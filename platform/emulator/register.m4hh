@@ -327,7 +327,7 @@ Case(CREATEVARIABLEMOVEY)
         // fill w/unb. var.
         srecord->initArgs();
         TaggedRef srecordRef=makeTaggedSRecord(srecord);
-        tmpRet = tagged2CVar(term)->unifyOutline(termPtr,0,srecordRef,NOFLATGUARD);
+        tmpRet = tagged2CVar(term)->unifyV(termPtr,srecordRef,NOFLATGUARD);
         if (tmpRet==PROCEED) {
           sPointer = srecord->getRef();
           SetReadMode;
@@ -549,7 +549,7 @@ Case(CREATEVARIABLEMOVEY)
                  }
 
                  if (isCVar(term)) {
-                   tmpRet = tagged2CVar(term)->unifyOutline(termPtr,0,atm,NOFLATGUARD);
+                   tmpRet = tagged2CVar(term)->unifyV(termPtr,atm,NOFLATGUARD);
                    if (tmpRet==PROCEED) { DISPATCH(3); }
                    if (tmpRet!=FAILED)  { goto LBLunifySpecial; }
                    term = *termPtr;  // Note: 'term' may be disposed
@@ -577,7 +577,7 @@ Case(CREATEVARIABLEMOVEY)
                  }
 
                  if (isCVar(term)) {
-                   tmpRet=tagged2CVar(term)->unifyOutline(termPtr,0,i,NOFLATGUARD);
+                   tmpRet=tagged2CVar(term)->unifyV(termPtr,i,NOFLATGUARD);
                    if (tmpRet==PROCEED) { DISPATCH(3); }
                    if (tmpRet!=FAILED)  { goto LBLunifySpecial; }
                    term = *termPtr;  // Note: 'term' may be disposed
@@ -601,7 +601,7 @@ Case(CREATEVARIABLEMOVEY)
 
                    if (isCVar(term)) {
                      TaggedRef aux =  makeTaggedLTuple(ltuple);
-                     tmpRet=tagged2CVar(term)->unifyOutline(termPtr,0,aux,NOFLATGUARD);
+                     tmpRet=tagged2CVar(term)->unifyV(termPtr,aux,NOFLATGUARD);
                      if (tmpRet==PROCEED) {
                        Xreg(getRegArg(PC+3)) = makeTaggedRef(ltuple->getRef()+1);
                        DISPATCH(4);
@@ -656,7 +656,7 @@ Case(CREATEVARIABLEMOVEY)
                      ltuple->setTail(e->currentUVarPrototype());
 
                      TaggedRef aux =  makeTaggedLTuple(ltuple);
-                     tmpRet=tagged2CVar(term)->unifyOutline(termPtr,0,aux,NOFLATGUARD);
+                     tmpRet=tagged2CVar(term)->unifyV(termPtr,aux,NOFLATGUARD);
                      if (tmpRet==PROCEED) {
                        SetReadMode;
                        DISPATCH(2);
@@ -816,7 +816,7 @@ Case(UNIFYLITERAL)
        }
 
        if (isCVar(term)) {
-         tmpRet=tagged2CVar(term)->unifyOutline(termPtr,0,atm,NOFLATGUARD);
+         tmpRet=tagged2CVar(term)->unifyV(termPtr,atm,NOFLATGUARD);
          if (tmpRet==PROCEED) { DISPATCH(2); }
          if (tmpRet!=FAILED)  { PC = lastGetRecord; goto LBLunifySpecial; }
          term = *termPtr;  // Note: 'term' may be disposed
@@ -851,7 +851,7 @@ Case(UNIFYLITERAL)
       }
 
       if (isCVar(term)) {
-        tmpRet=tagged2CVar(term)->unifyOutline(termPtr,0,i,NOFLATGUARD);
+        tmpRet=tagged2CVar(term)->unifyV(termPtr,i,NOFLATGUARD);
         if (tmpRet==PROCEED) { DISPATCH(2); }
         if (tmpRet!=FAILED)  { PC = lastGetRecord; goto LBLunifySpecial; }
         term = *termPtr;  // Note: 'term' may be disposed

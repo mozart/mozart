@@ -74,9 +74,6 @@ public:
   void gc(GenBoolVariable *);
   inline void dispose(void);
 
-  Bool unifyBool(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef,
-                 ByteCode *, Bool = TRUE);
-
   // is X=val still valid, i.e. is val an smallint and either 0 or 1.
   Bool valid(TaggedRef val);
 
@@ -95,20 +92,18 @@ public:
     GenCVariable::relinkSuspListTo(lv, reset_local);
   }
 
-  void propagate(TaggedRef var, PropCaller prop_eq = pc_propagator) {
-    if (suspList) GenCVariable::propagate(var, suspList, prop_eq);
+  void propagate(PropCaller prop_eq = pc_propagator) {
+    if (suspList) GenCVariable::propagate(suspList, prop_eq);
   }
-  void propagateUnify(TaggedRef var) { propagate(var, pc_cv_unif); }
+  void propagateUnify() { propagate(pc_cv_unif); }
 
   // needed to catch multiply occuring bool vars in propagators
   void patchStoreBool(OZ_FiniteDomain * d) { store_patch = d; }
   OZ_FiniteDomain * getStorePatchBool(void) { return store_patch; }
 
 
-  OZ_Return unifyV(TaggedRef* vPtr,TaggedRef v,TaggedRef *tPtr,TaggedRef t,
-                   ByteCode*scp) {
-    return unifyBool(vPtr,v,tPtr,t,scp);
-  }
+  OZ_Return unifyV(TaggedRef *, TaggedRef, ByteCode *);
+
   OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
     return valid(val);
   }
@@ -122,8 +117,13 @@ public:
   Bool isKindedV() { return true; }
   void disposeV(void) { dispose(); }
   int getSuspListLengthV() { return getSuspListLength(); }
-  void printV() {}
-  void printLongV() {}
+  void printStreamV(ostream &out,int depth = 10) {
+    out << "{0#1}";
+  }
+  void printLongStreamV(ostream &out,int depth = 10,
+                        int offset = 0) {
+    printStreamV(out,depth); out << endl;
+  }
 };
 
 inline Bool isGenBoolVar(TaggedRef term);

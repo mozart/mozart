@@ -75,9 +75,6 @@ public:
   void gc(GenFDVariable *);
   inline void dispose(void);
 
-  Bool unifyFD(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef,
-               ByteCode *, Bool = TRUE);
-
   void becomesSmallIntAndPropagate(TaggedRef * trPtr);
   void becomesBoolVarAndPropagate(TaggedRef * trPtr);
 
@@ -95,10 +92,12 @@ public:
   void relinkSuspListTo(GenFDVariable * lv, Bool reset_local = FALSE);
   void relinkSuspListTo(GenBoolVariable * lv, Bool reset_local = FALSE);
 
-  void propagate(TaggedRef var, OZ_FDPropState state,
+  void propagate(OZ_FDPropState state,
                  PropCaller prop_eq = pc_propagator);
 
-  void propagateUnify(TaggedRef var);
+  void propagateUnify() {
+    propagate(fd_prop_singl, pc_cv_unif);
+  }
 
   int getSuspListLength(void) {
     int len = suspList->length();
@@ -111,10 +110,8 @@ public:
 
 
 
-  OZ_Return unifyV(TaggedRef* vPtr,TaggedRef v,TaggedRef *tPtr,TaggedRef t,
-                   ByteCode*scp) {
-    return unifyFD(vPtr,v,tPtr,t,scp);
-  }
+  OZ_Return unifyV(TaggedRef *, TaggedRef, ByteCode *);
+
   OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
     return valid(val);
   }
@@ -129,9 +126,13 @@ public:
   Bool isKindedV() { return true; }
   void disposeV(void) { dispose(); }
   int getSuspListLengthV() { return getSuspListLength(); }
-  void printV() {}
-  void printLongV() {}
-
+  void printStreamV(ostream &out,int depth = 10) {
+    out << getDom().toString();
+  }
+  void printLongStreamV(ostream &out,int depth = 10,
+                        int offset = 0) {
+    printStreamV(out,depth); out << endl;
+  }
 };
 
 void addSuspFDVar(TaggedRef, Suspension, OZ_FDPropState = fd_prop_any);

@@ -45,8 +45,7 @@ public:
   OZ_Term getFunction() { return function; }
   void kickLazy();
 
-  OZ_Return unifyV(TaggedRef* vPtr,TaggedRef v,TaggedRef *tPtr,TaggedRef t,
-                   ByteCode* scp);
+  OZ_Return unifyV(TaggedRef* vPtr,TaggedRef t,ByteCode* scp);
   OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef /* val */) { return TRUE; }
   OZ_Return hasFeatureV(TaggedRef, TaggedRef *) { return SUSPEND; }
   GenCVariable* gcV() { return new GenLazyVariable(*this); }
@@ -59,9 +58,20 @@ public:
   void addSuspV(Suspension, TaggedRef*, int);
   Bool isKindedV() { return false; }
   void disposeV(void) { freeListDispose(this, sizeof(GenLazyVariable)); }
-  int getSuspListLengthV() { return getSuspList()->length()-1; }
-  void printV() {}
-  void printLongV() {}
+  int getSuspListLengthV() { return getSuspListLengthS(); }
+  void printStreamV(ostream &out,int depth = 10) {
+    OZ_Term f = getFunction();
+    if (f==0) out << "<lazy>";
+    else {
+      out << "<lazy: ";
+      oz_printStream(f,out,depth-1);
+      out << ">";
+    }
+  }
+  void printLongStreamV(ostream &out,int depth = 10,
+                        int offset = 0) {
+    printStreamV(out,depth); out << endl;
+  }
 };
 
 

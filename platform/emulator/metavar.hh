@@ -69,7 +69,6 @@ friend class GenCVariable;
 private:
   TaggedRef data;
   MetaTag * tag;
-  Bool unifyMeta(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, ByteCode *);
 
 public:
   GenMetaVariable() : GenCVariable(MetaVariable) {}
@@ -89,9 +88,9 @@ public:
 
   Bool valid(TaggedRef v);
 
-  void constrainVar(TaggedRef v, TaggedRef d) {
+  void constrainVar(TaggedRef d) {
     setData(d);
-    propagate(v, suspList, pc_propagator);
+    propagate(suspList, pc_propagator);
   }
 
   Bool isStrongerThan(TaggedRef var, TaggedRef vdata);
@@ -104,10 +103,8 @@ public:
   }
 
 
-  OZ_Return unifyV(TaggedRef*vPtr,TaggedRef v,TaggedRef *tPtr,TaggedRef t,
-                   ByteCode*scp) {
-    return unifyMeta(vPtr,v,tPtr,t,scp);
-  }
+  OZ_Return unifyV(TaggedRef* vPtr, TaggedRef t, ByteCode*scp);
+
   OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
     return valid(val);
   }
@@ -122,9 +119,13 @@ public:
   Bool isKindedV() { return true; }
   void disposeV(void) { freeListDispose(this, sizeof(GenMetaVariable)); }
   int getSuspListLengthV() { return getSuspListLength(); }
-  void printV() {}
-  void printLongV() {}
-
+  void printStreamV(ostream &out,int depth = 10) {
+    out << "<meta>";
+  }
+  void printLongStreamV(ostream &out,int depth = 10,
+                        int offset = 0) {
+    printStreamV(out,depth); out << endl;
+  }
 };
 
 

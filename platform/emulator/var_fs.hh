@@ -62,8 +62,7 @@ public:
   void gc(GenFSetVariable *);
   void dispose(void);
 
-  Bool unifyFSet(OZ_Term *, OZ_Term, OZ_Term *, OZ_Term,
-                 ByteCode *, Bool = TRUE);
+  OZ_Return unifyV(OZ_Term *, OZ_Term, ByteCode *);
   OZ_FSetConstraint &getSet(void) { return _fset; }
   void setSet(OZ_FSetConstraint fs) { _fset = fs; }
 
@@ -78,10 +77,12 @@ public:
 
   void relinkSuspListTo(GenFSetVariable * lv, Bool reset_local = FALSE);
 
-  void propagate(OZ_Term var, OZ_FSetPropState state,
+  void propagate(OZ_FSetPropState state,
                  PropCaller prop_eq = pc_propagator);
 
-  void propagateUnify(OZ_Term var);
+  void propagateUnify() {
+    propagate(fs_prop_val, pc_cv_unif);
+  }
 
   void becomesFSetValueAndPropagate(OZ_Term *);
 
@@ -100,10 +101,6 @@ public:
   }
 
 
-  OZ_Return unifyV(TaggedRef*vPtr,TaggedRef v,TaggedRef *tPtr,TaggedRef t,
-                   ByteCode*scp) {
-    return unifyFSet(vPtr,v,tPtr,t,scp);
-  }
   OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
     return valid(val);
   }
@@ -117,8 +114,13 @@ public:
   Bool isKindedV() { return true; }
   void disposeV(void) { dispose(); }
   int getSuspListLengthV() { return getSuspListLength(); }
-  void printV() {}
-  void printLongV() {}
+  void printStreamV(ostream &out,int depth = 10) {
+    out << getSet().toString();
+  }
+  void printLongStreamV(ostream &out,int depth = 10,
+                        int offset = 0) {
+    printStreamV(out,depth); out << endl;
+  }
 };
 
 void addSuspFSetVar(OZ_Term, SuspList *, OZ_FSetPropState = fs_prop_any);

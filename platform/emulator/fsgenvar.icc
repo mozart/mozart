@@ -41,7 +41,7 @@ GenFSetVariable * tagged2GenFSetVar(OZ_Term term)
 }
 
 inline
-void GenFSetVariable::propagate(OZ_Term var, OZ_FSetPropState state,
+void GenFSetVariable::propagate(OZ_FSetPropState state,
                                 PropCaller prop_eq)
 {
   if (prop_eq == pc_propagator) {
@@ -49,17 +49,17 @@ void GenFSetVariable::propagate(OZ_Term var, OZ_FSetPropState state,
     case fs_prop_val: { // no break
       for (int i = fs_prop_any; i--; )
         if (fsSuspList[i])
-          GenCVariable::propagate(var, fsSuspList[i], prop_eq);
+          GenCVariable::propagate(fsSuspList[i], prop_eq);
     }
            case fs_prop_lub: case fs_prop_glb:
       if (fsSuspList[state])
-        GenCVariable::propagate(var, fsSuspList[state], prop_eq);
+        GenCVariable::propagate(fsSuspList[state], prop_eq);
       break;
     case fs_prop_bounds:
       if (fsSuspList[fs_prop_lub])
-        GenCVariable::propagate(var, fsSuspList[fs_prop_lub], prop_eq);
+        GenCVariable::propagate(fsSuspList[fs_prop_lub], prop_eq);
       if (fsSuspList[fs_prop_glb])
-        GenCVariable::propagate(var, fsSuspList[fs_prop_glb], prop_eq);
+        GenCVariable::propagate(fsSuspList[fs_prop_glb], prop_eq);
       break;
     default:
       break;
@@ -67,15 +67,10 @@ void GenFSetVariable::propagate(OZ_Term var, OZ_FSetPropState state,
   } else {
     for (int i = fs_prop_any; i--; )
       if (fsSuspList[i])
-        GenCVariable::propagate(var, fsSuspList[i], prop_eq);
+        GenCVariable::propagate(fsSuspList[i], prop_eq);
   }
   if (suspList)
-    GenCVariable::propagate(var, suspList, prop_eq);
-}
-
-inline
-void GenFSetVariable::propagateUnify(TaggedRef var) {
-  propagate(var, fs_prop_val, pc_cv_unif);
+    GenCVariable::propagate(suspList, prop_eq);
 }
 
 inline
@@ -114,7 +109,7 @@ void GenFSetVariable::becomesFSetValueAndPropagate(TaggedRef * trPtr)
 
   OZ_Term set_val = makeTaggedFSetValue(new OZ_FSetValue(_fset));
 
-  propagate(*trPtr, fs_prop_val);
+  propagate(fs_prop_val);
   doBind(trPtr, set_val);
   dispose();
 }

@@ -52,21 +52,26 @@
 // NOTE:
 //   this order is used in the case of CVAR=CVAR unification
 //   e.g. SimpleVariable are bound prefered
+// partial order required:
+//  Simple<<everything
+//  Bool<<FD
+//  ???
+
 enum TypeOfGenCVariable {
-  SimpleVariable,
-  ComplexVariable,
+  SimpleVarType,
+  ComplexVarType,
   LazyVariable,
   PerdioVariable,
+  BoolVariable,
   FDVariable,
   OFSVariable,
   MetaVariable,
-  BoolVariable,
   FSetVariable,
   CtVariable,
   NonGenCVariable
 };
 
-#define GenVarCheckType(t) Assert(t >= SimpleVariable && t < NonGenCVariable)
+#define GenVarCheckType(t) Assert(t >= SimpleVarType && t < NonGenCVariable)
 
 class GenCVariable: public SVariable {
 
@@ -86,7 +91,7 @@ private:
 
 protected:
 
-  void propagate(TaggedRef, SuspList * &, PropCaller);
+  void propagate(SuspList * &, PropCaller);
 
 public:
   USEFREELISTMEMORY;
@@ -106,17 +111,23 @@ public:
 
   virtual GenCVariable* gcV() = 0;
   virtual void          gcRecurseV() = 0;
-  virtual OZ_Return     unifyV(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef,
-                               ByteCode *) = 0;
+  virtual OZ_Return     unifyV(TaggedRef *, TaggedRef, ByteCode *) = 0;
+
+  virtual int           isKindedV() = 0;
   virtual OZ_Return     validV(TaggedRef *, TaggedRef) = 0;
   virtual OZ_Return     hasFeatureV(TaggedRef, TaggedRef *) = 0;
+
   virtual void          addSuspV(Suspension susp, TaggedRef *vPtr,
                                  int unstable = TRUE) = 0;
+
   virtual void          disposeV() = 0;
-  virtual int           isKindedV() = 0;
-  virtual void          printV() = 0;
-  virtual void          printLongV() = 0;
+  virtual void          printStreamV(ostream &out,int depth = 10) = 0;
+  virtual void          printLongStreamV(ostream &out,int depth = 10,
+                                         int offset = 0) = 0;
   virtual int           getSuspListLengthV() = 0;
+
+  void printV(void) { printStreamV(cerr); cerr << endl; cerr.flush(); }
+  void printLongV(void) { printLongStreamV(cerr); cerr.flush(); }
 
   // methods relevant for term copying (gc and solve)
   GenCVariable * gc(void);
@@ -125,8 +136,7 @@ public:
   // unifies a generic variable with another generic variable
   // or a non-variable
   // invariant: left term == *this
-  OZ_Return unify(TaggedRef *, TaggedRef *, TaggedRef, ByteCode *);
-  OZ_Return unifyOutline(TaggedRef *, TaggedRef *, TaggedRef, ByteCode *);
+  OZ_Return unify(TaggedRef *, TaggedRef, ByteCode *);
 
   inline int getSuspListLength(void);
 

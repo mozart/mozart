@@ -55,20 +55,22 @@ void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
   }
 }
 
-OZ_Return PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
+OZ_Return PerdioVar::unifyV(TaggedRef *lPtr, TaggedRef r, ByteCode *scp)
 {
   if (isFuture())
     return ((Future*)this)->unifyFuture(lPtr);
 
-  TaggedRef rVal = *rPtr;
-  TaggedRef lVal = *lPtr;
+  if (oz_isRef(r)) {
+    TaggedRef *rPtr = tagged2Ref(r);
+    TaggedRef rVal = *rPtr;
+    TaggedRef lVal = *lPtr;
+    GenCVariable *cv = tagged2CVar(rVal);
 
-  Assert(!isNotCVar(rVal));
+    if (cv->getType()!=PerdioVariable) return FAILED;
 
-  PerdioVar *lVar = this;
+    PerdioVar *lVar = this;
 
-  if (isPerdioVar(rVal)) {
-    PerdioVar *rVar = tagged2PerdioVar(rVal);
+    PerdioVar *rVar = (PerdioVar *)cv;
 
     if (isObject()) {
       if (rVar->isObject()) {
@@ -92,7 +94,7 @@ OZ_Return PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *
     if (scp!=0 || !am.isLocalSVar(lVar)) {
       // in any kind of guard then bind and trail
       am.checkSuspensionList(lVal,pc_std_unif);
-      am.doBindAndTrail(lVal, lPtr,makeTaggedRef(rPtr));
+      am.doBindAndTrail(lPtr,makeTaggedRef(rPtr));
       return PROCEED;
     } else {
       // not in guard: distributed unification
@@ -109,17 +111,15 @@ OZ_Return PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *
 
 
   // PVAR := non PVAR
-  Assert(!oz_isVariable(rVal));
+  if (!valid(lPtr,r)) return FAILED;
 
-  if (!valid(lPtr,rVal)) return FAILED;
-
-  if (am.isLocalSVar(lVar)) {
+  if (am.isLocalSVar(this)) {
     // onToplevel: distributed unification
-    return bindPerdioVar(lVar,lPtr,rVal);
+    return bindPerdioVar(this,lPtr,r);
   } else {
     // in guard: bind and trail
-    am.checkSuspensionList(lVal,pc_std_unif);
-    am.doBindAndTrail(lVal, lPtr,rVal);
+    am.checkSuspensionList(*lPtr,pc_std_unif);
+    am.doBindAndTrail(lPtr,r);
     return PROCEED;
   }
 }

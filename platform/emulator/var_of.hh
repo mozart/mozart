@@ -115,8 +115,6 @@ public:
     // Return a sorted list of all features currently in the OFS
     TaggedRef getArityList();
 
-    Bool unifyOFS(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, ByteCode *);
-
     // Return the feature value if feature exists, return NULL if it doesn't exist
     TaggedRef getFeatureValue(TaggedRef feature) {
         Assert(oz_isFeature(feature));
@@ -139,7 +137,7 @@ public:
         Assert(valid);
         // (future optimization: a second suspList only waiting on features)
         if (prev==makeTaggedNULL()) {
-            // propagate(makeTaggedCVar(this), suspList, makeTaggedCVar(this), pc_propagator);
+            // propagate(suspList, pc_propagator);
             am.addFeatOFSSuspensionList(makeTaggedCVar(this),suspList,feature,FALSE);
             return TRUE;
         } else {
@@ -163,7 +161,7 @@ public:
     // Used to propagate suspensions (addFeatureValue, getLabel don't do it):
     void propagateOFS(void) {
       /* third argument must be ignored --> use AtomNil */
-      propagate(makeTaggedCVar(this), suspList, pc_propagator);
+      propagate(suspList, pc_propagator);
     }
 
     int getSuspListLength(void) {
@@ -202,10 +200,8 @@ public:
     // FiniteDomain &getDom (meaningless for ofs)
 
 
-  OZ_Return unifyV(TaggedRef *vPtr,TaggedRef v,TaggedRef *tPtr,TaggedRef t,
-                   ByteCode*scp) {
-    return unifyOFS(vPtr,v,tPtr,t,scp);
-  }
+  OZ_Return unifyV(TaggedRef *vPtr,TaggedRef t, ByteCode*scp);
+
   OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
     return valid(val);
   }
@@ -220,8 +216,21 @@ public:
   Bool isKindedV() { return true; }
   void disposeV(void) { freeListDispose(this, sizeof(GenOFSVariable)); }
   int getSuspListLengthV() { return getSuspListLength(); }
-  void printV() {}
-  void printLongV() {}
+  void printStreamV(ostream &out,int depth = 10) {
+    oz_printStream(getLabel(),out,0,0);
+    out << '(';
+    if (depth > 0) {
+      getTable()->newprint(out,depth-1);
+    } else {
+      out << ",,, ";
+      return;
+    }
+    out << "...)";
+  }
+  void printLongStreamV(ostream &out,int depth = 10,
+                        int offset = 0) {
+    printStreamV(out,depth); out << endl;
+  }
 };
 
 

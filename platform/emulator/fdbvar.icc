@@ -42,7 +42,7 @@ inline
 void GenBoolVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr, int e)
 {
   if (oz_isSmallInt(*trPtr)) return;
-  propagate(*trPtr);
+  propagate();
   doBind(trPtr, OZ_int(e));
   dispose();
 }

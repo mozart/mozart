@@ -191,17 +191,12 @@ public:
   void addSuspPerdioVar(TaggedRef *v, Suspension susp, int unstable);
   Bool valid(TaggedRef *varPtr, TaggedRef v);
   void primBind(TaggedRef *lPtr,TaggedRef v);
-  OZ_Return unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, ByteCode *);
 
   void dispose(void);
 
   void gcRecurse(void);
 
-  OZ_Return unifyV(TaggedRef *vptr,TaggedRef v,
-                   TaggedRef *tptr, TaggedRef t,
-                   ByteCode *scp) {
-    return unifyPerdioVar(vptr,tptr?tptr:&t,scp);
-  }
+  OZ_Return unifyV(TaggedRef *vptr, TaggedRef t, ByteCode *scp);
   OZ_Return validV(TaggedRef* ptr, TaggedRef val ) { return valid(ptr,val); }
   OZ_Return hasFeatureV(TaggedRef val, TaggedRef *) { return SUSPEND; }
   GenCVariable* gcV() { error("not impl"); return 0; }
@@ -212,8 +207,27 @@ public:
   Bool isKindedV() { return true; }
   void disposeV(void) { dispose(); }
   int getSuspListLengthV() { return getSuspListLength(); }
-  void printV() {}
-  void printLongV() {}
+  void printStreamV(ostream &out,int depth = 10) {
+    if (isFuture()) {
+      out << "<future>";
+      return;
+    }
+
+    out << "<dist:";
+    char *type = "";
+    if (isManager()) {
+      type = "mgr";
+    } else if (isProxy()) {
+      type = "pxy";
+    } else {
+      type = "oprxy";
+    }
+    out << type << ">";
+  }
+  void printLongStreamV(ostream &out,int depth = 10,
+                        int offset = 0) {
+    printStreamV(out,depth); out << endl;
+  }
 };
 
 inline
