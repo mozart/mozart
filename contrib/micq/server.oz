@@ -125,7 +125,7 @@ define
 	 in
 	    {WriteLog "Message "#GlobalMID#" is added to FAQ by "#SID}
 	    {DB storeX(id:GlobalMID data:faq(poster:SID answer:M date:Date question:FAQ))}
-	    MM="\n-- This message is added to the FAQ --\n"#M#"\n--------------------------------------\n"#FAQ
+	    MM="-- This message is added to the FAQ --\n"#M#"\n\n-- Answer ----------------------------\n"#FAQ
 	 else
 	    MM=M
 	 end
@@ -604,12 +604,18 @@ define
 	    {WriteLog "Can't return database dump to "#UID}
 	 end
       end
-      meth !S_getFAQ($)
-	 {WriteLog "FAQ request"}
+      meth !S_getFAQ($ host:H<=unit)
+	 if H\=unit then
+	    {WriteLog "Http FAQ request from "#H}
+	 end
 	 {Map {DB entriesX($)} fun{$ X} X.2 end}
       end
       meth !S_updateFAQ(id:ID data:Data)
-	 {DB storeX(id:ID data:Data)}
+	 if Data\=unit then
+	    {DB updateX(id:ID data:Data)}
+	 else
+	    {DB removeX(id:ID)}
+	 end
       end
       
       %% Local methods (used ONLY by server)
