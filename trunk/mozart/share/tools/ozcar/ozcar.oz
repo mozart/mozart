@@ -21,10 +21,13 @@ Ozcar =
 	end
 	
 	meth on
-	   {Tk.send wm(deiconify self.toplevel)}
+	   {Tk.batch [update(idletasks)
+		      wm(deiconify self.toplevel)]}
 	   {Compile "\\sw -optimize +debuginfo"}
 	   {Debug.on}
-	   Gui,rawStatus(InitStatus)
+	   case @currentThread == undef then
+	      Gui,rawStatus(InitStatus)
+	   else skip end
 	end
 	
      end init}

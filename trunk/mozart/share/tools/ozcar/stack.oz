@@ -253,6 +253,10 @@ in
       meth getId($)
 	 self.I
       end
+
+      meth getSize($)
+	 @Size
+      end
       
       meth getPos(file:?F line:?L)
 	 S = @Size

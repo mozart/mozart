@@ -3,6 +3,25 @@
 
 local
 
+   fun {AppOK Name}
+      ({Cget stepRecordBuiltin}  orelse Name \= 'record')
+      andthen
+      ({Cget stepDotBuiltin}     orelse Name \= '.')
+      andthen
+      ({Cget stepWidthBuiltin}   orelse Name \= 'Width')
+      andthen
+      ({Cget stepNewNameBuiltin} orelse Name \= 'NewName')
+      andthen
+      ({Cget stepSetSelfBuiltin} orelse Name \= 'setSelf')
+      andthen
+      ({Cget stepSystemProcedures} orelse
+       Name == ''         orelse
+       Name == '`,`'      orelse
+       Name == '`send`'   orelse
+       Name == '`ooSend`' orelse
+       {Atom.toString Name}.1 \= 96)
+   end
+   
    proc {ReadLoop S}
       case S
       of H|T then
@@ -40,6 +59,13 @@ in
       meth getThreadDic($)
 	 self.ThreadDic
       end
+
+      meth AddToSkippedProcs(Name T I FrameId)
+	 SkippedProcs <- FrameId # I | @SkippedProcs
+	 {OzcarMessage 'Skipping procedure \'' # Name # '\''}
+	 {OzcarShow @SkippedProcs}
+	 {Thread.resume T}
+      end
       
       meth readStreamMessage(M)
 	 case {Label M}
@@ -56,51 +82,37 @@ in
 	    Args = case {Value.hasFeature M args} then M.args else nil end
 	 in
 	    case {Thread.is T} then
-	       Ok =
-	       ({Cget stepRecordBuiltin}  orelse Name \= 'record')
-	       andthen
-	       ({Cget stepDotBuiltin}     orelse Name \= '.')
-	       andthen
-	       ({Cget stepWidthBuiltin}   orelse Name \= 'Width')
-	       andthen
-	       ({Cget stepNewNameBuiltin} orelse Name \= 'NewName')
-	       andthen
-	       ({Cget stepSetSelfBuiltin} orelse Name \= 'setSelf')
-	       andthen
-	       ({Cget stepSystemProcedures} orelse
-		Name == ''         orelse
-		Name == '`,`'      orelse
-		Name == '`send`'   orelse
-		Name == '`ooSend`' orelse
-		{Atom.toString Name}.1 \= 96)
+	       Ok = {AppOK Name}
 	    in
-	       case Ok then
-		  case {Dmember self.ThreadDic I} then
+	       case ThreadManager,exists(I $) then
+		  case Ok then
 		     ThreadManager,step(file:File line:Line thr:T id:I
 					name:Name args:Args frame:FrameId
 					builtin:IsBuiltin time:Time)
-		  elsecase (File == '' orelse File == 'nofile') andthen
+		  else
+		     ThreadManager,AddToSkippedProcs(Name T I FrameId)
+		  end
+	       elsecase (File == '' orelse File == 'nofile') then
+		  {Dbg.trace T false}
+		  {Dbg.stepmode T false}
+		  {Thread.resume T}
+		  case {HasFeature Args 1} andthen {IsRecord Args.1} andthen
 		     (Args.1 == off orelse {Label Args.1} == bpAt) then
 		     {OzcarMessage 'message from Emacs detected.'}
-		     {Dbg.trace T false}
-		     {Dbg.stepmode T false}
-		     {Thread.resume T}
 		  else
-		     {OzcarMessage WaitForThread}
-		     {Delay 400} % thread should soon be added
-		     case @Breakpoint then
-			Breakpoint <- false
-		     else
-			ThreadManager,step(file:File line:Line thr:T id:I
-					   name:Name args:Args frame:FrameId
-					   builtin:IsBuiltin time:Time)
-		     end
+		     Gui,rawStatus(IgnoreNoFileStep)
 		  end
 	       else
-		  SkippedProcs <- FrameId # I | @SkippedProcs
-		  {OzcarMessage 'Skipping procedure \'' # Name # '\''}
-		  {OzcarShow @SkippedProcs}
-		  {Thread.resume T}
+		  {OzcarMessage WaitForThread}
+		  {Delay 240} % thread should soon be added
+		  case @Breakpoint then
+		     Breakpoint <- false
+		  else
+		     % case Ok then
+		     ThreadManager,step(file:File line:Line thr:T id:I
+					name:Name args:Args frame:FrameId
+					builtin:IsBuiltin time:Time)
+		  end
 	       end
 	    else
 	       {OzcarMessage InvalidThreadID}
@@ -138,7 +150,7 @@ in
 		else
 		   0        %% parent unknown (threads of tk actions...)
 		end
-	    E = {Ozcar exists(I $)}
+	    E = ThreadManager,exists(I $)
 	 in
 	    case E then
 	       Stack = {Dget self.ThreadDic I}
@@ -156,14 +168,13 @@ in
 			{Thread.resume T}
 		     else skip end
 		     
-		     {Delay 200}
+		     {Delay 170}
 
 		     case Q == 1 then
 			SkippedThread <- nil
 		     else skip end
 
-		     case
-			{Thread.state T} == terminated then
+		     case {Thread.state T} == terminated then
 			{OzcarMessage EarlyThreadDeath # I}
 		     else
 			case Q == 0 then
@@ -181,7 +192,7 @@ in
 	 [] term then
 	    T = M.thr.1  %% just terminated thread
 	    I = M.thr.2  %% ...with it's id
-	    E = {Ozcar exists(I $)}
+	    E = ThreadManager,exists(I $)
 	 in
 	    case E then
 	       ThreadManager,remove(T I noKill)
@@ -198,7 +209,7 @@ in
 	    A    = M.args
 	    B    = M.builtin
 	    Time = M.time
-	    E = {Ozcar exists(I $)}
+	    E    = ThreadManager,exists(I $)
 	 in
 	    case E then
 	       StackObj = {Dget self.ThreadDic I}
@@ -229,7 +240,7 @@ in
 	 [] cont then
 	    T = M.thr.1  %% woken thread
 	    I = M.thr.2  %% ...with it's id
-	    E = {Ozcar exists(I $)}
+	    E = ThreadManager,exists(I $)
 	 in
 	    case E then
 	       /*
@@ -263,16 +274,18 @@ in
 	    T = M.thr.1
 	    I = M.thr.2
 	    X = M.exc
-	    E = {Ozcar exists(I $)}
 	 in
-	    case E then
-	       StackObj = {Dget self.ThreadDic I}
-	    in
-	       {StackObj printException(X)}
+	    case ThreadManager,exists(I $) then
+	       {{Dget self.ThreadDic I} printException(X)}
 	    else
 	       thread
-		  {Delay 280}
-		  ThreadManager,add(T I X#_ false)
+		  {Delay 320}
+		  case ThreadManager,exists(I $) then
+		     {Delay 140}
+		     {{Dget self.ThreadDic I} printException(X)}
+		  else
+		     ThreadManager,add(T I X#_ false)
+		  end
 	       end
 	    end
 	    
@@ -406,6 +419,16 @@ in
 	    end
 	    {Stack printTop} 
 	 else skip end
+      end
+
+      meth rebuildCurrentStack
+	 Stack = @currentStack
+      in
+	 case Stack == undef then
+	    Gui,rawStatus(FirstSelectThread)
+	 else
+	    {ForAll [rebuild(true) print] Stack}
+	 end
       end
       
       meth switch(I)
