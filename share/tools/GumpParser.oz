@@ -23,16 +23,11 @@
 %%% WARRANTIES.
 %%%
 
-functor $
-
+functor prop once
 import
-   System.{showError}
-
+   System(showError)
 export
-   'class':      GumpParser
-
-body
-
+   'class': GumpParser
+define
    \insert gump/GumpParserClass
-
 end

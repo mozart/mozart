@@ -25,16 +25,16 @@
 
 functor prop once
 import
-   Open.file
-   OS.system
-   Property.get
-   Debug from 'x-oz://boot/Debug'
-   System.valueToVirtualString
-   Foreign.load
+   Open(file)
+   OS(system)
+   Property(get)
+   Debug at 'x-oz://boot/Debug'
+   System(valueToVirtualString)
+   BisonModule(generate) at 'ozbison.so{native}'
 export
    makeProductionTemplates: MakeProductionTemplates
    transformScanner:        TransformScanner
    transformParser:         TransformParser
-body
+define
    \insert gump/Main.oz
 end
