@@ -663,11 +663,13 @@ define
 	       OzDocToHTML, Batch(M 1 ?HTML)
 	       if @MakeAbstract then
 		  Node = 'div'(hr()
-			       h2(@TopTitle)
+			       case @TopTitle of unit then EMPTY
+			       elseof T then h2(T)
+			       end
 			       case @Authors of nil then EMPTY
 			       else
 				  span('class': [subtitle]
-				       OzDocToHTML, FormatAuthors($))
+				       OzDocToHTML, FormatAuthors(@Authors $))
 			       end
 			       case @Abstract of unit then EMPTY
 			       elseof A then
@@ -681,12 +683,14 @@ define
 		     elseof URL then
 			p('class': [margin] a(href: URL PCDATA('Top')))
 		     end
-		     h1(align: center 'class': [title] @TopTitle)
+		     case @TopTitle of unit then EMPTY
+		     elseof T then h1(align: center 'class': [title] T)
+		     end
 		     HTML
 		     case @Authors of nil then EMPTY
 		     else
 			h2(align: center 'class': [authors]
-			   OzDocToHTML, FormatAuthors($))
+			   OzDocToHTML, FormatAuthors(@Authors $))
 		     end
 		     case @Comic of unit then EMPTY
 		     elseof M then p(OzDocToHTML, Process(M $))
@@ -1567,12 +1571,20 @@ define
 	 Res
       end
       meth MakeTitle(PtrText FormatNumber Sep LayoutTitle M Level HTML
-		     ?NodeTitle) HTML1 Title TheLabel Res in
+		     ?NodeTitle) HTML1 Ns Title Authors TheLabel Res in
 	 OzDocToHTML, FlushFloats(?HTML1)
-	 Title = case {Label {CondSelect M 1 unit}} of title then
-		    OzDocToHTML, Batch(M.1 1 $)
-		 else unit
+	 Ns = {Record.toList M.1=front(...)}
+	 Title = case {Filter Ns fun {$ N} {Label N} == title end} of [T] then
+		    OzDocToHTML, Batch(T 1 $)
+		 [] nil then unit
 		 end
+	 Authors = {Filter Ns
+		    fun {$ N}
+		       case {Label N} of author then true
+		       [] 'author.extern' then true
+		       else false
+		       end
+		    end}
 	 if {HasFeature M id} then
 	    TheLabel = M.id
 	 else
@@ -1608,7 +1620,12 @@ define
 	    end
 	 end
 	 TOC <- {Append @TOC [Level#TheLabel#@CurrentNode#NodeTitle]}
-	 HTML = SEQ([HTML1 {LayoutTitle Res}])
+	 HTML = SEQ([HTML1 {LayoutTitle Res}
+		     case Authors of nil then EMPTY
+		     else
+			h3('class': [authors]
+			   OzDocToHTML, FormatAuthors(Authors $))
+		     end])
       end
       meth ID(L Node HTML)
 	 if {Dictionary.member @Labels L} then
@@ -1730,7 +1747,11 @@ define
 	 end
       end
       meth MakeNode(Title BodyContents) Node in
-	 Node = html(head(title(thread {HTML.clean Title} end)
+	 Node = html(head(title(case Title of unit then
+				   PCDATA('Anonymous Document')
+				else
+				   thread {HTML.clean Title} end
+				end)
 			  link(rel: stylesheet
 			       type: 'text/css'
 			       href: @StyleSheet))
@@ -1743,7 +1764,7 @@ define
 			    hr()
 			    address(case @Authors of nil then EMPTY
 				    else As in
-				       OzDocToHTML, FormatAuthors(?As)
+				       OzDocToHTML, FormatAuthors(@Authors ?As)
 				       SEQ([As br()])
 				    end
 				    PCDATA('Generated on '#
@@ -1917,8 +1938,8 @@ define
 	 [] nil then skip
 	 end
       end
-      meth FormatAuthors($)
-	 case @Authors of nil then ""
+      meth FormatAuthors(Authors $)
+	 case Authors of nil then ""
 	 [] A|Ar then
 	    fun {FormatAuthor A} N1 N2 H in
 	       N1 = {FoldLTail [{CondSelect A firstname unit}
