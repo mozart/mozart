@@ -112,18 +112,18 @@ void addFeatOFSSuspensionList(TaggedRef var,
 			      Bool determ)
 {
   while (suspList) {
-    Suspension susp = suspList->getSuspension();
+    Suspendable * susp = suspList->getSuspendable();
 
     // The added condition ' || thr->isRunnable () ' is incorrect
     // since isPropagated means only that the thread is runnable
-    if (susp.isDead()) {
+    if (susp->isDead()) {
       suspList = suspList->getNext();
       continue;
     }
 
-    if (susp.isPropagator() && susp.isOFS()) {
+    if (susp->isOFS()) {
       MonitorArityPropagator * prop = 
-	(MonitorArityPropagator *) susp.getPropagator()->getPropagator();
+	(MonitorArityPropagator *) SuspToPropagator(susp)->getPropagator();
 
       Assert(sizeof(MonitorArityPropagator) == prop->sizeOf());
 

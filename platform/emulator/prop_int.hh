@@ -31,18 +31,18 @@
 
 #include "base.hh"
 #include "thr_class.hh"
+#include "prop_class.hh"
 #include "thr_int.hh"
 #include "am.hh"
 #include "space.hh"
 #include "debug.hh"
 #include "cpi_heap.hh"
 #include "var_base.hh"
-#include "lps.hh"
 
 // exports
 Thread * oz_mkLPQ(Board *bb, int prio);
 Propagator * oz_mkPropagator(Board *bb, OZ_Propagator *pro);
-void oz_pushToLPQ(Board *bb, Propagator * prop);
+void oz_pushToLPQ(Propagator * prop);
 Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy);
 
 
@@ -91,17 +91,19 @@ void oz_closeDonePropagator(Propagator * prop)
   prop->dispose();	// kost@: TODO? optimize;
   prop->setDead();
 
+  Board * cb = oz_currentBoard();
   //
   //  Actually, the current board can be alive or not - 
   // so, in the last case it's redundant;
-  oz_currentBoard()->decSuspCount();
+  cb->decSuspCount();
 
   //
   //  ... again to the 'SolveActor::checkExtSuspList':
   // there is a limitation in the implementation that no stability
   // can be achieved before a propagator on a global variable(s) 
   // completely disappears. Therefore, we make the check here;
-  CheckExtSuspension(prop);
+  if (prop->isExternal())
+    cb->checkSolveThreads();
 
   //
   //  An ESSENTIAL invariant:

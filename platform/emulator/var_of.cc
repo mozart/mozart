@@ -41,9 +41,9 @@ static
 Bool hasOFSSuspension(SuspList * suspList)
 {
   while (suspList) {
-    Suspension susp = suspList->getSuspension();
+    Suspendable * susp = suspList->getSuspendable();
     
-    if (!susp.isDead() && susp.isPropagator() && susp.isOFS()) 
+    if (!susp->isDead() && susp->isOFS()) 
       return TRUE;
 
     suspList = suspList->getNext();

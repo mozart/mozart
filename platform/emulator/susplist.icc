@@ -45,7 +45,7 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
     
     if (reset_local) 
       for (aux = this; aux; aux = aux->getNext())
-      	aux->getElem().unsetLocal();
+      	aux->getSuspendable()->unsetLocal();
     
     if (to_list) {
       // this != NULL && to_list != NULL
@@ -54,7 +54,7 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
       // ... tag this-list and find last entry
       SuspList * last DebugCode(= NULL);
       for (aux = this; 1; ) {
-	aux->getElem().setTagged();
+	aux->getSuspendable()->setTagged();
 	
 	SuspList * aux_next = aux->getNext(); 
 	
@@ -71,7 +71,7 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
       // remove tagged entries from to_list 
       SuspList ** aux1 = &to_list;
       while (*aux1) {
-	if ((*aux1)->getElem().isTagged()) {
+	if ((*aux1)->getSuspendable()->isTagged()) {
 	  *aux1 = (*aux1)->getNext();
 	  continue;
 	}
@@ -80,7 +80,7 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
       
       // untag this-list
       for (aux = this; aux; aux = aux->getNext())
-      	aux->getElem().unsetTagged();
+      	aux->getSuspendable()->unsetTagged();
       
       last->setNext(to_list);
     } 
