@@ -26,16 +26,22 @@
 (
     #* Connection
 
-    'get'		=> { in  => [],
-			     out => ['+record'],
-			     BI  => BIGetPID},
+    'get'	=> { in  => [],
+	             out => ['+record'],
+		     BI  => BIGetPID},
 
     'received'	=> { in  => ['value'],
-			     out => [],
-			     BI  => BIReceivedPID},
+		     out => [],
+		     BI  => BIReceivedPID},
 
     'toPort'	=> { in  => ['+virtualString','+int','+int','+int'],
-			     out => ['+port'],
-			     BI  => BITicket2Port},
+		     out => ['+port'],
+		     BI  => BITicket2Port},
+
+    'getCRC'	=> { in  => ['+virtualString'],
+		     out => ['+int','+int'],
+		     BI  => BIgetCRC},
 
  );
+
+
