@@ -1,3 +1,5 @@
+DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT
+
 INSTALLATION INSTRUCTIONS FOR THE MOZART SYSTEM
 ===============================================
 
@@ -6,12 +8,16 @@ INSTALLATION INSTRUCTIONS FOR THE MOZART SYSTEM
   Tcl/Tk 8.0
   GNU mp library
   C++ compiler (gcc prefered)
+  GNU make
+  GNU m4
+  perl
 
 * Fast installation
 
 ./configure
 make
 make install
+# use make bootstrap if you have no Oz system installed yet.
 
 * Multi platform installation
 
