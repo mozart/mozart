@@ -180,8 +180,6 @@ public:
     failChild();
   }
 
-  void gcRecurse();
-
   ProgramCounter getElsePC() { return elsePC; }
 
   // not possible because spaces are lazy marked as failed

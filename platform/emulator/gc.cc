@@ -370,7 +370,6 @@ enum TypeOfPtr {
   PTR_BOARD,
   PTR_ACTOR,
   PTR_THREAD,
-  PTR_CONT,
   PTR_DYNTAB,
   PTR_CONSTTERM
 };
@@ -477,8 +476,8 @@ void storeFwd(void* fromPtr, void *newValue) {
 }
 
 
-#define storeFwdField(t) \
-  storeFwd((int32*) this->gcGetMarkField(), t, NO); this->gcMark(t);
+#define storeFwdField(d,t) \
+  storeFwd((int32*) d->gcGetMarkField(), t, NO); d->gcMark(t);
 
 //*****************************************************************************
 //               Functions to gc external references into heap
@@ -775,66 +774,33 @@ RefsArray gcRefsArray(RefsArray r) {
 
 //
 //  ... Continuation;
+
 inline
-void Continuation::gcRecurse () {
+void Continuation::gc() {
   yRegs = gcRefsArray(yRegs);
   gRegs = gcRefsArray(gRegs);
   xRegs = gcRefsArray(xRegs);
 }
 
 inline
-Bool Continuation::gcIsMarked(void) {
-  return GCISMARKED((TaggedRef) pc);
-}
-
-inline
-void Continuation::gcMark(Continuation * fwd) {
-  pc = (ProgramCounter) GCMARK(fwd);
-}
-
-inline
-void ** Continuation::gcGetMarkField(void) {
-  return (void **) &pc;
-}
-
-inline
-Continuation * Continuation::gcGetFwd(void) {
-  Assert(gcIsMarked());
-  return (Continuation *) GCUNMARK((int32) pc);
-}
-
-Continuation *Continuation::gc() {
-  if (gcIsMarked())
-    return gcGetFwd();
-
-  Continuation *ret =
-    (Continuation *) gcReallocStatic(this, sizeof(Continuation));
-
-  gcStack.push (ret, PTR_CONT);
-
-  storeFwdField(ret);
-
-  return (ret);
-}
-
-inline
 Bool Board::gcIsMarked(void) {
-  return body.gcIsMarked();
+  return (Bool) gcField;
 }
 
 inline
 void Board::gcMark(Board * fwd) {
-  body.gcMark((Continuation *) fwd);
+  gcField = fwd;
 }
 
 inline
 void ** Board::gcGetMarkField(void) {
-  return body.gcGetMarkField();
+  return (void **) &gcField;
 }
 
 inline
 Board * Board::gcGetFwd(void) {
-  return (Board *) body.gcGetFwd();
+  Assert(gcIsMarked());
+  return gcField;
 }
 
 Board * Board::gcBoard() {
@@ -860,7 +826,7 @@ Board * Board::gcBoard() {
 
   gcStack.push(ret,PTR_BOARD);
 
-  storeFwdField(ret);
+  storeFwdField(bb, ret);
 
   return ret;
 }
@@ -968,9 +934,8 @@ Thread *Thread::gcThreadInline() {
 
   Thread * newThread = (Thread *) gcReallocStatic(this, sizeof(Thread));
 
-  if (isRunnable() || hasStack()) {
+  if (isInGc && (isRunnable() || hasStack()))
     ThreadList::add(newThread);
-  }
 
   gcStack.push(newThread, PTR_THREAD);
 
@@ -1044,7 +1009,7 @@ SVariable * SVariable::gc() {
 
   to->suspList = suspList->gc();
 
-  storeFwdField(to);
+  storeFwdField(this, to);
 
   to->home     = bb;
 
@@ -1181,7 +1146,7 @@ GenCVariable * GenCVariable::gc(void) {
   case FDVariable:
     to = (GenCVariable *) heapMalloc(sizeof(GenFDVariable));
     to->u = this->u;
-    storeFwdField(to);
+    storeFwdField(this, to);
     ((GenFDVariable *) to)->gc((GenFDVariable *) this);
     to->suspList = sl->gc();
     to->home     = bb;
@@ -1190,7 +1155,7 @@ GenCVariable * GenCVariable::gc(void) {
   case BoolVariable:
     to = (GenCVariable *) heapMalloc(sizeof(GenBoolVariable));
     to->u = this->u;
-    storeFwdField(to);
+    storeFwdField(this, to);
     ((GenBoolVariable *) to)->gc((GenBoolVariable *) this);
     to->suspList = sl->gc();
     to->home     = bb;
@@ -1215,7 +1180,7 @@ GenCVariable * GenCVariable::gc(void) {
   // The generic part
 
   to = (GenCVariable *) OZ_hrealloc(this, sz);
-  storeFwdField(to);
+  storeFwdField(this, to);
 
   switch (getType()) {
   case OFSVariable:
@@ -1402,7 +1367,9 @@ Thread *Thread::gcDeadThread() {
 
 inline
 OZ_Propagator * OZ_Propagator::gc(void) {
-  return (OZ_Propagator *) OZ_hrealloc(this, sizeOf());
+  OZ_Propagator * to = (OZ_Propagator *) OZ_hrealloc(this, sizeOf());
+
+  return to;
 }
 
 inline
@@ -1454,12 +1421,11 @@ void Thread::gcRecurse () {
 
   case S_PR_THR:
     {
-      OZ_Propagator * to_p = item.propagator->gc();
+      OZ_Propagator * p = item.propagator->gc();
 
-      Assert(to_p);
+      p->updateHeapRefs(isInGc);
 
-      to_p->updateHeapRefs(isInGc);
-      item.propagator = to_p;
+      item.propagator = p;
       break;
     }
 
@@ -1477,7 +1443,7 @@ ForeignPointer * ForeignPointer::gc(void) {
     (ForeignPointer*) gcReallocStatic(this,sizeof(ForeignPointer));
   ret->ptr = ptr;
 
-  storeFwdField(ret);
+  storeFwdField(this, ret);
   return ret;
 }
 #endif
@@ -1965,11 +1931,11 @@ Board* AM::copyTree(Board* bb, Bool *getIsGround)
 
 #ifdef CS_PROFILE
 redo:
-  if (across_chunks)
-    across_redid = OK;
-
   if (across_redid)
     error("Redoing cloning twice acress chunk boundarys. Fuck!\n");
+
+  if (across_chunks)
+    across_redid = OK;
 
   across_chunks = NO;
 
@@ -2545,7 +2511,7 @@ ConstTerm *ConstTerm::gcConstTerm() {
   }
 
   gcStack.push(ret,PTR_CONSTTERM);
-  storeFwdField(ret);
+  storeFwdField(this, ret);
   dogcGName(gn);
   return ret;
 }
@@ -2589,7 +2555,7 @@ HeapChunk * HeapChunk::gc(void) {
 
   ret->chunk_data = copyChunkData();
 
-  storeFwdField(ret);
+  storeFwdField(this,ret);
   return ret;
 }
 
@@ -2725,7 +2691,7 @@ Bool Board::gcIsAlive() {
 inline
 void Board::gcRecurse() {
   Assert(!isCommitted() && !isFailed());
-  body.gcRecurse();
+  body.gc();
   u.actor=u.actor->gcActor();
 
   script.Script::gc();
@@ -2734,15 +2700,13 @@ void Board::gcRecurse() {
 inline
 void AWActor::gcRecurse() {
   thread = thread->gcThread();
+  board  = board->gcBoard();
+  Assert(board);
+  next.gc();
 }
 
 inline
 void WaitActor::gcRecurse() {
-  board = board->gcBoard();
-  Assert(board);
-
-  next.gcRecurse ();
-
   int32 num = ToInt32(children[-1]);
   Board **newChildren=(Board **) heapMalloc((num+1)*sizeof(Board *));
 
@@ -2757,13 +2721,6 @@ void WaitActor::gcRecurse() {
   }
   children = newChildren;
   cpb      = cpb->gc();
-}
-
-inline
-void AskActor::gcRecurse () {
-  next.gcRecurse ();
-  board = board->gcBoard ();
-  Assert(board);
 }
 
 inline
@@ -2797,11 +2754,8 @@ inline
 void Actor::gcRecurse() {
   if (isAskWait()) {
     ((AWActor *)this)->gcRecurse();
-    if (isWait()) {
+    if (isWait())
       ((WaitActor *)this)->gcRecurse();
-    } else {
-      ((AskActor *)this)->gcRecurse();
-    }
   } else {
     ((SolveActor *)this)->gcRecurse();
   }
@@ -2922,10 +2876,6 @@ void GcStack::recurse(void) {
       ((Thread *) ptr)->gcRecurse();
       break;
 
-    case PTR_CONT:
-      ((Continuation*) ptr)->gcRecurse();
-      break;
-
     case PTR_DYNTAB:
       ((DynamicTable *) ptr)->gcRecurse();
       break;
@@ -2965,7 +2915,7 @@ Actor * Actor::gcActor() {
 
   gcStack.push(ret, PTR_ACTOR);
 
-  storeFwdField(ret);
+  storeFwdField(this, ret);
 
   return ret;
 }

@@ -147,11 +147,12 @@ Board::Board(Actor *a,int typ)
   Assert(a==NULL || !a->isCommitted());
   Assert (typ==Bo_Root || typ==Bo_Ask || typ==Bo_Wait || typ==Bo_Solve
           || typ==(Bo_Wait | Bo_Waiting));
-  flags = typ;
+  flags     = typ;
   suspCount = 0;
-  u.actor = a;
+  u.actor   = a;
+  gcField   = (Board *) 0;
 #ifdef PROP_MERGING
-  pq = (PropagatorQueue *) 0;
+  pq        = (PropagatorQueue *) 0;
 #endif
 }
 
