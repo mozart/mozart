@@ -115,8 +115,6 @@ enum EmulatorPropertyIndex {
   PROP_INTERNAL_DEBUG_IP,
   PROP_INTERNAL_PERDIO_DEBUG,
   PROP_INTERNAL_PERDIO_DOCOMPATIBLE,
-  PROP_INTERNAL_BROWSER,
-  PROP_INTERNAL_APPLET,
   PROP_INTERNAL,
   // this must remain last
   PROP__LAST
@@ -374,11 +372,6 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_INT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
   CASE_INT(PROP_INTERNAL_PERDIO_DEBUG,ozconf.debugPerdio);
   CASE_BOOL(PROP_INTERNAL_PERDIO_DOCOMPATIBLE,ozconf.perdiod0Compatiblity);
-  CASE_BOOL(PROP_INTERNAL_BROWSER,ozconf.browser);
-  CASE_BOOL(PROP_INTERNAL_APPLET,ozconf.applet);
-  CASE_REC(PROP_INTERNAL,"internal",(2,AtomBrowser,AtomApplet),
-           SET_BOOL(AtomBrowser,ozconf.browser);
-           SET_BOOL(AtomApplet,ozconf.applet););
   default:
     return 0; // not readable. 0 ok because no OZ_Term==0
   }
@@ -625,8 +618,6 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_NAT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
     CASE_NAT(PROP_INTERNAL_PERDIO_DEBUG,ozconf.debugPerdio);
     CASE_BOOL(PROP_INTERNAL_PERDIO_DOCOMPATIBLE,ozconf.perdiod0Compatiblity);
-    CASE_BOOL(PROP_INTERNAL_BROWSER,ozconf.browser);
-    CASE_BOOL(PROP_INTERNAL_APPLET,ozconf.applet);
     CASE_REC(PROP_INTERNAL,
              DO_BOOL(AtomDebug,
                      if (INT__) am.setSFlag(DebugMode);
@@ -635,9 +626,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
              SET_BOOL(AtomStopOnToplevelFailure,ozconf.stopOnToplevelFailure);
              SET_NAT(AtomDebugIP,ozconf.debugIP);
              SET_NAT(AtomDebugPerdio,ozconf.debugPerdio);
-             SET_BOOL(oz_atom("perdiod0Compatiblity"),ozconf.perdiod0Compatiblity);
-             SET_BOOL(AtomBrowser,ozconf.browser);
-             SET_BOOL(AtomApplet,ozconf.applet););
+             SET_BOOL(oz_atom("perdiod0Compatiblity"),ozconf.perdiod0Compatiblity));
     CASE_BOOL_DO(PROP_STANDALONE,ozconf.runningUnderEmacs=!INT__);
   default:
     return PROP__NOT__WRITABLE;
@@ -872,7 +861,5 @@ void initVirtualProperties()
   VirtualProperty::add("internal.ip.debug",PROP_INTERNAL_DEBUG_IP);
   VirtualProperty::add("internal.perdio.debug",PROP_INTERNAL_PERDIO_DEBUG);
   VirtualProperty::add("perdio.minimal",PROP_INTERNAL_PERDIO_DOCOMPATIBLE);
-  VirtualProperty::add("internal.browser",PROP_INTERNAL_BROWSER);
-  VirtualProperty::add("internal.applet",PROP_INTERNAL_APPLET);
   VirtualProperty::add("internal",PROP_INTERNAL);
 }

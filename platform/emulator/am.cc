@@ -101,9 +101,7 @@ void usage(int /* argc */,char **argv) {
   fprintf(stderr, " -u <url>     : start a compute server\n");
   fprintf(stderr, " -b <file>    : boot from assembly code\n");
   fprintf(stderr, " -B <dynlib>  : load ozma\n");
-  fprintf(stderr, " -browser     : undocumented\n");
-  fprintf(stderr, " -a <args> ...: application arguments\n");
-  fprintf(stderr, " -- <args> ...: same as above\n");
+  fprintf(stderr, " -- <args> ...: application arguments\n");
   osExit(1);
 }
 
@@ -226,11 +224,6 @@ void AM::init(int argc,char **argv)
 #endif
       continue;
     }
-    if (strcmp(argv[i],"-browser")==0) {
-      ozconf.browser = 1;
-      continue;
-    }
-
     if (strcmp(argv[i],"-u")==0) {
       moreThanOne++;
       url = getOptArg(i,argc,argv);
