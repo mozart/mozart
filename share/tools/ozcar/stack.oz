@@ -1,9 +1,11 @@
 %%%
-%%% Author:
+%%% Authors:
 %%%   Benjamin Lorenz <lorenz@ps.uni-sb.de>
+%%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%
 %%% Copyright:
 %%%   Benjamin Lorenz, 1997
+%%%   Leif Kornstaedt, 2001
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -91,15 +93,12 @@ local
 	    line:    {CondSelect Frame line unit}
 	    column:  {CondSelect Frame column unit}
 	    name:    if Kind == 'call' then
-			if {Not {HasFeature Frame data}} then 'unknown'
-			elseif {IsDet Data} then
-			   if {IsProcedure Data} then
-			      {System.printName Data}
-			   else
-			      {Value.toVirtualString Data 0 0}
-			   end
-			else
-			   {System.printName Data}
+			case {Value.status Data}
+			of det(procedure) then {System.printName Data}
+			[] det(atom) then Data
+			[] free then {System.printName Data}
+			[] future then {System.printName Data}
+			else 'unknown'
 			end
 		     else Kind
 		     end
@@ -132,18 +131,28 @@ in
 	 Rebuild              % should we re-calculate the stack
 			      % when the next 'step' message arrives?
 
-	 AtBreakpoint : false % currently stopped at a breakpoint?
-	 Exception : nil      % saved exception
+	 AtBreakpoint: false  % currently stopped at a breakpoint?
+	 Exception: unit      % saved exception
+	 SkippedProcs: nil    % list of frame IDs suppressed for display
 
-	 Step : 1
-	 Next : 1
-
-      meth init(thr:Thr id:ID)
+      meth init(Thr)
 	 self.T = Thr
-	 self.I = ID
 	 self.D = {Dictionary.new}
 	 Size    <- 0
 	 Rebuild <- false
+      end
+
+      meth addToSkippedProcs(FrameID)
+	 SkippedProcs <- FrameID|@SkippedProcs
+      end
+      meth isSkippedProc(FrameID $)
+	 {Member FrameID @SkippedProcs}
+      end
+      meth removeSkippedProc(FrameID)
+	 SkippedProcs <- {Filter @SkippedProcs fun {$ F} F \= FrameID end}
+      end
+      meth ClearSkippedProcs()
+	 SkippedProcs <- nil
       end
 
       meth atBreakpoint($)
@@ -152,14 +161,6 @@ in
 
       meth setAtBreakpoint(YesNo)
 	 AtBreakpoint <- YesNo
-      end
-
-      meth incStep($)
-	 Step <- @Step+1
-      end
-
-      meth incNext($)
-	 Next <- @Next+1
       end
 
       meth getFrame(Nr $)
@@ -176,65 +177,56 @@ in
 	 Rebuild <- Flag
       end
 
+      meth setException(X)
+	 if {IsDet X} andthen {IsRecord X} andthen {HasFeature X debug}
+	    andthen {IsDet X.debug} andthen {IsRecord X.debug}
+	    andthen {HasFeature X.debug stack}
+	 then
+	    Stack = X.debug.stack
+	    F#L#C = case X of error(kernel(noElse F L ...) ...) then F#L#~1
+		    elsecase Stack of Frame|_ then
+		       {CondSelect Frame file ''}#
+		       {CondSelect Frame line unit}#
+		       {CondSelect Frame column ~1}
+		    [] nil then ''#unit#~1
+		    end
+	    NewStack = entry(kind:exception thr:self.T
+			     file:F line:L column:C args:[X])|Stack
+	 in
+	    Exception <- {FormatExceptionLine {Error.exceptionToMessage X}}
+	    {SendEmacsBar F L C stoppedBlocked}
+	    StackManager,Recalculate(NewStack)
+	 else
+	    Exception <- 'Exception: ' # {V2VS X} # ' / no stack available'
+	    {SendEmacs removeBar}
+	    StackManager,Recalculate(nil)
+	 end
+      end
+
       meth getException($)
 	 @Exception
       end
 
-      meth printException(X)
-	 Status
-      in
-	 if {IsDet X} andthen {HasFeature X debug}
-	    andthen {IsDet X.debug} andthen {HasFeature X.debug stack} then
-	    Stack = X.debug.stack
-	    (F#L)#C = case Stack of Frame|_ then
-			 case X of error(kernel(noElse F L ...) ...) then
-			    %% use the file name and line number
-			    %% of the missing else itself (not the case)
-			    F#L
-			 else
-			    {CondSelect Frame file ''}#
-			    {CondSelect Frame line unit}
-			 end#
-			 {CondSelect Frame column unit}
-		      [] nil then (''#unit)#~1
-			 %% --** Leif meint, das ist Bullshit
-		      end
-	    S = entry(kind: exception thr: self.T
-		      file: F line: L column: C args: [X]) | Stack
-	 in
-	    Status = {FormatExceptionLine {Error.exceptionToMessage X}}
-	    {Ozcar PrivateSend(status(Status clear ExcThreadColor))}
-	    {SendEmacs bar(file:F line:L column:C state:blocked)}
-	    StackManager,ReCalculate({Reverse S})
-
-	 else              % no stack available
-	    E = {V2VS X}
-	 in
-	    Status = 'Exception: ' # E # ' / no stack available'
-	    {Ozcar PrivateSend(status(Status clear ExcThreadColor))}
-	    {SendEmacs removeBar}
-	    StackManager,ReCalculate(nil)
-	 end
-
-	 Exception <- Status
-      end
-
       meth print
-	 State = {CheckState self.T}
+	 Running = case {Primitives.threadState self.T}
+		   of runnable then true
+		   [] blocked  then true
+		   else false
+		   end
       in
-	 if @Rebuild andthen State \= running then
+	 if @Rebuild andthen {Not Running} then
 	    {OzcarMessage 'stack,print: rebuild flag detected'}
-	    StackManager,ReCalculate
+	    StackManager,Recalculate(unit)
 	 else
 	    Frames = {Dictionary.items self.D}
 	    Depth  = @Size
 	    Last   = if Depth > 0 then {Dictionary.get self.D Depth}
-		     else nil
+		     else unit
 		     end
 	 in
-	    {Ozcar PrivateSend(printStack(id:self.I frames:Frames
+	    {Ozcar PrivateSend(printStack(thr:self.T frames:Frames
 					  depth:Depth last:Last))}
-	    if State == running then
+	    if Running then
 	       {Ozcar PrivateSend(markStack(inactive))}
 	    else
 	       {Ozcar PrivateSend(markStack(active))}
@@ -243,107 +235,85 @@ in
       end
 
       meth getTop($)
-	 S = @Size
-      in
-	 if S == 0 then unit else {Dictionary.get self.D S} end
+	 case @Size of 0 then unit
+	 elseof S then {Dictionary.get self.D S}
+	 end
       end
 
       meth emacsBarToTop
-	 F = StackManager,getTop($)
-      in
-	 if F \= unit then
-	    S = {CheckState self.T}
-	 in
-	    {SendEmacs bar(file:F.file line:F.line column:F.column state:S)}
+	 case StackManager,getTop($) of unit then skip
+	 elseof F then
+	    {SendEmacsBar F.file F.line F.column
+	     {Primitives.threadState self.T}}
 	 end
       end
 
       meth printTop
 	 if @Rebuild then
 	    {OzcarMessage 'stack,printTop: rebuild flag detected'}
-	    StackManager,ReCalculate
-	 else
-	    S = @Size
-	 in
-	    if S \= 0 then
-	       TopFrame = {Dictionary.get self.D S}
-	    in
-	       {Ozcar PrivateSend(printStackFrame(frame:TopFrame delete:true))}
-	    end
+	    StackManager,Recalculate(unit)
+	 elsecase StackManager,getTop($) of unit then skip
+	 elseof F then
+	    {Ozcar PrivateSend(printStackFrame(frame:F delete:true))}
 	 end
       end
 
       meth entry(Frame)
 	 S = @Size
-	 Key = if S == 0 orelse {Dictionary.get self.D S}.dir == entry then
-		  S + 1
-	       else
-		  S
+	 Key = if S == 0 then 1
+	       elseif {Dictionary.get self.D S}.dir == entry then S + 1
+	       else S
 	       end
       in
 	 Size <- Key
 	 {Dictionary.put self.D Key {S2F Key Frame}}
       end
 
-      meth CountFramesWithoutDebug(I $)
-	 if I == 0 then
-	    0
-	 else
-	    Frame = {Dictionary.get self.D I}
-	 in
-	    if Frame.kind == call andthen Frame.args == unit then
-	       StackManager, CountFramesWithoutDebug(I - 1 $) + 1
+      meth exit(Frame)
+	 case @Size of 0 then
+	    {OzcarError 'internal stack inconsistency; recalculating stack'}
+	    StackManager,Recalculate(unit)
+	 elseof S then
+	    if {Dictionary.get self.D S}.dir == entry then
+	       {Dictionary.put self.D S {S2F S Frame}}
 	    else
-	       0
+	       {Dictionary.remove self.D S}
+	       Size <- StackManager,RemoveFramesWithoutDebug(S - 1 $)
+	       case @Size of 0 then
+		  {OzcarError 'internal stack inconsistency; resuming thread'}
+		  {Primitives.unleash self.T 0 false}
+	       elseof Key then
+		  {Dictionary.put self.D Key {S2F Key Frame}}
+	       end
 	    end
 	 end
       end
 
-      meth exit(Frame)
-	 S = @Size
-      in
-	 if S == 0 then
-	    {OzcarError 'internal stack inconsistency; recalculating stack'}
-	    StackManager, ReCalculate
-	 else
-	    Key = if {Dictionary.get self.D S}.dir == entry then S
-		  else N in
-		     StackManager,CountFramesWithoutDebug(S - 1 ?N)
-		     {For 0 N 1
-		      proc {$ I}
-			 {Dictionary.remove self.D S - I}
-		      end}
-		     S - (N + 1)
-		  end
-	 in
-	    Size <- Key
-	    if Key > 0 then
-	       {Dictionary.put self.D Key {S2F Key Frame}}
-	    else
-	       {OzcarError 'internal stack inconsistency; resuming thread'}
-	       {Thread.resume self.T}
+      meth RemoveFramesWithoutDebug(I $)
+	 case I of 0 then 0
+	 else Frame in
+	    Frame = {Dictionary.get self.D I}
+	    if Frame.kind == call andthen Frame.args == unit then
+	       {Dictionary.remove self.D I}
+	       StackManager,RemoveFramesWithoutDebug(I - 1 $)
+	    else I
 	    end
 	 end
       end
 
       %% local helpers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      meth GetStack($)
-	 {Reverse {Debug.getTaskStack self.T ~1 false}}
-      end
-
-      meth RemoveAllFrames
-	 {Dictionary.removeAll self.D}
-      end
-
-      meth ReCalculate(S<=noStack)
-	 CurrentStack = if S == noStack then StackManager,GetStack($)
-			else S end
+      meth Recalculate(S)
+	 CurrentStack = {Reverse case S of unit then
+				    {Primitives.getStack self.T ~1 false}
+				 else S
+				 end}
       in
-	 {OzcarMessage 'recalculating stack of thread ' # self.I}
-	 {Ozcar PrivateSend(removeSkippedProcs(self.I))}
+	 {OzcarMessage
+	  'recalculating stack of thread ' # {Primitives.getThreadName self.T}}
+	 StackManager,ClearSkippedProcs()
 	 StackManager,rebuild(false)
-	 StackManager,RemoveAllFrames
+	 {Dictionary.removeAll self.D}
 	 {StackToDict CurrentStack self.D}
 	 Size <- {Length {Dictionary.keys self.D}}
 	 StackManager,print
@@ -355,24 +325,17 @@ in
 	 self.T
       end
 
-      meth getId($)
-	 self.I
-      end
-
       meth getSize($)
 	 @Size
       end
 
       meth getPos(file:?F line:?L column:?C)
-	 S = @Size
-      in
-	 if S == 0 then
+	 case @Size of 0 then
 	    F = ''
 	    L = unit
-	    C = unit
-	 else
+	    C = ~1
+	 elseof S then TopFrame in
 	    TopFrame = {Dictionary.get self.D S}
-	 in
 	    F = TopFrame.file
 	    L = TopFrame.line
 	    C = TopFrame.column

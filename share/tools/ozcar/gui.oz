@@ -1,9 +1,11 @@
 %%%
-%%% Author:
+%%% Authors:
 %%%   Benjamin Lorenz <lorenz@ps.uni-sb.de>
+%%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%
 %%% Copyright:
 %%%   Benjamin Lorenz, 1997
+%%%   Leif Kornstaedt, 2001
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -25,62 +27,72 @@ local
       {IsDet Xs} andthen case Xs of _|_ then true else false end
    end
 
+   Approx = {NewUniqueName 'Approximation'}
+
+   fun {IsApprox X}
+      case X of Approx(...) then true else false end
+   end
+
+   fun {DisplayApprox X}
+      case X
+      of Approx(procedure A)  then A
+      [] Approx(cell Y)       then '('#{DisplayName Y}#')'
+      [] Approx(dictionary _) then DictionaryType
+      [] Approx(fdvar)        then FDVarType
+      [] Approx(fsvar)        then FSVarType
+      [] Approx(recordc)      then KindedRecordType
+      [] Approx(future)       then FutureType
+      [] Approx(free)         then UnboundType
+      [] Approx(A)            then '<'#A#'>'
+      else                         UnknownType
+      end
+   end
+
+   fun {DisplayName X}
+      case {Value.status X}
+      of det(int)   andthen X >= BigInt   then BigIntType
+      [] det(int)                         then X
+      [] det(float) andthen X >= BigFloat then BigFloatType
+      [] det(float)                       then {V2VS X}
+      [] det(tuple) andthen {IsApprox X}  then {DisplayApprox X}
+      [] det(tuple) andthen {IsDefList X} then ListType
+      [] det(tuple)                       then TupleType
+      [] det(record)                      then RecordType
+      [] det(atom)                        then {Value.toVirtualString X 0 0}
+      [] det(name)  andthen X == Approx   then UnknownType
+      [] det(name)  andthen {IsBool X}    then {System.printName X}
+      [] det(name)  andthen {IsUnit X}    then UnitType
+      [] det(name)                        then NameType
+      [] det(procedure)                   then ProcedureType
+      [] det(cell)                        then '('#{DisplayName {Access X}}#')'
+      [] det(chunk)                       then ChunkType
+      [] det(array)                       then ArrayType
+      [] det(dictionary)                  then DictionaryType
+      [] det('class')                     then ClassType
+      [] det(object)                      then ObjectType
+      [] det('lock')                      then LockType
+      [] det(port)                        then PortType
+      [] det(space)                       then SpaceType
+      [] det('thread')                    then ThreadType
+      [] det(Y)                           then '<'#Y#'>'
+      [] kinded(int)                      then FDVarType
+      [] kinded(fset)                     then FSVarType
+      [] kinded(record)                   then KindedRecordType
+      [] future                           then FutureType
+      [] free                             then UnboundType
+      else                                     UnknownType
+      end
+   end
+
    fun {FormatArgs A}
       {Map A
        fun {$ X}
 	  if {Cget envPrintTypes} then
-	     {CheckType X} # X
+	     {DisplayName X} # X
 	  else
 	     {V2VS X} # X
 	  end
        end}
-   end
-
-   fun {CheckType X}
-      if {IsDet X} then
-	 if     {IsArray X}            then ArrayType
-	 elseif {BitArray.is X}        then BitArrayType
-	 elseif {IsThread X}           then ThreadType
-	 elseif {IsAtom X}             then {Value.toVirtualString X 0 0}
-	 elseif {IsBool X}             then {Value.toVirtualString X 0 0}
-	 elseif {IsCell X}             then '(' # {CheckType {Access X}} # ')'
-	 elseif {IsClass X}            then ClassType
-	 elseif {IsDictionary X}       then DictionaryType
-	 elseif {IsFloat X}            then if X >= BigFloat then
-					       BigFloatType
-					    else
-					       {V2VS X}
-					    end
-%	 elseif {IsChar X}             then CharType
-%	 elseif {FD.is X}              then FDValueType
-	 elseif {IsInt X}              then if X >= BigInt then
-					       BigIntType
-					    else
-					       X
-					    end
-	 elseif {IsUnit X}             then UnitType
-	 elseif {IsName X}             then NameType
-	 elseif {IsLock X}             then LockType
-	 elseif {IsObject X}           then ObjectType
-	 elseif {IsPort X}             then PortType
-	 elseif {IsProcedure X}        then ProcedureType
-	 elseif {IsDefList X}          then ListType
-	 elseif {IsTuple X}            then TupleType
-	 elseif {IsRecord X}           then RecordType
-	 elseif {IsChunk X}            then ChunkType
-	 elseif {Space.is X}            then SpaceType
-	 elseif {FS.value.is X}        then FSValueType
-	 elseif {ForeignPointer.is X}  then ForeignPointerType
-	 else                                 UnknownType
-	 end
-      elseif {IsKinded X} then
-	 if     {FD.is X}              then FDVarType
-	 elseif {FS.var.is X}          then FSVarType
-	 elseif {RecordC.is X}         then KindedRecordType
-	 else                                 UnknownType
-	 end
-      else                                  UnboundType % {System.printName X}
-      end
    end
 
    fun {MakeLines N}
@@ -121,25 +133,12 @@ in
 
 	 LastClicked       : unit
 
-      meth resetLastSelectedFrame
-	 LSF = @LastSelectedFrame
-      in
-	 if LSF > 0 then
-	    Gui,DeactivateLine(LSF)
-	 end
-	 LastSelectedFrame <- 0
-      end
-
-      meth lastClickedValue(?V)
-	 try
-	    V = @LastClicked
-	 catch failure(...) then skip
-	 end
+      meth lastClickedValue($)
+	 @LastClicked
       end
 
       meth init
 	 MinX # MinY = ToplevelMinSize
-	 MaxX # MaxY = ToplevelMaxSize
       in
 	 %% create the main window, but delay showing it
 	 self.toplevel = {New Tk.toplevel tkInit(title:    TitleName
@@ -148,17 +147,15 @@ in
 						 withdraw: true)}
 	 {Tk.batch [wm(iconname   self.toplevel IconName)
 		    wm(minsize    self.toplevel MinX MinY)
-		    wm(maxsize    self.toplevel MaxX MaxY)
 		    wm(geometry   self.toplevel ToplevelGeometry)]}
 
 	 Menu,init
 
-	 {ForAll [self.ButtonFrame self.StatusFrame]
-	  proc{$ F}
-	     F = {New Tk.frame tkInit(parent: self.toplevel
-				      bd:     1
-				      relief: ridge)}
-	  end}
+	 for F in [self.ButtonFrame self.StatusFrame] do
+	    F = {New Tk.frame tkInit(parent: self.toplevel
+				     bd:     1
+				     relief: ridge)}
+	 end
 
 	 {Tk.batch [grid(self.menuBar       row:0 column:0
 			 sticky:we columnspan:3)
@@ -169,36 +166,26 @@ in
 		   ]}
 
 	 local
-	    Bs = {Map [StepButtonBitmap    # StepButtonColor #
-		       'step into procedures'
-		       NextButtonBitmap    # NextButtonColor #
-		       'step over procedures'
-		       UnleashButtonBitmap # UnleashButtonColor #
-		       'unleash to selected frame'
-		       StopButtonBitmap    # StopButtonColor #
-		       'stop'
-		       DetachButtonBitmap  # DetachButtonColor #
-		       'detach'
-		       TermButtonBitmap    # TermButtonColor #
-		       'terminate and detach']
-		  fun {$ S}
-		     Bitmap # ForegroundColor # _ = S
+	    Bs = {Map [StepButtonBitmap    # StepButtonColor
+		       NextButtonBitmap    # NextButtonColor
+		       UnleashButtonBitmap # UnleashButtonColor
+		       StopButtonBitmap    # StopButtonColor
+		       DetachButtonBitmap  # DetachButtonColor
+		       TermButtonBitmap    # TermButtonColor]
+		  fun {$ Bitmap # ForegroundColor}
 		     B = {New Tk.button
 			  tkInit(parent: self.ButtonFrame
 				 bitmap: {OzcarBitmap Bitmap}
 				 fg:     ForegroundColor
 				 activeforeground:
-				    if UseColors then
-				       ForegroundColor
-				    else
-				       SelectedForeground
+				    if UseColors then ForegroundColor
+				    else SelectedForeground
 				    end
 				 relief: raised
 				 action: self # action(Bitmap))}
 		  in
 		     {B tkBind(event:  HelpEvent
 			       action: self # help(Bitmap))}
-%		     {Tk.send balloonhelp(B BalloonHelpText)}
 		     B
 		  end}
 
@@ -224,7 +211,7 @@ in
 					  width:    5
 					  font:     ButtonFont
 					  action:   proc {$ S}
-						       Gui,setEmacsThreads(S)
+						       Gui,SetEmacsThreads(S)
 						    end)}
 	    {self.emacsThreadsMenu
 	     tkBind(event:  HelpEvent
@@ -280,7 +267,6 @@ in
 	 %% create the thread tree object...
 	 self.ThreadTree =
 	 {New Tree tkInit(parent: self.toplevel
-			  ozcar:  self
 			  title:  TreeTitle
 			  relief: sunken
 			  bd:     1
@@ -290,22 +276,22 @@ in
 				 action: self # help(TreeTitle))}
 
 	 %% ...and the text widgets for stack and environment
-	 {ForAll [self.StackText       # StackTitle      # StackTextWidth
-		  self.LocalEnvText    # LocalEnvTitle   # EnvTextWidth
-		  self.GlobalEnvText   # GlobalEnvTitle  # EnvTextWidth ]
-	  proc {$ T}
-	     T.1 = {New ScrolledTitleText tkInit(parent: self.toplevel
-						 title:  T.2
-						 wrap:   none
-						 state:  disabled
-						 width:  T.3
-						 cursor: TextCursor
-						 font:   DefaultFont
-						 bg:     DefaultBackground)}
-	     {T.1 tkBind(event:  HelpEvent
-			 action: self # help(T.2))}
-
-	  end}
+	 for W#Title#Width in
+	    [self.StackText       # StackTitle      # StackTextWidth
+	     self.LocalEnvText    # LocalEnvTitle   # EnvTextWidth
+	     self.GlobalEnvText   # GlobalEnvTitle  # EnvTextWidth]
+	 do
+	    W = {New ScrolledTitleText tkInit(parent: self.toplevel
+					      title:  Title
+					      wrap:   none
+					      state:  disabled
+					      width:  Width
+					      cursor: TextCursor
+					      font:   DefaultFont
+					      bg:     DefaultBackground)}
+	    {W tkBind(event:  HelpEvent
+		      action: self # help(Title))}
+	 end
 
 	 %% the global stack tag, to make Tk happy (and me!! :-))
 	 StackTag = 'globalTag'
@@ -327,12 +313,8 @@ in
 		   ]}
       end
 
-      meth setEmacsThreads(S)
-	 if S == AttachText then
-	    {EnqueueCompilerQuery setSwitch(runwithdebugger true)}
-	 else
-	    {EnqueueCompilerQuery setSwitch(runwithdebugger false)}
-	 end
+      meth SetEmacsThreads(S)
+	 {EnqueueCompilerQuery setSwitch(runwithdebugger (S == AttachText))}
       end
 
       meth checkSubThreads($)
@@ -342,41 +324,32 @@ in
       meth getEnv(Frame $)
 	 NullEnv = v('Y': nil 'G': nil)
       in
-	 if @currentStack == unit then
-	    NullEnv
+	 if @currentStack == unit then NullEnv
 	 else
-	    F = if Frame == unit then
-		   if @LastSelectedFrame > 0 then
-		      {@currentStack getFrame(@LastSelectedFrame $)}
-		   else
-		      {@currentStack getTop($)}
+	    F = case Frame of unit then
+		   case @LastSelectedFrame of 0 then {@currentStack getTop($)}
+		   elseof LSF then {@currentStack getFrame(LSF $)}
 		   end
-		else
-		   Frame
+		else Frame
 		end
 	 in
-	    if F == unit then
-	       NullEnv
+	    case F of unit then NullEnv
 	    else
 	       FrameId   = F.frameID
 	       SavedVars = F.vars
 	    in
 	       if SavedVars \= unit then
-		  {OzcarMessage
-		   'getEnv: using saved variables of frame ' # F.nr}
+		  {OzcarMessage 'getEnv: frame '#F.nr#' has saved variables'}
 		  SavedVars
 	       elseif FrameId \= unit then
-		  {OzcarMessage
-		   'getEnv: requesting variables for frame ' # F.nr}
-		  V = {Debug.getFrameVariables @currentThread FrameId}
-	       in
-		  if V == unit then %% `FrameId' was an invalid frame id...
-		     NullEnv
-		  else
-		     V
+		  {OzcarMessage 'getEnv: requesting variables for frame '#F.nr}
+		  case {Primitives.threadState @currentThread}
+		  of terminated then NullEnv
+		  elsecase {Primitives.getEnvironment @currentThread FrameId}
+		  of unit then NullEnv % `FrameId' was an invalid frame id...
+		  elseof V then V
 		  end
-	       else
-		  NullEnv
+	       else NullEnv
 	       end
 	    end
 	 end
@@ -388,126 +361,122 @@ in
       end
 
       meth updateEnv
-	 V = Gui,getEnv(unit $)
-      in
-	 Gui,markEnv(active)
-	 Gui,PrintEnv(vars:V)
+	 Gui,MarkEnv(active)
+	 Gui,PrintEnv(Gui,getEnv(unit $))
       end
 
-      meth DoPrintEnv(Widget Vars SV)
-	 {ForAll Vars
-	  proc{$ V}
-	     Name0 # Value = V
-	     Name = if {IsName Name0} then
-		       {VirtualString.toAtom {V2VS Name0}}
-		    else Name0 end
-	     PrintName # PrintValue # ClickValue =
-	     if {Cget envPrintTypes} then
-		Name # {CheckType Value} # Value
-	     else
-		if {IsDet Value} andthen {IsCell Value} then
-		   X = {Access Value}
-		in
-		   {VirtualString.toAtom
-		    '{Access ' # Name # '}'} # {V2VS X} # X
-		else
-		   Name # {V2VS Value} # Value
-		end
-	     end
-	  in
-	     if SV orelse {Atom.toString Name}.1 \= &` then
-		T  = {Widget newTag($)}
-		Ac = {New Tk.action
-		      tkInit(parent: Widget
-			     action: self # ProcessClick(ClickValue))}
-	     in
-		{Widget tk(insert 'end'
-			   {PrintF ' ' # PrintName {EnvVarWidth}})}
-		{Widget tk(insert 'end' PrintValue # '\n' T)}
-		{Widget tk(tag bind T '<1>' Ac)}
-		{Widget tk(tag conf T font:BoldFont)}
-	     else skip end
-	  end}
-      end
-
-      meth printEnv(vars:V<=unit)
-	 if {Cget updateEnv} then
-	    New in
+      meth printEnv(V)
+	 if {Cget updateEnv} then New in
 	    EnvSync <- New = unit
-	    Gui,markEnv(active)
+	    Gui,MarkEnv(active)
 	    thread
 	       {WaitOr New {Alarm {Cget timeoutToUpdateEnv}}}
-	       if {IsDet New} then skip else
-		  Gui,PrintEnv(vars:V)
+	       if {IsFree New} then
+		  Gui,PrintEnv(V)
 	       end
 	    end
 	 else
-	    Gui,markEnv(inactive)
+	    Gui,MarkEnv(inactive)
 	 end
       end
 
-      meth PrintEnv(vars:V)
-	 SV  = {Cget envSystemVariables}
-	 Y#G = if V == unit then
-		  nil # nil
-	       else
-		  V.'Y' # V.'G'
-	       end
+      meth PrintEnv(V)
+	 SV = {Cget envSystemVariables}
       in
 	 {self.LocalEnvText resetTags}
 	 Gui,Clear(self.LocalEnvText)
 	 if V \= unit then
-	    Gui,DoPrintEnv(self.LocalEnvText Y SV)
+	    Gui,DoPrintEnv(self.LocalEnvText V.'Y' SV)
 	 end
 	 Gui,Disable(self.LocalEnvText)
 
 	 {self.GlobalEnvText resetTags}
 	 Gui,Clear(self.GlobalEnvText)
 	 if V \= unit then
-	    Gui,DoPrintEnv(self.GlobalEnvText G SV)
+	    Gui,DoPrintEnv(self.GlobalEnvText V.'G' SV)
 	 end
 	 Gui,Disable(self.GlobalEnvText)
       end
 
-      meth FrameClick(frame:F highlight:Highlight<=true)
-	 if @currentThread == unit then skip
-	 elseif {Dbg.checkStopped @currentThread} then
-	    %% allow switching of stack frames only if thread is stopped
-	    Vars = Gui,getEnv(F $)
-	 in
-	    if Highlight then
-	       L = if F.line == unit then unit else {Abs F.line} end
-	    in
-	       {SendEmacs delayedBar(file:F.file line:L column:F.column
-				     state:unchanged)}
-	       Gui,SelectStackFrame(F.nr)
+      meth DoPrintEnv(Widget Vars SV)
+	 for V in Vars do
+	    Name0 # Value = V
+	    Name = if {IsName Name0} then
+		      {VirtualString.toAtom {V2VS Name0}}
+		   else Name0 end
+	    PrintName # PrintValue # ClickValue =
+	    if {Cget envPrintTypes} then
+	       Name # {DisplayName Value} # Value
 	    else
-	       Gui,SelectStackFrame(0)
+	       if {IsDet Value} andthen {IsCell Value} then
+		  X = {Access Value}
+	       in
+		  {VirtualString.toAtom
+		   '{Access ' # Name # '}'} # {V2VS X} # X
+	       else
+		  Name # {V2VS Value} # Value
+	       end
 	    end
-	    Gui,printEnv(vars:Vars)
-	 else %% thread is running
-	    Gui,markEnv(inactive)
+	 in
+	    if SV orelse {Atom.toString Name}.1 \= &` then
+	       T  = {Widget newTag($)}
+	       Ac = {New Tk.action
+		     tkInit(parent: Widget
+			    action: self # ProcessClick(ClickValue))}
+	    in
+	       {Widget tk(insert 'end'
+			  {PrintF ' ' # PrintName {EnvVarWidth}})}
+	       {Widget tk(insert 'end' PrintValue # '\n' T)}
+	       {Widget tk(tag bind T '<1>' Ac)}
+	       {Widget tk(tag conf T font:BoldFont)}
+	    end
+	 end
+      end
+
+      meth FrameClick(frame:F highlight:Highlight<=true)
+	 if @currentThread \= unit then
+	    Stopped = case {Primitives.threadState @currentThread}
+		      of stoppedRunnable then true
+		      [] stoppedBlocked  then true
+		      else false
+		      end
+	 in
+	    if Stopped then
+	       %% allow switching of stack frames only if thread is stopped
+	       if Highlight then
+		  L = case F.line of unit then unit else {Abs F.line} end
+	       in
+		  {SendEmacs delayedBar(file:F.file line:L column:F.column)}
+		  Gui,SelectStackFrame(F.nr)
+	       else
+		  Gui,SelectStackFrame(0)
+	       end
+	       Gui,printEnv(Gui,getEnv(F $))
+	    else %% thread is running
+	       Gui,MarkEnv(inactive)
+	    end
 	 end
       end
 
       meth previousThread
-	 if {IsFree @switchDone} then skip else
-	    switchDone <- _
+	 case {self.ThreadTree previous($)} of unit then skip
+	 elseof T then
+	    Gui,status('Selected thread ' # {Primitives.getThreadName T})
+	    ThreadManager,switch(T)
 	 end
-	 {self.ThreadTree selectPrevious}
       end
 
       meth nextThread
-	 if {IsFree @switchDone} then skip else
-	    switchDone <- _
+	 case {self.ThreadTree next($)} of unit then skip
+	 elseof T then
+	    Gui,status('Selected thread ' # {Primitives.getThreadName T})
+	    ThreadManager,switch(T)
 	 end
-	 {self.ThreadTree selectNext}
       end
 
       meth neighbourStackFrame(Delta)
-	 Stack = @currentStack
-      in
-	 if Stack \= unit then
+	 case @currentStack of unit then skip
+	 elseof Stack then
 	    LSF = @LastSelectedFrame
 	    N   = if LSF == 0 then ~1 else LSF + Delta end
 	    F   = {Stack getFrame(N $)}
@@ -522,35 +491,33 @@ in
 	 LSF = @LastSelectedFrame
       in
 	 if LSF \= T then
-	    if LSF > 0 then
+	    if LSF \= 0 then
 	       Gui,DeactivateLine(LSF)
 	    end
-	    if T > 0 then
+	    if T \= 0 then
 	       Gui,ActivateLine(T)
 	    end
 	    LastSelectedFrame <- T
 	 end
       end
 
-      meth UnselectStackFrame
+      meth unselectStackFrame
 	 LSF = @LastSelectedFrame
       in
-	 if LSF > 0 then
+	 if LSF \= 0 then
 	    Gui,DeactivateLine(LSF)
-	    LastSelectedFrame <- 0
 	 end
+	 LastSelectedFrame <- 0
       end
 
-      meth printStackFrame(frame:Frame delete:Delete<=true)
+      meth printStackFrame(frame:Frame delete:Delete)
 	 W          = self.StackText
 	 FrameNr    = Frame.nr
-	 FrameName  = case Frame.name
-		      of ''  then '$'
-		      [] nil then "nil"
-		      [] '#' then "#"
-		      else Frame.name end
+	 FrameName  = case Frame.name of ''  then '$'
+		      elseof N then N
+		      end
 	 FrameData  = Frame.data
-	 FrameArgs  = if Frame.args == unit then unit
+	 FrameArgs  = case Frame.args of unit then unit
 		      else {FormatArgs Frame.args}  %% argument list
 		      end
 	 LineColTag = FrameNr       %% no need to garbage collect this tag
@@ -590,24 +557,21 @@ in
 	       {W tk(insert LineEnd ' ...' q(StackTag LineActTag LineColTag))}
 	    end
 	 else
-	    {ForAll FrameArgs
-	     proc {$ Arg}
-		P # V     = Arg
-		ArgTag    = {W newTag($)}
-		ArgAction = {New Tk.action
-			     tkInit(parent: W
-				    action: self # ProcessClick(V))}
-	     in
-		{W tk(insert LineEnd ' ' q(StackTag LineActTag LineColTag))}
-		{W tk(insert LineEnd P q(StackTag LineColTag ArgTag))}
-		{W tk(tag bind ArgTag '<1>' ArgAction)}
-		{W tk(tag conf ArgTag font:BoldFont)}
-	     end}
+	    for Arg in FrameArgs do
+	       P # V     = Arg
+	       ArgTag    = {W newTag($)}
+	       ArgAction = {New Tk.action
+			    tkInit(parent: W
+				   action: self # ProcessClick(V))}
+	    in
+	       {W tk(insert LineEnd ' ' q(StackTag LineActTag LineColTag))}
+	       {W tk(insert LineEnd P q(StackTag LineColTag ArgTag))}
+	       {W tk(tag bind ArgTag '<1>' ArgAction)}
+	       {W tk(tag conf ArgTag font:BoldFont)}
+	    end
 	 end
 	 {W tk(insert LineEnd
-	       if Frame.kind \= 'call' then
-		  '' else '}'
-	       end #
+	       if Frame.kind \= 'call' then '' else '}' end #
 	       if Delete then '\n' else "" end
 	       q(StackTag LineActTag LineColTag))}
 	 {W tk(tag add  LineActTag LineEnd)} % extend tag to EOL
@@ -620,138 +584,147 @@ in
 	 end
       end
 
-      meth printStack(id:I frames:Frames depth:Depth last:LastFrame<=nil)
+      meth printStack(thr:T frames:Frames depth:Depth<=0 last:LastFrame<=unit)
 	 W = self.StackText
       in
 	 {W resetTags}
 	 Gui,Clear(W)
-	 if I == 0 then   % clear stack and env windows; reset title
-	    {self.StackText title(StackTitle)}
-	    Gui,Disable(W)
-	    Gui,clearEnv
-	 else
-	    {self.StackText title(AltStackTitle # I)}
-	    if Depth == 0 then T in
-	       if @currentThread == unit then
-		  {Delay {Cget timeoutToSwitch}} % timing analysis is tricky...
-	       end
-	       if (T = @currentThread) == unit then
-		  {OzcarError 'Gui,printStack: @currentThread == unit'}
-	       elseif {CheckState T} == running then
-		  Gui,Append(W (' There was no stack computed (yet)\n' #
-				' for this thread;' #
-				' stop it to compute one!'))
-	       else
+	 {self.StackText title(AltStackTitle # {Primitives.getThreadName T})}
+	 if Depth == 0 then
+	    case @currentThread of unit then
+	       {Delay {Cget timeoutToSwitch}} % timing analysis is tricky...
+	    else skip
+	    end
+	    case @currentThread of unit then
+	       {OzcarError 'Gui,printStack: @currentThread == unit'}
+	    elseof T then
+	       Empty = case {Primitives.threadState T}
+		       of terminated then true
+		       [] runnable   then true
+		       [] blocked    then true
+		       else false
+		       end
+	    in
+	       if Empty then
 		  Gui,Append(W ' The stack is empty.')
-	       end
-	       Gui,Disable(W)
-	       Gui,clearEnv
-	    else
-	       Gui,Append(W {MakeLines Depth}) % Tk is _really_ stupid...
-	       {ForAll Frames
-		proc{$ Frame}
-		   Gui,printStackFrame(frame:Frame delete:false)
-		end}
-	       Gui,Disable(W)
-	       {W tk(yview 'end')}
-	       if LastFrame == nil then
-		  {OzcarError 'printStack: LastFrame == nil ?!'}
 	       else
-		  Gui,FrameClick(frame:LastFrame highlight:false)
+		  Gui,Append(W (' No stack computed yet;\n' #
+				' stop thread to compute one'))
 	       end
+	       Gui,Disable(W)
+	       Gui,ClearEnv
+	    end
+	 else
+	    Gui,Append(W {MakeLines Depth}) % Tk is _really_ stupid...
+	    for Frame in Frames do
+	       Gui,printStackFrame(frame:Frame delete:false)
+	    end
+	    Gui,Disable(W)
+	    {W tk(yview 'end')}
+	    case LastFrame of unit then
+	       {OzcarError 'Gui,printStack: LastFrame == unit'}
+	    else
+	       Gui,FrameClick(frame:LastFrame highlight:false)
 	    end
 	 end
       end
 
       meth clearStack
-	 Gui,printStack(id:0 frames:nil depth:0)
+	 W = self.StackText
+      in
+	 {W resetTags}
+	 Gui,Clear(W)
+	 {self.StackText title(StackTitle)}
+	 Gui,Disable(W)
+	 Gui,ClearEnv
       end
 
-      meth clearEnv
-	 Gui,printEnv
+      meth ClearEnv
+	 Gui,printEnv(unit)
       end
 
-      meth selectNode(I)
-	 {self.ThreadTree select(I)}
+      meth selectNode(T)
+	 {self.ThreadTree select(T)}
       end
 
-      meth markNode(I How)
-	 {self.ThreadTree mark(I How)}
+      meth markNode(T S)
+	 {self.ThreadTree mark(T S)}
       end
 
-      meth addNode(I Q)
-	 {self.ThreadTree add(I Q)}
+      meth addNode(T S)
+	 {self.ThreadTree add(T S)}
       end
 
-      meth killNode(I $)
-	 {self.ThreadTree kill(I $)}
-      end
-
-      meth getStackText($)
-	 self.StackText
+      meth removeNode(T $)
+	 {self.ThreadTree remove(T $)}
       end
 
       meth status(S M<=clear C<=DefaultForeground)
-	 if M == clear then
+	 case M of clear then
 	    {self.StatusText replace(S C)}
-	 else
+	 [] append then
 	    {self.StatusText append(S C)}
 	 end
       end
 
-      meth BlockedStatus(T A)
-	 Gui,status('Thread ' # {Debug.getId T} # ' is blocked, ' #
-		    A # ' has no effect')
+      meth AssertRunning(B A $) T in
+	 T = @currentThread
+	 case {@currentStack getException($)} of unit then
+	    case {Primitives.threadState T} of terminated then
+	       Gui,status('Thread ' # {Primitives.getThreadName T} #
+			  ' is dead, ' # A # ' has no effect')
+	       false
+	    elseof State then
+	       Running = case State
+			 of runnable        then true
+			 [] blocked         then true
+			 [] stoppedRunnable then false
+			 [] stoppedBlocked  then false
+			 end
+	    in
+	       case B#Running
+	       of true#false then
+		  Gui,status('Thread ' # {Primitives.getThreadName T} #
+			     ' is not running, ' # A # ' has no effect')
+		  false
+	       [] false#true then
+		  Gui,status('Thread ' # {Primitives.getThreadName T} #
+			     ' is already running, ' # A # ' has no effect')
+		  false
+	       else true
+	       end
+	    end
+	 else
+	    Gui,status('Thread ' # {Primitives.getThreadName T} #
+		       ' got an unhandled exception, ' # A # ' has no effect')
+	    false
+	 end
       end
 
-      meth TerminatedStatus(T A)
-	 Gui,status('Thread ' # {Debug.getId T} # ' is dead, ' #
-		    A # ' has no effect')
-      end
-
-      meth StoppedStatus(I A)
-	 Gui,status('Thread ' # I # ' is not running, ' #
-		    A # ' has no effect')
-      end
-
-      meth RunningStatus(I A)
-	 Gui,status('Thread ' # I # ' is already running, ' #
-		    A # ' has no effect')
-      end
-
-      meth ExcStatus(I A)
-	 Gui,status('Thread ' # I # ' got an unhandled exception, ' #
-		    A # ' has no effect')
-      end
-
-      meth markStack(How)
-	 New in
+      meth markStack(How) New in
 	 MarkStackSync <- New = unit
 	 thread
 	    {WaitOr New {Alarm TimeoutToUpdate*10}}
-	    if {IsDet New} then skip else
+	    if {IsFree New} then
 	       Gui,DoMarkStack(How)
 	    end
 	 end
       end
 
       meth DoMarkStack(How)
-	 case How
-	 of active then
-	    {self.StackText tk(tag 'raise' StackTag)}
-	    {self.StackText tk(tag conf StackTag foreground:DefaultForeground)}
-	 [] inactive then
-	    {self.StackText tk(tag 'raise' StackTag)}
-	    {self.StackText tk(tag conf StackTag foreground:DirtyColor)}
-	 end
+	 {self.StackText tk(tag 'raise' StackTag)}
+	 {self.StackText tk(tag conf StackTag
+			    foreground:case How
+				       of active   then DefaultForeground
+				       [] inactive then DirtyColor
+				       end)}
       end
 
-      meth markEnv(How)
-	 New in
+      meth MarkEnv(How) New in
 	 MarkEnvSync <- New = unit
 	 thread
 	    {WaitOr New {Alarm TimeoutToUpdate*10}}
-	    if {IsDet New} then skip else
+	    if {IsFree New} then
 	       Gui,DoMarkEnv(How)
 	    end
 	 end
@@ -768,30 +741,22 @@ in
 	 end
       end
 
-      meth MarkRunning(T)
-	 if {CheckState T} \= blocked then
-	    Gui,markNode({Debug.getId T} running)
-	 end
-	 Gui,markStack(inactive)
-	 Gui,markEnv(inactive)
-	 {SendEmacs configureBar(running)}
-      end
-
-      meth ContinueTo(T Frame)
-	 Gui,UnselectStackFrame
-	 Gui,MarkRunning(T)
+      meth ContinueTo(T Frame DoStep)
 	 {@currentStack setAtBreakpoint(false)}
+	 Gui,unselectStackFrame
+	 Gui,markStack(inactive)
+	 Gui,MarkEnv(inactive)
+	 {SendEmacs configureBar(running)}
 	 case Frame.frameID of unit then
-	    {Dbg.unleash T 0}
+	    {Primitives.unleash T 0 DoStep}
 	 elseof FrameID then
-	    {Dbg.unleash T FrameID}
+	    {Primitives.unleash T FrameID DoStep}
 	 end
-	 {Thread.resume T}
+	 Gui,markNode(T {Primitives.threadState T})
       end
 
       meth action(A)
 	 lock
-	    {Wait @detachDone}
 	    {Wait @switchDone}
 	    if ThreadManager,emptyForest($) then
 	       Gui,status(NoThreads)
@@ -802,156 +767,90 @@ in
       end
 
       meth DoAction(A)
-	 if {IsName A} then skip else
-	    {OzcarMessage 'action(' # A # ')'}
-	 end
+	 {OzcarMessage 'action: '#{System.printName A}}
 
-	 if A == TermAllAction then
+	 case A of !TermAllAction then
 	    Gui,status('Terminating all threads...')
 	    ThreadManager,termAll
 	    Gui,status(' done' append)
 
-	 elseif A == TermAllButCurAction then
+	 [] !TermAllButCurAction then
 	    Gui,status('Terminating all threads but current...')
 	    ThreadManager,termAllButCur
 	    Gui,status(' done' append)
 
-	 elseif A == DetachAllAction then
+	 [] !DetachAllAction then
 	    Gui,status('Detaching all threads...')
 	    ThreadManager,detachAll
 	    Gui,status(' done' append)
 
-	 elseif A == DetachAllButCurAction then
+	 [] !DetachAllButCurAction then
 	    Gui,status('Detaching all threads but current...')
 	    ThreadManager,detachAllButCur
 	    Gui,status(' done' append)
 
-	 elseif A == DetachAllDeadAction then
+	 [] !DetachAllDeadAction then
 	    Gui,status('Detaching all dead threads...')
 	    ThreadManager,detachAllDead
 	    Gui,status(' done' append)
 
-	 elseif A == StepButtonBitmap then T I in
-	    T = @currentThread
-	    I = {Debug.getId T}
-	    if {@currentStack getException($)} \= nil then
-	       Gui,ExcStatus(I StepInto)
-	    else
-	       case {CheckState T}
-	       of running    then Gui,RunningStatus(I StepInto)
-	       [] terminated then Gui,TerminatedStatus(T StepInto)
-	       else
-		  TopFrame = {@currentStack getTop($)}
-	       in
-		  if TopFrame \= unit then
-		     if TopFrame.dir \= exit then
-			{@currentStack incStep(_)}
-		     end
-		     Gui,status('')
-		     Gui,ContinueTo(T TopFrame)
-		  end
+	 [] !StepButtonBitmap then
+	    if Gui,AssertRunning(false StepInto $) then
+	       case {@currentStack getTop($)} of unit then skip
+	       elseof TopFrame then
+		  Gui,status('')
+		  Gui,ContinueTo(@currentThread TopFrame true)
 	       end
 	    end
 
-	 elseif A == NextButtonBitmap then T I in
-	    T = @currentThread
-	    I = {Debug.getId T}
-	    if {@currentStack getException($)} \= nil then
-	       Gui,ExcStatus(I StepOver)
-	    else
-	       case {CheckState T}
-	       of running    then Gui,RunningStatus(I StepOver)
-	       [] terminated then Gui,TerminatedStatus(T StepOver)
-	       else
-		  TopFrame = {@currentStack getTop($)}
-	       in
-		  if TopFrame \= unit then
-		     if TopFrame.dir \= exit then
-			{@currentStack incNext(_)}
-			{Dbg.step T false}
-		     end
-		     Gui,status('')
-		     Gui,ContinueTo(T TopFrame)
-		  end
+	 [] !NextButtonBitmap then
+	    if Gui,AssertRunning(false StepOver $) then
+	       case {@currentStack getTop($)} of unit then skip
+	       elseof TopFrame then
+		  Gui,status('')
+		  Gui,ContinueTo(@currentThread TopFrame TopFrame.dir \= exit)
 	       end
 	    end
 
-	 elseif A == UnleashButtonBitmap then T I in
-	    T = @currentThread
-	    I = {Debug.getId T}
-	    if {@currentStack getException($)} \= nil then
-	       Gui,ExcStatus(I A)
-	    else
-	       case {CheckState T}
-	       of running    then Gui,RunningStatus(I A)
-	       [] terminated then Gui,TerminatedStatus(T A)
-	       else
-		  Frame
-		  LSF = @LastSelectedFrame
-		  Stk = @currentStack
-	       in
-		  {Stk getFrame(LSF Frame)}
-		  if Frame == unit then skip
-%              elseif Frame.dir == exit then
-%                 Gui,status('Already at end of procedure ' #
-%                              'application -- unleash has no effect')
-		  else
-		     {Dbg.step T false}
-		     {Stk rebuild(true)}
-		     case Frame.frameID of unit then
-			{Dbg.unleash T 0}
-		     elseof FrameID then
-			{Dbg.unleash T FrameID}
-		     end
-
-		     Gui,resetLastSelectedFrame
-		     Gui,MarkRunning(T)
-		     Gui,status('Unleashing thread ' # I #
-				' to frame ' #
-				if LSF == 0 then 1 else LSF end)
-		     {Thread.resume T}
-		  end
-	       end
-	    end
-
-	 elseif A == StopButtonBitmap then T S in
-	    T = @currentThread
-	    S = {Thread.state T}
-	    if S == terminated then Gui,TerminatedStatus(T A) else
-	       I         = {Debug.getId T}
-	       ThreadDic = ThreadManager,getThreadDic($)
-	       Stack     = {Dictionary.condGet ThreadDic I nil}
+	 [] !UnleashButtonBitmap then
+	    if Gui,AssertRunning(false A $) then
+	       Stk = @currentStack
+	       LSF = @LastSelectedFrame
 	    in
-	       if
-		  Stack == nil then skip
-	       elseif
-		  {Dbg.checkStopped T} then Gui,StoppedStatus(I A)
-	       else
-		  Gui,status('You have stopped thread ' # I)
-		  if S == blocked then
-		     F L C in
-		     {Thread.suspend T}
-		     {Stack rebuild(true)}
-		     {Stack print}
-		     {Stack getPos(file:F line:L column:C)}
-		     {SendEmacs bar(file:F line:L column:C state:S)}
-		     Gui,markNode(I stopped)  % thread is not running anymore
-		  else
-		     {Stack rebuild(true)}
-		  end
-		  {Dbg.step T true}
+	       case {Stk getFrame(LSF $)} of unit then skip
+	       elseof Frame then T in
+		  T = @currentThread
+		  {Stk rebuild(true)}
+		  Gui,status('Unleashing thread ' #
+			     {Primitives.getThreadName T} #
+			     ' to frame ' # {Max 1 LSF})
+		  Gui,ContinueTo(T Frame false)
 	       end
 	    end
 
-	 elseif A == DetachButtonBitmap then T I in
-	    T = @currentThread
-	    I = {Debug.getId T}
-	    lock UserActionLock then ThreadManager,detach(T I) end
+	 [] !StopButtonBitmap then
+	    if Gui,AssertRunning(true A $) then T in
+	       T = @currentThread
+	       {Primitives.suspend T}
+	       case {Primitives.threadState T} of stoppedBlocked then F L C in
+		  Gui,status('You have stopped thread ' #
+			     {Primitives.getThreadName T})
+		  Gui,markNode(T stoppedBlocked)
+		  {@currentStack rebuild(true)}
+		  {@currentStack print}
+		  {@currentStack getPos(file:?F line:?L column:?C)}
+		  {SendEmacsBar F L C stoppedBlocked}
+	       else
+		  Gui,status('')
+		  {Primitives.unleash T 0xFFFFFF true}
+	       end
+	    end
 
-	 elseif A == TermButtonBitmap then T I in
-	    T = @currentThread
-	    I = {Debug.getId T}
-	    ThreadManager,kill(T I)
+	 [] !DetachButtonBitmap then
+	    lock UserActionLock then ThreadManager,detach(@currentThread) end
+
+	 [] !TermButtonBitmap then
+	    ThreadManager,kill(@currentThread true)
 
 	 end
       end

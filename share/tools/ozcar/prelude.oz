@@ -22,25 +22,7 @@
 \insert string
 \insert tk
 
-%% some builtins...
-Dbg = dbg(on:           proc {$}
-			   {Property.put 'internal.debug' true}
-			end
-	  off:          proc {$}
-			   {Property.put 'internal.debug' false}
-			end
-	  stream:       Debug.getStream
-	  step:         Debug.setStepFlag
-	  trace:        Debug.setTraceFlag
-	  checkStopped: fun {$ T}
-			   try
-			      {Thread.isSuspended T}
-			   catch error(kernel(deadThread ...) ...) then
-			      false
-			   end
-			end
-	  unleash:      Debug.threadUnleash
-	 )
+Primitives = Server
 
 UserActionLock = {NewLock}
 
@@ -49,11 +31,6 @@ proc {EnqueueCompilerQuery M}
 end
 
 %% send a warning/error message
-proc {OzcarShow X}
-   if {Cget verbose} then
-      {System.show X}
-   end
-end
 proc {OzcarMessage M}
    if {Cget verbose} then
       {System.showInfo {OzcarMessagePrefix} # M}
@@ -78,16 +55,22 @@ proc {SendEmacs M}
    end
 end
 
+proc {SendEmacsBar File Line Column State}
+   S = case State
+       of terminated      then terminated
+       [] runnable        then running
+       [] blocked         then running
+       [] stoppedRunnable then runnable
+       [] stoppedBlocked  then blocked
+       end
+in
+   {SendEmacs bar(file:File line:Line column:Column state:S)}
+end
+
 ValuesHelp             = {NewName}
 BreakpointStaticHelp   = {NewName}
 BreakpointDynamicHelp  = {NewName}
 StatusHelp             = {NewName}
-
-fun {CheckState T}
-   S = {Thread.state T}
-in
-   if {Dbg.checkStopped T} orelse S == terminated then S else running end
-end
 
 local
    fun {MakeSpace N}
