@@ -25,6 +25,10 @@
 
 #define __BITS_HH__
 
+#if defined(INTERFACE)
+#pragma interface "bits.hh"
+#endif
+
 extern const char bits_in_byte[];
 
 static inline
