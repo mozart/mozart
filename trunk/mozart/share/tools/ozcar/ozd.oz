@@ -30,14 +30,15 @@
 
 functor
 import
+   Win32 at 'x-oz://boot/Win32'
    Application
    Compiler(engine)
    Debug(breakpoint) at 'x-oz://boot/Debug'
    Emacs(interface)
    Module(manager)
    OPIEnv(full)
-   OS(getEnv system)
-   Open(file socket)
+   OS(getEnv)
+   Open(file pipe socket)
    Ozcar(object)
    Profiler(object)
    Pickle(load)
@@ -72,6 +73,18 @@ define
        VS#'Usage: '#{Property.get 'application.url'}#
        ' <options> <appfunctor> -- <appargs>\n'#UsageString}
       {Application.exit Status}
+   end
+
+   fun {GetRegistryEmacs}
+      case {Property.get 'platform.os'} of win32 then
+	 case {Win32.getRegistryKey 'HKEY_LOCAL_MACHINE'
+	       'SOFTWARE\\GNU\\Emacs' 'emacs_dir'}
+	 of unit then unit
+	 [] false then unit
+	 elseof S then S#'/bin/emacs.exe'
+	 end
+      else unit
+      end
    end
 
    local
@@ -113,14 +126,18 @@ define
 		  File = {New Open.socket server(port: ?Port)}
 	       end
 	       EMACS = case Args.emacs of unit then
-			  case {OS.getEnv 'OZEMACS'} of false then 'emacs'
+			  case {OS.getEnv 'OZEMACS'} of false then
+			     case {GetRegistryEmacs} of unit then 'emacs'
+			     elseof X then X
+			     end
 			  elseof X then X
 			  end
 		       elseof X then X
 		       end
-	       {OS.system
-		EMACS#' -L '#{Property.get 'oz.home'}#
-		'/share/elisp -l oz -f oz-attach '#Port#' \&' _}
+	       _ = {New Open.pipe
+		    init(cmd: EMACS
+			 args: ['-L' {Property.get 'oz.home'}#'/share/elisp'
+				'-l' 'oz' '-f' 'oz-attach' Port])}
 	    end
 	    I = {New Emacs.interface
 		 init(E unit
