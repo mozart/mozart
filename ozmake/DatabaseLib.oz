@@ -22,6 +22,7 @@ define
       end
 
       meth databaselib_save(F ToTxt L)
+	 {Path.makeDirRec {Path.dirname F}}
 	 {self trace('writing pickled database '#F#'.ozf')}
 	 if {self get_justprint($)} then skip else
 	    {Pickle.save L F#'.ozf'}

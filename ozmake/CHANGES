@@ -1,5 +1,16 @@
 -*-outline-*-
 
+* version 0.72
+** ozmake --config=... now permits to manage predefined defaults
+   defaults can always be explicitly overriden on the command line
+   ozmake --config=set --FEAT1=VAL1 --FEAT2=VAL2 ...
+     saves the given defaults for those features (ignoring features
+     for which defaults cannot be set)
+   ozmake --config=unset FEAT1 FEAT2 ...
+     removes defaults for these features
+   ozmake --config=list
+     lists the current defaults
+
 * version 0.71
 ** ozmake --extract: default directory changed from current directory
    to subdirectory with name derived from the package mogul id

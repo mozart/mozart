@@ -1,0 +1,6 @@
+we are now able to save *.mogul files for each package
+
+what needs to be done:
+- also save section files
+- also save author files
+- cause --publish to create a pkg, install doc, and update db

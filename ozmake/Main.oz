@@ -30,7 +30,7 @@ prepare
       publishdir(single type:string)
       mogulpkgurl(single type:string)
       moguldocurl(single type:string)
-      mogulsecurl(single type:string)
+      moguldburl( single type:string)
       archive(   single type:string)
       tmpdir(    single type:string)
 
@@ -43,10 +43,9 @@ prepare
 
       action(single type:atom(build install clean veryclean
 			      create publish extract list help
-			      uninstall edit config
+			      uninstall edit mogul
 			      %%again
-			     )
-	     default:build)
+			     ))
       build(    char:&b alias:action#build)
       install(  char:&i alias:action#install)
       fullbuild(single type:bool)
@@ -59,8 +58,11 @@ prepare
       help(     char:&h alias:action#help)
       uninstall(char:&e alias:action#uninstall)
       edit(             alias:action#edit)
-      config(           alias:action#config)
+      mogul(            alias:action#mogul)
       %% again(            alias:action#again)
+
+      config(single type:atom(set unset list)
+	     validate:alt(when(action false) when(true optional)))
 
       grade(single type:atom(none up down same any))
       upgrade(  char:&U alias:[action#install grade#up])
@@ -87,63 +89,81 @@ prepare
       librarydir(multiple char:&L type:string)
       sysincludedirs(single type:bool)
       syslibrarydirs(single type:bool)
+
+      mogulpkgdir(single type:string)
+      moguldocdir(single type:string)
+      moguldbdir( single type:string)
       )
 
    OPTLIST =
    [
-    verbose        # set_verbose
-    quiet          # set_quiet
-    'just-print'   # set_justprint
-    optlevel       # set_optlevel
-    gnu            # set_gnu
-    prefix         # set_prefix
-    dir            # set_dir
-    builddir       # set_builddir
-    srcdir         # set_srcdir
-    bindir         # set_bindir
-    libdir         # set_libdir
-    docdir         # set_docdir
-    libroot        # set_libroot
-    docroot        # set_docroot
-    extractdir     # set_extractdir
-    publishdir     # set_publishdir
-    mogulpkgurl    # set_mogulpkgurl
-    moguldocurl    # set_moguldocurl
-    mogulsecurl    # set_mogulsecurl
-    archive        # set_archive
-    tmpdir         # set_tmpdir
-    makefile       # set_makefile
-    usemakepkg     # set_use_makepkg
-    package        # set_package
-    moguldatabase  # set_moguldatabase
-    database       # set_database
-    configfile     # set_configfile
-    grade          # set_grade
-    replacefiles   # set_replacefiles
-    keepzombies    # set_keepzombies
-    savedb         # set_savedb
-    '_installdocs' # set_includedocs
-    '_installlibs' # set_includelibs
-    '_installbins' # set_includebins
-    extendpackage  # set_extendpackage
-    fullbuild      # set_fullbuild
-    linewidth      # set_linewidth
-    'local'        # set_local
-    includedir     # set_includedirs
-    librarydir     # set_librarydirs
-    sysincludedirs # set_sysincludedirsok
-    syslibrarydirs # set_syslibrarydirsok
+    %% OPTION      # SET METHOD           # CONFIGURABLE?
+    verbose        # set_verbose	  # false
+    quiet          # set_quiet            # false
+    'just-print'   # set_justprint        # false
+    optlevel       # set_optlevel         # true
+    gnu            # set_gnu              # true
+    prefix         # set_prefix           # true
+    dir            # set_dir              # false
+    builddir       # set_builddir         # false
+    srcdir         # set_srcdir           # false
+    bindir         # set_bindir           # false
+    libdir         # set_libdir           # false
+    docdir         # set_docdir           # false
+    libroot        # set_libroot          # true
+    docroot        # set_docroot          # true
+    extractdir     # set_extractdir       # false
+    publishdir     # set_publishdir       # true
+    mogulpkgurl    # set_mogulpkgurl      # true
+    moguldocurl    # set_moguldocurl      # true
+    moguldburl     # set_moguldburl       # true
+    archive        # set_archive          # true
+    tmpdir         # set_tmpdir           # true
+    makefile       # set_makefile         # false
+    usemakepkg     # set_use_makepkg      # false
+    package        # set_package          # false
+    moguldatabase  # set_moguldatabase    # true
+    database       # set_database         # true
+    configfile     # set_configfile       # true
+    grade          # set_grade            # false
+    replacefiles   # set_replacefiles     # false
+    keepzombies    # set_keepzombies      # false
+    savedb         # set_savedb           # false
+    '_installdocs' # set_includedocs      # false
+    '_installlibs' # set_includelibs      # false
+    '_installbins' # set_includebins      # false
+    extendpackage  # set_extendpackage    # false
+    fullbuild      # set_fullbuild        # false
+    linewidth      # set_linewidth        # true
+    'local'        # set_local            # false
+    includedir     # set_includedirs      # true
+    librarydir     # set_librarydirs      # true
+    sysincludedirs # set_sysincludedirsok # true
+    syslibrarydirs # set_syslibrarydirsok # true
+    mogulpkgdir    # set_mogulpkgdir      # true
+    moguldocdir    # set_moguldocdir      # true
+    moguldbdir     # set_moguldbdir       # true
    ]
       
 define
    try
-      Args    = {Application.getArgs OPTIONS}
+      local Args_ = {Application.getArgs OPTIONS} in
+	 Args = if {HasFeature Args_ action} then Args_
+		elseif {HasFeature Args_ config} then
+		   {AdjoinAt Args_ action config}
+		else
+		   {AdjoinAt Args_ action build}
+		end
+      end
       Man     = {New Manager.'class' init}
       Targets = {Map Args.1 StringToAtom}
    in
-      for O#M in OPTLIST do
-	 if {HasFeature Args O} then {Man M(Args.O)} end
+      %% process the options supplied by the user
+      for Key#Set#_ in OPTLIST do
+	 if {HasFeature Args Key} then {Man Set(Args.Key)} end
       end
+      %% read some default configuration parameters
+      {Man config_install(Args OPTLIST)}
       %% only use MAKEPKG.oz if installing from a package and not
       %% explicitly disabled by the user
       {Man set_default_use_makepkg(Args.action==install andthen
@@ -160,7 +180,8 @@ define
       [] help      then {Help.help}
       [] uninstall then {Man uninstall}
       [] edit      then {Man makefileEdit}
-      [] config    then {Man config}
+      [] config    then {Man config(Args OPTLIST)}
+      [] mogul     then {Man mogul}
       %% [] again     then {Man again}
       end
       {Application.exit 0}

@@ -22,4 +22,8 @@ makefile(
 	     'Config.ozf' 'Mogul.ozf']
 	 'Help.ozf' :
 	    ['Utils.ozf' 'Path.ozf' 'Windows.ozf'
-	     'Shell.ozf' 'HELP.txt']))
+	     'Shell.ozf' 'HELP.txt'])
+   blurb : "foo bar baz"
+   info_html:
+      "ozmake is a great thing bla bla bla
+   and more stuff")
