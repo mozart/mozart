@@ -647,8 +647,11 @@ in
 	    Gui,clearEnv
 	 else
 	    {self.StackText title(AltStackTitle # I)}
-	    if Depth == 0 then T = @currentThread in
-	       if T == unit then
+	    if Depth == 0 then T in
+	       if @currentThread == unit then
+		  {Delay {Cget timeoutToSwitch}} % timing analysis is tricky...
+	       end
+	       if (T = @currentThread) == unit then
 		  {OzcarError 'Gui,printStack: @currentThread == unit'}
 	       elseif {CheckState T} == running then
 		  Gui,Append(W (' There was no stack computed (yet)\n' #
