@@ -618,6 +618,46 @@ int OZ_length(OZ_Term list)
  * record
  * -----------------------------------------------------------------*/
 
+/* take a label and an arity (as list) and construct a record
+   the fields are not initialized */
+OZ_Term OZ_record(OZ_Term label, OZ_Term arity) 
+{
+  OZ_warning("OZ_record not impl");
+  return OZ_nil();
+}
+
+/* take a label and a property list and construct a record */
+OZ_Term OZ_recordProp(OZ_Term label, OZ_Term propList) 
+{
+  OZ_Term out;
+  OZ_Bool ret = adjoinPropList(label,propList,out,NO);
+
+  if (ret != PROCEED) {
+    OZ_warning("OZ_record(%s,%s): failed",
+	       OZ_toC(label),OZ_toC(propList));
+    return nil();
+  }
+
+  return out;
+}
+
+void OZ_setRecordArg(OZ_Term record, OZ_Term feature, OZ_Term value)
+{
+  DEREF(record,_1,recTag);
+  DEREF(feature,_2,feaTag);
+
+  if (isLiteral(feaTag) ) {
+    if ( isSRecord(recTag) ) {
+      SRecord *recOut = tagged2SRecord(record)->replaceFeature(feature,value);
+      if (recOut) {
+	return;
+      }
+    }
+  }
+  OZ_warning("OZ_setRecordArg(%s,%s,%s): failed",
+	     OZ_toC(record),OZ_toC(feature),OZ_toC(value));
+}
+
 OZ_Term OZ_getRecordArg(OZ_Term term, OZ_Term fea)
 {
   DEREF(term,_1,_2);
