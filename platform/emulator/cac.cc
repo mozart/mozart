@@ -312,6 +312,7 @@ void exitCheckSpace() {
   *((int32 *) fromPtr) = makeTaggedMarkPtr(newValue);
 
 #define STOREPSEUDOFWDMARK(fromPtr, newValue)		\
+  Assert(!isSTAligned(newValue));			\
   CPTRAIL(fromPtr);					\
   *((int32 *) fromPtr) = makeTaggedRef(newValue);
 
