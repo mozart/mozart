@@ -531,7 +531,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
   
     default:
         // All other types fail when unified with an open feature structure
-        error("unexpected case in unifyOFS");
+        // error("unexpected case in unifyOFS");
         return FALSE;
     }
 }
