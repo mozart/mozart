@@ -459,9 +459,11 @@ char *getMemFromOS(size_t sz) {
 
   heapTop = heapEnd+thisBlockSz;
 
-  //message("heapTop: 0x%lx\n",heapTop);
-  if (tagValueOf(makeTaggedMiscp(heapTop)) != heapTop) {
-    warning("Oz adress space exhausted\n");
+  // message("heapTop: %p\n",heapTop);
+
+  void *aux = tagValueOf(makeTaggedMiscp(heapTop));
+  if (aux != heapTop) {
+    warning("Oz address space exhausted: %p != %p\n", aux, heapTop);
     osExit(1);
   }
   
