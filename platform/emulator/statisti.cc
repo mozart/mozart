@@ -124,6 +124,7 @@ void Statistics::reset()
   timeForGC.reset();
   timeForCopy.reset();
   timeForLoading.reset();
+  timeIdle = 0;
 
   solveAlt.reset();
   solveCloned.reset();

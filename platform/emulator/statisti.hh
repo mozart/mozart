@@ -77,6 +77,7 @@ public:
   StatCounter timeForGC;
   StatCounter timeUtime;
   StatCounter timeForPropagation;
+  unsigned long timeIdle;
 
   StatCounter heapUsed; /* total == memory used not including getUsedMemory() */
                         /* sinceIdle == memory reported during last idle */
