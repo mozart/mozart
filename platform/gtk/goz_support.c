@@ -51,7 +51,7 @@ OZ_BI_define (ozgtk_handle_pending_events, 0, 0)
   Put the signal id into the Oz stream
   This function is not to be exported via the OZ/C-interface
  */
-void
+static void
 signal_marshal (GtkObject * object,
                 gpointer    oz_id,  /* This pointer holds an guint */
                 guint       n_args,
@@ -113,11 +113,11 @@ OZ_BI_define (ozgtk_initialize_signal_port_sml, 1, 0)
   return OZ_ENTAILED;
 } OZ_BI_end
 
-void
-signal_marshal (GtkObject * object,
-                gpointer    oz_id,  /* This pointer holds an guint */
-                guint       n_args,
-                GtkArg *    args)
+static void
+signal_marshal_sml (GtkObject * object,
+                    gpointer    oz_id,  /* This pointer holds an guint */
+                    guint       n_args,
+                    GtkArg *    args)
 {
   OZ_send (signal_port_sml, OZ_int ((guint) oz_id));
 }
