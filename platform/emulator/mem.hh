@@ -79,6 +79,8 @@ inline unsigned int getAllocatedMemory() {
   return heapTotalSize;
 }
 
+void *heapMallocOutline(size_t chunk_size);
+
 inline
 void *heapMalloc(size_t chunk_size)
 {
@@ -108,16 +110,13 @@ unsigned int getMemoryInFreeList();
 inline
 void *freeListMalloc(size_t chunk_size)
 {
-#ifdef DEBUG_CHECK
-  if (chunk_size % 4 != 0) {
-    error("freeListMalloc: not aligned to word boundaries");
-  }
-#endif
+  Assert(chunk_size % 4 == 0);
+
   void **freeListCache = FreeList;
   void *aux = chunk_size < freeListMaxSize ? freeListCache[chunk_size] : (void *)NULL;
 
   if (aux == (void *) NULL)
-    aux = heapMalloc(chunk_size); 
+    aux = heapMallocOutline(chunk_size); 
   else {
     freeListCache[chunk_size] = *(void **)aux;
   }
