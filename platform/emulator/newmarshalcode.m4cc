@@ -1020,3 +1020,442 @@ Bool unmarshalCode(MsgBuffer *bs, Builder *b,
   return (done);
 }
 
+
+// Robust unmarshaling
+undefine([[opAction]])
+undefine([[marshaling]])
+
+define(opAction,
+[[ifelse($1,Number,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
+        $1,Literal,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
+        $1,Feature,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
+        $1,Constant,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
+        $1,Builtinname,PC=unmarshalBuiltin(b,PC);ozValuesCnt--;,
+        $1,XRegisterIndex,PC=unmarshalXRegRobust(PC,bs,&e);if(e) return ERR;,
+        $1,YRegisterIndex,PC=unmarshalYRegRobust(PC,bs,&e);if(e) return ERR;,
+        $1,GRegisterIndex,PC=unmarshalGRegRobust(PC,bs,&e);if(e) return ERR;,
+        $1,Arity,PC=unmarshalNumRobust(PC,bs,&e);if(e) return ERR;,
+        $1,Label,PC=unmarshalLabelRobust(PC,bs,&e);if(e) return ERR;,
+        $1,Count,PC=unmarshalNumRobust(PC,bs,&e);if(e) return ERR;,
+        $1,ArityAndIsTail,PC=unmarshalNumRobust(PC,bs,&e);if(e) return ERR;,
+        $1,Dummy,PC=unmarshalNumRobust(PC,bs,&e);if(e) return ERR;,
+        $1,ProcedureRef,PC=unmarshalProcedureRefRobust(b,PC,bs,code,&e);if(e) return ERR;,
+        $1,PredId,PC=unmarshalPredIdRobust(b,PC,lastPC,bs,&e);ozValuesCnt--;if(e) return ERR;,
+        $1,HashTableRef,PC=unmarshalHashTableRefRobust(b,PC,bs,&e);ozValuesCnt--;if(e) return ERR;,
+        $1,RecordArity,PC=unmarshalRecordArityRobust(b,PC,bs,&e);ozValuesCnt--;if(e) return ERR;,
+        $1,CallMethodInfo,PC=unmarshalCallMethodInfoRobust(b,PC,bs,&e);ozValuesCnt--;if(e) return ERR;,
+        $1,GRegRef,PC=unmarshalGRegRefRobust(PC,bs,&e);if(e) return ERR;,
+        $1,Location,PC=unmarshalLocationRobust(PC,bs,&e);if(e) return ERR;,
+        $1,Cache,PC=unmarshalCache(PC,code);)]])
+
+//
+inline static
+ProgramCounter unmarshalNumRobust(ProgramCounter pc, MsgBuffer *bs, int *error)
+{
+  int num = unmarshalNumberRobust(bs, error);
+  return ((pc && !(*error)) ? CodeArea::writeInt(num,pc) : (ProgramCounter) 0);
+}
+
+//
+inline static
+ProgramCounter unmarshalXRegRobust(ProgramCounter pc, MsgBuffer *bs, int *error)
+{
+  int idx = unmarshalNumberRobust(bs, error);
+  return ((pc && !(*error)) ? CodeArea::writeXRegIndex(idx, pc) 
+	  : (ProgramCounter) 0);
+}
+//
+inline static
+ProgramCounter unmarshalYRegRobust(ProgramCounter pc, MsgBuffer *bs, int *error)
+{
+  int idx = unmarshalNumberRobust(bs, error);
+  return ((pc && !(*error)) ? CodeArea::writeYRegIndex(idx, pc) 
+	  : (ProgramCounter) 0);
+}
+//
+inline static
+ProgramCounter unmarshalGRegRobust(ProgramCounter pc, MsgBuffer *bs, int *error)
+{
+  int idx = unmarshalNumberRobust(bs, error);
+  return ((pc && !(*error)) ? CodeArea::writeGRegIndex(idx, pc) 
+	  : (ProgramCounter) 0);
+}
+
+//
+inline static
+ProgramCounter unmarshalLabelRobust(ProgramCounter pc, MsgBuffer *bs, int *error)
+{
+  int offset = unmarshalNumberRobust(bs, error);
+  return ((pc && !(*error)) ? CodeArea::writeLabel(offset,0,pc) : (ProgramCounter) 0);
+}
+
+//
+static
+ProgramCounter unmarshalGRegRefRobust(ProgramCounter PC,MsgBuffer *bs,int *error)
+{ 
+  int e1,e2;
+  int nGRegs = unmarshalNumberRobust(bs, &e1);
+  AssRegArray *gregs = PC ? new AssRegArray(nGRegs) : 0;
+
+  for (int i = 0; i < nGRegs; i++) {
+    unsigned int reg = unmarshalNumberRobust(bs, &e2);
+    e1 = e1 || e2;
+    if (PC) {
+      (*gregs)[i].number = reg>>2;
+      (*gregs)[i].kind = (KindOfReg) (reg&3);
+    }
+  }
+  *error = e1;
+  return (writeAddress(gregs, PC));
+}
+
+//
+static
+ProgramCounter unmarshalLocationRobust(ProgramCounter PC,MsgBuffer *bs,
+				     int *error) 
+{ 
+  int e1,e2;
+  int inAr = unmarshalNumberRobust(bs, &e1);
+  int outAr = unmarshalNumberRobust(bs, &e2);
+  OZ_Location *loc = OZ_Location::newLocation(inAr+outAr);
+
+  e1 = e1 || e2;
+  for (int i = 0; i < inAr+outAr; i++) {
+    int n = unmarshalNumberRobust(bs, &e2);
+    e1 = e1 || e2;
+    loc->set(i,n);
+  }
+  *error = e1;
+  return (writeAddress(loc, PC));
+}
+
+//
+// 'unmarshalRecordArity' exists in two flavors: one fills a cell in a
+// code area with an 'SRecordArity' value (resp. discards it in "skip"
+// mode), while another one just fills up a given cell;
+static
+ProgramCounter unmarshalRecordArityRobust(Builder *b, ProgramCounter pc, 
+					MsgBuffer *bs, int *error) 
+{
+  RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
+  if (pc) {
+    if (at == RECORDARITY) {
+      CodeAreaLocation *loc = new CodeAreaLocation(pc);
+      b->getCompleteOzValue(putRealRecordArityCA, loc);
+      return (CodeArea::allocateWord(pc));
+    } else {
+      int e;
+      int width = unmarshalNumberRobust(bs, &e);
+      *error = *error || e || (at != TUPLEWIDTH);
+      return (CodeArea::writeInt(mkTupleWidth(width), pc));
+    }
+  } else {
+    if (at == RECORDARITY)
+      b->discardOzValueCA();
+    else
+      skipNumber(bs);
+    return ((ProgramCounter) 0);
+  }
+}
+
+//
+// (of course, this code must resemble 'marshalPredId()')
+static
+ProgramCounter unmarshalPredIdRobust(Builder *b, ProgramCounter pc,
+				   ProgramCounter lastPC, MsgBuffer *bs, 
+				   int *error) 
+{
+  if (pc) {
+    int e1,e2,e3,e4;
+    PredIdLocation *loc = new PredIdLocation(pc);
+
+    //
+    b->getOzValue(getPredIdNameCA, loc);
+    //
+    RecordArityType at = unmarshalRecordArityTypeRobust(bs, &e1);
+    if (at == RECORDARITY) {
+      b->getOzValue(saveRecordArityPredIdCA, loc);
+      e1 = NO;
+    } else {
+      Assert(at == TUPLEWIDTH);
+      int width = unmarshalNumberRobust(bs, &e1);
+      // set 'SRecordArity' directly (and there will be no arity
+      // list);
+      loc->setSRA(mkTupleWidth(width));
+    }
+    //
+    b->getOzValue(saveFileCA, loc);
+    //
+    loc->setLine(unmarshalNumberRobust(bs, &e2));
+    loc->setColumn(unmarshalNumberRobust(bs, &e3));
+    //
+    b->getOzValue(saveFlagsListCA, loc);
+    //
+    loc->setMaxX(unmarshalNumberRobust(bs, &e4));
+
+    *error = e1 || e2 || e3 || e4;
+    //
+    return (CodeArea::allocateWord(pc));
+
+  } else {
+    //
+    b->discardOzValueCA();	// name;
+    //
+    RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
+    if (at == RECORDARITY) {
+      b->discardOzValueCA();	// arity list;
+    } else {
+      Assert(at == TUPLEWIDTH);
+      skipNumber(bs);
+    }
+    //
+    b->discardOzValueCA();	// file;
+    //
+    skipNumber(bs);		// line & column;
+    skipNumber(bs);
+    //
+    b->discardOzValueCA();	// flags list;
+    //
+    skipNumber(bs);		// maxX;
+
+    //
+    return ((ProgramCounter) 0);
+  }
+}
+
+//
+static
+ProgramCounter unmarshalCallMethodInfoRobust(Builder *b, ProgramCounter pc, 
+					   MsgBuffer *bs, int *error) 
+{
+  int e1,e2,e3;
+  int compact = unmarshalNumberRobust(bs, &e1);
+
+  //
+  if (pc) {
+    CallMethodInfoLocation *loc = new CallMethodInfoLocation(pc, compact);
+
+    //
+    b->getOzValue(getCallMethodInfoNameCA, loc);
+    //
+    RecordArityType at = unmarshalRecordArityTypeRobust(bs, &e2);
+    if (at == RECORDARITY) {
+      b->getOzValue(saveCallMethodInfoRecordArityCA, loc);
+      e3 = NO;
+    } else {
+      Assert(at == TUPLEWIDTH);
+      int width = unmarshalNumberRobust(bs, &e3);
+      loc->setSRA(mkTupleWidth(width));
+    }
+
+    //
+    *error = e1 || e2 || e3;
+    return (CodeArea::allocateWord(pc));
+  } else {
+    b->discardOzValueCA();	// name;
+    //
+    RecordArityType at = unmarshalRecordArityTypeRobust(bs, &e2);
+    if (at == RECORDARITY)
+      b->discardOzValueCA();
+    else
+      skipNumber(bs);
+
+    //
+    *error = e1 || e2;
+    return ((ProgramCounter) 0);
+  }
+}
+
+//
+static
+ProgramCounter unmarshalHashTableRefRobust(Builder *b, ProgramCounter pc,
+					 MsgBuffer *bs, int *error)
+{
+  //
+  if (pc) {
+    int e1,e2,e3,e4;
+    int sz = unmarshalNumberRobust(bs, &e1);
+    int elseLabel = unmarshalNumberRobust(bs, &e2); /* the else label */
+    int listLabel = unmarshalNumberRobust(bs, &e3);
+    int nEntries = unmarshalNumberRobust(bs, &e4);
+    e1 = e1 || e2 || e3 || e4;
+    IHashTable *table;
+
+    //
+    table = new IHashTable(sz, elseLabel);
+    if (listLabel)
+      table->addList(listLabel);
+
+    //
+    for (int i = 0; i < nEntries; i++) {    
+      int termTag = unmarshalNumberRobust(bs, &e2);
+      int label = unmarshalNumberRobust(bs, &e3);
+      HashTableEntryDesc *desc = new HashTableEntryDesc(table, label);
+      e1 = e1 || e2 || e3;
+
+      //
+      switch (termTag) {
+      case RECORDTAG:
+	{
+	  b->getOzValue(getHashTableRecordEntryLabelCA, desc);
+	  //
+	  RecordArityType at = unmarshalRecordArityTypeRobust(bs, &e2);
+	  if (at == RECORDARITY) {
+	    b->getOzValue(saveRecordArityHashTableEntryCA, desc);
+	    e3 = NO;
+	  } else {
+	    Assert(at == TUPLEWIDTH);
+	    int width = unmarshalNumberRobust(bs, &e3);
+	    desc->setSRA(mkTupleWidth(width));
+	  }
+	  e1 = e1 || e2 || e3;
+	  break;
+	}
+
+      case ATOMTAG:
+	b->getOzValue(getHashTableAtomEntryLabelCA, desc);
+	break;
+
+      case NUMBERTAG:
+	b->getOzValue(getHashTableNumEntryLabelCA, desc);
+	break;
+
+      default: e1 = OK; break;
+      }
+    }
+
+    *error = e1;
+    // 
+    // The hash table is stored already, albeit it is not yet filled
+    // up;
+    return (CodeArea::writeIHashTable(table, pc));
+  } else {
+    int e1,e2;
+    skipNumber(bs);		// size
+    skipNumber(bs);		// elseLabel
+    skipNumber(bs);		// listLabel
+    int nEntries = unmarshalNumberRobust(bs, &e1);
+
+    //
+    for (int i = 0; i < nEntries; i++) {
+      int termTag = unmarshalNumberRobust(bs, &e2);
+      e1 = e1 || e2;
+      skipNumber(bs);		// label
+
+      //
+      switch (termTag) {
+      case RECORDTAG:
+	{
+	  b->discardOzValueCA();
+	  //
+	  RecordArityType at = unmarshalRecordArityTypeRobust(bs, &e2);
+	  e1 = e1 || e2;
+	  if (at == RECORDARITY)
+	    b->discardOzValueCA();
+	  else
+	    skipNumber(bs);
+	  break;
+	}
+
+      case ATOMTAG:
+	b->discardOzValueCA();
+	break;
+
+      case NUMBERTAG:
+	b->discardOzValueCA();
+	break;
+
+      default: e1 = OK; break;
+      }
+    }
+
+    //
+    return ((ProgramCounter) 0);
+  }
+}
+
+//
+static
+ProgramCounter unmarshalProcedureRefRobust(Builder *b, ProgramCounter pc,
+					 MsgBuffer *bs, CodeArea *code, 
+					 int *error)
+{
+  int e1,e2;
+  AbstractionEntry *entry = 0;
+  Bool copyable = unmarshalNumberRobust(bs, &e1);
+  if (copyable) {
+    MarshalTag tag = (MarshalTag) bs->get();
+    if (tag == DIF_REF) {
+      int i = unmarshalNumberRobust(bs, &e2);
+      entry = (AbstractionEntry*) ToPointer(b->get(i));
+    } else {
+      Assert(tag == DIF_ABSTRENTRY);
+      int e;
+      int refTag = unmarshalRefTagRobust(bs, b, &e);
+      e2 = e || (tag != DIF_ABSTRENTRY);
+      entry = new AbstractionEntry(OK);
+      b->set(ToInt32(entry),refTag);
+    }
+  }
+  else e2 = NO;
+  *error = e1 || e2;
+  return ((pc && !(*error)) ? code->writeAbstractionEntry(entry,pc)
+	  : (ProgramCounter) pc);
+}
+
+
+//
+// Returning 'OK' means we are done (with the code area); 
+// 'pc' can be zero meaning "discard the code". If it is non-zero,
+// then it is supposed to be large enough to hold the whole code;
+// Returning 'ERR' means that the buffer can not be marshalled.
+Bool unmarshalCodeRobust(MsgBuffer *bs, Builder *b, 
+		      BuilderCodeAreaDescriptor *desc)
+{
+  int e; 
+  int ozValuesCnt = ozValuesBA;
+  ProgramCounter PC = desc->getCurrent();
+  ProgramCounter lastPC;
+  // 'CodeArea*' is passed in it itself:
+  CodeArea *code = desc->getCodeArea();
+  Bool done = NO;
+
+  //
+  while (ozValuesCnt > 0) {
+    lastPC = PC;
+    Opcode op = (Opcode) bs->get();
+    if (op == ENDOFFILE) {
+      done = OK;
+      break;
+    }
+
+    //
+    Assert(op != CALLPROCEDUREREF);
+    if (PC)
+      PC = CodeArea::writeOpcode(op,PC);
+
+    //
+    switch(op) {
+
+      changequote(`,') dnl '
+      include(EMUDIR/instrDefs.m4)
+      changequote([[,]])
+
+    default: return ERR;
+    }
+
+    if (op == DEBUGENTRY && PC) {
+      TaggedRef file = getTaggedArg(lastPC+1);
+      int line = smallIntValue(getNumberArg(lastPC+2));
+      CodeArea::writeDebugInfo(lastPC,file,line);
+    }
+  }
+
+  //
+  if (done)
+    delete desc;
+  else
+    desc->setCurrent(PC);
+  return (done);
+}
+

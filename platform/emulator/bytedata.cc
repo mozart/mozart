@@ -138,6 +138,15 @@ OZ_Term unmarshalBitString(void*bs1) {
     s->getByte(i) = unmarshalByte(bs);
   return oz_makeTaggedExtension(s);
 }
+OZ_Term unmarshalBitStringRobust(void*bs1, int *overflow) {
+  MsgBuffer*bs=(MsgBuffer*)bs1;
+  int width = unmarshalNumberRobust(bs, overflow);
+  BitString*s = new BitString(width);
+  int size = s->getSize();
+  for (int i=0; i<size; i++)
+    s->getByte(i) = unmarshalByte(bs);
+  return oz_makeTaggedExtension(s);
+}
 
 OZ_Term BitString::printV(int depth) {
   int w = getWidth();
@@ -325,6 +334,14 @@ int ByteString::marshalV(void*bs1) {
 OZ_Term unmarshalByteString(void*bs1) {
   MsgBuffer*bs=(MsgBuffer*)bs1;
   int width = unmarshalNumber(bs);
+  ByteString*s = new ByteString(width);
+  for (int i=0; i<width; i++)
+    s->getByte(i) = unmarshalByte(bs);
+  return oz_makeTaggedExtension(s);
+}
+OZ_Term unmarshalByteStringRobust(void*bs1, int *overflow) {
+  MsgBuffer*bs=(MsgBuffer*)bs1;
+  int width = unmarshalNumberRobust(bs, overflow);
   ByteString*s = new ByteString(width);
   for (int i=0; i<width; i++)
     s->getByte(i) = unmarshalByte(bs);

@@ -34,9 +34,29 @@
 
 #include "gentraverser.hh"
 
+//A returnvalue from unmarshalCodeRobust
+#define ERR 123
+//
+// Constants needed for to check that no overflow occurs in unmarshalNumber()
+extern int RobustMarshaler_Max_Shift;// Biggest number dividable with 7 and less 
+                                   // then sizeof(int)
+extern int RobustMarshaler_Max_Hi_Byte;//(sizeof(int)-RobustMarshaler_Max_Shift)^2
 
+inline int unmarshalRefTag(MsgBuffer *bs)
+{
+  return unmarshalNumber(bs);
+}
+inline int unmarshalRefTagRobust(MsgBuffer *bs, Builder *builder, int *error)
+{
+  int e;
+  int rt = unmarshalNumberRobust(bs, &e);
+  *error = e || !builder->checkNewIndex(rt); // RefTags are found in order?
+  return rt;
+}
 OZ_Return oz_export(OZ_Term t);
+
 GName* unmarshalGName(TaggedRef*,MsgBuffer*);
+GName* unmarshalGNameRobust(TaggedRef*,MsgBuffer*,int*);
 void marshalGName(GName *gname, MsgBuffer *bs);
 
 class SendRecvCounter {
@@ -232,5 +252,6 @@ void newMarshalerFinishBatch()
 
 //
 OZ_Term newUnmarshalTerm(MsgBuffer *);
+OZ_Term newUnmarshalTermRobust(MsgBuffer *);
 
 #endif

@@ -181,125 +181,22 @@ inline void primaryToSecondary(DSite *s, int hvalue) {
   s->putInSecondary();
   secondarySiteTable->insertSecondary(s,hvalue2);}
 
-static
-DSite* unmarshalDSiteInternal(MsgBuffer *buf, DSite *tryS, MarshalTag mt)
-{
-  DSite *s;
-  int hvalue = tryS->hashPrimary();
+// for unmarshalDSiteInternal see dsite_general.cc
+#define ROBUST_UNMARSHALER
+#include "dsite_general.cc"
+#undef ROBUST_UNMARSHALER
+#include "dsite_general.cc"
 
-  FindType rc = primarySiteTable->findPrimary(tryS,hvalue,s);    
-  switch(rc){
-  case SAME: {
-    PD((SITE,"unmarshalsite SAME"));
-    if(mt==DIF_SITE_PERM){
-      if(s->isPerm()){
-	return s;}
-      s->discoveryPerm();
-      return s;}
-
-    //
-    if(mt == DIF_SITE_VI) {
-      // Note: that can be GName, in which case we have to fetch
-      // virtual info as well;
-      if (s != myDSite) {
-	Assert(s->remoteComm() || s->virtualComm());
-	//
-	// 's' could either have or have not virtual info (a master of
-	// a group could be already remembered outside as a
-	// non-virtual one);
-	if (s->hasVirtualInfo()) {
-	  // should be the same...
-	  unmarshalUselessVirtualInfo(buf);
-	} else {
-	  // haven't seen it (virtual info) yet;
-	  VirtualInfo *vi = unmarshalVirtualInfo(buf);
-
-	  //
-	  if (!s->ActiveSite()) {
-	    if (myDSite->isInMyVSGroup(vi)) {
-	      s->makeActiveVirtual(vi);
-	    } else {
-	      s->makeActiveRemoteVirtual(vi);
-	    }
-	  } else {
-	    s->addVirtualInfoToActive(vi);
-	  }
-	}
-      } else {
-	// my site is my site... already initialized;
-	unmarshalUselessVirtualInfo(buf);
-      }
-
-      //
-      return (s);
-    }
-
-    //
-    Assert(mt == DIF_SITE);
-    if(s != myDSite && !s->ActiveSite()) {
-      s->makeActiveRemote();}
-    return s;}
-
-  case NONE:
-    PD((SITE,"unmarshalsite NONE"));
-    break;
-    
-  case I_AM_YOUNGER:{
-    PD((SITE,"unmarshalsite I_AM_YOUNGER"));
-    if(mt == DIF_SITE_VI) {
-      unmarshalUselessVirtualInfo(buf);
-    }
-    int hvalue=tryS->hashSecondary();
-    s=secondarySiteTable->findSecondary(tryS,hvalue);
-    if(s){return s;}
-    s = new DSite(tryS->getAddress(), tryS->getPort(), tryS->getTimeStamp(),
-		  PERM_SITE);
-    secondarySiteTable->insertSecondary(s,hvalue);
-    return s;}
-
-  case I_AM_OLDER:{
-    PD((SITE,"unmarshalsite I_AM_OLDER"));
-    primaryToSecondary(s,hvalue);
-    break;}
-
-  default: Assert(0);}
-
-  // none
-
-  // type is left blank here:
-  s = new DSite(tryS->getAddress(), tryS->getPort(), tryS->getTimeStamp());
-  primarySiteTable->insertPrimary(s,hvalue);
-
-  //
-  if(mt==DIF_SITE_PERM){
-    PD((SITE,"initsite DIF_SITE_PERM"));
-    s->initPerm();
-    return s;}
-
-  if(mt == DIF_SITE_VI) {
-    PD((SITE,"initsite DIF_SITE_VI"));
-
-    //
-    // kost@ : fetch virtual info, which (among other things) 
-    // identifies the 'tryS's group of virtual sites;
-    VirtualInfo *vi = unmarshalVirtualInfo(buf);
-    if (myDSite->isInMyVSGroup(vi))
-      s->initVirtual(vi);
-    else 
-      s->initRemoteVirtual(vi);      
-    return (s);
-  }
-
-  Assert(mt == DIF_SITE);
-  PD((SITE,"initsite DIF_SITE"));
-  s->initRemote();
-  return s;
-}
 
 DSite *findDSite(ip_address a,int port,TimeStamp &stamp)
 {
   DSite tryS(a, port, stamp);
   return (unmarshalDSiteInternal(NULL, &tryS, DIF_SITE));
+}
+DSite *findDSiteRobust(ip_address a,int port,TimeStamp &stamp, int *error)
+{
+  DSite tryS(a, port, stamp);
+  return (unmarshalDSiteInternalRobust(NULL, &tryS, DIF_SITE, error));
 }
 
 DSite* unmarshalDSite(MsgBuffer *buf)
@@ -311,6 +208,17 @@ DSite* unmarshalDSite(MsgBuffer *buf)
 
   tryS.unmarshalBaseSite(buf);
   return unmarshalDSiteInternal(buf, &tryS, mt);
+}
+DSite* unmarshalDSiteRobust(MsgBuffer *buf, int *error)
+{
+  PD((UNMARSHAL,"site"));
+  MarshalTag mt = (MarshalTag) buf->get();
+  Assert(mt == DIF_SITE || mt == DIF_SITE_VI || mt == DIF_SITE_PERM);
+  DSite tryS;
+  int e1,e2;
+
+  tryS.unmarshalBaseSiteRobust(buf, &e1);
+  return unmarshalDSiteInternalRobust(buf, &tryS, mt, &e2);
 }
 
 /**********************************************************************/
@@ -454,6 +362,13 @@ VirtualInfo* unmarshalVirtualInfo(MsgBuffer *mb)
 {
   VirtualInfo *voidVI = freeVirtualInfoPool.allocate();
   VirtualInfo *vi = new (voidVI) VirtualInfo(mb);
+  return (vi);
+}
+//
+VirtualInfo* unmarshalVirtualInfoRobust(MsgBuffer *mb, int *error)
+{
+  VirtualInfo *voidVI = freeVirtualInfoPool.allocate();
+  VirtualInfo *vi = new (voidVI) VirtualInfo(mb, error);
   return (vi);
 }
 

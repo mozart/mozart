@@ -31,14 +31,10 @@
 #pragma implementation "newmarshaler.hh"
 #endif
 
+#include <math.h>
 #include "newmarshaler.hh"
 #include "boot-manager.hh"
 
-
-inline int unmarshalRefTag(MsgBuffer *bs)
-{
-  return unmarshalNumber(bs);
-}
 
 GName *globalizeConst(ConstTerm *t, MsgBuffer *bs)  
 { 
@@ -77,6 +73,19 @@ void unmarshalGName1(GName *gname, MsgBuffer *bs)
   }
   gname->gnameType = (GNameType) unmarshalNumber(bs);
 }
+void unmarshalGName1Robust(GName *gname, MsgBuffer *bs, int *error)
+{
+  int e1,e2;
+  gname->site=unmarshalSiteRobust(bs, &e1);
+  for (int i=0; (i<fatIntDigits && !e1); i++) {
+    int num, e;
+    num = unmarshalNumberRobust(bs, &e);
+    e1 = e || (num > maxDigit);
+    gname->id.number[i] = num;
+  }
+  gname->gnameType = (GNameType) unmarshalNumberRobust(bs, &e2);
+  *error = e1 || e2 || (gname->gnameType > MAX_GNT);
+}
 
 GName *unmarshalGName(TaggedRef *ret, MsgBuffer *bs)
 {
@@ -91,9 +100,36 @@ GName *unmarshalGName(TaggedRef *ret, MsgBuffer *bs)
   }
   return new GName(gname);
 }
+GName *unmarshalGNameRobust(TaggedRef *ret, MsgBuffer *bs, int *error)
+{
+  misc_counter[MISC_GNAME].recv();
+  GName gname;
+  unmarshalGName1Robust(&gname,bs,error);
+  
+  TaggedRef aux = oz_findGName(&gname);
+  if (aux) {
+    if (ret) *ret = aux; // ATTENTION
+    return 0;
+  }
+  return new GName(gname);
+}
 
 //
 int32* NMMemoryManager::freelist[NMMM_SIZE];
+
+int RobustMarshaler_Max_Shift;
+int RobustMarshaler_Max_Hi_Byte;
+//
+// Stuff needed for to check that no overflow is done in unmarshalNumber()
+void initRobustMarshaler()
+{
+  int intsize = sizeof(int);
+  int shft = intsize*7;
+  while(shft <= (intsize*8)-7) shft += 7;
+  RobustMarshaler_Max_Shift = shft;
+  RobustMarshaler_Max_Hi_Byte = 
+    (int) pow(2, (intsize*8)-RobustMarshaler_Max_Shift);
+}
 
 //
 // init stuff - must be called;
@@ -103,6 +139,7 @@ void initNewMarshaler()
   NMMemoryManager::init();
   isInitialized = OK;
   Assert(DIF_LAST == 45);  /* new dif(s) added? */
+  initRobustMarshaler();
 }
 
 //
@@ -435,363 +472,9 @@ Bool Marshaler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 Marshaler marshaler;
 Builder builder;
 
-//
-//
-OZ_Term newUnmarshalTerm(MsgBuffer *bs)
-{
-  Assert(isInitialized);
-  Assert(oz_onToplevel());
-  builder.build();
-
-  while(1) {
-    Builder *b = &builder;
-    MarshalTag tag = (MarshalTag) bs->get();
-
-    dif_counter[tag].recv();	// kost@ : TODO: needed?
-    switch(tag) {
-
-    case DIF_SMALLINT: 
-      b->buildValue(OZ_int(unmarshalNumber(bs)));
-      break;
-
-    case DIF_FLOAT:
-      b->buildValue(OZ_float(unmarshalFloat(bs)));
-      break;
-
-    case DIF_NAME:
-      {
-	int refTag = unmarshalRefTag(bs);
-	char *printname = unmarshalString(bs);
-	OZ_Term value;
-	GName *gname    = unmarshalGName(&value, bs);
-
-	if (gname) {
-	  Name *aux;
-	  if (strcmp("", printname) == 0) {
-	    aux = Name::newName(am.currentBoard());
-	  } else {
-	    aux = NamedName::newNamedName(strdup(printname));
-	  }
-	  aux->import(gname);
-	  value = makeTaggedLiteral(aux);
-	  b->buildValue(value);
-	  addGName(gname, value);
-	} else {
-	  b->buildValue(value);
-	}
-
-	//
-	b->set(value, refTag);
-	delete printname;
-	break;
-      }
-
-    case DIF_COPYABLENAME:
-      {
-	int refTag      = unmarshalRefTag(bs);
-	char *printname = unmarshalString(bs);
-	OZ_Term value;
-
-	NamedName *aux = NamedName::newCopyableName(strdup(printname));
-	value = makeTaggedLiteral(aux);
-	b->buildValue(value);
-	b->set(value, refTag);
-	delete printname;
-	break;
-      }
-
-    case DIF_UNIQUENAME:
-      {
-	int refTag      = unmarshalRefTag(bs);
-	char *printname = unmarshalString(bs);
-	OZ_Term value;
-
-	value = oz_uniqueName(printname);
-	b->buildValue(value);
-	b->set(value, refTag);
-	delete printname;
-	break;
-      }
-
-    case DIF_ATOM:
-      {
-	int refTag = unmarshalRefTag(bs);
-	char *aux  = unmarshalString(bs);
-	OZ_Term value = OZ_atom(aux);
-	b->buildValue(value);
-	b->set(value, refTag);
-	delete aux;
-	break;
-      }
-
-    case DIF_BIGINT:
-      {
-	char *aux  = unmarshalString(bs);
-	b->buildValue(OZ_CStringToNumber(aux));
-	delete aux;
-	break;
-      }
-
-    case DIF_LIST:
-      {
-	int refTag = unmarshalRefTag(bs);
-	b->buildListRemember(refTag);
-	break;
-      }
-
-    case DIF_TUPLE:
-      {
-	int refTag = unmarshalRefTag(bs);
-	int argno  = unmarshalNumber(bs);
-	b->buildTupleRemember(argno, refTag);
-	break;
-      }
-
-    case DIF_RECORD:
-      {
-	int refTag = unmarshalRefTag(bs);
-	b->buildRecordRemember(refTag);
-	break;
-      }
-
-    case DIF_REF:
-      {
-	int i = unmarshalNumber(bs);
-	b->buildValue(b->get(i));
-	break;
-      }
-
-    //
-    // kost@ : remember that either all DIF_OBJECT, DIF_VAR_OBJECT and
-    // DIF_OWNER are remembered, or none of them is remembered. That's
-    // because both 'marshalVariable' and 'marshalObject' could yield
-    // 'DIF_OWNER' (see also dpInterface.hh);
-    case DIF_OWNER:
-    case DIF_OWNER_SEC:
-      {
-	OZ_Term tert = (*unmarshalOwner)(bs, tag);
-	int refTag = unmarshalRefTag(bs);
-	b->buildValueRemember(tert, refTag);
-	break;
-      }
-
-    case DIF_RESOURCE_T:
-    case DIF_PORT:
-    case DIF_THREAD_UNUSED:
-    case DIF_SPACE:
-    case DIF_CELL:
-    case DIF_LOCK:
-    case DIF_OBJECT:
-      {
-	OZ_Term tert = (*unmarshalTertiary)(bs, tag);
-	int refTag = unmarshalRefTag(bs);
-	b->buildValueRemember(tert, refTag);
-	break;
-      }
-
-    case DIF_RESOURCE_N:
-      {
-	OZ_Term tert = (*unmarshalTertiary)(bs, tag);
-	b->buildValue(tert);
-	break;
-      }
-    
-    case DIF_CHUNK:
-      {
-	int refTag = unmarshalRefTag(bs);
-	OZ_Term value;
-	GName *gname = unmarshalGName(&value, bs);
-	
-	if (gname) {
-	  b->buildChunkRemember(gname,refTag);
-	} else {
-	  b->knownChunk(value);
-	  b->set(value,refTag);
-	}
-	break;
-      }
-
-    case DIF_CLASS:
-      {
-	int refTag = unmarshalRefTag(bs);
-	OZ_Term value;
-	GName *gname = unmarshalGName(&value, bs);
-	int flags = unmarshalNumber(bs);
-
-	if (gname) {
-	  b->buildClassRemember(gname,flags,refTag);
-	} else {
-	  b->knownClass(value);
-	  b->set(value,refTag);
-	}
-	break;
-      }
-
-    case DIF_VAR: 
-      {
-	OZ_Term v = (*unmarshalVar)(bs, FALSE, FALSE);
-	int refTag = unmarshalRefTag(bs);
-	b->buildValueRemember(v, refTag);
-	break;
-      }
-
-    case DIF_FUTURE: 
-      {
-	OZ_Term f = (*unmarshalVar)(bs, TRUE, FALSE);
-	int refTag = unmarshalRefTag(bs);
-	b->buildValueRemember(f, refTag);
-	break;
-      }
-
-    case DIF_VAR_AUTO: 
-      {
-	OZ_Term va = (*unmarshalVar)(bs, FALSE, TRUE);
-	int refTag = unmarshalRefTag(bs);
-	b->buildValueRemember(va, refTag);
-	break;
-      }
-
-    case DIF_FUTURE_AUTO: 
-      {
-	OZ_Term fa = (*unmarshalVar)(bs, TRUE, TRUE);
-	int refTag = unmarshalRefTag(bs);
-	b->buildValueRemember(fa, refTag);
-	break;
-      }
-
-    case DIF_VAR_OBJECT:
-      {
-	OZ_Term obj = (*unmarshalTertiary)(bs, tag);
-	int refTag = unmarshalRefTag(bs);
-	b->buildValueRemember(obj, refTag);
-	break;
-      }
-
-    case DIF_PROC:
-      { 
-	OZ_Term value;
-	int refTag    = unmarshalRefTag(bs);
-	GName *gname  = unmarshalGName(&value, bs);
-	int arity     = unmarshalNumber(bs);
-	int gsize     = unmarshalNumber(bs);
-	int maxX      = unmarshalNumber(bs);
-	int line      = unmarshalNumber(bs);
-	int column    = unmarshalNumber(bs);
-	int codesize  = unmarshalNumber(bs); // in ByteCode"s;
-
-	//
-	if (gname) {
-	  //
-	  CodeArea *code = new CodeArea(codesize);
-	  ProgramCounter start = code->getStart();
-	  ProgramCounter pc = start + sizeOf(DEFINITION);
-	  //
-	  BuilderCodeAreaDescriptor *desc =
-	    new BuilderCodeAreaDescriptor(start, start+codesize, code);
-	  b->buildBinary(desc);
-
-	  //
-	  b->buildProcRemember(gname, arity, gsize, maxX, line, column, 
-			       pc, refTag);
-	} else {
-	  Assert(oz_isAbstraction(oz_deref(value)));
-	  // ('zero' descriptions are not allowed;)
-	  BuilderCodeAreaDescriptor *desc =
-	    new BuilderCodeAreaDescriptor(0, 0, 0);
-	  b->buildBinary(desc);
-
-	  //
-	  b->knownProcRemember(value, refTag);
-	}
-	break;
-      }
-
-    //
-    // 'DIF_CODEAREA' is an artifact due to the non-recursive
-    // unmarshaling of code areas: in order to unmarshal an Oz term
-    // that occurs in an instruction, unmarshaling of instructions
-    // must be interrupted and later resumed; 'DIF_CODEAREA' tells the
-    // unmarshaler that a new code area chunk begins;
-    case DIF_CODEAREA:
-      {
-	BuilderOpaqueBA opaque;
-	BuilderCodeAreaDescriptor *desc = 
-	  (BuilderCodeAreaDescriptor *) b->fillBinary(opaque);
-	//
-	if (unmarshalCode(bs, b, desc))
-	  b->finishFillBinary(opaque);
-	else
-	  b->suspendFillBinary(opaque);
-	break;
-      }
-
-    case DIF_DICT:
-      {
-	int refTag = unmarshalRefTag(bs);
-	int size   = unmarshalNumber(bs);
-	Assert(oz_onToplevel());
-	b->buildDictionaryRemember(size,refTag);
-	break;
-      }
-
-    case DIF_BUILTIN:
-      {
-	int refTag = unmarshalRefTag(bs);
-	char *name = unmarshalString(bs);
-	Builtin * found = string2CBuiltin(name);
-
-	OZ_Term value;
-	if (!found) {
-	  OZ_warning("Builtin '%s' not in table.", name);
-	  value = oz_nil();
-	  delete name;
-	} else {
-	  if (found->isSited()) {
-	    OZ_warning("Unpickling sited builtin: '%s'", name);
-	  }
-	
-	  delete name;
-	  value = makeTaggedConst(found);
-	}
-	b->buildValue(value);
-	b->set(value, refTag);
-	break;
-      }
-
-    case DIF_EXTENSION:
-    {
-      int type = unmarshalNumber(bs);
-      OZ_Term value = oz_extension_unmarshal(type,bs);
-      if(value == 0) {
-	break;  // next value is nogood
-      }
-      b->buildValue(value);
-      break;
-    }
-
-    case DIF_FSETVALUE:
-      {
-	b->buildFSETValue();
-	break;
-      }
-
-    case DIF_REF_DEBUG:
-      { OZD_error("not implemented!"); }
-
-    case DIF_ARRAY:
-      { OZD_error("not implemented!"); }
-
-    case DIF_EOF:
-      return (b->finish());
-
-    default:
-      DebugCode(OZ_error("unmarshal: unexpected tag: %d\n",tag);) 
-      Assert(0);
-      b->buildValue(oz_nil());
-    }
-  }
-  Assert(0);
-}
+// for newUnmarshalTerm see unmarshaling.cc
+#include "robust_unmarshaling.cc"
+#include "fast_unmarshaling.cc"
 
 SendRecvCounter dif_counter[DIF_LAST];
 SendRecvCounter misc_counter[MISC_LAST];

@@ -166,3 +166,21 @@ Site* unmarshalSite(MsgBuffer *buf)
   }
   return (s);
 }
+
+Site* unmarshalSiteRobust(MsgBuffer *buf, int *overflow)
+{
+  Site tryS;
+
+  //
+  int minor = buf->getMinor();
+  tryS.unmarshalBaseSiteGNameRobust(buf,minor,overflow);
+
+  //
+  int hvalue = tryS.hash();
+  Site *s = siteTable->find(&tryS, hvalue);
+  if (!s) {
+    s = new Site(&tryS);
+    siteTable->insert(s, hvalue);
+  }
+  return (s);
+}
