@@ -166,7 +166,7 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  inline int hash();
+  inline unsigned int hash();
 };
 
 class Atom: public Literal {
@@ -176,7 +176,7 @@ public:
   static Atom *newAtom(const char *str);
   const char* getPrintName() { return printName; }
   int getSize() { return getOthers(); }
-  int hash() { return ToInt32(this)>>3; }
+  unsigned int hash() { return ToInt32(this)>>3; }
 };
 
 
@@ -195,7 +195,7 @@ public:
   }
 
   int getSeqNumber() { return getOthers(); }
-  int hash() { return getSeqNumber(); }
+  unsigned int hash() { return getSeqNumber(); }
 
   Bool isOnHeap() { return (getFlags()&Lit_isNamedName)==0; }
   Bool hasGName() { return (getFlags()&Lit_hasGName); }
@@ -220,7 +220,7 @@ public:
 };
 
 
-int Literal::hash()
+unsigned int Literal::hash()
 {
   if (isAtom()) return ((Atom*)this)->hash();
   return ((Name*)this)->hash();
@@ -359,7 +359,7 @@ Bool smallIntLE(TaggedRef A, TaggedRef B)
 }
 
 inline
-int smallIntHash(TaggedRef n)
+unsigned int smallIntHash(TaggedRef n)
 {
   return ((int)n)>>tagSize;
 }
@@ -393,7 +393,7 @@ public:
   double getValue() { return value; }
   OZPRINT;
   OZPRINTLONG;
-  int hash() { return (int) value; }
+  unsigned int hash() { return (unsigned int) value; }
 
   Float *gc();
 };
@@ -511,7 +511,7 @@ public:
   int stringLength()      { return mpz_sizeinbase(&value,10)+2; }
   void getString(char *s) { mpz_get_str(s,10,&value); }
   OZPRINTLONG;
-  int hash()              { return 75; } // all BigInt hash to same value
+  unsigned int hash()              { return 75; } // all BigInt hash to same value
   BigInt *gc();
 };
 
@@ -944,7 +944,7 @@ int featureCmp(TaggedRef a,TaggedRef b)
  * NOTE: all bigints are hashed to the same value
  */
 inline
-int featureHash(TaggedRef a)
+unsigned int featureHash(TaggedRef a)
 {
   CHECK_FEATURE(a);
   const TypeOfTerm tag = tagTypeOf(a);

@@ -47,7 +47,7 @@ EntryTable newEntryTable(int sz)
 ProgramCounter *IHashTable::add(Literal *constant, ProgramCounter label)
 {
   numentries++;
-  unsigned int hsh = constant->hash() % size;
+  unsigned int hsh = hash(constant->hash());
 
   if (literalTable == NULL)
     literalTable = newEntryTable(size);
@@ -62,7 +62,7 @@ ProgramCounter *IHashTable::add(Literal *name, SRecordArity arity,
                                 ProgramCounter label)
 {
   numentries++;
-  unsigned int hsh = name->hash() % size;
+  unsigned int hsh = hash(name->hash());
 
   if (functorTable == NULL)
     functorTable = newEntryTable(size);
@@ -81,11 +81,13 @@ ProgramCounter *IHashTable::add(TaggedRef number, ProgramCounter label)
   unsigned int hsh;
   switch (tagTypeOf(number)) {
 
-  case OZFLOAT:  hsh = tagged2Float(number)->hash() % size;  break;
-  case BIGINT:   hsh = tagged2BigInt(number)->hash() % size; break;
-  case SMALLINT: hsh = smallIntHash(number) % size;          break;
+  case OZFLOAT:  hsh = tagged2Float(number)->hash();  break;
+  case BIGINT:   hsh = tagged2BigInt(number)->hash(); break;
+  case SMALLINT: hsh = smallIntHash(number);          break;
   default:       { static ProgramCounter x = NOCODE; Assert(0); return &x; }
   }
+
+  hsh = hash(hsh);
 
   if (numberTable == NULL)
     numberTable = newEntryTable(size);
