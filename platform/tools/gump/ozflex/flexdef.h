@@ -435,6 +435,7 @@ extern const char *skel[];
 extern int skel_ind;
 extern char *infilename, *outfilename;
 extern int did_outfilename;
+extern FILE *outfile;
 extern char *prefix, *yyclass;
 extern int do_stdinit, use_stdout;
 extern char **input_files;
