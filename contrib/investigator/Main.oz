@@ -209,7 +209,7 @@ define
 		 {Map {VectorToList Root}
 		  fun {$ E}
 		     {Record.foldL VarTable
-		      fun {$ L var(reference: Ref id: Id...)}
+		      fun {$ L var(reference: Ref id: Id ...)}
 			 if L == unit then
 			    if {VarEq Ref E} then Id else unit end
 			 else L end

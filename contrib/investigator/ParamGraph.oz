@@ -8,7 +8,6 @@ export
 import
 
    FS
-   Aux(variableToVirtualString)
    Config(paramColour edgeColour)
    
 define
@@ -60,7 +59,7 @@ define
    
    fun {MakeNode Ignore Hist VarTable PropTable H}
       VarStr = {Hist get_sol_var(H.id $)}
-      #{Aux.variableToVirtualString H.reference}
+      #H.nameconstraint
 \ifdef SHOW_ID
       #" ["#H.id#"]"
 \endif

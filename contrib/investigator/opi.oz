@@ -16,8 +16,9 @@ end
 {BrowserPluginActivate}
 
 declare [R] = {Module.link ['x-oz://contrib/Reflect.ozf']}
-/*
 
+
+/*
 
 declare
 proc {Problem Sol}
@@ -90,7 +91,7 @@ B <: C
 
 {Browse {R.spaceReflect X}}
 
-{InvestigateConstraints S}
+{InvestigateConstraints A}
 
 
 \insert ~/Programming/Oz/coins.oz
