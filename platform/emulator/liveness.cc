@@ -216,7 +216,20 @@ outerLoop2:
         ISREAD(GETREGARG(PC+2));
         break;
 
+      case INLINEPLUS1:
+      case INLINEMINUS1:
+        ISREAD(GETREGARG(PC+1));
+        ISWRITE(GETREGARG(PC+2)); // must be last
+        break;
+
       case INLINEFUN1:
+        ISREAD(GETREGARG(PC+2));
+        ISWRITE(GETREGARG(PC+3)); // must be last
+        break;
+
+      case INLINEPLUS:
+      case INLINEMINUS:
+        ISREAD(GETREGARG(PC+1));
         ISREAD(GETREGARG(PC+2));
         ISWRITE(GETREGARG(PC+3)); // must be last
         break;
@@ -264,6 +277,13 @@ outerLoop2:
         break;
 
       case SHALLOWTEST1:
+        ISREAD(GETREGARG(PC+2));
+        PUSH(getLabelArg(PC+3));
+        break;
+
+      case TESTLESS:
+      case TESTLESSEQ:
+        ISREAD(GETREGARG(PC+1));
         ISREAD(GETREGARG(PC+2));
         PUSH(getLabelArg(PC+3));
         break;
