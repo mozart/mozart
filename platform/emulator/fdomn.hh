@@ -20,13 +20,9 @@
 
 #include "oz_cpi.hh"
 
-#define FD_NOI 4 // number of intervals
-//#define FD_NOI 16 // number of intervals
-
 const int fd_inf = 0;
 const int fd_sup = OZ_smallIntMax() - 1;
 
-const int fd_iv_max_high = FD_NOI;
 const int fd_full_size = fd_sup + 1;
 
 // TMUELLER: MAXFDBIARGS twice
@@ -42,7 +38,7 @@ private:
   OZ_Boolean isConsistent(void) const;
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD)
   struct _i_arr_type {
-    i_arr_type _i_arr[fd_iv_max_high];
+    i_arr_type _i_arr[1];
     i_arr_type &operator [] (int i) /*const*/ {
       AssertFD(0 <= i && i < *(((int *)this) - 1));
       return _i_arr[i];
@@ -53,7 +49,7 @@ private:
     }
   } i_arr;
 #else
-  i_arr_type i_arr[fd_iv_max_high];
+  i_arr_type i_arr[1];
 #endif
 
   int findPossibleIndexOf(int) const;
@@ -63,18 +59,24 @@ public:
 
   const FDIntervals &operator = (const FDIntervals &);
 
-  size_t memory_required(int hi) { // used for profiling
-    return sizeof(int) + 2 * hi * sizeof(int);
+  static size_t sizeOf(int hi) {
+    return (1 + 2 * hi) * sizeof(int);
   }
-  void * operator new (size_t s) {return freeListMalloc(s);}
-  void * operator new (size_t s, int hi) {
-    return heapMalloc(s + 2 * (hi - fd_iv_max_high) * sizeof(int));
+  size_t sizeOf(void) {
+    return sizeOf(high);
+  }
+  void * operator new(size_t, int hi) {
+    return heapMalloc(FDIntervals::sizeOf(hi));
+  }
+  void * operator new (size_t)  {
+    error("Unexpected call of FDIntervals::new.");
+    return NULL;
   }
   void operator delete(void *, size_t) {
     error("Unexpected call of FDIntervals::delete.");
   }
   void dispose(void) {
-    if (high <= fd_iv_max_high) freeListDispose(this, sizeof(FDIntervals));
+    freeListDispose(this, sizeOf());
   }
   int getHigh(void) { return high; }
 
@@ -101,47 +103,63 @@ public:
   void init(int, int, int, int);
   FDIntervals * complement(FDIntervals *);
   FDIntervals * complement(int, int * , int *);
-  void copy(FDIntervals *);
   int union_iv(const FDIntervals &, const FDIntervals &);
   int intersect_iv(FDIntervals &, const FDIntervals &);
   int subtract_iv (FDIntervals &, const FDIntervals &);
 };
 
-const int fd_bv_max_high = 2 * FD_NOI + 1;
-const int fd_bv_max_elem = 32 * fd_bv_max_high - 1;
-const int fd_bv_conv_max_high = (fd_bv_max_elem) / 2 + 2;
 
-extern int fd_bv_left_conv[fd_bv_conv_max_high];
-extern int fd_bv_right_conv[fd_bv_conv_max_high];
+extern int fd_bv_max_high, fd_bv_max_elem, fd_bv_conv_max_high;
+extern int * fd_bv_left_conv, * fd_bv_right_conv;
 
-// Invariants: size < max_elem - min_elem + 1 otherwise reduce to OZ_FiniteDomain
+inline int div32(int n) { return n >> 5; }
+inline int mod32(int n) { return n & 0x1f; }
+inline int word32(int n) { n+=1; return mod32(n) ? div32(n) + 1 : div32(n); }
+
+// Invariants: size < max_elem - min_elem + 1 otherwise
+// reduce to OZ_FiniteDomain
 class FDBitVector {
+friend class OZ_FiniteDomainImpl;
 private:
+  int high;
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD)
   struct b_arr_t {
-    int _b_arr[fd_bv_max_high];
+    int _b_arr[1];
     int &operator [] (int i) /*const*/ {
-      AssertFD(0 <= i && i < fd_bv_max_high);
+      AssertFD(0 <= i && i < *(((int *)this) - 1));
       return _b_arr[i];
     }
     int operator [] (int i) const {
-      AssertFD(0 <= i && i < fd_bv_max_high);
+      AssertFD(0 <= i && i < *(((int *)this) - 1));
       return _b_arr[i];
     }
   } b_arr;
 #else
-  int b_arr[fd_bv_max_high];
+  int b_arr[1];
 #endif
 public:
-  void * operator new (size_t s) {return freeListMalloc(s);}
+  void * operator new (size_t) {
+    error("Unexpected call of FDBitVector::new.");
+    return NULL;
+  }
   void operator delete(void *, size_t) {
     error("Unexpected call of FDBitVector::delete.");
   }
-  void dispose(void) {freeListDispose(this, sizeof(FDBitVector));}
+  FDBitVector(void) { error("Unexpected call of FDBitVector::FDBitVector."); }
+  FDBitVector(int hi) : high(hi) { Assert(high <= word32(fd_bv_max_elem)); }
 
-  size_t memory_required(void); // used for profiling
+  static size_t sizeOf(int hi) { return (1 + hi) * sizeof(int); }
+  size_t sizeOf(void) { return sizeOf(high); }
 
-  FDBitVector(void){}
+  int currBvMaxElem(void) const { return 32*high-1; }
+  int getHigh(void) { return high; }
+  void * operator new(size_t, int hi) {
+    return heapMalloc(FDBitVector::sizeOf(hi));
+  }
+  void dispose(void) {
+    freeListDispose(this, sizeOf());
+  }
+
   void print(ostream &, int = 0) const;
   void printLong(ostream &, int = 0) const;
   void printDebug(void) const;
@@ -158,6 +176,7 @@ public:
   int findSize(void);
   int findMinElem(void);
   int findMaxElem(void);
+  void findHigh(int);
   void initList(int list_len, int * list_left, int * list_right);
   int nextSmallerElem(int v, int upper) const;
   int nextLargerElem(int v, int upper) const;
@@ -169,9 +188,12 @@ public:
   int operator -= (const FDBitVector &);
   int mkRaw(int * list_left, int * list_right) const;
   int mkRawOutline(int * list_left, int * list_right) const;
-  int union_bv(const FDBitVector &, const int,
-               const FDBitVector &, const int);
-  int intersect_bv(FDBitVector &, const FDBitVector &);
+
+  const FDBitVector &operator = (const FDBitVector &);
+
+  int union_bv(const FDBitVector &, const FDBitVector &);
+  int intersect_bv(const FDBitVector &, const FDBitVector &);
+  int intersect_bv(const FDBitVector &);
 };
 
 typedef FDBitVector BitArray;
@@ -203,7 +225,7 @@ protected:
   void set_iv(void * p);
   void set_bv(void * p);
 
-  FDBitVector * provideBitVector(void) const;
+  FDBitVector * provideBitVector(int) const;
   FDIntervals * provideIntervals(int) const;
   int findSize(void) const;
   OZ_Boolean isSingleInterval(void) const;
@@ -274,5 +296,6 @@ public:
 };
 
 void initFDs();
+void reInitFDs(int);
 
 #endif
