@@ -41,42 +41,12 @@
 #include <sys/types.h>
 #undef _POSIX_SOURCE
 
-
 #include <sys/times.h>
 #include <fcntl.h>
 
-typedef HINSTANCE HMODULE;
-#define CreateEvent  CreateEventA
 extern "C" {
 
-typedef void *PVOID;
 #include "winsock.h"
-
-#ifdef OLDCYGGNUS
-
-#define MAKEWORD(a, b) ((WORD)(((BYTE)(a)) | ((WORD)((BYTE)(b))) << 8))
-
-  BOOL WINAPI SetStdHandle(DWORD nStdHandle, HANDLE hHandle);
-#define GetModuleHandle  GetModuleHandleA
-  HMODULE WINAPI GetModuleHandleA(LPCSTR lpModuleName);
-  BOOL WINAPI FreeLibrary(HINSTANCE hLibModule);
-  FARPROC WINAPI GetProcAddress(HINSTANCE hModule,LPCSTR lpProcName);
-
-typedef struct _OSVERSIONINFOW {
-    DWORD dwOSVersionInfoSize;
-    DWORD dwMajorVersion;
-    DWORD dwMinorVersion;
-    DWORD dwBuildNumber;
-    DWORD dwPlatformId;
-    WCHAR  szCSDVersion[ 128 ];       // Maintenance string for PSS usage
-} OSVERSIONINFO, *POSVERSIONINFO, *LPOSVERSIONINFO;
-
-BOOL WINAPI GetVersionExW(LPOSVERSIONINFO lpVersionInformation);
-#define VER_PLATFORM_WIN32s             0
-#define VER_PLATFORM_WIN32_WINDOWS      1
-#define VER_PLATFORM_WIN32_NT           2
-
-#endif
 
   inline void _endthreadex( unsigned __retval )
   {
