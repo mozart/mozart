@@ -457,6 +457,11 @@ Bool AM::hookCheckNeeded()
     if (e->hookCheckNeeded()) {                 \
       if (e->emulateHookOutline()) {            \
         Code;                                   \
+        if (e->isSetSFlag(StopThread)) {        \
+          e->unsetSFlag(StopThread);            \
+          PC=NOCODE;                            \
+          goto LBLreplaceBICall;                \
+        }                                       \
         return T_PREEMPT;                       \
       }                                         \
     }
@@ -655,8 +660,8 @@ extern void checkLiveness(ProgramCounter PC, int n, TaggedRef *X, int max);
 
 void addSusp(TaggedRef *varPtr, Thread *thr)
 {
-  if(thr->getPStop()==0)
-    addSuspAnyVar(varPtr,thr);
+  //  if(thr->getPStop()==0) ???????????????
+  addSuspAnyVar(varPtr,thr);
 }
 
 
@@ -1562,9 +1567,9 @@ LBLdispatcher:
       if (stateIsCell(state)) {
         rec = getState(state,NO,fea,XPC(2));
         if (rec==NULL) {
-          int argsToSave = MaxToSave(2,3);
-          PushContX(PC+6,Y,G,X,argsToSave);
-          return T_SUSPEND;
+          argsToSave = MaxToSave(2,3);
+          PC += 6;
+          goto LBLreplaceBICall;
         }
       } else {
         rec = getRecord(state);
@@ -1596,9 +1601,9 @@ LBLdispatcher:
       if (stateIsCell(state)) {
         rec = getState(state,OK,fea,XPC(2));
         if (rec==NULL) {
-          int argsToSave = getPosIntArg(PC+3);
-          PushContX(PC+6,Y,G,X,argsToSave);
-          return T_SUSPEND;
+          argsToSave = getPosIntArg(PC+3);
+          PC += 6;
+          goto LBLreplaceBICall;
         }
       } else {
         rec = getRecord(state);
@@ -2097,7 +2102,7 @@ LBLdispatcher:
   OzLock *t = (OzLock*)tagged2Tert(aux);
   Thread *th=e->currentThread();
 
-  if(t->getTertType()==Te_Local){
+  if(t->isLocal()){
     if(!e->onToplevel()){
       if (!e->isCurrentBoard(GETBOARD((LockLocal*)t))) {
         (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
@@ -2136,9 +2141,9 @@ LBLdispatcher:
   no_lock:
     PushCont(PC+lbl,Y,G);
     CTS->pushLock(t);
-    CheckLiveness(PC+4,toSave);
-    PushContX((PC+4),Y,G,X,toSave);      /* ATTENTION */
-    return T_SUSPEND;
+    argsToSave = toSave;
+    PC += 4;
+    goto LBLreplaceBICall;
   }
 
   Case(RETURN)

@@ -68,7 +68,7 @@ LBLstart:
   DebugTrace(ozd_trace("runnable thread->running"));
 
   // source level debugger & Thread.suspend
-  if (CTT->getStop() || CTT->getPStop()) {
+  if (CTT->getStop()) {
     e->unsetCurrentThread();  // byebye...
     goto LBLstart;
   }

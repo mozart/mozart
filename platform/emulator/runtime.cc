@@ -30,34 +30,6 @@
 
 #include <stdarg.h>
 
-// mm2: suspend/resume has to be overhauled
-void oz_suspendOnNet(Thread *th)
-{
-  if (th->pStop()==0) {
-    if (th == am.currentThread()) {
-      am.setSFlag(StopThread);
-    }
-    if (th->isRunnable())
-      th->unmarkRunnable();
-  }
-}
-
-void oz_resumeFromNet(Thread *th)
-{
-  if (th->pCont()==0) {
-    if (!th->isDeadThread()) {
-      if (th == am.currentThread()) {
-        Assert(am.isSetSFlag(StopThread));
-        am.unsetSFlag(StopThread);
-      } else {
-        am.suspThreadToRunnable(th);
-        if (!am.isScheduledSlow(th))
-          am.scheduleThread(th);
-      }
-    }
-  }
-}
-
 int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...)
 {
   Assert(!isRef(cat));

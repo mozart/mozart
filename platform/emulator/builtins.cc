@@ -124,15 +124,13 @@ OZ_BI_define(Name,3,0)                                  \
 #define NEW_DECLAREBI_USEINLINEFUN1(Name,InlineName)    \
 OZ_BI_define(Name,1,1)                                  \
 {                                                       \
-  OZ_Term help;                                         \
+  OZ_Term aux;                                          \
   oz_declareIN(0,arg1);                                 \
-  OZ_Return state = InlineName(arg1,help);              \
-  switch (state) {                                      \
-  case SUSPEND:                                         \
+  OZ_Return state = InlineName(arg1,aux);               \
+  OZ_result(aux);                                       \
+  if (state==SUSPEND) {                                 \
     oz_suspendOn(arg1);                                 \
-  case PROCEED:                                         \
-    OZ_RETURN(help);                                    \
-  default:                                              \
+  } else {                                              \
     return state;                                       \
   }                                                     \
 } OZ_BI_end
@@ -140,16 +138,14 @@ OZ_BI_define(Name,1,1)                                  \
 #define NEW_DECLAREBI_USEINLINEFUN2(Name,InlineName)    \
 OZ_BI_define(Name,2,1)                                  \
 {                                                       \
-  OZ_Term help;                                         \
+  OZ_Term aux;                                          \
   oz_declareIN(0,arg0);                                 \
   oz_declareIN(1,arg1);                                 \
-  OZ_Return state=InlineName(arg0,arg1,help);           \
-  switch (state) {                                      \
-  case SUSPEND:                                         \
+  OZ_Return state=InlineName(arg0,arg1,aux);            \
+  OZ_result(aux);                                       \
+  if (state==SUSPEND) {                                 \
     oz_suspendOn2(arg0,arg1);                           \
-  case PROCEED:                                         \
-    OZ_RETURN(help);                                    \
-  default:                                              \
+  } else {                                              \
     return state;                                       \
   }                                                     \
 } OZ_BI_end
@@ -157,20 +153,19 @@ OZ_BI_define(Name,2,1)                                  \
 #define NEW_DECLAREBI_USEINLINEFUN3(Name,InlineName)    \
 OZ_BI_define(Name,3,1)                                  \
 {                                                       \
-  OZ_Term help;                                         \
+  OZ_Term aux;                                          \
   oz_declareIN(0,arg0);                                 \
   oz_declareIN(1,arg1);                                 \
   oz_declareIN(2,arg2);                                 \
-  OZ_Return state=InlineName(arg0,arg1,arg2,help);      \
-  switch (state) {                                      \
-  case SUSPEND:                                         \
+  OZ_Return state=InlineName(arg0,arg1,arg2,aux);       \
+  OZ_result(aux);                                       \
+  if (state==SUSPEND) {                                 \
     oz_suspendOn3(arg0,arg1,arg2);                      \
-  case PROCEED:                                         \
-    OZ_RETURN(help);                                    \
-  default:                                              \
+  } else {                                              \
     return state;                                       \
   }                                                     \
 } OZ_BI_end
+
 
 #define NEW_DECLAREBOOLFUN1(BIfun,ifun,irel)            \
 OZ_BI_define(BIfun,1,1)                                 \
@@ -2729,7 +2724,6 @@ void threadRaise(Thread *th,OZ_Term E,int debug) {
   th->pushCFun(debug?BIraiseDebug:BIraise, args, 1, OK);
 
   th->setStop(NO);
-  th->zeroPStop();
 
   if (th->isSuspended())
     am.suspThreadToRunnable(th);
@@ -4811,27 +4805,6 @@ OZ_BI_define(BIprobe,1,0)
   return PROCEED;
 } OZ_BI_end
 
-OZ_BI_define(BIrestop,1,0)
-{
-  OZ_Term entity = OZ_in(0);
-  DEREF(entity,entityPtr,entityTag);
-
-  switch(entityTag){
-  case OZCONST:{
-    switch(tagged2Const(entity)->getType()){
-    case Co_Cell:
-    case Co_Port:
-    case Co_Lock:{
-      tagged2Tert(entity)->restop();
-      break;}
-    default: Assert(0);}
-    break;}
-  default:{
-    Assert(0);}}
-  oz_suspendOnNet(am.currentThread());
-  return BI_PREEMPT;
-} OZ_BI_end
-
 OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
   EntityCond ec = PERM_BLOCKED;
   Thread *th      = am.currentThread();
@@ -5081,6 +5054,22 @@ OZ_Return applyProc(TaggedRef proc, TaggedRef args)
 }
 
 
+/* bind control var in it's home space */
+void controlVarUnify(TaggedRef var, TaggedRef val)
+{
+  TaggedRef aux = deref(var);
+  Board *home = isSVar(aux) ? tagged2SVar(aux)->getHome1()
+                            : tagged2VarHome(aux);
+  if (am.onToplevel() && home==oz_rootBoard()) {
+    OZ_Return aux = oz_unify(var,val);
+    Assert(aux==PROCEED);
+  } else {
+    Thread *th=am.mkRunnableThread(DEFAULT_PRIORITY,home);
+    th->pushCall(BI_Unify,var,val);
+    am.scheduleThread(th);
+  }
+}
+
 OZ_Return suspendOnControlVar()
 {
   am.prepareCall(BI_controlVarHandler,am.getSuspendVarList());
@@ -5164,7 +5153,7 @@ bomb:
 // for debugging
 OZ_BI_define(BIcheckCVH,1,0)
 {
-  ControlVarNew(var);
+  ControlVarNew(var,oz_rootBoard());
   oz_unify(var,OZ_in(0)); // mm_u
   SuspendOnControlVar;
 } OZ_BI_end
@@ -5891,9 +5880,6 @@ OZ_BI_define(BIcopyRecord,1,1)
 } OZ_BI_end
 
 
-OZ_C_proc_proto(BIatWithState);
-OZ_C_proc_proto(BIassignWithState);
-
 inline
 SRecord *getStateInline(RecOrCell state, Bool isAssign, Bool newVar,
                         OZ_Term fea, OZ_Term &val, int &EmCode)
@@ -5995,17 +5981,6 @@ OZ_Return atInline(TaggedRef fea, TaggedRef &out)
 }
 NEW_DECLAREBI_USEINLINEFUN1(BIat,atInline)
 
-OZ_BI_define(BIatWithState,3,0)
-{
-  oz_declareNonvarIN(0,state);
-  OZ_Term fea = OZ_in(1);
-  OZ_Term out;
-  int ret = doAt(tagged2SRecord(deref(state)),fea,out);
-  if (ret!=PROCEED) return ret;
-  return oz_unify(OZ_in(2),out);
-} OZ_BI_end
-
-
 inline
 OZ_Return doAssign(SRecord *r, TaggedRef fea, TaggedRef value)
 {
@@ -6041,14 +6016,6 @@ OZ_Return assignInline(TaggedRef fea, TaggedRef value)
 
 NEW_DECLAREBI_USEINLINEREL2(BIassign,assignInline)
 
-OZ_BI_define(BIassignWithState,3,0)
-{
-  oz_declareNonvarIN(0,state);
-  OZ_Term fea = OZ_in(1);
-  OZ_Term val = OZ_in(2);
-
-  return doAssign(tagged2SRecord(deref(state)),fea,val);
-} OZ_BI_end
 
 OZ_Return ooExchInline(TaggedRef fea, TaggedRef newAttr, TaggedRef &oldAttr)
 {
@@ -6085,7 +6052,7 @@ bomb:
 NEW_DECLAREBI_USEINLINEFUN2(BIooExch,ooExchInline)
 
 
-int sizeOf(SRecord *sr)
+inline int sizeOf(SRecord *sr)
 {
   return sr ? sr->sizeOf() : 0;
 }
@@ -6901,7 +6868,6 @@ Builtin *BIinit()
   BIinitTclTk();
 
   BIinitPerdio();
-  BI_restop=makeTaggedConst(builtinTab.find("perdioRestop"));
 
   BI_probe=makeTaggedConst(builtinTab.find("probe"));
   BI_Delay=makeTaggedConst(builtinTab.find("Delay"));

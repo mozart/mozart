@@ -691,7 +691,7 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
   int rfd = fds[0];
 #endif
 
-  ControlVarNew(var);
+  ControlVarNew(var,am.currentBoard());
   PipeInfo *pi = new PipeInfo(rfd,pid,tmpfile,url,out,var,act);
   OZ_registerReadHandler(rfd,pipeHandler,pi);
   SuspendOnControlVar;

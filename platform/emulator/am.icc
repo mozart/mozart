@@ -222,7 +222,7 @@ void AM::removeExtThread(Thread *tt)
 INLINE
 void AM::suspThreadToRunnableOPT(Thread *tt)
 {
-  Assert(tt->isSuspended() || tt->getPStop());
+  Assert(tt->isSuspended());
 
   tt->markRunnable();
 
@@ -250,7 +250,7 @@ void AM::suspThreadToRunnableOPT(Thread *tt)
 INLINE
 void AM::suspThreadToRunnable(Thread *tt)
 {
-  Assert(tt->isSuspended() || tt->getPStop());
+  Assert(tt->isSuspended());
 
   tt->markRunnable();
 
