@@ -131,7 +131,7 @@ OZ_C_proc_end
 
 class CDPropagator : public OZ_Propagator {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile spawner;
 protected:
   OZ_Term b_tuple, v_tuple, vp_tuple;
 public:
@@ -146,7 +146,7 @@ public:
   virtual size_t sizeOf(void) { return sizeof(CDPropagator); }
   virtual OZ_Return propagate(void);
   virtual OZ_Term getParameters(void) const { return OZ_nil(); }
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &spawner; }
 };
 
 int unifiedVars(int sz, OZ_Term * v)
@@ -501,7 +501,7 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
 }
 OZ_C_proc_end
 
-OZ_CFunHeader CDPropagator::spawner = BIfdConstrDisj;
+OZ_PropagatorProfile CDPropagator::spawner = "BIfdConstrDisj";
 
 CDSuppl::CDSuppl(OZ_Propagator * p, OZ_Term b) : reg_b(b)
 {

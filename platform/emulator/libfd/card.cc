@@ -523,8 +523,8 @@ failure:
 //-----------------------------------------------------------------------------
 // static member
 
-OZ_CFunHeader LinEqBPropagator::spawner = fdp_sumCR;
-OZ_CFunHeader LinNotEqBPropagator::spawner = fdp_sumCR;
-OZ_CFunHeader LinLessEqBPropagator::spawner = fdp_sumCR;
-OZ_CFunHeader InBPropagator::spawner = fdp_intR;
-OZ_CFunHeader CardBPropagator::spawner = fdp_card;
+OZ_PropagatorProfile LinEqBPropagator::profile = "fdp_sumCR";
+OZ_PropagatorProfile LinNotEqBPropagator::profile = "fdp_sumCR";
+OZ_PropagatorProfile LinLessEqBPropagator::profile = "fdp_sumCR";
+OZ_PropagatorProfile InBPropagator::profile = "fdp_intR";
+OZ_PropagatorProfile CardBPropagator::profile = "fdp_card";

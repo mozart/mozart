@@ -303,15 +303,13 @@ void SolveActor::scheduleNonMonoSuspList(void)
     Propagator * prop = p->getPropagator();
 
 #ifdef DEBUG_NONMONOTONIC
-    OZ_CFunHeader * header = prop->getPropagator()->getHeader();
-    OZ_CFun headerfunc = header->getHeaderFunc();
-    printf("<%s %d>\n", builtinTab.getName((void *) headerfunc),
+    OZ_PropagatorProfile * header = prop->getPropagator()->getProfile();
+    char * pn = header->getPropagatorName();
+    printf("<%s %d>\n", pn),
            prop->getPropagator()->getOrder());
 #endif
 
-    //am.updateSolveBoardPropagatorToRunnable(thr);
     GETBOARD(prop)->pushToLPQ(prop);
-    //am.scheduleThreadInline(thr, thr->getPriority());
   }
 
   nonMonoSuspList = NULL;

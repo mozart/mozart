@@ -409,9 +409,9 @@ failure:
 // static member
 
 
-OZ_CFunHeader ConjunctionPropagator::spawner = fdp_conj;
-OZ_CFunHeader DisjunctionPropagator::spawner = fdp_disj;
-OZ_CFunHeader XDisjunctionPropagator::spawner = fdp_exor;
-OZ_CFunHeader ImplicationPropagator::spawner = fdp_impl;
-OZ_CFunHeader EquivalencePropagator::spawner = fdp_equi;
-OZ_CFunHeader NegationPropagator::spawner = fdp_nega;
+OZ_PropagatorProfile ConjunctionPropagator::profile = "fdp_conj";
+OZ_PropagatorProfile DisjunctionPropagator::profile = "fdp_disj";
+OZ_PropagatorProfile XDisjunctionPropagator::profile = "fdp_exor";
+OZ_PropagatorProfile ImplicationPropagator::profile = "fdp_impl";
+OZ_PropagatorProfile EquivalencePropagator::profile = "fdp_equi";
+OZ_PropagatorProfile NegationPropagator::profile = "fdp_nega";

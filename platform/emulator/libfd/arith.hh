@@ -33,11 +33,11 @@
 
 class TwicePropagator : public Propagator_D_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   TwicePropagator(OZ_Term x, OZ_Term y) : Propagator_D_D(x, y) {}
 
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 
@@ -45,11 +45,11 @@ public:
 
 class SquarePropagator : public Propagator_D_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   SquarePropagator(OZ_Term x, OZ_Term y) : Propagator_D_D(x, y) {}
 
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 
@@ -57,12 +57,12 @@ public:
 
 class PlusPropagator : public Propagator_D_D_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   PlusPropagator(OZ_Term x, OZ_Term y, OZ_Term z)
     : Propagator_D_D_D(x, y, z) {}
 
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 
@@ -70,12 +70,12 @@ public:
 
 class MinusPropagator : public Propagator_D_D_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   MinusPropagator(OZ_Term x, OZ_Term y, OZ_Term z)
     : Propagator_D_D_D(x, y, z) { };
 
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 
@@ -83,12 +83,12 @@ public:
 
 class TimesPropagator : public Propagator_D_D_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   TimesPropagator(OZ_Term x, OZ_Term y, OZ_Term z)
     : Propagator_D_D_D(x, y, z) { };
 
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 
@@ -96,45 +96,45 @@ public:
 
 class DivPropagator : public Propagator_D_I_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   DivPropagator(OZ_Term x, OZ_Term y, OZ_Term z)
     : Propagator_D_I_D(x, y, z) { };
 
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 
 class DivIPropagator : public Propagator_D_I_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   DivIPropagator(OZ_Term x, OZ_Term y, OZ_Term z)
     : Propagator_D_I_D(x, y, z) { };
 
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 
 class ModPropagator : public Propagator_D_I_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   ModPropagator(OZ_Term x, OZ_Term y, OZ_Term z)
     : Propagator_D_I_D(x, y, z) { };
 
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 
 class ModIPropagator : public Propagator_D_I_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   ModIPropagator(OZ_Term x, OZ_Term y, OZ_Term z)
     : Propagator_D_I_D(x, y, z) { };
 
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 
@@ -142,12 +142,12 @@ public:
 
 class PowerPropagator : public Propagator_D_D_I {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   PowerPropagator(OZ_Term x, OZ_Term y,  int c)
     : Propagator_D_D_I(x, y, c) {}
 
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 

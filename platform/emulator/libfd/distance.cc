@@ -468,7 +468,7 @@ failure:
 //-----------------------------------------------------------------------------
 // static member
 
-OZ_CFunHeader DistancePropagatorLeq::spawner = fdp_distance;
-OZ_CFunHeader DistancePropagatorGeq::spawner = fdp_distance;
-OZ_CFunHeader DistancePropagatorEq::spawner = fdp_distance;
-OZ_CFunHeader DistancePropagatorNeq::spawner = fdp_distance;
+OZ_PropagatorProfile DistancePropagatorLeq::profile = "fdp_distance";
+OZ_PropagatorProfile DistancePropagatorGeq::profile = "fdp_distance";
+OZ_PropagatorProfile DistancePropagatorEq::profile = "fdp_distance";
+OZ_PropagatorProfile DistancePropagatorNeq::profile = "fdp_distance";

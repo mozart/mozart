@@ -82,10 +82,10 @@ OZ_C_proc_begin(fdp_sumAC, 4)
 }
 OZ_C_proc_end
 
-OZ_CFunHeader LinEqAbsPropagator::header = fdp_sumAC;
-OZ_CFunHeader LinLessEqAbsPropagator::header = fdp_sumAC;
-OZ_CFunHeader LinGreaterEqAbsPropagator::header = fdp_sumAC;
-OZ_CFunHeader LinNotEqAbsPropagator::header = fdp_sumAC;
+OZ_PropagatorProfile LinEqAbsPropagator::profile = "fdp_sumAC";
+OZ_PropagatorProfile LinLessEqAbsPropagator::profile = "fdp_sumAC";
+OZ_PropagatorProfile LinGreaterEqAbsPropagator::profile = "fdp_sumAC";
+OZ_PropagatorProfile LinNotEqAbsPropagator::profile = "fdp_sumAC";
 
 //-----------------------------------------------------------------------------
 

@@ -1562,6 +1562,11 @@ $builtins = {
                              BI  => BIonToplevel,
                              native => false},
 
+    'getConstraints'    => { in  => ['+value','+[value]'],
+                             out => [],
+                             bi  => BIgetConstraints,
+                             native => true},
+
 
     #* OS interface
 
@@ -3169,6 +3174,12 @@ $builtins = {
     'fsp_isIn'          => { in  => ['int','fset','bool'],
                              out => [],
                              bi  => fsp_isIn,
+                             module => libfset,
+                             native => true},
+
+    'fsp_equalR'        => { in  => ['fset','fset','bool'],
+                             out => [],
+                             bi  => fsp_equalR,
                              module => libfset,
                              native => true},
 

@@ -31,15 +31,15 @@
 
 class IsInPropagator : public Propagator_S_I_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   IsInPropagator(OZ_Term v, OZ_Term i, OZ_Term b)
     : Propagator_S_I_D(v, i, b) { }
 
   virtual OZ_Return propagate(void);
 
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &spawner;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }
 };
 

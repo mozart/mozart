@@ -642,19 +642,19 @@ do_leave:
 }
 
 //-----------------------------------------------------------------------------
-OZ_CFunHeader isumEqProp::spawner = fdp_dsum;
-OZ_CFunHeader isumNEqProp::spawner = fdp_dsum;
-OZ_CFunHeader isumLeqProp::spawner = fdp_dsum;
-OZ_CFunHeader isumLtProp::spawner = fdp_dsum;
-OZ_CFunHeader isumGeqProp::spawner = fdp_dsum;
-OZ_CFunHeader isumGtProp::spawner = fdp_dsum;
+OZ_PropagatorProfile isumEqProp::profile = "fdp_dsum";
+OZ_PropagatorProfile isumNEqProp::profile = "fdp_dsum";
+OZ_PropagatorProfile isumLeqProp::profile = "fdp_dsum";
+OZ_PropagatorProfile isumLtProp::profile = "fdp_dsum";
+OZ_PropagatorProfile isumGeqProp::profile = "fdp_dsum";
+OZ_PropagatorProfile isumGtProp::profile = "fdp_dsum";
 
-OZ_CFunHeader isumcEqProp::spawner = fdp_dsumC;
-OZ_CFunHeader isumcNEqProp::spawner = fdp_dsumC;
-OZ_CFunHeader isumcLeqProp::spawner = fdp_dsumC;
-OZ_CFunHeader isumcLtProp::spawner = fdp_dsumC;
-OZ_CFunHeader isumcGeqProp::spawner = fdp_dsumC;
-OZ_CFunHeader isumcGtProp::spawner = fdp_dsumC;
+OZ_PropagatorProfile isumcEqProp::profile = "fdp_dsumC";
+OZ_PropagatorProfile isumcNEqProp::profile = "fdp_dsumC";
+OZ_PropagatorProfile isumcLeqProp::profile = "fdp_dsumC";
+OZ_PropagatorProfile isumcLtProp::profile = "fdp_dsumC";
+OZ_PropagatorProfile isumcGeqProp::profile = "fdp_dsumC";
+OZ_PropagatorProfile isumcGtProp::profile = "fdp_dsumC";
 
 //-----------------------------------------------------------------------------
 // eof

@@ -35,7 +35,7 @@ class Counter : public OZ_Propagator {
 private:
   int c;
   OZ_Term s;
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   Counter(OZ_Term i, OZ_Term st) : c(OZ_intToC(i)), s(st) {}
 
@@ -43,7 +43,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean) { OZ_updateHeapTerm(s); }
   virtual OZ_Return propagate(void);
   virtual OZ_Term getParameters(void) const { RETURN_LIST2(OZ_int(c), s); }
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 
@@ -52,7 +52,7 @@ private:
   int size;
   OZ_Term * reg_fds;
   OZ_Term stream;
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   //  FirstFail(OZ_Term l, OZ_Term stream) : FirstFail(l, stream) {};
   FirstFail(OZ_Term, OZ_Term);
@@ -60,7 +60,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean);
   virtual OZ_Return propagate(void);
   virtual OZ_Term getParameters(void) const { RETURN_LIST2(OZ_int(size), stream); }
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 //-----------------------------------------------------------------------------
@@ -70,7 +70,7 @@ private:
   OZ_Term a, b;
   int c;
 public:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   SpawnLess(OZ_Term i1, OZ_Term i2) : a(i1), b(i2), c(2) {}
 
@@ -78,7 +78,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean) { OZ_updateHeapTerm(a); OZ_updateHeapTerm(b); }
   virtual OZ_Return propagate(void);
   virtual OZ_Term getParameters(void) const { RETURN_LIST2(a, b); }
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 //-----------------------------------------------------------------------------
@@ -95,7 +95,7 @@ public:
 
   OZ_Term getParameters(void) const { RETURN_LIST2(_x, _y);}
 
-  virtual OZ_CFunHeader * getHeader(void) const { return &SpawnLess::spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &SpawnLess::profile; }
 
   virtual OZ_Return propagate(void);
 };
@@ -104,7 +104,7 @@ public:
 
 class TestGenSum : public Propagator_VD {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
   OZ_Term _v;
 
   OZ_FiniteDomain * _aux;
@@ -124,7 +124,7 @@ public:
   }
 
   virtual size_t sizeOf(void) { return sizeof(TestGenSum); }
-  virtual OZ_CFunHeader * getHeader(void) const { return &header; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 
   virtual OZ_Return propagate(void);
 
@@ -148,7 +148,7 @@ public:
 
 class TestSum : public Propagator_VD {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
   OZ_Term _v;
 
 public:
@@ -156,7 +156,7 @@ public:
   { }
 
   virtual size_t sizeOf(void) { return sizeof(TestSum); }
-  virtual OZ_CFunHeader * getHeader(void) const { return &header; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 
   virtual OZ_Return propagate(void);
 

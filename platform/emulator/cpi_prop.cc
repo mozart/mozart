@@ -138,7 +138,7 @@ problem:
 
 ostream& operator << (ostream& o, const OZ_Propagator &p)
 {
-  const char * func_name = builtinTab.getName((void *) p.getHeader()->getHeaderFunc());
+  const char * func_name = p.getProfile()->getPropagatorName();
   OZ_Term args = p.getParameters();
 
   if (!p.isMonotonic())

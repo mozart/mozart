@@ -34,7 +34,7 @@
 
 class TaskIntervalsPropagator : public Propagator_VD_VI {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   TaskIntervalsPropagator (OZ_Term x, OZ_Term durations)
     : Propagator_VD_VI(x, durations) {}
@@ -42,7 +42,7 @@ public:
   TaskIntervalsPropagator(OZ_Term tasks, OZ_Term starts, OZ_Term durs);
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 private:
   OZ_NonMonotonic _nm;
 public:
@@ -56,7 +56,7 @@ public:
 //-----------------------------------------------------------------------------
 class CPIteratePropagatorCumTI : public Propagator_VD_VI_VI_I {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   CPIteratePropagatorCumTI(OZ_Term x, OZ_Term durations, OZ_Term use,
                          OZ_Term cap)
@@ -66,7 +66,7 @@ public:
                          OZ_Term use, OZ_Term cap);
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 private:
   OZ_NonMonotonic _nm;
 public:

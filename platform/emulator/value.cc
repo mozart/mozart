@@ -1528,7 +1528,7 @@ TaggedRef PrTabEntry::getProfileStats()
   }
 
   {
-    OZ_CFunHeader *aux = OZ_CFunHeader::getFirst();
+    OZ_PropagatorProfile *aux = OZ_PropagatorProfile::getFirst();
     TaggedRef noname = oz_atom("nofile");
     while(aux) {
       if (aux->getSamples() || aux->getCalls()) {
@@ -1538,7 +1538,7 @@ TaggedRef PrTabEntry::getProfileStats()
         rec->setFeature(heap,oz_unsignedInt(aux->getHeap()));
         rec->setFeature(closures,oz_int(0));
         rec->setFeature(line,oz_int(1));
-        rec->setFeature(name,oz_atom(builtinTab.getName((void *)(aux->getHeaderFunc()))));
+        rec->setFeature(name,oz_atom(aux->getPropagatorName()));
         rec->setFeature(file,noname);
         ret = cons(makeTaggedSRecord(rec),ret);
       }

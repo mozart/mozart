@@ -33,13 +33,13 @@
 
 class SchedCardPropagator : public Propagator_D_I_D_I {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   SchedCardPropagator(OZ_Term x, OZ_Term xd, OZ_Term y, OZ_Term yd)
     : Propagator_D_I_D_I(x, xd, y, yd) {}
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 
@@ -47,7 +47,7 @@ public:
 
 class CPIteratePropagator : public Propagator_VD_VI {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   CPIteratePropagator(OZ_Term x, OZ_Term durations)
     : Propagator_VD_VI(x, durations) {}
@@ -55,7 +55,7 @@ public:
   CPIteratePropagator(OZ_Term tasks, OZ_Term starts, OZ_Term durs);
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 private:
   OZ_NonMonotonic _nm;
 public:
@@ -71,7 +71,7 @@ class CPIteratePropagatorCap : public Propagator_VD_VI_VI_I {
 private:
   // signals whether edge finding is used (1) or not (0)
   int reg_flag;
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   CPIteratePropagatorCap(OZ_Term x, OZ_Term durations, OZ_Term use,
                          OZ_Term cap)
@@ -81,7 +81,7 @@ public:
                          OZ_Term use, OZ_Term cap, int flag);
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 private:
   OZ_NonMonotonic _nm;
 public:
@@ -96,7 +96,7 @@ public:
 
 class CPIteratePropagatorCapUp : public Propagator_VD_VI_VI_I {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   CPIteratePropagatorCapUp(OZ_Term x, OZ_Term durations, OZ_Term use,
                            OZ_Term cap)
@@ -106,7 +106,7 @@ public:
                            OZ_Term use, OZ_Term cap);
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 private:
   OZ_NonMonotonic _nm;
 public:
@@ -122,7 +122,7 @@ public:
 
 class DisjunctivePropagator : public Propagator_VD_VI {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   DisjunctivePropagator(OZ_Term x, OZ_Term durations)
     : Propagator_VD_VI(x, durations) {}
@@ -130,7 +130,7 @@ public:
   DisjunctivePropagator(OZ_Term tasks, OZ_Term starts, OZ_Term durs);
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 private:
   OZ_NonMonotonic _nm;
 public:

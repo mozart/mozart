@@ -277,7 +277,7 @@ public:
   OZ_Boolean operator += (int);
   OZ_Boolean operator -= (int);
   OZ_Boolean operator <<= (const OZ_FSetConstraint &);
-  OZ_Boolean operator %= (const OZ_FSetConstraint &);
+  OZ_Boolean operator % (const OZ_FSetConstraint &);
   OZ_FSetConstraint operator & (const OZ_FSetConstraint &) const;
   OZ_FSetConstraint operator | (const OZ_FSetConstraint &) const;
   OZ_FSetConstraint operator - (const OZ_FSetConstraint &) const;
@@ -305,17 +305,17 @@ public:
   order_t getOrder(void) const { return _order; }
 };
 
-class OZ_CFunHeader {
+class OZ_PropagatorProfile {
 private:
-  OZ_CFunHeader * _next;
-  static OZ_CFunHeader * _all_headers;
-  OZ_CFun _header;
+  OZ_PropagatorProfile * _next;
+  static OZ_PropagatorProfile * _all_headers;
+  char * _propagator_name;
   unsigned _calls, _samples, _heap;
 
 public:
-  OZ_CFunHeader(OZ_CFun header);
+  OZ_PropagatorProfile(char * propagator_name);
 
-  OZ_CFun getHeaderFunc(void)     { return _header; }
+  char * getPropagatorName()      { return _propagator_name; }
   void incSamples(void)           { _samples++; }
   void incCalls(void)             { _calls++; }
   unsigned getSamples(void)       { return _samples; }
@@ -323,8 +323,8 @@ public:
   void incHeap(unsigned inc)      { _heap += inc; }
   unsigned getHeap(void)          { return _heap; }
 
-  static OZ_CFunHeader *getFirst() { return _all_headers; }
-  OZ_CFunHeader *getNext(void)     { return _next; }
+  static OZ_PropagatorProfile * getFirst() { return _all_headers; }
+  OZ_PropagatorProfile * getNext(void)     { return _next; }
 
   static void profileReset(void);
 };
@@ -356,7 +356,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean duplicate) = 0;
   virtual OZ_Return propagate(void) = 0;
   virtual OZ_Term getParameters(void) const = 0;
-  virtual OZ_CFunHeader * getHeader(void) const = 0;
+  virtual OZ_PropagatorProfile * getProfile(void) const = 0;
 
   // support for nonmonotonic propagator
   virtual OZ_Boolean isMonotonic(void) const { return OZ_TRUE; }

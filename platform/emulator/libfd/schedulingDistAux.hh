@@ -62,7 +62,7 @@ private:
 
   OZ_Term stream;
 
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   FirstsLasts(OZ_Term, OZ_Term, OZ_Term, OZ_Term, int);
   ~FirstsLasts();
@@ -70,7 +70,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean);
   virtual OZ_Return propagate(void);
   virtual OZ_Term getParameters(void) const { RETURN_LIST1(stream); }
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 

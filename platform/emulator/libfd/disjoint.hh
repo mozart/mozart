@@ -33,24 +33,24 @@
 
 class SchedCDPropagator : public Propagator_D_I_D_I {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   SchedCDPropagator(OZ_Term x, OZ_Term xd, OZ_Term y, OZ_Term yd)
     : Propagator_D_I_D_I(x, xd, y, yd) {}
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 class SchedCDBPropagator : public Propagator_D_I_D_I_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   SchedCDBPropagator(OZ_Term x, OZ_Term xd, OZ_Term y, OZ_Term yd, OZ_Term b)
     : Propagator_D_I_D_I_D(x, xd, y, yd, b) {}
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 

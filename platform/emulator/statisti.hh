@@ -120,8 +120,8 @@ public:
   void leaveCall(PrTabEntry *newproc);
   void heapAlloced(int sz);
 
-  OZ_CFunHeader *currPropagator;
-  void enterProp(OZ_CFunHeader *p) { currPropagator = p; p->incCalls(); }
+  OZ_PropagatorProfile *currPropagator;
+  void enterProp(OZ_PropagatorProfile *p) { currPropagator = p; p->incCalls(); }
   void leaveProp()                 { currPropagator = 0; }
 
   void initCount();

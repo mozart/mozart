@@ -55,6 +55,31 @@ public:
 
 //-----------------------------------------------------------------------------
 
+class Propagator_S_S_D : public OZ_Propagator {
+protected:
+  OZ_Term _v1, _v2, _b;
+
+public:
+  Propagator_S_S_D(OZ_Term v1, OZ_Term v2, OZ_Term b)
+    : _v1(v1), _v2(v2), _b(b) { }
+
+  virtual size_t sizeOf(void) {
+    return sizeof(Propagator_S_S_D);
+  }
+  virtual void updateHeapRefs(OZ_Boolean) {
+    OZ_updateHeapTerm(_v1);
+    OZ_updateHeapTerm(_v2);
+    OZ_updateHeapTerm(_b);
+  }
+  virtual OZ_Term getParameters(void) const {
+    return OZ_cons(_v1,
+                   OZ_cons(_v2,
+                           OZ_cons(_b, OZ_nil())));
+  }
+};
+
+//-----------------------------------------------------------------------------
+
 class Propagator_S_I : public OZ_Propagator {
 protected:
   OZ_Term _v;

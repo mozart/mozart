@@ -341,10 +341,10 @@ Bool AM::wakeUpPropagator(Propagator * prop, Board * home, PropCaller calledBy)
 
   if (prop->isNonMonotonicPropagator() && isBelowSolveBoard()) {
 #ifdef DEBUG_NONMONOTONIC
-    OZ_CFunHeader * header = prop->getPropagator()->getHeader();
-    OZ_CFun headerfunc = header->getHeaderFunc();
+    OZ_PropagatorProfile * profile = prop->getPropagator()->getProfile();
+    char * pn = profile->getPropagatorName();
     printf("wakeUpPropagator: nonmono prop <%s %d>\n",
-           builtinTab.getName((void *) headerfunc),
+           pn,
            prop->getPropagator()->getOrder());
     fflush(stdout);
 #endif
@@ -504,14 +504,14 @@ OZ_Return AM::runPropagator(Propagator * p)
   CpiHeap.reset();
 
   if (profileMode) {
-    OZ_CFunHeader * prop = p->getPropagator()->getHeader();
+    OZ_PropagatorProfile * prop = p->getPropagator()->getProfile();
     ozstat.enterProp(prop);
     int heapNow = getUsedMemoryBytes();
 #ifdef DEBUG_PROPAGATORS
-    OZ_CFunHeader * header = prop;
-    if (header) {
-      OZ_CFun headerfunc = header->getHeaderFunc();
-      printf("<%s", builtinTab.getName((void *) headerfunc)); fflush(stdout);
+    OZ_PropagatorProfile * profile = prop;
+    if (profile) {
+      char * pn = profile->getPropagatorName();
+      printf("<%s", pn); fflush(stdout);
     } else {
       printf("<CDSuppl"); fflush(stdout);
     }
@@ -528,10 +528,10 @@ OZ_Return AM::runPropagator(Propagator * p)
     return ret;
   } else {
 #ifdef DEBUG_PROPAGATORS
-    OZ_CFunHeader * header = p->getPropagator()->getHeader();
-    if (header) {
-      OZ_CFun headerfunc = header->getHeaderFunc();
-      printf("<%s", builtinTab.getName((void *) headerfunc)); fflush(stdout);
+    OZ_PropagatorProfile * profile = p->getPropagator()->getProfile();
+    if (profile) {
+      char * pn = profile->getPropagatorName();
+      printf("<%s", pn); fflush(stdout);
     } else {
       printf("<CDSuppl"); fflush(stdout);
     }

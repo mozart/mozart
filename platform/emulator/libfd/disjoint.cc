@@ -182,5 +182,5 @@ failure:
 //-----------------------------------------------------------------------------
 // static member
 
-OZ_CFunHeader SchedCDPropagator::spawner = fdp_disjoint;
-OZ_CFunHeader SchedCDBPropagator::spawner = fdp_disjointC;
+OZ_PropagatorProfile SchedCDPropagator::profile = "fdp_disjoint";
+OZ_PropagatorProfile SchedCDBPropagator::profile = "fdp_disjointC";

@@ -54,7 +54,7 @@ class ExtendedExpect : public OZ_Expect
 class SumACProp : public OZ_Propagator
 {
  private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
   int c,size;
   OZ_Term *_a,*_x,_d;
  public:
@@ -88,7 +88,7 @@ class SumACProp : public OZ_Propagator
      }
     return OZ_cons(_a_list, OZ_cons(_x_list, OZ_cons(_d, OZ_nil())));
    }
-  virtual OZ_CFunHeader * getHeader(void) const {return &spawner;}
+  virtual OZ_PropagatorProfile * getProfile(void) const {return &profile;}
   friend int simplify(int*,int*,OZ_Term*,OZ_Term,int*);
 };
 
@@ -307,7 +307,7 @@ OZ_C_proc_begin(fdtest_sumac, 3)
 }
 OZ_C_proc_end
 
-OZ_CFunHeader SumACProp::spawner = fdtest_sumac;
+OZ_PropagatorProfile SumACProp::profile = "fdtest_sumac";
 
 //-----------------------------------------------------------------------------
 
@@ -324,7 +324,7 @@ OZ_C_proc_begin(fdtest_spawnLess, 2)
 }
 OZ_C_proc_end
 
-OZ_CFunHeader SpawnLess::spawner = fdtest_spawnLess;
+OZ_PropagatorProfile SpawnLess::profile = "fdtest_spawnLess";
 
 OZ_Return SpawnLess::propagate(void)
 {
@@ -383,7 +383,7 @@ OZ_C_proc_begin(fdtest_counter, 2)
 }
 OZ_C_proc_end
 
-OZ_CFunHeader Counter::spawner = fdtest_counter;
+OZ_PropagatorProfile Counter::profile = "fdtest_counter";
 
 OZ_Return Counter::propagate(void)
 {
@@ -470,7 +470,7 @@ void FirstFail::updateHeapRefs(OZ_Boolean)
 
 }
 
-OZ_CFunHeader FirstFail::spawner = fdtest_firstFail;
+OZ_PropagatorProfile FirstFail::profile = "fdtest_firstFail";
 
 OZ_Return FirstFail::propagate(void)
 {
@@ -549,7 +549,7 @@ failure:
 
 class DPlusPropagator : public OZ_Propagator {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
   OZ_Term _x, _y, _z;
 public:
   DPlusPropagator(OZ_Term a, OZ_Term b, OZ_Term c)
@@ -565,7 +565,7 @@ public:
   virtual OZ_Term getParameters(void) const {
     return OZ_cons(_x, OZ_cons(_y, OZ_cons(_z, OZ_nil())));
   }
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 
@@ -585,7 +585,7 @@ OZ_C_proc_begin(fdtest_plus, 3)
 }
 OZ_C_proc_end
 
-OZ_CFunHeader DPlusPropagator::spawner = fdtest_plus;
+OZ_PropagatorProfile DPlusPropagator::profile = "fdtest_plus";
 
 OZ_Return DPlusPropagator::propagate(void)
 {
@@ -637,7 +637,7 @@ OZ_C_proc_begin(fdtest_gensum, 2)
 }
 OZ_C_proc_end
 
-OZ_CFunHeader TestGenSum::header = fdtest_gensum;
+OZ_PropagatorProfile TestGenSum::profile = "fdtest_gensum";
 
 OZ_Boolean add3(OZ_FiniteDomain &x,
                 OZ_FiniteDomain &y,
@@ -797,7 +797,7 @@ OZ_C_proc_begin(fdtest_sum, 2)
 }
 OZ_C_proc_end
 
-OZ_CFunHeader TestSum::header = fdtest_sum;
+OZ_PropagatorProfile TestSum::profile = "fdtest_sum";
 
 OZ_Return TestSum::propagate(void)
 {

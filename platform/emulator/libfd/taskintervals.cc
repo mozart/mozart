@@ -1211,5 +1211,5 @@ failure:
 
 //----------------------------------------------------------------------
 
-OZ_CFunHeader CPIteratePropagatorCumTI::spawner = sched_cumulativeTI;
-OZ_CFunHeader TaskIntervalsPropagator::spawner = sched_taskIntervals;
+OZ_PropagatorProfile CPIteratePropagatorCumTI::profile = "sched_cumulativeTI";
+OZ_PropagatorProfile TaskIntervalsPropagator::profile = "sched_taskIntervals";

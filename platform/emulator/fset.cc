@@ -1041,50 +1041,20 @@ OZ_Boolean FSetConstraint::operator <<= (const FSetConstraint& y)
   return normalize();
 }
 
+// not equal
 inline
-OZ_Boolean FSetConstraint::operator %= (const FSetConstraint& y)
+OZ_Boolean FSetConstraint::operator % (const FSetConstraint& y)
 {
-  DEBUG_FSETIR('(' << *this << " %= " << y << ") = ");
+  DEBUG_FSETIR('(' << *this << " % " << y << ") = ");
 
-  {
-    // greatest lower bound
-    OZ_Boolean becomesUpperBound = (_card_min < y._card_min);
+  if (_card_min > y._card_max || _card_max < y._card_min)
+    return OZ_FALSE;
 
-    if (! becomesUpperBound)
-      for (int i = fset_high; i--; ) {
-        int i_in = _in[i];
-        becomesUpperBound = (i_in != (i_in | y._in[i]));
-        if (becomesUpperBound)
-          break;
-      }
-    if (becomesUpperBound) {
-      for (int i = fset_high; i--; ) {
-        _in[i] |= ~y._not_in[i];
-      }
-      _card_min = _card_max = y._card_max;
-    }
-  }
-  {
-    // least upper bound
-    OZ_Boolean becomesLowerBound = (_card_max > y._card_max);
+  for (int i = fset_high; i--; )
+    if ((_in[i] & y._not_in[i]) || (_not_in[i] & y._in[i]))
+      return OZ_FALSE;
 
-    if (! becomesLowerBound)
-      for (int i = fset_high; i--; ) {
-        int i_not_in = _not_in[i];
-        becomesLowerBound = (i_not_in != (i_not_in | y._not_in[i]));
-        if (becomesLowerBound)
-          break;
-      }
-
-    if (becomesLowerBound) {
-      for (int i = fset_high; i--; ) {
-        _not_in[i] |= ~y._in[i];
-      }
-      _card_min = _card_max = y._card_min;
-    }
-  }
-
-  return normalize();
+  return OZ_TRUE;
 }
 
 inline
@@ -1119,6 +1089,7 @@ OZ_Boolean FSetConstraint::operator >= (const FSetConstraint &y)
   return normalize();
 }
 
+// disjoint
 inline
 OZ_Boolean FSetConstraint::operator != (const FSetConstraint &y)
 {
@@ -1134,7 +1105,7 @@ OZ_Boolean FSetConstraint::operator != (const FSetConstraint &y)
 inline
 OZ_Boolean FSetConstraint::operator == (const FSetConstraint &y) const
 {
-  DEBUG_FSETIR('(' << *this << " != " << y << ") = ");
+  DEBUG_FSETIR('(' << *this << " == " << y << ") = ");
 
   if (_card_min != y._card_min ||
       _card_max != y._card_max ||
@@ -1580,9 +1551,9 @@ OZ_Boolean OZ_FSetConstraint::operator <<= (const OZ_FSetConstraint& y)
   return CASTTHIS->operator <<= (CASTREF y);
 }
 
-OZ_Boolean OZ_FSetConstraint::operator %= (const OZ_FSetConstraint& y)
+OZ_Boolean OZ_FSetConstraint::operator % (const OZ_FSetConstraint& y)
 {
-  return CASTTHIS->operator %= (CASTREF y);
+  return CASTTHIS->operator % (CASTREF y);
 }
 
 OZ_FSetConstraint OZ_FSetConstraint::operator & (const OZ_FSetConstraint& y) const

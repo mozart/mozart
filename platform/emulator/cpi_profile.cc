@@ -27,12 +27,12 @@
 #include "oz_cpi.hh"
 
 
-OZ_CFunHeader * OZ_CFunHeader::_all_headers = NULL;
+OZ_PropagatorProfile * OZ_PropagatorProfile::_all_headers = NULL;
 
 
-void OZ_CFunHeader::profileReset()
+void OZ_PropagatorProfile::profileReset()
 {
-  OZ_CFunHeader *aux = getFirst();
+  OZ_PropagatorProfile * aux = getFirst();
   while(aux) {
     aux->_calls   = 0;
     aux->_samples = 0;
@@ -42,8 +42,8 @@ void OZ_CFunHeader::profileReset()
 }
 
 
-OZ_CFunHeader::OZ_CFunHeader(OZ_CFun header)
-  : _calls(0), _samples(0), _heap(0), _header(header)
+OZ_PropagatorProfile::OZ_PropagatorProfile(char * propagator_name)
+  : _calls(0), _samples(0), _heap(0), _propagator_name(propagator_name)
 {
   static int firstCall = 1;
   if (firstCall) {

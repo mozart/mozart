@@ -139,7 +139,7 @@ OZ_Term DiffnPropagator::getParameters(void) const
 // SPAWNER
 //////////
 
-OZ_CFunHeader DiffnPropagator::spawner = fdp_distinct2;
+OZ_PropagatorProfile DiffnPropagator::profile = "fdp_distinct2";
 
 
 //////////

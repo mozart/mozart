@@ -40,7 +40,6 @@ OZ_C_proc_begin(fsp_include, 2)
 }
 OZ_C_proc_end
 
-OZ_CFunHeader IncludePropagator::header = fsp_include;
 
 OZ_C_proc_begin(fsp_exclude, 2)
 {
@@ -56,7 +55,6 @@ OZ_C_proc_begin(fsp_exclude, 2)
 }
 OZ_C_proc_end
 
-OZ_CFunHeader ExcludePropagator::header = fsp_exclude;
 
 OZ_C_proc_begin(fsp_card, 2)
 {
@@ -76,7 +74,6 @@ OZ_C_proc_begin(fsp_card, 2)
 }
 OZ_C_proc_end
 
-OZ_CFunHeader FSetCardPropagator::header = fsp_card;
 
 //*****************************************************************************
 
@@ -194,3 +191,7 @@ failure:
   OZ_DEBUGPRINTTHIS("fail: ");
   return P.fail();
 }
+
+OZ_PropagatorProfile IncludePropagator::profile = "fsp_include";
+OZ_PropagatorProfile ExcludePropagator::profile = "fsp_exclude";
+OZ_PropagatorProfile FSetCardPropagator::profile = "fsp_card";

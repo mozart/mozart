@@ -39,8 +39,6 @@ OZ_C_proc_begin(fsp_monitorIn, 2)
 }
 OZ_C_proc_end
 
-OZ_CFunHeader MonitorInPropagator::header = fsp_monitorIn;
-
 OZ_Return MonitorInPropagator::propagate(void)
 {
   OZ_DEBUGPRINTTHIS("in ");
@@ -112,3 +110,5 @@ failure:
   fsetvar.fail();
   return FAILED;
 }
+
+OZ_PropagatorProfile MonitorInPropagator::profile = "fsp_monitorIn";

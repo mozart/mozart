@@ -1040,7 +1040,7 @@ private:
   bool isFailed;
   OZ_NonMonotonic _nm;
 
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 
   static int init_memory_management;
 
@@ -1073,8 +1073,8 @@ public:
 
   virtual OZ_Return propagate(void);
 
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &spawner;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }
 
   virtual OZ_Term getParameters(void) const {

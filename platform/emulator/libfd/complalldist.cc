@@ -30,7 +30,7 @@
 
 // set this according to whether the emulator demands the 'spawner'
 // function in propagators to be of type OZ_CFun (old version)
-// or OZ_CFunHeader (new version):
+// or OZ_PropagatorProfile (new version):
 
 #define OLDEMU
 
@@ -53,7 +53,7 @@ OZ_C_proc_begin(fdp_distinctD, 1) {
 }
 OZ_C_proc_end
 
-OZ_CFunHeader CompleteAllDistProp::spawner = fdp_distinctD;
+OZ_PropagatorProfile CompleteAllDistProp::profile = "fdp_distinctD";
 int CompleteAllDistProp::init_memory_management = 1;
 
 //=============================================================================

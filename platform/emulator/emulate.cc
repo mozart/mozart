@@ -2438,7 +2438,7 @@ LBLdispatcher:
 
              if (ozconf.errorDebug)
                e->setExceptionInfo(OZ_mkTupleC("apply",2,
-                                               OZ_atom(builtinTab.getName((void *)(prop->getPropagator()->getHeader()->getHeaderFunc()))),
+                                               OZ_atom((prop->getPropagator()->getProfile()->getPropagatorName())),
                                                prop->getPropagator()->getParameters()));
 
              e->closeDonePropagator(prop);

@@ -59,7 +59,7 @@ private:
   OZ_FSetValue _in_sofar;
 #endif
   OZ_Term _fsetvar, _stream;
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 public:
   MonitorInPropagator(OZ_Term fsetvar, OZ_Term stream)
 #ifdef FSET_HIGH
@@ -76,7 +76,7 @@ public:
   virtual OZ_Term getParameters(void) const {
     return OZ_cons(_fsetvar, OZ_cons(_stream, OZ_nil()));
   }
-  virtual OZ_CFunHeader * getHeader(void) const { return &header; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 #endif /* __MONITOR_HH__ */
