@@ -35,8 +35,21 @@ AC_INIT(Emulator/oz.h)
 
 AC_CANONICAL_HOST
 
+#AC_PREFIX_DEFAULT(${oz_default_prefix=/usr/local})
+if test -n "${oz_default_prefix}" && test -d $oz_default_prefix
+then
+  ac_default_prefix=$oz_default_prefix
+fi
+
 AC_PROG_INSTALL
 
-AC_CONFIG_SUBDIRS(Emulator lib bin elisp)
+topdira=`(cd $TOPDIR; pwd)`
+oz_path=$PATH:$topdira/bin:$topdira:$prefix/bin
+#AC_PATH_PROG(PLATFORMSCRIPT, ozplatform,   true, $oz_path)
+#AC_PATH_PROG(DYNLD,          ozdynld,      true, $oz_path)
+AC_PATH_PROG(MKINSTALLDIRS,  mkinstalldirs,true, $oz_path)
+
+#not yet
+#AC_CONFIG_SUBDIRS(Emulator lib bin elisp)
 
 AC_OUTPUT(Makefile)
