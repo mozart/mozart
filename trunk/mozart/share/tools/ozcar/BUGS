@@ -15,5 +15,5 @@ kann es passieren, dass faelschlicherweise das Setzen eines Breakpoints
 als erfolgreich bestaetigt wird, obwohl es (im aktuell gefeedeten Code) 
 gar nicht geklappt hat.
 
-bei cont message fehlt test auf T == currentThread; falls true, muss
-scrollbar(...) aufgerufen werden (das rote teil muss seine farbe aendern!!)
+Tue Apr  1 14:49:21 MET DST 1997
+leif special: tags werden nicht geloescht aus stack/env fenster
