@@ -114,10 +114,9 @@ cd $PREFIX
 mkdir -p $build
 cd $build
 #
-### $use_src/configure $moreargs --with-stdlib=$use_src-stdlib --prefix=$PREFIX/install
-### #
-### make depend bootstrap install
-make bootstrap install
+$use_src/configure $moreargs --with-stdlib=$use_src-stdlib --prefix=$PREFIX/install
+#
+make depend bootstrap install
 
 # inspect the emulator.exe for being dynamically linked against
 # libgcc_s.so, and if so - copy the library into
