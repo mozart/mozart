@@ -162,7 +162,7 @@ void debugStreamTerm(Thread *tt) {
   gotoBoard(bb);
 }
 
-void debugStreamExit(TaggedRef args) {
+void debugStreamExit(TaggedRef frameId) {
   Board *bb = gotoRootBoard();
 
   TaggedRef tail    = am.threadStreamTail;
@@ -175,7 +175,7 @@ void debugStreamExit(TaggedRef args) {
     cons(OZ_pairA("thr",
                   OZ_mkTupleC("#",2,makeTaggedConst(am.currentThread),
                               OZ_int(am.currentThread->getID()))),
-         cons(OZ_pairA("args",args),
+         cons(OZ_pairA("frame",frameId),
               nil()));
 
   TaggedRef entry = OZ_recordInit(OZ_atom("exit"), pairlist);
@@ -186,7 +186,7 @@ void debugStreamExit(TaggedRef args) {
 }
 
 void debugStreamCall(ProgramCounter PC, char *name, int arity,
-                     TaggedRef *arguments, bool builtin) {
+                     TaggedRef *arguments, bool builtin, int frameId) {
 
   ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
 
@@ -218,7 +218,8 @@ void debugStreamCall(ProgramCounter PC, char *name, int arity,
                                cons(OZ_pairA("builtin",
                                              builtin ? OZ_true() : OZ_false()),
                                     cons(OZ_pairAI("time", feedtime),
-                                         nil())))))));
+                                         cons(OZ_pairAI("frame",frameId),
+                                              nil()))))))));
 
     TaggedRef entry = OZ_recordInit(OZ_atom("step"), pairlist);
     OZ_unify(tail, OZ_cons(entry, newTail));
@@ -241,16 +242,31 @@ OZ_C_proc_begin(BItaskStack,3)
   ConstTerm *rec = tagged2Const(in);
   Thread *thread = (Thread*) rec;
 
-  if (thread->isDeadThread()) {
+  if (thread->isDeadThread() || !thread->hasStack())
     return OZ_unify(out, nil());
-  }
-
-  if (!thread->hasStack()) {
-    return OZ_unify(out, nil());
-  }
 
   TaskStack *taskstack = thread->getTaskStackRef();
   return OZ_unify(out, taskstack->dbgGetTaskStack(NOCODE, depth+1));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIframeVariables,3)
+{
+  OZ_declareNonvarArg(0,in);
+  OZ_declareIntArg(1,frameId);
+  OZ_declareArg(2,out);
+
+  in = OZ_deref(in);
+  if (!isThread(in)) { oz_typeError(0,"Thread"); }
+
+  ConstTerm *rec = tagged2Const(in);
+  Thread *thread = (Thread*) rec;
+
+  if (thread->isDeadThread() || !thread->hasStack())
+    return OZ_unify(out, nil());
+
+  TaskStack *taskstack = thread->getTaskStackRef();
+  return OZ_unify(out, taskstack->dbgFrameVariables(frameId));
 }
 OZ_C_proc_end
 

@@ -73,7 +73,7 @@
 
 #define NumberOfXRegisters      10000
 
-#define MAX_ID                  (1<<15)
+#define MAX_ID                  (1<<19)
 
 #define OzCompiler      "oz.compiler"
 

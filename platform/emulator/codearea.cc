@@ -245,8 +245,6 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, RefsArray G, RefsArray Y)
   if (pc == NOCODE_GLOBALVARNAME)
     return nil();
 
-  TaggedRef vars = varNames(PC,G,Y);
-
   Reg reg;
   ProgramCounter next;
   PrTabEntry *pred;
@@ -262,12 +260,12 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, RefsArray G, RefsArray Y)
     CodeArea::getDebugInfoArgs(dbgPC,file,line,_dbgAbspos,_dbgComment);
 
   TaggedRef pairlist =
-    OZ_cons(OZ_pairA("vars", vars),
-            OZ_cons(OZ_pairA("PC", OZ_int((int)PC)),
-    OZ_cons(OZ_pairA("name", OZ_atom(pred ? pred->getPrintName() : "???")),
-            OZ_cons(OZ_pairA("file", file),
-                    OZ_cons(OZ_pairA("line", OZ_int(line)),
-                            OZ_nil())))));
+    OZ_cons(OZ_pairA("PC", OZ_int((int)PC)),
+            OZ_cons(OZ_pairA("name", OZ_atom(pred ?
+                                             pred->getPrintName() : "???")),
+                    OZ_cons(OZ_pairA("file", file),
+                            OZ_cons(OZ_pairA("line", OZ_int(line)),
+                                    OZ_nil()))));
 
   return OZ_recordInit(OZ_atom("proc"), pairlist);
 }

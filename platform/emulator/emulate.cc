@@ -257,12 +257,13 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *argu
 
   if (def && debugmode()) {
     OzDebug *dbg;
-    OZ_Term dinfo = nil();
-    for (int i=def->getArity()-1; i>=0; i--) {
-      dinfo = cons(arguments[i],dinfo);
-    }
+    int frameId   = ++lastFrameID % MAX_ID;
+
+    OZ_Term dinfo = OZ_int(frameId);
+
     if (currentThread->stepMode() || def->getPred()->getSpyFlag()) {
-      debugStreamCall(PC, def->getPrintName(), def->getArity(), arguments, 0);
+      debugStreamCall(PC, def->getPrintName(), def->getArity(),
+                      arguments, 0, frameId);
       dbg = new OzDebug(DBG_STEP,dinfo);
       currentThread->pushDebug(dbg);
       return TRUE;
@@ -2416,15 +2417,12 @@ LBLdispatcher:
 
        if (e->debugmode() && e->currentThread->stepMode()) {
          char *name = builtinTab.getName((void *) bi->getFun());
-         debugStreamCall(PC, name, predArity, X, 1);
+         debugStreamCall(PC, name, predArity, X, 1, 0);
 
          if (!isTailCall) e->pushTask(PC,Y,G);
 
-         OZ_Term dinfo = nil();
-         for (int i=predArity-1; i>=0; i--) {
-           dinfo = cons(X[i],dinfo);
-         }
-         OzDebug *dbg = new OzDebug(DBG_STEP,dinfo);
+         OZ_Term dinfo = OZ_int(0);
+         OzDebug *dbg  = new OzDebug(DBG_STEP,dinfo);
 
          e->currentThread->pushDebug(dbg);
          e->pushCFun(bi->getFun(),X,predArity);
