@@ -524,7 +524,7 @@ Bool triggerVariableImpl(TaggedRef *tPtr){
 /* --- Unmarshal --- */
 
 static void sendRegister(BorrowEntry *be) {
-  PD((PD_VAR,"sendRegister"));  
+  PD((PD_VAR,"sendRegister"));
   Assert(creditSiteOut == NULL);
   be->getOneMsgCredit();
   NetAddress *na = be->getNetAddress();  
@@ -589,6 +589,7 @@ OZ_Term unmarshalVarRobustImpl(MsgBuffer* bs, Bool isFuture,
   OB_Entry *ob;
   int bi;
   OZ_Term val1 = unmarshalBorrowRobust(bs,ob,bi,error);
+  if(*error) return oz_nil();
   
   if (val1) {
     PD((UNMARSHAL,"var/chunk hit: b:%d",bi));
