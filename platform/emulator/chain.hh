@@ -59,6 +59,8 @@ public:
 
   void informHandle(Tertiary*,EntityCond);
 
+  void informAutomatic(Tertiary*);
+
   ChainElem *getFirstChainElem(){return first;}
 
   Site* getCurrent(){
@@ -99,6 +101,10 @@ public:
 
   void managerSeesSiteCrash(Tertiary*,Site* );
   Site* proxySeesSiteCrash(Tertiary *,Site*);
+
+  void addInform(InformElem *ie){
+    ie->next=inform;
+    inform=ie;}
 };
 
 /* __CHAINHH */

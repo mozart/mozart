@@ -872,6 +872,13 @@ public:
   void entityOK(EntityCond);
   void managerProbeFault(Site*,int);
   void proxyProbeFault(Site*,int);
+
+  void invokeSoon();
+  Bool maybeInvokeSoon(){
+    if(getEntityCond() & PERM_BLOCKED){ // ATTENTION
+      invokeSoon();
+      return OK;}
+    return NO;}
 };
 
 
