@@ -103,6 +103,9 @@ void printBanner()
 #ifdef DEBUG_FSET
 	  " DEBUG_FSET"
 #endif
+#ifdef DEBUG_MEM
+	  " DEBUG_MEM"
+#endif
 #ifdef DEBUG_FSET_CONSTRREP
 	  " DEBUG_FSET_CONSTRREP"
 #endif
