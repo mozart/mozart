@@ -4673,6 +4673,26 @@ OZ_C_proc_begin(BIdictionaryEntries,2)
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(BIdictionaryItems,2)
+{
+  oz_declareDictionaryArg(0,dict);
+  oz_declareArg(1,out);
+
+  return oz_unify(dict->items(),out);
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIdictionaryClone,2)
+{
+  oz_declareDictionaryArg(0,dict);
+  oz_declareArg(1,out);
+
+  return oz_unify(dict->clone(),out);
+}
+OZ_C_proc_end
+
+
 OZ_Return isDictionaryInline(TaggedRef t, TaggedRef &out)
 {
   NONVAR( t, term);
@@ -6751,6 +6771,8 @@ BIspec allSpec[] = {
   {"Dictionary.member",  3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
   {"Dictionary.keys",    2, BIdictionaryKeys,    0},
   {"Dictionary.entries", 2, BIdictionaryEntries, 0},
+  {"Dictionary.items",   2, BIdictionaryItems,   0},
+  {"Dictionary.clone",   2, BIdictionaryClone,   0},
 
   {"NewLock",	      1,BInewLock,	 0},
   {"Lock",	      1,BIlockLock,	 0},
