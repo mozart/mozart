@@ -120,7 +120,6 @@ define
 	 deltaSent <- ~S.sent
 	 deltaReceived <- ~S.received
 	 state <- S.state
-	 {System.show S}
       end
 
       meth getCol(who:W $)
@@ -317,14 +316,17 @@ define
 	      fun{$ RTT#_} RTT\=~1.0 end}
 	 in
 	    {self.GUI.sactivity display(ActivityDL)}
+	    {self.GUI.srtt display(RTTDL)}
 	    %% Find eventual selected site and raise its line
 	    case {Filter {Dictionary.items self.ActiveSites}
 		  fun{$ S} {S isSelected($)} end}
 	    of [S] then
-	       {self.GUI.sactivity raise_line({S getGraphKey($)})} 
+	       {self.GUI.sactivity raise_line({S getGraphKey($)})}
+	       {self.GUI.srtt raise_line({S getGraphKey($)})} 
+	       
 	    else skip
 	    end
-	    {self.GUI.srtt display(RTTDL)}
+
 	 end
       end
    end

@@ -24,10 +24,8 @@ define
 	 S P = {NewPort S}
 	 Site = {Filter {DPPane.siteStatistics} fun{$ M} M.state == mine end}.1
       in
-	 {System.show init(Tick Site)}
 	 self.site = site(ip:Site.ip port:Site.port pid:Site.pid)
 	 self.serverPort = {Connection.take Tick}
-	 {System.show self.site}
 	 {Send self.serverPort connecting(P self.site Site.siteid)}
 	 thread {ForAll S self} end
       end
