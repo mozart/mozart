@@ -34,9 +34,7 @@
 #include "builtins.hh"
 #include "var.hh"
 
-
-
-OZ_BI_define(BIdistHandlerInstall,2,0){
+OZ_BI_define(BIdistHandlerInstall,2,1){
   OZ_Term c0        = OZ_in(0);
   OZ_Term proc      = OZ_in(1);
 
@@ -47,10 +45,13 @@ OZ_BI_define(BIdistHandlerInstall,2,0){
   if(oz_isSRecord(c)) condStruct = tagged2SRecord(c);
   else return IncorrectFaultSpecification;
 
-  return DistHandlerInstall(condStruct,proc);
+  Bool suc;
+  OZ_Return ret=DistHandlerInstall(condStruct,proc,suc);
+  if(ret!=PROCEED) return ret;
+  OZ_RETURN(oz_bool(suc));
 }OZ_BI_end
 
-OZ_BI_define(BIdistHandlerDeInstall,2,0){
+OZ_BI_define(BIdistHandlerDeInstall,2,1){
   OZ_Term c0        = OZ_in(0);
   OZ_Term proc      = OZ_in(1);
 
@@ -62,7 +63,10 @@ OZ_BI_define(BIdistHandlerDeInstall,2,0){
   if(oz_isSRecord(c)) condStruct = tagged2SRecord(c);
   else return IncorrectFaultSpecification;
 
-  return DistHandlerDeInstall(condStruct,proc);
+  Bool suc;
+  OZ_Return ret=DistHandlerDeInstall(condStruct,proc,suc);
+  if(ret!=PROCEED) return ret;
+  OZ_RETURN(oz_bool(suc));
 }OZ_BI_end
 
 OZ_BI_define(BIgetEntityCond,2,0){
@@ -70,20 +74,19 @@ OZ_BI_define(BIgetEntityCond,2,0){
   OZ_Term v0 = OZ_in(1);
 
   initDP();
-  EntityCond ec;
+  EntityCond ec=ENTITY_NORMAL;
+
   DEREF(e0,vs_ptr,vs_tag);
   if(isVariableTag(vs_tag)){
     VarKind vk=classifyVar(vs_ptr);
-    if((vk==VAR_KINDED) || (vk==VAR_FREE) || (vk==VAR_FUTURE))
-      ec=ENTITY_NORMAL;
-    else ec=varGetEntityCond(vs_ptr);}
-
-  NONVAR(e0, e);
-  if(!oz_isConst(e)) return IncorrectFaultSpecification;
-
-  Tertiary *tert = tagged2Tert(e);
-  if(!isWatcherEligible(tert)) return IncorrectFaultSpecification;
-  ec = getEntityCond(tert);
+    if((vk!=VAR_KINDED) && (vk!=VAR_FREE) && (vk!=VAR_FUTURE))
+      ec=varGetEntityCond(vs_ptr);}
+  else{
+    NONVAR(e0, e);
+    if(oz_isConst(e)){
+      Tertiary *tert = tagged2Tert(e);
+      if(isWatcherEligible(tert)){
+        ec = getEntityCond(tert);}}}
 
   if(ec!= ENTITY_NORMAL){
     OZ_RETURN(listifyWatcherCond(ec));}

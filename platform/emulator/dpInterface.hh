@@ -93,4 +93,9 @@ extern void (*maybeDebugBufferGet)(BYTE b);
 extern void (*maybeDebugBufferPut)(BYTE b);
 #endif
 
+// distribution handlers
+extern Bool (*distHandlerInstall)(unsigned short,unsigned short,
+                                       Thread*,TaggedRef, TaggedRef);
+extern Bool (*distHandlerDeInstall)(unsigned short,unsigned short,
+                                       Thread*,TaggedRef, TaggedRef);
 #endif // __DPINTERFACE_HH

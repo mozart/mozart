@@ -45,6 +45,7 @@
 #include "chain.hh"
 #include "state.hh"
 #include "fail.hh"
+#include "interFault.hh"
 #include "protocolCredit.hh"
 #include "port.hh"
 #include "dpResource.hh"
@@ -70,11 +71,9 @@ MsgBufferManager* msgBufferManager = new MsgBufferManager();
 /*   init;                                                             */
 /* *********************************************************************/
 //
-// Trigger holder;
-static Bool perdioInitialized = NO;
 
 //
-// Interface method, BTW
+// Interface method, BTW PER-LOOK is this necessary
 Bool isPerdioInitializedImpl()
 {
   return (perdioInitialized);
@@ -1219,7 +1218,8 @@ void initDPCore()
   maybeDebugBufferGet = maybeDebugBufferGetImpl;
   maybeDebugBufferPut = maybeDebugBufferPutImpl;
 #endif
-
+  distHandlerInstall = distHandlerInstallImpl;
+  distHandlerDeInstall = distHandlerDeInstallImpl;
   //
   DV = new DebugVector();
 
@@ -1270,6 +1270,7 @@ void initDPCore()
   Assert(sizeof(CellSecEmul)==sizeof(CellSec));
   Assert(sizeof(PortManager)==sizeof(PortLocal));
   Assert(sizeof(PortProxy)==SIZEOFPORTPROXY);
+  dealWithDeferredWatchers();
 }
 
 /**********************************************************************/

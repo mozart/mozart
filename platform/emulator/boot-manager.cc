@@ -95,6 +95,7 @@ TaggedRef dictionary_of_modules;
 #include "modVirtualString-if.cc"
 #include "modBitString-if.cc"
 #include "modByteString-if.cc"
+#include "modInterFault-if.cc"
 
 /*
  * Modules that are possibly dynamically loaded
@@ -246,6 +247,7 @@ static ModuleEntry base_module_table[] = {
   {"VirtualString",     mod_int_VirtualString},
   {"BitString",         mod_int_BitString},
   {"ByteString",        mod_int_ByteString},
+  {"InterFault",        mod_int_InterFault},
   {0,0}
 };
 
