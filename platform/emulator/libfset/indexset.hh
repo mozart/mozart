@@ -142,7 +142,7 @@ int IndexSet::getHigh(void) const
   return _high; 
 }
 
-extern get_num_of_bits(const int m, const int * ia);
+extern int get_num_of_bits(const int m, const int * ia);
 
 inline
 int IndexSet::findCard(void) {
