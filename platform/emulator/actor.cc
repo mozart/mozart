@@ -127,6 +127,33 @@ Bool WaitActor::hasChoices() {
   return (cps ? !cps->isEmpty() : NO);
 }
 
+Bool WaitActor::isAliveUpToSolve(void) {
+  if (isCommitted())
+    return NO;
+
+  Board *bb = this->getBoardFast();
+  Actor *aa;
+
+loop:
+  // must be applied to a result of 'getBoardFast ()';
+  Assert (!(bb->isCommitted ()));
+
+  if (bb->isFailed()) 
+    return NO;
+  if (bb->isRoot() || bb->isSolve())
+    return OK;
+  
+  aa=bb->getActor();
+  if (aa->isCommitted()) 
+    return NO;
+
+  bb = aa->getBoardFast();
+
+  goto loop;
+  // should never come here
+  return NO;
+}
+
 #ifdef OUTLINE
 #define inline
 #include "actor.icc"

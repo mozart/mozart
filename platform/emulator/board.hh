@@ -129,6 +129,7 @@ public:
   Bool isWaiting() { return flags & Bo_Waiting ? OK : NO; }
   Bool isRoot() { return flags & Bo_Root ? OK : NO; }
   Bool isSolve () { return ((flags & Bo_Solve) ? OK : NO); }
+
   void newScript(int size);
   void setBody(ProgramCounter p,RefsArray y,
 	       RefsArray g,RefsArray x,int i);
