@@ -48,20 +48,17 @@ int nextPrime(int prime)
     prime++;
   }
 
-  while(1) {
-    if (isPrime(prime)) {
-      return prime;
-    }
+  while(!isPrime(prime)) {
     prime += 2;
   }
+  return prime;
 }
 
 
 
-HashTable::HashTable(hashType typ, int s)
+HashTable::HashTable(HtKeyType typ, int s)
 {
-  s = nextPrime(s);
-  tableSize = s;
+  tableSize = nextPrime(s);
   type = typ;
   counter = 0;
   percent = (int) (MAXFULL * tableSize);
@@ -71,9 +68,10 @@ HashTable::HashTable(hashType typ, int s)
   }
 }
 
-HashTable::~HashTable() {
-  // dispose hash table itself
-    delete [] table;
+HashTable::~HashTable() 
+{
+  /* dispose hash table itself */
+  delete [] table;
 }
 
 
@@ -105,17 +103,13 @@ unsigned HashTable::memRequired(int valSize)
     HashNode *lnp = &table[i];
     if (! lnp->isEmpty()) {
       mem += valSize;
-      if (type == CHARTYPE) {
+      if (type == HT_CHARKEY) {
 	mem += strlen(lnp->key.fstr);
       }
     }
   }
   return mem;
 }
-
-// add a new entry. Replace it iff "replace == OK" 
-// otherwise return NO
-
 
 
 void HashTable::resize()
@@ -130,15 +124,15 @@ void HashTable::resize()
   int i;
   for (i=0; i<tableSize; i++) 
     neu[i].setEmpty();
-  if (type == INTTYPE) {
+  if (type == HT_INTKEY) {
     for (i=0; i<oldSize; i++) {
       if (! old[i].isEmpty()) 
-	aadd(old[i].value,old[i].key.fint,NO);
+	htAdd(old[i].key.fint,old[i].value);
     }
   } else {
     for (i=0;i<oldSize;i++) {
       if (! old[i].isEmpty()) {
-	aadd(old[i].value,old[i].key.fstr,NO);
+	htAdd(old[i].key.fstr,old[i].value);
 	free(old[i].key.fstr);
       }
     }
@@ -176,59 +170,51 @@ inline int HashTable::findIndex(intlong i)
 }
 
 
-// add a new entry. Replace it iff "replace == OK" 
-// otherwise return NO
-
-
-Bool HashTable::aadd(void *d, char *s, Bool replace)
+Bool HashTable::htAdd(char *k, void *val)
 {
+  Assert(val!=htEmpty);
+
   if (counter > percent)
     resize();
   
-  int key = findIndex(s);
+  int key = findIndex(k);
   if (! table[key].isEmpty()) {     // already in there
-    if (replace == NO) {
-      return NO;
-    } else {               // replace old entry
-      free(table[key].key.fstr);
-    }
+    free(table[key].key.fstr);
   } else {
     counter++;
   }
   
-  table[key].key.fstr  = ozstrdup(s);
-  table[key].value = d;
+  table[key].key.fstr  = ozstrdup(k);
+  table[key].value = val;
   return OK;
 }
 
-Bool HashTable::aadd(void *d, intlong i, Bool replace)
+Bool HashTable::htAdd(intlong k, void *val)
 {
+  Assert(val!=htEmpty);
+
   if (counter > percent)
     resize();
   
-  int key = findIndex(i);
-  if (! table[key].isEmpty()) {     // already in there
-    if (replace == NO) {
-      return NO;
-    } // else replace old entry
-  } else {
+  int key = findIndex(k);
+  if (table[key].isEmpty()) {     // already in there
     counter++;
   }
   
-  table[key].key.fint  = i;
-  table[key].value = d;
+  table[key].key.fint  = k;
+  table[key].value = val;
   return OK;
 }
 
 
-void *HashTable::ffind(char *s)
+void *HashTable::htFind(char *s)
 {
   int key = findIndex(s);
   return (table[key].isEmpty())
     ? htEmpty : table[key].value;
 }
 
-void *HashTable::ffind(intlong i)
+void *HashTable::htFind(intlong i)
 {
   int key = findIndex(i);
   return (table[key].isEmpty())
@@ -238,7 +224,7 @@ void *HashTable::ffind(intlong i)
 int HashTable::lengthList(int i)
 {
   int key;
-  if (type == CHARTYPE) 
+  if (type == HT_CHARKEY) 
     key = hashFunc(table[i].key.fstr);
   else 
     key = hashFunc(table[i].key.fint);
@@ -252,7 +238,7 @@ int HashTable::lengthList(int i)
 
 void HashTable::print()
 {
-  if (type == CHARTYPE) {
+  if (type == HT_CHARKEY) {
     for(int i = 0; i < tableSize; i++) {
       if (! table[i].isEmpty()) {
 	printf("table[%d] = <%s,0x%x>\n", i, table[i].key.fstr, table[i].value);
