@@ -14,7 +14,8 @@ define
 			 defines    : Defines    <= nil
 			 debug      : Debug      <= false
 			 executable : Executable <= false
-			 gumpdir    : Gumpdir    <= unit)
+			 gumpdir    : Gumpdir    <= unit
+			 baseURL    : BaseURL    <= unit)
 	 BatchCompiler = {New Compiler.engine init()}
 	 UI = {New Compiler.interface init(BatchCompiler auto)}
       in
@@ -29,6 +30,11 @@ define
 	    end
 	 else
 	    {BatchCompiler enqueue(setGumpDirectory(Gumpdir))}
+	 end
+	 if BaseURL==unit then D={Path.dirname ToFile} in
+	    {BatchCompiler enqueue(setBaseURL(D))}
+	 else
+	    {BatchCompiler enqueue(setBaseURL(BaseURL))}
 	 end
 	 if Debug then
 	    {BatchCompiler enqueue(setSwitch(controlflowinfo true))}
