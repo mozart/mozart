@@ -122,7 +122,7 @@
           arg2="lllp{0.6\linewidth}">
     <Meta name=latex.table.spec arg1="table.prop.dp"
           arg2="lllp{0.6\linewidth}">
-    <Meta name=latex.table.spec arg1="table.prop.dpLog"
+    <Meta name=latex.table.spec arg1="table.prop.dplog"
           arg2="lllp{0.6\linewidth}">
     <Meta name=latex.table.spec arg1="table.prop.errors"
           arg2="lllp{0.6\linewidth}">
@@ -235,7 +235,7 @@
     <Meta name="html.split"       value="chapter.property">
     <Meta name="html.split"       value="section.property.application">
     <Meta name="html.split"       value="section.property.dp">
-    <Meta name="html.split"       value="section.property.dpLog">
+    <Meta name="html.split"       value="section.property.dplog">
     <Meta name="html.split"       value="section.property.errors">
     <Meta name="html.split"       value="section.property.fd">
     <Meta name="html.split"       value="section.property.gc">

@@ -207,13 +207,13 @@
 
   </Subsection>
 
-  <Subsection class=unnumbered id="section.property.dpLog">
-  <Title/Loging of distributed events:<<dpLog>>/
+  <Subsection class=unnumbered id="section.property.dplog">
+  <Title/Logging of distributed events: <<dpLog>>/
 
   <P>
-    <Table id="table.prop.dpLog">
+    <Table id="table.prop.dplog">
      <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
-      <Tr>
+     <Tr>
         <Td/<<connectLog>>/
         <Td/yes/
         <Td/<<Bool>>/
@@ -227,7 +227,8 @@
        </Tr>
     </Table>
     </P>
-  <P> The events are writen to standard out by default. They can be redirected to file by <<DPStatistics.createLogFile>>.
+  <P>
+      The events are writen to standard out by default. They can be redirected to file by <<DPStatistics.createLogFile>>.
   </P>
   </Subsection>
 
