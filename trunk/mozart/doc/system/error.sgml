@@ -26,7 +26,7 @@
   -->
 
 <Chapter id="Chapter.Error">
-  <Title/Error Routines: <<Error>>/
+  <Title/Error Formatting: <<Error>>/
   <P>
     The <<Error>> module is concerned with various tasks related to
     error reporting.  This encompasses the following:
@@ -38,15 +38,17 @@
 	Constructing error messages from run-time error conditions
 	in the form of exceptions.
       <Item>
-	Installing a default exception handler processing all uncaught
-	exceptions.  This involves printing out the exception with the
-	mechanisms mentioned above and executing a handler as given by
-	the properties <<'errors.toplevel'>> and <<'errors.subordinate'>>.
+	Registering error formatters in the <Def/error registry/.
     </List>
+    At boot time, the system installs a default exception handler processing
+    all uncaught exceptions.  This involves printing out the exception with
+    the mechanisms mentioned above and executing a handler as given by the
+    properties <<'errors.toplevel'>> and <<'errors.subordinate'>>, which see.
   <Section>
     <Title/Data Structures/
     <P>
-      The general format of an error message is as follows:
+      The central data structure used in this module is the error message.
+      The general format is as follows:
       <Grammar.Rule/?={message}
 	<Grammar.Alt/?={message label}<<(>>/
 	<Grammar.Alt type=space/<<   >>[<<kind: ?={extended virtual string}>>]
@@ -131,6 +133,32 @@
 	  every pair of elements.
       </List>
   <Section>
+    <Title/The Error Registry/
+    <P>
+      The <Def/error registry/ has the purpose of storing so-called
+      <Def/error formatters/ under specific keys of type <Q/literal/.
+      An error formatter&nbsp;?{P} is a procedure with the signature
+      <<<{?{P} ?+{ExceptionR} ??{MessageR}}>>>
+      ?{P}&nbsp;must be capable of processing any exception having as
+      label any of the keys under which ?{P} has been entered into the
+      error registry and must return a ?={message} as defined above
+      describing the condition.  In the case of error or system exceptions,
+      only the record found in the dispatch field of the exception is
+      handed to the formatter.
+    <P>
+      Error formatters may be invoked by the default exception handler
+      installed at boot time.  Possibly dealing with serious conditions,
+      formatters are required to be robust.  In particular, the handler
+      flags the thread executing the formatter to be <Def/non-blocking/,
+      &ie;, if it ever blocks on a logic variable, an exception is raised
+      in this thread.  This increases chances of any message being output
+      at all.  Note that it is allowed to block on futures though and that
+      this flag is not inherited by any created child thread.
+  <Section>
+    <Title/Example Error Formatter/
+    <P>
+      <!--** still missing -->
+  <Section>
     <Title/The Module/
     <P>
       <List enum>
@@ -163,5 +191,13 @@
 	<Item>
 	  converts an exception to a message and this to a virtual string,
 	  printing the result on standard error (using <<System.printError>>).
+
+	<Entry><<registerFormatter>>
+	  <Index class=tails/<<Error>><And><<registerFormatter>>/
+	<Synopsis><<{Error.registerFormatter ?+{L} ?+{P}}>>
+	<Item>
+	  enters a formatter for exceptions with label&nbsp;?_{L} into
+	  the error registry, quietly replacing a possibly existing
+	  formatter for&nbsp;?_{L}.
       </List>
 </Chapter>
