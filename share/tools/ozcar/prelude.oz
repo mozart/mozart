@@ -127,10 +127,14 @@ local
    end
 in
    fun {LookupFile F}
-      S = {Atom.toString F}
+      S   = {Atom.toString F}
+      Abs = case S
+	    of     &/|_   then true  % absolute path (Unix...
+	    elseof _|&:|_ then true  %               ...Windows)
+	    else false end
    in
-      case S.1 == &/ then
-	 try                   % absolute path
+      case Abs then
+	 try                         % absolute path
 	    {OS.stat F _}
 	    {OzcarMessage LS # F # ' found'}
 	    F
@@ -138,7 +142,7 @@ in
 	    {OzcarError LS # F # ' NOT FOUND!'} % should not happen!
 	    nil
 	 end
-      else                     % relative path
+      else                           % relative path
 	 %% strip "./" or "././"
 	 Suffix = case S.1 == &. andthen S.2.1 == &/ then T = S.2.2 in
 		     case T.1 == &. andthen T.2.1 == &/ then
