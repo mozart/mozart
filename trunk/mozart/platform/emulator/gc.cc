@@ -617,7 +617,7 @@ void CFuncContinuation::gcRecurse(void)
   DebugCheck (isFreedRefsArray (xRegs),
 	      error ("freed refs array in CFunContinuation::gcRecurse ()"));
   xRegs = gcRefsArray(xRegs);
-  node = node->gcBoard();
+  board = board->gcBoard();
 }
 
 /* mm2: have to check for discarded node */
@@ -663,7 +663,7 @@ void Continuation::gcRecurse(){
 inline
 void SuspContinuation::gcRecurse(){
   GCMETHMSG("SuspContinuation::gcRecurse");
-  node=node->gcBoard();
+  board = board->gcBoard();
   Continuation::gcRecurse();
 }
 
@@ -817,7 +817,7 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
     return NULL;
   }
 
-  Board *el = getNode()->gcGetBoardDeref();
+  Board *el = getBoard()->gcGetBoardDeref();
 
   if (el == NULL) {
     return NULL;
@@ -833,7 +833,7 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
 
   switch (flag & (S_cont|S_cfun)){
   case S_null:
-    newSusp->item.node = item.node->gcBoard();
+    newSusp->item.board = item.board->gcBoard();
     break;
   case S_cont:
     newSusp->item.cont = item.cont->gcCont();
@@ -845,7 +845,7 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
     error("Unexpected case in Suspension::gc().");
   }
   
-  DebugCheck(!getNode()->gcGetBoardDeref(),
+  DebugCheck(!getBoard()->gcGetBoardDeref(),
 	     warning("gc: adding dead node (3)"));
 
   setHeapCell((int *)&flag, GCMARK(newSusp));
@@ -856,7 +856,7 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
 /* we reverse the order of the list,
  * but this should be no problem
  */
-SuspList *SuspList::gc(Bool tcFlag)
+SuspList * SuspList::gc(Bool tcFlag)
 {
   GCMETHMSG("SuspList::gc");
 
