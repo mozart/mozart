@@ -539,11 +539,10 @@ void OzCtVariable::_cac(Board * bb) {
   SuspList ** new_susp_lists = (SuspList **)
     heapMalloc(sizeof(SuspList *) * noOfSuspLists);
   for (int i = noOfSuspLists; i--; )
-    new_susp_lists[i] = _susp_lists[0];
+    new_susp_lists[i] = _susp_lists[i];
   _susp_lists = new_susp_lists;
   // collect
   cacStack.pushLocalSuspList(bb, _susp_lists, noOfSuspLists);
-
 }
 
 inline
