@@ -82,6 +82,7 @@ NoThreads              = 'There is no thread attached'
 %%
 
 ArrayType              = '<array>'
+BitArrayType           = '<bitarray>'
 ThreadType             = '<thread>'
 CellType               = '<cell>'
 ClassType              = '<class>'
