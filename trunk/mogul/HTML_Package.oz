@@ -17,7 +17,7 @@ define
 	       'width' : '100%'
 	       'cellspacing' : '0'
 	       'border': '0'
-	       {self formatHeader('type' "section" $)}
+	       {self formatHeader('type' "package" $)}
 	       {self formatHeader('id' tt({HtmlQuote @id}) $)}
 	       if @pid==unit then '' else
 		  {self formatHeader(
@@ -34,8 +34,8 @@ define
 	       end
 	       if @author==nil then '' else
 		  {self formatHeaderEnum(
-			   'author'
-			    {Map @author Author.toHref}
+			   'author'#if {Length @author}==1 then nil else 's' end
+			   {Map @author Author.toHref}
 			   $)}
 	       end
 	       if @contact==nil then '' else

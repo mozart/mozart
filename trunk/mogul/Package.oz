@@ -119,6 +119,11 @@ define
       %%
       meth updatePkgList(DB L $) @id|L end
       %%
+      %%
+      meth updateAuthorList(DB L $) 
+	 package(id:@id authors:@author)|L
+      end
+      %%
       meth hasCategory(C $)
 	 {Member C @categories}
       end

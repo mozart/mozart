@@ -2,6 +2,7 @@ functor
 import
    HTML_Entry('class':HE)
    Text(htmlQuote:HtmlQuote)
+   Admin(manager:Manager)
 export
    'class' : HTML_Contact
 define
@@ -18,6 +19,13 @@ define
 	       'border': '0'
 	       {self formatHeader('type' "contact" $)}
 	       {self formatHeader('id' tt({HtmlQuote @id}) $)}
+	       if @pid==unit then '' else
+		  {self formatHeader(
+			   'section'
+			   a(href:{Manager id_to_href(@pid $)}
+			     {HtmlQuote @pid})
+			   $)}
+	       end
 	       {self formatHeader('name' {HtmlQuote @name} $)}
 	       if @email==unit then "" else
 		  {self formatHeader(
@@ -31,10 +39,27 @@ define
 			   a(href : @www tt({HtmlQuote @www}))
 			   $)}
 	       end
-	       %% !!! this should list also the packages for which
-	       %% this is a contact
-	       )
-	    )
+	       local
+		  TOC={self getContributions($)}
+	       in
+		  {self formatHeaderEnum(
+			   'contributions'
+			   {Map TOC
+			    fun {$ ID}
+			       L={Manager id_to_href(ID $)}
+			       N={{Manager condGetId(ID unit $)} getPackageName($)}
+			    in
+			       {Manager trace('creating link to '#ID#' '#L)}
+			       a(href:L
+				 if N==nil then
+				    tt({HtmlQuote ID})
+				 else
+				    N
+				 end)
+			    end}
+			   $)}
+	       end
+	       ))
       end
    end
 end
