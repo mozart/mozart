@@ -547,55 +547,54 @@ int pipeHandler(int, void *arg)
   int u = waitpid(pi->pid,NULL,0);
   if (u!=pi->pid) {
     doRaise(controlvar,OZ_unixError(errno),pi->url,pi->action);
+    // mm2: cleanup missing?
     return NO;
   }
 #endif
 
   if (retloc!=URLC_OK) {
     doRaise(controlvar,urlcStrerror(retloc),pi->url,pi->action);
-    goto exit;
+  } else {
+
+    switch (pi->action) {
+    case URL_LOCALIZE:
+      // this is only called when the file is remote, therefore
+      // a local copy will be made into the file
+      ControlVarUnify(controlvar,pi->out,
+                      OZ_mkTupleC("new",1,oz_atom(pi->file)));
+      break;
+    case URL_OPEN:
+      {
+        int fd = osopen(pi->file,O_RDONLY,0);
+        if (fd < 0) {
+          doRaise(controlvar,OZ_unixError(errno),pi->url,pi->action);
+        } else {
+          unlink(pi->file);
+          ControlVarUnify(controlvar,pi->out,OZ_int(fd));
+        }
+        break;
+      }
+    case URL_LOAD:
+      {
+        int fd = osopen(pi->file, O_RDONLY,0);
+        if (fd < 0) {
+          doRaise(controlvar,OZ_unixError(errno),pi->url,pi->action);
+        } else {
+          OZ_Term other = oz_newVariable();
+          OZ_Return aux = loadFD(fd,other);
+          if (aux==RAISE) {
+            ControlVarRaise(controlvar,am.getExceptionValue());
+          } else {
+            Assert(aux==PROCEED);
+            unlink(pi->file);
+            ControlVarUnify(controlvar,pi->out,other);
+          }
+        }
+        break;
+      }
+    }
   }
 
-  switch (pi->action) {
-  case URL_LOCALIZE:
-    // this is only called when the file is remote, therefore
-    // a local copy will be made into the file
-    ControlVarUnify(controlvar,pi->out,OZ_mkTupleC("new",1,oz_atom(pi->file)));
-    break;
-  case URL_OPEN:
-    {
-      int fd = osopen(pi->file,O_RDONLY,0);
-      if (fd < 0) {
-        doRaise(controlvar,OZ_unixError(errno),pi->url,pi->action);
-        goto exit;
-      }
-      unlink(pi->file);
-      ControlVarUnify(controlvar,pi->out,OZ_int(fd));
-      break;
-    }
-  case URL_LOAD:
-    {
-      int fd = osopen(pi->file, O_RDONLY,0);
-      if (fd < 0) {
-        doRaise(controlvar,OZ_unixError(errno),pi->url,pi->action);
-        goto exit;
-      }
-      OZ_Term other = oz_newVariable();
-      OZ_Return aux = loadFD(fd,other);
-      if (aux==RAISE) {
-        ControlVarRaise(controlvar,am.getExceptionValue());
-        goto exit;
-      }
-      Assert(aux==PROCEED);
-      unlink(pi->file);
-      ControlVarUnify(controlvar,pi->out,other);
-      break;
-    }
-  }
-
-  ControlVarResume(controlvar);
-
-exit:
   delete pi->file;
   delete pi;
   return OK;
