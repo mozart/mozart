@@ -20,238 +20,36 @@
 %%% WARRANTIES.
 %%%
 
-local
+functor
 
-   class AboutDialog
-      from TkTools.dialog
+prepare
 
-      meth init(master:Master)
-         TkTools.dialog,tkInit(master:  Master
-                               title:   TitleName#': About'
-                               buttons: ['Okay'#tkClose]
-                               focus:   1
-                               pack:    false
-                               default: 1)
-         Title = {New Tk.label tkInit(parent:     self
-                                      font:       AboutFont
-                                      text:       TitleName
-                                      foreground: blue)}
+   ArgSpec = record(defaults(rightmost type:bool default:true)
+                    random(rightmost type:bool default:true))
 
-         Author = {New Tk.label tkInit(parent: self
-                                       text: ('Christian Schulte\n' #
-                                              '(schulte@dfki.uni-sb.de)\n'))}
-      in
-         {Tk.send pack(Title Author side:top expand:1 padx:BigPad pady:BigPad)}
-         AboutDialog,tkPack
-      end
+   %% Default companies and drivers
+   DefaultScenario = d('Disney': ['Mickey'('Düsseldorf') 'Goofy'('Berlin')]
+                       'Oz':     ['Tinman'('München') 'Toto'('Saarbrücken')])
 
-   end
+import
+   Application Tk TkTools
 
+   Configure(fonts colors goods)
+   AgentAbstractions(new)
+   Agents(broker)
+   Widgets(entryChooser
+           map)
+   Dialogs(about
+           addCompany remCompany
+           addDriver remDriver)
+   Randomizer('class')
 
-   class OkayDialog from TkTools.dialog
-      meth init(master:M title:T okay:O)
-         TkTools.dialog,tkInit(master:  M
-                               title:   TitleName#': '#T
-                               buttons: ['Okay'#O 'Cancel'#tkClose]
-                               pack:    false
-                               default: 1)
-      end
-   end
+define
 
-   proc {Error M T}
-      {Wait {New TkTools.error tkInit(master:M text:T)}.tkClosed}
-   end
-
-   class AddCompanyDialog from OkayDialog prop final
-      meth init(master:M agents:AS company:C)
-         proc {Okay}
-            AddC={Entry tkReturnAtom(get $)}
-         in
-            if {Dictionary.member AS AddC} then
-               {Error self 'Company '#AddC#' already exists.'}
-            else C=AddC {self tkClose}
-            end
-         end
-
-         OkayDialog,init(master:M title:'Add Company' okay:Okay)
-         Frame = {New TkTools.textframe tkInit(parent:self text:'Add Company')}
-         Name  = {New Tk.label tkInit(parent:Frame.inner text:'Company:')}
-         Entry = {New Tk.entry tkInit(parent:Frame.inner bg:TextBg
-                                      width:BigTextWidth)}
-      in
-         {Tk.batch [pack(Name Entry side:left padx:Pad pady:Pad)
-                    pack(Frame) focus(Entry)]}
-         AddCompanyDialog,tkPack
-      end
-
-   end
-
-
-   class RemCompanyDialog from OkayDialog prop final
-
-      meth init(master:M agents:AS company:C)
-         proc {Okay}
-            RemC={Entry.entry tkReturnAtom(get $)}
-         in
-            if {Dictionary.member AS RemC} then C=RemC {self tkClose}
-            else {Error self 'There is no company with name: '#RemC#'.'}
-            end
-         end
-
-         OkayDialog, init(master:M title:'Remove Company' okay:Okay)
-         Frame = {New TkTools.textframe tkInit(parent:self
-                                               text:'Remove Company')}
-         Name  = {New Tk.label tkInit(parent:Frame.inner text:'Company:')}
-         Entry = {New EntryChooser tkInit(parent:Frame.inner
-                                          toplevel:self.toplevel
-                                          entries:{Dictionary.keys AS})}
-      in
-         {Tk.batch [pack(Name Entry side:left padx:Pad pady:Pad)
-                    pack(Frame) focus(Entry.entry)]}
-         RemCompanyDialog,tkPack
-      end
-
-   end
-
-
-   class AddDriverDialog from OkayDialog prop final
-
-      meth init(master:M agents:AS company:C driver:D city:Y)
-         proc {Okay}
-            AddC={EntryC.entry tkReturnAtom(get $)}
-            AddD={EntryD       tkReturnAtom(get $)}
-            AddY={EntryY.entry tkReturnAtom(get $)}
-         in
-            if {Dictionary.member AS AddC} then
-               if {Member AddD {Dictionary.get AS AddC}} then
-                  {Error self 'Driver '#AddD#' already exists for company '#
-                              AddC#'.'}
-               elseif {Country.isCity AddY} then
-                  C=AddC D=AddD Y=AddY  {self tkClose}
-               else
-                  {Error self 'There is no city '#AddY#'.'}
-               end
-            else {Error self 'There is no company '#AddC#'.'}
-            end
-         end
-
-         OkayDialog, init(master:M title:'Add Driver' okay:Okay)
-         Frame  = {New TkTools.textframe tkInit(parent:self text:'Add Driver')}
-         NameC  = {New Tk.label tkInit(parent:Frame.inner text:'Company:')}
-         EntryC = {New EntryChooser tkInit(parent:   Frame.inner
-                                           toplevel: self.toplevel
-                                           entries:  {Dictionary.keys AS})}
-         NameD  = {New Tk.label tkInit(parent:Frame.inner text:'Driver:')}
-         EntryD = {New Tk.entry tkInit(parent:Frame.inner bg:TextBg)}
-         NameY  = {New Tk.label tkInit(parent:Frame.inner text:'City:')}
-         EntryY = {New EntryChooser tkInit(parent:   Frame.inner
-                                           toplevel: self.toplevel
-                                           entries:  Country.cities)}
-      in
-         {Tk.batch [grid(NameC  row:0 column:0 sticky:w)
-                    grid(NameD  row:1 column:0 sticky:w)
-                    grid(NameY  row:2 column:0 sticky:w)
-                    grid(EntryC row:0 column:1 sticky:we)
-                    grid(EntryD row:1 column:1 sticky:we)
-                    grid(EntryY row:2 column:1 sticky:we)
-                    pack(Frame)]}
-         AddDriverDialog,tkPack
-      end
-
-   end
-
-
-   class RemDriverDialog from OkayDialog prop final
-
-      meth init(master:M agents:AS company:C driver:D)
-         Companies = {Filter {Dictionary.keys AS}
-                      fun {$ C}
-                         {Dictionary.get AS C}\=nil
-                      end}
-
-         proc {Okay}
-            RemC={EntryC.entry tkReturnAtom(get $)}
-            RemD={EntryD.entry tkReturnAtom(get $)}
-         in
-            if {Dictionary.member AS RemC} then
-               if {Member RemD {Dictionary.get AS RemC}} then
-                  C=RemC D=RemD {self tkClose}
-               else
-                  {Error self 'No driver '#RemD#' for company '#RemC#'.'}
-               end
-            else {Error self 'There is no company '#RemC#'.'}
-            end
-         end
-
-         OkayDialog, init(master:M title:'Remove Driver' okay:Okay)
-         Frame  = {New TkTools.textframe tkInit(parent:self text:'Remove Driver')}
-         NameC  = {New Tk.label tkInit(parent:Frame.inner text:'Company:')}
-         EntryC = {New EntryChooser tkInit(parent:Frame.inner
-                                           toplevel:self.toplevel
-                                           entries: Companies
-                                           action:  proc {$ A}
-                                                       {EntryD
-                                                        entries({Dictionary.get
-                                                                 AS A})}
-                                                    end)}
-         NameD  = {New Tk.label tkInit(parent:Frame.inner text:'Driver:')}
-         EntryD = {New EntryChooser tkInit(parent:Frame.inner
-                                           toplevel:self.toplevel
-                                           entries: {Dictionary.get AS
-                                                     Companies.1})}
-      in
-         {Tk.batch [grid(NameC  row:0 column:0 sticky:w)
-                    grid(NameD  row:1 column:0 sticky:w)
-                    grid(EntryC row:0 column:1 sticky:we)
-                    grid(EntryD row:1 column:1 sticky:we)
-                    pack(Frame)]}
-         RemDriverDialog,tkPack
-      end
-
-   end
-
-
-   local
-      TownSize   = 3
-      TextOffset = 11
-   in
-
-      class CountryMap
-         from Tk.canvas
-
-         meth init(parent:P)
-            Tk.canvas,tkInit(parent: P.toplevel
-                             relief:sunken bd:3
-                             width:  Country.width
-                             height: Country.height
-                             bg:     BackColor)
-            {ForAll {Country.graph}
-             proc {$ SPDs}
-                Src#(SrcX#SrcY)#Dsts = SPDs
-                Tag                  = {New Tk.canvasTag tkInit(parent:self)}
-             in
-                {Tag tkBind(event:'<1>' action:P # putSrc(Src))}
-                {Tag tkBind(event:'<2>' action:P # putDst(Src))}
-                {ForAll Dsts
-                 proc {$ Dst}
-                    DstX#DstY = Dst
-                 in
-                    {self tk(crea line SrcX SrcY DstX DstY fill:StreetColor)}
-                 end}
-                {self tk(crea rectangle
-                         SrcX-TownSize SrcY-TownSize
-                         SrcX+TownSize SrcY+TownSize
-                         fill:CityColor tag:Tag)}
-                {self tk(crea text SrcX SrcY+TextOffset
-                         text:Src font:TextFont tag:Tag)}
-             end}
-         end
-
-      end
-
-   end
-
-in
+   TextBg       = Configure.colors.textBg
+   TextFont     = Configure.fonts.text
+   TextWidth    = 4
+   BigTextWidth = 17
 
    class Frontend
       prop locking
@@ -270,7 +68,7 @@ in
       meth init(toplevel:T)
          self.toplevel = T
 
-         ThisRandomizer = {New Randomizer init(broker:ThisBroker)}
+         ThisRandomizer = {New Randomizer.'class' init(broker:ThisBroker)}
 
          RandGo    = {New Tk.variable tkInit(false)}
          RandSpeed = {New Tk.variable tkInit(1)}
@@ -331,7 +129,7 @@ in
                              menu:    nil)]
                  nil}
 
-         CtyMap = {New CountryMap init(parent:self)}
+         CtyMap = {New Widgets.map init(parent:self)}
          Query  = {New Tk.frame   tkInit(parent:T relief:sunken bd:3)}
 
          FromL  = {New Tk.label tkInit(parent:Query text:'From:')}
@@ -343,8 +141,9 @@ in
                                        anchor:w
                                        bg:TextBg font:TextFont)}
          WhatL  = {New Tk.label tkInit(parent:Query text:'Good:')}
-         WhatT  = {New EntryChooser tkInit(parent:Query toplevel:T
-                                           entries: {Record.toList Goods})}
+         WhatT  = {New Widgets.entryChooser
+                   tkInit(parent:Query toplevel:T
+                          entries: {Record.toList Configure.goods})}
          WhgtL  = {New Tk.label tkInit(parent:Query text:'Weight:')}
          WhgtT  = {New Tk.entry tkInit(parent:Query width:TextWidth
                                        bg:TextBg font:TextFont)}
@@ -373,7 +172,7 @@ in
          self.weight = WhgtT
          self.what   = WhatT.entry
 
-         ThisBroker = {NewAgent Broker init(toplevel:self)}
+         ThisBroker = {AgentAbstractions.new Agents.broker init(toplevel:self)}
 
          self.agents     = {Dictionary.new}
          self.broker     = ThisBroker
@@ -438,7 +237,7 @@ in
       meth about
          lock
             Frontend, DisableMenus
-            {Wait {New AboutDialog init(master:self.toplevel)}.tkClosed}
+            {Wait {New Dialogs.about init(master:self.toplevel)}.tkClosed}
             Frontend, EnableMenus
          end
       end
@@ -446,9 +245,9 @@ in
       meth addCompany
          lock Agents=self.agents C in
             Frontend, DisableMenus
-            {Wait {New AddCompanyDialog init(master: self.toplevel
-                                             agents: Agents
-                                             company:C)}.tkClosed}
+            {Wait {New Dialogs.addCompany init(master: self.toplevel
+                                               agents: Agents
+                                               company:C)}.tkClosed}
             if {IsDet C} then
                Menu = self.menu.configure
             in
@@ -470,9 +269,9 @@ in
       meth remCompany
          lock Agents=self.agents C in
             Frontend, DisableMenus
-            {Wait {New RemCompanyDialog init(master: self.toplevel
-                                             agents: Agents
-                                             company:C)}.tkClosed}
+            {Wait {New Dialogs.remCompany init(master: self.toplevel
+                                               agents: Agents
+                                               company:C)}.tkClosed}
             if {IsDet C} then
                Menu = self.menu.configure
             in
@@ -497,11 +296,11 @@ in
       meth addDriver
          lock Agents=self.agents C D Y in
             Frontend, DisableMenus
-            {Wait {New AddDriverDialog init(master: self.toplevel
-                                            agents: Agents
-                                            company:C
-                                            driver: D
-                                            city:   Y)}.tkClosed}
+            {Wait {New Dialogs.addDriver init(master: self.toplevel
+                                              agents: Agents
+                                              company:C
+                                              driver: D
+                                              city:   Y)}.tkClosed}
             if {IsDet C} then
                {Dictionary.put Agents C D|{Dictionary.get Agents C}}
                {self.menu.configure.remDriver tk(entryconf state:normal)}
@@ -514,10 +313,10 @@ in
       meth remDriver
          lock Agents=self.agents C D in
             Frontend, DisableMenus
-            {Wait {New RemDriverDialog init(master:  self.toplevel
-                                            agents:  Agents
-                                            company: C
-                                            driver:  D)}.tkClosed}
+            {Wait {New Dialogs.remDriver init(master:  self.toplevel
+                                              agents:  Agents
+                                              company: C
+                                              driver:  D)}.tkClosed}
             if {IsDet C} then
                {Dictionary.put Agents C
                 {List.subtract {Dictionary.get Agents C} D}}
@@ -552,6 +351,21 @@ in
          end
       end
 
+   end
+
+   Args = {Application.getCmdArgs ArgSpec}
+
+   T = {New Tk.toplevel tkInit(title:  'Transportation'
+                               delete: Application.exit # 0)}
+
+   F = {New Frontend init(toplevel:T)}
+
+   if Args.defaults orelse Args.random then
+      {F addDefaults}
+   end
+
+   if Args.random then
+      {F random}
    end
 
 end
