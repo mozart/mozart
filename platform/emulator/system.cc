@@ -115,8 +115,9 @@ OZ_BI_define(BIshowError,1,0)
 
 OZ_Return printInline(TaggedRef term, Bool newline = NO)
 {
-  char *s = OZ_toC(term,ozconf.printDepth,ozconf.printWidth);
-  return printVS(s,strlen(s),STDOUT_FILENO,newline);
+  int len;
+  char *s = OZ__toC(term,ozconf.printDepth,ozconf.printWidth,&len);
+  return printVS(s,len,STDOUT_FILENO,newline);
 }
 
 OZ_DECLAREBI_USEINLINEREL1(BIprint,printInline)
