@@ -25,9 +25,13 @@
 
 #define __BITS_HH__
 
+#if defined(INTERFACE)
+#pragma interface "bits.hh"
+#endif
+
 extern const char bits_in_byte[];
 
-inline
+static inline
 int get_num_of_bits(const int m, const int * ia) {
   int s = 0;
 
