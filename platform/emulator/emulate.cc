@@ -214,7 +214,7 @@ Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
     if(!isAbstraction(pred)) goto bombGenCall;
 
     abstr = tagged2Abstraction(pred);
-    if (abstr->isProxy() || abstr->getArity() != getWidth(gci->arity)) 
+    if (abstr->getArity() != getWidth(gci->arity)) 
       goto bombGenCall;
   }
 
