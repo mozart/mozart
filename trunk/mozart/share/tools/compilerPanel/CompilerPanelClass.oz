@@ -759,11 +759,11 @@ in
 	 o(self.Text configure state: normal)|
 	 case Coord == unit then
 	    o(self.Text insert 'end' VS)|Middle
-	 else File Line Column in
-	    case Coord of pos(F L C) then File = F Line = L Column = C
-	    [] pos(F L C _ _ _) then File = F Line = L Column = C
-	    [] posNoDebug(F L C) then File = F Line = L Column = C
-	    end
+	 else
+	    File = Coord.1
+	    Line = Coord.2
+	    Column = Coord.3
+	 in
 	    case File of 'nofile' then
 	       o(self.Text insert 'end' VS)|Middle
 	    else Tag Action in
@@ -1189,15 +1189,6 @@ in
 				      variable: DebugInfoControl
 				      action: {MkAction
 					       Switch(debuginfocontrol)})}
-	 DebugInfoStatements = {New Tk.variable tkInit(false)}
-	 DebugInfoStatementsSw = {New Tk.checkbutton
-				  tkInit(parent: DebuggerFrame
-					 text: 'Include statement information'
-					 font: SwitchFont
-					 variable: DebugInfoStatements
-					 action:
-					    {MkAction
-					     Switch(debuginfostatements)})}
 	 DebugInfoVarnames = {New Tk.variable tkInit(false)}
 	 DebugInfoVarnamesSw = {New Tk.checkbutton
 				tkInit(parent: DebuggerFrame
@@ -1284,7 +1275,7 @@ in
 		    pack(EmulatorLabel FeedToEmulatorSw ThreadedQueriesSw
 			 ProfileSw anchor: w)
 		    pack(DebuggerLabel RunWithDebuggerSw DebugInfoControlSw
-			 DebugInfoStatementsSw DebugInfoVarnamesSw anchor: w)
+			 DebugInfoVarnamesSw anchor: w)
 		    %% "Query Queue" note:
 		    grid(self.CurrentQuery row: 1 column: 1 sticky: nsew)
 		    grid(columnconfigure Queue 1 weight: 1)
@@ -1337,7 +1328,6 @@ in
 				   profile: Profile
 				   runwithdebugger: RunWithDebugger
 				   debuginfocontrol: DebugInfoControl
-				   debuginfostatements: DebugInfoStatements
 				   debuginfovarnames: DebugInfoVarnames)
 	 self.ToGray = [Remove Load Save
 			self.MaxNumberOfErrors.inc self.MaxNumberOfErrors.dec
@@ -1349,7 +1339,7 @@ in
 			DebugValueSw DebugTypeSw CodeGenSw OutputCodeSw
 			FeedToEmulatorSw ThreadedQueriesSw ProfileSw
 			RunWithDebuggerSw DebugInfoControlSw
-			DebugInfoStatementsSw DebugInfoVarnamesSw]
+			DebugInfoVarnamesSw]
 	 self.InterruptMenuItem = Menu.compiler.interrupt
 	 ValueDict <- {NewDictionary}
 	 TagDict <- {NewDictionary}
