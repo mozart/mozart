@@ -82,7 +82,7 @@ void doConnect(ComObj *comObj) {
 }
 
 inline OZ_Return parseRequestor(OZ_Term requestor, 
-				ComObj *&comObj, const char *&siteid) {
+				ComObj *&comObj, OZ_CONST char *&siteid) {
   if(OZ_isRecord(requestor)) {
     SRecord *srequestor = tagged2SRecord(requestor);
     int index = srequestor->getIndex(oz_atom("id"));
@@ -138,7 +138,7 @@ OZ_BI_define(BIgetConnGrant,4,0){
   if(canWait) {
     // If we can wait, then there must be a valid comobj in the 
     // requestor for queing purposes.
-    const char *unused;
+    OZ_CONST char *unused;
     ComObj *comObj;
     ret=parseRequestor(requestor,comObj,unused);
     if(ret!=OZ_ENTAILED)
@@ -171,7 +171,7 @@ OZ_BI_define(BIgetConnGrant,4,0){
 OZ_BI_define(BIfreeConnGrant,2,0){
   oz_declareNonvarIN(0,requestor);
   oz_declareNonvarIN(1,grant);
-  const char *unused;
+  OZ_CONST char *unused;
   ComObj *comObj;
   OZ_Return ret;
   ret=parseRequestor(requestor,comObj,unused);
@@ -229,7 +229,7 @@ OZ_BI_define(BIhandover,3,0){
       comObj=comController->newComObj(NULL);
     }
     else {
-      const char *siteid;
+      OZ_CONST char *siteid;
       OZ_Return ret;
       ret=parseRequestor(requestor,comObj,siteid);
 //        printf("bef cmp %s %d %s\n",toC(requestor),(int) comObj,siteid);
@@ -293,7 +293,7 @@ OZ_BI_define(BIconnFailed,2,0) {
   oz_declareNonvarIN(1,reason);
 
   DSite *site;
-  const char *siteid;
+  OZ_CONST char *siteid;
   ComObj *comObj;
   OZ_Return ret;
   ret=parseRequestor(requestor,comObj,siteid);
