@@ -126,8 +126,16 @@
 #define OZReadPortNumber  9000
 #define OZStartUpTries    490
 #ifdef WINDOWS
-/* connect under windows takes very long */
+/* connect under windows is done in blocking mode */
 #define OZConnectTries    10
+void osSetNonBlocking(int fd, Bool onoff)
+{
+  u_long dd = onoff;
+  int ret = ioctlsocket(fd,FIONBIO,&dd);
+  if (ret<0) 
+    message("ioctlsocket(%d,FIONBIO,%d) failed: %d\n",fd,ossockerrno(),onoff);
+}
+
 #else
 #define OZConnectTries    200
 #endif
@@ -2780,7 +2788,9 @@ static int acceptHandler(int fd,void *unused)
   Assert(auxbuf-accHbuf == accHbufSize);
   // EK!!
   // fcntl(newFD,F_SETFL,O_NONBLOCK);
-#ifndef __MINGW32__
+#ifdef WINDOWS
+  osSetNonBlocking(newFD,OK);
+#else
   fcntl(newFD,F_SETFL,O_NDELAY);
 #endif
   int written = 0;
@@ -3086,11 +3096,16 @@ retry:
     goto  ipOpenNoAnswer;}
   
   // EK!!
-#ifndef __MINGW32__
+#ifndef WINDOWS
   fcntl(fd,F_SETFL,O_NDELAY);
 #endif
   if(osconnect(fd,(struct sockaddr *) &addr,sizeof(addr))==0 
      || ossockerrno()==EINPROGRESS) {
+
+#ifdef WINDOWS
+    // do this later on Windows otherwise it doesn't work
+    osSetNonBlocking(fd,OK);
+#endif
     PD((TCP,"open success p:%d fd:%d",aport,fd));
     r->setFD(fd);
     OZ_registerReadHandler(fd,tcpConnectionHandler,(void *)r);
