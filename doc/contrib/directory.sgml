@@ -40,7 +40,7 @@
     </P>
     <P> 
       So what does it mean that a description <def/match/ a pattern?
-      All features in a pattern must present in the description. If a
+      All features in a pattern must be present in the description. If a
       field in the pattern has a value, then it must be either equal
       or match to a corresponding field in the description. For
       example, f(a:1 b:g(x:5 y:7) c:28 d:foo) does match f(c:28 b:g
@@ -79,7 +79,7 @@ init(port:?_{PortNr} <= useDefault
             made through the ip port ?_{PortNr}. The default ip port
             number is <<Discovery.defaultPortNumber>>. After the first
             contact has been performed, all subsequent interactions
-            are be done using Oz ports.
+            are done using Oz ports.
 	  <P>
 	    ?_{ServerId} is a record explaining which type of
             directory server it is.
@@ -174,7 +174,7 @@ lookup(pattern:?_{Pattern} services:??_{Services})
            </code>
           <Item>
             Asks servers for services that match the ?_{Pattern}.
-	    A list of pairs is returned. Pairs consist of a service
+	    A list of pairs is returned. Those pairs consist of a service
 	    description and its ticket.
         </List>
       </P>

@@ -22,7 +22,7 @@
   -->
 
   <Chapter id="Chapter.Discovery">
-    <Title/Locating services on a network: <<Discovery>>/
+    <Title/Locating services in a network: <<Discovery>>/
     <author.extern to="author.db" key="Andreas.Sundstroem">
 
     <P>
