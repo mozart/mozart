@@ -86,6 +86,8 @@ in
 
          Exception : nil   % saved exception
 
+         New : true        % the thread has not made any step yet...
+
       meth init(thr:Thr id:ID)
          self.T = Thr
          self.I = ID
@@ -93,6 +95,11 @@ in
          Size    <- 0
          SP      <- 1
          Rebuild <- false
+      end
+
+      meth checkNew(R)
+         R = @New
+         case R then New <- false else skip end
       end
 
       meth getFrame(Nr $)
