@@ -26,6 +26,12 @@ then
     done
 fi
 
+if test -z "$OZEMULATOR"
+then
+    echo Fatal error: no oz.emulator.bin found
+    exit 1
+fi
+
 OZINIT=${OZMAINIT}
 export OZINIT
 
