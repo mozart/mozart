@@ -917,9 +917,16 @@ int featureCmp(TaggedRef a,TaggedRef b)
   TypeOfTerm tagA = tagTypeOf(a);
   TypeOfTerm tagB = tagTypeOf(b);
   if (tagA != tagB) {
-    if (tagA==SMALLINT) return -1;
+    if (tagA==SMALLINT) {
+      if (tagB==LITERAL)
+	return -1;
+      
+      Assert(tagB==OZCONST);
+      return -tagged2BigInt(b)->cmp(smallIntValue(a));
+    }
     if (tagA==OZCONST) {
-      if (tagB==SMALLINT) return 1;
+      if (tagB==SMALLINT) 
+	return tagged2BigInt(a)->cmp(smallIntValue(b));
       Assert(tagB==LITERAL);
       return -1;
     }
