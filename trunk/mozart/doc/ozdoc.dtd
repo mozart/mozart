@@ -107,7 +107,7 @@
 
 <!--==================== PARAMETER ENTITIES =======================-->
 
-<!ENTITY % index.class	"index|index.begin|index.end">
+<!ENTITY % index.class	"index">
 <!ENTITY % p.mix.local "">
 <!ENTITY % p.mix "
 	  file    | kbd            | key        | samp
@@ -282,7 +282,7 @@
 
   -->
 
-<!ELEMENT list	- - (((entry,synopsis?)+,item)+|item+)>
+<!ELEMENT list	- - (((entry,synopsis*)+,item)+|item+)>
 <!ATTLIST list
 	%common.attr;
 	%display.attr;
@@ -657,8 +657,7 @@
 
      one may wish to index (1) an element from the document, (2) a
      span of the document which does not correspond to a single
-     element.  INDEX is intended for the first case, while INDEX.BEGIN
-     and INDEX.END are intended for the second case.
+     element.
 
      Furthermore, an entry may require several levels of indexing:
 
@@ -679,16 +678,6 @@
 
   -->
 
-<!ELEMENT index.begin - - ((and)+,see?)>
-<!ATTLIST index.begin
-	%common.attr;
-	sort.as CDATA #IMPLIED
->
-<!ELEMENT index.end   - O   EMPTY  >
-<!ATTLIST index.end
-	%common.attr;
-	%to.attr;
->
 <!ELEMENT index - - ((and)+,see?)>
 <!ELEMENT and O O (%p.chars.mix;)*>
 <!ELEMENT see - O (and)+>
