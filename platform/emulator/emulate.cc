@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.349  1996/07/26 14:28:39  schulte
+  bug fix in exception handling of inlined functions
+
   Revision 1.348  1996/07/19 08:30:28  mehl
   childs ->children
   Some more constructors declared without implementation.
@@ -2230,7 +2233,7 @@ LBLdispatcher:
 
       case RAISE:
         RAISE_BI1(entry->getPrintName(),
-                  cons(XPC(1),nil()));
+                  cons(XPC(2),nil()));
 
       case SLEEP:
       default:
@@ -2263,7 +2266,7 @@ LBLdispatcher:
 
       case RAISE:
         RAISE_BI1(entry->getPrintName(),
-                  cons(XPC(1),cons(XPC(2),nil())));
+                  cons(XPC(2),cons(XPC(3),nil())));
 
       case SLEEP:
       default:
