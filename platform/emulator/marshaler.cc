@@ -1215,7 +1215,7 @@ loop:
       int maxX      = unmarshalNumber(bs);
 
       if (gname) {
-	PrTabEntry *pr = new PrTabEntry(name,mkTupleWidth(arity),0,nil(),
+	PrTabEntry *pr = new PrTabEntry(name,mkTupleWidth(arity),0,0,0,nil(),
 					maxX);
 	Assert(am.onToplevel());
 	pr->setGSize(gsize);
