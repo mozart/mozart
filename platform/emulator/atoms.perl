@@ -102,6 +102,7 @@
 	  ( AtomLine,        "line"),
 	  ( AtomColumn,      "column"),
 	  ( AtomInvoc,       "invoc"),
+	  ( AtomCallerInvoc, "callerInvoc"),
 	  ( AtomPropInvoc,   "propInvoc"),
 	  ( AtomRun,         "run"),
 	  ( AtomRunnable,    "runnable"),

@@ -33,17 +33,21 @@
 #include "var_fd.hh"
 #include "unify.hh"
 
-#ifdef TMUELLER
+#ifdef CORRECT_UNIFY
 //-----------------------------------------------------------------------------
 OZ_Return OzBoolVariable::bind(OZ_Term * vPtr, OZ_Term term)
 {
+  DEBUG_CONSTRAIN_CVAR(("bindBool "));
+
   Assert(!oz_isRef(term));
 
   if (!oz_isSmallInt(term)) {
+    DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
     return FAILED;
   }
   int term_val = smallIntValue(term);
   if (term_val < 0 || 1 < term_val) {
+    DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
     return FAILED;
   }
 
@@ -59,6 +63,7 @@ OZ_Return OzBoolVariable::bind(OZ_Term * vPtr, OZ_Term term)
     bindGlobalVarToValue(vPtr, term);
   }
 
+  DEBUG_CONSTRAIN_CVAR(("PROCEED\n"));
   return PROCEED;
 }
 //-----------------------------------------------------------------------------
@@ -99,9 +104,11 @@ OZ_Return OzBoolVariable::bind(TaggedRef * vPtr, TaggedRef term)
 // Only if a local variable is bound relink its suspension list, since
 // global variables are trailed.(ie. their suspension lists are
 // implicitely relinked.)
-#ifdef TMUELLER
+#ifdef CORRECT_UNIFY
 OZ_Return OzBoolVariable::unify(OZ_Term  * left_varptr, OZ_Term * right_varptr)
 {
+  DEBUG_CONSTRAIN_CVAR(("unifyBool "));
+
   OZ_Term right_var       = *right_varptr;
   OzVariable * right_cvar = tagged2CVar(right_var);
   
@@ -173,7 +180,7 @@ OZ_Return OzBoolVariable::unify(OZ_Term  * left_varptr, OZ_Term * right_varptr)
     int intersection = right_fdvar->intersectWithBool();
 
     if (intersection == -2) {
-      return FAILED;
+      goto failed;
     }
 
     Bool right_var_is_constrained = 1;
@@ -284,6 +291,11 @@ OZ_Return OzBoolVariable::unify(OZ_Term  * left_varptr, OZ_Term * right_varptr)
       }
     }
   }
+  DEBUG_CONSTRAIN_CVAR(("PROCEED\n"));
+  return PROCEED;
+
+ failed:
+  DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
   return FALSE;
 } // OzBoolVariable::unify
 //-----------------------------------------------------------------------------

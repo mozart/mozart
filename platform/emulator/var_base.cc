@@ -330,25 +330,31 @@ VarStatus _var_check_status(OzVariable *cv) {
   return ((ExtVar*)cv)->checkStatusV();
 }
 
-#ifdef TMUELLER
+#ifdef CORRECT_UNIFY
 // dealing with global variables
 // add assertions that right sides of bin and cast are global or values!
-void bindGlobalVarToValue(OZ_Term *, OZ_Term)
+void bindGlobalVarToValue(OZ_Term * varptr, OZ_Term value)
 {
+  DoBindAndTrail(varptr, value);
 }
 
-void bindGlobalVar(OZ_Term *, OZ_Term *)
+void bindGlobalVar(OZ_Term * varptr_left, OZ_Term * varptr_right)
 {
+  DoBindAndTrail(varptr_left, makeTaggedRef(varptr_right));
 }
 
-void castGlobalVar(OZ_Term *, OZ_Term *)
+void castGlobalVar(OZ_Term * varptr_left, OZ_Term * varptr_right)
 {
+  DoBindAndTrail(varptr_left, makeTaggedRef(varptr_right));
 }
 
-void constrainGlobalVar(OZ_Term *, OZ_FiniteDomain &)
+void constrainGlobalVar(OZ_Term * varptr, OZ_FiniteDomain & fd)
 {
+  am.trail.pushVariable(varptr);
+  OzFDVariable * fdvar = (OzFDVariable *) tagged2CVar(*varptr);
+  fdvar->setDom(fd);
 }
-
+/*
 void constrainGlobalVar(OZ_Term *, OZ_FSetConstraint &)
 {
 }
@@ -356,16 +362,18 @@ void constrainGlobalVar(OZ_Term *, OZ_FSetConstraint &)
 void constrainGlobalVar(OZ_Term *, OZ_Ct *, OZ_CtDefinition *)
 {
 }
-
+*/
 // dealing with local variables
-void bindLocalVarToValue(OZ_Term *, OZ_Term)
+void bindLocalVarToValue(OZ_Term * varptr, OZ_Term value)
 {
+  DoBind(varptr, value);
 }
 
-void bindLocalVar(OZ_Term *, OZ_Term *)
+void bindLocalVar(OZ_Term * varptr_left, OZ_Term * varptr_right)
 {
+  DoBind(varptr_left, makeTaggedRef(varptr_right));
 }
-
+/*
 void castLocalVar(OZ_Term *, OZ_Term *)
 {
 }
@@ -381,4 +389,5 @@ void constrainLocalVar(OZ_Term *, OZ_FSetConstraint &)
 void constrainLocalVar(OZ_Term *, OZ_Ct *, OZ_CtDefinition *)
 {
 }
+*/
 #endif
