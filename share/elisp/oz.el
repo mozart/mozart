@@ -278,7 +278,6 @@ starts the emulator under gdb")
     ("New Oz buffer"          . oz-new-buffer)
     ("Fontify buffer"         . oz-fontify)
     ("Show/hide"
-     ("errors"       . oz-toggle-errors)
      ("compiler"     . oz-toggle-compiler)
      ("emulator"      . oz-toggle-emulator)
      )
@@ -297,10 +296,6 @@ starts the emulator under gdb")
 ;;------------------------------------------------------------
 ;; Start/Stop oz
 ;;------------------------------------------------------------
-
-(defvar oz-errors-found nil
-  "??? show *Oz Errors* if necessary")
-
 
 (defun run-oz ()
   "Run the Oz Compiler and Oz Emulator.
@@ -351,7 +346,6 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
       t
     (let ((file (oz-make-temp-name "/tmp/ozsock")))
       (if (not start-flag) (message "Oz died for some reason. Restarting ..."))
-      (setq oz-errors-found nil)
       (make-comint "Oz Compiler" "oz.compiler" nil "-emacs" "-S" file)
       (setq oz-compiler-buffer "*Oz Compiler*")
       (oz-create-buffer oz-compiler-buffer)
@@ -371,9 +365,6 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 	)
 
       (bury-buffer oz-emulator-buffer)
-
-      ;; make sure buffers exist
-      (oz-create-buffer "*Oz Errors*")
 
       (oz-set-title)
       (message "Oz started")
@@ -861,7 +852,6 @@ the GDB commands `cd DIR' and `directory'."
   (define-key map "\M-l"    'oz-feed-line)
   (define-key map "\M-n"   'oz-next-buffer)
   (define-key map "\M-p"   'oz-previous-buffer)
-  (define-key map "\C-c\C-e"    'oz-toggle-errors)
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
 ;  (if oz-lucid
 ;      (progn
@@ -946,11 +936,11 @@ if that value is non-nil."
 
 
 (defun oz-emulator-filter (proc string)
-  (oz-filter proc string 'oz-emulator-state))
+  (oz-filter proc string))
 
 
 (defun oz-compiler-filter (proc string)
-  (oz-filter proc string 'oz-compiler-state))
+  (oz-filter proc string))
 
 
 (defconst oz-escape-chars
@@ -962,40 +952,39 @@ if that value is non-nil."
   "")
 
 
-(defun oz-filter (proc string state-string)
+(defun oz-filter (proc string)
   (let ((old-buffer (current-buffer)))
     (unwind-protect
 	(let ((newbuf (process-buffer proc))
 	      old-point
-	      moving)
+	      moving
+	      (errs-found (string-match oz-error-chars string)))
+	  
+	  (if errs-found
+	      (delete-windows-on newbuf))
 	  (set-buffer newbuf)
-	  (setq moving (= (point) (process-mark proc)))
-
+	  (setq moving (or errs-found
+			   (= (point) (process-mark proc))))
+	  
 	  (save-excursion
 	    ;; Insert the text, moving the process-marker.
 	    (goto-char (process-mark proc))
 	    (setq old-point (point))
+	    (goto-char (point-max))
 	    (insert-before-markers string)
 	    (set-marker (process-mark proc) (point))
             
 	    ;; remove escape characters
 	    (goto-char old-point)
 	    (while (search-forward-regexp oz-escape-chars nil t)
-	      (replace-match "" nil t))
-	    (goto-char (point-max)))
-	  (if moving (goto-char (process-mark proc))))
-      (set-buffer old-buffer)
-      )
-    ;; error output
-    (if (or oz-errors-found (string-match oz-error-chars string))   ; contains errors ?
-	(progn
-	  (setq oz-errors-found t)
-	  (oz-show-error string)))
+	      (replace-match "" nil t)))
+	  (if moving (goto-char (process-mark proc)))
+	  (if errs-found
+	      (oz-show-buffer newbuf)))
+      (set-buffer old-buffer))))
+  
 
-    ;; reset error output if we have another message prefix than error
-    (if (and (not (string-match oz-error-chars string))
-	     (string-match oz-escape-chars string))
-	(setq oz-errors-found nil))))
+
 
 ;;------------------------------------------------------------
 ;; buffers
@@ -1011,7 +1000,6 @@ OZ compiler, emulator and error window")
     (let* ((edges (window-edges (selected-window)))
 	   (win (or (get-buffer-window oz-emulator-buffer)
 		    (get-buffer-window oz-compiler-buffer)
-		    (get-buffer-window "*Oz Errors*")
 		    (split-window (selected-window)
 				  (/ (* (- (nth 3 edges) (nth 1 edges))
 					(- 100 oz-other-buffer-percent))
@@ -1022,7 +1010,6 @@ OZ compiler, emulator and error window")
 
   (bury-buffer oz-emulator-buffer)
   (bury-buffer oz-compiler-buffer)
-  (bury-buffer "*Oz Errors*")
   (bury-buffer buffer))
 
 
@@ -1042,58 +1029,19 @@ OZ compiler, emulator and error window")
 
 (defun oz-hide-errors()
   (interactive)
-  (setq oz-errors-found nil)
-  (if (get-buffer "*Oz Errors*") 
-      (delete-windows-on "*Oz Errors*"))
   (if (get-buffer "*Oz Temp*") 
       (delete-windows-on "*Oz Temp*")))
 
 
-(defun oz-show-error(string)
-  (let ((buf (get-buffer-create "*Oz Errors*"))
-	old-point)
-    (save-excursion
-      (set-buffer buf)
-      ; if buffer is not visible then clear it out
-      (if (not (get-buffer-window buf))
-	  (delete-region (point-min) (point-max)))
-      (setq old-point (point-max))
-      (goto-char old-point)
-      (insert-before-markers string)
-    
-      ;; remove other than error messages
-      (goto-char old-point)
-      (while (search-forward-regexp 
-	      (concat oz-status-string ".*\n") nil t)
-	(replace-match "" nil t))
-
-      ;; remove escape characters
-      (goto-char old-point)
-      (while (search-forward-regexp oz-escape-chars nil t)
-	(replace-match "" nil t))
-      (goto-char (point-max)))
-
-    (oz-show-buffer buf)))
-
 (defun oz-toggle-compiler()
   (interactive)
-  (setq oz-errors-found nil)
   (oz-toggle-window oz-compiler-buffer))
 
 
 (defun oz-toggle-emulator()
   (interactive)
-  (setq oz-errors-found nil)
   (oz-toggle-window oz-emulator-buffer))
 
-
-
-(defun oz-toggle-errors()
-  (interactive)
-  (setq oz-errors-found nil)
-  (if (get-buffer-window "*Oz Errors*")
-      (oz-hide-errors)
-    (oz-toggle-window "*Oz Errors*")))
 
 
 (defun oz-toggle-window(buffername)
