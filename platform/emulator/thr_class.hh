@@ -126,7 +126,8 @@ union ThreadBodyItem {
 // <stopCount>
 
 class Thread : public Tertiary {
-  friend void engine(Bool);
+  friend int engine(Bool);
+  friend void scheduler();
   friend void ConstTerm::gcConstRecurse(void);
 private:
   //  Sparc, for instance, has a ldsb/stb instructions - 
@@ -208,6 +209,11 @@ public:
   Bool isPropagator() { 
     Assert(!isDeadThread());
     return state.flags & T_p_thr;
+  }
+
+  Bool isWakeup() { 
+    Assert(!isDeadThread());
+    return getThrType() == S_WAKEUP;
   }
   
   void setBody(RunnableThreadBody *rb) { item.threadBody=rb; }
