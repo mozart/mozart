@@ -245,7 +245,7 @@ void oz_var_restoreFromCopy(OzVariable * o, OzVariable * c) {
 #define VARTP(T1,T2) ((T1<<3)|T2)
 #define VTP(T1,T2)   VARTP(OZ_VAR_ ## T1, OZ_VAR_ ## T2)
 
-#define VAR_CAST_DEBUG
+// #define VAR_CAST_DEBUG
 
 #ifdef VAR_CAST_DEBUG
 
@@ -256,7 +256,7 @@ static char * VCTN[] = {
 #endif
 
 
-OZ_Return oz_var_cast(TaggedRef * &fp, Board * fb, TypeOfVariable tt) {
+OZ_Return oz_var_cast(TaggedRef * & fp, Board * fb, TypeOfVariable tt) {
   OzVariable * fv = tagged2CVar(*fp);
 
   TypeOfVariable ft = fv->getType();
@@ -306,38 +306,19 @@ OZ_Return oz_var_cast(TaggedRef * &fp, Board * fb, TypeOfVariable tt) {
     return PROCEED;
   }
   
-  if (oz_currentBoard() != fb)
-    // The variable is not local, so trail the cast operation
-    am.trail.pushCast(fp);
-  
-#ifdef VAR_CAST_DEBUG
+  OZ_Return ret = oz_var_bind(fv, fp, makeTaggedRef(newTaggedCVar(tv)));
 
-  if (ft != tt && oz_currentBoard() != fb)
-    printf("Variable casting: TRAILING\n");
+  Assert(oz_isRef(*fp));
 
-#endif
-  /*
-   *  The new variable inherits all suspensions:
-   *   see above to understand that no variable with multiple
-   *   suspensionlist is casted!
-   *
-   */  
+  fp = tagged2Ref(*fp);
 
-  tv->setSuspList(fv->unlinkSuspList());
-
-  // Bind original variable to casted variable
-  TaggedRef * tvt = newTaggedCVar(tv);
-
-  *fp = makeTaggedRef(tvt);
-
-  fp = tvt;
-
-  return PROCEED;
+  return ret;
 }
 
 #undef VTP
 #undef VARTP
   
+
 OZ_Term _var_status(OzVariable *cv) {
   Assert(cv->getType()==OZ_VAR_EXT);
   return ((ExtVar*)cv)->statusV();
