@@ -109,6 +109,7 @@ define
       [] kinded(fset)    then Approximation(fsvar)
       [] kinded(record)  then Approximation(recordc)
       [] future          then Approximation(future)
+      [] failed          then Approximation(failed)
       [] free            then Approximation(free)
       else                    Approximation
       end
