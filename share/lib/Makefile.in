@@ -21,18 +21,22 @@ INSTALL_DIR	= @INSTALL_DIR@
 
 OZENGINE        = @OZENGINE@
 
-COMPRESSFLAGS   = 
+COMPRESSLEVEL   = @oz_picklecompression@
+COMPRESSFLAGS   = --compress=$(COMPRESSLEVEL)
 
 OZFLAGS		= $(COMPRESSFLAGS)
 OZC		= @OZC@
 
+OZARFLAGS       = $(COMPRESSFLAGS)
+OZAR		= @OZAR@
+
 COMPILE		= $(OZC) $(OZFLAGS) -l Base -c
 EXEC		= $(OZC) $(OZFLAGS)
 COMPILESYSLET	= $(OZC) $(OZFLAGS) -l Base -x
+ARCHIVE         = $(OZAR) $(OZARFLAGS)
 
 P2T		= $(SRCDIR)/p2t.sh
 T2P		= $(SRCDIR)/t2p.sh
-OZAR		= ozar $(COMPRESSFLAGS)
 
 # exports
 export BUILDTOP
@@ -220,7 +224,7 @@ RunTime.ozf: compiler/RunTime.oz Base.ozf BaseBuiltins.ozf
 	$(COMPILE) -l BaseBuiltins $< -o $@
 
 Compiler.ozf: $(FUNFUNCTORS) ozar
-	$(OZENGINE) ozar --in=Main.ozf --out=Compiler.ozf
+	$(OZENGINE) $(ARCHIVE) --in=Main.ozf --out=Compiler.ozf
 
 #---------------------------------------------------------------------
 # Syslets
@@ -436,7 +440,7 @@ boot-init: $(BOOTINITTXTFROM)
 # may have been side-effected and may contains stateful stuff
 
 boot-ozc.ar: ozc ozar Compiler.ozf Type.ozf
-	OZMAKE_COPYALWAYS=yes OZINIT=Init.ozf OZ_LOAD=root=.:prefix=./=./:prefix=http\\://www.ps.uni-sb.de/ozhome/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:= $(SRCDIR)/oze.sh $(OZAR) --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates --in=$< --out=$@
+	OZMAKE_COPYALWAYS=yes OZINIT=Init.ozf OZ_LOAD=root=.:prefix=./=./:prefix=http\\://www.ps.uni-sb.de/ozhome/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:= $(SRCDIR)/oze.sh ozar --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates --in=$< --out=$@
 
 boot-init.ar: Init.ozf
 	cp $< $@
