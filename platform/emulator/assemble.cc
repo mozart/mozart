@@ -89,7 +89,7 @@ OZ_C_proc_begin(BIscheduleCode,3)
     greglist = OZ_tail(greglist);
   }
 
-  PrTabEntry *predd = new PrTabEntry(OZ_nil(),0,size);
+  PrTabEntry *predd = new PrTabEntry(OZ_nil(),0,size,FALSE);
   predd->PC = pc;
   Abstraction *p = new Abstraction(predd, gregs, tagged2Literal(OZ_nil()));
 
@@ -218,7 +218,7 @@ OZ_C_proc_begin(BIwritePredId,4)
   OZ_declareIntArg("writePredId",2,arity);
 
   int nGRegs = 0;
-  PrTabEntry *pred = new PrTabEntry(name,arity,nGRegs);
+  PrTabEntry *pred = new PrTabEntry(name,arity,nGRegs,FALSE);
   pc = CodeArea::writeBuiltin((BuiltinTabEntry*) pred, pc);
   pred->PC = pc+1;
 
