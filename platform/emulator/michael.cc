@@ -150,7 +150,9 @@ OZ_BI_define(BIhalt, 0,0)
 
 OZ_BI_define(BIdebugRef, 0,0)
 {
-  debugRef = debugRef?0:1;
+#ifdef DEBUG_REG
+  debugRef = debEugRef?0:1;
+#endif
   return PROCEED;
 } OZ_BI_end
 
