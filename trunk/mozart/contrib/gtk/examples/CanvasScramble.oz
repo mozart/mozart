@@ -22,7 +22,6 @@
 functor $
 import
    OS
-   Application
    System(show)
    GDK    at 'x-oz://system/gtk/GDK.ozf'
    GTK    at 'x-oz://system/gtk/GTK.ozf'
@@ -300,14 +299,6 @@ define
 	 GTK.window, add(Notebook)
 	 {Notebook setShowTabs(1)}
 	 {Notebook appendPage(Scramble {New GTK.label new("Fifteen")})}
-	 {self signalConnect('delete-event' deleteEvent _)}
-      end
-      meth deleteEvent(Args)
-	 %% Caution: At this time, the underlying GTK object
-	 %% Caution: has been destroyed already
-	 %% Caution: Destruction also includes all attached child objects.
-	 %% Caution: This event is solely intended to do OZ side cleanups.
-	 {Application.exit 0}
       end
    end
 
