@@ -22,7 +22,7 @@
 local
 
    fun {AppOK Name}
-      ({Cget stepDotBuiltin}     orelse Name \= 'Record.\'.\'')
+      ({Cget stepDotBuiltin}     orelse Name \= 'Value.\'.\'')
       andthen
       ({Cget stepNewNameBuiltin} orelse Name \= 'Name.new')
    end
