@@ -1001,11 +1001,6 @@
             <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/
               ?={variable} <Q class=terminal/<<:=>>/
               ?={variable}/
-            <Grammar.Alt/?={variable} <Q class=terminal/<<.>>/ ?={variable} <Q class=terminal/<<:=>>/
-              ?={variable}/
-            <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/
-              ?={variable} <Q class=terminal/<<.>>/ ?={variable} <Q class=terminal/<<:=>>/
-              ?={variable}/
             <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/
               ?={expression}/
             <Grammar.Alt/<<skip>>//
@@ -1639,6 +1634,14 @@ end>>/
               <Rewrite.Condition/if ?{E} is no variable./
             </Rewrite
             <Rewrite>?={statement}
+              <Rewrite.From/<<?{E1}.?{E2} := ?{E3}>>/
+              <Rewrite.To /<<?{E1}#?{E2} := ?{E3}>>/
+            </Rewrite>
+            <Rewrite>?={statement}
+              <Rewrite.From/<<?{x} = ?{E1}.?{E2} := ?{E3}>>/
+              <Rewrite.To /<<?{x} = ?{E1}#?{E2} := ?{E3}>>/
+            </Rewrite>
+            <Rewrite>?={statement}
               <Rewrite.From/<<?{E1} := ?{E2}>>/
               <Rewrite.To
 /<<local ?_{X} in
@@ -1671,60 +1674,6 @@ end>>/
 /<<local ?_{X} in
    ?_{X} = ?{E}
    ?{x} = ?{y} := ?_{X}
-end>>/
-              <Rewrite.Condition/if ?{E} is no variable./
-            </Rewrite>
-            <Rewrite>?={statement}
-              <Rewrite.From/<<?{E1}.?{E2} := ?{E3}>>/
-              <Rewrite.To
-/<<local ?_{X} in
-   ?_{X} = ?{E1}
-   ?_{X}.?_{E2} := ?{E3}
-end>>/
-              <Rewrite.Condition/if ?{E1} is no variable./
-            </Rewrite>
-            <Rewrite>?={statement}
-              <Rewrite.From/<<?{x}.?{E2} := ?{E3}>>/
-              <Rewrite.To
-/<<local ?_{X} in
-   ?_{X} = ?{E2}
-   ?{x}.?_{X} := ?{E3}
-end>>/
-              <Rewrite.Condition/if ?{E2} is no variable./
-            </Rewrite>
-            <Rewrite>?={statement}
-              <Rewrite.From/<<?{x}.?{y} := ?{E}>>/
-              <Rewrite.To
-/<<local ?_{X} in
-   ?_{X} = ?{E}
-   ?{x}.?{y} := ?_{X}
-end>>/
-              <Rewrite.Condition/if ?{E} is no variable./
-            </Rewrite>
-            <Rewrite>?={statement}
-              <Rewrite.From/<<?{x} = ?{E1}.?{E2} := ?{E3}>>/
-              <Rewrite.To
-/<<local ?_{X} in
-   ?_{X} = ?{E1}
-   ?{x} = ?_{X}.?_{E2} := ?{E3}
-end>>/
-              <Rewrite.Condition/if ?{E1} is no variable./
-            </Rewrite>
-            <Rewrite>?={statement}
-              <Rewrite.From/<<?{x} = ?{y}.?{E2} := ?{E3}>>/
-              <Rewrite.To
-/<<local ?_{X} in
-   ?_{X} = ?{E2}
-   ?{x} = ?{y}.?_{X} := ?{E3}
-end>>/
-              <Rewrite.Condition/if ?{E2} is no variable./
-            </Rewrite>
-            <Rewrite>?={statement}
-              <Rewrite.From/<<?{x} = ?{y}.?{z} := ?{E}>>/
-              <Rewrite.To
-/<<local ?_{X} in
-   ?_{X} = ?{E}
-   ?{x} = ?{y}.?{z} := ?_{X}
 end>>/
               <Rewrite.Condition/if ?{E} is no variable./
             </Rewrite>

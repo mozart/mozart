@@ -44,13 +44,13 @@
       <TR/<TD colspan=2/right-associative//
       <TR/<TD/<<?_{X} = ?_{Y}>>/<TD/<<{Value.'=' ?_{X} ?_{Y}}>>//
       <TR/<TD colspan=2/right-associative//
-      <TR/<TD/<<?+{X} := ?_{Y}>>/<TD/assignment to Cell or Attribute//
-      <TR/<TD/<<?_{Z} = ?+{X} := ?_{Y}>>/<TD/exchange of Cell or Attribute content//
-      <TR/<TD/<<?+{C}.?+{LI} := ?_{X}>>/<TD/update to Dictionary or Array element//
-      <TR/<TD/<<?_{Y} = ?+{C}.?+{LI} := ?_{X}>>/<TD/exchange of Dictionary or Array element//
-      <TR/<TD/<<?+{LI} <- ?_{X}>>/<TD/<<{Object.'<-' ?_{LI} ?_{X}}>>//
+      <TR/<TD/<<?+{X} := ?_{Y}>>/<TD/Cell, Attribute, Dictionary or Array element assignment//
+      <TR/<TD/<<?_{Z} = ?+{X} := ?_{Y}>>/<TD/Cell, Attribute, Dictionary or Array element exchange//
+      <TR/<TD/<<?+{C}.?+{LI} := ?_{X}>>/<TD/Dictionary or Array element assignment//
+      <TR/<TD/<<?_{Y} = ?+{C}.?+{LI} := ?_{X}>>/<TD/Dictionary or Array element exchange//
+      <TR/<TD/<<?+{LI} <- ?_{X}>>/<TD/<<{Object.'<-' self ?_{LI} ?_{X}} %% Object.'<-' is internal>>//
       <TR/<TD/<<?_{Y} = ?+{LI} <- ?_{X}>>/
-        <TD/<<{Object.exchange ?_{LI} ?_{X} ?_{Y}}>>//
+        <TD/<<{Object.exchange self ?_{LI} ?_{X} ?_{Y}} %% Object.exchange is internal>>//
       <TR/<TD colspan=2/non-associative//
       <TR/<TD/<<??{B} = ?_{X} == ?_{Y}>>/
         <TD/<<{Value.'==' ?_{X} ?_{Y} ?_{B}}>>//
@@ -79,14 +79,90 @@
       <TR/<TD/<<??{I3} = ?+{I1} mod ?+{I2}>>/
         <TD/<<{Int.'mod' ?_{I1} ?_{I2} ?_{I3}}>>//
       <TR/<TD colspan=2/right-associative//
-      <TR/<TD/<<?+{K}, ?+{R}>>/<TD/<<{Object.',' ?_{K} ?_{R}}>>//
+      <TR/<TD/<<?+{K}, ?+{R}>>/<TD/<<{Object.',' ?_{K} ?_{R}}  %% Object.',' is internal>>//
       <TR/<TD colspan=2/prefix//
       <TR/<TD/<<??{FI1} = ~?+{FI2}>>/<TD/<<{Number.'~' ?_{FI2} ?_{FI1}}>>//
       <TR/<TD colspan=2/left-associative//
-      <TR/<TD/<<?_{X} = ?+{RC}.?+{LI}>>/
-        <TD/<<{Value.'.' ?_{RC} ?_{LI} ?_{X}}>>//
+      <TR/<TD/<<?_{X} = ?+{Y}.?+{LI}>>/
+        <TD/get content of Record, Dictionary, or Array element//
       <TR/<TD colspan=2/prefix//
-      <TR/<TD/<<?_{X} = @?+{Y}>>/<TD/get content of Cell or Attribute//
+      <TR/<TD/<<?_{X} = @?+{Y}>>/<TD/get content of Cell, Attribute, Dictionary or Array element//
       <TR/<TD/<<?_{X} = !!?_{Y}>>/<TD/<<{Value.'!!' ?_{X} ?_{Y}}>>//
     </Table>
+<P>
+    The expansion of the state-manipulation operators (<<.>>, <<:=>>, and <<@>>) depends
+    on the type of the expressions involved. The expansions are simplified, suitable error
+    messages are returned if the type of the expressions are not valid.
+<List>
+        <Entry><Span class=index/<<E1.E2>>/
+          <Index/<<'.'>>/
+        <Synopsis>
+          <<E1.E2>>
+          expands to
+          <<<if {Record.is E1} then {Value.'.' E1 E2} else @(E1#E2) end>>>
+        <Item>
+          returns the content of a record, dictionary, or array element.
+
+        <Entry><Span class=index/<<E1.E2 := E3>>/
+          <Index/<<'. :='>>/
+        <Synopsis>
+          <<E1.E2 := E3>>
+          expands to
+          <<<@(E1#E2) := E3>>>
+        <Item>
+          <<'. :='>> is a <EM>ternary</EM> operator for updating dictionary and array elements.
+
+        <Entry><Span class=index/<<E1 := E2>>/
+          <Index/<<':='>>/
+        <Synopsis>
+          <<E1 := E2>>
+          expands to
+<<<
+case E1
+of (D#K) andthen {Dictionary.is D} then {Dictionary.put D K E2}
+[] (A#I) then {Array.put A I E2}
+elseif {IsCell E1} then
+   {Cell.assign E1 E2}
+else
+   {Object.assign self E1 E2}   %% E1 <- E2 (Object.assign is internal)
+end>>>
+        <Item>
+          <<':='>> updates dictionaries, arrays, cells, and attributes. Note, <<Obj.assign>>
+          is a dummy routine and not actually visible to the library user.
+
+        <Entry><Span class=index/<<@E>>/
+          <Index/<<'@'>>/
+        <Synopsis>
+          <<@E>>
+          expands to
+<<<
+case E
+of (D#K) andthen {Dictionary.is D} then {Dictionary.get D K}
+[] (A#I) then {Array.get A I}
+elseif {IsCell E} then
+    {Cell.access E}
+else
+    {Object.access self E}   %% @E (Object.access is internal)
+end>>>
+        <Item>
+          <<'@'>> returns the current value stored in dictionaries, arrays, cells, and attributes.
+          Note, <<Obj.access>> is a dummy routine and not actually visible to the library user.
+
+        <Entry><Span class=index/<<X = E1 := E2>>/
+          <Index/<<':='>>/
+        <Synopsis>
+          <<X = E1 := E2>>
+          expands to
+
+<<<
+'atomic'
+   X = @E1
+   E1 := E2
+'end'>>>
+        <Item>
+           In an expression context <<':='>> performs an atomic exchange with the current value
+           stored in the dictionary, array, cell, or attribute. Note <<'atomic' ... 'end'>> is pseudo
+           code to indicate that the exchange is an atomic action.
+</List>
+
 </Chapter>
