@@ -259,6 +259,7 @@ case $platform in
         ;;
     hpux*)
         TOOLLDCMD="ld -b"
+        EMULDFLAGS="-Wl,-E"
         oz_enable_modules_static=yes
         ;;
     freebsd*)
