@@ -111,7 +111,7 @@ void failureNomsg(AM *e) { HF_BODY(,); }
 
 
 
-#define NOFLATGUARD()   (shallowCP==NULL)
+#define NOFLATGUARD()   (!inShallowGuard)
 
 #define SHALLOWFAIL if (!NOFLATGUARD()) { goto LBLshallowFail; }
 
@@ -307,7 +307,7 @@ Bool hookCheckNeeded(AM *e)
 // -----------------------------------------------------------------------
 // THREADED CODE
 
-// #define WANT_INSTRPROFILE
+#define WANT_INSTRPROFILE
 
 #if defined(RECINSTRFETCH) && defined(THREADED)
  Error: RECINSTRFETCH requires THREADED == 0;
@@ -643,6 +643,7 @@ void engine() {
 
   /* shallow choice pointer */
   ByteCode *shallowCP = NULL;
+  Bool inShallowGuard = NO;
 
   SRecord *predicate; NoReg(predicate);
   int predArity;      NoReg(predArity);
@@ -699,12 +700,6 @@ void engine() {
 
   e->currentThread = Thread::GetFirst();
 
-  if (e->currentThread->isNormal()) {
-    e->currentTaskStack = e->currentThread->getTaskStack();
-  } else {
-    e->currentTaskStack = (TaskStack *) NULL;
-  }
-
   DebugTrace(trace("thread switched"));
 
   e->RestartProcess();
@@ -723,166 +718,125 @@ void engine() {
 
     DebugCheckT(CAA = NULL);
 
-    // POPTASK
-    if (e->currentTaskStack == NULL) {
+    TaskStack *taskStack = &e->currentThread->taskStack;
+    TaskStackEntry *topCache = taskStack->getTop();
+    TaggedBoard tb = (TaggedBoard) TaskStackPop(topCache-1);
+
+    ContFlag cFlag = getContFlag(tb);
+
+
+    /* RS: Optimize most probable case:
+     *  - do not handle C_CONT in switch --> faster
+     *  - assume cFlag == C_CONT implies stack does not contain empty mark
+     *  - if tb==rootBoard then no need to call getBoardDeref
+     *  - topCache maintained more efficiently
+     */
+    if (cFlag == C_CONT) {
+      Assert(!taskStack->isEmpty((TaskStackEntry) tb));
+      PC = (ProgramCounter) TaskStackPop(topCache-2);
+      Y = (RefsArray) TaskStackPop(topCache-3);
+      G = (RefsArray) TaskStackPop(topCache-4);
+      taskStack->setTop(topCache-4);
+      Board *auxBoard = getBoard(tb,cFlag);
+      if (!auxBoard->isRoot()) {
+        auxBoard = auxBoard->getBoardDeref();
+        if (auxBoard == NULL) {
+          goto LBLpopTask;
+        }
+        auxBoard->removeSuspension();
+      } else {
+        /* optimization: no need to maintain counter for rootBoard (RS) */
+      }
+      DebugCheck (((fsb = auxBoard->getSolveBoard ()) != NULL &&
+                   fsb->isReflected () == OK),
+                  error ("activity under reduced solve actor"));
+
+      INSTALLPATH(auxBoard);
+
+      goto LBLemulate;
+    }
+
+    if (taskStack->isEmpty((TaskStackEntry) tb)) {
+      if (e->currentThread->isSolve () == OK) {
+        Board *nb = e->currentThread->getNotificationBoard ();
+        e->decSolveThreads (nb);
+      }
+      goto LBLkillThread;
+    }
+
+    topCache--;
+
+    tmpBB = getBoard(tb,cFlag)->getBoardDeref();
+    switch (cFlag){
+    case C_XCONT:
+      PC = (ProgramCounter) TaskStackPop(--topCache);
+      Y = (RefsArray) TaskStackPop(--topCache);
+      G = (RefsArray) TaskStackPop(--topCache);
       {
-        Thread *c = e->currentThread;
-        if (c->isNervous()) {
-          tmpBB = c->popBoard()->getBoardDeref();
-          if (!tmpBB) {
-            goto LBLTaskEmpty;
-          }
-          DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
-                      fsb->isReflected () == OK),
-                      error ("activity under reduced solve actor"));
-          goto LBLTaskNervous;
+        RefsArray tmpX = (RefsArray) TaskStackPop(--topCache);
+        XSize = getRefsArraySize(tmpX);
+        int i = XSize;
+        while (--i >= 0) {
+          X[i] = tmpX[i];
         }
-        if (c->isSuspCont()) {
-          SuspContinuation *cont = c->popSuspCont();
-          tmpBB = cont->getBoard()->getBoardDeref();
-          if (!tmpBB) {
-            goto LBLTaskEmpty;
-          }
-          PC = cont->getPC();
-          Y = cont->getY();
-          G = cont->getG();
-          XSize = cont->getXSize();
-          cont->getX(X);
-          DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
-                      fsb->isReflected () == OK),
-                      error ("activity under reduced solve actor"));
-          disposeRefsArray(cont->getX());
-          cont->dispose();
-          goto LBLTaskCont;
-        }
-        if (c->isSuspCCont()) {
-          CFuncContinuation *ccont = c->popSuspCCont();
-          tmpBB = ccont->getBoard()->getBoardDeref();
-          if (!tmpBB) {
-            goto LBLTaskEmpty;
-          }
-          biFun = ccont->getCFunc();
-          currentTaskSusp = c->getResSusp();
-          XSize = ccont->getXSize();
-          ccont->getX(X);
-          DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
-                      fsb->isReflected () == OK),
-                      error ("activity under reduced solve actor"));
-          goto LBLTaskCFuncCont;
-        }
-        Assert(c->isNormal() && (!c->u.taskStack || c->u.taskStack->isEmpty()));
-        goto LBLTaskEmpty;
+        disposeRefsArray(tmpX);
       }
-    } else {
-      TaskStack *taskStack = e->currentTaskStack;
-      TaskStackEntry *topCache = taskStack->getTop();
-      TaggedBoard tb = (TaggedBoard) TaskStackPop(topCache-1);
-
-      ContFlag cFlag = getContFlag(tb);
-
-
-      /* RS: Optimize most probable case:
-       *  - do not handle C_CONT in switch --> faster
-       *  - assume cFlag == C_CONT implies stack does not contain empty mark
-       *  - if tb==rootBoard then no need to call getBoardDeref
-       *  - topCache maintained more efficiently
-       */
-      if (cFlag == C_CONT) {
-        Assert(!taskStack->isEmpty((TaskStackEntry) tb));
-        PC = (ProgramCounter) TaskStackPop(topCache-2);
-        Y = (RefsArray) TaskStackPop(topCache-3);
-        G = (RefsArray) TaskStackPop(topCache-4);
-        taskStack->setTop(topCache-4);
-        Board *rb = e->rootBoard;
-        if (getBoard(tb,cFlag) != rb) {
-          tmpBB = getBoard(tb,cFlag)->getBoardDeref();
-          if (tmpBB == NULL) {
-            goto LBLpopTask;
-          }
-        } else {
-          tmpBB = rb;
-        }
-        DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
-                     fsb->isReflected () == OK),
-                    error ("activity under reduced solve actor"));
-        goto LBLTaskCont;
+      taskStack->setTop(topCache);
+      if (!tmpBB) {
+        goto LBLpopTask;
       }
+      DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
+                   fsb->isReflected () == OK),
+                  error ("activity under reduced solve actor"));
 
+      tmpBB->removeSuspension();
 
-      if (taskStack->isEmpty((TaskStackEntry) tb)) {
-        goto LBLTaskEmpty;
-      }
+      INSTALLPATH(tmpBB);
 
-      topCache--;
+      goto LBLemulate;
 
-      tmpBB = getBoard(tb,cFlag)->getBoardDeref();
-      switch (cFlag){
-      case C_XCONT:
-        PC = (ProgramCounter) TaskStackPop(--topCache);
-        Y = (RefsArray) TaskStackPop(--topCache);
-        G = (RefsArray) TaskStackPop(--topCache);
-        {
-          RefsArray tmpX = (RefsArray) TaskStackPop(--topCache);
-          XSize = getRefsArraySize(tmpX);
-          int i = XSize;
-          while (--i >= 0) {
-            X[i] = tmpX[i];
-          }
-        }
+    case C_DEBUG_CONT:
+      {
+        OzDebug *ozdeb = (OzDebug *) TaskStackPop(--topCache);
         taskStack->setTop(topCache);
         if (!tmpBB) {
           goto LBLpopTask;
         }
-        DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
-                     fsb->isReflected () == OK),
-                    error ("activity under reduced solve actor"));
-        goto LBLTaskCont;
+        tmpBB->removeSuspension();
 
-      case C_DEBUG_CONT:
-        {
-          OzDebug *ozdeb = (OzDebug *) TaskStackPop(--topCache);
-          taskStack->setTop(topCache);
-          if (!tmpBB) {
-            goto LBLpopTask;
+        if (CBB != tmpBB) {
+          switch (e->installPath(tmpBB)) {
+          case INST_REJECTED: exitCall(FAILED,ozdeb); goto LBLpopTask;
+          case INST_FAILED:   exitCall(FAILED,ozdeb); goto LBLfailure;
+          case INST_OK:       break;
           }
-          tmpBB->removeSuspension();
-
-          if (CBB != tmpBB) {
-            switch (e->installPath(tmpBB)) {
-            case INST_REJECTED:
-              exitCall(FAILED,ozdeb);
-              goto LBLpopTask;
-            case INST_FAILED:
-              exitCall(FAILED,ozdeb);
-              goto LBLfailure;
-            case INST_OK:
-              break;
-            }
-          }
-
-          exitCall(PROCEED,ozdeb);
-          goto LBLcheckEntailment;
         }
 
-      case C_CALL_CONT:
-        {
-          predicate = (SRecord *) TaskStackPop(--topCache);
-          RefsArray tmpX = (RefsArray) TaskStackPop(--topCache);
-          predArity = tmpX ? getRefsArraySize(tmpX) : 0;
-          int i = predArity;
-          while (--i >= 0) {
-            X[i] = tmpX[i];
-          }
-          taskStack->setTop(topCache);
-          if (!tmpBB) {
-            goto LBLpopTask;
-          }
-          INSTALLPATH(tmpBB);
-          tmpBB->removeSuspension();
-          isExecute = OK;
-          goto LBLcall;
+        exitCall(PROCEED,ozdeb);
+        goto LBLcheckEntailment;
+      }
+
+    case C_CALL_CONT:
+      {
+        predicate = (SRecord *) TaskStackPop(--topCache);
+        RefsArray tmpX = (RefsArray) TaskStackPop(--topCache);
+        predArity = tmpX ? getRefsArraySize(tmpX) : 0;
+        int i = predArity;
+        while (--i >= 0) {
+          X[i] = tmpX[i];
         }
-      case C_NERVOUS:
+        disposeRefsArray(tmpX);
+        taskStack->setTop(topCache);
+        if (!tmpBB) {
+          goto LBLpopTask;
+        }
+        INSTALLPATH(tmpBB);
+        tmpBB->removeSuspension();
+        isExecute = OK;
+        goto LBLcall;
+      }
+    case C_NERVOUS:
+      {
         // by kost@ : 'SolveActor::Waker' can produce such task
         // (if the search problem is stable by its execution);
         taskStack->setTop(topCache);
@@ -892,22 +846,35 @@ void engine() {
         DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
                      fsb->isReflected () == OK),
                     error ("activity under reduced solve actor"));
-        goto LBLTaskNervous;
-      case C_CFUNC_CONT:
+
+        // nervous already done ?
+        if (!tmpBB->isNervous()) {
+          goto LBLpopTask;
+        }
+
+        DebugTrace(trace("nervous",tmpBB));
+        INSTALLPATH(tmpBB);
+        goto LBLcheckEntailment;
+      }
+
+    case C_CFUNC_CONT:
+      {
         // by kost@ : 'solve actors' are represented via the c-function;
         biFun = (OZ_CFun) TaskStackPop(--topCache);
         currentTaskSusp = (Suspension*) TaskStackPop(--topCache);
-        {
-          RefsArray tmpX = (RefsArray) TaskStackPop(--topCache);
-          if (tmpX != NULL) {
-            XSize = getRefsArraySize(tmpX);
-            int i = XSize;
-            while (--i >= 0) {
-              X[i] = tmpX[i];
-            }
-          } else {
-            XSize = 0;
+        RefsArray tmpX = (RefsArray) TaskStackPop(--topCache);
+        if (tmpX != NULL) {
+          XSize = getRefsArraySize(tmpX);
+          int i = XSize;
+          while (--i >= 0) {
+            X[i] = tmpX[i];
           }
+        } else {
+          XSize = 0;
+        }
+        /* RS: dont't know, if we can dispose for FDs */
+        if (currentTaskSusp == NULL) {
+          disposeRefsArray(tmpX);
         }
         taskStack->setTop(topCache);
         if (!tmpBB) {
@@ -918,18 +885,39 @@ void engine() {
                      fsb->isReflected () == OK),
                     error ("activity under reduced solve actor"));
 
-        goto LBLTaskCFuncCont;
-      default:
-        error("engine: POPTASK: unexpected task found.");
-        goto LBLerror;
-      }
-    }
+        tmpBB->removeSuspension();
 
-  LBLTaskEmpty:
-    if (e->currentThread->isSolve () == OK) {
-      Board *nb = e->currentThread->getNotificationBoard ();
-      e->decSolveThreads (nb);
-    }
+        if (currentTaskSusp != NULL && currentTaskSusp->isDead()) {
+          currentTaskSusp = NULL;
+          goto LBLpopTask;
+        }
+
+        INSTALLPATH(tmpBB);
+
+        LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
+
+        switch (biFun(XSize, X)) {
+        case FAILED:
+          killPropagatedCurrentTaskSusp();
+        localhack0:
+          HF_FAIL(applFailure(biFun), printArgs(X,XSize));
+        case PROCEED:
+          killPropagatedCurrentTaskSusp();
+          LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
+                            goto localhack0;);
+          goto LBLcheckEntailment;
+        default:
+          error("Unexpected return value by c-function.");
+          goto LBLerror;
+        } // switch
+      }
+
+    default:
+      error("engine: POPTASK: unexpected task found.");
+      goto LBLerror;
+    }  // switch
+
+
   LBLkillThread:
     {
       Thread *tmpThread = e->currentThread;
@@ -939,54 +927,6 @@ void engine() {
       }
     }
     goto LBLstart;
-
-  LBLTaskNervous:
-    // nervous already done ?
-    if (!tmpBB->isNervous()) {
-      goto LBLpopTask;
-    }
-
-    DebugTrace(trace("nervous",tmpBB));
-
-    INSTALLPATH(tmpBB);
-
-    goto LBLcheckEntailment;
-
-  LBLTaskCFuncCont:
-    tmpBB->removeSuspension();
-
-    if (currentTaskSusp != NULL && currentTaskSusp->isDead()) {
-      currentTaskSusp = NULL;
-      goto LBLpopTask;
-    }
-
-    INSTALLPATH(tmpBB);
-
-    LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
-
-    switch (biFun(XSize, X)) {
-    case FAILED:
-      killPropagatedCurrentTaskSusp();
-    localhack0:
-      HF_FAIL(applFailure(biFun), printArgs(X,XSize));
-    case PROCEED:
-      killPropagatedCurrentTaskSusp();
-      LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
-                        goto localhack0;);
-      goto LBLcheckEntailment;
-    default:
-      error("Unexpected return value by c-function.");
-      goto LBLerror;
-    } // switch
-
-
-  LBLTaskCont:
-    /* optimization: no need to maintain counter for rootBoard (RS) */
-    if (tmpBB != e->rootBoard) tmpBB->removeSuspension();
-
-    INSTALLPATH(tmpBB);
-
-    goto LBLemulate;
   }
 
   error("never here");
@@ -1136,24 +1076,18 @@ void engine() {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel1 rel         = (InlineRel1)entry->getInlineFun();
 
-      OZ_Bool res = rel(XPC(2));
-
-      switch(res) {
-
+      switch(rel(XPC(2))) {
       case PROCEED:
         DISPATCH(3);
 
       case SUSPEND:
-        {
-          suspendInlineRel(XPC(2),makeTaggedNULL(),1,
-                           entry->getFun(),e,shallowCP);
-          DISPATCH(3);
-        }
+        suspendInlineRel(XPC(2),makeTaggedNULL(),1,
+                         entry->getFun(),e,shallowCP);
+        DISPATCH(3);
+
       case FAILED:
-        {
           SHALLOWFAIL;
           HF_FAIL(applFailure(entry), printArgs(1,XPC(2)));
-        }
       }
     }
 
@@ -1162,23 +1096,16 @@ void engine() {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel2 rel         = (InlineRel2)entry->getInlineFun();
 
-      OZ_Bool res = rel(XPC(2),XPC(3));
-
-      switch(res) {
-
+      switch(rel(XPC(2),XPC(3))) {
       case PROCEED:
         DISPATCH(4);
 
       case SUSPEND:
-        {
-          suspendInlineRel(XPC(2),XPC(3),2,entry->getFun(),e,shallowCP);
-          DISPATCH(4);
-        }
+        suspendInlineRel(XPC(2),XPC(3),2,entry->getFun(),e,shallowCP);
+        DISPATCH(4);
       case FAILED:
-        {
-          SHALLOWFAIL;
-          HF_FAIL(applFailure(entry), printArgs(2,XPC(2),XPC(3)));
-        }
+        SHALLOWFAIL;
+        HF_FAIL(applFailure(entry), printArgs(2,XPC(2),XPC(3)));
       }
     }
 
@@ -1191,24 +1118,18 @@ void engine() {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun1 fun         = (InlineFun1)entry->getInlineFun();
 
-      OZ_Bool res = fun(XPC(2),XPC(3));
-
-      switch(res) {
-
+      switch(fun(XPC(2),XPC(3))) {
       case PROCEED:
         DISPATCH(4);
 
       case SUSPEND:
-        {
-          suspendInlineFun(XPC(2),makeTaggedNULL(),makeTaggedNULL(),XPC(3),2,
-                           entry->getFun(),(InlineFun2)fun,e,shallowCP);
-          DISPATCH(4);
-        }
+        suspendInlineFun(XPC(2),makeTaggedNULL(),makeTaggedNULL(),XPC(3),2,
+                         entry->getFun(),(InlineFun2)fun,e,shallowCP);
+        DISPATCH(4);
+
       case FAILED:
-        {
-          SHALLOWFAIL;
-          HF_FAIL(applFailure(entry), printArgs(1,XPC(2)));
-        }
+        SHALLOWFAIL;
+        HF_FAIL(applFailure(entry), printArgs(1,XPC(2)));
       }
     }
 
@@ -1217,22 +1138,18 @@ void engine() {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun2 fun = (InlineFun2)entry->getInlineFun();
 
-      OZ_Bool res = fun(XPC(2),XPC(3),XPC(4));
-
-      switch(res) {
-
+      switch(fun(XPC(2),XPC(3),XPC(4))) {
       case PROCEED:
         DISPATCH(5);
 
       case SUSPEND:
-        suspendInlineFun(XPC(2),XPC(3),makeTaggedNULL(),XPC(4),3,entry->getFun(),fun,e,shallowCP);
+        suspendInlineFun(XPC(2),XPC(3),makeTaggedNULL(),XPC(4),3,
+                         entry->getFun(),fun,e,shallowCP);
         DISPATCH(5);
 
       case FAILED:
-        {
-          SHALLOWFAIL;
-          HF_FAIL(applFailure(entry), printArgs(2,XPC(2),XPC(3)));
-        }
+        SHALLOWFAIL;
+        HF_FAIL(applFailure(entry), printArgs(2,XPC(2),XPC(3)));
       }
     }
 
@@ -1242,24 +1159,18 @@ void engine() {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun3 fun = (InlineFun3)entry->getInlineFun();
 
-      OZ_Bool res = fun(XPC(2),XPC(3),XPC(4),XPC(5));
-
-      switch(res) {
-
+      switch(fun(XPC(2),XPC(3),XPC(4),XPC(5))) {
       case PROCEED:
         DISPATCH(6);
 
       case SUSPEND:
-        {
-          suspendInlineFun(XPC(2),XPC(3),XPC(4),XPC(5),4,
-                           entry->getFun(),(InlineFun2)fun,e,shallowCP);
-          DISPATCH(6);
-        }
+        suspendInlineFun(XPC(2),XPC(3),XPC(4),XPC(5),4,
+                         entry->getFun(),(InlineFun2)fun,e,shallowCP);
+        DISPATCH(6);
+
       case FAILED:
-        {
-          SHALLOWFAIL;
-          HF_FAIL(applFailure(entry), printArgs(3,XPC(2),XPC(3),XPC(4)));
-        }
+        SHALLOWFAIL;
+        HF_FAIL(applFailure(entry), printArgs(3,XPC(2),XPC(3),XPC(4)));
       }
     }
 
@@ -1283,6 +1194,7 @@ void engine() {
   INSTRUCTION(SHALLOWGUARD)
     {
       shallowCP = PC;
+      inShallowGuard = OK;
       e->trail.pushMark();
       DISPATCH(3);
     }
@@ -1292,21 +1204,16 @@ void engine() {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel1 rel         = (InlineRel1)entry->getInlineFun();
 
-      OZ_Bool res = rel(XPC(2));
-
-      switch(res) {
+      switch(rel(XPC(2))) {
 
       case PROCEED: DISPATCH(5);
 
       case FAILED:  JUMP( getLabelArg(PC+3) );
 
       case SUSPEND:
-        {
-          suspendOnVar(XPC(2),getPosIntArg(PC+4),
-                       CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
-          goto LBLcheckEntailment;
-        }
-
+        suspendOnVar(XPC(2),getPosIntArg(PC+4),
+                     CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
+        goto LBLcheckEntailment;
       }
     }
 
@@ -1315,9 +1222,7 @@ void engine() {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel2 rel         = (InlineRel2)entry->getInlineFun();
 
-      OZ_Bool res = rel(XPC(2),XPC(3));
-
-      switch(res) {
+      switch(rel(XPC(2),XPC(3))) {
 
       case PROCEED: DISPATCH(6);
 
@@ -1325,10 +1230,9 @@ void engine() {
 
       case SUSPEND:
       default:
-        {
-          suspendShallowTest2(XPC(2),XPC(3),getPosIntArg(PC+5),CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
-          goto LBLcheckEntailment;
-        }
+        suspendShallowTest2(XPC(2),XPC(3),getPosIntArg(PC+5),
+                            CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
+        goto LBLcheckEntailment;
       }
     }
 
@@ -1338,6 +1242,7 @@ void engine() {
 
       if (numbOfCons == 0) {
         e->trail.popMark();
+        inShallowGuard = NO;
         shallowCP = NULL;
         DISPATCH(1);
       }
@@ -1355,6 +1260,7 @@ void engine() {
 
       CBB->incSuspCount();
       e->reduceTrailOnShallow(susp,numbOfCons);
+      inShallowGuard = NO;
       shallowCP = NULL;
       goto LBLcheckEntailment;
     }
@@ -1368,9 +1274,6 @@ void engine() {
     {
       int posInt = getPosIntArg(PC+1);
       Assert(posInt > 0);
-
-      IncfProfCounter(allocateCounter,(posInt+1)*sizeof(TaggedRef));
-
       Y = allocateY(posInt);
       DISPATCH(2);
     }
@@ -1389,12 +1292,9 @@ void engine() {
   INSTRUCTION(DEALLOCATEL)
     {
       Assert(!isFreedRefsArray(Y));
-
       if (!isDirtyRefsArray(Y)) {
-        IncfProfCounter(deallocateCounter,(getRefsArraySize(Y)+1)*sizeof(TaggedRef));
         deallocateY(Y);
       }
-
       Y=NULL;
       DISPATCH(1);
     }
@@ -1414,7 +1314,6 @@ void engine() {
   INSTRUCTION(SAVECONT)
     {
       e->pushTask(CBB,getLabelArg(PC+1),Y,G);
-
       DISPATCH(2);
     }
 
@@ -1468,14 +1367,9 @@ void engine() {
   INSTRUCTION(BRANCH)
     JUMP( getLabelArg(PC+1) );
 
-  INSTRUCTION(DETX)
-    ONREG(Det,X);
-
-  INSTRUCTION(DETY)
-    ONREG(Det,Y);
-
-  INSTRUCTION(DETG)
-    ONREG(Det,G);
+  INSTRUCTION(DETX) ONREG(Det,X);
+  INSTRUCTION(DETY) ONREG(Det,Y);
+  INSTRUCTION(DETG) ONREG(Det,G);
 
   Det:
   {
@@ -1496,26 +1390,13 @@ void engine() {
   };
 
 
+  INSTRUCTION(EXECUTEMETHODX) isExecute = OK; ONREG(SendMethod,X);
+  INSTRUCTION(EXECUTEMETHODY) isExecute = OK; ONREG(SendMethod,Y);
+  INSTRUCTION(EXECUTEMETHODG) isExecute = OK; ONREG(SendMethod,G);
 
-  INSTRUCTION(EXECUTEMETHODX)
-    isExecute = OK;
-    ONREG(SendMethod,X);
-  INSTRUCTION(EXECUTEMETHODY)
-    isExecute = OK;
-    ONREG(SendMethod,Y);
-  INSTRUCTION(EXECUTEMETHODG)
-    isExecute = OK;
-    ONREG(SendMethod,G);
-
-  INSTRUCTION(SENDMETHODX)
-    isExecute = NO;
-    ONREG(SendMethod,X);
-  INSTRUCTION(SENDMETHODY)
-    isExecute = NO;
-    ONREG(SendMethod,Y);
-  INSTRUCTION(SENDMETHODG)
-    isExecute = NO;
-    ONREG(SendMethod,G);
+  INSTRUCTION(SENDMETHODX) isExecute = NO; ONREG(SendMethod,X);
+  INSTRUCTION(SENDMETHODY) isExecute = NO; ONREG(SendMethod,Y);
+  INSTRUCTION(SENDMETHODG) isExecute = NO; ONREG(SendMethod,G);
 
  SendMethod:
   {
@@ -1561,26 +1442,13 @@ void engine() {
   }
 
 
+  INSTRUCTION(METHEXECUTEX) isExecute = OK; ONREG(ApplyMethod,X);
+  INSTRUCTION(METHEXECUTEY) isExecute = OK; ONREG(ApplyMethod,Y);
+  INSTRUCTION(METHEXECUTEG) isExecute = OK; ONREG(ApplyMethod,G);
 
-  INSTRUCTION(METHEXECUTEX)
-    isExecute = OK;
-    ONREG(ApplyMethod,X);
-  INSTRUCTION(METHEXECUTEY)
-    isExecute = OK;
-    ONREG(ApplyMethod,Y);
-  INSTRUCTION(METHEXECUTEG)
-    isExecute = OK;
-    ONREG(ApplyMethod,G);
-
-  INSTRUCTION(METHAPPLX)
-    isExecute = NO;
-    ONREG(ApplyMethod,X);
-  INSTRUCTION(METHAPPLY)
-    isExecute = NO;
-    ONREG(ApplyMethod,Y);
-  INSTRUCTION(METHAPPLG)
-    isExecute = NO;
-    ONREG(ApplyMethod,G);
+  INSTRUCTION(METHAPPLX) isExecute = NO; ONREG(ApplyMethod,X);
+  INSTRUCTION(METHAPPLY) isExecute = NO; ONREG(ApplyMethod,Y);
+  INSTRUCTION(METHAPPLG) isExecute = NO; ONREG(ApplyMethod,G);
 
  ApplyMethod:
   {
@@ -1623,32 +1491,15 @@ void engine() {
   }
 
 
-  INSTRUCTION(CALLX)
-    isExecute = NO;
-    ONREG(Call,X);
+  INSTRUCTION(CALLX) isExecute = NO; ONREG(Call,X);
+  INSTRUCTION(CALLY) isExecute = NO; ONREG(Call,Y);
+  INSTRUCTION(CALLG) isExecute = NO; ONREG(Call,G);
 
-  INSTRUCTION(CALLY)
-    isExecute = NO;
-    ONREG(Call,Y);
-
-  INSTRUCTION(CALLG)
-    isExecute = NO;
-    ONREG(Call,G);
-
-  INSTRUCTION(EXECUTEX)
-    isExecute = OK;
-    ONREG(Call,X);
-
-  INSTRUCTION(EXECUTEY)
-    isExecute = OK;
-    ONREG(Call,Y);
-
-  INSTRUCTION(EXECUTEG)
-    isExecute = OK;
-    ONREG(Call,G);
+  INSTRUCTION(EXECUTEX) isExecute = OK; ONREG(Call,X);
+  INSTRUCTION(EXECUTEY) isExecute = OK; ONREG(Call,Y);
+  INSTRUCTION(EXECUTEG) isExecute = OK; ONREG(Call,G);
 
  Call:
-
    {
      {
        TaggedRef taggedPredicate = RegAccess(HelpReg,getRegArg(PC+1));
@@ -1709,14 +1560,9 @@ void engine() {
 
         switch (bi->getType()) {
 
-        case BIsolve:
-          goto LBLBIsolve;
-
-        case BIsolveCont:
-          goto LBLBIsolveCont;
-
-        case BIsolved:
-          goto LBLBIsolved;
+        case BIsolve:     goto LBLBIsolve;
+        case BIsolveCont: goto LBLBIsolveCont;
+        case BIsolved:    goto LBLBIsolved;
 
         case BIDefault:
           {
@@ -2018,9 +1864,9 @@ void engine() {
       goto LBLsuspendBoard;
     }
 
+
   INSTRUCTION(WAITTOP)
     {
-
       /* top commit */
       if ( e->entailment() )
 
@@ -2461,6 +2307,7 @@ void engine() {
   {
     e->reduceTrailOnFail();
     ProgramCounter nxt = getLabelArg(shallowCP+1);
+    inShallowGuard = NO;
     shallowCP = NULL;
     JUMP(nxt);
   }
