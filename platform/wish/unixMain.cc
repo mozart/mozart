@@ -59,7 +59,7 @@
 #endif
 #endif
 
-if TK_MAJOR_VERSION >= 8 && TK_MINOR_VERSION >= 4
+#if TK_MAJOR_VERSION >= 8 && TK_MINOR_VERSION >= 4
 #define CONST_CAST(X,Y) const_cast<X>(Y)
 #else
 #define CONST_CAST(X,Y) (Y)
