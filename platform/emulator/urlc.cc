@@ -97,8 +97,6 @@
 /* ## HTTP user agent reported to the server */
 #define HTTP_USER_AGENT "tf_client/2.0"
 
-#include "wsock.hh"
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
