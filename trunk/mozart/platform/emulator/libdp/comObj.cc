@@ -376,8 +376,15 @@ Bool ComObj::canBeFreed() {
   localRef=FALSE;
   if(hasNeed()) 
     return FALSE;
-  else if(remoteRef)
+  else if(remoteRef) {
+    if(!sentclearref) {
+      MsgContainer *msgC=msgContainerManager->newMsgContainer(NULL);
+      msgC->put_C_CLEAR_REFERENCE();
+      send(msgC);
+      sentclearref=TRUE;
+    }
     return FALSE;
+  }
   else {
     switch(state) {
     case WORKING: {
