@@ -845,6 +845,10 @@ fi
 	
     fi
     
+  HOMEURL="http://mozart.ps.uni-sb.de/home"
+  HOMECACHE="http/mozart.ps.uni-sb.de/home"
+  
+  
 #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 #OZ_PATH_PROG(DYNLD,          ozdynld)
 
@@ -853,7 +857,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:857: checking for $ac_word" >&5
+echo "configure:861: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_RM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1035,6 +1039,8 @@ s%@SET_MAKE@%$SET_MAKE%g
 s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
 s%@INSTALL_DIR@%$INSTALL_DIR%g
+s%@HOMEURL@%$HOMEURL%g
+s%@HOMECACHE@%$HOMECACHE%g
 s%@RM@%$RM%g
 s%@subdirs@%$subdirs%g
 
