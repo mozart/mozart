@@ -259,7 +259,7 @@ define
 	 AutoIndex <- Args.'autoindex'
 	 OzDocToHTML, Process(SGML unit)
 	 OzDocToHTML, GenerateLabels()
-	 OzDocToHTML, DoThreading({Reverse @Threading})
+	 OzDocToHTML, DoThreading({Reverse @Threading} unit 'index.html')
 	 {ForAll {Dictionary.items @Labels}
 	  proc {$ N#T}
 	     if {IsFree N} then N#T = 'file:///dev/null'#PCDATA('???') end
@@ -1086,17 +1086,25 @@ define
 	    Next = In + 1
 	 end
       end
-      meth DoThreading(Ts)
-	 case Ts of sect(_ _)|Rest then
-	    OzDocToHTML, DoThreading(Rest)
-	 elseof nav(HTML)|sect(Node Label)|Rest then
-	    HTML = table('class': [nav] border: 1 align: center
-			 tr(td(a(href: Node#"#"#Label PCDATA('Next >>')))))
-	    OzDocToHTML, DoThreading(Rest)
+      meth DoThreading(Ts Prev1 Prev2)
+	 case Ts of sect(Node Label)|Rest then
+	    case Rest of nav(_)|_ then
+	       OzDocToHTML, DoThreading(Rest Prev2 Node#"#"#Label)
+	    else
+	       OzDocToHTML, DoThreading(Rest Prev1 Prev2)
+	    end
 	 elseof nav(HTML)|Rest then
-	    %--** when is Rest \= nil?
-	    HTML = EMPTY
-	    OzDocToHTML, DoThreading(Rest)
+	    HTML = table('class': [nav]
+			 border: 0 cellpadding: 6 cellspacing: 6 align: center
+			 tr(bgcolor: '#DDDDDD'
+			    case Prev1 of unit then EMPTY
+			    else td(a(href: Prev1 PCDATA('<< Prev')))
+			    end
+			    case Rest of sect(Node Label)|_ then
+			       td(a(href: Node#"#"#Label PCDATA('Next >>')))
+			    else EMPTY
+			    end))
+	    OzDocToHTML, DoThreading(Rest Prev1 Prev2)
 	 elseof nil then skip
 	 end
       end
