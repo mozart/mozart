@@ -399,6 +399,7 @@ void Thread::makeRunning ()
     am.cachedStack = getTaskStackRef();
     am.cachedSelf = getSelf();
     setSelf(0);
+    ProfileCode(ozstat.currAbstr=abstr; abstr=0);
     break;                      // nothing to do;
 
   case S_PR_THR:
@@ -430,10 +431,8 @@ void Thread::makeRunning ()
       e->changeSelf(obj);
 
 #define SaveSelf                                        \
-      ProfileCode(if (ozstat.currAbstr) {               \
-                    CTS->pushAbstr(ozstat.currAbstr);   \
-                    ozstat.enterCall(NULL);             \
-                  })                                    \
+      ProfileCode(CTT->setAbstr(ozstat.currAbstr);      \
+                  ozstat.enterCall(NULL));              \
       e->saveSelf();
 
 
@@ -2830,6 +2829,7 @@ LBLdispatcher:
 
       tt->pushCont(newPC,newY,G,NULL);
       tt->setSelf(e->getSelf());
+      ProfileCode(tt->setAbstr(ozstat.currAbstr));
 
       e->scheduleThread (tt);
 
@@ -3076,8 +3076,6 @@ LBLdispatcher:
 
   Case(TASKACTOR)
     {
-      ProfileCode(CTS->discardFrame(C_SET_ABSTR_Ptr);)
-
       AWActor *aw = (AWActor *) Y;
       Y = NULL;
 
@@ -3160,6 +3158,19 @@ LBLdispatcher:
        */
     }
 
+  Case(GENFASTCALL)
+    {
+      AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
+      Bool tailcall           =  getPosIntArg(PC+2);
+
+      if (entry->getAbstr() == 0) {
+        RAISE_APPLY(OZ_atom("unknown"),
+                    OZ_atom("Inconsistency in optimized application.\nMaybe due to previous toplevel failure."));
+      }
+      CodeArea::writeOpcode(tailcall ? FASTTAILCALL : FASTCALL, PC);
+      DISPATCH(0);
+    }
+
   Case(MARSHALLEDFASTCALL)
     {
       TaggedRef pred = getTaggedArg(PC+1);
@@ -3223,6 +3234,11 @@ LBLdispatcher:
     {
       error("under threaded code this must be different from GLOBALVARNAME,");
       error("otherwise CodeArea::adressToOpcode will not work.");
+    }
+
+  Case(PROFILEPROC)
+    {
+      error("unimplemented");
     }
 
   Case(TASKCATCH)

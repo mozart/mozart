@@ -100,7 +100,7 @@ AbstractionTable CodeArea::abstractionTab(4000);
 /*
   AbstractionEntry::defaultEntry: for bug fix. If you feed
 
-  declare P1 P2 Px
+  declare P1 P2 Px in
 
   proc {P1 X} true end
   proc {Px X} false end
@@ -113,8 +113,6 @@ AbstractionTable CodeArea::abstractionTab(4000);
   Use defaultEntry for all newly created AbstractionEntry. Set by a builtin.
 
 */
-
-AbstractionEntry AbstractionEntry::defaultEntry;
 
 
 AbstractionEntry *AbstractionTable::add(Abstraction *abstr)
@@ -478,6 +476,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case CREATEOR:
     case CREATEENUMOR:
     case CREATECHOICE:
+    case PROFILEPROC:
     case POPEX:
     case TASKXCONT:
     case TASKCFUNCONT:
@@ -697,6 +696,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
                getPosIntArg(PC+2));
       DISPATCH();
 
+    case GENFASTCALL:
     case FASTCALL:
     case FASTTAILCALL:
       {

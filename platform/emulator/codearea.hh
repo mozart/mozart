@@ -32,16 +32,13 @@ private:
   AbstractionEntry *next;
   static AbstractionEntry* allEntries;
 
-  static AbstractionEntry defaultEntry;
-
 public:
-  static void setDefaultEntry(Abstraction *a) { defaultEntry.setPred(a); }
-
   IHashTable *indexTable;
 
   AbstractionEntry() {
-    *this = defaultEntry;
-    next = allEntries;
+    abstr = 0;
+    pc    = NOCODE;
+    next  = allEntries;
     allEntries = this;
   }
   Abstraction *getAbstr() { return abstr; };
