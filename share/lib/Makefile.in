@@ -57,7 +57,7 @@ CPSRC   = Search FD Schedule FS
 DPSRC   = Connection Remote RemoteServer Fault URL
 WPSRC   = Tk TkTools
 MISCSRC = Misc
-SUPPSRC = Type
+SUPPSRC = Type Narrator Listener ErrorListener
 
 RUNFUNCTORS = \
         $(SPSRC:%=%.ozf) \
