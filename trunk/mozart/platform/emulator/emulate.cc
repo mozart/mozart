@@ -1796,7 +1796,7 @@ Case(GETVOID)
 			 :  /* INPUT  */
 			   "i" (LTAG_SMALLINT),
                            "r" (A),
-                           "r" (B),
+                           "r" (B)
 			 : "cc"
                        );
 
@@ -1910,7 +1910,7 @@ Case(GETVOID)
                        :  /* INPUT  */
                           "i" (LTAG_SMALLINT),
                           "r" (A),
-                          "r" (B),
+                          "r" (B)
 		       : "cc"
                        );
 
@@ -2088,6 +2088,7 @@ Case(GETVOID)
 		         "r" (A),
                          "r" (T),
 		         "m" (TaggedOzOverMaxInt)
+		       : "cc"
                        );
 	} else {
 	  A ^= LTAG_SMALLINT;
