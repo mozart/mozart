@@ -987,8 +987,10 @@ void osInitSignals()
  *       Sockets                                         *
  *********************************************************/
 
-static fd_set globalFDs[2];     // mask of active read/write FDs
-static fd_set copyFDs[2];	// ... its copy for 'select()';
+static fd_set registeredFDs[2];	// mask of active read/write FDs
+static fd_set watchedFDs[2];	// ... its copy went through 'select()';
+static int numbOfWatchedFDs;	// 
+static int blockWatchedFDs;	// 
 
 int osOpenMax()
 {
@@ -1115,8 +1117,8 @@ void osInit()
 
   openMax=osOpenMax();
 
-  FD_ZERO(&globalFDs[SEL_READ]);
-  FD_ZERO(&globalFDs[SEL_WRITE]);
+  FD_ZERO(&registeredFDs[SEL_READ]);
+  FD_ZERO(&registeredFDs[SEL_WRITE]);
 
   FD_ZERO(&socketFDs);
 
@@ -1174,11 +1176,11 @@ static
 void osWatchFDInternal(int fd, int mode)
 {
   CheckMode(mode);
-  OZ_FD_SET(fd,&globalFDs[mode]); 
+  OZ_FD_SET(fd,&registeredFDs[mode]); 
   // kost@ : in the case of preventing blocking in 'select()' by
   // waiting for write permission into 'stderr' (used by task
   // checkers&handlers, see am.cc), the copy must be updated as well:
-  OZ_FD_SET(fd,&copyFDs[mode]); 
+  OZ_FD_SET(fd,&watchedFDs[mode]); 
 }
 
 
@@ -1196,14 +1198,14 @@ void osWatchAccept(int fd)
 void osClrWatchedFD(int fd, int mode)
 {
   CheckMode(mode);
-  OZ_FD_CLR(fd,&globalFDs[mode]); 
+  OZ_FD_CLR(fd,&registeredFDs[mode]); 
 }
 
 
 Bool osIsWatchedFD(int fd, int mode)
 {
   CheckMode(mode);
-  return (FD_ISSET(fd,&globalFDs[mode])); 
+  return (FD_ISSET(fd,&registeredFDs[mode])); 
 }
 
 
@@ -1213,9 +1215,11 @@ Bool osIsWatchedFD(int fd, int mode)
  */
 void osBlockSelect(unsigned int &ms)
 {
-  copyFDs[SEL_READ]  = globalFDs[SEL_READ];
-  copyFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
-  (void) osSelect(&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],&ms);
+  watchedFDs[SEL_READ]  = registeredFDs[SEL_READ];
+  watchedFDs[SEL_WRITE] = registeredFDs[SEL_WRITE];
+  numbOfWatchedFDs =
+    osSelect(&watchedFDs[SEL_READ], &watchedFDs[SEL_WRITE], &ms);
+  blockWatchedFDs = OK;
 }
 
 /* osClearSocketErrors
@@ -1225,10 +1229,10 @@ void osClearSocketErrors()
 {
   fd_set auxFDs[2];
 
-  /* osClrWatchedFD might change globalFDs, such that the next
-   * call to FD_ISSET on globalFDs might fail */
-  auxFDs[SEL_READ]  = globalFDs[SEL_READ];
-  auxFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
+  /* osClrWatchedFD might change registeredFDs, such that the next
+   * call to FD_ISSET on registeredFDs might fail */
+  auxFDs[SEL_READ]  = registeredFDs[SEL_READ];
+  auxFDs[SEL_WRITE] = registeredFDs[SEL_WRITE];
 
   for (int i = 0; i < openMax; i++) {
     for(int mode=SEL_READ; mode <= SEL_WRITE; mode++) {
@@ -1283,31 +1287,17 @@ static fd_set tmpFDs[2];
 /* signals are blocked */
 int osFirstSelect()
 {
- loop:
-  tmpFDs[SEL_READ]  = globalFDs[SEL_READ];
-  tmpFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
-
-  int numbOfFDs = osSelect(&tmpFDs[SEL_READ], &tmpFDs[SEL_WRITE],
-			   (unsigned int *) WAIT_NULL);
-
-  if (numbOfFDs < 0) {
-    if (ossockerrno() == EINTR) goto loop;
-    if (ossockerrno() != EBADF) { /* some pipes may have been closed */
-      printfds(&tmpFDs[SEL_READ]);
-      printfds(&tmpFDs[SEL_WRITE]);
-      ozpwarning("select failed");
-    }
-    osClearSocketErrors();
-  }
-  return numbOfFDs;
+  tmpFDs[SEL_READ]  = watchedFDs[SEL_READ];
+  tmpFDs[SEL_WRITE] = watchedFDs[SEL_WRITE];
+  return (numbOfWatchedFDs);
 }
 
 Bool osNextSelect(int fd, int mode)
 {
   CheckMode(mode);
 
-  if (FD_ISSET(fd,&tmpFDs[mode])) {
-    OZ_FD_CLR(fd,&tmpFDs[mode]);
+  if (FD_ISSET(fd, &tmpFDs[mode])) {
+    OZ_FD_CLR(fd, &tmpFDs[mode]);
     return OK;
   }
   return NO;
@@ -1321,26 +1311,29 @@ Bool osNextSelect(int fd, int mode)
 // called from AM::checkIO
 int osCheckIO()
 {
- loop:
-  copyFDs[SEL_READ]  = globalFDs[SEL_READ];
-  copyFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
-  
-  int numbOfFDs = osSelect(&copyFDs[SEL_READ], &copyFDs[SEL_WRITE],
-			   (unsigned int *) WAIT_NULL);
-  if (numbOfFDs < 0) {
-    if (ossockerrno() == EINTR) goto loop;
-    if (ossockerrno() != EBADF) { /* some pipes may have been closed */
-      printfds(&globalFDs[SEL_READ]);
-      printfds(&globalFDs[SEL_WRITE]);
-      ozpwarning("checkIO: select failed");
+  if (blockWatchedFDs) {
+    blockWatchedFDs = NO;
+    return (numbOfWatchedFDs);
+  } else {
+  loop:
+    watchedFDs[SEL_READ]  = registeredFDs[SEL_READ];
+    watchedFDs[SEL_WRITE] = registeredFDs[SEL_WRITE];
+
+    numbOfWatchedFDs = 
+      osSelect(&watchedFDs[SEL_READ], &watchedFDs[SEL_WRITE],
+	       (unsigned int *) WAIT_NULL);
+    if (numbOfWatchedFDs < 0) {
+      if (ossockerrno() == EINTR) goto loop;
+      if (ossockerrno() != EBADF) { /* some pipes may have been closed */
+	printfds(&registeredFDs[SEL_READ]);
+	printfds(&registeredFDs[SEL_WRITE]);
+	ozpwarning("checkIO: select failed");
+      }
+      osClearSocketErrors();
     }
-    osClearSocketErrors();
+    return (numbOfWatchedFDs);
   }
-  return numbOfFDs;
 }
-
-
-
 
 
 /*
@@ -1430,8 +1423,8 @@ int ossafewrite(int fd, char *buf, unsigned int len)
 
 int osclose(int fd)
 {
-  OZ_FD_CLR((unsigned int)fd,&globalFDs[SEL_READ]);
-  OZ_FD_CLR((unsigned int)fd,&globalFDs[SEL_WRITE]);
+  OZ_FD_CLR((unsigned int)fd,&registeredFDs[SEL_READ]);
+  OZ_FD_CLR((unsigned int)fd,&registeredFDs[SEL_WRITE]);
 
 #ifdef WINDOWS
   // never close stdin on Windows, leads to problems

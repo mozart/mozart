@@ -269,7 +269,8 @@ void AM::init(int argc,char **argv)
 
 
 // internal registers
-  statusReg    = (StatusBit)0;
+  statusReg    = (StatusBit) 0;
+  childReady   = NO;
   criticalFlag = NO;
 
   _rootBoard = new Board();
@@ -483,10 +484,25 @@ void AM::suspendEngine(void) {
 
   _rootBoard->install();
 
-  ozstat.printIdle(stdout);
-
   //
   osBlockSignals(OK);
+
+  // erik+kost@ : Before we really attempt to suspend, we've probably
+  //              initiated sending a message(s), but that message(s)
+  //              are probably not yet written out.  'suspendEngine()'
+  //              with its handling of timers and special cases is too
+  //              heavy for figuring that out, so do an eager check:
+  oz_io_check();
+  if (isSetSFlag(IOReady)) {
+    oz_io_handle();
+    if (!threadsPool.isEmpty()) {
+      osUnblockSignals();
+      return;
+    }
+  }
+
+  // still nothing: (attempt to) suspend now;
+  ozstat.printIdle(stdout);
 
   //
   // kost@ : Alarm timer will be reset later (and we don't need to
@@ -622,8 +638,8 @@ void AM::checkStatus(Bool block)
     handleTasks();
 #endif
 
-  if (isSetSFlag(ChildReady)) {
-    unsetSFlag(ChildReady);
+  if (childReady) {
+    childReady = NO;
 #ifdef DENYS_EVENTS
     OZ_eventPush(oz_atom("SIGCHLD"));
 #else
@@ -767,16 +783,16 @@ void handlerPIPE(int)
   //
   // kost@ : let's check for a dead machine;
   // if (isDeadSTDOUT())
-    //am.exitOz(1);
+  //   am.exitOz(1);
   //
-  //prefixError();
-  //message("write on a pipe or other socket with no one to read it ****\n");
+  // prefixError();
+  // message("write on a pipe or other socket with no one to read it ****\n");
 }
 
 void handlerCHLD(int)
 {
   // DebugCheckT(message("a child process' state changed ****\n"));
-  am.setSFlag(ChildReady);
+  am.setChildReady();
   if (use_wake_jmp) {
     use_wake_jmp=0;
     siglongjmp(wake_jmp,1);
@@ -821,12 +837,6 @@ void AM::handleAlarm(int ms)
       ozstat.currPropagator->incSamples();
     } else if (ozstat.currAbstr) {
       ozstat.currAbstr->getProfile()->samples++;
-    }
-  }
-
-  if (threadSwitchCounter > 0) {
-    if (--threadSwitchCounter == 0) {
-      setSFlag(ThreadSwitch);
     }
   }
 
@@ -968,11 +978,13 @@ void AM::wakeUser()
 char flagChar(StatusBit flag)
 {
   switch (flag) {
-  case ThreadSwitch: return 'T';
-  case IOReady:      return 'I';
-  case UserAlarm:    return 'U';
-  case StartGC:      return 'G';
-  default:           return 'X';
+  case TimerInterrupt: return 'R';
+  case IOReady:        return 'I';
+  case UserAlarm:      return 'U';
+  case StartGC:        return 'G';
+  case TaskReady:      return 'T';
+  case SigPending:     return 'S';
+  default:             return 'X';
   }
 }
 #endif
