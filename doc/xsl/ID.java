@@ -1,13 +1,14 @@
 import java.util.Hashtable;
-import com.jclark.xsl.om.NodeIterator;
+import com.jclark.xsl.expr.*;
+import com.jclark.xsl.om.*;
 
 public class ID {
     private static Hashtable map = new Hashtable();
-    public static boolean put(String id,NodeIterator n) {
-	map.put(id,n);
+    public static boolean put(String id,NodeIterator n) throws XSLException {
+	map.put(id,n.next());
 	return false;
     }
-    public static NodeIterator get(String id) {
-	return (NodeIterator) map.get(id);
+    public static Node get(String id) {
+	return (Node) map.get(id);
     }
 }
