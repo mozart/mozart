@@ -21,7 +21,7 @@
 %%%
 
 
-declare 
+declare
    VirtualString
 
    IsVirtualString
@@ -33,7 +33,7 @@ local
 
    %% avoid cyclic module dependency
    ValueType = {`Builtin` 'Type.ofValue' 2}
-   
+
    local
       fun {AllToString I V S}
 	 case I>0 then {AllToString I-1 V {Append {ToString V.I} S}}
@@ -86,7 +86,7 @@ local
 	    end
 	 end
       end
-      
+
       fun {ChangeSignFloat Is S}
 	 case Is of &~|Ir then Js in S#{ChangeLast Ir S Js Js}
 	 else Js in {ChangeLast Is S Js Js}

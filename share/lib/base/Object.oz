@@ -105,7 +105,7 @@ local
       `ooFallback`       = {NewUniqueName 'ooFallback'}
       `ooId`             = {NewUniqueName 'ooId'}
    end
-   
+
    %%
    %% Fallback routines that are supplied with classes
    %%
@@ -126,7 +126,7 @@ local
       proc {FbSend M C Self}
 	 {`ooSetSelf` Self} {FbApply C M}
       end
-      
+
       local
 	 NewObject = {`Builtin` newObject 2}
       in
@@ -134,7 +134,7 @@ local
 	    O={NewObject C} in {O Message} O
 	 end
       end
-      
+
    in
       Fallback = fallback(new:   FbNew
 			  send:  FbSend
@@ -144,7 +144,7 @@ local
    %%
    %% Builtins needed for class creation
    %%
-   
+
    MakeClass = {`Builtin` makeClass 6}
    MarkSafe  = {`Builtin` 'Dictionary.markSafe' 1}
 
@@ -163,7 +163,7 @@ local
 	     end}
 	 end
       end
-	       
+
       %% Build inheritance graph
       proc {AddIG I1 C1r IG}
 	 %% Note that classes are in inverse order!
@@ -207,7 +207,7 @@ local
 	       end
 	    end
 	 end
-	 
+
 	 fun {RemoveLeader Ls Is ITCM IG NLs}
 	    %% Forall Is remove the leaders Ls and compute new leaders
 	    case Ls of nil then NLs
@@ -252,14 +252,14 @@ local
       end
    end
 
-      
+
 
    %%
    %% Compute method tables
    %%
    local
       NoArg = {NewName}
-   
+
       proc {SetOne One Meth FastMeth Defaults}
 	 %% Enters a single method
 	 L = One.1
@@ -270,7 +270,7 @@ local
 	 {Dictionary.put Meth L M}
 	 case F==NoArg then {Dictionary.remove FastMeth L}
 	 else {Dictionary.put FastMeth L F}
-	 end 
+	 end
 	 case D==NoArg then {Dictionary.remove Defaults L}
 	 else {Dictionary.put Defaults L D}
 	 end
@@ -286,7 +286,7 @@ local
 	    {SetMethods N-1 NewMeth Meth FastMeth Defaults}
 	 end
       end
-      
+
       local
 	 %% Adding of non conflicting methods
 	 proc {AddMethods N NewMeth Meth FastMeth Defaults}
@@ -330,7 +330,7 @@ local
 	    case OCs of nil then skip
 	    [] Cs|OCr then C|Cr=Cs in
 	       case Cr==nil then NewMeth=C.`ooNewMeth` in
-		  {AddMethods {Width NewMeth} NewMeth Meth FastMeth Defaults} 
+		  {AddMethods {Width NewMeth} NewMeth Meth FastMeth Defaults}
 	       else
 		  {SafeAddMethods Cs {Dictionary.new} Meth FastMeth Defaults}
 	       end
@@ -339,7 +339,7 @@ local
 	 end
       end
    end
-   
+
    %%
    %% Compute attributes and features
    %%
@@ -354,7 +354,7 @@ local
 	    {AddOther Ar R D}
 	 end
       end
-	 
+
       proc {SafeAdd As R C SoFar D}
 	 case As of nil then skip
 	 [] A|Ar then
@@ -367,7 +367,7 @@ local
 				    'feature or attribute' A)}
 	    elsecase {Dictionary.member D A} then skip
 	    else
-	       {Dictionary.put D A R.A}  
+	       {Dictionary.put D A R.A}
 	       {Dictionary.put SoFar A C} % Store class from which inherited
 	    end
 	    {SafeAdd Ar R C SoFar D}
@@ -396,7 +396,7 @@ local
    %%
    %% Computing free features
    %%
-   
+
    local
       fun {Free As R}
 	 case As of nil then nil
@@ -427,7 +427,7 @@ local
    %%
    %% Check parents for non-final classes
    %%
-   
+
    proc {CheckParents Cs PrintName}
       case Cs of nil then skip
       [] C|Cr then
@@ -477,11 +477,11 @@ in
 	       %% Information for features
 	       `ooNewFeat`:    NewFeat       % Record
 	       `ooUnFreeFeat`: Feat          % Record (rename, check)
-	                                  % also includes free features
+					  % also includes free features
 	       `ooFreeFeatR`:  FreeFeat      % Record (rename, check)
 	       %% Other info
-	       `ooPrintName`:  PrintName     % Atom	    
-	       `ooFallback`:   Fallback      % Record 
+	       `ooPrintName`:  PrintName     % Atom
+	       `ooFallback`:   Fallback      % Record
 	       `ooLocking`:    IsLocking     % Bool
 	      )
    in
@@ -600,9 +600,9 @@ in
 			    `ooPrintName`:  PrintName
 			    `ooLocking`:    Locking
 			    `ooFallback`:   Fallback)
-                 Feat Defaults Locking}
+		 Feat Defaults Locking}
    end
-   
+
 end
 
 %% %%%%%%%%%%%%%%%%%%%%
@@ -622,14 +622,14 @@ end
 %% %%%%%%%%%%%%%%%%%%%%
 
 local
-   
-   
+
+
    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %% %  The Classes Object.master and Object.slave
    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   
+
    local
-      
+
       %%
       %% Builtins for Master slave mechanism
       %%
@@ -639,7 +639,7 @@ local
       Slaves = {NewName}
 
    in
-      
+
       class MasterObject from BaseObject
 	 feat !Slaves
 	 meth init
@@ -658,7 +658,7 @@ local
 	    else
 	       {`RaiseError` object(slaveNotFree)}
 	    end
-	    
+
 	 end
 	 meth isFree($)
 	    @SlaveEntry==free
@@ -673,7 +673,7 @@ local
 	    end
 	 end
       end
-   end   
+   end
 in
    Object=object(
 		  %% Globally available
@@ -685,10 +685,10 @@ in
 		  '<-':             `<-`
 		  'send':          `send`
 		  'class':         `class`
-		  
+
 		  %% only in module
-				       
+
 		  master :     MasterObject
-                  slave  :     SlaveObject
+		  slave  :     SlaveObject
 		)
 end

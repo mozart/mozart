@@ -23,7 +23,7 @@
 %%%
 
 
-declare 
+declare
    Bool IsBool And Or Not
    `true` `false`
 in

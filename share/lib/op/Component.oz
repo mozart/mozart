@@ -3,7 +3,7 @@
 %%%   Denys Duchier (duchier@ps.uni-sb.de)
 %%%   Christian Schulte (schulte@dfki.de)
 %%%
-%%% Contributors:
+%%% Contributor:
 %%%   Ralf Scheidhauer (scheidhr@ps.uni-sb.de)
 %%%
 %%% Copyright:
@@ -43,16 +43,16 @@ local
 	      with debug end
       end
    end
-   
+
 in
    /*
       Desc is a record with the following optional features:
-      
-        resources       stateful resources allowed to be encountered during
+
+	resources       stateful resources allowed to be encountered during
 			save (unit means just ignore)
 			if unbound, it is unified with the resource
 			actually found (see found.resources)
-	found		a record of 1 further feature:
+	found           a record of 1 further feature:
 	found.resources
 			the stateful resources actually encountered during
 			save (a subset of allowed resources).
@@ -83,11 +83,9 @@ local
    SmartSave = {`Builtin` smartSave 3}
 
 in
-   
+
    Component = component(load:      Load
 			 save:      Save
 			 smartSave: SmartSave)
 
 end
-
-

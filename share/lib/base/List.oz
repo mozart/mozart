@@ -23,9 +23,9 @@
 %%%
 
 
-declare 
-   List 
-   MakeList IsList Append Member Length Nth Reverse 
+declare
+   List
+   MakeList IsList Append Member Length Nth Reverse
    Map FoldL FoldR FoldLTail FoldRTail ForAll All ForAllTail AllTail
    Some Filter
    Sort Merge Flatten
@@ -35,11 +35,11 @@ in
 fun {MakeList N}
    case N>0 then _|{MakeList N-1} else nil end
 end
-  
+
 fun {IsList Xs}
    case Xs of _|Xr then {IsList Xr} else Xs==nil end
 end
-	
+
 fun {Append Xs Ys}
    case Xs of nil then Ys
    [] X|Xr then X|{Append Xr Ys}
@@ -90,25 +90,25 @@ fun {FoldL Xs P Z}
    case Xs of nil then Z
    [] X|Xr then {FoldL Xr P {P Z X}}
    end
-end 
+end
 
 fun {FoldLTail Xs P Z}
    case Xs of nil then Z
    [] _|Xr then {FoldLTail Xr P {P Z Xs}}
    end
-end 
+end
 
 fun {FoldR Xs P Z}
    case Xs of nil then Z
    [] X|Xr then {P X {FoldR Xr P Z}}
    end
-end 
+end
 
 fun {FoldRTail Xs P Z}
    case Xs of nil then Z
    [] _|Xr then {P Xs {FoldRTail Xr P Z}}
    end
-end 
+end
 
 proc {ForAll Xs P}
    case Xs of nil then skip
@@ -153,7 +153,7 @@ local
 	 case {DoFlatten X S S1}
 	 then S=Start {DoFlatten Xr S1 End}
 	 else S2 in Start=X|S2 {DoFlatten Xr S2 End}
-	 end      
+	 end
       [] nil then Start=End true
       else false
       end
@@ -199,7 +199,7 @@ local
 	 {DoMerge MX MXr {DoSort N-N2 Xr Ys P} P}
       end
    end
-in   
+in
    fun {Sort Xs P}
       {DoSort {Length Xs} Xs nil P}
    end
@@ -217,7 +217,7 @@ local
    fun {ListTail N T}
       case N>0 then _|{ListTail N-1 T} elsecase N==0 then T end
    end
-  
+
    fun {Subtract Xs Y}
       case Xs of nil then nil
       [] X|Xr then case X\=Y then X|{Subtract Xr Y} else Xr end
@@ -229,7 +229,7 @@ local
       [] XX|Xr then {Last XX Xr}
       end
    end
-   
+
    local
       fun {Find X Xr Ys}
 	 case Ys of nil then false
@@ -290,11 +290,11 @@ local
       [] X|Xr then case {F X} then {DropWhile Xr F} else Xs end
       end
    end
-      
+
    proc {TakeDropWhile Xs F ?Ys ?Zs}
       case Xs of nil then Ys=nil Zs=nil
       [] X|Xr then
-	 case {F X} then  Ys=X|{TakeDropWhile Xr F $ Zs} 
+	 case {F X} then  Ys=X|{TakeDropWhile Xr F $ Zs}
 	 else Ys=nil Zs=Xs
 	 end
       end
@@ -308,43 +308,43 @@ local
       [] X|Xr then {P I X}|{MapInd Xr I+1 P}
       end
    end
-      
+
    fun {FoldLInd Xs I P Z}
       case Xs of nil then Z
       [] X|Xr then {FoldLInd Xr I+1 P {P I Z X}}
       end
    end
-      
+
    fun {FoldRInd Xs I P Z}
       case Xs of nil then Z
       [] X|Xr then {P I X {FoldRInd Xr I+1 P Z}}
       end
    end
-   
+
    fun {FoldLTailInd Xs I P Z}
       case Xs of nil then Z
       [] _|Xr then {FoldLTailInd Xr I+1 P {P I Z Xs}}
       end
    end
-      
+
    fun {FoldRTailInd Xs I P Z}
       case Xs of nil then Z
       [] _|Xr then {P I Xs {FoldRTailInd Xr I+1 P Z}}
       end
    end
-   
+
    proc {ForAllInd Xs I P}
       case Xs of nil then skip
       [] X|Xr then {P I X} {ForAllInd Xr I+1 P}
       end
    end
-   
+
    fun {AllInd Xs I F}
       case Xs of nil then true
       [] X|Xr then {F I X} andthen {AllInd Xr I+1 F}
       end
    end
-   
+
    proc {ForAllTailInd Xs I P}
       case Xs of nil then skip
       [] _|Xr then {P I Xs} {ForAllTailInd Xr I+1 P}
@@ -396,8 +396,8 @@ local
    proc {TakeDropWhileInd Xs I F ?Ys ?Zs}
       case Xs of nil then Ys=nil Zs=nil
       [] X|Xr then
-	 case {F I X} then Ys=X|{TakeDropWhileInd Xr I+1 F $ Zs} 
-	 else Ys=nil Zs=Xs 
+	 case {F I X} then Ys=X|{TakeDropWhileInd Xr I+1 F $ Zs}
+	 else Ys=nil Zs=Xs
 	 end
       end
    end
@@ -429,9 +429,9 @@ local
 	 {EnterArgs Xs 1 T}
       end
    end
-      
+
 in
-   
+
    List = list(make:          MakeList
 	       withTail:      ListTail
 	       is:            IsList
@@ -457,10 +457,10 @@ in
 	       take:          Take
 	       drop:          Drop
 	       takeDrop:      TakeDrop
-		  
+
 	       toTuple:       ToTuple
 	       toRecord:      `record`
-		  
+
 	       map:           Map
 	       foldL:         FoldL
 	       foldR:         FoldR
@@ -506,23 +506,23 @@ in
 		  end
 	       someInd:
 		  fun {$ Xs F}
-		     {SomeInd Xs 1 F} 
+		     {SomeInd Xs 1 F}
 		  end
 	       forAllTailInd:
 		  proc {$ Xs P}
-		     {ForAllTailInd Xs 1 P} 
+		     {ForAllTailInd Xs 1 P}
 		  end
 	       allTailInd:
 		  fun {$ Xs F}
-		     {AllTailInd Xs 1 F} 
+		     {AllTailInd Xs 1 F}
 		  end
 	       filterInd:
 		  fun {$ Xs F}
-		     {FilterInd Xs 1 F} 
+		     {FilterInd Xs 1 F}
 		  end
 	       partitionInd:
-		  proc {$ Xs F ?Ys ?Zs} 
-		     {PartitionInd Xs 1 F Ys Zs} 
+		  proc {$ Xs F ?Ys ?Zs}
+		     {PartitionInd Xs 1 F Ys Zs}
 		  end
 	       takeWhileInd:
 		  fun {$ Xs F}
@@ -530,12 +530,12 @@ in
 		  end
 	       dropWhileInd:
 		  fun {$ Xs F}
-		     {DropWhileInd Xs 1 F} 
+		     {DropWhileInd Xs 1 F}
 		  end
 	       takeDropWhileInd:
-		  proc {$ Xs F ?Ys ?Zs} 
-		     {TakeDropWhileInd Xs 1 F Ys Zs} 
+		  proc {$ Xs F ?Ys ?Zs}
+		     {TakeDropWhileInd Xs 1 F Ys Zs}
 		  end
 	      )
-   
+
 end

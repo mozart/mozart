@@ -1,5 +1,5 @@
 %%%
-%%% Authors:
+%%% Author:
 %%%   Christian Schulte (schulte@dfki.de)
 %%%
 %%% Copyright:
@@ -25,7 +25,7 @@ local
    ReadSize    = 1024
    ReadSizeAll = 4096
    KillTime    = 500
-   
+
    %%
    %% Attributes and Methods common to all open classes
    %%
@@ -68,7 +68,7 @@ local
 	 !Buff:        nil    % The buffer is empty
 	 !Last:        [0]    % The last char read is initialized to nul
 	 !AtEnd:       false  % Reading is not at end!
-      
+
       meth !InitLocks(M)
 	 %% Initialize locks
 	 try
@@ -78,14 +78,14 @@ local
 	    {`Raise` {Exception.system open(alreadyInitialized self M)}}
 	 end
       end
-      
+
       meth dOpen(RD WD)
 	 {Type.ask.int RD} {Type.ask.int WD}
 	 DescClass, InitLocks(dOpen(RD WD))
 	 ReadDesc  <- RD
 	 WriteDesc <- WD
       end
-      
+
       meth getDesc(?RD ?WD)
 	 lock self.ReadLock then
 	    lock self.WriteLock then
@@ -94,7 +94,7 @@ local
 	    end
 	 end
       end
-      
+
       meth !CloseDescs
 	 RD=@ReadDesc WD=@WriteDesc
       in
@@ -108,7 +108,7 @@ local
 	 else skip
 	 end
       end
-      
+
       meth close
 	 lock self.ReadLock then
 	    lock self.WriteLock then
@@ -132,25 +132,25 @@ local
 	 elseof M then {DoReadAll Desc Xr Xt N+M}
 	 end
       end
-      
+
       fun {DoWrite Desc V N}
 	 case {OS.write Desc V}
 	 of suspend(M S V) then {Wait S} {DoWrite Desc V M+N}
 	 elseof M then M+N
 	 end
       end
-      
+
       local
 	 %% Some records for mapping various descriptions to OS sepcification
-	 ModeMap=map(owner:  access(read:    ['S_IRUSR']   
-				    write:   ['S_IWUSR']   
-				    execute: ['S_IXUSR'])   
-		     group:  access(read:    ['S_IRGRP']   
-				    write:   ['S_IWGRP']   
-				    execute: ['S_IXGRP'])   
-		     others: access(read:    ['S_IROTH']   
-				    write:   ['S_IWOTH']   
-				    execute: ['S_IXOTH'])   
+	 ModeMap=map(owner:  access(read:    ['S_IRUSR']
+				    write:   ['S_IWUSR']
+				    execute: ['S_IXUSR'])
+		     group:  access(read:    ['S_IRGRP']
+				    write:   ['S_IWGRP']
+				    execute: ['S_IXGRP'])
+		     others: access(read:    ['S_IROTH']
+				    write:   ['S_IWOTH']
+				    execute: ['S_IXOTH'])
 		     all:    access(read:    ['S_IRUSR' 'S_IRGRP' 'S_IROTH']
 				    write:   ['S_IWUSR' 'S_IWGRP' 'S_IWOTH']
 				    execute: ['S_IXUSR' 'S_IXGRP' 'S_IXOTH']))
@@ -199,8 +199,8 @@ local
 
       class File
 	 from DescClass
-	 
-	 meth init(name:  Name  
+
+	 meth init(name:  Name
 		   flags: FlagS <= [read]
 		   mode:  Mode  <= mode(owner:[write] all:[read])) = M
 	    DescClass, InitLocks(M)
@@ -215,7 +215,7 @@ local
 				     open(illegalMode self M)}}
 	       elseof OSModeS then
 		  %% Handle special filenames
-		  D = case Name 
+		  D = case Name
 		      of 'stdin'  then {OS.fileDesc 'STDIN_FILENO'}
 		      [] 'stdout' then {OS.fileDesc 'STDOUT_FILENO'}
 		      [] 'stderr' then {OS.fileDesc 'STDERR_FILENO'}
@@ -224,16 +224,16 @@ local
 	       in
 		  ReadDesc  <- D
 		  WriteDesc <- D
-               end
+	       end
 	    end
 	 end
 
-	 meth read(size:Size <=ReadSize 
+	 meth read(size:Size <=ReadSize
 		   list:?Is  tail:It<=nil len:?N<=_)
 	    lock self.ReadLock then
 	       lock self.WriteLock then D=@ReadDesc in
 		  case {IsInt D} then
-		     N = case Size of all then {DoReadAll D ?Is It 0} 
+		     N = case Size of all then {DoReadAll D ?Is It 0}
 			 else {OS.read D Size ?Is It}
 			 end
 		  else {RaiseClosed self read(size:Size list:Is tail:It len:N)}
@@ -251,7 +251,7 @@ local
 	       end
 	    end
 	 end
-	 
+
 	 meth seek(whence:W<='set' offset:O<=0)
 	    lock self.ReadLock then
 	       lock self.WriteLock then D=@WriteDesc in
@@ -260,14 +260,14 @@ local
 				     of 'set'     then 'SEEK_SET'
 				     [] 'current' then 'SEEK_CUR'
 				     [] 'end'     then 'SEEK_END'
-		                     end _} 
-	          else {RaiseClosed self seek(whence:W offset:O)}
-	          end
+				     end _}
+		  else {RaiseClosed self seek(whence:W offset:O)}
+		  end
 	       end
 	    end
-         end
+	 end
 
-         meth tell(offset:?O)
+	 meth tell(offset:?O)
 	    lock self.ReadLock then
 	       lock self.WriteLock then D=@WriteDesc in
 		  case {IsInt D} then O={OS.lSeek D 0 'SEEK_CUR'}
@@ -288,7 +288,7 @@ local
 
    class SockAndPipe from DescClass
 
-      meth read(size: Size <= ReadSize 
+      meth read(size: Size <= ReadSize
 		len:  Len  <= _
 		list: List
 		tail: Tail <= nil)
@@ -308,7 +308,7 @@ local
 	    end
 	 end
       end
-	 
+
       meth flush(how:How<=[receive send])
 	 R = {Member receive How}
 	 S = {Member send    How}
@@ -342,11 +342,11 @@ local
 	 end
       end
    in
-      
+
       class Socket from SockAndPipe
 	 %% Implementation of socket
 	 feat !TimeOut
-	 
+
 	 meth init(type:T <=stream protocol:P <= nil time:Time <=~1) = M
 	    {Type.ask.int Time}
 	    DescClass, InitLocks(M)
@@ -375,7 +375,7 @@ local
 	    Socket, init
 	    Socket, connect(host:H port:P)
 	 end
-	 
+
 	 meth listen(backLog:Log<=5)
 	    lock self.ReadLock then
 	       lock self.WriteLock then D=@ReadDesc in
@@ -444,7 +444,7 @@ local
 	       end
 	    end
 	 end
-	 
+
 	 meth send(vs:V len:I<=_ port:P<=Missing host:H<='localhost')
 	    lock self.WriteLock then D=@WriteDesc in
 	       case {IsInt D} then
@@ -456,20 +456,20 @@ local
 	    end
 	 end
 
-	 meth receive(list:List  tail:Tail <= nil  len:Len<=_ 
-		      size:Size<=ReadSize 
+	 meth receive(list:List  tail:Tail <= nil  len:Len<=_
+		      size:Size<=ReadSize
 		      host:Host<=_ port:Port<=_ )
 	    lock self.ReadLock then D=@ReadDesc in
 	       case {IsInt D} then
 		  Len={OS.receiveFrom D Size nil List Tail Host Port}
 	       else {RaiseClosed self
-		     receive(list:List tail:Tail len:Len 
+		     receive(list:List tail:Tail len:Len
 			     size:Size host:Host port:Port)}
 	       end
 	    end
 	 end
 
-	 	 %% methods for closing a connection
+		 %% methods for closing a connection
 	 meth shutDown(how:How<=[receive send])
 	    R = {Member receive How}
 	    S = {Member send    How}
@@ -510,7 +510,7 @@ local
 
 
    %%%
-   %%% Object for reading and writing of lines of text 
+   %%% Object for reading and writing of lines of text
    %%%
 
    local
@@ -527,7 +527,7 @@ local
 	    end
 	 end
       end
-      
+
       fun {DoReadOne Is Desc ?UnusedIs ?AtEnd}
 	 case Is
 	 of I|Ir then UnusedIs=Ir AtEnd=false I
@@ -538,14 +538,14 @@ local
 	    end
 	 end
       end
-      
+
    in
 
       class Text from DescClass
 
 	 meth getC(?I)
 	    lock self.ReadLock then
-	       YetEnd  = @AtEnd  NextEnd 
+	       YetEnd  = @AtEnd  NextEnd
 	       YetBuff = @Buff   NextBuff
 	       YetLast = @Last   NextLast
 	    in
@@ -561,14 +561,14 @@ local
 	       end
 	    end
 	 end
-	 
+
 	 meth putC(I)
 	    {self write(vs:[I])}
 	 end
-	 
+
 	 meth getS($)
 	    lock self.ReadLock then
-	       YetEnd  = @AtEnd  NextEnd 
+	       YetEnd  = @AtEnd  NextEnd
 	       YetBuff = @Buff   NextBuff
 	       GetDesc = @ReadDesc
 	    in
@@ -587,11 +587,11 @@ local
 	       end
 	    end
 	 end
-	 
+
 	 meth putS(Is)
 	    {self write(vs:Is#'\n')}
 	 end
-	 
+
 	 meth unGetC
 	    lock self.ReadLock then
 	       Buff  <- @Last|@Buff
@@ -599,7 +599,7 @@ local
 	       AtEnd <- false
 	    end
 	 end
-	 
+
 	 meth atEnd($)
 	    lock self.ReadLock then
 	       @Buff==nil andthen @AtEnd
@@ -640,11 +640,10 @@ local
    end
 
 in
-   
+
    Open = open(file:   File
 	       text:   Text
-	       socket: Socket 
+	       socket: Socket
 	       pipe:   Pipe)
-   
-end
 
+end

@@ -23,7 +23,7 @@
 %%%
 
 
-declare 
+declare
    IsFeature
    Type
 in
@@ -36,14 +36,14 @@ end
 %% Module
 %%
 
-local 
+local
 
    IsFDIntC  = {`Builtin` fdIs 2}
    IsFSet    = {`Builtin` fsIsValueB 2}
    IsFSetC   = {`Builtin` fsIsVarB 2}
-   
+
    fun {IsOrdered X}
-      {IsNumber X} orelse {IsAtom X} 
+      {IsNumber X} orelse {IsAtom X}
    end
 
    fun {IsUnary X}
@@ -62,13 +62,13 @@ local
    end
 
    fun {IsPairOf X P1 P2}
-      {IsPair X} andthen {P1 X.1} andthen {P2 X.2} 
+      {IsPair X} andthen {P1 X.1} andthen {P2 X.2}
    end
 
    local
-      
+
       %% there exists a builtin doing this more efficient, Tobias?
-      
+
       fun {IsRecordOf R Fs P}
 	 case Fs of nil then true
 	 [] F|Fr then {P R.F} andthen {IsRecordOf R Fr  P}
@@ -76,20 +76,20 @@ local
       end
    in
       fun {IsFDVector X}
-	 case {IsRecord X} 
+	 case {IsRecord X}
 	 then case {Label X}=='|'
-	      then {IsListOf X IsFDIntC} 
+	      then {IsListOf X IsFDIntC}
 	      else {IsRecordOf X {Arity X} IsFDIntC}
 	      end
 	 else false end
       end
    end
-   
+
    fun {IsPropList Xs}
       {IsListOf Xs fun {$ X} {IsPair X} andthen {IsLiteral X.1} end}
    end
 
-   local 
+   local
       fun {IsComplexDomSpec Xs}
 	 {IsInt Xs} orelse
 	 {IsPairOf Xs IsInt IsInt} orelse
@@ -113,7 +113,7 @@ local
       SPN = {`Builtin` 'System.printName' 2}
    in
       fun {GenericAsk TypeTest TypeName}
-	 proc {$ X} 
+	 proc {$ X}
 	    case {TypeTest X} then skip else
 	       {`RaiseError` kernel(type {SPN TypeTest}
 				    [X]
@@ -127,89 +127,82 @@ local
 
    IsThread = {`Builtin` 'Thread.is' 2}
 
-   Is = is(array:		IsArray
-	   atom:		IsAtom
-	   bool:		IsBool
-	   char:		IsChar
-	   chunk:		IsChunk
-	   dictionary:		IsDictionary
-	   domainSpec:		IsDomainSpec
-	   int:			IsInt
-	   fdIntC:		IsFDIntC	   
-	   fdVector:		IsFDVector
-	   feature:		IsFeature
-	   float:		IsFloat
+   Is = is(array:               IsArray
+	   atom:                IsAtom
+	   bool:                IsBool
+	   char:                IsChar
+	   chunk:               IsChunk
+	   dictionary:          IsDictionary
+	   domainSpec:          IsDomainSpec
+	   int:                 IsInt
+	   fdIntC:              IsFDIntC
+	   fdVector:            IsFDVector
+	   feature:             IsFeature
+	   float:               IsFloat
 	   fset:                IsFSet
 	   fsetC:               IsFSetC
-	   list:		IsList
+	   list:                IsList
 	   'lock':              IsLock
-	   literal:		IsLiteral
-	   name:		IsName
-	   number:		IsNumber
-	   object:		IsObject
-	   ordered:		IsOrdered
-	   pair:		IsPair
-	   port:                IsPort    
-	   procedure:		IsProcedure
-	   propertyList:	IsPropList
-	   record:		IsRecord
-	   recordC:		IsRecordC
-	   space:		IsSpace
-	   string:		IsString
-	   unary:		IsUnary
-	   'unit':		IsUnit
-	   virtualString:	IsVirtualString
-	   'class':		IsClass
-	   'thread':		IsThread
+	   literal:             IsLiteral
+	   name:                IsName
+	   number:              IsNumber
+	   object:              IsObject
+	   ordered:             IsOrdered
+	   pair:                IsPair
+	   port:                IsPort
+	   procedure:           IsProcedure
+	   propertyList:        IsPropList
+	   record:              IsRecord
+	   recordC:             IsRecordC
+	   space:               IsSpace
+	   string:              IsString
+	   unary:               IsUnary
+	   'unit':              IsUnit
+	   virtualString:       IsVirtualString
+	   'class':             IsClass
+	   'thread':            IsThread
 	  )
 
-   Ask = ask(generic:           GenericAsk 
-	     array:		{GenericAsk IsArray array}
-	     atom:		{GenericAsk IsAtom atom}
-	     bool:		{GenericAsk IsBool bool}
-	     char:		{GenericAsk IsChar char}
-	     chunk:		{GenericAsk IsChunk chunk}
-	     dictionary:	{GenericAsk IsDictionary dictionary}
-	     domainSpec:	{GenericAsk IsDomainSpec domainSpec}
-	     int:		{GenericAsk IsInt int}
-	     fdIntC:		{GenericAsk IsFDIntC fd}
-	     fdVector:		{GenericAsk IsFDVector fdVector}
-	     feature:		{GenericAsk IsFeature feature}
-	     float:		{GenericAsk IsFloat float}
-	     list:		{GenericAsk IsList list}
-	     literal:		{GenericAsk IsLiteral literal}
+   Ask = ask(generic:           GenericAsk
+	     array:             {GenericAsk IsArray array}
+	     atom:              {GenericAsk IsAtom atom}
+	     bool:              {GenericAsk IsBool bool}
+	     char:              {GenericAsk IsChar char}
+	     chunk:             {GenericAsk IsChunk chunk}
+	     dictionary:        {GenericAsk IsDictionary dictionary}
+	     domainSpec:        {GenericAsk IsDomainSpec domainSpec}
+	     int:               {GenericAsk IsInt int}
+	     fdIntC:            {GenericAsk IsFDIntC fd}
+	     fdVector:          {GenericAsk IsFDVector fdVector}
+	     feature:           {GenericAsk IsFeature feature}
+	     float:             {GenericAsk IsFloat float}
+	     list:              {GenericAsk IsList list}
+	     literal:           {GenericAsk IsLiteral literal}
 	     'lock':            {GenericAsk IsLock 'lock'}
-	     name:		{GenericAsk IsName name}
-	     number:		{GenericAsk IsNumber number}
-	     object:		{GenericAsk IsObject object}
-	     ordered:		{GenericAsk IsOrdered ordered}
-	     pair:		{GenericAsk IsPair pair}
-	     port:		{GenericAsk IsPort port}
-	     procedure:		{GenericAsk IsProcedure procedure}
-	     propertyList:	{GenericAsk IsPropList propertyList}
-	     record:		{GenericAsk IsRecord record}
-	     recordC:		{GenericAsk IsRecordC recordC}
-	     space:		{GenericAsk IsSpace space}
-	     string:		{GenericAsk IsString string}
-	     unary:		{GenericAsk IsUnary unary}
-	     'unit':		{GenericAsk IsUnit 'unit'}
-	     virtualString:	{GenericAsk IsVirtualString virtualString}
-	     'class':		{GenericAsk IsClass 'class'}
-	     'thread':		{GenericAsk IsThread 'thread'}
+	     name:              {GenericAsk IsName name}
+	     number:            {GenericAsk IsNumber number}
+	     object:            {GenericAsk IsObject object}
+	     ordered:           {GenericAsk IsOrdered ordered}
+	     pair:              {GenericAsk IsPair pair}
+	     port:              {GenericAsk IsPort port}
+	     procedure:         {GenericAsk IsProcedure procedure}
+	     propertyList:      {GenericAsk IsPropList propertyList}
+	     record:            {GenericAsk IsRecord record}
+	     recordC:           {GenericAsk IsRecordC recordC}
+	     space:             {GenericAsk IsSpace space}
+	     string:            {GenericAsk IsString string}
+	     unary:             {GenericAsk IsUnary unary}
+	     'unit':            {GenericAsk IsUnit 'unit'}
+	     virtualString:     {GenericAsk IsVirtualString virtualString}
+	     'class':           {GenericAsk IsClass 'class'}
+	     'thread':          {GenericAsk IsThread 'thread'}
 	    )
-   
+
 
 in
-   
-   Type = type(is:	Is
-	       ask:	Ask
+
+   Type = type(is:      Is
+	       ask:     Ask
 	       ofValue: {`Builtin` 'Type.ofValue' 2})
 
 end
-
-
-
-
-
-
-

@@ -33,10 +33,10 @@ in
 Alarm = {`Builtin` 'Alarm' 2}
 Delay = {`Builtin` 'Delay' 1}
 
-local   
+local
 
-   fun {AddWaiter W T P} 
-      case W 
+   fun {AddWaiter W T P}
+      case W
       of (T1#P1)|R then
 	 case T1>T then (T#P)|(T1-T#P1)|R
 	 else (T1#P1)|{AddWaiter R T P}
@@ -63,7 +63,7 @@ local
    %%%
    %%% default initialization
    %%%
-   
+
    DefaultDelay      = 1000
    DefaultFun        = fun {$} DefaultDelay end
    DefaultNum        = ~1            %%% infinitely often
@@ -80,26 +80,26 @@ local
 
       prop
 	 locking
-      
+
       % attributes:
-      % Stop      : Stop trigger 
+      % Stop      : Stop trigger
       % Action    : Procedure or self message to be repeated
       % Final     : Procedure or self message to be performed at stop
       % Delay     : delay between iterations
       % DelayFun  : Function evaluating to the delay between iterations
       % Number    : number of iterations; loop ends with stop
-      
+
       attr
 	 Stop:       unit
 	 Action:     DefaultAction
-      	 Final:      DefaultFinal
-      	 ActDelay:   DefaultDelay
-         DelayFun:   DefaultFun
+	 Final:      DefaultFinal
+	 ActDelay:   DefaultDelay
+	 DelayFun:   DefaultFun
 	 NumReset:   DefaultNum
-	 NumberA:    DefaultNum     
-	
+	 NumberA:    DefaultNum
+
       meth setRepAll(action:     A <= DefaultAction
-                     final:      F <= DefaultFinal
+		     final:      F <= DefaultFinal
 		     delay:      D <= DefaultDelay
 		     delayFun:   DF<= DefaultFun
 		     number:     N <= DefaultNum    )
@@ -130,15 +130,15 @@ local
       end
 
       meth setRepAction(A <= DefaultAction)
-	 {AskNullaryProcOrRecord A} 
+	 {AskNullaryProcOrRecord A}
 	 Action <- A
       end
 
       meth setRepFinal(F <= DefaultFinal)
-	 {AskNullaryProcOrRecord F} 
+	 {AskNullaryProcOrRecord F}
 	 Final <- F
       end
-      
+
       meth setRepDelay(D <= DefaultDelay)
 	 {Type.ask.int D}
 	 ActDelay <- D
@@ -150,9 +150,9 @@ local
 	 ActDelay <- ~1
 	 DelayFun <- F
       end
-      
+
       meth setRepNum(N <= DefaultNum)
-	 {Type.ask.int N} 
+	 {Type.ask.int N}
 	 NumberA <- N
 	 NumReset <- N
       end
@@ -160,7 +160,7 @@ local
       %%%
       %%% The iteration core
       %%%
-      
+
       meth go
 	 case
 	    lock
@@ -171,35 +171,35 @@ local
 	 then Repeat, Run
 	 else skip end
       end
-      
+
       meth stop
 	 lock
-	    @Stop = unit	    
+	    @Stop = unit
 	    NumberA <- @NumReset
 	 end
       end
-      
+
       meth Run
-	 K D A N F 
+	 K D A N F
       in
 	 lock
 	    K = @Stop
 	    D = @ActDelay
 	    A = @Action
 	    F = @Final
-	    N = @NumberA 
-	 end	 
-	 
+	    N = @NumberA
+	 end
+
 	 case {IsDet K}
 	 then skip
 	 elsecase N==0
 	 then
 	    {self stop}
-	    {self Do(F)} 
+	    {self Do(F)}
 	 else
 	    S = {Alarm D}
 	 in
-	    {self Do(A)}	
+	    {self Do(A)}
 
 	    case N>0
 	    then NumberA <- N-1
@@ -211,7 +211,7 @@ local
 	    else skip end
 	 end
       end
-      
+
       meth Do(A)
 	 case {IsProcedure A}
 	 then {A} else {self A} end
@@ -220,7 +220,7 @@ local
       %%%
       %%% Action parameters to be redefined by inheritance
       %%%
-      
+
       meth finalRep
 	 skip
       end
@@ -243,13 +243,12 @@ local
 	 ULT.sec
       end
    end
-   
+
 in
-   
+
    Time = time(time:   TimeTime
-               delay:  Delay
+	       delay:  Delay
 	       alarm:  Alarm
 	       repeat: Repeat)
 
 end
-

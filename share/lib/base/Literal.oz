@@ -36,4 +36,3 @@ IsLiteral = {`Builtin` 'IsLiteral' 2}
 %% Module
 %%
 Literal = literal(is: IsLiteral)
-

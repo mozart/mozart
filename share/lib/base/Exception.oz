@@ -82,7 +82,7 @@ local
    in
       {Type.ask.record E}
       {Type.ask.record D}
-      K = {Label E} 
+      K = {Label E}
       system(E debug:K(info:D))
    end
 
@@ -91,7 +91,7 @@ local
    in
       {Type.ask.record E}
       {Type.ask.record D}
-      K = {Label E} 
+      K = {Label E}
       error(E debug:K(info:D))
    end
 
@@ -104,15 +104,13 @@ in
 
    Exception = exception('raise':       Raise
 			 raiseError:    `RaiseError`
-		         %%
-		         %% wrapper functions
-		         %% 
-		         error:         ErrorX
-		         failure:       FailureX
-		         system:        PredefX
-		         errorDebug:    ErrorXD
-		         systemDebug:   PredefXD)
+			 %%
+			 %% wrapper functions
+			 %%
+			 error:         ErrorX
+			 failure:       FailureX
+			 system:        PredefX
+			 errorDebug:    ErrorXD
+			 systemDebug:   PredefXD)
 
 end
-
-
