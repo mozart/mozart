@@ -40,8 +40,9 @@ public:
     abstr      = 0;
     pc         = NOCODE;
     next       = allEntries; 
-    dupOnload    = fc;
+    dupOnload  = fc;
     allEntries = this; 
+    indexTable = 0;
   }
   Abstraction *getAbstr() { return abstr; };
   RefsArray getGRegs()    { return g; };
