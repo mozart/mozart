@@ -359,25 +359,6 @@ Bool AM::fastUnifyOutline(TaggedRef ref1, TaggedRef ref2, Bool prop)
   return fastUnify(ref1, ref2, prop);
 }
 
-// unify and manage rebindTrail
-Bool AM::unify(TaggedRef t1, TaggedRef t2, Bool prop)
-{
-  CHECK_NONVAR(t1); CHECK_NONVAR(t2);
-  Bool result = performUnify(&t1, &t2, prop);
-
-  // unwindRebindTrail
-  TaggedRef *refPtr;
-  TaggedRef value;
-  
-  while (!rebindTrail.isEmpty ()) {
-    rebindTrail.popCouple(refPtr, value);
-    doBind(refPtr,value);
-  }
-
-  return result;
-}
-
-
 Bool AM::isLocalUVarOutline(TaggedRef var, TaggedRef *varPtr)
 {
   Board *bb=tagged2VarHome(var);
@@ -423,21 +404,47 @@ Bool AM::isMoreLocal(TaggedRef var1, TaggedRef var2)
 }
 
 
+
+static Stack unifyStack(100,Stack_WithMalloc);
+static Stack rebindTrail(100,Stack_WithMalloc);
+
+
+inline
+void rebind(TaggedRef *refPtr, TaggedRef newRef)
+{
+  rebindTrail.ensureFree(2);
+  rebindTrail.push(refPtr,NO);
+  rebindTrail.push(ToPointer(*refPtr),NO);
+  doBind(refPtr,newRef);
+}
+
+
+#define PopRebindTrail(value,refPtr)			\
+    TaggedRef value   = ToInt32(rebindTrail.pop()); 	\
+    TaggedRef *refPtr = (TaggedRef*) rebindTrail.pop(); 
+
 #define Swap(A,B,Type) { Type help=A; A=B; B=help; }
 
-Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, Bool prop)
-{
-  int argSize;
-  RefsArray args1, args2;
 
-start:
+Bool AM::unify(TaggedRef t1, TaggedRef t2, Bool prop)
+{
+  CHECK_NONVAR(t1); CHECK_NONVAR(t2);
+
+  Bool result = NO;
+
+  TaggedRef *termPtr1 = &t1;
+  TaggedRef *termPtr2 = &t2;
+
+loop:
+  int argSize;
+
   DEREFPTR(term1,termPtr1,tag1);
   DEREFPTR(term2,termPtr2,tag2);
 
   // identical terms ?
   if (term1 == term2 &&
       (!isUVar(term1) || termPtr1 == termPtr2)) {
-    return OK;
+    goto next;
   }
 
   if (isAnyVar(term1)) {
@@ -462,12 +469,14 @@ start:
  var_nonvar:
 
   if (isCVar(tag1)) {
-    return tagged2CVar(term1)->unify(termPtr1, term1, termPtr2, term2, prop);
+    if (tagged2CVar(term1)->unify(termPtr1, term1, termPtr2, term2, prop))
+      goto next;
+    goto fail;
+
   }
   
   bindToNonvar(termPtr1, term1, term2, prop);
-  return OK;
-
+  goto next;
 
   
  /*************/
@@ -490,37 +499,46 @@ start:
     } else {
       genericBind(termPtr1, term1, termPtr2, *termPtr2, prop);
     }
-    return OK;
+    goto next;
   }
   
   if (isNotCVar(tag2)) {
     genericBind(termPtr2, term2, termPtr1, *termPtr1, prop);
-    return OK;
+    goto next;
   }
 
   Assert(isCVar(tag1) && isCVar(tag2));
-  return tagged2CVar(term1)->unify(termPtr1,term1,termPtr2,term2,prop);
+  if (tagged2CVar(term1)->unify(termPtr1,term1,termPtr2,term2,prop))
+    goto next;
+  goto fail;
+
 
 
 
  /*************/
  nonvar_nonvar:
 
-  if (tag1 != tag2) {
-    return NO;
-  }
+  if (tag1 != tag2)
+    goto fail;
 
   switch ( tag1 ) {
 
   case OZCONST:
-    return tagged2Const(term1)->unify(term2,prop);
+    if (tagged2Const(term1)->unify(term2,prop))
+      goto next;
+    goto fail;
+
 
   case LTUPLE:
     {
-      args1 = tagged2LTuple(term1)->getRef();
-      args2 = tagged2LTuple(term2)->getRef();
+      LTuple *lt1 = tagged2LTuple(term1);
+      LTuple *lt2 = tagged2LTuple(term2);
+
+      rebind(termPtr2,term1);
       argSize = 2;
-      goto unify_args;
+      termPtr1 = lt1->getRef();
+      termPtr2 = lt2->getRef();
+      goto push;
     }
 
   case SRECORD:
@@ -528,45 +546,64 @@ start:
       SRecord *sr1 = tagged2SRecord(term1);
       SRecord *sr2 = tagged2SRecord(term2);
 
-      if (! sr1->compareFunctor(sr2)) {
-	return NO;
-      }
+      if (! sr1->compareFunctor(sr2))
+	goto fail;
 
-      argSize = sr1->getWidth();
-      args1 = sr1->getRef();
-      args2 = sr2->getRef();
-
-      goto unify_args;
+      rebind(termPtr2,term1);
+      argSize  = sr1->getWidth();
+      termPtr1 = sr1->getRef();
+      termPtr2 = sr2->getRef();
+      goto push;
     }
-
-  case LITERAL:
-    /* literals unify if their pointers are equal */
-    return NO;
 
   case OZFLOAT:
   case BIGINT:
   case SMALLINT:
-    return numberEq(term1,term2);
-    
+    if (numberEq(term1,term2))
+      goto next;
+    goto fail;
+
+  case LITERAL:
+    /* literals unify if their pointers are equal */
   default:
-    return NO;
+    goto fail;
   }
 
 
  /*************/
- unify_args:
 
-  rebind(termPtr2,term1);
-  for (int i = 0; i < argSize-1; i++ ) {
-    if ( !performUnify(args1+i,args2+i, prop)) {
-      return NO;
-    }
+next:
+  if (unifyStack.isEmpty()) {
+    result = OK;
+    goto exit;
   }
 
-  /* tail recursion optimization */
-  termPtr1 = args1+argSize-1;
-  termPtr2 = args2+argSize-1;
-  goto start;
+  termPtr2 = (TaggedRef*) unifyStack.pop();
+  termPtr1 = (TaggedRef*) unifyStack.pop();
+  argSize  = ToInt32(unifyStack.pop());
+  // fall through
+
+push:
+  if (argSize>1) {
+    unifyStack.ensureFree(3);
+    unifyStack.push(ToPointer(argSize-1),NO);
+    unifyStack.push(termPtr1+1,NO);
+    unifyStack.push(termPtr2+1,NO);
+  }
+  goto loop;
+  
+fail:
+  Assert(result==NO);
+  unifyStack.mkEmpty();
+  // fall through
+
+exit:
+  while (!rebindTrail.isEmpty ()) {
+    PopRebindTrail(value,refPtr);
+    doBind(refPtr,value);
+  }
+
+  return result;
 }
 
 /*

@@ -102,7 +102,6 @@ public:
 
   int statusReg;
   Trail trail;
-  RebindTrail rebindTrail;
   RefsArray xRegs;  
   
   RefsArray toplevelVars;
@@ -302,10 +301,8 @@ public:
   Bool unify(TaggedRef ref1, TaggedRef ref2, Bool prop = OK);
   Bool fastUnify(TaggedRef ref1, TaggedRef ref2, Bool prop);
   Bool fastUnifyOutline(TaggedRef ref1, TaggedRef ref2, Bool prop);
-  Bool performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, Bool prop);
   void bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef term, Bool prop);
 
-  void rebind(TaggedRef *ref, TaggedRef ptr);
   void doBindAndTrail(TaggedRef v, TaggedRef * vp, TaggedRef t);
   void doBindAndTrailAndIP(TaggedRef v, TaggedRef * vp, TaggedRef t,
 			       GenCVariable * lv, GenCVariable * gv,
