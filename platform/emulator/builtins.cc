@@ -6488,6 +6488,7 @@ BIspec allSpec2[] = {
   {"termToVS",2,BItermToVS},
 
   {"dumpThreads",0,BIdumpThreads},
+  {"listThreads",1,BIlistThreads},
 
   {"foreignFDProps", 1, BIforeignFDProps},
   {"platform",1,BIplatform},

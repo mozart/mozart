@@ -252,10 +252,23 @@ public:
     }
   }
 
+  static OZ_Term list()
+  {
+    OZ_Term out = OZ_nil();
+    for (ThreadList *aux = allthreads; aux; aux=aux->next)
+      out = OZ_cons(aux->elem->getDebugVar(), out);
+    return out;
+  }
+
 };
 
 ThreadList *ThreadList::allthreads = NULL;
 
+OZ_C_proc_begin(BIlistThreads, 1)
+{
+  return (OZ_unify(OZ_getCArg(0), ThreadList::list()));
+}
+OZ_C_proc_end
 
 OZ_C_proc_begin(BIdumpThreads, 0)
 {
@@ -2398,7 +2411,7 @@ void performCopying(void)
     case PTR_THREAD:    ((Thread *) ptr)->gcRecurse();           break;
     case PTR_CONT:      ((Continuation*) ptr)->gcRecurse();      break;
     case PTR_CFUNCONT:  ((CFuncContinuation*) ptr)->gcRecurse(); break;
-    case PTR_PROPAGATOR:((OZ_Propagator *) ptr)->gcRecurse();   break;
+    case PTR_PROPAGATOR:((OZ_Propagator *) ptr)->gcRecurse();    break;
     case PTR_DYNTAB:    ((DynamicTable *) ptr)->gcRecurse();     break;
     case PTR_CONSTTERM: ((ConstTerm *) ptr)->gcConstRecurse();   break;
     default:
@@ -2448,7 +2461,8 @@ Bool AM::idleGC()
 {
   Assert(isToplevel());
 
-  if ((int)getUsedMemory() > (ozconf.heapIdleMargin*ozconf.heapThreshold)/100 && ozconf.gcFlag) {
+  if ((int)getUsedMemory() >
+        (ozconf.heapIdleMargin*ozconf.heapThreshold)/100 && ozconf.gcFlag) {
     if (ozconf.showIdleMessage) {
       printf("gc ... ");
       fflush(stdout);
