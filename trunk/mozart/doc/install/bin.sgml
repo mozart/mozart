@@ -149,10 +149,10 @@ appropriately. Then you can draw links like this:
   </section>
 
   <section id=sec.emacsunix>
-    <title/Getting a UNIX version of Emacs/
+    <title/Getting a Unix version of Emacs/
 
     <p>
-      The Oz programming environment (OPI) is based on the Emacs  
+      The Oz Programming Interface (OPI) is based on the Emacs  
       editor. You can either use GNU Emacs version 19.28 or better
       which is available from:
 
