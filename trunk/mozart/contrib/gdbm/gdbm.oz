@@ -45,7 +45,7 @@ in
 	 ) at 'gdbm.so{native}'
       Finalize(register	:Register)
       Resolve( expand	:Expand) URL
-      ErrorRegistry
+      Error(registerFormatter)
       MODE at 'x-oz://contrib/os/mode'
    export
       is	: IS
@@ -164,7 +164,7 @@ in
 	 end
       end
 
-      {ErrorRegistry.put gdbm GdbmFormatter}
+      {Error.registerFormatter gdbm GdbmFormatter}
    end
 
 end

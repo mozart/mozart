@@ -23,7 +23,7 @@
 %%% WARRANTIES.
 %%%
 
-{ErrorRegistry.put panel
+{Error.registerFormatter panel
  fun {$ E}
     T = 'error in Oz Panel'
  in

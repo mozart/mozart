@@ -26,7 +26,7 @@
 
 functor
 import
-   ErrorRegistry(put)
+   Error(registerFormatter)
    Open(socket text)
 export
    'class': NetDictionary
@@ -339,7 +339,7 @@ define
       end
    end
 
-   {ErrorRegistry.put netdict
+   {Error.registerFormatter netdict
     fun {$ E} T in
        T = 'net dictionary error'
        case E of netdict(serverClosed Reason) then
