@@ -334,14 +334,14 @@ starts the emulator under gdb")
   "Start the debugger."
   (interactive)
   (oz-emacs-connect)
-  (oz-feed-file "$OZHOME/tools/debugger/buggi.oz")
+  (oz-feed-file "tools/debugger/buggi.oz")
   (setq oz-debug-mode t))
 
 (defun oz-debug-stop()
   "Stop the debugger."
   (interactive)
   (setq oz-debug-mode nil)
-  (oz-feed-file "$OZHOME/tools/debugger/buggi-stop.oz"))
+  (oz-feed-file "tools/debugger/buggi-stop.oz"))
 
 
 ;;------------------------------------------------------------
