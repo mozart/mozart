@@ -43,14 +43,14 @@ OZ_Return IsInPropagator::propagate(void)
     b.leave();
     v.leave();
     OZ_DEBUGPRINT("entailed: "<< *this);
-    return ENTAILED;
+    return OZ_ENTAILED;
   }
   if (v->isNotIn(_i)) {
     FailOnEmpty(*b &= 0);
     b.leave();
     v.leave();
     OZ_DEBUGPRINT("entailed: "<< *this);
-    return ENTAILED;
+    return OZ_ENTAILED;
   }
   OZ_DEBUGPRINT("sleep: "<< *this);
   b.leave();
