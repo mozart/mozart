@@ -317,8 +317,6 @@ extern TaggedRef BI_defer;
 void gcDeferEvents();
 void deferProxyProbeFault(Tertiary*,int);
 
-#define IncorrectFaultSpecification oz_raise(E_ERROR,E_SYSTEM,"incorrect fault specification",0)
-
 
 void maybeUnask(Tertiary*);
 Bool isVariableSpec(SRecord*);

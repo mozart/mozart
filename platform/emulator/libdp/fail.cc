@@ -387,7 +387,7 @@ if(!isFired()){
 void Watcher::varInvokeInjector(TaggedRef t,EntityCond ec,TaggedRef Op){
   Assert(isInjector());
   Assert(oz_currentThread()!=NULL);
-  am.prepareCall(proc, mkOp1("var",t),listifyWatcherCond(ec),Op);
+  am.prepareCall(proc, t,listifyWatcherCond(ec),Op);
 }
 
 void Watcher::invokeInjector(Tertiary* t,EntityCond ec,
@@ -396,7 +396,7 @@ void Watcher::invokeInjector(Tertiary* t,EntityCond ec,
   Assert(!isFired());
   Assert(th!=NULL);
   TaggedRef listified=listifyWatcherCond(ec,t);
-  th->pushCall(proc,mkOp1("nonVar",makeTaggedTert(t)),listified,Op);
+  th->pushCall(proc,makeTaggedTert(t),listified,Op);
   ControlVarResume(controlvar);
 }
 
@@ -1079,8 +1079,7 @@ OZ_Return DistHandlerInstall(SRecord *condStruct, TaggedRef proc, Bool& suc){
   ret=distHandlerInstallHelp(condStruct,ec,th,entity,kind);
   if(ec==ANY_COND) return IncorrectFaultSpecification;
   if(ret!=PROCEED) return ret;
-  if(ec==ANY_COND) return IncorrectFaultSpecification;
-  if((entity==0) && (ec & PERM_SOME|PERM_ALL|TEMP_SOME|TEMP_ALL)){
+  if((entity==0) && (ec & (PERM_SOME|PERM_ALL|TEMP_SOME|TEMP_ALL))){
     return IncorrectFaultSpecification;
   }
   if(!oz_isAbstraction(proc))
@@ -1106,6 +1105,9 @@ OZ_Return DistHandlerDeInstall(SRecord *condStruct, TaggedRef proc, Bool &suc){
 
   ret=distHandlerInstallHelp(condStruct,ec,th,entity,kind);
   if(ret!=PROCEED) return ret;
+  if((entity==0) && (ec & (PERM_SOME|PERM_ALL|TEMP_SOME|TEMP_ALL))){
+    return IncorrectFaultSpecification;
+  }
   suc=distHandlerDeInstallImpl(kind,ec,th,entity,proc);
   return PROCEED;
 }
@@ -1194,7 +1196,12 @@ OZ_BI_define(BIfailureDefault,3,0){
   oz_declareIN(0,entity);
   oz_declareIN(1,what);
   oz_declareIN(2,op);
-  return oz_raise(E_SYSTEM,E_SYSTEM,"dp",3,entity,what,op);
+  TaggedRef list,rec;
+  list=oz_cons(oz_pair2(AtomEntity,entity),oz_nil());
+  list=oz_cons(oz_pair2(AtomConditions,what),list);
+  list=oz_cons(oz_pair2(AtomOp,op),list);
+  rec=OZ_recordInit(AtomDp,list);
+  return OZ_raiseError(rec);
 }OZ_BI_end
 
 
@@ -1343,6 +1350,6 @@ Bool tertiaryFail(Tertiary *t,EntityCond &ec,TaggedRef &proc){
 OZ_Return tertiaryFailHandle(Tertiary* c,TaggedRef proc,EntityCond ec,
                               TaggedRef op){
   Assert(oz_currentThread()!=NULL);
-  am.prepareCall(proc,mkOp1("nonVar",makeTaggedTert(c)),
+  am.prepareCall(proc,makeTaggedTert(c),
                  listifyWatcherCond(ec,c),op);
   return BI_REPLACEBICALL;}

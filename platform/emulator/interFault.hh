@@ -56,7 +56,8 @@ enum EntityCondFlags{
   ANY_COND      = 128
 };
 
-#define IncorrectFaultSpecification oz_raise(E_ERROR,E_SYSTEM,"incorrect fault specification",0)
+#define IncorrectFaultSpecification \
+oz_raise(E_ERROR,E_KERNEL,"type",1,oz_atom("incorrect fault specification"));
 
 #define DerefVarTest(tt) { \
   if(OZ_isVariable(tt)){OZ_suspendOn(tt);} \

@@ -239,7 +239,7 @@ OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){
   } else {
     // in guard: bind and trail
     if(!errorIgnore()){
-      if(failurePreemption(mkOp1("deepBind",r))) {
+      if(failurePreemption(mkOp1("bind",r))) {
         return BI_REPLACEBICALL;}}
     oz_bindGlobalVar(this,lPtr,r);
     return PROCEED;
