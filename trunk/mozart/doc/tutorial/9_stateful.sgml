@@ -221,8 +221,8 @@ a cell. The <PTR TO="cellOp"> shows the operations on a cell.
 <CAPTION>Cell operations</CAPTION>
 <TABLE>
 <TR>
-  <TH>Operation</TD>
-  <TH>Description</TD>
+  <TH>Operation</TH>
+  <TH>Description</TH>
 </TR><TR>
   <TD><<{NewCell X ?C}>></TD>
   <TD>Creates a cell C with content X</TD>
