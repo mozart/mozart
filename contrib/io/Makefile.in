@@ -7,6 +7,7 @@ VPATH           = @srcdir@
 PLATFORM        = @PLATFORM@
 LIB_DIR1        = $(PREFIX)/contrib
 LIB_DIR         = $(PREFIX)/contrib/io
+HOMEURL         = @HOMEURL@
 
 OZC             = @OZC@
 OZDYNLD         = @OZDYNLD@

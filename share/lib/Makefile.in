@@ -2,6 +2,7 @@ BUILDTOP        = @BUILDTOP@
 BUILDDIR        = $(BUILDTOP)/share/lib
 VPATH           = @srcdir@
 SRCDIR          = @srcdir@
+HOMEURL         = @HOMEURL@
 
 PREFIX          = @prefix@
 OZPREFIX        = @prefix@
@@ -46,7 +47,7 @@ export OZLIB
 export OZPATH = .:$(SRCDIR)
 export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
-export OZ_LOAD = root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=http\://mozart.ps.uni-sb.de/home/share/=$(OZ_LIB)/:prefix=/=/:=
+export OZ_LOAD = root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=$(HOMEURL)/share/=$(OZ_LIB)/:prefix=/=/:=
 
 export OZMAKE_COPYALWAYS        = no
 export OZMAKE_VERBOSE           = no
@@ -281,18 +282,16 @@ IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
 install-images: \
         $(IMAGESDIR) $(IMAGES)
 
-CACHEDIR  = $(PREFIX)/cache/http/mozart.ps.uni-sb.de
-CACHELINK = $(CACHEDIR)/home
+HOMECACHE = @HOMECACHE@
+CACHEDIR  = $(PREFIX)/cache/$(HOMECACHE)
 
 install-cache: \
-        $(CACHEDIR) $(CACHELINK)
+        $(CACHEDIR)
 
 $(CACHEDIR):
         $(INSTALL_DIR) $(CACHEDIR)
-
-$(CACHELINK): $(CACHEDIR)
-        rm -f $(CACHELINK)
-        $(LN_S)  $(PREFIX) $(CACHELINK)
+        rm -f $(CACHEDIR)
+        $(LN_S) $(PREFIX) $(CACHEDIR)
 
 $(OZLIB) $(IMAGESDIR) $(OZBIN):
         $(INSTALL_DIR) $@
@@ -342,8 +341,6 @@ distclean: veryclean
 .PHONY: save restore
 .PHONY: check
 
-URL=http\\://mozart.ps.uni-sb.de/home
-
 # use the boot compiler to create the functors
 bootstrap:
         $(MAKE) boot-unzip boot-init boot-ozc boot-all
@@ -354,7 +351,7 @@ boot-all:
                 OZENGINE=$(SRCDIR)/oze.sh \
                 OZINIT=Init.ozf \
                 OZ_LIB=. \
-                OZ_LOAD=root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=/=/:prefix=./=./:prefix=$(URL)/share/=./:=
+                OZ_LOAD=root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:=
 
 STAGE1=./stage1
 STAGE2=./stage2
@@ -367,7 +364,7 @@ stage1:
 # stage2: recreate the functors and boot compiler using the stage1 functors
 stage2:
         $(MAKE) install-stage PREFIX=$(STAGE2) \
-                OZ_LOAD=prefix=$(URL)/share/=$(STAGE1)/share/:prefix=./=./:.:= \
+                OZ_LOAD=prefix=$(HOMEURL)/share/=$(STAGE1)/share/:prefix=./=./:.:= \
                 OZC="$(SRCDIR)/oze.sh $(STAGE1)/bin/ozc" \
                 OZINIT=$(STAGE1)/share/Init.ozf \
                 OZL=$(STAGE1)/bin/ozl
@@ -381,7 +378,7 @@ stage3:
                 BOOTOZCTXTFROM=$(STAGE2)/share/$(BOOTOZCTXT)
         $(MAKE) install-stage \
                 PREFIX=$(STAGE3) \
-                OZ_LOAD=prefix=$(URL)/share/=./:prefix=./=./:.:prefix=/=/:= \
+                OZ_LOAD=prefix=$(HOMEURL)/share/=./:prefix=./=./:.:prefix=/=/:= \
                 OZC=$(SRCDIR)/boot-ozc.sh \
                 OZINIT=Init.ozf \
                 OZL=ozl
@@ -451,7 +448,7 @@ boot-init: $(BOOTINITTXTFROM)
 # may have been side-effected and may contains stateful stuff
 
 boot-ozc.linked: ozc ozl Compiler.ozf $(SUPPSRC:%=%.ozf)
-        OZMAKE_COPYALWAYS=yes OZINIT=Init.ozf OZ_LOAD=root=.:prefix=./=./:prefix=http\\://mozart.ps.uni-sb.de/home/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:= $(SRCDIR)/oze.sh ozl --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
+        OZMAKE_COPYALWAYS=yes OZINIT=Init.ozf OZ_LOAD=root=.:prefix=./=./:prefix=$(HOMEURL)/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:= $(SRCDIR)/oze.sh ozl --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
 
 boot-init.linked: Init.ozf
         cp $< $@

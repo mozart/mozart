@@ -3,6 +3,7 @@
 BUILDTOP= @BUILDTOP@
 PREFIX  = @prefix@
 SUBDIRS = @CONTRIBDIRS@
+HOMEURL = @HOMEURL@
 
 .PHONY: bootstrap all install clean distclean veryclean World files check depend
 

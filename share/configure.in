@@ -112,9 +112,12 @@ dnl *****************************************************************
 dnl FINALIZE
 dnl *****************************************************************
 
-AC_OUTPUT(lib/Makefile tools/Makefile tools/ProductionTemplates.oz \
+AC_OUTPUT(lib/Makefile lib/support/DefaultURL.oz \
+    tools/Makefile tools/ProductionTemplates.oz \
     demo/Makefile test/Makefile \
-    examples/Makefile elisp/Makefile elisp/oz.el bin/Makefile Makefile)
+    examples/Makefile elisp/Makefile elisp/oz.el \
+    bin/Makefile bin/ozc.bat \
+    Makefile)
 
 
 errprint(ifdef([OZ_INIT],

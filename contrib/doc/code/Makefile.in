@@ -11,6 +11,7 @@ INSTALL         = @INSTALL@
 INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_LIB     = $(INSTALL) -m 444
 EMACS           = emacs
+HOMEURL         = @HOMEURL@
 
 TARGETS         = Fontifier.ozf
 ETARGETS        = Fontifier.elc
