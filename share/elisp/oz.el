@@ -377,9 +377,11 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (if (and (get-buffer-process oz-compiler-buffer)
 	   (or oz-win32 (get-buffer-process oz-emulator-buffer)))
       (if (null force)
-	  (let ((i (* 2 oz-halt-timeout))
-		(eproc (get-buffer-process oz-emulator-buffer))
-		(cproc (get-buffer-process oz-compiler-buffer)))
+	  (let* ((i (* 2 oz-halt-timeout))
+		 (cproc (get-buffer-process oz-compiler-buffer))
+		 (eproc (if oz-win32
+			    cproc
+			  (get-buffer-process oz-emulator-buffer))))
 	    (oz-send-string "\\halt ")
 	    (while (and (or (eq (process-status eproc) 'run)
 			    (eq (process-status cproc) 'run))
