@@ -27,8 +27,8 @@ local
 in
    functor
    import
-      IO   @ 'x-oz://contrib/os/io'
-      PROC @ 'x-oz://contrib/os/process'
+      IO   at 'x-oz://contrib/os/io'
+      PROC at 'x-oz://contrib/os/process'
    export
       File Process
    define
