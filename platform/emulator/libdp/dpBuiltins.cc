@@ -74,6 +74,9 @@ void perdioInitLocal()
   // fflush(stderr);
   // sleep(10);
 
+  if(perdioTrigger==0)
+    return;
+
   //
   perdioTrigger = 0;
   initPerdio();
@@ -88,7 +91,7 @@ void perdioInitLocal()
   OZ_protect(&GateStream);
   {
     Tertiary *t=(Tertiary*)new PortWithStream(oz_currentBoard(),GateStream);
-    globalizeTert(t);
+    globalizeTert(t,0);
     int ind = t->getIndex();
     Assert(ind == 0);
     OwnerEntry* oe=OT->getOwner(ind);
@@ -104,9 +107,7 @@ OZ_BI_define(BIGetPID,0,1)
   // pid = pid(host:String port:Int time:Int#Int)
 
   //
-  if (perdioTrigger) {
-    perdioInitLocal();
-  }
+  perdioInitLocal();
 
   char *nodename = oslocalhostname();
   if(nodename==NULL) { return oz_raise(E_ERROR,E_SYSTEM,"getPidUname",0); }
@@ -131,9 +132,7 @@ OZ_BI_define(BIReceivedPID,1,0)
 {
   oz_declareIN(0,stream);
   //
-  if (perdioTrigger) {
-    perdioInitLocal();
-  }
+  perdioInitLocal();
   return oz_unify(GateStream,stream);
 } OZ_BI_end
 
@@ -146,9 +145,7 @@ OZ_BI_define(BITicket2Port,4,1)
   oz_declareIntIN(3,pid);
 
   //
-  if (perdioTrigger) {
-    perdioInitLocal();
-  }
+  perdioInitLocal();
 
   time_t time;
   if (oz_isSmallInt(timeV)) {
