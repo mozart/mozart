@@ -1605,6 +1605,11 @@ OZ_BI_iodefine(unix_putEnv,2,0)
     return raiseUnixError("putenv", 0, "OS.putEnv failed.", "os");
   }
 
+#ifdef WINDOWS
+  /* some subprocesses (windows applications??) don't see putenv: */
+  SetEnvironmentVariable(envVar,envValue);
+#endif
+
   return PROCEED;
 } OZ_BI_ioend
 
