@@ -20,7 +20,6 @@
 #pragma implementation "board.hh"
 #pragma implementation "builtins.hh"
 #pragma implementation "cell.hh"
-#pragma implementation "codearea.hh"
 #pragma implementation "constter.hh"
 #pragma implementation "debug.hh"
 #pragma implementation "dllist.hh"
