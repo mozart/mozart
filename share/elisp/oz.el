@@ -624,7 +624,9 @@ variables oz-compiler-buffer and oz-emulator-buffer."
       (equal mode-name "Oz-Gump")
       (equal mode-name "Oz-Machine")
       (oz-new-buffer))
-  (if (and oz-using-new-compiler oz-emulator-hook)
+  (if (and oz-emulator-hook
+	   (or oz-using-new-compiler
+	       (not oz-gdb-autostart)))
       (oz-show-buffer (get-buffer oz-emulator-buffer))
     (oz-show-buffer (get-buffer oz-compiler-buffer))))
 
