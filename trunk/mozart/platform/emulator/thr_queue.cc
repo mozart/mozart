@@ -109,23 +109,3 @@ void ThreadQueueImpl::deleteThread(Thread *th)
   }
 }
 
-#ifdef LOCAL_THREAD_STACK
-void ThreadStackImpl::resize(void)
-{
-  int new_maxsize = (maxsize * 3) >> 1;
-  
-  Thread ** new_stack = 
-    (Thread **) heapMalloc ((size_t) (sizeof(Thread *) * new_maxsize));
-  
-  for (int i = tos; i--; )
-    new_stack[i] = stack[i];
-
-  freeListDispose (stack, (size_t) (maxsize * sizeof (Thread *)));
-
-  // tos and size remain unchanged
-  stack = new_stack;
-  maxsize = new_maxsize;
-}
-
-int ThreadStackImpl::fromBos;
-#endif
