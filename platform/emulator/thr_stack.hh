@@ -175,8 +175,6 @@ public:
 
     Assert(MemChunks::areRegsInHeap(x, i));
 
-    extern int checkBIArity(OZ_CFun f);
-    Assert(checkBIArity(f));
 
     pushFrame(C_CFUNC_CONT_Ptr,(void*)f,
 	      i>0 ? (copy ? copyRefsArray(x, i) : x) : NULL);

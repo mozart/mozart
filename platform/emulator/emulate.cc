@@ -2357,12 +2357,12 @@ LBLdispatcher:
 
        switch (biFun(X,OZ_ID_MAP)) {
        case PROCEED:       goto LBLpopTask;
-       case FAILED:        HF_BI(builtinTab.getEntry((void *) biFun));
+       case FAILED:        HF_BI(cfunc2Builtin((void *) biFun));
        case RAISE:
 	 if (e->exception.debug)
-	   set_exception_info_call(builtinTab.getEntry((void *) biFun),X);
+	   set_exception_info_call(cfunc2Builtin((void *) biFun),X);
          RAISE_THREAD_NO_PC;
-       case BI_TYPE_ERROR: RAISE_TYPE(builtinTab.getEntry((void *) biFun));
+       case BI_TYPE_ERROR: RAISE_TYPE(cfunc2Builtin((void *) biFun));
 
        case BI_REPLACEBICALL: 
 	 PC = NOCODE;

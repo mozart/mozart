@@ -89,6 +89,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   BI_dot,
   BI_exchangeCell,BI_assign,BI_atRedo,BI_lockLock,
   BI_controlVarHandler,
+  BI_unknown,
 
   __UNUSED_DUMMY_END_MARKER;
 

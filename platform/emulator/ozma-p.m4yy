@@ -300,9 +300,8 @@ Constant	: Number
 
 Builtinname	: Atom
 		  {
-		    const char *name = OZ_atomToC($1);
-		    Builtin *found = builtinTab.find(name);
-		    if (found == htEmpty) {
+		    Builtin * found = atom2Builtin($1);
+		    if (!found) {
 		      ozmaerror("undefined builtin");
 		      YYERROR;
 		    }

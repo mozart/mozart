@@ -363,9 +363,6 @@ Bool ozd_trace(char *info, ProgramCounter PC,RefsArray Y,Abstraction *CAP)
     case 'a':
       printAtomTab();
       break;
-    case 'b':
-      builtinTab.print();
-      break;
     case 'c':
       {
 	sscanf(&command[1],"%d",&skip);
