@@ -96,3 +96,9 @@ Reads in \fIozhome/bin/FILE\fP and uses it as header for executable
 files. Apart from \fIozwrapper.bin\fP, an \fIozwrapperw.bin\fP is
 supplied that launches \fBozenginew\fP instead of \fBozengine\fP. This
 option provides a convenient way to use this alternative wrapper.
+.TP
+.B \-\-sequential, \-\-nosequential (default) 
+Do not create a thread per executed functor body, rather execute all
+functor bodies in the same thread in a bottom up fashion. Use with
+care! In case the functors included have cyclic imports, it is not
+used.
