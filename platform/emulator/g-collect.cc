@@ -46,7 +46,6 @@
 #define _cacVarRecurse           gCollectVarRecurse
 #define _cacVarInline            gCollectVarInline
 
-#define _cacSRecordInline        gCollectSRecordInline
 #define _cacSRecord              gCollectSRecord
 
 #define _cacSuspendableInline    gCollectSuspendableInline

@@ -272,8 +272,7 @@ TaggedRef duplist(TaggedRef list, int &len)
   return ret;
 }
 
-TaggedRef Object::getArityList()
-{
+TaggedRef Object::getArityList(void) {
   TaggedRef ret = oz_nil();
 
   SRecord *rec=getClass()->getUnfreeRecord();
@@ -281,19 +280,13 @@ TaggedRef Object::getArityList()
   return ret;
 }
 
-TaggedRef ObjectClass::getArityList()
-{
-  return features->getArityList();
-}
-
-int Object::getWidth()
-{
+int Object::getWidth(void) {
   int ret = 0;
   SRecord *feat=getFreeRecord();
-  if (feat) ret = feat->getWidth ();
+  if (feat) ret = feat->getWidth();
 
   SRecord *rec=getClass()->getUnfreeRecord();
-  if (rec) ret += rec->getWidth ();
+  if (rec) ret += rec->getWidth();
   return ret;
 }
 
@@ -302,12 +295,6 @@ GName *Object::globalize(){
     setGName(newGName(makeTaggedConst(this),GNT_OBJECT));}
   return getGName1();
 }
-
-int ObjectClass::getWidth()
-{
-  return features->getWidth();
-}
-
 
 
 

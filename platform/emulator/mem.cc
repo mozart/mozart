@@ -575,7 +575,7 @@ void *ozMalloc(int chunk_size)
 #endif
     void *old = sbrk(0);
     if (lastBrk && old != lastBrk) {
-      DebugCheckT(message("fakeMallocing 2MB\n"));
+      // DebugCheckT(message("fakeMallocing 2MB\n"));
       fakeMalloc(2*MB);
       old = sbrk(0);
     }

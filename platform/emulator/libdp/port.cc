@@ -43,15 +43,6 @@
 #include "flowControl.hh"
 #include "ozconfig.hh"
 
-// GARBAGE COLLECTION HACK
-inline
-void OZ_collectHeapTermUnsafe(TaggedRef & frm, TaggedRef & to) {
-  if (frm)
-    oz_gCollectTerm(frm,to);
-  else
-    to=frm;
-}
-
 /**********************************************************************/
 /*   SECTION Port protocol                                       */
 /**********************************************************************/
@@ -124,7 +115,7 @@ void gcDistPortRecurseImpl(Tertiary *p)
   } else {
     gcManagerRecurseImpl(p);
     PortWithStream *pws = (PortWithStream *) p;
-    OZ_collectHeapTermUnsafe(pws->strm,pws->strm);
+    oz_gCollectTerm(pws->strm,pws->strm);
   }
 }
 

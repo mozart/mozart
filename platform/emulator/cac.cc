@@ -625,21 +625,7 @@ DynamicTable * DynamicTable::_cac(void) {
   to->numelem = numelem;
   to->size    = size;
 
-  HashElement * ft = table;
-  HashElement * tt = to->table;
-
-  for (dt_index i=size; i--; )
-    if (ft[i].ident) {
-      if (ft[i].value) {
-        OZ_cacBlock(&(ft[i].ident), &(tt[i].ident), 2);
-      } else {
-        oz_cacTerm(ft[i].ident, tt[i].ident);
-        tt[i].value = makeTaggedNULL();
-      }
-    } else {
-      tt[i].ident = makeTaggedNULL();
-      tt[i].value = makeTaggedNULL();
-    }
+  OZ_cacBlock((TaggedRef *) table, (TaggedRef *) to->table, 2 * size);
 
   return to;
 }
@@ -841,7 +827,7 @@ LTuple * LTuple::_cac(void) {
 }
 
 inline
-SRecord *SRecord::_cacSRecordInline(void) {
+SRecord *SRecord::_cacSRecord(void) {
   Assert(this);
 
   CHECKCOLLECTED(label, SRecord *);
@@ -1495,20 +1481,7 @@ void ConstTerm::_cacConstRecurse(void) {
       default:         Assert(0);
       }
 
-      o->setClass((ObjectClass *) o->getClass()->_cacConstTerm());
-      o->setFreeRecord(o->getFreeRecord()->_cacSRecord());
-      RecOrCell state = o->getState();
-      if (stateIsCell(state)) {
-        if (o->isLocal() && getCell(state)->isLocal()) {
-          TaggedRef newstate = ((CellLocal*) getCell(state))->getValue();
-          o->setState(tagged2SRecord(oz_deref(newstate))->_cacSRecord());
-        } else if (getCell(state)) {
-          o->setState((Tertiary*) getCell(state)->_cacConstTerm());
-        }
-      } else {
-        o->setState(getRecord(state)->_cacSRecord());
-      }
-      o->lock = (OzLock *) o->getLock()->_cacConstTerm();
+      OZ_cacBlock(&(o->cl1), &(o->cl1), 4);
       break;
     }
 
@@ -1531,10 +1504,7 @@ void ConstTerm::_cacConstRecurse(void) {
   case Co_Class:
     {
       ObjectClass *cl = (ObjectClass *) this;
-      cl->fastMethods    = (OzDictionary*) cl->fastMethods->_cacConstTerm();
-      cl->defaultMethods = (OzDictionary*) cl->defaultMethods->_cacConstTerm();
-      cl->features       = cl->features->_cacSRecord();
-      cl->unfreeFeatures = cl->unfreeFeatures->_cacSRecord();
+      OZ_cacBlock(&(cl->features), &(cl->features), 4);
       break;
     }
 
@@ -2490,10 +2460,12 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
     sz--; f++; t++;
     aux = *f;
 
-    Assert(aux);
-
     switch (tagTypeOf(aux)) {
-    case REF:        goto DO_DEREF;
+    case REF:
+      if (aux)
+        goto DO_DEREF;
+      *t = makeTaggedNULL();
+      continue;
     case REFTAG2:    goto DO_DEREF;
     case REFTAG3:    goto DO_DEREF;
     case REFTAG4:    goto DO_DEREF;
@@ -2567,7 +2539,7 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
      continue;
 
   DO_SRECORD:
-     *t = makeTaggedSRecord(tagged2SRecord(aux)->_cacSRecordInline());
+     *t = makeTaggedSRecord(tagged2SRecord(aux)->_cacSRecord());
      continue;
 
   DO_OZCONST:
@@ -2666,18 +2638,6 @@ Suspendable * Suspendable::_cacSuspendable(void) {
   return (this == NULL) ? (Suspendable *) NULL : _cacSuspendableInline();
 }
 
-SRecord * SRecord::_cacSRecord(void) {
-  return this ? _cacSRecordInline() : this;
-}
-
 ConstTerm * ConstTerm::_cacConstTerm(void) {
   return this ? _cacConstTermInline() : this;
 }
-
-#ifdef G_COLLECT
-
-OzVariable * OzVariable::gCollectVar(void) {
-  return gCollectVarInline();
-}
-
-#endif

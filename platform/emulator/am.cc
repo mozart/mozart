@@ -83,13 +83,13 @@ void printBanner()
 
 #ifdef DEBUG_CHECK
   fprintf(stderr,
-          "Compile Flags:"
+          "FLAGS:"
           " DEBUG_CHECK"
+#ifdef THREADED
+          " THREADED"
+#endif
 #ifdef DEBUG_DET
           " DEBUG_DET"
-#endif
-#ifdef DEBUG_TRACE
-          " DEBUG_TRACE"
 #endif
 #ifdef DEBUG_GC
           " DEBUG_GC"
@@ -120,12 +120,6 @@ void printBanner()
 #else
   fprintf(stderr, "Time-slice scheduling.\n");
 #endif
-#endif
-
-#ifdef THREADED
-  // fprintf(stderr, "Using threaded code (abs jumps).\n");
-#else
-  fprintf(stderr, "Not using threaded code.\n");
 #endif
 
 }
@@ -768,7 +762,7 @@ void handlerPIPE(int)
 
 void handlerCHLD(int)
 {
-  DebugCheckT(message("a child process' state changed ****\n"));
+  // DebugCheckT(message("a child process' state changed ****\n"));
   am.setSFlag(ChildReady);
   if (use_wake_jmp) {
     use_wake_jmp=0;

@@ -1367,7 +1367,10 @@ public:
     Assert(gname);
 
     //
-    ObjectClass *cl = new ObjectClass(NULL, NULL, NULL, NULL, NO, NO,
+    ObjectClass *cl = new ObjectClass(makeTaggedNULL(),
+                                      makeTaggedNULL(),
+                                      makeTaggedNULL(),
+                                      makeTaggedNULL(), NO, NO,
                                       am.currentBoard());
     cl->setGName(gname);
     OZ_Term classTerm = makeTaggedConst(cl);
@@ -1382,7 +1385,10 @@ public:
     Assert(gname);
 
     //
-    ObjectClass *cl = new ObjectClass(NULL, NULL, NULL, NULL, NO, NO,
+    ObjectClass *cl = new ObjectClass(makeTaggedNULL(),
+                                      makeTaggedNULL(),
+                                      makeTaggedNULL(),
+                                      makeTaggedNULL(), NO, NO,
                                       am.currentBoard());
     cl->setGName(gname);
     OZ_Term classTerm = makeTaggedConst(cl);

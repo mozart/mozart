@@ -57,15 +57,6 @@
 
 #include "os.hh"
 
-// GARBAGE COLLECTION HACK
-inline
-void OZ_collectHeapTermUnsafe(TaggedRef & frm, TaggedRef & to) {
-  if (frm)
-    oz_gCollectTerm(frm,to);
-  else
-    to=frm;
-}
-
 // from builtins.cc
 void doPortSend(PortWithStream *port,TaggedRef val);
 
@@ -283,9 +274,9 @@ void gCollectPendThread(PendThread **pt){
       ((DSite* )tmp->old)->makeGCMarkSite();
       ((DSite* )tmp->nw) ->makeGCMarkSite();}
     else{
-      OZ_collectHeapTermUnsafe((*pt)->old,tmp->old);
-      OZ_collectHeapTermUnsafe((*pt)->nw,tmp->nw);
-      OZ_collectHeapTermUnsafe((*pt)->controlvar,tmp->controlvar);}
+      oz_gCollectTerm((*pt)->old,tmp->old);
+      oz_gCollectTerm((*pt)->nw,tmp->nw);
+      oz_gCollectTerm((*pt)->controlvar,tmp->controlvar);}
     *pt=tmp;
     pt=&(tmp->next);}
 }

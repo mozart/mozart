@@ -40,16 +40,12 @@
 extern TaggedRef BI_portWait;
 
 class PortManager : public PortWithStream {
-  friend void ConstTerm::gCollectConstRecurse(void);
-  friend void ConstTerm::sCloneConstRecurse(void);
 public:
   NO_DEFAULT_CONSTRUCTORS2(PortManager)
   PortManager() : PortWithStream(0,0) {} // hack
 };
 
 class PortProxy: public Port {
-  friend void ConstTerm::gCollectConstRecurse(void);
-  friend void ConstTerm::sCloneConstRecurse(void);
 public:
   PendThread* pending;
   NO_DEFAULT_CONSTRUCTORS(PortProxy);

@@ -296,24 +296,37 @@ enum DeferType{
 class DeferElement{
 public:
   DeferElement *next;
-  Tertiary  *tert;
+  TaggedRef  tert;
   TaggedRef  pvar;
   DSite     *site;
   DeferType  type;
   int        prob;
   DeferElement(){Assert(0);}
 
+  void setTert(Tertiary * t) {
+    tert = t ? makeTaggedConst(t) : makeTaggedNULL();
+  }
+  Tertiary * getTert(void) {
+    return tert ? (Tertiary *) tagged2Const(tert) : (Tertiary *) NULL;
+  }
   void init(DSite* s,DeferType dt, int pr, Tertiary* t){
-    site=s; type=dt; prob=pr; tert=t;}
+    site=s; type=dt; prob=pr;
+    setTert(t);
+  }
 
   void init(DeferType dt, int pr, Tertiary* t){
-    site=NULL; type=dt; prob=pr; tert=t;}
+    site=NULL; type=dt; prob=pr;
+    setTert(t);
+  }
 
   void init(DeferType dt, Tertiary* t){
-    site=NULL; type=dt; prob= 0; tert=t;}
+    site=NULL; type=dt; prob= 0;
+    setTert(t);
+  }
 
   void init(DeferType dt, int pr,TaggedRef v){
-    site=NULL; type=dt; prob= pr; tert=NULL; pvar=v;}
+    site=NULL; type=dt; prob= pr; setTert((Tertiary *) NULL); pvar=v;
+  }
 
 };
 

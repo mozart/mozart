@@ -138,7 +138,7 @@ protected:
   // all should be TaggedRefs to simplify gc and access
   union {
     TaggedRef ref;
-    Tertiary *tert;
+    TaggedRef tert;
   } u;
 public:
   ProtocolObject()            { DebugCode(type=(PO_TYPE)4711; u.ref=0x5b5b5b5b;)}
@@ -146,15 +146,21 @@ public:
   Bool isRef()                { return type==PO_Ref; }
   Bool isVar()                { return type==PO_Var; }
   Bool isFree()               { return type==PO_Free; }
-  void setFree()              { type = PO_Free; DebugCode(u.tert=(Tertiary*)0xfebc5d4d); }
+  void setFree()              { type = PO_Free; DebugCode(u.tert=0xfebc5d4d); }
   void unsetFree()            { DebugCode(type=(PO_TYPE)4712); }
   Bool initialized()          { DebugCode(return type!=(PO_TYPE)4712);return TRUE;}
 
+  void setTert(Tertiary * t) {
+    u.tert = t ? makeTaggedConst(t) : makeTaggedNULL();
+  }
+  Tertiary * getTert(void) {
+    return u.tert ? (Tertiary *) tagged2Const(u.tert) : (Tertiary *) NULL;
+  }
   void mkTertiary(Tertiary *t,unsigned short f){
-    type = PO_Tert; u.tert=t; flags=f; }
+    type = PO_Tert; setTert(t); flags=f; }
 
   void mkTertiary(Tertiary *t){
-    type = PO_Tert; u.tert=t; flags=PO_NONE; }
+    type = PO_Tert; setTert(t); flags=PO_NONE; }
 
   void mkRef(TaggedRef v,unsigned short f){
     type=PO_Ref; u.ref=v; flags=f; }
@@ -175,24 +181,24 @@ public:
     type=PO_Var; u.ref=v;}
 
   void changeToTertiary(Tertiary* t){
-    type=PO_Tert; u.tert=t;}
+    type=PO_Tert; setTert(t);}
 
   void updateTertiaryGC(Tertiary *t){
-    u.tert=t; }
+    setTert(t); }
 
   unsigned short getFlags()         {return flags;}
   void setFlags(unsigned short f)   {flags=f;}
   void removeFlags(unsigned short f) {flags = flags & (~f);}
   void addFlags(unsigned short f)    {flags = flags | f;}
 
-  Tertiary *getTertiary() { Assert(isTertiary()); return u.tert; }
+  Tertiary *getTertiary() { Assert(isTertiary()); return getTert(); }
   TaggedRef getRef()      { Assert(isRef()||isVar()); return u.ref; }
   TaggedRef *getPtr()     { Assert(isVar()); return tagged2Ref(getRef()); }
   TaggedRef *getAnyPtr()  { return tagged2Ref(getRef()); }
 
   TaggedRef getValue() {
     if (isTertiary())
-      return makeTaggedConst(getTertiary());
+      return u.tert;
     else
       return getRef();
   }
@@ -281,7 +287,7 @@ public:
       return;
     makeGCMark();
 
-    u.tert = newval;
+    setTert(newval);
   }
 
   void gcPO();

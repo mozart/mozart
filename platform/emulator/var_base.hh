@@ -200,7 +200,6 @@ public:
 
   void           gCollectMark(TaggedRef *);
   OzVariable *   gCollectVarInline();
-  OzVariable *   gCollectVar();
   void           gCollectVarRecurse(void);
 
   void           sCloneMark(TaggedRef *);

@@ -49,16 +49,6 @@
 #include "var.hh"
 #include "var_obj.hh"
 
-// GARBAGE COLLECTION HACK
-inline
-void OZ_collectHeapTermUnsafe(TaggedRef & frm, TaggedRef & to) {
-  if (frm)
-    oz_gCollectTerm(frm,to);
-  else
-    to=frm;
-}
-
-
 Twin *usedTwins;
 Watcher* globalWatcher;
 
@@ -87,17 +77,17 @@ OZ_BI_define(BIdefer,0,0)
   while(ptr){
     switch(ptr->type){
     case DEFER_PROXY_TERT_PROBLEM:
-      proxyProbeFault(ptr->tert, ptr->prob);
+      proxyProbeFault(ptr->getTert(), ptr->prob);
       break;
     case DEFER_PROXY_VAR_PROBLEM:
       if(oz_isProxyVar(oz_deref(ptr->pvar))){
         oz_getProxyVar(oz_deref(ptr->pvar))->probeFault(ptr->prob);}
       break;
     case DEFER_MANAGER_PROBLEM:
-      managerProbeFault(ptr->tert,ptr->site, ptr->prob);
+      managerProbeFault(ptr->getTert(),ptr->site, ptr->prob);
       break;
     case DEFER_ENTITY_PROBLEM:{
-      entityProblem(ptr->tert);
+      entityProblem(ptr->getTert());
       break;}
     default: Assert(0);
     }
@@ -121,15 +111,16 @@ DeferElement* newDeferElement(){
 
 void gcDeferEvents(){
   DeferElement* ptr = DeferdEvents;
-  while(ptr!=NULL) {
-    if(ptr->type == DEFER_PROXY_VAR_PROBLEM){
-      OZ_collectHeapTermUnsafe( ptr->pvar, ptr->pvar);
+  while (ptr!=NULL) {
+    if (ptr->type == DEFER_PROXY_VAR_PROBLEM) {
+      oz_gCollectTerm(ptr->pvar, ptr->pvar);
+    } else {
+      oz_gCollectTerm(ptr->tert, ptr->tert);
     }
-    else{
-      ptr->tert=(Tertiary*)ptr->tert->gCollectConstTerm();}
-    if(ptr->type==DEFER_MANAGER_PROBLEM)
+    if (ptr->type==DEFER_MANAGER_PROBLEM)
       ptr->site->makeGCMarkSite();
-    ptr=ptr->next;}
+    ptr=ptr->next;
+  }
 }
 
 /**********************************************************************/
@@ -1198,7 +1189,7 @@ void EntityInfo::gcWatchers(){
     Watcher* newW=(Watcher*) oz_hrealloc(w,sizeof(Watcher));
     *base=newW;
     newW->thread=nth;
-    OZ_collectHeapTermUnsafe(newW->proc,newW->proc);
+    oz_gCollectTerm(newW->proc,newW->proc);
     base= &(newW->next);
     w=*base;}
 }
@@ -1206,7 +1197,7 @@ void EntityInfo::gcWatchers(){
 void gcGlobalWatcher(){
   if(globalWatcher==NULL) return;
   globalWatcher = (Watcher*) oz_hrealloc(globalWatcher,sizeof(Watcher));
-  OZ_collectHeapTermUnsafe(globalWatcher->proc,globalWatcher->proc);}
+  oz_gCollectTerm(globalWatcher->proc,globalWatcher->proc);}
 
 // called from gc
 void maybeUnask(Tertiary* t){

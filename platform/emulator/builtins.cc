@@ -3491,12 +3491,12 @@ OZ_BI_define(BInewClass,3,1) {
   OZ_Term defmethods = fr->getFeature(NameOoDefaults);
   { DEREF(defmethods,_1,_2); }
 
-  SRecord *uf = oz_isSRecord(ufeatures) ? tagged2SRecord(ufeatures) : (SRecord*)NULL;
+  TaggedRef uf = oz_isSRecord(ufeatures) ? ufeatures : makeTaggedNULL();
 
-  ObjectClass *cl = new ObjectClass(fr,
-                                    tagged2Dictionary(fastmeth),
+  ObjectClass *cl = new ObjectClass(features,
+                                    fastmeth,
                                     uf,
-                                    tagged2Dictionary(defmethods),
+                                    defmethods,
                                     oz_isTrue(locking),
                                     oz_isTrue(sited),
                                     oz_currentBoard());

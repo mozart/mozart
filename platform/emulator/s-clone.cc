@@ -46,7 +46,6 @@
 #define _cacVarRecurse          sCloneVarRecurse
 #define _cacVarInline           sCloneVarInline
 
-#define _cacSRecordInline       sCloneSRecordInline
 #define _cacSRecord             sCloneSRecord
 
 #define _cacSuspendableInline   sCloneSuspendableInline

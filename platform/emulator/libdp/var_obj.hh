@@ -45,10 +45,10 @@ class ObjectVar : public ExtVar {
 protected:
   short pvtype;
   short requested;
-  Object *obj;
+  TaggedRef obj;
   EntityInfo* info;
   union {
-    ObjectClass *aclass;
+    TaggedRef aclass;
     GName *gnameClass;
   } u;
 
@@ -59,14 +59,17 @@ protected:
 public:
   ObjectVar(Board *bb,Object *o,ObjectClass *cl) : ExtVar(bb) {
     setpvType(PV_OBJECTCLASSAVAIL);
-    obj   = o;
+    Assert(o);
+    obj   = makeTaggedConst(o);
     info=NULL;
-    u.aclass=cl;
+    Assert(cl);
+    u.aclass= makeTaggedConst(cl);
     requested = 0;
   }
   ObjectVar(Board *bb,Object *o,GName *gn) : ExtVar(bb) {
     setpvType(PV_OBJECTCLASSNOTAVAIL);
-    obj   = o;
+    Assert(o);
+    obj   = makeTaggedConst(o);
     info=NULL;
     u.gnameClass=gn;
     requested = 0;
@@ -95,7 +98,8 @@ private:
 
   void setClass(ObjectClass *cl) {
     Assert(isObjectClassAvail());
-    u.aclass=cl;
+    Assert(cl)
+    u.aclass=makeTaggedConst(cl);
   }
 
   GName *getGNameClass() {
@@ -103,10 +107,17 @@ private:
     return u.gnameClass;
   }
 
-  ObjectClass *getClass() { Assert(isObjectClassAvail()); return u.aclass; }
+  ObjectClass *getClass() {
+    Assert(isObjectClassAvail());
+    Assert(u.aclass);
+    return (ObjectClass *) tagged2Const(u.aclass);
+  }
 
 public:
-  Object *getObject() { return obj; }
+  Object * getObject(void) {
+    Assert(obj);
+    return (Object *) tagged2Const(obj);
+  }
   void marshal(MsgBuffer *);
   void sendObject(DSite*, int, ObjectFields&, BorrowEntry*);
   void sendObjectAndClass(ObjectFields&, BorrowEntry*);
