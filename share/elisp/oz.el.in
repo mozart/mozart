@@ -112,6 +112,12 @@
 	   :group 'languages)))
 
 (eval-and-compile
+  (eval '(defcustom oz-mode-hook nil
+	   "*Functions to run when Oz Mode or Oz-Gump Mode is activated."
+	   :type 'hook
+	   :group 'oz)))
+
+(eval-and-compile
   (eval '(defcustom OZ-HOME "@prefix@"
 	   "*Directory where Oz is installed.
 Used as fallback if the environment variable OZHOME is not set."
