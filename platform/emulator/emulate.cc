@@ -264,6 +264,7 @@ TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
        case HOOK_SCHEDULE:                                                    \
          e->pushTaskOutline(CBB,Pred->getPC(),NULL,G,X,Arity);                \
          goto LBLschedule;                                                    \
+       default: break;                                                        \
        }                                                                      \
      }
 
@@ -472,6 +473,8 @@ void engine() {
     switch (emulateHook(e,NULL,0,NULL)) {
     case HOOK_SCHEDULE:
       goto LBLschedule;
+    default:
+      break;
     }
 
     DebugCheckT(CAA = NULL);
@@ -1277,14 +1280,14 @@ void engine() {
     {
       Reg reg                     = getRegArg(PC+1);
       ProgramCounter next         = getLabelArg(PC+2);
-      PrTabEntry *pred            = getPredArg(PC+3);
+      PrTabEntry *predd            = getPredArg(PC+3);
       AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
 
-      AssRegArray &list = pred->gRegs;
+      AssRegArray &list = predd->gRegs;
       int size = list.getSize();
       RefsArray gRegs = (size == 0) ? NULL : allocateRefsArray(size);
 
-      Abstraction *p = new Abstraction (pred, gRegs, new Name(e->currentBoard));
+      Abstraction *p = new Abstraction (predd, gRegs, new Name(e->currentBoard));
       TaggedRef term = RegAccess(HelpReg1,reg);
       if (!e->fastUnify(term,makeTaggedSRecord(p))) {
         HANDLE_FAILURE(next,

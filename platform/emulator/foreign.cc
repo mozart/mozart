@@ -243,7 +243,12 @@ char *OZ_toC(OZ_Term term)
     return tagged2String(term);
 //    tagged2Const(term)->print(stream,depth,offset);
     break;
+
+  default:
+    Assert(0);
+    break;
   }
+
   warning("OZ_toC: failed");
   return ozstrdup("unknown term");
 }
@@ -306,6 +311,8 @@ OZ_Term OZ_label(OZ_Term term)
     return term;
   case SRECORD:
     return tagged2SRecord(term)->getLabel();
+  default:
+    break;
   }
   OZ_warning("OZ_label(%s): no number expected",OZ_toC(term));
   return nil();
@@ -324,6 +331,8 @@ int OZ_width(OZ_Term term)
     return tagged2SRecord(term)->getWidth();
   case ATOM:
     return 0;
+  default:
+    break;
   }
   OZ_warning("OZ_width(%s): no number expected",OZ_toC(term));
   return 0;
@@ -400,9 +409,9 @@ OZ_Term OZ_nil()
   return nil();
 }
 
-OZ_Term OZ_cons(OZ_Term head,OZ_Term tail)
+OZ_Term OZ_cons(OZ_Term hd,OZ_Term tl)
 {
-  return cons(head,tail);
+  return cons(hd,tl);
 }
 
 OZ_Term OZ_head(OZ_Term list)

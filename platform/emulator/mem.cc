@@ -352,9 +352,9 @@ void printChunkChain(void *Chain)
 }
 
 
-void getMemFromOS(size_t size)
+void getMemFromOS(size_t sz)
 {
-  if (size > heapMaxSize) {
+  if (sz > heapMaxSize) {
     error("heapMalloc: Required memory bigger than chunk size");
   }
 

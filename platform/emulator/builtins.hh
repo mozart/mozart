@@ -68,11 +68,11 @@ TypeOfTerm tag;                                                               \
 #define DECLAREBI_USEINLINEREL1(Name,InlineName)                              \
 OZ_C_proc_begin(Name,1)                                                       \
 {                                                                             \
-  OZ_Term arg = OZ_getCArg(0);                                                \
-  State state = InlineName(arg);                                              \
+  OZ_Term arg1 = OZ_getCArg(0);                                               \
+  State state = InlineName(arg1);                                             \
   if (state == SUSPEND) {                                                     \
     OZ_Suspension susp = OZ_makeSelfSuspension();                             \
-    OZ_addSuspension(arg,susp);                                               \
+    OZ_addSuspension(arg1,susp);                                                      \
     return PROCEED;                                                           \
   } else {                                                                    \
     return state;                                                             \
@@ -104,12 +104,12 @@ OZ_C_proc_begin(Name,2)                                                       \
 {                                                                             \
   OZ_Term help;                                                               \
                                                                               \
-  OZ_Term arg = OZ_getCArg(0);                                                \
-  State state = InlineName(arg,help);                                         \
+  OZ_Term arg1 = OZ_getCArg(0);                                               \
+  State state = InlineName(arg1,help);                                        \
   switch (state) {                                                            \
   case SUSPEND: {                                                             \
     OZ_Suspension susp = OZ_makeSelfSuspension();                             \
-    OZ_addSuspension(arg,susp);                                               \
+    OZ_addSuspension(arg1,susp);                                                      \
     return PROCEED;                                                           \
    }                                                                          \
   case FAILED:                                                                \
@@ -289,7 +289,7 @@ public:
 
 class BuiltinTab : public HashTable {
 public:
-  BuiltinTab(int size) : HashTable(size) {};
+  BuiltinTab(int sz) : HashTable(sz) {};
   ~BuiltinTab() {};
   unsigned memRequired(void) {
      return HashTable::memRequired(sizeof(BuiltinTabEntry));

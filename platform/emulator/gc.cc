@@ -155,35 +155,35 @@ inline int  GCUNMARK(int S)    { return S & ~GCTAG; }
 inline Bool GCISMARKED(int S)  { return S &  GCTAG ? OK : NO; }
 
 inline
-void fastmemcpy(int *to, int *from, int size)
+void fastmemcpy(int *to, int *frm, int sz)
 {
-  switch(size) {
-  case 36: *(to+8) = *(from+8);
-  case 32: *(to+7) = *(from+7);
-  case 28: *(to+6) = *(from+6);
-  case 24: *(to+5) = *(from+5);
-  case 20: *(to+4) = *(from+4);
-  case 16: *(to+3) = *(from+3);
-  case 12: *(to+2) = *(from+2);
-  case  8: *(to+1) = *(from+1);
-  case  4: *(to+0) = *(from+0);
+  switch(sz) {
+  case 36: *(to+8) = *(frm+8);
+  case 32: *(to+7) = *(frm+7);
+  case 28: *(to+6) = *(frm+6);
+  case 24: *(to+5) = *(frm+5);
+  case 20: *(to+4) = *(frm+4);
+  case 16: *(to+3) = *(frm+3);
+  case 12: *(to+2) = *(frm+2);
+  case  8: *(to+1) = *(frm+1);
+  case  4: *(to+0) = *(frm+0);
     break;
   default:
-    while(size>0) {
-      *to++ = *from++;
-      size -= sizeof(int);
+    while(sz>0) {
+      *to++ = *frm++;
+      sz -= sizeof(int);
     }
   }
 }
 
 
 inline
-void *gcRealloc(void *ptr, size_t size)
+void *gcRealloc(void *ptr, size_t sz)
 {
-  void *ret = heapMalloc(size);
-  DebugCheck(size%sizeof(int) != 0,
+  void *ret = heapMalloc(sz);
+  DebugCheck(sz%sizeof(int) != 0,
              error("gcRealloc: can only handle word sized blocks"););
-  fastmemcpy((int*)ret,(int*)ptr,size);
+  fastmemcpy((int*)ret,(int*)ptr,sz);
   return ret;
 }
 
@@ -404,9 +404,9 @@ void setHeapCell (int* ptr, int newValue)
 
 
 inline
-void gcTaggedBlock(TaggedRef *oldBlock, TaggedRef *newBlock,int size)
+void gcTaggedBlock(TaggedRef *oldBlock, TaggedRef *newBlock,int sz)
 {
-  for(int i = size-1; i>=0; i--) {
+  for(int i = sz-1; i>=0; i--) {
     if (!isRef(oldBlock[i]) && isAnyVar(oldBlock[i])) {
       gcTagged(oldBlock[i],newBlock[i]);
     }
@@ -414,9 +414,9 @@ void gcTaggedBlock(TaggedRef *oldBlock, TaggedRef *newBlock,int size)
 }
 
 inline
-void gcTaggedBlockRecurse(TaggedRef *block,int size)
+void gcTaggedBlockRecurse(TaggedRef *block,int sz)
 {
-  for(int i = size-1; i>=0; i--) {
+  for(int i = sz-1; i>=0; i--) {
     if (isRef(block[i]) || !isAnyVar(block[i])) {
       gcTagged(block[i],block[i]);
     }
@@ -485,8 +485,8 @@ void ConsList::gc()
 {
   GCMETHMSG("ConsList::gc");
   if(first){
-    int size = numbOfCons*sizeof(Equation);
-    Equation *aux = (Equation*)gcRealloc(first,size);
+    int sz = numbOfCons*sizeof(Equation);
+    Equation *aux = (Equation*)gcRealloc(first,sz);
     GCNEWADDRMSG(aux);
     for(int i = 0; i < numbOfCons; i++){
 #ifdef DEBUG_CHECK
@@ -560,9 +560,9 @@ RefsArray gcRefsArray(RefsArray r)
 
   CHECKCOLLECTED(r[-1], RefsArray);
 
-  int size = getRefsArraySize(r);
+  int sz = getRefsArraySize(r);
 
-  RefsArray aux = allocateRefsArray(size,NO);
+  RefsArray aux = allocateRefsArray(sz,NO);
   GCNEWADDRMSG(aux);
 
   if (isDirtyRefsArray(r)) {
@@ -574,7 +574,7 @@ RefsArray gcRefsArray(RefsArray r)
 
   setHeapCell((int*) &r[-1], GCMARK(aux));
 
-  for(int i = size-1; i >= 0; i--)
+  for(int i = sz-1; i >= 0; i--)
     gcTagged(r[i],aux[i]);
 
   return aux;
@@ -679,42 +679,42 @@ SRecord *SRecord::gcSRecord()
 
   CHECKCOLLECTED(u.type, SRecord *);
 
-  size_t size;
+  size_t sz;
 
   switch(getType()) {
 
   case R_ABSTRACTION:
-    size = sizeof(Abstraction);
+    sz = sizeof(Abstraction);
     break;
   case R_OBJECT:
-    size = sizeof(Object);
+    sz = sizeof(Object);
     break;
   case R_CELL:
-    size = sizeof(Cell);
+    sz = sizeof(Cell);
     break;
   case R_CHUNK:
   case R_RECORD:
-    size = sizeof(SRecord);
+    sz = sizeof(SRecord);
     break;
   case R_BUILTIN:
     switch (((Builtin *) this)->getType()) {
     case BIsolveCont:
-      size = sizeof(OneCallBuiltin);
+      sz = sizeof(OneCallBuiltin);
       if (((OneCallBuiltin *) this)->isSeen())
         ((Builtin *) this)->gRegs = NULL;
       break;
     case BIsolved:
-      size = sizeof(SolvedBuiltin);
+      sz = sizeof(SolvedBuiltin);
       break;
     default:
-      size = sizeof(Builtin);
+      sz = sizeof(Builtin);
     }
     break;
   default:
     error("SRecord::gc: unknown type");
   }
 
-  SRecord *ret = (SRecord*) gcRealloc(this,size);
+  SRecord *ret = (SRecord*) gcRealloc(this,sz);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_SRECORD);
   setHeapCell((int *)&u.type, GCMARK(ret));
@@ -1137,9 +1137,9 @@ void AM::gc(int msgLevel)
   initMemoryManagement();
 
   { /* initialize X regs; this IS necessary ! */
-    int size = getRefsArraySize(xRegs);
-    for (int i=0; i < size; i++) {
-      xRegs[i] = makeTaggedNULL();
+    int sz = getRefsArraySize(xRegs);
+    for (int j=0; j < sz; j++) {
+      xRegs[j] = makeTaggedNULL();
     }
   }
 
@@ -1498,9 +1498,8 @@ Thread *Thread::gc()
 {
   GCMETHMSG("Thread::gc");
   CHECKCOLLECTED(flags, Thread *);
-  size_t size;
-  size = sizeof(Thread);
-  Thread *ret = (Thread *) gcRealloc(this,size);
+  size_t sz = sizeof(Thread);
+  Thread *ret = (Thread *) gcRealloc(this,sz);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_THREAD);
   setHeapCell((int *)&flags, GCMARK(ret));
@@ -1584,9 +1583,8 @@ Board *Board::gcBoard1()
     setHeapCell ((int *) &suspCount, GCMARK(this));
     return (this);
   }
-  size_t size;
-  size = sizeof(Board);
-  Board *ret = (Board *) gcRealloc(this,size);
+  size_t sz = sizeof(Board);
+  Board *ret = (Board *) gcRealloc(this,sz);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_BOARD);
   setHeapCell((int *)&suspCount, GCMARK(ret));
@@ -1614,15 +1612,15 @@ Actor *Actor::gc()
   GCMETHMSG("Actor::gc");
   CHECKCOLLECTED(priority, Actor *);
   // by kost@; flags are needed for getBoardDeref
-  size_t size;
+  size_t sz;
   if (isWait()) {
-    size = sizeof(WaitActor);
+    sz = sizeof(WaitActor);
   } else if (isAsk () == OK) {
-    size = sizeof(AskActor);
+    sz = sizeof(AskActor);
   } else {
-    size = sizeof (SolveActor);
+    sz = sizeof (SolveActor);
   }
-  Actor *ret = (Actor *) gcRealloc(this,size);
+  Actor *ret = (Actor *) gcRealloc(this,sz);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_ACTOR);
   setHeapCell((int *)&priority, GCMARK(ret));
@@ -1649,10 +1647,10 @@ void WaitActor::gcRecurse()
   board = board->gcBoard ();
   next.gcRecurse ();
 
-  int no = (int) childs[-1];
-  Board **newChilds=(Board **) heapMalloc((no+1)*sizeof(Board *));
-  *newChilds++ = (Board *) no;
-  for (int i=0; i < no; i++) {
+  int num = (int) childs[-1];
+  Board **newChilds=(Board **) heapMalloc((num+1)*sizeof(Board *));
+  *newChilds++ = (Board *) num;
+  for (int i=0; i < num; i++) {
     if (childs[i]) {
       newChilds[i] = childs[i]->gcBoard();
     } else {
@@ -1699,19 +1697,19 @@ DLLStackEntry SolveActor::StackEntryGC (DLLStackEntry entry)
 
 void DLLStack::gc (DLLStackEntry (*f)(DLLStackEntry))
 {
-  DLLStackBodyEntry *read = l, *current = c;
+  DLLStackBodyEntry *rd = l, *current = c;
   clear ();
-  while (read != (DLLStackBodyEntry *) NULL) {
-    DLLStackEntry el = (*f)(read->elem);
+  while (rd != (DLLStackBodyEntry *) NULL) {
+    DLLStackEntry el = (*f)(rd->elem);
     if (el == (DLLStackEntry) NULL) {
-      if (current == read)
+      if (current == rd)
         current = current->next;
     } else {
       push (el);
-      if (current == read)
+      if (current == rd)
         c = s;
     }
-    read = read->next;
+    rd = rd->next;
   }
 }
 
@@ -1935,9 +1933,9 @@ void checkInToSpace(TaggedRef term)
   }
 }
 
-void regsInToSpace(TaggedRef *regs, int size)
+void regsInToSpace(TaggedRef *regs, int sz)
 {
-  for (int i=0; i<size; i++) {
+  for (int i=0; i<sz; i++) {
     checkInToSpace(regs[i]);
   }
 }

@@ -423,9 +423,9 @@ define(M4INSTRTWOREGS,``''
                  }
 
                  if (isLTuple(term)) {
-                   TaggedRef *arg = tagged2LTuple(term)->getRef();
-                   if (e->fastUnify(Reg1(reg2),makeTaggedRef(arg))) {
-                     Xreg(reg3) = tagged2NonVariable(arg+1);
+                   TaggedRef *argg = tagged2LTuple(term)->getRef();
+                   if (e->fastUnify(Reg1(reg2),makeTaggedRef(argg))) {
+                     Xreg(reg3) = tagged2NonVariable(argg+1);
 
                      DISPATCH(4);
                    }
