@@ -305,9 +305,10 @@ int Object::getWidth()
   return ret;
 }
 
-void Object::globalize(){
-  if (!hasGName()) {
+GName *Object::globalize(){
+  if (!getGName1()) {
     setGName(newGName(makeTaggedConst(this),GNT_OBJECT));}
+  return getGName1();
 }
 
 int ObjectClass::getWidth()

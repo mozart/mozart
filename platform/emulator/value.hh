@@ -163,9 +163,7 @@ public:
   Name *gcName();
   void gcRecurse();
 
-  GName *getGName() {
-    return hasGName() ? (GName*) ToPointer(homeOrGName) : globalize();
-  }
+  GName *getGName1() { return (GName*) ToPointer(homeOrGName); }
   GName *globalize();
   void import(GName *);
 };
@@ -1479,12 +1477,7 @@ public:
   TaggedRef getArityList();
   int getWidth();
 
-  GName *getGName() {
-    GName *gn = getGName1();
-    Assert(gn);
-    return gn;
-  }
-  void globalize();
+  GName *globalize();
 };
 
 
@@ -1552,10 +1545,8 @@ public:
     cl1=c;
   }
 
-  GName *hasGName(){
-    return objectID;}
-  void setGName(GName *gn){
-    objectID = gn;}
+  GName *getGName1()       { return objectID; }
+  void setGName(GName *gn) { objectID = gn;}
 
   OzLock *getLock() { return lock; }
   void setLock(OzLock *l) { lock=l; }
@@ -1615,7 +1606,7 @@ public:
 
   Object *gcObject();
 
-  void globalize();
+  GName *globalize();
   void localize();
 };
 
@@ -1690,10 +1681,6 @@ public:
   }
 
   GName *globalize();
-  GName *getGName() {
-    GName *gn = getGName1();
-    return gn ? gn : globalize();
-  }
 };
 
 
@@ -2020,10 +2007,6 @@ public:
   TaggedRef DBGgetGlobals();
 
   GName *globalize();
-  GName *getGName() {
-    GName *gn = getGName1();
-    return gn ? gn : globalize();
-  }
 };
 
 inline
