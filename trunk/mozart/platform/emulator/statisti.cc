@@ -114,10 +114,12 @@ void Statistics::print(FILE *fd)
 #ifdef HEAP_PROFILE
   printCount();
 #endif
-
-  fprintf(fd,"  FD variables created: %d\n", fdvarsCreated.total);
-  fprintf(fd,"  Propagators created : %d\n\n", propagatorsCreated.total); 
-
+  
+  fprintf(fd,"  Finite Domain Constraints:\n");
+  fprintf(fd,"    FD variables created : %d\n", fdvarsCreated.total);
+  fprintf(fd,"    Propagators created  : %d\n", propagatorsCreated.total); 
+  fprintf(fd,"    Propagators invoked  : %d\n\n", propagatorsInvoked.total); 
+  
   fprintf(fd,"******************************\n");
   fprintf(fd,"***   End of Statistics    ***\n");
   fprintf(fd,"******************************\n\n");
@@ -150,6 +152,7 @@ void Statistics::reset()
 
   fdvarsCreated.reset();
   propagatorsCreated.reset();
+  propagatorsInvoked.reset();
 }
 
 
