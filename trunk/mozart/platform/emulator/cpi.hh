@@ -89,7 +89,7 @@ OZ_Boolean isPosSmallSetInt(OZ_Term v);
     TypeError(P, C);							\
   } else if (O.isSuspending(r) || O.isExceptional(r)) {			\
     for (OZ_Term * v = O.getSuspVar(); v != NULL; v = O.getSuspVar())	\
-      am.addSuspendVarList(v);						\
+      (void) oz_addSuspendVarList(v);					\
     return SUSPEND;							\
   }									\
 }

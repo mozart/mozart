@@ -514,19 +514,12 @@ TaggedRef * newTaggedVar(OzVariable * c) {
 #if defined(DEBUG_CHECK)
 
 inline Bool oz_eq(TaggedRef t1, TaggedRef t2) {
-  Assert(t1==oz_safeDeref(t1));
-  Assert(t2==oz_safeDeref(t2));
-  return t1==t2;
-}
-
-inline Bool oz_eqNoCheck(TaggedRef t1, TaggedRef t2) {
   return t1==t2;
 }
 
 #else
 
 #define oz_eq(t1,t2) ((Bool)(((TaggedRef) (t1))==((TaggedRef) (t2))))
-#define oz_eqNoCheck(t1,t2) oz_eq(t1,t2)
 
 #endif
 
