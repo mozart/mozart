@@ -40,7 +40,7 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
     ozSetenv("OZPATH",buffer);
   }
 
-  sprintf(buffer,"%s/platform/%s;%s",ozhome,ozplatform,getenv("PATH"));
+  sprintf(buffer,"%s;%s/platform/%s;%s",ozhome,ozhome,ozplatform,getenv("PATH"));
   ozSetenv("PATH",buffer);
 
   int console = 0;
