@@ -90,6 +90,42 @@ public:
   }
 };
 
+class FSetMinNPropagator : public Propagator_S_VD {
+private:
+  static OZ_CFun header;
+  
+  int _firsttime, _last_min, _last_max, _l, _k;
+
+public:
+  FSetMinNPropagator(OZ_Term s, OZ_Term vd)
+    : _firsttime(1), Propagator_S_VD(s, vd) { }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const {
+    return header;
+  }  
+  virtual size_t sizeOf(void) {
+    return sizeof(FSetMinNPropagator);
+  }
+};
+
+class FSetMaxNPropagator : public Propagator_S_VD {
+private:
+  static OZ_CFun header;
+  
+  int _firsttime, _last_min, _last_max, _l, _k;
+
+public:
+  FSetMaxNPropagator(OZ_Term s, OZ_Term vd)
+    : _firsttime(1), Propagator_S_VD(s, vd) { }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const {
+    return header;
+  }  
+  virtual size_t sizeOf(void) {
+    return sizeof(FSetMaxNPropagator);
+  }
+};
+
 #endif /* __INTSETS_HH__ */
 
 
