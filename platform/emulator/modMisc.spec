@@ -97,16 +97,6 @@
 			     ifdef=>'PROFILE_BI'},
 
     ###
-    ### Christian's private stuff
-    ###
-
-    'GetCloneDiff'	=> { in  => ['+space'],
-			     out => ['+value'],
-			     BI  => BIgetCloneDiff,
-			     ifdef=>'CS_PROFILE'},
-
-
-    ###
     ### Ralf's private stuff
     ###
 

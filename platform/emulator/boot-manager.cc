@@ -89,6 +89,22 @@ TaggedRef dictionary_of_modules;
 #include "modVirtualSite-if.cc"
 #endif
 
+#ifdef CS_PROFILE
+OZ_BI_proto(BIgetCloneDiff);
+
+extern "C" 
+{
+  OZ_C_proc_interface * mod_int_CloneDiff(void) {
+    static OZ_C_proc_interface i_table[] = {
+      {"get",        1,      1,BIgetCloneDiff},
+      {0,0,0,0}
+    };
+    
+    return i_table;
+  }
+}
+#endif
+
 typedef OZ_C_proc_interface * (* init_fun_t) (void);
 
 struct ModuleEntry {
@@ -126,6 +142,10 @@ static ModuleEntry module_table[] = {
 
 #ifdef MISC_BUILTINS
   {"Misc",         mod_int_Misc},
+#endif
+
+#ifdef CS_PROFILE
+  {"CloneDiff", mod_int_CloneDiff},
 #endif
 
 #ifdef VIRTUALSITES
