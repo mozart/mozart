@@ -52,17 +52,18 @@ To be done.
 <chapter id=chapter.platformspecific>
 <title/Bugs Occuring Only on Particular Platforms/
 <p>
-<section>
-<title/Linux/
-<p>
-<list>
-<item> On some early versions of the Linux 2.2 kernel Mozart might
-crash with a SEGV. This is related to a bug in Linux implementation of
-mmap.
-<p>
-Workaround: use version 2.0.37 or upgrade to a newer 2.2 kernel.
-</list>
-</section>
+To be done.
+<!--  <section> -->
+<!--  <title/Linux/ -->
+<!--  <p> -->
+<!--  <list> -->
+<!--  <item> On some early versions of the Linux 2.2 kernel Mozart might -->
+<!--  crash with a SEGV. This is related to a bug in Linux implementation of -->
+<!--  mmap. -->
+<!--  <p> -->
+<!--  Workaround: use version 2.0.37 or upgrade to a newer 2.2 kernel. -->
+<!--  </list> -->
+<!--  </section> -->
 </chapter>
 
 
