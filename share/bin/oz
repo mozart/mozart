@@ -75,7 +75,7 @@ cmd=`basename $howcalled`
 case "$cmd" in
 
    oz) 
-       exec $LEMACS -l $OZHOME/elisp/ozstartup.el
+       exec $LEMACS -l $OZHOME/elisp/ozstartup.el $*
    ;;
 
    oz.compiler)
