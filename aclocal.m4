@@ -1036,7 +1036,8 @@ AC_DEFUN(OZ_ARG_WITH_LIB_DIR,[
   AC_MSG_CHECKING(for --with-lib-dir)
   AC_ARG_WITH(lib-dir,
     [--with-lib-dir=d1,...,dn   add these dirs to LDFLAGS],
-    oz_cv_with_lib_dirs=$with_lib_dir)
+    [oz_cv_with_lib_dirs=$with_lib_dir],
+    [: ${oz_cv_with_lib_dirs=$oz_with_lib_dir}])
   AC_MSG_RESULT($with_lib_dir)
   oz_tmp_IFS="$IFS"
   IFS=","
@@ -1069,7 +1070,8 @@ AC_DEFUN(OZ_ARG_WITH_INC_DIR,[
   AC_MSG_CHECKING(for --with-inc-dir)
   AC_ARG_WITH(inc-dir,
     [--with-inc-dir=d1,...,dn   add these dirs to CPPFLAGS],
-    oz_cv_with_inc_dirs=$with_inc_dir)
+    [oz_cv_with_inc_dirs=$with_inc_dir],
+    [: ${oz_cv_with_inc_dirs=$oz_with_inc_dir}])
   AC_MSG_RESULT($with_inc_dir)
   oz_tmp_IFS="$IFS"
   IFS=","
