@@ -129,7 +129,7 @@ define
 	     ("[l(\"cn<"#PropId
 	      #">\",n(\"\",["
 	      #"a(\"OBJECT\",\""#ReflC.name#"\\n"#Location#"\"),"
-	      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(PropId $)}#"\"),"
+	      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(C $)}#"\"),"
 	      #{Hist get_prop_node_attr(PropId $)}
 
 	      #"m(["

@@ -1,8 +1,9 @@
-
 \switch +dynamicvarnames
 \switch +controlflowinfo
 
 {Property.put 'internal.propLocation' true}
+
+{Show {Property.get 'internal.propLocation'}}
 
 
 declare
@@ -67,11 +68,24 @@ in
 {Browse N11}
 
 
+% propagators failed during propagation
+declare X Y Z in [X Y Z] ::: 1#10
+X <: Y
+Y <: Z
+Z <: X
 
-declare X = {FD.int 1#4} in thread cond Y = {FD.int 1#3} in Y = X {Show X} then {Show a} else {Show b} end end
-{Show X}
+{InvestigateConstraints X}
 
-declare [R] = {Module.link ['http://www.ps.uni-sb.de/~tmueller/mozart/ReflectConstraints.ozf']}
-{Wait R}
+% propagators failed during propagation
+declare A B C D in
+A :: 6#9
+[B C] ::: 1#10
+D :: 2#5
+A <: B
+C <: D
+B <: C
+
+{InvestigateConstraints A}
+
 
 */
