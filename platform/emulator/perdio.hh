@@ -342,8 +342,8 @@ GName *newGName(PrTabEntry *);
 
 PrTabEntry *findCodeGName(GName *);
 
-int loadURL(TaggedRef url, OZ_Term &out);
-int loadURL(char *url, OZ_Term &out);
+int loadURL(TaggedRef url, OZ_Term out);
+int loadURL(char *url, OZ_Term out);
 
 /* __PERDIOHH */
 #endif

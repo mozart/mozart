@@ -305,7 +305,7 @@ void AM::init(int argc,char **argv)
     // --> make sure that we check for input from compiler
     setSFlag(IOReady);
   } else {
-    OZ_Term v;
+    OZ_Term v=oz_newVariable();
     if (loadURL(url,v)!=PROCEED) {
       fprintf(stderr,"Loading from URL %s failed\n",url);
       exit(1);

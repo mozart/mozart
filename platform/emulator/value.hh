@@ -677,11 +677,13 @@ public:
 
 
 class ConstTermWithHome: public ConstTerm {
-protected:
-  Board *home;
+private:
+  Board *board;
 public:
-  ConstTermWithHome(Board *b, TypeOfConst t) : ConstTerm(t), home(b) {}
+  ConstTermWithHome(Board *b, TypeOfConst t) : ConstTerm(t), board(b) {}
+  Board *getBoardInternal() { return board; }
   Board *getBoard();
+  setBoard(Board *bb) { board = bb; }
 };
 
 
@@ -719,7 +721,6 @@ public:
 
   void globalizeTert();
   void localize();
-  void import();
 
   void gcProxy();
   void gcManager();
@@ -1256,17 +1257,25 @@ typedef int32 RecOrCell;
 
 inline
 Bool stateIsCell(RecOrCell rc)     { return rc&1; }
+
 inline
-Tertiary *getCell(RecOrCell rc)   { Assert(stateIsCell(rc)); return (Tertiary*) ToPointer(rc-1); }
+Tertiary *getCell(RecOrCell rc)   {
+  Assert(stateIsCell(rc)); return (Tertiary*) ToPointer(rc-1);
+}
+
 inline
-SRecord *getRecord(RecOrCell rc) { Assert(!stateIsCell(rc)); return (SRecord*) ToPointer(rc);}
+SRecord *getRecord(RecOrCell rc) {
+  Assert(!stateIsCell(rc)); return (SRecord*) ToPointer(rc);
+}
+
 inline
 RecOrCell makeRecCell(Tertiary *c)    { return ToInt32(c)|1; }
+
 inline
 RecOrCell makeRecCell(SRecord *r) { return ToInt32(r); }
 
 
-class Object: public Tertiary {
+class Object: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
   RecOrCell state;  // was: SRecord *state, but saves memory on the Alpha
@@ -1285,8 +1294,9 @@ public:
   Bool isClass()        { return getFlag(OFlagClass); }
   void setClass()       { setFlag(OFlagClass); }
 
-  Object(Board *b,SRecord *s,ObjectClass *ac,SRecord *feat,Bool iscl, OzLock *lck):
-    Tertiary(b,Co_Object,Te_Local)
+  Object(Board *bb,SRecord *s,ObjectClass *ac,SRecord *feat,Bool iscl,
+         OzLock *lck):
+    ConstTermWithHome(bb,Co_Object)
   {
     setFreeRecord(feat);
     setClass(ac);
@@ -1296,7 +1306,8 @@ public:
     setGName(0);
   }
 
-  Object(int i, GName *gn) : Tertiary(i,Co_Object,Te_Proxy)
+  Object(Board *bb, GName *gn):
+    ConstTermWithHome(bb,Co_Object)
   {
     setFreeRecord(NULL);
     setClass(NULL);
@@ -1319,7 +1330,9 @@ public:
   char *getPrintName()          { return getClass()->getPrintName(); }
   Bool lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X);
   RecOrCell getState()          { return state; }
-  void setState(SRecord *s)     { Assert(s!=0 || isClass()); state=makeRecCell(s); }
+  void setState(SRecord *s) {
+    Assert(s!=0 || isClass()); state=makeRecCell(s);
+  }
   void setState(Tertiary *c)    { state = makeRecCell(c); }
   OzDictionary *getDefMethods() { return getClass()->getDefMethods(); }
   Object *getOzClass()          { return getClass()->getOzClass(); }
@@ -1379,7 +1392,6 @@ public:
     return gn ? gn : globalize();
   }
   GName *globalize();
-  void import();
 
   OZPRINT;
   OZPRINTLONG;
@@ -1422,24 +1434,18 @@ Bool isObjectTrue(TaggedRef term)
  * SChunk
  *=================================================================== */
 
-class SChunk: public Tertiary {
+class SChunk: public ConstTermWithHome {
 friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef value;
 public:
   SChunk(Board *b,TaggedRef v)
-    : Tertiary(b,Co_Chunk,Te_Local), value(v)
+    : ConstTermWithHome(b,Co_Chunk), value(v)
   {
     Assert(v==0||isRecord(v));
     Assert(b);
     setGName(0);
   };
-
-  SChunk(int i, GName *gn) : Tertiary(i,Co_Chunk,Te_Proxy)
-  {
-    value = makeTaggedNULL();
-    setGName(gn);
-  }
 
   OZPRINT;
   OZPRINTLONG;
@@ -1449,7 +1455,12 @@ public:
   TaggedRef getArityList() { return ::getArityList(value); }
   int getWidth () { return ::getWidth(value); }
 
-  void import(TaggedRef val);
+  void import(TaggedRef val) {
+    Assert(!value);
+    Assert(isRecord(val));
+    Assert(getGName1());
+    value=val;
+  }
 
   GName *globalize();
   GName *getGName() {
@@ -1632,13 +1643,12 @@ private:
   SRecordArity methodArity;
   TaggedRef fileName;
   int lineno;
-  GName *gname;
 
 public:
   ProgramCounter PC;
 
   PrTabEntry (TaggedRef name, SRecordArity arityInit,TaggedRef file, int line)
-  : printname(name), spyFlag(NO), fileName(file), lineno(line), gname(NULL)
+  : printname(name), spyFlag(NO), fileName(file), lineno(line)
   {
     Assert(isLiteral(name));
     methodArity = arityInit;
@@ -1659,17 +1669,11 @@ public:
   Bool getSpyFlag()   { return (Bool) spyFlag; }
   void setSpyFlag()   { spyFlag = OK; }
   void unsetSpyFlag() { spyFlag = NO; }
-
-  void gcPrTabEntry();
-
-  void globalize();
-  GName *getGName()        { Assert(gname); return gname; }
-  void setGName(GName *gn) { Assert(gname==NULL); gname = gn; }
 };
 
 
 
-class Abstraction: public Tertiary {
+class Abstraction: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
 // DATA
@@ -1678,10 +1682,8 @@ protected:
 public:
   Abstraction(Abstraction&);
   Abstraction(PrTabEntry *prd, RefsArray gregs, Board *b)
-  : Tertiary(b,Co_Abstraction,Te_Local), gRegs(gregs), pred(prd)
+    : ConstTermWithHome(b,Co_Abstraction), gRegs(gregs), pred(prd)
   { }
-
-  Abstraction(TaggedRef name, int arity, GName *gn);
 
   OZPRINT;
   OZPRINTLONG;
@@ -1697,11 +1699,11 @@ public:
 
   TaggedRef DBGgetGlobals();
 
+  GName *globalize();
   GName *getGName() {
     GName *gn = getGName1();
     return gn ? gn : globalize();
   }
-  GName *globalize();
   void import(RefsArray g, ProgramCounter pc) {
     gRegs = g;
     if (pc!=NOCODE) {

@@ -1975,10 +1975,7 @@ void ConstTerm::gcConstRecurse()
   case Co_Object:
     {
       Object *o = (Object *) this;
-      o->gcTertiary();
-      if (o->isLocal()) {
-        o->setBoard(o->getBoard()->gcBoard());
-      }
+      o->setBoard(o->getBoardInternal()->gcBoard());
       o->setClass(o->getClass()->gcClass());
       o->setFreeRecord(o->getFreeRecord()->gcSRecord());
       RecOrCell state = o->getState();
@@ -1996,11 +1993,7 @@ void ConstTerm::gcConstRecurse()
     {
       Abstraction *a = (Abstraction *) this;
       a->gRegs = gcRefsArray(a->gRegs);
-      a->gcTertiary();
-      Assert(!a->isProxy());
-      if (a->isLocal()) {
-        a->setBoard(a->getBoard()->gcBoard());
-      }
+      a->setBoard(a->getBoardInternal()->gcBoard());
       break;
     }
 
@@ -2071,11 +2064,8 @@ void ConstTerm::gcConstRecurse()
   case Co_Chunk:
     {
       SChunk *c = (SChunk *) this;
-      c->gcTertiary();
       gcTagged(c->value,c->value);
-      if (c->isLocal()) {
-        c->setBoard(c->getBoard()->gcBoard());
-      }
+      c->setBoard(c->getBoardInternal()->gcBoard());
       break;
     }
 
@@ -2083,7 +2073,7 @@ void ConstTerm::gcConstRecurse()
     {
       OzArray *a = (OzArray*) this;
 
-      a->home = a->home->gcBoard();
+      a->setBoard(a->getBoardInternal()->gcBoard());
 
       if (a->getWidth() > 0) {
         TaggedRef *oldargs = a->getArgs();
@@ -2101,7 +2091,7 @@ void ConstTerm::gcConstRecurse()
   case Co_Dictionary:
     {
       OzDictionary *dict = (OzDictionary *) this;
-      dict->home  = dict->home->gcBoard();
+      dict->setBoard(dict->getBoardInternal()->gcBoard());
       dict->table = dict->table->gc();
       break;
     }
@@ -2109,7 +2099,7 @@ void ConstTerm::gcConstRecurse()
   case Co_Lock:
     {
       OzLock *lock = (OzLock *) this;
-      lock->home  = lock->home->gcBoard();
+      lock->setBoard(lock->getBoardInternal()->gcBoard());
       gcTagged(lock->threads,lock->threads);
       lock->locker = lock->locker->gcThread();
       break;
@@ -2122,13 +2112,6 @@ void ConstTerm::gcConstRecurse()
     Assert(0);
   }
 }
-
-inline
-void PrTabEntry::gcPrTabEntry()
-{
-  dogcGName(gname);
-}
-
 
 #define CheckLocal(CONST)                                       \
 {                                                               \
@@ -2154,7 +2137,6 @@ ConstTerm *ConstTerm::gcConstTerm()
       CheckLocal(a);
       sz = sizeof(Abstraction);
       dogcGName(a->getGName1());
-      a->getPred()->gcPrTabEntry();
       COUNT(abstraction);
       break;
     }
@@ -2217,6 +2199,7 @@ ConstTerm *ConstTerm::gcConstTerm()
     CheckLocal((Space *) this);
     sz = sizeof(Space);
     COUNT(space);
+    dogcGName(getGName1());
     break;
 
   case Co_Chunk:
