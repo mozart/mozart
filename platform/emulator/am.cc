@@ -146,7 +146,11 @@ void AM::init(int argc,char **argv)
     if (eh) {
       fprintf(stderr, "Waiting 10 secs... hook up (pid %d)!\n", osgetpid());
       fflush(stderr);
+#ifdef WINDOWS
+      Sleep(10*1000);
+#else
       sleep(10);
+#endif
     }
   }
 #endif
