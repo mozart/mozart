@@ -1213,6 +1213,8 @@ BIspec fdSpec[] = {
   {"fdp_twice", 2, fdp_twice},
   {"fdp_square", 2, fdp_square},
   {"fdp_subset", 2, fdp_subset},
+
+  {"counter", 2, fdtest_counter},
 #endif
 #ifdef DEBUG_STABLE
   {"debugStable", 0, debugStable},
@@ -1224,6 +1226,7 @@ BIspec fdSpec[] = {
   {"fddistributeMinPairs", 5, BIfdDistributeMinPairs},
   {"fddistributeTaskIntervals", 7, BIfdDistributeTaskIntervals},
   {"fddistributeTaskIntervalsOpt", 7, BIfdDistributeTaskIntervalsOpt},
+
 
   {0,0,0,0}
 };

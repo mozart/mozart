@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.345  1996/07/15 10:23:26  tmueller
+  added streams to cpi
+
   Revision 1.344  1996/07/12 16:19:18  schulte
   Scaled down default error handler; removed error verbosity
 
@@ -2063,7 +2066,10 @@ LBLdispatcher:
 
       case FAILED:
 	SHALLOWFAIL;
-	error("inlinefun2 fail");
+	HF_FAIL(OZ_mkTupleC("fail",2,
+			    OZ_atom(entry->getPrintName()),
+			    cons(XPC(2),cons(XPC(3),cons(XPC(4),nil())))));
+	//	error("inlinefun2 fail");
 
       case RAISE:
 	RAISE_FBI(entry->getPrintName(),
