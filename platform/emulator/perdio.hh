@@ -45,4 +45,10 @@ void getCode(ProcProxy *);
 void gcOwnerTable();
 void gcBorrowTable();
 
+void gcGNameTable();
+void gcGName(GName*);
+
+
+GName *newGName(TaggedRef t);
+
 #endif /* __PERDIOHH */

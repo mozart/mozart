@@ -107,10 +107,14 @@ protected:
     entry=from->entry;}
 
 public:
+  void makeEmptyForRS() {makeEmpty();} /* RSTODO */
+  Bool isEmptyForRS() {return isEmpty();} /* RSTODO */
+
   void setNext(GenHashNode *n){next=n;}
   GenHashNode *getNext(){return next;}
   GenHashBaseKey *getBaseKey(){return basekey;}
   GenHashEntry *getEntry(){return entry;}
+  void setEntry(GenHashEntry *e){ entry=e;}
   int getKey(){return key;}
 };
 
