@@ -273,7 +273,7 @@ changequote(<,>)
       IFS='
 '
       for oz_tmp_version3 in ${oz_tmp_version1}; do
-        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._]*\)\n'`
+        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._]*\)$'`
         break
       done
       IFS="$oz_tmp_IFS"
