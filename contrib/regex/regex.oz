@@ -31,7 +31,7 @@ in
             flags       : FLAGS
             is          : Is
            ) at 'regex.so{native}'
-      Finalize(register:Register)
+      Finalize(guardian : Guardian)
    export
       CFlags EFlags
       Is Make Search Compile Execute Group Groups
@@ -80,10 +80,11 @@ in
       end
 
       EFlags = eflags(get:GetEFlags set:SetEFlags)
+      Register = {Guardian FREE}
 
       proc {Compile SRC FLAGS RE}
          {COMPILE SRC {CFlagToInt FLAGS} RE}
-         {Register RE FREE}
+         {Register RE}
       end
       proc {Make SRC RE}
          {Compile SRC {Access CFlagsInt} RE}
