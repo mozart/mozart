@@ -22,13 +22,14 @@ void OZ_CFunHeader::profileReset()
   while(aux) {
     aux->_calls   = 0;
     aux->_samples = 0;
+    aux->_heap = 0;
     aux = aux->getNext();
   }
 }
 
 
 OZ_CFunHeader::OZ_CFunHeader(OZ_CFun header)
-  : _calls(0), _samples(0), _header(header)
+  : _calls(0), _samples(0), _heap(0), _header(header)
 {
   static int firstCall = 1;
   if (firstCall) {

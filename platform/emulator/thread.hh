@@ -265,7 +265,7 @@ public:
     state.flags = state.flags | T_runnable;
   }
   void unmarkRunnable () {
-    Assert (isRunnable () && !(isDeadThread ()));
+    Assert (isRunnable () && !(isDeadThread ()) || stopped());
     state.flags = state.flags & ~T_runnable;
   }
 
@@ -455,9 +455,15 @@ public:
     extern char * ctHeap, * ctHeapTop;
     ctHeap = ctHeapTop;
     if (am.profileMode) {
-      ozstat.enterProp(item.propagator->getHeader());
+      OZ_CFunHeader *prop = item.propagator->getHeader();
+      ozstat.enterProp(prop);
+      int heapNow = getUsedMemoryBytes();
       OZ_Return ret = item.propagator->propagate();
+      int heapUsed = getUsedMemoryBytes() - heapNow;
+      prop->incHeap(heapUsed);
       ozstat.leaveProp();
+      if (ozstat.currAbstr)
+        ozstat.currAbstr->heapUsed -= heapUsed;
       return ret;
     } else {
       return item.propagator->propagate();
