@@ -223,7 +223,7 @@ public:
 
   void deregisterSite(DSite* sd);
   void deAutoSite(DSite*);
-  void surrender(TaggedRef*, TaggedRef);
+  void surrender(TaggedRef*, TaggedRef,DSite*);
   void marshal(ByteBuffer *);
 
   inline void localize(TaggedRef *vPtr);

@@ -392,7 +392,11 @@ OZ_Return ManagerVar::bindVInternal(TaggedRef *lPtr, TaggedRef r,DSite *s)
 OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r){
   if(!errorIgnore()){
     if(failurePreemption(mkOp1("bind",r))) return BI_REPLACEBICALL;}
-  return bindVInternal(lPtr,r,myDSite);}
+  // AN: Pass NULL and not myDSite. myDSite can never be a site
+  // that acknowledge should be sent to. It will also never be in the
+  // proxy list.
+  return bindVInternal(lPtr,r,NULL);
+}
 
 void varGetStatus(DSite* site,int OTI, TaggedRef tr){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
@@ -416,7 +420,8 @@ OZ_Return ManagerVar::forceBindV(TaggedRef *lPtr, TaggedRef r)
   PD((PD_VAR,"bind manager o:%d v:%s",OTI,toC(*lPtr)));
   Bool isLocal = oz_isLocalVar(this);
   if (isLocal) {
-    sendRedirectToProxies(r, myDSite);
+    // In this case noone could get acknowledge => NULL
+    sendRedirectToProxies(r, NULL);
     EntityInfo *ei=info;
     oz_bindLocalVar(this,lPtr,r);
     OT->getOwner(OTI)->changeToRef();
@@ -428,9 +433,17 @@ OZ_Return ManagerVar::forceBindV(TaggedRef *lPtr, TaggedRef r)
   }
 }
 
-void ManagerVar::surrender(TaggedRef *vPtr, TaggedRef val)
+void ManagerVar::surrender(TaggedRef *vPtr, TaggedRef val,DSite *ackSite)
 {
-  OZ_Return ret = bindV(vPtr,val);
+  // AckSite has to be passed on if acknowledge and not redirect should
+  // be sent to the 'binding' site.
+
+  // AN! These two lines were copied from bindV. What do they do? Are they
+  // needed here?
+//    if(!errorIgnore()){
+//      if(failurePreemption(mkOp1("bind",val))) return BI_REPLACEBICALL;}
+
+  OZ_Return ret =  bindVInternal(vPtr,val,ackSite);
   Assert(ret==PROCEED);
 }
 

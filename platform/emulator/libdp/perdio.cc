@@ -758,7 +758,7 @@ void msgReceived(MsgContainer* msgC)
 
       if (oe->isVar()) {
         PD((PD_VAR,"SURRENDER do it"));
-        GET_VAR(oe,Manager)->surrender(oe->getPtr(),v);
+        GET_VAR(oe,Manager)->surrender(oe->getPtr(),v,rsite);
       } else {
         PD((PD_VAR,"SURRENDER discard"));
         PD((WEIRD,"SURRENDER discard"));
