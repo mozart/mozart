@@ -269,7 +269,7 @@ char *OZ_intToCString(OZ_Term term)
 
 OZ_Term OZ_CToFloat(OZ_Float i)
 {
-  return makeTaggedFloat(new Float(i));
+  return makeTaggedFloat(Float::newFloat(i));
 }
 
 OZ_Float OZ_floatToC(OZ_Term term)
