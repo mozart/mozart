@@ -1187,7 +1187,7 @@ int FiniteDomain::operator += (const int put_in)
 	  iv->initList(c_len, fd_bv_left_conv, fd_bv_right_conv);
 	} else {
 	  iv = provideIntervals(c_len + 1);
-	  fd_bv_right_conv[c_len] = fd_bv_right_conv[c_len] = put_in;
+	  fd_bv_left_conv[c_len] = fd_bv_right_conv[c_len] = put_in;
 	  iv->initList(c_len + 1, fd_bv_left_conv, fd_bv_right_conv);
 	}
 	max_elem = put_in;
