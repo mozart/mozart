@@ -113,8 +113,6 @@ public:
 };
 
 class OldPerdioVar : public PerdioVar {
-protected:
-  short flags;
 private:
   short pvtype;
   void *ptr;
@@ -132,13 +130,11 @@ public:
   NO_DEFAULT_CONSTRUCTORS2(OldPerdioVar);
   OldPerdioVar(Board *bb) : PerdioVar(bb) {
     u.proxies=0;
-    flags = 0;
     setpvType(PV_MANAGER);
   }
 
   OldPerdioVar(int i,Board *bb) : PerdioVar(bb) {
     u.bindings=0;
-    flags = 0;
     setpvType(PV_PROXY);
     setIndex(i);
   }
@@ -146,7 +142,6 @@ public:
   OldPerdioVar(Object *o,Board *bb) : PerdioVar(bb) {
     setpvType(PV_OBJECTCLASSAVAIL);
     ptr   = o;
-    flags = 0;
   }
 
   void setClass(ObjectClass *cl) {
