@@ -120,6 +120,9 @@ inline void *mallocBody(size_t chunk_size, int align)
     if (sizeof(int32) != align) {
       HeapTopAlign(align);
     }
+#ifdef DEBUG_MEM
+    memset((char *)heapTop,0x5A,chunk_size);
+#endif
     return heapTop;
   }
   getMemFromOS(chunk_size);
