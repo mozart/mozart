@@ -71,8 +71,8 @@ define
       V4={NewEntry "Lastname:" {CondSelect Info lastname ""}}
       V5={NewEntry "Organization:" {CondSelect Info organization Organization}}
       V6={NewEntry "Email:" {CondSelect Info email ""}}
-%      V7={NewEntry "Civic registration number:" {CondSelect Args extra "<personnummer>"}}
-      V7={NewEntry "Phone:" {CondSelect Args extra ""}}
+%      V7={NewEntry "Civic registration number:" {CondSelect Info extra "<personnummer>"}}
+      V7={NewEntry "Phone:" {CondSelect Info extra ""}}
 
       {Wait GO}
       {Start2}

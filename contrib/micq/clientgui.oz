@@ -917,10 +917,10 @@ define
               SU=({Access MyData}.userlevel==sysadm)
            in
               {Popup ["Broadcast Message"#proc{$}
-                                             {ComposeMessage
+                                             {ComposeMess
                                               message(user:user(id:SysAdm_Broadcast name:"Broadcast")
                                                       browser:false
-                                                      send:proc{$ IDs X} MID D in
+                                                      send:proc{$ IDs X} MID D
                                                               IDs2=if {Member IDs SysAdm_Broadcast} then
                                                                       {Dictionary.keys DB}
                                                                    else
@@ -939,16 +939,15 @@ define
                                                                                  E={Dictionary.get DB I}
                                                                               in
                                                                                  {E.widget saveSent(message:X
-                                                                                                    reply_to:RPT
-                                                                                                       mid:MID
+                                                                                                    reply_to:nil
+                                                                                                    mid:MID
                                                                                                     date:D
                                                                                                     incCount:true
                                                                                                    )}
                                                                               end}
                                                               end
                                                            end
-                                                     end
-                                              message:Mess)}
+                                                      message:nil)}
                                           end
                       separator
                       "Add Friends"#proc{$}
@@ -997,7 +996,10 @@ define
                                  "Close Help Window"}
                              end
                       if SU then
-                         "GetAll Users"#
+                         "GetAll Users"#proc{$} skip end
+                      else
+                         ignore
+                      end
                       separator
                       "Logout"#Kill
                      ] T}
