@@ -87,3 +87,5 @@ LOG  [<>]?=?
 }
 
 %%
+
+int yywrap YY_PROTO(( void )) { return 1; }

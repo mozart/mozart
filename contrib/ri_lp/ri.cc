@@ -138,9 +138,6 @@ extern "C"
 
     RIDefinition::_kind = OZ_getUniqueId();
     
-    printf("\tModule `real interval constraints' from %s (%s) loaded.\n",
-	   __DATE__, __TIME__);
-    
     return i_table;
   }
 } /* extern "C" */
