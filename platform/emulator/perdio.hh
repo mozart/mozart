@@ -327,7 +327,6 @@ extern BufferManager *bufferManager;
 void gcGNameTable();
 void gcGName(GName*);
 void getCode(ProcProxy*);
-void addGName(GName *, PrTabEntry *);
 GName *copyGName(GName*);
 
 enum GNameType {
