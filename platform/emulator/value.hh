@@ -503,7 +503,8 @@ enum TypeOfConst {
    */
   Co_Object,   
   Co_Chunk,
-  Co_Array
+  Co_Array,
+  Co_Dictionary
 };
 
 
