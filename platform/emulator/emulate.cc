@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.358  1996/09/03 08:58:33  mehl
+  bug fixed: collecting dead threads
+
   Revision 1.357  1996/09/02 21:54:41  mehl
   job eliminated and new deep guards
   bug fixed in new thread scheduling
@@ -1636,7 +1639,7 @@ LBLsuspendThread:
 
 #ifdef DEBUG_CHECK
     if (CTT==e->rootThread) {
-      printf("root blocked\n");
+      // printf("root blocked\n");
     }
 #endif
 
