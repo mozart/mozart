@@ -141,13 +141,15 @@ Bool localizeTertiary(Tertiary*);
 Bool isTertiaryPending(Tertiary*);
 void dpExitWithTimer(unsigned int);
 
-//Stuff for seting values in Networklayer
+//Stuff for setting values in Networklayer
 void setIPAddress(int);
 int  getIPAddress();
 void setIPPort(int);
 int getIPPort();
 void setFirewallStatus(Bool);
 Bool getFireWallStatus();
+void setTransport(OZ_Term);
+OZ_Term getTransport();
 
 // AN
 inline void perdio_msgReceived(MsgContainer *msgC,ByteBuffer *bb) {
