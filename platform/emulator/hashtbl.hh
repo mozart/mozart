@@ -38,11 +38,6 @@
 
 class SHT_HashNode;
 
-typedef union {
-  const char *fstr;
-  intlong fint;
-} HtKey;
-
 //
 // The one with the paramount efficiency (atom- and name- hash
 // tables). That is, we don't really care how expensive is the
@@ -53,16 +48,16 @@ typedef union {
 // ones outside it;
 class SHT_HashNode {
 private:
-  HtKey key;
+  const char *key;
   void* value;
   SHT_HashNode *next;
 
 public:
-  void setEmpty() { key.fint = (intlong) htEmpty; }
-  Bool isEmpty()  { return (key.fint == (intlong) htEmpty); }
+  void setEmpty() { key = (const char*) htEmpty; }
+  Bool isEmpty()  { return (key == (const char*) htEmpty); }
 
   //
-  void setKey(const char *sIn) { key.fstr = sIn; }
+  void setKey(const char *sIn) { key = sIn; }
   void setValue(void *valueIn) { value = valueIn; }
   void setNext(SHT_HashNode *nextIn) { next = nextIn; }
 
@@ -76,7 +71,7 @@ public:
   }
 
   //
-  HtKey getKey() { return (key); }
+  const char* getKey() { return (key); }
   void* getValue() { return (value); }
   SHT_HashNode *getNext() { return (next); }
 };
@@ -129,22 +124,22 @@ protected:
 //
 class AHT_HashNode {
 private:
-  HtKey key;
+  intlong key;
   void* value;
 
 public:
-  void setEmpty() { key.fint = (intlong) htEmpty; }
-  Bool isEmpty()  { return (key.fint == (intlong) htEmpty); }
+  void setEmpty() { key = (intlong) htEmpty; }
+  Bool isEmpty()  { return (key == (intlong) htEmpty); }
 
   //
   AHT_HashNode() { setEmpty(); }
 
   //
-  void setKey(intlong iIn) { key.fint = iIn; }
+  void setKey(intlong iIn) { key = iIn; }
   void setValue(void *vIn) { value = vIn; }
 
   //
-  HtKey getKey() { return (key); }
+  intlong getKey() { return (key); }
   void* getValue() { return (value); }
 };
 
@@ -199,39 +194,27 @@ protected:
 };
 
 
-// 
-// An address hash table with the O(n) (n=number of entries) reset
-// time. Useful e.g. for marshaling. The idea is that a hash node
-// keeps a reference to a previous node, so 'reset()' traverses those
-// backwards (keep in mind also that there is no 'delete'
-// operation). Unfortunately, i don't see any simple and efficient way
-// to just extend the 'HashTable'. So, a lot of things are plain
-// copied...
-
 //
-class AHT_HashNodeLinked {
+class AHT_HashNodeCnt {
 private:
-  HtKey key;
-  void * value;
-  AHT_HashNodeLinked *prev;
+  intlong key;
+  void* value;
+  unsigned int cnt;
 
   //
 public:
-  void setEmpty() { key.fint = (intlong) htEmpty; }
-  Bool isEmpty()  { return (key.fint == (intlong) htEmpty); }
+  AHT_HashNodeCnt() { cnt = 0; }
+
+  unsigned int getCnt() { return (cnt); }
+  void setCnt(unsigned int cntIn) { cnt = cntIn; }
 
   //
-  AHT_HashNodeLinked() { setEmpty(); }
-
-  //
-  void setKey(intlong iIn) { key.fint = iIn; }
+  void setKey(intlong iIn) { key = iIn; }
   void setValue(void *vIn) { value = vIn; }
-  void setPrev(AHT_HashNodeLinked *pIn) { prev = pIn; }
 
   //
-  HtKey getKey() { return (key); }
+  intlong getKey() { return (key); }
   void* getValue() { return (value); }
-  AHT_HashNodeLinked* getPrev() { return (prev); }
 };
 
 //
@@ -239,20 +222,26 @@ public:
 class AddressHashTableFastReset {
 private:
   int tableSize;
-  int incStepMod;		// an integer slightly < tableSize;
+  int bits;			// pkey & skey;
+  int rsBits;			// right shifht;
+  int slsBits;			// skey left shift;
   int counter;      // number of entries
   int percent;      // if more than percent is used, we reallocate
-  AHT_HashNodeLinked *table;
-  AHT_HashNodeLinked *prev;
-  DebugCode(int nsearch;);	// number of searches;
-  DebugCode(int tries;);	// accumulated;
+  unsigned int pass;		// current pass
+  // (inits to 1 since AHT_HashNodeCnt inits it to 0);
+  AHT_HashNodeCnt *table;
+  int lastKey;
+  DebugCode(intlong lastK;);
+  DebugCode(int nsearch;);	// number of searches since last 'mkEmpty()';
+  DebugCode(int tries;);	// accumulated over 'nsearch';
   DebugCode(int maxtries;);
+  DebugCode(int nsearchAcc;);	// .. since object construction;
+  DebugCode(int triesAcc;);	// accumulated over 'nsearchAcc';
 
   //
 private:
   unsigned int primeHashFunc(intlong);
   unsigned int incHashFunc(intlong);
-  unsigned int getStepN(unsigned int pkey, unsigned int ikey, int i);
 
   unsigned int findIndex(intlong i);
   void mkTable();
@@ -266,19 +255,20 @@ public:
   //
   int getSize() { return (counter); }
   void htAdd(intlong k, void *val);
+  void htAddLastNotFound(intlong k, void *val);
   void *htFind(intlong k);
-  void mkEmpty(Bool force = FALSE);
+  void mkEmpty();
 
   //
   // for e.g. garbage collection:
-  AHT_HashNodeLinked *getNext(AHT_HashNodeLinked *hn) {
-    for (hn++; hn < table+tableSize; hn++) {
-      if (!hn->isEmpty())
+  AHT_HashNodeCnt *getNext(AHT_HashNodeCnt *hn) {
+    for (hn--; hn >= table; hn--) {
+      if (hn->getCnt() == pass)
 	return (hn);
     }
-    return ((AHT_HashNodeLinked *) 0);
+    return ((AHT_HashNodeCnt *) 0);
   }
-  AHT_HashNodeLinked *getFirst() { return (getNext(table-1)); }
+  AHT_HashNodeCnt *getFirst() { return (getNext(table+tableSize)); }
 
   //
   DebugCode(void print(););

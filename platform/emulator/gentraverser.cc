@@ -50,10 +50,10 @@ void GTIndexTable::gCollectGTIT()
 
   //
   GCGTITEntry *ta = new GCGTITEntry[asize];
-  AHT_HashNodeLinked *n = getFirst();
+  AHT_HashNodeCnt *n = getFirst();
   int i = 0;
   do {
-    ta[i].term = (OZ_Term) (n->getKey()).fint;
+    ta[i].term = (OZ_Term) (n->getKey());
     ta[i].index = ToInt32(n->getValue());
     n = getNext(n);
     i++;
@@ -160,11 +160,21 @@ void GenTraverser::doit()
     OZ_Term t = get();
     // a push-pop pair for the topmost entry is saved:
   bypass:
+    register TaggedRef *tPtr;
+    DebugCode(tPtr = -1;);
     CrazyDebug(incDebugNODES(););
-    DEREF(t, tPtr);
 
     //
+  deref:
     switch (tagged2ltag(t)) {
+
+    case LTAG_REF00:
+    case LTAG_REF10:
+    case LTAG_REF01:
+    case LTAG_REF11:
+      tPtr = tagged2Ref(t);
+      t = *tPtr;
+      goto deref;
 
     case LTAG_SMALLINT:
       processSmallInt(t);
