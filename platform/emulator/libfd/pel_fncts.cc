@@ -29,8 +29,6 @@
 #include "rel_filter.hh"
 #include "pel_fncts.hh"
 
-#define NEW
-
 typedef  _PropagatorController_V_V<int,
   PEL_FDIntVar,pf_entailed,pf_failed,pf_sleep> PEL_ParamIterator_V_V;
 
@@ -58,8 +56,6 @@ public:
   pf_return_t operator ()() { return pf_return_t(_r); }
 };
 
-#ifdef NEW
-
 pf_return_t PEL_LessEqOffset::propagate(PEL_Engine &e) 
 {
   //
@@ -72,37 +68,3 @@ pf_return_t PEL_LessEqOffset::propagate(PEL_Engine &e)
   //
   return filter_lessEqOffset(s, x, y, c)();
 }
-
-#else
-
-pf_return_t PEL_LessEqOffset::propagate(PEL_Engine &e)
-{
-  //
-  PEL_FDIntVar &x = *(PEL_FDIntVar *) e[_x];
-  int c = _c;
-  PEL_FDIntVar &y = *(PEL_FDIntVar *) e[_y];
-  //
-  FailOnEmpty(*x <= (y->getMaxElem() - c));
-  FailOnEmpty(*y >= (x->getMinElem() + c));
-  //
-  if (x->getMaxElem() + c <= y->getMinElem()) {
-    x.leave();
-    y.leave();
-    CDM(("\t-> entailed\n"));
-    return pf_entailed;
-  }
-  //
-  if (x->getMinElem() + c > y->getMaxElem()) {
-    CDM(("\t-> failed\n"));
-    goto failure;
-  }
-  {
-    pf_return_t r = (x.leave() | y.leave()) ? pf_sleep : pf_entailed;
-    CDM(("\t-> %s\n", r == pf_sleep ? "sleep" : "entailed"));
-    return r;
-  }
- failure:
-  CDM(("\t-> failed\n"));
-  return pf_failed;
-}
-#endif
