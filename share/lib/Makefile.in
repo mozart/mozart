@@ -177,7 +177,7 @@ ozvsserver: Standard.ozf MakeOzVSServer.oz dp/RemoteServer
 # Boot compiler
 #---------------------------------------------------------------------
 
-ozc.ozm:
+ozc.ozm: compiler-Opcodes.oz compiler-Builtins.oz
         $(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
         mv -f /tmp/$$$$.ozm $@
 
