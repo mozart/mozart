@@ -316,7 +316,9 @@ public:
 // Keep OZ_Term"s already seen;
 class GTIndexTable : private HashTableFastReset {
 public:
-  GTIndexTable() : HashTableFastReset(2000) {}
+  GTIndexTable() : HashTableFastReset(2000) {
+    Assert(sizeof(OZ_Term) == sizeof(intlong));
+  }
 
   //
   int rememberTerm(OZ_Term l) {
