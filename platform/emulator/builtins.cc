@@ -1405,7 +1405,9 @@ State atInline(TaggedRef fea, TaggedRef &out)
   }
 
 bomb:
-  TypeError2("@",1,"Feature (and the name of a field)",makeTaggedSRecord(rec),fea);
+  TypeError2("@",1,"Feature (and the name of a field)",
+	     rec?makeTaggedSRecord(rec):OZ_CToAtom("noattributes"),
+	     fea);
 }
 DECLAREBI_USEINLINEFUN1(BIat,atInline)
 
@@ -2672,7 +2674,8 @@ State assignInline(TaggedRef fea, TaggedRef value)
   }
   
  bomb:
-  assignError(makeTaggedSRecord(r),fea,"<-");
+  assignError(r?makeTaggedSRecord(r):OZ_CToAtom("noattributes"),
+	      fea,"<-");
   return PROCEED;
 }
 
