@@ -77,6 +77,15 @@
 /* use a debug malloc library */
 #undef DMALLOC
 
+/* Define if you want support for virtual sites */
+#undef VIRTUALSITES
+
+/* Define if you want to include misc builtins */
+#undef MISC_BUILTINS
+
+
+
+
 /* conf.h.in.  Generated automatically from - by autoheader.  */
 
 /* Define if using alloca.c.  */
@@ -224,5 +233,4 @@
 /* Define if you have the socket library (-lsocket).  */
 #undef HAVE_LIBSOCKET
 
-/* Define if you want support for virtual sites */
-#undef VIRTUALSITES
+

@@ -92,6 +92,11 @@ struct ModuleEntry {
 #include "modAssemblerSupport.dcl"
 #include "modCompilerSupport.dcl"
 #include "modProfile.dcl"
+#include "modBrowser.dcl"
+#include "modDebug.dcl"
+#include "modForeign.dcl"
+#include "modFault.dcl"
+#include "modDistribution.dcl"
 
 static OZ_C_proc_interface mod_int_Property[] = {
 #include "modProperty.tbl"
@@ -145,6 +150,42 @@ static OZ_C_proc_interface mod_int_Profile[] = {
 #include "modProfile.tbl"
  {0,0,0,0}
 };
+static OZ_C_proc_interface mod_int_Browser[] = {
+#include "modBrowser.tbl"
+ {0,0,0,0}
+};
+static OZ_C_proc_interface mod_int_Debug[] = {
+#include "modDebug.tbl"
+ {0,0,0,0}
+};
+static OZ_C_proc_interface mod_int_Foreign[] = {
+#include "modForeign.tbl"
+ {0,0,0,0}
+};
+static OZ_C_proc_interface mod_int_Fault[] = {
+#include "modFault.tbl"
+ {0,0,0,0}
+};
+static OZ_C_proc_interface mod_int_Distribution[] = {
+#include "modDistribution.tbl"
+ {0,0,0,0}
+};
+
+#ifdef MISC_BUILTINS
+#include "modMisc.dcl"
+static OZ_C_proc_interface mod_int_Misc[] = {
+#include "modMisc.tbl"
+ {0,0,0,0}
+};
+#endif
+
+#ifdef VIRTUALSITES
+#include "modVirtualSite.dcl"
+static OZ_C_proc_interface mod_int_VirtualSite[] = {
+#include "modVirtualSite.tbl"
+ {0,0,0,0}
+};
+#endif
 
 
 static ModuleEntry module_table[] = {
@@ -157,8 +198,13 @@ static ModuleEntry module_table[] = {
   {"Profile",  mod_int_Profile},
 
   {"AssemblerSupport", mod_int_AssemblerSupport},
-  {"Assembler",        mod_int_AssemblerSupport},
   {"CompilerSupport",  mod_int_CompilerSupport},
+
+  {"Browser",      mod_int_Browser},
+  {"Foreign",      mod_int_Foreign},
+  {"Fault",        mod_int_Fault},
+  {"Distribution", mod_int_Distribution},
+  {"Debug",        mod_int_Debug},
 
   {"FDB",      mod_int_FDB},
   {"FSB",      mod_int_FSB},
@@ -170,6 +216,14 @@ static ModuleEntry module_table[] = {
   {"FDP",      DYNAMIC_MODULE(mod_int_FDP) },
   {"Schedule", DYNAMIC_MODULE(mod_int_Schedule) },
   {"FSP",      DYNAMIC_MODULE(mod_int_FSP) },
+
+#ifdef MISC_BUILTINS
+  {"Misc",         mod_int_Misc},
+#endif
+
+#ifdef VIRTUALSITES
+  {"VirtualSite",  mod_int_VirtualSite},
+#endif
 
   {0, 0},
 };
