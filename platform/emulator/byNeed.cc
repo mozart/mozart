@@ -31,24 +31,33 @@
 
 #include "byNeed.hh"
 
-// if `function' is a procedure or an object, we simply call it
-// with the variable itself as argument.
-//
-// for extension, `function' may also be a tuple, where typically
-// the first element is a small integer that determines the
-// operational interpretation:
-//
-//	1#P	==> thread {P ME} end
-//	2#X	==> force request of X
-//	3#URL	==> thread {Load URL ME} end
-//	4#call(P X1 ... Xn) ==> thread {P X1 ... Xn ME} end
+/* if `function' is a procedure or an object, we simply call it with a
+ * new variable as argument: local Tmp in {F Tmp} This := Tmp end
+ */
+
+
+OZ_BI_define(BIbyNeedAssign,2,0)
+{
+  OZ_Term var = OZ_in(0);
+  DEREF(var,varPtr,_);
+  OZ_Term val = OZ_in(1);
+
+  Assert(isByNeedVariable(var));
+  oz_bind(varPtr,var,val);
+  return PROCEED;
+} OZ_BI_end
 
 void
 ByNeedVariable::kickLazy(TaggedRef *ptr)
 {
   if (function!=0) {
-    Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,home);
-    thr->pushCall(function,makeTaggedRef(ptr));
+    Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,GETBOARD(this));
+    OZ_Term newvar=oz_newVar(GETBOARD(this));
+    static RefsArray args = allocateStaticRefsArray(2);
+    args[0]=makeTaggedRef(ptr);
+    args[1]=newvar;
+    thr->pushCFun(BIbyNeedAssign, args, 2, OK);
+    thr->pushCall(function,newvar);
     am.scheduleThread(thr);
     function=0;
   }
@@ -82,3 +91,4 @@ OZ_BI_define(BIbyNeed,1,1)
   ByNeedVariable *lazy = new ByNeedVariable(oz_fun);
   OZ_RETURN(makeTaggedRef(newTaggedCVar(lazy)));
 } OZ_BI_end
+
