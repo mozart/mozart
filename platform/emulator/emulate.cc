@@ -2604,8 +2604,8 @@ LBLkillThread:
 // CLASS: MISC: ERROR/NOOP/default
 // -------------------------------------------------------------------------
 
-  Case(ERROR)
-      error("Emulate: ERROR command executed");
+  Case(OZERROR)
+      error("Emulate: OZERROR command executed");
       goto LBLerror;
 
 
