@@ -43,18 +43,30 @@ allocation.</p>
       <p>The profiler collects information in a per procedure basis.
 This information consists of the following quantities:
 <list>
-	  <entry class=bold/head/
-	  <item/heap memory allocated by the procedure/
-	  <entry/calls/
-	  <item/how many times the procedure was called/
-	  <entry/closures/
-	  <item/how many times the corresponding closure was created/
-	  <entry/samples/
-	  <item/statistical estimation of the time spent in the
+        <entry /<em>heap</em>/
+	  <item>Heap memory allocated by the procedure
+	  </item>
+	 <entry/<em>calls</em>/
+	    <item>How many times the procedure was called</item>
+	 <entry/<em>samples</em>/
+	  <item>Statistical estimation of the time spent in the
 procedure. This works as follows: every 10ms a signal is delivered and
 the emulator increases the <q/samples/ counter of the procedure
-currently executing./
+currently executing.</item>
+	 <entry/<em>closures</em>/
+	  <item>How many times the corresponding closure was created. 
+	  Note that nested procedure declarations like <<Bar>> in
+	  <<<
+proc {Foo X Y}
+  proc {Bar U V} ... end
+  ...
+end>>>
+          both consume runtime and memory since a new closure for <<Bar>> has 
+	  to be created at runtime whenever <<Foo>> ist called. So one might consider
+	  lifting the definition of <<Bar>>. 
+	  </item>
 	</list></p>
+	
     </chapter>
 
     <chapter>
@@ -65,7 +77,9 @@ automatically inserted by the compiler when it is invoked with the
 <code proglang=sh/--profiler/ option.  This option can also be
 abbreviated <code proglang=sh/-p/.  There is however an unfortunate
 limitation when compiling code for profiling: tail-call optimization
-is turned off (except for self applications).</p>
+is turned off (except for self applications). Besides this
+instrumented code runs in general a bit slower than code that was not
+compiled for profiling.</p>
       <p>As an example, let's consider the following rather pointless
 application below.  I call it <q/The 3 Little Piggies/, and it does
 nothing but waste time and memory:
@@ -103,10 +117,6 @@ large list.
 <picture.choice display>
 	  <picture.extern to="prof3.gif" type="gif">
 	</picture.choice>
-    </chapter>
-
-    <chapter>
-      <title/How To Interpret The Results/
     </chapter>
 
     <chapter>
@@ -152,7 +162,99 @@ The default is <var env/$OZEMACS/ if set, else <file/emacs/./
     </chapter>
 
     <chapter>
+      <title/Mixing Code With and Without Profiling Information/
+      <p>
+      If a procedure <<Foo>>, that has been compiled for profiling,
+      calls another procedure <<Bar>>, that was not compiled for profiling,
+      only the counters for <<Foo>> are incremented at
+      runtime. So for example the heap memory allocated within <<Bar>> is
+      added to the heap profile counter of <<Foo>>. For efficiency all
+      the Oz library modules are compiled without profiling
+      information. So if <<Foo>> itself does not much more than
+      calling <<List.append>> it might show up high in the profilers
+      window,  if it is often called with very long lists for
+      example, whereas <<List.append>> will not show up at
+      all. Nevertheless you might in this case consider changing the
+      representation of your data structures.
+    </chapter>
+    <chapter>
       <title/How To Profile In The OPI/
+<p>
+      In the OPI the most convenient way to start the profiler is to
+      choose the <code /Profiler/ item in the Oz menu of Emacs.
+      This will open the profiler window and tell the compiler to
+      instrument the code for profiling thereafter. So everything fed
+      <em/after/ opening the profiler will be instrumented.
+      Then press <code /reset/, run your application and press the
+      <code/update/ button after its termination.
+<p>
+      Clicking on the bar of a particular procedure <<P>> in the
+      profiler's window will try to locate the definition of <<P>> in
+      an Emacs buffer.
+<p>
+      Profiling is switched off in the OPI by either closing the profiler
+      window or by feeding
+      <<<{Profiler.close}>>>
+      which will close the profiler window and inform the compiler to
+      generate uninstrumented code thereafter. Note that code
+      previously compiled for profiling will still run slower, so you
+      might consider recompilation.
+    </chapter>
+    <chapter>
+      <title/The Profiler's User Interface/
+<p>
+     The profiler window consists of the following frames:
+<list>
+   <entry /<code>Procedures</code>/
+     <item>Presents a list of bars for each procedure sorted by the
+     sort criteria selected via the <code/Sort By/ menu. Clicking on a
+     bar will update the <code/Proc Info/ frame and will additionally
+     try to locate the definition of the corresponding procedure in an
+     Emacs buffer.
+     </item>
+   <entry /<code>Proc Info</code>/ 
+     <item>Lists for the selected procedure its name, the file name and
+     line number of the source code of its definition plus the values
+     of all the profile counters.
+     </item>
+   <entry /<code>Summary</code>/
+     <item>Lists the sum of all the counters of all procedures being
+     compiled for profiling.
+     </item>
+</list>
+<p>
+     The profiler provides the following buttons and menus:
+<list>
+   <entry /<code>Action</code>/
+   <item>
+     <list>
+       <entry /<code>Update</code>/
+       <item>Read the current values of the profile counters from the
+       emulator and update the display in the <code>Procedures</code>
+       frame. 
+       </item>
+       <entry /<code>Reset</code>/
+       <item>Resets all profile counters to zero.</item>
+     </list>
+   <entry /<code>Options</code>/
+   <item>
+     <list>
+       <entry /<code>Use Emacs</code>/
+       <item>This is a toggle button that lets you choose whether 
+       clicking on a bar in the <code/Procedures/ frame will tell
+       Emacs to locate the definitin of the selected procedure.
+       </item>
+       <entry /<code>Automatic Update</code>/
+       <item>Let the user select an interval in which the displays
+       are updated periodically. By default automatic update is
+       off.
+       </item>
+     </list>
+   <entry /<code/update//  <item>Same as menu <code/Action --> Update/.</item>
+   <entry /<code/reset//   <item>Same as menu <code/Action --> Reset/.</item>
+   <entry /<code/Sort By// <item>Selects the sort criteria by which
+   procedures are listed in the <code /Procedures/ frame.</item>
+</list>
     </chapter>
 </book>
 
