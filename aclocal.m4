@@ -123,6 +123,12 @@ AC_DEFUN(OZ_PROG_INSTALL,[
   AC_PROG_INSTALL
   OZ_PATH_PROG(INSTALL_DIR,  mkinstalldirs)])
 
+AC_DEFUN(OZ_FREEZE_DATE,[
+  AC_CACHE_CHECK([for freeze date],oz_cv_freeze_date,[
+    oz_cv_freeze_date=`date`])
+  OZFREEZEDATE=$oz_freeze_date;
+  AC_SUBST(OZFREEZEDATE)])
+
 AC_DEFUN(OZ_INIT, [
   AC_CANONICAL_HOST
   AC_PREFIX_DEFAULT(/usr/local/oz)
@@ -141,6 +147,7 @@ AC_DEFUN(OZ_INIT, [
   OZ_ARG_WITH_LIB_DIR
   AC_SUBST(CPPFLAGS)
   AC_SUBST(LDFLAGS)
+  OZ_FREEZE_DATE
   OZ_PATH_PROG(OZTOOL,oztool,[OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh"])
   case "$target" in
     i386-mingw32) PLATFORM=win32-i486;;
