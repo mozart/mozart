@@ -132,5 +132,6 @@ OZ_C_proc_proto(fsp_union)
 OZ_C_proc_proto(fsp_subsume)
 OZ_C_proc_proto(fsp_disjoint)
 OZ_C_proc_proto(fsp_min)
+OZ_C_proc_proto(fsp_monitorIn)
 
 #endif
