@@ -36,7 +36,7 @@ define
    in
       if D.year<50 then 2000+D.year else 1900+D.year end#"/"#
       if D.mDay<10 then 0#D.mDay else D.mDay end #"/"#
-      if D.mon<10 then 0#D.mon else D.mon end #" - "#
+      if (D.mon + 1)<10 then 0#(D.mon + 1) else (D.mon + 1) end #" - "#
       if D.hour<10 then 0#D.hour else D.hour end #":"#
       if D.min<10 then 0#D.min else D.min end #":"#
       if D.sec<10 then 0#D.sec else D.sec end #" : "
