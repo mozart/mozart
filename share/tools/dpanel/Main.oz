@@ -45,7 +45,6 @@ import
    Finalize(everyGC)
    NetInfo(netInfo)
    MessageInfo
-   Connection
    Browser
 export
    open:Start
@@ -71,7 +70,6 @@ define
 
    %% Used by the distributed cntrl func
    ServerPort
-   PickledPort = {Connection.offerUnlimited ServerPort}
 
    SelectSite
 
@@ -252,7 +250,8 @@ define
                             {Assign SelectedSite none}
                          end
                          if O \= none then
-                            {{SD getSite(O $)}deselect}
+                            %% The site might have been removed due to gc
+                            try{{SD getSite(O $)}deselect} catch _ then skip end
                             {GUI.ssites deselect(key:O )}
                             %% Deselect the site at all remote wins
                             {ClientControler deselectSite(key:O)}
@@ -289,7 +288,13 @@ define
 
          thread {Updater ST OT BT NI MI} end
          thread
-            {ForAll {NewPort $ ServerPort} ClientControler}
+            {ForAll {NewPort $ ServerPort} proc{$ M}
+                                              try
+                                                  {ClientControler M}
+                                              catch _ then
+                                                 skip
+                                              end
+                                           end}
          end
       end
    end
@@ -309,6 +314,6 @@ define
    end
 
    fun{Server}
-      PickledPort
+      ServerPort
    end
 end
