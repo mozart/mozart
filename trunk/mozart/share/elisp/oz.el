@@ -539,7 +539,7 @@ the GDB commands `cd DIR' and `directory'."
      '(
        "proc" "fun"
        "local" "declare"
-       "if" "or" "OR" "case" "then" "else" "elseif" "of" "elseof"
+       "if" "or" "OR" "case" "then" "else" "elseif" "of" "elseof" "elsecase"
        "end" "fi" "ro" "RO"
        "class" "create" "meth" "extern" "from" "with" "attr" "feat" "self"
        "true" "false"
@@ -575,7 +575,7 @@ the GDB commands `cd DIR' and `directory'."
 
 (defconst oz-middle-pattern 
   (concat (oz-make-keywords-for-match
-	   '("in" "then" "else" "elseif" "of" "elseof"))
+	   '("in" "then" "else" "elseif" "of" "elseof" "elsecase"))
 	  "\\|" "\\[\\]"))
 
 (defconst oz-feat-end-pattern
