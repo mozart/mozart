@@ -373,16 +373,44 @@ starts the emulator under gdb")
 ;; Debugger stuff
 ;;------------------------------------------------------------
 
-(defun oz-debug-start()
+(defun oz-debug-start ()
   "Start the debugger."
   (interactive)
   (oz-send-string "{Ozcar on}"))
 
-(defun oz-debug-stop()
+(defun oz-debug-stop ()
   "Stop the debugger."
   (interactive)
   (oz-send-string "{Ozcar off}"))
   
+(defun oz-breakpoint-set ()
+  "Set breakpoint at line where mouse points to."
+  (interactive)
+  (if (buffer-file-name)
+      (oz-send-string (concat "{Ozcar bpAt('"
+			      (buffer-file-name)
+			      "' "
+			      (+ (count-lines (point-min) (window-start))
+				 (cdr (cdr (mouse-position)))
+				 1)
+			      " true)}"))
+    (message (concat "You must save this buffer to a file "
+		     "in order to set breakpoints!"))))
+
+(defun oz-breakpoint-delete ()
+  "Delete breakpoint at line where mouse points to."
+  (interactive)
+  (if (buffer-file-name)
+      (oz-send-string (concat "{Ozcar bpAt('"
+			      (buffer-file-name)
+			      "' "
+			      (+ (count-lines (point-min) (window-start))
+				 (cdr (cdr (mouse-position)))
+				 1)
+			      " false)}"))
+    (message (concat "You must save this buffer to a file "
+		     "in order to delete breakpoints!"))))
+
 
 ;;------------------------------------------------------------
 ;; Start/Stop oz
@@ -626,7 +654,7 @@ the GDB commands `cd DIR' and `directory'."
 			  (+ 1 (count-lines (point-min) start))
 			  " '"
 			  (if (buffer-file-name)
-			    (buffer-file-name)
+			      (buffer-file-name)
 			    "nofile")
 			  "'\n"
 			  (buffer-substring start end)))
@@ -1121,7 +1149,8 @@ the GDB commands `cd DIR' and `directory'."
     (define-key map "\M-p"         'oz-previous-buffer)
 
     (define-key map "\C-c\C-d\C-r" 'oz-debug-start)
-    (define-key map "\C-c\C-d\C-d" 'oz-debug-devel-start)
+    (define-key map [A-mouse-1]    'oz-breakpoint-set)
+    (define-key map [A-mouse-3]    'oz-breakpoint-delete)
     (define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
     )
 
