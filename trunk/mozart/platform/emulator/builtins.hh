@@ -324,15 +324,12 @@ char *VAR;					\
  * exceptions
  * -----------------------------------------------------------------------*/
 
-int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...);
+int  oz_raise(OZ_Term cat, OZ_Term key, const char * label, int arity, ...);
+void oz_typeErrorInternal(const int pos, const char * type);
 
 #define oz_typeError(pos,type)			\
 {						\
-  (void) oz_raise(E_ERROR,E_KERNEL,		\
-		  "type",5,NameUnit,NameUnit,	\
-		  OZ_atom(type),		\
-		  OZ_int(pos+1),		\
-		  OZ_string(""));		\
+  oz_typeErrorInternal(pos,type);               \
   return BI_TYPE_ERROR;				\
 }
 
