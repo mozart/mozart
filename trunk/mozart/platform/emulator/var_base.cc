@@ -175,6 +175,7 @@ int oz_var_getSuspListLength(OzVariable *cv)
   case OZ_VAR_FD:     return ((OzFDVariable*)cv)->getSuspListLength();
   case OZ_VAR_OF:     return ((OzOFVariable*)cv)->getSuspListLength();
   case OZ_VAR_FS:     return ((OzFSVariable*)cv)->getSuspListLength();
+  case OZ_VAR_CT:     return ((OzCtVariable*)cv)->getSuspListLength();
   case OZ_VAR_EXT:    return ((ExtVar *)cv)->getSuspListLengthV();
   default:            return cv->getSuspListLengthS();
   }
