@@ -79,10 +79,12 @@ extern Bool isCollecting;
 #endif
 #endif
 
+#ifdef S_CLONE
 #ifdef CS_PROFILE
 int32 * cs_copy_start = NULL;
 int32 * cs_orig_start = NULL;
 int     cs_copy_size  = 0;
+#endif
 #endif
 
 #ifdef G_COLLECT
