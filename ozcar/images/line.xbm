@@ -1,4 +1,0 @@
-#define line_width 12
-#define line_height 1
-static unsigned char line_bits[] = {
-   0x49, 0x02};
