@@ -29,7 +29,7 @@ RPMROOT=/usr/src/redhat
 RPMSRC=$RPMROOT/SOURCES
 RPMSPEC=$RPMROOT/SPECS
 TMPDIR=/tmp
-: ${PACKAGER:="Denys Duchier (mozart-oz.org)"}
+: ${PACKAGER:="Konstantin Popov (mozart-oz.org)"}
 
 #
 # Read dir
@@ -157,10 +157,10 @@ cd $TMPDIR
 cat > $RPMSPEC/$SPEC <<EOF
 # Spec file for Mozart, an efficient and distributed implementation of Oz
 # Author: Christian Schulte, 1998
-# Contributor: Konstantin Popov, 2001
+# Contributor: Konstantin Popov, 2001, 2004
 # Contributor: Denys Duchier, 2001
 # Copyright: Christian Schulte, 1998, 1999
-# Copyright: Konstantin Popov, 2001
+# Copyright: Konstantin Popov, 2001, 2004
 # Copyright: Denys Duchier, 2001
 Name: mozart
 Version: $VERSION
@@ -236,19 +236,34 @@ PREFIX=\$RPM_BUILD_ROOT$OZHOME
 mkdir -p \$RPM_BUILD_ROOT/etc/profile.d
 (cd \$RPM_BUILD_ROOT/etc/profile.d; \
  gzip -dc \$RPM_SOURCE_DIR/mozart-profiles.tar.gz | tar xf -)
-# documentation files
 mkdir -p \$PREFIX
-(cd \$PREFIX; \
- gzip -dc \$RPM_SOURCE_DIR/$DOCTAR | tar xf -; \
- mv mozart/doc .; \
- mv mozart/print .; \
- rm -rf mozart; \
- rm -rf doc/demo/applets; \
- chown -R root .; \
- chgrp -R root .; \
- chmod -R a+rX,g-w,o-w .)
 # Generic install
 make install
+# inspect the emulator.exe for being dynamically linked against
+# libgcc_s.so, and if so - copy the library into
+# $PREFIX/platform/$PLTFRM/lib:
+PLTFRM=\`\$PREFIX/bin/ozplatform\`
+found=""
+dynlib=\`ldd \$PREFIX/platform/\${PLTFRM}/emulator.exe | grep libgcc_s.so && eval '' || eval ''\`
+for e in \$dynlib ; do
+    match=\`echo \$e | grep "/.*libgcc_s.so" && eval '' || eval ''\`
+    if [ "\$match" != "" ]; then
+	found=\$match
+	break
+    fi
+done
+if [ "\$found" != "" ]; then
+    for e in `echo \$found | tr '/' ' '` ; do
+	lib=\$e
+    done
+    mkdir -p \$PREFIX/platform/\${PLTFRM}/lib
+    /bin/cp \$found \$PREFIX/platform/\${PLTFRM}/lib/\$lib
+    /bin/chmod a+x \$PREFIX/platform/\${PLTFRM}/lib/\$lib
+    unset lib
+fi
+unset found
+unset dynlib
+
 # Strip binaries and shared objects
 find \$PREFIX -type f -name '*.so*' -exec strip '{}' ';'
 find \$PREFIX -type f -name '*.exe' -exec strip '{}' ';'
@@ -256,8 +271,19 @@ find \$PREFIX -type f -name '*.exe' -exec strip '{}' ';'
 (cd \$RPM_BUILD_DIR/\$RPM_PACKAGE_NAME-\$RPM_PACKAGE_VERSION-std; \
  make install )
 
+# documentation files (overwrite whatever is installed up until now;)
+(cd \$PREFIX; \
+ gzip -dc \$RPM_SOURCE_DIR/$DOCTAR | tar xf -; \
+ rm -rf doc print; \
+ mv mozart/doc .; \
+ mv mozart/print .; \
+ rm -rf mozart; \
+ rm -rf doc/demo/applets; \
+ chown -R root .; \
+ chgrp -R root .; \
+ chmod -R a+rX,g-w,o-w .)
+
 # Create file lists
-PLTFRM=\`\$PREFIX/bin/ozplatform\`
 make files.base files.base-\${PLTFRM}
 make files.contrib files.contrib-\${PLTFRM}
 make files.doc
@@ -281,7 +307,7 @@ EOF
 #
 
 rpmpgm=`rpmbuild --usage >/dev/null 2>&1 && echo rpmbuild || echo rpm`
-$rpmpgm --clean -bs ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
+$rpmpgm --clean -ba ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
 rm -f ${RPMSPEC}/${SPEC}
 rm -f ${RPMSRC}/${SRCTAR}
 rm -f ${RPMSRC}/${DOCTAR}
@@ -293,5 +319,5 @@ rm -f ${RPMSRC}/mozart.xpm
 # Move the created rpms to destination
 #
 
-#mv ${RPMROOT}/RPMS/i386/mozart-{,doc-}$VERSION-$BUILD.i386.rpm ${DSTDIR}
+mv ${RPMROOT}/RPMS/i386/mozart-{,doc-}$VERSION-$BUILD.i386.rpm ${DSTDIR}
 mv ${RPMROOT}/SRPMS/mozart-$VERSION-$BUILD.src.rpm ${DSTDIR}
