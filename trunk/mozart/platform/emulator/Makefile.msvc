@@ -1,15 +1,16 @@
 WINDIR=Y:/.root/project/ps/soft/win32-i486
 
-# at sics use
+# at SICS use
 #WINDIR=Y:/.root/home/scheidhr/build/packages/win32-i486
 
-# debugging flags
+# code with debugging infos
+COPT = -Zi #-W3
 
-DBG = -Zi
-#DBG = -Ox
+# for fast code
+#COPT = -Ox
 
 
-
+######################################################################
 
 
 DEFS = -DWINDOWS_EMULATOR -DHAVE_CONFIG_H
@@ -92,15 +93,15 @@ OBJS=   $(SRCS:.cc=.obj)
 
 
 .cc.obj:
-	cl $(DBG) $(DEFS) $(INCS) -c -Fo$@ -nologo -Tp $<
+	cl $(COPT) $(DEFS) $(INCS) -c -Fo$@ -nologo -Tp $<
 
 .cc.s:
-	cl $(DBG) $(DEFS) $(INCS) -c -Fa$@ -nologo -Tp $<
+	cl $(COPT) $(DEFS) $(INCS) -c -Fa$@ -nologo -Tp $<
 
 
 all: emulator.exe
 
 emulator.exe: $(OBJS)
-	cl $(DBG) $(OBJS) $(LIBS) wsock32.lib -Feemulator.exe 
+	cl $(COPT) $(OBJS) $(LIBS) wsock32.lib -Feemulator.exe 
 
 
