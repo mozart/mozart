@@ -952,7 +952,7 @@ Bool oz_eq(TaggedRef t1, TaggedRef t2)
 /*
  * class Tagged2:
  *  32 bit word to store
- *    pointer + 2 tag bits or
+ *    word aligned pointer + 2 tag bits or
  *    30 bit value + 2 tag bits
  */
 class Tagged2
@@ -997,7 +997,7 @@ public:
 /*
  * class Tagged4:
  *  32 bit word to store
- *    word aligned pointer + 4 tag bits or
+ *    word aligned pointer in fixed segment + 4 tag bits or
  *    28 bit value + 4 tag bits
  */
 class Tagged4

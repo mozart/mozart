@@ -990,8 +990,8 @@ void fset2buffer(ostream &out, OZ_FSetValue * fs)
 }
 
 // genvar.cc
-void oz_cv_printStream(ostream &out, const char *s, OzVariable *cv,
-		       int depth);
+void oz_var_printStream(ostream &out, const char *s, OzVariable *cv,
+			int depth);
 
 void oz_printStream(OZ_Term term, ostream &out, int depth, int width)
 {
@@ -1037,7 +1037,7 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
       }
       const char *s = oz_varGetName(makeTaggedRef(termPtr));
       if (isCVar(tag)) {
-	oz_cv_printStream(out, s,tagged2CVar(term),depth);
+	oz_var_printStream(out, s,tagged2CVar(term),depth);
       } else {
 	out << s;
       }

@@ -327,8 +327,8 @@ Case(CREATEVARIABLEMOVEY)
 	// fill w/unb. var.
 	srecord->initArgs();
 	TaggedRef srecordRef=makeTaggedSRecord(srecord);
-	tmpRet = oz_cv_bindINLINE(tagged2CVar(term),termPtr,srecordRef,
-				  NOFLATGUARD);
+	tmpRet = oz_var_bindINLINE(tagged2CVar(term),termPtr,srecordRef,
+				   NOFLATGUARD);
 	if (tmpRet==PROCEED) {
 	  sPointer = srecord->getRef();
 	  SetReadMode;
@@ -337,7 +337,7 @@ Case(CREATEVARIABLEMOVEY)
 	if (tmpRet!=FAILED)
 	  goto LBLunifySpecial;
       } else {
-	oz_bindToNonvar(termPtr,makeTaggedSRecord(srecord), NOFLATGUARD);
+	oz_bindOPT(termPtr,makeTaggedSRecord(srecord), NOFLATGUARD);
 		     
 	sPointer = srecord->getRef();
 	SetWriteMode;
@@ -369,7 +369,7 @@ Case(CREATEVARIABLEMOVEY)
 	      addSuspPtr(termPtr, CTT);
 	      return T_SUSPEND;
 	    } else if (isCVar(term) &&
-		       oz_cv_validINLINE(tagged2CVar(term),termPtr,atm)) {
+		       oz_var_validINLINE(tagged2CVar(term),termPtr,atm)) {
 	      PushContX(PC);
 	      addSuspPtr(termPtr, CTT);
 	      
@@ -452,7 +452,7 @@ Case(CREATEVARIABLEMOVEY)
 	if (oz_isVariable(term) &&
 	    (!oz_isKinded(term) ||
 	     (isCVar(term)
-	      && oz_cv_validINLINE(tagged2CVar(term),termPtr,i)))) {
+	      && oz_var_validINLINE(tagged2CVar(term),termPtr,i)))) {
 	  PushContX(PC);
 	  addSuspPtr(termPtr, CTT);
 	  return T_SUSPEND;
@@ -558,7 +558,7 @@ Case(CREATEVARIABLEMOVEY)
 		 DEREF(term,termPtr,tag);
 
 		 if (isUVar(tag)) {
-		   oz_bindToNonvar(termPtr, atm, NOFLATGUARD);
+		   oz_bindOPT(termPtr, atm, NOFLATGUARD);
 		   DISPATCH(3);
 		 }
 		 
@@ -567,8 +567,8 @@ Case(CREATEVARIABLEMOVEY)
 		 }
 
 		 if (isCVar(term)) {
-		   tmpRet = oz_cv_bindINLINE(tagged2CVar(term),termPtr,atm,
-					     NOFLATGUARD);
+		   tmpRet = oz_var_bindINLINE(tagged2CVar(term),termPtr,atm,
+					      NOFLATGUARD);
 		   if (tmpRet==PROCEED) { DISPATCH(3); }
 		   if (tmpRet!=FAILED)  { goto LBLunifySpecial; }
 		 }
@@ -586,7 +586,7 @@ Case(CREATEVARIABLEMOVEY)
 		 DEREF(term,termPtr,tag);
 
 		 if (isUVar(tag)) {
-		   oz_bindToNonvar(termPtr, i, NOFLATGUARD);
+		   oz_bindOPT(termPtr, i, NOFLATGUARD);
 		   DISPATCH(3);
 		 }
 		 
@@ -595,8 +595,8 @@ Case(CREATEVARIABLEMOVEY)
 		 }
 
 		 if (isCVar(term)) {
-		   tmpRet=oz_cv_bindINLINE(tagged2CVar(term),termPtr,i,
-					   NOFLATGUARD);
+		   tmpRet=oz_var_bindINLINE(tagged2CVar(term),termPtr,i,
+					    NOFLATGUARD);
 		   if (tmpRet==PROCEED) { DISPATCH(3); }
 		   if (tmpRet!=FAILED)  { goto LBLunifySpecial; }
 		 }
@@ -619,8 +619,8 @@ Case(CREATEVARIABLEMOVEY)
 
 		   if (isCVar(term)) {
 		     TaggedRef aux =  makeTaggedLTuple(ltuple);
-		     tmpRet=oz_cv_bindINLINE(tagged2CVar(term),termPtr,aux,
-					     NOFLATGUARD);
+		     tmpRet=oz_var_bindINLINE(tagged2CVar(term),termPtr,aux,
+					      NOFLATGUARD);
 		     if (tmpRet==PROCEED) { 
 		       Xreg(getRegArg(PC+3)) = makeTaggedRef(ltuple->getRef()+1);
 		       DISPATCH(4);
@@ -631,7 +631,7 @@ Case(CREATEVARIABLEMOVEY)
 		     HF_TELL(Xreg(getRegArg(PC+1)), makeTaggedLTuple(ltuple));
 
 		   } else {
-		     oz_bindToNonvar(termPtr,makeTaggedLTuple(ltuple),NOFLATGUARD);
+		     oz_bindOPT(termPtr,makeTaggedLTuple(ltuple),NOFLATGUARD);
 		     Xreg(getRegArg(PC+3)) = makeTaggedRef(ltuple->getRef()+1);
 		     DISPATCH(4);
 		   }
@@ -675,8 +675,8 @@ Case(CREATEVARIABLEMOVEY)
 		     ltuple->setTail(e->currentUVarPrototype());
 
 		     TaggedRef aux =  makeTaggedLTuple(ltuple);
-		     tmpRet=oz_cv_bindINLINE(tagged2CVar(term),termPtr,aux,
-					     NOFLATGUARD);
+		     tmpRet=oz_var_bindINLINE(tagged2CVar(term),termPtr,aux,
+					      NOFLATGUARD);
 		     if (tmpRet==PROCEED) {
 		       SetReadMode;
 		       DISPATCH(2);
@@ -687,7 +687,7 @@ Case(CREATEVARIABLEMOVEY)
 		     term = *termPtr;  // Note: 'term' may be disposed
 		   } else {
 		     SetWriteMode;
-		     oz_bindToNonvar(termPtr,makeTaggedLTuple(ltuple),NOFLATGUARD);
+		     oz_bindOPT(termPtr,makeTaggedLTuple(ltuple),NOFLATGUARD);
 		     DISPATCH(2);
 		   }
 		 } else if (oz_isLTuple(term)) {
@@ -827,7 +827,7 @@ Case(UNIFYLITERAL)
        DEREFPTR(term,termPtr,tag);
 
        if (isUVar(tag)) {
-         oz_bindToNonvar(termPtr, atm, NOFLATGUARD);
+         oz_bindOPT(termPtr, atm, NOFLATGUARD);
          DISPATCH(2);
        }
 		 
@@ -836,7 +836,7 @@ Case(UNIFYLITERAL)
        }
 
        if (isCVar(term)) {
-         tmpRet=oz_cv_bindINLINE(tagged2CVar(term),termPtr,atm,NOFLATGUARD);
+         tmpRet=oz_var_bindINLINE(tagged2CVar(term),termPtr,atm,NOFLATGUARD);
 	 if (tmpRet==PROCEED) { DISPATCH(2); }
 	 if (tmpRet!=FAILED)  { PC = lastGetRecord; goto LBLunifySpecial; }
          term = *termPtr;  // Note: 'term' may be disposed
@@ -862,7 +862,7 @@ Case(UNIFYLITERAL)
       DEREFPTR(term,termPtr,tag);
 
       if (isUVar(tag)) {
-        oz_bindToNonvar(termPtr, i, NOFLATGUARD);
+        oz_bindOPT(termPtr, i, NOFLATGUARD);
         DISPATCH(2);
       }
 		 
@@ -871,7 +871,7 @@ Case(UNIFYLITERAL)
       }
 
       if (isCVar(term)) {
-	tmpRet=oz_cv_bindINLINE(tagged2CVar(term),termPtr,i,NOFLATGUARD);
+	tmpRet=oz_var_bindINLINE(tagged2CVar(term),termPtr,i,NOFLATGUARD);
 	if (tmpRet==PROCEED) { DISPATCH(2); }
 	if (tmpRet!=FAILED)  { PC = lastGetRecord; goto LBLunifySpecial; }
 	term = *termPtr;  // Note: 'term' may be disposed
