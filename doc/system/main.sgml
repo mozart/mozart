@@ -35,9 +35,12 @@
 <!ENTITY % proglang.values.local "|sh">
 
 <!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
 <!ENTITY amp "&">
 <!ENTITY Oz "Oz">
 <!ENTITY qmrk "?">
+<!ENTITY tkcmd "../tcltk/TkCmd">
 
 <!-- Processing Instructions -->
 <!ENTITY emdash PI "emdash">
@@ -165,6 +168,22 @@
     <!-- Window programming -->
 
     <Meta name="html.split"       value="chapter.tk">
+
+    <Meta name="html.split"       value="section.tk.tickles">
+    <Meta name="html.split"       value="section.tk.objects">
+    <Meta name="html.split"       value="section.tk.no-action">
+    <Meta name="html.split"       value="section.tk.action-widget">
+    <Meta name="html.split"       value="section.tk.toplevel">
+    <Meta name="html.split"       value="section.tk.menuentry">
+    <Meta name="html.split"       value="section.tk.tagmark">
+    <Meta name="html.split"       value="section.tk.image">
+    <Meta name="html.split"       value="section.tk.font">
+    <Meta name="html.split"       value="section.tk.variable">
+    <Meta name="html.split"       value="section.tk.listener">
+    <Meta name="html.split"       value="section.tk.action">
+    <Meta name="html.split"       value="section.tk.strings">
+    <Meta name="html.split"       value="section.tk.misc">
+
     <Meta name="html.split"       value="chapter.tktools">
 
     <Meta name="html.split.toc"   value="">

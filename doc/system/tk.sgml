@@ -27,25 +27,40 @@
 
 <chapter id="chapter.tk">
 <title/The Module <<Tk>>/
-<p>
-This chapter contains reference information for the <<Tk>> module.
-<p>
-<section id="sec.tk.tickles">
-<title/Tickles/
-<p>
-<index class=module/tickles<and>id/ <def/Tickles/ are &Oz; values used to communicate with
-the GUI agent. The GUI agent can be send tickles.
-<p>
-The set of tickles contains virtual strings, boolean values, and
-so-called tickle-objects. A tickle-object is an object which is created
-from a class the Tk module provides for. Roughly spoken, the set of
-tickles is closed under record construction, where only records are
-allowed which do not contain names as features or as label. Proper
-records with the labels <<v>>, <<b>>, <<#>>, and <<|>> are special cases.
 
-<figure class=Figure id="fig.tk.tickle-def">
-<caption/Procedure <<IsTcl>> tests whether a value is tickle./
-<<<
+  <p>
+   This chapter contains reference information for the <<Tk>> module.
+
+  <section id="section.tk.tickles">
+    <title/Tickles/
+
+    <p>
+      <index class=module/tickles<and>id/ <def/Tickles/ are &Oz; values
+      used to communicate with the graphics engine. The graphics engine
+      receives and executes tickles. The graphics engine is
+      implemented in Tcl/Tk (see <ptr to="Ousterhout.94">). In order
+      to execute tickles the graphics engine first translates tickles
+      into strings. This section defines tickles,
+      defines how tickles are translated into strings, and presents
+      the &Oz; procedures to send tickles.
+
+    <subsection id="section.tk.tickles.syntax">
+      <title/Syntax/
+
+    <p>
+      The set of tickles contains virtual strings, boolean values, and
+      so-called tickle-objects. A tickle-object is an object which is
+      created from a class the Tk module provides for (all classes but
+      <<Tk.listener>>). Roughly spoken, the set of tickles is closed
+      under record construction, where only records are allowed which
+      do not contain names as features or as label. Proper records with
+      the labels <<v>>, <<b>>, <<#>>, and <<|>> are special
+      cases. Examples for tickles can be found in <ptr.extern
+      to="ozdoc:wp" key="section.widgets-1.tickles">.
+
+    <figure id="figure.tk.tickle-def">
+      <caption/Procedure <<IsTcl>> tests whether a value is tickle./
+<chunk class=anonymous><title/IsTcl/
 fun {IsTcl X}
    {IsBool X} orelse {IsUnit X} orelse
    {IsVirtualString X} orelse
@@ -63,311 +78,315 @@ fun {IsTcl X}
    else {Record.all X IsTcl}
    end
 end
->>>
-</figure>
-<p>
-The exact definition of a tickle is given by the procedure <<IsTcl>>
-which is shown in <Ptr to="fig.tk.tickle-def">. The procedure
-<<IsTcl>> returns <<true>>, if and only if <<X>> is a tickle. Otherwise
-<<false>> is returned. The procedure <<IsTclObject>> tests whether an
-object is a tickle-object. Note that records which have the labels <<#>>
-and <<|>> are treated as virtual strings.
+</chunk>
+    </figure>
 
-<figure class=Figure id="fig.tk.tickle-trans">
-<caption/Procedure <<TclToV>> transforms a tickle into a virtual string./
-<<<
-fun {Octal I Ir}
-   &\\|(I div 64 + &0)|((I mod 64) div 8 + &0)|(I mod 8 + &0)|Ir
+    <p>
+      The exact definition of a tickle is given by the procedure
+      <<IsTcl>> which is shown in <Ptr to="figure.tk.tickle-def">. The
+      procedure <<IsTcl>> returns <<true>>, if and only if <<X>> is a
+      tickle. Otherwise <<false>> is returned. The procedure
+      <<IsTclObject>> tests whether an object is a tickle-object. Note
+      that records which have the labels <<#>> and <<|>> are treated
+      as virtual strings.
+
+    <subsection id="section.tk.tickles.translation">
+      <title/Translation to Virtual Strings/
+
+    <p>
+      The translation of a tickle into a virtual string that then by the
+      graphics agent is interpreted as a tcl command is shown in <ptr
+      to="figure.tk.tickle-trans">. The used help routines are shown
+      in <ptr to="figure.tk.tickle-trans-help">.
+
+    <figure id="figure.tk.tickle-trans">
+      <caption/Procedure <<TclToV>> translates a tickle into a virtual
+       string./
+<chunk class=anonymous><title/TclToV/
+local
+   fun {FieldToV AI Tcl}
+      if {IsInt AI} then '' else '-'#{Quote AI}#' ' end # {TclToV Tcl}
+   end
+   fun {RecordToV R AIs}
+      {FoldR AIs fun {$ AI V}
+                    {FieldToV AI R.AI} # ' ' # V
+                 end ''}
+   end
+in
+   fun {TclToV Tcl}
+      if {IsBool Tcl} then case Tcl then 0 else 1 end
+      elseif Tcl==Unit then ''
+      elseif {IsVirtualString Tcl} then {Quote Tcl}
+      elseif {IsTclObject Tcl} then {TclObjectToV Tcl}
+      else
+        case {Label Tcl}
+        of o then {RecordToV Tcl {Arity Tcl}}
+        [] p then AI|AIs={Arity Tcl} in
+           '{'#{FieldToV AI Tcl.AI}#'.'#{RecordToV Tcl AIs}#'}'
+        [] b then {FoldR Tcl.1 fun {$ Tcl V}
+                                  {TclToV Tcl}#' '#V
+                               end ''}
+        [] c then '#'#{Hex Tcl.1}#{Hex Tcl.2}#{Hex Tcl.3}
+        [] v then Tcl.1
+        [] s then '"'#{RecordToV Tcl {Arity Tcl}}#'"'
+        [] l then '['#{RecordToV Tcl {Arity Tcl}}#']'
+        [] q then '{'#{RecordToV Tcl {Arity Tcl}}#'}'
+        else {Quote {Label Tcl}}#' '#{RecordToV Tcl {Arity Tcl}}
+        end
+      end
+   end
 end
+</chunk>
+    </figure>
 
+    <figure id="figure.tk.tickle-trans-help">
+      <caption/Help routines to translate a tickle into a virtual
+       string./
+<p>
+<chunk><title/Definition of Octal/
+fun {Octal I}
+   [&\\ (I div 64 + &0) ((I mod 64) div 8 + &0) (I mod 8 + &0)]
+end
+</chunk>
+<chunk><title/Definition of Quote/
 fun {Quote V}
    case {VirtualString.toString V} of nil then "\"\""
-   elseof S then
+   [] S then
       {FoldR S fun {$ I Ir}
                   if {Member I "{}[]\\$\";"} then &\\|I|Ir
-                  elseif I<33 orelse I>127 then {Octal I Ir}
+                  elseif I<33 orelse I>127 then {Append {Octal I} Ir}
                   else I|Ir
                   end
                end nil}
    end
 end
-
-fun {FieldToV AI Tcl}
-   if {IsInt AI} then '' else '-'#{Quote AI}#' ' end # {TclToV Tcl}
-end
-
-fun {RecordToV R AIs}
-   {FoldR AIs fun {$ AI V}
-                 {FieldToV AI R.AI} # ' ' # V
-              end ''}
-end
-
-fun {HexDigit I}
-   I + if I>9 then &amp;a-10 else &amp;0 end
-end
-
-fun {Hex I}
-   [{HexDigit I div 16} {HexDigit I mod 16}]
-end
-
-fun {TclToV Tcl}
-   if {IsBool Tcl} then case Tcl then 0 else 1 end
-   elseif Tcl==Unit then ''
-   elseif {IsVirtualString Tcl} then {Quote Tcl}
-   elseif {IsTclObject Tcl} then {TclObjectToV Tcl}
-   else
-     case {Label Tcl}
-     of o then {RecordToV Tcl {Arity Tcl}}
-     [] p then AI|AIs={Arity Tcl} in
-        '{'#{FieldToV AI Tcl.AI}#'.'#{RecordToV Tcl AIs}#'}'
-     [] b then {FoldR Tcl.1 fun {$ Tcl V}
-                               {TclToV Tcl}#' '#V
-                            end ''}
-     [] c then '#'#{Hex Tcl.1}#{Hex Tcl.2}#{Hex Tcl.3}
-     [] v then Tcl.1
-     [] s then '"'#{RecordToV Tcl {Arity Tcl}}#'"'
-     [] l then '['#{RecordToV Tcl {Arity Tcl}}#']'
-     [] q then '{'#{RecordToV Tcl {Arity Tcl}}#'}'
-     else {Quote {Label Tcl}}#' '#{RecordToV Tcl {Arity Tcl}}
-     end
+</chunk>
+<chunk><title/Definition of Hex/
+local
+   fun {HexDigit I}
+      I + if I>9 then &amp;a-10 else &amp;0 end
+   end
+in
+   fun {Hex I}
+      [{HexDigit I div 16} {HexDigit I mod 16}]
    end
 end
->>>
-
-</figure>
-
-<p>
-The semantics of a tickle is given by its expansion to a virtual
-string.
-<p>
-<subsection id="section.tk.send">
-<title/Sending Tickles/
-<p>
-<list>
-<Entry><<send>> <Index class=module/Tk<and>send/
-<Synopsis>
-<<{Tk.send ?+{Tcl}}>>
-<Item>
-Sends ?+{Tcl} to get evaluated.
-
-<Entry> <<batch>>
-<index class=module/Tk<and>batch/
-
-<Synopsis>
-<<{Tk.batch ?+{TclS}}>>
-<Item>
-Sends a list of ?+{TclS}.
-</list>
-
-</subsection>
-<subsection id="section.tk.return-values">
-<Title/Return Values/
-<p>
-</subsection>
-
-<subsection id="section.tk.return">
-<Title/Sending Tickles and Returning Values/
-<p>
-<List>
-<Entry> <<return>>
-<index class=module/Tk<and>return/
-
-<Synopsis>
-<<{Tk.return ?+{Tcl} ??{S}}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as string.
-
-<Entry> <<returnString>>
-<index class=module/Tk<and>returnString/
-
-<Synopsis>
-<<{Tk.returnString ?+{Tcl} ??{S}}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as string.
-
-<Entry> <<returnAtom>>
-<index class=module/Tk<and>returnAtom/
-
-<Synopsis>
-<<{Tk.returnAtom ?+{Tcl} ??{A}}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as atom.
+</chunk>
+    </figure>
 
 
-<Entry> <<returnInt>>
-<index class=module/Tk<and>returnInt/
+    <subsection id="section.tk.tickles.send">
+      <title/Sending Tickles/
 
-<Synopsis>
-<<{Tk.returnInt ?+{Tcl} ??{IB}}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as integer. If the
-result does not describe a number <<False>> is returned.
+      <p>
+        Tickles can be send to the graphics engine with the following
+        procedures. The graphics engine processes tickles in batches:
+        it reads a batch of tickles and executes it. If no further
+        batch can be read currently, it updates the graphics. After
+        having updated the graphics, it checks whether user events are
+        to be processed.
 
-<Entry> <<returnFloat>>
-<index class=module/Tk<and>returnFloat/
+      <p>
+        The Oz procedures to send tickles are asynchronous and
+        preserve order: all tickles are processed in the same order
+        they are send in. However, after the procedure has been
+        executed, the graphics engine might not yet have executed the
+        tickle.
 
-<Synopsis>
-<<{Tk.returnFloat ?+{Tcl} ??{FB}}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
+      <p>
+        <list>
+          <entry><<send>> <index class=module/Tk<and>send/
+          <synopsis>
+            <<{Tk.send ?+{Tcl}}>>
+          <item>
+            Sends ?+{Tcl} to the graphics engine.
 
-<Entry> <<returnList>>
-<index class=module/Tk<and>returnList/
+          <entry> <<batch>> <index class=module/Tk<and>batch/
+          <synopsis>
+            <<{Tk.batch ?+{TclS}}>>
+          <item>
+            Sends a list of list of tickles ?+{TclS} to the graphics
+            engine. It is guaranteed that the graphics engine
+            processes all tickles in ?_{TclS} in a single batch.
+        </list>
 
-<Synopsis>
-<<{Tk.returnList ?+{Tcl} ??{Ss}}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
+    </subsection>
 
-<Entry> <<returnListString>>
-<index class=module/Tk<and>returnListString/
+    <subsection id="section.tk.return-values">
+      <title/Sending Tickles and Returning Values/
 
-<Synopsis>
-<<{Tk.returnListString ?+{Tcl} ??{Ss}}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
+      <p>
+        In the same way as sending tickles to graphics engine, the
+        engine can asynchronously send back return values which are
+        strings. The following procedures send tickles and
+        return the values returned by executing the tickles by the
+        graphics engine.
 
-<Entry> <<returnListAtom>>
-<index class=module/Tk<and>returnListAtom/
+      <p>
+        <list>
+          <entry> <<returnString>>
+            <index class=module/Tk<and>returnString/
+          <synopsis>
+            <<{Tk.returnString ?+{Tcl} ??{S}}>>
+          <item>
+            Returns the result of sending and executing ?+{Tcl} as string.
 
-<Synopsis>
-<<{Tk.returnListAtom ?+{Tcl} ??{As}}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
+          <entry> <<return>> <index class=module/Tk<and>return/
+          <synopsis>
+            <<{Tk.return ?+{Tcl} ??{S}}>>
+          <item>
+            Shortcut for <<Tk.returnString>>.
 
+          <entry> <<returnAtom>>
+            <index class=module/Tk<and>returnAtom/
+          <synopsis>
+            <<{Tk.returnAtom ?+{Tcl} ??{A}}>>
+          <item>
+            Returns the result of sending and executing ?+{Tcl} as string.
 
-<Entry> <<returnListInt>>
-<index class=module/Tk<and>returnListInt/
+          <entry> <<returnInt>>
+            <index class=module/Tk<and>returnInt/
+          <synopsis>
+            <<{Tk.returnInt ?+{Tcl} ??{IB}}>>
+          <item>
+            Returns the result of sending and executing ?+{Tcl} as
+            integer. If the result does not describe a number
+            <<false>> is returned.
 
-<Synopsis>
-<<{Tk.returnListInt ?+{Tcl} ??{IBs}}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
+          <entry> <<returnFloat>>
+            <index class=module/Tk<and>returnFloat/
+          <synopsis>
+            <<{Tk.returnFloat ?+{Tcl} ??{FB}}>>
+          <item>
+            Returns the result of sending and executing ?+{Tcl} as
+            float. If the result does not describe a number <<false>>
+            is returned.
 
-<Entry> <<returnListFloat>>
-<index class=module/Tk<and>returnListFloat/
+          <entry> <<returnListString>>
+            <index class=module/Tk<and>returnListString/
+          <synopsis>
+            <<{Tk.returnListString ?+{Tcl} ??{Ss}}>>
+          <item>
+            Returns the result of sending and executing ?+{Tcl} as
+            list of strings.
 
-<Synopsis>
-<<{Tk.returnListFloat ?+{Tcl} ??{FBs}}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
-</list>
-</subsection>
-</section>
+          <entry> <<returnList>>
+            <index class=module/Tk<and>returnList/
+          <synopsis>
+            <<{Tk.returnList ?+{Tcl} ??{Ss}}>>
+          <item>
+            Shortcut for <<Tk.returnListString>>.
 
-<section id="section.tk.objects">
-<title/Tickle Objects/
-<p>
+          <entry> <<returnListAtom>>
+            <index class=module/Tk<and>returnListAtom/
+          <synopsis>
+            <<{Tk.returnListAtom ?+{Tcl} ??{ABs}}>>
+          <item>
+            Returns the result of sending and executing ?+{Tcl} as
+            list of atoms. If elements of the list do not form valid
+            atoms, the list contains the element <<false>> instead.
 
-<figure class=Figure id="figure.tk.hierarchy">
-<caption/Hierarchy of tickle objects./
+          <entry> <<returnListInt>>
+            <index class=module/Tk<and>returnListInt/
+          <synopsis>
+            <<{Tk.returnListInt ?+{Tcl} ??{IBs}}>>
+          <item>
+            Returns the result of sending and executing ?+{Tcl} as
+            list of integers. If elements of the list do not form valid
+            numbers, the list contains the element <<false>> instead.
+
+          <entry> <<returnListFloat>>
+            <index class=module/Tk<and>returnListFloat/
+          <synopsis>
+            <<{Tk.returnListFloat ?+{Tcl} ??{FBs}}>>
+          <item>
+            Returns the result of sending and executing ?+{Tcl} as
+            list of integers. If elements of the list do not form valid
+            numbers, the list contains the element <<false>> instead.
+
+        </list>
+
+      </subsection>
+
+  </section>
+
+  <section id="section.tk.objects">
+    <title/Tickle Objects/
+
+    <p>
+      Rather than programming with tickles directly, all graphical
+      entities are provided as classes. To these classes we refer to
+      as <def/tickle classes/ and to their instances as <def/tickle
+      objects/. Applying a tickle object to a message translates it
+      in a straightforward way into a tickle.
+
+    <figure id="figure.tk.hierarchy">
+      <caption/Hierarchy of tickle objects./
 <picture latex>
 \newcommand{\OzClass}[3]{%
-\rput(#1,#2){\psframe[fillcolor=lightgray,fillstyle=solid,boxsep=false,framearc=.3](-0.35,-0.25)(0.35,0.25)\makebox(0,0){#3}}}
+\rput(#1,#2){\psframe[fillcolor=lightgray,fillstyle=solid,boxsep=false,framearc=.3](-0.35,-0.4)(0.35,0.4)\makebox(0,0){\texttt{#3}}}}
 \newcommand{\clc}[4]{\psline{-}(#1,#2)(#3,#4)}
 \newcommand{\ViClass}[3]{%
-\rput(#1,#2){\psframe[fillcolor=white,fillstyle=solid,boxsep=false,framearc=.3](-0.35,-0.25)(0.35,0.25)\makebox(0,0){#3}}}
+\rput(#1,#2){\psframe[fillcolor=white,fillstyle=solid,boxsep=false,framearc=.3](-0.35,-0.4)(0.35,0.4)\makebox(0,0){\texttt{#3}}}}
 
-\psset{xunit=4cm,yunit=0.85cm,runit=.26cm,framearc=0,linewidth=.75pt}% ,arcangle=15}
-\begin{pspicture}(-0.5,-0.5)(3.5,22.5)\footnotesize
-\OzClass{3}{22}{canvas}
-\OzClass{3}{21}{entry}
-\OzClass{3}{20}{frame}
-\OzClass{3}{19}{label}
-\OzClass{3}{18}{listbox}
-\OzClass{3}{17}{menu}
-\OzClass{3}{16}{menubutton}
-\OzClass{3}{15}{message}
-\OzClass{3}{14}{text}
-\OzClass{3}{13}{button}
-\OzClass{3}{12}{checkbutton}
-\OzClass{3}{11}{radiobutton}
-\OzClass{3}{10}{scale}
-\OzClass{3}{09}{scrollbar}
-\ViClass{2}{18}{no action}
-\clc{2.35}{18}{2.65}{22}
-\clc{2.35}{18}{2.65}{21}
-\clc{2.35}{18}{2.65}{20}
-\clc{2.35}{18}{2.65}{19}
-\clc{2.35}{18}{2.65}{18}
-\clc{2.35}{18}{2.65}{17}
-\clc{2.35}{18}{2.65}{16}
-\clc{2.35}{18}{2.65}{15}
-\clc{2.35}{18}{2.65}{14}
-\ViClass{2}{11}{action}
-\clc{2.35}{11}{2.65}{13}
-\clc{2.35}{11}{2.65}{12}
-\clc{2.35}{11}{2.65}{11}
-\clc{2.35}{11}{2.65}{10}
-\clc{2.35}{11}{2.65}{09}
-\OzClass{2}{10}{toplevel}
-\OzClass{2}{09}{cascade}
-\OzClass{2}{08}{checkbutton}
-\OzClass{2}{07}{command}
-\OzClass{2}{06}{radiobutton}
-\OzClass{2}{05}{separator}
-\OzClass{2}{04}{canvas tag}
-\OzClass{2}{03}{text tag}
-\OzClass{2}{02}{text mark}
-\ViClass{1}{14}{widget}
-\clc{1.35}{14}{1.65}{18}
-\clc{1.35}{14}{1.65}{11}
-\clc{1.35}{14}{1.65}{10}
-\ViClass{1}{07}{menuentry}
-\clc{1.35}{07}{1.65}{09}
-\clc{1.35}{07}{1.65}{08}
-\clc{1.35}{07}{1.65}{07}
-\clc{1.35}{07}{1.65}{06}
-\clc{1.35}{07}{1.65}{05}
-\ViClass{1}{03}{tag or mark}
-\clc{1.35}{03}{1.65}{04}
-\clc{1.35}{03}{1.65}{03}
-\clc{1.35}{03}{1.65}{02}
-\OzClass{1}{02}{image}
-\OzClass{1}{01}{action}
-\OzClass{1}{00}{variable}
-\ViClass{0}{08}{Tcl object}
-\clc{0.35}{08}{0.65}{14}
-\clc{0.35}{08}{0.65}{07}
-\clc{0.35}{08}{0.65}{03}
-\clc{0.35}{08}{0.65}{02}
-\clc{0.35}{08}{0.65}{01}
-\clc{0.35}{08}{0.65}{00}
+\psset{xunit=3cm,yunit=0.55cm,runit=.26cm,framearc=0,linewidth=.75pt}% ,arcangle=15}
+\begin{pspicture}(-0.5,-0.5)(3.5,23.5)\footnotesize
+\OzClass{3}{23}{canvas}\OzClass{3}{22}{entry}
+\OzClass{3}{21}{frame}\OzClass{3}{20}{label}
+\OzClass{3}{19}{listbox}\OzClass{3}{18}{menu}
+\OzClass{3}{17}{menubutton}\OzClass{3}{16}{message}
+\OzClass{3}{15}{text}\OzClass{3}{14}{button}
+\OzClass{3}{13}{checkbutton}\OzClass{3}{12}{radiobutton}
+\OzClass{3}{11}{scale}\OzClass{3}{10}{scrollbar}
+\ViClass{2}{19}{no action}
+\clc{2.35}{19}{2.65}{23}\clc{2.35}{19}{2.65}{22}
+\clc{2.35}{19}{2.65}{21}\clc{2.35}{19}{2.65}{20}
+\clc{2.35}{19}{2.65}{19}\clc{2.35}{19}{2.65}{18}
+\clc{2.35}{19}{2.65}{17}\clc{2.35}{19}{2.65}{16}
+\clc{2.35}{19}{2.65}{15}
+\ViClass{2}{12}{action}
+\clc{2.35}{12}{2.65}{14}\clc{2.35}{12}{2.65}{13}
+\clc{2.35}{12}{2.65}{12}\clc{2.35}{12}{2.65}{11}
+\clc{2.35}{12}{2.65}{10}
+\OzClass{2}{11}{toplevel}\OzClass{2}{10}{cascade}
+\OzClass{2}{09}{checkbutton}\OzClass{2}{08}{command}
+\OzClass{2}{07}{radiobutton}\OzClass{2}{06}{separator}
+\OzClass{2}{05}{canvas tag}\OzClass{2}{04}{text tag}
+\OzClass{2}{03}{text mark}
+\ViClass{1}{15}{widget}
+\clc{1.35}{15}{1.65}{19}\clc{1.35}{15}{1.65}{12}
+\clc{1.35}{15}{1.65}{11}
+\ViClass{1}{08}{menuentry}
+\clc{1.35}{08}{1.65}{10}\clc{1.35}{08}{1.65}{09}
+\clc{1.35}{08}{1.65}{08}\clc{1.35}{08}{1.65}{07}
+\clc{1.35}{08}{1.65}{06}
+\ViClass{1}{04}{tag or mark}
+\clc{1.35}{04}{1.65}{05}\clc{1.35}{04}{1.65}{04}
+\clc{1.35}{04}{1.65}{03}
+\OzClass{1}{03}{image}\OzClass{1}{02}{font}
+\OzClass{1}{01}{action}\OzClass{1}{00}{variable}
+\ViClass{0}{09}{Tcl object}
+\clc{0.35}{09}{0.65}{15}\clc{0.35}{09}{0.65}{08}
+\clc{0.35}{09}{0.65}{04}\clc{0.35}{09}{0.65}{03}
+\clc{0.35}{09}{0.65}{02}\clc{0.35}{09}{0.65}{01}
+\clc{0.35}{09}{0.65}{00}
 \end{pspicture}
-</picture>
-</figure>
+      </picture>
+      </figure>
 
-<subsection id="section.tk.meth-tkInit">
-<title/Object Initialization/
-<p>
-</subsection>
+    <p>
+      The available tickle classes are shown in <ptr
+      to="figure.tk.hierarchy">, where the classes that are shadowed
+      gray are classes provided by the tk module, the others are just
+      conceptual.
 
-<subsection id="section.tk.meth-tk"/
-<title/Sending Commands/ <p>/
+    <p>
+      To give a convenient translation from the message to a tickle,
+      we will use the following procedure that takes a <<Message>>,
+      removes the features <<Remove>> of the <<Message>> and adjoins
+      the record <<Add>> to it.
 
-<subsection id="section.tk.meth-tkReturn"/
-<title/Returning Values/ <p>/
-
-<subsection id="section.tk.meth-action"/
-<title/Actions/ <p>/
-
-<subsection id="section.tk.meth-args"/
-<title/Action Arguments/ <p>/
-
-<subsection id="section.tk.event-patterns"/
-<title/Event Patterns/ <p>/
-
-<subsection id="section.tk.event-args">
-<title/Event Arguments/
-<p>
-
-<figure class=Figure id="fig.tk.tclify">
+<figure id="figure.tk.tclify">
 <caption/Procedure <<Tclify>> transforms a message into a tickle./
 <<<fun {Tclify Message Remove Add}
    {Adjoin {FoldL Remove fun {$ F M}
@@ -378,721 +397,271 @@ result does not describe a number <<False>> is returned.
 end
 >>>
 </figure>
-</subsection>
 
-<section id="section.tk.widgets">
-<title/Widget Classes/
+    <subsection id="section.tk.tkInit">
+       <title/Initialization: <<tkInit>>/
+
+    <subsection id="section.tk.tk">
+       <title/Commands: <<tk>>/
+
+    <subsection id="section.tk.tkReturn">
+       <title/Commands with return value: <<tkReturn>>/
+
+    <subsection id="section.tk.tkBind">
+       <title/Event bindings: <<tkBind>>/
+
+
+  <section id="section.tk.no-action">
+    <title/No-Action Widgets/
+
+    <p>
+      <table>
+        <tr/ <th/Widget/ <th/Example/ <th/Reference//
+        <tr/ <td/canvas/
+             <td/<ptr.extern to="ozdoc:wp" key="chapter.canvas"/
+             <td/<ref.extern to="&tkcmd;/canvas.htm"/<file/canvas////
+        <tr/ <td/entry/
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.entry"/
+             <td/<ref.extern to="&tkcmd;/entry.htm"/<file/entry////
+        <tr/ <td/frame/
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-1.frame"/
+             <td/<ref.extern to="&tkcmd;/frame.htm"/<file/frame////
+        <tr/ <td/label/
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-1.label"/
+             <td/<ref.extern to="&tkcmd;/label.htm"/<file/label////
+        <tr/ <td/listbox/
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.listbox"/
+             <td/<ref.extern to="&tkcmd;/listbox.htm"/<file/listbox////
+        <tr/ <td/menu/
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.menu"/
+             <td/<ref.extern to="&tkcmd;/menu.htm"/<file/menu////
+        <tr/ <td/menubutton/
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.menu"/
+             <td/<ref.extern to="&tkcmd;/menubutton.htm"/<file/menubutton////
+        <tr/ <td/message/
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-1.messages"/
+             <td/<ref.extern to="&tkcmd;/message.htm"/<file/message////
+        <tr/ <td/text/
+             <td/<ptr.extern to="ozdoc:wp" key="chapter.text"/
+             <td/<ref.extern to="&tkcmd;/text.htm"/<file/text////
+      </table>
+
+  </section>
+
+
+  <section id="section.tk.action-widget">
+    <title/Action Widgets/
+
+    <p>
+      <table>
+        <tr/ <th/Widget/ <th/Example/ <th/Reference//
+        <tr/ <td/button/
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.button"/
+             <td/<ref.extern to="&tkcmd;/button.htm"/<file/button////
+        <tr/ <td/checkbutton/
+             <td/<ptr.extern to="ozdoc:wp"
+                             key="section.widgets-2.otherbuttons"/
+             <td/<ref.extern to="&tkcmd;/checkbutton.htm"/<file/checkbutton////
+        <tr/ <td/radiobutton/
+             <td/<ptr.extern to="ozdoc:wp"
+                             key="section.widgets-2.otherbuttons"/
+             <td/<ref.extern to="&tkcmd;/radiobutton.htm"/<file/radiobutton////
+        <tr/ <td/scale/
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.scale"/
+             <td/<ref.extern to="&tkcmd;/scale.htm"/<file/scale////
+        <tr/ <td/scrollbar/
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.listbox"/
+             <td/<ref.extern to="&tkcmd;/scrollbar.htm"/<file/scrollbar////
+      </table>
+
+    <p>
+
+  </section>
+
+
+  <section id="section.tk.toplevel">
+    <title/Toplevel Widgets/
+
+    <p>
+
+  </section>
+
+
+  <section id="section.tk.menuentry">
+    <title/Menu Entries/
+
+    <p>
+
+  </section>
+
+
+  <section id="section.tk.tagmark">
+    <title/Tags And Marks/
+
+    <p>
+
+  </section>
+
+
+  <section id="section.tk.image">
+    <title/Images/
+
+    <p>
+
+  </section>
+
+
+  <section id="section.tk.font">
+    <title/Fonts/
+
+    <p>
+
+  </section>
+
+
+  <section id="section.tk.variable">
+    <title/Variables/
+
+    <p>
+
+  </section>
+
+
+  <section id="section.tk.action">
+    <title/Actions/
+
+    <p>
+
+  </section>
+
+  <section id="section.tk.listener">
+    <title/Listeners/
+
+    <p>
+
+  </section>
+
+
+  <section id="section.tk.strings">
+    <title/Strings/
+
+    <p>
+    <Index scope="section.tk.strings"/Tk<and>string/
+
+    <list>
+      <entry> <<toAtom>>
+        <index class=module/Tk<and>string<and>toAtom/
+      <synopsis>
+        <<{Tk.string.toAtom ?+{S} ??{A}}>>
+      <item>
+        Returns an atom corresponding to the string ?_{S}.
+
+      <entry> <<toInt>>
+        <index class=module/Tk<and>string<and>toInt/
+      <synopsis>
+        <<{Tk.string.toInt ?+{S} ??{IB}}>>
+      <item>
+        Returns an integer corresponding to the string ?_{S}. If ?_{S}
+        does not form a valid number, <<false>> is returned.
+
+      <entry> <<toFloat>>
+        <index class=module/Tk<and>string<and>toFloat/
+      <synopsis>
+        <<{Tk.string.toFloat ?+{S} ??{FB}}>>
+      <item>
+        Returns a float corresponding to the string ?_{S}. If ?_{S}
+        does not form a valid number, <<false>> is returned.
+
+      <entry> <<toListString>>
+        <index class=module/Tk<and>string<and>toListString/
+      <synopsis>
+        <<{Tk.string.toListString ?+{S} ??{Ss}}>>
+      <item>
+        Returns a list of strings that corresponds to the space
+        separated substrings of ?_{S}.
+
+      <entry> <<toListAtom>>
+        <index class=module/Tk<and>string<and>toListAtom/
+      <synopsis>
+        <<{Tk.string.toListAtom ?+{S} ??{As}}>>
+      <item>
+        Returns a list of atoms that corresponds to the space
+        separated substrings of ?_{S}.
+
+      <entry> <<toListInt>>
+        <index class=module/Tk<and>string<and>toListInt/
+      <synopsis>
+        <<{Tk.string.toListInt ?+{S} ??{IBs}}>>
+      <item>
+        Returns a list of integers that corresponds to the space
+        separated number strings of ?_{S}. If one of the substrings
+        does not form a valid number, the element will be <<false>>
+        rather than an integer.
+
+      <entry> <<toListFloat>>
+        <index class=module/Tk<and>string<and>toListFloat/
+      <synopsis>
+        <<{Tk.string.toListFloat ?+{S} ??{FBs}}>>
+      <item>
+        Returns a list of floats that corresponds to the space
+        separated number strings of ?_{S}. If one of the substrings
+        does not form a valid number, the element will be <<false>>
+        rather than a float.
+    </list>
+
+  </section>
+
+
+  <section id="section.tk.misc">
+    <title/Miscellaneous/
 <p>
 
-<list>
-<Entry> <<tkReturn>>
-<index class=module/Tk<and>variable<and>tkReturn/
+    <list>
+      <entry> <<isColor>>
+        <index class=module/Tk<and>isColor/
+      <synopsis>
+        <<Tk.isColor>>
+      <item>
+        Is <<true>>, if the current display supports colors.
+      <p>
+        Is defined as
+        <<<Tk.isColor={Tk.returnInt winfo(depth '.')}&gt;1>>>
+
+      <entry> <<addXScrollbar>>
+        <index class=module/Tk<and>addXScrollbar/
+      <synopsis>
+        <<{Tk.addXScrollbar ?+{BarTcl} ?+{ToScrollTcl}}>>
+      <item>
+        Attaches a horizontal scrollbar defined by ?_{BarTcl} to a
+        scrollable widget defined by ?_{ToScrollTcl}.
+
+      <entry> <<addYScrollbar>>
+        <index class=module/Tk<and>addYScrollbar/
+      <synopsis>
+        <<{Tk.addYScrollbar ?+{BarTcl} ?+{ToScrollTcl}}>>
+      <item>
+        Attaches a vertical scrollbar defined by ?_{BarTcl} to a
+        scrollable widget defined by ?_{ToScrollTcl}.
+
+      <entry> <<getId>>
+        <index class=module/Tk<and>getId/
+      <synopsis>
+        <<{Tk.getId ?_{V}}>>
+      <item>
+        Returns a virtual string ?_{V} that can be used as new unique
+        tickle identifier.
+
+      <entry> <<getPrefix>>
+        <index class=module/Tk<and>getPrefix/
+      <synopsis>
+        <<{Tk.getPrefix ?_{V}}>>
+      <item>
+        Returns a virtual string ?_{V} that can be used as prefix for
+        new unique tickle identifiers. It is guaranteed that appending
+        integers to ?_{V} yields unique identifiers.
+
+    </list>
+  </section>
 
-<Synopsis>
-<<tkReturn(??{S})>>
-<Item>
-Creates
 
-
-<Entry><<tkReturnString>>
-<index class=module/Tk<and>variable<and>tkReturnString/
-
-<Synopsis><<tkReturnString(??{S})>>
-<Entry><<tkReturnAtom>>
-<index class=module/Tk<and>variable<and>tkReturnAtom/
-
-<Synopsis><<tkReturnAtom(??{A})>>
-<Entry><<tkReturnInt>>
-<index class=module/Tk<and>variable<and>tkReturnInt/
-
-<Synopsis><<tkReturnInt(??{IB})>>
-<Entry><<tkReturnFloat>>
-<index class=module/Tk<and>variable<and>tkReturnFloat/
-
-<Synopsis><<tkReturnFloat(??{FB})>>
-<Entry><<tkReturnList>>
-<index class=module/Tk<and>variable<and>tkReturnList/
-
-<Synopsis><<tkReturnList(??{Ss})>>
-<Entry><<tkReturnListString>>
-<index class=module/Tk<and>variable<and>tkReturnListString/
-
-<Synopsis><<tkReturnListString(??{Ss})>>
-<Entry><<tkReturnListAtom>>
-<index class=module/Tk<and>variable<and>tkReturnListAtom/
-
-<Synopsis><<tkReturnListAtom(??{As})>>
-<Entry><<tkReturnListInt>>
-<index class=module/Tk<and>variable<and>tkReturnListInt/
-
-<Synopsis><<tkReturnListInt(??{IBs})>>
-<Entry><<tkReturnListFloat>>
-<index class=module/Tk<and>variable<and>tkReturnListFloat/
-
-<Synopsis><<tkReturnListFloat(??{FBs})>>
-<Item>
-Creates
-</list>
-
-<subsection/
-<title/Toplevel Widgets/<p>/
-
-<subsection/
-<title/Action Widgets/<p>/
-
-<subsection/
-<title/No-Action Widgets/<p>/
-</section>
-
-<section id="section.tk.menuentries">
-<title/Menu Entries/
-<p>
-
-<list>
-<Entry><<tkReturn>>
-<index class=module/Tk<and>variable<and>tkReturn/
-
-<Synopsis>
-<<tkReturn(??{S})>>
-<Item>
-Creates
-
-<Entry><<tkReturnString>>
-<index class=module/Tk<and>variable<and>tkReturnString/
-
-<Synopsis><<tkReturnString(??{S})>>
-<Entry><<tkReturnAtom>>
-<index class=module/Tk<and>variable<and>tkReturnAtom/
-
-<Synopsis><<tkReturnAtom(??{A})>>
-<Entry><<tkReturnInt>>
-<index class=module/Tk<and>variable<and>tkReturnInt/
-
-<Synopsis><<tkReturnInt(??{IB})>>
-<Entry><<tkReturnFloat>>
-<index class=module/Tk<and>variable<and>tkReturnFloat/
-
-<Synopsis><<tkReturnFloat(??{FB})>>
-<Entry><<tkReturnList>>
-<index class=module/Tk<and>variable<and>tkReturnList/
-
-<Synopsis><<tkReturnList(??{Ss})>>
-<Entry><<tkReturnListString>>
-<index class=module/Tk<and>variable<and>tkReturnListString/
-
-<Synopsis><<tkReturnListString(??{Ss})>>
-<Entry><<tkReturnListAtom>>
-<index class=module/Tk<and>variable<and>tkReturnListAtom/
-
-<Synopsis><<tkReturnListAtom(??{As})>>
-<Entry><<tkReturnListInt>>
-<index class=module/Tk<and>variable<and>tkReturnListInt/
-
-<Synopsis><<tkReturnListInt(??{IBs})>>
-<Entry><<tkReturnListFloat>>
-<index class=module/Tk<and>variable<and>tkReturnListFloat/
-
-<Synopsis><<tkReturnListFloat(??{FBs})>>
-
-<Item>
-Creates
-</list>
-</section>
-
-<section>
-<Title/Tags and Marks/
-<p>
-
-<subsection id="section.tk.canvastags">
-<Title/Canvas Tags/
-<p>
-<Index scope=section.tk.canvastags/Tk<and>canvasTag/
-
-
-<list>
-<Entry> <<tkInit>>
-<index class=module/Tk<and>canvasTag<and>tkInit/
-
-<Synopsis>
-<<tkInit(parent: ?_{TclObject})>>
-<Item>
-Creates
-
-<Entry> <<tk>>
-<index class=module/Tk<and>canvasTag<and>tk/
-
-<Synopsis>
-<<tk(_ ...)>>
-<Item>
-Creates
-
-<Entry> <<tkReturn>>
-<index class=module/Tk<and>canvasTag<and>tkReturn/
-
-<Synopsis>
-<<tkReturn(... ??{S})>>
-<Item>
-Creates
-
-<Entry> <<tkReturnString>>
-<index class=module/Tk<and>canvasTag<and>tkReturnString/
-
-<Synopsis> <<tkReturnString(... ??{S})>>
-<Entry> <<tkReturnAtom>>
-<index class=module/Tk<and>canvasTag<and>tkReturnAtom/
-
-<Synopsis> <<tkReturnAtom(... ??{A})>>
-<Entry> <<tkReturnInt>>
-<index class=module/Tk<and>canvasTag<and>tkReturnInt/
-
-<Synopsis> <<tkReturnInt(... ??{IB})>>
-<Entry> <<tkReturnFloat>>
-<index class=module/Tk<and>canvasTag<and>tkReturnFloat/
-
-<Synopsis> <<tkReturnFloat(... ??{FB})>>
-<Entry> <<tkReturnList>>
-<index class=module/Tk<and>canvasTag<and>tkReturnList/
-
-<Synopsis> <<tkReturnList(... ??{Ss})>>
-<Entry> <<tkReturnListString>>
-<index class=module/Tk<and>canvasTag<and>tkReturnListString/
-
-<Synopsis> <<tkReturnListString(... ??{Ss})>>
-<Entry> <<tkReturnListAtom>>
-<index class=module/Tk<and>canvasTag<and>tkReturnListAtom/
-
-<Synopsis> <<tkReturnListAtom(... ??{As})>>
-<Entry> <<tkReturnListInt>>
-<index class=module/Tk<and>canvasTag<and>tkReturnListInt/
-
-<Synopsis> <<tkReturnListInt(... ??{IBs})>>
-<Entry> <<tkReturnListFloat>>
-<index class=module/Tk<and>canvasTag<and>tkReturnListFloat/
-
-<Synopsis> <<tkReturnListFloat(... ??{FBs})>>
-
-<Item>
-Creates
-
-
-<Entry> <<tkBind>>
-<index class=module/Tk<and>canvasTag<and>tkBind/
-
-<Synopsis>
-<<tkBind(event:  ?+{EventPattern}
-       args:   ?+{Args}
-       append: ?+{AppendB}
-       break:  ?+{BreakB}
-       action: ?+{Action}       <= _)>>
-<Item>
-Creates
-
-<Entry> <<close>>
-<index class=module/Tk<and>canvasTag<and>close/
-
-<Synopsis>
-<<close>>
-<Item>
-Closes
-</list>
-</subsection>
-
-<subsection id="section.tk.texttags">
-<title/Text Tags/
-<p>
-<index scope="section.tk.texttags"/Tk<and>textTag/
-
-
-<list>
-<Entry> <<tkInit>>
-<index class=module/Tk<and>textTag<and>tkInit/
-
-<Synopsis>
-<<tkInit(parent: ?{TclObject})>>
-<Item>
-Creates
-
-<Entry> <<tk>>
-<index class=module/Tk<and>textTag<and>tk/
-
-<Synopsis>
-<<tk(_ ...)>>
-<Item>
-Creates
-
-<Entry> <<tkReturn>>
-<index class=module/Tk<and>textTag<and>tkReturn/
-
-<Synopsis>
-<<tkReturn(... ??{S})>>
-<Item>
-Creates
-
-<Entry> <<tkReturnString>>
-<index class=module/Tk<and>textTag<and>tkReturnString/
-
-<Synopsis> <<?tkReturnString(... ??{S})>>
-<Entry> <<tkReturnAtom>>
-<index class=module/Tk<and>textTag<and>tkReturnAtom/
-
-<Synopsis> <<?tkReturnAtom(... ??{A})>>
-<Entry> <<tkReturnInt>>
-<index class=module/Tk<and>textTag<and>tkReturnInt/
-
-<Synopsis> <<?tkReturnInt(... ??{IB})>>
-<Entry> <<tkReturnFloat>>
-<index class=module/Tk<and>textTag<and>tkReturnFloat/
-
-<Synopsis> <<?tkReturnFloat(... ??{FB})>>
-<Entry> <<tkReturnList>>
-<index class=module/Tk<and>textTag<and>tkReturnList/
-
-<Synopsis> <<?tkReturnList(... ??{Ss})>>
-<Entry> <<tkReturnListString>>
-<index class=module/Tk<and>textTag<and>tkReturnListString/
-
-<Synopsis> <<?tkReturnListString(... ??{Ss})>>
-<Entry> <<tkReturnListAtom>>
-<index class=module/Tk<and>textTag<and>tkReturnListAtom/
-
-<Synopsis> <<?tkReturnListAtom(... ??{As})>>
-<Entry> <<tkReturnListInt>>
-<index class=module/Tk<and>textTag<and>tkReturnListInt/
-
-<Synopsis> <<?tkReturnListInt(... ??{IBs})>>
-<Entry> <<tkReturnListFloat>>
-<index class=module/Tk<and>textTag<and>tkReturnListFloat/
-
-<Synopsis> <<?tkReturnListFloat(... ??{FBs})>>
-
-<Item>
-Creates
-
-<Entry> <<tkBind>>
-<index class=module/Tk<and>textTag<and>tkBind/
-
-<Synopsis>
-<<tkBind(event:  ?+{EventPattern}
-       args:   ?+{Args}
-       append: ?+{AppendB}
-       break:  ?+{BreakB}
-       action: ?+{Action}       <= _)>>
-<Item>
-Creates
-
-<Entry> <<close>>
-<index class=module/Tk<and>textTag<and>close/
-
-<Synopsis>
-<<close>>
-<Item>
-Closes
-</list>
-</subsection>
-
-<subsection id="section.tk.textmark">
-<title/Text Marks/
-<p>
-<index scope="section.tk.textmark"/Tk<and>textMark/
-
-
-<list>
-<Entry> <<tkInit>>
-<index class=module/Tk<and>textMark<and>tkInit/
-
-<Synopsis>
-<<tkInit(parent: ?{TclObject})>>
-<Item>
-Creates
-
-<Entry> <<tk>>
-<index class=module/Tk<and>textMark<and>tk/
-
-<Synopsis>
-<<tk(_ ...)>>
-<Item>
-Creates
-
-<Entry> <<tkReturn>>
-<index class=module/Tk<and>textMark<and>tkReturn/
-
-<Synopsis>
-<<tkReturn(... ??{S})>>
-<Item>
-Creates
-
-<Entry><<tkReturnString>>
-<index class=module/Tk<and>textMark<and>tkReturnString/
-
-<Synopsis><<tkReturnString(... ??{S})>>
-<Entry><<tkReturnAtom>>
-<index class=module/Tk<and>textMark<and>tkReturnAtom/
-
-<Synopsis><<tkReturnAtom(... ??{A})>>
-<Entry><<tkReturnInt>>
-<index class=module/Tk<and>textMark<and>tkReturnInt/
-
-<Synopsis><<tkReturnInt(... ??{IB})>>
-<Entry><<tkReturnFloat>>
-<index class=module/Tk<and>textMark<and>tkReturnFloat/
-
-<Synopsis><<tkReturnFloat(... ??{FB})>>
-<Entry><<tkReturnList>>
-<index class=module/Tk<and>textMark<and>tkReturnList/
-
-<Synopsis><<tkReturnList(... ??{Ss})>>
-<Entry><<tkReturnListString>>
-<index class=module/Tk<and>textMark<and>tkReturnListString/
-
-<Synopsis><<tkReturnListString(... ??{Ss})>>
-<Entry><<tkReturnListAtom>>
-<index class=module/Tk<and>textMark<and>tkReturnListAtom/
-
-<Synopsis><<tkReturnListAtom(... ??{As})>>
-<Entry><<tkReturnListInt>>
-<index class=module/Tk<and>textMark<and>tkReturnListInt/
-
-<Synopsis><<tkReturnListInt(... ??{IBs})>>
-<Entry><<tkReturnListFloat>>
-<index class=module/Tk<and>textMark<and>tkReturnListFloat/
-
-<Synopsis><<tkReturnListFloat(... ??{FBs})>>
-
-<Item>
-Creates
-
-<Entry> <<close>>
-<index class=module/Tk<and>textMark<and>close/
-
-<Synopsis>
-<<close>>
-<Item>
-Closes
-</list>
-</subsection>
-</section>
-
-<section id="section.tk.Images">
-<Title/Images/
-<p>
-<Index scope="section.tk.Images"/Tk<and>image/
-
-
-<list>
-<Entry> <<tkInit>>
-<index class=module/Tk<and>image<and>tkInit/
-
-<Synopsis>
-<<tkInit(type: ?{TypeTcl} ...)>>
-<Item>
-Creates
-
-<Entry> <<tk>>
-<index class=module/Tk<and>image<and>tk/
-
-<Synopsis>
-<<tk(_ ...)>>
-<Item>
-Creates
-
-<Entry> <<tkReturn>>
-<index class=module/Tk<and>image<and>tkReturn/
-
-<Synopsis>
-<<tkReturn(??{S})>>
-<Item>
-Creates
-
-<Entry><<tkReturnString>>
-<index class=module/Tk<and>image<and>tkReturnString/
-
-<Synopsis><<tkReturnString(... ??{S})>>
-<Entry><<tkReturnAtom>>
-<index class=module/Tk<and>image<and>tkReturnAtom/
-
-<Synopsis><<tkReturnAtom(... ??{A})>>
-<Entry><<tkReturnInt>>
-<index class=module/Tk<and>image<and>tkReturnInt/
-
-<Synopsis><<tkReturnInt(... ??{IB})>>
-<Entry><<tkReturnFloat>>
-<index class=module/Tk<and>image<and>tkReturnFloat/
-
-<Synopsis><<tkReturnFloat(... ??{FB})>>
-<Entry><<tkReturnList>>
-<index class=module/Tk<and>image<and>tkReturnList/
-
-<Synopsis><<tkReturnList(... ??{Ss})>>
-<Entry><<tkReturnListString>>
-<index class=module/Tk<and>image<and>tkReturnListString/
-
-<Synopsis><<tkReturnListString(... ??{Ss})>>
-<Entry><<tkReturnListAtom>>
-<index class=module/Tk<and>image<and>tkReturnListAtom/
-
-<Synopsis><<tkReturnListAtom(... ??{As})>>
-<Entry><<tkReturnListInt>>
-<index class=module/Tk<and>image<and>tkReturnListInt/
-
-<Synopsis><<tkReturnListInt(... ??{IBs})>>
-<Entry><<tkReturnListFloat>>
-<index class=module/Tk<and>image<and>tkReturnListFloat/
-
-<Synopsis><<tkReturnListFloat(... ??{FBs})>>
-
-<Item>
-Creates
-
-<Entry> <<close>>
-<index class=module/Tk<and>image<and>close/
-
-<Synopsis>
-<<close>>
-<Item>
-Closes
-
-</list>
-
-</section>
-
-<section id="section.tk.variables">
-<title/Variables/
-<p>
-<Index scope="section.tk.variables"/Tk<and>variable/
-
-
-<list>
-<Entry> <<tkInit>>
-<index class=module/Tk<and>variable<and>tkInit/
-
-<Synopsis>
-<<tkInit(?{Tcl})>>
-tkInit
-<Item>
-Creates
-
-<Entry> <<tkSet>>
-<index class=module/Tk<and>variable<and>tkSet/
-
-<Synopsis>
-<<tkSet(?+{Tcl})>>
-<Item>
-Creates
-
-<Entry> <<tkReturn>>
-<index class=module/Tk<and>variable<and>tkReturn/
-
-<Synopsis>
-<<tkReturn(??{S})>>
-<Item>
-Creates
-
-<Entry><<tkReturnString>>
-<index class=module/Tk<and>variable<and>tkReturnString/
-
-<Synopsis><<tkReturnString(??{S})>>
-<Entry><<tkReturnAtom>>
-<index class=module/Tk<and>variable<and>tkReturnAtom/
-
-<Synopsis><<tkReturnAtom(??{A})>>
-<Entry><<tkReturnInt>>
-<index class=module/Tk<and>variable<and>tkReturnInt/
-
-<Synopsis><<tkReturnInt(??{IB})>>
-<Entry><<tkReturnFloat>>
-<index class=module/Tk<and>variable<and>tkReturnFloat/
-
-<Synopsis><<tkReturnFloat(??{FB})>>
-<Entry><<tkReturnList>>
-<index class=module/Tk<and>variable<and>tkReturnList/
-
-<Synopsis><<tkReturnList(??{Ss})>>
-<Entry><<tkReturnListString>>
-<index class=module/Tk<and>variable<and>tkReturnListString/
-
-<Synopsis><<tkReturnListString(??{Ss})>>
-<Entry><<tkReturnListAtom>>
-<index class=module/Tk<and>variable<and>tkReturnListAtom/
-
-<Synopsis><<tkReturnListAtom(??{As})>>
-<Entry><<tkReturnListInt>>
-<index class=module/Tk<and>variable<and>tkReturnListInt/
-
-<Synopsis><<tkReturnListInt(??{IBs})>>
-<Entry><<tkReturnListFloat>>
-<index class=module/Tk<and>variable<and>tkReturnListFloat/
-
-<Synopsis><<tkReturnListFloat(??{FBs})>>
-
-<Item>
-Creates
-
-<Entry> <<close>>
-<index class=module/Tk<and>variable<and>close/
-
-<Synopsis>
-<<close>>
-<Item>
-Creates
-
-</list>
-</section>
-
-<section id="section.tk.actions">
-<title/Actions/
-<p>
-<index scope="section.tk.actions"/Tk<and>action/
-
-
-<list>
-<Entry> <<tkInit>>
-<index class=module/Tk<and>action<and>tkInit/
-
-<Synopsis>
-<<tkInit(parent: ?{Parent}
-       action: ?{Action}
-       args:   ?{Args} <= nil)>>
-<Item>
-Creates
-
-<Entry> <<tkAction>>
-<index class=module/Tk<and>action<and>tkAction/
-
-<Synopsis>
-<<tkAction(action: ?{Action}
-         args:   ?{Args} <= nil)>>
-<Item>
-Creates
-
-<Entry> <<close>>
-<index class=module/Tk<and>action<and>close/
-
-<Synopsis>
-<<close>>
-<Item>
-Creates
-</list>
-</section>
-
-<section id="section.tk.strings">
-<title/Strings/
-<p>
-<Index scope="section.tk.strings"/Tk<and>string/
-
-
-<list>
-<Entry> <<toInt>>
-<index class=module/Tk<and>string<and>toInt/
-
-<Synopsis>
-<<Tk.string.toInt ?+{S} ??{IB}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
-
-<Entry> <<toFloat>>
-<index class=module/Tk<and>string<and>toFloat/
-
-<Synopsis>
-<<Tk.string.toFloat ?+{S} ??{FB}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
-
-<Entry> <<toListString>>
-<index class=module/Tk<and>string<and>toListString/
-
-<Synopsis>
-<<Tk.string.toListString ?+{S} ??{Ss}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
-
-<Entry> <<toListAtom>>
-<index class=module/Tk<and>string<and>toListAtom/
-
-<Synopsis>
-<<Tk.string.toListAtom ?+{S} ??{As}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
-
-<Entry> <<toListInt>>
-<index class=module/Tk<and>string<and>toListInt/
-
-<Synopsis>
-<<Tk.string.toListInt ?+{S} ??{IBs}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
-
-<Entry> <<toListFloat>>
-<index class=module/Tk<and>string<and>toListFloat/
-
-<Synopsis>
-<<Tk.string.toListFloat ?+{S} ??{FBs}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
-</list>
-</section>
-
-<section>
-<title/Miscellanenous/
-<p>
-<list>
-
-<Entry> <<isColor>>
-<index class=module/Tk<and>isColor/
-
-<Synopsis>
-<<Tk.isColor>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
-
-<Entry> <<addXScrollbar>>
-<index class=module/Tk<and>addXScrollbar/
-
-<Synopsis>
-<<Tk.addXScrollbar ?+{BarTcl} ?+{ToScrollTcl}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
-
-<Entry> <<addYScrollbar>>
-<index class=module/Tk<and>addYScrollbar/
-
-<Synopsis>
-<<Tk.addYScrollbar ?+{BarTcl} ?+{ToScrollTcl}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
-</list>
-</section>
-
-<section>
-<title/Creating Unique Identifiers/
-<p>
-<list>
-<Entry> <<getPrefix>>
-<index class=module/Tk<and>getPrefix/
-
-<Synopsis>
-<<Tk.getPrefix ??{V}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
-
-
-<Entry> <<server>>
-<index class=module/Tk<and>returnFloat/
-
-<Synopsis>
-<<{Tk.server ?+{Tcl} ??{FB}}>>
-<Item>
-Returns the result of sending and evaluating ?+{Tcl} as float. If the
-result does not describe a number <<False>> is returned.
-</list>
-</section>
 </chapter>
