@@ -6938,6 +6938,17 @@ OZ_C_proc_begin(BInameVariable,2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIgenerateAbstractionTableID,1)
+{
+  oz_declareArg(0,res);
+  static int id = 0;
+  // all generated IDs have to be even, since the odd numbers are
+  // reserved for code compiled by the old compiler:
+  id += 2;
+  return oz_unify(res,oz_int(id));
+}
+OZ_C_proc_end
+
 
 /********************************************************************
  * Table of builtins
@@ -7318,10 +7329,11 @@ BIspec allSpec[] = {
   {"raiseError", 1, BIraiseError, 0},
 
   // builtins for the new compiler's environment handling:
-  {"isBuiltin",             2, BIisBuiltin,             0},
-  {"getBuiltinName",        2, BIgetBuiltinName,        0},
-  {"getAbstractionTableID", 2, BIgetAbstractionTableID, 0},
-  {"nameVariable",          2, BInameVariable,          0},
+  {"isBuiltin",                  2, BIisBuiltin,                  0},
+  {"getBuiltinName",             2, BIgetBuiltinName,             0},
+  {"getAbstractionTableID",      2, BIgetAbstractionTableID,      0},
+  {"nameVariable",               2, BInameVariable,               0},
+  {"generateAbstractionTableID", 1, BIgenerateAbstractionTableID, 0},
 
   {0,0,0,0}
 };
