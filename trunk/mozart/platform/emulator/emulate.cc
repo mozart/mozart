@@ -161,6 +161,11 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
 		       OZ_atom(builtinTab.getName((void *) biFun)),	\
 		       OZ_toList(predArity,X)));
 
+#define HF_PROPAGATOR(P)						      \
+   HF_FAIL(OZ_mkTupleC("fail", 2,					      \
+		       OZ_atom(builtinTab.getName((void *) P->getSpawner())), \
+		       P->getArguments()));
+
 #define NOFLATGUARD   (shallowCP==NULL)
 
 #define SHALLOWFAIL   if (shallowCP) { goto LBLshallowFail; }
@@ -1102,14 +1107,8 @@ LBLinstallThread:
       //  Note that *propagators* never yield 'SUSPEND';
     case FAILED:
       //ozstat.timeForPropagation.incf(osUserTime()-starttime);
-      if (!e->isToplevel()) { goto LBLfailure; }
-      {
-	OZ_CFun spawner = e->currentThread->getPropagator()->getSpawner();
-	OZ_Term spawnerName = OZ_atom(builtinTab.getName((void *)spawner));
-	OZ_Term args = e->currentThread->getPropagator()->getArguments();
-	e->currentThread->propagatorToNormal();
-	DORAISE(OZ_mkTupleC("failPropagator",2,spawnerName,args));
-      }
+
+      HF_PROPAGATOR(e->currentThread->getPropagator());
 
     default:
       error ("Unexpected value returned from a propagator.");
@@ -2778,13 +2777,18 @@ LBLsuspendThread:
      {
        DebugCheck(ozconf.stopOnToplevelFailure, tracerOn();trace("raise"));
 
-       TaggedRef traceBack;
-       TaggedRef pred = e->currentThread->findCatch(traceBack);
-       if (PC != NOCODE) {
-	 traceBack = cons(CodeArea::dbgGetDef(PC),traceBack);
+       TaggedRef traceBack = nil();
+       TaggedRef pred = 0;
+       if (e->currentThread && !e->currentThread->isPropagator()) {
+	 pred = e->currentThread->findCatch(traceBack);
+	 if (PC != NOCODE) {
+	   traceBack = cons(CodeArea::dbgGetDef(PC),traceBack);
+	 }
+	 traceBack = reverseC(traceBack);
+       } else {
+	 e->currentThread = e->mkRunnableThread(PROPAGATOR_PRIORITY, CBB, 0);
+	 e->restartThread();
        }
-       traceBack = reverseC(traceBack);
-
        if (!pred || !isProcedure(pred)) {
 	 pred = e->defaultExceptionHandler;
        }
