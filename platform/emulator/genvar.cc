@@ -38,17 +38,9 @@ SVariable(n == NULL ? am.currentBoard() : n)
 }
 
 
-void GenCVariable::propagate(TaggedRef var, SuspList * &sl,
-			     PropCaller unifyVars)
+void GenCVariable::propagate(SuspList * &sl, PropCaller unifyVars)
 {
-  sl = am.checkSuspensionList(tagged2SVarPlus(var), sl, unifyVars);
-}
-
-OZ_Return GenCVariable::unifyOutline(TaggedRef *tptr1,
-				     TaggedRef *tptr2, TaggedRef term2,
-				     ByteCode *scp)
-{
-  return unify(tptr1,tptr2,term2, scp);
+  sl = am.checkSuspensionList(this, sl, unifyVars);
 }
 
 void addSuspCVarOutline(TaggedRef *v, Suspension susp, int unstable)

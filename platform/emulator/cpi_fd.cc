@@ -254,31 +254,29 @@ OZ_Boolean OZ_FDIntVar::tell(void)
       } else {
 	int singl = domPtr->getSingleElem();
 	*domPtr = dom;
-	tagged2GenFDVar(var)->propagate(var, fd_prop_singl);
-	am.doBindAndTrail(var, varPtr, OZ_int(singl));
+	tagged2GenFDVar(var)->propagate(fd_prop_singl);
+	am.doBindAndTrail(varPtr, OZ_int(singl));
       }
     } else if (*domPtr == fd_bool) {
       if (isState(loc_e)) {
 	tagged2GenFDVar(var)->becomesBoolVarAndPropagate(varPtr);
       } else {
 	*domPtr = dom;
-	tagged2GenFDVar(var)->propagate(var, CHECK_BOUNDS);
+	tagged2GenFDVar(var)->propagate(CHECK_BOUNDS);
 	GenBoolVariable * newboolvar = new GenBoolVariable();
 	OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
-	am.doBindAndTrailAndIP(var, varPtr,
-			       makeTaggedRef(newtaggedboolvar),
-			       newboolvar, tagged2GenBoolVar(var));
+	DoBindAndTrailAndIP(varPtr, makeTaggedRef(newtaggedboolvar),
+			    newboolvar, tagged2GenBoolVar(var));
       }
       return OZ_TRUE;
     } else {
-      tagged2GenFDVar(var)->propagate(var, CHECK_BOUNDS);
+      tagged2GenFDVar(var)->propagate(CHECK_BOUNDS);
       if (isState(glob_e)) {
 	GenFDVariable * locfdvar = new GenFDVariable(*domPtr);
 	OZ_Term * loctaggedfdvar = newTaggedCVar(locfdvar);
 	*domPtr = dom;
-	am.doBindAndTrailAndIP(var, varPtr,
-			       makeTaggedRef(loctaggedfdvar),
-			       locfdvar, tagged2GenFDVar(var));
+	DoBindAndTrailAndIP(varPtr, makeTaggedRef(loctaggedfdvar),
+			    locfdvar, tagged2GenFDVar(var));
       } 
       return OZ_TRUE;
     }
@@ -288,8 +286,8 @@ OZ_Boolean OZ_FDIntVar::tell(void)
     if (isState(loc_e)) {
       tagged2GenBoolVar(var)->becomesSmallIntAndPropagate(varPtr, *domPtr);
     } else {
-      tagged2GenBoolVar(var)->propagate(var);
-      am.doBindAndTrail(var, varPtr, OZ_int(domPtr->getSingleElem()));
+      tagged2GenBoolVar(var)->propagate();
+      am.doBindAndTrail(varPtr, OZ_int(domPtr->getSingleElem()));
     }
   }
   return OZ_FALSE;

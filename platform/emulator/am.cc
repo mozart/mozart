@@ -577,8 +577,13 @@ loop:
 
   COUNT(varNonvarUnify);
 
-  if (isCVar(tag1))
-    goto cvar;
+  if (isCVar(tag1)) {
+    // mm2: use GenCVar::bind here
+    result = tagged2CVar(term1)->unify(termPtr1, term2, scp);
+    if (result == PROCEED)
+      goto next;
+    goto fail;
+  }
   
   oz_bindToNonvar(termPtr1, term1, term2, scp);
   goto next;
@@ -616,15 +621,15 @@ loop:
 
   Assert(isCVar(tag1) && isCVar(tag2));
   /* prefered binding of perdio vars */
-  if (cmpCVar(tagged2CVar(term2),tagged2CVar(term1))>0) {
+  if (cmpCVar(tagged2CVar(term1),tagged2CVar(term2))>0) {
     Swap(term1,term2,TaggedRef);
     Swap(termPtr1,termPtr2,TaggedRef*);
   }
 
 
 cvar:
-  result = tagged2CVar(term1)->unify(termPtr1, termPtr2, term2, scp);
-  if (result== PROCEED)
+  result = tagged2CVar(term1)->unify(termPtr1, makeTaggedRef(termPtr2), scp);
+  if (result == PROCEED)
     goto next;
   goto fail;
 
@@ -1098,26 +1103,10 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
 }
 
 
-void AM::doBindAndTrail(TaggedRef v, TaggedRef * vp, TaggedRef t)
+void AM::doBindAndTrail(TaggedRef * vp, TaggedRef t)
 {
   Assert(shallowHeapTop || checkHome(vp));
-  trail.pushRef(vp, v);
-  
-  CHECK_NONVAR(t);
-  *vp = t;
-
-  Assert(oz_isRef(*vp) || !oz_isVariable(*vp));
-}
-
-/*
- * ... and install propagators
- */
-void AM::doBindAndTrailAndIP(TaggedRef v, TaggedRef * vp, TaggedRef t,
-			     GenCVariable * lv, GenCVariable * gv)
-{
-  lv->installPropagators(gv);
-  Assert(shallowHeapTop || checkHome(vp));
-  trail.pushRef(vp, v);
+  trail.pushRef(vp, *vp);
   
   CHECK_NONVAR(t);
   *vp = t;

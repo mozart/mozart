@@ -34,7 +34,6 @@
 #include "runtime.hh"
 
 #include "genvar.hh"
-#include "lazyvar.hh"
 
 #include "ofgenvar.hh"
 
@@ -1089,20 +1088,9 @@ void cvar2buffer(ostream &out, const char *s, GenCVariable *cv, int depth)
       out << type << ">";
       break;
     }
-  case LazyVariable:
-    {
-      out << s;
-      OZ_Term f = ((GenLazyVariable*)cv)->getFunction();
-      if (f==0) out << "<lazy>";
-      else {
-	out << "<lazy: ";
-	term2Buffer(out,f,depth-1);
-	out << ">";
-      }
-      break;
-    }
   default:
-    out << s << "<Unknown variable type: " << cv->getType() << ">";
+    out << s << "/";
+    cv->printStreamV(out,depth);
     break;
   }
 }

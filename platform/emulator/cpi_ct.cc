@@ -202,14 +202,14 @@ OZ_Boolean OZ_GenCtVar::tell(void)
       if (isState(loc_e)) {
 	// a _local_ variable becomes a value
 
-	ctvar->propagate(var, OZ_WAKEUP_ALL, pc_propagator);
+	ctvar->propagate(OZ_WAKEUP_ALL, pc_propagator);
 	doBind(varPtr, constr->toValue());
 
       } else {
 	// a _global_ variable becomes a value
 
-	ctvar->propagate(var, OZ_WAKEUP_ALL, pc_propagator);
-	am.doBindAndTrail(var, varPtr, constr->toValue());
+	ctvar->propagate(OZ_WAKEUP_ALL, pc_propagator);
+	am.doBindAndTrail(varPtr, constr->toValue());
 
 	ctRestoreConstraint();
       }
@@ -219,7 +219,7 @@ OZ_Boolean OZ_GenCtVar::tell(void)
 
       OZ_GenWakeUpDescriptor wakeup_descr = ctGetWakeUpDescrptor();
       
-      ctvar->propagate(var, wakeup_descr, pc_propagator);
+      ctvar->propagate(wakeup_descr, pc_propagator);
 
       if (isState(glob_e)) {
 	GenCtVariable * locctvar = new GenCtVariable(constr, 
@@ -228,9 +228,8 @@ OZ_Boolean OZ_GenCtVar::tell(void)
 	
 	ctRestoreConstraint();
 
-	am.doBindAndTrailAndIP(var, varPtr,
-			       makeTaggedRef(loctaggedctvar),
-			       locctvar, ctvar);
+	DoBindAndTrailAndIP(varPtr, makeTaggedRef(loctaggedctvar),
+			    locctvar, ctvar);
       } 
 
       goto t;

@@ -191,28 +191,27 @@ OZ_Boolean OZ_FSetVar::tell(void)
       } else {
 	OZ_FSetValue setvalue = *setPtr;
 	*setPtr = set;
-	tagged2GenFSetVar(var)->propagate(var, fs_prop_val);
-	am.doBindAndTrail(var, varPtr, 
+	tagged2GenFSetVar(var)->propagate(fs_prop_val);
+	am.doBindAndTrail(varPtr, 
 			  makeTaggedFSetValue(new OZ_FSetValue(setvalue)));
       }
       goto f;
     } else {
       if (known_in < setPtr->getKnownIn())
-	tagged2GenFSetVar(var)->propagate(var, fs_prop_glb);
+	tagged2GenFSetVar(var)->propagate(fs_prop_glb);
 
       if (known_not_in < setPtr->getKnownNotIn())
-	tagged2GenFSetVar(var)->propagate(var, fs_prop_lub);
+	tagged2GenFSetVar(var)->propagate(fs_prop_lub);
 
       if (card_size > setPtr->getCardSize())
-	tagged2GenFSetVar(var)->propagate(var, fs_prop_val);
+	tagged2GenFSetVar(var)->propagate(fs_prop_val);
       
       if (isState(glob_e)) {
 	GenFSetVariable * locfsvar = new GenFSetVariable(*setPtr);
 	OZ_Term * loctaggedfsvar = newTaggedCVar(locfsvar);
 	*setPtr = set;
-	am.doBindAndTrailAndIP(var, varPtr,
-			       makeTaggedRef(loctaggedfsvar),
-			       locfsvar, tagged2GenFSetVar(var));
+	DoBindAndTrailAndIP(varPtr, makeTaggedRef(loctaggedfsvar),
+			    locfsvar, tagged2GenFSetVar(var));
       } 
       goto t;
     }
