@@ -101,6 +101,14 @@ public:
   int dpLogConnectLog;
   int dpLogMessageLog;
 
+  // distributed gc
+  int dpUseTimeLease;
+  int dpUseFracWRC;
+  int dp_wrc_alpha;
+  int dp_tl_leaseTime;
+  int dp_tl_updateTime;
+
+
   int closetime;
 
   int numToplevelVars;
