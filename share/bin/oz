@@ -11,7 +11,7 @@ howcalled=$0
 
 if [ ${OZHOME-xx} = xx ]
 then
-  OZHOME =`dirname \`dirname $howcalled\``
+  OZHOME=`dirname \`dirname $howcalled\``
   echo "Setting Oz installation directory to: $OZHOME"
   export OZHOME
 fi
