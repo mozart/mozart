@@ -58,7 +58,7 @@ protected:
   void propagate(TaggedRef, SuspList * &, TaggedRef, Bool);
 
 public:
-  USEHEAPMEMORY;
+  USEFREELISTMEMORY;
 
   // the constructor creates per default a local variable (wrt curr. node)
   GenCVariable(TypeOfGenCVariable , TaggedRef = AtomVoid, Board * = NULL);

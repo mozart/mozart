@@ -32,11 +32,15 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
     {
       if (! finiteDomain.contains(smallIntValue(term))) return FALSE;
       propagate(var, fd_det, term, TRUE);
-      Bool varIsLocal = isLocalVariable();
-      if (! varIsLocal) addSuspension(new Suspension(am.currentBoard));
 
-      doBindAndTrail(var, vPtr, term, varIsLocal);
-
+      if (isLocalVariable()) {
+	doBind(vPtr, term);
+	dispose();
+      } else {
+	addSuspension(new Suspension(am.currentBoard));
+	doBindAndTrail(var, vPtr, term);
+      }
+      
       return TRUE;
     }
   case CVAR:
@@ -65,12 +69,15 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	      termVar->propagate(term, right_dom, int_term, TRUE);
 	      doBind(tPtr, int_term);
 	      doBind(vPtr, TaggedRef(tPtr));
+	      dispose();
+	      termVar->dispose();
 	    } else {
 	      termVar->setDom(intsct);
 	      propagate(var, left_dom, TaggedRef(tPtr), TRUE);
 	      termVar->propagate(term, right_dom, TaggedRef(vPtr), TRUE);
 	      relinkSuspListTo(termVar);
 	      doBind(vPtr, TaggedRef(tPtr));
+	      dispose();
 	    }
 	  } else { // bind term to var
 	    if (intsct == fd_singleton) {
@@ -79,12 +86,15 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	      propagate(var, left_dom, int_var, TRUE);
 	      doBind(vPtr, int_var);
 	      doBind(tPtr, TaggedRef(vPtr));
+	      dispose();
+	      termVar->dispose();
 	    } else {
 	      setDom(intsct);
 	      termVar->propagate(term, right_dom, TaggedRef(vPtr), TRUE);
 	      propagate(var, left_dom, TaggedRef(vPtr), TRUE);
 	      termVar->relinkSuspListTo(this);
 	      doBind(tPtr, TaggedRef(vPtr));
+	      termVar->dispose();
 	    }
 	  }
 	  break;
@@ -99,6 +109,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	      termVar->addSuspension(new Suspension(am.currentBoard));
 	      doBind(vPtr, int_var);
 	      doBindAndTrail(term, tPtr, TaggedRef(vPtr));
+	      dispose();
 	    } else {
 	      setDom(intsct);
 	      termVar->propagate(term, right_dom, TaggedRef(vPtr), TRUE);
@@ -111,6 +122,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	    propagate(var, left_dom, TaggedRef(tPtr), TRUE);
 	    relinkSuspListTo(termVar);
 	    doBind(vPtr, TaggedRef(tPtr));
+	    dispose();
 	  }
 	  break;
 	}
@@ -124,6 +136,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	      addSuspension(new Suspension(am.currentBoard));
 	      doBind(tPtr, int_term);
 	      doBindAndTrail(var, vPtr, TaggedRef(tPtr));
+	      termVar->dispose();
 	    } else {
 	      termVar->setDom(intsct);
 	      propagate(var, left_dom, TaggedRef(tPtr), TRUE);
@@ -136,6 +149,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	    propagate(var, left_dom, TaggedRef(vPtr), TRUE);
 	    termVar->relinkSuspListTo(this);
 	    doBind(tPtr, TaggedRef(vPtr));
+	    termVar->dispose();
 	  }
 	  break;
 	}

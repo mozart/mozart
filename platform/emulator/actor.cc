@@ -354,7 +354,7 @@ Bool SolveActor::checkExtSuspList ()
       continue;
     }
 
-    Board *b = (susp->getNode ())->getBoardDeref ();
+    Board *b = (susp->getBoard ())->getBoardDeref ();
 
     if (b == (Board *) NULL) {
       susp->markDead ();
