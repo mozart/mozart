@@ -92,12 +92,12 @@ INSTALLDIRS=	$(PREFIX) $(DIRS:%=$(PREFIX)/%)
 # common targets
 ######################################################################
 
-.PHONY: all bootstrap install clean veryclean distclean check
+.PHONY: platform all bootstrap install clean veryclean distclean check
 
 all:: bootstrap
 
 platform:
-	(cd $@; make bootstrap)
+	(cd platform; make bootstrap)
 
 bootstrap clean veryclean depend distclean check install::
 	dirs="$(SUBDIRS)"; \
