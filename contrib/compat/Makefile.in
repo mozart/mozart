@@ -20,8 +20,8 @@ INSTALL_BIN     = $(INSTALL) -m 555
 
 CYGPATH         = $(SRCTOP)/share/lib/cygpath.sh
 
-TARGETS         = TextPickle.ozf convertTextPickle
-BIN_TARGETS     = $(BIN_DIR)/convertTextPickle
+TARGETS         = TextPickle.ozf convertTextPickle$(EXE_EXT)
+BIN_TARGETS     = $(BIN_DIR)/convertTextPickle$(EXE_EXT)
 CACHE_TARGETS   = $(CACHEDIR)/TextPickle.ozf \
                   $(CACHEDIR)/TextPickleScanner.so-$(PLATFORM)
 
@@ -54,7 +54,7 @@ clean:
         -rm -f TextPickleScanner.[Clo]
 
 veryclean: clean
-        -rm -f *.so-* *.ozf convertTextPickle
+        -rm -f *.so-* *.ozf convertTextPickle$(EXE_EXT)
 
 distclean: clean
         -rm -f config.* Makefile
@@ -63,7 +63,7 @@ include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 
-convertTextPickle: ConvertTextPickle.oz
+convertTextPickle$(EXE_EXT): ConvertTextPickle.oz
         $(OZC) $(OZCFLAGS) -x $(OZEXECFILE) $(shell $(CYGPATH) "$<") -o $@
 
 #---------------------------------------------------------------------
