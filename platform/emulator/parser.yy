@@ -283,6 +283,8 @@ void xy_setParserExpect() {
 %type <t>  elseOfList
 %type <t>  caseClauseList
 %type <t>  caseClause
+%type <t>  sideCondition
+%type <t>  pattern
 %type <t>  class
 %type <t>  phraseOpt
 %type <t>  classDescriptorList
@@ -813,8 +815,29 @@ caseClauseList	: caseClause
 		  { $$ = consList($1,$3); }
 		;
 
-caseClause	: inSequence then inSequence
+caseClause	: sideCondition then inSequence
 		  { $$ = newCTerm("fCaseClause",$1,$3); }
+		;
+
+sideCondition	: pattern
+		  { $$ = $1; }
+		| pattern andthen thisCoord sequence
+		  { $$ = newCTerm("fSideCondition",$1,
+				  newCTerm("fSkip",$3),$4,$3); }
+		| pattern andthen thisCoord sequence _in_ sequence
+		  { $$ = newCTerm("fSideCondition",$1,$4,$6,$3); }
+		;
+
+pattern		: pattern '=' coord pattern
+		  { $$ = newCTerm("fEq",$1,$4,$3); }
+		| pattern '|' coord pattern
+		  { $$ = makeCons($1,$4,$3); }
+		| phrase2
+		  { $$ = $1; }
+		| phrase2 '#' coord hashes
+		  { $$ = newCTerm("fRecord",
+				  newCTerm("fAtom",newCTerm("#"),$3),
+				  consList($1,$4)); }
 		;
 
 class		: _class_ coord phraseOpt classDescriptorList methList
