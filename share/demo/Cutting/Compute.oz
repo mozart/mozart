@@ -23,7 +23,7 @@
 functor
 
 import
-   Tk TkTools Search
+   Tk TkTools Search Explorer
 
    Script(compile: Compile)
 
@@ -50,6 +50,7 @@ prepare
 
    CanvasBd     = 10
    PlateWidth   = 15
+   ButtonWidth  = 10
    PlateBd      = 3
    Pad          = 3
    CanvasWidth  = 250
@@ -186,18 +187,23 @@ define
 
          Start = {New Tk.button tkInit(parent: ButtonFrame
                                        text:   'Start'
-                                       width:  8
+                                       width:  ButtonWidth
                                        action: self # start
                                        font:   Fonts.normal)}
          Stop  = {New Tk.button tkInit(parent: ButtonFrame
                                        text:   'Stop'
-                                       width:  8
+                                       width:  ButtonWidth
                                        action: self # stop
                                        state:  disabled
                                        font:   Fonts.normal)}
+         Tree  = {New Tk.button tkInit(parent: ButtonFrame
+                                       text:   'Search Tree'
+                                       width:  ButtonWidth
+                                       action: self # tree
+                                       font:   Fonts.normal)}
          Anim  = {New Tk.button tkInit(parent: ButtonFrame
                                        text:   'Animate'
-                                       width:  8
+                                       width:  ButtonWidth
                                        action: self # animate
                                        state:  disabled
                                        font:   Fonts.normal)}
@@ -228,15 +234,16 @@ define
                     grid(columnconfigure self    2 weight:1)
                     grid(rowconfigure    self    1 weight:1)
 
-                    grid(row:1 column:1 padx:Pad pady:Pad Start)
-                    grid(row:2 column:1 padx:Pad pady:Pad Stop)
+                    grid(row:0 column:1 padx:Pad pady:Pad Start)
+                    grid(row:1 column:1 padx:Pad pady:Pad Stop)
+                    grid(row:2 column:1 padx:Pad pady:Pad Tree)
                     grid(row:3 column:1 padx:Pad pady:Pad
                          {New Tk.canvas tkInit(parent:ButtonFrame
                                                width:0 height:20)})
                     grid(row:4 column:1 padx:Pad pady:Pad Status)
                     grid(row:5 column:1 padx:Pad pady:Pad
                          {New Tk.canvas tkInit(parent:ButtonFrame
-                                               width:0 height:30)})
+                                               width:0 height:20)})
                     grid(row:6 column:1 padx:Pad pady:Pad Anim)
 
                     grid(row:1 column:1 ButtonFrame sticky:nw)
@@ -275,6 +282,12 @@ define
             {self.plate   display(Sol)}
             {self.status tk(configure bg:GoodColor text:'Okay.')}
             {self.animate tk(configure state:normal)}
+         end
+      end
+
+      meth tree
+         thread
+            {Explorer.object one(@script)}
          end
       end
 
