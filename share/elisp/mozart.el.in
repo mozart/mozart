@@ -32,6 +32,7 @@
 (require 'oz)
 (require 'comint)
 (require 'compile)
+(require 'oz-server)
 
 (eval-and-compile
   (defvar oz-old-frame-title
@@ -234,7 +235,7 @@ Used for popping up the corresponding buffer.")
 All strings matching this regular expression are removed.")
 
 (defconst oz-socket-pattern
-  "'oz-socket \\(\"\\([^\"]*\\)\" \\)?\\([0-9]+\\)'"
+  "'oz-socket \\(\"\\([^\"]*\\)\" \\)?\\([0-9]+\\) \\([0-9]+\\)'"
   "Regex for reading the information about the compiler socket.")
 
 (defconst oz-show-temp-pattern
@@ -534,7 +535,7 @@ With C-u C-u as prefix argument, send it a SIGKILL instead."
       (oz-buffer-show (get-buffer oz-emulator-buffer)))
   (bury-buffer oz-emulator-buffer))
 
-(defun oz-socket (host port)
+(defun oz-socket (host port port2)
   (let ((bs oz-compiler-buffers) (newbs nil))
     (while bs
       (if (not (comint-check-proc (car bs)))
@@ -559,7 +560,8 @@ With C-u C-u as prefix argument, send it a SIGKILL instead."
       (setq oz-buffered-send-string nil)
       (while xs
 	(oz-send-string (car (car xs)) (cdr (car xs)))
-	(setq xs (cdr xs))))))
+	(setq xs (cdr xs)))))
+  (oz-server-open host port2))
 
 ;;}}}
 ;;{{{ Filtering Process Output
@@ -569,12 +571,13 @@ With C-u C-u as prefix argument, send it a SIGKILL instead."
   (let ((start 0))
     (while (string-match oz-socket-pattern string start)
       (let ((host (or (oz-match-string 2 string) oz-default-host))
-	    (port (string-to-number (oz-match-string 3 string))))
+	    (port (string-to-number (oz-match-string 3 string)))
+	    (port2 (string-to-number (oz-match-string 4 string))))
 	(setq start (match-beginning 0))
 	(setq string (concat (substring string 0 start)
 			     (substring string (match-end 0))))
 	(save-excursion
-	  (oz-socket host port)))))
+	  (oz-socket host port port2)))))
   (funcall oz-emulator-filter-hook proc string))
 
 (defun oz-compiler-filter (proc string)
