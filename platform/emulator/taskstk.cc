@@ -15,7 +15,6 @@
 
 #include "am.hh"
 
-
 void TaskStack::resize(int newsize)
 {
   if (newsize < 20) {
@@ -122,7 +121,6 @@ int TaskStack::frameSize(ContFlag cFlag)
   case C_SET_CUROBJECT:
     return 2;
   case C_CALL_CONT:  
-    return 3;
   case C_CFUNC_CONT:
     return 3;
     

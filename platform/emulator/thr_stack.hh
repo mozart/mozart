@@ -144,7 +144,6 @@ public:
     push(ToPointer(C_CFUNC_CONT), NO);
   }
   
-  
   void pushCont(ProgramCounter pc,
 		RefsArray y,RefsArray g,RefsArray x,int i, Bool copy)
   {

@@ -16,12 +16,6 @@
 #include "fdomn.hh"
 #include "fdomn1.hh"
 
-#if defined(OUTLINE) || defined(FDOUTLINE)
-#define inline
-#include "fdomn.icc"
-#endif
-
-
 //-----------------------------------------------------------------------------
 // Miscellaneous --------------------------------------------------------------
 
@@ -428,7 +422,7 @@ inline
 int FDIntervals::union_iv(const FDIntervals &x, const FDIntervals &y)
 {
   int x_c, y_c, z_c, r;
-  for (x_c = 0, y_c = 0, z_c = 0, r; x_c < x.high && y_c < y.high; ) {
+  for (x_c = 0, y_c = 0, z_c = 0, r=-1; x_c < x.high && y_c < y.high; ) {
 
     if (x.i_arr[x_c].left < y.i_arr[y_c].left) {
       i_arr[z_c].left = x.i_arr[x_c].left;
@@ -758,7 +752,7 @@ inline
 int FDBitVector::mkRaw(int * list_left, int * list_right) const
 {
   int i, r, l, len;
-  for (i = 0, r = 1, len = 0; i < fd_bv_max_elem + 2; i += 1)
+  for (i = 0, r = 1, len = 0, l = -1; i < fd_bv_max_elem + 2; i += 1)
     if (contains(i)) {
       if (r) l = i;
       r = 0;
@@ -864,7 +858,7 @@ size_t FDBitVector::memory_required(void) { // used for profiling
 
 
 //-----------------------------------------------------------------------------
-// class OZ_FiniteDomain ---------------------------------------------------------
+// class OZ_FiniteDomain ------------------------------------------------------
 
 // private methods ------------------------------------------------------------
 
@@ -1081,8 +1075,9 @@ OZ_FiniteDomain::OZ_FiniteDomain(void * d) {
   FiniteDomainInit(d);
 }
 
-OZ_FiniteDomain::OZ_FiniteDomain(void) {
+OZ_FiniteDomain::OZ_FiniteDomain(OZ_Term t) {
   FiniteDomainInit(NULL);
+  init(t);
 }
 
 void OZ_FiniteDomain::dispose(void) {
@@ -1319,7 +1314,9 @@ int OZ_FiniteDomain::init(OZ_Term d)
 {
   DEREF(d, d_ptr, d_tag);
   
-  if (isSmallInt(d_tag)) {
+  if (isSTuple(d) && tagged2SRecord(d)->getWidth() == 1) {
+    return ~ init((*tagged2SRecord(d))[0]);
+  } else if (isSmallInt(d_tag)) {
     return initSingleton(OZ_intToC(d));
   } else if (AtomSup == d) {
     return initSingleton(fd_sup);

@@ -64,7 +64,7 @@ void ThreadsPool::scheduleThread (Thread *th)
       }
       currentPriority = pri;
       currentQueue = insQueue;
-      if (th->isPropagator ()) {
+      if (th->isPropagator () || th->isNewPropagator()) {
 	am.restartThread ();	// heuristic?
       } else {
 	am.setSFlag (ThreadSwitch); // the must, in fact;

@@ -148,6 +148,16 @@ OZ_Term OZ_termType(OZ_Term term)
  * providing constants
  *------------------------------------------------------------------*/
 
+int OZ_getMinPrio(void) 
+{
+  return OZMIN_PRIORITY;
+}
+
+int OZ_getMaxPrio(void) 
+{
+  return OZMAX_PRIORITY ;
+}
+
 int OZ_getMinInt(void) 
 {
   return OzMinInt;
@@ -1027,9 +1037,7 @@ void OZ_addThread(OZ_Term var, OZ_Thread thr)
     return;
   }
 
-  SVariable *svar = taggedBecomesSuspVar(varPtr);
-
-  svar->addSuspension ((Thread *) thr);
+  addSuspAnyVar(varPtr, new SuspList((Thread *) thr));
 }
 
 OZ_Bool OZ_suspendOnVar(OZ_Term var)
