@@ -105,8 +105,7 @@ public:
   void suspendOnVarList(Thread *thr);
 
   void suspendInline(int n,
-		     OZ_Term A,OZ_Term B=makeTaggedNULL(),
-		     OZ_Term C=makeTaggedNULL(),OZ_Term D=makeTaggedNULL());
+		     OZ_Term A,OZ_Term B=makeTaggedNULL(),OZ_Term C=makeTaggedNULL());
 
 
   TaggedRef aVarUnifyHandler;
