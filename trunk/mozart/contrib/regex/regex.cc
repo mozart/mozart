@@ -33,7 +33,8 @@ public:
   virtual int getIdV() { return id; }
   virtual OZ_Term typeV() { return OZ_atom("regex"); }
   virtual OZ_Term printV(int depth = 10);
-  virtual OZ_Extension* gcV();
+  virtual OZ_Extension* gCollectV(void);
+  virtual OZ_Extension* sCloneV(void) { Assert(0); return NULL; }
   //
   void release() {
     delete src;
@@ -70,7 +71,7 @@ OZ_Term REGEX::printV(int depth = 10)
 		     OZ_atom(">"));
 }
 
-OZ_Extension* REGEX::gcV()
+OZ_Extension* REGEX::gCollectV(void)
 {
   return new REGEX(src,re);
 }
