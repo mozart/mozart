@@ -1259,12 +1259,12 @@ ConstTerm *ConstTerm::gCollectConstTermInline(void) {
 
  const_withhome: {
    ConstTermWithHome * ctwh_t = (ConstTermWithHome *) oz_hrealloc(this, sz);
+   STOREFWDFIELD(this, ctwh_t);
    if (ctwh_t->hasGName())
      gCollectGName(ctwh_t->getGName1());
    else
      ctwh_t->setBoard(ctwh_t->getSubBoardInternal()->gCollectBoard());
    cacStack.push(ctwh_t, PTR_CONSTTERM);
-   STOREFWDFIELD(this, ctwh_t);
    return ctwh_t;
  }
 
