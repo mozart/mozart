@@ -345,8 +345,7 @@ end
 
 declare
 Images={TkTools.images
-	['http://www.mozart-oz.org/home/'#
-	 'doc/demo/applets/images/trucks/truck-right.ppm']}
+	['x-oz://doc/demo/applets/images/trucks/truck-right.ppm']}
 TruckImage = Images.'truck-right'
 class Truck from Tk.canvasTag Time.repeat
    meth init(Position)
@@ -356,7 +355,7 @@ class Truck from Tk.canvasTag Time.repeat
 		 anchor: sw
 		 tags:   self)}
       {self setRepAll(delay:100 number:150)}
-      {self forward}
+      thread {self forward} end
    end
    meth forward
       {self setRepAction(tk(move 2 0))}
