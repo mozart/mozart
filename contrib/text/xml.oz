@@ -1,7 +1,9 @@
 %%% -*-oz-gump-*-
 %%% XML parser
+\switch +gump
 functor
 import
+   Resolve OS
    GumpScanner('class':GS)
    GumpParser('class':GP)
 export
@@ -105,15 +107,23 @@ define
          end
       end
       meth parseFile(F L)
-         lock
-            {@theScanner scanFile(F)}
-            if GP,parse(document(L) $) then skip
-            else raise xml(parseFailed) end end
+          R = {Resolve.pickle.localize F}
+      in
+         try
+            lock
+               {@theScanner scanFile(R.1)}
+               if GP,parse(document(L) $) then skip
+               else raise xml(parseFailed) end end
+            end
+         finally
+            case R of new(X) then
+               try {OS.unlink X} catch _ then skip end
+            else skip end
          end
       end
       token '<' '</' '<?' cdata '/>' '>' attribute value
       syn document($)
-         !L = { Element($) }* => root(L)
+         L = { Element($) }* => root(L)
       end
       syn Element($)
          '<'(ID) Attributes(ALIST) '/>'

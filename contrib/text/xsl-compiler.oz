@@ -116,7 +116,7 @@ define
       A = {CondSelect Elt.attribute Att unit}
    in if A==unit then Def else A.value end end
    fun {AttributeGet Elt Att}
-      Elt.attribute.value
+      Elt.attribute.Att.value
    end
    fun {SplitAttributeValue S}
       try {SplitValue S nil}
@@ -142,7 +142,7 @@ define
       end
    end
    class XSL_Compiler
-      feat locking
+      prop locking
       attr data parser
       meth init parser<-{New XSL_Attribute_Parser init} end
       meth process(Root $)
@@ -164,13 +164,23 @@ define
       end
       meth DoTop(X)
          if {IsSpaces X} then skip
+         elsecase X of xsl(type:'xsl:stylesheet' ...) then
+            {self 'xsl:stylesheet'(X)}
+         else raise xsl(illegalAtTopLevel X) end end
+      end
+      meth 'xsl:stylesheet'(X)
+         {ForAll X.content
+          proc {$ E} {self topSS(E)} end}
+      end
+      meth topSS(X)
+         if {IsSpaces X} then skip
          elsecase X of xsl(type:T ...) then
             if {CondSelect IsTopLevel T false} then
                {self T(X)}
             else
-               raise xsl(illegalAtTopLevel X) end
+               raise xsl(illegalInStylesheetElement X) end
             end
-         else raise xsl(illegalAtTopLevel X) end
+         else raise xsl(illegalInStylesheetElement X) end
          end
       end
       meth 'xsl:import'(X)
@@ -251,7 +261,7 @@ define
          end
       end
       meth doElement(X $)
-         As = {Record.map X.attributes
+         As = {Record.map X.attribute
                fun {$ V} {self doAttributeValue(V $)} end}
       in
          elt(type      : X.type
