@@ -38,7 +38,14 @@ TKLIBTCLDIR     = $(TK_PREFIX)/lib/tk$(TK_VERSION)
 
 EXTRALDFLAGS   	= @EXTRALDFLAGS@
 
+IS_DARWIN	= @IS_DARWIN@
+ifeq ($(IS_DARWIN),yes)
+OZWISHRELDIR	= OzWish.app/Contents/MacOS
+OZWISHDIR	= $(PLATFORMDIR)/$(OZWISHRELDIR)
+OZWISH		= $(OZWISHRELDIR)/OzWish
+else
 OZWISH		= tk.exe
+endif
 SRCS		= @SRCS@
 OBJS		= ${SRCS:.cc=.o}
 
@@ -46,10 +53,37 @@ OBJS		= ${SRCS:.cc=.o}
 
 .SUFFIXES: .cc .o .c $(SUFFIXES)
 
-
 all: $(OZWISH)
 
 bootstrap: all
+
+### IFEQ BEGIN -------------------------------------------------------
+ifeq ($(IS_DARWIN),yes)
+######################################################################
+# DARWIN SPECIFIC
+######################################################################
+
+$(OZWISH): unixMain.cc OzWish.pbxproj/project.pbxproj OzWish.pbxproj/icns
+	cd OzWish.pbxproj && pbxbuild SYMROOT=$(BUILTOP)/platform/wish
+
+clean:
+	-rm *~
+
+veryclean: clean
+	-rm -rf OzWish.app
+
+distclean: veryclean
+	-rm -f conf.h config.* Makefile OzWish.pbxproj/project.pbxproj
+
+install: $(PLATFORMDIR) $(OZWISHDIR) $(OZWISH) $(PROVIDETCLLIBS)
+	$(INSTALL_BIN) $(OZWISH) $(OZWISHDIR)
+
+$(OZWISHDIR):
+	$(INSTALL_DIR) $@
+else
+######################################################################
+# ANYTHING NON-DARWIN
+######################################################################
 
 $(OZWISH): $(OBJS)
 	$(CXX) $(LDFLAGS) $(EXTRALDFLAGS) -o $@ $(OBJS) $(LIBS)
@@ -66,6 +100,9 @@ distclean: veryclean
 
 install: $(PLATFORMDIR) $(OZWISH) $(PROVIDETCLLIBS) @INSTALLWINDLLS@
 	$(INSTALL_BIN) $(OZWISH) $(PLATFORMDIR)
+
+endif
+### IFEQ END ---------------------------------------------------------
 
 installwindlls: $(PLATFORMDIR)
 	$(INSTALL) $(WINDLLDIR)/tcl83.dll $(PLATFORMDIR)

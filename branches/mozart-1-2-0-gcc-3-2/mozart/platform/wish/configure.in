@@ -288,7 +288,19 @@ dnl *****************************************************************
 
 AC_CONFIG_HEADER(conf.h)
 
-AC_OUTPUT(Makefile)
+IS_DARWIN=no
+AC_SUBST(IS_DARWIN)
+
+TODO="Makefile"
+
+case ${platform} in
+*-darwin)
+	IS_DARWIN=yes
+	TODO="$TODO OzWish.pbxproj/project.pbxproj"
+	;;
+esac
+
+AC_OUTPUT($TODO)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded
