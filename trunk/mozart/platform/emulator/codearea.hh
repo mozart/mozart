@@ -145,7 +145,7 @@ public:
   CodeGCList *addTagged(ProgramCounter ptr) { return add(ptr,C_TAGGED); }
   CodeGCList *addAbstractionEntry(ProgramCounter ptr) { return add(ptr,C_ABSTRENTRY); }
 
-  void remove(TaggedRef *t);
+  void remove(GCListTag,TaggedRef *);
 
   void collectGClist();
 };
@@ -176,6 +176,7 @@ protected:
   ProgramCounter curInstr;/* start of current instruction */
   time_t timeStamp;       /* feed time */
   Bool referenced;        /* for GC */
+public:
   CodeGCList *gclist;
 
 #define CheckWPtr Assert(wPtr < codeBlock+size)
@@ -291,7 +292,7 @@ public:
 
   static CodeArea *findBlock(ProgramCounter PC);
 
-  void unprotect(TaggedRef* t);
+  void unprotectTagged(TaggedRef* t);
 
   static ProgramCounter writeInt(TaggedRef i, ProgramCounter ptr)
   {

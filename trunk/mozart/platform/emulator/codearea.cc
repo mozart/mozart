@@ -1135,12 +1135,12 @@ ProgramCounter
 
 CodeArea::~CodeArea()
 {
+  gclist->dispose();
 #ifdef DEBUG_CHECK
   memset(getStart(),-1,size*sizeof(ByteCode));
 #else
   delete [] getStart();
 #endif
-  gclist->dispose();
 }
 
 
@@ -1240,19 +1240,15 @@ CodeArea *CodeArea::findBlock(ProgramCounter PC)
 }
 
 
-void CodeArea::unprotect(TaggedRef* t)
-{
-  gclist->remove(t);
-}
-
-
-void CodeGCList::remove(TaggedRef *t)
-{
+inline
+void CodeGCList::remove(GCListTag ltag, TaggedRef * t) {
   for (CodeGCList *aux = this; aux!=NULL; aux = aux->next) {
     for (int i=0; i<codeGCListBlockSize; i++) {
-      if ((TaggedRef*)aux->block[i].pc == t) {
-	aux->block[i].pc  = NULL;
-	aux->block[i].tag = C_FREE;
+      GCListEntry * bl = &(aux->block[i]);
+      
+      if (bl->tag == ltag && (TaggedRef*) bl->pc == t) {
+	bl->pc  = NULL;
+	bl->tag = C_FREE;
 	return;
       }
     }
@@ -1260,6 +1256,12 @@ void CodeGCList::remove(TaggedRef *t)
 
   Assert(0);
 }
+
+void CodeArea::unprotectTagged(TaggedRef* t) {
+  gclist->remove(C_TAGGED,t);
+}
+
+
 
 
 
