@@ -117,7 +117,7 @@ static Bool isUninterestingTask(ProgramCounter PC) {
     PC == C_CALL_CONT_Ptr ||
     PC == C_SET_SELF_Ptr ||
     PC == C_SET_ABSTR_Ptr ||
-    PC == C_LTQ_Ptr ||
+    PC == C_LPQ_Ptr ||
     PC == C_ACTOR_Ptr ||
     PC == C_CATCH_Ptr;
 }

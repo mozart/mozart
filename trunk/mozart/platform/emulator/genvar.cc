@@ -48,9 +48,9 @@ OZ_Return GenCVariable::unifyOutline(TaggedRef *tptr1, TaggedRef *tptr2, TaggedR
   return unify(tptr1,tptr2,term2, scp);
 }
 
-void addSuspCVarOutline(TaggedRef *v, Thread *el, int unstable)
+void addSuspCVarOutline(TaggedRef *v, Suspension susp, int unstable)
 {
-  addSuspCVar(v, el, unstable);
+  addSuspCVar(v, susp, unstable);
 }
 
 #ifdef OUTLINE

@@ -38,7 +38,7 @@
 #include "thrqueue.hh"
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
-
+#define GETBOARDOBJ(v) ((v).getBoardInternal()->derefBoard())
 
 struct Equation {
 friend class Script;
@@ -92,6 +92,10 @@ enum BoardFlags {
   Bo_Waiting    = 0x0800
 };
 
+
+#ifdef DEBUG_THREADCOUNT
+extern int existingLTQs;
+#endif
 
 class Board {
 friend int engine(Bool init);
@@ -218,20 +222,8 @@ public:
     body.setX(x,i);
   }
 
-  void setCommitted(Board *s) {
-    Assert(!isInstalled() && !isCommitted());
-  
-    int both = s->getLocalThreadQueue() && localThreadQueue;
-    s->setLocalThreadQueue(localThreadQueue->merge(s->getLocalThreadQueue()));
-    Assert(localThreadQueue == NULL || (!both || localThreadQueue->isEmpty()));
-    
-    if (both) 
-      resetLocalThreadQueue();
+  void setCommitted(Board *s);
 
-    flags |= Bo_Committed;
-    u.actor->setCommitted();
-    u.ref = s;
-  }
   void setActor (Actor *aa) { 
     u.actor = aa; 
   }
@@ -247,23 +239,23 @@ public:
 //-----------------------------------------------------------------------------
 // local thread queue
 private:
-  LocalThreadQueue * localThreadQueue;
+  LocalPropagatorQueue * localPropagatorQueue;
 public:
-  void pushToLTQ(Thread * thr);
+  void pushToLPQ(Propagator *);
 
-  void resetLocalThreadQueue(void) {
-    localThreadQueue->getLTQThread()->getTaskStackRef()->makeEmpty();
-    Assert(localThreadQueue);
-    localThreadQueue->dispose ();
-    localThreadQueue = NULL;
+  void resetLocalPropagatorQueue(void);
+
+  LocalPropagatorQueue * getLocalPropagatorQueue(void) {
+    return localPropagatorQueue;
   }
-  LocalThreadQueue * getLocalThreadQueue(void) {
-    return localThreadQueue;
-  }
-  void setLocalThreadQueue(LocalThreadQueue * ltq) {
-    localThreadQueue = ltq;
+  void setLocalPropagatorQueue(LocalPropagatorQueue * lpq) {
+    localPropagatorQueue = lpq;
   }
 
 };
+
+#ifndef OUTLINE
+#include "board.icc"
+#endif
 
 #endif

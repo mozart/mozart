@@ -112,19 +112,19 @@ GenFDVariable * tagged2GenFDVar(TaggedRef term)
 }
 
 inline
-void addSuspFDVar(TaggedRef v, Thread * el, OZ_FDPropState list_index)
+void addSuspFDVar(TaggedRef v, Suspension susp, OZ_FDPropState list_index)
 {
   GenFDVariable * fv = tagged2GenFDVar(v);
 
   switch (list_index) {
   case fd_prop_singl:
-    AddSuspToList(fv->fdSuspList[fd_prop_singl], el, fv->home);
+    AddSuspToList(fv->fdSuspList[fd_prop_singl], susp, fv->home);
     break;
   case fd_prop_bounds:
-    AddSuspToList(fv->fdSuspList[fd_prop_bounds], el, fv->home);
+    AddSuspToList(fv->fdSuspList[fd_prop_bounds], susp, fv->home);
     break;
   case fd_prop_any:
-    AddSuspToList(fv->suspList, el, fv->home);
+    AddSuspToList(fv->suspList, susp, fv->home);
     break;
   default:
     error("list index out of range.");

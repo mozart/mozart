@@ -117,10 +117,10 @@ inline Indent indent(int i) {
 // returns OK if associated suspension is alive
 inline Bool isEffectiveSusp(SuspList* sl)
 {
-  Thread *thr = sl->getElem ();
-  if (thr->isDeadThread ())
+  Suspension susp = sl->getSuspension();
+  if (susp.isDead())
     return NO;
-  if (!GETBOARD(thr))
+  if (!GETBOARDOBJ(susp))
     return NO;
   return OK;
 }
@@ -360,6 +360,23 @@ void GenCVariable::printStream(ostream &stream, int depth)
       break;
    }
 
+  case CtVariable:
+    {
+      GenCtVariable * me = (GenCtVariable *) this;
+
+      for (int i = 0; i < me->_noOfSuspLists; i += 1) {
+	SuspList * sl = me->_susp_lists[i];
+	if (isEffectiveList(sl))
+	  stream << "sl[" << i << "]("
+		 << sl->length()
+		 << '/'
+		 << sl->lengthProp()
+		 << ')';
+      }
+      stream << ' ' <<  me->getConstraint()->toString();
+      break;
+    }
+
   case MetaVariable:
     {
       GenMetaVariable* me = (GenMetaVariable *) this;
@@ -430,6 +447,19 @@ void GenCVariable::printLongStream(ostream &stream, int depth, int offset)
       // me->getLabel()->printStream(stream, PRINT_DEPTH_DEC(depth));
       me->getTable()->printStream(stream, PRINT_DEPTH_DEC(depth));
       stream << endl;
+      break;
+    }
+
+  case CtVariable:
+    {
+      GenCtVariable * me = (GenCtVariable *) this;
+
+      for (int i = 0; i < me->_noOfSuspLists; i += 1) {
+	SuspList * sl = me->_susp_lists[i];
+	stream << indent(offset) << "Ct Var SuspList[" << i << "]:\n"; 
+	sl->printLongStream(stream, depth, offset+3);
+      }
+      stream << ' ' <<  me->getConstraint()->toString();
       break;
     }
 
@@ -737,7 +767,7 @@ void SuspList::printLongStream(ostream &stream, int depth, int offset)
   for (SuspList* sl = this; sl != NULL; sl = sl->getNext()) {
     if (isEffectiveSusp(sl)) {
       stream << indent(offset);
-      (sl->getElem ())->printStream(stream);
+      sl->getSuspension().printStream(stream);
       stream << endl;
     }
   } // for
@@ -1007,7 +1037,7 @@ void Board::printLongStream(ostream &stream, int depth, int offset)
     stream << indent(offset) << "Actor:" << endl;
     u.actor->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
   }
-  stream << "Local thread queue: " << localThreadQueue << endl;
+  stream << "Local propagator queue: " << localPropagatorQueue << endl;
 }
 
 void Script::printStream(ostream &stream, int depth)
@@ -1187,22 +1217,14 @@ void Thread::printStream(ostream &stream, int depth)
     stream << " Wakeup";
     break;
 
-  case S_PR_THR:
-    stream << " Propagator: " << getPropagator()->toString();
-    break;
-
   default:
     stream << "(unknown type " << getThrType() << ")";
   }
 
   if ((getFlags ()) & T_solve)     stream << " solve";
   if ((getFlags ()) & T_ext)       stream << " ext";
-  if ((getFlags ()) & T_loca)      stream << " loca";
-  if ((getFlags ()) & T_unif)      stream << " unif";
-  if ((getFlags ()) & T_ofs)       stream << " ofs";
   if ((getFlags ()) & T_tag)       stream << " tag";
-  if ((getFlags ()) & T_ltq)       stream << " ltq";
-  if ((getFlags ()) & T_nmo)       stream << " nmo";
+  if ((getFlags ()) & T_lpq)       stream << " lpq";
   stream << " <";
   GETBOARD(this)->printStream(stream, PRINT_DEPTH_DEC(depth));
   stream << ">";
@@ -1214,6 +1236,36 @@ void Thread::printLongStream(ostream &stream, int depth, int offset)
   stream << endl;
   if (hasStack()) 
     item.threadBody->taskStack.printTaskStack(depth); //mm2: prints to stderr!
+}
+
+void Propagator::printStream(ostream &stream, int depth)
+{
+  stream << "Propagator: " << getPropagator()->toString();  
+}
+
+void Propagator::printLongStream(ostream &stream, int depth, int)
+{
+  printStream(stream, depth);
+}
+
+void Suspension::printStream(ostream &stream, int depth)
+{
+  if (isThread()) {
+    getThread()->printStream(stream, depth);
+  } else {
+    Assert(isPropagator());
+    getPropagator()->printStream(stream, depth);
+  }    
+}
+
+void Suspension::printLongStream(ostream &stream, int depth, int offset)
+{
+  if (isThread()) {
+    getThread()->printLongStream(stream, depth, offset);
+  } else {
+    Assert(isPropagator());
+    getPropagator()->printLongStream(stream, depth, offset);
+  }    
 }
 
 void Literal::printLongStream(ostream &stream, int depth, int offset)
@@ -1515,10 +1567,10 @@ void LocalPropagationQueue::printStream(ostream &stream, int depth)
 
   for (; psize; psize --) {
     stream << "lpqueue[" << phead << "]="
-	 << "@" << queue[phead].thr << endl;
+	 << "@" << queue[phead].prop << endl;
 
     stream << "(" << endl;
-    queue[phead].thr->printStream(stream,depth);
+    queue[phead].prop->printStream(stream,depth);
     stream << ")" << endl;
 
     phead = (phead + 1) & (maxsize - 1);
@@ -1527,8 +1579,8 @@ void LocalPropagationQueue::printStream(ostream &stream, int depth)
 
 void OrderedSuspList::printStream(ostream &stream, int depth)
 {
-  for (OrderedSuspList * p = this; p != NULL; p = p->n) {
-    OZ_Propagator * pr = p->t->getPropagator();
+  for (OrderedSuspList * p = this; p != NULL; p = p->getNext()) {
+    OZ_Propagator * pr = p->_p->getPropagator();
     stream << "   " << pr->toString();
   }
 }

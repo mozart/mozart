@@ -29,8 +29,8 @@
 class CDSuppl : public OZ_Propagator {
 protected:
   OZ_Term reg_b;
-  OZ_Thread thr; /* this is a `Propagator' on the emulator side of the
-                    interface */
+  void * prop; /* this is a `Propagator' on the emulator side of the
+		  interface */ 
 public:
   CDSuppl(OZ_Propagator * p, OZ_Term b);
   

@@ -52,7 +52,7 @@ public:
   Bool valid(TaggedRef /* val */) { return TRUE; }
   OZ_Term getFunction() { return function; }
   void kickLazy();
-  void addSuspLazy(Thread*,int);
+  void addSuspLazy(Suspension, int);
   Bool isKinded() { return false; }
   void dispose(void) { freeListDispose(this, sizeof(GenLazyVariable)); }
 };
