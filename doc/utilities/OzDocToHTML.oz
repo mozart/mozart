@@ -1563,7 +1563,7 @@ define
 	    ToGenerate <- L2|@ToGenerate
 	    {@MyIndexer enter(L Ands a(href: @CurrentNode#"#"#L2
 				       PCDATA('here')))}   %--**
-	    a(name: L)
+	    a(name: L2)
 	 elseof X then Node HTML in
 	    OzDocToHTML, ID(X ?Node ?HTML)
 	    {@MyIndexer enter(L Ands SEQ([PCDATA('see ')
