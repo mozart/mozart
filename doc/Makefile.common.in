@@ -257,3 +257,6 @@ $(WHAT)-new-hilite.xml: $(WHAT)-new.el
                 --eval $(EMACSDO4) \
                 --eval $(EMACSDO5) \
                 --load $(WHAT)-new.el > $@ || { rm -f $@; exit -1 }
+
+../global-xref-db.xml:
+        cd .. && $(MAKE) global-xref-db.xml
