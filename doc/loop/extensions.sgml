@@ -130,6 +130,20 @@ the sum of a sequence of values.
     </subsection>
   </section>
   <section>
+    <title/Lazy Generators/
+    <p>A loop, using the features described below, is an expression
+    which denotes a list of values that is lazily computed
+    concurrently (&ie; on a separate thread).
+    <list>
+      <entry/<code/yield:E//
+      <item/contributes the value of <code/E/ to the stream, then
+      blocks until more of the stream is needed.  The <code/yield/
+      feature is very similar to the <code/collect/ feature./
+      <entry/<code/yieldAppend//
+      <item/this is to <code/append/ like <code/yield/ is to <code/collect/./
+    </list>
+  </section>
+  <section>
     <title/Generators/
     <p>A generator is a nullary function that returns the <em/next/
     value each time it is invoked, and raises an exception to indicate
