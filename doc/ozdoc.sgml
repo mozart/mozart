@@ -61,7 +61,7 @@
         </CODE>
         may be written
         <CODE DISPLAY>
-          <![ RCDATA [</TITLE/Kinded Variables/]]>
+          <![ RCDATA [<TITLE/Kinded Variables/]]>
         </CODE></P>
 
         <P>This abbreviation is supported for all elements.  The
@@ -220,30 +220,30 @@
       <TITLE/BNF Description of the DTD/
 
       <P>This description is a simplified idealization of the DTD.  It
-        provides an intuitive overview of the element hierarchy.  Base
-        identifiers, e.g. TITLE, denote elements, bracketed phrases,
-        e.g. <CODE/&lt;TEXT or PHRASE/, denote non-terminal symbols in
-        this BNF description.
+        provides an intuitive overview of the element hierarchy.
+        Identifiers such as &EG; <TAG/TITLE/ denote elements, whereas
+        identifiers such as &EG; <VAR TYPE=GRAMMAR/TEXT or PHRASE/ denote
+        non-terminal symbols in this BNF description.
         <GRAMMAR.RULE>
-          <GRAMMAR.HEAD><CODE/FOO/</GRAMMAR.HEAD>
-          <GRAMMAR.ALT><CODE/BAR BAZ/</GRAMMAR.RULE>
-        means that the contents of element FOO must consist of a BAR
-        element followed by a BAZ element.  whereas:
+          <GRAMMAR.HEAD><TAG/FOO/</GRAMMAR.HEAD>
+          <GRAMMAR.ALT><TAG/BAR/ <TAG/BAZ/</GRAMMAR.RULE>
+        means that the contents of element <TAG/FOO/ must consist of a
+        <TAG/BAR/ element followed by a <TAG/BAZ/ element.  Whereas:
         <GRAMMAR.RULE>
           <VAR GRAMMAR/FOO/
-          <GRAMMAR.ALT><CODE/BAR BAZ/</GRAMMAR.RULE>
+          <GRAMMAR.ALT><TAG/BAR/ <TAG/BAZ/</GRAMMAR.RULE>
         means that non-terminal ?={FOO} can be rewritten to the
-        sequence <CODE/BAR BAZ/.</P>
+        sequence <TAG/BAR/ <TAG/BAZ/.</P>
 
-      <P>The annotation <CODE/+&lt;INDEXING>/ in the rule for
-        <CODE/BOOK/ indicates that the elements represented by
+      <P>The annotation <CODE/+?={INDEXING}/ in the rule for
+        <TAG/BOOK/ indicates that the elements represented by
         non-terminal ?={INDEXING} are allowed to occur
-        anywhere within the scope of element <CODE/BOOK/.</P>
+        anywhere within the scope of element <TAG/BOOK/.</P>
 
       <P><GRAMMAR>
           <GRAMMAR.RULE>
             <GRAMMAR.HEAD/<TAG/BOOK//
-            <GRAMMAR.ALT><TAG/FRONT BODY BACK/?
+            <GRAMMAR.ALT><TAG/FRONT/ <TAG/BODY/ <TAG/BACK/?
               <GRAMMAR.NOTE>+?={INDEXING}</GRAMMAR.RULE>
           <GRAMMAR.RULE>
             <GRAMMAR.HEAD/<TAG/FRONT//
@@ -493,7 +493,7 @@
             <ITEM>a standard 2 character code for a language.  It
                 indicates the default language within the scope of the
                 element and is inherited unless explicitly overriden.
-                It serves e.g. to obtain appropriate language
+                It serves &EG; to obtain appropriate language
                 dependent services such as hyphenation and quote
                 delimiters.
                 <LIST>
@@ -544,7 +544,7 @@
         <P>some elements have variants whose data comes from an
           external resource rather than from within the document
           itself: the name of such an element is obtained by
-          concatenating <CODE/.EXTERN/ to the usual name, e.g.:
+          concatenating <CODE/.EXTERN/ to the usual name, &EG;:
           <CODE DISPLAY><![ RCDATA [
 <PTR.EXTERN     TO='...'>
 <MATH.EXTERN    TO='...'>
@@ -909,7 +909,7 @@ CLASS=SOCALLED>upgrades</Q>; down the drain, where it belongs!]]></CODE>
           <ENTRY><TAG/SPAN/
           <ITEM>this element has no particular semantics but serves
               mainly to mark an otherwise undistinguished piece of
-              text so that it can be assigned an ID (e.g. for cross
+              text so that it can be assigned an ID (&EG; for cross
               reference purposes) or a <ATTRIB/CLASS/ for whatever
               purpose was not anticipated by the DTD.
               <CODE DISPLAY><![ RCDATA
@@ -947,7 +947,7 @@ CLASS=SOCALLED>upgrades</Q>; down the drain, where it belongs!]]></CODE>
                     Such an indication makes it possible to
                     automatically generate a caption label that
                     indicates this type and to cross-reference the
-                    figure in the appropriate list (e.g. here: a list
+                    figure in the appropriate list (&EG; here: a list
                     of pictures).
               </LIST>
           <ENTRY><TAG/NOTE/
@@ -966,7 +966,7 @@ CLASS=SOCALLED>upgrades</Q>; down the drain, where it belongs!]]></CODE>
                     <CODE DISPLAY>
                       <![ RCDATA [<NOTE FOOT>...</NOTE>]]>
                       =
-                      <![ RCDATA [<NOTE CLASS=FOOT>..</NOTE>]]></CODE>
+                      <![ RCDATA [<NOTE CLASS=FOOT>...</NOTE>]]></CODE>
               </LIST>
           <ENTRY><TAG/INDEX/
           <ENTRY><TAG/INDEX.BEGIN/
@@ -985,7 +985,7 @@ CLASS=SOCALLED>upgrades</Q>; down the drain, where it belongs!]]></CODE>
 <INDEX CLASS=PROCEDURE>FoldL</INDEX>]]></CODE>
               For a <Q/see/ reference:
               <CODE DISPLAY><![ RCDATA [
-[<INDEX>un<AND>deux<SEE>one<AND>two<AND>french</INDEX>]]></CODE>
+<INDEX>un<AND>deux<SEE>one<AND>two<AND>french</INDEX>]]></CODE>
               <LIST CLASS=ATTRIBS>
                 <ENTRY><ATTRIB/SEE/
                 <ITEM>allows one index to refer to another by ID, and
