@@ -50,7 +50,7 @@ define(opAction,
         $1,Literal,m->marshalOzValue(getTaggedArg(PC++));ozValuesCnt--;,
         $1,Feature,m->marshalOzValue(getTaggedArg(PC++));ozValuesCnt--;,
         $1,Constant,m->marshalOzValue(getTaggedArg(PC++));ozValuesCnt--;,
-        $1,Builtinname,marshalBuiltin(m,(Builtin*)getAdressArg(PC++));ozValuesCnt--;,
+        $1,Builtinname,_m_bi = (Builtin*)getAdressArg(PC++); marshalBuiltin(m,_m_bi);ozValuesCnt--;,
         $1,XRegisterIndex,marshalNumber(XRegToInt(getXRegArg(PC++)),bs);,
         $1,YRegisterIndex,marshalNumber(YRegToInt(getYRegArg(PC++)),bs);,
         $1,GRegisterIndex,marshalNumber(GRegToInt(getGRegArg(PC++)),bs);,
@@ -65,7 +65,7 @@ define(opAction,
         $1,RecordArity,marshalRecordArity(m,(SRecordArity) getAdressArg(PC++),bs);ozValuesCnt--;,
         $1,CallMethodInfo,marshalCallMethodInfo(m,(CallMethodInfo*)getAdressArg(PC++),bs);ozValuesCnt--;,
         $1,GRegRef,marshalGRegRef((AssRegArray*)getAdressArg(PC++),bs);,
-        $1,Location,marshalLocation((OZ_Location*)getAdressArg(PC++),bs);,
+        $1,Location,marshalLocation(_m_bi,(OZ_Location*)getAdressArg(PC++),bs);,
         $1,Cache,PC += CacheSize;)]])
 
 //
@@ -151,10 +151,10 @@ void marshalGRegRef(AssRegArray *gregs, MsgBuffer *bs)
 
 //
 inline static
-void marshalLocation(OZ_Location *loc,MsgBuffer *bs)
+void marshalLocation(Builtin * bi, OZ_Location *loc,MsgBuffer *bs)
 {
-  int inAr = loc->getInArity();
-  int outAr = loc->getOutArity();
+  int inAr  = bi->getInArity();
+  int outAr = bi->getOutArity();
   marshalNumber(inAr,bs);
   marshalNumber(outAr,bs);
 
@@ -249,6 +249,8 @@ Bool newMarshalCode(GenTraverser *gt, void *arg)
   // when 'ozValuesCnt' hits zero, then the code area must be broken
   // in two pieces (before a next instructioN):
   int ozValuesCnt = ozValuesBA;
+  Builtin * _m_bi; // Needed for passing information from marshalling
+                   // builtins to locations
 
   //
   if (PC == start) newMarshalCodeStart(bs);
@@ -479,7 +481,7 @@ ProgramCounter unmarshalLocation(ProgramCounter PC,MsgBuffer *bs)
 {
   int inAr = unmarshalNumber(bs);
   int outAr = unmarshalNumber(bs);
-  OZ_Location *loc = OZ_Location::newLocation(inAr,outAr);
+  OZ_Location *loc = OZ_Location::newLocation(inAr+outAr);
 
   for (int i = 0; i < inAr+outAr; i++) {
     int n = unmarshalNumber(bs);

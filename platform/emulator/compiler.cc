@@ -475,7 +475,7 @@ OZ_BI_define(BIstoreLocation,2,0)
     oz_typeError(1,"Location");
   }
 
-  OZ_Location *loc = OZ_Location::newLocation(inArity,outArity);
+  OZ_Location *loc = OZ_Location::newLocation(inArity+outArity);
   int i;
   for (i = 0; i < inArity; i++) {
     OZ_Term reg = oz_deref(oz_head(inLocs));
@@ -491,7 +491,7 @@ OZ_BI_define(BIstoreLocation,2,0)
       return oz_raise(E_ERROR,AtomAssembler,
                       "registerIndexOutOfRange",1,OZ_in(1));
     }
-    loc->setIn(i,j);
+    loc->set(i,j);
     inLocs = oz_deref(oz_tail(inLocs));
   }
   for (i = 0; i < outArity; i++) {
@@ -508,7 +508,7 @@ OZ_BI_define(BIstoreLocation,2,0)
       return oz_raise(E_ERROR,AtomAssembler,
                       "registerIndexOutOfRange",1,OZ_in(1));
     }
-    loc->setOut(i,j);
+    loc->set(inArity+i,j);
     outLocs = oz_deref(oz_tail(outLocs));
   }
 
