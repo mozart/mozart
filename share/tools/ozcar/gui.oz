@@ -171,7 +171,7 @@ in
 	 in
 	    {ForAll
 	     [TkSusp        # Susp        # IgnoreFeeds     # suspend
-	      TkRunChildren # RunChildren # StartNewThreads # runChildren]
+	      TkRunChildren # RunChildren # IgnoreThreads   # runChildren]
 	     proc {$ B}
 		M = B.4
 	     in
@@ -189,9 +189,9 @@ in
 		{B.2 tkBind(event:  HelpEvent
 			    action: self # help(B.3))}
 	     end}
-	    % /*
+	     /*
 	    {RunChildren tk(conf state:disabled)}
-	    % */
+	     */
 	    self.tkRunChildren = TkRunChildren
 	    {Tk.batch [pack(b(Bs) side:left  padx:1)
 		       pack(Susp RunChildren side:right padx:2)]}
