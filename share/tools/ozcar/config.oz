@@ -220,9 +220,6 @@ IgnoreThreadsBitmap    = {VS2A children # BitmapExtension}
 
 TextCursor             = left_ptr
 
-MaxStackSize           = 500 % note there are lots of OzDebug stack frames...
-MaxStackBrowseSize     = 50
-
 %% the timeout variables have critical values --
 %% you should know what you are doing when changing them...
 TimeoutToCalcTree      = 380 % ms
