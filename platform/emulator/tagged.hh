@@ -26,7 +26,7 @@
 #include <stdio.h>
 
 
-#include "error.h"
+#include "error.hh"
 #include "types.hh"
 #include "mem.hh"
 #include "gc.hh"

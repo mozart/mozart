@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include <malloc.h>
 
-#include "error.h"
+#include "error.hh"
 #include "types.hh"
 
 //*****************************************************************************
