@@ -8,7 +8,7 @@ extern "C" {
 void error( char *format ...);
 }
 
-#  define DEBUG_FD_IR(COND, CODE) if (COND) CODE;
+#  define DEBUG_FD_IR(COND, CODE) if (COND) { cout << CODE << flush;}
 
 #  define AssertFD(C) \
 if (!(C)) error("FD assertion '%s' failed at %s:%d.", #C, __FILE__, __LINE__); 

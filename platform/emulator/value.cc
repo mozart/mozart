@@ -39,7 +39,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomLocation, AtomMiddle, AtomNames, AtomOn, AtomPropagate, 
   AtomPropagators, AtomRun, AtomRunnable, AtomRuns, AtomShowSuspension, 
   AtomStackMaxSize, AtomStopOnToplevelFailure, AtomSystem, AtomThread, 
-  AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth;
+  AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth, AtomHeap;
 
 
 // Some often used constants
@@ -140,7 +140,7 @@ void initLiterals()
   AtomUser                  = makeTaggedAtom("user");
   AtomVariables             = makeTaggedAtom("variables");
   AtomWidth                 = makeTaggedAtom("width");
-
+  AtomHeap                  = makeTaggedAtom("heap");
 }
 
 

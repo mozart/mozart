@@ -1580,13 +1580,12 @@ void FDIntervals::print(ostream &ofile, int idnt) const
     if (flag) ofile << ' '; else flag = TRUE; 
     printFromTo(ofile, i_arr[i].left, i_arr[i].right);
   }
-  ofile << " }";
+  ofile << "}";
 }
 
 void FDIntervals::printLong(ostream &ofile, int idnt) const
 {
-  ofile << endl << indent(idnt) << "high=" << high
-	<< " fd_iv_max_high=" << fd_iv_max_high << endl;
+  ofile << endl << indent(idnt) << "high=" << endl;
   print(ofile, idnt);
   for (int i = 0; i < high; i += 1)
     ofile << endl << indent(idnt)
@@ -1630,9 +1629,9 @@ void FDBitVector::print(ostream &ofile, int idnt) const
 
 void FDBitVector::printLong(ostream &ofile, int idnt) const
 {
-  ofile << "  fd_bv_max_high=" << fd_bv_max_high << endl;
+  ofile << "  high=" << high << endl;
   print(ofile, idnt);
-  for (int i = 0; i < fd_bv_max_high; i++) {
+  for (int i = 0; i < high; i++) {
     ofile << endl << indent(idnt + 2) << '[' << i << "]:  ";
     for (int j = 31; j >= 0; j--) {
       ofile << ((b_arr[i] & (1 << j)) ? '1' : 'o');
@@ -1675,8 +1674,8 @@ void OZ_FiniteDomainImpl::print(ostream &ofile, int idnt) const
   default:
     error("unexpected case");
   }
-  DEBUG_FD_IR(FALSE, ofile << ((getType() == fd_descr) ? 'f' :
-	      (getType() == bv_descr ? 'b' : 'i')) << '#' << size);
+  //  DEBUG_FD_IR(FALSE, ((getType() == fd_descr) ? 'f' :
+  //	      (getType() == bv_descr ? 'b' : 'i')) << '#' << size);
 }
 
 void OZ_FiniteDomainImpl::printLong(ostream &ofile, int idnt) const

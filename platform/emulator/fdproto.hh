@@ -114,5 +114,6 @@ OZ_C_proc_proto(fdp_subset)
 OZ_C_proc_proto(fdtest_counter)
 OZ_C_proc_proto(fdtest_firstFail)
 OZ_C_proc_proto(fdtest_spawnLess)
+OZ_C_proc_proto(fdtest_plus)
 
 #endif
