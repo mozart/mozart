@@ -11,7 +11,7 @@ in the current release.
 A <EM>modification</EM> is an operation that is specified
 but behaves differently in the current release.
 
-<P>The limitations and modifications
+<P>Most of the limitations and modifications
 listed here will be removed in future releases.
 
 <SECTION><TITLE>Performance limitations</TITLE>
@@ -89,7 +89,8 @@ namely <<ipcs>> and <<ipcrm>>.
 
 <item>Threads, dictionaries, arrays, and spaces are sited,
 even though they are in base modules.
-In future releases, they will be made unsited.
+In future releases, it is likely that
+dictionaries and arrays will be made unsited.
 
 <item>When a reference to a constrained variable
 (finite domain, finite set, or free record)
