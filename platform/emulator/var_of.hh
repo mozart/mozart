@@ -259,7 +259,7 @@ inline
 void addSuspOFSVar(TaggedRef v, Suspension susp)
 {
   GenOFSVariable * ofs = tagged2GenOFSVar(v);
-  AddSuspToList(ofs->suspList, susp, ofs->home);
+  AddSuspToList(ofs->suspList, susp, ofs->getHome1());
 }
 
 
