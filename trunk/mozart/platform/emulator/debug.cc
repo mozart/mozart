@@ -413,7 +413,7 @@ void exitBuiltin(OZ_Bool bol, Builtin *bi, int arity, TaggedRef *args)
 #define MaxLine 100
 
 inline	void printLong(TaggedRef term, int depth) {
-  taggedPrintLong(term, depth ? depth : 10);
+  taggedPrintLong(term, depth ? depth : ozconf.printDepth);
 }
 
 inline	void printShort(TaggedRef term) {
