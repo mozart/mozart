@@ -234,16 +234,17 @@ OZ_BI_end
 #endif
 
 //
-// called from signal handler
+// is NOT called from a real signal handler, but from
+// 'checkStatus()' (and from 'suspendEngine()').
 void oz_io_check()
 {
 #ifdef DENYS_EVENTS
+  // kost@ : won't work in the new model, when 'oz_io_handle()'
+  // doesn't call 'osSelect()' at all?
   if (am.isSetSFlag(IOReady)) return;
 #endif
-  int numbOfFDs = osCheckIO();
-  if (!am.isCritical() && (numbOfFDs > 0)) {
+  if (osCheckIO() > 0)
     am.setSFlag(IOReady);
-  }
 }
 
 //
