@@ -177,6 +177,55 @@ define
       end
    end
 
+   local
+      fun {GetNext Ts}
+	 case Ts of T|Tr then
+	    case T of up then {GetNext Tr}
+	    [] down(_) then {GetNext Tr}
+	    else T
+	    end
+	 [] nil then unit
+	 end
+      end
+   in
+      proc {DoThreading Ts Prev1 Prev2 Ups}
+	 case Ts of T|Rest then
+	    case T of sect(Node Label) then
+	       case {GetNext Rest} of nav(_) then
+		  {DoThreading Rest Prev2 Node#"#"#Label Ups}
+	       else
+		  {DoThreading Rest Prev1 Prev2 Ups}
+	       end
+	    [] nav(HTML) then Navs in
+	       Navs = [case Prev1 of unit then EMPTY
+		       else
+			  td(a(href: Prev1 PCDATA('<< Prev')))
+		       end
+		       case Ups of Node|_ then
+			  td(a(href: Node VERBATIM('- Up -')))
+		       [] nil then EMPTY
+		       end
+		       case {GetNext Rest} of sect(Node Label) then
+			  td(a(href: Node#"#"#Label PCDATA('Next >>')))
+		       else EMPTY
+		       end]
+	       HTML = if {All Navs fun {$ Nav} Nav == EMPTY end} then EMPTY
+		      else
+			 table('class': [nav] align: center border: 0
+			       cellpadding: 6 cellspacing: 6
+			       tr(bgcolor: '#DDDDDD' SEQ(Navs)))
+		      end
+	       {DoThreading Rest Prev1 Prev2 Ups}
+	    [] down(Node) then
+	       {DoThreading Rest Prev1 Prev2 Node|Ups}
+	    [] up then _|Upr = Ups in
+	       {DoThreading Rest Prev1 Prev2 Upr}
+	    end
+	 elseof nil then skip
+	 end
+      end
+   end
+
    proc {WriteFile VS File}
       F = {New Open.file init(name: File flags: [write create truncate])}
    in
@@ -259,7 +308,7 @@ define
 	 AutoIndex <- Args.'autoindex'
 	 OzDocToHTML, Process(SGML unit)
 	 OzDocToHTML, GenerateLabels()
-	 OzDocToHTML, DoThreading({Reverse @Threading} unit 'index.html')
+	 {DoThreading {Reverse @Threading} unit 'index.html' nil}
 	 {ForAll {Dictionary.items @Labels}
 	  proc {$ N#T}
 	     if {IsFree N} then N#T = 'file:///dev/null'#PCDATA('???') end
@@ -1086,28 +1135,6 @@ define
 	    Next = In + 1
 	 end
       end
-      meth DoThreading(Ts Prev1 Prev2)
-	 case Ts of sect(Node Label)|Rest then
-	    case Rest of nav(_)|_ then
-	       OzDocToHTML, DoThreading(Rest Prev2 Node#"#"#Label)
-	    else
-	       OzDocToHTML, DoThreading(Rest Prev1 Prev2)
-	    end
-	 elseof nav(HTML)|Rest then
-	    HTML = table('class': [nav]
-			 border: 0 cellpadding: 6 cellspacing: 6 align: center
-			 tr(bgcolor: '#DDDDDD'
-			    case Prev1 of unit then EMPTY
-			    else td(a(href: Prev1 PCDATA('<< Prev')))
-			    end
-			    case Rest of sect(Node Label)|_ then
-			       td(a(href: Node#"#"#Label PCDATA('Next >>')))
-			    else EMPTY
-			    end))
-	    OzDocToHTML, DoThreading(Rest Prev1 Prev2)
-	 elseof nil then skip
-	 end
-      end
       meth PrepareNode(M ?X ?HTML)
 	 case OzDocToHTML, GetSplitNode(M $) of unit then
 	    X = unit
@@ -1117,6 +1144,7 @@ define
 	 elseof Node then
 	    SomeSplit <- true
 	    X = @CurrentNode#@TOC#@TOCMode
+	    Threading <- down(@CurrentNode)|@Threading
 	    CurrentNode <- Node
 	    TOC <- nil
 	    HTML = EMPTY
@@ -1149,6 +1177,7 @@ define
 	 if @Split andthen {Dictionary.member @Meta 'html.split.bib'} then
 	    SomeSplit <- true
 	    X = @CurrentNode#@TOC#@TOCMode
+	    Threading <- down(@CurrentNode)|@Threading
 	    CurrentNode <- 'bib.html'
 	    TOC <- nil
 	    HTML = EMPTY
@@ -1164,6 +1193,7 @@ define
 	 if @Split andthen {Dictionary.member @Meta 'html.split.index'} then
 	    SomeSplit <- true
 	    X = @CurrentNode#@TOC#@TOCMode
+	    Threading <- down(@CurrentNode)|@Threading
 	    CurrentNode <- 'idx.html'
 	    TOC <- nil
 	    HTML = EMPTY
@@ -1179,6 +1209,7 @@ define
 	 case X of unit then HTML
 	 [] C#T#M then Res in
 	    OzDocToHTML, MakeNode(Title HTML)
+	    Threading <- up|@Threading
 	    CurrentNode <- C
 	    Res = if M then {FormatTOC @TOC}
 		  else SEQ([hr() {FormatTOC @TOC}])
