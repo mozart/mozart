@@ -71,7 +71,7 @@ $(NEWCACHEDIR)/GumpScanner.so-$(PLATFORM): GumpScanner.so-$(PLATFORM)
 $(NEWCACHEDIR)/Bison.so-$(PLATFORM): ozbison/Bison.so-$(PLATFORM)
         $(INSTALLDLL) $< $@
 
-$(PLATFORMDIR)/flex.exe: ozflex/flex
+$(PLATFORMDIR)/flex.exe: ozflex/flex.exe
         $(INSTALLPRG) $< $@
 
 $(INCDIR)/%: %
