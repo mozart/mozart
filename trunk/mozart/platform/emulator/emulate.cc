@@ -256,23 +256,25 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *argu
     debugStreamThread(currentThread);
   }
 
-  if (def && debugmode() && 
-      (currentThread->stepMode() || def->getPred()->getSpyFlag())) {
-    
-    debugStreamCall(PC, def->getPrintName(), def->getArity(), arguments, 0);
-    
+  if (def && debugmode() && currentThread->isTraced()) {
+    OzDebug *dbg;
     OZ_Term dinfo = nil();
     for (int i=def->getArity()-1; i>=0; i--) {
       dinfo = cons(arguments[i],dinfo);
     }
     dinfo = cons(makeTaggedConst(def),dinfo);
     
-    OzDebug *dbg = new OzDebug(DBG_NEXT,dinfo);
-    currentThread->pushDebug(dbg);
-
-    return TRUE;
+    if (currentThread->stepMode() || def->getPred()->getSpyFlag()) {
+      debugStreamCall(PC, def->getPrintName(), def->getArity(), arguments, 0);
+      dbg = new OzDebug(DBG_STEP,dinfo);
+      currentThread->pushDebug(dbg);
+      return TRUE;
+    } 
+    else {
+      dbg = new OzDebug(DBG_NEXT,dinfo);
+      currentThread->pushDebug(dbg);
+    }
   }
-  
   return FALSE;
 }
 
@@ -2704,6 +2706,11 @@ LBLdispatcher:
       }
       case DBG_NEXT : {
 	if (CTT->isTraced())
+	  ;
+	break;
+      }
+      case DBG_STEP : {
+	if (CTT->isTraced() && !CTT->contFlag())
 	  CTT->startStepMode();
 	break;
       }
