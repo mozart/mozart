@@ -351,10 +351,10 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIbreakpointAt, 4)
 {
-  OZ_declareArg    (0,file)
-  OZ_declareIntArg (1,line);
-  OZ_declareArg    (2,what);
-  OZ_declareArg    (3,out);
+  OZ_declareAtomArg (0,file)
+  OZ_declareIntArg  (1,line);
+  OZ_declareArg     (2,what);
+  OZ_declareArg     (3,out);
 
   ProgramCounter PC = allDbgInfos->find(file,line);
   
