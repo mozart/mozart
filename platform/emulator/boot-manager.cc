@@ -57,6 +57,7 @@ static TaggedRef dictionary_of_modules;
 #include "modProfile-if.cc"
 #include "modDistribution-if.cc"
 #include "modWeakDictionary-if.cc"
+#include "modSpace-if.cc"
 #ifdef DENYS_EVENTS
 #include "modEvent-if.cc"
 #include "modTimer-if.cc"
@@ -88,7 +89,6 @@ static TaggedRef dictionary_of_modules;
 #include "modPort-if.cc"
 #include "modProcedure-if.cc"
 #include "modRecord-if.cc"
-#include "modSpace-if.cc"
 #include "modString-if.cc"
 #include "modThread-if.cc"
 #include "modTime-if.cc"
@@ -99,7 +99,6 @@ static TaggedRef dictionary_of_modules;
 #include "modBitString-if.cc"
 #include "modByteString-if.cc"
 #include "modInterFault-if.cc"
-#include "modCombinators-if.cc"
 
 /*
  * Modules that are possibly dynamically loaded
@@ -193,6 +192,8 @@ static ModuleEntry ext_module_table[] = {
   {"Timer",           mod_int_Timer},
 #endif
 
+  {"Space",             mod_int_Space},
+
 #ifdef MODULES_LINK_STATIC
   {"FSP",             mod_int_FSP},
   {"FDP",             mod_int_FDP},
@@ -247,7 +248,6 @@ static ModuleEntry base_module_table[] = {
   {"Port",              mod_int_Port},
   {"Procedure",         mod_int_Procedure},
   {"Record",            mod_int_Record},
-  {"Space",             mod_int_Space},
   {"String",            mod_int_String},
   {"Thread",            mod_int_Thread},
   {"Time",              mod_int_Time},
@@ -258,7 +258,6 @@ static ModuleEntry base_module_table[] = {
   {"BitString",         mod_int_BitString},
   {"ByteString",        mod_int_ByteString},
   {"InterFault",        mod_int_InterFault},
-  {"Combinators",       mod_int_Combinators},
   {0,0}
 };
 
