@@ -117,8 +117,7 @@ public:
 
   Board *derefBoard() {
     Board *bb;
-    for (bb=this; bb->isCommitted(); bb=bb->u.ref)
-      ;
+    for (bb=this; bb->isCommitted(); bb=bb->u.ref) {}
     return bb;
   }
 

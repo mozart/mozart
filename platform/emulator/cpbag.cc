@@ -10,14 +10,12 @@
 */
 
 
-#if defined(INTERFACE) && !defined(PEANUTS)
+#if defined(INTERFACE)
 #pragma implementation "cpbag.hh"
 #endif
 
-#include "am.hh"
-
 #include "cpbag.hh"
-
+#include "actor.hh"
 
 CpBag * CpBag::get(WaitActor ** wa) {
   *wa = (WaitActor *) 0;
