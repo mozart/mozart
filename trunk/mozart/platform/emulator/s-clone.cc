@@ -65,13 +65,9 @@
 
 #define _cacPendThreadEmul sClonePendThreadEmul
 
-#define _cacVarFix sCloneVarFix
-#define _CacVarFix SCloneVarFix
+#define _cacFix sCloneFix
 
 #define _cac_varSizes sCloneVarsizes
-
-#define _CacStack SCloneStack
-#define _cacStack sCloneStack
 
 #define _cacReallocStatic        sCloneReallocStatic
 #define _cacStoreFwd             sCloneStoreFwd
@@ -80,9 +76,6 @@
 #define _cacRefsArrayIsMarked    sCloneRefsArrayIsMarked
 #define _cacRefsArrayMark        sCloneRefsArrayMark
 #define _cacRefsArrayUnmark      sCloneRefsArrayUnmark
-
-#define _cacSuspList             sCloneSuspList
-#define _cacLocalSuspList        sCloneLocalSuspList
 
 #include "cac.cc"
 
