@@ -1456,6 +1456,7 @@ public:
 /************************************************************/
 
 void RemoteSite::zeroReferences(){
+  return;
   PD((SITE,"Zero references to site %s",site->stringrep()));
   if(writeConnection == NULL)  return;
   writeConnection->removeReference();
@@ -3474,7 +3475,7 @@ void ReadConnection::prmDwn(){
   tcpCache->remove(this);
   //EK possible mem leak
   if(isIncomplete())
-    messageManager->freeMessage(getCurQueue());}
+    messageManager->freeMessageAndMsgBuffer(getCurQueue());}
 
 void WriteConnection::prmDwn(){
   if(fd!=LOST)  osclose(fd);
@@ -3508,8 +3509,8 @@ void WriteConnection::prmDwn(){
       remoteSite->site->communicationProblem(current->msgType, current->site,
                                              current->storeIndx,COMM_FAULT_PERM_NOT_SENT,
                                              (FaultInfo) current->bs);
-      //EK possible mem leak....
-      messageManager->freeMessage(current);
+
+      messageManager->freeMessageAndMsgBuffer(current);
       current = NULL;}
   if(isInWriteQueue())
     clearInWriteQueue();
@@ -3636,7 +3637,7 @@ void ReadConnection::close(){
   tcpCache->remove(this);
   informSiteRemove();
   if(isIncomplete())
-    messageManager->freeMessage(getCurQueue());
+    messageManager->freeMessageAndMsgBuffer(getCurQueue());
   readConnectionManager->freeConnection(this);}
 
 

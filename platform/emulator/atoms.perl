@@ -164,6 +164,8 @@
           ( AtomConditions,     "conditions"),
           ( AtomOp,             "op"),
           ( AtomOwner,          "owner"),
+          ( AtomSystem,         "system"),
+          ( AtomState,          "state"),
 
         # Types
           ( AtomBool,        "bool"),
