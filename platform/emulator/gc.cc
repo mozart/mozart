@@ -1792,7 +1792,7 @@ void AM::gc(int msgLevel)
   _rootBoard = _rootBoard->gcBoard();   // must go first!
   setCurrent(_currentBoard->gcBoard(),NO);
 
-  CodeArea::gc();
+  AbstractionEntry::gcAbstractionEntries();
 
   aritytable.gc ();
   ThreadsPool::doGC ();
@@ -2038,10 +2038,6 @@ void AbstractionEntry::gcAbstractionEntries()
     aux->g = (aux->abstr == NULL) ? (RefsArray) NULL : gcRefsArray(aux->g);
     aux = aux->next;
   }
-}
-
-void CodeArea::gc() {
-  abstractionTab.gcAbstractionTable();
 }
 
 void ThreadsPool::doGC () {
