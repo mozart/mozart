@@ -206,14 +206,15 @@ public:
 // class ByteSink
 // ===================================================================
 
-OZ_Term makeGenericExc(char *msg, OZ_Term arg)
+OZ_Term makeGenericExc(char *id,char *msg, OZ_Term arg)
 {
-  return OZ_makeException(E_ERROR,OZ_atom("dp"),"generic",2,oz_atom(msg),arg);
+  return OZ_makeException(E_ERROR,OZ_atom("dp"),"generic",
+			  3,oz_atom(id),oz_atom(msg),arg);
 }
 
-OZ_Return raiseGeneric(char *msg, OZ_Term arg)
+OZ_Return raiseGeneric(char *id, char *msg, OZ_Term arg)
 {
-  return OZ_raise(makeGenericExc(msg,arg));
+  return OZ_raise(makeGenericExc(id,msg,arg));
 }
 
 #define M_FILE		(PERDIOMAGICSTART)
@@ -255,10 +256,14 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header, Bool textmode)
     bs->setTextmode();
   marshal_M_FILE(bs,PERDIOVERSION,in);
 
-  OZ_Return ret=onlyFutures(bs->getNoGoods());
-  if (ret != PROCEED) return ret;
+  OZ_Return ret=onlyFutures(bs->getResources());
+  if (ret != PROCEED) {
+    bufferManager->dumpByteStream(bs);
+    return ret;
+  }
 
-  CheckNogoods(in,bs,"Resources found during save",bufferManager->dumpByteStream(bs));
+  CheckNogoods(in,bs,"save:nogoods","Non-exportables found during save",
+	       bufferManager->dumpByteStream(bs));
 
   bs->beginWrite();
   bs->incPosAfterWrite(tcpHeaderSize);
@@ -283,7 +288,8 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header, Bool textmode)
 
   //  return oz_unify(resources,bs->resources);
   if (!oz_isNil(res)) {
-    return raiseGeneric("Resources found during save",
+    return raiseGeneric("save:resources",
+			"Resources found during save",
 			oz_mklist(OZ_pairA("Resources",res),
 				  OZ_pairA("Filename",oz_atom(filename))));
   }
@@ -302,7 +308,8 @@ ByteSinkFile::allocateBytes(int n,char *header)
   fd = strcmp(filename,"-")==0 ? STDOUT_FILENO 
                                : open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
   if (fd < 0)
-    return raiseGeneric("Open failed during save",
+    return raiseGeneric("save:open",
+			"Open failed during save",
 			oz_mklist(OZ_pairA("File",oz_atom(filename)),
 				  OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
   
@@ -337,7 +344,8 @@ ByteSinkFile::putBytes(BYTE*pos,int len)
   if (compressionlevel==0 && write(fd,pos,len)<0 ||
       compressionlevel>0 && gzwrite(zfd,pos,len)<0) {
     if (errno != EINTR)
-      return raiseGeneric("Write failed during save",
+      return raiseGeneric("save:write",
+			  "Write failed during save",
 			  oz_mklist(OZ_pairA("File",oz_atom(filename)),
 				    OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
     goto loop;
@@ -355,7 +363,8 @@ ByteSinkDatum::allocateBytes(int n, char *ignored)
   dat.size = n;
   dat.data = (char*) malloc(n);
   if (dat.data==0)
-    return raiseGeneric("Malloc failed during save",
+    return raiseGeneric("save:malloc",
+			"Malloc failed during save",
 			oz_cons(OZ_pairA("Error",oz_atom(OZ_unixError(errno))),
 				oz_nil()));
   return PROCEED;
@@ -387,7 +396,8 @@ OZ_Return saveIt(OZ_Term val, char *filename, char *header,
 		 int compressionlevel, Bool textmode)
 {
   if (compressionlevel < 0 || compressionlevel > 9) {
-    return raiseGeneric("Save: compression level must be between 0 and 9",
+    return raiseGeneric("save:compressionlevel",
+			"Save: compression level must be between 0 and 9",
 			oz_list(OZ_pairA("File",oz_atom(filename)),
 				OZ_pairAI("Compression level",compressionlevel),
 				0));
@@ -456,7 +466,7 @@ OZ_Return export(OZ_Term t)
   if (ozconf.perdioMinimal) {
     Exporter bs;
     marshalTermRT(t,&bs);
-    CheckNogoods(t,(&bs),"Resources found during export",);
+    CheckNogoods(t,(&bs),"export:nogoods","Non-exportables found during export",);
 
     OZ_Term vars = bs.getVars();
     while (!oz_isNil(vars)) {
@@ -516,12 +526,14 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
   if (versiongot) {
     OZ_Term vergot = oz_atom(versiongot);
     delete versiongot;
-    return raiseGeneric("Version mismatch during loading of pickle",
+    return raiseGeneric("load:versionmismatch",
+			"Version mismatch during loading of pickle",
 			oz_mklist(OZ_pairA("File",oz_atom(compname)),
 				  OZ_pairA("Expected",oz_atom(PERDIOVERSION)),
 				  OZ_pairA("Got",vergot)));
   } else {
-    return raiseGeneric("Trying to load non-pickle",
+    return raiseGeneric("load:nonpickle",
+			"Trying to load non-pickle",
 			oz_cons(OZ_pairA("File",oz_atom(compname)),oz_nil()));
   }
 }
@@ -544,7 +556,7 @@ ByteSource::makeByteStream(ByteStream*& stream)
     pos = stream->beginRead(max);
   }
   if (total==0)
-    return raiseGeneric("Empty byte source",oz_nil());
+    return raiseGeneric("bytesource:empty","Empty byte source",oz_nil());
 
   return PROCEED;
 }
@@ -561,7 +573,8 @@ loop:
   got = gzread(fd,pos,max);
   if (got < 0) {
     if (errno==EINTR) goto loop;
-    return raiseGeneric("Read error during load",
+    return raiseGeneric("load:read",
+			"Read error during load",
 			oz_cons(OZ_pairA("Error",oz_atom(OZ_unixError(errno))),
 				oz_nil()));
   }
@@ -646,7 +659,8 @@ static
 void doRaise(TaggedRef controlvar, char *msg, const char *url,URLAction act)
 {
   ControlVarRaise(controlvar,
-		  makeGenericExc("Error in URL handler",
+		  makeGenericExc("URLhandler",
+				 "Error in URL handler",
 				 oz_mklist(OZ_pairA("Message",oz_atom(msg)),
 					   OZ_pairA("Action",oz_atom(ACTION_STRING(act))),
 					   OZ_pairA("URL",oz_atom(url)))));
@@ -771,7 +785,8 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
   unsigned tid;
   HANDLE thrd = CreateThread(NULL,0,&fetchThread,ui,0,&tid);
   if (thrd==NULL)
-    return raiseGeneric("getURL: start thread failed",
+    return raiseGeneric("getURL:thread",
+			"getURL: start thread failed",
 			oz_cons(OZ_pairA("URL",oz_atom(url)),oz_nil()));
   int pid = 0;
 
@@ -779,7 +794,8 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
 
   int fds[2];
   if (pipe(fds)<0) {
-    return raiseGeneric("getURL: system call 'pipe' failed",
+    return raiseGeneric("getURL:pipe",
+			"getURL: system call 'pipe' failed",
 			oz_cons(OZ_pairA("URL",oz_atom(url)),oz_nil()));
   }
 
@@ -793,7 +809,8 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
       exit(0);
     }
   case -1:
-    return raiseGeneric("getURL: system call 'fork' failed",
+    return raiseGeneric("getURL:fork",
+			"getURL: system call 'fork' failed",
 			oz_cons(OZ_pairA("URL",oz_atom(url)),oz_nil()));
   default:
     break;

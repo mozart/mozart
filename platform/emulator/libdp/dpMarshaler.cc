@@ -291,10 +291,9 @@ void marshalObject(ConstTerm* t, MsgBuffer *bs)
 Bool marshalTertiary(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
 {
   PD((MARSHAL,"Tert"));
-  DSite* sd=bs->getSite();
   switch(t->getTertType()){
   case Te_Local:
-    globalizeTert(t,bs);
+    globalizeTert(t);
     // no break here!
   case Te_Manager:
     {
@@ -308,7 +307,8 @@ Bool marshalTertiary(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
     {
       PD((MARSHAL,"proxy"));
       int BTI=t->getIndex();
-      if (bs->getSite() && borrowTable->getOriginSite(BTI)==sd) {
+      DSite* sd=bs->getSite();
+      if (sd && borrowTable->getOriginSite(BTI)==sd) {
 	marshalToOwner(BTI,bs);
 	return OK;}
       marshalBorrowHead(tag,BTI,bs);
@@ -395,7 +395,6 @@ OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
     break;
   case DIF_OBJECT:
     {
-      
       TaggedRef obj;
       GName *gnobj = unmarshalGName(&obj,bs);
       TaggedRef clas;
@@ -425,7 +424,7 @@ OZ_Term unmarshalOwner(MsgBuffer *bs,MarshalTag mt){
     int OTI=unmarshalNumber(bs);
     PD((UNMARSHAL,"OWNER o:%d",OTI));
     OwnerEntry* oe=OT->getOwner(OTI);
-    oe->returnCreditOwner(1);
+    oe->returnCreditOwner(1,OTI);
     OZ_Term oz=oe->getValue();
     return oz;}
   Assert(mt==DIF_OWNER_SEC);
