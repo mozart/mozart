@@ -57,6 +57,39 @@ inline int square(int a) { return truncToIntMax(double(a) * double(a)); }
 inline int min(int a, int b) { return a < b ? a : b; }
 inline int max(int a, int b) { return a > b ? a : b; }
 
+#define OPTIMIZED_ONES
+#ifdef OPTIMIZED_ONES
+#define SUMUP(S, A, X1, X2)				\
+{							\
+  OZ_ASSERT(A); 					\
+  int __a = (A); 					\
+  S += ((__a == 1) 					\
+	? (X1) 						\
+	: ((__a == -1) 					\
+	   ? -(X2) 					\
+	   : double(__a) * (__a >= 0 ? (X1) : (X2))	\
+	   )						\
+	);						\
+}
+
+#define RETURNSUM(F, S, A) 			\
+{ 						\
+  int __a = (A);				\
+  if (__a == 1) 				\
+    return -doubleToInt(S);			\
+  else if (__a == -1)				\
+    return doubleToInt(S);			\
+  else						\
+    return doubleToInt(F(-S / double(__a)));	\
+}
+#else
+#define SUMUP(S, A, X1, X2)  \
+{int __a = (A); S += __a * double(__a >= 0 ? (X1) : (X2));}
+
+#define RETURNSUM(F, S, A) \
+return doubleToInt(F(-S / double(A)));
+#endif
+
 //-----------------------------------------------------------------------------
 // cache stuff for LinEqPropagator::run()
 
@@ -98,11 +131,11 @@ void update_cache(int slot, int a[], OZ_FDIntVar x[],
 
   for (int j = cache_from[slot]; j < cache_slot_to; j += 1) 
     if (a[j] >= 0) {
-      cache_val_pos += NUMBERCAST(a[j]) * x[j]->getMinElem();
-      cache_val_neg += NUMBERCAST(a[j]) * x[j]->getMaxElem();
+      cache_val_pos += double(a[j]) * x[j]->getMinElem();
+      cache_val_neg += double(a[j]) * x[j]->getMaxElem();
     } else {
-      cache_val_pos += NUMBERCAST(a[j]) * x[j]->getMaxElem();
-      cache_val_neg += NUMBERCAST(a[j]) * x[j]->getMinElem();
+      cache_val_pos += double(a[j]) * x[j]->getMaxElem();
+      cache_val_neg += double(a[j]) * x[j]->getMinElem();
     }
   pos_cache[slot] = cache_val_pos;
   neg_cache[slot] = cache_val_neg;
@@ -132,14 +165,14 @@ int calc_txl_lin(int i, int slot,
     s = pos_txl_cache;
     for (int j = cache_from[slot]; j < cache_slot_to; j += 1) 
       if (j != i)
-	s += a[j] * NUMBERCAST(a[j] >= 0 ? x[j]->getMaxElem() : x[j]->getMinElem());
+	SUMUP(s, a[j], x[j]->getMaxElem(),x[j]->getMinElem());
   } else {
     s = neg_txl_cache;
     for (int j = cache_from[slot]; j < cache_slot_to; j += 1) 
       if (j != i)
-	s += a[j] * NUMBERCAST(a[j] >= 0 ? x[j]->getMinElem() : x[j]->getMaxElem());
+	SUMUP(s, a[j], x[j]->getMinElem(), x[j]->getMaxElem());
   }
-  return doubleToInt(ceil(-double(s) / a[i]));
+  RETURNSUM(ceil, s, a[i]);
 }
 
 inline
@@ -155,14 +188,84 @@ int calc_txu_lin(int i, int slot,
     s = pos_txu_cache;
     for (int j = cache_from[slot]; j < cache_slot_to; j += 1) 
       if (j != i)
-	s += a[j] * NUMBERCAST(a[j] >= 0 ? x[j]->getMinElem() : x[j]->getMaxElem());
+	SUMUP(s, a[j], x[j]->getMinElem(), x[j]->getMaxElem());
   } else {
     s = neg_txu_cache;
     for (int j = cache_from[slot]; j < cache_slot_to; j += 1) 
       if (j != i)
-	s += a[j] * NUMBERCAST(a[j] >= 0 ? x[j]->getMaxElem() : x[j]->getMinElem());
+	SUMUP(s, a[j], x[j]->getMaxElem(), x[j]->getMinElem());
   }
-  return doubleToInt(floor(-double(s) / a[i]));
+  RETURNSUM(floor, s, a[i]);
+}
+
+//-----------------------------------------------------------------------------
+
+inline
+double calc_tx_lin(int k, int sz, int a[], OZ_FDIntVar x[], int c)
+{
+  double s = c;
+  for (int i = sz; i--; ) 
+    if (k != i)
+      SUMUP(s, a[i], x[i]->getMinElem(), x[i]->getMaxElem());
+  
+  s /= -a[k]; // TMUELLER
+  return s;
+}
+
+//-----------------------------------------------------------------------------
+
+inline
+int calc_txl_lin(int k, int sz, int a[], OZ_FDIntVar x[], int c)
+{
+  double sum = c;
+  
+  if (a[k] >=0) {
+    for (int i = sz; i--; ) 
+      if (i != k)
+	SUMUP(sum, a[i], x[i]->getMaxElem(), x[i]->getMinElem());
+  } else {
+    for (int i = sz; i--; ) 
+      if (i != k)
+	SUMUP(sum, a[i], x[i]->getMinElem(), x[i]->getMaxElem());
+  }
+  RETURNSUM(ceil, sum, a[k]);
+}
+
+
+inline
+int calc_txu_lin(int k, int sz, int a[], OZ_FDIntVar x[], int c)
+{
+  double sum = c;
+  if (a[k] >=0) {
+    for (int i = sz; i--; ) 
+      if (i != k)
+	SUMUP(sum, a[i], x[i]->getMinElem(), x[i]->getMaxElem());
+  } else {
+    for (int i = sz; i--; ) 
+      if (i != k)
+	SUMUP(sum, a[i], x[i]->getMaxElem(), x[i]->getMinElem());
+  }
+  RETURNSUM(floor, sum, a[k]);
+}
+
+//-----------------------------------------------------------------------------
+
+inline
+int check_calc_txl(int sz, int a[], OZ_FDIntVar x[], int c)
+{
+  double sum = c;
+  for (int i = sz; i--; ) 
+    SUMUP(sum, a[i], x[i]->getMinElem(), x[i]->getMaxElem());
+  return doubleToInt(sum);
+}
+
+inline
+int check_calc_txu(int sz, int a[], OZ_FDIntVar x[], int c)
+{
+  double sum = c;
+  for (int i = sz; i--; ) 
+    SUMUP(sum, a[i], x[i]->getMaxElem(),x[i]->getMinElem());
+  return doubleToInt(sum);
 }
 
 //-----------------------------------------------------------------------------
@@ -171,9 +274,9 @@ inline
 int calc_txl_nonlin(int k, int sz, int l, int smd_sz[], 
 		    int a[], FDIntVarArr2 &x, int c)
 {
-  NUMBERCAST sum = c;
+  double sum = c;
   for (int i = sz; i--; ) {
-    NUMBERCAST prod = a[i];
+    double prod = a[i];
     if (i != k) {
       if ((a[i] >= 0) == (a[k] >= 0)) {
 	for (int j = smd_sz[i]; j--; )
@@ -186,7 +289,7 @@ int calc_txl_nonlin(int k, int sz, int l, int smd_sz[],
     }
   }
 
-  NUMBERCAST prod = a[k];
+  double prod = a[k];
   for (int j = smd_sz[k]; j--; )
     if (j != l)
       prod *= x[k][j]->getMaxElem();
@@ -197,9 +300,9 @@ inline
 int calc_txu_nonlin(int k, int sz, int l, int smd_sz[], 
 		    int a[], FDIntVarArr2 &x, int c)
 {
-  NUMBERCAST sum = c;
+  double sum = c;
   for (int i = sz; i--; ) {
-    NUMBERCAST prod = a[i];
+    double prod = a[i];
     if (i != k) {
       if ((a[i] >= 0) == (a[k] >= 0)) {
 	for (int j = smd_sz[i]; j--; )
@@ -212,7 +315,7 @@ int calc_txu_nonlin(int k, int sz, int l, int smd_sz[],
     }
   }
   
-  NUMBERCAST prod = a[k];
+  double prod = a[k];
   for (int j = smd_sz[k]; j--; )
     if (j != l)
       prod *= x[k][j]->getMinElem();
@@ -222,12 +325,12 @@ int calc_txu_nonlin(int k, int sz, int l, int smd_sz[],
 //-----------------------------------------------------------------------------
 
 inline
-NUMBERCAST calc_tx_nonlin(int k, int sz, int l, int smd_sz[], 
+double calc_tx_nonlin(int k, int sz, int l, int smd_sz[], 
 			  int a[], FDIntVarArr2 &x, int c)
 {
-  NUMBERCAST sum = c;
+  double sum = c;
   for (int i = sz; i--; ) {
-    NUMBERCAST prod = a[i];
+    double prod = a[i];
     if (i != k) {
       if ((!(a[k] >= 0))^(a[i] >= 0) == (a[k] >= 0)) {
 	for (int j = smd_sz[i]; j--; )
@@ -240,7 +343,7 @@ NUMBERCAST calc_tx_nonlin(int k, int sz, int l, int smd_sz[],
     }
   }
 
-  NUMBERCAST prod = a[k];
+  double prod = a[k];
   if (a[k] >= 0) {
     for (int j = smd_sz[k]; j--; )
       if (j != l)
@@ -252,69 +355,6 @@ NUMBERCAST calc_tx_nonlin(int k, int sz, int l, int smd_sz[],
 	prod *= x[k][j]->getMaxElem();
     return prod == 0 ? 0 : (- sum / prod);
   }
-}
-
-//-----------------------------------------------------------------------------
-
-inline
-double calc_tx_lin(int k, int sz, int a[], OZ_FDIntVar x[], int c)
-{
-  double s = c;
-  for (int i = sz; i--; ) 
-    if (k != i)
-      s += NUMBERCAST(a[i]) * (a[i] >= 0 ? x[i]->getMinElem() : x[i]->getMaxElem());
-  
-  s /= -a[k];
-  return s;
-}
-
-//-----------------------------------------------------------------------------
-
-inline
-int calc_txl_lin(int k, int sz, int a[], OZ_FDIntVar x[], int c)
-{
-  NUMBERCAST sum = 0;
-  OZ_Boolean sign_k = (a[k] >=0);
-  for (int i = sz; i--; ) 
-    if (i != k)
-      sum += NUMBERCAST(a[i]) * (sign_k == (a[i] >= 0)
-			 ? x[i]->getMaxElem() : x[i]->getMinElem());
-
-  return doubleToInt(ceil(-(sum + c) / NUMBERCAST(a[k])));
-}
-
-
-inline
-int calc_txu_lin(int k, int sz, int a[], OZ_FDIntVar x[], int c)
-{
-  NUMBERCAST sum = 0;
-  OZ_Boolean sign_k = (a[k] >=0);
-  for (int i = sz; i--; ) 
-    if (i != k)
-      sum += NUMBERCAST(a[i]) * (sign_k == (a[i] >= 0)
-			 ? x[i]->getMinElem() : x[i]->getMaxElem());
-  
-  return doubleToInt(floor(-(sum + c) / NUMBERCAST(a[k])));
-}
-
-//-----------------------------------------------------------------------------
-
-inline
-int check_calc_txl(int sz, int a[], OZ_FDIntVar x[], int c)
-{
-  NUMBERCAST sum = c;
-  for (int i = sz; i--; ) 
-    sum += NUMBERCAST(a[i]) * ((a[i] >= 0) ? x[i]->getMinElem() : x[i]->getMaxElem());
-  return doubleToInt(sum);
-}
-
-inline
-int check_calc_txu(int sz, int a[], OZ_FDIntVar x[], int c)
-{
-  NUMBERCAST sum = c;
-  for (int i = sz; i--; ) 
-    sum += NUMBERCAST(a[i]) * ((a[i] >= 0) ? x[i]->getMaxElem() : x[i]->getMinElem());
-  return doubleToInt(sum);
 }
 
 //-----------------------------------------------------------------------------
