@@ -34,7 +34,7 @@ define
    ParseError = 'sgml parse error'
    CrossRefWarning = 'sgml cross-reference warning'
 
-   PI = {NewName}
+   PI   % is initialized by ozdoc upon linking
 
    proc {OutputParseErrors S Reporter} Line Lines in
       {List.takeDropWhile S fun {$ C} C \= &\n end ?Line ?Lines}
