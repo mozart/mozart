@@ -974,8 +974,12 @@ define
 	       HTML2 = case ClassName of "" then EMPTY
 		       else
 			  span('class': [entrycategory]
-			       VERBATIM('&nbsp;') PCDATA('[')
-			       i(PCDATA(ClassName)) PCDATA(']'))
+			       span('class': [entrycategorybracket]
+				    VERBATIM('&nbsp;')
+				    PCDATA('['))
+			       i(PCDATA(ClassName))
+			       span('class': [entrycategorybracket]
+				    PCDATA(']')))
 		       end
 	       dt(COMMON: @Common HTML1 HTML2)
 	    [] synopsis then
