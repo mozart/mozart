@@ -1895,6 +1895,8 @@ void engine() {
 
         waitBoard->setCommitted(CBB);   // by kost@ 4.10.94
         Bool ret = e->installScript(waitBoard->getScriptRef());
+        if (!ret)
+          HANDLE_FAILURE(NULL, ,);
         Assert(ret!=NO);
         CBB->incSuspCount(waitBoard->getSuspCount()-1);
         DISPATCH(1);
@@ -1935,6 +1937,8 @@ void engine() {
 
         bb->setCommitted(CBB);    // by kost@ 4.10.94
         Bool ret = e->installScript(bb->getScriptRef());
+        if (!ret)
+          HANDLE_FAILURE(NULL, ,);
         Assert(ret != NO);
         CBB->incSuspCount(bb->getSuspCount());
         CBB->removeSuspension();
