@@ -26,7 +26,7 @@
 
   <p>
     <ptr to="chapter.hello"> used a rather simple
-    application as example. This present chapter shows how to use
+    application as example. This chapter shows how to use
     functors for the modular development of larger applications.
 
   <section id="section.development.functors">
@@ -54,12 +54,7 @@
       it only imported system modules. However, larger applications will
       typically import modules computed by other application functors.
 
-    <p>
-      **** The module names internet wide ****
-
-      dynamic linking ****
-
-
+    
   <section id="section.devel.lmf">
     <title/Example: Last Minute Flights/
 
@@ -71,7 +66,7 @@
       <list enum>
         <item> 
           A data base server: It maintains a data base that contains
-          available flights, where each flight as a unique id by which
+          available flights, where each flight has a unique id by which
           it can be identified. At first, the data base is
           not even persistent, but as we incrementally refine and improve
           our application,
@@ -168,15 +163,6 @@ export
     <p>
       When a functor definition is compiled, all free variable
       identifiers must be bound by the base environment.
-<!--
-DENYS: I don't think this bit is useful at this point. the sentence
-above says precisely what is important here.
-
-Pickling the
-      functor created by compilation then includes all values referred
-      to by the free identifiers. We are going to discuss the issue of
-      pickling in more detail in ????.
--->
 
   <section id="section.development.form">
     <title/The Graphical Input Form/
@@ -245,29 +231,59 @@ end
 </chunk>
     
 
-  <section id="section.development.compile">
+  <section id="section.development.compile" proglang=sh>
     <title/Compilation/
 
     <p>
-      Functors also are compilation units.
+      Functors also are compilation units. Each functor definition is
+      compiled separately. For our example, the following sequence of
+      commands  
+<<<
+ozc -c DB.oz -o DB.ozf
+ozc -c Form.oz -o Form.ozf
+ozc -c LMF.oz -o LMF.oza
+>>>
+     compiles our example functor definitions. If you now change the
+     functor definition in, say, <file/DB.oz/ but the interface of the
+     created functor remains the same, none of the other functor
+     definitions need recompilation.
+
+   <p>
+     Note that we have chosen as file extensions for pickled functors
+     that are not supposed to be run as applications the string
+     <samp/ozf/. For the root functor of our application we chose
+     <samp/oza/. This is completely transparent as it comes to the
+     semantics of our program, it is just a convention that makes it
+     easier to tell apart which pickled functors are root functors of
+     applications. 
+
   </section>
 
-  <section id="section.development.execution">
+  <section id="section.development.execution" proglang=sh>
     <title/Execution/
 
     <p>
-      Just as before.
+      As before, we just execute the root functor of our application
+      by applying the <<ozengine>> command to <<LMF.oza>>:
+<<<
+ozengine LMF.oza
+>>>
 
     <p>
-      Explained later.
-
+      The next chapter (<ptr to="chapter.mof">) explains how
+      applications that consist of several functors are executed.
   </section>
 
 
-  <Section id="Section.sevelopment.make" proglang=sh>
+<!--
+
+  <Section id="Section.development.make" proglang=sh>
     <Title/Using <<make>> for Functor Compilation/
 
+    
   </Section>
+
+-->
 
 </Chapter>
 
