@@ -42,8 +42,17 @@
      'slowNet'           => { in  => ['+int', '+int'],
 			      out => [],
 			      bi  => BIslowNet},
+
      'initIPConnection'    => { in  => ['+record'],
 				out => ['+record'],
 				BI  => BIinitIPConnection},
+
+     'getBroadcastAddresses' => { in  => [],
+				  out => ['+[string]'],
+				  bi  => BIgetBroadcastAddresses},
+
+     'sockoptBroadcast'      => { in  => ['+int'],
+				  out => [],
+				  bi  => BIsockoptBroadcast}
      );
 

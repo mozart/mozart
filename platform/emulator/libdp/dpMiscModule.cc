@@ -36,10 +36,21 @@
 #include "os.hh"
 #include "newmarshaler.hh"
 #ifndef WINDOWS
+#include <sys/errno.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <net/if.h>
+// handles IRIX6 (6.5 at least), IRIX64, HPUX_700 (9.05 at least),
+// Solaris does not try to be BSD4.3-compatible by default (but one
+// can say '-DBSD_COMP' and then that stuff is included as well)
+#if defined(SOLARIS_SPARC)
+#include    <sys/sockio.h>
+#else
+#include    <sys/ioctl.h>
+#endif
 #endif
 #ifdef VIRTUALSITES
 #define USE_VS_MSGBUFFERS
@@ -50,6 +61,22 @@
 #include "virtual.hh"
 #endif
 
+static
+int raiseUnixError(char *f,int n, char * e, char * g) {
+  return oz_raise(E_SYSTEM,E_OS, g, 3, OZ_string(f), OZ_int(n), OZ_string(e)); 
+}
+
+//
+#define WRAPCALL(f, CALL, RET)				\
+int RET;						\
+while ((RET = CALL) < 0) {				\
+  if (ossockerrno() != EINTR) { RETURN_UNIX_ERROR(f); }	\
+}
+//
+#define RETURN_UNIX_ERROR(f) \
+{ return raiseUnixError(f,ossockerrno(), OZ_unixError(ossockerrno()), "dpMisc"); }
+
+//
 OZ_BI_define(BIcrash,0,0)   /* only for debugging */
 {
   initDP();
@@ -180,6 +207,88 @@ OZ_BI_define(BIinitIPConnection,1,1)
 	    );
 } OZ_BI_end
 
+//
+// Return the list of broadcast addresses available (may be empty if
+// none were found)
+OZ_BI_define(BIgetBroadcastAddresses,0,1)
+{
+  int bsize, nba, i;
+  char *buff;
+  struct ifconf ifc;
+  struct ifreq *ifrp;
+  OZ_Term lba = oz_nil();	// list of broadcast addresses;
+
+#if defined(SIOCGIFCONF) && defined(SIOCGIFFLAGS) && defined(SIOCGIFBRDADDR)
+  WRAPCALL("socket", ossocket(PF_INET, SOCK_DGRAM, 0), desc);
+
+  // how many interfaces can be there??! :-))
+  bsize = sizeof(struct ifreq) * 16;
+  buff = (char *) malloc(bsize);
+  if (buff < 0)
+    RETURN_UNIX_ERROR("virtual memory exhausted!");
+
+  //
+  ifc.ifc_len = bsize;
+  ifc.ifc_buf = buff;
+  if (ioctl(desc, SIOCGIFCONF, &ifc) < 0) {
+    free(buff);
+    close(desc);
+    RETURN_UNIX_ERROR("SIOCGIFCONF failed!");
+  }
+
+  //
+  ifrp = ifc.ifc_req;
+  nba = ifc.ifc_len / sizeof(struct ifreq);
+
+  //
+  for (i = 0; i < nba; i++, ifrp++) {
+    struct ifreq ifr;
+    // take only 'UP' and 'BROADCAST' interfaces:
+    strcpy(ifr.ifr_name, ifrp->ifr_name);
+    if (ioctl(desc, SIOCGIFFLAGS, &ifr) < 0 ||
+	!(ifr.ifr_flags & IFF_UP) ||
+	!(ifr.ifr_flags & IFF_BROADCAST))
+      continue;
+
+    //
+    strcpy(ifr.ifr_name, ifrp->ifr_name);
+    // take only inet addresses, if any:
+    if (// strncmp(ifr.ifr_name, "lo", 2) == 0 ||
+	ioctl(desc, SIOCGIFBRDADDR, &ifr) < 0 ||
+	ifr.ifr_broadaddr.sa_family != AF_INET) {
+      // none: let it go;
+      continue;
+    } else {
+      lba = oz_cons(OZ_string(inet_ntoa(((struct sockaddr_in *) &ifr.ifr_broadaddr)->sin_addr)), lba);
+    }
+  }
+
+  //
+  close(desc);
+  free(buff);
+#else
+  // last resort - just give '-1' away;
+  lba = oz_cons(oz_string(inet_ntoa((const struct in_addr) -1), lba));
+#endif
+
+  //
+  OZ_RETURN(lba);
+} OZ_BI_end
+
+//
+// Allow the broadcast messages for a socket;
+OZ_BI_define(BIsockoptBroadcast,1,0)
+{
+#ifdef SO_BROADCAST
+  OZ_declareInt(0, desc);
+  int on = 1;
+  //
+  if (setsockopt(desc, SOL_SOCKET, SO_BROADCAST,
+		 (void *) &on, (socklen_t) sizeof(on)) < 0)
+    RETURN_UNIX_ERROR("setsockopt failed!");
+#endif
+  return PROCEED;
+} OZ_BI_end
 
 /*
  * The builtin table
