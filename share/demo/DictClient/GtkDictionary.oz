@@ -151,20 +151,20 @@ define
          VBoxDesc =
          table(nRows: 2 nColumns: 2
                borderWidth: 5
-               attach(left: 0 right: 1 top: 0 bottom: 1
+               attach(left: 0 top: 0
                       label(xalign: 0.0
                             label: 'Server: '))
-               attach(left: 1 right: 2 top: 0 bottom: 1
+               attach(left: 1 top: 0
                       entry(handle: ServerEntry
                             text:
                                case Server of unit then DEFAULT_SERVER
                                else Server
                                end
                             activate: DoConnect))
-               attach(left: 0 right: 1 top: 1 bottom: 2
+               attach(left: 0 top: 1
                       label(xalign: 0.0
                             label: 'Port:'))
-               attach(left: 1 right: 2 top: 1 bottom: 2
+               attach(left: 1 top: 1
                       entry(handle: PortEntry
                             text:
                                case Port of unit then DEFAULT_PORT
@@ -240,16 +240,16 @@ define
                 title: Title
                 add(table(nRows: 3 nColumns: 1
                           handle: Table
-                          attach(left: 0 right: 1 top: 0 bottom: 1
+                          attach(left: 0 top: 0
                                  yoptions: nil
                                  MenuBarDesc)
-                          attach(left: 0 right: 1 top: 1 bottom: 2
+                          attach(left: 0 top: 1
                                  ScrolledWindowDesc))))
 
          self.toplevel = {Create WindowDesc}
       in
          if Status then
-            {Table conf(attach(left: 0 right: 1 top: 2 bottom: 3
+            {Table conf(attach(left: 0 top: 2
                                yoptions: nil
                                label(xalign: 0.0
                                      handle: self.status)))}
@@ -463,15 +463,15 @@ define
          WordFrameDesc =
          frame(label: 'Word'
                add(table(nRows: 2 nColumns: 2
-                         attach(left: 0 right: 2 top: 0 bottom: 1
+                         attach(left: 0 right: 2 top: 0
                                 yoptions: nil
                                 entry(handle: self.WordEntry
                                       keyPressEvent: LookupShortcut))
-                         attach(left: 0 right: 1 top: 1 bottom: 2
+                         attach(left: 0 top: 1
                                 xoptions: nil yoptions: nil
                                 button(label: 'Lookup'
                                        clicked: P#GetDefinitions(NetPort)))
-                         attach(left: 1 right: 2 top: 1 bottom: 2
+                         attach(left: 1 top: 1
                                 xoptions: nil yoptions: nil
                                 button(label: 'Match'
                                        clicked: P#GetMatches(NetPort))))))
@@ -480,14 +480,14 @@ define
          DatabasesFrameDesc =
          frame(label: 'Databases'
                add(table(nRows: 2 nColumns: 1
-                         attach(left: 0 right: 1 top: 0 bottom: 1
+                         attach(left: 0 top: 0
                                 scrolledWindow(
                                    hscrollbarPolicy: never
                                    vscrollbarPolicy: always
                                    addWithViewport(
                                       list(selectionMode: extended
                                            handle: self.DatabasesList))))
-                         attach(left: 0 right: 1 top: 1 bottom: 2
+                         attach(left: 0 top: 1
                                 xoptions: nil yoptions: nil
                                 button(label: 'Update List'
                                        clicked: P#UpdateDatabases(NetPort))))))
@@ -498,14 +498,14 @@ define
          StrategiesFrameDesc =
          frame(label: 'Strategies'
                add(table(nRows: 2 nColumns: 1
-                         attach(left: 0 right: 1 top: 0 bottom: 1
+                         attach(left: 0 top: 0
                                 scrolledWindow(
                                    hscrollbarPolicy: never
                                    vscrollbarPolicy: always
                                    addWithViewport(
                                       list(selectionMode: browse
                                            handle: self.StrategiesList))))
-                         attach(left: 0 right: 1 top: 1 bottom: 2
+                         attach(left: 0 top: 1
                                 xoptions: nil yoptions: nil
                                 button(label: 'Update List'
                                        clicked:
@@ -531,19 +531,19 @@ define
                 destroy: P#close()
                 add(table(nRows: 5 nColumns: 2
                           columnSpacing: 5 rowSpacing: 5
-                          attach(left: 0 right: 2 top: 0 bottom: 1
+                          attach(left: 0 right: 2 top: 0
                                  yoptions: nil
                                  MenuBarDesc)
-                          attach(left: 0 right: 2 top: 1 bottom: 2
+                          attach(left: 0 right: 2 top: 1
                                  yoptions: nil
                                  WordFrameDesc)
-                          attach(left: 0 right: 1 top: 2 bottom: 3
+                          attach(left: 0 top: 2
                                  DatabasesFrameDesc)
-                          attach(left: 1 right: 2 top: 2 bottom: 3
+                          attach(left: 1 top: 2
                                  StrategiesFrameDesc)
-                          attach(left: 0 right: 2 top: 3 bottom: 4
+                          attach(left: 0 right: 2 top: 3
                                  LogFrameDesc)
-                          attach(left: 0 right: 2 top: 4 bottom: 5
+                          attach(left: 0 right: 2 top: 4
                                  yoptions: nil
                                  StatusLabelDesc))))
 
@@ -608,10 +608,12 @@ define
       end
       meth About()
          Blurb =
-         vBox(packStart(label(label: 'Programming Systems Lab'))
-              packStart(label(label: 'Universität des Saarlandes')) %--** ä
-              packStart(label(label: 'Contact: Leif Kornstaedt'))
-              packStart(label(label: '<kornstae@ps.uni-sb.de>')))
+         vBox(pack(label(label: 'Programming Systems Lab'))
+              pack(label(label: 'Universität des Saarlandes')) %--** ä
+              pack(label(label: 'Contact: Leif Kornstaedt'))
+              pack(label(label: '<kornstae@ps.uni-sb.de>')))
+
+         %--** Image = {{New GDK.imlib noop()} loadImage('dict.gif' $)}
 
          DialogDesc =
          dialog(title: 'About Dictionary Client'
@@ -619,23 +621,16 @@ define
                 userResizable: false
                 vBox(table(nRows: 3 nColumns: 2
                            borderWidth: 5 rowSpacing: 5 columnSpacing: 5
-                           attach(left: 1 right: 2 top: 0 bottom: 1
+                           %--** attach(left: 0 top: 0 Image)
+                           attach(left: 1 top: 0
                                   label(label: 'Dictionary Client'))
-                           attach(left: 0 right: 2 top: 1 bottom: 2
+                           attach(left: 0 right: 2 top: 1
                                   Blurb)))
                 actionArea(button(label: 'Ok'
                                   clicked: Dialog#destroy())))
          Dialog = {Create DialogDesc}
       in
          {Dialog showAll()}
-/*--**
-         Pixmap =
-         {New GTK.pixmap new({New GDK.misc
-                              pixmapCreateFromXpm({Table getParentWindow($)}
-                                                  unit unit 'dict.xpm' $) _}
-                             unit)}
-         {Table attachDefaults(Pixmap 0 1 0 1)}
-*/
       end
       meth GetDefinitions(NetPort) Word DBs in
          {self.WordEntry getChars(0 ~1 ?Word)}
