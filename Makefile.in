@@ -168,7 +168,7 @@ $(PACKDIR) $(PACKDIR)/mozart $(PACKDIR)/mozart/doc:
 	$(INSTALL_DIR) $@
 
 oz-win::
-	rm -rf mozart oz3
+	rm -rf oz3
 	$(INSTALL_DIR) oz3
 	( cd $(PREFIX); \
 	  $(TAR) cf - \
@@ -183,6 +183,9 @@ oz-win::
 	cp oz3/share/*.so-win32-i486 $(WINCACHEDIR)/share || true
 	rm -f oz3/share/*.so-win32-i486
 	cp -r oz3/doc/demo/applets $(WINCACHEDIR)/doc/demo
+	(cd oz3/contrib;\
+	 rm -rf os text;\
+	 rm -rf gdbm.ozf regex.ozf LP.ozf Psql.ozf RI.ozf Reflect.ozf DaVinci.ozf)
 	find oz3 -name '*.so-*' -not -name '*.so-win32-i486' -exec rm -f '{}' ';'
 	rm -rf oz3/share/doc oz3/platform/win32-i486/oztool.sh
 	mv $(WINCACHEDIR)/share/Init.ozf oz3/share
