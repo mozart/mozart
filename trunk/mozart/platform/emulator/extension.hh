@@ -42,6 +42,7 @@ enum OZ_Registered_Extension_Id {
   OZ_E_THREAD,
   OZ_E_HEAPCHUNK,
   OZ_E_CHUNK,
+  OZ_E_WEAKDICTIONARY,
   OZ_E_LAST
 };
 
