@@ -6084,7 +6084,7 @@ OZ_C_proc_begin(BISystemGetGC,1) {
   OZ_Term decrease  = OZ_pairAI("decrease",   0);
   OZ_Term on        = OZ_pair2(OZ_atom("on"),
                                ozconf.gcFlag ? NameTrue : NameFalse);
-  OZ_Term threshold = OZ_pairAI("threshold",  ozconf.heapThreshold);
+  OZ_Term threshold = OZ_pairAI("threshold",  ozconf.heapThreshold*KB);
   OZ_Term size      = OZ_pairAI("size",       getUsedMemory()*KB);
   OZ_Term active    = OZ_pairAI("active",     0);
 
