@@ -43,6 +43,13 @@ HELP.txt: HELP.html Makefile.vars
 	lynx -dump $< > $@
 txt: HELP.txt
 
+doc: ozmake.xml ozmake.xsl
+	case `java -version 2>&1` in \
+	Kaffe*) JAVACP=-addclasspath;; \
+	*) JAVACP=-classpath;; \
+	esac; \
+	java $$JAVACP XT.jar com.jclark.xsl.sax.Driver ozmake.xml ozmake.xsl ozmake.html
+
 #publish: duchier-ozmake-$(VERSION).pkg
 #duchier-ozmake-$(VERSION).pkg: $(OZMAKE_SOURCES) ./ozmake
 #	./ozmake --publish -v -p duchier-ozmake-$(VERSION).pkg
