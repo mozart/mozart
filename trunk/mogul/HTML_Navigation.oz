@@ -9,7 +9,7 @@ define
       Ls=if {IsDet NavBar} then NavBar
 	 else NavBar={GetNavBar1} end
    in
-      p('class':"margin" 
+      'div'('class':"margin" 
 	table({MMap Ls fun{$ X}
 			  case X of _#Anchor then
 %				Cat :: cp, exe, ...
