@@ -13,8 +13,41 @@ OZ_PATH_PROG(DYNLD, ozdynld)
 OZ_PATH_PROG(INSTALLSRC, ozinstallsrc)
 OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 OZ_PATH_PROG(MKINSTALLDIRS, mkinstalldirs)
-: ${platform=`$PLATFORMSCRIPT`}
+ : ${platform=`$PLATFORMSCRIPT`}
 AC_SUBST(platform)
+if test "${GXX}" = yes; then
+  : ${oz_copt_disable_extension="-fno-exceptions -fno-rtti"}
+fi
+AC_DEFUN(OZ_CXX_OPTIONS, [
+	ozm_out=
+ 	echo 'void f(){}' > oz_conftest.c
+ 	for ozm_opt in "$1"
+ 	do
+	    AC_MSG_CHECKING(compiler option $ozm_opt)
+	    ozm_ropt=`echo $ozm_opt | sed -e 's/[[^a-zA-Z0-9_]]/_/g'`
+	    AC_CACHE_VAL(oz_cv_gxxopt_$ozm_ropt,
+		if test -z "`${CXX} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
+		    eval "oz_cv_gxxopt_$ozm_ropt=yes"
+		else
+		    eval "oz_cv_gxxopt_$ozm_ropt=no"
+		fi)
+	    if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'}'`\" = yes"; then
+		ozm_out="$ozm_out $ozm_opt"
+		AC_MSG_RESULT(yes)
+            else
+		AC_MSG_RESULT(no)
+	    fi
+ 	done
+ 	rm -f oz_conftest*
+	$2="$ozm_out"
+	])
+OZ_CXX_OPTIONS("$oz_copt_disable_extension",oz_a)
+if test "$ac_test_CXXFLAGS" != set
+then
+    CXXFLAGS=
+fi
+
+CXXFLAGS="$CXXFLAGS $oz_a"
 AC_CONFIG_SUBDIRS(ozflex)
 AC_OUTPUT(Makefile ozbison/Makefile)
 

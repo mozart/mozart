@@ -8,7 +8,7 @@ RM		= @RM@ -f
 DYNLD		= @DYNLD@
 
 CC		= @CC@
-CFLAGS		= -O6
+CFLAGS		= @CXXFLAGS@ -O6
 INCLUDES	= -I$(TOPDIR)/Emulator @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@ -lc
