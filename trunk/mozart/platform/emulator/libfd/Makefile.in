@@ -29,7 +29,7 @@ SRCDIR		= @srcdir@
 INCS		= -I. -I$(SRCDIR)/.. -I..
 
 FDLIBSRCS = arith.cc fdaux.cc bool.cc \
-	    card.cc cd.cc count.cc \
+	    card.cc count.cc \
 	    rel.cc disjoint.cc std.cc \
 	    sum.cc sumequal.cc \
 	    distance.cc streamProps.cc \

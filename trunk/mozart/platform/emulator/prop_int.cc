@@ -60,8 +60,6 @@ Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy)
 {
   Assert(prop->getBoardInternal() && prop->getPropagator());
 
-  Board *cb_cache = oz_currentBoard();
-  
   if (prop->isNonMonotonicPropagator() && !oz_onToplevel()) {
 #ifdef DEBUG_NONMONOTONIC
     OZ_PropagatorProfile * profile = prop->getPropagator()->getProfile();
@@ -76,13 +74,6 @@ Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy)
 
     WAKEUP_PROPAGATOR(prop->markRunnable();
 		      am.currentBoard()->addToNonMono(prop));
-  }
-  
-  if (localPropStore.isUseIt()) {
-    Assert(GETBOARD(prop) == cb_cache);
-    prop->markRunnable();
-    localPropStore.push(prop);
-    return FALSE;
   }
   
   WAKEUP_PROPAGATOR(prop->markRunnable();
