@@ -145,7 +145,8 @@
 	the object code produced by the C++&nbsp;compiler) and the last one is
 	the resulting dynamic library used by the generated scanner, loaded
 	via <<Foreign.load>>.
-    <SubSection><Title>Using the Generated Scanner
+    <SubSection>
+      <Title/Using the Generated Scanner/
       <P>
 	<Ptr to="program.scanner.test"> shows a sample program running our
 	generated scanner.
@@ -400,7 +401,7 @@
 	scanners reside at the same time in the Mozart system.  The following
 	directive allows this prefix to be changed (the default <<zy>> is all
 	right if only a single scanner is used at any time):
-	<<<\gumpscannerprefix ?{atom}>>>
+	<<<\gumpscannerprefix ?={atom}>>>
       <P>
 	<Ptr to="table.scanner.switches"> summarizes some compiler switches
 	that control the &Gump; Scanner Generator.
