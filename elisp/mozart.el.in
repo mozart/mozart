@@ -436,10 +436,10 @@ See variable `compilation-parse-errors-function' for the interface it uses."
 	(buffer-substring (match-beginning num) (match-end num)))))
 
 ;;}}}
-;;{{{ Start/Stop Oz
+;;{{{ Run/Halt Oz
 
 (defun run-oz ()
-  "Start Mozart as a sub-process.
+  "Run Mozart as a sub-process.
 Handle input and output via the Oz Emulator buffer."
   (interactive)
   (save-excursion
@@ -734,7 +734,7 @@ feed that many preceding paragraphs as well as the current paragraph."
     (oz-feed-region (car region) (cdr region))))
 
 (defun oz-send-string (string &optional system)
-  "Feed STRING to the Oz Compiler, restarting it if it died.
+  "Feed STRING to the Oz Compiler, restarting Mozart if it died.
 If SYSTEM is non-nil, it is a command for the system and is to be
 compiled using a default set of switches."
   (interactive "sString to feed: \nP")
