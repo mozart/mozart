@@ -72,8 +72,6 @@ failure:
 //-----------------------------------------------------------------------------
 
 
-#define INITIALSIZE 10000
-
 static OZ_FDIntVar * xx;
 static int * dd;
 
@@ -86,21 +84,99 @@ static int compareAscDue(const void *a, const void *b) {
   return(xx[*(int*)a]->getMaxElem() + dd[*(int*)a] - xx[*(int*)b]->getMaxElem() - dd[*(int*)b]);
 }
 
+// for cpIterate
+struct StartDurTerms {
+  OZ_Term start;
+  int dur;
+};
 
-OZ_C_proc_begin(sched_cpIterate, 2)
+int compareDurs(const void * a, const void * b) {
+  return ((StartDurTerms *) b)->dur - ((StartDurTerms *) a)->dur;
+}
+
+// for cpIterateCap
+struct StartDurUseTerms {
+  OZ_Term start;
+  int dur;
+  int use;
+};
+
+int compareDursUse(const void * a, const void * b) {
+  return ((StartDurUseTerms *) b)->dur * ((StartDurUseTerms *) b)->use
+    - ((StartDurUseTerms *) a)->dur * ((StartDurUseTerms *) a)->use;
+}
+
+CPIteratePropagator::CPIteratePropagator(OZ_Term tasks, 
+					 OZ_Term starts, 
+					 OZ_Term durs)
+  : Propagator_VD_VI(OZ_vectorSize(tasks))
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT);
-  
-  PropagatorExpect pe;
-  
-  OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
-  OZ_EXPECT(pe, 1, expectVectorInt);
-  SAMELENGTH_VECTORS(0, 1);
+  VectorIterator vi(tasks);
+  int i = 0;
+		     
+  DECL_DYN_ARRAY(StartDurTerms, sd, reg_sz);
 
-  return pe.impose(new CPIteratePropagator(OZ_args[0], OZ_args[1]),  
-		   OZ_getLowPrio());
+  while (vi.anyLeft()) {
+    OZ_Term task = vi.getNext();
+
+    sd[i].start = OZ_subtree(starts, task);
+    sd[i].dur = OZ_intToC(OZ_subtree(durs, task));
+    i += 1;
+  } // while
+
+  OZ_ASSERT(i == reg_sz);
+
+  qsort(sd, reg_sz, sizeof(StartDurTerms), compareDurs);
+
+  for (i = reg_sz; i--; ) {
+    reg_l[i]      = sd[i].start;
+    reg_offset[i] = sd[i].dur;
+  }
+}
+
+OZ_C_proc_begin(sched_cpIterate, 3)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," 
+		   OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT);
+  
+  {
+    PropagatorExpect pe;
+    
+    OZ_EXPECT(pe, 0, expectVectorVectorLiteral);
+    OZ_EXPECT(pe, 1, expectProperRecordIntVarMinMax);
+    OZ_EXPECT(pe, 2, expectProperRecordInt);
+    SAMELENGTH_VECTORS(1, 2);
+  }
+  
+  OZ_Term starts = OZ_args[1], durs = OZ_args[2];
+
+  VectorIterator vi(OZ_args[0]);
+
+  for (int i = OZ_vectorSize(OZ_args[0]); i--; ) {
+    OZ_Term tasks = vi.getNext();
+
+    PropagatorExpect pe;
+
+    VectorIterator vi_tasks(tasks);
+    while (vi_tasks.anyLeft()) {
+      OZ_Term task = vi_tasks.getNext();
+      OZ_Term start_task = OZ_subtree(starts, task);
+      OZ_Term dur_task = OZ_subtree(durs, task);
+      if (!start_task || !dur_task) 
+	return OZ_typeError(expectedType, 0, "Scheduling applications expect that all task symbols are features of the records denoting the start times and durations.");
+      pe.expectIntVarMinMax(OZ_subtree(starts, task));
+    }
+
+    OZ_Return r = pe.impose(new CPIteratePropagator(tasks, starts, durs),
+			    OZ_getLowPrio());
+
+    if (r == FAILED) return FAILED;
+  }
+  return OZ_ENTAILED;
 }
 OZ_C_proc_end
+
+//-----------------------------------------------------------------------------
 
 class Min_max {
 public:
@@ -135,11 +211,11 @@ OZ_Return CPIteratePropagator::propagate(void)
   int downFlag = 0;
   int disjFlag = 0;
 
+
   int kUp;
   int kDown;
   int dur0;
   int mSi;
-
 
   DECL_DYN_ARRAY(int, set0, ts);
   DECL_DYN_ARRAY(int, compSet0, ts);
@@ -273,7 +349,7 @@ cploop:
 	compSet0[compSet0Size++] = realL;
     }
 
-    if (kUp-kDown < dur0) return FAILED;
+    if (kUp-kDown < dur0) goto failure;
     
     struct Set *oset = &Sets[0];	
 //    oset ->cSi = kDown +dur0;
@@ -306,7 +382,7 @@ cploop:
 	int minL = MinMax[realL].min;
 	int newCSi = max( bset->cSi, minL+dSi);
 	if (newCSi > kUp) 
-	  return FAILED;
+	  goto failure;
 	else {
 	  struct Set *cset = &Sets[setSize];	
 	  cset->cSi = newCSi;
@@ -397,7 +473,7 @@ cploop:
 		int sext = Sets[0].ext[i];
 		int right = maxL-dur[sext];
 		if (right < 0) 
-		  return FAILED;
+		  goto failure;
 		if (MinMax[sext].max > right) {
 		  FailOnEmpty(*x[sext] <= right);
 		}
@@ -407,7 +483,7 @@ cploop:
 		int sext = Sets[i].val;
 		int right = maxL-dur[sext];
 		if (right < 0) 
-		  return FAILED;
+		  goto failure;
 		if (MinMax[sext].max > right) {
 		  FailOnEmpty(*x[sext] <= right);
 		}
@@ -484,7 +560,7 @@ cploop:
 	compSet0[compSet0Size++] = realL;
     }
 
-    if (kUp-kDown < dur0) return FAILED;
+    if (kUp-kDown < dur0) goto failure;
 
     struct Set *oset = &Sets[0];
     oset->cSi = min(kUp - dur0,minLst);
@@ -520,7 +596,7 @@ cploop:
 	  int maxL = MinMax[realL].max+durL;
 	  int newCSi = min( bset->cSi, maxL-dSi);
 	  if (newCSi < kDown) 
-	    return FAILED;
+	    goto failure;
 	  else {
 	    struct Set *cset = &Sets[setSize];	
 	    cset->cSi = newCSi;
@@ -609,7 +685,7 @@ cploop:
 	      downFlag = 1;
 	      int right = s->cSi - durL;
 	      if (right < 0)
-	        return FAILED;
+	        goto failure;
 	      FailOnEmpty(*x[l] <= right);
 
 	      int minDL = minL + durL;
@@ -705,20 +781,69 @@ failure:
 
 //--------------------------------------------------------------
 
-OZ_C_proc_begin(sched_disjunctive, 2)
+OZ_C_proc_begin(sched_disjunctive, 3)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT);
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," 
+		   OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT);
+    
+  {
+    PropagatorExpect pe;
+    
+    OZ_EXPECT(pe, 0, expectVectorVectorLiteral);
+    OZ_EXPECT(pe, 1, expectProperRecordIntVarMinMax);
+    OZ_EXPECT(pe, 2, expectProperRecordInt);
+    SAMELENGTH_VECTORS(1, 2);
+  }
   
-  PropagatorExpect pe;
-  
-  OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
-  OZ_EXPECT(pe, 1, expectVectorInt);
-  SAMELENGTH_VECTORS(0, 1);
+  OZ_Term starts = OZ_args[1], durs = OZ_args[2];
 
-  return pe.impose(new DisjunctivePropagator(OZ_args[0], OZ_args[1]),  
-		   OZ_getLowPrio());
+  VectorIterator vi(OZ_args[0]);
+
+  for (int i = OZ_vectorSize(OZ_args[0]); i--; ) {
+    OZ_Term tasks = vi.getNext();
+
+    PropagatorExpect pe;
+
+    VectorIterator vi_tasks(tasks);
+    while (vi_tasks.anyLeft()) {
+      OZ_Term task = vi_tasks.getNext();
+      OZ_Term start_task = OZ_subtree(starts, task);
+      OZ_Term dur_task = OZ_subtree(durs, task);
+      if (!start_task || !dur_task) 
+	return OZ_typeError(expectedType, 0, "Scheduling applications expect that all task symbols are features of the records denoting the start times and durations.");
+      pe.expectIntVarMinMax(OZ_subtree(starts, task));
+    }
+
+    OZ_Return r = pe.impose(new DisjunctivePropagator(tasks, starts, durs),
+			    OZ_getLowPrio());
+
+    if (r == FAILED) return FAILED;
+  }
+  return OZ_ENTAILED;
+
 }
 OZ_C_proc_end
+
+DisjunctivePropagator::DisjunctivePropagator(OZ_Term tasks, 
+					     OZ_Term starts, 
+					     OZ_Term durs)
+  : Propagator_VD_VI(OZ_vectorSize(tasks))
+{
+  VectorIterator vi(tasks);
+  int i = 0;
+		     
+  while (vi.anyLeft()) {
+    OZ_Term task = vi.getNext();
+
+    reg_l[i]      = OZ_subtree(starts, task);
+    reg_offset[i] = OZ_intToC(OZ_subtree(durs, task));
+    i += 1;
+  } // while
+    
+    OZ_ASSERT(i == reg_sz);
+
+}
+
 
 OZ_Return DisjunctivePropagator::propagate(void)
 {
@@ -808,49 +933,107 @@ int ozcdecl CompareIntervals(const void *In1, const void *In2)
   }
 }
 
+inline int EnergyFunct(int t1, int t2, int dura, int usea, int ra, int da)
+{
+  return max(0,
+	     usea*min(dura, 
+		      min(t2 - t1,
+			  min(ra + dura - t1,
+			      t2 - da + dura))));
+}
+
 int ozcdecl CompareBounds(const void *Int1, const void *Int2) {
   return *(int*)Int1 - *(int*)Int2;
 }
-OZ_C_proc_begin(sched_cpIterateCap, 4)
+
+CPIteratePropagatorCap::CPIteratePropagatorCap(OZ_Term tasks, 
+					       OZ_Term starts, 
+					       OZ_Term durs, 
+					       OZ_Term use,
+					       OZ_Term cap)
+  : Propagator_VD_VI_VI_I(OZ_vectorSize(tasks))
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT ","  OZ_EM_INT);
+
+  reg_capacity = OZ_intToC(cap);
+
+  VectorIterator vi(tasks);
+  int i = 0;
+		     
+  DECL_DYN_ARRAY(StartDurUseTerms, sdu, reg_sz);
+
+  while (vi.anyLeft()) {
+    OZ_Term task = vi.getNext();
+
+    sdu[i].start = OZ_subtree(starts, task);
+    sdu[i].dur = OZ_intToC(OZ_subtree(durs, task));
+    sdu[i].use = OZ_intToC(OZ_subtree(use, task));
+    i += 1;
+  } // while
+
+  OZ_ASSERT(i == reg_sz);
+
+  qsort(sdu, reg_sz, sizeof(StartDurUseTerms), compareDursUse);
+
+  for (i = reg_sz; i--; ) {
+    reg_l[i]      = sdu[i].start;
+    reg_offset[i] = sdu[i].dur;
+    reg_use[i]    = sdu[i].use;
+  }
+}
+
+OZ_C_proc_begin(sched_cpIterateCap, 5)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_VECT OZ_EM_FD 
+		   "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT 
+		   "," OZ_EM_VECT OZ_EM_INT);
   
-  PropagatorExpect pe;
+  {
+    PropagatorExpect pe;
+    
+    OZ_EXPECT(pe, 0, expectVectorVectorLiteral);
+    OZ_EXPECT(pe, 1, expectProperRecordIntVarMinMax);
+    OZ_EXPECT(pe, 2, expectProperRecordInt);
+    OZ_EXPECT(pe, 3, expectProperRecordInt);
+    OZ_EXPECT(pe, 4, expectVectorInt);
+    SAMELENGTH_VECTORS(1, 2);
+    SAMELENGTH_VECTORS(1, 3);
+  }
+
+  OZ_Term starts = OZ_args[1], durs = OZ_args[2], use = OZ_args[3], 
+    caps = OZ_args[4];
+
+
+  VectorIterator vi(OZ_args[0]);
+  VectorIterator viCap(caps);
+
+  for (int i = 0; i < OZ_vectorSize(OZ_args[0]); i++) {
+    OZ_Term tasks    = vi.getNext();
+    OZ_Term capacity = viCap.getNext();
+
+    PropagatorExpect pe;
+
+    VectorIterator vi_tasks(tasks);
+    while (vi_tasks.anyLeft()) {
+      OZ_Term task = vi_tasks.getNext();
+      OZ_Term start_task = OZ_subtree(starts, task);
+      OZ_Term dur_task = OZ_subtree(durs, task);
+      OZ_Term use_task = OZ_subtree(use, task);
+      if (!start_task || !dur_task || !use_task) 
+	return OZ_typeError(expectedType, 0, "Scheduling applications expect that all task symbols are features of the records denoting the start times, the durations and the resource usages.");
+      pe.expectIntVarMinMax(OZ_subtree(starts, task));
+    }
+
+    OZ_Return r = pe.impose(new CPIteratePropagatorCap(tasks, starts, durs, 
+						       use, capacity),
+			    OZ_getLowPrio());
+
+    if (r == FAILED) return FAILED;
+  }
+  return OZ_ENTAILED;
   
-  OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
-  OZ_EXPECT(pe, 1, expectVectorInt);
-  OZ_EXPECT(pe, 2, expectVectorInt);
-  OZ_EXPECT(pe, 3, expectInt);
-  SAMELENGTH_VECTORS(0, 1);
-  
-  return pe.impose(new CPIteratePropagatorCap(OZ_args[0], OZ_args[1], 
-					      OZ_args[2], OZ_args[3]),  
-		   OZ_getLowPrio());
 }
 OZ_C_proc_end
 
-/*
-// flag version for interval reasoning only
-OZ_C_proc_begin(sched_cpIterateCap, 5)
-{
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT ","  OZ_EM_INT ","  OZ_EM_INT);
-  
-  PropagatorExpect pe;
-  
-  OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
-  OZ_EXPECT(pe, 1, expectVectorInt);
-  OZ_EXPECT(pe, 2, expectVectorInt);
-  OZ_EXPECT(pe, 3, expectInt);
-  OZ_EXPECT(pe, 4, expectInt);
-  SAMELENGTH_VECTORS(0, 1);
-  
-  return pe.impose(new CPIteratePropagatorCap(OZ_args[0], OZ_args[1],
-					     OZ_args[2], OZ_args[3],
-					     OZ_intToC(OZ_args[4])), 
-		  OZ_getLowPrio());
-}
-OZ_C_proc_end
-*/
 
 struct Set2 {
   int dSi, sUp, sLow, extSize;
@@ -891,6 +1074,7 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
   int downFlag = 0;
   int disjFlag = 0;
   int cap_flag = 0;
+
 
   int kUp;
   int kDown;
@@ -960,6 +1144,67 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
       }
     }
 
+/* it is not worth the effort
+// energy from Baptistes thesis
+for (i=0; i<ts; i++) {
+  for (j=0; j<ts; j++) {
+    int ra = x[i]->getMinElem();
+    int sum1 = 0;
+    int val = x[j]->getMinElem();
+    for (int k = 0; k<ts; k++) {
+      if (i != k)
+	sum1 = sum1 + EnergyFunct(ra, val, dur[k], use[k], 
+				  x[k]->getMinElem(),
+				  x[k]->getMaxElem() + dur[k]);
+    }
+    int sum2 = sum1 + use[i] * min(dur[i], val - ra);
+    if ( capacity*(val - ra) < sum2) {
+      int up = (int) ceil( (double) sum1 / (double) capacity);
+      if (ra + up > x[i]->getMinElem()) {
+	FailOnEmpty(*x[i] >= ra + up);
+      }
+    }
+    
+    sum1 = 0;
+    val = x[j]->getMaxElem() + dur[j];
+    for (int k = 0; k<ts; k++) {
+      if (i != k)
+	sum1 = sum1 + EnergyFunct(ra, val, dur[k], use[k], 
+				  x[k]->getMinElem(),
+				  x[k]->getMaxElem() + dur[k]);
+    }
+    sum2 = sum1 + use[i] * min(dur[i], val - ra);
+    if ( capacity*(val - ra) < sum2) {
+      int up = (int) ceil( (double) sum1 / (double) capacity);
+      if (ra + up > x[i]->getMinElem()) {
+	FailOnEmpty(*x[i] >= ra + up);
+      }
+    }
+  }
+  
+  for (j=0; j<ts; j++) {
+    if (i != j) {
+      int leftBound = x[i]->getMinElem();
+      int rightBound = x[j]->getMaxElem()+dur[j];
+      if (rightBound >= leftBound) {
+	// test for failure; not sufficient space
+	int sum = 0;
+	for (int k = 0; k<ts; k++) {
+	  int energy = EnergyFunct(leftBound, rightBound, dur[k], use[k], 
+				   x[k]->getMinElem(),
+				   x[k]->getMaxElem() + dur[k]);
+	  sum = sum + energy;
+	}
+	if (sum > capacity * (rightBound - leftBound))
+	  goto failure;
+	
+	}
+    }
+  }
+}
+
+*/
+
 
 cploop:
 
@@ -1007,7 +1252,7 @@ cploop:
 
 
     if ((kUp-kDown)*capacity < use0) {
-      return FAILED;
+      goto failure;
     }
 
     
@@ -1037,7 +1282,7 @@ cploop:
 	int dSi = bset->dSi + dur[realL]*use[realL];
 	int minL = MinMax[realL].min;
 	if ( (kUp - minL)*capacity < dSi) {
-	  return FAILED;
+	  goto failure;
 	}
 	else {
 	  struct Set2 *cset = &Sets[setSize];	
@@ -1154,7 +1399,9 @@ cploop:
 	compSet0[compSet0Size++] = realL;
     }
     
-    if ( (kUp-kDown)*capacity < use0) return FAILED;
+    if ( (kUp-kDown)*capacity < use0) {
+      goto failure;
+    }
 
     struct Set2 *oset = &Sets[0];
     oset->dSi = use0;
@@ -1184,7 +1431,9 @@ cploop:
 	  int dSi = bset->dSi + durL*use[realL];
 	  int maxL = MinMax[realL].max+durL;
 	  if ( (maxL - kDown)*capacity < dSi)
-	    return FAILED;
+	    {
+	      goto failure;
+	    }
 	  else {
 	    struct Set2 *cset = &Sets[setSize];	
 	    cset->dSi = dSi;
@@ -1226,7 +1475,7 @@ cploop:
 	  }
 	}
 	else {
-	  if (maxL + durL - s->sLow >= s->dSi + durL) {
+	  if ((maxL + durL - s->sLow) * capacity >= s->dSi + durL*useL) {
 	    // case 5: L may be last
 	    lCount++;
 	  }
@@ -1239,7 +1488,7 @@ cploop:
 		downFlag = 1;
 		int right = val - durL;
 		if (right < 0)
-		  return FAILED;
+		  goto failure;
 		FailOnEmpty(*x[l] <= right);
 //		MinMax[l].max = x[l]->getMaxElem();
 	      }
@@ -1307,6 +1556,7 @@ reifiedloop:
   }
 
 
+
 capLoop:
 
   //////////
@@ -1337,34 +1587,30 @@ capLoop:
     //////////
     int min_left = mysup;
     int max_right = 0;
+    int sum = 0;
     for (i=0; i<ts; i++) {
-      if (MinMax[i].min < min_left) min_left = MinMax[i].min;
-      if (MinMax[i].max > max_right) max_right = MinMax[i].max;
+      int iMin = MinMax[i].min;
+      int iDue = MinMax[i].max + dur[i];
+      sum = sum + use[i] * dur[i];
+      if (iMin < min_left) min_left = iMin;
+      if (iDue > max_right) max_right = iDue;
     }
+    // test whether the capacity is sufficient for all tasks
+    if (sum > capacity * (max_right - min_left))
+      goto failure;
+    /*
     Intervals[interval_nb].left = min_left;
     Intervals[interval_nb].right = max_right;
     Intervals[interval_nb].use = 0;
     interval_nb++;
-    
-    /*
-    cout << "alt\n";
-    for(i=0;i<interval_nb;i++){
-      cout << Intervals[i].left << " " << Intervals[i].right << endl;
-    }
     */
+    
 
     //////////
     // sort the intervals lexicographically
     //////////
     Interval * intervals = Intervals;
     qsort(intervals, interval_nb, sizeof(Interval), CompareIntervals);
-
-    /*
-    cout << "neu\n";
-    for(i=0;i<interval_nb;i++){
-      cout << Intervals[i].left << " " << Intervals[i].right << " " << Intervals[i].use << endl;
-    }
-    */
 
     //////////
     // compute the set of all bounds of intervals
@@ -1382,6 +1628,7 @@ capLoop:
     //////////
     int * intervalBounds = IntervalBounds;
     qsort(intervalBounds, double_nb, sizeof(int), CompareBounds);
+
 
     //////////
     // compute the set of intervals, for which there is exclusion
@@ -1407,10 +1654,12 @@ capLoop:
 	int rightInt = Intervals[i].right;
 	if (leftInt > right_val) break;
 	if ( (left_val >= leftInt) && (right_val <= rightInt) ) {
-	  cum = cum + Intervals[i].use;
+	  cum = cum + (right_val - left_val) * Intervals[i].use;
 	}
       }
-      if (cum > capacity) return FAILED;
+      if (cum > (right_val - left_val) * capacity) {
+	goto failure;
+      }
       if (cum > 0) {
 	ExclusionIntervals[exclusion_nb].left = left_val;
 	ExclusionIntervals[exclusion_nb].right = right_val;
@@ -1420,7 +1669,6 @@ capLoop:
       left_pt = right_pt;
     }
 
-
     int last = 0;
     //////////
     // exclude from the tasks the intervals, which indicate that 
@@ -1429,99 +1677,80 @@ capLoop:
     // do not use reg_flag anymore, it is not worth it.
     // the commented region does contain code which avoids the 
     // production of holes in domains
-    /*
-    if (reg_flag == 0)
-      {
-      */
-	// perhaps some tests before generalizing domains could improve
-        for (i=0; i<ts; i++) {
-	  int lst = MinMax[i].max;
-	  int ect = MinMax[i].min + dur[i];
-	  int use_i = use[i];
-	  int dur_i = dur[i];
-	  for (j=0; j<exclusion_nb; j++) {
-	    Interval Exclusion = ExclusionIntervals[j];
-	    if (Exclusion.use + use_i > capacity) {
-	      int left = Exclusion.left;
-	      int right = Exclusion.right;
-	      if (lst < ect) {
-		if ( (lst <= left) && (right <= ect) ) continue;
-		else {
-		  if (Exclusion.use + use_i > capacity) {
-		    OZ_FiniteDomain la;
-		    la.initRange(left-dur_i+1,right-1);
-		    FailOnEmpty(*x[i] -= la);
-		    
-		    // new
-		    // for capacity > 1 we must count the used resource. 
-		    // But this is too expensive.
-		    if ((left - last < dur_i) && (capacity == 1)) {
-		      OZ_FiniteDomain la;
-		      la.initRange(last,right-1);
-		      FailOnEmpty(*x[i] -= la);
-		    }
-		    last = right;
-		    
-		  }
-		}
-	      }
-	      else {
-		if (Exclusion.use + use_i > capacity) {
+
+
+    // perhaps some tests before generalizing domains could improve
+    for (i=0; i<ts; i++) {
+      int lst = MinMax[i].max;
+      int ect = MinMax[i].min + dur[i];
+      int use_i = use[i];
+      int dur_i = dur[i];
+      for (j=0; j<exclusion_nb; j++) {
+	Interval Exclusion = ExclusionIntervals[j];
+	int span = Exclusion.right - Exclusion.left;
+	if (Exclusion.use + span * use_i > span * capacity) {
+	  int left = Exclusion.left;
+	  int right = Exclusion.right;
+	  if (lst < ect) {
+	    if ( (lst <= left) && (right <= ect) ) continue;
+	    else {
+	      if (Exclusion.use + span * use_i > span * capacity) {
+		OZ_FiniteDomain la;
+		la.initRange(left-dur_i+1,right-1);
+		FailOnEmpty(*x[i] -= la);
+		
+		// new
+		// for capacity > 1 we must count the used resource. 
+		// But this is too expensive.
+		if ((left - last < dur_i) && (capacity == 1)) {
 		  OZ_FiniteDomain la;
-		  la.initRange(left-dur_i+1,right-1);
+		  la.initRange(last,right-1);
 		  FailOnEmpty(*x[i] -= la);
-		  
-		  // new
- 	          // for capacity > 1 we must count the used resource. 
-                  // But this is too expensive.
-  	          if ((left - last < dur_i) && (capacity == 1)) {
-		    OZ_FiniteDomain la;
-		    la.initRange(last,right-1);
-		    FailOnEmpty(*x[i] -= la);
-		  }
-		  last = right;
-		  
 		}
+		last = right;
+		
 	      }
 	    }
 	  }
-	}
-    /*
-      }
-  
-    else {
-      
-      OZ_FiniteDomain la, lb;
-      for (i=0; i<ts; i++) {
-	int lst = MinMax[i].max;
-	int ect = MinMax[i].min + dur[i];
-	int use_i = use[i];
-	int dur_i = dur[i];
-	lb.initFull();
-	for (j=0; j<exclusion_nb; j++) {
-	  Interval Exclusion = ExclusionIntervals[j];
-	  if (Exclusion.use + use_i > capacity) {
-	    int left = Exclusion.left;
-	    int right = Exclusion.right;
-	    if (lst < ect) {
-	      if ( (lst <= left) && (right <= ect) ) continue;
-	      else {
-		if (Exclusion.use + use_i > capacity) {
-		  la.initRange(left-dur_i+1,right-1);
-		  FailOnEmpty(lb -= la);
-		  
-		  // new
- 	          // for capacity > 1 we must count the used resource. 
-                  // But this is too expensive.
-		  if ((left - last < dur_i) && (capacity == 1)) {
-		    la.initRange(last,right-1);
-		    FailOnEmpty(lb -= la);
-		  }
-		  last = right;
-		  
-		}
+	  else {
+	    if (Exclusion.use + span * use_i > span * capacity) {
+	      OZ_FiniteDomain la;
+	      la.initRange(left-dur_i+1,right-1);
+	      FailOnEmpty(*x[i] -= la);
+	      
+	      // new
+ 	      // for capacity > 1 we must count the used resource. 
+              // But this is too expensive.
+  	      if ((left - last < dur_i) && (capacity == 1)) {
+		OZ_FiniteDomain la;
+		la.initRange(last,right-1);
+		FailOnEmpty(*x[i] -= la);
 	      }
+	      last = right;
+	      
 	    }
+	  }
+	}
+      }
+    }
+
+    
+    /*
+    OZ_FiniteDomain la, lb;
+    for (i=0; i<ts; i++) {
+      int lst = MinMax[i].max;
+      int ect = MinMax[i].min + dur[i];
+      int use_i = use[i];
+      int dur_i = dur[i];
+      lb.initFull();
+      for (j=0; j<exclusion_nb; j++) {
+	Interval Exclusion = ExclusionIntervals[j];
+	int span = Exclusion.right - Exclusion.left;
+	if (Exclusion.use + span * use_i > span * capacity) {
+	  int left = Exclusion.left;
+	  int right = Exclusion.right;
+	  if (lst < ect) {
+	    if ( (lst <= left) && (right <= ect) ) continue;
 	    else {
 	      if (Exclusion.use + use_i > capacity) {
 		la.initRange(left-dur_i+1,right-1);
@@ -1530,7 +1759,7 @@ capLoop:
 		// new
  	        // for capacity > 1 we must count the used resource. 
                 // But this is too expensive.
-  	        if ((left - last < dur_i) && (capacity == 1)) {
+		if ((left - last < dur_i) && (capacity == 1)) {
 		  la.initRange(last,right-1);
 		  FailOnEmpty(lb -= la);
 		}
@@ -1539,12 +1768,28 @@ capLoop:
 	      }
 	    }
 	  }
+	  else {
+	    if (Exclusion.use + span * use_i > span * capacity) {
+	      la.initRange(left-dur_i+1,right-1);
+	      FailOnEmpty(lb -= la);
+	      
+	      // new
+	      // for capacity > 1 we must count the used resource. 
+              // But this is too expensive.
+  	      if ((left - last < dur_i) && (capacity == 1)) {
+		la.initRange(last,right-1);
+		FailOnEmpty(lb -= la);
+	      }
+	      last = right;
+	      
+	    }
+	  }
 	}
-	FailOnEmpty(lb >= x[i]->getMinElem());
-	FailOnEmpty(lb <= x[i]->getMaxElem());
-	FailOnEmpty(*x[i] >= lb.getMinElem());
-	FailOnEmpty(*x[i] <= lb.getMaxElem());
       }
+      FailOnEmpty(lb >= x[i]->getMinElem());
+      FailOnEmpty(lb <= x[i]->getMaxElem());
+      FailOnEmpty(*x[i] >= lb.getMinElem());
+      FailOnEmpty(*x[i] <= lb.getMaxElem());
     }
     */
 
@@ -1567,7 +1812,7 @@ capLoop:
     if (cap_flag == 1) {
       cap_flag = 0;
       goto capLoop;
-    }
+    } 
 
       
   }
@@ -1586,22 +1831,90 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-
-OZ_C_proc_begin(sched_cpIterateCapUp, 4)
+CPIteratePropagatorCapUp::CPIteratePropagatorCapUp(OZ_Term tasks, 
+						   OZ_Term starts, 
+						   OZ_Term durs, 
+						   OZ_Term use,
+						   OZ_Term cap)
+  : Propagator_VD_VI_VI_I(OZ_vectorSize(tasks))
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT ","  OZ_EM_INT);
 
-  PropagatorExpect pe;
+  reg_capacity = OZ_intToC(cap);
+
+  VectorIterator vi(tasks);
+  int i = 0;
+		     
+  DECL_DYN_ARRAY(StartDurUseTerms, sdu, reg_sz);
+
+  while (vi.anyLeft()) {
+    OZ_Term task = vi.getNext();
+
+    sdu[i].start = OZ_subtree(starts, task);
+    sdu[i].dur = OZ_intToC(OZ_subtree(durs, task));
+    sdu[i].use = OZ_intToC(OZ_subtree(use, task));
+    i += 1;
+  } // while
+
+  OZ_ASSERT(i == reg_sz);
+
+  qsort(sdu, reg_sz, sizeof(StartDurUseTerms), compareDursUse);
+
+  for (i = reg_sz; i--; ) {
+    reg_l[i]      = sdu[i].start;
+    reg_offset[i] = sdu[i].dur;
+    reg_use[i]    = sdu[i].use;
+  }
+}
+
+OZ_C_proc_begin(sched_cpIterateCapUp, 5)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_VECT OZ_EM_FD 
+		   "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT 
+		   "," OZ_EM_VECT OZ_EM_INT);
   
-  OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
-  OZ_EXPECT(pe, 1, expectVectorInt);
-  OZ_EXPECT(pe, 2, expectVectorInt);
-  OZ_EXPECT(pe, 3, expectInt);
-  SAMELENGTH_VECTORS(0, 1);
-  
-  return pe.impose(new CPIteratePropagatorCapUp(OZ_args[0], OZ_args[1], 
-						OZ_args[2], OZ_args[3]),  
-		   OZ_getLowPrio());
+  {
+    PropagatorExpect pe;
+    
+    OZ_EXPECT(pe, 0, expectVectorVectorLiteral);
+    OZ_EXPECT(pe, 1, expectProperRecordIntVarMinMax);
+    OZ_EXPECT(pe, 2, expectProperRecordInt);
+    OZ_EXPECT(pe, 3, expectProperRecordInt);
+    OZ_EXPECT(pe, 4, expectVectorInt);
+    SAMELENGTH_VECTORS(1, 2);
+    SAMELENGTH_VECTORS(1, 3);
+  }
+
+  OZ_Term starts = OZ_args[1], durs = OZ_args[2], use = OZ_args[3], 
+    caps = OZ_args[4];
+
+
+  VectorIterator vi(OZ_args[0]);
+  VectorIterator viCap(caps);
+
+  for (int i = 0; i < OZ_vectorSize(OZ_args[0]); i++) {
+    OZ_Term tasks    = vi.getNext();
+    OZ_Term capacity = viCap.getNext();
+
+    PropagatorExpect pe;
+
+    VectorIterator vi_tasks(tasks);
+    while (vi_tasks.anyLeft()) {
+      OZ_Term task = vi_tasks.getNext();
+      OZ_Term start_task = OZ_subtree(starts, task);
+      OZ_Term dur_task = OZ_subtree(durs, task);
+      OZ_Term use_task = OZ_subtree(use, task);
+      if (!start_task || !dur_task || !use_task) 
+	return OZ_typeError(expectedType, 0, "Scheduling applications expect that all task symbols are features of the records denoting the start times, the durations and the resource usages.");
+      pe.expectIntVarMinMax(OZ_subtree(starts, task));
+    }
+
+    OZ_Return r = pe.impose(new CPIteratePropagatorCapUp(tasks, starts, durs, 
+							 use, capacity),
+			    OZ_getLowPrio());
+
+    if (r == FAILED) return FAILED;
+  }
+  return OZ_ENTAILED;
 }
 OZ_C_proc_end
 
@@ -1702,11 +2015,11 @@ capLoop:
 	// really for this???
 	if (leftInt > right_val) break;
 	if ( (leftInt <= left_val) && (right_val <= rightInt) ) {
-	  cum = cum + Intervals[i].use;
+	  cum = cum + (right_val - left_val) * Intervals[i].use;
 	}
       }
-      if (cum < capacity) {
-	return FAILED;
+      if (cum < (right_val - left_val) * capacity) {
+	goto failure;
       }
       InclusionIntervals[inclusion_nb].left = left_val; 
       InclusionIntervals[inclusion_nb].right = right_val;
@@ -1724,11 +2037,12 @@ capLoop:
       int dur_i = dur[i];
       for (j=0; j<inclusion_nb; j++) {
 	Interval Inclusion = InclusionIntervals[j];
-	if (Inclusion.use - use_i < capacity) {
+	int span = Inclusion.right - Inclusion.left;
+	if (Inclusion.use - span * use_i < span * capacity) {
 	  int left = Inclusion.left;
 	  int right = Inclusion.right;
 	  if ( (mini <= left) && (right <= maxi) ) {
-	    if (Inclusion.use - use_i < capacity) {
+	    if (Inclusion.use - span * use_i < span * capacity) {
 	      if (dur_i < right - left) goto failure;
 	      OZ_FiniteDomain la;
 	      la.initRange(right-dur_i,left);
