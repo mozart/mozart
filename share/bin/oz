@@ -14,22 +14,25 @@
 
 # where Oz resides:
 
-howcalled=$0
-cmd=`basename $howcalled`
+howcalled="$0"
+cmd=`basename "$howcalled"`
 
 if test -z "${OZHOME}"
 then
-  dir=`dirname $howcalled`
-  OZHOME=`(cd $dir; cd ..; /bin/pwd)`
+  dir=`dirname "$howcalled"`
+  OZHOME=`(cd "$dir"; cd ..; /bin/pwd)`
 fi
 export OZHOME
 
-: ${OZPLATFORM=`$OZHOME/bin/ozplatform`}
-: ${OZEMULATOR=$OZHOME/platform/$OZPLATFORM/emulator.exe}
+: ${OZPLATFORM=`"$OZHOME/bin/ozplatform"`}
+: ${OZEMULATOR="$OZHOME/platform/$OZPLATFORM/emulator.exe"}
 : ${OZ_LD_LIBRARY_PATH="$HOME/.oz/platform/$OZPLATFORM/lib:$OZHOME/platform/$OZPLATFORM/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"}
+: ${OZ_DYLD_LIBRARY_PATH="$HOME/.oz/platform/$OZPLATFORM/lib:$OZHOME/platform/$OZPLATFORM/lib${DYLD_LIBRARY_PATH:+:}${DYLD_LIBRARY_PATH}"}
 
-LD_LIBRARY_PATH=$OZ_LD_LIBRARY_PATH
+LD_LIBRARY_PATH="$OZ_LD_LIBRARY_PATH"
 export LD_LIBRARY_PATH
+DYLD_LIBRARY_PATH="$OZ_DYLD_LIBRARY_PATH"
+export DYLD_LIBRARY_PATH
 
 # set OZPATH & PATH
 if test -z "${OZ_PI}"
@@ -39,10 +42,10 @@ then
   then
      OZPATH=.
   fi
-  OZPATH=${OZPATH}:${OZHOME}/share
+  OZPATH="${OZPATH}:${OZHOME}/share"
   export OZPATH
   # increment path
-  PATH=${OZHOME}/bin:${PATH}
+  PATH="${OZHOME}/bin:${PATH}"
   export PATH
   OZ_PI=1
   export OZ_PI
@@ -97,19 +100,19 @@ case "$cmd" in
         fi
         url=$1
         shift
-        exec $OZEMULATOR $OZGUI -u $url -- "$@"
+        exec "$OZEMULATOR" $OZGUI -u $url -- "$@"
         ;;
 
    oztool)
-        exec sh $OZHOME/platform/$OZPLATFORM/oztool.sh "$@"
+        exec sh "$OZHOME/platform/$OZPLATFORM/oztool.sh" "$@"
         ;;
    text2pickle)
-        exec $OZHOME/platform/$OZPLATFORM/text2pickle.exe "$@"
+        exec "$OZHOME/platform/$OZPLATFORM/text2pickle.exe" "$@"
         ;;
 
    pickle2text|oldpickle2text)
-        exec $OZEMULATOR --pickle2text "$@" |
-             $OZHOME/platform/$OZPLATFORM/text2pickle.exe --textmode
+        exec "$OZEMULATOR" --pickle2text "$@" |
+             "$OZHOME/platform/$OZPLATFORM/text2pickle.exe" --textmode
         ;;
 
    *)
