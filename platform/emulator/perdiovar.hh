@@ -22,7 +22,8 @@
 
 enum PV_TYPES {
   PV_MANAGER,
-  PV_PROXY
+  PV_MANAGER_BOUND,
+  PV_PROXY,
 };
 
 class PerdioVar: public GenCVariable {
@@ -37,8 +38,12 @@ public:
     tagged.setIndex(i);
   }
 
+  void globalize(int i) { tagged.setType(PV_MANAGER); tagged.setIndex(i); }
+
   Bool isManager() { return tagged.getType()==PV_MANAGER; }
-  Bool isProxy() { return !isManager(); }
+  Bool isBound() { return tagged.getType()==PV_MANAGER_BOUND; }
+  Bool isProxy() { return tagged.getType()==PV_PROXY; }
+
   int getIndex() { return tagged.getIndex(); }
   void setIndex(int i) { tagged.setIndex(i); }
 
@@ -47,8 +52,11 @@ public:
   size_t getSize(void) { return sizeof(PerdioVar); }
 
 
+  Bool bindPerdioVar(TaggedRef *vptr,TaggedRef v,PerdioVar *rVar=0);
+  Bool surrender(TaggedRef *vptr,TaggedRef v,PerdioVar *rVar);
   Bool unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, Bool prop);
 
+  int compare(PerdioVar *r) { return -1; } // mm2: TODO
   void gcPerdioVar(void);
 };
 

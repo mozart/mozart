@@ -2544,7 +2544,7 @@ LBLdispatcher:
        if (exceptionType!=E_USER) {
          switch (exceptionType) {
          case E_ERROR:
-           if (ozconf.moreInfo) {
+           if (ozconf.errorDebug) {
              OZ_Term traceBack = CTT->reflect(lastTop,CTT->getTop(),PC);
              OZ_Term loc = e->dbgGetLoc(CBB);
              exceptionValue = formatError(exceptionValue,traceBack,loc);
@@ -2554,7 +2554,7 @@ LBLdispatcher:
            break;
          case E_DEEP_FAILURE:
          case E_FAILURE:
-           if (ozconf.moreInfo) {
+           if (ozconf.errorDebug) {
              OZ_Term traceBack = CTT->reflect(lastTop,CTT->getTop(),PC);
              OZ_Term loc = e->dbgGetLoc(CBB);
              exceptionValue = formatFailure(exceptionValue,traceBack,loc);

@@ -488,10 +488,13 @@ void OwnerTable::receiveReturnCredit(int index,Credit c){
     Assert(te->getTertType()==Te_Manager);
     te->localize();
   } else {
+    // localize a variable
     Assert(o->getObject().isPVariable());
     TaggedRef *tPtr=o->getObject().getPVariable();
     PerdioVar *pvar = tagged2PerdioVar(*tPtr);
-    // mm2: do nothing
+    SVariable *svar = new SVariable(am.rootBoard);
+    svar->setSuspList(pvar->getSuspList());
+    doBindSVar(tPtr,svar);
   }
   freeOwnerEntry(index);
 }
@@ -1665,12 +1668,12 @@ void marshallTerm(int sd,OZ_Term t, ByteStream *bs, DebtRec *dr);
 
 void marshallTertiary(int sd,Tertiary *t, ByteStream *bs, DebtRec *dr)
 {
-  int bi=t->getIndex();
   if (t->isProxy()) {
     PERDIO_DEBUG(MARSHALL,"MARSHALL: proxy");
-    if (borrowTable->getOriginSite(bi)==sd){
-      marshallToOwner(bi,bs,dr);
-      return;}
+    if (borrowTable->getOriginSite(t->getIndex())==sd) {
+      marshallToOwner(t->getIndex(),bs,dr);
+      return;
+    }
   }
 
   int tag;
@@ -1682,7 +1685,7 @@ void marshallTertiary(int sd,Tertiary *t, ByteStream *bs, DebtRec *dr)
 
   if (t->isProxy()) {
     PERDIO_DEBUG(MARSHALL,"MARSHALL: proxy");
-    marshallBorrowHead(tag,bi,bs,dr);
+    marshallBorrowHead(tag,t->getIndex(),bs,dr);
   } else {
     if(t->isLocal()){
       PERDIO_DEBUG(MARSHALL,"MARSHALL:proxy local");
@@ -1712,6 +1715,7 @@ void marshallVariable(int sd, PerdioVar *pvar, ByteStream *bs,DebtRec *dr)
       return;}
     marshallBorrowHead(VARTAG,i,bs,dr);
   } else {  // owner
+    Assert(pvar->isManager());
     marshallOwnHead(VARTAG,i,bs);
   }
 }

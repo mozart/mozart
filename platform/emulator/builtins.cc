@@ -6255,7 +6255,6 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
   DoBoolFeature(suspension, t, AtomShowSuspension);
   DoBoolFeature(stop,       t, AtomStopOnToplevelFailure);
   DoBoolFeature(cell,       t, AtomCellHack);
-  DoBoolFeature(moreinfo,   t, AtomMoreInfo);
   DoNatFeature(stack,       t, AtomStackMaxSize);
   DoNatFeature(debugIP,     t, AtomDebugIP);
   DoNatFeature(debugPerdio, t, AtomDebugPerdio);
@@ -6269,7 +6268,6 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
   SetIfPos(ozconf.showSuspension,        suspension, 1);
   SetIfPos(ozconf.stopOnToplevelFailure, stop,       1);
   SetIfPos(ozconf.cellHack,              cell,       1);
-  SetIfPos(ozconf.moreInfo,              moreinfo,   1);
   SetIfPos(ozconf.stackMaxSize,          stack,      KB);
   SetIfPos(ozconf.debugIP,               debugIP,    1);
   SetIfPos(ozconf.debugPerdio,           debugPerdio,1);
