@@ -122,12 +122,7 @@ in
 		  {T updateAfterOption}
 	       end
 	    else
-	       E = {System.get errors}
-	    in
-	       {System.showError '*** Panel Configuration Error'} 
-	       {System.showError ('*** Option configuration: ' #
-				  {System.valueToVirtualString OM E.depth E.width})}
-	       {System.showError ''}
+	       {`RaiseError` panel(option OM)}
 	    end
 	 end
       end
