@@ -5981,7 +5981,7 @@ OZ_C_proc_begin(BIapply,2)
 
   am.currentThread()->pushCall(proc,argsArray,len);
   deallocateY(argsArray);
-  return PROCEED;
+  return BI_REPLACEBICALL;
 }
 OZ_C_proc_end
 
@@ -7742,6 +7742,30 @@ OZ_C_proc_end
 
 #endif
 
+/********************************************************************
+ * Service Registry
+ ******************************************************************** */
+
+// Copyright © by Denys Duchier, Jan 1998, Universität des Saarlandes
+//
+// The service registry is for plugins that provide (improved)
+// services.  For example, search path and cache mechanisms for
+// loading etc...  In particular, the emulator itself can take advantage
+// of services implemented in Oz.
+//
+// see value.hh for:
+//      service_get(OZ_Term)
+//      service_get(char*)
+//      service_put(OZ_Term,OZ_Term)
+//      service_put(char*s,OZ_Term)
+
+OZ_Term service_registry;
+
+OZ_C_proc_begin(BIservice_registry,1)
+{
+  return oz_unify(service_registry,OZ_getCArg(0));
+}
+OZ_C_proc_end
 
 /********************************************************************
  * Copy Code
@@ -8203,6 +8227,8 @@ BIspec allSpec[] = {
   {"GetCloneDiff", 2, BIgetCloneDiff, 0},
 #endif
 
+  {"ServiceRegistry",1,BIservice_registry,0},
+
   {0,0,0,0}
 };
 
@@ -8246,6 +8272,9 @@ BuiltinTabEntry *BIinit()
 
   dummyRecord = makeTaggedNULL();
   OZ_protect(&dummyRecord);
+
+  service_registry = makeTaggedConst(new OzDictionary(ozx_rootBoard()));
+  OZ_protect(&service_registry);
 
   return bi;
 }
