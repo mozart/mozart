@@ -1323,6 +1323,14 @@ $builtins = {
 			     BI  => BIPromiseWaitRequest,
 			     module=>'promise',
 			     native => false},
+    ###* ByNeed
+
+    'ByNeed'		=> { in  => ['value','value'],
+			     out => [],
+			     BI  => BIbyNeed,
+			     module=>'future',
+			     native => false},
+
     ###* Lazy
 
     'Lazy.new'		=> { in  => ['value','value'],
