@@ -79,7 +79,7 @@ public:
 
   void dumpMsgBuffer(MsgBuffer *m){ // only for marshaled/write stuff (not read)
     Site *s=m->getSite();
-    if(s->remoteComm){
+    if(s->remoteComm()){
       dumpRemoteMsgBuffer(m);}
     else{
       Assert(s!=NULL);
