@@ -179,7 +179,7 @@ TaskIntervalsProof::~TaskIntervalsProof(void)
 //////////
 // BUILTIN
 //////////
-OZ_C_proc_begin(sched_taskIntervalsProof, 5)
+OZ_BI_define(sched_taskIntervalsProof, 5, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_RECORD OZ_EM_FD \
                    "," OZ_EM_RECORD OZ_EM_INT "," OZ_EM_STREAM "," OZ_EM_INT);
@@ -195,11 +195,11 @@ OZ_C_proc_begin(sched_taskIntervalsProof, 5)
   OZ_EXPECT(pe, 3, expectStream);
   OZ_EXPECT(pe, 4, expectInt);
 
-  return pe.impose(new TaskIntervalsProof(OZ_args[0], OZ_args[1],
-                                          OZ_args[2], OZ_args[3],
-                                          OZ_intToC(OZ_args[4])));
+  return pe.impose(new TaskIntervalsProof(OZ_in(0), OZ_in(1),
+                                          OZ_in(2), OZ_in(3),
+                                          OZ_intToC(OZ_in(4))));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 //////////
 // COPYING

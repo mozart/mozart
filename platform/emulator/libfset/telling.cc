@@ -26,7 +26,7 @@
 
 #include "telling.hh"
 
-OZ_C_proc_begin(fsp_include, 2)
+OZ_BI_define(fsp_include, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FSET);
 
@@ -35,13 +35,13 @@ OZ_C_proc_begin(fsp_include, 2)
   OZ_EXPECT(pe, 0, expectIntVarAny);
   OZ_EXPECT(pe, 1, expectFSetVarBounds);
 
-  return pe.impose(new IncludePropagator(OZ_args[1],
-                                         OZ_args[0]));
+  return pe.impose(new IncludePropagator(OZ_in(1),
+                                         OZ_in(0)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
-OZ_C_proc_begin(fsp_exclude, 2)
+OZ_BI_define(fsp_exclude, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FSET );
 
@@ -50,13 +50,13 @@ OZ_C_proc_begin(fsp_exclude, 2)
   OZ_EXPECT(pe, 0, expectIntVarAny);
   OZ_EXPECT(pe, 1, expectFSetVarBounds);
 
-  return pe.impose(new ExcludePropagator(OZ_args[1],
-                                         OZ_args[0]));
+  return pe.impose(new ExcludePropagator(OZ_in(1),
+                                         OZ_in(0)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
-OZ_C_proc_begin(fsp_card, 2)
+OZ_BI_define(fsp_card, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FD);
 
@@ -67,10 +67,10 @@ OZ_C_proc_begin(fsp_card, 2)
   OZ_EXPECT_SUSPEND(pe, 0, expectFSetVarAny, dummy);
   OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, dummy);
 
-  return pe.impose(new FSetCardPropagator(OZ_args[0],
-                                          OZ_args[1]));
+  return pe.impose(new FSetCardPropagator(OZ_in(0),
+                                          OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
 //*****************************************************************************

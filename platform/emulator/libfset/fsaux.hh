@@ -120,8 +120,8 @@ OZ_Return __debugReturnPrint(OZ_Return r)
 
 #define SAMELENGTH_VECTORS(I, J)                                        \
   {                                                                     \
-    int i_size = OZ_vectorSize(OZ_args[I]);                             \
-    int j_size = OZ_vectorSize(OZ_args[J]);                             \
+    int i_size = OZ_vectorSize(OZ_in(I));                               \
+    int j_size = OZ_vectorSize(OZ_in(J));                               \
     if ((i_size >= 0) && (j_size >= 0) && (i_size != j_size))           \
       return OZ_typeErrorCPI(expectedType, J,                           \
                           "Vectors must have same size.");              \

@@ -53,16 +53,16 @@ CpiHeapClass memory;
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_distinctD, 1) {
+OZ_BI_define(fdp_distinctD, 1, 0) {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD);
 
   PropagatorExpect pe;
 
   OZ_EXPECT(pe, 0, expectVectorIntVarAny);
 
-  return pe.impose(new CompleteAllDistProp(OZ_args[0]));
+  return pe.impose(new CompleteAllDistProp(OZ_in(0)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_PropagatorProfile CompleteAllDistProp::profile;
 int CompleteAllDistProp::init_memory_management;

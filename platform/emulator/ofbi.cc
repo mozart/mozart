@@ -395,14 +395,14 @@ OZ_BI_define(BIisRecordCB,1,1)
  */
 // this really belongs in mozart_cpi.hh
 
-OZ_C_proc_begin(BIwidthC, 2)
+OZ_BI_define(BIwidthC, 2, 0)
 {
     OZ_EXPECTED_TYPE("record,finite domain");
 
-    TaggedRef rawrec=OZ_getCArg(0);
-    TaggedRef rawwid=OZ_getCArg(1);
-    TaggedRef rec=OZ_getCArg(0);
-    TaggedRef wid=OZ_getCArg(1);
+    TaggedRef rawrec=OZ_in(0);
+    TaggedRef rawwid=OZ_in(1);
+    TaggedRef rec=rawrec;
+    TaggedRef wid=rawwid;
     DEREF(rec, recPtr, recTag);
     DEREF(wid, widPtr, widTag);
 
@@ -471,7 +471,7 @@ OZ_C_proc_begin(BIwidthC, 2)
     OZ_EXPECT(pe, 1, expectIntVar);
 
     return pe.impose(new WidthPropagator(rawrec, rawwid)); // oz_args[0], oz_args[1]));
-} OZ_C_proc_end
+} OZ_BI_end
 
 OZ_PropagatorProfile WidthPropagator::profile = "BIwidthC";
 
@@ -600,19 +600,19 @@ OZ_Return WidthPropagator::propagate(void)
 // L is list of current features).  monitorArity imposes that X is a record (like
 // RecordC) and hence fails if X is not a record.
 
-OZ_C_proc_begin(BImonitorArity, 3)
+OZ_BI_define(BImonitorArity, 3, 0)
 {
     OZ_EXPECTED_TYPE("any(record),any,any(list)");
 
-    OZ_Term rec = OZ_getCArg(0);
-    OZ_Term kill = OZ_getCArg(1);
-    OZ_Term arity = OZ_getCArg(2);
+    OZ_Term rec = OZ_in(0);
+    OZ_Term kill = OZ_in(1);
+    OZ_Term arity = OZ_in(2);
 
-    OZ_Term tmpkill=OZ_getCArg(1);
+    OZ_Term tmpkill=OZ_in(1);
     DEREF(tmpkill,_1,killTag);
     Bool isKilled = !isVariableTag(killTag);
 
-    OZ_Term tmprec=OZ_getCArg(0);
+    OZ_Term tmprec=OZ_in(0);
     DEREF(tmprec,_2,recTag);
     switch (recTag) {
     case LTUPLE:
@@ -641,7 +641,7 @@ OZ_C_proc_begin(BImonitorArity, 3)
     default:
         oz_typeError(0,"Record");
     }
-    tmprec=OZ_getCArg(0);
+    tmprec=OZ_in(0);
     DEREF(tmprec,_3,_4);
 
     // At this point, rec is OFS and tmprec is dereferenced and undetermined
@@ -671,7 +671,7 @@ OZ_C_proc_begin(BImonitorArity, 3)
     }
 
     return PROCEED;
-} OZ_C_proc_end
+} OZ_BI_end
 
 OZ_PropagatorProfile MonitorArityPropagator::profile = "BImonitorArity";
 

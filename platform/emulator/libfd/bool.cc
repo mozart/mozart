@@ -28,7 +28,7 @@
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_conj, 3)
+OZ_BI_define(fdp_conj, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FDBOOL "," OZ_EM_FDBOOL "," OZ_EM_FDBOOL);
 
@@ -42,11 +42,11 @@ OZ_C_proc_begin(fdp_conj, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new ConjunctionPropagator(OZ_args[0],
-                                             OZ_args[1],
-                                             OZ_args[2]));
+  return pe.impose(new ConjunctionPropagator(OZ_in(0),
+                                             OZ_in(1),
+                                             OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return ConjunctionPropagator::propagate(void)
 {
@@ -100,7 +100,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_disj, 3)
+OZ_BI_define(fdp_disj, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FDBOOL "," OZ_EM_FDBOOL "," OZ_EM_FDBOOL);
 
@@ -114,11 +114,11 @@ OZ_C_proc_begin(fdp_disj, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new DisjunctionPropagator(OZ_args[0],
-                                             OZ_args[1],
-                                             OZ_args[2]));
+  return pe.impose(new DisjunctionPropagator(OZ_in(0),
+                                             OZ_in(1),
+                                             OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return DisjunctionPropagator::propagate(void)
 {
@@ -162,7 +162,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_exor, 3)
+OZ_BI_define(fdp_exor, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FDBOOL "," OZ_EM_FDBOOL "," OZ_EM_FDBOOL);
 
@@ -176,11 +176,11 @@ OZ_C_proc_begin(fdp_exor, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new XDisjunctionPropagator(OZ_args[0],
-                                              OZ_args[1],
-                                              OZ_args[2]));
+  return pe.impose(new XDisjunctionPropagator(OZ_in(0),
+                                              OZ_in(1),
+                                              OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return XDisjunctionPropagator::propagate(void)
 {
@@ -224,7 +224,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_impl, 3)
+OZ_BI_define(fdp_impl, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FDBOOL "," OZ_EM_FDBOOL "," OZ_EM_FDBOOL);
 
@@ -238,11 +238,11 @@ OZ_C_proc_begin(fdp_impl, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new ImplicationPropagator(OZ_args[0],
-                                             OZ_args[1],
-                                             OZ_args[2]));
+  return pe.impose(new ImplicationPropagator(OZ_in(0),
+                                             OZ_in(1),
+                                             OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return ImplicationPropagator::propagate(void)
 {
@@ -286,7 +286,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_equi, 3)
+OZ_BI_define(fdp_equi, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FDBOOL "," OZ_EM_FDBOOL "," OZ_EM_FDBOOL);
 
@@ -300,11 +300,11 @@ OZ_C_proc_begin(fdp_equi, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new EquivalencePropagator(OZ_args[0],
-                                             OZ_args[1],
-                                             OZ_args[2]));
+  return pe.impose(new EquivalencePropagator(OZ_in(0),
+                                             OZ_in(1),
+                                             OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
 OZ_Return EquivalencePropagator::propagate(void)
@@ -348,7 +348,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_nega, 2)
+OZ_BI_define(fdp_nega, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FDBOOL "," OZ_EM_FDBOOL);
 
@@ -361,9 +361,9 @@ OZ_C_proc_begin(fdp_nega, 2)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new NegationPropagator(OZ_args[0], OZ_args[1]));
+  return pe.impose(new NegationPropagator(OZ_in(0), OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return NegationPropagator::propagate(void)
 {

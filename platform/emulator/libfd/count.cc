@@ -33,7 +33,7 @@
 //-----------------------------------------------------------------------------
 // Exactly
 
-OZ_C_proc_begin(fdp_exactly, 3)
+OZ_BI_define(fdp_exactly, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_VECT OZ_EM_FD "," OZ_EM_INT);
 
@@ -43,9 +43,9 @@ OZ_C_proc_begin(fdp_exactly, 3)
   OZ_EXPECT(pe, 1, expectVectorIntVarAny);
   OZ_EXPECT(pe, 2, expectInt);
 
-  return pe.impose(new ExactlyPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new ExactlyPropagator(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 ExactlyPropagator::~ExactlyPropagator(void)
 {
@@ -169,7 +169,7 @@ failure:
 //-----------------------------------------------------------------------------
 // AtLeast
 
-OZ_C_proc_begin(fdp_atLeast, 3)
+OZ_BI_define(fdp_atLeast, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_VECT OZ_EM_FD "," OZ_EM_INT);
 
@@ -179,9 +179,9 @@ OZ_C_proc_begin(fdp_atLeast, 3)
   OZ_EXPECT(pe, 1, expectVectorIntVarAny);
   OZ_EXPECT(pe, 2, expectInt);
 
-  return pe.impose(new AtLeastPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new AtLeastPropagator(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 AtLeastPropagator::~AtLeastPropagator(void)
 {
@@ -286,7 +286,7 @@ failure:
 //-----------------------------------------------------------------------------
 // AtMost
 
-OZ_C_proc_begin(fdp_atMost, 3)
+OZ_BI_define(fdp_atMost, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_VECT OZ_EM_FD "," OZ_EM_INT);
 
@@ -296,9 +296,9 @@ OZ_C_proc_begin(fdp_atMost, 3)
   OZ_EXPECT(pe, 1, expectVectorIntVarAny);
   OZ_EXPECT(pe, 2, expectInt);
 
-  return pe.impose(new AtMostPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new AtMostPropagator(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 AtMostPropagator::~AtMostPropagator(void)
 {
@@ -402,7 +402,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_element, 3)
+OZ_BI_define(fdp_element, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_FD);
 
@@ -412,9 +412,9 @@ OZ_C_proc_begin(fdp_element, 3)
   OZ_EXPECT(pe, 1, expectVectorInt);
   OZ_EXPECT(pe, 2, expectIntVarAny);
 
-  return pe.impose(new ElementPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new ElementPropagator(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return ElementPropagator::propagate(void)
 {

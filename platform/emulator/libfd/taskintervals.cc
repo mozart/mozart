@@ -78,7 +78,7 @@ TaskIntervalsPropagator::TaskIntervalsPropagator(OZ_Term tasks,
 
 }
 
-OZ_C_proc_begin(sched_taskIntervals, 3)
+OZ_BI_define(sched_taskIntervals, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," \
                    OZ_EM_RECORD OZ_EM_FD "," OZ_EM_RECORD OZ_EM_INT);
@@ -92,11 +92,11 @@ OZ_C_proc_begin(sched_taskIntervals, 3)
     SAMELENGTH_VECTORS(1, 2);
   }
 
-  OZ_Term starts = OZ_args[1], durs = OZ_args[2];
+  OZ_Term starts = OZ_in(1), durs = OZ_in(2);
 
-  VectorIterator vi(OZ_args[0]);
+  VectorIterator vi(OZ_in(0));
 
-  for (int i = OZ_vectorSize(OZ_args[0]); i--; ) {
+  for (int i = OZ_vectorSize(OZ_in(0)); i--; ) {
     OZ_Term tasks = vi.getNext();
 
     PropagatorExpect pe;
@@ -117,7 +117,7 @@ OZ_C_proc_begin(sched_taskIntervals, 3)
   }
   return OZ_ENTAILED;
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
 class Min_max {
@@ -644,7 +644,7 @@ CPIteratePropagatorCumTI::CPIteratePropagatorCumTI(OZ_Term tasks,
   }
 }
 
-OZ_C_proc_begin(sched_cumulativeTI, 5)
+OZ_BI_define(sched_cumulativeTI, 5, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_RECORD OZ_EM_FD \
                    "," OZ_EM_RECORD OZ_EM_INT "," OZ_EM_RECORD OZ_EM_INT \
@@ -662,14 +662,14 @@ OZ_C_proc_begin(sched_cumulativeTI, 5)
     SAMELENGTH_VECTORS(1, 3);
   }
 
-  OZ_Term starts = OZ_args[1], durs = OZ_args[2], use = OZ_args[3],
-    caps = OZ_args[4];
+  OZ_Term starts = OZ_in(1), durs = OZ_in(2), use = OZ_in(3),
+    caps = OZ_in(4);
 
 
-  VectorIterator vi(OZ_args[0]);
+  VectorIterator vi(OZ_in(0));
   VectorIterator viCap(caps);
 
-  for (int i = 0; i < OZ_vectorSize(OZ_args[0]); i++) {
+  for (int i = 0; i < OZ_vectorSize(OZ_in(0)); i++) {
     OZ_Term tasks    = vi.getNext();
     OZ_Term capacity = viCap.getNext();
 
@@ -694,7 +694,7 @@ OZ_C_proc_begin(sched_cumulativeTI, 5)
   return OZ_ENTAILED;
 
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
 struct Set2 {

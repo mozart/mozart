@@ -50,7 +50,7 @@ void sortVars(FSetUnionNPropagator  &p)
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fsp_disjointN, 1)
+OZ_BI_define(fsp_disjointN, 1, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FSET);
 
@@ -58,9 +58,9 @@ OZ_C_proc_begin(fsp_disjointN, 1)
 
   OZ_EXPECT(pe, 0, expectVectorFSetVarBounds);
 
-  return pe.impose(new FSetDisjointNPropagator(OZ_args[0]));
+  return pe.impose(new FSetDisjointNPropagator(OZ_in(0)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return FSetDisjointNPropagator::propagate(void)
 {
@@ -141,7 +141,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fsp_unionN, 2)
+OZ_BI_define(fsp_unionN, 2, o)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FSET "," OZ_EM_FSET);
 
@@ -155,10 +155,10 @@ OZ_C_proc_begin(fsp_unionN, 2)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new FSetUnionNPropagator(OZ_args[0],
-                                            OZ_args[1]));
+  return pe.impose(new FSetUnionNPropagator(OZ_in(0),
+                                            OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
 inline
@@ -317,7 +317,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fsp_partition, 2)
+OZ_BI_define(fsp_partition, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FSET "," OZ_EM_FSET);
 
@@ -331,10 +331,10 @@ OZ_C_proc_begin(fsp_partition, 2)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new FSetPartitionPropagator(OZ_args[0],
-                                               OZ_args[1]));
+  return pe.impose(new FSetPartitionPropagator(OZ_in(0),
+                                               OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
 OZ_Return FSetPartitionPropagator::propagate(void)

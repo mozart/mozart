@@ -31,7 +31,7 @@
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_distance, 4)
+OZ_BI_define(fdp_distance, 4, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_LIT "," OZ_EM_FD);
 
@@ -39,41 +39,41 @@ OZ_C_proc_begin(fdp_distance, 4)
 
   OZ_EXPECT(pe, 2, expectLiteral);
 
-  const char * op = OZ_atomToC(OZ_args[2]);
+  const char * op = OZ_atomToC(OZ_in(2));
 
   if (!strcmp(SUM_OP_NEQ, op)) {
     OZ_EXPECT(pe, 0, expectIntVarSingl);
     OZ_EXPECT(pe, 1, expectIntVarSingl);
     OZ_EXPECT(pe, 3, expectIntVarSingl);
 
-    return pe.impose(new DistancePropagatorNeq(OZ_args[0], OZ_args[1],
-                                              OZ_args[3], 0));
+    return pe.impose(new DistancePropagatorNeq(OZ_in(0), OZ_in(1),
+                                              OZ_in(3), 0));
   } else {
     OZ_EXPECT(pe, 0, expectIntVarMinMax);
     OZ_EXPECT(pe, 1, expectIntVarMinMax);
     OZ_EXPECT(pe, 3, expectIntVarMinMax);
 
     if (!strcmp(SUM_OP_EQ, op)) {
-      return pe.impose(new DistancePropagatorEq(OZ_args[0], OZ_args[1],
-                                               OZ_args[3], 0));
+      return pe.impose(new DistancePropagatorEq(OZ_in(0), OZ_in(1),
+                                               OZ_in(3), 0));
     } else if (!strcmp(SUM_OP_LEQ, op)) {
-      return pe.impose(new DistancePropagatorLeq(OZ_args[0], OZ_args[1],
-                                                OZ_args[3], 0));
+      return pe.impose(new DistancePropagatorLeq(OZ_in(0), OZ_in(1),
+                                                OZ_in(3), 0));
     } else if (!strcmp(SUM_OP_LT, op)) {
-      return pe.impose(new DistancePropagatorLeq(OZ_args[0], OZ_args[1],
-                                              OZ_args[3], 1));
+      return pe.impose(new DistancePropagatorLeq(OZ_in(0), OZ_in(1),
+                                              OZ_in(3), 1));
     } else if (!strcmp(SUM_OP_GEQ, op)) {
-      return pe.impose(new DistancePropagatorGeq(OZ_args[0], OZ_args[1],
-                                                OZ_args[3], 0 ));
+      return pe.impose(new DistancePropagatorGeq(OZ_in(0), OZ_in(1),
+                                                OZ_in(3), 0 ));
     } else if (!strcmp(SUM_OP_GT, op)) {
-      return pe.impose(new DistancePropagatorGeq(OZ_args[0], OZ_args[1],
-                                                OZ_args[3], 1));
+      return pe.impose(new DistancePropagatorGeq(OZ_in(0), OZ_in(1),
+                                                OZ_in(3), 1));
     }
   }
 
   ERROR_UNEXPECTED_OPERATOR(2);
 }
-OZ_C_proc_end
+OZ_BI_end
 
 //=============================================================================
 

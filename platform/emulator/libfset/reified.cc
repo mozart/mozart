@@ -33,7 +33,7 @@
 #endif
 
 //-----------------------------------------------------------------------------
-OZ_C_proc_begin(fsp_equalR, 3)
+OZ_BI_define(fsp_equalR, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FSET "," OZ_EM_FDBOOL);
 
@@ -45,11 +45,11 @@ OZ_C_proc_begin(fsp_equalR, 3)
   int dummy;
   OZ_EXPECT_SUSPEND(pe, 2, expectBoolVar, dummy);
 
-  return pe.impose(new EqualRPropagator(OZ_args[1],
-                                        OZ_args[0],
-                                        OZ_args[2]));
+  return pe.impose(new EqualRPropagator(OZ_in(1),
+                                        OZ_in(0),
+                                        OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
 //*****************************************************************************
@@ -110,7 +110,7 @@ entailment:
 }
 
 //-----------------------------------------------------------------------------
-OZ_C_proc_begin(fsp_includeR, 3)
+OZ_BI_define(fsp_includeR, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FSET "," OZ_EM_FDBOOL);
 
@@ -122,11 +122,11 @@ OZ_C_proc_begin(fsp_includeR, 3)
   int dummy;
   OZ_EXPECT_SUSPEND(pe, 2, expectBoolVar, dummy);
 
-  return pe.impose(new IncludeRPropagator(OZ_args[1],
-                                          OZ_args[0],
-                                          OZ_args[2]));
+  return pe.impose(new IncludeRPropagator(OZ_in(1),
+                                          OZ_in(0),
+                                          OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
 //*****************************************************************************
@@ -191,7 +191,7 @@ entailment:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fsp_isInR, 3)
+OZ_BI_define(fsp_isInR, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_INT "," OZ_EM_FSET "," OZ_EM_FDBOOL);
 
@@ -203,11 +203,11 @@ OZ_C_proc_begin(fsp_isInR, 3)
   int dummy;
   OZ_EXPECT_SUSPEND(pe, 2, expectBoolVar, dummy);
 
-  return pe.impose(new IsInRPropagator(OZ_args[1],
-                                       OZ_args[0],
-                                       OZ_args[2]));
+  return pe.impose(new IsInRPropagator(OZ_in(1),
+                                       OZ_in(0),
+                                       OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return IsInRPropagator::propagate(void)
 {
@@ -258,7 +258,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fsp_bounds, 5)
+OZ_BI_define(fsp_bounds, 5, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSETVAL "," OZ_EM_FSET "," OZ_EM_INT ","
                    OZ_EM_FD "," OZ_EM_FDBOOL);
@@ -272,13 +272,13 @@ OZ_C_proc_begin(fsp_bounds, 5)
   OZ_EXPECT_SUSPEND(pe, 3, expectIntVarMinMax, dummy);
   OZ_EXPECT_SUSPEND(pe, 4, expectBoolVar, dummy);
 
-  return pe.impose(new BoundsPropagator(OZ_args[0],
-                                        OZ_args[1],
-                                        OZ_args[2],
-                                        OZ_args[3],
-                                        OZ_args[4]));
+  return pe.impose(new BoundsPropagator(OZ_in(0),
+                                        OZ_in(1),
+                                        OZ_in(2),
+                                        OZ_in(3),
+                                        OZ_in(4)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return BoundsPropagator::propagate(void)
 {
@@ -332,7 +332,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fsp_boundsN, 5)
+OZ_BI_define(fsp_boundsN, 5, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FSETVAL ","
                    OZ_EM_VECT OZ_EM_FSET ","
@@ -354,13 +354,13 @@ OZ_C_proc_begin(fsp_boundsN, 5)
   SAMELENGTH_VECTORS(0, 3);
   SAMELENGTH_VECTORS(0, 4);
 
-  return pe.impose(new BoundsNPropagator(OZ_args[0],
-                                         OZ_args[1],
-                                         OZ_args[2],
-                                         OZ_args[3],
-                                         OZ_args[4]));
+  return pe.impose(new BoundsNPropagator(OZ_in(0),
+                                         OZ_in(1),
+                                         OZ_in(2),
+                                         OZ_in(3),
+                                         OZ_in(4)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return BoundsNPropagator::propagate(void)
 {
@@ -438,7 +438,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fsp_partitionReified, 3)
+OZ_BI_define(fsp_partitionReified, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FSET "," OZ_EM_FSET ","
                    OZ_EM_VECT OZ_EM_FD);
@@ -449,11 +449,11 @@ OZ_C_proc_begin(fsp_partitionReified, 3)
   OZ_EXPECT(pe, 1, expectFSetValue);
   OZ_EXPECT(pe, 2, expectVectorIntVarMinMax);
 
-  return pe.impose(new PartitionReifiedPropagator(OZ_args[0],
-                                                  OZ_args[1],
-                                                  OZ_args[2]));
+  return pe.impose(new PartitionReifiedPropagator(OZ_in(0),
+                                                  OZ_in(1),
+                                                  OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
 OZ_Return PartitionReifiedPropagator::propagate(void)

@@ -26,7 +26,7 @@
 
 #include "standard.hh"
 
-OZ_C_proc_begin(fsp_intersection, 3)
+OZ_BI_define(fsp_intersection, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FSET "," OZ_EM_FSET);
 
@@ -41,13 +41,13 @@ OZ_C_proc_begin(fsp_intersection, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new FSetIntersectionPropagator(OZ_args[0],
-                                                  OZ_args[1],
-                                                  OZ_args[2]));
+  return pe.impose(new FSetIntersectionPropagator(OZ_in(0),
+                                                  OZ_in(1),
+                                                  OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(fsp_union, 3)
+OZ_BI_define(fsp_union, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FSET "," OZ_EM_FSET);
 
@@ -62,14 +62,14 @@ OZ_C_proc_begin(fsp_union, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new FSetUnionPropagator(OZ_args[0],
-                                           OZ_args[1],
-                                           OZ_args[2]));
+  return pe.impose(new FSetUnionPropagator(OZ_in(0),
+                                           OZ_in(1),
+                                           OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
-OZ_C_proc_begin(fsp_subsume, 2)
+OZ_BI_define(fsp_subsume, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FSET);
 
@@ -83,13 +83,13 @@ OZ_C_proc_begin(fsp_subsume, 2)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new FSetSubsumePropagator(OZ_args[0],
-                                             OZ_args[1]));
+  return pe.impose(new FSetSubsumePropagator(OZ_in(0),
+                                             OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
-OZ_C_proc_begin(fsp_disjoint, 2)
+OZ_BI_define(fsp_disjoint, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FSET);
 
@@ -103,13 +103,13 @@ OZ_C_proc_begin(fsp_disjoint, 2)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new FSetDisjointPropagator(OZ_args[0],
-                                              OZ_args[1]));
+  return pe.impose(new FSetDisjointPropagator(OZ_in(0),
+                                              OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
-OZ_C_proc_begin(fsp_distinct, 2)
+OZ_BI_define(fsp_distinct, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FSET);
 
@@ -123,12 +123,12 @@ OZ_C_proc_begin(fsp_distinct, 2)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new FSetDistinctPropagator(OZ_args[0],
-                                              OZ_args[1]));
+  return pe.impose(new FSetDistinctPropagator(OZ_in(0),
+                                              OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(fsp_diff, 3)
+OZ_BI_define(fsp_diff, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET","OZ_EM_FSET","OZ_EM_FSET);
 
@@ -142,11 +142,11 @@ OZ_C_proc_begin(fsp_diff, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new FSetDiffPropagator(OZ_args[0],
-                                          OZ_args[1],
-                                          OZ_args[2]));
+  return pe.impose(new FSetDiffPropagator(OZ_in(0),
+                                          OZ_in(1),
+                                          OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
 //*****************************************************************************

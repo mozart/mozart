@@ -209,10 +209,6 @@ $module_init_fun_name = "fdp_init";
                              out => [],
                              bi  => fdp_distinct2},
 
- 'subset'       => { in  => ['int','int'],
-                     out => [],
-                     bi  => fdp_subset},
-
  'sumD'         => { in  => ['+value','+atom','int'],
                              out => [],
                              bi  => fdp_dsum},

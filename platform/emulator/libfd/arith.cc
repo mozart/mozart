@@ -33,13 +33,6 @@
 //-----------------------------------------------------------------------------
 // Twice
 
-OZ_C_proc_begin(fdp_twice, 2)
-{
-  OZ_warning("This foreign function must never be called.");
-  return FAILED;
-}
-OZ_C_proc_end
-
 OZ_Return TwicePropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y);
@@ -68,13 +61,6 @@ failure:
 //-----------------------------------------------------------------------------
 // Square
 
-OZ_C_proc_begin(fdp_square, 2)
-{
-  OZ_warning("This foreign function must never be called.");
-  return FAILED;
-}
-OZ_C_proc_end
-
 OZ_Return SquarePropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y);
@@ -102,7 +88,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_plus, 3)
+OZ_BI_define(fdp_plus, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
 
@@ -116,9 +102,9 @@ OZ_C_proc_begin(fdp_plus, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new PlusPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new PlusPropagator(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return PlusPropagator::propagate(void)
 {
@@ -199,7 +185,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_minus, 3)
+OZ_BI_define(fdp_minus, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
 
@@ -213,13 +199,13 @@ OZ_C_proc_begin(fdp_minus, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new PlusPropagator(OZ_args[2], OZ_args[1], OZ_args[0]));
+  return pe.impose(new PlusPropagator(OZ_in(2), OZ_in(1), OZ_in(0)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_times, 3)
+OZ_BI_define(fdp_times, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
 
@@ -233,9 +219,9 @@ OZ_C_proc_begin(fdp_times, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new TimesPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new TimesPropagator(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return TimesPropagator::propagate(void)
 {
@@ -331,7 +317,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_divD, 3)
+OZ_BI_define(fdp_divD, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_FD);
 
@@ -345,11 +331,11 @@ OZ_C_proc_begin(fdp_divD, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  if (OZ_intToC(OZ_args[1]) == 0) return pe.fail();
+  if (OZ_intToC(OZ_in(1)) == 0) return pe.fail();
 
-  return pe.impose(new DivPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new DivPropagator(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return DivPropagator::propagate(void)
 {
@@ -382,7 +368,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_divI, 3)
+OZ_BI_define(fdp_divI, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_FD);
 
@@ -396,11 +382,11 @@ OZ_C_proc_begin(fdp_divI, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  if (OZ_intToC(OZ_args[1]) == 0) return pe.fail();
+  if (OZ_intToC(OZ_in(1)) == 0) return pe.fail();
 
-  return pe.impose(new DivIPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new DivIPropagator(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return DivIPropagator::propagate(void)
 {
@@ -446,7 +432,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_modD, 3)
+OZ_BI_define(fdp_modD, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_FD);
 
@@ -460,11 +446,11 @@ OZ_C_proc_begin(fdp_modD, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  if (OZ_intToC(OZ_args[1]) == 0) return pe.fail();
+  if (OZ_intToC(OZ_in(1)) == 0) return pe.fail();
 
-  return pe.impose(new ModPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new ModPropagator(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return ModPropagator::propagate(void)
 {
@@ -514,7 +500,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_modI, 3)
+OZ_BI_define(fdp_modI, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_FD);
 
@@ -528,11 +514,11 @@ OZ_C_proc_begin(fdp_modI, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  if (OZ_intToC(OZ_args[1]) == 0) return pe.fail();
+  if (OZ_intToC(OZ_in(1)) == 0) return pe.fail();
 
-  return pe.impose(new ModIPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new ModIPropagator(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return ModIPropagator::propagate(void)
 {
@@ -607,7 +593,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_power, 3)
+OZ_BI_define(fdp_power, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_FD);
 
@@ -621,11 +607,11 @@ OZ_C_proc_begin(fdp_power, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new PowerPropagator(OZ_args[0],
-                                       OZ_args[2],
-                                       OZ_intToC(OZ_args[1])));
+  return pe.impose(new PowerPropagator(OZ_in(0),
+                                       OZ_in(2),
+                                       OZ_intToC(OZ_in(1))));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 inline
 double power(int x, int y)
@@ -682,13 +668,6 @@ failure:
 //-----------------------------------------------------------------------------
 // Twice
 
-OZ_C_proc_begin(fdp_twiceD, 2)
-{
-  OZ_warning("This foreign function must never be called.");
-  return FAILED;
-}
-OZ_C_proc_end
-
 OZ_Return TwiceDPropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y);
@@ -715,13 +694,6 @@ failure:
 //-----------------------------------------------------------------------------
 // Square
 
-OZ_C_proc_begin(fdp_squareD, 2)
-{
-  OZ_warning("This foreign function must never be called.");
-  return FAILED;
-}
-OZ_C_proc_end
-
 OZ_Return SquareDPropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y);
@@ -747,7 +719,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_plusD, 3)
+OZ_BI_define(fdp_plusD, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
 
@@ -761,9 +733,9 @@ OZ_C_proc_begin(fdp_plusD, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new PlusDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new PlusDPropagator(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return PlusDPropagator::propagate(void)
 {
@@ -810,7 +782,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_minusD, 3)
+OZ_BI_define(fdp_minusD, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
 
@@ -824,13 +796,13 @@ OZ_C_proc_begin(fdp_minusD, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new PlusDPropagator(OZ_args[2], OZ_args[1], OZ_args[0]));
+  return pe.impose(new PlusDPropagator(OZ_in(2), OZ_in(1), OZ_in(0)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_timesD, 3)
+OZ_BI_define(fdp_timesD, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
 
@@ -844,9 +816,9 @@ OZ_C_proc_begin(fdp_timesD, 3)
   if (susp_count > 1)
     return pe.suspend();
 
-  return pe.impose(new TimesDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new TimesDPropagator(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return TimesDPropagator::propagate(void)
 {
