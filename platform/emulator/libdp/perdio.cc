@@ -1193,7 +1193,26 @@ OwnerEntry *getOwnerEntryFromOTI(int i){
 
 Tertiary* getTertiaryFromOTI(int i){
   return OT->getOwner(i)->getTertiary();}
-  
+
+/*
+ * The builtin table: no builtins, just a fake
+ */
+
+#ifndef MODULES_LINK_STATIC
+
+extern "C"
+{
+  OZ_C_proc_interface * mod_int_DPB(void)
+  {
+    static OZ_C_proc_interface i_table[] = {
+      {0,0,0,0}
+    };
+
+    return i_table;
+  } /* mod_int_DPB(void) */
+} /* extern "C" */
+
+#endif  
 
 /**********************************************************************/
 /*   Exported for gates                                   */

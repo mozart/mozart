@@ -27,15 +27,10 @@ functor
 
 import
    Open(pipe)
-   
    OS(getEnv)
-
    System(showInfo)
-
    Connection(offer)
-
    Property(get)
-
    Module(manager)
    
 export
@@ -43,6 +38,11 @@ export
    
 define
 
+   %%
+   %% Force linking of base libraries
+   %%
+   {Wait Connection.offer}
+   
    HasVirtualSite = {Property.get 'distribution.virtualsites'}
    
    VirtualSite = if HasVirtualSite then
