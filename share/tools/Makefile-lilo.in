@@ -1,0 +1,251 @@
+BUILDTOP	= @BUILDTOP@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+SRCTOP		= @SRCTOP@
+
+PREFIX		= @prefix@
+
+OZBIN		= $(PREFIX)/bin
+OZTOOLS		= $(PREFIX)/tools
+OZPATH		= .:$(PREFIX)/lib:$(PREFIX)/tools
+IMAGESDIR	= $(OZTOOLS)/images
+CACHEDIR	= $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/tools
+CACHEBINDIR	= $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/bin
+
+SHELL		= /bin/sh
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_SRC	= @INSTALL_SRC@
+INSTALL_DIR	= @INSTALL_DIR@
+
+PERL		= @PERL@
+ENV2TYPE	= $(PERL) $(SRCTOP)/share/lib/env2type
+
+OZFLAGS		= -DLILO
+OZBATCH		= @OZBATCH@
+
+COMPILE		= $(OZBATCH) $(OZFLAGS) -c
+EXEC		= $(OZBATCH) $(OZFLAGS)
+
+COMPILERPANELSRC1 = \
+	CompilerPanelClass.oz
+COMPILERPANELSRC = $(COMPILERPANELSRC1:%=compilerPanel/%) CompilerPanel.oz
+
+PANELSRC1 = \
+	configure.oz load.oz make-notes.oz runtime-bar.oz top.oz \
+	main.oz dialogs.oz
+PANELSRC = $(PANELSRC1:%=panel/%) Panel.oz
+
+BROWSERSRC1 = \
+	XResources.oz browserObject.oz browserTerm.oz \
+	bufsAndStreams.oz constants.oz controlObject.oz core.oz \
+	errors.oz managerObject.oz reflect.oz repManager.oz \
+	store.oz tcl-interface.oz termObject.oz \
+	termsStore.oz undefs.oz windowManager.oz
+BROWSERSRC = $(BROWSERSRC1:%=browser/%) Browser.oz
+
+EXPLORERSRC1 = \
+	main.oz misc.oz action-nodes.oz hide-nodes.oz \
+	layout-nodes.oz manager.oz \
+	menu-manager.oz move-nodes.oz tk-nodes.oz \
+	configure.oz nodes.oz toplevel-manager.oz \
+	default-actions.oz search-nodes.oz stat-nodes.oz statistics-balloon.oz \
+	dialog-manager.oz shapes-and-images.oz status-manager.oz
+EXPLORERSRC = $(EXPLORERSRC1:%=explorer/%) Explorer.oz
+
+EMACSSRC = Emacs.oz
+
+OZCARSRC1 = \
+	prelude.oz string.oz tk.oz config.oz help.oz tree.oz thread.oz \
+	stack.oz source.oz menu.oz dialog.oz gui.oz ozcar.oz
+OZCARSRCNOVER = $(OZCARSRC1:%=ozcar/%) Ozcar.oz
+OZCARSRC = $(OZCARSRCNOVER) ozcar-version.oz
+
+OZCARIMAGESDIR = $(IMAGESDIR)/ozcar
+OZCARIMAGES1 = \
+	ozcar.xbm children.xbm detach.xbm line.xbm next.xbm queries.xbm \
+	step.xbm stop.xbm term.xbm unleash.xbm
+OZCARIMAGES = $(OZCARIMAGES1:%=$(OZCARIMAGESDIR)/%)
+
+PROFILERSRC1 = \
+	prof-gui.oz prof-prelude.oz prof-tk.oz \
+	prof-config.oz prof-help.oz profiler.oz \
+	prof-dialog.oz prof-menu.oz prof-string.oz
+PROFILERSRC = $(PROFILERSRC1:%=profiler/%) Profiler.oz
+
+GUMPSRC1 = Bison.oz Main.oz Output.oz ParserGenerator.oz ScannerGenerator.oz
+GUMPSRC = $(GUMPSRC1:%=gump/%) Gump.oz
+
+GUMPSCANNERSRC1 = GumpScannerClass.oz
+GUMPSCANNERSRC = $(GUMPSCANNERSRC1:%=gump/%) GumpScanner.oz
+
+GUMPPARSERSRC1 = GumpParserClass.oz
+GUMPPARSERSRC = $(GUMPPARSERSRC1:%=gump/%) GumpParser.oz
+
+GUMPEXAMPLES = \
+	Examples.oz Lambda.in LambdaParser.ozg LambdaScanner.ozg \
+	OzParser.ozg OzScanner.ozg
+
+ALLSRCS = \
+	$(COMPILERPANELSRC) $(PANELSRC) $(BROWSERSRC) \
+	$(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC) \
+	$(GUMPSRC) $(GUMPSCANNERSRC) $(GUMPPARSERSRC)
+
+TOOLSDIRS1 = gump gump/examples
+TOOLSDIRS = $(TOOLSDIRS1:%=$(OZTOOLS)/%)
+
+TOOLSFILES = \
+	$(GUMPEXAMPLES:%=$(OZTOOLS)/gump/examples/%) \
+	$(OZTOOLS)/gump/ProductionTemplates.oz \
+	$(ENVS:%=$(OZTOOLS)/%) \
+	$(TYCS:tyc/%=$(OZTOOLS)/%)
+
+FUNCTORS = \
+	CompilerPanel.ozf Panel.ozf Browser.ozf Explorer.ozf Emacs.ozf \
+	Ozcar.ozf Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf
+
+TOOLSFUNCTORS = $(FUNCTORS:%=$(OZTOOLS)/%)
+CACHEFUNCTORS = $(FUNCTORS:%=$(CACHEDIR)/%)
+
+SYSLETS = opi
+BINFILES = $(SYSLETS:%=$(OZBIN)/%)
+
+IMAGES1 = \
+	compiler.xbm compilermask.xbm \
+	lines-lr.xbm lines-rl.xbm grid-25.xbm grid-50.xbm \
+	browserMIcon.xbm browserIcon.xbm stop.xbm
+IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
+
+
+.PHONY: all install
+
+all: Makefile-lilo $(FUNCTORS) $(SYSLETS)
+
+# include $(SRCTOP)/share/Makefile.boot
+
+
+#---------------------------------------------------------------------
+# Components
+#---------------------------------------------------------------------
+
+%.ozf: %.oz
+	$(COMPILE) $< -o $@
+
+opi: MakeOPI.oz $(TYCS)
+	$(EXEC) -l AP $<
+
+
+
+CompilerPanel.ozf: $(COMPILERPANELSRC) Browser.env CompilerPanel.env
+
+Panel.ozf: $(PANELSRC) Panel.env
+
+Browser.ozf: $(BROWSERSRC) Browser.env
+
+Explorer.ozf: $(EXPLORERSRC) Browser.env Explorer.env
+
+Emacs.ozf: $(EMACSSRC) Emacs.env
+
+Ozcar.ozf: $(OZCARSRC) Browser.env Emacs.env Ozcar.env
+
+Profiler.ozf: $(PROFILERSRC) Browser.env Emacs.env Profiler.env
+
+Gump.ozf: $(GUMPSRC) $(SRCTOP)/share/lib/compiler/TupleSyntax.oz \
+	$(SRCTOP)/share/lib/compiler/Misc.oz \
+	$(SRCTOP)/share/lib/compiler/FormatStrings.oz Gump.env
+
+GumpScanner.ozf: $(GUMPSCANNERSRC) GumpScanner.env
+
+GumpParser.ozf: $(GUMPPARSERSRC) GumpParser.env
+
+
+#---------------------------------------------------------------------
+# Installation
+#---------------------------------------------------------------------
+
+.PHONY: install install-main install-images install-cache
+
+install: install-main install-images install-cache
+
+install-main: all \
+	$(OZTOOLS) $(TOOLSDIRS) $(TOOLSFILES) $(TOOLSFUNCTORS) \
+	$(OZBIN) $(BINFILES)
+
+install-images: \
+	$(IMAGESDIR) $(IMAGES) $(OZCARIMAGESDIR) $(OZCARIMAGES)
+
+$(OZBIN) $(OZTOOLS) $(TOOLSDIRS) $(IMAGESDIR) $(OZCARIMAGESDIR):
+	$(INSTALL_DIR) $@
+
+$(OZTOOLS)/%.oz: %.oz
+	$(INSTALL_SRC) $< $@
+
+$(OZTOOLS)/%.ozf: %.ozf
+	$(INSTALL_FILE) $< $@
+
+$(OZTOOLS)/gump/examples/%: gump/examples/%
+	$(INSTALL_SRC) $< $@
+
+$(IMAGESDIR)/%: images/%
+	$(INSTALL_FILE) $< $@
+
+$(OZCARIMAGESDIR)/%: ozcar/images/%
+	$(INSTALL_FILE) $< $@
+
+$(OZBIN)/%: %
+	$(INSTALL_BIN) $< $@
+
+install-cache: $(CACHEDIR) $(CACHEFUNCTORS)
+$(CACHEDIR) $(CACHEBINDIR):
+	$(INSTALL_DIR) $@
+$(CACHEDIR)/%.ozf : %.ozf
+	$(INSTALL_FILE) $< $@
+
+
+#---------------------------------------------------------------------
+# Cleaning up
+#---------------------------------------------------------------------
+
+.PHONY: clean veryclean distclean tags
+
+clean:
+	rm -f *~ *.bak
+	rm -f ozcar-version.oz
+	rm -f $(FUNCTORS)
+	rm -f opi
+
+veryclean: clean
+	rm -f -r $(STAGE1) TAGS
+
+distclean: veryclean
+	rm -f Makefile-lilo
+
+tags:
+	etags --language=none \
+	--regex='/[ \t]*proc\>[^{\n]*{!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
+	--regex='/[ \t]*fun\>[^{\n]*{!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
+	--regex='/[ \t]*class[ \t]+!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
+	--regex='/[ \t]*meth\([ \t]+\|[ \t]*![ \t]*\)\([A-Za-z0-9][A-Za-z0-9_]*\|`.+`|'\''.+'\''\)/\2/' \
+	$(ALLSRCS)
+
+#---------------------------------------------------------------------
+# Testing Components Locally
+#---------------------------------------------------------------------
+
+Makefile-lilo: Makefile-lilo.in ../config.status
+	cd .. && ./config.status
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck
+
+.PHONY: stage1
+
+STAGE1=./stage1
+
+# stage1: create the components using the installed ones
+stage1:
+	$(MAKE) install-main PREFIX=$(STAGE1)
+
+check:

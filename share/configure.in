@@ -58,6 +58,7 @@ AC_CHECK_PROGS(THEEMACS, emacs xemacs, emacs)
 
 OZ_PATH_PROG(OZPLATFORM, ozplatform)
 OZ_PATH_PROG(OZBATCH, ozbatch, OZBATCH=`pwd`/lib/ozbatch)
+OZ_PATH_PROG(OZC, ozc, OZC=`pwd`/lib/ozc)
 
 AC_MSG_CHECKING(for --enable-fun)
 AC_ARG_ENABLE(fun,
@@ -78,7 +79,9 @@ dnl *****************************************************************
 dnl FINALIZE
 dnl *****************************************************************
 
-AC_OUTPUT(lib/Makefile lib/Makefile-lilo tools/Makefile demo/Makefile test/Makefile \
+AC_OUTPUT(lib/Makefile lib/Makefile-lilo \
+    tools/Makefile tools/Makefile-lilo \
+    demo/Makefile test/Makefile \
     examples/Makefile elisp/Makefile elisp/oz.el bin/Makefile Makefile)
 
 
