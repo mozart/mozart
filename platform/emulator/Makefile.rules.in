@@ -5,7 +5,6 @@ all install clean realclean depend::
 
 realclean::
         $(MAKE) clean SUBDIRS=
-        $(RM) Makefile
 
 clean::
         $(RM) *.o *~  *.bak *.obj
