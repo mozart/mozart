@@ -110,6 +110,11 @@ starts the emulator under gdb")
   "The saved window title")
 
 
+(defun oz-window-system()
+  "Non-nil iff we are running under X"
+  window-system)
+
+
 ;;------------------------------------------------------------
 ;; Utilities
 ;;------------------------------------------------------------
@@ -918,7 +923,7 @@ if that value is non-nil."
 
   ; font lock stuff
   (oz-set-fontlock-keywords)
-  (if oz-want-font-lock
+  (if (and oz-want-font-lock (oz-window-system))
       (font-lock-mode 1))
   (run-hooks 'oz-mode-hook))
 
@@ -936,16 +941,16 @@ if that value is non-nil."
 ;; Fontification
 ;;------------------------------------------------------------
 
-(require 'font-lock)
+(if (oz-window-system) (require 'font-lock))
 
 
 (defun oz-fontify-buffer()
   (interactive)
-  (font-lock-fontify-buffer))
+  (if (oz-window-system) (font-lock-fontify-buffer)))
 
 
 (defun oz-fontify-region(beg end)
-  (font-lock-fontify-region beg end))
+  (if (oz-window-system) (font-lock-fontify-region beg end)))
 
 
 (defun oz-fontify(&optional arg)
