@@ -16,8 +16,11 @@
 #include <errno.h>
 #include <ctype.h>
 
-#if defined(LINUX) || defined(SOLARIS_SPARC) || defined(SUNOS_SPARC) || defined(IRIX5_MIPS) || defined(OSF1_ALPHA)
+#if defined(LINUX) || defined(SOLARIS_SPARC) || defined(SUNOS_SPARC) || defined(IRIX5_MIPS) || defined(OSF1_ALPHA) || defined(FREEBSD_I486)
 #   define DLOPEN 1
+#ifdef FREEBSD_I486
+#define RTLD_NOW 1
+#endif
 #endif
 
 #ifdef DLOPEN
@@ -5093,6 +5096,9 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
 #endif
 #ifdef LINUX
   strCat(command, commandUsed, "ld -shared -o ");
+#endif
+#ifdef FREEBSD_I486
+  strCat(command, commandUsed, "ld -r -o ");
 #endif
   strCat(command, commandUsed, tempfile);
 
