@@ -25,8 +25,8 @@
 declare
 MM = {New Module.manager init()}
 
-DSettings = {MM link(url:'./defaultsettings.ozf' $)}
-Server = {MM link(url:'./server.ozf' $)}
+DSettings = {MM link(url:'/home/nilsf/source/mozart/contrib/micq/defaultsettings.ozf' $)}
+Server = {MM link(url:'/home/nilsf/source/mozart/contrib/micq/server.ozf' $)}
 
 Spec=record('ticket'(single char:&t type:string
                      default:DSettings.ticketfile)
