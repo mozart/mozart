@@ -91,6 +91,7 @@ inline void marshalDIFcounted(MarshalerBuffer *bs, MarshalTag tag) {
   marshalDIF(bs,tag);
 }
 //
+inline
 void DPMarshaler::processSmallInt(OZ_Term siTerm)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
@@ -119,6 +120,7 @@ void DPMarshaler::processSmallInt(OZ_Term siTerm)
 }
 
 //
+inline
 void DPMarshaler::processFloat(OZ_Term floatTerm)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
@@ -202,6 +204,7 @@ static void dpMarshalLitCont(GenTraverser *gt, GTAbstractEntity *arg)
 }
 
 //
+inline
 void DPMarshaler::processLiteral(OZ_Term litTerm)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
@@ -267,6 +270,7 @@ void DPMarshaler::processLiteral(OZ_Term litTerm)
 }
 
 //
+inline
 void DPMarshaler::processBigInt(OZ_Term biTerm, ConstTerm *biConst)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
@@ -407,6 +411,7 @@ void DPMarshaler::processExtension(OZ_Term t)
 }
 
 //
+inline
 Bool DPMarshaler::processObject(OZ_Term term, ConstTerm *objConst)
 {
   if (doToplevel)
@@ -592,6 +597,7 @@ void DPMarshaler::processVar(OZ_Term cv, OZ_Term *varTerm)
 }
 
 //
+inline
 void DPMarshaler::processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber)
 {
   Assert(repNumber >= 0);
@@ -626,6 +632,7 @@ void DPMarshaler::processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber)
 }
 
 //
+inline
 Bool DPMarshaler::processLTuple(OZ_Term ltupleTerm)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
@@ -658,6 +665,7 @@ Bool DPMarshaler::processLTuple(OZ_Term ltupleTerm)
 }
 
 //
+inline
 Bool DPMarshaler::processSRecord(OZ_Term srecordTerm)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
@@ -704,6 +712,7 @@ Bool DPMarshaler::processSRecord(OZ_Term srecordTerm)
 }
 
 //
+inline
 Bool DPMarshaler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
@@ -1333,6 +1342,7 @@ dpUnmarshalHashTableRefRobust(Builder *b,
 #include "dpMarshalcode.cc"
 
 //
+inline
 void DPMarshaler::processSync()
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
@@ -1356,15 +1366,28 @@ void DPMarshaler::processSync()
 }
 
 //
+#define TRAVERSERCLASS  DPMarshaler
+#include "gentraverserLoop.cc"
+#undef  TRAVERSERCLASS
+
+
 //
+//
+inline
 void VariableExcavator::processSmallInt(OZ_Term siTerm) {}
+inline
 void VariableExcavator::processFloat(OZ_Term floatTerm) {}
+inline
 void VariableExcavator::processLiteral(OZ_Term litTerm) {}
+inline
 void VariableExcavator::processBigInt(OZ_Term biTerm, ConstTerm *biConst) {}
+inline
 void VariableExcavator::processBuiltin(OZ_Term biTerm, ConstTerm *biConst) {}
+inline
 void VariableExcavator::processExtension(OZ_Term t) {}
 
 //
+inline
 Bool VariableExcavator::processObject(OZ_Term objTerm, ConstTerm *objConst)
 {
   rememberTerm(objTerm);
@@ -1375,30 +1398,36 @@ Bool VariableExcavator::processObject(OZ_Term objTerm, ConstTerm *objConst)
     return (TRUE);
   }
 }
+inline
 Bool VariableExcavator::processNoGood(OZ_Term resTerm, Bool trail)
 {
   Assert(!oz_isVar(resTerm));
   return (OK);
 }
+inline
 void VariableExcavator::processLock(OZ_Term lockTerm, Tertiary *tert)
 {
   rememberTerm(lockTerm);
 }
+inline
 Bool VariableExcavator::processCell(OZ_Term cellTerm, Tertiary *tert)
 {
   rememberTerm(cellTerm);
   return (TRUE);
 }
+inline
 void VariableExcavator::processPort(OZ_Term portTerm, Tertiary *tert)
 {
   rememberTerm(portTerm);
 }
+inline
 void VariableExcavator::processResource(OZ_Term rTerm, Tertiary *tert)
 {
   rememberTerm(rTerm);
 }
 
 //
+inline
 void VariableExcavator::processVar(OZ_Term cv, OZ_Term *varTerm)
 {
   Assert(oz_isVar(cv));
@@ -1407,18 +1436,22 @@ void VariableExcavator::processVar(OZ_Term cv, OZ_Term *varTerm)
 }
 
 //
+inline
 void VariableExcavator::processRepetition(OZ_Term t, OZ_Term *tPtr,
                                           int repNumber) {}
+inline
 Bool VariableExcavator::processLTuple(OZ_Term ltupleTerm)
 {
   rememberTerm(ltupleTerm);
   return (NO);
 }
+inline
 Bool VariableExcavator::processSRecord(OZ_Term srecordTerm)
 {
   rememberTerm(srecordTerm);
   return (NO);
 }
+inline
 Bool VariableExcavator::processChunk(OZ_Term chunkTerm,
                                      ConstTerm *chunkConst)
 {
@@ -1499,7 +1532,13 @@ Bool VariableExcavator::processAbstraction(OZ_Term absTerm,
 }
 
 //
+inline
 void VariableExcavator::processSync() {}
+
+//
+#define TRAVERSERCLASS  VariableExcavator
+#include "gentraverserLoop.cc"
+#undef  TRAVERSERCLASS
 
 //
 // Not in use since we take a snapshot of a value ahead of

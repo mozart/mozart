@@ -256,7 +256,7 @@ public:
 //
 class NodeProcessor : public NodeProcessorStack {
 protected:
-  Bool keepRunning;
+  StackEntry* tosNotRunning;    // keeps real 'tos' when suspending;
   ProcessNodeProc proc;
   Opaque* opaque;
 
@@ -264,7 +264,7 @@ protected:
 protected:
   // actual processor;
   void doit() {
-    while (keepRunning && !isEmpty()) {
+    while (!isEmpty()) {
       OZ_Term term = get();
       (*proc)(term, opaque, this);
     }
@@ -273,10 +273,16 @@ protected:
   //
 public:
   NodeProcessor() {
-    keepRunning = NO;
+    tosNotRunning = (StackEntry *) 0;
     DebugCode(opaque = (Opaque *) -1);
   }
   ~NodeProcessor() {}
+
+  // adds a new entry to the process stack;
+  void add(OZ_Term t) {
+    ensureFree(1);
+    put(t);
+  }
 
   //
   // If 'suspend()' is called (by 'ProcessNodeProc') then 'start(...)'
@@ -284,35 +290,52 @@ public:
   // The term 't' is pushed back into the stack - such that we'll
   // start with it next time;
   void suspend(OZ_Term t) {
-    Assert(keepRunning);
+    Assert(tosNotRunning == (StackEntry *) 0);
+    // FIRST, save the term we'are suspending on:
+    put(t);
+    // Now, dupe the 'doit()' into believing we're done:
+    tosNotRunning = getTop();
+    Assert(tosNotRunning != (StackEntry *) 0);
+    NodeProcessorStack::mkEmpty();
     DebugCode(opaque = (Opaque *) -1);
-    keepRunning = NO;
-    put(t);
   }
-  void add(OZ_Term t) {
-    ensureFree(1);
-    put(t);
-  } // adds a new entry to the process stack;
-
-  //
-  void resume() { doit(); } // see 'suspend()';
-  void clear() { mkEmpty(); } // deletes all entries in process queue;
 
   //
   Opaque* getOpaque() { return (opaque); }
+
   //
-  // Define the first node & start the action. Returns 'TRUE' when
-  // we are done (i.e. the stack is empty);
-  Bool start(OZ_Term t, ProcessNodeProc p, Opaque* o) {
-    clear();
+  // Define the first node & start the action;
+  void start(OZ_Term t, ProcessNodeProc p, Opaque* o) {
+    Assert(tosNotRunning == (StackEntry *) 0);
+    NodeProcessorStack::mkEmpty();
     put(t);
     proc = p;
     opaque = o;
+
     //
-    keepRunning = OK;
     doit();
-    // if 'keepRunning' is true when the stack is empty:
-    return (keepRunning);
+
+    //
+    if (tosNotRunning) {
+      // keep 'opaque';
+      setTop(tosNotRunning);
+      tosNotRunning = (StackEntry *) 0;
+    }
+    Assert(tosNotRunning == (StackEntry *) 0);
+  }
+
+  //
+  Bool isFinished() { return (isEmpty()); }
+
+  // see 'suspend()';
+  void resume() {
+    Assert(tosNotRunning == (StackEntry *) 0);
+    doit();
+    if (tosNotRunning) {
+      setTop(tosNotRunning);
+      tosNotRunning = (StackEntry *) 0;
+    }
+    Assert(tosNotRunning == (StackEntry *) 0);
   }
 };
 
@@ -389,7 +412,7 @@ protected:
 // what to do with each type of nodes. Traversing starts with
 // 'traverse(OZ_Term t, Opaque *o)', where 't' is a root node.  The
 // traverser then calls 'processXXX(root)', depending on the type of
-// root node XXX.  The processXXX virtual methods are divided into two
+// root node XXX.  The processXXX methods are divided into two
 // categories, those that return void (these are always leaves) and
 // boolean ones which return TRUE to indicate a leaf, and FALSE
 // otherwise.  For instance, if 'processRecord()' returns FALSE, then
@@ -470,11 +493,21 @@ typedef void (*TraverserContProcessor)(GenTraverser *m,
 class GenTraverser : protected NodeProcessor, public GTIndexTable {
 private:
   CrazyDebug(int debugNODES;);
-  void doit();                  // actual processor;
+  // 'doit()'s are templated from 'gentraverserLoop.cc' (see also
+  // comments before "process" methods;
+  void doit() { Assert(0); }
 
-private:
-  CrazyDebug(void incDebugNODES() { debugNODES++; });
-  CrazyDebug(void decDebugNODES() { debugNODES--; });
+protected:
+  // special treatment: no value is available to suspend on!
+  void suspendSync() {
+    Assert(tosNotRunning == (StackEntry *) 0);
+    putInt(taggedSyncTask);
+    //
+    tosNotRunning = getTop();
+    Assert(tosNotRunning != (StackEntry *) 0);
+    NodeProcessorStack::mkEmpty();
+    DebugCode(opaque = (Opaque *) -1);
+  }
 
   //
   // When the builder receives a value from the stream, it either just
@@ -492,14 +525,9 @@ private:
     putInt(taggedSyncTask);
   }
 
-protected:
-  // special treatment: no value is available to suspend on!
-  void suspendSync() {
-    Assert(keepRunning);
-    DebugCode(opaque = (Opaque *) -1);
-    keepRunning = NO;
-    putInt(taggedSyncTask);
-  }
+  //
+  CrazyDebug(void incDebugNODES() { debugNODES++; });
+  CrazyDebug(void decDebugNODES() { debugNODES--; });
 
   //
 public:
@@ -509,10 +537,10 @@ public:
   void reset() {
     CrazyDebug(debugNODES = 0;);
     Assert(proc == (ProcessNodeProc) -1); // not used;
-    DebugCode(opaque = (Opaque *) -1);
-    keepRunning = NO;
-    clear();
+    NodeProcessorStack::mkEmpty();
     unwindGTIT();
+    tosNotRunning = (StackEntry *) 0;
+    DebugCode(opaque = (Opaque *) -1);
   }
 
   //
@@ -520,30 +548,24 @@ public:
     DebugCode(proc = (ProcessNodeProc) -1;); // not used;
     reset();
   }
-  virtual ~GenTraverser() {}
+  ~GenTraverser() {}
 
   //
   // Steps through the stack and gCollect's everything there;
   void gCollect();
 
   //
-  // As with the node processor, it is possible to suspend with a node
-  // to continue with:
-  void suspend(OZ_Term t) {
-    Assert(keepRunning);
-    DebugCode(opaque = (Opaque *) -1);
-    keepRunning = NO;
-    put(t);
-  }
-
+  // 'suspend(OZ_Term t)' is inherited from NodeProcessor;
   //
   // However, treating binary areas (BA) is different: the binary area
   // is just not finished (so, there is no other value to suspend
   // with), but we still have to suspend:
   void suspendBA() {
-    Assert(keepRunning);
+    Assert(tosNotRunning == (StackEntry *) 0);
+    tosNotRunning = getTop();
+    Assert(tosNotRunning != (StackEntry *) 0);
+    NodeProcessorStack::mkEmpty();
     DebugCode(opaque = (Opaque *) -1);
-    keepRunning = NO;
   }
 
   //
@@ -551,30 +573,28 @@ public:
   // (AC): the traverser proceeds then by application of a
   // user-specified function;
   void suspendAC(TraverserContProcessor proc, GTAbstractEntity *arg) {
+    Assert(tosNotRunning == (StackEntry *) 0);
     ensureFree(3);
     putPtr((void *) proc);
     putPtr(arg);
     putInt(taggedContTask);
-    Assert(keepRunning);
+    //
+    tosNotRunning = getTop();
+    Assert(tosNotRunning != (StackEntry *) 0);
+    NodeProcessorStack::mkEmpty();
     DebugCode(opaque = (Opaque *) -1);
-    keepRunning = NO;
   }
 
   //
-  // For efficiency reasons 'GenTraverser' has its own 'doit' - not
-  // the one from 'NodeProcessor'. Because of that, 'resume()' is
-  // overloaded as well (but with the same meaning);
-  void resume(Opaque *o) {
-    Assert(opaque == (Opaque *) -1); // otherwise that's recursive;
-    opaque = o;
-    keepRunning = OK;
-    doit();
-  }     // see 'suspend()';
+  void resume(Opaque *o) { Assert(0); }
 
   //
   // The caller does not always know whether the traversing process
   // has been finished or not. So,
-  Bool isFinished() { return (isEmpty()); }
+  Bool isFinished() {
+    Assert(tosNotRunning == (StackEntry *) 0);
+    return (isEmpty());
+  }
 
   //
   // Sometimes it is desirable to marshal a number of values with
@@ -589,26 +609,16 @@ public:
   void prepareTraversing(Opaque *o) {
     Assert(proc == (ProcessNodeProc) -1); // not used;
     Assert(opaque == (Opaque *) -1); // otherwise that's recursive;
-    Assert(keepRunning == NO);  // not used;
+    Assert(tosNotRunning == (StackEntry *) 0);
     Assert(o != (Opaque *) -1);      // not allowed (limitation);
     opaque = o;
-    keepRunning = OK;
   }
-  void traverse() {
-    doit();
-    // CrazyDebug(fprintf(stdout, " --- %d nodes.\n", debugNODES););
-    // CrazyDebug(fflush(stdout););
-  }
-  void traverse(OZ_Term t) {
-    ensureFree(1);
-    put(t);
-    traverse();
-  }
+  void traverse(OZ_Term t) { Assert(0); }
   void finishTraversing() {
     Assert(isEmpty());
     DebugCode(opaque = (Opaque *) -1);
     Assert(proc == (ProcessNodeProc) -1); // not used;
-    keepRunning = NO;
+    Assert(tosNotRunning == (StackEntry *) 0);
     unwindGTIT();
   }
 
@@ -629,54 +639,60 @@ public:
   //
 protected:
   //
+  // 'process' methods are to be defined by every subclass
+  // (i.e. marshaler's instance). Note: they are not virtual in
+  // current implementation, so every subclass defines also its 'doit'
+  // - based on the template from 'gentraverserLoop'. All this is for
+  // efficiency reasons (that is, to eliminate virtual methods as
+  // such);
+  //
   // Note that co-references are discovered not among all nodes, but
   // only among: literals, var"s, ltuples, srecords, and all oz
   // const"s;
   //
   // OZ_Term"s are dereferenced;
-  virtual void processSmallInt(OZ_Term siTerm) = 0;
-  virtual void processFloat(OZ_Term floatTerm) = 0;
-  virtual void processLiteral(OZ_Term litTerm) = 0;
-  virtual void processExtension(OZ_Term extensionTerm) = 0;
+  void processSmallInt(OZ_Term siTerm);
+  void processFloat(OZ_Term floatTerm);
+  void processLiteral(OZ_Term litTerm);
+  void processExtension(OZ_Term extensionTerm);
   // OzConst"s;
-  virtual void processBigInt(OZ_Term biTerm, ConstTerm *biConst) = 0;
-  virtual void processBuiltin(OZ_Term biTerm, ConstTerm *biConst) = 0;
+  void processBigInt(OZ_Term biTerm, ConstTerm *biConst);
+  void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
   // 'Tertiary' OzConst"s;
-  virtual void processLock(OZ_Term lockTerm, Tertiary *lockTert) = 0;
-  virtual Bool processCell(OZ_Term cellTerm, Tertiary *cellTert) = 0;
-  virtual void processPort(OZ_Term portTerm, Tertiary *portTert) = 0;
-  virtual void processResource(OZ_Term resTerm, Tertiary *tert) = 0;
+  void processLock(OZ_Term lockTerm, Tertiary *lockTert);
+  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
+  void processPort(OZ_Term portTerm, Tertiary *portTert);
+  void processResource(OZ_Term resTerm, Tertiary *tert);
   // anything else:
   // 'processNoGood(...)' returns NO if suspension occured;
-  virtual Bool processNoGood(OZ_Term resTerm, Bool trail) = 0;
+  Bool processNoGood(OZ_Term resTerm, Bool trail);
   //
-  virtual void processVar(OZ_Term cv, OZ_Term *varTerm) = 0;
+  void processVar(OZ_Term cv, OZ_Term *varTerm);
 
   //
-  virtual void processRepetition(OZ_Term t, OZ_Term *tPtr,
-                                 int repNumber) = 0;
+  void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
 
   //
   // These methods return TRUE if the node to be considered a leaf;
   // (Note that we might want to go through a repetition, don't we?)
-  virtual Bool processLTuple(OZ_Term ltupleTerm) = 0;
-  virtual Bool processSRecord(OZ_Term srecordTerm) = 0;
-  virtual Bool processFSETValue(OZ_Term fsetvalueTerm) = 0;
+  Bool processLTuple(OZ_Term ltupleTerm);
+  Bool processSRecord(OZ_Term srecordTerm);
+  Bool processFSETValue(OZ_Term fsetvalueTerm);
   // composite OzConst"s;
-  virtual Bool processObject(OZ_Term objTerm, ConstTerm *objConst) = 0;
-  virtual Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst) = 0;
-  virtual Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst) = 0;
-  virtual Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst) = 0;
-  virtual Bool processClass(OZ_Term classTerm, ConstTerm *classConst) = 0;
-  //  virtual Bool processCell(OZ_Term cellTerm, Tertiary *cellTert) = 0;
+  Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
+  Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst);
+  Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
+  Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
+  Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
+  //  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
   //
   // 'processAbstraction' also issues 'traverseBinary';
-  virtual Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst) = 0;
+  Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
 
   //
   // One can think of 'sync' as an of a pseudo term: it simplifies
   // greately the builder's work;
-  virtual void processSync() = 0;
+  void processSync();
 
   //
 public:
@@ -737,8 +753,8 @@ protected:
   //
   // kost@ : TODO: i'm not yet sure that this is worth the result...
   //         Ralf, do you have an idea about that?
-  //  virtual Bool processSmallIntList(OZ_Term siTerm, OZ_Term ltuple) = 0;
-  //  virtual Bool processLiteralList(OZ_Term litTerm, OZ_Term ltuple) = 0;
+  //  Bool processSmallIntList(OZ_Term siTerm, OZ_Term ltuple);
+  //  Bool processLiteralList(OZ_Term litTerm, OZ_Term ltuple);
 };
 
 
@@ -1244,7 +1260,7 @@ public:
     tos = newTos;
     checkConsistency();
   }
-  void clear() { tos = array; }
+  void mkEmpty() { tos = array; }
   //
   StackEntry *ensureFree(StackEntry *frame, int n)
   {
@@ -1604,7 +1620,7 @@ public:
         DebugCode(result = (OZ_Term) 0xfefefea1);
         return (r);
       } else {
-        clear();                // do it eagerly - presumably seldom;
+        mkEmpty();              // do it eagerly - presumably seldom;
         DebugCode(result = (OZ_Term) 0xfefefea1);
         return ((OZ_Term) 0);
       }
