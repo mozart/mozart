@@ -127,6 +127,8 @@ Standard.ozf: Init.ozp
         $(COMPILE) $< -o $@
 %.ozf: wp/%.oz
         $(COMPILE) $< -o $@
+%.ozf: compiler/%.oz
+        $(COMPILE) $< -o $@
 %.ozf: misc/%.oz
         $(COMPILE) $< -o $@
 %.ozf: %.oz
@@ -182,10 +184,6 @@ functor2env: $(RUNFUNCTORS) Standard.ozf MakeFunctorToEnv.oz
 
 compiler-Env.oz: $(RUNFUNCTORS) Standard.ozf functor2env
         $(OZENGINE) functor2env -in=Standard.ozf -out=compiler-Env.oz
-
-Compiler.ozf: $(COMPILERSRC)
-
-
 
 #---------------------------------------------------------------------
 # Syslets
@@ -405,49 +403,39 @@ thorough-check:
 # no suffixes needed
 .SUFFIXES:
 
-#
-# Currently unused
-#
-
 #---------------------------------------------------------------------
 # Compiler
 
-#FunMisc.ozp: compiler/Misc.oz $(STANDARD)
-#
-#FunBuiltins.ozp: compiler/Builtins.oz compiler-Builtins.oz $(STANDARD)
-#
-#FunSA.ozp: SP-new.env CP-new.env compiler/Misc-new.env \
-#       compiler/POTypes.oz compiler/StaticAnalysis.oz $(STANDARD)
-#
-#FunCode.ozp: SP-new.env compiler/Misc-new.env compiler/CodeStore.oz \
-#       compiler/CodeEmitter.oz compiler/CodeGen.oz $(STANDARD)
-#
-#FunCore.ozp: SP-new.env compiler/Misc-new.env compiler/Annotate.oz \
-#       compiler/CoreLanguage.oz $(STANDARD)
-#
-#FunUnnest.ozp: CP-new.env compiler/Misc-new.env compiler/TupleSyntax.oz \
-#       compiler/BindingAnalysis.oz compiler/UnnestFD.oz compiler/Unnester.oz \
-#       $(STANDARD)
-#
-#FunAssembler.ozp: SP-new.env compiler/Assembler.oz compiler-Opcodes.oz \
-#       $(STANDARD)
-#
-#FunCompiler.ozp: SP-new.env compiler/Misc-new.env \
-#       compiler/FormatStrings.oz compiler/Reporter.oz compiler/ParseOz.oz \
-#       compiler/Interface.oz compiler/CompilerClass.oz \
-#       compiler/GenericInterface.oz compiler/QuietInterface.oz \
-#       compiler-Version.oz $(STANDARD)
-#
-#COMPILER_BIG = @COMPILER_BIG@
-#COMPILER_FUN = @COMPILER_FUN@
-#
-#$(COMPILER_BIG): $(DUMPINTRO) $(COMPILERSRC) SP.env CP.env \
-#       ../tools/Gump.env Compiler.env Init.ozp
-#
-#$(COMPILER_FUN): $(DUMPINTRO) SP.env CP.env ../tools/Gump.env Compiler.env \
-#       Init.ozp FunMisc.ozp FunBuiltins.ozp FunSA.ozp FunCode.ozp \
-#       FunCore.ozp FunUnnest.ozp FunAssembler.ozp FunCompiler.ozp \
-#       compiler/FunMake.oz $(TYCS)
-#       $(OZC) $(OZFLAGS) --include=DumpIntro.oz -l OP \
-#       -c compiler/FunMake.oz -o Compiler.ozp
-#
+FunMisc.ozf: compiler/Misc.oz $(STANDARD)
+
+FunBuiltins.ozf: compiler/Builtins.oz compiler-Builtins.oz $(STANDARD)
+
+FunSA.ozf: compiler/Misc-new.env compiler/POTypes.oz \
+        compiler/StaticAnalysis.oz $(STANDARD)
+
+FunCode.ozf: compiler/Misc-new.env compiler/CodeStore.oz \
+        compiler/CodeEmitter.oz compiler/CodeGen.oz $(STANDARD)
+
+FunCore.ozf: compiler/Misc-new.env compiler/Annotate.oz \
+        compiler/CoreLanguage.oz $(STANDARD)
+
+FunUnnest.ozf: compiler/Misc-new.env compiler/TupleSyntax.oz \
+        compiler/BindingAnalysis.oz compiler/UnnestFD.oz \
+        compiler/Unnester.oz $(STANDARD)
+
+FunAssembler.ozf: compiler/Assembler.oz compiler-Opcodes.oz $(STANDARD)
+
+FunCompiler.ozf: compiler/Misc-new.env compiler/FormatStrings.oz \
+        compiler/Reporter.oz compiler/ParseOz.oz compiler/Interface.oz \
+        compiler/CompilerClass.oz compiler/GenericInterface.oz \
+        compiler/QuietInterface.oz compiler-Version.oz $(STANDARD)
+
+COMPILER_BIG = @COMPILER_BIG@
+COMPILER_FUN = @COMPILER_FUN@
+
+$(COMPILER_BIG): $(COMPILERSRC)
+
+$(COMPILER_FUN): FunMisc.ozf FunBuiltins.ozf FunSA.ozf FunCode.ozf \
+        FunCore.ozf FunUnnest.ozf FunAssembler.ozf FunCompiler.ozf \
+        compiler/FunMake.oz
+        $(COMPILE) -l Pickle=./Pickle.ozf compiler/FunMake.oz -o Compiler.ozf
