@@ -2486,10 +2486,12 @@ char *OZ_FiniteDomain::toString() const
   str.reset();
   CASTCONSTTHIS->print(str, 0);
 
-#ifdef DEBUG_FD_CONSTRREP
+#ifdef DEBUG_FD_CONSTRREP_DETAILED_OUTPUT
   static ozstrstream tmp_str;
   tmp_str.reset();
-  tmp_str << "fd(" << str.str() << ")" << flush;
+  tmp_str << "fd(" << str.str() << ")" 
+	  << "@" << this
+	  << flush;
   return tmp_str.str();
 #else
   return str.str();
