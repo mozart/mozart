@@ -348,8 +348,13 @@ void AM::init(int argc,char **argv)
 
 void AM::exitOz(int status)
 {
-  (*dpExit)();
-  osExit(status);
+  static int gotHereOnce = 0;
+
+  if (!gotHereOnce) {
+    gotHereOnce = 1;
+    (*dpExit)();
+    osExit(status);
+  }
 }
 
 /* -------------------------------------------------------------------------
