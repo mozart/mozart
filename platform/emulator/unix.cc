@@ -1456,7 +1456,12 @@ OZ_C_ioproc_begin(unix_pipe,4)
   }
 
 #ifdef WINDOWS
-  int pid = 0, sock = 0;
+  int k;
+  char buf[10000];
+  buf[0] = '\0';
+  for (k=0 ; k<argno; k++) {
+    strcat(buf,argv[k]);
+  }
 
   STARTUPINFO si;
   SECURITY_ATTRIBUTES sa;
@@ -1467,32 +1472,31 @@ OZ_C_ioproc_begin(unix_pipe,4)
   sa.bInheritHandle = TRUE;
   PROCESS_INFORMATION pinf;
 
-  HANDLE rh, wh, dupOut, dupIn;
-  BOOL ret = CreatePipe(&rh,&wh,&sa,0);
-  ret = DuplicateHandle(GetCurrentProcess(), wh,
-                        GetCurrentProcess(), &dupOut, 0, TRUE,
-                        DUPLICATE_SAME_ACCESS);
-  ret = DuplicateHandle(GetCurrentProcess(), rh,
-                        GetCurrentProcess(), &dupIn, 0, TRUE,
-                        DUPLICATE_SAME_ACCESS);
-  si.hStdOutput = dupOut;
-  si.hStdInput = dupIn;
-  si.dwFlags = STARTF_USESTDHANDLES;
-
-  char buf[10000];
-  buf[0] = '\0';
-  {
-    int i;
-    for (i=0; i<argno ; i++) {
-      strcat(buf,argv[i]);
-    }
+  HANDLE saveout = GetStdHandle(STD_OUTPUT_HANDLE);
+  HANDLE savein  = GetStdHandle(STD_INPUT_HANDLE);
+  HANDLE rh1,wh1,rh2,wh2;
+  if (!CreatePipe(&rh1,&wh1,&sa,0)  ||
+      !CreatePipe(&rh2,&wh2,&sa,0)  ||
+      !SetStdHandle(STD_OUTPUT_HANDLE,wh1) ||
+      !SetStdHandle(STD_INPUT_HANDLE,rh2) ||
+      !CreateProcess(NULL,buf,&sa,NULL,TRUE,DETACHED_PROCESS,
+                     NULL,NULL,&si,&pinf)) {
+    OZ_warning("createProcess failed: %d\n",GetLastError());
+    return FAILED;
   }
-  printf("Executing: %s\n",buf);
-  ret = CreateProcess(NULL,buf,&sa,NULL,TRUE,CREATE_NEW_CONSOLE,
-                      NULL,NULL,&si,&pinf);
 
-  int rfd = _hdopen((int)rh,O_RDONLY|O_BINARY);
-  int wfd = _hdopen((int)wh,O_WRONLY|O_BINARY);
+  int pid = pinf.dwProcessId;
+  CloseHandle(wh1);
+  CloseHandle(rh2);
+  SetStdHandle(STD_OUTPUT_HANDLE,saveout);
+  SetStdHandle(STD_INPUT_HANDLE,savein);
+
+  int rsock = _hdopen((int)rh1,O_RDONLY|O_BINARY);
+  int wsock = _hdopen((int)wh2,O_WRONLY|O_BINARY);
+  if (rsock<0 || wsock<0) {
+    perror("_hdopen");
+    return FAILED;
+  }
 
 #else  /* !WINDOWS */
 
