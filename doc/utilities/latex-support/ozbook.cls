@@ -21,6 +21,7 @@
 \DeclareOption{notitle}{\@titlePagefalse}
 \DeclareOption{notableofcontents}{\@tableofcontentsfalse}
 \DeclareOption{pdf}{\@pdftrue}
+\DeclareOption{html}{}
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{book}}
 
 % Execution of Options
@@ -37,6 +38,7 @@
 \RequirePackage{pst-node}
 \RequirePackage{latexsym}
 \RequirePackage{epsf}
+\RequirePackage{html}
 
 % Main Code
 %
