@@ -77,7 +77,10 @@ public:
       scheduleThreadOutline (th, pri);
     }
   }
+  void updateCurrentQueue();
   void scheduleThread (Thread *th);
+  void rescheduleThread(Thread *th);
+  void deleteThread(Thread *th);
   void scheduleThreadOutline (Thread *th, int pri);
 
   Bool threadQueueIsEmpty ();

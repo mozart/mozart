@@ -50,9 +50,9 @@ extern "C" int dlclose(void *);
 #include "oz_cpi.hh"
 #include "dictionary.hh"
 
-/*===================================================================
+/********************************************************************
  * Macros
- *=================================================================== */
+ ******************************************************************** */
 
 #define NONVAR(X,term,tag)                      \
 TaggedRef term = X;                             \
@@ -265,9 +265,15 @@ OZ_Return BIifun(TaggedRef val1, TaggedRef val2, TaggedRef &out)        \
 }                                                                       \
 DECLAREBI_USEINLINEFUN2(BIfun,BIifun)
 
-/*===================================================================
+#define CheckLocalBoard(Object,Where);                  \
+  if (am.currentBoard != Object->getBoardFast()) {      \
+    am.currentBoard->incSuspCount();                    \
+    return OZ_raiseC("globalState",1,OZ_atom(Where));           \
+  }
+
+/********************************************************************
  * BuiltinTab
- *=================================================================== */
+ ******************************************************************** */
 
 #ifdef BUILTINS2
 
@@ -306,9 +312,9 @@ BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t)
   return(builtin);
 }
 
-/*===================================================================
+/********************************************************************
  * `builtin`
- *=================================================================== */
+ ******************************************************************** */
 
 OZ_Term OZ_findBuiltin(char *name, OZ_Term handler)
 {
@@ -359,10 +365,9 @@ OZ_C_proc_begin(BIbuiltin,3)
 OZ_C_proc_end
 
 
-/*===================================================================
- * All builtins
- *=================================================================== */
-
+/********************************************************************
+ * Type tests
+ ******************************************************************** */
 
 OZ_Return isValueInline(TaggedRef val)
 {
@@ -530,8 +535,81 @@ DECLAREBI_USEINLINEREL1(BIisRecord,isRecordInline)
 DECLAREBOOLFUN1(BIisRecordB,isRecordBInline,isRecordInline)
 
 
-// Constrain term to a record, with given label (wait until determined), with an initial size
-// sufficient for at least tNumFeats features.  If term is already a record, do nothing.
+OZ_Return isProcedureInline(TaggedRef t)
+{
+  NONVAR( t, term, tag );
+  return isProcedure(term) ? PROCEED : FAILED;
+}
+
+DECLAREBI_USEINLINEREL1(BIisProcedure,isProcedureInline)
+DECLAREBOOLFUN1(BIisProcedureB,isProcedureBInline,isProcedureInline)
+
+OZ_Return isChunkInline(TaggedRef t)
+{
+  NONSUVAR( t, term, tag );
+  if (isCVar(tag)) {
+      switch (tagged2CVar(term)->getType()) {
+      case OFSVariable:
+      case FDVariable:
+      case BoolVariable:
+          return FAILED;
+      default:
+          return SUSPEND;
+      }
+  }
+  return isChunk(term) ? PROCEED : FAILED;
+}
+DECLAREBI_USEINLINEREL1(BIisChunk,isChunkInline)
+DECLAREBOOLFUN1(BIisChunkB,isChunkBInline,isChunkInline)
+
+OZ_Return procedureArityInline(TaggedRef procedure, TaggedRef &out)
+{
+  NONVAR( procedure, pterm, ptag );
+
+  if (isProcedure(pterm)) {
+    int arity;
+    ConstTerm *rec = tagged2Const(pterm);
+
+    switch (rec->getType()) {
+    case Co_Abstraction:
+      arity = ((Abstraction *) rec)->getArity();
+      break;
+    case Co_Builtin:
+      arity = ((Builtin *) rec)->getArity();
+      break;
+    default:
+      goto typeError;
+    }
+    out = newSmallInt(arity);
+    return PROCEED;
+  }
+  goto typeError;
+
+typeError:
+  out = nil();
+  TypeErrorT(0,"Procedure");
+}
+
+DECLAREBI_USEINLINEFUN1(BIprocedureArity,procedureArityInline)
+
+OZ_Return isCellInline(TaggedRef cell)
+{
+  NONVAR( cell, term, _ );
+  return isCell(term) ? PROCEED : FAILED;
+}
+DECLAREBI_USEINLINEREL1(BIisCell,isCellInline)
+DECLAREBOOLFUN1(BIisCellB,isCellBInline,isCellInline)
+
+/*********************************************************************
+ * OFS Records
+ *********************************************************************/
+
+/*
+ * Constrain term to a record, with given label (wait until
+ * determined), with an initial size sufficient for at least tNumFeats
+ * features.  If term is already a record, do nothing.
+ */
+
 OZ_C_proc_begin(BIsystemTellSize,3)
 {
   TaggedRef label = OZ_getCArg(0);
@@ -807,445 +885,6 @@ OZ_C_proc_begin(BIisRecordCVarB,2)
   return (OZ_unify (OZ_getCArg (1), NameTrue));
 }
 OZ_C_proc_end
-
-
-
-OZ_Return isProcedureInline(TaggedRef t)
-{
-  NONVAR( t, term, tag );
-  return isProcedure(term) ? PROCEED : FAILED;
-}
-
-DECLAREBI_USEINLINEREL1(BIisProcedure,isProcedureInline)
-DECLAREBOOLFUN1(BIisProcedureB,isProcedureBInline,isProcedureInline)
-
-OZ_Return isChunkInline(TaggedRef t)
-{
-  NONSUVAR( t, term, tag );
-  if (isCVar(tag)) {
-      switch (tagged2CVar(term)->getType()) {
-      case OFSVariable:
-      case FDVariable:
-      case BoolVariable:
-          return FAILED;
-      default:
-          return SUSPEND;
-      }
-  }
-  return isChunk(term) ? PROCEED : FAILED;
-}
-DECLAREBI_USEINLINEREL1(BIisChunk,isChunkInline)
-DECLAREBOOLFUN1(BIisChunkB,isChunkBInline,isChunkInline)
-
-OZ_Return procedureArityInline(TaggedRef procedure, TaggedRef &out)
-{
-  NONVAR( procedure, pterm, ptag );
-
-  if (isProcedure(pterm)) {
-    int arity;
-    ConstTerm *rec = tagged2Const(pterm);
-
-    switch (rec->getType()) {
-    case Co_Abstraction:
-      arity = ((Abstraction *) rec)->getArity();
-      break;
-    case Co_Builtin:
-      arity = ((Builtin *) rec)->getArity();
-      break;
-    default:
-      goto typeError;
-    }
-    out = newSmallInt(arity);
-    return PROCEED;
-  }
-  goto typeError;
-
-typeError:
-  out = nil();
-  TypeErrorT(0,"Procedure");
-}
-
-DECLAREBI_USEINLINEFUN1(BIprocedureArity,procedureArityInline)
-
-
-
-
-OZ_Return isCellInline(TaggedRef cell)
-{
-  NONVAR( cell, term, _ );
-  return isCell(term) ? PROCEED : FAILED;
-}
-DECLAREBI_USEINLINEREL1(BIisCell,isCellInline)
-DECLAREBOOLFUN1(BIisCellB,isCellBInline,isCellInline)
-
-// ---------------------------------------------------------------------
-// Spaces
-// ---------------------------------------------------------------------
-
-
-#define declareSpace()                                  \
-  OZ_Term tagged_space = OZ_getCArg(0);                 \
-  DEREF(tagged_space, space_ptr, space_tag);            \
-  if (isAnyVar(space_tag))                              \
-    OZ_suspendOn(makeTaggedRef(space_ptr));             \
-  if (!isSpace(tagged_space))                           \
-    TypeErrorT(0, "Space");                             \
-  Space *space = (Space *) tagged2Const(tagged_space);
-
-#define declareUnmergedSpace()                  \
-  declareSpace()                                \
-  if (space->isMerged())                        \
-    TypeErrorT(0, "Space already merged");
-
-#define declareStableSpace()                                            \
-  declareUnmergedSpace();                                               \
-  {                                                                     \
-    TaggedRef result = space->getSolveActor()->getResult();             \
-    DEREF(result, result_ptr, result_tag);                              \
-    if (isAnyVar(result_tag)) OZ_suspendOn(makeTaggedRef(result_ptr));  \
-  }
-
-OZ_C_proc_begin(BInewSpace, 2) {
-  OZ_Term proc = OZ_getCArg(0);
-
-  DEREF(proc, proc_ptr, proc_tag);
-  if (isAnyVar(proc_tag))
-    OZ_suspendOn(makeTaggedRef(proc_ptr));
-
-  if (!isProcedure(proc))
-    TypeErrorT(0, "Procedure");
-
-  Board* CBB = am.currentBoard;
-  int    CPP = am.currentThread->getPriority();
-
-  // creation of solve actor and solve board
-  SolveActor *sa = new SolveActor(CBB, CPP);
-
-  // thread creation for {proc root}
-  sa->inject(CPP, proc);
-
-  // create space
-  return OZ_unify(OZ_getCArg(1), makeTaggedConst(new Space(CBB,sa->getSolveBoard())));
-} OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIisSpace, 2) {
-  OZ_Term tagged_space = OZ_getCArg(0);
-
-  DEREF(tagged_space, space_ptr, space_tag);
-
-  if (isAnyVar(space_tag))
-    OZ_suspendOn(makeTaggedRef(space_ptr));
-
-  return OZ_unify(OZ_getCArg(1), isSpace(tagged_space) ? NameTrue : NameFalse);
-} OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIaskSpace, 2) {
-  declareSpace();
-
-  if (space->isFailed())
-    return OZ_unify(OZ_args[1], AtomFailed);
-
-  if (space->isMerged())
-    return OZ_unify(OZ_args[1], AtomMerged);
-
-  TaggedRef answer = space->getSolveActor()->getResult();
-
-  DEREF(answer, answer_ptr, answer_tag);
-
-  if (isAnyVar(answer_tag))
-    OZ_suspendOn(makeTaggedRef(answer_ptr));
-
-  return OZ_unify(OZ_args[1],
-                  (isSTuple(answer) &&
-                   literalEq(tagged2SRecord(answer)->getLabel(),
-                             AtomSucceeded))
-                    ? AtomSucceeded : answer);
-} OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIaskVerboseSpace, 2) {
-  declareSpace();
-
-  if (space->isFailed())
-    return OZ_unify(OZ_args[1], AtomFailed);
-
-  if (space->isMerged())
-    return OZ_unify(OZ_args[1], AtomMerged);
-
-  if (space->getSolveActor()->isBlocked()) {
-    SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
-    stuple->setArg(0, am.currentUVarPrototype);
-
-    if (OZ_unify(OZ_args[1], makeTaggedSRecord(stuple)) == FAILED)
-      return FAILED;
-
-    OZ_args[1] = stuple->getArg(0);
-  }
-
-  TaggedRef answer = space->getSolveActor()->getResult();
-
-  DEREF(answer, answer_ptr, answer_tag);
-
-  if (isAnyVar(answer_tag))
-    OZ_suspendOn(makeTaggedRef(answer_ptr));
-
-  return OZ_unify(OZ_args[1], answer);
-} OZ_C_proc_end
-
-
-OZ_C_proc_begin(BImergeSpace, 2) {
-  declareUnmergedSpace();
-
-  if (am.isBelow(am.currentBoard,space->getSolveBoard()->getBoardFast()))
-    TypeErrorM("current space is subordinated");
-
-  if (space->isFailed())
-    return FAILED;
-
-  Board *CBB = am.currentBoard;
-
-  // Check board
-
-  TaggedRef result = space->getSolveActor()->getResult();
-
-  if (OZ_isVariable(result) && OZ_unify(result, AtomMerged) == FAILED)
-    return FAILED;
-
-  TaggedRef root = space->getSolveActor()->merge(CBB);
-  space->merge();
-
-  return OZ_unify(root, OZ_getCArg(1));
-} OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIcloneSpace, 2) {
-  declareStableSpace();
-
-  Board* CBB = am.currentBoard;
-
-  if (space->isFailed())
-    return OZ_unify(OZ_getCArg(1),
-                    makeTaggedConst(new Space(CBB, (Board *) 0)));
-
-
-  return OZ_unify(OZ_getCArg(1),
-                  makeTaggedConst(new Space(CBB,
-                                            space->getSolveActor()->clone(CBB))));
-
-} OZ_C_proc_end
-
-
-OZ_C_proc_begin(contChooseInternal, 2) {
-  int left  = smallIntValue(OZ_getCArg(0)) - 1;
-  int right = smallIntValue(OZ_getCArg(1)) - 1;
-
-  int status =
-    SolveActor::Cast(am.currentBoard->getActor())->choose(left,right);
-
-  if (status==-1) {
-    TypeErrorT(0, "Space: choice point stack is empty");
-  } else if (status==0) {
-    return FAILED;
-  }
-
-  return PROCEED;
-} OZ_C_proc_end
-
-
-
-OZ_C_proc_begin(BIchooseSpace, 2) {
-  declareStableSpace();
-  TaggedRef choice = OZ_getCArg(1);
-
-  DEREF(choice, choice_ptr, choice_tag);
-
-  if (isAnyVar(choice_tag))
-    OZ_suspendOn(makeTaggedRef(choice_ptr));
-
-  TaggedRef left, right;
-
-  if (isSmallInt(choice_tag)) {
-    left  = choice;
-    right = choice;
-  } else if (isSTuple(choice) &&
-             literalEq(AtomPair,
-                       tagged2SRecord(choice)->getLabel()) &&
-             tagged2SRecord(choice)->getWidth() == 2) {
-    left  = tagged2SRecord(choice)->getArg(0);
-    DEREF(left, left_ptr, left_tag);
-
-    if (isAnyVar(left_tag))
-      OZ_suspendOn(makeTaggedRef(left_ptr));
-
-    right = tagged2SRecord(choice)->getArg(1);
-
-    DEREF(right, right_ptr, right_tag);
-
-    if (isAnyVar(right_tag))
-      OZ_suspendOn(makeTaggedRef(right_ptr));
-  } else {
-    TypeErrorT(1, "Integer or pair of integers");
-  }
-
-  if (am.currentBoard != space->getSolveBoard()->getParentFast())
-    TypeErrorT(0, "current space must be directly subordinated");
-
-  //  if (am.isBelow(am.currentBoard,space->getSolveBoard()->getBoardFast()))
-
-  space->getSolveActor()->clearResult(space->getBoardFast());
-
-  RefsArray args = allocateRefsArray(2, NO);
-  args[0] = left;
-  args[1] = right;
-
-  Thread *it = new Thread(am.currentThread->getPriority(),
-                          space->getSolveBoard(), OK);
-  it->pushCFunCont(contChooseInternal, args, 2, NO);
-  am.scheduleThread(it);
-
-  return PROCEED;
-} OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIinjectSpace, 2) {
-  declareUnmergedSpace();
-
-  // Check whether space is failed!
-  if (space->isFailed())
-    return PROCEED;
-
-  if (am.currentBoard != space->getSolveBoard()->getParentFast())
-    TypeErrorT(0, "current space must be directly subordinated");
-
-  OZ_Term proc = OZ_getCArg(1);
-
-  DEREF(proc, proc_ptr, proc_tag);
-
-  if (isAnyVar(proc_tag))
-    OZ_suspendOn(makeTaggedRef(proc_ptr));
-
-  if (!isProcedure(proc))
-    TypeErrorT(1, "Procedure");
-
-  Board      *sb = space->getSolveBoard();
-  SolveActor *sa = space->getSolveActor();
-
-  // clear status
-  sa->clearResult(space->getBoardFast());
-
-  // inject
-  sa->inject(sa->getPriority(), proc);
-
-  return PROCEED;
-} OZ_C_proc_end
-
-
-
-// ---------------------------------------------------------------------
-// Tuple
-// ---------------------------------------------------------------------
-
-OZ_Return tupleInline(TaggedRef label, TaggedRef argno, TaggedRef &out)
-{
-  DEREF(argno,_1,argnoTag);
-  DEREF(label,_2,labelTag);
-
-  if (isSmallInt(argnoTag)) {
-    if (isLiteral(labelTag)) {
-      int i = smallIntValue(argno);
-
-      if (i < 0) {
-        goto typeError1;
-      }
-
-      // literals
-      if (i == 0) {
-        out = label;
-        return PROCEED;
-      }
-
-      {
-        SRecord *s = SRecord::newSRecord(label,i);
-
-        TaggedRef newVar = am.currentUVarPrototype;
-        for (int j = 0; j < i; j++) {
-          s->setArg(j,newVar);
-        }
-
-        out = s->normalize();
-        return PROCEED;
-      }
-    }
-    if (isAnyVar(labelTag)) {
-      return SUSPEND;
-    }
-    goto typeError0;
-  }
-  if (isAnyVar(argnoTag)) {
-    if (isAnyVar(labelTag) || isLiteral(labelTag)) {
-      return SUSPEND;
-    }
-    goto typeError0;
-  }
-  goto typeError1;
-
- typeError0:
-  TypeErrorT(0,"Literal");
- typeError1:
-  TypeErrorT(1,"(non-negative small) Int");
-}
-
-DECLAREBI_USEINLINEFUN2(BItuple,tupleInline)
-
-
-// ---------------------------------------------------------------------
-// Tuple & Record
-// ---------------------------------------------------------------------
-
-
-OZ_Return labelInline(TaggedRef term, TaggedRef &out)
-{
-  // Wait for term to be a record with determined label:
-  // Get the term's label, if it exists
-  DEREF(term,_1,tag);
-  switch (tag) {
-  case LTUPLE:
-    out=AtomCons;
-    return PROCEED;
-  case LITERAL:
-    out=term;
-    return PROCEED;
-  case SRECORD:
-  record:
-    out=tagged2SRecord(term)->getLabel();
-    return PROCEED;
-  case UVAR:
-  case SVAR:
-    return SUSPEND;
-  case CVAR:
-    switch (tagged2CVar(term)->getType()) {
-    case OFSVariable:
-      {
-        TaggedRef thelabel=tagged2GenOFSVar(term)->getLabel();
-        DEREF(thelabel,_1,_2);
-        if (isAnyVar(thelabel)) return SUSPEND;
-        out=thelabel;
-        return PROCEED;
-      }
-    case FDVariable:
-    case BoolVariable:
-        TypeErrorT(0,"Record");
-    default:
-        return SUSPEND;
-    }
-  default:
-    TypeErrorT(0,"Record");
-  }
-}
-
-DECLAREBI_USEINLINEFUN1(BIlabel,labelInline)
 
 
 /*
@@ -1662,149 +1301,6 @@ OZ_Return MonitorArityPropagator::run(void)
 }
 
 
-
-/*
- * NOTE: similar functions are dot, genericSet, uparrow
- */
-OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot)
-{
-  DEREF(fea, _1,feaTag);
-LBLagain:
-  DEREF(term, _2, termTag);
-
-  if (isAnyVar(feaTag)) {
-    switch (termTag) {
-    case LTUPLE:
-    case SRECORD:
-    case SVAR:
-    case UVAR:
-      return SUSPEND;
-    case CVAR:
-      switch (tagged2CVar(term)->getType()) {
-      case FDVariable:
-      case BoolVariable:
-          goto typeError0;
-      default:
-          return SUSPEND;
-      }
-      // if (tagged2CVar(term)->getType() == OFSVariable) return SUSPEND;
-      // if (tagged2CVar(term)->getType() == AVAR) return SUSPEND;
-      // goto typeError0;
-    case LITERAL:
-      goto typeError0;
-    default:
-      if (isChunk(term)) return SUSPEND;
-      goto typeError0;
-    }
-  }
-
-  switch (termTag) {
-  case LTUPLE:
-    {
-      if (!isSmallInt(fea)) {
-        if (!dot && isBigInt(fea)) return FAILED;
-        if (dot) goto raise;
-        goto typeError1;
-      }
-      int i2 = smallIntValue(fea);
-
-      switch (i2) {
-      case 1:
-        if (out) *out = tagged2LTuple(term)->getHead();
-        return PROCEED;
-      case 2:
-        if (out) *out = tagged2LTuple(term)->getTail();
-        return PROCEED;
-      }
-      if (dot) goto raise;
-      return FAILED;
-    }
-
-  case SRECORD:
-    {
-      if ( ! isFeature(feaTag) ) goto typeError1;
-
-      TaggedRef t = tagged2SRecord(term)->getFeature(fea);
-      if (t == makeTaggedNULL()) {
-        if (dot) goto raise;
-        return FAILED;
-      }
-      if (out) *out = t;
-      return PROCEED;
-    }
-
-  case UVAR:
-  case SVAR:
-    if (!isFeature(feaTag)) {
-      TypeErrorT(1,"Feature");
-    }
-    return SUSPEND;
-
-  case CVAR:
-    {
-      if (tagged2CVar(term)->getType() != OFSVariable) goto typeError0;
-      if (!isFeature(feaTag)) goto typeError1;
-      GenOFSVariable *ofs=(GenOFSVariable *)tagged2CVar(term);
-      TaggedRef t = ofs->getFeatureValue(fea);
-      if (t == makeTaggedNULL()) return SUSPEND;
-      if (out) *out = t;
-      return PROCEED;
-    }
-
-  case LITERAL:
-    if (dot) goto raise;
-    return FAILED;
-
-  default:
-    if (isChunk(term)) {
-      if (! isFeature(feaTag)) { goto typeError1; }
-      TaggedRef t;
-      switch (tagged2Const(term)->getType()) {
-      case Co_Chunk:
-        t = tagged2SChunk(term)->getFeature(fea);
-        break;
-      case Co_Object:
-        t = tagged2Object(term)->getFeature(fea);
-        break;
-      case Co_Array:
-      case Co_Dictionary:
-      default:
-        // no public known features
-        t = makeTaggedNULL();
-        break;
-      }
-      if (t == makeTaggedNULL()) {
-        if (dot) goto raise;
-        return FAILED;
-      }
-      if (out) *out = t;
-      return PROCEED;
-    }
-    /* special case for cells (mm 17.3.95) */
-    if (ozconf.cellHack && isCell(term)) {
-      Cell *cell= tagged2Cell(term);
-      term = cell->getValue();
-      goto LBLagain;
-    }
-
-    goto typeError0;
-  }
-typeError0:
-  TypeErrorT(0,"Record or Chunk");
-typeError1:
-  TypeErrorT(1,"Feature");
-raise:
-  return OZ_raiseC(".",2,term,fea);
-}
-
-
-OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
-{
-  return genericDot(term,fea,&out,TRUE);
-}
-DECLAREBI_USEINLINEFUN2(BIdot,dotInline)
-
-
 // {SetC X F Y}: destructively update feature F of X with new value Y.
 // X must be undetermined record, F must be literal, feature is added if it doesn't exist.
 // Non-monotonic built-in.
@@ -1900,13 +1396,29 @@ OZ_C_proc_begin(BItestCB, 3)
     DEREF(term, termPtr, termTag);
     DEREF(fea,  feaPtr,  feaTag);
 
-    // Error unless X is OFS:
-    if (termTag!=CVAR || tagged2CVar(term)->getType()!=OFSVariable)
-        TypeErrorT(0,"undetermined record");
-
     // Error unless F is a feature:
     if (!isFeature(feaTag))
         TypeErrorT(1,"Feature");
+
+    if (isRecord(term)) {
+      if (isSRecord(term)) {
+        TaggedRef t = tagged2SRecord(term)->getFeature(fea);
+        return OZ_unify(out,t?NameTrue:NameFalse);
+      }
+      if (isLTuple(term)) {
+        if (!isSmallInt(fea)) return OZ_unify(out,NameFalse);
+        int feaval=smallIntValue(fea);
+        if (feaval==1 || feaval==2) return OZ_unify(out,NameTrue);
+        return OZ_unify(out,NameFalse);
+      }
+      Assert(isLiteral(term));
+      return OZ_unify(out,NameFalse);
+    }
+
+    // Error unless X is OFS:
+
+    if (termTag!=CVAR || tagged2CVar(term)->getType()!=OFSVariable)
+        TypeErrorT(0,"undetermined record");
 
     // At this point, X is OFS and F is feature.
     GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
@@ -2180,6 +1692,515 @@ OZ_Return uparrowInlineBlocking(TaggedRef term, TaggedRef fea, TaggedRef &out)
     return genericUparrowInline(term, fea, out, TRUE);
 }
 
+// ---------------------------------------------------------------------
+// Spaces
+// ---------------------------------------------------------------------
+
+#define declareSpace()                                  \
+  OZ_Term tagged_space = OZ_getCArg(0);                 \
+  DEREF(tagged_space, space_ptr, space_tag);            \
+  if (isAnyVar(space_tag))                              \
+    OZ_suspendOn(makeTaggedRef(space_ptr));             \
+  if (!isSpace(tagged_space))                           \
+    TypeErrorT(0, "Space");                             \
+  Space *space = (Space *) tagged2Const(tagged_space);
+
+#define declareUnmergedSpace()                  \
+  declareSpace()                                \
+  if (space->isMerged())                        \
+    return OZ_raiseC("spaceMerged",0);
+
+#define declareStableSpace()                                            \
+  declareUnmergedSpace();                                               \
+  {                                                                     \
+    TaggedRef result = space->getSolveActor()->getResult();             \
+    DEREF(result, result_ptr, result_tag);                              \
+    if (isAnyVar(result_tag)) OZ_suspendOn(makeTaggedRef(result_ptr));  \
+  }
+
+OZ_C_proc_begin(BInewSpace, 2) {
+  OZ_Term proc = OZ_getCArg(0);
+
+  DEREF(proc, proc_ptr, proc_tag);
+  if (isAnyVar(proc_tag))
+    OZ_suspendOn(makeTaggedRef(proc_ptr));
+
+  if (!isProcedure(proc))
+    TypeErrorT(0, "Procedure");
+
+  Board* CBB = am.currentBoard;
+  int    CPP = am.currentThread->getPriority();
+
+  // creation of solve actor and solve board
+  SolveActor *sa = new SolveActor(CBB, CPP);
+
+  // thread creation for {proc root}
+  sa->inject(CPP, proc);
+
+  // create space
+  return OZ_unify(OZ_getCArg(1), makeTaggedConst(new Space(CBB,sa->getSolveBoard())));
+} OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIisSpace, 2) {
+  OZ_Term tagged_space = OZ_getCArg(0);
+
+  DEREF(tagged_space, space_ptr, space_tag);
+
+  if (isAnyVar(space_tag))
+    OZ_suspendOn(makeTaggedRef(space_ptr));
+
+  return OZ_unify(OZ_getCArg(1), isSpace(tagged_space) ? NameTrue : NameFalse);
+} OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIaskSpace, 2) {
+  declareSpace();
+
+  if (space->isFailed())
+    return OZ_unify(OZ_args[1], AtomFailed);
+
+  if (space->isMerged())
+    return OZ_unify(OZ_args[1], AtomMerged);
+
+  TaggedRef answer = space->getSolveActor()->getResult();
+
+  DEREF(answer, answer_ptr, answer_tag);
+
+  if (isAnyVar(answer_tag))
+    OZ_suspendOn(makeTaggedRef(answer_ptr));
+
+  return OZ_unify(OZ_args[1],
+                  (isSTuple(answer) &&
+                   literalEq(tagged2SRecord(answer)->getLabel(),
+                             AtomSucceeded))
+                    ? AtomSucceeded : answer);
+} OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIaskVerboseSpace, 2) {
+  declareSpace();
+
+  if (space->isFailed())
+    return OZ_unify(OZ_args[1], AtomFailed);
+
+  if (space->isMerged())
+    return OZ_unify(OZ_args[1], AtomMerged);
+
+  if (space->getSolveActor()->isBlocked()) {
+    SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
+    stuple->setArg(0, am.currentUVarPrototype);
+
+    if (OZ_unify(OZ_args[1], makeTaggedSRecord(stuple)) == FAILED)
+      return FAILED;
+
+    OZ_args[1] = stuple->getArg(0);
+  }
+
+  TaggedRef answer = space->getSolveActor()->getResult();
+
+  DEREF(answer, answer_ptr, answer_tag);
+
+  if (isAnyVar(answer_tag))
+    OZ_suspendOn(makeTaggedRef(answer_ptr));
+
+  return OZ_unify(OZ_args[1], answer);
+} OZ_C_proc_end
+
+
+OZ_C_proc_begin(BImergeSpace, 2) {
+  declareUnmergedSpace();
+
+  if (am.isBelow(am.currentBoard,space->getSolveBoard()->getBoardFast()))
+    return OZ_raiseC("spaceSuper",0);
+
+  if (space->isFailed())
+    return FAILED;
+
+  Board *CBB = am.currentBoard;
+
+  // Check board
+
+  TaggedRef result = space->getSolveActor()->getResult();
+
+  if (OZ_isVariable(result) && OZ_unify(result, AtomMerged) == FAILED)
+    return FAILED;
+
+  TaggedRef root = space->getSolveActor()->merge(CBB);
+  space->merge();
+
+  return OZ_unify(root, OZ_getCArg(1));
+} OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIcloneSpace, 2) {
+  declareStableSpace();
+
+  Board* CBB = am.currentBoard;
+
+  if (space->isFailed())
+    return OZ_unify(OZ_getCArg(1),
+                    makeTaggedConst(new Space(CBB, (Board *) 0)));
+
+
+  return OZ_unify(OZ_getCArg(1),
+                  makeTaggedConst(new Space(CBB,
+                                            space->getSolveActor()->clone(CBB))));
+
+} OZ_C_proc_end
+
+
+OZ_C_proc_begin(contChooseInternal, 2) {
+  int left  = smallIntValue(OZ_getCArg(0)) - 1;
+  int right = smallIntValue(OZ_getCArg(1)) - 1;
+
+  int status =
+    SolveActor::Cast(am.currentBoard->getActor())->choose(left,right);
+
+  if (status==-1) {
+    return OZ_raiseC("spaceNoChoices",0);
+  } else if (status==0) {
+    return FAILED;
+  }
+
+  return PROCEED;
+} OZ_C_proc_end
+
+
+
+OZ_C_proc_begin(BIchooseSpace, 2) {
+  declareStableSpace();
+  TaggedRef choice = OZ_getCArg(1);
+
+  DEREF(choice, choice_ptr, choice_tag);
+
+  if (isAnyVar(choice_tag))
+    OZ_suspendOn(makeTaggedRef(choice_ptr));
+
+  TaggedRef left, right;
+
+  if (isSmallInt(choice_tag)) {
+    left  = choice;
+    right = choice;
+  } else if (isSTuple(choice) &&
+             literalEq(AtomPair,
+                       tagged2SRecord(choice)->getLabel()) &&
+             tagged2SRecord(choice)->getWidth() == 2) {
+    left  = tagged2SRecord(choice)->getArg(0);
+    DEREF(left, left_ptr, left_tag);
+
+    if (isAnyVar(left_tag))
+      OZ_suspendOn(makeTaggedRef(left_ptr));
+
+    right = tagged2SRecord(choice)->getArg(1);
+
+    DEREF(right, right_ptr, right_tag);
+
+    if (isAnyVar(right_tag))
+      OZ_suspendOn(makeTaggedRef(right_ptr));
+  } else {
+    TypeErrorT(1, "Integer or pair of integers");
+  }
+
+  if (am.currentBoard != space->getSolveBoard()->getParentFast())
+    return OZ_raiseC("spaceSuper",0);
+
+  //  if (am.isBelow(am.currentBoard,space->getSolveBoard()->getBoardFast()))
+
+  space->getSolveActor()->clearResult(space->getBoardFast());
+
+  RefsArray args = allocateRefsArray(2, NO);
+  args[0] = left;
+  args[1] = right;
+
+  Thread *it = new Thread(am.currentThread->getPriority(),
+                          space->getSolveBoard(), OK);
+  it->pushCFunCont(contChooseInternal, args, 2, NO);
+  am.scheduleThread(it);
+
+  return PROCEED;
+} OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIinjectSpace, 2) {
+  declareUnmergedSpace();
+
+  // Check whether space is failed!
+  if (space->isFailed())
+    return PROCEED;
+
+  if (am.currentBoard != space->getSolveBoard()->getParentFast())
+    return OZ_raiseC("spaceSuper",0);
+
+  OZ_Term proc = OZ_getCArg(1);
+
+  DEREF(proc, proc_ptr, proc_tag);
+
+  if (isAnyVar(proc_tag))
+    OZ_suspendOn(makeTaggedRef(proc_ptr));
+
+  if (!isProcedure(proc))
+    TypeErrorT(1, "Procedure");
+
+  Board      *sb = space->getSolveBoard();
+  SolveActor *sa = space->getSolveActor();
+
+  // clear status
+  sa->clearResult(space->getBoardFast());
+
+  // inject
+  sa->inject(sa->getPriority(), proc);
+
+  return PROCEED;
+} OZ_C_proc_end
+
+
+
+// ---------------------------------------------------------------------
+// Tuple
+// ---------------------------------------------------------------------
+
+OZ_Return tupleInline(TaggedRef label, TaggedRef argno, TaggedRef &out)
+{
+  DEREF(argno,_1,argnoTag);
+  DEREF(label,_2,labelTag);
+
+  if (isSmallInt(argnoTag)) {
+    if (isLiteral(labelTag)) {
+      int i = smallIntValue(argno);
+
+      if (i < 0) {
+        goto typeError1;
+      }
+
+      // literals
+      if (i == 0) {
+        out = label;
+        return PROCEED;
+      }
+
+      {
+        SRecord *s = SRecord::newSRecord(label,i);
+
+        TaggedRef newVar = am.currentUVarPrototype;
+        for (int j = 0; j < i; j++) {
+          s->setArg(j,newVar);
+        }
+
+        out = s->normalize();
+        return PROCEED;
+      }
+    }
+    if (isAnyVar(labelTag)) {
+      return SUSPEND;
+    }
+    goto typeError0;
+  }
+  if (isAnyVar(argnoTag)) {
+    if (isAnyVar(labelTag) || isLiteral(labelTag)) {
+      return SUSPEND;
+    }
+    goto typeError0;
+  }
+  goto typeError1;
+
+ typeError0:
+  TypeErrorT(0,"Literal");
+ typeError1:
+  TypeErrorT(1,"(non-negative small) Int");
+}
+
+DECLAREBI_USEINLINEFUN2(BItuple,tupleInline)
+
+
+// ---------------------------------------------------------------------
+// Tuple & Record
+// ---------------------------------------------------------------------
+
+
+OZ_Return labelInline(TaggedRef term, TaggedRef &out)
+{
+  // Wait for term to be a record with determined label:
+  // Get the term's label, if it exists
+  DEREF(term,_1,tag);
+  switch (tag) {
+  case LTUPLE:
+    out=AtomCons;
+    return PROCEED;
+  case LITERAL:
+    out=term;
+    return PROCEED;
+  case SRECORD:
+  record:
+    out=tagged2SRecord(term)->getLabel();
+    return PROCEED;
+  case UVAR:
+  case SVAR:
+    return SUSPEND;
+  case CVAR:
+    switch (tagged2CVar(term)->getType()) {
+    case OFSVariable:
+      {
+        TaggedRef thelabel=tagged2GenOFSVar(term)->getLabel();
+        DEREF(thelabel,_1,_2);
+        if (isAnyVar(thelabel)) return SUSPEND;
+        out=thelabel;
+        return PROCEED;
+      }
+    case FDVariable:
+    case BoolVariable:
+        TypeErrorT(0,"Record");
+    default:
+        return SUSPEND;
+    }
+  default:
+    TypeErrorT(0,"Record");
+  }
+}
+
+DECLAREBI_USEINLINEFUN1(BIlabel,labelInline)
+
+/*
+ * NOTE: similar functions are dot, genericSet, uparrow
+ */
+OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot)
+{
+  DEREF(fea, _1,feaTag);
+LBLagain:
+  DEREF(term, _2, termTag);
+
+  if (isAnyVar(feaTag)) {
+    switch (termTag) {
+    case LTUPLE:
+    case SRECORD:
+    case SVAR:
+    case UVAR:
+      return SUSPEND;
+    case CVAR:
+      switch (tagged2CVar(term)->getType()) {
+      case FDVariable:
+      case BoolVariable:
+          goto typeError0;
+      default:
+          return SUSPEND;
+      }
+      // if (tagged2CVar(term)->getType() == OFSVariable) return SUSPEND;
+      // if (tagged2CVar(term)->getType() == AVAR) return SUSPEND;
+      // goto typeError0;
+    case LITERAL:
+      goto typeError0;
+    default:
+      if (isChunk(term)) return SUSPEND;
+      goto typeError0;
+    }
+  }
+
+  switch (termTag) {
+  case LTUPLE:
+    {
+      if (!isSmallInt(fea)) {
+        if (!dot && isBigInt(fea)) return FAILED;
+        if (dot) goto raise;
+        goto typeError1;
+      }
+      int i2 = smallIntValue(fea);
+
+      switch (i2) {
+      case 1:
+        if (out) *out = tagged2LTuple(term)->getHead();
+        return PROCEED;
+      case 2:
+        if (out) *out = tagged2LTuple(term)->getTail();
+        return PROCEED;
+      }
+      if (dot) goto raise;
+      return FAILED;
+    }
+
+  case SRECORD:
+    {
+      if ( ! isFeature(feaTag) ) goto typeError1;
+
+      TaggedRef t = tagged2SRecord(term)->getFeature(fea);
+      if (t == makeTaggedNULL()) {
+        if (dot) goto raise;
+        return FAILED;
+      }
+      if (out) *out = t;
+      return PROCEED;
+    }
+
+  case UVAR:
+  case SVAR:
+    if (!isFeature(feaTag)) {
+      TypeErrorT(1,"Feature");
+    }
+    return SUSPEND;
+
+  case CVAR:
+    {
+      if (tagged2CVar(term)->getType() != OFSVariable) goto typeError0;
+      if (!isFeature(feaTag)) goto typeError1;
+      GenOFSVariable *ofs=(GenOFSVariable *)tagged2CVar(term);
+      TaggedRef t = ofs->getFeatureValue(fea);
+      if (t == makeTaggedNULL()) return SUSPEND;
+      if (out) *out = t;
+      return PROCEED;
+    }
+
+  case LITERAL:
+    if (dot) goto raise;
+    return FAILED;
+
+  default:
+    if (isChunk(term)) {
+      if (! isFeature(feaTag)) { goto typeError1; }
+      TaggedRef t;
+      switch (tagged2Const(term)->getType()) {
+      case Co_Chunk:
+        t = tagged2SChunk(term)->getFeature(fea);
+        break;
+      case Co_Object:
+        t = tagged2Object(term)->getFeature(fea);
+        break;
+      case Co_Array:
+      case Co_Dictionary:
+      default:
+        // no public known features
+        t = makeTaggedNULL();
+        break;
+      }
+      if (t == makeTaggedNULL()) {
+        if (dot) goto raise;
+        return FAILED;
+      }
+      if (out) *out = t;
+      return PROCEED;
+    }
+    /* special case for cells (mm 17.3.95) */
+    if (ozconf.cellHack && isCell(term)) {
+      Cell *cell= tagged2Cell(term);
+      term = cell->getValue();
+      goto LBLagain;
+    }
+
+    goto typeError0;
+  }
+typeError0:
+  TypeErrorT(0,"Record or Chunk");
+typeError1:
+  TypeErrorT(1,"Feature");
+raise:
+  return OZ_raiseC(".",2,term,fea);
+}
+
+
+OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
+{
+  return genericDot(term,fea,&out,TRUE);
+}
+DECLAREBI_USEINLINEFUN2(BIdot,dotInline)
+
 
 OZ_Return hasFeatureInline(TaggedRef term, TaggedRef fea)
 {
@@ -2187,6 +2208,40 @@ OZ_Return hasFeatureInline(TaggedRef term, TaggedRef fea)
 }
 DECLAREBI_USEINLINEREL2(BIhasFeature,hasFeatureInline)
 DECLAREBOOLFUN2(BIhasFeatureB,hasFeatureBInline,hasFeatureInline)
+
+OZ_Return subtreeInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
+{
+  return genericDot(term,fea,&out,FALSE);
+}
+
+DECLAREBI_USEINLINEFUN2(BIsubtree,subtreeInline)
+
+
+extern OZ_Return subtreeInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
+
+
+/*
+ * fun {matchDefault Term Attr Defau}
+ *    if X in Term.Attr = X then X else Defau fi
+ * end
+ */
+
+OZ_Return matchDefaultInline(TaggedRef term, TaggedRef attr, TaggedRef defau,
+                             TaggedRef &out)
+{
+  switch(subtreeInline(term,attr,out)) {
+  case PROCEED:
+    return PROCEED;
+  case SUSPEND:
+    return SUSPEND;
+  case FAILED:
+  default:
+    out = defau;
+    return PROCEED;
+  }
+}
+
+DECLAREBI_USEINLINEFUN3(BImatchDefault,matchDefaultInline)
 
 
 OZ_Return widthInline(TaggedRef term, TaggedRef &out)
@@ -2228,9 +2283,8 @@ OZ_Return widthInline(TaggedRef term, TaggedRef &out)
 DECLAREBI_USEINLINEFUN1(BIwidth,widthInline)
 
 
-
 // ---------------------------------------------------------------------
-// Bool things
+// Unit
 // ---------------------------------------------------------------------
 
 OZ_C_proc_begin(BIgetUnit,1)
@@ -2238,6 +2292,49 @@ OZ_C_proc_begin(BIgetUnit,1)
   return OZ_unify(NameUnit,OZ_getCArg(0));
 }
 OZ_C_proc_end
+
+OZ_Return isUnitInline(TaggedRef t)
+{
+  NONSUVAR( t, term, tag);
+  if (isCVar(tag)) {
+    switch (tagged2CVar(term)->getType()) {
+    case OFSVariable:
+      {
+        GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
+        if (ofsvar->getWidth()>0) return FAILED;
+        TaggedRef lbl=ofsvar->getLabel();
+        DEREF(lbl,_1,lblTag);
+        if (isLiteral(lblTag)) {
+          if (isAtom(lbl)) {
+            if (literalEq(term,NameUnit))
+              return SUSPEND;
+            else
+              return FAILED;
+          } else { // isName
+            return FAILED;
+          }
+        }
+        return SUSPEND;
+      }
+    case FDVariable:
+    case BoolVariable:
+      return FAILED;
+    default:
+      return SUSPEND;
+    }
+  }
+  if (literalEq(term,NameUnit))
+    return PROCEED;
+  else
+    return FAILED;
+}
+
+DECLAREBI_USEINLINEREL1(BIisUnit,isUnitInline)
+DECLAREBOOLFUN1(BIisUnitB,isUnitBInline,isUnitInline)
+
+// ---------------------------------------------------------------------
+// Bool things
+// ---------------------------------------------------------------------
 
 OZ_C_proc_begin(BIgetTrue,1)
 {
@@ -2293,7 +2390,6 @@ OZ_Return isBoolInline(TaggedRef t)
 DECLAREBI_USEINLINEREL1(BIisBool,isBoolInline)
 DECLAREBOOLFUN1(BIisBoolB,isBoolBInline,isBoolInline)
 
-
 OZ_Return notInline(TaggedRef A, TaggedRef &out)
 {
   NONVAR(A,term,tag);
@@ -2313,6 +2409,7 @@ OZ_Return notInline(TaggedRef A, TaggedRef &out)
 
 DECLAREBI_USEINLINEFUN1(BInot,notInline)
 
+// and: not specified (mm)
 OZ_Return andInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
@@ -2344,6 +2441,7 @@ OZ_Return andInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 DECLAREBI_USEINLINEFUN2(BIand,andInline)
 
 
+// or: not specified (mm)
 OZ_Return orInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
@@ -2391,7 +2489,7 @@ OZ_C_proc_begin(BIstringToAtom,2)
   OZ_declareStringArg(0,str);
   OZ_Term out = OZ_getCArg(1);
 
-  if (!str) return OZ_typeError(0,"String as Atom");
+  if (!str) return OZ_raiseC("stringNoAtom",1,OZ_getCArg(0));
 
   OZ_Return ret = OZ_unifyAtom(out,str);
 
@@ -2402,7 +2500,6 @@ OZ_C_proc_end
 // ---------------------------------------------------------------------
 // Virtual Strings
 // ---------------------------------------------------------------------
-
 
 inline
 TaggedRef vs_suspend(SRecord *vs, int i, TaggedRef arg_rest) {
@@ -2703,7 +2800,9 @@ OZ_C_proc_begin(BIrecordWidth, 2)
 }
 OZ_C_proc_end
 
-// ---------------------------------------------------------------------
+/* ---------------------------------------------------------------------
+ * Threads
+ * --------------------------------------------------------------------- */
 
 OZ_C_proc_begin(BIsetThreadPriority,1)
 {
@@ -2731,6 +2830,71 @@ OZ_C_proc_begin(BIgetThreadPriority,1)
   return OZ_unifyInt(out,am.currentThread->getPriority());
 }
 OZ_C_proc_end
+
+
+
+#ifdef NEW_THREAD
+int OZ_isThread(OZ_Term t)
+{
+  return 0;
+}
+
+#define OZ_declareThreadArg(ARG,VAR)                            \
+ Thread *VAR;                                                   \
+ OZ_nonvarArg(ARG);                                             \
+ if (! OZ_isThread(OZ_getCArg(ARG))) {                          \
+   return OZ_typeError(ARG,"Thread");                           \
+ } else {                                                       \
+   VAR = (Thread *) tagged2Const(OZ_deref(OZ_getCArg(ARG)));    \
+ }
+
+OZ_C_proc_begin(BIthreadSetPriority,2)
+{
+  OZ_declareThreadArg(0,th);
+  OZ_declareIntArg(1,prio);
+
+  if (prio > OZMAX_PRIORITY || prio < OZMIN_PRIORITY) {
+    TypeErrorT(0,"Int [0 ... 100]");
+  }
+
+  int oldPrio = th->getPriority();
+  th->setPriority(prio);
+
+  if (prio <= oldPrio) {
+    am.setSFlag(ThreadSwitch);
+  }
+
+  if (am.currentThread != th && th->isRunnable()) {
+    am.rescheduleThread(th);
+  }
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIthreadGetPriority,2)
+{
+  OZ_declareThreadArg(0,th);
+  OZ_declareArg(1,out);
+
+  return OZ_unifyInt(out,th->getPriority());
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIthreadTerminate,1)
+{
+  OZ_declareThreadArg(0,th);
+
+  if (am.currentThread == th) {
+    am.setSFlag(ThreadSwitch);
+  } else if (th->isRunnable()) {
+    am.deleteThread(th);
+  }
+  am.terminateThread(th);
+
+  return PROCEED;
+}
+OZ_C_proc_end
+#endif
 
 // ---------------------------------------------------------------------
 // NAMES
@@ -2872,6 +3036,10 @@ OZ_Return neqInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   }
 }
 
+// ---------------------------------------------------------------------
+// String
+// ---------------------------------------------------------------------
+
 OZ_C_proc_begin(BIisString,2)
 {
   OZ_Term in=OZ_getCArg(0);
@@ -2890,6 +3058,10 @@ OZ_C_proc_end
 
 #ifdef BUILTINS1
 
+
+// ---------------------------------------------------------------------
+// Char
+// ---------------------------------------------------------------------
 
 #define FirstCharArg(NAME)                      \
  int i;                                         \
@@ -2999,37 +3171,9 @@ OZ_C_proc_begin(BIcharType,2) {
 } OZ_C_proc_end
 
 
-/*
- *      Construct a new SRecord to be a copy of old.
- *      This is the functionality of adjoin(old,newlabel).
- */
-OZ_C_proc_begin(BIcopyRecord,2)
-{
-  OZ_Term in = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-  NONVAR(in,rec,tag);
-
-  switch (tag) {
-  case SRECORD:
-    {
-      SRecord *rec0 = tagged2SRecord(rec);
-      SRecord *rec1 = SRecord::newSRecord(rec0);
-      return OZ_unify(out,makeTaggedSRecord(rec1));
-    }
-  case LITERAL:
-    return OZ_unify(out,rec);
-
-  default:
-    TypeErrorT(0,"Determined Record");
-  }
-}
-OZ_C_proc_end
-
-
-
-/*===================================================================
+/********************************************************************
  * Records
- *=================================================================== */
+ ******************************************************************** */
 
 OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
 {
@@ -3387,79 +3531,12 @@ OZ_Return BIarityInline(TaggedRef term, TaggedRef &out)
 
 DECLAREBI_USEINLINEFUN1(BIarity,BIarityInline)
 
-void assignError(TaggedRef rec, TaggedRef fea, char *name)
-{
-  prefixError();
-  message("Object Error\n");
-  message("Assignment (%s) failed: bad attribute or state\n",name);
-  message("attribute found  : %s\n", toC(fea));
-  message("state found      : %s\n", toC(rec));
-}
-
-#define CheckSelf                               \
-     Assert(am.getSelf() != NULL);              \
-     { Object *o = am.getSelf();                \
-       Assert(o->getDeepness()>=1);             \
-     }
-
-
-OZ_Return atInline(TaggedRef fea, TaggedRef &out)
-{
-  DEREF(fea, _1, feaTag);
-
-  SRecord *rec = am.getSelf()->getState();
-  if (rec) {
-    if (!isFeature(fea)) {
-      if (isAnyVar(fea)) {
-        return SUSPEND;
-      }
-      goto bomb;
-    }
-    CheckSelf;
-    TaggedRef t = rec->getFeature(fea);
-    if (t) {
-      out = t;
-      return PROCEED;
-    }
-  }
-
-bomb:
-  TypeErrorT(1,"(valid) Feature");
-}
-DECLAREBI_USEINLINEFUN1(BIat,atInline)
-
-OZ_Return assignInline(TaggedRef fea, TaggedRef value)
-{
-  DEREF(fea, _2, feaTag);
-
-  SRecord *r = am.getSelf()->getState();
-  if (r) {
-    CheckSelf;
-    if (!isFeature(fea)) {
-      if (isAnyVar(fea)) {
-        return SUSPEND;
-      }
-      goto bomb;
-    }
-    if (r->replaceFeature(fea,value) == makeTaggedNULL()) {
-      goto bomb;
-    }
-    return PROCEED;
-  }
-
- bomb:
-  assignError(r?makeTaggedSRecord(r):OZ_atom("noattributes"),
-              fea,"<-");
-  return PROCEED;
-}
-
-DECLAREBI_USEINLINEREL2(BIassign,assignInline)
 
 #endif /* BUILTINS1 */
 
 
 /* -----------------------------------------------------------------------
-   suspending
+   Numbers
    ----------------------------------------------------------------------- */
 
 #ifdef BUILTINS1
@@ -3559,7 +3636,7 @@ OZ_Return BIdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(B,_2,tagB);
 
   if (tagB == SMALLINT && smallIntValue(B) == 0) {
-    return OZ_raiseC("div",2,A,B);
+    return OZ_raiseC("div0",2,A);
   }
 
   if ( (tagA == SMALLINT) && (tagB == SMALLINT)) {
@@ -3577,8 +3654,7 @@ OZ_Return BImodInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(B,_2,tagB);
 
   if ((tagB == SMALLINT && smallIntValue(B) == 0)) {
-    OZ_warning("mod(%s,0): division by zero",toC(A));
-    return FAILED;
+    return OZ_raiseC("mod0",2,A);
   }
 
   if ( (tagA == SMALLINT) && (tagB == SMALLINT)) {
@@ -4141,7 +4217,7 @@ OZ_Return BIfloatToIntInline(TaggedRef A, TaggedRef &out)
     return SUSPEND;
   }
 
-  return FAILED;
+  TypeErrorT(-1,"Float");
 }
 
 OZ_C_proc_begin(BIfloatToString, 2)
@@ -4156,7 +4232,7 @@ OZ_C_proc_begin(BIfloatToString, 2)
     OZ_Return ret = OZ_unify(out,OZ_string(s));
     return ret;
   }
-  return FAILED;
+  TypeErrorT(0,"Float");
 }
 OZ_C_proc_end
 
@@ -4165,11 +4241,11 @@ OZ_C_proc_begin(BIstringToFloat, 2)
   OZ_declareStringArg(0,str);
   OZ_declareArg(1,out);
 
-  if (!str) return OZ_typeError(0,"String as Float");
+  if (!str) return OZ_raiseC("stringNoFloat",1,OZ_getCArg(0));
 
   char *end = OZ_parseFloat(str);
   if (!end || *end != 0) {
-    return FAILED;
+    return OZ_raiseC("stringNoFloat",1,OZ_getCArg(0));
   }
   OZ_Return ret = OZ_unify(out,OZ_CStringToFloat(str));
   return ret;
@@ -4198,11 +4274,12 @@ OZ_C_proc_begin(BIstringToInt, 2)
   OZ_declareStringArg(0,str);
   OZ_declareArg(1,out);
 
-  if (!str) return OZ_typeError(0,"String as Int");
+  if (!str) return OZ_raiseC("stringNoInt",1,OZ_getCArg(0));
+
 
   char *end = OZ_parseInt(str);
   if (!end || *end != 0) {
-    return FAILED;
+    return OZ_raiseC("stringNoInt",1,OZ_getCArg(0));
   }
   OZ_Return ret = OZ_unify(out,OZ_CStringToInt(str));
   return ret;
@@ -4234,9 +4311,7 @@ OZ_C_proc_begin(BIintToString, 2)
   OZ_Term out = OZ_getCArg(1);
 
   if (OZ_isInt(in)) {
-    char *str = toC(in);
-    OZ_Return ret = OZ_unify(out,OZ_string(str));
-    return ret;
+    return OZ_unify(out,OZ_string(toC(in)));
   }
   TypeErrorT(0,"Int");
 }
@@ -4454,22 +4529,10 @@ DECLAREBI_USEINLINEFUN1(BIabs,BIabsInline)
 DECLAREBI_USEINLINEFUN1(BIadd1,BIadd1Inline)
 DECLAREBI_USEINLINEFUN1(BIsub1,BIsub1Inline)
 
-#define CheckFuckingBoard(Object);                                                              \
-  if (am.currentBoard != Object->getBoardFast()) {                                              \
-    if (am.currentBoard->isWait()) {                                                            \
-      warning("nonlocal access in computation space of disjunction not impl.");                 \
-    } else {                                                                                    \
-      warning("nonlocal access in computation space of %s",                                     \
-              am.currentBoard->isSolve() ? "solve" : "conditional");                            \
-    }                                                                                           \
-    message("Built-in exchangeCell: message sending to a non locally declared object?\n");      \
-    am.currentBoard->incSuspCount();                                                            \
-    return PROCEED;                                                                             \
-  }
 
-/*
+/* ------------------------------------------------------------
  * Groups
- */
+ * ------------------------------------------------------------ */
 
 OZ_C_proc_begin(BInewGroup,2)
 {
@@ -4543,7 +4606,7 @@ OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef inState, TaggedRef &outSta
   }
   Cell *cell = tagged2Cell(rec);
 
-  CheckFuckingBoard(cell);
+  CheckLocalBoard(cell,"cell");
 
   TaggedRef old = cell->exchangeValue(outState);
   return OZ_unify(old,inState);
@@ -4562,19 +4625,18 @@ OZ_C_proc_begin(BIexchangeCell,3)
   switch (state) {
   case SUSPEND:
     OZ_suspendOn(cell);
-  case FAILED:
-    return FAILED;
   case PROCEED:
-  default:
     return OZ_unify(help,outState);
+  default:
+    return state;
   }
 }
 OZ_C_proc_end
 
 
-/*===================================================================
+/********************************************************************
  * Arrays
- *=================================================================== */
+ ******************************************************************** */
 
 OZ_C_proc_begin(BIarrayNew,4)
 {
@@ -4647,7 +4709,7 @@ OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
   }
 
   OzArray *ar = tagged2Array(array);
-  CheckFuckingBoard(ar);
+  CheckLocalBoard(ar,"array");
   return ar->getArg(smallIntValue(index),out);
 }
 DECLAREBI_USEINLINEFUN2(BIarrayGet,arrayGetInline)
@@ -4666,16 +4728,16 @@ OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
   }
 
   OzArray *ar = tagged2Array(array);
-  CheckFuckingBoard(ar);
+  CheckLocalBoard(ar,"array");
   return ar->setArg(smallIntValue(index),value);
 }
 
 DECLAREBI_USEINLINEREL3(BIarrayPut,arrayPutInline)
 
 
-/*===================================================================
+/********************************************************************
  *   Dictionaries
- *=================================================================== */
+ ******************************************************************** */
 
 OZ_C_proc_begin(BIdictionaryNew,1)
 {
@@ -4696,7 +4758,7 @@ OZ_C_proc_begin(BIdictionaryKeys,2)
     TypeErrorT(0,"Dictionary");
   }
 
-  CheckFuckingBoard(tagged2Dictionary(dict));
+  CheckLocalBoard(tagged2Dictionary(dict),"dict");
   return OZ_unify(tagged2Dictionary(dict)->keys(),out);
 }
 OZ_C_proc_end
@@ -4717,7 +4779,7 @@ DECLAREBI_USEINLINEFUN1(BIisDictionary,isDictionaryInline)
   if (!isDictionary(dictaux)) { TypeErrorT(0,"Dictionary"); }   \
   if (!isFeature(key))        { TypeErrorT(1,"feature"); }      \
   OzDictionary *dict = tagged2Dictionary(dictaux);              \
-  if (checkboard) { CheckFuckingBoard(dict); }
+  if (checkboard) { CheckLocalBoard(dict,"dict"); }
 
 
 OZ_Return dictionaryMemberInline(TaggedRef d, TaggedRef k, TaggedRef &out)
@@ -4794,7 +4856,7 @@ OZ_C_proc_begin(BIdictionaryToRecord,3)
   if (!isLiteral(lbl)) {
     TypeErrorT(1,"Literal");
   }
-  CheckFuckingBoard(tagged2Dictionary(dict));
+  CheckLocalBoard(tagged2Dictionary(dict),"dict");
   return OZ_unify(tagged2Dictionary(dict)->toRecord(lbl),r);
 }
 OZ_C_proc_end
@@ -4969,7 +5031,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
 
     if (!f) {
       OZ_warning("linkObjectFiles(%s): expand filename failed",fileName);
-      return FAILED;
+      return OZ_raiseC("???",0);
     }
 
     if (ozconf.showForeignLoad) {
@@ -4979,7 +5041,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
       OZ_warning("linkObjectFiles(%s): failed for %s",fileName,f);
       dld_perror("linkObjectFiles");
       delete [] f;
-      return FAILED;
+      return OZ_raiseC("???",0);
     }
     delete [] f;
     list = OZ_tail(list);
@@ -5015,7 +5077,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
   char *ofiles[numOfiles];
   if (arrayFromList(list,ofiles,numOfiles) == NULL) {
     unlink(tempfile);
-    return FAILED;
+    return OZ_raiseC("???",0);
   }
 
   for (int i=0; ofiles[i] != NULL; i++) {
@@ -5024,7 +5086,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
       OZ_warning("linkObjectFiles: too many arguments");
       unlink(tempfile);
       delete [] f;
-      return FAILED;
+      return OZ_raiseC("???",0);
     }
     strCat(command, commandUsed, " ");
     strCat(command, commandUsed, f);
@@ -5040,7 +5102,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
     sprintf(buf,"'%s' failed in linkObjectFiles",command);
     ozpwarning(buf);
     unlink(tempfile);
-    return FAILED;
+    return OZ_raiseC("???",0);
   }
 
 #ifdef HPUX_700
@@ -5049,7 +5111,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
                     BIND_IMMEDIATE | BIND_NONFATAL | BIND_NOSTART | BIND_VERBOSE, 0L);
 
   if (handle == NULL) {
-    return FAILED;
+    return OZ_raiseC("???",0);
   }
 #else
   void *handle;
@@ -5057,7 +5119,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
   if (!(handle = (void *)dlopen(tempfile, RTLD_NOW ))) {
     OZ_warning("dlopen failed in linkObjectFiles: %s",dlerror());
     unlink(tempfile);
-    return FAILED;
+    return OZ_raiseC("???",0);
   }
 #endif
 
@@ -5072,7 +5134,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
       ofiles[0]==NULL ||
       ofiles[1]!=NULL) {
     OZ_warning("linkObjectFiles(%s): can only accept one DLL\n",toC(list));
-    return FAILED;
+    return OZ_raiseC("???",0);
   }
 
   if (ozconf.showForeignLoad) {
@@ -5082,7 +5144,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
   void *handle = (void *)LoadLibrary(ofiles[0]);
   if (handle==NULL) {
     OZ_warning("failed in linkObjectFiles: %d",GetLastError());
-    return FAILED;
+    return OZ_raiseC("???",0);
   }
   return OZ_unifyInt(out,ToInt32(handle));
 
@@ -5103,12 +5165,12 @@ OZ_C_proc_begin(BIunlinkObjectFile,1)
 
   if (!f) {
     OZ_warning("unlinkObjectFile(%s): expand filename failed",fileName);
-    return FAILED;
+    return OZ_raiseC("???",0);
   }
   if (dld_unlink_by_file(f,0) != 0) {
     delete [] f;
     OZ_warning("unlinkObjectFile(%s): failed for %s",fileName,f);
-    return FAILED;
+    return OZ_raiseC("???",0);
   }
   delete [] f;
 #endif
@@ -5183,7 +5245,7 @@ OZ_C_proc_begin(BIfindFunction,3)
 #ifdef WINDOWS
     OZ_warning("error=%d\n",GetLastError());
 #endif
-    return FAILED;
+    return OZ_raiseC("???",0);
   }
 
 #ifdef DLD
@@ -5196,7 +5258,7 @@ OZ_C_proc_begin(BIfindFunction,3)
     char ** unresolved = dld_list_undefined_sym();
     for (int i=0; i< dld_undefined_sym_count; i++)
       OZ_warning("findFunction: %s",unresolved[i]);
-    return FAILED;
+    return OZ_raiseC("???",0);
   }
 #endif
 
@@ -5209,7 +5271,9 @@ OZ_C_proc_begin(BIfindFunction,3)
 OZ_C_proc_end
 
 
-// ---------------------------------------------------------------------------
+/* ------------------------------------------------------------
+ * Shutdown
+ * ------------------------------------------------------------ */
 
 OZ_C_proc_begin(BIshutdown,0)
 {
@@ -5218,7 +5282,9 @@ OZ_C_proc_begin(BIshutdown,0)
 }
 OZ_C_proc_end
 
-// -------------- SLEEP -------------------------------
+/* ------------------------------------------------------------
+ * Sleep
+ * ------------------------------------------------------------ */
 
 OZ_C_proc_begin(BIsleep,3)
 {
@@ -5228,8 +5294,7 @@ OZ_C_proc_begin(BIsleep,3)
   if (t <= 0) return OZ_unify(l,r);
 
   if (!am.isToplevel()) {
-    OZ_warning("Built-in sleep: only on toplevel");
-    return FAILED;
+    return OZ_raiseC("globalState",1,OZ_atom("io"));
   }
 
   am.insertUser(t,cons(l,r));
@@ -5238,7 +5303,9 @@ OZ_C_proc_begin(BIsleep,3)
 OZ_C_proc_end
 
 
-// ---------------------------------------------------------------------------
+/* ------------------------------------------------------------
+ * Garbage Collection
+ * ------------------------------------------------------------ */
 
 OZ_C_proc_begin(BIgarbageCollection,0)
 {
@@ -5247,7 +5314,9 @@ OZ_C_proc_begin(BIgarbageCollection,0)
 }
 OZ_C_proc_end
 
-// ---------------------------------------------------------------------------
+/* ------------------------------------------------------------
+ * System specials
+ * ------------------------------------------------------------ */
 
 OZ_C_proc_begin(BIsystemEq,2)
 {
@@ -5262,7 +5331,9 @@ OZ_C_proc_begin(BIsystemEqB,3)
 }
 OZ_C_proc_end
 
-
+/*
+ * unify: used by compiler if '\sw -optimize'
+ */
 OZ_C_proc_begin(BIunify,2)
 {
   OZ_Term t0 = OZ_getCArg(0);
@@ -5278,6 +5349,9 @@ OZ_C_proc_begin(BIfail,VarArity)
 }
 OZ_C_proc_end
 
+/*
+ * nop: used as fallback when loading builtins
+ */
 OZ_C_proc_begin(BInop,VarArity)
 {
   warning("nop");
@@ -5286,7 +5360,7 @@ OZ_C_proc_begin(BInop,VarArity)
 OZ_C_proc_end
 
 // ------------------------------------------------------------------------
-// --- Call: Builtin: Load File
+// load precompiled file
 // ------------------------------------------------------------------------
 
 OZ_C_proc_begin(BIloadFile,1)
@@ -5304,7 +5378,7 @@ OZ_C_proc_begin(BIloadFile,1)
 
   if (fd == NULL) {
     OZ_warning("call: loadFile: cannot open file '%s'",file);
-    return FAILED;
+    return OZ_raiseC("???",0);
   }
 
   if (ozconf.showFastLoad) {
@@ -5425,6 +5499,7 @@ OZ_C_proc_end
  *
  * NOTE: similar functions are dot, genericSet, uparrow, subtree, hasFeature
  * ---------------------------------------------------------------------*/
+
 OZ_C_proc_begin(BIgenericSet, 3)
 {
   OZ_Term term = OZ_getCArg(0);
@@ -5503,42 +5578,9 @@ OZ_C_proc_begin(BIgenericSet, 3)
 }
 OZ_C_proc_end
 
-// ---------------------------------------------------------------------------
-
-/* fun {matchDefault Term Attr Defau}
- *    if X in Term.Attr = X then X else Defau fi
- * end
- */
-
-
-OZ_Return subtreeInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
-{
-  return genericDot(term,fea,&out,FALSE);
-}
-
-DECLAREBI_USEINLINEFUN2(BIsubtree,subtreeInline)
-
-
-extern OZ_Return subtreeInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
-
-OZ_Return matchDefaultInline(TaggedRef term, TaggedRef attr, TaggedRef defau,
-                             TaggedRef &out)
-{
-  switch(subtreeInline(term,attr,out)) {
-  case PROCEED:
-    return PROCEED;
-  case SUSPEND:
-    return SUSPEND;
-  case FAILED:
-  default:
-    out = defau;
-    return PROCEED;
-  }
-}
-
-DECLAREBI_USEINLINEFUN3(BImatchDefault,matchDefaultInline)
-
-// ---------------------------------------------------------------------------
+/* ---------------------------------------------------------------------
+ * atomHash ???
+ * --------------------------------------------------------------------- */
 
 OZ_C_proc_begin(BIatomHash, 3)
 {
@@ -5579,7 +5621,9 @@ OZ_C_proc_begin(BIatomHash, 3)
 }
 OZ_C_proc_end
 
-// ---------------------------------------------------------------------------
+/* ---------------------------------------------------------------------
+ * gensym ???
+ * --------------------------------------------------------------------- */
 
 static int genCount = 0;
 
@@ -5596,12 +5640,9 @@ OZ_C_proc_begin(BIgensym,2)
 }
 OZ_C_proc_end
 
-
-/*
- * some special builtins for browser:
- *  getsBound
- *  intToAtom
- */
+/* ---------------------------------------------------------------------
+ * Browser: special builtins: getsBound, intToAtom
+ * --------------------------------------------------------------------- */
 
 OZ_C_proc_begin(_getsBound_dummy, 0)
 {
@@ -5668,6 +5709,10 @@ OZ_C_proc_begin(BIintToAtom, 2)
 }
 OZ_C_proc_end
 
+/* ---------------------------------------------------------------------
+ * ???
+ * --------------------------------------------------------------------- */
+
 OZ_C_proc_begin(BIconstraints,2)
 {
   OZ_Term in = OZ_getCArg(0);
@@ -5726,6 +5771,9 @@ OZ_C_proc_begin(BIsetAbstractionTabDefaultEntry,1)
 }
 OZ_C_proc_end
 
+/* ---------------------------------------------------------------------
+ * System
+ * --------------------------------------------------------------------- */
 
 OZ_C_proc_begin(BIprintError,1)
 {
@@ -5771,32 +5819,10 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIgetTermSize,4)
 {
-  int depth, width;
-  OZ_Term t = OZ_getCArg (0);
-  OZ_Term dt = OZ_getCArg (1);
-  OZ_Term wt = OZ_getCArg (2);
-  OZ_Term out = OZ_getCArg (3);
-
-  DEREF(dt, dtPtr, dtTag);
-  DEREF(wt, wtPtr, wtTag);
-
-  if (isAnyVar(dtTag)) {
-    OZ_suspendOn (makeTaggedRef(dtPtr));
-  } else if (!isSmallInt(dt)) {
-    TypeErrorT(1,"(valid) Int)");
-    TypeErrorT(1,"Int");
-  } else {
-    depth = smallIntValue(dt);
-  }
-
-  if (isAnyVar(wtTag)) {
-    OZ_suspendOn (makeTaggedRef(wtPtr));
-  } else if (!isSmallInt(wt)) {
-    TypeErrorT(2,"(valid) Int)");
-    TypeErrorT(2,"Int");
-  } else {
-    width = smallIntValue(wt);
-  }
+  OZ_declareArg(0,t);
+  OZ_declareIntArg(1,depth);
+  OZ_declareIntArg(2,width);
+  OZ_declareArg(3,out);
 
   return OZ_unify(out, OZ_int(OZ_termGetSize(t, depth, width)));
 }
@@ -5811,14 +5837,18 @@ OZ_Return showInline(TaggedRef term)
 
 DECLAREBI_USEINLINEREL1(BIshow,showInline)
 
-// ---------------------------------------------------------------------------
-// GETVALUE
-// ---------------------------------------------------------------------------
+OZ_C_proc_begin(BIprintLong,1)
+{
+  OZ_Term args0 = OZ_getCArg(0);
+  taggedPrintLong(args0);
 
-#define STRCASE(STR,VAL,UNIFYPROC) \
-     if (strcmp(feature,STR) == 0) { \
-       return UNIFYPROC (out,(VAL)); \
-     }
+  return PROCEED;
+}
+OZ_C_proc_end
+
+// ---------------------------------------------------------------------------
+// ???
+// ---------------------------------------------------------------------------
 
 TaggedRef Abstraction::DBGgetGlobals() {
   int n = getGSize();
@@ -5827,88 +5857,6 @@ TaggedRef Abstraction::DBGgetGlobals() {
     OZ_putArg(t,i,gRegs[i]);
   }
   return t;
-}
-
-inline
-OZ_Term NULL2NIL(OZ_Term t)
-{
-  return t==makeTaggedNULL() ? OZ_nil() : t;
-}
-
-int taggedGetValue(TaggedRef term,TaggedRef feat,TaggedRef out)
-{
-  DEREF(term,termPtr,tag);
-  DEREF(feat,_1,fTag);
-  if (!OZ_isAtom(feat)) {
-    return NO;
-  }
-
-  char *feature = tagged2Literal(feat)->getPrintName();
-
-  STRCASE("addr",
-          isAnyVar(tag) ? ToInt32(termPtr) : ToInt32(tagValueOf(tag,term)),
-          OZ_unifyInt);
-  STRCASE("isvar",
-          isAnyVar(tag) ? "ok" : "no",
-          OZ_unifyAtom);
-  STRCASE("lengthSuspList",
-          isCVar(tag) ? tagged2CVar(term)->getSuspListLength() :
-          (isSVar(tag) ? tagged2SVar(term)->getSuspList()->length()
-           : (isUVar(tag) ? 0 : -1)),
-          OZ_unifyInt);
-
-  STRCASE("name",
-          tagged2String(term,ozconf.printDepth),
-          OZ_unifyAtom);
-
-  switch (tag) {
-  case SRECORD:
-  case LITERAL:
-    break;
-  case UVAR:
-    STRCASE("home",ToInt32(tagged2VarHome(term)->getBoardFast()),OZ_unifyInt);
-    STRCASE("suspensions",nil(),OZ_unify);
-    break;
-  case SVAR:
-  case CVAR:
-    STRCASE("home",ToInt32(tagged2SuspVar(term)->getBoardFast()),OZ_unifyInt);
-    STRCASE("suspensions",tagged2SuspVar(term)->DBGmakeSuspList(),OZ_unify);
-    break;
-
-  case OZCONST:
-  default:
-    if (isConst(term)) {
-      ConstTerm *rec = tagged2Const(term);
-      switch(rec->getType()) {
-      case Co_Builtin:
-        STRCASE("arity",((Builtin *) rec)->getArity(),OZ_unifyInt);
-        STRCASE("handler",
-                NULL2NIL(((Builtin *) rec)->getSuspHandler()),
-                OZ_unify);
-        break;
-
-      case Co_Object:
-        rec = ((Object *) rec)->getAbstraction();
-        // no break here!
-      case Co_Abstraction:
-        STRCASE("arity",((Abstraction *) rec)->getArity(),OZ_unifyInt);
-        STRCASE("globals",
-                ((Abstraction *) rec)->DBGgetGlobals(),
-                OZ_unify);
-        break;
-      case Co_Cell:
-        STRCASE("home",ToInt32(((Cell *) rec)->getBoardFast()),OZ_unifyInt);
-        break;
-      default:
-        break;
-      }
-    }
-    break;
-  }
-
-  warning("getValue(%s,%s): bad feature",
-          toC(term),toC(feat));
-  return NO;
 }
 
 OZ_C_proc_begin(BIgetArgv,1)
@@ -5974,6 +5922,12 @@ TaggedRef SuspList::DBGmakeList() {
   return cons(makeTaggedConst(b),getNext()->DBGmakeList());
 }
 
+// ---------------------------------------------------------------------------
+
+#define STRCASE(STR,VAL,UNIFYPROC)              \
+     if (strcmp(feature,STR) == 0) {            \
+       return UNIFYPROC (out,(VAL));            \
+     }
 int AM::getValue(TaggedRef feat, TaggedRef out)
 {
   DEREF(feat,_1,fTag);
@@ -6005,46 +5959,18 @@ int AM::getValue(TaggedRef feat, TaggedRef out)
   STRCASE("heapIdleMargin",    ozconf.heapIdleMargin,           OZ_unifyInt);
 
   STRCASE("clockTick",         CLOCK_TICK,                    OZ_unifyInt);
-  STRCASE("printDepth",        ozconf.printDepth,               OZ_unifyInt);
+  STRCASE("printDepth",        ozconf.printDepth,             OZ_unifyInt);
+  STRCASE("printWidth",        ozconf.printWidth,             OZ_unifyInt);
+  STRCASE("errorPrintDepth",   ozconf.errorPrintDepth,        OZ_unifyInt);
+  STRCASE("errorPrintWidth",   ozconf.errorPrintWidth,        OZ_unifyInt);
   STRCASE("statusReg",         (int)statusReg,                OZ_unifyInt);
   STRCASE("root",              makeTaggedConst(rootBoard),    OZ_unify);
   STRCASE("currentBlackboard", makeTaggedConst(currentBoard), OZ_unify);
   STRCASE("queryFILE",         compStream->csfileno(),     OZ_unifyInt);
   STRCASE("errorVerbosity",    ozconf.errorVerbosity,           OZ_unifyInt);
 
-  warning("getValue(0,%s): bad feature", toC(feat));
   return NO;
 }
-
-
-OZ_C_proc_begin(BIgetValue,3)
-{
-  OZ_Term term = OZ_getCArg(0);
-  OZ_Term fea = OZ_getCArg(1);
-  OZ_Term out = OZ_getCArg(2);
-
-  OZ_nonvarArg(1);
-  NONVAR(fea,feat,ftag);
-
-  if (!isLiteral(ftag)) {
-    TypeErrorT(1,"Feature");
-  }
-
-  char *feature = tagged2Literal(feat)->getPrintName();
-
-  if (OZ_isInt(term)) {  // AM
-    DEREF(term,_1,_2);
-    STRCASE("addr",ToInt32(tagValueOf(term)),OZ_unifyInt);
-    STRCASE("name", tagged2String(term,ozconf.printDepth),
-            OZ_unifyAtom);
-    STRCASE("printname", tagged2String(term,ozconf.printDepth),
-            OZ_unifyAtom);
-    return am.getValue(feat,out) ? PROCEED : FAILED;
-  }
-
-  return taggedGetValue(term,feat,out) ? PROCEED: FAILED;
-}
-OZ_C_proc_end
 
 #undef STRCASE
 
@@ -6112,66 +6038,116 @@ int AM::setValue(TaggedRef feature, TaggedRef value)
   DOIF("printDepth",
        ozconf.printDepth = val;
        );
+  DOIF("printWidth",
+       ozconf.printDepth = val;
+       );
+  DOIF("errorPrintDepth",
+       ozconf.errorPrintDepth = val;
+       );
+  DOIF("errorPrintWidth",
+       ozconf.errorPrintDepth = val;
+       );
   DOIF("errorVerbosity",
        ozconf.errorVerbosity = val;
        );
-  warning("setValue(0,%s): bad feature",toC(feature));
   return NO;
 }
+#undef DOIF
 
-OZ_C_proc_begin(BIsetValue,3)
+OZ_C_proc_begin(BIconfigure,2)
 {
-  OZ_nonvarArg(0);
-  OZ_nonvarArg(1);
+  OZ_declareNonvarArg(0,fea);
+  OZ_declareArg(1,val);
 
-  OZ_Term tmpTerm = OZ_getCArg(0);
-  OZ_Term fea = OZ_getCArg(1);
-  OZ_Term val = OZ_getCArg(2);
-
-  NONVAR(tmpTerm,term,ttag);
-  NONVAR(val,value,vtag);
-  NONVAR(fea,feature,ftag);
-  if (!isLiteral(ftag)) {
+  if (!OZ_isLiteral(fea)) {
     TypeErrorT(1,"Feature");
   }
 
-  if (OZ_isInt(term)) {  // AM
-    return am.setValue(feature,value) ? PROCEED : FAILED;
-  }
-
-  TypeErrorT(0,"Const or 0");
+  if (am.setValue(deref(fea),val)) return PROCEED;
+  return OZ_raiseC("configure",1,fea);
 }
 OZ_C_proc_end
 
-#undef DOIF
 
-/*
- * System parameters
- */
+OZ_C_proc_begin(BIconfigureValue,2)
+{
+  OZ_declareNonvarArg(0,fea);
+  OZ_declareArg(1,out);
 
-#define BICONF(gname,sname,aname)               \
-OZ_C_proc_begin(gname,2)                        \
-{                                               \
-  OZ_declareArg(1,val);                         \
-                                                \
-  return OZ_unifyInt(val,ozconf.aname);         \
-}                                               \
-OZ_C_proc_end                                   \
-OZ_C_proc_begin(sname,2)                        \
-{                                               \
-  OZ_declareIntArg(0,val);                      \
-  ozconf.aname=val;                             \
-  return PROCEED;                               \
-}                                               \
+  if (!OZ_isLiteral(fea)) {
+    TypeErrorT(1,"Feature");
+  }
+
+  if (am.getValue(deref(fea),out)) return PROCEED;
+  return OZ_raiseC("configure",1,fea);
+}
 OZ_C_proc_end
 
 
-BICONF(BIgetPrintDepth,BIsetPrintDepth,printDepth)
-BICONF(BIgetPrintWidth,BIsetPrintWidth,printWidth)
-BICONF(BIgetErrorDepth,BIsetErrorDepth,errorPrintDepth)
-BICONF(BIgetErrorWidth,BIsetErrorWidth,errorPrintWidth)
+// ---------------------------------------------------------------------------
 
-#undef BICONF
+OZ_C_proc_begin(BIonToplevel,1)
+{
+  OZ_declareArg(0,out);
+
+  return OZ_unify(out,OZ_onToplevel() ? NameTrue : NameFalse);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIaddr,2)
+{
+  OZ_declareArg(0,val);
+  OZ_declareArg(1,out);
+
+  DEREF(val,valPtr,valTag);
+  if (valPtr) {
+    return OZ_unifyInt(out,ToInt32(valPtr));
+  }
+  return OZ_unifyInt(out,ToInt32(tagValueOf(valTag,val)));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIsuspensions,2)
+{
+  OZ_declareArg(0,val);
+  OZ_declareArg(1,out);
+
+  DEREF(val,valPtr,valTag);
+  switch (valTag) {
+  case UVAR:
+    return OZ_unify(out,nil());
+  case SVAR:
+  case CVAR:
+    return OZ_unify(out,tagged2SuspVar(val)->DBGmakeSuspList());
+  default:
+    return OZ_unify(out,nil());
+  }
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIglobals,2)
+{
+  OZ_declareNonvarArg(0,proc);
+  OZ_declareArg(1,out);
+
+  DEREF(proc,ptr,tag);
+  if (isConst(proc)) {
+    ConstTerm *cc = tagged2Const(proc);
+    switch (cc->getType()) {
+    case Co_Builtin:
+      return OZ_unify(out,nil());
+    case Co_Abstraction:
+      return OZ_unify(out, ((Abstraction *) cc)->DBGgetGlobals());
+    case Co_Object:
+      return OZ_unify(out,
+                      ((Object *) cc)->getAbstraction()->DBGgetGlobals());
+    default:
+      break;
+    }
+  }
+  TypeErrorT(1,"Procedure or Object");
+}
+OZ_C_proc_end
 
 
 // ---------------------------------------------------------------------------
@@ -6293,40 +6269,6 @@ OZ_C_proc_begin(BIqueryDebugState,2)
 }
 OZ_C_proc_end
 
-// --------------------- ... -----------------------------
-
-OZ_C_proc_begin(BIprintLong,1)
-{
-  OZ_Term args0 = OZ_getCArg(0);
-  taggedPrintLong(args0);
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-
-
-OZ_C_proc_begin(BIidToTerm,2)
-{
-  OZ_Term term = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-
-  if (!OZ_isInt(term)) {
-    TypeErrorT(0,"Int");
-  }
-  int no = OZ_intToC(term);
-  return OZ_unify(out,(TaggedRef) no);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BItermToId,2)
-{
-  OZ_Term in = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-  return OZ_unifyInt(out,(int) in);
-}
-OZ_C_proc_end
-
 // ----------------------------------------------------------
 
 OZ_C_proc_begin(BIusertime, 1)
@@ -6344,6 +6286,10 @@ OZ_C_proc_begin(BImemory, 1)
     }
 OZ_C_proc_end
 
+
+/* -------------------------------------------------------------------------
+ * Debugging: special builtins for Benni
+ * ------------------------------------------------------------------------- */
 
 OZ_C_proc_begin(BIshowStatistics,0)
 {
@@ -6367,6 +6313,9 @@ OZ_C_proc_begin(BIresetStatistics,0)
 OZ_C_proc_end
 
 
+/* -------------------------------------------------------------------------
+ *
+ * ------------------------------------------------------------------------- */
 
 OZ_C_proc_begin(BIisStandalone,1)
 {
@@ -6388,9 +6337,6 @@ OZ_C_proc_begin(BItraceBack, 0)
 }
 OZ_C_proc_end
 
-
-
-
 OZ_C_proc_begin(BIplatform, 1)
 {
   OZ_Term ret = OZ_pair2(OZ_atom(ozconf.osname),OZ_atom(ozconf.cpu));
@@ -6404,6 +6350,7 @@ OZ_C_proc_begin(BIozhome, 1)
   return OZ_unifyAtom(OZ_getCArg(0),ozconf.ozHome);
 }
 OZ_C_proc_end
+
 
 // ---------------------------------------------------------------------------
 
@@ -6436,6 +6383,105 @@ OZ_C_proc_begin(ozparser_exit,0)
 return PROCEED;
 OZ_C_proc_end
 #endif
+
+
+// ---------------------------------------------------------------------
+// OO Stuff
+// ---------------------------------------------------------------------
+
+/*
+ *      Construct a new SRecord to be a copy of old.
+ *      This is the functionality of adjoin(old,newlabel).
+ */
+OZ_C_proc_begin(BIcopyRecord,2)
+{
+  OZ_Term in = OZ_getCArg(0);
+  OZ_Term out = OZ_getCArg(1);
+  NONVAR(in,rec,tag);
+
+  switch (tag) {
+  case SRECORD:
+    {
+      SRecord *rec0 = tagged2SRecord(rec);
+      SRecord *rec1 = SRecord::newSRecord(rec0);
+      return OZ_unify(out,makeTaggedSRecord(rec1));
+    }
+  case LITERAL:
+    return OZ_unify(out,rec);
+
+  default:
+    TypeErrorT(0,"Determined Record");
+  }
+}
+OZ_C_proc_end
+
+void assignError(TaggedRef rec, TaggedRef fea, char *name)
+{
+  prefixError();
+  message("Object Error\n");
+  message("Assignment (%s) failed: bad attribute or state\n",name);
+  message("attribute found  : %s\n", toC(fea));
+  message("state found      : %s\n", toC(rec));
+}
+
+#define CheckSelf                               \
+     Assert(am.getSelf() != NULL);              \
+     { Object *o = am.getSelf();                \
+       Assert(o->getDeepness()>=1);             \
+     }
+
+
+OZ_Return atInline(TaggedRef fea, TaggedRef &out)
+{
+  DEREF(fea, _1, feaTag);
+
+  SRecord *rec = am.getSelf()->getState();
+  if (rec) {
+    if (!isFeature(fea)) {
+      if (isAnyVar(fea)) {
+        return SUSPEND;
+      }
+      goto bomb;
+    }
+    CheckSelf;
+    TaggedRef t = rec->getFeature(fea);
+    if (t) {
+      out = t;
+      return PROCEED;
+    }
+  }
+
+bomb:
+  TypeErrorT(1,"(valid) Feature");
+}
+DECLAREBI_USEINLINEFUN1(BIat,atInline)
+
+OZ_Return assignInline(TaggedRef fea, TaggedRef value)
+{
+  DEREF(fea, _2, feaTag);
+
+  SRecord *r = am.getSelf()->getState();
+  if (r) {
+    CheckSelf;
+    if (!isFeature(fea)) {
+      if (isAnyVar(fea)) {
+        return SUSPEND;
+      }
+      goto bomb;
+    }
+    if (r->replaceFeature(fea,value) == makeTaggedNULL()) {
+      goto bomb;
+    }
+    return PROCEED;
+  }
+
+ bomb:
+  assignError(r?makeTaggedSRecord(r):OZ_atom("noattributes"),
+              fea,"<-");
+  return PROCEED;
+}
+
+DECLAREBI_USEINLINEREL2(BIassign,assignInline)
 
 Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla,
                   Bool iscl, Board *b)
@@ -6647,11 +6693,10 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIsetClosed,1)
 {
   OZ_Term obj=OZ_getCArg(0);
-  OZ_Term out=OZ_getCArg(1);
 
   DEREF(obj,objPtr,_2);
   if (isAnyVar(obj)) OZ_suspendOn(makeTaggedRef(objPtr));
-  if (!isObject(obj)) return FAILED;
+  if (!isObject(obj)) TypeErrorT(0,"Object");
   Object *oo = (Object *)tagged2Const(obj);
   oo->close();
   return PROCEED;
@@ -6743,9 +6788,9 @@ OZ_C_proc_begin(BIsetModeToDeep,0)
 OZ_C_proc_end
 
 
-/*===================================================================
+/********************************************************************
  * Exceptions
- *=================================================================== */
+ ******************************************************************** */
 
 OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
 {
@@ -6955,9 +7000,9 @@ OZ_C_proc_end
 #endif /* BUILTINS2 */
 
 
-/*===================================================================
+/********************************************************************
  * Table of builtins
- *=================================================================== */
+ ******************************************************************** */
 
 
 #ifdef BUILTINS2
@@ -6989,7 +7034,7 @@ BIspec allSpec1[] = {
   {">=Rel",2,BIge,       (IFOR) BIgeInline},
   {">Rel",2,BIgreat,     (IFOR) BIgreatInline},
   {"=:=Rel",2,BInumeq,   (IFOR) BInumeqInline},
-  {"=\\=Rel",2,BInumneq,  (IFOR) BInumneqInline},
+  {"=\\=Rel",2,BInumneq, (IFOR) BInumneqInline},
 
   {"~",2,BIuminus,    (IFOR) BIuminusInline},
   {"+1",2,BIadd1,     (IFOR) BIadd1Inline},
@@ -7038,8 +7083,9 @@ BIspec allSpec1[] = {
   {"NewDictionary",     1, BIdictionaryNew,     0},
   {"IsDictionary",      2, BIisDictionary,     (IFOR) isDictionaryInline},
   {"Dictionary.get",    3, BIdictionaryGet,    (IFOR) dictionaryGetInline},
-  {"Dictionary.getIf",  4, BIdictionaryGetIf,  (IFOR) dictionaryGetIfInline},
-  {"Dictionary.deepGetIf",  4, BIdictionaryDeepGetIf,  (IFOR) dictionaryDeepGetIfInline},
+  {"Dictionary.condGet",  4, BIdictionaryGetIf,  (IFOR) dictionaryGetIfInline},
+  {"Dictionary.deepGetIf",  4, BIdictionaryDeepGetIf,
+   (IFOR) dictionaryDeepGetIfInline},
   {"Dictionary.put",    3, BIdictionaryPut,    (IFOR) dictionaryPutInline},
   {"Dictionary.remove", 2, BIdictionaryRemove, (IFOR) dictionaryRemoveInline},
   {"Dictionary.member", 3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
@@ -7073,9 +7119,6 @@ BIspec allSpec1[] = {
   {"record",      3,BImakeRecord,       0},
   {"Arity",           2,BIarity,            (IFOR) BIarityInline},
   {"AdjoinAt",        4,BIadjoinAt,         0},
-  {"@",               2,BIat,               (IFOR) atInline},
-  {"<-",              2,BIassign,           (IFOR) assignInline},
-  {"copyRecord",      2,BIcopyRecord,       0},
 
   {0,0,0,0}
 };
@@ -7096,6 +7139,7 @@ BIspec allSpec2[] = {
   {"IsName",2,BIisNameB,          (IFOR) isNameBInline},
   {"IsAtom",2,BIisAtomB,          (IFOR) isAtomBInline},
   {"IsBool", 2,BIisBoolB,         (IFOR) isBoolBInline},
+  {"IsUnit", 2,BIisUnitB,         (IFOR) isUnitBInline},
   {"IsChunk",2,BIisChunkB,        (IFOR) isChunkBInline},
   {"IsRecordC",2,BIisRecordCB,    (IFOR) isRecordCBInline},
   {"IsObject", 2,BIisObjectB,     (IFOR) BIisObjectBInline},
@@ -7116,6 +7160,7 @@ BIspec allSpec2[] = {
   {"isNameRel",1,BIisName,           (IFOR) isNameInline},
   {"isAtomRel",1,BIisAtom,           (IFOR) isAtomInline},
   {"isBoolRel",  1,BIisBool,         (IFOR) isBoolInline},
+  {"isUnitRel",  1,BIisUnit,         (IFOR) isUnitInline},
   {"isChunkRel",  1,BIisChunk,       (IFOR) isChunkInline},
   {"isRecordCRel",1,BIisRecordC,     (IFOR) isRecordCInline},
   {"isClassRel", 1,BIisClass,        (IFOR) BIisClassInline},
@@ -7128,9 +7173,10 @@ BIspec allSpec2[] = {
 
 
   {"IsVirtualString",      2, BIvsIs,    0},
-  {"VirtualString.length", 3, BIvsLength, 0},
+  {"virtualStringLength",  3, BIvsLength, 0},
 
   {"getUnit", 1,BIgetUnit,         0},
+
   {"getTrue", 1,BIgetTrue,         0},
   {"getFalse",1,BIgetFalse,        0},
   {"Not",     2,BInot,             (IFOR) notInline},
@@ -7238,8 +7284,12 @@ BIspec allSpec2[] = {
   {"printError",1,BIprintError},
   {"Show",1,BIshow,  (IFOR) showInline},
 
-  {"getValue",3,BIgetValue},
-  {"setValue",3,BIsetValue},
+  {"configure",2,BIconfigure},
+  {"configureValue",2,BIconfigureValue},
+  {"onToplevel",1,BIonToplevel},
+  {"addr",2,BIaddr},
+  {"suspensions",2,BIsuspensions},
+  {"globals",2,BIglobals},
   {"getArgv", 1,BIgetArgv},
 
   {"halt",0,BIhalt},
@@ -7247,17 +7297,17 @@ BIspec allSpec2[] = {
   // Debugging
   {"globalThreadStream",1,BIglobalThreadStream},
   {"currentThread",1,BIcurrentThread},
+  {"Thread.this",1,BIcurrentThread},
   {"startTraceMode",2,BIstartTraceMode},
   {"stopTraceMode",1,BIstopTraceMode},
   {"setStepMode",2,BIsetStepMode},
   {"stopThread",1,BIstopThread},
   {"contThread",1,BIcontThread},
+  {"Thread.suspend",1,BIstopThread},
+  {"Thread.continue",1,BIcontThread},
   {"queryDebugState",2,BIqueryDebugState},
 
   {"printLong",1,BIprintLong},
-
-  {"termToId",2,BItermToId},
-  {"idToTerm",2,BIidToTerm},
 
   {"spy",         1, BIspy},
   {"nospy",       1, BInospy},
@@ -7286,6 +7336,9 @@ BIspec allSpec2[] = {
   {"platform",       1, BIplatform},
   {"ozhome",         1, BIozhome},
 
+  {"@",               2,BIat,                  (IFOR) atInline},
+  {"<-",              2,BIassign,              (IFOR) assignInline},
+  {"copyRecord",      2,BIcopyRecord,          0},
   {"makeClass",        8,BImakeClass,          0},
   {"setModeToDeep",    0,BIsetModeToDeep,      0},
   {"setMethApplHdl",   1,BIsetMethApplHdl,     0},
@@ -7307,15 +7360,6 @@ BIspec allSpec2[] = {
   {"Space.clone",         2, BIcloneSpace,      0},
   {"Space.choose",        2, BIchooseSpace,     0},
   {"Space.inject",        2, BIinjectSpace,     0},
-
-  {"System.getPrintDepth", 2, BIgetPrintDepth, 0},
-  {"System.getPrintWidth", 2, BIgetPrintWidth, 0},
-  {"System.getErrorDepth", 2, BIgetErrorDepth, 0},
-  {"System.getErrorWidth", 2, BIgetErrorWidth, 0},
-  {"System.setPrintDepth", 2, BIsetPrintDepth, 0},
-  {"System.setPrintWidth", 2, BIsetPrintWidth, 0},
-  {"System.setErrorDepth", 2, BIsetErrorDepth, 0},
-  {"System.setErrorWidth", 2, BIsetErrorWidth, 0},
 
   {"biExceptionHandler",         3, BIbiExceptionHandler,         0},
   {"setDefaultExceptionHandler", 1, BIsetDefaultExceptionHandler, 0},
