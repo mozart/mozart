@@ -973,7 +973,7 @@ feed that many preceding paragraphs as well as the current paragraph."
     (save-excursion
       (set-buffer oz-compiler-buffer)
       (setq oz-compiler-output-start (point-max))
-      (process-send-eof proc)
+      (comint-send-string proc (char-to-string 4))
       (setq oz-next-error-marker nil))))
 
 
