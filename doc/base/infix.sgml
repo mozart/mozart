@@ -7,8 +7,8 @@
 <Chapter id="chapter.infix">
   <Title/Infix Notations/
   <P>
-    The &Oz; Notation <!--** reference --> supports infix and prefix notation
-    for very common procedures.
+    &Oz; supports infix and prefix notation for very common procedures (see
+    <Ptr.Extern to="ozdoc:notation" key="section.context-free.operators">).
   <P>
     In the following table, we give the prefix and infix notations and the
     corresponding expansions.  The operators are grouped together according
