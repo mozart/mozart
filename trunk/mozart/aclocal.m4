@@ -342,7 +342,7 @@ dnl Christian's request, CXXFLAGS is set to -O by default if it is not
 dnl already set in the environment
 dnl ==================================================================
 
-AC_DEFUN(OZ_VERSION_GXX,[2.7])
+AC_DEFUN(OZ_VERSION_GXX,[2.95.3])
 AC_DEFUN(OZ_CXX_CHOOSE,[
   if test -z "$oz_cv_cxx__chosen"; then
     : ${CXXFLAGS="-O"}
@@ -361,12 +361,12 @@ configure found the GNU C++ compiler $CXX version $oz_tmp_version
 but version] OZ_VERSION_GXX [or higher is required to build the
 system.  It can be retrieved from:
 
-	ftp://ftp.gnu.org/pub/gnu/
+	ftp://ftp.gnu.org/pub/gnu/gcc/
 
-The latest version at this time is 2.95.2 and is available
+The latest version at this time is 3.3.2 and is available
 packaged as the following archive:
 
-	gcc-2.95.2.tar.gz 
+	gcc-3.3.2.tar.gz 
 
 You may find a mirror archive closer to you by consulting:
 
@@ -468,7 +468,7 @@ dnl At Christian's request CFLAGS is set to -O by default if it is not
 dnl already set in the environment.
 dnl ==================================================================
 
-AC_DEFUN(OZ_VERSION_GCC,[2.7])
+AC_DEFUN(OZ_VERSION_GCC,[2.95.3])
 AC_DEFUN(OZ_CC_CHOOSE,[
   if test -z "$oz_cv_cc__chosen"; then
     : ${CFLAGS="-O"}
@@ -486,12 +486,12 @@ configure found the GNU C compiler $CC version $oz_tmp_version
 but version] OZ_VERSION_GCC [or higher is required to build the
 system.  It can be retrieved from:
 
-	ftp://ftp.gnu.org/pub/gnu/
+	ftp://ftp.gnu.org/pub/gnu/gcc/
 
-The latest version at this time is ??? and is available
+The latest version at this time is 3.3.2 and is available
 packaged as the following archive:
 
-	???
+	gcc-3.3.2.tar.gz
 
 You may find a mirror archive closer to you by consulting:
 
@@ -574,9 +574,9 @@ AC_DEFUN(OZ_PROG_FLEX,[
 GNU flex version] OZ_VERSION_FLEX [or higher is needed to build the
 system.  It can be retrieved from:
 
-	ftp://ftp.gnu.org/pub/gnu/
+	ftp://ftp.gnu.org/pub/gnu/non-gnu/flex/
 
-The latest version at this time is 2.5.4 and is available
+The latest version at this time is 2.5.4a and is available
 packaged as the following archive:
 
 	flex-2.5.4a.tar.gz
@@ -584,6 +584,11 @@ packaged as the following archive:
 You may find a mirror archive closer to you by consulting:
 
 	http://www.gnu.org/order/ftp.html
+
+You may find additional information or more recent releases
+on the flex development site:
+
+	http://lex.sourceforge.net/
 ])
       fi
     fi
@@ -631,12 +636,12 @@ AC_DEFUN(OZ_PROG_BISON,[
 GNU bison version] OZ_VERSION_BISON [or higher is needed to build the system.
 It can be retrieved from:
 
-	ftp://ftp.gnu.org/pub/gnu/
+	ftp://ftp.gnu.org/pub/gnu/bison/
 
-The latest version at this time is 1.30 and is available
+The latest version at this time is 1.875 and is available
 packaged as the following archive:
 
-	bison-1.30.tar.gz
+	bison-1.875.tar.gz
 
 
 You may find a mirror archive closer to you by consulting:
