@@ -1,22 +1,17 @@
 BUILDTOP	= @BUILDTOP@
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
-TOPDIR		= @TOPDIR@
 
 PREFIX		= @prefix@
 OZEX		= $(PREFIX)/examples
 
-SHELL		= @SH@
-RM		= @RM@ -f
-MKDIR		= @MKDIR@
-ECHO		= @ECHO@
-M4		= @M4@
-LN              = @LN@ -s
+SHELL		= /bin/sh
 
+@SET_MAKE@
 INSTALL		= @INSTALL@
-INSTALLFILE	= $(INSTALL) -m 444
-INSTALLSRC	= @INSTALLSRC@
-INSTALLDIR	= $(INSTALL) -m 775 -d
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_SRC	= @INSTALL_SRC@
+INSTALL_DIR	= @INSTALL_DIR@
 
 EXDIRS = \
 	sampler sampler/constraints \
@@ -29,7 +24,7 @@ OZEXDIRS = $(EXDIRS:%=$(OZEX)/%)
 all:
 
 $(OZEX) $(OZEXDIRS):
-	$(INSTALLDIR) $@
+	$(INSTALL_DIR) $@
 
 FD = \
 	bin-packing bridge-naive bridge cars change \
@@ -53,31 +48,34 @@ SAMPLER0 = \
 SAMPLER = $(SAMPLER0:%=$(OZEX)/sampler/%.oz)
 
 $(OZEX)/fd/%.oz: fd/%.oz
-	$(INSTALLSRC) $< $@
+	$(INSTALL_SRC) $< $@
 
 $(OZEX)/grammar/%.oz: grammar/%.oz
-	$(INSTALLSRC) $< $@
+	$(INSTALL_SRC) $< $@
 $(OZEX)/grammar/shieber/%.oz: grammar/shieber/%.oz
-	$(INSTALLSRC) $< $@
+	$(INSTALL_SRC) $< $@
 $(OZEX)/sampler/%.oz: sampler/%.oz
-	$(INSTALLSRC) $< $@
+	$(INSTALL_SRC) $< $@
 $(OZEX)/sampler/constraints/%.oz: sampler/constraints/%.oz
-	$(INSTALLSRC) $< $@
+	$(INSTALL_SRC) $< $@
 
 
 .PHONY: all install
-.PHONY: clean realclean veryclean
+.PHONY: clean veryclean
 
 install: all $(OZEX) $(OZEXDIRS) $(SAMPLER) $(EXAMPLES)
 
 clean:
-	$(RM) *~ ./*/*~ ./*/*/*~
+	-rm -f *~ ./*/*~ ./*/*/*~
 
-realclean: clean
+veryclean: clean
 
-veryclean: realclean
+distclean: veryclean
+	-rm -f Makefile
 
-distclean: realclean
-	$(RM) Makefile
+include $(SRCDIR)/../Makefile.boot
 
-include ../Makefile.boot
+bootstrap:
+	$(MAKE) boot-all
+
+check:

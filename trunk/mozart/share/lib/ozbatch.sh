@@ -5,16 +5,17 @@
 #    make OZBATCH=./ozbatch.sh
 #
 
+: ${BUILDTOP=../..}
 : ${SRCDIR=.}
 : ${OZMAFILE="-b $SRCDIR/ozbatch.ozm"}
-: ${OZPLATFORM=`$SRCDIR/../bin/ozplatform`}
+: ${OZPLATFORM=`$BUILDTOP/share/bin/ozplatform`}
 : ${OZPREFIX=/usr/local/oz}
 
 if test -z "$OZEMULATOR"
 then
     for d in \
-	$SRCDIR/../../platform/emulator \
-	$SRCDIR/../../platform/emulator/$OZPLATFORM \
+	$BUILDTOP/platform/emulator \
+	$BUILDTOP/platform/emulator/$OZPLATFORM \
 	$OZPREFIX/platform/$OZPLATFORM
     do
 	if test -x $d/oz.emulator.bin
@@ -31,4 +32,4 @@ export OZINIT
 echo "Using OZEMULATOR: $OZEMULATOR"
 echo "Using OZMAFILE: $OZMAFILE"
 
-exec $OZEMULATOR $OZMAFILE -a "$@"
+exec $OZEMULATOR $OZMAFILE -- "$@"

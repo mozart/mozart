@@ -125,7 +125,7 @@ clean veryclean: mostlyclean
 
 distclean: clean
 	rm -f .bootstrap $(FLEX) scan.c tags TAGS Makefile config.status \
-		config.h
+		config.h stamp.h
 
 maintainer-clean: distclean
 	@echo "This command is intended for maintainers to use;"
