@@ -168,7 +168,10 @@ private:
   static Bool scanBool(CompStream *fd);
   void scanVariablename (CompStream *fd);
   void scanLiteral(CompStream *fd);
+  TaggedRef parseFeature(CompStream *fd);
   TaggedRef parseLiteral(CompStream *fd);
+  TaggedRef parseLiteral(CompStream *fd, int what);
+  TaggedRef parseNumber(CompStream *fd);
   void scanRegister(CompStream *fd, int &regAdd);
   void scanRegisterIndex (CompStream *fd);
   void scanArity(CompStream *fd);
@@ -179,6 +182,7 @@ private:
   void scanGenCallInfo(CompStream *fd);
   void scanApplMethInfo(CompStream *fd);
   void scanLabel(CompStream *fd, ProgramCounter start);
+  SRecordArity parseRecordArity(CompStream *fd);
   void scanRecordArity(CompStream *fd);
   TaggedRef parseRecordArity (CompStream *fd, int length);
   void scanBuiltinname(CompStream *fd);
