@@ -109,6 +109,8 @@ SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * hoome)
 #ifdef DEBUG_STABLE
 SuspList * board_constraints = NULL;
 
+void printBCDebug(Board * b) { printBC(cerr, b); }
+
 void printBC(ostream &ofile, Board * b)
 {
   for (SuspList * sl = board_constraints; sl != NULL; sl = sl->getNext()) {
