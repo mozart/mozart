@@ -63,22 +63,6 @@ enum TypeOfTerm {
 
 extern char *TypeOfTermString[];
 
-/*
- * We use 4 bits for tags --> adress space is 2^28 == 256MB
- *
- * We can do better, if you define
- *     #define LARGEADRESSES
- *
- * if the value part of a TaggRef contains a pointer (this holds for all
- * except small ints , than it will be word aligned,
- * i.e. its two lower bits are 00
- * --> makeTaggedRefs shifts only up by 2 bits
- * --> tagValueOf shifts down by 2 bits AND zeros the two lowest bits
- *
- */
-
-#define LARGEADRESSES
-
 // ---------------------------------------------------------------------------
 // --- TaggedRef: CLASS / BASIC ACCESS FUNCTIONS
 
