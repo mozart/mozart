@@ -22,27 +22,33 @@ PERL            = @PERL@
 SHAREDIR	= $(PREFIX)/share
 
 ### files to install
-SHAREFILES      = $(SHAREDIR)/GTK.so-$(PLATFORM) \
+SHAREFILES      = $(SHAREDIR)/GTK.so-$(PLATFORM)               \
 	          $(SHAREDIR)/GDK.so-$(PLATFORM)
-PLATFORMFILES   = $(PLATFORMDIR)/GTK.so-$(PLATFORM) \
+#                  $(SHAREDIR)/GnomeCanvas.so-$(PLATFORM)
+PLATFORMFILES   = $(PLATFORMDIR)/GTK.so-$(PLATFORM)            \
 	          $(PLATFORMDIR)/GDK.so-$(PLATFORM)
+#                  $(PLATFORMDIR)/GnomeCanvas.so-$(PLATFORM)
 ### end of files to install
 
 ALL_INCLUDES    = -I$(VPATH)/../emulator
 
 BUILD           = $(PERL) $(VPATH)/goz_build_native.perl
+BUILD_GTK       = $(BUILD) --includes="gtk/gtk.h"
+BUILD_GNOME_CANVAS = $(BUILD) --includes=`gnome-config --includedir libgnomeui`/libgnomeui/gnome-canvas.h
 
 SPECS_PATH      = $(VPATH)/../../share/lib/gtk/specs
 GTK_SPECS       = $(SPECS_PATH)/gtk/*.spec
 GDK_SPECS       = $(SPECS_PATH)/gdk/*.spec
+GNOME_CANVAS_SPECS = $(SPECS_PATH)/gnome-canvas/*.spec
 
 GTK_OBJECTS     = goz_gtk_interface.o goz_gtk_wrappers.o
-GDK_OBJECTS = goz_gdk_interface.o goz_gdk_wrappers.o
-OBJECTS         = goz_support.o $(GDK_OBJECTS) $(GTK_OBJECTS)
+GDK_OBJECTS     = goz_gdk_interface.o goz_gdk_wrappers.o
+GNOME_CANVAS_OBJECTS = goz_gnome_canvas_interface.o goz_gnome_canvas_wrappers.o
+OBJECTS         = goz_support.o $(GDK_OBJECTS) $(GTK_OBJECTS) $(GNOME_CANVAS_OBJECTS)
 
 .SUFFIXES: .cc .o .c .h $(SUFFIXES)
 
-all: GTK.so-$(PLATFORM) GDK.so-$(PLATFORM)
+all: GTK.so-$(PLATFORM) GDK.so-$(PLATFORM) #GnomeCanvas.so-$(PLATFORM)
 
 bootstrap: all
 
@@ -53,10 +59,10 @@ $(OBJECTS): %.o: %.c
 ### GTK
 
 goz_gtk_wrappers.c: $(GTK_SPECS)
-	$(BUILD) --c-wrappers $^ > $@
+	$(BUILD_GTK) --c-wrappers $^ > $@
 
 goz_gtk_interface.c: goz_gtk_wrappers.c goz_support.c
-	$(BUILD) --interface $^ > $@
+	$(BUILD_GTK) --interface $^ > $@
 
 GTK.so-$(PLATFORM): $(GTK_OBJECTS) goz_support.o
 	$(OZTOOL) ld $(LDFLAGS) $(GTK_OBJECTS) goz_support.o -o $@
@@ -66,20 +72,34 @@ GTK.so-$(PLATFORM): $(GTK_OBJECTS) goz_support.o
 ### GDK
 
 goz_gdk_wrappers.c: $(GDK_SPECS)
-	 $(BUILD) --c-wrappers $^ > $@
+	 $(BUILD_GTK) --c-wrappers $^ > $@
 
-goz_gdk_interface.c: goz_gdk_wrappers.c goz_support.c
-	$(BUILD) --interface $^ > $@
+goz_gdk_interface.c: goz_gdk_wrappers.c
+	$(BUILD_GTK) --interface $^ > $@
 
 GDK.so-$(PLATFORM): $(GDK_OBJECTS) goz_support.o
 	$(OZTOOL) ld $(LDFLAGS) $(GDK_OBJECTS) goz_support.o -o $@
 
 ### end of GDK
 
+### Gnome Canvas
+
+goz_gnome_canvas_wrappers.c: $(GNOME_CANVAS_SPECS)
+	 $(BUILD_GNOME_CANVAS) --c-wrappers $^ > $@
+
+goz_gnome_canvas_interface.c: goz_gnome_canvas_wrappers.c
+	$(BUILD_GNOME_CANVAS) --interface $^ > $@
+
+GnomeCanvas.so-$(PLATFORM): $(GNOME_CANVAS_OBJECTS) goz_support.o
+	$(OZTOOL) ld $(LDFLAGS) `gnome-config --libs gnomeui` $(GNOME_CANVAS_OBJECTS) goz_support.o -o $@
+
+### end of Gnome Canvas
+
 clean:
-	-rm -f goz_gtk_interface.c goz_gdk_interface.c  \
-		goz_gtk_wrappers.c goz_gdk_wrappers.c   \
-		*.o *~ core
+	-rm -f goz_gtk_interface.c           goz_gtk_wrappers.c          \
+	       goz_gdk_interface.c           goz_gdk_wrappers.c          \
+               goz_gnome_canvas_interface.c  goz_gnome_canvas_wrappers.c \
+	       *.o *~ core *.so-$(PLATFORM)
 
 veryclean: clean
 	-rm -f *.so-* 
@@ -93,7 +113,7 @@ install: $(PLATFORMDIR) $(PLATFORMFILES) \
 ### GTK install
 
 $(PLATFORMDIR)/GTK.so-$(PLATFORM): GTK.so-$(PLATFORM)
-	$(INSTALL_BIN) GTK.so-$(PLATFORM) $(PLATFORMDIR)/GTK.so
+	$(INSTALL_BIN) $^ $(PLATFORMDIR)/GTK.so
 
 $(SHAREDIR)/GTK.so-$(PLATFORM): $(PLATFORMDIR)/GTK.so
 	$(RM) $(SHAREDIR)/GTK.so-$(PLATFORM)
@@ -103,12 +123,22 @@ $(SHAREDIR)/GTK.so-$(PLATFORM): $(PLATFORMDIR)/GTK.so
 ### GDK install
 
 $(PLATFORMDIR)/GDK.so-$(PLATFORM): GDK.so-$(PLATFORM)
-	$(INSTALL_BIN) GDK.so-$(PLATFORM) $(PLATFORMDIR)/GDK.so
+	$(INSTALL_BIN) $^ $(PLATFORMDIR)/GDK.so
 
 $(SHAREDIR)/GDK.so-$(PLATFORM): $(PLATFORMDIR)/GDK.so
 	$(RM) $(SHAREDIR)/GDK.so-$(PLATFORM)
 	(cd $(SHAREDIR) && \
 	 $(LN_S) ../platform/$(PLATFORM)/GDK.so GDK.so-$(PLATFORM))
+
+### Gnome Canvas install
+
+$(PLATFORMDIR)/GnomeCanvas.so-$(PLATFORM): GnomeCanvas.so-$(PLATFORM)
+	$(INSTALL_BIN) $^ $(PLATFORMDIR)/GnomeCanvas.so
+
+$(SHAREDIR)/GnomeCanvas.so-$(PLATFORM): $(PLATFORMDIR)/GnomeCanvas.so
+	$(RM) $(SHAREDIR)/GnomeCanvas.so-$(PLATFORM)
+	(cd $(SHAREDIR) && \
+	 $(LN_S) ../platform/$(PLATFORM)/GnomeCanvas.so GnomeCanvas.so-$(PLATFORM))
 
 Makefile: Makefile.in
 	./config.status

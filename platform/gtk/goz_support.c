@@ -116,6 +116,58 @@ goz_oz_list_to_g_list(OZ_Term ozlist)
 }
 
 /*****************************************************************************
+ * Convertions
+ *****************************************************************************/
+
+/* gdkEvent to Oz record (OZ_term *) */
+OZ_Term
+OZ_gdkEvent(GdkEvent *event) {
+  OZ_Term     record;
+  OZ_Term     features[2];
+  OZ_Term     arity;
+  
+  features[0] = OZ_atom ("type");
+  features[1] = OZ_atom ("window");
+  features[2] = OZ_atom ("send_event");
+  arity = OZ_toList (3, features);
+
+  record = OZ_record (OZ_atom ("gdkEvent"), arity);
+
+  OZ_putSubtree (record, features[0], OZ_int ((int) (*(GdkEventAny *) event).type));
+  OZ_putSubtree (record, features[1], OZ_makeForeignPointer ((*(GdkEventAny *) event).window));
+  OZ_putSubtree (record, features[2], OZ_int ((*(GdkEventAny *) event).send_event));
+
+  return record;
+}
+
+/* Convert a GList to an Oz list of foreign elements */
+OZ_Term
+GOZ_GLIST_TO_OZTERM (GList * glist) {
+  OZ_Term    ozlist;
+  gpointer   element;
+
+  ozlist = OZ_nil ();
+
+  element = g_list_last (glist);
+  do {
+    ozlist = OZ_cons (OZ_makeForeignPointer (element) , ozlist);
+  } while (element = g_list_previous (glist));
+
+  g_list_free (glist);
+
+  return ozlist;
+}
+
+/* Convert a GSList to an Oz list of foreign elements */
+OZ_Term
+GOZ_GSLIST_TO_OZTERM (GSList * gslist) {
+  OZ_Term ozlist;
+
+  ozlist = OZ_nil ();
+  return ozlist;
+}
+
+/*****************************************************************************
  * Gtk macros
  *****************************************************************************/
 
