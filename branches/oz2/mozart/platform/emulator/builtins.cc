@@ -53,6 +53,7 @@ extern "C" int dlclose(void *);
 #include "solve.hh"
 #include "oz_cpi.hh"
 #include "dictionary.hh"
+#include "runtime.hh"
 
 /********************************************************************
  * Macros that overload stuff from foreign.cc
@@ -601,7 +602,7 @@ OZ_Return procedureArityInline(TaggedRef procedure, TaggedRef &out)
 
 typeError:
   out = nil();
-  TypeErrorT(0,"Procedure");
+  oz_typeError(0,"Procedure");
 }
 
 DECLAREBI_USEINLINEFUN1(BIprocedureArity,procedureArityInline)
@@ -645,7 +646,7 @@ OZ_C_proc_begin(BIsystemTellSize,3)
   /* most probable case first */
   if (isLiteral(labelTag) && isNotCVar(tag)) {
     DEREF(tNumFeats, nPtr, ntag);
-    if (!isSmallInt(tNumFeats)) TypeErrorT(1,"Int");
+    if (!isSmallInt(tNumFeats)) oz_typeError(1,"Int");
     dt_index numFeats=smallIntValue(tNumFeats);
     dt_index size=ceilPwrTwo((numFeats<=FILLLIMIT) ? numFeats
 			     : (int)ceil((double)numFeats/FILLFACTOR));
@@ -659,7 +660,7 @@ OZ_C_proc_begin(BIsystemTellSize,3)
   switch (labelTag) {
   case LTUPLE:
   case SRECORD:
-    TypeErrorT(0,"Literal");
+    oz_typeError(0,"Literal");
   case LITERAL:
     break;
   case UVAR:
@@ -675,12 +676,12 @@ OZ_C_proc_begin(BIsystemTellSize,3)
       }
     case FDVariable:
     case BoolVariable:
-      TypeErrorT(0,"Literal");
+      oz_typeError(0,"Literal");
     default:
       OZ_suspendOn (makeTaggedRef(labelPtr));
     }
   default:
-    TypeErrorT(0,"Literal");
+    oz_typeError(0,"Literal");
   }
 
   Assert(labelTag == LITERAL);
@@ -705,7 +706,7 @@ OZ_C_proc_begin(BIsystemTellSize,3)
     {
       // Calculate initial size of hash table:
       DEREF(tNumFeats, nPtr, ntag);
-      if (!isSmallInt(tNumFeats)) TypeErrorT(1,"Int");
+      if (!isSmallInt(tNumFeats)) oz_typeError(1,"Int");
       dt_index numFeats=smallIntValue(tNumFeats);
       dt_index size=ceilPwrTwo((numFeats<=FILLLIMIT) ? numFeats
                                                      : (int)ceil((double)numFeats/FILLFACTOR));
@@ -746,7 +747,7 @@ OZ_C_proc_begin(BIrecordTell,2)
   switch (labelTag) {
   case LTUPLE:
   case SRECORD:
-    TypeErrorT(0,"Literal");
+    oz_typeError(0,"Literal");
   case LITERAL:
     break;
   case UVAR:
@@ -762,12 +763,12 @@ OZ_C_proc_begin(BIrecordTell,2)
       }
     case FDVariable:
     case BoolVariable:
-      TypeErrorT(0,"Literal");
+      oz_typeError(0,"Literal");
     default:
       OZ_suspendOn (makeTaggedRef(labelPtr));
     }
   default:
-    TypeErrorT(0,"Literal");
+    oz_typeError(0,"Literal");
   }
 
   Assert(labelTag == LITERAL);
@@ -785,7 +786,7 @@ OZ_C_proc_begin(BIrecordTell,2)
        tagged2GenOFSVar(t)->propagateOFS();
        return ret;
     }
-    TypeErrorT(0,"Record");
+    oz_typeError(0,"Record");
     // else fall through to creation case
   case UVAR:
   case SVAR:
@@ -892,7 +893,7 @@ OZ_C_proc_begin(BIwidthC, 2)
           break;
       case FDVariable:
       case BoolVariable:
-          TypeErrorT(0,"Record");
+          oz_typeError(0,"Record");
       default:
           OZ_suspendOn(rawrec);
       }
@@ -902,7 +903,7 @@ OZ_C_proc_begin(BIwidthC, 2)
     case LTUPLE:
       break;
     default:
-      TypeErrorT(0,"Record");
+      oz_typeError(0,"Record");
     }
 
     // Ensure that second argument wid is a FD or integer:
@@ -1111,14 +1112,14 @@ OZ_C_proc_begin(BImonitorArity, 3)
             break;
         case FDVariable:
         case BoolVariable:
-            TypeErrorT(0,"Record");
+            oz_typeError(0,"Record");
         default:
             OZ_suspendOn(rec);
         }
         // *** arity is calculated from the OFS; see below
         break;
     default:
-        TypeErrorT(0,"Record");
+        oz_typeError(0,"Record");
     }
 
 #ifdef DEBUG_MONITORARITY
@@ -1413,9 +1414,9 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
         goto typeError1;
     }
 typeError1:
-    TypeErrorT(0,"Record");
+    oz_typeError(0,"Record");
 typeError2:
-    TypeErrorT(1,"Feature");
+    oz_typeError(1,"Feature");
 }
 
 
@@ -1440,7 +1441,7 @@ OZ_Return uparrowInlineBlocking(TaggedRef term, TaggedRef fea, TaggedRef &out)
   if (isAnyVar(space_tag))				\
     OZ_suspendOn(makeTaggedRef(space_ptr));		\
   if (!isSpace(tagged_space))				\
-    TypeErrorT(0, "Space");				\
+    oz_typeError(0, "Space");				\
   Space *space = (Space *) tagged2Const(tagged_space);
 
 
@@ -1452,7 +1453,7 @@ OZ_C_proc_begin(BInewSpace, 2) {
     OZ_suspendOn(makeTaggedRef(proc_ptr));
 
   if (!isProcedure(proc))
-    TypeErrorT(0, "Procedure");
+    oz_typeError(0, "Procedure");
 
   Board* CBB = am.currentBoard;
   int    CPP = am.currentThread->getPriority();
@@ -1697,7 +1698,7 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
     if (isAnyVar(right_tag))
       OZ_suspendOn(makeTaggedRef(right_ptr));
   } else {
-    TypeErrorT(1, "Integer or pair of integers");
+    oz_typeError(1, "Int or pair of Ints");
   }
 
   if (am.currentBoard != space->getSolveBoard()->getParent()) 
@@ -1741,7 +1742,7 @@ OZ_C_proc_begin(BIinjectSpace, 2) {
     OZ_suspendOn(makeTaggedRef(proc_ptr));
 
   if (!isProcedure(proc))
-    TypeErrorT(1, "Procedure");
+    oz_typeError(1, "Procedure");
 
   Board      *sb = space->getSolveBoard();
   SolveActor *sa = space->getSolveActor();
@@ -1809,9 +1810,9 @@ OZ_Return tupleInline(TaggedRef label, TaggedRef argno, TaggedRef &out)
   goto typeError1;
 
  typeError0:
-  TypeErrorT(0,"Literal");
+  oz_typeError(0,"Literal");
  typeError1:
-  TypeErrorT(1,"(non-negative small) Int");
+  oz_typeError(1,"(non-negative small) Int");
 }
 
 DECLAREBI_USEINLINEFUN2(BItuple,tupleInline)
@@ -1853,12 +1854,12 @@ OZ_Return labelInline(TaggedRef term, TaggedRef &out)
       }
     case FDVariable:
     case BoolVariable:
-        TypeErrorT(0,"Record");
+        oz_typeError(0,"Record");
     default:
         return SUSPEND;
     }
   default:
-    TypeErrorT(0,"Record");
+    oz_typeError(0,"Record");
   }
 }
 
@@ -1895,13 +1896,13 @@ OZ_Return hasLabelInline(TaggedRef term, TaggedRef &out)
       }
     case FDVariable:
     case BoolVariable:
-      TypeErrorT(0,"Record");
+      oz_typeError(0,"Record");
     default:
       out=NameFalse;
       return PROCEED;
     }
   default:
-    TypeErrorT(0,"Record");
+    oz_typeError(0,"Record");
   }
 }
 
@@ -1977,7 +1978,7 @@ LBLagain:
   case UVAR:
   case SVAR:
     if (!isFeature(feaTag)) {
-      TypeErrorT(1,"Feature");
+      oz_typeError(1,"Feature");
     }
     return SUSPEND;
 
@@ -2024,9 +2025,9 @@ LBLagain:
     goto typeError0;
   }
 typeError0:
-  TypeErrorT(0,"Record or Chunk");
+  oz_typeError(0,"Record or Chunk");
 typeError1:
-  TypeErrorT(1,"Feature");
+  oz_typeError(1,"Feature");
 raise:
   return am.raise(E_ERROR,E_KERNEL,".",2,term,fea);
 }
@@ -2111,7 +2112,7 @@ OZ_Return widthInline(TaggedRef term, TaggedRef &out)
     break;
   }
 
-  TypeErrorT(0,"Record");
+  oz_typeError(0,"Record");
 }
 
 DECLAREBI_USEINLINEFUN1(BIwidth,widthInline)
@@ -2236,7 +2237,7 @@ OZ_Return notInline(TaggedRef A, TaggedRef &out)
     return PROCEED;
   }
 
-  TypeErrorT(0,"Bool");
+  oz_typeError(0,"Bool");
 }
 
 DECLAREBI_USEINLINEFUN1(BInot,notInline)
@@ -2252,7 +2253,7 @@ OZ_Return andInline(TaggedRef A, TaggedRef B, TaggedRef &out) {
       out = B;
       return PROCEED;
     } else {
-      TypeErrorT(1,"Bool");
+      oz_typeError(1,"Bool");
     }
   } else if (literalEq(A,NameFalse)) {
     if (isAnyVar(B)) {
@@ -2261,12 +2262,12 @@ OZ_Return andInline(TaggedRef A, TaggedRef B, TaggedRef &out) {
       out = NameFalse;
       return PROCEED;
     } else { 
-      TypeErrorT(1,"Bool");
+      oz_typeError(1,"Bool");
     }
   } else if (isAnyVar(A)) {
     return SUSPEND;
   } else {
-    TypeErrorT(0,"Bool");
+    oz_typeError(0,"Bool");
   }
 }
 
@@ -2285,7 +2286,7 @@ OZ_Return orInline(TaggedRef A, TaggedRef B, TaggedRef &out) {
       out = NameTrue;
       return PROCEED;
     } else {
-      TypeErrorT(1,"Bool");
+      oz_typeError(1,"Bool");
     }
   } else if (literalEq(A,NameFalse)) {
     if (isAnyVar(B)) {
@@ -2294,12 +2295,12 @@ OZ_Return orInline(TaggedRef A, TaggedRef B, TaggedRef &out) {
       out = B;
       return PROCEED;
     } else { 
-      TypeErrorT(1,"Bool");
+      oz_typeError(1,"Bool");
     }
   } else if (isAnyVar(A)) {
     return SUSPEND;
   } else {
-    TypeErrorT(0,"Bool");
+    oz_typeError(0,"Bool");
   }
 }
 
@@ -2318,7 +2319,7 @@ OZ_Return atomToStringInline(TaggedRef t, TaggedRef &out)
   if (isAnyVar(t)) return SUSPEND;
 
   if (!isAtom(t)) {
-    TypeErrorT(-1,"atom");
+    oz_typeError(-1,"Atom");
   }
   
   out = OZ_string(tagged2Literal(t)->getPrintName());
@@ -2512,7 +2513,7 @@ OZ_C_proc_begin(BIvsLength,3) {
     OZ_args[1] = makeTaggedSmallInt(len);
     return SUSPEND;
   } else if (status == FAILED) {
-    TypeErrorT(0, "Virtual String");
+    oz_typeError(0, "Virtualstring");
   } else {
      return OZ_unify(OZ_args[2], makeTaggedSmallInt(len));
   }
@@ -2540,7 +2541,7 @@ OZ_C_proc_begin(BInewChunk,2)
 
   if (OZ_isVariable(val)) OZ_suspendOn(val);
   val=deref(val);
-  if (!isRecord(val)) TypeErrorT(0,"Record");
+  if (!isRecord(val)) oz_typeError(0,"Record");
 
   return OZ_unify(out,OZ_newChunk(val));
 }
@@ -2560,7 +2561,7 @@ OZ_C_proc_begin(BIchunkArity,2)
     OZ_suspendOn(makeTaggedRef(chPtr));
 
   case OZCONST: 
-    if (!isChunk(ch)) TypeErrorT(0,"Chunk");
+    if (!isChunk(ch)) oz_typeError(0,"Chunk");
     //
     switch (tagged2Const(ch)->getType()) {
     case Co_Object:
@@ -2573,7 +2574,7 @@ OZ_C_proc_begin(BIchunkArity,2)
     }
 
   default:
-    TypeErrorT(0,"Chunk");
+    oz_typeError(0,"Chunk");
   }
 }
 OZ_C_proc_end
@@ -2592,7 +2593,7 @@ OZ_C_proc_begin(BIchunkWidth, 2)
     OZ_suspendOn(makeTaggedRef(chPtr));
 
   case OZCONST:
-    if (!isChunk(ch)) TypeErrorT(0,"Chunk");
+    if (!isChunk(ch)) oz_typeError(0,"Chunk");
     //
     switch (tagged2Const(ch)->getType()) {
     case Co_Object:
@@ -2607,7 +2608,7 @@ OZ_C_proc_begin(BIchunkWidth, 2)
     }
 
   default:
-    TypeErrorT(0,"Chunk");
+    oz_typeError(0,"Chunk");
   }
 }
 OZ_C_proc_end
@@ -2658,7 +2659,7 @@ OZ_C_proc_begin(BIthreadSetPriority,2)
     prio = HI_PRIORITY;
   } else {
   type_goof:
-    TypeErrorT(1,"Atom [low medium high]");
+    oz_typeError(1,"Atom [low medium high]");
   }
 
   if (th->isDeadThread()) return PROCEED;
@@ -3156,12 +3157,12 @@ OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
       switch (tagged2CVar(t1)->getType()) {
       case FDVariable:
       case BoolVariable:
-          TypeErrorT(1,"Record");
+          oz_typeError(1,"Record");
       default:
           return SUSPEND; 
       }
     default:
-      TypeErrorT(1,"Record");
+      oz_typeError(1,"Record");
     }
   case LTUPLE:
   case SRECORD:
@@ -3187,12 +3188,12 @@ OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
         switch (tagged2CVar(t1)->getType()) {
         case FDVariable:
         case BoolVariable:
-            TypeErrorT(1,"Record");
+            oz_typeError(1,"Record");
         default:
             return SUSPEND;
         }
       default:
-	TypeErrorT(1,"Record");
+	oz_typeError(1,"Record");
       }
     }
   case UVAR:
@@ -3202,7 +3203,7 @@ OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
         switch (tagged2CVar(t0)->getType()) {
         case FDVariable:
         case BoolVariable:
-	  TypeErrorT(0,"Record");
+	  oz_typeError(0,"Record");
 	default:
 	  break;
         }
@@ -3218,15 +3219,15 @@ OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
       switch (tagged2CVar(t1)->getType()) {
       case FDVariable:
       case BoolVariable:
-          TypeErrorT(1,"Record");
+          oz_typeError(1,"Record");
       default:
 	return SUSPEND;
       }
     default:
-      TypeErrorT(1,"Record");
+      oz_typeError(1,"Record");
     }
   default:
-    TypeErrorT(0,"Record");
+    oz_typeError(0,"Record");
   }
 } 
 
@@ -3255,10 +3256,10 @@ OZ_C_proc_begin(BIadjoinAt,4)
     if (isCVar(fea)) {
       if (tagged2CVar(fea)->getType()!=OFSVariable ||
           tagged2GenOFSVar(fea)->getWidth()>0)
-	TypeErrorT(1,"Feature");
+	oz_typeError(1,"Feature");
       OZ_suspendOn(makeTaggedRef(feaPtr));;
     }
-    TypeErrorT(1,"Feature");
+    oz_typeError(1,"Feature");
 
   case LTUPLE:
   case SRECORD:
@@ -3268,7 +3269,7 @@ OZ_C_proc_begin(BIadjoinAt,4)
 	OZ_suspendOn(makeTaggedRef(feaPtr));
       }
       if (!isFeature(tag1)) {
-	TypeErrorT(1,"Feature");
+	oz_typeError(1,"Feature");
       }
       return OZ_unify(out,rec1->adjoinAt(fea,value));
     }
@@ -3277,20 +3278,20 @@ OZ_C_proc_begin(BIadjoinAt,4)
   case SVAR:
   case CVAR:
     if (tag0==CVAR && tagged2CVar(rec)->getType()!=OFSVariable)
-        TypeErrorT(0,"Record");
+        oz_typeError(0,"Record");
     if (isFeature(fea) || isNotCVar(fea)) {
       OZ_suspendOn(makeTaggedRef(recPtr));
     }
     if (isCVar(fea)) {
       if (tagged2CVar(fea)->getType()!=OFSVariable ||
           tagged2GenOFSVar(fea)->getWidth()>0)
-	TypeErrorT(1,"Feature");
+	oz_typeError(1,"Feature");
       OZ_suspendOn(makeTaggedRef(recPtr));
     }
-    TypeErrorT(1,"Feature");
+    oz_typeError(1,"Feature");
 
   default:
-    TypeErrorT(0,"Record");
+    oz_typeError(0,"Record");
   }
 }
 OZ_C_proc_end
@@ -3341,7 +3342,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
 {
   TaggedRef arity=getArity(list);
   if (arity == makeTaggedNULL()) {
-    TypeErrorT(1,"list(Feature#Value)");
+    oz_typeError(1,"list of pairs of Feature and Value)");
   }
   DEREF(t0,t0Ptr,tag0);
   if (isRef(arity)) { // must suspend
@@ -3434,9 +3435,9 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
 
  typeError0:
   if (recordFlag) {
-    TypeErrorT(0,"Record");
+    oz_typeError(0,"Record");
   } else {
-    TypeErrorT(0,"Literal");
+    oz_typeError(0,"Literal");
   }
 }
 
@@ -3491,10 +3492,10 @@ OZ_Return BIarityInline(TaggedRef term, TaggedRef &out)
   if (isNotCVar(tag)) return SUSPEND;
   if (isCVar(tag)) {
     if (tagged2CVar(term)->getType()!=OFSVariable)
-      TypeErrorT(0,"Record");
+      oz_typeError(0,"Record");
     return SUSPEND;
   }
-  TypeErrorT(0,"Record");
+  oz_typeError(0,"Record");
 }
 
 DECLAREBI_USEINLINEFUN1(BIarity,BIarityInline)
@@ -3507,7 +3508,7 @@ DECLAREBI_USEINLINEFUN1(BIarity,BIarityInline)
 
 static OZ_Return bombArith(char *type)
 {
-  TypeErrorT(-1,type);
+  oz_typeError(-1,type);
 }
 
 #define suspendTest(A,B,test,type)			\
@@ -3523,7 +3524,7 @@ static OZ_Return bombArith(char *type)
 
 static OZ_Return suspendOnNumbers(TaggedRef A, TaggedRef B) 
 {
-  suspendTest(A,B,isNumber,"Number");
+  suspendTest(A,B,isNumber,"int or float\nuniformly for all arguments");
 }
 
 inline Bool isNumOrAtom(TaggedRef t)
@@ -3533,7 +3534,7 @@ inline Bool isNumOrAtom(TaggedRef t)
 
 static OZ_Return suspendOnNumbersAndAtoms(TaggedRef A, TaggedRef B) 
 {
-  suspendTest(A,B,isNumOrAtom,"Number or Atom");
+  suspendTest(A,B,isNumOrAtom,"int, float or atom\nuniformly for all arguments");
 }
 
 static OZ_Return suspendOnFloats(TaggedRef A, TaggedRef B) 
@@ -3754,7 +3755,7 @@ OZ_Return BIuminusInline(TaggedRef A, TaggedRef &out)
     return SUSPEND;
 
   default:
-    TypeErrorT(0,"Int");
+    oz_typeError(0,"Int");
   }
 }
 
@@ -3784,7 +3785,7 @@ OZ_Return BIabsInline(TaggedRef A, TaggedRef &out)
     return SUSPEND;
   }
 
-  TypeErrorT(0,"Number");
+  oz_typeError(0,"Number");
 }
 
 // add1(X) --> X+1
@@ -3807,7 +3808,7 @@ OZ_Return BIadd1Inline(TaggedRef A, TaggedRef &out)
     return SUSPEND;
   }
 
-  TypeErrorT(0,"Int");
+  oz_typeError(0,"Int");
 }
 
 // sub1(X) --> X-1
@@ -3830,7 +3831,7 @@ OZ_Return BIsub1Inline(TaggedRef A, TaggedRef &out)
     return SUSPEND;
   }
 
-  TypeErrorT(0,"Int");
+  oz_typeError(0,"Int");
 }
 
 
@@ -3875,7 +3876,7 @@ OZ_Return bigtest(TaggedRef A, TaggedRef B,
   if (isAnyVar(A) || isAnyVar(B)) 
     return SUSPEND;
 
-  TypeErrorT(-1,"Float x Float or Int x Int or Atom x Atom");
+  oz_typeError(-1,"Int, Float or Atom\nuniformly for all arguments");
 }
 
 
@@ -3897,7 +3898,7 @@ OZ_Return BIminInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 	  ? A : B;
 	return PROCEED;
       }
-      TypeErrorT(-1,"Comparable");
+      oz_typeError(-1,"Comparable");
       
     default: break;
     }
@@ -3932,7 +3933,7 @@ OZ_Return BImaxInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 	  ? B : A;
 	return PROCEED;
       }
-      TypeErrorT(-1,"Comparable");
+      oz_typeError(-1,"Comparable");
 
     default: break;
     }
@@ -3970,7 +3971,7 @@ OZ_Return BIlessInline(TaggedRef A, TaggedRef B)
                        tagged2Literal(B)->getPrintName()) < 0)
           ? PROCEED : FAILED;
       }
-      TypeErrorT(-1,"Comparable");
+      oz_typeError(-1,"Comparable");
     }
   }
 
@@ -4056,7 +4057,7 @@ OZ_Return BIleInline(TaggedRef A, TaggedRef B)
 		       tagged2Literal(B)->getPrintName()) <= 0)
 	  ? PROCEED : FAILED;
       }
-      TypeErrorT(-1,"Comparable");
+      oz_typeError(-1,"Comparable");
     }
 
   }
@@ -4114,7 +4115,7 @@ OZ_Return BIintToFloatInline(TaggedRef A, TaggedRef &out)
     return SUSPEND;
   }
 
-  TypeErrorT(0,"Int");
+  oz_typeError(0,"Int");
 }
 
 /* mm2: I don't know if this is efficient, but it's only called,
@@ -4152,7 +4153,7 @@ OZ_Return BIfloatToIntInline(TaggedRef A, TaggedRef &out) {
     return PROCEED;
   }
 
-  TypeErrorT(-1,"Float");
+  oz_typeError(-1,"Float");
 }
 
 OZ_C_proc_begin(BIfloatToString, 2)
@@ -4167,7 +4168,7 @@ OZ_C_proc_begin(BIfloatToString, 2)
     OZ_Return ret = OZ_unify(out,OZ_string(s));
     return ret;
   }
-  TypeErrorT(0,"Float");
+  oz_typeError(0,"Float");
 }
 OZ_C_proc_end
 
@@ -4258,7 +4259,7 @@ OZ_C_proc_begin(BIintToString, 2)
   if (OZ_isInt(in)) {
     return OZ_unify(out,OZ_string(toC(in)));
   }
-  TypeErrorT(0,"Int");
+  oz_typeError(0,"Int");
 }
 OZ_C_proc_end
 
@@ -4330,7 +4331,7 @@ OZ_Return InlineName(TaggedRef AA, TaggedRef &out)	\
     out = makeTaggedFloat(Fun(floatValue(AA)));		\
     return PROCEED;					\
   }							\
-  TypeErrorT(0,"Float");				\
+  oz_typeError(0,"Float");				\
 }							\
 DECLAREBI_USEINLINEFUN1(BIName,InlineName)
 
@@ -4483,7 +4484,7 @@ OZ_C_proc_begin(BIsendPort,2)
   prt = deref(prt);
 
   if (!isPort(prt)) {
-    TypeErrorT(0,"Port");
+    oz_typeError(0,"Port");
   }
 
   return sendPort(prt,msg);
@@ -4513,7 +4514,7 @@ OZ_C_proc_begin(BIclosePort,1)
   prt = deref(prt);
 
   if (!isPort(prt)) {
-    TypeErrorT(0,"Port");
+    oz_typeError(0,"Port");
   }
 
   return closePort(prt);
@@ -4542,7 +4543,7 @@ OZ_C_proc_begin(BIlockLock,1)
   lock = deref(lock);
 
   if (!isLock(lock)) {
-    TypeErrorT(0,"Lock");
+    oz_typeError(0,"Lock");
   }
 
   OzLock *lck = tagged2Lock(lock);
@@ -4568,7 +4569,7 @@ OZ_C_proc_begin(BIunlockLock,1)
   lock = deref(lock);
 
   if (!isLock(lock)) {
-    TypeErrorT(0,"Lock");
+    oz_typeError(0,"Lock");
   }
 
   tagged2Lock(lock)->unlock();
@@ -4598,7 +4599,7 @@ OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef inState, TaggedRef &outSta
   outState = makeTaggedRef(newTaggedUVar(am.currentBoard));
 
   if (!isCell(rec)) {
-    TypeErrorT(0,"Cell");
+    oz_typeError(0,"Cell");
   }
   Cell *cell = tagged2Cell(rec);
 
@@ -4635,7 +4636,7 @@ OZ_Return BIaccessCellInline(TaggedRef c, TaggedRef &out)
   NONVAR(c,rec);
 
   if (!isCell(rec)) {
-    TypeErrorT(0,"Cell");
+    oz_typeError(0,"Cell");
   }
   Cell *cell = tagged2Cell(rec);
 
@@ -4650,7 +4651,7 @@ OZ_Return BIassignCellInline(TaggedRef c, TaggedRef in)
   NONVAR(c,rec);
 
   if (!isCell(rec)) {
-    TypeErrorT(0,"Cell");
+    oz_typeError(0,"Cell");
   }
   Cell *cell = tagged2Cell(rec);
 
@@ -4677,10 +4678,10 @@ OZ_C_proc_begin(BIarrayNew,4)
   high = deref(OZ_getCArg(1));
 
   if (!isSmallInt(low)) {
-    TypeErrorT(0,"smallInteger");
+    oz_typeError(0,"(small) Int");
   }
   if (!isSmallInt(high)) {
-    TypeErrorT(1,"smallInteger");
+    oz_typeError(1,"(small) Int");
   }
 
   int ilow  = smallIntValue(low);
@@ -4704,7 +4705,7 @@ OZ_Return arrayLowInline(TaggedRef t, TaggedRef &out)
 {
   NONVAR( t, term );
   if (!isArray(term)) {
-    TypeErrorT(0,"Array");
+    oz_typeError(0,"Array");
   }
   out = makeInt(tagged2Array(term)->getLow());
   return PROCEED;
@@ -4715,7 +4716,7 @@ OZ_Return arrayHighInline(TaggedRef t, TaggedRef &out)
 {
   NONVAR( t, term );
   if (!isArray(term)) {
-    TypeErrorT(0,"Array");
+    oz_typeError(0,"Array");
   }
   out = makeInt(tagged2Array(term)->getHigh());
   return PROCEED;
@@ -4729,11 +4730,11 @@ OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
   NONVAR( i, index );
 
   if (!isArray(array)) {
-    TypeErrorT(0,"Array");
+    oz_typeError(0,"Array");
   }
 
   if (!isSmallInt(index)) {
-    TypeErrorT(1,"smallInteger");
+    oz_typeError(1,"(small) Int");
   }
 
   OzArray *ar = tagged2Array(array);
@@ -4749,11 +4750,11 @@ OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
   NONVAR( i, index );
 
   if (!isArray(array)) {
-    TypeErrorT(0,"Array");
+    oz_typeError(0,"Array");
   }
 
   if (!isSmallInt(index)) {
-    TypeErrorT(1,"smallInteger");
+    oz_typeError(1,"(small) Int");
   }
 
   OzArray *ar = tagged2Array(array);
@@ -4786,7 +4787,7 @@ OZ_C_proc_begin(BIdictionaryKeys,2)
 
   NONVAR1( d, dict );
   if (!isDictionary(dict)) {
-    TypeErrorT(0,"Dictionary");
+    oz_typeError(0,"Dictionary");
   }
 
   return OZ_unify(tagged2Dictionary(dict)->keys(),out);
@@ -4801,7 +4802,7 @@ OZ_C_proc_begin(BIdictionaryEntries,2)
 
   NONVAR1( d, dict );
   if (!isDictionary(dict)) {
-    TypeErrorT(0,"Dictionary");
+    oz_typeError(0,"Dictionary");
   }
 
   return OZ_unify(tagged2Dictionary(dict)->pairs(),out);
@@ -4816,7 +4817,7 @@ OZ_C_proc_begin(BIdictionaryItems,2)
 
   NONVAR1( d, dict );
   if (!isDictionary(dict)) {
-    TypeErrorT(0,"Dictionary");
+    oz_typeError(0,"Dictionary");
   }
 
   return OZ_unify(tagged2Dictionary(dict)->items(),out);
@@ -4831,7 +4832,7 @@ OZ_C_proc_begin(BIdictionaryClone,2)
 
   NONVAR1( d, dict );
   if (!isDictionary(dict)) {
-    TypeErrorT(0,"Dictionary");
+    oz_typeError(0,"Dictionary");
   }
 
   return OZ_unify(tagged2Dictionary(dict)->clone(),out);
@@ -4851,8 +4852,8 @@ DECLAREBI_USEINLINEFUN1(BIisDictionary,isDictionaryInline)
 #define GetDictAndKey(d,k,dict,key,checkboard)			\
   NONVAR(d,dictaux);						\
   NONVAR(k,key);						\
-  if (!isDictionary(dictaux)) { TypeErrorT(0,"Dictionary"); }	\
-  if (!isFeature(key))        { TypeErrorT(1,"feature"); }	\
+  if (!isDictionary(dictaux)) { oz_typeError(0,"Dictionary"); }	\
+  if (!isFeature(key))        { oz_typeError(1,"Feature"); }	\
   OzDictionary *dict = tagged2Dictionary(dictaux);		\
   if (checkboard) { CheckLocalBoard(dict,"dict"); }
 
@@ -4924,11 +4925,11 @@ OZ_C_proc_begin(BIdictionaryToRecord,3)
 
   NONVAR1( d, dict); 
   if (!isDictionary(dict)) {
-    TypeErrorT(0,"Dictionary");
+    oz_typeError(0,"Dictionary");
   }
   NONVAR1( l, lbl);
   if (!isLiteral(lbl)) {
-    TypeErrorT(1,"Literal");
+    oz_typeError(1,"Literal");
   }
   return OZ_unify(tagged2Dictionary(dict)->toRecord(lbl),r);
 }
@@ -5457,7 +5458,7 @@ OZ_C_proc_begin(BIapply,2)
 
   OZ_Term var;
   if (!OZ_isList(args,&var)) {
-    if (var == 0) TypeErrorT(1,"List");
+    if (var == 0) oz_typeError(1,"List");
     OZ_suspendOn(var);
   }
 
@@ -5472,7 +5473,7 @@ OZ_C_proc_begin(BIapply,2)
   DEREF(proc,procPtr,_2);
   if (isAnyVar(proc)) OZ_suspendOn(makeTaggedRef(procPtr));
   if (!isProcedure(proc) && !isObject(proc)) {
-    TypeErrorT(0,"Procedure or Object");
+    oz_typeError(0,"Procedure or Object");
   }
   
   am.pushCall(proc,len,argsArray);
@@ -5492,7 +5493,7 @@ OZ_C_proc_begin(BIdeepFeed,2)
 
   NONVAR1(c,rec);
   if (!isCell(rec)) {
-    TypeErrorT(0,"Cell");
+    oz_typeError(0,"Cell");
   }
 
   Cell *cell1 = tagged2Cell(rec);
@@ -5531,7 +5532,7 @@ OZ_C_proc_begin(BIdeepReadCell,2)
   OZ_Term out = OZ_getCArg(1);
   NONVAR1(c,rec);
   if (!isCell(rec)) {
-    TypeErrorT(0,"Cell");
+    oz_typeError(0,"Cell");
   }
   Cell *cell1 = tagged2Cell(rec);
   return OZ_unify(out,cell1->getValue());
@@ -5622,7 +5623,7 @@ OZ_C_proc_begin(BIsetAbstractionTabDefaultEntry,1)
 {
   TaggedRef in = OZ_getCArg(0); DEREF(in,_1,_2);
   if (!isAbstraction(in)) {
-    TypeErrorT(0,"Abstraction");
+    oz_typeError(0,"Abstraction");
   }
 
   AbstractionEntry::setDefaultEntry(tagged2Abstraction(in));
@@ -5950,7 +5951,7 @@ OZ_C_proc_end
   if (isLiteral(tTag))                  \
     return PROCEED;                     \
   if (!isSRecord(t))                    \
-    TypeErrorT(0, "Record");            
+    oz_typeError(0, "Record");            
 
 #define DoPercentFeature(var,term,atom) \
   int     var = -1;                                              \
@@ -5960,7 +5961,7 @@ OZ_C_proc_end
       if (isAnyVar(outTag)) OZ_suspendOn(makeTaggedRef(outPtr)); \
       if (!isSmallInt(outTag) ||                                 \
 	  (var=smallIntValue(out)) < 1 || var > 100)             \
-	 TypeErrorT(0, "Int");                                   \
+	 oz_typeError(0, "Int");                                   \
     }                                                            \
   }
           
@@ -5975,7 +5976,7 @@ OZ_C_proc_end
       } else if (isBigInt(outTag) && tagged2BigInt(out)->getInt()>=0) {   \
 	var = tagged2BigInt(out)->getInt();                               \
       } else {                                                            \
-	TypeErrorT(0, "Int");                                             \
+	oz_typeError(0, "Int");                                             \
       }                                                                   \
     }                                                                     \
   }
@@ -5992,7 +5993,7 @@ OZ_C_proc_end
 	} else if (literalEq(out,NameFalse)) {                            \
 	  var = 0;                                                        \
 	} else {                                                          \
-	  TypeErrorT(0, "Bool");                                          \
+	  oz_typeError(0, "Bool");                                          \
 	}                                                                 \
     }                                                                     \
   }
@@ -6221,7 +6222,7 @@ OZ_C_proc_begin(BIcopyRecord,2)
     return OZ_unify(out,rec);
 
   default:
-    TypeErrorT(0,"Determined Record");
+    oz_typeError(0,"(det) Record");
   }
 }
 OZ_C_proc_end
@@ -6250,7 +6251,7 @@ OZ_Return atInline(TaggedRef fea, TaggedRef &out)
   }
 
 bomb:
-  TypeErrorT(0,"(valid) Feature");
+  oz_typeError(0,"(valid) Feature");
 }
 DECLAREBI_USEINLINEFUN1(BIat,atInline)
 
@@ -6268,7 +6269,7 @@ OZ_Return assignInline(TaggedRef fea, TaggedRef value)
     if (isAnyVar(fea)) {
       return SUSPEND;
     }
-    TypeErrorT(0,"Feature");
+    oz_typeError(0,"Feature");
   }
 
   if (!r) return am.raise(E_ERROR,E_OBJECT,"<-",3,nil(),fea,value);
@@ -6305,7 +6306,7 @@ OZ_Return ooExchInline(TaggedRef fea, TaggedRef newAttr, TaggedRef &oldAttr)
   }
 
 bomb:
-  TypeErrorT(1,"(valid) Feature");
+  oz_typeError(1,"(valid) Feature");
 }
 DECLAREBI_USEINLINEFUN2(BIooExch,ooExchInline)
 
@@ -6335,13 +6336,13 @@ OZ_C_proc_begin(BImakeClass,9)
 
   SRecord *methods = NULL;
 
-  if (!isDictionary(fastmeth))   { TypeErrorT(0,"dictionary"); }
-  if (!isLiteral(printname))     { TypeErrorT(1,"literal"); }
-  if (!isDictionary(slowmeth))   { TypeErrorT(2,"dictionary"); }
-  if (!isAbstraction(send))      { TypeErrorT(3,"abstraction"); }
-  if (!isRecord(features))       { TypeErrorT(4,"record"); }
-  if (!isRecord(ufeatures))      { TypeErrorT(5,"record"); }
-  if (!isDictionary(defmethods)) { TypeErrorT(6,"dictionary"); }
+  if (!isDictionary(fastmeth))   { oz_typeError(0,"Dictionary"); }
+  if (!isLiteral(printname))     { oz_typeError(1,"Literal"); }
+  if (!isDictionary(slowmeth))   { oz_typeError(2,"Dictionary"); }
+  if (!isAbstraction(send))      { oz_typeError(3,"Procedure (no builtin)"); }
+  if (!isRecord(features))       { oz_typeError(4,"Record"); }
+  if (!isRecord(ufeatures))      { oz_typeError(5,"Record"); }
+  if (!isDictionary(defmethods)) { oz_typeError(6,"Dictionary"); }
 
   SRecord *uf = isSRecord(ufeatures) ? tagged2SRecord(ufeatures) : (SRecord*)NULL;
 
@@ -6370,7 +6371,7 @@ OZ_C_proc_begin(BIsetMethApplHdl,1)
 {
   OZ_Term preed = OZ_getCArg(0); DEREF(preed,_1,_2);
   if (! isAbstraction(preed)) {
-    TypeErrorT(0,"abstraction");
+    oz_typeError(0,"Procedure (no builtin)");
   }
 
   if (am.methApplHdl != makeTaggedNULL()) {
@@ -6464,7 +6465,7 @@ OZ_Return newObjectInline(TaggedRef cla, TaggedRef &out)
   { DEREF(cla,_1,_2); }
   if (isAnyVar(cla)) return SUSPEND;
   if (!isObject(cla)) {
-    TypeErrorT(0,"Class");
+    oz_typeError(0,"Class");
   }
 
   Object *obj = (Object *)tagged2Const(cla);
@@ -6520,7 +6521,7 @@ OZ_C_proc_begin(BIsetSelf,1)
   OZ_Term obj = OZ_getCArg(0);
   obj = deref(obj);
   if (!isObject(obj)) {
-    TypeErrorT(0,"Object");
+    oz_typeError(0,"Object");
   }
   am.changeSelf(tagged2Object(obj));
   return PROCEED;
@@ -6546,10 +6547,10 @@ DECLAREBI_USEINLINEREL1(BIooGetLock,ooGetLockInline)
 OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
 {
   OZ_declareNonvarArg(0,hdl);
-  if (!OZ_isProcedure(hdl)) TypeErrorT(0,"Procedure");
+  if (!OZ_isProcedure(hdl)) oz_typeError(0,"Procedure");
 
   hdl = deref(hdl);
-  if (tagged2Const(hdl)->getArity() != 1) TypeErrorT(0,"Procedure/1");
+  if (tagged2Const(hdl)->getArity() != 1) oz_typeError(0,"Procedure/1");
   am.defaultExceptionHandler = hdl;
   return PROCEED;
 }

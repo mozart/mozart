@@ -22,6 +22,7 @@
 #include "solve.hh"
 
 #include "dictionary.hh"
+#include "runtime.hh"
 
 TaggedRef NameTclName,
   AtomTclOption, AtomTclList, AtomTclPosition,
@@ -45,7 +46,7 @@ OZ_Return raise_os_error()
 
 OZ_Return raise_type_error(TaggedRef tcl)
 {
-  TypeErrorT(-1,"Tickle");
+  oz_typeError(-1,"Tickle");
 }
 
 OZ_Return raise_closed(TaggedRef tcl) {
@@ -93,7 +94,7 @@ OZ_C_proc_begin(BIaddFastGroup,3)
     tagged2LTuple(group)->setTail(member);
     return OZ_unify(member,OZ_getCArg(2));
   }
-  return OZ_typeError(0,"List");
+  oz_typeError(0,"List");
 } 
 OZ_C_proc_end
 
@@ -136,7 +137,7 @@ OZ_C_proc_begin(BIgetFastGroup,2)
     if (isNil(group)) return OZ_unify(out,OZ_getCArg(1));
   }
   
-  return OZ_typeError(0,"List");
+  oz_typeError(0,"List");
 } 
 OZ_C_proc_end
 
