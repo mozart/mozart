@@ -30,8 +30,6 @@
 <!DOCTYPE Book SYSTEM "ozdoc.dtd" [
 
 <!-- Extension to the DTD -->
-<!ENTITY % p.mix.local "|Em">
-<!ELEMENT Em - - (#PCDATA)>
 <!ENTITY % proglang.values.local "|sh">
 <!ENTITY % author.class "author|author.extern|comic">
 <!ENTITY % picture.element "picture|picture.extern|picture.choice">
