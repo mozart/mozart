@@ -1,0 +1,262 @@
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh">
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY eg PI "eg">
+<!ENTITY etc PI "etc">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=draft>
+    <Title/Application Programming/
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
+    <Author.Extern to="author.db" key="Christian.Schulte">
+    <Abstract>
+      Mozart allows straightforward creation of applications that can run
+      without the Oz programming environment.  They can run in different
+      application environments like command line shells, web browsers, and
+      web servers.
+    <P>
+      Mozart provides the essential infrastructure needed to create different
+      types of applications.  It supports the automatic loading of required
+      modules as well as parameter passing.
+  <Body>
+    <Chapter proglang=sh id="chapter.conventions">
+      <Title/Conventions/
+      <Section>
+	<Title/Parsing of CGI arguments/
+	<P>
+	  Boolean options ?{option} may be given as <<?{option}=yes>> or
+	  <<?{option}=no>>.  Option names may be abbreviated, as long as
+	  they remain unambiguous.
+      <Section>
+	<Title/Parsing of Command Lines/
+	<P>
+	  We distinguish between long option names and single character
+	  options.  Long options are given as <<--?{option}>> or
+	  <<--?{option}=?{value}>>; option names may be abbreviated as
+	  long as they remain unambiguous.  Single-character options
+	  are given as <<-?{x}>>, eventually followed by a value.
+	  Several single-character options may be combined, &eg;,
+	  <<-xy>> means <<-x -y>> (provided <<x>> does not take an
+	  argument).  The argument to a single-character option may
+	  be attached to the option character, &ie;, you can write
+	  <<-?{x}?{value}>> or <<-?{x} ?{value}>>.
+	<P>
+	  Boolean options ?{option} may be given as <<--?{option}>> (meaning
+	  <Code proglang=oz/true/) or <<--no?{option}>> (meaning <Code
+	  proglang=oz/false/).  A single hyphen&nbsp;<<->> is not considered
+	  to be an option and thus is returned unchanged.  Parsing stops at
+	  a double hyphen&nbsp;<<-->> not followed by an option name; the
+	  double hyphen itself does not appear in the output.
+    <Chapter>
+      <Title/Option Specifications/
+      <P>
+	There are several ways to specify the way the arguments are parsed.
+	The first three are of increasing processing power; the last two
+	are supplied for backwards compatibility.
+      <Section>
+	<Title/Plain/
+	<Para class=apropos><Title/Syntax Specification/
+	    The <<plain>> way of command line processing actually involves
+	    no processing at all.  In CGI scripts, not even escape characters
+	    are resolved.
+	    <Grammar.Rule>?={spec}
+	      <Grammar.Alt/<<plain>>/
+	    </Grammar.Rule>
+	<Para class=apropos><Title/Returned Result/
+	  For CGI scripts, the result consists of a list of pairs of strings
+	  (the name&slash;value pairs), whereas for command lines, it consists
+	  of a list of strings.
+      <Section>
+	<Title/List/
+	<Para class=apropos><Title/Syntax Specification/
+	  The <<list>> way of processing command line arguments takes care
+	  of determining what is a command line option, whether it takes a
+	  value, how its value to be interpreted, &etc;
+	  <Grammar.Rule>?={spec}
+	    <Grammar.Alt add/<<list(>>[<<mode: ?={mode}>>] ?={option}
+	      &ellipsis; ?={option})/
+	  </Grammar.Rule>
+	  Using the <<mode>> specification, the command line parser can either
+	  be instructed to stop at the first non-option argument it encounters
+	  (<<start>>) or it can look for options in the whole command line
+	  (<<anywhere>>).  The latter is the default if no <<mode>> is given.
+	  <Grammar.Rule>?={mode}
+	    <Grammar.Alt/<<start>> | <<anywhere>>/
+	  </Grammar.Rule>
+	<P>
+	  The integer fields of the option specification describe the
+	  individual options.  An option must as least have an ?={option name}.
+	  Furthermore, it may either be an alias for another option (if
+	  <<alias>> is given) or it may be a <Q class=quasi/real/ option
+	  actually visible to the application.  Aliases are never returned
+	  to the application; they are always replaced by the option they
+	  are an alias for.
+	  <Grammar.Rule>?={option}
+	    <Grammar.Alt/?={option name}<<(>>[<<char:>> ?={char or chars}]
+	      [<<type: ?={type}>>]<<)>>/
+	    <Grammar.Alt or/?={option name}<<(>>[<<char: ?={char or chars}>>]
+	      <<alias: ?={alias})>>/
+	  </Grammar.Rule>
+	  <Grammar.Rule>?={option name}
+	    <Grammar.Alt/?={atom}/
+	  </Grammar.Rule>
+	  As mentioned above, options may be notated using single-character
+	  short forms.  The <<char>> specification may assign one or several
+	  single-character short forms to an option.  Note that as with
+	  aliases, the long option name is returned instead of the character.
+	  <Grammar.Rule>?={char or chars}
+	    <Grammar.Alt/?={char} | <<[>>?={char}<<]>>/
+	  </Grammar.Rule>
+	<P>
+	  If no <<type>> is given, then the option does not take an argument.
+	  (Note that <<true>> will be used as the associated value in this
+	  case.)  Boolean options have a special status, as has already been
+	  alluded to in <Ptr to="chapter.conventions">; these also may not
+	  take an explicit argument.  The remaining type specifications,
+	  however, require an additional argument.  The <<list(?={primary
+	  type})>> annotation interprets its argument as a comma-separated
+	  list of elements of a specific type.
+	  <Grammar.Rule>?={type}
+	    <Grammar.Alt/<<bool>>/
+	    <Grammar.Alt/?={primary type}/
+	    <Grammar.Alt/<<list(?={primary type})>>/
+	  </Grammar.Rule>
+	<P>
+	  There are four supported basic types and a <Q class=quasi/generic/
+	  type.  Integer and float arguments have to be given in Oz notation
+	  (with the exception that the unary minus sign may be notated
+	  as&nbsp;<<->>); minimum and maximum values may also be specified.
+	  For arguments to be returned as atoms, a set of allowed values may
+	  be specified.  Strings are returned as-is.
+	<P>
+	  The generic type simply consists of a binary procedure with the
+	  signature <<{P ?+{S} ?_{X}}>> which may arbitrarily transform the
+	  argument, given as a string.
+	  <Grammar.Rule>?={primary type}
+	    <Grammar.Alt/<<int(>>[<<min: ?={int}>>] [<<max: ?={int}>>]<<)>>/
+	    <Grammar.Alt/<<float(>>[<<min: ?={float}>>]
+	      [<<max: ?={float}>>]<<)>>/
+	    <Grammar.Alt/<<atom(>>[?={atom} &ellipsis; ?={atom}]<<)>>/
+	    <Grammar.Alt/<<string>>/
+	    <Grammar.Alt/?={procedure}/
+	  </Grammar.Rule>
+	<P>
+	  Two different forms of alias are supported.  Option name aliases
+	  simply state that this option name is equivalent to some other
+	  option name; the other option's argument description will be used
+	  for parsing this option as well.  The second kind of alias states
+	  that this option is equivalent to another option used with an
+	  additional supplied value (or a combination of several options).
+	  In the latter case, the value will be tranferred to the output
+	  without any additional transformations.  (It should be list however,
+	  if the <<type>> specification was <<list(?={primary type})>>.)
+	  <Grammar.Rule>?={alias}
+	    <Grammar.Alt/?={option name}/
+	    <Grammar.Alt/?={option name}<<#>>?={value}
+	      | <<[>>?={option name}<<#>>?={value}<<]>>/
+	  </Grammar.Rule>
+	<Para class=apropos><Title/Returned Result/
+	  The result of this processing step is a list of parsed options,
+	  interspersed with non-parsed arguments, a so-called ?={option list}:
+	  <Grammar.Rule>?={option list}
+	    <Grammar.Alt/<<[>>?={arg or option}<<]>>/
+	  </Grammar.Rule>
+	  <Grammar.Rule>?={arg or option}
+	    <Grammar.Alt/?={option name}<<#>>?={value}/
+	    <Grammar.Alt/?={string}/
+	  </Grammar.Rule>
+      <Section>
+	<Title/Record/
+	<Para class=apropos><Title/Syntax Specification/
+	  The additional processing step involved in <<record>> kind
+	  specifications is that additional contextual conditions may
+	  be checked, and the result is returned in a different form.
+	<P>
+	  Basically, the <<record>> specification is a strict extension
+	  of the <<list>> specification.
+	  <Grammar.Rule>?={spec}
+	    <Grammar.Alt add/<<record(>>[<<mode: ?={mode}>>] ?={option}
+	      &ellipsis; ?={option})/
+	  </Grammar.Rule>
+	  The specification for <Q class=quasi/real/ options take some
+	  more information into consideration, namely how often the
+	  option may appear and how several occurrences combine (?={occ}),
+	  and whether it is a required option (<<optional>>; the default
+	  is <<true>>) or whether it takes a default value (which it
+	  does not by default).
+	  <Grammar.Rule>?={option}
+	    <Grammar.Alt add/?={option name}<<(>>/
+	    <Grammar.Alt space/<<   >>[<<char: ?={char or chars}>>]/
+	    <Grammar.Alt space/<<   >>[<<type: ?={type}>>]/
+	    <Grammar.Alt space/<<   >>[<<1: ?={occ}>>]/
+	    <Grammar.Alt space/<<   >>[<<default: ?={value}>>]/
+	    <Grammar.Alt space/<<   >>[<<optional: ?={bool}>>]<<)>>/
+	  </Grammar.Rule>
+	  An option may be allowed to occur at most once (<<single>>) or
+	  any number of times.  In the latter case, the result may either
+	  respect all occurrences (<<multiple>>), or it may ignore all but
+	  the first (<<leftmost>>) or last (<<rightmost>>) occurrence.
+	  When all occurrences are respected, a list of them (preserving
+	  the order) is returned.
+	  <Grammar.Rule>?={occ}
+	    <Grammar.Alt/<<single>> | <<multiple>>
+	      | <<leftmost>> | <<rightmost>>/
+	  </Grammar.Rule>
+	<Para class=apropos><Title/Returned Result/
+	  The result consists of an option record.  The options which had
+	  an explicit ?={occ} given in their specification are moved from
+	  the option list into this record.  Options with default values
+	  appear with these values in the option record unless they were
+	  explicitly given in the argument list.  All non-optional options
+	  also appear in this record.  All other options, interspersed
+	  with non-parsed arguments, are stored as an option list under
+	  feature&nbsp;<<1>> of this record.
+	  <Grammar.Rule>?={option record}
+	    <Grammar.Alt/<<optRec(1: ?={option list}>>/
+	    <Grammar.Alt/<<       ?={option name}: ?={value}>> &ellipsis;/
+	    <Grammar.Alt/<<       ?={option name}: ?={value}>>/
+	  </Grammar.Rule>
+      <Section>
+	<Title/Backward Compatibility/
+	<P>
+	  For backward compatibility, two further modes of processing are
+	  supplied, although their use is discouraged.  They are in fact
+	  translated to the <<record>> method described above.
+	  <Grammar.Rule>?={Spec}
+	    <Grammar.Alt add/<<single(>>?={Option} &ellipsis; ?={Option})/
+	    <Grammar.Alt/<<multiple(>>?={Option} &ellipsis; ?={Option})/
+	  </Grammar.Rule>
+	  The specifications are enriched as follows:
+	  <List>
+	    <Item>
+	      If no <<default>> is given for an option, it is assigned
+	      a default <<default>> based on its type, as illustrated by
+	      the following table.
+	      <Table>
+		<TR/<TH/Type/<TH/Default//
+		<TR/<TD/<<bool>>/<TD/<<false>>//
+		<TR/<TD/<<int>>/<TD/<<0>>//
+		<TR/<TD/<<float>>/<TD/<<0.0>>//
+		<TR/<TD/<<string>>/<TD/<<"">>//
+		<TR/<TD/<<atom>>/<TD/<<''>>//
+	      </Table>
+	    <Item>
+	      If no ?={occ} is given, <<rightmost>> is assigned as a
+	      default.
+	    <Item>
+	      For ?={option name}s of length&nbsp;1, a single-character
+	      option is accepted.
+	  </List>
+</Book>
