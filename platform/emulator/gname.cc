@@ -47,34 +47,34 @@ int GNameTable::hash(GName *gname)
 
 inline void GNameTable::add(GName *name)
 {
-  int hvalue=hash(name);
-  GenHashTable::htAdd(hvalue,(GenHashBaseKey*)name,0);
+  unsigned int hvalue=hash(name);
+  GenHashTable::htAddU(hvalue,(GenHashBaseKey*)name,0);
 }
 
 TaggedRef GNameTable::find(GName *name)
 {
-  int hvalue = hash(name);
-  GenHashNode *aux = htFindFirst(hvalue);
+  unsigned int hvalue = hash(name);
+  GenHashNode *aux = htFindFirstU(hvalue);
   while(aux) {
     GName *gn = (GName*)aux->getBaseKey();
     if (name->same(gn)) {
       return gn->getValue();
     }
-    aux = htFindNext(aux,hvalue); }
+    aux = htFindNextU(aux,hvalue); }
   return makeTaggedNULL();
 }
 
 void GNameTable::remove(GName *name)
 {
-  int hvalue = hash(name);
-  GenHashNode *aux = htFindFirst(hvalue);
+  unsigned int hvalue = hash(name);
+  GenHashNode *aux = htFindFirstU(hvalue);
   while(aux) {
     GName *gn = (GName *) aux->getBaseKey();
     if (name->same(gn)) {
-      htSub(hvalue, aux);
+      htSubU(hvalue, aux);
       break;
     }
-    aux = htFindNext(aux, hvalue);
+    aux = htFindNextU(aux, hvalue);
   }
 }
 
