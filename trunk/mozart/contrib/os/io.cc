@@ -21,6 +21,8 @@ public:
   virtual OZ_Term printV(int depth = 10);
   virtual OZ_Extension* gCollectV(void);
   virtual OZ_Extension* sCloneV(void) { Assert(0); return NULL; }
+  virtual void gCollectRecurseV(void) {}
+  virtual void sCloneRecurseV(void) {}
   //
   void doFree();
   void doClose();
