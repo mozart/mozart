@@ -7,13 +7,9 @@
   Version: $Revision$
   State: $State$
 
-  Changes:
   $Log$
-  Revision 1.340  1996/07/04 12:05:21  mehl
-  testing Log
-
-  Revision 1.339  1996/07/04 12:04:50  mehl
-  testing Log
+  Revision 1.341  1996/07/04 12:05:58  mehl
+  adding Log to the start of the file
 
 
   The main engine
