@@ -9,6 +9,7 @@ import
    Open(file html)
    Directory(mkDirForFile)
    HTML_Navigation(getNavigationBar)
+   Regex(compile search group) at 'x-oz://contrib/regex'
 export
    'class' : HTML_Entry
 define
@@ -80,7 +81,7 @@ define
 	 elseif @content_type=='text/html' then
 	    'div'(
 	       'class' : 'formatbody'
-	       {Text.makeBS @body})
+	       {Text.makeBS {JustGetBody @body}})
 	 else
 	    pre(
 	       'class' : 'formatbody'
@@ -105,5 +106,13 @@ define
 	 end
       end
       meth updateSubHtml(_) skip end
+   end
+   %%
+   %% some bozos actually include a full html document in the body
+   %%
+   RE_BODY = {Regex.compile '<body[^>]*>(.*)</body[[:space:]]*>' [extended icase]}
+   fun {JustGetBody S}
+      case {Regex.search RE_BODY S} of false then S
+      [] M then {Regex.group 1 M S} end
    end
 end
