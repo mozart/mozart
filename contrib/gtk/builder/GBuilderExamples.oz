@@ -26,6 +26,7 @@ import
    Open(file)
    Property(get)
    GBuilder(create: Create)
+   System(show)
 define
    local
       fun {NColumns Rows}
@@ -228,23 +229,35 @@ define
           signalConnect(clicked proc {$ _} {Dialog destroy()} end _)}
          {Dialog showAll()}
       end
+
+      Username Password
    in
       EditableDesc =
-      table(nRows: 4 nColumns: 2
+      table(nRows: 4 nColumns: 3
             attach(left: 0 top: 0 yoptions: nil
                    label(label: 'Username: '
                          xalign: 0.0))
             attach(left: 1 top: 0 yoptions: nil
-                   entry(visibility: true))
+                   entry(visibility: true
+                         handle: Username))
             attach(left: 0 top: 1 yoptions: nil
                    label(label: 'Password: '
                          xalign: 0.0))
+            attach(left: 2 top: 0 bottom: 2 yoptions: nil
+                   button(label: 'Test'
+                          clicked:
+                             proc {$ _}
+                                {System.show
+                                 test(user: {Username return(text: $)}
+                                      pass: {Password return(text: $)})}
+                             end))
             attach(left: 1 top: 1 yoptions: nil
-                   entry(visibility: false))
-            attach(left: 0 right: 2 top: 2
-                   text(editable: true
-                        handle: Text))
-            attach(left: 0 right: 2 top: 3 yoptions: nil
+                   entry(visibility: false
+                         handle: Password))
+            attach(left: 0 right: 3 top: 2
+                   scrolledWindow(add(text(editable: true
+                                           handle: Text))))
+            attach(left: 0 right: 3 top: 3 yoptions: nil
                    button(label: 'Open file'
                           clicked: LoadFileAction)))
    end
