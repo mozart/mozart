@@ -105,8 +105,13 @@ public:
   void setLocalThreadQueue(LocalThreadQueue * ltq) {
     localThreadQueue = ltq;
   }
+
+  void clearSuspList(Thread *killThr = NULL);
 private:
-  Bool checkExtSuspList ();
+  Bool checkExtSuspList () {
+    clearSuspList();		// Christian's; (no spaces!);
+    return (suspList == NULL);
+  }
 };
 
 #ifndef OUTLINE
