@@ -10,6 +10,8 @@ fi
 system="`$UNAME -m` `$UNAME -s` `$UNAME -r`"
 
 case $system in
+   ppc\ Linux\ 2.*)	OZARCH=linux-ppc
+   ;;
    sun4*\ SunOS\ 4.1*)	OZARCH=sunos-sparc
    ;;
    sun4*\ SunOS\ 5*)	OZARCH=solaris-sparc
