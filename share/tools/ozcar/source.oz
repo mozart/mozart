@@ -138,7 +138,6 @@ in
       end
 	 
       meth scrollbar(file:F line:L color:C what:What<=appl)
-	 %% color is redundant, should be thrown away!!!
 	 case F == undef orelse F == '' orelse F == noDebugInfo then
 	    SourceManager,EraseScrollbar(What)
 	 else
