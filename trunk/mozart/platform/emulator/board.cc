@@ -169,7 +169,7 @@ Bool Board::isFailureInBody ()
 #else
     Opcode op = CodeArea::getOP (body.getPC ());
 #endif
-    return ((op == FAILURE) ? OK : NO);
+    return (op == FAILURE);
   }
 }
 

@@ -30,8 +30,7 @@ Bool GenCVariable::isLocalVariable(void)
   Board * home_board = getHome1();
 
   return (home_board == am.currentBoard ||
-	  home_board->getBoardDeref() == am.currentBoard)
-    ? OK : NO;
+	  home_board->getBoardDeref() == am.currentBoard);
 }
 
 void GenCVariable::propagate(TaggedRef var, SuspList * &sl, TaggedRef term,

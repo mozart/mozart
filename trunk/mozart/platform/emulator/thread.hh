@@ -53,7 +53,7 @@ public:
   void init(int prio,Board *home);
   int getPriority();
   // isSolve() replace by hasNotificationBoard()
-  Bool hasNotificationBoard () { return notificationBoard ? OK : NO; }
+  Bool hasNotificationBoard () { return notificationBoard!=NULL; }
   void setNotificationBoard (Board *b) { notificationBoard = b; }
   Board* getNotificationBoard () { return (notificationBoard); }
 
