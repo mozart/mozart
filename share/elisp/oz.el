@@ -1018,6 +1018,7 @@ the GDB commands `cd DIR' and `directory'."
 ;; oz-mode
 ;;------------------------------------------------------------
 
+;(setq oz-mode-syntax-table nil)
 (if oz-mode-syntax-table
     ()
   (let ((table (make-syntax-table)))
@@ -1035,8 +1036,8 @@ the GDB commands `cd DIR' and `directory'."
     (modify-syntax-entry ?\n ">" table)
 ;    (modify-syntax-entry ?%  "< b" table)
 ;    (modify-syntax-entry ?\n "> b" table)
-;    (modify-syntax-entry ?/ "_ 14" table)
-;    (modify-syntax-entry ?* "_ 23" table)
+    (modify-syntax-entry ?/ "_ 14" table)
+    (modify-syntax-entry ?* "_ 23b" table)
     (setq oz-mode-syntax-table table)
     (set-syntax-table oz-mode-syntax-table)))
 
@@ -1070,11 +1071,9 @@ the GDB commands `cd DIR' and `directory'."
 )
 
 (defun oz-mode-commands (map)
-  (define-key map "\t"       'oz-indent-line)
-
+  (define-key map "\t" 'oz-indent-line)
   (if oz-other-map
       (progn
-		   
 	(define-key map "\C-c\C-f\C-b" 	'oz-feed-buffer)
 	(define-key map "\C-c\C-f\C-r"	'oz-feed-region)
 	(define-key map "\C-c\C-f\C-l"	'oz-feed-line)
@@ -1100,6 +1099,7 @@ the GDB commands `cd DIR' and `directory'."
     (define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
     (define-key map "\C-c\C-d\C-s" 'oz-debug-step)
     (define-key map "\C-c\C-d\C-c" 'oz-debug-cont)
+
     )
 
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
@@ -1121,6 +1121,16 @@ the GDB commands `cd DIR' and `directory'."
   (define-key map "\C-cd"       'oz-gdb)
   (define-key map "\r"		'oz-electric-terminate-line)
   (define-key map "\C-cp"       'oz-view-panel)
+
+  ;; by j.doerre
+  (define-key map "\M-\C-f" 'forward-oz-expr)
+  (define-key map "\M-\C-b" 'backward-oz-expr)
+  (define-key map "\M-\C-k" 'kill-oz-expr)
+  (define-key map "\M-\C-@" 'mark-oz-expr)
+  ;;  (define-key oz-mode-map [C-M-SPC] 'mark-oz-expr)
+  (define-key map [C-M-backspace] 'backward-kill-oz-expr)
+  (define-key map [C-M-delete] 'backward-kill-oz-expr)
+  (define-key map "\M-\C-t" 'transpose-oz-exprs)
   )
 
 (oz-mode-commands oz-mode-map)
@@ -1561,5 +1571,190 @@ OZ compiler, emulator and error window")
 			     nil
 			     t
 			     nil)))
+
+
+
+;;; OZ expressions hopping
+
+;;; simulation of the -sexp functions for OZ expressions (i.e. support
+;;; for moving over complete proc (fun, meth etc.) ... end blocks)
+
+;;; Method: We use scan-sexp and count keywords delimiting OZ
+;;; expressions appropriately. When an infix keyword (like in, then,
+;;; but also attr) is encountered, this is treated like white space.
+
+;;; Limitations: 
+;;; 1) The method used means that we might happily hop over balanced 
+;;; s-expressions (i.e. delimited with parens, braces ...) in which OZ
+;;; keywords are not properly balanced. 
+;;; 2) When encountering an infix expression, it is ambiguous which
+;;; expression to move over, the sub-expression or the whole. We
+;;; choose to always move over the smallest balanced expression
+;;; (i.e. the first subexpression).
+;;; 3) transpose-oz-expr is not very useful, since it does not know,
+;;; when space must be inserted.
+
+
+;;; unfortunately more pattern, since those used for indenting
+;;; are not exactly what is required; but they are used to define the
+;;; new ones here
+
+(defconst oz-expr-begin-pattern
+  (concat oz-declare-pattern "\\|" oz-begin-pattern))
+
+(defconst oz-expr-between-pattern
+  (concat oz-between-pattern "\\|" oz-middle-pattern))
+
+(defconst oz-expr-end-pattern oz-end-pattern)
+
+
+
+(defun forward-oz-expr (&optional arg)
+  "Move forward one balanced expression (OZ expression).
+With argument, do it that many times. Negative ARG means backwards."
+  (interactive "p")
+  (or arg (setq arg 1))
+  (if (< arg 0) (backward-oz-expr arg)
+    (while (> arg 0)
+      (let ((pos (scan-sexps (point) 1))
+	    keyword-kind)
+	(if (equal pos nil)
+	    (end-of-buffer)
+	  (goto-char pos)
+	  (and (= (char-syntax (char-after (1- pos))) ?w)
+	       (save-excursion
+		 (forward-word -1)
+		 (cond ((looking-at oz-expr-begin-pattern)
+			(setq keyword-kind 'begin))
+		       ((looking-at oz-expr-between-pattern)
+			(setq keyword-kind 'between))
+		       ((looking-at oz-expr-end-pattern)
+			(setq keyword-kind 'end))))
+	       (cond ((eq keyword-kind 'begin)
+		      (oz-goto-matching-end 1))
+		     ((eq keyword-kind 'between)
+		      (forward-oz-expr))
+		     ((eq keyword-kind 'end)
+		      (error "Containing expression ends"))))))
+      (setq arg (1- arg)))))
+      
+
+
+(defun oz-goto-matching-end (nest-level)
+  ;; move point to NEST-LEVELth unbalanced "end"
+  (let ((loop t)
+	found
+	(pos (point)))
+    (save-excursion
+      (while loop
+	(setq pos (scan-sexps pos 1))
+	(if (equal pos nil)
+	    (setq loop nil
+		  pos (point-max))
+	  (goto-char pos)
+	  (if (equal (char-syntax (char-after (1- pos))) ?w)
+	      (and (forward-word -1)
+		   (cond ((looking-at oz-expr-end-pattern)
+			  (setq nest-level (1- nest-level)))
+			 ((looking-at oz-expr-begin-pattern)
+			  (setq nest-level (1+ nest-level)))
+			 (t t))
+		   (goto-char pos)))
+	  (if (< nest-level 1)
+	      (setq loop nil
+		    found t)))))
+    (goto-char pos)
+    (if found
+	t
+      (error "Unbalanced OZ expression"))))
+
+
+(defun backward-oz-expr (&optional arg)
+  "Move backward one balanced expression (OZ expression).
+With argument, do it that many times. Argument must be positive."
+  (interactive "p")
+  (or arg (setq arg 1))
+  (while (> arg 0)
+    (let ((pos (scan-sexps (point) -1)))
+      (if (equal pos nil)
+	  (beginning-of-buffer)
+	(goto-char pos)
+	(cond ((looking-at oz-expr-end-pattern)
+	       (oz-goto-matching-begin 1))
+	      ((looking-at oz-expr-between-pattern)
+	       (backward-oz-expr))
+	      ((looking-at oz-expr-begin-pattern)
+	       (error "Containing expression ends")))))
+    (setq arg (1- arg))))
+
+
+(defun oz-goto-matching-begin (nest-level)
+  ;; move point to NEST-LEVELth unbalanced begin of block
+  (let ((loop t)
+	found
+	(pos (point)))
+    (save-excursion
+      (while loop
+	(setq pos (scan-sexps pos -1))
+	(if (equal pos nil)
+	    (setq loop nil
+		  pos (point-min))
+	  (goto-char pos)
+	  (if (equal (char-syntax (following-char)) ?w)
+	      (cond ((looking-at oz-expr-end-pattern)
+		     (setq nest-level (1+ nest-level)))
+		    ((looking-at oz-expr-begin-pattern)
+		     (setq nest-level (1- nest-level)))
+		    (t t)))
+	  (if (< nest-level 1)
+	      (setq loop nil
+		    found t)))))
+    (goto-char pos)
+    (if found
+	t
+      (error "Unbalanced OZ expression"))))
+
+
+
+;; the other functions (mark-, transpose-, kill-(bw)-oz-expr are 
+;; straightforward adaptions of their "sexpr"-counterparts
+
+
+(defun mark-oz-expr (arg)
+  "Set mark ARG balanced OZ expressions from point.
+The place mark goes is the same place \\[forward-oz-expr] would
+move to with the same argument."
+  (interactive "p")
+  (push-mark
+    (save-excursion
+      (forward-oz-expr arg)
+      (point))
+    nil t))
+
+
+(defun transpose-oz-exprs (arg)
+  "Like \\[transpose-words] but applies to balanced OZ expressions.
+Does not work in all cases."
+  (interactive "*p")
+  (transpose-subr 'forward-oz-expr arg))
+
+
+(defun kill-oz-expr (arg)
+  "Kill the balanced  OZ expression following the cursor.
+With argument, kill that many OZ expressions after the cursor.
+Negative arg -N means kill N OZ expressions before the cursor."
+  (interactive "p")
+  (let ((pos (point)))
+    (forward-oz-expr arg)
+    (kill-region pos (point))))
+
+(defun backward-kill-oz-expr (arg)
+  "Kill the balanced OZ expression preceding the cursor.
+With argument, kill that many OZ expressions before the cursor.
+Negative arg -N means kill N OZ expressions after the cursor."
+  (interactive "p")
+  (let ((pos (point)))
+    (forward-oz-expr arg)
+    (kill-region pos (point))))
 
 (provide 'oz)
