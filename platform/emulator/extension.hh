@@ -45,7 +45,7 @@
  */
 
 // starts with OZ_E_LAST
-unsigned int OZ_newUniqueId();
+unsigned int oz_newUniqueId();
 int OZ_isExtension(OZ_Term t);
 Extension *OZ_getExtension(OZ_Term t);
 OZ_Term OZ_extension(Extension *e);
