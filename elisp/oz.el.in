@@ -1146,10 +1146,10 @@ Point is left at the first character of the keyword."
 	  "\\)\\>"))
 
 (defun oz-is-quoted ()
-  "Return non-nil iff the position of the point is quoted.
-Return non-nil iff the point is inside a string, quoted atom, backquote
-variable, ampersand-denoted character or one-line comment.  In this case,
-move the point to the beginning of the corresponding token.  Else the
+  "Return non-nil iff the position of point is quoted.
+Return non-nil iff point is inside a string, quoted atom, backquote
+variable, ampersand-denoted character or one-line comment.  In this
+case, move point to the beginning of the corresponding token.  Else
 point is not moved."
   (let ((ret nil)
 	(p (point))
