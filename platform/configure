@@ -896,7 +896,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) INSTALL_DIR=`echo $INSTALL_DIR | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$INSTALL_DIR"
@@ -992,7 +992,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) OZPLATFORM=`echo $OZPLATFORM | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$OZPLATFORM"
@@ -1047,7 +1047,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) OZTOOL=`echo $OZTOOL | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$OZTOOL"
@@ -1208,15 +1208,12 @@ if test "${GTK_ENABLED}" = yes; then
     PLATFORMDIRS="$PLATFORMDIRS gtk"
 fi
 
-case "$target" in
-   NONE)
-   ;;
-   i386-mingw32)
-    PLATFORMDIRS="$PLATFORMDIRS mswindows"
-    ;;
-
-   *) { echo "configure: error: "can only cross-compile for target i386-mingw32 not for $target"" 1>&2; exit 1; }
-    ;;
+case $platform in
+    win32*)
+        PLATFORMDIRS="$PLATFORMDIRS mswindows"
+        ;;
+    *)
+        ;;
 esac
 
 

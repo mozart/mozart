@@ -51,15 +51,12 @@ if test "${GTK_ENABLED}" = yes; then
     PLATFORMDIRS="$PLATFORMDIRS gtk"
 fi
 
-case "$target" in
-   NONE)
-   ;;
-   i386-mingw32)
-    PLATFORMDIRS="$PLATFORMDIRS mswindows"
-    ;;
-
-   *) AC_MSG_ERROR("can only cross-compile for target i386-mingw32 not for $target")
-    ;;
+case $platform in
+    win32*)
+        PLATFORMDIRS="$PLATFORMDIRS mswindows"
+        ;;
+    *)
+        ;;
 esac
 
 AC_SUBST(PLATFORMDIRS)
