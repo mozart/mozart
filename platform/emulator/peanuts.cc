@@ -51,6 +51,8 @@
 #pragma implementation "trail.hh"
 #pragma implementation "types.hh"
 #pragma implementation "variable.hh"
+#pragma implementation "thrqueue.hh"
+#pragma implementation "thrspool.hh"
 #pragma implementation "verbose.hh"
 #endif
 
@@ -91,4 +93,6 @@
 #include "trail.cc"
 #include "types.cc"
 #include "variable.cc"
+#include "thrqueue.cc"
+#include "thrspool.cc"
 #include "verbose.cc"
