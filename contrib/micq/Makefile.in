@@ -40,8 +40,10 @@ BMETH = $(BUILDTOP)/contrib/micq/methods.ozf
 SMETH = $(SRCDIR)/methods.oz
 
 
+include $(BUILDTOP)/share/Makefile.boot
+
 $(GIFCONV) : Gif2Functor.oz GifToBase64.ozf
-	$(COMPILE) -x $< -o $@
+	$(COMPILE) -x $(OZEXECFILE) $< -o $@
 
 GifToBase64.ozf : GifToBase64.oz
 	$(COMPILE) -c $< -o $@	
@@ -73,10 +75,10 @@ client.oza: client
 	$(OZL) -z 9 $< -o $@
 
 micq: startserver.oz server.ozf 
-	$(COMPILE) -x $< -o $@
+	$(COMPILE) -x $(OZEXECFILE) $< -o $@
 
 client: startclient.oz client.ozf 
-	$(COMPILE) -x $< -o $@
+	$(COMPILE) -x $(OZEXECFILE) $< -o $@
 
 %.ozf: %.oz
 	$(COMPILE) -c $< -o $@
@@ -127,8 +129,6 @@ clean veryclean:
 
 distclean: veryclean
 	-rm -f Makefile config.*
-
-include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 

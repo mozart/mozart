@@ -212,14 +212,16 @@ LMF1 = \
 
 LMFFUN = $(LMF1:%=LMF/%.ozf)
 
+include $(BUILDTOP)/share/Makefile.boot
+
 lmf-server: $(LMFFUN)
-	$(LINK) -x LMF/Server.ozf -o $@
+	$(LINK) -x $(OZEXECFILE) LMF/Server.ozf -o $@
 
 lmf-book.cgi: $(LMFFUN)
-	$(LINK) -x LMF/Book.ozf -o $@
+	$(LINK) -x $(OZEXECFILE)  LMF/Book.ozf -o $@
 
 lmf-process.cgi: $(LMFFUN)
-	$(LINK) -x LMF/ProcessBook.ozf -o $@
+	$(LINK) -x $(OZEXECFILE)  LMF/ProcessBook.ozf -o $@
 
 .PHONY: lmf
 
@@ -307,8 +309,6 @@ Makefile: Makefile.in ../config.status
 
 ../config.status: ../configure
 	cd .. && ./config.status --recheck
-
-include $(BUILDTOP)/share/Makefile.boot
 
 dirs:
 	dirs="$(DIRS)"; \
