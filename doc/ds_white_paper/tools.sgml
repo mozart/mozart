@@ -2,9 +2,9 @@
 <title/Monitoring Tools/
 
 
-<p>To help the programmer understand, tune, and debug his/her
-distributed applications we supply three tools for understanding the
-the behavior of the DS.
+<p>To help the programmer understand, tune, and debug distributed
+applications we supply three tools for understanding the the behavior
+of the DS.
 
 <LIST>
 
@@ -18,7 +18,7 @@ events to a file. With help of a tool that displays logs graphically,
 logs from multiple sites can be displayed together in a graph.
 
 <ITEM>To simulate the behavior of a distributed application there is a
-tool that can simulate a set of Mozart sits in a controlled
+tool that can simulate a set of Mozart sites in a controlled
 environment. The simulator executes Mozart code and simulates
 distributed events by a discrete event simulation engine.
 
