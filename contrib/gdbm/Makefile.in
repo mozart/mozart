@@ -54,11 +54,13 @@ $(NEWCACHEDIR)/gdbm.so-$(PLATFORM): gdbm.so-$(PLATFORM)
 gdbm.ozf: gdbm.oz
         $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
-gdbm.so-$(PLATFORM): gdbm.o
-        $(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
-
 gdbm.o: gdbm.cc
+        OZTOOL_CXX="@CXX@" \
         $(OZTOOL) c++ $(WINOZTOOLCXXFLAGS) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
+gdbm.so-$(PLATFORM): gdbm.o
+        OZTOOL_LD="@CXX@" \
+        $(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
 
 clean veryclean:
         -$(RM) *~ *.bak *.o *.so-* *.ozf
