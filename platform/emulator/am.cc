@@ -1371,12 +1371,16 @@ void AM::checkIO()
  * these things together - this leads to efficiency penalties, 
  * and less possibilities to make an assertion.
  *
+ * RETURNS: OK if solveSpace found, else NO
  */
-void AM::incSolveThreads(Board *bb)
+
+int AM::incSolveThreads(Board *bb)
 {
+  int ret = NO;
   while (!bb->isRoot()) {
     Assert(!bb->isCommitted());
     if (bb->isSolve()) {
+      ret = OK;
       SolveActor *sa = SolveActor::Cast(bb->getActor());
       //
       Assert (!sa->isCommitted());
@@ -1389,6 +1393,7 @@ void AM::incSolveThreads(Board *bb)
     }
     bb = bb->getParent();
   }
+  return ret;
 }
 
 void AM::decSolveThreads(Board *bb)
@@ -1404,7 +1409,7 @@ void AM::decSolveThreads(Board *bb)
 	//
 	// ... first - notification board below the failed solve board; 
 	if (!(sa->isCommitted ()) && isStableSolve (sa)) {
-	  scheduleThread (mkRunnableThread(DEFAULT_PRIORITY,bb,OK));
+	  scheduleThread(mkRunnableThread(DEFAULT_PRIORITY,bb));
 	}
       } else {
 	Assert (sa->getThreads () > 0);
