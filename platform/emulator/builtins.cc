@@ -75,7 +75,7 @@ OZ_C_proc_begin(BIbuiltin,3)
 
   Builtin *bi = new Builtin(found,hdl);
 
-  return (OZ_unify(ret,makeTaggedSRecord(bi)));
+  return (OZ_unify(ret,makeTaggedConst(bi)));
 }
 OZ_C_proc_end
 

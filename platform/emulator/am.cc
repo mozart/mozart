@@ -264,6 +264,8 @@ void AM::init(int argc,char **argv)
   currentSolveBoard = (Board *) NULL;
   wasSolveSet = NO;
 
+  initLiterals();
+
   initThreads();
 
   // builtins
@@ -273,7 +275,6 @@ void AM::init(int argc,char **argv)
     exit(1);
   }
 
-  initLiterals();
   initTagged();
   SolveActor::Init();
 
@@ -281,7 +282,7 @@ void AM::init(int argc,char **argv)
   toplevelVars = allocateRefsArray(numToplevelVars);
 
   Builtin *bi = new Builtin(entry,makeTaggedNULL());
-  toplevelVars[0] = makeTaggedSRecord(bi);
+  toplevelVars[0] = makeTaggedConst(bi);
 
   IO::init();
 #ifdef DEBUG_CHECK
@@ -416,7 +417,7 @@ start:
   switch ( tag1 ) {
 
   case CONST:
-    return tagged2Const(term1)->unify(term2);
+    return tagged2Const(term1)->unify(term2,prop);
 
   case LTUPLE:
     {
@@ -451,7 +452,7 @@ start:
         return NO;
       }
 
-      argSize = sr1->getArgsSize();
+      argSize = sr1->getWidth();
       args1 = sr1->getRef();
       args2 = sr2->getRef();
 
@@ -1048,7 +1049,7 @@ Bool AM::fastUnifyOutline(TaggedRef ref1, TaggedRef ref2, Bool prop)
   return fastUnify(ref1, ref2, prop);
 }
 
-void AM::pushDebug(Board *n, SRecord *def, int arity, RefsArray args)
+void AM::pushDebug(Board *n, Chunk *def, int arity, RefsArray args)
 {
   currentThread->pushDebug(n,new OzDebug(def,arity,args));
 }

@@ -80,8 +80,8 @@ int OZ_isNil(OZ_Term term)
 
 int OZ_isNoNumber(OZ_Term term)
 {
-  DEREF(term,_1,tag);
-  return isRecord(tag) || isTuple(tag);
+  DEREF(term,_1,_2);
+  return isRecord(term) || isTuple(term);
 }
 
 int OZ_isRecord(OZ_Term term)
@@ -447,16 +447,12 @@ char *OZ_toC(OZ_Term term)
   DEREF(term,termPtr,tag)
   switch(tag) {
   case UVAR:
-    return tagged2String(term,am.conf.printDepth);
   case SVAR:
-    return tagged2String(term,am.conf.printDepth);
   case CVAR:
-    return tagged2String(term,am.conf.printDepth);
   case STUPLE:
-    return tagged2String(term,am.conf.printDepth);
   case SRECORD:
-    return tagged2String(term,am.conf.printDepth);
   case LTUPLE:
+  case CONST:
     return tagged2String(term,am.conf.printDepth);
   case LITERAL:
     return OZ_literalToC(term);
@@ -465,8 +461,6 @@ char *OZ_toC(OZ_Term term)
   case BIGINT:
   case SMALLINT:
     return OZ_intToCString(term);
-  case CONST:
-    return tagged2String(term,am.conf.printDepth);
 
   default:
     break;
@@ -628,16 +622,13 @@ OZ_Term OZ_termToVS(OZ_Term t)
   case UVAR:
   case SVAR:
   case CVAR:
+  case LTUPLE:
+  case STUPLE:
+  case SRECORD:
+  case CONST:
     return OZ_CToAtom(OZ_toC(t));
   case LITERAL:
     if (isAtom(t)) return t;
-    return OZ_CToAtom(OZ_toC(t));
-  case LTUPLE:
-  case STUPLE:
-    return OZ_CToAtom(OZ_toC(t));
-  case SRECORD:
-    return OZ_CToAtom(OZ_toC(t));
-  case CONST:
     return OZ_CToAtom(OZ_toC(t));
   default:
     return OZ_CToAtom("OZ_termToVS: unknown Tag");
@@ -819,7 +810,7 @@ OZ_Term OZ_record(OZ_Term label, OZ_Term arity)
 {
   Arity *newArity = mkArity(arity);
   if (!newArity) return nil();
-  return makeTaggedSRecord(new SRecord(newArity,label,OK,makeTaggedNULL()));
+  return makeTaggedSRecord(SRecord::newSRecord(label,newArity));
 }
 
 /* take a label and a property list and construct a record */

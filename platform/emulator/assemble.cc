@@ -93,7 +93,7 @@ OZ_C_proc_begin(BIscheduleCode,3)
   predd->PC = pc;
   Abstraction *p = new Abstraction(predd, gregs, tagged2Literal(OZ_nil()));
 
-  return OZ_unify(OZ_getCArg(2),makeTaggedSRecord(p));
+  return OZ_unify(OZ_getCArg(2),makeTaggedConst(p));
 }
 OZ_C_proc_end
 
@@ -114,7 +114,7 @@ OZ_C_proc_begin(BIwriteBuiltin,3)
   OZ_Term bi  = OZ_getCArg(1);
 
   DEREF(bi,_1,_2);
-  if (!isSRecord(bi) || tagged2SRecord(bi)->getType() != R_BUILTIN) {
+  if (!isConstChunk(bi) || chunkCast(bi)->getCType() != C_BUILTIN) {
     warning("writeBuiltin: builtin expected", OZ_toC(bi));
     return FAILED;
   }

@@ -296,40 +296,44 @@ Bool AM::hookCheckNeeded()
 // -----------------------------------------------------------------------
 // THREADED CODE
 
-// #define WANT_INSTRPROFILE
-
 #if defined(RECINSTRFETCH) && defined(THREADED)
  Error: RECINSTRFETCH requires THREADED == 0;
 #endif
 
 #define INCFPC(N) PC += N
 
+// #define WANT_INSTRPROFILE
 #if defined(WANT_INSTRPROFILE)
 #define asmLbl(INSTR) asm(" " #INSTR ":");
 #else
 #define asmLbl(INSTR)
 #endif
 
-#if defined(WANT_INSTRPROFILE)
-#define INSTRUCTION(INSTR)   INSTR: asmLbl(INSTR); INSTR##LBL
-#else
-#define INSTRUCTION(INSTR)   INSTR: INSTR##LBL
-#endif
 
 /* threaded code broken on linux, leads to memory leek,
  * this is a workaround
  */
-#if defined(THREADED) && !defined(LINUX)
+
+#ifdef THREADED
+#define Case(INSTR)   asmLbl(INSTR); INSTR##LBL
+
+#ifdef LINUX
+#define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
+#else
 
 // let gcc fill in the delay slot of the "jmp" instruction:
 #define DISPATCH(INC) {                                                       \
-  intlong help = *(PC+INC);                                                   \
+  intlong aux = *(PC+INC);                                                    \
   INCFPC(INC);                                                                \
-  goto* (void*) (help|textBase);                                              \
+  goto* (void*) (aux|textBase);                                       \
 }
+#endif /* LINUX */
 
-#else /* THREADED && !LINUX */
+#else /* THREADED */
+
+#define Case(INSTR)   case INSTR
 #define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
+
 #endif
 
 #define JUMP(absAdr) PC = absAdr; DISPATCH(0)
@@ -698,8 +702,8 @@ void engine() {
   /* which kind of solve combinator to choose */
   Bool isEatWaits = NO;
 
-  SRecord *predicate; NoReg(predicate);
-  int predArity;      NoReg(predArity);
+  Chunk *predicate; NoReg(predicate);
+  int predArity;    NoReg(predArity);
 
 #ifdef CATCH_SEGV
   switch (setjmp(IO::engineEnvironment)) {
@@ -877,7 +881,7 @@ void engine() {
 
     case C_CALL_CONT:
       {
-        predicate = (SRecord *) TaskStackPop(--topCache);
+        predicate = (Chunk *) TaskStackPop(--topCache);
         RefsArray tmpX = (RefsArray) TaskStackPop(--topCache);
         predArity = tmpX ? getRefsArraySize(tmpX) : 0;
         int i = predArity;
@@ -984,13 +988,13 @@ void engine() {
           }
           goto LBLcheckEntailment;
         default:
-          error("Unexpected return value by c-function.");
+          Assert(NO);
           goto LBLerror;
         } // switch
       }
 
     default:
-      error("engine: POPTASK: unexpected task found.");
+      Assert(NO);
       goto LBLerror;
     }  // switch
 
@@ -1038,11 +1042,9 @@ void engine() {
 
  LBLdispatcher:
 
-#ifdef THREADED
+#if defined(THREADED) && defined(LINUX)
   /* threaded code broken under linux */
-#ifdef LINUX
   goto* (void*) (*PC);
-#endif
 #endif
 
 #ifdef SLOW_DEBUG_CHECK
@@ -1068,7 +1070,9 @@ void engine() {
                 goto LBLfailure;
               });
 
+#ifndef THREADED
   switch (op) {
+#endif
 
 // the instructions are classified into groups
 // to find a certain class of instructions search for the String "CLASS:"
@@ -1082,7 +1086,7 @@ void engine() {
 // CLASS: (Fast-) Call/Execute Inline Funs/Rels
 // ------------------------------------------------------------------------
 
-  case INSTRUCTION(FASTCALL):
+  Case(FASTCALL):
     {
 
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
@@ -1103,7 +1107,7 @@ void engine() {
     }
 
 
-  case INSTRUCTION(FASTTAILCALL):
+  Case(FASTTAILCALL):
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
 
@@ -1121,7 +1125,7 @@ void engine() {
       }
     }
 
-  case INSTRUCTION(CALLBUILTIN):
+  Case(CALLBUILTIN):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       OZ_CFun fun = entry->getFun();
@@ -1153,7 +1157,7 @@ void engine() {
     }
 
 
-  case INSTRUCTION(INLINEREL1):
+  Case(INLINEREL1):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel1 rel         = (InlineRel1)entry->getInlineFun();
@@ -1173,7 +1177,7 @@ void engine() {
       }
     }
 
-  case INSTRUCTION(INLINEREL2):
+  Case(INLINEREL2):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel2 rel         = (InlineRel2)entry->getInlineFun();
@@ -1195,7 +1199,7 @@ void engine() {
       if inline functions fail on toplevel a new variable has to be stored
       into Out
       */
-  case INSTRUCTION(INLINEFUN1):
+  Case(INLINEFUN1):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun1 fun         = (InlineFun1)entry->getInlineFun();
@@ -1215,7 +1219,7 @@ void engine() {
       }
     }
 
-  case INSTRUCTION(INLINEFUN2):
+  Case(INLINEFUN2):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun2 fun = (InlineFun2)entry->getInlineFun();
@@ -1236,7 +1240,7 @@ void engine() {
     }
 
 
-  case INSTRUCTION(INLINEFUN3):
+  Case(INLINEFUN3):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun3 fun = (InlineFun3)entry->getInlineFun();
@@ -1256,7 +1260,7 @@ void engine() {
       }
     }
 
-  case INSTRUCTION(INLINEEQEQ):
+  Case(INLINEEQEQ):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun2 fun = (InlineFun2)entry->getInlineFun();
@@ -1273,7 +1277,7 @@ void engine() {
 // CLASS: Shallow guards stuff
 // ------------------------------------------------------------------------
 
-  case INSTRUCTION(SHALLOWGUARD):
+  Case(SHALLOWGUARD):
     {
       shallowCP = PC;
       inShallowGuard = OK;
@@ -1281,7 +1285,7 @@ void engine() {
       DISPATCH(3);
     }
 
-  case INSTRUCTION(SHALLOWTEST1):
+  Case(SHALLOWTEST1):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel1 rel         = (InlineRel1)entry->getInlineFun();
@@ -1303,7 +1307,7 @@ void engine() {
       }
     }
 
-  case INSTRUCTION(SHALLOWTEST2):
+  Case(SHALLOWTEST2):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel2 rel         = (InlineRel2)entry->getInlineFun();
@@ -1326,7 +1330,7 @@ void engine() {
       }
     }
 
-  case INSTRUCTION(SHALLOWTHEN):
+  Case(SHALLOWTHEN):
     {
       int numbOfCons = e->trail.chunkSize();
 
@@ -1360,7 +1364,7 @@ void engine() {
 // CLASS: Environment
 // -------------------------------------------------------------------------
 
-  case INSTRUCTION(ALLOCATEL):
+  Case(ALLOCATEL):
     {
       int posInt = getPosIntArg(PC+1);
       Assert(posInt > 0);
@@ -1368,18 +1372,18 @@ void engine() {
       DISPATCH(2);
     }
 
-  case INSTRUCTION(ALLOCATEL1):  { Y =  allocateY(1); DISPATCH(1); }
-  case INSTRUCTION(ALLOCATEL2):  { Y =  allocateY(2); DISPATCH(1); }
-  case INSTRUCTION(ALLOCATEL3):  { Y =  allocateY(3); DISPATCH(1); }
-  case INSTRUCTION(ALLOCATEL4):  { Y =  allocateY(4); DISPATCH(1); }
-  case INSTRUCTION(ALLOCATEL5):  { Y =  allocateY(5); DISPATCH(1); }
-  case INSTRUCTION(ALLOCATEL6):  { Y =  allocateY(6); DISPATCH(1); }
-  case INSTRUCTION(ALLOCATEL7):  { Y =  allocateY(7); DISPATCH(1); }
-  case INSTRUCTION(ALLOCATEL8):  { Y =  allocateY(8); DISPATCH(1); }
-  case INSTRUCTION(ALLOCATEL9):  { Y =  allocateY(9); DISPATCH(1); }
-  case INSTRUCTION(ALLOCATEL10): { Y = allocateY(10); DISPATCH(1); }
+  Case(ALLOCATEL1):  { Y =  allocateY(1); DISPATCH(1); }
+  Case(ALLOCATEL2):  { Y =  allocateY(2); DISPATCH(1); }
+  Case(ALLOCATEL3):  { Y =  allocateY(3); DISPATCH(1); }
+  Case(ALLOCATEL4):  { Y =  allocateY(4); DISPATCH(1); }
+  Case(ALLOCATEL5):  { Y =  allocateY(5); DISPATCH(1); }
+  Case(ALLOCATEL6):  { Y =  allocateY(6); DISPATCH(1); }
+  Case(ALLOCATEL7):  { Y =  allocateY(7); DISPATCH(1); }
+  Case(ALLOCATEL8):  { Y =  allocateY(8); DISPATCH(1); }
+  Case(ALLOCATEL9):  { Y =  allocateY(9); DISPATCH(1); }
+  Case(ALLOCATEL10): { Y = allocateY(10); DISPATCH(1); }
 
-  case INSTRUCTION(DEALLOCATEL):
+  Case(DEALLOCATEL):
     {
       Assert(!isFreedRefsArray(Y));
       if (!isDirtyRefsArray(Y)) {
@@ -1392,22 +1396,22 @@ void engine() {
 // CLASS: CONTROL: FAIL/SUCCESS/RETURN/SAVECONT
 // -------------------------------------------------------------------------
 
-  case INSTRUCTION(FAILURE):
+  Case(FAILURE):
     {
       HF_FAIL(, message("Executing 'false'\n"));
     }
 
 
-  case INSTRUCTION(SUCCEED):
+  Case(SUCCEED):
     DISPATCH(1);
 
-  case INSTRUCTION(SAVECONT):
+  Case(SAVECONT):
     {
       e->pushTask(CBB,getLabelArg(PC+1),Y,G);
       DISPATCH(2);
     }
 
-  case INSTRUCTION(RETURN):
+  Case(RETURN):
   {
     goto LBLcheckEntailment;
   }
@@ -1417,7 +1421,7 @@ void engine() {
 // CLASS: Definition
 // ------------------------------------------------------------------------
 
-  case INSTRUCTION(DEFINITION):
+  Case(DEFINITION):
     {
       Reg reg                     = getRegArg(PC+1);
       ProgramCounter nxt          = getLabelArg(PC+2);
@@ -1447,7 +1451,7 @@ void engine() {
           break;
         }
       }
-      Xreg(reg) = makeTaggedSRecord(p);
+      Xreg(reg) = makeTaggedConst(p);
       JUMP(nxt);
     }
 
@@ -1455,12 +1459,12 @@ void engine() {
 // CLASS: CONTROL: FENCE/CALL/EXECUTE/SWITCH/BRANCH
 // -------------------------------------------------------------------------
 
-  case INSTRUCTION(BRANCH):
+  Case(BRANCH):
     JUMP( getLabelArg(PC+1) );
 
-  case INSTRUCTION(DETX): ONREG(Det,X);
-  case INSTRUCTION(DETY): ONREG(Det,Y);
-  case INSTRUCTION(DETG): ONREG(Det,G);
+  Case(DETX): ONREG(Det,X);
+  Case(DETY): ONREG(Det,Y);
+  Case(DETG): ONREG(Det,G);
 
   Det:
   {
@@ -1485,13 +1489,13 @@ void engine() {
   };
 
 
-  case INSTRUCTION(TAILSENDMSGX): isTailCall = OK; ONREG(SendMethod,X);
-  case INSTRUCTION(TAILSENDMSGY): isTailCall = OK; ONREG(SendMethod,Y);
-  case INSTRUCTION(TAILSENDMSGG): isTailCall = OK; ONREG(SendMethod,G);
+  Case(TAILSENDMSGX): isTailCall = OK; ONREG(SendMethod,X);
+  Case(TAILSENDMSGY): isTailCall = OK; ONREG(SendMethod,Y);
+  Case(TAILSENDMSGG): isTailCall = OK; ONREG(SendMethod,G);
 
-  case INSTRUCTION(SENDMSGX): isTailCall = NO; ONREG(SendMethod,X);
-  case INSTRUCTION(SENDMSGY): isTailCall = NO; ONREG(SendMethod,Y);
-  case INSTRUCTION(SENDMSGG): isTailCall = NO; ONREG(SendMethod,G);
+  Case(SENDMSGX): isTailCall = NO; ONREG(SendMethod,X);
+  Case(SENDMSGY): isTailCall = NO; ONREG(SendMethod,Y);
+  Case(SENDMSGG): isTailCall = NO; ONREG(SendMethod,G);
 
  SendMethod:
   {
@@ -1503,13 +1507,13 @@ void engine() {
     PC = isTailCall ? 0 : PC+4;
 
     DEREF(object,_1,objectTag);
-    if (!isSRecord(objectTag)) {
+    if (!isConstChunk(object)) {
       if (isAnyVar(objectTag)) {
         X[0] = makeMethod(arity,label,X);
         X[1] = origObj;
         predArity = 2;
         extern TaggedRef suspCallHandler; // mm2
-        predicate = tagged2SRecord(suspCallHandler);
+        predicate = chunkCast(suspCallHandler);
         goto LBLcall;
       }
 
@@ -1531,18 +1535,18 @@ void engine() {
   bombSend:
     X[0] = makeMethod(arity,label,X);
     predArity = 1;
-    predicate = tagged2SRecord(object);
+    predicate = chunkCast(object);
     goto LBLcall;
   }
 
 
-  case INSTRUCTION(TAILAPPLMETHX): isTailCall = OK; ONREG(ApplyMethod,X);
-  case INSTRUCTION(TAILAPPLMETHY): isTailCall = OK; ONREG(ApplyMethod,Y);
-  case INSTRUCTION(TAILAPPLMETHG): isTailCall = OK; ONREG(ApplyMethod,G);
+  Case(TAILAPPLMETHX): isTailCall = OK; ONREG(ApplyMethod,X);
+  Case(TAILAPPLMETHY): isTailCall = OK; ONREG(ApplyMethod,Y);
+  Case(TAILAPPLMETHG): isTailCall = OK; ONREG(ApplyMethod,G);
 
-  case INSTRUCTION(APPLMETHX): isTailCall = NO; ONREG(ApplyMethod,X);
-  case INSTRUCTION(APPLMETHY): isTailCall = NO; ONREG(ApplyMethod,Y);
-  case INSTRUCTION(APPLMETHG): isTailCall = NO; ONREG(ApplyMethod,G);
+  Case(APPLMETHX): isTailCall = NO; ONREG(ApplyMethod,X);
+  Case(APPLMETHY): isTailCall = NO; ONREG(ApplyMethod,Y);
+  Case(APPLMETHG): isTailCall = NO; ONREG(ApplyMethod,G);
 
  ApplyMethod:
   {
@@ -1579,18 +1583,18 @@ void engine() {
     X[0] = origObject;
 
     predArity = 5;
-    predicate = tagged2SRecord(methApplHdl);
+    predicate = chunkCast(methApplHdl);
     goto LBLcall;
   }
 
 
-  case INSTRUCTION(CALLX): isTailCall = NO; ONREG(Call,X);
-  case INSTRUCTION(CALLY): isTailCall = NO; ONREG(Call,Y);
-  case INSTRUCTION(CALLG): isTailCall = NO; ONREG(Call,G);
+  Case(CALLX): isTailCall = NO; ONREG(Call,X);
+  Case(CALLY): isTailCall = NO; ONREG(Call,Y);
+  Case(CALLG): isTailCall = NO; ONREG(Call,G);
 
-  case INSTRUCTION(TAILCALLX): isTailCall = OK; ONREG(Call,X);
-  case INSTRUCTION(TAILCALLY): isTailCall = OK; ONREG(Call,Y);
-  case INSTRUCTION(TAILCALLG): isTailCall = OK; ONREG(Call,G);
+  Case(TAILCALLX): isTailCall = OK; ONREG(Call,X);
+  Case(TAILCALLY): isTailCall = OK; ONREG(Call,Y);
+  Case(TAILCALLG): isTailCall = OK; ONREG(Call,G);
 
  Call:
    {
@@ -1601,18 +1605,18 @@ void engine() {
        PC = isTailCall ? 0 : PC+3;
 
        DEREF(taggedPredicate,predPtr,predTag);
-       if (!isSRecord(predTag)) {
+       if (!isConstChunk(taggedPredicate)) {
          if (isAnyVar(predTag)) {
            X[predArity++] = makeTaggedRef(predPtr);
            extern TaggedRef suspCallHandler; // mm2
-           predicate = tagged2SRecord(suspCallHandler);
+           predicate = chunkCast(suspCallHandler);
            goto LBLcall;
          }
          HF_WARN(applFailure(taggedPredicate),
                  printArgs(X,predArity));
        }
 
-       predicate = tagged2SRecord(taggedPredicate);
+       predicate = chunkCast(taggedPredicate);
      }
 
 // -----------------------------------------------------------------------
@@ -1626,11 +1630,11 @@ void engine() {
 // --- Call: Abstraction
 // -----------------------------------------------------------------------
 
-    TypeOfRecord typ = predicate->getType();
+    TypeOfChunk typ = predicate->getCType();
 
     switch (typ) {
-    case R_ABSTRACTION:
-    case R_OBJECT:
+    case C_ABSTRACTION:
+    case C_OBJECT:
       {
         Abstraction *def = (Abstraction *) predicate;
 
@@ -1645,7 +1649,7 @@ void engine() {
 // -----------------------------------------------------------------------
 // --- Call: Builtin
 // -----------------------------------------------------------------------
-    case R_BUILTIN:
+    case C_BUILTIN:
       {
         bi = (Builtin *) predicate;
 
@@ -1736,7 +1740,7 @@ void engine() {
         goto LBLerror;
       } // end builtin
     default:
-      HF_WARN(applFailure(makeTaggedSRecord(predicate)),
+      HF_WARN(applFailure(makeTaggedConst(predicate)),
                       );
     } // end switch on type of predicate
 
@@ -1758,9 +1762,9 @@ void engine() {
          goto LBLcall;
        }
 
-       if (isSRecord (x0Tag) == NO ||
-           !(tagged2SRecord (x0)->getType () == R_ABSTRACTION ||
-             tagged2SRecord (x0)->getType () == R_BUILTIN)) {
+       if (!isConstChunk(x0) ||
+           !(chunkCast(x0)->getCType () == C_ABSTRACTION ||
+             chunkCast(x0)->getCType () == C_BUILTIN)) {
          HF_FAIL (,
                   message("Application failed: no abstraction or builtin in solve combinator\n"));
 
@@ -1896,15 +1900,13 @@ void engine() {
    LBLBIsolved:
      {
        TaggedRef valueIn = (((SolvedBuiltin *) bi)->getGRegs ())[0];
-       DebugCheck ((isRef (valueIn) == OK),
-                   error ("reference is found in 'solved' builtin"));
+       Assert(!isRef(valueIn));
 
-       if (tagTypeOf (valueIn) == CONST) {
+       if (isConst(valueIn) && tagged2Const(valueIn)->getType() == Co_Board) {
          Board *solveBB =
            (Board *) tagValueOf ((((SolvedBuiltin *) bi)->getGRegs ())[0]);
          // VERBMSG("solved",((void *) bi),((void *) solveBB));
-         DebugCheck ((solveBB->isSolve () == NO),
-                     error ("no 'solve' blackboard  in solve continuation builtin"));
+         Assert(solveBB->isSolve());
          DebugCheck((solveBB->isCommitted () == OK ||
                      solveBB->isDiscarded () == OK ||
                      solveBB->isFailed () == OK),
@@ -1933,9 +1935,9 @@ void engine() {
          // adjoin the list of or-actors to the list in actual solve actor!!!
          Board *currentSolveBB = e->currentSolveBoard;
          if (currentSolveBB == (Board *) NULL) {
-           DebugCheckT (message ("solved is applied not inside of a search problem?\n"));
+           DebugCheckT(message("solved is applied not inside of a search problem?\n"));
          } else {
-           SolveActor::Cast (currentSolveBB->getActor ())->pushWaitActorsStackOf (solveAA);
+           SolveActor::Cast(currentSolveBB->getActor())->pushWaitActorsStackOf(solveAA);
          }
 
          if ( !e->fastUnifyOutline(solveAA->getSolveVar(), X[0], OK) ) {
@@ -1960,7 +1962,7 @@ void engine() {
 // --------------------------------------------------------------------------
 
 
-  case INSTRUCTION(WAIT):
+  Case(WAIT):
     {
       Assert(CBB->isWait() && !CBB->isCommitted());
 
@@ -1988,7 +1990,7 @@ void engine() {
     }
 
 
-  case INSTRUCTION(WAITTOP):
+  Case(WAITTOP):
     {
       /* top commit */
       if ( e->entailment() )
@@ -2032,7 +2034,7 @@ void engine() {
       goto LBLsuspendBoardWaitTop;
     }
 
-  case INSTRUCTION(ASK):
+  Case(ASK):
     {
       // entailment ?
       if (e->entailment()) {
@@ -2082,7 +2084,7 @@ void engine() {
 // CLASS: NODES: CREATE/END
 // -------------------------------------------------------------------------
 
-  case INSTRUCTION(CREATECOND):
+  Case(CREATECOND):
     {
       ProgramCounter elsePC = getLabelArg(PC+1);
       int argsToSave = getPosIntArg(PC+2);
@@ -2094,7 +2096,7 @@ void engine() {
       DISPATCH(3);
     }
 
-  case INSTRUCTION(CREATEOR):
+  Case(CREATEOR):
     {
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
@@ -2104,7 +2106,7 @@ void engine() {
       DISPATCH(3);
     }
 
-  case INSTRUCTION(CREATEENUMOR):
+  Case(CREATEENUMOR):
     {
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
@@ -2118,7 +2120,7 @@ void engine() {
       DISPATCH(3);
     }
 
-  case INSTRUCTION(WAITCLAUSE):
+  Case(WAITCLAUSE):
     {
       // create a node
       e->setCurrent(new Board(CAA,Bo_Wait),OK);
@@ -2129,7 +2131,7 @@ void engine() {
       DISPATCH(1);
     }
 
-  case INSTRUCTION(ASKCLAUSE):
+  Case(ASKCLAUSE):
     {
       e->setCurrent(new Board(CAA,Bo_Ask),OK);
       CBB->setInstalled();
@@ -2140,10 +2142,10 @@ void engine() {
     }
 
 
-  case INSTRUCTION(ELSECLAUSE):
+  Case(ELSECLAUSE):
     DISPATCH(1);
 
-  case INSTRUCTION(THREAD):
+  Case(THREAD):
     {
       markDirtyRefsArray(Y);
       ProgramCounter newPC = PC+2;
@@ -2167,14 +2169,14 @@ void engine() {
     }
 
 
-  case INSTRUCTION(NEXTCLAUSE):
+  Case(NEXTCLAUSE):
     {
       CAA->nextClause(getLabelArg(PC+1));
       DISPATCH(2);
     }
 
 
-  case INSTRUCTION(LASTCLAUSE):
+  Case(LASTCLAUSE):
     {
       CAA->lastClause();
       DISPATCH(1);
@@ -2184,14 +2186,14 @@ void engine() {
 // CLASS: MISC: ERROR/NOOP/default
 // -------------------------------------------------------------------------
 
-  case INSTRUCTION(ERROR):
+  Case(ERROR):
     {
       error("Emulate: ERROR command executed");
       goto LBLerror;
     }
 
 
-  case INSTRUCTION(DEBUGINFO):
+  Case(DEBUGINFO):
     {
       TaggedRef filename = getLiteralArg(PC+1);
       int line           = smallIntValue(getNumberArg(PC+2));
@@ -2210,27 +2212,29 @@ void engine() {
       DISPATCH(6);
     }
 
-  case INSTRUCTION(TESTLABEL1):
-  case INSTRUCTION(TESTLABEL2):
-  case INSTRUCTION(TESTLABEL3):
-  case INSTRUCTION(TESTLABEL4):
+  Case(TESTLABEL1):
+  Case(TESTLABEL2):
+  Case(TESTLABEL3):
+  Case(TESTLABEL4):
 
-  case INSTRUCTION(TEST1):
-  case INSTRUCTION(TEST2):
-  case INSTRUCTION(TEST3):
-  case INSTRUCTION(TEST4):
+  Case(TEST1):
+  Case(TEST2):
+  Case(TEST3):
+  Case(TEST4):
 
-  case INSTRUCTION(ENDOFFILE):
-  case INSTRUCTION(ENDDEFINITION):
+  Case(ENDOFFILE):
+  Case(ENDDEFINITION):
 
-  case INSTRUCTION(SWITCHCOMPMODE):
+  Case(SWITCHCOMPMODE):
     e->currentThread->switchCompMode();
     DISPATCH(1);
 
+#ifndef THREADED
   default:
     warning("emulate instruction: default should never happen");
     break;
   } /* switch*/
+#endif
 
 
 // ----------------- end emulate ------------------------------------------

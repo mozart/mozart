@@ -254,6 +254,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
                               Bool prop)
 {
     TypeOfTerm tTag = tagTypeOf(term);
+    TaggedRef bindInRecordCaseHack = term;
 
     switch (tTag) {
     case LITERAL:
@@ -291,6 +292,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
       }
 
     case SRECORD:
+    Record:
       {
         // For all features of var, term should contain the feature.
         // Unify the values of corresponding features.
@@ -330,8 +332,8 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         }
 
         // Bind OFSVar to the SRecord:
-        if (vLoc) doBind(vPtr, TaggedRef(term));
-        else doBindAndTrail(var, vPtr, TaggedRef(term));
+        if (vLoc) doBind(vPtr, bindInRecordCaseHack);
+        else doBindAndTrail(var, vPtr, bindInRecordCaseHack);
 
         // Unify corresponding feature values:
         PairList* p=pairs;
@@ -557,6 +559,11 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
       }
 
     default:
+        /* Builtins, Abstractions and Cells are also records */
+        if (isConstChunk(term)) {
+          term = makeTaggedSRecord(chunkCast(term)->getRecord());
+          goto Record;
+        }
         // All other types fail when unified with an open feature structure
         // error("unexpected case in unifyOFS");
         return FALSE;

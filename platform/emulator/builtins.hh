@@ -258,9 +258,8 @@ private:
 
 
 
-class Builtin: public SRecord {
-friend void SRecord::gcRecurse();
-friend SRecord *SRecord::gcSRecord();
+class Builtin: public Chunk {
+friend Chunk::gcRecurse();
 private:
   BuiltinTabEntry *fun;
   TaggedRef suspHandler; // this one is called, when it must suspend
@@ -268,38 +267,33 @@ protected:
   RefsArray gRegs;       // context;
 public:
   Builtin(Builtin *b)
-  : suspHandler(b->suspHandler), fun(b->fun), SRecord(R_BUILTIN,NULL,NULL),
+  : suspHandler(b->suspHandler), fun(b->fun), Chunk(C_BUILTIN),
     gRegs (b->gRegs) {}
   Builtin(BuiltinTabEntry *fn, TaggedRef handler, RefsArray gregs = NULL)
-  : suspHandler(handler), fun(fn), SRecord(R_BUILTIN,NULL,NULL),
+    : suspHandler(handler), fun(fn), Chunk(C_BUILTIN),
     gRegs (gregs) {}
-  Builtin(BuiltinTabEntry *fn, TaggedRef handler, RefsArray gregs,
-          Arity *arity, RefsArray features)
-  : suspHandler(handler), fun(fn), SRecord(R_BUILTIN, arity, features),
+  Builtin(BuiltinTabEntry *fn, TaggedRef handler, RefsArray gregs, Arity *arity)
+    : suspHandler(handler), fun(fn), Chunk(C_BUILTIN,arity),
     gRegs (gregs) {}
   OZPRINT;
   OZPRINTLONG;
 
-  int getArity() { return fun->getArity(); }
-  OZ_CFun getFun() { return fun->getFun(); }
+  int getArity()       { return fun->getArity(); }
+  OZ_CFun getFun()     { return fun->getFun(); }
   char *getPrintName() { return fun->getPrintName(); }
-  TaggedRef getName() { return fun->getName(); }
-  BIType getType() { return fun->getType(); }
+  TaggedRef getName()  { return fun->getName(); }
+  BIType getType()     { return fun->getType(); }
 
-  SRecord *getSuspHandler() {
-    return suspHandler == makeTaggedNULL()
-      ? (SRecord*) NULL
-      : tagged2SRecord(suspHandler);
+  Chunk *getSuspHandler() {
+    return suspHandler == makeTaggedNULL() ? (Chunk*) NULL : chunkCast(suspHandler);
   }
   TaggedRef getDBGHandler() {
-    return suspHandler == makeTaggedNULL()
-      ? nil()
-      : suspHandler;
+    return suspHandler == makeTaggedNULL() ? nil() : suspHandler;
   }
   Bool compare(Builtin *r) {
     return (fun == r->fun &&
             suspHandler == r->suspHandler &&
-            gRegs == r->gRegs) ? OK : NO;
+            gRegs == r->gRegs);
   }
   // mm: this is a hack: the id is not always unique
   int getId() {
@@ -344,12 +338,13 @@ class OneCallBuiltin: public Builtin {
 public:
   USEHEAPMEMORY;
 
-  OneCallBuiltin (BuiltinTabEntry *fn, RefsArray gregs,
-                  Arity *arity, RefsArray features)
-  : Builtin ((BuiltinTabEntry *)fn, (TaggedRef) 0, gregs, arity, features)
-  {}
+  OneCallBuiltin (BuiltinTabEntry *fn, RefsArray gregs, Arity *arity, TaggedRef fea)
+  : Builtin (fn, (TaggedRef) 0, gregs, arity)
+  {
+    getRecord()->setArg(0,fea);
+  }
 
-  inline Bool isSeen () { return ((gRegs == (RefsArray) NULL) ? OK : NO); }
+  inline Bool isSeen () { return (gRegs == NULL); }
   inline RefsArray &getGRegs() { return(gRegs); }
   inline void hasSeen () { gRegs = (RefsArray) NULL; }
 };
@@ -358,10 +353,11 @@ class SolvedBuiltin: public Builtin {
 public:
   USEHEAPMEMORY;
 
-  SolvedBuiltin (BuiltinTabEntry *fn, RefsArray gregs,
-                 Arity *arity, RefsArray features)
-  : Builtin ((BuiltinTabEntry *)fn, (TaggedRef) 0, gregs, arity, features)
-    {}
+  SolvedBuiltin(BuiltinTabEntry *fn, RefsArray gregs, Arity *arity, TaggedRef fea)
+  : Builtin (fn, (TaggedRef) 0, gregs, arity)
+  {
+    getRecord()->setArg(0,fea);
+  }
   inline RefsArray &getGRegs() { return(gRegs); }
 };
 

@@ -312,17 +312,6 @@ Bool isSRecord(TaggedRef term) {
 }
 
 inline
-Bool isRecord(TypeOfTerm tag) {
-  return isSRecord(tag) || isLiteral(tag);
-}
-
-inline
-Bool isRecord(TaggedRef term) {
-  GCDEBUG(term);
-  return isRecord(tagTypeOf(term));
-}
-
-inline
 Bool isSTuple(TypeOfTerm tag) {
   return (tag == STUPLE);
 }
@@ -342,17 +331,6 @@ inline
 Bool isTuple(TaggedRef term) {
   GCDEBUG(term);
   return isTuple(tagTypeOf(term));
-}
-
-inline
-Bool isNoNumber(TypeOfTerm tag) {
-  return isRecord(tag) || isTuple(tag);
-}
-
-inline
-Bool isNoNumber(TaggedRef term) {
-  GCDEBUG(term);
-  return isNoNumber(tagTypeOf(term));
 }
 
 inline

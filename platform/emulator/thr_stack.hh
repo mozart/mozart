@@ -127,7 +127,7 @@ public:
   // for debugging
   TaggedRef TaskStack::DBGmakeList();
 
-  void pushCall(Board *n, SRecord *pred, RefsArray  x, int i)
+  void pushCall(Board *n, Chunk *pred, RefsArray  x, int i)
   {
     DebugCheckT(nodeCheckY(n));
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));

@@ -65,7 +65,7 @@ public:
     taskStack.pushDebug(b, d);
   }
 
-  void pushCall(Board *b, SRecord *pred, RefsArray  x, int n)
+  void pushCall(Board *b, Chunk *pred, RefsArray  x, int n)
   {
 #ifndef NEWCOUNTER
     b->incSuspCount();
