@@ -52,6 +52,26 @@
 <Book proglang="oz">
   <Front>
 
+    <!-- Defining width of tables and pictures -->
+
+    <Meta name="latex.picture.width" arg1="setdistr.pic" 
+                                     arg2="0.8\linewidth">
+
+    <Meta name="latex.picture.width" arg1="pic.fset_steiner_naive"
+                                     arg2="0.8\linewidth">
+
+    <Meta name="latex.picture.width" arg1="pic.fset_steiner_order"
+                                     arg2="0.8\linewidth">
+
+    <Meta name="latex.picture.width" arg1="hamming_browser.pic"
+                                     arg2="0.5\linewidth">
+
+    <Meta name="latex.picture.width" arg1="pic.crew_browser"
+                                     arg2="0.8\linewidth">
+
+    <Meta name="latex.picture.width" arg1="golf_explorer.pic"
+                                     arg2="0.8\linewidth">
+
     <!-- Splitting the document into different HTML nodes -->
 
     <Meta name="html.split" value="fset.tutorial.intro">

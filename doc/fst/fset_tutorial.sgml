@@ -1,6 +1,6 @@
 <Chapter id="fset.tutorial.intro"> <Title/Introduction/
 
-<Para><Title/Set Values./ Oz 3 provides finite sets of non-negative
+<Para><Title/Set Values/ Oz 3 provides finite sets of non-negative
 integers as first-class values and every set value is a subset of the
 universal set <Math>{\cal U} = \{0,\ldots,sup\}</Math>. The value of
 <Math>sup</Math> is determined by the actual implementation and in
@@ -11,7 +11,7 @@ integer is <Math>2^{27}-1</Math>. To be able to represent the
 cardinality of a set by a small integer, the biggest element of a set
 is determined to <Math>2^{27}-2</Math>.</Note>.
 
-<Para><Title/Set Constraints./
+<Para><Title/Set Constraints/
 A basic set constraint approximates a set value <Math>S</Math> in
 three different ways:
 
@@ -43,7 +43,7 @@ Non-basic set constraints, as intersection <Math>\cap</Math>, union
 provided as propagators. For details on the provided set propagators
 see <Ptr.Extern to="ozdoc:system" key="chapter.fs">.
 
-<Para><Title/Set Constraint Propagation./ To explain constraint
+<Para><Title/Set Constraint Propagation/ To explain constraint
 propagation, assume the basic set constraints:<Math>\emptyset
 \subseteq X,Y \subseteq \{1,\ldots,5\}</Math> and additionally the
 following non-basic constraints: <Math>X \cup Y =
@@ -68,7 +68,7 @@ the cardinality constraint. The disjointness constraint then removes
 upper bound and that way determines <Math>X</Math> to
 <Math>\{1,2\}</Math>.
 
-<Para><Title/Connecting Finite Sets and Finite Domains./ Set
+<Para><Title/Connecting Finite Sets and Finite Domains/ Set
 constraints on their own are of limited use, connecting them with
 finite domain constraints provides much more expressivity. The
 straightforward way is to connect a finite set variable via the
@@ -85,14 +85,14 @@ finite domains (see <Ptr.Extern to="ozdoc:system" key="chapter.fs">
 for details on <<FS.int.match>>) that is used in <Ptr
 to="fset.examples.steiner">.
 
-<Para><Title/Distribution./
+<Para><Title/Distribution/
 Due to the fact that constraint propagation is incomplete, expectedly
 in case of set constraints as well, solving a problem involving set
 constraints requires distribution. A typical choice-point distributing
 a set variable is <Math>n \in S \vee n \notin S</Math>. The following
 figure illustrates that.
 
-<PICTURE.extern display to="setdistr.gif" type=GIF>
+<PICTURE.extern display to="setdistr.gif" id="setdistr.pic" type=GIF>
 
 <P>
 

@@ -3,7 +3,7 @@
 <Chapter id="fset.examples.crew"> <Title/A Crew Allocation Problem/
 
 
-<Para><Title/Problem Specification./ A small air-line has to assign
+<Para><Title/Problem Specification/ A small air-line has to assign
 their <Math>20</Math> flight attendants to <Math>10</Math>
 flights. Each flight has to be accompanied by a certain number of
 cabin crew (see <Ptr to="table.crew_per_flight">) that has to meet a
@@ -19,7 +19,7 @@ member has two flights off after an attended flight.
 <Table class=dyptic>
 <Tr><Td>
 <Table>
-<Tr><Th/flight no/ <Th/# of cabin staff/
+<Tr><Th/flight #/ <Th/# of cabin staff/
 <Tr><Td/1/ <Td/4/
 <Tr><Td/2/ <Td/4/
 <Tr><Td/3/ <Td/5/
@@ -29,7 +29,7 @@ member has two flights off after an attended flight.
 </Td>
 <Td>
 <Table>
-<Tr><Th/flight no/ <Th/# of cabin staff/
+<Tr><Th/flight #/ <Th/# of cabin staff/
 <Tr><Td/6/ <Td/4/ 
 <Tr><Td/7/ <Td/4/ 
 <Tr><Td/8/ <Td/5/ 
@@ -42,20 +42,15 @@ member has two flights off after an attended flight.
 
 <Figure class=table id="table.foreign_lang_per_flight">
 <Caption/Cabin crew speaking foreign language per flight./
-<Table class=dyptic>
+<Table>
 <Tr><Td>
 <Table>
-<Tr><Th/flight no/ <Th/French/ <Th/Spanish/ <Th/German/ 
+<Tr><Th/flight #/ <Th/French/ <Th/Spanish/ <Th/German/ 
 <Tr><Td/1/ <Td/1/ <Td/1/ <Td/1/
 <Tr><Td/2/ <Td/1/ <Td/1/ <Td/1/
 <Tr><Td/3/ <Td/1/ <Td/1/ <Td/1/
 <Tr><Td/4/ <Td/2/ <Td/2/ <Td/1/
 <Tr><Td/5/ <Td/2/ <Td/2/ <Td/1/
-</Table>
-</Td>
-<Td>
-<Table>
-<Tr><Th/flight no/ <Th/French/ <Th/Spanish/ <Th/German/ 
 <Tr><Td/6/ <Td/1/ <Td/1/ <Td/1/ 
 <Tr><Td/7/ <Td/1/ <Td/1/ <Td/1/ 
 <Tr><Td/8/ <Td/1/ <Td/1/ <Td/1/ 
@@ -71,7 +66,7 @@ member has two flights off after an attended flight.
 <Table class=dyptic>
 <Tr><Td>
 <Table>
-<Tr><Th/flight no/ <Th/male/ <Th/female/  
+<Tr><Th/flight #/ <Th/male/ <Th/female/  
 <Tr><Td/1/ <Td/1/ <Td/1/
 <Tr><Td/2/ <Td/1/ <Td/1/
 <Tr><Td/3/ <Td/1/ <Td/1/
@@ -81,7 +76,7 @@ member has two flights off after an attended flight.
 </Td>
 <Td>
 <Table>
-<Tr><Th/flight no/ <Th/male/ <Th/female/  
+<Tr><Th/flight #/ <Th/male/ <Th/female/  
 <Tr><Td/6/ <Td/1/ <Td/1/
 <Tr><Td/7/ <Td/1/ <Td/1/
 <Tr><Td/8/ <Td/1/ <Td/1/
@@ -92,7 +87,7 @@ member has two flights off after an attended flight.
 </Table>
 </Figure>
 
-<Para><Title/Model./ The cabin crew for every flight is represented as
+<Para><Title/Model/ The cabin crew for every flight is represented as
 a set. The constraints on cabin crews of individual flights are
 modeled in terms of constraints on the cardinality of the intersection
 of the cabin crew set of that flight with the sets associated with
@@ -102,17 +97,28 @@ and German-speaking cabin crew. The constraint that a crew member has
 two flights off after an attended flight is expressed by the
 disjointness of the appropriate sets representing a crew per flight.
 
-<Para><Title/Solver./ The function <<AssignCrew>> returns a solver
+<Para><Title/Solver/ The function <<AssignCrew>> returns a solver
 configured according to its arguments <<FlightData>> and <<Crew>>. As
 previously mentioned, the constraints on the cabin crew of a flight
 are expressed in terms of sets of crew members meeting these
 constraints. For that reason the following variables are defined:
-<<Stewards>> (male cabin crew members), <<Stewardesses>> (female cabin
-crew members), <<FrenchSpeaking>>, <<GermanSpeaking>>, and
+
+<List>
+
+<Item> <<Stewards>> (male cabin crew members),
+
+<Item> <<Stewardesses>> (female cabin
+crew members), 
+
+<Item> <<FrenchSpeaking>>, <<GermanSpeaking>>, and
 <<SpanishSpeaking>> (French-, German-, &resp Spanish-speaking cabin
-crew members). The procedure <<TeamConstraint>> imposes the
+crew members). 
+
+</List>
+
+Procedure <<TeamConstraint>> imposes the
 abovementioned constraints on the individual flight cabin crew sets
-intersecting them with the appropriate sets (<<FS.intersection>>), and
+intersecting them with appropriate sets (<<FS.intersection>>), and
 constrains the intersection's cardinality according to <Ptr
 to="table.crew_per_flight">, <Ptr to="table.foreign_lang_per_flight">,
 and <Ptr to="table.sex_per_flight"> (using <<FS.card>> and <<>=:>>).
@@ -129,7 +135,7 @@ are imposed on <<Flights>> by the <<Map>> loop, by mapping the data
 provided by <<FlightData>> to <<Flights>>. The distribution is
 straightforward and has no particularities.
 
-<Para><Title/Dealing with sets of literals./ Often real-life
+<Para><Title/Dealing with sets of literals/ Often real-life
 applications deal with sets of names, descriptions and the like rather
 than integers, which can be represented by &oz; literals. The
 functions <<SetOfLiterals>>, <<Lits2Ints>>, and <<Ints2Lits>> allow to
@@ -153,7 +159,8 @@ Running the solver by
 and invoking the &oz; Browser on the solution node results in:
 
 <P>
-<PICTURE.extern id="pic.crew_browser" display to="crew_browser.gif" type=GIF>
+<PICTURE.extern id="pic.crew_browser" display to="crew_browser.gif" 
+                type=GIF>
 
 <P> The flights are to be attended in the order they appear in the
 solution list. Each sublist denotes the assignment for an individual
