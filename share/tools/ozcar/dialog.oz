@@ -37,8 +37,7 @@ local
 
       meth init(master:Master)
 	 fun {EvalInit}
-	    CC     = {New {NewCompiler Tk TkTools Open
-			   OS Browse}.interface.quiet init}
+	    CC     = {New Compiler.interface.quiet init}
 	    AuxEnv = {Ozcar PrivateSend(getEnv(unit $))}
 	    CurEnv = {Record.adjoinList env {Append AuxEnv.'G' AuxEnv.'Y'}}
 	 in
