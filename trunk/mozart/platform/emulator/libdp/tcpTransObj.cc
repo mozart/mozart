@@ -156,12 +156,11 @@ TransController *TCPTransObj::getTransController() {
 }
 
 inline void TCPTransObj::marshal(MsgContainer *msgC, int acknum) {
-  int num=msgC->getMsgNum();
   Bool cont=msgC->checkFlag(MSG_HAS_MARSHALCONT);
   writeBuffer->marshalBegin();
 
-  PD((TCP_INTERFACE,"---marshal: %s nr:%d ack:%d cont:%d",
-      mess_names[msgC->getMessageType()],num,acknum,
+  PD((TCP_INTERFACE,"---marshal: %s ack:%d cont:%d",
+      mess_names[msgC->getMessageType()],acknum,
       msgC->checkFlag(MSG_HAS_MARSHALCONT))); 
 
   writeBuffer->put(0xFF);          // Ctrl
@@ -171,15 +170,19 @@ inline void TCPTransObj::marshal(MsgContainer *msgC, int acknum) {
   if(cont) {
     Assert(msgC->getMessageType()<C_FIRST);
     writeBuffer->put(CF_CONT);     // CF
-    writeBuffer->putInt(num);
+    Assert(msgC->getMsgNum()!=NO_MSG_NUM);
+    writeBuffer->putInt(msgC->getMsgNum());
   }
   else
-    writeBuffer->put(CF_FIRST);
+    {
+      Assert(msgC->getMsgNum()==NO_MSG_NUM);
+      writeBuffer->put(CF_FIRST);
+    }
 
   writeBuffer->setSite(site);
   msgC->marshal(writeBuffer, tcptransController);
 
-  Assert(writeBuffer->availableSpace()>=0); // Room for trailer?
+  Assert(writeBuffer->availableSpace()>=1); // Room for trailer?
   if(msgC->checkFlag(MSG_HAS_MARSHALCONT)) {
     globalContCounter++;
     comObj->msgPartlySent(msgC);
@@ -219,6 +222,7 @@ int TCPTransObj::writeHandler(int fd) {
     Assert(len>0);
     globalOSWriteCounter++;
     ret=oswrite(fd,pos,len);
+    //    printf("Rwrite fd:%d bytes:%d len:%d\n",fd,ret,len);
     PD((TCP_INTERFACE,"Os-written %d",ret));
     
     if(ret<0) {
@@ -259,6 +263,7 @@ unmarshalReturn TCPTransObj::unmarshal() {
   MsgContainer *msgC;
   int msgnum;
   int t;
+  
 
   b=readBuffer->get();              // Ctrl
   Assert(b==0xFF);
@@ -271,8 +276,9 @@ unmarshalReturn TCPTransObj::unmarshal() {
     GenCast(b,BYTE,type,MessageType);
     cf=readBuffer->get();          // CF
 
-    if(cf==CF_FIRST)
+    if(cf==CF_FIRST){
       msgC=comObj->getMsgContainer();
+    }
     else {
       Assert(cf==CF_CONT);
       msgnum=readBuffer->getInt();   // MsgNr
@@ -325,7 +331,7 @@ int TCPTransObj::readHandler(int fd) {
   while (TRUE) {
     globalOSReadCounter++;
     ret = osread(fd,pos,len);
-
+    // printf("Read fd:%d bytes:%d len:%d this:%x\n",fd,ret,len,(int)this);
     if (ret<0) {
       switch(classifyError()) {
       case GO_AHEAD:

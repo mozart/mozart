@@ -48,6 +48,8 @@
 #define DO_CONNECT_LOG ozconf.dpLogConnectLog
 #define DO_MESSAGE_LOG ozconf.dpLogMessageLog
 
+
+
 ComObj::ComObj(DSite *site) {
   init(site);
 }
@@ -63,6 +65,8 @@ void ComObj::init(DSite *site) {
 
   lastReceived=0;
   lastSent=0;
+  sentLrgMsg = 0;
+  receivedLrgMsg = 0;
   timer=NULL;
   reopentimer=NULL;
   closetimer=NULL;
@@ -329,7 +333,8 @@ void ComObj::close(CState statetobe,Bool merging) {
     comObjDone(this);
   Assert(!connectgrantrequested && connectVar==(OZ_Term) 0x45);
   queues.clear5();
-
+  // Can this be a bug? The level 5 messages are cleared, but not
+  // eventual partialy received ad sent messages.... ERIK .
   switch(statetobe) {
   case CLOSED_WF_HANDOVER:
     //    state=CLOSED_WF_HANDOVER; happens anyway!
@@ -452,6 +457,8 @@ inline void ComObj::extractCI(OZ_Term channelinfo,int &bufferSize) {
     queues.msgAcked(remLastReceived,TRUE,FALSE);      // Resend/Ack msgs
     queues.clearRec();                                // Clear partly received
     queues.clearCont();
+    sentLrgMsg=0;
+    receivedLrgMsg=0;
     lastSent=remLastReceived; // Others requeued
 
     index=srec->getIndex(oz_atom("msgAckTimeOut"));
@@ -909,7 +916,7 @@ MsgContainer *ComObj::getNextMsgContainer(int &acknum) {
   
   if(msgC==NULL) return NULL;
   if(!msgC->checkFlag(MSG_HAS_MARSHALCONT) && msgC->getMessageType()<C_FIRST) {
-    msgC->setMsgNum(++lastSent);
+    msgC->setMsgNum(NO_MSG_NUM);
   }
   if(DO_MESSAGE_LOG) {
     if(msgC!=NULL) 
@@ -938,7 +945,7 @@ MsgContainer *ComObj::getNextMsgContainer(int &acknum) {
 void ComObj::msgSent(MsgContainer *msgC)
 {
   if (msgC->getMessageType() < C_FIRST) {
-    Assert(msgC->getMsgNum() != -1);
+    msgC->setMsgNum(++lastSent);
     queues.insertUnacked(msgC);
   } else {
     msgContainerManager->deleteMsgContainer(msgC);
@@ -946,6 +953,8 @@ void ComObj::msgSent(MsgContainer *msgC)
 }
 
 void ComObj::msgPartlySent(MsgContainer *msgC) { 
+  if (msgC->getMsgNum() == NO_MSG_NUM)
+    msgC->setMsgNum(++sentLrgMsg);
   queues.requeue(msgC);
 }
 
@@ -953,8 +962,8 @@ void ComObj::msgPartlyReceived(MsgContainer *msgC) {
   PD((TCP_INTERFACE,"---msgPartlyReceived: %s nr:%d from %d",
       mess_names[msgC->getMessageType()],lastReceived+1,
       site!=NULL?site->getTimeStamp()->pid:-1));
-  if(msgC->getMsgNum()==-1)
-    msgC->setMsgNum(lastReceived+1);
+  if(msgC->getMsgNum()==NO_MSG_NUM)
+    msgC->setMsgNum(++receivedLrgMsg);
   queues.putRec(msgC);
 }
 
