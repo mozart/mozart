@@ -1,0 +1,18 @@
+To install the Mozart Standard Library, you should have Mozart already
+installed on your system.  Assuming Mozart is installed in $PREFIX, you
+should invoke:
+
+	$PREFIX/ozengine ./ozmake --prefix=$PREFIX --install --package=mozart-stdlib.pkg
+
+If a version of the Mozart Standard Library is already installed, you
+should invoke instead:
+
+	$PREFIX/ozengine ./ozmake --prefix=$PREFIX --upgrade --package=mozart-stdlib.pkg
+
+If you do not have sufficient privileges to install the Mozart Standard
+Library in the global Mozart installation directory, you can instead
+install it in your own area (however, you will be the only one to benefit
+from this).  Invoke:
+
+	$PREFIX/ozengine ./ozmake --install --package=mozart-stdlib.pkg
+or	$PREFIX/ozengine ./ozmake --upgrade --package=mozart-stdlib.pkg
