@@ -2062,13 +2062,18 @@ public:
 
 class PrTabEntry {
 private:
-  unsigned short arity;
   SRecordArity methodArity;
   TaggedRef printname, file, info; // Never change: garbage collection
   int line, colum;
-  int flags;
+
+  struct {
+    unsigned int arity   : 16;   
+    unsigned int maxX    : 15;
+    unsigned int isSited : 1;
+  } p;
+
   int gSize;
-  int maxX;
+
 public:
   PrTabEntry *next;
   static PrTabEntry *allPrTabEntries;
@@ -2089,25 +2094,27 @@ public:
 	     TaggedRef fil, int lin, int colu, TaggedRef fl, int max)
   {
     printname = name;
-    maxX = max;
+    p.maxX = max;
     file  = fil;
     line  = lin;
     colum = colu;
 
     codeBlock = NULL;
-    flags = 0;
+    p.isSited = 0;
     fl = oz_deref(fl);
     while (oz_isCons(fl)) {
       OZ_Term ff=oz_deref(oz_head(fl));
-      if (oz_eq(ff,AtomSited)) { flags |= PR_SITED; }
+      if (oz_eq(ff,AtomSited)) { 
+	p.isSited = 1;
+      }
       fl = oz_deref(oz_tail(fl));
     }
     Assert(oz_isNil(fl));
 
     Assert(oz_isLiteral(name));
     methodArity = arityInit;
-    arity =  (unsigned short) getWidth(arityInit);
-    Assert((int)arity == getWidth(arityInit)); /* check for overflow */
+    p.arity =  getWidth(arityInit);
+    Assert((int)p.arity == getWidth(arityInit)); /* check for overflow */
     PC = NOCODE;
     info = oz_nil();
     pprof = NULL;
@@ -2151,7 +2158,7 @@ public:
 
   void setGSize(int n) { gSize = n; }
   int getGSize() { return gSize; }
-  int getArity () { return (int) arity; }
+  int getArity () { return p.arity; }
 
   SRecordArity getMethodArity() { return methodArity; }
   void setMethodArity(SRecordArity sra) { methodArity = sra; }
@@ -2163,15 +2170,15 @@ public:
   void setInfo(TaggedRef t) { info = t; }
   TaggedRef getInfo()       { return info; }
 
-  int isSited()    { return flags&PR_SITED; }
-  int getFlags()   { return flags; }
+  int isSited()    { return p.isSited; }
+  int getFlags()   { return p.isSited; }
   OZ_Term getFlagsList() {
     OZ_Term ret = oz_nil();
     if (isSited()) ret = oz_cons(AtomSited,ret);
     return ret;
   }
 
-  int getMaxX()    { return maxX; }
+  int getMaxX()    { return p.maxX; }
   int getLine()   { return line; }
   int getColumn() { return colum; }
   TaggedRef getFile() { return file; }

@@ -1118,7 +1118,7 @@ void AssReg::printStream(ostream &stream, int depth)
 
 void PrTabEntry::printStream(ostream &stream, int depth) {
   stream << "<PrTabEntry: " << getPrintName()
-	 << "/" << (int) arity <<  "PC: " << (void *) PC
+	 << "/" << (int) p.arity <<  "PC: " << (void *) PC
 	 << ">";
 }
 
