@@ -181,12 +181,8 @@ public:
     return OK;
   }
   TaggedRef getDefaultExceptionHdl() { return defaultExceptionHdl; }
-  Bool setDefaultExceptionHdl(TaggedRef pred) {
-    if (defaultExceptionHdl && defaultExceptionHdl!=pred) {
-      return NO;
-    }
+  void setDefaultExceptionHdl(TaggedRef pred) {
     defaultExceptionHdl = pred;
-    return OK;
   }
   TaggedRef getMethApplHdl() { return methApplHdl; }
   Bool setMethApplHdl(TaggedRef pred) {
