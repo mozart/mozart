@@ -172,13 +172,13 @@ oz-win::
 	  $(TAR) cf - oz/include oz/share \
 		   oz/LICENSE \
 		   oz/contrib \
+		   oz/doc \
 		   oz/platform/winbin \
                    oz/platform/win32-i486/?*.exe \
                    oz/platform/win32-i486/?*.dll \
                    oz/platform/win32-i486/wish \
          ) | $(TAR) xf -
 	$(INSTALL_DIR) oz/doc
-	( cd $(PREFIX)/doc; $(TAR) cf - . ) | (cd oz/doc; $(TAR) xf -)
 	$(INSTALL_DIR) $(WINCACHEDIR)/share
 	$(INSTALL_DIR) $(WINCACHEDIR)/doc/demo
 	mv oz/share/images oz/share/?*.ozf $(WINCACHEDIR)/share
