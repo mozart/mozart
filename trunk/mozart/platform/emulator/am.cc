@@ -104,9 +104,8 @@ void usage(int /* argc */,char **argv) {
   fprintf(stderr, " -init <file> : load and execute init procedure\n");
   fprintf(stderr, " -noinit      : don't (see above)\n");
   fprintf(stderr, " -u <url>     : start a compute server\n");
-#ifdef OZMA
   fprintf(stderr, " -b <file>    : boot from assembly code\n");
-#endif
+  fprintf(stderr, " -B <dynlib>  : load ozma\n");
   fprintf(stderr, " -f <file>    : execute precompiled file\n");
   fprintf(stderr, " -a <args> ...: application arguments\n");
   fprintf(stderr, " -- <args> ...: same as above\n");
@@ -228,9 +227,8 @@ void AM::init(int argc,char **argv)
   char *precompiledFile = NULL;
   char *url = NULL;
   char *initFile = getenv("OZINIT");
-#ifdef OZMA
   char *assemblyCodeFile = NULL;
-#endif
+  char *ozmaLib = NULL;
   Bool quiet = FALSE;
   int moreThanOne = 0;
   
@@ -278,13 +276,15 @@ void AM::init(int argc,char **argv)
       url = getOptArg(i,argc,argv);
       continue;
     }
-#ifdef OZMA
     if (strcmp(argv[i],"-b")==0) {
       moreThanOne++;
       assemblyCodeFile = getOptArg(i,argc,argv);
       continue;
     }
-#endif
+    if (strcmp(argv[i],"-B")==0) {
+      ozmaLib = getOptArg(i,argc,argv);
+      continue;
+    }
     if (strcmp(argv[i],"-init")==0) {
       initFile = getOptArg(i,argc,argv);
       continue;
@@ -307,11 +307,7 @@ void AM::init(int argc,char **argv)
   }
 
   if (moreThanOne > 1) {
-#ifdef OZMA
     fprintf(stderr,"Atmost one of '-u', '-f', '-S', '-b' allowed.\n");
-#else
-    fprintf(stderr,"Atmost one of '-u', '-f', '-S' allowed.\n");
-#endif
     usage(argc,argv);
    }
 
@@ -340,10 +336,8 @@ void AM::init(int argc,char **argv)
   compStream = 0;
   if (url) {
     isStandaloneF=OK;
-#ifdef OZMA
   } else if (assemblyCodeFile) {
     isStandaloneF=OK;
-#endif
   } else {
     if (compilerFIFO) {
       compStream = connectCompiler(compilerFIFO);
@@ -364,7 +358,7 @@ void AM::init(int argc,char **argv)
   }
 
 
-  engine(OK);
+  (void) engine(OK);
 
   initFDs();
   
@@ -426,9 +420,7 @@ void AM::init(int argc,char **argv)
 
   {
     Thread *tt = (initFile||url
-#ifdef OZMA
 		  ||assemblyCodeFile
-#endif
 		  )?
       mkRunnableThread(DEFAULT_PRIORITY, _rootBoard):0;
     RefsArray args = allocateStaticRefsArray(2);
@@ -443,13 +435,25 @@ void AM::init(int argc,char **argv)
       tt->pushCFun(BIload,args,2,OK);
     }
 
-#ifdef OZMA
+    OZ_Term (*ozmaFunc)(const char *);
+    if (ozmaLib) {
+      OZ_Term out = oz_newVariable();
+      int ret = osDlopen(ozmaLib, out);
+      if (ret != PROCEED) {
+	fprintf(stderr, "can not open ozma library %s\n",ozmaLib);
+	osExit(1);
+      }
+      ozmaFunc = (OZ_Term (*)(const char *))
+	osDlsym((void *) OZ_intToC(out),"ozma_readProc");
+      if (!ozmaFunc) {
+	fprintf(stderr, "can't find ozma_readProc\n");
+	osExit(1);
+      }
+    }
     if (assemblyCodeFile) {
-      extern OZ_Term ozma_readProc(const char *filename);
-      OZ_Term v=ozma_readProc(assemblyCodeFile);
+      OZ_Term v=(*ozmaFunc)(assemblyCodeFile);
       if (v!=makeTaggedNULL()) tt->pushCall(v, 0, 0);
     }
-#endif
 
     if (initFile) {
       args[0] = oz_atom(initFile);
