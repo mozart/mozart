@@ -6065,9 +6065,10 @@ OZ_C_proc_begin(BISystemGetPriorities,1) {
   OZ_Term high   = OZ_pairAI("high",   0);
   OZ_Term middle = OZ_pairAI("middle", 0);
 
-  return OZ_recordInit(OZ_atom("priorities"),
+  return OZ_unify(OZ_getCArg(0),
+                  OZ_recordInit(OZ_atom("priorities"),
                        OZ_cons(high,
-                         OZ_cons(middle,nil())));
+                         OZ_cons(middle,nil()))));
 }
 OZ_C_proc_end
 
@@ -6077,7 +6078,22 @@ OZ_C_proc_begin(BISystemGetTime,1) {
 OZ_C_proc_end
 
 OZ_C_proc_begin(BISystemGetGC,1) {
-  return OZ_unify(OZ_getCArg(0),nil());
+  OZ_Term minimal   = OZ_pairAI("minimal",    0);
+  OZ_Term maximal   = OZ_pairAI("maximal",    0);
+  OZ_Term increase  = OZ_pairAI("increase",   0);
+  OZ_Term decrease  = OZ_pairAI("decrease",   0);
+  OZ_Term on        = OZ_pair2(OZ_atom("on"),
+                               ozconf.gcFlag ? NameTrue : NameFalse);
+  OZ_Term threshold = OZ_pairAI("threshold",  ozconf.heapThreshold);
+  OZ_Term size      = OZ_pairAI("size",       getUsedMemory()*KB);
+  OZ_Term active    = OZ_pairAI("active",     0);
+
+  return OZ_unify(OZ_getCArg(0),
+                  OZ_recordInit(OZ_atom("gc"),
+                    OZ_cons(active, OZ_cons(decrease,
+                      OZ_cons(increase, OZ_cons(maximal,
+                        OZ_cons(minimal, OZ_cons(on,
+                          OZ_cons(size, OZ_cons(threshold,nil()))))))))));
 }
 OZ_C_proc_end
 
@@ -6085,9 +6101,10 @@ OZ_C_proc_begin(BISystemGetPrint,1) {
   OZ_Term depth = OZ_pairAI("depth", ozconf.printDepth);
   OZ_Term width = OZ_pairAI("width", ozconf.printWidth);
 
-  return OZ_recordInit(OZ_atom("print"),
+  return OZ_unify(OZ_getCArg(0),
+                  OZ_recordInit(OZ_atom("print"),
                        OZ_cons(depth,
-                         OZ_cons(width,nil())));
+                         OZ_cons(width,nil()))));
 }
 OZ_C_proc_end
 
