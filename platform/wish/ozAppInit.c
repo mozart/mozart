@@ -29,7 +29,11 @@
 static char rcsid[] = "$Header$ SPRITE (Berkeley)";
 #endif /* not lint */
 
+#ifdef HAVE_TK8_0_H
+#include "tk8.0.h"
+#else
 #include "tk.h"
+#endif
 
 /*
  * The following variable is a special hack that allows applications
