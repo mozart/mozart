@@ -134,6 +134,14 @@ public:
   virtual OZ_CFun getSpawner(void) const { return spawner; }
 };
 
+int unifiedVars(int sz, OZ_Term * v)
+{
+  int * is = OZ_findEqualVars(sz, v), nb = 0;
+  for (int i = sz; i--; )
+    if (is[i] >= 0 && is[i] != i) nb += 1; 
+  return nb;
+}
+
 //-----------------------------------------------------------------------------
 // BIfdConstrDisj
 // Argument structure:    clause 1    clause n
@@ -180,6 +188,8 @@ OZ_Return CDPropagator::run(void)
   
   BIfdBodyManager x(0);
   
+// introduction of variables
+
   // introduce Bs
   x.add(0, clauses);
   int c;
@@ -209,8 +219,10 @@ OZ_Return CDPropagator::run(void)
   }
   
 // check if vars got unified and if so propagate equality to local vars
+  // void variables become heap variables
   x.propagate_unify_cd(clauses, variables, _vp);
-
+  int unified_vars = unifiedVars(variables, &_v[0]);
+  
   for (c = clauses; c--; ) {
     if (x[idx_b(c)] == 0) {
       continue;
@@ -302,11 +314,20 @@ OZ_Return CDPropagator::run(void)
       x[idx_v(v)] &= x[idx_vp(not_failed_clause, v)];
     x[idx_b(not_failed_clause)] &= 1;
     
+    if (unified_vars < unifiedVars(variables, &(*tagged2SRecord(deref(_vp[not_failed_clause])))[0])) {
+      // imposed equality to global variables
+      int * is = OZ_findEqualVars(variables, &_v[0]);
+      for (int i = 0; i < variables; i += 1)
+	if (is[i] >= 0 && is[i] != i) 
+	  if (FAILED == OZ_unify(_v[i], _v[is[i]]))
+	    error("Failure occured while commiting clause in constr disj."); 
+    }
     return x.entailmentClause(idx_b(0), idx_b(clauses - 1),
 			      idx_v(0), idx_v(variables - 1),
 			      idx_vp(not_failed_clause, 0),
 			      idx_vp(not_failed_clause, variables - 1));
-  } else if (entailed_clause != -1) {                         // top commit
+  } else if (entailed_clause != -1 && 
+	     unified_vars == unifiedVars(variables, &(*tagged2SRecord(deref(_vp[entailed_clause])))[0])) {                         // top commit
     for (c = clauses; c--; )
       if (c != entailed_clause)
 	x[idx_b(c)] &= 0;
@@ -473,6 +494,8 @@ OZ_Return CDSuppl::run(void)
   OZ_FDIntVar b(reg_b);
   PropagatorController_V P(b);
 
+  OZ_DEBUGPRINT("cdsuppl.in: b=" << *b);
+
   if (*b == 0) {
     ((Thread *) thr)->closeDonePropagatorCD();	
     return PROCEED;
@@ -504,6 +527,8 @@ OZ_Return CDSuppl::run(void)
     ((Thread *) thr)->closeDonePropagatorCD();	
     *b &= 0;
   }
+
+  OZ_DEBUGPRINT("cdsuppl.out: b=" << *b);
 
   P.vanish();
   return ret_val == FAILED ? PROCEED : ret_val;
