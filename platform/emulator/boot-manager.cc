@@ -62,6 +62,14 @@ TaggedRef dictionary_of_modules;
 // kost@ : linked so far statically;
 #include "modPID-if.cc"
 #include "modFault-if.cc"
+// kost@ : linked so far statically;
+#ifdef MISC_BUILTINS
+#include "modDPMisc-if.cc"
+#endif
+// kost@ : linked so far statically;
+#ifdef VIRTUALSITES
+#include "modVirtualSite-if.cc"
+#endif
 
 /*
  * Builtins that are possibly dynamically loaded
@@ -80,13 +88,14 @@ TaggedRef dictionary_of_modules;
 // kost@ : linked so far statically;
 // #include "modPID-if.cc"
 // #include "modFault-if.cc"
-#ifdef MISC_BUILTINS
-#include "modDPMisc-if.cc"
-#endif
-
-#ifdef VIRTUALSITES
-#include "modVirtualSite-if.cc"
-#endif
+// kost@ : linked so far statically;
+// #ifdef MISC_BUILTINS
+// #include "modDPMisc-if.cc"
+// #endif
+// kost@ : linked so far statically;
+// #ifdef VIRTUALSITES
+// #include "modVirtualSite-if.cc"
+// #endif
 
 #endif
 
@@ -139,6 +148,14 @@ static ModuleEntry module_table[] = {
 // kost@ : linked so far statically;
   {"PID",             mod_int_PID},
   {"Fault",           mod_int_Fault},
+// kost@ : linked so far statically;
+#ifdef MISC_BUILTINS
+  {"DPMisc",          mod_int_DPMisc},
+#endif
+// kost@ : linked so far statically;
+#ifdef VIRTUALSITES
+  {"VirtualSite",  mod_int_VirtualSite},
+#endif
 
 #ifdef MODULES_LINK_STATIC
   {"FSP",             mod_int_FSP},
@@ -152,12 +169,14 @@ static ModuleEntry module_table[] = {
 // kost@ : linked so far statically;
 //   {"PID",             mod_int_PID},
 //   {"Fault",           mod_int_Fault},
-#ifdef MISC_BUILTINS
-  {"DPMisc",          mod_int_DPMisc},
-#endif
-#ifdef VIRTUALSITES
-  {"VirtualSite",  mod_int_VirtualSite},
-#endif
+// kost@ : linked so far statically;
+// #ifdef MISC_BUILTINS
+//   {"DPMisc",          mod_int_DPMisc},
+// #endif
+// kost@ : linked so far statically;
+// #ifdef VIRTUALSITES
+//   {"VirtualSite",  mod_int_VirtualSite},
+// #endif
 #endif
 
 #ifdef MISC_BUILTINS

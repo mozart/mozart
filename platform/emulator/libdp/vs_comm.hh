@@ -37,7 +37,7 @@
 
 #include "am.hh"
 #include "genhashtbl.hh"
-
+#include "virtual.hh"
 #include "vs_msgbuffer.hh"
 #include "vs_mailbox.hh"
 
