@@ -863,7 +863,17 @@ void ConstTerm::printStream(ostream &stream, int depth)
     break;
   case Co_Cell:        ((CellLocal *) this)->printStream(stream,depth);
     break;
-  case Co_Port:        ((Port *) this)->printStream(stream,depth);
+  case Co_Port:
+    switch(((Tertiary *)this)->getTertType()){
+    case Te_Local:      ((PortLocal *)   this)->printStream(stream,depth);
+      break;
+    case Te_Manager:    ((PortManager *) this)->printStream(stream,depth);
+      break;
+    case Te_Proxy:      ((PortProxy *)   this)->printStream(stream,depth);
+      break;
+    default:
+      Assert(NO);
+    }
     break;
   case Co_Space:       ((Space *) this)->printStream(stream,depth);
     break;
@@ -873,7 +883,18 @@ void ConstTerm::printStream(ostream &stream, int depth)
     break;
   case Co_Dictionary:  ((OzDictionary *) this)->printStream(stream,depth);
     break;
-  case Co_Lock:        ((LockLocal *) this)->printStream(stream,depth);
+  case Co_Lock:
+    switch(((Tertiary *)this)->getTertType()){
+    case Te_Local:   ((LockLocal *)   this)->printStream(stream,depth);
+      break;
+    case Te_Frame:   ((LockFrame *)   this)->printStream(stream,depth);
+      break;
+    case Te_Manager: ((LockManager *) this)->printStream(stream,depth);
+      break;
+    case Te_Proxy:   ((LockProxy *)   this)->printStream(stream,depth);
+      break;
+    default:         Assert(NO);
+    }
     break;
   case Co_Thread:      ((Thread *) this)->printStream(stream,depth);
     break;
