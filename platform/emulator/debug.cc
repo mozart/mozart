@@ -30,27 +30,13 @@
 #include "codearea.hh"
 #include "am.hh"
 
-/*
-#include "builtins.hh"
-#include "thread.hh"
-#include "board.hh"
-
-#include <string.h>
-#include <signal.h>
-#include <setjmp.h>
-*/
-
-Bool pbDebug=FALSE;
-
 TaggedRef OzDebug::toRecord(const char *label, Thread *thread, int frameId) {
   TaggedRef pairlist = oz_nil();
   if (data != makeTaggedNULL()) {
     pairlist = oz_cons(OZ_pairA("data",data),pairlist);
   }
-  if (arity > 0) {
-
+  if (arity >= 0) {
     TaggedRef arglist = oz_nil();
-
     for(int i = arity; i--; ) {
       if (arguments[i] == NameVoidRegister)
         arguments[i] = OZ_newVariable();
