@@ -61,7 +61,6 @@ local
 in
 
    class ExplorerClass
-      from BaseObject
       prop locking final
 
       feat

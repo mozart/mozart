@@ -5,16 +5,13 @@
 %%%  Last modified: $Date$ by $Author$
 %%%  Version: $Revision$
 
-declare PanelClass Panel in
-
-local
-
-   \insert panel/main.oz
-   
+declare
+   PanelClass Panel
 in
 
-   Panel = {New PanelClass init}
+\insert panel/main.oz
+   
+Panel = {New PanelClass init}
 
-end
 
 
