@@ -457,11 +457,8 @@ define
 	 catch _ then false end
       end
       
-      meth removeApplication( id: ID author: A)
-	 if {self.applicationDB isMember( id: ID status:$ )} andthen
-	    ( {self isSysadm( id:A sysadm:$)} orelse
-	      {self getApplicationInfo( id: ID name:_ clienturl:_
-					serverurl: _ author:$)} == A)
+      meth removeApplication( id: ID author: _) % No authority check!
+	 if {self.applicationDB isMember( id: ID status:$ )}
 	 then {self.applicationDB remove( id: ID )}
 	 else raise removeDenied( ID ) end end
       end
