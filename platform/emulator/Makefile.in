@@ -190,7 +190,7 @@ SRCS = $(SRCS1) $(CREATEDSRCS)
 
 OBJS = $(SRCS:.cc=.o)
 
-.NOEXPORT: emulate.o @POGRAMNAME@ peanuts.o
+.NOEXPORT: emulate.o @PROGRAMNAME@ peanuts.o
 .PHONY:	all subdirs win win-install first install install-bin install-inc \
 	install-dir version depend tags clean+ clean realclean veryclean
 
@@ -233,8 +233,6 @@ install-dir:
 	if test ! -d $(incdir); then $(INSTALL_DIR) $(incdir) ; fi
 
 version.cc: version 
-
-emulate.cc:: register.hh
 
 initffuns.cc oz.c: oz.h
 	$(OZDIR)/makeffuns $(OZDIR)
