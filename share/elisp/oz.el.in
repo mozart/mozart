@@ -197,10 +197,10 @@ and that no command will be bound to C-c followed by a letter."
 (eval-and-compile
   (eval '(defcustom oz-components-path
 	   (or (getenv "OZ_LOAD")
-	       (concat "prefix=@HOMEURL@/="
-		       "~/mozart/share/lib/stage1/:"
-		       "prefix=@HOMEURL@/="
-		       "~/mozart/share/tools/stage1/:"
+	       (concat "prefix=@HOMEURL@/share/="
+		       "~/mozart/share/lib/:"
+		       "prefix=@HOMEURL@/share/="
+		       "~/mozart/share/tools/:"
 		       "cache=~/.oz/cache:cache=" (oz-home) "/cache"))
 	   "*Search path for the Oz Components (used by \\[oz-other])."
 	   :type 'string
