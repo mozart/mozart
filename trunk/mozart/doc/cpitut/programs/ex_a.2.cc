@@ -1,4 +1,5 @@
 class AddProp : public OZ_Propagator {
+  friend OZ_C_proc_interface *oz_init_module(void);
 private:
   static OZ_PropagatorProfile profile;
   OZ_Term _x, _y, _z;
