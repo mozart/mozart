@@ -103,7 +103,7 @@ prepare
       exe(single type:atom(default no yes both multi))
       makepkgfile(single type:string)
 
-      '_speed'(single type:bool default:true)
+      '_speed'(single type:bool)
       fast(alias:['_speed'#true])
       slow(alias:['_speed'#false])
       )
