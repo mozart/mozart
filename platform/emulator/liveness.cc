@@ -458,8 +458,10 @@ outerLoop2:
       case GETRECORDX:
 	ISREAD(GETREGARG(PC+3));
 	break;
-      case TESTLITERALX:
       case TESTBOOLX:
+	PUSH(getLabelArg(PC+2));
+	// fall through
+      case TESTLITERALX:
       case TESTNUMBERX:
 	ISREAD(GETREGARG(PC+1));
 	// fall through
