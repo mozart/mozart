@@ -181,7 +181,7 @@ if the owner site is inaccessible.
 In that case it might not be possible to learn
 anything about the remote sites.
 
-<index/fault state<and>enumeration/
+<index/fault state<and>exhaustive list/
 <P>The complete fault state of an
 entity consists of at most one
 element from the set
@@ -542,8 +542,10 @@ the procedure is called <EM>watcher</EM>.
 <SUBSECTION><TITLE>Lazy detection with handlers</TITLE>
 
 <index/failure<and>handler (synchronous detection)/
+<index/synchronous failure detection/
 <index/fault handler/
 <index/handler/
+<index/lazy<and>failure detection/
 <P>When an operation is attempted
 on an entity with a problem,
 then a handler call replaces the operation.
@@ -609,13 +611,15 @@ the operation after they return.
 <SUBSECTION><TITLE>Eager detection with watchers</TITLE>
 
 <index/failure<and>watcher (asynchronous detection)/
+<index/asynchronous failure detection/
 <index/fault watcher/
 <index/watcher/
+<index/eager<and>failure detection/
 <P>Fault handlers detect failure synchronously,
 i.e., when an operation is attempted.
 One often wants to be informed earlier.
 The advanced model allows the application to be informed
-asynchronously, that is,
+asynchronously and eagerly, that is,
 as soon as the site finds out about the failure.
 Two operations are provided:
 <LIST>
@@ -662,6 +666,7 @@ all proxies will see a <<permFail>>.
 
 <index/fault state<and>eager stateless data (records, procedures,
 functions, classes, functors)/
+<index/eager<and>stateless data/
 <P>Eager stateless data, namely records, procedures,
 functions, classes, and functors, are
 copied immediately in messages.
