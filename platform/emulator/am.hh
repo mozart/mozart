@@ -110,6 +110,8 @@ public:
   TaskStack *cachedStack;
   Object *cachedSelf;
 
+  char *shallowHeapTop;
+
 public:
   void changeSelf(Object *o);
   void saveSelf();
@@ -305,12 +307,10 @@ public:
   void rebind(TaggedRef *ref, TaggedRef ptr);
   void doBindAndTrail(TaggedRef v, TaggedRef * vp, TaggedRef t);
   void doBindAndTrailAndIP(TaggedRef v, TaggedRef * vp, TaggedRef t,
-                               GenCVariable * lv, GenCVariable * gv,
-                               ByteCode *);
+                               GenCVariable * lv, GenCVariable * gv);
 
   Bool isLocalUVarOutline(TaggedRef var,TaggedRef *varPtr);
   Bool isLocalSVarOutline(SVariable *var);
-  Bool isLocalUVar(TaggedRef var);
   Bool isLocalUVar(TaggedRef var,TaggedRef *varPtr);
   Bool isLocalSVar(TaggedRef var);
   Bool isLocalSVar(SVariable *var);
@@ -320,7 +320,7 @@ public:
 
  private:
   void genericBind(TaggedRef *varPtr, TaggedRef var,
-                   TaggedRef *termPtr, TaggedRef term, ByteCode *scp);
+                   TaggedRef *termPtr, TaggedRef term);
  public:
 
   void checkSuspensionList(TaggedRef taggedvar,

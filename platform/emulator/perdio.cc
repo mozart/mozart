@@ -2989,13 +2989,14 @@ void marshallURL(GName *gname, TaggedRef t, ByteStream *bs,MarshallInfo *mi)
   marshallGName(gname,bs);
   Assert(isAtom(t));
   marshallTerm(0,t,bs,mi);
+
+  addURL(mi,t);
 }
 
 Bool checkURL(GName *gname, ByteStream *bs, MarshallInfo *mi)
 {
   TaggedRef t = gname->getURL();
   if (t) {
-    addURL(mi,t);
     if(mi && (literalEq(NameUnit,mi->saveTheseURLsToo) ||
               member(t,mi->saveTheseURLsToo))) {
       return NO;

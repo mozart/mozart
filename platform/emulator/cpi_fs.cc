@@ -197,7 +197,7 @@ OZ_Boolean OZ_FSetVar::tell(void)
         *setPtr = set;
         am.doBindAndTrailAndIP(var, varPtr,
                                makeTaggedRef(loctaggedfsvar),
-                               locfsvar, tagged2GenFSetVar(var), OZ_FALSE);
+                               locfsvar, tagged2GenFSetVar(var));
       }
       goto t;
     }

@@ -1949,6 +1949,7 @@ LBLdispatcher:
   Case(SHALLOWGUARD)
     {
       shallowCP = PC;
+      e->shallowHeapTop = heapTop;
       e->trail.pushMark();
       DISPATCH(3);
     }
@@ -2019,6 +2020,7 @@ LBLdispatcher:
     {
       if (e->trail.isEmptyChunk()) {
         shallowCP = NULL;
+        e->shallowHeapTop = NULL;
         e->trail.popMark();
         DISPATCH(1);
       }
@@ -2029,6 +2031,7 @@ LBLdispatcher:
         int argsToSave = getPosIntArg(shallowCP+2);
         e->pushContX(shallowCP,Y,G,X,argsToSave);
         shallowCP = NULL;
+        e->shallowHeapTop = NULL;
         e->reduceTrailOnShallow(CTT);
         goto LBLsuspendThread;
       }
@@ -2571,7 +2574,8 @@ LBLdispatcher:
 
        Assert(CTT && !CTT->isPropagator());
 
-       shallowCP = 0; // failure in shallow guard can never be handled
+       shallowCP         = 0; // failure in shallow guard can never be handled
+       e->shallowHeapTop = 0;
 
        Bool foundHdl;
 
@@ -3244,7 +3248,8 @@ LBLdispatcher:
       e->reduceTrailOnFail();
     }
     ProgramCounter nxt = getLabelArg(shallowCP+1);
-    shallowCP = NULL;
+    shallowCP         = NULL;
+    e->shallowHeapTop = NULL;
     JUMP(nxt);
   }
 

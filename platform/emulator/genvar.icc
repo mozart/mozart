@@ -133,11 +133,11 @@ int GenCVariable::hasFeature(TaggedRef fea,TaggedRef *out)
 
 // this is supposed to be the local variable
 inline
-void GenCVariable::installPropagators(GenCVariable * glob_var, ByteCode *scp)
+void GenCVariable::installPropagators(GenCVariable * glob_var)
 {
   Assert(getType() == glob_var->getType() ||
          (getType() == BoolVariable && glob_var->getType() == FDVariable));
-  Assert(scp || am.isLocalSVar(this) && ! am.isLocalSVar(glob_var));
+  Assert(am.shallowHeapTop || am.isLocalSVar(this) && ! am.isLocalSVar(glob_var));
 
   Board * glob_home = glob_var->getBoard();
   suspList = ::installPropagators(suspList, glob_var->getSuspList(),

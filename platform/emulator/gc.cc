@@ -1538,6 +1538,7 @@ void AM::gc(int msgLevel)
 
   rootBoard = rootBoard->gcBoard();   // must go first!
   Assert(cachedSelf==0);
+  Assert(shallowHeapTop==0);
   Assert(rootBoard);
   setCurrent(currentBoard->gcBoard(),NO);
 
