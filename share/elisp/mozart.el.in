@@ -984,9 +984,9 @@ With ARG, stop it instead."
   (oz-send-string "{Panel.open}" t))
 
 (defun oz-open-compiler-panel ()
-  "Feed `{New CompilerPanel.'class' init(`Compiler`) _}' to the Oz Compiler."
+  "Feed `{New CompilerPanel.'class' init(OPI.compiler) _}' to the Oz Compiler."
   (interactive)
-  (oz-send-string "{New CompilerPanel.'class' init(`Compiler`) _}" t))
+  (oz-send-string "{New CompilerPanel.'class' init(OPI.compiler) _}" t))
 
 ;;}}}
 ;;{{{ Misc Goodies
