@@ -610,7 +610,7 @@ extern "C" void __builtin_vec_delete (void *ptr)
 
 #ifdef WINDOWS
 
-const int wrappedHDStart = 10000; /* hope that's enough (RS) */
+const int wrappedHDStart = 200000; /* hope that's enough (RS) */
 
 class WrappedHandle {
 public:
