@@ -29,13 +29,16 @@
 
 <Chapter id="chapter.geometry">
   <Title/Geometry Managers/
+
   <P>
     This chapter explains geometry managers.  Geometry managers compute how
     much space widgets occupy and at wich position they appear on the screen.
     Last but not least they make widgets appear on the screen with the
     geometry computed previously.
+
   <Section id="section.geometry.intro">
     <Title/Widgets and Parcels/
+
     <P>
       A geometry manager computes the size and location of widgets, that is
       the geometry, and displays the widgets on the screen.  The geometry
@@ -54,6 +57,7 @@
 	<Item>
 	  The options given to the geometry manager.
       </List>
+
     <P>
       The geometry manager computes for each slave of a master widget a
       so-called <Def/parcel/.  The parcel is a rectangle and describes the
@@ -64,11 +68,13 @@
       the geometry manager distributes the space in the parcel for the
       master to the slave parcels. This may shrink or grow the parcels for
       the slaves.
+
     <P>
       Options to the geometry manager affect usually the way how parcels are
       computed and how widgets are put into their parcels, if the parcels
       are larger (or smaller) than the parcel initially requested by the
       widget.
+
     <P>
       In the following we will show the two most important geometry managers
       which are provided in Tk.  One is the packer, which can be used for
@@ -76,6 +82,7 @@
       line.  The other geometry manager we will discuss is implemented by
       the <<grid>> command.  As the name suggests, the grid command allows
       for arranging widgets in a gridded fashion. 
+
     <P>
       It is perfectly possible to mix geometry managers in a single toplevel
       widget provided that all slaves of a master are managed by the same
@@ -83,38 +90,50 @@
       frames which contain widgets themselves.  Both frames must be managed
       by the same manager.  The widgets in the frames can be managed by two
       different managers.
+
     <P>
       We discuss only the most important options these two managers provide,
-      a complete description can be found in the manpages <File/pack(n)/ and
-      <File/grid(n)/.  More information on the packer can also be found in
-      John Ousterhout's book in Chapter&nbsp;17.
+      a complete description can be found in <ref.extern
+      to="&tkcmd/pack.htm"/<kbd/pack// and <ref.extern
+      to="&tkcmd/grid.htm"/<kbd/grid//. More information on the packer
+      can also be found in <ref to="Ousterhout.94"/John Ousterhout's
+      book/ in Chapter&nbsp;17.
+
   <Section id="section.geometry.pack">
     <Title/The Packer/
+
     <P>
       The packer supports simple arrangemenet of widgets in rows and
       columns.  Arranging widgets nicely usually also means that some
       vertical and horizontal space has to be inserted, either designed to
       provide for additional space or to fill up space not occupied by the
       widget's original size.
+
     <P>
       The different ways how to affect the geometry we will study by means
       of examples.  For this, let us assume we are dealing with three label
       widgets.  The following function creates a toplevel widget with
-      backgound color white for better visibilty, and returns a list of
+      backgound color white for better visibility, and returns a list of
       three labels.
-<<<fun {NewLabels}
-   T = {New Tk.toplevel tkInit(background:white)}
+<chunk class=anonymous><title/NewLabels/
+fun {NewLabels}
+   T={New Tk.toplevel tkInit(background:white)}
 in
    {Map ['label' 'Second label widget' '3rd label']
     fun {$ A}
        {New Tk.label tkInit(parent:T text:A)}
     end}
-end>>>
+end
+</chunk>
+
     <P>
       To display the labels in the toplevel widget, the packer can be
       invoked as follows:
-<<<[L1 L2 L3] = {NewLabels}
-{Tk.send pack(L1 L2 L3)}>>>
+<chunk class=anonymous><title/pack basic/
+[L1 L2 L3] = {NewLabels}
+{Tk.send pack(L1 L2 L3)}
+</chunk>
+
     <P>
       This computes and displays a geometry for the toplevel widget as shown
       in <Ptr to="figure.geometry.pack-basic">.  Rather than giving a tickle
@@ -122,13 +141,18 @@ end>>>
       tickle/.  A batch tickle is a tuple with label&nbsp;<<b>> where its
       single argument must be a list of tickles.  By using a batch tickle,
       we can rewrite our example from above to
-      <<<{Tk.send pack(b({NewLabels}))}>>>
+<chunk class=anonymous><title/pack batch/
+{Tk.send pack(b({NewLabels}))}
+</chunk>
       where the list of tickles is the list of labels as returned by the
       function <<NewLabels>>.
+    <p>
       <Figure id="figure.geometry.pack-basic">
 	<Caption/Plain geometry computed by the packer./
 	<Picture.Extern to="packer-plain.gif" type=gif>
       </Figure>
+     
+
     <SubSection>
       <Title/Side Options/
       <P>
@@ -140,15 +164,22 @@ end>>>
 	computed when <<left>> and <<bottom>> are given as values for the
 	side option.  Valid values for the side option are <<top>>, <<bottom>>,
 	<<left>>, and <<right>>.
+
+      <p>
 	<Figure id="figure.geometry.packer-side">
 	  <Caption
 	    /Geometries computed by the packer according to <<side>> option./
 	  <P>
 	    <Picture.Extern to="packer-left.gif" type=gif>
-	    <<<{Tk.send pack(b({NewLabels}) side:left)}>>>
+<chunk class=anonymous><title/pack left/
+{Tk.send pack(b({NewLabels}) side:left)}
+</chunk>
 	    <Picture.Extern to="packer-bottom.gif" type=gif>
-	    <<<{Tk.send pack(b({NewLabels}) side:bottom)}>>>
+<chunk class=anonymous><title/pack bottom/
+{Tk.send pack(b({NewLabels}) side:bottom)}
+</chunk>
 	</Figure>
+
     <SubSection>
       <Title/Padding/
       <P>
@@ -165,14 +196,20 @@ end>>>
 	<Ptr to="figure.geometry.packer-pad"> show the effects on the
 	geometries computed by the packer for both internal and external
 	padding.
+
 	<Figure id="figure.geometry.packer-pad">
 	  <Caption/Additional space provided by the packer./
 	  <P>
 	    <Picture.Extern to="packer-pad.gif" type=gif>
-	    <<<{Tk.send pack(b({NewLabels}) padx:1#m pady:1#m)}>>>
+<chunk class=anonymous><title/pack pad/
+{Tk.send pack(b({NewLabels}) padx:1#m pady:1#m)}
+</chunk>
 	    <Picture.Extern to="packer-ipad.gif" type=gif>
-	    <<<{Tk.send pack(b({NewLabels}) ipadx:2#m ipady:2#m)}>>>
+<chunk class=anonymous><title/pack ipad/
+{Tk.send pack(b({NewLabels}) ipadx:2#m ipady:2#m)}
+</chunk>
 	</Figure>
+
     <SubSection id="section.geometry.anchors">
       <Title/Anchors/
       <P>
@@ -183,15 +220,20 @@ end>>>
 	of <<center>>, <<n>>, <<s>>, <<w>>, <<e>>, <<nw>>, <<ne>>, <<sw>>,
 	and <<se>>.  The <Ptr to="figure.geometry.packer-anchor"> shows the
 	geometry computed when <<w>> is used as anchor.
+
 	<Figure id="figure.geometry.packer-anchor">
 	  <Caption/Using the <<anchor>> option for packing./
 	  <P>
 	    <Picture.Extern to="packer-anchor.gif" type=gif>
-	    <<<{Tk.send pack(b({NewLabels}) anchor:w padx:1#m pady:1#m)}>>>
+<chunk class=anonymous><title/pack anchor/
+{Tk.send pack(b({NewLabels}) anchor:w padx:1#m pady:1#m)}
+</chunk>
 	</Figure>
       <P>
+
     <SubSection>
       <Title/Filling and Expansion/
+
       <P>
 	For pleasent overall geometry it is imported that widgets have similar
 	geometries.  The packer employs two different schemes how widgets can
@@ -199,17 +241,22 @@ end>>>
 	extends over its entire parcel.  The other one is expansion: the
 	widget's parcel is extended such that the parcels of all slaves in
 	a master occupy the master's parcel entirely.
+
       <P>
 	<Ptr to="figure.geometry.packer-fill"> shows the geometry computed when
 	the option <<fill>> with value&nbsp;<<x>> is used. Possible values for
 	the <<fill>> option are <<x>>, <<y>>, <<both>>, and <<none>> (which is
 	the default).
+
 	<Figure id="figure.geometry.packer-fill">
 	  <Caption/Using the <<fill>> option for packing./
 	  <P>
 	    <Picture.Extern to="packer-fill.gif" type=gif>
-	    <<<{Tk.send pack(b({NewLabels}) fill:x)}>>>
+<chunk class=anonymous><title/pack fill/
+{Tk.send pack(b({NewLabels}) fill:x)}
+</chunk>
 	</Figure>
+
       <P>
 	Expansion is only significant when the parcels of the slave do not
 	fill the master's parcel completely.  In all our previous examples,
@@ -217,6 +264,7 @@ end>>>
 	enough to contain the slave's parcels.  So there was no additional
 	space in the master's parcel to be filled by expansion of slave
 	parcels. 
+
       <P>
 	<Ptr to="figure.geometry.packer-resize"> shows three toplevel widgets
 	which have been resized manually by dragging with the mouse.  The top
@@ -225,43 +273,57 @@ end>>>
 	in the middle, only the parcels of the label widget's are expanded.
 	At the bottom, the parcels are expanded and then filled up in both
 	horizontal and vertical direction by the label widgets.
+
 	<Figure id="figure.geometry.packer-resize">
 	  <Caption/Resizing effects for filling and expansion./
 	  <P>
 	    <Picture.Extern to="packer-resize-fill.gif" type=gif>
-	    <<<{Tk.send pack(b({NewLabels}) fill:x)}>>>
+<chunk class=anonymous><title/pack fill expand/
+{Tk.send pack(b({NewLabels}) fill:x)}
+</chunk>
 	    <Picture.Extern to="packer-resize-expand.gif" type=gif>
-	    <<<{Tk.send pack(b({NewLabels}) expand:true)}>>>
+<chunk class=anonymous><title/pack expand expand/
+{Tk.send pack(b({NewLabels}) expand:true)}
+</chunk>
 	    <Picture.Extern to="packer-resize-both.gif" type=gif>
-	    <<<{Tk.send pack(b({NewLabels}) fill:both expand:true)}>>>
+<chunk class=anonymous><title/pack both expand/
+{Tk.send pack(b({NewLabels}) fill:both expand:true)}
+</chunk>
 	</Figure>
-  <Section id="subsection.geometry.grid">
+
+  <Section id="section.geometry.grid">
     <Title/The Grid Geometry Manager/
+
     <P>
       The grid geometry arranges widgets in a gridded fashion.  For each
       widget to be managed by the <<grid>> command, a row and a column
       number is given.  The manager computes parcels for the widgets such
       that all parcels in the same column have the same width and all
       parcels in the same row have the same height.
+
     <P>
       <Ptr to="figure.geometry.grid"> shows how eight labels are placed by
       the <<grid>> command.  Note that it is not necessary that all positions
       in the grid are occupied by a widget.  In our example in <Ptr
       to="figure.geometry.grid">, the position at row and column&nbsp;<<2>>
       does not contain a widget.
+
       <Figure id="figure.geometry.grid">
 	<Caption/Using the <<grid>> command./
 	<P>
 	  <Picture.Extern to="grid.gif" type=gif>
-<<<proc {GL R C S}
+<chunk class=anonymous><title/grid basic/
+proc {GL T R C S}
    L={New Tk.label tkInit(parent:T text:S)}
 in
    {Tk.send grid(L row:R column:C padx:4 pady:4)}
 end
-{GL 1 1 nw}   {GL 1 2 north} {GL 1 3 ne}
-{GL 2 1 west}                {GL 2 3 east}
-{GL 3 1 sw}   {GL 3 2 south} {GL 3 3 sw}>>>
+{GL T 1 1 nw}   {GL T 1 2 north} {GL T 1 3 ne}
+{GL T 2 1 west}                  {GL T 2 3 east}
+{GL T 3 1 sw}   {GL T 3 2 south} {GL T 3 3 sw}
+</chunk>
       </Figure>
+
     <SubSection>
       <Title/Padding/
       <P>
@@ -269,8 +331,10 @@ end
 	does.  In the above example we used external padding by giving <<padx>>
 	and <<pady>> options.  It is also possible to use internal padding with
 	the options <<ipadx>> and <<ipady>>.
+
     <SubSection>
       <Title/Span Options/
+
       <P>
 	The grid command can also compute geometries where widgets occupy
 	more than a single row or column. In the example shown in <Ptr
@@ -278,25 +342,31 @@ end
 	by the <<grid>> command to occupy both two rows and two columns.
 	How much rows and columns a widget's parcel spans is specified with
 	the <<columnspan>> and <<rowspan>> options.
+
 	<Figure id="figure.geometry.span">
 	  <Caption/Using the <<columnspan>> and <<rowspan>> options./
 	  <P>
 	    <Picture.Extern to="grid-span.gif" type=gif>
-<<<{Tk.send grid({New Tk.label tkInit(parent:T text:'Upper left')} 
+<chunk class=anonymous><title/grid span/
+{Tk.send grid({New Tk.label tkInit(parent:T text:'Upper left')} 
 	      row:1    rowspan:2
 	      column:1 columnspan:2
 	      padx:4 pady:4)}
-{GL 1 3 ne} {GL 2 3 east}
-{GL 3 1 sw} {GL 3 2 south} {GL 3 3 sw}>>>
+{GL T 1 3 ne} {GL T 2 3 east}
+{GL T 3 1 sw} {GL T 3 2 south} {GL T 3 3 sw}
+</chunk>
 	</Figure>
       <P>
+
     <SubSection id="section.geometry.sticky">
       <Title/Sticky Options/
+
       <P>
 	The <<grid>> command combines the <<anchor>> and <<fill>> options from
 	the packer in a single <<sticky>> option.  The value given for a sticky
 	option determines both the side the widget is placed in its parcel,
 	and how the widget is to be stretched to fill its parcel.
+
       <P>
 	Valid values for the <<sticky>> option are all combinations of the
 	letters <<n>>, <<s>>, <<w>>, and&nbsp;<<e>> in any order.  Giving one
@@ -305,54 +375,160 @@ end
 	both <<w>> and&nbsp;<<e>>) requests that the widget should fill
 	its parcel horizontally (or vertically).  For an example see <Ptr
 	to="figure.geometry.sticky">.
+
 	<Figure id="figure.geometry.sticky">
 	  <Caption/Using the <<sticky>> option with the <<grid>> command./
 	  <P>
 	    <Picture.Extern to="grid-sticky.gif" type=gif>
-<<<{Tk.send grid({New Tk.label tkInit(parent:T text:'Upper left')} 
+<chunk class=anonymous><title/grid sticky/
+{Tk.send grid({New Tk.label tkInit(parent:T text:'Upper left')} 
 	      row:1    rowspan:2
 	      column:1 columnspan:2
 	      sticky: nse
-	      padx:4 pady:4)}>>>
+	      padx:4 pady:4)}
+</chunk>
 	</Figure>
+
     <SubSection>
       <Title/Weight Options/
+
       <P>
 	The grid geometry manager employs a different scheme for expansion of
 	parcels than the packer.  Rows and columns in the grid can be assigned
 	an integer weight.  Additional space available in the master of the
 	grid is distributed between the rows and columns according to their
 	relative weight.
+
       <P>
-	For example, if we take the last example and want that all additonal
+	For example, if we take the last example and want that all additional
 	space is given to the third row and third column, we can do this by
-<<<{Tk.batch [grid(rowconfigure    T 3 weight:1)
-           grid(columnconfigure T 3 weight:1)]}>>>
+<chunk class=anonymous><title/grid weight/
+{Tk.batch [grid(rowconfigure    T 3 weight:1)
+           grid(columnconfigure T 3 weight:1)]}
+</chunk>
 	<Ptr to="figure.geometry.weight"> shows the result of resizing the
 	window.
+
 	<Figure id="figure.geometry.weight">
 	  <Caption/Result of resizing a window./
 	  <Picture.Extern to="grid-weight.gif" type=gif>
 	</Figure>
-  <Section>
+
+  <Section id="section.geometry.anchor">
     <Title/Using Anchors for Widgets/
+
     <P>
       The <<anchor>> option for the packer and the <<sticky>> option for the
       grid geometry manager determine where the widget is placed in its
       parcel.  In the same way several kind of widgets, &eg;, message and
-      label widgets, take an achor <<option>>, which determines where the
+      label widgets, take an anchor <<option>>, which determines where the
       displayed item, &eg;, the text or bitmap, is placed within the widget.
+
     <P>
       <Ptr to="figure.geometry.widget-anchor"> shows an example for the three
       label widgets used throughout <Ptr to="section.geometry.pack">.  The
       possible values for the anchor options are the same as described in
       <Ptr to="section.geometry.anchors">.
+
       <Figure id="figure.geometry.widget-anchor">
 	<Caption/Widgets with <<anchor>> options./
 	<P>
 	  <Picture.Extern to="widget-anchor.gif" type=gif>
-<<<[L1 L2 L3]={NewLabels}
+<chunk class=anonymous><title/widget anchor/
+[L1 L2 L3]={NewLabels}
 {Tk.send pack(L1 L2 L3 fill:x)}
-{L1 tk(configure anchor:w)} {L3 tk(configure anchor:e)}>>>
+{L1 tk(configure anchor:w)} 
+{L3 tk(configure anchor:e)}
+</chunk>
       </Figure>
+
+
+<![ %EXTRA; [
+<section><title/Examples/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Geometry Managers
+%%%
+
+%%
+%% The Packer
+%%
+
+declare
+<chunk.ref/NewLabels/
+
+declare
+<chunk.ref/pack basic/
+
+<chunk.ref/pack batch/
+
+
+%% Side Options
+<chunk.ref/pack left/
+
+<chunk.ref/pack bottom/
+
+
+%% Padding
+<chunk.ref/pack pad/
+
+<chunk.ref/pack ipad/
+
+
+%% Anchors
+<chunk.ref/pack anchor/
+
+
+%% Filling and Expansion
+<chunk.ref/pack fill expand/
+
+<chunk.ref/pack expand expand/
+
+<chunk.ref/pack both expand/
+
+
+
+%%
+%% The Grid Geometry Manager
+%%
+
+declare
+T={New Tk.toplevel tkInit(bg:white)}
+<chunk.ref/grid basic/
+
+
+%% Span Options
+declare
+T={New Tk.toplevel tkInit(bg:white)}
+<chunk.ref/grid span/
+
+
+%% Sticky Options
+declare
+T={New Tk.toplevel tkInit(bg:white)}
+<chunk.ref/grid sticky/
+{GL T 1 3 ne} {GL T 2 3 east}
+{GL T 3 1 sw} {GL T 3 2 south} {GL T 3 3 sw}
+
+
+%% Weight Options
+<chunk.ref/grid weight/
+
+
+
+%%
+%% Using Anchors for Widgets
+%%
+
+declare
+<chunk.ref/widget anchor/
+
+
+
+
+
+</chunk>
+]]>
+
 </Chapter>

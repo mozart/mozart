@@ -45,6 +45,7 @@
 <!ENTITY tools     SYSTEM "tools.sgml">
 <!ENTITY canvas    SYSTEM "canvas.sgml">
 <!ENTITY text      SYSTEM "text.sgml">
+<!ENTITY data      SYSTEM "data.sgml">
 
 <!-- Abbreviations -->
 <!ENTITY lt "<">
@@ -67,12 +68,27 @@
   <Front>
     <Meta name="html.split"       value="chapter.introduction">
     <Meta name="html.split"       value="chapter.started">
+
     <Meta name="html.split"       value="chapter.widgets-1">
+    <Meta name="html.split"       value="section.widgets-1.toplevel">
+    <Meta name="html.split"       value="section.widgets-1.tickles">
+    <Meta name="html.split"       value="section.widgets-1.frame">
+    <Meta name="html.split"       value="section.widgets-1.hierarchy">
+    <Meta name="html.split"       value="section.widgets-1.label">
+    <Meta name="html.split"       value="section.widgets-1.images">
+    <Meta name="html.split"       value="section.widgets-1.messages">
+
     <Meta name="html.split"       value="chapter.geometry">
+    <Meta name="html.split"       value="section.geometry.intro">
+    <Meta name="html.split"       value="section.geometry.pack">
+    <Meta name="html.split"       value="section.geometry.grid">
+    <Meta name="html.split"       value="section.geometry.anchor">
+
     <Meta name="html.split"       value="chapter.widgets-2">
     <Meta name="html.split"       value="chapter.tools">
     <Meta name="html.split"       value="chapter.canvas">
     <Meta name="html.split"       value="chapter.text">
+    <Meta name="html.split"       value="appendix.data">
 
     <Meta name="html.split.toc"   value="">
     <Meta name="html.split.bib"   value="">
@@ -98,58 +114,17 @@
       widgets allowing for object-oriented and concurrent window programming.
     </Abstract>
   <Body>
-
-
     &intro;  
     &started;  
     &widgets-1; 
     &geometry;  
     &widgets-2;  
-<!-- &canvas;  -->
+<!--    &canvas; -->
     &text;
     &tools;
-
-<![ %EXTRA; [
-<chapter><title/Examples/
-<p>
-<chunk><title/EXAMPLES/
-%%%
-%%% Chapter: Widgets
-%%%
-<chunk.ref/Widgets/
-
-
-%%%
-%%% Chapter: Geometry Managers
-%%%
-
-
-
-%%%
-%%% Chapter: More Widgets
-%%%
-
-
-
-%%%
-%%% Chapter: Canvas Widgets
-%%%
-
-
-
-%%%
-%%% Chapter: Text Widgets
-%%%
-
-
-
-%%%
-%%% Chapter: Tools for Tk
-%%%
-</chunk>
-]]>
-
+    &data;
   <Back>
     <Bib.Extern id="Ousterhout.94"  to="wp.bib" key="Ousterhout.94"> 
     <Bib.Extern id="HarrisonMcLennan.98"  to="wp.bib" key="HarrisonMcLennan.98"> 
 </Book>
+

@@ -116,8 +116,10 @@ E={New TkTools.error
       widget: depending on the window manager the widget appears with less
       decoration, &eg;, no title, on the screen.  Moreover, when the master
       widget is closed, the dialog is closed as well.
-  <Section>
+
+  <Section id="section.tools.menubars">
     <Title/Menubars/
+
     <P>
       A menubar is a frame widget containing several menubutton widgets.  To
       each of the menubutton widgets a menu is attached.  The menu contains
@@ -247,4 +249,42 @@ Dummy = {New Tk.frame tkInit(parent:T width:10#c height:4#c)}
               label: 'Exit')}>>>
       which can be deleted and removed from the menu again by:
       <<<{Added tkClose}>>>
+
+  <section id="section.tools.images">
+    <title/Handling Images/
+
+<![ %EXTRA; [
+<section><title/Examples/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Geometry Managers
+%%%
+
+
+
+%%%
+%%% Chapter: More Widgets
+%%%
+
+
+
+%%%
+%%% Chapter: Canvas Widgets
+%%%
+
+
+
+%%%
+%%% Chapter: Text Widgets
+%%%
+
+
+
+%%%
+%%% Chapter: Tools for Tk
+%%%
+</chunk>
+]]>
+
 </Chapter>
