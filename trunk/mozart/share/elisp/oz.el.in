@@ -747,6 +747,8 @@ If FORCE is non-nil, kill it immediately."
 	(message "Oz started."))))
 
 (defun oz-socket (host port)
+  (if oz-win32  ;; otherwise didn't work on 95, did work on NT
+      (setq host "localhost"))
   (let ((bs oz-compiler-buffers) (newbs nil))
     (while bs
       (if (not (comint-check-proc (car bs)))
