@@ -12,6 +12,22 @@
  *  protocol and message layer
  * -----------------------------------------------------------------------*/
 
+/* -----------------------------------------------------------------------
+ * TODO
+ *
+ *   variable protocol:
+ *     failure/exception handling
+ *     more than one bind request
+ *   cell protocol
+ *     all
+ *   object protocol
+ *     all
+ *   chunks
+ *     all
+ *   builtin
+ *     classify secure/insecure
+ * -----------------------------------------------------------------------*/
+
 #ifdef PERDIO
 
 #include <time.h>
@@ -43,7 +59,6 @@ DebtRec* debtRec;
 
 void marshallTerm(int sd,OZ_Term t, ByteStream *bs, DebtRec *dr);
 int unmarshallWithDest(BYTE *buf, int len, OZ_Term *t);
-void unmarshallNoDest(BYTE *buf, int len, OZ_Term *t);
 void domarshallTerm(int sd,OZ_Term t, ByteStream *bs);
 void unmarshallTerm(ByteStream*,OZ_Term*);
 OZ_Term unmarshallTerm(ByteStream *bs);
@@ -213,8 +228,11 @@ class ByteStream {
   BYTE *pos;
   int len;
 public:
+  int refCounter;
+public:
   ByteStream()
   {
+    refCounter=0;
     len = ipHeaderSize;
     size = DEFAULT_BYTE_STREAM_SIZE;
     array = new BYTE[size];
@@ -222,6 +240,7 @@ public:
   }
   ByteStream(BYTE *buf,int len) : len(len)
   {
+    refCounter=0;
     size=-1;
     array = buf;
     pos = buf;
@@ -1594,8 +1613,6 @@ void ByteStream::resize()
   delete oldarray;
 }
 
-int refCounter = 0;
-
 class RefTable {
   OZ_Term *array;
   int size;
@@ -1938,23 +1955,6 @@ OZ_Term unmarshallBorrow(ByteStream *bs,OB_Entry *&ob,int &bi){
   return 0;
 }
 
-void unmarshallNoDest(BYTE *buf, int len, OZ_Term *t){
-  ByteStream *bs = new ByteStream(buf,len);
-  refCounter = 0;
-  unmarshallTerm(bs,t);
-  bs->endCheck();
-  delete bs;}
-
-int unmarshallWithDest(BYTE *buf, int len, OZ_Term *t){
-  ByteStream *bs = new ByteStream(buf,len);
-  refCounter = 0;
-  int dest = unmarshallNumber(bs);
-  unmarshallTerm(bs,t);
-  bs->endCheck();
-  delete bs;
-  return dest;}
-
-
 
 /**********************************************************************/
 /*                 MARSHALLING terms                                  */
@@ -1974,11 +1974,10 @@ Bool checkCycle(OZ_Term t, ByteStream *bs)
 }
 
 inline
-void trailCycle(OZ_Term *t)
-{					
+void trailCycle(OZ_Term *t,int r)
+{
   refTrail->trail(t);
-  *t = (refCounter<<tagSize)|GCTAG;
-  refCounter++;
+  *t = (r<<tagSize)|GCTAG;
 }
 
 void marshallTertiary(int sd,Tertiary *t, ByteStream *bs, DebtRec *dr)
@@ -2021,7 +2020,7 @@ void marshallTertiary(int sd,Tertiary *t, ByteStream *bs, DebtRec *dr)
     marshallNumber(a->getArity(),bs);
   }
 
-  trailCycle(t->getRef());
+  trailCycle(t->getRef(),bs->refCounter++);
 }
 
 void marshallVariable(int sd, PerdioVar *pvar, ByteStream *bs,DebtRec *dr)
@@ -2193,10 +2192,11 @@ loop:
 processArgs:
   OZ_Term arg0 = tagged2NonVariable(args);
   if (!isRef(*args) && isAnyVar(*args)) {
+    int r=bs->refCounter++;
     marshallTerm(sd,arg0,bs,dr);
-    trailCycle(args);
+    trailCycle(args,r);
   } else {
-    trailCycle(args);
+    trailCycle(args,bs->refCounter++);
     marshallTerm(sd,arg0,bs,dr);
   }
   args++;
@@ -2291,7 +2291,7 @@ loop:
       argno = 2;
       LTuple *l = new LTuple();
       *ret = makeTaggedLTuple(l);
-      refTable->set(refCounter++,*ret);
+      refTable->set(bs->refCounter++,*ret);
       ret = l->getRef();
       PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:list");
       goto processArgs;
@@ -2302,7 +2302,7 @@ loop:
       TaggedRef label = unmarshallTerm(bs);
       SRecord *rec = SRecord::newSRecord(label,argno);
       *ret = makeTaggedSRecord(rec);
-      refTable->set(refCounter++,*ret);
+      refTable->set(bs->refCounter++,*ret);
       ret = rec->getRef();
       PERDIO_DEBUG1(UNMARSHALL,"UNMARSHALL:tuple no_args:%d",argno)
       goto processArgs;      
@@ -2315,7 +2315,7 @@ loop:
       TaggedRef label = unmarshallTerm(bs);
       SRecord *rec = SRecord::newSRecord(label,mkArity(arity));
       *ret = makeTaggedSRecord(rec);
-      refTable->set(refCounter++,*ret);
+      refTable->set(bs->refCounter++,*ret);
       ret = rec->getRef();
       PERDIO_DEBUG1(UNMARSHALL,"UNMARSHALL:record no:%d",argno)
       goto processArgs;      
@@ -2345,13 +2345,14 @@ loop:
       OZ_Term val = unmarshallBorrow(bs,ob,bi);
       if (val) {
 	PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:port hit");
+	refTable->set(bs->refCounter++,val);
 	*ret=val;
 	return;
       }
       PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:port miss");
       Tertiary *tert = new PortProxy(bi);
       *ret= makeTaggedConst(tert);
-      refTable->set(refCounter++,*ret);
+      refTable->set(bs->refCounter++,*ret);
       ob->mkTertiary(tert);
       return;
     }
@@ -2390,12 +2391,14 @@ loop:
 
       if (val) {
 	*ret=val;
+	refTable->set(bs->refCounter++,val);
 	return;
       }
 
       TaggedRef aux = gnameTable->gnameFind(&gname);
       if (aux) {
 	*ret = aux;
+	refTable->set(bs->refCounter++,aux);
 	return;
       }
 
@@ -2407,7 +2410,7 @@ loop:
       gnameTable->gnameAdd(copy,taggedPP);
       pp->setGName(copy);
 
-      refTable->set(refCounter++,taggedPP);
+      refTable->set(bs->refCounter++,taggedPP);
       ob->mkTertiary(pp);
       return;
     }
@@ -2463,14 +2466,18 @@ void siteReceive(BYTE *msg,int len)
   case M_SITESEND:
     {
       PERDIO_DEBUG(MSG_RECEIVED,"MSG_RECEIVED:SITE");
+
+      ByteStream *bs = new ByteStream(msg+1,len-1);
       OZ_Term t;
-      unmarshallNoDest(msg+1,len-1,&t);
+      unmarshallTerm(bs,&t);
+      bs->endCheck();
+      delete bs;
       if (!t) {
 	if (ozconf.debugPerdio) {
 	  printf("siteReceive: message SITE:");
 	  printBytes(msg,len);
 	}
-	OZ_fail("siteReceive: SITE unmarshall failed\n");
+	error("siteReceive: SITE unmarshall failed\n");
       }
       if (ozconf.debugPerdio) {
 	printf("siteReceive: SITE '%s'\n",OZ_toC(t,10,10));
@@ -2483,15 +2490,20 @@ void siteReceive(BYTE *msg,int len)
   case M_PORTSEND:    /* M_PORTSEND index term */
     {
       PERDIO_DEBUG(MSG_RECEIVED,"MSG_RECEIVED:PORTSEND");
+
+      ByteStream *bs = new ByteStream(msg+1,len-1);
+      int portIndex = unmarshallNumber(bs);
       OZ_Term t;
-      int portIndex;
-      portIndex=unmarshallWithDest(msg+1,len-1,&t);
+      unmarshallTerm(bs,&t);
+      bs->endCheck();
+      delete bs;
+
       if (!t) {
 	if (ozconf.debugPerdio) {
 	  printf("siteReceive: message PORTSEND:");
 	  printBytes(msg,len);
 	}
-	OZ_fail("siteReceive: PORTSEND unmarshall failed\n");
+	error("siteReceive: PORTSEND unmarshall failed\n");
       }
       if (ozconf.debugPerdio) {
 	printf("siteReceive: PORTSEND '%s'\n",OZ_toC(t,10,10));
@@ -2574,8 +2586,6 @@ void siteReceive(BYTE *msg,int len)
       NetAddress na = NetAddress(lookupLocalSite(),na_index);
       marshallNetAddress(&na,bs1);
       
-      refCounter = 0;
-
       /* send globals */
       RefsArray globals = pp->getGRegs();
       int gs = globals ? pp->getGSize() : 0;
@@ -2619,7 +2629,7 @@ void siteReceive(BYTE *msg,int len)
       
       int gsize = unmarshallNumber(bs);
       RefsArray globals = gsize==0 ? 0 : allocateRefsArray(gsize);
-      
+
       for (int i=0; i<gsize; i++) {
 	globals[i] = unmarshallTerm(bs);
       }
@@ -2754,7 +2764,7 @@ void siteReceive(BYTE *msg,int len)
       break;
     }
   default:
-    OZ_fail("siteReceive: unknown message %d\n",msg[0]);
+    error("siteReceive: unknown message %d\n",msg[0]);
     printf("\n--\n%s\n--\n",msg);
     break;
   }
@@ -2769,7 +2779,6 @@ void siteReceive(BYTE *msg,int len)
 
 void domarshallTerm(int sd,OZ_Term t, ByteStream *bs)
 {
-  refCounter = 0;
   marshallTerm(sd,t,bs,debtRec);
   refTrail->unwind();
 }
