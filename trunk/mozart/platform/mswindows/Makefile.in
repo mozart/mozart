@@ -34,7 +34,8 @@ INSTALL=	@INSTALL@
 INSTALL_DIR=	@INSTALL_DIR@
 INSTALL_BIN=	$(INSTALL) -m 555
 
-WINEXES=	setup.exe oz.exe ozengine.exe ozwrapper.exe oztool.exe
+WINEXES=	setup.exe oz.exe ozengine.exe ozwrapper.exe oztool.exe\
+		ozenginew.exe ozwrapperw.exe 
 
 .PHONY: bootstrap all install clean veryclean distclean depend check
 
@@ -84,6 +85,12 @@ setup.cc oz.cc ozengine.cc: version.h
 	$(CXX) -s -o $@ $<
 
 oz.exe: oz.o
+	$(CXX) -s -o $@ $< -mwindows
+
+ozenginew.exe: ozenginew.o
+	$(CXX) -s -o $@ $< -mwindows
+
+ozwrapperw.exe: ozwrapperw.o
 	$(CXX) -s -o $@ $< -mwindows
 
 setup.exe: setup.o
