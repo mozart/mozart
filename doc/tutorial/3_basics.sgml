@@ -53,13 +53,6 @@
     <P><PICTURE.EXTERN TO="image33.gif" TYPE=gif>
   </FIGURE>
 
-<!-- Use the same figure as in base..
-  <SECTION><TITLE>Primary Oz Types</TITLE>
-  <P><FIGURE FLOAT ID="TypeHier" CLASS="MAXI">
-    <CAPTION>Oz Type Hierarchy</CAPTION>
-    <P><PICTURE.EXTERN LATEX TO="primary-types.tex">
-  </FIGURE>
--->
   <P>Oz is a dynamically typed language. <PTR TO="TypeHier"> shows the
   type hierarchy of Oz. Any variable, if it ever gets a value, will be
   bound to a value of one of these types. Most of the types seem
