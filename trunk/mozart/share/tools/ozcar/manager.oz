@@ -6,6 +6,7 @@ local
    proc {ReadLoop S O}
       case S
       of H|T then
+	 {Show 'readloop:'}
 	 {DebugMessage H}
 	 {O read(H)}
 	 {ReadLoop T O}
@@ -14,7 +15,7 @@ local
    
 in
    
-   class Manager from UrObject
+   create Manager from UrObject with init
       feat
 	 Stream            %% info stream of the emulator
       attr
@@ -35,7 +36,15 @@ in
 	 Threads <- T | @Threads
 	 {Thread.setName T {New ThreadDebugger init(thr:T)}}
       end
-	  
+
+      meth remove(T)
+	 Threads <- {List.filter @Threads fun {$ X} X\=T end}
+      end
+
+      meth exists(T $)
+	 {List.member T @Threads}
+      end
+      
       meth read(M)
 	 case {Label M}
 	 of step then
@@ -51,9 +60,15 @@ in
 
 	 elseof thr then
 	    T = M.thr.1
+	    E = self,exists(T $)
 	 in
-	    self,add(T)
-	    {Message "Got new thread (id " # {Thread.id T} # ")"}
+	    case E then
+	       {Message "Got known thread (id " # {Thread.id T} # ")"}
+	    else
+	       {Message "Got new thread (id " # {Thread.id T} # ")"}
+	       self,add(T)
+	       {Ozcar newThread(T)}
+	    end
 	    
 	 else skip end
       end
