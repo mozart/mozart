@@ -76,6 +76,25 @@ public:
 SuspList * installPropagators(SuspList * local_list, SuspList * glob_list,
                               Board * glob_home);
 
+
+//-----------------------------------------------------------------------------
+// class OrderedSuspList
+
+class OrderedSuspList {
+private:
+  Thread * t;
+  OrderedSuspList * n;
+public:
+  USEFREELISTMEMORY;
+
+  OrderedSuspList(Thread * thr, OrderedSuspList * l) : t(thr), n(l) {}
+  OrderedSuspList * insert(Thread *);
+  void print(void);
+  OrderedSuspList * gc(void);
+  OrderedSuspList * getNext(void) const { return n; }
+  Thread * getThread(void) const { return t; }
+};
+
 #ifdef OUTLINE
 #undef inline
 #else

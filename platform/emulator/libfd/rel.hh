@@ -112,6 +112,16 @@ public:
 
   virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
   virtual OZ_Return propagate(void);
+  /*
+private:
+  OZ_NonMonotonic _nm;
+public:
+  virtual OZ_Boolean isMonotonic(void) const { return OZ_FALSE; }
+  virtual OZ_NonMonotonic::order_t getOrder(void) const {
+    return _nm.getOrder();
+  }
+  virtual size_t sizeOf(void) { return sizeof(*this); }
+  */
 };
 
 //-----------------------------------------------------------------------------

@@ -494,6 +494,8 @@ CDSuppl::CDSuppl(OZ_Propagator * p, OZ_Term b) : reg_b(b)
   thr = (OZ_Thread) am.mkPropagator(am.currentBoard,
                                     OZ_getHighPrio(),
                                     p);
+  // cd threads,  are expected to be suspended
+  ((Thread *) thr)->unmarkRunnable();
 }
 
 void CDSuppl::updateHeapRefs(OZ_Boolean) {
@@ -548,5 +550,5 @@ OZ_Return CDSuppl::propagate(void)
   return ret_val == FAILED ? PROCEED : ret_val;
 }
 
-// end fo file
+// end of file
 //-----------------------------------------------------------------------------

@@ -36,11 +36,11 @@ private:
   TaggedRef solveVar;
   TaggedRef result;
   SuspList  *suspList;
-  LocalThreadQueue * localThreadQueue;
   int threads;
 public:
   SolveActor();
   ~SolveActor();
+
   SolveActor(SolveActor&);
   SolveActor(Board *bb);
 
@@ -93,6 +93,11 @@ public:
   TaggedRef genFailed();
   TaggedRef genUnstable(TaggedRef arg);
 
+//-----------------------------------------------------------------------------
+// local thread queue
+private:
+  LocalThreadQueue * localThreadQueue;
+public:
   void pushToLTQ(Thread * thr, Board * b);
 
   void resetLocalThreadQueue(void) {
@@ -108,6 +113,21 @@ public:
     localThreadQueue = ltq;
   }
 
+//-----------------------------------------------------------------------------
+// support for nonmonotonic propagators
+private:
+  OrderedSuspList * nonMonoSuspList;
+public:
+  void addToNonMonoSuspList(Thread *);
+  void scheduleNonMonoSuspList(void);
+  void mergeNonMonoSuspListWith(OrderedSuspList *);
+  void setNonMonoSuspList(OrderedSuspList * l) {
+    nonMonoSuspList = l;
+  }
+
+//-----------------------------------------------------------------------------
+
+public:
   void clearSuspList(Thread *killThr = NULL);
 private:
   Bool checkExtSuspList () {
