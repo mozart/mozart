@@ -79,6 +79,53 @@ Bool SolveActor::isBlocked() {
   return ((getThreads()==0) && !am.isStableSolve(this));
 }
 
+static
+Bool extParameters(OZ_Term list, Board * solve_board)
+{
+  while (OZ_isCons(list)) {
+    OZ_Term h = OZ_head(list);
+    
+    Bool found = FALSE;
+
+    if (OZ_isVariable(h)) {
+
+#ifdef DEBUG_PROP_STABILTY_TEST
+      taggedPrint(h);
+#endif
+
+      DEREF(h, hptr, htag);
+
+      Assert(!isUVar(htag));
+
+      Board  * home = (isSVar(htag) 
+		       ? tagged2SVar(h) 
+		       : taggedCVar2SVar(h))->getBoard();
+      Board * tmp = solve_board;
+
+      // from solve board go up to root; if you step over home 
+      // then the variable is external otherwise it must be a local one
+      do {
+	tmp = tmp->getParent();
+
+	Assert (!(tmp->isCommitted()) && !(tmp->isFailed()));
+	
+	if (tmp == home) { 
+	  found = TRUE;
+	  break;
+	}
+      } while (!tmp->isRoot());
+      
+    } else if (OZ_isCons(h)) {
+      found = extParameters(h, solve_board);
+    }
+
+    if (found) return TRUE;
+
+    list = OZ_tail(list);
+  } // while
+  return FALSE;
+}
+
 void SolveActor::clearSuspList(Thread *killThr) {
   SuspList *tmpSuspList = suspList;
 
@@ -107,6 +154,7 @@ void SolveActor::clearSuspList(Thread *killThr) {
 
     Board *bb = thr->getBoard();
 
+    // find threads, which occured in a failed nested search space
     while (1) {
       bb = bb->getSolveBoard();
       if (bb == solveBoard) break;
@@ -115,16 +163,44 @@ void SolveActor::clearSuspList(Thread *killThr) {
       if (bb == 0) break;
     }
 
-    if (bb == 0) {
-      thr->disposeSuspendedThread ();
-      tmpSuspList = tmpSuspList->dispose ();
+    if (thr->isPropagator()) {
+
+#ifdef DEBUG_PROP_STABILTY_TEST
+      cout << "SolveActor::clearSuspList : Found propagator." << endl 
+	   << *thr->getPropagator() << endl
+	   << "\tbb = " << bb << endl << flush;
+#endif
+
+      if (bb) {
+	// if propagator suspends on external variable then keep its
+	// thread in the list to avoid stability
+	if (extParameters(thr->getPropagator()->getArguments(), solveBoard)) {
+#ifdef DEBUG_PROP_STABILTY_TEST
+	  cout << "\tExt parameter found!" << endl << flush;
+#endif
+	  SuspList * helpList = tmpSuspList;
+	  addSuspension (helpList);
+	} 
+#ifdef DEBUG_PROP_STABILTY_TEST
+	else {
+	  cout << "\tNo ext parameter found!" << endl << flush;
+	}
+#endif
+
+      }
+      tmpSuspList = tmpSuspList->getNext ();
     } else {
-      SuspList *helpList = tmpSuspList;
-      tmpSuspList = tmpSuspList->getNext();
-      addSuspension (helpList);
+      if (bb == 0) {
+	thr->disposeSuspendedThread ();
+	tmpSuspList = tmpSuspList->dispose ();
+      } else {
+	SuspList *helpList = tmpSuspList;
+	tmpSuspList = tmpSuspList->getNext();
+	addSuspension (helpList);
+      }
     }
   }
-}  
+}
 
 SolveActor::SolveActor(Board *bb, int prio)
  : Actor (Ac_Solve, bb, prio), suspList (NULL), threads (0), cpb(NULL), 
@@ -142,5 +218,3 @@ SolveActor::SolveActor(Board *bb, int prio)
 #include "solve.icc"
 #undef inline
 #endif
-
-
