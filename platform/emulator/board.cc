@@ -147,7 +147,7 @@ Board::Board(Actor *a,int typ)
     a->addChild(this);
   }
   suspCount=0;
-  actor=a;
+  u.actor=a;
 }
 
 Board::~Board() {
@@ -162,7 +162,7 @@ inline void Board::addSuspension()
 inline Actor *Board::getActor()
 {
   DebugCheck(isCommitted(),error("Board::getActor"));
-  return actor;
+  return u.actor;
 }
 
 inline Continuation *Board::getBodyPtr()
@@ -173,7 +173,7 @@ inline Continuation *Board::getBodyPtr()
 inline Board *Board::getParentBoard()
 {
   DebugCheck(isCommitted(),error("Board::getParentBoard"));
-  return actor->getBoard();
+  return u.actor->getBoard();
 }
 
 inline ConsList &Board::getScriptRef()
@@ -183,7 +183,7 @@ inline ConsList &Board::getScriptRef()
 
 inline Board *Board::getBoard()
 {
-  return board;
+  return u.board;
 }
 
 /* return NULL if board is dead */
@@ -194,7 +194,7 @@ inline Board *Board::getBoardDeref()
     if (bb->isDiscarded() || bb->isFailed()) {
       return NULL;
     } else if (bb->isCommitted()) {
-      bb = bb->board;
+      bb = bb->u.board;
     } else {
       return bb;
     }
@@ -228,7 +228,7 @@ inline Bool Board::isDiscarded()
   Bool ret=NO;
   if (flags & Bo_Discarded) {
     ret = OK;
-  } else if (actor && actor->isCommitted()) {
+  } else if (!isCommitted() && u.actor && u.actor->isCommitted()) {
     DebugCheck(isInstalled(),error("Board: discarded & installed"));
     flags |= Bo_Discarded;
     ret = OK;
@@ -338,8 +338,8 @@ inline void Board::setCommitted(Board *s)
 {
   DebugCheck(isInstalled(),error("setCommitted"));
   flags |= Bo_Committed;
-  actor->setCommitted();
-  board = s;
+  u.actor->setCommitted();
+  u.board = s;
 }
 
 inline void Board::setWaitTop()

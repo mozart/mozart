@@ -122,7 +122,7 @@ void Thread::Init()
   Root = new Thread;
   Root->flags = T_Normal;
   Root->priority = SystemPriority;
-  Root->taskStack = new TaskStack();
+  Root->u.taskStack = new TaskStack();
 }
 
 Thread *Thread::GetCurrent()
@@ -165,7 +165,7 @@ void Thread::Schedule(Suspension *s)
   Thread *t=new Thread;
   t->flags = T_Warm;
   t->priority = s->getPriority();
-  t->suspension = s;
+  t->u.suspension = s;
   s->getNode()->addSuspension();
   t->schedule();
 }
@@ -175,7 +175,7 @@ void Thread::ScheduleRoot(ProgramCounter PC,RefsArray y)
 {
   Board *bb=Board::GetRoot();
   bb->addSuspension();
-  Root->taskStack->queueCont(bb,PC,y);
+  Root->u.taskStack->queueCont(bb,PC,y);
   if (Root!=Current && !Root->isScheduled()) {
     Root->schedule();
   }
@@ -187,7 +187,7 @@ void Thread::Schedule(Board *b)
   Thread *t = new Thread;
   t->flags = T_Nervous;
   t->priority = b->getActor()->getPriority();
-  t->board = b;
+  t->u.board = b;
   b->setNervous();
   t->schedule();
 }
@@ -198,14 +198,14 @@ Thread::Thread(int prio)
   Thread(*this);
   flags = T_Normal;
   priority = prio;
-  taskStack = new TaskStack;
+  u.taskStack = new TaskStack;
 }
 // create a new thread without any value
 Thread::Thread()
 : ConstTerm(Co_Thread)
 {
   prev=next= (Thread *) NULL;
-  DebugCheckT(priority = -1; taskStack = (TaskStack *) -1; flags = -1);
+  DebugCheckT(priority = -1; u.taskStack = (TaskStack *) -1; flags = -1);
 }
 
 
@@ -228,8 +228,8 @@ Bool Thread::isNervous()
 void Thread::dispose() {
   if (this != Root) {
     if (isNormal()) {
-      if (taskStack) {
-	taskStack->dispose();
+      if (u.taskStack) {
+	u.taskStack->dispose();
       }
     }
     DebugCheck(prev!=0 || next!=0,error("Thread::dispose"));
@@ -399,7 +399,7 @@ void Thread::Start() {
   Current=UnlinkHead();
 
   if (Current->isNormal()) {
-    am.currentTaskStack = Current->taskStack;
+    am.currentTaskStack = Current->u.taskStack;
   } else {
     am.currentTaskStack = (TaskStack *) NULL;
   }
@@ -409,9 +409,9 @@ void Thread::Start() {
 
 void Thread::MakeTaskStack()
 {
-  DebugCheck(!Current->isNormal() || Current->taskStack!=NULL,
+  DebugCheck(!Current->isNormal() || Current->u.taskStack!=NULL,
 	     error("Thread::pushTask"));
-  am.currentTaskStack = Current->taskStack = new TaskStack();
+  am.currentTaskStack = Current->u.taskStack = new TaskStack();
 
 }
 
@@ -421,7 +421,7 @@ void Thread::pushTask(Board *bb,ProgramCounter pc,
 {
   DebugCheck(!isNormal(),error("Thread::pushTask"));
   bb->addSuspension();
-  taskStack->pushCont(bb,pc,y,g,x,i);
+  u.taskStack->pushCont(bb,pc,y,g,x,i);
 }
 
 void Thread::ScheduleCurrent()
@@ -444,8 +444,8 @@ int Thread::GetCurrentPriority() {
 Board *Thread::popBoard()
 {
   DebugCheck(!isNervous(),error("Thread::popBoard"));
-  Board *ret = board;
-  board = (Board *) NULL;
+  Board *ret = u.board;
+  u.board = (Board *) NULL;
   flags = T_Normal;
   return ret;
 }
@@ -453,8 +453,8 @@ Board *Thread::popBoard()
 Suspension *Thread::popSuspension()
 {
   DebugCheck(!isWarm(),error("Thread::popSuspension"));
-  Suspension *ret = suspension;
-  suspension = (Suspension *) NULL;
+  Suspension *ret = u.suspension;
+  u.suspension = (Suspension *) NULL;
   flags = T_Normal;
   return ret;
 }
@@ -463,5 +463,5 @@ void Thread::NewCurrent(int prio) {
   Current = new Thread();
   Current->flags = T_Normal;
   Current->priority = prio;
-  am.currentTaskStack = Current->taskStack = new TaskStack();
+  am.currentTaskStack = Current->u.taskStack = new TaskStack();
 }
