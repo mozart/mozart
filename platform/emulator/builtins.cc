@@ -5653,7 +5653,7 @@ OZ_C_proc_begin(BIsetAbstractionTabDefaultEntry,1)
     oz_typeError(0,"Abstraction");
   }
 
-  AbstractionEntry::setDefaultEntry(tagged2Abstraction(in));
+  warning("setAbstractionTabDefaultEntry no longer needed");
   return PROCEED;
 }
 OZ_C_proc_end
