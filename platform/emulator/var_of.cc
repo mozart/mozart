@@ -555,9 +555,9 @@ TaggedRef GenOFSVariable::getOpenArityList(TaggedRef* ftail)
     return dynamictable->getOpenArityList(ftail);
 }
 
-TaggedRef GenOFSVariable::getOpenArityList(TaggedRef* ftail, Board* home)
+TaggedRef GenOFSVariable::getOpenArityList(TaggedRef* ftail, Board* hoome)
 {
-    return dynamictable->getOpenArityList(ftail,home);
+    return dynamictable->getOpenArityList(ftail,hoome);
 }
 
 
