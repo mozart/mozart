@@ -1205,7 +1205,7 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
     ((GenFSetVariable*)this)->fsSuspList[fs_prop_lub]->print(stream, depth, offset+3);
     
     stream << indent(offset) << "FSet :\n" << indent(offset + 3); 
-    ((OZ_FSetImpl *) &((GenFSetVariable*)this)->getSet())->print(stream);
+    ((FSetConstraint *) &((GenFSetVariable*)this)->getSet())->print(stream);
     stream << endl;
     break;
 

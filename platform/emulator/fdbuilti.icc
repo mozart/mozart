@@ -12,7 +12,7 @@
 #ifndef __fdbuiltin_icc__
 #define __fdbuiltin_icc__
 
-#if defined(INTERFACE) && !defined(OUTLINE) && !defined(FDOUTLINE)
+#if defined(INTERFACE) && !defined(OUTLINE)
 #pragma interface
 #endif
 
