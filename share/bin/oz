@@ -1,9 +1,19 @@
 #!/bin/sh
-# Script that configures the environment to
-# start emacs for a standalone version of Oz
-# MUST reside in <oz dist dir>/bin
+# Oz startup script.
 
-#set -vx
+
+
+# uncomment and adapt the following line if you want
+# to draw links from say /usr/local/bin to OZHOME/bin
+# see chapter "installation" in the users manual for more information
+
+# OZHOME=/usr/local/oz
+
+
+
+
+######################################################################
+# you should not edit below this line
 
 # where Oz resides:
 
