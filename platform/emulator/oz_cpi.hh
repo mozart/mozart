@@ -136,6 +136,7 @@ public:
   OZ_Return replaceBy(OZ_Term, OZ_Term);
   OZ_Return replaceByInt(OZ_Term, int);
   OZ_Return postpone(void);
+  OZ_Boolean postOn(OZ_Term);
 };
 
 ostream& operator << (ostream& o, const OZ_Propagator &p);
@@ -186,11 +187,12 @@ public:
   OZ_expect_t expectIntVarAny(OZ_Term t) {return expectIntVar(t, fd_any);}
   OZ_expect_t expectInt(OZ_Term);
   OZ_expect_t expectTruthVar(OZ_Term);
-  OZ_expect_t expectTuple(OZ_Term, FDExpectFun);
+
+  OZ_expect_t expectVector(OZ_Term, FDExpectFun);
 
   //  by kost@ 9.04.96: usage of fdaux.hh in fdcd.cc is eliminated;
-  OZ_expect_t expectTupleIntVarAny(OZ_Term t) {
-    return expectTuple(t, (FDExpectFun)(OZ_PropagatorExpect::expectIntVarAny));
+  OZ_expect_t expectVectorIntVarAny(OZ_Term t) {
+    return expectVector(t, (FDExpectFun)(OZ_PropagatorExpect::expectIntVarAny));
   }
   
   OZ_Boolean isSuspending(OZ_expect_t r) {

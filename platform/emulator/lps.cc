@@ -85,6 +85,17 @@ void LocalPropagationQueue::printDebug () {
 
   for (; psize; psize --) {
     cout << "lpqueue[" << phead << "]="
+	 << "@" << queue[phead].thr << endl;
+
+    phead = (phead + 1) & (maxsize - 1);
+  }
+}
+
+void LocalPropagationQueue::printDebugLong () {
+  int psize = size, phead = head;
+
+  for (; psize; psize --) {
+    cout << "lpqueue[" << phead << "]="
 	 << "@" << queue[phead].thr << "(";
     queue[phead].thr->print(cout);
     cout << ")" << endl;
@@ -119,6 +130,7 @@ Bool LocalPropagationStore::propagate_locally () {
 	 
   while (!(isEmpty ())) {
     Thread *thr = am.currentThread = pop ();
+
     Assert (am.currentThread != (Thread *) NULL);
     Assert (am.currentBoard == thr->getBoardFast());
     //
