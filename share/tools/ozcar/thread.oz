@@ -267,7 +267,7 @@ in
 	    end
 	    Gui,printAppl(id:I name:N args:A builtin:IsBuiltin time:Time
 			  file:F line:L)
-	 end
+	 else skip end
       end
 
       meth block(T I F L N A B Time)
