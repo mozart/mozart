@@ -93,6 +93,20 @@ ChachedOORegs setObject(ChachedOORegs regs, Object *o)
   return (ToInt32(o)|(regs&0x3));
 }
 
+enum {
+  E_ERROR,
+  E_CONDITION
+};
+
+enum {
+  E_KERNEL,
+  E_OBJECT,
+  E_OPEN,
+  E_TK,
+  E_UNIX,
+  E_SYSTEM
+};
+
 // this class contains the central global data
 class AM : public ThreadsPool {
 friend void engine(Bool init);
@@ -142,17 +156,19 @@ public:
   void addSuspendVarList(TaggedRef * t);
   void suspendOnVarList(Thread *thr);
 
-  TaggedRef exception;
+  void formatError(OZ_Term traceBack,OZ_Term loc);
+  void formatFailure(OZ_Term traceBack,OZ_Term loc);
+  int raise(int cat, int key, char *label, int arity, ...);
   struct {
-    int pos;
-    char *comment;
-    char *type;
-  } typeError;
-  OZ_Term typeException(char *fun, OZ_Term args);
+    int debug;
+    TaggedRef value;
+    TaggedRef info;
+  } exception;
+  void enrichTypeException(char *fun, OZ_Term args);
 
   void suspendInline(int n,
-                     OZ_Term A,OZ_Term B=makeTaggedNULL(),OZ_Term C=makeTaggedNULL());
-
+                     OZ_Term A,OZ_Term B=makeTaggedNULL(),
+                     OZ_Term C=makeTaggedNULL());
 
   TaggedRef aVarUnifyHandler;
   TaggedRef aVarBindHandler;

@@ -84,7 +84,7 @@ extern "C" char *inet_ntoa(struct in_addr in);
      if (OZ_isVariable(susp)) {                                         \
        OZ_suspendOn(susp);                                              \
      } else {                                                           \
-       return OZ_raiseC("systemLimitInternal",1,                        \
+       return am.raise(E_ERROR,E_SYSTEM,"limitInternal",1,              \
                         OZ_string("virtual string too long"));          \
      }                                                                  \
    } else if (status != PROCEED) {                                      \
@@ -143,24 +143,19 @@ while ((RET = CALL) < 0) {                   \
 // specification of returning
 // -------------------------------------------------
 
-OZ_Term makeErrorTuple(int n, char * e, char * g) {
-  OZ_Term err_tuple = OZ_tupleC("unix",3);
-  OZ_putArg(err_tuple, 0, OZ_atom(g));
-  OZ_putArg(err_tuple, 1, OZ_int(n));
-  OZ_putArg(err_tuple, 2, OZ_string(e));
-
-  return err_tuple;
+int raiseUnixError(int n, char * e, char * g) {
+  return am.raise(E_ERROR,E_UNIX, g, 2, OZ_int(n), OZ_string(e));
 }
 
 // return upon unix-error
 #define RETURN_UNIX_ERROR \
-{ return OZ_raise(makeErrorTuple(errno, OZ_unixError(errno), "unix")); }
+{ return raiseUnixError(errno, OZ_unixError(errno), "unix"); }
 
 
 #if defined(ULTRIX_MIPS) || defined(OS2_I486)
 
 #define RETURN_NET_ERROR \
-{ return OZ_raise(makeErrorTuple(0, "Host lookup failure.", "host")); }
+{ return raiseUnixError(0, "Host lookup failure.", "host"); }
 
 #else
 
@@ -185,7 +180,7 @@ static char* h_strerror(const int err) {
 }
 
 #define RETURN_NET_ERROR \
-{ return OZ_raise(makeErrorTuple(h_errno, h_strerror(errno), "host")); }
+{ return raiseUnixError(h_errno, h_strerror(errno), "host"); }
 
 
 #endif
@@ -1467,8 +1462,8 @@ OZ_C_ioproc_begin(unix_pipe,4)
   argl=args;
 
   if (argno+2 >= maxArgv) {
-    return OZ_raiseC("systemLimitInternal",1,
-                     OZ_string("too many arguments for pipe"));
+    return am.raise(E_ERROR,E_SYSTEM,"limitInternal",1,
+                    OZ_string("too many arguments for pipe"));
   }
   argv[0] = s;
   argv[argno+1] = 0;
@@ -1487,8 +1482,8 @@ OZ_C_ioproc_begin(unix_pipe,4)
     if (status == SUSPEND) {
       free(vsarg);
       Assert(!OZ_isVariable(susp));
-      return OZ_raiseC("systemLimitInternal",1,
-                       OZ_string("virtual string too long"));
+      return am.raise(E_ERROR,E_SYSTEM,"limitInternal",1,
+                   OZ_string("virtual string too long"));
     }
     Assert(status == PROCEED);
     *(vsarg+len) = '\0';
@@ -1537,8 +1532,8 @@ OZ_C_ioproc_begin(unix_pipe,4)
       !SetStdHandle((DWORD)STD_INPUT_HANDLE,rh2) ||
       !CreateProcess(NULL,buf,&sa,NULL,TRUE,0,
                      NULL,NULL,&si,&pinf)) {
-    return OZ_raise(makeErrorTuple(0, "Cannot create pipe process.",
-                                   "windows"));
+    return raiseUnixError(0, "Cannot create pipe process.",
+                          "windows");
   }
 
   int pid = (int) pinf.hProcess;
@@ -1550,9 +1545,9 @@ OZ_C_ioproc_begin(unix_pipe,4)
   int rsock = _hdopen((int)rh1,O_RDONLY|O_BINARY);
   int wsock = _hdopen((int)wh2,O_WRONLY|O_BINARY);
   if (rsock<0 || wsock<0) {
-    return OZ_raise(makeErrorTuple(0,
-                                   "Cannot connect to created pipe process.",
-                                   "windows"));
+    return raiseUnixError(0,
+                          "Cannot connect to created pipe process.",
+                          "windows");
   }
 
 #else  /* !WINDOWS */
@@ -1725,13 +1720,13 @@ OZ_C_ioproc_begin(unix_tempName, 3)
   char *filename;
 
   if (strlen(prefix) > 5)
-    return OZ_raiseC("systemLimitExternal",1,
-                     OZ_string("Maximal 5 characters for Unix.tempName prefix allowed."));
+    return am.raise(E_ERROR,E_SYSTEM,"limitExternal",1,
+                    OZ_string("Maximal 5 characters for Unix.tempName prefix allowed."));
 
   if (!(filename = tempnam(directory, prefix))) {
-    return OZ_raise(makeErrorTuple(0,
-                                   "Unix.tempName failed.",
-                                   "unix"));
+    return raiseUnixError(0,
+                          "Unix.tempName failed.",
+                          "unix");
   }
   filename = ozstrdup(filename);
 
@@ -1766,9 +1761,9 @@ OZ_C_ioproc_begin(unix_putEnv,2)
   int ret = putenv(buf);
   if (ret != 0) {
     delete buf;
-    return OZ_raise(makeErrorTuple(0,
-                                   "Unix.putEnv failed.",
-                                   "unix"));
+    return raiseUnixError(0,
+                          "Unix.putEnv failed.",
+                          "unix");
   }
 
   return PROCEED;
@@ -1875,7 +1870,7 @@ OZ_C_proc_end
 #define NotAvail(Name,Arity,Fun)                                \
 OZ_C_ioproc_begin(Fun,Arity)                                    \
 {                                                               \
-  return OZ_raiseC("systemLimitExternal",2,                     \
+  return am.raise(E_ERROR,E_SYSTEM,"limitExternal",1,           \
                    OZ_atom(Name));                              \
 }                                                               \
 OZ_C_proc_end

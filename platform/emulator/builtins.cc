@@ -51,13 +51,6 @@ extern "C" int dlclose(void *);
 #include "oz_cpi.hh"
 #include "dictionary.hh"
 
-
-extern
-int raiseKernel(char *label,int arity,...);
-
-extern
-int raiseObject(char *label,int arity,...);
-
 /********************************************************************
  * Macros
  ******************************************************************** */
@@ -276,7 +269,7 @@ DECLAREBI_USEINLINEFUN2(BIfun,BIifun)
 #define CheckLocalBoard(Object,Where);                          \
   if (am.currentBoard != Object->getBoard()) {                  \
     am.currentBoard->incSuspCount();                            \
-    return raiseKernel("globalState",1,OZ_atom(Where)); \
+    return am.raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom(Where));   \
   }
 
 /********************************************************************
@@ -323,11 +316,11 @@ OZ_C_proc_begin(BIbuiltin,3)
   BuiltinTabEntry *found = builtinTab.find(name);
 
   if (found == htEmpty) {
-    return raiseKernel("builtinUndefined",1,OZ_getCArg(0));
+    return am.raise(E_ERROR,E_KERNEL,"builtinUndefined",1,OZ_getCArg(0));
   }
 
   if (arity!=-1 && (arity != found->getArity())) {
-    return raiseKernel("builtinArity",1,OZ_getCArg(0));
+    return am.raise(E_ERROR,E_KERNEL,"builtinArity",1,OZ_getCArg(0));
   }
 
   return OZ_unify(ret,makeTaggedConst(found));
@@ -1499,13 +1492,13 @@ OZ_C_proc_begin(BImergeSpace, 2) {
   declareSpace();
 
   if (space->isMerged())
-    return raiseKernel("spaceMerged",1,tagged_space);
+    return am.raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
 
   if (space->isFailed())
     return FAILED;
 
   if (am.isBelow(am.currentBoard,space->getSolveBoard()->derefBoard()))
-    return raiseKernel("spaceSuper",1,tagged_space);
+    return am.raise(E_ERROR,E_KERNEL,"spaceSuper",1,tagged_space);
 
   Board *CBB = am.currentBoard;
 
@@ -1533,7 +1526,7 @@ OZ_C_proc_begin(BIcloneSpace, 2) {
   declareSpace();
 
   if (space->isMerged())
-    return raiseKernel("spaceMerged",1,tagged_space);
+    return am.raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
 
   Board* CBB = am.currentBoard;
 
@@ -1562,7 +1555,7 @@ OZ_C_proc_begin(contChooseInternal, 2) {
     SolveActor::Cast(am.currentBoard->getActor())->choose(left,right);
 
   if (status==-1) {
-    return raiseKernel("spaceNoChoices",0);
+    return am.raise(E_ERROR,E_KERNEL,"spaceNoChoices",0);
   } else if (status==0) {
     return FAILED;
   }
@@ -1576,7 +1569,7 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
   declareSpace();
 
   if (space->isMerged())
-    return raiseKernel("spaceMerged",1,tagged_space);
+    return am.raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
 
   if (space->isFailed())
     return PROCEED;
@@ -1620,7 +1613,7 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
   }
 
   if (am.currentBoard != space->getSolveBoard()->getParent())
-    return raiseKernel("spaceParent",1,tagged_space);
+    return am.raise(E_ERROR,E_KERNEL,"spaceParent",1,tagged_space);
 
   space->getSolveActor()->unsetGround();
   space->getSolveActor()->clearResult(space->getBoard());
@@ -1643,14 +1636,14 @@ OZ_C_proc_begin(BIinjectSpace, 2) {
   declareSpace();
 
   if (space->isMerged())
-    return raiseKernel("spaceMerged",1,tagged_space);
+    return am.raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
 
   // Check whether space is failed!
   if (space->isFailed())
     return PROCEED;
 
   if (am.currentBoard != space->getSolveBoard()->getParent())
-    return raiseKernel("spaceParent", 1, tagged_space);
+    return am.raise(E_ERROR,E_KERNEL,"spaceParent", 1, tagged_space);
 
   OZ_Term proc = OZ_getCArg(1);
 
@@ -1957,7 +1950,7 @@ typeError0:
 typeError1:
   TypeErrorT(1,"Feature");
 raise:
-  return raiseKernel(".",2,term,fea);
+  return am.raise(E_ERROR,E_KERNEL,".",2,term,fea);
 }
 
 
@@ -3582,7 +3575,7 @@ OZ_Return BIdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 
   if (tagB == SMALLINT && smallIntValue(B) == 0) {
     if (tagA == SMALLINT || tagA == BIGINT) {
-      return raiseKernel("div0",1,A);
+      return am.raise(E_ERROR,E_KERNEL,"div0",1,A);
     } else {
       return bombArith("Int");
     }
@@ -3604,7 +3597,7 @@ OZ_Return BImodInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 
   if ((tagB == SMALLINT && smallIntValue(B) == 0)) {
     if (tagA == SMALLINT || tagA == BIGINT) {
-      return raiseKernel("mod0",1,A);
+      return am.raise(E_ERROR,E_KERNEL,"mod0",1,A);
     } else {
       return bombArith("Int");
     }
@@ -4196,7 +4189,7 @@ OZ_C_proc_begin(BIstringToFloat, 2)
 
   char *end = OZ_parseFloat(str);
   if (!end || *end != 0) {
-    return raiseKernel("stringNoFloat",1,OZ_getCArg(0));
+    return am.raise(E_ERROR,E_KERNEL,"stringNoFloat",1,OZ_getCArg(0));
   }
   OZ_Return ret = OZ_unify(out,OZ_CStringToFloat(str));
   return ret;
@@ -4238,12 +4231,12 @@ OZ_C_proc_begin(BIstringToInt, 2)
   OZ_declareProperStringArg(0,str);
   OZ_declareArg(1,out);
 
-  if (!str) return raiseKernel("stringNoInt",1,OZ_getCArg(0));
+  if (!str) return am.raise(E_ERROR,E_KERNEL,"stringNoInt",1,OZ_getCArg(0));
 
 
   char *end = OZ_parseInt(str);
   if (!end || *end != 0) {
-    return raiseKernel("stringNoInt",1,OZ_getCArg(0));
+    return am.raise(E_ERROR,E_KERNEL,"stringNoInt",1,OZ_getCArg(0));
   }
   OZ_Return ret = OZ_unify(out,OZ_CStringToInt(str));
   return ret;
@@ -4552,7 +4545,7 @@ OZ_C_proc_begin(BIlockLock,1)
   OzLock *lck = tagged2Lock(lock);
   if (!am.isToplevel()) {
     if (am.currentBoard != lck->getBoard()) {
-      return raiseKernel("globalState",1,OZ_atom("lock"));
+      return am.raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
     }
   }
 
@@ -4840,7 +4833,7 @@ OZ_Return dictionaryGetInline(TaggedRef d, TaggedRef k, TaggedRef &out)
 {
   GetDictAndKey(d,k,dict,key,NO);
   if (dict->getArg(key,out) != PROCEED) {
-    return raiseKernel("dict",2,d,k);
+    return am.raise(E_ERROR,E_KERNEL,"dict",2,d,k);
   }
   return PROCEED;
 }
@@ -5201,7 +5194,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
   return PROCEED;
 
 raise:
-  return raiseKernel("foreign",2,OZ_atom("linkFiles"),list);
+  return am.raise(E_ERROR,E_KERNEL,"foreign",2,OZ_atom("linkFiles"),list);
 }
 OZ_C_proc_end
 
@@ -5233,7 +5226,7 @@ OZ_C_proc_begin(BIunlinkObjectFile,1)
 
   return PROCEED;
 raise:
-  return raiseKernel("foreign",3,OZ_atom("unlinkFile"),fileName);
+  return am.raise(E_ERROR,E_KERNEL,"foreign",3,OZ_atom("unlinkFile"),fileName);
 }
 OZ_C_proc_end
 
@@ -5327,7 +5320,7 @@ OZ_C_proc_begin(BIfindFunction,3)
 
   return PROCEED;
 raise:
-  return raiseKernel("foreign", 3,
+  return am.raise(E_ERROR,E_KERNEL,"foreign", 3,
                      OZ_atom("cannotFindFunction"),
                      OZ_getCArg(0),
                      OZ_getCArg(1));
@@ -5355,7 +5348,7 @@ OZ_C_proc_begin(BIalarm,2) {
   OZ_Term out=OZ_getCArg(1);
 
   if (!am.isToplevel()) {
-    return raiseKernel("globalState",1,OZ_atom("io"));
+    return am.raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("io"));
   }
 
   if (t <= 0)
@@ -5371,7 +5364,7 @@ OZ_C_proc_begin(BIdelay,1) {
   OZ_declareIntArg(0,t);
 
   if (!am.isToplevel()) {
-    return raiseKernel("globalState",1,OZ_atom("io"));
+    return am.raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("io"));
   }
 
   if (t <= 0)
@@ -5461,7 +5454,7 @@ OZ_C_proc_begin(BIloadFile,1)
 
   if (fd == NULL) {
     OZ_warning("call: loadFile: cannot open file '%s'",file);
-    return raiseKernel("loadFile",1,term0);
+    return am.raise(E_ERROR,E_KERNEL,"loadFile",1,term0);
   }
 
   if (ozconf.showFastLoad) {
@@ -6544,10 +6537,10 @@ OZ_Return assignInline(TaggedRef fea, TaggedRef value)
     TypeErrorT(0,"Feature");
   }
 
-  if (!r) return raiseObject("<-",3,nil(),fea,value);
+  if (!r) return am.raise(E_ERROR,E_OBJECT,"<-",3,nil(),fea,value);
 
   if (r->replaceFeature(fea,value) == makeTaggedNULL()) {
-    return raiseObject("<-",3,makeTaggedSRecord(r),fea,value);
+    return am.raise(E_ERROR,E_OBJECT,"<-",3,makeTaggedSRecord(r),fea,value);
   }
 
   return PROCEED;
@@ -6834,7 +6827,7 @@ OZ_Return ooGetLockInline(TaggedRef val)
 {
   OzLock *lock = am.getSelf()->getLock();
   if (lock==NULL)
-    return raiseObject("locking",1,makeTaggedConst(am.getSelf()));
+    return am.raise(E_ERROR,E_OBJECT,"locking",1,makeTaggedConst(am.getSelf()));
 
   return am.fastUnify(val,makeTaggedConst(lock),OK) ? PROCEED : FAILED;
 }
@@ -6874,13 +6867,26 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIraise,1)
 {
-  return RAISE_USER;
+  OZ_declareArg(0,exc);
+
+  return OZ_raise(exc);
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BIraiseError,1)
 {
-  return RAISE_BIERROR;
+  OZ_declareArg(0,exc);
+
+  OZ_Term ret = OZ_record(OZ_atom("error"),
+                          cons(OZ_int(1),
+                               cons(OZ_atom("debug"),OZ_nil())));
+  OZ_putSubtree(ret,OZ_int(1),exc);
+  OZ_putSubtree(ret,OZ_atom("debug"),NameUnit);
+
+  am.exception.info = NameUnit;
+  am.exception.value = ret;
+  am.exception.debug = TRUE;
+  return RAISE;
 }
 OZ_C_proc_end
 
