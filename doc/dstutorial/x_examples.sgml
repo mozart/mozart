@@ -7,20 +7,28 @@
 wants to interact with the world outside it.
 Mozart supports three basic kinds of global names:
 <LIST>
+<index/ticket/
+<index/global name<and>ticket/
 <ITEM> A <EM>ticket</EM> is a string that references a data
 structure inside a running application.
 Tickets can be created by Mozart and
 used by active applications to connect themselves
 (see module <ref.extern to="ozdoc:system"
 key="chapter.connection"/<<Connection>>/).
+<index/URL/
+<index/global name<and>URL/
 <ITEM> A <EM>URL</EM> is a string that references
 a file across the network.
 The string follows the standard URL syntax.
+<index/pickle/
+<index/stateless entity<and>pickle/
 In Mozart the file can be a <EM>pickle</EM>, in which case
 it can hold any kind of stateless data--procedures,
 classes, functors, records, strings, and so forth
 (see module <ref.extern to="ozdoc:system"
 key="chapter.pickle"/<<Pickle>>/).
+<index/hostname/
+<index/global name<and>hostname/
 <ITEM> A <EM>hostname</EM> is a string that
 refers to a host (another machine) across the network.
 The string follows the standard DNS syntax.
@@ -72,6 +80,7 @@ declare Stream Tkt in
 {Show Tkt}
 >>>
 
+<index/ticket<and>example/
 <P>The ticket is returned in <<Tkt>>.
 Application 1 then publishes the value of <<Tkt>> somewhere so that
 other applications can access it.
@@ -102,6 +111,7 @@ then Application 2's browse window will show the bindings.
 
 <SUBSECTION><TITLE>Persistent data structures</TITLE>
 
+<index/pickle<and>example/
 <P>An application can save
 any stateless data structure
 in a file and load it again from a file.
@@ -141,6 +151,7 @@ cannot be pickled.
 
 <SUBSECTION><TITLE>Remote computations and functors</TITLE>
 
+<index/remote computation<and>example/
 <P>An application can start a computation
 on a remote host
 that uses the resources of that host and
@@ -177,6 +188,7 @@ The module should not reference any resources.
 If it does, an exception will be raised in the thread
 doing the <<apply>>.
 
+<index/remote computation<and>of a statement (needing resources)/
 <P>Any Oz statement ?{S} can be executed
 remotely by creating a functor:
 <code display
@@ -191,8 +203,8 @@ and return a module <<M>> that contains all the fields mentioned
 in ?{Results}.
 If ?{S} does not use any resources, then there is
 a slightly simpler way to do remote computations.
-The next section shows how when it talks
-about compute servers.
+The next section shows how by building a simple
+compute server.
 
 <P>A second solution is to use a functor with
 an external reference:
@@ -208,6 +220,8 @@ M={R apply(F $)}
 but it's all right since we are not pickling the functor.
 In fact, it's quite possible for
 functors to have external references.
+/index/computed functor/
+/index/functor<and>computed/
 Such functors are called <em>computed functors</em>.
 They can only be pickled if the external references
 are to stateless entities.
@@ -223,6 +237,7 @@ We give this solution later in the tutorial.
 
 <SECTION><TITLE>Servers</TITLE>
 
+/index/server/
 <P>A server is a long-lived computation that provides a service to clients.
 We will show progressively how to build different kinds of servers.
 
@@ -262,7 +277,7 @@ end
 >>>
 <P>This will show <<"Hello world">> in the browser window.
 
-<P>What happens is that by taking the connection,
+<P>By taking the connection,
 the client gets a reference to the server.
 This conceptually merges the client and server computation spaces
 into a single computation space.
@@ -273,6 +288,7 @@ the computation spaces become separate again.
 
 <SUBSECTION><TITLE>The hello server with stationary objects</TITLE>
 
+/index/stationary object<and>example/
 <P>The previous section shows how to build a basic server
 using a port to collect messages.
 There is in fact a much simpler way,
@@ -295,6 +311,8 @@ independently of the object's class.
 
 <SUBSECTION id="making.stationary.objects"><TITLE>Making stationary objects</TITLE>
 
+<index/stationary object/definition/
+<index/object<and>stationary/
 <P>Stationary entities are a very important abstraction.
 Mozart provides two operations to
 make entities stationary.
@@ -365,6 +383,8 @@ raised by <<ProcOrObj>>.
 
 <SUBSECTION id="compute.server"><TITLE>A compute server</TITLE>
 
+<index/compute server/
+<index/server<and>compute server/
 <P>One of the promises of distributed computing is making
 computations go faster by exploiting the parallelism
 inherent in networks of computers.
@@ -408,11 +428,11 @@ In the remote case, the variable <<F>>
 is shared between the client and server.
 When the server binds it, its value
 is immediately sent to the server.
-This is how the client gets a result from the server
+This is how the client gets a result from the server.
 
+<index/remote computation<and>of a statement (not needing resources)/
 <P>Any Oz statement <EM>S</EM> that does not use resources
-can be executed remotely by making a procedure out
-of it:
+can be executed remotely by making a procedure out of it:
 <code display
 /P=proc {$} ?{S} end/
 To run this, the client just executes <<{C run(P)}>>.
@@ -468,11 +488,13 @@ end
 
 <SUBSECTION><TITLE>A dynamically-extensible server</TITLE>
 
+<index/server<and>dynamically-extensible/
 <P>Sometimes a server has to be upgraded,
 for example
 to add extra functionality or to fix a bug.
 We show how to upgrade a server
 without stopping it.
+<index/Java<and>limitation/
 This cannot be done in Java.
 In practice, the upgrade can even
 be done interactively.
@@ -534,6 +556,7 @@ The new method supports the original call <<run(P)>>
 and adds a new call <<run(P Prio)>>, where <<Prio>>
 sets the priority of the thread doing computation <<P>>.
 
+<index/garbage collection<and>in a server/
 <P>The compute server can be
 upgraded indefinitely
 since garbage collection will remove

@@ -13,6 +13,7 @@ reliable objects with recovery.
 
 <SECTION><TITLE>A fault-tolerant hello server</TITLE>
 
+<index/example<and>client crash/
 <P>Let's take a fresh look at the hello server.
 How can we make it resistant to distribution faults?
 First we specify the client and server behavior.

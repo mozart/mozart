@@ -1,6 +1,7 @@
 <CHAPTER ID="chapter.failure">
   <TITLE>Failure Model</TITLE>
 
+<index/partial failure property/
 <P>Distributed systems have the partial failure
 property, that is, part of the system can fail
 while the rest continues to work.
@@ -17,7 +18,13 @@ distributed systems to become more robust.
 are recognized by the system
 and how they are reflected in the language.
 The system recognizes
+<index/failure<and>fail-stop/
+<index/fail-stop failure/
 permanent site failures that are instantaneous (fail-stop)
+<index/failure<and>temporary network problem/
+<index/failure<and>permanent network problem/
+<index/communication failure/
+<index/network failure/
 and both temporary and permanent communication failures.
 The system provides mechanisms
 to program with language entities that are subject
@@ -56,6 +63,7 @@ both a language entity and a particular site.
 For example, one would like to send a message
 to a port from a given site.
 The site may or may not be able to send the message.
+<index/fault states/
 A language entity can be in three fault states
 on a given site:
 <LIST>
@@ -92,6 +100,7 @@ to reestablish another connection.
 application to react quickly to temporary network problems.
 It is raised by the system as soon as a network problem
 is recognized.
+<index/time-out<and>difference with temporary fault/
 It is therefore fundamentally different from a time-out.
 For example, TCP gives a time-out after some minutes.
 This duration has been chosen to be very long,
@@ -124,7 +133,7 @@ The important thing is that the network layer does not make this decision;
 the application is completely free to decide or to let the user decide.
 
 
-<SUBSECTION><TITLE>Remote faults</TITLE>
+<SUBSECTION><TITLE>Remote problems</TITLE>
 
 <P>The local fault states <<ok>>, <<tempFail>>,
 and <<permFail>> say
@@ -171,6 +180,7 @@ if the owner site is inaccessible.
 In that case it might not be possible to learn
 anything about the remote sites.
 
+<index/fault state<and>enumeration/
 <P>The complete fault state of an
 entity consists of at most one
 element from the set
@@ -192,6 +202,8 @@ sites (e.g., <<remoteProblem(permSome)>>).
 
 <SECTION><TITLE>Basic model</TITLE>
 
+<index/failure<and>basic model/
+<index/basic failure model/
 <P>We present the failure model in two steps:
 the basic model and the advanced model.
 The simplest way to start writing fault-tolerant
@@ -205,6 +217,7 @@ The fault detection can be enabled separately on each of two levels:
 a per-site level or a per-thread level
 (see <ptr to="levels">).
 
+<index/exception<and>in failure model/
 <P>Exceptions can be enabled on logic variables,
 ports, objects, cells, and locks.
 All other entities, e.g., records, procedures, classes,
@@ -228,6 +241,8 @@ The advanced model is explained in
 
 <SUBSECTION><TITLE>Enabling exceptions on faults</TITLE>
 
+<index/default failure detection/
+<index/failure detection<and>default/
 <P>By default, new entities are
 set up so that an exception will be raised
 on fault states <<tempFail>> or <<permFail>>.
@@ -296,6 +311,8 @@ do not have the correct type.
 
 <SUBSECTION id="binding.logic.variables"><TITLE>Binding logic variables</TITLE>
 
+<index/logic variable<and>binding in failure model/
+<index/failure mode<and>binding logic variables/
 <P>A logic variable can be declared before it is bound.
 What happens to its enabled exceptions when it is bound?
 For example, let's say variable <<V>> is enabled with <<FS_v>>
@@ -352,6 +369,8 @@ There is no attempt to "combine" the two sets.
 
 <SUBSECTION><TITLE>Exception formats</TITLE>
 
+<index/failure exception<and>format/
+<index/exception<and>format for failure exception/
 <P>The exceptions raised have the format
 <<<system(dp(entity:E conditions:FS op:OP) ...)>>>
 where the four arguments are defined as follows:
@@ -413,6 +432,8 @@ object-record is fetched over the network, which might fail.
 
 <SUBSECTION id="levels"><TITLE>Levels of fault detection</TITLE>
 
+<index/fault detection/level/
+<index/level of fault detection/
 <P>There are three levels of fault detection, namely
 default site-based, site-based, and thread-based.
 A more specific level, if it exists,
@@ -467,6 +488,9 @@ if the <<tempFail>> state goes away.
 
 <SUBSECTION><TITLE>Levels and sitedness</TITLE>
 
+<index/fault level<and>relation with sitedness/
+<index/level<and>relation with sitedness/
+<index/sitedness<and>relation with fault detection/
 <P>The <<Fault>> module has both sited and unsited operations.
 Both setting the default and enabling at the site level
 are <EM>sited</EM>.
@@ -494,6 +518,8 @@ a thread on the site where the procedure is executed.
 
 <SECTION id="advanced.model"><TITLE>Advanced model</TITLE>
 
+<index/failure<and>advanced model/
+<index/advanced failure model/
 <P>The basic model lets you set up the system to
 raise an exception when an operation is attempted
 on a faulty entity.
@@ -513,6 +539,9 @@ the procedure is called <EM>watcher</EM>.
 
 <SUBSECTION><TITLE>Lazy detection with handlers</TITLE>
 
+<index/failure model<and>handler (synchronous detection)/
+<index/fault handler/
+<index/handler/
 <P>When an operation is attempted
 on an entity with a problem,
 then a handler call replaces the operation.
@@ -577,6 +606,9 @@ the operation after they return.
 
 <SUBSECTION><TITLE>Eager detection with watchers</TITLE>
 
+<index/failure model<and>watcher (asynchronous detection)/
+<index/fault watcher/
+<index/watcher/
 <P>Fault handlers detect failure synchronously,
 i.e., when an operation is attempted.
 One often wants to be informed earlier.
@@ -626,6 +658,8 @@ all proxies will see a <<permFail>>.
 
 <SUBSECTION id="eager.stateless.data"><TITLE>Eager stateless data</TITLE>
 
+<index/fault state<and>eager stateless data (records, procedures,
+functions, classes, functors)/
 <P>Eager stateless data, namely records, procedures,
 functions, classes, and functors, are
 copied immediately in messages.
@@ -647,6 +681,7 @@ becomes unreachable or crashes.
 
 <SUBSECTION><TITLE>Sited entities</TITLE>
 
+<index/fault state<and>sited entities/
 <P>Sited entities can be referenced remotely
 but can only be used on their home site.
 Attempting to use one outside of its home
@@ -656,6 +691,8 @@ So their only possible fault state is <<ok>>.
 
 <SUBSECTION><TITLE>Ports</TITLE>
 
+<index/fault state<and>port/
+<index/port<and>fault states/
 <P>A port has one owner site
 and a set of proxy sites.
 The following failure modes are possible:
@@ -682,6 +719,8 @@ on the owner site.
 
 <SUBSECTION><TITLE>Logic variables</TITLE>
 
+<index/fault state<and>logic variable/
+<index/logic variable<and>fault states/
 <P>A logic variable has one owner site
 and a set of proxy sites.
 The following failure modes are possible:
@@ -733,6 +772,10 @@ delayed or never done.
 
 <SUBSECTION><TITLE>Cells and locks</TITLE>
 
+<index/fault state<and>cell/
+<index/cell<and>fault states/
+<index/fault state<and>lock/
+<index/lock<and>fault states/
 <P>Cells and locks have almost the same failure behavior.
 A cell or lock has one owner site and a set of proxy sites.
 At any given time instant,
@@ -765,6 +808,8 @@ Both are implemented by the same distributed protocol.
 
 <SUBSECTION><TITLE>Objects</TITLE>
 
+<index/fault state<and>object/
+<index/object<and>fault states/
 <P>An object consists of
 an object-record that is a lazy chunk
 and that references
