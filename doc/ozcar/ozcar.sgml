@@ -15,8 +15,20 @@
 
 <book proglang=oz>
   <front>
+    <!-- Splitting the document into different HTML nodes -->
+    <meta name="html.split" value="chapter.start">
+    <meta name="html.split" value="chapter.gui">
+    <meta name="html.split" value="chapter.example">
+    <meta name="html.split" value="chapter.exec">
+    <meta name="html.split" value="chapter.env">
+    <meta name="html.split" value="chapter.exception">
+    <meta name="html.split" value="chapter.reference">
+    <meta name="html.split.bib" value="">
+    <meta name="html.split.index" value="">
+
     <meta name=ozversion value="3.0">
     <meta name=status value=draft>
+
     <title/The Mozart Debugger/
     <author.extern to="author.db" key="Benjamin.Lorenz">
     <abstract>
@@ -37,7 +49,7 @@
       programs.
     </abstract>
   <body>
-    <chapter>
+    <chapter id="chapter.start">
       <title/Getting Started/
       <p>
       There are two ways in which Ozcar can be invoked. First, from
@@ -61,7 +73,7 @@
         oz application itself, btw.). If you want to debug the
         application foo, you just type from the shell ozd foo. This
         starts an Oz engine, which in turn starts Ozcar and Emacs.
-    <chapter>
+    <chapter id="chapter.gui">
       <title/Ozcar's Main Components/
         <p>
         <ptr to=ozcar.initial> shows the main window after Ozcar has
@@ -159,7 +171,7 @@
         some booring step into or unleash), the color is blue, otherwise,
         that is, if a breakpoint has been reached or an unhandled exception
         was raised, the color is red.
-      <Chapter>
+      <chapter id="chapter.example">
         <title/A First Interaction
         <p>
         So, how can Ozcar actually be used? Consider the following
@@ -223,7 +235,7 @@ end>>>
         to grey. To detach the thread, simply click on the
         <picture.extern inline gif to="detach.gif"> button.
 
-      <Chapter>
+      <chapter id="chapter.exec">
         <title/Execution Control
         <p>
         This chapter describes the various possibilities to execute
@@ -397,7 +409,7 @@ end
         Unfortunately, there is no information yet about all currently
         defined dynamic breakpoints. You just have to keep them in mind.
         This should be changed in the future.
-      <Chapter>
+      <chapter id="chapter.env">
         <title/Environment Inspectation/
         <p>
         In this chapter you learn how to investigate the environment, i.e,
@@ -457,7 +469,7 @@ end
         <caption/You can execute all kinds of statements/
           <p><picture.extern gif to="exec-statement.gif">
         </figure>
-      <Chapter>
+      <chapter id="chapter.exception">
         <title/Exceptions/
         <p>
         Errors in programs often manifest themselves by threads throwing
@@ -496,7 +508,7 @@ end
         <caption/Emacs shows the position where the error occured/
           <p><picture.extern gif to="exception-emacs.gif">
         </figure>
-      <Chapter>
+      <chapter id="chapter.reference">
       <title/Reference Section/
         <p>
         This chapter gives a complete description of all the
@@ -510,15 +522,15 @@ end
           <p>
           <list>
             <entry><menu/About&ellipsis;/
-            <Item>
+            <item>
             Pops up an info box containing author and compilation information
             <entry><menu/Destroy/
-            <Item>
+            <item>
             Closes the internal Ozcar object. Use this menu entry only
             if Ozcar hangs, as all information about currently attached
             threads gets lost.
             <entry><menu key="C-x"/Suspend/
-            <Item>
+            <item>
             Closes the main window, sets the mozart emulator to non debug mode,
             and causes the compiler to generate non debug code. Information
             about currently attached threads is preserved.
@@ -526,81 +538,121 @@ end
           <subsection>
           <title/Action/
           <p>
-          <figure class="picture">
-          <caption/The Action menu/
-            <p><picture.extern gif to="menu-action.gif">
-          </figure>
+          <list>
+            <entry><menu key="s"/Step Into/
+            <item>
+            Do exactly one step (stop again at the next step point, enter
+            procedures). Identical to pressing the <picture.extern inline
+            gif to="step.gif"> button.
+            <entry><menu key="n"/Step Over/
+            <item>
+            Do one step, jump over procedures or other blocks which constitute
+            a step point. Identical to pressing the <picture.extern inline
+            gif to="next.gif"> button.
+            <entry><menu key="c"/Unleash/
+            <item>
+            Continue execution until the marked stack frame is about to be
+            removed from the stack, or until the stack is empty if
+            no frame is marked. Identical to pressing the
+            <picture.extern inline gif to="unleash.gif"> button.
+            <entry><menu key="z"/Stop/
+            <item>
+            Stop the current thread at the next step point it reaches.
+            Identical to pressing the
+            <picture.extern inline gif to="stop.gif"> button.
+          </list>
+          <subsubsection>
+          <title/The Detach submenu/
           <p>
-          <Para class=apropos><Title/Step Into/
-          Do exactly one step (stop again at the next step point, enter
-          procedures). Identical to pressing the <picture.extern inline
-          gif to="step.gif"> button.
+          This menu contains some useful entries to
+          detach one or more attached threads:
+          <list>
+            <entry><menu key="d"/Current/
+            <item>
+            Detach the current thread. Identical to pressing the
+            <picture.extern inline gif to="detach.gif"> button.
+            <entry><menu key="C-d"/All But Current/
+            <item>
+            Leave the current thread alone in Ozcar's thread forest. Detach
+            all the others, let them continue to run (if they are not dead).
+            <entry><menu key="M-d"/All/
+            <item>
+            Detach all threads, let them continue to run
+            (if they are not dead).
+            <entry><menu key="M-u"/All Dead/
+            <item>
+            Detach all dead threads.
+          </list>
+          <subsubsection>
+          <title/The Terminate submenu/
           <p>
-          <Para class=apropos><Title/Step Over/
-          Do one step, jump over procedures or other blocks which constitute
-          a step point. Identical to pressing the <picture.extern inline
-          gif to="next.gif"> button.
-          <p>
-          <Para class=apropos><Title/Unleash/
-          Continue execution until the marked stack frame is about to be
-          removed from the stack, or until the stack is empty if
-          no frame is marked. Identical to pressing the
-          <picture.extern inline gif to="unleash.gif"> button.
-          <p>
-          <Para class=apropos><Title/Stop/
-          Stop the current thread at the next step point it reaches.
-          Identical to pressing the
-          <picture.extern inline gif to="stop.gif"> button.
-          <p>
-          <Para class=apropos><Title/Detach/
-          Detach one or more attached threads.
-          <p>
-          <figure class="picture">
-          <caption/The Detach submenu/
-            <p><picture.extern gif to="submenu-detach.gif">
-          </figure>
-          <p>
-          <Para class=apropos><Title/-> Current/
-          Detach the current thread. Identical to pressing the
-          <picture.extern inline gif to="detach.gif"> button.
-          <p>
-          <Para class=apropos><Title/-> All But Current/
-          Leave the current thread alone in Ozcar's thread forest. Detach
-          all the others, let them continue to run (if they are not dead).
-          <p>
-          <Para class=apropos><Title/-> All/
-          Detach all threads, let them continue to run (if they are not dead).
-          <p>
-          <Para class=apropos><Title/-> All Dead/
-          Detach all dead threads.
-          <p>
-          <Para class=apropos><Title/Terminate/
-          Detach and kill one or more attached threads.
-          <p>
-          <figure class="picture">
-          <caption/The Terminate submenu/
-            <p><picture.extern gif to="submenu-terminate.gif">
-          </figure>
-          <p>
-          <Para class=apropos><Title/-> Current/
-          Detach and kill the current thread. Identical to pressing the
-          <picture.extern inline gif to="kill.gif"> button.
-          <p>
-          <Para class=apropos><Title/-> All But Current/
-          Leave the current thread alone in Ozcar's thread forest. Detach
-          and kill all the others.
-          <p>
-          <Para class=apropos><Title/-> All/
-          Detach and kill all threads.
+          This menu contains some useful entries to
+          detach <em>and kill</em> one or more attached threads:
+          <list>
+            <entry><menu key="t"/Current/
+            <item>
+            Detach and kill the current thread. Identical to pressing the
+            <picture.extern inline gif to="kill.gif"> button.
+            <entry><menu key="C-t"/All But Current/
+            <item>
+            Leave the current thread alone in Ozcar's thread forest. Detach
+            and kill all the others.
+            <entry><menu key="M-t"/All/
+            <item>
+            Detach and kill all threads.
+          </list>
           <subsection>
           <title/Thread/
           <p>
-          <figure class="picture">
-          <caption/The Thread menu/
-            <p><picture.extern gif to="menu-thread.gif">
-          </figure>
+          <list>
+            <entry><menu key="Left"/Previous/
+            <item>
+            Select the thread which is located above the currently
+            selected thread in the thread view. If the current thread
+            is the first thread in the thread view, the last thread (at
+            the bottom) is selected.
+            <entry><menu key="Right"/Next/
+            <item>
+            Select the thread which is located below the currently
+            selected thread in the thread view. If the current thread
+            is the last thread in the thread view, the first thread (at
+            the top) is selected.
+            <entry><menu key="C-s"/Status/
+            <item>
+            Print some useful information about the currently attached
+            threads, for example:
+            <em>2 attached threads, currently selected: 58/1
+            (stopped, runnable)</em>. The first part of the information
+            is obvious. The two numbers associated with the selected thread
+            are the thread id and the parent thread id. In parentheses,
+            information is given if the selected thread is stopped or
+            running, and if it is runnable, blocked or terminated.
+
+
+          </list>
           <subsection>
           <title/Stack/
+          <p>
+          <list>
+            <entry><menu key="Up"/Previous Frame/
+            <item>
+            Select the previous stack frame (if it exists)
+            of the currently selected thread. Note that the stack grows
+            to the bottom of the window, so you will reach an older frame.
+            <entry><menu key="Down"/Next Frame/
+            <item>
+            Select the next stack frame (if it exists)
+            of the currently selected thread. Note that the stack grows
+            to the bottom of the window, so you will reach a younger frame.
+            <entry><menu key="C-l"/Re-Calculate/
+            <item>
+            Update the stack view. You may see special,
+            compiler-generated stack frames then, as well as some
+            variables which have been bound in the meanwhile appear
+            which their value instead of an underscore. (There is
+            <em>no</em> automatic update which forces the stack view
+            to display a variable's value as soon as it becomes known.)
+          </list>
           <subsection>
           <title/Options/
           <subsection>
