@@ -140,11 +140,12 @@
       </Picture.Choice>
     <Abstract>
       This document offers a number of demo applets that can be run
-      directly from within their documentation. In order to execute
-      Mozart Applets, your Web Browser must be Mozart Applet
-      enabled. 
+      directly from within their documentation. 
     <p>
-      This is done easily, see <ptr.extern to="ozdoc:apptut" key="applets">.
+      To run the demo applets you have to have Mozart installed (which
+      is easy and is described in <ptr.extern to="ozdoc:install">) and
+      your Web Browser must be Mozart enabled (which is as easy and is
+      described in <ptr.extern to="ozdoc:apptut" key="applets">). 
     </Abstract>
   
     <Part id="part.constraints">
