@@ -1344,7 +1344,9 @@ Possible values are one of <code/No/, <code/Yes/, and
         <Title/Testing Locally/
         <P>
           One part of the support is concerned with testing system functors
-          locally.
+          locally&etc; This part is now subsumed and replaced by
+          profiles (see <ptr to="chapter.profiles">).
+<!--
           <List>
             <Entry class=useroption><Span class=index/<<oz-build-dir>>/
               (default: <File>~/mozart</File>)
@@ -1425,9 +1427,12 @@ cache=~/.oz/cache:cache=?{oz-home}/cache>>>
               The local functors are given by the user option
               <<oz-functor-path>>; see <<oz-set-functor-path>>.
           </List>
+-->
       <Section id="section.intro.gdb">
         <Title/Running under gdb/
-        <P>
+        <P>This part is now also subsumed and replaced by profiles
+        (see <ptr to="chapter.profiles">).
+<!--
           <Index/emulator<And>debugging/
           The last command is for starting the Mozart Emulator under <Span
           class=index/gdb/.
@@ -1451,6 +1456,7 @@ cache=~/.oz/cache:cache=?{oz-home}/cache>>>
               Else you have the possibility to first set breakpoints and only
               run the emulator when you issue the <Samp/run/ command to gdb.
           </List>
+-->
     <Appendix id="appendix.api">
       <Title/Application Programmer's Interface/
       <P>
