@@ -22,17 +22,17 @@ domain variables &resp a vector of finite domain variables. We have the
 following propagation rules, which determine the operational semantics
 of the propagator for the constraint <Math/element/.
 
-<p>
+<para id=u_vector.rule_e1><title//
 Rule 1: <Math/n := dom(n) \cap \{i \; | \; \exists j \in dom(v): j \in
-dom(d_i)\}\label{rule_e1}/
+dom(d_i)\}/
 
-<p>
+<para id=u_vector.rule_e2><title//
 Rule 2: <Math/v := dom(v) \cap \left(\bigcup_{i \in (dom(n) \cap
-\{1,\ldots,m\})} dom(d_i) \right)\label{rule_e2}/
+\{1,\ldots,m\})} dom(d_i) \right)/
 
-<p>
+<para id=u_vector.rule_e3><title//
 Rule 3: <Math/\mbox{if}  \;\;\; dom(n) = \{o\} \;\;\; \mbox{then}  \;\;\; d_o
-:= dom(v)\label{rule_e3}/ 
+:= dom(v)/ 
 
 <p>
 Note that <Math/dom(x)/ denotes the current domain of <Math/x/
@@ -191,52 +191,38 @@ provided because of the use of the macro <<FailOnEmpty>> (see
 
 <p>
 The propagation rules are implemented in the same order as they are
-presented in <ptr to="u_vector.element">. 
-That ensures that the values for
-<Math/i/ in rule [fixme ruleref{rule_e2}]
- are always in the index range of the vector
-<<d>>, since rule [fixme ruleref{rule_e1}] makes sure that only valid indices
-are contained in the domain of <Math/n/. 
-Note that the indices of vectors in
-Oz range over <Math/1 \ldots n/ 
-and the corresponding indices of &ccpp; arrays
-over <Math/0 \ldots n-1/. 
+presented in <ptr to="u_vector.element">.  That ensures that the
+values for <Math/i/ in rule 2 <ptr to="u_vector.rule_e2"> are always
+in the index range of the vector <<d>>, since rule 1 <ptr
+to="u_vector.rule_e1"> makes sure that only
+valid indices are contained in the domain of <Math/n/.  Note that the
+indices of vectors in Oz range over <Math/1 \ldots n/ and the
+corresponding indices of &ccpp; arrays over <Math/0 \ldots n-1/.
 
-<para class=apropos><title/Implementation of propagation rules/
-[fixme ruleref{rule_e1}]
-The implementation of the propagation rule 
-starts with an initially
-empty auxiliary domain <<aux_n>>. It collects all integers <Math/i/ 
-in the
-auxiliary domain, where the intersection of <Math/d_i/ and <Math/v/ 
-is not
-empty. That is equivalent to finding at least one <Math/j/ 
-being contained in
-<Math/d_i/ and <Math/v/. 
-The domain of <Math/n/, &ie <<n>>, is constrained by
-<<aux_n>>.
+<para class=apropos><title/Implementation of propagation rules/ The
+implementation of the propagation rule 1 <ptr to="u_vector.rule_e1">
+starts with an initially empty auxiliary domain <<aux_n>>. It collects
+all integers <Math/i/ in the auxiliary domain, where the intersection
+of <Math/d_i/ and <Math/v/ is not empty. That is equivalent to finding
+at least one <Math/j/ being contained in <Math/d_i/ and <Math/v/.  The
+domain of <Math/n/, &ie <<n>>, is constrained by <<aux_n>>.
 
 <p>
-The second rule [fixme ruleref{rule_e2}] states that the domain of <Math/v/
-cannot
-contain more values than occurring in all yet possible elements of the
-vector <Math/d/. The implementation uses again an initially empty auxiliary
-domain <<aux_v>> and collects in a loop all elements of <Math/d_i/ in
-<<aux_v>> by iterating over all <Math/i/ being contained in 
-<Math/n/.  The
-implementation of this rule closes with constraining <<v>> by
-<<aux_v>>. 
+The second rule 2 <ptr to="u_vector.rule_e2"> states that the domain
+of <Math/v/ cannot contain more values than occurring in all yet
+possible elements of the vector <Math/d/. The implementation uses
+again an initially empty auxiliary domain <<aux_v>> and collects in a
+loop all elements of <Math/d_i/ in <<aux_v>> by iterating over all
+<Math/i/ being contained in <Math/n/.  The implementation of this rule
+closes with constraining <<v>> by <<aux_v>>.
 
 <p>
-The last rule [fixme ruleref{rule_e3}] is only applied if <Math/n/ is
-determined, 
-&ie <<n->getSize()>> returns <Math/1/. 
-Then it retrieves the value <Math/o/,
-applies <<leave()>> to all variables of type <<OZ_FDIntVar>> and
-replaces the <Math/element/ propagator by the equality 
-<Math/v = d_o/ using the
-member function <<replaceBy()>> of class <<OZ_Propagator>> (see
-<ptr to="u_replacing">).
+The last rule, rule 3 <ptr to="u_vector.rule_e3">, is only applied if
+<Math/n/ is determined, &ie <<n->getSize()>> returns <Math/1/.  Then
+it retrieves the value <Math/o/, applies <<leave()>> to all variables
+of type <<OZ_FDIntVar>> and replaces the <Math/element/ propagator by
+the equality <Math/v = d_o/ using the member function <<replaceBy()>>
+of class <<OZ_Propagator>> (see <ptr to="u_replacing">).
 <p>
 
 
