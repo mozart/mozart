@@ -135,7 +135,7 @@ exponential number of threads! See how easy it is to create concurrent
 threads. You may use this program to test how many threads your Oz
 installation can create. Try
 
-<<<{Browse {Fib 24}}>>>
+<<<{Browse {Fib 25}}>>>
 
 <P>while using the panel program in your Oz menu to see the threads. 
 If it works, try a larger number. 
