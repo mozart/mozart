@@ -1,0 +1,2 @@
+<ITEM> <<highlightbackground:C>> : Specifies the color to display in the traversal highlight region when the widget does not have the input focus.  <<C>> must be a valid color (see <ptr to="misc.color">)
+

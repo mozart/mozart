@@ -1,0 +1,126 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Contributors (sgml translation):
+  -   Daniel Simon <dansim@ps.uni-sb.de>
+  -   Andy Walter <anwalt@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+
+<chapter id=chapter.text>
+<title/Input and Output of Text/
+<p>
+The example in <ptr to=section.files.expand-a> resulted in a very inefficient
+program: reading the entire file to a list and processing it afterwards
+is extremely memory consuming.
+<p>
+A far better solution is to process the file incrementally
+line by line. This pattern of reading files occurs in fact very often,
+thus we provide support for it. The support provided is a mixin
+class <<Open.text>>. This mixin class can be used together with files,
+sockets, and pipes.
+
+<section id="section.text.expand"><title/Expanding TAB Characters Revisited/
+<p>
+In <ptr to=prog-opprog-expandi/ the revised formulation of the
+<<Expand>> procedure is shown. As before the file objects are created,
+but now both files inherit from <<Open.text>> as well. This class
+provides methods for buffered input and output.
+<p>
+<index/Expand/
+<figure class=Program id=prog-opprog-expandi>
+<caption/The Incremental <<Expand>> Procedure/
+<chunk class=anonymous><title/Expand2/
+local 
+   fun {Insert N Is}
+      if N>0 then {Insert N-1 & |Is} else Is end
+   end
+   fun {ScanLine Is Tab N}
+      case Is of nil then nil
+      [] I|Ir then
+         case I 
+         of &\t then M=Tab-(N mod Tab) in {Insert M {ScanLine Ir Tab M+N}}
+         [] &\b then I|{ScanLine Ir Tab {Max 0 N-1}}
+         else I|{ScanLine Ir Tab N+1}
+         end
+      end
+   end
+   proc {Scan Tab IF OF}
+      Is={IF getS($)} 
+   in
+      if Is==false then 
+         {IF close} {OF close}
+      else
+         {OF putS({ScanLine Is Tab 0})}
+         {Scan Tab IF OF}
+      end
+   end
+   class TextFile 
+      from Open.file Open.text 
+   end
+in
+   proc {Expand Tab IN ON}
+      {Scan Tab 
+       {New TextFile init(name:IN)}
+       {New TextFile init(name:  ON 
+                          flags: [write create truncate])}}
+   end
+end
+</chunk>
+</figure>
+
+The procedure <<Scan>> applies the input file object <<IF>> to the message
+<<getS($)>>. It yields either <<false>>, in case the end of the file is
+reached, or a string. This string contains exactly one line of the input
+file (without a newline character).
+<p>
+The expansion of TAB characters is done in the function <<ScanLine>> as
+before. The expanded lines are written with the <<putS>> method.
+</section>
+
+
+<![ %EXTRA; [
+<section><title/NONE/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Input and Output of Text
+%%%
+
+%%
+%% Expanding TAB Characters Revisited
+%%
+
+declare
+<chunk.ref/Expand2/
+
+
+
+
+
+</chunk>
+]]>
+
+
+
+</chapter>
+

@@ -1,0 +1,662 @@
+<!--
+  - Author:
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Leif Kornstaedt, 1996-1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.scanner">
+  <Title/The Gump Scanner Generator/
+  <P>
+    <Index/scanner<And>generator/
+    This chapter describes the &Gump; Scanner Generator.  Its input consists
+    of an &Oz; source with embedded scanner specifications; the output
+    implements each scanner by an &Oz; class.
+  <Para class=apropos><Title/Definitions/
+    A <Def>scanner</Def> is a program that performs lexical analysis,
+    which means that it transforms a stream of characters into a stream of
+    <Def class=noindex>tokens</Def><Index/token<And>stream/.  The text is
+    read from left to right.  During this process, sequences of characters
+    are grouped into <Def>lexemes</Def> according to user-defined rules,
+    specified by so-called <Def>regular expressions</Def> and associated
+    <Def>semantic actions</Def>.  An action computes tokens from a lexeme,
+    each consisting of a <Def class=noindex>token class</Def><Index/token<And
+    >class/ and an optional <Def class=noindex>token value</Def><Index
+    /token<And>value/, which are appended to the token stream.  The process
+    is iterated until the end of the character stream is reached.
+  <P>
+    This chapter first describes the basic principles of the &Gump; Scanner
+    Generator by means of an example in <Ptr to="section.scanner.example">.
+    A more detailed reference is then given in <Ptr
+    to="section.scanner.reference">.
+  <Section id="section.scanner.example">
+    <Title/Example/
+    <P>
+      As a running example we will specify, throughout the manual, a front-end
+      for a compiler or an interpreter for a small functional language <Name
+      type=language>Lambda</Name><Index/Lambda<And>language used as example/.
+      In this section we will define the scanner for this language, in
+      <Ptr to="section.parser.example"> we build a parser on top of this
+      scanner.
+    <SubSection>
+      <Title/Writing a Scanner Specification/
+      <P>
+	<Ptr to="program.scanner.example"> shows the specification of the
+	sample scanner we will consider in this section.  In the following
+	we will examine this example line by line.
+	<Figure float id="program.scanner.example" class=program>
+	  <Caption>The <<LambdaScanner>> scanner specification.</Caption>
+	  <P>
+	    <Code.Extern display to="LambdaScanner.ozg" class=linenumbers>
+	</Figure>
+      <Para class=apropos><Title/Class Descriptors/
+	At the first glance the scanner specification closely resembles a
+	class definition with some extra elements, introduced by the keyword
+	<<scanner>> instead of <<class>>.  This is intentional, since it
+	will ultimately be replaced by a class.  This is why all descriptors
+	allowed in a class definition are also allowed at the beginning of a
+	scanner specification.  Consider the <<from>>, <<attr>> and <<meth>>
+	constructs used in lines 2 to&nbsp;10.
+      <Para class=apropos><Title/Lexical Abbreviations/
+	The scanner-specific declarations begin at line&nbsp;12.  Two kinds
+	of definition can be introduced by the keyword <<lex>>: either a <Def
+	>lexical abbreviation</Def>, as seen in lines 12 to&nbsp;15, or a
+	<Def>lexical rule</Def> as found from line&nbsp;17 to the end of the
+	specification.  A lexical abbreviation <<lex ?{I} = &lt;?{R}&gt; end>>
+	associates an identifier&nbsp;<Var type=meta>I</Var> with a given
+	regular expression&nbsp;<Var type=meta>R</Var>.  Occurrences
+	of&nbsp;<<{?{I}}>> in other regular expressions are then replaced
+	to&nbsp;<<(?{R})>>.
+      <P>
+	<Index/regular expressions<And>syntax/
+	Note that regular expressions use the same syntax as regular
+	expressions in <Span class=index/&flex;/&nbsp;<Ptr to="paxson95">,
+	with a few exceptions (detailed in <Ptr to="section.scanner.syntax">).
+	Furthermore, we must either enclose them in angle brackets or give
+	them as &Oz; strings.  (The latter proves useful when the
+	angle-bracketed version confuses <Span class=index/Emacs/'
+	fontification<Index/fontification/ mode, but is a bit harder to
+	read, since more characters must be escaped.)
+      <P>
+	The example defines four lexical abbreviations: <<digit>> stands for
+	a decimal digit, <<letter>> for an uppercase or lowercase letter;
+	<<id>> defines the syntax of identifiers to consist of a letter,
+	followed by an arbitrary sequence of letters and digits; and finally,
+	<<int>> defines the syntax of positive decimal integers as a nonempty
+	sequence of digits.
+      <Para class=apropos><Title/Lexical Rules/
+	Lexical rules of the form <<lex &lt;?{R}&gt; ?{S} end>> are
+	more interesting, since the set of these is the actual scanner
+	specification.  Upon a match of a prefix of the input character
+	stream with the regular expression&nbsp;<<R>>, the
+	statement&nbsp;<<S>> is executed as a method body (&ie;, <<self>> may
+	be accessed and modified).  Two methods are provided by the mixin
+	class <Span class=index/<<GumpScanner.'class'>>/ (inherited from in
+	line&nbsp;2) to append tokens to the token stream: <<putToken1>><Index
+	class=module/GumpScanner.'class'<And>putToken1/, which appends a
+	token of a given class without a value (<<unit>> being used instead),
+	and <<putToken>><Index class=module/GumpScanner.'class'<And>putToken/,
+	which allows a specific token value to be provided.  Token classes may
+	be represented by arbitrary &Oz; values, but the parser generator in
+	<Ptr to="chapter.parser"> expects them to be atoms.  In lines 18
+	and&nbsp;21 you can see how constants are used as token classes.
+	In line&nbsp;33 the token class is computed from the lexeme.
+      <Para class=apropos><Title/Accessing the Lexeme/
+	The lexeme itself may be accessed in several ways.  The method
+	<<getAtom>><Index class=module/GumpScanner.'class'<And>getAtom/ returns
+	the lexeme as an atom, which is the representation for identifier
+	token values chosen in line&nbsp;25.  The method <<getString>><Index
+	class=module/GumpScanner.'class'<And>getString/ returns the lexeme as
+	a string, such as in line&nbsp;28, where it is subsequently converted
+	to an integer.
+      <P>
+	The remaining lexical rules are easily explained.  Lines 36
+	and&nbsp;37 respectively describe how <Span class=index/whitespace/
+	and <Span class=index/comments/ are to be ignored.  This is done by
+	neither calling <<putToken1>> nor <<putToken>>.  (Note that an action
+	can also invoke them several times to append multiple tokens to the
+	token stream, just as it may chose not to invoke them at all to simply
+	ignore the lexeme or only produce <Span class=index/side effects/.)
+	The rule in line&nbsp;38 ignores any matched newlines, but updates the
+	line counter<Index/line numbers/ attribute <<LineNumber>> as it does
+	so.  The rule in line&nbsp;41 reports any remaining <Span class=index
+	/unmatched characters/ in the input as <Span class=index/lexical
+	errors/<Index/error<And>lexical/ and returns the token <Span
+	class=index/<<'error'>>/<Index/error<And>token/<Index/token<and>error/
+	which the parser can recognize as an erroneous token.
+      <Para class=apropos><Title/End-of-File Rules/
+	The final rule, in line&nbsp;46, has the special syntax
+	<Span class=index/<<&lt;&lt;EOF&gt;&gt;>>/<Index/end-of-file/<Index
+	/token<and>end-of-file/ (it might also have been written as
+	<<"&lt;&lt;EOF&gt;&gt;">>) and only matches the end of the character
+	stream.  It returns the token <Span class=index/<<'EOF'>>/ which can
+	be recognized by the parser as the end of input.  Note that the
+	action might just as well open another file<Index/file<And>scanning
+	from/ to read from.
+      <P>
+	More information about acceptable sets of regular expressions in
+	scanner specifications, conflict resolution and grouping into
+	lexical modes is given in <Ptr to="section.scanner.syntax">.
+    <SubSection>
+      <Title/Invoking Gump/
+      <P>
+	Now that we have finished writing our specification, we want to
+	translate it into an Oz class definition that implements our scanner.
+	For this, we issue the compiler directive
+	<<<\switch +gump>>>
+	<Index/compiler<And>switch<And><<gump>>/
+	whereupon the compiler<Index/compiler<And>scanner specifications/
+	will accept &Gump; specifications.
+      <Para class=apropos><Title/Running Gump/
+	Save the above specification in a file <File/LambdaScanner.ozg/.
+	The extension <File/.ozg/<Index/file<And>extension <<.ozg>>/
+	indicates that this file contains &Oz; code with additional &Gump;
+	definitions, so that <Span class=index/Emacs/ will fontify<Index
+	/fontification/ &Gump; definitions correctly.  Feeding
+	<<<\insert LambdaScanner.ozg>>>
+	will process this file.  Switch to the Compiler buffer (via <Kbd
+	>C-c C-c</Kbd>) to watch &Gump;'s status messages and any errors
+	occurring during the translation.
+      <Para class=apropos><Title/Output Files/
+	<Index/file<And>created by Gump/
+	When the translation is finished, you will notice several new files
+	in the current working directory.  These will be named after your
+	<<scanner>> specification.  Suppose your scanner was called&nbsp;<<S>>,
+	then you will find files <File/S.l/, <File/S.C/, <File/S.o/ and
+	<File/S.so/.  The first three are intermediate results (respectively
+	the input file for <Span class=index/&flex;/, the &flex;-generated
+	<Span class=index/C++/&nbsp;file and the object code produced by the
+	C++&nbsp;compiler) and the last one is the resulting <Span class=index
+	/dynamic library/<Index/native functor/<Index/foreign library/ used by
+	the generated scanner.
+	<!--** generated imports -->
+	<!--** document environment variable OZTOOL -->
+	<!--** include reference to oztool -->
+      <Para class=apropos><Title/Implementation Limitation/
+	<Index/limitations<And>of the scanner generator/
+	Note that due to limitations of dynamic linking, a scanner may only
+	be loaded once into the system.  When interactively developing a
+	scanner, this means that you will not see changes you make to the
+	set and order of the regular expressions consistently.  You should
+	thus halt and restart Mozart each time you make changes to the
+	regular expressions.
+      <P>
+	See also <Ptr to="section.scanner.params"> for a workaround around
+	this limitation.
+    <SubSection>
+      <Title/Using the Generated Scanner/
+      <P>
+	<Ptr to="program.scanner.test"> shows a sample program running our
+	generated scanner.
+	<Figure float id="program.scanner.test" class=program>
+	  <Caption>A program making use of the generated scanner.</Caption>
+	  <P>
+	    <Code.Extern display to="TestScanner.ozg">
+	</Figure>
+      <P>
+	The generated <<LambdaScanner>> class is instantiated as <<MyScanner>>.
+	We have to call the method <<init()>> first to initialize the internal
+	structures of the <Span class=index/<<GumpScanner.'class'>>/.
+      <Para class=apropos><Title/Requesting Tokens/
+	The procedure <Span class=index/<<GetTokens>>/ repeatedly
+	invokes the <<GumpScanner.'class'>> method<Index class=module
+	/GumpScanner.'class'<And>getToken/
+	<<<getToken(??{X} ??{Y})>>>
+	which returns the next token's token class in&nbsp;<<X>> and token
+	value in&nbsp;<<Y>> and removes it from the token stream.
+	<<GetTokens>> exits when the end of the token stream is reached,
+	which is recognized by the token class <Span class=index/<<'EOF'>>/.
+      <Para class=apropos><Title/Providing Inputs/
+	To actually start scanning we have to provide an input character
+	stream.  This is done via one of the methods<Index class=module
+	/GumpScanner.'class'<And>scanFile/<Index/file<And>scanning from/
+	<<<scanFile(?+{FileName})>>>
+	or<Index class=module/GumpScanner.'class'<And>scanVirtualString/<Index
+	/virtual string<And>scanning from/
+	<<<scanVirtualString(?+{V})>>>
+	Each of these pushes the currently used buffer (if any) upon an
+	internal stack of buffers<Index/buffer stack/ and builds a new
+	buffer from the given source.  Each time the end of a buffer is
+	reached, the <Span class=index/<<&lt;&lt;EOF&gt;&gt;>>/ rule is
+	matched.  This may pop a buffer and continue scanning the next-outer
+	buffer where it left off, using the <<closeBuffer>><Index class=module
+	/GumpScanner.'class'<And>closeBuffer/ method described in <Ptr
+	to="section.scanner.class">.
+      <Para class=apropos><Title/Closing Scanners/
+	When a scanner is not used anymore, it should be sent the message<Index
+	class=module/GumpScanner.'class'<And>close/
+	<<<close()>>>
+	so that it can close any open files and release any allocated buffers.
+	(This is even necessary when scanning virtual strings due to the
+	underlying implementation in&nbsp;<Span class=index/C++/.)
+      <P>
+	The following is a sample input for the scanner.  The above example
+	expects this to be placed in the file <File/Lambda.in/ in the
+	current directory:
+	<Code.Extern display proglang=lambda to="Lambda.in">
+  <Section id="section.scanner.reference">
+    <Title/Reference/
+    <P>
+      This section is intended to serve as a reference for the user of
+      the &Gump; Scanner Generator.  It details the syntax of the embedded
+      scanner specification language in <Ptr to="section.scanner.syntax">,
+      which options are supported and how they are specified in <Ptr
+      to="section.scanner.params"> and finally the runtime part of the
+      Scanner Generator, the mixin class <<GumpScanner.'class'>>, in
+      <Ptr to="section.scanner.class">.
+    <SubSection id="section.scanner.syntax">
+      <Title/Syntax of the Scanner Specification Language/
+      <P>
+	The notation used here for specifying the syntax of the specification
+	language is a variant of <Name type=formalism>BNF</Name> and is
+	defined in <Ptr to="appendix.notation">.
+      <P>
+	A scanner specification is allowed anywhere as an &Oz; statement:
+	<Grammar.Rule/?={statement}
+	  <Grammar.Alt type=add/?={scanner specification}//
+      <P>
+	It is similar to a class definition, except that it is introduced
+	by the keyword <<scanner>>, must be named by a variable (and not an
+	arbitrary term), since this is used for assigning file names, and
+	allows for additional descriptors after the usual class descriptors.
+	<Index/file<And>created by Gump/
+	<Grammar.Rule/?={scanner specification}
+	  <Grammar.Alt/<<scanner>> ?={variable}/
+	  <Grammar.Alt type=space/{ ?={class descriptor} }/
+	  <Grammar.Alt type=space/{ ?={method} }/
+	  <Grammar.Alt type=space/{ ?={scanner descriptor} }+/
+	  <Grammar.Alt type=space/<<end>>//
+      <P>
+	A <Def>lexical abbreviation</Def> associates an identifier with a
+	regular expression, which can then be referenced in subsequent lexical
+	abbreviations or any lexical rules by enclosing the identifier in
+	curly brackets.  The regular expression is additionally parenthesized
+	when it is expanded.
+	<Grammar.Rule/?={lexical abbreviation}
+	  <Grammar.Alt/<<lex>> ?={atom}
+	    <Q class=terminal/<<=>>/ ?={regex} <<end>>/
+	  <Grammar.Alt/<<lex>> ?={variable}
+	    <Q class=terminal/<<=>>/ ?={regex} <<end>>//
+      <P>
+	The definition of a <Def>lexical rule</Def> is similar to the
+	definition of a method.  However, its head consists of a regular
+	expression; when this is matched, the body of the lexical rule is
+	executed (as a method).
+	<Grammar.Rule/?={lexical rule}
+	  <Grammar.Alt/<<lex>> ?={regex}/
+	  <Grammar.Alt type=space/?={in statement}/
+	  <Grammar.Alt type=space/<<end>>//
+      <P>
+	<Index/start conditions/
+	Regular expressions may be annotated with <Def>lexical modes</Def>.
+	Each lexical mode constitutes an independent sub-scanner:  At any time
+	a certain mode is active; in this mode only the regular expressions
+	annotated with it will be matched.  All lexical rules defined within
+	the scope of a lexical mode are annotated with this lexical mode.
+	A lexical mode may <Def class=noindex>inherit</Def><Index
+	/inheriting<And>from lexical modes/ from other lexical modes; all
+	regular expressions in these modes are then annotated with the
+	inheriting lexical mode as well.  Lexical modes implicitly inherit
+	from all lexical modes they are nested in.  Lexical rules written
+	at top-level are annotated with the implicitly declared mode <Span
+	class=index/<<INITIAL>>/.
+	<Grammar.Rule/?={lexical mode}
+	  <Grammar.Alt/<<mode>> ?={variable} [ <<from>> { ?={variable} }+ ]/
+	  <Grammar.Alt type=space/{ ?={mode descriptor} }/
+	  <Grammar.Alt type=space/<<end>>//
+	<Grammar.Rule/?={mode descriptor}
+	  <Grammar.Alt/?={lexical rule}/
+	  <Grammar.Alt/?={lexical mode}//
+      <SubSubSection>
+	<Title/Syntax of Regular Expressions/
+	<P>
+	  <Index/regular expressions<And>syntax/
+	  Regular expressions ?={regex} correspond to the regular expressions
+	  used in <Span class=index/&flex;/&nbsp;<Ptr to="paxson95"
+	  info="Version 2.5.2"> with a few exceptions:
+	  <List>
+	    <Item>
+	      &Gump; regular expressions are either enclosed in angle
+	      brackets or given as &Oz; strings.
+	    <Item>
+	      <Index/start conditions/
+	      The angle-bracket annotation with <Span class=index/lexical
+	      modes/ is not supported by &Gump;; use scopes of lexical modes
+	      instead.  Note that several distinct lexical mode definitions
+	      may occur for the same lexical mode name as long as no
+	      inheritance cycles are created.
+	  </List>
+	<P>
+	  Due to the underlying use of &flex;, the names of lexical
+	  abbreviations are restricted to the syntax allowed in &flex;
+	  name definitions.
+      <SubSubSection>
+	<Title/Ambiguities and Errors in the Rule Set/
+	<P>
+	  <Index/ambiguities<And>in a scanner specification/
+	  Tokenization is performed by a left-to-right scan of the input
+	  character stream.  If several rules match a prefix of the input,
+	  then the rule matching the longest prefix is preferred.  If
+	  several rules match the same (longest) prefix of the input,
+	  then two rules may be applied to disambiguate the match (see
+	  <Ptr to="section.scanner.params"> on how to select the rule):
+	  <List>
+	    <Entry>First-fit.<Index/first-fit matching/
+	    <Item>
+	      The rule notated first in the scanner specification is
+	      preferred.  In this case, every conflict can be uniquely
+	      resolved.  Two errors in the rule set are possible: holes
+	      and completely covered rules (see below).
+	    <Entry>Best-fit.<Index/best-fit matching/
+	    <Item>
+	      Suppose two conflicting rules are rule&nbsp;<Math.Choice>
+	      <Math type=html><I>r&lt;/I><SUB>1&lt;/SUB></Math>
+	      <Math type=latex>r_1</Math></Math.Choice>
+	      and rule&nbsp;<Math.Choice>
+	      <Math type=html><I>r&lt;/I><SUB>2&lt;/SUB></Math
+	      ><Math type=latex>r_2</Math></Math.Choice>, which are
+	      annotated by sets of lexical modes <Math.Choice>
+	      <Math type=html><I>S&lt;/I><SUB>1&lt;/SUB></Math>
+	      <Math type=latex>S_1</Math></Math.Choice>
+	      and&nbsp;<Math.Choice>
+	      <Math type=html><I>S&lt;/I><SUB>2&lt;/SUB></Math>
+	      <Math type=latex>S_2</Math></Math.Choice>
+	      respectively.  Then <Math.Choice>
+	      <Math type=html><I>r&lt;/I><SUB>1&lt;/SUB></Math>
+	      <Math type=latex>r_1</Math></Math.Choice> is preferred
+	      over&nbsp;<Math.Choice>
+	      <Math type=html><I>r&lt;/I><SUB>2&lt;/SUB></Math>
+	      <Math type=latex>r_2</Math></Math.Choice> if and only
+	      if the following condition holds:
+	      <Math.Choice display>
+		<Math type=html><I>S&lt;/I><SUB>1&lt;/SUB> is a subset of
+		<I>S&lt;/I><SUB>2&lt;/SUB> and L(<I>r&lt;/I><SUB>1&lt;/SUB>)
+		is a subset of L(<I>r&lt;/I><SUB>2&lt;/SUB>)</Math>
+		<Math type=latex>S_1 \subseteq S_2 \; \wedge \;
+		L(r_1) \subseteq L(r_2)</Math>
+	      </Math.Choice>
+	      where <Math.Choice><Math type=html>L(<I>r&lt;/I>)</Math>
+	      <Math type=latex>L(r)</Math></Math.choice> is the language
+	      generated by a regular expression&nbsp;<Math.Choice><Math
+	      type=html><I>r&lt;/I></Math><Math type=latex>r</Math>
+	      </Math.Choice>, that is, the set of strings that
+	      match&nbsp;<Math.Choice><Math type=html><I>r&lt;/I></Math>
+	      <Math type=latex>r</Math></Math.Choice>.  Intuitively, this
+	      rule means that <Math.Choice>
+	      <Math type=html><I>r&lt;/I><SUB>1&lt;/SUB></Math>
+	      <Math type=latex>r_1</Math></Math.Choice> is <Q/more
+	      specialized than/&nbsp;<Math.Choice>
+	      <Math type=html><I>r&lt;/I><SUB>2&lt;/SUB></Math>
+	      <Math type=latex>r_2</Math></Math.Choice>.  Additionally
+	      to the errors possible in the rule set in the first-fit
+	      case, here the situation may arise that the rule set is not
+	      well-ordered &wrt; the <Q/more specialized than/ relation.
+	  </List>
+	<P>
+	  <Index/error<And>in a scanner's rule set/
+	  The following errors in the rule set may occur:
+	  <List>
+	    <Entry>Holes in the rule set.
+	    <Item>
+	      For some input (in some mode), no true prefix is matched by
+	      any rule.  Due to the underlying implementation using &flex;,
+	      this will result in the warning message
+	      <Code display/"-s option given but default rule can be matched"/
+	      If at run-time some such input is encountered, this will
+	      result in an error exception
+	      <Code display/"flex scanner jammed"/
+	    <Entry>Completely covered rules.
+	    <Item>
+	      A rule&nbsp;<Math.Choice><Math type=html><I>r&lt;/I></Math>
+	      <Math type=latex>r</Math></Math.Choice> is never matched
+	      because for every prefix in&nbsp;<Math.Choice>
+	      <Math type=html>L(<I>r&lt;/I>)</Math>
+	      <Math type=latex>L(r)</Math></Math.choice> exists another
+	      rule&nbsp;<Math.Choice><Math type=html><I>r&lt;/I></Math>
+	      <Math type=latex>s</Math></Math.Choice> which is preferred
+	      over&nbsp;<Math.Choice><Math type=html><I>r&lt;/I></Math>
+	      <Math type=latex>r</Math></Math.Choice>.
+	    <Entry>Non well-orderedness.
+	    <Item>
+	      Two rules&nbsp;<Math.Choice>
+	      <Math type=html><I>r&lt;/I><SUB>1&lt;/SUB></Math>
+	      <Math type=latex>r_1</Math></Math.Choice>
+	      and&nbsp;<Math.Choice>
+	      <Math type=html><I>r&lt;/I><SUB>2&lt;/SUB></Math>
+	      <Math type=latex>r_2</Math></Math.Choice>
+	      are in conflict in the best-fit case, but neither is
+	      <Math.Choice><Math type=html><I>r&lt;/I><SUB>1&lt;/SUB></Math>
+	      <Math type=latex>r_1</Math></Math.Choice> more
+	      specialized than&nbsp;<Math.Choice>
+	      <Math type=html><I>r&lt;/I><SUB>2&lt;/SUB></Math>
+	      <Math type=latex>r_2</Math></Math.Choice>
+	      nor the other way round, and no rule or set of rules exists
+	      that covers <Math.Choice>
+	      <Math type=html>L(<I>r&lt;/I><SUB>1&lt;/SUB>) intersected
+	      with L(<I>r&lt;/I><SUB>2&lt;/SUB>)</Math>
+	      <Math type=latex>L(r_1) \cap L(r_2)</Math></Math.Choice>.
+	  </List>
+    <SubSection id="section.scanner.params">
+      <Title/Parameters to Scanner Generation/
+      <P>
+	The &Gump; Scanner Generator supports several configuration
+	parameters, which may be set on a per-scanner basis via the use
+	of macro directives.
+      <Para class=apropos><Title/Macro Directives/
+	<Index/macro directives/
+	Due to the implementation of scanners in&nbsp;<Span class=index/C++/,
+	a unique prefix is required for each scanner to avoid symbol conflicts
+	when several scanners reside at the same time in the Mozart system.
+	The following macro directive allows this prefix to be changed
+	(the default <<zy>> is all right if only a single scanner is used
+	at any time):
+	<<<\gumpscannerprefix ?={atom}>>>
+	<Index/compiler<And>switch<And><<gumpscannerprefix>>/
+      <Para class=apropos><Title/Switches/
+	<Ptr to="table.scanner.switches"> summarizes some compiler switches
+	that control the &Gump; Scanner Generator.
+	<Figure float id="table.scanner.switches" class=table>
+	  <Caption>Compiler switches for the Gump Scanner Generator.</Caption>
+	  <P>
+	    <Table>
+	      <TR>
+		<TH>Switch
+		<TH>Effect
+	      <TR>
+		<TD><Code><Span class=ignore>\switch +</Span
+		  >gumpscannerbestfit</Code>
+		  <Index/best-fit matching/
+		  <Index/compiler<And>switch<And><<gumpscannerbestfit>>/
+		<TD>Use best-fit instead of first-fit disambiguating
+	      <TR>
+		<TD><Code><Span class=ignore>\switch +</Span
+		  >gumpscannercaseless</Code>
+		  <Index/compiler<And>switch<And><<gumpscannercaseless>>/
+		<TD>Generate a case-insensitive scanner
+	      <TR>
+		<TD><Code><Span class=ignore>\switch +</Span
+		  >gumpscannernowarn</Code>
+		  <Index/compiler<And>switch<And><<gumpscannernowarn>>/
+		  <Index/compiler<And>warnings/
+		  <Index/warnings<And>suppressing/
+		<TD>Suppress warnings from <Span class=index/&flex;/
+	    </Table>
+	</Figure>
+    <SubSection id="section.scanner.class">
+      <Title/The Mixin Class <<GumpScanner.'class'>>/
+      <P>
+	The module <<GumpScanner>> defines the runtime support needed by
+	&Gump;-generated scanners.  All operations and data are encapsulated
+	in the mixin class <Span class=index/<<GumpScanner.'class'>>/ that
+	scanners have to inherit from in order to be executable.
+      <Para class=apropos><Title/Abstract Members/
+	The mixin class expects the following features and methods to be
+	defined by derivate classes.  (It is a good idea not to define any
+	class members whose name begins with <<lex&ellipsis;>> since these
+	may be used for internals of the Scanner Generator.)
+	<List>
+	  <Entry><<feat lexer>><Index class=module/GumpScanner.'class'<And
+	    >lexer/
+	  <Item>
+	    This feature must contain the scanner-specific loaded foreign
+	    functions, which includes the generated scanner tables.
+	  <Entry><<meth lexExecuteAction(?+{I})>><Index class=module
+	    /GumpScanner.'class'<And>lexExecuteAction/
+	  <Item>
+	    This method is called each time a regular expression is
+	    matched.  Regular expressions are assigned unique integers;
+	    ?_{I}&nbsp;indicates which rule's associated action is to be
+	    run.
+	</List>
+      <Para class=apropos><Title/Provided Members/
+	The <<GumpScanner.'class'>> class defines some user functionality
+	that is to be used either by users of the generated scanner or by
+	the semantic actions in the scanner itself.
+	<List>
+	  <Entry><<meth init()>><Index class=module
+	    /GumpScanner.'class'<And>init/
+	  <Item>
+	    This initializes the internal structures of the
+	    <<GumpScanner.'class'>>.  This must be called before any other
+	    method of this class.
+	  <Entry><<meth setMode(?+{I})>><Index class=module
+	    /GumpScanner.'class'<And>setMode/
+	  <Item>
+	    <Index/lexical modes/
+	    <Index/start conditions/
+	    The operation mode of the scanner is set to the lexical
+	    mode&nbsp;?_{I}.  Lexical modes are represented internally as
+	    integers.  Since modes are identified by variables, the class
+	    generation phase wraps a <<local &ellipsis; end>> around the
+	    class equating the mode variables to the assigned unique
+	    integers.
+	  <Entry><<meth currentMode(??{I})>><Index class=module
+	    /GumpScanner.'class'<And>currentMode/
+	  <Item>
+	    This returns the integer&nbsp;?_{I} identifying the lexical mode
+	    the scanner currently operates in.
+	  <Entry><<meth getAtom(??{A})>><Index class=module
+	    /GumpScanner.'class'<And>getAtom/
+	  <Item>
+	    This method is used to access the lexeme last matched.  It is
+	    returned as an atom in the variable&nbsp;?_{A}.  Note that if
+	    the lexeme contains a <Span class=index/<Name type=char
+	    >NUL</Name>/ character (ISO&nbsp;0) then only the text up to
+	    the first <Name type=char>NUL</Name> but excluding it is returned.
+	  <Entry><<meth getString(??{S})>><Index class=module
+	    /GumpScanner.'class'<And>getString/
+	  <Item>
+	    This method returns the lexeme as a string in the
+	    variable&nbsp;?_{S}.  The restrictions concerning <<getAtom>>
+	    do not apply for <<getString>>.
+	  <Entry><<meth getLength(??{I})>><Index class=module
+	    /GumpScanner.'class'<And>getString/
+	  <Item>
+	    This method returns the length of the lexeme (number of
+	    characters matched).
+	  <Entry><<meth putToken(?+{X} ?_{Y})>><Index class=module
+	    /GumpScanner.'class'<And>putToken/
+	  <Item>
+	    This method may be used to append a token with token
+	    class&nbsp;?_{X} and value&nbsp;?_{Y} to the token stream.
+	    (Actually, the token class may be an arbitrary &Oz; value, but
+	    atoms and the integers between 0 and&nbsp;255 are the only
+	    representations understood by &Gump;-generated parsers.)
+	  <Entry><<meth putToken1(?+{X})>><Index class=module
+	    /GumpScanner.'class'<And>putToken1/
+	  <Item>
+	    This method may be used to append a token with token
+	    class&nbsp;?_{X} and value <<unit>> to the token stream.
+	  <Entry><<meth getToken(??{X} ?_{Y})>><Index class=module
+	    /GumpScanner.'class'<And>getToken/
+	  <Item>
+	    The next token is removed from the token stream and returned.
+	    The token class is returned in&nbsp;?_{X} and its value
+	    in&nbsp;?_{Y}.
+	  <Entry><<meth input(??{C})>><Index class=module
+	    /GumpScanner.'class'<And>input/
+	  <Item>
+	    The next (unmatched) character is removed from the character
+	    stream and returned in&nbsp;?_{C}.
+	  <Entry><<meth scanFile(?+{V})>><Index class=module
+	    /GumpScanner.'class'<And>scanFile/
+	  <Item>
+	    <Index/file<And>scanning from/
+	    This method causes the currently scanned buffer (if any) to be
+	    pushed on a stack of active buffers.  A new buffer is created
+	    from the file with name&nbsp;?_{V} and scanned.
+	    If the file does not exist, the error exception
+	    <<gump(fileNotFound ?_{V})</Code><Index/file<And>not found
+	    exception/ with the filename in&nbsp;?_{V} is raised; the
+	    default treatment is the invocation of a custom error printer.
+	  <Entry><<meth scanVirtualString(?+{V})>><Index class=module
+	    /GumpScanner.'class'<And>scanVirtualString/
+	  <Item>
+	    <Index/virtual string<And>scanning from/
+	    Like <<scanFile>>, but scans a virtual string&nbsp;?_{V}.
+	    If&nbsp;?_{V} contains <Span class=index/<Name type=char
+	    >NUL</Name>/ characters (ISO&nbsp;0) then the virtual string
+	    is only scanned up to and excluding the first <Name type=char
+	    >NUL</Name> character.
+	  <Entry><<meth setInteractive(?+{B})>><Index class=module
+	    /GumpScanner.'class'<And>setInteractive/
+	  <Item>
+	    <Index/interactive scanning/
+	    Each buffer may be either interactive or non-interactive.  An
+	    interactive buffer only reads as many characters as are needed
+	    to be considered to decide about a match; a non-interactive
+	    buffer may read ahead.  This method allows the topmost buffer
+	    on the stack to be set to interactive (if ?_{B} is <<true>>) or
+	    non-interactive (if ?_{B} is <<false>>).  New buffers are always
+	    created as non-interactive buffers.
+	  <Entry><<meth getInteractive(??{B})>><Index class=module
+	    /GumpScanner.'class'<And>getInteractive/
+	  <Item>
+	    Whether the topmost buffer on the buffer stack is interactive
+	    is returned.
+	  <Entry><<meth setBOL(?+{B})>><Index class=module
+	    /GumpScanner.'class'<And>setBOL/
+	  <Item>
+	    The <Span class=index/beginning-of-line/ (BOL) flag indicates
+	    whether the beginning-of-line regular expression <Code><Span
+	    class=ignore>lex &lt;</Span>^<Span class=ignore>&gt;</Span
+	    ></Code> will currently match the input.  This flag is true at
+	    the beginning of a buffer or after a <Span class=index/newline/
+	    has been scanned.  The flag's value may be set at will with
+	    this method.
+	  <Entry><<meth getBOL(??{B})>><Index class=module
+	    /GumpScanner.'class'<And>getBOL/
+	  <Item>
+	    Returns the current state of the beginning-of-line flag.
+	    See the <<setBOL>> method.
+	  <Entry><<meth closeBuffer()>><Index class=module
+	    /GumpScanner.'class'<And>closeBuffer/
+	  <Item>
+	    <Index/buffer stack/
+	    Closes the topmost buffer on the buffer stack and resumes
+	    scanning from the buffer on the new stack top (if any).  If the
+	    buffer stack is or becomes empty through this operation, only
+	    tokens with class <Span class=index/<<'EOF'>>/ and value
+	    <<unit>> are returned subsequently (until a new buffer is
+	    created).
+	  <Entry><<meth close()>>
+	  <Item>
+	    Closes all buffers on the buffer stack.  Before calling any
+	    other methods, you should call <<init()>> again.
+	</List>
+</Chapter>
