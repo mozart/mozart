@@ -46,6 +46,11 @@ OZ_Term      GOZ_GSLIST_TO_OZTERM          (GSList * gslist);
 
 #define GOZ_DECLARE_VARARG(i, val)          OZ_declareTerm(i, (val))
 
+#define GOZ_DECLARE_VIRTUAL_STRING(i, val) \
+  gchar *val; \
+  OZ_declareTerm(i, GOZ_(val)) \
+  OZ_isUnit (GOZ_(val)) ? val = NULL : val = OZ_virtualStringToC(GOZ_(val), NULL);
+
 /*****************************************************************************
  * Declaration of GLib basic types
  *****************************************************************************/
