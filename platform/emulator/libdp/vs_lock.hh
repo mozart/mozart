@@ -51,43 +51,44 @@
 typedef unsigned int Value;
 
 //
-// This works properly on Sun"s only by now;
-#if  defined(SUNOS_SPARC) || defined(SOLARIS_SPARC)
-
-//
 // Basic swap;
 #ifdef __GNUC__
+
+#if defined(sparc)
 
 #define ASM_SWAP(cell, value)					\
 ({ 								\
   Value out;							\
-  asm volatile ("swap %3,%0"					\
+  __asm__ __volatile__ ("swap %3,%0"				\
 		: "=r" (out),   "=m" (cell) 	/* output */	\
 		: "0"  (value), "m"  (cell));	/* input  */	\
   out;								\
 })
+;
 
-#else 
-
-#define ASM_SWAP(cell, value)					\
-({								\
-  Value out = (Value) cell;					\
-  cell = (Value) value;						\
-  out;								\
-})
-
-#endif
-
-#else  // !(defined(SUNOS_SPARC) || defined(SOLARIS_SPARC))
+#elif defined(i386)
 
 #define ASM_SWAP(cell, value)					\
-({								\
-  Value out = (Value) cell;					\
-  cell = (Value) value;						\
+({ 								\
+  Value out;							\
+  __asm__ __volatile__ ("xchgl %3,%0"				\
+                        :"=r" (out), "=m" (cell)		\
+                        :"0" (value), "m" (cell));		\
   out;								\
 })
+;
+
+#else
+
+WE DO NOT SUPPORT ANYTHING ELSE BUT SPARCs and i386 SYSTEMS!
 
 #endif 
+
+#else
+
+WE DO NOT SUPPORT ANYTHING ELSE BUT GCC COMPILER!
+
+#endif
 
 //
 #define PAR_UNLOCKED	0x0
