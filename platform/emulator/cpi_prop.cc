@@ -72,7 +72,7 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
 	  if (cv->isBoolPatched()) goto bool_lbl; else goto fd_lbl;
 	} else if (cv->getType() == FDVariable) {
 	fd_lbl:
-	  o << ((GenFDVariable *) cv)->getDom();
+	  o << ((GenFDVariable *) cv)->getDom().toString();
 	} else if (cv->getType() == BoolVariable) {
 	bool_lbl:
 	  o << "{0#1}";
@@ -115,6 +115,13 @@ ostream& operator << (ostream& o, const OZ_Propagator &p)
   o << '}' << flush;
   
   return o;
+}
+
+char *OZ_Propagator::toString() const
+{
+  ozstrstream str;
+  str << (*this);
+  return ozstrdup(str.str());
 }
 
 OZ_Boolean OZ_Propagator::mayBeEqualVars(void)

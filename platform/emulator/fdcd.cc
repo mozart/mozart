@@ -509,7 +509,7 @@ OZ_Return CDSuppl::propagate(void)
   OZ_FDIntVar b(reg_b);
   PropagatorController_V P(b);
 
-  OZ_DEBUGPRINT("cdsuppl.in: b=" << *b);
+  OZ_DEBUGPRINT(("cdsuppl.in: b=*s",b->toString()));
 
   if (*b == 0) {
     ((Thread *) thr)->closeDonePropagatorCD();	
@@ -545,7 +545,7 @@ OZ_Return CDSuppl::propagate(void)
     *b &= 0;
   }
 
-  OZ_DEBUGPRINT("cdsuppl.out: b=" << *b);
+  OZ_DEBUGPRINT(("cdsuppl.out: b=",b->toString()));
 
   P.vanish();
   return ret_val == FAILED ? PROCEED : ret_val;

@@ -9,6 +9,8 @@
   ------------------------------------------------------------------------
 */
 
+#include <stdarg.h>
+
 #include "fdaux.hh"
 
 //-----------------------------------------------------------------------------
@@ -17,9 +19,9 @@ OZ_C_proc_begin(fdp_init, 1)
 {
   
 #ifdef OZ_DEBUG
-  cout << "*** DEBUG-FDLIB ***" << endl << flush;
+  oz_debugprint("*** DEBUG-FDLIB ***");
 #elif OZ_PROFILE
-  cout << "*** PROFILE-FDLIB ***" << endl << flush;
+  oz_debugprint("*** PROFILE-FDLIB ***");
 #endif
   return OZ_unifyAtom(OZ_args[0], __DATE__ " (" __TIME__ ")");
 }
@@ -263,3 +265,16 @@ void vectorToLinear(OZ_Term v, int &a, OZ_Term &x)
 }
 
 //-----------------------------------------------------------------------------
+
+
+
+void oz_debugprint(char *format, ...)
+{
+  va_list ap;
+  va_start(ap,format);
+  vfprintf(stderr,format,ap);
+  va_end(ap);
+
+  fprintf(stderr, "\n");
+  fflush(stderr);
+}

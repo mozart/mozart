@@ -1382,7 +1382,7 @@ int OZ_FiniteDomainImpl::initList(int list_len,
 inline
 OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator ~ (void) const
 {
-  DEBUG_FD_IR(OZ_FALSE, *this << " = ~ ");
+  DEBUG_FD_IR(OZ_FALSE, this->toString() << " = ~ ");
   
   OZ_FiniteDomainImpl y; y.initEmpty();
 
@@ -1429,7 +1429,7 @@ OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator ~ (void) const
   }
 
   AssertFD(y.isConsistent());
-  DEBUG_FD_IR(OZ_FALSE, y << endl);
+  DEBUG_FD_IR(OZ_FALSE, y.toString() << endl);
   
   return y;
 }
@@ -1546,7 +1546,7 @@ int OZ_FiniteDomainImpl::intersectWithBool(void)
 inline
 int OZ_FiniteDomainImpl::nextSmallerElem(int v) const
 {
-  DEBUG_FD_IR(OZ_FALSE, "nextSmaller(" << *this << ',' << v << ")=");
+  DEBUG_FD_IR(OZ_FALSE, "nextSmaller(" << this->toString() << ',' << v << ")=");
 
   descr_type type = getType();
   if (type == fd_descr) {
@@ -1578,7 +1578,7 @@ int OZ_FiniteDomainImpl::nextSmallerElem(int v) const
 inline
 int OZ_FiniteDomainImpl::nextLargerElem(int v) const
 {
-  DEBUG_FD_IR(OZ_FALSE, "nextLarger(" << *this << ',' << v << ")=");
+  DEBUG_FD_IR(OZ_FALSE, "nextLarger(" << this->toString() << ',' << v << ")=");
 
   descr_type type = getType();
   if (type == fd_descr) {
@@ -1610,7 +1610,7 @@ int OZ_FiniteDomainImpl::nextLargerElem(int v) const
 inline
 int OZ_FiniteDomainImpl::lowerBound(int v) const
 {
-  DEBUG_FD_IR(OZ_FALSE, "lowerBound(" << *this << ',' << v << ")=");
+  DEBUG_FD_IR(OZ_FALSE, "lowerBound(" << this->toString() << ',' << v << ")=");
 
   if (isIn(v)) {
     descr_type type = getType();
@@ -1637,7 +1637,7 @@ int OZ_FiniteDomainImpl::lowerBound(int v) const
 inline
 int OZ_FiniteDomainImpl::upperBound(int v) const
 {
-  DEBUG_FD_IR(OZ_FALSE, "upperBound(" << *this << ',' << v << ")=");
+  DEBUG_FD_IR(OZ_FALSE, "upperBound(" << this->toString() << ',' << v << ")=");
 
   if (isIn(v)) {
     descr_type type = getType();
@@ -1664,7 +1664,7 @@ int OZ_FiniteDomainImpl::upperBound(int v) const
 inline
 int OZ_FiniteDomainImpl::midElem(void) const
 {
-  DEBUG_FD_IR(OZ_FALSE, "mid(" << *this << ")=");
+  DEBUG_FD_IR(OZ_FALSE, "mid(" << this->toString() << ")=");
   
   int mid = (min_elem + max_elem) / 2;
 
@@ -1703,16 +1703,16 @@ OZ_Term OZ_FiniteDomainImpl::getAsList(void) const
 inline
 int OZ_FiniteDomainImpl::operator &= (const int i)
 {
-  DEBUG_FD_IR(OZ_FALSE, *this << " &= " << i << " = ");
+  DEBUG_FD_IR(OZ_FALSE, this->toString() << " &= " << i << " = ");
   if (contains(i)) {
     initSingleton(i);
     AssertFD(isConsistent());
-    DEBUG_FD_IR(OZ_FALSE, *this << endl);
+    DEBUG_FD_IR(OZ_FALSE, this->toString() << endl);
     return 1;
   } else {
     initEmpty();
     AssertFD(isConsistent());
-    DEBUG_FD_IR(OZ_FALSE, *this << endl);
+    DEBUG_FD_IR(OZ_FALSE, this->toString() << endl);
     return 0;
   }
 }
@@ -1720,7 +1720,7 @@ int OZ_FiniteDomainImpl::operator &= (const int i)
 inline
 int OZ_FiniteDomainImpl::operator <= (const int leq)
 {
-  DEBUG_FD_IR(OZ_FALSE, *this  << " <= " << leq << " = ");
+  DEBUG_FD_IR(OZ_FALSE, this->toString()  << " <= " << leq << " = ");
 
   if (leq < min_elem) {
     AssertFD(isConsistent());
@@ -1747,14 +1747,14 @@ int OZ_FiniteDomainImpl::operator <= (const int leq)
   }
   if (isSingleInterval()) setType(fd_descr);
   AssertFD(isConsistent());
-  DEBUG_FD_IR(OZ_FALSE, *this << endl);
+  DEBUG_FD_IR(OZ_FALSE, this->toString() << endl);
   return size;
 }
 
 inline
 int OZ_FiniteDomainImpl::operator >= (const int geq)
 {
-  DEBUG_FD_IR(OZ_FALSE, *this  << " >= " << geq << " = ");
+  DEBUG_FD_IR(OZ_FALSE, this->toString()  << " >= " << geq << " = ");
   
   if (geq > max_elem) {
     AssertFD(isConsistent());
@@ -1777,14 +1777,14 @@ int OZ_FiniteDomainImpl::operator >= (const int geq)
   }
   if (isSingleInterval()) setType(fd_descr);
   AssertFD(isConsistent());
-  DEBUG_FD_IR(OZ_FALSE, *this << endl);
+  DEBUG_FD_IR(OZ_FALSE, this->toString() << endl);
   return size;
 }
 
 inline
 int OZ_FiniteDomainImpl::operator -= (const int take_out)
 {
-  DEBUG_FD_IR(OZ_FALSE, *this << " -= " << take_out << " = ");
+  DEBUG_FD_IR(OZ_FALSE, this->toString() << " -= " << take_out << " = ");
   if (contains(take_out)) {
     descr_type type = getType();
     if (type == fd_descr) {
@@ -1825,21 +1825,21 @@ int OZ_FiniteDomainImpl::operator -= (const int take_out)
     if (isSingleInterval()) setType(fd_descr);
   }
   AssertFD(isConsistent());
-  DEBUG_FD_IR(OZ_FALSE, *this << endl);
+  DEBUG_FD_IR(OZ_FALSE, this->toString() << endl);
   return size;
 }
 
 inline
 int OZ_FiniteDomainImpl::operator -= (const OZ_FiniteDomainImpl &y)
 {
-  DEBUG_FD_IR(OZ_FALSE, *this << " -= " << y << " = ");
+  DEBUG_FD_IR(OZ_FALSE, this->toString() << " -= " << y.toString() << " = ");
   if (y != fd_empty) {
     descr_type x_type = getType(), y_type = y.getType();
     if (x_type == fd_descr) {
       if (y_type == fd_descr) {
 	if (y.max_elem < min_elem || max_elem < y.min_elem) {
 	  AssertFD(isConsistent());
-	  DEBUG_FD_IR(OZ_FALSE, *this << endl);
+	  DEBUG_FD_IR(OZ_FALSE, this->toString() << endl);
 	  return size;
 	} else if (y.min_elem <= min_elem && max_elem <= y.max_elem) {
 	  size = 0;
@@ -1901,17 +1901,17 @@ int OZ_FiniteDomainImpl::operator -= (const OZ_FiniteDomainImpl &y)
     if (isSingleInterval()) setType(fd_descr);
   }
   AssertFD(isConsistent());
-  DEBUG_FD_IR(OZ_FALSE, *this << endl);
+  DEBUG_FD_IR(OZ_FALSE, this->toString() << endl);
   return size;
 }
 
 inline
 int OZ_FiniteDomainImpl::operator += (const int put_in)
 {
-  DEBUG_FD_IR(OZ_FALSE, *this << " += " << put_in << " = ");
+  DEBUG_FD_IR(OZ_FALSE, this->toString() << " += " << put_in << " = ");
   
   if (put_in < fd_inf || fd_sup < put_in) {
-    DEBUG_FD_IR(OZ_FALSE, *this << endl);
+    DEBUG_FD_IR(OZ_FALSE, this->toString() << endl);
     return size;
   }
   if (size == 0) {
@@ -1990,14 +1990,14 @@ int OZ_FiniteDomainImpl::operator += (const int put_in)
   if (isSingleInterval()) setType(fd_descr);
 
   AssertFD(isConsistent());
-  DEBUG_FD_IR(OZ_FALSE, *this << endl);
+  DEBUG_FD_IR(OZ_FALSE, this->toString() << endl);
   return size;
 }
 
 inline
 OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator | (const OZ_FiniteDomainImpl &y) const
 {
-  DEBUG_FD_IR(OZ_FALSE, *this << " | " << y << " =  ");
+  DEBUG_FD_IR(OZ_FALSE, this->toString() << " | " << y.toString() << " =  ");
   
   OZ_FiniteDomainImpl z; z.initEmpty();
 
@@ -2025,7 +2025,7 @@ OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator | (const OZ_FiniteDomainImpl &
   if (z.isSingleInterval()) z.setType(fd_descr);
 
   AssertFD(z.isConsistent());
-  DEBUG_FD_IR(OZ_FALSE, z << endl);
+  DEBUG_FD_IR(OZ_FALSE, z.toString() << endl);
   
   return z;
 }
@@ -2033,7 +2033,7 @@ OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator | (const OZ_FiniteDomainImpl &
 inline
 int OZ_FiniteDomainImpl::operator &= (const OZ_FiniteDomainImpl &y)
 {
-  DEBUG_FD_IR(OZ_FALSE, *this << " &= " << y << " = ");
+  DEBUG_FD_IR(OZ_FALSE, this->toString() << " &= " << y.toString() << " = ");
 
   if (*this == fd_empty || y == fd_empty) {
     initEmpty();
@@ -2070,7 +2070,7 @@ int OZ_FiniteDomainImpl::operator &= (const OZ_FiniteDomainImpl &y)
   if (isSingleInterval()) setType(fd_descr);
   
   AssertFD(isConsistent());
-  DEBUG_FD_IR(OZ_FALSE, *this << endl);
+  DEBUG_FD_IR(OZ_FALSE, this->toString() << endl);
 
   return size;
 }
@@ -2078,7 +2078,7 @@ int OZ_FiniteDomainImpl::operator &= (const OZ_FiniteDomainImpl &y)
 inline
 OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator & (const OZ_FiniteDomainImpl &y) const
 {
-  DEBUG_FD_IR(OZ_FALSE, *this << " & " << y << " = ");
+  DEBUG_FD_IR(OZ_FALSE, this->toString() << " & " << y.toString() << " = ");
   
   OZ_FiniteDomainImpl z; z.initEmpty();
 
@@ -2117,7 +2117,7 @@ OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator & (const OZ_FiniteDomainImpl &
   if (z.isSingleInterval()) z.setType(fd_descr);
 
   AssertFD(z.isConsistent());
-  DEBUG_FD_IR(OZ_FALSE, z << endl);
+  DEBUG_FD_IR(OZ_FALSE, z.toString() << endl);
 
   return z;
 }
@@ -2340,10 +2340,12 @@ OZ_Boolean OZ_FiniteDomain::operator != (const int i) const
   return CASTTHIS->operator != (i);
 }
 
-ostream &OZ_FiniteDomain::print(ostream &s) const
+char *OZ_FiniteDomain::toString() const
 {
-  CASTTHIS->print(s, 0);
-  return s;
+  static ozstrstream str;
+  str.reset();
+  CASTTHIS->print(str, 0);
+  return str.str();
 }
 
 void OZ_FiniteDomain::copyExtension(void)

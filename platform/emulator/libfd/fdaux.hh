@@ -12,6 +12,7 @@
 #ifndef __FDAUX_HH__
 #define __FDAUX_HH__
 
+#include <stdio.h>
 #include <malloc.h>
 #include <string.h>
 
@@ -20,14 +21,20 @@
 //-----------------------------------------------------------------------------
 // debug macros
 
+// #define OZ_DEBUG
+
 #ifdef OZ_DEBUG
 #define OZ_DEBUGCODE(C) C
-#define _OZ_DEBUGPRINT(C) cout << C << endl << flush 
-#define OZ_DEBUGPRINT(C) /* _OZ_DEBUGPRINT(C) */
-#define OZ_ASSERT(C)						\
-  if (! (C)) {							\
-    cerr << "OZ_ASSERT " << #C << " failed (" __FILE__ << ':'   \
-	 << __LINE__ << ")." << endl << flush;	                \
+
+extern "C" void oz_debugprint(char *format ...);
+
+#define _OZ_DEBUGPRINT(C) oz_debugprint C
+#define OZ_DEBUGPRINT(C) _OZ_DEBUGPRINT(C)
+#define OZ_ASSERT(C)					\
+  if (! (C)) {						\
+    fprintf(stderr,"OZ_ASSERT %s failed (%s:%d).\n",	\
+	    #C,__FILE__, __LINE__);			\
+    fflush(stderr);					\
   }
 #else
 #define OZ_DEBUGCODE(C)
@@ -35,6 +42,11 @@
 #define OZ_DEBUGPRINT(C)
 #define OZ_ASSERT(C)
 #endif
+
+#define _OZ_DEBUGPRINTTHIS(string) 		\
+   _OZ_DEBUGPRINT(("%s%s",string,this->toString()))
+
+#define OZ_DEBUGPRINTTHIS(string) _OZ_DEBUGPRINTTHIS(string) 
 
 //-----------------------------------------------------------------------------
 // misc macros

@@ -9,7 +9,7 @@
   ------------------------------------------------------------------------
 */
 
-#include "ozstrstream.h"
+#include "ozostream.hh"
 
 #include "am.hh"
 
@@ -110,8 +110,7 @@ void tagged2Stream(TaggedRef ref, ostream &stream, int depth, int offset)
   DEREF(ref,refPtr,tag)    
   switch(tag) {
   case UVAR:
-    stream << "_"
-	   << hex << ToInt32(refPtr) << dec;
+    stream << "_" << ToInt32(refPtr);
     break;
   case SVAR:
     tagged2SVar(ref)->print(stream,depth,offset,origRef);
@@ -192,7 +191,7 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
 	       << '/'
 	       << me->fdSuspList[fd_prop_bounds]->lengthProp()
 	       << ')';
-      stream << ' ' <<  me->getDom() << ">";
+      stream << ' ' <<  me->getDom().toString() << ">";
       break;
     }
 
@@ -955,7 +954,7 @@ PRINT(Thread)
     break;
 
   case S_PR_THR:
-    stream << " P: " << *getPropagator();
+    stream << " P: " << getPropagator()->toString();
     break;
 
   default:
