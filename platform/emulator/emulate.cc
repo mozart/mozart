@@ -399,31 +399,6 @@ bombGenCall:
 
 
 
-static
-Bool changeMarshaledFastCall(ProgramCounter PC,TaggedRef pred, 
-			     int tailcallAndArity)
-{
-  if (isAbstraction(pred)) {
-    Abstraction *abstr = tagged2Abstraction(pred);
-    AbstractionEntry *entry = new AbstractionEntry(NO);
-    entry->setPred(abstr);
-    CodeArea::writeOpcode((tailcallAndArity&1) ? FASTTAILCALL : FASTCALL, PC);
-    CodeArea::writeAddress(entry, PC+1);
-    return OK;
-  }
-
-  if (0 && isBuiltin(pred)) { // Leif check here !!!!!!!!!!!!!
-    Assert((tailcallAndArity&1)==0); // there is no tail version  for CALLBI
-    Builtin* entry = tagged2Builtin(pred);
-    CodeArea::writeBuiltin(entry,PC+1);
-    CodeArea::writeOpcode(CALLBI, PC);
-    return OK;
-  }
-
-  return NO;
-}
-
-
 // -----------------------------------------------------------------------
 // *** CALL HOOK
 // -----------------------------------------------------------------------
@@ -2646,15 +2621,25 @@ LBLdispatcher:
 	SUSP_PC(predPtr,tailcallAndArity>>1,PC);
       }
 
-      OZ_unprotect((TaggedRef*)(PC+1));
-
-      if (!changeMarshaledFastCall(PC,pred,tailcallAndArity)) {
-	RAISE_APPLY(pred,cons(OZ_atom("proc or builtin expected."),nil()));
+      if (isAbstraction(pred)) {
+	OZ_unprotect((TaggedRef*)(PC+1));
+	Abstraction *abstr = tagged2Abstraction(pred);
+	AbstractionEntry *entry = new AbstractionEntry(NO);
+	entry->setPred(abstr);
+	CodeArea::writeOpcode((tailcallAndArity&1)? FASTTAILCALL: FASTCALL,PC);
+	CodeArea::writeAddress(entry, PC+1);
+	DISPATCH(0);
       }
+      if (isBuiltin(pred) || isObject(pred)) {
+	isTailCall = tailcallAndArity & 1;
+	if (!isTailCall) PC += 3;
+	predArity = tailcallAndArity >> 1;
+	predicate = tagged2Const(pred);
+	goto LBLcall;
+      }
+      RAISE_APPLY(pred,cons(OZ_atom("proc or builtin expected."),nil()));
+    }
 
-      DISPATCH(0);
-    } 
-      
   Case(GENCALL) 
     {
       GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC+1);
