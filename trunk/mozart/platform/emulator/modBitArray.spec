@@ -82,6 +82,10 @@
 			     out => ['+[int]'],
 			     BI  => BIbitArray_toList},
 
+     'fromList'	        => { in  => ['+[int]'],
+			     out => ['+bitArray'],
+			     BI  => BIbitArray_fromList},
+
      'complementToList'	=> { in  => ['+bitArray'],
 			     out => ['+[int]'],
 			     BI  => BIbitArray_complementToList},
