@@ -30,7 +30,7 @@
 <!ENTITY % p.mix.local "|Em">
 <!ELEMENT Em - - (#PCDATA)>
 <!ENTITY amp "&">
-<!ENTITY % proglang.values.local "|lambda|sh|elisp">
+<!ENTITY % proglang.values.local "|lambda|sh">
 <!ENTITY % author.class "author|author.extern|comic">
 <!ENTITY % picture.element "picture|picture.extern|picture.choice">
 <!ELEMENT comic - O (%picture.element;)>
@@ -64,7 +64,6 @@
 <BOOK PROGLANG=OZ>
   <FRONT>
     <meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
-    <meta name="proglang.mode" arg1="elisp" arg2="emacs-lisp-mode">
     <!-- Splitting the document into different HTML nodes -->
     <Meta name="html.split" value="chapter.api">
     <Meta name="html.split" value="chapter.introduction">
