@@ -4055,7 +4055,7 @@ OZ_BI_define(BIat,1,1)
     if (t) {
       OZ_RETURN(t);
     }
-    return oz_raise(E_ERROR,E_OBJECT,"@",2,makeTaggedSRecord(rec),fea);
+    return oz_raise(E_ERROR,E_OBJECT,"@",2,makeTaggedConst(am.getSelf()),fea);
   } else { // perdio
     int ret;
     OZ_Term out;
@@ -4096,7 +4096,7 @@ OZ_BI_define(BIassign,2,0)
     if (t) {
       return PROCEED;
     } else {
-      return oz_raise(E_ERROR,E_OBJECT,"<-",3,makeTaggedSRecord(rec),fea,value);
+      return oz_raise(E_ERROR,E_OBJECT,"<-",3,makeTaggedConst(self),fea,value);
     }
   }
 
@@ -4115,7 +4115,7 @@ OZ_BI_define(BIassign,2,0)
   Assert(rec!=NULL);
 
   if (rec->replaceFeature(fea,value) == makeTaggedNULL()) {
-    return oz_raise(E_ERROR,E_OBJECT,"<-",3,makeTaggedSRecord(rec),fea,value);
+    return oz_raise(E_ERROR,E_OBJECT,"<-",3,makeTaggedConst(self),fea,value);
   }
   return PROCEED;
 } OZ_BI_end
@@ -4159,7 +4159,7 @@ OZ_BI_define(BIexchange,2,1)
     OZ_RETURN(aux);
   }
 
-  return oz_raise(E_ERROR,E_OBJECT,"ooExch",3,makeTaggedSRecord(rec),fea,newVal); // mm2: Error
+  return oz_raise(E_ERROR,E_OBJECT,"ooExch",3,makeTaggedConst(am.getSelf()),fea,newVal); // mm2: Error
 } OZ_BI_end
 
 
