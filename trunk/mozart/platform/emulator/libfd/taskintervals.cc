@@ -31,7 +31,6 @@
 
 //-----------------------------------------------------------------------------
 
-//#define ADDITIONALPRUNING
 /*
   the following specifies whether constructive disjunction shall be 
   used for cumulative in the reification loop
@@ -114,8 +113,7 @@ OZ_C_proc_begin(sched_taskIntervals, 3)
       pe.expectIntVarMinMax(OZ_subtree(starts, task));
     }
 
-    OZ_Return r = pe.impose(new TaskIntervalsPropagator(tasks, starts, durs),
-			    OZ_getLowPrio());
+    OZ_Return r = pe.impose(new TaskIntervalsPropagator(tasks, starts, durs));
 
     if (r == FAILED) return FAILED;
   }
@@ -373,16 +371,6 @@ tiloop:
 		if ( (i!=element) && (MinMax[element].max > right) ) {
 		  loopFlag = 1;
 		  FailOnEmpty( *x[element] <= right);
-		  /*
-		    // is not useful
-		  OZ_Term left_side_task = reg_l[element];
-		  OZ_Term right_side_task = reg_l[i];
-		  addImpose(fd_prop_bounds, left_side_task);
-		  addImpose(fd_prop_bounds, right_side_task);
-		  
-		  impose(new LessEqOffPropagator(left_side_task, right_side_task,
-		  -dur[element]));
-		  */
 		}
 	      }
 	    }
@@ -406,16 +394,6 @@ tiloop:
 		if ( (i!=element) && (MinMax[element].min < right) ) {
 		  loopFlag = 1;
 		  FailOnEmpty( *x[element] >= right);
-		  /*
-		    // is not useful
-		  OZ_Term left_side_task = reg_l[i];
-		  OZ_Term right_side_task = reg_l[element];
-		  addImpose(fd_prop_bounds, left_side_task);
-		  addImpose(fd_prop_bounds, right_side_task);
-		  
-		  impose(new LessEqOffPropagator(left_side_task, right_side_task,
-		  -dur[i]));
-		  */
 		}
 	      }
 	    }
@@ -640,8 +618,7 @@ OZ_C_proc_begin(sched_cumulativeTI, 5)
     }
 
     OZ_Return r = pe.impose(new CPIteratePropagatorCumTI(tasks, starts, durs, 
-						       use, capacity),
-			    OZ_getLowPrio());
+						       use, capacity));
 
     if (r == FAILED) return FAILED;
   }
@@ -693,22 +670,11 @@ OZ_Return CPIteratePropagatorCumTI::propagate(void)
   int dur0;
   int mSi;
 
-  /*
-  DECL_DYN_ARRAY(int, set0, ts);
-  DECL_DYN_ARRAY(int, compSet0, ts);
-  DECL_DYN_ARRAY(int, forCompSet0Up, ts);
-  DECL_DYN_ARRAY(int, forCompSet0Down, ts);
-  DECL_DYN_ARRAY(int, outSide, ts);
-  */
 
   DECL_DYN_ARRAY(Min_max, MinMax, ts);
   for (i=ts; i--;){
     MinMax[i].min = x[i]->getMinElem();
     MinMax[i].max = x[i]->getMaxElem();
-    /*
-    forCompSet0Up[i] = i;
-    forCompSet0Down[i] = i;
-    */
   }
 
   int set0Size;
@@ -898,110 +864,6 @@ tiloop:
 	  int OS = sizeAll;
 	  int OT = tsizeTI;
 
-#ifdef ADDITIONALPRUNING
-	  if (contained == 0) {
-	    sizeAll = sizeAll + cset->overlap - overlapI;
-	    tsizeTI = tsizeTI + cset->overlap - overlapI;
-
-	    // due to Mats email
-	    if (sizeAll > capacity*(tdueTI - releaseI)) {
-	      int delta = sizeAll - capacity*(tdueTI - releaseI);
-	      DECL_DYN_ARRAY(int, s1, ts);
-	      DECL_DYN_ARRAY(int, s2, ts);
-	      int s1_count=0, s2_count=0;
-	      for (j=0;j<ts;j++) {
-		if (use[j]+useI > capacity) 
-		  s2[s2_count++] = j;
-		else s1[s1_count++] = j;
-	      }
-	      for (j=0;j<s1_count;j++) {
-		delta -= use[s1[j]]*dur[s1[j]];
-	      }
-	      if (delta > 0) {
-		for (j=0;j<s2_count;j++) {
-		  if (MinMax[s2[j]].min + dur[s2[j]] <= releaseI)
-		    delta -= use[s2[j]]*dur[s2[j]];
-		}
-		if (delta > 0 )
-		  printf("habuakakdasd\n");
-	      }
-	    }
-	    sizeAll = OS;
-	    tsizeTI = OT;
-	  }
-	  
-	    //due to nuijten p.62 -- 65
-	  if ( (releaseI < releaseTI) || (dueI > dueTI) ) {
-	    if ( (treleaseTI < releaseI) && (releaseI < cset->ect) &&
-		 (tsizeTI + (intMin(releaseI+durI,tdueTI) -treleaseTI)*use[i] > (tdueTI - treleaseTI) * capacity) ) {
-	      if (MinMax[i].min < cset->ect){
-		FailOnEmpty(*x[i] >= cset->ect);
-		tiFlag = 1;
-	      }
-	    }
-	    if ( (cset->lst < dueI) && (dueI < tdueTI) &&
-		 (tsizeTI + (dueTI - intMax(dueI-durI,treleaseTI) )*use[i] > (tdueTI - treleaseTI) * capacity) ) {
-	      if (MinMax[i].max > cset->lst - durI) {
-		FailOnEmpty(*x[i] <= cset->lst - durI);
-		tiFlag = 1;
-	      }
-	    }
-	    if ( (releaseI < treleaseTI) && (treleaseTI < releaseI+durI) &&
-		 (tsizeTI + (releaseI+durI- treleaseTI)*use[i] > (tdueTI - treleaseTI) * capacity) ) {
-	      int delta = tsizeTI - (tdueTI - treleaseTI) * (capacity - useI);
-	      if (delta > 0) {
-		int val = treleaseTI + (int) ceil((double) delta / (double) useI);
-		for (int m = 0; m<ts; m++) {
-		  if ((m != i) && (MinMax[m].min >= releaseTI) && 
-		      (MinMax[m].max+dur[m] <= dueTI) ) {
-		    if (use[m]+use[i] > capacity) {
-		    FailOnEmpty(*x[m] <= MinMax[i].max - dur[m]);
-		    FailOnEmpty(*x[i] >= MinMax[m].min + dur[m]);
-		    }
-		  }
-		}
-		if (releaseI < val) {
-		  tiFlag = 1;
-		  FailOnEmpty(*x[i] >= val);
-		}
-	      }
-	    }
-	    if  ( (dueI-durI < tdueTI) && (tdueTI < dueI) &&
-		  (tsizeTI + (tdueTI- (dueI-durI))*use[i] > (tdueTI - treleaseTI) * capacity) ) {
-	      int delta = tsizeTI - (tdueTI - treleaseTI) * (capacity - useI);
-	      if (delta > 0) {
-		int val = tdueTI + (int) floor((double) delta / (double) useI);
-		if (dueI > val) {
-		  tiFlag = 1;
-		  FailOnEmpty(*x[i] <= val - durI);
-		}
-	      }
-	    }
-	  }
-
-
-	  if (contained == 0) {
-	    sizeAll = sizeAll + cset->overlap - overlapI;
-	    tsizeTI = tsizeTI + cset->overlap - overlapI;
-
-	    //  Caseau on cumulative scheduling, ICLP96
-	    int slack = (tdueTI - treleaseTI)*capacity - tsizeTI;
-	    if ( (useI*durI - intMax(0,treleaseTI-releaseI)*useI > slack)
-		 && (useI*(tdueTI - treleaseTI) > slack)
-		 && (releaseI < tdueTI - (int) floor( (double) slack / (double) useI))) {
-	      FailOnEmpty(*x[i] >= tdueTI - (int) floor( (double) slack / (double) useI));
-	      tiFlag = 1;
-	    }
-	    if ( (useI*durI - intMax(0,dueI-tdueTI)*useI > slack)
-		 && (useI*(tdueTI - treleaseTI) > slack)
-		 && (dueI > treleaseTI + (int) ceil( (double) slack / (double) useI) )) {
-	      FailOnEmpty(*x[i] <= treleaseTI + (int) ceil( (double) slack / (double) useI) - durI);
-	      tiFlag = 1;
-	    }
-	    sizeAll = OS;
-	    tsizeTI = OT;
-	  }
-#endif
 
 	  // if task i is contained, this does not work!
 
@@ -1225,30 +1087,10 @@ capLoop:
 	}
       }
 
-      /*
-      // counting the overlap is not worth the effort for cumulative reasoning
-      int cumOver = 0;
-      //this destroys the cumulative reasoning
-      for (i = 0; i < ts; i++) {
-	if (MinMax[i].max >= MinMax[i].min + dur[i]) {
-	  int overlap = intMin(intMax(0,MinMax[i].min+dur[i]-left_val),
-			       intMin(intMax(0,right_val-MinMax[i].max),
-				      intMin(dur[i],right_val-left_val)));
-	  cumOver = cumOver + overlap * use[i];
-	}
-      }
-      */
-
       
       if (cum > (right_val - left_val) * capacity) {
         goto failure;
       }
-      /*
-      // it's not worth the effort
-      if (cum+cumOver > (right_val - left_val) * capacity) {
-        goto failure;
-      }
-      */
 
       if (cum > 0) {
 	ExclusionIntervals[exclusion_nb].left = left_val;
@@ -1260,10 +1102,6 @@ capLoop:
     }
 
     int last = 0;
-    /*
-    int last_left = 0;
-    int last_right = 0;
-    */
 
     //////////
     // exclude from the tasks the intervals, which indicate that 
