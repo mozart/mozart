@@ -387,9 +387,9 @@ void DPMarshaler::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
   //
-  if (triggerVariable(cvarTerm)) {
-    replaceOzValue(makeTaggedRef(cvarTerm));
-  } else if (bs->availableSpace() >= DIFMaxSize + MNumberMaxSize +
+  // Note: futures are not triggered here! Instead, they are when a
+  // snapshot of a term is taken;
+  if (bs->availableSpace() >= DIFMaxSize + MNumberMaxSize +
 	     max(MDistVarMaxSize, MDistSPPMaxSize)) {
     if (marshalVariable(cvarTerm, bs)) {
       rememberVarNode(this, bs, cvarTerm);
@@ -2558,14 +2558,23 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
     OZ_Term v = *vp;
 
     //
+  repeat:
     if (oz_isExtVar(v)) {
       ExtVarType evt = oz_getExtVar(v)->getIdV();
       switch (evt) {
       case OZ_EVAR_MANAGER:
 	{
 	  // if it's a future, let's kick it now:
-	  if (triggerVariable(vp))
-	    v = oz_deref(*vp);
+	  if (triggerVariable(vp)) {
+	    v = makeTaggedRef(vp);
+	    DEREF(v, vp, _tag);
+	    if (oz_isVariable(v)) {
+	      goto repeat;	// 'v' can be a var again;
+	    } else {
+	      break;		// var is gone;
+	    }
+	  }
+
 	  // make&save an "exported" manager;
 	  ManagerVar *mvp = oz_getManagerVar(v);
 	  ExportedManagerVar *emvp = new ExportedManagerVar(mvp, dest);
@@ -2608,8 +2617,16 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
       Assert(perdioInitialized);
 
       // if it's a future, let's kick it now:
-      if (triggerVariable(vp))
-	v = oz_deref(*vp);
+      if (triggerVariable(vp)) {
+	v = makeTaggedRef(vp);
+	DEREF(v, vp, _tag);
+	if (oz_isVariable(v)) {
+	  goto repeat;		// 'v' can be a var again;
+	} else {
+	  break;		// var is gone;
+	}
+      }
+
       //
       ManagerVar *mvp = globalizeFreeVariable(vp);
       ExportedManagerVar *emvp = new ExportedManagerVar(mvp, dest);
