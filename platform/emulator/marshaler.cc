@@ -1182,7 +1182,6 @@ loop:
     {
       PD((UNMARSHAL,"finite set value"));
       OZ_Term glb=unmarshalTerm(bs);
-      message("read fset: %s\n",toC(glb));
       extern void makeFSetValue(OZ_Term,OZ_Term*);
       makeFSetValue(glb,ret);
       return;
