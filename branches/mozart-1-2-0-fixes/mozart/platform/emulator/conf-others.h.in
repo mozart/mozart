@@ -38,6 +38,7 @@
 #undef IRIX6
 #undef NETBSD
 #undef FREEBSD
+#undef OPENBSD
 #undef IRIX
 #undef OS2
 #undef RHAPSODY
