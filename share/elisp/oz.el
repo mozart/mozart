@@ -402,6 +402,17 @@ All strings matching this regular expression are removed.")
       (kill-buffer buffer))
     string))
 
+(defun oz-match-string (num &optional string)
+  "Return string of text matched by last search.
+NUM specifies which parenthesized expression in the last regexp.
+ Value is nil if NUMth pair didn't match, or there were less than NUM pairs.
+Zero means the entire text matched by the whole regexp or whole string.
+STRING should be given if the last search was by `string-match' on STRING."
+  (if (match-beginning num)
+      (if string
+          (substring string (match-beginning num) (match-end num))
+        (buffer-substring (match-beginning num) (match-end num)))))
+
 
 ;;------------------------------------------------------------
 ;; Menus
@@ -604,11 +615,8 @@ With ARG, start it instead."
 (make-face 'bar-blocked)
 
 (defun oz-set-face (face background)
-  (cond (oz-gnu-emacs
-	 (modify-face face "white" background nil nil nil nil))
-	(oz-lucid-emacs
-	 (set-face-foreground face "white")
-	 (set-face-background face background))))
+  (set-face-foreground face "white")
+  (set-face-background face background))
 
 (let ((color (and (eq window-system 'x) (x-display-color-p))))
   (oz-set-face 'bar-running  (if color "#b0b0b0" "black"))
@@ -919,7 +927,7 @@ The emulator to use for debugging is set via \\[oz-set-emulator]."
       (let ((res (oz-shell-command-to-string
 		  (concat (oz-home) "/bin/ozplatform"))))
 	(string-match "[a-zA-Z0-9-]+" res)
-	(setenv "OZPLATFORM" (match-string 0 res))))
+	(setenv "OZPLATFORM" (oz-match-string 0 res))))
     (setenv "OZPATH"
 	    (concat (or (getenv "OZPATH") ".") ":"
 		    (oz-home) ":"
@@ -2293,7 +2301,7 @@ splitting, the outputs are passed to the common oz-filter."
 	    ;; look for oz-show-temp:
 	    (goto-char start-of-output)
 	    (while (re-search-forward oz-show-temp-pattern nil t)
-	      (let ((file (match-string 1)) buf)
+	      (let ((file (oz-match-string 1)) buf)
 		(replace-match "" nil t)
 		(setq buf (get-buffer oz-temp-buffer))
 		(if (null buf)
@@ -2311,9 +2319,9 @@ splitting, the outputs are passed to the common oz-filter."
 	    ;; look for oz-bar information:
 	    (goto-char start-of-output)
 	    (while (re-search-forward oz-bar-pattern nil t)
-	      (let ((file  (match-string 1))
-		    (line  (string-to-number (match-string 2)))
-		    (state (match-string 4)))
+	      (let ((file  (oz-match-string 1))
+		    (line  (string-to-number (oz-match-string 2)))
+		    (state (oz-match-string 4)))
 		(replace-match "" nil t)
 		(if (string-equal file "nofile")
 		    (cond (oz-bar-overlay
@@ -2715,9 +2723,9 @@ When in emulator buffer, visit place indicated in next callstack line."
 	 (beginning-of-line)
 	 (let ((error-marker (point-marker)))
 	   (if (re-search-forward oz-error-pattern nil t)
-	       (let ((file (or (match-string 2) "nofile"))
-		     (lineno-string (match-string 3))
-		     (column-string (match-string 5)))
+	       (let ((file (or (oz-match-string 2) "nofile"))
+		     (lineno-string (oz-match-string 3))
+		     (column-string (oz-match-string 5)))
 		 (setq oz-next-error-marker (point-marker))
 		 (list error-marker file lineno-string column-string))
 	     (let ((win (get-buffer-window oz-compiler-buffer)))
@@ -2733,9 +2741,9 @@ When in emulator buffer, visit place indicated in next callstack line."
 (defun oz-fetch-next-callstack-data ()
   (beginning-of-line)
   (if (re-search-forward oz-error-pattern nil t)
-      (let ((file (or (match-string 2) "nofile"))
-	    (lineno-string (match-string 3))
-	    (column-string (match-string 5)))
+      (let ((file (or (oz-match-string 2) "nofile"))
+	    (lineno-string (oz-match-string 3))
+	    (column-string (oz-match-string 5)))
 	(setq oz-next-error-marker (point-marker))
 	(beginning-of-line)
 	(list (point-marker) file lineno-string column-string))))
