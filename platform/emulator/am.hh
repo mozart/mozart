@@ -121,7 +121,8 @@ public:
 
   TaggedRef suspCallHandler;
   TaggedRef suspendVarList;
-  void addSuspendVarList(TaggedRef t);
+  void emptySuspendVarList(void) { suspendVarList = makeTaggedNULL(); }
+  void addSuspendVarList(TaggedRef * t);
   void suspendOnVarList(Suspension *susp);
 
   void suspendInline(Board *bb,int prio,OZ_CFun fun,int n,

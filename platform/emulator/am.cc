@@ -843,11 +843,11 @@ void AM::reduceTrailOnShallow(int numbOfCons)
     /* test if only trailed to create suspension and not bound ? */
     if (refPtr!=ptrOldVal) {
       if (isAnyVar(oldVal)) {
-        addSuspendVarList(makeTaggedRef(ptrOldVal));
+        addSuspendVarList(ptrOldVal);
       }
     }
 
-    addSuspendVarList(makeTaggedRef(refPtr));
+    addSuspendVarList(refPtr);
   }
   trail.popMark();
 }

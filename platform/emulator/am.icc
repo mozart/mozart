@@ -248,12 +248,14 @@ void AM::restartThread()
 }
 
 inline
-void AM::addSuspendVarList(TaggedRef t)
+void AM::addSuspendVarList(TaggedRef * t)
 {
+  Assert(isAnyVar(*t));
+
   if (suspendVarList==makeTaggedNULL()) {
-    suspendVarList=t;
+    suspendVarList=makeTaggedRef(t);
   } else {
-    suspendVarList=cons(t,suspendVarList);
+    suspendVarList=cons(makeTaggedRef(t),suspendVarList);
   }
 }
 
