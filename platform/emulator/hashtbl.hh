@@ -20,7 +20,8 @@
 
 class HashNode;
 
-typedef enum {INTTYPE = 0, CHARTYPE = 1} hashType;
+/* keys of hashtables may be integers or strings */
+typedef enum {HT_INTKEY = 0, HT_CHARKEY = 1} HtKeyType;
 
 typedef union {char *fstr; intlong fint; } HtKey;
 
@@ -42,7 +43,7 @@ protected:
   int counter;      // number of entries
   int percent;      // if more than percent is used, we reallocate
   int tableSize;
-  hashType type;
+  HtKeyType type;
   HashNode * table;
   int hashFunc(intlong);
   int hashFunc(char *);
@@ -52,14 +53,14 @@ protected:
   void resize();
 
 public:
-  HashTable(hashType,int);
+  HashTable(HtKeyType,int sz);
   ~HashTable();
 
   // return NO iff already in there and replace = NO
-  Bool aadd(void *, char *, Bool replace = NO);
-  Bool aadd(void *, intlong, Bool replace = NO);
-  void *ffind(intlong);
-  void *ffind(char *);
+  Bool htAdd(char *k, void *val);
+  Bool htAdd(intlong k, void *val);
+  void *htFind(intlong);
+  void *htFind(char *);
   void print();
   void printStatistic();
   unsigned memRequired(int valSize = 0);

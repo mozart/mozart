@@ -2016,7 +2016,7 @@ BIspec fdSpec[] = {
   {"debugStable", 0, debugStable},
   {"resetStable", 0, resetStable},
 #endif
-  {0,0,0,0,0}
+  {0,0,0,0}
 };
 
 void BIinitFD(void)

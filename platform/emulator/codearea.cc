@@ -37,8 +37,8 @@ void CodeArea::recordInstr(ProgramCounter PC){
 
 #endif
 
-HashTable CodeArea::atomTab(CHARTYPE,10000);
-HashTable CodeArea::nameTab(CHARTYPE,1000);
+HashTable CodeArea::atomTab(HT_CHARKEY,10000);
+HashTable CodeArea::nameTab(HT_CHARKEY,1000);
 int CodeArea::totalSize = 0; /* in bytes */
 char **CodeArea::opToString = initOpToString();
 CodeAreaList *CodeArea::allBlocks = NULL;
@@ -68,14 +68,14 @@ void CodeArea::showAtomNames()
 
 inline Literal *addToLiteralTab(char *str, HashTable *table, Bool isName)
 {
-  Literal *found = (Literal *) table->ffind(str);
+  Literal *found = (Literal *) table->htFind(str);
 
   if (found != (Literal *) htEmpty) {
     return found;
   }
 
   found = new Literal(str,isName);
-  if (table->aadd(found,str)) {
+  if (table->htAdd(str,found)) {
     return found;
   }
   error("addToLiteralTab: failed");
@@ -128,14 +128,14 @@ AbstractionEntry *AbstractionTable::add(int id)
   if (id == 0)
     return NULL;
 
-  AbstractionEntry *found = (AbstractionEntry *) CodeArea::abstractionTab.ffind(id);
+  AbstractionEntry *found = (AbstractionEntry *) CodeArea::abstractionTab.htFind(id);
 
   if (found != (AbstractionEntry *) htEmpty) {
     return found;
   }
 
   found = new AbstractionEntry();
-  if (CodeArea::abstractionTab.aadd(found,id)) {
+  if (CodeArea::abstractionTab.htAdd(id,found)) {
     return found;
   }
 

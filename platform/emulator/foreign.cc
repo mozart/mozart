@@ -995,7 +995,7 @@ OZ_Term OZ_newName()
 
 int OZ_addBuiltin(char *name, int arity, OZ_CFun fun)
 {
-  return BIadd(name,arity,fun,OK) == NULL ? 0 : 1;
+  return BIadd(name,arity,fun) == NULL ? 0 : 1;
 }
 
 OZ_Bool OZ_raise(OZ_Term exc)
