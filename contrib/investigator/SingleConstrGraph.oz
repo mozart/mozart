@@ -5,16 +5,18 @@ export
 
 import
 
-   Aux(variableToVirtualString counterClass)
+   Aux(counterClass)
    Config(paramColour edgeColour eventColour)
    FS
+
+   System
 
 define
 
    IdCounter = {New Aux.counterClass init}
 
    fun {MakeParameterEdge Hist VarTable Event VarId EventPs AllParams}
-      VarStr = {Aux.variableToVirtualString VarTable.VarId.reference}
+      VarStr = VarTable.VarId.nameconstraint
 \ifdef SHOW_ID
       #" ["#VarId#"]"
 \endif
@@ -116,13 +118,14 @@ define
          of H|T then Events = {Arity H.susplists} in
             {ForAll Events
              proc {$ Event}
-                if  {FS.isIn ReflC.id H.susplists.Event}
+                if {FS.isIn ReflC.id H.susplists.Event}
                 then
                    Entry = {Dictionary.condGet Dict Event nil}
                 in
                    {Dictionary.put Dict Event H.id|Entry}
                 else skip end
              end}
+
             {ConstraintEvents1 T}
          else skip end
       end
@@ -145,6 +148,7 @@ define
       #" ["#PropId#"]"
 \endif
    in
+      {System.show g}
       {Hist reset_mark}
 
       scg(graph:
