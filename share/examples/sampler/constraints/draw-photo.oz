@@ -10,7 +10,7 @@ declare DrawPhoto in
 local
    Mid            = 80
    Dist           = 120
-   FontFamily     = '-*-helvetica-medium-r-normal--*-'
+%   FontFamily     = '-*-helvetica-medium-r-normal--*-'
    BoldFontFamily = '-*-helvetica-bold-r-normal--*-'
    FontMatch      = '-*-*-*-*-*-*'
 
@@ -22,7 +22,7 @@ local
 
    fun {ComputeDis N Ful}
       {FoldL {List.zip Prefs Ful fun {$ X Y} X#Y end}
-       fun {$ I (A#B)#F}
+       fun {$ I (A#_)#F}
 	  case A==N andthen {FD.reflect.size F}==1 andthen F==0 then I+1
 	  else I
 	  end

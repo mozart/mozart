@@ -181,7 +181,7 @@ end
 %%%
 %%% Graphical output
 %%%
-\insert sampler/constraints/draw-photo.oz
+\insert constraints/draw-photo.oz
 
 {Explorer.object add(information DrawPhoto)}
 
@@ -255,10 +255,10 @@ end
 %%%
 
 %% bridge specification
-\feed sampler/constraints/bridge.oz
+\insert constraints/bridge.oz
 
 %% Scheduling compiler
-\feed sampler/constraints/scheduling-compiler.oz
+\insert constraints/scheduling-compiler.oz
 
 
 {Explorer.object script({Compile Bridge}
@@ -267,9 +267,10 @@ end
 		 end)}
 
 %% Use Gantt chart to visualize
-\feed sampler/constraints/gantt.oz
+\insert constraints/gantt.oz
 
-{Explorer.object add(information DrawGantt)}
+{Explorer.object add(information {DrawGantt Bridge}
+		     label: 'Draw Gantt Bridge')}
 
 
 
@@ -291,7 +292,10 @@ end
 %%%
 %%% Production scheduling
 %%%
-\feed sampler/constraints/machines.oz
+\insert constraints/machines.oz
+
+{Explorer.object add(information {DrawGantt Machines}
+		     label: 'Draw Gantt Machines')}
 
 {ExploreBest {Compile Machines} proc {$ O N}
 				   O.pe >: N.pe
@@ -341,14 +345,4 @@ end
 %%% Show the bridge schedule
 %%%
 
-\feed sampler/constraints/animate-bridge.oz
-
-
-
-
-
-
-
-
-
-
+\insert constraints/animate-bridge.oz
