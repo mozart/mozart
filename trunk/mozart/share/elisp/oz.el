@@ -382,34 +382,67 @@ starts the emulator under gdb")
   "Stop the debugger."
   (interactive)
   (oz-send-string "{Ozcar off}"))
-  
-(defun oz-breakpoint-set ()
-  "Set breakpoint at line where mouse points to."
-  (interactive)
-  (if (buffer-file-name)
-      (oz-send-string (concat "{Ozcar bpAt('"
-			      (buffer-file-name)
-			      "' "
-			      (+ (count-lines (point-min) (window-start))
-				 (cdr (cdr (mouse-position)))
-				 1)
-			      " true)}"))
-    (message (concat "You must save this buffer to a file "
-		     "in order to set breakpoints!"))))
 
-(defun oz-breakpoint-delete ()
+ 
+(defun oz-breakpoint-set (event)
+  "Set breakpoint at line where mouse points to."
+  (interactive "e")
+  (oz-breakpoint event " true"))
+
+(defun oz-breakpoint-delete (event)
   "Delete breakpoint at line where mouse points to."
+  (interactive "e")
+  (oz-breakpoint event " false"))
+
+(defun oz-breakpoint (event flag)
+  (mouse-minibuffer-check event)
+  (save-window-excursion
+    (select-window (posn-window (event-start event)))
+    (if (buffer-file-name)
+	(oz-send-string (concat "{Ozcar bpAt('"
+				(buffer-file-name)
+				"' "
+				(count-lines 
+				 (point-min) 
+				 (posn-point (event-start event)))
+				flag
+				")}"))
+      (message (concat "You must save this buffer to a file "
+		       "in order to manipulate breakpoints!"))
+      )))
+
+
+;; scrollbar stuff
+(make-face 'scrollbar)
+(modify-face 'scrollbar "white" "#7070c0" nil nil nil nil nil)
+(defvar scrollbar-overlay nil)
+
+(defun oz-scrollbar (file line)
+  "Display scrollbar at given line, load file if necessary."
   (interactive)
-  (if (buffer-file-name)
-      (oz-send-string (concat "{Ozcar bpAt('"
-			      (buffer-file-name)
-			      "' "
-			      (+ (count-lines (point-min) (window-start))
-				 (cdr (cdr (mouse-position)))
-				 1)
-			      " false)}"))
-    (message (concat "You must save this buffer to a file "
-		     "in order to delete breakpoints!"))))
+  (let* ((last-nonmenu-event t)
+	 (buffer (find-file-noselect file))
+	 (window (display-buffer buffer))
+	 (beg) (end)
+	 (oldpos))
+    (save-excursion
+      (set-buffer buffer)
+      (save-restriction
+	(widen)
+	(setq oldpos (point))
+	(goto-line line) (setq beg (point))
+	(end-of-line)    (setq end (+ (point) 1))
+
+	(or scrollbar-overlay (setq scrollbar-overlay (make-overlay beg end)))
+	(move-overlay scrollbar-overlay beg end (current-buffer))
+	(overlay-put scrollbar-overlay 'face 'scrollbar))
+
+	(if (or (< beg (window-start)) (> beg (window-end)))
+	    (progn
+	      (widen)
+	      (goto-char beg))
+	  (goto-char oldpos)))
+    (set-window-point window beg)))
 
 
 ;;------------------------------------------------------------
@@ -1149,8 +1182,8 @@ the GDB commands `cd DIR' and `directory'."
     (define-key map "\M-p"         'oz-previous-buffer)
 
     (define-key map "\C-c\C-d\C-r" 'oz-debug-start)
-    (define-key map [A-mouse-1]    'oz-breakpoint-set)
-    (define-key map [A-mouse-3]    'oz-breakpoint-delete)
+    (define-key map [M-S-mouse-1]  'oz-breakpoint-set)
+    (define-key map [M-S-mouse-3]  'oz-breakpoint-delete)
     (define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
     )
 
@@ -1342,34 +1375,6 @@ and initial semicolons."
     oz-compiler-buffer))
 
 
-;; debugger support
-(defun oz-display-arrow (file line)
-  "Display arrow at given position, load file if necessary."
-  (interactive)
-  (let* ((last-nonmenu-event t)
-	 (buffer (find-file-noselect file))
-	 (window (display-buffer buffer))
-	 (oldpos)
-	 (pos))
-    (save-excursion
-      (set-buffer buffer)
-      (save-restriction
-	(widen)
-	(setq oldpos (point))
-	(goto-line line)
-	(setq pos (point))
-	(setq overlay-arrow-string "=>")
-	(or overlay-arrow-position
-	    (setq overlay-arrow-position (make-marker)))
-	(set-marker overlay-arrow-position (point) (current-buffer)))
-      (if (or (< pos (window-start)) (> pos (window-end)))
-	  (progn
-	    (widen)
-	    (goto-char pos))
-	(goto-char oldpos)))
-    (set-window-point window overlay-arrow-position)))
-
-
 (defun oz-compiler-filter (proc string)
   (if (not oz-win32)
       (oz-filter proc string (process-buffer proc))
@@ -1414,13 +1419,13 @@ and initial semicolons."
             (while (search-forward-regexp oz-remove-pattern nil t)
               (replace-match "" nil t))
 
-            ;; oz-arrow information?
+            ;; oz-scrollbar information?
             (while (search-forward-regexp oz-arrow-pattern nil t)
               (let ((file (match-string 1))
                     (line (string-to-number (match-string 2))))
                 (replace-match "" nil t)
-                (oz-display-arrow file line))))
-	  
+                (oz-scrollbar file line))))
+
 	  (if (or moving errs-found) (goto-char (process-mark proc))))
       (set-buffer old-buffer))
 
