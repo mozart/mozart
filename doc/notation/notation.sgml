@@ -36,8 +36,8 @@
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
     <Title/The Oz Notation/
-    <Author.Extern to="author.db" key="Martin.Henz">
     <Author.Extern to="author.db" key="Leif.Kornstaedt">
+    <Author.Extern to="author.db" key="Martin.Henz">
     <Comic>
       <Picture.Choice>
         <Picture.Extern to="notation.gif" type=gif>
@@ -1185,11 +1185,13 @@
               <Rewrite.From/<<?{D} in >>[ ?{S} ]<< ?{E}>>/
               <Rewrite.To/<<local ?{D} in >>[ ?{S} ]<< ?{E} end>>/
             </Rewrite>
-            <Rewrite>?={declaration part}
-              <Rewrite.From/?{D}/
-              <Rewrite.To/?{x1} &ellipsis; ?{xn}/
+            <Rewrite>?={statement}
+              <Rewrite.From/<<local ?{D} in ?{S} end>>/
+              <Rewrite.To/<<local ?{x1} &ellipsis; ?{xn} in ?{D'} ?{S} end>>/
               <Rewrite.Condition/if ?{D} is not a sequence of distinct
-                variables and where {?{x1}, &ellipsis;, ?{xn}} = ?{PV}(?{D})./
+                variables and where {?{x1}, &ellipsis;, ?{xn}} = ?{PV}(?{D})
+                and ?{D'} is ?{D} with singleton variables and escapes
+                removed./
             </Rewrite>
         <SubSection class=unnumbered>
           <Title/Grouping/
@@ -1649,6 +1651,24 @@ end>>/
               <Rewrite.From/?{SE}/
               <Rewrite.To/<<skip then ?{SE}>>/
             </Rewrite>
+            <Rewrite>?={cond statement clause} ?={dis statement clause}
+              ?={choice statement clause}
+              <Rewrite.From/<<?{D} in ?{S1} >>[ <<then ?{S2}>> ]/
+              <Rewrite.To
+/<<?{x1} &ellipsis; ?{xn} in ?{D'} ?{S1} >>[ <<then ?{S2}>> ]/
+              <Rewrite.Condition/if ?{D} is not a sequence of distinct
+                variables and where {?{x1}, &ellipsis;, ?{xn}} = ?{PV}(?{D})
+                and ?{D'} is ?{D} with singleton variables and escapes
+                removed./
+            </Rewrite>
+            <Rewrite>?={cond expression clause} ?={choice expression clause}
+              <Rewrite.From/<<?{D} in ?{S} then ?{E}>>/
+              <Rewrite.To/<<?{x1} &ellipsis; ?{xn} in ?{D'} ?{S} then ?{E}>>/
+              <Rewrite.Condition/if ?{D} is not a sequence of distinct
+                variables and where {?{x1}, &ellipsis;, ?{xn}} = ?{PV}(?{D})
+                and ?{D'} is ?{D} with singleton variables and escapes
+                removed./
+            </Rewrite>
         <SubSection class=unnumbered>
           <Title/Constructive Disjunction/
           <P>
@@ -1689,7 +1709,7 @@ end>>/
           <P>
             <Rewrite>?={statement}
               <Rewrite.From/<<?{x} = class >>[<< $ >>]<< &ellipsis; end>>/
-              <Rewrite.To/class ?{x} &ellipsis; end>>/
+              <Rewrite.To/<<class ?{x} &ellipsis; end>>/
             </Rewrite>
         <SubSection class=unnumbered>
           <Title/Operators/
