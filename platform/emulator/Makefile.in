@@ -40,7 +40,7 @@ STATIC_MODULELIBS=	-L. ${DYN_MODULE_NAMES:%=-l%}
 STATIC_MODULETARGETS=	$(DYN_MODULE_NAMES:%=lib%.a)
 DYNAMIC_MODULETARGETS=	$(DYN_MODULE_NAMES:%=%.so)
 
-CORE_MODULE_NAMES=	Run OF FS FD CPI OS Space Store Mem Support
+CORE_MODULE_NAMES=	Run OF FS FD CPI OS Space Store Mem Pickle Support
 # mm2: spliting emulator into different libraries does not work,
 #      because some files are not linked into emulator.exe, which
 #      are only required from dynamic modules
@@ -127,7 +127,7 @@ SPACESRCS=\
 MEMSRCS=\
 	gc.cc mem.cc liveness.cc
 
-COMPONENTSSRCS=\
+PICKLESRCS=\
 	gname.cc components.cc marshaler.cc site.cc
 
 OFSRCS=	var_of.cc ofbi.cc
@@ -152,7 +152,7 @@ SRCS= \
 	$(SUPPORTSRCS) $(MEMSRCS) $(STORESRCS) \
 	$(SPACESRCS) $(RUNSRCS) $(OSSRCS) \
 	$(CPISRCS) $(FDSRCS) $(FSETSRCS) $(OFSRCS) \
-	$(COMPONENTSSRCS)
+	$(PICKLESRCS)
 
 # mm2: if enabled CORE_LIBS uncomment the following
 COREOBJS=   $(SRCS:%.cc=%.o)
@@ -255,6 +255,12 @@ libOS.a: $(OSSRCS:%.cc=%.o)
 
 libMem.a: $(MEMSRCS:%.cc=%.o)
 	$(AR) -rc $@ $(MEMSRCS:%.cc=%.o) && $(RANLIB) $@
+
+libPickle.a: $(PICKLESRCS:%.cc=%.o)
+	$(AR) -rc $@ $(PICKLESRCS:%.cc=%.o) && $(RANLIB) $@
+
+libOther.a: $(OTHERSRCS:%.cc=%.o)
+	$(AR) -rc $@ $(OTHERSRCS:%.cc=%.o) && $(RANLIB) $@
 
 win: ozlib.lnk $(CREATEDFILES)
 
