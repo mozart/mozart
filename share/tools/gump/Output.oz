@@ -239,8 +239,6 @@ local
 	 end#'end'
       [] fRaise(S _) then
 	 'raise'#IN#NL#{OzBlock S}#EX#NL#'end'
-      [] fRaiseWith(S T _) then
-	 'raise'#IN#NL#{OzBlock S}#EX#NL#'with'#IN#NL#{OzBlock T}#EX#NL#'end'
       [] fGrammar(T Obj _) then
 	 {Obj output(T $)}
       end
