@@ -1,162 +1,79 @@
-%%%  Programming Systems Lab, DFKI Saarbruecken,
-%%%  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
-%%%  Author: Gert Smolka, Joerg Wuertz
-%%%  Email: {smolka,wuertz}@dfki.uni-sb.de
-%%%  Last modified: $Date$ by $Author$
-%%%  Version: $Revision$
+%%%
+%%% Authors:
+%%%   Christian Schulte <schulte@ps.uni-sb.de>
+%%%
+%%% Copyright:
+%%%   Christian Schulte, 1998
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
 
+%% The scheduling compiler
 declare
-
-fun {Compile Specification}
-   TaskSpecs   = Specification.tasks
-   Constraints = Specification.constraints
-
-   MaxTime =
-      {FoldL TaskSpecs fun {$ In _#D#_#_} D+In end 0}
-   Tasks =
-      {Map TaskSpecs fun {$ T#_#_#_} T end}
-   Dur =    % task --> duration
-      {MakeRecord dur Tasks}
-      {ForAll TaskSpecs proc {$ T#D#_#_} Dur.T = D end}
-   Resources =
-       {FoldL TaskSpecs
-        fun {$ In _#_#_#Resource}
-           case Resource==noResource orelse {Member Resource In}
-           then In else Resource|In end
-        end
-        nil}
-   ExclusiveTasks =  % list of lists of exclusive tasks
-      {FoldR Resources
-       fun {$ Resource Xs}
-          {FoldR TaskSpecs
-           fun {$ Task#_#_#ThisResource In}
-              case Resource==ThisResource then Task|In else In end
-           end
-           nil} | Xs
-       end
-       nil}
-   SortedExclusiveTasks =  % most requested resource first
-      {Sort ExclusiveTasks
-       fun {$ Xs Ys}
-          fun {Aux Xs}
-             {FoldL Xs fun {$ In X} In + Dur.X end 0}
-          end
-       in
-          {Aux Xs} > {Aux Ys}
-       end}
-   ExclusionPairs =
-      {FoldR SortedExclusiveTasks
-       fun {$ Xs Ps}
-          {FoldRTail Xs
-           fun {$ Y|Ys Pss}
-              {FoldR Ys fun {$ Z Pss} Y#Z|Pss end Pss}
-           end
-           Ps}
-       end
-       nil}
-in
-   proc {$ Sol}
-      Choices Start
-   in
-      Sol = Start
-      Start =       % task --> start time
-         {FD.record start Tasks 0#MaxTime}
-
-      % impose precedences
-
-      {ForAll TaskSpecs
-       proc {$ Task#_#Preds#_}
-          {ForAll Preds
-           proc {$ Pred}
-              Start.Pred + Dur.Pred =<: Start.Task
-           end}
-       end}
-
-      % impose Constraints
-
-      {Constraints Start Dur}
-
-      % impose resource constraints
-
-      {FoldR ExclusionPairs
-       fun {$ A#B Cs}
-          {FD.disjointC Start.A Dur.A Start.B Dur.B} | Cs
-       end
-       nil
-       Choices}
-
-
-      % enumerate exclusion choices
-
-      {FD.distribute naive Choices}
-
-      % fix all start points to minimum after enumeration
-      {Record.forAll Start proc {$ S} S = {FD.reflect.min S} end}
-
+local
+   fun {GetDur TaskSpec}
+      {List.toRecord dur {Map TaskSpec fun {$ T}
+                                          {Label T}#T.dur
+                                       end}}
    end
-end
-
-
-fun {SmartCompile Specification}
-   TaskSpecs   = Specification.tasks
-   Constraints = Specification.constraints
-
-   MaxTime =
-      {FoldL TaskSpecs fun {$ In _#D#_#_} D+In end 0}
-   Tasks =
-      {Map TaskSpecs fun {$ T#_#_#_} T end}
-   Dur =    % task --> duration
-      {MakeRecord dur Tasks}
-      {ForAll TaskSpecs proc {$ T#D#_#_} Dur.T = D end}
-   Resources =
-       {FoldL TaskSpecs
-        fun {$ In _#_#_#Resource}
-           case Resource==noResource orelse {Member Resource In}
-           then In else Resource|In end
-        end
-        nil}
-   ExclusiveTasks =  % list of lists of exclusive tasks
-      {FoldR Resources
-       fun {$ Resource Xs}
-          {FoldR TaskSpecs
-           fun {$ Task#_#_#ThisResource In}
-              case Resource==ThisResource then Task|In else In end
-           end
-           nil} | Xs
-       end
-       nil}
-in
-   proc {$ Sol}
-      Choices Start
+   fun {GetStart TaskSpec}
+      MaxTime = {FoldL TaskSpec fun {$ Time T}
+                                   Time+T.dur
+                                end 0}
+      Tasks   = {Map TaskSpec Label}
    in
-      Sol = Start
-      Start =       % task --> start time
-         {FD.record start Tasks 0#MaxTime}
-
-      % impose precedences
-
-      {ForAll TaskSpecs
-       proc {$ Task#_#Preds#_}
-          {ForAll Preds
-           proc {$ Pred}
-              Start.Pred + Dur.Pred =<: Start.Task
-           end}
+      {FD.record start Tasks 0#MaxTime}
+   end
+   fun {GetTasksOnResource TaskSpec}
+      D={Dictionary.new}
+   in
+      {ForAll TaskSpec
+       proc {$ T}
+          if {HasFeature T res} then R=T.res in
+             {Dictionary.put D R {Label T}|{Dictionary.condGet D R nil}}
+          end
        end}
-
-      % impose Constraints
-
-      {Constraints Start Dur}
-
-      % impose resource constraints
-
-      {Schedule.serialized ExclusiveTasks Start Dur}
-
-      % enumerate exclusion choices
-
-      {Schedule.firstsLastsDist ExclusiveTasks Start Dur}
-
-      % fix all start points to minimum after enumeration
-      {Record.forAll Start proc {$ S} S = {FD.reflect.min S} end}
-
+      {Dictionary.toRecord tor D}
+   end
+in
+   fun {Compile Spec}
+      TaskSpec    = Spec.tasks
+      Constraints = if {HasFeature Spec constraints} then
+                       Spec.constraints
+                    else
+                       proc {$ _ _} skip end
+                    end
+      Dur         = {GetDur TaskSpec}
+      TasksOnRes  = {GetTasksOnResource TaskSpec}
+   in
+      proc {$ Start}
+         Start = {GetStart TaskSpec}
+         {ForAll TaskSpec
+          proc {$ T}
+             {ForAll {CondSelect T pre nil}
+              proc {$ P}
+                 Start.P + Dur.P =<: Start.{Label T}
+              end}
+          end}
+         {Constraints Start Dur}
+         {Schedule.serialized TasksOnRes Start Dur}
+         {Schedule.firstsDist TasksOnRes Start Dur}
+         choice skip end
+         {Record.forAll Start proc {$ S}
+                                 S={FD.reflect.min S}
+                              end}
+      end
    end
 end

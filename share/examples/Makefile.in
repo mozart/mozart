@@ -1,16 +1,63 @@
+#
+#  Authors:
+#    Christian Schulte <schulte@ps.uni-sb.de>
+#
+#  Copyright:
+#    Christian Schulte, 1998
+#
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+#
+#  This file is part of Mozart, an implementation
+#  of Oz 3:
+#     http://mozart.ps.uni-sb.de
+#
+#  See the file "LICENSE" or
+#     http://mozart.ps.uni-sb.de/LICENSE.html
+#  for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL
+#  WARRANTIES.
+
 BUILDTOP        = @BUILDTOP@
+BUILDDIR        = $(BUILDTOP)/share/demo
 VPATH           = @srcdir@
 SRCDIR          = @srcdir@
+SRCTOP          = @SRCTOP@
+HOMEURL         = @HOMEURL@
 
 PREFIX          = @prefix@
 OZEX            = $(PREFIX)/examples
 
 SHELL           = /bin/sh
+LN_S            = @LN_S@
 
-@SET_MAKE@
 INSTALL         = @INSTALL@
 INSTALL_FILE    = $(INSTALL) -m 444
 INSTALL_DIR     = @INSTALL_DIR@
+
+OZCFLAGS        =
+OZC             = @OZC@
+
+OZLFLAGS        =
+OZL             = @OZL@
+
+COMPILE         = $(OZC) $(OZCFLAGS) -b $(BUILDDIR)/ -c
+ZCOMPILE        = $(COMPILE) -z 9
+
+@SET_MAKE@
+
+FUNCTORS = \
+        Knights.ozf Queens.ozf
+
+all: $(FUNCTORS)
+
+%.ozf: fd/graphics/%.oz
+        $(ZCOMPILE) $< -o $@
+
+
+EXFUNCTORS = \
+        $(FUNCTORS:%=$(OZEX)/%)
 
 EXDIRS = \
         sampler sampler/constraints \
@@ -20,7 +67,6 @@ EXDIRS = \
 
 OZEXDIRS = $(EXDIRS:%=$(OZEX)/%)
 
-all:
 
 $(OZEX) $(OZEXDIRS):
         $(INSTALL_DIR) $@
@@ -28,9 +74,9 @@ $(OZEX) $(OZEXDIRS):
 FD = \
         bin-packing bridge-naive bridge cars change \
         conference configuration donald family fraction \
-        grocery kalotan knights knights/graphics magic-sequence \
+        grocery kalotan knights magic-sequence \
         magic-square map-coloring money multiply photo \
-        pythagoras queens queens/graphics safe srat \
+        pythagoras queens safe srat \
         tiling warehouses zebra
 
 GR = \
@@ -46,9 +92,10 @@ SAMPLER0 = \
         constraints/scheduling-compiler oz
 SAMPLER = $(SAMPLER0:%=$(OZEX)/sampler/%.oz)
 
+$(OZEX)/%.ozf: %.ozf
+        $(INSTALL_FILE) $< $@
 $(OZEX)/fd/%.oz: fd/%.oz
         $(INSTALL_FILE) $< $@
-
 $(OZEX)/grammar/%.oz: grammar/%.oz
         $(INSTALL_FILE) $< $@
 $(OZEX)/grammar/shieber/%.oz: grammar/shieber/%.oz
@@ -61,15 +108,22 @@ $(OZEX)/sampler/constraints/%.oz: sampler/constraints/%.oz
 
 .PHONY: all install clean veryclean distclean bootstrap check depend
 
-install: all $(OZEX) $(OZEXDIRS) $(SAMPLER) $(EXAMPLES)
+install: all $(OZEX) $(OZEXDIRS) $(SAMPLER) $(EXAMPLES) $(EXFUNCTORS)
 
 clean:
         -rm -f *~ ./*/*~ ./*/*/*~
 
 veryclean: clean
+        -rm -f $(FUNCTORS)
 
 distclean: veryclean
         -rm -f Makefile
+
+Makefile: Makefile.in ../config.status
+        cd .. && ./config.status
+
+../config.status: ../configure
+        cd .. && ./config.status --recheck
 
 include $(SRCDIR)/../Makefile.boot
 
