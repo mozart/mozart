@@ -343,17 +343,3 @@ OZ_C_proc_begin(BIfsCardRange, 3)
 }
 OZ_C_proc_end
 
-#include "fsetbuilti.dcl"
-static
-BIspec fdSpec[] = {
-#include "fsetbuilti.tbl"
-  {0,0,0,0}
-};
-
-void BIinitFSet(void)
-{
-  BIaddSpec(fdSpec);
-}
-
-// eof
-//-----------------------------------------------------------------------------

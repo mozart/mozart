@@ -52,9 +52,6 @@ CREATEDOTHERS= \
 	instrtab.hh opcodes.hh optostr.hh marshaler.hh\
 	marshalcode.cc marshalMsg.cc register.hh oz.c \
 	config.h builtins.tbl builtins.dcl \
-	ctgenvar.tbl ctgenvar.dcl \
-	fdbuilti.tbl fdbuilti.dcl \
-	fsetbuilti.tbl fsetbuilti.dcl \
 	scanner.cc parser.cc \
 	$(MODSPECS:%=mod%.dcl) \
 	$(MODSPECS:%=mod%.tbl)
@@ -222,12 +219,6 @@ libParser.a: parser.o scanner.o parsertable.o
 	$(AR) -rc $@ parser.o scanner.o parsertable.o && $(RANLIB) $@
 
 builtins.o: builtins.tbl builtins.dcl
-
-fdbuilti.o: fdbuilti.tbl fdbuilti.dcl
-
-fsetcore.o: fsetbuilti.tbl fsetbuilti.dcl
-
-ctgenvar.o:  ctgenvar.tbl ctgenvar.dcl
 
 wif.o: modWif.tbl modWif.dcl
 
