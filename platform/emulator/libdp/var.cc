@@ -207,7 +207,7 @@ Bool ManagerVar::failurePreemption(TaggedRef term){
 
 #define ExportControl(Val) \
 { if(ozconf.perdioMinimal) { \
-     OZ_Return ret=export(Val); \
+     OZ_Return ret=oz_export(Val); \
      if(ret!=PROCEED) return ret;}}
 
 OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){

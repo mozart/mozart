@@ -381,7 +381,7 @@ static void putOzValueCA(void *arg, OZ_Term value) {
   CodeAreaLocation *loc = (CodeAreaLocation *) arg;
   //
   (void) (loc->getCodeArea())->writeTagged(value, loc->getPtr());
-  delete arg;
+  delete loc;
 }
 
 //
@@ -424,7 +424,7 @@ static void putBuiltinCA(void *arg, OZ_Term value) {
   //
   Assert(oz_isBuiltin(value));
   CodeArea::writeAddressAllocated(tagged2Builtin(value), loc->getPtr());
-  delete arg;
+  delete loc;
 }
 //
 inline static
@@ -499,7 +499,7 @@ static void putRealRecordArityCA(void *arg, OZ_Term value) {
   Assert(isSorted(value));
   SRecordArity sra = makeRealRecordArity(value);
   CodeArea::writeWordAllocated(sra, loc->getPtr());
-  delete arg;
+  delete loc;
 }
 
 //
@@ -596,7 +596,7 @@ static void getPredIdNameCA(void *arg, OZ_Term value) {
 	       loc->getFlagsList(), loc->getMaxX());
   CodeArea::writeAddressAllocated(pred, loc->getPtr());
   //
-  delete arg;
+  delete loc;
 }
 
 //
@@ -816,7 +816,7 @@ static void getHashTableRecordEntryLabelCA(void *arg, OZ_Term value) {
   (desc->getTable())->add(tagged2Literal(value), sra, desc->getLabel());
 
   //
-  delete arg;
+  delete desc;
 }
 //
 static void saveRecordArityHashTableEntryCA(void *arg, OZ_Term value) {
@@ -830,7 +830,7 @@ static void getHashTableAtomEntryLabelCA(void *arg, OZ_Term value) {
 
   //
   (desc->getTable())->add(tagged2Literal(value), desc->getLabel());
-  delete arg;
+  delete desc;
 }
 
 //
@@ -839,7 +839,7 @@ static void getHashTableNumEntryLabelCA(void *arg, OZ_Term value) {
 
   //
   (desc->getTable())->add(value, desc->getLabel());
-  delete arg;
+  delete desc;
 }
 
 
