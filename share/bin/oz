@@ -122,7 +122,7 @@ case "$cmd" in
    ;;
 
    ozemacs) 
-	$OZEMACS $@
+	exec $OZEMACS $@
    ;;
 
    oz.compiler)
