@@ -83,6 +83,10 @@
 #define MAX_UDP_PACKET    100*1024  /* 100k */
 #define TCP_PACKET_SIZE   1*1024    /* 1k */
 
+
+/* if defined: variables are stored directly in structure */
+#define OPT_VAR_IN_STRUCTURE
+
 /*
  *
  * ###   #     # ######  ####### ######  #######    #    #     # #######

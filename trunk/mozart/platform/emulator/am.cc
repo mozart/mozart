@@ -1121,7 +1121,7 @@ void AM::setCurrent(Board *c, Bool checkNotGC)
   Assert(!checkNotGC || oldBoard == currentBoard);
 
   currentBoard = c;
-  currentUVarPrototypeValue = makeTaggedUVar(c);
+  _currentUVarPrototype = makeTaggedUVar(c);
   DebugCheckT(oldBoard=c);
 
   if (c->isSolve ()) {
