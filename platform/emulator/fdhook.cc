@@ -48,6 +48,7 @@ void killPropagatedCurrentTaskSusp() {
   Assert(FDcurrentTaskSusp->isResistant());
   Assert(!FDcurrentTaskSusp->isDead());
 
+  // constructive disjunction ???
   if (!FDcurrentTaskSusp->isPropagated()) {
     FDcurrentTaskSusp = NULL;
     return;
@@ -61,12 +62,15 @@ void killPropagatedCurrentTaskSusp() {
   FDcurrentTaskSusp = NULL;
 }
 
+/*
+ * make propagator into surviving board suspension
+ */
 void dismissCurrentTaskSusp(void) {
   Assert(FDcurrentTaskSusp != NULL);
   Assert(FDcurrentTaskSusp->isResistant());
   Assert(!FDcurrentTaskSusp->isDead());
   Assert(am.currentBoard==FDcurrentTaskSusp->getBoardFast());
-  FDcurrentTaskSusp->cContToBoard(am.currentBoard); // mm2 opt
+  FDcurrentTaskSusp->cContToBoard(am.currentBoard);
   FDcurrentTaskSusp = NULL;
 }
 
