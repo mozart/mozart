@@ -305,7 +305,7 @@ install-inc: $(INCDIR)
 install-module: $(DYNAMIC_MODULETARGETS) $(BINDIR)
 	mods="$(DYNAMIC_MODULETARGETS)"; \
 	for i in $$mods; do \
-	  $(INSTALL_BIN) $$mod $(BINDIR) \
+	  $(INSTALL_BIN) $$i $(BINDIR) \
         done
 
 $(BINDIR) $(INCDIR):
