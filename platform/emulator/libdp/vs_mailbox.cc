@@ -151,7 +151,9 @@ void VSMailboxManagerOwned::markDestroy()
 {
   //
   if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) < 0) {
-    if (errno != EIDRM) 
+    // If an already removed id is removed (tried to) again,
+    // e.g. linux says 'EIDRM' while Solaris 'EINVAL';
+    if (errno != EIDRM && errno != EINVAL) 
       OZ_error("Virtual Sites: cannot mark the shared memory for destroying");
   }
 #ifdef TRACE_MAILBOXES

@@ -480,15 +480,12 @@ static Bool processMessageQueue(unsigned long clock, void *sqi)
     // 
     Assert(vsm);
     while (vsm) {
-      Bool messageReady = TRUE;
+      Bool messageReady;
 
       //
       messageReady = vs->tryToSendToAgain(vsm, &freeMsgBufferPool);
-      if (messageReady)
-	vsm->retractVSMsgQueueNode();
-
-      //
       siteReady = siteReady && messageReady;
+
       //
       vsm = vs->getNext();
     }

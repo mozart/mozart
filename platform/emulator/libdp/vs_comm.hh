@@ -65,9 +65,13 @@ private:
   //
 protected:
   VSMsgQueueNode* getNextVSMsgQueueNode() { return (nextVSMsgQueueNode); }
-  void setNextVSMsgQueueNode(VSMsgQueueNode *n) { nextVSMsgQueueNode = n; }
+  void setNextVSMsgQueueNode(VSMsgQueueNode *n) {
+    nextVSMsgQueueNode = n;
+  }
   VSMsgQueueNode* getPrevVSMsgQueueNode() { return (prevVSMsgQueueNode); }
-  void setPrevVSMsgQueueNode(VSMsgQueueNode *p) { prevVSMsgQueueNode = p; }
+  void setPrevVSMsgQueueNode(VSMsgQueueNode *p) {
+    prevVSMsgQueueNode = p;
+  }
 
 public:
   VSMsgQueueNode() {
@@ -148,7 +152,7 @@ public:
     }
   }
   void dispose(VSMessage *b) {
-    Assert(b->getNextVSMsgQueueNode() == (VSMessage *) 0);
+    Assert(b->getNextVSMsgQueueNode() == (VSMessage *) -1);
     b->setNextVSMsgQueueNode(freeList);
     freeList = b;
   }
