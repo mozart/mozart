@@ -26,6 +26,9 @@ local
 	 Depth==0 andthen CurX+@offset>FindX
       end
 
+      meth findByX(_ _ _ $)
+	 self
+      end
    end
 
    class FailedOrUnstable
