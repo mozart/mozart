@@ -31,6 +31,17 @@ The default is such that an optimized system is generated
      --enable-opt=p
         compile with profiling switches (-pg)
 
+  --with-pgcc
+     use Pentium GCC if available
+
+  --with-gmp=<dir> use gmp.h and libgmp.{a,so} found in <dir>
+
+  --with-gmp-lib=<dir> use libgmp.{a,so} found in <dir>
+
+  --with-gmp-include=<dir> use gmp.h found in <dir>
+
+  --with-malloc=<obj> use malloc() from <obj>
+
 - Environment variables used by configure
 
  - CC: the C compiler
@@ -85,11 +96,8 @@ you can run in the future to recreate the current configuration, a file
 reconfiguring, and a file `config.log' containing compiler output
 (useful mainly for debugging `configure').
 
-   If you need to do unusual things to compile the package, please try
-to figure out how `configure' could check whether to do them, and mail
-diffs or instructions to the address given in the `README' so they can
-be considered for the next release.  If at some point `config.cache'
-contains results you don't want to keep, you may remove or edit it.
+   If at some point `config.cache' contains results you don't want to
+keep, you may remove or edit it.
 
    The file `configure.in' is used to create `configure' by a program
 called `autoconf'.  You only need `configure.in' if you want to change
@@ -118,13 +126,11 @@ The simplest way to compile this package is:
      source code directory by typing `make clean'.  To also remove the
      files that `configure' created (so you can compile the package for
      a different kind of computer), type `make distclean'.  There is
-     also a `make maintainer-clean' target, but that is intended mainly
-     for the package's developers.  If you use it, you may have to get
-     all sorts of other programs in order to regenerate files that came
-     with the distribution.
+     also a `make realclean' target, for removing automatically
+     generated files.
 
-Compilers and Options
-=====================
+
+Compilers and Options =====================
 
    Some systems require unusual options for compilation or linking that
 the `configure' script does not know about.  You can give `configure'

@@ -36,7 +36,7 @@ define(instruction,
                 `incrop(1)') dnl
 ') dnl
 
-include(OZINCDIR/instrDefs.m4)
+include(EMUDIR/instrDefs.m4)
 include(`opcodes.hh')
 
 inline char **initOpToString(){
@@ -70,6 +70,6 @@ define(twoRegs,
 ')
 
 
-include(OZINCDIR/instrDefs.m4)
+include(EMUDIR/instrDefs.m4)
 return help;
 }
