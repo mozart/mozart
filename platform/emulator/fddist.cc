@@ -126,7 +126,7 @@ OZ_C_proc_begin(BIfdDistribute, 5) {
 
       int curmax = getMax(d_arg);
 
-      if (curmax < maxmax) {
+      if (curmax > maxmax) {
 	maxmax     = curmax;
 	variable   = arg; 
 	d_variable = d_arg;
@@ -150,7 +150,7 @@ OZ_C_proc_begin(BIfdDistribute, 5) {
 
       Assert(isGenFDVar(d_arg) || isGenBoolVar(d_arg));
 
-      int curmin = getSize(d_arg);
+      int curmin = getMin(d_arg);
 
       if (curmin < minmin) {
 	minmin     = curmin;
@@ -1468,8 +1468,11 @@ OZ_C_proc_begin(BIfdGetCandidates, 5) {
   }
 
   // to store FD variables
-  //  DECL_DYN_ARRAY(min_max_set, all_tasks, width);
-  struct min_max_dur_set all_tasks[MAGIC];
+
+
+  struct min_max_dur_set * all_tasks;
+  all_tasks = ::new min_max_dur_set[width];
+
   // to store durations
   int i,j,k,l,left,right;
   int sumDur = 0;
@@ -1493,10 +1496,11 @@ OZ_C_proc_begin(BIfdGetCandidates, 5) {
   }
 
   // to store relase and due without values
-  //DECL_DYN_ARRAY(int, dues, width);
-  //DECL_DYN_ARRAY(int, releases, width);
-  int dues[MAGIC];
-  int releases[MAGIC];
+  int * dues;
+  int * releases;
+  dues = ::new int[width];
+  releases = ::new int[width];
+
   for (i=0; i < width; i++) {
     int release = fd_sup;
     int due     = 0;
@@ -1512,12 +1516,13 @@ OZ_C_proc_begin(BIfdGetCandidates, 5) {
   }
 
   // compute firsts and lasts
-  //DECL_DYN_ARRAY(int, firsts, width);  
-  //DECL_DYN_ARRAY(int, lasts, width);  
-  struct min_max_dur_setFL firsts[MAGIC];
-  struct min_max_dur_setFL lasts[MAGIC];
+  struct min_max_dur_setFL * firsts;
+  struct min_max_dur_setFL * lasts;
+  firsts = ::new min_max_dur_setFL[width];
+  lasts = ::new min_max_dur_setFL[width];
   int number_of_firsts = 0;
   int number_of_lasts = 0;
+
 
   /*
   for (i=0; i<width; i++) {
@@ -1595,7 +1600,7 @@ OZ_C_proc_begin(BIfdGetCandidates, 5) {
   OZ_Term ret = nil;
 
   if ( (number_of_lasts==0) || (number_of_firsts==0) )
-    return FAILED;
+    goto failure;
   else if (number_of_lasts < number_of_firsts) goto imposeLasts;
   else if (number_of_lasts > number_of_firsts) goto imposeFirsts;
   else if (number_of_firsts == 1) goto imposeFirsts;
@@ -1614,18 +1619,38 @@ imposeLasts:
     TaggedRef task1 = deref(vector->getArg(lasts[i].id));  
     ret = OZ_cons(task1, ret);
   }
-  return ( (OZ_unify(out_atoms, makeTaggedAtom("lasts"))) &&
-	   (OZ_unify(out_tasks, ret)) )
-    ? PROCEED :FAILED;
+  if ( (OZ_unify(out_atoms, makeTaggedAtom("lasts"))) &&
+       (OZ_unify(out_tasks, ret)) )
+    goto success;
+  else 
+    goto failure;
   
 imposeFirsts:
   for (i=number_of_firsts-1; i>=0; i--) {
     TaggedRef task1 = deref(vector->getArg(firsts[i].id));  
     ret = OZ_cons(task1, ret);
   }
-  return ( (OZ_unify(out_atoms, makeTaggedAtom("firsts"))) &&
-	   (OZ_unify(out_tasks, ret)) )
-    ? PROCEED :FAILED;
+  if ( (OZ_unify(out_atoms, makeTaggedAtom("firsts"))) &&
+       (OZ_unify(out_tasks, ret)) )
+    goto success;
+  else 
+    goto failure;
+
+success:
+  :: delete [] all_tasks;
+  :: delete [] dues;
+  :: delete [] releases;
+  :: delete [] firsts;
+  :: delete [] lasts;
+  return PROCEED;
+
+failure: 
+  :: delete [] all_tasks;
+  :: delete [] dues;
+  :: delete [] releases;
+  :: delete [] firsts;
+  :: delete [] lasts;
+  return FAILED;
 
 
 } OZ_C_proc_end
