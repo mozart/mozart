@@ -373,6 +373,10 @@ starts the emulator under gdb")
 ;; Debugger stuff
 ;;------------------------------------------------------------
 
+(setq oz-breakpoint-error
+      (concat "You must save this buffer to a file "
+	      "in order to manipulate breakpoints!"))
+
 (defun oz-debug-start ()
   "Start the debugger."
   (interactive)
@@ -383,18 +387,37 @@ starts the emulator under gdb")
   (interactive)
   (oz-send-string "{Ozcar off}"))
 
- 
-(defun oz-breakpoint-set (event)
+(defun oz-breakpoint-key-set ()
+  "Set breakpoint at current line."
+  (interactive)
+  (oz-breakpoint-key " true"))
+
+(defun oz-breakpoint-key-delete ()
+  "Delete breakpoint at current line."
+  (interactive)
+  (oz-breakpoint-key " false"))
+
+(defun oz-breakpoint-key (flag)
+  (if (buffer-file-name)
+      (oz-send-string (concat "{Ozcar bpAt('"
+			      (buffer-file-name)
+			      "' "
+			      (count-lines (point-min) (point))
+			      flag
+			      ")}"))
+    (message oz-breakpoint-error)))
+
+(defun oz-breakpoint-mouse-set (event)
   "Set breakpoint at line where mouse points to."
   (interactive "e")
-  (oz-breakpoint event " true"))
+  (oz-breakpoint-mouse event " true"))
 
-(defun oz-breakpoint-delete (event)
+(defun oz-breakpoint-mouse-delete (event)
   "Delete breakpoint at line where mouse points to."
   (interactive "e")
-  (oz-breakpoint event " false"))
+  (oz-breakpoint-mouse event " false"))
 
-(defun oz-breakpoint (event flag)
+(defun oz-breakpoint-mouse (event flag)
   (mouse-minibuffer-check event)
   (save-window-excursion
     (select-window (posn-window (event-start event)))
@@ -407,9 +430,7 @@ starts the emulator under gdb")
 				 (posn-point (event-start event)))
 				flag
 				")}"))
-      (message (concat "You must save this buffer to a file "
-		       "in order to manipulate breakpoints!"))
-      )))
+      (message oz-breakpoint-error))))
 
 
 (make-face 'scrollbar-runnable)
@@ -1201,9 +1222,11 @@ the GDB commands `cd DIR' and `directory'."
     (define-key map "\M-p"         'oz-previous-buffer)
 
     (define-key map "\C-c\C-d\C-r" 'oz-debug-start)
-    (define-key map [M-S-mouse-1]  'oz-breakpoint-set)
-    (define-key map [M-S-mouse-3]  'oz-breakpoint-delete)
     (define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
+    (define-key map "\C-c\C-d\C-b" 'oz-breakpoint-key-set)
+    (define-key map "\C-c\C-d\C-d" 'oz-breakpoint-key-delete)
+    (define-key map [M-S-mouse-1]  'oz-breakpoint-mouse-set)
+    (define-key map [M-S-mouse-3]  'oz-breakpoint-mouse-delete)
     )
 
   (define-key map "\M-\C-x"	'oz-feed-paragraph)
