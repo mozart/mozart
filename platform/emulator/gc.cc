@@ -1580,9 +1580,7 @@ void AM::gc(int msgLevel)
   gcTagged(threadStream,threadStream);
   gcTagged(threadStreamTail,threadStreamTail);
 
-  gcTagged(tcl_lock, tcl_lock);
-  gcTagged(tcl_rets, tcl_rets);
-  gcTagged(tcl_dict, tcl_dict);
+  gc_tcl_sessions();
 
   performCopying();
 
