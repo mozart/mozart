@@ -144,8 +144,10 @@ define
 
    fun {DateCurrent}
       D={OS.localTime}
+      Y=D.year+1900
+      M=D.mon+1
    in
-      {AdjoinAt D year 1900+D.year}
+      {Adjoin D time(year:Y mon:M)}
    end
 
    fun {DateCurrentToString}
