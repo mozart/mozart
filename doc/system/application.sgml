@@ -44,6 +44,25 @@
             acquires the arguments from the system property <<argv>>
             and parses them according to ?_{Spec}.  Returns the options
             in&nbsp;?_{R}.
+
+          <Entry><<getGuiArgs>>
+          <Synopsis>
+            <<{Application.getGuiArgs ?+{Spec} ??{R}}>>
+          <Item>
+            pops up a graphical interface with which the user can
+            interactively and comfortably edit the possible options
+            described by ?_{Spec}.  Returns the options in&nbsp;?_{R}.
+
+          <Entry><<getArgs>>
+          <Synopsis>
+            <<{Application.getArgs ?+{Spec} ??{R}}>>
+          <Item>
+            This is the recommended way of acquiring an application's
+            arguments.  It invokes either <<Application.getCmdArgs>>
+            or <<Application.getGuiArgs>> depending on whether the value
+            of boolean property <<'application.gui'>>.  The latter is
+            set to <<true>> when the <code proglang=sh/ozengine/ is
+            invoked with option <code proglang=sh/--gui/.
         </List>
       <Para class=apropos><Title/Error Handling/
         If an error is encountered in the input, an error exception of the
