@@ -84,9 +84,6 @@ define(opAction,
 inline
 void marshalBuiltin(Builtin *entry,MsgBuffer *bs)
 {
-  if (entry->isNative()) {
-    //warning("marshalling native builtin: %s",toC(entry->getName()));
-  }
   marshalTerm(makeTaggedConst(entry),bs);
 }
 
