@@ -23,11 +23,14 @@ in
 
    class Manager
       from
-	 UrObject
+	 BaseObject
 	 DialogManager
 	 MenuManager
 	 StatusManager
 	 ToplevelManager
+      prop
+	 locking
+	 final
       
       feat
 	 explorer
@@ -42,50 +45,48 @@ in
 
       
       meth init(EXPLORER)
-	 PackAll = ToplevelManager,init($)
-      in
-	 DialogManager,init
-	 MenuManager,init
-	 StatusManager,init
-	 self.explorer = EXPLORER
-	 {PackAll}
-	 ToplevelManager,configurePointer(idle)
+	 lock
+	    PackAll = ToplevelManager,init($)
+	 in
+	    DialogManager,init
+	    MenuManager,init
+	    StatusManager,init
+	    self.explorer = EXPLORER
+	    {PackAll}
+	    ToplevelManager,configurePointer(idle)
+	 end
       end
       
       meth clear
-	 Manager,clearDialogs
-	 MenuManager,clear
-	 StatusManager,clear
-	 ToplevelManager,clear
-	 root    <- false
-	 PrevSol <- false
+	 lock
+	    Manager,ClearDialogs
+	    MenuManager,clear
+	    StatusManager,clear
+	    ToplevelManager,clear
+	    root    <- false
+	    PrevSol <- false
+	 end
       end
 
-      meth clearDialogs
-	 case @ToClose of nil then skip elseof POs then
-	    {ForAll POs
-	     proc {$ PO}
-		case {IsDet PO} then 
-		   case {Object.is PO} then
-		      thread {PO close} end
-		   elsecase
-		      {Procedure.is PO} andthen {Procedure.arity PO}==0
-		   then thread {PO} end
-		   end
-		else skip
-		end
-	     end}
-	    ToClose <- nil
-	 end
+      meth ClearDialogs
+	 {ForAll @ToClose
+	  proc {$ A}
+	     thread
+		case A of O#M then {O M} else {A} end
+	     end
+	  end}
+	 ToClose <- nil
       end
 
       meth reset
-	 case @query of false then skip elseof Query then
-	    Manager,query(Query @order)
+	 lock
+	    case @query of false then skip elseof Query then
+	       Manager,query(Query @order)
+	    end
 	 end
       end
 
-      meth setCursor(CurNode IsVisible <= false)
+      meth SetCursor(CurNode IsVisible <= false)
 	 %% Might only be invoked if root is not false
 	 MenuManager,normal(explorer([clear postscript reset]))
 	 case {@root isFinished($)} then
@@ -177,47 +178,52 @@ in
       end
 
       meth query(Query Order)
-	 Manager,clear
-	 IsBAB   <- (Order\=false)
-	 query   <- Query
-	 order   <- Order
-	 curNode <- false
-	 PrevSol <- false
-	 {self.status setBAB(@IsBAB)}
-	 StatusManager,start(_)
-	 root <- {MakeRoot self Query Order}
-	 Manager,prepare
+	 lock
+	    Manager,clear
+	    IsBAB   <- (Order\=false)
+	    query   <- Query
+	    order   <- Order
+	    curNode <- false
+	    PrevSol <- false
+	    {self.status setBAB(@IsBAB)}
+	    StatusManager,start(_)
+	    root <- {MakeRoot self Query Order}
+	    StatusManager,stop
+	    Manager,Layout
+	    Manager,SetCursor(@root)
+	    ToplevelManager,configurePointer(idle)
+	 end
       end
 
-      meth prepare
-	 StatusManager,stop
-	 Manager,Layout
-	 Manager,setCursor(@root)
-	 ToplevelManager,configurePointer(idle)
-      end
       
       %%
       %% Implementation of ``Move'' functionality
       %%
 
       meth moveTop
-	 Manager,setCursor(@root)
-      end
-
-      meth moveCurrent
-	 CurNode = @curNode
-      in
-	 curNode <- false
-	 Manager,setCursor(CurNode)
-      end
-      
-      meth moveFrom(What)
-	 case {@curNode What($)} of false then skip elseof Dest then
-	    Manager,setCursor(Dest)
+	 lock
+	    Manager,SetCursor(@root)
 	 end
       end
 
-      meth idle
+      meth moveCurrent
+	 lock
+	    CurNode = @curNode
+	 in
+	    curNode <- false
+	    Manager,SetCursor(CurNode)
+	 end
+      end
+      
+      meth moveFrom(What)
+	 lock
+	    case {@curNode What($)} of false then skip elseof Dest then
+	       Manager,SetCursor(Dest)
+	    end
+	 end
+      end
+
+      meth Idle
 	 MenuManager,idle
 	 ToplevelManager,configurePointer(idle)
       end
@@ -226,20 +232,20 @@ in
       %% Implementation of ``Search'' functionality
       %%
 
-      meth getPrevSol($)
+      meth GetPrevSol($)
 	 case @PrevSol of false then false
 	 elseof Sol then {Sol getOriginalSpace($)}
 	 end
       end
       
-      meth startSearch($ <= _)
+      meth StartSearch($ <= _)
 	 MenuManager,busy
 	 MenuManager,normal(explorer([halt break]))
 	 ToplevelManager,configurePointer(searching)
 	 StatusManager,start($)
       end
 
-      meth stopSearch(Sol Cursor <= false)
+      meth StopSearch(Sol Cursor <= false)
 	 case @root==nil then skip else
 	    TryCursor = case Cursor==false then
 			   case Sol==false then @curNode
@@ -255,33 +261,37 @@ in
 	    StatusManager,stop
 	    ToplevelManager,hideCursor
 	    Manager,LayoutAfterSearch
-	    Manager,setCursor({TryCursor getOverHidden(TryCursor $)})
+	    Manager,SetCursor({TryCursor getOverHidden(TryCursor $)})
 	    MenuManager,disable(explorer(halt))
-	    Manager,idle
+	    Manager,Idle
 	 end
       end
       
       meth next
-	 CurNode = @curNode
-	 Break   = Manager,startSearch($)
-	 O       = self.options.search
-      in
-	 Manager,stopSearch({CurNode
-			     next(Break Manager,getPrevSol($)
-				  {Dictionary.get O search}
-				  {Dictionary.get O information} $)})
+	 lock
+	    CurNode = @curNode
+	    Break   = Manager,StartSearch($)
+	    O       = self.options.search
+	 in
+	    Manager,StopSearch({CurNode
+				next(Break Manager,GetPrevSol($)
+				     {Dictionary.get O search}
+				     {Dictionary.get O information} $)})
+	 end
       end
       
       meth all
-	 Manager,startSearch
-	 Manager,DoAll({Dictionary.get self.options.drawing update})
+	 lock
+	    Manager,StartSearch
+	    Manager,DoAll({Dictionary.get self.options.drawing update})
+	 end
       end
 
       meth DoAll(NoSol)
 	 Break   = StatusManager,getBreakFlag($)
 	 CurNode = @curNode
 	 O       = self.options.search
-	 Sol     = {CurNode next(Break Manager,getPrevSol($)
+	 Sol     = {CurNode next(Break Manager,GetPrevSol($)
 				 {Dictionary.get O search}
 				 {Dictionary.get O information} $)}
       in
@@ -298,199 +308,231 @@ in
 	       Manager,DoAll({Dictionary.get self.options.drawing update})
 	    else Manager,DoAll(NoSol-1)
 	    end
-	 else Manager,stopSearch(Sol)
+	 else Manager,StopSearch(Sol)
 	 end
       end
 
       meth step
-	 CurNode = @curNode
-      in
-	 Manager,startSearch(_)
-	 Manager,stopSearch({CurNode
-			     step(Manager,getPrevSol($)
-				  {Dictionary.get self.options.search
-				   information} $)})
+	 lock
+	    CurNode = @curNode
+	 in
+	    Manager,StartSearch(_)
+	    Manager,StopSearch({CurNode
+				step(Manager,GetPrevSol($)
+				     {Dictionary.get self.options.search
+				      information} $)})
+	 end
       end
 
       meth nodes(ToDo)
-	 MenuManager,busy
-	 MenuManager,normal(explorer(break))
-	 StatusManager,clearBreak
-	 Manager,hideCursor
-	 {@curNode ToDo}
-	 Manager,Layout
-	 Manager,setCursor(@curNode false)
-	 Manager,idle
+	 lock
+	    MenuManager,busy
+	    MenuManager,normal(explorer(break))
+	    StatusManager,clearBreak
+	    Manager,hideCursor
+	    {@curNode ToDo}
+	    Manager,Layout
+	    Manager,SetCursor(@curNode false)
+	    Manager,Idle
+	 end
       end
       
       meth stat
-	 StatNode = case @curNode
-		    of false then @root
-		    elseof CurNode then CurNode
-		    end
-      in
-	 case StatNode==false then skip else
-	    Number  = Manager,getNumber(StatNode $)
-	    Handler = {self.statAction get($)}.3
-	    Stat    = {StatNode stat($)}
+	 lock
+	    StatNode = case @curNode
+		       of false then @root
+		       elseof CurNode then CurNode
+		       end
 	 in
-	    case {Procedure.arity Handler}
-	    of 2 then thread {Handler Number Stat} end
-	    [] 3 then CloseAction in
-	       ToClose <- CloseAction|@ToClose
-	       thread {Handler Number Stat ?CloseAction} end
+	    case StatNode==false then skip else
+	       Number  = Manager,getNumber(StatNode $)
+	       Handler = {self.statAction get($)}.3
+	       Stat    = {StatNode stat($)}
+	    in
+	       case {Procedure.arity Handler}
+	       of 2 then thread {Handler Number Stat} end
+	       [] 3 then CloseAction in
+		  ToClose <- CloseAction|@ToClose
+		  thread {Handler Number Stat ?CloseAction} end
+	       end
 	    end
 	 end
       end
 
       meth setByXY(X Y)
-	 Manager,setCursor(ToplevelManager,findByXY(X Y $) true)
+	 lock
+	    Manager,SetCursor(ToplevelManager,findByXY(X Y $) true)
+	 end
       end
       
       meth nodesByXY(What X Y)
-	 Manager,setCursor(ToplevelManager,findByXY(X Y $) false)
-	 Manager,nodes(What)
+	 lock
+	    Manager,SetCursor(ToplevelManager,findByXY(X Y $) false)
+	    Manager,nodes(What)
+	 end
       end
       
       meth doByXY(What X Y)
-	 Manager,setCursor(ToplevelManager,findByXY(X Y $) false)
-	 Manager,What
+	 lock
+	    Manager,SetCursor(ToplevelManager,findByXY(X Y $) false)
+	    Manager,What
+	 end
       end
       
       meth selInfo(X Y)
-	 Node = ToplevelManager,findByXY(X Y $)
-      in
-	 case {Node isHidden($)} then skip else
-	    Manager,nodesInfo(Node)
+	 lock
+	    Node = ToplevelManager,findByXY(X Y $)
+	 in
+	    case {Node isHidden($)} then skip else
+	       Manager,nodesInfo(Node)
+	    end
 	 end
       end
       
       meth nodesInfo(Node <= false)
-	 RealNode = case Node==false then @curNode else Node end
-      in
-	 case RealNode of false then skip elseof CurNode then
-	    MenuManager,busy
-	    Action  = {self.infoAction get($)}
-	    Handler = Action.3
-	    Cast    = Action.4
-	    Number  = Manager,getNumber(RealNode $)
-	    Info    = {RealNode findSpace($)}
+	 lock
+	    RealNode = case Node==false then @curNode else Node end
 	 in
-	    case Info==false then
-	       DialogManager,error('Recomputation of information failed.')
-	    elsecase {Procedure.arity Handler}
-	    of 2 then thread {Handler Number {Cast Info}} end
-	    [] 3 then CloseAction in
-	       ToClose <- CloseAction|@ToClose
-	       thread {Handler Number {Cast Info} ?CloseAction} end
+	    case RealNode of false then skip elseof CurNode then
+	       MenuManager,busy
+	       Action  = {self.infoAction get($)}
+	       Handler = Action.3
+	       Cast    = Action.4
+	       Number  = Manager,getNumber(RealNode $)
+	       Info    = {RealNode findSpace($)}
+	    in
+	       case Info==false then
+		  DialogManager,error('Recomputation of information failed.')
+	       elsecase {Procedure.arity Handler}
+	       of 2 then thread {Handler Number {Cast Info}} end
+	       [] 3 then CloseAction in
+		  ToClose <- CloseAction|@ToClose
+		  thread {Handler Number {Cast Info} ?CloseAction} end
+	       end
+	       Manager,SetCursor(CurNode)
+	       Manager,Idle
 	    end
-	    Manager,setCursor(CurNode)
-	    Manager,idle
 	 end
       end
 
       meth nodesSelCmp
-	 CurNode = @curNode
-      in
-	 cmpNode <- CurNode
-	 Manager,getNumber(CurNode _)
-	 MenuManager,disable(nodes(selCmp))
-	 MenuManager,normal(nodes(deselCmp))
-	 Manager,setCursor(CurNode)
+	 lock
+	    CurNode = @curNode
+	 in
+	    cmpNode <- CurNode
+	    Manager,getNumber(CurNode _)
+	    MenuManager,disable(nodes(selCmp))
+	    MenuManager,normal(nodes(deselCmp))
+	    Manager,SetCursor(CurNode)
+	 end
       end
 
       meth nodesDeselCmp
-	 cmpNode <- false
-	 MenuManager,disable(nodes([deselCmp cmp]))
-	 Manager,setCursor(@curNode)
+	 lock
+	    cmpNode <- false
+	    MenuManager,disable(nodes([deselCmp cmp]))
+	    Manager,SetCursor(@curNode)
+	 end
       end
       
       meth nodesCmp
-	 CmpNode = @cmpNode
-	 CurNode = @curNode
-      in
-	 case CurNode==CmpNode then skip else
-	    MenuManager,busy
-	    CurNumber = ToplevelManager,getNumber(CurNode $)
-	    CmpNumber = ToplevelManager,getNumber(CmpNode $)
-	    Action    = {self.cmpAction get($)}
-	    Handler   = Action.3
-	    Cast      = Action.4
-	    CurInfo   = {CurNode findSpace($)}
-	    CmpInfo   = {CmpNode findSpace($)}
+	 lock
+	    CmpNode = @cmpNode
+	    CurNode = @curNode
 	 in
-	    case CmpInfo==false orelse CurInfo==false then
-	       DialogManager,error('Recomputation of information failed.')
-	    elsecase {Procedure.arity Handler}
-	    of 4 then
-	       thread
-		  {Handler CmpNumber {Cast CmpInfo} CurNumber {Cast CurInfo}}
+	    case CurNode==CmpNode then skip else
+	       MenuManager,busy
+	       CurNumber = ToplevelManager,getNumber(CurNode $)
+	       CmpNumber = ToplevelManager,getNumber(CmpNode $)
+	       Action    = {self.cmpAction get($)}
+	       Handler   = Action.3
+	       Cast      = Action.4
+	       CurInfo   = {CurNode findSpace($)}
+	       CmpInfo   = {CmpNode findSpace($)}
+	    in
+	       case CmpInfo==false orelse CurInfo==false then
+		  DialogManager,error('Recomputation of information failed.')
+	       elsecase {Procedure.arity Handler}
+	       of 4 then
+		  thread
+		     {Handler CmpNumber {Cast CmpInfo} CurNumber {Cast CurInfo}}
+		  end
+	       [] 5 then CloseAction in
+		  ToClose <- CloseAction|@ToClose
+		  thread
+		     {Handler CmpNumber {Cast CmpInfo} CurNumber {Cast CurInfo}
+		      ?CloseAction}
+		  end
 	       end
-	    [] 5 then CloseAction in
-	       ToClose <- CloseAction|@ToClose
-	       thread
-		  {Handler CmpNumber {Cast CmpInfo} CurNumber {Cast CurInfo}
-		   ?CloseAction}
-	       end
+	       Manager,SetCursor(CurNode)
+	       Manager,Idle
 	    end
-	    Manager,setCursor(CurNode)
-	    Manager,idle
 	 end
       end	    
 
       meth wake(Node KillId)
-	 case {self.status getKill(_ $)}==KillId then
-	    case Node.mom of !Sentinel then
-	       Manager,reset
-	    elseof Mom then
-	       {Mom  removeLast(Manager,getPrevSol($))}
-	       {Node close}
-	       {self.status removeBlocked}
-	       curNode <- Mom
-	       Manager,step
+	 lock
+	    case {self.status getKill(_ $)}==KillId then
+	       case Node.mom of !Sentinel then
+		  Manager,reset
+	       elseof Mom then
+		  {Mom  removeLast(Manager,GetPrevSol($))}
+		  {Node close}
+		  {self.status removeBlocked}
+		  curNode <- Mom
+		  Manager,step
+	       end
+	    else skip
 	    end
-	 else skip
 	 end
       end
 
       meth updateAfterOption
-	 case {Dictionary.get self.options.drawing scale} then
-	    ToplevelManager,scaleToFit
-	 else skip
+	 lock
+	    case {Dictionary.get self.options.drawing scale} then
+	       ToplevelManager,scaleToFit
+	    else skip
+	    end
 	 end
       end
       
       meth guiOptions(What)
-	 MenuManager,busy
-	 DialogManager,guiOptions(What)
-	 Manager,updateAfterOption
-	 Manager,idle
-	 case @curNode\=false then
-	    Manager,setCursor(@curNode false)
-	 else skip
+	 lock
+	    MenuManager,busy
+	    DialogManager,guiOptions(What)
+	    Manager,updateAfterOption
+	    Manager,Idle
+	    case @curNode\=false then
+	       Manager,SetCursor(@curNode false)
+	    else skip
+	    end
 	 end
       end
       
       meth postscript
-	 Manager,hideCursor
-	 ToplevelManager,hideNumbers
-	 MenuManager,busy
-	 DialogManager,postscript
-	 ToplevelManager,unhideNumbers
-	 Manager,idle
-	 case @curNode\=false then
-	    Manager,setCursor(@curNode false)
-	 else skip
+	 lock
+	    Manager,hideCursor
+	    ToplevelManager,hideNumbers
+	    MenuManager,busy
+	    DialogManager,postscript
+	    ToplevelManager,unhideNumbers
+	    Manager,Idle
+	    case @curNode\=false then
+	       Manager,SetCursor(@curNode false)
+	    else skip
+	    end
 	 end
       end
       
       meth close
 	 {self.explorer ManagerClosed}
-	 case @root of false then skip elseof Root then
-	    {Root close}
+	 lock
+	    case @root of false then skip elseof Root then
+	       {Root close}
+	    end
+	    Manager,         ClearDialogs
+	    ToplevelManager, close
 	 end
-	 Manager,         clearDialogs
-	 ToplevelManager, close
       end
 
    end
