@@ -857,7 +857,8 @@ Object *Object::gcObject() {
 Promise *Promise::gcPromise()
 {
   CHECKCOLLECTED(future,Promise *);
-  Promise *ret = new Promise(future);
+  Promise *ret = new Promise(future,gname);
+  dogcGName(gname);  
   OZ_collectHeapTerm(future,ret->future);
   storeFwd((int32*)&future, ret);
   return ret;
@@ -1069,11 +1070,10 @@ GenCVariable * GenCVariable::gc(void) {
   case MetaVariable:
     sz = sizeof(GenMetaVariable); break;
   case PerdioVariable:
-    sz = sizeof(PerdioVar);       break;
+    sz = ((PerdioVar*)this)->isFuture() ? sizeof(Future) : sizeof(PerdioVar);
+    break;
   case LazyVariable:
     sz = sizeof(GenLazyVariable); break;
-  case FUTURE:
-    sz = sizeof(Future); break;
   default:
     Assert(0);
   }
@@ -1101,8 +1101,7 @@ void GenLazyVariable::gcRecurse(void) {
   }
 }
 
-inline
-void Future::gcRecurse(void) {
+void Future::gcFuture() {
   OZ_collectHeapTerm(requested,requested);
 }
 
@@ -1155,8 +1154,6 @@ void GenCVariable::gcRecurse(void) {
     ((PerdioVar *) this)->gcRecurse(); break;
   case LazyVariable:
     ((GenLazyVariable*) this)->gcRecurse(); break;
-  case FUTURE:
-    ((Future*) this)->gcRecurse(); break;
   default:
     Assert(0);
   }
