@@ -1,12 +1,8 @@
 <!--
   - Authors:
-  -   Denys Duchier     <duchier@ps.uni-sb.de>
-  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
   -   Christian Schulte <schulte@ps.uni-sb.de>
   -
   - Copyright:
-  -   Denys Duchier, 1998
-  -   Leif Kornstaedt, 1998
   -   Christian Schulte, 1998
   -
   - Last change:
@@ -28,40 +24,52 @@
 <Chapter id="Chapter.Search">
   <Title/Search Engines: <<Search>>/
 
-<p>
-This chapter describes various search engines. The engines
-fall into the following categories.
-<para><title/Basic Search Engines./
-Easy to use engines for single, all, and
-best solution search.
+  <p>
+    This chapter describes various search engines. The engines fall
+    into the following categories. 
+    <list>
+      <entry>Basic Search Engines
+      <item>
+        Easy to use engines for single, all, and best solution
+        search. 
+      <entry>General Purpose Search Engines
+      <item>
+        Engines that offer additional support for:
+        <list>
+          <entry>Recomputation
+          <item>
+            Recomputation allows to trade space for time, allowing to
+          solve problems which otherwise would use too much 
+          memory. 
+          <entry>Killing
+          <item>
+            The execution of engines can be killed.
+          <entry>Output
+          <item>
+            Solutions computed can be returned as procedures or
+            first-class computation spaces. 
+       </list>
+    </list> 
 
-<para><title/General Purpose Search Engines./
-These engines offer additional support for:
-<list>
-<entry><<Recomputation>>
-<item>Recomputation allows to trade space for time, allowing to solve
-problems which otherwise would use too much memory.
-<entry><<Killing.>>
-<item>
-The execution of engines can be killed.
-<entry><<Output.>>
-<item>Solutions computed can be returned as procedures or
-first-class computation spaces.
-</list>
+  <para><title/<ref to="sec.search.object"/Search Object//
+    The search object supports demand-driven search for single, all,
+    and best solutions. Search can be stopped and resumed as
+    needed. The object supports recomputation and the different kinds
+    of output as described above.
 
-<para><title/Search Object./
-The search object supports demand-driven search for single, all, and
-best solutions. Search can be stopped and resumed as
-needed. The object supports recomputation and the different kinds of
-output as described above.
+  <para><title/<ref to="section.search.parallel"/Parallel Search Engines//
+    Parallel search engines use multiple networked computers to speed
+    up the exploration of search trees. During exploration of a search
+    tree entire subtrees are delegated to Oz engines that run on
+    different computers in parallel.
 
-<para><title/The Oz Explorer./
-Besides of the engines described here, Mozart features the Oz
-Explorer, an interactive graphical search engine. A short description
-of its use can be found in <ptr.extern to="ozdoc:fdt"
-key="section.problem.explorer">. Reference information on the Oz
-Explorer can be found in <ptr.extern to="ozdoc:explorer">, a research
-paper is&nbsp;<ptr to="Explorer.97">.
+  <para><title/Oz Explorer/
+    Besides of the engines described here, Mozart features the
+    OzExplorer, an interactive graphical search engine. A short
+    description of its use can be found in <ptr.extern to="ozdoc:fdt" 
+    key="section.problem.explorer">. Reference information on the Oz
+    Explorer can be found in <ptr.extern to="ozdoc:explorer">, a
+    research paper is&nbsp;<ptr to="Explorer.97">.
 
 <p>
 <section id="VanillaSearch"><title/Basic Search Engines/
@@ -567,5 +575,141 @@ stops the search engine and closes the object.
 </list>
 </section>
 
+  <section id="section.search.parallel">
+    <title/Parallel Search Engines/
+
+      <p>
+        Parallel search engines use multiple networked computers to
+        speed up the exploration of search trees. During exploration
+        of a search tree entire subtrees are delegated to
+        multiple workers. Each worker is powered by a single Oz
+        engine. This means that all worker run in parallel:
+        subtrees are explored in parallel rather than
+        sequentially. Each engine runs on a networked
+        computer, or multiple engines can even run on a single networked
+        computer. The latter makes sense if the computer has more than
+        a single processor and can run the engines in parallel.
+      </p>
+     
+      <para class=apropos><title/When to use?/
+        Delegating subtrees for exploration to workers incurs some
+        overhead. But if the number of subtrees is significant,
+        parallel execution can gain over the required overhead. If no subtrees
+        exist (the search tree is just a single path) or the
+        subtrees are small (just a small search tree),
+        parallel search engines do not improve. 
+        Branch and bound search for
+        hard problems (like scheduling problems) in particular can take
+        advantage. Currently, you can expect linear speedup for up to six
+        workers (that is, six times faster!) with well suited
+        problems.
+      </para>
+
+      <para class=apropos><title/What to do?/
+        Your scripts do not need rewriting. They must be wrapped
+        into a functor definition.
+      </para>
+
+  <subsection id="section.search.parallel.example">
+    <title/An Example/
+
+    <p>
+      To come.
+
+  <subsection id="section.search.parallel.api">
+    <title/The Class <<Search.parallel>>/
+
+    <p>
+      The class <<Search.parallel>> provides the following methods.
+
+    <list>
+      <entry> <<init>>
+        <index class=module/Search<AND>parallel<AND>init/
+      <synopsis>
+        <<<init(?+{HostA1}:?+{I1} ... ?+{HostAn}:?+{In})>>>
+      <item>
+        Creates and initializes a new parallel search engine by
+        forking new Oz processes.
+      
+      <entry> <<one>>
+        <index class=module/Search<AND>parallel<AND>one/
+      <synopsis>
+        <<<one(?+{FunctorOrUrl} ??{Xs})>>>
+      <item>
+        Searches a single solution for the script specified by
+        ?_{FunctorOrUrl}. ?_{FunctorOrUrl} must be either a functor or
+        a url given as virtual string that refers to a pickled
+        functor. The engine runs the script that must be exported by
+        the field <<script>>.
+      <p>
+        Returns in ?_{Xs} either <<nil>> in case no solution does
+        exists, or a singleton list containing the solution.
+      <p>
+        Blocks until search terminates.
+    
+
+      <entry> <<all>>
+        <index class=module/Search<AND>parallel<AND>all/
+      <synopsis>
+        <<<all(?+{FunctorOrUrl} ??{Xs})>>>
+      <item>
+        Searches all solutions for the script specified by
+        ?_{FunctorOrUrl}. ?_{FunctorOrUrl} must be either a functor or
+        a url given as virtual string that refers to a pickled
+        functor. The engine runs the script that must be exported by
+        the field <<script>>.
+      <p>
+        Returns in ?_{Xs} the list of solutions.
+      <p>
+        Blocks until search terminates.
+
+      <entry> <<best>>
+        <index class=module/Search<AND>parallel<AND>best/
+      <synopsis>
+        <<<best(?+{FunctorOrUrl} ??{Xs})>>>
+      <item>
+        Searches the best solution for the script and order specified by
+        ?_{FunctorOrUrl}. ?_{FunctorOrUrl} must be either a functor or
+        a url given as virtual string that refers to a pickled
+        functor. The engine runs the script that must be exported by
+        the field <<script>> and uses as order for branch and bound
+        search the fields <<order>>.
+      <p>
+        Returns in ?_{Xs} either <<nil>> in case no solution does
+        exists, or a list containing the solutions in increasing
+        order. That is the last element (if any) is the best
+        solution.
+      <p>
+        Blocks until search terminates.
+
+      <entry> <<stop>>
+        <index class=module/Search<AND>parallel<AND>stop/
+      <synopsis>
+        <<<stop()>>>
+      <item>
+        Stops the current search started by <<one>>, <<all>>, or
+        <<best>>. 
+      <p>
+        Blocks until search has been terminated.
+
+      <entry> <<close>>
+        <index class=module/Search<AND>parallel<AND>close/
+      <synopsis>
+        <<<close()>>>
+      <item>
+        Closes the object and terminates all forked Oz processes.
+
+      <entry> <<trace>>
+        <index class=module/Search<AND>parallel<AND>close/
+      <synopsis>
+        <<<trace(?+{B})>>>
+      <item>
+        Switches graphical tracing of search tree delegation on or
+        off, depending on ?+{B}.
+      <p class=danger>
+        Method is highly speculative and is subject to change.
+      </p>
+
+    </list>
 
 </Chapter>
