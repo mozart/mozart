@@ -13,7 +13,7 @@ local
       meth init(master:Master)
 	 TkTools.dialog,tkInit(master:  Master
 			       title:   TitleName#': About'
-			       buttons: ['Okay'#close]
+			       buttons: ['Okay'#tkClose]
 			       focus:   1
 			       pack:    false
 			       default: 1)
@@ -27,7 +27,7 @@ local
 					      '(schulte@dfki.uni-sb.de)\n'))}
       in
 	 {Tk.send pack(Title Author side:top expand:1 padx:BigPad pady:BigPad)}
-	 AboutDialog,pack
+	 AboutDialog,tkPack
       end
 
    end
@@ -48,13 +48,13 @@ local
 	       {Dictionary.put O height      Size.height}
 	       {Dictionary.put O color       {ColorVar  tkReturnAtom($)}}
 	       {Dictionary.put O orientation {OrientVar tkReturnAtom($)}}
-	       {self close}
+	       {self tkClose}
 	    end
 	 end
 
 	 TkTools.dialog,tkInit(master:  M
 			       title:   TitleName#': Postscript'
-			       buttons: ['Okay'#Okay 'Cancel'#close]
+			       buttons: ['Okay'#Okay 'Cancel'#tkClose]
 			       pack:    false
 			       default: 1)
 	 Color     = {New TkTools.textframe tkInit(parent: self
@@ -99,7 +99,7 @@ local
 			 SizeEntry side:left pady:Pad)
 		    pack(Color Orient Size side:top fill:x)
 		    focus(SizeEntry)]}
-	 PostscriptDialog,pack
+	 PostscriptDialog,tkPack
       end
 
    end
@@ -117,7 +117,7 @@ local
 	       {Dictionary.put O hide   {IsHide tkReturnInt($)}==1}
 	       {Dictionary.put O scale  {IsScale tkReturnInt($)}==1}
 	       {Dictionary.put O update I}
-	       {self close}
+	       {self tkClose}
 	    end
 	 end
 	 
@@ -125,7 +125,7 @@ local
 			       title:   TitleName#': Drawing'
 			       default: 1
 			       pack:    false
-			       buttons: ['Okay'#Okay 'Cancel'#close])
+			       buttons: ['Okay'#Okay 'Cancel'#tkClose])
 
 	 Drawing  = {New TkTools.textframe tkInit(parent:self
 						  text:  'Drawing')}
@@ -160,7 +160,7 @@ local
 			 row:3 column:2) 
 		    pack(Drawing)
 		    focus(Update)]}
-	 DrawingDialog,pack
+	 DrawingDialog,tkPack
       end
       
    end
@@ -198,7 +198,7 @@ local
 		  {Dictionary.put O search      SD}
 		  {Dictionary.put O information ID}
 		  {Dictionary.put O failed      {FailedVar tkReturnInt($)}==1}
-		  {self close}
+		  {self tkClose}
 	       else skip
 	       end
 	    end
@@ -207,7 +207,7 @@ local
 				  title:   TitleName#': Search Options'
 				  default: 1
 				  pack:    false
-				  buttons: ['Okay'#Okay 'Cancel'#close])
+				  buttons: ['Okay'#Okay 'Cancel'#tkClose])
 	    Recomp = {New TkTools.textframe tkInit(parent: self
 						   text:   'Recomputation')}
 	    Left   = {New Tk.frame tkInit(parent:Recomp.inner)}
@@ -268,7 +268,7 @@ local
 		       pack(Right side:right anchor:n)
 
 		       pack(Recomp fill:x)]}
-	    SearchDialog,pack
+	    SearchDialog,tkPack
 	 end
 
       end
@@ -302,7 +302,7 @@ in
 		    [] drawing    then DrawingDialog
 		    end
 		    init(master:  self.toplevel
-			 options: self.options.What)}.closed}
+			 options: self.options.What)}.tkClosed}
       end
 
       meth postscript
@@ -318,7 +318,7 @@ in
       end
 
       meth about
-	 {Wait {New AboutDialog init(master:self.toplevel)}.closed}
+	 {Wait {New AboutDialog init(master:self.toplevel)}.tkClosed}
 	 touch
       end
 
@@ -326,7 +326,7 @@ in
 	 {Wait {New TkTools.error
 		tkInit(master:  self.toplevel
 		       text:    M
-		       title:   TitleName#': Error Message')}.closed}
+		       title:   TitleName#': Error Message')}.tkClosed}
 	 touch
       end
 
