@@ -209,6 +209,51 @@ public:
 
 //-----------------------------------------------------------------------------
 
+class PartitionProbingPropagator : public OZ_Propagator {
+protected:
+  static OZ_CFunHeader header;
+
+  IndexSets * _i_sets;
+
+  int _size;
+
+  int _u_max_elem;
+
+  OZ_Term * _vd;
+  int _first;
+public:
+  PartitionProbingPropagator(OZ_Term vs, OZ_Term s, OZ_Term vd);
+
+  virtual OZ_Return propagate(void);
+
+  virtual size_t sizeOf(void) { return sizeof(PartitionProbingPropagator); }
+
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &header;
+  }
+
+  virtual void updateHeapRefs(OZ_Boolean) {
+    // copy index sets
+    _i_sets = _i_sets->copy();
+
+    // copy bools
+    OZ_Term * new_vd = OZ_hallocOzTerms(_size);
+
+    for (int i = _size; i--; ) {
+      new_vd[i] = _vd[i];
+      OZ_updateHeapTerm(new_vd[i]);
+    }
+    _vd = new_vd;
+
+  }
+  virtual OZ_Term getParameters(void) const {
+    return OZ_nil();
+  }
+
+};
+
+//-----------------------------------------------------------------------------
+
 class PartitionReified1Propagator : public PartitionReifiedPropagator {
 protected:
   static OZ_CFunHeader header;
@@ -238,6 +283,13 @@ public:
     _min_cost_per_elem = tmp_min_cost_per_elem;
   }
 
+private:
+  OZ_NonMonotonic _nm;
+public:
+  virtual OZ_Boolean isMonotonic(void) const { return OZ_FALSE; }
+  virtual OZ_NonMonotonic::order_t getOrder(void) const {
+    return _nm.getOrder();
+  }
 };
 
 
