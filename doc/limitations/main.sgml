@@ -62,9 +62,9 @@
 <chapter class=unnumbered><title/Limitations/
 <P>In general, Mozart has very few system limitations.
 Memory allocation is dynamic.
-The number of record fields, array and dictionary size,
+The number of record fields, the size of arrays and dictionarys,
 the number of characters in an atom,
-integer precision, the number of threads, etc.,
+the number of threads, integer precision, etc.,
 are all limited only by available memory.
 Memory is requested from the operating system according to need.
 The allocation strategy is user-customizable
@@ -108,7 +108,7 @@ is from <math/\{\}/ to <math/\{0, ..., 2^{27}-2\}/.
 <section class=unnumbered><title/Integers and Floats/
 
 <p>Integers of 28-bit or less precision are stored in registers.
-Floating-pointer numbers and
+Floating-point numbers and
 integers needing more than 28-bit precision are stored on the heap.
 <p>
 This means that calculations are significantly
