@@ -63,7 +63,7 @@
 	  procedure ?{P} or a pair <<?{O}#?{M}>> of an object
 	  ?{O} and a message ?{M}. When the Explorer is cleared, reset, or
 	  closed, a new thread is created that runs either <<{?{P}}>> or 
-	  <<{?{O}} ?{M}}>> is executed.
+	  <<{?{O} ?{M}}>> is executed.
 	<P>
 	  For example, the default information action can be defined
 	  as follows: 
