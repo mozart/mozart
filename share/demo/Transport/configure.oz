@@ -77,7 +77,7 @@ end
 
 %% Where to find the bitmaps?
 local
-   Url = 'http://www.ps.uni-sb.de/ozhome/demo/images/transport/'
+   Url = 'http://mozart.ps.uni-sb.de/home/doc/demo/images/transport/'
    RI  = {TkTools.images
           {Map [down
                 truck_frame_left truck_frame_right

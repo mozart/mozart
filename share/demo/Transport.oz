@@ -24,8 +24,8 @@ local
 
    \insert 'Transport/country.oz'
 
-   ArgSpec = single(defaults(type:bool default:true)
-                    random(type:bool default:true))
+   ArgSpec = record(defaults(rightmost type:bool default:true)
+                    random(rightmost type:bool default:true))
 
 in
 
