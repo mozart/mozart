@@ -24,6 +24,7 @@
 #endif
 
 #include "term.hh"
+#include "am.hh"
 
 //-----------------------------------------------------------------------------
 //                       Generic Constrained Variable
@@ -41,12 +42,13 @@ protected:
 
   // takes the suspensionlist of var and  appends it to the
   // suspensionlist of leftVar
-  inline void relinkSuspList(GenCVariable * leftVar);
+  void relinkSuspList(GenCVariable * leftVar);
   
   // moves appropriate suspension-list entries onto wake-up stack
   void propagate(TaggedRef, TaggedRef);  
   void propagate(TaggedRef, TaggedRef *);
   SuspList * propagate(TaggedRef, SuspList * &, TaggedRef);
+
 public:
   USEHEAPMEMORY;
 
@@ -63,9 +65,11 @@ public:
   // binds var to term and trails var, if it is global
   // var can be global/local GenCVariable
   // term can be local GenCVariable or an appropriate non-variable
+
   void bind(TaggedRef * vPtr, TaggedRef var,
 	    TaggedRef * tPtr, TaggedRef term);
-  void bind(TaggedRef * vPtr, TaggedRef var, Bool varIsLocal,
+
+  void bind(TaggedRef * vPtr, TaggedRef var, Bool varIsLocal, 
 	    TaggedRef * tPtr, TaggedRef term);
   
   // methods relevant for term copying (gc and solve)  
@@ -83,7 +87,8 @@ public:
   
   OZPRINT;
   OZPRINTLONG;
-
+  MPRINT;
+  
   static Bool unifyGenCVariables;
 };
 
