@@ -114,7 +114,8 @@ in
 	 StatusText
 
       attr
-	 LastSelectedFrame : undef
+	 LastSelectedFrame : 0
+	 EnvSync           : _
 
       meth init
 	 %% create the main window, but delay showing it
@@ -147,7 +148,7 @@ in
 	 local
 	    %% Tk has some problems printing centered text :-(
 	    Bs = {Map [' step' ' next'  ' cont' ' forget'
-		       ' term' ' reset' /* ' stack' */ ]
+		       ' term' /* ' reset' ' stack' */ ]
 		  fun {$ B}
 		     {New Tk.button tkInit(parent: self.ButtonFrame
 					   text:   B
@@ -271,6 +272,17 @@ in
       end
 
       meth printEnv(frame:I vars:V<=nil)
+	 New in
+	 EnvSync <- New = unit
+	 thread
+	    {WaitOr New {Alarm TimeoutToUpdateEnv}}
+	    case {IsDet New} then skip else
+	       Gui,PrintEnv(frame:I vars:V)
+	    end
+	 end
+      end
+      
+      meth PrintEnv(frame:I vars:V)
 	 CV = {Not {Cget envSystemVariables}}
 	 CP = {Not {Cget envProcedures}}
       in
@@ -288,18 +300,20 @@ in
 	 Gui,Disable(self.GlobalEnvText)
       end
    
-      meth frameClick(frame:F highlight:Highlight<=true)
+      meth frameClick(frame:F highlight:Highlight<=true delay:D<=true)
 	 L
       in
-	 {Delay 70} % > TIME_SLICE
-	 L = {Lck is($)}
+	 case D then
+	    {Delay 70} % > TIME_SLICE
+	    L = {Lck is($)}
+	 else
+	    L = false
+	 end
 	 case L then skip else
+	    CurThr        = @currentThread
 	    FrameId       = F.id
 	    FrameNr       = F.nr
-	    CurThr        = @currentThread
-	    CurThrId      = {Thread.id CurThr}
-	    StackObj      = {Dget ThreadManager,getThreadDic($) CurThrId}
-	    SavedVars     = {StackObj getVars(FrameNr $)}
+	    SavedVars     = F.vars
 	    Vars          = case SavedVars \= nil then
 			       {OzcarMessage 'using saved variables'}
 			       SavedVars
@@ -320,13 +334,25 @@ in
 	    Gui,printEnv(frame:FrameNr vars:Vars)
 	 end
       end
-   
+
+      meth neighbourStackFrame(Delta)
+	 Stack = @currentStack
+      in
+	 case Stack == undef then skip else
+	    LSF = @LastSelectedFrame
+	    N   = case LSF == 0 then ~1 else LSF + Delta end
+	    F   = {Stack getFrame(N $)}
+	 in
+	    Gui,frameClick(frame:F highlight:true delay:false)
+	 end
+      end
+      
       meth SelectStackFrame(T)
 	 W   = self.StackText
 	 LSF = @LastSelectedFrame
       in
 	 case LSF \= T then
-	    case LSF \= undef then
+	    case LSF > 0 then
 	       {W tk(tag conf LSF
 		     relief:flat borderwidth:0
 		     background: DefaultBackground
@@ -337,10 +363,8 @@ in
 		     relief:raised borderwidth:0
 		     background: SelectedBackground
 		     foreground: SelectedForeground)}
-	       LastSelectedFrame <- T
-	    else
-	       LastSelectedFrame <- undef
-	    end
+	    else skip end
+	    LastSelectedFrame <- T
 	 else skip end
       end
 
