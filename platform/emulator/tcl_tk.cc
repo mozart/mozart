@@ -377,17 +377,27 @@ void atom2buffer(TaggedRef atom) {
 
 inline
 void int2buffer(TaggedRef i) {
-  char *s = OZ_intToCString(i);
-  cstring2buffer(s);
-  delete [] s;
+  if (isSmallInt(i)) {
+    int len;
+    sprintf(tcl_buffer,"%d%n",smallIntValue(i),&len);
+    tcl_buffer += len;
+    if (tcl_buffer>tcl_buffer_end)
+      resize_tcl_buffer();
+  } else {
+    char * s = OZ_intToCString(i);
+    cstring2buffer(s);
+    delete [] s;
+  }
 }
 
 
 inline
 void float2buffer(TaggedRef f) {
-  char *s = OZ_floatToCString(f);
-  cstring2buffer(s);
-  delete [] s;
+  int len;
+  sprintf(tcl_buffer,"%e%n",floatValue(f),&len);
+  tcl_buffer += len;
+  if (tcl_buffer>tcl_buffer_end)
+    resize_tcl_buffer();
 }
 
 
