@@ -1,6 +1,11 @@
 %%% $Id$
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
+%% Until the emacs interface has been fixed, you'll find
+%% lines with "funny" comments like here:
+%% StatusInitText = 'No current thread' /* end */
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
@@ -20,26 +25,27 @@ GlobalEnvTitle         = 'Global Environment'
 AltLocalEnvTitle       = 'Local Environment of Frame  #'
 AltGlobalEnvTitle      = 'Global Environment of Frame  #'
 
-StatusInitText         = 'No current thread'
+StatusInitText         = 'No current thread' /* end */
 StatusEndText          = 'See you again...'
 
 ApplPrefixText         = 'Application:'
 ApplFilePrefixText     = 'File:'
 
-InvalidThreadID        = 'Invalid Thread ID in step message'
+InvalidThreadID        = 'Invalid Thread ID in step message' /* end */
 NoFileInfo             = 'step message without line number information, ' #
-                         'continuing thread #'
+                         'continuing thread #' /* end */
+NoFileBlockInfo        = ' blocks without line number information'
 EarlyThreadDeath       = '...hm, but it has died already?!'
-KnownThread            = 'Got known thread'
-NewThread              = 'Got new thread'
+KnownThread            = 'Got known thread' /* end */
+NewThread              = 'Got new thread' /* end */
+
+UnknownSuspThread      = 'Unknown suspending thread' /* end */
+UnknownWokenThread     = 'Unknown woken thread' /* end */
+UnknownMessage         = 'Unknown message on stream' /* end */	
+UnknownTermThread      = 'Unknown terminating thread' /* end */
+
 ID                     = fun {$ I} ' (id ' # I # ')' end
-
 OzcarMessagePrefix     = 'Ozcar: '
-				     
-/*                       Just for you, you stupid emacs!
-end end end end
-*/
-
 FileLineSeparator      = ' '
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
