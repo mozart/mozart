@@ -401,7 +401,7 @@ define
                                             key: ctrl(o)
                                             action: P#ServerOpen(NetPort))
                                     separator
-                                    command(label: 'Status ...'
+                                    command(label: 'Status'
                                             key: ctrl(s)
                                             action: P#ServerStatus(NetPort))
                                     command(label: 'Information ...'
@@ -637,9 +637,10 @@ define
          Title = {New Tk.label tkInit(parent: Dialog
                                       text: 'Dictionary Client')}
          Author = {New Tk.label tkInit(parent: Dialog
-                                       text: 'Programming Systems Lab\n'#
-                                             'Contact: Leif Kornstaedt\n'#
-                                             '<kornstae@ps.uni-sb.de>')}
+                                       text: ('Programming Systems Lab\n'#
+                                              'Universität des Saarlandes\n'#
+                                              'Contact: Leif Kornstaedt\n'#
+                                              '<kornstae@ps.uni-sb.de>'))}
       in
          {Tk.batch [grid(Icon row: 0 column: 0 padx: 4 pady: 4)
                     grid(Title row: 0 column: 1 padx: 4 pady: 4)
