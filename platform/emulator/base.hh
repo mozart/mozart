@@ -25,8 +25,8 @@
  *
  */
 
-#ifndef __BASEH
-#define __BASEH
+#ifndef __BASEHH
+#define __BASEHH
 
 #ifdef INTERFACE
 #pragma interface

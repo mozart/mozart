@@ -24,8 +24,10 @@
  *
  */
 
-#ifndef __BASEHH
-#define __BASEHH
+#ifndef __DPBASEHH
+#define __DPBASEHH
+
+#include "base.hh"
 
 class LockProxy;
 class CellProxy;
@@ -38,7 +40,6 @@ class VirtualSite;
 class RemoteSite;
 class DSiteHashTable;
 class Watcher;
-class PerdioVar;
 class BorrowEntry;
 class OwnerEntry;
 class DSite;
