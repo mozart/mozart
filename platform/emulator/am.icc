@@ -436,8 +436,12 @@ int AM::commit(Board *bb, Thread *tt=0)
 inline
 void AM::changeSelf(Object *o)
 {
-  currentThread->pushOORegs(cachedOORegisters);
-  cachedOORegisters = ToInt32(o)|OO_Final;
+  int oldRegs = cachedOORegisters;
+  int newRegs = ToInt32(o)|OO_Final;
+  if(newRegs != oldRegs) {
+    currentThread->pushOORegs(oldRegs);
+    cachedOORegisters = newRegs;
+  }
 }
 
 inline
