@@ -1140,17 +1140,14 @@ void Object::release()
   if (decDeepness()==0) {
     /* wake threads */
     Assert(!isRef(threads));
-    if (sameLiteral(threads,AtomNil)) {
-      Assert(getDeepness()==0);
-      return;
+    if (!sameLiteral(threads,AtomNil)) {
+      incDeepness();
+      TaggedRef var = head(threads);
+      if (OZ_unify(var, isClosed() ? NameTrue : NameFalse)==FAILED) {
+	warning("Object::wakeThreads: unify failed");
+      }
+      threads = tail(threads);
     }
-    
-    incDeepness();
-    TaggedRef var = head(threads);
-    if (OZ_unify(var, isClosed() ? NameTrue : NameFalse)==FAILED) {
-      warning("Object::wakeThreads: unify failed");
-    }
-    threads = tail(threads);
   }
 }
 
