@@ -13,7 +13,7 @@ BODY, P, H1, H2, H3, H4, TABLE, TR, TH, TD, IMG {
   font-family: sans-serif;
 }
 
-PRE, CODE, KBD {
+PRE, CODE, KBD, SPAN.key {
   font-family: courier, monospace;
 }
 
@@ -42,6 +42,7 @@ UL.toc {
   font-size: 80%;
 }
 
+SPAN.key          { color: #669933; }
 CODE              { color: #663366; }
 PRE CODE          { color: #000000; }
 
