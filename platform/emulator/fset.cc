@@ -29,6 +29,8 @@
 #pragma implementation "fset.hh"
 #endif
 
+#include <stdarg.h>
+
 #include "ozostream.hh"
 #include "fset.hh"
 #include "tagged.hh"
@@ -36,7 +38,6 @@
 #include "bits.hh"
 
 //*****************************************************************************
-#include <stdarg.h>
 
 void print_to_fsfile (const char *format, ...)
 {

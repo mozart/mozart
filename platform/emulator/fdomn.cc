@@ -28,6 +28,8 @@
 #pragma implementation "fdomn.hh"
 #endif
 
+#include <stdarg.h>
+
 #include "ozostream.hh"
 #include "fdomn.hh"
 
@@ -38,7 +40,7 @@
 #endif
 
 //-----------------------------------------------------------------------------
-#include <stdarg.h>
+
 #include "bits.hh"
 
 void print_to_fdfile (const char *format, ...)
