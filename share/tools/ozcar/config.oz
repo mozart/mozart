@@ -9,7 +9,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '0.9.9 (Jan 97)'
+Version                = '0.9.10 (Feb 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -22,8 +22,6 @@ AltStackTitle          = 'Stack of Thread  #'
 
 LocalEnvTitle          = 'Local Variables'
 GlobalEnvTitle         = 'Global Variables'
-AltLocalEnvTitle       = 'Local Variables of Frame  #'
-AltGlobalEnvTitle      = 'Global Variables of Frame  #'
 
 StatusInitText         = 'No current thread' /* end */
 StatusEndText          = 'See you again...'
@@ -93,13 +91,13 @@ MagicAtom              = 'noActionPlease'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Geometry
 %%
-ToplevelGeometry       = '590x420+7+50'
-SourceWindowGeometry   = '496x564+612+50'   %% I really hate hardcoding this
+ToplevelGeometry       = '580x400+7+50'
+SourceWindowGeometry   = '496x564+600+50'   %% I really hate hardcoding this
                                             %% but window managers seem
                                             %% to be f*cking stupid :-((
 SourceWindowTextSize   = 80 # 40
 
-ThreadTreeWidth        = 0
+ThreadTreeWidth        = 120
 ThreadTreeStretchX     = 11
 ThreadTreeStretchY     = 14
 ThreadTreeOffset       = 4
@@ -134,7 +132,7 @@ BitMap                 = '@' # BitMapDir # 'debugger.xbm'
 %%
 TextCursor             = left_ptr
 
-MaxStackSize           = 10000
+MaxStackSize           = 40
 MaxStackBrowseSize     = 10
 
 TimeoutToMessage       = 500  % ms
