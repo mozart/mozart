@@ -627,7 +627,7 @@ void addChildProc(pid_t pid)
 }
 
 
-void osExit()
+void osExit(int status)
 {
   /* terminate all our children */
   ChildProc *aux = ChildProc::allchildren;
@@ -640,6 +640,12 @@ void osExit()
 #endif
     aux = aux->next;
   }
+
+#ifdef WINDOWS
+  ExitProcess(status);
+#else
+  exit(status);
+#endif
 }
 
 
