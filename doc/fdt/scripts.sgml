@@ -39,7 +39,8 @@ scripts separating the general script from
 particular data sets.
 
 
-<section id="SecFDQueens"><title/Example: Queens/
+<section id="section.scripts.queens">
+  <title/Example: Queens/
 
 
 <subsection class=unnumbered>
@@ -183,7 +184,8 @@ be non repetitive.
 
 </section>
 
-<section><title/Example: Changing Money/
+<section id="section.scripts.change">
+  <title/Example: Changing Money/
 
 <subsection class=unnumbered>
   <title/Problem Specification/
