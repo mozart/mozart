@@ -3,7 +3,6 @@
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
   Author: popow,mehl,scheidhr
-
   The main engine
   ------------------------------------------------------------------------
 */
@@ -2631,6 +2630,8 @@ LBLdispatcher:
       ozstat.createdThreads.incf();
       RefsArray newY = Y==NULL ? (RefsArray) NULL : copyRefsArray(Y);
       tt->pushCont(newPC,newY,G,NULL);
+      tt->setSelf(e->getSelf());
+
       e->scheduleThread (tt);
 
 #ifdef LINKEDTHREADS
