@@ -12,6 +12,7 @@
 #define ERROR_HINTS             1
 
 #define TIME_SLICE		50  /* ms */
+#define CLOCK_TICK	        TIME_SLICE*1000	/* usec */
 
 #define HI_PRIORITY             2
 #define MID_PRIORITY            1
@@ -47,7 +48,6 @@
 #define INITIALHEAPTHRESHOLD	2048 /* kByte   */
 #define HEAPBLOCKSIZE	     1048576 /* byte    */
 
-#define CLOCK_TICK	10000	/* usec */
 #define TASK_STACK_SIZE		10
 #define THREAD_QUEUE_SIZE	256
 #define NUM_TOPLEVEL_VARS	10000
