@@ -100,9 +100,12 @@ run the emulator when you issue the command `run' to gdb.")
 (defvar oz-mode-syntax-table nil)
 (defvar oz-mode-abbrev-table nil)
 
-(defvar oz-mode-map (make-sparse-keymap))
-(defvar oz-compiler-buffer-map nil)
-(defvar oz-emulator-buffer-map nil)
+(defvar oz-mode-map (make-sparse-keymap)
+  "Keymap used in oz-mode buffers.")
+(defvar oz-compiler-buffer-map nil
+  "Keymap used in *Oz Compiler* buffer.")
+(defvar oz-emulator-buffer-map nil
+  "Keymap used in *Oz Emulator* buffer.")
 
 (defvar oz-emulator (concat (getenv "HOME") "/Oz/Emulator/oz.emulator.bin")
   "*Path to the Oz Emulator for gdb mode and for \\[oz-other].")
@@ -182,8 +185,8 @@ All strings matching this regular expression are removed.")
 ;; Locating Errors (jd)
 ;;------------------------------------------------------------
 
-(defvar oz-last-fed-region-start nil
-  "Marker on last fed region; used to locate errors.")
+(defvar oz-last-fed-buffer nil
+  "Buffer from which the last region was fed; used to locate errors.")
 
 (defvar oz-compiler-output-start nil
   "Where output of last compiler run began.")
@@ -194,11 +197,12 @@ All strings matching this regular expression are removed.")
 (defvar oz-error-intro-pattern "\\(error\\|warning\\) \\*\\*\\*\\*\\*"
   "Regular expression for finding error messages.")
 
-(defvar oz-error-pattern-1
-  "in file \"\\([^\"\n]+\\)\", line \\([0-9]+\\), column \\([0-9]+\\)")
-
-(defvar oz-error-pattern-2
-  "in line \\([0-9]+\\), column \\([0-9]+\\)")
+(defvar oz-error-pattern
+  (concat "in "
+	  "\\(file \"\\([^\"\n]+\\)\",? *\\)?"
+	  "line \\([0-9]+\\)"
+	  "\\(,? *column \\([0-9]+\\)\\)?")
+  "Regular expression matching error coordinates.")
 
 
 ;;------------------------------------------------------------
@@ -296,7 +300,8 @@ Positions are returned as a pair ( START . END )."
     (goto-char end)
     (skip-chars-backward " \t\n")
     (setq end (point)))
-  (setq oz-last-fed-region-start (copy-marker start))
+  (if (not (buffer-file-name))
+      (setq oz-last-fed-buffer (current-buffer)))
   (concat "\\line " (1+ (count-lines 1 start))
 	  " '" (or (buffer-file-name) "nofile") "' % fromemacs\n"
 	  (buffer-substring start end)))
@@ -657,6 +662,8 @@ If FORCE is non-nil, kill the processes immediately."
 			    (oz-make-temp-name "/tmp/ozpipein"))))
 	  (if (not start-flag) (message "Oz died.  Restarting ..."))
 	  (setq oz-using-new-compiler use-new-compiler)
+	  (define-key oz-mode-map "\C-cc"
+	    (if oz-using-new-compiler 'oz-compiler-panel 'oz-precompile-file))
 	  (cond (oz-using-new-compiler
 		 t)
 		(oz-win32
@@ -670,7 +677,7 @@ If FORCE is non-nil, kill the processes immediately."
 	  (save-excursion
 	    (set-buffer oz-compiler-buffer)
 	    (set (make-local-variable 'compilation-error-regexp-alist)
-		 '((oz-error-pattern-1 1 2 3)))
+		 '((oz-error-pattern 2 3 5)))
 	    (set (make-local-variable 'compilation-parsing-end)
 		 (point))
 	    (set (make-local-variable 'compilation-error-list)
@@ -2484,16 +2491,16 @@ When in emulator buffer, visit place indicated in next callstack line."
 	(comp-buffer (get-buffer oz-compiler-buffer))
 	(emu-buffer (get-buffer oz-emulator-buffer))
 	error-data)
-    (cond ((eq old-buffer comp-buffer)
-	   (oz-goto-error-start)
-	   (setq error-data (oz-fetch-next-error-data))
-	   (switch-to-buffer-other-window old-buffer))
-	  ((eq old-buffer emu-buffer)
-	   (setq error-data (oz-fetch-next-callstack-data))
-	   (if error-data
-	       (switch-to-buffer-other-window old-buffer)))
-	  ((bufferp comp-buffer)
-	   (save-excursion
+    (save-excursion
+      (cond ((eq old-buffer comp-buffer)
+	     (oz-goto-error-start)
+	     (setq error-data (oz-fetch-next-error-data))
+	     (switch-to-buffer-other-window old-buffer))
+	    ((eq old-buffer emu-buffer)
+	     (setq error-data (oz-fetch-next-callstack-data))
+	     (if error-data
+		 (switch-to-buffer-other-window old-buffer)))
+	    ((bufferp comp-buffer)
 	     (set-buffer comp-buffer)
 	     (cond ((and oz-next-error-marker
 			 (eq (marker-buffer oz-next-error-marker) comp-buffer))
@@ -2506,30 +2513,26 @@ When in emulator buffer, visit place indicated in next callstack line."
 		   (t (error "No compilation found")))
 	     (setq error-data (oz-fetch-next-error-data)))))
     (if error-data
-	(let ((error-marker (car error-data))
-	      (file (nth 1 error-data))
-	      (lineno (nth 2 error-data))
-	      (column (nth 3 error-data))
-	      source-marker buf)
-	  (if (string-equal file "nofile")
-	      (if (not oz-last-fed-region-start)
-		  (error "No source buffer found")
-		(save-excursion
-		  (set-buffer (marker-buffer oz-last-fed-region-start))
-		  (goto-char oz-last-fed-region-start)
-		  (if (> lineno 1) (forward-line (1- lineno)))
-		  (if (> column 0) (forward-char column))
-		  (setq source-marker (point-marker))))
-	    (setq buf (compilation-find-file error-marker file nil))
-	    (if (null buf)
-		(error "No source buffer found"))
-	    (set-buffer buf)
-	    (save-excursion
-	      (save-restriction
-		(widen)
-		(goto-line lineno)
-		(if (> column 0) (forward-char column))
-		(setq source-marker (point-marker)))))
+	(let* ((error-marker (car error-data))
+	       (file (nth 1 error-data))
+	       (lineno-string (nth 2 error-data))
+	       (lineno (car (read-from-string lineno-string)))
+	       (column-string (nth 3 error-data))
+	       (column (and column-string
+			    (car (read-from-string column-string))))
+	       (buf (if (string-equal file "nofile")
+			oz-last-fed-buffer
+		      (compilation-find-file error-marker file nil)))
+	       source-marker)
+	  (if (not buf)
+	      (error "No source buffer found"))
+	  (set-buffer buf)
+	  (save-excursion
+	    (save-restriction
+	      (widen)
+	      (goto-line lineno)
+	      (if (and column (> column 0)) (forward-char column))
+	      (setq source-marker (point-marker))))
 	  (compilation-goto-locus (cons error-marker source-marker)))
       (message "No next error")
       (sit-for 1))))
@@ -2538,32 +2541,16 @@ When in emulator buffer, visit place indicated in next callstack line."
   (cond ((re-search-forward oz-error-intro-pattern nil t)
 	 (beginning-of-line)
 	 (let ((error-marker (point-marker)))
-	   (cond ((re-search-forward oz-error-pattern-1 nil t)
-		  (let ((file (buffer-substring (match-beginning 1)
-						(match-end 1)))
-			(lineno (car (read-from-string
-				      (buffer-substring (match-beginning 2)
-							(match-end 2)))))
-			(column (car (read-from-string
-				      (buffer-substring (match-beginning 3)
-							(match-end 3))))))
-		    (setq oz-next-error-marker (point-marker))
-		    (list error-marker file lineno column)))
-		 ((re-search-forward oz-error-pattern-2 nil t)
-		  (let ((file "nofile")
-			(lineno (car (read-from-string
-				      (buffer-substring (match-beginning 1)
-							(match-end 1)))))
-			(column (car (read-from-string
-				      (buffer-substring (match-beginning 2)
-							(match-end 2))))))
-		    (setq oz-next-error-marker (point-marker))
-		    (list error-marker file lineno column)))
-		 (t
-		  (let ((win (get-buffer-window oz-compiler-buffer nil)))
-		    (if win
-			(set-window-point win (point-max))))
-		  nil))))
+	   (if (re-search-forward oz-error-pattern nil t)
+	       (let ((file (or (match-string 2) "nofile"))
+		     (lineno-string (match-string 3))
+		     (column-string (match-string 5)))
+		 (setq oz-next-error-marker (point-marker))
+		 (list error-marker file lineno-string column-string))
+	     (let ((win (get-buffer-window oz-compiler-buffer nil)))
+	       (if win
+		   (set-window-point win (point-max))))
+	     nil)))
 	(t
 	 (let ((win (get-buffer-window oz-compiler-buffer nil)))
 	   (if win
@@ -2571,34 +2558,14 @@ When in emulator buffer, visit place indicated in next callstack line."
 	 nil)))
 
 (defun oz-fetch-next-callstack-data ()
-  (let (posx posy lineno file limit error-marker)
-    (beginning-of-line)
-    (cond ((setq posy (search-forward "File: " nil t))
-	   (beginning-of-line)
-	   (setq error-marker (point-marker))
-	   (end-of-line)
-	   (setq limit (point))
-	   (goto-char posy)
-	   (search-forward " " limit t)
-	   (setq file (buffer-substring posy (1- (point))))
-	   (setq posx (search-forward "Line: " limit t))
-	   (setq lineno (car (read-from-string
-			      (buffer-substring posx limit))))
-	   (list error-marker file lineno 0))
-	  ((setq posy (search-forward "File '" nil t))
-	   (beginning-of-line)
-	   (setq error-marker (point-marker))
-	   (end-of-line)
-	   (setq limit (point))
-	   (goto-char posy)
-	   (search-forward "'" limit t)
-	   (setq file (buffer-substring posy (1- (point))))
-	   (setq posx (search-forward ", line " limit t))
-	   (setq lineno (car (read-from-string
-			      (buffer-substring posx limit))))
-	   (list error-marker file lineno 0))
-	  (t
-	   nil))))
+  (beginning-of-line)
+  (if (re-search-forward oz-error-pattern nil t)
+      (let ((file (or (match-string 2) "nofile"))
+	    (lineno-string (match-string 3))
+	    (column-string (match-string 5)))
+	(setq oz-next-error-marker (point-marker))
+	(beginning-of-line)
+	(list (point-marker) file lineno-string column-string))))
 
 ;; if point is in the middle of an error message (in the compiler buffer),
 ;; then it is moved to the start of the message.
