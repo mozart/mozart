@@ -29,57 +29,64 @@ define
    LATEX2GIF = 'latex2gif'
 
    class LaTeXToGIFClass
-      attr DirName: unit N: unit FileName: unit File: unit
+      attr Dict: unit Keys: unit DirName: unit N: unit
       meth init(Dir)
 	 DirName <- Dir
 	 N <- 0
       end
       meth convertPicture(VS ?OutFileName)
-	 LaTeXToGIFClass, OpenLaTex()
-	 {@File write(vs: VS#'\n\\clearpage\n')}
-	 N <- @N + 1
-	 OutFileName = 'latex'#@N#'.gif'
+	 LaTeXToGIFClass, Enter(VS ?OutFileName)
       end
       meth convertMath(VS Display ?OutFileName)
-	 LaTeXToGIFClass, OpenLaTex()
-	 {@File write(vs: case Display of display then '\\[\n'#VS#'\n\\]\n'
-			  [] inline then '$'#VS#'$\n'
-			  end#'\\clearpage\n')}
-	 N <- @N + 1
-	 OutFileName = 'latex'#@N#'.gif'
+	 LaTeXToGIFClass, Enter(case Display of inline then '$'#VS#'$\n'
+				[] display then '\\[\n'#VS#'\n\\]\n'
+				end ?OutFileName)
       end
-      meth OpenLaTex()
-	 case @File of unit then
-	    FileName <- {OS.tmpnam}
-	    File <- {New Open.file init(name: @FileName
-					flags: [write create truncate])}
-	    {@File write(vs: ('\\documentclass{report}\n'#
-			      '\\usepackage{wasysym}\n'#
-			      '\\usepackage{pstricks}\n'#
-			      '\\usepackage{pst-node}\n'#
-			      '\\usepackage{rotating}\n'#
-			      '\\pagestyle{empty}\n'#
-			      '\\begin{document}\n'))}
+      meth Enter(VS OutFileName) A in
+	 case @Dict of unit then
+	    Dict <- {NewDictionary}
+	    Keys <- nil
 	 else skip
+	 end
+	 A = {VirtualString.toAtom VS}
+	 case {Dictionary.condGet @Dict A unit} of unit then
+	    N <- @N + 1
+	    OutFileName = 'latex'#@N#'.gif'
+	    {Dictionary.put @Dict A OutFileName}
+	    Keys <- A|@Keys
+	 else
+	    {Dictionary.get @Dict A OutFileName}
 	 end
       end
       meth process(Reporter)
-	 case @File of unit then skip
-	 else
-	    {@File write(vs: '\\end{document}\n')}
-	    {@File close()}
+	 case @Dict of unit then skip
+	 else FileName File in
 	    {Reporter startSubPhase('converting LaTeX sections to GIF')}
+	    FileName = {OS.tmpnam}
+	    File = {New Open.file init(name: FileName
+				       flags: [write create truncate])}
+	    {File write(vs: ('\\documentclass{report}\n'#
+			     '\\usepackage{wasysym}\n'#
+			     '\\usepackage{pstricks}\n'#
+			     '\\usepackage{pst-node}\n'#
+			     '\\usepackage{rotating}\n'#
+			     '\\pagestyle{empty}\n'#
+			     '\\begin{document}\n'))}
+	    {ForAll {Reverse @Keys}
+	     proc {$ X}
+		{File write(vs: X#'\n\\clearpage\n')}
+	     end}
+	    {File write(vs: '\\end{document}\n')}
+	    {File close()}
 	    try
 	       case
-		  {OS.system LATEX2GIF#' '#@FileName#' '#@N#' '#@DirName}
+		  {OS.system LATEX2GIF#' '#FileName#' '#@N#' '#@DirName}
 	       of 0 then skip
 	       elseof I then
 		  {Exception.raiseError ozDoc(latexToGif I)}
 	       end
 	    finally
-	       {OS.unlink @FileName}
-	       File <- unit
-	       FileName <- unit
+	       {OS.unlink FileName}
 	    end
 	 end
       end
