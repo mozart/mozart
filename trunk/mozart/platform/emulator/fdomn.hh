@@ -259,4 +259,6 @@ public:
   void copyExtension(void);
 };
 
+void initFDs();
+
 #endif
