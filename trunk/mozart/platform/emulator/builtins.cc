@@ -5809,6 +5809,11 @@ SRecord *getStateInline(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &va
 
   TaggedRef old;
   Tertiary *t=getCell(state);          // shortcut
+  if(t->isLocal()) { // can happen if globalized object becomes localized again
+    message("localized object found\n");
+    return tagged2SRecord(deref(((CellLocal*)t)->getValue()));
+  }
+
   if(t->getTertType()!=Te_Proxy){
     CellSec* sec;
     if(t->getTertType()==Te_Frame){
