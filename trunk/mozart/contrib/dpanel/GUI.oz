@@ -15,11 +15,16 @@ export
    bsites:BSites
    bactive:BActive
    bnumber:BNumber
+
+   nilist:NIList
+   ninumber:NINumber
+   nibyte:NIByte
 define
    SiteVis={NewCell true}
    OwnerVis={NewCell true}
    BorrowVis={NewCell true}
-
+   NetInfoVis={NewCell true}
+   
    class TitleGraph from Tk.frame
       feat graph 
 
@@ -202,7 +207,7 @@ define
    BorrowF={New Tk.frame tkInit(parent:T)}
    BSites={New SiteList tkInit(parent:BorrowF)}
    BActive={New TitleGraph tkInit(parent:BorrowF
-				 title:"Active/s"
+				 title:"#Active/s"
 				 miny:1.0
 				 maxy:11.0
 				 dim:''
@@ -214,14 +219,32 @@ define
 				 dim:''
 				 fill:true)}
    
+   %% Net info frame
+   NetInfoF={New Tk.frame tkInit(parent:T)}
+   NIList={New SiteList tkInit(parent:NetInfoF)}
+   NINumber={New TitleGraph tkInit(parent:NetInfoF
+				 title:"Number"
+				 miny:1.0
+				 maxy:11.0
+				 dim:''
+				 fill:true)}
+   NIByte={New TitleGraph tkInit(parent:NetInfoF
+				 title:"Byte"
+				 miny:1.0
+				 maxy:11.0
+				 dim:''
+				 fill:true)}
+   
 in
    {Tk.send pack(SSites SActive SNumber side:left)}
    {Tk.send pack(OSites OActive ONumber side:left)}
    {Tk.send pack(BSites BActive BNumber side:left)}
+   {Tk.send pack(NIList NINumber NIByte side:left)}
 
    {Tk.batch [grid(SiteF   row:0 column:0 sticky:news)
 	      grid(OwnerF  row:1 column:0 sticky:news)
-	      grid(BorrowF row:2 column:0 sticky:news)]}
+	      grid(BorrowF row:2 column:0 sticky:news)
+	      grid(NetInfoF row:3 column:0 sticky:news)]}
 	      
    %%{Tk.send pack(SiteF OwnerF BorrowF fill:x)}
 
@@ -266,6 +289,20 @@ in
 			       {Assign BorrowVis true}
 			       {Tk.send
 				grid(BorrowF row:2 column:0 sticky:news)}
+			    end
+			 end
+			 if {Access NetInfoVis} then
+			    "Hide Net Info Frame"#
+			    proc{$}
+			       {Assign NetInfoVis false}
+			       {Tk.send grid(forget(NetInfoF))}
+			    end
+			 else
+			    "Show Net Info Frame"#
+			    proc{$}
+			       {Assign NetInfoVis true}
+			       {Tk.send
+				grid(NetInfoF row:3 column:0 sticky:news)}
 			    end
 			 end]
 			T}
