@@ -2016,11 +2016,11 @@ private:
   TaggedRef printname;
   unsigned short arity;
   SRecordArity methodArity;
-  TaggedRef fileName;
-  int lineno;
+  TaggedRef pos;
   TaggedRef info;
   int flags;
   int gSize;
+  int maxX;
 public:
   PrTabEntry *next;
   unsigned int numClosures, numCalled, heapUsed, samples, lastHeap;
@@ -2035,9 +2035,26 @@ public:
   OZPRINT;
   NO_DEFAULT_CONSTRUCTORS(PrTabEntry);
   PrTabEntry (TaggedRef name, SRecordArity arityInit,
-              TaggedRef file, int line, int fl)
-  : printname(name), fileName(file), lineno(line), flags(fl)
+              TaggedRef apos, TaggedRef fl, int maxX)
+  : printname(name), pos(apos), maxX(maxX)
   {
+    OZ_protect(&pos);
+    Assert(pos==0 ||
+           (OZ_isTuple(pos) && OZ_width(pos)==3 &&
+            OZ_isAtom(OZ_getArg(pos,0)) &&
+            OZ_isInt(OZ_getArg(pos,1)) &&
+            OZ_isInt(OZ_getArg(pos,2))));
+
+    flags = 0;
+    fl = oz_deref(fl);
+    while (oz_isCons(fl)) {
+      OZ_Term ff=oz_deref(head(fl));
+      if (oz_eq(ff,OZ_atom("once"))) { flags |= PR_COPYONCE; }
+      else if (oz_eq(ff,OZ_atom("native"))) { flags |= PR_NATIVE; }
+      fl = oz_deref(tail(fl));
+    }
+    Assert(oz_isNil(fl));
+
     Assert(oz_isLiteral(name));
     methodArity = arityInit;
     arity =  (unsigned short) getWidth(arityInit);
@@ -2047,14 +2064,15 @@ public:
     numClosures = numCalled = heapUsed = samples = lastHeap = 0;
     next = allPrTabEntries;
     allPrTabEntries = this;
-    gSize=0;
+    DebugCheckT(gSize=-1);
   }
 
   void setGSize(int n) { gSize = n; }
   int getGSize() { return gSize; }
   int getArity () { return (int) arity; }
-  TaggedRef getFileName() { return fileName; }
-  int getLine() { return lineno; }
+
+  OZ_Term getPos()      { return pos; }
+
   SRecordArity getMethodArity() { return methodArity; }
   const char *getPrintName () { return tagged2Literal(printname)->getPrintName(); }
   TaggedRef getName () { return printname; }
@@ -2064,9 +2082,17 @@ public:
   void setInfo(TaggedRef t) { info = t; }
   TaggedRef getInfo()       { return info; }
 
-  int getFlags()   { return flags; }
   int isNative()   { return flags&PR_NATIVE; }
   int isCopyOnce() { return flags&PR_COPYONCE; }
+  int getFlags()   { return flags; }
+  OZ_Term getFlagsList() {
+    OZ_Term ret = nil();
+    if (isNative()) ret = cons(OZ_atom("native"),ret);
+    if (isCopyOnce()) ret = cons(OZ_atom("once"),ret);
+    return ret;
+  }
+
+  int getMaxX()    { return maxX; }
 
   void patchFileAndLine();
 
@@ -2086,6 +2112,7 @@ public:
   static Abstraction *Abstraction::newAbstraction(PrTabEntry *prd,
                                                   Board *bb)
   {
+    Assert(prd->getGSize()>=0);
     int sz=sizeof(Abstraction)+sizeof(TaggedRef)*(prd->getGSize()-1);
     Abstraction *ab = (Abstraction *) int32Malloc(sz);
     ab->ConstTermWithHome::init(bb,Co_Abstraction);

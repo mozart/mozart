@@ -211,14 +211,15 @@ ByteSink::putTerm(OZ_Term in, char *filename)
     bs->sentFirst();
   }
   bs->writeCheck();
+  TaggedRef res=bs->resources;
   bufferManager->freeByteStream(bs);
 
   //  return oz_unify(resources,bs->resources);
-  if (!oz_isNil(bs->resources)) {
+  if (!oz_isNil(res)) {
     return oz_raise(E_ERROR,OZ_atom("dp"),"save",3,
                     oz_atom("resources"),
                     oz_atom(filename),
-                    bs->resources);
+                    res);
   }
 
   return PROCEED;

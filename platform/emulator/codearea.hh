@@ -89,8 +89,7 @@ class CodeArea {
   friend inline void printNameTab();
 
   static Bool getNextDebugInfoArgs(ProgramCounter from,
-                                   TaggedRef &file, TaggedRef &line,
-                                   TaggedRef &column, TaggedRef &comment);
+                                   TaggedRef &pos, TaggedRef &comment);
 
 protected:
   ByteCode *codeBlock;    /* a block of abstract machine code */
@@ -131,8 +130,7 @@ public:
                              int frameId, RefsArray Y, Abstraction *G);
   static TaggedRef getFrameVariables(ProgramCounter, RefsArray, Abstraction *);
   static void getDefinitionArgs(ProgramCounter PC, Reg &reg,
-                                int &next, TaggedRef &file,
-                                TaggedRef &line, TaggedRef &column,
+                                int &next, TaggedRef &pos,
                                 TaggedRef &predName);
 
   /* with one argument it means that we need the code till the "query"  */

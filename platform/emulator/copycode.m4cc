@@ -164,8 +164,9 @@ PrTabEntry *checkPTE(PrTabEntry *pte, HashTable *ht)
 {
   CheckHT(PrTabEntry *,pte);
 
-  aux = new PrTabEntry (pte->getName(),checkSRA(pte->getMethodArity(),ht),
-                        pte->getFileName(), pte->getLine(),pte->getFlags());
+  aux = new PrTabEntry(pte->getName(),checkSRA(pte->getMethodArity(),ht),
+                       pte->getPos(), pte->getFlagsList(),
+                       pte->getMaxX());
   ht->htAdd(ToInt32(pte),aux);
   return aux;
 }
@@ -313,8 +314,8 @@ ProgramCounter copyCode(ProgramCounter start, TaggedRef list, Bool makecopy)
   Reg reg;
   int nxt;
   PrTabEntry *pred;
-  TaggedRef file,line,column,predName;
-  CodeArea::getDefinitionArgs(start,reg,nxt,file,line,column,predName);
+  TaggedRef pos,predName;
+  CodeArea::getDefinitionArgs(start,reg,nxt,pos,predName);
 
   int size = nxt;
   ProgramCounter ret;

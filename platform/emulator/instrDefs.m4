@@ -24,7 +24,8 @@ instruction(endOfFile)
 instruction(skip)
 instruction(failure)
 
-dnl   Reg x ContAddr x (PrintName x Arity x FileName x LineNum)
+dnl   Reg x ContAddr
+dnl       x (PrintName x Arity x FileName x LineNum x Flags x NLiveRegs)
 dnl       x AbstractionEntry x AssRegArray
 instruction(definition,writeArg(XRegisterIndex),Label,PredId,PredicateRef,GRegRef)
 instruction(definitionCopy,writeArg(XRegisterIndex),Label,PredId,PredicateRef,GRegRef)
@@ -122,10 +123,11 @@ dnl   ApplMethInfo = MethName x Arity
 instruction(applMeth,ApplMethInfo,readArg(Register))
 instruction(tailApplMeth,ApplMethInfo,readArg(Register))
 
-instruction(getSelf,readArg(XRegisterIndex))
-instruction(lockThread,Label,readArg(XRegisterIndex),NLiveRegs)
-instruction(inlineAt,Feature,writeArg(XRegisterIndex),NLiveRegs,Cache)
-instruction(inlineAssign,Feature,readArg(XRegisterIndex),NLiveRegs,Cache)
+instruction(getSelf,writeArg(XRegisterIndex))
+instruction(setSelf,readArg(XRegisterIndex))
+instruction(lockThread,Label,readArg(XRegisterIndex))
+instruction(inlineAt,Feature,writeArg(XRegisterIndex),Cache)
+instruction(inlineAssign,Feature,readArg(XRegisterIndex),Cache)
 
 instruction(branch,Label)
 
@@ -133,7 +135,7 @@ instruction(wait)
 instruction(waitTop)
 instruction(ask)
 
-instruction(createCond,Label,NLiveRegs)
+instruction(createCond,Label)
 instruction(createOr)
 instruction(createEnumOr)
 instruction(createChoice)
@@ -141,7 +143,6 @@ instruction(clause)
 instruction(emptyClause)
 
 instruction(thread,Label)
-instruction(threadX,Arity,Label)
 
 instruction(exHandler,Label)
 instruction(popEx)
@@ -152,61 +153,61 @@ instruction(nextClause,Label)
 instruction(lastClause)
 
 dnl   conditionals
-instruction(shallowGuard,Label,NLiveRegs)
+instruction(shallowGuard,Label)
 instruction(shallowThen)
 
-instruction(testLiteral,readArg(Register),Literal,Label,Label,NLiveRegs)
-instruction(testNumber,readArg(Register),Number,Label,Label,NLiveRegs)
+instruction(testLiteral,readArg(Register),Literal,Label)
+instruction(testNumber,readArg(Register),Number,Label)
 
-instruction(testRecord,readArg(Register),Literal,RecordArity,Label,Label,NLiveRegs)
-instruction(testList,readArg(Register),Label,Label,NLiveRegs)
+instruction(testRecord,readArg(Register),Literal,RecordArity,Label)
+instruction(testList,readArg(Register),Label)
 
-instruction(testBool,readArg(Register),Label,Label,Label,NLiveRegs)
+instruction(testBool,readArg(Register),Label,Label)
 
-instruction(match,readArg(Register),HashTableRef,NLiveRegs)
+instruction(match,readArg(Register),HashTableRef)
 instruction(getVariable,writeArg(Register))
 instruction(getVarVar,writeArg(Register),writeArg(Register))
 instruction(getVoid,Count)
 
 dnl   code annotations for the source-level debugger
 
-dnl   debug args: file x line x column x comment x nliveregs
-instruction(debugEntry,Literal,Number,Number,Literal,NLiveRegs)
-instruction(debugExit,Literal,Number,Number,Literal,NLiveRegs)
+dnl   debug args: file x line x column x comment
+instruction(debugEntry,Literal,Number,Number,Literal)
+instruction(debugExit,Literal,Number,Number,Literal)
 
-instruction(globalVarname,Variablename)
-instruction(localVarname,Variablename)
+instruction(globalVarname,Constant)
+instruction(localVarname,Constant)
 
 instruction(clearY,writeArg(YRegisterIndex))
 instruction(profileProc)
 
 dnl   builtin applications
 
-instruction(callBI,Builtinname,Location,NLiveRegs)
+instruction(callBI,Builtinname,Location)
 instruction(inlinePlus1,readArg(XRegisterIndex),
-                        writeArg(XRegisterIndex),NLiveRegs)
+                        writeArg(XRegisterIndex))
 instruction(inlineMinus1,readArg(XRegisterIndex),
-                         writeArg(XRegisterIndex),NLiveRegs)
+                         writeArg(XRegisterIndex))
 instruction(inlinePlus, readArg(XRegisterIndex),
                         readArg(XRegisterIndex),
-                        writeArg(XRegisterIndex),NLiveRegs)
+                        writeArg(XRegisterIndex))
 instruction(inlineMinus,readArg(XRegisterIndex),
                         readArg(XRegisterIndex),
-                        writeArg(XRegisterIndex),NLiveRegs)
+                        writeArg(XRegisterIndex))
 instruction(inlineDot,readArg(XRegisterIndex),Feature,
-                        writeArg(XRegisterIndex),NLiveRegs,Cache)
+                        writeArg(XRegisterIndex),Cache)
 instruction(inlineUparrow,readArg(XRegisterIndex),readArg(XRegisterIndex),
-                        writeArg(XRegisterIndex),NLiveRegs)
+                        writeArg(XRegisterIndex))
 
-instruction(testBI,Builtinname,Location,Label,NLiveRegs)
+instruction(testBI,Builtinname,Location,Label)
 instruction(testLT,readArg(XRegisterIndex),
                    readArg(XRegisterIndex),
                    writeArg(XRegisterIndex),
-                   Label,NLiveRegs)
+                   Label)
 instruction(testLE,readArg(XRegisterIndex),
                    readArg(XRegisterIndex),
                    writeArg(XRegisterIndex),
-                   Label,NLiveRegs)
+                   Label)
 
 dnl   dummy instructions to allow easy testing of new
 dnl   instructions via assembler

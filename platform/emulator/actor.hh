@@ -193,10 +193,10 @@ public:
   NO_DEFAULT_CONSTRUCTORS(WaitActor);
 
   WaitActor(Board *s,Thread *tt,
-            ProgramCounter p,RefsArray y,Abstraction *cap,RefsArray x, int i,
+            ProgramCounter p,RefsArray y,Abstraction *cap,
             Bool d)
     : AWActor((d ? (ActorFlags)(Ac_Wait | Ac_Choice) : Ac_Wait),s,tt,
-              p,y,cap,x,i)
+              p,y,cap,0,0)
   {
     children  = NULL;
     cpb       = NULL;

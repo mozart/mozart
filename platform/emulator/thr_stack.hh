@@ -160,6 +160,7 @@ public:
   }
 
   void pushX(RefsArray X, int i) {
+    Assert(i>=0);
     if (i>0) {
       RefsArray x=copyRefsArray(X,i);
       Assert(MemChunks::areRegsInHeap(x,getRefsArraySize(x)));
@@ -169,6 +170,7 @@ public:
 
   void pushCFun(OZ_CFun f, RefsArray  x, int i, Bool copy)
   {
+    Assert(i>=0);
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
 
     Assert(MemChunks::areRegsInHeap(x, i));
@@ -194,6 +196,7 @@ public:
 
   void pushCall(TaggedRef pred, RefsArray  x, int i)
   {
+    Assert(i>=0);
     pushFrame(C_CALL_CONT_Ptr, ToPointer(pred), i>0 ? copyRefsArray(x, i) : NULL);
   }
 

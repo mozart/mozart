@@ -109,6 +109,9 @@ undefine(`instruction')
 %type <tagged> Atom
 %type <tagged> Bool
 %type <tagged> Name
+%type <tagged> Pos
+%type <tagged> Flags
+%type <tagged> FlagsList
 %type <tagged> HashTableEntries
 %type <tagged> HashTableEntry
 %type <tagged> NumOrLit
@@ -307,10 +310,6 @@ Builtinname     : Atom
                   }
                 ;
 
-Variablename    : Atom
-                  { codeArea->writeTagged($1); }
-                ;
-
 Register        : XREGISTER
                   {
                     codeArea->writeReg($1);
@@ -356,9 +355,6 @@ Arity           : Integer
 Count           : Integer
                 ;
 
-NLiveRegs       : Integer
-                ;
-
 ArityAndIsTail  : Integer
                 ;
 
@@ -399,12 +395,55 @@ PredicateRef    : UNIT
                   }
                 ;
 
-PredId          : PID '(' Atom INTEGER Atom INTEGER Bool Bool ')'
+Pos             : Atom '(' Atom INTEGER INTEGER ')'
+                  {
+                    $$ = OZ_mkTuple($1,3,$3,$4,$5);
+                  }
+                ;
+
+Flags           : NIL
+                  {
+                    $$ = OZ_nil();
+                  }
+                | '[' FlagsList ']'
+                  {
+                    $$ = $2;
+                  }
+                ;
+
+FlagsList       : Atom
+                  {
+                    $$ = OZ_cons($1,OZ_nil());
+                  }
+                | Atom FlagsList
+                  {
+                    $$ = OZ_cons($1,$2);
+                  }
+                ;
+
+PredId          : PID '(' Atom INTEGER Pos Flags INTEGER ')'
+                  {
+                    const OZ_Term printname = $3;
+                    const SRecordArity arity = mkTupleWidth(OZ_intToC($4));
+                    const OZ_Term pos = $5;
+                    const OZ_Term flags = $6;
+                    const maxX = OZ_intToC($7);
+                    PrTabEntry *pte =
+                      new PrTabEntry(printname,arity,pos,flags,maxX);
+                    codeArea->writeAddress(pte);
+                  }
+                // mm2: only for compat should be removed
+                | PID '(' Atom INTEGER Atom INTEGER Bool Bool INTEGER ')'
                   {
                     SRecordArity arity = mkTupleWidth(OZ_intToC($4));
-                    int flags = (OZ_isTrue($7) ? PR_COPYONCE : 0)
-                              + (OZ_isTrue($8) ? PR_NATIVE : 0);
-                    PrTabEntry *pte = new PrTabEntry($3,arity,$5,OZ_intToC($6),flags);
+
+                    OZ_Term flags = OZ_nil();
+                    if (OZ_isTrue($7)) flags=OZ_cons(OZ_atom("once"), flags);
+                    if (OZ_isTrue($8)) flags=OZ_cons(OZ_atom("native"), flags);
+
+                    PrTabEntry *pte = new PrTabEntry($3,arity,
+                      OZ_mkTupleC("pos",3,$5,$6,OZ_int(0)),
+                      flags,OZ_intToC($9));
                     codeArea->writeAddress(pte);
                   }
                 ;
@@ -605,9 +644,13 @@ TaggedRef ozma_readProc(const char *filename)
   if (res)
     return makeTaggedNULL();
 
-  RefsArray gRegs = (RefsArray) NULL;
-  PrTabEntry *pte = new PrTabEntry(OZ_atom("toplevelAbstraction"),
-                                           mkTupleWidth(0),nil(),0,NO);
+  const int maxX=-1; // should never suspend
+  PrTabEntry *pte
+    = new PrTabEntry(OZ_atom("toplevelAbstraction"),
+                mkTupleWidth(0),
+                OZ_mkTupleC("pos",3,OZ_atom("nofile"),OZ_int(0),OZ_int(0)),
+                nil(),maxX);
   pte->PC = codeArea->getStart();
+  pte->setGSize(0);
   return makeTaggedConst(Abstraction::newAbstraction(pte,am.currentBoard()));
 }

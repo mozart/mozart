@@ -153,6 +153,12 @@ Case(GETSELF)
        DISPATCH(2);
      }
 
+Case(SETSELF)
+     {
+       ChangeSelf(tagged2Object(XPC(1)));
+       DISPATCH(2);
+     }
+
 
 CaseOneRegGImpossible(CREATEVARIABLE,
    ``{
@@ -323,12 +329,12 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
         DEREF(term,termPtr,tag);
 
         if (literalEq(term,atm)) {
-          JUMPRELATIVE( getLabelArg(PC+3) );
+          DISPATCH(4);
         }
 
         if (isNotCVar(term) ||
             isCVar(term) && tagged2CVar(term)->valid(termPtr,atm)) {
-          PushContX(PC,Y,CAP,X,getPosIntArg(PC+5));
+          PushContX(PC);
           addSuspPtr(termPtr, CTT);
 
           /* Bug fix:
@@ -349,7 +355,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
           return T_SUSPEND;
         }
 
-        JUMPRELATIVE( getLabelArg(PC+4) );
+        JUMPRELATIVE( getLabelArg(PC+3) );
     }''
     )
 
@@ -359,20 +365,20 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
         DEREF(term,termPtr,tag);
 
         if (literalEq(term,NameTrue)) {
-          JUMPRELATIVE(getLabelArg(PC+2));
+          DISPATCH(4);
         }
 
         if (literalEq(term,NameFalse)) {
-          JUMPRELATIVE(getLabelArg(PC+3));
+          JUMPRELATIVE(getLabelArg(PC+2));
         }
 
         if (oz_isVariable(term)) {
-          PushContX(PC,Y,CAP,X,getPosIntArg(PC+5));
+          PushContX(PC);
           addSuspPtr(termPtr, CTT);
           return T_SUSPEND;
         }
 
-        JUMPRELATIVE( getLabelArg(PC+4) );
+        JUMPRELATIVE( getLabelArg(PC+3) );
     }''
     )
 
@@ -385,21 +391,24 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 
         /* optimized for integer case */
         if (isSmallIntTag(tag)) {
-          JUMPRELATIVE( getLabelArg(smallIntEq(term,i) ? PC+3 : PC+4) );
+          if (smallIntEq(term,i)) {
+            DISPATCH(4);
+          }
+          JUMPRELATIVE(getLabelArg(PC+3));
         }
 
         if (oz_numberEq(i,term)) {
-          JUMPRELATIVE( getLabelArg(PC+3) );
+          DISPATCH(4);
         }
 
         if (isNotCVar(term) ||
             isCVar(term) && tagged2CVar(term)->valid(termPtr,i)) {
-          PushContX(PC,Y,CAP,X,getPosIntArg(PC+5));
+          PushContX(PC);
           addSuspPtr(termPtr, CTT);
           return T_SUSPEND;
         }
 
-        JUMPRELATIVE( getLabelArg(PC+4) );
+        JUMPRELATIVE( getLabelArg(PC+3) );
     }''
     )
 
@@ -414,7 +423,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
         if (isSRecordTag(tag)) {
           if (tagged2SRecord(term)->compareSortAndArity(label,sra)) {
             sPointer = tagged2SRecord(term)->getRef();
-            JUMPRELATIVE(getLabelArg(PC+4));
+            DISPATCH(5);
           }
         } else if (isCVar(term)) {
           GenCVariable *cvar = tagged2CVar(term);
@@ -425,29 +434,29 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
               Literal *lit = tagged2Literal(label);
               if (sraIsTuple(sra)) {
                 if (ofsvar->disentailed(lit,getTupleWidth(sra))) {
-                  JUMPRELATIVE(getLabelArg(PC+5));
+                  JUMPRELATIVE(getLabelArg(PC+4));
                 }
               } else {
                 if (ofsvar->disentailed(lit,getRecordArity(sra))) {
-                  JUMPRELATIVE(getLabelArg(PC+5));
+                  JUMPRELATIVE(getLabelArg(PC+4));
                 }
               }
             }
             // fall through
           case PerdioVariable:
           case LazyVariable:
-            PushContX(PC,Y,CAP,X,getPosIntArg(PC+6));
+            PushContX(PC);
             addSuspPtr(termPtr, CTT);
             return T_SUSPEND;
           default:
             break;
           }
         } else if (oz_isVariable(term)) {
-          PushContX(PC,Y,CAP,X,getPosIntArg(PC+6));
+          PushContX(PC);
           addSuspPtr(termPtr, CTT);
           return T_SUSPEND;
         }
-        JUMPRELATIVE(getLabelArg(PC+5));
+        JUMPRELATIVE(getLabelArg(PC+4));
     }''
     )
 
@@ -459,7 +468,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
         DEREF(term,termPtr,tag);
         if (isLTupleTag(tag)) {
           sPointer = tagged2LTuple(term)->getRef();
-          JUMPRELATIVE(getLabelArg(PC+2));
+          DISPATCH(3);
         } else if (isCVar(term)) {
           GenCVariable *cvar = tagged2CVar(term);
           switch (cvar->getType()) {
@@ -467,24 +476,24 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
             {
               GenOFSVariable *ofsvar = (GenOFSVariable *) cvar;
               if (ofsvar->disentailed(tagged2Literal(AtomCons),2)) {
-                JUMPRELATIVE(getLabelArg(PC+3));
+                JUMPRELATIVE(getLabelArg(PC+2));
               }
             }
             // fall through
           case PerdioVariable:
           case LazyVariable:
-            PushContX(PC,Y,CAP,X,getPosIntArg(PC+4));
+            PushContX(PC);
             addSuspPtr(termPtr, CTT);
             return T_SUSPEND;
           default:
             break;
           }
         } else if (oz_isVariable(term)) {
-          PushContX(PC,Y,CAP,X,getPosIntArg(PC+4));
+          PushContX(PC);
           addSuspPtr(termPtr, CTT);
           return T_SUSPEND;
         }
-        JUMPRELATIVE(getLabelArg(PC+3));
+        JUMPRELATIVE(getLabelArg(PC+2));
     }''
     )
 

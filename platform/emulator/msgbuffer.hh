@@ -29,8 +29,6 @@
 
 class MsgBuffer {
 public:
-  Bool unmarshallingOld;
-
   OZ_Term resources, nogoods;
 
   BYTE* posMB;
@@ -45,7 +43,6 @@ public:
   void init() {
     resources = nil();
     nogoods   = nil();
-    unmarshallingOld=NO;
   }
   BYTE get(){
     if(posMB==endMB){

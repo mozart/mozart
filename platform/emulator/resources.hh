@@ -191,7 +191,7 @@
 //#define DEBUG_PROP_STABILTY_TEST
 
 // test if the liveness routine for X registers works
-// #define DEBUG_LIVENESS
+//#define DEBUG_LIVENESS
 
 #endif
 

@@ -1374,9 +1374,14 @@ void PrTabEntry::printPrTabEntries()
     samplesTotal += aux->samples;
     if (aux->numClosures || aux->numCalled || aux->heapUsed || aux->samples) {
       char *name = ozstrdup(toC(aux->printname)); // cannot have 2 toC in one line
-      printf("%20.20s Created: %5u Called: %6u Heap: %5u B, Samples: %5u %s(%d)\n",
+      printf("%20.20s Created: %5u Called: %6u Heap: %5u B, Samples: %5u",
              name,aux->numClosures,aux->numCalled,aux->heapUsed,
-             aux->samples,toC(aux->fileName),aux->lineno);
+             aux->samples);
+      OZ_Term pos=aux->getPos();
+      printf(" %s(%d,%d)\n",
+             OZ_atomToC(OZ_getArg(pos,0)),
+             OZ_intToC(OZ_getArg(pos,1)),
+             OZ_intToC(OZ_getArg(pos,2)));
       delete name;
     }
     aux = aux->next;
@@ -1418,9 +1423,10 @@ TaggedRef PrTabEntry::getProfileStats()
         rec->setFeature(calls,oz_unsignedInt(aux->numCalled));
         rec->setFeature(heap,oz_unsignedInt(aux->heapUsed));
         rec->setFeature(closures,oz_unsignedInt(aux->numClosures));
-        rec->setFeature(line,oz_int(aux->lineno));
+        OZ_Term pos = aux->getPos(); // mm2
+        rec->setFeature(line,OZ_getArg(pos,1));
         rec->setFeature(name,aux->printname);
-        rec->setFeature(file,aux->fileName);
+        rec->setFeature(file,OZ_getArg(pos,0));
         ret = cons(makeTaggedSRecord(rec),ret);
       }
       aux = aux->next;
@@ -1469,10 +1475,9 @@ void PrTabEntry::patchFileAndLine()
 {
   Reg reg;
   int next;
-  TaggedRef file, line, column, comment, predName;
-  CodeArea::getDefinitionArgs(PC-sizeOf(DEFINITION),reg,next,file,line,column,predName);
-  lineno = smallIntValue(line);
-  fileName = file;
+  TaggedRef newpos, comment, predName;
+  CodeArea::getDefinitionArgs(PC-sizeOf(DEFINITION),reg,next,newpos,predName);
+  pos = newpos;
 }
 
 int featureEqOutline(TaggedRef a, TaggedRef b)
