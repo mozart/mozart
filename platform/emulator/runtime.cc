@@ -111,9 +111,9 @@ Board *ozx_rootBoard() { return am._rootBoard; }
 
 BuiltinTab builtinTab(750);
 
-Builtin *BIadd(const char *name,int arity, OZ_CFun funn, IFOR infun)
+Builtin *BIadd(const char *name,int inArity, int outArity, OZ_CFun funn, IFOR infun)
 {
-  Builtin *builtin = new Builtin(name,arity,funn,infun);
+  Builtin *builtin = new Builtin(name,inArity,outArity,funn,infun);
 
   builtinTab.htAdd(name,builtin);
 
@@ -124,7 +124,7 @@ Builtin *BIadd(const char *name,int arity, OZ_CFun funn, IFOR infun)
 void BIaddSpec(BIspec *spec)
 {
   for (int i=0; spec[i].name; i++) {
-    BIadd(spec[i].name,spec[i].arity,spec[i].fun,spec[i].ifun);
+    BIadd(spec[i].name,spec[i].inArity,spec[i].outArity,spec[i].fun,spec[i].ifun);
   }
 }
 
