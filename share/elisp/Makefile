@@ -25,7 +25,7 @@ Makefile: Makefile.m4
 elcs:    $(ELCS)
 
 install: elcs
-	install -m 444 $(ELS) $(ELCS) /usr/share/gs/soft/oz/elisp
+	install -m 444 $(ELS) $(ELCS) /usr/share/gs/soft/oz/lib/elisp
 
 oz.el: comint.el
 

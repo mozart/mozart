@@ -8,7 +8,7 @@ ELCS = $(ELS:.el=.elc)
 define(OzDir,/usr/share/gs/soft/oz)
 define(OzLib,OzDir/lib)
 define(OzInc,OzDir/`include')
-define(OzLisp,OzDir/elisp)
+define(OzLisp,OzLib/elisp)
 
 
 help:
