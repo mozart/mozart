@@ -2234,8 +2234,12 @@ LBLsuspendThread:
           DISPATCH(6);
         }
       }
-      RAISE_BI(OZ_mkTupleC("proc",4,
-                           OZ_CToAtom("`@`"),makeTaggedSRecord(rec),fea,AtomVoid));
+      DORAISE(OZ_mkTupleC("accessFailure",1,
+                          OZ_mkTupleC("proc",4,
+                                      OZ_CToAtom("`@`"),
+                                      rec?makeTaggedSRecord(rec):OZ_CToAtom("noattributes"),
+                                      fea,
+                                      AtomVoid)));
     }
 
   Case(INLINEASSIGN)
@@ -2255,7 +2259,9 @@ LBLsuspendThread:
       DORAISE(OZ_mkTupleC("assignFailure",1,
                           OZ_mkTupleC("proc",4,
                                       OZ_CToAtom("`<-`"),
-                                      makeTaggedSRecord(rec),fea,XPC(2))));
+                                      rec?makeTaggedSRecord(rec):OZ_CToAtom("noattributes"),
+                                      fea,
+                                      XPC(2))));
     }
 
   Case(INLINEUPARROW)
