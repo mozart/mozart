@@ -372,10 +372,7 @@ OZ_Return CompleteAllDistProp::xpropagate(void) {
   loop:
     for (int i2 = size; i2--; ) {
       if (*reg[i2] != fd_singl) {
-	printf("reg[%d]=%s ", i2, reg[i2]->toString());
-	printf("u=%s ", u.toString());
 	if ((*reg[i2] -= u) == 0) return PC.fail();
-	printf("afterwards reg[%d]=%s\n", i2, reg[i2]->toString());
 	if (*reg[i2] == fd_singl) {
 	  u += reg[i2]->getSingleElem();
 	  goto loop;
