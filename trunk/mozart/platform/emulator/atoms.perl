@@ -193,7 +193,7 @@ if ("$option" eq "-body") {
     print "\n\n";
     
     while (($key,$val) = each %names) {
-	printf("   %-20s = getUniqueName(\"%s\");\n",$key,$val);
+	printf("   %-20s = oz_uniqueName(\"%s\");\n",$key,$val);
     }
     
     print "}\n\n";
