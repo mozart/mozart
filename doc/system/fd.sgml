@@ -118,6 +118,18 @@ to&nbsp;<math/\{0,1,9,10\}/.
 <index scope=sfd/Finite Domains/
 
 <list>
+
+<entry>
+<index class=module/FD<and>inf/
+<<inf>>
+<synopsis>
+<<<
+FD.inf
+>>>
+<item>
+is a constant integer. Its concrete value is implementation dependent.
+In Mozart <<FD.inf>> is 0.
+
 <entry>
 <index class=module/FD<and>sup/
 <<sup>>
@@ -127,7 +139,7 @@ FD.sup
 >>>
 <item>
 is a constant integer. Its concrete value is implementation dependent.
-In DFKI Oz, <<FD.sup>> is 134 217 726.
+In Mozart <<FD.sup>> is 134 217 726.
 
 <entry>
 <index class=module/FD<and>is/
@@ -710,7 +722,7 @@ constraints <<X::Spec>>, where <<Spec>> may also contain holes.
 <<distinct>>
 <synopsis>
 <<<
-{FD.distinct ?+{Dv}}
+{FD.distinct ?*{Dv}}
 >>>
 <item>
 All elements in ?{Dv} are pairwise distinct. If one element becomes
@@ -724,7 +736,7 @@ fail even if <<A>> is not determined.
 <<distinctOffset>>
 <synopsis>
 <<<
-{FD.distinctOffset ?+{Dv} ?+{Iv}}
+{FD.distinctOffset ?*{Dv} ?+{Iv}}
 >>>
 <item>
 All sums <math/{\tt D}_i+{\tt I}_i/ are pairwise distinct, &ie; for all
@@ -738,7 +750,7 @@ different from <math/{\tt D}_i+{\tt I}_i-{\tt I}_j/.
 <<distinct2>>
 <synopsis>
 <<<
-{FD.distinct2 ?+{Dv1} ?+{Iv1} ?+{Dv2} ?+{Iv2}}
+{FD.distinct2 ?*{Dv1} ?+{Iv1} ?*{Dv2} ?+{Iv2}}
 >>>
 <item>
 Assume that all arguments are tuples of width ?{n}. Then the propagator's
@@ -760,11 +772,11 @@ and heights of
 the rectangles, respectively.
 
 <entry><<atMost>><index class=module/FD<and>atMost/
-<synopsis><<{FD.atMost ?+{D} ?+{Dv} ?+{I}}>>
+<synopsis><<{FD.atMost ?*{D} ?*{Dv} ?+{I}}>>
 <entry><<atLeast>><index class=module/FD<and>atLeast/
-<synopsis><<{FD.atLeast ?+{D} ?+{Dv} ?+{I}}>>
+<synopsis><<{FD.atLeast ?*{D} ?*{Dv} ?+{I}}>>
 <entry><<exactly>><index class=module/FD<and>exactly/
-<synopsis><<{FD.exactly ?+{D} ?+{Dv} ?+{I}}>>
+<synopsis><<{FD.exactly ?*{D} ?*{Dv} ?+{I}}>>
 <item>
 At most, at least, exactly ?{D} elements of ?{Dv} are equal to
 ?{I}.
@@ -782,7 +794,7 @@ The propagator <<FD.atMost>>, <<FD.atLeast>> and <<FD.exactly>> are defined
 <<element>>
 <synopsis>
 <<<
-{FD.element ?+{D1} ?+{Iv} ?+{D2}}
+{FD.element ?*{D1} ?+{Iv} ?*{D2}}
 >>>
 <item>
 The ?{D1}-th element of ?{Iv} is ?{D2}.
@@ -935,7 +947,7 @@ relation symbol ?{A}, the symbol of the negated relation occurs in
 <<reified.int>>
 <synopsis>
 <<<
-{FD.reified.int ?+{Spec} ?+{D1} ?_{D2}}
+{FD.reified.int ?+{Spec} ?*{D1} ?_{D2}}
 >>>
 <item>
 reifies <<{FD.int Spec D1}>> into ?{D2}.
@@ -955,7 +967,7 @@ reifies <<{FD.dom Spec Dv}>> into ?{D}.
 <<reified.sum>>
 <synopsis>
 <<<
-{FD.reified.sum ?+{Dv} ?+{A} ?+{D1} ?_{D2}}
+{FD.reified.sum ?*{Dv} ?+{A} ?*{D1} ?_{D2}}
 >>>
 <item>
 reifies <<{FD.sum Dv A D1}>> into ?{D2}.
@@ -965,7 +977,7 @@ reifies <<{FD.sum Dv A D1}>> into ?{D2}.
 <<reified.sumC>>
 <synopsis>
 <<<
-{FD.reified.sumC ?+{Iv} ?+{Dv} ?+{A} ?+{D1} ?_{D2}}
+{FD.reified.sumC ?+{Iv} ?*{Dv} ?+{A} ?*{D1} ?_{D2}}
 >>>
 <item>
 reifies <<{FD.sumC Iv Dv A D1}>> into ?{D2}.
@@ -975,7 +987,7 @@ reifies <<{FD.sumC Iv Dv A D1}>> into ?{D2}.
 <<reified.sumCN>>
 <synopsis>
 <<<
-{FD.reified.sumCN ?+{Iv} ?+{Dvv} ?+{A} ?+{D1} ?_{D2}}
+{FD.reified.sumCN ?+{Iv} ?*{Dvv} ?+{A} ?*{D1} ?_{D2}}
 >>>
 <item>
 reifies <<{FD.sumCN Iv Dvv A D1}>> into ?{D2}.
@@ -985,7 +997,7 @@ reifies <<{FD.sumCN Iv Dvv A D1}>> into ?{D2}.
 <<reified.sumAC>>
 <synopsis>
 <<<
-{FD.reified.sumAC ?+{Iv} ?+{Dv} ?+{A} ?+{D1} ?_{D2}}
+{FD.reified.sumAC ?+{Iv} ?*{Dv} ?+{A} ?*{D1} ?_{D2}}
 >>>
 <item>
 reifies <<{FD.sumAC Iv Dv A D1}>> into ?{D2}.
@@ -995,7 +1007,7 @@ reifies <<{FD.sumAC Iv Dv A D1}>> into ?{D2}.
 <<reified.sumACN>>
 <synopsis>
 <<<
-{FD.reified.sumACN ?+{Iv} ?+{Dvv} ?+{A} ?+{D1} ?_{D2}}
+{FD.reified.sumACN ?+{Iv} ?*{Dvv} ?+{A} ?*{D1} ?_{D2}}
 >>>
 <item>
 reifies <<{FD.sumACN Iv Dvv A D1}>> into ?{D2}.
@@ -1005,7 +1017,7 @@ reifies <<{FD.sumACN Iv Dvv A D1}>> into ?{D2}.
 <<reified.distance>>
 <synopsis>
 <<<
-{FD.reified.distance ?+{D1} ?+{D2} ?+{A} ?+{D3} ?_{D4}}
+{FD.reified.distance ?*{D1} ?*{D2} ?+{A} ?*{D3} ?_{D4}}
 >>>
 <item>
 reifies <<{FD.distance D1 D2 A D3}>> into ?{D4}.
@@ -1015,7 +1027,7 @@ reifies <<{FD.distance D1 D2 A D3}>> into ?{D4}.
 <<reified.card>>
 <synopsis>
 <<<
-{FD.reified.card ?+{D1} ?+{Dv} ?+{D2} ?_{D3}}
+{FD.reified.card ?*{D1} ?*{Dv} ?*{D2} ?_{D3}}
 >>>
 <item>
 creates a propagator for
@@ -1209,7 +1221,7 @@ end
 <<distance>>
 <synopsis id=page.distance>
 <<<
-{FD.distance ?+{D1} ?+{D2} ?+{A} ?+{D3}}
+{FD.distance ?*{D1} ?*{D2} ?+{A} ?*{D3}}
 >>>
 <item>
 creates a propagator for <math/|~{\tt D1}-{\tt D2}~|\;\sim_{{\tt A}}\;{\tt D3}/.
@@ -1228,7 +1240,7 @@ more efficient.
 <<less>>
 <synopsis>
 <<<
-{FD.less ?+{D1} ?+{D2}}
+{FD.less ?*{D1} ?*{D2}}
 >>>
 <item>
 Equivalent to ?{D1}<<&lt;:>>?{D2}.
@@ -1238,7 +1250,7 @@ Equivalent to ?{D1}<<&lt;:>>?{D2}.
 <<lesseq>>
 <synopsis>
 <<<
-{FD.lesseq ?+{D1} ?+{D2}}
+{FD.lesseq ?*{D1} ?*{D2}}
 >>>
 <item>
 Equivalent to ?{D1} <<=&lt;:>> ?{D2}.
@@ -1248,7 +1260,7 @@ Equivalent to ?{D1} <<=&lt;:>> ?{D2}.
 <<greater>>
 <synopsis>
 <<<
-{FD.greater ?+{D1} ?+{D2}}
+{FD.greater ?*{D1} ?*{D2}}
 >>>
 <item>
 Equivalent to ?{D1}<<&gt;:>>?{D2}.
@@ -1258,7 +1270,7 @@ Equivalent to ?{D1}<<&gt;:>>?{D2}.
 <<greatereq>>
 <synopsis>
 <<<
-{FD.greatereq ?+{D1} ?+{D2}}
+{FD.greatereq ?*{D1} ?*{D2}}
 >>>
 <item>
 Equivalent to ?{D1}<<&gt;=:>>?{D2}.
@@ -1268,7 +1280,7 @@ Equivalent to ?{D1}<<&gt;=:>>?{D2}.
 <<disjoint>>
 <synopsis>
 <<<
-{FD.disjoint ?+{D1} ?+{I1} ?+{D2} ?+{I2}}
+{FD.disjoint ?*{D1} ?+{I1} ?*{D2} ?+{I2}}
 >>>
 <item>
 creates a propagator for
@@ -1291,7 +1303,7 @@ end
 <<disjointC>>
 <synopsis>
 <<<
-{FD.disjointC ?+{D1} ?+{I1} ?+{D2} ?+{I2} ?_{D3}}
+{FD.disjointC ?*{D1} ?+{I1} ?*{D2} ?+{I2} ?_{D3}}
 >>>
 <item>
 creates a propagator for

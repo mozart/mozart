@@ -59,7 +59,7 @@ see&nbsp;<ptr to=MuellerMueller.WLP.97>.
 >>>
 <item>
 An integer constant that denotes the smallest possible element of a
-set.  Its value is implementation-dependent.  In Mozart <<FD.inf>> is
+set.  Its value is implementation-dependent.  In Mozart <<FS.inf>> is
 0.
 <entry>
 <index class=module/FS<and>sup<and>id/
@@ -69,8 +69,8 @@ set.  Its value is implementation-dependent.  In Mozart <<FD.inf>> is
 >>>
 <item>
 An integer constant that denotes the greatest possible element of a
-set.  Its value is implementation-dependent.  In Mozart <<FD.sup>> is
-63.
+set.  Its value is implementation-dependent.  In Mozart <<FS.sup>> is
+134 217 726.
 <entry>
 <index class=module/FS<and>include<and>id/
 <<include>>
@@ -567,6 +567,7 @@ Converts <<M>> to a string and returns it in <<M>>.
 <section><title/Iterating and Monitoring/
 <p>
 <list>
+
 <entry>
 <index class=module/FS<and>monitorIn<and>id/
 <<monitorIn>>
@@ -574,9 +575,21 @@ Converts <<M>> to a string and returns it in <<M>>.
 <<<{FS.monitorIn *M ?Is}
 >>>
 <item>
-This procedure writes all elements of <<M>> to <<Is>> as soon
-as <math/{\tt I} \in {\tt M}/ becomes known.  When <<M>> becomes determined
-the stream <<Is>> will be closed.
+This procedure writes all elements of <<M>> to <<Is>> as soon as
+<math/{\tt I} \in {\tt M}/ becomes <Em/known/.  When <<M>> becomes
+determined the stream <<Is>> will be closed.
+
+<entry>
+<index class=module/FS<and>monitorOut<and>id/
+<<monitorOut>>
+<synopsis>
+<<<{FS.monitorOut *M ?Is}
+>>>
+<item>
+This procedure writes all elements of <<M>> to <<Is>> as soon as
+<math/{\tt I} \in {\tt M}/ becomes <Em/unknown/.  When <<M>> becomes
+determined the stream <<Is>> will be closed.
+
 <entry>
 <index class=module/FS<and>forAllIn<and>id/
 <<forAllIn>>
