@@ -1,6 +1,37 @@
+%%%
+%%% Author:
+%%%   Denys Duchier <duchier@ps.uni-sb.de>
+%%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+%%%
+%%% Copyright:
+%%%   Denys Duchier. 1998
+%%%   Leif Kornstaedt, 1998
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation of Oz 3:
+%%%   $MOZARTURL$
+%%%
+%%% See the file "LICENSE" or
+%%%   $LICENSEURL$
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
+%%% ==================================================================
+%%% HISTORY:
+%%%	The idea of using emacs for fontification is due to Leif
+%%% Kornstaed who wrote the first version of this library. This new
+%%% implementation was written by Denys Duchier, and generalizes the
+%%% previous one.  In particular it supports structured requests.
+%%% ==================================================================
+
 functor
 import
-   Open OS Property System
+   Open OS Property
 export
    'class'	: Fontifier
    vs		: FontifyVirtualString
@@ -184,8 +215,6 @@ define
 					flags:[write create truncate])}
       Specs
    in
-      {System.showError "IN:  "#FileNameIn}
-      {System.showError "OUT: "#FileNameOut}
       try
 	 Specs =
 	 {Map Requests
@@ -203,9 +232,8 @@ define
 	  end
 	  {ReadEvents {ReadFile FileNameOut}} _}
       finally
-	 %try {OS.unlink FileNameIn } catch _ then skip end
-	 %try {OS.unlink FileNameOut} catch _ then skip end
-	 skip
+	 try {OS.unlink FileNameIn } catch _ then skip end
+	 try {OS.unlink FileNameOut} catch _ then skip end
       end
    end
 
