@@ -186,15 +186,17 @@ in
 	    {ForAll [appl stack]
 	     proc{$ W}
 		case @CurrentWindow.W \= undef then
-		   {@CurrentWindow.W highlight(line:undef
-					       color:undef what:W)}
+		   {@CurrentWindow.W highlight(line:  undef
+					       color: SourceTextBackground
+					       what:  W)}
 		   SourceManager,Update(W undef)
 		else skip end
 	     end}
 	 else
 	    case @CurrentWindow.What \= undef then
-	       {@CurrentWindow.What highlight(line:undef
-					      color:undef what:What)}
+	       {@CurrentWindow.What highlight(line:  undef
+					      color: SourceTextBackground
+					      what:  What)}
 	       SourceManager,Update(What undef)
 	    else skip end
 	 end
@@ -240,7 +242,7 @@ in
 	 CW = @CurrentWindow.What
       in
 	 case CW \= undef andthen CW \= E.1 then
-	    {CW highlight(line:undef color:undef what:What)}
+	    {CW highlight(line:undef color:SourceTextBackground what:What)}
 	 else skip end
 	 SourceManager,Update(What E.1)
 	 {self.NoteBook toTop(E.2)}

@@ -246,8 +246,8 @@ in
 
       meth kill(T I)
 	 {Dbg.trace T false}
-	 ThreadManager,remove(T I kill)
 	 {Thread.terminate T}
+	 ThreadManager,remove(T I kill)
       end
       
       meth forget(T I)
@@ -356,11 +356,7 @@ in
       end
       
       meth close
-	 %% actually, we should kill this damned thread, but then we get this:
-	 %% board.icc:21
-	 %% Internal Error:  assertion '!isCommitted() && !isFailed()' failed
-	 %% (DFKI Oz Emulator 1.9.16 (sunos-sparc) of Mon Oct, 07, 1996) 
-	 {Thread.suspend self.ReadLoopThread}
+	 skip
       end
       
    end
