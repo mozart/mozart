@@ -93,6 +93,9 @@ enum MessageType {
 
   M_FILE,
   M_INIT_VS,
+
+  M_SEND_GATE,
+
   M_LAST
 };
 
