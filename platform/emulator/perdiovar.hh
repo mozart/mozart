@@ -187,7 +187,7 @@ public:
 
   ProxyList *getProxies() { Assert(isManager()); return u.proxies; }
 
-  void addSuspPerdioVar(TaggedRef *v,Thread *el, int unstable);
+  void addSuspPerdioVar(TaggedRef *v, Suspension susp, int unstable);
   Bool valid(TaggedRef *varPtr, TaggedRef v);
   void primBind(TaggedRef *lPtr,TaggedRef v);
   OZ_Return unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, ByteCode *);

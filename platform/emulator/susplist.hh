@@ -35,6 +35,7 @@
 
 #include "base.hh"
 #include "mem.hh"
+#include "thread.hh"
 
 // #include "oz_cpi.hh"
 
@@ -48,29 +49,32 @@
  */
 class SuspList {
 private:
-  Thread *thr;
-  SuspList *next;
+  Suspension  _susp;
+  SuspList * _next;
 public:
   USEFREELISTMEMORY;
   SuspList * gc();
   OZPRINTLONG;
 
   NO_DEFAULT_CONSTRUCTORS(SuspList);
-  SuspList(Thread *t, SuspList * n = NULL)
-    : thr(t), next(n)
+  SuspList(Suspension s, SuspList * n = NULL)
+    : _susp(s), _next(n)
   {
-    Assert(t);
+    Assert(!s.isNull());
   }
 
 
-  SuspList * getNext(void)   { return next; }
-  void setNext(SuspList * n) { next = n; }
-  Thread *getElem()          { return thr; }
+  SuspList * getNext(void)   { return _next; }
+  void setNext(SuspList * n) { _next = n; }
+  Suspension getSuspension(void)   { return _susp; }
+
+  // TMUELLER: will have to go
+  Suspension getElem(void)   { return _susp; } 
 
   SuspList * appendToAndUnlink(SuspList * &, Bool reset_local);
 
   SuspList * dispose(void) {
-    SuspList * ret = next;
+    SuspList * ret = _next;
     freeListDispose(this, sizeof(SuspList));
     return ret;
   }
@@ -90,17 +94,17 @@ public:
 
 class OrderedSuspList {
 private:
-  Thread * t;
-  OrderedSuspList * n;
+  Propagator * _p;
+  OrderedSuspList * _n;
 public:
   USEFREELISTMEMORY;
   
-  OrderedSuspList(Thread * thr, OrderedSuspList * l) : t(thr), n(l) {}
-  OrderedSuspList * insert(Thread *);
+  OrderedSuspList(Propagator * p, OrderedSuspList * l) :  _p(p), _n(l) {}
+  OrderedSuspList * insert(Propagator *);
   OZPRINT;
   OrderedSuspList * gc(void);
-  OrderedSuspList * getNext(void) const { return n; }
-  Thread * getThread(void) const { return t; }
+  OrderedSuspList * getNext(void) const { return _n; }
+  Propagator * getPropagator(void) const { return _p; }
 };
 
 #ifdef OUTLINE

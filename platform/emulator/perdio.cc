@@ -2328,14 +2328,14 @@ void sendHelpX(MessageType mt,BorrowEntry *be)
   SendTo(na->site,bs,mt,na->site,na->index);
 }
 
-void PerdioVar::addSuspPerdioVar(TaggedRef *v,Thread *el, int unstable)
+void PerdioVar::addSuspPerdioVar(TaggedRef * v, Suspension susp, int unstable)
 {
   if (suspList!=NULL) {
-    addSuspSVar(el,unstable);
+    addSuspSVar(susp, unstable);
     return;
   }
 
-  addSuspSVar(el,unstable);
+  addSuspSVar(susp, unstable);
 
   if (isFuture()) {
     if (isManager()) {

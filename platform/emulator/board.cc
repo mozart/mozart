@@ -143,7 +143,7 @@ Board* Board::getSolveBoard ()
 }
 
 Board::Board(Actor *a,int typ) 
-: localThreadQueue(NULL)
+: localPropagatorQueue(NULL)
 {
   Assert(a!=NULL || typ==Bo_Root);
   Assert(a==NULL || !a->isCommitted());
@@ -208,14 +208,42 @@ loop:
 }
 #endif
 
-void Board::pushToLTQ(Thread * thr) {
-  if (localThreadQueue) {
-    localThreadQueue->enqueue(thr);
+#ifdef DEBUG_THREADCOUNT
+int existingLTQs = 0;
+#endif
+
+void Board::pushToLPQ(Propagator * prop) {
+  if (localPropagatorQueue) {
+    localPropagatorQueue->enqueue(prop);
   } else {
-    Thread * ltq_thr = am.mkLTQ(this, PROPAGATOR_PRIORITY);
-    localThreadQueue = new LocalThreadQueue(ltq_thr, thr);
-    am.scheduleThreadInline(ltq_thr, PROPAGATOR_PRIORITY);
+    Thread * lpq_thr = am.mkLPQ(this, PROPAGATOR_PRIORITY);
+    localPropagatorQueue = new LocalPropagatorQueue(lpq_thr, prop);
+    am.scheduleThreadInline(lpq_thr, PROPAGATOR_PRIORITY);
+#ifdef DEBUG_THREADCOUNT
+    existingLTQs += 1;
+    //    printf("+LTQ=%p\n", localPropagatorQueue); fflush(stdout);
+#endif
   }
 }
 
+void Board::setCommitted(Board *s) {
+  Assert(!isInstalled() && !isCommitted());
+  
+  s->setLocalPropagatorQueue(localPropagatorQueue->merge(s->getLocalPropagatorQueue()));
+
+  flags |= Bo_Committed;
+  u.actor->setCommitted();
+  u.ref = s;
+}
+
 // -------------------------------------------------------------------------
+
+
+#ifdef OUTLINE
+#define inline
+#include "board.icc"
+#undef inline
+#endif
+
+// eof
+//-----------------------------------------------------------------------------

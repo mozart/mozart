@@ -32,6 +32,7 @@
 #endif
 
 #include "thrqueue.hh"
+#include "thread.hh"
 
 class ThreadsPool {
 private:
@@ -52,7 +53,7 @@ public:
   ~ThreadsPool () {};
 
   Thread *currentThread()           { return _currentThread; }
-  void unsetCurrentThread()         { _currentThread=0; }
+  void unsetCurrentThread()         { _currentThread=0; } 
   void setCurrentThread(Thread *th) { _currentThread=th; }
 
   void initThreads();

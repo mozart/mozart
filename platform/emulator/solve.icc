@@ -43,9 +43,9 @@ void SolveActor::addSuspension(SuspList *l)
 }
 
 inline
-void SolveActor::addSuspension (Thread *thr)
+void SolveActor::addSuspension (Suspension susp)
 {
-  suspList = new SuspList (thr, suspList);
+  suspList = new SuspList (susp, suspList);
 }
 
 inline
@@ -171,5 +171,31 @@ void SolveActor::clearResult(Board* bb) {
   result = makeTaggedRef(newTaggedUVar(bb));
 }
 
+#ifdef DEBUG_THREADCOUNT
+extern int existingLTQs;
+#endif
+
+inline
+void SolveActor::incThreads(int n = 1) 
+{ 
+  threads += n; 
+
+#ifdef DEBUG_THREADCOUNT
+  //if (threads < existingLTQs)
+  //    Assert(0);
+#endif
+}
+
+inline
+int SolveActor::decThreads() 
+{ 
+#ifdef DEBUG_THREADCOUNT
+  //printf("(threads=%d LTQs=%d) ", threads, existingLTQs); fflush(stdout);
+  //  if (threads <= existingLTQs)
+  //    Assert(0);
+#endif
+
+  Assert (threads > 0); return (--threads); 
+}
 
 #endif  // __SOLVE_ICC_

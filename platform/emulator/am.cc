@@ -759,7 +759,7 @@ oz_BFlag oz_isBetween(Board *to, Board *varHome)
 
 inline
 // static
-Bool AM::wakeUpThread(Thread *tt, Board *home)
+Bool AM::wakeUpThread(Thread * tt, Board *home)
 {
   Assert (tt->isSuspended());
   Assert (tt->isRThread());
@@ -778,7 +778,7 @@ Bool AM::wakeUpThread(Thread *tt, Board *home)
     //  The whole thread is eliminated - because of the invariant
     // stated just before 'disposeSuspendedThread ()' in thread.hh;
     tt->markDeadThread();
-    checkExtThread(tt);
+    checkExtSuspension(tt);
     freeThreadBody(tt);
     return TRUE;
 
@@ -793,6 +793,7 @@ inline
 void AM::wakeupToRunnable(Thread *tt)
 {
   Assert(tt->isSuspended());
+
   tt->markRunnable();
 
   if (isBelowSolveBoard() || tt->isExtThread()) {
@@ -840,7 +841,7 @@ Bool AM::wakeUpBoard(Thread *tt, Board *home)
     // because of assertions in decSuspCount and getSuspCount
     if (bb->isFailed()) {
       tt->markDeadThread();
-      checkExtThread(tt);
+      checkExtSuspension(tt);
       return OK;
     }
 #endif
@@ -877,7 +878,7 @@ Bool AM::wakeUpBoard(Thread *tt, Board *home)
 
   case B_DEAD:
     tt->markDeadThread();
-    checkExtThread(tt);
+    checkExtSuspension(tt);
     return OK;
 
   default:
@@ -892,43 +893,53 @@ Bool AM::wakeUpBoard(Thread *tt, Board *home)
 //  Since this method is used at the only one place, it's inlined;
 inline
 // static 
-Bool AM::wakeUp(Thread *tt, Board *home, PropCaller calledBy) {
-  switch (tt->getThrType()) {
-  case S_RTHREAD: 
-    return wakeUpThread(tt,home);
-  case S_WAKEUP:
-    return wakeUpBoard(tt,home);
-  case S_PR_THR:
-    return wakeUpPropagator(tt, home, calledBy);
-  default:
-    Assert(0);
-    return FALSE;
+Bool AM::wakeUp(Suspension susp, Board * home, PropCaller calledBy) 
+{
+  if (susp.isThread()) {
+    Thread * tt = susp.getThread();
+    
+    switch (tt->getThrType()) {
+    case S_RTHREAD: 
+      return wakeUpThread(tt,home);
+    case S_WAKEUP:
+      return wakeUpBoard(tt,home);
+    default:
+      Assert(0);
+      return FALSE;
+    }
+  } else {
+    Assert(susp.isPropagator());
+    
+    return wakeUpPropagator(susp.getPropagator(), home, calledBy);
   }
-  return FALSE;		// just to keep gcc happy;
 }
 
 
-void AM::wakeupAny(Thread *tt,Board *bb)
+void AM::wakeupAny(Suspension susp, Board * bb)
 {
-  switch (tt->getThrType()) {
-  case S_RTHREAD:
-    Assert (tt->isSuspended());
-    Assert (tt->isRThread());
-    suspThreadToRunnable(tt);
-    scheduleThread(tt);
-    break;
-  case S_WAKEUP:
-    Assert(tt->isSuspended());
-    wakeupToRunnable(tt);
-    scheduleThread(tt);
-    break;
-  case S_PR_THR:
-    {
-      //mm2: can this happen?
-      int ret = wakeUpPropagator(tt,bb,pc_std_unif);
-      Assert(ret);
+  if (susp.isThread()) {
+    Thread * tt = susp.getThread();
+
+    switch (tt->getThrType()) {
+    case S_RTHREAD:
+      Assert (tt->isSuspended());
+      Assert (tt->isRThread());
+      suspThreadToRunnable(tt);
+      scheduleThread(tt);
+      break;
+    case S_WAKEUP:
+      Assert(tt->isSuspended());
+      wakeupToRunnable(tt);
+      scheduleThread(tt);
+      break;
+    default:
+      Assert(0);
     }
-  break;
+  } else {
+    Assert(susp.isPropagator());
+    
+    int ret = wakeUpPropagator(susp.getPropagator(), bb, pc_std_unif);
+    Assert(ret);
   }
 }
 
@@ -937,9 +948,9 @@ void AM::wakeupAny(Thread *tt,Board *bb)
 //  X = Y 
 // --> if det Y then ... fi
 
-SuspList *AM::checkSuspensionList(SVariable * var,
-				  SuspList * suspList,
-				  PropCaller calledBy)
+SuspList * AM::checkSuspensionList(SVariable * var,
+				   SuspList * suspList,
+				   PropCaller calledBy)
 {
   if (inShallowGuard())
     return suspList;
@@ -951,9 +962,9 @@ SuspList *AM::checkSuspensionList(SVariable * var,
   while (suspList) {
     PROFILE_CODE1(FDProfiles.inc_item(susps_per_checksusplist);)
 
-    Thread *thr = suspList->getElem();
+    Suspension susp = suspList->getSuspension();
 
-    if (thr->isDeadThread ()) {
+    if (susp.isDead()) {
       suspList = suspList->dispose();
       continue;
     }
@@ -961,7 +972,7 @@ SuspList *AM::checkSuspensionList(SVariable * var,
 PROFILE_CODE1
   (
    if (isCurrentBoard(GETBOARD(var))) {
-     if (isCurrentBoard(GETBOARD(thr)))
+     if (isCurrentBoard(GETBOARDOBJ(susp)))
        FDProfiles.inc_item(from_home_to_home_hits); 
      else
        FDProfiles.inc_item(from_home_to_deep_hits);
@@ -977,12 +988,14 @@ PROFILE_CODE1
    )
   
  // already runnable susps remain in suspList
-    if (thr->isRunnable()) {
-      if (thr->isPropagator()) {
-	if (calledBy && !thr->isUnifyThread()) {
-	  switch (oz_isBetween(GETBOARD(thr), GETBOARD(var))) {
+    if (susp.isRunnable()) {
+      if (susp.isPropagator()) {
+	Propagator * prop = susp.getPropagator();
+
+	if (calledBy && !prop->isUnifyPropagator()) {
+	  switch (oz_isBetween(GETBOARD(prop), GETBOARD(var))) {
 	  case B_BETWEEN:
-	    thr->markUnifyThread ();
+	    prop->markUnifyPropagator();
 	    break;
 	  case B_DEAD:
 	    //  keep the thread itself alive - it will be discarded
@@ -999,8 +1012,8 @@ PROFILE_CODE1
 	continue;
       }
     } else {
-      if (wakeUp(thr, GETBOARD(var), calledBy)) {
-	Assert (thr->isDeadThread () || thr->isRunnable ());
+      if (wakeUp(susp, GETBOARD(var), calledBy)) {
+	Assert (susp.isDead() || susp.isRunnable());
 	suspList = suspList->dispose ();
 	continue;
       }
@@ -1304,12 +1317,14 @@ void AM::reduceTrailOnEqEq()
  * -------------------------------------------------------------------------*/
 // Check if there exists an S_ofs (Open Feature Structure) suspension
 // in the suspList (Used only for monitorArity)
-Bool AM::hasOFSSuspension(SuspList *suspList)
+Bool AM::hasOFSSuspension(SuspList * suspList)
 {
   while (suspList) {
-    Thread *thr = suspList->getElem ();
-    if (!thr->isDeadThread () &&
-	thr->isPropagator() && thr->isOFSThread ()) return TRUE;
+    Suspension susp = suspList->getSuspension();
+    
+    if (!susp.isDead() && susp.isPropagator() && susp.isOFSPropagator()) 
+      return TRUE;
+
     suspList = suspList->getNext();
   }
   return FALSE;
@@ -1325,25 +1340,25 @@ Bool AM::hasOFSSuspension(SuspList *suspList)
  * routine is inspired by am.checkSuspensionList, and must track all
  * changes to it.  */
 void AM::addFeatOFSSuspensionList(TaggedRef var,
-                                  SuspList* suspList,
+                                  SuspList * suspList,
 				  TaggedRef flist,
 				  Bool determ)
 {
   while (suspList) {
-    Thread *thr = suspList->getElem ();
+    Suspension susp = suspList->getSuspension();
 
     // The added condition ' || thr->isRunnable () ' is incorrect
     // since isPropagated means only that the thread is runnable
-    if (thr->isDeadThread ()) {
-      suspList=suspList->getNext();
+    if (susp.isDead()) {
+      suspList = suspList->getNext();
       continue;
     }
 
-    if (thr->isPropagator() && thr->isOFSThread ()) {
-      MonitorArityPropagator *prop =
-	(MonitorArityPropagator *) thr->getPropagator();
+    if (susp.isPropagator() && susp.isOFSPropagator()) {
+      MonitorArityPropagator * prop = 
+	(MonitorArityPropagator *) susp.getPropagator()->getPropagator();
 
-      Assert(sizeof(MonitorArityPropagator)==prop->sizeOf());
+      Assert(sizeof(MonitorArityPropagator) == prop->sizeOf());
 
       // Only add features if var and fvar are the same:
       TaggedRef fvar=prop->getX();
@@ -1585,6 +1600,10 @@ void AM::suspendEngine()
 {
   deinstallPath(_rootBoard);
 
+#ifdef DEBUG_THREADCOUNT
+  printf("(AM::suspendEngine LTQs=%d) ", existingLTQs); fflush(stdout);
+#endif
+
   ozstat.printIdle(stdout);
 
   osBlockSignals(OK);
@@ -1761,8 +1780,14 @@ int AM::incSolveThreads(Board *bb)
   return ret;
 }
 
+#ifdef DEBUG_THREADCOUNT
+void AM::decSolveThreads(Board *bb, char * s)
+{
+  //printf("AM::decSolveThreads: %s.\n", s); fflush(stdout);
+#else
 void AM::decSolveThreads(Board *bb)
 {
+#endif
   while (!oz_isRootBoard(bb)) {
     Assert(!bb->isCommitted());
     if (bb->isSolve()) {
@@ -1782,6 +1807,9 @@ void AM::decSolveThreads(Board *bb)
     }
     bb = bb->getParent();
   }
+#ifdef DEBUG_THREADCOUNT
+  //printf("(AM::decSolveThreads LTQs=%d) ", existingLTQs); fflush(stdout);
+#endif
 }
 
 #ifdef DEBUG_CHECK
@@ -2002,19 +2030,34 @@ void AM::checkDebugOutline(Thread *tt)
 }
 
 //  Make a runnable thread with a single task stack entry <local thread queue>
-Thread *AM::mkLTQ(Board *bb, int prio)
+Thread *AM::mkLPQ(Board *bb, int prio)
 {
-  Thread *th = new Thread(S_RTHREAD | T_runnable | T_ltq,prio,bb,newId());
+  Thread * th = new Thread(S_RTHREAD | T_runnable | T_lpq, prio, bb, newId());
   th->setBody(allocateBody());
   bb->incSuspCount();
   checkDebug(th,bb);
-  Assert(isCurrentBoard(bb));
-  Assert(isInSolveDebug(bb));
+  //Assert(isCurrentBoard(bb));
 
-  incSolveThreads(bb);
-  th->setInSolve();
+#ifdef DEBUG_THREADCOUNT
+  th->markLPQThread();
+#endif
 
-  th->pushLTQ(bb);
+#ifdef DEBUG_THREADCOUNT
+  //printf("+");fflush(stdout);
+#endif
+
+  if (isBelowSolveBoard()) {
+#ifdef DEBUG_THREADCOUNT
+    //printf("!");fflush(stdout);
+#endif
+    Assert(isInSolveDebug(bb));
+    incSolveThreads(bb);
+    th->setInSolve();
+  } else {
+    Assert(!isInSolveDebug(GETBOARD(th)));
+  }
+
+  th->pushLPQ(bb);
 
   return th;
 }
@@ -2074,16 +2117,16 @@ int AM::commit(Board *bb, Thread *tt)
 }
 
 // see variable.hh
-void checkExtThread(Thread *elem, Board *home)
+void checkExtSuspension(Suspension susp, Board * home)
 {
   if (am.isBelowSolveBoard()) {
-    am.setExtThreadOutlined(elem,home->derefBoard());
+    am.setExtSuspensionOutlined(susp, home->derefBoard());
   }
 }
 
-void AM::setExtThreadOutlined(Thread *tt, Board *varHome)
+void AM::setExtSuspensionOutlined(Suspension susp, Board *varHome)
 {
-  Board *bb = currentBoard();
+  Board * bb = currentBoard();
   Bool wasFound = NO;
   Assert (!varHome->isCommitted());
 
@@ -2092,27 +2135,27 @@ void AM::setExtThreadOutlined(Thread *tt, Board *varHome)
     Assert (!bb->isCommitted() && !bb->isFailed());
     if (bb->isSolve()) {
       SolveActor *sa = SolveActor::Cast(bb->getActor());
-      sa->addSuspension(tt);
+      sa->addSuspension(susp);
       wasFound = OK;
     }
     bb = bb->getParent();
   }
   
-  if (wasFound) tt->setExtThread();
+  if (wasFound) susp.setExtSuspension();
 }
 
-void AM::checkExtThreadOutlined(Thread *tt)
+void AM::checkExtSuspensionOutlined(Suspension susp)
 {
-  Assert(tt->wasExtThread());
+  Assert(susp.wasExtSuspension());
 
-  Board *sb = GETBOARD(tt)->getSolveBoard();
+  Board *sb = GETBOARDOBJ(susp)->getSolveBoard();
 
   while (sb) {
     Assert(sb->isSolve());
     
-    SolveActor *sa = SolveActor::Cast(sb->getActor());
+    SolveActor * sa = SolveActor::Cast(sb->getActor());
     if (isStableSolve(sa)) {
-      scheduleThread(mkRunnableThreadOPT(DEFAULT_PRIORITY,sb));
+      scheduleThread(mkRunnableThreadOPT(DEFAULT_PRIORITY, sb));
     }
     sb = GETBOARD(sa)->getSolveBoard();
   }
@@ -2145,21 +2188,22 @@ SuspList *AM::installPropagators(SuspList * local_list, SuspList * glob_list,
   
   // mark up local suspensions to avoid copying them
   while (aux) {
-    aux->getElem()->markTagged();
+    aux->getSuspension().markTagged();
     aux = aux->getNext();
   }
 
   // create references to suspensions of global variable
   aux = glob_list;
   while (aux) {
-    Thread *thr = aux->getElem();
+    Suspension susp = aux->getSuspension();
     
-    if (!thr->isDeadThread() && 
-	thr->isPropagator() &&
-	!thr->isTagged() && /* TMUELLER possible optimization 
-				  isTaggedAndUntag */
-	oz_isBetween(GETBOARD(thr), glob_home) == B_BETWEEN) {
-      ret_list = new SuspList (thr, ret_list);
+    /* NOTE: a possible optimization isTaggedAndUntag (TMUELLER) */
+	
+    if (!susp.isDead() && 
+	susp.isPropagator() &&
+	!susp.isTagged() && 
+	oz_isBetween(GETBOARDOBJ(susp), glob_home) == B_BETWEEN) {
+      ret_list = new SuspList(susp, ret_list);
     }
     
     aux = aux->getNext();
@@ -2168,7 +2212,7 @@ SuspList *AM::installPropagators(SuspList * local_list, SuspList * glob_list,
   // unmark local suspensions 
   aux = local_list;
   while (aux) {
-    aux->getElem()->unmarkTagged();
+    aux->getSuspension().unmarkTagged();
     aux = aux->getNext();
   }
   

@@ -39,8 +39,7 @@
 
 inline 
 Bool isUnifyCurrentPropagator () {
-  Assert (am.currentThread()->isPropagator ());
-  return (am.currentThread()->isUnifyThread ());
+  return Propagator::getRunningPropagator()->isUnifyPropagator();
 }
 
 #endif
