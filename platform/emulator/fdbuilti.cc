@@ -829,7 +829,7 @@ void BIfdBodyManager::processNonRes(void)
                         newSmallInt(bifdbm_dom[0]->singl()));
     }
   } else {
-    Assert(bifdbm_var_state[0] == fdbm_local && vartag == pm_svar);
+    Assert(bifdbm_var_state[0] == fdbm_global && vartag == pm_svar);
 
     if (*bifdbm_dom[0] == fd_singleton) {
       TaggedRef newsmallint = newSmallInt(bifdbm_dom[0]->singl());
