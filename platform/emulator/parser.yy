@@ -284,7 +284,7 @@ static CTerm decls[DEPTH];
 }
 
 %token HELP SWITCH SHOWSWITCHES FEED THREADEDFEED
-%token CORE OZMACHINE TOPVARS
+%token CORE OZMACHINE
 %token SWITCHNAME FILENAME
 %token OZATOM ATOM_LABEL OZFLOAT OZINT AMPER DOTINT STRING
 %token VARIABLE VARIABLE_LABEL
@@ -479,8 +479,6 @@ directive	: HELP
 		  { $$ = newCTerm("dirCore",newCTerm(xyhelpFileName)); }
 		| OZMACHINE FILENAME
 		  { $$ = newCTerm("dirMachine",newCTerm(xyhelpFileName)); }
-		| TOPVARS FILENAME
-		  { $$ = newCTerm("dirTopVars",newCTerm(xyhelpFileName)); }
 		;
 
 switchList	: /* empty */
