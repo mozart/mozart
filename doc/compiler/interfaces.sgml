@@ -1,4 +1,4 @@
-<Chapter id="chapter.interfaces">
+<Section id="section.api.interfaces">
   <Title/Compiler Interfaces/
   <P>
     A Compiler Engine is sufficient to instruct a compiler to do something,
@@ -8,7 +8,7 @@
     With each Compiler Engine <<E>> an arbitrary number of interfaces can
     be registered.  All of <<E>>'s registered interfaces are notified of
     its output or changes of its state.
-  <Section>
+  <SubSection>
     <Title/Registering an Interface/
     <P>
       What is actually registered with a Compiler Engine is an Oz port.
@@ -26,8 +26,8 @@
       of the Compiler Engine).
     <P>
       A list of all the possible notifications is given in <Ptr
-      to="section.reference.notifications">.
-  <Section>
+      to="appendix.notifications">.
+  <SubSection>
     <Title/The Generic Interface/
     <P>
       The class <<Compiler.genericInterface>> is an abstraction
@@ -52,7 +52,7 @@
       <<getPort(?P)>> the port which the interface registered with it.
       <<enqueue(M)>> simply forwards an enqueue request to the Compiler
       Engine.
-  <Section>
+  <SubSection>
     <Title/Interfaces defined in the Mozart Library and Tools/
     <P>
       <List>
@@ -81,4 +81,4 @@
 	<P>
 	  <Code.Extern display to="CompilerPanel.oz">
       </Figure>
-</Chapter>
+</Section>
