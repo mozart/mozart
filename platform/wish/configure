@@ -2060,10 +2060,10 @@ echo "configure:2059: checking whether to build with AquaTk" >&5
 if test "${with_tk_aqua+set}" = set; then
   withval="$with_tk_aqua"
   : ${oz_tk_aqua="$with_tk_aqua"}
-    $oztmp="yes using $oz_tk_aqua"
+    oztmp="yes using $oz_tk_aqua"
 else
   : ${oz_tk_aqua=""}
-    $oztmp="no"
+    oztmp="no"
 fi
 
 echo "$ac_t""$oztmp" 1>&6
