@@ -116,7 +116,7 @@ local
 			 SolImage SolNumber
 			 FailedImage FailedNumber side:left)
 		    pack(BabField OrderField TimeFrame NodeFrame DepthFrame
-			 side:left padx:HugePad fill:x)]}
+			 side:left padx:HugePad)]}
 	 self.Time          = TimeField
 	 self.Bab           = BabField
 	 self.Order         = OrderField
