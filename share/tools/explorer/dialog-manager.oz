@@ -41,7 +41,7 @@ local
 	 proc {Okay}
 	    SizeString={SizeEntry tkReturn(get $)}
 	 in
-	    case {Misc.check SizeString} of !False then skip
+	    case {CheckSize SizeString} of !False then skip
 	    elseof Size then
 	       {Dictionary.put O size        SizeString}
 	       {Dictionary.put O width       Size.width}
@@ -197,7 +197,7 @@ local
 	       case {IsInt SD} andthen {IsInt ID} then
 		  {Dictionary.put O search      SD}
 		  {Dictionary.put O information ID}
-		  {Dictionary.put O order    {OrderVar tkReturnInt($)}==1}
+		  {Dictionary.put O failed      {FailedVar tkReturnInt($)}==1}
 		  {self close}
 	       else skip
 	       end
@@ -217,45 +217,49 @@ local
 	    Info   = {New Tk.entry tkInit(parent:Left
 					  back:  EntryColor
 					  width: SmallEntryWidth)}
+	    FailedVar = {New Tk.variable tkInit}
 	    Right  = {New Tk.frame tkInit(parent:Recomp.inner)}
 	    
-	    proc {Enter S#I}
+	    proc {Enter S#I#F}
 	       {Search tk(delete 0 'end')} {Search tk(insert 0 S)}
 	       {Info   tk(delete 0 'end')} {Info   tk(insert 0 I)}
+	       {FailedVar tkSet(F)}
 	    end
 
-	    Order  = {New TkTools.textframe
-		      tkInit(parent: self text:'Exploration Order')}
-	    Only     = {New Tk.frame tkInit(parent:Order.inner)}
-	    OrderVar = {New Tk.variable tkInit({Dictionary.get O order})}
-	    Fixed    = {New Tk.checkbutton tkInit(parent:   Only
-						  text:     'Fixed to left-to-right'
-						  anchor:   w
-						  variable: OrderVar)}
 	 in
 	    {Enter ({DistI2VS {Dictionary.get O search}} #
-		    {DistI2VS {Dictionary.get O information}})}
+		    {DistI2VS {Dictionary.get O information}} #
+		    {Dictionary.get O failed})}
 
 	    {Tk.batch [grid({New Tk.label tkInit(parent:Left
 						 text:  'Search:'
 						 anchor:w)}
-			    row:0 column:0 sticky:we)
-		       grid(Search row:0 column:1 sticky:we)
+			    row:0 column:0 sticky:w)
+		       grid(Search row:0 column:1 sticky:w)
 		       grid({New Tk.label tkInit(parent:Left
 						 text:  'Information:'
 						 anchor:w)}
-			    row:1 column:0 sticky:we)
-		       grid(Info row:1 column:1 sticky:we)
+			    row:1 column:0 sticky:w)
+		       grid(Info row:1 column:1 sticky:w)
+		       grid({New Tk.checkbutton
+			     tkInit(parent:Left
+				    text:'Full Recomputation in Failed Subtrees'
+				    anchor:w
+				    var:FailedVar)}
+			    row:2 column:0 columnspan:2 sticky:we)
 
 		       pack({New Tk.button tkInit(parent: Right
 						  text:   'Normal'
-						  action: Enter # (none # 5))}
+						  action: Enter #
+						          (none # 5 # True))}
 			    {New Tk.button tkInit(parent: Right
 						  text:   'Large'
-						  action: Enter # (5 # 25))}
+						  action: Enter #
+						          (5 # 25 # True))}
 			    {New Tk.button tkInit(parent: Right
 						  text:   'Huge'
-						  action: Enter # (25 # full))}
+						  action: Enter #
+						          (25 # full # True))}
 			    fill:x)
 
 		       pack(Left side:left anchor:n)
@@ -263,10 +267,7 @@ local
 			    side:left ipadx:1#c)
 		       pack(Right side:right anchor:n)
 
-		       pack(Fixed fill:x)
-		       pack(Only  side:left anchor:n)
-
-		       pack(Recomp Order side:top fill:x)]}
+		       pack(Recomp fill:x)]}
 	    SearchDialog,pack
 	 end
 

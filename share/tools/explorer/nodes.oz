@@ -106,6 +106,7 @@ local
 		       else persistent
 		       end
 		    of transient  then transient(S)
+		    [] flushable  then flushable(S)
 		    [] persistent then persistent(S)
 		    else False
 		    end
@@ -122,6 +123,7 @@ local
 		       else persistent
 		       end		       
 		    of transient  then transient(S)
+		    [] flushable  then flushable(S)
 		    [] persistent then persistent(S)
 		    else False
 		    end
@@ -157,6 +159,7 @@ local
 	 self.mom  = Mom
 	 copy <- case AllocateCopy
 		 of transient  then transient({Space.clone S})
+		 [] flushable  then flushable({Space.clone S})
 		 [] persistent then persistent({Space.clone S})
 		 else False
 		 end
