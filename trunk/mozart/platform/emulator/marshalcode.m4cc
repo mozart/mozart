@@ -83,6 +83,7 @@ define(opAction,
         $1,ApplMethInfo,marshalApplMethInfo((ApplMethInfoClass*)getAdressArg(PC++),bs);,
         $1,GRegRef,marshalGRegRef((AssRegArray*)getAdressArg(PC++),bs);,
         $1,Location,marshalLocation((OZ_Location*)getAdressArg(PC++),bs);,
+        $1,XRegisterIndexList,marshalXList(GetXList(PC++),bs);,
         $1,Cache,PC += CacheSize;)]])
 
 
@@ -119,6 +120,17 @@ void marshalLocation(OZ_Location *loc,MsgBuffer *bs)
 
   for (int i = 0; i < inAr+outAr; i++) {
     int out = loc->get(i);
+    marshalNumber(out,bs);
+  }
+}
+
+void marshalXList(XRegisterIndexListClass *xlist,MsgBuffer *bs)
+{
+  int n = xlist->getLength();
+  marshalNumber(n,bs);
+
+  for (int i = 0; i < n; i++) {
+    int out = xlist->get(i);
     marshalNumber(out,bs);
   }
 }
@@ -355,6 +367,7 @@ define(opAction,
         $1,ApplMethInfo,PC=unmarshalApplMethInfo(PC,bs);,
         $1,GRegRef,PC=unmarshalGRegRef(PC,bs);,
         $1,Location,PC=unmarshalLocation(PC,bs);,
+        $1,XRegisterIndexList,PC=unmarshalXList(PC,bs);,
         $1,Cache,PC=unmarshalCache(PC,bs);)]])
 
 
@@ -443,6 +456,19 @@ ProgramCounter unmarshalLocation(ProgramCounter PC,MsgBuffer *bs)
   return writeAddress(loc,PC);
 }
 
+ProgramCounter unmarshalXList(ProgramCounter PC,MsgBuffer *bs)
+{
+  int n = unmarshalNumber(bs);
+  XRegisterIndexListClass *xlist =
+    XRegisterIndexListClass::newXRegisterIndexList(n);
+
+  for (int i = 0; i < n; i++) {
+    int n = unmarshalNumber(bs);
+    xlist->set(i,n);
+  }
+
+  return writeAddress(xlist,PC);
+}
 
 
 SRecordArity unmarshalRecordArity(MsgBuffer *bs) 
