@@ -139,7 +139,7 @@ in
 	 in
 	    Gui,status(N # ' attached thread' #
 		       if N > 1 then 's, currently selected: ' else ': ' end
-		       # I # '/' # P # ' (' #
+		       # I # '/' # {Value.toVirtualString P 0 0} # ' (' #
 		       case {Primitives.threadState T}
 		       of terminated      then 'terminated'
 		       [] runnable        then 'not stopped, runnable'
@@ -277,7 +277,8 @@ in
       in
 	 {self.ThreadDic put(T Stack)}
 	 {OzcarMessage
-	  'attaching thread ' # {Primitives.getThreadName T} # '/' # Q}
+	  'attaching thread ' # {Primitives.getThreadName T} # '/' #
+	  {Value.toVirtualString Q 0 0}}
 	 case Exc of exc(X) then   %% exception
 	    Gui,addNode(T exc)
 	    ThreadManager,switch(T false)
