@@ -1070,15 +1070,17 @@ url_local:
     }
   case URL_OPEN:
     {
-      int fd = osopen(urlDecoded,O_RDONLY,0);
-      if (fd<0) goto kaboom;
+      int fd;
+      while ((fd = osopen(urlDecoded,O_RDONLY,0)) < 0)
+	if (ossockerrno()!=EINTR) goto kaboom;
       out = OZ_int(fd);
       Return(PROCEED);
     }
   case URL_LOAD:
     {
-      int fd = osopen(urlDecoded,O_RDONLY,0);
-      if (fd<0) goto kaboom;
+      int fd;
+      while ((fd = osopen(urlDecoded,O_RDONLY,0)) < 0)
+	if (ossockerrno()!=EINTR) goto kaboom;
       OZ_Term   val    = oz_newVariable();
       OZ_Return status = loadFD(fd,val,urlDecoded);
       if (status==PROCEED) out=val;
