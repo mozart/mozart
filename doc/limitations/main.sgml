@@ -76,6 +76,25 @@ to the operating system.
 <p>
 However, a few limits remain.
 
+<section class=unnumbered><title/Maximum Memory Size/
+
+<p>
+Mozart has been ported to 32-bit and 64-bit architectures.
+On the 32-bit architectures,
+a program can have a maximum of 512MB of active
+data per site at any instant.
+This limit is due to
+the implementations of
+dynamic typing and garbage collection.
+A crude but effective way
+to go beyond this limit
+is to use the <<Remote>> module
+to create new sites (i.e., OS processes).
+This is especially effective if communication
+to the new processes is by shared memory.
+For more information on <<Remote>>,
+see <ptr.extern to="ozdoc:system" key="Chapter.Remote">.
+
 <section class=unnumbered><title/Garbage Collection/
 
 <p>
