@@ -22,15 +22,14 @@
 
 
 local
-   BackColor    = white
-   OutlineColor = black
-   Width        = 240
-   Height       = 20
-   Gap          = 2
-   Border       = 2
-   Y0           = Gap + 1
-   Y1           = Height
-   Home         = ~10
+   BackColor = white
+   Width     = 240
+   Height    = 20
+   Gap       = 2
+   Border    = 2
+   Y0        = Gap + 1
+   Y1        = Height
+   Home      = ~10
 in
 
    class RuntimeBar

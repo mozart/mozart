@@ -296,7 +296,7 @@ local
                                             highlightthickness: 0
                                             height:             3)}
                        fill:x side:top)|TclT
-      [] F|Fr then TclR TclS
+      [] F|Fr then
          Border = {New TkTools.textframe tkInit(parent: P
                                                 text:   F.text
                                                 font:   BoldFont)}
