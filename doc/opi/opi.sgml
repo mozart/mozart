@@ -959,7 +959,7 @@
       <Section>
         <Title/Testing Locally/
         <P>
-          One part of the support is concerned with testing system components
+          One part of the support is concerned with testing system functors
           locally.
           <List>
             <Entry class=useroption><Span class=index/<<oz-emulator>>/
@@ -975,23 +975,22 @@
               <<<$HOME/mozart/platform/emulator/oz.emulator.bin>>>
               where <<$HOME>> stands for the value of the environment
               variable <Var type=env/HOME/.
-            <Entry class=useroption><Span class=index/<<oz-components-path>>/
+            <Entry class=useroption><Span class=index/<<oz-functor-path>>/
               (default: see below)
             <Item>
-              <Index/components/
-              Search path for the Oz Components.  This is used by the
+              <Index/functor<And>system/
+              Search path for the Oz system functors.  This is used by the
               <<oz-other>> command.  By default, this specifies rules to
-              look for components in the <Span class=index/<File/stage1//
-              directories under <File>~/mozart/share/lib</File> and <File
-              >~/mozart/share/tools</File>.  This is useful for first
-              testing changes before installing the modified functors
-              globally.
+              look for functors in the <File>~/mozart/share/lib</File> and
+              <File>~/mozart/share/tools</File> directories.  This is useful
+              for first testing changes before installing the modified
+              functors globally.
             <P proglang=sh>
               The default value of this variable is taken from the
               environment variable <Var type=env/OZ_LOAD/ if it is set,
               else it is set to
-<<<prefix=http\\://mozart.ps.uni-sb.de/home/=~/mozart/share/lib/stage1/:
-prefix=http\\://mozart.ps.uni-sb.de/home/=~/mozart/share/tools/stage1/:
+<<<prefix=http\\://mozart.ps.uni-sb.de/home/share/=~/mozart/share/lib/:
+prefix=http\\://mozart.ps.uni-sb.de/home/share/=~/mozart/share/tools/:
 cache=~/.oz/cache:cache=$OZHOME/cache>>>
               where <<$OZHOME>> stands for the value of the environment
               variable <Var type=env/OZHOME/.
@@ -1001,39 +1000,39 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
               Name of the <Index/functor<And>root/<Span class=index
               /root functor/ to load on startup.
             <Entry class=command><Span class=index/<<oz-set-other>>/
-              <<?_{SET-COMPONENTS}>> (<Key/C-c C-m/)
+              <<?_{SET-FUNCTOR-PATH}>> (<Key/C-c C-m/)
             <Item>
-              If ?_{SET-COMPONENTS} is <<nil>>, call <<oz-set-emulator>>,
-              else call <<oz-set-components>>.
+              If ?_{SET-FUNCTOR-PATH} is <<nil>>, call <<oz-set-emulator>>,
+              else call <<oz-set-functor-path>>.
             <Entry class=command><Span class=index/<<oz-set-emulator>>/
               (<Key/C-c C-m/)
             <Item>
               Interactively set the value of the variable <<oz-emulator>>.
               Also, if the environment variable <Var type=env/OZEMULATOR/ is
               set, replace its value by this one.
-            <Entry class=command><Span class=index/<<oz-set-components>>/
+            <Entry class=command><Span class=index/<<oz-set-functor-path>>/
               (<Key/C-u C-c C-m/)
             <Item>
               Interactively set the value of the variable
-              <<oz-components-path>>.  Also, if the environment variable
+              <<oz-functor-path>>.  Also, if the environment variable
               <Var type=env/OZ_LOAD/ is set, replace its value by this one.
             <Entry class=command><Span class=index/<<oz-other>>/
-              <<?_{SET-COMPONENTS}>> (<Key/C-c C-o/)
+              <<?_{SET-FUNCTOR-PATH}>> (<Key/C-c C-o/)
             <Item>
-              If ?_{SET-COMPONENTS} is <<nil>>, call <<oz-other-emulator>>,
-              else call <<oz-other-components>>.
+              If ?_{SET-FUNCTOR-PATH} is <<nil>>, call <<oz-other-emulator>>,
+              else call <<oz-other-functor-path>>.
             <Entry class=command><Span class=index/<<oz-other-emulator>>/
               (<Key/C-c C-o/)
             <Item>
               Toggle between global and local Oz Emulator.  The local
               emulator is given by the user option <<oz-emulator>>; see
               <<oz-set-emulator>>.
-            <Entry class=command><Span class=index/<<oz-other-components>>/
+            <Entry class=command><Span class=index/<<oz-other-functor-path>>/
               (<Key/C-u C-c C-o/)
             <Item>
-              Toggle between global and local Oz Components search path.
-              The local components are given by the user option
-              <<oz-components-path>>; see <<oz-set-components>>.
+              Toggle between global and local Oz functor search path.
+              The local functors are given by the user option
+              <<oz-functor-path>>; see <<oz-set-functor-path>>.
           </List>
       <Section>
         <Title/Running under gdb/
