@@ -92,5 +92,12 @@
       versions of <Ref.extern to="../tcltk/contents.htm"/them/, which
       carry the following <Ref.extern
       to="../tcltk/copyright.htm"/copyright/. 
+
+  <Section class=unnumbered>
+    <Title/Acknowledgements/
+
+    <p>
+      I am grateful to Michael Mehl, who co-authored an earlier
+      version of this document.
       
 </Chapter>
