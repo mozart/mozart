@@ -4469,7 +4469,7 @@ void xy_exit() {
 
 int xylex() {
   int next = xymylex();
-  if (get_cond() || next == 0 || next == ENDOFFILE)
+  if (get_cond() || next == 0 || next == T_ENDOFFILE)
     return next;
   else
     return xylex();
