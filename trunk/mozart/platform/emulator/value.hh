@@ -187,8 +187,8 @@ public:
   Bool isHandler(){ return kind&HANDLER;}
   Bool isContinueHandler(){Assert(isHandler());return kind & RETRY;} 
   void setContinueHandler(){Assert(isHandler()); kind = kind | RETRY;} 
-  Bool xxisPersistent(){return kind & PERSISTENT;}
-  void xxsetPersistent(){kind = kind | PERSISTENT;}
+  Bool isPersistent(){return kind & PERSISTENT;}
+  void setPersistent(){kind = kind | PERSISTENT;}
   
 
   void setNext(Watcher* w){next=w;}
@@ -1038,13 +1038,13 @@ public:
   Bool isLocal()   { return (getTertType() == Te_Local); }
   Bool isManager() { return (getTertType() == Te_Manager); }
   Bool isProxy()   { return (getTertType() == Te_Proxy); }
+  Bool isFrame()   { return (getTertType() == Te_Frame); }
 
   void setBoard(Board *b);
   void globalizeTert();
 
   void gcProxy();
   void gcManager();
-  void gcTertiary();
 
   Bool installHandler(EntityCond,TaggedRef,Thread*,Bool,Bool);
   Bool deinstallHandler(Thread*,TaggedRef);
