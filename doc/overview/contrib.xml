@@ -42,7 +42,7 @@
   <topic id="scripts"/>
   <title>ozskel</title>
   <import href="~/.oz/bin/ozskel"/>
-  <doc href="http://www.ps.uni.sb.de/~duchier/.ozdoc/bin/ozskel/index.html"/>
+  <doc href="http://www.ps.uni-sb.de/~duchier/.ozdoc/bin/ozskel/index.html"/>
   <src href="http://www.ps.uni-sb.de/~duchier/.oztar/duchier-ozskel.tgz"/>
   <abstract>
 A shell script that creates the files you need for
@@ -55,7 +55,7 @@ managing/distributing a mozart contribution (e.g.
   <topic id="cp"/>
   <title>Select</title>
   <import href="x-ozlib://duchier/cp/Select.ozf"/>
-  <doc href="http://www.ps.uni-sb.de/~duchier/.ozdoc/x-ozlib/duchier/cp/Select.html"/>
+  <doc href="http://www.ps.uni-sb.de/~duchier/.ozdoc/x-ozlib/duchier/cp/select/index.html"/>
   <src href="http://www.ps.uni-sb.de/~duchier/.oztar/duchier-select.tgz"/>
   <abstract>
 an implementation of the selection constraint for finite domains and
@@ -67,7 +67,7 @@ finite sets.
   <topic id="op"/>
   <title>InputSource</title>
   <import href="x-ozlib://duchier/op/InputSource.ozf"/>
-  <doc href="http://www.ps.uni-sb.de/~duchier/.ozdoc/x-ozlib/duchier/op/InputSource.html"/>
+  <doc href="http://www.ps.uni-sb.de/~duchier/.ozdoc/x-ozlib/duchier/op/InputSource/index.html"/>
   <src href="http://www.ps.uni-sb.de/~duchier/.oztar/duchier-inputsource.tgz"/>
   <abstract>
 a class for reading data from an arbitrary sequence of heterogenous
