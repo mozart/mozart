@@ -144,7 +144,7 @@ void AM::init(int argc,char **argv)
 
   installingScript = FALSE;
 
-  defaultExceptionHdl = taggedVoidValue;
+  defaultExceptionHdl = makeTaggedNULL();
 
   preparedCalls = NULL;
 
