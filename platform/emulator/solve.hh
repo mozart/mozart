@@ -37,7 +37,6 @@ private:
   TaggedRef solveVar;
   TaggedRef result;
   SuspList  *suspList;
-  SuspList  *stable_sl;
   int threads;
 public:
   SolveActor(Board *bb, int prio, Bool debug);
@@ -81,8 +80,6 @@ public:
     return (cps ? cps->getTop() : (WaitActor *) 0);
   }
 
-  Bool stable_wake(void);
-  void add_stable_susp (Thread *thr);
   void setBoard(Board *bb) { board = bb; }
 
   TaggedRef genSolved();

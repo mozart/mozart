@@ -1037,7 +1037,6 @@ PRINT(Thread)
   if ((getFlags ()) & T_S_unif)      stream << 'U';
   if ((getFlags ()) & T_S_ofs)       stream << 'O';
   if ((getFlags ()) & T_S_tag)       stream << 'T';
-  if ((getFlags ()) & T_S_stable)    stream << 'W';
   stream << ">]" << endl;
 
   if (board) {

@@ -44,15 +44,6 @@ Bool SolveActor::areNoExtSuspensions()
 }
 
 inline
-Bool SolveActor::stable_wake(void) {
-  if (stable_sl) {
-    stable_sl = stable_sl->stable_wake();
-    return TRUE;
-  }
-  return FALSE;
-}
-
-inline
 void SolveActor::inject(int prio, TaggedRef proc) {
   // thread creation for {proc root}
   RefsArray args = allocateRefsArray(1, NO);

@@ -141,7 +141,7 @@ Bool SolveActor::checkExtSuspList()
 
 SolveActor::SolveActor(Board *bb, int prio, Bool debug)
  : Actor (Ac_Solve, bb, prio),
-   suspList (NULL), threads (0), stable_sl(NULL), cps(NULL)
+   suspList (NULL), threads (0), cps(NULL)
 {
   result     = makeTaggedRef(newTaggedUVar(bb));
   solveBoard = new Board(this, Bo_Solve);
@@ -150,10 +150,6 @@ SolveActor::SolveActor(Board *bb, int prio, Bool debug)
   solveBoard->decSuspCount(); // Initially there is no task!
   if (debug)
     this->setDebug();
-}
-
-void SolveActor::add_stable_susp(Thread *thr) {
-  stable_sl = new SuspList (thr, stable_sl);
 }
 
 // ------------------------------------------------------------------------
