@@ -161,7 +161,6 @@ OZ_Return OZ_checkSituatednessDynamic(Board * s,TaggedRef * x) {
       TaggedRef * f_ptr = tagged2Ref(h);
       Assert(oz_isVar(*f_ptr));
 
-      // Assert(tagged2Var(*f_ptr)->getType() == OZ_VAR_FUTURE);
       Assert(oz_isFuture(*f_ptr));
 
       (void) am.addSuspendVarListInline(f_ptr);
@@ -353,7 +352,6 @@ void checkSituatedBlock(OZ_Term * tb, int sz) {
 	OzVariable * cv = tagged2Var(x);
       
 	if (!ISGOOD(cv->getBoardInternal())) {
-	  // if (cv->getType() == OZ_VAR_FUTURE)
 	  if (oz_isFuture(x))
 	    futs = oz_cons(makeTaggedRef(x_ptr),futs);
 	  else

@@ -42,7 +42,6 @@
 #include "var_bool.hh"
 #include "var_of.hh"
 #include "var_ct.hh"
-#include "var_future.hh"
 #include "var_failed.hh"
 #include "var_readonly.hh"
 #include "var_simple.hh"
@@ -755,10 +754,6 @@ OzVariable * OzVariable::_cacVarInline(void) {
   case OZ_VAR_READONLY:
     cacReallocStatic(OzVariable,this,to,sizeof(ReadOnly));
     break;
-  case OZ_VAR_FUTURE:
-    cacReallocStatic(OzVariable,this,to,sizeof(Future));
-    cacStack.push(to, PTR_VAR);
-    break;
   case OZ_VAR_FAILED:
     cacReallocStatic(OzVariable,this,to,sizeof(Failed));
     cacStack.push(to, PTR_VAR);
@@ -800,11 +795,6 @@ void OzOFVariable::_cacRecurse(void) {
 }
 
 inline
-void Future::_cacRecurse(void) {
-  oz_cacTerm(function,function);
-}
-
-inline
 void Failed::_cacRecurse(void) {
   oz_cacTerm(exception,exception);
 }
@@ -815,9 +805,6 @@ void OzVariable::_cacVarRecurse(void) {
   switch (getType()) {
   case OZ_VAR_FAILED:  
     ((Failed *)      this)->_cacRecurse(); 
-    break;
-  case OZ_VAR_FUTURE:  
-    ((Future *)      this)->_cacRecurse(); 
     break;
   case OZ_VAR_OF:      
     ((OzOFVariable*) this)->_cacRecurse(); 

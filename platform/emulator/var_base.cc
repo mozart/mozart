@@ -42,7 +42,6 @@
 #include "var_simple.hh"
 #include "var_opt.hh"
 #include "var_readonly.hh"
-#include "var_future.hh"
 #include "var_failed.hh"
 #include "var_ext.hh"
 #include "dpInterface.hh"
@@ -76,7 +75,6 @@ Bool oz_var_valid(OzVariable *ov,TaggedRef val) {
   case OZ_VAR_SIMPLE:   return ((SimpleVar *) ov)->valid(val);
   case OZ_VAR_READONLY_QUIET:
   case OZ_VAR_READONLY: return ((ReadOnly *) ov)->valid(val);
-  case OZ_VAR_FUTURE:   return ((Future *) ov)->valid(val);
   case OZ_VAR_FAILED:   return ((Failed *) ov)->valid(val);
   case OZ_VAR_BOOL:     return ((OzBoolVariable*) ov)->valid(val);
   case OZ_VAR_FD:       return ((OzFDVariable*) ov)->valid(val);
@@ -103,7 +101,6 @@ OZ_Return oz_var_unify(OzVariable *ov, TaggedRef *ptr, TaggedRef *val) {
   case OZ_VAR_SIMPLE:   return ((SimpleVar *) ov)->unify(ptr,val);
   case OZ_VAR_READONLY_QUIET:
   case OZ_VAR_READONLY: return ((ReadOnly *) ov)->unify(ptr,val);
-  case OZ_VAR_FUTURE:   return ((Future *) ov)->unify(ptr,val);
   case OZ_VAR_FAILED:   return ((Failed *) ov)->unify(ptr,val);
   case OZ_VAR_BOOL:     return ((OzBoolVariable*) ov)->unify(ptr,val);
   case OZ_VAR_FD:       return ((OzFDVariable*) ov)->unify(ptr,val);
@@ -123,7 +120,6 @@ OZ_Return oz_var_bind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
   case OZ_VAR_SIMPLE:   return ((SimpleVar *) ov)->bind(ptr,val);
   case OZ_VAR_READONLY_QUIET:
   case OZ_VAR_READONLY: return ((ReadOnly *) ov)->bind(ptr,val);
-  case OZ_VAR_FUTURE:   return ((Future *) ov)->bind(ptr,val);
   case OZ_VAR_FAILED:   return ((Failed *) ov)->bind(ptr,val);
   case OZ_VAR_BOOL:     return ((OzBoolVariable*) ov)->bind(ptr,val);
   case OZ_VAR_FD:       return ((OzFDVariable*) ov)->bind(ptr,val);
@@ -143,7 +139,6 @@ OZ_Return oz_var_forceBind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
   case OZ_VAR_SIMPLE:   return ((SimpleVar *) ov)->bind(ptr,val);
   case OZ_VAR_READONLY_QUIET:
   case OZ_VAR_READONLY: return ((ReadOnly *) ov)->forceBind(ptr,val);
-  case OZ_VAR_FUTURE:   return ((Future *) ov)->forceBind(ptr,val);
   case OZ_VAR_FAILED:   return ((Failed *) ov)->forceBind(ptr,val);
   case OZ_VAR_BOOL:     return ((OzBoolVariable*) ov)->bind(ptr,val);
   case OZ_VAR_FD:       return ((OzFDVariable*) ov)->bind(ptr,val);
@@ -172,8 +167,6 @@ OZ_Return oz_var_addSusp(TaggedRef *v, Suspendable * susp) {
   Assert(oz_isVar(*v));
   OzVariable *ov = tagged2Var(*v);
   switch (ov->getType()) {
-  case OZ_VAR_FUTURE:
-    return ((Future *) ov)->addSusp(v, susp);
   case OZ_VAR_FAILED:
     return ((Failed *) ov)->addSusp(v, susp);
   case OZ_VAR_READONLY_QUIET:
@@ -210,9 +203,6 @@ OZ_Return oz_var_addQuietSusp(TaggedRef *v, Suspendable * susp) {
   case OZ_VAR_FAILED:
     // Don't suspend on a failed value!  addSusp() raises the exception.
     return ((Failed *) ov)->addSusp(v, susp);
-  case OZ_VAR_FUTURE:
-    ov->addSuspSVar(susp);
-    return (SUSPEND);
   case OZ_VAR_EXT:
     return var2ExtVar(ov)->addSuspV(v, susp);
   case OZ_VAR_OPT:
@@ -261,7 +251,6 @@ void oz_var_dispose(OzVariable *ov) {
   case OZ_VAR_SIMPLE:   ((SimpleVar *) ov)->dispose(); break;
   case OZ_VAR_READONLY_QUIET:
   case OZ_VAR_READONLY: ((ReadOnly *) ov)->dispose(); break;
-  case OZ_VAR_FUTURE:   ((Future *) ov)->dispose(); break;
   case OZ_VAR_FAILED:   ((Failed *) ov)->dispose(); break;
   case OZ_VAR_BOOL:     ((OzBoolVariable*) ov)->dispose(); break;
   case OZ_VAR_FD:       ((OzFDVariable*) ov)->dispose(); break;
@@ -288,9 +277,6 @@ void oz_var_printStream(ostream &out, const char *s, OzVariable *cv, int depth)
     case OZ_VAR_READONLY:
       out << s;
       ((ReadOnly *)cv)->printStream(out,depth); return;
-    case OZ_VAR_FUTURE:
-      out << s;
-      ((Future *)cv)->printStream(out,depth); return;
     case OZ_VAR_FAILED:
       out << s;
       ((Failed *)cv)->printStream(out,depth); return;
@@ -412,9 +398,9 @@ extern void oz_forceWakeUp(SuspList **);
  *    right-hand side becomes needed.
  * -  Ext -> *      is ignored here: that's the business of that ext var itself!
  *                  Notably, the distribution one;
- * -  Future -> *   is, and has to be, handled by the Future::bind. Don't return 
- *                  'SUSPEND' here!
- * -  ReadOnly -> * idem
+ * -  ReadOnly -> * is, and has to be, handled by the ReadOnly::bind.
+ *                  Don't return 'SUSPEND' here!
+
  * -  Ct -> Future  cannot proceed: unification of Ct"s require a Ct or a non-variable
  *                  at the right hand side, which is not possible due to the nature.
  * -  Ct -> Ext     cannot proceed either: don't know how to make a Ct out of it!
@@ -444,34 +430,31 @@ OZ_Return oz_var_cast(TaggedRef * & fp, Board * fb, TypeOfVariable tt) {
     return FAILED;
 
   case VTP(FD,OPT): case VTP(FD,SIMPLE_QUIET): case VTP(FD,SIMPLE):
-  case VTP(FD,READONLY_QUIET): case VTP(FD,READONLY):
-  case VTP(FD,FUTURE): case VTP(FD,EXT):
+  case VTP(FD,READONLY_QUIET): case VTP(FD,READONLY): case VTP(FD,EXT):
     tv = new OzFDVariable(fb);
     break;
 
   case VTP(BOOL,OPT): case VTP(BOOL,SIMPLE_QUIET): case VTP(BOOL,SIMPLE):
   case VTP(BOOL,READONLY_QUIET): case VTP(BOOL,READONLY):
-  case VTP(BOOL,FUTURE): case VTP(BOOL,EXT):
+  case VTP(BOOL,EXT):
     tv = new OzBoolVariable(fb);
     break;
 
   case VTP(FS,OPT): case VTP(FS,SIMPLE_QUIET): case VTP(FS,SIMPLE):
   case VTP(FS,READONLY_QUIET): case VTP(FS,READONLY):
-  case VTP(FS,FUTURE): case VTP(FS,EXT):
+  case VTP(FS,EXT):
     tv = new OzFSVariable(fb);
     break;
 
   case VTP(CT,OPT): case VTP(CT,SIMPLE_QUIET): case VTP(CT,SIMPLE):
-  case VTP(CT,READONLY_QUIET): case VTP(CT,READONLY):
-  case VTP(CT,FUTURE): case VTP(CT,EXT):
+  case VTP(CT,READONLY_QUIET): case VTP(CT,READONLY): case VTP(CT,EXT):
     tv = new OzCtVariable(((OzCtVariable *) fv)->getConstraint(), 
 			  ((OzCtVariable *) fv)->getDefinition(), 
 			  fb);
     break;
 
   case VTP(OF,OPT): case VTP(OF,SIMPLE_QUIET): case VTP(OF,SIMPLE):
-  case VTP(OF,READONLY_QUIET): case VTP(OF,READONLY):
-  case VTP(OF,FUTURE): case VTP(OF,EXT):
+  case VTP(OF,READONLY_QUIET): case VTP(OF,READONLY): case VTP(OF,EXT):
     tv = new OzOFVariable(fb);
     break;
 
