@@ -4883,11 +4883,12 @@ OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
   switch(entity->getType()){
   case Co_Object:{
     Object *o = (Object *)entity;
-    if(entity->isLocal()) 
-      return oz_raise(E_ERROR,E_SYSTEM,"handlers on Local Objects not implemented",0);;
-    cell = getCell(o->getState());
+    if(entity->getTertType()==Te_Local && !stateIsCell(o->getState())) 
+      cell = entity;
+    else{
+      cell = getCell(o->getState());
+      cell->setMasterTert(entity);}
     lock = o->getLock();
-    cell->setMasterTert(entity);
     if(cell->installHandler(ec,proc,th,Continue,Persistent)){
       if(lock!=NULL){
 	o->getLock()->setMasterTert(entity);
@@ -4989,12 +4990,13 @@ OZ_Return WatcherInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
   case Co_Object:{
     Object *o = (Object *)entity;
     Tertiary *lock, *cell;
-    if(entity->isLocal()) 
-      return oz_raise(E_ERROR,E_SYSTEM,"handlers on Local Objects not implemented",0);;
-    cell = getCell(o->getState());
+    if(entity->getTertType()==Te_Local)
+      entity->installWatcher(ec,proc,Persistent);
+    else{
+      cell = getCell(o->getState());
+      cell->setMasterTert(entity);
+      cell->installWatcher(ec,proc,Persistent);}
     lock = o->getLock();
-    cell->setMasterTert(entity);
-    cell->installWatcher(ec,proc,Persistent);
     if(lock!=NULL){
       lock->setMasterTert(entity);
       lock->installWatcher(ec,proc,Persistent);}
