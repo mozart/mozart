@@ -545,6 +545,47 @@ inherent in networks of computers.
 A first step is to create a compute server, that is,
 a server that accepts any computation and uses
 its computational resources to do the computation.
+Here's one way to create a compute server:
+<<<
+declare
+class ComputeServer
+   meth init skip end
+   meth run(P) {P} end
+end
+
+C={NewStat ComputeServer init}
+>>>
+The compute server can be made available through a URL
+as shown before.
+Here's how a client uses the compute server:
+<<<
+declare
+fun {Fibo N}
+   if N<2 then 1 else {Fibo N-1}+{Fibo N-2} end
+end
+
+% Do first computation remotely
+local F in
+   {C run(proc {$} F={Fibo 30} end)}
+   {Browse F}
+end
+
+% Do second computation locally
+local F in
+   F={Fibo 30}
+   {Browse F}
+end
+>>>
+Any Oz expression <EM>E</EM> can be executed
+remotely by prefixing it by
+<<{C run(proc {$}>> and suffixing it by <<end)}>>.
+Because Mozart is fully network-transparent,
+<EM>E</EM> can be almost any expression
+in the language: for example,
+<EM>E</EM> can define new classes
+inheriting from client classes.
+The only expressions not allowed are
+those using client resources.
 
 
 </CHAPTER>
