@@ -25,13 +25,12 @@
  */
 
 // #include "misc.cc"
-#ifdef linux
+#include <windows.h>
+#include <process.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#define GetModuleFileName(a, buffer, len) sprintf(buffer,"/usr/local/oz/bin/bla")
-#endif
 
 const char *ozplatform = "win32-i486";
 
@@ -100,12 +99,15 @@ void usage()
 {
   fprintf(stderr,"oztool for Win32 (November 1998)\n\
 oztool:\n\
-\tld -gnu -o TargetLib FileList \n\
-\tld -watcom -o TargetLib FileList \n\
+\tld  -gnu -o TargetLib FileList \n\
+\tld  -watcom -o TargetLib FileList \n\
+\tld  -msvc -o TargetLib FileList \n\
 \tc++ -gnu -c Source1.cc [SourceFiles.c ...]\n\
 \tc++ -watcom -c Source.cc\n\
-\tc -gnu -c Source1.c [SourceFiles.c ...]\n\
-\tc -watcom -c Source.c\n\
+\tc++ -msvc -c Source.cc\n\
+\tc   -gnu -c Source1.c [SourceFiles.c ...]\n\
+\tc   -watcom -c Source.c\n\
+\tc   -msvc -c Source.cc\n\
 \tozplatform\n");
   exit(2);
 }
@@ -136,18 +138,16 @@ char * get_mozart_c()
 
 char *ostmpnam()
 {
-  static char tn[L_tmpnam+2];
-  tn[0] = 'C';
-  tn[1] = ':';
-  tn[2] = 0;
-  char *aux = tmpnam(NULL);
-  if (aux==0)
-    return 0;
-  strcat(tn,aux);
-  dossify(tn);
-  return tn;
+  return tmpnam(NULL);
 }
 
+
+void doexit(int n)
+{
+  if (n!=0)
+    fprintf(stderr,"*** error\n");
+  exit(n);
+}
 
 int execute(char **argv)
 {
@@ -157,11 +157,7 @@ int execute(char **argv)
     aux++;
   }
   printf("\n",argv);
-#ifdef linux
-  return 0;
-#else
   return spawnvp(P_WAIT,argv[0],argv);
-#endif
 }
 
 int main(int argc, char** argv)
@@ -213,7 +209,49 @@ int main(int argc, char** argv)
         }
       cleanup:
         unlink(tempfile);
-        exit(r);
+        doexit(r);
+      }
+    }
+    if (argc>=3 && !strcmp(argv[2],"-msvc")) {
+      if (argc>=5 && !strcmp(argv[3],"-o")) {
+        if (argc==5) {
+          fprintf(stderr,"Missing Object Files.\n");
+          usage();
+        }
+        /* ld -msvc -o */
+        char *tempfile=concat(ostmpnam(),".obj");
+        char *junklib = concat(ostmpnam(),".lib");
+        char *junkexp = concat(ostmpnam(),".exp");
+        char **wuergs = new char*[7];
+        wuergs[0]="cl";
+        wuergs[1]="-nologo";
+        wuergs[2]="-c";
+        wuergs[3]=oz_include();
+        wuergs[4]=get_mozart_c();
+        wuergs[5]=concat("-Fo",tempfile);
+        wuergs[6]=NULL;
+        int r=execute(wuergs);
+        if (r)
+          goto cleanup;
+        {
+          char **links = new char*[argc+9];
+          char *libname = argv[4];
+          r = 0;
+          links[r++]="cl";
+          links[r++]="-LD";
+          links[r++]=tempfile;
+          for (int i=5; i<argc; i++) links[r++]=argv[i];
+          links[r++]=concat("-Fe",libname);
+          links[r++]="-link";
+          links[r++]=concat("-IMPLIB:",junklib);
+          links[r]=NULL;
+          r=execute(links);
+        }
+      cleanup3:
+        unlink(tempfile);
+        unlink(junklib);
+        unlink(junkexp);
+        doexit(r);
       }
     }
     if (argc>=3 && !strcmp(argv[2],"-gnu")) {
@@ -272,7 +310,7 @@ int main(int argc, char** argv)
         unlink(tempfile);
         unlink(aname);
         unlink(defname);
-        exit(r);
+        doexit(r);
       }
     }
   }
@@ -297,8 +335,6 @@ int main(int argc, char** argv)
     for (int i=3; i<argc; i++) wc[r++]=argv[i];
     wc[r]=NULL;
     r=execute(wc);
-    if (r)
-      printf("DON'T PANIC: RC= %i.\n",r);
     exit (r);
   }
   usage();
