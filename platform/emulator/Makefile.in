@@ -72,7 +72,7 @@ PEANUTSFILE= peanuts.cc
 PEANUTS= \
 	am.cc genvar.cc	indexing.cc fdhook.cc \
 	taskstk.cc mem.cc assemble.cc \
-	fdprofil.cc statisti.cc fdgenvar.cc \
+	statisti.cc fdgenvar.cc \
 	codearea.cc debug.cc lps.cc solve.cc \
 	variable.cc thrqueue.cc thrspool.cc \
 	perdiovar.cc lazyvar.cc \

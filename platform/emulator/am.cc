@@ -1050,11 +1050,7 @@ SuspList * AM::checkSuspensionList(SVariable * var,
 
   SuspList * retSuspList = NULL;
 
-  PROFILE_CODE1(FDProfiles.inc_item(no_calls_checksusplist);)
-    
   while (suspList) {
-    PROFILE_CODE1(FDProfiles.inc_item(susps_per_checksusplist);)
-
     Suspension susp = suspList->getSuspension();
 
     if (susp.isDead()) {
@@ -1062,24 +1058,6 @@ SuspList * AM::checkSuspensionList(SVariable * var,
       continue;
     }
 
-PROFILE_CODE1
-  (
-   if (isCurrentBoard(GETBOARD(var))) {
-     if (isCurrentBoard(GETBOARDOBJ(susp)))
-       FDProfiles.inc_item(from_home_to_home_hits); 
-     else
-       FDProfiles.inc_item(from_home_to_deep_hits);
-   } else {
-     Board * b = GETBOARD(thr);
-     if (b == GETBOARD(var))
-       FDProfiles.inc_item(from_deep_to_home_misses);
-     else if (oz_isBetween(b, GETBOARD(var))==B_BETWEEN)
-       FDProfiles.inc_item(from_deep_to_deep_hits);
-     else
-       FDProfiles.inc_item(from_deep_to_deep_misses);
-   }
-   )
-  
  // already runnable susps remain in suspList
     if (susp.isRunnable()) {
       if (susp.isPropagator()) {
