@@ -1483,7 +1483,8 @@ LBLkillThread:
         SHALLOWFAIL;
         HF_FAIL(applFailure(entry), printArgs(1,XPC(2)));
       case SLEEP:
-        error("Unexpected SLEEP returned.");
+      default:
+        Assert(0);
       }
     }
 
@@ -1513,7 +1514,8 @@ LBLkillThread:
         SHALLOWFAIL;
         HF_FAIL(applFailure(entry), printArgs(2,XPC(2),XPC(3)));
       case SLEEP:
-        error("Unexpected SLEEP returned.");
+      default:
+        Assert(0);
       }
     }
 
@@ -1545,7 +1547,8 @@ LBLkillThread:
         SHALLOWFAIL;
         HF_FAIL(applFailure(entry), printArgs(1,XPC(2)));
       case SLEEP:
-        error("Unexpected SLEEP returned.");
+      default:
+        Assert(0);
       }
     }
 
@@ -1580,7 +1583,8 @@ LBLkillThread:
         SHALLOWFAIL;
         HF_FAIL(applFailure(entry), printArgs(2,XPC(2),XPC(3)));
       case SLEEP:
-        error("Unexpected SLEEP returned.");
+      default:
+        Assert(0);
       }
     }
 
@@ -1617,7 +1621,8 @@ LBLkillThread:
         SHALLOWFAIL;
         HF_FAIL(applFailure(entry), printArgs(3,XPC(2),XPC(3),XPC(4)));
       case SLEEP:
-        error("Unexpected SLEEP returned.");
+      default:
+        Assert(0);
       }
     }
 
@@ -1628,8 +1633,6 @@ LBLkillThread:
 
       // note XPC(4) is maybe the same as XPC(2) or XPC(3) !!
       switch (fun(XPC(2),XPC(3),XPC(4))) {
-      case FAILED:  error("inline eqeq failed");
-      case SLEEP:   error("Unexpected SLEEP returned.");
       case PROCEED:
         DISPATCH(6);
       case SUSPEND:
@@ -1641,6 +1644,10 @@ LBLkillThread:
           e->suspendInline(CPP,entry->getFun(),3,A,B,C);
           CHECKSEQ;
         }
+      case FAILED:
+      case SLEEP:
+      default:
+        Assert(0);
       }
     }
 
@@ -1665,12 +1672,7 @@ LBLkillThread:
       switch(rel(XPC(2))) {
 
       case PROCEED: DISPATCH(5);
-
       case FAILED:  JUMP( getLabelArg(PC+3) );
-
-      case SLEEP:
-        error("Unexpected SLEEP returned.");
-
       case SUSPEND:
         {
           Suspension *susp = e->mkSuspension(CPP,
@@ -1678,6 +1680,10 @@ LBLkillThread:
           addSusp(XPC(2),susp);
         }
         CHECKSEQ;
+
+      case SLEEP:
+      default:
+        Assert(0);
       }
     }
 
@@ -1689,11 +1695,7 @@ LBLkillThread:
       switch(rel(XPC(2),XPC(3))) {
 
       case PROCEED: DISPATCH(6);
-
       case FAILED:  JUMP( getLabelArg(PC+4) );
-
-      case SLEEP:
-        error("Unexpected SLEEP returned.");
 
       case SUSPEND:
         {
@@ -1707,6 +1709,10 @@ LBLkillThread:
           if (isAnyVar(B)) addSusp(BPtr,susp);
           CHECKSEQ;
         }
+
+      case SLEEP:
+      default:
+        Assert(0);
       }
     }
 
