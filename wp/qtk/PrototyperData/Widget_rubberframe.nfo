@@ -1,0 +1,7 @@
+This examples shows the rubberframe widget.
+
+A rubberframe can place different widgets either horizontally or vertically so that the user can interactively change the horizontal space taken by each widgets.
+
+The lrrubberframe and tdrubberframe behave as the td and lr widgets except that they don't support a grid structure (newline, empty and continue keywords are not supported). You can place as many widgets as you want horizontally or vertically.
+
+Cfr the td and lr documentation.

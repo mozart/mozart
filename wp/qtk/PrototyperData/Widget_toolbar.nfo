@@ -1,0 +1,24 @@
+This example shows the different toolbar widgets.
+
+Four widgets can be used to create an attractive toolbar :
+
+- tbbutton : similar to button.
+- tbradiobutton : similar to radiobutton.
+- tbcheckbutton : similar to checkbutton.
+
+The three first widgets acts very similarly to the widgets specified.
+They support 4 different states :
+- normal
+- highlight : when the mouse is over the button
+- selected : when the user clicks the button
+- disabled : if the button is turned off
+
+Each state support different displays attribute :
+- foreground : color of the text
+- background : color of the background
+- bitmap : a bitmap icon displayed above the text
+- image : same as bitmap
+- relief : sunken, ridge, raised or flat
+- borderwidth : the size of the border
+
+These attributes animate the buttons as the user interact with them.

@@ -103,6 +103,7 @@
     <Meta name="html.split" value="misc.winfo">
     <Meta name="html.split" value="misc.menu">
     <Meta name="html.split" value="misc.events">
+    <Meta name="html.split" value="misc.reference">
     <Meta name="html.split" value="chapter.advanced">
     <Meta name="html.split" value="chapter.stddialog">
 

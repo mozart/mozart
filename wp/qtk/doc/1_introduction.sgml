@@ -3,7 +3,7 @@
 
  
 <P> 
-The <<QTk>> module implements a description-based abstraction to help programmers efficiently build graphical user interfaces. Windows are built in a declarative way, expressing the widgets that compose the window along with their geometry. Widgets can be dynamically controled by handles. Miscellaneous facilities are also providden to fasten the GUI development of applications. The <<QTk>> module is dedicaded to <EM>Oz 3</EM>. It can be loaded by:
+The <<QTk>> module implements a description-based abstraction to help programmers efficiently build graphical user interfaces. Windows are built in a declarative way, expressing the widgets that compose the window along with their geometry. Widgets can be dynamically controlled by handles. Miscellaneous facilities are also provided to facilitate the development of an application's GUI. The <<QTk>> module is dedicated to <EM>Oz 3</EM>. It can be loaded by:
 <list>
 <item> From the OPI: <<declare QTk={Module.link ["x-oz://system/wp/QTk.ozf"]}>>
 <item> In a functor, in the <<import>> part: <<import QTk at 'x-oz://system/wp/QTk.oz'>>
@@ -16,12 +16,12 @@ The documentation is split in the following chapters:
 
 
 <LIST>
-<ITEM> <ptr to="chapter.prototyper"> Demo application: The QTk Prototyper
+<ITEM> <ptr to="chapter.prototyper"> The Prototyper application
 <ITEM> <ptr to="chapter.example"> Tutorial example: a notepad application
 <ITEM> <ptr to="chapter.basics"> QTk basics
 <ITEM> <ptr to="chapter.advanced"> QTk advanced topics
-<ITEM> <ptr to="chapter.stddialog"> Standard dialog boxes
-<ITEM> <ptr to="chapter.widgets"> Reference documentation to QTk widgets
+<ITEM> <ptr to="chapter.stddialog"> QTk standard dialog boxes
+<ITEM> <ptr to="chapter.widgets"> Widgets reference
 <ITEM> <ptr to="chapter.misc"> Miscellaneous
 </LIST>
 
@@ -67,7 +67,7 @@ the following code defines a record and references it in D:
 
 >>>
 The record with label <<td>> has two fields that themselves contain
-records defining two buttons that are labeled Show and Close. These buttons are linked to the actions of
+records defining two buttons that are labelled Show and Close. These buttons are linked to the actions of
 displaying <<Hello World>> and closing the window.
 </P>
 <P>
@@ -109,7 +109,7 @@ and readable.  Here's an example:
            {But "Quit" toplevel#close}))
 
 >>>
-The functions <<Txt>> and <<But>> shorten the writting of the record <<D>>. 
+The functions <<Txt>> and <<But>> shorten the writing of the record <<D>>. 
 This defines a window with one rubber frame, two text labels,
 two text boxes (including one with scrollbar), two buttons (each with
 an action). One of the actions is a procedure that does a calculation
