@@ -3354,10 +3354,10 @@ $builtins = {
                              BI  => BIconstraints,
                              native => true},
 
-    'ozma_readProc'     => { in  => ['+virtualString'],
-                             out => ['+value'],
-                             BI  => ozma_readProc,
-                             ifdef =>OZMA,
+    'ozma_readProc'     => { in     => ['+virtualString'],
+                             out    => ['+value'],
+                             BI     => ozma_readProc,
+                             ifdef  => STATIC_LIBOZMA,
                              native => true},
 
 #    'SystemRegistry'   => { in  => [],

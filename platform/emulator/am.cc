@@ -94,7 +94,6 @@ void usage(int /* argc */,char **argv) {
           "usage: %s <options>\n",
           argv[0]);
   fprintf(stderr, " -d           : debugging on\n");
-  fprintf(stderr, " -l <lib>     : load native library\n");
   fprintf(stderr, " -init <file> : load and execute init procedure\n");
   fprintf(stderr, " -u <url>     : start a compute server\n");
   fprintf(stderr, " -x <hex>     : start as a virtual site\n");
@@ -224,26 +223,6 @@ void AM::init(int argc,char **argv)
       assemblyCodeFile = getOptArg(i,argc,argv);
       continue;
     }
-    if (strcmp(argv[i],"-l")==0) {
-      char *libfile = getOptArg(i,argc,argv);
-      OZ_Term out;
-      int ret = osDlopen(libfile, out);
-      if (ret != PROCEED) {
-        fprintf(stderr, "can not open native library %s\n",libfile);
-        osExit(1);
-      }
-      void* handle = OZ_getForeignPointer(out);
-      OZ_C_proc_interface * I;
-      I = (OZ_C_proc_interface *) osDlsym(handle,"oz_interface");
-      if (I==0) {
-        fprintf(stderr,"cannotFindInterface");
-        osExit(1);
-      }
-
-      (void) ozInterfaceToRecord(I);
-      continue;
-    }
-
     if (strcmp(argv[i],"-init")==0) {
       initFile = getOptArg(i,argc,argv);
       continue;
@@ -352,12 +331,63 @@ void AM::init(int argc,char **argv)
   }
 
   if (assemblyCodeFile) {
+
+    OZ_CFun f = 0;
+
+#ifndef STATIC_LIBOZMA
+
+    char * libfile = strdup(argv[0]);
+
+    char * last_slash = 0;
+
+    char * c = libfile;
+
+    while (*c) {
+      if (*c == '/')
+        last_slash = c+1;
+      c++;
+    }
+
+    if (!last_slash) {
+      fprintf(stderr, "Illegal emulator name.\n");
+      osExit(1);
+    }
+
+    // Assumption that emulator name is longer than libozma.so
+    strcpy(last_slash, "libozma.so");
+
+    printf("Loading ozma library: %s\n",libfile);
+
+    OZ_Term out;
+    int ret = osDlopen(libfile, out);
+
+    if (ret != PROCEED) {
+      fprintf(stderr, "Cannot open ozma library.\n");
+      osExit(1);
+    }
+
+    free(libfile);
+
+    void* handle = OZ_getForeignPointer(out);
+
+    f = (OZ_CFun)  osDlsym(handle,"ozma_readProc");
+
+    if (!f) {
+      fprintf(stderr,"builtin ozma_readProc not found");
+      osExit(1);
+    }
+
+#else
+
+    printf("Ozma library statically linked\n");
+
     Builtin *bi = builtinTab.find("ozma_readProc");
     if (bi==htEmpty) {
       fprintf(stderr,"builtin ozma_readProc not found");
       osExit(1);
     }
-    OZ_CFun f = bi->getFun();
+    f = bi->getFun();
+#endif
     OZ_Term args[2] = { oz_atom(assemblyCodeFile),0 };
     OZ_Return r=(*f)(args,0);
     if (r!=PROCEED) {
