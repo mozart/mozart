@@ -46,42 +46,55 @@ distribution strategy in order to solve more and more demanding
 problems. 
 
 <subsection class=unnumbered>
-<title>Problem Specification</title> 
+  <title>Problem Specification</title> 
 
 <p>
 The task names, their description, duration (in days) 
 and the company in charge are given in <ptr to=table.hausbau>. For
-example, ?{B} denotes the task involved with  the carpentry for the
+example, <<b>> denotes the task involved with  the carpentry for the
 roof. This task lasts for 3 
-days. Task ?{A} must be finished before the work for task ?{B} is
+days. Task <<a>> must be finished before the work for task <<b>> is
 started (indicated by the column <em/Predecessor/). The company in
-charge for task ?{B} is <em/House Inc/. The overall goal is to build the
+charge for task <<b>> is <em/House Inc/. The overall goal is to build the
 house as quickly as possible. 
 
-<figure class="Table" id=table.hausbau>
-<caption/Building a house/ 
+<p>
+<figure id=table.hausbau>
+<caption/Building a house./ 
 <table>
-<tr/<td/Task /<td/ Description /<td/ Duration /<td/ Predecessor /<td/ Company//
-<tr/<td/?{A} /<td/ Erecting Walls /<td/ 7 /<td/ _ /<td/ Construction Inc. //
-<tr/<td/?{B} /<td/ Carpentry for Roof  /<td/ 3 /<td/ ?{A} /<td/ House Inc. //
-<tr/<td/?{C} /<td/ Roof      /<td/ 1 /<td/ ?{B} /<td/ House Inc. //
-<tr/<td/?{D} /<td/ Installations   /<td/ 8 /<td/ ?{A} /<td/ Construction Inc. //
-<tr/<td/?{E} /<td/ Facade Painting       /<td/ 2 /<td/ $C, D$ /<td/ Construction Inc. //
-<tr/<td/?{F} /<td/ Windows          /<td/ 1 /<td/ $C, D$ /<td/ House Inc. //
-<tr/<td/?{G} /<td/ Garden   /<td/ 1 /<td/ $C, D$ /<td/ House Inc. //
-<tr/<td/?{H} /<td/ Ceilings /<td/ 3 /<td/ ?{A} /<td/ Construction Inc. //
-<tr/<td/?{I} /<td/ Painting     /<td/ 2 /<td/ $F, H$ /<td/ Builder Corp. //
-<tr/<td/?{J} /<td/ Moving in         /<td/ 1 /<td/ ?{I} /<td/ Builder Corp. //
+<tr/ <th/Task/ <th/Description/ <th/Duration/ <th/Predecessor/ <th/Company//
+<tr/ <td/<<a>>/ <td/Erecting Walls/ 
+     <td/7/ <td/none/ <td/Construction Inc.//
+<tr/ <td/<<b>>/ <td/Carpentry for Roof/ 
+     <td/3/ <td/<<a>>/ <td/House Inc.//
+<tr/ <td/<<c>>/ <td/Roof/ 
+     <td/1/ <td/<<b>>/ <td/House Inc.//
+<tr/ <td/<<d>>/ <td/Installations/ 
+     <td/8/ <td/<<a>>/ <td/Construction Inc.//
+<tr/ <td/<<e>>/ <td/Facade Painting/ 
+     <td/2/ <td/<<c>>, <<d>>/ <td/Construction Inc.//
+<tr/ <td/<<f>>/ <td/Windows/ 
+     <td/1/ <td/<<c>>, <<d>>/ <td/House Inc.//
+<tr/ <td/<<g>>/ <td/Garden/ 
+     <td/1/ <td/<<c>>, <<d>>/ <td/House Inc.//
+<tr/ <td/<<h>>/ <td/Ceilings/
+     <td/3/ <td/<<a>>/ <td/Construction Inc.//
+<tr/ <td/<<i>>/ <td/Painting/ 
+     <td/2/ <td/<<f>>, <<h>>/ <td/Builder Corp.//
+<tr/ <td/<<j>>/ <td/Moving in/ 
+     <td/1/ <td/<<i>>/ <td/Builder Corp.//
 </table>
 </figure>
 
-<subsection id=sec.precedence><title/Building a House: Precedence Constraints/
+<subsection id=sec.precedence>
+  <title/Building a House: Precedence Constraints/
+
 <p>
 For the first model we do not consider the companies in charge
 for the tasks. 
 
-<subsection class=unnumbered>
-<title>Model.</title>
+<subsubsection class=unnumbered>
+  <title>Model</title>
 
 <p> 
 The model introduces for each task  a variable
@@ -95,7 +108,7 @@ obtain 29.
 <para class=apropos><title/precedence constraints/
 From the predecessor relation we can
 derive a set of so-called <def/precedence constraints/:
-<p><math>
+<math display>
 \left\{
 \begin{array}{c}
 A+7 \leq B, \qquad B+3 \leq C, \qquad A+7 \leq D, \qquad C+1 \leq E,\\
@@ -104,29 +117,30 @@ D+8\leq G, \qquad A+7 \leq H, \qquad F+1\leq I, \qquad H+3 \leq I,\\
 I+2 \leq J.
 \end{array}
 \right\}
-</math><p>
+</math>
 
 <para class=apropos><title/makespan/
-For example, the constraint <math>A+7\leq B</math> means that the earliest start
-time of ?{B} is 7 days after ?{A} has been started. We assume an
-additional task ?{PE} modeling the project end for the problem. All
-other tasks precede ?{PE}. The start time of ?{PE} is called
+For example, the constraint <math>A+7\leq B</math> means that the
+earliest start time of <<b>> is 7 days after <<a>> has been
+started. We assume an 
+additional task <<pe>> modeling the project end for the problem. All
+other tasks precede <<pe>>. The start time of <<pe>> is called
 the <def/makespan/ of the schedule. 
 
-<subsection class=unnumbered>
-<title>Distribution Strategy</title> 
+<subsubsection class=unnumbered>
+  <title>Distribution Strategy</title> 
 
 <p>
 If all propagators have become stable,
 it is sufficient to determine each variable to the current
 minimal value in its domain  to obtain a solution. This is due
 to the fact that we only  use constraints of the form <math>x + c \leq y</math>
-where ?{c} is an integer. Hence, we do not need a distributor at
+where <math/c/ is an integer. Hence, we do not need a distributor at
 all. Note that this fact remains true if we also consider constraints of the
 form <math>x+c=y</math> (this will be needed later). 
 
-<subsection class=unnumbered>
-<title>Script</title> 
+<subsubsection class=unnumbered>
+  <title>Script</title> 
 
 <p>
 The problem specification which is a direct
@@ -141,7 +155,7 @@ The task <<pe>> denotes the additional task representing the
 project end. 
 
 <figure id=fig.data.hausbau>
-<caption/The specifiation to build a house/
+<caption/The specifiation to build a house./
 <<<
 House = house(taskSpec:
 		 [a  # 7 # nil   # constructionInc
@@ -163,9 +177,8 @@ In <ptr to=fig.script1.hausbau> a function is shown which returns a
 script for our scheduling problem. Such a function is called a 
 <def/scheduling compiler/ because it processes the problem specification
 and returns 
-a procedure which can be run by a procedure like <<SearchOne>> or the
-Explorer.  Hence, the scheduling compiler <Q/compiles/ the problem
-specification into an <Q/executable/ for a search engine. 
+a script. Hence, the scheduling compiler <em/compiles/ the problem
+specification into an <em/executable script/.
 
 <p>
 The durations and start times of tasks are stored in the records <<Dur>>
@@ -181,7 +194,7 @@ makespan of the schedule is 19.  By
 construction this solution is the one with the smallest makespan. 
 
 <figure id=fig.script1.hausbau>
-<caption/A scheduling compiler to build a script./
+<caption/Scheduling compiler to build a script./
 <<<
 proc {Precedences TaskSpecs Start Dur}
    {ForAll TaskSpecs
@@ -212,7 +225,9 @@ end
 </figure>
 </subsection>
 
-<subsection id=sec.bahCC><title/Building a House: Capacity Constraints/
+
+<subsection id=sec.bahCC>
+   <title/Building a House: Capacity Constraints/
 
 <p>
 In this section we take the companies into account which are in charge
@@ -220,15 +235,15 @@ for the tasks. We assume that each company cannot handle two tasks
 simultaneously. That is, the execution of two tasks handled by the same
 company must not overlap in time.
 
-<subsection class=unnumbered>
-<title>Model</title>
+<subsubsection class=unnumbered>
+  <title>Model</title>
 
 <p>
  For each company (which we also call a 
 <def/resource/ because the companies are consumed by a task) we must
  find a <def/serialization/ of the handled
 tasks, &ie; for each task pair 
-<math/(A,B)/ we must decide whether ?{A} is finished before ?{B} starts or vice
+?{A},?{B} we must decide whether ?{A} is finished before ?{B} starts or vice
 versa. Assume two tasks with start times <math>S_1</math> and <math>S_2</math> and the
 durations <math>D_1</math> and <math>D_2</math>, respectively. 
 
@@ -245,32 +260,33 @@ is not a feasible approach for problems with many tasks. Thus, we will
 use a single propagator in the script providing the same propagation
 as the quadratic number of reified constraints.
 
-<subsection class=unnumbered>
-<title>Distribution Strategy</title>
+
+<subsubsection class=unnumbered>
+  <title>Distribution Strategy</title>
 
 <p> 
 Because of the capacity constraints
 we have to provide a distribution strategy. We use the standard
 first-fail strategy. 
 
-<subsection class=unnumbered id=page.tasksOnRes>
-<title>Script</title>
+<subsubsection class=unnumbered id=page.tasksOnRes>
+  <title>Script</title>
 
 <p> 
 We extend the scheduling compiler in
 <ptr to=fig.script1.hausbau> to extract the tasks handled by a
 common resource. This can be done as follows. 
 <<<
-TasksOnRes
-= {FoldL TaskSpecs
-   fun {$ In Task#_#_#Resource}
-      if Resource==noResource then In
-      else TaskOnResource = {CondSelect In Resource 
-                             nil}
-      in
-	 {AdjoinAt In Resource Task|TaskOnResource}
-      end
-   end tasksOnResources}
+local
+   D={Dictionary.new}
+in
+   {ForAll TaskSpecs 
+    proc {$ Task#_#_#Res}
+       if Res\=noResource then
+          {Dictionary.put D Res Task|{Dictionary.condGet D Res nil}}
+       end
+    end}
+TasksOnRes = {Dictionary.toRecord D tor}
 >>>
 
 <p>
@@ -282,16 +298,14 @@ The script returned by the modified scheduling compiler will use
 {Schedule.serializedDisj TasksOnRes Start Dur}
 >>>
 This statement creates for each resource a single propagator for the
-capacity constraints as described in the model above  (note that the full
-script can be found in the shipped demo file). 
+capacity constraints as described in the model above.
 
-<p>
-\begin{exercise}
+<exercise  id="scheduling.ex.a">
 Write a procedure which implements the capacity constraints of the
 problem by reified constraints. 
-\end{exercise}
-<p>
-\begin{solution}
+</exercise>
+
+<answer to="scheduling.ex.a">
 A possible solution is as follows.
 <<<
 proc {CapacityConstraints TasksOnRes Start Dur}
@@ -301,14 +315,13 @@ proc {CapacityConstraints TasksOnRes Start Dur}
 	proc {$ T1|Tr}
 	   {ForAll Tr
 	    proc {$ T2}
-	       (Start.T1 + Dur.T1 =<: Start.T2)
-	       + (Start.T2 + Dur.T2 =<: Start.T1) =: 1
+	       (Start.T1 + Dur.T1 =<: Start.T2) +
+	       (Start.T2 + Dur.T2 =<: Start.T1) =: 1
 	    end}
 	end}
     end}
-end
->>>
-\end{solution}
+end>>>
+</answer>
 
 <p>
 But we are not only interested in the first solution but in the best
@@ -333,7 +346,8 @@ solution for our problem can be found by the following statement.
 The first solution which is also the optimal one  has a makespan of 21. 
 </subsection>
 
-<subsection id=sec.serializers><title/Building a House: Serializers/ 
+<subsection id=sec.serializers>
+  <title/Building a House: Serializers/ 
 
 <p>
 So far we have used only distribution strategies where  a variable is
@@ -351,11 +365,13 @@ the previous section by formulating a new distribution strategy.
 
 <p>
 Note that we have to refine the notion of distribution here. In
-<ptr to=sec.dast> we have distributed a finite domain problem ?{P}
-only with constraints ?{C} and <math>\neg C</math>. 
+<ptr to=sec.dast> we have distributed a finite domain problem <math/P/
+only with constraints <math/C/ and <math>\neg C</math>. 
 But we can refine the concept of distribution by distributing 
 with constraints <math/C_1/ and <math/C_2/
 whenever <math>P \models C_1 \vee C_2</math> holds.  
+
+<p>
 By this condition we are sure that
 no solution is lost.  For a serializer we distribute with constraints
 <math>S_1 + D_1 \leq S_2</math> and <math>S_2 + D_2 \leq S_1</math> where we assume two tasks
@@ -365,7 +381,7 @@ condition holds by construction, &ie; <math>P \models S_1 + D_1 \leq S_2
 \vee S_2 + D_2 \leq S_1</math>.
  
 <subsection class=unnumbered>
-<title>Distribution Strategy.</title>
+  <title>Distribution Strategy</title>
 
 <p>
 We replace the first-fail distribution strategy by a strategy consisting
@@ -384,7 +400,7 @@ constraints of the form <math>x + c \leq y</math>. Thus, it is sufficient for th
 second phase to determine each variable to the smallest value in its
 domain.
 
-<subsection class=unnumbered>
+<subsubsection class=unnumbered>
 <title>Script</title>
 
 <p> 
@@ -404,7 +420,7 @@ proc {DistributeRes AllTasks Start Dur}
 	   {ForAll Tr
 	    proc{$ T2}
 	       choice Start.T1 + Dur.T1 =<: Start.T2
-	       [] Start.T2 + Dur.T2 =<: Start.T1
+	       []     Start.T2 + Dur.T2 =<: Start.T1
 	       end
 	    end}
 	end}
@@ -412,16 +428,15 @@ proc {DistributeRes AllTasks Start Dur}
 end
 >>>
 <p>
-The choice statement <<choice S1 [] S2 end>> is an
+The choice statement <<choice ?{S1} [] ?{S2} end>> is an
 abbreviation for
 <<<
-choice S1 then skip
-[] S2 then skip
+choice ?{S1} then skip
+[]     ?{S2} then skip
 end	
 >>>
 <p>
-If we assume the refined scheduling compiler to be <<CompileHouse3>> (see
-the shipped demo file), the
+If we assume the refined scheduling compiler to be <<CompileHouse3>>, the
 optimal 
 solution can be found by 
 <<<
@@ -438,16 +453,17 @@ solution of this more difficult problem.
 </section>
 
 <section><title/Constructing a Bridge/
+
 <p>
 The following problem is taken from <ptr to=bartusch.83> and is used as a
 benchmark in the constraint programming community. The problem is to
 schedule the construction of the bridge shown  in
 <ptr to=fig.bridgeProblem>. 
 
-<figure class="Figure" id=fig.bridgeProblem>
+<figure id=fig.bridgeProblem>
 <caption/The Bridge Problem./
 <picture.choice>
-<picture.extern to="pictures/bridge.eps" type=ps>
+<picture.extern to="pictures/bridge.ps" type=ps info="-width 400">
 </picture.choice>
 </figure>
 
@@ -560,9 +576,10 @@ The optimal solution can be found by
 >>>
 The full search tree consists of 1&nbsp;268 choice nodes and 8 solution
 nodes (see <Ptr to="fig.scheduling.bridge">).
-<Figure class="Figure maxi" id="fig.scheduling.bridge">
+
+<figure id="fig.scheduling.bridge">
 <caption/A search tree for the bridge problem./
-<picture.extern to="pictures/bridgeXWPICK.eps" type=ps>
+<picture.extern to="pictures/bridge-tree-1.ps" type=ps info="-width 400">
 </figure>
 
 <figure class="Figure" id=fig.bridgeCompiler>
@@ -704,7 +721,7 @@ same resource have the same texture.
 <figure class="Figure maxi" id=fig.gantt>
 <caption/The Gantt-chart for the bridge problem./
 <picture.choice>
-<picture.extern to="pictures/gantt.ps" type=ps>
+<picture.extern to="pictures/gantt.ps" type=ps  info="-width 400">
 </picture.choice>
 </figure>
 <p>
@@ -1007,10 +1024,13 @@ and  prove its optimality with only 30 choice nodes (see
 <Ptr to="fig.scheduling.bridge"> where we have needed 8 solutions to
 reach the optimal one, we now find the optimal solution immediately. The
 size of the search tree is reduced by more than an order of magnitude. 
-<figure class="Figure Maxi" id="fig.scheduling.bridgStronge2">
+
+<figure id="fig.scheduling.bridgStronge2">
 <caption/A search tree for the bridge problem./
-<picture.extern to="pictures/bridgeStrongXWPICK.eps" type=ps>
+<picture.extern to="pictures/bridge-tree-2.ps" type=ps info="-height 200">
 </figure>
+
+<p>
 The optimality of the problem
 can be proven with only 4 choice nodes.
 <p>
@@ -1267,13 +1287,7 @@ To find the optimal solution we better use the serializer
 	      Schedule.firstsLastsDist} Order}
 >>>
 The full search tree to find the optimal solution and to prove its
-optimality is shown in <Ptr to="fig.scheduling.mt10Solve">. It 
-contains 16&nbsp;786 choice nodes and has depth&nbsp;91.
-
-<figure class="Figure maxi" id="fig.scheduling.mt10Solve">
-<caption/The full search tree for MT10./
-<picture.extern to="mt10XWPICK.gif" type=gif>
-</figure>
+optimality contains 16786 choice nodes and has depth&nbsp;91.
 
 </section>
 
