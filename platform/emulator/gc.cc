@@ -1962,6 +1962,15 @@ void ThreadsPool::doGC () {
   lowQueue.gc();
 }
 
+#ifdef LINKED_QUEUES
+void ThreadQueue::gc() {
+  ThreadQueueIterator iter(this);
+  Thread*ptr;
+  head=tail=0;
+  head_index=tail_index=size=0;
+  while ((ptr=iter.getNext())) enqueue(ptr->gcThread());
+}
+#else
 void ThreadQueue::gc() {
   int newsize = suggestNewSize();
   Thread ** newqueue =
@@ -1983,7 +1992,28 @@ void ThreadQueue::gc() {
    head    = 0;
    tail    = size - 1;
 }
+#endif /* !LINKED_QUEUES */
 
+#ifdef LINKED_QUEUES
+LocalPropagatorQueue * LocalPropagatorQueue::gc() {
+  if (this==0) return 0;
+  // when a space is being cloned, it must be stable
+  // which means that it local propagation must be empty
+  // and this is catched by the conditional above.
+  // if we fall through, then we must be in GC
+  Assert(isInGc);
+  Assert(!isEmpty());
+  LocalPropagatorQueue * q = new LocalPropagatorQueue();
+  q->lpq_thr = lpq_thr->gcThread();
+  LocalPropagatorQueueIterator iter(this);
+  Propagator*ptr;
+  while ((ptr=iter.getNext())) q->enqueue(ptr->gcPropagator());
+  // do not return the blocks to the free list since they
+  // are in old space, just forget everything
+  zeroAll();
+  return q;
+}
+#else
 LocalPropagatorQueue * LocalPropagatorQueue::gc() {
   if (!this)
     return NULL;
@@ -2001,6 +2031,7 @@ LocalPropagatorQueue * LocalPropagatorQueue::gc() {
 
   return new_lpq;
 }
+#endif /* !LINKED_QUEUES */
 
 // Note: the order of the list must be maintained
 inline
