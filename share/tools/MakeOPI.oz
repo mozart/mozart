@@ -73,6 +73,23 @@ local
      end nil}}
 
 
+   proc {LazyAdapt M1 Fs ?M2}
+      Request
+      proc {FwdRequest _}
+	 Request = unit
+      end
+   in
+      M2={MakeRecord 'export' Fs}
+      {Record.forAll M2
+       fun {$}
+	  {Lazy.new FwdRequest}
+       end}
+      thread
+	 {Wait Request}
+	 {ForAll Fs proc {$ F} M1.F=M2.F end}
+      end
+   end
+   
    functor OPI
 
    import
@@ -115,7 +132,7 @@ local
 
       {ForAll PrintNames
        proc {$ Key#Feats}
-	  Env = {Module.load Key unit Feats}
+	  Env={LazyAdapt {Module.load Key unit nil} Feats}
        in
 	  {OPICompiler enqueue(mergeEnv(Env))}
        end}
