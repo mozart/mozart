@@ -611,7 +611,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 \\f(e(ed?)?)?                  { BEGIN(INPUTFILE); return FEED; }
 \\threadedfeed                 { BEGIN(INPUTFILE); return THREADEDFEED; }
 \\c(o(re?)?)?                  { BEGIN(INPUTFILE); return CORE; }
-\\m(a(c(h(i(ne?)?)?)?)?)?      { BEGIN(INPUTFILE); return MACHINE; }
+\\m(a(c(h(i(ne?)?)?)?)?)?      { BEGIN(INPUTFILE); return OZMACHINE; }
 \\t(o(p(v(a(rs?)?)?)?)?)?      { BEGIN(OUTPUTFILE); return TOPVARS; }
 
 \\in(s(e(rt?)?)?)?             { BEGIN(INSERT); }
@@ -994,7 +994,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "prod"                         { return xy_gumpSyntax? prod: OZATOM; }
 "prod"/\(                      { return xy_gumpSyntax? prod: ATOM_LABEL; }
 "prop"/\(?                     { return prop; }
-"raise"/\(?                    { return raise; }
+"raise"/\(?                    { return ozraise; }
 "scanner"                      { return xy_gumpSyntax? _scanner_: OZATOM; }
 "scanner"/\(                   { return xy_gumpSyntax? _scanner_: ATOM_LABEL; }
 "self"/\(?                     { return self; }
