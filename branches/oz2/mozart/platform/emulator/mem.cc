@@ -79,7 +79,7 @@ unsigned int getMemoryInFreeList()
 //   USESBRK
 //   USEMALLOC
 
-#if defined(SUNOS_SPARC) || defined(SOLARIS_SPARC) || defined(LINUX) || defined(IRIX5_MIPS) 
+#if defined(SUNOS_SPARC) || defined(SOLARIS) || defined(LINUX) || defined(IRIX5_MIPS) 
 #define USESBRK
 #else
 #define USEMALLOC
