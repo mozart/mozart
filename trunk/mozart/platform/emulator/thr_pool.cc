@@ -29,6 +29,12 @@
 #endif
 
 #include "thr_pool.hh"
+#include "board.hh"
+
+void ThreadsPool::setCurrentThread(Thread *th) { 
+  _currentThread=th; 
+  th->setBoardInternal(th->getBoardInternal()->derefBoard());
+}
 
 int ThreadsPool::getRunnableNumber()
 {
@@ -113,22 +119,6 @@ lowMid:
 
   Assert(lowCounter>=0 || !midQueue.isEmpty());
   goto lowMid;
-}
-
-void ThreadsPool::scheduleThread(Thread *th,int pri)
-{
-  Assert(!isScheduledSlow(th));
-  if (pri < 0) pri = th->getPriority();
-
-  if (pri == MID_PRIORITY) {
-    midQueue.enqueue(th);
-  } else if (pri == HI_PRIORITY) {
-    hiQueue.enqueue(th);
-    if (hiCounter<0) hiCounter=ozconf.hiMidRatio;
-  } else {
-    lowQueue.enqueue(th);
-    if (lowCounter<0) lowCounter=ozconf.midLowRatio;
-  }
 }
 
 Bool ThreadsPool::threadQueuesAreEmptyOutline()

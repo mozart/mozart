@@ -1165,7 +1165,6 @@ Thread *Thread::gcDeadThread() {
   newThread->setBoardInternal(am.rootBoard());
 
   storeFwdField(this, newThread);
-  setSelf(0);
   setAbstr(0);
 
   return (newThread);
@@ -1186,7 +1185,6 @@ void Thread::gcRecurse() {
     setBoardInternal(getBoardInternal()->gcBoard());    
 
     threadBody = threadBody->gcRTBody();
-    setSelf(getSelf()->gcObjectInline());
 
   } else {
     //  The following assertion holds because suspended threads

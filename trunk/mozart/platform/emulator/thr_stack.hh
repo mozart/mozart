@@ -144,7 +144,7 @@ public:
   TaggedRef frameToRecord(Frame *&frame, Thread *thread, Bool verbose);
   TaggedRef findAbstrRecord(void);
 
-  Bool findCatch(Thread *thr,
+  Bool findCatch(Thread *thr, 
 		 ProgramCounter PC=NOCODE, RefsArray Y=NULL,
 		 Abstraction *G=NULL,
 		 TaggedRef *traceBack=0, Bool verbose=NO);

@@ -257,9 +257,11 @@ TaggedRef TaskStack::findAbstrRecord(void)
   }
 }
 
-Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC, 
+Bool TaskStack::findCatch(Thread *thr,
+			  ProgramCounter PC, 
 			  RefsArray Y, Abstraction *G,
-			  TaggedRef *out, Bool verbose) 
+			  TaggedRef *out, 
+			  Bool verbose) 
 {
   Assert(this);
 
@@ -282,6 +284,8 @@ Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC,
     }
   }
 
+  Object * foundSelf = (Object *) NULL;
+  
   while (!isEmpty()) {
     if (out) {
       Frame *frame = getTop();
@@ -293,6 +297,11 @@ Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC,
     PopFrame(this,PC,Y,G);
     if (PC==C_CATCH_Ptr) {
       if (out) *out = reverseC(*out);
+
+      // If there was a set self, push it back!
+      if (foundSelf)
+	pushSelf(foundSelf);
+      
       return TRUE;
     } else if (PC==C_DEBUG_CONT_Ptr) {
       OzDebug *dbg = (OzDebug *) Y;
@@ -314,12 +323,12 @@ Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC,
 	break;
       case Te_Proxy: OZ_error("lock proxy unlocking\n");break;}
     } else if (PC==C_SET_SELF_Ptr) { 
-      Object *newSelf = (Object*)Y;
-      thr->setSelf(newSelf);
+      foundSelf = (Object*) Y;
     } else if (PC==C_SET_ABSTR_Ptr) { 
       ozstat.leaveCall((PrTabEntry*)Y);
     }
   }
+
   if (out) *out = reverseC(*out);
   return FALSE;
 }
