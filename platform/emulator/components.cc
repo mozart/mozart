@@ -542,6 +542,57 @@ Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
 }
 
 
+//
+// Map perdio version into mozart version.
+// The table must be sorted on perdio numbers. It does not need to be
+// complete but then it is not complete :-)
+typedef struct {
+  int major, minor;
+  char ozversion[16];
+} pv2ovTabType;
+//
+static pv2ovTabType pv2ovTab[] = {
+  { 1, 5, "1.0.1" },
+  { 2, 0, "1.1.0" },
+  { 3, 0, "1.1.0" }
+};
+
+// returns a string to be used as "oz version %s";
+// returned string must be deallocated;
+char *pv2ov(char *pvs)
+{
+  int major, minor, num, i;
+  char *buf = (char *) malloc(128);
+  int pvn;
+
+  //
+  if (sscanf(pvs,"%d#%d",&major,&minor) != 2) {
+    sprintf(buf, "cannot be determined");
+    return (buf);
+  }
+  pvn = (int) (major << 16) | minor;
+
+  //
+  num = sizeof(pv2ovTab)/sizeof(pv2ovTabType);
+  Assert(num);
+  for (i = 0; ; i++) {
+    int tpvn = (int) (pv2ovTab[i].major << 16) | pv2ovTab[i].minor;
+
+    if (pvn == tpvn)
+      sprintf(buf, "%s", pv2ovTab[i].ozversion);
+    else if (pvn < tpvn)
+      sprintf(buf, "earlier than %s(%d#%d)", pv2ovTab[i].ozversion,
+              pv2ovTab[i].major, pv2ovTab[i].minor);
+    else if (i == num-1)
+      sprintf(buf, "later than %s(%d#%d)", pv2ovTab[i].ozversion,
+              pv2ovTab[i].major, pv2ovTab[i].minor);
+    else
+      continue;
+    break;
+  }
+  return (buf);
+}
+
 OZ_Return
 ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
 {
@@ -568,19 +619,24 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
   bufferManager->dumpByteStream(stream);
   if (versiongot) {
     OZ_Term vergot = oz_atom(versiongot);
+    char *vs = pv2ov(versiongot);
+    OZ_Term ozvergot = oz_atom(vs);
+    char s1[80];
+    sprintf(s1, "Pickle version %s correspnds Oz version", versiongot);
     delete versiongot;
+    delete vs;
     return raiseGeneric("load:versionmismatch",
                         "Version mismatch during loading of pickle",
                         oz_mklist(OZ_pairA("File",oz_atom(compname)),
                                   OZ_pairA("Expected",oz_atom(PERDIOVERSION)),
-                                  OZ_pairA("Got",vergot)));
+                                  OZ_pairA("Got",vergot),
+                                  OZ_pairA(s1,ozvergot)));
   } else {
     return raiseGeneric("load:nonpickle",
-                        "Trying to load non-pickle",
+                        "Trying to load a non-pickle",
                         oz_cons(OZ_pairA("File",oz_atom(compname)),oz_nil()));
   }
 }
-
 
 OZ_Return
 ByteSource::makeByteStream(ByteStream*& stream, const char *filename)
