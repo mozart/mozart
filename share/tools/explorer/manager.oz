@@ -70,7 +70,6 @@ in
 	 {self.killer clear}
 	 <<MenuManager     clear>>
 	 <<StatusManager   clear>>
-	 <<DialogManager   clear>>
 	 <<ToplevelManager clear>>
 	 <<Manager         clearNumbers>>
 	 Classes    <- False
@@ -104,13 +103,17 @@ in
       end
 
       meth setOptions(O)
-	 case {HasSubtreeAt O search} then <<setSearchOptions(O.search)>>
+	 case {HasSubtreeAt O search} then
+	    <<setSearchOptions(O.search)>>
 	 else true end
-	 case {HasSubtreeAt O information} then <<setInfoOptions(O.information)>>
+	 case {HasSubtreeAt O information} then
+	    <<setInfoOptions(O.information)>>
 	 else true end
-	 case {HasSubtreeAt O drawing} then <<setLayoutOptions(O.drawing)>>
+	 case {HasSubtreeAt O drawing} then
+	    <<setLayoutOptions(O.drawing)>>
 	 else true end
-	 case {HasSubtreeAt O postscript} then <<setPostscriptOptions(O.postscript)>>
+	 case {HasSubtreeAt O postscript} then
+	    <<setPostscriptOptions(O.postscript)>>
 	 else true end
       end
       
@@ -292,11 +295,12 @@ in
       meth next
 	 <<MenuManager busy>>
 	 CurNode  = @curNode
-	 MaxDepth = {self.menu.search.depth getNumber($)}
+	 MaxDepth = <<DialogManager getSearchDepth($)>>
 	 <<ToplevelManager configurePointer(searching)>>
-	 <<StatusManager   allow({self.menu.search.nodes getNumber($)})>>
+	 <<StatusManager   allow(<<DialogManager getSearchNodes($)>>)>>
 	 <<MenuManager     normal(search(halt))>>
 	 <<StatusManager start>>
+
 	 Sol = case @IsBAB then
 		  {CurNode next(@PrevBABSol MaxDepth
 				<<getSearchDistance($)>> $)}
@@ -325,7 +329,7 @@ in
 	 case @curNode==False then true else
 	    <<Manager busy>>
 	    <<MenuManager  normal(search(halt))>>
-	    <<StatusManager allow({self.menu.search.nodes getNumber($)})>>
+	    <<StatusManager allow(<<DialogManager getSearchNodes($)>>)>>
 	    <<StatusManager start>>
 	    <<Manager DoAll(<<DialogManager getUpdateSol($)>>)>>
 	 end
@@ -333,7 +337,7 @@ in
 
       meth DoAll(NoSol)
 	 <<ToplevelManager configurePointer(searching)>>
-	 MaxDepth = {self.menu.search.depth getNumber($)}
+	 MaxDepth = <<DialogManager getSearchDepth($)>>
 	 Sol      = case @IsBAB then
 		       {@curNode next(@PrevBABSol
 				      MaxDepth

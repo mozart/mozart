@@ -374,7 +374,6 @@ local
 	 end
       end
    end
-
    
    class Cascade
       from StateMenuEntry
@@ -393,69 +392,6 @@ local
 				       menu:  Menu))}
       end
    end
-
-
-   class Number
-      from Cascade
-      attr Value:0 Label:nil
-      meth init(parent:  Parent
-		label:   L
-		normal:  InitState<=True
-		numbers: Numbers)
-	 Def = Numbers.def
-	 SM  = {New Menu init(parent:Parent)}
-	 Inf = Def==~1
-      in
-	 {ForAll Numbers.set
-	  proc {$ N}
-	     LN SN
-	  in
-	     case N==~1 then LN=inf SN=False else LN=N SN=N end
-	     {New Command init(parent: SM
-			       label:  '= '#LN
-			       action: self#Set(SN)) _}
-	  end}
-	 {New Separator init(parent:SM) _}
-	 {ForAll Numbers.inc
-	  proc {$ N}
-	     {New Command init(parent: SM
-			       label:  '+ '#N
-			       action: self#Inc(N)) _}
-	  end}
-	 {New Separator init(parent:SM) _}
-	 {ForAll Numbers.inc
-	  proc {$ N}
-	     {New Command init(parent: SM
-			       label:  '- '#N
-			       action: self#Inc(~N)) _}
-	  end}
-	 <<Cascade init(parent: Parent
-			label:  L#' ('#case Inf then inf else Def end#')'
-			normal: InitState
-			menu:   SM)>>
-	 Value <- case Inf then False else Def end
-	 Label <- L
-      end
-      
-      meth Set(N)
-	 Display = case N==False then inf else {Abs N} end
-      in
-	 Value <- N
-	 <<Cascade label(@Label#' ('#Display#')')>>
-      end
-
-      meth Inc(I)
-	 case @Value of !False then true elseof N then
-	    <<Number Set({Max N+I 1})>>
-	 end
-      end
-
-      meth getNumber(?N)
-	 N = case @Value of !False then ~1 elseof N then N end
-      end
-
-   end
-   
 
    local
       fun {MakeEntries Es KeyBinder Parent Group}
@@ -547,7 +483,6 @@ in
 		   radiobutton: Radiobutton
 		   separator:   Separator
 		   cascade:     Cascade
-		   number:      Number
 		   make:        MakeMenu)
 		   
 end
