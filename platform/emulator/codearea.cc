@@ -189,12 +189,6 @@ void AbstractionEntry::setPred(Abstraction *ab)
 #define DISPATCH() PC += sizeOf(op); break
 
 
-#ifdef FASTREGACCESS
-inline Reg regToInt(Reg N) { return (N / sizeof(TaggedRef)); }
-#else
-inline Reg regToInt(Reg N) { return N; }
-#endif
-
 
 char *getBIName(ProgramCounter PC)
 {

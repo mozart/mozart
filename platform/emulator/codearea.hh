@@ -362,4 +362,11 @@ public:
   }
 };
 
+#ifdef FASTREGACCESS
+inline Reg regToInt(Reg N) { return (N / sizeof(TaggedRef)); }
+#else
+inline Reg regToInt(Reg N) { return N; }
+#endif
+
+
 #endif

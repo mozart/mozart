@@ -126,13 +126,12 @@ public:
   // is used by consistency checking of a copy of a search tree; 
 #endif
 
-  TaggedRef suspCallHandler;
   TaggedRef suspendVarList;
   void emptySuspendVarList(void) { suspendVarList = makeTaggedNULL(); }
   void addSuspendVarList(TaggedRef * t);
   void suspendOnVarList(Suspension *susp);
 
-  void suspendInline(OZ_CFun fun,int n,
+  void suspendInline(int n,
 		     OZ_Term A,OZ_Term B=makeTaggedNULL(),
 		     OZ_Term C=makeTaggedNULL(),OZ_Term D=makeTaggedNULL());
 
