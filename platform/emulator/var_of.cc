@@ -50,8 +50,8 @@ DynamicTable* DynamicTable::doubleDynamicTable() {
 
 // Return a copy of the current table that has size newSize and all contents
 // of the current table.  The current table's contents MUST fit in the copy!
-DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize=(-1)) {
-    if (newSize==(-1)) newSize=size;
+DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize=(dt_index)(-1L)) {
+    if (newSize==(dt_index)(-1L)) newSize=size;
     Assert(isPwrTwo(size));
     Assert(numelem<size);
     Assert(numelem<newSize);
@@ -222,7 +222,7 @@ Bool DynamicTable::srecordcheck(SRecord &sr, PairList* &pairs) {
     return TRUE;
 }
 
-// Return a difference list of all the features currently in the dynamic table.
+// Return a sorted difference list of all the features currently in the dynamic table.
 // The head is the return value and the tail is returned through an argument.
 TaggedRef DynamicTable::getOpenArityList(TaggedRef* ftail)
 {
@@ -233,13 +233,7 @@ TaggedRef DynamicTable::getOpenArityList(TaggedRef* ftail, Board* home)
 {
     TaggedRef thehead=makeTaggedRef(newTaggedUVar(home));
     TaggedRef thetail=thehead;
-
-    for (dt_index i=0; i<size; i++) {
-        if (table[i].value!=makeTaggedNULL()) {
-    	    Assert(isLiteral(table[i].ident));
-            thehead=makeTaggedLTuple(new LTuple(table[i].ident,thehead));
-        }
-    }
+    thehead=getArityList(thetail);
     *ftail = thetail;
     return thehead;
 }
@@ -272,8 +266,9 @@ TaggedRef DynamicTable::extraSRecFeatures(SRecord &sr) {
 }
 
 // Allocate & return sorted list containing all features:
-TaggedRef DynamicTable::getArity() {
-    TaggedRef arity=AtomNil;
+// Takes optional tail as input argument.
+TaggedRef DynamicTable::getArityList(TaggedRef tail=AtomNil) {
+    TaggedRef arity=tail;
     if (numelem>0) {
         STuple *stuple=STuple::newSTuple(AtomNil,numelem);
         TaggedRef *arr=stuple->getRef();
@@ -639,6 +634,11 @@ TaggedRef GenOFSVariable::getOpenArityList(TaggedRef* ftail)
 TaggedRef GenOFSVariable::getOpenArityList(TaggedRef* ftail, Board* hoome)
 {
     return dynamictable->getOpenArityList(ftail,hoome);
+}
+
+TaggedRef GenOFSVariable::getArityList()
+{
+    return dynamictable->getArityList();
 }
 
 
