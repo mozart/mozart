@@ -29,8 +29,9 @@ int percent(int i, int sum)
   return sum>0 ? i*100/sum : 0;
 }
 
-
+#ifndef OSF1_ALPHA
 extern "C" void *sbrk(int incr);
+#endif
 
 static
 void printTime(FILE *fd,char *s,unsigned int t) {
