@@ -15,6 +15,7 @@ import
    Package('class')
    Except('raise':Raise)
    Pickler(toFile fromFile) at 'Pickler.ozf'
+   URL(toAtom:URLToAtom)
 export
    'class' : Database
 prepare
@@ -114,7 +115,7 @@ define
 	       try
 		  {Manager trace('Fetching info from '#Url)}
 		  Msg   = try {Parse {Slurp Url}}
-			  catch _ then {Raise mogul(notFound(Url))} unit end
+			  catch _ then {Raise mogul(notFound({URLToAtom Url}))} unit end
 		  {Msg check_id_expected(Id Pid)}
 		  {Msg check_keys(['type'])}
 		  Type  = {VirtualString.toAtom {ToLower {Msg get1('type' $)}}}
