@@ -29,12 +29,13 @@ import
    OS(getEnv putEnv)
    URL
 define
-   Syslet.spec = single('in'(type: string)
-                        'type'(type: string)
-                        'out'(type: string)
+   Syslet.spec = single('in'(         type:string optional:false default:unit)
+                        'type'(       type:string optional:false default:unit)
+                        'out'(        type:string optional:false default:unit)
                         % HTML options
-                        'stylesheet'(type: string)
-                        %% -- parametrize
+                        'stylesheet'( type:string optional:false default:unit)
+                        'latexmath'(  type:bool                  default:true)
+                        % Path names
                         'ozdoc-home'( type:string optional:false default:unit)
                         'author-path'(type:string optional:false default:unit)
                         'bib-path'(   type:string optional:false default:unit)
@@ -42,13 +43,11 @@ define
                         'elisp-path'( type:string optional:false default:unit)
                         'sbin-path'(  type:string optional:false default:unit)
                        )
-   %% -- process parametrization
-   %% -- store results in ozdoc.* properties
+   % Process path name options and store results in ozdoc.* properties
    local
-      %% -- determine the directory in which document source
-      %% -- files are located
+      % Determine the directory in which document source files are located:
       SRC_DIR =
-      case Syslet.args.'in' of "" then '.'
+      case Syslet.args.'in' of unit then '.'
       elseof X then
          Url  = {URL.make X}
          Path = {CondSelect Url path unit}
@@ -112,21 +111,22 @@ define
          elseof X then X end
       elseof X then X end
       {Property.put 'ozdoc.sbin.path' SBIN_PATH}
-      CSS = case Syslet.args.'stylesheet' of "" then
-               case {OS.getEnv 'OZDOC_STYLESHEET'} of false then
-                  'http://www.ps.uni-sb.de/css/ozdoc.css'
-               elseof X then X end
-            elseof X then X end
+      CSS =
+      case Syslet.args.'stylesheet' of unit then
+         case {OS.getEnv 'OZDOC_STYLESHEET'} of false then
+            'http://www.ps.uni-sb.de/css/ozdoc.css'
+         elseof X then X end
+      elseof X then X end
       {Property.put 'ozdoc.stylesheet' CSS}
    in
       {OS.putEnv 'PATH' SBIN_PATH#':'#{OS.getEnv 'PATH'}}
       {OS.putEnv 'OZDOC_ELISP_PATH' ELISP_PATH}
    end
-   %% -- actual application code
+   % The actual translation
    try
-      case Syslet.args.'in' of "" then
+      case Syslet.args.'in' of unit then
          {Raise usage('no input file name specified')}
-      elsecase Syslet.args.'out' of "" then
+      elsecase Syslet.args.'out' of unit then
          {Raise usage('no output directory name specified')}
       elsecase Syslet.args.2 of _|_ then
          {Raise usage('unrecognized command line arguments')}
@@ -153,15 +153,16 @@ define
           '\n'#
           'HTML options\n'#
           '--stylesheet=<URL>  What style sheet to use for generated pages.\n'#
+          '--(no)latexmath     Whether to generate GIFs from LaTeX math.\n'#
+          '\n'#
           'Parametrization\n'#
-          '--ozdoc-home=<DIR>  ozdoc installation directory\n'
+          '--ozdoc-home=<DIR>  ozdoc installation directory.\n'#
           '--author-path=<Search Path>\n'#
           '--bib-path=<Search Path>\n'#
           '--bst-path=<Search Path>\n'#
           '--sbin-path=<Search Path>\n'#
           '                    Where to look for author databases,\n'#
-          '                    bib files, bst files, ozdoc scripts\n'
-         }
+          '                    bib files, bst files, and ozdoc scripts.\n'}
          {Syslet.exit 2}
       else
          {Error.printExc E}

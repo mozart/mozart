@@ -51,17 +51,11 @@ define
    end
 
    local
-      fun {MakeTokensSub S}
+      fun {MakeTokens S}
          case S of & |Cr then Token Rest in
             {List.takeDropWhile Cr IsNoSpace ?Token ?Rest}
-            {MakeName Token}|{MakeTokensSub Rest}
+            {MakeName Token}|{MakeTokens Rest}
          [] nil then nil
-         end
-      end
-
-      fun {MakeTokens S}
-         case {MakeTokensSub S} of [X] then X
-         elseof Xs then Xs
          end
       end
    in
@@ -73,7 +67,9 @@ define
             %--** use s or p identifier
             {MakeName Name}#{String.toAtom Value}
          [] 'TOKEN' then
-            {MakeName Name}#{MakeTokens Rest}
+            case {MakeName Name} of 'class' then 'class'#{MakeTokens Rest}
+            elseof T then T#{MakeTokens Rest}.1
+            end
          elsecase Rest of & |Value then
             {Exception.raiseError sgml(unsupportedAttributeType Type Value)}
             unit
@@ -234,10 +230,7 @@ define
    end
 
    fun {IsOfClass M C}
-      case {CondSelect M 'class' nil} of nil then false
-      [] Xs=_|_ then {Member C Xs}
-      elseof X then C == X
-      end
+      {Member C {CondSelect M 'class' nil}}
    end
 
    MAXERRORS = 17

@@ -1,39 +1,32 @@
-BODY, TH, TD, TR, P, CAPTION, H1, H2, H3, H4, IMG, TABLE {
+BODY, P, H1, H2, H3, H4, TABLE, TR, TH, TD, IMG {
   font-family: sans-serif;
 }
 
-PRE, CODE {
-  font-family: courier;
-}
-
-CODE.DISPLAY {
-  text-align: left;
+PRE, CODE, KBD {
+  font-family: courier, monospace;
 }
 
 BODY {
   background-color: white;
   margin-left: 160px;
   background: url(http://www.ps.uni-sb.de/www/img/page.gif) white;
+  background-repeat: repeat-y;
 }
 
 P {
   text-align: justify;
 }
 
-P.margin {
+CODE.display, .synopsis P, P.margin, TH {
   text-align: left;
 }
 
-H1.title {
+H1.title, H2.authors {
   text-align: center;
 }
 
 H1 {
   color: #9B0000;
-}
-
-H2.authors {
-  text-align: center;
 }
 
 H2 {
@@ -52,8 +45,16 @@ H4 {
 }
 
 CODE {
+  color: #663366;
+}
+
+PRE CODE {
   color: #000000;
   font-size: 12pt;
+}
+
+UL.toc {
+  list-style: none;
 }
 
 SPAN.comment      { color: #B22222; }
@@ -63,10 +64,6 @@ SPAN.functionname { color: #0000FF; }
 SPAN.type         { color: #228B22; }
 SPAN.variablename { color: #B8860B; }
 SPAN.reference    { color: #5F9EA0; }
-
-TH {
-  text-align: left;
-}
 
 .margin {
   position: absolute;

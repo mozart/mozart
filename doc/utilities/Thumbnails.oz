@@ -25,7 +25,6 @@ import
 export
    'class': ThumbnailsClass
 define
-   %% -- PATH has already been augmented
    GIF2THUMBNAIL = 'gif2thumbnail'
 
    class ThumbnailsClass
