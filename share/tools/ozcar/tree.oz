@@ -245,7 +245,7 @@ in
       end
 
       meth SwitchToThread(I)
-	 {ForAll [rawStatus('You have selected thread #' # I)
+	 {ForAll [status(SwitchMessage # I)
 		  switch(I)] Ozcar}
       end
    end

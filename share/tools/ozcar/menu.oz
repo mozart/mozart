@@ -36,9 +36,13 @@ in
 		    action:  self # about
 		    key:     ctrl(i))
 		  separator
+		  C(label:   'Status'
+		    action:  self # checkMe
+		    key:     ctrl(s))
 		  C(label:   'Reset'
 		    action:  self # action(' reset')
 		    key:     ctrl(r))
+		  separator
 		  C(label:   'Close'
 		    action:  self # off
 		    key:     ctrl(x))]
