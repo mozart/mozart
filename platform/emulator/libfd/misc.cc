@@ -270,7 +270,7 @@ OZ_C_proc_begin(fdtest_sumac, 3)
  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_INT","OZ_EM_VECT OZ_EM_FD","OZ_EM_FD);
 
  #ifndef NDEBUG
-  printf("fdtest_sumac=0x%x\n",fdtest_sumac);
+  printf("fdtest_sumac=0x%x\n",(unsigned int)fdtest_sumac);
  #endif
 
  ExtendedExpect pe;
@@ -374,7 +374,7 @@ OZ_Return Counter::propagate(void)
   while (!stream.isEostr()) {
     OZ_Term e = stream.get();
     if (OZ_isAtom(e)) {
-      char * a = OZ_atomToC(e);
+      const char * a = OZ_atomToC(e);
       
       if (! strcmp("inc", a)) {
 	c += 1;
@@ -384,7 +384,7 @@ OZ_Return Counter::propagate(void)
 	goto failure;
       }
     } else if (OZ_isTuple(e) && ! OZ_isLiteral(e)) {
-      char * l = OZ_atomToC(OZ_label(e));
+      const char * l = OZ_atomToC(OZ_label(e));
       
       if (! strcmp("get", l)) {
 	if (OZ_unify(OZ_int(c), OZ_getArg(e, 0)) == FAILED) 
@@ -466,7 +466,7 @@ OZ_Return FirstFail::propagate(void)
   while (!st.isEostr()) {
     OZ_Term e = st.get();
     if (OZ_isTuple(e) && ! OZ_isLiteral(e)) {
-      char * l = OZ_atomToC(OZ_label(e));
+      const char * l = OZ_atomToC(OZ_label(e));
       if (! strcmp("dist", l)) {
 	int last = 0;
 	int current = 0;

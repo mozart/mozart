@@ -26,7 +26,7 @@ OZ_C_proc_begin(fdp_sumCD, 4)
   OZ_EXPECT(pe, 2, expectIntVarMinMax);
   OZ_EXPECT(pe, 3, expectIntVarMinMax);
 
-  char * op = OZ_atomToC(OZ_args[1]);
+  const char * op = OZ_atomToC(OZ_args[1]);
   if (!strcmp(SUM_OP_EQ, op)) {
     return pe.impose(new CDSuppl(new SumEqPropagator(OZ_args[0], OZ_args[2]), OZ_args[3]), OZ_getHighPrio());
   } else if (!strcmp(SUM_OP_NEQ, op)) {
@@ -59,7 +59,7 @@ OZ_C_proc_begin(fdp_sumCCD, 5)
   OZ_EXPECT(pe, 3, expectIntVarMinMax);
   OZ_EXPECT(pe, 4, expectIntVarMinMax);
 
-  char * op = OZ_atomToC(OZ_args[2]);
+  const char * op = OZ_atomToC(OZ_args[2]);
   if (!strcmp(SUM_OP_EQ, op)) {
     return pe.impose(new CDSuppl(new SumCEqPropagator(OZ_args[0], OZ_args[1], OZ_args[3]), OZ_args[4]), OZ_getHighPrio());
   } else if (!strcmp(SUM_OP_NEQ, op)) {
@@ -92,7 +92,7 @@ OZ_C_proc_begin(fdp_sumCNCD, 5)
   OZ_EXPECT(pe, 3, expectIntVarMinMax);
   OZ_EXPECT(pe, 4, expectIntVarMinMax);
 
-  char * op = OZ_atomToC(OZ_args[2]);
+  const char * op = OZ_atomToC(OZ_args[2]);
   if (!strcmp(SUM_OP_EQ, op)) {
     return pe.impose(new CDSuppl(new SumCN_EqPropagator(OZ_args[0], OZ_args[1], OZ_args[3]), OZ_args[4]), OZ_getHighPrio());
   } else if (!strcmp(SUM_OP_NEQ, op)) {
