@@ -357,6 +357,17 @@ Board *tagged2VarHome(TaggedRef ref)
   return (Board *) tagValueOf2(UVAR,ref);
 }
 
+inline
+OzVariable *oz_getVar(TaggedRef *v) {
+  if (isUVar(*v)) {
+    OzVariable *sv = oz_newSimpleVar(tagged2VarHome(*v));
+    *v = makeTaggedCVar(sv);
+    return sv;
+  } else {
+    return tagged2CVar(*v);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // --- TaggedRef: BASIC TYPE TESTS
 

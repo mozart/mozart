@@ -160,6 +160,8 @@ public:
 //-----------------------------------------------------------------------------
 };
 
+void oz_solve_scheduleNonMonoSuspList(SolveActor *sa);
+
 #ifndef OUTLINE
 #include "solve.icc"
 #endif
