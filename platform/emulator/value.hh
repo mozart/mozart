@@ -88,8 +88,11 @@ RecordFailure,
   BI_portWait,BI_Unify,BI_Show,BI_send,BI_probe,BI_Delay,BI_startTmp,
   BI_load,BI_fail,BI_url_load,
   BI_exchangeCell,BI_assign,BI_atRedo,BI_lockLock,
-BI_controlVarHandler;
+  BI_controlVarHandler,
 
+  __UNUSED_DUMMY_END_MARKER;
+
+extern Builtin *bi_raise, *bi_raiseError, *bi_raiseDebug;
 
 // hack to avoid including am.hh
 extern Board *oz_rootBoardOutline();

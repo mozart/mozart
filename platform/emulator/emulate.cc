@@ -115,6 +115,8 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
 static
 void set_exception_info_call(Builtin *bi,OZ_Term *X, int *map=OZ_ID_MAP)
 {
+  if (bi==bi_raise||bi==bi_raiseError||bi==bi_raiseDebug) return;
+
   int iarity = bi->getInArity();
   int oarity = bi->getOutArity();
 

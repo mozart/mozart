@@ -7102,6 +7102,10 @@ Builtin *BIinit()
   BI_fail=makeTaggedConst(builtinTab.find("fail"));
   BI_url_load=makeTaggedConst(builtinTab.find("URL.load"));
 
+  bi_raise = builtinTab.find("raise");
+  bi_raiseError = builtinTab.find("raiseError");
+  bi_raiseDebug = builtinTab.find("raiseDebug");
+
   dummyRecord = makeTaggedNULL();
   OZ_protect(&dummyRecord);
 
