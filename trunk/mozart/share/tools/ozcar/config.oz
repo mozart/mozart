@@ -183,7 +183,7 @@ MaxStackBrowseSize     = 15
 TimeoutToCalc          =  90 % ms
 TimeoutToRedraw        = 180
 TimeoutToBlock         = 470
-TimeoutToUpdateEnv     = 230
+TimeoutToUpdateEnv     = 430
 TimeoutToUpdateScroll  = TimeoutToUpdateEnv
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
