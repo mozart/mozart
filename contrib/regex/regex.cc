@@ -16,7 +16,9 @@
 #include "mozart.h"
 #include <sys/types.h>
 
-#ifndef HAVE_STRDUP
+#ifdef HAVE_STRDUP
+#include <string.h>
+#else
 inline char * strdup(const char *s) {
   char *ret = new char[strlen(s)+1];
   strcpy(ret,s);
