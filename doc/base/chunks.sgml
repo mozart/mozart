@@ -509,11 +509,11 @@ end>>>
           <Grammar.Rule>?={module name}
             <Grammar.Alt/?={atom}/
         <P>
-          The optional <<from>> field gives the value of this import's
+          The optional <<'from'>> field gives the value of this import's
           <<at>> clause, if given:
           <Grammar.Rule>?={import info}
             <Grammar.Alt
-              /<<info(type: ?={type} >>[<<from: ?={atom}>>]<<)>>/
+              /<<info(type: ?={type} >>[<<'from': ?={atom}>>]<<)>>/
         <P>
           The <<type>> field is the expected type of the module.
           This can be any of the atoms returned by <<Value.type>>,
