@@ -764,7 +764,8 @@ Bool checkAtom(const char *s)
     return strcmp(t, "if") && strcmp(t, "import")
 	&& strcmp(t, "in")? OK: NO;
   case 'l':
-    return strcmp(t, "local") && strcmp(t, "lock")? OK: NO;
+    return strcmp(t, "local") && strcmp(t, "lock")
+      && strcmp(t, "loop")? OK: NO;
   case 'm':
     return strcmp(t, "meth") && strcmp(t, "mod")? OK: NO;
   case 'n':
