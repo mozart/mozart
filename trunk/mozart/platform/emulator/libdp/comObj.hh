@@ -124,8 +124,9 @@ public:
   DSite *getSite() {return site;}
 
   // For Site:
+  // Specifying priority -1 means accepting the default as in msgFormat.m4 and
+  // should allways be used.
   void send(MsgContainer *,int priority);
-//    void siteIsPerm(); // Information from site. Should we seize to exist?
   void installProbe(int lowerBound, int higherBound, int interval);  
            // Should this be moved to the comController?
   Bool canBeFreed(); // A question that implicitly tells the comObj
