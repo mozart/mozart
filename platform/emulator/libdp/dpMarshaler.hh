@@ -389,6 +389,7 @@ public:
   //
   OZ_Term &getLocRef() { return (loc); }
   OZ_Term &getVarRef() { return (var); }
+  void gcSetLoc(OZ_Term locIn) { loc = locIn; }
   //
   void saveValue(OZ_Term value) { aVal = value; }
   OZ_Term getSavedValue() { return (aVal); }
