@@ -40,6 +40,7 @@
 #endif
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <sys/utsname.h>
 #include <fcntl.h>
 #include <time.h>
 #include <unistd.h>
@@ -815,6 +816,8 @@ OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
   return loadDatum(d,t);
 }
 
+#define OZ_GATE
+#ifdef OZ_GATE
 OZ_Term gatePort=0;
 
 OZ_BI_define(BIGateId,0,1)
@@ -861,14 +864,6 @@ OZ_BI_define(BICloseGate,0,0)
     gatePort = 0;
   }
   return PROCEED;
-}
-
-extern int sendPort(OZ_Term port, OZ_Term val);
-
-void sendGate(OZ_Term t) {
-  if (gatePort) {
-    sendPort(gatePort,t);
-  }
 }
 
 OZ_BI_define(BISendGate,2,0)
@@ -924,8 +919,119 @@ OZ_BI_define(BISendGate,2,0)
 bomb:
   return oz_raise(E_ERROR,E_SYSTEM,"sendGate",2,OZ_in(0),val);
 }
+#endif
 
+#define OZ_PID
+#ifdef OZ_PID
+static
+OZ_Term pidPort=0;
 
+OZ_BI_define(BIGetPID,0,1)
+{
+  // pid = pid(host:String port:Int time:Int)
+
+  struct utsname auname;
+  if(uname(&auname)<0) { return oz_raise(E_ERROR,E_SYSTEM,"getPidUname",0); }
+  struct hostent *hostaddr;
+  hostaddr=gethostbyname(auname.nodename);
+  struct in_addr tmp;
+  memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
+
+  OZ_Term host = oz_pairA("host",oz_string(inet_ntoa(tmp)));
+  OZ_Term port = oz_pairA("port",oz_int(mySite->getPort()));
+  OZ_Term time = 
+    oz_pairA("time",oz_unsignedLong((unsigned long) mySite->getTimeStamp()));
+  // NOTE: converting time_t to an unsigned long, maybe a [long] double!
+
+  OZ_Term l = cons(host,cons(port,cons(time,nil())));
+  OZ_RETURN(OZ_recordInit(OZ_atom("PID"),l));
+}
+
+OZ_BI_define(BIReceivedPID,1,0)
+{
+  oz_declareIN(0,stream);
+
+  if (pidPort) return oz_raise(E_ERROR,E_SYSTEM,"pidAlreadyInUse",0);
+
+  pidPort = oz_newPort(stream);
+  OZ_protect(&pidPort);
+
+  return PROCEED;
+}
+
+OZ_BI_define(BIClosePID,0,0)
+{
+  if (pidPort) {
+    OZ_unprotect(&pidPort);
+    pidPort = 0;
+  }
+  return PROCEED;
+}
+
+OZ_BI_define(BISendPID,4,0)
+{
+  oz_declareVirtualStringIN(0,host);
+  oz_declareIntIN(1,port);
+  oz_declareNonvarIN(2,timeV);
+  oz_declareIN(3,val);
+
+  time_t time;
+  if (isSmallInt(timeV)) {
+    int i = oz_IntToC(timeV);
+    if (i <= 0) goto bomb;
+    time = (time_t) i;
+  } else if (isBigInt(timeV)) {
+    unsigned long i = tagged2BigInt(timeV)->getUnsignedLong();
+    if (i==0 && i == OzMaxUnsignedLong) goto bomb;
+    time = (time_t) i;
+  } else {
+  bomb:
+    return oz_raise(E_ERROR,E_SYSTEM,"PID.send",2,
+		    OZ_atom("badTime"),OZ_in(2));
+  }
+    
+  struct hostent *hostaddr;
+  hostaddr = gethostbyname(host);
+  if (!hostaddr) {
+    return oz_raise(E_ERROR,E_SYSTEM,"PID.send",2,
+		    OZ_atom("gethostbyname"),OZ_in(0));
+  }
+  struct in_addr tmp;
+  memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
+  ip_address addr;
+  addr = ntohl(tmp.s_addr);
+
+  Site *site;
+  site = findSite(addr,port,time);
+
+  if (!site) {
+    return oz_raise(E_ERROR,E_SYSTEM,"PID.send",5,
+		    OZ_atom("findSite"),OZ_in(0),OZ_in(1),
+		    OZ_in(2),val);
+  }
+
+  MsgBuffer *bs;
+  bs = msgBufferManager->getMsgBuffer(site);
+  marshal_M_SEND_GATE(bs,val);
+  (void) site->sendTo(bs,M_SEND_GATE,0,0);
+  return PROCEED;
+}
+#endif
+
+extern int sendPort(OZ_Term port, OZ_Term val);
+
+void sendGate(OZ_Term t) {
+#ifdef OZ_GATE
+  if (gatePort) {
+    sendPort(gatePort,t);
+  }
+#endif
+#ifdef OZ_PID
+  if (pidPort) {
+    sendPort(pidPort,t);
+  }
+#endif
+}
 
 BIspec componentsSpec[] = {
   {"smartSave",    3, BIsmartSave, 0},
@@ -933,6 +1039,7 @@ BIspec componentsSpec[] = {
 
   {"Wget",         2, BIWget, 0},    
 
+#ifdef OZ_GATE
   {"GateId",       1, BIGateId},
   {"OpenGate",     1, BIOpenGate},
   {"CloseGate",    0, BICloseGate},
@@ -942,7 +1049,14 @@ BIspec componentsSpec[] = {
   {"Gate.open",     1, BIOpenGate},
   {"Gate.close",    0, BICloseGate},
   {"Gate.send",     2, BISendGate},
+#endif
 
+#ifdef OZ_PID
+  {"PID.get",       1, BIGetPID},
+  {"PID.received",  1, BIReceivedPID},
+  {"PID.close",     0, BIClosePID},
+  {"PID.send",      4, BISendPID},
+#endif
   {"URL.localize", 2, BIurl_localize},
   {"URL.open",     2, BIurl_open},
   {"URL.load",     2, BIurl_load},
