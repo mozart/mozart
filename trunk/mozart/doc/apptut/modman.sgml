@@ -188,7 +188,7 @@ import
           <td/<ptr.extern to="ozdoc:system" key="chapter.remote">//
       <tr/<td/<<URL>>/
           <td/URL parsing and resolution routines/
-          <td/<ptr.extern to="ozdoc:system" key="chapter.url">//
+          <td/<ptr.extern to="ozdoc:system" key="chapter.urlurl">//
       <tr/<td/<<Resolve>>/
           <td/URL resolving/
           <td/<ptr.extern to="ozdoc:system" key="chapter.resolve">//
