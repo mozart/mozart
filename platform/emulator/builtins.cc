@@ -2449,68 +2449,89 @@ OZ_C_proc_begin(BIcharIs,2) {
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharIsAlNum,2) {
-  FirstCharArg("charIsAlNum");
+  FirstCharArg("Char.isAlNum");
   return OZ_unify(OZ_getCArg(1), isalnum(i) ? NameTrue : NameFalse);
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharIsAlpha,2) {
-  FirstCharArg("charIsAlpha");
+  FirstCharArg("Char.isAlpha");
   return OZ_unify(OZ_getCArg(1), isalpha(i) ? NameTrue : NameFalse);
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharIsCntrl,2) {
-  FirstCharArg("charIsCntrl");
+  FirstCharArg("Char.isCntrl");
   return OZ_unify(OZ_getCArg(1), iscntrl(i) ? NameTrue : NameFalse);
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharIsDigit,2) {
-  FirstCharArg("charIsDigit");
+  FirstCharArg("Char.isDigit");
   return OZ_unify(OZ_getCArg(1), isdigit(i) ? NameTrue : NameFalse);
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharIsGraph,2) {
-  FirstCharArg("charIsGraph");
+  FirstCharArg("Char.isGraph");
   return OZ_unify(OZ_getCArg(1), isgraph(i) ? NameTrue : NameFalse);
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharIsLower,2) {
-  FirstCharArg("charIsLower");
+  FirstCharArg("Char.isLower");
   return OZ_unify(OZ_getCArg(1), islower(i) ? NameTrue : NameFalse);
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharIsPrint,2) {
-  FirstCharArg("charIsPrint");
+  FirstCharArg("Char.isPrint");
   return OZ_unify(OZ_getCArg(1), isprint(i) ? NameTrue : NameFalse);
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharIsPunct,2) {
-  FirstCharArg("charIsPunct");
+  FirstCharArg("Char.isPunct");
   return OZ_unify(OZ_getCArg(1), ispunct(i) ? NameTrue : NameFalse);
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharIsSpace,2) {
-  FirstCharArg("charIsSpace");
+  FirstCharArg("Char.isSpace");
   return OZ_unify(OZ_getCArg(1), isspace(i) ? NameTrue : NameFalse);
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharIsUpper,2) {
-  FirstCharArg("charIsUpper");
+  FirstCharArg("Char.isUpper");
   return OZ_unify(OZ_getCArg(1), isupper(i) ? NameTrue : NameFalse);
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharIsXDigit,2) {
-  FirstCharArg("charIsXDigit");
+  FirstCharArg("Char.isXDigit");
   return OZ_unify(OZ_getCArg(1), isxdigit(i) ? NameTrue : NameFalse);
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharToLower,2) {
-  FirstCharArg("charToLower");
+  FirstCharArg("Char.toLower");
   return OZ_unifyInt(OZ_getCArg(1), tolower(i));
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharToUpper,2) {
-  FirstCharArg("charToUpper");
+  FirstCharArg("Char.toUpper");
   return OZ_unifyInt(OZ_getCArg(1), toupper(i));
+} OZ_C_proc_end
+
+OZ_C_proc_begin(BIcharToAtom,2) {
+  FirstCharArg("Char.toAtom");
+  if (i) {
+     char s[2]; s[0]= (char) i; s[1]='\0';
+     return OZ_unify(OZ_getCArg(1), makeTaggedAtom(s));
+  }
+  return OZ_unify(OZ_getCArg(1), AtomEmpty);
+} OZ_C_proc_end
+
+OZ_C_proc_begin(BIcharType,2) {
+  FirstCharArg("Char.type");
+  TaggedRef type;
+  if (isupper(i))      type = AtomUpper; 
+  else if (islower(i)) type = AtomLower;
+  else if (isdigit(i)) type = AtomDigit;
+  else if (isspace(i)) type = AtomCharSpace;
+  else if (ispunct(i)) type = AtomPunct;
+  else                 type = AtomOther;
+  return OZ_unify(OZ_getCArg(1), type);
 } OZ_C_proc_end
 
 
@@ -6055,20 +6076,23 @@ BIspec allSpec[] = {
   {"==",   2,BIeq,     0},
   {"\\=",  2,BIneq,    0},
 
-  {"charIs",      2, BIcharIs,		0},
-  {"charIsAlNum", 2, BIcharIsAlNum,	0},
-  {"charIsAlpha", 2, BIcharIsAlpha,	0},
-  {"charIsCntrl", 2, BIcharIsCntrl,	0},
-  {"charIsDigit", 2, BIcharIsDigit,	0},
-  {"charIsGraph", 2, BIcharIsGraph,	0},
-  {"charIsLower", 2, BIcharIsLower,	0},
-  {"charIsPrint", 2, BIcharIsPrint,	0},
-  {"charIsPunct", 2, BIcharIsPunct,	0},
-  {"charIsSpace", 2, BIcharIsSpace,	0},
-  {"charIsUpper", 2, BIcharIsUpper,	0},
-  {"charIsXDigit", 2, BIcharIsXDigit,	0},
-  {"charToLower", 2, BIcharToLower,	0},
-  {"charToUpper", 2, BIcharToUpper,	0},
+  {"IsChar",        2, BIcharIs,	0},
+  {"Char.isAlNum",  2, BIcharIsAlNum,	0},
+  {"Char.isAlpha",  2, BIcharIsAlpha,	0},
+  {"Char.isCntrl",  2, BIcharIsCntrl,	0},
+  {"Char.isDigit",  2, BIcharIsDigit,	0},
+  {"Char.isGraph",  2, BIcharIsGraph,	0},
+  {"Char.isLower",  2, BIcharIsLower,	0},
+  {"Char.isPrint",  2, BIcharIsPrint,	0},
+  {"Char.isPunct",  2, BIcharIsPunct,	0},
+  {"Char.isSpace",  2, BIcharIsSpace,	0},
+  {"Char.isUpper",  2, BIcharIsUpper,	0},
+  {"Char.isXDigit", 2, BIcharIsXDigit,	0},
+  {"Char.toLower",  2, BIcharToLower,	0},
+  {"Char.toUpper",  2, BIcharToUpper,	0},
+  {"Char.toAtom",   2, BIcharToAtom,	0},
+  {"Char.type",     2, BIcharType,	0},
+
   {"adjoin",          3,BIadjoin,           (IFOR) BIadjoinInline},
   {"adjoinList",      3,BIadjoinList,       0},
   {"record",          3,BImakeRecord,       0},
