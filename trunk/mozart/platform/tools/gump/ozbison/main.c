@@ -98,7 +98,7 @@ OZ_BI_define(bison_generate, 2, 1)
 }
 OZ_BI_end
 
-struct OZ_C_proc_interface oz_interface[] = {
+OZ_C_proc_interface oz_interface[] = {
   {"generate",2,1,bison_generate},
   {0,0,0,0}
 };
