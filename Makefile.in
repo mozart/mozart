@@ -135,7 +135,7 @@ NOTDIRSRCTOP	= $(notdir $(SRCTOP))
 
 src: $(PACKDIR)
 	echo "[" $(NOTDIRSRCTOP) "]"
-	test -n $(NOTDIRSRCTOP) || { echo "bad"; exit 1; }
+	test -n "$(NOTDIRSRCTOP)" || { echo "bad"; exit 1; }
 	(cd $(PACKDIR); \
 	 (cd $(SRCTOP)/..; \
 	  $(TAR) -cf - $(NOTDIRSRCTOP)) | $(TAR) -xf - ; \
@@ -193,7 +193,7 @@ $(PLATFORMS): $(PACKDIR) $(PACKDIR)/mozart
 	ldd $(PREFIX)/platform/$(PLATFORM)/emulator.exe \
 	    $(PREFIX)/platform/$(PLATFORM)/tk.exe | \
 	sed 's/^.*emulator.exe:/emulator.exe dynamically linked against:/' | \
-	sed 's/^.*tk.exe:/tk.exe dynamically linked against:/' > README.`$(OZVERSION)`.$(OZBUILD)-$@
+	sed 's/^.*tk.exe:/tk.exe dynamically linked against:/' > README-`$(OZVERSION)`.$(OZBUILD)-$@
 	rm -rf $(PACKDIR)/mozart
 	rm -f files.base files.base-$@ files.contrib files.contrib-$@
 	rm -f files.base-all files.contrib-all files.all
@@ -317,5 +317,29 @@ files.doc:
 		-path './examples/*' \
 	\) -and \! \( -path './doc/Mozart.hh?' \) ) > $@
 
+######################################################################
+# standard library support
+######################################################################
 
+STDLIB=@OZSTDLIB@
+std: $(PACKDIR)
+	test -n "$(STDLIB)" || { echo "set STDLIB to source dir for mozart standard library"; exit 1; }
+	-rm -rf $(PACKDIR)/mozart-stdlib
+	mkdir $(PACKDIR)/mozart-stdlib
+	cd $(PACKDIR)/mozart-stdlib && ((cd $(STDLIB) && tar -cf - .) | tar -xf -)
+	-rm -rf $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std
+	mkdir $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std
+	cd $(PACKDIR)/mozart-stdlib && \
+	  $(PREFIX)/bin/ozengine ./ozmake.ozf --create --package=mozart-stdlib.pkg && \
+	  cp README ozmake.ozf mozart-stdlib.pkg $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std
+	(cd $(PACKDIR) && $(TAR) -cf - mozart-$(shell $(OZVERSION)).$(OZBUILD)-std) | \
+	$(COMPRESS) > mozart-$(shell $(OZVERSION)).$(OZBUILD)-std.tar.gz
+	rm -rf $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std $(PACKDIR)/mozart-stdlib
 
+ifneq ($(STDLIB),)
+install:: installstd
+endif
+
+installstd:
+	test -n "$(STDLIB)" || { echo "set STDLIB to source dir for mozart standard library"; exit 1; }
+	(cd $(STDLIB) && $(PREFIX)/bin/ozengine ./ozmake.ozf --install --prefix=$(PREFIX) --nosavedb)
