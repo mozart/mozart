@@ -1,0 +1,3 @@
+-- handle freeing on destroy signal (e.g., makeStrArr in GBuilderTypes):
+   some fromOz conversions in GBuilderTypes allocate data structures
+   which need to be explicitly freed, this currently never happens

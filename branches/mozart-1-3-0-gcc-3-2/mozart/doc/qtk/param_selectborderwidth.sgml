@@ -1,0 +1,1 @@
+<ITEM> <<selectborderwidth:P>> : pecifies a non-negative value indicating the width of the 3-D border to draw around selected items. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">).

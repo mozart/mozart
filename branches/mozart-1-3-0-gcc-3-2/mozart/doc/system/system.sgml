@@ -1,0 +1,174 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.system">
+  <Title/Miscelleanous System Support: <<System>>/
+
+  <p>
+    The <<System>> module contains procedures providing functionality
+    related to the Mozart Engine. 
+
+  <section id="section.system.control">
+    <title/System Control/
+
+    <p>
+    <list>
+      <entry><<gcDo>>
+        <index class=tails/<<System>><And><<gcDo>>/
+      <synopsis>
+        <<{System.gcDo}>>
+      <item>
+        Invokes garbage collection.
+    </list>
+ 
+  <section id="section.system.printing">
+    <title/Printing/
+
+    <p>
+      The procedures to print values and virtual strings choose the
+      output device for the printed text as follows:
+      <list enum>
+        <item> If Mozart is running standalone, the standard output or 
+          standard error device is chosen (depending on the procedure).
+        <item> Otherwise the Oz Programming Interface is chosen as output
+          device.
+      </list>
+     
+    <p>
+     The procedures explained here differ from those provided by
+     <<Open>> and <<OS>> in that they can be used to print information
+     in subordinated computation spaces to support debugging.
+
+    <p>
+    <list>
+      <entry><<print>>
+        <index class=tails/<<System>><And><<print>>/
+      <synopsis>
+        <<{System.print ?_{X}}>>
+      <item>
+        The current information on ?_{X} is printed without a
+        following newline.
+      <p>
+        The output is limited in depth and width by system parameters
+        that can be configured either by the Oz Panel (see <ptr.extern
+        to="ozdoc:panel">) or by <<Property.put>>
+        (see <ptr to="chapter.property">).
+
+      <p>
+        A width of <math/n/ means that for lists at most <math/n/
+        elements and for records at most <math/n/ fields are printed,
+        the unprinted elements and fields are abbreviated by
+        <kbd/,,,/. A depth of <math/n/ means that trees are printed to
+        a depth limit of <math/n/ only, deeper subtrees are
+        abbreviated by <kbd/,,,/. 
+
+      <p>
+        The printed text appears on standard output.
+
+      <entry id=system.show><<show>>
+        <index class=tails/<<System>><And><<show>>/
+      <synopsis>
+        <<{System.show ?_{X}}>>
+      <item>
+        The current information on ?_{X} is printed with a
+        following newline.
+      <p>
+        The output is limited in depth and width as with
+        <<System.print>>. 
+      <p>
+        The printed text appears on standard output.
+
+
+      <entry><<printError>>
+        <index class=tails/<<System>><And><<printError>>/
+      <synopsis>
+        <<{System.printError ?_{V}}>>
+      <item> 
+        Prints the virtual string ?_{V} without a newline.
+      <p>
+        The printed text appears on standard error.
+
+      <entry><<showError>>
+        <index class=tails/<<System>><And><<showError>>/
+      <synopsis>
+        <<{System.showError ?_{V}}>>
+      <item> 
+        Prints the virtual string ?_{V} followed by a newline.
+      <p>
+        The printed text appears on standard error.
+
+
+      <entry><<printInfo>>
+        <index class=tails/<<System>><And><<printInfo>>/
+      <synopsis>
+        <<{System.printInfo ?_{V}}>>
+      <item> 
+        Prints the virtual string ?_{V} without a newline.
+      <p>
+        The printed text appears on standard output.
+
+      <entry><<showInfo>>
+        <index class=tails/<<System>><And><<showInfo>>/
+      <synopsis>
+        <<{System.showInfo ?_{V}}>>
+      <item> 
+        Prints the virtual string ?_{V} followed by a newline.
+      <p>
+        The printed text appears on standard output.
+
+    </list>
+
+  <section id="section.system.misc">
+    <title/Miscellaneous/
+
+    <p>
+    <list>
+      <entry><<eq>>
+        <index class=tails/<<System>><And><<eq>>/
+      <synopsis>
+        <<{System.eq ?_{X} ?_{Y} ??{B}}>>
+      <item> 
+        Tests whether ?_{X} and ?_{Y} refer to the same value node in
+        the store. 
+
+      <entry><<nbSusps>>
+        <index class=tails/<<System>><And><<nbSusps>>/
+      <synopsis>
+        <<{System.nbSusps ?_{X} ??{I}}>>
+      <item> 
+        Returns the number of suspensions on ?_{X}, that is the number
+        of threads and propagators that suspend on ?_{X}. 
+
+      <entry><<onToplevel>>
+	<index class=tails/<<System>><And><<onToplevel>>/
+      <synopsis>
+	<<{System.onToplevel ??{B}}>>
+      <item>
+	Returns <<true>> iff the current thread is executing in the
+	top level space and not within a deep space.
+
+    </list>
+
+  </Chapter>
+
+

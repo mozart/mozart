@@ -1,0 +1,277 @@
+<Section id="u_advanced">
+<Title/Advanced Topics/
+
+<p>
+This section discusses issues of practical relevance not covered in this
+manual so far. It explains implementation techniques rather than
+giving ready-to-use code.
+
+<p>
+<!-- ********************************************************************** -->
+<SubSection id="u_advanced.detect">
+<Title/Detecting Equal Variables in a Vector/
+
+<p>
+A feature of the finite domain constraint system of Oz is that it is
+able to exploit equality between variables. For example, one can
+simplify linear equations in case equal variables are detected. Let us
+regard the equation <Math/2u+v+7w-2x+y=0/. Imposing the equality constraints
+<Math/u=x/ and <Math/v=y/ allows to simplify the equation to
+<Math/7w+2y=0/. This
+simplification offers the advantage that the propagator becomes
+computationally less complex resulting in a better execution
+performance.
+
+<p>
+The &cpi provides the function 
+<para class=apropos><title/<<OZ_findEqualVars>>/
+<< int * OZ_findEqualVars(int sz, OZ_Term * v)>>
+
+<p>
+to detect equal variables in an <<OZ_Term>> array. It expects
+<<v>> to be an array with <<sz>> elements. Assume the application
+
+<p>
+<<  int * pa = OZ_findEqualVars(arr_sz, x);>>
+
+<p>
+where <<pa>> is called the position array. The array <<x>> is
+scanned with ascending index starting from <Math/0/ to determine the values
+of <<pa>>.  If <<x[i]>> denotes a variable and this variable
+occurs the first time, the value of <<pa[i]>> is <<i>>. In case
+the variable occurs not the first time, <<pa[i]>> contains the index
+of the first occurrence. If <<x[i]>> denotes an integer, <<pa[i]>>
+contains <Math/-1/. 
+
+<p>
+As an example, consider the constraint <Math/2a+3b-4c-5d+4e+8=0/ where at
+runtime the constraint <Math/c=e \wedge d=2/ is imposed. The result of the
+equal variable detection is as follows.
+
+<p>
+<Table>
+<Tr><Td/<<i>>/ <Td/0/ <Td/1/ <Td/2/ <Td/3/ <Td/4/ </Tr>
+<Tr><Td/<<x[i]>>/ <Td/a/ <Td/b/ <Td/c/ <Td/d/ <Td/e/
+<Tr><Td/<<pa[i]>>/ <Td/0/ <Td/1/ <Td/2/ <Td/-1/ <Td/2/
+</Table>
+
+<p>
+The state of the propagator can now be updated to represent the
+equivalent constraint <Math/2a+3b-2=0/.  Thus, this simplification avoids
+tedious handling of equal variables in the propagation algorithm and it
+improves memory consumption and runtime behaviour.  
+
+<para class=apropos><title/<<mayBeEqualVars>>/ To avoid unnecessary
+calls of <<OZ_findEqualVars()>>, this function is intended to be used
+in conjunction with the member function <<mayBeEqualVars()>> of class
+<<OZ_Propagator>> (see also <Ptr.Extern to="ozdoc:cpiref"
+key="r_prop.provided">).  In case an equality constraint has been
+imposed on at least one variable occurring in the propagator's
+parameters, <<mayBeEqualVars()>> returns <Math/1/.
+
+<p>
+Note that the function <<OZ_findEqualVars()>> returns a pointer to a
+static array, &ie another application of this function will override
+the previous values.
+
+<p>
+<!-- ********************************************************************** -->
+<SubSection id="u_advanced.redundant">
+<Title/Avoiding Redundant Copying/
+
+<p>
+In <ptr to="u_vector.class"> we learned that data structures
+referenced by the state of a propagator have to be copied whenever the
+Oz runtime system calls either the member function <<gCollect()>> or
+<<sClone()>>.  But constant data structures, &ie data structures which
+do not change during the propagator's lifetime, need only to be
+duplicated in case of a garbage collection. Otherwise it is sufficient
+to have a reference to such a constant data structure. Thus it is
+useful to use a reference counting technique to keep track of the
+number of references to the constant data structure, so that the
+destructor of the propagator can dispose the data structure when there
+is no reference left.
+
+<p>
+That is one reason why there are distinct member functions for garbage
+collection and space cloning. Garbage collection requires a fresh copy
+of constant data structures while space cloning requires only a
+reference and a reference counting technique is applicable.
+
+<p>
+The code presented in this section defines the class <<ConstDataHdl>>
+which can be used to avoid redundant copying of constant data
+structures by approptiate actions in <<gCollect()>> and
+<<sClone()>>. The class <<ConstDataHdl>> implements a reference
+counting scheme and holds in its state, apart from the actual constant
+data structure, the reference counter <<_refCount>> and the forward
+reference <<_newLoc>>. In our example the constant data structure is
+the string <<"Constant data">>.
+
+<p>
+The constructor of <<ConstDataHdl>> creates the constant data
+structure and initialises the reference counting mechanism.  The
+operator <<new>> is redefined to allocate instances of
+<<ConstDataHdl>> on the heap. The operator <<delete>> decrements the
+reference counter and deallocates the instance of <<ConstDataHdl>>
+from the heap if there is no reference left.  The member function
+<<getRef()>> is to be used if a new reference to an instance of
+<<ConstDataHdl>> is needed (<<sClone()>>). It increments <<_refCount>>
+and returns the self-reference <<this>>. The member function
+<<copy()>> is to be used if the constant data structure has to be
+duplicated which is the case in <<gCollect()>>.
+
+<p>
+<Code.Extern display proglang=cc to="programs/constData.1.cc" class=linenumbers>
+
+<p>
+At its first invocation the member function <<copy()>> duplicates the
+instance it is called from, sets the forward reference <<newLoc>> to
+the location of the duplicate, and returns the reference to the
+duplicate. All subsequent invocations only increment the reference
+counter of the duplicate and return a reference to the duplicate.
+<p>
+To use the presented reference counting scheme in a propagator add to ...
+<p>
+
+<List>
+<Entry> ... the class definition of the propagator:
+
+<Item>
+<Code.Extern display proglang=cc to="programs/constData.4.cc" class=linenumbers>
+
+<Entry> ... the constructor definition of the propagator:
+<Item>
+<Code.Extern display proglang=cc to="programs/constData.3.cc" class=linenumbers>
+
+<Entry> ... the destructor definition of the propagator:
+<Item>
+<Code.Extern display proglang=cc to="programs/constData.5.cc" class=linenumbers>
+
+<Entry> ... the definition of the member function <<gCollect()>>:
+<Item>
+<Code.Extern display proglang=cc to="programs/constData.2b.cc" class=linenumbers>
+
+<Entry> ... the definition of the member function <<sClone()()>>:
+<Item>
+<Code.Extern display proglang=cc to="programs/constData.2a.cc" class=linenumbers>
+</List>
+
+<p>
+The presented class definition of <<ConstDataHdl>> can be adopted by
+redefining the embedded data structure <<ConstDataHdl::_constData>>
+appropriately.
+
+<!-- ********************************************************************** -->
+<p>
+<SubSection id="u_advanced.reified">
+<Title/Reified Constraints/
+
+<p>
+This section sketches the implementation of reified constraints (see
+the section on reified constraints in <Ptr.Extern to="ozdoc:fdt"
+key="chapter.reified">) and goes into more details concerning the
+particularities of the class <<OZ_FDIntVar>>.
+
+<p>
+The idea of reification is as follows: A <Math>0/1</Math>-variable 
+<Em/R/ is
+associated with a constraint <Math/C/. The variable <Math/R/ 
+is called <Em/control variable/. 
+As long as the domain of <Math/R/ is not constrained to a
+singleton domain, the constraint <Math/C/ 
+checks if the constraint store
+entails or disentails <Math/C/. If so, 
+the variable <Math/R/ is constrained to <Math/1/
+or <Math/0/, respectively. 
+Otherwise, if <Math/R/ is constrained to <Math/0/ or <Math/1/
+then the constraint <Math/C/ or <Math/\neg C/, respectively, 
+is imposed to the store.
+
+<p>
+The implementation of a reified constraint is explained for <Math/(x
+\leq y) \leftrightarrow r/, which will be implemented by the class
+<<ReifiedLessEqProp>>. We assume that the constraints <Math/x \leq y/
+and <Math/x > y/ are implemented by the classes <<LessEqProp>> &resp
+<<GreaterProp>>. This section focuses on implementing
+<<ReifiedLessEqProp::propagate()>>.
+
+<p>
+There are basically two cases to be regarded. The first case is that the
+domain of the control variable is an integer. Then 
+<Math/(x \leq y) \leftrightarrow r/
+has to be replaced either by <Math/x \leq y/ or by <Math/x > y/. The
+technique to replace a propagator by another one is explained in
+<ptr to="u_replacing">.
+
+<p>
+<para class=apropos><title/Encapsulated Constraint Propagation/
+If the control variable 
+is still a <Math>0/1</Math> variable, the
+reified propagator checks if the constraint <Math/x\leq y/ 
+is entailed &resp disentailed by the store. For this, the
+propagator has to perform a constraint propagation such that the propagation
+results are only locally visible inside the propagator and not written
+to the store. This is called <Em/encapsulated constraint
+propagation/. Additionally, the reified propagator checks if the
+constraints produced by encapsulated propagation, so-called
+<em/encapsulated constraints/, are subsumed by the constraint store. If so
+the control variable is constrained to <Math/1/. If the encapsulated
+constraints are inconsistent, the control variable is constrained to
+<Math/0/. Otherwise the control variable is left untouched.
+
+<para class=apropos><title/The member function <<readEncap>>/
+Instances of class 
+<<OZ_FDIntVar>> are usually initialised by the member function
+<<read()>> or the constructor <<OZ_FDIntVar(OZ_Term)>> with the
+intention to make amplified constraints visible to the store. To obtain
+an instance of <<OZ_FDIntVar()>> providing encapsulated constraint
+propagation, the function <<readEncap()>> has to be used instead. Such
+an instance is used in the same way as in the non-encapsulated case.
+
+<p>
+The code below implements member function <<propagate()>> of class
+<<ReifiedLessEq>>. It is implemented in such a way that it utilises
+encapsulated propagation
+<note foot>
+Of course, an alternative would have
+been to reason over the bounds of the domains.
+</note>.
+
+<p>
+<Code.Extern display proglang=cc to="programs/reifiedLess.1.cc" class=linenumbers>
+
+<p>
+The implementation checks first whether the control variable <<r>>
+denotes a singleton. If so, the reified propagator is replaced by an
+appropriate propagator depending on the value of <<r>>.
+
+<p>
+Otherwise the code proceeds with defining the variables <<x>> and
+<<y>> as instances of class <<OZ_FDIntVar>>. Initialisation of
+<<x>> and <<y>> with <<readEncap()>> ensures encapsulated
+constraint propagation. Next it is checked if <Math/x \leq y/ is entailed by
+the store, which is the case if <Math/\overline{x} \leq \underline{y}/ is
+true 
+<note foot>
+Note that <Math/\underline{x}/ 
+(<Math/\overline{x}/) denotes the
+smallest (largest) integer of the current domain of <Math/x/
+</note>. 
+
+If so,
+<<r_val>> is set to <Math/1/ and the code branches to label <<quit>>. Then
+the propagation rules are implemented. They are <Math/x \leq
+\overline{y}/ 
+and
+<Math/y \geq \underline{x}/. In case an inconsistency is detected, the code
+branches to label <<quit>> and the value of <<r_val>> is left at <Math/0/.
+Finally, the function <<propagate()>> returns <<OZ_SLEEP>> to the runtime
+system. 
+
+<p>
+The code at label <<quit>> constrains <<r>> to the value of
+<<r_val>> and in case of an inconsistency it returns
+<<OZ_FAILED>>. Otherwise the propagator is left by returning
+<<OZ_ENTAILED>>.
+<p>

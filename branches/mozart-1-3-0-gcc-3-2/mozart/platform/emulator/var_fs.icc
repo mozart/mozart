@@ -1,0 +1,140 @@
+/*
+ *  Authors:
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ * 
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
+ * 
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+#ifndef __fsgenvar_icc__
+#define __fsgenvar_icc__
+
+#if defined(INTERFACE) && !defined(OUTLINE)
+#pragma interface
+#endif
+
+#include "unify.hh"
+
+//-----------------------------------------------------------------------------
+
+inline
+OzFSVariable * tagged2GenFSetVar(OZ_Term term)
+{
+  return (OzFSVariable *) tagged2Var(term);
+}
+
+inline
+Bool isGenFSetVar(TaggedRef term)
+{
+  return oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_FS);
+}
+
+inline
+void OzFSVariable::becomesFSetValueAndPropagate(TaggedRef * trPtr)
+{
+  Assert(!oz_isFSetValue(*trPtr));
+  if (oz_isFSetValue(*trPtr)) return;
+
+  Assert(this == tagged2Var(*trPtr));
+
+  OZ_Term set_val = makeTaggedFSetValue(new OZ_FSetValue(_fset));
+
+  propagate(fs_prop_val);
+  DoBind(trPtr, set_val);
+  dispose();
+}
+
+inline
+void OzFSVariable::installPropagators(OzFSVariable * glob_var)
+{
+  installPropagatorsG(glob_var);
+  Board * gb = glob_var->getBoardInternal();
+  for (int i = 0; i < fs_prop_any; i += 1)
+    fsSuspList[i] = oz_installPropagators(fsSuspList[i],
+					  glob_var->fsSuspList[i],
+					  gb);
+}
+
+inline
+void OzFSVariable::relinkSuspListTo(OzFSVariable * lv, Bool reset_local)
+{
+  OzVariable::relinkSuspListTo(lv, reset_local); // any
+
+  // Ensure locality invariant!
+
+  if (reset_local) {
+    for (int i = 0; i < fs_prop_any; i += 1)
+      fsSuspList[i] =
+	fsSuspList[i]->appendToAndUnlink(lv->suspList, reset_local);
+  } else {
+    for (int i = 0; i < fs_prop_any; i += 1)
+      fsSuspList[i] =
+	fsSuspList[i]->appendToAndUnlink(lv->fsSuspList[i], reset_local);
+  }
+}
+
+inline
+void addSuspFSetVar(OZ_Term v, Suspendable * susp, OZ_FSetPropState list_index)
+{
+
+  OzFSVariable * fsv = tagged2GenFSetVar(v);
+
+  Assert(list_index == fs_prop_any ||
+	 fsv->getBoardInternal()->derefBoard() ==
+	 susp->getBoardInternal()->derefBoard());
+
+  switch (list_index) {
+  case fs_prop_val:
+    Assert(susp->isPropagator());
+    fsv->fsSuspList[fs_prop_val] =
+      new SuspList(susp, fsv->fsSuspList[fs_prop_val]);
+    break;
+  case fs_prop_bounds:
+    Assert(susp->isPropagator());
+    fsv->fsSuspList[fs_prop_glb] =
+      new SuspList(susp, fsv->fsSuspList[fs_prop_glb]);
+    fsv->fsSuspList[fs_prop_lub] =
+      new SuspList(susp, fsv->fsSuspList[fs_prop_lub]);
+    break;
+  case fs_prop_glb:
+    Assert(susp->isPropagator());
+    fsv->fsSuspList[fs_prop_glb] =
+      new SuspList(susp, fsv->fsSuspList[fs_prop_glb]);
+    break;
+  case fs_prop_lub:
+    Assert(susp->isPropagator());
+    fsv->fsSuspList[fs_prop_lub] =
+      new SuspList(susp, fsv->fsSuspList[fs_prop_lub]);
+    break;
+  case fs_prop_any:
+    fsv->addSuspSVar(susp);
+    break;
+  default:
+    Assert(0);
+    break;
+  }
+}
+
+#endif /* __fsgenvar_icc__ */
+
+// end of file
+//-----------------------------------------------------------------------------
+

@@ -1,0 +1,134 @@
+@SET_MAKE@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+PREFIX		= @prefix@
+PLATFORM	= @PLATFORM@
+LIB_DIR		= $(PREFIX)/cache/x-oz/contrib
+HOMEURL         = @HOMEURL@
+
+OZC		= @OZC@
+OZL		= @OZL@
+COMPILE		= $(OZC) -c
+OZTOOL		= @OZTOOL@
+CPPFLAGS	= -I$(SRCTOP)/platform/emulator \
+		  -I$(BUILDTOP)/platform/emulator \
+		  -I$(PREFIX)/include @CPPFLAGS@
+CXXFLAGS	= @CXXFLAGS@
+LDFLAGS		= @LDFLAGS@
+LIBS		= @LIBS@
+
+INSTALL		= @INSTALL@
+INSTALL_DIR	= @INSTALL_DIR@
+INSTALL_LIB	= $(INSTALL) -m 444
+INSTALL_DLL	= $(INSTALL) -m 555
+
+RM		= rm -f
+LIBS     	= -lc -lm
+
+CFLAGS   	= -O3
+
+CXX      	= $(OZTOOL) c++
+LD       	= $(OZTOOL) ld
+DEPEND   	= $(CXX) $(CFLAGS) -MM
+
+OZDEPEND 	= $(OZC) -c -M
+
+#----------------------------------------------------------------------
+# Sources and targets
+#----------------------------------------------------------------------
+
+OZSRCS          = \
+		Misc.oz \
+		History.oz \
+		SingleConstrGraph.oz \
+		Main.oz \
+		SingleParamGraph.oz \
+		Config.oz \
+		Tables.oz \
+		ConstrGraph.oz \
+		ParamGraph.oz \
+		ProcedureGraph.oz
+
+OZGSRCS         = 
+
+OZFNCTS         = $(OZSRCS:.oz=.ozf) $(OZGSRCS:.ozg=.ozf) 
+
+TARGETS		= Investigator.ozf
+LIB_TARGETS	= $(TARGETS:%=$(LIB_DIR)/%)
+
+.PHONY: depend clean distclean bootstrap
+
+all:     $(TARGETS)
+install: $(LIB_DIR) $(LIB_TARGETS)
+new:	 clean all
+
+$(LIB_DIR):
+	$(INSTALL_DIR) $@
+
+Investigator.ozf: $(OZFNCTS)
+	$(OZL) -z 9 Main.ozf -o $@
+
+$(LIB_DIR)/Investigator.ozf: Investigator.ozf
+	$(INSTALL_LIB) $< $@
+
+#----------------------------------------------------------------------
+# Oz part
+#----------------------------------------------------------------------
+
+%.ozf: %.oz 
+	$(OZC) $(OZFLAGS) -c $< -o $@ 
+
+%.ozf: %.ozg 
+	$(OZC) $(OZFLAGS) -c --gump $< -o $@ 
+
+#----------------------------------------------------------------------
+# C part
+#----------------------------------------------------------------------
+
+%.so-$(PLATFORM): $(CSRCS:.cc=.o) 
+	$(LD) -o $@ $^ $(LDFLAGS) $(LIBS)
+
+%.o: %.cc 
+	$(CXX) $(OPTIMIZE) $(CFLAGS) -c $< -o $@ 
+
+#----------------------------------------------------------------------
+# Maintenance
+#----------------------------------------------------------------------
+
+depend: Makefile $(CSRCS) $(OZSRCS) $(OZGSRCS)
+#	$(DEPEND) $(CSRCS:%=$(SRCDIR)/%) > Makefile.deps
+	$(OZDEPEND) $(OZSRCS:%=$(SRCDIR)/%) $(OZGSRCS:%=$(SRCDIR)/%) \
+	>> Makefile.deps
+
+clean: 
+	-$(RM) *.ozf
+	-$(RM) *.o
+	-$(RM) *.so-$(PLATFORM)
+	-$(RM) *.so
+	-$(RM) *.l
+	-$(RM) *.C
+	-$(RM) *~
+
+distclean: clean
+	-$(RM) config.* Makefile*
+
+include $(BUILDTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#----------------------------------------------------------------------
+# Automatic Makefile update
+#----------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
+
+#----------------------------------------------------------------------
+# Dependencies
+#----------------------------------------------------------------------
+-include Makefile.deps

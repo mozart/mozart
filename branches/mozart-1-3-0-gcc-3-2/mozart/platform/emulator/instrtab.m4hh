@@ -1,0 +1,78 @@
+/*
+ *  Authors:
+ *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ * 
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
+ * 
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+define(readArg,$1)
+define(writeArg,$1)
+
+define(instruction,
+	`INSTR(TOUPPER($1))
+')
+
+
+#ifdef __GNUC__
+
+#define INSTR(instr) && instr##LBL,
+static void *instrTable[OZERROR+1] = {
+
+#else
+
+#define INSTR(instr) {					\
+	__asm mov instrTable[eax], OFFSET instr 	\
+	__asm add eax,4					\
+      }
+
+
+static void *instrTable[OZERROR+1];
+
+   _asm mov eax,0
+
+#endif
+
+
+
+  include(EMUDIR/instrDefs.m4)
+
+
+#ifdef __GNUC__
+0};
+#else
+#endif
+
+#undef INSTR
+
+#ifdef INLINEOPCODEMAP
+
+#define INSTR(instr) && instr##FAKE,
+
+static void * instrFakeTable[OZERROR+1] = {
+  include(EMUDIR/instrDefs.m4)
+0};
+
+#undef INSTR
+
+#endif
+
+

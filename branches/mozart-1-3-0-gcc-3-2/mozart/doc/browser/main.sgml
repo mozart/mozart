@@ -1,0 +1,1042 @@
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh|fundamental">
+
+<!ENTITY % input.local.2 SYSTEM "browser.extra">
+<!ENTITY % p.mix.local "|menu">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY dot "." -- to distinguish it from periods -->
+<!ENTITY Oz "Oz">
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY endash PI "endash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY wrt PI "wrt">
+<!ENTITY eg PI "eg">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <meta name="proglang.mode" arg1="oz" arg2="oz-mode">
+    <meta name="proglang.mode" arg1="sh" arg2="sh-mode">
+    <meta name="proglang.mode" arg1="fundamental" arg2="fundamental-mode">
+    <!-- Splitting the document into different HTML nodes -->
+
+    <meta name="html.split"	  value="chapter.browser">
+    <meta name="html.split"	  value="sec.usingthebrowser">
+    <meta name="html.split"	  value="sec.browser.browsercommandsandoptions">
+    <meta name="html.split"	  value="sec.browser.applicationbrowsers">
+    <meta name="html.split"	  value="sec.browser.browsedinformation">
+
+    <Meta name="html.split.index" value="">
+    <Meta name="html.split.toc"   value="">
+
+    <Meta name=latex.input   value="browser-utils.tex">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=revised>
+    <Title/The Oz Browser/
+    <Author.Extern to="author.db" key="Konstantin.Popov">
+    <Abstract>
+The &Oz; Browser is a concurrent output tool for displaying possibly
+partial information about the values of variables.
+    </Abstract>
+  <Body>
+<chapter id="chapter.browser" proglang=oz>
+<title/The &Oz; Browser/
+
+<p>
+The &Oz; Browser is a concurrent output tool for displaying possibly
+partial information about the values of variables.
+
+<p>
+The Browser is written in &Oz; itself<note/However, it uses a
+number of private features of the &Oz; implementation, which are not
+described in this manual or somewhere else, but required to achieve the
+special Browser functionality, like browsing in local computation
+spaces./ and constitutes a nontrivial example of concurrent programming
+in &Oz;. Its source code is shipped with the &Oz; distribution.
+
+<p>
+Browser has a graphical user interface which is built using the &Oz;
+Tk interface (see <ptr.extern to="ozdoc:wp">). Hopefully, it is mainly <Q/self-explaining/ 
+and its use is quite straightforward.
+
+<p>
+<figure id=fig.browser.prime>
+<caption/The &Oz; Browser./
+<picture.choice>
+<picture.extern to="nicebrowser.gif" type=gif>
+<picture.extern to="pictures/nicebrowser.eps" type=ps>
+</picture.choice>
+</figure>
+
+Browser can be easily used in an &Oz; application as an <Q/embedded/
+viewing tool. A Browser widget can be placed in any window and
+used for browsing of an application's output.
+
+<chapter id=sec.usingTheBrowser><title/Using the Browser/
+
+<p>
+In this section the functionality of the Browser is presented.
+Simultaneously, notions required for reading of the following sections
+are explained.
+
+<section><title/Invoking the Browser/
+
+<p>
+<index/<<Browse>>/
+<index/<<Browser>><and><<browse>>/
+The Browser can be invoked by the predefined unary procedure
+<<Browse>>. For example,
+<<<
+{Browse X}
+>>>
+creates a browser window and shows the current constraint on the
+variable <<X>>.
+
+<p>
+<index class=menu/Browser<and>Close/
+A browser window can be closed via the <span class=menu/Close/ entry of the
+<span class=menu/Browser/ menu, or by the <kbd/C-x/ keyboard accelerator.
+
+<p>
+Normally the <<Browse>> procedure is used in the top-level computation
+space. Browsing from local computation spaces is not
+concurrent <note foot/That is, incrementally imposed constraints are not
+reflected by the Browser. One could say that a browser makes a
+'snapshot' of constraints./, and there is a number of restrictions of
+the Browser functionality, which are considered in the
+<ptr to=sec.browsingInDeepGuards >.
+</section>
+
+<section><title/The User Interface/
+
+<p>
+<index class=menu/Browser<and>Break/
+A Browser window (<ptr to=fig.browser.prime >) consists of a text
+widget in which browsed information is shown, a menubar and scrollbars.
+The red button on the right side of the menubar, called the <em/break/
+button, is used to stop browsing as soon as possible.
+
+<p>
+Menu entries can be active or passive, depending on the Browser
+state. On the right side of menu entries their keyboard accelerators are
+specified, if any. Using an accelerator of a (currently) passive entry
+has no effect.
+
+<p>
+The view of the text widget can be adjusted by the scrollbars. The
+number of lines in the text widget depends on information that is
+browsed, and is limited only by the Tk implementation. Lines in text
+widget are never wrapped, and its width is determined automatically by
+the Tk library.
+
+<p>
+<index/terms<and>layout/
+The Browser automatically changes the layout of information shown
+in its text widget whenever the window size is changed by the user, or
+user changes the currently used font.
+
+<p>
+<index/X11 selection/
+The usual 'cut-and-paste' mechanism can be used with the Browser if
+you want to paste a part of a term's representation somewhere else. A
+text fragment is selected like in Emacs or the X11 terminal emulator
+(xterm), except that the <Kbd/Shift/ key must be kept pressed during
+the selection, and that there are no word- or line- selection
+modes. On Windows, a selected text is copied by means of <kbd/C-q/
+</section>
+
+<section><title/Browser Module/
+
+<p>
+The <code/Browser/ module exports the following values:
+<list>
+<entry><<Browser.'class'>>
+<index class=module/Browser<and>'class'/
+<item> is an &Oz; class that implements the Browser.
+<entry><<Browser.object>>
+<index class=module/Browser<and>object/
+<item> is an instance of <<Browser.'class'>><note foot/Actually,
+two <em/distinct/ things are called 'Browser' here: first, this is the
+tool described in this chapter itself, and, second, this is a particular
+instance of the tool (a <<Browser.'class'>> object)./:
+<code display>
+BrowserObject = {New Browser.'class' init}
+</code>
+<entry><<Browser.browse>>
+<index/<<Browse>>/
+<index/<<Browser>><and><<browse>>/
+<item> is an unary procedure used to tell <<Browser.object>> to browse
+its argument. It is also available as procedure <code/Browse/ in the OPI:
+<code display>
+Browse = proc {$ X} {Browser.object browse(X)} end
+</code>
+</list>
+<p>
+Methods of the <<Browser.'class'>> are summarized in the
+<ptr to=sec.browser.applicationBrowsers >.
+</section>
+
+<section id=sec.browser.browsedInformation><title/What Is Browsed: A
+Look Under The Hood/
+<p>
+&Oz; Browser displays the current information about values of variables.
+This information is stated by means of constraints stored in constraint
+stores.  Constraint that describes a value of a variable can be
+represented as a directed graph which is shown in textual form.
+<p>
+Due to the properties of the Kernel &Oz;<note foot/Namely, due to the
+constraint system itself and restricted use of constraint predicates in
+the Kernel &Oz;./, a constraint in the store can be only a conjunction of
+the following types of formulae:
+<list>
+<item> Equations of the form <math>x\deq y</math>, where <math/x/ and <math>y</math> are distinct
+variables. 
+
+<item> Equations of the form <math>x\deq s</math>, where <math>s</math> is either a primitive
+value or a record <math/l(l_1\col x_1,\;\ldots,\;l_n\col x_n)/, and
+<math>x,\;x_1,\ldots,x_n</math> are variables.
+
+<item> Disjunctive constraints of the form <math>x\deq n_1\lor\ldots\lor x\deq n_k</math>, where <math>x</math> is a variable and
+<math>n_1,\ldots,n_k</math> are integers which are allowed to be an element of a
+finite domain. 
+
+<item> Feature constraints of the form <math/x\deq l(l_1\col x_1,\;\ldots,\;l_n\col x_n\;\ldots)/, where <math/x,\;x_1,\ldots,x_n/ are
+variables. 
+</list>
+
+For instance, the value of the variable <math>X</math> from the example 
+<code display>
+  X = a(1 b(r:2)) 
+</code>
+is described as follows:
+<math/
+x\deq a(x_1,\; x_2)\;\land\;
+x_1\deq 1\;\land\;
+x_2\deq b(r\col x_3)\;\land\;
+x_3\deq 2
+/
+Since a store keeps its constraint only up to logical equivalence in the
+&Oz; Universe, one can say that for every variable <math>x</math> there is at most
+one binding for <math>x</math>, &ie; a formula of the forms mentioned just above.
+<p>
+Additionally, during the elaboration of an expression the &Oz; System
+imposes a total order '<math>\prec</math>' on all variables, which occur in
+it<note foot/Informally, <math>x^\beta\prec_\alpha y^\gamma</math>, where <math>\alpha</math>,
+<math>\beta</math> and <math>\gamma</math> are computation spaces, so that
+<math>\alpha\preceq\beta</math> and <math>\alpha\preceq\gamma</math> (that is, <math>\alpha</math> is
+below or equal both <math>\beta</math> and <math>\gamma</math>), if <math>\beta\preceq\gamma</math> and
+either <em/(i)/ <math>\alpha\neq\gamma</math>, <em/(ii)/ <math>x</math> is an unconstrained
+variable while <math>y</math> is a constrained one, or <em/(iii)/ <math>y</math> was created
+earlier than <math>x</math>. Otherwise, an <em/arbitrary/ order is chosen by the
+&Oz; Engine. Note that the order on local to a computation space variables
+changes unpredictably during the garbage collection./, so that a
+constraint can only contain either <math>x\deq y</math> if <math>x\prec y</math>, or <math>y\deq x</math>
+otherwise.
+<p>
+Informally, a graph representation of a constraint on a variable <math>x</math>
+emerges when that constraint is traversed up to primitive values or yet
+unbound variables. Leaf nodes of a graph denote those primitive values
+and unbound variables, non-leaf nodes denote records, and edges
+of the graph model occurrences of variables in records.
+<p>
+A graph shown by the Browser is constructed as follows.  Let us denote
+the set of variables to be browsed as <math>\V</math>, whereat initially <math>\V</math>
+contains the variable <math>x</math> passed to <<Browse>>: <math/\V = \{x\}/; the set of
+already browsed variables as <math>\P</math><note foot/The set <math>\P</math> is needed to
+handle constraints over rational trees, which allow graphs described
+here to be cyclic./, initially <math>\P=\emptyset</math>, and the set of couples
+<math>\langle x,y\rangle</math> as <math>\E</math>, initially <math/\E=\emptyset/. Each node carry
+an auxiliary label &nbsp;&emdash; a variable it represents; couples from <math>\E</math> denote
+edges between nodes labeled by its variables. Nodes of a graph are
+created iteratively; at each step a variable <math>y</math> is extracted from <math>\V</math>,
+and one of the following rules is applied:
+<p>
+<list>
+<item> If the constraint store does not contain any binding for or a
+constraint on <math>y</math>, then a leaf node labeled by
+<math>y</math> is created that represent the variable itself. The
+variable <math>y</math> is added to <math>\P</math>.
+
+<item> If there is an equation of the form <math>y\deq z</math>, then
+<math/\{z\}\cap\P/
+is adjoined to <math>\V</math>, and <math>y</math> is replaced by <math>z</math> in every couple of <math>\E</math>
+and among nodes' labels. This step can be seen informally as
+<Q/dereferencing/; it serves for minimizing the graph representation of
+a constraint.
+
+<item> If there is an equation of the form <math>y\deq s</math>, where <math>s</math> is a
+primitive value, then a leaf node labeled by <math>y</math> is created that
+represent that value. The variable <math>y</math> is added to <math>\P</math>.
+
+<item> If there is an equation of the form <math>y\deq s</math>, where <math>s</math> is a
+record <math/l(l_1\col x_1,\;\ldots,\;l_n\col x_n)/, then a non-leaf
+node labeled by <math>y</math> is created that represent that record. The variable
+<math>y</math> is added to <math>\P</math>. The set <math/\{x_1,\ldots,x_n\}\cap\P/ is adjoined to
+<math>\V</math>, and <math>n</math> new couples <math>\langle y,x_i\rangle</math> are added to <math>\E</math>.
+
+<item> If there is a disjunctive constraint on <math>y</math>, then a leaf node
+labeled by <math>y</math> is created that represent the corresponding finite
+domain. The variable <math>y</math> is added to <math>\P</math>.
+
+<item> If there is an feature constraint of the form <math/y\deq
+l(l_1\col x_1,\;\ldots,\;l_n\col x_n\;\ldots)/, then a non-leaf node
+labeled by <math>y</math> is created that represent that partially known record.
+The variable <math>y</math> is added to <math>\P</math>. The set <math/\{x_1,\ldots,x_n\}\cap\P/ is
+adjoined to <math>\V</math>, and <math>n</math> new couples <math>\langle y,x_i\rangle</math> are added
+to <math>\E</math>.
+</list>
+
+Construction of the graph is stopped whet the set <math>\V</math> becomes empty.
+It is continued automatically when additional constraints are added to
+the store.
+<p>
+<index/terms/
+In the scope of this documentation, the textual representation of a
+(sub)graph is called (sub)<def/term/<note foot/Browser terms are similar
+to &Oz; (syntactic) terms as defined in <Ptr.extern to="ozdoc:notation">,
+but they have different origins./. A (sub)term can be <def/primitive/ or
+<def/compound/, similarly to the &Oz; values.
+<p>
+Numbers and records are shown as one would expect. Procedures, cells,
+chunks, spaces and threads are shown by their <def/print names/. Finite domains have a
+special representation: for instance, if an FD variable is constrained to
+the domain {1,2,3,7,8,9}, then it is shown as <<_{ 1..3 7..9 }>>.
+Partially known records are represented as records, but with additional
+ellipses just before the closing parentheses: <<ofs(a: 1 b: 2 ...)>>.
+<p>
+Additionally, the following &Oz; data types are treated specially:
+
+<list>
+<entry>Lists
+<index class=menu/Options<and>Display Parameters<and>Browse Limit/
+<item> have two representations&nbsp;&emdash; a sequence of cons cells (like
+<<1|2|A>>) and the representation of well-formed lists in square brackets
+(like <<[1 2 3]>>). The second representation is choosen whenever a list
+can be decided to be well-formed when only <math>N</math> its elements are
+considered. <math>N</math> is double of the current value of the <<Width>> browse
+limit, described in <ptr to=sec.browser.theOutputFormat>.
+
+<index class=menu/Options<and>Representation<and>Chunks/
+<entry>Chunks
+<item> that constructed from non-primitive values (like classes
+and objects) are represented as compound terms if the <<Chunks>>
+representation detail option is set, and if this option is not set then
+the string <<(?)>> is added to the representation.
+
+<index class=menu/Options<and>Representation<and>Strings/
+<index class=menu/Options<and>Representation<and>Virtual Strings/
+<entry>Strings, Virtual Strings
+<item> are shown
+in readable form, &ie; by enclosed in quotes ASCII strings, if the
+corresponding <<Strings>> or <<Virtual strings>> option, repectively, is
+set.
+<p>
+Note that browsing of virtual strings is not monotonic. For instance,
+constraints on the variable << S>>
+<code display>
+  declare S in S = _#[101 108 108 111]
+</code>
+is browsed in this case as <<_#ello>> <note foot/The string 
+<<[101 108 108 111]>> is a string of the ascii codes for the characters
+<em/e/, <em/l/, <em/l/ and <em/o/ respectively./. If the additional 
+&Oz; line 
+<index class=menu/Selection<and>Rebrowse/
+<code display>
+  S = [72]#_
+</code>
+is feeded, the Browser changes the term's respresentation to
+<<H#ello>> and <em/not/ to <<Hello>>; you have to issue the
+<<Rebrowse>> command to obtain 'Hello'.
+</list>
+
+<index class=menu/Options<and>Representation<and>Names And Procedures/
+<index/print names/
+An extended format of print names of variables, procedures, cell,
+chunks, spaces and threads can be requested by setting the <<Names And
+Procedures>> option.
+</section>
+
+<section id=sec.browser.theOutputFormat/<title/The Basic Output Format/
+<p>
+
+This section describes the simplest Oz value's representation the
+Browser supports. In this case the Browser thinks of a value as of a
+tree that leaf nodes are primitive values and non-leaf nodes are
+records. Note that equal subtrees are represented as many times as
+they occur; this is a simplification with respect to the value graph
+described in <ptr to=sec.browser.browsedInformation >. More concise
+representations are discussed in <ptr
+to=sec.browser.detectingOfCoreferencesAndCycles >. 
+
+<p>
+The description is divided into the following issues:
+
+<list>
+<item> Browsing of arbitrarily deep and wide terms.
+<item> Using parenthesis to override the term constructor precedences.
+<item> Printing layout for compound terms.
+</list>
+
+<p>
+<index/terms<and>viewing forms/
+<index/viewing form<and>completely/
+<index/viewing form<and>partially/
+<index/viewing form<and>shrunken/
+Each (sub)term is shown in a certain <def/viewing form/, namely, it can be
+drawn <def/completely/, <def/partially/ or it can be <def/shrunken/:
+
+<list>
+<entry>Completely
+<item> means that the term is shown if it represents a
+primitive value, finite domain or a variable; or all its subterm(s)
+are shown in some form if the term is compound.
+
+<entry>Partially
+<item> means that only the <math>N</math> first subterms of the compound
+term are shown, the rest of them is replaced with '<<,,,>>';
+
+<entry>Shrunken
+<item> means that the term is shown in the form '<<,,,>>'.
+</list>
+
+<index class=tails/print<and>width/
+<index class=tails/print<and>depth/
+<index class=menu/Options<and>Display Parameters<and>Browse Limits/
+The form of each (sub)term is determined by values of the <def/width/
+and <def/depth browse limits/:
+<list>
+<entry>Width
+<item> specifies for each compound (sub)term the number of its
+subterms that are shown, &ie; the number <math>N</math> from above.
+<entry>Depth
+<item> specifies the depth in a term's representation where
+subterms are shrunken.
+</list>
+These parameters can be set via the <<Display Parameters>> submenu of the
+<<Options>> menu. Note that increasing of values <<Depth>> and <<Width>>
+affects all currently shown terms.
+<p>
+Terms shown by the Browser are built with respect to the &Oz; term
+constructor precedences as defined in &Oz; Notation <!--**  <ptr to=notation> -->,
+and uses round parentheses to override them.
+<p>
+<index/options<and>layout<and>align record fields/
+<index class=menu/Options<and>Layout<and>Align Record Fields/
+The Browser tries to produce the most compact printing layout for
+compound terms. Namely, it packs in one row as many subterms as
+possible, while usual minimal subterm indentation is provided. The
+only exception of this rule is that record subterms are shown in one
+column if they don't fit in one row. However, this can be switched off
+via turning off the option <<Record Fields Aligned>> of the <<Layout>>
+submenu of the <<Options>> menu.
+<p>
+<index/viewing form<and>completely/
+<index/viewing form<and>partially/
+<index/viewing form<and>shrunken/
+<index class=menu/Selection<and>Expand/
+<index class=menu/Selection<and>Shrink/
+A non-shrunken (sub)term can be <def/shrunken/ explicitly by means of
+the <<Shrink>> commands of the <<Selection>> menu. The command is applied
+to a selection, which is described in
+<ptr to=sec.browser.actions >. A partially shown or shrunken
+(sub)term can be <def/expanded/:
+
+<list>
+<item> If a (sub)term was shrunken, it is replaced by a subterm which is
+<index class=menu/Options<and>Display Parameters<and>Expansion Increment/
+<index/options<and>display<and>depth increment/
+<<Depth>> deep, where <<Depth>> is the Browser's current <def/expansion
+limit/. The expansion limits can be set by means of the <<Display Parameters>>
+ submenu of the <<Options>> menu.
+
+<index class=menu/Options<and>Display Parameters<and>Expansion Increment/
+<index/options<and>display<and>width increment/
+<item> If a (sub)term was partially shown, its further <<Width>> subterms
+are viewed, where <<Width>> is the Browser's expansion limit.
+</list>
+</section>
+
+<section><title/Controlling Browsing/
+<p>
+<index class=menu/Browser<and>Break/ 
+Browser draws terms sequentially, in the depth-first, left-to-right
+fashion, one term after each other. Drawing process can be stopped
+nearly all the time by pressing the <em/break/ button (or by using the
+<<Break>>  entry of the <<Browser>> menu). When browsing is being stopped,
+(sub)term(s) yet to be drawn appear in shrunken form, and started but
+not yet completed (sub)term(s) appear partially.
+<p>
+<index class=menu/Options<and>Buffer/
+<index class=menu/Browser<and>Clear/
+<index class=menu/Browser<and>Clear All But Last/
+More than term can be shown simultaneously in a Browser window.  The
+Browser contains a first-in-first-out buffer where information about
+browsed terms is kept. The buffer size limits the number of
+simultaneously shown terms; it can be set via the <<Buffer>> submenu of
+the <<Options>> menu.  All terms in the buffer can be removed via the
+<<Clear>> entry of the <<Browser>> menu. All terms except the last one can
+be removed via the <<Clear All But Last>> entry.
+</section>
+
+<section id=sec.browser.detectingOfCoreferencesAndCycles><title/Represntation of Rational Trees/
+
+<p>
+The Browser can represent a cyclic tree, i.e. a tree-like graph that
+contains <Q/backward/ edges (edges starting in a node below its
+target). A cyclic tree representation is built as follows:
+<list>
+<item> A subterm representing a target node obtains a unique prefix
+of the form <<C>><math>N</math><<=>>, where <math>N</math> is a number.
+<item> For all backward to that node edges pseudo-nodes are created,
+which are represented as <<C>><math>N</math>.
+</list>
+
+For example, the value of <math>X</math> determined by the expression
+<code display>
+  declare 
+  N = {NewName}
+  X = a(f1:X f2:N f3:N)
+  in {Browse X}
+</code>
+is browsed as << <![RCDATA[C1=a(f1:C1 f2:<N: `N`> f3:<N: `N`>)]]> >>.
+
+<p>
+A textual representation of a value graph described in <ptr
+to=sec.browser.browsedInformation > is generated using the <Q/minimal
+graph/ representation option.  Informally speaking, in this mode equal
+subgraphs are represented only once; all subsequent subgraphs that are
+equal to an already created one <note foot/Two graphs are equal here
+iff they are unifiable./ are represented as a reference to it. For
+instance, the Browser output for the example above would be <<
+<![RCDATA[R1=a(f1:R1 f2:R2=<N: `N`> f3:R2)]]> >>.
+<p>
+<index class=menu/Options<and>Representation<and>Tree/
+<index class=menu/Options<and>Representation<and>Graph/
+<index class=menu/Options<and>Representation<and>Minimal Graph/
+The representation options are set by means of the <<Representation>>
+submenu of the <<Options>> menu, by choosing one of the <<Tree>>, <<Graph>>
+and <<Minimal Graph>>.
+<p>
+Note that additional parenthesis are inserted around textual
+representation of (sub)terms with the prefixes <<R>><math>N</math><<=>> or
+<<C>><math>N</math><<=>>, if necessary. For instance, the Browser output of
+the example:
+<code display>
+  declare
+  X = a(1|2|3|b(c) b(c))
+  in {Browse X}
+</code>
+is <<a(1|2|3|(R1=b(c)) R1)>>.
+<p>
+<index class=menu/Selection<and>Deref/
+<index/dereferencing/
+The only operation defined on reference names is <def/dereferencing/.
+Its effect is scrolling to a term tagged with the reference name, and
+selecting it. The <<Deref>> command can be invoked from the <<Selection>>
+menu or by the keyboard accelerator, similarly to <<Expand>> and <<Shrink>> 
+ commands. 
+</section>
+
+<section id=sec.browser.actions><title/Actions/
+<p>
+<index/selection/
+<index class=menu/Browser<and>Deselect/ 
+An arbitrary shown (sub)term can be <def/selected/. This is achieved by
+clicking the left mouse button. Deselection proceeds by clicking the
+right one.  Selected (sub)terms are shown in the text widget on a wheat
+colored background.  Selected (sub)terms are targets for both
+pre-defined browser operations (like <<Shrink>> and <<Expand>> described
+in Section<ptr to=sec.browser.theOutputFormat >) and user-defined <def/actions/.
+<p>
+<index/actions<and>user-defined/
+<index class=menu/Selection<and>Set Action/
+The <em/Actions/ mechanism provide for application of unary procedures
+with the current selection as an argument. There are two predefined
+actions: <<Show>> and <<Browse>>. There can be <def/user-defined actions/,
+which are added by means of the <<add>>, <<set>> and <<delete>> methods of
+<<BrowserClass>>: 
+<index class=module/Browser<and>'class'<and>add/
+<index class=module/Browser<and>'class'<and>set/
+<index class=module/Browser<and>'class'<and>delete/
+<code display>
+  %%
+  declare 
+  P = proc {$ S} {Browse {Value.status S}} end
+  in
+  {Browser add(P label:'Show Status')}
+  {Browser set(P)}
+  %% use the action now!
+  {Browser delete(P)}  % delete(all)
+  {Browser set(Show)}
+</code>
+<index class=menu/Selection<and>Apply Action/
+<p>
+In this example a new action <<P>> is created (which effect is printing
+the status of a selection), then it is added (<<add>>) and set (<<set>>)
+as the current one. At this point user can either click the middle mouse
+button or use the <<Apply Action>> entry of the <<Selection>> menu in
+order to invoke it. After that the action is removed, and the predefined
+<<Show>> is set as the current.
+<p>
+A useful application of this mechanism is the action which equates two
+subsequent selections:
+<code display>
+  declare
+  class UnifyTwoClass from Object.base
+     prop final locking
+     attr first: _ state: start
+     meth click(S)
+        case @state == start then
+           {Show 'First...'}
+           first <- S
+           state <- continue
+        else
+           {Show 'Unify!'}
+           S = @first
+           state <- start
+        end
+     end
+  end
+  UnifyTwo = {New UnifyTwoClass noop}
+  proc {UnifyAction S}
+     {UnifyTwo click(S)}
+  end 
+  in skip
+</code>
+<p>
+Now we can set this action and browse, for instance, a list constructor
+with two variables:
+<index class=module/Browser<and>'class'<and>createWindow/
+<index class=module/Browser<and>'class'<and>add/
+<index class=module/Browser<and>'class'<and>set/
+<index class=module/Browser<and>'class'<and>option/
+<code display>
+  {Browser createWindow}
+  {Browser add(UnifyAction)}
+  {Browser set(UnifyAction)}
+  {Browser option(representation mode:graph)}
+  %%
+  {Browse _|_}
+</code>
+<p>
+If we will click the middle mouse button subsequently on the list
+constructor and the second variable, we will get a cyclic list:
+<<C1=_|C1>>.
+</section>
+
+<section id=sec.browsingInDeepGuards><title/Browsing in Local Computation Spaces/
+<p>
+There are the following distinguishing features of using the Browser in
+a computation space:
+
+<list>
+<item> Browsing in a computation space <em/is not/ concurrent.
+<index/print names/
+<item> Print names of variables, (&Oz;) names, procedures, cells, chunks,
+spaces and threads are quoted. For instance, a variable <<A>> will be
+browsed as <<`A`>>, and not as <<A>>.
+
+<index class=menu/Options<and>Representation<and>Names And Procedures/
+<index/print names/
+<item> Print names of mentioned above objects are always generated in the
+extended format, without any respect to the current value of the option
+<<Names And Procedures>>.
+
+<item> Feature constraints are converted to records, that is, their
+representation does not contain ellipses just before the closing
+parentheses.
+
+<item> Generally, builiding <<graph>> and <<minimal graph>> representation
+yields <em/wrong/ results. For instance, two equal variables are not
+detected as being equal; whereas two tuples <code/a(_)/ and <code/a(_)/ are
+detected as being equal.
+
+<p class=danger>
+<item> 
+The Browser needs much more memory and runtime to perform browsing, in
+particular when large lists are browsed.
+
+<p class=danger>
+<item>
+Continuous browsing of big different terms leads to significant memory
+leakage in the &Oz; Emulator, which is limited by the total size of a
+textual representation of all browsed terms.
+
+</list>
+
+<p class=danger>
+The differences mentioned above are straightforward once there is the
+understanding how the Browser works in that case.
+<p>
+The point here is that the Browser operates in the top-level computation
+space, whereas a constraint describing a value of a given variable can
+contain variables, names, procedures and so on that belong to the local
+computation space. These variables cannot occur in constraints in the
+top-level one; therefore, each constraint browsed in a local computation
+space is converted to a constraint which <em/does not contain/ any
+variables, names and so on this transformation, called here <em/reflection/,
+takes place in the local computation space, where <<Browse>>  call was
+issued. After that the reflected constraint is passed to the top-level
+computation space by a special builtin, and actually browsed.
+<p>
+The reflection step can take place only once for a browsed constraint;
+that is, browsing is not concurrent in this case.
+<p>
+Objects of mentioned above types are replaced by atoms during
+reflection. The number of new atoms created this way is limited by the
+size of a constraint graph to be browsed. Since atoms are not a subject
+for garbage collection in the &Oz; System, the memory consumed by the
+System grows up.
+<p>
+Since the reflection process must terminate, the Browser builds a
+minimal graph representation of a constraint, which is passed to the
+top-level computation space. This explains the computational complexity
+of browsing in local computation spaces.
+</section>
+
+<section><title/Setting Options/
+<p>
+<index class=module/Browser<and>'class'<and>option/
+Every Browser option that can be set by means of the <<Options>> menu can
+be set also by means of the <<option>> method of the <<BrowserClass>>. Its
+format is
+<code display>
+  option(?{group} ?{option}: ?{value})
+</code>
+<p>
+<index/options<and>buffer<and>size/
+<index/options<and>buffer<and>separate buffer entries/
+<index/options<and>representation<and>mode/
+<index/options<and>representation<and>detailed chunks/
+<index/options<and>representation<and>detailed names and procedures/
+<index/options<and>representation<and>strings/
+<index/options<and>representation<and>virtual strings/
+<index/options<and>display<and>width/
+<index/options<and>display<and>depth/
+<index/options<and>display<and>width increment/
+<index/options<and>display<and>depth increment/
+<index/options<and>layout<and>font size/
+<index/options<and>layout<and>bold/
+<index/options<and>layout<and>align record fields/
+<index/options/
+There is the complete list of possible options with example values:
+<code display>
+  option(buffer size:1)
+  option(buffer separateBufferEntries:false)
+  option(representation mode:minGraph)
+  option(representation detailedChunks:true)
+  option(representation
+         detailedNamesAndProcedures:false)
+  option(representation strings:true)
+  option(representation virtualStrings:false)
+  option(display depth:100)
+  option(display width:2000)
+  option(display depthInc:2)
+  option(display widthInc:5)
+  option(layout size:14)
+  option(layout bold:false)
+  option(layout alignRecordFields:true)
+</code>
+<p>
+There is an additional group <<special>> which allows to control the
+geometry of the Browser window:
+<code display>
+  option(special xSize:800)
+  option(special ySize:600)
+  option(special xMinSize:300)
+  option(special yMinSize:200)
+</code>
+</section>
+</chapter>
+
+<chapter id=sec.browser.browserCommandsAndOptions><title/Browser Commands and Options/
+<p>
+<!-- \newcommand{\kphead}[1]{{\tt #1}} -->
+
+The meanings of the menu entries of the Browser are summarized in this
+section.
+
+<section><title/The Browser Menu/
+<index class=menu/Browser/
+<p>
+
+<list>
+<entry><menu/About&ellipsis;/
+<index class=menu/Browser<and>About&ellipsis;/
+<item>
+Displays a small dialog containg information about the product.
+
+<entry><menu key="C-c"/Break/
+<index class=menu/Browser<and>Break/
+<item>
+Stops browsing as soon as possible.
+
+<entry><menu mouse=r1/Deselect/
+<index/selection/
+<index class=menu/Browser<and>Deselect/ 
+<item>
+Deselects the current selection, if any.
+
+<entry><menu key="C-u"/Clear/
+<index/buffer/
+<index class=menu/Browser<and>Clear/
+<item>
+Removes all browsed information from the Browser window, if any.
+
+<entry><menu key="C-w"/Clear All But Last/
+<index/buffer/
+<index class=menu/Browser<and>Clear All But Last/
+<item>Removes all browsed information from the Browser window except the last
+term, if any.
+
+<entry><menu key="C-l"/Refine Layout/
+<index class=menu/Browser<and>Refine Layout/
+<item>Checks the current term layout and optimizes it whenever possible.
+
+<entry><menu key="C-x"/Close/
+<index class=menu/Browser<and>Close/
+<item>Closes the Browser.
+</list>
+</section>
+
+<section><title/The Selection Menu/
+<p>
+<list>
+<entry><menu mouse=l2 key="e"/Expand/
+<index/buffer/
+<index class=menu/Selection<and>Expand/
+<item>Replaces the selected shrunken (sub)term <code/,,,/ by a subterm(s),
+or views further subterm(s) of a partially shown selected (sub)term.
+
+<entry><menu mouse=r2 key="s"/Shrink/
+<index class=menu/Selection<and>Shrink/
+<item>Shrinks the selected (sub)term.
+
+<entry><menu mouse=m1 key="d"/Deref/
+<index/dereferencing/
+<index class=menu/Selection<and>Deref/
+<item>If a reference (<<R>><math>N</math> or <<C>><math>N</math>) subterm is selected, the Browser
+exposes and selects the referenced (sub)term.
+
+<entry><menu key="C-b"/Rebrowse/
+<index class=menu/Selection<and>Rebrowse/
+<item>Removes and creates again a selected (sub)term.
+
+<entry><menu/SetAction/
+<index class=menu/Selection<and>Set Action/
+<item>Shows a submemu an action can be choosen from.
+
+<entry><menu mouse=m1 key="C-p"/Apply Action/
+<index class=menu/Selection<and>Apply Action/
+<item>Applies the currently set action to the current selection, if any.
+</list>
+</section>
+
+<section><title/The Options Menu/
+<index class=menu/Options/
+<p>
+<list>
+<entry><menu/Buffer&ellipsis;/
+<index class=menu/Options<and>Buffer/
+<index/buffer/
+<index/options<and>buffer<and>size/
+<index/options<and>buffer<and>separate buffer entries/
+<item>Creates a dialog used for setting the buffer size. and enabling drawing
+a graphical separator between shown terms.
+
+<entry><menu/Representation&ellipsis;/
+<index class=menu/Options<and>Representation/
+<index class=menu/Options<and>Representation<and>Tree/
+<index class=menu/Options<and>Representation<and>Graph/
+<index class=menu/Options<and>Representation<and>Minimal Graph/
+<index class=menu/Options<and>Representation<and>Chunks/
+<index class=menu/Options<and>Representation<and>Names And Procedures/
+<index class=menu/Options<and>Representation<and>Strings/
+<index class=menu/Options<and>Representation<and>Virtual Strings/
+<index/options<and>representation<and>mode/
+<index/options<and>representation<and>detailed chunks/
+<index/options<and>representation<and>detailed names and procedures/
+<index/options<and>representation<and>strings/
+<index/options<and>representation<and>virtual strings/
+<item>Creates a dialog used for setting the representation mode (building
+<<Tree>>, <<Graph>> or <<Minimal Graph>>), detail level (for <<Chunks>> and
+<<Names And Procedures>>), and type (displaying <<Strings>> or <<Virtual Strings>>  as such).
+
+<entry><menu/Display Parameters&ellipsis;/
+<index class=menu/Options<and>Display Parameters/
+<index class=menu/Options<and>Display Parameters<and>Browse Limits/
+<index class=menu/Options<and>Display Parameters<and>Expansion Increment/
+<index/options<and>display<and>width/
+<index/options<and>display<and>depth/
+<index/options<and>display<and>width increment/
+<index/options<and>display<and>depth increment/
+<item>Creates a dialog used for setting the browse limits (<<Depth>> and
+<<Width>>) and the expansion increments (also <<Depth>> and <<Width>>).
+
+<entry><menu/Layout&ellipsis;/
+<index/options<and>layout<and>font size/
+<index/options<and>layout<and>bold/
+<index/options<and>layout<and>align record fields/
+<index class=menu/Options<and>Layout/
+<item>Creates a dialog used for setting a font to be used (<<Font Size>> and
+whether it should be <<Bold>>), as well as setting Browser to show record
+subterms in one column if they don't fit in one row (that is, to <<Align
+Record Fields>>).
+</list>
+</section>
+</chapter>
+
+<chapter id=sec.browser.applicationBrowsers><title/Using Browser Objects/
+<p>
+All Browsers in the &Oz; system are &Oz; objects. The <<BrowserClass>> is the
+class definition of these objects. In this section the usage of these
+objects is described.
+
+<section><title/Creating A Browser Object/
+<p>
+<index class=module/Browser<and>'class'<and>init/
+One can create Browser objects similarly to the pre-defined <<Browser>>
+one:
+<code display>
+BrowserObject = {New Browser.'class' init}
+</code>
+<p>
+The plain <<init>> method makes a newly created Browser placed on its own
+toplevel widget. One can tell a Browser object to use a Tk frame
+(see <!--**  <ptr to=tk> --> for details) as its toplevel frame:
+
+<index class=module/Browser<and>'class'<and>createWindow/
+<index class=module/Browser<and>'class'<and>init/
+<index class=module/Browser<and>'class'<and>browse/
+<code display>
+declare W F BrowserObject in
+%%
+W = {New Tk.toplevel tkInit(bg:ivory)}
+{Tk.send wm(geometry W "500x300")}
+%%
+F = {New Tk.frame tkInit(parent : W
+			 bd     : 3
+			 bg     : white
+                         relief : groove
+                         width  : 450 
+                         height : 250)}
+{Tk.send pack(F fill:both padx:10 pady:10 expand:true)}
+%%
+BrowserObject = {New Browser.'class' init(origWindow: F)}
+{BrowserObject createWindow}
+%%
+{BrowserObject
+ browse(
+    record(
+       atom: bonjour
+       quotedAtom: 'hello world'
+       list: [one two three four five six seven nine]
+       integer: 57
+       float: 34.56e~76
+       string:"adieu, monde cruel!"
+       byteString:{ByteString.make "squeeze me"}
+       tuple: foo(one(1) two(1 2) three(1 2 3))))}
+</code>
+<p>
+The window produced that way is shown on
+<ptr to=fig.browser.oz-em-browser >. Such a browser is called an
+<def/embedded/ Browser, compared to a <def/stand-alone/ Browser using its own
+toplevel widget.
+<figure id=fig.browser.oz-em-browser>
+<caption/An Embedded Application Browser/
+<picture.choice>
+<picture.extern to="emb_nicebrowser.gif" type=gif>
+<picture.extern to="pictures/emb_nicebrowser.eps" type=ps>
+</picture.choice>
+</figure>
+
+<index class=module/Browser<and>'class'<and>createWindow/
+<index class=module/Browser<and>'class'<and>browse/
+Note that when a Browser object is created, either stand-alone or
+embedded, its window does not appear immediately.  This happens when 
+either <<createWindow>> or <<browse>> methods are applied.
+<p>
+<index class=module/Browser<and>'class'<and>closeWindow/
+<index class=module/Browser<and>'class'<and>close/
+A Browser window can be closed by means of the <<closeWindow>> method.
+Each time a Browser window is closed its buffer is flushed.  A Browser
+object itself can be closed by means of the <<close>>  method, which
+deletes its window and frees used by the object memory. A subsequent
+application of a Browser object closed this way proceeds as it were just
+created\footnote{This feature is used in the pre-defined <<Browser>>,
+which can be closed many times but never dies. Note that this behavior
+<em/is not/ <Q/re-creating/ since no new Browser object is created
+immediately.}.
+<p>
+<index class=module/Browser<and>'class'<and>closeWindow/
+Note that the <<closeWindow>> method has no effect for embedded
+application browsers.
+<p>
+<index class=module/Browser<and>'class'<and>close/
+An embedded browser and its frame should be closed by sending the
+<<close>> messages on the Browser object and on the frame object in that
+sequence. For instance, in our example it would be
+<code display>
+   {BO close}
+   {F close}
+</code>
+</section>
+
+<section><title/Browser Object Methods/
+<p>
+<index/application<and>stand-alone/
+<index/application<and>embedded/
+
+Browser objects are controlled by user through the Browser GUI, and by
+means of application of them to the <<BrowserClass>> methods. At the
+glance, there are the following public methods of a Browser object,
+where <<X>> and <<Y>> are certain internal default values:
+
+<index class=module/Browser<and>'class'<and>init/
+<index class=module/Browser<and>'class'<and>createWindow/
+<index class=module/Browser<and>'class'<and>closeWindow/
+<index class=module/Browser<and>'class'<and>close/
+<index class=module/Browser<and>'class'<and>browse/
+<index class=module/Browser<and>'class'<and>break/
+<index class=module/Browser<and>'class'<and>clear/
+<index class=module/Browser<and>'class'<and>clearAllButLast/
+<index class=module/Browser<and>'class'<and>rebrowse/
+<index class=module/Browser<and>'class'<and>option/
+<index class=module/Browser<and>'class'<and>add/
+<index class=module/Browser<and>'class'<and>set/
+<index class=module/Browser<and>'class'<and>delete/
+<index class=module/Browser<and>'class'<and>refineLayout/
+<code display>
+   meth init(origWindow: OrigWindow <= X)
+   meth createWindow
+   meth closeWindow
+   meth close
+   meth browse(Term)
+   meth break
+   meth clear
+   meth clearAllButLast
+   meth rebrowse
+   meth option(...)
+   meth add(Action label:Label <= Y)
+   meth set(Action)
+   meth delete(Action)
+   meth refineLayout
+</code>
+</section>
+</chapter>
+</Book>

@@ -1,0 +1,94 @@
+$Id$
+
+Wed Oct 17 17:12:13 CEST 2001
+-- The query dialog does not work nicely for remote environments
+-- Reflection needs to be improved, cf. Inspector
+-- Implement debugging within spaces
+
+Tue Jan 14 18:25:50 MET 1997
+Erkennung von "veralteter" Codearea (wenn korrespondierendes
+Source-File neueren Datums ist) klappt nicht bei vorcompiliertem Code
+(Der Compiler muesste die aktuelle Zeit beim Compilieren berechnen,
+nicht der Emulator beim Laden des Codes).
+
+Wed Jan 22 18:54:07 MET 1997
+Das Builtin breakpointAt braucht weiteren Parameter `timestamp'. Sonst
+kann es passieren, dass faelschlicherweise das Setzen eines Breakpoints
+als erfolgreich bestaetigt wird, obwohl es (im aktuell gefeedeten Code) 
+gar nicht geklappt hat.
+
+Thu Oct 23 00:27:38 MET DST 1997
+- renaming Debugger --> Wanzenentnehmer oder Entwanznehmer
+
+Thu Oct 23 01:01:01 MET DST 1997
+optionale alphabetische Sortierung des Environments
+
+Mon Oct 27 17:51:41 MET 1997
+unmarshalling of code does not preserve breakpoint information
+
+Mon Nov  3 20:06:35 CET 1997
+bei Exceptions: wenn Emacs Bar einmal geloescht wurde, kommt er
+beim Selektieren anderer (gesicherter) Stack Frames nie mehr zurueck;
+im File wird jedoch an die richtige Stelle gesprungen.
+
+Mon Nov 10 14:59:14 CET 1997
+Kontext-Menues fuer Stackframe: u.a. unleash
+                    Thread    : kill etc...
+
+Mon Nov 24 20:17:34 CET 1997
+rebuildCurrentStack sollte aktuell selektierten stackframe nicht veraendern
+(statt dessen wird zum obersten frame zurueckgesprungen)
+
+Tue Dec  9 16:19:49 CET 1997
+bruni special: jaaaa...
+- action "step to next line"
+- interpreter in status line
+- anforderungen fuer inspector, um embedded benutzen zu koennen
+- gewichte festlegen (leif meint, interaktiv) fuer die subwindows
+  (merkt sich das in rc file)
+- icon + menuleiste ausblendbar machen
+
+Tue Dec  9 16:20:41 CET 1997
+Leif special: nicht gerade special
+- alternative ausdruecke in den auswertungsbaum einhaengen
+- fuer printnamen und werte getrennte fenster, um resizing gracefully handlen
+  zu koennen (frei aus dem englischen transkribiert von bruni)
+
+Sun Jan  4 15:29:19 MET 1998
+Verteiltes Debuggen:
+  Die Fileinformation muss den Hostnamen beinhalten
+
+Mon Jan 12 20:50:44 MET 1998
+Verteiltes Debuggen + lokales Debuggen der liboz:
+  Beim Einladen von Code in den Emulator muss der Filename
+  aus der Debuginfo kanonisiert werden, damit BIbreakpointAt
+  funktionieren kann.
+
+Tue Jan 13 18:43:25 MET 1998
+Pro Stackframe merken, wie die Scrollbars in den Env Windows liegen,
+bei Thread/Frame-Switches entsprechend anpassen.
+
+Thu Jan 29 15:21:08 CET 1998
+Gert spezial: 
+ - fonts auswaehlbar machen
+ - bildchen toggelbar mit text
+ - pause-Button toggelt zwischen gestoppt/nicht gestoppt,
+ - clear-button mit 'terminate all' funktionalitaet
+ - Dreiteilung 'Off', 'On' und 'Silent': 
+   'Off'    : wie bisher bei geschlossenen Fensters
+   'On'     : wie bisher bei geoeffneten Fenster und 'Add Queries' aktiv
+   'Silent' : 'Add Queries' aus, keine Exceptions abfangen, aber
+              Compilerschalter fuer Debugcode.
+ - Automatisches 'Raise' durch den wm bei verschiedenen, wohl zu definierenden
+   Events: Breakpoint angesprungen, exception geworfen, start, wenn schon da..
+
+Thu Jan 29 15:24:42 CET 1998
+leif ganz normal:
+ - thread tree reihenfolge fix fix fixen.
+
+Thu Jan 29 17:20:29 CET 1998
+gelegentliche (hm, wann genau??) Inkonsistenz zwischen Tk-Variablen
+(Attach Queries, etc...) und den internen Config-Zustaenden
+
+Thu Jan 29 22:54:07 CET 1998
+attach == ankoppeln, detach == entkoppeln??!

@@ -1,0 +1,141 @@
+<chapter id="chapter.failures">
+<title/Failure/
+
+<p>
+
+
+  The Mozart system uses a three-state-model for remote sites. The
+  three states are: OK, Temporarily Lost (Temp) , and Permanently Lost
+  (Perm).  At first introduction a remote site is always in the state
+  OK, further use might change the state of the site into one of the
+  other two states. The states are described here:
+
+  <LIST>
+    <ITEM> OK: No problem has yet been detected on the remote site. 
+
+    <ITEM> Temporary Lost: Some transient kind of problems has been
+    detected. A network fluctuation or partitioning can be the cause.
+
+    <ITEM> Permanently Lost: The site is gone and will never be
+    contactable again. The process is gone or the machine is taken
+    down.
+  </LIST>
+
+  <Ptr to ="figure.three_states"> shows the transition-graph for the
+  different states. Note that Perm is a non-transient state.
+    
+   <figure id=figure.three_states>
+        <caption/Transition-graph over OK, Temp and Perm/
+        <picture.choice display>
+           <picture.extern to="three_states.gif" type=gif>
+        </picture.choice>
+   </figure>
+
+
+<p>The classification of site failures into the two categories
+<em>Temp</em> and <em>Perm</em>, simplifies construction of fault
+tolerant applications. By reflecting the failure state of an entity's
+home site to language level, the programmer is presented detailed
+information on what to expect from an entity in the future. The
+interpretation of the state then is: An entity in the state Temp might
+be accessible again while a Perm state clearly defines that the entity
+will never be accessible again.
+    
+
+    
+  
+  <section>
+<title/Handling Faults from Mozart/
+
+    <p> Mozart offers different ways to instrument the behavior of
+        distributed entities in the case of failure (also see
+        <ptr.extern to="ozdoc:system" key="chapter.fault"> and
+        <ptr.extern to="ozdoc:dstutorial" key="chapter.failure">). A
+        fault condition can be paired together with a reaction
+        strategy implemented by a procedure; this pair can be
+        installed on a particular entity. When a fault occurs that
+        matches the fault condition the reaction strategy is executed.
+
+    <p>There are three different  ways to instrument an entity's behavior 
+    when faults interfere with their usage:
+
+    <LIST>
+     <ITEM> Fault Exceptions:
+   
+        Fault Exceptions are per default thrown when an operation on
+        a failed entity is attempted. The condition on when an entity
+        is failed is set by a global fault condition.
+
+     <ITEM> Watchers:
+        A Watcher is an asynchronous fault handler that monitors a 
+	specific entity. When the fault condition for that entity matches 
+	the installed fault condition the reaction procedure is started 
+	in a new thread.     
+
+     <ITEM> Handlers:
+     
+        An Handlers is similar to a Watcher, but is only triggered
+	when an operation is attempted on the particular entity. If
+	the entity has a fault condition that matches the installed
+	fault condition, the reaction procedure is executed instead
+	of the operation, in the same thread.
+            
+</LIST>
+<section>
+<title/Fault Detection 
+
+    <p>The Message Passing Layer (the Communication Layer together
+    with the Transport Layer) monitors its channels to detect any
+    kinds of problems. To simplify the design Perm is only detected
+    while opening connections, while Temp is detected on an open
+    channel as described below.
+
+<subsection><title/Permanent Fault/
+     
+    <p>Operating system error codes are used to deduce that a remote
+    site is permanently down. The main reason for this is that the
+    error codes that guarantee that a process does not exists are
+    only propagated at connection attempts.
+
+<subsection><title/Temporary Faults/
+    
+    <p>Temporary Fault detection is done on Round Trip (RT)
+    calculations.  Each Mozart site has an Acceptable Round Trip
+    (ART), when a RT to a remote site is higher than the ART the
+    remote site is defined as Temp. When the RT goes down below the
+    ART the remote site is considered OK again. The ART can be
+    instrumented from language level.
+
+    <P>The message passing layer constantly measures the RT to all
+    remote sites it is connected to. RT information is piggybacked on
+    ordinary messages to minimize the network traffic.
+
+<SECTION><TITLE/Fault Tolerance/
+    
+   <P>The DS has been designed to be as fault tolerant as possible,
+   with the limited knowledge available. The Message Passing Layer
+   assures reliable delivery as long as it is possible. Messages to a
+   remote site that is in the Perm state will of course not be
+   delivered, and can therefore be discarded. If a connection is lost,
+   a reconnect will be attempted<Note foot>These attempts will
+   continue until a Perm is detected, but the interval between
+   reconnection attempts will grow to avoid harassing servers.</note>.
+
+   <P>On top of this mechanism the protocols are implemented with
+   recovery mechanisms, when possible. The mobile state protocol can
+   bypass lost sites and avoid loss of the state. The Lock protocol,
+   for instance, can recreate its mobile lock if it is lost.
+
+<SECTION><TITLE/Perm and Temp on the Internet/
+   
+   <P>Detecting that a remote site is Perm gone on the Internet
+   is hard, almost impossible. With dynamic addressing schemas as
+   DHCP and and NAT's nothing can be said about the correct state of a
+   machine.  Perm is most likely detected on local LANs where
+   distributed programs running over WANs will probably just
+   experience Temp faults.
+
+
+
+
+

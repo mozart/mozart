@@ -1,0 +1,158 @@
+#  Authors:
+#    Konstantin Popov <kost@sics.se>
+# 
+#  Contributors:
+#    optional, Contributor's name (Contributor's email address)
+# 
+#  Copyright:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://www.mozart-oz.org
+# 
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
+include ../Makefile.vars
+
+BUILDTOP	= @BUILDTOP@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+INCS		= -I$(SRCDIR) -I. -I$(SRCDIR)/.. -I..
+M4_D=		-DEMUDIR=$(SRCDIR)
+LIBS=		@LIBS@
+LDFLAGS=	@LDFLAGS@
+
+REALCORESRCS = dpMarshaler.cc port.cc dpDebug.cc network.cc		\
+               protocolState.cc dsite.cc perdio.cc state.cc		\
+               vs_interface.cc fail.cc table.cc	                        \
+               protocolFail.cc var.cc var_obj.cc var_lazy.cc msgType.cc	\
+               chain.cc dpResource.cc msgContainer.cc	\
+	       comObj.cc connection.cc tcpConnection.cc			\
+               prioQueues.cc transObj.cc tcpTransObj.cc timers.cc	\
+               var_class.cc \
+               referenceConsistency.cc fracWRC.cc timeLease.cc
+
+CREATEDCOREFILES = msgContainer_marshal.hh msgContainer_marshal.cc \
+                   dpMarshalcode.cc 
+CREATEDCORESRCS  = 
+CORESRCS = $(REALCORESRCS) $(CREATEDCORESRCS)
+COREOBJS = $(CORESRCS:.cc=.lo)
+
+REALVSSRCS = virtual.cc vs_comm.cc vs_mailbox.cc vs_msgbuffer.cc
+VSSRCS = $(REALVSSRCS)
+VSOBJS = $(VSSRCS:.cc=.lo)
+
+MODULESRCS = pidModule.cc faultModule.cc dpMiscModule.cc dpStatisticsModule.cc
+MODULEOBJS = $(MODULESRCS:.cc=.lo)
+
+REALSRCS = $(REALCORESRCS) $(REALVSSRCS) $(MODULESRCS)
+
+CREATEDFILES = $(CREATEDCOREFILES)
+
+
+# nothing for just "all";
+all:
+
+#
+../DPB.so-$(PLATFORM): $(CREATEDFILES) $(COREOBJS)
+	$(DYNLD) -o $@ $(COREOBJS)
+
+../libDPB.a: $(COREOBJS)
+	$(AR) -rc $@ $(COREOBJS) && $(RANLIB) $@
+
+#
+pidModule.lo: ../modPID-if.cc $(CREATEDFILES)
+
+../PID.so-$(PLATFORM): pidModule.lo
+	$(DYNLD) -o $@ $<
+
+../libPID.a: pidModule.lo
+	$(AR) -rc $@ $< && $(RANLIB) $@
+
+#
+faultModule.lo: ../modFault-if.cc
+
+../Fault.so-$(PLATFORM): faultModule.lo 
+	$(DYNLD) -o $@ $<
+
+../libFault.a: faultModule.lo
+	$(AR) -rc $@ $< && $(RANLIB) $@
+
+#
+dpMiscModule.lo: ../modDPMisc-if.cc
+
+../DPMisc.so-$(PLATFORM): dpMiscModule.lo 
+	$(DYNLD) -o $@ $<
+
+../libDPMisc.a: dpMiscModule.lo
+	$(AR) -rc $@ $< && $(RANLIB) $@
+
+#
+
+dpStatisticsModule.lo: ../modDPStatistics-if.cc $(CREATEDFILES)
+
+../DPStatistics.so-$(PLATFORM): dpStatisticsModule.lo 
+	$(DYNLD) -o $@ $<
+
+../libDPStatistics.a: dpStatisticsModule.lo
+	$(AR) -rc $@ $< && $(RANLIB) $@
+
+#
+../VirtualSite.so-$(PLATFORM): $(VSOBJS)
+	$(DYNLD) -o $@ $(VSOBJS)
+
+../libVirtualSite.a: $(VSOBJS)
+	$(AR) -rc $@ $(VSOBJS) && $(RANLIB) $@
+
+#
+first:	$(CREATEDFILES)
+
+depend:: Makefile $(REALSRCS)
+	$(MAKE) first
+	$(DEPEND) $(REALSRCS:%=$(SRCDIR)/%) | sed -e '1,$$s/\.o:/\.lo:/' > Makefile.deps
+
+Makefile: Makefile.in
+	(cd ..;./config.status)
+
+-include Makefile.deps
+include ../Makefile.rules
+
+distclean::
+	-rm -f Makefile makefile
+
+cleaner::
+	-rm -f *.a *.so-$(PLATFORM) $(CREATEDFILES)
+
+veryclean::
+	-rm -f *.a *.so-$(PLATFORM) Makefile.deps TAGS $(CREATEDFILES)
+
+#
+# special dependencies...
+ALLOBJS=$(COREOBJS) $(VSOBJS) $(MODULEOBJS)
+
+# m4-files dependencies;
+dpMarshalcode.cc dpMarshaler.o: dpMarshalcode.m4cc
+msgContainer_marshal.hh: msgContainer_marshal.m4hh msgFormat.m4
+msgContainer.o: msgContainer_marshal.m4hh msgFormat.m4
+msgContainer_marshal.cc: msgContainer_marshal.m4cc msgFormat.m4
+msgContainer.o: msgContainer_marshal.m4cc msgFormat.m4
+
+BUILDDIR=$(shell pwd)
+tags:	$(CREATEDFILES)
+	etags \
+	--regex='/OZ_BI_\(io\)?define([ 	]*\([^ 	,)]+\)/\2/' \
+	--regex='/OZ_C_\(io\)?proc_begin([ 	]*\([^ 	,)]+\)/\2/' \
+	--regex='/OZ_DECLARE[A-Z0-9_]*([ 	]*\([^ 	,)]+\)/\1/' -l c++ \
+	-o $(SRCDIR)/TAGS \
+	$(addprefix $(BUILDDIR)/,$(CREATEDFILES)) \
+	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/../*c $(SRCDIR)/../*h 
+

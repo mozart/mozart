@@ -1,0 +1,151 @@
+<!--
+  - Author:
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Leif Kornstaedt, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Appendix id="appendix.narrator">
+  <Title/Narrators and Listeners/
+  <Section>
+    <Title/The <<Narrator>> Module/
+    <P>
+      The <<Narrator>> module, located at <File>x-oz://system/Narrator</File>,
+      exports the class <<Narrator.'class'>> with the following methods.
+    <Para class=apropos><Title/Methods/
+      <List>
+	<Entry><<init(??{PrivateNarratorO})>>
+	<Item>
+	  <P.silent><!--**-->
+	<Entry><<register(?+{Port})>>
+	<Item>
+	  <P.silent><!--**-->
+	<Entry><<newListener(?+{Port})>>
+	<Item>
+	  <P.silent><!--**-->
+	<Entry><<unregister(?+{Port})>>
+	<Item>
+	  <P.silent><!--**-->
+	<Entry><<tell(?_{X})>>
+	<Item>
+	  <P.silent><!--**-->
+      </List>
+    <SubSection class=unnumbered>
+      <Title/The <<PrivateNarrator>> Class/
+      <!--**-->
+      <Para class=apropos><Title/Methods/
+	<List>
+	  <Entry><<setLogPhases(?+{B})>>
+	  <Item>
+	    <P.silent><!--**-->
+	  <Entry><<setMaxNumberOfErrors(?+{I})>>
+	  <Item>
+	    <P.silent><!--**-->
+	  <Entry><<tell(?_{X})>>
+	  <Item>
+	    <P.silent><!--**-->
+	  <Entry><<startBatch()>>
+	  <Item>
+	    <P.silent><!--**-->
+	  <Entry><<startPhase(?+{V})>>
+	  <Item>
+	    <P.silent><!--**-->
+	  <Entry><<startSubPhase(?+{V})>>
+	  <Item>
+	    <P.silent><!--**-->
+	  <Entry><<endBatch(?+{A})>>
+	  <Item>
+	    <P.silent>
+	      <!--** accepted, rejected, aborted, crashed, interrupted -->
+	  <Entry><<error(coord: ?+{Coord} &lt;= unit
+      kind:  ?+{KindV} &lt;= unit
+      msg:   ?+{MsgV}  &lt;= unit
+      items: ?+{Ts}    &lt;= unit
+      abort: ?+{B}     &lt;= true)>>
+	  <Item>
+	    <P.silent><!--**-->
+	  <Entry><<warn(coord: ?+{Coord} &lt;= unit
+     kind:  ?+{KindV} &lt;= unit
+     msg:   ?+{MsgV}  &lt;= unit
+     items: ?+{Ts}    &lt;= unit)>>
+	  <Item>
+	    <P.silent><!--**-->
+	  <Entry><<hasSeenError(??{B})>>
+	  <Item>
+	    <P.silent><!--**-->
+	</List>      
+  <Section>
+    <Title/The <<Listener>> Module/
+    <P>
+      The <<Listener>> module, located at <File>x-oz://system/Listener</File>,
+      exports the class <<Listener.'class'>> with the following methods.
+    <Para class=apropos><Title/Methods/
+      <List>
+	<Entry><<init(?+{NarratorO} ?+{ServeL})>>
+	<Item>
+	  initializes a listener with a narrator and the label of a
+	  unary method.  The listener creates a port, registers this with
+	  ?_{NarratorO}, and creates a thread in which the ?_{ServeL} method
+	  is applied to the port's stream.
+	<Entry><<close()>>
+	<Item>
+	  undoes all effects of the <<init>> method:  The server thread
+	  is terminated and the listener's port is unregistered.
+	<Entry><<getNarrator(??{NarratorO})>>
+	<Item>
+	  returns the narrator with which the listener's port is currently
+	  registered.
+	<Entry><<getPort(??{Port})>>
+	<Item>
+	  returns the associated port.
+      </List>
+  <Section>
+    <Title/The <<ErrorListener>> Module/
+    <P>
+      The <<ErrorListener>> module, located at <File
+      >x-oz://system/ErrorListener</File>, exports the class
+      <<ErrorListener.'class'>> with the following methods.
+    <Para class=apropos><Title/Methods/
+      <List>
+	<Entry>
+	  <<init(?+{NarratorO} ?+{ServeOneL} &lt;= unit ??{VerboseL} &lt;= false)>>
+	<Item>
+	  <P.silent><!--**-->
+	<Entry><<reset()>>
+	<Item>
+	  <P.silent><!--**-->
+	<Entry><<setVerbosity(?+{L})>>
+	<Item>
+	  <P.silent><!--**-->
+	<Entry><<hasErrors(??{B})>>
+	<Item>
+	  <P.silent><!--**-->
+	<Entry><<isActive(??{B})>>
+	<Item>
+	  <P.silent><!--**-->
+	<Entry><<getVS(??{B})>>
+	<Item>
+	  <P.silent><!--**-->
+	<Entry><<getMessages(??{Xs})>>
+	<Item>
+	  <P.silent><!--**-->
+	<Entry><<formatMessages(?+{Xs} ??{V})>>
+	<Item>
+	  <P.silent><!--**-->
+      </List>
+</Appendix>

@@ -1,0 +1,92 @@
+<chapter id="chapter.efficient">
+<title/Efficient Implementation/
+
+<p>The Distribution Subsystem of Mozart boosts throughput and can
+communicate with an unbounded number of sites in spite of bounded
+resources such as memory or a limited number of connections. The
+ability to distribute any entity does not impose any noticeable
+performance loss on local entities. These properties are achieved by
+an efficient implementation which will be discussed in this section.
+
+<section>
+<title/Throughput/
+
+<p>Over most transport media throughput can be boosted by sending
+few fairly large packets rather than many small ones. The DS utilizes
+this by pipelining, that is sending several messages to the same
+destination in one packet. This is possible since all messages to one
+site are sent via the same (virtual) connection, and since all sends
+are asynchronous. Asynchronous sends allow a short delay between the
+time a message is constructed and actually sent. During this period of
+time, more messages from the same or a different computation may be
+constructed and can be sent together.  <NOTE FOOT>This is a more
+fine-grained version of the Nagle algorithm.</NOTE>
+
+<p>The perceived throughput consists not only of the amount of bytes
+transmitted, but also of the importance of the transmitted
+data. Important data is therefore sent with a higher priority. Large
+low priority messages may also be interleaved by high priority
+messages by sending large messages in pieces. Note that no messages
+are lost.
+
+<section>
+<title/Resource Usage/
+
+<p>The resources that are limited in this context are mainly memory
+and number of connections. The number of connections available depends
+on what transfer medium and what operating system is used.  For a
+TCP-connection the limit is imposed by a limited number of file
+descriptors.
+
+<para class=apropos><title/Memory/</para>
+
+<p>The largest amount of memory necessary for communication is that of
+the buffers necessary for marshaling. To avoid a memory blowup when
+sending large messages, the DS uses a suspendable marshaler.  This
+marshaler marshals data to buffers limited in size and suspends in
+case they are filled. The partial message can then be sent and
+marshaling can be continued later.
+
+<para class=apropos><title/Connections/</para>
+
+<p>The fact that only one virtual connection per pair of sites is
+used, limits the number of physical connections.  Unfortunately, when
+resources are scarce, this is not always enough. Some applications may
+acquire references to a large number of sites without ever
+communicating with all of these. Other applications may need to do
+concurrent communication with more sites than can be simultaneously
+physically connected. The former case is handled by the automatic
+connection establishment property, the latter by a round robin
+scheduling mechanism that lets all virtual connections take turns on
+having one of the possible physical connections on a need to use
+basis.
+
+<section>
+<title/Zero Impact Implementation of the Distribution Subsystem/
+
+<p>The Distribution Subsystem does not interfere with the performance of
+the local Mozart engine. This is achieved in several ways:
+
+<list>
+<item>The DS is a dynamically loadable library that
+will only be loaded into the system when communication is needed.
+<item>All sockets used for communication are non-blocking, enabling
+the local computation to advance while the network is transmitting
+data.
+<item>The implementation of entities is done in such a way that the
+distributed version will only be invoked when necessary.
+<item>The execution time of the operating system process is shared
+between the Mozart Virtual Machine and the DS. This is achieved by
+passing messages asynchronously via queues between the two systems,
+and processing them in each systems time-slice (See <PTR
+TO="figure.time-sharing">). 
+
+
+<figure id=figure.time-sharing>
+<caption/Time sharing between the Mozart Virtual Machine and the
+Distribution Subsystem/
+<picture.choice display>
+      <picture.extern to="time_sharing.gif" type=gif>
+</picture.choice>
+</figure>
+</list>
