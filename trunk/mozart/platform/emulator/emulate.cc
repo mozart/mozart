@@ -62,14 +62,14 @@ void failureUnify(AM *e, char *msgShort, TaggedRef arg1, TaggedRef arg2,
 #define HF_UNIFY(MSG_SHORT,T1,T2,MSG_LONG)                                    \
    if (!e->isToplevelFailure()) { goto LBLfailure; }                          \
    failureUnify(e,MSG_SHORT,T1,T2,MSG_LONG,PC);				      \
-   goto LBLkillThread;
+   goto LBLtoplevelFailure;
 
 
 
 #define HF_FAIL(MSG_SHORT,MSG_LONG) 					      \
    if (!e->isToplevelFailure()) { goto LBLfailure; }			      \
    HF_BODY(MSG_SHORT,MSG_LONG);						      \
-   goto LBLkillThread;
+   goto LBLtoplevelFailure;
 
 
 void failureNomsg(AM *e, ProgramCounter PC) { HF_BODY(,); }
@@ -77,7 +77,7 @@ void failureNomsg(AM *e, ProgramCounter PC) { HF_BODY(,); }
 #define HF_NOMSG   							      \
    if (!e->isToplevelFailure()) { goto LBLfailure; }			      \
    failureNomsg(e,PC);							      \
-   goto LBLkillThread;
+   goto LBLtoplevelFailure;
 
 
 
@@ -1118,6 +1118,12 @@ void engine()
 	goto LBLpopTask;
       }
 
+
+    /* unraised exception */
+    case C_EXCEPT_HANDLER:
+	taskstack->setTop(topCache-1);
+	goto LBLpopTask;
+
     case C_CALL_CONT:
       {
 	predicate = (Chunk *) TaskStackPop(--topCache);
@@ -2090,6 +2096,31 @@ LBLkillThread:
 
 	switch (bi->getType()) {
 
+	case BIraise:
+	LBLraise:
+	  {
+	    TaggedRef exception = X[0];
+	    if (!e->isToplevel()) {
+	      warning("raise only allowed on toplevel (yet)");
+	      if (isTailCall) {
+		goto LBLpopTask;
+	      }
+	      JUMP(PC);
+	    }
+	    isTailCall = OK;
+	    if (e->currentThread == NULL) {
+	      predicate = NULL;
+	    } else {
+	      predicate = e->currentThread->findExceptionHandler();
+	    }
+	    if (predicate == NULL) {
+	      warning("no exception handler found for: %s",OZ_toC(exception));
+	      goto LBLpopTask;
+	    }
+	    /* exception is already in X[0], but should somehow be reflected !!! */
+	    goto LBLcall;
+	  }
+
 	case BIsolve:
 	  { isEatWaits = NO; isSolveDebug = NO; goto LBLBIsolve; }
 	case BIsolveEatWait:
@@ -2702,6 +2733,14 @@ LBLkillThread:
     JUMP(nxt);
   }
   
+ LBLtoplevelFailure:
+  {
+    /* raise exception "toplevelFailure" */
+    X[0] = makeTaggedAtom("toplevelFailure");
+    predArity = 1;
+    goto LBLraise;
+  }
+
  LBLfailure:
   {
     AWActor *aa;
