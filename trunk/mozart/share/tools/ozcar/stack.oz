@@ -67,6 +67,24 @@ local
 
    fun {S2F Nr Frame}
       Data = {CondSelect Frame data unit}
+      Kind#Granul = case Frame.kind of 'call/c' then 'call'#coarse
+		    [] 'call/f' then 'call'#fine
+		    [] 'lock/c' then 'lock'#coarse
+		    [] 'lock/f' then 'lock'#fine
+		    [] 'exception handler/c' then 'exception handler'#coarse
+		    [] 'exception handler/f' then 'exception handler'#fine
+		    [] 'conditional/c' then 'conditional'#coarse
+		    [] 'conditional/f' then 'conditional'#fine
+		    [] 'definition/c' then 'definition'#coarse
+		    [] 'definition/f' then 'definition'#fine
+		    [] 'skip/c' then 'skip'#coarse
+		    [] 'skip/f' then 'skip'#fine
+		    [] 'fail/c' then 'fail'#coarse
+		    [] 'fail/f' then 'fail'#fine
+		    [] 'thread/c' then 'thread'#coarse
+		    [] 'thread/f' then 'thread'#fine
+		    elseof K then K#unknown
+		    end
    in
       frame(nr:      Nr   % frame counter
 	    dir:     {Label Frame}   % 'entry' or 'exit'
@@ -75,7 +93,7 @@ local
 	    column:  {CondSelect Frame column unit}
 	    time:    Frame.time
 	    name:    case {CondSelect Frame name unit} of unit then
-			case Frame.kind of call then
+			case Kind == 'call' then
 			   case {IsDet Data} then
 			      case Data == unit then 'unknown'
 			      elsecase {IsProcedure Data} then
@@ -88,22 +106,20 @@ local
 			   else
 			      UnboundType
 			   end
-			[] 'lock' then 'lock'
-			[] handler then 'exception handler'
-			[] cond then 'conditional'
-			[] exception then 'exception'
-			[] statement then 'statement'
+			else Kind
 			end
 		     elseof Name then Name
 		     end
+	    kind:    Kind
+	    granul:  Granul
 	    data:    Data
-	    args:    case Frame.kind
-		     of 'lock' then [Frame.data]
+	    args:    case Kind of 'lock' then [Frame.data]
 		     [] 'cond' then
 			case {IsDet Data} andthen Data == unit then unit
 			else [Data]
 			end
-		     else {CondSelect Frame args unit}
+		     else
+			{CondSelect Frame args unit}
 		     end
 	    frameID: {CondSelect Frame frameID unit}
 	    vars:    {CondSelect Frame vars unit})
@@ -279,9 +295,7 @@ in
 	 else
 	    Frame = {Dictionary.get self.D I}
 	 in
-	    case Frame.args == unit
-	       andthen {Not {IsSpecialFrameName Frame.name}}
-	    then
+	    case Frame.kind == call andthen Frame.args == unit then
 	       StackManager, CountFramesWithoutDebug(I - 1 $) + 1
 	    else
 	       0
@@ -310,6 +324,7 @@ in
 	    case Key > 0 then
 	       {Dictionary.put self.D Key {S2F Key Frame}}
 	    else
+	       {OzcarError 'internal stack inconsistency; resuming thread'}
 	       {Thread.resume self.T}
 	    end
 	 end
