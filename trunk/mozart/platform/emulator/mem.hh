@@ -31,15 +31,11 @@
 #pragma interface
 #endif
 
-
-#include <stdlib.h>
-#ifndef IRIX
-#include <memory.h>
-#endif
-#include <stdio.h>
-
 #include "base.hh"
 #include "statisti.hh"
+
+#include <stdlib.h>
+#include <stdio.h>
 
 #ifdef DEBUG_MEM
 #define DebugMem(Code) Code
