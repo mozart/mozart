@@ -30,6 +30,8 @@
 #pragma implementation "mem.hh"
 #endif
 
+#include <malloc.h>
+
 #include "mem.hh"
 #include "os.hh"
 #include "am.hh"

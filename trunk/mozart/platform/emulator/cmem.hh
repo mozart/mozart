@@ -54,6 +54,9 @@ void init_cmem();
 //
 class CppObjMemory {
 public:
+  /*
+   * kost@ : well, it turns out NOT to bring anything somehow.
+   *         diabled for now;
   //
   void *operator new(size_t size) {
     int index = size / sizeof(int32);
@@ -82,6 +85,7 @@ public:
     *((int32 **) obj) = freelist[index];
     freelist[index] = (int32 *) obj;
   }
+  */
 
   // must be empty;
   CppObjMemory() {}

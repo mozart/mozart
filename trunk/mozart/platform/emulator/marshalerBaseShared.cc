@@ -65,9 +65,8 @@ void marshalGName(MARSHALERBUFFER *bs, GName *gname)
 {
   // generic one (not distributions'!)
   gname->site->marshalSiteForGName(bs);
-  for (int i = 0; i < fatIntDigits; i++) {
-    marshalNumber(bs, gname->id.number[i]);
-  }
+  for (int i = fatIntDigits; i--; )
+    marshalNumber(bs, gname->id.getNumber(i));
   marshalNumber(bs, (int) gname->gnameType);
 }
 

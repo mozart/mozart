@@ -117,7 +117,9 @@ public:
   Bool failurePreemption(TaggedRef);
   void wakeAll();
 
-  TaggedRef getTaggedRef();
+  TaggedRef getTaggedRef() {
+    return (borrowIndex2borrowEntry(getIndex())->getRef());
+  }
 
   void nowGarbage(BorrowEntry*); 
 };
@@ -242,7 +244,9 @@ public:
 
   void subEntityCond(EntityCond);
   void newWatcher(Bool);
-  TaggedRef getTaggedRef();
+  TaggedRef getTaggedRef() {
+    return (ownerIndex2ownerEntry(getIndex())->getRef());
+  }
   Bool failurePreemption(TaggedRef);
   void wakeAll();
 };

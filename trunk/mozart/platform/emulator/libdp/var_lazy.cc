@@ -148,7 +148,7 @@ void LazyVar::newWatcher(Bool b){
 }
 
 TaggedRef LazyVar::getTaggedRef() {
-  return borrowTable->bi2borrow(index)->getRef();
+  return borrowIndex2borrowEntry(index)->getRef();
 }
 
 

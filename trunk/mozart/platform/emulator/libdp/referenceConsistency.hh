@@ -85,51 +85,84 @@ public:
 
 class HomeReference{
   friend class OB_Entry;
+private:
+  Ext_OB_TIndex extOTI;
   
 public:
-  Ext_OB_TIndex extOTI;
   GCalgorithm *algs;
+
+  HomeReference() {
+    DebugCode(extOTI = (Ext_OB_TIndex) -1;);
+    DebugCode(algs = (GCalgorithm *) -1;);
+  }
+  ~HomeReference() {
+    while (algs != NULL){
+      GCalgorithm *tmp2 = algs;
+      algs->remove();
+      algs = algs->next;
+      delete tmp2;
+    }
+    DebugCode(extOTI = (Ext_OB_TIndex) -1;);
+    DebugCode(algs = (GCalgorithm *) -1;);
+  }
+
   // 
-  Bool isPersistent();
+  Bool isPersistent() { return (algs == NULL); }
   void makePersistent();
   // old hasFullCredit
   Bool canBeReclaimed();
-  
-  void setUp(Ext_OB_TIndex indx, int algs);
+
+  // 'setUp()' respects GC algorithm settings (ozconf.dpUseTimeLease,
+  // ozconf.dpUseFracWRC);
+  void setUp(Ext_OB_TIndex indx);
   
   Bool mergeReference(RRinstance *r);
   RRinstance *getBigReference();
   RRinstance *getSmallReference();
   
-  void removeReference();
-  
   Bool removeAlgorithm(OZ_Term);
   OZ_Term extract_info();
+
+  Ext_OB_TIndex getExtOTI() { return (extOTI); }
 };
 
 
 class RemoteReference{
   friend class BorrowEntry;
   friend class BorrowTable;
-public:
-  RemoteReference(){}
-  
+
+private:
   NetAddress netaddr;
+
+public:
   GCalgorithm *algs;
-  
-  Bool isPersistent();
+
+  RemoteReference() { DebugCode(algs = (GCalgorithm *) -1;); }
+  void setUp(RRinstance *r, DSite* s, int i);
+
+  Bool isPersistent() { return (algs == NULL); }
+  NetAddress* getNetAddress() { return (&netaddr); }
 
   Bool canBeReclaimed();
-
-  void setUp(RRinstance *r,DSite* s,int i);
   
-  void dropReference();
+  void dropReference() {
+    NetAddress *na = getNetAddress();
+    DSite* site = na->site;
+    int index = na->index;
+    GCalgorithm *tmp=algs;
+    while(tmp!=NULL){
+      GCalgorithm *tmp2=tmp;
+      tmp->dropReference(site,index);
+      tmp=tmp->next;
+      delete tmp2;
+    }
+  }
   void copyReference(RemoteReference *from);
   void mergeReference(RRinstance *r);
 
   RRinstance *getBigReference();
   RRinstance *getSmallReference();
-  NetAddress* getNetAddress();
+
   OZ_Term extract_info();
 };
 

@@ -2,9 +2,10 @@
  *  Authors:
  *    Tobias Mueller <tmueller@ps.uni-sb.de>
  *    Ralf Scheidhauer <Ralf.Scheidhauer@ps.uni-sb.de>
+ *    Konstantin Popov <kost@sics.se>
  * 
  *  Contributors:
- *    Konstantin Popov <kost@sics.se>
+ *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -39,7 +40,7 @@
 class SHT_HashNode;
 
 //
-// The one with the paramount efficiency (atom- and name- hash
+// The one with the paramount lookup efficiency (atom- and name- hash
 // tables). That is, we don't really care how expensive is the
 // "insert" operation, both in terms of speed and memory.
 
@@ -76,10 +77,15 @@ public:
 };
 
 //
+extern crc_t crc_table[256];
+
+//
+// kost@ : Now, with CRC32 hashing, the table size is the power of 2;
 class StringHashTable {
 protected:
   SHT_HashNode *table;		// 
   int tableSize;		// 
+  unsigned int mask;		// hash mask;
   int counter;      // number of entries
   int percent;      // if more than percent is used, we reallocate
 
@@ -87,7 +93,15 @@ private:
   int lengthList(int i);
 
 protected:
-  unsigned int hashFunc(const char *);
+  unsigned int hashFunc(const char *p) {
+    unsigned int hash = (unsigned int) 0xffffffff;
+    for (; *p; p++)
+      hash = crc_table[(hash ^ (*p)) & 0xff] ^ (hash >> 8);
+    // this scheme performs quite well [for smaller examples] too:
+    // for (; *p; p++)
+    //   hash = hash = (hash<<7)^(hash>>25)^(*p);
+    return (hash & mask);
+  }
   void resize();
 
 public:
@@ -150,7 +164,7 @@ protected:
   int percent;			// reallocate when percent > counter;
   //
   int bits;			// pkey & skey;
-  int rsBits;			// right shifht;
+  int rsBits;			// right shift;
   int slsBits;			// skey left shift;
   DebugCode(int nsearch;);	// number of searches;
   DebugCode(int tries;);	// accumulated;
@@ -228,8 +242,8 @@ private:
   int counter;			// number of entries;
   int percent;			// reallocate when percent > counter;
   //
-  int bits;			// ipkey & skey;
-  int rsBits;			// right shifht;
+  int bits;			// pkey & skey;
+  int rsBits;			// right shift;
   int slsBits;			// skey left shift;
   unsigned int pass;		// current pass;
   // (inits to 1 since AHT_HashNodeCnt inits it to 0);
@@ -275,6 +289,132 @@ public:
   //
   DebugCode(void print(););
   DebugCode(void printStatistics(int th = 0););
+};
+
+//
+// Generic template for tables with the 'delete' operation, and where
+// dedicated nodes are (m-)allocated anyway. Notably, for the borrow
+// (and possibly also owner) table. It is supposed to supersede the
+// (in)famous 'GenHashTable'.
+//
+// Table keeps "nodes" that must be inherited from 'GenDistEntryNode'.
+// Specific nodes must implement comparison methods, etc.
+//
+// The current implementation of 'GenDistEntryTable' is a bucket hash
+// table-based one, with sorted lists. The hashing scheme is the
+// multiplicative one (using the Knuth' terminology).
+// 
+
+//
+// 'GenDistEntryTable' uses methods of this class.
+// Also, the linkage between nodes is provided;
+template<class NODE>
+class GenDistEntryNode {
+private:
+  NODE *next;
+
+public:
+  GenDistEntryNode() { DebugCode (next = (NODE *) -1;); }
+
+  //
+  NODE** getNextNodeRef() { return (&next); }
+  NODE *getNext() { return(next); }
+  void setNext(NODE *n) { next = n; }
+
+  // Interface methods - must be implemented properly by specific node
+  // types.
+  // 'value4hash()' returns an unsigned integer for hashing;
+  unsigned int value4hash() { Assert(0); return (0); }
+  // Negative if less, 0 if equal, positive if larger than 'n';
+  int compare(NODE *n) { Assert(0); return (0); }
+};
+
+//
+template<class NODE>
+class GenDistEntryTable {
+private:
+  // buckets are sorted in ascending order;
+  NODE **table;
+  int tableSize;
+  int counter;			// number of allocated entries;
+  int percent;			// reallocate when percent > counter;
+
+  //
+  // 'bits' is the number of bits in a hash value, and 'rsBits' is the
+  // number of bits in the Right Shift to leave 'bits' in a hash
+  // value;
+  int bits;
+  int rsBits;
+
+  //
+private:
+  void mkEmpty();
+  void init(int sizeIn);
+  void resize();
+
+  //
+  unsigned int hash(unsigned int i) {
+    // golden cut = 0.6180339887 = A/w
+    // (0.61803398874989484820458683436563811772030917980576 ..),
+    // there are 32bit integers w = 4294967296,
+    // thus A = 2654435769 (11400714819323198485 for 64bit architecture).
+    // Yet better, follow Knuth volume 3 section 6.4:
+    //   0.25                < A/w < 0.29999999999999999
+    //   0.33333333333333331 < A/w < 0.42857142857142855
+    //   0.5714285714285714  < A/w < 0.66666666666666663
+    //   0.69999999999999996 < A/w < 0.75
+    // For MIX with radix=10 with 5 bytes word 'A' is suggested to be
+    //   6125423371 = 61*10^4 + 25*10^3 + 42*10^2 + 33*10^1 + 71*10^0
+    // For our radix=2 computers with 4 bytes let's take
+    //   0x9e*256^3 + 0x41*256^2 + 0x93*256^1 + 0x55*256^0 = 0x9e419355
+    // (2655097685 in decimal);
+    return ((((unsigned int) i) * ((unsigned int) 0x9e419355)) >> rsBits);
+  }
+
+  //
+public:
+  GenDistEntryTable(int sizeIn) { init(sizeIn); }
+  ~GenDistEntryTable() {
+    delete table;
+    DebugCode(table = (NODE **) -1;);
+    DebugCode(tableSize = counter = percent = bits = rsBits = -1;);
+  }
+
+  //
+  void compactify();
+
+  // 'htAdd()' inserts any node - there may be equal nodes already in
+  // there;
+  // The 'newNode's 'next' field may be uninitialized (but will be set
+  // properly, of course);
+  void htAdd(NODE *newNode);
+  // 'htDel()'/'htFind()' match nodes that are *equal* to the
+  // specified one (but not necessarily the same one, of course);
+  NODE* htFind(NODE *eqNode);
+  // 'htDel()' does nothing if no node matches;
+  void htDel(NODE *eqNode);
+
+  //  
+  int getSize() { return (tableSize); }
+  int getUsed() { return (counter); }
+
+  // Sequential scavenging for garbage collection.  We assume that
+  // nodes are not relocated, as well as are not added/deleted from
+  // the table;
+  NODE* getFirstNode(int i) { return (table[i]); }
+  // Now, nodes can be removed too:
+  NODE** getFirstNodeRef(int i) { return (&table[i]); }
+  // delete the identified node from the table (note that a pointer to
+  // a pointer is necessary), but not the node itself;
+  void deleteNode(NODE *pn, NODE **ppn) {
+    Assert(pn == *ppn);
+    *ppn = pn->getNext();
+    DebugCode(pn->setNext((NODE *) -1););
+    counter--;
+  }
+
+  //
+  DebugCode(void checkConsistency(););
 };
 
 #endif

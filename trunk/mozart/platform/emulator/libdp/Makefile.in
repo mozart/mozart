@@ -39,8 +39,7 @@ REALCORESRCS = dpMarshaler.cc port.cc dpDebug.cc network.cc		\
 	       comObj.cc connection.cc tcpConnection.cc			\
                prioQueues.cc transObj.cc tcpTransObj.cc timers.cc	\
                var_class.cc \
-               referenceConsistency.cc fracWRC.cc timeLease.cc          \
-               bucketHashTable.cc
+               referenceConsistency.cc fracWRC.cc timeLease.cc
 
 CREATEDCOREFILES = msgContainer_marshal.hh msgContainer_marshal.cc \
                    dpMarshalcode.cc 
