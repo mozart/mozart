@@ -4485,11 +4485,10 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   Assert(isPort(prt));
 
   Port *port  = tagged2Port(prt);
-  TertType tt = port->getTertType();
 
   CheckLocalBoard(port,"port");
 
-  if(tt==Te_Proxy) {
+  if(port->isProxy()) {
     return portSend(port,val,am.currentThread());
   } 
   LTuple *lt = new LTuple(val,am.currentUVarPrototype());
@@ -5412,7 +5411,7 @@ OZ_BI_define(BIdlLoad,1,1)
       return oz_raise(E_ERROR,AtomForeign,
 		      "cannotFindInterfaceFunction", 2,
 		      OZ_in(0), oz_atom(I->name));
-    bi = new Builtin(I->name,I->arity,0,*func,(IFOR)NULL); // mm2
+    bi = new Builtin(I->name,I->arity,0,*func,OK,(IFOR)NULL); // mm2
     l = cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
     I++;
   }
@@ -6789,7 +6788,7 @@ OZ_C_proc_proto(BIdebugPrintLong);
 #include "builtins.dcl"
 BIspec allSpec[] = {
 #include "builtins.tbl"
-  {0,0,0,0}
+  {0,0,0,0,0}
 };
 
 
@@ -6807,7 +6806,7 @@ extern void initVirtualProperties();
 
 Builtin *BIinit()
 {
-  Builtin *bi = BIadd("builtin",2,1,BIbuiltin);
+  Builtin *bi = BIadd("builtin",2,1,BIbuiltin,OK);
 
   if (!bi)
     return bi;
