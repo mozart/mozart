@@ -80,6 +80,8 @@ public:
   int clockTick;
 
   int taskStackSize;
+
+  int typeErrorVerbosity;
 public:
   ConfigData();
 };
