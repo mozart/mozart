@@ -144,18 +144,6 @@ OZ_LIB_GMP
 AC_SUBST(CPPFLAGS)
 AC_SUBST(LDFLAGS)
 
-dnl ******************************************************************
-dnl maybe select QTk
-dnl ******************************************************************
-
-OZ_ENABLE(qtk,[QTk GUI builder],no,
-    QTK_ENABLED=yes
-    AC_MSG_RESULT(yes),
-    QTK_ENABLED=no
-    AC_MSG_RESULT(no)
-)
-AC_SUBST(QTK_ENABLED)
-
 dnl *****************************************************************
 dnl FINALIZE
 dnl *****************************************************************

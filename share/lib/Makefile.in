@@ -51,14 +51,7 @@ SITE_PROPERTY_FLAGS     =
 SITE_PROPERTY_SRCS      =
 endif
 
-QTK_ENABLED     = @QTK_ENABLED@
-ifeq ($(QTK_ENABLED),yes)
-QTK_FLAGS       = -DQTK_ENABLED
-else
-QTK_FLAGS       =
-endif
-
-OZCFLAGS        = $(COMPRESSFLAGS) $(DENYS_FLAGS) $(SITE_PROPERTY_FLAGS) $(QTK_FLAGS)
+OZCFLAGS        = $(COMPRESSFLAGS) $(DENYS_FLAGS) $(SITE_PROPERTY_FLAGS)
 OZC             = @OZC@
 
 OZLOADSEP       = @OZLOADSEP@
@@ -106,11 +99,6 @@ CPSRC1  = Search FD FS Combinator RecordC
 CPSRC2  = Schedule ParSearch ParWorker ParLogging
 DPSRC   = Connection Discovery Remote RemoteServer Fault URL DPStatistics DPInit ConnectionFunctor AcceptFunctor ConnectAcceptModule DPControl $(DENYS_DPSRCS)
 WPSRC   = Tk TkTools Tix
-ifeq ($(QTK_ENABLED),yes)
-QTKSRC  = QTk QTkDevel
-else
-QTKSRC  =
-endif
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
 MACSRC  = Macro BackquoteMacro LoopMacro
 
@@ -128,7 +116,6 @@ FUNCTORS1 = \
         $(WPSRC:%=%.ozf) \
         $(SUPPSRC:%=%.ozf) \
         $(CPSRC2:%=%.ozf) \
-        $(QTKSRC:%=%.ozf) \
         Compiler.ozf
 
 FUNCTORS = $(FUNCTORS1) Init.ozf
@@ -239,9 +226,6 @@ ParSearch.ozf: ParSearchTmp.ozf ParProcess.ozf ParManager.ozf ozl$(EXE_EXT)
 %.ozf: wp/%.oz Base.ozf
         $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
-%.ozf: qtk/%.oz Base.ozf
-        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
-
 %.ozf: %.oz Base.ozf
         $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
@@ -261,68 +245,6 @@ Open.ozf: op/HtmlTable.oz
 Tk.ozf: wp/Tk.oz wp/TkInit.oz wp/TkOptions.oz
         $(COMPILE) --norecordhoist $(shell $(CYGPATH) "$<") -o $@
 TkTools.ozf: DefaultURL.ozf
-
-# QTk dependencies
-
-QTKDEPS1        = \
-        QTkDevel.ozf QTkImage.ozf QTkMenu.ozf QTkSpace.ozf QTkLabel.ozf \
-        QTkButton.ozf QTkCheckbutton.ozf QTkRadiobutton.ozf             \
-        QTkScale.ozf QTkScrollbar.ozf QTkEntry.ozf QTkCanvas.ozf        \
-        QTkListbox.ozf QTkText.ozf
-
-QTKDEPS2        = $(QTKDEPS1)   \
-        QTkPlaceholder.ozf      \
-        QTkPanel.ozf QTkRubberframe.ozf QTkScrollframe.ozf QTkToolbar.ozf
-
-QTKDEPS3        = $(QTKDEPS2)   \
-        QTkDropdownlistbox.ozf QTkNumberentry.ozf
-
-ifeq ($(QTK_ENABLED),yes)
-QTKCLEAN        = $(QTKDEPS3) QTkBare.ozf QTkDropdownbutton_bitmap.ozf \
-        QTkDropdownbutton_gen_bitmap.ozf QTkImageLibBoot.ozf \
-        QTkNumberentry_bitmap.ozf QTkNumberentry_gen_bitmap.ozf \
-        mini-dec.xbm mini-down.xbm mini-inc.xbm
-else
-QTKCLEAN        =
-endif
-
-
-QTkBare.ozf:qtk/QTk.oz qtk/Frame.oz qtk/QTkClipboard.oz qtk/QTkFont.oz qtk/QTkDialogbox.oz
-        $(COMPILE) --define=FULLLOAD $(shell $(CYGPATH) "$<") -o $@
-
-QTkDevel.ozf:qtk/QTkDevel.oz
-        $(COMPILE) --define=DEBUG $(shell $(CYGPATH) "$<") -o $@
-
-mini-down.xbm:qtk/mini-down.xbm
-        cp $< $@
-
-mini-dec.xbm:qtk/mini-dec.xbm
-        cp $< $@
-
-mini-inc.xbm:qtk/mini-inc.xbm
-        cp $< $@
-
-QTkDropdownbutton_bitmap.ozf: \
-        QTkImageLibBoot.ozf $(QTKDEPS2) \
-        QTkDropdownbutton_gen_bitmap.ozf mini-down.xbm
-        $(OZENGINE) QTkDropdownbutton_gen_bitmap.ozf
-
-QTkDropdownlistbox.ozf: \
-        qtk/QTkDropdownlistbox.oz \
-        QTkBare.ozf QTkImage.ozf QTkDevel.ozf \
-        QTkDropdownbutton_bitmap.ozf
-        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
-
-QTkNumberentry_bitmap.ozf: \
-        QTkImageLibBoot.ozf $(QTKDEPS2) \
-        QTkNumberentry_gen_bitmap.ozf mini-inc.xbm mini-dec.xbm
-        $(OZENGINE) QTkNumberentry_gen_bitmap.ozf
-
-QTkNumberentry.ozf: QTkNumberentry_bitmap.ozf
-
-QTk.ozf: QTkBare.ozf $(QTKDEPS3) ozl$(EXE_EXT)
-        $(OZENGINE) ozl$(EXE_EXT) $(COMPRESSFLAGS) $< -o $@
-
 
 # compiler dependencies
 COMPILERSRC1 = \
@@ -487,8 +409,7 @@ CLEANFILES = \
         $(COMPILERSRCEXTRA) \
         CpSupport.ozf ParWorkerTmp.ozf ParLoggingTmp.ozf ParSearchTmp.ozf \
         $(FUNCTORS) $(FUNFUNCTORS) $(PARSEARCHFUNCTORS) \
-        $(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc \
-        $(QTKCLEAN)
+        $(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc
 
 clean:
         -rm -f $(CLEANFILES)
