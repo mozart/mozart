@@ -567,6 +567,7 @@ ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
 
 
     
+    
 
     
 # Make sure we can run config.sub.
@@ -575,7 +576,7 @@ else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
 fi
 
 echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:579: checking host system type" >&5
+echo "configure:580: checking host system type" >&5
 
 host_alias=$host
 case "$host_alias" in
@@ -617,7 +618,7 @@ echo "$ac_t""$host" 1>&6
     
 
     echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:621: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:622: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -654,7 +655,7 @@ fi
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:658: checking for a BSD compatible install" >&5
+echo "configure:659: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -714,7 +715,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:718: checking for $ac_word" >&5
+echo "configure:719: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -773,6 +774,101 @@ fi
     BUILDTOP=`cd $BUILDTOP && pwd`
     
     
+    
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    # Extract the first word of "ozc", so it can be a program name with args.
+set dummy ozc; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:789: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_OZC'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$OZC" in
+  /*)
+  ac_cv_path_OZC="$OZC" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_OZC="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+OZC="$ac_cv_path_OZC"
+if test -n "$OZC"; then
+  echo "$ac_t""$OZC" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+    OZC=`echo $OZC | sed -e "s|//|/|g"`
+    if test ! -n "$OZC"
+    then
+	OZC=undefined
+	OZC=$BUILDTOP/share/lib/ozc.sh
+    fi
+    
+    
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    # Extract the first word of "ozplatform", so it can be a program name with args.
+set dummy ozplatform; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:835: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$OZPLATFORM" in
+  /*)
+  ac_cv_path_OZPLATFORM="$OZPLATFORM" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_OZPLATFORM="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+OZPLATFORM="$ac_cv_path_OZPLATFORM"
+if test -n "$OZPLATFORM"; then
+  echo "$ac_t""$OZPLATFORM" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+    OZPLATFORM=`echo $OZPLATFORM | sed -e "s|//|/|g"`
+    if test ! -n "$OZPLATFORM"
+    then
+	OZPLATFORM=undefined
+	
+    fi
+    
+    PLATFORM=`$OZPLATFORM`
+    
+
 SUBDIRS="code sgml"
 
 trap '' 1 2 15
@@ -929,6 +1025,9 @@ s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
 s%@INSTALL_DIR@%$INSTALL_DIR%g
 s%@BUILDTOP@%$BUILDTOP%g
+s%@OZC@%$OZC%g
+s%@OZPLATFORM@%$OZPLATFORM%g
+s%@PLATFORM@%$PLATFORM%g
 s%@SUBDIRS@%$SUBDIRS%g
 
 CEOF

@@ -1,6 +1,6 @@
 AC_INIT(sgml)
 AC_PROG_MAKE_SET
-OZ_INIT
+OZ_CONTRIB_INIT
 SUBDIRS="code sgml"
 AC_SUBST(SUBDIRS)
 AC_OUTPUT(Makefile code/Makefile sgml/Makefile)
