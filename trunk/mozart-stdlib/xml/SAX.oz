@@ -10,81 +10,97 @@ prepare
 define
    class Processor
       attr
-	 GET MAP STACK TAG
+	 GET MAP STACK TAG ProcessElem ProcessName
 	 %%
-      meth INIT(Get)
-	 GET   <- Get
-	 MAP   <- {NameSpaces.newPrefixMap}
+      meth initFromTokenizer(T)
+	 Processor,init(get:T.get)
+      end
+      meth initFromString(S)
+	 Processor,init(string:S)
+      end
+      meth initFromURL(U)
+	 Processor,init(url:U)
+      end
+      meth init(...)=Init
+	 TOK = if {CondSelect Init fast false}
+	       then Tokenizer.fast
+	       else Tokenizer end
+	 NS  = if {CondSelect Init namespaces true}
+	       then NameSpaces
+	       else NameSpaces.fast end
+	 FEA = if {HasFeature Init string}
+	       then newFromString
+	       else newFromURL end
+	 ARG = if {HasFeature Init string} then Init.string
+	       elseif {HasFeature Init url} then Init.url
+	       else Init.file end
+	 MA  = if {HasFeature Init prefixMap}
+	       then Init.prefixMap
+	       else {NS.newPrefixMap} end
+	 GG  = if {HasFeature Init get}
+	       then Init.get
+	       else {TOK.FEA ARG}.get end
+      in
+	 GET   <- GG
+	 MAP   <- MA
 	 STACK <- nil
 	 TAG   <- unit
-      end
-      meth initFromTokenizer(T)
-	 Processor,INIT(T.get)
+	 ProcessElem <- NS.processElement
+	 ProcessName <- NS.processName
 	 {self startDocument()}
 	 Processor,PARSE()
       end
-      meth initFromString(S)
-	 Processor,initFromTokenizer({Tokenizer.newFromString S})
-      end
-      meth initFromURL(U)
-	 Processor,initFromTokenizer({Tokenizer.newFromURL U})
-      end
-      meth initLazyFromURL(U)
-	 Processor,initFromTokenizer({Tokenizer.newLazyFromURL U})
-      end
       %%
-      meth startDocument()            skip end
-      meth endDocument()              skip end
-      meth startElement(_ _)          skip end
-      meth endElement(_)              skip end
-      meth characters(_)              skip end
-      meth processingInstruction(_ _) skip end
-      meth comment(_)                 skip end
+      meth startDocument()              skip end
+      meth endDocument()                skip end
+      meth startElement(_ _ _)          skip end
+      meth endElement(_ _)              skip end
+      meth characters(_ _)              skip end
+      meth processingInstruction(_ _ _) skip end
+      meth comment(_ _)                 skip end
+      %%
+      meth ERROR(R)
+	 raise xml(sax:R) end
+      end
       %%
       meth PARSE()
 	 case {@GET}
 	 of unit then
 	    {self endDocument()}
 	    if @TAG\=unit then
-	       {Exception.raiseError
-		xml(parse(nonTerminatedElement @TAG))}
+	       Processor,ERROR(nonTerminatedElement(@TAG))
 	    end
-	 [] stag(Name Alist Empty) then Tag2 Alist2 Map2 in
-	    {NameSpaces.processElement
-	     Name Alist @MAP
-	     Tag2 Alist2 Map2}
-	    {self startElement(Tag2 Alist2)}
-	    if Empty then {self endElement(Tag2)}
+	 [] stag(Name Alist Empty Coord) then Tag2 Alist2 Map2 in
+	    {@ProcessElem Name Alist @MAP Tag2 Alist2 Map2}
+	    {self startElement(Tag2 Alist2 Coord)}
+	    if Empty then {self endElement(Tag2 Coord)}
 	    else
 	       STACK<-(@TAG|@MAP)|@STACK
 	       TAG<-Tag2
 	       MAP<-Map2
 	    end
 	    Parser,PARSE()
-	 [] etag(Name) then
-	    Tag={NameSpaces.processName Name @MAP}
+	 [] etag(Name Coord) then
+	    Tag={@ProcessName Name @MAP}
 	 in
 	    if @TAG\=Tag then
-	       {Exception.raiseError
-		xml(parse(mismatchedEtag(found:Tag wanted:@TAG)))}
+	       Processor,ERROR(mismatchedEtag(found:Tag wanted:@TAG coord:Coord))
 	    else
-	       {self endElement(Tag)}
+	       {self endElement(Tag Coord)}
 	    end
 	    case @STACK
 	    of (Tag|Map)|Stack then
 	       TAG<-Tag MAP<-Map STACK<-Stack
 	       Processor,PARSE()
-	    else {Exception.raiseError
-		  xml(parse(unexpectedErrorAtEtag Tag))}
-	    end
-	 [] pi(Target Args) then
-	    {self processingInstruction(Target Args)}
+	    else Processor,ERROR(unexpectedErrorAtEtag(Tag Coord)) end
+	 [] pi(Target Args Coord) then
+	    {self processingInstruction(Target Args Coord)}
 	    Processor,PARSE()
-	 [] text(Chars) then
-	    {self characters(Chars)}
+	 [] text(Chars Coord) then
+	    {self characters(Chars Coord)}
 	    Processor,PARSE()
-	 [] comment(Chars) then
-	    {self comment(Chars)}
+	 [] comment(Chars Coord) then
+	    {self comment(Chars Coord)}
 	    Processor,PARSE()
 	 end
       end
@@ -109,11 +125,13 @@ define
       end
       meth endDocument() @CONTENTS=nil end
 
-      meth makeElement(Tag Alist Contents $)
+      meth makeElement(Tag Alist Contents Coord $)
 	 element(
 	    tag      : Tag
 	    alist    : Alist
-	    contents : Contents)
+	    contents : Contents
+	    coord    : Coord
+	    )
       end
       meth makeAttribute(Key Val $)
 	 attribute(
@@ -126,9 +144,9 @@ define
 	     {self makeAttribute(Key Val $)}
 	  end}
       end
-      meth startElement(Tag Alist)
+      meth startElement(Tag Alist Coord)
 	 Alist2 Contents2
-	 H = {self makeElement(Tag Alist2 Contents2 $)}
+	 H = {self makeElement(Tag Alist2 Contents2 Coord $)}
 	 T
       in
 	 @CONTENTS=H|T
@@ -137,7 +155,7 @@ define
 	 PARENT<-H
 	 Alist2 = {self makeAlist(Alist $)}
       end
-      meth endElement(_)
+      meth endElement(_ _)
 	 @CONTENTS=nil
 	 case @STACK of (T|P)|L then
 	    STACK<-L
@@ -146,28 +164,28 @@ define
 	 end
       end
 
-      meth makeText(Chars $)
-	 text({MakeBS Chars})
+      meth makeText(Chars Coord $)
+	 text({MakeBS Chars} Coord)
       end
-      meth characters(Chars) L in
-	 @CONTENTS = {self makeText(Chars $)}|L
+      meth characters(Chars Coord) L in
+	 @CONTENTS = {self makeText(Chars Coord $)}|L
 	 CONTENTS<-L
       end
 
-      meth makePI(Target Data $)
+      meth makePI(Target Data Coord $)
 	 pi({StringToAtom Target}
-	    {StringToAtom Data})
+	    {StringToAtom Data} Coord)
       end
-      meth processingInstruction(Target Data) L in
-	 @CONTENTS = {self makePI(Target Data $)}|L
+      meth processingInstruction(Target Data Coord) L in
+	 @CONTENTS = {self makePI(Target Data Coord $)}|L
 	 CONTENTS<-L
       end
 
-      meth makeComment(Chars $)
-	 comment({MakeBS Chars})
+      meth makeComment(Chars Coord $)
+	 comment({MakeBS Chars} Coord)
       end
-      meth comment(Chars) L in
-	 @CONTENTS = {self makeComment(Chars $)}|L
+      meth comment(Chars Coord) L in
+	 @CONTENTS = {self makeComment(Chars Coord $)}|L
 	 CONTENTS<-L
       end
    end

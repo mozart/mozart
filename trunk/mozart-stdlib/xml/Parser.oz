@@ -5,9 +5,8 @@ export
    Fast
    new : NewParserInit
 import
-   Tokenizer     at 'Tokenizer.ozf'
-   FastTokenizer at 'FastTokenizer.ozf'
-   NameSpaces    at 'NameSpaces.ozf'
+   Tokenizer  at 'Tokenizer.ozf'
+   NameSpaces at 'NameSpaces.ozf'
 prepare
    MakeBS = ByteString.make
    BIVS2S = VirtualString.toString
@@ -99,15 +98,15 @@ define
       {NewParser {Tokenizer.newFromURL S}.get Params NameSpaces}
    end
    fun {FastNewFromString S Params}
-      {NewParser {FastTokenizer.newFromString S}.get Params NameSpaces.fast}
+      {NewParser {Tokenizer.fast.newFromString S}.get Params NameSpaces.fast}
    end
    fun {FastNewFromURL S Params}
-      {NewParser {FastTokenizer.newFromURL S}.get Params NameSpaces.fast}
+      {NewParser {Tokenizer.fast.newFromURL S}.get Params NameSpaces.fast}
    end
    Fast = fast(newFromString : FastNewFromString
 	       newFromURL    : FastNewFromURL)
    fun {NewParserInit Init}
-      TOK = if {CondSelect Init fast false} then FastTokenizer else Tokenizer end
+      TOK = if {CondSelect Init fast false} then Tokenizer.fast else Tokenizer end
       NS  = if {CondSelect Init namespaces true} then NameSpaces else NameSpaces.fast end
       FEA = if {HasFeature Init string} then newFromString else newFromURL end
       ARG = if {HasFeature Init string} then Init.string

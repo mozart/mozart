@@ -142,3 +142,17 @@ end
 {TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml' namespaces:false)} %% 160 ms
 {TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml' fast:true)} %% 120, 140 ms
 {TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml' fast:true namespaces:false)} %% 100, 120 ms
+
+declare [SAX]={Link ['SAX.ozf']}
+proc {TRY2 Init}
+   T1={Property.get 'time.total'}
+   {New SAX.parser Init _}
+   T2={Property.get 'time.total'}
+in
+   {Show T2-T1}
+end
+
+{TRY2 init(url:'/home/denys/src/ozstuff/xml/apptut.xml')} %% 190, 210 ms
+{TRY2 init(url:'/home/denys/src/ozstuff/xml/apptut.xml' fast:true)} %% 150 ms
+{TRY2 init(url:'/home/denys/src/ozstuff/xml/apptut.xml' namespaces:false)} %% 170 ms
+{TRY2 init(url:'/home/denys/src/ozstuff/xml/apptut.xml' namespaces:false fast:true)} %% 120 ms
