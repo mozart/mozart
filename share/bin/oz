@@ -117,8 +117,14 @@ case "$cmd" in
 
    oz)
         echo "Using emacs '${OZEMACS}'"
-
-        $OZEMACS -l $OZHOME/lib/elisp/ozstartup.el $@ &
+        case "$USER" in
+                schulte)
+                        $OZEMACS -l $OZHOME/lib/elisp/ozstartup.el $@
+                ;;
+                *)
+                        $OZEMACS -l $OZHOME/lib/elisp/ozstartup.el $@ &
+                ;;
+        esac
    ;;
 
    ozdemo)
