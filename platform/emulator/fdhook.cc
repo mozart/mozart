@@ -81,15 +81,6 @@ void activateCurrentTaskSusp(void) {
   FDcurrentTaskSusp = NULL;
 }
 
-Suspension * makeHeadSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
-                                OZ_Term * args, int arity)
-{
-  return new Suspension(am.currentBoard,
-                        am.currentThread->getPriority(),
-                        fun, args, arity);
-}
-
-
 
 SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * hoome)
 {

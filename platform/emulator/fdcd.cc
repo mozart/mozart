@@ -238,57 +238,6 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
         }
   }
 
-  /*
-// constrain local variables with corresponding global ones
-  for (c = clauses; c--; ) {
-    if (x[idx_b(c)] == 0) {
-      failed_clauses += 1;
-    } else {
-      Bool top_commit = TRUE, not_failed = TRUE;
-
-      for (v = variables; v--; ) {
-        int v_v_size = x[idx_v(v)].getSize();
-        if (x.isNotCDVoid(idx_vp(c, v))) {
-          if ((x[idx_vp(c, v)] &= x[idx_v(v)]) == 0) {
-            x[idx_b(c)] &= 0;  // intersection is empty --> clause failed
-            failed_clauses += 1;
-            not_failed = top_commit = FALSE;
-            break;
-          } else {
-            top_commit &= (v_v_size == x[idx_vp(c, v)].getSize());
-          }
-        }
-      }
-      if (not_failed)
-        not_failed_clause = c;
-      if (top_commit && x[idx_b(c)].maxElem() == 2) {
-        entailed_clause = c;
-        break;
-      }
-    }
-  }
-
-  if (failed_clauses == clauses) {                            // failure
-    return FailFD;
-  } else if ((clauses - failed_clauses) == 1) {               // unit commit
-    for (v = variables; v--; )
-      x[idx_v(v)] &= x[idx_vp(not_failed_clause, v)];
-    x[idx_b(not_failed_clause)] &= 1;
-
-    return x.entailmentClause(idx_b(0), idx_b(clauses - 1),
-                              idx_v(0), idx_v(variables - 1),
-                              idx_vp(not_failed_clause, 0),
-                              idx_vp(not_failed_clause, variables - 1));
-  } else if (entailed_clause != -1) {                         // top commit
-
-    for (c = clauses; c--; )
-      if (c != entailed_clause)
-        x[idx_b(c)] &= 0;
-    x[idx_b(entailed_clause)] &= 1;
-
-    return x.entailmentClause(idx_b(0), idx_b(clauses - 1));
-  }
-  */
 // propagate till you reach a fixpoint
   localPropStore.backup(0x10);
 
@@ -311,7 +260,7 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
 #endif
 
     for (v = variables; v--; )
-      x.propagateIfTouched(idx_vp(c, v));
+      x.process(idx_vp(c, v));
 
 #ifndef TM_LP
     localPropStore.unsetUseIt();
@@ -322,14 +271,6 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
       error("local propagation must be empty");
     x.restore();
 
-    /*
-    if (!localPropStore.do_propagation()) {
-      x.restore();
-      x[idx_b(c)] &= 0;
-    } else {
-      x.restore();
-    }
-    */
     Assert(localPropStore.isEmpty());
 
   }
@@ -459,7 +400,8 @@ OZ_Bool cd_wrapper_a(int OZ_arity, OZ_Term OZ_args[], OZ_CFun, OZ_CFun BI_body)
     }
   }
 
-  x.propagateIfTouched(0);
+  x.process(0);
+
   return EntailFD;
 }
 
@@ -625,7 +567,8 @@ OZ_Bool cd_wrapper_b(int OZ_arity, OZ_Term OZ_args[], OZ_CFun, OZ_CFun BI_body)
     x[0] &= 0;
   }
 
-  x.propagateIfTouched(0);
+  x.process(0);
+
   return EntailFD;
 }
 
@@ -656,5 +599,151 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIfdPutNotCD, 3)
 {
   return cd_wrapper_b(OZ_arity, OZ_args, OZ_self, BIfdPutNot);
+}
+OZ_C_proc_end
+
+
+//-----------------------------------------------------------------------------
+// Special scheduling constructive disjunctions
+//-----------------------------------------------------------------------------
+// Constructive Disjunction for scheduling only
+
+OZ_C_proc_begin(BIfdCDSched, 4)
+{
+  return genericHead_x_y_c_d(OZ_arity, OZ_args, OZ_self, BIfdCDSched_body,
+                             fd_bounds, fd_bounds);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIfdCDSched_body, 4)
+{
+  BIfdBodyManager a(2); //number of FDs
+
+  for (int i = 2; i--; )
+    a.introduce(i, OZ_getCArg(i));
+
+  const int x = 0, y = 1;
+
+  int xd = smallIntValue(deref(OZ_getCArg(2)));
+  int yd = smallIntValue(deref(OZ_getCArg(3)));
+
+  int xl = a[x].minElem(), xu = a[x].maxElem();
+  int yl = a[y].minElem(), yu = a[y].maxElem();
+
+  if (xu + xd <= yl) return a.entailment();
+  if (yu + yd <= xl) return a.entailment();
+
+  if (xl + xd > yu){
+    killPropagatedCurrentTaskSusp();
+    return BIfdLessEqOff(3, allocateRegs(OZ_getCArg(y),
+                                         OZ_getCArg(x),
+                                         newSmallInt(-yd)));
+  }
+
+  if (yl + yd > xu){
+    killPropagatedCurrentTaskSusp();
+    return BIfdLessEqOff(3, allocateRegs(OZ_getCArg(x),
+                                         OZ_getCArg(y),
+                                         newSmallInt(-xd)));
+  }
+
+  LocalFD la, lb, lc, ld, l1, l2;
+
+  la.init(0, yu - xd);
+  lb.init(yl + yd, fd_iv_max_elem);
+  lc.init(0, xu - yd);
+  ld.init(xl + xd, fd_iv_max_elem);
+
+  l1 = (la | lb);
+  l2 = (lc | ld);
+  FailOnEmpty(a[x] &= l1);
+  FailOnEmpty(a[y] &= l2);
+
+  return a.release();
+}
+OZ_C_proc_end
+
+//-----------------------------------------------------------------------------
+// Constructive Disjunction for scheduling only
+
+OZ_C_proc_begin(BIfdCDSchedControl, 5)
+{
+  return genericHead_x_y_c_d_b(OZ_arity, OZ_args, OZ_self, BIfdCDSchedControl_body,
+                             fd_bounds);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIfdCDSchedControl_body, 5)
+{
+  BIfdBodyManager a(3); //number of FDs
+
+  for (int i = 2; i--; )
+    a.introduce(i, OZ_getCArg(i));
+  a.introduce(2, OZ_getCArg(4));
+
+  const int x = 0, y = 1, control = 2;
+
+  int xd = smallIntValue(deref(OZ_getCArg(2)));
+  int yd = smallIntValue(deref(OZ_getCArg(3)));
+
+  int xl = a[x].minElem(), xu = a[x].maxElem();
+  int yl = a[y].minElem(), yu = a[y].maxElem();
+
+  if (xu + xd <= yl) {
+    FailOnEmpty(a[control] &= 0);
+    return a.entailment();
+  }
+  if (yu + yd <= xl) {
+    FailOnEmpty(a[control] &= 1);
+    return a.entailment();
+  }
+
+  if (xl + xd > yu){
+    FailOnEmpty(a[control] &= 1);
+    a.process(control);
+    killPropagatedCurrentTaskSusp();
+    return BIfdLessEqOff(3, allocateRegs(OZ_getCArg(y),
+                                         OZ_getCArg(x),
+                                         newSmallInt(-yd)));
+  }
+
+  if (yl + yd > xu){
+    FailOnEmpty(a[control] &= 0);
+    a.process(control);
+    killPropagatedCurrentTaskSusp();
+    return BIfdLessEqOff(3, allocateRegs(OZ_getCArg(x),
+                                         OZ_getCArg(y),
+                                         newSmallInt(-xd)));
+  }
+
+  if (a[control] == fd_singleton) {
+    if (a[control].singl() == 0) {
+      killPropagatedCurrentTaskSusp();
+      return BIfdLessEqOff(3, allocateRegs(OZ_getCArg(x),
+                                           OZ_getCArg(y),
+                                           newSmallInt(-xd)));
+    }
+    else {
+      killPropagatedCurrentTaskSusp();
+      return BIfdLessEqOff(3, allocateRegs(OZ_getCArg(y),
+                                           OZ_getCArg(x),
+                                           newSmallInt(-yd)));
+    }
+  }
+
+
+  LocalFD la, lb, lc, ld, l1, l2;
+
+  la.init(0, yu - xd);
+  lb.init(yl + yd, fd_iv_max_elem);
+  lc.init(0, xu - yd);
+  ld.init(xl + xd, fd_iv_max_elem);
+
+  l1 = (la | lb);
+  l2 = (lc | ld);
+  FailOnEmpty(a[x] &= l1);
+  FailOnEmpty(a[y] &= l2);
+
+  return a.release();
 }
 OZ_C_proc_end

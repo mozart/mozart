@@ -34,7 +34,7 @@
 
 
 enum FDPropState {fd_det = 0, fd_bounds, fd_any};
-enum FDState {fd_empty, fd_full, fd_discrete, fd_singleton};
+enum FDState {fd_empty, fd_full, fd_discrete, fd_bool, fd_singleton};
 
 
 #define FD_NOI 4 // number of intervals
@@ -236,6 +236,15 @@ public:
 
   FiniteDomain(void * d = NULL) {FiniteDomainInit(d);}
 
+  unsigned getDescrSize() {
+    switch (getType()) {
+    case iv_descr:
+      return sizeof(FDIntervals) + 2 * (get_iv()->getHigh() - fd_iv_max_high) * sizeof(int);
+    case bv_descr: return sizeof(FDBitVector);
+    default: return 0;
+    }
+  }
+
   int setEmpty(void) {
     setType(fd_descr, NULL);
     return size = 0;
@@ -275,6 +284,7 @@ public:
   int init(TaggedRef);
 
   int setSingleton(int);
+  int setBool(void);
 
   int getSize(void) const {return size;}
   int minElem(void) const {return min_elem;}
@@ -286,10 +296,8 @@ public:
   TaggedRef getAsList(void) const;
   Bool next(int i, int &n) const;
   int nextBiggerElem(int v) const;
+  int intersectWithBool(void);
   int constrainBool(void);
-  Bool isBool(void) {
-    return (min_elem == 0) && (max_elem == 1);
-  }
 
   // non-destructive operators
   FiniteDomain operator & (const FiniteDomain &) const; // intersection
@@ -348,6 +356,7 @@ public:
 #endif
 
 
+#ifdef LOCAL_FD
 class LocalFD : public FiniteDomain {
 private:
   char iv_bv_descr[sizeof(FDIntervals)];
@@ -360,7 +369,9 @@ public:
     return *this;
   }
 };
-
+#else
+typedef FiniteDomain LocalFD;
+#endif
 
 inline
 ostream &operator << (ostream &ofile, const FiniteDomain &fd) {
@@ -368,13 +379,5 @@ ostream &operator << (ostream &ofile, const FiniteDomain &fd) {
   return ofile;
 }
 
-
-inline
-TaggedRef mkTuple(int from, int to){
-  OZ_Term s = OZ_tuple(OZ_CToAtom("#"), 2);
-  OZ_putArg(s, 1, OZ_CToInt(from));
-  OZ_putArg(s, 2, OZ_CToInt(to));
-  return s;
-}
 
 #endif
