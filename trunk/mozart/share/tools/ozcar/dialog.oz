@@ -60,7 +60,7 @@ local
 	    AuxEnv = {Ozcar PrivateSend(getEnv(unit $))}
 	 in
 	    Env = {Record.adjoinList
-		   case {Cget emacsInterface} of false then OPIEnv.base
+		   case {Cget emacsInterface} of false then OPIEnv.full
 		   elseof I then
 		      {{I getNarrator($)} enqueue(getEnv($))}
 		   end
