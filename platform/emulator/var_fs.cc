@@ -368,9 +368,11 @@ void OzFSVariable::propagate(OZ_FSetPropState state,
   if (prop_eq == pc_propagator) {
     switch (state) {
     case fs_prop_val:
-      for (int i = fs_prop_any; i--; )
-        if (fsSuspList[i])
-          OzVariable::propagateLocal(fsSuspList[i], prop_eq);
+      {
+        for (int i = fs_prop_any; i--; )
+          if (fsSuspList[i])
+            OzVariable::propagateLocal(fsSuspList[i], prop_eq);
+      }
       break;
     case fs_prop_lub: case fs_prop_glb:
       if (fsSuspList[state])
