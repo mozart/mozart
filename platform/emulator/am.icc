@@ -69,15 +69,15 @@ Bool AM::fastUnify(TaggedRef A, TaggedRef B)
 }
 
 inline
-void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef a)
+void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef a, Bool prop)
 {
   // most probable case first: local UVar
   // if (isUVar(var) && currentBoard == tagged2VarHome(var)) {
   // more efficient:
-  if (var == currentUVarPrototype) {
+  if (var == currentUVarPrototype && prop) {
     doBind(varPtr,a);
   } else {
-    genericBind(varPtr,var,NULL,a);
+    genericBind(varPtr,var,NULL,a,prop);
   }
 }
 
@@ -169,9 +169,9 @@ Bool AM::entailment ()
 }
 
 inline
-void AM::bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr)
+void AM::bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr, Bool prop)
 {
-  genericBind(varPtr,var,termPtr, *termPtr);
+  genericBind(varPtr,var,termPtr, *termPtr, prop);
 }
 
 /*

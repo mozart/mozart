@@ -64,8 +64,7 @@ public:
   // unifies a generic variable with another generic variable
   // or a non-variable
   // invariant: left term == *this
-  Bool unify(TaggedRef *, TaggedRef, TypeOfTerm,
-             TaggedRef *, TaggedRef, TypeOfTerm);
+  Bool unify(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, Bool);
 
   int getSuspListLength(void);
 

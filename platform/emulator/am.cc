@@ -292,10 +292,10 @@ void AM::init(int argc,char **argv)
 // ----------------------- unification
 
 // unify and manage rebindTrail
-Bool AM::unify(TaggedRef t1, TaggedRef t2)
+Bool AM::unify(TaggedRef t1, TaggedRef t2, Bool prop)
 {
   CHECK_NONVAR(t1); CHECK_NONVAR(t2);
-  Bool result = performUnify(&t1, &t2);
+  Bool result = performUnify(&t1, &t2, prop);
 
   // unwindRebindTrail
   TaggedRef *refPtr;
@@ -318,7 +318,7 @@ inline Bool heapNewer(TaggedRef *termPtr1, TaggedRef *termPtr2)
 
 #define Swap(A,B,Type) { Type help=A; A=B; B=help; }
 
-Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2)
+Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, Bool prop)
 {
   int argSize;
   RefsArray args1, args2;
@@ -356,11 +356,10 @@ start:
  var_nonvar:
 
   if (isCVar(tag1)) {
-    return tagged2CVar(term1)->unify(termPtr1, term1, tag1,
-                                     termPtr2, term2, tag2);
+    return tagged2CVar(term1)->unify(termPtr1, term1, termPtr2, term2, prop);
   }
 
-  bindToNonvar(termPtr1, term1, term2);
+  bindToNonvar(termPtr1, term1, term2, prop);
   return OK;
 
 
@@ -372,21 +371,20 @@ start:
   if (isNotCVar(tag1)) {
     if ( isNotCVar(tag2) && isLocalVariable(term2) &&
          (!isLocalVariable(term1) || heapNewer(termPtr2,termPtr1))) {
-      bind(termPtr2, term2, termPtr1);
+      bind(termPtr2, term2, termPtr1, prop);
     } else {
-      bind(termPtr1, term1, termPtr2);
+      bind(termPtr1, term1, termPtr2, prop);
     }
     return OK;
   }
 
   if (isNotCVar(tag2)) {
-    bind(termPtr2, term2, termPtr1);
+    bind(termPtr2, term2, termPtr1, prop);
     return OK;
   }
 
   Assert(isCVar(tag1) && isCVar(tag2));
-  return tagged2CVar(term1)->unify(termPtr1, term1, tag1,
-                                   termPtr2, term2, tag2);
+  return tagged2CVar(term1)->unify(termPtr1,term1,termPtr2,term2,prop);
 
 
 
@@ -462,7 +460,7 @@ start:
   rebind (termPtr2, term1);
 
   for (int i = 0; i < argSize-1; i++ ) {
-    if (!performUnify(args1+i,args2+i)) {
+    if (!performUnify(args1+i,args2+i, prop)) {
       return NO;
     }
   }
@@ -663,25 +661,20 @@ void AM::awakeNode(Board *node)
 // exception from general rule that arguments are never variables!
 //  term may be an
 void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
-                     TaggedRef *termPtr, TaggedRef term)
+                     TaggedRef *termPtr, TaggedRef term,
+                     Bool prop)
      /* bind var to term;         */
 {
-  Suspension* susp;
-
-/* termPtr == NULL means term is not a variable */
+  /* termPtr == NULL means term is not a variable */
 
   /* first step: do suspensions */
 
-#ifdef DEBUG_FD
-  if(isCVar(var) == OK)
-    error("Constrained variable not allowed here at %s:%d.",
-          __FILE__, __LINE__);
-#endif
+  Assert(isCVar(var) == NO);
 
-  if (isSVar(var)) {
+  if (prop && isSVar(var)) {
 
     DEREF(term,zzz,tag);
-// special case if second arg is a variable !!!!
+   // special case if second arg is a variable !!!!
     SVariable *svar = (termPtr && isNotCVar(tag)) ?
       (taggedBecomesSuspVar(termPtr)) : NULL;
     // variables are passed as references
@@ -707,11 +700,11 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
 
   /* second step: mark binding for non-local variable in trail;     */
   /* also mark such (i.e. this) variable in suspention list;        */
-  if ( ! isLocalVariable(var) ) {
+  if ( !isLocalVariable(var) || prop==NO ) {
 
     (void) taggedBecomesSuspVar(varPtr);
 
-// trail old value
+    /* trail old value */
     trail.pushRef(varPtr,*varPtr);
 
 // check if term is also a variable

@@ -23,23 +23,22 @@ void GenCVariable::relinkSuspListTo(GenCVariable * lv) {
 }
 
 inline
-Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1, TypeOfTerm ttag1,
-                         TaggedRef * tptr2, TaggedRef term2, TypeOfTerm ttag2)
+Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
+                         TaggedRef * tptr2, TaggedRef term2,
+                         Bool prop)
 {
   Assert(getType()==FDVariable || getType()==OFSVariable);
   switch (getType()){
   case FDVariable:
     {
-      if (! ((GenFDVariable *)this)->unifyFD(tptr1, term1, ttag1,
-                                             tptr2, term2, ttag2))
+      if (! ((GenFDVariable *)this)->unifyFD(tptr1, term1, tptr2, term2, prop))
         return FALSE;
       LOCAL_PROPAGATION(if (! localPropStore.isInLocalPropagation())
                         if (! localPropStore.do_propagation()) return FALSE;)
     }
     return TRUE;
   case OFSVariable:
-    return ((GenOFSVariable *)this)->unifyOFS(tptr1, term1, ttag1,
-                                              tptr2, term2, ttag2);
+    return ((GenOFSVariable *)this)->unifyOFS(tptr1, term1, tptr2, term2, prop);
   default:
     break;
   }
