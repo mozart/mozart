@@ -87,7 +87,7 @@ public:
 
 #ifndef DENYS_EVENTS
   Bool wakeUpCheck(LongTime *t){
-    return first != NULL && t > &time;}
+    return first != NULL && *t > time;}
   
   void wakeUpExecute(LongTime *t);
 #else
