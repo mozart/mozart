@@ -133,7 +133,7 @@ public:
   OZ_Return unify(TaggedRef *, TaggedRef *, TaggedRef, ByteCode *);
   OZ_Return unifyOutline(TaggedRef *, TaggedRef *, TaggedRef, ByteCode *);
 
-  int getSuspListLength(void);
+  inline int getSuspListLength(void);
 
   // is X=val still valid
   Bool valid(TaggedRef *varPtr, TaggedRef val);

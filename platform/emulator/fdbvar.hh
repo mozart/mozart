@@ -59,7 +59,7 @@ public:
 
   // methods relevant for term copying (gc and solve)
   void gc(GenBoolVariable *);
-  void dispose(void);
+  inline void dispose(void);
   
   Bool unifyBool(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef,
 		 ByteCode *, Bool = TRUE);
@@ -70,7 +70,7 @@ public:
   void becomesSmallIntAndPropagate(TaggedRef * trPtr, OZ_FiniteDomain & fd);
   void becomesSmallIntAndPropagate(TaggedRef * trPtr, int e);
 
-  int getSuspListLength(void) { return suspList->length(); }
+  inline int getSuspListLength(void) { return suspList->length(); }
 
   void installPropagators(GenFDVariable *, Board *);
 
