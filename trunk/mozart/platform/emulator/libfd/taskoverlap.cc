@@ -55,12 +55,11 @@ TasksOverlapPropagator::TasksOverlapPropagator(OZ_Term x, OZ_Term xd,
     (*_cl2_t2).initFull();
     (*_cl2_o).initSingleton(0);
   }
-  
   // clause 3
   {
     _engine_cl3.init();
     make_PEL_LessEqOffset(_engine_cl3, _cl3_t2, reg_yd, _cl3_t1);
-    
+    //
     (*_cl3_t1).initFull();
     (*_cl3_t2).initFull();
     (*_cl3_o).initSingleton(0);
@@ -81,29 +80,29 @@ OZ_Return TasksOverlapPropagator::propagate(void)
 
   PEL_FDIntVar cl1_t1, cl1_t2, cl1_o;
   PEL_FDIntVar cl2_t1, cl2_t2, cl2_o;
-  PEL_FDIntVar cl3_t1, cl3_t2, cl3_o; 
+  PEL_FDIntVar cl3_t1, cl3_t2, cl3_o;
   //
   PEL_Engine engine_cl1(_engine_cl1, "DDD",
-			&_cl1_t1, &cl1_t1, 
-			&_cl1_t2, &cl1_t2, 
+			&_cl1_t1, &cl1_t1,
+			&_cl1_t2, &cl1_t2,
 			&_cl1_o, &cl1_o);
   CMD(engine_cl1.getPropTable().print(engine_cl1));
 
   PEL_Engine engine_cl2(_engine_cl2, "DDD",
-			&_cl2_t1, &cl2_t1, 
-			&_cl2_t2, &cl2_t2, 
+			&_cl2_t1, &cl2_t1,
+			&_cl2_t2, &cl2_t2,
 			&_cl2_o, &cl2_o);
   CMD(engine_cl2.getPropTable().print(engine_cl2));
 
   PEL_Engine engine_cl3(_engine_cl3, "DDD",
-			&_cl3_t1, &cl3_t1, 
-			&_cl3_t2, &cl3_t2, 
+			&_cl3_t1, &cl3_t1,
+			&_cl3_t2, &cl3_t2,
 			&_cl3_o, &cl3_o);
   CMD(engine_cl3.getPropTable().print(engine_cl3));
   //
   int nb_failed_clauses = 0, not_first_iteration = 0;
 
-  /* 
+  /*
      1. lift common information of unfailed clauses
      2. propagate basic constraints into unfailed spaces
      3. if all propagation queues are empty then:
@@ -169,7 +168,7 @@ OZ_Return TasksOverlapPropagator::propagate(void)
       }
     }
     _first = 0;
-    // 3. step
+    // 3. step // was soll das?, wir sind och eager, oder?
     if (engine_cl1.hasReachedFixPoint() &&
 	engine_cl2.hasReachedFixPoint() &&
 	engine_cl3.hasReachedFixPoint()) {
@@ -177,7 +176,7 @@ OZ_Return TasksOverlapPropagator::propagate(void)
       int nb_failed_clauses = (engine_cl1.isFailed() +
 			       engine_cl2.isFailed() +
 			       engine_cl3.isFailed());
-      // 3.a step 
+      // 3.a step
       if (nb_failed_clauses == 3) {
 	goto failure;
       }
@@ -224,8 +223,8 @@ OZ_Return TasksOverlapPropagator::propagate(void)
 	CDM(("oops 1\n"));
       } // step 3.b
       // step 3.c
-      //   a clause is entailed if no prop fncts are left and 
-      //   the basic constraints are subsumed 
+      //   a clause is entailed if no prop fncts are left and
+      //   the basic constraints are subsumed
       if (engine_cl1.isBasic() &&
 	  _t1->getSize() <= cl1_t1->getSize() &&
 	  _t2->getSize() <= cl1_t2->getSize() &&
@@ -275,8 +274,8 @@ OZ_Return TasksOverlapPropagator::propagate(void)
 
 OZ_BI_define(fdp_tasksOverlap, 5, 0)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_INT "," 
-		   OZ_EM_FD "," OZ_EM_INT "," 
+  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_INT ","
+		   OZ_EM_FD "," OZ_EM_INT ","
 		   OZ_EM_FDBOOL);
 
   PropagatorExpect pe;
