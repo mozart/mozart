@@ -7,14 +7,10 @@
 
 declare PanelClass Panel in
 
-local
+\insert panel/main.oz
 
-   \insert panel/main.oz
-   
-in
+Panel = {New PanelClass init}
 
-   Panel = {New PanelClass init}
 
-end
 
 
