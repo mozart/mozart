@@ -325,6 +325,7 @@ void ComObj::close(CState statetobe,Bool merging) {
     if(!merging && 
        (state==CLOSING_WEAK || state==CLOSED) && 
        queues.hasNeed()) {
+      printf("CLOSED => reopen\n");
       open(); // => state=CLOSED_WF_HANDOVER
       break;
     }
@@ -1221,3 +1222,15 @@ void ComController::deleteComObj(ComObj* comObj){
   return;
 }
 
+ComController::~ComController(){
+  ComObj *comObj;
+  FreeListEntry *f;
+  int l=length();
+  for(int i=0;i<l;i++) {
+    f=getOne();
+    Assert(f!=NULL);
+    GenCast(f,FreeListEntry*,comObj,ComObj*);
+    delete comObj;
+  }
+  Assert(length()==0);
+}
