@@ -37,7 +37,7 @@ void error( const char *format ...);
 }
 
 
-#  define DEBUG_FD_IR(COND, CODE) if (COND) { *cpi_cout << CODE << flush;}
+#  define DEBUG_FD_IR(COND, CODE) if (COND || 1) { *cpi_cout << CODE << flush;}
 
 
 #  define AssertFD(C) \
