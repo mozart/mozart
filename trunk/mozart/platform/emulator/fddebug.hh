@@ -32,11 +32,11 @@
 //-----------------------------------------------------------------------------
 
 //#define DEBUG_CONSTRAINT_IR
-#ifdef DEBUG_CONSTRAINT_IR
+//#ifdef DEBUG_CONSTRAINT_IR
 //#define DEBUG_FD_CONSTRREP
 #define DEBUG_FD
 #define DEBUG_FSET
-#define DEBUG_FSET_CONSTRREP
+//#define DEBUG_FSET_CONSTRREP
 
 //#define TO_FSET_FILE
 //#define TO_FD_FILE
