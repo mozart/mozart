@@ -42,7 +42,7 @@ extern "C" {
 
 #define OZ_C_proc_begin(Name,arity)                                       \
 OZ_BI_proto(Name);                                                        \
-OZ_Return FUNDECL(Name,(OZ_Term _OZ_NEW_ARGS[],int _OZ_NEW_LOC[])) {      \
+FUNDECL(OZ_Return,Name,(OZ_Term _OZ_NEW_ARGS[],int _OZ_NEW_LOC[])) {      \
     const OZ_CFun OZ_self = Name;                                         \
     OZ_Term OZ_args[arity];                                               \
     const int OZ_arity = arity;                                           \
@@ -97,7 +97,7 @@ OZ_Term VAR = OZ_getCArg(ARG);                  \
 
 
 #define OZ_declareAtomArg(ARG,VAR)              \
- CONST char *VAR;                               \
+ OZ_CONST char *VAR;                            \
  OZ_nonvarArg(ARG);                             \
  if (! OZ_isAtom(OZ_getCArg(ARG))) {            \
    return OZ_typeError(ARG,"Atom");             \

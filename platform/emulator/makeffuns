@@ -28,16 +28,20 @@ cat > $ozc << EOF
 #include <stdio.h>
 #include "mozart.h"
 
+#define extern
+
 EOF
 
-grep _FUNDECL $in | grep -v define | sed -e 's/extern //' >> $ozc
+grep _FUNDECL $in | grep -v define >> $ozc
 
 echo "#define OZVERSION \"$OZVERSION\"" >> $ozc
 
 cat >> $ozc << EOF
 
+#undef extern
+
 #undef _FUNDECL
-#define _FUNDECL(fun,args) fun = funs[i++]
+#define _FUNDECL(type,fun,args) fun = funs[i++]
 
 
 int ozcdecl OZ_linkFF(char *version, void** funs)
@@ -52,7 +56,7 @@ int ozcdecl OZ_linkFF(char *version, void** funs)
 EOF
 
 
-grep _FUNDECL $in | grep -v define | sed -e 's/^.*_FUNDECL/_FUNDECL/' >> $ozc
+grep _FUNDECL $in | grep -v define >> $ozc
 
 cat >> $ozc << EOF
 
@@ -66,7 +70,7 @@ cat > $initffuns << EOF
 #ifdef WINDOWS
 
 #undef _FUNDECL
-#define _FUNDECL(fun,args) ffuns[i++] = &fun
+#define _FUNDECL(type,fun,args) ffuns[i++] = &fun
 
 void **ffuns;
 
@@ -80,7 +84,7 @@ void initffuns()
 
 EOF
 
-grep _FUNDECL $in | grep -v define | sed -e 's/^.*_FUNDECL/_FUNDECL/' >> $initffuns
+grep _FUNDECL $in | grep -v define >> $initffuns
 
 cat >> $initffuns << EOF
   Assert(i<numffuns);
