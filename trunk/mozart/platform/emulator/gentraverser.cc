@@ -355,7 +355,7 @@ void GenTraverser::doit()
 
     case TAG_UVAR:
       // marshaled&exported UVar"s become CVar"s, so:
-      Assert(findLocation(tPtr) < 0);
+      Assert(findVarLocation(tPtr) < 0);
       processUVar(t, tPtr);
       break;
 
@@ -364,7 +364,7 @@ void GenTraverser::doit()
 	// Note: we remember locations of variables, - not the
 	// variables themselves! This works, since values and
 	// variables cannot co-reference.
-	int ind = findLocation(tPtr);
+	int ind = findVarLocation(tPtr);
 	if (ind >= 0) {
 	  processRepetition(t, tPtr, ind);
 	  break;
