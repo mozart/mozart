@@ -35,11 +35,6 @@
 // loeckelt (for big fsets)
 #include "mozart_cpi.hh"
 
-#ifdef LINUX
-/* FD_ISSET missing */
-#include <sys/time.h>
-#endif
-
 #include "gc.hh"
 #include "var_base.hh"
 #include "fdomn.hh"
@@ -86,6 +81,7 @@ int     cs_copy_size  = 0;
  * Forward reference
  */
 
+static void gcCode(CodeArea *block);
 static void gcCode(ProgramCounter PC);
 
 /*
@@ -2060,7 +2056,6 @@ void ConstTerm::gcConstRecurse()
       if (stateIsCell(state)) {
         if (o->isLocal() && getCell(state)->isLocal()) {
           TaggedRef newstate = ((CellLocal*) getCell(state))->getValue();
-          message("GC: localizing object\n");
           o->setState(tagged2SRecord(oz_deref(newstate))->gcSRecord());
         } else {
           o->setState((Tertiary*) getCell(state)->gcConstTerm());
@@ -2088,7 +2083,7 @@ void ConstTerm::gcConstRecurse()
       Abstraction *a = (Abstraction *) this;
       a->gcConstTermWithHome();
       if (isInGc)
-        gcCode(a->getPC());
+        gcCode(a->getPred()->getCodeBlock());
       break;
     }
 
@@ -2099,7 +2094,6 @@ void ConstTerm::gcConstRecurse()
         CellLocal *cl=(CellLocal*)t;
         cl->setBoard(GETBOARD(cl)->gcBoard());
         OZ_collectHeapTerm(cl->val,cl->val);
-        break;
       } else {
         (*gcDistCellRecurse)(t);
       }
@@ -2862,12 +2856,17 @@ void CodeArea::gcCodeBlock()
   }
 }
 
-void gcCode(ProgramCounter PC) {
+void gcCode(CodeArea *block) {
   Assert(isInGc);
   if (codeGCgeneration!=0)
     return;
 
-  CodeArea::findBlock(PC)->gcCodeBlock();
+  block->gcCodeBlock();
+}
+
+
+void gcCode(ProgramCounter PC) {
+  gcCode(CodeArea::findBlock(PC));
 }
 
 void CodeGCList::collectGClist()

@@ -289,7 +289,7 @@ public:
 
   static CodeArea *findBlock(ProgramCounter PC);
 
-  static void unprotect(TaggedRef* t);
+  void unprotect(TaggedRef* t);
 
   static ProgramCounter writeInt(TaggedRef i, ProgramCounter ptr)
   {
