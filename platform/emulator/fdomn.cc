@@ -443,9 +443,9 @@ int FDIntervals::union_iv(const FDIntervals &x, const FDIntervals &y)
   }
 
   // copy remaining intervals
-  if (x.i_arr[x_c].left < r) x_c += 1;
+  if ((x_c + 1) < x.high && x.i_arr[x_c].left < r) x_c += 1;
   for (; x_c < x.high; x_c += 1, z_c += 1) i_arr[z_c] = x.i_arr[x_c];
-  if (y.i_arr[y_c].left < r) y_c += 1;
+  if ((y_c + 1) < y.high && y.i_arr[y_c].left < r) y_c += 1;
   for (; y_c < y.high; y_c += 1, z_c += 1) i_arr[z_c] = y.i_arr[y_c];
 
   Assert(high >= z_c);
@@ -971,13 +971,13 @@ int FiniteDomain::initList(int list_len,
       FDBitVector * bv = provideBitVector();
       bv->initList(list_len, list_left, list_right);
       size = bv->findSize();
-      setType(bv_descr, bv);
+      setType(bv);
     } else {
       int new_len = simplify(list_len, list_left, list_right);
       FDIntervals * iv = provideIntervals(new_len);
       iv->initList(new_len, list_left, list_right);
       size = iv->findSize();
-      setType(iv_descr, iv);
+      setType(iv);
     }
   }
   if (isSingleInterval()) setType(fd_descr);
@@ -1119,9 +1119,9 @@ void FiniteDomain::gc(void)
   if (type == fd_descr) {
     setType(fd_descr, NULL);
   } else if (type == bv_descr) {
-    setType(bv_descr, get_bv()->copy());
+    setType(get_bv()->copy());
   } else {
-    setType(iv_descr, get_iv()->copy());
+    setType(get_iv()->copy());
   }  
 }
 
@@ -1138,11 +1138,11 @@ const FiniteDomain &FiniteDomain::operator = (const FiniteDomain &fd)
     } else if (type == bv_descr) {
       FDBitVector * item = provideBitVector();
       *item = *fd.get_bv();
-      setType(bv_descr, item);
+      setType(item);
     } else {
       FDIntervals * item = provideIntervals(fd.get_iv()->high);
       *item = *fd.get_iv();
-      setType(iv_descr, item);
+      setType(item);
     }
   }
   return *this;
@@ -1268,9 +1268,18 @@ int FiniteDomain::operator -= (const int take_out)
       } else if (take_out == max_elem) {
 	max_elem -= 1;
       } else {
-	FDIntervals * iv = provideIntervals(2);
-	iv->init(min_elem, take_out - 1, take_out + 1, max_elem);
-	setType(iv_descr, iv);
+	if (max_elem <= fd_bv_max_elem) {
+	  FDBitVector * bv = provideBitVector();
+	  bv->setFromTo(min_elem, max_elem);
+	  bv->resetBit(take_out);
+	  min_elem = bv->findMinElem();
+	  max_elem = bv->findMaxElem();
+	  setType(bv);
+	} else {
+	  FDIntervals * iv = provideIntervals(2);
+	  iv->init(min_elem, take_out - 1, take_out + 1, max_elem);
+	  setType(iv);
+	}
       }
     } else if (type == bv_descr) {
       FDBitVector * bv = get_bv();
@@ -1281,7 +1290,7 @@ int FiniteDomain::operator -= (const int take_out)
       FDIntervals * iv = (*get_iv() -= take_out);
       min_elem = iv->findMinElem();
       max_elem = iv->findMaxElem();
-      setType(iv_descr, iv);
+      setType(iv);
     }
     size -= 1;
     if (isSingleInterval()) setType(fd_descr);
@@ -1308,11 +1317,11 @@ int FiniteDomain::operator += (const int put_in)
       } else if (put_in < min_elem) {
 	FDIntervals * iv = provideIntervals(2);
 	iv->init(put_in, put_in, min_elem, max_elem);
-	setType(iv_descr, iv);
+	setType(iv);
       } else {
 	FDIntervals * iv = provideIntervals(2);
 	iv->init(min_elem, max_elem, put_in, put_in);
-	setType(iv_descr, iv);
+	setType(iv);
       }
     } else if (type == bv_descr) {
       if (put_in <= fd_bv_max_elem) {
@@ -1333,13 +1342,13 @@ int FiniteDomain::operator += (const int put_in)
 	  iv->initList(c_len + 1, fd_bv_left_conv, fd_bv_right_conv);
 	}
 	max_elem = put_in;
-	setType(iv_descr, iv);
+	setType(iv);
       }
     } else {
       FDIntervals * iv = (*get_iv() += put_in);
       min_elem = iv->findMinElem();
       max_elem = iv->findMaxElem();
-      setType(iv_descr, iv);
+      setType(iv);
     }
   }
   size += 1;
@@ -1378,7 +1387,7 @@ FiniteDomain &FiniteDomain::operator ~ (void) const
 	y.size = iv->findSize();
 	y.min_elem = 0;
 	y.max_elem = fd_iv_max_elem;
-	y.setType(iv_descr, iv);
+	y.setType(iv);
       }
     } else {      // reserve one interval too many !!!
       FDIntervals * iv;
@@ -1394,7 +1403,7 @@ FiniteDomain &FiniteDomain::operator ~ (void) const
       y.size = iv->findSize();
       y.min_elem = iv->findMinElem();
       y.max_elem = iv->findMaxElem();
-      y.setType(iv_descr, iv);
+      y.setType(iv);
       if (y.isSingleInterval()) y.setType(fd_descr);
     }
   }
@@ -1414,7 +1423,7 @@ FiniteDomain &FiniteDomain::operator | (const FiniteDomain &y) const
     FDIntervals * x_v = asIntervals();
     FDIntervals * y_v = y.asIntervals();
     FDIntervals * z_v;
-    z.setType(iv_descr, z_v = newIntervals(x_v->high + y_v->high));
+    z.setType(z_v = newIntervals(x_v->high + y_v->high));
     z.size = z_v->union_iv(*x_v, *y_v);
     z.min_elem = z_v->findMinElem();
     z.max_elem = z_v->findMaxElem();
@@ -1423,7 +1432,7 @@ FiniteDomain &FiniteDomain::operator | (const FiniteDomain &y) const
     FDBitVector * x_v = asBitVector();
     FDBitVector * y_v = y.asBitVector();
     FDBitVector * z_v;
-    z.setType(bv_descr, z_v = new FDBitVector);
+    z.setType(z_v = new FDBitVector);
     z.size = z_v->union_bv(*x_v, *y_v);
     z.min_elem = z_v->findMinElem();
     z.max_elem = z_v->findMaxElem();
@@ -1497,7 +1506,7 @@ int FiniteDomain::operator &= (const FiniteDomain &y)
     size = x_i->intersect_iv(*z_i, *y_i);
     min_elem = z_i->findMinElem();
     max_elem = z_i->findMaxElem();
-    setType(iv_descr, z_i);
+    setType(z_i);
   } else {
     FDBitVector * x_b = asBitVector();
     FDBitVector * y_b = y.asBitVector();
@@ -1505,7 +1514,7 @@ int FiniteDomain::operator &= (const FiniteDomain &y)
     size = x_b->intersect_bv(*x_b, *y_b);
     min_elem = x_b->findMinElem();
     max_elem = x_b->findMaxElem();
-    setType(bv_descr, x_b);
+    setType(x_b);
   }
   
   if (isSingleInterval()) setType(fd_descr);
@@ -1540,7 +1549,7 @@ FiniteDomain &FiniteDomain::operator & (const FiniteDomain &y) const
     z.size = x_i->intersect_iv(*z_i, *y_i);
     z.min_elem = z_i->findMinElem();
     z.max_elem = z_i->findMaxElem();
-    z.setType(iv_descr, z_i);
+    z.setType(z_i);
   } else {
     FDBitVector * x_b = asBitVector();
     FDBitVector * y_b = y.asBitVector();
@@ -1549,7 +1558,7 @@ FiniteDomain &FiniteDomain::operator & (const FiniteDomain &y) const
     z.size = x_b->intersect_bv(*z_b, *y_b);
     z.min_elem = z_b->findMinElem();
     z.max_elem = z_b->findMaxElem();
-    z.setType(bv_descr, z_b);
+    z.setType(z_b);
   }
   
   if (z.isSingleInterval()) z.setType(fd_descr);
