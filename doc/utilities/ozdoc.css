@@ -3,7 +3,7 @@ BODY, TH, TD, TR, P, CAPTION, H1, H2, H3, IMG, TABLE {
 }
 
 PRE, CODE {
-  font-family: monospace;
+  font-family: courier;
 }
 
 BODY {
