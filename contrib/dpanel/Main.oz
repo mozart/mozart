@@ -8,7 +8,7 @@ import
    NetInfo(netInfo)
 export
    open:Start
-%   openNetInfo:OpenNetInfo
+   openNetInfo:OpenNetInfo
 define
    %%
    %%TODO:
@@ -25,9 +25,30 @@ define
    MainLock = {NewLock}
    Running={NewCell false}
    RunSync = {NewCell unit}
-%   OpenNetInfo=GUI.OpenNetInfo
+   OpenNetInfo=GUI.openNetInfo
 
-   proc {Start} O N in
+   WD
+   proc {Start} O N
+      proc{GCLineDraw}
+         thread
+            {ForAll {NewWeakDictionary $ WD}
+             proc{$ gc#N}
+                lock MainLock then
+                   if {Not {IsFree {Access RunSync}}} then
+                      {GUI.oactive   divider(col:darkred)}
+                      {GUI.sactivity divider(col:darkred)}
+                      {GUI.bactive   divider(col:darkred)}
+                      {GUI.onumber   divider(col:darkred)}
+                      {GUI.srtt   divider(col:darkred)}
+                      {GUI.bnumber   divider(col:darkred)}
+                   end
+                   WD.gc:=N
+                end
+             end}
+         end
+         WD.gc:={NewName}
+      end
+   in
       {Exchange Running O N}
       if O\=false then
          {GUI.reOpen}
@@ -48,18 +69,8 @@ define
          {ST setGui(GUI)}
          {OT setGui(GUI.osites GUI.oactive GUI.onumber)}
          {BT setGui(GUI.bsites GUI.bactive GUI.bnumber)}
-         {Finalize.everyGC proc{$}
-                              lock MainLock then
-                                 if {Not {IsFree {Access RunSync}}} then
-                                    {GUI.oactive   divider(col:darkred)}
-                                    {GUI.sactivity divider(col:darkred)}
-                                    {GUI.bactive   divider(col:darkred)}
-                                    {GUI.onumber   divider(col:darkred)}
-                                    {GUI.snumber   divider(col:darkred)}
-                                    {GUI.bnumber   divider(col:darkred)}
-                                 end
-                              end
-                           end }
+
+         {GCLineDraw}
 
          thread {Updater ST OT BT NI} end
       end
