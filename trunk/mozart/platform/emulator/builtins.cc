@@ -782,31 +782,7 @@ OZ_C_proc_begin(BInewSpace, 2) {
   int    CPP = am.currentThread->getPriority();
 
   // creation of solve actor and solve board
-  SolveActor *sa = new SolveActor(CBB, CPP, NO);
-
-  // thread creation for {proc root}
-  sa->inject(CPP, proc);
-    
-  // create space   
-  return OZ_unify(OZ_getCArg(1), makeTaggedConst(new Space(CBB,sa->getSolveBoard())));
-} OZ_C_proc_end
-
-
-OZ_C_proc_begin(BInewDebugSpace, 2) {
-  OZ_Term proc = OZ_getCArg(0);
-
-  DEREF(proc, proc_ptr, proc_tag);
-  if (isAnyVar(proc_tag)) 
-    OZ_suspendOn(makeTaggedRef(proc_ptr));
-
-  if (!isProcedure(proc))
-    TypeErrorT(0, "Procedure");
-
-  Board* CBB = am.currentBoard;
-  int    CPP = am.currentThread->getPriority();
-
-  // creation of solve actor and solve board
-  SolveActor *sa = new SolveActor(CBB, CPP, OK);
+  SolveActor *sa = new SolveActor(CBB, CPP);
 
   // thread creation for {proc root}
   sa->inject(CPP, proc);
@@ -837,7 +813,31 @@ OZ_C_proc_begin(BIaskSpace, 2) {
   if (space->isMerged())
     return OZ_unify(OZ_args[1], AtomMerged);
   
-  if (space->getSolveActor()->isDebugBlocked()) {
+  TaggedRef answer = space->getSolveActor()->getResult();
+  
+  DEREF(answer, answer_ptr, answer_tag);
+
+  if (isAnyVar(answer_tag))
+    OZ_suspendOn(makeTaggedRef(answer_ptr));
+
+  return OZ_unify(OZ_args[1], 
+		  (isSTuple(answer) && 
+		   literalEq(tagged2SRecord(answer)->getLabel(), 
+			     AtomSucceeded))
+                    ? AtomSucceeded : answer);
+} OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIaskVerboseSpace, 2) {
+  declareSpace();
+
+  if (space->isFailed())
+    return OZ_unify(OZ_args[1], AtomFailed);
+  
+  if (space->isMerged())
+    return OZ_unify(OZ_args[1], AtomMerged);
+
+  if (space->getSolveActor()->isBlocked()) {
     SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
     stuple->setArg(0, am.currentUVarPrototype);
 
@@ -846,7 +846,7 @@ OZ_C_proc_begin(BIaskSpace, 2) {
 
     OZ_args[1] = stuple->getArg(0);
   } 
-
+  
   TaggedRef answer = space->getSolveActor()->getResult();
   
   DEREF(answer, answer_ptr, answer_tag);
@@ -6555,14 +6555,14 @@ BIspec allSpec2[] = {
   {"setSelf",          1,BIsetSelf,            0},
   {"setClosed",        1,BIsetClosed,          0},
 
-  {"Space.new",           2, BInewSpace,       0},
-  {"Space.newDebug",      2, BInewDebugSpace,  0},
-  {"IsSpace",             2, BIisSpace,        0},
-  {"Space.ask",           2, BIaskSpace,       0},
-  {"Space.merge",         2, BImergeSpace,     0},
-  {"Space.clone",         2, BIcloneSpace,     0},
-  {"Space.choose",        2, BIchooseSpace,    0},
-  {"Space.inject",        2, BIinjectSpace,    0},
+  {"Space.new",           2, BInewSpace,        0},
+  {"IsSpace",             2, BIisSpace,         0},
+  {"Space.ask",           2, BIaskSpace,        0},
+  {"Space.askVerbose",    2, BIaskVerboseSpace, 0},
+  {"Space.merge",         2, BImergeSpace,      0},
+  {"Space.clone",         2, BIcloneSpace,      0},
+  {"Space.choose",        2, BIchooseSpace,     0},
+  {"Space.inject",        2, BIinjectSpace,     0},
 
   {"System.getPrintDepth", 2, BIgetPrintDepth, 0},
   {"System.getPrintWidth", 2, BIgetPrintWidth, 0},
