@@ -55,15 +55,11 @@ class MethodCache {
 public:
   Abstraction *lookup(Object *obj, TaggedRef meth, int arity)
   {
-    // xCalled++;
-
     ObjectClass *cla = obj->getClass();
-    if (cla==cl)
-      return abstr;  /* cache hit */
-
-    // xMiss++;
-    cl    = cla;
-    abstr = obj->getMethod(meth,arity);  /* is ok even if we find no method */
+    if (cla!=cl) {
+      cl    = cla;
+      abstr = obj->getMethod(meth,arity);  /* is ok even if we find no method */
+    }
     return abstr;
   }
 };
@@ -335,9 +331,7 @@ bombGenCall:
      FALSE: can continue
    */
 
-Bool AM::emulateHookOutline(Abstraction *def,
-                            int arity,
-                            TaggedRef *arguments)
+Bool AM::emulateHookOutline(Abstraction *def, int arity, TaggedRef *arguments)
 {
   // without signal blocking;
   if (isSetSFlag(ThreadSwitch)) {
@@ -373,12 +367,16 @@ Bool AM::hookCheckNeeded()
   return (isSetSFlag());
 }
 
-/* macros are faster ! */
-#define emulateHookCall(e,def,arity,arguments) \
- (e->hookCheckNeeded() && e->emulateHookOutline(def, arity, arguments))
 
-#define emulateHookPopTask(e) \
- (e->hookCheckNeeded() && e->emulateHookOutline(0,0,0))
+/* macros are faster ! */
+#define emulateHookCall(e,def,arity,arguments,Code)             \
+    if (e->hookCheckNeeded()) {                                 \
+      if (e->emulateHookOutline(def, arity, arguments)) {       \
+        Code;                                                   \
+      }                                                         \
+    }
+
+#define emulateHookPopTask(e,Code) emulateHookCall(e,0,0,0,Code)
 
 
 #define CallPushCont(ContAdr) e->pushTask(ContAdr,Y,G)
@@ -394,13 +392,13 @@ Bool AM::hookCheckNeeded()
  * in case we have call(x-N) and we have to switch process or do GC
  * we have to save as cont address Pred->getPC() and NOT PC
  */
-#define CallDoChecks(Pred,gRegs,Arity)                          \
-     Y = NULL;                                                  \
-     G = gRegs;                                                 \
-     if (emulateHookCall(e,Pred,Arity,X)) {                     \
-        e->pushTaskOutline(Pred->getPC(),NULL,G,X,Arity);       \
-        goto LBLschedule;                                       \
-     }
+#define CallDoChecks(Pred,gRegs,Arity)                                  \
+     Y = NULL;                                                          \
+     G = gRegs;                                                         \
+     emulateHookCall(e,Pred,Arity,X,                                    \
+                     e->pushTaskOutline(Pred->getPC(),NULL,G,X,Arity);  \
+                     goto LBLschedule;);
+
 
 // load a continuation into the machine registers PC,Y,G,X
 #define LOADCONT(cont)                          \
@@ -561,7 +559,7 @@ Bool AM::hookCheckNeeded()
   }
 
 #define SUSP_PC(TermPtr,RegsToSave,PC)          \
-   e->pushTask(PC,Y,G,X,RegsToSave);            \
+   e->pushTaskOutline(PC,Y,G,X,RegsToSave);     \
    addSusp(TermPtr,e->mkSuspThread ());         \
    CHECK_CURRENT_THREAD;
 
@@ -1316,9 +1314,8 @@ LBLpopTask:
     Assert(CBB==currentDebugBoard);
     asmLbl(popTask);
 
-    if (emulateHookPopTask(e)) {
-      goto LBLschedule;
-    }
+    emulateHookPopTask(e,
+                       goto LBLschedule);
 
     DebugCheckT(CAA = NULL);
 
@@ -1329,7 +1326,7 @@ LBLpopTask:
 
   next_task:
     topElem = TaskStackPop (topCache-1);
-    cFlag = getContFlag (ToInt32 (topElem));
+    cFlag   = getContFlag (ToInt32 (topElem));
 
     /* RS: Optimize most probable case:
      *  - do not handle C_CONT in switch --> faster
@@ -1339,8 +1336,8 @@ LBLpopTask:
     if (cFlag == C_CONT) {
       Assert(!taskstack->isEmpty(topElem));
       PC = getPC(C_CONT,ToInt32(topElem));
-      Y = (RefsArray) TaskStackPop(topCache-2);
-      G = (RefsArray) TaskStackPop(topCache-3);
+      Y  = (RefsArray) TaskStackPop(topCache-2);
+      G  = (RefsArray) TaskStackPop(topCache-3);
       taskstack->setTop(topCache-3);
       goto LBLemulate;
     }
@@ -1384,16 +1381,14 @@ LBLpopTask:
     case C_DEBUG_CONT:
       {
         OzDebug *ozdeb = (OzDebug *) TaskStackPop(--topCache);
-        taskstack->setTop(topCache);
-
         exitCall(PROCEED,ozdeb);
-        goto LBLpopTask;
+        goto next_task;
       }
 
     /* unraised exception */
     case C_EXCEPT_HANDLER:
-        taskstack->setTop(topCache-1);
-        goto LBLpopTask;
+      topCache--;
+      goto next_task;
 
     case C_CALL_CONT:
       {
@@ -1472,16 +1467,10 @@ LBLpopTask:
 
     case C_SET_CAA:
       CAA = (AWActor *) TaskStackPop (--topCache);
-      taskstack->setTop (topCache);
       goto next_task;
 
     case C_SET_CUROBJECT:
       e->setCurrentObject((Object *) TaskStackPop(--topCache));
-      taskstack->setTop(topCache);
-      goto next_task;
-
-    case C_SET_MODETOP:
-      Assert(0);
       goto next_task;
 
     default:
@@ -2395,7 +2384,7 @@ LBLsuspendThread:
       case PROCEED: DISPATCH(5);
       case FAILED:  JUMP( getLabelArg(PC+3) );
       case SUSPEND:
-        e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
+        e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+4));
         addSusp (XPC(2), e->mkSuspThread ());
         CHECK_CURRENT_THREAD;
 
@@ -2422,7 +2411,7 @@ LBLsuspendThread:
 
       case SUSPEND:
         {
-          e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
+          e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+5));
           Thread *thr = e->mkSuspThread ();
           OZ_Term A=XPC(2);
           OZ_Term B=XPC(3);
@@ -2452,7 +2441,7 @@ LBLsuspendThread:
       }
 
       int argsToSave = getPosIntArg(shallowCP+2);
-      e->pushTask(shallowCP,Y,G,X,argsToSave);
+      e->pushTaskOutline(shallowCP,Y,G,X,argsToSave);
       Thread *thr = e->mkSuspThread ();
       shallowCP = NULL;
       e->reduceTrailOnShallow ();
@@ -2507,15 +2496,24 @@ LBLsuspendThread:
     DISPATCH(1);
 
   Case(SAVECONT)
+    e->pushTaskOutline(getLabelArg(PC+1),Y,G);
+    DISPATCH(2);
+
+  Case(RELEASEOBJECT)
+    e->getCurrentObject()->release();
+    DISPATCH(1);
+
+  Case(SETMODETODEEP)
     {
-      e->pushTask(getLabelArg(PC+1),Y,G);
+      Object *o = e->getCurrentObject();
+      o->incDeepness();
+      // am.currentThread->pushSetModeTop();
+      // am.currentThread->pushSetCurObject(am.getCurrentObject());
       DISPATCH(2);
     }
 
   Case(RETURN)
-  {
     goto LBLpopTask;
-  }
 
 
 // ------------------------------------------------------------------------
@@ -2593,7 +2591,7 @@ LBLsuspendThread:
     }
     /* INCFPC(3): dont do it */
     int argsToSave = getPosIntArg(PC+2);
-    e->pushTask(PC,Y,G,X,argsToSave);
+    e->pushTaskOutline(PC,Y,G,X,argsToSave);
     Thread *thr = e->mkSuspThread ();
     if (isCVar (tag)) {
       (tagged2CVar (term))->addDetSusp (thr);
@@ -2623,20 +2621,7 @@ LBLsuspendThread:
     Assert(HelpReg!=X || arity==regToInt(getRegArg(PC+2)));
 
     DEREF(object,objectPtr,_2);
-    if (!isObject(object)) {
-      if (isAnyVar(object)) {
-        SUSP_PC(objectPtr,arity+1,PC);
-      }
-
-      if (isProcedure(object))
-        goto bombSend;
-
-      DORAISE(OZ_mkTupleC("applyFailure",1,
-                      OZ_mkTupleC("proc",2,object,
-                              makeMessage(arity,label,X))));
-    }
-
-    {
+    if (isObject(object)) {
       Object *obj      = (Object *) tagged2Const(object);
       Abstraction *def = getSendMethod(obj,label,arity,(MethodCache*)(PC+4));
       if (def == NULL) {
@@ -2652,6 +2637,17 @@ LBLsuspendThread:
       CallDoChecks(def,def->getGRegs(),arity);
       JUMP(def->getPC());
     }
+
+    if (isAnyVar(object)) {
+      SUSP_PC(objectPtr,arity+1,PC);
+    }
+
+    if (isProcedure(object))
+      goto bombSend;
+
+    DORAISE(OZ_mkTupleC("applyFailure",1,
+                        OZ_mkTupleC("proc",2,object,
+                                    makeMessage(arity,label,X))));
 
   bombSend:
     PC = isTailCall ? PC : PC+6;
@@ -3412,21 +3408,6 @@ LBLsuspendThread:
   Case(TEST2)
   Case(TEST3)
   Case(TEST4)
-
-  Case(RELEASEOBJECT)
-    {
-      e->getCurrentObject()->release();
-      DISPATCH(1);
-    }
-
-  Case(SETMODETODEEP)
-    {
-      Object *o = e->getCurrentObject();
-      o->incDeepness();
-      // am.currentThread->pushSetModeTop();
-      // am.currentThread->pushSetCurObject(am.getCurrentObject());
-      DISPATCH(2);
-    }
 
   Case(ENDOFFILE)
   Case(ENDDEFINITION)
