@@ -166,7 +166,8 @@ compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
 EMUSRCDIR=$(SRCDIR)/../../platform/emulator
 BIDECL=$(EMUSRCDIR)/bidecl.perl
 compiler-Builtins.oz: $(EMUSRCDIR)/modBuiltins.spec
-	perl $(BIDECL) -file $< -oztable > $@
+	perl $(BIDECL) -file $< -oztable > $@ \
+	|| (rm -f $@; exit 1)
 
 compiler-Opcodes.oz: compiler/Opcodes.m4oz $(EMUSRCDIR)/instrDefs.m4
 	$(M4) -DEMUDIR=$(EMUSRCDIR) < $< > $@ \
