@@ -94,7 +94,7 @@ identifies four different remote problems:
 <ITEM> <<I=permSome>>: At least one of the other sites
 referencing the entity is either failed or
 in the fault state <<permFail>>.
-<ITEM> <<I=permAll>: All of the other sites referencing
+<ITEM> <<I=permAll>>: All of the other sites referencing
 the entity are either failed or
 in the fault state <<permFail>>.
 <ITEM> <<I=tempSome>>: At least one of the other sites
