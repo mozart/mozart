@@ -510,7 +510,7 @@ local
           if N mod 1000 == 0 then
             {Browse 'riding a new volvo'}
           end
-            {Consumer N-1 Xs}
+          {Consumer N-1 Xs}
         else {Consumer N Xs} end
       end
    end
@@ -520,6 +520,63 @@ end
 >>>
 </FIGURE>
 
+<SUBSECTION> <TITLE> Futures </TITLE>
+<P>There is another way to program demand-driven computation. This
+uses the notion of <EM> future </EM> and the <<ByNeed>> primitive
+operations. 
+A future is a read-only capability of a logic variable. For example
+to create a future of the variable <<X>> we perfrom the operation
+<<!!>> on create a future <<Y>>.
+
+<<< Y = !!X >>>
+
+<P> A thread trying to use the value of a future, e.g. <<Y>> will suspenduntil the variable of the future, e.g. <<X>>, gets bound.
+
+<P>One way to execute a procedure lazily, i.e. in a demand-driven manner,
+is to use the operation <<{ByNeed +P ?F>>.
+<<ByNeed>> takes a one output argument procedure <<P>>, and returns 
+a future <<F>>. We a thread tries to access the value of <<F>>, the
+procedure <<{P X}>> is called, and its result value <<X>> is bound to
+<<F>>. This allows us to perform demand-driven computations in a 
+straightforward manner. For example:
+
+<<<
+declare Y
+{ByNeed proc {$ X} X=1 end Y}
+{Browse Y}
+>>>
+
+<P> We will observe that <<Y>> becomes a future, 
+i.e. we will see <<Y&lt;Future&gt;>> in the browser. 
+If we try to access the value of <<Y>>, it will get bound to <<1>>.
+One way to access <<Y>> is by perform the operation
+<<<
+{Wait Y}
+>>>
+
+<P> 
+<P><FIGURE ID="volvos2" CLASS="Figure">
+<CAPTION>Producing Volvo's lazily</CAPTION>
+<<<
+local
+   proc {Producer Xs}
+      Xr in
+      Xs = volvo|{ByNeed {Producer Xr} $}
+   end
+   proc {Consumer N Xs}
+      if N==0 then skip end
+      case Xs of X|Xr then
+          if X==volvo andthen N mod 1000 == 0 then
+            {Browse 'riding a new volvo'}
+            {Consumer N-1 Xr}
+          else {Consume N Xr} end
+      end
+   end
+in
+   {Consumer 10000000 thread {Producer $} end}
+end
+>>>
+</FIGURE>
 
 <SECTION id=section.concurrency.termination><TITLE/Thread Termination-Detection/
 <P>We have seen how threads are forked using the statement 
