@@ -2,8 +2,8 @@
 
 set -x
 
-TK=tk4.1b1
-TCL=tcl7.5b1
+TK=tk4.1b3
+TCL=tcl7.5b3
 
 cd $TCL/unix
 rm -rf dltest
