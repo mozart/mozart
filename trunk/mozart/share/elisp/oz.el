@@ -3,10 +3,10 @@
 ;;  ... edit ...
 ;;  make oz
 ;;  cvs commit
-;; --------------------------------------------------------------------------
+;; ----------------------------------------------------------------------
 ;; OZ-Mode
 ;; credits to mm and rs
-;; --------------------------------------------------------------------------
+;; ----------------------------------------------------------------------
 ;; list of changes:
 
 ;; 11.1.93 mm 
@@ -30,23 +30,36 @@
 ;;  deleted some keywords for highlighting, fixed error
 ;; 15.3.93 rs
 ;; added "oz-print-region" and "oz-print-buffer"
+;; 8.9.93 rs
+;; random removed
+;; call compiler directly, since it can now reliably bind the socket
 ;; --------------------------------------------------------------------------
+
+;(byte-compiler-options (optimize t) (warnings (- free-vars)) (file-format emacs18))
+(setq debug-on-error nil)
+;(setq debug-on-error t)
+
+
+(setq screen-title-format
+      '((" C:  "  (40 . oz-compiler-state))
+	("   M:  " (-25 . oz-machine-state))))
+
+
+(setq oz-compiler-state "not running")
+(setq oz-machine-state  "not runnnig")
+
+
 
 
 (require 'comint)
 
-(defvar lucid-emacs
-  (if (string= (substring emacs-version 0 2) "19")
-      t
-    nil
-    )
+(defvar lucid-emacs 
+  (string-match "Lucid" emacs-version)
   "Use Lucid-Emacs functions for highlighting for example")
 
-(if lucid-emacs
-    (load "blink-paren")
-)
 
-(random t)
+(if lucid-emacs
+    (load "blink-paren"))
 
 (defvar oz-indent-chars 3
 "*Indentation of Oz statements with respect to containing block.")
@@ -59,18 +72,16 @@
 (defvar oz-mode-map (make-sparse-keymap))
 (defvar oz-input-mode-map nil)
 
-(defvar oz-system "oz.compiler.csh"
+(defvar oz-compiler "oz.compiler"
   "Oz system used by run-oz")
-(defvar oz-machine "oz.machine.csh"
+
+(defvar oz-machine "oz.machine"
   "Oz machine used by run-oz")
 
-(defvar time-wait 10
-  "Time the machine needs to bind the socket")
-
-(defvar oz-dir (concat (or (getenv "OZDIR") "/usr/share/gs/soft/oz") "/")
+(defvar oz-home (concat (or (getenv "OZHOME") "/usr/share/gs/soft/oz") "/")
   "The directory where oz is installed")
 
-(defvar oz-doc-dir (concat oz-dir "doc/")
+(defvar oz-doc-dir (concat oz-home "doc/")
   "The default doc directory")
 
 (defvar oz-doc-file "quick.dvi"
@@ -79,10 +90,25 @@
 (defvar oz-preview "xdvi"
   "The previewer for doc files")
 
+
+(defvar oz-error-string (format "%c" 17)
+  "how compiler and engine signal errors")
+
+(defvar oz-warn-string (format "%c" 18)
+  "how compiler and engine signal warnings")
+
+(defvar oz-status-string (format "%c" 19)
+  "how compiler and engine signal status changes")
+
+
 (if (not lucid-emacs)
     (defun abs(x)
-      (if (< x 0) (- 0 x) x)
-      ))
+      (if (< x 0) (- 0 x) x)))
+
+(setq completion-ignored-extensions
+      (append '(".load" ".sym")
+	      completion-ignored-extensions))
+
 
 
 (if oz-mode-syntax-table
@@ -138,33 +164,77 @@
   (define-key map "\M-r"    'oz-feed-region)
   (define-key map "\M-i"    'oz-feed-file)
   (define-key map "\M-l"    'oz-feed-line)
-  (define-key map "\M-u"    'oz-clear-buffer)
-  (define-key map "\M-c"    'oz-clone-buffer)
+  (define-key map "\M-m"    'oz-toggle-machine-window)
   (define-key map "\M-e"    'oz-toggle-compiler-window)
   (define-key map "\M-z"    'oz-prettyprint))
 
 (oz-mode-commands oz-mode-map)
 
+(setq oz-small-font    '("-*-courier-" . "-*-*-*-100-*-*-*-*-iso8859-*"))
+(setq oz-normal-font   '("-*-courier-" . "-*-*-*-120-*-*-*-*-iso8859-*"))
+(setq oz-large-font    '("-*-courier-" . "-*-*-*-140-*-*-*-*-iso8859-*"))
+(setq oz-very-large-font '("-*-courier-" . "-*-*-*-180-*-*-*-*-iso8859-*"))
+
+(defun oz-small-font()
+  (interactive)
+  (oz-set-default-font oz-small-font))
+
+(defun oz-normal-font()
+  (interactive)
+  (oz-set-default-font oz-normal-font))
+
+(defun oz-large-font()
+  (interactive)
+  (oz-set-default-font oz-large-font))
+
+(defun oz-very-large-font()
+  (interactive)
+  (oz-set-default-font oz-very-large-font))
+
+(defun oz-set-default-font(font)
+  (set-default-font (concat (car font) "medium-r" (cdr font)))
+  (set-face-font 'bold (concat (car font) "bold-r" (cdr font)))
+  (set-face-font 'italic (concat (car font) "medium-o" (cdr font))))
+
+(defun oz-fixed()
+  (interactive)
+  (set-default-font "fixed")
+  (set-face-font 'bold "fixed")
+  (set-face-font 'italic "fixed"))
+
+
 ;;; OZ MODE
 (if lucid-emacs
-(defvar oz-menubar 
+;(defvar oz-menubar 
+(setq oz-menubar 
   (append default-menubar
 	  '(("Oz"     
-	     ["Feed buffer"          oz-feed-buffer t]
-	     ["Feed region"          oz-feed-region t]
-	     ["Feed line"            oz-feed-line t]
+	     ["Feed buffer"            oz-feed-buffer t]
+	     ["Feed region"            oz-feed-region t]
+	     ["Feed line"              oz-feed-line t]
               "-----"
-	     ["Next Oz buffer"       oz-next-buffer t]
-	     ["Previous Oz buffer"   oz-previous-buffer t]
-	     ["New Oz buffer"        oz-new-buffer t]
-	     ["Clone buffer"         oz-clone-buffer t]
-	     ["Clear buffer"         oz-clear-buffer t]
-	     ["Pretty print buffer"  oz-prettyprint t]
-	     ["Region to printer"    oz-print-region t]
-	     ["Buffer to printer"    oz-print-buffer t]
-	     ["Include file into Oz" oz-feed-file t]
-	     ["Show/Hide errors"     oz-toggle-compiler-window t]
+	     ["Next Oz buffer"         oz-next-buffer t]
+	     ["Previous Oz buffer"     oz-previous-buffer t]
+	     ["New Oz buffer"          oz-new-buffer t]
+              "-----"
+	     ["Refresh buffer"         oz-prettyprint t]
+	     ["Region to printer"      oz-print-region t]
+	     ["Buffer to printer"      oz-print-buffer t]
+              "-----"
+	     ["Include file"           oz-feed-file t]
+	     ["Compile file"           oz-precompile-file t]
+              "-----"
+	     ["Show/hide compiler"     oz-toggle-compiler-window t]
+	     ["Show/hide machine"      oz-toggle-machine-window t]
              ["Show Documentation ..." oz-doc t]
+              "-----"
+	      ("Font"
+	       ["Small"      oz-small-font      t]
+	       ["Normal"     oz-normal-font     t]
+	       ["Large"      oz-large-font      t]
+	       ["Very Large" oz-very-large-font t]
+	       ["Fixed"      oz-fixed           t]
+	       )
               "-----"
 	     ["Start Oz" run-oz t]
 	     ["Halt Oz"  halt-oz t]
@@ -195,15 +265,15 @@ if that value is non-nil."
 	(proc-buff (get-buffer-process "*Oz Compiler*")))
     (if proc-buff
 	(error "Oz already running")
-      (setq proc-buff (process-buffer (start-oz-process)))
-      (set-buffer proc-buff)
+      (set-buffer (process-buffer (start-oz-process)))
       (oz-clear-buffer)
       (oz-input-mode)
       (if (not oz-input-to-oz) 
-	  (toggle-read-only 1))
-      (set-process-filter (get-process "Oz Compiler") 'oz-filter)
-;      (switch-to-buffer cur)
+	  (oz-toggle-read-only t))
+      (set-process-filter (get-process "Oz Compiler") 'oz-compiler-filter)
+      (set-process-filter (get-process "Oz Machine")  'oz-machine-filter)
       (oz-new-buffer)
+      (oz-show-machine-window)
       (oz-hide-errors))))
 
 
@@ -213,23 +283,20 @@ if that value is non-nil."
 
 (defun start-oz-process()
   (or (get-process "Oz Compiler")
-      (let ((port (format "%d" (+ 9000 (random 1000)))))
-	(message "Starting Oz")
-	(start-oz-machine port)
-	(message "Starting Compiler")
-	(make-comint "Oz Compiler" oz-system nil port)
-	(save-excursion
-	  (switch-to-buffer "*Oz Compiler*")
-	  (oz-input-mode))
-	(set-process-filter  (get-process "Oz Compiler") 'oz-filter)
-	(get-process "Oz Compiler"))))
+      (let ((file (oz-make-temp-name "/tmp/ozsock")))
+	(setq oz-compiler-state "booting...")
+        (make-comint "Oz Compiler" oz-compiler nil "-S" file)
 
-(defun start-oz-machine(port)
-  (message (format "Starting Machine (port = %s)" port))
-  (start-process "Oz Machine" nil oz-machine port)
-;; wait a little bit until machine has bind it's socket
-  (sleep-for time-wait)
-)
+	(setq oz-machine-state "booting...")
+	(make-comint "Oz Machine" oz-machine nil "-S" file)
+
+        (save-excursion
+          (switch-to-buffer "*Oz Compiler*")
+          (oz-input-mode))
+        (set-process-filter  (get-process "Oz Compiler") 'oz-compiler-filter)
+        (set-process-filter  (get-process "Oz Machine") 'oz-machine-filter)
+        (get-process "Oz Compiler"))))
+
 
 (defun oz-doc ()
   (interactive)
@@ -238,10 +305,7 @@ if that value is non-nil."
 	       oz-doc-dir (concat oz-doc-dir oz-doc-file) t)))
     (if (file-exists-p name)
 	(start-process "OZ Doc" "*Preview*" oz-preview name)
-      (error "file %s doesn't exists" name)
-      )
-    )
-  )
+      (error "file %s doesn't exists" name))))
 
 
 ;;------------------------------------------------------------
@@ -282,19 +346,45 @@ if that value is non-nil."
   (oz-hide-errors)
   (oz-send-string (concat "!include '" file "'\n"))) 
 
+(defun oz-load-file(file)
+  (interactive "FLoad file: ")
+  (oz-hide-errors)
+  (oz-send-string (concat "!load '" file "'\n"))) 
+
+(defun oz-precompile-file(file)
+  (interactive "FPrecompile file: ")
+  (oz-hide-errors)
+  (oz-send-string (concat "!precompile '" file "'\n"))) 
+
 (defun oz-hide-errors()
   (interactive)
   (if (get-buffer "*Oz Compiler*")
       (delete-windows-on "*Oz Compiler*")))
+;  (if (get-buffer "*Oz Machine*")
+;      (delete-windows-on "*Oz Machine*")))
+
 
 
 (defun oz-toggle-compiler-window()
   (interactive)
-  (if (get-buffer "*Oz Compiler*")
-      (if (get-buffer-window "*Oz Compiler*")
-	  (oz-hide-errors)
-	(oz-show-compiler (get-buffer "*Oz Compiler*")))
+  (oz-toggle-window "*Oz Compiler*"))
+
+
+(defun oz-toggle-machine-window()
+  (interactive)
+  (if (member oz-machine-screen (visible-screen-list))
+      (iconify-screen oz-machine-screen)
+    (oz-show-machine-window)))
+
+
+
+(defun oz-toggle-window(buffername)
+  (if (get-buffer buffername)
+      (if (get-buffer-window buffername t)
+	  (delete-windows-on buffername)
+	(oz-show-buffer (get-buffer buffername)))
     (error "Oz not yet runnning")))
+
 
 
 (defun halt-oz()
@@ -312,10 +402,9 @@ if that value is non-nil."
       (error "Buffer is associated with a file. Use kill-buffer.")
     (if (not oz-input-to-oz) 
 	(let ((oldro  buffer-read-only))
-	  (toggle-read-only 0)
+	  (oz-toggle-read-only nil)
 	  (delete-region (or beg (point-min)) (or end (point-max)))
-	  (if oldro (toggle-read-only oldro))))))
-
+	  (if oldro (oz-toggle-read-only oldro))))))
 
 
 
@@ -323,43 +412,69 @@ if that value is non-nil."
   (ensure-oz-process)
   (save-excursion
     (switch-to-buffer (get-buffer "*Oz Compiler*"))
-    (oz-clear-buffer0 (point-min) (point-max)))
+    (oz-clear-buffer0 (point-min) (point-max))
+    (bury-buffer))
   (process-send-string "Oz Compiler" string)
   (process-send-eof "Oz Compiler"))
 
+(defvar oz-machine-screen nil
+  "screen to display Oz machine output")
 
-(defun oz-show-compiler (buffer)
-  (let ((cur (current-buffer)))
-    (pop-to-buffer buffer)
-    (goto-char (point-max))
-    (pop-to-buffer cur)))
+(setq oz-machine-screen nil)
 
 
+(defun oz-show-buffer (buffer)
+  (if (equal (get-buffer buffer) (get-buffer "*Oz Machine*"))
+	(oz-show-machine-window)
+    (let ((cur (current-buffer))
+	  (old-win (selected-window)))
+      (pop-to-buffer buffer t)
+      (setq win (get-buffer-window buffer))
+      (select-window win)
+      (goto-char (point-max))
+      (select-window old-win)
+      (bury-buffer buffer))))
 
-(defun find-buffer-other-window ()
+
+
+(defun oz-show-machine-window()
   (interactive)
-  (let ((cur (current-buffer)))
-    (x-new-screen)
-    (switch-to-buffer cur)))
+  (if (member oz-machine-screen (screen-list))
+      t
+    (setq oz-machine-screen (new-screen))
+    (set-screen-size oz-machine-screen 70 22)
+    (set-buffer-dedicated-screen 
+         (get-buffer "*Oz Machine*") 
+	 oz-machine-screen))
 
-(defun switch-to-buffer-new-screen (buffer)
-  (interactive "BSwitch to buffer in other screen: ")
-  (let ((win (get-buffer-window buffer t)))
-    (if win
-	(progn
-	  ;; (select-window win)
-	  (make-screen-visible (window-screen win))
-	  (raise-screen  (window-screen win)))
-      (x-new-screen)
-      (switch-to-buffer buffer))))
+  (make-screen-visible oz-machine-screen)
+  (oz-scroll-machine-window))
+
+
+(defun oz-scroll-machine-window()
+  (let ((old-w pop-up-windows)
+	(old-scr (selected-screen)))
+    (setq pop-up-windows nil)
+    (select-window (display-buffer "*Oz Machine*" t oz-machine-screen))
+    (goto-char (point-max))
+    (select-screen old-scr)
+    (setq pop-up-windows old-w)))
+
+
+;(set-mouse-position (selected-screen) 10 2)
+;(select-screen oz-machine-screen)
+
+;(get-buffer-create "*Oz Machine*")
+;(get-buffer-create "*Oz Compiler*")
+;(oz-show-buffer "*Oz Machine*")
+;(oz-show-buffer "*scratch*")
 
 
 (defun oz-new-buffer()
   (interactive)
   (oz-hide-errors)
-  (let ((buf (generate-new-buffer "Oz")))
-    (switch-to-buffer buf)
-    (oz-mode)))
+  (switch-to-buffer (generate-new-buffer "Oz"))
+  (oz-mode))
 
 
 (defun oz-previous-buffer()
@@ -387,15 +502,7 @@ if that value is non-nil."
     (if (null bool)
 	t
       (set-buffer cur)
-      (error "No other oz-buffer")))
-)
-
-
-(defun oz-clone-buffer()
-  (interactive)
-  (let ((cur (current-buffer)))
-    (oz-new-buffer)
-    (insert-buffer cur)))
+      (error "No other oz-buffer"))))
 
   
 (defun oz-make-keywords-for-match(args)
@@ -419,8 +526,7 @@ if that value is non-nil."
 		   "trigger" "seq")))
 
 (defconst oz-end-pattern
-      (oz-make-keywords-for-match '("end" "fi" "ro"))
-      )
+      (oz-make-keywords-for-match '("end" "fi" "ro")))
 
 (defconst oz-middle-pattern 
       (concat (oz-make-keywords-for-match
@@ -428,8 +534,7 @@ if that value is non-nil."
 	      "\\|" "\\[\\]"))
 
 (defconst oz-key-pattern
-      (concat oz-begin-pattern "\\|" oz-middle-pattern "\\|" oz-end-pattern)
-      )
+      (concat oz-begin-pattern "\\|" oz-middle-pattern "\\|" oz-end-pattern))
 
 (defconst oz-left-pattern "[[({]")
 (defconst oz-right-pattern "[])}]")
@@ -439,9 +544,8 @@ if that value is non-nil."
   (goto-char 0)
   (while (< (point) (point-max))
     (oz-indent-line t)
-    (forward-line 1)
-    )
-  )
+    (forward-line 1)))
+
 
 (defun oz-indent-region(b e)
   (interactive "r")
@@ -449,10 +553,7 @@ if that value is non-nil."
     (goto-char b)
     (while (< (point) end)
       (oz-indent-line t)
-      (forward-line 1)
-      )
-    )
-  )
+      (forward-line 1))))
 
 (defun oz-indent-line(&optional no-empty-line)
   (interactive)
@@ -466,18 +567,11 @@ if that value is non-nil."
 	    (cond ((< col 0) t)
 		  ((not (= col (current-column)))
 		   (delete-horizontal-space)
-		   (indent-to col)
-		   )
-		  )
-	    )
-	  )
+		   (indent-to col)))))
       (if (is-first-in-row)
-	  (skip-chars-forward " \t")
-	)
-      (setq case-fold-search search-mode)
-      )
-    )
-  )
+	  (skip-chars-forward " \t"))
+      (setq case-fold-search search-mode))))
+
 
 (defun oz-calc-indent(no-empty-line)
   (cond ((and no-empty-line (is-first-in-row) (is-last-in-row))
@@ -791,49 +885,59 @@ if that value is non-nil."
   (recenter arg)
   (oz-highlight-buffer))
 
+(min (length "opop") 7)
+
+(defun oz-machine-filter (proc string)
+  (oz-filter proc string 'oz-machine-state)
+  (oz-scroll-machine-window))
 
 
-(defun oz-filter (proc string)
+(defun oz-compiler-filter (proc string)
+  (oz-filter proc string 'oz-compiler-state))
+
+
+(defvar oz-escape-chars
+  (concat oz-status-string "\\|" oz-warn-string "\\|" oz-error-string)
+  "")
+
+(defun oz-filter (proc string state-string)
   (let ((old-buffer (current-buffer))
-	newbuf ppp
-	match)
+        newbuf help-string old-point
+        match match-start match-end)
     (setq newbuf (process-buffer proc))
     (set-buffer newbuf)
-    (if (null oz-input-to-oz) (toggle-read-only 0))
+    (oz-toggle-read-only nil)
       ;; Insert the text, moving the process-marker.
-    (goto-char (process-mark proc))
-    (save-excursion
-      (insert string)
-
-      ;; show status messages of compiler in mini buffer
-      (if (eq 0
-	      (string-match "^ *----" string))
-	  (message (substring string 4)))
-
-      ;; 
-      (if (null oz-input-to-oz)
-	  (progn 
-	    (toggle-read-only 0)
-
-	    (goto-char (point-min))
-	    (while (search-forward "OZ> " nil t)
-	      (replace-match "" nil t))
-
-	    (toggle-read-only 1)))
-
-      (if (string-match "\\*\\*\\*" string)
-	  (progn (oz-show-compiler
-		  (process-buffer (get-process "Oz Compiler")))
-		 (message ""))))
-
     (goto-char (point-max))
-    (set-marker (process-mark proc) (point))
+    (setq old-point (point))
+    (insert string)
+
+    ;; show status messages of compiler in mini buffer
+    (setq match-start nil)
+    (setq help-string string)
+
+    ;; only display the last status message
+    (while (setq match-start (string-match oz-status-string help-string))
+      (setq help-string (substring help-string (+ 1 match-start))))
+    (if (string= string help-string)
+	t
+      (setq match-end (string-match "\n" help-string))
+      (set state-string (substring help-string 0 match-end)))
+            
+    ;; remove escape characters
+    (goto-char old-point)
+    (while (search-forward-regexp oz-escape-chars nil t)
+      (replace-match "" nil t))
+    
+    (if (string-match oz-error-string string)   ; contains errors ?
+	(oz-show-buffer newbuf))
+      
     (pop-to-buffer old-buffer)))
 
 
+
 (if lucid-emacs
-(add-hook 'find-file-hooks 'oz-highlight-buffer)
-)
+    (add-hook 'find-file-hooks 'oz-highlight-buffer))
 
 ;(add-hook 'write-file-hooks 'oz-highlight-buffer)
 
@@ -856,7 +960,7 @@ Meta-Return sends current input.
   (setq major-mode 'oz-input-mode)
   (setq mode-name "Oz Input")
   (cond (t;;(not oz-input-mode-map)
-         (setq oz-input-mode-map (full-copy-sparse-keymap comint-mode-map))
+         (setq oz-input-mode-map (copy-keymap comint-mode-map))
          (define-key oz-input-mode-map "\C-m" 'newline)
 	 (define-key oz-input-mode-map "\M-e" 'oz-toggle-compiler-window)
          (define-key oz-input-mode-map "\C-d" 
@@ -948,7 +1052,7 @@ Meta-Return sends current input.
        (insert-string ")") t)))
   
 
-(global-set-key [(f10)] 'oz-convert-one-application)
+(if lucid-emacs (global-set-key [(f10)] 'oz-convert-one-application))
 
 (defun oz-convert-buffer()
   (interactive)
@@ -987,3 +1091,16 @@ Meta-Return sends current input.
     
 
 
+(defun oz-toggle-read-only(val)
+  (setq buffer-read-only val))
+
+
+
+(setq oz-temp-counter 0)
+
+(defun oz-make-temp-name(name)
+  (setq oz-temp-counter (+ 1 oz-temp-counter))
+  (format "%s%d" (make-temp-name name) oz-temp-counter))
+
+
+;(oz-make-temp-name "/tmp/xx")
