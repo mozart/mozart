@@ -36,7 +36,8 @@ and waits until all are done before continuing.
 The agent servers are represented by <<AS0>> and <<AS9>> and the
 work is represented by functors containing
 the one-argument procedures <<P0>> to <<P9>>.
-When a procedure is finished it binds its argument to <<unit>>.
+Each procedure binds its argument to the result of
+its calculation.
 <<<
 declare
 A=functor
@@ -54,7 +55,8 @@ As the distribution model
 makes clear (see <ptr to="single.assignment">),
 the termination of each remote task
 is signaled to the original task
-by exactly one network message.
+by exactly one network message,
+which contains the result of the task's calculation.
 
 <P>The Mozart vision of a universe of agents
 is a set of fixed places, the agent servers,
