@@ -356,7 +356,7 @@ void *heapMallocOutline(size_t chunk_size)
 void getMemFromOS(size_t sz)
 {
   if ((int)sz > ozconf.heapBlockSize) {
-    error("memory chunk too big (size=%d): look for an infinite recursion",sz);
+    error("memory chunk too big (size=%d)\nTry\n\tsetenv OZHEAPBLOCKSIZE <x>\nwhere <x> is greater than %d.",sz,ozconf.heapBlockSize);
   }
 
   heapTotalSize += ozconf.heapBlockSize/KB;
