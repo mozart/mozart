@@ -45,31 +45,6 @@ void DynamicTable::init(dt_index s) {
     }
 }
 
-// Maximum number of elements in hash table:
-/* Full/Max: 0/0, 1/1, 2/2, 4/4, 6/8, 12/16, 24/32 (limit:75%) */
-/* !!! DOING +2 instead of +1 goes into INFINITE LOOP.  CHECK IT OUT! */
-// #define fullFunc(size) (((size)+((size)>>1)+1)>>1)
-#define fullFunc(size) ((size)<=FILLLIMIT?(size):( (size) - ((size)>>2) ))
-
-// Fill factor at which the hash table is considered sparse enough to halve in size:
-/* Empty/Max: 0/0, 0/1, 1/2, 2/4, 3/8, 6/16, ... (limit:37.5%) */
-#define emptyFunc(size) (((size)+((size)>>1)+2)>>2)
-
-// True if the hash table is considered full:
-// Test whether the current table has too little room for one new element:
-// ATTENTION: Calls to insert should be preceded by fullTest.
-Bool DynamicTable::fullTest() {
-    Assert(isPwrTwo(size));
-    return (numelem>=fullFunc(size));
-}
-
-// Return a table that is double the size of the current table and
-// that contains the same elements:
-// ATTENTION: Should be called before insert if the table is full.
-DynamicTable* DynamicTable::doubleDynamicTable() {
-    return copyDynamicTable(size?(size<<1):1);
-}
-
 // Return a copy of the current table that has size newSize and all contents
 // of the current table.  The current table's contents MUST fit in the copy!
 DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize=(dt_index)(-1L)) {
@@ -102,31 +77,31 @@ DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize=(dt_index)(-1L)) {
 
 // Hash and rehash until: (1) the element is found, (2) a fully empty slot is found, or (3) the
 // hash table has only filled slots and non-full empty slots and does not contain the element.
-// If *valid==TRUE, then returns i with (table[i].ident==id || table[i].ident==makeTaggedNULL())
 // That is, if answer is valid then returns index of slot containing the element or a correct
-// empty slot.
+// empty slot otherwise return "invalidIndex"
 // This hash routine works for completely full hash tables and hash tables in which
 // elements have been removed by making their value NULL.
-dt_index DynamicTable::fullhash(TaggedRef id, Bool *valid) {
-    Assert(isPwrTwo(size));
-    Assert(isFeature(id));
-    // Function 'hash' may eventually return the literal's seqNumber (see value.hh):
-    if (size==0) { *valid=FALSE; return (dt_index) 0L; }
-    dt_index size1=(size-1);
-    dt_index i=size1 & ((dt_index) featureHash(id));
-    dt_index s=size1;
-    // Rehash if necessary using semi-quadratic probing (quadratic is not covering)
-    // Theorem: semi-quadratic probing is covering in size steps (proof: PVR+JN)
-    Bool notvalid;
-    while((notvalid=(table[i].ident!=makeTaggedNULL() &&
-		     !featureEq(table[i].ident,id)))
-           && s!=0) {
-        i+=s;
-        i&=size1;
-        s--;
-    }
-    *valid=(!notvalid);
-    return i;
+inline
+dt_index DynamicTable::fullhash(TaggedRef id) 
+{
+  Assert(isPwrTwo(size));
+  Assert(isFeature(id));
+  // Function 'hash' may eventually return the literal's seqNumber (see value.hh):
+  if (size==0) { return invalidIndex; }
+  dt_index size1=(size-1);
+  dt_index i=size1 & ((dt_index) featureHash(id));
+  dt_index s=size1;
+  // Rehash if necessary using semi-quadratic probing (quadratic is not covering)
+  // Theorem: semi-quadratic probing is covering in size steps (proof: PVR+JN)
+  Bool notvalid;
+  while((notvalid=(table[i].ident!=makeTaggedNULL() &&
+		   !featureEq(table[i].ident,id)))
+	&& s!=0) {
+    i+=s;
+    i&=size1;
+    s--;
+  }
+  return notvalid ? invalidIndex : i;
 }
 
 
@@ -140,8 +115,12 @@ TaggedRef DynamicTable::insert(TaggedRef id, TaggedRef val, Bool *valid) {
     Assert(isPwrTwo(size));
     Assert(isFeature(id));
     Assert(!fullTest());
-    dt_index i=fullhash(id,valid);
-    if (!*valid) return makeTaggedNULL();
+    dt_index i=fullhash(id);
+    if (i==invalidIndex) {
+      *valid = FALSE;
+      return makeTaggedNULL();
+    }
+    *valid = TRUE;
     Assert(i<size);
     if (table[i].value!=makeTaggedNULL()) {
         Assert(isFeature(table[i].ident));
@@ -163,10 +142,9 @@ TaggedRef DynamicTable::insert(TaggedRef id, TaggedRef val, Bool *valid) {
 TaggedRef DynamicTable::lookup(TaggedRef id) {
     Assert(isPwrTwo(size));
     Assert(isFeature(id));
-    Bool valid;
-    dt_index i=fullhash(id,&valid);
-    Assert(!valid || i<size);
-    if (valid &&
+    dt_index i=fullhash(id);
+    Assert(i==invalidIndex || i<size);
+    if (i!=invalidIndex &&
 	table[i].value!=makeTaggedNULL() &&
 	featureEq(table[i].ident,id)) {
         // Val is found
@@ -182,10 +160,9 @@ TaggedRef DynamicTable::lookup(TaggedRef id) {
 Bool DynamicTable::update(TaggedRef id, TaggedRef val) {
     Assert(isPwrTwo(size));
     Assert(isFeature(id));
-    Bool valid;
-    dt_index i=fullhash(id,&valid);
-    Assert(!valid || i<size);
-    if (valid && table[i].value!=makeTaggedNULL()) {
+    dt_index i=fullhash(id);
+    Assert(i==invalidIndex || i<size);
+    if (i!=invalidIndex && table[i].value!=makeTaggedNULL()) {
         Assert(isFeature(table[i].ident));
         // Ident exists; update value & return TRUE:
         table[i].value=val;
@@ -196,16 +173,36 @@ Bool DynamicTable::update(TaggedRef id, TaggedRef val) {
     }
 }
 
+// Destructively update index id with new value val even if id does 
+// not have a value yet
+// Return TRUE if index id successfully updated, else FALSE
+Bool DynamicTable::add(TaggedRef id, TaggedRef val) 
+{
+  Assert(isPwrTwo(size));
+  Assert(isFeature(id));
+  dt_index i=fullhash(id);
+  Assert(i==invalidIndex || i<size);
+  if (i!=invalidIndex) {
+    if (table[i].value==makeTaggedNULL()) {
+      numelem++;
+    }
+    table[i].ident=id;
+    table[i].value=val;
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
 // Remove index id from table.  Reclaim memory: if the table becomes too sparse then
 // return a smaller table that contains all its entries.  Otherwise, return same table.
 DynamicTable *DynamicTable::remove(TaggedRef id) {
     Assert(isPwrTwo(size));
     Assert(isFeature(id));
-    Bool valid;
-    dt_index i=fullhash(id,&valid);
-    Assert(!valid || i<size);
+    dt_index i=fullhash(id);
+    Assert(i==invalidIndex || i<size);
     DynamicTable* ret=this;
-    if (valid && table[i].value!=makeTaggedNULL()) {
+    if (i!=invalidIndex && table[i].value!=makeTaggedNULL()) {
         // Remove the element
         numelem--;
         table[i].value=makeTaggedNULL();
@@ -341,7 +338,7 @@ TaggedRef DynamicTable::getArityList(TaggedRef tail) {
     if (numelem>0) {
         SRecord *stuple=SRecord::newSRecord(AtomNil,numelem);
         TaggedRef *arr=stuple->getRef();
-        for (unsigned int ai=0,di=0; di<size; di++) {
+        for (int ai=0,di=0; di<size; di++) {
             if (table[di].value!=makeTaggedNULL()) {
     	       Assert(isFeature(table[di].ident));
                arr[ai] = table[di].ident;
@@ -355,6 +352,20 @@ TaggedRef DynamicTable::getArityList(TaggedRef tail) {
     }
     return arity;
 }
+
+// Return _unsorted_ list containing all features:
+TaggedRef DynamicTable::getKeys() 
+{
+  TaggedRef arity=AtomNil;
+  for (int di=0; di<size; di++) {
+    if (table[di].value!=makeTaggedNULL()) {
+      Assert(isFeature(table[di].ident));
+      arity=cons(table[di].ident,arity);
+    }
+  }
+  return arity;
+}
+
 
 // Return TRUE if current table has features that are not in arity argument
 Bool DynamicTable::hasExtraFeatures(int tupleArity) {
