@@ -64,14 +64,15 @@ by the <<Open>> module.
 <p>
 If the operating system returns an error, an Oz Exception is
 raised which looks as follows:
-<<<system(os(?_{A} ?_{I} ?_{S}) debug:?_{X})>>>
+<<<system(os(?_{A} ?_{S1} ?_{I} ?_{S2}) debug:?_{X})>>>
 where:
 <list enum>
 <item> The atom ?_{A} gives the category of the error (&eg; <<os>> for
 operating system or <<net>> for network layer).
+<item> The string ?_{S1} describes the operating system routine that raised the exception.
 <item> The integer ?_{I} gives an operating system dependent error
 number.
-<item> The string ?_{S} describes the exception by some text.
+<item> The string ?_{S2} describes the exception by some text.
 <item> The value ?_{X} might contain some additional debug information.
 </list>
 </section>
