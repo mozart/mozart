@@ -32,7 +32,7 @@ OZ_BI_define (ozgtk_initialize_signal_port, 1, 0)
 {
   OZ_declareTerm (0, port);
   signal_port = port;
-  OZ_protect(&signal_port); /* bruni: prevent GC of port anchor */
+  OZ_protect(&signal_port); /* prevent GC of port anchor */
   return OZ_ENTAILED;
 } OZ_BI_end
 
@@ -66,9 +66,8 @@ signal_marshal (GtkObject * object,
 OZ_BI_define (ozgtk_signal_connect, 3, 1)
 {
   /*
-   * The callback function will allways be NULL,
-   * we only use our marshaller
-   *
+    The callback function will allways be NULL,
+    we only use our marshaller
    */
   guint id;
   GOZ_DECLARE_GTKOBJECT (0, object);
@@ -89,7 +88,7 @@ OZ_BI_define (ozgtk_signal_connect, 3, 1)
 OZ_BI_define (ozgtk_signal_emit_by_name, 2, 0)
 {
   GOZ_DECLARE_GTKOBJECT (0, object);
-  OZ_declareTerm (1, _name); /* No strings for signals but atoms */
+  OZ_declareTerm (1, _name); /* signals are atoms, not strings */
   gchar * name = (gchar *) OZ_atomToC(_name);
   gtk_signal_emit_by_name(object, name);
   return OZ_ENTAILED;
@@ -201,7 +200,7 @@ OZ_BI_define (ozgtk_widget_unset_flags, 2, 0)
 } OZ_BI_end
 
 /*****************************************************************************
- * Dialog
+ * Dialog (soon obsolete)
  *****************************************************************************/
 
 OZ_BI_define (ozgtk_dialog_window, 1, 1)
