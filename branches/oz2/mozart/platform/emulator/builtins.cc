@@ -1983,13 +1983,6 @@ LBLagain:
       return PROCEED;
     }
 
-    /* special case for cells (mm 17.3.95) */
-    if (ozconf.cellHack && isCell(term)) {
-      Cell *cell= tagged2Cell(term);
-      term = cell->getValue();
-      goto LBLagain;
-    }
-
     goto typeError0;
   }
 typeError0:
@@ -6162,7 +6155,6 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
   DoBoolFeature(debugmode,  t, AtomDebug);
   DoBoolFeature(suspension, t, AtomShowSuspension);
   DoBoolFeature(stop,       t, AtomStopOnToplevelFailure);
-  DoBoolFeature(cell,       t, AtomCellHack);
   DoNatFeature(stack,       t, AtomStackMaxSize);
 
   if (debugmode == 0) {
@@ -6173,7 +6165,6 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
     
   SetIfPos(ozconf.showSuspension,        suspension, 1);
   SetIfPos(ozconf.stopOnToplevelFailure, stop,       1);
-  SetIfPos(ozconf.cellHack,              cell,       1);
   SetIfPos(ozconf.stackMaxSize,          stack,      KB);
 
   return PROCEED;

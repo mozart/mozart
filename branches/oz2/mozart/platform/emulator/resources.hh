@@ -47,24 +47,12 @@
 #define INITIALHEAPTHRESHOLD	2048 /* kByte   */
 #define HEAPBLOCKSIZE	     1048576 /* byte    */
 
-#define CLOCK_TICK	10000	/* usec */
+#define CLOCK_TICK	        10000  /* usec */
 #define TASK_STACK_SIZE		10
 #define THREAD_QUEUE_SIZE	256
 #define NUM_TOPLEVEL_VARS	10000
 
 #define NumberOfXRegisters	10000
 
-#define NameOfNil	"nil"
-#define NameOfVoid	"_"
-#define NameOfCons	"|"
-#define NameOfPair	"#"
-#define NameOfBool	"bool"
-#define NameOfSup	"sup"
-#define NameOfCompl	"compl"
-#define NameOfUnknown	"unknown"
-
 #define OzCompiler	"oz.compiler"
 
-#define MAX_TCP_CACHE     5
-#define MAX_UDP_PACKET    100*1024  /* 100k */
-#define TCP_PACKET_SIZE   1*1024    /* 1k */
