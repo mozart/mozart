@@ -236,7 +236,7 @@ public:
   BFlag isBetween(Board * to, Board * varHome);
   void incSolveThreads (Board *bb,int n=1);
   void decSolveThreads (Board *bb);
-  DebugCode (Bool isInSolveDebug (Board *bb););
+  DebugCode (Bool isInSolveDebug (Board *bb);)
 
   // debugging --> see file ../builtins/debug.C
   State getValue(TaggedRef feature, TaggedRef out);
