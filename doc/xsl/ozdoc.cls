@@ -917,7 +917,7 @@
   \fi}
 
 \newcommand{\mozart@chunk@label}{%
-  \llap{\hbox to1cm{\hfil\mozart@chunk@curr@page.\alph{mozart@chunk@subpage}\quad}}}
+  \llap{\hbox to1cm{\hfil\mozart@chunk@curr@page\alph{mozart@chunk@subpage}\quad}}}
 
 % \mozart@chunk@ref@bwd{CHUNK.ID}{CHUNK.NUM}
 
@@ -939,15 +939,21 @@
       {}%
       {\pageref{chunk.#1.\the\mozart@cnt}$\triangleright$}}}
 
+\newcommand{\mozart@chunk@equiv}[1]{%
+  \ifnum#1=1\else{+}\fi{\equiv}}
+
 \newcommand{\mozart@chunk@ref@def}[1]{%
   \@ifundefined{r@chunk.#1.1}{}%
-    {~~\pageref{chunk.#1.1}\ref{chunk.#1.1}}}
+    {\edef\mozart@temp{\expandafter\expandafter
+       \expandafter\@firstoftwo\csname r@chunk.#1.1\endcsname}%
+     ~~\pageref{chunk.#1.1}\@alph{\mozart@temp}}}
 
 \newenvironment{CHUNK}[3]
   {\begin{list}{}{\leftmargin\mozart@displaymargin}%
      \mozart@chunk@init
      \item[\mbox{\mozart@chunk@label\bf$\color{chunkborder}\langle$%
-       \textcolor{chunktitle}{#1\mozart@chunk@ref@def{#2}}$\color{chunkborder}\rangle\equiv$}]%
+       \textcolor{chunktitle}{#1\mozart@chunk@ref@def{#2}}%
+       $\color{chunkborder}\rangle\mozart@chunk@equiv{#3}$}]%
      \edef\@currentlabel{\themozart@chunk@subpage}%
      \label{chunk.glob.\themozart@chunk}%
      \label{chunk.#2.#3}%
@@ -962,9 +968,10 @@
   {\begin{CODEDISPLAY}}
   {\end{CODEDISPLAY}}
 
-\newcommand{\CHUNKREF}[1]{%
+\newcommand{\CHUNKREF}[2]{%
   \mbox{\normalfont\bf$\color{chunkborder}\langle$%
-    \textcolor{chunkref}{#1}$\color{chunkborder}\rangle$}}
+    \textcolor{chunkref}{#1\mozart@chunk@ref@def{#2}}%
+    $\color{chunkborder}\rangle$}}
 
 % (entry,synopsis*)+,item
 
