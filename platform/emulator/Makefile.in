@@ -136,8 +136,8 @@ install-dir:
         if test ! -d $(BINDIR); then $(INSTALL_DIR) $(BINDIR) ; fi
         if test ! -d $(INCDIR); then $(INSTALL_DIR) $(INCDIR) ; fi
 
-initffuns.cc oz.c: oz.h
-        $(SRCDIR)/makeffuns $(SRCDIR) "$(OZVERSION)"
+initffuns.cc oz.c: oz.h $(OZVERSION)
+        $(SRCDIR)/makeffuns $(SRCDIR) `$(OZVERSION)`
 
 version.cc: version.sed
         $(MAKE) version
@@ -195,8 +195,9 @@ ozma-s.ll: ozma-s.m4ll
 ozma-p.yy: ozma-p.m4yy
         $(M4) $< > $@
 
-config.h: $(TOPDIR)/include/config.m4h
-        $(M4) -DOZVERSION=\"$(OZVERSION)\" -DOZINCDIR=$(TOPDIR)/include $< > $@
+config.h: $(TOPDIR)/include/config.m4h $(OZVERSION)
+        $(M4) -DOZVERSION=\"`$(OZVERSION)`\" \
+                -DOZINCDIR=$(TOPDIR)/include $< > $@
 
 #/usr/include/signal.h is broken on Linux:
 #os.cc: In function `void osBlockSignals(int = 0)':
