@@ -16,15 +16,12 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '3.0.0-4 (Apr 97)'
+Version                = '3.0.0-5 (Apr 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
 NameOfBenni            = 'Benjamin Lorenz'
 EmailOfBenni           = 'lorenz@ps.uni-sb.de'
-
-SourceWindowTitle      = 'Ozcar Source Window'
-SourceWindowIcon       = 'Ozcar Source'
 
 InitStatus             = TitleName # ' initialized'
 ResetStatus            = 'Resetting Ozcar...'
@@ -132,11 +129,6 @@ MagicAtom              = 'noActionPlease'
 %% Geometry
 %%
 ToplevelGeometry       = '510x360+30+40'
-%ToplevelGeometry       = '510x360'
-SourceWindowGeometry   = '511x564+560+50'   %% I really hate hardcoding this
-                                            %% but window managers seem
-                                            %% to be f*cking stupid :-((
-SourceWindowTextSize   = 82 # 40
 
 ThreadTreeWidth        = 120
 ThreadTreeStretchX     = 11
@@ -202,11 +194,11 @@ TextCursor             = left_ptr
 MaxStackSize           = 40
 MaxStackBrowseSize     = 15
 
-TimeoutToCalc          =  90 % ms
-TimeoutToRedraw        = 180
+TimeoutToCalcTree      = 180 % ms
 TimeoutToBlock         = 470
 TimeoutToUpdateEnv     = 430
 TimeoutToUpdateScroll  = TimeoutToUpdateEnv
+TimeoutToSwitch        = 260
 
 HelpEvent              = '<3>'
 
@@ -286,10 +278,6 @@ else
    BuiltinColor            = black
 end
 
-SourceTextForeground    = black
-SourceTextInvForeground = white
-SourceTextBackground    = white
-
 %% this is for the Emacs scrollbar function
 ColorMeaning            = cm(ScrollbarApplColor    : 'runnable'
 			     ScrollbarBlockedColor : 'blocked'
@@ -311,8 +299,6 @@ ConfigStepSetSelfBuiltin   = false  %% step on builtin 'setSelf' ?
 ConfigEnvSystemVariables   = true   %% filter system variables in Env Window?
 ConfigEnvProcedures        = false  %% filter procedures in Env Window?
 
-ConfigScrollbar            = emacsScrollbar  %% use arrow in emacs window
-
 Config =
 {New
  class
@@ -330,8 +316,7 @@ Config =
        envSystemVariables :    ConfigEnvSystemVariables
        envProcedures :         ConfigEnvProcedures
 
-       scrollbar :             ConfigScrollbar
-    
+
     meth init
        skip
     end
@@ -340,13 +325,6 @@ Config =
        What <- {Not @What}
     end
 
-    meth toggleScrollbar
-       M = @scrollbar
-    in
-       scrollbar <- case M == emacsScrollbar
-		    then ozScrollbar else emacsScrollbar end
-    end
-    
     meth get(What $)
        @What
     end
