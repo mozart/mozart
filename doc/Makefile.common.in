@@ -124,7 +124,7 @@ OZDOC2XML	= $(SRCTOP)/doc/xsl/ozdoc2xml
 CLASSPATH	= $(SRCTOP)/doc/xsl/oz.jar
 
 $(WHAT).xml: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
-	( nsgmls -c../catalog $< | $(OZDOC2XML) > $@ ) || { rm -f $@; exit -1; }
+	( nsgmls -c../bootcatalog $< | $(OZDOC2XML) > $@ ) || { rm -f $@; exit -1; }
 $(WHAT).tex: $(WHAT)-ready.xml
 	$(JAVA) $(JAVACP) $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-new.xsl $@ \
 	|| { rm -f $@; exit -1; }
