@@ -50,6 +50,8 @@ void prefixWarning()
     fputc(MSG_WARN,stderr);
 }
 
+extern char *AMVersion, *AMDate, *ozplatform;
+
 void error(const char *format, ...)
 {
   va_list ap;
@@ -63,7 +65,12 @@ void error(const char *format, ...)
 
   fprintf(stderr, "\n*** Internal Error: "
 #ifndef DEBUG_CHECK
-	   "Please send a bug report to oz@ps.uni-sb.de ***\n"
+	  "Please send a bug report to oz-bugs@ps.uni-sb.de ***\n"
+	  "*** with the following information:\n"
+	  "*** version:  %s\n"
+	  "*** platform: %s\n"
+	  "*** date:     %s\n\n",
+	  AMVersion,ozplatform,AMDate
 #endif
 	   );
   vfprintf(stderr,format,ap);
