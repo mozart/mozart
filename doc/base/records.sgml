@@ -61,6 +61,14 @@
 	  literals and integers, say <<[c d 1]>>, and then binds <<R>> to
 	  <<b(_ c: _ d: _)>>.
 
+	<Entry><Span class=index/<<clone>>/
+	  <Index class=tails/<<Record>><And><<clone>>/
+	<Synopsis>
+	  <<{Record.clone ?+{R1} ??{R2}}>>
+	<Item>
+	  returns a record ?_{R2} with the same label and features as ?_{R1}
+	  and fresh variables at every field.
+
 	<Entry><Span class=index/<<Label>>/
 	  <Index/<<Record>><And><<label>>/
 	<Synopsis>
@@ -460,7 +468,7 @@
 	<Entry><<append>>
 	  <Index class=tails/<<Tuple>><And><<append>>/
 	<Synopsis>
-	  <<{Tuple.append ?+{T1} ?+{T2} ??{T3}>>
+	  <<{Tuple.append ?+{T1} ?+{T2} ??{T3}}>>
 	<Item>
 	  returns a tuple with same label as&nbsp;?_{T2}.  Given that
 	  ?_{T1} has width&nbsp;<Var type=meta/i/ and ?_{T2} has

@@ -185,6 +185,13 @@
 	<Item>
 	  returns the list of all items currently in ?_{Dictionary}.
 
+	<Entry><<isEmpty>>
+	  <Index class=tails/<<Dictionary>><And><<isEmpty>>/
+	<Synopsis>
+	  <<{Dictionary.isEmpty ?+{Dictionary} ??{B}}>>
+	<Item>
+	  tests whether ?_{Dictionary} currently contains an entry.
+
 	<Entry><<remove>>
 	  <Index class=tails/<<Dictionary>><And><<remove>>/
 	<Synopsis>
