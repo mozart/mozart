@@ -120,7 +120,7 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
 }
 
 
-#define DORAISE(T) { X[1] = (T); X[0] = OZ_atom("system"); goto LBLraise; }
+#define DORAISE(T) { X[1] = (T); X[0] = OZ_atom("error"); goto LBLraise; }
 
 #define RAISE_APPLY(fun,args)                   \
    DORAISE(OZ_mkTupleC("apply",2,fun,args));
@@ -2777,6 +2777,7 @@ LBLsuspendThread:
      {
        DebugCheck(ozconf.stopOnToplevelFailure, tracerOn();trace("raise"));
 
+       shallowCP = 0; // failure in shallow guard can never be handled
        TaggedRef traceBack = nil();
        TaggedRef pred = 0;
        if (e->currentThread && !e->currentThread->isPropagator()) {

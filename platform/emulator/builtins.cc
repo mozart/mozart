@@ -6114,13 +6114,13 @@ int AM::setValue(TaggedRef feature, TaggedRef value)
        ozconf.printDepth = val;
        );
   DOIF("printWidth",
-       ozconf.printDepth = val;
+       ozconf.printWidth = val;
        );
   DOIF("errorPrintDepth",
        ozconf.errorPrintDepth = val;
        );
   DOIF("errorPrintWidth",
-       ozconf.errorPrintDepth = val;
+       ozconf.errorPrintWidth = val;
        );
   DOIF("errorVerbosity",
        ozconf.errorVerbosity = val;
@@ -6916,7 +6916,9 @@ void printX(char *what, OZ_Term vs)
 OZ_C_proc_begin(BIbiExceptionHandler,1)
 {
   OZ_Term arg=OZ_getCArg(0);
-  if (!OZ_isTuple(arg)) {
+  if (!OZ_isTuple(arg) ||
+      OZ_width(arg)!=3 ||
+      OZ_label(arg) != OZ_atom("error")) {
     if (ozconf.errorVerbosity > 0) {
       errorHeader();
       message("EXCEPTION: %s\n",toC(arg));
