@@ -32,7 +32,7 @@
 #include "mem.hh"
 #include "stack.hh"
 
-#include <malloc.h>
+#include <stdlib.h>
 
 inline
 void Stack::reallocate(int newsize)

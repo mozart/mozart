@@ -34,7 +34,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <malloc.h>
 
 #include "mem.hh"
 
