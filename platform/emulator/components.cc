@@ -45,6 +45,7 @@
 #include "msgbuffer.hh"
 #include "builtins.hh"
 #include "os.hh"
+#include "simplevar.hh"
 
 #ifndef WINDOWS
 #include <sys/types.h>
@@ -199,7 +200,6 @@ OZ_Return raiseGeneric(char *msg, OZ_Term arg)
 }
 
 #define M_FILE          (PERDIOMAGICSTART)
-#define M_EXPORT        (PERDIOMAGICSTART + 1)
 
 //
 // Per: More seriously: The bytes 'M_FILE' and 'DIF_PRIMARY' are not
@@ -213,27 +213,7 @@ void marshal_M_FILE(MsgBuffer * buf,char* str,TaggedRef t) {
   buf->marshalEnd();
   return;
 }
-static void marshal_M_EXPORT(MsgBuffer * buf, TaggedRef t) {
-  buf->marshalBegin();
-  buf->put(M_EXPORT);
-  buf->put(DIF_PRIMARY);
-  marshalTermRT(t,buf);
-  buf->marshalEnd();
-  return;
-}
-
 //
-void unmarshal_M_FILE(MsgBuffer* buf,char* &str, TaggedRef &t) {
-  (void) buf->get();
-  str=unmarshalString(buf);
-  t=unmarshalTermRT(buf);
-  buf->unmarshalEnd();
-}
-void unmarshal_M_EXPORT(MsgBuffer* buf,TaggedRef &t) {
-  (void) buf->get();
-  t=unmarshalTermRT(buf);
-  buf->unmarshalEnd();
-}
 
 //
 OZ_Return onlyFutures(OZ_Term l) {
@@ -253,6 +233,8 @@ OZ_Return onlyFutures(OZ_Term l) {
 OZ_Return
 ByteSink::putTerm(OZ_Term in, char *filename, char *header, Bool textmode)
 {
+  perdioInitLocal();
+
   ByteStream* bs=bufferManager->getByteStream();
   if (textmode)
     bs->setTextmode();
@@ -454,18 +436,35 @@ Bool pickle2text()
 
 #endif
 
+OZ_Return export(OZ_Term t)
+{
+  if (ozconf.perdiod0Compatiblity) {
+    Exporter bs;
+    marshalTerm(t,&bs);
+    refTrail->unwind();
+    CheckNogoods(t,(&bs),"Resources found during export",);
+
+    OZ_Term vars = bs.getVars();
+    while (!oz_isNil(vars)) {
+      OZ_Term t = oz_head(vars);
+      DEREF(t,tPtr,_2);
+      if (isSimpleVar(t)) {
+        tagged2SimpleVar(t)->markExported();
+      } else if (isUVar(t)) {
+        uvar2SimpleVar(tPtr);
+        continue; // redo
+      }
+      vars = oz_tail(vars);
+    }
+
+  }
+  return PROCEED;
+}
 
 OZ_BI_define(BIexport,1,0)
 {
   OZ_declareIN(0,in);
-  ByteStream* bs=bufferManager->getByteStream();
-  marshal_M_EXPORT(bs,in);
-
-  CheckNogoods(in,bs,"Resources found during export",bufferManager->dumpByteStream(bs));
-
-  bufferManager->dumpByteStream(bs);
-
-  return PROCEED;
+  return export(in);
 } OZ_BI_end
 
 

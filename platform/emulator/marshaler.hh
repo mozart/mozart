@@ -34,6 +34,8 @@
 
 //  provided by marshaler to protocol-layer.
 
+OZ_Return export(OZ_Term t);
+
 void marshalTerm(OZ_Term,MsgBuffer*);
 void marshalTermRT(OZ_Term t, MsgBuffer *bs);
 void marshalSRecord(SRecord *sr, MsgBuffer *bs);

@@ -41,27 +41,18 @@ OZ_Return sendRedirectToProxies(OldPerdioVar *pv, OZ_Term val,
 {
   ProxyList *pl = pv->getProxies();
   OwnerEntry *oe = OT->getOwner(OTI);
-  if (!pl) {
-    // kost@ : that's SB stuff again...
-    // kost@ : let's take a components buffer here...
-    MsgBuffer *bs = getComponentMsgBuffer();
-    marshal_M_REDIRECT(bs,myDSite,OTI,val);
-    CheckNogoods(val,bs,UNIFY_ERRORMSG,);
-    freeComponentMsgBuffer(bs);
-  } else {
-      do {
-          DSite* sd = pl->sd;
-          if (sd==ackSite) {
-              sendAcknowledge(sd,OTI);
-          } else {
-              OZ_Return ret = sendRedirect(sd,OTI,val);
-              if (ret != PROCEED) return ret;
-          }
-          ProxyList *tmp = pl->next;
-          pl->dispose();
-          pl = tmp;
-      } while (pl);
-  }
+  do {
+    DSite* sd = pl->sd;
+    if (sd==ackSite) {
+      sendAcknowledge(sd,OTI);
+    } else {
+      OZ_Return ret = sendRedirect(sd,OTI,val);
+      if (ret != PROCEED) return ret;
+    }
+    ProxyList *tmp = pl->next;
+    pl->dispose();
+    pl = tmp;
+  } while (pl);
   return PROCEED;
 }
 

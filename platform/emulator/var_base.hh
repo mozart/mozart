@@ -70,17 +70,28 @@
 #define STORE_FLAG 1
 #define REIFIED_FLAG 2
 
+
+#define SVAR_EXPORTED 1
+#define SVAR_FLAGSMASK 0x3
+
 class SVariable {
 protected:
   SuspList * suspList;
-  Board * home;
+  unsigned int homeAndFlags;
 public:
 
   USEFREELISTMEMORY;
 
+  Board *getHome1()        { return (Board *)(homeAndFlags&~SVAR_FLAGSMASK); }
+  void setHome(Board *h) {
+    homeAndFlags = (homeAndFlags&SVAR_FLAGSMASK)|((unsigned)h); }
+
+  Bool isExported()   { return homeAndFlags&SVAR_EXPORTED; }
+  void markExported() { homeAndFlags |= SVAR_EXPORTED; }
+
   SVariable() {}
 
-  SVariable(Board * h) : suspList(NULL), home(h) {}
+  SVariable(Board * h) : suspList(NULL) { homeAndFlags=0; setHome(h); }
 
   void dispose(void) {
     suspList->disposeList();
@@ -88,14 +99,13 @@ public:
   }
 
   // get home node without deref, for faster isLocal
-  Board *getHome1() { return home; }
   Board *getHomeUpdate() {
-    if (home->isCommitted()) {
-      home=home->derefBoard();
+    if (getHome1()->isCommitted()) {
+      setHome(getHome1()->derefBoard());
     }
-    return home;
+    return getHome1();
   }
-  Board *getBoardInternal() { return home; }
+  Board *getBoardInternal() { return getHome1(); }
   SuspList *getSuspList() { return suspList; }
   int getSuspListLengthS() { return suspList->length(); }
 
@@ -145,7 +155,7 @@ public:
 
   void addSuspSVar(Suspension susp, int unstable)
   {
-    AddSuspToList(suspList, susp, unstable ? home : 0);
+    AddSuspToList(suspList, susp, unstable ? getHome1() : 0);
   }
 
   OZPRINTLONG;

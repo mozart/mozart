@@ -142,6 +142,12 @@ void gcPerdioVarRecurse(GenCVariable *cv)
 }
 
 // extern
+Bool checkExportable(TaggedRef var)
+{
+  Assert(OZ_isVariable(var));
+  return (isPerdioVar(var) || oz_isFree(var));
+}
+
 OldPerdioVar *var2PerdioVar(TaggedRef *tPtr)
 {
   if (isPerdioVar(*tPtr) ) {

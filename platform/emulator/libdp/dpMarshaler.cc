@@ -218,8 +218,8 @@ void marshalFullObjectAndClassRT(Object *o,MsgBuffer* bs){
 void marshalObject(Object *o, MsgBuffer *bs, GName *gnclass)
 {
   if (marshalTertiary(o,DIF_OBJECT,bs)) return;   /* ATTENTION */
-  Assert(o->hasGName());
-  marshalGName(o->hasGName(),bs);
+  Assert(o->getGName1());
+  marshalGName(globalizeConst(o,bs),bs);
   marshalGName(gnclass,bs);
   trailCycleOutLine(o->getCycleRef(),bs);
 }
@@ -285,10 +285,8 @@ void marshalObject(ConstTerm* t, MsgBuffer *bs)
   Assert(o->getType() == Co_Object);
 
   ObjectClass *oc = o->getClass();
-  oc->globalize();
-  o->globalize();
-  bs->addRes(makeTaggedConst(t));
-  marshalObject(o,bs,oc->getGName());}
+  globalizeConst(o,bs);
+  marshalObject(o,bs,globalizeConst(oc,bs));}
 
 Bool marshalTertiary(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
 {
@@ -296,7 +294,7 @@ Bool marshalTertiary(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
   DSite* sd=bs->getSite();
   switch(t->getTertType()){
   case Te_Local:
-    globalizeTert(t);
+    globalizeTert(t,bs);
     // no break here!
   case Te_Manager:
     {
@@ -457,11 +455,13 @@ OZ_Term unmarshalVar(MsgBuffer* bs){
 
 // Returning 'NO' means we are going to proceed with 'marshal bomb';
 Bool marshalVariable(TaggedRef *tPtr, MsgBuffer *bs) {
+  if (!bs->globalize())
+    return checkExportable(*tPtr);
+
   PerdioVar *pvar = var2PerdioVar(tPtr);
   if (pvar==NULL) {
     return (NO);
   }
-  bs->addRes(makeTaggedRef(tPtr));
   pvar->marshalV(bs);
   return (OK);
 }
@@ -492,7 +492,7 @@ void marshalObjVar(OldPerdioVar *pvar, MsgBuffer *bs)
     return;
 
   GName *classgn =  pvar->isObjectClassAvail() ?
-                      pvar->getClass()->getGName() : pvar->getGNameClass();
+                      globalizeConst(pvar->getClass(),bs) : pvar->getGNameClass();
 
   marshalObject(pvar->getObject(),bs,classgn);
 }

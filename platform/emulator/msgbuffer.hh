@@ -41,7 +41,7 @@
 
 class MsgBuffer {
 private:
-  OZ_Term resources, nogoods;
+  OZ_Term nogoods;
   int flags;
 
   //
@@ -59,8 +59,7 @@ public:
   virtual void unmarshalBegin()=0;
   virtual void unmarshalEnd()=0;
 
-  void init() {
-    resources = oz_nil();
+  virtual void init() {
     nogoods   = oz_nil();
     flags     = 0;
   }
@@ -79,6 +78,7 @@ public:
     return *posMB++;}
 
   void put(BYTE b){
+    if (posMB==0) return;
     if(posMB>endMB){
       putNext(b);
       return;}
@@ -90,10 +90,10 @@ public:
   virtual char* siteStringrep()=0;
   virtual DSite* getSite()=0;                    // overrided for network/vsite comm
   virtual Bool isPersistentBuffer()=0;
+  virtual Bool globalize() { return OK; }
   virtual void unmarshalReset()                 {} // only for network receovery
 
-  void addRes(OZ_Term t)    { resources = oz_cons(t,resources); }
-  OZ_Term getResources()    { return resources; }
+  virtual void visit(OZ_Term t)     { }
   void addNogood(OZ_Term t) { nogoods = oz_cons(t,nogoods); }
   OZ_Term getNoGoods()      { return nogoods; }
 };
