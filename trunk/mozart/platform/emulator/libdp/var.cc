@@ -155,7 +155,7 @@ void sendSurrender(BorrowEntry *be,OZ_Term val){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_SURRENDER(na->index,myDSite,val);
   msgC->setImplicitMessageCredit(be->getOneMsgCredit());
-  sendTo(na->site,msgC,3);
+  send(msgC,3);
 }
 
 Bool dealWithInjectors(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Bool &hit,TaggedRef term){
@@ -312,7 +312,7 @@ static void sendAcknowledge(DSite* sd,int OTI){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
   msgC->put_M_ACKNOWLEDGE(myDSite,OTI);
 
-  sendTo(sd,msgC,3);
+  send(msgC,3);
 }
 
 // extern
@@ -323,7 +323,7 @@ void sendRedirect(DSite* sd,int OTI,TaggedRef val)
   MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
   msgC->put_M_REDIRECT(myDSite,OTI,val);
 
-  sendTo(sd,msgC,3);
+  send(msgC,3);
 }
 
 inline Bool queueTrigger(DSite* s){
@@ -402,7 +402,7 @@ void varGetStatus(DSite* site,int OTI, TaggedRef tr){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
   msgC->put_M_SENDSTATUS(myDSite,OTI,tr);
 
-  sendTo(site,msgC,3);
+  send(msgC,3);
 }
 
 void ProxyVar::receiveStatus(TaggedRef tr)
@@ -552,7 +552,7 @@ static void sendRegister(BorrowEntry *be) {
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_REGISTER(na->index,myDSite);
   msgC->setImplicitMessageCredit(be->getOneMsgCredit());
-  sendTo(na->site,msgC,3);
+  send(msgC,3);
 }
 
 static void sendDeRegister(BorrowEntry *be) {
@@ -563,7 +563,7 @@ static void sendDeRegister(BorrowEntry *be) {
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_DEREGISTER(na->index,myDSite);
   msgC->setImplicitMessageCredit(be->getOneMsgCredit());
-  sendTo(na->site,msgC,3);
+  send(msgC,3);
 }
 
 void ProxyVar::nowGarbage(BorrowEntry* be){
@@ -653,7 +653,7 @@ void sendGetStatus(BorrowEntry *be){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_GETSTATUS(myDSite,na->index);
   msgC->setImplicitMessageCredit(be->getOneMsgCredit());
-  sendTo(na->site,msgC,3);
+  send(msgC,3);
 }
  
 OZ_Term ProxyVar::statusV()

@@ -378,14 +378,14 @@ void PrioQueues::clearAll() {
   msgC=unackedList;
   while(msgC!=NULL) {
     unackedList=msgC->next;
-    msgC->deleteSnapshot();
+    msgC->deleteSnapshot(); // AN! can unacked have snapshot?
     msgContainerManager->deleteMsgContainer(msgC,COMM_FAULT_PERM_MAYBE_SENT);
     msgC=unackedList;
   }
   msgC=recList;
   while(msgC!=NULL) {
     recList=msgC->next;
-    msgC->deleteSnapshot();
+    msgC->deleteSnapshot(); // AN! for incoming?
     msgContainerManager->deleteMsgContainer(msgC);
     msgC=recList;
   }
