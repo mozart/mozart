@@ -167,9 +167,9 @@ HelpFont               = '-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*'
 %%
 
 OzLibDir               = {System.get home} # '/lib/'
-OzBitmapDir            = '@' # OzLibDir # 'bitmaps/'
+OzBitmapDir            = '@' # OzLibDir # 'images/'
 OzcarBitmapDir         = OzBitmapDir # 'ozcar/'
-IconBitMap             = OzBitmapDir # 'debugger' # BitmapExtension
+IconBitMap             = OzcarBitmapDir # 'ozcar' # BitmapExtension
 BitmapExtension        = '.xbm'
 
 StepButtonBitmap       = step
