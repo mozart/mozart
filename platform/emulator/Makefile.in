@@ -44,7 +44,9 @@ MODULEINSTALL   = @MODULEINSTALL@
 SUBDIRS		= libfd libfset
 OZVERSION	= $(SRCTOP)/OZVERSION
 
-MODSPECS = FDP FSP Schedule Wif Parser OS Property Pickle PID URL FDB FSB
+MODSPECS = FDP FSP Schedule Wif Parser OS Property Pickle \
+	PID URL FDB FSB System Finalize CTB \
+	AssemblerSupport CompilerSupport Profile
 
 CREATEDOTHERS= \
 	instrtab.hh opcodes.hh optostr.hh marshaler.hh\
