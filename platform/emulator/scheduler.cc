@@ -1,8 +1,8 @@
 #include "runtime.hh"
 #include "trace.hh"
 
-# define CBB (e->currentBoard())
-# define CTT (e->currentThread())
+# define CBB (oz_currentBoard())
+# define CTT (oz_currentThread())
 
 
 static
@@ -28,8 +28,8 @@ int canOptimizeFailure(AM *e, Thread *tt)
   if (tt->hasCatchFlag() || oz_onToplevel()) { // catch failure
     if (tt->isSuspended()) {
       tt->pushCall(BI_fail,0,0);
-      e->suspThreadToRunnableOPT(tt);
-      e->scheduleThread(tt);
+      oz_suspThreadToRunnableOPT(tt);
+      am.threadsPool.scheduleThread(tt);
     } else {
       printf("WEIRD: failure detected twice");
 #ifdef DEBUG_CHECK
@@ -60,17 +60,17 @@ LBLstart:
     e->checkStatus();
   }
 
-  if (e->threadQueuesAreEmpty()) {
+  if (am.threadsPool.threadQueuesAreEmpty()) {
     e->suspendEngine();
   }
-  e->setCurrentThread(e->getFirstThread());
+  am.threadsPool.setCurrentThread(am.threadsPool.getFirstThread());
   Assert(CTT);
 
   DebugTrace(ozd_trace("runnable thread->running"));
 
   // source level debugger & Thread.suspend
   if (CTT->getStop()) {
-    e->unsetCurrentThread();  // byebye...
+    am.threadsPool.unsetCurrentThread();  // byebye...
     goto LBLstart;
   }
 
@@ -83,7 +83,7 @@ LBLstart:
   {
     Board *bb=GETBOARD(CTT);
     if (CBB != bb) {
-      switch (e->installPath(bb)) {
+      switch (oz_installPath(bb)) {
       case INST_OK:
 	break;
       case INST_REJECTED:
@@ -155,8 +155,8 @@ LBLrunThread:
 LBLpreemption:
   Assert(GETBOARD(CTT)==CBB);
   /*  Assert(CTT->isRunnable()|| (CTT->isStopped())); ATTENTION */
-  e->scheduleThreadInline(CTT, CTT->getPriority());
-  e->unsetCurrentThread();
+  am.threadsPool.scheduleThreadInline(CTT, CTT->getPriority());
+  am.threadsPool.unsetCurrentThread();
   goto LBLstart;
 
 
@@ -192,14 +192,14 @@ LBLterminate:
     Assert(!CBB->isFailed());
 
     Assert(oz_onToplevel() ||
-	   ((CTT->isInSolve() || !e->isBelowSolveBoard()) &&
-	    (e->isBelowSolveBoard() || !CTT->isInSolve())));
+	   ((CTT->isInSolve() || !am.isBelowSolveBoard()) &&
+	    (am.isBelowSolveBoard() || !CTT->isInSolve())));
 
 
     CBB->decSuspCount();
 
-    e->disposeRunnableThread(CTT);
-    //e->unsetCurrentThread(); // TMUELLER
+    am.disposeRunnableThread(CTT);
+    //am.threadsPool.unsetCurrentThread(); // TMUELLER
 
     // fall through to checkEntailmentAndStability
   }
@@ -250,7 +250,7 @@ LBLcheckEntailmentAndStability:
 	//
 	//  kost@ : optimize the most probable case!
 	if (sa->decThreads () != 0) {
-	  e->DECSOLVETHREADS (nb, "a");
+	  DECSOLVETHREADS (nb, "a");
 	  goto LBLstart;
 	}
       } else {
@@ -263,7 +263,7 @@ LBLcheckEntailmentAndStability:
     //  Note again that 'decSolveThreads' should be done from 
     // the 'nb' board which is probably modified above!
     // 
-    DebugCode(e->unsetCurrentThread());
+    DebugCode(am.threadsPool.unsetCurrentThread());
 
     DebugTrace(ozd_trace("check entailment"));
 
@@ -276,16 +276,16 @@ LBLcheckEntailmentAndStability:
   // check for entailment of ASK and WAITTOP
     if ((CBB->isAsk() || CBB->isWaitTop()) && e->entailment()) {
       Board *bb = CBB;
-      e->deinstallCurrent();
-      int ret=e->commit(bb);
+      oz_deinstallCurrent();
+      int ret=oz_commit(bb);
       Assert(ret);
     } else if (CBB->isSolve()) {
-      e->checkStability();
+      oz_checkStability();
     }
 
     // 
     //  deref nb, because it maybe just committed!
-    if (nb) e->DECSOLVETHREADS (nb->derefBoard(), "b");
+    if (nb) DECSOLVETHREADS (nb->derefBoard(), "b");
     goto LBLstart;
   }
 
@@ -331,13 +331,13 @@ LBLdiscardThread:
 	Assert (sa);
 	Assert (sa->getSolveBoard () == tmpBB);
 
-	e->DECSOLVETHREADS(GETBOARD(sa), "c");
+	DECSOLVETHREADS(GETBOARD(sa), "c");
       } else {
-	e->DECSOLVETHREADS (tmpBB, "d");
+	DECSOLVETHREADS (tmpBB, "d");
       }
     }
     e->disposeRunnableThread(CTT);
-    e->unsetCurrentThread();
+    am.threadsPool.unsetCurrentThread();
 
     goto LBLstart;
   }
@@ -391,7 +391,7 @@ LBLsuspend1:
 
     DebugTrace(ozd_trace("suspend runnable thread"));
 
-    e->unsetCurrentThread();
+    am.threadsPool.unsetCurrentThread();
 
     //  No counter decrement 'cause the thread is still alive!
 
@@ -431,7 +431,7 @@ LBLfailure:
 
      Actor *aa=CBB->getActor();
 
-     e->failBoard();
+     oz_failBoard();
 
      // currentThread is a thread forked in a local space or a propagator
      if (aa->isSolve()) {
@@ -461,18 +461,18 @@ LBLfailure:
 	 if (wa->hasNoChildren()) {
 	   if (canOptimizeFailure(e,tt)) goto LBLfailure;
 	 } else {
-	   Assert(!e->isScheduledSlow(tt));
+	   Assert(!am.threadsPool.isScheduledSlow(tt));
 	   /* test unit commit */
 	   if (wa->hasOneChildNoChoice()) {
 	     Board *waitBoard = wa->getLastChild();
-	     int succeeded = e->commit(waitBoard);
+	     int succeeded = oz_commit(waitBoard);
 	     if (!succeeded) {
 	       if (canOptimizeFailure(e,tt)) goto LBLfailure;
 	     }
 	   }
 	 }
        } else {
-	 Assert(!e->isScheduledSlow(tt));
+	 Assert(!am.threadsPool.isScheduledSlow(tt));
 	 Assert(aw->isAsk());
 
 	 AskActor *aa = AskActor::Cast(aw);
@@ -494,16 +494,16 @@ LBLfailure:
 			  tmpCont->getY(), tmpCont->getCAP());
 	     if (tmpCont->getX()) ts->pushX(tmpCont->getX());
 	     aa->disposeAsk();
-	     e->suspThreadToRunnableOPT(tt);
-	     e->scheduleThread(tt);
+	     oz_suspThreadToRunnableOPT(tt);
+	     am.threadsPool.scheduleThread(tt);
 	   }
 	 }
        }
      }
      
-     e->DECSOLVETHREADS(CBB, "e");
-     e->disposeRunnableThread(CTT);
-     e->unsetCurrentThread();
+     DECSOLVETHREADS(CBB, "e");
+     am.disposeRunnableThread(CTT);
+     am.threadsPool.unsetCurrentThread();
 
      goto LBLstart;
    }

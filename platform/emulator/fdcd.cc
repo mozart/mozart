@@ -507,7 +507,7 @@ OZ_PropagatorProfile CDPropagator::spawner = "BIfdConstrDisj";
 
 CDSuppl::CDSuppl(OZ_Propagator * p, OZ_Term b) : reg_b(b) 
 {
-  prop = (void *) am.mkPropagator(am.currentBoard(),
+  prop = (void *) oz_mkPropagator(oz_currentBoard(),
 				  OZ_getHighPrio(),
 				  p);
   // cd threads,  are expected to be suspended
@@ -527,13 +527,13 @@ OZ_Return CDSuppl::propagate(void)
   OZ_DEBUGPRINT(("cdsuppl.in: b=%s", b->toString()));
 
   if (*b == 0) {
-    am.closeDonePropagatorCD((Propagator *) prop);	
+    oz_closeDonePropagatorCD((Propagator *) prop);	
     return PROCEED;
   } 
 
   if (*b == 1) {
     OZ_Propagator * p = ((Propagator *) prop)->swapPropagator(this);
-    am.closeDonePropagatorThreadCD((Propagator *) prop);	
+    oz_closeDonePropagatorThreadCD((Propagator *) prop);	
     return replaceBy(p);
   }
 
@@ -546,18 +546,18 @@ OZ_Return CDSuppl::propagate(void)
     ((Propagator *) prop)->markUnifyPropagator();
   }
 
-  OZ_Return ret_val = am.runPropagator((Propagator *) prop);
+  OZ_Return ret_val = oz_runPropagator((Propagator *) prop);
 
   Propagator::setRunningPropagator(backup_runningPropagator);
 
   OZ_ASSERT(b->getMaxElem() >= 2);
 
   if (ret_val == PROCEED) {
-    am.closeDonePropagatorCD((Propagator *) prop);
+    oz_closeDonePropagatorCD((Propagator *) prop);
     *b <= (b->getMaxElem() - 1);
     OZ_ASSERT(b->getMaxElem() >= 2);
   } else if (ret_val == FAILED) {
-    am.closeDonePropagatorCD((Propagator *) prop);	
+    oz_closeDonePropagatorCD((Propagator *) prop);	
     *b &= 0;
   }
 

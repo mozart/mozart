@@ -71,7 +71,7 @@ Bool ozd_trace(char *info, ProgramCounter PC,RefsArray Y,Abstraction *CAP)
     displayCode(PC, 1);
   } else {
     printf("%s: ",info);
-    am.currentBoard()->print();
+    oz_currentBoard()->print();
   }
 
   if (skip > 0) {
@@ -81,7 +81,7 @@ Bool ozd_trace(char *info, ProgramCounter PC,RefsArray Y,Abstraction *CAP)
   while (1) {
     printf("\nBREAK");
     if (am.isSetSFlag()) {
-      printf("[S:0x%p=",am.currentBoard());
+      printf("[S:0x%p=",oz_currentBoard());
       if (am.isSetSFlag(ThreadSwitch)) {
 	printf("P");
       }
@@ -125,13 +125,13 @@ Bool ozd_trace(char *info, ProgramCounter PC,RefsArray Y,Abstraction *CAP)
     case 'f':
       return NO;
     case 'p':
-      am.currentBoard()->printLong();
+      oz_currentBoard()->printLong();
       break;
     case 's':
       mode = OK;
       return OK;
     case 't':
-      am.currentThread()->printLong();
+      oz_currentThread()->printLong();
       break;
     case 'A':
       ozd_printAM();
@@ -161,7 +161,7 @@ Bool ozd_trace(char *info, ProgramCounter PC,RefsArray Y,Abstraction *CAP)
       }
       break;
     case 'T':
-      am.printThreads();
+      am.threadsPool.printThreads();
       break;
 
     case '?':

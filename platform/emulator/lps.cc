@@ -65,7 +65,7 @@ void LocalPropagationQueue::resize () {
 }
 
 Bool LocalPropagationStore::propagate_locally () {
-  Board *currentBoard = am.currentBoard();
+  Board *currentBoard = oz_currentBoard();
   RefsArray args;
 
   // kost@ : --> let's try ...
@@ -82,7 +82,7 @@ Bool LocalPropagationStore::propagate_locally () {
 
     OZ_Return ret_val;
     
-    ret_val = am.runPropagator(prop);
+    ret_val = oz_runPropagator(prop);
 
     switch (ret_val) {
     case FAILED:
@@ -95,7 +95,7 @@ Bool LocalPropagationStore::propagate_locally () {
 	message("Propagator %s failed\n", str);
 	delete str;
       }
-      am.closeDonePropagator(prop);
+      oz_closeDonePropagator(prop);
       return reset();
 
     case RAISE:
@@ -105,15 +105,15 @@ Bool LocalPropagationStore::propagate_locally () {
       error ("propagate_locally: 'SUSPEND' is returned?\n");
 
     case SLEEP:
-      am.suspendPropagator(prop);
+      oz_suspendPropagator(prop);
       break;
 
     case SCHEDULED:
-      am.scheduledPropagator(prop);
+      oz_scheduledPropagator(prop);
       break;
 
     case PROCEED:
-      am.closeDonePropagator(prop);
+      oz_closeDonePropagator(prop);
       break;
     }
     
