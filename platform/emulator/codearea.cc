@@ -876,9 +876,9 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case CALLMETHOD:
     case GENCALL:
       {
-        GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC+1);
-        fprintf(ofile, "(%p[ri:%d l:%s", gci,gci->regIndex, toC(gci->mn));
-        fprintf(ofile, " a:%s] %d)\n", toC(sraGetArityList(gci->arity)),
+        CallMethodInfo *cmi = (CallMethodInfo*)getAdressArg(PC+1);
+        fprintf(ofile, "(%p[ri:%d l:%s", cmi,cmi->regIndex, toC(cmi->mn));
+        fprintf(ofile, " a:%s] %d)\n", toC(sraGetArityList(cmi->arity)),
                 getPosIntArg(PC+2));
         DISPATCH();
       }

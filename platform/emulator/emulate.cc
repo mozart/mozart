@@ -375,44 +375,17 @@ OZ_Term biArgs(OZ_Location *loc, OZ_Term *X) {
 }
 
 // -----------------------------------------------------------------------
-// *** genCallInfo: self modifying code!
+// *** patchToFastCall: self modifying code!
 // -----------------------------------------------------------------------
 
-static
-Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
+
+void patchToFastCall(Abstraction *abstr, ProgramCounter PC, Bool isTailCall)
 {
-  Assert(!oz_isRef(pred));
-
-  Abstraction *abstr = NULL;
-  if (gci->isMethAppl) {
-    Bool defaultsUsed;
-    abstr = tagged2ObjectClass(pred)->getMethod(gci->mn,gci->arity,
-                                                0,defaultsUsed);
-    /* fill cache and try again later */
-    if (abstr==NULL || defaultsUsed) return NO;
-  } else {
-    if(!oz_isAbstraction(pred)) goto bombGenCall;
-
-    abstr = tagged2Abstraction(pred);
-    if (abstr->getArity() != getWidth(gci->arity))
-      goto bombGenCall;
-  }
-
-  {
-    /* ok abstr points to an abstraction */
-    AbstractionEntry *entry = new AbstractionEntry(NO);
-    entry->setPred(abstr);
-    CodeArea *code = CodeArea::findBlock(PC);
-    code->writeAbstractionEntry(entry, PC+1);
-    CodeArea::writeOpcode(gci->isTailCall ? FASTTAILCALL : FASTCALL, PC);
-    return OK;
-  }
-
-bombGenCall:
-  CodeArea::writeRegIndex(gci->regIndex,PC+1);
-  CodeArea::writeArity(getWidth(gci->arity), PC+2);
-  CodeArea::writeOpcode(gci->isTailCall ? TAILCALLG : CALLG,PC);
-  return OK;
+  AbstractionEntry *entry = new AbstractionEntry(NO);
+  entry->setPred(abstr);
+  CodeArea *code = CodeArea::findBlock(PC);
+  code->writeAbstractionEntry(entry, PC+1);
+  CodeArea::writeOpcode(isTailCall ? FASTTAILCALL : FASTCALL, PC);
 }
 
 
@@ -3209,11 +3182,7 @@ Case(GETVOID)
       if(oz_isAbstraction(pred)) {
         Abstraction *abstr = tagged2Abstraction(pred);
         if (abstr->getArity() == arity) {
-          AbstractionEntry *entry = new AbstractionEntry(NO);
-          entry->setPred(abstr);
-          CodeArea *code = CodeArea::findBlock(PC);
-          code->writeAbstractionEntry(entry, PC+1);
-          CodeArea::writeOpcode(tailCall ? FASTTAILCALL : FASTCALL, PC);
+          patchToFastCall(abstr,PC,tailCall);
           DISPATCH(0);
         }
       }
@@ -3223,39 +3192,41 @@ Case(GETVOID)
       DISPATCH(0);
     }
 
-  Case(CALLMETHOD)
-      OZ_error("CALLMETHOD not yet implemented");
+  Case(GENCALL)
+      OZ_error("GENCALL is gone");
       return T_ERROR;
 
-  Case(GENCALL)
+  Case(CALLMETHOD)
     {
-      GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC+1);
-      int arity = getPosIntArg(PC+2);
-      Assert(arity==0); /* is filled in by procedure genCallInfo */
-      TaggedRef pred = CAP->getG(gci->regIndex);
+      CallMethodInfo *cmi = (CallMethodInfo*)getAdressArg(PC+1);
+      TaggedRef pred = CAP->getG(cmi->regIndex);
       DEREF(pred,predPtr,_1);
       if (oz_isVariable(pred)) {
         SUSP_PC(predPtr,PC);
       }
 
-      if (genCallInfo(gci,pred,PC)) {
-        gci->dispose();
-        DISPATCH(0);
+      Bool defaultsUsed;
+      Abstraction *abstr = tagged2ObjectClass(pred)->getMethod(cmi->mn,cmi->arity,
+                                                               0,defaultsUsed);
+      /* fill cache and try again later */
+      if (abstr==NULL || defaultsUsed) {
+        isTailCall = cmi->isTailCall;
+        if (!isTailCall) PC = PC+3;
+
+        Assert(tagged2ObjectClass(pred)->getFallbackApply());
+
+        X[1] = makeMessage(cmi->arity,cmi->mn,X);
+        X[0] = pred;
+
+        predArity = 2;
+        predicate = tagged2Const(tagged2ObjectClass(pred)->getFallbackApply());
+        goto LBLcall;
       }
-
-      isTailCall = gci->isTailCall;
-      if (!isTailCall) PC = PC+3;
-
-      /* the following adapted from bombApply */
-      Assert(tagged2ObjectClass(pred)->getFallbackApply());
-
-      X[1] = makeMessage(gci->arity,gci->mn,X);
-      X[0] = pred;
-
-      predArity = 2;
-      predicate = tagged2Const(tagged2ObjectClass(pred)->getFallbackApply());
-      goto LBLcall;
+      patchToFastCall(abstr,PC,cmi->isTailCall);
+      cmi->dispose();
+      DISPATCH(0);
     }
+
 
 
   /* The following must be different from the following,
