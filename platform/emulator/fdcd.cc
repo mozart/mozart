@@ -27,6 +27,9 @@
 #include "fdbuilti.hh"
 #include "lps.hh"
 #include "threadInterface.hh"
+#include "genvar.hh"
+#include "fdgenvar.hh"
+#include "fdbvar.hh"
 
 //#define DEBUG_FDCD
 
@@ -74,7 +77,7 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
     DEREF(bi, bi_ptr, bi_tag);
     //mm2
     Assert(isUVar(bi));
-    GenFDVariable * fdvar = new GenFDVariable();
+    GenFDVariable * fdvar = new GenFDVariable(oz_currentBoard());
     fdvar->getDom().initRange(0, OZ_intToC(p[i]) + 2);
     doBind(bi_ptr, makeTaggedRef(newTaggedCVar(fdvar)));
   }
@@ -111,13 +114,15 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
         if (isSmallIntTag(vjtag)) {
           vp_i_j_val = vj;
         } else if (isGenBoolVar(vj,vjtag)) {
-          vp_i_j_val = makeTaggedRef(newTaggedCVar(new GenBoolVariable));
+          vp_i_j_val = makeTaggedRef(newTaggedCVar(new GenBoolVariable(oz_currentBoard())));
         } else if (isGenFDVar(vj,vjtag)) {
 
-          GenFDVariable * fdvar = new GenFDVariable(tagged2GenFDVar(vj)->getDom());
+          GenFDVariable * fdvar
+            = new GenFDVariable(tagged2GenFDVar(vj)->getDom(),
+                                oz_currentBoard());
           vp_i_j_val = makeTaggedRef(newTaggedCVar(fdvar));
         } else {
-          GenFDVariable * fdvar = new GenFDVariable;
+          GenFDVariable * fdvar = new GenFDVariable(oz_currentBoard());
           vp_i_j_val = makeTaggedRef(newTaggedCVar(fdvar));
         }
         doBind(vp_i_j_ptr, vp_i_j_val);

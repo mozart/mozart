@@ -32,16 +32,10 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include "conf.h"
-#endif
-
+#include "base.hh"
 #include "builtins.hh"
-
 #include "genvar.hh"
-
-#include "ofgenvar.hh"
-
+#include "threadInterface.hh"
 
 
 OZ_BI_define(BIaddr,1,1)

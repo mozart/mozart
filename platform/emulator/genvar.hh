@@ -40,7 +40,10 @@
 #endif
 
 #include "variable.hh"
-#include "pointer-marks.hh"
+
+#ifdef DEBUG_CHECK
+#include "am.hh"
+#endif
 
 //#define DEBUG_TELLCONSTRAINTS
 
@@ -58,9 +61,7 @@
 //  ???
 
 enum TypeOfGenCVariable {
-  SimpleVarType,
-  ComplexVarType, // mm2
-  OZ_VAR_BYNEED, // mm2
+  OZ_VAR_SIMPLE,
   OZ_VAR_FUTURE,
   PerdioVariable,
   BoolVariable,
@@ -68,10 +69,13 @@ enum TypeOfGenCVariable {
   OFSVariable,
   FSetVariable,
   CtVariable,
-  NonGenCVariable
+  NonGenCVariable,
+  OZ_VAR_EXTENTED
 };
 
-#define GenVarCheckType(t) Assert(t >= SimpleVarType && t < NonGenCVariable)
+#ifdef DEBUG_CHECK
+#define OZ_VAR_INVALID ((TypeOfGenCVariable) -1)
+#endif
 
 class GenCVariable: public SVariable {
 
@@ -91,74 +95,38 @@ private:
 
 protected:
 
-  void propagate(SuspList * &, PropCaller);
+  void propagate(SuspList *& sl, PropCaller unifyVars) {
+    sl=oz_checkAnySuspensionList(sl,GETBOARD(this), unifyVars);
+  }
 
 public:
   USEFREELISTMEMORY;
 
   GenCVariable(); // mm2: fake compiler
 
-  TypeOfGenCVariable getType(void){ return u.var_type; }
+  TypeOfGenCVariable getType(void) { return u.var_type; }
   void setType(TypeOfGenCVariable t){
-    GenVarCheckType(t);
     u.var_type = t;
   }
 
-  // mm2: default for board is not nice
-  // the constructor creates per default a local variable (wrt curr. node)
   GenCVariable(TypeOfGenCVariable t, DummyClass *) { setType(t); };
-  GenCVariable(TypeOfGenCVariable, Board * = (Board*)0);
+  GenCVariable(TypeOfGenCVariable t, Board *bb) : SVariable(bb) { setType(t); }
 
-  // gc: copying
-  virtual GenCVariable* gcV() = 0;
-  // gc: collect entry points
-  virtual void          gcRecurseV() = 0;
-  // tell
-  virtual OZ_Return     unifyV(TaggedRef *, TaggedRef, ByteCode *) = 0;
+  GenCVariable * gcG(void);
+  void           gcRecurseG(void);
 
-  // ask
-  virtual OZ_Return     validV(TaggedRef *, TaggedRef) = 0;
-
-  virtual void addSuspV(Suspension susp, TaggedRef *vPtr,
-                        int unstable = TRUE)
-  {
-    addSuspSVar(susp, unstable);
+  void installPropagatorsG(GenCVariable *glob_var) {
+    Assert(this->getType() == glob_var->getType() ||
+           (this->getType() == BoolVariable &&
+            glob_var->getType() == FDVariable));
+    Assert(am.inShallowGuard() || am.isLocalSVar(this) &&
+           ! am.isLocalSVar(glob_var));
+    suspList = oz_installPropagators(suspList,
+                                     glob_var->getSuspList(),
+                                     GETBOARD(glob_var));
   }
-
-  // destructor
-  virtual void          disposeV() = 0;
-  virtual void          printStreamV(ostream &out,int depth = 10)
-  {
-    out << "<cvar: " << getType() << ">";
-  }
-  virtual OZ_Term       inspectV();
-  virtual void          printLongStreamV(ostream &out,int depth = 10,
-                                         int offset = 0)
-  {
-    printStreamV(out,depth); out << endl;
-  }
-  virtual int           getSuspListLengthV()
-  {
-    return getSuspListLengthS();
-  }
-
-  void printV(void) { printStreamV(cerr); cerr << endl; cerr.flush(); }
-  void printLongV(void) { printLongStreamV(cerr); cerr.flush(); }
-
-  // methods relevant for term copying (gc and solve)
-  GenCVariable * gc(void);
-  void gcRecurse(void);
-
-  inline int getSuspListLength(void);
-
-  // is X=val still valid
-  Bool valid(TaggedRef *varPtr, TaggedRef val);
 
   OZPRINTLONG;
-
-  void installPropagators(GenCVariable *);
-
-  void dispose(void);
 
   // needed to catch multiply occuring reified vars in propagators
   void patchReified(OZ_FiniteDomain * d, Bool isBool) {
@@ -181,26 +149,45 @@ public:
   OZ_FiniteDomain * getReifiedPatch(void) {
     return (OZ_FiniteDomain *)  (u.var_type & ~u_mask);
   }
-  Bool isKinded() {
-    switch (getType()) {
-    case FDVariable:
-    case BoolVariable:
-    case OFSVariable:
-    case FSetVariable:
-    case CtVariable:
-      return true;
-    default:
-      return false;
-    }
-  }
 };
 
-// isKinded = !isFree
+/* -------------------------------------------------------------------------
+ * Kinded/Free
+ * ------------------------------------------------------------------------- */
+
+inline
+Bool oz_cv_isKinded(GenCVariable *cv)
+{
+  switch (cv->getType()) {
+  case FDVariable:
+  case BoolVariable:
+  case OFSVariable:
+  case FSetVariable:
+  case CtVariable:
+    return true;
+    // mm2: handle ExtVar???
+  default:
+    return false;
+  }
+}
+
+// isKinded <=> !isFree
 inline
 int oz_isFree(TaggedRef r)
 {
-  return oz_isVariable(r) && (!isCVar(r) || !tagged2CVar(r)->isKinded());
+  return oz_isVariable(r) && (!isCVar(r) || !oz_cv_isKinded(tagged2CVar(r)));
 }
+
+Bool oz_cv_valid(GenCVariable *,TaggedRef *,TaggedRef);
+OZ_Return oz_cv_unify(GenCVariable *,TaggedRef *,TaggedRef, ByteCode *);
+OZ_Return oz_cv_bind(GenCVariable *,TaggedRef *,TaggedRef, ByteCode *);
+void oz_cv_addSusp(GenCVariable *, TaggedRef *, Suspension, int = TRUE);
+void oz_cv_printStream(ostream &, const char *, GenCVariable *, int);
+int oz_cv_getSuspListLength(GenCVariable *);
+
+/* -------------------------------------------------------------------------
+ *
+ * ------------------------------------------------------------------------- */
 
 // only SVar and their descendants can be exclusive
 inline
@@ -259,20 +246,5 @@ OZ_FiniteDomain * unpatchReifiedFD(OZ_Term t, Bool isBool)
   v->unpatchReified(isBool);
   return v->getReifiedPatch();
 }
-
-void addSuspCVarOutline(TaggedRef * v, Suspension susp, int unstable = TRUE);
-
-#include "fsgenvar.hh"
-#include "fdgenvar.hh"
-#include "fdbvar.hh"
-#include "ofgenvar.hh"
-#include "ctgenvar.hh"
-#include "perdiovar.hh"
-
-#ifdef OUTLINE
-void addSuspCVar(TaggedRef * v, Suspension susp, int unstable = TRUE);
-#else
-#include "genvar.icc"
-#endif
 
 #endif

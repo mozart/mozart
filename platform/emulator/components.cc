@@ -31,14 +31,12 @@
 
 #include "wsock.hh"
 
-
 #include "codearea.hh"
 #include "indexing.hh"
 
 #include "perdio.hh"
 #include "perdio_debug.hh"
 #include "genvar.hh"
-#include "perdiovar.hh"
 #include "gc.hh"
 #include "dictionary.hh"
 #include "genhashtbl.hh"

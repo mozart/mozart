@@ -36,6 +36,7 @@
 #include "genvar.hh"
 #include "oz.h"
 #include "perdio_debug.hh"
+#include "am.hh"
 
 enum PV_TYPES {
   PV_MANAGER,
@@ -98,20 +99,20 @@ public:
   void setpvType(PV_TYPES t) { pvtype = (short) t; }
   PV_TYPES getpvType()       { return (PV_TYPES) pvtype; }
 
-  PerdioVar() : GenCVariable(PerdioVariable) {
+  PerdioVar(Board *bb) : GenCVariable(PerdioVariable,bb) {
     u.proxies=0;
     flags = 0;
     setpvType(PV_MANAGER);
   }
 
-  PerdioVar(int i) : GenCVariable(PerdioVariable) {
+  PerdioVar(int i,Board *bb) : GenCVariable(PerdioVariable,bb) {
     u.bindings=0;
     flags = 0;
     setpvType(PV_PROXY);
     setIndex(i);
   }
 
-  PerdioVar(Object *o) : GenCVariable(PerdioVariable) {
+  PerdioVar(Object *o,Board *bb) : GenCVariable(PerdioVariable,bb) {
     setpvType(PV_OBJECTCLASSAVAIL);
     ptr   = o;
     flags = 0;
@@ -184,20 +185,16 @@ public:
 
   ProxyList *getProxies() { Assert(isManager()); return u.proxies; }
 
-  void addSuspPerdioVar(TaggedRef *v, Suspension susp, int unstable);
-  Bool valid(TaggedRef *varPtr, TaggedRef v);
+  void addSusp(TaggedRef *v, Suspension susp, int unstable);
+  Bool valid(TaggedRef v);
   void primBind(TaggedRef *lPtr,TaggedRef v);
 
   void dispose(void);
 
   void gcRecurse(void);
 
-  OZ_Return unifyV(TaggedRef *vptr, TaggedRef t, ByteCode *scp);
-  OZ_Return validV(TaggedRef* ptr, TaggedRef val ) { return valid(ptr,val); }
-  GenCVariable* gcV() { error("not impl"); return 0; }
-  void gcRecurseV() { error("not impl"); }
-  void disposeV(void) { dispose(); }
-  void printStreamV(ostream &out,int depth = 10) {
+  OZ_Return unify(TaggedRef *vptr, TaggedRef t, ByteCode *scp);
+  void printStream(ostream &out,int depth = 10) {
     out << "<dist:";
     char *type = "";
     if (isManager()) {
@@ -209,9 +206,9 @@ public:
     }
     out << type << ">";
   }
-  void printLongStreamV(ostream &out,int depth = 10,
+  void printLongStream(ostream &out,int depth = 10,
                         int offset = 0) {
-    printStreamV(out,depth); out << endl;
+    printStream(out,depth); out << endl;
   }
 };
 

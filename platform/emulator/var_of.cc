@@ -29,11 +29,7 @@
 #pragma implementation "ofgenvar.hh"
 #endif
 
-#include "am.hh"
-
-#include "genvar.hh"
 #include "ofgenvar.hh"
-#include "dictionary.hh"
 
 //-------------------------------------------------------------------------
 //                               for class GenOFSVariable
@@ -57,8 +53,8 @@ Bool hasOFSSuspension(SuspList * suspList)
 }
 
 // (Arguments are dereferenced)
-OZ_Return GenOFSVariable::unifyV(TaggedRef *vPtr, TaggedRef term,
-                                 ByteCode *scp)
+OZ_Return GenOFSVariable::unify(TaggedRef *vPtr, TaggedRef term,
+                                ByteCode *scp)
 {
   TaggedRef bindInRecordCaseHack = term;
 
@@ -275,13 +271,13 @@ OZ_Return GenOFSVariable::unifyV(TaggedRef *vPtr, TaggedRef term,
         // Make a local copy of the var's DynamicTable:
         DynamicTable* dt=dynamictable->copyDynamicTable();
         // Make a new GenOFSVariable with the new DynamicTable:
-        newVar=new GenOFSVariable(*dt);
+        newVar=new GenOFSVariable(*dt,oz_currentBoard());
         nvRefPtr=newTaggedCVar(newVar);
         otherVar=termVar; // otherVar must be smallest
       } else {
         // Same as above, but in opposite order:
         DynamicTable* dt=termVar->getTable()->copyDynamicTable();
-        newVar=new GenOFSVariable(*dt);
+        newVar=new GenOFSVariable(*dt,oz_currentBoard());
         nvRefPtr=newTaggedCVar(newVar);
         otherVar=this; // otherVar must be smallest
       }

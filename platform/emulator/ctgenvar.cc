@@ -28,17 +28,17 @@
 #pragma implementation "ctgenvar.hh"
 #endif
 
+#include "ctgenvar.hh"
 #include "am.hh"
-#include "genvar.hh"
 #include "builtins.hh"
+#include "threadInterface.hh"
 
 // `var' and `vptr' belongs to `this', i.e., is a `GenCtVariable
 // `term' and `tptr' are either values or other constrained variable
 // (preferably `GenCtVariable' of the right kind. Unification is
 // implemented such, that `GenCtVariable's of the sam ekind are
 // compatible with each other.
-OZ_Return GenCtVariable::unifyV(OZ_Term * vptr, OZ_Term term,
-                                ByteCode * scp)
+OZ_Return GenCtVariable::unify(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
 {
   TypeOfTerm ttag = tagTypeOf(term);
 
@@ -68,7 +68,7 @@ OZ_Return GenCtVariable::unifyV(OZ_Term * vptr, OZ_Term term,
       }
       if (isLocalVar) {
         doBind(vptr, term);
-        disposeV();
+        dispose();
       } else {
         am.doBindAndTrail(vptr, term);
       }
@@ -114,22 +114,22 @@ OZ_Return GenCtVariable::unifyV(OZ_Term * vptr, OZ_Term term,
             propagateUnify();
             doBind(vptr, new_value);
             doBind(tptr, new_value);
-            disposeV();
-            term_var->disposeV();
+            dispose();
+            term_var->dispose();
           } else if (heapNewer(vptr, tptr)) { // bind var to term
             term_var->copyConstraint(new_constr);
             propagateUnify();
             term_var->propagateUnify();
             relinkSuspListTo(term_var);
             doBind(vptr, makeTaggedRef(tptr));
-            disposeV();
+            dispose();
           } else { // bind term to var
             copyConstraint(new_constr);
             term_var->propagateUnify();
             propagateUnify();
             term_var->relinkSuspListTo(this);
             doBind(tptr, makeTaggedRef(vptr));
-            term_var->disposeV();
+            term_var->dispose();
           }
         } // TRUE + 2 * TRUE:
       break;
@@ -146,7 +146,7 @@ OZ_Return GenCtVariable::unifyV(OZ_Term * vptr, OZ_Term term,
                 propagateUnify();
               doBind(vptr, new_value);
               am.doBindAndTrail(tptr, new_value);
-              disposeV();
+              dispose();
             } else {
               copyConstraint(new_constr);
               if (is_not_installing_script)
@@ -163,7 +163,7 @@ OZ_Return GenCtVariable::unifyV(OZ_Term * vptr, OZ_Term term,
               propagateUnify();
             relinkSuspListTo(term_var, TRUE);
             doBind(vptr, makeTaggedRef(tptr));
-            disposeV();
+            dispose();
           }
         } // TRUE + 2 * FALSE:
       break;
@@ -180,7 +180,7 @@ OZ_Return GenCtVariable::unifyV(OZ_Term * vptr, OZ_Term term,
                 term_var->propagateUnify();
               doBind(tptr, new_value);
               am.doBindAndTrail(vptr, new_value);
-              term_var->disposeV();
+              term_var->dispose();
             } else {
               term_var->copyConstraint(new_constr);
               if (is_not_installing_script)
@@ -197,7 +197,7 @@ OZ_Return GenCtVariable::unifyV(OZ_Term * vptr, OZ_Term term,
               propagateUnify();
             term_var->relinkSuspListTo(this, TRUE);
             doBind(tptr, makeTaggedRef(vptr));
-            term_var->disposeV();
+            term_var->dispose();
           }
         } // FALSE + 2 * TRUE:
       break;
@@ -216,7 +216,8 @@ OZ_Return GenCtVariable::unifyV(OZ_Term * vptr, OZ_Term term,
             am.doBindAndTrail(vptr, new_value);
             am.doBindAndTrail(tptr, new_value);
           } else {
-            GenCVariable * cv = new GenCtVariable(new_constr, getDefinition());
+            GenCtVariable * cv = new GenCtVariable(new_constr, getDefinition(),
+                                                   oz_currentBoard());
             OZ_Term * cvar = newTaggedCVar(cv);
             if (scp == 0) {
               if (var_is_constrained)
@@ -278,8 +279,8 @@ OZ_Return tellBasicConstraint(OZ_Term v,
     ctvariable:
       GenCtVariable * ctv =
         constr
-        ? new GenCtVariable(constr, def)
-        :  new GenCtVariable(def->leastConstraint(), def);
+        ? new GenCtVariable(constr, def,oz_currentBoard())
+        :  new GenCtVariable(def->leastConstraint(), def, oz_currentBoard());
 
       OZ_Term *  tctv = newTaggedCVar(ctv);
 
@@ -327,7 +328,8 @@ OZ_Return tellBasicConstraint(OZ_Term v,
       if (am.isLocalSVar(v)) {
         ctvar->copyConstraint(new_constr);
       } else {
-        GenCtVariable * locctvar = new GenCtVariable(new_constr, def);
+        GenCtVariable * locctvar = new GenCtVariable(new_constr, def,
+                                                     oz_currentBoard());
         OZ_Term * loctaggedctvar = newTaggedCVar(locctvar);
         DoBindAndTrailAndIP(vptr, makeTaggedRef(loctaggedctvar),
                             locctvar, ctvar);
@@ -381,13 +383,13 @@ void GenCtVariable::relinkSuspListTo(GenCtVariable * lv, Bool reset_local)
       _susp_lists[i]->appendToAndUnlink(lv->_susp_lists[i], reset_local);
 }
 
-void GenCtVariable::installPropagators(GenCtVariable * glob_var,
-                                       Board * glob_home)
+void GenCtVariable::installPropagators(GenCtVariable * glob_var)
 {
+  installPropagatorsG(glob_var);
   for (int i = _definition->getNoOfWakeUpLists(); i--; )
     _susp_lists[i] = oz_installPropagators(_susp_lists[i],
                                           glob_var->_susp_lists[i],
-                                          glob_home);
+                                          GETBOARD(glob_var));
 }
 
 //-----------------------------------------------------------------------------

@@ -25,6 +25,12 @@
  */
 
 #include "cpi.hh"
+#include "fdgenvar.hh"
+#include "fdbvar.hh"
+#include "fsgenvar.hh"
+#include "ctgenvar.hh"
+#include "ofgenvar.hh"
+#include "threadInterface.hh"
 
 // gc.cc: OZ_Propagator * OZ_Propagator::gc(void)
 

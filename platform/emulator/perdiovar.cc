@@ -32,9 +32,9 @@
 #include "conf.h"
 #endif
 
-#include "am.hh"
-#include "genvar.hh"
+#include "perdiovar.hh"
 #include "perdio.hh"
+#include "threadInterface.hh"
 
 // bind and inform sites
 
@@ -58,7 +58,7 @@ void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
   }
 }
 
-OZ_Return PerdioVar::unifyV(TaggedRef *lPtr, TaggedRef r, ByteCode *scp)
+OZ_Return PerdioVar::unify(TaggedRef *lPtr, TaggedRef r, ByteCode *scp)
 {
   if (oz_isRef(r)) {
     TaggedRef *rPtr = tagged2Ref(r);
@@ -111,7 +111,7 @@ OZ_Return PerdioVar::unifyV(TaggedRef *lPtr, TaggedRef r, ByteCode *scp)
 
 
   // PVAR := non PVAR
-  if (!valid(lPtr,r)) return FAILED;
+  if (!valid(r)) return FAILED;
 
   if (am.isLocalSVar(this)) {
     // onToplevel: distributed unification
@@ -124,7 +124,7 @@ OZ_Return PerdioVar::unifyV(TaggedRef *lPtr, TaggedRef r, ByteCode *scp)
   }
 }
 
-Bool PerdioVar::valid(TaggedRef *varPtr, TaggedRef v)
+Bool PerdioVar::valid(TaggedRef v)
 {
   Assert(!oz_isRef(v) && !oz_isVariable(v));
 

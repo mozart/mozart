@@ -25,6 +25,7 @@
  */
 
 #include "cpi.hh"
+#include "ctgenvar.hh"
 
 //-----------------------------------------------------------------------------
 
@@ -233,7 +234,8 @@ OZ_Boolean OZ_GenCtVar::tell(void)
 
       if (isState(glob_e)) {
         GenCtVariable * locctvar = new GenCtVariable(constr,
-                                                     ctvar->getDefinition());
+                                                     ctvar->getDefinition(),
+                                                     oz_currentBoard());
         OZ_Term * loctaggedctvar = newTaggedCVar(locctvar);
 
         ctRestoreConstraint();

@@ -247,7 +247,7 @@ Bool isCVar(TaggedRef term) {
  * for inline function version
  */
 
-#define _oz_isVariable(val)    (((TaggedRef) val&2)==0)       /* mask = 0010 */
+#define _oz_isVariable(val) (((TaggedRef) val&2)==0)       /* mask = 0010 */
 #define _isNotCVar(val)   (((TaggedRef) val&6)==0)       /* mask = 0110 */
 #define _isUVar(val)      (((TaggedRef) val&14)==0)      /* mask = 1110 */
 #define _isLTuple(val)    (((TaggedRef) val&13)==0)      /* mask = 1101 */
@@ -566,6 +566,12 @@ TaggedRef *newTaggedUVar(Board *c)
 {
   return newTaggedUVar(makeTaggedUVar(c));
 }
+
+#ifdef DEBUG_NO_UVAR
+#define oz_newVar(bb)            makeTaggedRef(newTaggedUVar(bb))
+#else
+#define oz_newVar(bb)            makeTaggedRef(newTaggedUVar(bb))
+#endif
 
 inline
 TaggedRef *newTaggedCVar(GenCVariable *c) {

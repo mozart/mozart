@@ -31,6 +31,8 @@
 #pragma interface
 #endif
 
+#include "fdgenvar.hh"
+
 inline
 void GenBoolVariable::dispose(void) {
   suspList->disposeList();
@@ -56,13 +58,19 @@ void GenBoolVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr,
 
 
 inline
-void GenBoolVariable::installPropagators(GenFDVariable * glob_var,
-                                         Board * glob_home)
+void GenBoolVariable::installPropagators(GenFDVariable * glob_var)
 {
+  installPropagatorsG(glob_var);
   for (int i = 0; i < fd_prop_any; i += 1)
     suspList= oz_installPropagators(suspList,
                                     glob_var->fdSuspList[i],
-                                    glob_home);
+                                    GETBOARD(glob_var));
+}
+
+inline
+void GenBoolVariable::installPropagators(GenBoolVariable * glob_var)
+{
+  installPropagatorsG(glob_var);
 }
 
 

@@ -28,9 +28,11 @@
 #pragma implementation "fdgenvar.hh"
 #endif
 
-#include "am.hh"
-#include "genvar.hh"
+#include "fdgenvar.hh"
+#include "fdbvar.hh"
 #include "fdomn.hh"
+#include "am.hh"
+#include "threadInterface.hh"
 
 // unify expects either two GenFDVariables or at least one
 // GenFDVariable and one non-variable
@@ -38,8 +40,7 @@
 // Only if a local variable is bound relink its suspension list, since
 // global variables are trailed.(ie. their suspension lists are
 // implicitely relinked.)
-OZ_Return GenFDVariable::unifyV(TaggedRef * vPtr, TaggedRef term,
-                                ByteCode *scp)
+OZ_Return GenFDVariable::unify(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
 {
 #ifdef SCRIPTDEBUG
   printf(am.isInstallingScript()
@@ -233,22 +234,26 @@ OZ_Return GenFDVariable::unifyV(TaggedRef * vPtr, TaggedRef term,
           am.doBindAndTrail(vPtr, int_val);
           am.doBindAndTrail(tPtr, int_val);
         } else {
-          GenCVariable *c_var;
-          if (intsct == fd_bool)
-            c_var = new GenBoolVariable();
-          else
-            c_var = new GenFDVariable(intsct);
-          TaggedRef * var_val = newTaggedCVar(c_var);
-          if (scp==0) {
-            if (varIsConstrained) propagateUnify();
-            if (termIsConstrained) termVar->propagateUnify();
-          }
           if (intsct == fd_bool) {
+            GenBoolVariable * c_var
+              = new GenBoolVariable(oz_currentBoard());
+            TaggedRef * var_val = newTaggedCVar(c_var);
+            if (scp==0) {
+              if (varIsConstrained) propagateUnify();
+              if (termIsConstrained) termVar->propagateUnify();
+            }
             DoBindAndTrailAndIP(vPtr, makeTaggedRef(var_val),
                                 c_var, this);
             DoBindAndTrailAndIP(tPtr, makeTaggedRef(var_val),
                                 c_var, termVar);
           } else {
+            GenFDVariable * c_var
+              = new GenFDVariable(intsct,oz_currentBoard());
+            TaggedRef * var_val = newTaggedCVar(c_var);
+            if (scp==0) {
+              if (varIsConstrained) propagateUnify();
+              if (termIsConstrained) termVar->propagateUnify();
+            }
             DoBindAndTrailAndIP(vPtr, makeTaggedRef(var_val),
                                 c_var, this);
             DoBindAndTrailAndIP(tPtr, makeTaggedRef(var_val),
@@ -338,10 +343,11 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 
     // create appropriate constrained variable
     if (*fd == fd_bool) {
-      cv = (GenCVariable *) new GenBoolVariable();
+      cv = (GenCVariable *) new GenBoolVariable(oz_currentBoard());
     } else {
     fdvariable:
-      cv = (GenCVariable *) fd ? new GenFDVariable(*fd) : new GenFDVariable();
+      cv = (GenCVariable *) fd ? new GenFDVariable(*fd,oz_currentBoard())
+        : new GenFDVariable(oz_currentBoard());
     }
     OZ_Term *  tcv = newTaggedCVar(cv);
 
@@ -384,7 +390,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
         fdvar->becomesBoolVarAndPropagate(vptr);
       } else {
         fdvar->propagate(fd_prop_bounds);
-        GenBoolVariable * newboolvar = new GenBoolVariable();
+        GenBoolVariable * newboolvar = new GenBoolVariable(oz_currentBoard());
         OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
         DoBindAndTrailAndIP(vptr, makeTaggedRef(newtaggedboolvar),
                             newboolvar, tagged2GenBoolVar(v));
@@ -394,7 +400,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       if (am.isLocalSVar(v)) {
         fdvar->getDom() = dom;
       } else {
-        GenFDVariable * locfdvar = new GenFDVariable(dom);
+        GenFDVariable * locfdvar = new GenFDVariable(dom,oz_currentBoard());
         OZ_Term * loctaggedfdvar = newTaggedCVar(locfdvar);
         DoBindAndTrailAndIP(vptr, makeTaggedRef(loctaggedfdvar),
                             locfdvar, tagged2GenFDVar(v));

@@ -31,10 +31,7 @@
 #pragma interface
 #endif
 
-#include "base.hh"
 #include "genvar.hh"
-#include "fdomn.hh"
-#include "fdhook.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -57,10 +54,12 @@ public:
     : GenCVariable(BoolVariable,(DummyClass*)0)
   {
   }
-  GenBoolVariable(void) : GenCVariable(BoolVariable)
+  GenBoolVariable(Board *bb) : GenCVariable(BoolVariable,bb)
   {
     ozstat.fdvarsCreated.incf();
   }
+
+  // mm2: ???
   GenBoolVariable(SuspList *sl) : GenCVariable(BoolVariable,(DummyClass*)0)
   {
     suspList=sl;
@@ -82,15 +81,8 @@ public:
 
   inline int getSuspListLength(void) { return suspList->length(); }
 
-  void installPropagators(GenFDVariable *, Board *);
-
-  void relinkSuspListTo(GenBoolVariable * lv, Bool reset_local = FALSE) {
-    GenCVariable::relinkSuspListTo(lv, reset_local);
-  }
-
-  void relinkSuspListTo(GenFDVariable * lv, Bool reset_local = FALSE) {
-    GenCVariable::relinkSuspListTo(lv, reset_local);
-  }
+  void installPropagators(GenBoolVariable *);
+  void installPropagators(GenFDVariable *);
 
   void propagate(PropCaller prop_eq = pc_propagator) {
     if (suspList) GenCVariable::propagate(suspList, prop_eq);
@@ -101,26 +93,14 @@ public:
   void patchStoreBool(OZ_FiniteDomain * d) { store_patch = d; }
   OZ_FiniteDomain * getStorePatchBool(void) { return store_patch; }
 
+  OZ_Return unify(TaggedRef *, TaggedRef, ByteCode *);
 
-  OZ_Return unifyV(TaggedRef *, TaggedRef, ByteCode *);
-
-  OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
-    return valid(val);
-  }
-  GenCVariable* gcV() { error("not impl"); return 0; }
-  void gcRecurseV() { error("not impl"); }
-  void addSuspV(Suspension susp, TaggedRef* ptr, int state) {
-    error("not impl");
-    // mm2: addSuspBoolVar(makeTaggedRef(ptr),susp,state);
-  }
-  void disposeV(void) { dispose(); }
-  int getSuspListLengthV() { return getSuspListLength(); }
-  void printStreamV(ostream &out,int depth = 10) {
+  void printStream(ostream &out,int depth = 10) {
     out << "{0#1}";
   }
-  void printLongStreamV(ostream &out,int depth = 10,
+  void printLongStream(ostream &out,int depth = 10,
                         int offset = 0) {
-    printStreamV(out,depth); out << endl;
+    printStream(out,depth); out << endl;
   }
 };
 

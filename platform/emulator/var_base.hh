@@ -37,7 +37,6 @@
 #include "tagged.hh"
 #include "susplist.hh"
 #include "board.hh"
-#include "pointer-marks.hh"
 
 #define AddSuspToList0(List, Susp, Home)                \
 {                                                       \
@@ -158,7 +157,7 @@ void addSuspSVar(TaggedRef v, Suspension susp,int unstable = TRUE)
   tagged2SVar(v)->addSuspSVar(susp, unstable);
 }
 
-// #define SIMPLEVAR
+#define SIMPLEVAR
 #ifdef SIMPLEVAR
 SVariable *oz_newSVar(Board *bb);
 #else
@@ -176,8 +175,8 @@ void addSuspUVar(TaggedRefPtr v, Suspension susp, int unstable = TRUE)
   sv->addSuspSVar(susp, unstable);
 }
 
-extern
-void addSuspCVarOutline(TaggedRef *v, Suspension susp, int unstable);
+void oz_cv_addSusp(GenCVariable *, TaggedRef *, Suspension, int = TRUE);
+
 inline
 void addSuspAnyVar(TaggedRefPtr v, Suspension susp,int unstable = TRUE)
 {
@@ -185,7 +184,7 @@ void addSuspAnyVar(TaggedRefPtr v, Suspension susp,int unstable = TRUE)
   if (isSVar(t)) {
     addSuspSVar(t, susp, unstable);
   } else if (isCVar(t)) {
-    addSuspCVarOutline(v, susp, unstable);
+    oz_cv_addSusp(tagged2CVar(*v), v, susp, unstable);
   } else {
     addSuspUVar(v, susp, unstable);
   }

@@ -36,6 +36,7 @@
 #include "builtins.hh"
 #include "genvar.hh"
 #include "cpi_heap.hh"
+#include "fdomn.hh"
 
 #if defined(OUTLINE)
 #define inline

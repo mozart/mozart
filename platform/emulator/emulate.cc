@@ -39,7 +39,7 @@
 #include "builtins.hh"
 #include "indexing.hh"
 
-#include "genvar.hh"
+#include "allgenvar.hh"
 #include "dictionary.hh"
 #include "fdhook.hh"
 #include "perdio.hh"
@@ -316,15 +316,6 @@ void deallocateY(RefsArray a)
           SUSP_PC(termPtr,PC);                                          \
         }                                                               \
       }
-
-
-inline
-TaggedRef fastnewTaggedUVar(AM *e)
-{
-  TaggedRef *ret = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
-  *ret = e->currentUVarPrototype();
-  return makeTaggedRef(ret);
-}
 
 
 /* specially optimized unify: test two most probable cases first:

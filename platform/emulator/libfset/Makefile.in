@@ -25,8 +25,8 @@ include ../Makefile.vars
 
 BUILDTOP        = @BUILDTOP@
 VPATH           = @srcdir@
-FSETDIR         = @srcdir@
-INCS            = -I. -I$(FSETDIR)/.. -I..
+SRCDIR          = @srcdir@
+INCS            = -I. -I$(SRCDIR)/.. -I..
 
 FSETLIBSRCS =   standard.cc telling.cc \
                 testing.cc fsaux.cc \
@@ -38,19 +38,14 @@ FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 
 all: $(FSETTARGETS)
 
-.PHONY: libFSP.a FSP.so
-
-libFSP.a: ../libFSP.a
-FSP.so: ../FSP.so
-
-../FSP.so: $(FSETLIBOBJS)
+../FSP.so: $(FSETLIBOBJS) $(SRCDIR)
         $(DYNLD) -o $@ $(FSETLIBOBJS)
 
-../libFSP.a: $(FSETLIBOBJS)
+../libFSP.a: $(FSETLIBOBJS) $(SRCDIR)
         $(AR) -rc $@ $(FSETLIBOBJS) && $(RANLIB) $@
 
 depend:: Makefile $(FSETLIBSRCS)
-        $(DEPEND) $(FSETLIBSRCS:%=$(FSETDIR)/%) > Makefile.deps
+        $(DEPEND) $(FSETLIBSRCS:%=$(SRCDIR)/%) > Makefile.deps
 
 -include Makefile.deps
 

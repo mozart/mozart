@@ -25,6 +25,7 @@
  */
 
 #include "cpi.hh"
+#include "fsgenvar.hh"
 
 //-----------------------------------------------------------------------------
 
@@ -207,7 +208,8 @@ OZ_Boolean OZ_FSetVar::tell(void)
         tagged2GenFSetVar(var)->propagate(fs_prop_val);
 
       if (isState(glob_e)) {
-        GenFSetVariable * locfsvar = new GenFSetVariable(*setPtr);
+        GenFSetVariable * locfsvar
+          = new GenFSetVariable(*setPtr,oz_currentBoard());
         OZ_Term * loctaggedfsvar = newTaggedCVar(locfsvar);
         *setPtr = set;
         DoBindAndTrailAndIP(varPtr, makeTaggedRef(loctaggedfsvar),

@@ -36,8 +36,9 @@
 #include "os.hh"
 #include "board.hh"
 #include "threadInterface.hh"
-#include "genvar.hh"
+#include "allgenvar.hh"
 #include "codearea.hh"
+#include "fdomn.hh"
 
 AM am;
 
@@ -532,8 +533,7 @@ loop:
   COUNT(varNonvarUnify);
 
   if (isCVar(tag1)) {
-    // mm2: use GenCVar::bind here
-    int res = tagged2CVar(term1)->unifyV(termPtr1, term2, scp);
+    int res = oz_cv_bindINLINE(tagged2CVar(term1),termPtr1, term2, scp);
     if (res == PROCEED)
       goto next;
     result = res;
@@ -600,8 +600,8 @@ loop:
 
 cvar:
   {
-    int res
-      = tagged2CVar(term1)->unifyV(termPtr1, makeTaggedRef(termPtr2), scp);
+    int res = oz_cv_unifyINLINE(tagged2CVar(term1),termPtr1,
+                                makeTaggedRef(termPtr2), scp);
     if (res == PROCEED)
       goto next;
     result = res;
