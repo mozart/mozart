@@ -515,6 +515,7 @@ void msgReceived(MsgContainer* msgC)
     }
   case M_ASK_FOR_CREDIT:
     {
+#ifdef SEC_CREDIT_HANDLER
       int na_index;
       DSite* rsite;
       msgC->get_M_ASK_FOR_CREDIT(na_index,rsite);
@@ -524,34 +525,64 @@ void msgReceived(MsgContainer* msgC)
       Credit c= oe->getCreditBig();
 
       MsgContainer *newmsgC = msgContainerManager->newMsgContainer(rsite);
-      Assert(c.owner==NULL);
       newmsgC->put_M_BORROW_CREDIT(myDSite,na_index,c.credit);
 
       send(newmsgC,-1);
+#else
+      OZ_error("Receiving sec-credit msg  without sec credits installed, M_OWNER_ASK_FOR_CREDIT");
+#endif
+      break;
+    }
+  case M_OWNER_FW:
+   {
+#ifndef SEC_CREDIT_HANDLER
+     int index;
+      int eint;
+      int dint;
+      Credit c;
+      msgC->get_M_OWNER_FW(index,eint,dint);
+      c.enumerator=eint;
+      c.denominator=dint;
+
+      PD((MSG_RECEIVED,"OWNER_CREDIT index:%d credit:%d",index,c));
+      receiveAtOwner(index)->addCredit(c);
+#else
+      OZ_error("Receiving fw-credit msg  without fw credits installed, M_OWNER_FW");
+#endif
       break;
     }
 
   case M_OWNER_CREDIT:
     {
+#ifdef SEC_CREDIT_HANDLER
       int index;
       int cint;
       Credit c;
       msgC->get_M_OWNER_CREDIT(index,cint);
+
       c.owner=NULL;
+
       c.credit=cint;
 
       PD((MSG_RECEIVED,"OWNER_CREDIT index:%d credit:%d",index,c));
       receiveAtOwner(index)->addCredit(c);
+#else
+      OZ_error("Receiving sec-credit msg  without sec credits installed, M_OWNER_CREDIT");
+#endif
+
+
       break;
     }
 
   case M_OWNER_SEC_CREDIT:
     {
+#ifdef SEC_CREDIT_HANDLER
       int index;
       int cint;
       Credit c;
       DSite* s;
       msgC->get_M_OWNER_SEC_CREDIT(s,index,cint);
+
       c.owner=myDSite; // I am the owner of this secondary credit
       c.credit=cint;
       PD((MSG_RECEIVED,"OWNER_SEC_CREDIT site:%s index:%d credit:%d",
@@ -559,12 +590,18 @@ void msgReceived(MsgContainer* msgC)
 //        printf("received M_OWNER_SEC_CREDIT %x %d %d %x\n",
 //           (int)s,index,c.credit,(int)c.owner);
 
+
       receiveAtBorrow(s,index)->addCredit(c);
+
+#else
+      OZ_error("Receiving sec-credit msg  without sec credits installed, M_OWNER_SEC_CREDIT");
+#endif
       break;
     }
 
   case M_BORROW_CREDIT:
     {
+#ifdef SEC_CREDIT_HANDLER
       int si;
       int cint;
       Credit c;
@@ -583,6 +620,9 @@ void msgReceived(MsgContainer* msgC)
         sendCreditBack(na.site,na.index,c);}
       else {
         be->addCredit(c);}
+#else
+      OZ_error("Receiving sec-credit msg  without sec credits installed, M_BORROW_CREDIT");
+#endif
       break;
     }
 

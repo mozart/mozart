@@ -48,6 +48,20 @@
 //    send(msgC,-1);
 //  }
 
+#ifndef SEC_CREDIT_HANDLER
+
+
+void sendCreditBack(DSite *entitysite,int entityOTI,Credit c) {
+  MsgContainer *msgC;
+  msgC = msgContainerManager->newMsgContainer(entitysite);
+  msgC->put_M_OWNER_FW(entityOTI,c.enumerator,c.denominator);
+
+  send(msgC,-1);
+}
+
+
+#else
+
 void sendCreditBack(DSite *entitysite,int entityOTI,Credit c) {
   MsgContainer *msgC;
 
@@ -65,6 +79,8 @@ void sendCreditBack(DSite *entitysite,int entityOTI,Credit c) {
 
   send(msgC,-1);
 }
+
+#endif
 
 void askForCredit(DSite *entitysite, int entityOTI) {
   Assert(entitysite!=myDSite);
