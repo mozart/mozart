@@ -233,7 +233,7 @@ OZ_Term OwnerTable::extract_info(){
       oz_cons(OZ_recordInit(oz_atom("oe"),
 	oz_cons(oz_pairAI("index", ctr),
 	oz_cons(oz_pairAA("type", toC(PO_getValue(oe))),
-	oz_cons(oz_pairA("credit", credit), 
+	oz_cons(oz_pairA("dist_gc", credit), 
 		oz_nil())))), list);
   }
   return OZ_recordInit(oz_atom("ot"),
@@ -293,14 +293,13 @@ OZ_Term BorrowEntry::extract_info(int index) {
     OZ_recordInit(oz_atom("netAddress"),
       oz_cons(oz_pairA("site", oz_atom(bcreditHandler.netaddr.site->stringrep_notype())),
       oz_cons(oz_pairAI("index",(int)bcreditHandler.netaddr.index), oz_nil())));
-  bcreditHandler.extract_info(primCred, secCred);
+
   return OZ_recordInit(oz_atom("be"),
      oz_cons(oz_pairAI("index", index),
      oz_cons(oz_pairAA("type", toC(PO_getValue(this))),
      oz_cons(oz_pairA("na", na),
-     oz_cons(oz_pairA("secCred", secCred),
-     oz_cons(oz_pairA("primCred",primCred),
-	     oz_nil()))))));
+      oz_cons(oz_pairA("dist_gc",  bcreditHandler.extract_info()),
+	     oz_nil())))));
 }
 
 
