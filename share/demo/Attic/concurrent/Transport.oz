@@ -40,6 +40,10 @@ local
       FD
 
    body
+      Applet.spec = single(defaults(type:bool default:true)
+			   random(type:bool default:true)
+			   title(type:string default:"Transportation"))
+
       \insert 'transport/configure.oz'
       \insert 'transport/widgets.oz'
       \insert 'transport/randomizer.oz'
@@ -66,15 +70,7 @@ local
    end
 
 in
-
-   {Application.applet
-    'transport.oza'
     
     MakeTransport
-
-    single(defaults(type:bool default:true)
-	   random(type:bool default:true)
-	   title(type:string default:"Transportation"))
-   }
 
 end
