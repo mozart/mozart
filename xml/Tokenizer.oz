@@ -2,6 +2,7 @@ functor
 export
    NewFromURL
    NewFromString
+   Fast
 prepare
    %% ================================================================
    %% {IsNameChar C}
@@ -560,6 +561,7 @@ prepare
    end
 import
    Open(file:OpenFileClass)
+   Fast at 'FastTokenizer.ozf'
 define
    local
       fun {OpenFile F}
