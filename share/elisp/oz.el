@@ -4,6 +4,10 @@
 ;; $Id$
 
 ;; BUGS
+;; - only enable menu items when a region is active:
+;;   (put 'comment-region 'menu-enable 'mark-active)
+;; - oz-directive-on-region should write a \line directive at the start
+;;   of the file.
 ;; - `/*' ... `*/' style comments are ignored for purposes of indentation.
 ;;   (Nesting and line breaks are problematic.)
 ;; - Line breaks inside strings, quotes or backquote variables
@@ -35,11 +39,12 @@
 
 ;; automatically switch into Oz-Mode when loading
 ;; files ending in ".oz"
-(or (assoc "\\.oz\\'" auto-mode-alist)
+(or (assoc "\\.oz$" auto-mode-alist)
     (setq auto-mode-alist
-	  (append '(("/\\.ozrc\\'" . oz-mode)
-		    ("\\.oz\\'" . oz-mode)
-		    ("\\.ozg\\'" . oz-gump-mode))
+	  (append '(("/\\.ozrc$" . oz-mode)
+		    ("\\.oz$" . oz-mode)
+		    ("\\.ozm$" . ozm-mode)
+		    ("\\.ozg$" . oz-gump-mode))
 		  auto-mode-alist)))
 
 
@@ -235,10 +240,6 @@ All strings matching this regular expression are removed.")
 		    (list (cons 'name oz-old-frame-title))))
 		(visible-frame-list)))))
 
-(defun oz-window-system ()
-  "Return non-nil iff Emacs is running under X Windows."
-  window-system)
-
 
 ;;------------------------------------------------------------
 ;; Utilities
@@ -342,11 +343,13 @@ The point is moved to the end of the line."
      ("Buffer"      . oz-to-coresyntax-buffer)
      ("Region"      . oz-to-coresyntax-region)
      ("Line"        . oz-to-coresyntax-line)
+     ("Paragraph"   . oz-to-coresyntax-paragraph)
      )
     ("Emulator Code"
      ("Buffer"      . oz-to-emulatorcode-buffer)
      ("Region"      . oz-to-emulatorcode-region)
      ("Line"        . oz-to-emulatorcode-line)
+     ("Paragraph"   . oz-to-emulatorcode-paragraph)
      )
     ("Indent"
      ("Line"   . oz-indent-line)
@@ -390,7 +393,8 @@ variables oz-compiler-buffer and oz-emulator-buffer."
   (interactive)
   (oz-check-running t)
   (if (not (or (equal mode-name "Oz")
-	       (equal mode-name "Oz-Gump")))
+	       (equal mode-name "Oz-Gump")
+	       (equal mode-name "Oz-Machine")))
       (oz-new-buffer))
   (oz-show-buffer (get-buffer oz-compiler-buffer)))
 
@@ -648,8 +652,7 @@ the gdb commands `cd DIR' and `directory'."
   "Feed the current line to the Oz Compiler."
   (interactive)
   (let ((line (oz-line-pos)))
-    (oz-feed-region (car line) (cdr line)))
-  (oz-zmacs-stuff))
+    (oz-feed-region (car line) (cdr line))))
 
 (defun oz-feed-paragraph ()
   "Feed the current paragraph to the Oz Compiler.
@@ -982,6 +985,7 @@ to handle lines like 'attr a:'."
 		  ((looking-at "\\[\\]")
 		   (goto-char (match-end 0)))
 		  (t
+		   (forward-char)
 		   (setq nesting (1+ nesting)))))
 	(error "No matching closing parenthesis")))))
 
@@ -1028,8 +1032,7 @@ save for whitespace, then its indentation is not changed.  If the
 point was inside the line's leading whitespace, then it is moved to
 the end of this whitespace after indentation."
   (interactive)
-  (let ((old-case-fold-search case-fold-search))
-    (setq case-fold-search nil)   ; respect case
+  (let ((case-fold-search nil))   ; respect case
     (unwind-protect
 	(save-excursion
 	  (beginning-of-line)
@@ -1041,8 +1044,7 @@ the end of this whitespace after indentation."
 		     (delete-horizontal-space)
 		     (indent-to col))))))
       (if (oz-is-left)
-	  (skip-chars-forward " \t"))
-      (setq case-fold-search old-case-fold-search))))
+	  (skip-chars-forward " \t")))))
 
 (defun oz-calc-indent ()
   "Calculate the required indentation for the current line.
@@ -1165,8 +1167,7 @@ If there is none until the end of line, return the column of point."
   "Move forward one balanced Oz expression.
 With argument, do it that many times. Negative ARG means backwards."
   (interactive "p")
-  (let ((old-case-fold-search case-fold-search) pos)
-    (setq case-fold-search nil)
+  (let ((case-fold-search nil) pos)
     (or arg (setq arg 1))
     (if (< arg 0)
 	(backward-oz-expr (- arg))
@@ -1205,15 +1206,13 @@ With argument, do it that many times. Negative ARG means backwards."
 			   (error "Containing expression ends prematurely"))
 			  (t
 			   (forward-word 1)))))
-	      (setq arg (1- arg)))))))
-    (setq case-fold-search old-case-fold-search)))
+	      (setq arg (1- arg)))))))))
 
 (defun backward-oz-expr (&optional arg)
   "Move backward one balanced Oz expression.
 With argument, do it that many times. Argument must be positive."
   (interactive "p")
-  (let ((old-case-fold-search case-fold-search))
-    (setq case-fold-search nil)
+  (let ((case-fold-search nil))
     (or arg (setq arg 1))
     (while (> arg 0)
       (let ((pos (scan-sexps (point) -1)))
@@ -1231,8 +1230,7 @@ With argument, do it that many times. Argument must be positive."
 		 (setq arg (1+ arg)))
 		((looking-at oz-begin-pattern)
 		 (error "Containing expression ends prematurely")))
-	  (setq arg (1- arg)))))
-    (setq case-fold-search old-case-fold-search)))
+	  (setq arg (1- arg)))))))
 
 (defun mark-oz-expr (arg)
   "Set mark ARG balanced Oz expressions from point.
@@ -1350,12 +1348,13 @@ Negative arg -N means kill N Oz expressions after the cursor."
     (define-key map "\M-p"         'oz-previous-buffer))
 
   (define-key map "\M-\C-x"	'oz-feed-paragraph)
-  (define-key map "\C-c\C-c"    'oz-toggle-compiler)
 
   (define-key map [(control c) (control h)] 'oz-halt)
   (define-key map "\C-c\C-h"    'oz-halt)
 
+  (define-key map "\C-c\C-c"    'oz-toggle-compiler)
   (define-key map "\C-c\C-e"    'oz-toggle-emulator)
+  (define-key map "\C-c\C-t"    'oz-toggle-temp)
   (define-key map "\C-c\C-n"    'oz-new-buffer)
   (define-key map "\C-c\C-l"    'oz-fontify)
   (define-key map "\C-c\C-r"    'run-oz)
@@ -1401,9 +1400,26 @@ if that value is non-nil."
 
   ;; font lock stuff
   (oz-set-font-lock-defaults)
-  (if (and oz-want-font-lock (oz-window-system))
+  (if (and oz-want-font-lock window-system)
       (font-lock-mode 1))
   (run-hooks 'oz-mode-hook))
+
+(defun ozm-mode ()
+  "Major mode for displaying Oz machine code.
+
+Commands:
+\\{oz-mode-map}"
+  (interactive)
+  (kill-all-local-variables)
+  (use-local-map oz-mode-map)
+  (setq major-mode 'ozm-mode)
+  (setq mode-name "Oz-Machine")
+  (oz-mode-variables)
+
+  ;; font lock stuff
+  (ozm-set-font-lock-defaults)
+  (if (and oz-want-font-lock window-system)
+      (font-lock-mode 1)))
 
 (defun oz-gump-mode ()
   "Major mode for editing Oz code with embedded Gump specifications.
@@ -1415,7 +1431,7 @@ if that value is non-nil."
   (interactive)
   (kill-all-local-variables)
   (use-local-map oz-mode-map)
-  (setq major-mode 'oz-mode)
+  (setq major-mode 'oz-gump-mode)
   (setq mode-name "Oz-Gump")
   (oz-mode-variables)
   (if (and oz-lucid (not (assoc "Oz" current-menubar)))
@@ -1425,7 +1441,7 @@ if that value is non-nil."
 
   ;; font lock stuff
   (oz-gump-set-font-lock-defaults)
-  (if (and oz-want-font-lock (oz-window-system))
+  (if (and oz-want-font-lock window-system)
       (font-lock-mode 1))
   (run-hooks 'oz-mode-hook))
 
@@ -1514,7 +1530,8 @@ and initial percent signs."
 ;; Fontification
 ;;------------------------------------------------------------
 
-(if (oz-window-system) (require 'font-lock))
+(if window-system
+    (require 'font-lock))
 
 (defconst oz-keywords
   '("declare" "local" "in" "end"
@@ -1557,17 +1574,17 @@ The first subexpression matches the keyword proper (for fontification).")
   "Regular expression matching non-identifier keywords.")
 
 (defconst oz-proc-fun-matcher
-  (concat "\\<\\(proc\\|fun\\)[ \t]*{"
+  (concat "\\<\\(proc\\|fun\\)[ \t]*{!?"
 	  "\\([A-Z][A-Za-z0-9_]*\\|`[^`\n]*`\\)")
   "Regular expression matching proc or fun definitions.
 The second subexpression matches the definition's identifier
 (if it is a variable) and is used for fontification.")
 
 (defconst oz-class-matcher
-  (concat "\\<class[ \t]+"
+  (concat "\\<class\\([ \t]+\\|[ \t]*!\\)"
 	  "\\([A-Z][A-Za-z0-9_]*\\|`[^`\n]*`\\)")
   "Regular expression matching class definitions.
-The first subexpression matches the definition's identifier
+The second subexpression matches the definition's identifier
 (if it is a variable) and is used for fontification.")
 
 (defconst oz-meth-matcher
@@ -1597,7 +1614,7 @@ and is used for fontification.")
   (append (list (list oz-proc-fun-matcher
 		      '(2 font-lock-function-name-face))
 		(list oz-class-matcher
-		      '(1 font-lock-type-face))
+		      '(2 font-lock-type-face))
 		(list oz-meth-matcher
 		      '(2 font-lock-function-name-face)))
 	  oz-font-lock-keywords-2)
@@ -1608,6 +1625,87 @@ and is used for fontification.")
        '((oz-font-lock-keywords oz-font-lock-keywords-1
 	  oz-font-lock-keywords-2 oz-font-lock-keywords-3)
 	 nil nil ((?& . "/")) beginning-of-line)))
+
+;;------------------------------------------------------------
+;; Fontification for Oz-Machine Mode
+
+(defconst ozm-keywords-matcher
+  "\\<\\(true\\|false\\|unit\\)\\>")
+
+(defconst ozm-instr-matcher-1
+  (concat
+   "\t\\("
+   (mapconcat
+    'identity
+    '("move" "moveMoveXYXY" "moveMoveYXYX" "allocateL"
+      "moveMoveXYYX" "moveMoveYXXY" "createNamedVariable" "createVariable"
+      "createVariableMove" "putInt" "putConstant" "putList" "putRecord"
+      "setInt" "setConstant" "setValue" "setVariable" "setVoid" "getInt"
+      "getConstant" "getList" "getListValVar" "getRecord" "unifyInt"
+      "unifyConstant" "unifyValue" "unifyVariable" "unifyValVar" "unifyVoid"
+      "unify" "branch" "callBuiltin" "inlineFun[1-3]" "inlineRel[1-3]"
+      "inlineEqEq" "inlineDot" "inlineUparrow" "inlineAt" "inlineAssign"
+      "genCall" "call" "tailCall" "fastCall" "fastTailCall" "genFastCall"
+      "marshalledFastCall" "sendMsg" "tailSendMsg" "applMeth" "tailApplMeth"
+      "thread" "threadX" "exHandler" "createCond" "nextClause" "shallowGuard"
+      "shallowTest[12]" "testConst" "testNumber" "testBool" "switchOnTerm"
+      "getVariable" "getVarVar" "getVoid" "lockThread" "getSelf" "det"
+      "weakDet" "debugInfo" "globalVarname" "localVarname" "clearY") "\\|")
+   "\\)("))
+
+(defconst ozm-instr-matcher-2
+  (concat
+   "\t\\("
+   (mapconcat
+    'identity
+    '("allocateL[1-9]" "allocateL10" "deAllocateL"
+      "deAllocateL[1-9]" "deAllocateL10" "return" "popEx" "createOr"
+      "createEnumOr" "createChoice" "clause" "emptyClause" "lastClause"
+      "shallowThen" "failure" "succeed" "wait" "waitTop" "ask" "profileProc")
+    "\\|")
+   "\\)$"))
+
+(defconst ozm-definition-matcher
+  "\t\\(definition\\|endDefinition\\)(")
+
+(defconst ozm-register-matcher
+  "\\<\\(x\\|y\\|g\\)([0-9]+)")
+
+(defconst ozm-label-matcher
+  "^lbl([0-9]+)")
+
+(defconst ozm-name-matcher
+  "<N: [^>]+>")
+
+(defconst ozm-builtin-name-matcher
+  (concat "\t\\(callBuiltin\\|inlineRel[1-3]\\|inlineFun[1-3]\\|inlineEqEq\\|"
+	  "shallowTest[12]\\)(\\([A-Za-z0-9_]+\\|'[^'\n]'\\)"))
+
+(defconst ozm-font-lock-keywords-1
+  (list (cons ozm-keywords-matcher 1)
+	(list ozm-instr-matcher-1
+	      '(1 font-lock-keyword-face))
+	(list ozm-instr-matcher-2
+	      '(1 font-lock-keyword-face))
+	(list ozm-definition-matcher
+	      '(1 font-lock-function-name-face))
+	(cons ozm-name-matcher 'font-lock-string-face)))
+
+(defconst ozm-font-lock-keywords ozm-font-lock-keywords-1)
+
+(defconst ozm-font-lock-keywords-2
+  (append (list (list ozm-register-matcher
+		      '(1 font-lock-type-face))
+		(cons ozm-label-matcher 'font-lock-reference-face)
+		(list ozm-builtin-name-matcher
+		      '(2 font-lock-variable-name-face)))
+	  ozm-font-lock-keywords-1))
+
+(defun ozm-set-font-lock-defaults ()
+  (set (make-local-variable 'font-lock-defaults)
+       '((ozm-font-lock-keywords ozm-font-lock-keywords-1
+	  ozm-font-lock-keywords-2)
+	 nil nil nil beginning-of-line)))
 
 ;;------------------------------------------------------------
 ;; Fontification for Oz-Gump Mode
@@ -1707,7 +1805,7 @@ and is used for fontification.")
 
 (defun oz-fontify-buffer ()
   (interactive)
-  (if (oz-window-system) (font-lock-fontify-buffer)))
+  (if window-system (font-lock-fontify-buffer)))
 
 (defun oz-fontify (&optional arg)
   (interactive "P")
@@ -1814,6 +1912,7 @@ The rest of the output is then passed through the oz-filter."
     (save-excursion
       (let ((win (or (get-buffer-window oz-emulator-buffer)
 		     (get-buffer-window oz-compiler-buffer)
+		     (get-buffer-window oz-temp-buffer)
 		     (split-window (get-largest-window)
 				   (/ (* (window-height (get-largest-window))
 					 (- 100 oz-other-buffer-percent))
@@ -1859,6 +1958,13 @@ If it is, then remove it."
   (interactive)
   (oz-toggle-window oz-emulator-buffer))
 
+(defun oz-toggle-temp ()
+  "Toggle Oz Temp window.
+If the temp window is not visible, then show it.
+If it is, then remove it."
+  (interactive)
+  (oz-toggle-window oz-temp-buffer))
+
 (defun oz-toggle-window (buffername)
   (let ((buffer (get-buffer buffername)))
     (if buffer
@@ -1896,7 +2002,8 @@ If it is, then remove it."
     (while (and buffers none-found)
       (set-buffer (car buffers))
       (if (or (equal mode-name "Oz")
-	      (equal mode-name "Oz-Gump"))
+	      (equal mode-name "Oz-Gump")
+	      (equal mode-name "Oz-Machine"))
 	  (progn (switch-to-buffer (car buffers))
 		 (setq none-found nil))
 	(setq buffers (cdr buffers))))
@@ -1929,9 +2036,17 @@ If it is, then remove it."
   (let ((line (oz-line-pos)))
     (oz-to-coresyntax-region (car line) (cdr line))))
 
+(defun oz-to-coresyntax-paragraph ()
+  (interactive)
+  (save-excursion
+    (backward-paragraph 1)
+    (let ((start (point)))
+      (forward-paragraph 1)
+      (oz-to-coresyntax-region start (point)))))
+
 (defun oz-to-coresyntax-region (start end)
    (interactive "r")
-   (oz-directive-on-region start end "\\core" ".ozc" t))
+   (oz-directive-on-region start end "\\core" ".ozc"))
 
 (defun oz-to-emulatorcode-buffer ()
   (interactive)
@@ -1942,11 +2057,19 @@ If it is, then remove it."
   (let ((line (oz-line-pos)))
     (oz-to-emulatorcode-region (car line) (cdr line))))
 
+(defun oz-to-emulatorcode-paragraph ()
+  (interactive)
+  (save-excursion
+    (backward-paragraph 1)
+    (let ((start (point)))
+      (forward-paragraph 1)
+      (oz-to-emulatorcode-region start (point)))))
+
 (defun oz-to-emulatorcode-region (start end)
    (interactive "r")
-   (oz-directive-on-region start end "\\machine" ".ozm" nil))
+   (oz-directive-on-region start end "\\machine" ".ozm"))
 
-(defun oz-directive-on-region (start end directive suffix enter-oz-mode)
+(defun oz-directive-on-region (start end directive suffix)
   "Applies a directive to the region."
   (let ((file-1 (concat oz-temp-file ".oz"))
 	(file-2 (concat oz-temp-file suffix)))
@@ -1954,20 +2077,25 @@ If it is, then remove it."
 	(delete-file file-2))
     (write-region start end file-1)
     (message "")
-    (if (get-buffer oz-temp-buffer)
-	(progn (delete-windows-on oz-temp-buffer)
-	       (kill-buffer oz-temp-buffer)))
+    (let ((buf (get-buffer oz-temp-buffer)))
+      (if buf
+	  (save-excursion
+	    (set-buffer buf)
+	    (erase-buffer))))
     (shell-command (concat "touch " file-2))
     (start-process "Oz Temp" oz-temp-buffer "tail" "+1f" file-2)
     (message "")
     (oz-send-string (concat directive " '" file-1 "'"))
     (let ((buf (get-buffer oz-temp-buffer)))
       (oz-show-buffer buf)
-      (if enter-oz-mode
-	  (save-excursion
-	    (set-buffer buf)
-	    (oz-mode)
-	    (oz-fontify-buffer))))))
+      (cond ((string-match "\\.ozc$" file-2)
+	     (save-excursion
+	       (set-buffer buf)
+	       (oz-mode)))
+	    ((string-match "\\.ozm$" file-2)
+	     (save-excursion
+	       (set-buffer buf)
+	       (ozm-mode)))))))
 
 (defun oz-feed-region-browse (start end)
   "Feed the current region to the Oz Compiler.
