@@ -1431,8 +1431,8 @@ OZ_BI_define(unix_pipe,2,2) {
   HANDLE savein  = GetStdHandle(STD_INPUT_HANDLE);
   HANDLE rh1,wh1,rh2,wh2;
 
-  if (!CreatePipe(&rh1,&wh1,&sa,0)  ||
-      !CreatePipe(&rh2,&wh2,&sa,0)  ||
+  if (!CreatePipe(&rh1,&wh1,&sa,64*1024)  ||
+      !CreatePipe(&rh2,&wh2,&sa,64*1024)  ||
       !SetStdHandle((DWORD)STD_OUTPUT_HANDLE,wh1) ||
       !SetStdHandle((DWORD)STD_ERROR_HANDLE,wh1) ||
       !SetStdHandle((DWORD)STD_INPUT_HANDLE,rh2) ||
