@@ -138,6 +138,11 @@ void freeListChop(void * addr, size_t size) {
 // ----------------------------------------------------------------
 // mem from os with 3 alternatives MMAP, SBRK or MALLOC
 
+// mm2: I've disabled mmap because many people reported spurious problems.
+// Please check with Denys and afranke@ags.uni-sb.de before reenabling it.
+
+#undef HAVE_MMAP
+
 //
 // kost@: i have not tested that on anything else than 2.0.*
 // Linux-i486 (2.0.7-based) and Solaris-Sparc. And don't risk
