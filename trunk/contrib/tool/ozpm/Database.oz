@@ -34,7 +34,7 @@ define
       meth remove(K) {Dictionary.remove @db {ToKey K}} end
       meth member(K $) {Dictionary.member @db {ToKey K}} end
       meth save
-	 try {Pickle.save {Dictionary.toRecord o @db} @file}
+	 try {Pickle.save {Dictionary.toRecord '1.0' @db} @file}
 	 catch _ then skip end
       end
    end

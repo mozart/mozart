@@ -99,6 +99,7 @@ define
 	 setTitle
 	 handle
 	 allTag
+	 selTag
       attr
 	 info
 	 title
@@ -125,6 +126,9 @@ define
 	 if {IsFree self.allTag} then
 	    self.allTag={self.handle newTag($)}
 	    {self.allTag addtag(withtag all)}
+	    self.selTag={self.handle newTag($)}
+	 else
+	    {self.selTag delete}
 	 end
 	 info<-Info
 	 {self.setTitle Info.title}
@@ -163,7 +167,7 @@ define
 		  {Node expand}
 		  if I\=0 then
 		     {Node bind(event:"<1>"
-				action:{self.parent.toplevel newAction(self#select(I) $)})}
+				action:{self.parent.toplevel newAction(self#select(I Node) $)})}
 		  end
 	       end
 	    in
@@ -188,10 +192,20 @@ define
       meth getClass(C)
 	 C=TreeDataView
       end
-      meth select(I)
+      meth select(I Node)
 	 Info={List.nth @info.info I}
 	 D=r(info:Info)
       in
+	 local
+	    Coord={self.handle tkReturnListInt(bbox(Node.tag) $)}
+	 in
+	    {self.selTag delete}
+	    {self.handle create(rectangle b(Coord)
+				outline:black
+				stipple:gray50
+				tags:self.selTag)}
+	    {self.selTag lower}
+	 end
 	 {self.parent displayInfo(D)}
       end
    end
@@ -354,14 +368,16 @@ define
 	 else
 	    Info=Inf.info
 	    fun{ListToString L}
-	       if {List.is L} then
-		  {List.drop
-		   {VirtualString.toString
-		    {List.foldL L fun{$ S X} S#"\n"#X end ""}
-		   } 1}
-	       else
-		  {VirtualString.toString L}
-	       end
+	       {List.map
+		if {List.is L} then
+		   {List.drop
+		    {VirtualString.toString
+		     {List.foldL L fun{$ S X} S#"\n"#X end ""}
+		    } 1}
+		else
+		   {VirtualString.toString L}
+		end
+		fun{$ C} if C==&\n then & else C end end}
 	    end
 	 in
 	    {self.setTitle {VirtualString.toString Info.id}}
