@@ -14,6 +14,10 @@ static const int mustRead=9;
 #define CF_CONT 1
 #define CF_FINAL 2
 
+extern int  globalOSWriteCounter;
+extern int  globalOSReadCounter;
+extern int  globalContCounter;
+
 static int tcpTransObj_writeHandler(int fd,void *o) {
   return ((TCPTransObj *) o)->writeHandler(fd);
 }
@@ -126,6 +130,7 @@ inline void TCPTransObj::marshal(MsgContainer *msgC, int acknum) {
   msgC->marshal(writeBuffer, tcptransController);
 
   if(msgC->checkFlag(MSG_HAS_MARSHALCONT)) {
+    globalContCounter++;
     comObj->msgPartlySent(msgC);
     writeBuffer->put(CF_CONT);
   }
@@ -161,6 +166,7 @@ int TCPTransObj::writeHandler(int fd) {
   while((totLen=writeBuffer->getUsed())>0) {
     len = writeBuffer->getWriteParameters(pos);
     Assert(len>0);
+    globalOSWriteCounter++;
     ret=oswrite(fd,pos,len);
     PD((TCP_INTERFACE,"Os-written %d",ret));
     
@@ -261,6 +267,7 @@ int TCPTransObj::readHandler(int fd) {
   len=readBuffer->getReadParameters(pos);
   Assert(osTestSelect(fd,SEL_READ) && len>0);
   while (TRUE) {
+    globalOSReadCounter++;
     ret = osread(fd,pos,len);
 
     if (ret<0) {
