@@ -27,6 +27,8 @@
  *
  */
 
+#include "wsock.hh"
+
 #include "base.hh"
 #include "dpBase.hh"
 
@@ -40,8 +42,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#endif
 #include <netdb.h>
+#endif
 
 
 OZ_BI_define(BIgetCRC,1,1) 

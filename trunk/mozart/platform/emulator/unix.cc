@@ -36,7 +36,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
+
+#ifndef WINDOWS
 #include <netdb.h>
+#endif
 
 
 #if defined(LINUX) || defined(HPUX_700)
@@ -196,7 +199,6 @@ int raiseUnixError(char *f,int n, char * e, char * g) {
 
 static char* h_strerror(const int err) {
   switch (err) {
-#ifndef __MINGW32__
   case HOST_NOT_FOUND:
     return "No such host is known.";
   case TRY_AGAIN:
@@ -210,7 +212,6 @@ static char* h_strerror(const int err) {
   case NO_DATA:
 #endif
     return "No internet address.";
-#endif
   default:
     return "Hostname lookup failure.";
   }
@@ -677,11 +678,6 @@ OZ_BI_iodefine(unix_getCWD,0,1)
     size+=SIZE;
   }
 } OZ_BI_ioend
-
-#ifdef __MINGW32__
-#define O_NOCTTY   0
-#define O_NONBLOCK 0
-#endif
 
 #ifndef O_SYNC
 #define O_SYNC     0
@@ -1449,8 +1445,8 @@ OZ_BI_define(unix_pipe,2,2) {
   SetStdHandle((DWORD)STD_ERROR_HANDLE,saveerr);
   SetStdHandle((DWORD)STD_INPUT_HANDLE,savein);
     
-  int rsock = _hdopen((int)rh1,O_RDONLY|O_BINARY);
-  int wsock = _hdopen((int)wh2,O_WRONLY|O_BINARY);
+  int rsock = oshdopen((int)rh1,O_RDONLY|O_BINARY);
+  int wsock = oshdopen((int)wh2,O_WRONLY|O_BINARY);
   if (rsock<0 || wsock<0) {
     return raiseUnixError("hdopen",0, 
 			  "Cannot connect to created pipe process.", 
@@ -1898,7 +1894,7 @@ OZ_BI_define(unix_srandom, 1,0)
 #endif
 
 
-#ifdef __MINGW32__
+#ifdef WINDOWS
 
 OZ_BI_define(unix_getpwnam,1,1)
 {

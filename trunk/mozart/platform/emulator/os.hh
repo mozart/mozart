@@ -161,24 +161,11 @@ void registerSocket(int fd);
 
 char *osfgets(char *s, int n, FILE *stream);
 
-#ifdef _MSC_VER
-#define _hdopen(file,flags) _open_osfhandle(file,flags)
-#define _os_handle(fd) _get_osfhandle(fd)
-#define SIGUSR1 SIGINT
-#endif
-
-#if defined(__CYGWIN32__) || defined(__MINGW32__)
-extern int _hdopen(int, int flags);
-#endif
-
-#ifdef __MINGW32__
+#ifdef WINDOWS
+extern int oshdopen(int file, int flags);
 #define SIGUSR1 SIGINT
 #define O_NONBLOCK 0
 #define O_NOCTTY   0
-#endif
-
-
-#ifdef WINDOWS
 #define PathSeparator ';'
 #else
 #define PathSeparator ':'
