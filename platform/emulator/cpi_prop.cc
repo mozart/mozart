@@ -83,8 +83,7 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
 
     case CVAR:
       {
-	const char * n = getVarName(makeTaggedRef(hptr));
-	o << (!n ? "_" : n);
+	o << getVarName(makeTaggedRef(hptr));
 
 	GenCVariable * cv = tagged2CVar(h);
 	

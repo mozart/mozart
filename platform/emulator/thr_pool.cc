@@ -77,17 +77,6 @@ void ThreadsPool::rescheduleThread(Thread *th)
   scheduleThread(th);
 }
 
-
-Board * ThreadsPool::getHighestSolveDebug(void) 
-{
-  Board *b;
-  b = hiQueue.getHighestSolveDebug();
-  if (b) return b;
-  b = midQueue.getHighestSolveDebug();
-  if (b) return b;
-  return lowQueue.getHighestSolveDebug();
-}
-
 Thread *ThreadsPool::getFirstThreadOutline()
 {
   Assert(hiCounter>=0 || lowCounter>=0); // otherwise inline version

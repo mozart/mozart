@@ -2169,3 +2169,21 @@ SuspList *AM::installPropagators(SuspList * local_list, SuspList * glob_list,
   
   return ret_list;
 }
+
+#ifdef DEBUG_STATUS
+  /*
+   * Print capital letter, when flag is set and
+   * lower case letter when unset.
+   */ 
+char flagChar(StatusBit flag)
+{
+  switch (flag) {
+  case ThreadSwitch: return 'T';
+  case IOReady:      return 'I';
+  case UserAlarm:    return 'U';
+  case StartGC:      return 'G';
+  case DebugMode:    return 'D';
+  default:           return 'X';
+  }
+}
+#endif

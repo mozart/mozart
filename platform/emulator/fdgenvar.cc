@@ -331,7 +331,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 {
 #ifdef DEBUG_TELLCONSTRAINTS
   cout << "tellBasicConstraint - in - : ";
-  taggedPrint(v);
+  oz_print(v);
   if (fd) cout << " , " << *fd;
   cout << endl <<flush;
 #endif
@@ -459,7 +459,7 @@ proceed:
 
 #ifdef DEBUG_TELLCONSTRAINTS
   cout << "tellBasicConstraint - out - : ";
-  if (vptr) taggedPrint(*vptr); else taggedPrint(v);
+  if (vptr) oz_print(*vptr); else oz_print(v);
   if (fd) cout << " , " << *fd;
   cout << endl <<flush;
 #endif
