@@ -135,7 +135,7 @@ exponential number of threads! See how easy it is to create concurrent
 threads. You may use this program to test how many threads your Oz
 installation can create. Try
 
-<<<{Fib 24}>>>
+<<<{Browse {Fib 24}}>>>
 
 <P>while using the panel program in your Oz menu to see the threads.
 If it works, try a larger number.
@@ -155,7 +155,8 @@ end
 
 <P><FIGURE ID="Threads" CLASS="Figure">
 <CAPTION>The Mozart Panel showing thread creation <<{Fib 26 X}>></CAPTION>
-<PICTURE.EXTERN TO="Thread.ps" TYPE="ps" info="-width 400">
+<!-- <PICTURE.EXTERN TO="Thread.ps" TYPE="ps" info="-width 400"> -->
+<PICTURE.EXTERN TO="thread.gif" TYPE=gif>
 </FIGURE>
 
 <P>The whole idea of explicit thread creation in Oz is to enable the
