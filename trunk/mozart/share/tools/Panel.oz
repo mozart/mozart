@@ -5,12 +5,31 @@
 %%%  Last modified: $Date$ by $Author$
 %%%  Version: $Revision$
 
-declare PanelClass Panel in
+declare
+   PanelClass Panel
+\ifdef SAVE
+   NewPanel
+\endif
+in
 
+\ifdef SAVE
+fun {NewPanel Tk TkTools}
+\endif
+   
 \insert panel/main.oz
 
-Panel = {New PanelClass init}
+   Panel = {New PanelClass init}
 
+\ifdef SAVE
+in
+   panel('PanelClass': PanelClass
+	 'Panel':      Panel)
+end
+
+panel('PanelClass': PanelClass
+      'Panel':      Panel)
+= {NewPanel Tk TkTools}
+\endif
 
 
 

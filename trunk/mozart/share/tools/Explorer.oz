@@ -7,26 +7,48 @@
 
 
 declare
-
-Explorer ExplorerClass
-
-ExploreOne ExploreAll ExploreBest
-
+   Explorer ExplorerClass
+   ExploreOne ExploreAll ExploreBest
+\ifdef SAVE
+   NewExplorer
+\endif
 in
 
-\insert 'explorer/main.oz'
+\ifdef SAVE
+fun {NewExplorer Tk TkTools Browse}
+\endif
+   
+   \insert 'explorer/main.oz'
 
-Explorer = {New ExplorerClass init}
+   Explorer = {New ExplorerClass init}
 
-proc {ExploreOne P}
-   {Explorer one(P)}
+   proc {ExploreOne P}
+      {Explorer one(P)}
+   end
+
+   proc {ExploreAll P}
+      {Explorer all(P)}
+   end
+   
+   proc {ExploreBest P O}
+      {Explorer all(P O)}
+   end
+
+\ifdef SAVE
+in
+   explorer('ExplorerClass': ExplorerClass
+	    'Explorer':      Explorer
+	    'ExploreOne':    ExploreOne
+	    'ExploreAll':    ExploreAll
+	    'ExploreBest':   ExploreBest)
 end
 
-proc {ExploreAll P}
-   {Explorer all(P)}
-end
 
-proc {ExploreBest P O}
-   {Explorer all(P O)}
-end
+explorer('ExplorerClass': ExplorerClass
+	 'Explorer':      Explorer
+	 'ExploreOne':    ExploreOne
+	 'ExploreAll':    ExploreAll
+	 'ExploreBest':   ExploreBest)
+= {NewExplorer Tk TkTools Browse}
+\endif
 
