@@ -1426,6 +1426,7 @@ descriptor <code /fd/.
 
 </chapter>
 
+<!-- ********************************************************************** -->
 <Chapter id="chapter.extension">
 <Title/The Extension class/
 
@@ -1481,13 +1482,13 @@ documentation and in <Ptr to="section.extension.example"> an example.
 (for <<OZ_SituatedExtension>>).
 
 
-  <ENTRY><<virtual void gCollectRecurseV()>> // default: do nothing
+  <ENTRY><<virtual void gCollectRecurseV()>> // required
 <index class=tails/<<OZ_Extension>> <and> <<gCollectRecurseV>>/
 <ITEM>Invoked on the copy obtained from <<gCollectV>>.  The VM has marked the data
 such that recursive updates of fields, e.g. running <<OZ_gCollect>>,
 does not run into cycles.
 
-  <ENTRY><<virtual void sCloneRecurseV()>> // default: do nothing
+  <ENTRY><<virtual void sCloneRecurseV()>> // required
 <index class=tails/<<OZ_Extension>> <and> <<sCloneRecurseV>>/
 <ITEM>Invoked on the copy obtained from <<sCloneV>>.  The VM has marked the data
 such that recursive updates of fields, e.g. running <<OZ_sClone>>,
