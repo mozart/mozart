@@ -204,24 +204,95 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
 } // PRINT(GenCVariable)
 
 
+// Swap TaggedRef array elements:
+inline void inplace_swap(TaggedRef* a, TaggedRef* b) {
+  register TaggedRef aux = *a;
+  *a = *b;
+  *b = aux;
+}
+
+// In-place sort of an array of TaggedRef:
+void inplace_quicksort(TaggedRef* first, TaggedRef* last) {
+  register TaggedRef* i;
+  register TaggedRef* j;
+
+  if (first >= last)
+    return;
+  for (i = first, j = last; ; j--) {
+    while (i != j && atomcmp(*i, *j) <= 0)
+      j--;
+    if (i == j)
+      break;
+    inplace_swap(i, j);
+    do
+      i++;
+    while (i != j && atomcmp(*i, *j) <= 0);
+    if (i == j)
+      break;
+    inplace_swap(i, j);
+  } // for
+  inplace_quicksort(first, i-1);
+  inplace_quicksort(i+1, last);
+}
+
+
+// Non-Name Features are output in alphabetic order:
 PRINT(DynamicTable)
 {
     stream << '(';
     int nonempty=FALSE;
-    for (dt_index i=0; i<size; i++) {
-        if (table[i].ident) {
+    // Count Atoms & Names in dynamictable:
+    TaggedRef tmplit;
+    dt_index di;
+    long ai;
+    long nAtom=0;
+    long nName=0;
+    for (di=0; di<size; di++) {
+        tmplit=table[di].ident;
+        if (tmplit) {
             nonempty=TRUE;
-            CHECK_DEREF(table[i].ident);
-            stream << ' ';
-            tagged2Stream(table[i].ident,stream,depth);
-            stream << ':';
-            stream << ' ';
-            tagged2Stream(table[i].value,stream,depth);
+            CHECK_DEREF(tmplit);
+            if (isAtom(tmplit)) nAtom++; else nName++;
         }
     }
+    // Allocate array on heap as STuple, put Atoms in array:
+    STuple *stuple=STuple::newSTuple(AtomNil,nAtom);
+    TaggedRef *arr=stuple->getRef();
+    // TaggedRef *arr = new TaggedRef[nAtom];
+    for (ai=0,di=0; di<size; di++) {
+        tmplit=table[di].ident;
+        if (tmplit && isAtom(tmplit)) arr[ai++]=tmplit;
+    }
+    // Sort the Atoms according to printName:
+    // (Routine used from records.cc)
+    inplace_quicksort(arr, arr+(nAtom-1));
+    // Output the Atoms first, in order:
+    for (ai=0; ai<nAtom; ai++) {
+        stream << ' ';
+        tagged2Stream(arr[ai],stream,depth);
+        stream << ':';
+        stream << ' ';
+        tagged2Stream(lookup(arr[ai]),stream,depth);
+    }
+    // Output the Names last, unordered:
+    for (di=0; di<size; di++) {
+        tmplit=table[di].ident;
+        if (tmplit && !isAtom(tmplit)) {
+            stream << ' ';
+            tagged2Stream(tmplit,stream,depth);
+            stream << ':';
+            stream << ' ';
+            tagged2Stream(table[di].value,stream,depth);
+        }
+    }
+    // Deallocate array:
+    // (Done automatically as part of heap GC)
+    // delete arr;
+    // Finish up the output:
     if (nonempty) stream << ' ';
     stream << "...)" ;
 }
+
 
 PRINTLONG(DynamicTable)
 {

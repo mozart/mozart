@@ -183,7 +183,7 @@ public:
     // Merge the current dynamictable into an external dynamictable
     // Return a pairlist containing all term pairs with the same feature
     // The external dynamictable is resized if necessary
-    void merge(DynamicTable* &dt, PairList* &pairs, long &pairlen);
+    void merge(DynamicTable* &dt, PairList* &pairs);
 
     // Check an srecord against the current dynamictable
     // Return TRUE if all elements of dynamictable exist in srecord.
@@ -272,8 +272,8 @@ public:
         return label;
     }
 
-    int getWidth(void) {
-        return (int)(dynamictable->numelem);
+    long getWidth(void) {
+        return (long)(dynamictable->numelem);
     }
 
     DynamicTable* getTable(void) {

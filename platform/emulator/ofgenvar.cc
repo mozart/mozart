@@ -110,6 +110,7 @@ TaggedRef DynamicTable::lookup(TaggedRef id) {
 
 // Return TRUE iff there are features in an external dynamictable that
 // are not in the current dynamictable
+// This routine is currently not needed
 Bool DynamicTable::extraFeaturesIn(DynamicTable* dt) {
     Assert(isPwrTwo(size));
     for (dt_index i=0; i<dt->size; i++) {
@@ -125,10 +126,9 @@ Bool DynamicTable::extraFeaturesIn(DynamicTable* dt) {
 // Merge the current dynamictable into an external dynamictable
 // Return a pairlist containing all term pairs with the same feature
 // The external dynamictable is resized if necessary
-void DynamicTable::merge(DynamicTable* &dt, PairList* &pairs, long &pairlen) {
+void DynamicTable::merge(DynamicTable* &dt, PairList* &pairs) {
     Assert(isPwrTwo(size));
     pairs=new PairList();
-    pairlen=0;
     Assert(pairs->isempty());
     for (dt_index i=0; i<size; i++) {
         if (table[i].ident!=makeTaggedNULL()) {
@@ -139,7 +139,6 @@ void DynamicTable::merge(DynamicTable* &dt, PairList* &pairs, long &pairlen) {
                 // Two terms have this feature; don't insert
                 // Add the terms to the list of pairs:
                 pairs->addpair(val, table[i].value);
-                pairlen++;
                 Assert(!pairs->isempty());
             } else {
                 // Element successfully inserted
@@ -254,7 +253,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         else doBindAndTrail(var, vPtr, TaggedRef(term));
 
         // Update the OFS suspensions:
-        if (vLoc) am.addFeatOFSSuspensionList(var,suspList,NULL,TRUE);
+        if (vLoc) am.addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
 
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
@@ -297,15 +296,16 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         if (!success) { pairs->free(); return FALSE; }
 
         // Take care of OFS suspensions:
-        Bool vExtra;
-        if (vLoc && (vExtra=(termSRec->getWidth()>getWidth())) && am.hasOFSSuspension(suspList)) {
-            // Calculate feature or list of features 'flist' that are in SRECORD
-            // and not in OFS.
-            TaggedRef flist = dynamictable->extraSRecFeatures(*termSRec);
-            // Add the extra features to S_ofs suspensions:
-            am.addFeatOFSSuspensionList(var,suspList,flist,TRUE);
-        } else if (vLoc && !vExtra) {
-            am.addFeatOFSSuspensionList(var,suspList,NULL,TRUE);
+        if (vLoc && am.hasOFSSuspension(suspList)) {
+            if (termSRec->getWidth()>getWidth()) {
+                // Calculate feature or list of features 'flist' that are in SRECORD
+                // and not in OFS.
+                TaggedRef flist = dynamictable->extraSRecFeatures(*termSRec);
+                // Add the extra features to S_ofs suspensions:
+                am.addFeatOFSSuspensionList(var,suspList,flist,TRUE);
+            } else {
+                am.addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
+            }
         }
 
         // Bind OFSVar to the SRecord:
@@ -369,10 +369,11 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         GenOFSVariable* otherVar=NULL;
         TaggedRef* nvRefPtr=NULL;
         TaggedRef* otherPtr=NULL;
-        Bool globConstrained=TRUE;
+        long varWidth=getWidth();
+        long termWidth=termVar->getWidth();
         if (vLoc && tLoc) {
             // Reuse the largest table (optimization to improve unification speed):
-            if (getWidth()>termVar->getWidth()) {
+            if (varWidth>termWidth) {
                 newVar=this;
                 nvRefPtr=vPtr;
                 otherVar=termVar; // otherVar must be smallest
@@ -388,17 +389,15 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
             newVar=this;
             nvRefPtr=vPtr;
             otherVar=termVar;
-            globConstrained = otherVar->dynamictable->extraFeaturesIn(newVar->dynamictable);
         } else if (!vLoc && tLoc) {
             // Reuse the term:
             newVar=termVar;
             nvRefPtr=tPtr;
             otherVar=this;
-            globConstrained = otherVar->dynamictable->extraFeaturesIn(newVar->dynamictable);
         } else if (!vLoc && !tLoc) {
             // Reuse the largest table (this improves unification speed):
-            if (getWidth()>termVar->getWidth()) {
-                // Make a local copy of the var's DynamicTable.
+            if (varWidth>termWidth) {
+                // Make a local copy of the var's DynamicTable:
                 DynamicTable* dt=dynamictable->copyDynamicTable();
                 // Make a new GenOFSVariable with the new DynamicTable:
                 newVar=new GenOFSVariable(*dt);
@@ -418,14 +417,12 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 
         // Take care of OFS suspensions, part 1/2 (before merging tables):
         Bool vOk=vLoc && am.hasOFSSuspension(suspList);
-        Bool vWidth=getWidth();
         TaggedRef vList;
         if (vOk) {
             // Calculate the extra features in var:
             vList=termVar->dynamictable->extraFeatures(dynamictable);
         }
         Bool tOk=tLoc && am.hasOFSSuspension(termVar->suspList);
-        Bool tWidth=termVar->getWidth();
         TaggedRef tList;
         if (tOk) {
             // Calculate the extra features in term:
@@ -435,15 +432,15 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         // Merge otherVar's DynamicTable into newVar's DynamicTable.
         // (During the merge, calculate the list of feature pairs that correspond.)
         PairList* pairs;
-        long pairlen;
-        otherVar->dynamictable->merge(newVar->dynamictable, pairs, pairlen);
+        otherVar->dynamictable->merge(newVar->dynamictable, pairs);
+        long mergeWidth=newVar->getWidth();
 
         // Take care of OFS suspensions, part 2/2 (after merging tables):
-        if (vOk && (vWidth>pairlen)) {
+        if (vOk && (vList!=AtomNil /*mergeWidth>termWidth*/)) {
             // Add the extra features to S_ofs suspensions:
             am.addFeatOFSSuspensionList(var,suspList,vList,FALSE);
         }
-        if (tOk && (tWidth>pairlen)) {
+        if (tOk && (tList!=AtomNil /*mergeWidth>varWidth*/)) {
             // Add the extra features to S_ofs suspensions:
             am.addFeatOFSSuspensionList(term,termVar->suspList,tList,FALSE);
         }
@@ -456,12 +453,14 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
             // bind to var without trailing:
             doBind(otherPtr, makeTaggedRef(nvRefPtr));
         } else if (vLoc && !tLoc) {
-            if (globConstrained)
+            // Global term is constrained if result has more features than term:
+            if (mergeWidth>termWidth)
                 doBindAndTrail(term, tPtr, makeTaggedRef(vPtr));
             else
                 doBind(vPtr, makeTaggedRef(tPtr));
         } else if (!vLoc && tLoc) {
-            if (globConstrained)
+            // Global var is constrained if result has more features than var:
+            if (mergeWidth>varWidth)
                 doBindAndTrail(var, vPtr, makeTaggedRef(tPtr));
             else
                 doBind(tPtr, makeTaggedRef(vPtr));
@@ -505,7 +504,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         if (vLoc && tLoc) {
             otherVar->relinkSuspListTo(newVar);
         } else if (vLoc && !tLoc) {
-            if (globConstrained) {
+            if (mergeWidth>termWidth) {
                 Suspension* susp=new Suspension(am.currentBoard);
                 Assert(susp!=NULL);
                 termVar->addSuspension(susp);
@@ -513,7 +512,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
                 relinkSuspListTo(termVar);
             }
         } else if (!vLoc && tLoc) {
-            if (globConstrained) {
+            if (mergeWidth>varWidth) {
                 Suspension* susp=new Suspension(am.currentBoard);
                 Assert(susp!=NULL);
                 addSuspension(susp);
