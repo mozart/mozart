@@ -16,7 +16,7 @@ local
    HalfWidth       = LoadWidth div 2
    Border          = 5
    BlackTickSize   = 4 
-   Height          = 70
+   Height          = 60
 
    FontFamily      = '-*-helvetica-medium-r-normal--*-'
    FontMatch       = '-*-*-*-*-*-*'

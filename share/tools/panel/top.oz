@@ -251,34 +251,43 @@ in
 	    Menu  = {TkTools.menubar EventFrame self
 		     [menubutton(text:    ' Panel '
 				 feature: panel
+				 font:    BoldFont
 				 menu:
 		        [command(label:   'About...'
 				 action:  self # about
+				 font:    BoldFont
 				 feature: about)
 			 separator
 			 command(label:   'Reset'
 				 key:     ctrl(r)
+				 font:    BoldFont
 				 action:  self # clear)
 			 separator
 			 command(label:   'Shutdown System...'
 				 action:  self # shutdown
+				 font:    BoldFont
 				 feature: shutdown)
 			 separator
 			 command(label:   'Close'
 				 action:  self # tkClose
+				 font:    BoldFont
 				 key:     ctrl(x))])
 		      menubutton(text:    ' Options '
+				 font:    BoldFont
 				 feature: options
 				 menu:
 		         [checkbutton(label: 'Configure'
+				      font:    BoldFont
 				      variable: {New Tk.variable
 						 tkInit(Config)}
 				      action: self # toggleInfo)
 			  separator
 			  command(label:  'Update...'
+				  font:    BoldFont
 				  action:  self # optionUpdate
 				  feature: update)
 			  command(label:  'History...'
+				  font:    BoldFont
 				  action:  self # optionHistory
 				  feature: history)])
 		     ]
@@ -288,7 +297,8 @@ in
 	    Frame = {New Tk.frame tkInit(parent: EventFrame
 					 highlightthickness: 0
 					 bd:                 4)}
-	    Book  = {New TkTools.notebook tkInit(parent: Frame)}
+	    Book  = {New TkTools.notebook tkInit(parent:Frame
+						 font:BoldFont)}
 	    Threads =
 	    {MakePage ThreadPage 'Threads' Book self true
 	     [frame(text:    'Runtime'
@@ -338,15 +348,17 @@ in
 		    feature: priorities
 		    pack:    Config
 		    left:
-		       [scale(text:    'High / Medium:'
+		       [entry(text:    'High / Medium:'
 			      feature: high
-			      state:   {System.get priorities}.high
+			      max:     100
+			      init:    {System.get priorities}.high
 			      action:  proc {$ N}
 					  {System.set priorities(high:N)}
 				       end)
-			scale(text:    'Medium / Low:'
+			entry(text:    'Medium / Low:'
 			      feature: medium
-			      state:   {System.get priorities}.medium
+			      max:     100
+			      init:    {System.get priorities}.medium
 			      action:  proc {$ N}
 					  {System.set priorities(medium:N)}
 				       end)]
@@ -386,11 +398,34 @@ in
 		    feature: parameter
 		    pack:    Config
 		    left:
-		       [scale(text:    'Maximal Size Limit:'
-			      feature: maxSize
-			      range:   1#1024
+		       [entry(text:    'Minimal Size:'
+			      feature: minSize
+			      min:     1
+			      max:     1024
 			      dim:     'MB'
-			      state:   local MS={System.get gc}.max in
+			      init:    {System.get gc}.min div MegaByteI
+			      action:  proc {$ N}
+					  S = Memory.options.parameter.maxSize
+				       in
+					  case {S get($)}<N then {S set(N)}
+					  else skip end
+					  {System.set gc(min: N * MegaByteI)}
+				       end)
+			entry(text:    'Free:'
+			      feature: free
+			      max:     100
+			      init:    {System.get gc}.free
+			      side:    right
+			      action:  proc {$ N}
+					  {System.set gc(free: N)}
+				       end
+			      dim:     '%')
+			entry(text:    'Maximal Size:'
+			      feature: maxSize
+			      min:     1
+			      max:     1024
+			      dim:     'MB'
+			      init:    local MS={System.get gc}.max in
 					  case MS=<0 then 1024
 					  else MS div MegaByteI
 					  end
@@ -402,29 +437,12 @@ in
 					  else skip end
 					  {System.set gc(max: N * MegaByteI)}
 				       end)
-			scale(text:    'Minimal Size Limit:'
-			      feature: minSize
-			      range:   1#1024
-			      dim:     'MB'
-			      state:   {System.get gc}.min div MegaByteI
-			      action:  proc {$ N}
-					  S = Memory.options.parameter.maxSize
-				       in
-					  case {S get($)}<N then {S set(N)}
-					  else skip end
-					  {System.set gc(min: N * MegaByteI)}
-				       end)
-			scale(text:    'Free:'
-			      feature: free
-			      state:   {System.get gc}.free
-			      action:  proc {$ N}
-					  {System.set gc(free: N)}
-				       end
-			      dim:     '%')
-			scale(text:    'Tolerance:'
-			      feature: tolerance	    
+			entry(text:    'Tolerance:'
+			      feature: tolerance
+			      max:     100
 			      dim:     '%'
-			      state:   {System.get gc}.tolerance
+			      side:    right
+			      init:    {System.get gc}.tolerance
 			      action:  proc {$ N}
 					  {System.set gc(tolerance: N)}
 				       end)]
@@ -463,10 +481,10 @@ in
 		    feature: showParameter
 		    pack:    {Not Config}
 		    left:
-		       [size(text:    'Maximal Size Limit:'
+		       [size(text:    'Maximal Size:'
 			     feature: maxSize
 			     dim:     'MB')
-			size(text:    'Minimal Size Limit:'
+			size(text:    'Minimal Size:'
 			     feature: minSize
 			     dim:     'MB')]
 		    right: nil)
@@ -537,18 +555,16 @@ in
 	       frame(text:    'Output'
 		     feature: output
 		     left:
-			[entry(text:    'Maximal Print Depth:'
+			[entry(text:    'Maximal Depth:'
 			       feature: depth
 			       action:  proc {$ N}
 					   {System.set print(depth: N)}
-					end
-			       top:     self)
-			 entry(text:    'Maximal Print Width:'
+					end)
+			 entry(text:    'Maximal Width:'
 			       feature: width
 			       action:  proc {$ N}
 					   {System.set print(width: N)}
-					end
-			       top:     self)]
+					end)]
 		     right:
 			[button(text:    'Default'
 				feature: default
@@ -573,24 +589,22 @@ in
 				     action:  proc {$ B}
 						 {System.set errors(hints:B)}
 					      end)
-			 entry(text:    'Maximal Tasks:'
-			       feature: 'thread'
-			       action:  proc {$ N}
-					   {System.set errors('thread': N)}
-					end
-			       top:     self)
-			 entry(text:    'Maximal Print Depth:'
+			 entry(text:    'Maximal Depth:'
 			       feature: depth
 			       action:  proc {$ N}
 					   {System.set errors(depth: N)}
-					end
-			       top:     self)
-			 entry(text:    'Maximal Print Width:'
+					end)
+			 entry(text:    'Maximal Tasks:'
+			       feature: 'thread'
+			       side:    right
+			       action:  proc {$ N}
+					   {System.set errors('thread': N)}
+					end)
+			 entry(text:    'Maximal Width:'
 			       feature: width
 			       action:  proc {$ N}
 					   {System.set errors(width: N)}
-					end
-			       top:     self)]
+					end)]
 		     right:
 			[button(text:    'Default'
 				feature: default
