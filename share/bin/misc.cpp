@@ -5,7 +5,7 @@
 #include <process.h>
 #include <io.h>
 
-#include "../include/config.h"
+#include "version.h"
 
 #ifndef X_OK
 #define X_OK 0
