@@ -35,7 +35,7 @@
 /* HACK ALERT: */
 #define PERDIOMAGICSTART       31
 
-#define PERDIOMINOR      "14"
+#define PERDIOMINOR      "15"
 #define PERDIOMAJOR      OZVERSION
 #define PERDIOVERSION    PERDIOMAJOR "#" PERDIOMINOR
 
@@ -79,7 +79,6 @@ typedef enum {
   DIF_SITE_PERM,
   DIF_PASSIVE,
   DIF_COPYABLENAME,
-  DIF_ATOMNOREF,
   DIF_LAST
 } MarshalTag;
 
@@ -121,7 +120,6 @@ const struct {MarshalTag tag; char *name;} dif_names[] = {
   { DIF_SITE_PERM,    "SITE_PERM"},
   { DIF_PASSIVE,      "PASSIVE"},
   { DIF_COPYABLENAME, "COPYABLENAME"},
-  { DIF_ATOMNOREF,    "ATOMNOREF"},
   { DIF_LAST,         "LAST"}
 };
 
@@ -136,6 +134,8 @@ const struct {MarshalTag tag; char *name;} dif_names[] = {
 #define TAG_COMMENT   '#'
 #define TAG_CODESTART 'C'
 #define TAG_CODEEND   'c'
+#define TAG_TERMREF   'T'
+#define TAG_TERMDEF   't'
 #define TAG_EOF       -1
 
 
@@ -156,5 +156,9 @@ void marshalByte(unsigned char c, MsgBuffer *bs);
 void marshalString(const char *s, MsgBuffer *bs);
 void marshalLabel(int start, int lbl, MsgBuffer *bs);
 void marshalLabelDef(char *lbl, MsgBuffer *bs);
+void marshalTermDef(int lbl, MsgBuffer *bs);
+void marshalTermRef(int lbl, MsgBuffer *bs);
+
+void splitversion(char *vers, char *&major, int &minordiff);
 
 #endif /* __PICKLEH */

@@ -237,3 +237,39 @@ void marshalCodeEnd(MsgBuffer *bs)
     putTag(TAG_CODEEND,bs);
   }
 }
+
+
+void marshalTermDef(int lbl, MsgBuffer *bs)
+{
+  if (bs->textmode()) {
+    putTag(TAG_TERMDEF,bs);
+    putNumber(lbl,bs);
+  } else {
+    marshalNumber(lbl,bs);
+  }
+}
+
+void marshalTermRef(int lbl, MsgBuffer *bs)
+{
+  if (bs->textmode()) {
+    putTag(TAG_TERMREF,bs);
+    putNumber(lbl,bs);
+  } else {
+    marshalNumber(lbl,bs);
+  }
+}
+
+
+
+void splitversion(char *vers, char *&major, int &minordiff)
+{
+  major = vers;
+  char *minor = strrchr(vers,'#');
+  if (minor) {
+    minor++;
+  } else {
+    minor = "0";
+  }
+  minordiff = atoi(PERDIOMINOR) - atoi(minor);
+}
+
