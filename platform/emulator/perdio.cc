@@ -107,6 +107,7 @@
 #include "perdiovar.hh"
 #include "gc.hh"
 #include "dictionary.hh"
+#include "urlc.hh"
 
 typedef long Credit;  /* TODO: full credit,long credit? */
 
@@ -2281,7 +2282,7 @@ void PerdioVar::addSuspPerdioVar(Thread *el)
   if (isURL()) {
     int ret=loadURL(getURL(),oz_newVariable());
     if (ret != PROCEED) {
-      warning("mm2: load URL failed not impl");
+      warning("mm2: load URL %s failed not impl",toC(getURL()));
     }
   }
 }
@@ -5635,20 +5636,11 @@ int loadURL(TaggedRef url, OZ_Term out)
 }
 
 
-int loadFile(char *filename,OZ_Term out)
+int loadFD(int fd, OZ_Term out)
 {
-  int fd = strcmp(filename,"-")==0 ? STDIN_FILENO : open(filename,O_RDONLY);
-  if (fd < 0) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",3,
-                    oz_atom("open"),
-                    oz_atom(OZ_unixError(errno)),
-                    oz_atom(filename));
-  }
-
   if (skipHeader(fd)==NO) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",2,
-                    oz_atom("magicHeaderNotFound"),
-                    oz_atom(filename));
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",1,
+                    oz_atom("magicHeaderNotFound"));
   }
 
   ByteStream *bs=bufferManager->getByteStream();
@@ -5663,10 +5655,9 @@ int loadFile(char *filename,OZ_Term out)
     if (ret < 0) {
       if (errno==EINTR) continue;
       close(fd);
-      return oz_raise(E_ERROR,OZ_atom("perdio"),"load",3,
+      return oz_raise(E_ERROR,OZ_atom("perdio"),"load",2,
                       oz_atom("read"),
-                      oz_atom(OZ_unixError(errno)),
-                      oz_atom(filename));
+                      oz_atom(OZ_unixError(errno)));
     }
     len+=ret;
     if (ret < max) {
@@ -5680,9 +5671,8 @@ int loadFile(char *filename,OZ_Term out)
   close(fd);
 
   if (len==0) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",2,
-                    oz_atom("fileEmpty"),
-                    oz_atom(filename));
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",1,
+                    oz_atom("fileEmpty"));
   }
   bs->beforeInterpret(0);
   bs->unmarshalBegin();
@@ -5710,6 +5700,20 @@ int loadFile(char *filename,OZ_Term out)
   SiteUnify(val,out);
   return PROCEED;
 }
+
+int loadFile(char *filename,OZ_Term out)
+{
+  int fd = strcmp(filename,"-")==0 ? STDIN_FILENO : open(filename,O_RDONLY);
+  if (fd < 0) {
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",3,
+                    oz_atom("open"),
+                    oz_atom(OZ_unixError(errno)),
+                    oz_atom(filename));
+  }
+
+  return loadFD(fd,out);
+}
+
 
 int loadURL(char *url, OZ_Term out)
 {
@@ -5790,6 +5794,11 @@ int loadURL(char *url, OZ_Term out)
     }
   }
 bomb:
+
+  int fd = openUrl(url);
+  if (fd >= 0) {
+    return loadFD(fd,out);
+  }
   if (!loadHook) {
     return oz_raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
                     oz_atom("loadHook"));
