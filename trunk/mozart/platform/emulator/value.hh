@@ -32,7 +32,7 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
 
        NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,
        NameOoFastMeth,NameOoDefaults,NameOoRequiredArg,NameOoDefaultVar,
-       NameOoPrintName,
+       NameOoPrintName,NameOoLocking,
 
        NameUnit,
        AtomKinded, AtomDet, AtomRecord, AtomFSet, 
@@ -1216,11 +1216,12 @@ public:
 
   ObjectClass *gcClass();
 
-  void import(OzDictionary *fm, SRecord *uf, OzDictionary *dm)
+  void import(OzDictionary *fm, SRecord *uf, OzDictionary *dm, Bool l)
   {
     fastMethods    = fm;
     unfreeFeatures = uf;
     defaultMethods = dm;
+    locking        = l;
   }
 
   OZPRINT;
@@ -1904,7 +1905,7 @@ public:
   OZPRINT;
   OZPRINTLONG;       
 
-  CellFrame():Tertiary(NULL,Co_Cell,Te_Frame){Assert(0);}
+  CellFrame():Tertiary((Board*)NULL,Co_Cell,Te_Frame){Assert(0);}
   short getState(){
     Assert(sec!=NULL);
     return sec->state;}
