@@ -28,7 +28,7 @@ CACHE_TARGETS   = $(CACHEDIR)/TextPickle.ozf \
 .PHONY: all install clean veryclean distclean bootstrap depend
 
 %.ozf: %.ozg
-        OZTOOL="$(OZTOOL)" \
+        OZTOOL=$(shell $(CYGPATH) "$(OZTOOL)") \
         $(OZC) -z 9 --gump $(OZCFLAGS) -c $(shell $(CYGPATH) "$<") -o $@
 
 all: $(TARGETS)
