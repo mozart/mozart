@@ -48,16 +48,9 @@ else
     echo "Using $OZEMULATOR"
 fi
 
-case "$cmd" in
-   oz-debug)	OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin.debug
-		export OZEMULATOR
-		cmd=oz
-esac
 
 # set OZCOMPILER
-if [ ${OZCOMPILER-xx} = xx ]; then
-   OZCOMPILER=$OZHOME/platform/$OZPLATFORM/oz.compiler.bin
-fi
+${OZCOMPILER=$OZHOME/platform/$OZPLATFORM/oz.compiler.bin}
 
 # set OZPATH & PATH
 if [ X$cmd = Xoze -o ${OZ_PI-xx} = xx ]; then
@@ -72,18 +65,6 @@ if [ X$cmd = Xoze -o ${OZ_PI-xx} = xx ]; then
   export MANPATH
   OZ_PI=1
   export OZ_PI
-fi
-
-# load fonts
-if [ -d ${OZHOME}/lib/fonts ]; then 
-   xset +fp ${OZHOME}/lib/fonts
-fi
-
-
-# setting line editor
-: ${OZILE=xxx}
-if [ ! -f $OZILE -o ${TERM-xx} = emacs ]; then
-   OZILE=""  # running under emacs
 fi
 
 # where is Emacs?
@@ -139,7 +120,7 @@ case "$cmd" in
 
    ozsa)    exec $OZEMULATOR "$@" ;;
 
-   oz-)     exec $OZILE $OZCOMPILER "$@" ;;
+   oz-)     exec $OZCOMPILER "$@" ;;
 
    ozdo)    exec "$@" ;;
 
@@ -187,7 +168,7 @@ case "$cmd" in
 	else
           exec xterm -name "OzCompiler" \
                -T "Oz Compiler Input Window" \
-	       -e $OZILE $OZCOMPILER `echo $* |  sed -e 's/-/+/g'`
+	       -e $OZCOMPILER `echo $* |  sed -e 's/-/+/g'`
         fi
    ;;
 
