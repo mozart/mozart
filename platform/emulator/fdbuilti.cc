@@ -810,5 +810,9 @@ void BIinitFD()
   BIadd("fdCardBIBin_body", 2, BIfdCardBIBin_body);
   BIadd("fdCardNestableBIBin", 3, BIfdCardNestableBIBin); 
   BIadd("fdCardNestableBIBin_body", 3, BIfdCardNestableBIBin_body);
+  BIadd("fdCDManagerUnion", 4, BIfdCDManagerUnion); 
+  BIadd("fdCDManagerUnion_body", 4, BIfdCDManagerUnion_body);
+  BIadd("fdCDManagerIntersection", 4, BIfdCDManagerIntersection); 
+  BIadd("fdCDManagerIntersection_body", 4, BIfdCDManagerIntersection_body);
 }
 

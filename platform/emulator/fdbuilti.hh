@@ -233,6 +233,8 @@ OZ_C_proc_proto(BIfdNotInKillB);
 OZ_C_proc_proto(BIfdCardNestableBIBin);
 OZ_C_proc_proto(BIfdGenLinEqKillB);
 OZ_C_proc_proto(BIfdGenLinLessEqKillB);
+OZ_C_proc_proto(BIfdCDManagerUnion);
+OZ_C_proc_proto(BIfdCDManagerIntersection);
 
 // fdwatch.cc
 OZ_C_proc_proto(BIfdWatchDom1);
@@ -308,6 +310,8 @@ OZ_C_proc_proto(BIfdInKillB_body);
 OZ_C_proc_proto(BIfdNotInKillB_body);
 OZ_C_proc_proto(BIfdGenLinEqKillB_body);
 OZ_C_proc_proto(BIfdGenLinLessEqKillB_body);
+OZ_C_proc_proto(BIfdCDManagerUnion_body);
+OZ_C_proc_proto(BIfdCDManagerIntersection_body);
 
 //-----------------------------------------------------------------------------
 // Prototypes for Heads of Built-ins
@@ -350,6 +354,14 @@ OZ_Bool genericHead_x_D_d(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
 
 OZ_Bool genericHead_x_c_d_e(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
 			    OZ_CFun BI_body, FDPropState target_list);
+
+OZ_Bool genericHead_cd(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
+		       OZ_CFun BI_body, FDPropState target_list);
+
+OZ_Bool genericHead_cdIntersect(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
+				OZ_CFun BI_body, FDPropState target_list);
+
+
 
 //-----------------------------------------------------------------------------
 // Auxiliary stuff
