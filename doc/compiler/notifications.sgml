@@ -14,19 +14,17 @@
     <Title/Query Queue Notifications/
     <P>
       <List>
-        <Entry><<newQuery(?_{Id} ?_{M})>>
+        <Entry><<newQuery(?_{I} ?_{T})>>
         <Item>
-          A new query ?_{M} with identification number ?_{Id} has been
-          enqueued.
-        <Entry><<runQuery(?_{Id} ?_{M})>>
+          A new query ?_{T} with identification ?_{I} has been enqueued.
+        <Entry><<runQuery(?_{I} ?_{T})>>
         <Item>
-          The query ?_{M} with identification number ?_{Id} is now
-          being executed.
-        <Entry><<removeQuery(?_{Id})>>
+          The query ?_{T} with identification ?_{I} is now being executed.
+        <Entry><<removeQuery(?_{I})>>
         <Item>
-          The query with identification number ?_{Id} has been removed
-          from the query queue, either because it finished executing
-          or because it was dequeued by a user program.
+          The query with identification ?_{I} has been removed from the query
+          queue, either because it finished executing or because it was
+          dequeued by a user program.
       </List>
   <Section>
     <Title/Compiler Activity Notifications/
@@ -44,16 +42,17 @@
     <Title/Compiler State Change Notifications/
     <P>
       <List>
-        <Entry><<switch(?_{SwitchName} ?_{B})>>
+        <Entry><<switch(?_{A} ?_{B})>>
         <Item>
-          The switch named ?_{SwitchName} has been set to ?_{B}.
-        <Entry><<switches(?_{Rec})>>
+          The switch named&nbsp;?_{A} has been set to&nbsp;?_{B}.
+        <Entry><<switches(?_{R})>>
         <Item>
-          The settings of all switches is transmitted.
-        <Entry><<maxNumberOfErrors(?_{N})>>
+          The settings of all switches is transmitted as a record mapping
+          each switch name to its setting.
+        <Entry><<maxNumberOfErrors(?_{I})>>
         <Item>
           The maximum number of errors after which to abort compilation
-          has been set to ?_{N}.
+          has been set to ?_{I}.
         <Entry><<env(?_{Env})>>
         <Item>
           The environment has been set to ?_{Env}.
@@ -62,29 +61,29 @@
     <Title/Compiler Output Notificiations/
     <P>
       <List>
-        <Entry><<info(?_{VS})>>
+        <Entry><<info(?_{V})>>
         <Item>
-          An information message ?_{VS} is to be output.
-        <Entry><<info(?_{VS} ?_{Coord})>>
+          An information message&nbsp;?_{V} is to be output.
+        <Entry><<info(?_{V} ?_{Coord})>>
         <Item>
-          An information message ?_{VS}, related to the source coordinates
+          An information message&nbsp;?_{V}, related to the source coordinates
           ?_{Coord}, is to be output.
-        <Entry><<message(?_{Record} ?_{Coord})>>
+        <Entry><<message(?_{R} ?_{Coord})>>
         <Item>
-          An error or warning message ?_{Record}, related to the source
-          coordinates ?_{Coord}, is to be output.  ?_{Record} has the
+          An error or warning message&nbsp;?_{R}, related to the source
+          coordinates ?_{Coord}, is to be output.  ?_{R}&nbsp;has the
           standard error message format, described in
           <File>mozart/share/lib/sp/Error.oz</File>.
-        <Entry><<insert(?_{FilenameVS} ?_{Coord})>>
+        <Entry><<insert(?_{V} ?_{Coord})>>
         <Item>
-          During parsing, the file named ?_{FilenameVS} has been read.
+          During parsing, the file named&nbsp;?_{V} has been read.
           The corresponding <<\insert>> directive (if any) was at source
           coordinates ?_{Coord}.
-        <Entry><<displaySource(?_{TitleVS} ?_{ExtVS} ?_{VS})>>
+        <Entry><<displaySource(?_{TitleV} ?_{ExtV} ?_{V})>>
         <Item>
-          A source text ?_{VS} with title ?_{TitleVS} is to be displayed;
-          its format is the one for which the file extension ?_{ExtVS} is
-          typically used (such as <File/oz/ or <File/ozm/).
+          A source text&nbsp;?_{V} with title&nbsp;?_{TitleV} is to be
+          displayed; its format is the one for which the file extension
+          ?_{ExtV} is typically used (such as <File/oz/ or <File/ozm/).
         <Entry><<attention()>>
         <Item>
           The error output buffer should be raised with the cursor at
