@@ -44,7 +44,7 @@ EMACS           = emacs
 
 SUBDIRS         = @SUBDIRS@
 
-.PHONY: all quick bootstrap check install clean veryclean distclean depend installps $(DOCDIR)/idx
+.PHONY: all quick bootstrap check install clean veryclean distclean depend installps $(DOCDIR)/idx idx/index.html
 
 all bootstrap:: $(CED)
 
