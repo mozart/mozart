@@ -109,171 +109,173 @@ OZ_Return OzFDVariable::bind(TaggedRef * vPtr, TaggedRef term)
 OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
 {
   DEBUG_CONSTRAIN_CVAR(("unifyFD "));
-
+  //
   OZ_Term right_var       = *right_varptr;
   OzVariable * right_cvar = tagged2CVar(right_var);
-
-  // this assertion is not valid anymore
+  //
   if (right_cvar->getType() == OZ_VAR_BOOL) {
     DEBUG_CONSTRAIN_CVAR(("branch to OzBoolVariable::unify\n"));
     return ((OzBoolVariable *)right_cvar)->unify(right_varptr, left_varptr);
   }
-
+  OzFDVariable * right_fdvar = (OzFDVariable *) right_cvar;
+  Bool left_var_is_local     = oz_isLocalVar(this);
+  Bool right_var_is_local    = oz_isLocalVar(right_fdvar);
+  //
+  if (!left_var_is_local && right_var_is_local) {
+    DEBUG_CONSTRAIN_CVAR(("global-local (swapping)"));
+    //
+    // left variable is global and right variable is local
+    //
+    // swap variables to be unified and recurse
+    return unify(right_varptr, left_varptr);
+  }
+  //
   if (right_cvar->getType() != OZ_VAR_FD) {
     goto failed;
   }
+  //
   {
     // compute intersection of domains ...
-    OzFDVariable * right_fdvar   = (OzFDVariable *) right_cvar;
     OZ_FiniteDomain &right_dom   = right_fdvar->finiteDomain;
     OZ_FiniteDomain intersection = finiteDomain & right_dom;
     //
     if (intersection == fd_empty) {
       goto failed;
     }
-    {
-      Bool left_var_is_local  = oz_isLocalVar(this);
-      Bool right_var_is_local = oz_isLocalVar(right_fdvar);
-      // 
-      if (left_var_is_local && right_var_is_local) {
-	DEBUG_CONSTRAIN_CVAR(("local-local"));
-	//
-	// left and right variable are local
-	//
-	if (intersection == fd_singl) {
-	  // intersection is singleton
-	  OZ_Term int_var = newSmallInt(intersection.getSingleElem());
-	  // wake up 
-	  right_fdvar->propagateUnify();
-	  propagateUnify();
-	  // bind variables to integer value
-	  bindLocalVarToValue(left_varptr, int_var);
-	  bindLocalVarToValue(right_varptr, int_var);
-	  // dispose variables
-	  dispose();
-	  right_fdvar->dispose();
-	} else if (heapNewer(left_varptr, right_varptr)) {
-	  // bind left variable to right variable
-	  if (intersection == fd_bool) {
-	    // intersection has boolean domain
-	    OzBoolVariable * right_boolvar = right_fdvar->becomesBool();
-	    propagateUnify();
-	    right_boolvar->propagateUnify();
-	    relinkSuspListTo(right_boolvar);
-	    bindLocalVar(left_varptr, right_varptr);
-	  } else {
-	    // intersection has proper domain
-	    right_fdvar->setDom(intersection);
-	    propagateUnify();
-	    right_fdvar->propagateUnify();
-	    relinkSuspListTo(right_fdvar);
-	    bindLocalVar(left_varptr, right_varptr);
-	  }
-	  // dispose left_var
-	  dispose();
-	} else {
-	  // bind right variable to left variable
-	  if (intersection == fd_bool) {
-	    // intersection has boolean domain
-	    OzBoolVariable * left_boolvar = becomesBool();
-	    right_fdvar->propagateUnify();
-	    left_boolvar->propagateUnify();
-	    right_fdvar->relinkSuspListTo(left_boolvar);
-	    bindLocalVar(right_varptr, left_varptr);
-	  } else {
-	    // intersection has proper domain
-	    setDom(intersection);
-	    right_fdvar->propagateUnify();
-	    propagateUnify();
-	    right_fdvar->relinkSuspListTo(this);
-	    bindLocalVar(right_varptr, left_varptr);
-	  }
-	  // dispose right_var
-	  right_fdvar->dispose();
-	}
-      } else if (left_var_is_local && !right_var_is_local) {
-	DEBUG_CONSTRAIN_CVAR(("local-global"));
-	//
-	// left variable is local and right variable is global
-	//
-	if (intersection == fd_singl) {
-	  // intersection is singleton
-	  OZ_Term int_var = newSmallInt(intersection.getSingleElem());
-	  right_fdvar->propagateUnify();
-	  propagateUnify();
-	  bindLocalVarToValue(left_varptr, int_var);
-	  bindGlobalVarToValue(right_varptr, int_var);
-	  // dispose left_var
-	  dispose();
-	} else if (intersection== fd_bool) {
+    // 
+    if (left_var_is_local && right_var_is_local) {
+      DEBUG_CONSTRAIN_CVAR(("local-local"));
+      //
+      // left and right variable are local
+      //
+      if (intersection == fd_singl) {
+	// intersection is singleton
+	OZ_Term int_var = newSmallInt(intersection.getSingleElem());
+	// wake up 
+	right_fdvar->propagateUnify();
+	propagateUnify();
+	// bind variables to integer value
+	bindLocalVarToValue(left_varptr, int_var);
+	bindLocalVarToValue(right_varptr, int_var);
+	// dispose variables
+	dispose();
+	right_fdvar->dispose();
+      } else if (heapNewer(left_varptr, right_varptr)) {
+	// bind left variable to right variable
+	if (intersection == fd_bool) {
 	  // intersection has boolean domain
-	  Board * right_fdvar_home = right_fdvar->getBoardInternal();
-	  OzBoolVariable * right_boolvar = new OzBoolVariable(right_fdvar_home);
-	  OZ_Term * right_varptr_bool =
-	    newTaggedCVar(new OzBoolVariable(right_fdvar_home));
-	  // wake up
-	  right_fdvar->propagateUnify();
+	  OzBoolVariable * right_boolvar = right_fdvar->becomesBool();
 	  propagateUnify();
-	  // cast and bind
-	  castGlobalVar(right_varptr, right_varptr_bool);
-	  bindLocalVar(left_varptr, right_varptr_bool);
-	} else {
-	  // intersection has proper domain
-	  right_fdvar->propagateUnify();
-	  if (intersection.getSize() < right_dom.getSize()) {
-	    // intersection constrains domain of global variable
-	    constrainGlobalVar(right_varptr, intersection);
-	  }
-	  propagateUnify();
+	  right_boolvar->propagateUnify();
+	  relinkSuspListTo(right_boolvar);
 	  bindLocalVar(left_varptr, right_varptr);
-	  // dispose local variable
-	  dispose();
-	}
-      } else if (!left_var_is_local && right_var_is_local) {
-	DEBUG_CONSTRAIN_CVAR(("global-local"));
-	//
-	// left variable is global and right variable is local
-	//
-	// swap variables to be unified and recurse
-	return unify(right_varptr, left_varptr);
-      } else {
-	DEBUG_CONSTRAIN_CVAR(("global-global"));
-	//
-	// left and right variable are global
-	//
-	Assert(!left_var_is_local && !right_var_is_local);
-	//
-	// note bind from left to right since left var is more local than
-	// right one (important for stablity/space merging)
-	//
-	if (intersection == fd_singl){
-	  // intersection is singleton
-	  OZ_Term int_val = newSmallInt(intersection.getSingleElem());
-	  propagateUnify();
-	  right_fdvar->propagateUnify();
-	  bindGlobalVarToValue(left_varptr, int_val);
-	  bindGlobalVarToValue(right_varptr, int_val);
-	} else if (intersection == fd_bool) {
-	  // intersection has boolean domain
-	  Board * right_fdvar_home = right_fdvar->getBoardInternal();
-	  OzBoolVariable * right_boolvar =
-	    new OzBoolVariable(right_fdvar_home);
-	  OZ_Term * right_varptr_bool =
-	    newTaggedCVar(new OzBoolVariable(right_fdvar_home));
-	  //
-	  propagateUnify();
-	  right_fdvar->propagateUnify();
-	  // bind left variable to right variable ..
-	  bindGlobalVar(left_varptr, right_varptr);
-	  // .. and cast right variable to boolean variable
-	  castGlobalVar(right_varptr, right_varptr_bool);
 	} else {
 	  // intersection has proper domain
+	  right_fdvar->setDom(intersection);
 	  propagateUnify();
 	  right_fdvar->propagateUnify();
-	  // bind left variable to right variable ..
-	  bindGlobalVar(left_varptr, right_varptr);
-	  //
+	  relinkSuspListTo(right_fdvar);
+	  bindLocalVar(left_varptr, right_varptr);
+	}
+	// dispose left_var
+	dispose();
+      } else {
+	// bind right variable to left variable
+	if (intersection == fd_bool) {
+	  // intersection has boolean domain
+	  OzBoolVariable * left_boolvar = becomesBool();
+	  right_fdvar->propagateUnify();
+	  left_boolvar->propagateUnify();
+	  right_fdvar->relinkSuspListTo(left_boolvar);
+	  bindLocalVar(right_varptr, left_varptr);
+	} else {
+	  // intersection has proper domain
+	  setDom(intersection);
+	  right_fdvar->propagateUnify();
+	  propagateUnify();
+	  right_fdvar->relinkSuspListTo(this);
+	  bindLocalVar(right_varptr, left_varptr);
+	}
+	// dispose right_var
+	right_fdvar->dispose();
+      }
+    } else if (left_var_is_local && !right_var_is_local) {
+      DEBUG_CONSTRAIN_CVAR(("local-global"));
+      //
+      // left variable is local and right variable is global
+      //
+      if (intersection == fd_singl) {
+	// intersection is singleton
+	OZ_Term int_var = newSmallInt(intersection.getSingleElem());
+	right_fdvar->propagateUnify();
+	propagateUnify();
+	bindLocalVarToValue(left_varptr, int_var);
+	bindGlobalVarToValue(right_varptr, int_var);
+	// dispose left_var
+	dispose();
+      } else if (intersection== fd_bool) {
+	// intersection has boolean domain
+	Board * right_fdvar_home = right_fdvar->getBoardInternal();
+	OzBoolVariable * right_boolvar = new OzBoolVariable(right_fdvar_home);
+	OZ_Term * right_varptr_bool =
+	  newTaggedCVar(new OzBoolVariable(right_fdvar_home));
+	// wake up
+	right_fdvar->propagateUnify();
+	propagateUnify();
+	// cast and bind
+	castGlobalVar(right_varptr, right_varptr_bool);
+	bindLocalVar(left_varptr, right_varptr_bool);
+      } else {
+	// intersection has proper domain
+	right_fdvar->propagateUnify();
+	if (intersection.getSize() < right_dom.getSize()) {
+	  // intersection constrains domain of global variable
+	  constrainGlobalVar(right_varptr, intersection);
+	}
+	propagateUnify();
+	bindLocalVar(left_varptr, right_varptr);
+	// dispose local variable
+	dispose();
+      }
+    } else {
+      DEBUG_CONSTRAIN_CVAR(("global-global"));
+      //
+      // left and right variable are global
+      //
+      Assert(!left_var_is_local && !right_var_is_local);
+      //
+      // note bind from left to right since left var is more local than
+      // right one (important for stablity/space merging)
+      //
+      if (intersection == fd_singl){
+	// intersection is singleton
+	OZ_Term int_val = newSmallInt(intersection.getSingleElem());
+	propagateUnify();
+	right_fdvar->propagateUnify();
+	bindGlobalVarToValue(left_varptr, int_val);
+	bindGlobalVarToValue(right_varptr, int_val);
+      } else if (intersection == fd_bool) {
+	// intersection has boolean domain
+	Board * right_fdvar_home = right_fdvar->getBoardInternal();
+	OzBoolVariable * right_boolvar =
+	  new OzBoolVariable(right_fdvar_home);
+	OZ_Term * right_varptr_bool =
+	  newTaggedCVar(new OzBoolVariable(right_fdvar_home));
+	//
+	propagateUnify();
+	right_fdvar->propagateUnify();
+	// bind left variable to right variable ..
+	bindGlobalVar(left_varptr, right_varptr);
+	// .. and cast right variable to boolean variable
+	castGlobalVar(right_varptr, right_varptr_bool);
+      } else {
+	// intersection has proper domain
+	propagateUnify();
+	right_fdvar->propagateUnify();
+	// bind left variable to right variable ..
+	bindGlobalVar(left_varptr, right_varptr);
+	//
+	if (intersection.getSize() < right_dom.getSize()) {
 	  constrainGlobalVar(right_varptr, intersection);
 	}
       }
