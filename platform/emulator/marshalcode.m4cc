@@ -165,10 +165,10 @@ ProgramCounter writeAddress(void *ptr,ProgramCounter PC)
 
 void marshalPredicateRef(AbstractionEntry *entry,MsgBuffer *bs)
 {
-  Bool dupOnload = entry && entry->dupOnload; 
-  marshalNumber(dupOnload,bs);
-  if (dupOnload) {
-    if (checkCycle(ToInt32(entry->indexTable),bs)) return;    
+  Bool copyable = entry && entry->copyable;
+  marshalNumber(copyable,bs);
+  if (copyable) {
+    if (checkCycle(ToInt32(entry->indexTable),bs)) return;
     marshalDIF(bs,DIF_ABSTRENTRY);
     trailCycle((OZ_Term *)&entry->indexTable, bs,0);
   } else {
@@ -180,15 +180,15 @@ void marshalPredicateRef(AbstractionEntry *entry,MsgBuffer *bs)
 ProgramCounter unmarshalPredicateRef(ProgramCounter PC,MsgBuffer *bs)
 {
   AbstractionEntry *entry = 0;
-  Bool dupOnload = unmarshalNumber(bs);
-  if (dupOnload) {
+  Bool copyable = unmarshalNumber(bs);
+  if (copyable) {
     MarshalTag tag = (MarshalTag) bs->get();
     if (tag==DIF_REF) {
       int i = unmarshalNumber(bs);
       entry = (AbstractionEntry*) ToPointer(refTable->get(i));
     } else {
       Assert(tag==DIF_ABSTRENTRY);
-      entry = new AbstractionEntry(NO);
+      entry = new AbstractionEntry(OK);
       gotRef(bs,ToInt32(entry));
     }
   }
@@ -237,10 +237,10 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
     /* fastcalls need special handling */
     if (op==FASTCALL || op==FASTTAILCALL) {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC);
-      Abstraction *abstr = entry->getAbstr();
-      if (!entry->dupOnload) {
+      if (!entry->copyable) {
 	PD((MARSHAL,"marshalledfastcall"));
 	bs->put(MARSHALLEDFASTCALL);
+	Abstraction *abstr = entry->getAbstr();
 	marshalTerm(makeTaggedConst(abstr),bs);
 	Bool istailcall = (op==FASTTAILCALL);
 	marshalNumber((entry->getArity()<<1)|istailcall,bs);
