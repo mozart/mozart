@@ -1118,10 +1118,10 @@ fi
 if test "${enable_fun}" = no; then
     echo "$ac_t""no" 1>&6
     COMPILER_FUN=Compiler.fun
-    COMPILER_BIG=Compiler.ozc
+    COMPILER_BIG=Compiler.ozf
 else
     echo "$ac_t""yes" 1>&6
-    COMPILER_FUN=Compiler.ozc
+    COMPILER_FUN=Compiler.ozf
     COMPILER_BIG=Compiler.big
 fi
 
