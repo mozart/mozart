@@ -352,8 +352,7 @@ Bool hookCheckNeeded(AM *e)
 
 #define JUMP(absAdr) PC = absAdr; DISPATCH(0)
 
-#define ONREG1(Label,R1)     HelpReg1 = (R1); goto Label
-#define ONREG2(Label,R1,R2)  HelpReg1 = (R1); HelpReg2 = (R2)
+#define ONREG(Label,R)     HelpReg = (R); goto Label
 
 
 #ifdef FASTREGACCESS
@@ -585,6 +584,14 @@ SRecord *newSRecordOutline(Arity *ff, TaggedRef label)
             S,A1,A2,__LINE__);                                             \
     fflush(verbOut);
 
+
+/* &Var prevent Var to be allocated to a register,
+ * increases chances that variables declared as "register"
+ * will be really allocated to registers
+ */
+
+#define NoReg(Var) { void *p = &Var; }
+
 void engine() {
 
 // ------------------------------------------------------------------------
@@ -601,23 +608,23 @@ void engine() {
   register AM *e               Reg6 = &am;
   register RefsArray G         Reg7 = NULL;
 
-  int XSize = 0;
+  int XSize = 0; NoReg(XSize);
 
-  Bool isExecute = NO;
-  Suspension* &currentTaskSusp = FDcurrentTaskSusp;
+  Bool isExecute = NO; NoReg(isExecute);
+  Suspension* &currentTaskSusp = FDcurrentTaskSusp; NoReg(currentTaskSusp);
   AWActor *CAA = NULL;
-  Board *tmpBB = NULL;
+  Board *tmpBB = NULL; NoReg(tmpBB);
 
 # define CBB (e->currentBoard)
 
-  RefsArray HelpReg1 = NULL, HelpReg2 = NULL;
-  OZ_CFun biFun = NULL;
+  RefsArray HelpReg = NULL; NoReg(HelpReg);
+  OZ_CFun biFun = NULL;     NoReg(biFun);
 
   /* shallow choice pointer */
   ByteCode *shallowCP = NULL;
 
-  SRecord *predicate;
-  int predArity;
+  SRecord *predicate; NoReg(predicate);
+  int predArity;      NoReg(predArity);
 
 #ifdef CATCH_SEGV
   switch (setjmp(IO::engineEnvironment)) {
@@ -1457,17 +1464,17 @@ void engine() {
     JUMP( getLabelArg(PC+1) );
 
   INSTRUCTION(DETX)
-    ONREG1(Det,X);
+    ONREG(Det,X);
 
   INSTRUCTION(DETY)
-    ONREG1(Det,Y);
+    ONREG(Det,Y);
 
   INSTRUCTION(DETG)
-    ONREG1(Det,G);
+    ONREG(Det,G);
 
   Det:
   {
-    TaggedRef origTerm = RegAccess(HelpReg1,getRegArg(PC+1));
+    TaggedRef origTerm = RegAccess(HelpReg,getRegArg(PC+1));
     TaggedRef term = origTerm;
     DEREF(term,termPtr,tag);
 
@@ -1487,28 +1494,28 @@ void engine() {
 
   INSTRUCTION(EXECUTEMETHODX)
     isExecute = OK;
-    ONREG1(SendMethod,X);
+    ONREG(SendMethod,X);
   INSTRUCTION(EXECUTEMETHODY)
     isExecute = OK;
-    ONREG1(SendMethod,Y);
+    ONREG(SendMethod,Y);
   INSTRUCTION(EXECUTEMETHODG)
     isExecute = OK;
-    ONREG1(SendMethod,G);
+    ONREG(SendMethod,G);
 
   INSTRUCTION(SENDMETHODX)
     isExecute = NO;
-    ONREG1(SendMethod,X);
+    ONREG(SendMethod,X);
   INSTRUCTION(SENDMETHODY)
     isExecute = NO;
-    ONREG1(SendMethod,Y);
+    ONREG(SendMethod,Y);
   INSTRUCTION(SENDMETHODG)
     isExecute = NO;
-    ONREG1(SendMethod,G);
+    ONREG(SendMethod,G);
 
  SendMethod:
   {
     TaggedRef label   = getLiteralArg(PC+1);
-    TaggedRef origObj = RegAccess(HelpReg1,getRegArg(PC+2));
+    TaggedRef origObj = RegAccess(HelpReg,getRegArg(PC+2));
     TaggedRef object  = origObj;
     int arity         = getPosIntArg(PC+3);
 
@@ -1552,28 +1559,28 @@ void engine() {
 
   INSTRUCTION(METHEXECUTEX)
     isExecute = OK;
-    ONREG1(ApplyMethod,X);
+    ONREG(ApplyMethod,X);
   INSTRUCTION(METHEXECUTEY)
     isExecute = OK;
-    ONREG1(ApplyMethod,Y);
+    ONREG(ApplyMethod,Y);
   INSTRUCTION(METHEXECUTEG)
     isExecute = OK;
-    ONREG1(ApplyMethod,G);
+    ONREG(ApplyMethod,G);
 
   INSTRUCTION(METHAPPLX)
     isExecute = NO;
-    ONREG1(ApplyMethod,X);
+    ONREG(ApplyMethod,X);
   INSTRUCTION(METHAPPLY)
     isExecute = NO;
-    ONREG1(ApplyMethod,Y);
+    ONREG(ApplyMethod,Y);
   INSTRUCTION(METHAPPLG)
     isExecute = NO;
-    ONREG1(ApplyMethod,G);
+    ONREG(ApplyMethod,G);
 
  ApplyMethod:
   {
     TaggedRef label        = getLiteralArg(PC+1);
-    TaggedRef origObject   = RegAccess(HelpReg1,getRegArg(PC+2));
+    TaggedRef origObject   = RegAccess(HelpReg,getRegArg(PC+2));
     TaggedRef object       = origObject;
     int arity              = getPosIntArg(PC+3);
     Abstraction *def;
@@ -1613,33 +1620,33 @@ void engine() {
 
   INSTRUCTION(CALLX)
     isExecute = NO;
-    ONREG1(Call,X);
+    ONREG(Call,X);
 
   INSTRUCTION(CALLY)
     isExecute = NO;
-    ONREG1(Call,Y);
+    ONREG(Call,Y);
 
   INSTRUCTION(CALLG)
     isExecute = NO;
-    ONREG1(Call,G);
+    ONREG(Call,G);
 
   INSTRUCTION(EXECUTEX)
     isExecute = OK;
-    ONREG1(Call,X);
+    ONREG(Call,X);
 
   INSTRUCTION(EXECUTEY)
     isExecute = OK;
-    ONREG1(Call,Y);
+    ONREG(Call,Y);
 
   INSTRUCTION(EXECUTEG)
     isExecute = OK;
-    ONREG1(Call,G);
+    ONREG(Call,G);
 
  Call:
 
    {
      {
-       TaggedRef taggedPredicate = RegAccess(HelpReg1,getRegArg(PC+1));
+       TaggedRef taggedPredicate = RegAccess(HelpReg,getRegArg(PC+1));
        predArity = getPosIntArg(PC+2);
 
        PC = isExecute ? 0 : PC+3;
