@@ -127,8 +127,8 @@
 	feature).  We use the plural-<Q/s/ suffix to indicate lists of
 	values of a certain type.  For instance, <<Is>> stands for a list
 	of integers.  This suffix can be repeated to indicate lists of lists
-	&etc;  Additionally, these arguments can be prefixed as in <<PortI>>,
-	which indicates that the integer represents a port.
+	&etc;  Additionally, these arguments can be prefixed as in <<LowI>>,
+	which indicates that the integer represents a lower bound.
     <SubSection class=unnumbered>
       <Title/Modes/
       <Para class=apropos><Title/Modes <<+>>,<<?>>, none/

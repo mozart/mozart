@@ -51,21 +51,21 @@
 	<Entry><Span class=index/<<Exchange>>/
 	  <Index/<<Cell>><And><<exchange>>/
 	<Synopsis>
-	  <<{Cell.exchange ?+{Cell} ??{X} ?_{Y}}>>
+	  <<{Cell.exchange ?+{Cell} ?_{X} ?_{Y}}>>
 	<Item>
-	  returns the current content of <<Cell>> as&nbsp;<<X>>, and sets the
+	  returns the current content of <<Cell>> in&nbsp;<<X>>, and sets the
 	  content of <<Cell>> to&nbsp;<<Y>>.
 
 	<Entry><Span class=index/<<Access>>/
 	  <Index/<<Cell>><And><<access>>/
 	<Synopsis>
-	  <<{Cell.access ?+{Cell} ??{X}}>>
+	  <<{Cell.access ?+{Cell} ?_{X}}>>
 	<Item>
-	  returns the current content of <<Cell>>.
+	  returns the current content of <<Cell>> in&nbsp;<<X>>.
 
 	<Entry><Span class=index/<<Assign>>/
 	<Synopsis>
-	  <<{Cell.assign ?+{Cell} X}>>
+	  <<{Cell.assign ?+{Cell} ?_{X}}>>
 	<Item>
 	  sets the content of <<Cell>> to&nbsp;<<X>>.
       </List>
