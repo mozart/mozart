@@ -125,7 +125,13 @@ class Gui from Menu Dialog
    end
    
    meth removeNode(I)
+      {Show guiRemoveNode#I}
       {self.ThreadTree remove(I)}
+   end
+
+   meth killNode(I)
+      {Show guiKillNode#I}
+      {self.ThreadTree kill(I)}
    end
 
    meth displayTree
@@ -144,18 +150,19 @@ class Gui from Menu Dialog
    end
 
    meth action(A)
-      case {Label A}
-      of step then
-	 {Thread.resume @currentThread}
-      elseof cont then
-	 {Dbg.stepmode @currentThread false}
-	 {Thread.resume @currentThread}
-      elseof stack then
-	 S = {Filter {Dbg.taskstack @currentThread 1}
-	      fun {$ E} E \= toplevel end}
-      in
-	 {Browse S}
-      end
+      case @currentThread \= undef then
+	 case {Label A}
+	 of step then
+	    {Thread.resume @currentThread}
+	 elseof cont then
+	    {Dbg.stepmode @currentThread false}
+	    {Thread.resume @currentThread}
+	 elseof stack then
+	    S = {Filter {Dbg.taskstack @currentThread 1}
+		 fun {$ E} E \= toplevel end}
+	 in
+	    {Browse S}
+	 end
+      else skip end
    end
-   
 end
