@@ -131,113 +131,117 @@ class CountPropagator : public BaseCountPropagator
 public:
   CountPropagator(OZ_Term n,OZ_Term l,OZ_Term v)
     : BaseCountPropagator(n,l,v) {}
-  virtual OZ_Return propagate(void) {
-    if (reg_l_sz == 0)
-      return (atleast)?replaceByInt(reg_n, 0):PROCEED;
+  virtual OZ_Return propagate(void);
+};
 
-    int &v = reg_v, &l_sz = reg_l_sz, n_in_l = 0;
-    OZ_FDIntVar n_var(reg_n);
-    DECL_DYN_ARRAY(OZ_FDIntVar, l, l_sz);
-    CountPropagatorController P(l_sz, l, reg_oldDomSizes, n_var);
+template<const bool atleast,const bool atmost>
+OZ_Return CountPropagator<atleast,atmost>::propagate(void)
+{
+  if (reg_l_sz == 0)
+    return (atleast)?replaceByInt(reg_n, 0):PROCEED;
 
-    // tn  is the number of entailed equations
-    // tnn is the number of disentailed equations
+  int &v = reg_v, &l_sz = reg_l_sz, n_in_l = 0;
+  OZ_FDIntVar n_var(reg_n);
+  DECL_DYN_ARRAY(OZ_FDIntVar, l, l_sz);
+  CountPropagatorController P(l_sz, l, reg_oldDomSizes, n_var);
 
-    int tn  = reg_tn;
-    int tnn = reg_tnn;
+  // tn  is the number of entailed equations
+  // tnn is the number of disentailed equations
 
-    // only check a var if it has changed
-    // this is achieved by caching the sizes of the
-    // domains of the FD vars in L from one run of
-    // propagate to the next
-    // the cached size is -1 when the var has been dropped
-    // -2 when it it is about to be dropped
+  int tn  = reg_tn;
+  int tnn = reg_tnn;
 
-  recheck:
-    for (int i = l_sz; i--; ) {
-      int sz = reg_oldDomSizes[i];
-      if (sz<0) continue;
-      l[i].read(reg_l[i]);
-      // find out if n_var occurs in l
-      if (n_in_l==0 && (&(*n_var)==&(*l[i]))) n_in_l = 1;
-      int li_sz = l[i]->getSize();
-      if (li_sz < sz) {
-	if (li_sz == 1) {
-	  if (l[i]->getSingleElem() == v)
-	    tn += 1;
-	  else
-	    tnn += 1;
+  // only check a var if it has changed
+  // this is achieved by caching the sizes of the
+  // domains of the FD vars in L from one run of
+  // propagate to the next
+  // the cached size is -1 when the var has been dropped
+  // -2 when it it is about to be dropped
+
+ recheck:
+  for (int i = l_sz; i--; ) {
+    int sz = reg_oldDomSizes[i];
+    if (sz<0) continue;
+    l[i].read(reg_l[i]);
+    // find out if n_var occurs in l
+    if (n_in_l==0 && (&(*n_var)==&(*l[i]))) n_in_l = 1;
+    int li_sz = l[i]->getSize();
+    if (li_sz < sz) {
+      if (li_sz == 1) {
+	if (l[i]->getSingleElem() == v)
+	  tn += 1;
+	else
+	  tnn += 1;
+	// we never need to check this one again
+	reg_oldDomSizes[i] = -2;
+      }
+      else {
+	if (! l[i]->isIn(v)) {
+	  tnn += 1;
 	  // we never need to check this one again
 	  reg_oldDomSizes[i] = -2;
-	}
-	else {
-	  if (! l[i]->isIn(v)) {
-	    tnn += 1;
-	    // we never need to check this one again
-	    reg_oldDomSizes[i] = -2;
-	    // and we should not suspend on it anymore
-	    l[i].dropParameter();
-	    reg_l[i] = OZ_nil();
-	  }
+	  // and we should not suspend on it anymore
+	  l[i].dropParameter();
+	  reg_l[i] = OZ_nil();
 	}
       }
     }
-
-    // write back the updated results
-    reg_tn  = tn;
-    reg_tnn = tnn;
-
-    // frequent special case: N determined
-    if (*n_var == fd_singl) {
-    N_det:
-      int n = n_var->getSingleElem();
-      // satisfaction surplus: upper and lower bounds
-      int ss_hi = oldSize - tnn - n;
-      int ss_lo = tn - n;
-      if (ss_hi <  0) { if (atleast) goto failure; else goto vanish; }
-      if (ss_hi == 0) {
-	if (atleast) {
-	  for (int i = l_sz; i--; )
-	    if (reg_oldDomSizes[i]>=0 && l[i]->isIn(v))
-	      FailOnEmpty(*l[i] &= v);
-	}
-	goto vanish;
-      }
-      if (ss_lo > 0) { if (atmost) goto failure; else goto vanish; }
-      if (ss_lo == 0) {
-	if (atmost) {
-	  for (int i = l_sz; i--; )
-	    if (reg_oldDomSizes[i]>=0 && *l[i] != fd_singl)
-	      FailOnEmpty(*l[i] -= v);
-	}
-	goto vanish;
-      }
-    } else {
-      // propagate into the index
-      int sz_before = n_var->getSize();
-      int sz;
-      if (atmost)  { FailOnEmpty((sz = (*n_var >= tn))); }
-      if (atleast) { FailOnEmpty((sz = (*n_var <= (oldSize - tnn)))); }
-      if (n_in_l && sz_before!=sz) goto recheck;
-      if (sz==1) goto N_det;
-    }
-
-    // we fall through to here when we need to suspend again
-    // we need to update the cached sizes of the domains
-    for (int i=l_sz; i--;)
-      if (reg_oldDomSizes[i] >= 0) {
-	reg_oldDomSizes[i] = l[i]->getSize();
-      }
-
-    return P.leave();
-
-  vanish:
-    return P.vanish();
-
-  failure:
-    return P.fail();
   }
-};
+
+  // write back the updated results
+  reg_tn  = tn;
+  reg_tnn = tnn;
+
+  // frequent special case: N determined
+  if (*n_var == fd_singl) {
+  N_det:
+    int n = n_var->getSingleElem();
+    // satisfaction surplus: upper and lower bounds
+    int ss_hi = oldSize - tnn - n;
+    int ss_lo = tn - n;
+    if (ss_hi <  0) { if (atleast) goto failure; else goto vanish; }
+    if (ss_hi == 0) {
+      if (atleast) {
+	for (int i = l_sz; i--; )
+	  if (reg_oldDomSizes[i]>=0 && l[i]->isIn(v))
+	    FailOnEmpty(*l[i] &= v);
+      }
+      goto vanish;
+    }
+    if (ss_lo > 0) { if (atmost) goto failure; else goto vanish; }
+    if (ss_lo == 0) {
+      if (atmost) {
+	for (int i = l_sz; i--; )
+	  if (reg_oldDomSizes[i]>=0 && *l[i] != fd_singl)
+	    FailOnEmpty(*l[i] -= v);
+      }
+      goto vanish;
+    }
+  } else {
+    // propagate into the index
+    int sz_before = n_var->getSize();
+    int sz;
+    if (atmost)  { FailOnEmpty((sz = (*n_var >= tn))); }
+    if (atleast) { FailOnEmpty((sz = (*n_var <= (oldSize - tnn)))); }
+    if (n_in_l && sz_before!=sz) goto recheck;
+    if (sz==1) goto N_det;
+  }
+
+  // we fall through to here when we need to suspend again
+  // we need to update the cached sizes of the domains
+  for (int i=l_sz; i--;)
+    if (reg_oldDomSizes[i] >= 0) {
+      reg_oldDomSizes[i] = l[i]->getSize();
+    }
+
+  return P.leave();
+
+ vanish:
+  return P.vanish();
+
+ failure:
+  return P.fail();
+}
 
 //-----------------------------------------------------------------------------
 
