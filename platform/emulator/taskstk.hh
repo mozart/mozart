@@ -127,7 +127,9 @@ public:
 
   void gc(TaskStack *newstack);
 
-  TaggedRef findCatch(TaggedRef &traceback);
+  TaggedRef findCatch();
+  TaggedRef reflect(TaskStackEntry *from=0,TaskStackEntry *to=0,
+                    ProgramCounter pc=NOCODE);
 
   void pushSetFinal()
   {

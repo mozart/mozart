@@ -675,7 +675,7 @@ Bool checkAtom(char *s)
   case 'f':
     return strcmp(t, "false") && strcmp(t, "feat")
         && strcmp(t, "finally") && strcmp(t, "from")
-        && strcmp(t, "fun")? OK: NO;
+        && strcmp(t, "fun") && strcmp(t, "fail")? OK: NO;
   case 'i':
     return strcmp(t, "if") && strcmp(t, "in")? OK: NO;
   case 'l':
@@ -695,6 +695,8 @@ Bool checkAtom(char *s)
     return strcmp(t, "then") && strcmp(t, "thread")
         && strcmp(t, "touch") && strcmp(t, "true")
         && strcmp(t, "try")? OK: NO;
+  case 'u':
+    return strcmp(t, "unit")? OK: NO;
   case 'w':
     return strcmp(t, "with")? OK: NO;
   default:

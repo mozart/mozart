@@ -259,9 +259,7 @@ void AM::init(int argc,char **argv)
 
   BuiltinTabEntry *biTabEntry =
     (BuiltinTabEntry *) builtinTab.htFind("biExceptionHandler");
-  biExceptionHandler =
-    makeTaggedConst(new Builtin(biTabEntry,0));
-  defaultExceptionHandler = biExceptionHandler;
+  defaultExceptionHandler = makeTaggedConst(new Builtin(biTabEntry,0));
 
   ioNodes = new IONode[osOpenMax()];
 

@@ -5534,8 +5534,9 @@ OZ_C_proc_begin(BIcatch,1)
 
   DEREF(proc,procPtr,_2);
   if (isAnyVar(proc)) OZ_suspendOn(makeTaggedRef(procPtr));
-  if (!isProcedure(proc) && !isObject(proc)) {
-    TypeErrorT(0,"Procedure or Object");
+
+  if (!isProcedure(proc) || tagged2Const(proc)->getArity() !=1) {
+    TypeErrorT(0,"Procedure/1");
   }
 
   am.currentThread->pushCatch(proc);
@@ -7064,7 +7065,7 @@ OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
   if (!OZ_isProcedure(hdl)) TypeErrorT(0,"Procedure");
 
   hdl = deref(hdl);
-  if (tagged2Const(hdl)->getArity() != 1) return OZ_raiseC("???",0);
+  if (tagged2Const(hdl)->getArity() != 1) TypeErrorT(0,"Procedure/1");
   am.defaultExceptionHandler = hdl;
   return PROCEED;
 }
@@ -7503,7 +7504,8 @@ BuiltinTabEntry *BIinit()
   BIaddSpec(allSpec2);
 
   /* see emulate.cc */
-  BIaddSpecial("raise",             2, BIraise);
+  BIaddSpecial("raise",             1, BIraise);
+  BIaddSpecial("raiseError",        1, BIraiseError);
 
 #ifdef ASSEMBLER
   BIinitAssembler();

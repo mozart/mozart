@@ -1567,7 +1567,6 @@ void AM::gc(int msgLevel)
   gcTagged(aVarBindHandler,aVarBindHandler);
   gcTagged(dVarHandler,dVarHandler);
 
-  gcTagged(biExceptionHandler,biExceptionHandler);
   gcTagged(defaultExceptionHandler,defaultExceptionHandler);
 
   gcTagged(threadStream,threadStream);
