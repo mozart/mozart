@@ -35,14 +35,14 @@ $(ELISPDIR)/%.elc: %.elc
 	$(INSTALLFILE) $< $@
 
 clean:
-	$(RM) *.elc TAGS
+	$(RM) *.elc *~ TAGS
 
 veryclean: clean
 
 realclean: clean
 
-distclean:
-	$(RM) Makefile Makefile.bak
+distclean: clean
+	$(RM) Makefile config.*
 
 tags:
 	etags oz.el
