@@ -212,7 +212,7 @@ Bool AM::isEmptyTrailChunk ()
 }
 
 inline
-void AM::pushCall(Chunk *def, int arity, RefsArray args)
+void AM::pushCall(TaggedRef def, int arity, RefsArray args)
 {
   currentThread->pushCall(def,args,arity);
 }
@@ -289,12 +289,10 @@ Board *Object::getBoardFast()
   return isDeep() ? ((DeepObject*)this)->home->getBoardFast() : am.rootBoard;
 }
 
-/*
 inline
-Board *Cell::getBoardFast()
+Board *SChunk::getBoardFast()
 {
-  return name->getBoardFast();
+  return home->getBoardFast();
 }
-*/
 
 #endif  // __AM_ICC
