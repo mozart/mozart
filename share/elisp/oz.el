@@ -1211,9 +1211,7 @@ the GDB commands `cd DIR' and `directory'."
 
 
 (defun oz-filter (proc string state-string)
-  (let ((old-buffer (current-buffer))
-;	(old-win (selected-window))
-)
+  (let ((old-buffer (current-buffer)))
     (unwind-protect
 	(let ((newbuf (process-buffer proc))
 	      help-string old-point
@@ -1221,7 +1219,6 @@ the GDB commands `cd DIR' and `directory'."
 	      moving)
 	  (set-buffer newbuf)
 	  (setq moving (= (point) (process-mark proc)))
-	  (process-mark proc)
 
 	  (save-excursion
 	    ;; Insert the text, moving the process-marker.
@@ -1250,7 +1247,6 @@ the GDB commands `cd DIR' and `directory'."
 	    (goto-char (point-max)))
 	  (if moving (goto-char (process-mark proc))))
       (set-buffer old-buffer)
-;;      (select-window old-win)
       )
     ;; error output
     (if (or oz-errors-found (string-match oz-error-chars string))   ; contains errors ?
@@ -1275,7 +1271,6 @@ the GDB commands `cd DIR' and `directory'."
       (setq old-point (point-max))
       (goto-char old-point)
       (insert-before-markers string)
-      (set-marker (process-mark proc) (point))
     
       ;; remove other than error messages
       (goto-char old-point)
