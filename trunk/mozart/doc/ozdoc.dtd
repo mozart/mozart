@@ -190,7 +190,7 @@
 <!ENTITY % sect2.class "sect2 | subsection"   >
 <!ENTITY % sect3.class "sect3 | subsubsection">
 
-<!ELEMENT body O O ((%sect0.class;)*,part*,appendix*)>
+<!ELEMENT body O O ((%sect0.class;)*,part*,appendix*) -(meta)>
 
 <!ELEMENT part            - O (front,(%p.model;),(%sect0.class;)*,appendix*)>
 <!ELEMENT (%sect0.class;) - O (front,(%p.model;),(%sect1.class;)*)>
