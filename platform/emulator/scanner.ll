@@ -378,23 +378,6 @@ static char *scExpndFileName(char *fileName, char *curfile) {
     return ret;
   }
 
-  // search in "current" directory
-  if (curfile != NULL) {
-    int i = strlen(curfile);
-    while (i != 0 && curfile[i - 1] != '/')   // i. e., the dir part of curfile
-      i--;
-    if (i != 0) {
-      char *help = new char[i + strlen(fileName) + 1];
-      strncpy(help, curfile, i);
-      strcpy(&help[i], fileName);
-      char *ret = checkAccess(help);
-      delete[] help;
-
-      if (ret != NULL)
-        return ret;
-    }
-  }
-
   // search in OZPATH
   char *path = getenv("OZPATH");
   if (path == NULL)
@@ -414,6 +397,23 @@ static char *scExpndFileName(char *fileName, char *curfile) {
     if (path[i] == '\0')
       return NULL;
     path = &path[i + 1];
+  }
+
+  // search in "current" directory
+  if (curfile != NULL) {
+    int i = strlen(curfile);
+    while (i != 0 && curfile[i - 1] != '/')   // i. e., the dir part of curfile
+      i--;
+    if (i != 0) {
+      char *help = new char[i + strlen(fileName) + 1];
+      strncpy(help, curfile, i);
+      strcpy(&help[i], fileName);
+      char *ret = checkAccess(help);
+      delete[] help;
+
+      if (ret != NULL)
+        return ret;
+    }
   }
 
   return NULL;
