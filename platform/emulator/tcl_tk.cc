@@ -19,124 +19,45 @@
 #include "ofgenvar.hh"
 #include "fdbuilti.hh"
 #include "solve.hh"
+#include "StringBuffer.hh"
 
+StringBuffer tcl_buffer;
 
-#define SAFETY_MARGIN   256
-#define TCL_BUFFER_SIZE 1024
-
-static char tcl_static_buffer[TCL_BUFFER_SIZE+SAFETY_MARGIN];
-static char * tcl_buffer;
-static char * tcl_buffer_start;
-static char * tcl_buffer_end;
-static char * protect_start;
-
-
-inline 
-void init_tcl_buffer(void) {
-  tcl_buffer_start = tcl_static_buffer;
-  tcl_buffer_end   = tcl_buffer_start + TCL_BUFFER_SIZE;
-  tcl_buffer       = tcl_buffer_start;
-}
-
-void resize_tcl_buffer(void) {
-  int new_size = (3 * (tcl_buffer_end - tcl_buffer_start)) / 2; 
-  char *new_tcl_buffer_start = 
-    new char[new_size + SAFETY_MARGIN];
-    
-  tcl_buffer_end   = new_tcl_buffer_start + new_size;
-    
-  char *new_tcl_buffer = new_tcl_buffer_start;
-  
-  for (char *j=tcl_buffer_start; j<tcl_buffer ; new_tcl_buffer++, j++) 
-    *new_tcl_buffer = *j;
-    
-  if (tcl_buffer_start!=tcl_static_buffer)
-    delete tcl_buffer_start;
-
-  tcl_buffer       = (tcl_buffer - tcl_buffer_start) + new_tcl_buffer_start;
-  tcl_buffer_start = new_tcl_buffer_start;
-
-}
-
-inline
-void delete_tcl_buffer(void) {
-  if (tcl_buffer_start!=tcl_static_buffer)
-    delete tcl_buffer_start;
-}
-
-
+OZ_Term NameTclName,
+  AtomTclOption, AtomTclList, AtomTclPosition,
+  AtomTclQuote, AtomTclString, AtomTclVS,
+  AtomTclBatch,
+  AtomError,
+  AtomDot, AtomTagPrefix, AtomVarPrefix, AtomImagePrefix,
+  NameGroupVoid;
 
 OZ_C_proc_begin(BIgetTclName,1) {
   return OZ_unify(OZ_getCArg(0), NameTclName);
 } OZ_C_proc_end
 
 
-
-State isVirtualString(TaggedRef vs) {
-  DEREF(vs, vs_ptr, vs_tag);
-
-  if (isAnyVar(vs_tag)) {
-    return OZ_suspendOnVar(makeTaggedRef(vs_ptr));
-  }
-
-  if (isInt(vs_tag) || isFloat(vs_tag) || 
-      (isLiteral(vs_tag) && tagged2Literal(vs)->isAtom()))
-    return PROCEED;
-
-  if (isSTuple(vs) && 
-      sameLiteral(tagged2SRecord(vs)->getLabel(),AtomPair)) {
-    for (int i=0; i < tagged2SRecord(vs)->getWidth(); i++) {
-      State argstate = isVirtualString(tagged2SRecord(vs)->getArg(i));
-      if (argstate!=PROCEED) 
-	return argstate;
-    }
-    return PROCEED;
-  }
-
-  if (isLTuple(vs_tag)) {
-    int len = isString(vs);
-
-    if (len == -2) {
-      return FAILED;
-    } else if (len == -1) {
-      return SUSPEND;
-    } else {
-      return PROCEED;
-    }
-  }
-
-  return FAILED;
-
-}
-
-
-inline
-State isTclLiteral(TaggedRef tcl) {
-  if (tagged2Literal(tcl)->isAtom()) {
-    return PROCEED;
-  } else if (sameLiteral(tcl,NameTrue) || sameLiteral(tcl,NameFalse)) {
-    return PROCEED;
-  }
-  return FAILED;
-}
-
-State isTcl(TaggedRef tcl) {
+OZ_Return isTcl(TaggedRef tcl) {
   DEREF(tcl, tcl_ptr, tcl_tag);
 
   if (isAnyVar(tcl_tag)) {
-    return OZ_suspendOnVar(makeTaggedRef(tcl_ptr));
+    OZ_suspendOn(makeTaggedRef(tcl_ptr));
   } else if (isInt(tcl_tag)) {
     return PROCEED;
   } else if (isFloat(tcl_tag)) {
     return PROCEED;
   } else if (isLiteral(tcl_tag)) {
-    return isTclLiteral(tcl);
+    if (tagged2Literal(tcl)->isAtom()) {
+      return PROCEED;
+    } else if (literalEq(tcl,NameTrue) || literalEq(tcl,NameFalse)) {
+      return PROCEED;
+    }
+    return FAILED;
   } else if (isObject(tcl)) {
     TaggedRef v = tagged2Object(tcl)->getFeature(NameTclName);
     if (v!=makeTaggedNULL()) {
       DEREF(v, v_ptr, v_tag);
       if (isAnyVar(v_tag)) {
-	return OZ_suspendOnVar(makeTaggedRef(v_ptr)); 
+	OZ_suspendOn(makeTaggedRef(v_ptr)); 
       } else {
 	return PROCEED;
       }
@@ -148,34 +69,34 @@ State isTcl(TaggedRef tcl) {
     TaggedRef l  = st->getLabel();
     
     if (isAtom(l)) {
-      if (sameLiteral(l,AtomPair)) { 
-	return isVirtualString(tcl);
-      } else if (sameLiteral(l,AtomTclVS)) {
+      if (literalEq(l,AtomPair)) { 
+	return OZ_isVirtualString(tcl);
+      } else if (literalEq(l,AtomTclVS)) {
 	TaggedRef arg = st->getArg(0);
 
 	DEREF(arg, arg_ptr, arg_tag);
 
 	if (isAnyVar(arg_tag)) {
-	  return OZ_suspendOnVar(makeTaggedRef(arg_ptr)); 
+	  OZ_suspendOn(makeTaggedRef(arg_ptr)); 
 	}
 
-	return isVirtualString(arg);
-      } else if (sameLiteral(l,AtomTclBatch)) {
+	return OZ_isVirtualString(arg);
+      } else if (literalEq(l,AtomTclBatch)) {
 	TaggedRef batch = st->getArg(0);
 
 	while (1) {
 	  DEREF(batch, batch_ptr, batch_tag);
 
 	  if (isAnyVar(batch_tag)) {
-	    return OZ_suspendOnVar(makeTaggedRef(batch_ptr)); 
+	    OZ_suspendOn(makeTaggedRef(batch_ptr)); 
 	  } else if (isLTuple(batch_tag)) {
-	    State batch_state = isTcl(tagged2LTuple(batch)->getHead());
+	    OZ_Return batch_state = isTcl(tagged2LTuple(batch)->getHead());
 
 	    if (batch_state!=PROCEED) 
 	      return batch_state;
 
 	    batch = tagged2LTuple(batch)->getTail();
-	  } else if (isLiteral(batch_tag) && sameLiteral(batch,AtomNil)) {
+	  } else if (isLiteral(batch_tag) && literalEq(batch,AtomNil)) {
 	    return PROCEED;
 	  } else {
 	    return FAILED;
@@ -184,7 +105,7 @@ State isTcl(TaggedRef tcl) {
 
       } else {
 	for (int i=0; i < st->getWidth(); i++) {
-	  State argstate = isTcl(st->getArg(i));
+	  OZ_Return argstate = isTcl(st->getArg(i));
 	  if (argstate!=PROCEED) 
 	    return argstate;
 	}
@@ -195,7 +116,7 @@ State isTcl(TaggedRef tcl) {
     SRecord * sr = tagged2SRecord(tcl);
     if (tagged2Literal(sr->getLabel())->isAtom()) {
       for (int i=0; i < sr->getWidth(); i++) {
-      State argstate = isTcl(sr->getArg(i));
+      OZ_Return argstate = isTcl(sr->getArg(i));
       if (argstate!=PROCEED) 
 	return argstate;
       }
@@ -205,7 +126,7 @@ State isTcl(TaggedRef tcl) {
     }
     
   } else if (isLTuple(tcl_tag)) {
-    int len = isString(tcl);
+    int len = OZ_isString(tcl);
 
     if (len == -2) {
       return FAILED;
@@ -222,7 +143,7 @@ State isTcl(TaggedRef tcl) {
 
 
 OZ_C_proc_begin(BIisTcl, 2) {  
-  State s = isTcl(OZ_getCArg(0)); 
+  OZ_Return s = isTcl(OZ_getCArg(0)); 
   switch (s) {
   case FAILED:  
     return OZ_unify(OZ_getCArg(1), NameFalse);
@@ -240,11 +161,11 @@ OZ_C_proc_begin(BIisTclFilter, 3) {
   DEREF(tcl, tcl_ptr, tcl_tag);
 
   if (isAnyVar(tcl_tag)) {
-    return OZ_suspendOnVar(makeTaggedRef(tcl_ptr));
+    OZ_suspendOn(makeTaggedRef(tcl_ptr));
   } else if (isLiteral(tcl_tag)) {
     return OZ_unify(OZ_getCArg(2), NameTrue);
   } else if (isSRecord(tcl_tag)) {
-    State s = PROCEED;
+    OZ_Return s = PROCEED;
     SRecord * sr = tagged2SRecord(tcl);
     TaggedRef as = deref(sr->getArityList());
     TaggedRef fs = deref(OZ_getCArg(1));
@@ -253,9 +174,9 @@ OZ_C_proc_begin(BIisTclFilter, 3) {
       TaggedRef a = deref(tagged2LTuple(as)->getHead());
       TaggedRef f = deref(tagged2LTuple(fs)->getHead());
 
-      if (tagged2Literal(a)->isAtom()) {
+      if (isFeature(a)) {
 
-	switch (atomcmp(a,f)) {
+	switch (featureCmp(a,f)) {
 	case 0:
 	  fs = deref(tagged2LTuple(fs)->getTail());
 	  as = deref(tagged2LTuple(as)->getTail());
@@ -304,35 +225,22 @@ OZ_C_proc_begin(BIisTclFilter, 3) {
 
 inline 
 void tcl_put(char c) {
-  *tcl_buffer = c; tcl_buffer++;
-  if (tcl_buffer>tcl_buffer_end) 
-    resize_tcl_buffer();
+  tcl_buffer.put(c);
 }
 
 inline 
 void tcl_back(void) {
-  tcl_buffer--;
+  tcl_buffer.back();
 }
 
 inline 
 void tcl_put2(char c1, char c2) {
-  *tcl_buffer = c1; tcl_buffer++;
-  *tcl_buffer = c2; tcl_buffer++;
-  if (tcl_buffer>tcl_buffer_end) 
-    resize_tcl_buffer();
+  tcl_buffer.put2(c1,c2);
 }
 
 inline 
 void tcl_put_octal(char c) {
-  unsigned char c1 = (((unsigned char) c & '\300') >> 6) + '0';
-  unsigned char c2 = (((unsigned char) c & '\070') >> 3) + '0';
-  unsigned char c3 = ((unsigned char) c & '\007') + '0';
-  *tcl_buffer = '\\'; tcl_buffer++;
-  *tcl_buffer = c1;   tcl_buffer++;
-  *tcl_buffer = c2;   tcl_buffer++;
-  *tcl_buffer = c3;   tcl_buffer++;
-  if (tcl_buffer>tcl_buffer_end) 
-    resize_tcl_buffer();
+  tcl_buffer.put_octal(c);
 }
 
 inline 
@@ -377,14 +285,10 @@ void atom2buffer(TaggedRef atom) {
 inline
 void int2buffer(TaggedRef i) {
   if (isSmallInt(i)) {
-    int len;
-    sprintf(tcl_buffer,"%d%n",smallIntValue(i),&len);
-    tcl_buffer += len;
-    if (tcl_buffer>tcl_buffer_end) 
-      resize_tcl_buffer();
+    tcl_buffer.put_int(smallIntValue(i));
   } else {
     char * s = OZ_intToCString(i);
-    cstring2buffer(s);
+    tcl_buffer.put_string(s);
     delete [] s;
   }
 }
@@ -392,11 +296,7 @@ void int2buffer(TaggedRef i) {
 
 inline
 void float2buffer(TaggedRef f) {
-  int len;
-  sprintf(tcl_buffer,"%g%n",floatValue(f),&len);
-  tcl_buffer += len;
-  if (tcl_buffer>tcl_buffer_end) 
-    resize_tcl_buffer();
+  tcl_buffer.put_float(floatValue(f));
 }
 
 
@@ -420,10 +320,10 @@ void vs2buffer(TaggedRef vs) {
   } else if (isLiteral(vs_tag)) {
     Assert(tagged2Literal(vs)->isAtom());
     
-    if (!sameLiteral(vs, AtomNil) && !sameLiteral(vs, AtomPair))
+    if (!literalEq(vs, AtomNil) && !literalEq(vs, AtomPair))
       atom2buffer(vs);
   } else if (isSTuple(vs)) {
-    Assert(sameLiteral(tagged2SRecord(vs)->getLabel(),AtomPair));
+    Assert(literalEq(tagged2SRecord(vs)->getLabel(),AtomPair));
 
     for (int i=0; i < tagged2SRecord(vs)->getWidth(); i++)
       vs2buffer(tagged2SRecord(vs)->getArg(i));
@@ -433,22 +333,23 @@ void vs2buffer(TaggedRef vs) {
 }
 
 
+static char *protect_start;
 inline
 void start_protect(void) {
-  protect_start = tcl_buffer;
+  protect_start = tcl_buffer.getPtr();
 }
 
 
 inline
 void stop_protect(void) {
-  if (protect_start == tcl_buffer)
+  if (protect_start == tcl_buffer.getPtr())
     tcl_put2('"','"');
 }
 
 
 inline
 void protect_atom2buffer(TaggedRef atom) {
-  if (sameLiteral(atom, AtomPair) || sameLiteral(atom, AtomNil))
+  if (literalEq(atom, AtomPair) || literalEq(atom, AtomNil))
     return;
 
   char *s = tagged2Literal(atom)->getPrintName();
@@ -479,10 +380,10 @@ void protect_vs2buffer(TaggedRef vs) {
   } else if (isLiteral(vs_tag)) {
     Assert(tagged2Literal(vs)->isAtom());
     
-    if (!sameLiteral(vs, AtomNil) && !sameLiteral(vs, AtomPair))
+    if (!literalEq(vs, AtomNil) && !literalEq(vs, AtomPair))
       protect_atom2buffer(vs);
   } else if (isSTuple(vs)) {
-    Assert(sameLiteral(tagged2SRecord(vs)->getLabel(),AtomPair));
+    Assert(literalEq(tagged2SRecord(vs)->getLabel(),AtomPair));
 
     for (int i=0; i < tagged2SRecord(vs)->getWidth(); i++)
       protect_vs2buffer(tagged2SRecord(vs)->getArg(i));
@@ -522,9 +423,9 @@ void tcl2buffer(TaggedRef tcl) {
       start_protect();
       protect_atom2buffer(tcl);
       stop_protect();
-    } else if (sameLiteral(tcl,NameTrue)) {
+    } else if (literalEq(tcl,NameTrue)) {
       tcl_put('1');
-    } else if (sameLiteral(tcl,NameFalse)) {
+    } else if (literalEq(tcl,NameFalse)) {
       tcl_put('0');
     }
   } else if (isLTuple(tcl_tag)) {
@@ -535,27 +436,27 @@ void tcl2buffer(TaggedRef tcl) {
     SRecord  * st = tagged2SRecord(tcl);
     TaggedRef l  = st->getLabel();
     
-    if (sameLiteral(l,AtomPair)) {
+    if (literalEq(l,AtomPair)) {
       start_protect();
       protect_vs2buffer(tcl);
       stop_protect();
-    } else if (sameLiteral(l,AtomTclOption)) {
+    } else if (literalEq(l,AtomTclOption)) {
       tuple2buffer(st);
-    } else if (sameLiteral(l,AtomTclList)) {
+    } else if (literalEq(l,AtomTclList)) {
       tcl_put('['); tuple2buffer(st); tcl_put(']');
-    } else if (sameLiteral(l,AtomTclQuote)) {
+    } else if (literalEq(l,AtomTclQuote)) {
       tcl_put('{'); tuple2buffer(st); tcl_put('}');
-    } else if (sameLiteral(l,AtomTclString)) {
+    } else if (literalEq(l,AtomTclString)) {
       tcl_put('"'); tuple2buffer(st); tcl_put('"');
-    } else if (sameLiteral(l,AtomTclPosition)) {
+    } else if (literalEq(l,AtomTclPosition)) {
       if (st->getWidth() > 1) {
 	tcl_put('{'); tcl2buffer(st->getArg(0));
 	tcl_put('.'); tuple2buffer(st, 1);
 	tcl_put('}');
       }
-    } else if (sameLiteral(l,AtomTclVS)) {
+    } else if (literalEq(l,AtomTclVS)) {
       vs2buffer(st->getArg(0));
-    } else if (sameLiteral(l,AtomTclBatch)) {
+    } else if (literalEq(l,AtomTclBatch)) {
       TaggedRef b = deref(st->getArg(0));
 
       if (isLTuple(b)) {
@@ -581,7 +482,7 @@ void tcl2buffer(TaggedRef tcl) {
     SRecord * sr = tagged2SRecord(tcl);
     TaggedRef l  = sr->getLabel();
 
-    if (!sameLiteral(l,AtomTclOption)) {
+    if (!literalEq(l,AtomTclOption)) {
       start_protect();
       protect_atom2buffer(l);
       stop_protect();
@@ -593,7 +494,10 @@ void tcl2buffer(TaggedRef tcl) {
     while (isLTuple(as)) {
       TaggedRef a = deref(tagged2LTuple(as)->getHead());
 
-      if (tagged2Literal(a)->isAtom()) {
+      if (isSmallInt(a)) {
+	tcl2buffer(sr->getFeature(a));
+	tcl_put(' ');
+      } else if (tagged2Literal(a)->isAtom()) {
 	tcl_put('-');
 	start_protect();
 	protect_atom2buffer(a);
@@ -612,21 +516,21 @@ void tcl2buffer(TaggedRef tcl) {
 }
 
 
-State ret_unix_error(TaggedRef out) {
+OZ_Return ret_unix_error(TaggedRef out) {
   SRecord * err_tuple = SRecord::newSRecord(AtomError, 2);
     
-  err_tuple->setArg(0, OZ_CToInt(errno));
-  err_tuple->setArg(1, OZ_CToString(OZ_unixError(errno)));
+  err_tuple->setArg(0, OZ_int(errno));
+  err_tuple->setArg(1, OZ_atom(OZ_unixError(errno)));
   
   return OZ_unify(out,makeTaggedSRecord(err_tuple));
 }
 
 
-State tcl_write(int fd, char * buff, int len, TaggedRef out) {
+OZ_Return tcl_write(int fd, char * buff, int len, TaggedRef out) {
   int ret = osTestSelect(fd,SEL_WRITE);
 
   if (ret < 0)  { 
-    delete_tcl_buffer();
+    tcl_buffer.reset();
     return ret_unix_error(out);
   } else if (ret==0) {
     return OZ_unifyInt(out,0);
@@ -634,13 +538,13 @@ State tcl_write(int fd, char * buff, int len, TaggedRef out) {
 
   while ((ret = write(fd, buff, len)) < 0) {
     if (errno != EINTR) { 
-      delete_tcl_buffer();
+      tcl_buffer.reset();
       return ret_unix_error(out);
     }
   }
 
   if (len == ret) {
-    delete_tcl_buffer();
+    tcl_buffer.reset();
 
     return OZ_unify(out, NameTrue);
   }
@@ -652,11 +556,11 @@ State tcl_write(int fd, char * buff, int len, TaggedRef out) {
 OZ_C_proc_begin(BItclWrite,3) {  
   OZ_declareIntArg(0, fd);
 
-  init_tcl_buffer();
+  tcl_buffer.reset();
   tcl2buffer(OZ_getCArg(1));
   tcl_put('\n');
 
-  return tcl_write(fd, tcl_buffer_start, tcl_buffer-tcl_buffer_start, 
+  return tcl_write(fd, tcl_buffer.string(), tcl_buffer.size(), 
 		   OZ_getCArg(2));
 }
 OZ_C_proc_end
@@ -666,7 +570,7 @@ OZ_C_proc_begin(BItclWriteBatch,3) {
   OZ_declareIntArg(0, fd);
   TaggedRef batch = deref(OZ_getCArg(1));
 
-  init_tcl_buffer();
+  tcl_buffer.reset();
 
   while (isLTuple(batch)) {
     tcl2buffer(tagged2LTuple(batch)->getHead());
@@ -675,7 +579,7 @@ OZ_C_proc_begin(BItclWriteBatch,3) {
   }
   tcl_put('\n');
 
-  return tcl_write(fd, tcl_buffer_start, tcl_buffer-tcl_buffer_start, 
+  return tcl_write(fd, tcl_buffer.string(), tcl_buffer.size(), 
 		   OZ_getCArg(2));
 }
 OZ_C_proc_end
@@ -684,13 +588,13 @@ OZ_C_proc_end
 OZ_C_proc_begin(BItclWriteTuple,4) {  
   OZ_declareIntArg(0, fd);
 
-  init_tcl_buffer();
+  tcl_buffer.reset();
   tcl2buffer(OZ_getCArg(1));
   tcl_put(' ');
   tuple2buffer(tagged2SRecord(deref(OZ_getCArg(2))));
   tcl_put('\n');
 
-  return tcl_write(fd, tcl_buffer_start, tcl_buffer-tcl_buffer_start, 
+  return tcl_write(fd, tcl_buffer.string(), tcl_buffer.size(),
 		   OZ_getCArg(3));
 }
 OZ_C_proc_end
@@ -701,7 +605,7 @@ OZ_C_proc_begin(BItclWriteTagTuple,5) {
   OZ_declareIntArg(0, fd);
   TaggedRef tuple = deref(OZ_getCArg(3));
 
-  init_tcl_buffer();
+  tcl_buffer.reset();
   tcl2buffer(OZ_getCArg(1));
   tcl_put(' ');
   tcl2buffer(tagged2SRecord(tuple)->getArg(0));
@@ -711,7 +615,7 @@ OZ_C_proc_begin(BItclWriteTagTuple,5) {
   tuple2buffer(tagged2SRecord(tuple),1);
   tcl_put('\n');
 
-  return tcl_write(fd, tcl_buffer_start, tcl_buffer-tcl_buffer_start, 
+  return tcl_write(fd, tcl_buffer.string(), tcl_buffer.size(),
 		   OZ_getCArg(4));
 }
 OZ_C_proc_end
@@ -720,7 +624,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BItclWriteFilter,7) {  
   OZ_declareIntArg(0, fd);
 
-  init_tcl_buffer();
+  tcl_buffer.reset();
   tcl2buffer(OZ_getCArg(1));
   tcl_put(' ');
   vs2buffer(OZ_getCArg(2));
@@ -739,9 +643,9 @@ OZ_C_proc_begin(BItclWriteFilter,7) {
       TaggedRef a = deref(tagged2LTuple(as)->getHead());
       TaggedRef f = deref(tagged2LTuple(fs)->getHead());
       
-      if (tagged2Literal(a)->isAtom()) {
+      if (isFeature(a)) {
 	
-	switch (atomcmp(a,f)) {
+	switch (featureCmp(a,f)) {
 	case 0:
 	  fs = deref(tagged2LTuple(fs)->getTail());
 	  as = deref(tagged2LTuple(as)->getTail());
@@ -750,11 +654,16 @@ OZ_C_proc_begin(BItclWriteFilter,7) {
 	  fs = deref(tagged2LTuple(fs)->getTail());
 	  break;
 	case -1:
-	  tcl_put('-');
-	  atom2buffer(a);
-	  tcl_put(' ');
-	  tcl2buffer(sr->getFeature(a));
-	  tcl_put(' ');
+	  if (isSmallInt(a)) {
+	    tcl2buffer(sr->getFeature(a));
+	    tcl_put(' ');
+	  } else if (isAtom(a)) {
+	    tcl_put('-');
+	    atom2buffer(a);
+	    tcl_put(' ');
+	    tcl2buffer(sr->getFeature(a));
+	    tcl_put(' ');
+	  }
 	  as = deref(tagged2LTuple(as)->getTail());
 	  break;
 	}
@@ -780,7 +689,7 @@ OZ_C_proc_begin(BItclWriteFilter,7) {
   tcl2buffer(OZ_getCArg(5));
   tcl_put('\n');
 
-  return tcl_write(fd, tcl_buffer_start, tcl_buffer-tcl_buffer_start, 
+  return tcl_write(fd, tcl_buffer.string(), tcl_buffer.size(),
 		   OZ_getCArg(6));
 }
 OZ_C_proc_end
@@ -790,8 +699,8 @@ OZ_C_proc_begin(BItclWriteCont,3) {
   OZ_declareIntArg(0, fd);
   OZ_declareIntArg(1, written);
 
-  return tcl_write(fd, tcl_buffer_start + written, 
-		   tcl_buffer-tcl_buffer_start-written, 
+  return tcl_write(fd, tcl_buffer.string() + written, 
+		   tcl_buffer.size() - written, 
 		   OZ_getCArg(2));
 }
 OZ_C_proc_end
@@ -807,12 +716,12 @@ TaggedRef findAliveEntry(TaggedRef group) {
   group = deref(group);
 
   while (isCons(group)) {
-      TaggedRef head = headDeref(group);
+      TaggedRef ahead = deref(head(group));
 
-      if (!(isLiteral(head) && sameLiteral(head,NameGroupVoid)))
+      if (!(isLiteral(ahead) && literalEq(ahead,NameGroupVoid)))
 	return group;
       
-      group = tailDeref(group);
+      group = deref(tail(group));
   }
 
   return group;
@@ -858,15 +767,15 @@ OZ_C_proc_begin(BIgetFastGroup,2)
   if (isCons(group)) {
     TaggedRef out = nil();
 
-    group = tailDeref(group);
+    group = deref(tail(group));
     
     while (isCons(group)) {
-      TaggedRef head = headDeref(group);
+      TaggedRef ahead = deref(head(group));
 
-      if (!(isLiteral(head) && sameLiteral(head,NameGroupVoid)))
-	out = cons(head, out);
+      if (!(isLiteral(ahead) && literalEq(ahead,NameGroupVoid)))
+	out = cons(ahead, out);
       
-      group = tailDeref(group);
+      group = deref(tail(group));
     }
 
     return isNil(group) ? OZ_unify(out,OZ_getCArg(1)) : FAILED;
@@ -901,7 +810,7 @@ OZ_C_proc_begin(BIgenWidgetName,2) {
   DEREF(parent, p_ptr, p_tag);
 
   if (isAnyVar(p_tag))
-    return OZ_suspendOnVar(makeTaggedRef(p_ptr));
+    OZ_suspendOn(makeTaggedRef(p_ptr));
 
   SRecord * s = SRecord::newSRecord(AtomPair,3);
   s->setArg(0,parent);
@@ -963,5 +872,21 @@ BIspec tclTkSpec[] = {
 
 void BIinitTclTk() {
   BIaddSpec(tclTkSpec);
+
+  NameTclName      = OZ_newName();
+  AtomTclOption    = OZ_atom("o");
+  AtomTclList      = OZ_atom("l");
+  AtomTclPosition  = OZ_atom("p");
+  AtomTclQuote     = OZ_atom("q");
+  AtomTclString    = OZ_atom("s");
+  AtomTclVS        = OZ_atom("v");
+  AtomTclBatch     = OZ_atom("b");
+  AtomError        = OZ_atom("error");
+  AtomDot          = OZ_atom(".");
+  AtomTagPrefix    = OZ_atom("t");
+  AtomVarPrefix    = OZ_atom("v");
+  AtomImagePrefix  = OZ_atom("i");
+
+  NameGroupVoid    = OZ_newName();
 }
 

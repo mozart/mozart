@@ -55,9 +55,13 @@ public:
 };
 
 extern BuiltinTab builtinTab;
-extern State dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
-extern State uparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
+extern OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
+extern OZ_Return uparrowInline(TaggedRef term, TaggedRef fea,
+				   TaggedRef &out);
 
+OZ_Return BIarityInline(TaggedRef, TaggedRef &);
+OZ_Return adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
+			     Bool recordFlag);
 
 #endif
 

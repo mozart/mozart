@@ -730,7 +730,7 @@ Bool GenOFSVariable::valid(TaggedRef val)
     if (getWidth()>0) return FALSE;
     TaggedRef tmp=label;
     DEREF(tmp,_1,_2);
-    if (isLiteral(tmp) && !sameLiteral(tmp,val)) return FALSE;
+    if (isLiteral(tmp) && !literalEq(tmp,val)) return FALSE;
     return TRUE;
 }
 

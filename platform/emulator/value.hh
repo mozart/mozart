@@ -24,14 +24,7 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomChunk,
        AtomRecord, AtomAtom, AtomName, AtomUnknown,
        AtomClosed, AtomVariable,
-       NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl,
-       NameGroupVoid,
-       NameTclName,
-       AtomTclOption, AtomTclList, AtomTclPosition,
-       AtomTclQuote, AtomTclString, AtomTclVS,
-       AtomTclBatch,
-       AtomError,
-       AtomDot, AtomTagPrefix, AtomVarPrefix, AtomImagePrefix;
+       NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl;
 
 /*===================================================================
  * Literal
@@ -82,16 +75,6 @@ public:
   int hash() { return getSeqNumber(); }
 };
 
-class Name : public Literal {
-public:
-  USEHEAPMEMORY;
-
-  Name(Board *hb) : Literal (hb)
-  {
-    Assert(hb != NULL);
-  }
-};
-
 inline
 Bool isAtom(TaggedRef term) {
   return isLiteral(tagTypeOf(term)) && tagged2Literal(term)->isAtom();
@@ -100,7 +83,7 @@ Bool isAtom(TaggedRef term) {
 
 //mm2: one argument is guarantueed to be a literal ???
 inline
-Bool sameLiteral(TaggedRef a, TaggedRef b)
+Bool literalEq(TaggedRef a, TaggedRef b)
 {
   Assert(isLiteral(a) || isLiteral(b));
   return (a==b);
@@ -227,15 +210,17 @@ unsigned int smallIntHash(TaggedRef n)
 
 
 inline
-Bool sameSmallInt(TaggedRef a, TaggedRef b)
+Bool smallIntEq(TaggedRef a, TaggedRef b)
 {
+  Assert(isSmallInt(a) || isSmallInt(b));
   return (a == b);
 }
 
 inline
 Bool smallIntCmp(TaggedRef a, TaggedRef b)
 {
-  return smallIntLess(a,b) ? -1 : (sameSmallInt(a,b) ? 0 : 1);
+  Assert(isSmallInt(a) && isSmallInt(b));
+  return smallIntLess(a,b) ? -1 : (smallIntEq(a,b) ? 0 : 1);
 }
 
 /*===================================================================
@@ -272,7 +257,7 @@ double floatValue(TaggedRef t)
 }
 
 inline
-Bool sameFloat(TaggedRef a, TaggedRef b)
+Bool floatEq(TaggedRef a, TaggedRef b)
 {
   return (tagged2Float(a)->getValue() == tagged2Float(b)->getValue());
 }
@@ -303,8 +288,7 @@ public:
   }
   BigInt(char *s) {
     if(mpz_init_set_str(&value, s, 10)) {
-      OZ_warning("BigInt(%s): cannot convert",s);
-      mpz_init_set_si(&value,0);
+      Assert(0);
     }
   }
   void dispose() 
@@ -326,7 +310,7 @@ public:
   }
 
   /* make an 'int' if <Big> fits into it, else return INT_MAX,INT_MIN */
-  int BigInt2Int()
+  int getInt()
   {
     if (mpz_cmp_si(&value,INT_MAX) > 0) {
       return INT_MAX;
@@ -381,7 +365,7 @@ TaggedRef makeInt(int i)
 }
 
 inline
-Bool sameBigInt(TaggedRef a, TaggedRef b)
+Bool bigIntEq(TaggedRef a, TaggedRef b)
 {
   return tagged2BigInt(a)->equal(tagged2BigInt(b));
 }
@@ -393,9 +377,9 @@ Bool numberEq(TaggedRef a, TaggedRef b)
   
   TypeOfTerm tag = tagTypeOf(a);
   switch(tag) {
-  case OZFLOAT:  return sameFloat(a,b);
-  case SMALLINT: return sameSmallInt(a,b);
-  case BIGINT:   return sameBigInt(a,b);
+  case OZFLOAT:  return floatEq(a,b);
+  case SMALLINT: return smallIntEq(a,b);
+  case BIGINT:   return bigIntEq(a,b);
   default:       return NO;
   }
 }
@@ -443,14 +427,12 @@ protected:
 
 inline
 Bool isCons(TaggedRef term) {
-  DEREF(term,_1,_2);
   return isLTuple(term);
 }
 
 inline
 Bool isNil(TaggedRef term) {
-  DEREF(term,_1,_2);
-  return sameLiteral(term,AtomNil);
+  return literalEq(term,AtomNil);
 }
 
 inline
@@ -478,7 +460,6 @@ TaggedRef cons(char *head, TaggedRef tail)
 inline
 TaggedRef head(TaggedRef list)
 {
-  DEREF(list,_1,_2);
   Assert(isLTuple(list));
   return tagged2LTuple(list)->getHead();
 }
@@ -486,34 +467,22 @@ TaggedRef head(TaggedRef list)
 inline
 TaggedRef tail(TaggedRef list)
 {
-  DEREF(list,_1,_2);
   Assert(isLTuple(list));
   return tagged2LTuple(list)->getTail();
 }
 
-// -------------------------------------------------------------------------
-// --- Access functions: do not only deref input, but also output;
-
-
 inline
-TaggedRef headDeref(TaggedRef list)
+int length(OZ_Term l)
 {
-  DEREF(list,zzz,tag);
-  TaggedRef ret = tagged2LTuple(list)->getHead();
-  DEREF(ret,_1,tag2);
-  CHECK_NONVAR(ret);
-  return ret;
+  int len = 0;
+  l = deref(l);
+  while (isCons(l)) {
+    len++;
+    l = deref(tail(l));
+  }
+  return len;
 }
 
-inline
-TaggedRef tailDeref(TaggedRef list)
-{
-  DEREF(list,zzz,tag)
-  TaggedRef ret = tagged2LTuple(list)->getTail();
-  DEREF(ret,_1,_2);
-  CHECK_NONVAR(ret);
-  return ret;
-}
 
 /*===================================================================
  * ConstTerm
@@ -608,20 +577,20 @@ Bool isFeature(TaggedRef lab) { return isLiteral(lab) || isInt(lab); }
 Assert(!isRef(lab) && !isAnyVar(lab) && isFeature(lab));
 
 inline
-Bool featureEq(TaggedRef a,TaggedRef b)
+int featureEq(TaggedRef a,TaggedRef b)
 {
   CHECK_FEATURE(a);
   CHECK_FEATURE(b);
   if (isLiteral(a)) {
     // Note: if b is no literal this also returns NO
-    return a==b ? OK : NO;
+    return literalEq(a,b);
   }
   TypeOfTerm tagA = tagTypeOf(a);
   TypeOfTerm tagB = tagTypeOf(b);
   if (tagA != tagB) return NO;
   switch(tagA) {
-  case SMALLINT: return sameSmallInt(a,b);
-  case BIGINT:   return sameBigInt(a,b);
+  case SMALLINT: return smallIntEq(a,b);
+  case BIGINT:   return bigIntEq(a,b);
   default:       return NO;
   }
 }
@@ -930,13 +899,11 @@ public:
   
   void gcRecurse();
 
-  Bool isPair() { return isTuple() && sameLiteral(label,AtomPair); }
-
   OZPRINT;
   OZPRINTLONG;
 
   Bool compareSortAndArity(TaggedRef lbl, SRecordArity arity) {
-    return sameLiteral(getLabel(),lbl) &&
+    return literalEq(getLabel(),lbl) &&
            sameSRecordArity(getSRecordArity(),arity);
   }
 
@@ -955,18 +922,8 @@ Bool isRecord(TaggedRef term) {
 }
 
 
-State adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
-		     Bool recordFlag);
-
 SRecord *makeRecord(TaggedRef t);
 
-
-inline
-int isPair(TaggedRef term) {
-  DEREF(term,zzz,tag);
-  return isSRecord(tag) && 
-    tagged2SRecord(term)->isPair();
-}
 
 inline
 int isSTuple(TaggedRef term) {
@@ -981,54 +938,15 @@ int isTuple(TaggedRef term) {
 inline
 TaggedRef left(TaggedRef pair)
 {
-  DEREF(pair,zzz,tag);
-  Assert(isPair(pair));
+  Assert(OZ_isPair2(pair));
   return tagged2SRecord(pair)->getArg(0);
 }
 
 inline
 TaggedRef right(TaggedRef pair)
 {
-  DEREF(pair,zzz,tag);
-  Assert(isPair(pair));
+  Assert(OZ_isPair(pair));
   return tagged2SRecord(pair)->getArg(1);
-}
-
-inline
-TaggedRef arg(TaggedRef tuple, int i)
-{
-  DEREF(tuple,zzz,tag);
-  Assert(isSTuple(tuple));
-  return tagged2SRecord(tuple)->getArg(i);
-}
-
-
-inline
-TaggedRef leftDeref(TaggedRef pair)
-{
-  TaggedRef ret = tagged2SRecord(pair)->getArg(0);
-  DEREF(ret,_1,_2);
-  CHECK_NONVAR(ret);
-  return ret;
-}
-
-inline
-TaggedRef rightDeref(TaggedRef pair)
-{
-  TaggedRef ret = tagged2SRecord(pair)->getArg(1);
-  DEREF(ret,_1,_2);
-  CHECK_NONVAR(ret);
-  return ret;
-}
-
-inline
-TaggedRef argDeref(TaggedRef tuple, int i)
-{
-  DEREF(tuple,zzz,tag)
-  TaggedRef ret = tagged2SRecord(tuple)->getArg(i);
-  DEREF(ret,_1,_2);
-  CHECK_NONVAR(ret);
-  return ret;
 }
 
 /*===================================================================
@@ -1185,7 +1103,7 @@ void Object::release()
   if (decDeepness()==0) {
     /* wake threads */
     Assert(!isRef(threads));
-    if (!sameLiteral(threads,AtomNil)) {
+    if (!literalEq(threads,AtomNil)) {
       incDeepness();
       TaggedRef var = head(threads);
       if (OZ_unify(var, isClosed() ? NameTrue : NameFalse)==FAILED) {
@@ -1267,7 +1185,7 @@ SChunk *tagged2SChunk(TaggedRef term)
 inline
 Bool isChunk(TaggedRef t)
 {
-  return (isSChunk(t) || isObject(t)) ? OK : NO;
+  return isSChunk(t) || isObject(t);
 }
 
 /*===================================================================
@@ -1398,7 +1316,7 @@ Bool isProcedure(TaggedRef term)
 inline
 Bool isAbstraction(ConstTerm *s)
 {
-  return (s->getType() == Co_Abstraction) ? OK : NO;
+  return s->getType() == Co_Abstraction;
 }
 
 inline
@@ -1536,7 +1454,7 @@ public:
 inline
 Bool isBuiltin(ConstTerm *s)
 {
-  return (s->getType() == Co_Builtin) ? OK : NO;
+  return s->getType() == Co_Builtin;
 }
 
 inline

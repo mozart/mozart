@@ -44,7 +44,7 @@ Bool isUnifyCurrentPropagator () {
 }
 
 inline
-Thread *makeHeadThread (OZ_Bool (*fun)(int, OZ_Term[]),
+Thread *makeHeadThread (OZ_CFun fun,
 			OZ_Term *args, int arity)
 {
   return (new Thread (am.currentBoard,

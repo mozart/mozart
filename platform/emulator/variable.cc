@@ -74,7 +74,7 @@ TaggedRef VariableNamer::getName(TaggedRef v)
   for (VariableNamer *i = allnames; i!=NULL; i = i->next) {
 #ifdef PRETTYVARNAMES
 /* Browser cannot handle: declare A B in {Browse A#B}  A=B  */
-    if (sameTerm(i->var,v)) {
+    if (termEq(i->var,v)) {
       ret = i->name;
       found++;
       if (found > 1) {
@@ -83,7 +83,7 @@ TaggedRef VariableNamer::getName(TaggedRef v)
       strcat(buf,getAtomName(ret));
     }
 #else
-    if (OZ_isVariable(i->var) && sameTerm(i->var,v)) {
+    if (OZ_isVariable(i->var) && termEq(i->var,v)) {
       return i->name;
     }
 #endif
@@ -137,3 +137,14 @@ void VariableNamer::cleanup()
     }
   }
 }
+
+char *getVarName(TaggedRef v)
+{
+  TaggedRef n = VariableNamer::getName(v);
+  DEREF(n,_1,_2);
+  if (!OZ_isAtom(n)) {
+    n = AtomVoid;
+  }
+  return tagged2Literal(n)->getPrintName();
+}
+

@@ -35,8 +35,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIgetFDLimits,2)
 { 
-  return (OZ_unify(OZ_CToInt(0), OZ_getCArg(0)) &&
-    OZ_unify(OZ_CToInt(fd_sup), OZ_getCArg(1))) ? PROCEED : FAILED;
+  return (OZ_unify(OZ_int(0), OZ_getCArg(0)) &&
+    OZ_unify(OZ_int(fd_sup), OZ_getCArg(1))) ? PROCEED : FAILED;
 }
 OZ_C_proc_end
 
@@ -62,9 +62,9 @@ OZ_C_proc_begin(BIfdMin, 2)
     return OZ_unify(var, OZ_getCArg(1));   
   } else if (isGenFDVar(var,vartag)) {
     int minVal = tagged2GenFDVar(var)->getDom().minElem();
-    return OZ_unify(OZ_CToInt(minVal), OZ_getCArg(1));   
+    return OZ_unify(OZ_int(minVal), OZ_getCArg(1));   
   } else if (isGenBoolVar(var,vartag)) {
-    return OZ_unify(OZ_CToInt(0), OZ_getCArg(1));   
+    return OZ_unify(OZ_int(0), OZ_getCArg(1));   
   } else if (isNotCVar(vartag)) {
     return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
   } else {
@@ -84,9 +84,9 @@ OZ_C_proc_begin(BIfdMax,2)
     return OZ_unify(var, OZ_getCArg(1));   
   } else if (isGenFDVar(var,vartag)) {
     int maxVal = tagged2GenFDVar(var)->getDom().maxElem();
-    return OZ_unify(OZ_CToInt(maxVal), OZ_getCArg(1));   
+    return OZ_unify(OZ_int(maxVal), OZ_getCArg(1));   
   } else if (isGenBoolVar(var,vartag)) {
-    return OZ_unify(OZ_CToInt(1), OZ_getCArg(1));   
+    return OZ_unify(OZ_int(1), OZ_getCArg(1));   
   } else if (isNotCVar(vartag)) {
     return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
   } else {
@@ -127,12 +127,12 @@ OZ_C_proc_begin(BIfdGetCardinality,2)
   OZ_getCArgDeref(0, var, varptr, vartag);
 
   if(isSmallInt(vartag)) {
-    return OZ_unify(OZ_CToInt(1), OZ_getCArg(1));
+    return OZ_unify(OZ_int(1), OZ_getCArg(1));
   } else if (isGenFDVar(var,vartag)) {
     OZ_FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
-    return OZ_unify(OZ_CToInt(fdomain.getSize()), OZ_getCArg(1));
+    return OZ_unify(OZ_int(fdomain.getSize()), OZ_getCArg(1));
   } else if (isGenBoolVar(var,vartag)) {
-    return OZ_unify(OZ_CToInt(2), OZ_getCArg(1));
+    return OZ_unify(OZ_int(2), OZ_getCArg(1));
   } else if (isNotCVar(vartag)) {
     return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
   } else { 
@@ -163,10 +163,10 @@ OZ_C_proc_begin(BIfdNextTo, 3)
     int next_val, n_val = OZ_intToC(n);
     return (tagged2GenFDVar(var)->getDom().next(n_val, next_val))
       ? OZ_unify(OZ_getCArg(2), mkTuple(next_val, 2 * n_val - next_val))
-      : OZ_unify(OZ_getCArg(2), OZ_CToInt(next_val));
+      : OZ_unify(OZ_getCArg(2), OZ_int(next_val));
   } else if (isGenBoolVar(var,vartag)) {
     int val = OZ_intToC(n);
-    return OZ_unify(OZ_getCArg(2), OZ_CToInt(val >= 1 ? 1 : 0));
+    return OZ_unify(OZ_getCArg(2), OZ_int(val >= 1 ? 1 : 0));
   } else if (isNotCVar(vartag)) {
     return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
   } else {

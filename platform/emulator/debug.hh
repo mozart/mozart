@@ -32,8 +32,8 @@ public:
 
 
 void enterCall(Board *b, TaggedRef def,int arity, TaggedRef *args);
-void exitCall(OZ_Bool,OzDebug *);
-void exitBuiltin(OZ_Bool, TaggedRef bi, int arity, TaggedRef *args);
+void exitCall(OZ_Return,OzDebug *);
+void exitBuiltin(OZ_Return, TaggedRef bi, int arity, TaggedRef *args);
 
 OZ_C_proc_proto(BIspy)
 OZ_C_proc_proto(BInospy)
