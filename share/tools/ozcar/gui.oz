@@ -75,7 +75,7 @@ local
 					      else
 						 X
 					      end
-	 elsecase {IsUnit  X}            then UnitType
+	 elsecase {IsUnit X}             then UnitType
 	 elsecase {IsName X}             then NameType
 	 elsecase {IsLock X}             then LockType
 	 elsecase {IsObject X}           then ObjectType
@@ -588,7 +588,7 @@ in
 	    {W tk(insert LineEnd Arrow # FrameNr # ' {' # FrameName
 		  q(StackTag LineActTag LineColTag))}
 	 else
-	    ProcTag    = {self.StackText newTag($)}
+	    ProcTag    = {W newTag($)}
 	    ProcAction = {New Tk.action
 			  tkInit(parent: W
 				 action: self # ProcessClick(FrameData))}
@@ -610,7 +610,7 @@ in
 	    {ForAll FrameArgs
 	     proc {$ Arg}
 		P # V     = Arg
-		ArgTag    = {self.StackText newTag($)}
+		ArgTag    = {W newTag($)}
 		ArgAction = {New Tk.action
 			     tkInit(parent: W
 				    action: self # ProcessClick(V))}

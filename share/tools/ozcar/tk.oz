@@ -21,9 +21,9 @@
 
 class TitleFrame from Tk.frame
    feat Label
-   meth tkInit(title:T<='' ...)=M
+   meth tkInit(title:T<=unit ...)=M
       Tk.frame,{Record.subtract M title}
-      case T == '' then skip else
+      case T == unit then skip else
 	 self.Label = {New Tk.label
 		       tkInit(parent: self
 			      text:   T
