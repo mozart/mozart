@@ -91,7 +91,7 @@ public:
     while(aux){
       int OTI = (int) aux->getEntry();
       OwnerEntry *oe=OT->getEntry(OTI);
-      if(oe && (!oe->isFree()) &&oe->getRef()==entity){
+      if(oe && (!oe->isTertiary()) &&oe->getRef()==entity){
 	return OTI;}
       else{
 	if(htSub(hvalue,aux));}
