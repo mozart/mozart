@@ -217,12 +217,11 @@ int main(int argc, char** argv)
           char **links = new char*[argc+9];
           char *libname = argv[3];
           r = 0;
-          links[r++]="cl";
-          links[r++]="-LD";
+          links[r++]="link";
+          links[r++]="-DLL";
           links[r++]=tempfile;
-          for (int i=5; i<argc; i++) links[r++]=argv[i];
-          links[r++]=concat("-Fe",libname);
-          links[r++]="-link";
+          for (int i=4; i<argc; i++) links[r++]=argv[i];
+          links[r++]=concat("-OUT:",libname);
           links[r++]=concat("-IMPLIB:",junklib);
           links[r]=NULL;
           r=execute(links);
