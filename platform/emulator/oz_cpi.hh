@@ -120,7 +120,7 @@ ostream &operator << (ostream &ofile, const OZ_FiniteDomain &fd) {
 //-----------------------------------------------------------------------------
 // class OZ_Propagator
 
-enum OZ_FDPropState {fd_det = 0, fd_bounds, fd_any};
+enum OZ_FDPropState {fd_singl = 0, fd_bounds, fd_any};
 
 // virtual base class; never create an object from this class
 class OZ_Propagator {
@@ -226,7 +226,7 @@ private:
   OZ_Boolean tell(void);
 public:
   OZ_FDIntVar(void) {}
-  OZ_FDIntVar(OZ_Term v) { enter(v); }
+  OZ_FDIntVar(OZ_Term v) { read(v); }
 		      
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
@@ -243,8 +243,8 @@ public:
   OZ_Boolean isTouched(void) const {return initial_size > domPtr->getSize();}
 
   void ask(OZ_Term);
-  void enter(OZ_Term);
-  void enterSpec(OZ_Term);
+  void read(OZ_Term);
+  void readLocal(OZ_Term);
   OZ_Boolean leave(void) { return isSort(sgl_e) ? OZ_FALSE : tell(); }
   void fail(void);
 };

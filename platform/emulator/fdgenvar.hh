@@ -45,12 +45,12 @@ private:
 public:  
   GenFDVariable(OZ_FiniteDomain &fd) : GenCVariable(FDVariable) {
     finiteDomain = fd;
-    fdSuspList[fd_det] = fdSuspList[fd_bounds] = NULL;
+    fdSuspList[fd_singl] = fdSuspList[fd_bounds] = NULL;
   }
 
   GenFDVariable() : GenCVariable(FDVariable) {
     finiteDomain.initFull();
-    fdSuspList[fd_det] = fdSuspList[fd_bounds] = NULL;
+    fdSuspList[fd_singl] = fdSuspList[fd_bounds] = NULL;
   }
 
   // methods relevant for term copying (gc and solve)
@@ -85,13 +85,13 @@ public:
 
   int getSuspListLength(void) {
     return suspList->length() +
-      fdSuspList[fd_det]->length() + fdSuspList[fd_bounds]->length();
+      fdSuspList[fd_singl]->length() + fdSuspList[fd_bounds]->length();
   }
 
   void installPropagators(GenFDVariable *, Board *);
 
   void addDetSusp(Thread *susp) {
-    fdSuspList[fd_det] = addSuspToList(fdSuspList[fd_det], 
+    fdSuspList[fd_singl] = addSuspToList(fdSuspList[fd_singl], 
 				       new SuspList(susp,NULL), home);
   }
 };
