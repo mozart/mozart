@@ -7,6 +7,10 @@
 
 local
 
+   fun {AddZero N}
+      case N<10 then '0'#N else N end
+   end
+   
    fun {FormatTime Totaltime Copytime}
       Hours      = Totaltime div 3600000
       Minutes    = Totaltime div 60000
@@ -15,7 +19,8 @@ local
       case Hours==0 then
 	 case Minutes==0 then
 	    case Seconds==0 then Totaltime # 'ms'
-	    else Seconds # '.' # (Totaltime - 1000 * Seconds ) div 10 # 's'
+	    else Seconds # '.' # {AddZero (Totaltime - 1000 * Seconds ) div 10}
+	       # 's'
 	    end
 	 else Minutes # 'm ' # Seconds - Minutes * 60 # 's'
 	 end
