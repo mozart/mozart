@@ -32,7 +32,13 @@ Dbg = dbg(on:           proc {$}
 	  stream:       Debug.getStream
 	  step:         Debug.setStepFlag
 	  trace:        Debug.setTraceFlag
-	  checkStopped: Debug.checkStopped
+	  checkStopped: fun {$ T}
+			   try
+			      {Debug.checkStopped T}
+			   catch error(kernel(deadThread ...) ...) then
+			      false
+			   end
+			end
 	  unleash:      Debug.threadUnleash
 	 )
 
