@@ -32,9 +32,9 @@ INSTALL_DIR	= @INSTALL_DIR@
 HOMEURL         = @HOMEURL@
 
 
-.PHONY: all quick bootstrap check install clean veryclean distclean depend
+.PHONY: all quick bootstrap boot-quick check install clean veryclean distclean depend
 
-all quick bootstrap:: $(TKDOCBASE)
+all quick bootstrap boot-quick:: $(TKDOCBASE)
 
 install:: all $(DOCDIR)/tcltk
 
@@ -43,7 +43,7 @@ check depend:
 $(TKDOCBASE): $(TKDOC)
 	gzip -dc < $(TKDOC) | tar xf -
 	touch $(TKDOCBASE)
-	
+
 Makefile: $(VPATH)/Makefile.in ../config.status
 	cd .. && ./config.status
 
