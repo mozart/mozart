@@ -112,12 +112,16 @@ ostream& operator << (ostream& o, const OZ_Propagator &p)
 {
   char * func_name = builtinTab.getName((void *) p.getHeaderFunc());
   OZ_Term args = p.getParameters();
-
+ 
+ 
   /*
 #ifdef DEBUG_CHECK
   o << "cb(" << (void *) am.currentBoard << "), p(" << (void *) &p << ") ";
 #endif
 */
+  
+  if (!p.isMonotonic())
+    o << p.getOrder() << '#' << flush;
 
   o << '{' << func_name << ' ';
   outputArgsList(o, args, FALSE);
@@ -177,7 +181,6 @@ OZ_Boolean OZ_Propagator::addImpose(OZ_FDPropState ps, OZ_Term v)
 void OZ_Propagator::impose(OZ_Propagator * p, int prio) 
 {
   Thread * thr = am.mkPropagator(am.currentBoard, prio, p);
-  thr->headInitPropagator();
 
   ozstat.propagatorsCreated.incf();
 
@@ -235,6 +238,22 @@ void OZ_Propagator::impose(OZ_Propagator * p, int prio)
     thr->markLocalThread();
   
   staticSpawnVarsNumberProp = 0;
+}
+
+//-----------------------------------------------------------------------------
+// class NonMonotonic
+
+OZ_NonMonotonic::order_t OZ_NonMonotonic::_next_order = 1;
+
+OZ_NonMonotonic::OZ_NonMonotonic(void) : _order(_next_order++)
+{
+
+#ifdef DEBUG_NONMONOTONIC
+  cout << "Constructing nonmonotonic prop: order=" << _order 
+       << endl << flush;
+#endif
+
+  Assert(_next_order);
 }
 
 // End of File

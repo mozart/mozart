@@ -110,6 +110,32 @@ TaggedRef SolveActor::merge(Board *bb, Bool isSibling) {
       resetLocalThreadQueue();
     }
   }
+
+  // merge nonmonotonic susp lists
+  if (nonMonoSuspList) {
+    // Merge in current solve board but not elsewhere
+    bb = am.currentSolveBoard;
+    
+    if (bb && bb->isSolve()) {
+      // merge nonmonotonic susp list to another solve space
+      
+      SolveActor * sa = SolveActor::Cast(bb->getActor());
+      
+      if (sa->nonMonoSuspList) {
+	sa->mergeNonMonoSuspListWith(nonMonoSuspList);
+	setNonMonoSuspList(NULL);
+      } else {
+	sa->setNonMonoSuspList(nonMonoSuspList);
+      }
+      
+    } else {
+      // merge nonmonotinic susp list to a non-solve space
+      
+      DebugCode(OZ_warning("Merging solve space with non-solve space."));
+      
+      scheduleNonMonoSuspList();
+    }
+  }
   
   return solveVar;
 }
