@@ -42,6 +42,8 @@
 <!ENTITY ellipsis PI "ellipsis">
 <!ENTITY ie PI "ie">
 <!ENTITY eg PI "eg">
+
+<!ENTITY cc.class "<span class=ignore>class </span>">
 ]>
 <BOOK>
 <meta name="html.split" value="part.getting.started">
