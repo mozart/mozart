@@ -525,10 +525,8 @@ in
 	       FrameDir = Frame.dir
 	    in
 	       Gui,Disable(W)
-	       case FrameDir == entry then % should also work with 'exit' :-(
-		  {W tk(yview 'end')}
-		  Gui,frameClick(frame:Frame highlight:false)
-	       else skip end
+	       {W tk(yview 'end')}
+	       Gui,frameClick(frame:Frame highlight:false)
 	    else skip end
 	 end
       end
