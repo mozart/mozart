@@ -252,12 +252,9 @@ void gcPerdioFinal()
 /*   globalization                                       */
 /* *********************************************************************/
 
-void globalizeTert(Tertiary *t, MsgBuffer *bs)
+void globalizeTert(Tertiary *t)
 { 
   Assert(t->isLocal());
-
-  if (bs && !bs->globalize())
-    return;
 
   switch(t->getType()) {
   case Co_Cell:
@@ -294,7 +291,7 @@ void globalizeTert(Tertiary *t, MsgBuffer *bs)
 	  while(w!=NULL){
 	    insertWatcher(cell,w);
 	  }}
-	globalizeTert(cell,bs);
+	globalizeTert(cell);
 	o->setState(cell);}
       break;
     }
@@ -452,7 +449,7 @@ void msgReceived(MsgBuffer* bs)
       Credit c;
       unmarshal_M_OWNER_CREDIT(bs,index,c);
       PD((MSG_RECEIVED,"OWNER_CREDIT index:%d credit:%d",index,c));
-      receiveAtOwnerNoCredit(index)->returnCreditOwner(c);
+      receiveAtOwnerNoCredit(index)->returnCreditOwner(c,index);
       break;
     }
 

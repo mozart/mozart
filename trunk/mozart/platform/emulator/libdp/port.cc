@@ -148,7 +148,8 @@ OZ_Return portSend(Tertiary *p, TaggedRef msg)
     unmarshal_M_PORT_SEND(bs,portIndex,t);
     dumpRemoteMsgBuffer(bs);
     */
-    return raiseGeneric("Resources found during send to port",
+    return raiseGeneric("portSend:resources",
+			"Resources found during send to port",
 			oz_mklist(OZ_pairA("Resources",nogoods),
 				  OZ_pairA("Port",makeTaggedTert(p))));
   }
