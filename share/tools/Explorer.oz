@@ -7,31 +7,17 @@
 
 
 declare
-\ifndef NEWSAVE
-   Explorer ExplorerClass
-   ExploreOne ExploreAll ExploreBest
-\endif
-\ifdef SAVE
    NewExplorer
-\endif
 in
 
-\ifdef SAVE
 fun
 \ifdef NEWCOMPILER
    instantiate
 \endif
-   {NewExplorer
-\ifdef NEWSAVE
-     Standard
-\endif
-     Tk TkTools Browse}
-\endif
+   {NewExplorer Standard Tk TkTools Browse}
 
-\ifdef NEWSAVE
 \insert 'Standard.env'
    = Standard
-\endif
    
    \insert 'explorer/main.oz'
 
@@ -49,8 +35,6 @@ fun
       {Explorer all(P O)}
    end
 
-\ifdef SAVE
 in
-  \insert 'Explorer.env'
+   \insert 'Explorer.env'
 end
-\endif
