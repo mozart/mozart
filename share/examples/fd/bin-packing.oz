@@ -1,3 +1,25 @@
+%%%
+%%% Authors:
+%%%   Gert Smolka <smolka@ps.uni-sb.de>
+%%%
+%%% Copyright:
+%%%   Gert Smolka, 1998
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
 declare
 fun {BinPacking Order}
    ComponentTypes = [glass plastic steel wood copper]
@@ -33,8 +55,7 @@ fun {BinPacking Order}
              case Ys of A|B|_ then
                 A.type =<: B.type
                 thread
-                   case A.type == B.type then A.glass >=: B.glass
-                   else skip end
+                   if A.type == B.type then A.glass >=: B.glass end
                 end
              else skip end
           end}
@@ -52,7 +73,7 @@ fun {BinPacking Order}
       NbComps = {Record.foldR Order Number.'+' 0}
       Div     = NbComps div MaxBinCapacity
       Mod     = NbComps mod MaxBinCapacity
-      Min     = case Mod==0 then Div else Div+1 end
+      Min     = if Mod==0 then Div else Div+1 end
       NbBins  = {FD.int Min#NbComps}
       Types
       Capacities

@@ -1,4 +1,25 @@
-%Configuration, form Solver Manual,  page 189
+%%%
+%%% Authors:
+%%%   Gert Smolka <smolka@ps.uni-sb.de>
+%%%
+%%% Copyright:
+%%%   Gert Smolka, 1998
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
 declare
 fun {Plug RackSpecs CardSpecs NbRacks Cards}
    RackType        = {List.number 0 {Length RackSpecs} 1}
@@ -15,13 +36,12 @@ fun {Plug RackSpecs CardSpecs NbRacks Cards}
       Price
       NbSlots       = {FD.int RackNbSlots}
    in
-      R = rack(
-                type: Type = {FD.int RackType}
-                cards: NbCards = {FD.record type CardType 0#RackMaxNbSlots}
-                price: Price = {FD.int RackPrice}
+      R = rack(type: Type = {FD.int RackType}
+               cards: NbCards = {FD.record type CardType 0#RackMaxNbSlots}
+               price: Price = {FD.int RackPrice}
               )
       thread
-         case Type==0 then Power=0  Price=0  NbSlots=0
+         if Type==0 then Power=0  Price=0  NbSlots=0
          else Spec = {Nth RackSpecs Type} in
             Power=Spec.power  Price=Spec.price  NbSlots=Spec.slots
          end
@@ -35,8 +55,7 @@ fun {Plug RackSpecs CardSpecs NbRacks Cards}
           case Rs of A|B|_ then
              A.type =<: B.type
              thread
-                case A.type == B.type then A.cards.1 >=: B.cards.1
-                else skip end
+                if A.type == B.type then A.cards.1 >=: B.cards.1 end
              end
           else skip end
        end}

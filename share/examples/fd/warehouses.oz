@@ -1,9 +1,31 @@
-% Locating Warehouses
+%%%
+%%% Authors:
+%%%   Gert Smolka <smolka@ps.uni-sb.de>
+%%%
+%%% Copyright:
+%%%   Gert Smolka, 1998
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
+%%% Locating Warehouses
 
 declare
-% Capacity: Supplier --> Nat
+%% Capacity: Supplier --> Nat
 Capacity   = supplier(       1   4  2  1  3)
-% CostMatrix: Store --> Supplier --> Nat
+%% CostMatrix: Store --> Supplier --> Nat
 CostMatrix = store(
                     supplier(20 24 11 25 30)
                     supplier(28 27 82 83 74)
@@ -23,11 +45,11 @@ end
 proc {WareHouse X}
    NbSuppliers = {Width Capacity}
    NbStores    = {Width CostMatrix}
-   % Supplier: Store --> Supplier
+   %% Supplier: Store --> Supplier
    Supplier    = {FD.tuple store NbStores 1#NbSuppliers}
-   % Open: Supplier --> {0,1}
+   %% Open: Supplier --> {0,1}
    Open        = {FD.tuple supplier NbSuppliers 0#1}
-   % Cost: Store --> Nat
+   %% Cost: Store --> Nat
    Cost        = {FD.tuple store NbStores 0#FD.sup}
    SumCost     = {FD.decl} = {FD.sum Cost '=:'}
    NbOpen      = {FD.decl} = {FD.sum Open '=:'}
