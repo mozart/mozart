@@ -846,6 +846,28 @@ public:
     cerr.flush();
   }
 
+  void printTerm(void) {
+    for (int i = 0; i < curr_num_of_vars; i += 1)
+      printTerm(i);
+  }
+
+  void printTerm(int i) {
+    if (*bifdbm_varptr[i] == bifdbm_var[i]) {
+      cout << "index=" << i << endl;
+      taggedPrintLong(TaggedRef(bifdbm_varptr[i]));
+      cout << endl << flush;
+    } else {
+      cout << "ATTENTION *bifdbm_varptr[i]!=bifdbm_var[i]. index="
+	   << i << endl;
+      cout << "bifdbm_varptr";
+      taggedPrintLong(TaggedRef(bifdbm_varptr[i]));
+      cout << endl << flush;
+      cout << "bifdbm_var";
+      taggedPrintLong(bifdbm_var[i]);
+      cout << endl << flush;
+    }
+  }
+  
   void introduce(int i, TaggedRef v) {
     if (only_local_vars) {
       introduceLocal(i, v);
