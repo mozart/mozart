@@ -272,10 +272,7 @@ inline Bool SEND_SHORT(Site* s){
 
 void pushUnify(Thread *t, TaggedRef t1, TaggedRef t2)
 {
-  RefsArray args = allocateRefsArray(2,NO); // with default priority
-  args[0]=t1;
-  args[1]=t2;
-  t->pushCall(BI_Unify,args,2);
+  t->pushCall(BI_Unify,t1,t2);
 }
 
 void SiteUnify(TaggedRef val1,TaggedRef val2)
@@ -293,10 +290,8 @@ void SiteUnify(TaggedRef val1,TaggedRef val2)
 #ifdef PERDIO_DEBUG
   PD((SITE_OP,"SITE_OP: site unify called"));
   if(DV->on(SITE_OP)){
-    RefsArray args0=allocateRefsArray(1,NO);
-    TaggedRef tr=oz_atom("SITE_OP: site unify complete";
-    args[0]=tr;
-    th->pushCall(BI_Show,args0,1);}
+    TaggedRef tr=oz_atom("SITE_OP: site unify complete");
+    th->pushCall(BI_Show,tr);}
 #endif
   pushUnify(th,val1,val2);
   am.scheduleThread(th);
@@ -4965,22 +4960,16 @@ Bool Tertiary::deinstallWatcher(EntityCond wc, TaggedRef proc){
 
 void Watcher::invokeHandler(EntityCond ec,Tertiary* entity){
   Assert(isHandler());
-  RefsArray argsX = allocateRefsArray(1, NO);
-  argsX[0]= makeTaggedTert(entity);
-  thread->pushCall(BI_restop,argsX,1);
-  RefsArray args = allocateRefsArray(2, NO);
-  args[0]= makeTaggedTert(entity);
-  args[1]= (ec & PERM_BLOCKED)?AtomPermBlocked:AtomTempBlocked;
-  thread->pushCall(proc,args,2);
+  thread->pushCall(BI_restop,makeTaggedTert(entity));
+  thread->pushCall(proc,
+		   makeTaggedTert(entity),
+		   (ec & PERM_BLOCKED)?AtomPermBlocked:AtomTempBlocked);
   oz_resumeFromNet(thread);}
 
 void Watcher::invokeWatcher(EntityCond ec,Tertiary* entity){
   Assert(!isHandler());
   Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, ozx_rootBoard());
-  RefsArray args = allocateRefsArray(2,NO);
-  args[0]=makeTaggedTert(entity);
-  args[1]=listifyWatcherCond(ec);
-  tt->pushCall(proc, args, 2);
+  tt->pushCall(proc, makeTaggedTert(entity), listifyWatcherCond(ec));
   am.scheduleThread(tt);}
 
 Bool CellSec::threadIsPending(Thread *t){
@@ -5417,9 +5406,7 @@ void Site::probeFault(ProbeReturn pr){
 void insertDangelingEvent(Tertiary *t){
   PD((PROBES,"Starting DangelingThread"));
   Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, ozx_rootBoard());
-  RefsArray args = allocateRefsArray(1,NO);
-  args[0] = makeTaggedTert(t);
-  tt->pushCall(BI_probe, args, 1);
+  tt->pushCall(BI_probe, makeTaggedTert(t));
   am.scheduleThread(tt);}
 
 /**********************************************************************/
@@ -5683,13 +5670,8 @@ OZ_BI_define(BIcloseCon,1,0)
 void wakeUpTmp(int i, int time){
   PD((TCPCACHE,"Starting DangelingThread"));
   Thread *tt = am.mkRunnableThread(LOW_PRIORITY, ozx_rootBoard());
-  RefsArray args1 = allocateRefsArray(1,NO);
-  args1[0] = makeTaggedSmallInt(time);
-  RefsArray args2 = allocateRefsArray(2,NO);
-  args2[0] = makeTaggedSmallInt(i);
-  args2[1] = makeTaggedSmallInt(time);
-  tt->pushCall(BI_startTmp, args2, 2);
-  tt->pushCall(BI_Delay, args1, 1);
+  tt->pushCall(BI_startTmp, makeTaggedSmallInt(i), makeTaggedSmallInt(time));
+  tt->pushCall(BI_Delay, makeTaggedSmallInt(time));
   am.scheduleThread(tt);}
 
 GenHashNode *getPrimaryNode(GenHashNode* node, int &i);

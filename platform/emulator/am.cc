@@ -445,16 +445,14 @@ void AM::init(int argc,char **argv)
 		  ||assemblyCodeFile
 		  )?
       mkRunnableThread(DEFAULT_PRIORITY, _rootBoard):0;
-    RefsArray args = allocateStaticRefsArray(2);
 
     if (!url) {
       // --> make sure that we check for input from compiler
       setSFlag(IOReady);
     } else {
-      args[0] = oz_atom(url);
-      args[1] = oz_newVariable();
-      tt->pushCall(args[1],0,0);
-      tt->pushCall(BI_load,args,2);
+      TaggedRef proc = oz_newVariable();
+      tt->pushCall(proc);
+      tt->pushCall(BI_load,oz_atom(url),proc);
     }
 
     OZ_Term (*ozmaFunc)(const char *);
@@ -482,10 +480,9 @@ void AM::init(int argc,char **argv)
     }
 
     if (initFile) {
-      args[0] = oz_atom(initFile);
-      args[1] = oz_newVariable();
-      tt->pushCall(args[1],0,0);
-      tt->pushCall(BI_load,args,2);
+      TaggedRef proc = oz_newVariable();
+      tt->pushCall(proc);
+      tt->pushCall(BI_load,oz_atom(initFile),proc);
     }
 
     if (tt) scheduleThread(tt);
