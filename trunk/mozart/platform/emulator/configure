@@ -2669,6 +2669,7 @@ fi
 #define DMALLOC 1
 EOF
 
+    LIBS="$LIBS -ldmalloc"
 elif test -n "$with_dmalloc"
 then
     { echo "configure: error: only yes allowed" 1>&2; exit 1; }
@@ -2681,7 +2682,7 @@ fi
 if test -z "$with_dmalloc" 
 then
     echo $ac_n "checking for --with-malloc""... $ac_c" 1>&6
-echo "configure:2685: checking for --with-malloc" >&5
+echo "configure:2686: checking for --with-malloc" >&5
     # Check whether --with-malloc or --without-malloc was given.
 if test "${with_malloc+set}" = set; then
   withval="$with_malloc"
@@ -2705,7 +2706,7 @@ fi
 
 
 echo $ac_n "checking for --enable-tmphack""... $ac_c" 1>&6
-echo "configure:2709: checking for --enable-tmphack" >&5
+echo "configure:2710: checking for --enable-tmphack" >&5
 # Check whether --enable-tmphack or --disable-tmphack was given.
 if test "${enable_tmphack+set}" = set; then
   enableval="$enable_tmphack"
@@ -2742,7 +2743,7 @@ case $platform in
     linux*)
 	
     echo $ac_n "checking for --enable-lstatic""... $ac_c" 1>&6
-echo "configure:2746: checking for --enable-lstatic" >&5
+echo "configure:2747: checking for --enable-lstatic" >&5
     # Check whether --enable-lstatic or --disable-lstatic was given.
 if test "${enable_lstatic+set}" = set; then
   enableval="$enable_lstatic"
@@ -2767,7 +2768,7 @@ esac
 
 
     echo $ac_n "checking for --enable-finalization""... $ac_c" 1>&6
-echo "configure:2771: checking for --enable-finalization" >&5
+echo "configure:2772: checking for --enable-finalization" >&5
     # Check whether --enable-finalization or --disable-finalization was given.
 if test "${enable_finalization+set}" = set; then
   enableval="$enable_finalization"

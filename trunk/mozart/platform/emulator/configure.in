@@ -532,6 +532,9 @@ dnl *****************************************************************
 dnl dmalloc
 dnl *****************************************************************
 
+dnl *** active by executing output of 
+dnl ***  dmalloc -l /tmp/dmalloc.$USER -i 100 high
+
 AC_MSG_CHECKING(for --with-dmalloc)
 AC_ARG_WITH(dmalloc,
     [--with-dmalloc
@@ -542,6 +545,7 @@ then
     AC_MSG_RESULT(yes)
     AC_CHECK_LIB(dmalloc,main,true,AC_MSG_ERROR(cannot find lib dmalloc))
     AC_DEFINE(DMALLOC)
+    LIBS="$LIBS -ldmalloc"
 elif test -n "$with_dmalloc"
 then
     AC_MSG_ERROR(only yes allowed)
