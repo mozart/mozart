@@ -136,7 +136,7 @@ static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
   case LITERAL:
     tagged2Literal(ref)->print(stream,depth,offset);
     break;
-  case FLOAT:
+  case OZFLOAT:
     tagged2Float(ref)->print(stream,depth,offset);
     break;
   case BIGINT:
@@ -148,7 +148,7 @@ static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
       OZ_free(s);
     }
     break;
-  case CONST:
+  case OZCONST:
     tagged2Const(ref)->print(stream,depth,offset);
     break;
   default:
@@ -689,7 +689,7 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
   case LITERAL:
     tagged2Literal(ref)->printLong(stream,depth,offset);
     break;
-  case FLOAT:
+  case OZFLOAT:
     tagged2Float(ref)->printLong(stream,depth,offset);
     break;
   case BIGINT:
@@ -705,7 +705,7 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
       stream << endl;
     }
     break;
-  case CONST:
+  case OZCONST:
     tagged2Const(ref)->printLong(stream,depth,offset);
     break;
   default:
