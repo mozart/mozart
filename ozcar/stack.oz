@@ -73,6 +73,9 @@ in
          Rebuild        % should we re-calculate the stack
                         % when the next 'step' message arrives?
 
+         Sync  : _      % sync block/cont actions
+         Delay : false
+
       meth init(thr:Thr id:ID)
          self.T = Thr
          self.I = ID
@@ -80,6 +83,24 @@ in
          Size    <- 0
          SP      <- 1
          Rebuild <- false
+      end
+
+      meth blockMsg(Ack)
+         New in
+         Sync  <- New = unit
+         Delay <- true
+         thread
+            {WaitOr New {Alarm TimeoutToBlock}}
+            lock
+               Delay <- false
+               case {IsDet New} then Ack = no else Ack = ok end
+            end
+         end
+      end
+
+      meth contMsg(Ack)
+         case @Delay then Ack = no else Ack = ok end
+         Sync <- _ = unit
       end
 
       meth rebuild(Flag)
