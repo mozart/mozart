@@ -26,7 +26,6 @@
 #define SHOW_IDLE_MESSAGE	0
 #define SHOW_SUSPENSION		0
 #define STOP_ON_TOPLEVEL_FAILURE	0
-#define ERROR_VERBOSITY		2
 
 #define OZ_PATH		".:/usr/local/oz/lib"
 
