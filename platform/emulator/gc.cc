@@ -1177,20 +1177,18 @@ void processUpdateStack(void)
 // all nodes but node self
 inline void setPathMarks (Board *bb)
 {
-  while (bb->isCommitted())
-    {
-      bb = bb->getBoard();
-      bb->setPathMark();
-    }
+  while (bb->isCommitted()) {
+    bb = bb->getBoard();
+    bb->setPathMark();
+  }
 }
 
 inline void unsetPathMarks (Board *bb)
 {
-  while (bb->isCommitted())
-    {
-      bb = bb->getBoard();
-      bb->unsetPathMark();
-    }
+  while (bb->isCommitted()) {
+    bb = bb->getBoard();
+    bb->unsetPathMark();
+  }
 }
 
 
@@ -1198,7 +1196,7 @@ inline void unsetPathMarks (Board *bb)
  *   AM::copyTree () routine (for search capabilities of the machine)
  *
  */
-Board* AM::copyTree (Board* bb,Bool *isGround)
+Board* AM::copyTree (Board* bb, Bool *isGround)
 {
   opMode = IN_TC;
   gcing = 0;
@@ -1568,7 +1566,9 @@ void Board::gcRecurse()
 
 Actor *Actor::gc()
 {
-  CHECKCOLLECTED(flags, Actor *);
+  // CHECKCOLLECTED(flags, Actor *);
+  CHECKCOLLECTED(priority, Actor *);
+  // by kost@; flags are needed for getBoardDeref
   size_t size;
   if (isWait()) {
     size = sizeof(WaitActor);
@@ -1579,7 +1579,7 @@ Actor *Actor::gc()
   }
   Actor *ret = (Actor *) gcRealloc(this,size);
   ptrStack.push(ret,PTR_ACTOR);
-  setHeapCell((int *)&flags, GCMARK(ret));
+  setHeapCell((int *)&priority, GCMARK(ret));
   return ret;
 }
 

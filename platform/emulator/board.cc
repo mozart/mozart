@@ -124,19 +124,22 @@ void Board::SetCurrent(Board *c, Bool checkNotGC)
     am.wasSolveSet = OK; 
     DebugCheckT (oldSolveBoard = c); 
   } else if (am.wasSolveSet == OK) {
-    am.currentSolveBoard = GetSolveBoard ();
+    DebugCheck ((checkNotGC && oldSolveBoard != am.currentSolveBoard),
+		error ("somebody has changed 'am.currentSolveBoard'"));
+    am.currentSolveBoard = c->getSolveBoard ();
     am.wasSolveSet = NO;
+    DebugCheckT (oldSolveBoard = am.currentSolveBoard); 
   }
 }
 
-Board* Board::GetSolveBoard ()
+Board* Board::getSolveBoard ()
 {
-  Board *b = am.currentBoard;
+  Board *b = this;
   Board *rb = am.rootBoard;
-  while (b != rb) {
+  while (b != (Board *) NULL && b != rb) {
     if (b->isSolve () == OK)
       return (b);
-    b = (b->getBoardDeref ())->getParentBoard ();
+    b = (b->getParentBoard ())->getBoardDeref ();
   }
   return ((Board *) NULL); 
 }
@@ -145,7 +148,7 @@ Board::Board(Actor *a,int typ)
 : ConstTerm(Co_Board)
 {
   DebugCheck(!a && typ!=Bo_Root,error("Board::Board"));
-  DebugCheck(typ!=Bo_Root && typ!=Bo_Ask && typ!=Bo_Wait,
+  DebugCheck(typ!=Bo_Root && typ!=Bo_Ask && typ!=Bo_Wait && typ!=Bo_Solve,
 	     error("Board::Board"));
   flags=typ;
   if (a != (Actor *) NULL && a->isAskWait () == OK) {
