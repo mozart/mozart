@@ -99,7 +99,8 @@ OZ_BI_define(BIbindReadOnly,2,0)
   oz_declareDerefIN(0, var);
   Assert(oz_isVar(var) &&
          (tagged2Var(var)->getType() == OZ_VAR_READONLY ||
-          tagged2Var(var)->getType() == OZ_VAR_READONLY_QUIET));
+          tagged2Var(var)->getType() == OZ_VAR_READONLY_QUIET ||
+          tagged2Var(var)->getType() == OZ_VAR_EXT));
 
   oz_declareIN(1, val);
 
