@@ -48,12 +48,6 @@ veryclean clean::
 distclean:: veryclean
 	-rm -f Makefile
 
-xsl-jar: sax.jar xt.jar xp.jar
-	jar xf $(SRCDIR)/sax.jar
-	jar xf $(SRCDIR)/xt.jar
-	jar xf $(SRCDIR)/xp.jar
-	jar cf $(SRCDIR)/xsl.jar com org
-
 oz-jar: $(CLASSES)
-	jar xf $(SRCDIR)/xsl.jar
-	jar cf $(SRCDIR)/oz.jar com org $(EXTEND_CLASSES)
+	$(JAR) xf $(SRCDIR)/xsl.jar
+	$(JAR) cf $(SRCDIR)/oz.jar com org $(EXTEND_CLASSES)
