@@ -934,11 +934,7 @@ class OwnerTable {
 public:
   OwnerEntry* array;  /* TODO move to private */
 
-#ifdef DEBUG_PERDIO
-
-
   void print();
-#endif
 
   OwnerEntry *getOwner(int i)  { Assert(i>=0 && i<size); return &array[i];}
 
@@ -1069,7 +1065,6 @@ void OwnerTable::freeOwnerEntry(int i){
   PD((TABLE,"owner delete o:%d",i));
   return;}
 
-#ifdef DEBUG_PERDIO
 void OwnerTable::print(){
   printf("***********************************************\n");
   printf("********* OWNER TABLE *************************\n");
@@ -1077,15 +1072,24 @@ void OwnerTable::print(){
   printf("Size:%d No_used:%d \n",size,no_used);
   int i;
   for(i=0;i<size;i++){
-    printf("<%d> ",i);
     if(!(array[i].isFree())){
-      printf("OWNER\n");
+      printf("<%d> OWNER: %s\n",i,toC(getOwner(i)->getValue()));
+#ifdef XXDEBUG_PERDIO
       getOwner(i)->print();
     } else{
-      printf("FREE: next:%d\n",array[i].uOB.nextfree);}}
+      printf("<%d> FREE: next:%d\n",i,array[i].uOB.nextfree);
+#endif
+    }
+  }
   printf("-----------------------------------------------\n");
 }
-#endif
+
+OZ_BI_define(BIprintOwnerTable,0,0)
+{
+  OT->print();
+  return PROCEED;
+}
+
 
 /* ********************************************************************** */
 /*   SECTION 12:: BorrowCreditExtension                                   */
@@ -1840,9 +1844,7 @@ public:
 
   void copyBorrowTable(BorrowEntry *,int);
 
-#ifdef DEBUG_PERDIO
   void print();
-#endif
 };
 
 
@@ -1979,7 +1981,6 @@ void BorrowEntry::print() {
   printf("NA: s:%s o:%d\n",na->site->stringrep(),na->index);
 }
 
-#ifdef DEBUG_PERDIO
 void BorrowTable::print(){
   printf("***********************************************\n");
   printf("********* BORROW TABLE *************************\n");
@@ -1990,14 +1991,23 @@ void BorrowTable::print(){
   for(i=0;i<size;i++){
     if(!(array[i].isFree())){
       b=getBorrow(i);
-      printf("<%d> BORROW\n",i);
+      printf("<%d> BORROW: %s\n",i,toC(b->getValue()));
+#ifdef XXDEBUG_PERDIO
       b->print();
     } else {
-      printf("<%d> FREE: next:%d\n",i,array[i].uOB.nextfree);}}
+      printf("<%d> FREE: next:%d\n",i,array[i].uOB.nextfree);
+#endif
+    }
+  }
   printf("-----------------------------------------------\n");
 }
 
-#endif
+OZ_BI_define(BIprintBorrowTable,0,0)
+{
+  BT->print();
+  return PROCEED;
+}
+
 
 #ifdef DEBUG_PERDIO
 
@@ -2257,7 +2267,7 @@ void PerdioVar::addSuspPerdioVar(TaggedRef *v,Thread *el, int unstable){
 
   addSuspSVar(el,unstable);
 
-  if (isObjectGName()) {
+  if (isObjectClassNotAvail()) {
     MessageType mt;
     if(findGName(getGNameClass())==0) {mt=M_GET_OBJECTANDCLASS;}
     else {mt=M_GET_OBJECT;}
@@ -2265,7 +2275,7 @@ void PerdioVar::addSuspPerdioVar(TaggedRef *v,Thread *el, int unstable){
     sendHelpX(mt,be);
     return;}
 
-  if (isObject()) {
+  if (isObjectClassAvail()) {
     BorrowEntry *be=BT->getBorrow(getObject()->getIndex());
     sendHelpX(M_GET_OBJECT,be);
     return;
@@ -2638,10 +2648,10 @@ void PerdioVar::gcRecurse(void)
       last = &newPL->next;}
     *last = 0;}
   else {
-    Assert(isObject() || isObjectGName());
+    Assert(isObject());
     gcBorrowNow(getObject()->getIndex());
     ptr = getObject()->gcObject();
-    if (isObject()) {
+    if (isObjectClassAvail()) {
       u.aclass = u.aclass->gcClass();}}
 }
 
@@ -3393,7 +3403,7 @@ void Site::msgReceived(MsgBuffer* bs)
         error("M_SEND_OBJECT - don't understand");}
       fillInObject(&of,o);
       ObjectClass *cl;
-      if (pv->isObject()) {cl=pv->getClass();}
+      if (pv->isObjectClassAvail()) {cl=pv->getClass();}
       else {cl=tagged2ObjectClass(deref(findGName(pv->getGNameClass())));}
       o->setClass(cl);
 
@@ -3813,7 +3823,7 @@ void bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
     pv->primBind(lPtr,v);
     OT->getOwner(pv->getIndex())->mkRef();
     sendRedirect(pv->getProxies(),v,mySite,pv->getIndex());
-  } else if (pv->isObject() || pv->isObjectGName()) {
+  } else if (pv->isObject()) {
     PD((PD_VAR,"bind object u:%s",toC(makeTaggedConst(pv->getObject()))));
     pv->primBind(lPtr,v);
   } else {
@@ -5775,9 +5785,11 @@ BIspec perdioSpec[] = {
 #ifdef DEBUG_PERDIO
   {"dvset",    2, BIdvset, 0},
 #endif
-  {"NetCloseCon",    1, BIcloseCon, 0},
-  {"startTmp",        2, BIstartTmp, 0},
-  {"siteStatistics", 1, BIsiteStatistics, 0},
+  {"NetCloseCon",      1, BIcloseCon, 0},
+  {"startTmp",         2, BIstartTmp, 0},
+  {"siteStatistics",   1, BIsiteStatistics, 0},
+  {"printBorrowTable", 0, BIprintBorrowTable, 0},
+  {"printOwnerTable",  0, BIprintOwnerTable, 0},
   {0,0,0,0}
 };
 
