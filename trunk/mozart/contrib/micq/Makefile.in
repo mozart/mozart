@@ -4,6 +4,7 @@ SRCTOP		= @SRCTOP@
 PREFIX		= @prefix@
 SRCDIR          = @srcdir@
 VPATH           = @srcdir@
+OZENGINE	= @ozengine@
 PLATFORM	= @PLATFORM@
 HOMEURL		= @HOMEURL@
 LIB_DIR		= $(PREFIX)/contrib/micq
@@ -15,8 +16,12 @@ INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
 INSTALL_LIB	= $(INSTALL) -m 444
 APPLETS		= server.oza client.oza
+GIFCONV		= Gif2Functor.oza
+ICONDIR		= $(SRCDIR)/Icons2
+MAKEGIF		= $(OZENGINE) $(GIFCONV)
+GIFS		= $(addsuffix _gif.ozf, Logo Letter Online Offline Away Powered_by_oz Eyes)
 
-all:		$(APPLETS)
+all:		$(GIFCONV) $(GIFS) $(APPLETS)
 
 install:: $(LIB_DIR) $(DEMO_DIR) \
 	$(addprefix $(LIB_DIR)/,$(APPLETS)) \
@@ -30,7 +35,33 @@ $(DEMO_DIR)/MIM.oza: client.oza
 	$(INSTALL_LIB) $< $@
 BMETH = $(BUILDTOP)/contrib/micq/methods.ozf
 
- 
+
+$(GIFCONV) : Gif2Functor.oz GifToBase64.ozf
+	$(COMPILE) -x $< -o $@
+
+GifToBase64.ozf : GifToBase64.oz
+	$(COMPILE) -c $< -o $@	
+
+Logo_gif.ozf : $(ICONDIR)/logo.gif
+	$(MAKEGIF) $(ICONDIR)/logo.gif -o Logo_gif.ozf
+
+Letter_gif.ozf : $(ICONDIR)/letter.gif
+	$(MAKEGIF) $(ICONDIR)/letter.gif -o Letter_gif.ozf
+
+Away_gif.ozf : $(ICONDIR)/away_t.gif
+	$(MAKEGIF) $(ICONDIR)/away_t.gif -o Away_gif.ozf
+
+Online_gif.ozf : $(ICONDIR)/online_t.gif
+	$(MAKEGIF) $(ICONDIR)/online_t.gif -o Online_gif.ozf
+
+Offline_gif.ozf : $(ICONDIR)/offline_t.gif
+	$(MAKEGIF) $(ICONDIR)/offline_t.gif -o Offline_gif.ozf
+
+Eyes_gif.ozf : $(ICONDIR)/eyes_t.gif
+	$(MAKEGIF) $(ICONDIR)/eyes_t.gif -o Eyes_gif.ozf
+
+Powered_by_oz_gif.ozf : $(ICONDIR)/powered-by-oz-100.gif
+	$(MAKEGIF) $(ICONDIR)/powered-by-oz-100.gif -o Powered_by_oz_gif.ozf
 
 server.oza: micq
 	$(OZL) -z 9 $< -o $@
@@ -46,11 +77,18 @@ client: startclient.oz client.ozf
 %.ozf: %.oz
 	$(COMPILE) -c $< -o $@
 
-
 server.ozf: server.oz $(BMETH) defaultsettings.ozf database.ozf mobility.ozf newaccountgui.ozf \
 	log.ozf  sysadm.ozf
 	$(COMPILE) -c $< -o $@
 
+FaqEdit.ozf : FaqEdit.oz
+	$(COMPILE) -c  $< -o $@
+
+ScrollFrame.ozf : ScrollFrame.oz
+	$(COMPILE) -c  $< -o $@
+
+MozartPower.ozf : MozartPower.oz Powered_by_oz_gif.ozf
+	$(COMPILE) -c $< -o $@
 
 addapplicationgui.ozf: addapplicationgui.oz $(BMETH)
 	$(COMPILE) -c $< -o $@
@@ -65,7 +103,7 @@ newfriendsgui.ozf: newfriendsgui.oz $(BMETH)
 sysadm.ozf: sysadm.oz $(BMETH) addapplicationgui.ozf editapplicationgui.ozf
 	$(COMPILE) -c $< -o $@
 client.ozf : client.oz $(BMETH) clientgui.ozf newfriendsgui.ozf \
-	defaultsettings.ozf dialoggui.ozf mobility.ozf 
+	defaultsettings.ozf dialoggui.ozf mobility.ozf FaqEdit.ozf 
 	$(COMPILE) -c $< -o $@
 clientgui.ozf : clientgui.oz $(BMETH) messagedisplay.ozf manager.ozf \
 	defaultsettings.ozf popup.ozf messagegui.ozf editaccount.ozf \
