@@ -234,6 +234,9 @@ in
    fun {GenLitPrintName FN Store}
       case {IsAtom FN} then {GenAtomPrintName FN}
       elsecase {IsName FN} then {GenNamePrintName FN Store}
+	 %%
+	 %% Note that special names (true, false and unit) are not
+	 %% treated specially here!
       elsecase {IsInt FN} then {VirtualString.changeSign FN '~'}
       else FN
       end
@@ -779,7 +782,8 @@ in
 	    Term = self.term
 	    %%
 	    Name = case {Bool.is Term} then 
-		      case Term then '<B: true>' else '<B: false>' end
+		      case Term then 'true' else 'false' end
+		   elsecase Term == unit then 'unit'
 		   else {GenNamePrintName Term self.store}
 		   end 
 
