@@ -102,7 +102,7 @@ first:  $(CREATEDFILES)
 
 depend:: Makefile $(REALSRCS)
         $(MAKE) first
-        $(DEPEND) $(REALSRCS:%=$(SRCDIR)/%) | sed -e '1,$s/\.o:/\.lo:/' > Makefile.deps
+        $(DEPEND) $(REALSRCS:%=$(SRCDIR)/%) | sed -e '1,$$s/\.o:/\.lo:/' > Makefile.deps
 
 Makefile: Makefile.in
         (cd ..;./config.status)
