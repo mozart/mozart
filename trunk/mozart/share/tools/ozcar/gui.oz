@@ -60,7 +60,7 @@ local
 	 elseif {IsThread X}           then ThreadType
 	 elseif {IsAtom X}             then {Value.toVirtualString X 0 0}
 	 elseif {IsBool X}             then {Value.toVirtualString X 0 0}
-	 elseif {IsCell X}             then CellType
+	 elseif {IsCell X}             then '(' # {CheckType {Access X}} # ')'
 	 elseif {IsClass X}            then ClassType
 	 elseif {IsDictionary X}       then DictionaryType
 	 elseif {IsFloat X}            then if X >= BigFloat then
