@@ -97,10 +97,11 @@ private:
       return n;
     } else if (o == OZ_SLEEP) {
       return (n == OZ_FAILED ? n : o);
-    } else if (o = OZ_FAILED) {
+    } else if (o == OZ_FAILED) {
       return o;
     } else {
       OZ_ASSERT(0);
+      return o;
     }
   }
 public:  //
@@ -205,7 +206,7 @@ public:  //
     for (int i = 0; i < _nb_actions; i += 1) {
       _actions_t::_action_params_t &a = _actions[i]._action_params;
       //
-      if (r = OZ_FAILED) {
+      if (r == OZ_FAILED) {
 	break;
       }
       switch (_actions[i]._what) {
