@@ -99,8 +99,7 @@ public:
   void incSolveFailed(void)  { solveFailed.incf(); }
 
   PrTabEntry *currAbstr;
-  void enterCall(PrTabEntry  *a);
-  void leaveCall(PrTabEntry  *old);
+  void leaveCall(PrTabEntry *newproc);
   void heapAlloced(int sz);
 
   OZ_CFunHeader *currPropagator;
