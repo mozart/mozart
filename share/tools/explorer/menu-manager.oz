@@ -143,11 +143,12 @@ in
 				     state:   disabled
 				     feature: postscript)
 			     separator
-			     command(label:   'Quit'
+			     command(label:   'Close'
 				     action:  proc {$}
 						 {self.status kill}
 						 {self close}
 					      end
+				     key:     ctrl(x)
 				     feature: quit)]
 		      feature: explorer)
 	   menubutton(text: 'Move'
