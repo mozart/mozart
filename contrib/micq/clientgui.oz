@@ -867,7 +867,8 @@ define
 				      if Aps2==nil then ignore else "Edit Application"#Aps2 end
 				     ]
 		      separator
-		      "Debugging"#["Start Distribution Panel"#proc{$} {DP.open} end
+		      "Debugging"#["Start Distribution Panel"#proc{$} skip {DP.open}
+							      end
 				   "Start Panel"#proc{$} {Panel.object open} end
 				   "Browse DB"#proc{$} {Browse {Dictionary.entries DB}} end
 				  ]
