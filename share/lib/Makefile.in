@@ -10,6 +10,7 @@ BITMAPDIR	= $(OZLIB)/bitmaps
 
 SHELL		= @SH@
 RM		= @RM@ -f
+MV		= @MV@
 MKDIR		= @MKDIR@
 RMDIR		= @RMDIR@
 ECHO		= @ECHO@
@@ -216,7 +217,7 @@ ozbatch.ozm: MakeAssembly.oz \
 	$(OPSRC) OP.env $(GUMPSRC) Gump.env \
 	$(COMPILERSRC) Compiler.env BatchCompile.oz
 	$(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
-	/bin/mv -f /tmp/$$$$.ozm $@
+	$(MV) -f /tmp/$$$$.ozm $@
 
 ozbatch: MakeBatch.oz BatchCompile.oz $(DUMPINTRO) \
 	SP.ozc SP.env OP.ozc OP.env \
@@ -436,7 +437,7 @@ tags:
 	$(ALLSRCS)
 
 bootstrap: ${OZMA_LIB}
-	make Init.ozc all OZBATCH=$(SRCDIR)/ozbatch.sh OZ_LIB=.
+	$(MAKE) Init.ozc all OZBATCH=$(SRCDIR)/ozbatch.sh OZ_LIB=.
 
 #
 # testing components locally
@@ -451,42 +452,41 @@ STAGE2=./stage2
 STAGE3=./stage3
 
 stage1:
-	make all
-	make install-main PREFIX=$(STAGE1)
+	$(MAKE) all
+	$(MAKE) install-main PREFIX=$(STAGE1)
 
 stage1-bootstrap:
-	make bootstrap PREFIX=$(STAGE1)
+	$(MAKE) bootstrap PREFIX=$(STAGE1)
 
 stage2:
-	make install-main2 PREFIX=$(STAGE2) \
+	$(MAKE) install-main2 PREFIX=$(STAGE2) \
 	OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE1)/lib/ \
 	OZBATCH=$(STAGE1)/bin/ozbatch \
-	OZINIT=$(STAGE1)/lib/Init.ozc \
-	OZ_TRACE_LOAD=1
+	OZINIT=$(STAGE1)/lib/Init.ozc
 
 stage3:
-	make install-main2 PREFIX=$(STAGE3) \
+	$(MAKE) install-main2 PREFIX=$(STAGE3) \
 	OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE2)/lib/ \
 	OZBATCH=$(SRCDIR)/ozbatch.sh \
 	OZINIT=$(STAGE2)/lib/Init.ozc \
-	OZ_TRACE_LOAD=1 OZMAFILE=$(STAGE2)/lib/ozbatch.ozm
+	OZMAFILE=$(STAGE2)/lib/ozbatch.ozm
 
 check:
-	make stage1-bootstrap clean stage2
+	$(MAKE) stage1-bootstrap clean stage2
 
 .PHONY: denys install-denys denys2
 
 denys: SP.ozc CP.ozc OP.ozc Compiler.ozc Gump.ozc AP.ozc tycs ozbatch
 
 install-denys:
-	-mkdir stage1
-	-mkdir stage1/lib
-	-mkdir stage1/bin
-	mv *ozc tyc/*tyc stage1/lib/
-	mv ozbatch stage1/bin/
+	-$(MKDIR) stage1
+	-$(MKDIR) stage1/lib
+	-$(MKDIR) stage1/bin
+	$(MV) *ozc tyc/*tyc stage1/lib/
+	$(MV) ozbatch stage1/bin/
 
 denys2:
-	make denys \
+	$(MAKE) denys \
 	OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE1)/lib/ \
 	OZBATCH=$(STAGE1)/bin/ozbatch \
 	OZINIT=$(STAGE1)/lib/Init.ozc
