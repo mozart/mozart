@@ -768,10 +768,119 @@ failure:
 }
 
 //-----------------------------------------------------------------------------
+
+OZ_C_proc_begin(fdtest_sum, 2)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD);
+  
+  PropagatorExpect pe;
+
+  OZ_EXPECT(pe, 0, expectVectorIntVarSingl);
+  OZ_EXPECT(pe, 1, expectIntVarMinMax);
+
+  return pe.impose(new TestSum(OZ_args[0], OZ_args[1]));
+}
+OZ_C_proc_end
+
+OZ_CFunHeader TestSum::header = fdtest_sum;
+
+OZ_Return TestSum::propagate(void)
+{
+  OZ_DEBUGPRINTTHIS("in ");
+  
+  int &vd_size = reg_l_sz;
+  OZ_Term * _vd = reg_l;
+
+  DECL_DYN_ARRAY(OZ_FDIntVar, vd, vd_size);
+  OZ_FDIntVar s(_v);
+
+  PropagatorController_VV_V P(vd_size, vd, s);
+  int i;
+  int s_ub = s->getMaxElem();
+  int s_lb = s->getMinElem();
+  int sum = 0;
+  int det_vars = 0;
+
+  for (i = vd_size; i--; ) {
+    vd[i].read(_vd[i]);
+    
+    if (*vd[i] == fd_singl) {
+      sum += vd[i]->getSingleElem();
+      det_vars += 1;
+    }
+  }
+  
+  if (vd_size == det_vars) {
+    FailOnEmpty(*s &= sum);
+  } else if (sum < s_ub) {
+    int diff = 0;
+
+    for (i = vd_size; i--; ) {
+      if (*vd[i] != fd_singl) {
+	int max_elem = vd[i]->getMaxElem();
+	
+	if (sum + max_elem > s_ub) {
+	  FailOnEmpty(*vd[i] &= 0);
+	} else {
+	  diff += max_elem;
+	}
+	if (sum + diff < s_lb) {
+	  goto failure;
+	} else if (sum + diff == s_lb) {
+	  FailOnEmpty(*s &= s_lb);
+	  for (int j = vd_size; j--; )
+	    if (*vd[j] != fd_singl) 
+	      FailOnEmpty(*vd[j] -= 0);
+	}
+      } 
+    }
+  } else if (sum > s_ub) {
+    goto failure;
+  } else { 
+    OZ_ASSERT(sum == s_ub);
+
+    for (i = vd_size; i--; ) {
+      FailOnEmpty(*s &= s_ub);
+ 
+      if (*vd[i] != fd_singl) 
+	FailOnEmpty(*vd[i] &= 0);
+    } 
+  }
+  
+  {
+    OZ_Return r = P.leave();
+    
+    if (r == OZ_SLEEP) {
+      
+      int j = 0;
+      for (i = 0; i < vd_size; i += 1) {
+        if (*vd[i] == fd_singl && 0 == vd[i]->getSingleElem())
+	  continue;
+	if (i != j) 
+	  _vd[j] = _vd[i];
+        j += 1;
+      }
+      vd_size = j;
+    }
+    
+    OZ_DEBUGPRINTTHIS("out ");
+    return r;
+  }
+
+failure:
+  OZ_DEBUGPRINTTHIS("failed");
+  return P.fail();  
+}
+
+//-----------------------------------------------------------------------------
 // propagator by our hiwis
 
 #ifdef ALLDIFF
 #include "_alldiff.cc"
+#endif
+
+#ifndef INPROP
+//#define INPROP
 #endif
 
 #ifdef INPROP
