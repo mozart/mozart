@@ -159,6 +159,14 @@ public:
   void copyExtension(void);
   void disposeExtension(void);
 
+  static void * operator new(size_t);
+  static void operator delete(void *, size_t);
+
+#ifdef __GNUC__
+  static void * operator new[](size_t);
+  static void operator delete[](void *, size_t);
+#endif
+
   char * toString(void) const;
 };
 
@@ -277,6 +285,14 @@ public:
 
   OZ_FSetConstraint(const OZ_FSetConstraint &);
   OZ_FSetConstraint &operator = (const OZ_FSetConstraint &);
+
+  static void * operator new(size_t);
+  static void operator delete(void *, size_t);
+
+#ifdef __GNUC__
+  static void * operator new[](size_t);
+  static void operator delete[](void *, size_t);
+#endif
 
   void copyExtension(void);
   void disposeExtension(void);
