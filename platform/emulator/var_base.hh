@@ -19,7 +19,7 @@
   if ((List) && ((List)->getElem() == Thread)) {	\
   } else {						\
     List = new SuspList(Thread, List);			\
-    checkExtThread(Thread,Home);			\
+    if (Home) checkExtThread(Thread,Home);		\
   }							\
 }
 
@@ -101,32 +101,43 @@ public:
     return r;
   }
 
-  void addSuspSVar(Thread * el)
+  void addSuspSVar(Thread * el, int unstable)
   {
-    AddSuspToList(suspList,el,home);
+    AddSuspToList(suspList,el,unstable?home:0);
   }
-
 
   void print(ostream &stream, int depth, int offset, TaggedRef v);
   void printLong(ostream &stream, int depth, int offset, TaggedRef v);
 };
 
 inline
-void addSuspSVar(TaggedRef v, Thread * el)
+void addSuspSVar(TaggedRef v, Thread * el,int unstable=TRUE)
 {
-  tagged2SVar(v)->addSuspSVar(el);
+  tagged2SVar(v)->addSuspSVar(el,unstable);
 }
 
 inline
-void addSuspUVar(TaggedRefPtr v, Thread * el)
+void addSuspUVar(TaggedRefPtr v, Thread * el, int unstable=TRUE)
 {
   SVariable *sv = new SVariable(tagged2VarHome(*v));
   *v = makeTaggedSVar(sv);
-  sv->addSuspSVar(el);
+  sv->addSuspSVar(el,unstable);
 }
 
-
-void addSuspAnyVar(TaggedRefPtr v, Thread *thr);
+extern
+void addSuspCVarOutline(TaggedRef v, Thread *el, int unstable);
+inline
+void addSuspAnyVar(TaggedRefPtr v, Thread *thr,int unstable=TRUE)
+{
+  TaggedRef t = *v;
+  if (isSVar(t)) { 
+    addSuspSVar(t,thr,unstable);
+  } else if (isCVar(t)) {
+    addSuspCVarOutline(t,thr,unstable);
+  } else {
+    addSuspUVar(v,thr,unstable);
+  }
+}
 
 inline
 SVariable *tagged2SuspVar(TaggedRef var)

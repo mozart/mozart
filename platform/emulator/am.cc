@@ -971,12 +971,9 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
 {
   Assert(!isCVar(var) && !isRef(term));
 
-  /* first step: do suspensions */
+  /* first step: do suspension */
   if (isSVar(var)) {
     checkSuspensionList(var, pc_std_unif);
-    if (isSVar(term)) {
-      checkSuspensionList(term, pc_std_unif);
-    }
   }
 
   /* second step: mark binding for non-local variable in trail;     */
@@ -1103,14 +1100,10 @@ void AM::reduceTrailOnSuspend()
 
       bb->setScript(index,refPtr,*refPtr);
 
-      // change UVAR -> SVAR to allow further optimization of
-      // bind UVAR = SVAR: no check susp list needed
-      // NOTE: gc should never turn SVAR -> UVAR if suspList is empty!
       TaggedRef vv= *refPtr;
       DEREF(vv,vvPtr,_vvTag);
-      if (isUVar(vv)) {
-	SVariable *sv = new SVariable(tagged2VarHome(vv));
-	*vvPtr = makeTaggedSVar(sv);
+      if (isAnyVar(vv)) {
+	addSuspAnyVar(vvPtr,thr,NO);  // !!! Makes space *not* unstable !!!
       }
 
       unBind(refPtr, value);
