@@ -48,9 +48,13 @@ local
       from CombineNodes.sentinel TkNodes.sentinel
    end
 
+   fun {DerefBlocked S}
+      case S of blocked(S) then {DerefBlocked S} else S end
+   end
+   
 in
 
-   fun {MakeRoot Manager Query Order}
+   fun {MakeRoot Manager Query Order AwaitStable}
       Sentinel={New SentinelNode dirtyUp}
       Features=f(classes:   Classes
 		 canvas:    Manager.canvas
@@ -64,7 +68,9 @@ in
 		 choose:   {Class.new [ChooseNode] a Features [final]})
       S = {Space.new Query}
    in   
-      case {Space.askVerbose S}
+      case
+	 if AwaitStable then {Space.ask S _} end
+	 {Space.askVerbose S}
       of failed then
 	 {New Classes.failed init(Sentinel 1)}
       [] succeeded(SA) then
