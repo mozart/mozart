@@ -525,7 +525,7 @@ void DSite::probeFault(ProbeReturn pr) {
   PD((PROBES,"PROBEfAULT  site:%s",stringrep()));
   int limit=OT->getSize();
   for(int ctr = 0; ctr<limit;ctr++){
-    OwnerEntry *oe = OT->getOwner(ctr);
+    OwnerEntry *oe = OT->getOtiEntry(ctr);
     if(oe->isTertiary()){
       Tertiary *tr=oe->getTertiary();
       PD((PROBES,"Informing Manager"));
@@ -562,14 +562,14 @@ void Chain::establish_PERM_SOME(Tertiary* t){
   if(hasFlag(TOKEN_PERM_SOME)) return;
   setFlag(TOKEN_PERM_SOME);
   int OTI=t->getIndex();
-  triggerInforms(&inform,OT->getOwner(OTI),OTI,PERM_SOME);
+  triggerInforms(&inform,OT->getEntry(OTI),OTI,PERM_SOME);
   addEntityCond(t,PERM_SOME);
   entityProblem(t);}
 
 void Chain::establish_TOKEN_LOST(Tertiary* t){
   setFlagAndCheck(TOKEN_LOST);
   int OTI=t->getIndex();
-  triggerInforms(&inform,OT->getOwner(OTI),OTI,PERM_SOME|PERM_ALL|PERM_FAIL);
+  triggerInforms(&inform,OT->getEntry(OTI),OTI,PERM_SOME|PERM_ALL|PERM_FAIL);
   addEntityCond(t,PERM_SOME|PERM_FAIL|PERM_ALL);}
 
 void Chain::shortcutCrashLock(LockManager* lm){
@@ -588,7 +588,7 @@ void Chain::shortcutCrashLock(LockManager* lm){
   ce=getFirstNonGhost();
   int OTI=lm->getIndex();
   if(ce->site==myDSite){
-    lockReceiveTokenManager(OT->getOwner(OTI),OTI);
+    lockReceiveTokenManager(OT->getEntry(OTI),OTI);
     return;}
   lockSendToken(myDSite,OTI,ce->site);}
 
@@ -609,7 +609,7 @@ void Chain::shortcutCrashCell(CellManager* cm,TaggedRef val){
   ce=getFirstNonGhost();
   int index=cm->getIndex();
   if(ce->site==myDSite){
-    cellReceiveContentsManager(OT->getOwner(index),val,index);
+    cellReceiveContentsManager(OT->getEntry(index),val,index);
     return;}
   cellSendContents(val,ce->site,myDSite,index);}
 
@@ -690,7 +690,7 @@ void Chain::managerSeesSitePerm(Tertiary *t,DSite* s){
     return;}
   PD((ERROR_DET,"Token lost"));
   int OTI=t->getIndex();
-  handleTokenLost(t,OT->getOwner(OTI),OTI);
+  handleTokenLost(t,OT->getEntry(OTI),OTI);
   Assert(inform==NULL);
   return;
 }
@@ -731,7 +731,7 @@ void triggerInformsOK(InformElem **base,OwnerEntry* oe,int index,EntityCond ec){
 void Chain::managerSeesSiteTemp(Tertiary *t,DSite* s){
   EntityCond ec;
   int index=t->getIndex();
-  OwnerEntry *oe=OT->getOwner(index);
+  OwnerEntry *oe=OT->getEntry(index);
   PD((ERROR_DET,"managerSeesSiteTemp site:%s nr:%d",
       s->stringrep(),index));
 
@@ -752,7 +752,7 @@ void Chain::managerSeesSiteOK(Tertiary *t,DSite* s){
   Assert(hasFlag(INTERESTED_IN_OK));
 
   int index=t->getIndex();  
-  OwnerEntry *oe=OT->getOwner(index);
+  OwnerEntry *oe=OT->getEntry(index);
   PD((ERROR_DET,"managerSeesSiteOK site:%s nr:%d",
       s->stringrep(),index));
 
