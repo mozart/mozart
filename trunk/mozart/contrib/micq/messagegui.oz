@@ -28,7 +28,7 @@ import
    Tk
 %   Browser(browse:Browse)
    DD(dragAndDrop:DragAndDrop) at 'draganddrop.ozf'
-   OS(system)
+   OS(system uName)
 %   Pop(popup:Popup) at 'popup.ozf'
 export
    new:NewMess
@@ -109,17 +109,19 @@ define
       fun{FindHttp Xs}
 	 {MyCollect {MySplit Xs}}
       end
+      TBB
    in
       if Type==new then
-	 proc{GO} Mess={TB tkReturnString(get p(1 0) 'end' $)} in
+	 proc{GO}
+	    Mess={TB tkReturnString(get p(1 0) 'end' $)}
+	    Mess2=if {IsDet TBB} then {TBB tkReturnString(get p(1 0) 'end' $)} else nil end
+	 in
 	    {Wait Mess} {T tkClose}
-	    {Arg.send {ET getReceivers($)} Mess}
+	    {Arg.send {ET getReceivers($)} Mess Mess2}
 	 end
       in
-	 {TB tkBind(event:'<Alt-Return>'
-		    action:GO)}
-	 B1={New Tk.button tkInit(parent:T text:"Send Message!" bd:1 relief:groove
-				  action:GO)}
+	 {TB tkBind(event:'<Alt-Return>' action:GO)}
+	 B1={New Tk.button tkInit(parent:T text:"Send Message!" bd:1 relief:groove action:GO)}
       else
 	 B1={New Tk.button tkInit(parent:T text:"Reply Message!" bd:1 relief:groove
 				  action:proc{$}
@@ -142,10 +144,11 @@ define
 	 {Tk.addYScrollbar TB1 SY1}
 	 {TB1 tk(insert p(1 0) Arg.message)}
 %	 {TB1 tk(config state:disabled)}
-	 {Tk.batch [grid(L0 row:2 column:0 columnspan:3 sticky:we)
+	 {Tk.batch [grid(L0 row:2 column:0 columnspan:3 sticky:w)
 		    grid(TB1 row:3 column:0 columnspan:2 sticky:we pady:3)
 		    grid(SY1 row:3 column:2 sticky:ns pady:3)
-		    grid(L1 row:4 column:0 columnspan:3 sticky:we)]} 
+		    grid(L1 row:4 column:0 columnspan:3 sticky:w)]} 
+	 TBB=TB1
       end
       
       if Type==read then
@@ -184,8 +187,11 @@ define
 		   {TB tk(tag config Tag underline:true foreground:blue)}
 		   {Tag tkBind(event:'<1>'
 			       action:proc{$}
-					 _={OS.system  "netscape -raise -remote 'openURL(http://"#
-					    X.1#", new-window)'"}
+					 if {OS.uName}.sysname=="WIN32" then
+					    _={OS.system  "netscape http://"#X.1}
+					 else
+					    _={OS.system  "netscape -raise -remote 'openURL(http://"#X.1#", new-window)'"}
+					 end
 				      end)}
 		elseif {IsInt X} then
 		   {TB tk(insert 'end' {Char.toAtom X})}
