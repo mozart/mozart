@@ -412,7 +412,7 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 		       ProgramCounter to)
 {
   ProgramCounter PC = from;
-  int defCount = 0; // counter for nested defintions
+  int defCount = 0; // counter for nested definitions
   for (int i = 1; i <= sz || sz <= 0 ; i++) {
 
     if (sz <=0 && to != NOCODE && PC > to) {
