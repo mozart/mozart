@@ -29,6 +29,7 @@
 #include "taskstk.hh"
 
 #include "debug.hh"
+#include "codearea.hh"
 
 
 void TaskStack::resize(int newsize)
@@ -77,8 +78,9 @@ void TaskStack::printDebug(Bool verbose, int depth)
 	RefsArray Y = (RefsArray) pop();
 	RefsArray G = (RefsArray) pop();
 	if (!verbose) break;
-	printf("\tC_CONT: board=0x%x, PC=0x%x, Y=0x%x, G=0x%x\n",
+	printf("\tC_CONT: board=0x%x, PC=0x%x, Y=0x%x, G=0x%x\n\t",
 	       n, PC, Y, G);
+	CodeArea::display(CodeArea::definitionStart(PC),1,stdout);
       }
       break;
     case C_XCONT:
