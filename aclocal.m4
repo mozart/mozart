@@ -1227,11 +1227,11 @@ changequote([,])
         oz_tmp_ok="-I$oz_tmp"
         break])
       done
+      CPPFLAGS=$oz_tmp_cppflags
       if test "$oz_tmp_ok" = no; then
 	AC_TRY_CPP([#include "$1"],[
           oz_tmp_ok=yes],)
       fi
-      CPPFLAGS=$oz_tmp_cppflags
 changequote(`,')oz_cv_header_`'patsubst($1,[^a-zA-Z0-9],_)="$oz_tmp_ok"
 changequote([,])
     ])
