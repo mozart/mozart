@@ -324,19 +324,23 @@ OZ_BI_define(BIfsCardRange, 3, 0)
 
   {
     OZ_Term v = OZ_in(2);
-    DEREF(v, vptr, vtag);
+
+    DEREF(v, vptr, vtag)
 
     if (isFSetValueTag(vtag)) {
       int card = tagged2FSetValue(v)->getCard();
       return ((l <= card) && (card <= u)) ? PROCEED : FAILED;
     } else if (isGenFSetVar(v, vtag)) {
       OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
-      if (!fsetconstr->putCard(l, u))
+      int old_card_size = fsetconstr->getCardSize();
+
+      if (!fsetconstr->putCard(l, u)) {
         return FAILED;
-      /* a variable might have become a fset value because of
-         imposing a card constraints */
-      if (fsetconstr->isValue())
+      } else if (fsetconstr->isValue()) {
         tagged2GenFSetVar(v)->becomesFSetValueAndPropagate(vptr);
+      } else if (old_card_size > fsetconstr->getCardSize()) {
+        tagged2GenFSetVar(v)->propagate(fs_prop_val);
+      }
       return PROCEED;
     } else if (oz_isNonKinded(v)) {
       oz_suspendOnPtr(vptr);
