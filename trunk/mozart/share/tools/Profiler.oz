@@ -27,6 +27,9 @@
 functor $
 
 import
+   Profile.{mode reset getInfo}
+      from 'x-oz-boot:Profile'
+
    Property.{get}
    
    OS.{time}
