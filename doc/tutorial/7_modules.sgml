@@ -41,7 +41,7 @@ done by using the field <<append>> from the <EM>record</EM> <<List>>:
 <<List.append>>. Notice that in the above example the procedure
 <<MergeSort>> is private to the module. Most of the base library modules of
 Mozart follow the above structure.
-The above module can be create from a functor that looks as follow:
+The above module can be created from a functor that looks as follows:
 <<<
 functor
 export
@@ -56,43 +56,45 @@ define
    proc {Member ...} ... end
 end
 >>>
-Assuming that this functor is stored, somehow, on the file '/home/xxx/list.ozf',the module can be created as follows:
+Assuming that this functor is stored, somehow, on the file '/home/xxx/list.ozf', the module can be created as follows:
 <<<
 declare [List]= {Module.link ['/home/xxx/list.ozf']}
 >>>
+<P> <<Module.link/2>> is a function defined in the module <<Module>>
+that takes a list of functors, links them together, returns
+a corresponding list of modules.
 
-<!-- DENYS: global makes sense only in the OPI -->
-<P>Often some of the procedures in a module are made global without
-the module prefix. There are several ways to do this. Here is one way
-to make <<Append>> externally visible:
+<P>Functors may have also import declarations. If you want to import a
+system module you can just state the name of its functor. On the
+other-hand importing a user-defined module requires stating the URL of
+the functor.
 
+<P> Consider the following functor.
 <<<
-declare List Append in
-local
-   proc {!Append ... }  ... end
-   ...
-in
-   List = list(append: Append
-               sort: Sort
-               member: Member
-               ... )
-end
->>>
+functor
+import
+   Browser
+   FO at 'file:///home/seif/FileOperations.ozf'
+define
+   {Browser.browse {FO.countLines '/etc/passwd'}}
+end >>>
 
-<!-- DENYS: we definitely don't do this much anymore: we use imports -->
-<P>Modules are often stored on files, for example the <<List>> module
-could be stored on the file <FILE>List.oz</FILE>. This file may be
-inserted into another file by using the compiler directive
-<<\insert 'List.oz'>>.
+<P> The <<import>>
+declaration imports the system module <<Browser>>, and uses the
+procedure <<Browser.browse>>. It also imports the module <<FO>>
+specified by the functor stored in the file
+<<'/home/seif/FileOperations.ozf'>>, and calls the procedure
+<<FO.countLines>> which counts the number of lines in a file
+given as argument.
 
-<P CLASS=WARNING>You can investigate the libraries accompanying the
-system in the EMACS OZ menu. Click on the entry Find, and select
+<P CLASS=WARNING>You can investigate the system modules accompanying
+the system in the EMACS OZ menu. Click on the entry Find, and select
 Modules File.
 
-<P CLASS=WARNING>The List module is defined in the <EM/Oz Standard
-Modules/ documentation.
-
-<P CLASS=WARNING>Compiler directives are defined in <EM/The DFKI Oz
-User's Manual/.
+<P CLASS=WARNING>Given
+a file <<'x.oz'>> defining a functor, you may
+create the corresponding functor <<'x.ozf'>> from
+your shell by typing the command:
+<<< ozc -c x.ozf >>>
 
 </CHAPTER>
