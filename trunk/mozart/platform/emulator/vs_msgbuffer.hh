@@ -31,9 +31,13 @@
 #endif
 
 #include <sys/types.h>
+#ifdef VIRTUALSITES
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/shm.h>
+#else
+#define key_t int
+#endif
 #include <errno.h>
 
 #include "base.hh"
@@ -112,7 +116,7 @@ typedef union semun SemOptArg;
 typedef union semun {
   int val;
   struct semid_ds *buf;
-  ushort *array;
+  unsigned short *array;
 } SemOptArg;
 #endif
 
