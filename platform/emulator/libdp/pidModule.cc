@@ -66,10 +66,8 @@ OZ_BI_define(BIGetPID,0,1)
   if(nodename==NULL) { return oz_raise(E_ERROR,E_SYSTEM,"getPidUname",0); }
   struct hostent *hostaddr=gethostbyname(nodename);
   free(nodename);
-  struct in_addr tmp;
-  memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
 
-  OZ_Term host = oz_pairA("host",oz_string(inet_ntoa(tmp)));
+  OZ_Term host = oz_pairA("host",oz_string(osinet_ntoa(hostaddr->h_addr_list[0])));
   OZ_Term port = oz_pairA("port",OZ_int(myDSite->getPort()));
   OZ_Term time =
     oz_pairA("time",

@@ -103,7 +103,9 @@ extern "C" void setmode(int,mode_t);
 #include <fcntl.h>
 
 #if !defined(ultrix) && !defined(WINDOWS)
-# include <sys/socket.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #endif
 
 #ifdef AIX3_RS6000
@@ -979,6 +981,23 @@ char *ostmpnam(char *s) { return tmpnam(s); }
 int osdup(int fd) { return dup(fd); }
 
 #endif
+
+
+char *osinet_ntoa(char *ip)
+{
+  /* workaroud for a bug in gcc 2.8 under Irix 6.x */
+#if defined(IRIX6) && defined(__GNUC__)
+  static char buf[20];
+  sprintf(buf,"%d.%d.%d.%d",
+          (unsigned)ip[0],(unsigned)ip[1],(unsigned)ip[2],(unsigned)ip[3]);
+  return buf;
+#else
+  struct in_addr tmp;
+  memcpy(&tmp,ip,sizeof(in_addr));
+  return inet_ntoa(tmp);
+#endif
+}
+
 
 
 void osInit()
