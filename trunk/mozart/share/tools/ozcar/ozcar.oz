@@ -75,6 +75,10 @@ in
 	      {@MyOzcar M}
 	   end
 
+	   meth lastClickedValue(?V)
+	      {@MyOzcar lastClickedValue(V)}
+	   end
+
 	   meth !PrivateSend(M)
 	      {@MyOzcar M}
 	   end

@@ -328,7 +328,7 @@ in
       end
 
       meth SwitchToThread(I)
-	 {Ozcar PrivateSend(status('You have selected thread #' # I))}
+	 {Ozcar PrivateSend(status('New selected thread is #' # I))}
 	 {Ozcar PrivateSend(switch(I))}
       end
    end
