@@ -134,7 +134,7 @@ OZ_Return SchedCDBPropagator::run(void)
     return replaceBy(new LessEqOffPropagator(reg_x, reg_y, -xd));
   }
 
-  if (*b == fd_singleton) {
+  if (*b == fd_singl) {
     P.vanish();
     if (b->getSingleElem() == 0) {
       return replaceBy(new LessEqOffPropagator(reg_x, reg_y, -xd));

@@ -21,13 +21,33 @@ _spawnVars_t * staticSpawnVars = new _spawnVars_t[MAXFDBIARGS];
 
 _spawnVars_t * staticSpawnVarsProp = new _spawnVars_t[MAXFDBIARGS];
 
-OZ_Term ** staticSuspendVars = new OZ_Term*[MAXFDBIARGS];
+_spawnVars_t * staticSuspendVars = new _spawnVars_t[MAXFDBIARGS];
 
 int staticSpawnVarsNumber = 0;
 
 int staticSpawnVarsNumberProp = 0;
 
 int staticSuspendVarsNumber = 0;
+
+
+#ifdef FDBISTUCK
+
+OZ_Return constraintsSuspendOnVar(OZ_CFun, int, OZ_Term *,
+                                  OZ_Term * t)
+{
+  OZ_suspendOn(makeTaggedRef(t));
+}
+
+#else
+
+OZ_Return constraintsSuspendOnVar(OZ_CFun f, int a, OZ_Term * x,
+                                  OZ_Term * t)
+{
+  OZ_addThread(makeTaggedRef(t), OZ_makeSuspendedThread(f, x, a));
+  return PROCEED;
+}
+
+#endif
 
 #if defined(OUTLINE)
 #define inline

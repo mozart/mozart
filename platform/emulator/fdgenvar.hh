@@ -37,7 +37,7 @@ friend inline void addSuspFDVar(TaggedRef, Thread *, OZ_FDPropState);
 
 private:
   OZ_FiniteDomain finiteDomain;
-  SuspList * fdSuspList[fd_any];
+  SuspList * fdSuspList[fd_prop_any];
 
   void relinkSuspListToItself(Bool reset_local = FALSE);
 
@@ -46,13 +46,13 @@ public:
   GenFDVariable(OZ_FiniteDomain &fd) : GenCVariable(FDVariable) {
     ozstat.fdvarsCreated.incf();
     finiteDomain = fd;
-    fdSuspList[fd_singl] = fdSuspList[fd_bounds] = NULL;
+    fdSuspList[fd_prop_singl] = fdSuspList[fd_prop_bounds] = NULL;
   }
 
   GenFDVariable() : GenCVariable(FDVariable) {
     ozstat.fdvarsCreated.incf();
     finiteDomain.initFull();
-    fdSuspList[fd_singl] = fdSuspList[fd_bounds] = NULL;
+    fdSuspList[fd_prop_singl] = fdSuspList[fd_prop_bounds] = NULL;
   }
 
   // methods relevant for term copying (gc and solve)
@@ -87,7 +87,7 @@ public:
 
   int getSuspListLength(void) {
     int len = suspList->length();
-    for (int i = fd_any; i--; )
+    for (int i = fd_prop_any; i--; )
       len += fdSuspList[i]->length();
     return len;
   }
@@ -95,7 +95,7 @@ public:
   void installPropagators(GenFDVariable *, Board *);
 
   void addDetSusp(Thread *susp) {
-    fdSuspList[fd_singl] = addSuspToList(fdSuspList[fd_singl],
+    fdSuspList[fd_prop_singl] = addSuspToList(fdSuspList[fd_prop_singl],
                                        new SuspList(susp,NULL), home);
   }
 };
@@ -103,9 +103,9 @@ public:
 Bool isGenFDVar(TaggedRef term);
 Bool isGenFDVar(TaggedRef term, TypeOfTerm tag);
 GenFDVariable * tagged2GenFDVar(TaggedRef term);
-void addSuspFDVar(TaggedRef, SuspList *, OZ_FDPropState = fd_any);
-void addSuspFDVar(TaggedRef, Thread *, OZ_FDPropState = fd_any);
-OZ_Return tellBasicConstraint(OZ_Term, OZ_FiniteDomain * = NULL);
+void addSuspFDVar(TaggedRef, SuspList *, OZ_FDPropState = fd_prop_any);
+void addSuspFDVar(TaggedRef, Thread *, OZ_FDPropState = fd_prop_any);
+OZ_Return tellBasicConstraint(OZ_Term, OZ_FiniteDomain *);
 
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdgenvar.icc"

@@ -11,6 +11,8 @@
 
 #include "cpi.hh"
 
+//-----------------------------------------------------------------------------
+
 void * OZ_FDIntVar::operator new(size_t s)
 {
   return heap_new(s);
@@ -31,7 +33,7 @@ void OZ_FDIntVar::operator delete[](void * p, size_t s)
 {
   heap_delete(p, s);
 }
-#endif
+#endif /* _MSC_VER */
 
 void OZ_FDIntVar::ask(OZ_Term v)
 {
@@ -174,7 +176,7 @@ void OZ_FDIntVar::readEncap(OZ_Term v)
   } else {
     Assert(isCVar(vtag));
 
-    setState(spec_e);
+    setState(encap_e);
     GenCVariable * cvar = tagged2CVar(v);
 
     if (cvar->testReifiedFlag()) {
@@ -215,13 +217,13 @@ OZ_Boolean OZ_FDIntVar::tell(void)
   } else if(!isTouched()) {
     return OZ_TRUE;
   } else if (isSort(int_e)) { // finite domain variable
-    if (*domPtr == fd_singleton) {
+    if (*domPtr == fd_singl) {
       if (isState(loc_e)) {
         tagged2GenFDVar(var)->becomesSmallIntAndPropagate(varPtr);
       } else {
         int singl = domPtr->getSingleElem();
         *domPtr = dom;
-        tagged2GenFDVar(var)->propagate(var, fd_singl);
+        tagged2GenFDVar(var)->propagate(var, fd_prop_singl);
         am.doBindAndTrail(var, varPtr, OZ_int(singl));
       }
     } else if (*domPtr == fd_bool) {
@@ -229,7 +231,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
         tagged2GenFDVar(var)->becomesBoolVarAndPropagate(varPtr);
       } else {
         *domPtr = dom;
-        tagged2GenFDVar(var)->propagate(var, fd_bounds);
+        tagged2GenFDVar(var)->propagate(var, fd_prop_bounds);
         GenBoolVariable * newboolvar = new GenBoolVariable();
         OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
         am.doBindAndTrailAndIP(var, varPtr,
@@ -239,7 +241,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
       }
       return OZ_TRUE;
     } else {
-      tagged2GenFDVar(var)->propagate(var, fd_bounds);
+      tagged2GenFDVar(var)->propagate(var, fd_prop_bounds);
       if (isState(glob_e)) {
         GenFDVariable * locfdvar = new GenFDVariable(*domPtr);
         OZ_Term * loctaggedfdvar = newTaggedCVar(locfdvar);
@@ -251,7 +253,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
       return OZ_TRUE;
     }
   } else {
-    Assert(isSort(bool_e) && *domPtr == fd_singleton); // boolean variable
+    Assert(isSort(bool_e) && *domPtr == fd_singl); // boolean variable
 
     if (isState(loc_e)) {
       tagged2GenBoolVar(var)->becomesSmallIntAndPropagate(varPtr, *domPtr);
@@ -267,7 +269,7 @@ void OZ_FDIntVar::fail(void)
 {
   if (isSort(sgl_e))
     return;
-  if (isState(spec_e)) {
+  if (isState(encap_e)) {
     unpatchReified(var, isSort(bool_e));
     return;
   }

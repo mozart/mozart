@@ -483,7 +483,7 @@ start:
   switch ( tag1 ) {
 
   case FSETVALUE:
-    return tagged2FSetValue(term1)->unify(term2);
+    return ((FSetValue *) tagged2FSetValue(term1))->unify(term2);
 
   case OZCONST:
     return tagged2Const(term1)->unify(term2,prop);

@@ -180,7 +180,7 @@ OZ_Return LinEqBPropagator::run(void)
     return P.vanish();
   }
 
-  if (*b == fd_singleton) {
+  if (*b == fd_singl) {
     OZ_DEBUGPRINT("spawning (not) eq " << b->getSingleElem());
     P.vanish();
     OZ_Propagator *prop;
@@ -228,7 +228,7 @@ OZ_Return LinLessEqBPropagator::run(void)
 
   Reify(check_calc_txu(sz, a, x, c) <= 0, 1);
 
-  if (*b == fd_singleton) {
+  if (*b == fd_singl) {
     OZ_DEBUGPRINT("spawning lesseq " << b->getSingleElem());
     P.vanish();
     if (b->getSingleElem() == 1) {
@@ -319,7 +319,7 @@ OZ_Return LinNotEqBPropagator::run(void)
     return P.vanish();
   }
 
-  if (*b == fd_singleton) {
+  if (*b == fd_singl) {
     OZ_DEBUGPRINT("spawning (not) eq " << b->getSingleElem());
     P.vanish();
     OZ_Propagator *prop;
@@ -363,7 +363,7 @@ OZ_Return InBPropagator::run(void)
   OZ_FDIntVar v(reg_v), b(reg_b);
   PropagatorController_V_V P(v, b);
 
-  if (*b == fd_singleton) {
+  if (*b == fd_singl) {
     FailOnEmpty(*v &= b->getSingleElem() ? domain : ~domain);
     OZ_DEBUGPRINT("vanish out " << *this);
     return P.vanish();
@@ -424,7 +424,7 @@ OZ_Return CardBPropagator::run(void)
   int lowl = low->getMinElem(), lowu = low->getMaxElem();
   int upl = up->getMinElem(), upu = up->getMaxElem();
 
-  if (*b == fd_singleton) {
+  if (*b == fd_singl) {
     if (b->getSingleElem() == 1) {
       FailOnEmpty(*low <= upu);
       FailOnEmpty(*up >= lowl);
@@ -440,7 +440,7 @@ OZ_Return CardBPropagator::run(void)
   zeroes = 0;
 
   for (i = v_sz; i--; )
-    if (*v[i] == fd_singleton)
+    if (*v[i] == fd_singl)
       if (v[i]->getSingleElem() == 0)
         zeroes++;
       else
@@ -458,12 +458,12 @@ OZ_Return CardBPropagator::run(void)
     return P.vanish();
   }
 
-  if (*b == fd_singleton) {
+  if (*b == fd_singl) {
     if (b->getSingleElem() == 1) {
       if ((ones == upu) && (possibles - ones > 0)) {
         // impose negatively
         for (i = v_sz; i--; )
-          if (*v[i] != fd_singleton)
+          if (*v[i] != fd_singl)
             FailOnEmpty(*v[i] &= 0);
         return P.vanish();
       }
@@ -471,7 +471,7 @@ OZ_Return CardBPropagator::run(void)
       if ((possibles == lowl) && (possibles - ones > 0)) {
         // impose positively
         for (i = v_sz; i--; )
-          if (*v[i] != fd_singleton)
+          if (*v[i] != fd_singl)
             FailOnEmpty(*v[i] &= 1);
         return P.vanish();
       }
@@ -481,7 +481,7 @@ OZ_Return CardBPropagator::run(void)
       if ((ones == lowl - 1) && (possibles <= upl) && (possibles - ones > 0)) {
         // impose negatively
         for (i = v_sz; i--; )
-          if (*v[i] != fd_singleton)
+          if (*v[i] != fd_singl)
             FailOnEmpty(*v[i] &= 0);
         return P.vanish();
       }
@@ -489,7 +489,7 @@ OZ_Return CardBPropagator::run(void)
       if ((possibles == upl + 1) && (ones >= lowu) && (possibles - ones > 0)) {
         // impose positively
         for (i = v_sz; i--; )
-          if (*v[i] != fd_singleton)
+          if (*v[i] != fd_singl)
             FailOnEmpty(*v[i] &= 1);
         return P.vanish();
       }

@@ -1328,13 +1328,17 @@ void GenFDVariable::gc(void)
   ((OZ_FiniteDomainImpl *) &finiteDomain)->gc();
 
   int i;
-  for (i = fd_any; i--; )
+  for (i = fd_prop_any; i--; )
     fdSuspList[i] = fdSuspList[i]->gc();
 }
 
 void GenFSetVariable::gc(void)
 {
   GCMETHMSG("GenFSetVariable::gc");
+
+  int i;
+  for (i = fs_prop_any; i--; )
+    fsSuspList[i] = fsSuspList[i]->gc();
 }
 
 FSetValue * FSetValue::gc(void)
@@ -1463,7 +1467,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
   switch (auxTermTag) {
 
   case SMALLINT: toTerm = auxTerm; break;
-  case FSETVALUE: toTerm = makeTaggedFSetValue(tagged2FSetValue(auxTerm)->gc()); break;
+  case FSETVALUE: toTerm = makeTaggedFSetValue(((FSetValue *) tagged2FSetValue(auxTerm))->gc()); break;
   case LITERAL:  toTerm = makeTaggedLiteral(tagged2Literal(auxTerm)->gc()); break;
   case LTUPLE:   toTerm = makeTaggedLTuple(tagged2LTuple(auxTerm)->gc()); break;
   case SRECORD:  toTerm = makeTaggedSRecord(tagged2SRecord(auxTerm)->gcSRecord()); break;

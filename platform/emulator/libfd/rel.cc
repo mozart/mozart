@@ -36,12 +36,12 @@ OZ_Return NotEqOffPropagator::run(void)
   OZ_FDIntVar x(reg_x), y(reg_y);
   PropagatorController_V_V P(x, y);
 
-  if (*x == fd_singleton) {
+  if (*x == fd_singl) {
     FailOnEmpty(*y -= (x->getSingleElem() - c));
     return P.vanish();
   }
 
-  if (*y == fd_singleton) {
+  if (*y == fd_singl) {
     FailOnEmpty(*x -= (y->getSingleElem() + c));
     return P.vanish();
   }
@@ -306,7 +306,7 @@ OZ_Return DistinctPropagator::run(void)
   if (hasEqualVars()) goto failure;
 
   for  (i = sz; i--; )
-    if (*l[i] == fd_singleton) {
+    if (*l[i] == fd_singl) {
       int s = l[i]->getSingleElem();
       if (u.isIn(s)) {
         goto failure;
@@ -317,10 +317,10 @@ OZ_Return DistinctPropagator::run(void)
 
  loop:
   for (i = sz; i--; ) {
-    if (*l[i] != fd_singleton) {
+    if (*l[i] != fd_singl) {
       FailOnEmpty(*l[i] -= u);
 
-      if (*l[i] == fd_singleton) {
+      if (*l[i] == fd_singl) {
         u += l[i]->getSingleElem();
         goto loop;
       }
@@ -329,7 +329,7 @@ OZ_Return DistinctPropagator::run(void)
 
   int from, to;
   for (from = 0, to = 0; from < sz; from += 1)
-    if (*l[from] != fd_singleton)
+    if (*l[from] != fd_singl)
       reg_l[to++] = reg_l[from];
   sz = to;
 
@@ -391,15 +391,15 @@ OZ_Return DistinctOffsetPropagator::run(void)
 
 loop:
   for (i=sz; i--; )
-    if (*l[i] == fd_singleton) {
+    if (*l[i] == fd_singl) {
       int s = offset[i]+l[i]->getSingleElem();
       for (int j=sz; j--; ) {
         if ( i != j) {
-          if (*l[j] != fd_singleton) {
+          if (*l[j] != fd_singl) {
             int tmp = s-offset[j];
             if (tmp >= 0) {
               FailOnEmpty(*l[j] -= tmp);
-              if (*l[j] == fd_singleton) goto loop;
+              if (*l[j] == fd_singl) goto loop;
             }
           }
           else {
@@ -412,7 +412,7 @@ loop:
 
   int from, to;
   for (from = 0, to = 0; from < sz; from += 1)
-    if (*l[from] != fd_singleton) {
+    if (*l[from] != fd_singl) {
       reg_l[to] = reg_l[from];
       offset[to++] = offset[from];
     }

@@ -30,10 +30,10 @@ struct _spawnVars_t {
 
 extern _spawnVars_t * staticSpawnVars;
 extern _spawnVars_t * staticSpawnVarsProp;
-extern OZ_Term ** staticSuspendVars;
-extern int staticSpawnVarsNumber,
-           staticSpawnVarsNumberProp,
-           staticSuspendVarsNumber;
+extern _spawnVars_t * staticSuspendVars;
+extern int staticSpawnVarsNumber;
+extern int staticSpawnVarsNumberProp;
+extern int staticSuspendVarsNumber;
 
 extern char * ctHeap, * ctHeapTop;
 
@@ -49,7 +49,7 @@ public:
   OZ_Term * getSuspVar(void) {
     if (staticSuspendVarsNumber == 0)
       return NULL;
-    return staticSuspendVars[--staticSuspendVarsNumber];
+    return staticSuspendVars[--staticSuspendVarsNumber].var;
   }
 };
 
@@ -72,8 +72,10 @@ OZ_Boolean isPosSmallSetInt(OZ_Term v);
 }
 
 void staticAddSpawnProp(OZ_FDPropState ps, OZ_Term * v);
-
 void staticAddSpawn(OZ_FDPropState ps, OZ_Term * v);
+
+void staticAddSpawnProp(OZ_FSetPropState ps, OZ_Term * v);
+void staticAddSpawn(OZ_FSetPropState ps, OZ_Term * v);
 
 void * heap_new(size_t s);
 
@@ -84,6 +86,8 @@ void heap_delete(void *, size_t);
 #else
 #undef inline
 #endif
+
+OZ_Return constraintsSuspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *);
 
 #endif /* __CPI__H__ */
 

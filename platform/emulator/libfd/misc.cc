@@ -10,9 +10,9 @@ class ExtendedExpect : public OZ_Expect
 {
  public:
   OZ_expect_t expectIntVarSingl(OZ_Term t)
-   {return expectIntVar(t, fd_singl);}
+   {return expectIntVar(t, fd_prop_singl);}
   OZ_expect_t expectIntVarMinMax(OZ_Term t)
-   {return expectIntVar(t, fd_bounds);}
+   {return expectIntVar(t, fd_prop_bounds);}
   OZ_expect_t expectVectorInt(OZ_Term t)
    {return expectVector(t, &expectInt);}
   OZ_expect_t expectVectorIntVarAny(OZ_Term t)
@@ -319,8 +319,8 @@ OZ_Return SpawnLess::run(void)
 
   if (!c) {
     cout << "Spawning less!!!" << endl << flush;
-    addSpawn(fd_bounds, a);
-    addSpawn(fd_bounds, b);
+    addSpawn(fd_prop_bounds, a);
+    addSpawn(fd_prop_bounds, b);
     spawn(new Less(a, b));
     return ENTAILED;
   }
@@ -479,7 +479,7 @@ OZ_Return FirstFail::run(void)
         OZ_FDIntVar var;
         do {
           var.ask(reg_fds[current]);
-        } while ((*var == fd_singleton) && (++current < size));
+        } while ((*var == fd_singl) && (++current < size));
 
         // No elements left
         if (current==size) {
@@ -496,7 +496,7 @@ OZ_Return FirstFail::run(void)
 
             for (int i=current+1; i<size; i++) {
               var.ask(reg_fds[i]);
-              if (*var == fd_singleton)
+              if (*var == fd_singl)
                 continue;
               if (i != new_cur)
                 reg_fds[new_cur] = reg_fds[i];

@@ -64,26 +64,64 @@ void OZ_Expect::addSpawn(OZ_FDPropState ps, OZ_Term * v)
     staticAddSpawn(ps, v);
 }
 
+inline
+void OZ_Expect::addSpawn(OZ_FSetPropState ps, OZ_Term * v)
+{
+  if (collect)
+    staticAddSpawn(ps, v);
+}
+
 // variables are insuffiently constrained
+
 inline
 void OZ_Expect::addSuspend(OZ_Term * v)
 {
   if (collect) {
-    staticSuspendVars[staticSuspendVarsNumber++] = v;
+    staticSuspendVars[staticSuspendVarsNumber].var = v;
+#ifdef Assert
+    staticSuspendVars[staticSuspendVarsNumber++].expected_type = NonGenCVariable;
+#else
+    staticSuspendVarsNumber++;
+#endif
+    Assert(staticSuspendVarsNumber < MAXFDBIARGS);
+  }
+}
+
+
+inline
+void OZ_Expect::addSuspend(OZ_FDPropState ps, OZ_Term * v)
+{
+  if (collect) {
+    staticSuspendVars[staticSuspendVarsNumber].var = v;
+    staticSuspendVars[staticSuspendVarsNumber].expected_type = FDVariable;
+    staticSuspendVars[staticSuspendVarsNumber++].state.fd = ps;
 
     Assert(staticSuspendVarsNumber < MAXFDBIARGS);
   }
 }
 
-//-----------------------------------------------------------------------------
-// expect member functions
+inline
+void OZ_Expect::addSuspend(OZ_FSetPropState ps, OZ_Term * v)
+{
+  if (collect) {
+    staticSuspendVars[staticSuspendVarsNumber].var = v;
+    staticSuspendVars[staticSuspendVarsNumber].expected_type = FSetVariable;
+    staticSuspendVars[staticSuspendVarsNumber++].state.fs = ps;
+
+    Assert(staticSuspendVarsNumber < MAXFDBIARGS);
+  }
+}
+
+//*****************************************************************************
+// member functions related to finite domain constraints
+//*****************************************************************************
 
 //-----------------------------------------------------------------------------
 // An OZ term describing a finite domain is either:
 // (1) a positive small integer <= FD.sup
-// (2) a 2 tuple of (1) or bool
-// (3) a non-empty list of (1) and/or (2)
-// (4) a tuple compl() of 4 (to come)
+// (2) a 2 tuple of (1)
+// (3) a non-empty list of (1) and/or (2) or (1) or (2)
+// (4) a tuple compl() of 4
 
 OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
 {
@@ -106,6 +144,9 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
   } else if (isPosSmallFDInt(descr) && (level >= 1)) { // (1)
     return expectProceed(1, 1);
   } else if (isGenFDVar(descr, descr_tag) && (level >= 1)) {
+    addSuspend(fd_prop_singl, descr_ptr);
+    return expectSuspend(1, 0);
+  } else if (isGenBoolVar(descr, descr_tag) && (level >= 1)) {
     addSuspend(descr_ptr);
     return expectSuspend(1, 0);
   } else if (isSTuple(descr) && (level >= 2)) {
@@ -137,28 +178,63 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
 
 }
 
+OZ_expect_t OZ_Expect::expectIntVar(OZ_Term t, OZ_FDPropState ps)
+{
+  DEREF(t, tptr, ttag);
+
+  if (isPosSmallFDInt(t)) {
+    return expectProceed(1, 1);
+  } else if (isGenBoolVar(t, ttag) || isGenFDVar(t, ttag)) {
+    addSpawn(ps, tptr);
+    return expectProceed(1, 1);
+  } else if (isNotCVar(ttag)) {
+    addSuspend(ps, tptr);
+    return expectSuspend(1, 0);
+  }
+  return expectFail();
+}
+
+OZ_expect_t OZ_Expect::expectInt(OZ_Term t)
+{
+  Assert(isRef(t) || !isAnyVar(t));
+
+  DEREF(t, tptr, ttag);
+
+  if (isSmallInt(ttag)) {
+    return expectProceed(1, 1);
+  } else if (isAnyVar(ttag)) {
+    addSuspend(fd_prop_singl, tptr);
+    return expectSuspend(1, 0);
+  }
+  return expectFail();
+}
+
+//*****************************************************************************
+// member functions related to finite set constraints
+//*****************************************************************************
+
 //-----------------------------------------------------------------------------
 // An OZ term describing a finite set is either:
 // (1) a positive small integer <= FS.sup
-// (2) a 2 tuple of (1) or bool
+// (2) a 2 tuple of (1)
 // (3) a possibly empty list of (1) and/or (2)
 
-OZ_expect_t OZ_Expect::expectSetDescr(OZ_Term descr, int level)
+OZ_expect_t OZ_Expect::_expectFSetDescr(OZ_Term descr, int level)
 {
   DEREF(descr, descr_ptr, descr_tag);
-
-  if (level > 3)
-    level = 3;
 
   if (isNotCVar(descr_tag)) {
     addSuspend(descr_ptr);
     return expectSuspend(1, 0);
-  } else if (isPosSmallSetInt(descr) && (level >= 1)) { // (1)
+  } else if (isPosSmallSetInt(descr) && (level == 1 || level == 2)) { // (1)
     return expectProceed(1, 1);
-  } else if (isGenFDVar(descr, descr_tag) && (level >= 1)) {
+  } else if (isGenFDVar(descr, descr_tag) && (level == 1 || level == 2)) {
+    addSuspend(fd_prop_singl, descr_ptr);
+    return expectSuspend(1, 0);
+  } else if (isGenBoolVar(descr, descr_tag) && (level == 1 || level == 2)) {
     addSuspend(descr_ptr);
     return expectSuspend(1, 0);
-  } else if (isSTuple(descr) && (level >= 2)) {
+  } else if (isSTuple(descr) && (level == 2)) {
     SRecord &tuple = *tagged2SRecord(descr);
     if (tuple.getWidth() != 2)
       return expectFail();
@@ -189,12 +265,45 @@ OZ_expect_t OZ_Expect::expectSetDescr(OZ_Term descr, int level)
 
 }
 
+OZ_expect_t OZ_Expect::expectFSetVar(OZ_Term t, OZ_FSetPropState ps)
+{
+  DEREF(t, tptr, ttag);
+
+  if (isFSetValue(ttag)) {
+    return expectProceed(1, 1);
+  } else if (isGenFSetVar(t, ttag)) {
+    addSpawn(ps, tptr);
+    return expectProceed(1, 1);
+  } else if (isNotCVar(ttag)) {
+    addSuspend(ps, tptr);
+    return expectSuspend(1, 0);
+  }
+  return expectFail();
+}
+
+OZ_expect_t OZ_Expect::expectFSetValue(OZ_Term t)
+{
+  Assert(isRef(t) || !isAnyVar(t));
+
+  DEREF(t, tptr, ttag);
+
+  if (isFSetValue(ttag)) {
+    return expectProceed(1, 1);
+  } else if (isAnyVar(ttag)) {
+    addSuspend(fs_prop_val, tptr);
+    return expectSuspend(1, 0);
+  }
+  return expectFail();
+}
+
+//*****************************************************************************
+
 OZ_expect_t OZ_Expect::expectVar(OZ_Term t)
 {
   DEREF(t, tptr, ttag);
 
   if (isAnyVar(ttag)) {
-    addSpawn(fd_any, tptr);
+    addSpawn(fd_prop_any, tptr);
     return expectProceed(1, 1);
   }
   return expectFail();
@@ -207,40 +316,9 @@ OZ_expect_t OZ_Expect::expectRecordVar(OZ_Term t)
   if (isRecord(t)) {
     return expectProceed(1, 1);
   } else if (isGenOFSVar(t, ttag)) {
-    addSpawn(fd_any, tptr);
+    addSpawn(fd_prop_any, tptr);
     return expectProceed(1, 1);
   } else if (isNotCVar(ttag)) {
-    addSuspend(tptr);
-    return expectSuspend(1, 0);
-  }
-  return expectFail();
-}
-
-OZ_expect_t OZ_Expect::expectIntVar(OZ_Term t, OZ_FDPropState ps)
-{
-  DEREF(t, tptr, ttag);
-
-  if (isPosSmallFDInt(t)) {
-    return expectProceed(1, 1);
-  } else if (isGenBoolVar(t, ttag) || isGenFDVar(t, ttag)) {
-    addSpawn(ps, tptr);
-    return expectProceed(1, 1);
-  } else if (isNotCVar(ttag)) {
-    addSuspend(tptr);
-    return expectSuspend(1, 0);
-  }
-  return expectFail();
-}
-
-OZ_expect_t OZ_Expect::expectInt(OZ_Term t)
-{
-  Assert(isRef(t) || !isAnyVar(t));
-
-  DEREF(t, tptr, ttag);
-
-  if (isSmallInt(ttag)) {
-    return expectProceed(1, 1);
-  } else if (isAnyVar(ttag)) {
     addSuspend(tptr);
     return expectSuspend(1, 0);
   }
@@ -331,7 +409,7 @@ OZ_expect_t OZ_Expect::expectStream(OZ_Term st)
   DEREF(st, stptr, sttag);
 
   if (isNotCVar(sttag)) {
-    addSpawn(fd_any, stptr);
+    addSpawn(fd_prop_any, stptr);
     return expectProceed(1, 1);
   } else if (isNil(st)) {
     return expectProceed(1, 1);
@@ -348,7 +426,7 @@ OZ_expect_t OZ_Expect::expectStream(OZ_Term st)
     if (isNil(st)) {
       return expectProceed(len, len);
     } else if (isNotCVar(sttag)) {
-      addSpawn(fd_any, stptr);
+      addSpawn(fd_prop_any, stptr);
       return expectProceed(len, len);
     }
   }
@@ -363,11 +441,11 @@ OZ_Return OZ_Expect::suspend(OZ_Thread th)
   Assert(staticSuspendVarsNumber > 0);
 #ifdef FDBISTUCK
   for (int i = staticSuspendVarsNumber; i--; )
-    am.addSuspendVarList(staticSuspendVars[i]);
+    am.addSuspendVarList(staticSuspendVars[i].var);
   return SUSPEND;
 #else
   for (int i = staticSuspendVarsNumber; i--; )
-    OZ_addThread (makeTaggedRef(staticSuspendVars[i]), th);
+    OZ_addThread (makeTaggedRef(staticSuspendVars[i].var), th);
   return PROCEED;
 #endif
 }
@@ -376,6 +454,11 @@ OZ_Return OZ_Expect::fail(void)
 {
   return FAILED;
 }
+
+
+//*****************************************************************************
+// member function to spawn a propagator
+//*****************************************************************************
 
 OZ_Return OZ_Expect::spawn(OZ_Propagator * p, int prio,
                            OZ_PropagatorFlags flags)
@@ -386,11 +469,21 @@ OZ_Return OZ_Expect::spawn(OZ_Propagator * p, int prio,
   // OZ_Propagator::run is run.
   int i;
   for (i = staticSuspendVarsNumber; i--; ) {
-    OZ_Term v = makeTaggedRef(staticSuspendVars[i]);
+    OZ_Term v = makeTaggedRef(staticSuspendVars[i].var);
     DEREF(v, vptr, vtag);
+    TypeOfGenCVariable type = staticSuspendVars[i].expected_type;
+
+    Assert(type == FDVariable || type == FSetVariable);
 
     if (isNotCVar(vtag)) {
-      tellBasicConstraint(makeTaggedRef(vptr));
+
+      if (type == FDVariable) {
+        tellBasicConstraint(makeTaggedRef(vptr), (OZ_FiniteDomain *) NULL);
+      } else {
+        Assert(type == FSetVariable);
+        tellBasicConstraint(makeTaggedRef(vptr), (OZ_FSet *) NULL);
+      }
+
       /*
       GenFDVariable * fv = new GenFDVariable();
       OZ_Term * tfv = newTaggedCVar(fv);
@@ -463,6 +556,9 @@ OZ_Return OZ_Expect::spawn(OZ_Propagator * p, int prio,
       if (isGenFDVar(v, vtag)) {
         addSuspFDVar(v, thr, staticSpawnVars[i].state.fd);
         all_local &= am.isLocalCVar(v);
+      } else if (isGenFSetVar(v, vtag)) {
+        addSuspFSetVar(v, thr, staticSpawnVars[i].state.fs);
+        all_local &= am.isLocalCVar(v);
       } else if (isGenOFSVar(v, vtag)) {
         addSuspOFSVar(v, thr);
         all_local &= am.isLocalCVar(v);
@@ -482,7 +578,7 @@ OZ_Return OZ_Expect::spawn(OZ_Propagator * p, int prio,
 
   // Note all SVARs and UVARs in staticSuspendVars are constrained to FDVARs.
   for (i = staticSuspendVarsNumber; i--; ) {
-    OZ_Term v = makeTaggedRef(staticSuspendVars[i]);
+    OZ_Term v = makeTaggedRef(staticSuspendVars[i].var);
     DEREF(v, vptr, vtag);
 
     if (isAnyVar(vtag)) {

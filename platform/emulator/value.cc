@@ -27,7 +27,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag,
   NameOoDefaultVar,NameOoRequiredArg,
   NameUnit,
-  AtomKinded, AtomDet, AtomRecord, AtomLow,
+  AtomKinded, AtomDet, AtomRecord, AtomLow, AtomFSet,
   // Atoms for System.get and System.set
   AtomActive, AtomAtoms, AtomBuiltins, AtomCellHack, AtomCommitted,
   AtomCloned, AtomCode, AtomCopy, AtomCreated, AtomDebug, AtomDepth,
@@ -145,6 +145,7 @@ void initLiterals()
   AtomKinded                = makeTaggedAtom("kinded");
   AtomDet                   = makeTaggedAtom("det");
   AtomRecord                = makeTaggedAtom("record");
+  AtomFSet                  = makeTaggedAtom("fset");
   // AtomInt                   = makeTaggedAtom("int");
 
   AtomDebugIP               = makeTaggedAtom("debugIP");

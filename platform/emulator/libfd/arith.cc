@@ -117,13 +117,13 @@ OZ_Return PlusPropagator::run(void)
   OZ_FDIntVar x(reg_x), y(reg_y), z(reg_z);
   PropagatorController_V_V_V P(x, y, z);
 
-  if (*x == fd_singleton)
+  if (*x == fd_singl)
     if (*x == 0) {
       P.vanish();
       return replaceBy(reg_y, reg_z);
     }
 
-  if (*y == fd_singleton)
+  if (*y == fd_singl)
     if (*y == 0) {
       P.vanish();
       return replaceBy(reg_x, reg_z);
@@ -316,13 +316,13 @@ OZ_Return TimesPropagator::run(void)
   int xint, yint;
 
 loop:
-  if (*x == fd_singleton && *y == fd_singleton) {
+  if (*x == fd_singl && *y == fd_singl) {
     FailOnEmpty(*z &= truncToIntMax(double(x->getSingleElem()) * double(y->getSingleElem())));
     goto loopend;
   }
 
   // z mod x = 0
-  if (*x == fd_singleton && *z == fd_singleton && (xint = x->getSingleElem()) != 0) {
+  if (*x == fd_singl && *z == fd_singl && (xint = x->getSingleElem()) != 0) {
     int zint;
     if ((zint = z->getSingleElem()) % xint != 0) {
       goto failure;
@@ -333,7 +333,7 @@ loop:
   }
 
   // z mod y = 0
-  if (*y == fd_singleton && *z == fd_singleton && (yint = y->getSingleElem()) != 0) {
+  if (*y == fd_singl && *z == fd_singl && (yint = y->getSingleElem()) != 0) {
     int zint;
     if ((zint = z->getSingleElem()) % yint != 0) {
       goto failure;
@@ -544,10 +544,10 @@ OZ_Return ModPropagator::run(void)
   if (xu < y) {
     P.vanish();
     return replaceBy(reg_x, reg_z);
-  } else if (*x == fd_singleton && x->getSingleElem() == y) {
+  } else if (*x == fd_singl && x->getSingleElem() == y) {
     P.vanish();
     return replaceByInt(reg_z, 0);
-  } else if (xu <= y && *z == fd_singleton && z->getSingleElem() == 0) {
+  } else if (xu <= y && *z == fd_singl && z->getSingleElem() == 0) {
     OZ_FiniteDomain u(fd_empty);
     u += 0;
     if (xu == y) u += y;
@@ -615,10 +615,10 @@ OZ_Return ModIPropagator::run(void)
   if (xu < y) {
     P.vanish();
     return replaceBy(reg_x, reg_z);
-  } else if (*x == fd_singleton && x->getSingleElem() == y) {
+  } else if (*x == fd_singl && x->getSingleElem() == y) {
     P.vanish();
     return replaceByInt(reg_z, 0);
-  } else if (xu <= y && *z == fd_singleton && z->getSingleElem() == 0) {
+  } else if (xu <= y && *z == fd_singl && z->getSingleElem() == 0) {
     OZ_FiniteDomain u(fd_empty);
     u += 0;
     if (xu == y) u += y;

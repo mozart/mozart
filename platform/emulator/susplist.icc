@@ -84,12 +84,6 @@ SuspList * SuspList::dispose(void)
 }
 
 inline
-SuspList * SuspList::getNextAndDispose(void) {
-  SuspList * n = next; dispose(); return n;
-}
-
-
-inline
 void SuspList::disposeList(void) {
   for (SuspList * l = this; l; l = l->dispose());
 }

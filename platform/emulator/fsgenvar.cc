@@ -19,34 +19,51 @@
 Bool GenFSetVariable::valid(TaggedRef val)
 {
   Assert(!isRef(val));
-  return (isFSetValue(val) && _fset.unify(*tagged2FSetValue(val)));
+  return (isFSetValue(val) && ((OZ_FSetImpl *) &_fset)->unify(*(FSetValue *)tagged2FSetValue(val)));
 }
 
 void GenFSetVariable::dispose(void) {
-  //  _fset.disposeExtension();
   suspList->disposeList();
   freeListDispose(this, sizeof(GenFSetVariable));
 }
 
+#ifdef DEBUG_FSET
+#define DEBUG_FSUNIFY
+#define DEBUG_TELLCONSTRAINTS
+#endif
 
 Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
                                 TaggedRef * tptr, TaggedRef term,
                                 Bool prop, /* propagate */
                                 Bool disp  /* dispose */)
 {
+#ifdef DEBUG_FSUNIFY
+  cout << "entering fs unify" << endl << flush;
+  taggedPrint(makeTaggedRef(vptr));
+  taggedPrint(makeTaggedRef(tptr));
+#endif
+
   TypeOfTerm ttag = tagTypeOf(term);
 
   switch (ttag) {
   case FSETVALUE:
     {
-      if (! _fset.unify(*tagged2FSetValue(term)))
-        return FALSE;
+#ifdef DEBUG_FSUNIFY
+      cout << "fs = fs val" << endl << flush;
+#endif
+
+      if (! ((OZ_FSetImpl *) &_fset)->unify(*(FSetValue *)tagged2FSetValue(term)))
+        goto f;
+
+#ifdef DEBUG_FSUNIFY
+      cout << "succeeded" << endl << flush;
+#endif
 
       Bool isLocalVar = am.isLocalSVar(this);
       Bool isNotInstallingScript = !am.isInstallingScript();
 
       if (prop && (isNotInstallingScript || isLocalVar))
-        propagate(var, fs_val);
+        propagate(var, fs_prop_val);
 
       if (prop && isLocalVar) {
         doBind(vptr, term);
@@ -55,27 +72,34 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
         am.doBindAndTrail(var, vptr, term);
       }
 
-      return TRUE;
+      goto t;
     }
   case CVAR:
     {
       switch(tagged2CVar(term)->getType()) {
       case FSetVariable:
         {
+#ifdef DEBUG_FSUNIFY
+          cout << "fs = fs" << endl << flush;
+#endif
           GenFSetVariable * term_var = tagged2GenFSetVar(term);
-          OZ_FSetImpl &t_fset = term_var->getSet(), new_fset;
+          OZ_FSetImpl * t_fset = (OZ_FSet *) &term_var->getSet();
+          OZ_FSetImpl * fset = (OZ_FSet *) &getSet();
+          OZ_FSetImpl new_fset;
 
-          if ((new_fset = t_fset.unify(_fset)).getCardMin() == -1)
-            return FALSE;
+          if ((new_fset = t_fset->unify(*fset)).getCardMin() == -1)
+            goto f;
 
-          Bool var_is_local =  (prop && am.isLocalSVar(this));
+#ifdef DEBUG_FSUNIFY
+          cout << "succeeded" << endl << flush;
+#endif
+          Bool var_is_local = (prop && am.isLocalSVar(this));
           Bool term_is_local = (prop && am.isLocalSVar(term_var));
-
           Bool is_not_installing_script = !am.isInstallingScript();
-          Bool var_is_constrained = is_not_installing_script ||
-                                    _fset.isWeakerThan(new_fset);
-          Bool term_is_constrained = is_not_installing_script ||
-                                     t_fset.isWeakerThan(new_fset);
+          Bool var_is_constrained = (is_not_installing_script ||
+                                     fset->isWeakerThan(new_fset));
+          Bool term_is_constrained = (is_not_installing_script ||
+                                      t_fset->isWeakerThan(new_fset));
 
 
           switch (var_is_local + 2 * term_is_local) {
@@ -112,7 +136,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
             }
           case TRUE + 2 * FALSE: // var is local and term is global
             {
-              if (t_fset.isWeakerThan(new_fset)) {
+              if (t_fset->isWeakerThan(new_fset)) {
                 if (new_fset.isFSetValue()) {
                   OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(new_fset));
                   if (is_not_installing_script) term_var->propagateUnify(term);
@@ -139,7 +163,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
             }
           case FALSE + 2 * TRUE: // var is global and term is local
             {
-              if (_fset.isWeakerThan(new_fset)){
+              if (fset->isWeakerThan(new_fset)){
                 if(new_fset.isFSetValue()) {
                   OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(new_fset));
                   if (is_not_installing_script) propagateUnify(var);
@@ -193,7 +217,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
             error("unexpected case in unifyFSet");
             break;
           } // switch (varIsLocal + 2 * termIsLocal)
-          return TRUE;
+          goto t;
         }
       default:
         break;
@@ -202,7 +226,130 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
   default:
     break;
   }
+t:
+#ifdef DEBUG_FSUNIFY
+  cout << "leaving fs unify (true)" << flush;
+  taggedPrint(makeTaggedRef(vptr));
+  taggedPrint(makeTaggedRef(tptr));
+  cout << endl << flush;
+#endif
+  return TRUE;
+
+f:
+#ifdef DEBUG_FSUNIFY
+  cout << "leaving fs unify (false)" << flush;
+  taggedPrint(makeTaggedRef(vptr));
+  taggedPrint(makeTaggedRef(tptr));
+  cout << endl << flush;
+#endif
   return FALSE;
+}
+
+OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSet * fs)
+{
+#ifdef DEBUG_TELLCONSTRAINTS
+  cout << "tellBasicConstraint - in - : ";
+  taggedPrint(v);
+  if (fs) cout << " , " << *fs;
+  cout << endl <<flush;
+#endif
+
+  DEREF(v, vptr, vtag);
+
+  if (fs && !fs->isValid())
+    goto failed;
+
+
+// tell finite set constraint to unconstrained variable
+  if (isNotCVar(vtag)) {
+    if (! fs) goto fsvariable;
+
+    // fs denotes a set value --> v becomes set value
+    if (fs->isValue()) {
+      if (am.isLocalVariable(v, vptr)) {
+        if (isSVar(vtag))
+          am.checkSuspensionList(v);
+        doBind(vptr, makeTaggedFSetValue(new FSetValue(*fs)));
+      } else {
+        am.doBindAndTrail(v, vptr, makeTaggedFSetValue(new FSetValue(*fs)));
+      }
+      goto proceed;
+    }
+
+    // create finite set variable
+  fsvariable:
+    GenFSetVariable * fsv =
+      fs ? new GenFSetVariable(*fs) : new GenFSetVariable();
+
+    OZ_Term *  tfsv = newTaggedCVar(fsv);
+
+    if (am.isLocalVariable(v, vptr)) {
+      if (isSVar(vtag)) {
+        am.checkSuspensionList(v);
+        fsv->setSuspList(tagged2SVar(v)->getSuspList());
+      }
+      doBind(vptr, makeTaggedRef(tfsv));
+    } else {
+      am.doBindAndTrail(v, vptr, makeTaggedRef(tfsv));
+    }
+
+    goto proceed;
+// tell finite set constraint to finite set variable
+  } else if (isGenFSetVar(v, vtag)) {
+    if (! fs) goto proceed;
+
+    GenFSetVariable * fsvar = tagged2GenFSetVar(v);
+    OZ_FSet set = ((OZ_FSetImpl *) &fsvar->getSet())->unify(*fs);
+
+    if (!set.isValid())
+      goto failed;
+
+    if (!((OZ_FSetImpl *) &fsvar->getSet())->isWeakerThan(set))
+      goto proceed;
+
+    if (set.isValue()) {
+      if (am.isLocalCVar(v)) {
+        fsvar->getSet() = set;
+        fsvar->becomesFSetValueAndPropagate(vptr);
+      } else {
+        fsvar->propagate(v, fs_prop_val);
+        am.doBindAndTrail(v, vptr, makeTaggedFSetValue(new FSetValue(set)));
+      }
+    } else {
+      fsvar->propagate(v, fs_prop_bounds);
+      if (am.isLocalCVar(v)) {
+        fsvar->getSet() = set;
+      } else {
+        GenFSetVariable * locfsvar = new GenFSetVariable(set);
+        OZ_Term * loctaggedfsvar = newTaggedCVar(locfsvar);
+        am.doBindAndTrailAndIP(v, vptr,
+                               makeTaggedRef(loctaggedfsvar),
+                               locfsvar, tagged2GenFSetVar(v), OZ_FALSE);
+      }
+    }
+    goto proceed;
+  } else if (isFSetValue(vtag)) {
+    if (!fs) goto proceed;
+
+    if (fs->unify(*(FSetValue *) tagged2FSetValue(v)))
+      goto proceed;
+    goto failed;
+  }
+
+failed:
+
+  return FAILED;
+
+proceed:
+
+#ifdef DEBUG_TELLCONSTRAINTS
+  cout << "tellBasicConstraint - out - : ";
+  if (vptr) taggedPrint(*vptr); else taggedPrint(v);
+  if (fs) cout << " , " << *fs;
+  cout << endl <<flush;
+#endif
+
+  return PROCEED;
 }
 
 #if defined(OUTLINE)

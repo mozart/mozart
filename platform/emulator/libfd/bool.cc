@@ -41,7 +41,7 @@ OZ_Return ConjunctionPropagator::run(void)
   FailOnEmpty(y->constrainBool());
   FailOnEmpty(z->constrainBool());
 
-  if (*x == fd_singleton)
+  if (*x == fd_singl)
     if (x->getSingleElem() == 0) {
       FailOnEmpty(*z &= 0);
       OZ_DEBUGPRINT("out: x=0 " << *this);
@@ -52,7 +52,7 @@ OZ_Return ConjunctionPropagator::run(void)
       return replaceBy(reg_y, reg_z);
     }
 
-  if (*y == fd_singleton)
+  if (*y == fd_singl)
     if (y->getSingleElem() == 0) {
       FailOnEmpty(*z &= 0);
       OZ_DEBUGPRINT("out: y=0 " << *this);
@@ -63,7 +63,7 @@ OZ_Return ConjunctionPropagator::run(void)
       return replaceBy(reg_x, reg_z);
     }
 
-  if (*z == fd_singleton && z->getSingleElem() == 1) {
+  if (*z == fd_singl && z->getSingleElem() == 1) {
     FailOnEmpty(*x &= 1);
     FailOnEmpty(*y &= 1);
     OZ_DEBUGPRINT("out: z=1 " << *this);
@@ -112,7 +112,7 @@ OZ_Return DisjunctionPropagator::run(void)
   FailOnEmpty(y->constrainBool());
   FailOnEmpty(z->constrainBool());
 
-  if (*x == fd_singleton)
+  if (*x == fd_singl)
     if (x->getSingleElem() == 1) {
       FailOnEmpty(*z &= 1);
       return P.vanish();
@@ -121,7 +121,7 @@ OZ_Return DisjunctionPropagator::run(void)
       return replaceBy(reg_y, reg_z);
     }
 
-  if (*y == fd_singleton)
+  if (*y == fd_singl)
     if (y->getSingleElem() == 1) {
       FailOnEmpty(*z &= 1);
       return P.vanish();
@@ -130,7 +130,7 @@ OZ_Return DisjunctionPropagator::run(void)
       return replaceBy(reg_x, reg_z);
     }
 
-  if (*z == fd_singleton && z->getSingleElem() == 0) {
+  if (*z == fd_singl && z->getSingleElem() == 0) {
     FailOnEmpty(*x &= 0);
     FailOnEmpty(*y &= 0);
     return P.vanish();
@@ -175,12 +175,12 @@ OZ_Return XDisjunctionPropagator::run(void)
   FailOnEmpty(y->constrainBool());
   FailOnEmpty(z->constrainBool());
 
-  if (*x == fd_singleton && *y == fd_singleton) {
+  if (*x == fd_singl && *y == fd_singl) {
     FailOnEmpty(*z &= ((x->getSingleElem() == y->getSingleElem()) ? 0 : 1));
     return P.vanish();
   }
 
-  if (*z == fd_singleton) {
+  if (*z == fd_singl) {
     P.vanish();
     if (z->getSingleElem() == 1) {
       return replaceBy(new NegationPropagator(reg_x, reg_y));
@@ -238,7 +238,7 @@ OZ_Return ImplicationPropagator::run(void)
   FailOnEmpty(y->constrainBool());
   FailOnEmpty(z->constrainBool());
 
-  if (*x == fd_singleton)
+  if (*x == fd_singl)
     if (x->getSingleElem() == 0) {
       FailOnEmpty(*z &= 1);
       return P.vanish();
@@ -247,7 +247,7 @@ OZ_Return ImplicationPropagator::run(void)
       return replaceBy(reg_y, reg_z);
     }
 
-  if (*y == fd_singleton) {
+  if (*y == fd_singl) {
     if (y->getSingleElem() == 1) {
       FailOnEmpty(*z &= 1);
       return P.vanish();
@@ -256,7 +256,7 @@ OZ_Return ImplicationPropagator::run(void)
       return replaceBy(new NegationPropagator(reg_x, reg_z));
     }
   }
-  if (*z == fd_singleton && z->getSingleElem() == 0) {
+  if (*z == fd_singl && z->getSingleElem() == 0) {
     FailOnEmpty(*x &= 1);
     FailOnEmpty(*y &= 0);
     return P.vanish();
@@ -302,12 +302,12 @@ OZ_Return EquivalencePropagator::run(void)
   FailOnEmpty(y->constrainBool());
   FailOnEmpty(z->constrainBool());
 
-  if (*x == fd_singleton && *y == fd_singleton) {
+  if (*x == fd_singl && *y == fd_singl) {
     FailOnEmpty(*z &= ((x->getSingleElem() == y->getSingleElem()) ? 1 : 0));
     return P.vanish();
   }
 
-  if (*z == fd_singleton) {
+  if (*z == fd_singl) {
     P.vanish();
     if (z->getSingleElem() == 0) {
       return replaceBy(new NegationPropagator(reg_x, reg_y));
@@ -362,12 +362,12 @@ OZ_Return NegationPropagator::run(void)
   FailOnEmpty(x->constrainBool());
   FailOnEmpty(y->constrainBool());
 
-  if (*x == fd_singleton) {
+  if (*x == fd_singl) {
     FailOnEmpty(*y &= (1 - x->getSingleElem()));
     return P.vanish();
   }
 
-  if (*y == fd_singleton) {
+  if (*y == fd_singl) {
     FailOnEmpty(*x &= (1 - y->getSingleElem()));
     return P.vanish();
   }

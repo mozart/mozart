@@ -2762,6 +2762,8 @@ OZ_Return BIstatusInline(TaggedRef term, TaggedRef &out) {
     case FDVariable:
     case BoolVariable:
       t->setArg(0, AtomInt); break;
+    case FSetVariable:
+      t->setArg(0, AtomFSet); break;
     case OFSVariable:
       t->setArg(0, AtomRecord); break;
     default:

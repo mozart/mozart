@@ -479,8 +479,8 @@ OZ_Return TaskIntervalsProof::run(void)
                                                       + task];
                       OZ_Term right_side_task = reg_fds[resource_starts[i]
                                                        + left];
-                      addSpawn(fd_bounds, left_side_task);
-                      addSpawn(fd_bounds, right_side_task);
+                      addSpawn(fd_prop_bounds, left_side_task);
+                      addSpawn(fd_prop_bounds, right_side_task);
                       spawn(new LessEqOffPropagator(right_side_task, left_side_task,
                                                     -all_durs[i][left]));
 
@@ -514,8 +514,8 @@ OZ_Return TaskIntervalsProof::run(void)
                                                         + task];
                         OZ_Term right_side_task = reg_fds[resource_starts[i]
                                                          + right];
-                        addSpawn(fd_bounds, left_side_task);
-                        addSpawn(fd_bounds, right_side_task);
+                        addSpawn(fd_prop_bounds, left_side_task);
+                        addSpawn(fd_prop_bounds, right_side_task);
 
                         spawn(new LessEqOffPropagator(left_side_task, right_side_task,
                                                       -all_durs[i][task]));

@@ -1179,7 +1179,7 @@ OZ_Boolean OZ_FiniteDomainImpl::operator != (const int v) const
 inline
 OZ_Boolean OZ_FiniteDomainImpl::operator == (const OZ_FDState state) const
 {
-  if (state == fd_singleton) {
+  if (state == fd_singl) {
     return size == 1;
   } else if (state == fd_bool) {
     return size == 2 && min_elem == 0 && max_elem == 1;
@@ -1192,7 +1192,7 @@ OZ_Boolean OZ_FiniteDomainImpl::operator == (const OZ_FDState state) const
 inline
 OZ_Boolean OZ_FiniteDomainImpl::operator != (const OZ_FDState state) const
 {
-  if (state == fd_singleton) {
+  if (state == fd_singl) {
     return size != 1;
   } else if (state == fd_bool) {
     return size != 2 || min_elem != 0 || max_elem != 1;
