@@ -79,7 +79,11 @@ OZ_Term OZ_Extension::typeV()
   return oz_atom("extension");
 }
 
-OZ_Boolean OZ_Extension::isLocalV() { return OZ_TRUE; }
+OZ_Boolean OZ_Extension::isLocal()
+{
+  Board *bb=(Board*) __getSpaceInternal();
+  return bb==0?OZ_TRUE:oz_isCurrentBoard(bb);
+}
 
 OZ_SituatedExtension::OZ_SituatedExtension(void)
   : OZ_Extension()
@@ -90,11 +94,6 @@ OZ_SituatedExtension::OZ_SituatedExtension(void)
 OZ_Term OZ_SituatedExtension::typeV()
 {
   return oz_atom("situatedExtension");
-}
-
-OZ_Boolean OZ_SituatedExtension::isLocalV()
-{
-  return oz_isCurrentBoard((Board*)space);
 }
 
 Bool oz_isChunkExtension(TaggedRef term)
