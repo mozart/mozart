@@ -146,8 +146,8 @@ public:
 
     DynamicTable() { error("do not use DynamicTable"); }
 
-    // Create an initially empty dynamictable of size s (default 1)
-    static DynamicTable* newDynamicTable(dt_index s=1);
+    // Create an initially empty dynamictable of size s
+    static DynamicTable* newDynamicTable(dt_index s=4);
 
     // Initialize an elsewhere-allocated dynamictable of size s
     void init(dt_index s=1);

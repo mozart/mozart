@@ -12,7 +12,7 @@
 //                               for class DynamicTable
 //-------------------------------------------------------------------------
 
-// Create an initially empty dynamictable of size s (default 1)
+// Create an initially empty dynamictable of size s
 DynamicTable* DynamicTable::newDynamicTable(dt_index s) {
     Assert(isPwrTwo(s));
     size_t memSize = sizeof(DynamicTable) + sizeof(HashElement)*(s-1);
