@@ -1,6 +1,5 @@
 Makefile
 config.log
 config.status
-posix.oz
 *.ozf
 *~
