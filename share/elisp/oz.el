@@ -2215,14 +2215,16 @@ If it is, then remove it."
   (let ((none-found t) (cur (current-buffer)))
     (while (and buffers none-found)
       (set-buffer (car buffers))
-      (if (equal mode-name "Oz")
+      (if (or (equal mode-name "Oz")
+	      (equal mode-name "Oz-Gump")
+	      (equal mode-name "Oz-Machine"))
 	  (progn (switch-to-buffer (car buffers))
 		 (setq none-found nil))
-	  (setq buffers (cdr buffers))))
+	(setq buffers (cdr buffers))))
     (if none-found
 	(progn
 	  (set-buffer cur)
-	  (error "No other Oz buffer")))))
+	  (error "This is the only Oz buffer")))))
 
 
 ;;------------------------------------------------------------
