@@ -46,16 +46,6 @@ SUBDIRS		= @SUBDIRS@
 .PHONY: all bootstrap check install clean veryclean distclean depend
 
 
-all quick bootstrap clean veryclean depend distclean check install::
-	dirs="$(SUBDIRS)"; \
-	for i in $$dirs; do \
-	  if (cd $$i && $(MAKE) $@); \
-          then true; \
-          else exit 1; \
-          fi; \
-        done
-
-
 all:: $(CED)
 
 bootstrap:: all
@@ -88,3 +78,14 @@ veryclean:: clean
 
 distclean:: veryclean
 	-rm -f Makefile ced.el catalog config.log config.status config.cache
+
+all quick bootstrap clean veryclean depend distclean check install::
+	dirs="$(SUBDIRS)"; \
+	for i in $$dirs; do \
+	  if (cd $$i && $(MAKE) $@); \
+          then true; \
+          else exit 1; \
+          fi; \
+        done
+
+
