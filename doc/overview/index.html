@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
   <head>
-    <title>Documentation of the Mozart Programming System</title>
+    <title>Mozart Documentation: Overview</title>
     <link rel=stylesheet type="text/css" href="ozdoc.css">
 <style>
 p { font-size:10pt; margin-top:0pt; }
@@ -13,9 +13,7 @@ a.h2a { font-size:10pt; color:steelblue; }
 </style>
   </head>
   <body>
-    <h1 class=title>Documentation of the Mozart Programming System</h1>
-    <h2 class=authors><a href="/~duchier/">Denys Duchier</a></h2>
-    <hr>
+    <h1 class=title>Mozart Documentation: Overview</h1>
     <table align=center>
         <tr>
           <td><dl>
@@ -25,24 +23,39 @@ a.h2a { font-size:10pt; color:steelblue; }
                          >The System Installation Manual</a></dt>
                   <dt><a href="getstarted.html#demo" class=h2
                          >The Demo Applications Document</a></dt>
+                  <dt><a href="getstarted.html#change" class=h2
+                         >Changes</a></dt>
                 </dl><br>
 
               <dt><a href="tutorials.html" class=h1>Tutorials</a></dt>
               <dd><dl>
-                  <dt><a href="tutorials.html#tutorial" class=h2
-                         >The Oz Tutorial</a></dt>
-                  <dt><a href="tutorials.html#fdt" class=h2
-                         >The Finite Domain Constraint Programming
-                          Tutorial</a></dt>
-                  <dt><a href="tutorials.html#constraints" class=h2
-                         >Problem Solving With Constraints in Oz</a></dt>
-                  <dt><a href="tutorials.html#apptut" class=h2
-                         >The Application Programming Tutorial</a></dt>
-                  <dt><a href="tutorials.html#wp" class=h2
-                         >The Window Programming Tutorial</a></dt>
-                  <dt><a href="tutorials.html#op" class=h2
-                         >The Open Programming Tutorial</a></dt>
-                </dl><br>
+                  <dt><a href="tutorials.html#intro" class=h2a
+                         >Introductory</a></dt>
+                  <dd><dl>
+                      <dt><a href="tutorials.html#tutorial" class=h2
+                           >Tutorial of Oz</a></dt>
+                      <dt><a href="tutorials.html#opi" class=h2
+                           >The Oz Programming Interface</a></dt>
+                      <dt><a href="tutorials.html#dstutorial" class=h2
+                           >Distributed Programming in Mozart</a></dt>
+                      <dt><a href="tutorials.html#fdt" class=h2
+                           >Finite Domain Constraint Programming</a></dt>
+                      <dt><a href="tutorials.html#apptut" class=h2
+                            >Application Programming</a></dt>
+                      </dl><br>
+                  <dt><a href="tutorials.html#advanced" class=h2a
+                         >Advanced</a></dt>
+                  <dd><dl>
+                      <dt><a href="tutorials.html#fst" class=h2
+                            >Problem Solving with Finite Set Constraints</a></dt>
+                      <dt><a href="tutorials.html#wp" class=h2
+                            >Window Programming</a></dt>
+                      <dt><a href="tutorials.html#op" class=h2
+                            >Open Programming</a></dt>
+                      <dt><a href="tutorials.html#cpitut" class=h2
+                            >Constraint Extension Tutorial</a></dt>
+                      </dl>
+              </dl><br>
 
               <dt><a href="reference.html" class=h1>Reference Manuals</a></dt>
               <dd><dl>
@@ -50,11 +63,13 @@ a.h2a { font-size:10pt; color:steelblue; }
                          >Programming Modules and Libraries</a></dt>
                   <dd><dl>
                       <dt><a href="reference.html#base" class=h2
-                             >The Base Environment Reference Manual</a></dt>
+                             >The Oz Base Environment</a></dt>
                       <dt><a href="reference.html#system" class=h2
-                             >The System Modules Reference Manual</a></dt>
+                             >System Modules</a></dt>
+                      <dt><a href="reference.html#compiler" class=h2
+                             >The Mozart Compiler</a></dt>
                     </dl>
-                </dl>
+                </dl><br>
               <dt><dl>
               <dt><a href="reference.html#env" class=h2a
                      >Programming Environment and Tools</a></dt>
@@ -62,17 +77,43 @@ a.h2a { font-size:10pt; color:steelblue; }
                   <dt><a href="reference.html#opi" class=h2
                          >The Oz Programming Interface</a></dt>
                   <dt><a href="reference.html#tools" class=h2
-                         >The Oz Tools Reference Manual</a></dt>
-                  <dt><a href="reference.html#compiler" class=h2
-                         >The Oz Compiler</a></dt>
-                  <dt><a href="reference.html#debugger" class=h2
-                         >The Oz Debugger</a></dt>
+                         >Oz Shell Utilities</a></dt>
+                  <dt><a href="reference.html#ozcar" class=h2
+                         >The Mozart Debugger</a></dt>
+                  <dt><a href="reference.html#explorer" class=h2
+                         >Oz Explorer - Visual Constraint Programming Support</a></dt>
+                  <dt><a href="reference.html#panel" class=h2
+                         >Oz Panel</a></dt>
+                  <dt><a href="reference.html#browser" class=h2
+                         >The Oz Browser</a></dt>
                   <dt><a href="reference.html#profiler" class=h2
-                         >The Oz Profiler</a></dt>
+                         >The Mozart Profiler</a></dt>
+                  <dt><a href="reference.html#gump" class=h2
+                         >Gump - A Front-End Generator for Oz</a></dt>
+                </dl><br>
+              <dt><a href="reference.html#interface" class=h2a
+                     >Interfaces</a></dt>
+              <dd><dl>
+                  <dt><a href="reference.html#cpiref" class=h2
+                         >Constraint Extensions Reference</a></dt>
+                  <dt><a href="reference.html#foreign" class=h2
+                         >Interfacing to C and C++</a></dt>
+                </dl><br>
+              <dt><a href="reference.html#definition" class=h2a
+                     >Definitions</a></dt>
+              <dd><dl>
+                  <dt><a href="reference.html#notation" class=h2
+                         >The Oz Notation</a></dt>
+                </dl><br>
+              <dt><a href="reference.html#other" class=h2a
+                     >Other</a></dt>
+              <dd><dl>
+                  <dt><a href="reference.html#contrib" class=h2
+                         >Contributed Libraries</a></dt>
+                  <dt><a href="reference.html#ozdoc" class=h2
+                         >Oz Documentation DTD</a></dt>
                 </dl><br>
             </dl><br>
-      <dt><a href="miscellaneous.html" class=h1>Miscellaneous</a></dt>
-</dl></td>
         </tr>
       </table>
 <hr>
