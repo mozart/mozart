@@ -39,27 +39,6 @@
 #define inline
 #endif
 
-inline 
-TaggedRef MonitorArityPropagator::getX(void) { 
-  return X; 
-}
-inline 
-TaggedRef MonitorArityPropagator::getK(void) { 
-  return K; 
-}
-inline 
-TaggedRef MonitorArityPropagator::getFH(void) { 
-  return FH; 
-}
-inline 
-TaggedRef MonitorArityPropagator::getFT(void) { 
-  return FT; 
-}
-inline
-void MonitorArityPropagator::setFH(TaggedRef FH1) { 
-  FH=FH1; 
-}
-
 /* Add list of features to each OFS-marked suspension list 'flist' has
  * three possible values: a single feature (literal or integer), a
  * nonempty list of features, or NULL (no extra features).
@@ -90,14 +69,14 @@ void addFeatOFSSuspensionList(TaggedRef var,
       Assert(sizeof(MonitorArityPropagator) == prop->sizeOf());
 
       // Only add features if var and fvar are the same:
-      TaggedRef fvar=prop->getX();
+      TaggedRef fvar=prop->X;
       DEREF(fvar,_1,_2);
       if (var!=fvar) {
 	suspList=suspList->getNext();
 	continue;
       }
       // Only add features if the 'kill' variable is undetermined:
-      TaggedRef killl=prop->getK();
+      TaggedRef killl=prop->K;
       DEREF(killl,_,killTag);
       if (!isVariableTag(killTag)) {
 	suspList=suspList->getNext();
@@ -107,13 +86,13 @@ void addFeatOFSSuspensionList(TaggedRef var,
       // Add the feature or list to the diff. list in FH and FT:
       if (flist) {
 	if (oz_isFeature(flist))
-	  prop->setFH(oz_cons(flist,prop->getFH()));
+	  prop->FH = oz_cons(flist,prop->FH);
 	else {
 	  // flist must be a list
 	  Assert(oz_isCons(flist));
 	  TaggedRef tmplist=flist;
 	  while (tmplist!=AtomNil) {
-	    prop->setFH(oz_cons(oz_head(tmplist),prop->getFH()));
+	    prop->FH = oz_cons(oz_head(tmplist),prop->FH);
 	    tmplist=oz_tail(tmplist);
 	  }
 	}
@@ -121,7 +100,7 @@ void addFeatOFSSuspensionList(TaggedRef var,
       if (determ) {
 	// FS is det.: tail of list must be bound to nil: (always succeeds)
 	// Do *not* use unification to do this binding!
-	TaggedRef tl=prop->getFT();
+	TaggedRef tl=prop->FT;
 	DEREF(tl,tailPtr,tailTag);
 	switch (tailTag) {
 	case LITERAL:
