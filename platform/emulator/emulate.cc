@@ -193,6 +193,17 @@ void deallocateY(RefsArray a)
   deallocateY(a,getRefsArraySize(a));
 }
 
+// fix disabled
+// #define DIST_UNIFY_FIX 0
+
+// X=f(Y,b) Y=g(a): stop after X=f(Y,b) (create new var for Y)
+#define DIST_UNIFY_FIX 1
+
+// X=f(Y,b) Y=g(a): ask manager of X for binding to f(g(a),b)
+//#define DIST_UNIFY_FIX 2
+
+void buildRecord(ProgramCounter PC, RefsArray X, RefsArray Y, Abstraction *CAP);
+
 // -----------------------------------------------------------------------
 // *** ???
 // -----------------------------------------------------------------------
@@ -2833,6 +2844,206 @@ LBLshallowFail:
     JUMPRELATIVE(getLabelArg(PC+1));
   }
 } // end engine
+
+
+// ------------------------------------------------------------------------
+// *** FAILURE
+// ------------------------------------------------------------------------
+
+
+#undef ONREG
+#undef ONREG2
+#undef DISPATCH
+#define ONREG(Label,R)      auxReg = (R); goto Label
+#define ONREG2(Label,R1,R2) auxReg = (R1); auxReg1 = (R2); goto Label
+#define DISPATCH(incPC,incArgs) 		\
+   PC += incPC;					\
+   argsToHandle += incArgs;			\
+   break;
+
+Bool isGetRecAndFriends(Opcode op)
+{
+#if DIST_UNIFY_FIX > 1
+  return NO; // don't build nested structures
+#else
+  switch(op) {
+    
+  case GETRECORDX:
+  case GETRECORDY:
+  case GETRECORDG:
+  case GETLISTVALVARX:
+  case GETLISTVALVARY:
+  case GETLISTVALVARG:
+  case GETLISTX:
+  case GETLISTY:
+  case GETLISTG:
+    return OK;
+
+  default:
+    return NO;
+  }
+#endif
+}
+
+void buildRecord(ProgramCounter PC, RefsArray X, RefsArray Y,Abstraction *CAP)
+{
+#if DIST_UNIFY_FIX > 0
+  Assert(oz_onToplevel());
+  TaggedRef *sPointer;
+  RefsArray auxReg, auxReg1;
+  int argsToHandle = 0;
+  
+  int maxX = CAP->getPred()->getMaxX();
+  RefsArray savedX = allocateRefsArray(maxX,NO);
+  for (int i = 0; i < maxX; i++)
+    savedX[i] = X[i];
+
+  int maxY = Y ? getRefsArraySize(Y) : 0;
+  RefsArray savedY = Y ? allocateRefsArray(maxY,NO) : 0;
+  for (int i = 0; i < maxY; i++)
+    savedY[i] = Y[i];
+
+  Bool firstCall = OK;
+  while(1) {
+    Opcode op = CodeArea::getOpcode(PC);
+    if (!firstCall && argsToHandle==0 && !isGetRecAndFriends(op))
+      goto exit;
+    firstCall = NO;
+    switch(op) {
+
+    case GETRECORDX: ONREG(getRecord,X);
+    case GETRECORDY: ONREG(getRecord,Y);
+    case GETRECORDG: ONREG(getRecord,GREF);
+      {
+      getRecord:
+	TaggedRef label = getLiteralArg(PC+1);
+	SRecordArity ff = (SRecordArity) getAdressArg(PC+2);
+	TaggedRef term = RegAccess(auxReg,getRegArg(PC+3));
+	DEREF(term,termPtr,tag);
+	
+	Assert(isUVar(term));
+	int numArgs = getWidth(ff);
+	SRecord *srecord = SRecord::newSRecord(label,ff, numArgs);
+	bindOPT(termPtr,makeTaggedSRecord(srecord), NULL);
+	sPointer = srecord->getRef();
+	DISPATCH(4,numArgs);
+      }
+
+    case GETLITERALX: ONREG(getNumber,X);
+    case GETLITERALY: ONREG(getNumber,Y);
+    case GETLITERALG: ONREG(getNumber,GREF);
+    case GETNUMBERX:  ONREG(getNumber,X);
+    case GETNUMBERY:  ONREG(getNumber,Y);
+    case GETNUMBERG:  ONREG(getNumber,GREF);
+    getNumber:
+    {
+      TaggedRef i = getNumberArg(PC+1);
+      TaggedRef term = RegAccess(auxReg,getRegArg(PC+2));
+      DEREF(term,termPtr,tag);
+      Assert(isUVar(tag));
+      bindOPT(termPtr, i,NULL);
+      DISPATCH(3,-1);
+    }
+
+
+    case GETLISTVALVARX: ONREG(getListValVar,X);
+    case GETLISTVALVARY: ONREG(getListValVar,Y);
+    case GETLISTVALVARG: ONREG(getListValVar,GREF);
+    getListValVar:
+      {
+	TaggedRef term = RegAccess(X,getRegArg(PC+1));
+	DEREF(term,termPtr,tag);
+	
+	Assert(isUVar(term));
+	LTuple *ltuple = new LTuple();
+	ltuple->setHead(RegAccess(auxReg,getRegArg(PC+2)));
+	ltuple->setTail(am.currentUVarPrototype());
+	bindOPT(termPtr,makeTaggedLTuple(ltuple),NULL);
+	RegAccess(X,getRegArg(PC+3)) = makeTaggedRef(ltuple->getRef()+1);
+	DISPATCH(4,0);
+      }
+
+    case GETLISTX: ONREG(getList,X);
+    case GETLISTY: ONREG(getList,Y);
+    case GETLISTG: ONREG(getList,GREF);
+    getList:
+      {
+	TaggedRef aux = RegAccess(auxReg,getRegArg(PC+1));
+	DEREF(aux,auxPtr,tag);
+	
+	Assert(isUVar(aux));
+	LTuple *ltuple = new LTuple();
+	sPointer = ltuple->getRef();
+	bindOPT(auxPtr,makeTaggedLTuple(ltuple),NULL);
+	DISPATCH(2,2);
+      }
+
+    case UNIFYVARIABLEX: ONREG(unifyVariable,X);
+    case UNIFYVARIABLEY: ONREG(unifyVariable,Y);
+    case UNIFYVARIABLEG: ONREG(unifyVariable,GREF);
+    unifyVariable:
+    {
+	*sPointer = am.currentUVarPrototype();
+	RegAccess(auxReg,getRegArg(PC+1)) = makeTaggedRef(sPointer++);
+	DISPATCH(2,-1);
+      }
+
+    case UNIFYVALUEX: ONREG(unifyValue,X);
+    case UNIFYVALUEY: ONREG(unifyValue,Y);
+    case UNIFYVALUEG: ONREG(unifyValue,GREF);
+    unifyValue:
+    {
+	*sPointer++ = RegAccess(auxReg,getRegArg(PC+1));
+	DISPATCH(2,-1);
+      }
+
+    case UNIFYVALVARXX: ONREG2(UnifyValVar,X,X);
+    case UNIFYVALVARXY: ONREG2(UnifyValVar,X,Y);
+    case UNIFYVALVARXG: ONREG2(UnifyValVar,X,GREF);
+    case UNIFYVALVARYX: ONREG2(UnifyValVar,Y,X);
+    case UNIFYVALVARYY: ONREG2(UnifyValVar,Y,Y);
+    case UNIFYVALVARYG: ONREG2(UnifyValVar,Y,GREF);
+    case UNIFYVALVARGX: ONREG2(UnifyValVar,GREF,X);
+    case UNIFYVALVARGY: ONREG2(UnifyValVar,GREF,Y);
+    case UNIFYVALVARGG: ONREG2(UnifyValVar,GREF,GREF);
+      {
+      UnifyValVar:
+	*sPointer++ = RegAccess(auxReg,getRegArg(PC+1));
+	*sPointer++ = am.currentUVarPrototype();
+	RegAccess(auxReg1,getRegArg(PC+2)) = makeTaggedRef(sPointer);
+	DISPATCH(3,-2);
+      }
+
+    case UNIFYVOID:
+      {
+	int n = getPosIntArg(PC+1);
+	for (int i = n-1; i >=0; i-- ) {
+	  *sPointer++ = am.currentUVarPrototype();
+	}
+	DISPATCH(2,-n);
+      }
+
+    case UNIFYNUMBER:
+    case UNIFYLITERAL:
+      {
+	*sPointer++ = getTaggedArg(PC+1);
+	DISPATCH(2,-1);
+      }
+
+    default:
+      displayCode(PC,1);
+      displayDef(PC,1);
+      OZ_error("buildRecord: unhandled opcode: %d\n",op);
+      goto exit;
+    }
+  }
+ exit:
+  for (int i = 0; i < maxX; i++)
+    X[i] = savedX[i];
+  for (int i = 0; i < maxY; i++)
+    Y[i] = savedY[i];
+#endif
+}
 
 
 // --------------------------------------------------------------------------
