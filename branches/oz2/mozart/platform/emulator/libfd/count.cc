@@ -116,6 +116,11 @@ OZ_Return ExactlyPropagator::propagate(void)
   
   l_sz = to;
 
+  // if n_var occurs in reg_l we must consider the case that
+  // the list becomes empty but n_var is still a FD.
+  if (l_sz == 0) {
+    FailOnEmpty(*n_var &= n_var->getMinElem());
+  }
 
   return P.leave();
 
@@ -217,6 +222,10 @@ OZ_Return AtLeastPropagator::propagate(void)
   }
   
   l_sz = to;
+  if (l_sz == 0) {
+    FailOnEmpty(*n_var &= n_var->getMinElem());
+  }
+
   return P.leave();
 
 failure:
@@ -316,6 +325,9 @@ OZ_Return AtMostPropagator::propagate(void)
   
   l_sz = to;
 
+  if (l_sz == 0) {
+    return P.vanish();
+  }
   return P.leave();
 
 failure:
