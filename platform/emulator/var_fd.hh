@@ -46,6 +46,7 @@ class OzFDVariable: public OzVariable {
 friend class OzVariable;
 friend class OzBoolVariable;
 friend inline void addSuspFDVar(TaggedRef, Suspendable *, OZ_FDPropState);
+friend OZ_Return oz_var_cast(TaggedRef *&, Board *, TypeOfVariable);
   
 private:
   OZ_FiniteDomain finiteDomain;

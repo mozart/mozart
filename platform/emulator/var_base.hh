@@ -276,7 +276,7 @@ int oz_var_getSuspListLength(OzVariable*);
 OzVariable * oz_var_copyForTrail(OzVariable *);
 void oz_var_restoreFromCopy(OzVariable *, OzVariable *);
 
-OZ_Return oz_var_cast(TaggedRef *, Board *, TypeOfVariable);
+OZ_Return oz_var_cast(TaggedRef *&, Board *, TypeOfVariable);
 
 
 inline
