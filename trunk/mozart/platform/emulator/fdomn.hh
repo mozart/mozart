@@ -38,9 +38,6 @@ const int fd_sup = OZ_smallIntMax() - 1;
 
 const int fd_full_size = fd_sup + 1;
 
-// TMUELLER: MAXFDBIARGS twice
-#define MAXFDBIARGS 1000 // maximum number of arguments of fd built-ins
-
 struct i_arr_type {int left; int right;};
   
 // Invariants: high == 1 reduce to OZ_FiniteDomain
@@ -217,8 +214,9 @@ typedef FDBitVector BitArray;
 
 typedef int * intptr;
 
-extern intptr fd_iv_left_sort[MAXFDBIARGS];
-extern intptr fd_iv_right_sort[MAXFDBIARGS];
+#define FDOMNINITSIZE 1000
+extern intptr fd_iv_left_sort[FDOMNINITSIZE];
+extern intptr fd_iv_right_sort[FDOMNINITSIZE];
 
 class OZ_FiniteDomainImpl : public OZ_FiniteDomain {
 protected:
