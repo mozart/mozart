@@ -232,7 +232,7 @@ See <file /gethostbyname(3)/.
 <item>
 Returns the time since 00:00:00 GMT,  Jan.  1,  1970 in seconds.
 <p>
-See <file /time(3)/.
+See <file /time(2)/.
 
 
 <Entry> <<gmTime>> <Synopsis>
@@ -262,7 +262,7 @@ features, where the fields are all integers:
 <<isDst>> /<td/ 1 if daylight savings time in effect (DST) /<td/<p.silent>//
 </table>
 <p>
-See <file /gmtime(3)/, <file /localtime(3)/, and <file /time(3)/.
+See <file /gmtime(3)/, <file /localtime(3)/, and <file /time(2)/.
 </list>
 </section>
 
