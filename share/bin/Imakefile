@@ -1,7 +1,7 @@
 BINDIR  = $(OZHOME)/bin
 SHELL   = /bin/sh
 VCBIN=/MSDEV/BIN
-SCRIPTS = oz oz+ ozplatform ozwish
+SCRIPTS = oz oz+ ozplatform oz.wish
 LINKS   = oz- ozc ozsa ozsac oz.compiler oz.emulator ozdo \
           ozemacs ozdemo
 
