@@ -12,6 +12,7 @@
 ;; - 10thread is not recognized as a keyword as it should be.
 ;; - An ampersand as the last character in a string or before a
 ;;   backslash-escaped double quote in a string messes up fontification.
+;; - Writing e.g., C == &\\andthen ... confuses fontification.
 ;; - The use of non-escaped double quotes in Oz-Gump regular expression
 ;;   tokens confuses fontification.
 ;; - Oz-Gump regular expressions are not ignored for indentation.
@@ -77,45 +78,61 @@
   "*If non-nil, automatically enter font-lock-mode for oz-mode."
   :type 'boolean
   :group 'oz)
+(put 'oz-want-font-lock 'variable-interactive
+     "XAutomatically enter font-lock-mode in the Oz modes? (t or nil): ")
 
 (defcustom oz-auto-indent t
   "*If non-nil, automatically indent lines."
   :type 'boolean
   :group 'oz)
+(put 'oz-auto-indent 'variable-interactive
+     "XAutomatically indent lines in Oz and Oz-Gump modes? (t or nil): ")
 
 (defcustom oz-indent-chars 3
   "*Number of spaces Oz statements are indented wrt. containing block."
   :type 'integer
   :group 'oz)
+(put 'oz-indent-chars 'variable-interactive
+     "nNumber of characters to indent in Oz and Oz-Gump modes: ")
 
 (defcustom oz-pedantic-spaces nil
   "*If non-nil, highlight ill-placed whitespace.
 Note that this variable is only checked once when oz.el is loaded."
   :type 'boolean
   :group 'oz)
+(put 'oz-pedantic-spaces 'variable-interactive
+     "XNote: This variable has no effect when oz.el has already been loaded: ")
 
 (defcustom oz-change-title t
-  "*If non-nil, change the title of the Emacs window while Oz is running."
+  "*If non-nil, change the title of the Emacs frame while Oz is running."
   :type 'boolean
   :group 'oz)
+(put 'oz-change-title 'variable-interactive
+     "XChange frame title when Oz is running? (t or nil): ")
 
 (defcustom oz-frame-title
   (concat "Oz Programming Interface (" oz-old-frame-title ")")
   "*String to be used as Emacs window title while Oz is running."
   :type 'string
   :group 'oz)
+(put 'oz-frame-title 'variable-interactive
+     "sFrame title to use while Oz is running: ")
 
 (defcustom oz-emulator
   (concat (getenv "HOME") "/Oz/Emulator/oz.emulator.bin")
   "*Path to the Oz Emulator for gdb mode and for \\[oz-other]."
   :type 'string
   :group 'oz)
+(put 'oz-emulator 'variable-interactive
+     "fChoose Oz Emulator binary: ")
 
 (defcustom oz-compiler-boot-file
   (concat (getenv "HOME") "/Oz/Compiler/backend/ozboot.ql")
   "*Path to the old Oz Compiler's boot file for \\[oz-other]."
   :type 'string
   :group 'oz)
+(put 'oz-compiler-boot-file 'variable-interactive
+     "fChoose Oz Compiler boot file: ")
 
 (defcustom oz-use-new-compiler
   (not (null (getenv "OZUSENEWCOMPILER")))
@@ -124,39 +141,53 @@ This has the effect of not opening the *Oz Compiler* buffer and feeding
 everything into the *Oz Emulator* buffer."
   :type 'boolean
   :group 'oz)
+(put 'oz-use-new-compiler 'variable-interactive
+     "XUse New Oz Compiler? (t or nil): ")
 
 (defcustom oz-new-compiler-url
   (concat "file:" (getenv "HOME") "/Oz/tools/compiler/Compiler.ozc")
   "*URL of the new Oz Compiler for gdb mode and for \\[oz-other]."
   :type 'string
   :group 'oz)
+(put 'oz-new-compiler-url 'variable-interactive
+     "sURL of the Oz Compiler component: ")
 
 (defcustom oz-gdb-autostart t
-  "*If non-nil, start emulator immediately in gdb mode.
+  "*If non-nil, start emulator immediately when in gdb mode.
 If nil, you have the possibility to first set breakpoints and only
 run the emulator when you issue the command `run' to gdb."
   :type 'boolean
   :group 'oz)
+(put 'oz-gdb-autostart 'variable-interactive
+     "XStart emulator immediately when in gdb mode? (t or nil): ")
 
 (defcustom oz-other-buffer-size 35
   "*Percentage of screen to use for Oz Compiler and Emulator windows."
   :type 'integer
   :group 'oz)
+(put 'oz-other-buffer-size 'variable-interactive
+     "nPercentage of screen to use for Oz windows: ")
 
 (defcustom oz-popup-on-error t
   "*If non-nil, pop up Compiler resp. Emulator buffer upon error."
   :type 'boolean
   :group 'oz)
+(put 'oz-popup-on-error 'variable-interactive
+     "XPop up Oz buffers on error? (t or nil): ")
 
 (defcustom oz-halt-timeout 30
   "*Number of seconds to wait for shutdown in oz-halt."
   :type 'integer
   :group 'oz)
+(put 'oz-halt-timeout 'variable-interactive
+     "nNumer of seconds to wait for shutdown of the Oz system: ")
 
 (defcustom oz-previewer "xdvi"
   "*Viewer command for Oz documentation files."
   :type 'string
   :group 'oz)
+(put 'oz-previewer 'variable-interactive
+     "sViewer command for Oz documentation files: ")
 
 
 ;;------------------------------------------------------------
@@ -797,18 +828,20 @@ binary (can also be done via \\[oz-set-emulator]."
     (oz-set-emulator)))
 
 (defun oz-set-emulator ()
-  "Set the value of environment variable OZEMULATOR.
+  "Set the value of variable `oz-emulator'.
 This is the emulator used for debugging with gdb.
 Can be selected by \\[oz-other-emulator]."
   (interactive)
   (setq oz-emulator
 	(expand-file-name
-	 (read-file-name "Choose Emulator: " nil nil t nil)))
+	 (read-file-name (format "Oz Emulator binary (default %s): "
+				 oz-emulator)
+			 nil oz-emulator t nil)))
   (if (getenv "OZEMULATOR")
       (setenv "OZEMULATOR" oz-emulator)))
 
 (defun oz-set-compiler ()
-  "Set the value of environment variables OZBOOT or OZCOMPILERCOMP.
+  "Set the value of variables `oz-compiler-boot-file' or `oz-new-compiler-url'.
 This is to specify an alternative Oz Compiler boot file or URL,
 depending on the setting of the variable `oz-use-new-compiler'.
 Can be selected by \\[oz-other-compiler]."
@@ -819,12 +852,15 @@ Can be selected by \\[oz-other-compiler]."
 	      (concat
 	       "file://"
 	       (expand-file-name
-		(read-file-name "Choose Compiler file: " nil nil t nil))))
+		(read-file-name "Oz Compiler component file: "
+				nil nil t nil))))
 	(if (getenv "OZCOMPILERCOMP")
 	    (setenv "OZCOMPILERCOMP" oz-new-compiler-url)))
     (setq oz-compiler-boot-file
 	  (expand-file-name
-	   (read-file-name "Choose Compiler boot file: " nil nil t nil)))
+	   (read-file-name (format "Oz Compiler boot file (default %s): "
+				   oz-compiler-boot-file)
+			   nil oz-compiler-boot-file t nil)))
     (if (getenv "OZBOOT")
 	(setenv "OZBOOT" oz-compiler-boot-file))))
 
@@ -1057,19 +1093,19 @@ feed that many preceding paragraphs as well as the current paragraph."
   "[][(){}]")
 
 (defconst oz-any-pattern
-  (concat "\\<\\(attr\\|c\\(ase\\|atch\\|lass\\|hoice\\|ondis\\)\\|"
-	  "declare\\|dis\\|e\\(lse\\(case\\|if\\|of\\)?\\|nd\\)\\|"
-	  "f\\(eat\\|inally\\|rom\\|un\\)\\|if\\|in\\|"
+  (concat "\\<\\(attr\\|case\\|catch\\|class\\|choice\\|condis\\|"
+	  "declare\\|dis\\|else\\|elsecase\\|elseif\\|elseof\\|end\\|"
+	  "feat\\|finally\\|from\\|fun\\|if\\|in\\|"
 	  "local\\|lock\\|meth\\|not\\|of\\|or\\|proc\\|prop\\|raise\\|"
-	  "t\\(hen\\|hread\\|ry\\)\\|with\\)\\>\\|\\[\\]\\|"
+	  "then\\|thread\\|try\\|with\\)\\>\\|\\[\\]\\|"
 	  oz-left-or-right-pattern))
 (defconst oz-gump-any-pattern
-  (concat "\\<\\(attr\\|c\\(ase\\|atch\\|lass\\|hoice\\|ondis\\)\\|"
-	  "declare\\|dis\\|e\\(lse\\(case\\|if\\|of\\)?\\|nd\\)\\|"
-	  "f\\(eat\\|inally\\|rom\\|un\\)\\|if\\|in\\|"
-	  "l\\(ex\\|ocal\\|ock\\)\\|meth\\|mode\\|not\\|of\\|or\\|"
-	  "p\\(arser\\|roc\\|rod\\|rop\\)\\|raise\\|scanner\\|syn\\|"
-	  "t\\(hen\\|hread\\|oken\\|ry\\)\\|with\\)\\>\\|=>\\|\\[\\]\\|"
+  (concat "\\<\\(attr\\|case\\|catch\\|class\\|choice\\|condis\\|"
+	  "declare\\|dis\\|else\\|elsecase\\|elseif\\|elseof\\|end\\|"
+	  "feat\\|finally\\|from\\|fun\\|if\\|in\\|"
+	  "lex\\|local\\|lock\\|meth\\|mode\\|not\\|of\\|or\\|"
+	  "parser\\|proc\\|prod\\|prop\\|raise\\|scanner\\|syn\\|"
+	  "then\\|thread\\|token\\|try\\|with\\)\\>\\|=>\\|\\[\\]\\|"
 	  "//\\|" oz-left-or-right-pattern))
 
 ;;------------------------------------------------------------
@@ -2517,12 +2553,12 @@ of the procedure Browse."
 
 (defun oz-feed-file (file)
   "Feed a file to the Oz Compiler."
-  (interactive "FFeed file: ")
+  (interactive "fFeed file: ")
   (oz-send-string (concat "\\threadedfeed '" file "'")))
 
 (defun oz-precompile-file (file)
   "Precompile an Oz file."
-  (interactive "FPrecompile file: ")
+  (interactive "fPrecompile file: ")
   (if oz-using-new-compiler
       (error "Precompiling not supported with the new compiler")
     (oz-send-string (concat "\\precompile '" file "'"))))
