@@ -2,6 +2,9 @@
 %%% Author:
 %%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%
+%%% Contributors:
+%%%   Tobias Mueller <tmueller@ps.uni-sb.de>
+%%%
 %%% Copyright:
 %%%   Leif Kornstaedt, 1998
 %%%
@@ -27,6 +30,7 @@ import
    AuthorDB('class')
    BibliographyDB('class')
    Fontifier('class' noProgLang)
+   Thumbnails('class')
    MathToGIF('class')
 export
    Translate
@@ -195,6 +199,8 @@ define
 	 % for Math and Math.Choice:
 	 MathDisplay: unit
 	 MyMathToGIF: unit
+	 % for Picture:
+	 MyThumbnails: unit
 	 % for Figure:
 	 Floats: unit
 	 FigureCounters: unit
@@ -209,6 +215,8 @@ define
 	 IsColor <- B
 	 MyFontifier <- {New Fontifier.'class' init()}
 	 OutputDirectory <- Dir
+	 {OS.system "mkdir -p "#Dir _}   %--** {OS.mkDir Dir}
+	 MyThumbnails <- {New Thumbnails.'class' init(Dir)}
 	 MyMathToGIF <- {New MathToGIF.'class' init(Dir)}
 	 CurrentNode <- "index.html"
 	 NodeCounter <- 0
@@ -220,7 +228,6 @@ define
 	 OzDocToHTML, Process(SGML)
 	 OzDocToHTML, EndNode()
 	 OzDocToHTML, GenerateLabels()
-	 {OS.system "mkdir -p "#Dir _}   %--** {OS.mkDir Dir}
 	 {ForAll @ToWrite
 	  proc {$ VS#File}
 	     {WriteFile VS File}
@@ -557,13 +564,13 @@ define
 			    end ""}
 	       case ClassName of "" then skip
 	       else
-		  Out <- @Out#('<DT><P align=right><I>'#ClassName#
-			       '</I></P></DT>\n')
+		  Out <- @Out#('<DD><P align=right><I>'#ClassName#
+			       '</I></P></DD>\n')
 	       end
 	    [] synopsis then
 	       Out <- @Out#'<DD><BLOCKQUOTE>\n'
 	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</DD></BLOCKQUOTE>\n'
+	       Out <- @Out#'</BLOCKQUOTE></DD>\n'
 	    [] item then
 	       if @InDescription then
 		  Out <- @Out#'<DD>\n'
@@ -610,12 +617,31 @@ define
 	    [] picture then
 	       {Exception.raiseError ozdoc(sgmlToHTML unsupported M)}   %--**
 	    [] 'picture.extern' then
-	       case {CondSelect M type unit} of 'gif' then
-		  case M.display of display then Out <- @Out#'</P>\n'
+	       case {CondSelect M type unit} of 'gif' then IAlign in
+		  case M.display of display then
+		     Out <- @Out#'</P>\n'
+		     IAlign = if {SGML.isOfClass M left} then left
+			      elseif {SGML.isOfClass M right} then right
+			      else center
+			      end
+		     if IAlign \= unit then
+			Out <- @Out#'<DIV align='#IAlign#'>'
+		     end
 		  [] inline then skip
 		  end
-		  Out <- @Out#'<IMG src='#{MakeCDATA M.to}#'>'
-		  case M.display of display then Out <- @Out#'<P'#@Align#'>\n'
+		  if {SGML.isOfClass M thumbnail} then ThumbnailName in
+		     {@MyThumbnails get(M.to ?ThumbnailName)}
+		     Out <- @Out#('<A href='#{MakeCDATA M.to}#'>'#
+				  '<IMG src='#{MakeCDATA ThumbnailName}#'>'#
+				  '</A>')
+		  else
+		     Out <- @Out#'<IMG src='#{MakeCDATA M.to}#'>'
+		  end
+		  case M.display of display then
+		     if IAlign \= unit then
+			Out <- @Out#'</DIV>'
+		     end
+		     Out <- @Out#'<P'#@Align#'>\n'
 		  [] inline then skip
 		  end
 	       [] unit then
