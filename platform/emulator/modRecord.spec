@@ -38,10 +38,6 @@
 		       out => ['+record'],
 		       bi  => BIcloneRecord},
 
-     'isC'	  => { in  => ['+value'],
-		       out => ['+bool'],
-		       bi  => BIisRecordCB},
-
      'adjoin'	  => { in  => ['+record','+record'],
 		       out => ['+record'],
 		       bi  => BIadjoin},
@@ -61,30 +57,6 @@
      'label'	  => { in  => ['*recordC'],
 		       out => ['+literal'],
 		       bi  => BIlabel},
-
-     'hasLabel'	  => { in  => ['value'],
-		       out => ['+bool'],
-		       bi  => BIhasLabel},
-
-     'tellRecord' => { in  => ['+literal','record'],
-		       out => [],
-		       BI  => BIrecordTell},
-
-     'widthC'	  => { in  => ['*record','int'],
-		       out => [],
-		       BI  => BIwidthC},
-
-     'monitorArity' => { in  => ['*recordC','value','[feature]'],
-			out => [],
-			BI  => BImonitorArity},
-
-     'tellRecordSize'=> { in  => ['+literal','+int','record'],
-			  out => [],
-			  BI  => BIsystemTellSize},
-
-     '^'	  => { in  => ['*recordCOrChunk','+feature'],
-		       out => ['value'],
-		       bi  => BIuparrowBlocking},
 
      'width'	  => { in  => ['+record'],
 		       out => ['+int'],

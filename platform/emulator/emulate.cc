@@ -2210,33 +2210,6 @@ Case(GETVOID)
       RAISE_THREAD;
     }
 
-  Case(INLINEUPARROW)
-    {
-      switch(uparrowInlineBlocking(XPC(1),XPC(2),XPC(3))) {
-      case PROCEED:
-	DISPATCH(4);
-
-      case SUSPEND:
-	  OZ_suspendOnInternal2(XPC(1),XPC(2));
-	  CheckLiveness(PC);
-	  PushContX(PC);
-	  SUSPENDONVARLIST;
-
-      case FAILED:
-	HF_APPLY(OZ_atom("Record.'^'"),
-		 oz_cons(XPC(1),oz_cons(XPC(2),oz_nil())));
-
-      case RAISE:
-	RAISE_THREAD;
-
-      case BI_TYPE_ERROR:
-	RAISE_TYPE1_FUN("^",oz_cons(XPC(1),oz_cons(XPC(2),oz_nil())));
-
-      case SLEEP:
-      default:
-	Assert(0);
-      }
-    }
 
 
 // ------------------------------------------------------------------------
@@ -2805,6 +2778,7 @@ Case(GETVOID)
   Case(UNIFYVALVARYG)
   Case(UNIFYVALVARGG)
 
+  Case(INLINEUPARROW)
 
   Case(TAILCALLY)
   Case(TAILAPPLMETHX)
