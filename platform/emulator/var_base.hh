@@ -437,18 +437,20 @@ OZ_FiniteDomain * unpatchReifiedFD(OZ_Term t, Bool isBool)
   return v->getReifiedPatch();
 }
 
-//#define TMUELLER
+#define TMUELLER
 #ifdef TMUELLER
 // dealing with global variables
-void bindGlobalVar(OZ_Term *, OZ_Term);
-void castGlobalVar(OZ_Term *, OZ_Term);
+void bindGlobalVar(OZ_Term *, OZ_Term *);
+void bindGlobalVarToValue(OZ_Term *, OZ_Term);
+void castGlobalVar(OZ_Term *, OZ_Term *);
 void constrainGlobalVar(OZ_Term *, OZ_FiniteDomain &);
 void constrainGlobalVar(OZ_Term *, OZ_FSetConstraint &);
 void constrainGlobalVar(OZ_Term *, OZ_Ct *, OZ_CtDefinition *);
 
 // dealing with local variables
-void bindLocalVar(OZ_Term *, OZ_Term);
-void castLocalVar(OZ_Term *, OZ_Term);
+void bindLocalVar(OZ_Term *, OZ_Term *);
+void bindLocalVarToValue(OZ_Term *, OZ_Term);
+void castLocalVar(OZ_Term *, OZ_Term *);
 void constrainLocalVar(OZ_Term *, OZ_FiniteDomain &);
 void constrainLocalVar(OZ_Term *, OZ_FSetConstraint &);
 void constrainLocalVar(OZ_Term *, OZ_Ct *, OZ_CtDefinition *);
