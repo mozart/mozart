@@ -32,22 +32,23 @@ SRCDIR=	@srcdir@
 
 include Makefile.vars
 
-MODULE_NAMES =\
-	DP Wif Schedule FDP FSP Parser \
+DYN_MODULE_NAMES =\
+	Wif Schedule FDP FSP Parser \
 	CompilerSupport Browser Debug
 
-STATIC_MODULELIBS=	-L. ${MODULE_NAMES:%=-l%}
-STATIC_MODULETARGETS=	$(MODULE_NAMES:%=lib%.a)
-DYNAMIC_MODULETARGETS=	$(MODULE_NAMES:%=%.so)
+STATIC_MODULELIBS=	-L. ${DYN_MODULE_NAMES:%=-l%}
+STATIC_MODULETARGETS=	$(DYN_MODULE_NAMES:%=lib%.a)
+DYNAMIC_MODULETARGETS=	$(DYN_MODULE_NAMES:%=%.so)
 
-CORE_MODULES=	DP Run OF FS FD CPI OS Space Store Mem Support
+CORE_MODULE_NAMES=	Run OF FS FD CPI OS Space Store Mem Support
 # mm2: spliting emulator into different libraries does not work,
 #      because some files are not linked into emulator.exe, which
 #      are only required from dynamic modules
-# CORE_LIBS=	-L. ${CORE_MODULES:%=-l%}
-CORE_TARGETS=	${CORE_MODULES:%=lib%.a}
+# CORE_LIBS=	-L. ${CORE_MODULE_NAMES:%=-l%}
+CORE_TARGETS=	${CORE_MODULE_NAMES:%=lib%.a}
 
 # kost@, Per: let's link against libdp statically (so far);
+# mm2: removed from DYN_MODULE_NAMES to fix parallel make problem
 CORE_LIBS=	-L. libDP.a
 LIBS=		$(CORE_LIBS) @LIBS@
 
@@ -108,10 +109,8 @@ OSSRCS=\
 STORESRCS=\
 	tagged.cc value.cc atoms.cc \
 	dictionary.cc extension.cc bitarray.cc \
-	ozthread.cc heapchunk.cc \
-	variable.cc susplist.cc genvar.cc \
-	simplevar.cc future.cc \
-	fdgenvar.cc \
+	ozthread.cc heapchunk.cc susplist.cc \
+	var_base.cc var_simple.cc var_future.cc \
 	bytedata.cc
 
 RUNSRCS=\
@@ -131,20 +130,20 @@ MEMSRCS=\
 COMPONENTSSRCS=\
 	gname.cc components.cc marshaler.cc site.cc
 
-OFSRCS=	ofgenvar.cc ofbi.cc
+OFSRCS=	var_of.cc ofbi.cc
 
 FDSRCS=\
 	fdomn.cc fdcore.cc \
-	fdcd.cc fdbvar.cc
+	fdcd.cc var_fd.cc var_bool.cc
 
 CPISRCS=\
 	cpi.cc cpi_fd.cc cpi_prop.cc \
 	cpi_fs.cc cpi_expect.cc cpi_misc.cc \
 	cpi_stream.cc cpi_profile.cc cpi_ct.cc \
-	ctgenvar.cc
+	var_ct.cc
 
 FSETSRCS=\
-	fset.cc fsetcore.cc fsgenvar.cc
+	fset.cc fsetcore.cc var_fs.cc
 
 TEXT2PICKLESRCS= text2pickle.cc opcodes.cc
 TEXT2PICKLEOBJS= $(TEXT2PICKLESRCS:.cc=.o)

@@ -131,12 +131,12 @@ void OldPerdioVar::gcRecurseV(void)
 }
 
 // two interface methods;
-GenCVariable* gcCopyPerdioVar(GenCVariable *cv)
+OzVariable* gcCopyPerdioVar(OzVariable *cv)
 {
-  return ((GenCVariable *) gcRealloc(cv, sizeof(OldPerdioVar)));
+  return ((OzVariable *) gcRealloc(cv, sizeof(OldPerdioVar)));
 }
 
-void gcPerdioVarRecurse(GenCVariable *cv)
+void gcPerdioVarRecurse(OzVariable *cv)
 {
   ((OldPerdioVar *) cv)->gcRecurseV();
 }
@@ -257,7 +257,7 @@ void OldPerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
 
   TaggedRef vv=oz_deref(v);
   if (isCVar(vv)) {
-    SVariable *sv=tagged2SVarPlus(vv);
+    OzVariable *sv=tagged2SVarPlus(vv);
     if (sv==this) return;
     oz_checkSuspensionList(sv, pc_std_unif);
     relinkSuspListTo(sv);
@@ -274,9 +274,9 @@ OZ_Return OldPerdioVar::unifyV(TaggedRef *lPtr, TaggedRef r, ByteCode *scp)
     TaggedRef *rPtr = tagged2Ref(r);
     TaggedRef rVal = *rPtr;
     TaggedRef lVal = *lPtr;
-    GenCVariable *cv = tagged2CVar(rVal);
+    OzVariable *cv = tagged2CVar(rVal);
 
-    if (cv->getType()!=PerdioVariable) return FAILED;
+    if (cv->getType()!=OZ_VAR_DIST) return FAILED;
 
     OldPerdioVar *lVar = this;
 
@@ -405,10 +405,10 @@ OZ_Term OldPerdioVar::isDetV()
  
   
   
-void perdioVarAddSusp(GenCVariable *cv, TaggedRef *v,
+void perdioVarAddSusp(OzVariable *cv, TaggedRef *v,
 		      Suspension susp, int unstable)
 {
-  Assert(cv->getType() == PerdioVariable);
+  Assert(cv->getType() == OZ_VAR_DIST);
   OldPerdioVar *pv = (OldPerdioVar *) cv;
 
   pv->addSuspV(v, susp, unstable);
@@ -416,20 +416,20 @@ void perdioVarAddSusp(GenCVariable *cv, TaggedRef *v,
 
 // interface
 
-void perdioVarPrint(GenCVariable* cv,ostream &out,int depth){
+void perdioVarPrint(OzVariable* cv,ostream &out,int depth){
   ((OldPerdioVar*)cv)->printStreamV(out,depth);}
 
-OZ_Return perdioVarUnify(GenCVariable* cv,TaggedRef* ptr, TaggedRef val,ByteCode* scp){
+OZ_Return perdioVarUnify(OzVariable* cv,TaggedRef* ptr, TaggedRef val,ByteCode* scp){
   return ((OldPerdioVar*)cv)->unifyV(ptr,val,scp);}
 
-Bool perdioVarValid(GenCVariable* cv, TaggedRef val){
+Bool perdioVarValid(OzVariable* cv, TaggedRef val){
   return ((OldPerdioVar*)cv)->validV(val);}  
 
-VariableStatus perdioVarStatus(GenCVariable *cv) {
+VariableStatus perdioVarStatus(OzVariable *cv) {
   return ((OldPerdioVar*) cv)->statusV();
 }
 
 
-OZ_Term perdioVarIsDet(GenCVariable *cv) {
+OZ_Term perdioVarIsDet(OzVariable *cv) {
   return ((OldPerdioVar*) cv)->isDetV();
 }

@@ -25,8 +25,8 @@
  */
 
 #include "cpi.hh"
-#include "fdgenvar.hh"
-#include "fdbvar.hh"
+#include "var_fd.hh"
+#include "var_bool.hh"
 
 //-----------------------------------------------------------------------------
 
@@ -66,16 +66,16 @@ void OZ_FDIntVar::ask(OZ_Term v)
   } else {
     Assert(isCVar(vtag));
 
-    GenCVariable * cvar = tagged2CVar(v);
+    OzVariable * cvar = tagged2CVar(v);
 
-    if (cvar->getType() == BoolVariable) {
+    if (cvar->getType() == OZ_VAR_BOOL) {
       initial_size = dom.initBool();
       domPtr = &dom;
       setSort(bool_e);
     } else {
-      Assert(cvar->getType() == FDVariable);
+      Assert(cvar->getType() == OZ_VAR_FD);
 	
-      domPtr = &((GenFDVariable *) cvar)->getDom();
+      domPtr = &((OzFDVariable *) cvar)->getDom();
       initial_size = domPtr->getSize();
       setSort(int_e);
       
@@ -105,12 +105,12 @@ int OZ_FDIntVar::read(OZ_Term v)
     // local variable per definition
 
       setState(loc_e);
-      GenCVariable * cvar = tagged2CVar(v);
+      OzVariable * cvar = tagged2CVar(v);
 
       if (cvar->testReifiedFlag()) {
       // may already be a reified var; then the type is incorrect
 	if (cvar->isBoolPatched()) goto local_bool; else goto local_fd; 
-      } else if (cvar->getType() == BoolVariable) {	
+      } else if (cvar->getType() == OZ_VAR_BOOL) {	
       local_bool:
 
 	setSort(bool_e);
@@ -118,12 +118,12 @@ int OZ_FDIntVar::read(OZ_Term v)
 	if (cvar->testStoreFlag()) {
 	// may already be entered as store var
 	  initial_size = 2;
-	  domPtr = ((GenBoolVariable *) cvar)->getStorePatchBool();
+	  domPtr = ((OzBoolVariable *) cvar)->getStorePatchBool();
 	} else {
 	// entered first time as store var
 	  initial_size = dom.initBool();
 	  domPtr = &dom;
-	  ((GenBoolVariable *) cvar)->patchStoreBool(domPtr);
+	  ((OzBoolVariable *) cvar)->patchStoreBool(domPtr);
 	}
 	initial_width = 1;
       } else {
@@ -132,8 +132,8 @@ int OZ_FDIntVar::read(OZ_Term v)
 	setSort(int_e);
 	
 	if (oz_onToplevel())
-	  dom = ((GenFDVariable *) cvar)->getDom();
-	domPtr = &((GenFDVariable *) cvar)->getDom();
+	  dom = ((OzFDVariable *) cvar)->getDom();
+	domPtr = &((OzFDVariable *) cvar)->getDom();
 	initial_size = domPtr->getSize();
 	initial_width = ((OZ_FiniteDomainImpl * )domPtr)->getWidth();
 
@@ -143,24 +143,24 @@ int OZ_FDIntVar::read(OZ_Term v)
     } else {
       // don't know before hand if local or global
       
-      GenCVariable * cvar = tagged2CVar(v);
+      OzVariable * cvar = tagged2CVar(v);
       setState(am.isLocalSVar(v) ? loc_e : glob_e);
       
       if (cvar->testReifiedFlag()) {
       // may already be a reified var; then the type is incorrect
 	if (cvar->isBoolPatched()) goto global_bool; else goto global_fd; 
-      } else if (cvar->getType() == BoolVariable) {
+      } else if (cvar->getType() == OZ_VAR_BOOL) {
       global_bool:
 	setSort(bool_e);
 	
 	if (cvar->testStoreFlag()) {
 	// may already be entered as store var
-	  domPtr = ((GenBoolVariable *) cvar)->getStorePatchBool();
+	  domPtr = ((OzBoolVariable *) cvar)->getStorePatchBool();
 	  initial_size = 2;
 	} else {
 	// entered first time as store var
 	  domPtr = &dom;
-	  ((GenBoolVariable *) cvar)->patchStoreBool(domPtr);
+	  ((OzBoolVariable *) cvar)->patchStoreBool(domPtr);
 	  initial_size = dom.initBool();
 	}
 	initial_width = 1;
@@ -169,8 +169,8 @@ int OZ_FDIntVar::read(OZ_Term v)
       global_fd:
 	
 	if (isState(glob_e) || oz_onToplevel())
-	  dom = ((GenFDVariable *) cvar)->getDom();
-	domPtr = &((GenFDVariable *) cvar)->getDom();
+	  dom = ((OzFDVariable *) cvar)->getDom();
+	domPtr = &((OzFDVariable *) cvar)->getDom();
 	initial_size = domPtr->getSize();
 	initial_width = ((OZ_FiniteDomainImpl *)domPtr)->getWidth();
 	setSort(int_e);
@@ -201,7 +201,7 @@ int OZ_FDIntVar::readEncap(OZ_Term v)
     Assert(isCVar(vtag));
 
     setState(encap_e);
-    GenCVariable * cvar = tagged2CVar(v);
+    OzVariable * cvar = tagged2CVar(v);
     
     if (cvar->testReifiedFlag()) {
     // var is already entered somewhere else
@@ -209,7 +209,7 @@ int OZ_FDIntVar::readEncap(OZ_Term v)
       domPtr = cvar->getReifiedPatch();
       initial_size = domPtr->getSize();
       initial_width = ((OZ_FiniteDomainImpl *)domPtr)->getWidth();
-    } else if (cvar->getType() == BoolVariable) {
+    } else if (cvar->getType() == OZ_VAR_BOOL) {
     // bool var entered first time
       initial_size = dom.initBool();
       initial_width = 1;
@@ -218,11 +218,11 @@ int OZ_FDIntVar::readEncap(OZ_Term v)
       cvar->patchReified(domPtr, TRUE);
     } else {
     // fd var entered first time
-      Assert(cvar->getType() == FDVariable);
+      Assert(cvar->getType() == OZ_VAR_FD);
 
       setSort(int_e);
       dom.initEmpty();
-      dom = ((GenFDVariable *) cvar)->getDom();
+      dom = ((OzFDVariable *) cvar)->getDom();
       domPtr = &dom;
       initial_size = domPtr->getSize();
       initial_width = ((OZ_FiniteDomainImpl *)domPtr)->getWidth();
@@ -242,6 +242,9 @@ int OZ_FDIntVar::readEncap(OZ_Term v)
 
 OZ_Boolean OZ_FDIntVar::tell(void)
 {
+  if (!oz_isVariable(*varPtr))
+    return OZ_FALSE;
+
   if (testReifiedFlag(var)) 
     unpatchReifiedFD(var, isSort(bool_e));
   
@@ -265,7 +268,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
       } else {
 	*domPtr = dom;
 	tagged2GenFDVar(var)->propagate(CHECK_BOUNDS);
-	GenBoolVariable * newboolvar = new GenBoolVariable(oz_currentBoard());
+	OzBoolVariable * newboolvar = new OzBoolVariable(oz_currentBoard());
 	OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
 	DoBindAndTrailAndIP(varPtr, makeTaggedRef(newtaggedboolvar),
 			    newboolvar, tagged2GenBoolVar(var));
@@ -274,8 +277,8 @@ OZ_Boolean OZ_FDIntVar::tell(void)
     } else {
       tagged2GenFDVar(var)->propagate(CHECK_BOUNDS);
       if (isState(glob_e)) {
-	GenFDVariable * locfdvar
-	  = new GenFDVariable(*domPtr,oz_currentBoard());
+	OzFDVariable * locfdvar
+	  = new OzFDVariable(*domPtr,oz_currentBoard());
 	OZ_Term * loctaggedfdvar = newTaggedCVar(locfdvar);
 	*domPtr = dom;
 	DoBindAndTrailAndIP(varPtr, makeTaggedRef(loctaggedfdvar),

@@ -25,11 +25,11 @@
  *
  */
 
-#if defined(INTERFACE) && !defined(PEANUTS)
-#pragma implementation "future.hh"
+#if defined(INTERFACE)
+#pragma implementation "var_future.hh"
 #endif
 
-#include "future.hh"
+#include "var_future.hh"
 #include "builtins.hh"
 #include "thr_int.hh"
 

@@ -36,7 +36,7 @@
 #include "space.hh"
 #include "debug.hh"
 #include "cpi_heap.hh"
-#include "variable.hh"
+#include "var_base.hh"
 #include "lps.hh"
 
 // exports

@@ -85,14 +85,14 @@
 
 #ifdef DEBUG_PRINT
 
-#include "genvar.hh"
+#include "var_base.hh"
 #include "fdomn.hh"
 #include "dictionary.hh"
 #include "builtins.hh"
-#include "fdgenvar.hh"
-#include "fsgenvar.hh"
-#include "ctgenvar.hh"
-#include "ofgenvar.hh"
+#include "var_fd.hh"
+#include "var_fs.hh"
+#include "var_ct.hh"
+#include "var_of.hh"
 #include "solve.hh"
 #include "lps.hh"
 
@@ -294,36 +294,16 @@ void ozd_printLong(OZ_Term val) {
 // PRINT
 // ----------------------------------------------------------------
 
-void SVariable::printStream(ostream &stream, int depth)
+void OzVariable::printStream(ostream &stream, int depth)
 {
-  stream << "<SV @" << this
-	 << (isEffectiveList(suspList) ? "*" : "") << ">";
-}
-
-void SVariable::printLongStream(ostream &stream, int depth, int offset)
-{
-  this->printStream(stream);
-  stream << endl
-	 << indent(offset)
-	 << "SuspList:\n"; 
-  suspList->printLongStream(stream, PRINT_DEPTH_DEC(depth), offset+3);
-  
-  stream << indent(offset)
-	 << "Home: ";
-  GETBOARD(this)->printStream(stream,PRINT_DEPTH_DEC(depth));
-  stream << endl;
-}
-
-void GenCVariable::printStream(ostream &stream, int depth)
-{
-  stream << "<CV @" << this;
+  stream << "<Var @" << this;
   if (isEffectiveList(suspList))
     stream << " a" << suspList->length();
 
   switch(getType()){
-  case FDVariable:
+  case OZ_VAR_FD:
     {
-      GenFDVariable * me = (GenFDVariable *) this;
+      OzFDVariable * me = (OzFDVariable *) this;
       if (isEffectiveList(me->fdSuspList[fd_prop_singl]))
 	stream << " s("
 	       << me->fdSuspList[fd_prop_singl]->length()
@@ -339,15 +319,15 @@ void GenCVariable::printStream(ostream &stream, int depth)
       break;
     }
 
-  case BoolVariable:
+  case OZ_VAR_BOOL:
     {
       stream << " {0 1}";
       break;
     }
 
-  case FSetVariable:
+  case OZ_VAR_FS:
     {
-      GenFSetVariable * me = (GenFSetVariable *) this;
+      OzFSVariable * me = (OzFSVariable *) this;
       if (isEffectiveList(me->fsSuspList[fs_prop_val]))
 	stream << " val("
 	       << me->fsSuspList[fs_prop_val]->length()
@@ -368,19 +348,19 @@ void GenCVariable::printStream(ostream &stream, int depth)
       break;
     }
 
-  case OFSVariable:
+  case OZ_VAR_OF:
     {
       stream << ' ';
-      GenOFSVariable* me = (GenOFSVariable *) this;
+      OzOFVariable* me = (OzOFVariable *) this;
       stream << " ";
       ozd_printStream(me->getLabel(),stream,depth);
       me->getTable()->printStream(stream,PRINT_DEPTH_DEC(depth));
       break;
    }
 
-  case CtVariable:
+  case OZ_VAR_CT:
     {
-      GenCtVariable * me = (GenCtVariable *) this;
+      OzCtVariable * me = (OzCtVariable *) this;
 
       for (int i = 0; i < me->getNoOfSuspLists(); i += 1) {
 	SuspList * sl = me->_susp_lists[i];
@@ -395,8 +375,8 @@ void GenCVariable::printStream(ostream &stream, int depth)
       break;
     }
 
-  case PerdioVariable:
-    stream << " PerdioVariable";
+  case OZ_VAR_DIST:
+    stream << " OZ_VAR_DIST";
       break;
 
   default:
@@ -404,9 +384,9 @@ void GenCVariable::printStream(ostream &stream, int depth)
     break;
   }
   stream << ">";
-} // PRINTSTREAM(GenCVariable)
+} // PRINTSTREAM(OzVariable)
 
-void GenCVariable::printLongStream(ostream &stream, int depth, int offset)
+void OzVariable::printLongStream(ostream &stream, int depth, int offset)
 {
   this->printStream(stream);
 
@@ -419,42 +399,42 @@ void GenCVariable::printLongStream(ostream &stream, int depth, int offset)
   suspList->printLongStream(stream, depth, offset+3);
 
   switch(getType()){
-  case FDVariable:
+  case OZ_VAR_FD:
     stream << indent(offset) << "FD Singleton SuspList:\n"; 
-    ((GenFDVariable*)this)->fdSuspList[fd_prop_singl]
+    ((OzFDVariable*)this)->fdSuspList[fd_prop_singl]
       ->printLongStream(stream, depth, offset+3);
       stream << indent(offset) << "FD Bounds SuspList:\n"; 
-    ((GenFDVariable*)this)->fdSuspList[fd_prop_bounds]
+    ((OzFDVariable*)this)->fdSuspList[fd_prop_bounds]
       ->printLongStream(stream, depth, offset+3);
     stream << indent(offset) << "FD Domain:\n"; 
-    ((OZ_FiniteDomainImpl *) &((GenFDVariable*)this)->getDom())
+    ((OZ_FiniteDomainImpl *) &((OzFDVariable*)this)->getDom())
       ->printLong(stream, offset+3);
     break;
 
-  case BoolVariable:
+  case OZ_VAR_BOOL:
     stream << indent(offset) << "Boolean Domain: {0 1}" << endl; 
     break;
 
-  case FSetVariable:
+  case OZ_VAR_FS:
     stream << indent(offset) << "FSet val SuspList:\n"; 
-    ((GenFSetVariable*)this)->fsSuspList[fs_prop_val]
+    ((OzFSVariable*)this)->fsSuspList[fs_prop_val]
       ->printLongStream(stream, depth, offset+3);
     stream << indent(offset) << "FSet glb SuspList:\n"; 
-    ((GenFSetVariable*)this)->fsSuspList[fs_prop_glb]
+    ((OzFSVariable*)this)->fsSuspList[fs_prop_glb]
       ->printLongStream(stream, depth, offset+3);
     stream << indent(offset) << "FSet lub SuspList:\n"; 
-    ((GenFSetVariable*)this)->fsSuspList[fs_prop_lub]
+    ((OzFSVariable*)this)->fsSuspList[fs_prop_lub]
       ->printLongStream(stream, depth, offset+3);
     stream << indent(offset) << "FSet :\n" << indent(offset + 3); 
-    ((FSetConstraint *) &((GenFSetVariable*)this)->getSet())
+    ((FSetConstraint *) &((OzFSVariable*)this)->getSet())
       ->print(stream);
     stream << endl;
     break;
 
-  case OFSVariable:
+  case OZ_VAR_OF:
     {
       stream << indent(offset);
-      GenOFSVariable* me = (GenOFSVariable *) this;
+      OzOFVariable* me = (OzOFVariable *) this;
       ozd_printStream(me->getLabel(),stream,PRINT_DEPTH_DEC(depth));
       // me->getLabel()->printStream(stream, PRINT_DEPTH_DEC(depth));
       me->getTable()->printStream(stream, PRINT_DEPTH_DEC(depth));
@@ -462,9 +442,9 @@ void GenCVariable::printLongStream(ostream &stream, int depth, int offset)
       break;
     }
 
-  case CtVariable:
+  case OZ_VAR_CT:
     {
-      GenCtVariable * me = (GenCtVariable *) this;
+      OzCtVariable * me = (OzCtVariable *) this;
 
       for (int i = 0; i < me->getNoOfSuspLists(); i += 1) {
 	SuspList * sl = me->_susp_lists[i];
@@ -475,15 +455,15 @@ void GenCVariable::printLongStream(ostream &stream, int depth, int offset)
       break;
     }
 
-  case PerdioVariable:
-    stream << indent(offset) << "<PerdioVariable *" << this << ">" << endl;
+  case OZ_VAR_DIST:
+    stream << indent(offset) << "<OZ_VAR_DIST *" << this << ">" << endl;
       break;
   default:
     stream << indent(offset) << " unknown type: " << (int) getType() << endl;
     break;
   }
 
-} // printLongStream(GenCVariable)
+} // printLongStream(OzVariable)
 
 
 // Non-Name Features are output in alphanumeric order (ints before atoms):

@@ -32,7 +32,7 @@
 #pragma interface
 #endif
 
-#include "variable.hh"
+#include "var_base.hh"
 
 // optimize: inline ....
 
@@ -51,7 +51,7 @@ Bool AM::isLocalUVar(TaggedRef var,TaggedRef *varPtr)
 
 
 INLINE
-Bool AM::isLocalSVar(SVariable *var) {
+Bool AM::isLocalSVar(OzVariable *var) {
   ShallowCheckLocal(var);
   return (oz_isCurrentBoard(var->getHome1())) || isLocalSVarOutline(var);
 }

@@ -67,18 +67,18 @@ void marshalObject(ConstTerm *t, MsgBuffer *bs);
 
 //
 // Perdio variables;
-Bool perdioVarValid(GenCVariable *cv, TaggedRef val);
-OZ_Return perdioVarUnify(GenCVariable *cv, TaggedRef *ptr,
+Bool perdioVarValid(OzVariable *cv, TaggedRef val);
+OZ_Return perdioVarUnify(OzVariable *cv, TaggedRef *ptr,
 			 TaggedRef val, ByteCode *scp);
-OZ_Return perdioVarBind(GenCVariable *cv, TaggedRef *ptr,
+OZ_Return perdioVarBind(OzVariable *cv, TaggedRef *ptr,
 			TaggedRef val, ByteCode *scp);
-void perdioVarAddSusp(GenCVariable *cv, TaggedRef *v,
+void perdioVarAddSusp(OzVariable *cv, TaggedRef *v,
 		      Suspension susp, int unstable);
-GenCVariable* gcCopyPerdioVar(GenCVariable *cv);
-void gcPerdioVarRecurse(GenCVariable *cv);
-void perdioVarPrint(GenCVariable *cv, ostream &out, int depth);
-VariableStatus perdioVarStatus(GenCVariable *cv);
-OZ_Term perdioVarIsDet(GenCVariable *cv);
+OzVariable* gcCopyPerdioVar(OzVariable *cv);
+void gcPerdioVarRecurse(OzVariable *cv);
+void perdioVarPrint(OzVariable *cv, ostream &out, int depth);
+VariableStatus perdioVarStatus(OzVariable *cv);
+OZ_Term perdioVarIsDet(OzVariable *cv);
 
 // interface for GC;
 void gcProxyRecurse(Tertiary *t);
