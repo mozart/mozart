@@ -495,6 +495,8 @@ inline
 void addSusp(TaggedRef var,Suspension *susp)
 {
   DEREF(var,varPtr,_1);
+  Assert(isAnyVar(var));
+
   taggedBecomesSuspVar(varPtr)->addSuspension(susp);
 }
 
@@ -512,9 +514,11 @@ void addSusp(TaggedRef *varPtr,Suspension *susp)
 void AM::suspendOnVarList(Suspension *susp)
 {
   Assert(suspendVarList!=makeTaggedNULL());
+
   TaggedRef varList=suspendVarList;
   while (!isRef(varList)) {
     Assert(isCons(varList));
+
     addSusp(head(varList),susp);
     varList=tail(varList);
   }
@@ -589,6 +593,8 @@ void AM::suspendInline(Board *bb,int prio,OZ_CFun fun,int n,
     DEREF(X[n],ptr,_1);
     if (isAnyVar(X[n])) addSusp(ptr,susp);
   }
+
+  suspendVarList = makeTaggedNULL();   // mm2 please check
 }
 
 
@@ -1574,12 +1580,14 @@ void engine() {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel1 rel         = (InlineRel1)entry->getInlineFun();
 
+
       switch(rel(XPC(2))) {
       case PROCEED:
         DISPATCH(4);
 
       case SUSPEND:
         if (shallowCP) {
+          e->emptySuspendVarList();
           e->trail.pushIfVar(XPC(2));
           DISPATCH(4);
         }
@@ -1605,6 +1613,7 @@ void engine() {
       case SUSPEND:
         {
           if (shallowCP) {
+            e->emptySuspendVarList();
             e->trail.pushIfVar(XPC(2));
             e->trail.pushIfVar(XPC(3));
             DISPATCH(5);
@@ -1636,6 +1645,7 @@ void engine() {
           TaggedRef A=XPC(2);
           TaggedRef B=XPC(3) = makeTaggedRef(newTaggedUVar(CBB));
           if (shallowCP) {
+            e->emptySuspendVarList();
             e->trail.pushIfVar(A);
             DISPATCH(5);
           }
@@ -1656,6 +1666,7 @@ void engine() {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun2 fun = (InlineFun2)entry->getInlineFun();
 
+
       // note XPC(4) is maybe the same as XPC(2) or XPC(3) !!
       switch(fun(XPC(2),XPC(3),XPC(4))) {
       case PROCEED:
@@ -1667,6 +1678,7 @@ void engine() {
           TaggedRef B=XPC(3);
           TaggedRef C=XPC(4) = makeTaggedRef(newTaggedUVar(CBB));
           if (shallowCP) {
+            e->emptySuspendVarList();
             e->trail.pushIfVar(A);
             e->trail.pushIfVar(B);
             DISPATCH(6);
@@ -1701,6 +1713,7 @@ void engine() {
           TaggedRef C=XPC(4);
           TaggedRef D=XPC(5) = makeTaggedRef(newTaggedUVar(CBB));
           if (shallowCP) {
+            e->emptySuspendVarList();
             e->trail.pushIfVar(A);
             e->trail.pushIfVar(B);
             e->trail.pushIfVar(C);
