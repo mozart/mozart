@@ -4,8 +4,8 @@
 <P>The basic difference between a distributed and
 a centralized program is that the former
 is partitioned among several sites.
-<index id=idx.site/site/
-<index id=idx.geographicdistribution/site<and>geographic distribution/
+<index id=idx.site/site<and>/
+<index/geographic distribution/
 We define a <EM>site</EM>
 as the basic unit of geographic distribution.
 In the current implementation,
@@ -200,14 +200,17 @@ should not be confused with
 <index id=idx.portunixoz/port<and>Oz vs. Unix/
 <index id=idx.unixport/Unix port/
 Unix ports, which are an OS concept.
-Mozart applications will never use Unix ports explicitly
-except when communicating with other applications
+Mozart applications do not need to use Unix ports explicitly
+except to communicate with applications
 that have a Unix port interface.
 
 <ITEM> <EM>Cell</EM>:
 A cell is an updatable pointer to any other entity,
 i.e., it is analogous to a standard updatable variable
 in imperative languages such as C and Java.
+<index/cell<and>analogy to C and Java/
+<index/Java<and>relation to Oz cell/
+<index/C<and>relation to Oz cell/
 Cells have the same distributed semantics
 as cached objects.
 Updating the pointer
@@ -578,11 +581,13 @@ and so forth.
 <SUBSECTION id="section.distmodel.shutdown"><TITLE>Controlled system shutdown</TITLE>
 
 <P>A site can be stopped in two ways: normally or abnormally.
-<index/shutdown<and>normal/
+<index id=normal.shutdown/shutdown<and>normal/
+<index see=normal.shutdown/halt<and>normal/
 The normal way is a controlled shutdown initiated
 by <<{Application.exit I}>>, where <<I>> is
 the return status (see the module <<Application>>).
-<index/shutdown<and>abnormal/
+<index id=abnormal.shutdown/shutdown<and>abnormal/
+<index see=abnormal.shutdown/halt<and>abnormal/
 The abnormal way is a site crash
 triggered by an external problem.
 The failure model (see <ptr to="chapter.failure">) is used
@@ -607,7 +612,8 @@ then that entity will no longer work.
 <P>All memory management in Mozart is automatic;
 the programmer does not have to worry about when
 an entity is no longer referenced.
-<index/garbage collection/
+<index/garbage collection<and>distributed/
+<index/memory management/
 Mozart implements an efficient distributed garbage collection
 algorithm that reclaims all unused entities
 except those that form a

@@ -496,7 +496,7 @@ We show how to upgrade a server
 without stopping it.
 <index/Java<and>limitation/
 This cannot be done in Java.
-In practice, the upgrade can even
+In Mozart, the upgrade can even
 be done interactively.
 A person sits down at a terminal anywhere
 in the world, starts up an interactive Mozart
