@@ -378,16 +378,19 @@ Initializes a stream socket as a client.
 <code display>
 read(list: ??{ListS}  
      tail: ?_{TailX}  &lt;= nil  
-     size: ?+{SizeI} &lt;= 1024  
+     size: ?+{SizeAI} &lt;= 1024  
      len:  ??{LenI}  &lt;= _)
 </code><item>
 <index class=module/ Open<AND>socket<AND>read /
 Receives data from a stream-connected socket or
 from a datagram socket with peer specified.
 <p>
-An attempt is made to read ?+{SizeI} bytes from the socket.
+An attempt is made to read ?+{SizeAI} bytes from the socket.
 ??{ListS} is constrained to the data while the tail of ??{ListS}
 is constrained to ?_{TailX}.
+The atom <<all>>
+is also a legal value for ?+{SizeAI}. In this case the entire input is
+read.
 <p>
 ??{LenI} is bound to the number of bytes actually read. If the
 socket is of type stream and the other end of the connection has been
@@ -543,7 +546,7 @@ See also <file/execv(3)/, <file/fork(2)/.
 <code display>
 read(list: ??{ListS}  
      tail: ?_{TailX}  &lt;= nil  
-     size: ?+{SizeI} &lt;= 1024  
+     size: ?+{SizeAI} &lt;= 1024  
      len:  ??{LenI}  &lt;= _)
 </code><item>
 <index class=module/Open<AND>pipe<AND>read /
@@ -552,6 +555,9 @@ the forked process.
 <p>
 An attempt is made to read ?+{SizeI} bytes. ??{ListS} is bound to
 the data read while the tail of ??{ListS} is bound to ?_{TailX}.
+The atom <<all>>
+is also a legal value for ?+{SizeAI}. In this case the entire input is
+read.
 <p>
 ??{LenI} is bound to the number of bytes actually read. If the
 socket is of type stream and the other end of the connection has been
