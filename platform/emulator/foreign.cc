@@ -510,10 +510,15 @@ OZ_Term OZ_label(OZ_Term term)
     return term;
   case SRECORD:
     return tagged2SRecord(term)->getLabel();
+  case CVAR:
+    // To maintain compatibility with labelInline, gives no output for OFSVar:
+    // if (tagged2CVar(term)->getType()==OFSVariable) 
+    //    return tagged2GenOFSVar(term)->getLabel();
+    break;
   default:
     break;
   }
-  OZ_warning("OZ_label(%s): no number expected",OZ_toC(term));
+  OZ_warning("OZ_label(%s): no number or undetermined record expected",OZ_toC(term));
   return nil();
 }
 
@@ -533,7 +538,7 @@ int OZ_width(OZ_Term term)
   default:
     break;
   }
-  OZ_warning("OZ_width(%s): no number expected",OZ_toC(term));
+  OZ_warning("OZ_width(%s): no number or undetermined record expected",OZ_toC(term));
   return 0;
 }
 
