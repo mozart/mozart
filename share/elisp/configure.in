@@ -1,0 +1,49 @@
+dnl -*- sh -*-
+dnl
+dnl  Authors:
+dnl    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+dnl
+dnl  Copyright:
+dnl    Leif Kornstaedt, 1998
+dnl
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl
+dnl  This file is part of Mozart, an implementation of Oz 3:
+dnl    $MOZARTURL$
+dnl
+dnl  See the file "LICENSE" or
+dnl    $LICENSEURL$
+dnl  for information on usage and redistribution
+dnl  of this file, and for a DISCLAIMER OF ALL
+dnl  WARRANTIES.
+dnl
+
+AC_INIT(oz.el)
+
+if test -n "$oz_default_prefix" && test -d $oz_default_prefix
+then
+  ac_default_prefix=$oz_default_prefix
+fi
+
+SRCDIRA=`(cd $srcdir; pwd)`
+AC_SUBST(SRCDIRA)
+
+TOPDIR=$srcdir/..
+AC_SUBST(TOPDIR)
+
+TOPDIRA=`(cd $srcdir; cd ..; pwd)`
+AC_SUBST(TOPDIRA)
+
+AC_PROG_INSTALL
+
+AC_CHECK_PROGS(EMACS, emacs xemacs)
+AC_CHECK_PROGS(RM, rm)
+AC_CHECK_PROGS(ECHO, echo)
+
+OZPATH=$PATH:$TOPDIRA/bin:$TOPDIR:$prefix/bin
+AC_PATH_PROG(INSTALLSRC, ozinstallsrc, , $OZPATH)
+AC_SUBST(INSTALLSRC)
+
+AC_OUTPUT(Makefile)
