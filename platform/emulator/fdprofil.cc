@@ -165,6 +165,24 @@ void ProfileHost::print_total_average(void) {
 }
 
 
+void ProfileHost::printBoardStat(Board * b) {
+  if (b) {
+    ProfileList * aux = head;
+
+    while (aux && (aux->getBoard()!= b))
+      aux = aux->get_next();
+
+    if (aux) {
+      aux->print();
+    } else {
+      printf("Board 0x%x not found.\n", b);
+    }
+  } else {
+    printf("Board == NULL.\n");
+  }
+}
+
+
 TaggedRefSet * TaggedRefSet::root = NULL;
 
 Bool TaggedRefSet::add(TaggedRef t, TaggedRefSet * &st) {
