@@ -323,6 +323,7 @@ in
 	 else
 	    Gui,addNode(I Q)
 	    case Q == 0 orelse Q == 1 then 
+	       {Stack checkNew(_)}  % don't force a first `step'
 	       ThreadManager,switch(I)
 	       case Q == 1 then
 		  Gui,status('Got new query, selecting thread #' # I)
@@ -483,23 +484,28 @@ in
 	 in
 	    currentThread <- T
 	    currentStack  <- Stack
-	    
-	    case PrintStack then
-	       case S == terminated then
-		  SourceManager,removeBar
-		  Gui,printStack(id:I frames:nil depth:0)
-	       else
-		  F L Exc = {Stack getException($)}
-	       in
-		  {ForAll [print getPos(file:F line:L)] Stack}
-		  case Exc == nil then
-		     SourceManager,bar(file:F line:L state:S)
+
+	    case {Stack checkNew($)} then
+	       {OzcarMessage 'Let thread #' # I # ' make its first step'}
+	       {Thread.resume T}
+	    else
+	       case PrintStack then
+		  case S == terminated then
+		     SourceManager,removeBar
+		     Gui,printStack(id:I frames:nil depth:0)
 		  else
-		     SourceManager,bar(file:F line:L state:blocked)
-		     Gui,doStatus(Exc clear BlockedThreadColor)
+		     F L Exc = {Stack getException($)}
+		  in
+		     {ForAll [print getPos(file:F line:L)] Stack}
+		     case Exc == nil then
+			SourceManager,bar(file:F line:L state:S)
+		     else
+			SourceManager,bar(file:F line:L state:blocked)
+			Gui,doStatus(Exc clear BlockedThreadColor)
+		     end
 		  end
-	       end
-	    else skip end
+	       else skip end
+	    end
 	 end
       end
 
