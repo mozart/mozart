@@ -172,6 +172,7 @@ public:
   OZ_FSetValue(const OZ_Term);
   OZ_FSetValue(const OZ_FSetState);
   OZ_FSetValue(int, int);
+  OZ_FSetValue(const OZ_FiniteDomain &);
 
   int getCard(void) const { return _card; }
   int getKnownNotIn(void) const { return fsethigh32 - _card; }
@@ -185,7 +186,10 @@ public:
   OZ_Term getKnownNotInList(void) const;
   char * toString(void);
 
+  // comparison
   OZ_Boolean operator == (const OZ_FSetValue &) const;
+  OZ_Boolean operator <= (const OZ_FSetValue &) const;
+
   OZ_FSetValue operator & (const OZ_FSetValue &) const;
   OZ_FSetValue operator | (const OZ_FSetValue &) const;
   OZ_FSetValue operator - (const OZ_FSetValue &) const;
