@@ -72,9 +72,9 @@ $module_init_fun_name = "space_init";
                              out => [],
                              BI  => BIwaitStableSpace},
 
-     'checkSit'         => { in  => ['value'],
-                             out => [],
-                             BI  => BIcheckSit},
+     'send'             => { in  => ['+port','value'],
+                             out => ['value'],
+                             BI  => BIsendFromSpace},
                  
      );
 1;;
