@@ -2819,8 +2819,10 @@ LBLdispatcher:
 	break;
       }
       case DBG_NEXT : {
-	if (CTT->isTraced())
-	  ;
+	if (CTT->stepMode()) {
+	  debugStreamExit(ozdeb->info);
+	  goto LBLpreemption;  
+	}
 	break;
       }
       case DBG_STEP : {
