@@ -3597,7 +3597,7 @@ test -n "$PERL" || PERL="NONE"
         PERL=perl_not_found
         echo "configure: warning: perl not found" 1>&2
       else
-        echo "configure: warning: 
+        { echo "configure: error: 
 Perl version 5 or higher is needed to build the system.
 It can be retrieved from:
 
@@ -3611,7 +3611,7 @@ packaged as the following archive:
 You may find further information on the Perl site:
 
 	http://www.perl.org/
-" 1>&2
+" 1>&2; exit 1; }
       fi
     fi
   else
