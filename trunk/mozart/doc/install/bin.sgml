@@ -120,7 +120,7 @@ from <p>
 <p>
 
 For the unexperienced user we recommend using XEmacs, since it is
-distributed in binary form and its ease of installation. When Oz comes
+distributed in binary form which simplifies installation. When Oz comes
 up, it tries to invoke Emacs via the command <code/emacs/. If your
 version of Emacs has to be invoked with a different command name, say
 <code/emacs20/, you can achieve this by setting the environment
