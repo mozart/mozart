@@ -413,7 +413,7 @@ Thread *Thread::GetFirst() {
 
 TaskStack *Thread::makeTaskStack()
 {
-  Assert(isNormal() && !(u.taskStack!=(TaskStack *)NULL));
+  Assert(isNormal() && !u.taskStack);
   u.taskStack = new TaskStack(am.conf.taskStackSize);
   return u.taskStack;
 }
