@@ -465,7 +465,7 @@ define
 	       L1S = L1.start
 	       L2S = L2.start
 
-	       condis
+	       dis
 		  B=:1
 		  L1S + L1Dur >: L2S
 		  L2S + L2Dur >: L1S
