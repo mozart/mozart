@@ -320,7 +320,7 @@ in
       %% local helpers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       meth GetStack($)
-	 {Reverse {Thread.taskStack self.T ~1 false}}
+	 {Reverse {Debug.getTaskStack self.T ~1 false}}
       end
 
       meth RemoveAllFrames

@@ -42,7 +42,7 @@ import
    Compiler.{engine
 	     quietInterface}
 
-   DebugSupport
+   Debug
       from 'x-oz://boot/Debug'
    
 export
