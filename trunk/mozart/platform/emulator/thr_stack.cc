@@ -133,8 +133,7 @@ loop:
 }
 
 
-TaggedRef TaskStack::findCatch(TaggedRef &out)
-{
+TaggedRef TaskStack::findCatch(TaggedRef &out) {
   out = nil();
 
   Assert(this);

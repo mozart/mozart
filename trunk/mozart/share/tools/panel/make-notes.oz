@@ -141,8 +141,8 @@ local
 				 text:               T
 				 anchor:             w
 				 var:                V
-				 action:             self # invoke
-				 width:              TextWidth)>>
+				 action:             self # invoke)>>
+%				 width:              TextWidth)>>
 	 self.Var    = V
 	 self.Action = A
 	 Saved <- S
@@ -211,8 +211,8 @@ local
 	 of scale then
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
-				      anchor: w
-				      width:  TextWidth)}
+				      anchor: w)}
+%				      width:  TextWidth)}
 	    S1 = {New Scale init(parent: P
 				 range:  {CondSelect L range 1#100}
 				 action: L.action
@@ -228,8 +228,8 @@ local
 	 [] number    then
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
-				      anchor: w
-				      width:  TextWidth)}
+				      anchor: w)}
+%				      width:  TextWidth)}
 	    L2 = {New PrintNumber init(parent:P)}
 	    L3 = case {HasFeature L color} orelse {HasFeature L stipple} then
 		    C = {CondSelect L color black}
@@ -239,14 +239,14 @@ local
 		 end
 	 in
 	    R.{GetFeature L}=L2
-	    grid(L1 sticky:e column:0 row:N) |
+	    grid(L1 sticky:w column:0 row:N) |
 	    grid(L2 sticky:e column:1 row:N) | 
 	    grid(L3 padx:Pad sticky:e column:2 row:N) | TclR
 	 [] size then
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
-				      anchor: w
-				      width:  TextWidth)}
+				      anchor: w)}
+%				      width:  TextWidth)}
 	    L2 = {New PrintNumber init(parent:P)}
 	    L3 = {New Tk.label tkInit(parent: P
 				      anchor: e
@@ -259,15 +259,15 @@ local
 		 end
 	 in
 	    R.{GetFeature L}=L2
-	    grid(L1 sticky:e column:0 row:N) |
+	    grid(L1 sticky:w column:0 row:N) |
 	    grid(L2 sticky:e column:1 row:N) | 
 	    grid(L3 sticky:e column:2 row:N) | 
 	    grid(L4 padx:Pad sticky:e column:3 row:N) | TclR
 	 [] time then
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
-				      anchor: w
-				      width:  TextWidth)}
+				      anchor: w)}
+%				      width:  TextWidth)}
 	    L3 = {New Tk.label  tkInit(parent:P anchor:e)}
 	    L2 = {New PrintTime init(parent: P
 				     dim:    L3)}
@@ -279,7 +279,7 @@ local
 		 end
 	 in
 	    R.{GetFeature L}=L2
-	    grid(L1 sticky:e column:0 row:N) |
+	    grid(L1 sticky:w column:0 row:N) |
 	    grid(L2 sticky:e column:1 row:N) | 
 	    grid(L3 sticky:w column:2 row:N) | 
 	    grid(L4 padx:Pad sticky:e column:3 row:N) | TclR
@@ -302,15 +302,15 @@ local
 	 [] entry then
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
-				      anchor: w
-				      width:  TextWidth)}
+				      anchor: w)}
+%				      width:  TextWidth)}
 	    E2 = {New Entry init(parent: P
 				 action: L.action
 				 top:    L.top)}
 	 in
 	    R.{GetFeature L}=E2
-	    grid(L1 sticky:e column:0 row:N) |
-	    grid(E2 sticky:e column:1 row:N) | TclR
+	    grid(L1 sticky:w column:0 row:N) |
+	    grid(E2 sticky:w column:1 row:N) | TclR
 	 [] timebar then
 	    F  = {New Tk.frame tkInit(parent:            P
 				      highlightthickness:0)}
