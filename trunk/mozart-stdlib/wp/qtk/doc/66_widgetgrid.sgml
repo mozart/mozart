@@ -45,6 +45,7 @@ A <<grid>> widget is a frame, ie a rectangular area of a window. It's primary pu
 <ref to="chapter.widgets.grid.param_highlightcolor">highlightcolor</ref>
 <ref to="chapter.widgets.grid.param_highlightthickness">highlightthickness</ref>
 <ref to="chapter.widgets.grid.param_look">look</ref>
+<ref to="chapter.widgets.grid.param_onCreation">onCreation</ref>
 <ref to="chapter.widgets.grid.param_padx">padx</ref>
 <ref to="chapter.widgets.grid.param_pady">pady</ref>
 <ref to="chapter.widgets.grid.param_relief">relief</ref>
@@ -53,7 +54,11 @@ A <<grid>> widget is a frame, ie a rectangular area of a window. It's primary pu
 
 <subsection><title>Method List</title><p>
 
-<para><title>'raise'</title><p><<'raise'(1:W)>>: If the <<W>> argument is omitted then the command raises the widget so that it is above all of its siblings in the stacking order (it will not be obscured by any siblings and will obscure any siblings that overlap it). If <<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the descendant of a sibling of this widget. In this case the <<'raise'>> command will insert this widget into the stacking order just above <<W>>; this could end up either raising
+<para><title>'raise'</title><p><<'raise'(1:W)>>: If the <<W>> argument is omitted then the command raises the widget so that it is above all of its siblings in
+the stacking order (it will not be obscured by any siblings and will obscure any siblings that overlap it). If
+<<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the
+descendant of a sibling of this widget. In this case the <<'raise'>> command will insert this widget into the stacking order
+just above <<W>>; this could end up either raising
 or lowering the widget.
 
 <para><title>bbox</title><p><<bbox(?Column ?Row ?Column2 ?Row L)>>: bind <<L>> to a list of 4 integers representing a bounding box: first two elements are the top left <<X>> and <<Y>> coordinate in pixels of the box, the third element the width and the height of the box. The bounding box and its origin depends on the number of arguments:
@@ -96,7 +101,11 @@ or lowering the widget.
 
 <para><title>location</title><p><<location(X Y O)>>: given <<X>> and <<Y>> values in screen units relative to the master window, the column and row number at that <<X>> and <<Y>> location is bound to <<O>>. For locations that are above or to the left of the grid, -1 is returned. 
 
-<para><title>lower</title><p><<lower(1:W)>>: If the <<W>> argument is omitted then the command lowers the widget so that it is below all of its siblings in the stacking order (it will be obscured by any siblings and will not obscure any siblings that overlap it). If <<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the descendant of a sibling of this widget. In this case the <<lower>> command will insert this widget into the stacking order just below <<W>>; this could end up either raising
+<para><title>lower</title><p><<lower(1:W)>>: If the <<W>> argument is omitted then the command lowers the widget so that it is below all of its siblings in
+the stacking order (it will be obscured by any siblings and will not obscure any siblings that overlap it). If
+<<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the
+descendant of a sibling of this widget. In this case the <<lower>> command will insert this widget into the stacking order
+just below <<W>>; this could end up either raising
 or lowering the widget. 
 
 <para><title>propagate</title><p><<propagate(B)>>: <<B>> is a boolean that specifies if the propagation is enabled or not. The grid geometry manager normally computes how large a master must be to just exactly meet the needs of its slaves, and it sets the requested width and height of the master to these dimensions. This causes geometry information to propagate up through a window hierarchy to a top-level window so that the entire sub-tree sizes itself to fit the needs of the leaf windows. However, the grid <<propagate>> method may be used to turn off propagation for one or more masters. If propagation is disabled then grid will not set the requested width and height of the master window. This may be useful if, for example, you wish for a master window to have a fixed size that you specify. 
@@ -114,7 +123,11 @@ or lowering the widget.
 
 <para><title>set</title><p><<set(parameter1:value1 ... parameterX:valueX)>>: Changes the value of one or more parameters. <<parameterX>> must be a valid parameter for the widget. <<valueX>> must be a valid value for the parameter.
 
-<para><title>setGrab</title><p><<setGrab(global:B)>>: Sets a grab on the widget. If <<B>> is <<true>> then the grab is global, otherwise it is local (<<B>> false by default). If a grab was already in effect for this application then it is automatically released. If there is already a grab on the widget and it has the same global/local form as the requested grab, then the command does nothing. Local grab affects only the grabbing application: events will be reported to other applications as if the grab had never occurred. A global grab locks out all applications on the screen, so that only the given subtree of the grabbing application will be sensitive to pointer events (mouse button presses, mouse button releases, pointer motions, window entries, and window exits). During global grabs the window manager will not receive pointer events either. Warning: whe a grab is set, it is define for the whole Oz process so that it will prevent the user to do input to other windows as well. Moreover a grab is still effective even if the window that contains the grabbed widgets is hidden. <<B>> must be a boolean.
+<para><title>setGrab</title><p><<setGrab(global:B)>>: Sets a grab on the widget. If <<B>> is <<true>> then the grab is global, otherwise it is local (<<B>> false by default). If a grab was already in effect for this application then it is automatically released. If there is already a grab on the widget and it has the same global/local form as the requested grab, then the command does nothing. Local grab affects only the grabbing application: events will
+be reported to other applications as if the grab had never occurred. A global grab
+locks out all applications on the screen, so that only the given subtree of the grabbing application will be
+sensitive to pointer events (mouse button presses, mouse button releases, pointer motions, window entries, and
+window exits). During global grabs the window manager will not receive pointer events either. Warning: whe a grab is set, it is define for the whole Oz process so that it will prevent the user to do input to other windows as well. Moreover a grab is still effective even if the window that contains the grabbed widgets is hidden. <<B>> must be a boolean.
 
 <para><title>size</title><p><<size(S)>>: binds <<S>> to the number of contained widgets in the grid.
 
@@ -166,6 +179,8 @@ Note that <<newline>> and <<empty>> are <EM>not</EM> widgets and therefore can't
 
 <para id="chapter.widgets.grid.param_look"><title>look</title><p><<look:L>>: Specifies a look to use for the widget. A look specifies default values for the parameters of widgets. This parameter can be specified at creation time only. Moreover changing a look will not change the appearance of widgets that are already displayed with that look. See <ptr to="misc.look"> for more details.
 
+<para id="chapter.widgets.grid.param_onCreation"><title>onCreation</title><p><<onCreation:P>>: When a widget is created, for example by <<QTk.build>>, this parameter specifies an action to execute right after the widget has been created, but before returning from the build instruction. It is usefull if one needs the handle of the widget to initialize it in ways not permitted by its description record (for example binding the <<Enter>> or <<Leave>> mouse events).
+
 <para id="chapter.widgets.grid.param_padx"><title>padx</title><p><<padx:P>>: Specifies how much horizontal external padding to leave on each side of the widget. This space is added outside the widget border. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)
 
 <para id="chapter.widgets.grid.param_pady"><title>pady</title><p><<pady:P>>: Specifies how much vertical external padding to leave on each side of the widget. This space is added outside the widget border. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)
@@ -174,7 +189,7 @@ Note that <<newline>> and <<empty>> are <EM>not</EM> widgets and therefore can't
     indicates how the interior of the widget should appear relative to its exterior; for example, <<raised>> means the interior of the widget
     should appear to protrude from the screen, relative to the exterior of the widget. 
 
-<para id="chapter.widgets.grid.param_takefocus"><title>takefocus</title><p><<takefocus:B>>: Determines whether the window accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanism consult the value of the <<takeFocus>> option. A value of <<false>> means that the widget should be skipped entirely during keyboard traversal. <<true>> means that the widget should receive the input focus as long as it is viewable (it and all of its ancestors are mapped). <<B>> must be a boolean.
+<para id="chapter.widgets.grid.param_takefocus"><title>takefocus</title><p><<takefocus:B>>: Determines whether the window accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanims consult the value of the <<takeFocus>> option. A value of <<false>> means that the widget should be skipped entirely during keyboard traversal. <<true>> means that the widget should receive the input focus as long as it is viewable (it and all of its ancestors are mapped). <<B>> must be a boolean.
 
 <para id="chapter.widgets.grid.param_tooltips"><title>tooltips</title><p><<tooltips:VS>>: Specifies a tooltip for the widget. A tooltip is a small message that appears when the mouse cursor if left still over the widget for a while. If <<VS>> is set to <<nil>>, no tooltip will appear at all. <<VS>> must be a virtual string.
 

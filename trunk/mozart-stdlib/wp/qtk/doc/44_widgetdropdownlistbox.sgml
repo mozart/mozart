@@ -21,7 +21,7 @@ end
 <subsection> <TITLE>Description</TITLE>
 
 <P>
-A dropdownlistbox is a widget that displays a button with a down arrow. Clicking this button pops down a listbox allowing the user to select one of the displayed items. The listbox can be pulled down either at the left or at the right of the button. Usually a label or an entry is placed at the left of the dropdownlistbox. The user can change the contents of that widget by selecting an item in the listbox.
+A dropdownlistbox is a widget that displays a button with a down arrow. Clicking this button pops down a listbox allowing the user to select one of the displayed items. The listbox can ben pulled down either at the left or at the right of the button. Usually a label or an entry is placed at the left of the dropdownlistbox. The user can change the contents of that widget by selecting an item in the listbox.
 </P>
 <P>
 A dropdownlistbox is a just a button and a listbox linked together. All parameters that begin by <<button>> configure the button part of the widget while the remaining parameters configure the listbox part of the widget. See these specific widgets for more details.
@@ -86,6 +86,7 @@ Many of the widget methods for listboxes take one or more indices as arguments. 
 <ref to="chapter.widgets.dropdownlistbox.param_highlightthickness">highlightthickness</ref>
 <ref to="chapter.widgets.dropdownlistbox.param_look">look</ref>
 <ref to="chapter.widgets.dropdownlistbox.param_lrscrollbar">lrscrollbar</ref>
+<ref to="chapter.widgets.dropdownlistbox.param_onCreation">onCreation</ref>
 <ref to="chapter.widgets.dropdownlistbox.param_padx">padx</ref>
 <ref to="chapter.widgets.dropdownlistbox.param_pady">pady</ref>
 <ref to="chapter.widgets.dropdownlistbox.param_relief">relief</ref>
@@ -100,7 +101,11 @@ Many of the widget methods for listboxes take one or more indices as arguments. 
 
 <subsection><title>Method List</title><p>
 
-<para><title>'raise'</title><p><<'raise'(1:W)>>: If the <<W>> argument is omitted then the command raises the widget so that it is above all of its siblings in the stacking order (it will not be obscured by any siblings and will obscure any siblings that overlap it). If <<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the descendant of a sibling of this widget. In this case the <<'raise'>> command will insert this widget into the stacking order just above <<W>>; this could end up either raising
+<para><title>'raise'</title><p><<'raise'(1:W)>>: If the <<W>> argument is omitted then the command raises the widget so that it is above all of its siblings in
+the stacking order (it will not be obscured by any siblings and will obscure any siblings that overlap it). If
+<<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the
+descendant of a sibling of this widget. In this case the <<'raise'>> command will insert this widget into the stacking order
+just above <<W>>; this could end up either raising
 or lowering the widget.
 
 <para><title>activate</title><p><<activate(I)>>: Sets the active element to the one indicated by <<I>>. The active element is drawn with an underline when the widget has the input focus.
@@ -127,7 +132,11 @@ or lowering the widget.
 
 <para><title>insert</title><p><<insert(I LVS)>>: Inserts the list of virtual strings <<LVS>> just before the element at position <<I>>. If <<I>> is the atom <<end>>, the list is inserted after all elements.
 
-<para><title>lower</title><p><<lower(1:W)>>: If the <<W>> argument is omitted then the command lowers the widget so that it is below all of its siblings in the stacking order (it will be obscured by any siblings and will not obscure any siblings that overlap it). If <<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the descendant of a sibling of this widget. In this case the <<lower>> command will insert this widget into the stacking order just below <<W>>; this could end up either raising
+<para><title>lower</title><p><<lower(1:W)>>: If the <<W>> argument is omitted then the command lowers the widget so that it is below all of its siblings in
+the stacking order (it will be obscured by any siblings and will not obscure any siblings that overlap it). If
+<<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the
+descendant of a sibling of this widget. In this case the <<lower>> command will insert this widget into the stacking order
+just below <<W>>; this could end up either raising
 or lowering the widget. 
 
 <para><title>nearest</title><p><<nearest(I V)>>: Given <<I>>, a y-coordinate within the listbox window, this command binds <<V>> to the index of the (visible) listbox element nearest to that y-coordinate. 
@@ -151,7 +160,11 @@ or lowering the widget.
 
 <para><title>set</title><p><<set(parameter1:value1 ... parameterX:valueX)>>: Changes the value of one or more parameters. <<parameterX>> must be a valid parameter for the widget. <<valueX>> must be a valid value for the parameter.
 
-<para><title>setGrab</title><p><<setGrab(global:B)>>: Sets a grab on the widget. If <<B>> is <<true>> then the grab is global, otherwise it is local (<<B>> false by default). If a grab was already in effect for this application then it is automatically released. If there is already a grab on the widget and it has the same global/local form as the requested grab, then the command does nothing. Local grab affects only the grabbing application: events will be reported to other applications as if the grab had never occurred. A global grab locks out all applications on the screen, so that only the given subtree of the grabbing application will be sensitive to pointer events (mouse button presses, mouse button releases, pointer motions, window entries, and window exits). During global grabs the window manager will not receive pointer events either. Warning: whe a grab is set, it is define for the whole Oz process so that it will prevent the user to do input to other windows as well. Moreover a grab is still effective even if the window that contains the grabbed widgets is hidden. <<B>> must be a boolean.
+<para><title>setGrab</title><p><<setGrab(global:B)>>: Sets a grab on the widget. If <<B>> is <<true>> then the grab is global, otherwise it is local (<<B>> false by default). If a grab was already in effect for this application then it is automatically released. If there is already a grab on the widget and it has the same global/local form as the requested grab, then the command does nothing. Local grab affects only the grabbing application: events will
+be reported to other applications as if the grab had never occurred. A global grab
+locks out all applications on the screen, so that only the given subtree of the grabbing application will be
+sensitive to pointer events (mouse button presses, mouse button releases, pointer motions, window entries, and
+window exits). During global grabs the window manager will not receive pointer events either. Warning: whe a grab is set, it is define for the whole Oz process so that it will prevent the user to do input to other windows as well. Moreover a grab is still effective even if the window that contains the grabbed widgets is hidden. <<B>> must be a boolean.
 
 <para><title>size</title><p><<size(V)>>: Binds <<V>> to an integer indicating the total number of elements in the listbox. 
 
@@ -196,7 +209,7 @@ or lowering the widget.
     the input focus. If the value is zero, no focus highlight is drawn
     around the widget. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">).
 
-<para id="chapter.widgets.dropdownlistbox.buttontakefocus"><title>buttontakefocus</title><p><<buttontakefocus:B>>: Determines whether the button accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanism consult the value of the takeFocus option. A value of <<false>> means that the window should be skipped
+<para id="chapter.widgets.dropdownlistbox.buttontakefocus"><title>buttontakefocus</title><p><<buttontakefocus:B>>: Determines whether the button accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanims consult the value of the takeFocus option. A value of <<false>> means that the window should be skipped
     entirely during keyboard traversal. <<true>> means that the window should receive the input focus as long as it is viewable (it and all of its
     ancestors are mapped). <<B>> must be a boolean.
 
@@ -236,6 +249,8 @@ or lowering the widget.
 
 <para id="chapter.widgets.dropdownlistbox.param_lrscrollbar"><title>lrscrollbar</title><p><<lrscrollbar:B>>: Determines whether the widget has got a horizontal bar below. This option can be specified at creation time only. <<B>> must be a boolean.
 
+<para id="chapter.widgets.dropdownlistbox.param_onCreation"><title>onCreation</title><p><<onCreation:P>>: When a widget is created, for example by <<QTk.build>>, this parameter specifies an action to execute right after the widget has been created, but before returning from the build instruction. It is usefull if one needs the handle of the widget to initialize it in ways not permitted by its description record (for example binding the <<Enter>> or <<Leave>> mouse events).
+
 <para id="chapter.widgets.dropdownlistbox.param_padx"><title>padx</title><p><<padx:P>>: Specifies how much horizontal external padding to leave on each side of the widget. This space is added outside the widget border. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)
 
 <para id="chapter.widgets.dropdownlistbox.param_pady"><title>pady</title><p><<pady:P>>: Specifies how much vertical external padding to leave on each side of the widget. This space is added outside the widget border. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)
@@ -254,7 +269,7 @@ or lowering the widget.
 
 <para id="chapter.widgets.dropdownlistbox.param_setgrid"><title>setgrid</title><p><<setgrid:B>>: Determines whether this widget controls the resizing grid for its top-level window. This option is typically used in text widgets, where the information in the widget has a natural size (the size of a character) and it makes sense for the window's dimensions to be integral numbers of these units. These natural window sizes form a grid. If the <<setgrid>> option is set to <<true>> then the widget will communicate with the window manager so that when the user interactively resizes the top-level window that contains the widget, the dimensions of the window will be displayed to the user in grid units and the window size will be constrained to integral numbers of grid units. <<B>> must be a boolean.
 
-<para id="chapter.widgets.dropdownlistbox.param_takefocus"><title>takefocus</title><p><<takefocus:B>>: Determines whether the window accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanism consult the value of the <<takeFocus>> option. A value of <<false>> means that the widget should be skipped entirely during keyboard traversal. <<true>> means that the widget should receive the input focus as long as it is viewable (it and all of its ancestors are mapped). <<B>> must be a boolean.
+<para id="chapter.widgets.dropdownlistbox.param_takefocus"><title>takefocus</title><p><<takefocus:B>>: Determines whether the window accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanims consult the value of the <<takeFocus>> option. A value of <<false>> means that the widget should be skipped entirely during keyboard traversal. <<true>> means that the widget should receive the input focus as long as it is viewable (it and all of its ancestors are mapped). <<B>> must be a boolean.
 
 <para id="chapter.widgets.dropdownlistbox.param_tdscrollbar"><title>tdscrollbar</title><p><<tdscrollbar:B>>: Determines whether the widget has got a vertical bar at the right. This option can be specified at creation time only. <<B>> must be a boolean.
 

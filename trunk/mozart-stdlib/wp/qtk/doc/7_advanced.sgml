@@ -143,6 +143,8 @@ This method is an enhanced version of the previous one. The constructor method o
 <em>More examples: adding list support for container widgets</em>
 <para><title><ref.extern to="listcont.oz">Source File</ref.extern></title>
 <code.extern display to="listcont.oz" proglang=oz></para>
+
+<p></p>
 <section><title>QTk builders</title>
 <p>
 The previous chapter already showed an example of a QTk builder. A QTk builder 
@@ -165,11 +167,15 @@ And supports the following functions and procedures:
 <item> <<MyBuilder.defaultLook>>: defines the default <<look>> (<ptr to="misc.look">) for widgets.
 <item> <<{MyBuilder.setAlias AliasName Alias}>>: defines an alias (see above).
 <item> <<{MyBuilder.unSetAlias AliasName}>>: removes an alias from the alias database of <<MyBuilder>>.
-<item> <<{MyBuilder.getAlias AliasName}>>: returns the function applied to transform the <<AliasName>> alias description in the window description record. Although an alias can be specified in three different forms (record, function or class), <<getAlias>> returns only a one parameter function that is semantically equivalent to the initial alias specification.
+<item> <<{MyBuilder.getAlias AliasName}>>: returns the function applied to transform the <<AliasName>> alias description in the window description record. Altough an alias can be specified in three different forms (record, function or class), <<getAlias>> returns only a one parameter function that is semantically equivalent to the initial alias specification.
 <item> <<{MyBuilder.getWidgetList}>>: returns the list of all widgets defined in <<MyBuilder>>.
 <item> <<{MyBuilder.getAliasList}>>: returns the list of all aliases defined in <<MyBuilder>>.
 </list>
 There exists a default builder inside QTk. <<QTk.build>> uses the <<build>> function of this default builder. However users are not allowed to modify the widget or alias database, nor the default look of this default builder. Therefore <<QTk.build>> creates always the same windows depending only on the description record used.
-
+</p>
+<section><title>QTk.flush</title>
+<p>
+For efficiency reasons, all commands send to the windowing system are batched together. Because of that, a widget might fail to return some information about itself, generally regarding its actual height and width. The command  <<{QTk.flush}>> blocks until all pending commands of the windowing system have been processed.
+</p>
 </CHAPTER>
 

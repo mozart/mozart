@@ -41,7 +41,7 @@ The <<base>> for an index must have one of the following forms:
 
 <LIST>
 
-<ITEM> <<coord(X Y)>> : Indicates <<X>>'th character on line <<Y>>. Lines and chars both begins at 1. If <<X>> is then atom <<end>> then it refers to the newline character that ends the line. 
+<ITEM> <<coord(L C)>> : Indicates <<C>>'th character on line <<L>>. Lines and chars both begins at 1. If <<C>> is then atom <<end>> then it refers to the newline character that ends the line. 
 
 <ITEM> <<pixel(X Y)>> : Indicates the character that covers the pixel whose x and y coordinates within the text's window are <<X>> and <<Y>>. 
 
@@ -82,7 +82,7 @@ If <<modifiers>> follow the base index, each one of them must have one of the fo
 The first form of annotation in text widgets is a tag. A tag can be associated to any part of the text. There may be any number of tags associated with characters in a text. Each tag may refer to a single character, a range of characters, or several ranges of characters. An individual character may have any number of tags associated with it. 
 </P>
 <P>
-A priority order is defined among tags, and this order is used in implementing some of the tag-related functions described below. When a tag is defined (by associating it with characters or setting its display options or binding commands to it), it is given a priority higher than any existing tag. The priority order of tags may be redefined using the <<'raise'()>> and <<lower()>> methods.
+A priority order is defined among tags, and this order is used in implementing some of the tag-related functions described below. When a tag is defined (by associating it with characters or setting its display options or binding commands to it), it is given a priority higher than any existing tag. The priority order of tags may be redefined using the <<raise()>> and <<lower()>> methods.
 </P>
 <P>
 Tags serve several purposes in text widgets. First, they control the way information is displayed on the screen. By default, characters are displayed as determined by the background, font, and foreground options for the text widget. However, display options may be associated with individual tags. If a character has been tagged, then the display options associated with the tag override the default display style. 
@@ -108,7 +108,7 @@ The third form of annotation in text widgets is an embedded window. Each embedde
 <EM>EMBEDDED IMAGES</EM>
 </P>
 <P>
-The final form of annotation in text widgets is an embedded image. Each embedded image annotation causes an image to be displayed at a particular point in the text. There may be any number of embedded images in a text widget, and a particular image may be embedded in multiple places in the same text widget. The embedded image's position on the screen will be updated as the text is modified or scrolled. Each embedded image occupies one character's worth of index space in the text widget, and it may be referred to either by its position in the widget's index space, or the name it is assigned when the image is inserted into the text widget with image create. If the range of text containing the embedded image is deleted then that copy of the image is removed from the screen. 
+The final form of annotation in text widgets is an embedded image. Each embedded image annotation causes an image to be displayed at a particular point in the text. There may be any number of embedded images in a text widget, and a particular image may be embedded in multiple places in the same text widget. The embedded image's position on the screen will be updated as the text is modified or scrolled. Each embedded image occupies one character's worth of index space in the text widget, and it may be referred to either by its position in the widget's index space, or the name it is assigned when the image is inserted into the text widget widh image create. If the range of text containing the embedded image is deleted then that copy of the image is removed from the screen. 
 </P>
 <subsection> <title>Parameter List</title><p>
 
@@ -149,6 +149,7 @@ The final form of annotation in text widgets is an embedded image. Each embedded
 <ref to="chapter.widgets.text.param_ipady">ipady</ref>
 <ref to="chapter.widgets.text.param_look">look</ref>
 <ref to="chapter.widgets.text.param_lrscrollbar">lrscrollbar</ref>
+<ref to="chapter.widgets.text.param_onCreation">onCreation</ref>
 <ref to="chapter.widgets.text.param_padx">padx</ref>
 <ref to="chapter.widgets.text.param_pady">pady</ref>
 <ref to="chapter.widgets.text.param_relief">relief</ref>
@@ -163,7 +164,11 @@ The final form of annotation in text widgets is an embedded image. Each embedded
 
 <subsection><title>Method List</title><p>
 
-<para><title>'raise'</title><p><<'raise'(1:W)>>: If the <<W>> argument is omitted then the command raises the widget so that it is above all of its siblings in the stacking order (it will not be obscured by any siblings and will obscure any siblings that overlap it). If <<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the descendant of a sibling of this widget. In this case the <<'raise'>> command will insert this widget into the stacking order just above <<W>>; this could end up either raising
+<para><title>'raise'</title><p><<'raise'(1:W)>>: If the <<W>> argument is omitted then the command raises the widget so that it is above all of its siblings in
+the stacking order (it will not be obscured by any siblings and will obscure any siblings that overlap it). If
+<<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the
+descendant of a sibling of this widget. In this case the <<'raise'>> command will insert this widget into the stacking order
+just above <<W>>; this could end up either raising
 or lowering the widget.
 
 <para><title>bbox</title><p><<bbox(I V)>>: Binds <<V>> to a list of four elements describing the screen area of the character given by <<I>>. The first two elements of the list give the x and y coordinates of the upper-left corner of the area occupied by the character, and the last two elements give the width and height of the area. If the character is only partially visible on the screen, then the return value reflects just the visible part. If the character is not visible on the screen then the return value is an empty list. <<I>> must be an indices as described above.
@@ -211,7 +216,11 @@ or lowering the widget.
 
 <para><title>insert</title><p><<insert(I VS1 ?Tag1 ?VS2 ?Tag2 ...)>>: Inserts all of the <<VSx>> arguments just before the character at position <<I>>. If <<I>> refers to the end of the text (the character after the last newline) then the new text is inserted just before the last newline instead. If there is a single <<VS1>> argument and no <<Tag1>>, then the new text will receive any tags that are present on both the character before and the character after the insertion point; if a tag is present on only one of these characters then it will not be applied to the new text. If <<TagX>> is specified then it consists of either a text tag, or a record of the form <<q(Tag1 ... TagX)>>. The new characters will receive all of the tags in this list and no others, regardless of the tags present around the insertion point. If multiple chars-tagList argument pairs are present, they produce the same effect as if a separate insert widget command had been issued for each pair, in order. The last <<Tag>> argument may be omitted. 
 
-<para><title>lower</title><p><<lower(1:W)>>: If the <<W>> argument is omitted then the command lowers the widget so that it is below all of its siblings in the stacking order (it will be obscured by any siblings and will not obscure any siblings that overlap it). If <<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the descendant of a sibling of this widget. In this case the <<lower>> command will insert this widget into the stacking order just below <<W>>; this could end up either raising
+<para><title>lower</title><p><<lower(1:W)>>: If the <<W>> argument is omitted then the command lowers the widget so that it is below all of its siblings in
+the stacking order (it will be obscured by any siblings and will not obscure any siblings that overlap it). If
+<<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the
+descendant of a sibling of this widget. In this case the <<lower>> command will insert this widget into the stacking order
+just below <<W>>; this could end up either raising
 or lowering the widget. 
 
 <para><title>newImage</title><p><<newImage(I param1:value1 ... paramX:valueX V)>>: This command creates a new image annotation, which will appear in the text at the position given by <<I>>. <<V>> is bound to an object allowing to control the image. The parameters are:
@@ -333,7 +342,11 @@ The matching range must be entirely within a single line of text. For regular ex
 
 <para><title>set</title><p><<set(parameter1:value1 ... parameterX:valueX)>>: Changes the value of one or more parameters. <<parameterX>> must be a valid parameter for the widget. <<valueX>> must be a valid value for the parameter.
 
-<para><title>setGrab</title><p><<setGrab(global:B)>>: Sets a grab on the widget. If <<B>> is <<true>> then the grab is global, otherwise it is local (<<B>> false by default). If a grab was already in effect for this application then it is automatically released. If there is already a grab on the widget and it has the same global/local form as the requested grab, then the command does nothing. Local grab affects only the grabbing application: events will be reported to other applications as if the grab had never occurred. A global grab locks out all applications on the screen, so that only the given subtree of the grabbing application will be sensitive to pointer events (mouse button presses, mouse button releases, pointer motions, window entries, and window exits). During global grabs the window manager will not receive pointer events either. Warning: whe a grab is set, it is define for the whole Oz process so that it will prevent the user to do input to other windows as well. Moreover a grab is still effective even if the window that contains the grabbed widgets is hidden. <<B>> must be a boolean.
+<para><title>setGrab</title><p><<setGrab(global:B)>>: Sets a grab on the widget. If <<B>> is <<true>> then the grab is global, otherwise it is local (<<B>> false by default). If a grab was already in effect for this application then it is automatically released. If there is already a grab on the widget and it has the same global/local form as the requested grab, then the command does nothing. Local grab affects only the grabbing application: events will
+be reported to other applications as if the grab had never occurred. A global grab
+locks out all applications on the screen, so that only the given subtree of the grabbing application will be
+sensitive to pointer events (mouse button presses, mouse button releases, pointer motions, window entries, and
+window exits). During global grabs the window manager will not receive pointer events either. Warning: whe a grab is set, it is define for the whole Oz process so that it will prevent the user to do input to other windows as well. Moreover a grab is still effective even if the window that contains the grabbed widgets is hidden. <<B>> must be a boolean.
 
 <para><title>winfo</title><p><<winfo(parameter1:value1 ... parameterX:valueX)>>: This commands works like the <<get>> method, but for window-related information. For more details, see <ptr to="misc.winfo">.
 
@@ -412,6 +425,8 @@ The matching range must be entirely within a single line of text. For regular ex
 
 <para id="chapter.widgets.text.param_lrscrollbar"><title>lrscrollbar</title><p><<lrscrollbar:B>>: Determines whether the widget has got a horizontal bar below. This option can be specified at creation time only. <<B>> must be a boolean.
 
+<para id="chapter.widgets.text.param_onCreation"><title>onCreation</title><p><<onCreation:P>>: When a widget is created, for example by <<QTk.build>>, this parameter specifies an action to execute right after the widget has been created, but before returning from the build instruction. It is usefull if one needs the handle of the widget to initialize it in ways not permitted by its description record (for example binding the <<Enter>> or <<Leave>> mouse events).
+
 <para id="chapter.widgets.text.param_padx"><title>padx</title><p><<padx:P>>: Specifies how much horizontal external padding to leave on each side of the widget. This space is added outside the widget border. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)
 
 <para id="chapter.widgets.text.param_pady"><title>pady</title><p><<pady:P>>: Specifies how much vertical external padding to leave on each side of the widget. This space is added outside the widget border. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)
@@ -430,7 +445,7 @@ The matching range must be entirely within a single line of text. For regular ex
 
 <para id="chapter.widgets.text.param_setgrid"><title>setgrid</title><p><<setgrid:B>>: Determines whether this widget controls the resizing grid for its top-level window. This option is typically used in text widgets, where the information in the widget has a natural size (the size of a character) and it makes sense for the window's dimensions to be integral numbers of these units. These natural window sizes form a grid. If the <<setgrid>> option is set to <<true>> then the widget will communicate with the window manager so that when the user interactively resizes the top-level window that contains the widget, the dimensions of the window will be displayed to the user in grid units and the window size will be constrained to integral numbers of grid units. <<B>> must be a boolean.
 
-<para id="chapter.widgets.text.param_takefocus"><title>takefocus</title><p><<takefocus:B>>: Determines whether the window accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanism consult the value of the <<takeFocus>> option. A value of <<false>> means that the widget should be skipped entirely during keyboard traversal. <<true>> means that the widget should receive the input focus as long as it is viewable (it and all of its ancestors are mapped). <<B>> must be a boolean.
+<para id="chapter.widgets.text.param_takefocus"><title>takefocus</title><p><<takefocus:B>>: Determines whether the window accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanims consult the value of the <<takeFocus>> option. A value of <<false>> means that the widget should be skipped entirely during keyboard traversal. <<true>> means that the widget should receive the input focus as long as it is viewable (it and all of its ancestors are mapped). <<B>> must be a boolean.
 
 <para id="chapter.widgets.text.param_tdscrollbar"><title>tdscrollbar</title><p><<tdscrollbar:B>>: Determines whether the widget has got a vertical bar at the right. This option can be specified at creation time only. <<B>> must be a boolean.
 
