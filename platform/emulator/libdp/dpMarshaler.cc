@@ -1875,7 +1875,17 @@ unmarshalTertiaryRobust(MarshalerBuffer *bs, MarshalTag tag, int *error)
       Assert(0);
     }
     // If the entity had a failed condition, propagate it.
-    if (ec & PERM_FAIL) deferProxyTertProbeFault(ob->getTertiary(),PROBE_PERM);
+    if (ec & PERM_FAIL){
+      // As failed entities are propageted as Resources, the
+      // type of the marshaled entity can differ from the
+      // type of the borrowtable entity
+      // i.e. A failed variable, the table contains a variable
+      // but the unmarshaled entity is a tertiary(resource).
+      if(ob->isTertiary())
+        deferProxyTertProbeFault(ob->getTertiary(),PROBE_PERM);
+      else
+        deferProxyVarProbeFault(val,PROBE_PERM);
+    }
     return val;
   }
 
