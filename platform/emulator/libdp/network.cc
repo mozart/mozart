@@ -101,9 +101,9 @@
 
 #define NETWORK_ERROR(Args) {OZ_error Args;}
 #define IMPLEMENT(Args) {OZ_error Args;}
-
+/*
 #define PERDIOLOGLOW
-
+*/
 /* free list sizes */
 
 #define SITE_CUTOFF    100
