@@ -23,26 +23,29 @@
  *  WARRANTIES.
  *
  */
+
 #include <errno.h>
+#include <unistd.h>
 
 #include "ozostream.hh"
 #include "base.hh"
+#include "os.hh"
 
 ozostream& ends(ozostream& outs)  { return outs.ends();}
 ozostream& endl(ozostream& outs)  { return outs.endl(); }
 ozostream& flush(ozostream& outs) { return outs.flush(); }
 
 
-ozostream ozcout(stdout), ozcerr(stderr);
+ozostream ozcout(STDOUT_FILENO), ozcerr(STDERR_FILENO);
 
 
 ozostream &ozostream::operator << (const char *s)
 {
-  Assert(fd);
- loop:
-  if (fprintf(fd,s) < 0) {
-    if (errno == EINTR) goto loop;
-    perror("fprintf");
+  Assert(fd!=-1);
+  union { char *s1; const char *s2; } u;
+  u.s2 = s;
+  if (ossafewrite(fd,u.s1,strlen(s))<0) {
+    perror("ozostream write");
   }
   return *this;
 }
@@ -57,9 +60,10 @@ ozostream &ozostream::operator << (const void *p)
 
 ozostream &ozostream::operator << (char c)
 {
-  char buf[100];
-  sprintf(buf,"%c",c);
-  return *this << buf;
+  if (ossafewrite(fd,&c,1)<0) {
+    perror("ozostream write");
+  }
+  return *this;
 }
 
 ozostream &ozostream::operator << (long i)
