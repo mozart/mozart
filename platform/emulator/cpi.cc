@@ -28,9 +28,7 @@ _spawnVars_t * staticSuspendVars = new _spawnVars_t[CPIINITSIZE];
 #endif
 
 int staticSpawnVarsNumber = 0;
-
 int staticSpawnVarsNumberProp = 0;
-
 int staticSuspendVarsNumber = 0;
 
 
