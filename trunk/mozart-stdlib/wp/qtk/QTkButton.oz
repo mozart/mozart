@@ -26,6 +26,7 @@
 functor
 
 import
+   OS
    Tk
    QTkDevel(splitParams:        SplitParams
 	    tkInit:             TkInit
@@ -43,6 +44,8 @@ export
    
 define
 
+   IsDarwin=({OS.uName}.sysname=="Darwin")
+   DPadx#DPady=if IsDarwin then 10#1 else 0#0 end
    class QTkButton
 
       feat
@@ -105,11 +108,12 @@ define
 	    QTkClass,M
 	    self.Return={CondSelect M return _}
 	    {SplitParams M [ipadx ipady init key] A B}
-	    Tk.button,{Record.adjoin {TkInit A} tkInit(padx:{CondSelect B ipadx 2}
-						       pady:{CondSelect B ipady 2}
-						       text:{CondSelect B init {CondSelect A text ""}}
-						       action:self.toplevel.port#r(self Execute)
-						      )}
+	    Tk.button,{Record.adjoin {TkInit A}
+				   tkInit(padx:{CondSelect B ipadx 2}+DPadx
+						  pady:{CondSelect B ipady 2}+DPady
+						  text:{CondSelect B init {CondSelect A text ""}}
+						  action:self.toplevel.port#r(self Execute)
+						 )}
 	    if {HasFeature B key} then
 	       if {Tk.returnInt 'catch'(v("{") bind self.toplevel "<"#M.key#">" v("{info library}") v("}"))}==0 then
 		  {self.toplevel tkBind(event:"<"#M.key#">" action:self.toplevel.port#r(self Execute))}
@@ -144,8 +148,8 @@ define
 	     proc{$ I V}
 		case I
 		of 1 then QTkClass,set(text:V)
-		[] ipadx then {ExecTk self configure(padx:V)}
-		[] ipady then {ExecTk self configure(pady:V)}
+		[] ipadx then {ExecTk self configure(padx:V+DPadx)}
+		[] ipady then {ExecTk self configure(pady:V+DPady)}
 		end
 	     end}
 	 end
@@ -162,8 +166,8 @@ define
 	     proc{$ I V}
 		case I
 		of 1 then QTkClass,get(text:V)
-		[] ipadx then {ReturnTk self cget("-padx" V) natural}
-		[] ipady then {ReturnTk self cget("-pady" V) natural}
+		[] ipadx then V={ReturnTk self cget("-padx" $) natural}-DPadx
+		[] ipady then V={ReturnTk self cget("-pady" $) natural}-DPady
 		end
 	     end}
 	 end
