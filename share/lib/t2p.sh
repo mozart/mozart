@@ -3,7 +3,7 @@
 : ${SRCDIR=.}
 : ${SRCTOP=$SRCDIR/../..}
 : ${OZPLATFORM=`$SRCTOP/share/bin/ozplatform`}
-: ${OZPREFIX=/usr/local/oz}
+: ${OZPREFIX=/opt/mozart-1.1.0}
 
 if test -z "$TEXT2PICKLE"
 then
