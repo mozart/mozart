@@ -1634,7 +1634,8 @@ in
 	 {Tk.return tk_getSaveFile(parent: self.TopLevel
 				   title: 'Oz Compiler: Save Variable'
 				   filetypes:
-				      q(q('Oz Pickle Files' q('.ozp'))
+				      q(q('Oz Pickle Files'
+					  q(UrlDefaults.pickle))
 					q('All Files' '*')))}
 	 case FileName == "" then skip
 	 else {Pickle.save Value FileName}

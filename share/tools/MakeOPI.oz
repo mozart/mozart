@@ -24,7 +24,12 @@
 %%%
 
 local
-   MozartUrl = 'http://www.ps.uni-sb.de/ozhome/'
+   local
+      UrlDefaults = \insert '../url-defaults.oz'
+   in
+      FunExt      = UrlDefaults.'functor'
+      MozartUrl   = UrlDefaults.'home'
+   end
 
    LibNames = ['Application'
 	       'Search' 'FD' 'Schedule' 'FS'
@@ -56,13 +61,13 @@ local
    PrintNames =
    {FoldL LibNames
     fun {$ PNs A}
-       Ns={GetPrintNames {Load MozartUrl#'lib/'#A#'.ozf'}.'export'}
+       Ns={GetPrintNames {Load MozartUrl#'lib/'#A#FunExt}.'export'}
     in
        case Ns==nil then PNs else A#Ns|PNs end
     end 
     {FoldL ToolNames
      fun {$ PNs A}
-	Ns={GetPrintNames {Load MozartUrl#'tools/'#A#'.ozf'}.'export'}
+	Ns={GetPrintNames {Load MozartUrl#'tools/'#A#FunExt}.'export'}
      in
 	case Ns==nil then PNs else A#Ns|PNs end
      end nil}}
