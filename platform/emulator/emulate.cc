@@ -124,7 +124,7 @@ TaggedRef formatError(TaggedRef info, TaggedRef val, TaggedRef traceBack) {
  * Handle Failure macros (HF)
  */
 
-#if OUTLINE_HF_RAISE_FAILURE
+#if !OUTLINE_HF_RAISE_FAILURE
 Bool AM::hf_raise_failure()
 {
   if (!oz_onToplevel() && !oz_currentThread()->isCatch())
