@@ -122,46 +122,41 @@ private:
     char* host;              // destination host
     char* user;              // user name
     char* pass;              // password 
-    char  ftp_type;          // FTP transfer type
     unsigned short port;     // connection port 
     char* path;              // path to retrieve
     int ofd;                 // file id to return
-    int sockfd;              
-    char* temp_file_name;    // keeps a temporary file name
-    int unlink_mode;         // != 0 to unlink the filename
     struct sockaddr_in lin;  // local in address
     int ftp_header_stat;     // last ftp reply status
     int ftp_last_reply;      // last reply code from the ftp server
-    int ftp_stat;            // ftp state diagram marker
     int http_header_stat;    // last http status report
     char* http_redirect;     // points to the URL returned by an HTTP redirect
 
     /* annoying and support functions */
     int clean(void); // cleans the data fields
-    int tmp_file_open(int mode); // opens a temporary file 
+    int tmp_file_open(char **file); // opens a temporary file 
     int tcpip_open(const char* host, int port); // opens connection
     int writen(int sockfd, char* buf, int n); // write n bytes to socket
     int write3(int sockfd, const char* p1, int lp1, // writev limited clone
 	       const char* p2, int lp2, const char* p3, int lp3);
     int descape(char* s); // de-escape the string (modifies it!)
-    int http_req(void); // sends HTTP request
+    int http_req(int sockfd); // sends HTTP request
     int http_header_interp(char* line, int linenr);
-    int http_get_header(char* buf, int* brem, int& n);
+    int http_get_header(char* buf, int* brem, int& n, int sockfd);
     int ftp_header_interp(char* line);
-    int ftp_get_reply(char* buf, int* blen);
+    int ftp_get_reply(char* buf, int* blen, int sockfd);
 
     /* ## internal interface for ##extension */
     int parse_file(const char* line);
     int get_file(void);
 
     int parse_http(const char* line);
-    int get_http(void);
+    int get_http(char **file);
 
     int parse_ftp(const char* line);
-    int get_ftp(void);
+    int get_ftp(char **file);
 
     int parse(const char* line);
-    int getURL(const char* line, int unlink_m);
+    int getURL(const char* line, char **file);
 
 public:
     urlc(void);
@@ -189,18 +184,15 @@ static char URLC_hs[] = "%:@&=+$-_.!*'(),;/?";
 
 urlc::urlc(void)
 {
-    proto = NULL;
-    host = NULL;
-    user = NULL;
-    pass = NULL;
-    temp_file_name = NULL;
-    unlink_mode = URLC_OK;
-    ftp_type = 'I';
-    ftp_header_stat = URLC_OK;
-    port = 0;
-    path = NULL;
-    http_header_stat = URLC_OK;
-    http_redirect = NULL;
+  proto = NULL;
+  host = NULL;
+  user = NULL;
+  pass = NULL;
+  ftp_header_stat = URLC_OK;
+  port = 0;
+  path = NULL;
+  http_header_stat = URLC_OK;
+  http_redirect = NULL;
 }
 
 
@@ -223,8 +215,6 @@ urlc::clean(void)
 	free(pass);
 	pass = NULL;
     }
-    unlink_mode = URLC_OK;
-    ftp_type = 'I';
     ftp_header_stat = URLC_OK;
     port = 0;
     if(NULL != path) {
@@ -248,11 +238,11 @@ urlc::~urlc(void)
 
 /* opens a temporary file.
    if mode == URLC_UNLINK => remove the filename else 
-   put name in temp_file_name.
+   put name in file.
    returns file descriptor number or error reason
    */
 int 
-urlc::tmp_file_open(int mode)
+urlc::tmp_file_open(char **file)
 {
     int lofd = -1;
     char tn[L_tmpnam] = ""; // I like POSIX!
@@ -271,19 +261,16 @@ urlc::tmp_file_open(int mode)
 	URLC_PERROR("open");
 	return (URLC_EFILE);
     } while(1);
-    if(URLC_UNLINK == mode) {
-	if(-1 == unlink(tn)) {
-	    URLC_PERROR("unlink");
-	    return (URLC_EFILE);
-	}
-    }
-    else {
-	if(NULL != temp_file_name)
-	    free(temp_file_name);
-	temp_file_name = (char*)malloc(1 + strlen(tn));
-	if(NULL == temp_file_name)
-	    return (URLC_EALLOC);
-	strcpy(temp_file_name, tn);
+    if(file == NULL) {
+      if(-1 == unlink(tn)) {
+	URLC_PERROR("unlink");
+	return (URLC_EFILE);
+      }
+    } else {
+	*file = (char*)malloc(1 + strlen(tn));
+	if(NULL == *file)
+	  return (URLC_EALLOC);
+	strcpy(*file, tn);
     }
 
     return (lofd);
@@ -621,7 +608,6 @@ urlc::parse_ftp(const char* line)
 	free(pass);
 	pass = NULL;
     }
-    ftp_type='I';
     port = 21;
 
     p_collon = strchr(line, ':');
@@ -664,7 +650,6 @@ urlc::parse_ftp(const char* line)
 	p_semi += strlen("type=");
 	if((0 == p_semi[0]) || (NULL == strchr("aid", p_semi[0])))
 	    return (URLC_EPARSE); // no valid(?) type specifier
-	ftp_type = 'I'; // ## stupid, isn't it?
     }
     if(NULL == p_slash) { // no path specified
 	path = NULL;
@@ -835,7 +820,7 @@ urlc::ftp_header_interp(char* line)
    assumes buffer is has URLC_BUFLEN size.
    */
 int
-urlc::ftp_get_reply(char* buf, int* blen)
+urlc::ftp_get_reply(char* buf, int* blen, int sockfd)
 {
     if(NULL == buf) 
 	return (URLC_EEMPTY);
@@ -892,10 +877,10 @@ urlc::ftp_get_reply(char* buf, int* blen)
    returns URLC_OK on asuccess or reason.
    */
 int
-urlc::get_ftp(void)
+urlc::get_ftp(char **file)
 {
     ofd = -1; // preparing for desasters
-    sockfd = tcpip_open(host, port);
+    int sockfd = tcpip_open(host, port);
     if(0 > sockfd)
 	return (URLC_ESOCK);
 
@@ -904,7 +889,7 @@ urlc::get_ftp(void)
     int n = 0;
 
     // greetings
-    n = ftp_get_reply(buf, &blen); 
+    n = ftp_get_reply(buf, &blen,sockfd); 
     if(URLC_OK != n)
 	return (n);
 
@@ -912,7 +897,7 @@ urlc::get_ftp(void)
     n = write3(sockfd, "USER ", 5, user, strlen(user), "\r\n", 2);
     if(URLC_OK != n)
 	return (n);
-    n = ftp_get_reply(buf, &blen);
+    n = ftp_get_reply(buf, &blen,sockfd);
     if((URLC_OK != n) && (URLC_INTERM != n))
 	return (n);
 
@@ -924,7 +909,7 @@ urlc::get_ftp(void)
 	    n = writen(sockfd, "PASS \r\n", 7); // not normal!
 	if(URLC_OK != n)
 	    return (n);
-	n = ftp_get_reply(buf, &blen);
+	n = ftp_get_reply(buf, &blen,sockfd);
 	if(URLC_OK != n)
 	    return (n);
     }
@@ -950,17 +935,18 @@ urlc::get_ftp(void)
 	free(pn);
 	if(URLC_OK != n) 
 	    return (n);
-	n = ftp_get_reply(buf, &blen);
+	n = ftp_get_reply(buf, &blen,sockfd);
 	if(URLC_OK != n)
 	    return (n);
 	p = p2 + 1; // prepares for next round
     }
     
     // TYPE 
+    char ftp_type = 'I';
     n = write3(sockfd, "TYPE ", 5, &ftp_type, 1, "\r\n", 2);
     if(URLC_OK != n)
 	return (n);
-    n = ftp_get_reply(buf, &blen);
+    n = ftp_get_reply(buf, &blen,sockfd);
     if(URLC_OK != n)
 	return (n);
 
@@ -1019,14 +1005,14 @@ urlc::get_ftp(void)
     n = write3(sockfd, "PORT ", 5, port_val, strlen(port_val), "\r\n", 2);
     if(URLC_OK != n) 
 	return (URLC_ESOCK);
-    n = ftp_get_reply(buf, &blen);
+    n = ftp_get_reply(buf, &blen,sockfd);
     if(URLC_OK != n)
 	return (URLC_ERESP);
     // RETR
     n = write3(sockfd, "RETR ", 5, p, strlen(p), "\r\n", 2);
     if(URLC_OK != n)
 	return (n);
-    n = ftp_get_reply(buf, &blen);
+    n = ftp_get_reply(buf, &blen,sockfd);
     if(URLC_OK != n)
 	return (n);
 
@@ -1055,7 +1041,7 @@ urlc::get_ftp(void)
     if(-1 == fcntl(newsockfd, F_SETFL, O_NONBLOCK))
 	URLC_PERROR("fcntl");
 
-    ofd = tmp_file_open(unlink_mode);
+    ofd = tmp_file_open(file);
     if(0 > ofd)
 	return (ofd);
 
@@ -1097,7 +1083,7 @@ urlc::get_ftp(void)
     n = write3(sockfd, "QUIT ", 5, NULL, 0, NULL, 0);
     if(URLC_OK != n)
 	return (n);
-    n = ftp_get_reply(buf, &blen);
+    n = ftp_get_reply(buf, &blen,sockfd);
     if(URLC_OK != n)
 	return (URLC_ERESP); // too late, but to be consistent
     osclose(sockfd);
@@ -1211,7 +1197,7 @@ urlc::parse_http(const char* line)
    the headers in a single call.
  */
 int
-urlc::http_req(void)
+urlc::http_req(int sockfd)
 {
     int n;
     int tot_len = 0;
@@ -1313,7 +1299,7 @@ urlc::http_header_interp(char* line, int linenr)
    assumes buffer has URLC_BUFLEN size
    */
 int
-urlc::http_get_header(char* buf, int* brem, int& n)
+urlc::http_get_header(char* buf, int* brem, int& n, int sockfd)
 {
     int n1 = 0;
     char* p = buf;
@@ -1380,7 +1366,7 @@ urlc::http_get_header(char* buf, int* brem, int& n)
    returns URLC_OK on success, reason on error. 
  */
 int
-urlc::get_http(void)
+urlc::get_http(char **file)
 {
     int n = 0;
     int n2 = 0;
@@ -1388,19 +1374,19 @@ urlc::get_http(void)
     int brem  = URLC_BUFLEN;
     char buf[URLC_BUFLEN] = "";
 
-    sockfd = tcpip_open(host, port);
+    int sockfd = tcpip_open(host, port);
     if(0 > sockfd)
 	return (URLC_ESOCK);
-    n = http_req();
+    n = http_req(sockfd);
     if(URLC_OK != n)
 	return (n);
-    n = http_get_header(buf, &brem, n2);
+    n = http_get_header(buf, &brem, n2, sockfd);
     if(URLC_OK != n) {
 	ofd = -1;
 	osclose(sockfd);
 	return (n);
     }
-    ofd = tmp_file_open(unlink_mode);
+    ofd = tmp_file_open(file);
     if(0 > ofd) {
 	osclose(sockfd);
 	return (ofd);
@@ -1421,10 +1407,10 @@ urlc::get_http(void)
 	    switch(errno) {
 	    case EINTR:
 	    case EAGAIN: // == EWOULDBLOCK(?)
-		continue;
-		default:
-		    URLC_PERROR("read");
-		    th2(URLC_ESOCK);
+	      continue;
+	    default:
+	      URLC_PERROR("read");
+	      th2(URLC_ESOCK);
 	    }
 	}
     }
@@ -1457,7 +1443,7 @@ bomb:
    negative error status (URLC_*).
  */
 int
-urlc::getURL(const char* line, int unlink_m)
+urlc::getURL(const char* line, char **file)
 {
     int n = 0;
     int t = 0;
@@ -1471,17 +1457,12 @@ urlc::getURL(const char* line, int unlink_m)
 	    return (URLC_EPARSE);
 	ofd = -1;
 	
-	if(URLC_UNLINK == unlink_m)
-	    unlink_mode = URLC_UNLINK;
-	else
-	    unlink_mode = 0;
-
 	if(0 == strcmp("file:", proto)) 
 	    n = get_file();
 	if(0 == strcmp("http://", proto))
-	    n = get_http();
+	    n = get_http(file);
 	if(0 == strcmp("ftp://", proto))
-	    n = get_ftp();
+	    n = get_ftp(file);
 	/* other protocols tested here */
 	/* ##extension */
 
@@ -1506,7 +1487,7 @@ urlc::getURL(const char* line, int unlink_m)
 int
 urlc::openURL(const char* line)
 {
-    return (getURL(line, URLC_UNLINK));
+    return getURL(line, NULL);
 }
 
 
@@ -1515,11 +1496,10 @@ urlc::localizeURL(const char* line, char** fnp)
 {
     int fd = -1;
 
-    fd = getURL(line, URLC_OK);
+    fd = getURL(line,fnp);
     if(0 > fd) // some error
 	return (fd);
     osclose(fd);
-    *fnp = temp_file_name;
 
     return (URLC_OK);
 }
