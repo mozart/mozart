@@ -579,6 +579,8 @@ ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
 
 
 
+    srcdir=`cd $srcdir && pwd`
+
 
 # Make sure we can run config.sub.
 if $ac_config_sub sun4 >/dev/null 2>&1; then :
@@ -586,7 +588,7 @@ else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
 fi
 
 echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:590: checking host system type" >&5
+echo "configure:592: checking host system type" >&5
 
 host_alias=$host
 case "$host_alias" in
@@ -628,7 +630,7 @@ echo "$ac_t""$host" 1>&6
 
 
     echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:632: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:634: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -665,7 +667,7 @@ fi
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:669: checking for a BSD compatible install" >&5
+echo "configure:671: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -725,7 +727,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:729: checking for $ac_word" >&5
+echo "configure:731: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -785,7 +787,7 @@ fi
 
 
 echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:789: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:791: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -815,7 +817,7 @@ BUILDTOP=`cd .. && pwd`
 
 
 echo $ac_n "checking for --enable-contrib""... $ac_c" 1>&6
-echo "configure:819: checking for --enable-contrib" >&5
+echo "configure:821: checking for --enable-contrib" >&5
 # Check whether --enable-contrib or --disable-contrib was given.
 if test "${enable_contrib+set}" = set; then
   enableval="$enable_contrib"
@@ -828,7 +830,7 @@ if test -z "${enable_contrib}"; then
 else
     case "${enable_contrib}" in
     no)         oz_enable_contrib=;;
-    yes)        oz_enable_contrib=gdbm,regex,doc;;
+    yes)        oz_enable_contrib=gdbm,regex,doc,io;;
     *)          oz_enable_contrib=${enable_contrib};;
     esac
 fi
