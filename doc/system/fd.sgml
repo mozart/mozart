@@ -44,7 +44,7 @@ propagators.  For example, <<A+A=:B>> is equivalent to <<2*A=:B>> (for
 notation see&nbsp;sec.infix-ps.
 <p>
 The constraint store is amplified with constraints <<X::Spec>>  and
-equality between variables, <em/&eg;/ <<X=:Y>> is equivalent to <<X=Y>>.
+equality between variables, &eg;, <<X=:Y>> is equivalent to <<X=Y>>.
 
 <para><title/relation symbols/
 There are generic procedures who take
