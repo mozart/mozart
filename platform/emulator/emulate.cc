@@ -689,7 +689,7 @@ TaggedRef makeMessage(SRecordArity srecArity, TaggedRef label, TaggedRef *X)
     tt->setArg(i,X[i]);
   }
   TaggedRef ret = makeTaggedSRecord(tt);
-  //  message("makeMessage: %s\n",toC(ret));
+
   return ret;
 }
 
@@ -1070,8 +1070,9 @@ LBLdispatcher:
   Case(SETVOID)
     {
       int n = getPosIntArg(PC+1);
-      for (int i = 0; i < n; i++ ) {
+      while (n > 0) {
         *sPointer++ = e->currentUVarPrototype();
+        n--;
       }
       DISPATCH(2);
     }
