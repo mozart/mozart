@@ -1,7 +1,8 @@
-(setq debug-on-error t)
+;(setq debug-on-error t)
 
-(defvar lucid-emacs
-   (string= (substring emacs-version 0 2) "19")
+(defvar
+  lucid-emacs 
+  (string-match "Lucid" emacs-version)
   "Use Lucid-Emacs functions for highlighting for example")
 
 
