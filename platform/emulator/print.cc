@@ -504,16 +504,52 @@ PRINTLONG(OzDictionary)
   print(stream,depth+1,offset);
 }
 
-PRINT(OzLock)
+PRINT(LockLocal)
 {
   CHECKDEPTH;
-  stream << "<Lock@" << this << ">";
+  stream << "<LockLocal@" << this << ">";
 }
 
-PRINTLONG(OzLock)
+PRINTLONG(LockLocal)
 {
   CHECKDEPTHLONG;
-  stream << "<Lock@" << this << ">";
+  stream << "<LockLocal@" << this << ">";
+}
+
+PRINT(LockProxy)
+{
+  CHECKDEPTH;
+  stream << "<LockProxy@" << this << ">";
+}
+
+PRINTLONG(LockProxy)
+{
+  CHECKDEPTHLONG;
+  stream << "<LockProxy@" << this << ">";
+}
+
+PRINT(LockFrame)
+{
+  CHECKDEPTH;
+  stream << "<LockFrame@" << this << ">";
+}
+
+PRINTLONG(LockFrame)
+{
+  CHECKDEPTHLONG;
+  stream << "<LockFrame@" << this << ">";
+}
+
+PRINT(LockManager)
+{
+  CHECKDEPTH;
+  stream << "<LockManager@" << this << ">";
+}
+
+PRINTLONG(LockManager)
+{
+  CHECKDEPTHLONG;
+  stream << "<LockManager@" << this << ">";
 }
 
 PRINT(SChunk)
@@ -717,8 +753,8 @@ PRINTLONG(ConstTerm)
     switch(((Tertiary *)this)->getTertType()){
     case Te_Local:   ((CellLocal *)   this)->printLong(stream,depth,offset); break;
     case Te_Frame:   ((CellFrame *)   this)->printLong(stream,depth,offset); break;
-    case Te_Manager: ((PortManager *) this)->printLong(stream,depth,offset); break;
-    case Te_Proxy:   ((PortProxy *)   this)->printLong(stream,depth,offset); break;
+    case Te_Manager: ((CellManager *) this)->printLong(stream,depth,offset); break;
+    case Te_Proxy:   ((CellProxy *)   this)->printLong(stream,depth,offset); break;
     default:         Assert(NO);
     }
     break;
@@ -734,7 +770,15 @@ PRINTLONG(ConstTerm)
   case Co_Chunk:      ((SChunk *) this)->printLong(stream,depth,offset);      break;
   case Co_Array:      ((OzArray *) this)->printLong(stream,depth,offset);     break;
   case Co_Dictionary: ((OzDictionary *) this)->printLong(stream,depth,offset);break;
-  case Co_Lock:       ((OzLock *) this)->printLong(stream,depth,offset);break;
+  case Co_Lock:       
+    switch(((Tertiary *)this)->getTertType()){
+    case Te_Local:   ((LockLocal *)   this)->printLong(stream,depth,offset); break;
+    case Te_Frame:   ((LockFrame *)   this)->printLong(stream,depth,offset); break;
+    case Te_Manager: ((LockManager *) this)->printLong(stream,depth,offset); break;
+    case Te_Proxy:   ((LockProxy *)   this)->printLong(stream,depth,offset); break;
+    default:         Assert(NO);
+    }
+    break;
   case Co_Thread:     ((Thread *) this)->printLong(stream,depth,offset);    break;
   case Co_Builtin:    ((BuiltinTabEntry *) this)->printLong(stream,depth,offset);     break;
   default: 	      Assert(NO);
@@ -756,7 +800,7 @@ PRINT(ConstTerm)
   case Co_Chunk:       ((SChunk *) this)->print(stream,depth,offset);      break;
   case Co_Array:       ((OzArray *) this)->print(stream,depth,offset);     break;
   case Co_Dictionary:  ((OzDictionary *) this)->print(stream,depth,offset);break;
-  case Co_Lock:        ((OzLock *) this)->print(stream,depth,offset);break;
+  case Co_Lock:        ((LockLocal *) this)->print(stream,depth,offset);break;
   case Co_Thread:      ((Thread *) this)->print(stream,depth,offset);    break;
   case Co_Builtin:     ((BuiltinTabEntry *) this)->print(stream,depth,offset);     break;
   default:             Assert(NO);
