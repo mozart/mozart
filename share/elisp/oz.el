@@ -1009,9 +1009,9 @@ compiled using a default set of switches."
 		 "\\switch +threadedqueries -verbose "
 		 "-expression -runwithdebugger\n"
 		 string
-		 "\n\\popSwitches\n"))
-      (comint-send-string proc string)
-      (comint-send-string proc "\n"))
+		 "\n\\popSwitches"))
+      (comint-send-string proc string))
+    (comint-send-string proc "\n")
     (comint-send-string proc eof)))
 
 
