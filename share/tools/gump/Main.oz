@@ -28,8 +28,6 @@ local
       INCLUDEDIR = OZHOME#'/include'
    end
 
-   \insert ../../lib/compiler/FormatStrings
-
    %--------------------------------------------------------------------
    % Auxiliary Functions and Classes
    %--------------------------------------------------------------------
@@ -50,6 +48,13 @@ local
 
    %--------------------------------------------------------------------
    % Auxiliary Functions for Output
+
+   \insert ../../lib/compiler/FormatStrings
+
+   fun {SymbolToVirtualString S}
+      {FormatStringToVirtualString
+       case S of fVar(X _) then pn(X) [] fAtom(X _) then oz(X) end}
+   end
 
    \insert Output
 
