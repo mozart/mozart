@@ -107,3 +107,15 @@ lastname:       Lindblom
 firstname:      Simon
 www:            http://www.sics.se/~simon
 email:          simon@sics.se
+
+key:            Peter.VanRoy
+lastname:       Van Roy
+firstname:      Peter
+www:            http://www.info.ucl.ac.be/people/cvvanroy.html
+email:          pvr@info.ucl.ac.be
+
+key:            Per.Brand
+lastname:       Brand
+firstname:      Per
+www:            http://www.sics.se/~perbrand
+email:          perbrand@sics.se
