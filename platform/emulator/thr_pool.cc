@@ -79,73 +79,38 @@ Board * ThreadsPool::getHighestSolveDebug(void)
 
 Thread *ThreadsPool::getFirstThreadOutline()
 {
+  Assert(hiCounter>=0 || lowCounter>=0); // otherwise inline version
   /*
    * empty hiQueue
    */
   if (hiCounter < 0) {
     Assert(hiQueue.isEmpty());
-
-    Assert(lowCounter >= 0); /* other case inline version */
-
     Assert(!lowQueue.isEmpty() || !midQueue.isEmpty());
-    lowCounter--;
-    if (lowCounter < 0 || midQueue.isEmpty()) {
-      if (!lowQueue.isEmpty()) {
-	lowCounter=ozconf.midLowRatio;
-	return lowQueue.dequeue();
-      } else {
-	lowCounter=-1;
-	return midQueue.dequeue();
-      }
+
+lowMid:
+    if (lowCounter == 0 || midQueue.isEmpty()) {
+      Assert(!lowQueue.isEmpty());
+      Thread *th = lowQueue.dequeue();
+      lowCounter = lowQueue.isEmpty() ? -1 : ozconf.midLowRatio;
+      return th;
     }
+    lowCounter--;
     return midQueue.dequeue();
   }
 
   /*
    * use hiQueue, else mid/low
    */
-  hiCounter--;
-  if (hiCounter >= 0) {
-    if (!hiQueue.isEmpty()) { return hiQueue.dequeue(); }
-    hiCounter = -1;
-    goto mid;
+  if (hiCounter > 0 || (lowCounter < 0 && midQueue.isEmpty())) {
+    Thread *th = hiQueue.dequeue();
+    hiCounter = hiQueue.isEmpty() ? -1 : hiCounter-1;
+    return th;
   }
-
-  /*
-   * use midQueue, else hiQueue
-   */
+  Assert(hiCounter==0);
   hiCounter=ozconf.hiMidRatio;
-mid:
-  if (lowCounter < 0) {
-    return !midQueue.isEmpty() ? midQueue.dequeue() : hiQueue.dequeue();
-  }
 
-  /*
-   * use midQueue, else lowQueue, else hiQueue
-   */
-  lowCounter--;
-  if (lowCounter >= 0) {
-    if (!midQueue.isEmpty()) return midQueue.dequeue();
-
-    if (!lowQueue.isEmpty()) {
-      lowCounter = ozconf.midLowRatio;
-      return lowQueue.dequeue();
-    } else {
-      lowCounter = -1;
-      return hiQueue.dequeue();
-    }
-  }
-
-  /*
-   * use lowQueue, else midQueue, else hiQueue
-   */
-  if (!lowQueue.isEmpty()) {
-    lowCounter = ozconf.midLowRatio;
-    return lowQueue.dequeue();
-  } else {
-    lowCounter = -1;
-    return !midQueue.isEmpty() ? midQueue.dequeue() : hiQueue.dequeue();
-  }
+  Assert(lowCounter>=0 || !midQueue.isEmpty());
+  goto lowMid;
 }
 
 void ThreadsPool::scheduleThread(Thread *th,int pri)
@@ -166,11 +131,15 @@ void ThreadsPool::scheduleThread(Thread *th,int pri)
 Bool ThreadsPool::threadQueuesAreEmptyOutline()
 {
   if (!midQueue.isEmpty()) return NO;
-  if (hiCounter > 0) {
+  if (hiCounter >= 0) {
     if (!hiQueue.isEmpty()) return NO;
+  } else {
+    Assert(hiQueue.isEmpty());
   }
-  if (lowCounter > 0) {
+  if (lowCounter >= 0) {
     if (!lowQueue.isEmpty()) return NO;
+  } else {
+    Assert(lowQueue.isEmpty());
   }
   return OK;
 }
