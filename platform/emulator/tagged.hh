@@ -62,7 +62,23 @@ enum TypeOfTerm {
 //  4 = 0100 unusable /
 };
 
-extern char * TypeOfTermString[];
+extern char *TypeOfTermString[];
+
+/*
+ * We use 4 bits for tags --> adress space is 2^28 == 256MB
+ *
+ * We can do better, if you define
+ *     #define LARGEADRESSES
+ *
+ * if the value part of a TaggRef contains a pointer (this holds for all
+ * except small ints , than it will be word aligned,
+ * i.e. its two lower bits are 00
+ * --> makeTaggedRefs shifts only up by 2 bits
+ * --> tagValueOf shifts down by 2 bits AND zeros the two lowest bits
+ *
+ */
+
+#define LARGEADRESSES
 
 // ---------------------------------------------------------------------------
 // --- TaggedRef: CLASS / BASIC ACCESS FUNCTIONS
@@ -72,9 +88,6 @@ typedef TaggedRef *TaggedRefPtr;
 
 const int tagSize = 4;
 const int tagMask   = 0xF;
-
-/* we loose 4 bits for tags */
-#define maxPointer TaggedToPointer((TaggedRef)~0 >> tagSize)
 
 
 // ------------------------------------------------------
@@ -102,14 +115,24 @@ inline
 void *tagValueOf(TaggedRef ref)
 {
   GCDEBUG(ref);
+#ifdef LARGEADRESSES
+  return TaggedToPointer((ref >> (tagSize-2))&~3);
+#else
   return TaggedToPointer(ref >> tagSize);
+#endif
 }
 
 inline
 TaggedRef makeTaggedRef(TypeOfTerm tag, int32 i)
 {
+#ifdef LARGEADRESSES
+  Assert((i&3) == 0);
+  return (i << (tagSize-2)) | tag;
+#else
   return (i << tagSize) | tag;
+#endif
 }
+
 
 inline
 TaggedRef makeTaggedRef(TypeOfTerm tag, void *ptr)
@@ -498,7 +521,13 @@ TaggedRef makeTaggedLiteral(Literal *s)
 inline
 TaggedRef makeTaggedSmallInt(int32 s)
 {
+#ifdef LARGEADRESSES
+  /* small ints are the only TaggedRefs that do not
+   * contain a pointer in the value part */
+  return (s << tagSize) | SMALLINT;
+#else
   return makeTaggedRef(SMALLINT,(void*)s);
+#endif
 }
 
 inline
@@ -574,13 +603,15 @@ TaggedRef *newTaggedCVar(GenCVariable *c) {
 // --- TaggedRef: conversion: tagged2<Type>
 
 
-// this function is now obsolete, the call of tagValueOf cannot be optimized
-//   if the tag is known
 inline
-void *tagValueOf(TypeOfTerm /* tag */, TaggedRef ref)
+void *tagValueOf(TypeOfTerm tag, TaggedRef ref)
 {
   GCDEBUG(ref);
+#ifdef LARGEADRESSES
+  return TaggedToPointer((ref>>(tagSize-2)) - (tag>>2));
+#else
   return tagValueOf(ref);
+#endif
 }
 
 #define _tagged2Ref(ref) ((TaggedRef *) ToPointer(ref))
