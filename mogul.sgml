@@ -33,6 +33,9 @@
 	  categories</ref.extern></td>
 	  </tr>
 	  <tr>
+	    <td><ref.extern to="info/byauthor.html">List by author</ref.extern></td>
+	  </tr>
+	  <tr>
 	    <td><ref.extern to="pkg/">Archive of package distributions</ref.extern></td>
 	  </tr>
 	  <tr>
