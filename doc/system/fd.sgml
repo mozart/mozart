@@ -772,7 +772,7 @@ fail even if <<A>> is not determined.
 
 <entry>
 <index class=module/FD<and>distinctB/
-<<distinct>>
+<<distinctB>>
 <synopsis>
 <<<
 {FD.distinctB ?*{Dv}}
@@ -787,7 +787,7 @@ described in <ptr to=puget.98>.
 
 <entry>
 <index class=module/FD<and>distinctD/
-<<distinct>>
+<<distinctD>>
 <synopsis>
 <<<
 {FD.distinctD ?*{Dv}}
