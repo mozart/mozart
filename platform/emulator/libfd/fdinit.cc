@@ -38,6 +38,7 @@
 #include "sumabs.hh"
 #include "sumd.hh"
 #include "distribute.hh"
+#include "taskoverlap.hh"
 
 void fdp_init(void) 
 {
