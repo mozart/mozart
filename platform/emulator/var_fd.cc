@@ -37,6 +37,10 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
       if (! varIsLocal) addSuspension(new Suspension(am.currentBoard));
 
       doBindAndTrail(var, vPtr, term, varIsLocal);
+
+      LOCAL_PROPAGATION(if (localPropStore.isEnabled)
+                      return localPropStore.do_propagation());
+
       return TRUE;
     }
   case CVAR:
@@ -65,7 +69,8 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
               TaggedRef int_term = newSmallInt(intsct.singl());
               propagate(var, left_dom, int_term, TRUE);
               termVar->propagate(term, right_dom, int_term, TRUE);
-              doBind(vPtr, int_term);
+              doBind(tPtr, int_term);
+              doBind(vPtr, TaggedRef(tPtr));
             } else {
               termVar->setDom(intsct);
               propagate(var, left_dom, TaggedRef(tPtr), TRUE);
@@ -78,7 +83,8 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
               TaggedRef int_var = newSmallInt(intsct.singl());
               termVar->propagate(term, right_dom, int_var, TRUE);
               propagate(var, left_dom, int_var, TRUE);
-              doBind(tPtr, int_var);
+              doBind(vPtr, int_var);
+              doBind(tPtr, TaggedRef(vPtr));
             } else {
               setDom(intsct);
               termVar->propagate(term, right_dom, TaggedRef(vPtr), TRUE);
@@ -97,7 +103,8 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
               termVar->propagate(term, right_dom, int_var, TRUE);
               propagate(var, left_dom, int_var, TRUE);
               termVar->addSuspension(new Suspension(am.currentBoard));
-              doBindAndTrail(term, tPtr, int_var);
+              doBind(vPtr, int_var);
+              doBindAndTrail(term, tPtr, TaggedRef(vPtr));
             } else {
               setDom(intsct);
               termVar->propagate(term, right_dom, TaggedRef(vPtr), TRUE);
@@ -120,7 +127,8 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
               propagate(var, left_dom, int_term, TRUE);
               termVar->propagate(term, right_dom, int_term, TRUE);
               addSuspension(new Suspension(am.currentBoard));
-              doBindAndTrail(var, vPtr, int_term);
+              doBind(tPtr, int_term);
+              doBindAndTrail(var, vPtr, TaggedRef(tPtr));
             } else {
               termVar->setDom(intsct);
               propagate(var, left_dom, TaggedRef(tPtr), TRUE);
@@ -143,7 +151,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
             propagate(var, left_dom, int_val, TRUE);
             termVar->propagate(term, right_dom, int_val, TRUE);
             doBindAndTrail(var, vPtr, int_val);
-            doBindAndTrail(term, tPtr, int_val);
+            doBindAndTrail(term, tPtr, TaggedRef(vPtr));
           } else {
             TaggedRef pn = tagged2CVar(var)->getName();
             TaggedRef * var_val = newTaggedCVar(new GenFDVariable(intsct, pn));
@@ -161,6 +169,8 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
         error("unexpected case in unifyFD");
         break;
       } // switch
+      LOCAL_PROPAGATION(if (localPropStore.isEnabled)
+                        return localPropStore.do_propagation());
       return TRUE;
     }
   default:
