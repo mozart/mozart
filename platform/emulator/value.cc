@@ -628,44 +628,6 @@ TaggedRef insertlist(TaggedRef ins, TaggedRef old) {
   return old;
 }
 
-inline
-void swap(TaggedRef** a, TaggedRef** b) 
-{
-  register TaggedRef aux = **a;
-  **a = **b;
-  **b = aux;
-}
-
-static
-void quicksort(TaggedRef** first, TaggedRef** last) 
-{
-  register TaggedRef** i;
-  register TaggedRef** j;
-
-  if (first >= last)
-    return;
-
-  /* use middle element as pivot --> much better for sorted inputs */
-  TaggedRef **middle = first + (last-first)/2;
-  swap(first,middle);
-
-  for (i = first, j = last; ; j--) {
-    while (i != j && featureCmp(**i, **j) <= 0)
-      j--;
-    if (i == j)
-      break;
-    swap(i, j);
-    do
-      i++;
-    while (i != j && featureCmp(**i, **j) <= 0);
-    if (i == j)
-      break;
-    swap(i, j);
-  } // for
-  quicksort(first, i-1);
-  quicksort(i+1, last);
-}
-
 //
 // 'list' must be packed;
 Bool isSorted(TaggedRef list)
