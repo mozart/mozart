@@ -194,7 +194,7 @@ ProgramCounter CodeArea::printDef(ProgramCounter PC,FILE *out)
 }
 
 TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
-                              int frameId, RefsArray Y, Abstraction *G)
+                              int frameId, RefsArray Y, Abstraction *CAP)
 {
   Reg reg;
   int next;
@@ -215,7 +215,7 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
   int iline = smallIntValue(line);
   pairlist =
     cons(OZ_pairAI("time",findTimeStamp(PC)),
-         cons(OZ_pairA("name",predName),
+         cons(OZ_pairA("data",makeTaggedConst(CAP)),
               cons(OZ_pairA("file",file),
                    cons(OZ_pairAI("line",iline < 0? -iline: iline),
                         cons(OZ_pairAI("PC",(int)PC),
@@ -225,13 +225,13 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
   if (frameId != -1)
     pairlist = cons(OZ_pairAI("frameID",frameId),pairlist);
   else
-    pairlist = cons(OZ_pairA("vars",getFrameVariables(PC,Y,G)),pairlist);
+    pairlist = cons(OZ_pairA("vars",getFrameVariables(PC,Y,CAP)),pairlist);
 
   return OZ_recordInit(OZ_atom("entry"), pairlist);
 }
 
 TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
-                                      RefsArray Y, Abstraction *G) {
+                                      RefsArray Y, Abstraction *CAP) {
   TaggedRef locals = nil();
   TaggedRef globals = nil();
 
@@ -251,12 +251,12 @@ TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
     }
     locals = reverseC(locals);
 
-    int gsize=G->getPred()->getGSize();
+    int gsize=CAP->getPred()->getGSize();
     if (gsize>0) {
       for (int i=0; getOpcode(aux) == GLOBALVARNAME; i++) {
         TaggedRef aux1 = getLiteralArg(aux+1);
         if (!literalEq(aux1, AtomEmpty)) {
-          globals = cons(OZ_mkTupleC("#", 2, aux1, G->getG(i)), globals);
+          globals = cons(OZ_mkTupleC("#", 2, aux1, CAP->getG(i)), globals);
         }
         aux += sizeOf(getOpcode(aux));
       }
