@@ -217,7 +217,8 @@ Bool GenHashTable::htSub(int bigIndex,GenHashNode *cur){
 void GenHashTable::deleteFirst(GenHashNode *cur){
   GenHashNode *next=cur->next;
   if(next==NULL){
-    cur->makeEmpty();}
+    cur->makeEmpty();
+    return;}
   cur->copyFrom(next);
   manager->deleteGenHashNode(next);}
 
