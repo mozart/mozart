@@ -7,8 +7,7 @@ import
    Global(fileMftPkl    : FILEMFTPKL
 	  localDB       : LOCALDB
 	  args          : Args
-	  dirPrefix     : DirPrefix
-	  pathLocalDB   : PATHLOCALDB)
+	  dirPrefix     : DirPrefix)
    Application(exit)
    System(showInfo:Print show:Show)
    Pickle(load save)
@@ -34,15 +33,14 @@ define
 	 %% cross checks with the informations of the local installation is done here
 	 %%
 	 if {Not Force} then
-	    for Entry in LOCALDB do
-	       if Entry.id==PInfo.id then
-		  raise ok(alreadyinstalled(loc:Entry pkg:PInfo)) end
-	       else
-		  for F in Entry.filelist do
-		     for E in PInfo.filelist do
-			if E==F then
-			   raise ok(nameclash(name:E loc:Entry pkg:PInfo)) end
-			end
+	    if {LocalDB member(PInfo.id $)} then
+	       raise ok(alreadyinstalled(loc:Entry pkg:PInfo)) end
+	    end
+	    for Entry in {LocalDB items($)} do
+	       for F in Entry.filelist do
+		  for E in PInfo.filelist do
+		     if E==F then
+			raise ok(nameclash(name:E loc:Entry pkg:PInfo)) end
 		     end
 		  end
 	       end
@@ -61,28 +59,11 @@ define
 	 local
 	    ToSave={Record.adjoin
 		       {Record.adjoinAt PInfo lsla PLS}
-		       ipackage}
-	    |{List.filter LOCALDB
-	      fun{$ Entry}
-		 Entry.id\=PInfo.id %% forcing an install keeps only one version
-	      end}
-	    {Show ToSave}
-	    File={PATHLOCALDB toString($)}
-	    {Show {String.toAtom File}}
+		    ipackage}
 	 in
-	    {Pickle.save ToSave File}
+	    {LocalDB put(PInfo.id ToSave)}
+	    {LocalDB save}
 	 end
-
-	 
-%	 {Pickle.save {Record.adjoin
-%		       {Record.adjoinAt PInfo lsla PLS}
-%		       ipackage}
-%	  |{List.filter LOCALDB
-%	    fun{$ Entry}
-%	       Entry.id\=PInfo.id %% forcing an install keeps only one version
-%	   end}
-%	  {PATHLOCALDB toString($)}}
-	 %% result
 	 success(pkg:PInfo)
       catch ok(E) then E
       finally
