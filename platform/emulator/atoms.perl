@@ -208,7 +208,9 @@
 	  ( NameGroupVoid,     "group(void)"),
 	  ( NameNonExportable, "nonExportable"),
 
-	  
+	  # for marking uninitialized Y registers
+	  ( NameVoidRegister,  "VoidRegister" ),
+
           # needed for instances: methods
 	  ( NameOoMeth,        "ooMeth"),
 	  ( NameOoFastMeth,    "ooFastMeth"),
