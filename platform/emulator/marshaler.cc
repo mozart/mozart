@@ -432,36 +432,12 @@ GName *unmarshalGName(TaggedRef *ret, MsgBuffer *bs)
     if (ret) *ret = aux; // ATTENTION
     return 0;
   }
-  GName *gn=new GName(gname);
-  bs->gnameMark(gn);
-  return gn;
+  return new GName(gname);
 }
 
 /* *********************************************************************/
 /*   SECTION 8: URLs  marshaling/unmarshaling                          */
 /* *********************************************************************/
-
-void marshalURL(GName *gname, TaggedRef t, MsgBuffer *bs) 
-{
-  PD((MARSHAL,"URL %s",toC(t)));
-  marshalDIF(bs,DIF_URL);
-  marshalGName(gname,bs);
-  Assert(isAtom(t));
-  marshalTerm(t,bs);
-  bs->addURL(t);
-}
-
-Bool checkURL(GName *gname, MsgBuffer *bs) 
-{
-  TaggedRef t = gname->getURL();
-  if (t) {
-    if(bs->saveAnyway(t)) {return NO;}
-    marshalURL(gname,t,bs);
-    return OK;
-  }
-  bs->gnameMark(gname);
-  return NO;
-}
 
 GName *getGName(TaggedRef t)
 {
@@ -595,7 +571,6 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       PD((MARSHAL,"chunk"));
       SChunk *ch=(SChunk *) t;
       GName *gname=ch->getGName();
-      if (checkURL(gname,bs)) return;
       marshalDIF(bs,DIF_CHUNK);
       marshalGName(gname,bs);
       trailCycle(t->getRef(),bs,4);
@@ -607,7 +582,6 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       PD((MARSHAL,"class"));
       ObjectClass *cl = (ObjectClass*) t;
       cl->globalize();
-      if (checkURL(cl->getGName(),bs)) return;
       marshalClass(cl,bs);
       return;
     }
@@ -616,7 +590,6 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       PD((MARSHAL,"abstraction"));
       Abstraction *pp=(Abstraction *) t;
       GName *gname=pp->getGName();
-      if (checkURL(gname,bs)) return;
 
       marshalDIF(bs,DIF_PROC);
       marshalGName(gname,bs);
@@ -1098,21 +1071,10 @@ loop:
 
   case DIF_URL:
     {
-      GName *gname=unmarshalGName(ret,bs);
-      TaggedRef url=unmarshalTerm(bs);
-
-      PD((UNMARSHAL,"url: %s",toC(url)));
-      if (gname) {
-	PerdioVar *pvar = new PerdioVar(gname,url);
-	
-	*ret = makeTaggedRef(newTaggedCVar(pvar));
-	addGName(gname,*ret);
-      } else {
-	PD((UNMARSHAL,"url found"));
-      }
+      warning("support no longer supported");
+      *ret = oz_newVariable();
       return;
     }
-
   case DIF_CHUNK:
     {
       PD((UNMARSHAL,"chunk"));
@@ -1130,7 +1092,7 @@ loop:
 	// mm2: share the follwing code DIF_CHUNK, DIF_CLASS, DIF_PROC!
 	DEREF(*ret,chPtr,_1);
 	PerdioVar *pv;
-	if (!isPerdioVar(*ret) || !(pv=tagged2PerdioVar(*ret))->isURL()) {
+	if (!isPerdioVar(*ret)) {
 	  warning("mm2: chunk gname mismatch");
 	  return;
 	}
@@ -1163,7 +1125,7 @@ loop:
       } else if (!isClass(deref(*ret))) {
 	DEREF(*ret,chPtr,_1);
 	PerdioVar *pv;
-	if (!isPerdioVar(*ret) || !(pv=tagged2PerdioVar(*ret))->isURL()) {
+	if (!isPerdioVar(*ret)) {
 	  warning("mm2: class gname mismatch");
 	  return;
 	}
@@ -1208,7 +1170,7 @@ loop:
       } else if (!isAbstraction(deref(*ret))) {
 	DEREF(*ret,chPtr,_1);
 	PerdioVar *pv;
-	if (!isPerdioVar(*ret) || !(pv=tagged2PerdioVar(*ret))->isURL()) {
+	if (!isPerdioVar(*ret)) {
 	  warning("mm2: proc gname mismatch");
 	  return;
 	}
@@ -1308,15 +1270,10 @@ void marshalVariable(PerdioVar *pvar, MsgBuffer *bs)
     return;
   }
 
-  if (pvar->isObjectGName()) {
-    PD((MARSHAL,"var objectproxy"));
-    marshalObject(pvar->getObject(),bs,pvar->getGNameClass());
-    return;
-  } 
+  Assert(pvar->isObjectGName());
 
-  Assert(pvar->isURL());
-  PD((MARSHAL,"var url"));
-  marshalURL(pvar->getGName(),pvar->getURL(),bs);
+  PD((MARSHAL,"var objectproxy"));
+  marshalObject(pvar->getObject(),bs,pvar->getGNameClass());
   return;
 }
 
