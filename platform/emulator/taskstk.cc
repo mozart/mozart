@@ -7,19 +7,6 @@
   State: $State$
 
   ------------------------------------------------------------------------
-
-  exported variables/classes: process task stack class
-
-  exported procedures:
-
-  ------------------------------------------------------------------------
-
-  internal static variables:
-
-  internal procedures:
-
-  ------------------------------------------------------------------------
-
 */
 
 #if defined(__GNUC__) && !defined(NOPRAGMA)
