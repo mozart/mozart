@@ -435,7 +435,7 @@ an entity is no longer referenced.
 Mozart implements an efficient distributed garbage collection
 algorithm that reclaims all unused entities
 except those that form a cycle of references
-with at least two different owner sites.
+on at least two different owner sites.
 For example, if two sites each own an object
 that references the other, then they will
 not be reclaimed.
