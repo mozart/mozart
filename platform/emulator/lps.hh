@@ -81,6 +81,7 @@ public:
   }
   int getSize () { return (size); }
   void printDebug ();
+  void printDebugLong ();
 };
 
 /*
