@@ -13,16 +13,10 @@ als erfolgreich bestaetigt wird, obwohl es (im aktuell gefeedeten Code)
 gar nicht geklappt hat.
 
 Thu Oct 23 00:27:38 MET DST 1997
-- `ooNew` faelschlicherweise auf Stack (fixen im Compiler!)
-- action 'step' auf Prozeduren _ohne_ Steppunkte sollte nichtsdestotrotz
-  einen Step-Punkt generieren (Proz.-Ein- und -Austritt).
 - renaming Debugger --> Wanzenentnehmer oder Entwanznehmer
 
 Thu Oct 23 01:01:01 MET DST 1997
 optionale alphabetische Sortierung des Environments
-
-Thu Oct 23 12:09:18 MET DST 1997
-reset optional auch ohne kill anbieten
 
 Mon Oct 27 17:51:41 MET 1997
 unmarshalling of code does not preserve breakpoint information
@@ -40,12 +34,9 @@ Mon Nov 24 20:17:34 CET 1997
 rebuildCurrentStack sollte aktuell selektierten stackframe nicht veraendern
 (statt dessen wird zum obersten frame zurueckgesprungen)
 
-Mon Nov 24 20:24:37 CET 1997
-Left und Right selektieren "neuen" Thread, wenn nur einer da ist...
-
 Tue Dec  9 16:19:49 CET 1997
 bruni special: jaaaa...
-- step to next line
+- action "step to next line"
 - interpreter in status line
 - anforderungen fuer inspector, um embedded benutzen zu koennen
 - gewichte festlegen (leif meint, interaktiv) fuer die subwindows
@@ -55,6 +46,9 @@ bruni special: jaaaa...
 Tue Dec  9 16:20:41 CET 1997
 Leif special: nicht gerade special
 - alternative ausdruecke in den auswertungsbaum einhaengen
-- das wars fuer Leif.
 - fuer printnamen und werte getrennte fenster, um resizing gracefully handlen
   zu koennen (frei aus dem englischen transkribiert von bruni)
+
+Sun Jan  4 15:29:19 MET 1998
+Verteiltes Debuggen:
+  Die Fileinformation muss den Hostnamen beinhalten
