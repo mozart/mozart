@@ -1130,12 +1130,6 @@ public:
  *=================================================================== */
 
 enum TypeOfExtendedConst {
-  // all entries should be of the form
-  // X_Co_Foo = (n<<4),
-  // we offset by 4 because that is the width of TypeOfConst
-  // we perform this offset at the point of definition so
-  // that it won't be necessary at the point of use, which
-  // should speed things up a little
 };
 
 class ExtendedConst: public ConstTerm {
