@@ -1283,6 +1283,18 @@ TaggedRef osDlopen(char *filename, OZ_Term& ret)
       err=oz_int(GetLastError());
       goto raise;
     }
+
+    FARPROC linkff = (FARPROC) osDlsym(handle, "OZ_linkFF");
+    if (linkff==0) {
+      OZ_warning("OZ_linkFF not found, maybe not exported from DLL?");
+      goto raise;
+    }
+    extern void **ffuns;
+    if (linkff(OZVERSION,ffuns)==0) {
+      OZ_warning("call of 'OZ_linkFF' failed, maybe recompilation needed?");
+      goto raise;
+    }
+
     ret = OZ_makeForeignPointer(handle);
   }
 #endif
