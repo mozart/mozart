@@ -1936,6 +1936,7 @@ LBLdispatcher:
 
   Case(SHALLOWTEST1)
     {
+      COUNT(inlinecalls);
       InlineRel1 rel = (InlineRel1)GetBI(PC+1)->getInlineFun();
       Assert(rel != NULL);
 
@@ -1967,6 +1968,7 @@ LBLdispatcher:
 
   Case(SHALLOWTEST2)
     {
+      COUNT(inlinecalls);
       InlineRel2 rel = (InlineRel2)GetBI(PC+1)->getInlineFun();
       Assert(rel != NULL);
 
