@@ -121,62 +121,6 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
     return makeTaggedNULL();
   }
 
-  if (PC == C_CFUNC_CONT_Ptr) {
-    // Alas, this frame is not pushed for builtins called as
-    // inline-builtins (inlineFun, inlineRel), so if the examined
-    // code was not executed with debug information and in debugmode,
-    // it will not be shown on the stack.
-    Frame *auxframe = frame, *lastframe;
-    GetFrame(auxframe,auxPC,auxY,auxG);
-    while (isUninterestingTask(auxPC))
-      GetFrameNoDecl(auxframe,auxPC,auxY,auxG);
-    if (auxPC == C_EMPTY_STACK) {
-      frame = NULL;
-      return makeTaggedNULL();
-    }
-    // now we also ignore the frame with the next normal continuation,
-    // to see whether it is followed by a debug frame:
-    lastframe = auxframe;
-    GetFrameNoDecl(auxframe,auxPC,auxY,auxG);
-    while (isUninterestingTask(auxPC)) {
-      lastframe = auxframe;
-      GetFrameNoDecl(auxframe,auxPC,auxY,auxG);
-    }
-    if (auxPC == C_EMPTY_STACK) {
-      frame = NULL;
-      return makeTaggedNULL();
-    } else if (auxPC == C_DEBUG_CONT_Ptr) {
-      // the OzDebug in the next stack frame has more to tell than
-      // this builtin-application frame:
-      frame = lastframe;
-      return makeTaggedNULL();
-    } else {
-      frame = auxframe;
-
-      RefsArray X = (RefsArray) G;
-      TaggedRef args = oz_nil();
-      if (X) {
-        for (int i = getRefsArraySize(X) - 1; i >= 0; i--)
-          args = oz_cons(X[i],args);
-      }
-
-      TaggedRef pairlist =
-        oz_cons(OZ_pairA("args",args),
-             oz_cons(OZ_pairA("kind",OZ_atom("call")),
-                  oz_cons(OZ_pairA("thr",oz_thread(thread)),
-                       oz_cons(OZ_pairAI("time",CodeArea::findTimeStamp(PC)),
-                            oz_cons(OZ_pairA("origin",OZ_atom("builtinFrame")),
-                                 oz_nil())))));
-      if (frameId != -1)
-        pairlist = oz_cons(OZ_pairAI("frameID",frameId),pairlist);
-
-      pairlist = oz_cons(OZ_pairA("data", makeTaggedConst(cfunc2Builtin((void *) Y))),
-                         pairlist);
-
-      return OZ_recordInit(OZ_atom("entry"), pairlist);
-    }
-  }
-
   ProgramCounter definitionPC = CodeArea::definitionStart(PC);
   if (definitionPC == NOCODE)
     return makeTaggedNULL();

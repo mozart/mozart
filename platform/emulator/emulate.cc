@@ -3035,53 +3035,6 @@ Case(GETVOID)
       goto LBLpopTaskNoPreempt;
     }
 
-  Case(TASKCFUNCONT)
-     {
-       OZ_CFun biFun = (OZ_CFun) (void*) CAP;
-       RefsArray tmpX = (RefsArray) Y;
-       CAP = 0;
-       Y = 0;
-       if (tmpX != NULL) {
-         predArity = getRefsArraySize(tmpX);
-         int i = predArity;
-         while (--i >= 0) {
-           XREGS[i] = tmpX[i];
-         }
-       } else {
-         predArity = 0;
-       }
-       disposeRefsArray(tmpX);
-
-       DebugTrace(ozd_trace(cfunc2Builtin((void *) biFun)->getPrintName()));
-
-       switch (biFun(OZ_ID_LOC->getMapping())) {
-       case PROCEED:       goto LBLpopTask;
-       case FAILED:        HF_BI(cfunc2Builtin((void *) biFun),OZ_ID_LOC);
-       case RAISE:
-         if (e->exception.debug)
-           set_exception_info_call(cfunc2Builtin((void *) biFun),OZ_ID_LOC);
-         RAISE_THREAD_NO_PC;
-       case BI_TYPE_ERROR:
-         RAISE_TYPE(cfunc2Builtin((void *) biFun),OZ_ID_LOC);
-
-       case BI_REPLACEBICALL:
-         PC = NOCODE;
-         Assert(!e->isEmptyPreparedCalls());
-         goto LBLreplaceBICall;
-
-       case SUSPEND:
-         CTT->pushCFun(biFun,XREGS,predArity);
-         SUSPENDONVARLIST;
-
-      case BI_PREEMPT:
-        return T_PREEMPT;
-
-       case SLEEP:
-       default:
-         Assert(0);
-       }
-     }
-
   Case(OZERROR)
     {
       return T_ERROR;

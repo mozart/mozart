@@ -252,7 +252,6 @@ dnl   Instruction for efficiently interpreting different tasks on the stack;
 dnl   only used internally by the emulator
 
 instruction(taskXCont)
-instruction(taskCFunCont)
 instruction(taskDebugCont)
 instruction(taskCallCont)
 instruction(taskLock)

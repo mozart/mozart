@@ -1451,8 +1451,6 @@ TaskStack * TaskStack::_cac(void) {
       *CAP = makeTaggedMiscp((void *)
                              _cacRefsArray((RefsArray)
                                            tagValueOf(*CAP)));
-    } else if (PC == C_CFUNC_CONT_Ptr) {
-      *Y = _cacRefsArray(*Y);
     } else { // usual continuation
       *Y   = _cacRefsArray(*Y);
       oz_cacTerm(*CAP, *CAP);

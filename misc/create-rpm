@@ -62,7 +62,7 @@ setenv PATH ${OZHOME}/bin:\${PATH}
 EOF
 
 chmod a+x oz.sh oz.csh
-tar cf - oz.csh oz.sh | bzip2 -9 -c > ${RPMSRC}/mozart-profiles.tar.bz2
+tar cf - oz.csh oz.sh | bzip2 -9 > ${RPMSRC}/mozart-profiles.tar.bz2
 rm -f oz.sh oz.csh
 
 
@@ -157,9 +157,9 @@ Group: Development/Languages
 Packager: Christian Schulte <schulte@ps.uni-sb.de>
 Icon: mozart.xpm
 
-Source0: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/mozart-${VERSION}-src.tar.gz
-Source1: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/mozart-${VERSION}-doc.tar.gz
-Source2: mozart-profiles.tar.gz
+Source0: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/mozart-${VERSION}-src.tar.bz2
+Source1: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/mozart-${VERSION}-doc.tar.bz2
+Source2: mozart-profiles.tar.bz2
 
 BuildRoot: /var/tmp/mozart-${VERSION}
 
@@ -204,7 +204,7 @@ rm -rf \$RPM_BUILD_DIR/mozart-${VERSION}
 %setup -c -D -T -a 0
 mkdir tmp-doc
 cd tmp-doc
-gzip -dc \$RPM_SOURCE_DIR/mozart-${VERSION}-doc.tar.gz | tar xf -
+bzip2 < \$RPM_SOURCE_DIR/mozart-${VERSION}-doc.tar.bz2 | tar xf -
 mv mozart/doc ..
 cd ..
 chown -R root .

@@ -1924,14 +1924,9 @@ OZ_Term OZ_makeException(OZ_Term cat,OZ_Term key,char*label,int arity,...)
  * threads
  * -----------------------------------------------------------------*/
 
-void OZ_pushCFun(OZ_Thread thr,OZ_CFun fun,OZ_Term *args,int arity)
+void OZ_pushCall(OZ_Thread thr,OZ_Term proc,OZ_Term *args,int arity)
 {
-  ((Thread *)thr)->pushCFun(fun, args, arity);
-}
-
-void OZ_pushCall(OZ_Thread thr,OZ_Term fun,OZ_Term *args,int arity)
-{
-  ((Thread *)thr)->pushCall(fun, args, arity);
+  ((Thread *)thr)->pushCall(proc, args, arity);
 }
 
 OZ_Thread OZ_newSuspendedThread()
@@ -1948,10 +1943,10 @@ OZ_Thread OZ_newSuspendedThread()
   return (OZ_Thread) oz_newThreadSuspended();
 }
 
-OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
+OZ_Thread OZ_makeSuspendedThread(OZ_Term proc,OZ_Term *args,int arity)
 {
   Thread *thr=oz_newThreadSuspended();
-  thr->pushCFun(fun,args,arity);
+  thr->pushCall(proc,args,arity);
   return (OZ_Thread) thr;
 }
 
@@ -1960,10 +1955,10 @@ OZ_Thread OZ_newRunnableThread()
   return (OZ_Thread) oz_newThread();
 }
 
-void OZ_makeRunnableThread(OZ_CFun fun, OZ_Term *args,int arity)
+void OZ_makeRunnableThread(OZ_Term proc, OZ_Term *args,int arity)
 {
   Thread *thr = oz_newThread();
-  thr->pushCFun(fun,args,arity);
+  thr->pushCall(proc,args,arity);
 }
 
 void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)

@@ -911,7 +911,6 @@ OZ_BI_define(BIthreadIs,1,1)
 /*
  * raise exception on thread
  */
-OZ_BI_proto(BIraise);
 
 static void threadRaise(Thread *th,OZ_Term E) {
   Assert(oz_currentThread() != th);
@@ -919,7 +918,7 @@ static void threadRaise(Thread *th,OZ_Term E) {
   RefsArray args=allocateRefsArray(1, NO);
   args[0]=E;
 
-  th->pushCFun(BIraise, args, 1);
+  th->pushCall(BI_raise, args, 1);
 
   th->unsetStop();
 

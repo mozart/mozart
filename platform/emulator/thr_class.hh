@@ -125,9 +125,6 @@ public:
   void pushCallNoCopy(TaggedRef pred, RefsArray  x) {
     taskStack->pushCallNoCopy(pred, x);
   }
-  void pushCFun(OZ_CFun f, RefsArray  x, int n) {
-    taskStack->pushCFun(f, x, n);
-  }
 
   void pushCatch() {
     setCatch();

@@ -331,7 +331,6 @@ ProgramCounter CodeArea::definitionEnd(ProgramCounter PC)
     case ENDDEFINITION:
       return PC;
     case TASKXCONT:
-    case TASKCFUNCONT:
     case TASKDEBUGCONT:
     case TASKCALLCONT:
     case TASKLOCK:
@@ -461,7 +460,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case PROFILEPROC:
     case POPEX:
     case TASKXCONT:
-    case TASKCFUNCONT:
     case TASKDEBUGCONT:
     case TASKCALLCONT:
     case TASKLOCK:
@@ -1125,7 +1123,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 
 ProgramCounter
   C_XCONT_Ptr,
-  C_CFUNC_CONT_Ptr,
   C_DEBUG_CONT_Ptr,
   C_CALL_CONT_Ptr,
   C_LOCK_Ptr,
@@ -1164,16 +1161,15 @@ void CodeArea::init(void **instrTable)
   }
 #endif
   CodeArea *code = new CodeArea(20);
-  C_XCONT_Ptr = code->getStart();
-  C_CFUNC_CONT_Ptr   = writeOpcode(TASKXCONT,C_XCONT_Ptr);
-  C_DEBUG_CONT_Ptr   = writeOpcode(TASKCFUNCONT,C_CFUNC_CONT_Ptr);
-  C_CALL_CONT_Ptr    = writeOpcode(TASKDEBUGCONT,C_DEBUG_CONT_Ptr);
-  C_LOCK_Ptr         = writeOpcode(TASKCALLCONT,C_CALL_CONT_Ptr);
-  C_SET_SELF_Ptr     = writeOpcode(TASKLOCK,C_LOCK_Ptr);
-  C_SET_ABSTR_Ptr    = writeOpcode(TASKSETSELF,C_SET_SELF_Ptr);
-  C_CATCH_Ptr        = writeOpcode(TASKPROFILECALL,C_SET_ABSTR_Ptr);
-  C_EMPTY_STACK      = writeOpcode(TASKCATCH,C_CATCH_Ptr);
-  ProgramCounter aux = writeOpcode(TASKEMPTYSTACK,C_EMPTY_STACK);
+  C_XCONT_Ptr        = code->getStart();
+  C_DEBUG_CONT_Ptr   = writeOpcode(TASKXCONT,       C_XCONT_Ptr);
+  C_CALL_CONT_Ptr    = writeOpcode(TASKDEBUGCONT,   C_DEBUG_CONT_Ptr);
+  C_LOCK_Ptr         = writeOpcode(TASKCALLCONT,    C_CALL_CONT_Ptr);
+  C_SET_SELF_Ptr     = writeOpcode(TASKLOCK,        C_LOCK_Ptr);
+  C_SET_ABSTR_Ptr    = writeOpcode(TASKSETSELF,     C_SET_SELF_Ptr);
+  C_CATCH_Ptr        = writeOpcode(TASKPROFILECALL, C_SET_ABSTR_Ptr);
+  C_EMPTY_STACK      = writeOpcode(TASKCATCH,       C_CATCH_Ptr);
+  ProgramCounter aux = writeOpcode(TASKEMPTYSTACK,  C_EMPTY_STACK);
   /* mark end with GLOBALVARNAME, so definitionEnd works properly */
   (void) writeOpcode(GLOBALVARNAME,aux);
 }

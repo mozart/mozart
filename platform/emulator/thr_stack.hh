@@ -41,7 +41,6 @@
 
 extern ProgramCounter
   C_XCONT_Ptr          , // a continuation with    X registers
-  C_CFUNC_CONT_Ptr     , // a continuation  to call a c-function
   C_DEBUG_CONT_Ptr     , // a continuation for debugging
   C_CALL_CONT_Ptr      , // an application
   C_LOCK_Ptr           , //
@@ -156,15 +155,6 @@ public:
 #endif
       pushFrame(C_XCONT_Ptr,x,makeTaggedNULL());
     }
-  }
-
-  void pushCFun(OZ_CFun f, RefsArray  x, int i) {
-    Assert(i>=0);
-    DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
-    Assert(MemChunks::areRegsInHeap(x, i));
-    pushFrame(C_CFUNC_CONT_Ptr,
-              i>0 ? copyRefsArray(x, i) : NULL,
-              makeTaggedMiscp((void *) f));
   }
 
   void pushCont(ProgramCounter pc,RefsArray y,Abstraction *cap) {

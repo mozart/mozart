@@ -366,11 +366,10 @@ _FUNDECL(OZ_Term   ,OZ_makeException,(OZ_Term kind,OZ_Term key,char*label,int ar
 /* Suspending builtins */
 
 _FUNDECL(OZ_Thread ,OZ_newRunnableThread,());
-_FUNDECL(void      ,OZ_makeRunnableThread,(OZ_CFun, OZ_Term *, int));
+_FUNDECL(void      ,OZ_makeRunnableThread,(OZ_Term, OZ_Term *, int));
 _FUNDECL(OZ_Thread ,OZ_newSuspendedThread,());
-_FUNDECL(OZ_Thread ,OZ_makeSuspendedThread,(OZ_CFun, OZ_Term *, int));
+_FUNDECL(OZ_Thread ,OZ_makeSuspendedThread,(OZ_Term, OZ_Term *, int));
 _FUNDECL(void      ,OZ_addThread,(OZ_Term, OZ_Thread));
-_FUNDECL(void      ,OZ_pushCFun,(OZ_Thread,OZ_CFun,OZ_Term *,int));
 _FUNDECL(void      ,OZ_pushCall,(OZ_Thread,OZ_Term,OZ_Term *,int));
 
 _FUNDECL(OZ_Return ,OZ_suspendOnInternal,(OZ_Term));

@@ -153,7 +153,7 @@ OZ_Term Future::inspect()
 }
 
 // this builtin/propagator is only internally available
-OZ_BI_define(VarToFuture,2,0)
+OZ_BI_define(BIvarToFuture,2,0)
 {
   OZ_Term v = OZ_in(0);
   v = oz_safeDeref(v);
@@ -181,10 +181,10 @@ OZ_BI_define(BIfuture,1,1)
     args[1]=f;
     if (bb!=oz_currentBoard()) {
       Thread *thr = oz_newThreadInject(bb);
-      thr->pushCFun(VarToFuture,args,2);
+      thr->pushCall(BI_varToFuture,args,2);
     } else { // optimize: immediately suspend thread
       Thread *thr = oz_newThreadSuspended();
-      thr->pushCFun(VarToFuture,args,2);
+      thr->pushCall(BI_varToFuture,args,2);
       OZ_Return ret = oz_var_addSusp(vPtr, thr);
       Assert(ret==SUSPEND);
     }
