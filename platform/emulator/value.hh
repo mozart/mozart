@@ -595,7 +595,6 @@ enum TypeOfConst {
   Co_Dictionary,    /* 12 */
   Dummy,           // GCTAG  
   Co_Lock
-  /* Co_PPort        15 - could optimize P[port] */
 };
 
 enum TertType {

@@ -1363,7 +1363,7 @@ OZ_C_proc_begin(BIaskSpace, 2) {
   oz_declareArg(1,out);
 
   if (space->isProxy()) {
-    return remoteApplication("Space.ask",space,out);
+    return remoteSend(space,"Space.ask",out);
   }
 
   if (space->isFailed())
@@ -1392,7 +1392,7 @@ OZ_C_proc_begin(BIaskVerboseSpace, 2) {
   oz_declareArg(1,out);
 
   if (space->isProxy()) {
-    return remoteApplication("Space.askVerbose",space,out);
+    return remoteSend(space,"Space.askVerbose",out);
   }
 
   if (space->isFailed())
@@ -1427,7 +1427,7 @@ OZ_C_proc_begin(BImergeSpace, 2) {
   oz_declareArg(1,out);
 
   if (space->isProxy()) {
-    return remoteApplication("Space.merge",space,out);
+    return remoteSend(space,"Space.merge",out);
   }
 
   if (space->isMerged())
@@ -1507,7 +1507,7 @@ OZ_C_proc_begin(BIcloneSpace, 2) {
   oz_declareArg(1,out);
 
   if (space->isProxy()) {
-    return remoteApplication("Space.clone",space,out);
+    return remoteSend(space,"Space.clone",out);
   }
 
   if (space->isMerged())
@@ -1555,7 +1555,7 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
   oz_declareArg(1,choice);
 
   if (space->isProxy()) {
-    return remoteApplication("Space.choose",space,choice);
+    return remoteSend(space,"Space.choose",choice);
   }
 
   if (space->isMerged())
@@ -1626,7 +1626,7 @@ OZ_C_proc_begin(BIinjectSpace, 2)
   oz_declareArg(1,proc);
 
   if (space->isProxy()) {
-    return remoteApplication("Space.inject",space,proc);
+    return remoteSend(space,"Space.inject",proc);
   }
 
   if (space->isMerged())
@@ -1660,14 +1660,6 @@ OZ_C_proc_begin(BIinjectSpace, 2)
   return PROCEED;
 } OZ_C_proc_end
 
-
-void call(OZ_CFun fun,Space *sp, OZ_Term val)
-{
-  RefsArray args = allocateRefsArray(2,NO);
-  args[0]=makeTaggedConst(sp);
-  args[1]=val;
-  OZ_makeRunnableThread(fun,args,2);
-}
 
 #undef declareSpace
 
@@ -2565,7 +2557,7 @@ OZ_C_proc_begin(BIthreadSetPriority,2)
   oz_declareNonvarArg(1,atom_prio);
 
   if (th->isProxy()) {
-    return remoteApplication("Thread.setPriority",th,atom_prio);
+    return remoteSend(th,"Thread.setPriority",atom_prio);
   }
 
   int prio;
@@ -2622,7 +2614,7 @@ OZ_C_proc_begin(BIthreadGetPriority,2)
   oz_declareArg(1,out);
   
   if (th->isProxy()) {
-    return remoteApplication("Thread.getPriority",th,out);
+    return remoteSend(th,"Thread.getPriority",out);
   }
 
 
@@ -2676,7 +2668,7 @@ OZ_C_proc_begin(BIthreadRaise,2)
   oz_declareNonvarArg(1,E);
 
   if (th->isProxy()) {
-    return remoteApplication("Thread.raise",th,E);
+    return remoteSend(th,"Thread.raise",E);
   }
 
   if (am.currentThread == th) {
@@ -2696,7 +2688,7 @@ OZ_C_proc_begin(BIthreadTerminate,1)
   oz_declareThreadArg(0,th);
 
   if (th->isProxy()) {
-    return remoteApplication("Thread.terminate",th);
+    return remoteSend(th,"Thread.terminate",nil());
   }
 
   if (th->isDeadThread()) return PROCEED;
@@ -2724,7 +2716,7 @@ OZ_C_proc_begin(BIthreadSuspend,1)
   oz_declareThreadArg(0,th);
   
   if (th->isProxy()) {
-    return remoteApplication("Thread.suspend",th);
+    return remoteSend(th,"Thread.suspend",nil());
   }
 
 
@@ -2751,7 +2743,7 @@ OZ_C_proc_begin(BIthreadResume,1)
   oz_declareThreadArg(0,th);
 
   if (th->isProxy()) {
-    return remoteApplication("Thread.resume",th);
+    return remoteSend(th,"Thread.resume",nil());
   }
 
 
@@ -2767,7 +2759,7 @@ OZ_C_proc_begin(BIthreadIsSuspended,2)
   oz_declareArg(1,out);
 
   if (th->isProxy()) {
-    return remoteApplication("Thread.isSuspended",th,out);
+    return remoteSend(th,"Thread.isSuspended",out);
   }
 
 
@@ -2791,7 +2783,7 @@ OZ_C_proc_begin(BIthreadState,2)
   oz_declareArg(1,out);
 
   if (th->isProxy()) {
-    return remoteApplication("Thread.state",th,out);
+    return remoteSend(th,"Thread.state",out);
   }
 
 
@@ -4445,7 +4437,7 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   CheckLocalBoard(port,"port");
 
   if(tt==Te_Proxy) {
-    remoteSend((PortProxy*) port,val);  
+    remoteSend(port,"Send",val);
     return PROCEED;
   } 
   LTuple *lt = new LTuple(val,am.currentUVarPrototype());
@@ -4453,7 +4445,18 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   OZ_Term old = ((PortWithStream*)port)->exchangeStream(lt->getTail());
     
   if (oz_unify(makeTaggedLTuple(lt),old)!=PROCEED) {
-    OZ_fail("oz_send failed\n");
+    /* respect port semantics:
+     *
+     * fun {NewPort S}
+     *   C={NewCell S}
+     * in
+     *   proc {$ Val}
+     *     {Exchange Cell Old T}
+     *     thread Old=H|T end         %% !!!
+     *   end
+     * end
+     */
+    OZ_unifyInThread(makeTaggedLTuple(lt),old);
   }
   return PROCEED;
 }
@@ -4462,13 +4465,13 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
 OZ_C_proc_begin(BIsendPort,2)
 {
   oz_declareNonvarArg(0,prt);
-  oz_declareArg(1,msg);
+  oz_declareArg(1,val);
 
   if (!isPort(prt)) {
     oz_typeError(0,"Port");
   }
 
-  return sendPort(prt,msg);
+  return sendPort(prt,val);
 }
 OZ_C_proc_end
 
@@ -4482,7 +4485,7 @@ OZ_Return closePort(OZ_Term prt)
   CheckLocalBoard(port,"port");
 
   if(tt==Te_Proxy) {
-    remoteClose((PortProxy*) port);
+    remoteSend(port,"Port.close",nil());
     return PROCEED;
   } 
   OZ_Term old = ((PortWithStream*)port)->exchangeStream(nil());
