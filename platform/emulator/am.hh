@@ -116,7 +116,11 @@ public:
   void setSelf(Object *o) { cachedSelf = o; }
   Object *getSelf() { return cachedSelf; }
 
-  TaggedRef currentUVarPrototype; // opt: cache
+  TaggedRef currentUVarPrototypeValue; // opt: cache
+  TaggedRef currentUVarPrototype() {
+    Assert(currentBoard=tagged2VarHome(currentUVarPrototypeValue));
+    return currentUVarPrototypeValue;
+  }
   Board *rootBoard;
 
   Board *currentSolveBoard;       // current 'solve' board or NULL if none;

@@ -646,6 +646,33 @@ PROFILE_CODE1
   return retSuspList;
 }
 
+
+int isBelow(Board *bb,Board *varHome) {
+  while (bb != varHome) {
+    if (bb->isRoot ()) return NO;
+    bb=bb->getParent();
+  }
+  return OK;
+}
+
+Board *varHome(TaggedRef val) {
+  if (isUVar(val)) {
+    return tagged2VarHome(val);
+  } else if (isSVar(val)) {
+    return tagged2SVar(val)->getBoard();
+  } else {
+    return taggedCVar2SVar(val)->getBoard();
+  }
+}
+
+bool checkHome(TaggedRef *vPtr) {
+  TaggedRef val = deref(*vPtr);
+
+  return !isAnyVar(val) ||
+    isBelow(am.currentBoard,varHome(val));
+}
+
+
 // exception from general rule that arguments are never variables!
 //  term may be an
 void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
@@ -669,6 +696,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
   /* second step: mark binding for non-local variable in trail;     */
   /* also mark such (i.e. this) variable in suspention list;        */
   if ( !isLocalVariable(var,varPtr) || !prop ) {
+    Assert(checkHome(varPtr));
     trail.pushRef(varPtr,var);
   } else  { // isLocalVariable(var)
     if (isSVar(var)) {
@@ -682,6 +710,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
 
 void AM::doBindAndTrail(TaggedRef v, TaggedRef * vp, TaggedRef t)
 {
+  Assert(checkHome(vp));
   trail.pushRef(vp, v);
 
   CHECK_NONVAR(t);
@@ -698,6 +727,7 @@ void AM::doBindAndTrailAndIP(TaggedRef v, TaggedRef * vp, TaggedRef t,
                              Bool prop)
 {
   lv->installPropagators(gv,prop);
+  Assert(checkHome(vp));
   trail.pushRef(vp, v);
 
   CHECK_NONVAR(t);
@@ -1006,7 +1036,7 @@ void AM::setCurrent(Board *c, Bool checkNotGC)
   Assert(!checkNotGC || oldBoard == currentBoard);
 
   currentBoard = c;
-  currentUVarPrototype = makeTaggedUVar(c);
+  currentUVarPrototypeValue = makeTaggedUVar(c);
   DebugCheckT(oldBoard=c);
 
   if (c->isSolve ()) {

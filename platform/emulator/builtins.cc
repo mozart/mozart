@@ -960,7 +960,7 @@ OZ_Return WidthPropagator::run(void)
                     TaggedRef alist=tagged2GenOFSVar(rec)->getTable()->getArityList();
                     Arity *arity=aritytable.find(alist);
                     SRecord *newrec = SRecord::newSRecord(lbl,arity);
-                    newrec->initArgs(am.currentUVarPrototype);
+                    newrec->initArgs(am.currentUVarPrototype());
                     Bool res=am.unify(rawrec,newrec->normalize());
                     Assert(res);
                 }
@@ -1391,7 +1391,7 @@ OZ_C_proc_begin(BIaskVerboseSpace, 2) {
 
   if (space->getSolveActor()->isBlocked()) {
     SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
-    stuple->setArg(0, am.currentUVarPrototype);
+    stuple->setArg(0, am.currentUVarPrototype());
 
     if (oz_unify(OZ_args[1], makeTaggedSRecord(stuple)) == FAILED)
       return FAILED;
@@ -1660,7 +1660,7 @@ OZ_Return tupleInline(TaggedRef label, TaggedRef argno, TaggedRef &out)
       {
         SRecord *s = SRecord::newSRecord(label,i);
 
-        TaggedRef newVar = am.currentUVarPrototype;
+        TaggedRef newVar = am.currentUVarPrototype();
         for (int j = 0; j < i; j++) {
           s->setArg(j,newVar);
         }
@@ -4392,7 +4392,7 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
     remoteSend((PortProxy*) port,val);
     return PROCEED;
   }
-  LTuple *lt = new LTuple(val,am.currentUVarPrototype);
+  LTuple *lt = new LTuple(val,am.currentUVarPrototype());
 
   OZ_Term old = ((PortWithStream*)port)->exchangeStream(lt->getTail());
 
@@ -6549,7 +6549,7 @@ TaggedRef cloneObjectRecord(TaggedRef record, Bool cloneAll)
   SRecord *in  = tagged2SRecord(record);
   SRecord *rec = SRecord::newSRecord(in);
 
-  OZ_Term proto = am.currentUVarPrototype;
+  OZ_Term proto = am.currentUVarPrototype();
 
   for(int i=0; i < in->getWidth(); i++) {
     OZ_Term arg = in->getArg(i);

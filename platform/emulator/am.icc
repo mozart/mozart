@@ -33,7 +33,7 @@ void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var,
   // most probable case first: local UVar
   // if (isUVar(var) && currentBoard == tagged2VarHome(var)) {
   // more efficient:
-  if (var == currentUVarPrototype && prop) {
+  if (var == currentUVarPrototype() && prop) {
     doBind(varPtr,a);
   } else {
     genericBind(varPtr,var,NULL,a,prop);
@@ -54,7 +54,7 @@ Bool AM::fastUnify(TaggedRef A, TaggedRef B, Bool prop)
   if (!prop) goto bomb;
 
   {
-    TaggedRef proto = currentUVarPrototype;
+    TaggedRef proto = currentUVarPrototype();
     TaggedRef term1 = A;
     TaggedRef term2 = B;
 
@@ -117,7 +117,7 @@ Bool AM::isLocalUVar(TaggedRef var,TaggedRef *varPtr)
 {
   // variables are usually bound
   // in the node where they are created
-  if (var == currentUVarPrototype) return OK;
+  if (var == currentUVarPrototype()) return OK;
   return isLocalUVarOutline(var,varPtr);
 }
 
@@ -126,7 +126,7 @@ Bool AM::isLocalUVar(TaggedRef var)
 {
   // variables are usually bound
   // in the node where they are created
-  if (var == currentUVarPrototype) return OK;
+  if (var == currentUVarPrototype()) return OK;
   return tagged2VarHome(var)->derefBoard()==currentBoard;
 }
 

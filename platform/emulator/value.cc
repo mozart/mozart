@@ -531,7 +531,7 @@ void bigIntInit()
 TaggedRef mkRecord(TaggedRef label,SRecordArity ff)
 {
   SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
-  srecord->initArgs(am.currentUVarPrototype);
+  srecord->initArgs(am.currentUVarPrototype());
   return makeTaggedSRecord(srecord);
 }
 
