@@ -134,3 +134,4 @@
 typedef int socklen_t;
 #endif
 
+#undef HAVE_STDINT_H
