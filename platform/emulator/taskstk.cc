@@ -219,8 +219,30 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
       continue;
     }
 
+    if (PC==C_ACTOR_Ptr) {
+      ProgramCounter DebugPC = CodeArea::nextDebugInfo((ProgramCounter) G);
+      if (DebugPC != NOCODE) {
+        TaggedRef def = CodeArea::dbgGetDef(DebugPC);
+        if (!OZ_isNil(def)) {
+          TaggedRef pairlist =
+            cons(OZ_pairA("name", OZ_atom("cond")),
+                 cons(OZ_pairA("args", nil()),
+                      nil()));
+          TaggedRef entry = OZ_recordInit(OZ_atom("builtin"), pairlist);
+          out = cons(entry, out);
+
+          time_t feedtime = CodeArea::findTimeStamp(DebugPC);
+          TaggedRef dinfo = cons(OZ_int(0),cons(OZ_int(feedtime),nil()));
+          out = cons(OZ_mkTupleC("debug",1,dinfo), out);
+
+          out = cons(def,out);
+        }
+      }
+      continue;
+    }
+
     TaggedRef def = CodeArea::dbgGetDef(PC);
-    if (def != nil())
+    if (!OZ_isNil(def))
       out = cons(def,out);
     else
       // definitionStart(PC) == NOCODE_GLOBALVARNAME
