@@ -612,6 +612,9 @@ failure:
   return FAILED;
 }
 
+#ifdef ALLDIFF
+#include "_alldiff.cc"
+#endif
 
 //-----------------------------------------------------------------------------
 // eof
