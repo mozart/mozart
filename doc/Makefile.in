@@ -29,12 +29,17 @@ VPATH		= @srcdir@
 SHDOCDIR	= $(PREFIX)/share/doc
 DOCDIR		= $(PREFIX)/doc
 SRCTOP		= @SRCTOP@
+BUILDTOP	= @BUILDTOP@
 
 INSTALL		= @INSTALL@
 INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_DIR	= @INSTALL_DIR@
 HOMEURL		= @HOMEURL@
+OZENGINE	= @OZENGINE@
 OZDOC		= @OZDOC@
+
+OZDOCFLAGS	=
+DOCIFY		= $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
 
 FILES		= ozdoc.dcl ozdoc.dtd ozdoc.doc catalog author.db
 LIBFILES	= $(addprefix $(SHDOCDIR)/,$(FILES))
@@ -43,7 +48,7 @@ EMACS		= emacs
 
 SUBDIRS		= @SUBDIRS@
 
-.PHONY: all quick bootstrap check install clean veryclean distclean depend ps installps $(DOCDIR)/idx idx/index.html xref clean-xref
+.PHONY: all quick bootstrap check install clean veryclean distclean depend ps installps $(DOCDIR)/idx xref clean-xref bootidx THEINDEX
 
 Makefile: Makefile.in config.status
 	./config.status
@@ -75,10 +80,16 @@ all quick check install clean veryclean distclean installps depend clean-xref::
 	dirs="$(SUBDIRS)"; \
 	for i in $$dirs; do (cd $$i && $(MAKE) $@) || exit 1; done
 
+include $(SRCTOP)/share/Makefile.boot
+
 bootstrap::
 	dirs="$(SUBDIRS)"; \
 	for i in $$dirs; do (cd $$i && $(MAKE) bootstrap) || exit 1; done; \
 	for i in $$dirs; do (cd $$i && $(MAKE) bootquick) || exit 1; done
+
+bootstrap:: boot-THEINDEX
+all:: THEINDEX
+THEINDEX: idx/index.html
 
 clean::
 	-rm -f *~
@@ -102,7 +113,7 @@ PSDOCDIRS	= apptut base browser bugs changes compiler \
 
 idx/index.html:
 	mkdir idx 2> /dev/null; \
-	$(OZDOC) --in=index.db --out=idx --type=html-global-index \
+	$(DOCIFY) --in=index.db --out=idx --type=html-global-index \
 	--stylesheet=ozdoc.css
 
 global-xref-db.xml:
