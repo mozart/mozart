@@ -28,21 +28,17 @@
 
 static DWORD WINAPI readerThread(void *arg)
 {
-  CRITICAL_SECTION lock;
-  InitializeCriticalSection(&lock);
   HANDLE hRead = (HANDLE) arg;
   DWORD ret;
   char buffer[1024];
   while(1) {
     if (ReadFile(hRead,buffer,sizeof(buffer) - 1,&ret,0) == FALSE)
-      return 0;
+      break;
     buffer[ret] = 0;
-    EnterCriticalSection(&lock);
     MessageBox(NULL,buffer,"Mozart Output",
                MB_ICONINFORMATION | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
-    LeaveCriticalSection(&lock);
   }
-  return 1;
+  return 0;
 }
 
 int createProcess(char *cmdline)
@@ -75,13 +71,14 @@ int createProcess(char *cmdline)
   sa.lpSecurityDescriptor = NULL;
   sa.bInheritHandle = TRUE;
   PROCESS_INFORMATION pi;
-  BOOL ret = CreateProcess(NULL,cmdline,&sa,NULL,TRUE,
-                           DETACHED_PROCESS | CREATE_SUSPENDED,
-                           NULL,NULL,&si,&pi);
+  DWORD ret = CreateProcess(NULL,cmdline,&sa,NULL,TRUE,
+                            DETACHED_PROCESS | CREATE_SUSPENDED,
+                            NULL,NULL,&si,&pi);
 
   if (ret == FALSE) {
     panic(true,"Cannot run '%s'.\n",cmdline);
   }
+  CloseHandle(pi.hThread);
 
   DWORD thrid;
   CreateThread(0,10000,&readerThread,hRead,0,&thrid);
@@ -90,7 +87,9 @@ int createProcess(char *cmdline)
   WaitForSingleObject(pi.hProcess,INFINITE);
 
   DWORD code;
-  if (GetExitCodeProcess(pi.hProcess,&code) != FALSE && code != 0)
+  ret = GetExitCodeProcess(pi.hProcess,&code);
+  CloseHandle(pi.hProcess);
+  if (ret != FALSE && code != 0)
     return code;
   else
     return 0;
