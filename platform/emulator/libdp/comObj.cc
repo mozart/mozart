@@ -29,7 +29,7 @@
 #include "connection.hh"
 #include "timers.hh"
 
-#define OPEN_TIMEOUT PERDIO_TIMEOUT
+#define OPEN_TIMEOUT PERDIO_TIMEOUT / 10
 #define CLOSE_TIMEOUT PERDIO_TIMEOUT
 #define WF_REMOTE_TIMEOUT PERDIO_TIMEOUT*10
 
@@ -203,13 +203,11 @@ Bool ComObj::openTimerExpired() {
     }
     else {
       PD((TCP_INTERFACE,"opentimerexpired with no need or remoteref %x",this));
-      printf("opentimerexpired %p\n",this);
       close(CLOSED);
     }
   }
   else if(state==ANONYMOUS_WF_NEGOTIATE) {// Never a problem, anonymous
     close(CLOSED,TRUE);//Use close with true not to be reopened
-printf("Anonymous opentimerexpired\n");
     comController->deleteComObj(this);
     return FALSE;
   }
@@ -218,7 +216,6 @@ printf("Anonymous opentimerexpired\n");
 }
 
 Bool ComObj::closeTimerExpired() {
-  printf("closeTimerExpired state %d\n",state);
   switch(state) {
   case CLOSING_HARD:
     // Close violently, hand back resource and wait in line.
