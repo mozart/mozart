@@ -77,7 +77,7 @@ extern void (*gCollectPerdioFinal)();
 extern void (*dpExit)();
 
 // hook to make changing of tcpcache-size dynamic
-extern void (*changeMaxTCPCache)();
+extern void (*changeTCPLimit)();
 
 // distribution handlers
 extern Bool (*distHandlerInstall)(unsigned short,unsigned short,

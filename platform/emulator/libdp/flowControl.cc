@@ -53,7 +53,7 @@ void FlowControler::addElement(TaggedRef e){
     static OZ_Term dp_event_flowControl = oz_atom("dp.flowControl");
     OZ_eventPush(dp_event_flowControl);
 #else
-    am.setMinimalTaskInterval((void*)this,ozconf.perdioFlowBufferTime);
+    am.setMinimalTaskInterval((void*)this,ozconf.dpFlowBufferTime);
 #endif
     first = last = newE;
     return;}
@@ -69,7 +69,7 @@ void FlowControler::addElement(TaggedRef e,DSite* s,int i){
     static OZ_Term dp_event_flowControl = oz_atom("dp.flowControl");
     OZ_eventPush(dp_event_flowControl);
 #else
-    am.setMinimalTaskInterval((void*)this,ozconf.perdioFlowBufferTime);
+    am.setMinimalTaskInterval((void*)this,ozconf.dpFlowBufferTime);
 #endif
     first = last = newE;
     return;}
@@ -119,7 +119,7 @@ Bool FlowControler::doTask(){
 
 void FlowControler::wakeUpExecute(unsigned int t){
   FlowControlElement *ptr,*back;
-  time = t + ozconf.perdioFlowBufferTime; // Check the user put value....
+  time = t + ozconf.dpFlowBufferTime; // Check the user put value....
 
   while(first!=NULL && first->canSend()){
     ptr=first;

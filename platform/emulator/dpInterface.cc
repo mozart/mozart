@@ -169,7 +169,7 @@ void gCollectPerdioRootsStub() {}
 void dpExitStub() {;}
 
 // hook to make changing of tcpcache-size dynamic
-void changeMaxTCPCacheStub() {;}
+void changeTCPLimitStub() {;}
 
 Bool distHandlerInstallStub(unsigned short x,unsigned short y,
                                  Thread* th,TaggedRef a,TaggedRef b){
@@ -249,8 +249,8 @@ void (*dpExit)()
   = dpExitStub;
 
 // hook to make changing of tcpcache-size dynamic
-void (*changeMaxTCPCache)()
-  = changeMaxTCPCacheStub;
+void (*changeTCPLimit)()
+  = changeTCPLimitStub;
 
 // distribution handlers
 

@@ -68,23 +68,22 @@ public:
   int debugPerdio;
 
   // Info needed for flowcontrol in ports
-  int perdioFlowBufferSize;
-  int perdioFlowBufferTime;
-
-  //
-  // For Perdio's 'Remote' and 'Connection';
-  int perdioTimeout;
+  int dpFlowBufferSize;
+  int dpFlowBufferTime;
 
   // global handler
-  int perdioSeifHandler;
+  int dpSeifHandler;
 
-  int perdioUseAltVarProtocol;
+  int dpUseAltVarProtocol;
 
-  int perdioTempRetryCeiling;
-  int perdioTempRetryFloor;
-  int perdioTempRetryFactor;
-  int perdioMaxTCPCache;
-  int perdioCheckAliveInterval;
+  int dpRetryTimeCeiling;
+  int dpRetryTimeFloor;
+  int dpRetryTimeFactor;
+  int dpTCPHardLimit;
+  int dpTCPWeakLimit;
+
+  int dpProbeInterval;
+  int dpProbeTimeout;
 
   int dpTableDefaultOwnerTableSize;
   int dpTableDefaultBorrowTableSize;

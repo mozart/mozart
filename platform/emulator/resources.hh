@@ -139,15 +139,17 @@ error include resources.hh before mozart.h
 
 //
 // Distributed Oz - general;
-#define FLOW_BUFFER_SiZE    10000 /* lower limit on nof msg for flowcontrol */
-#define FLOW_BUFFER_TIME    1000
-#define PERDIO_TIMEOUT      30000 /* ms */
+#define DP_FLOWBUFFERSIZE            10000   /* lower limit on nof msg for
+                                                flowcontrol */
+#define DP_FLOWBUFFERTIME            1000
 
-#define PERDIO_TEMP_RETRY_CEILING    200000
-#define PERDIO_TEMP_RETRY_FLOOR      500
-#define PERDIO_TEMP_RETRY_FACTOR     50
-#define PERDIO_MAX_TCP_CACHE         30
-#define PERDIO_CHECK_ALIVE_INTERVAL  5000
+#define DP_RETRYTIMECEILING          200000
+#define DP_RETRYTIMEFLOOR            500
+#define DP_RETRYTIMEFACTOR           50
+#define DP_TCPHARDLIMIT              60
+#define DP_TCPWEAKLIMIT              60
+#define DP_PROBEINTERVAL             5000
+#define DP_PROBETIMEOUT              30000 /* ms */
 
 //
 // Distributed Oz - virtual sites

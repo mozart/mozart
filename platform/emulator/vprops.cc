@@ -150,21 +150,21 @@ enum EmulatorPropertyIndex {
   PROP_INTERNAL_STOP,
   PROP_INTERNAL_DEBUG_IP,
   PROP_INTERNAL,
-  // PERDIO
-  PROP_PERDIO_SEIFHANDLER,
-  PROP_PERDIO_FLOWBUFFERSIZE,
-  PROP_PERDIO_FLOWBUFFERTIME,
-  PROP_PERDIO_DEBUG,
-  PROP_PERDIO_MINIMAL,
-  PROP_PERDIO_VERSION,
-  PROP_PERDIO_USEALTVARPROTOCOL,
-  PROP_PERDIO_TIMEOUT,
-  PROP_PERDIO_TEMPRETRYCEILING,
-  PROP_PERDIO_TEMPRETRYFLOOR,
-  PROP_PERDIO_TEMPRETRYFACTOR,
-  PROP_PERDIO_MAXTCPCACHE,
-  PROP_PERDIO_CHECKALIVEINTERVAL,
-  PROP_PERDIO,
+  // PERDIO renamed DP
+  PROP_DP_SEIFHANDLER,
+  PROP_DP_FLOWBUFFERSIZE,
+  PROP_DP_FLOWBUFFERTIME,
+  PROP_DP_DEBUG,
+  PROP_DP_VERSION,
+  PROP_DP_USEALTVARPROTOCOL,
+  PROP_DP_RETRYTIMECEILING,
+  PROP_DP_RETRYTIMEFLOOR,
+  PROP_DP_RETRYTIMEFACTOR,
+  PROP_DP_TCPHARDLIMIT,
+  PROP_DP_TCPWEAKLIMIT,
+  PROP_DP_PROBEINTERVAL,
+  PROP_DP_PROBETIMEOUT,
+  PROP_DP,
   // DPTABLE
   PROP_DPTABLE_DEFAULTOWNERTABLESIZE,
   PROP_DPTABLE_DEFAULTBORROWTABLESIZE,
@@ -440,43 +440,48 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_BOOL(PROP_INTERNAL_SUSPENSION,ozconf.showSuspension);
   CASE_BOOL(PROP_INTERNAL_STOP,ozconf.stopOnToplevelFailure);
   CASE_INT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
-  // PERDIO
-  CASE_INT(PROP_PERDIO_DEBUG,ozconf.debugPerdio);
-  CASE_BOOL(PROP_PERDIO_SEIFHANDLER,ozconf.perdioSeifHandler);
-  CASE_INT(PROP_PERDIO_FLOWBUFFERSIZE,ozconf.perdioFlowBufferSize);
-  CASE_INT(PROP_PERDIO_FLOWBUFFERTIME,ozconf.perdioFlowBufferTime);
-  CASE_INT(PROP_PERDIO_TIMEOUT,ozconf.perdioTimeout);
-  CASE_INT(PROP_PERDIO_TEMPRETRYCEILING,ozconf.perdioTempRetryCeiling);
-  CASE_INT(PROP_PERDIO_TEMPRETRYFLOOR,ozconf.perdioTempRetryFloor);
-  CASE_INT(PROP_PERDIO_TEMPRETRYFACTOR,ozconf.perdioTempRetryFactor);
-  CASE_INT(PROP_PERDIO_MAXTCPCACHE,ozconf.perdioMaxTCPCache);
-  CASE_INT(PROP_PERDIO_CHECKALIVEINTERVAL,ozconf.perdioCheckAliveInterval);
+  // DP
+  CASE_INT(PROP_DP_DEBUG,ozconf.debugPerdio);
+  CASE_BOOL(PROP_DP_SEIFHANDLER,ozconf.dpSeifHandler);
+  CASE_INT(PROP_DP_FLOWBUFFERSIZE,ozconf.dpFlowBufferSize);
+  CASE_INT(PROP_DP_FLOWBUFFERTIME,ozconf.dpFlowBufferTime);
+  CASE_INT(PROP_DP_RETRYTIMECEILING,ozconf.dpRetryTimeCeiling);
+  CASE_INT(PROP_DP_RETRYTIMEFLOOR,ozconf.dpRetryTimeFloor);
+  CASE_INT(PROP_DP_RETRYTIMEFACTOR,ozconf.dpRetryTimeFactor);
+  CASE_INT(PROP_DP_TCPHARDLIMIT,ozconf.dpTCPHardLimit);
+  CASE_INT(PROP_DP_TCPWEAKLIMIT,ozconf.dpTCPWeakLimit);
+  CASE_INT(PROP_DP_PROBEINTERVAL,ozconf.dpProbeInterval);
+  CASE_INT(PROP_DP_PROBETIMEOUT,ozconf.dpProbeTimeout);
 
-  case PROP_PERDIO_VERSION: return OZ_pair2(oz_int(PERDIOMAJOR),
+  case PROP_DP_VERSION: return OZ_pair2(oz_int(PERDIOMAJOR),
                                             oz_int(PERDIOMINOR));
 
-  CASE_BOOL(PROP_PERDIO_USEALTVARPROTOCOL,ozconf.perdioUseAltVarProtocol);
-  CASE_REC(PROP_PERDIO,"perdio",
-           (12,oz_atomNoDup("useAltVarProtocol"),oz_atomNoDup("minimal"),
+  CASE_BOOL(PROP_DP_USEALTVARPROTOCOL,ozconf.dpUseAltVarProtocol);
+  CASE_REC(PROP_DP,"dp",
+           (13,oz_atomNoDup("useAltVarProtocol"),
             oz_atomNoDup("seifHandler"),oz_atomNoDup("debug"),
-            oz_atomNoDup("flowbuffersize"),oz_atomNoDup("flowbuffertime"),
-            oz_atomNoDup("version"),oz_atomNoDup("tempRetryCeiling"),
-            oz_atomNoDup("tempRetryFloor"),oz_atomNoDup("tempRetryFactor"),
-            oz_atomNoDup("maxTCPCache"),oz_atomNoDup("checkAliveInterval")),
+            oz_atomNoDup("flowBufferSize"),oz_atomNoDup("flowBufferTime"),
+            oz_atomNoDup("version"),oz_atomNoDup("retryTimeCeiling"),
+            oz_atomNoDup("retryTimeFloor"),oz_atomNoDup("retryTimeFactor"),
+            oz_atomNoDup("tcpHardLimit"),oz_atomNoDup("tcpWeakLimit"),
+            oz_atomNoDup("probeInterval"),oz_atomNoDup("probeTimeout")),
            SET_BOOL(oz_atomNoDup("useAltVarProtocol"),
-                    ozconf.perdioUseAltVarProtocol);
-           SET_BOOL(oz_atomNoDup("seifHandler"), ozconf.perdioSeifHandler);
+                    ozconf.dpUseAltVarProtocol);
+           SET_BOOL(oz_atomNoDup("seifHandler"), ozconf.dpSeifHandler);
            SET_INT(oz_atomNoDup("debug"), ozconf.debugPerdio);
-           SET_INT(oz_atomNoDup("flowbuffersize"),ozconf.perdioFlowBufferSize);
-           SET_INT(oz_atomNoDup("flowbuffertime"),ozconf.perdioFlowBufferTime);
-           SET_INT(oz_atomNoDup("tempRetryCeiling"),
-                   ozconf.perdioTempRetryCeiling);
-           SET_INT(oz_atomNoDup("tempRetryFloor"),ozconf.perdioTempRetryFloor);
-           SET_INT(oz_atomNoDup("tempRetryFactor"),
-                   ozconf.perdioTempRetryFactor);
-           SET_INT(oz_atomNoDup("maxTCPCache"), ozconf.perdioMaxTCPCache);
-           SET_INT(oz_atomNoDup("checkAliveInterval"),
-                   ozconf.perdioCheckAliveInterval);
+           SET_INT(oz_atomNoDup("flowBufferSize"),ozconf.dpFlowBufferSize);
+           SET_INT(oz_atomNoDup("flowBufferTime"),ozconf.dpFlowBufferTime);
+           SET_INT(oz_atomNoDup("retryTimeCeiling"),
+                   ozconf.dpRetryTimeCeiling);
+           SET_INT(oz_atomNoDup("retryTimeFloor"),ozconf.dpRetryTimeFloor);
+           SET_INT(oz_atomNoDup("retryTimeFactor"),
+                   ozconf.dpRetryTimeFactor);
+           SET_INT(oz_atomNoDup("tcpHardLimit"), ozconf.dpTCPHardLimit);
+           SET_INT(oz_atomNoDup("tcpWeakLimit"), ozconf.dpTCPWeakLimit);
+           SET_INT(oz_atomNoDup("probeInterval"),
+                   ozconf.dpProbeInterval);
+           SET_INT(oz_atomNoDup("probeTimeout"),
+                   ozconf.dpProbeTimeout);
            SET_REC(oz_atomNoDup("version"), OZ_pair2(oz_int(PERDIOMAJOR),
                                                 oz_int(PERDIOMINOR)));
            );
@@ -729,38 +734,45 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
              SET_NAT(AtomDebugIP,ozconf.debugIP));
 
 
-    CASE_NAT(PROP_PERDIO_DEBUG,ozconf.debugPerdio);
+    CASE_NAT(PROP_DP_DEBUG,ozconf.debugPerdio);
 
-    CASE_BOOL(PROP_PERDIO_USEALTVARPROTOCOL,ozconf.perdioUseAltVarProtocol);
-    CASE_BOOL(PROP_PERDIO_SEIFHANDLER,ozconf.perdioSeifHandler);
-    CASE_NAT(PROP_PERDIO_FLOWBUFFERSIZE,ozconf.perdioFlowBufferSize);
-    CASE_NAT(PROP_PERDIO_FLOWBUFFERTIME,ozconf.perdioFlowBufferTime);
-    CASE_NAT(PROP_PERDIO_TEMPRETRYCEILING,ozconf.perdioTempRetryCeiling);
-    CASE_NAT(PROP_PERDIO_TEMPRETRYFLOOR,ozconf.perdioTempRetryFloor);
-    CASE_NAT(PROP_PERDIO_TEMPRETRYFACTOR,ozconf.perdioTempRetryFactor);
-    CASE_NAT_DO(PROP_PERDIO_MAXTCPCACHE,{
-      ozconf.perdioMaxTCPCache=INT__;
-      changeMaxTCPCache();
+    CASE_BOOL(PROP_DP_USEALTVARPROTOCOL,ozconf.dpUseAltVarProtocol);
+    CASE_BOOL(PROP_DP_SEIFHANDLER,ozconf.dpSeifHandler);
+    CASE_NAT(PROP_DP_FLOWBUFFERSIZE,ozconf.dpFlowBufferSize);
+    CASE_NAT(PROP_DP_FLOWBUFFERTIME,ozconf.dpFlowBufferTime);
+    CASE_NAT(PROP_DP_RETRYTIMECEILING,ozconf.dpRetryTimeCeiling);
+    CASE_NAT(PROP_DP_RETRYTIMEFLOOR,ozconf.dpRetryTimeFloor);
+    CASE_NAT(PROP_DP_RETRYTIMEFACTOR,ozconf.dpRetryTimeFactor);
+    CASE_NAT_DO(PROP_DP_TCPHARDLIMIT,{
+      ozconf.dpTCPHardLimit=INT__;
+      changeTCPLimit();
     });
-    CASE_NAT(PROP_PERDIO_CHECKALIVEINTERVAL,ozconf.perdioCheckAliveInterval);
-    CASE_NAT(PROP_PERDIO_TIMEOUT,ozconf.perdioTimeout);
-    // PERDIO
-    CASE_REC(PROP_PERDIO,
+    CASE_NAT_DO(PROP_DP_TCPWEAKLIMIT,{
+      ozconf.dpTCPWeakLimit=INT__;
+      changeTCPLimit();
+    });
+    CASE_NAT(PROP_DP_PROBEINTERVAL,ozconf.dpProbeInterval);
+    CASE_NAT(PROP_DP_PROBETIMEOUT,ozconf.dpProbeTimeout);
+    // DP
+    CASE_REC(PROP_DP,
              SET_NAT(AtomDebugPerdio,ozconf.debugPerdio);
-             SET_NAT(oz_atomNoDup("flowbuffersize"),ozconf.perdioFlowBufferSize);
-             SET_NAT(oz_atomNoDup("flowbuffertime"),ozconf.perdioFlowBufferTime);
-             SET_NAT(oz_atomNoDup("seifHandler"),ozconf.perdioSeifHandler);
-             SET_NAT(oz_atomNoDup("tempRetryCeiling"),
-                      ozconf.perdioTempRetryCeiling);
-             SET_NAT(oz_atomNoDup("tempRetryFloor"),
-                      ozconf.perdioTempRetryFloor);
-             SET_NAT(oz_atomNoDup("tempRetryFactor"),
-                      ozconf.perdioTempRetryFactor);
-             SET_NAT(oz_atomNoDup("maxTCPCache"),ozconf.perdioMaxTCPCache);
-             SET_NAT(oz_atomNoDup("checkAliveInterval"),
-                      ozconf.perdioCheckAliveInterval);
+             SET_NAT(oz_atomNoDup("flowbuffersize"),ozconf.dpFlowBufferSize);
+             SET_NAT(oz_atomNoDup("flowbuffertime"),ozconf.dpFlowBufferTime);
+             SET_NAT(oz_atomNoDup("seifHandler"),ozconf.dpSeifHandler);
+             SET_NAT(oz_atomNoDup("retryTimeCeiling"),
+                      ozconf.dpRetryTimeCeiling);
+             SET_NAT(oz_atomNoDup("retryTimeFloor"),
+                      ozconf.dpRetryTimeFloor);
+             SET_NAT(oz_atomNoDup("retryTimeFactor"),
+                      ozconf.dpRetryTimeFactor);
+             SET_NAT(oz_atomNoDup("tcpHardLimit"),ozconf.dpTCPHardLimit);
+             SET_NAT(oz_atomNoDup("tcpweaklimit"),ozconf.dpTCPWeakLimit);
+             SET_NAT(oz_atomNoDup("probeInterval"),
+                      ozconf.dpProbeInterval);
+             SET_NAT(oz_atomNoDup("probeTimeout"),
+                      ozconf.dpProbeTimeout);
              SET_BOOL(oz_atomNoDup("useAltVarProtocol"),
-                      ozconf.perdioUseAltVarProtocol););
+                      ozconf.dpUseAltVarProtocol););
     // DPTABLE
     CASE_NAT_DO(PROP_DPTABLE_DEFAULTOWNERTABLESIZE,{
       ozconf.dpTableDefaultOwnerTableSize=INT__;
@@ -1034,22 +1046,22 @@ static const struct prop_entry prop_entries[] = {
   {"internal.suspension",PROP_INTERNAL_SUSPENSION},
   {"internal.stop",PROP_INTERNAL_STOP},
   {"internal.ip.debug",PROP_INTERNAL_DEBUG_IP},
-  // PERDIO
-  {"perdio.debug",PROP_PERDIO_DEBUG},
-  {"perdio.useAltVarProtocol",
-                       PROP_PERDIO_USEALTVARPROTOCOL},
-  {"perdio.minimal",PROP_PERDIO_MINIMAL},
-  {"perdio.version",PROP_PERDIO_VERSION},
-  {"perdio.flowbuffersize",PROP_PERDIO_FLOWBUFFERSIZE},
-  {"perdio.flowbuffertime",PROP_PERDIO_FLOWBUFFERTIME},
-  {"perdio.timeout",PROP_PERDIO_TIMEOUT},
-  {"perdio.seifHandler",PROP_PERDIO_SEIFHANDLER},
-  {"perdio.tempRetryCeiling",PROP_PERDIO_TEMPRETRYCEILING},
-  {"perdio.tempRetryFloor",PROP_PERDIO_TEMPRETRYFLOOR},
-  {"perdio.tempRetryFactor",PROP_PERDIO_TEMPRETRYFACTOR},
-  {"perdio.maxTCPCache",PROP_PERDIO_MAXTCPCACHE},
-  {"perdio.checkAliveInterval",PROP_PERDIO_CHECKALIVEINTERVAL},
-  {"perdio",PROP_PERDIO},
+  // DP
+  {"dp.debug",PROP_DP_DEBUG},
+  {"dp.useAltVarProtocol",
+                       PROP_DP_USEALTVARPROTOCOL},
+  {"dp.version",PROP_DP_VERSION},
+  {"dp.flowBufferSize",PROP_DP_FLOWBUFFERSIZE},
+  {"dp.flowBufferTime",PROP_DP_FLOWBUFFERTIME},
+  {"dp.seifHandler",PROP_DP_SEIFHANDLER},
+  {"dp.retryTimeCeiling",PROP_DP_RETRYTIMECEILING},
+  {"dp.retryTimeFloor",PROP_DP_RETRYTIMEFLOOR},
+  {"dp.retryTimeFactor",PROP_DP_RETRYTIMEFACTOR},
+  {"dp.tcpHardLimit",PROP_DP_TCPHARDLIMIT},
+  {"dp.tcpWeakLimit",PROP_DP_TCPWEAKLIMIT},
+  {"dp.probeInterval",PROP_DP_PROBEINTERVAL},
+  {"dp.probeTimeout",PROP_DP_PROBETIMEOUT},
+  {"dp",PROP_DP},
   // DPTABLE
   {"dpTable.defaultOwnerTableSize",
                        PROP_DPTABLE_DEFAULTOWNERTABLESIZE},

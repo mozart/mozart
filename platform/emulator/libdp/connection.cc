@@ -107,10 +107,15 @@ inline OZ_Return parseRequestor(OZ_Term requestor,
       // or it may be reused which is checked by comparing the sites.
       if(comController->valid(comObj)) {
         DSite *site=comObj->getSite();
-        if(site==NULL) // this comObj has been reused for accept
+        if(site==NULL) { // this comObj has been reused for accept
+//        fprintf(stderr,"reused for accept\n");
           return OZ_FAILED;
-        else if(strcmp(site->stringrep_notype(),siteid)!=0) // reused for other site
+        }
+        else if(strcmp(site->stringrep_notype(),siteid)!=0) {
+          // reused for other site
+//        fprintf(stderr,"reused for other site\n");
           return OZ_FAILED;
+        }
         // The right one! Go ahead
       }
       else return OZ_FAILED;

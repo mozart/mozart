@@ -1102,7 +1102,7 @@ void initDPCore()
   gCollectBorrowTableUnusedFrames = gcBorrowTableUnusedFramesImpl;
   gCollectPerdioFinal = gcPerdioFinalImpl;
   dpExit = dpExitImpl;
-  changeMaxTCPCache = changeMaxTCPCacheImpl;
+  changeTCPLimit = changeTCPLimitImpl;
   distHandlerInstall = distHandlerInstallImpl;
   distHandlerDeInstall = distHandlerDeInstallImpl;
   //
@@ -1132,7 +1132,7 @@ void initDPCore()
                                              2, 0, BIstartTmp, OK));
 
 
-  if(ozconf.perdioSeifHandler)
+  if(ozconf.dpSeifHandler)
     installGlobalWatcher(PERM_FAIL|TEMP_FAIL,
                   makeTaggedConst(new Builtin("", "failureDefault",
                                                3, 0, BIfailureDefault, OK)),
@@ -1297,6 +1297,10 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
 
   // Close any remaining connections violently.
   comController->closeAll();
+
+  //  DebugCode(int dummy;
+  //    Assert(getTransControllerInfo(dummy)==0);)
+  //        printf("left %d\n",getTransControllerInfo(dummy));)
 
   //  printf("times left %d\n", timeUntilClose);
   //  printf("connections left %d\n", connectionsLeft);
