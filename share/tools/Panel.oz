@@ -22,19 +22,23 @@
 
 \ifdef LILO
 
-functor $
+functor $ prop once
 
 import
-   SP.{System = 'System'}
+   System.{gaga}
 
-   OP.{Open = 'Open'}
+   Open.{file}
 
-   WP.{Tk      = 'Tk'
-       TkTools = 'TkTools'}
+   Tk
+   
+   TkTools.{note
+	    notebook
+	    textframe
+	    numberentry}
    
 export
-   'PanelClass': PanelClass
-   'Panel':      Panel
+   'class': PanelClass
+   'panel': Panel
 
 body
    \insert 'panel/main.oz'

@@ -24,33 +24,62 @@
 functor $
 
 import
-   SP.{System  = 'System'
-       Error   = 'Error'
-       Foreign = 'Foreign'
-       Show    = 'Show'}
+   System.{get
+	   valueToVirtualString
+	   Show = 'Show'}
 
-   CP.{FS = 'FS'}
+   Error.{formatLine
+	  msg}
 
-   OP.{Open      = 'Open'
-       Load      = 'Load'
-       Component = 'Component'}
+   Foreign.{pointer
+	   }
 
-   WP.{Tk      = 'Tk'
-       TkTools = 'TkTools'}
+   FS.{value}
 
-   Compiler.{RealCompiler = 'Compiler'}
+   Open.{file}
+
+   Component.{Load = load
+	      save}
+
+   Tk.{isColor
+       toplevel
+       frame
+       label
+       text
+       batch
+       listbox
+       scrollbar
+       addYScrollbar
+       scale
+       variable
+       entry
+       send
+       return
+       returnInt
+       button
+       checkbutton
+       menuentry
+       action}
+
+   TkTools.{dialog
+	    error
+	    textframe
+	    menubar
+	    note
+	    notebook
+	    numberentry}
+
+   Compiler.{genericInterface}
 
    Browser.{Browse = 'Browse'}
 
-   Emacs.{RealEmacs = 'Emacs'}
+   Emacs.{condSend}
 
 export
-   'CompilerPanel': CompilerPanel
+   panel: CompilerPanel
 
 body
-   Compiler = RealCompiler
-   Emacs    = RealEmacs
-in
+
    \insert compilerPanel/CompilerPanelClass
 
 end
