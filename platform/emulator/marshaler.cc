@@ -172,13 +172,15 @@ double unmarshalFloat(MsgBuffer *bs)
   return dc.u.d;
 }
 
+class ByteStream;
+
 char *unmarshalString(MsgBuffer *bs)
 {
   misc_counter[MISC_STRING].recv();
   int i = unmarshalNumber(bs);
 
   char *ret = new char[i+1];  
-  for (int k=0; k<i; k++) {
+  for (int k=0; k<i && !bs->atEnd(); k++) {
     ret[k] = bs->get();
   }
   ret[i] = '\0';
