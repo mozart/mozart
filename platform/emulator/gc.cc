@@ -998,10 +998,10 @@ void GenFDVariable::gc(void)
 
   int i;
   if (opMode == IN_TC && getHome() == fromCopyBoard)
-    for (i = 0; i < any; i++)
+    for (i = 0; i < fd_any; i++)
       fdSuspList[i] = fdSuspList[i]->gc(OK);
   else
-    for (i = 0; i < any; i++)
+    for (i = 0; i < fd_any; i++)
       fdSuspList[i] = fdSuspList[i]->gc(NO);
 }
 

@@ -150,26 +150,26 @@ PRINT(GenCVariable){
   case FDVariable:
     {
       GenFDVariable * me = (GenFDVariable *) this;
-      if (isEffectiveList(me->fdSuspList[det]) == OK)
+      if (isEffectiveList(me->fdSuspList[fd_det]) == OK)
         stream << " d("
-               << me->fdSuspList[det]->length()
+               << me->fdSuspList[fd_det]->length()
                << '/'
-               << me->fdSuspList[det]->lengthProp()
+               << me->fdSuspList[fd_det]->lengthProp()
                << ')';
-      if (isEffectiveList(me->fdSuspList[bounds]) == OK)
-        stream << " b(" << me->fdSuspList[bounds]->length()
+      if (isEffectiveList(me->fdSuspList[fd_bounds]) == OK)
+        stream << " b(" << me->fdSuspList[fd_bounds]->length()
                << '/'
-               << me->fdSuspList[bounds]->lengthProp()
+               << me->fdSuspList[fd_bounds]->lengthProp()
                << ')';
-      if (isEffectiveList(me->fdSuspList[size]) == OK)
-        stream << " s(" << me->fdSuspList[size]->length()
+      if (isEffectiveList(me->fdSuspList[fd_size]) == OK)
+        stream << " s(" << me->fdSuspList[fd_size]->length()
                << '/'
-               << me->fdSuspList[size]->lengthProp()
+               << me->fdSuspList[fd_size]->lengthProp()
                << ')';
-      if (isEffectiveList(me->fdSuspList[eqvar]) == OK)
-        stream << " e(" << me->fdSuspList[eqvar]->length()
+      if (isEffectiveList(me->fdSuspList[fd_eqvar]) == OK)
+        stream << " e(" << me->fdSuspList[fd_eqvar]->length()
                << '/'
-               << me->fdSuspList[eqvar]->lengthProp()
+               << me->fdSuspList[fd_eqvar]->lengthProp()
                << ')';
       stream << ' ';
       me->getDom().print(stream, 0);
@@ -782,16 +782,16 @@ PRINTLONG(GenCVariable){
 
   if (type == FDVariable) {
     stream << indent(offset) << "Det SuspList:\n";
-    ((GenFDVariable*)this)->fdSuspList[det]->print(stream, 0, offset+3);
+    ((GenFDVariable*)this)->fdSuspList[fd_det]->print(stream, 0, offset+3);
 
     stream << indent(offset) << "Bounds SuspList:\n";
-    ((GenFDVariable*)this)->fdSuspList[bounds]->print(stream, 0, offset+3);
+    ((GenFDVariable*)this)->fdSuspList[fd_bounds]->print(stream, 0, offset+3);
 
     stream << indent(offset) << "Size SuspList:\n";
-    ((GenFDVariable*)this)->fdSuspList[size]->print(stream, 0, offset+3);
+    ((GenFDVariable*)this)->fdSuspList[fd_size]->print(stream, 0, offset+3);
 
     stream << indent(offset) << "Equal variables SuspList:\n";
-    ((GenFDVariable*)this)->fdSuspList[eqvar]->print(stream, 0, offset+3);
+    ((GenFDVariable*)this)->fdSuspList[fd_eqvar]->print(stream, 0, offset+3);
 
    }
 
