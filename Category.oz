@@ -62,7 +62,7 @@ define
 	    tr('class':'header'
 	       'valign':'top'
 	       td('class':'header'
-		  a(href:'../'#Id#'.html' {HtmlQuote Id}))
+		  a(href:{Manager id_to_href(Id $)} {HtmlQuote Id}))
 	       td('class':'header' ":")
 	       td('class':'value' Desc))
 	 end}
@@ -114,7 +114,7 @@ define
 	    tr('class':'header'
 	       'valign':'top'
 	       td('class':'header'
-		  a(href:Id#'.html' tt(Id)))
+		  a(href:{Manager id_to_href(Id $)} tt(Id)))
 	       td('class':'header' ":")
 	       td('class':'value' Desc))
 	 end}

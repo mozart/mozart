@@ -96,7 +96,7 @@ define
       end
       %%
       meth docHrefs($)
-	 Dir = '../doc/'#@id#'/'
+	 Dir = {Manager id_to_docdir_href(@id $)}
       in
 	 {FoldR
 	  {Filter
@@ -116,7 +116,7 @@ define
       end
       %%
       meth pkgHrefs($)
-	 Dir = '../pkg/'#@id#'/'
+	 Dir = {Manager id_to_pkgdir_href(@id $)}
       in
 	 {Filter
 	  {Map @url_pkg
@@ -156,7 +156,7 @@ define
 	       H = {Manager cat_to_href(C $)}
 	       S = tt({HtmlQuote C})
 	    in
-	       if H==unit then S else a(href:'category/'#H S) end
+	       if H==unit then S else a(href:H S) end
 	    end}
 	   fun {$ X Accu}
 	      if Accu==nil then [X] else X|", "|Accu end

@@ -150,6 +150,16 @@ define
       in
 	 @mogulTOP#'/info/'#S#'.html'
       end
+      meth id_to_docdir_href(ID $)
+	 S = {URL.toString {AdjoinAt {URL.make ID} scheme unit}}
+      in
+	 @mogulTOP#'/doc/'#S#'/'
+      end
+      meth id_to_pkgdir_href(ID $)
+	 S = {URL.toString {AdjoinAt {URL.make ID} scheme unit}}
+      in
+	 @mogulTOP#'/pkg/'#S#'/'
+      end
       meth condGetId(ID D $)
 	 if @db==unit then D else {@db condGet(ID D $)} end
       end
@@ -205,7 +215,7 @@ define
 	 Admin,InitCategories
 	 case {CondSelect @categories C unit}
 	 of unit then unit
-	 [] R then R.normalized#'.html' end
+	 [] R then @mogulTOP#'/info/category/'#R.normalized#'.html' end
       end
       meth InitCategories
 	 if @categories==unit then
