@@ -1,9 +1,7 @@
 <!DOCTYPE Book SYSTEM "ozdoc.dtd" [
 
 <!-- Extension to the DTD -->
-<!ENTITY % proglang.values.local "|lambda|sh">
-<!ENTITY % picture.element "picture|picture.extern|picture.choice">
-<!ELEMENT comic - O (%picture.element;)>
+<!ENTITY % proglang.values.local "|sh">
 
 <!-- Abbreviations -->
 <!ENTITY lt "<">
@@ -28,10 +26,6 @@
     <Meta name=ozversion value="3.0">
     <Meta name=status value=revised>
     <Meta name="proglang.mode" arg1="sh" arg2="sh-mode">
-    <Meta name=latex.package value="oz">
-    <Meta name=latex.package value="pstricks">
-    <Meta name=latex.package value="rotate">
-    <Meta name=latex.package value="pifont">
 
     <meta name="html.split" value="chapter.intro">
     <meta name="html.split" value="sec.foreignex">
@@ -548,7 +542,7 @@ The following data types are defined in the interface:
 <entry><<OZ_C_proc_interface>>
 <index class=module/OZ_C_proc_interface/
 <synopsis>
-<code >
+<code display>
 typedef struct {
   const char * name;
   short        inArity;
@@ -570,7 +564,7 @@ exported from a native module.
 <synopsis>
 <index class=module/OZ_BI_define/
 <index class=module/OZ_BI_end/
-<code >
+<code display>
   OZ_BI_define(Name,InArity,OutArity)
   ... C/C++ code
   OZ_BI_end
@@ -645,15 +639,12 @@ checks. Therefor in C (not in C++) only one of them can be used only
 at the start of a new block statement. For this reason there is also a
 second set of macros named <code /OZ_set*/ that expect that their
 second argument has already been declared. Thus in C++ you can use
-<p>
-<code>
+<code display>
   OZ_declareAtom(0,mystring);
   OZ_declareInt(1,myint);
 </code>
-<p>
 whereas in plain C you have to write
-<p>
-<code>
+<code display>
   char *mystring;
   int myint;
   OZ_setAtom(0,mystring);
@@ -670,11 +661,9 @@ whereas in plain C you have to write
 <item> Abstract access to output argument number <code /n/ (counting
 starts with 0). Should only be used for writing an output argument and
 never for reading. Usage is like
-<p>
-<code >
+<code display>
   OZ_out(3) = OZ_atom("myResult");
 </code>
-<p>
 This macro should only be used in case a function returns more than
 one value. For returning values in the first output argument one of
 the functions below should be used.
@@ -682,8 +671,7 @@ the functions below should be used.
 <entry/<<OZ_RETURN(V)>><index class=module/OZ_RETURN//
 <item> Returns from the C function with output value <<V>>. It is a
 macro which expands to
-<p>
-<code>
+<code display>
   return (OZ_out(0)=V,OZ_ENTAILED)
 </code>
 </list>
