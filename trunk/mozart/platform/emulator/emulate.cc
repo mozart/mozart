@@ -2087,11 +2087,14 @@ LBLdispatcher:
     {
       Reg reg                     = getRegArg(PC+1);
       ProgramCounter nxt          = getLabelArg(PC+2);
-      PrTabEntry *predd           = getPredArg(PC+3);
-      AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
+      AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+3);
+      PrTabEntry *predd           = getPredArg(PC+4);
       AssRegArray *list           = (AssRegArray*) getAdressArg(PC+5);
       
-      
+      if (predd->getPC()==NOCODE) {
+        predd->PC = PC+sizeOf(DEFINITION);
+      }
+
       int size = list->getSize();
       RefsArray gRegs = (size == 0) ? (RefsArray) NULL : allocateRefsArray(size);
 
