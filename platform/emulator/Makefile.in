@@ -166,12 +166,12 @@ bootstrap:: all
 
 $(MODINTERS): bidecl.perl
 
-libFDP.a FDP.so libSchedule.a Schedule.so: \
-        libfd modFDP-if.cc modSchedule-if.cc
+.PHONY: libFDP.a FDP.so libSchedule.a Schedule.so
+libFDP.a FDP.so libSchedule.a Schedule.so:
         cd libfd; $(MAKE) ../$@
 
-libFSP.a FSP.so: \
-        libfset modFSP-if.cc
+.PHONY: libFSP.a FSP.so
+libFSP.a FSP.so:
         cd libfset; $(MAKE) ../$@
 
 Wif.so: $(WIFOBJS)
@@ -280,10 +280,8 @@ version.cc: version.sed $(filter-out version.cc,$(ALLSRCS))
              -e "s/OZPLATFORM/$(PLATFORM)/" \
              $(SRCDIR)/version.sed > version.cc
 
-depend:: Makefile $(CREATEDFILES) $(ALLSRCS) $(TEXT2PICKLESRCS)
-        $(DEPEND) version.cc initffuns.cc \
-                $(ALLSRCS:%=$(SRCDIR)/%) $(CREATEDSRCS) \
-                > Makefile.deps
+depend:: version.cc initffuns.cc $(CREATEDSRCS) $(ALLSRCS)
+        $(DEPEND) $^ > Makefile.deps
 
 tags:   $(CREATEDFILES) version.cc
         etags \

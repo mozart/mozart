@@ -39,14 +39,17 @@ FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 
 all: $(FSETTARGETS)
 
-../FSP.so: $(FSETLIBOBJS) $(SRCDIR) .
+../FSP.so: $(FSETLIBOBJS)
         $(DYNLD) -o $@ $(FSETLIBOBJS)
 
-../libFSP.a: $(FSETLIBOBJS) $(SRCDIR) .
+../libFSP.a: $(FSETLIBOBJS)
         $(AR) -rc $@ $(FSETLIBOBJS) && $(RANLIB) $@
 
-depend:: Makefile $(FSETLIBSRCS)
+depend:: $(FSETLIBSRCS)
         $(DEPEND) $(FSETLIBSRCS:%=$(SRCDIR)/%) > Makefile.deps
+
+Makefile: Makefile.in
+        (cd ..;./config.status)
 
 -include Makefile.deps
 
