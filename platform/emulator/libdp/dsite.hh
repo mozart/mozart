@@ -158,6 +158,7 @@ private:
   void makePermConnected(){
     flags |= PERM_SITE;
     flags &= (~CONNECTED);
+    u.readCtr=0;
     return;}
 
   void makePerm(){
@@ -250,7 +251,7 @@ public:
     Assert(!isGCMarkedSite());
     if(flags & MY_SITE) {return NO;}
     unsigned short t=getType();
-    if(ActiveSite() &&
+    if(ActiveSite() && !isPerm() &&
        ((t & CONNECTED) || u.readCtr!=0)){
       zeroActive();
       return NO;}
