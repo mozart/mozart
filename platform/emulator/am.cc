@@ -196,8 +196,8 @@ void AM::init(int argc,char **argv)
   char *queryFileName = NULL;
 
   /* process command line arguments */
-  conf.argV = 0;
-  conf.argC = NULL;
+  conf.argV = NULL;
+  conf.argC = 0;
   for (int i=1; i<argc; i++) {
     if (strcmp(argv[i],"-E")==0) {
       runningUnderEmacs = 1;
