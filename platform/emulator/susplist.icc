@@ -23,36 +23,6 @@
 //                           class SuspList
 
 inline
-SuspList * SuspList::appendToAndUnlink(SuspList * &to_list)
-{
-  if (this)
-    if (to_list) {
-      SuspList* aux;
-      for (aux = to_list; aux->getNext(); aux = aux->getNext());
-      aux->setNext(this);
-    } else {
-      to_list = this;
-    }
-  return NULL;
-}
-
-inline
-SuspList * SuspList::appendTo(SuspList * to_list)
-{
-  if (this) {
-    if (to_list) {
-      SuspList *aux;
-      for (aux = to_list; aux->getNext(); aux = aux->getNext());
-      aux->setNext(this);
-      return to_list;
-    } 
-    return this;
-  } else {
-    return to_list;
-  }
-}
-
-inline
 SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
 {
   if (reset_local) {
@@ -71,21 +41,16 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
     }
     return NULL;
   } else {
-    return appendToAndUnlink(to_list);
+    if (this)
+      if (to_list) {
+	SuspList* aux;
+	for (aux = to_list; aux->getNext(); aux = aux->getNext());
+	aux->setNext(this);
+      } else {
+	to_list = this;
+      }
+    return NULL;
   }
-}
-
-inline
-SuspList * SuspList::dispose(void)
-{
-  SuspList * ret = next;
-  freeListDispose(this, sizeof(SuspList));
-  return ret;
-}
-
-inline
-void SuspList::disposeList(void) {
-  for (SuspList * l = this; l; l = l->dispose());
 }
 
 //-----------------------------------------------------------------------------
@@ -108,16 +73,6 @@ OrderedSuspList * OrderedSuspList::insert(Thread * thr)
   *p = new OrderedSuspList(thr, *p);
 
   return r;
-}
-
-inline
-void OrderedSuspList::print(void)
-{
-  for (OrderedSuspList * p = this; p != NULL; p = p->n) {
-    OZ_Propagator * pr = p->t->getPropagator();
-    cout << "   " << pr->toString() 
-	 << endl << flush;
-  }
 }
 
 #endif
