@@ -640,10 +640,8 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     DEREF(v, vptr, vtag);
 
     if (isAnyVar(vtag)) {
+      Assert(!isCVar(vtag) || (!testStoreFlag(v) && !testReifiedFlag(v)));
 
-      Assert(!isCVar(vtag) || 
-	     (!testResetStoreFlag(v) && !testResetReifiedFlag(v)));
-      
       if (isGenFDVar(v, vtag)) {
 	addSuspFDVar(v, thr, staticSpawnVars[i].state.fd);
 	all_local &= am.isLocalSVar(v);
