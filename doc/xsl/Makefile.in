@@ -22,7 +22,7 @@ NEWCOMPILE	= $(JAVAC) -classpath $(SRCDIR)/xsl-new.jar -d .
 LATEXHANDLER	= com/jclark/xsl/sax/LaTeXOutputHandler.class
 NXMLHANDLER	= com/jclark/xsl/sax/NXMLOutputHandler.class
 TEXTHANDLER	= com/jclark/xsl/sax/TextOutputHandler.class
-EXTEND_CLASSES	= TeX.class ID.class Msg.class Meta.class
+EXTEND_CLASSES	= TeX.class ID.class Msg.class Meta.class Meta\$$ChunkInfo.class
 HANDLER_CLASSES	= $(LATEXHANDLER) $(NXMLHANDLER) $(TEXTHANDLER)
 CLASSES		= $(EXTEND_CLASSES) $(HANDLER_CLASSES)
 
@@ -31,6 +31,8 @@ CLASSES		= $(EXTEND_CLASSES) $(HANDLER_CLASSES)
 all bootstrap:: $(CLASSES)
 
 bootquick::
+
+Meta\$$ChunkInfo.class: Meta.class
 
 $(LATEXHANDLER): LaTeXOutputHandler.java
 	$(COMPILE) $<
