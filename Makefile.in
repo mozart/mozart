@@ -167,23 +167,28 @@ $(PACKDIR) $(PACKDIR)/mozart $(PACKDIR)/mozart/doc:
         $(INSTALL_DIR) $@
 
 oz-win::
-        rm -rf oz oz3 oz-`$(OZVERSION)`
+        rm -rf oz oz3
         ( cd $(PREFIX)/..; \
           $(TAR) cf - oz/include oz/share \
                    oz/LICENSE \
+                   oz/contrib \
                    oz/platform/winbin \
-                   oz/doc \
                    oz/platform/win32-i486/?*.exe \
                    oz/platform/win32-i486/?*.dll \
                    oz/platform/win32-i486/wish \
          ) | $(TAR) xf -
+        $(INSTALL_DIR) oz/doc
+        ( cd $(PREFIX)/doc; $(TAR) cf - . ) | (cd oz/doc; $(TAR) xf -)
         $(INSTALL_DIR) $(WINCACHEDIR)/share
         $(INSTALL_DIR) $(WINCACHEDIR)/doc/demo
         mv oz/share/images oz/share/?*.ozf $(WINCACHEDIR)/share
         mv oz/doc/demo/applets $(WINCACHEDIR)/doc/demo
+        find oz -name '*.so-*' -not -name '*.so-win32-i486' -exec rm -f '{}' ';'
+        rm -rf oz/share/doc
         mv $(WINCACHEDIR)/share/Init.ozf oz/share
         for i in ozc ozd ozl; do \
-          cat oz/platform/winbin/ozwrapper.exe $(PREFIX)/bin/$$i > oz/platform/winbin/$$i.exe;\
+          cat oz/platform/winbin/ozwrapper.exe \
+              $(PREFIX)/bin/$$i > oz/platform/winbin/$$i.exe;\
         done
         i386-mingw32-strip oz/platform/win32-i486/*.exe
         mv oz/platform/winbin oz/bin
