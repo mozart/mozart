@@ -2767,9 +2767,18 @@ LBLdispatcher:
     {
       TaggedRef taggedPredicate = (TaggedRef)ToInt32(Y);
 
+      predArity = G ? getRefsArraySize(G) : 0;
+
+      DEREF(taggedPredicate,predPtr,predTag);
+      if (!isProcedure(taggedPredicate) && !isObject(taggedPredicate)) {
+	if (isAnyVar(predTag)) {
+	  SUSP_PC(predPtr,0,PC);
+	}
+	RAISE_APPLY(taggedPredicate,OZ_toList(predArity,G));
+      }
+
       RefsArray tmpX = G;
       Y = G = NULL;
-      predArity = tmpX ? getRefsArraySize(tmpX) : 0;
       int i = predArity;
       while (--i >= 0) {
 	X[i] = tmpX[i];
@@ -2778,15 +2787,6 @@ LBLdispatcher:
       DebugTrace(trace("call cont task",CBB));
       isTailCall = OK;
 
-      DEREF(taggedPredicate,predPtr,predTag);
-      if (!isProcedure(taggedPredicate) && !isObject(taggedPredicate)) {
-	if (isAnyVar(predTag)) {
-	  /* compiler ensures: if pred is in X[n], then n == arity+1,
-	   * so we save one additional argument */
-	  SUSP_PC(predPtr,predArity,PC);
-	}
-	RAISE_APPLY(taggedPredicate,OZ_toList(predArity,X));
-      }
       predicate=tagged2Const(taggedPredicate);
       goto LBLcall;
     }
