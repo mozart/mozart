@@ -57,7 +57,7 @@
       <section>
 	<title/Invocation from the OPI/
 	<p>
-	To start Ozcar from the OPI, you have to apply the elisp
+	To <def>start Ozcar</def> from the OPI, you have to apply the elisp
 	function <span proglang=elisp><<oz-debugger>></span>, which is
 	bound to the key sequence <Key/C-. C-. d/ by default. Executed
 	with prefix argument (<Key/C-u C-. C-. d/), the Ozcar window
@@ -97,7 +97,7 @@
 	<subsection>
 	<title/Thread States/
 	<p>
-	Different node shapes correspond to different thread states:
+	Different node shapes correspond to different <def>thread states</def>:
 	The state of a thread can be seen as a pair of two values.
 	The first one determines if the thread is currently stopped by
 	the debugger. Nodes of such threads are printed with a
@@ -134,13 +134,13 @@
       <section>
 	<title/Stack View/
 	<p>
-	Right beside the thread window, there is another window
-	labeled <def>Stack</def> or <def>Stack of Thread
-	&lt;id&gt;</def>. It prints the stack of the currently
-	selected thread (if there is any). Beware: the topmost frame
-	is displayed at the bottom. The procedure arguments are
-	printed in bold face and can be further investigated (using
-	the Browser tool) by clicking on them.
+        Right beside the thread window, there is another window
+	labeled Stack or Stack of Thread &lt;id&gt;.  It prints the
+	stack of the currently selected thread (if there is
+	any). Beware: the topmost frame is displayed at the
+	bottom. The procedure arguments are printed in bold face and
+	can be further investigated (using the Browser tool) by
+	clicking on them.
 	<subsection>
 	<title/Stackframe Selection/
 	<p>
@@ -168,8 +168,8 @@
       <section>
 	<title/Status Line/
 	<p>
-	At the bottom of the main window, there is a <def>Status
-	Line</def> which is used to display miscellaneous useful
+	At the bottom of the main window, there is a Status
+	Line which is used to display miscellaneous useful
 	information.
       <section>
 	<title/Source view/
