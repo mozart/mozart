@@ -301,28 +301,6 @@ OZ_C_proc_begin(BItraceThread,2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIqueryDebugState,2)
-{
-  OZ_Term chunk = deref(OZ_getCArg(0));
-  OZ_Term out   = OZ_getCArg(1);
-
-  ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = (Thread*) rec;
-
-  return oz_unify(out, OZ_mkTupleC("debugState",
-                                   3,
-                                   thread->isTraced()  ? oz_atom("Traced")
-                                                       : oz_atom("notTraced"),
-                                   thread->stepMode()  ? oz_atom("stepON")
-                                                       : oz_atom("stepOFF"),
-                                   thread->stopped()   ? oz_atom("stopped")
-                                                       : oz_atom("running")
-                                   ));
-
-}
-OZ_C_proc_end
-
-
 
 OZ_C_proc_begin(BIspy, 1)
 {

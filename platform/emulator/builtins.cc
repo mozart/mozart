@@ -2786,33 +2786,7 @@ OZ_C_proc_begin(BIthreadState,2)
     return remoteSend(th,"Thread.state",out);
   }
 
-
   return oz_unify(out,threadState(th));
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIthreadGetName,2)
-{
-  oz_declareThreadArg(0,th);
-  oz_declareArg(1,out);
-
-  if (th->isProxy())
-    return oz_raise(E_ERROR,E_KERNEL,"threadGetName Proxy not impl",0);
-
-  return oz_unify(out, th->getName());
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIthreadSetName,2)
-{
-  oz_declareThreadArg(0,th);
-  oz_declareArg(1,in);
-
-  if (th->isProxy())
-    return oz_raise(E_ERROR,E_KERNEL,"threadSetName Proxy not impl",0);
-
-  th->setName(in);
-  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -7042,7 +7016,6 @@ BIspec allSpec[] = {
   {"stopThread",1,BIstopThread},
   {"contThread",1,BIcontThread},
   {"traceThread",2,BItraceThread},
-  {"queryDebugState",2,BIqueryDebugState},
   {"Debug.breakpointAt",4,BIbreakpointAt},
   {"Debug.breakpoint",0,BIbreakpoint},
 
@@ -7065,8 +7038,6 @@ BIspec allSpec[] = {
   {"Thread.getPriority",2,BIthreadGetPriority},
   {"Thread.isSuspended",2,BIthreadIsSuspended},
   {"Thread.state",2,BIthreadState},
-  {"Thread.getName",2,BIthreadGetName},
-  {"Thread.setName",2,BIthreadSetName},
 
   {"printLong",1,BIprintLong},
 

@@ -149,8 +149,6 @@ private:
   } state;
 
   unsigned long id;
-
-  TaggedRef name;
   ThreadBodyItem item;          // NULL if it's a deep 'unify' suspension;
 
 #ifdef PERDIO
@@ -209,9 +207,6 @@ public:
 
   void setSelf(Object *o) { setPtr(o); }
   Object *getSelf() { return (Object *) getPtr(); }
-
-  TaggedRef getName() { return name; }
-  void setName(TaggedRef n) { name = n; }
 
   //  priority;
   int getPriority() {
