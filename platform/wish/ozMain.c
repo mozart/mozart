@@ -361,7 +361,9 @@ StdinProc(clientData, mask)
     Tk_CreateFileHandler(0, 0, StdinProc, (ClientData) 0);
     code = Tcl_Eval(interp, cmd);
     Tk_CreateFileHandler(0, TK_READABLE, StdinProc, (ClientData) 0);
-    if (*interp->result != 0) {
+    if (*interp->result != 0
+         && !strstr(interp->result,
+                "unknown option \"-outline\"")) { /* Tk is buggy! -BL */
         if ((code != TCL_OK) || (tty)) {
           fprintf(stdout,"w --- %s", cmd);
           fprintf(stdout,"---  %s\n---\n.\n", interp->result);
