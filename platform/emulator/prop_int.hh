@@ -88,11 +88,6 @@ void oz_closeDonePropagator(Propagator * prop)
   Assert(!prop->isDeadPropagator());
   Assert(oz_isCurrentBoard(GETBOARD(prop)));
 
-  // constructive disjunction ???
-  // kost@: i don't know what's going on here - just keep it as it was;
-  //if (isSuspended ()) 
-  //return;
-
   prop->dispose();	// kost@: TODO? optimize;
   prop->markDeadPropagator();
 
@@ -112,25 +107,6 @@ void oz_closeDonePropagator(Propagator * prop)
   //  An ESSENTIAL invariant:
   //  If entailment/whatever is reached somewhere, that's a bad news.
   //  I don't know how to check this assertion right now;
-}
-
-inline
-void oz_closeDonePropagatorThreadCD(Propagator * prop)
-{
-  prop->markRunnable();
-  oz_currentBoard()->decSuspCount();
-  prop->markDeadPropagator();
-  CheckExtSuspension(prop);
-}
-
-inline 
-void oz_closeDonePropagatorCD(Propagator * prop) 
-{
-  prop->markRunnable();
-  prop->dispose();
-  prop->markDeadPropagator();
-  oz_currentBoard()->decSuspCount();
-  CheckExtSuspension(prop);
 }
 
 inline

@@ -41,8 +41,6 @@
 
 //-----------------------------------------------------------------------------
 
-LocalPropagationStore localPropStore;
-
 void LocalPropagationQueue::resize () {
   int new_maxsize = maxsize * 2;
   queue_t * new_queue = ::new queue_t[new_maxsize];
