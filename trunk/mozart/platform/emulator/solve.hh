@@ -18,6 +18,7 @@
 #endif
 
 #include "cpbag.hh"
+#include "gc.hh"
 
 // ------------------------------------------------------------------------
 
@@ -37,6 +38,13 @@ private:
   TaggedRef result;
   SuspList  *suspList;
   int threads;
+
+#ifdef CS_PROFILE
+  int32 * orig_start;
+  int32 * copy_start;
+  int     copy_size;
+#endif
+
 public:
   SolveActor();
   ~SolveActor();
@@ -92,6 +100,10 @@ public:
   TaggedRef genChoice(int noOfClauses);
   TaggedRef genFailed();
   TaggedRef genUnstable(TaggedRef arg);
+
+#ifdef CS_PROFILE
+  TaggedRef getCloneDiff(void);
+#endif
 
 //-----------------------------------------------------------------------------
 // local thread queue

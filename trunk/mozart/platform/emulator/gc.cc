@@ -59,6 +59,13 @@ typedef enum {IN_GC = 0, IN_TC} GcMode;
 
 static GcMode opMode;
 
+#ifdef CS_PROFILE
+int32 * cs_copy_start = NULL;
+int32 * cs_orig_start = NULL;
+int     cs_copy_size  = 0;
+#endif
+
+
 /****************************************************************************
  *               Debug
  ****************************************************************************/
@@ -1814,11 +1821,20 @@ void processUpdateStack(void)
  *
  */
 
+#ifdef CS_PROFILE
+static Bool across_redid = NO;
+#endif
+
 Board* AM::copyTree(Board* bb, Bool *isGround)
 {
 #ifdef VERBOSE
   if (verbOut == (FILE *) NULL) 
     verbReopen ();
+#endif
+
+#ifdef CS_PROFILE
+  across_redid  = NO;
+  across_chunks = NO;
 #endif
 
   PROFILE_CODE1(FDProfiles.add(bb); FDVarsTouched.discard();)
@@ -1837,6 +1853,19 @@ Board* AM::copyTree(Board* bb, Bool *isGround)
 
   if (ozconf.timeDetailed)
     starttime = osUserTime();
+
+#ifdef CS_PROFILE
+redo: 
+  if (across_chunks)
+    across_redid = OK;
+
+  if (across_redid)
+    error("Redoing cloning twice acress chunk boundarys. Fuck!\n");
+  
+  across_chunks = NO;
+
+  cs_orig_start = (int32 *) heapTop;
+#endif
 
   ptrStack.unlock();
 
@@ -1865,6 +1894,27 @@ Board* AM::copyTree(Board* bb, Bool *isGround)
   unsetPathMarks(fromCopyBoard);
   fromCopyBoard = NULL;
   gcing = 1;
+
+#ifdef CS_PROFILE
+  if (across_chunks)
+    goto redo;
+
+  cs_copy_size = cs_orig_start - ((int32 *) heapTop);
+
+  cs_orig_start = (int32 *) heapTop;
+  
+  cs_copy_start = (int32*) malloc(4 * cs_copy_size + 256);
+
+  {
+    int n = cs_copy_size;
+
+    while (n) {
+      *(cs_copy_start + n) = *(cs_orig_start + n);
+      n--;
+    }
+
+  }
+#endif
 
   if (ozconf.timeDetailed)
     ozstat.timeForCopy.incf(osUserTime()-starttime);
@@ -2703,6 +2753,14 @@ void SolveActor::gcRecurse () {
   cpb              = cpb->gc();
   localThreadQueue = localThreadQueue->gc();
   nonMonoSuspList  = nonMonoSuspList->gc();
+#ifdef CS_PROFILE
+  if((copy_size>0) && copy_start) {
+    free(copy_start);
+  }
+  orig_start = (int32 *) NULL;
+  copy_start = (int32 *) NULL;
+  copy_size  = 0;
+#endif
 }
 
 void Actor::gcRecurse()
