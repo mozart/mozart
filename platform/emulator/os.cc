@@ -524,14 +524,6 @@ int osOpenMax()
 
 void osInit()
 {
-#ifdef MAKEANEWPGRP // mm2
-  // create a new process group, so that we can
-  // easily terminate all our children
-  if (setpgrp(getpid(),getpid()) < 0) {
-    ozperror("setpgrp");
-  }
-#endif
-
   DebugCheck(CLOCK_TICK < 1000, error("CLOCK_TICK must be greater than 1 ms"));
 
   openMax=osOpenMax();
