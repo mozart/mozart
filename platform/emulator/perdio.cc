@@ -262,7 +262,7 @@ inline Bool SEND_SHORT(Site* s){
   if(s->siteStatus()==PERM_SITE) {return OK;}
   return NO;}
 
-inline void pushUnify(Thread *t, TaggedRef t1, TaggedRef t2)
+void pushUnify(Thread *t, TaggedRef t1, TaggedRef t2)
 {
   RefsArray args = allocateRefsArray(2,NO); // with default priority
   args[0]=t1;
