@@ -72,8 +72,8 @@ ByNeedVariable::unifyV(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
 
   kickLazy(vPtr);
 
-  oz_bind(vPtr,*vPtr,t);
-  return PROCEED;
+  oz_suspendOnPtr(vPtr);
+  return SUSPEND;
 }
 
 void
