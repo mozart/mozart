@@ -1685,9 +1685,10 @@ OZ_BI_define(BItestRecord,3,1)
 
   OZ_Term ret=oz_checkList(patArityList,OZ_CHECK_FEATURE);
   if (oz_isRef(ret))   oz_suspendOn(ret);
-  if (oz_isFalse(ret)) oz_typeError(2,"non-empty finite list(Feature)");
+  if (oz_isFalse(ret)) oz_typeError(2,"finite list(Feature)");
   int len = smallIntValue(ret);
-  if (len==0) oz_typeError(2,"non-empty finite list(Feature)");
+  if (len==0)
+    OZ_RETURN_BOOL(oz_eq(val,patLabel));
 
   // compute the pattern's arity:
   TaggedRef sortedPatArityList = sortlist(duplist(patArityList,len),len);
