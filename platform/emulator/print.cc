@@ -350,8 +350,8 @@ PRINT(SRecord)
   CHECK_DEREF(ar);
   if (isCons(ar)) {
     stream << "(";
-    NEWLINE(offset+2);
     while (isCons(ar)) {
+      NEWLINE(offset+2);
       TaggedRef feat = head(ar);
       CHECK_DEREF(feat);
       tagged2Stream(feat,stream,depth,offset);
@@ -359,8 +359,8 @@ PRINT(SRecord)
       CHECK_DEREF(ar);
       stream << ": ";
       tagged2Stream(getFeature(feat),stream,DEC(depth),offset+2);
-      NEWLINE(offset+2);
     }
+    NEWLINE(offset);
     stream << ")";
   }
 }
