@@ -187,16 +187,6 @@ AC_ARG_ENABLE(contrib-compat,
 AC_MSG_RESULT($oz_cv_enable_contrib_compat)
 OZ_ADDTO_CONTRIBDIRS(compat)
 
-AC_MSG_CHECKING([for --enable-contrib-xml])
-AC_ARG_ENABLE(contrib-xml,
-  [--enable-contrib-xml
-	whether to build the xml contribution (default: yes)],
-  [oz_cv_enable_contrib_xml=$enableval],
-  [: ${oz_cv_enable_contrib_xml:=$oz_enable_contrib_xml}
-   : ${oz_cv_enable_contrib_xml:=yes}])
-AC_MSG_RESULT($oz_cv_enable_contrib_xml)
-OZ_ADDTO_CONTRIBDIRS(xml)
-
 
 AC_OUTPUT(Makefile)
 
