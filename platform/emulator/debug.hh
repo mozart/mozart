@@ -73,7 +73,7 @@ public:
   }
 
   void setSingleArgument(TaggedRef x) {
-    arity        = 0;
+    arity        = 1;
     arguments    = (TaggedRef *) freeListMalloc(sizeof(TaggedRef));
     arguments[0] = x;
   }
@@ -82,7 +82,7 @@ public:
   // procedure may be found by looking into the thread stack;
   // not providin a frameId (-1) means that the variable names
   // are directly adjoined to the record
-  TaggedRef toRecord(const char *label, Thread *thread, int frameId = -1);
+  TaggedRef toRecord(OZ_Term label, Thread *thread, int frameId = -1);
 
   TaggedRef getFrameVariables();
 
