@@ -1393,9 +1393,12 @@ public:
     setCreditOB(cur+c);}
 
   Bool getOnePrimaryCredit(){
-    if(isExtended()) {
-      return getOnePrimaryCredit_E();}
-    if(isPersistent()) {return OK;}
+    if(isExtended()){
+      PD((CREDIT,"Structure extended, no primary"));
+      return NO;}
+    if(isPersistent()) {
+      PD((CREDIT,"PERSISTENCY!!"));
+      return OK;}
     Credit tmp=getCreditOB();
     Assert(tmp>0);
     if(tmp-1<BORROW_MIN) {
@@ -1407,7 +1410,7 @@ public:
 
   Credit getSmallPrimaryCredit(){
     if(isExtended()){
-      return getSmallPrimaryCredit_E();}      
+      return NO;}      
     if(isPersistent()) {
       return INFINITE_CREDIT;}
     Credit tmp=getCreditOB();
@@ -1416,7 +1419,7 @@ public:
       setCreditOB(tmp-BORROW_GIVE_CREDIT_SIZE);
       thresholdCheck(BORROW_GIVE_CREDIT_SIZE);
       return BORROW_GIVE_CREDIT_SIZE;}
-    PD((SPECIAL,"low credit %d",tmp));
+    PD((CREDIT,"low credit %d",tmp));
     if(tmp-2>=BORROW_MIN){
       setCreditOB(tmp-2);
       thresholdCheck(2);      
@@ -1450,9 +1453,11 @@ public:
 
 void getOneMsgCredit(){
   if(getOnePrimaryCredit()){
+    PD((CREDIT,"Got one primary"));
     Assert(creditSite==NULL);
     return;}
   creditSite=getOneSecondaryCredit();
+  PD((CREDIT,"Got one secondary %s",creditSite->stringrep()));
   Assert(creditSite);
   return;}
 };
@@ -3796,7 +3801,7 @@ OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg) {
 /**********************************************************************/
 /*   SECTION 24:: Port protocol                                       */
 /**********************************************************************/
-int PortSendTreash = 15000;
+int PortSendTreash = 40000;
 int PortWaitTimeSlice = 100;
 int PortWaitTimeK = 1;
 
@@ -4058,13 +4063,19 @@ void sendCreditBack(Site* sd,int OTI,Credit c){
   return;}
 
 void sendPrimaryCredit(Site *sd,int OTI,Credit c){
+  PD((CREDIT,"Sending PrimaryCreds"));
   MsgBuffer *bs= msgBufferManager->getMsgBuffer(sd);
+  Site *cr = creditSite;
   marshal_M_OWNER_CREDIT(bs,OTI,c);
+  creditSite = cr;
   SendTo(sd,bs,M_OWNER_CREDIT,sd,OTI);}
 
 void sendSecondaryCredit(Site *cs,Site *sd,int OTI,Credit c){
+  PD((CREDIT,"Sending PrimaryCreds"));
   MsgBuffer *bs= msgBufferManager->getMsgBuffer(cs);
+  Site *cr = creditSite;
   marshal_M_OWNER_SEC_CREDIT(bs,sd,OTI,c);
+  creditSite = cr;
   SendTo(cs,bs,M_OWNER_SEC_CREDIT,sd,OTI);}
 
 /**********************************************************************/
