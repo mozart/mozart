@@ -89,6 +89,10 @@ void TCPTransObj::init() {
 }
 
 void TCPTransObj::close() {
+  close(TRUE);
+}
+
+void TCPTransObj::close(Bool isrunning) {
   PD((TCP_INTERFACE,"TCPTransObj closing down"));
 
   if(fd!=-1) {
@@ -99,7 +103,7 @@ void TCPTransObj::close() {
   }
   // Must be last, this may be deleted or reused
   // implies that close may never be used twice!
-  tcptransController->transObjFreed(comObj,this);
+  tcptransController->transObjFreed(comObj,this,isrunning);
 }
 
 void TCPTransObj::deliver() {
@@ -134,7 +138,8 @@ OZ_Return TCPTransObj::setUp(DSite *site,ComObj *comObj,OZ_Term settings) {
     int fd=oz_intToC(t);
     this->fd=fd;
   }
-  tcptransController->addRunning(comObj);
+  //  tcptransController->addRunning(comObj); Doing so gives problems at
+  // !comObj->handover in connection.cc
   return PROCEED;
 }
 

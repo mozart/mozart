@@ -45,6 +45,10 @@ protected:
   virtual void init()=0;
 public:
   virtual void close()=0;
+  // Boolean tells wether this transobj is up and running with a comObj 
+  // registered in running of the transcontroller. This is important for
+  // cancelled transobjs from connection.cc.
+  virtual void close(Bool)=0;
   // ComObj keeps track of its deliver calls so that as long as 
   // it has called deliver, and TransObj has not pulled all of its
   // messages with getNextMsgContainer, it will not say deliver again.
@@ -83,7 +87,7 @@ public:
   void getTransObj(ComObj *comObj);
   // After comObj->preemptTransObj this method shall be called by comObj
   // When the comObj is done the transObj is returned with this method
-  void transObjFreed(ComObj *comObj,TransObj *transObj);
+  void transObjFreed(ComObj *comObj,TransObj *transObj,Bool isrunning);
   // Initiator site: When the comObj is removed and no longer wants to
   // wait for a resource (i.e. a transport object). The request is
   // removed from the queue:

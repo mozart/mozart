@@ -48,6 +48,7 @@ private:
 public:
   void init();
   void close();
+  void close(Bool isrunning);
   void deliver();
   void readyToReceive();
 
@@ -79,7 +80,7 @@ protected:
     int w, h;
     w=ozconf.dpTCPWeakLimit;
     h=ozconf.dpTCPHardLimit;
-    return w<=h?w:h;
+    return w<h?w:h-1;
   }
 }; 
 
