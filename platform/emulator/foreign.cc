@@ -33,7 +33,7 @@ char TmpBuffer[100];
 
 int OZ_isAtom(OZ_Term term)
 {
-  DEREF(term,_1,tag);
+  DEREF(term,_1,_2);
   return (isXAtom(term) == OK) ? 1 : 0;
 }
 
@@ -50,25 +50,25 @@ int OZ_isCons(OZ_Term term)
 
 int OZ_isFloat(OZ_Term term)
 {
-  DEREF(term,_1,tag);
-  return (isFloat(tag) == OK) ? 1 : 0;
+  DEREF(term,_1,_2);
+  return (isFloat(term) == OK) ? 1 : 0;
 }
 
 int OZ_isInt(OZ_Term term)
 {
-  DEREF(term,_1,tag);
-  return (isInt(tag) == OK) ? 1 : 0;
+  DEREF(term,_1,_2);
+  return (isInt(term) == OK) ? 1 : 0;
 }
 
 int OZ_isLiteral(OZ_Term term)
 {
-  DEREF(term,_1,tag);
-  return (isLiteral(tag) == OK) ? 1 : 0;
+  DEREF(term,_1,_2);
+  return (isLiteral(term) == OK) ? 1 : 0;
 }
 
 int OZ_isName(OZ_Term term)
 {
-  DEREF(term,_1,tag);
+  DEREF(term,_1,_2);
   return (isXName(term) == OK) ? 1 : 0;
 }
 
@@ -85,26 +85,26 @@ int OZ_isNoNumber(OZ_Term term)
 
 int OZ_isRecord(OZ_Term term)
 {
-  DEREF(term,_1,tag);
-  return (isRecord(tag) == OK) ? 1 : 0;
+  DEREF(term,_1,_2);
+  return (isRecord(term) == OK) ? 1 : 0;
 }
 
 int OZ_isTuple(OZ_Term term)
 {
-  DEREF(term,_1,tag);
-  return (isTuple(tag) == OK) ? 1 : 0;
+  DEREF(term,_1,_2);
+  return (isTuple(term) == OK) ? 1 : 0;
 }
 
 int OZ_isValue(OZ_Term term)
 {
-  DEREF(term,_1,tag);
-  return !isAnyVar(tag);
+  DEREF(term,_1,_2);
+  return !isAnyVar(term);
 }
 
 int OZ_isVariable(OZ_Term term)
 {
-  DEREF(term,_1,tag);
-  return isAnyVar(tag);
+  DEREF(term,_1,_2);
+  return isAnyVar(term);
 }
 
 OZ_Term OZ_termType(OZ_Term term)
@@ -165,9 +165,12 @@ int OZ_intToC(OZ_Term term)
 
   if (isSmallInt(tag)) {
     return smallIntValue(term);
-  } else if (isBigInt(term)) {
+  }
+
+  if (isBigInt(tag)) {
     return tagged2BigInt(term)->BigInt2Int();
   }
+
   OZ_warning("intToC(%s): int arg expected",tagged2String(term));
   return 0;
 }
@@ -459,7 +462,6 @@ OZ_Term OZ_label(OZ_Term term)
   switch (tag) {
   case LTUPLE:
     return tagged2LTuple(term)->getLabel();
-    break;
   case STUPLE:
     return tagged2STuple(term)->getLabel();
   case ATOM:
@@ -495,17 +497,23 @@ int OZ_width(OZ_Term term)
 
 OZ_Term OZ_tuple(OZ_Term label, int width)
 {
+  DEREF(label,_1,_2);
+
   if (!isLiteral(label)) {
     OZ_warning("OZ_tuple(%s,%d): literal expected",
                OZ_toC(label),width);
     return nil();
   }
-  if ((width == 2) && (OZ_unify(label,AtomCons) == PROCEED)) {
+
+  if (width == 2 && sameAtom(label,AtomCons)) {
     // have to make a list
     return makeTaggedLTuple(new LTuple());
-  } else if (width <= 0) {
+  }
+
+  if (width <= 0) {
     return label;
   }
+
   return makeTaggedSTuple(STuple::newSTuple(label,width));
 }
 
@@ -611,8 +619,8 @@ int OZ_length(OZ_Term list)
 
 OZ_Term OZ_getRecordArg(OZ_Term term, OZ_Term fea)
 {
-  DEREF(term,_1,tag);
-  if (isSRecord(tag)) {
+  DEREF(term,_1,_2);
+  if (isSRecord(term)) {
     OZ_Term ret = tagged2SRecord(term)->getFeature(fea);
     if (ret) {
       return ret;
@@ -628,10 +636,7 @@ OZ_Term OZ_getRecordArg(OZ_Term term, OZ_Term fea)
 
 OZ_Bool OZ_unify(OZ_Term t1, OZ_Term t2)
 {
-  if (!am.unify(t1, t2)) {
-    return FAILED;
-  }
-  return PROCEED;
+  return am.unify(t1, t2) ? PROCEED : FAILED;
 }
 
 OZ_Term OZ_newVariable()
@@ -643,19 +648,19 @@ OZ_Term OZ_newVariable()
  * IO
  * -----------------------------------------------------------------*/
 
-int OZ_select(int fd) {
-  if (IO::setIORequest(fd) == NO) {
-    return 0;
-  }
-  return 1;
+int OZ_select(int fd)
+{
+  return IO::setIORequest(fd) ? 1 : 0;
 }
 
-int OZ_openIO(int fd) {
+int OZ_openIO(int fd)
+{
   IO::openIO(fd);
   return 1;
 }
 
-int OZ_closeIO(int fd) {
+int OZ_closeIO(int fd)
+{
   IO::closeIO(fd);
   return 1;
 }
@@ -664,7 +669,8 @@ int OZ_closeIO(int fd) {
  * garbage collection
  * -----------------------------------------------------------------*/
 
-int OZ_protect(OZ_Term *t) {
+int OZ_protect(OZ_Term *t)
+{
   if (!gcProtect(t)) {
     OZ_warning("protect: failed");
     return 0;
@@ -672,7 +678,8 @@ int OZ_protect(OZ_Term *t) {
   return 1;
 }
 
-int OZ_unprotect(OZ_Term *t) {
+int OZ_unprotect(OZ_Term *t)
+{
   if (!gcUnprotect(t)) {
     OZ_warning("unprotect: failed");
     return 0;
@@ -684,7 +691,8 @@ int OZ_unprotect(OZ_Term *t) {
  * free strings
  * -----------------------------------------------------------------*/
 
-void OZ_free(char *s) {
+void OZ_free(char *s)
+{
   delete [] s;
 }
 
