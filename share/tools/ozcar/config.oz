@@ -255,6 +255,7 @@ ConfigStepRecordBuiltin    = false  %% step on builtin 'record'  ?
 ConfigStepDotBuiltin       = true   %% step on builtin '.'       ?
 ConfigStepWidthBuiltin     = true   %% step on builtin 'width'   ?
 ConfigStepNewNameBuiltin   = false  %% step on builtin 'NewName' ?
+ConfigStepSetSelfBuiltin   = false  %% step on builtin 'setSelf' ?
 
 ConfigEnvSystemVariables   = true   %% filter system variables in Env Window?
 ConfigEnvProcedures        = false  %% filter procedures in Env Window?
@@ -265,11 +266,14 @@ Config =
     
     attr
        verbose :               ConfigVerbose
+    
        stepSystemProcedures :  ConfigStepSystemProcedures
        stepRecordBuiltin :     ConfigStepRecordBuiltin
        stepDotBuiltin :        ConfigStepDotBuiltin
        stepWidthBuiltin :      ConfigStepWidthBuiltin
        stepNewNameBuiltin :    ConfigStepNewNameBuiltin
+       stepSetSelfBuiltin :    ConfigStepSetSelfBuiltin
+    
        envSystemVariables :    ConfigEnvSystemVariables
        envProcedures :         ConfigEnvProcedures
     
