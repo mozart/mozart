@@ -182,7 +182,7 @@ Makefile: Makefile.in ../config.status
 depend:
 
 base/smallbuf.so-$(OZPLATFORM): base/smallbuf.o
-	$(OZTOOL) ld $(LDFLAGS) @OZWSOCKLIB@ $< -o $@
+	$(OZTOOL) ld $(LDFLAGS) $< @OZWSOCKLIB@ -o $@
 
 %.so-$(OZPLATFORM): %.o
 	$(OZTOOL) ld $(LDFLAGS) $< -o $@
