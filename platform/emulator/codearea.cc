@@ -41,7 +41,7 @@ void CodeArea::recordInstr(ProgramCounter PC){
 
 #endif
 
-HashTable CodeArea::atomTab(CHARTYPE,8000);
+HashTable CodeArea::atomTab(CHARTYPE,10000);
 HashTable CodeArea::nameTab(CHARTYPE,1000);
 int CodeArea::totalSize = 0; /* in bytes */
 char **CodeArea::opToString = initOpToString();
@@ -81,10 +81,9 @@ inline Literal *addToLiteralTab(char *str, HashTable *table, Bool isName)
   found = new Literal(str,isName);
   if (table->aadd(found,str)) {
     return found;
-  } else {
-    error("addToLiteralTab: failed");
-    return NULL;
   }
+  error("addToLiteralTab: failed");
+  return NULL;
 }
 
 
