@@ -235,6 +235,17 @@ to="ozdoc:loop"></p>
             <Code display proglang=oz
             >Mozart_1   Mozart_1_1   Mozart_1_1_0</Code>
 
+        <SubSection>
+          <Title/URL Support/
+          <P>The format of URL records has changed incompatibly.  It
+          is now simpler:  feature <code/absolute/ is a boolean
+          indicating whether the url is absolute and feature
+          <code/path/ is now just a list of strings representing the
+          components of the path.  An empty component is now simply
+          omitted when converting to a string using cache syntax: thus
+          the bug involving a <code>//</code> in the middle of a path
+          has now disappeared.  Parsing urls is also faster.
+
       </section>
 
       <section id="section.m110.fixes">
