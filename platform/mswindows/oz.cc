@@ -26,6 +26,10 @@
 
 #include "misc.cc"
 
+#if !defined(OZENGINE) && !defined(OZENGINEW)
+#define OZSCRIPT
+#endif
+
 
 char *getEmulator(char *ozhome)
 {
@@ -51,65 +55,61 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
 
   GetModuleFileName(NULL, buffer, sizeof(buffer));
   char *progname = getProgname(buffer);
-
-  const int depth = 2;
-  char *ozhome   = getOzHome(buffer,depth);
+  char *ozhome   = getOzHome(buffer,2);
 
   ozSetenv("OZPLATFORM",ozplatform);
   ozSetenv("OZHOME",ozhome);
 
-  {
-    char *ozpath = getenv("OZPATH");
-    if (ozpath == NULL) {
-      ozpath = ".";
-    }
-    sprintf(buffer,"%s;%s/share", ozpath,ozhome);
-    ozSetenv("OZPATH",buffer);
+  char *ozpath = getenv("OZPATH");
+  if (ozpath == NULL) {
+    ozpath = ".";
   }
+  sprintf(buffer,"%s;%s/share", ozpath,ozhome);
+  ozSetenv("OZPATH",buffer);
 
-  sprintf(buffer,"%s/bin;%s/platform/%s;%s",ozhome,ozhome,ozplatform,getenv("PATH"));
+  sprintf(buffer,"%s/bin;%s/platform/%s;%s",
+          ozhome,ozhome,ozplatform,getenv("PATH"));
   ozSetenv("PATH",buffer);
 
   int console = 0;
-  if (stricmp(progname,"oz.exe")==0) {
-    char *emacshome  = getEmacsHome();
-    if (emacshome==NULL) {
-      OzPanic(1,"Emacs home not found.\nDid you install Emacs?");
-    }
-    sprintf(buffer,"%s/bin/runemacs.exe -L \"%s/share/elisp\" -l oz.elc -f run-oz",
-            emacshome,ozhome);
-#ifdef OZENGINE
-  } else if (stricmp(progname,"ozengine.exe")==0) {
-#else
-  } else if (stricmp(progname,"ozenginew.exe")==0) {
-      int argc    = _argc;
-      char **argv = _argv;
-      console = DETACHED_PROCESS;
-#endif
-    if (argc < 2) {
-      OzPanic(1,"usage: ozengine url <args>\n");
-    }
-    char *ozemulator = getEmulator(ozhome);
-    char *url = argv[1];
-    sprintf(buffer,"%s -u \"%s\" -- ", ozemulator,url);
-    for (int i=2; i<argc; i++) {
-      strcat(buffer," \"");
-      strcat(buffer,argv[i]);
-      strcat(buffer,"\"");
-    }
-    //    console = DETACHED_PROCESS;
-  } else {
-    OzPanic(1,"Unknown invocation: %s", progname);
+
+#ifdef OZSCRIPT
+  char *emacshome  = getEmacsHome();
+  if (emacshome==NULL) {
+    OzPanic(1,"Emacs home not found.\nDid you install Emacs?");
   }
+  sprintf(buffer,"%s/bin/runemacs.exe -L \"%s/share/elisp\" -l oz.elc -f run-oz",
+          emacshome,ozhome);
+#endif
+#if defined(OZENGINE) || defined(OZENGINEW)
+#ifdef OZENGINEW
+  int argc    = _argc;
+  char **argv = _argv;
+  console = DETACHED_PROCESS;
+#endif
+  if (argc < 2) {
+    OzPanic(1,"usage: ozengine url <args>\n");
+  }
+  char *ozemulator = getEmulator(ozhome);
+  char *url = argv[1];
+  sprintf(buffer,"%s -u \"%s\" -- ", ozemulator,url);
+  for (int i=2; i<argc; i++) {
+    strcat(buffer," \"");
+    strcat(buffer,argv[i]);
+    strcat(buffer,"\"");
+  }
+#endif
 
   STARTUPINFO si;
   ZeroMemory(&si,sizeof(si));
   si.cb = sizeof(si);
 
   PROCESS_INFORMATION pinf;
-  BOOL ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,console,NULL,NULL,&si,&pinf);
+  BOOL ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,
+                           console,NULL,NULL,&si,&pinf);
   if (ret!=TRUE) {
-    OzPanic(1,"Cannot run '%s' Oz.\nError = %d.\nDid you run setup?",buffer,errno);
+    OzPanic(1,"Cannot run '%s' Oz.\nError = %d."
+              "Did you run setup?",buffer,errno);
   }
   WaitForSingleObject(pinf.hProcess,INFINITE);
 
