@@ -30,29 +30,9 @@ $module_init_fun_name = "fdp_init";
  #
  # Distribution stuff
  #
- 'selVarNaive'	=> { in     => ['+tuple'],
-			     out    => ['*int'],
-			     bi     => BIfdd_selVarNaive},
- 
- 'selVarSize'	=> { in     => ['+tuple'],
-			     out    => ['*int'],
-			     bi     => BIfdd_selVarSize},
- 
- 'selVarMin'	=> { in     => ['+tuple'],
-			     out    => ['*int'],
-			     bi     => BIfdd_selVarMin},
- 
- 'selVarMax'	=> { in     => ['+tuple'],
-			     out    => ['*int'],
-			     bi     => BIfdd_selVarMax},
- 
- 'selVarNbSusps' => { in     => ['+tuple'],
-			  out    => ['*int'],
-			  bi     => BIfdd_selVarNbSusps},
-
- 'ff'   => { in =>  ['+value'],
+ 'distribute'    => { in =>  ['+int','+int','+value'],
                       out => ['value'],
-                      bi => fdd_test_ff },
+                      bi =>  fdd_distribute },
  #
  # Propagators
  #
