@@ -18,17 +18,17 @@ public:
   virtual ozostream &operator << (char *s);
   virtual ozostream &operator << (void *p);
   virtual ozostream &operator << (char c); 
-  virtual ozostream &operator << (unsigned char c) { return (*this) << (char) c; }
   virtual ozostream &operator << (long i);
   virtual ozostream &operator << (double f);
-  virtual ozostream &operator << (unsigned int i)  { return (*this) << (long) i; }
-  virtual ozostream &operator << (int i)           { return (*this) << (long) i; }
-  virtual ozostream &operator << (unsigned long i) { return (*this) << (long) i; }
+  ozostream &operator << (unsigned char c) { return (*this) << (char) c; }
   virtual ozostream &flush() { fflush(fd); return (*this); }
   virtual ozostream &ends() { return (*this) << '\0'; }
   virtual ozostream &endl() { return (*this) << "\n"; }
   virtual ozostream &operator<<(ozostream& (*func)(ozostream&)) { 
     return (*func)(*this); }
+  ozostream &operator << (unsigned int i)  { return (*this) << (long) i; }
+  ozostream &operator << (int i)           { return (*this) << (long) i; }
+  ozostream &operator << (unsigned long i) { return (*this) << (long) i; }
 };
 
 

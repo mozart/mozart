@@ -96,9 +96,6 @@ extern unsigned int heapTotalSize;   // # kilo bytes allocated
 
 void getMemFromOS(size_t size);
 
-// return free used kilo bytes on the heap
-unsigned int getUsedMemory(void);
-
 inline unsigned int getAllocatedMemory() {
   return heapTotalSize;
 }
@@ -176,11 +173,17 @@ void deleteChunkChain(char *);
 int inChunkChain(void *, void *);
 void printChunkChain(void *);
 
+void *freeListMallocOutline(size_t chunk_size);
+void freeListDisposeOutline(void *addr, size_t chunk_size);
+
 #ifndef OUTLINE
 #include "mem.icc"
 #else
 void * freeListMalloc(size_t chunk_size);
 void freeListDispose(void *addr, size_t chunk_size);
+
+// return free used kilo bytes on the heap
+unsigned int getUsedMemory(void);
 #endif
 
 #endif

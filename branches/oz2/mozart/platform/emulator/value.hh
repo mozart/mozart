@@ -458,7 +458,7 @@ protected:
  public:
   USEHEAPMEMORY;
 
-  LTuple(void) {;} // called by putlist and the like
+  LTuple(void) {} // called by putlist and the like
   LTuple(TaggedRef head, TaggedRef tail) 
   { args[0] = head; args[1] = tail; }
 
@@ -797,8 +797,8 @@ private:
   int size;		// size is always a power of 2
   int hashmask;		// size-1, used as mask for hashing
   int width;	        // next unused index in RefsArray (for add())
-  DebugCheckT(int numberofentries);
-  DebugCheckT(int numberofcollisions);
+  DebugCheckT(int numberofentries;)
+  DebugCheckT(int numberofcollisions;)
   Bool isTupleFlag;
 
   TaggedRef *keytable;
@@ -1197,6 +1197,7 @@ typedef enum {
 
 #define ObjFlagMask ~3
 
+
 class Object: public ConstTerm {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
@@ -1205,7 +1206,6 @@ protected:
   int32 flagsAndLock;
 public:
   Object();
-  ~Object();
   Object(Object&);
 
   void setFlag(OFlag f)   { flagsAndLock |= (int) f; } 

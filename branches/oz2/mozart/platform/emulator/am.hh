@@ -261,9 +261,15 @@ public:
   Bool hookCheckNeeded();
   Bool isNotPreemtiveScheduling(void);
 
+#ifdef OUTLINE
+  RunnableThreadBody* allocateBody();
+  Thread *mkRunnableThread(int prio, Board *bb,
+			   Bool inSolve=NO, Bool link=NO);
+#else
   inline RunnableThreadBody* allocateBody();
   inline Thread *mkRunnableThread(int prio, Board *bb,
 				  Bool inSolve=NO, Bool link=NO);
+#endif
   Thread *mkLTQ(Board *bb, int prio, SolveActor * sa);
   Thread *mkWakeupThread(Board *bb);
   Thread *mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
