@@ -75,27 +75,44 @@ void debugStreamThread(Thread *tt) {
 
 OZ_C_proc_begin(BItaskStack,2)
 {
-  OZ_Term in  = OZ_deref(OZ_getCArg(0));
-  OZ_Term out = OZ_getCArg(1);
+  OZ_declareNonvarArg(0,in);
+  OZ_declareArg(1,out);
 
-  if (OZ_isVariable(in)) {
-    OZ_warning("No taskstack for variable");
-    return OZ_unify(out, nil());
-  }
+  in = OZ_deref(in);
+  if (!isThread(in)) { TypeErrorT(0,"Thread"); }
 
   ConstTerm *rec = tagged2Const(in);
   Thread *thread = (Thread*) rec;
 
   if (thread->isDeadThread()) {
-    OZ_warning("No taskstack for dead thread");
     return OZ_unify(out, nil());
   }
 
-  if (!thread->hasStack())
+  if (!thread->hasStack()) {
     return OZ_unify(out, nil());
+  }
 
   TaskStack *taskstack = thread->getTaskStackRef();
   return OZ_unify(out, taskstack->dbgGetTaskStack(NOCODE, 10));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIlocation,2)
+{
+  OZ_declareNonvarArg(0,in);
+  OZ_declareArg(1,out);
+
+  in = OZ_deref(in);
+  if (!isThread(in)) { TypeErrorT(0,"Thread"); }
+
+  ConstTerm *rec = tagged2Const(in);
+  Thread *thread = (Thread*) rec;
+
+  if (thread->isDeadThread()) {
+    return OZ_unify(out, nil());
+  }
+
+  return OZ_unify(out, am.dbgGetLoc(thread->getBoard()));
 }
 OZ_C_proc_end
 
