@@ -28,6 +28,7 @@
 
 #ifdef LINKED_QUEUES
 #if defined(INTERFACE) && !defined(PEANUTS)
+#pragma implementation "lqueue.hh"
 #pragma implementation "thr_lqueue.hh"
 #endif
 
@@ -83,6 +84,7 @@ void LinkedQueueImpl::remove(void* x)
 
 #ifdef DEBUG_EMULATOR
 static void debug_just_instantiate_but_never_call() {
+  /*
   // ThreadQueue
   ThreadQueue *q = new ThreadQueue();
   Thread *t;
@@ -98,14 +100,14 @@ static void debug_just_instantiate_but_never_call() {
   (void) q->isScheduledSlow(t);
   q->gc();
   q->printThreads();
-  q->deleteThread();
+  q->deleteThread(t);
   (void) q->getRunnableNumber();
   // ThreadQueueIterator
   ThreadQueueIterator i1;
-  ThreadQueueIterator i2(&q);
-  ThreadQueueIterator i3(q);
-  i1.reset(&q);
+  ThreadQueueIterator i2(q);
+  ThreadQueueIterator i3(*q);
   i1.reset(q);
+  i1.reset(*q);
   (void) i1.getNext();
   (void) i1.getPointerToNext();
   // LocalPropagatorQueue
@@ -116,21 +118,21 @@ static void debug_just_instantiate_but_never_call() {
   (void) lq->getSize();
   lq->zeroAll();
   lq->dispose();
-  lq->enqueue(t,5);
+  lq->enqueue(p,5);
   (void) lq->dequeue();
   (void) lq->find(p);
   lq->remove(p);
   lq->merge(lq);
-  (void) lq->isScheduledSlow(t);
   lq->gc();
   (void) lq->getLPQThread();
   // LocalPropagatorQueueIterator
-  LocalPropagatorQueueIterator j1(&lq);
-  LocalPropagatorQueueIterator j2(lq);
+  LocalPropagatorQueueIterator j1(lq);
+  LocalPropagatorQueueIterator j2(*lq);
   j1.reset(lq);
-  j1.reset(&lq);
+  j1.reset(*lq);
   (void) j1.getNext();
   (void) j1.getPointerToNext();
+  */
 }
 #endif
 
