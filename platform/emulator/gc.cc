@@ -15,7 +15,7 @@
 #undef TURNED_OFF
 // #define TURNED_OFF
 
-#ifdef LINUX_I486
+#ifdef LINUX
 /* FD_ISSET missing */
 #include <sys/time.h>
 #endif
@@ -341,7 +341,7 @@ class SavedPtrStack: public Stack {
 public:
   SavedPtrStack() : Stack() {}
   ~SavedPtrStack() {}
-  void pushPtr(int* ptr, int value)
+  void pushPtr(int32* ptr, int32 value)
   {
     ensureFree(2);
     push(ptr,NO);
@@ -359,11 +359,11 @@ static SavedPtrStack savedPtrStack;
 /*
  * set: only used in conjunction with the function setHeapCell ???
  */
-inline int  GCMARK(void *S)    { return makeTaggedRef(GCTAG,S); }
-inline int  GCMARK(int S)      { return GCMARK((void *) S); }
+inline int32  GCMARK(void *S)    { return makeTaggedRef(GCTAG,S); }
+inline int32  GCMARK(int32 S)    { return makeTaggedRef(GCTAG,S); }
 
-inline int  GCUNMARK(int S)    { return (int)tagValueOf(S); }
-inline Bool GCISMARKED(int S)  { return GCTAG==tagTypeOf(S); }
+inline int32  GCUNMARK(int32 S)  { return (int32)tagValueOf(S); }
+inline Bool GCISMARKED(int32 S)  { return GCTAG==tagTypeOf((TaggedRef)S); }
 
 
 /*
@@ -371,7 +371,7 @@ inline Bool GCISMARKED(int S)  { return GCTAG==tagTypeOf(S); }
  *   Then return the forward pointer to to-space.
  */
 #define CHECKCOLLECTED(elem,type)  \
-  if (GCISMARKED((int)elem)) return (type) GCUNMARK((int) elem);
+  if (GCISMARKED((int32)elem)) return (type) GCUNMARK((int) elem);
 
 
 /*
@@ -383,10 +383,10 @@ inline Bool GCISMARKED(int S)  { return GCTAG==tagTypeOf(S); }
  *
  */
 inline
-void storeForward (int* fromPtr, void *newValue, Bool domark=OK)
+void storeForward (int32* fromPtr, void *newValue, Bool domark=OK)
 {
   if (opMode == IN_TC) {
-    savedPtrStack.pushPtr(fromPtr, (int) *fromPtr);
+    savedPtrStack.pushPtr(fromPtr, (int32) *fromPtr);
   }
   DebugGC(opMode == IN_GC
           && MemChunks::list->inChunkChain((void *)fromPtr),
@@ -394,13 +394,13 @@ void storeForward (int* fromPtr, void *newValue, Bool domark=OK)
   DebugGC(opMode == IN_GC
           && from->inChunkChain ((void *) newValue),
           error ("storing (marked) ref in to FROM-space"));
-  *fromPtr = domark ? GCMARK(newValue) : (int)newValue;
+  *fromPtr = domark ? GCMARK(newValue) : ToInt32(newValue);
 }
 
 inline
 void storeForward(void* fromPtr, void *newValue)
 {
-  storeForward((int*) fromPtr, newValue);
+  storeForward((int32*) fromPtr, newValue);
 }
 
 //*****************************************************************************
@@ -685,7 +685,7 @@ SuspContinuation *SuspContinuation::gcCont()
   return ret;
 }
 
-#define GCBIT (1<<(BitsPerWord-1))
+#define GCBIT (1<<(8*sizeof(int32)-1))
 
 inline Bool refsArrayIsMarked(RefsArray r)
 {
@@ -694,12 +694,12 @@ inline Bool refsArrayIsMarked(RefsArray r)
 
 inline void refsArrayMark(RefsArray r, void *ptr)
 {
-  storeForward((int *) &r[-1],(void*)((int)ptr|GCBIT),NO);
+  storeForward((int32 *) &r[-1], ToPointer(ToInt32(ptr)|GCBIT),NO);
 }
 
 inline RefsArray refsArrayUnmark(RefsArray r)
 {
-  return (RefsArray) (r[-1]&~GCBIT);
+  return (RefsArray) ToPointer(r[-1]&~GCBIT);
 }
 
 
@@ -1300,7 +1300,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
 
       DebugGCT(toTerm = fromTerm); // otherwise 'makeTaggedRef' complains
       if (updateVar(auxTerm)) {
-        storeForward((int *) &fromTerm, (void *)makeTaggedRef(&toTerm));
+        storeForward((int *) &fromTerm, &toTerm);
 
         // updating toTerm AFTER fromTerm:
         toTerm = gcVariable(auxTerm);
@@ -1497,7 +1497,7 @@ void processUpdateStack(void)
           error("processUpdateStack: variable expected here.");
         } // switch
         INFROMSPACE(auxTermPtr);
-        storeForward((int *) auxTermPtr,(void*)*Term);
+        storeForward((int *) auxTermPtr,ToPointer(*Term));
       }
     } // while
 
@@ -1741,7 +1741,7 @@ Thread *Thread::gc()
   Thread *ret = (Thread *) gcRealloc(this,sz);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_THREAD);
-  storeForward((int *)getGCField(), ret);
+  storeForward(getGCField(), ret);
   return ret;
 }
 
@@ -1824,7 +1824,7 @@ Board *Board::gcGetBoardDeref()
   GCMETHMSG("Board::gcGetBoardDeref");
   Board *bb = this;
   while (OK) {
-    if (!bb || GCISMARKED((int)*bb->getGCField())) {
+    if (!bb || GCISMARKED(*bb->getGCField())) {
       return bb;
     }
     if (bb->isDiscarded() || bb->isFailed()) {
@@ -1835,7 +1835,7 @@ Board *Board::gcGetBoardDeref()
     } else {
       Board *retB = bb;
       while (OK) {
-        if (!bb || GCISMARKED((int)*bb->getGCField())) {
+        if (!bb || GCISMARKED(*bb->getGCField())) {
           return retB;
         }
         if (bb->isDiscarded() || bb->isFailed()) {
@@ -1920,7 +1920,7 @@ Actor *Actor::gc()
   Actor *ret = (Actor *) gcRealloc(this,sz);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_ACTOR);
-  storeForward((int *)getGCField(), ret);
+  storeForward(getGCField(), ret);
   return ret;
 }
 
@@ -2029,7 +2029,7 @@ void SRecord::gcRecurse()
                   error ("freed 'g' refs (abs) array in SRecord::gcRecurse ()"));
       a->gRegs = gcRefsArray(a->gRegs);
       a->name = a->name->gc ();
-      DebugGC((a->name->getHome () == (Board *) ALLBITS ||
+      DebugGC((a->name->getHome () == (Board *) ToPointer(ALLBITS) ||
                a->name->getHome () == (Board *) NULL),
               error ("non-dynamic name is met in Abstraction::gcRecurse"));
       INTOSPACE(a->name);
