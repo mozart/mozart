@@ -336,11 +336,19 @@ def sort_by_os_then_date(entries):
         t = {}
         for d,e in l:
             f = e.table.get('format','')
+            if t.has_key(f):
+                t[f].append(e)
+            else:
+                t[f]=[e]
+        items = t.items()
+        items.sort()
         if LISTING=='full':
-            for d,e in l:
-                entries.append(e)
+            for f,l in items:
+                for e in l:
+                    entries.append(e)
         else:
-            entries.append(l[0][1])
+            for f,l in items:
+                entries.append(l[0])
     return entries
 
 def sort_item_by_os_then_date(item):
@@ -796,7 +804,7 @@ def page_print_section(section,entries):
 
 def page_default(mozart_version):
     page_begin("Download Mozart")
-    page_releases('default',mozart_version)
+    page_releases('default',mozart_version,0)
     page_div_begin()
     print """<p>General information on how to install Mozart can be found in
     <a href="http://www.mozart-oz.org/documentation/install/index.html">Installing Mozart</a></p>
