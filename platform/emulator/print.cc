@@ -223,24 +223,26 @@ PRINT(SRecord)
     break;
   }
 
-  if (depth <= 1) {
-    stream << "(...)";
-  } else if (type == R_RECORD || type == R_CHUNK) {
-    stream << "(";
-    NEWLINE(offset+2);
-    TaggedRef ar = getArityList();
-    CHECK_DEREF(ar);
-    while (isCons(ar)) {
-      TaggedRef feat = head(ar);
-      CHECK_DEREF(feat);
-      tagged2Stream(feat,stream,depth,offset);
-      ar = tail(ar);
-      CHECK_DEREF(ar);
-      stream << ": ";
-      tagged2Stream(getFeature(feat),stream,depth-1,offset+2);
+  TaggedRef ar = getArityList();
+  CHECK_DEREF(ar);
+  if (isCons(ar)) {
+    if (depth <= 1) {
+      stream << "(...)";
+    } else {
+      stream << "(";
       NEWLINE(offset+2);
+      while (isCons(ar)) {
+        TaggedRef feat = head(ar);
+        CHECK_DEREF(feat);
+        tagged2Stream(feat,stream,depth,offset);
+        ar = tail(ar);
+        CHECK_DEREF(ar);
+        stream << ": ";
+        tagged2Stream(getFeature(feat),stream,depth-1,offset+2);
+        NEWLINE(offset+2);
+      }
+      stream << ")";
     }
-    stream << ")";
   }
 }
 
