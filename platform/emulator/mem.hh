@@ -83,7 +83,7 @@ extern char *heapTop;         // pointer to next free memory block
 #endif
 
 extern char *heapEnd;
-extern int   heapTotalSize;   // # kilo bytes allocated
+extern unsigned int heapTotalSize;   // # kilo bytes allocated
 
 void getMemFromOS(size_t size);
 

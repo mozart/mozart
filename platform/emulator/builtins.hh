@@ -287,7 +287,7 @@ public:
 
   SRecord *getSuspHandler() { 
     return suspHandler == makeTaggedNULL()
-      ? NULL
+      ? (SRecord*) NULL
       : tagged2SRecord(suspHandler);
   }
   TaggedRef getDBGHandler() { 

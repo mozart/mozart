@@ -74,7 +74,8 @@ void WaitActor::addChildInternal(Board *bb)
     return;
   }
   int32 maxx= ToInt32(childs[-1]);
-  for (int i = 0; i < maxx; i++) {
+  int i;
+  for (i = 0; i < maxx; i++) {
     if (!childs[i]) {
       childs[i] = bb;
       return;

@@ -71,10 +71,10 @@ public:
 
   int gcFlag;                 // request GC to run
   int gcVerbosity;            // GC verbosity level
-  int heapMaxSize;
-  int heapMargin;
-  int heapIncrement;
-  int heapIdleMargin;
+  unsigned int heapMaxSize;
+  unsigned int heapMargin;
+  unsigned int heapIncrement;
+  unsigned int heapIdleMargin;
   
   char *ozPath;
   char *linkPath;
