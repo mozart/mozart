@@ -75,7 +75,6 @@ case "$target" in
         AC_MSG_RESULT(cross compiling for windows)
 
         CXX=${target}-gcc
-        LD=${target}-ld
         RANLIB=${target}-ranlib
         AR=${target}-ar
 
