@@ -349,6 +349,8 @@ public:
 };
 
 
+extern TaggedRef mkTuple(int from, int to);
+
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdomn.icc"
 #endif
