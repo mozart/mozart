@@ -29,9 +29,6 @@ WindowsPlatform        = 'win32-i486'
 NameOfBenni            = 'Benjamin Lorenz'
 EmailOfBenni           = 'lorenz@ps.uni-sb.de'
 
-IgnoreQueries          = 'Ignore Queries'
-IgnoreSubThreads       = 'Ignore Subthreads'
-
 TreeTitle              = 'Thread Tree'
 StackTitle             = 'Stack'
 AltStackTitle          = 'Stack of Thread  #'
@@ -164,8 +161,8 @@ StopButtonBitmap       = stop
 ForgetButtonBitmap     = forget
 TermButtonBitmap       = term
 
-IgnoreQueriesBitmap    = {VS2A queries  # BitmapExtension}
-IgnoreSubThreadsBitmap = {VS2A children # BitmapExtension}
+AddQueriesBitmap       = {VS2A queries  # BitmapExtension}
+AddSubThreadsBitmap    = {VS2A children # BitmapExtension}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
