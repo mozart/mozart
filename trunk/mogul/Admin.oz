@@ -335,9 +335,7 @@ define
 	       if @db==unit then
 		  {Raise mogul('update-ozpm-info'(no_db_is_opened))}
 	       end
-	       {Pickle.save
-		info(authors  : Admin,get_authors($)
-		     packages : Admin,get_packages($))
+	       {Pickle.save {@db get_ozpm_info($)}
 		{RelativeTo @mogulDIR 'ozpm.info'}}
 	    catch mogul(...)=E then
 	       Admin,addReport(M E)
