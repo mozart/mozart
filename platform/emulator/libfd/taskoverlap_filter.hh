@@ -41,8 +41,8 @@
 #define OZ_DEBUGPRINT
 #endif
 
-template  <class SERVICE, class FDVAR, class FD, class P_PFDVAR, class PFDVAR, class ENGINE>
-SERVICE &FilterTasksOverlap<SERVICE, FDVAR, FD, P_PFDVAR, PFDVAR, ENGINE>::filter(SERVICE & s,
+template  <class SERVICE, class FDVAR, class FDM, class P_PFDVAR, class PFDVAR, class ENGINE>
+SERVICE &FilterTasksOverlap<SERVICE, FDVAR, FDM, P_PFDVAR, PFDVAR, ENGINE>::filter(SERVICE & s,
                                                         FDVAR &x,
                                                         int xd,
                                                         FDVAR &y,
@@ -88,7 +88,8 @@ SERVICE &FilterTasksOverlap<SERVICE, FDVAR, FD, P_PFDVAR, PFDVAR, ENGINE>::filte
     //--------------------------------------------------
     // 1. step
     if (not_first_iteration) {
-      FD u_t1(fd_empty), u_t2(fd_empty), u_o(fd_empty);
+      FDM u_t1, u_t2, u_o;
+      u_t1.initEmpty(); u_t2.initEmpty(); u_o.initEmpty();
       if (!engine_cl1.isFailed()) {
         u_t1 = u_t1 | *cl1_t1;
         u_t2 = u_t2 | *cl1_t2;
