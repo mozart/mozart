@@ -153,7 +153,7 @@ local
 		       {MakeFileName T ".so"}#'-'#PLATFORM#' -lc'} \= 0
 	       then
 		  {Rep error(kind: 'system error'
-			     msg: 'invocation of ozdynld failed')}
+			     msg: 'invocation of oztool failed')}
 		  stop
 	       else continue
 	       end
