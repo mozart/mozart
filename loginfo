@@ -20,12 +20,12 @@
 #
 ALL		/home/ps-home/hydra/CVS/CVSROOT/log.pl -m mehl %s
 #Oz		/duplo/CVS/CVSROOT/ozlog.pl /www/oz2/system/changes.data
-Oz/Emulator	mail -s "I have changed %s" scheidhr,tmueller,perbrand
+Oz/Emulator	mail -s "I have changed %s" scheidhr,tmueller,perbrand,erik
 Oz/TestFiles	mail -s "I have changed %s" tmueller
 Oz/FDLib	mail -s "I have changed %s" scheidhr,tmueller,wuertz
 Oz/Compiler	mail -s "I have changed %s" henz,scheidhr
 Oz/Toto		mail -s "I have changed %s" henz,reiter
-Oz/include	mail -s "I have changed %s" scheidhr,tmueller,henz
+Oz/include	mail -s "I have changed %s" scheidhr,tmueller,henz,erik
 Oz/lib		mail -s "I have changed %s" henz,wuertz,popow,tmueller
 Oz/demo		mail -s "I have changed %s" wuertz
 Oz/elisp	mail -s "I have changed %s" scheidhr
