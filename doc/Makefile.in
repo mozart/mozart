@@ -36,6 +36,8 @@ INSTALL_DIR	= @INSTALL_DIR@
 HOMEURL		= @HOMEURL@
 OZDOC		= @OZDOC@
 
+ENABLE_INDEX	= @ENABLE_INDEX@
+
 FILES		= ozdoc.dcl ozdoc.dtd ozdoc.doc catalog author.db
 LIBFILES	= $(addprefix $(SHDOCDIR)/,$(FILES))
 
@@ -49,7 +51,7 @@ Makefile: Makefile.in config.status
 	./config.status
 
 install:: all $(SHDOCDIR) $(DOCDIR) $(LIBFILES) $(DOCDIR)/.htaccess \
-	$(DOCDIR)/idx/index.html $(DOCDIR)/idx
+	$(DOCDIR)/idx $(ENABLE_INDEX:%=$(DOCDIR)/%)
 
 $(SHDOCDIR) $(DOCDIR) $(DOCDIR)/idx:
 	$(INSTALL_DIR) $@
@@ -75,8 +77,7 @@ all quick check install clean veryclean distclean installps depend::
 bootstrap::
 	dirs="$(SUBDIRS)"; \
 	for i in $$dirs; do (cd $$i && $(MAKE) bootstrap) || exit 1; done; \
-	for i in $$dirs; do (cd $$i && $(MAKE) bootquick) || exit 1; done; \
-	make idx/index.html
+	for i in $$dirs; do (cd $$i && $(MAKE) bootquick) || exit 1; done
 
 clean::
 	-rm -f *~
