@@ -6,31 +6,24 @@
     an extended Backus-Naur-Formalism built from the following parts:
     <List>
       <Item>
-	<P.silent><!--**-->
-	  terminals and nonterminals are enclosed in angle brackets
-	  <Math.Choice><Math type=html>&lt;...&gt;</Math>
-	  <Math type=latex>\langle\ldots\rangle</Math></Math.Choice>;
+	terminals and nonterminals are enclosed in angle brackets
+	<Math.Choice><Math type=html>&lt;...&gt;</Math>
+	<Math type=latex>\langle\ldots\rangle</Math></Math.Choice>;
       <Item>
-	<P.silent><!--**-->
-	  the left side is separated from the right side by either ::= or
-	  +=, where += adds productions to an existing nonterminal;
+	the left side is separated from the right side by either ::= or
+	+=, where += adds productions to an existing nonterminal;
       <Item>
-	<P.silent><!--**-->
-	  the vertical bar separates alternatives;
+	the vertical bar separates alternatives;
       <Item>
-	<P.silent><!--**-->
-	  square brackets denote optional phrases;
+	square brackets denote optional phrases;
       <Item>
-	<P.silent><!--**-->
-	  curly braces enclose phrases that may be repeated 0 to <Var
-	  type=meta>n</Var>&nbsp;times;
+	curly braces enclose phrases that may be repeated 0 to <Var
+	type=meta>n</Var>&nbsp;times;
       <Item>
-	<P.silent><!--**-->
-	  curly braces with a suffixed&nbsp;+ enclose phrases that may be
-	  repeated 1 to <Var type=meta>n</Var>&nbsp;times;
+	curly braces with a suffixed&nbsp;+ enclose phrases that may be
+	repeated 1 to <Var type=meta>n</Var>&nbsp;times;
       <Item>
-	<P.silent><!--**-->
-	  literal strings are typeset in <Code>this way</Code>.
+	literal strings are typeset in <Code>this way</Code>.
     </List>
   <Section>
     <Title/Elements from the Oz Syntax/
@@ -43,44 +36,36 @@
       <List>
 	<Entry>?={atom}
 	<Item>
-	  <P.silent><!--**-->
-	    stands for an &Oz; atom (quoted or not).
+	  stands for an &Oz; atom (quoted or not).
 	<Entry>?={variable}
 	<Item>
-	  <P.silent><!--**-->
-	    denotes an &Oz; variable (backquoted or not).
+	  denotes an &Oz; variable (backquoted or not).
 	<Entry>?={atom label}
 	<Item>
-	  <P.silent><!--**-->
-	    is an &Oz; atom that is immediately followed by a left parenthesis.
+	  is an &Oz; atom that is immediately followed by a left parenthesis.
 	<Entry>?={variable label}
 	<Item>
-	  <P.silent><!--**-->
-	    is an &Oz; variable that is immediately followed by a left
-	    parenthesis.
+	  is an &Oz; variable that is immediately followed by a left
+	  parenthesis.
       </List>
     <Para class=apropos><Title/Nonterminals/
       Furthermore, the following nonterminals from the &Oz; syntax are used:
       <List>
 	<Entry>?={escaped variable}
 	<Item>
-	  <P.silent><!--**-->
-	    stands for an &Oz; variable that may optionally be preceded by an
-	    exclamation mark, preventing its implicit declaration.
+	  stands for an &Oz; variable that may optionally be preceded by an
+	  exclamation mark, preventing its implicit declaration.
 	<Entry>?={phrase}
 	<Item>
-	  <P.silent><!--**-->
-	    is an &Oz; statement or expression.  This distinction is not made
-	    by the context-free syntax; it is stated informally in the
-	    descriptions instead.
+	  is an &Oz; statement or expression.  This distinction is not made
+	  by the context-free syntax; it is stated informally in the
+	  descriptions instead.
 	<Entry>?={class descriptor}
 	<Item>
-	  <P.silent><!--**-->
-	    stands for a class descriptor, &ie;, one of <<from>>, <<prop>>,
-	    <<attr>> or <<feat>>.
+	  stands for a class descriptor, &ie;, one of <<from>>, <<prop>>,
+	  <<attr>> or <<feat>>.
 	<Entry>?={method}
 	<Item>
-	  <P.silent><!--**-->
-	    stands for a <<meth &ellipsis; end>> definition.
+	  stands for a <<meth &ellipsis; end>> definition.
       </List>
 </Appendix>
