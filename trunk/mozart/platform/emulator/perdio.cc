@@ -3682,7 +3682,9 @@ loop:
       TaggedRef arity = unmarshallTerm(bs);
       TaggedRef sortedarity = arity;
       if (!isSorted(arity)) {
-	sortedarity = sortlist(arity,length(arity));
+	int len;
+	TaggedRef aux = duplist(arity,len);
+	sortedarity = sortlist(aux,len);
       }
       PD((UNMARSHALL,"record no:%d",length(arity)));
       TaggedRef label = unmarshallTerm(bs);

@@ -1116,6 +1116,7 @@ TaggedRef oz_adjoinList(SRecord *, TaggedRef arity, TaggedRef proplist);
 
 Bool isSorted(TaggedRef list);
 
+TaggedRef duplist(TaggedRef list, int &len);
 TaggedRef sortlist(TaggedRef list,int len);
   
 inline
