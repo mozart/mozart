@@ -1,12 +1,11 @@
 functor
 import
    Application(getCmdArgs exit)
-   Tk XML Browser
+   Tk Browser XSL_READ at 'XSL-READ.ozf'
 define
    Args = {Application.getCmdArgs
            record('in'(single type:string optional:false))}
-   Parser = {New XML.'class' init}
-   Doc    = {Parser parseFile(Args.'in' $)}
+   Doc = {XSL_READ.parseFile Args.'in'}
    {Browser.browse Doc}
    Quit
    Top={New Tk.toplevel tkInit(title:'Oz XSL Processor')}

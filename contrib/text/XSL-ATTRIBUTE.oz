@@ -101,7 +101,7 @@ define
    %%
    fun {Pattern Tokens}
       Alts#Tokens2 = {OrPatterns Tokens}
-   in pattern(Alt)#Tokens2 end
+   in pattern(Alts)#Tokens2 end
    %%
    fun {OrPatterns Tokens}
       A #Tokens2 = {Alt Tokens}
