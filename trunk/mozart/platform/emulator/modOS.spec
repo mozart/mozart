@@ -189,11 +189,21 @@
 			     out => ['+record'],
 			     BI  => unix_uName},
 
-    'getpwnam'	=> { in  => ['+virtualString'],
+    'getpwnam'	        => { in  => ['+virtualString'],
 			     out => ['+record'],
 			     BI  => unix_getpwnam},
-    'signal'	=> { in  => ['+int','+procedure'],
+
+    'signal'	        => { in  => ['+int','+procedure'],
 			     out => [],
 			     BI  => unix_signalHandler},
+
+    'getPID'            => { in  => [],
+                             out => ['+int'],
+	                     BI  => unix_getpid },
+
+    'getPPID'           => { in  => [],
+                             out => ['+int'],
+	                     BI  => unix_getppid },
+
 
  );

@@ -1942,3 +1942,15 @@ OZ_BI_define(unix_signalHandler, 2,0)
   
   return OZ_typeError(0,"signal name");
 } OZ_BI_end
+
+
+
+
+OZ_BI_define(unix_getpid,0,1) {
+  OZ_RETURN(oz_int(getpid()));
+} OZ_BI_end
+
+OZ_BI_define(unix_getppid,0,1) {
+  OZ_RETURN(oz_int(getppid()));
+} OZ_BI_end
+
