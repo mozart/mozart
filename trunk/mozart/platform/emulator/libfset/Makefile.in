@@ -49,8 +49,8 @@ install:: @INSTALL_PROP@
 install-prop:
 	$(INSTALL_BIN) $(FSETTARGETS) $(bindir)
 
-depend:: $(FSETLIBSRCS) 
-	$(DEPEND) `for f in $(FSETLIBSRCS); do echo $(FSETDIR)/$$f; done` >> Makefile
+depend:: Makefile $(FSETLIBSRCS) 
+	$(DEPEND) $(FSETLIBSRCS:%=$(FSETDIR)/%) >> Makefile
 
 realclean::
 	$(RM) *.a *.so

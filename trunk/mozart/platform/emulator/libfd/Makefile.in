@@ -25,7 +25,8 @@ include ../Makefile.vars
 
 VPATH		= @srcdir@
 FDDIR		= @srcdir@
-CPPFLAGS	+= -I..
+INCS		= -I. -I$(SRCDIR)/.. -I..
+
 FDTARGETS	= @FDTARGETS@
 
 FDLIBSRCS = arith.cc fdaux.cc bool.cc \
@@ -61,8 +62,9 @@ install:: @INSTALL_PROP@
 install-prop:
 	$(INSTALL_BIN) $(FDTARGETS) $(bindir)
 
-depend:: $(FDLIBSRCS) $(SCHEDLIBSRCS)
-	$(DEPEND) `for f in $(FDLIBSRCS) $(SCHEDLIBSRCS) ; do echo $(FDDIR)/$$f; done` >> Makefile
+depend:: Makefile $(FDLIBSRCS) $(SCHEDLIBSRCS)
+	$(DEPEND) $(FDLIBSRCS:%=$(FDDIR)/%) $(SCHEDLIBSRCS:%=$(FDDIR)/%) \
+		>> Makefile
 
 include ../Makefile.rules
 
