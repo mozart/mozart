@@ -5,6 +5,9 @@ import
    Path  at 'Path.ozf'
    Utils at 'Utils.ozf'
    Windows at 'Windows.ozf'
+prepare
+   DictItems = Dictionary.items
+   fun {Cmp1 X Y} X.1 < Y.1 end
 define
    class Installer
 
@@ -106,14 +109,27 @@ define
       meth get_installation_pairs($)
 	 ITargets = Installer,get_install_targets($)
 	 IPairs   = Installer,targets_to_installation_pairs(ITargets $)
-	 Stack = {Utils.newStackFromList {Reverse IPairs}}
-      in
-	 if {self get_local($)} then skip else
-	    for M in {self get_submans($)} do
-	       for P in {M get_installation_pairs($)} do {Stack.push P} end
+	 DPairs   = {NewDictionary}
+	 proc {Enter IPair}
+	    Key = IPair.1	% src file
+	    Old = {CondSelect DPairs Key unit}
+	 in
+	    if Old==unit then
+	       DPairs.Key := IPair
+	    elseif Old==IPair then
+	       skip
+	    else
+	       raise ozmake(install:clash(Old.1 Key IPair.2)) end
 	    end
 	 end
-	 {Reverse {Stack.toList}}
+      in
+	 {ForAll IPairs Enter}
+	 if {self get_local($)} then skip else
+	    for M in {self get_submans($)} do
+	       {ForAll {M get_installation_pairs($)} Enter}
+	    end
+	 end
+	 {Sort {DictItems DPairs} Cmp1}
       end
 
       meth get_installation_triples($)
