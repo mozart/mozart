@@ -5,7 +5,8 @@ OZPANEL  = $(OZLIB)/panel
 
 LOCALFILES = \
 	configure.oz load.oz make-notes.oz pie.oz top.oz \
-	labelframe.oz main.oz notebook.oz 
+	labelframe.oz main.oz notebook.oz dialogs.oz \
+	discrete-scale.oz
 
 BITMAPS = \
 	panel.xbm

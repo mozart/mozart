@@ -10,6 +10,8 @@ local
    PanelTopClosed = {NewName}
 
    \insert configure.oz
+
+   \insert discrete-scale.oz
    
    \insert notebook.oz
 
@@ -19,6 +21,8 @@ local
 
    \insert load.oz
 
+   \insert dialogs.oz
+   
    \insert make-notes.oz
    
    \insert top.oz

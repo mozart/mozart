@@ -6,8 +6,6 @@
 %%%  Version: $Revision$
 
 local
-   SmallPad     = 2
-   Pad          = 4
    Border       = 2
    LabelWidth   = 8
    TextWidth    = 18
@@ -94,6 +92,7 @@ local
       meth init(parent:P range:R action:A state:S)
 	 <<Tk.scale tkInit(parent:    P
 			   length:    200
+			   font:      ScaleFont
 			   'from':    R.1
 			   highlightthickness: 0
 			   to:        R.2
@@ -314,26 +313,32 @@ local
 				       highlightthickness: 0)}
 	 Right  = {New Tk.frame tkInit(parent:            Frame
 				       highlightthickness: 0)}
-	 FR     = {MakeRecord a {Append {Map F.left GetFeature}
+	 FR     = {MakeRecord a frame|{Append {Map F.left GetFeature}
 				 {Map F.right GetFeature}}}
       in
+	 FR.frame = Border
 	 {Border add(Frame)}
 	 R.{GetFeature F}=FR
 	 {MakeSide F.left 0 Left FR
 	  {MakeSide F.right 0 Right FR
-	   pack(Border pady:Pad side:top) |
-	   pack(Left   side:left  anchor:n) |
-	   pack(Right  side:right anchor:s) | {MakeFrames Fr P R TclT}}}
+	   case {CondSelect F pack True} then
+	      pack(Border pady:Pad padx:Pad side:top) |
+	      pack(Left   side:left  anchor:n) |
+	      pack(Right  side:right anchor:s) | {MakeFrames Fr P R TclT}
+	   else
+	      pack(Left   side:left  anchor:n) |
+	      pack(Right  side:right anchor:s) | {MakeFrames Fr P R TclT}
+	   end}}
      end
    end
 
 in
    
-   fun {MakePage Class Mark Book PageSpec}
+   fun {MakePage Class Mark Book Add PageSpec}
       R    = {MakeRecord a {Map PageSpec GetFeature}}
-      Page = {New Class init(parent:Book options:R)}
+      Page = {New Class init(parent:Book options:R text:' '#Mark#' ')}
    in
-      {Book add(note:Page text:' '#Mark#' ')}
+      case Add then {Book add(note:Page)} else true end
       thread
 	 {Tk.batch {MakeFrames PageSpec Page R nil}}
       end
