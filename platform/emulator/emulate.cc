@@ -300,7 +300,8 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def,
     return TRUE;
   }
 
-  if (def && debugmode() && !currentSolveBoard) {
+  if (def && debugmode() && !currentSolveBoard &&
+                                       CodeArea::existVarNames(PC)) {
     OzDebug *dbg;
     int frameId   = ++lastFrameID % MAX_ID;
     
