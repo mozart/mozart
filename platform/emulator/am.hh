@@ -88,7 +88,9 @@ public:
   Trail trail;
   RebindTrail rebindTrail;
   RefsArray xRegs;  
+  
   RefsArray toplevelVars;
+  int toplevelVarsCount;
 
   Board *currentBoard;
   TaskStack *cachedStack;
