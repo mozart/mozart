@@ -25,7 +25,7 @@ BIN_TARGETS     = $(BIN_DIR)/convertTextPickle
 .PHONY: all install clean veryclean distclean bootstrap depend
 
 %.ozf: %.ozg
-        $(OZC) --gump $(OZCFLAGS) -c $< -o $@
+        $(OZC) -z 9 --gump $(OZCFLAGS) -c $< -o $@
 
 all: $(TARGETS)
 

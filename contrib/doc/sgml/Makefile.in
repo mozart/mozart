@@ -24,7 +24,7 @@ $(LIB_TARGETS): $(LIB_DIR)/% : %
         $(INSTALL_LIB) $< $@
 
 %.ozf: %.oz
-        $(OZC) -c $< -o $@
+        $(OZC) -z 9 -c $< -o $@
 
 clean veryclean:
         -rm *~ *.ozf

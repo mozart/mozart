@@ -9,7 +9,7 @@ LIB_DIR         = $(PREFIX)/contrib
 HOMEURL         = @HOMEURL@
 
 OZC             = @OZC@
-COMPILE         = $(OZC) -c
+COMPILE         = $(OZC) -z 9 -c
 OZTOOL          = @OZTOOL@
 CPPFLAGS        = -I$(SRCTOP)/platform/emulator \
                   -I$(BUILDTOP)/platform/emulator \

@@ -41,7 +41,7 @@ $(LIB_DIR)/regex.so-$(PLATFORM): regex.so-$(PLATFORM)
         $(INSTALL_DLL) $< $@
 
 regex.ozf: regex.oz
-        $(COMPILE) $< -o $@
+        $(COMPILE) -z 9 $< -o $@
 
 regex.so-$(PLATFORM): regex.o
         $(OZTOOL) ld -o $@ $< $(LDFLAGS) $(LIBS)
