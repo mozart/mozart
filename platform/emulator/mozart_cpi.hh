@@ -98,6 +98,99 @@
 #define OZ_EM_STREAM    "stream"
 
 //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// Dynamically sized arrays for compilers which do not provide alloca
+
+
+#ifdef __GNUC__
+#define USE_GCCALLOCA
+#else
+#define USE_INTVAR_NEW
+#endif
+
+
+#ifdef DEBUG_INDICES
+
+#include <stdlib.h>
+
+template <class T>
+class IndexCheckArray {
+private:
+  int _size;
+  T * _array;
+public:
+  IndexCheckArray(int s)  {
+    _size = s;
+    _array = (T *) malloc(s * sizeof(T));
+  }
+  inline
+  T &operator [](int i) {
+    OZ_ASSERT(0 <= i && i < _size);
+    return _array[i];
+  }
+  inline
+  operator T*() { return _array; } // conversion operator
+
+  inline
+  T * getArray(void) { return _array; }
+};
+
+#define GET_ARRAY(A) (A).getArray()
+
+/* index-checked dynamic arrays */
+#define _DECL_DYN_ARRAY(Type,Var,Size) IndexCheckArray<Type> Var(Size)
+
+#else
+
+#define GET_ARRAY(A) (A)
+
+/* gcc supports dynamic sized arrays */
+#ifdef USE_GCCALLOCA
+
+#define _DECL_DYN_ARRAY(Type,Var,Size) Type Var[Size]
+
+#endif
+
+/* literally copied from fdaux.hh */
+#ifdef USE_INTVAR_NEW
+
+inline void * operator new(size_t, void * p) { return p; }
+
+#define _DECL_DYN_ARRAY(Type,Var,Size)				\
+Type * Var;							\
+{								\
+  int __sz = Size;						\
+  void *__aux = OZ_FDIntVar::operator new(sizeof(Type) * __sz);	\
+  Var = new (__aux) Type[__sz];					\
+}
+
+#endif
+
+#ifdef USE_ALLOCA
+
+inline void * operator new(size_t, void * p) { return p; }
+
+#include <malloc.h>
+
+#define _DECL_DYN_ARRAY(Type,Var,Size)		\
+Type * Var;					\
+{						\
+  int __sz = Size;				\
+ void *__aux = alloca(sizeof(Type) * __sz);	\
+ Var = new (__aux) Type[__sz];			\
+}
+
+#endif
+
+#endif /* DEBUG_INDICES */
+
+/* cannot handle sometimes arrays of size 0 correctly */
+#define DECL_DYN_ARRAY(Type,Var,Size) \
+_DECL_DYN_ARRAY(Type,Var,Size==0?1:Size)
+
+
+
+//-----------------------------------------------------------------------------
 // OZ_FiniteDomain
 
 class OZ_FSetValue;
@@ -1033,6 +1126,64 @@ inline
 OZ_Boolean OZ_Expect::isExceptional(OZ_expect_t r) {
   return (r.accepted == -2);
 }
+
+//-----------------------------------------------------------------------------
+// OZ_Filter
+
+class OZ_Filter {
+public:
+  virtual int hasState(void) = 0;
+};
+
+
+//-----------------------------------------------------------------------------
+// OZ_Service
+
+class OZ_CPIVarVector {
+private:
+  int _size;
+  OZ_Term ** _vector;
+public:
+  OZ_CPIVarVector(int sz, OZ_Term * &vector) : _size(sz), _vector(&vector) {}
+  void condens(void);
+};
+
+
+class OZ_FSetVarVector : public OZ_CPIVarVector {
+  OZ_FSetVar * _vector;
+public:
+  OZ_FSetVarVector(int size, OZ_Term * &vector);
+};
+
+typedef OZ_Return (*make_prop_fn_2)(OZ_Term, OZ_Term);
+typedef OZ_Return (*make_prop_fn_3)(OZ_Term, OZ_Term, OZ_Term);
+typedef OZ_Return (*make_prop_fn_4)(OZ_Term, OZ_Term, OZ_Term, OZ_Term);
+
+
+class OZ_Service {
+private:
+  int _closed;
+public:
+  //
+  OZ_Service(void) : _closed(0) {}
+  //
+  // sleep is default, after one of these operations, the object is
+  // closed
+  void entailed(void);
+  void failed(void);
+  void equate(OZ_CPIVar &, OZ_CPIVar &);
+  void add_parameter(OZ_CPIVar &, int event);
+  void drop_parameter(OZ_CPIVar &);
+  // propagator is set `scheduled'
+  void impose_propagator(make_prop_fn_2, OZ_Term, OZ_Term);
+  void impose_propagator(make_prop_fn_3, OZ_Term, OZ_Term, OZ_Term);
+  void impose_propagator(make_prop_fn_4, OZ_Term, OZ_Term, OZ_Term, OZ_Term);
+  // changes state of propagator, propagator shall not be set
+  // `scheduled' (hence, `impose_propagator' does not work)
+  void condens_vector(OZ_CPIVarVector &);
+  OZ_Return operator ()();
+};
+
 
 #endif // __MOZART_CPI_HH__
 //
