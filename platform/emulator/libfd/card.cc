@@ -197,8 +197,8 @@ OZ_Return LinEqBPropagator::propagate(void)
   if (*b == fd_singl) {
     OZ_DEBUGPRINT(("imposing (not) eq %d", b->getSingleElem()));
     OZ_Propagator *prop = (b->getSingleElem() == 1
-                           ? new LinEqPropagator(*this)
-                           : new LinNotEqPropagator(*this));
+                           ? (OZ_Propagator *) new LinEqPropagator(*this)
+                           : (OZ_Propagator *) new LinNotEqPropagator(*this));
     b.leave();
     return replaceBy(prop);
   }

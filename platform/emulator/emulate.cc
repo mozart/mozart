@@ -453,62 +453,6 @@ void pushContX(TaskStack *stk,
 #define YPC(N) (*(YRegToPtr(Y,getYRegArg(PC+N))))
 #define GPC(N) (*(GRegToPtr((CAP->getGRef()),getGRegArg(PC+N))))
 
-/* define REGOPT if you want the into register optimization for GCC */
-#if defined(REGOPT) && __GNUC__ >= 2 && (defined(ARCH_I486) || defined(ARCH_MIPS) || defined(OSF1_ALPHA) || defined(ARCH_SPARC)) && !defined(DEBUG_CHECK)
-#define Into(Reg) asm(#Reg)
-
-#ifdef ARCH_I486
-#define Reg1 asm("%esi")
-#define Reg2
-#define Reg3
-#define Reg4
-#define Reg5
-#define Reg6
-#define Reg7
-#endif
-
-#ifdef ARCH_SPARC
-#define Reg1 asm("i0")
-#define Reg2 asm("i1")
-#define Reg3 asm("i2")
-#define Reg4 asm("i3")
-#define Reg5 asm("i4")
-#define Reg6 asm("i5")
-#define Reg7 asm("l0")
-#endif
-
-#ifdef OSF1_ALPHA
-#define Reg1 asm("$9")
-#define Reg2 asm("$10")
-#define Reg3
-#define Reg4
-#define Reg5
-#define Reg6
-#define Reg7
-#endif
-
-#ifdef ARCH_MIPS
-#define Reg1 asm("$16")
-#define Reg2 asm("$17")
-#define Reg3 asm("$18")
-#define Reg4 asm("$19")
-#define Reg5 asm("$20")
-#define Reg6
-#define Reg7
-#endif
-
-#else
-
-#define Reg1
-#define Reg2
-#define Reg3
-#define Reg4
-#define Reg5
-#define Reg6
-#define Reg7
-
-#endif
-
 /*
  * Handling of the READ/WRITE mode bit:
  * last significant bit of sPointer set iff in WRITE mode
@@ -622,44 +566,37 @@ TaggedRef makeMessage(SRecordArity srecArity, TaggedRef label) {
 // ------------------------------------------------------------------------
 
 
-/* &Var prevent Var to be allocated to a register,
- * increases chances that variables declared as "register"
- * will be really allocated to registers
- */
-
-#define NoReg(Var) { void *p = &Var; }
-
 // short names
 # define CBB (oz_currentBoard())
 # define CTT (oz_currentThread())
-# define CTS (e->getCachedStack())
+# define CTS (am.getCachedStack())
 
 int engine(Bool init)
 {
-// ------------------------------------------------------------------------
-// *** Global Variables
-// ------------------------------------------------------------------------
-  /* ordered by importance: first variables will go into machine registers
-   * if -DREGOPT is set
-   */
-  register ProgramCounter PC   Reg1 = 0;
-  register RefsArray * Y       Reg2 = NULL;
-  register TaggedRef *sPointer Reg3 = NULL;
-  register AM * const e        Reg4 = &am;
-  register Abstraction * CAP   Reg5 = NULL;
 
-  Bool isTailCall              = NO;                NoReg(isTailCall);
+  /*
+   * Global Variables aka registers
+   *
+   */
+
+  register ProgramCounter PC   = 0;
+  register RefsArray * Y       = NULL;
+  register TaggedRef *sPointer = NULL;
+  register AM * const e        = &am;
+  register Abstraction * CAP   = NULL;
+
+  Bool isTailCall              = NO;
 
   // handling perdio unification
-  ProgramCounter lastGetRecord;                     NoReg(lastGetRecord);
+  ProgramCounter lastGetRecord;
 
-  ConstTerm *predicate;     NoReg(predicate);
-  int predArity;            NoReg(predArity);
+  ConstTerm *predicate;
+  int predArity;
 
   TaggedRef * TMPA, * TMPB;
 
   // optimized arithmetic and special cases for unification
-  OZ_Return tmpRet;  NoReg(tmpRet);
+  OZ_Return tmpRet;
 
   TaggedRef auxTaggedA, auxTaggedB;
   int auxInt;
@@ -1825,7 +1762,7 @@ Case(GETVOID)
   Case(INLINEMINUS)
     {
 
-#if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTERREGACCESS)
+#if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__) && defined(FASTERREGACCESS)
 
       {
         register TaggedRef A, B;
@@ -1935,7 +1872,7 @@ Case(GETVOID)
   Case(INLINEPLUS)
     {
 
-#if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTERREGACCESS)
+#if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__) && defined(FASTERREGACCESS)
 
       {
         register TaggedRef A, B;
@@ -2046,7 +1983,7 @@ Case(GETVOID)
 
   Case(INLINEMINUS1)
     {
-#if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTERREGACCESS)
+#if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__) && defined(FASTERREGACCESS)
 
       {
         register TaggedRef A, T;
@@ -2121,7 +2058,7 @@ Case(GETVOID)
   Case(INLINEPLUS1)
     {
 
-#if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTERREGACCESS)
+#if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__) && defined(FASTERREGACCESS)
 
       {
         register TaggedRef A, T;
@@ -3370,9 +3307,7 @@ Case(GETVOID)
 
 static
 ThreadReturn debugEntry(ProgramCounter PC, RefsArray * Y, Abstraction * CAP) {
-  register AM * const e        Reg4 = &am;
-
-  if ((e->debugmode() || CTT->isTrace()) && oz_onToplevel()) {
+  if ((am.debugmode() || CTT->isTrace()) && oz_onToplevel()) {
     int line = tagged2SmallInt(getNumberArg(PC+2));
     if (line < 0) {
       execBreakpoint(oz_currentThread());
@@ -3512,7 +3447,7 @@ ThreadReturn debugEntry(ProgramCounter PC, RefsArray * Y, Abstraction * CAP) {
     } else {
       CTT->pushDebug(dbg,DBG_NOSTEP_ATOM);
     }
-  } else if (e->isPropagatorLocation()) {
+  } else if (am.isPropagatorLocation()) {
     OzDebug *dbg = new OzDebug(PC,NULL,CAP);
     CTT->pushDebug(dbg,DBG_EXIT_ATOM);
   }
@@ -3522,15 +3457,13 @@ ThreadReturn debugEntry(ProgramCounter PC, RefsArray * Y, Abstraction * CAP) {
 
 static
 ThreadReturn debugExit(ProgramCounter PC, RefsArray * Y, Abstraction * CAP) {
-  register AM * const e        Reg4 = &am;
-
   OzDebug *dbg;
   Atom * dothis;
   CTT->popDebug(dbg, dothis);
 
   if (dbg != (OzDebug *) NULL) {
     Assert(oz_eq(getLiteralArg(dbg->PC+4),getLiteralArg(PC+4)));
-    Assert(e->isPropagatorLocation() ||
+    Assert(am.isPropagatorLocation() ||
            (dbg->Y == Y &&
             ((Abstraction *) tagged2Const(dbg->CAP)) == CAP));
 

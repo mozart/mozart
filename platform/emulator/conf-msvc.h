@@ -41,9 +41,6 @@
 #define FASTERREGACCESS 1
 #endif
 
-/* define if use native register for am registers (requires GCC) */
-#define REGOPT 1
-
 /* define if modules are linked statically */
 #define MODULES_LINK_STATIC 1
 
