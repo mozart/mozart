@@ -8,6 +8,7 @@ import
    Text(strip : Strip) at 'x-ozlib://duchier/lib/String.ozf'
    Look
    System(show:Show)
+   QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
 export
    infoView       : InfoView
    simpleInfoView : SimpleInfoView
@@ -16,6 +17,8 @@ define
 
    KeyLook=Look.key
    ValueLook=Look.value
+
+   DispHtml={QTk.loadTkPI "./tkhtml" html}
 
    fun {NormalizeWS L}
       case L of nil then nil
@@ -105,7 +108,18 @@ define
 			      Vs0 = {VirtualString.toString {Strip V}}
 			      Vs=if {Member D [body]} then Vs0 else {NormalizeWS Vs0} end
 			   in
-			      if Vs\="" then
+			      if DispHtml andthen D==body andthen Vs\="" then
+				 Html
+			      in
+				 thread
+				    {Wait Html}
+				    {Html parse(""#V)}
+				 end
+				 I#label(text:D look:KeyLook)|
+				 I+1#html(look:KeyLook handle:Html)|
+				 I+2#newline|
+				 {Loop1 Xs I+3}
+			      elseif Vs\="" then
 				 I#label(text:D look:KeyLook)|
 				 I+1#label(text:Vs look:ValueLook)|
 				 I+2#newline|
