@@ -30,7 +30,6 @@ void OZ_CFunHeader::profileReset()
 OZ_CFunHeader::OZ_CFunHeader(OZ_CFun header) 
   : _calls(0), _samples(0), _header(header)
 {
-  printf("."); fflush(stdout);
   static int firstCall = 1;
   if (firstCall) {
     firstCall = 0;
