@@ -768,9 +768,9 @@ class BoundedPoint from Point
       ybounds &lt;- YB
    end
    meth move(X Y)
-      case {self BoundConstraint(X Y $)} then
+      if {self BoundConstraint(X Y $)} then
         Point,move(X Y)
-      else skip end
+      end
    end
    meth BoundConstraint(X Y $)
       (X &gt;= @xbounds.1 andthen
@@ -832,9 +832,9 @@ class BHPoint from HistoryPoint BoundedPoint
    end
    meth move(X Y)
       L = @boundConstraint in
-      case {self L(X Y $)} then
+      if {self L(X Y $)} then
         HistoryPoint,move(X Y)
-      else skip end
+      end
    end
    meth display
       BoundedPoint,display
