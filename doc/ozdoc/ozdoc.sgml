@@ -17,7 +17,7 @@
     <META NAME="html.split" value="chapter.description">
     <META NAME="html.split" value="chapter.extending">
     <TITLE>Oz Documentation DTD
-    <AUTHOR.EXTERN TO="author.db" KEY="denys.duchier">
+    <AUTHOR.EXTERN TO="author.db" KEY="Denys.Duchier">
     <CHAPTER ID=chapter.intro>
       <TITLE/Introduction/
 
