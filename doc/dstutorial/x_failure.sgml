@@ -74,6 +74,43 @@ will complete and it is usually
 possible to find out something about what the
 problem is, depending on the type of the entity.
 
+<P> A fault state <<F>> different from <<ok>> will
+cause the distribution exception <<system(dp(F))>>
+to be raised when an operation is attempted on the entity.
+
+<P> The fault state <<tempFail>> exists to allow the
+application to react quickly to temporary network problems.
+It is raised by the system as soon as a network problem
+is recognized.
+It is therefore fundamentally different from a time-out.
+For example, TCP gives a time-out after some minutes.
+This duration has been chosen to be very long,
+approximating infinity from the viewpoint of the
+network connection.
+After the time-out,
+one can be sure that the connection is no longer working.
+The purpose of <<tempFail>> is quite different:
+it is to <EM>inform</EM> the application
+of network problems, not to mark the <EM>end</EM> of a connection.
+For example, an application might be connected to a given server.
+If there are problems with this server, the application
+would like to be informed quickly so that it can try connecting
+to another server.
+The <<tempFail>> exceptions will therefore be relatively frequent,
+much more frequent than time-outs.
+
+<P> It is possible for
+a temporary network error to be effectively permanent.
+In general, the distinction between the two cannot be made from inside
+the application.
+For example, if a user disconnects the network connection of a laptop
+machine, then only he or she knows whether the problem is permanent.
+The decision whether to continue waiting on a temporary error
+or whether to interrupt the wait can cut through all levels of
+abstraction to appear at the top level.
+The application then pops up a window to ask the user whether
+to continue waiting or not.
+
 <SUBSECTION><TITLE>Eager stateless data</TITLE>
 
 <P> Eager stateless data, namely records, procedures,
@@ -356,14 +393,27 @@ that the server has crashed.
 
 <P> To keep the client from blocking
 indefinitely, it must time out.
-We need a time out since the server
-drops a problematic client like a hot potato.
-The time out is an argument to <<SafeWait>>.
+We need a time-out since otherwise a client
+will be stuck when the server drops it like a hot potato.
+The time-out is an argument to <<SafeWait>>.
 
 <SUBSECTION><TITLE>Making fault-tolerant stationary objects</TITLE>
 
 <P> To be useful in practice,
 stationary objects must have well-defined behavior when
 there are faults.
+
+<P> We propose the following specification:
+<LIST>
+<ITEM> The call <<C={NewSafeStat Class Init}>>
+creates a new stationary object <<C>>.
+<ITEM> The call <<{C Msg}>> can raise
+the additional distribution exceptions
+<<permFail>> and <<tempFail>>,
+in addition to the exceptions raised in the object.
+<ITEM> The call <<{C Msg T}>> adds a time-out <<T>> (in ms).
+If there is no result after this time,
+then the distribution exception <<timeOut>> is raised.
+</LIST>
 
 </CHAPTER>
