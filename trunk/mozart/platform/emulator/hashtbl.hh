@@ -20,7 +20,7 @@
 
 class HashNode;
 
-typedef enum hashType {INTTYPE = 0, CHARTYPE = 1};
+typedef enum {INTTYPE = 0, CHARTYPE = 1} hashType;
 
 typedef union {char *fstr; intlong fint; } HtKey;
 
