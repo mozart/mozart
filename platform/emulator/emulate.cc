@@ -1629,7 +1629,7 @@ LBLdispatcher:
       if (stateIsCell(state)) {
         rec = getState(state,NO,fea,XPC(2));
         if (rec==NULL) {
-          predArity = MaxToSave(2,4);
+          predArity = MaxToSave(2,3);
           PC += 6;
           goto LBLreplaceBICall;
         }
