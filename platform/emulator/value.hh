@@ -1,9 +1,6 @@
 /*
  * FBPS Saarbr"ucken
  * Author: mehl
- * Last modified: $Date$ from $Author$
- * Version: $Revision$
- * State: $State$
  *
  * Values: literal, list, records
  */
@@ -1105,20 +1102,6 @@ int isSTuple(TaggedRef term) {
 inline
 int isTuple(TaggedRef term) {
   return isLTuple(term) || isSTuple(term);
-}
-
-inline
-TaggedRef left(TaggedRef pair)
-{
-  Assert(OZ_isPair2(pair));
-  return tagged2SRecord(pair)->getArg(0);
-}
-
-inline
-TaggedRef right(TaggedRef pair)
-{
-  Assert(OZ_isPair(pair));
-  return tagged2SRecord(pair)->getArg(1);
 }
 
 inline

@@ -5,9 +5,6 @@
  *  SICS
  *    Box 1263, S-16428 Sweden, Phone (+46) 8 7521500
  *  Author: brand,scheidhr, mehl
- *  Last modified: $Date$ from $Author$
- *  Version: $Revision$
- *  State: $State$
  *
  *  protocol and message layer
  * -----------------------------------------------------------------------*/
@@ -49,8 +46,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <stdio.h>
-#include "oz.h"
-#include "am.hh"
+#include "runtime.hh"
 #include "ip.hh"
 #include "codearea.hh"
 #include "indexing.hh"
@@ -189,6 +185,7 @@ public:
       getTertiary()->setIndex(i);
     } else {
       TaggedRef tPtr = getRef();
+      if (!isPerdioVar(deref(tPtr))) return;
       TaggedRef val = *tagged2Ref(tPtr);
       PerdioVar *pv = tagged2PerdioVar(val);
       pv->setIndex(i);
@@ -945,7 +942,8 @@ public:
     }
     pendLink=from->pendLink;
     netaddr.set(from->netaddr.site,from->netaddr.index);
-    from->setIndex(i);}
+    from->setIndex(i);
+  }
 
   void initBorrow(Credit c,Site* s,int i){
     Assert(isFree());
@@ -3046,7 +3044,7 @@ int compareNetAddress(PerdioVar *lVar,PerdioVar *rVar)
 
 #define CHECK_INIT                                              \
   if (!ipIsInit()) {                                            \
-    return am.raise(E_ERROR,OZ_atom("ip"),"uninitialized",0);   \
+    return oz_raise(E_ERROR,OZ_atom("ip"),"uninitialized",0);   \
                                                                   }
 
 
@@ -3092,7 +3090,7 @@ OZ_C_proc_begin(BIstartServer,2)
 
   prt=deref(prt);
   if (!isPort(prt)) {
-    TypeErrorT(0,"Port");
+    oz_typeError(0,"Port");
   }
 
   PERDIO_DEBUG1(USER,"USER:startServer called p:%d",port);

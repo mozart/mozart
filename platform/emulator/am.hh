@@ -2,9 +2,6 @@
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
   Author: popow, mehl
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
 
   ------------------------------------------------------------------------
 */
@@ -142,6 +139,12 @@ public:
   void addSuspendVarList(TaggedRef * t);
   void suspendOnVarList(Thread *thr);
 
+  struct {
+    TaggedRef proc;
+    RefsArray args;
+    int argsNo;
+  } suspendBI;
+
   void formatError(OZ_Term traceBack,OZ_Term loc);
   void formatFailure(OZ_Term traceBack,OZ_Term loc);
   int raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...);
@@ -250,7 +253,7 @@ public:
   Bool isInstallingScript(void) {return installingScript;}
   Bool install(Board *bb);
   void deinstallPath(Board *top);
-  void deinstallCurrent();
+  INLINE void deinstallCurrent();
   void reduceTrailOnUnitCommit();
   void reduceTrailOnSuspend();
   void reduceTrailOnFail();

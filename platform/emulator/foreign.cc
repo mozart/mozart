@@ -2,9 +2,6 @@
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-W-6600 Saarbruecken 11, Phone (+49) 681 302-5312
   Author: scheidhr
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
   */
 
 #include <ctype.h>
@@ -15,7 +12,7 @@
 
 #include "oz.h"
 
-#include "am.hh"
+#include "runtime.hh"
 
 #include "genvar.hh"
 #include "ofgenvar.hh"
@@ -197,31 +194,16 @@ int OZ_isFalse(OZ_Term term)
   return literalEq(term,NameFalse);
 }
 
-inline
-int isPair(OZ_Term term)
-{
-  if (isLiteral(term)) return literalEq(term,AtomPair);
-  if (!isSRecord(term)) return 0;
-  SRecord *sr = tagged2SRecord(term);
-  if (!sr->isTuple()) return 0;
-  return literalEq(sr->getLabel(),AtomPair);
-}
-
 int OZ_isPair(OZ_Term term)
 {
   term = deref(term);
-  return isPair(term);
+  return oz_isPair(term);
 }
 
 int OZ_isPair2(OZ_Term term)
 {
   term = deref(term);
-  if (isLiteral(term)) return literalEq(term,AtomPair);
-  if (!isSRecord(term)) return 0;
-  SRecord *sr = tagged2SRecord(term);
-  if (!sr->isTuple()) return 0;
-  if (!literalEq(sr->getLabel(),AtomPair)) return 0;
-  return sr->getWidth()==2;
+  return oz_isPair2(term);
 }
 
 int OZ_isRecord(OZ_Term term)
@@ -245,7 +227,7 @@ int OZ_isValue(OZ_Term term)
 int OZ_isVariable(OZ_Term term)
 {
   term = deref(term);
-  return isAnyVar(term);
+  return oz_isVariable(term);
 }
 
 OZ_Term OZ_termType(OZ_Term term)
@@ -253,47 +235,47 @@ OZ_Term OZ_termType(OZ_Term term)
   term = deref(term);
 
   if (isThread(term)) {
-    return OZ_atom("thread");
+    return oz_atom("thread");
   }
 
   if (isAnyVar(term)) {
-    return OZ_atom("variable");
+    return oz_atom("variable");
   }
 
   if (isInt(term)) {
-    return OZ_atom("int");
+    return oz_atom("int");
   }
 
   if (isFloat(term)) {
-    return OZ_atom("float");
+    return oz_atom("float");
   }
 
   if (isLiteral(term)) {
-    return OZ_atom(tagged2Literal(term)->isAtom() ? "atom" : "name");
+    return oz_atom(tagged2Literal(term)->isAtom() ? "atom" : "name");
   }
 
   if (isTuple(term)) {
-    return OZ_atom("tuple");
+    return oz_atom("tuple");
   }
 
   if (isProcedure(term)) {
-    return OZ_atom("procedure");
+    return oz_atom("procedure");
   }
 
   if (isCell(term)) {
-    return OZ_atom("cell");
+    return oz_atom("cell");
   }
 
   if (isChunk(term)) {
-    return OZ_atom("chunk");
+    return oz_atom("chunk");
   }
 
   if (isSRecord(term)) {
-    return OZ_atom("record");
+    return oz_atom("record");
   }
 
   if (isSpace(term)) {
-    return OZ_atom("space");
+    return oz_atom("space");
   }
 
   OZ_warning("OZ_termType: unknown type\n");
@@ -349,7 +331,7 @@ OZ_Term OZ_true(void)
 
 OZ_Term OZ_int(int i)
 {
-  return makeInt(i);
+  return oz_int(i);
 }
 
 /*
@@ -458,7 +440,7 @@ char *OZ_parseInt(char *s)
 
 OZ_Term OZ_float(double i)
 {
-  return makeTaggedFloat(i);
+  return oz_float(i);
 }
 
 double OZ_floatToC(OZ_Term term)
@@ -481,7 +463,7 @@ OZ_Term OZ_CStringToFloat(char *s)
   // undo changes
   replChar(s,'-','~');
 
-  return OZ_float(res);
+  return oz_float(res);
 }
 
 
@@ -1085,7 +1067,7 @@ char *OZ_atomToC(OZ_Term term)
 
 OZ_Term OZ_atom(char *s)
 {
-  return makeTaggedAtom(s);
+  return oz_atom(s);
 }
 
 /* -----------------------------------------------------------------
@@ -1197,7 +1179,7 @@ void virtualString2buffer(ostream &out,OZ_Term term)
     return;
   }
   if (isAtom(t)) {
-    if (isNil(t) || isPair(t)) return;
+    if (isNil(t) || oz_isPair(t)) return;
     vsatom2buffer(out,t);
     return;
   }
@@ -1210,7 +1192,7 @@ void virtualString2buffer(ostream &out,OZ_Term term)
     return;
   }
 
-  if (!isPair(t)) {
+  if (!oz_isPair(t)) {
     OZ_warning("no virtual string: %s",toC(term));
     return;
   }
@@ -1250,7 +1232,7 @@ void OZ_printVirtualString(OZ_Term term)
   if (isCons(t)) {
     OZ_printString(t);
   } else if (isAtom(t)) {
-    if (isNil(t) || isPair(t)) {
+    if (isNil(t) || oz_isPair(t)) {
       return;
     }
     OZ_printAtom(t);
@@ -1259,7 +1241,7 @@ void OZ_printVirtualString(OZ_Term term)
   } else if (isFloat(t)) {
     OZ_printFloat(t);
   } else {
-    if (!isPair(t)) {
+    if (!oz_isPair(t)) {
       OZ_warning("OZ_printVirtualString: no virtual string: %s",toC(term));
       return;
     }
@@ -1487,10 +1469,7 @@ OZ_Term OZ_pair(int n)
 }
 
 OZ_Term OZ_pair2(OZ_Term t1,OZ_Term t2) {
-  SRecord *sr = SRecord::newSRecord(AtomPair,2);
-  sr->setArg(0,t1);
-  sr->setArg(1,t2);
-  return makeTaggedSRecord(sr);
+  return oz_pair2(t1,t2);
 }
 
 /* -----------------------------------------------------------------
@@ -1616,18 +1595,18 @@ OZ_Term OZ_arityList(OZ_Term term)
 
 OZ_Return OZ_unify(OZ_Term t1, OZ_Term t2)
 {
-  return am.fastUnify(t1,t2,OK) ? PROCEED : FAILED;
+  return oz_unify(t1,t2);
 }
 
 int OZ_eq(OZ_Term t1, OZ_Term t2)
 {
-  return termEq(t1,t2);
+  return oz_eq(t1,t2);
 }
 
 
 OZ_Term OZ_newVariable()
 {
-  return makeTaggedRef(newTaggedUVar(am.currentBoard));
+  return oz_newVariable();
 }
 
 /* -----------------------------------------------------------------
@@ -1714,7 +1693,7 @@ int isVirtualString(OZ_Term vs, OZ_Term *var)
 
   if (isInt(vs) || isFloat(vs) || isAtom(vs))  return 1;
 
-  if (isPair(vs)) {
+  if (oz_isPair(vs)) {
     SRecord *sr = tagged2SRecord(vs);
     int len = sr->getWidth();
     for (int i=0; i < len; i++) {
@@ -1742,7 +1721,7 @@ int OZ_isVirtualString(OZ_Term vs, OZ_Term *var)
 
 OZ_Term OZ_newName()
 {
-  return makeTaggedLiteral(Name::newName(am.currentBoard));
+  return oz_newName();
 }
 /* -----------------------------------------------------------------
  *
@@ -1763,7 +1742,7 @@ void OZ_addBISpec(OZ_BIspec *spec)
 OZ_Return OZ_raise(OZ_Term exc)
 {
   if (OZ_isVariable(exc)) {
-    return am.raise(E_ERROR,E_KERNEL,"instantiation",5,
+    return oz_raise(E_ERROR,E_KERNEL,"instantiation",5,
                     OZ_atom("raise"),cons(exc,nil()),
                     OZ_atom("det"),OZ_int(1),OZ_string(""));
   }
@@ -1775,7 +1754,7 @@ OZ_Return OZ_raise(OZ_Term exc)
 
 OZ_Return OZ_raiseA(char *name, int was, int shouldBe)
 {
-  return am.raise(E_ERROR,E_SYSTEM,"inconsistentArity",3,
+  return oz_raise(E_ERROR,E_SYSTEM,"inconsistentArity",3,
                   OZ_atom(name),OZ_int(was),OZ_int(shouldBe));
 }
 
@@ -1838,40 +1817,19 @@ void OZ_addThread(OZ_Term var, OZ_Thread thr)
   addSuspAnyVar(varPtr, new SuspList((Thread *) thr));
 }
 
-
-void OZ_suspendOnInternal(OZ_Term var)
+OZ_Return OZ_suspendOnInternal(OZ_Term var)
 {
-  DEREF(var,varPtr,_1);
-  Assert(isAnyVar(var));
-  am.addSuspendVarList(varPtr);
+  oz_suspendOn(var);
 }
 
-void OZ_suspendOnInternal2(OZ_Term var1,OZ_Term var2)
+OZ_Return OZ_suspendOnInternal2(OZ_Term var1,OZ_Term var2)
 {
-  DEREF(var1,varPtr1,_1);
-  if (isAnyVar(var1)) {
-    am.addSuspendVarList(varPtr1);
-  }
-  DEREF(var2,varPtr2,_2);
-  if (isAnyVar(var2)) {
-    am.addSuspendVarList(varPtr2);
-  }
+  oz_suspendOn2(var1,var2);
 }
 
-void OZ_suspendOnInternal3(OZ_Term var1,OZ_Term var2,OZ_Term var3)
+OZ_Return OZ_suspendOnInternal3(OZ_Term var1,OZ_Term var2,OZ_Term var3)
 {
-  DEREF(var1,varPtr1,_1);
-  if (isAnyVar(var1)) {
-    am.addSuspendVarList(varPtr1);
-  }
-  DEREF(var2,varPtr2,_2);
-  if (isAnyVar(var2)) {
-    am.addSuspendVarList(varPtr2);
-  }
-  DEREF(var3,varPtr3,_3);
-  if (isAnyVar(var3)) {
-    am.addSuspendVarList(varPtr3);
-  }
+  oz_suspendOn3(var1,var2,var3);
 }
 
 /* -----------------------------------------------------------------
@@ -1880,14 +1838,14 @@ void OZ_suspendOnInternal3(OZ_Term var1,OZ_Term var2,OZ_Term var3)
 
 OZ_Term OZ_newCell(OZ_Term val)
 {
-  return makeTaggedConst(new Cell(am.currentBoard, val));
+  return oz_newCell(val);
 }
 
 OZ_Term OZ_newChunk(OZ_Term val)
 {
   val=deref(val);
   if (!isRecord(val)) return 0;
-  return makeTaggedConst(new SChunk(am.currentBoard, val));
+  return oz_newChunk(val);
 }
 
 int OZ_onToplevel()
@@ -1910,7 +1868,7 @@ char *OZ_unixError(int aErrno) {
 
 OZ_Return OZ_typeError(int pos,char *type)
 {
-  TypeErrorT(pos,type);
+  oz_typeError(pos,type);
 }
 
 void OZ_main(int argc,char **argv)
@@ -1941,7 +1899,7 @@ void OZ_fail(char *format, ...)
 
 OZ_Term OZ_newPort(OZ_Term val)
 {
-  return makeTaggedConst(new PortWithStream(am.currentBoard, val));
+  return oz_newPort(val);
 }
 
 void OZ_send(OZ_Term port, OZ_Term val)

@@ -31,6 +31,7 @@ void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
   if (isAnyVar(vv)) {
     Assert(isPerdioVar(vv));
     PerdioVar *pv=tagged2PerdioVar(vv);
+    if (pv==this) return;
     pv->setSuspList(am.checkSuspensionList(pv, pv->getSuspList(),
                                            pc_std_unif));
     relinkSuspListTo(pv);
