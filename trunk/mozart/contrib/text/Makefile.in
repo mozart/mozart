@@ -9,6 +9,7 @@ OZC		= @OZC@
 INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
 INSTALL_LIB	= $(INSTALL) -m 444
+INSTALL_DLL	= $(INSTALL) -m 555
 EMACS		= emacs
 HOMEURL         = @HOMEURL@
 PLATFORM	= @PLATFORM@
@@ -29,8 +30,10 @@ install:	$(LIB_DIR) $(LIB_TARGETS)
 $(LIB_DIR) $(ELIB_DIR):
 	$(INSTALL_DIR) $@
 
-$(LIB_TARGETS): $(LIB_DIR)/% : %
+$(LIB_DIR)/%.ozf : %.ozf
 	$(INSTALL_LIB) $< $@
+$(LIB_DIR)/%.so-$(PLATFORM) : %.so-$(PLATFORM)
+	$(INSTALL_DLL) $< $@
 
 %.ozf: %.oz
 	$(OZC) -c $< -o $@
