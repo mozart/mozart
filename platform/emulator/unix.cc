@@ -2,11 +2,13 @@
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
   Author: mehl, schulte
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
   */
 
 #include "wsock.hh"
 
-#include "runtime.hh"
+#include "oz.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -68,6 +70,8 @@ extern "C" char *inet_ntoa(struct in_addr in);
 #define max_vs_length 4096*4
 #define vs_buff(VAR) char VAR[max_vs_length + 256];
 
+#include "am.hh"
+
 //
 // Argument handling
 //
@@ -76,7 +80,7 @@ extern "C" char *inet_ntoa(struct in_addr in);
 #define OZ_C_ioproc_begin(Name,Arity)                                   \
 OZ_C_proc_begin(Name,Arity)                                             \
   if (!OZ_onToplevel()) {                                               \
-    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("io"));    \
+    return am.raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("io"));    \
   }
 
 #define OZ_C_ioproc_end }
@@ -89,7 +93,7 @@ OZ_C_proc_begin(Name,Arity)                                             \
      if (OZ_isVariable(susp)) {                                         \
        OZ_suspendOn(susp);                                              \
      } else {                                                           \
-       return oz_raise(E_SYSTEM,E_SYSTEM,"limitInternal",1,             \
+       return am.raise(E_SYSTEM,E_SYSTEM,"limitInternal",1,             \
                         OZ_string("virtual string too long"));          \
      }                                                                  \
    } else if (status != PROCEED) {                                      \
@@ -149,7 +153,7 @@ while ((RET = CALL) < 0) {                   \
 // -------------------------------------------------
 
 int raiseUnixError(int n, char * e, char * g) {
-  return oz_raise(E_SYSTEM,E_OS, g, 2, OZ_int(n), OZ_string(e));
+  return am.raise(E_SYSTEM,E_OS, g, 2, OZ_int(n), OZ_string(e));
 }
 
 // return upon unix-error
@@ -566,15 +570,28 @@ OZ_C_proc_begin(unix_uName,1)
   if (uname(&buf) < 0)
     RETURN_UNIX_ERROR;
 
-  OZ_Term t1=OZ_pairAS("sysname",buf.sysname);
-  OZ_Term t2=OZ_pairAS("nodename",buf.nodename);
-  OZ_Term t3=OZ_pairAS("release",buf.release);
-  OZ_Term t4=OZ_pairAS("version",buf.version);
-  OZ_Term t5=OZ_pairAS("machine",buf.machine);
+#ifdef SUNOS_SPARC
+  char dname[65];
+  if (getdomainname(dname, 65)) {
+    RETURN_UNIX_ERROR;
+  }
+#else
+  char * dname;
+  dname = buf.domainname;
+#endif
+
+  OZ_Term t1=OZ_pairAS("domainname",dname);
+  OZ_Term t2=OZ_pairAS("machine",buf.machine);
+  OZ_Term t3=OZ_pairAS("nodename",buf.nodename);
+  OZ_Term t4=OZ_pairAS("release",buf.release);
+  OZ_Term t5=OZ_pairAS("sysname",buf.sysname);
+  OZ_Term t6=OZ_pairAS("version",buf.version);
+
 
   OZ_Term pairlist=
-    OZ_cons(t1,OZ_cons(t2,OZ_cons(t3,OZ_cons(t4,OZ_cons(t5,OZ_nil())))));
+    cons(t1,cons(t2,cons(t3,cons(t4,cons(t5,cons(t6,nil()))))));
   return OZ_unify(out,OZ_recordInit(OZ_atom("utsname"),pairlist));
+
 }
 OZ_C_proc_end
 #endif
@@ -1465,7 +1482,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
   argl=args;
 
   if (argno+2 >= maxArgv) {
-    return oz_raise(E_SYSTEM,E_SYSTEM,"limitInternal",1,
+    return am.raise(E_SYSTEM,E_SYSTEM,"limitInternal",1,
                     OZ_string("too many arguments for pipe"));
   }
   argv[0] = s;
@@ -1485,7 +1502,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
     if (status == SUSPEND) {
       free(vsarg);
       Assert(!OZ_isVariable(susp));
-      return oz_raise(E_SYSTEM,E_SYSTEM,"limitInternal",1,
+      return am.raise(E_SYSTEM,E_SYSTEM,"limitInternal",1,
                    OZ_string("virtual string too long"));
     }
     Assert(status == PROCEED);
@@ -1857,7 +1874,7 @@ OZ_C_proc_begin(unix_random, 1)
 #if defined(SOLARIS_SPARC) || defined(SUNOS_SPARC) || defined(LINUX)
   return OZ_unifyInt(out,random());
 #else
-  return oz_raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("Unix.random"));
+  return am.raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("Unix.random"));
   // return OZ_unifyInt(out,rand());
 #endif
 }
@@ -1873,7 +1890,7 @@ OZ_C_proc_begin(unix_srandom, 1)
 #if defined(SOLARIS_SPARC) || defined(SUNOS_SPARC) || defined(LINUX)
   srandom((unsigned int) seed);
 #else
-  return oz_raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("Unix.srandom"));
+  return am.raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("Unix.srandom"));
   // srand((unsigned int) seed);
 #endif
 
@@ -1888,7 +1905,7 @@ OZ_C_proc_end
 #define NotAvail(Name,Arity,Fun)                        \
 OZ_C_ioproc_begin(Fun,Arity)                            \
 {                                                       \
-  return oz_raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,  \
+  return am.raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,  \
                    OZ_atom(Name));                      \
 }                                                       \
 OZ_C_proc_end

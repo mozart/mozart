@@ -55,6 +55,7 @@ extern "C" {
   int shutdown(int s, int how);
 
   int gethostname(const char *name, int namelen);
+  int getdomainname(const char *name, int namelen);
 
   int select(int width,
              fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
