@@ -386,8 +386,9 @@
 \newcommand{\mozartLT}[1]{\mozart@LT}
 \newcommand{\mozartGT}[1]{\mozart@GT}
 \newcommand{\mozartVBAR}[1]{\mozart@VBAR}
+\DeclareRobustCommand\mozart@SPACE{\nobreakspace}
 \newcommand{\mozartSPACE}[1]{\mozart@SPACE}
-\newcommand{\mozartNEWLINE}[1]{\mozart@NEWLINE}
+\newcommand{\mozartNEWLINE}{\mozart@NEWLINE}
 
 \newcommand{\mozartEMPTY}{}
 
@@ -518,6 +519,7 @@
 \newcommand{\usepi@ie}{i.e.\ }
 \newcommand{\usepi@nbsp}{~}
 \newcommand{\usepi@LaTeX}{\LaTeX{}}
+\newcommand{\usepi@LATEX}{\LaTeX{}}
 \newcommand{\usepi@ellipsis}{\ldots}
 \newcommand{\usepi@etc}{etc.}
 \newcommand{\usepi@resp}{resp.\ }
@@ -560,8 +562,17 @@
 \DeclareRobustCommand{\CODEINLINE}{\bgroup\let\FACETEXT\INLINEFACETEXT\@CODEINLINE}
 \newcommand{\CODEEXTERN}[1]{%
   \begin{DISPLAY}\mozart@code@font\verbatiminput{#1}\end{DISPLAY}}
+
+%% all newlines in code are encoded using \mozartNEWLINE
+%% remaining newlines are needed to keep lines
+%% short enough to be processed by TeX.  Hence the
+%% \let\obeylines\@empty.  Really, we don't want alltt
+%% but something much like it that neither uses
+%% obeyspaces nor obeylines... maybe some day.
+
 \newenvironment{CODEDISPLAY}
-  {\begin{DISPLAY}\begin{alltt}\mozart@code@font\mozart@specials@code@display}
+  {\let\obeylines\@empty
+   \begin{DISPLAY}\begin{alltt}\mozart@code@font\mozart@specials@code@display}
   {\end{alltt}\end{DISPLAY}}
 
 \definecolor{comment}{rgb}{0.698039,0.133333,0.133333}
@@ -709,6 +720,7 @@
      \item[\mbox{\bf$\color{chunkborder}\langle$%
        \textcolor{chunktitle}{#1}$\color{chunkborder}\rangle\equiv$}]%
      \topsep\z@\parskip\z@\partopsep\z@\parsep\z@\itemsep\z@
+     \let\obeylines\@empty
      \hfill\hbox{}\begin{alltt}\mozart@code@font\mozart@specials@code@display}
   {\end{alltt}\end{list}}
 
@@ -846,3 +858,14 @@
 \renewcommand*\l@subsubsection[1]{\latex@l@subsubsection{\mozart@toc@font#1}}
 \renewcommand*\l@paragraph[1]{\latex@l@paragraph{\mozart@toc@font#1}}
 \renewcommand*\l@subparagraph[1]{\latex@l@subparagraph{\mozart@toc@font#1}}
+
+%% DTD doc support
+
+\newcommand{\DTDTAG}[1]{\texttt}
+\newcommand{\DTDATTRIB}[1]{\texttt}
+\newcommand{\DTDPI}[1]{\texttt}
+
+%%
+
+\newcommand{\PAGEREF}{\protect\pageref}
+\newcommand{\REF}{\protect\ref}
