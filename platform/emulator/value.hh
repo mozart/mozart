@@ -288,7 +288,12 @@ extern "C" {
 
 
 const int OzMaxInt = INT_MAX>>tagSize;
+#ifdef __GNUC__
+const int OzMinInt = INT_MIN>>tagSize;
+#else 
 const int OzMinInt = -OzMaxInt;
+#endif
+
 const unsigned long OzMaxUnsignedLong = ~0;
 
 const TaggedRef TaggedOzMaxInt = makeTaggedSmallInt(OzMaxInt);
