@@ -1167,9 +1167,6 @@ void initDPCore()
   gcDistCellRecurse = gcDistCellRecurseImpl;
   gcDistLockRecurse = gcDistLockRecurseImpl;
   gcDistPortRecurse = gcDistPortRecurseImpl;
-  auxGcDistCell = auxGcDistCellImpl;
-  auxGcDistLock = auxGcDistLockImpl;
-  gcStatefulSpec = gcStatefulSpecImpl;
   gcBorrowTableUnusedFrames = gcBorrowTableUnusedFramesImpl;
   gcFrameToProxy = gcFrameToProxyImpl;
   gcPerdioFinal = gcPerdioFinalImpl;
@@ -1298,23 +1295,6 @@ OZ_Term getGatePort(DSite* sd){
   Assert(b->isPersistent());
   return b->getValue();}
 
-//
-ConstTerm *gcStatefulSpecImpl(Tertiary *t)
-{
-  ConstTerm *ret;
-  if(t->getType()==Co_Cell){
-    CellFrame *cf=(CellFrame*)t;
-    cf->setAccessBit();
-    ret = (ConstTerm *) OZ_hrealloc(t,sizeof(CellFrame));
-    cf->myStoreForward(ret);}
-  else{
-    Assert(t->getType()==Co_Lock);
-    LockFrame *lf=(LockFrame*)t;
-    lf->setAccessBit();
-    ret = (ConstTerm *) OZ_hrealloc(t,sizeof(LockFrame));
-    lf->myStoreForward(ret);}
-  return (ret);
-}
 
 void dpExitWithTimer(unsigned int timeUntilClose) {
   //  printf("Close started at %s\n", myDSite->stringrep());
