@@ -1315,7 +1315,9 @@ void engine() {
       if (tmpThread) {  /* may happen if catching SIGSEGV and SIGBUS */
         if (tmpThread->hasNotificationBoard()) {
           Board *nb = tmpThread->notificationBoard->getBoardFast();
+#ifdef NEWCOUNTER
           Assert(nb==tmpThread->getBoardFast());
+#endif
           e->decSolveThreads(nb);
         }
         e->currentThread=(Thread *) NULL;
