@@ -237,6 +237,7 @@ in
 			     command(label:   'Select Compare'
 				     action:  self # nodesSelCmp
 				     state:   disabled
+				     event:   '<KeyPress-1>'
 				     key:     1
 				     feature: selCmp)
 			     command(label:   'Deselect Compare'
@@ -247,6 +248,7 @@ in
 			     command(label:   'Compare'
 				     action:  self # nodesCmp
 				     state:   disabled
+				     event:   '<KeyPress-2>'
 				     key:     2
 				     feature: cmp)
 			     separator
