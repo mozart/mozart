@@ -1368,7 +1368,6 @@ LBLkillThread:
       Actor *aa;
       switch (e->checkEntailment(cont,aa)) {
       case CE_FAIL:
-	printf("scheisse\n");
 	if (nb) e->decSolveThreads(nb);
 	HF_NOMSG;
       case CE_SOLVE_CONT: /* no special case */
