@@ -1811,19 +1811,9 @@ void ThreadsPool::doGC ()
   rootThread         = rootThread->gcThread();
   threadBodyFreeList = (RunnableThreadBody *) NULL;
 
-  ThreadQueue *thq = currentQueue;
-  int pri = currentPriority;
-  int prioInd = nextPrioInd;
-  while (thq) { 
-    thq->doGC ();
-
-    if (prioInd >= 0) {
-      pri = nextPrio[prioInd--];
-      thq = &queues[pri];
-    } else {
-      thq = (ThreadQueue *) NULL;
-    }
-  }
+  hiQueue.doGC();
+  midQueue.doGC();
+  lowQueue.doGC();
 }
 
 void ThreadQueue::doGC ()

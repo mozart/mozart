@@ -2686,7 +2686,7 @@ OZ_C_proc_begin(BIthreadSetPriority,2)
   OZ_declareIntArg(1,prio);
 
   if (prio > OZMAX_PRIORITY || prio < OZMIN_PRIORITY) {
-    TypeErrorT(0,"Int [0 ... 100]");
+    TypeErrorT(0,"Int [0 ... 2]");
   }
 
   if (th->isDeadThread()) return PROCEED;
@@ -5924,15 +5924,15 @@ TaggedRef SuspList::DBGmakeList() {
 OZ_C_proc_begin(BISystemGetThreads,1) {
   GetRecord;
   SetIntArg(AtomCreated,  ozstat.createdThreads.total);
-  SetIntArg(AtomRunnable, 0); // Michael: fill!
+  SetIntArg(AtomRunnable, am.getRunnableNumber());
   return PROCEED;
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BISystemGetPriorities,1) {
   GetRecord;
-  SetIntArg(AtomHigh,   0); // Michael: fill!
-  SetIntArg(AtomMiddle, 0); // Michael: fill!
+  SetIntArg(AtomHigh,   ozconf.hiMidRatio);
+  SetIntArg(AtomMiddle, ozconf.midLowRatio);
   return PROCEED;				
 }
 OZ_C_proc_end
@@ -6154,8 +6154,9 @@ OZ_C_proc_begin(BISystemSetPriorities,1) {
   DoPercentFeature(high,   t, AtomHigh);
   DoPercentFeature(middle, t, AtomMiddle);
 
+  SetIfPos(ozconf.hiMidRatio,  high,   1);
+  SetIfPos(ozconf.midLowRatio, middle, 1);
   
-  // Do something with these guys
   return PROCEED;
 }
 OZ_C_proc_end

@@ -106,3 +106,33 @@ Board * ThreadQueueImpl::getHighestSolveDebug(void)
 
   return NULL;
 }
+
+int ThreadQueueImpl::getRunnableNumber()
+{
+  int ret=0;
+  int j=head;
+  for (int i=size; i > 0; i--) {
+    ret+=queue[j]->getRunnableNumber();
+    INC(j);
+  }
+  return ret;
+}
+
+void ThreadQueueImpl::deleteThread(Thread *th)
+{
+  int ahead = head;
+
+  for (int i = size; i > 0 ; i--) {
+    if (queue[ahead] == th) {
+      for (int j = i-1; j > 0; j--) {
+	int last=ahead;
+	INC(ahead);
+	queue[last] = queue[ahead];
+      }
+      size--;
+      tail = tail-1; if (tail < 0 && size>0) tail = maxsize-1;
+      return;
+    }
+    INC(ahead);
+  }
+}
