@@ -348,10 +348,11 @@ emulator.exe: $(PRGDEP)
 	$(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
 
 emulator.dll: $(PRGDEP)
-	$(DLLTOOL) --as $(AS) --output-def emulator.def \
+	$(DLLTOOL) --as $(AS) --output-def emulator0.def \
 	--output-lib libemulator.a --dllname $@ $(OBJS) && \
+	sed 's/ @.*//g' < emulator0.def > emulator.def && \
 	$(DLLWRAP) --driver-name $(CXX) --dlltool-name $(DLLTOOL) --as $(AS) \
-	 $(EMULDFLAGS) $(LDFLAGS) -o $@ --def emulator.def $(OBJS) $(LIBS)
+	$(EMULDFLAGS) $(LDFLAGS) -o $@ --def emulator.def $(OBJS) $(LIBS)
 
 text2pickle.exe: $(TEXT2PICKLEOBJS)
 	$(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(TEXT2PICKLEOBJS)
