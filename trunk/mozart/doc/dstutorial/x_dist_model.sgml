@@ -30,7 +30,7 @@ This gives the language entity a particular
 distributed semantics in terms of network messages.
 
 <P>The <EM>distributed semantics</EM>
-<index id=idx.distributedsemantics/distributed semantics/
+<index id=idx.distributedsemantics/distributed semantics<and>/
 <index id=idx.semanticsdistributed/semantics<and>distributed/
 defines the network communications done by the system
 when operations are performed on an entity.
@@ -161,7 +161,7 @@ semantics in Oz.
 distributed semantics:
 <LIST>
 <ITEM> <EM>Thread</EM>:
-<index id=idx.thread/thread/
+<index id=idx.thread/thread<and>/
 A thread actively executes a sequence of instructions.
 The thread is stationary on the site it is created.
 Threads communicate through shared data and
@@ -172,7 +172,7 @@ This makes Oz a data-flow language.
 Threads are <EM>sited</EM> entities (see <ptr to="sited.entities">).
 
 <ITEM> <EM>Port</EM>:
-<index id=idx.port/port/
+<index id=idx.port/port<and>/
 <index id=idx.channel/channel<and>asynchronous many-to-one/
 <index id=idx.amtochannel/asynchronous many-to-one channel/
 A port is an asynchronous many-to-one channel
@@ -209,8 +209,8 @@ A cell is an updatable pointer to any other entity,
 i.e., it is analogous to a standard updatable variable
 in imperative languages such as C and Java.
 <index/cell<and>analogy to C and Java/
-<index/Java<and>relation to Oz cell/
-<index/C<and>relation to Oz cell/
+<index/Java language<and>relation to Oz cell/
+<index/C language<and>relation to Oz cell/
 Cells have the same distributed semantics 
 as cached objects.
 Updating the pointer
@@ -238,9 +238,8 @@ exclusion algorithm.
 are those that can be assigned only to one value:
 <LIST>
 <ITEM> <EM>Logic variable</EM>:
-<index id=idx.logicvariable/logic variable/
-<index id=idx.variablelogic/variable<and>logic/
-<index see=idx.logicvariable/variable/
+<index/logic variable<and>/
+<index/variable<and>logic variable/
 Logic variables have two operations:
 they can be bound (i.e., assigned)
 or read (i.e., wait until bound).
@@ -350,7 +349,7 @@ can exist on a site:
 
 <ITEM> <EM>Records and numbers</EM>:
 <index id=idx.distributedsemanticsrecord/distributed semantics<and>record/
-<index id=idx.record/record/
+<index id=idx.record/record<and>/
 <index id=idx.distributedsemanticsnumber/distributed semantics<and>number/
 <index id=idx.number/number/
 <index id=idx.distributedsemanticslist/distributed semantics<and>list/
@@ -385,7 +384,7 @@ chunks, atoms, and names</EM>:
 <index/distributed semantics<and>class/
 <index/class/
 <index/distributed semantics<and>functor/
-<index/functor/
+<index/functor<and>/
 <index/distributed semantics<and>chunk/
 <index/chunk/
 <index/distributed semantics<and>atom/
@@ -449,8 +448,8 @@ where a module is a record.
 
 <P>Entities that can be used only on one site
 are called <EM>sited</EM>.
-<index/sited entity/
-<index/language entity/sited/
+<index/sited entity<and>/
+<index/language entity<and>sited/
 <index/owner site/
 <index/home site/
 We call this site their <EM>owner site</EM>
@@ -467,7 +466,7 @@ Since Oz is a network-transparent
 <P>In Mozart, all sited entities are modules,
 except for a few exceptional cases listed below.
 Not all modules are sited, though.
-<index/module/
+<index/module<and>definition/
 <index/language entity/module/
 <index/record<and>module/
 A <EM>module</EM> is a record that

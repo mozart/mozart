@@ -6,7 +6,7 @@
 <P>Global names are needed when an application
 wants to interact with the world outside it.
 Mozart supports three basic kinds of global names:
-<index/ticket/
+<index/ticket<and>/
 <index/global name<and>ticket/
 <LIST>
 <ITEM> A <EM>ticket</EM> is a string that references a data
@@ -237,7 +237,7 @@ We give this solution later in the tutorial.
 
 <SECTION><TITLE>Servers</TITLE>
 
-<index/server/
+<index/server<and>/
 <P>A server is a long-lived computation that provides a service to clients.
 We will show progressively how to build different kinds of servers.
 
@@ -494,7 +494,7 @@ for example
 to add extra functionality or to fix a bug.
 We show how to upgrade a server
 without stopping it.
-<index/Java<and>limitation/
+<index/Java language<and>limitation/
 This cannot be done in Java.
 In Mozart, the upgrade can even
 be done interactively.
