@@ -64,6 +64,19 @@ void ResourceHashTable::gcResourceTable(){
   gcResourceTableRecurse(aux, index);
 }
 
+inline
+Bool isReallyBuiltin(TaggedRef b) {
+  if (!oz_isConst(b))
+    return NO;
+
+  ConstTerm * c = tagged2Const(b);
+  
+  if (c->cacIsMarked())
+    return NO;
+
+  return isBuiltin(c);
+}
+
 void ResourceHashTable::gcResourceTableRecurse(GenHashNode *in, int index){
   int  OTI;
   OwnerEntry *oe;
@@ -71,9 +84,11 @@ void ResourceHashTable::gcResourceTableRecurse(GenHashNode *in, int index){
   if(aux==NULL) return;
 
   TaggedRef entity = (TaggedRef) aux->getBaseKey();
-  if(!oz_isBuiltin(entity)){
+
+  if(!isReallyBuiltin(entity)) {
     entity = oz_deref(entity);
-    Assert(!oz_isVariable(entity));}
+    Assert(!oz_isVariable(entity));
+  }
   
   OTI =  (int) aux->getEntry();
   if(htSub(index,aux)) ;
