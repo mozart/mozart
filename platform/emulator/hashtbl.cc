@@ -364,7 +364,8 @@ inline
 unsigned int AddressHashTable::incHashFunc(void *i)
 {
   unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e419355);
-  return (((m << slsBits) >> rsBits) | 0x1); // has to be odd;
+  // has to be odd (in order the hash table covering be complete);
+  return (((m << slsBits) >> rsBits) | 0x1);
 }
 
 //
@@ -621,7 +622,8 @@ inline
 unsigned int AddressHashTableO1Reset::incHashFunc(void *i)
 {
   unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e419355);
-  return (((m << slsBits) >> rsBits) | 0x1); // has to be odd;
+  // has to be odd (in order the hash table covering be complete);
+  return (((m << slsBits) >> rsBits) | 0x1);
 }
 
 //
