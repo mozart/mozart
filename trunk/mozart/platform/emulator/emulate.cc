@@ -367,13 +367,13 @@ void Thread::makeRunning ()
     setHasStack ();
     item.threadBody = am.allocateBody ();
 
-    getBoardInternal()->setNervous ();
+    getBoard()->setNervous ();
     // no break here
 
   case S_RTHREAD:
     am.cachedStack = getTaskStackRef();
-    am.cachedSelf = self;
-    self = 0;
+    am.cachedSelf = getSelf();
+    setSelf(0);
     break;			// nothing to do;
 
   case S_PR_THR:

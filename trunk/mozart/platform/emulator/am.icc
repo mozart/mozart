@@ -240,13 +240,16 @@ Board *ConstTermWithHome::getBoard() {
   return home->derefBoard();
 }
 
+inline
+Board *Tertiary::getBoardInternal()
+{
+  return getTertType() == Te_Local ? (Board*)getPointer() : am.rootBoard;
+}
 
 inline
 Board *Tertiary::getBoard()
 {
-  if (getTertType() == Te_Local)
-    return ((Board*)getPointer())->derefBoard();
-  return am.rootBoard;
+  return getBoardInternal()->derefBoard();
 }
 
 
