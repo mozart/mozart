@@ -34,11 +34,12 @@
 
 OZ_Return suspendOnControlVar()
 {
+  Assert(oz_currentThread() != NULL);
   am.prepareCall(BI_controlVarHandler,am.emptySuspendVarList());
   return BI_REPLACEBICALL;
 }
 
 void suspendOnControlVar2()
 {
-  am.prepareCall(BI_controlVarHandler,am.emptySuspendVarList());
+  (void) suspendOnControlVar();
 }
