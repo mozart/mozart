@@ -222,9 +222,6 @@ WP.ozf: $(DUMPINTRO) $(WPSRC) SP.env OP.env WP.env Init.ozc
 
 Misc.ozf: $(DUMPINTRO) $(MISCSRC) Misc.env Init.ozc
 
-
-	
-
 # dependencies removed to avoid automatic recreation
 #ozbatch.ozm: MakeAssembly.oz \
 #	$(STANDARDSRC) Base.env Standard.env \
@@ -361,12 +358,11 @@ clean:
 	-rm -f *~ *.bak
 	-rm -f compiler-Version.oz compiler-Builtins.oz compiler-Opcodes.oz
 	-rm -f -r tyc
-	-rm -f Base.ozc Standard.ozc $(COMPONENTS) Fun*.ozc
+	-rm -f Base.ozc Standard.ozc $(COMPONENTS) Fun*.ozc ozbatch.ozc
 	-rm -f ozbatch ozserver
 
 veryclean: clean
 	-rm -f -r TAGS $(STAGE1) $(STAGE2) $(STAGE2B) $(STAGE3) $(STAGE3B)
-	-rm -f ozbatch.ozc
 
 distclean: veryclean
 	-rm -f Makefile
@@ -456,13 +452,16 @@ newozma:
 	 OZINIT=$(STAGE1)/lib/Init.ozc
 
 check:
-	$(MAKE) bootstrap stage1
-	$(MAKE) clean stage2
+	$(MAKE) bootstrap stage1 && \
+	$(MAKE) clean stage2 && \
 	$(MAKE) clean stage3
 
 thorough-check:
-	$(MAKE) clean bootstrap stage1
-	$(MAKE) clean stage2
-	$(MAKE) clean stage2b
-	$(MAKE) clean stage3
+	$(MAKE) clean bootstrap stage1 && \
+	$(MAKE) clean stage2 && \
+	$(MAKE) clean stage2b && \
+	$(MAKE) clean stage3 && \
 	$(MAKE) clean stage3b
+
+# no suffixes needed
+.SUFFIXES:
