@@ -6,9 +6,12 @@ export
    DateParse DateLess DateToString DateCurrentToString
    DateCurrentToAtom DateCurrent DateToAtom DateToUserVS
    IsMogulID
-   NewStack
+   NewStack NewStackFromList
    ListToVS
    ReadTextDB
+   WriteTextDB
+   HaveGNUC
+   MogulToFilename
 import
    Open Compiler OS URL
    Path at 'Path.ozf'
@@ -160,8 +163,9 @@ define
       else false end
    end
 
-   fun {NewStack}
-      C={NewCell nil}
+   fun {NewStack} {StackPack {NewCell nil}} end
+   fun {NewStackFromList L} {StackPack {NewCell L}} end
+   fun {StackPack C}
       proc {Push X} L in {Exchange C L X|L} end
       fun  {Pop} Old New in
 	 {Exchange C Old New}
@@ -203,6 +207,60 @@ define
       C={O getC($)}
    in
       if C==CTRL_A then nil else C|{ReadEntry O} end
+   end
+
+   proc {WriteTextDB L F}
+      O = {New Open.file init(name:F flags:[write create truncate])}
+   in
+      try
+	 for X in L do
+	    {O write(vs:{Value.toVirtualString X 1000000 1000000}#[CTRL_A])}
+	 end
+      finally
+	 try {O close} catch _ then skip end
+      end
+   end
+
+   local
+      fun {HasYes L}
+	 case L
+	 of &Y|&E|&S|_ then true
+	 [] _|L then {HasYes L}
+	 else false end
+      end
+   in
+      fun {HaveGNUC OZTOOL}
+	 F={OS.tmpnam}#'.h'
+      in
+	 try
+	    O={New Open.file init(name:F flags:[write create truncate])}
+	    {O write(vs:"#ifdef __GNUC__\nYES\n#endif")}
+	    {O close}
+	    P={New Open.pipe init(cmd:OZTOOL args:['c++' '-E' F])}
+	    L={P read(list:$ size:all)}
+	 in
+	    {HasYes L}
+	 catch _ then false
+	 finally
+	    try {OS.unlink F} catch _ then skip end
+	 end
+      end
+   end
+
+   local
+      fun {SlashToDash L}
+	 case L
+	 of &/|L then &-|{SlashToDash L}
+	 []  H|L then  H|{SlashToDash L}
+	 []  nil then nil end
+      end
+   in
+      fun {MogulToFilename MOG}
+	 U1={Path.toURL MOG}
+	 U2={Adjoin U1 url(scheme:unit device:unit absolute:false)}
+      in
+	 {Append {SlashToDash {Path.toCache U2}} ".pkg"}
+      end
    end
 
 end

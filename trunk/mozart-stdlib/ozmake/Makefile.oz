@@ -38,7 +38,7 @@ define
 	 {CondSelect @Target2Section {Path.toAtom T} unit}
       end
 
-      meth initFromRecord(R)
+      meth makefile_from_record(R)
 
 	 Target2Section<-{NewDictionary}
 	 Target2Rule   <-{NewDictionary}
@@ -361,12 +361,12 @@ define
 	 in
 	    if {Path.exists F} then
 	       {self trace('reading makefile: '#F)}
-	       Makefile,initFromRecord({Utils.compileFile F false})
+	       Makefile,makefile_from_record({Utils.compileFile F false})
 	    elseif {self get_makefile_given($)} then
 	       raise ozmake(makefile:filenotfound(F)) end
 	    else
 	       {self trace('using empty makefile')}
-	       Makefile,initFromRecord(o)
+	       Makefile,makefile_from_record(o)
 	    end
 	 end
       end

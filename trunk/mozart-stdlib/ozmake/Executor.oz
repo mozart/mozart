@@ -2,7 +2,7 @@ functor
 export
    'class' : Executor
 import
-   OS System(showError:Print)
+   OS Property System(showError:Print) Open(file:OpenFile)
    Path  at 'Path.ozf'
    Utils at 'Utils.ozf'
    Shell at 'Shell.ozf'
@@ -24,8 +24,23 @@ define
 
       meth incr Indent<-'  '#@Indent end
       meth decr Indent<-@Indent.2 end
-      meth trace(Msg) if {self get_verbose($)} then {Print @Indent#Msg} end end
-      meth print(Msg) {Print Msg} end
+      meth trace(Msg)
+	 if {self get_quiet($)} then skip
+	 elseif {self get_verbose($)} then {Print @Indent#Msg} end
+      end
+      %% xtrace gives feedback even in non verbose mode
+      %% but it can be shut up with --quiet
+      %% it is used only for real commands and let's the user
+      %% see that something is happening
+      meth xtrace(Msg)
+	 if {self get_quiet($)} then skip
+	 elseif {self get_verbose($)} then {Print @Indent#Msg}
+	 else {Print Msg} end
+      end
+      meth print(Msg)
+	 if {self get_quiet($)} then skip
+	 else {Print Msg} end
+      end
 
       %% turn a target into an actual filename
 
@@ -62,8 +77,21 @@ define
 	 [] ozl then Executor,OZL(DST SRC Rule.options)
 	 [] cc  then Executor,CC( DST SRC Rule.options)
 	 [] ld  then Executor,LD( DST SRC Rule.options)
-	 [] unit then skip % existence checked by make_src
+	 [] unit then Executor,NULL(Target)
 	 else raise ozmake(build:unknowntool(Rule.tool)) end
+	 end
+      end
+
+      %% Null tool: just check existence
+
+      meth NULL(Target)
+	 %% existence checked by make_src
+	 if {self get_justprint($)} then
+	    %% in a dry run just output a message but no error
+	    try {self make_src(Target _)}
+	    catch _ then {self xtrace('no rule to build '#Target)} end
+	 else
+	    {self make_src(Target _)}
 	 end
       end
 
@@ -75,7 +103,7 @@ define
 	 L2 = if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
 	 L3 = if {Member executable Options} then '-x'|L2 else '-c'|L2 end
       in
-	 {self trace({Utils.listToVS ozc|L3})}
+	 {self xtrace({Utils.listToVS ozc|L3})}
 	 if {self get_justprint($)} then
 	    %% record time of simulated build
 	    Executor,SimulatedTouch(DST)
@@ -95,7 +123,7 @@ define
 	 L1 = [SRC '-o' DST]
 	 L2 = if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
       in
-	 {self trace({Utils.listToVS ozl|L2})}
+	 {self xtrace({Utils.listToVS ozl|L2})}
 	 if {self get_justprint($)} then
 	    %% record time of simulated build
 	    Executor,SimulatedTouch(DST)
@@ -115,11 +143,12 @@ define
 	 L1 = [SRC '-o' DST]
 	 L2 = case {self get_optlevel($)}
 	      of debug then '-g'|L1
-	      [] optimize then '-O'|L1
+	      [] optimize then
+		 if {self get_gnu($)} then '-O3' else '-O' end|L1
 	      else L1 end
 	 L3 = 'c++'|'-c'|L2
       in
-	 {self trace({Utils.listToVS oztool|L3})}
+	 {self xtrace({Utils.listToVS oztool|L3})}
 	 if {self get_justprint($)} then
 	    %% record time of simulated build
 	    Executor,SimulatedTouch(DST)
@@ -136,7 +165,7 @@ define
 	 Executor,exec_mkdir({Path.dirname DST})
 	 L1 = [ld SRC '-o' DST]
       in
-	 {self trace({Utils.listToVS oztool|L1})}
+	 {self xtrace({Utils.listToVS oztool|L1})}
 	 if {self get_justprint($)} then
 	    %% record time of simulated build
 	    Executor,SimulatedTouch(DST)
@@ -148,6 +177,8 @@ define
 	    end
 	 end
       end
+
+      meth exec_simulated_touch(F) Executor,SimulatedTouch(F) end
 
       meth SimulatedTouch(DST) Key={Path.toAtom DST} in
 	 {Dictionary.remove @RMFILE Key}
@@ -190,7 +221,7 @@ define
 	 elsecase {Path.safeStat U}.type
 	 of 'dir' andthen {Not {self get_justprint($)} andthen Executor,simulated_deleted(U $)} then skip
 	 else
-	    {self trace('mkdir '#{Path.toString U})}
+	    {self xtrace('mkdir '#{Path.toString U})}
 	    if {self get_justprint($)} then
 	       %% record time of simulated creation
 	       Executor,SimulatedTouch(U)
@@ -206,7 +237,7 @@ define
       meth exec_rmdir(D)
 	 if {self get_justprint($)} andthen Executor,simulated_deleted(D $) then skip
 	 else
-	    {self trace('rm -R '#{Path.toString D})}
+	    {self xtrace('rm -R '#{Path.toString D})}
 	    if {self get_justprint($)} then
 	       Executor,SimulatedDelete(D)
 	    else
@@ -223,7 +254,7 @@ define
       meth exec_rm(F)
 	 if {self get_justprint($)} andthen Executor,simulated_deleted(F $) then skip
 	 else
-	    {self trace('rm '#{Path.toString F})}
+	    {self xtrace('rm '#{Path.toString F})}
 	    if {self get_justprint($)} then
 	       Executor,SimulatedDelete(F)
 	    else
@@ -232,6 +263,25 @@ define
 		  raise ozmake(rm:S) end
 	       end
 	    end
+	 end
+      end
+
+      %% copying a file
+
+      meth exec_cp(From To)
+	 F={Path.expand From}
+	 T={Path.expand To}
+      in
+	 {self xtrace('cp '#F#' '#T)}
+	 if {self get_justprint($)} then
+	    Executor,SimulatedTouch(T)
+	 else
+	    Data={Utils.slurpFile F}
+	    if {Path.exists T} then {Path.remove T} end
+	    File={New OpenFile init(name:T flags:[write create truncate])}
+	 in
+	    {File write(vs:Data)}
+	    {File close}
 	 end
       end
 
@@ -248,15 +298,34 @@ define
       end
 
       meth exec_mkexec(To)
-	 {self trace('chmod -x '#To)}
+	 {self xtrace('chmod -x '#To)}
 	 if {self get_justprint($)} then skip else
 	    try {Shell.execute ['chmod' '-x' To]}
 	    catch _ then
 	       if {Property.get 'platform.os'}\=win32 then
-		  raise ozmake(mkexec:F) end
+		  raise ozmake(mkexec:To) end
 	       end
 	    end
 	 end
+      end
+
+      meth exec_check_for_gnu($)
+	 {self trace('checking for GNU compiler')}
+	 {Utils.haveGNUC {self get_oz_oztool($)}}
+      end
+
+      meth exec_write_to_file(Data File)
+	 Executor,exec_mkdir({Path.dirname File})
+	 {self xtrace('writing '#File)}
+	 if {self get_justprint($)} then
+	    Executor,SimulatedTouch(File)
+	 else
+	    if {Path.exists File} then {Path.remove File} end
+	    Out={New OpenFile init(name:File flags:[write create truncate])}
+	 in
+	    {Out write(vs:Data)}
+	    {Out close}
+	 end 
       end
 
    end
