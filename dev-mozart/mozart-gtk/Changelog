@@ -1,0 +1,6 @@
+*mozart-gtk-1.1 (28 Apr 2003)
+
+  28 Apr 2003; Denys Duchier (denys.duchier@loria.fr):
+  Fixed CPPFLAGS issues. I forgot to use the cleaned up versions
+  of GTK_CFLAGS.  This was causing configure problems when it
+  contained -I/usr/local/include.
