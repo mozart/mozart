@@ -106,6 +106,10 @@
           ( AtomDetailed,    "detailed"),
           ( AtomBrowser,     "browser"),
           ( AtomApplet,      "applet"),
+          ( AtomArgs,        "args"),
+          ( AtomURL,         "url"),
+          ( AtomOs,          "os"),
+          ( AtomArch,        "arch"),
 
           ( AtomKinded,      "kinded"),
           ( AtomDet,         "det"),
