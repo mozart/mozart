@@ -47,7 +47,7 @@
 <!entity chapter.concurrency.cheap system "conc-cheap.sgml">
 <!entity chapter.concurrency.patterns system "conc-patterns.sgml">
 
-<!ENTITY % proglang.values.local "|sh|makefile">
+<!ENTITY % proglang.values.local "|sh|makefile|java">
 <!ENTITY % p.mix.local "|em">
 <!ELEMENT em - - (#PCDATA)>
 <!ENTITY nbsp PI "nbsp">
@@ -75,6 +75,7 @@
     <meta name="html.split" value="part.concurrency">
     <meta name="html.split" value="chapter.concurrency.cheap">
     <meta name="html.split" value="chapter.concurrency.patterns">
+    <meta name=proglang arg1="java" arg2="java-mode">
     <title/Application Programming/
     <author.Extern to="author.db" key="Denys.Duchier">
     <author.Extern to="author.db" key="Leif.Kornstaedt">
