@@ -284,7 +284,10 @@ public:
   }
 
   static void free(void * p, const size_t s) {
+    Assert(oz_isHeapAligned(p));
     Assert(FL_IsValidSize(s));
+    // kost@ : "doomsday" measure ;-)
+    // memset(p, -1, s);
     if (s > FL_MaxSize) {
       FL_Large * f = (FL_Large *) p;
       f->setBoth(large,s);

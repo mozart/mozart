@@ -246,7 +246,7 @@ void MgrVarPatch::disposeV()
   DebugCode(oti = (OB_TIndex) -1;);
   DebugCode(remoteRef = (RRinstance *) -1;);
   DebugCode(tag = (MarshalTag) -1;);
-  oz_freeListDispose(this, sizeof(MgrVarPatch));
+  oz_freeListDispose(extVar2Var(this), extVarSizeof(MgrVarPatch));
 }
 
 //
@@ -299,7 +299,7 @@ void PxyVarPatch::disposeV()
   DebugCode(ms = (DSite *) -1;);
   DebugCode(isFuture = isToOwner = -1;);
   DebugCode(ec = (BYTE) -1;);
-  oz_freeListDispose(this, sizeof(PxyVarPatch));
+  oz_freeListDispose(extVar2Var(this), extVarSizeof(PxyVarPatch));
 }
 
 //
