@@ -218,7 +218,7 @@
   \mozart@titlepage
   \mozart@license
   \mozart@contents
-  \clearpage
+  \if@openright\cleardoublepage\else\clearpage\fi
   \pagestyle{mozart}\thispagestyle{mozart}%
   \setcounter{page}{1}\setcounter{footnote}{0}}
 
