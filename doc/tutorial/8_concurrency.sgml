@@ -328,7 +328,7 @@ fun {Producer N}
    else nil end
 end
 local
-   proc {Consumer Ls N}
+   proc {ConsumerN Ls N}
       case Ls of nil then skip
       [] volvo|Lr then
          if N mod 1000 == 0 then
