@@ -4,17 +4,19 @@
   compatible to the previous version Oz 2. Oz 2 is the successor Oz 1.
   Oz 3 and its programming system Mozart is developed mainly by the
   research groups of Gert Smolka at Saarland university and DFKI (the German Research Center
-  for Artificial Intelligent)
- and Seif Haridi at SICS (the Swedish Institute
-  of Computer Science).
+  for Artificial Intelligent),
+  Seif Haridi at SICS (the Swedish Institute
+  of Computer Science),
+  and Peter Van Roy at UCL (the Universite catholique de Louvain).
 
   <P>Oz is in essence a concurrent constraint programming language, see
   <PTR TO="saraswat94">. A good exposition of the programming model underlying
-  Oz 1 is found in <PTR TO="smolka95">. Underlying Oz versions is a concurrent
-  constraint-programming model, which is extended to support stateful
-  computations, i.e. computations on mutable objects. The Oz 1
-  computation model supported a fine-grained notion of concurrency where
-  each statement can potentially be executed concurrently. This resulted
+  Oz 1 is found in <PTR TO="smolka95">. Underlying all Oz versions is
+  a concurrent
+  constraint programming model, which is extended to support stateful
+  computations, i.e., computations on mutable objects. The original Oz
+  computation model, Oz 1, supports a fine-grained notion of concurrency where
+  each statement can potentially be executed concurrently. This results
   in a fine-grained concurrent object model similar to the actor
   model. Our experience using Oz 1 showed that this kind of model, while
   theoretically appealing, makes it very hard for the programmer to
@@ -22,20 +24,21 @@
   debug programs and the object model becomes unnecessarily awkward.
 
   <P>In Oz 2, these problems have been remedied by using instead a
-  thread-based concurrency model, with programmable control over
-  concurrency. A powerful new object system has been designed and
+  thread-based concurrency model, with explicit creation of threads.
+  A powerful new object system has been designed and
   traditional exception handling constructs have been added. In
   addition, the constraint solving and search capabilities have been
   greatly enhanced.
 
-  <P>The current version of Oz, Oz 3 is almost upward compatible with Oz 2
+  <P>The current Oz version, Oz 3, is almost upward compatible with Oz 2
   apart from minor syntactic simplifications. Oz 3 is extended with a concept
   for module specification called <EM>functor</EM> to support
   incremental construction of programs from components that may be
   addressable over the Internet by URLs, see <PTR TO="duchier98">.
   The Mozart implementation of Oz 3 supports distributed and networked
-  applications. It is possible, in network-transparent fashion, to
-  connect different Oz computations located on different sites. Mozart
+  applications. It is possible to connect Oz computations located on
+  different sites, resulting in a single network-transparent computation.
+  Mozart
   supports automatic transfer of stateless data and code among sites,
   mobile computation (objects), message passing, shared logic
   variables and orthogonal mechanisms for network/site fault detection
@@ -52,7 +55,7 @@
   benefits of the various programming paradigms whether object-oriented,
   functional or constraint logic programming. When we start writing
   programs in any existing language, we quickly find ourselves confined
-  by the concepts of the underlying paradigm. Oz tries to attack this
+  by the concepts of the underlying paradigm. Oz solves this
   problem by a coherent design that combines the programming
   abstractions of various paradigms in clean and simple way.
 
@@ -85,7 +88,7 @@
   only when all <EM>real</EM> data-flow dependencies on the variables
   involved are resolved.
 
-  <ITEM>The Mozart platform supports network transparent distribution of
+  <ITEM>The Mozart platform supports network-transparent distribution of
   Oz computations. Multiple Oz sites can connect together and
   automatically behave like a single Oz computation, sharing variables,
   objects, classes and procedures. Sites disconnect automatically when
