@@ -593,20 +593,14 @@ define
             [] picture then
                {Exception.raiseError ozdoc(sgmlToHTML unsupported M)}   %--**
             [] 'picture.extern' then
-               case M.type
-               of gif then
-                  case M.display
-                  of display then Out <- @Out#'</P>\n'
+               case {CondSelect M type unit} of 'gif' then
+                  case M.display of display then Out <- @Out#'</P>\n'
                   [] inline then skip
                   end
-
                   Out <- @Out#'<IMG src='#{MakeCDATA M.to}#'>'
-
-                  case M.display
-                  of display then Out <- @Out#'<P>\n'
+                  case M.display of display then Out <- @Out#'<P'#@Align#'>\n'
                   [] inline then skip
                   end
-
                else
                   {Exception.raiseError
                    ozDoc(sgmlToHTML unsupportedPictureNotation M)}   %--**
@@ -730,7 +724,9 @@ define
                if {HasFeature M float} then
                   Floats <- {Append @Floats [M]}
                else
+                  Out <- @Out#'</P>'
                   OzDocToHTML, OutputFigure(M)
+                  Out <- @Out#'<P'#@Align#'>'
                end
             [] caption then
                {Exception.raiseError ozDoc(sgmlToHTML internalError M)}
