@@ -21,11 +21,14 @@ LIBFILES = ${LOCALFILES:%.oz=$(OZCAR)/%.oz}
 
 all::	../Ozcar.oz
 
-../Ozcar.oz:: $(LOCALFILES)
+../Ozcar.oz:: $(LOCALFILES) version.oz
 	touch ../Ozcar.oz
 
+version.oz:: $(LOCALFILES)
+	./version.sh
+
 clean::
-	rm -f *~ *.oz?
+	rm -f *~ *.oz? version.oz
 
 install:: $(OZCAR) $(LIBFILES) bitmaps
 
