@@ -210,7 +210,8 @@ OZ_Return iLinEqProp::propagate(void) {
 
   int all_ones =1;          // if abs of all factors is 1, simpler calculation.
 
-  for (int i =0; i < reg_sz; i++) 
+  int i;
+  for (i =0; i < reg_sz; i++) 
     if (reg_a[i]*reg_a[i] != 1) 
       all_ones = 0;
 
@@ -220,7 +221,7 @@ OZ_Return iLinEqProp::propagate(void) {
   DECL_DYN_ARRAY(OZ_FDIntVar, var, reg_sz);
   DECL_DYN_ARRAY(OZ_FiniteDomain, buffer, reg_sz);
 
-  for (int i =0; i < reg_sz; i++) { 
+  for (i =0; i < reg_sz; i++) { 
     var[i].read(reg_x[i]);
     buffer[i].initEmpty();    
   }
@@ -232,7 +233,8 @@ OZ_Return iLinEqProp::propagate(void) {
     old_domains_size = new_domains_size;
     new_domains_size = 0;
 
-    for (int reduce =0; reduce < reg_sz; reduce++) {
+    int reduce;
+    for (reduce =0; reduce < reg_sz; reduce++) {
       // AuxDom is used for building up a new domain of possible values
       OZ_FiniteDomain AuxDom;
       AuxDom.initEmpty();
@@ -257,7 +259,7 @@ OZ_Return iLinEqProp::propagate(void) {
     // possible ones.
 
     DECL_DYN_ARRAY(int, curr_val, reg_sz);
-    for (int reduce =0; reduce < reg_sz; reduce++) {
+    for (reduce =0; reduce < reg_sz; reduce++) {
 
       for (int k=0; k<reg_sz; k++) 
         curr_val[k]=var[k]->getMinElem(); // init curr_val array
@@ -335,7 +337,8 @@ OZ_Return iLinLessEqProp::propagate(void) {
 
   int all_ones =1;          // if abs of all factors is 1, simpler calculation.
 
-  for (int i=0; i<reg_sz; i++) 
+  int i;
+  for (i=0; i<reg_sz; i++) 
     if (reg_a[i]*reg_a[i] != 1) 
       all_ones=0;
 
@@ -345,7 +348,7 @@ OZ_Return iLinLessEqProp::propagate(void) {
   DECL_DYN_ARRAY(OZ_FDIntVar, var, reg_sz);
   DECL_DYN_ARRAY(OZ_FiniteDomain, buffer, reg_sz);
 
-  for (int i =0; i < reg_sz; i++) { 
+  for (i =0; i < reg_sz; i++) { 
     var[i].read(reg_x[i]);
     buffer[i].initEmpty();
   }
@@ -357,7 +360,8 @@ OZ_Return iLinLessEqProp::propagate(void) {
     old_domains_size = new_domains_size;
     new_domains_size = 0;
 
-    for (int reduce =0; reduce < reg_sz; reduce++) {
+    int reduce;
+    for (reduce =0; reduce < reg_sz; reduce++) {
       // AuxDom is used for building up a new domain of possible values
       OZ_FiniteDomain AuxDom;
       AuxDom.initEmpty();
@@ -382,7 +386,7 @@ OZ_Return iLinLessEqProp::propagate(void) {
     // at the end of the day, the elements in the buffer are exactly the
     // possible ones.
     DECL_DYN_ARRAY(int, curr_val, reg_sz);
-    for (int reduce =0; reduce < reg_sz; reduce++) {
+    for (reduce =0; reduce < reg_sz; reduce++) {
       for (int k=0; k<reg_sz; k++) 
         curr_val[k]=var[k]->getMinElem(); // init curr_val array
       int elem = -1;
@@ -445,7 +449,7 @@ do_leave:
   _OZ_DEBUGPRINT("do_leave");
 
   int upsum = reg_c;
-  for (int i =0; i < reg_sz; i++) {
+  for (i=0; i < reg_sz; i++) {
     if (reg_a[i] > 0) upsum += reg_a[i]*var[i]->getMaxElem();
     else              upsum += reg_a[i]*var[i]->getMinElem();
   } 
@@ -477,7 +481,8 @@ OZ_Return iLinNEqProp::propagate(void) {
 
   int all_ones =1;          // if abs of all factors is 1, simpler calculation.
   int sum_sizes=0;
-  for (int i =0; i < reg_sz; i++) 
+  int i;
+  for (i =0; i < reg_sz; i++) 
     if (reg_a[i]*reg_a[i] != 1) 
       all_ones = 0;
 
@@ -492,7 +497,7 @@ OZ_Return iLinNEqProp::propagate(void) {
   DECL_DYN_ARRAY(OZ_FDIntVar, var, reg_sz);
   DECL_DYN_ARRAY(OZ_FiniteDomain, buffer, reg_sz);
 
-  for (int i =0; i < reg_sz; i++) { 
+  for (i =0; i < reg_sz; i++) { 
     var[i].readEncap(reg_x[i]);
     sum_sizes += var[i]->getSize();
     buffer[i].initEmpty();    
@@ -506,7 +511,8 @@ OZ_Return iLinNEqProp::propagate(void) {
     old_domains_size = new_domains_size;
     new_domains_size = 0;
 
-    for (int reduce =0; reduce < reg_sz; reduce++) {
+    int reduce;
+    for (reduce =0; reduce < reg_sz; reduce++) {
       // AuxDom is used for building up a new domain of possible values
       OZ_FiniteDomain AuxDom;
       AuxDom.initEmpty();
@@ -531,7 +537,7 @@ OZ_Return iLinNEqProp::propagate(void) {
     // possible ones.
 
     DECL_DYN_ARRAY(int, curr_val, reg_sz);
-    for (int reduce =0; reduce < reg_sz; reduce++) {
+    for (reduce =0; reduce < reg_sz; reduce++) {
 
       for (int k=0; k<reg_sz; k++) 
         curr_val[k]=var[k]->getMinElem(); // init curr_val array

@@ -76,11 +76,12 @@ int simplify(int *size,int *a,OZ_Term *x,OZ_Term d,int *c)
 { // gibt Position von d im Vektor zur"uck
  if (size==0) return -1;
  DECL_DYN_ARRAY(OZ_Term,xd,*size+1);
- for(int j=*size;j--;) xd[j]=x[j];
+ int j;
+ for(j=*size;j--;) xd[j]=x[j];
  xd[*size]=d;
  int *is=OZ_findEqualVars(*size+1,xd);
  int dpos=is[*size];
- for (int j=*size;j--;) 
+ for (j=*size;j--;) 
   {
    if(is[j]==-1)       // singleton in x
     {       
