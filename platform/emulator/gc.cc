@@ -24,6 +24,7 @@
 #include "cell.hh"
 #include "dllist.hh"
 #include "fdgenvar.hh"
+#include "fdhook.hh"
 #include "io.hh"
 #include "misc.hh"
 #include "objects.hh"
@@ -1182,6 +1183,8 @@ void AM::gc(int msgLevel)
     am.currentTaskStack = (TaskStack *) NULL;
   }
 
+  if (FDcurrentTaskSusp != (Suspension *) NULL)
+    FDcurrentTaskSusp = FDcurrentTaskSusp->gcSuspension (NO);
   Thread::GC();
 
   GCPROCMSG("ioNodes");
@@ -1349,6 +1352,7 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
   fromCopyBoard = bb;
   setPathMarks(fromCopyBoard);
   toCopyBoard = fromCopyBoard->gcBoard();
+  // kost@ : FDcurrentTaskSusp ???
 
   performCopying();
 
@@ -1526,8 +1530,9 @@ void Thread::gcRecurse()
   GCREF(next);
   GCREF(prev);
 
+  DebugGC ((opMode == IN_TC), error ("thread is gc'ed in 'copy' mode?"));
   if (resSusp != NULL)
-   resSusp->gcSuspension((opMode == IN_TC) ? OK : NO);
+   resSusp = resSusp->gcSuspension(NO);
   if (isNormal()) {
     GCREF(u.taskStack);
   } else if (isSuspCont()) {
