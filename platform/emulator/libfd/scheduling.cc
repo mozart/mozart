@@ -1556,6 +1556,35 @@ reifiedloop:
   }
 
 
+  /*
+// energy from Baptistes thesis
+for (i=0; i<ts; i++) {
+  for (j=0; j<ts; j++) {
+    if (i != j) {
+      int leftBound = x[i]->getMinElem();
+      int rightBound = x[j]->getMaxElem()+dur[j];
+      if (rightBound >= leftBound) {
+	// test for failure; not sufficient space
+	int sum = 0;
+	for (int k = 0; k<ts; k++) {
+	  int energy = EnergyFunct(leftBound, rightBound, dur[k], use[k], 
+				   x[k]->getMinElem(),
+				   x[k]->getMaxElem() + dur[k]);
+	  sum = sum + energy;
+	}
+	if (sum > capacity * (rightBound - leftBound)) {
+	  cout << "left: " << leftBound << " right: " << rightBound << 
+	    " sum: " << sum << " cap: " << capacity* (rightBound - leftBound)
+	       << endl;
+	  goto failure;
+	}
+      }
+    }
+  }
+}
+*/
+
+
 capLoop:
 
   //////////
@@ -1586,14 +1615,23 @@ capLoop:
     //////////
     int min_left = mysup;
     int max_right = 0;
+    int sum = 0;
     for (i=0; i<ts; i++) {
-      if (MinMax[i].min < min_left) min_left = MinMax[i].min;
-      if (MinMax[i].max > max_right) max_right = MinMax[i].max;
+      int iMin = MinMax[i].min;
+      int iDue = MinMax[i].max + dur[i];
+      sum = sum + use[i] * dur[i];
+      if (iMin < min_left) min_left = iMin;
+      if (iDue > max_right) max_right = iDue;
     }
+    // test whether the capacity is sufficient for all tasks
+    if (sum > capacity * (max_right - min_left))
+      goto failure;
+    /*
     Intervals[interval_nb].left = min_left;
     Intervals[interval_nb].right = max_right;
     Intervals[interval_nb].use = 0;
     interval_nb++;
+    */
     
 
     //////////
@@ -1601,7 +1639,6 @@ capLoop:
     //////////
     Interval * intervals = Intervals;
     qsort(intervals, interval_nb, sizeof(Interval), CompareIntervals);
-
 
     //////////
     // compute the set of all bounds of intervals
@@ -1619,6 +1656,7 @@ capLoop:
     //////////
     int * intervalBounds = IntervalBounds;
     qsort(intervalBounds, double_nb, sizeof(int), CompareBounds);
+
 
     //////////
     // compute the set of intervals, for which there is exclusion
