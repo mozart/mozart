@@ -852,7 +852,7 @@ The vector <<Ms>> is distributed according to the specification
 <item>
 <<<
 generic(order:    +Order   &lt;= order
-        filter:   +Filter  &lt;= false
+        filter:   +Filter  &lt;= true
         select:   +Select  &lt;= id
         element:  +Element &lt;= element
         rrobin:   +RRobin  &lt;= false
