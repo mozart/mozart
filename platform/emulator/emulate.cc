@@ -82,13 +82,7 @@ if (e->isToplevel()) {							      \
 
 #define NOFLATGUARD()   (shallowCP==NULL)
 
-#define SHALLOWFAIL							      \
-  if (!NOFLATGUARD()) {							      \
-    e->reduceTrailOnFail();						      \
-    ProgramCounter nxt = getLabelArg(shallowCP+1);			      \
-    shallowCP = NULL;							      \
-    JUMP(nxt);								      \
-  }
+#define SHALLOWFAIL if (!NOFLATGUARD()) { goto LBLshallowFail; }
 
 
 #define CheckArity(arity,arityExp,pred,cont)				      \
@@ -1896,7 +1890,7 @@ void engine() {
 	waitBoard->setCommitted(CBB);   // by kost@ 4.10.94
 	Bool ret = e->installScript(waitBoard->getScriptRef());
 	if (!ret)
-	  HANDLE_FAILURE(NULL, ,);	
+	  HANDLE_FAILURE(,);	
 	Assert(ret!=NO);
 	CBB->incSuspCount(waitBoard->getSuspCount()-1);
 	DISPATCH(1);
@@ -1938,7 +1932,7 @@ void engine() {
 	bb->setCommitted(CBB);    // by kost@ 4.10.94
 	Bool ret = e->installScript(bb->getScriptRef());
 	if (!ret)
-	  HANDLE_FAILURE(NULL, ,);	
+	  HANDLE_FAILURE(,);	
 	Assert(ret != NO);
 	CBB->incSuspCount(bb->getSuspCount());
 	CBB->removeSuspension();
@@ -2330,6 +2324,14 @@ void engine() {
 // ------------------------------------------------------------------------
 // *** FAILURE
 // ------------------------------------------------------------------------
+ LBLshallowFail:
+  {
+    e->reduceTrailOnFail();
+    ProgramCounter nxt = getLabelArg(shallowCP+1);
+    shallowCP = NULL;
+    JUMP(nxt);
+  }
+  
  LBLfailure:
   {
     DebugTrace(trace("fail",CBB));
