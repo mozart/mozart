@@ -1,0 +1,77 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+TOPDIR		= @TOPDIR@
+
+PREFIX		= @prefix@
+OZEX		= $(PREFIX)/examples
+
+SHELL		= @SH@
+RM		= @RM@ -f
+MKDIR		= @MKDIR@
+ECHO		= @ECHO@
+M4		= @M4@
+LN              = @LN@ -s
+
+INSTALL		= @INSTALL@
+INSTALLFILE	= $(INSTALL) -m 444
+INSTALLSRC	= @INSTALLSRC@
+INSTALLDIR	= $(INSTALL) -m 775 -d
+
+EXDIRS = \
+	sampler sampler/constraints \
+	fd fd/knights fd/queens \
+	grammar grammar/shieber 
+
+
+OZEXDIRS = $(EXDIRS:%=$(OZEX)/%)
+
+all:
+
+$(OZEX) $(OZEXDIRS):
+	$(INSTALLDIR) $@
+
+FD = \
+	bin-packing bridge-naive bridge cars change \
+	conference configuration donald family fraction \
+	grocery kalotan knights knights/graphics magic-sequence \
+	magic-square map-coloring money multiply photo \
+	pythagoras queens queens/graphics safe srat \
+	tiling warehouses zebra
+
+GR = \
+	hpsg shieber shieber/formalism shieber/grammar
+
+EXAMPLES = \
+	$(FD:%=$(OZEX)/fd/%.oz) \
+	$(GR:%=$(OZEX)/grammar/%.oz)
+
+SAMPLER0 = \
+	constraints/animate-bridge constraints/bridge \
+	constraints/draw-photo constraints/gantt constraints/machines \
+	constraints/scheduling-compiler oz
+SAMPLER = $(SAMPLER0:%=$(OZEX)/sampler/%.oz)
+
+$(OZEX)/fd/%.oz: fd/%.oz
+	$(INSTALLSRC) $< $@
+
+$(OZEX)/grammar/%.oz: grammar/%.oz
+	$(INSTALLSRC) $< $@
+$(OZEX)/grammar/shieber/%.oz: grammar/shieber/%.oz
+	$(INSTALLSRC) $< $@
+$(OZEX)/sampler/%.oz: sampler/%.oz
+	$(INSTALLSRC) $< $@
+$(OZEX)/sampler/constraints/%.oz: sampler/constraints/%.oz
+	$(INSTALLSRC) $< $@
+
+
+.PHONY: all install
+.PHONY: clean realclean veryclean
+
+install: all $(OZEX) $(OZEXDIRS) $(SAMPLER) $(EXAMPLES)
+
+clean:
+	$(RM) *~ ./*/*~ ./*/*/*~
+
+realclean: clean
+
+veryclean: realclean
