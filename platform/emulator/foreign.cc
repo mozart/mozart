@@ -345,7 +345,7 @@ OZ_Term OZ_CStringToFloat(char *s)
   if (*end != '\0') {
     OZ_warning("CStringToCFloat(%s): couldn't parse the end of %s",s,end);
   }
-  free(help);
+  OZ_free(help);
   return OZ_CToFloat(res);
 }
 
