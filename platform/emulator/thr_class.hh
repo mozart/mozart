@@ -180,8 +180,6 @@ public:
   Thread *gcDeadThread();
   void gcRecurse();
 
-  void dealloc();
-
   void freeThreadBodyInternal() {
     Assert(isDeadThread());
     item.threadBody = 0;

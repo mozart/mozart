@@ -68,10 +68,10 @@ CXXSRCS = \
         ozostream.cc runtime.cc unix.cc\
         tcl_tk.cc metavar.cc perdio.cc\
         urlc.cc iso-ctype.cc hashtbl.cc\
-        os.cc emulate.cc builtins.cc\
+        os.cc emulate.cc scheduler.cc builtins.cc\
         components.cc network.cc virtual.cc\
         comm.cc marshaler.cc liveness.cc gc.cc\
-        vprops.cc deallocate.cc scheduler.cc
+        vprops.cc
 
 FDSRCS =\
         fdbuilti.cc fdomn.cc fdcore.cc\
