@@ -263,6 +263,7 @@ void ComObj::close(CState statetobe,Bool merging) {
 //  	 myDSite->getTimeStamp()->pid,this,state,statetobe);
 
   clearTimers();
+  lastrtt=-1;
 
   if(transObj!=NULL) {
 #ifdef COMOBJ_CONNECT_LOG
