@@ -35,8 +35,7 @@ define
    %% need to be quoted to avoid problems with embedded spaces
    %% in filenames and special shell characters
    
-   case {Property.get 'platform.os'}
-   of 'win32' then
+   if {Property.get 'platform.os'}=='win32' then
       SHELL
    in
       case {Reverse {Map {VS2S {OS.getEnv 'COMSPEC'}} ToLower}}

@@ -56,6 +56,7 @@ prepare
    fun {SplitPosix   S} {Split S IsSlash} end
 import
    OS Property
+   Shell at 'Shell.ozf'
 define
    
    fun {Make X}
@@ -279,6 +280,14 @@ define
 	     resolve((Path,basenameString($))
 		     #'-'#{Property.get 'platform.name'} $)}
 	 else self end
+      end
+      meth makeExecutable()
+	 try {Shell.executeCommand ['chmod' '+x' @info.string]}
+	 catch E then
+	    if IS_WINDOWS then skip else
+	       raise E end
+	    end
+	 end
       end
    end
 
