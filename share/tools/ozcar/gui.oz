@@ -737,7 +737,7 @@ in
 	 New in
 	 MarkStackSync <- New = unit
 	 thread
-	    {WaitOr New {Alarm TimeoutToUpdate*5}}
+	    {WaitOr New {Alarm TimeoutToUpdate*10}}
 	    case {IsDet New} then skip else
 	       Gui,DoMarkStack(How)
 	    end
@@ -759,7 +759,7 @@ in
 	 New in
 	 MarkEnvSync <- New = unit
 	 thread
-	    {WaitOr New {Alarm TimeoutToUpdate*5}}
+	    {WaitOr New {Alarm TimeoutToUpdate*10}}
 	    case {IsDet New} then skip else
 	       Gui,DoMarkEnv(How)
 	    end
