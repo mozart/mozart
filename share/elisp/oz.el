@@ -46,9 +46,8 @@
 ;;    so its output goes into the compiler buffer
 ;; ---------------------------------------------------------------------
 
-(if (string-match "-nt" (emacs-version))  ;; for now
-    (setq oz-win32 t)
-  (setq oz-win32 nil))
+(setq oz-win32 (eq system-type 'windows-nt))
+
 
 
 ;;------------------------------------------------------------
