@@ -213,10 +213,6 @@ COMPILERSRCEXTRA = compiler-Builtins.oz compiler-Opcodes.oz
 COMPILERSRCNOVER = \
         $(COMPILERSRC1:%=compiler/%) $(COMPILERSRCEXTRA)
 
-compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
-        echo 'DATE = '\'`date '+%h %d %Y (%T)'`\' > $@ \
-        || (rm -f $@; exit 1)
-
 # NOTE: update this list also in platform/emulator/Makefile.in
 BIMODSPECS = \
         Array Atom BitArray Bool Cell Char Chunk Class \
@@ -229,7 +225,7 @@ EMUSRCDIR=$(SRCDIR)/../../platform/emulator
 BIDECL=$(EMUSRCDIR)/bidecl.perl
 BIMODFILES = $(BIMODSPECS:%=$(EMUSRCDIR)/mod%.spec)
 
-first: $(COMPILERSRCEXTRA) compiler-Version.oz
+first: $(COMPILERSRCEXTRA)
 
 compiler-Builtins.oz: $(BIMODFILES)
         $(PERL) $(BIDECL) -srcdir $(EMUSRCDIR) -builtins $(BIMODSPECS) > $@
@@ -266,7 +262,7 @@ Main.ozf: compiler/Main.oz compiler/FormatStrings.oz \
         compiler/CheckTupleSyntax.oz compiler/ParseOz.oz \
         compiler/CompilerClass.oz compiler/Interface.oz \
         compiler/Abstractions.oz compiler/Errors.oz \
-        compiler-Version.oz Base.ozf
+        Base.ozf
 
 RunTime.ozf: compiler/RunTime.oz Base.ozf
         $(COMPILE) $< -o $@
@@ -345,7 +341,6 @@ $(OZLIB)/boot-%: boot-%
 .PHONY: clean veryclean distclean
 
 CLEANFILES = \
-        compiler-Version.oz \
         $(COMPILERSRCEXTRA) \
         CpSupport.ozf ParWorkerTmp.ozf ParLoggingTmp.ozf ParSearchTmp.ozf \
         $(FUNCTORS) $(FUNFUNCTORS) $(PARSEARCHFUNCTORS) \

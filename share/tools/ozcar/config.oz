@@ -24,7 +24,6 @@
 %% Text
 %%
 
-Version                = \insert ozcar-version.oz
 TitleName              = 'Oz Debugger'
 IconName               = 'Ozcar'
 
