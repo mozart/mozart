@@ -6401,18 +6401,14 @@ DECLAREBI_USEINLINEREL1(BIisObject,BIisObjectInline)
 DECLAREBOOLFUN1(BIisObjectB,BIisObjectBInline,BIisObjectInline)
 
 
-/* getClass(t) returns class of t, if t is an object
- * otherwise return t!
- */
 OZ_Return getClassInline(TaggedRef t, TaggedRef &out)
 { 
   DEREF(t,_,tag);
   if (isAnyVar(tag)) return SUSPEND;
-  if (!isObject(t)) {
-    out = t;
-    return PROCEED;
+  if (!isObject(t) || tagged2Object(t)->isClass()) {
+    oz_typeError(0,"Object");
   }
-  out = ((Object *)tagged2Const(t))->getOzClass();
+  out = tagged2Object(t)->getOzClass();
   return PROCEED;
 }
 
