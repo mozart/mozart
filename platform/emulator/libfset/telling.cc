@@ -9,8 +9,8 @@ OZ_C_proc_begin(fsp_tellIsIn, 2)
   OZ_EXPECT(pe, 0, expectFSetVarBounds);
   OZ_EXPECT(pe, 1, expectInt);
   
-  return pe.spawn(new TellIsInPropagator(OZ_args[0],
-					 OZ_args[1]));
+  return pe.impose(new TellIsInPropagator(OZ_args[0],
+					  OZ_args[1]));
 } 
 OZ_C_proc_end
 
@@ -25,8 +25,8 @@ OZ_C_proc_begin(fsp_tellIsNotIn, 2)
   OZ_EXPECT(pe, 0, expectFSetVarBounds);
   OZ_EXPECT(pe, 1, expectInt);
   
-  return pe.spawn(new TellIsNotInPropagator(OZ_args[0],
-					    OZ_args[1]));
+  return pe.impose(new TellIsNotInPropagator(OZ_args[0],
+					     OZ_args[1]));
 } 
 OZ_C_proc_end
 
@@ -45,8 +45,8 @@ OZ_C_proc_begin(fsp_card, 2)
   
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new FSetCardPropagator(OZ_args[0],
-					 OZ_args[1]));
+  return pe.impose(new FSetCardPropagator(OZ_args[0],
+					  OZ_args[1]));
 } 
 OZ_C_proc_end
 
@@ -54,7 +54,7 @@ OZ_CFun FSetCardPropagator::spawner = fsp_card;
 
 //*****************************************************************************
 
-OZ_Return TellIsInPropagator::run(void)
+OZ_Return TellIsInPropagator::propagate(void)
 {
   _OZ_DEBUGPRINT("in: " << *this);
   
@@ -72,7 +72,7 @@ failure:
   return FAILED;
 }
 
-OZ_Return TellIsNotInPropagator::run(void)
+OZ_Return TellIsNotInPropagator::propagate(void)
 {
   _OZ_DEBUGPRINT("in: " << *this);
   
@@ -90,7 +90,7 @@ failure:
   return FAILED;
 }
 
-OZ_Return FSetCardPropagator::run(void)
+OZ_Return FSetCardPropagator::propagate(void)
 {
   OZ_DEBUGPRINT("in: " << *this);
   

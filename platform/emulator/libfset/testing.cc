@@ -22,15 +22,15 @@ OZ_C_proc_begin(fsp_isIn, 3)
   OZ_EXPECT(pe, 1, expectInt);
   OZ_EXPECT(pe, 2, expectIntVarAny);
   
-  return pe.spawn(new IsInPropagator(OZ_args[0],
-				     OZ_args[1],
-				     OZ_args[2]));
+  return pe.impose(new IsInPropagator(OZ_args[0],
+				      OZ_args[1],
+				      OZ_args[2]));
 } 
 OZ_C_proc_end
 
 OZ_CFun IsInPropagator::spawner = fsp_isIn;
 
-OZ_Return IsInPropagator::run(void)
+OZ_Return IsInPropagator::propagate(void)
 {
   OZ_DEBUGPRINT("in: " << *this);
   

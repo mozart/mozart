@@ -22,8 +22,8 @@ private:
 public:
   TwicePropagator(OZ_Term x, OZ_Term y) : Propagator_D_D(x, y) {}
   
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Return run(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
 };
 
 //-----------------------------------------------------------------------------
@@ -34,8 +34,8 @@ private:
 public:
   SquarePropagator(OZ_Term x, OZ_Term y) : Propagator_D_D(x, y) {}
   
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Return run(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
 };
 
 //-----------------------------------------------------------------------------
@@ -47,8 +47,8 @@ public:
   PlusPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_D_D(x, y, z) {}
 
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Return run(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
 };
 
 //-----------------------------------------------------------------------------
@@ -60,8 +60,8 @@ public:
   MinusPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_D_D(x, y, z) { };
 
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Return run(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
 };
 
 //-----------------------------------------------------------------------------
@@ -73,8 +73,8 @@ public:
   TimesPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_D_D(x, y, z) { };
   
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Return run(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
 };
 
 //-----------------------------------------------------------------------------
@@ -86,8 +86,8 @@ public:
   DivPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_I_D(x, y, z) { };
   
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Return run(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
 };
 
 class DivIPropagator : public Propagator_D_I_D {
@@ -97,8 +97,8 @@ public:
   DivIPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_I_D(x, y, z) { };
   
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Return run(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
 };
 
 class ModPropagator : public Propagator_D_I_D {
@@ -108,8 +108,8 @@ public:
   ModPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_I_D(x, y, z) { };
   
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Return run(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
 };
 
 class ModIPropagator : public Propagator_D_I_D {
@@ -119,8 +119,8 @@ public:
   ModIPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_I_D(x, y, z) { };
   
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Return run(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
 };
 
 #endif

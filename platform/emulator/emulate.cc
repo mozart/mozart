@@ -15,6 +15,8 @@
 #include "dictionary.hh"
 #include "fdhook.hh"
 
+#define PROP_TIME
+
 /*
  * Object stuff
  */
@@ -1021,8 +1023,8 @@ LBLinstallThread:
 	OZ_Propagator *prop = CTT->getPropagator();
 	CTT = e->mkRunnableThread(PROPAGATOR_PRIORITY, CBB);
 	e->restartThread();
-	HF_APPLY(OZ_atom(builtinTab.getName((void *)(prop->getSpawner()))),
-		 prop->getArguments());
+	HF_APPLY(OZ_atom(builtinTab.getName((void *)(prop->getHeaderFunc()))),
+		 prop->getParameters());
       }
 
     default:
@@ -2799,7 +2801,10 @@ LBLdispatcher:
 
        Assert(!ltq->isEmpty());
 
+#ifdef PROP_TIME
        unsigned int starttime = osUserTime();
+#endif
+
        Thread * backup_currentThread = CTT;
 
        while (!ltq->isEmpty() && e->isNotPreemtiveScheduling()) {
@@ -2816,7 +2821,9 @@ LBLdispatcher:
 	 } else if (r == FAILED) {
 	   thr->closeDonePropagator();
 	   CTT = backup_currentThread;
+#ifdef PROP_TIME
 	   ozstat.timeForPropagation.incf(osUserTime()-starttime);
+#endif
 	   CTS->restoreFrame(); // RS: is this needed ???
 	   // failure of propagator is never catched !
 	   goto LBLfailure; // top-level failure not possible
@@ -2827,8 +2834,10 @@ LBLdispatcher:
        } 
 	
        CTT = backup_currentThread;
+#ifdef PROP_TIME
        ozstat.timeForPropagation.incf(osUserTime()-starttime);
-	
+#endif
+
        if (ltq->isEmpty()) {
 	 sa->resetLocalThreadQueue();
 #ifdef DEBUG_LTQ

@@ -55,9 +55,9 @@ public:
   ~FirstsLasts();
   virtual size_t sizeOf(void) { return sizeof(FirstsLasts); }
   virtual void updateHeapRefs(OZ_Boolean);
-  virtual OZ_Return run(void); 
-  virtual OZ_Term getArguments(void) const { RETURN_LIST1(stream); }
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void); 
+  virtual OZ_Term getParameters(void) const { RETURN_LIST1(stream); }
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 

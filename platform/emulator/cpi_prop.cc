@@ -110,8 +110,8 @@ problem:
 
 ostream& operator << (ostream& o, const OZ_Propagator &p) 
 {
-  char * func_name = builtinTab.getName((void *) p.getSpawner());
-  OZ_Term args = p.getArguments();
+  char * func_name = builtinTab.getName((void *) p.getHeaderFunc());
+  OZ_Term args = p.getParameters();
 
 #ifdef DEBUG_CHECK
   o << "cb(" << (void *) am.currentBoard << "), p(" << (void *) &p << ") ";
@@ -151,7 +151,7 @@ OZ_Return OZ_Propagator::postpone(void)
   return SCHEDULED;
 }
 
-OZ_Boolean OZ_Propagator::postOn(OZ_Term t)
+OZ_Boolean OZ_Propagator::imposeOn(OZ_Term t)
 {
   DEREF(t, tptr, ttag);
   if (isAnyVar(ttag)) {
@@ -161,7 +161,7 @@ OZ_Boolean OZ_Propagator::postOn(OZ_Term t)
   return OZ_FALSE;
 }
 
-OZ_Boolean OZ_Propagator::addSpawn(OZ_FDPropState ps, OZ_Term v)
+OZ_Boolean OZ_Propagator::addImpose(OZ_FDPropState ps, OZ_Term v)
 {
   DEREF(v, vptr, vtag);
   if (!isAnyVar(vtag))
@@ -172,7 +172,7 @@ OZ_Boolean OZ_Propagator::addSpawn(OZ_FDPropState ps, OZ_Term v)
   return TRUE;
 }
 
-void OZ_Propagator::spawn(OZ_Propagator * p, int prio) 
+void OZ_Propagator::impose(OZ_Propagator * p, int prio) 
 {
   Thread * thr = am.mkPropagator(am.currentBoard, prio, p);
   thr->headInitPropagator();
