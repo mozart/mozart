@@ -9,6 +9,7 @@
 
 
 #include <ctype.h>
+#include <errno.h>
 
 #include "oz.h"
 
@@ -448,6 +449,7 @@ char *OZ_toC(OZ_Term term)
 /* convert a C string (char*) to an Oz string */
 OZ_Term OZ_CToString(char *s)
 {
+  if (!s) { return OZ_nil(); }
   char *p=s;
   while (*p!='\0') {
     p++;
@@ -838,6 +840,16 @@ int OZ_onToplevel()
 /* -----------------------------------------------------------------
  * 
  * -----------------------------------------------------------------*/
+
+char *OZ_unixError(int aErrno) {
+#ifndef SUNOS_SPARC
+  return strerror(aErrno);
+#else
+  extern char *sys_errlist[];
+  return sys_errlist[aErrno];
+#endif  
+}
+
 
 void OZ_typeError(char *f,int pos,char *typeStr, OZ_Term val)
 {
