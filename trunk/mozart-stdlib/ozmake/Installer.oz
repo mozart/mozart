@@ -37,7 +37,9 @@ define
       %% and command line options
 
       meth get_install_targets($)
+	 Accu  = {Utils.newStack}
 	 Stack = {Utils.newStack}
+	 Done  = {NewDictionary}
       in
 	 if {self get_includedocs($)} then
 	    for T in {self get_doc_targets($)} do {Stack.push T} end
@@ -48,7 +50,17 @@ define
 	 if {self get_includebins($)} then
 	    for T in {self get_bin_targets($)} do {Stack.push T} end
 	 end
-	 {Reverse {Stack.toList}}
+	 for while:{Not {Stack.isEmpty}} do T={Stack.pop} in
+	    if {HasFeature Done T} then skip else
+	       Done.T := unit
+	       {Accu.push T}
+	       %% fetch runtime dependencies
+	       for X in {self get_autodepend_install(T $)} do
+		  {Stack.push X}
+	       end
+	    end
+	 end
+	 {Accu.toList}
       end
 
       meth target_to_installed_file(T $)

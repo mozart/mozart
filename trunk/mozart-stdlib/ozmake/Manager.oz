@@ -18,6 +18,7 @@ import
    Config      at 'Config.ozf'
    Mogul       at 'Mogul.ozf'
    ExecutorFast at 'ExecutorFast.ozf'
+   Depends     at 'Depends.ozf'
 define
    class Manager
       from
@@ -37,6 +38,7 @@ define
 	 Config     .'class'
 	 Mogul      .'class'
 	 ExecutorFast.'class'
+	 Depends    .'class'
 
       meth init
 	 {self exec_init}

@@ -626,7 +626,7 @@ define
 	 %% note that we assume that T is an atom
 	 if Makefile,target_is_src(T $) andthen {Not {self get_fullbuild($)}} then nil
 	 else
-	    L = {CondSelect @Target2Depends T nil}
+	    L = {self get_autodepend_build(T $)}
 	    R = Makefile,get_rule(T $)
 	 in
 	    if R.tool==unit orelse {Member R.file L} then L

@@ -113,6 +113,7 @@ define
 	 TarTargets  : nil
 	 Fast        : true
 	 WantVersion : unit
+	 AutoDepend  : true
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -932,5 +933,8 @@ define
 	 end
       end
       meth get_want_version($) @WantVersion end
+
+      meth set_autodepend(B) AutoDepend<-B end
+      meth get_autodepend($) @AutoDepend end
    end
 end

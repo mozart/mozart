@@ -1,28 +1,3 @@
-                                    ozmake
-
-   [1]Denys Duchier
-
-   provides
-          ozmake
-
-   download prebuilt tool
-
-        Current version
-                [2]ozmake for Unix
-                [3]ozmake.exe for Windows
-                [4]non executable functor ozmake.ozf for either
-
-        Current version
-                [5]ozmake for Unix
-                [6]ozmake.exe for Windows
-                [7]non executable functor ozmake.ozf for either
-     _________________________________________________________________
-
-   ozmake is now in beta-release - feedback is extremely welcome
-
-   see [8]CHANGES for a list of changes between successive versions of
-   ozmake.
-
 USAGE
 
    ozmake OPTIONS TARGETS
@@ -803,19 +778,3 @@ CONTACTS
 
    You can invoke ozmake --publish on such a makefile to contribute the
    corresponding mogul database entries
-     _________________________________________________________________
-
-
-    [9]Denys Duchier
-
-References
-
-   1. http://www.ps.uni-sb.de/~duchier/
-   2. http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake
-   3. http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake.exe
-   4. http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake.ozf
-   5. http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake
-   6. http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake.exe
-   7. http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake.ozf
-   8. file://localhost/home/denys/src/Mozart/ozlib/OzMake2/CHANGES
-   9. http://www.ps.uni-sb.de/~duchier/
