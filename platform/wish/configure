@@ -1979,12 +1979,13 @@ fi
         CPPFLAGS="$oz_a $CPPFLAGS"
         EXTRALDFLAGS="-mwindows -s"
         SRCS="winMain.cc"
+        WITH_TCLTK=$with_tcl/lib
         INSTALLWINDLLS=installwindlls
         : ${WINDLLDIR=$windlldir}
-        for i in tcl80.dll tk80.dll msvcrt.dll; do
+        for i in tcl83.dll tk83.dll msvcrt.dll; do
           dll=$WINDLLDIR/$i
           echo $ac_n "checking for DLL $dll""... $ac_c" 1>&6
-echo "configure:1988: checking for DLL $dll" >&5
+echo "configure:1989: checking for DLL $dll" >&5
           if test -f $dll
           then echo "$ac_t""yes" 1>&6
           else { echo "configure: error: required DLL $dll not found" 1>&2; exit 1; }
@@ -2004,13 +2005,13 @@ esac
 
 
 
-: ${oz_tcltk_search="$prefix/lib /usr/lib /usr/local/lib /usr/pkg /usr/X11R6/lib /usr/X11/lib /opt/X11R6/lib /opt/X11/lib"}
+: ${oz_tcltk_search="$WITH_TCLTK $WITH_TCLTK/lib  $prefix/lib /usr/lib /usr/local/lib /usr/pkg /usr/X11R6/lib /usr/X11/lib /opt/X11R6/lib /opt/X11/lib"}
 : ${oz_tcl_search="$oz_tcltk_search /usr/local/lib/tcl8.3 /usr/local/lib/tcl8.2 /usr/local/lib/tcl8.0"}
 : ${oz_tk_search="$oz_tcltk_search /usr/local/lib/tk8.3 /usr/local/lib/tk8.2 /usr/local/lib/tk8.0"}
 
 
 echo $ac_n "checking for tclConfig.sh""... $ac_c" 1>&6
-echo "configure:2014: checking for tclConfig.sh" >&5
+echo "configure:2015: checking for tclConfig.sh" >&5
 # Check whether --with-tcl or --without-tcl was given.
 if test "${with_tcl+set}" = set; then
   withval="$with_tcl"
@@ -2020,7 +2021,8 @@ fi
 
 if test -n "${with_tcl}"
 then
-    oz_tcl_search=$with_tcl
+    oz_tcl_search="$with_tcl $oz_tcl_search"
+    echo kost: $oz_tcl_search
 fi
 
 TCL_LIB_DIR=""
@@ -2047,7 +2049,7 @@ echo "$ac_t""$TCL_LIB_DIR/tclConfig.sh" 1>&6
 
 
 echo $ac_n "checking for tkConfig.sh""... $ac_c" 1>&6
-echo "configure:2051: checking for tkConfig.sh" >&5
+echo "configure:2053: checking for tkConfig.sh" >&5
 # Check whether --with-tk or --without-tk was given.
 if test "${with_tk+set}" = set; then
   withval="$with_tk"
@@ -2057,7 +2059,7 @@ fi
 
 if test -n "${with_tk}"
 then
-    oz_tk_search=$with_tk
+    oz_tk_search="$with_tk $oz_tk_search"
 fi
 
 TK_LIB_DIR=""
@@ -2086,7 +2088,7 @@ echo "$ac_t""$TK_LIB_DIR/tkConfig.sh" 1>&6
 
 
     echo $ac_n "checking for --enable-copy-tcl-libs""... $ac_c" 1>&6
-echo "configure:2090: checking for --enable-copy-tcl-libs" >&5
+echo "configure:2092: checking for --enable-copy-tcl-libs" >&5
     # Check whether --enable-copy-tcl-libs or --disable-copy-tcl-libs was given.
 if test "${enable_copy_tcl_libs+set}" = set; then
   enableval="$enable_copy_tcl_libs"

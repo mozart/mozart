@@ -1,3 +1,4 @@
+
 /*
  * winMain.c --
  *
@@ -83,7 +84,7 @@ PutsCmd(ClientData clientData, Tcl_Interp *inter, int argc, char **argv)
   return TCL_OK;
 }
 
-
+
 
 /* THE TWO FOLLOWING FUNCTIONS HAVE BEEN COPIED FROM EMULATOR */
 
@@ -136,9 +137,10 @@ void readHandler(ClientData clientData, int mask)
   // that the I/O manager calls a readHandler exactly once for each
   // channel. That is, it cannot happen that two 'readHandlers' are
   // started simultaneously.
-  if (tkLock == 1) return;
-  else tkLock = 1;
-
+  if (tkLock == 1)
+    return;
+  else
+    tkLock = 1;
   static int bufSize  = 1000;
   static char *buffer = NULL;
   if (buffer == NULL) {
@@ -154,6 +156,7 @@ void readHandler(ClientData clientData, int mask)
       WishPanic("realloc of buffer failed");
   }
 
+
   Tcl_Channel in = (Tcl_Channel) clientData;
   int count = Tcl_Read(in,buffer+used,bufSize-used);
 
@@ -161,6 +164,7 @@ void readHandler(ClientData clientData, int mask)
     WishPanic("Connection to engine lost: %d, %d, %d",
               count, in, Tcl_GetErrno());
   }
+
 
   if (count==0) {
     if (Tcl_Eof(in)) {
@@ -183,6 +187,7 @@ void readHandler(ClientData clientData, int mask)
     return;
   }
 
+
   int code = Tcl_GlobalEval(interp, buffer);
   if (code != TCL_OK) {
     char buf[1000];
@@ -203,6 +208,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCm
 {
     watchParent();
 
+    Tcl_FindExecutable("");
     interp = Tcl_CreateInterp();
 
     int argc;
@@ -233,18 +239,18 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCm
     if (argc!=1)
       WishPanic("Usage: tk.exe port\n", argc);
 
+    close(0);
+    close(1);
+    close(2);
+
     int port = atoi(argv[0]);
     Tcl_Channel inout = Tcl_OpenTcpClient(interp,port,"localhost",0,0,0);
     if (inout==0)
       WishPanic("Tcl_OpenTcpClient(%d,%s) failed",port,"localhost");
-
+    Tcl_CreateChannelHandler(inout,TCL_READABLE ,readHandler,(ClientData)inout);
+    Tcl_RegisterChannel(interp, inout);
     Tcl_SetChannelOption(interp, inout, "-blocking", "off");
     Tcl_SetChannelOption(interp, inout, "-translation", "binary");
-    Tcl_CreateChannelHandler(inout,TCL_READABLE,readHandler,(ClientData)inout);
-
-    close(0);
-    close(1);
-    close(2);
     Tcl_SetStdChannel(inout,TCL_STDIN);
     Tcl_SetStdChannel(inout,TCL_STDOUT);
     Tcl_SetStdChannel(inout,TCL_STDERR);
@@ -272,7 +278,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCm
 
 
 
-
+
 /*
  *----------------------------------------------------------------------
  *
