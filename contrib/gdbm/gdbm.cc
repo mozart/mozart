@@ -299,4 +299,8 @@ extern "C"
     GDBM::id = oz_newUniqueId();
     return i_table;
   }
+
 } /* extern "C" */
+
+
+char oz_module_name[] = "GDBM";
