@@ -57,6 +57,7 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomNew, AtomSend, AtomApply, AtomApplyList,
 
        NameUnit,
+       NameNonExportable,
        AtomKinded, AtomDet, AtomRecord, AtomFSet, 
        // Atoms for System.get and System.set
        AtomActive, AtomAtoms, AtomBuiltins, AtomCommitted, 
@@ -2043,6 +2044,7 @@ private:
   int outArity;
   OZ_CFun fun;
   IFOR inlineFun;
+  Bool native;
 #ifdef PROFILE_BI
   unsigned long counter;
 #endif
@@ -2055,8 +2057,9 @@ public:
   static void *operator new(size_t chunk_size)
   { return ::new char[chunk_size]; }
   
-  Builtin(const char *s,int inArity,int outArity, OZ_CFun fn,IFOR infun)
-  : inArity(inArity),outArity(outArity),fun(fn), inlineFun(infun), ConstTerm(Co_Builtin)
+  Builtin(const char *s,int inArity,int outArity, OZ_CFun fn, Bool nat, IFOR infun)
+  : inArity(inArity),outArity(outArity),fun(fn), inlineFun(infun), native(nat),
+    ConstTerm(Co_Builtin)
   {
     printname = makeTaggedAtom(s);
 #ifdef PROFILE_BI
@@ -2073,6 +2076,7 @@ public:
   }
   TaggedRef getName() { return printname; }
   IFOR getInlineFun() { return inlineFun; } 
+  Bool isNative()     { return native; }
 
 #ifdef PROFILE_BI
   void incCounter() { counter++; }
