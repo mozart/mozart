@@ -13,11 +13,12 @@
 #include "foreign.h"
 
 
-#include "builtins.hh"
-#include "bignum.hh"
-#include "records.hh"
-#include "cell.hh"
 #include "am.hh"
+#include "bignum.hh"
+#include "builtins.hh"
+#include "cell.hh"
+#include "records.hh"
+#include "thread.hh"
 
 int OZ_isInt(OZ_Term term)
 {
@@ -380,6 +381,7 @@ OZ_Suspension *OZ_makeSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
 {
   Board::GetCurrent()->addSuspension();
   return new OZ_Suspension(new CFuncContinuation(Board::GetCurrent(),
+						 Thread::GetCurrentPriority(),
 						 fun, args, arity));
 }
 

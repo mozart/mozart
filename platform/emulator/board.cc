@@ -191,7 +191,7 @@ inline Board *Board::getBoardDeref()
 {
   Board *bb = this;
   while (OK) {
-    if (bb->isDiscarded() || bb->isFailed()) {
+    if (!bb || bb->isDiscarded() || bb->isFailed()) {
       return NULL;
     } else if (bb->isCommitted()) {
       bb = bb->u.board;

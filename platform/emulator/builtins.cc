@@ -119,7 +119,7 @@ BuiltinTabEntry *BIinit()
 
   BIadd("printBuiltins",0,BIprintBuiltins);
 
-  BIinitDatatypes();
+  BIinitCore();
   BIinitArith();
   BIinitSpecial();
   BIinitDebug();
