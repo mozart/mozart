@@ -40,17 +40,22 @@ void reviveCurrentTaskSusp(void) {
 
 void killPropagatedCurrentTaskSusp(void) {
   if (FDcurrentTaskSusp == NULL) return;
-  if (FDcurrentTaskSusp->isPropagated() == NO) return;
-    
+
   DebugCheck(FDcurrentTaskSusp->isResistant() == NO,
 	     error("Cannot kill non-resistant suspension."));
   DebugCheck(FDcurrentTaskSusp->isDead() == OK,
 	     error("Suspension already dead."));
-    
+
+  if (FDcurrentTaskSusp->isPropagated() == NO) {
+    FDcurrentTaskSusp = NULL;
+    return;
+  }
+      
   FDcurrentTaskSusp->markDead();
   (void) am.checkExtSuspension(FDcurrentTaskSusp);
   FDcurrentTaskSusp = NULL;
 };
+
 
 void dismissCurrentTaskSusp(void) {
   DebugCheck(FDcurrentTaskSusp->isResistant() == NO,
@@ -61,6 +66,7 @@ void dismissCurrentTaskSusp(void) {
   FDcurrentTaskSusp->cContToNode(am.currentBoard);
   FDcurrentTaskSusp = NULL;
 }
+
 
 void undoTrailing(int n) {
   while(n--) {
