@@ -83,7 +83,6 @@ define(opAction,
         $1,ApplMethInfo,marshalApplMethInfo((ApplMethInfoClass*)getAdressArg(PC++),bs);,
         $1,GRegRef,marshalGRegRef((AssRegArray*)getAdressArg(PC++),bs);,
         $1,Location,marshalLocation((OZ_Location*)getAdressArg(PC++),bs);,
-        $1,XRegisterIndexList,marshalXList(GetXList(PC++),bs);,
         $1,Cache,PC += CacheSize;)]])
 
 
@@ -123,18 +122,6 @@ void marshalLocation(OZ_Location *loc,MsgBuffer *bs)
     marshalNumber(out,bs);
   }
 }
-
-void marshalXList(XRegisterIndexListClass *xlist,MsgBuffer *bs)
-{
-  int n = xlist->getLength();
-  marshalNumber(n,bs);
-
-  for (int i = 0; i < n; i++) {
-    int out = xlist->get(i);
-    marshalNumber(out,bs);
-  }
-}
-
 
 void marshalRecordArity(SRecordArity ar,MsgBuffer *bs)
 {
@@ -279,13 +266,14 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
   PD((MARSHAL,"end of file put %d"));
 }
 
+enum { ATOMTAG, NUMBERTAG, RECORDTAG};
+
 void marshalHashTableRef(ProgramCounter start, IHashTable *table,MsgBuffer *bs)
 {
   int sz = table->size;
   marshalNumber(sz,bs);
   marshalLabel(table->elseLabel,bs);
   marshalLabel(table->listLabel,bs);
-  marshalLabel(table->varLabel,bs);
 
   int entries = table->numentries;
   marshalNumber(entries,bs);
@@ -321,7 +309,7 @@ void marshalHashTableRef(ProgramCounter start, IHashTable *table,MsgBuffer *bs)
       HTEntry *aux = table->functorTable[i];
       while(aux) {
         entries--;
-        marshalNumber(FUNCTORTAG,bs);
+        marshalNumber(RECORDTAG,bs);
         marshalLabel(aux->getLabel(),bs);
         SRecordArity sra;
         Literal *label = aux->getFunctor(sra);
@@ -367,7 +355,6 @@ define(opAction,
         $1,ApplMethInfo,PC=unmarshalApplMethInfo(PC,bs);,
         $1,GRegRef,PC=unmarshalGRegRef(PC,bs);,
         $1,Location,PC=unmarshalLocation(PC,bs);,
-        $1,XRegisterIndexList,PC=unmarshalXList(PC,bs);,
         $1,Cache,PC=unmarshalCache(PC,bs);)]])
 
 
@@ -392,7 +379,7 @@ ProgramCounter unmarshalTagged(ProgramCounter PC, MsgBuffer *bs)
   return PC ? CodeArea::writeTagged(ret,PC) : 0;
 }
 
-inline
+
 ProgramCounter unmarshalBuiltin(ProgramCounter PC, MsgBuffer *bs)
 {
   TaggedRef name = unmarshalTerm(bs);
@@ -414,14 +401,14 @@ inline
 ProgramCounter unmarshalLabel(ProgramCounter PC, MsgBuffer *bs)
 {
   int offset = unmarshalNumber(bs);
-  return PC ? CodeArea::writeLabel(offset,0,PC,NO) : 0;
+  return PC ? CodeArea::writeLabel(offset,0,PC) : 0;
 }
 
 
 inline
 ProgramCounter unmarshalCache(ProgramCounter PC, MsgBuffer *bs)
 {
-  return PC ? CodeArea::writeCache(PC) : PC;
+  return PC ? CodeArea::writeCache(PC) : 0;
 }
 
 
@@ -455,21 +442,6 @@ ProgramCounter unmarshalLocation(ProgramCounter PC,MsgBuffer *bs)
 
   return writeAddress(loc,PC);
 }
-
-ProgramCounter unmarshalXList(ProgramCounter PC,MsgBuffer *bs)
-{
-  int n = unmarshalNumber(bs);
-  XRegisterIndexListClass *xlist =
-    XRegisterIndexListClass::newXRegisterIndexList(n);
-
-  for (int i = 0; i < n; i++) {
-    int n = unmarshalNumber(bs);
-    xlist->set(i,n);
-  }
-
-  return writeAddress(xlist,PC);
-}
-
 
 SRecordArity unmarshalRecordArity(MsgBuffer *bs)
 {
@@ -526,11 +498,9 @@ ProgramCounter unmarshalHashTableRef(ProgramCounter PC, int start, MsgBuffer *bs
   int label            = unmarshalNumber(bs); /* the else label */
   IHashTable *table    = PC ? new IHashTable(sz,label) : 0;
 
-  int pc1 = unmarshalNumber(bs);
-  int pc2 = unmarshalNumber(bs);
+  int pc = unmarshalNumber(bs);
   if (PC) {
-    table->addList(pc1);
-    table->addVar(pc2);
+    table->addList(pc);
   }
   int nEntries = unmarshalNumber(bs);
   for (int i = 0; i < nEntries; i++) {
@@ -538,7 +508,7 @@ ProgramCounter unmarshalHashTableRef(ProgramCounter PC, int start, MsgBuffer *bs
     label = unmarshalNumber(bs);
     OZ_Term term = unmarshalTerm(bs);
     switch (termTag) {
-    case FUNCTORTAG:
+    case RECORDTAG:
       {
         SRecordArity arity = unmarshalRecordArity(bs);
         if (PC) table->add(tagged2Literal(term),arity,label);
@@ -569,27 +539,6 @@ ProgramCounter unmarshalApplMethInfo(ProgramCounter PC,MsgBuffer *bs)
 
 
 
-Bool changeMarshaledFastCall(ProgramCounter PC,TaggedRef pred, int tailcallAndArity)
-{
-  if (isAbstraction(pred)) {
-    Abstraction *abstr = tagged2Abstraction(pred);
-    AbstractionEntry *entry = AbstractionTable::add(abstr);
-    CodeArea::writeOpcode((tailcallAndArity&1) ? FASTTAILCALL : FASTCALL, PC);
-    CodeArea::writeAddress(entry, PC+1);
-    return OK;
-  }
-
-  if (isBuiltin(pred)) {
-    Assert((tailcallAndArity&1)==0); // there is no tail version  for CALLBUILTIN
-    Builtin* entry = tagged2Builtin(pred);
-    CodeArea::writeBuiltin(entry,PC+1);
-    CodeArea::writeOpcode(CALLBUILTIN, PC);
-    return OK;
-  }
-
-  return NO;
-}
-
 ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
 {
   int codesize = unmarshalNumber(bs);  // this is in Bytes!!!
@@ -616,20 +565,6 @@ ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
 
     if (discard==NO) {
       PC = CodeArea::writeOpcode(op,PC);
-    }
-
-    if (0 && op==MARSHALLEDFASTCALL) {
-
-      PD((UNMARSHAL,"marshaled  fast call"));
-      TaggedRef pred       = unmarshalTerm(bs);
-      int tailcallAndArity = unmarshalNumber(bs);
-      if (PC) {
-        if (!changeMarshaledFastCall(PC,deref(pred),tailcallAndArity)) {
-          PC = CodeArea::writeTagged(pred,PC);
-          PC = CodeArea::writeInt(tailcallAndArity,PC);
-        }
-      }
-      continue;
     }
 
     switch(op) {

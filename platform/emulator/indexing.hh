@@ -134,7 +134,6 @@ class IHashTable {
 
   int elseLabel;
   int listLabel;
-  int varLabel;
 
   IHashTable(int sz, int elseLbl) {
     numentries = 0;
@@ -143,14 +142,12 @@ class IHashTable {
     literalTable = functorTable = numberTable = NULL;
     elseLabel = elseLbl;
     listLabel = elseLabel;
-    varLabel  = elseLabel;
   };
 
   int *add(TaggedRef number, int label);
   int *add(Literal *constant, int label);
   int *add(Literal *functor, SRecordArity arity,
                       int label);
-  void addVar(int label)  { varLabel  = label; }
   void addList(int label) { listLabel = label; }
 
   int hash(int n) { return (n & hashMask); }  // return a value n with 0 <= n < size
@@ -160,6 +157,6 @@ class IHashTable {
 };
 
 int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
-                        IHashTable *table, TaggedRef *&sP, Bool isMatch);
+                        IHashTable *table, TaggedRef *&sP);
 
 #endif

@@ -52,7 +52,6 @@ void ThreadsPool::initThreads ()
 
   // public part;
   _currentThread = (Thread *) NULL;
-  _rootThread = 0;
   threadBodyFreeList = NULL;
 }
 

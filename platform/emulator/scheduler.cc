@@ -248,16 +248,6 @@ LBLterminate:
            ((CTT->isInSolve() || !e->isBelowSolveBoard()) &&
             (e->isBelowSolveBoard() || !CTT->isInSolve())));
 
-    if (CTT == e->rootThread()) {
-      e->rootThread()->reInit();
-      e->checkToplevel();
-      if (e->rootThread()->isEmpty()) {
-        e->unsetCurrentThread();
-        goto LBLstart;
-      } else {
-        goto LBLpreemption;
-      }
-    }
 
     CBB->decSuspCount();
 
@@ -435,14 +425,6 @@ LBLsuspend:
     // the case of blocking the root thread;
     Assert(GETBOARD(CTT)==CBB);
 
-#ifdef DEBUG_ROOT_THREAD
-    // this can happen if \sw -threadedqueries,
-    // or in non-threaded \feeds, e.g. suspend for I/O
-    if (CTT==e->rootThread()) {
-      printf("root blocked\n");
-    }
-#endif
-
     if (e->debugmode() && CTT->getTrace()) {
       debugStreamBlocked(CTT);
     } else if (CTT->getNoBlock()) {
@@ -559,12 +541,6 @@ LBLfailure:
        }
      }
 
-#ifdef DEBUG_CHECK
-     if (CTT==e->rootThread()) {
-       printf("fail root thread\n");
-     }
-#endif
-
      e->decSolveThreads(CBB);
      e->disposeRunnableThread(CTT);
      e->unsetCurrentThread();
@@ -633,10 +609,9 @@ LBLraise:
     if (e->defaultExceptionHdl) {
       CTT->pushCall(e->defaultExceptionHdl,e->exception.value);
     } else {
-      if (!am.isStandalone())
-        printf("\021");
-      printf("Exception raise:\n   %s\n",toC(e->exception.value));
-      fflush(stdout);
+      prefixError();
+      fprintf(stderr,"Exception raise:\n   %s\n",toC(e->exception.value));
+      fflush(stderr);
     }
     goto LBLrunThread; // changed from LBLpopTaskNoPreempt; -BL 26.3.97
   }

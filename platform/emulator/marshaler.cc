@@ -134,10 +134,8 @@ char *dif_names[DIF_LAST] = {
   "chunk",
   "proc",
   "class",
-  "url",
   "array",
   "fsetvalue",
-  "newname",
   "abstractionentry",
   "primary",
   "secondary",
@@ -574,12 +572,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
 
       marshalDIF(bs,DIF_PROC);
       marshalGName(gname,bs);
-      TaggedRef names = pp->getPred()->getNames();
-      Bool hasNames = !literalEq(names,NameUnit);
-      Assert(hasNames==OK || hasNames==NO);
-      marshalNumber(hasNames,bs);
 
-      bs->marshaledProcHasNames(names); // change by Per
       marshalTerm(pp->getName(),bs);
       marshalNumber(pp->getArity(),bs);
       ProgramCounter pc = pp->getPC();
@@ -689,15 +682,11 @@ loop:
         marshalString(lit->getPrintName(),bs);
         PD((MARSHAL,"unique name: %s",lit->getPrintName()));
       } else {
-        if(bs->knownAsNewName(t)){ // change by Per
-          marshalDIF(bs,DIF_NEWNAME);
-        } else {
-          marshalDIF(bs,DIF_NAME);
-          GName *gname = ((Name*)lit)->globalize();
-          marshalGName(gname,bs);
-          marshalString(lit->getPrintName(),bs);
-          PD((MARSHAL,"name: %s",lit->getPrintName()));
-        }
+        marshalDIF(bs,DIF_NAME);
+        GName *gname = ((Name*)lit)->globalize();
+        marshalGName(gname,bs);
+        marshalString(lit->getPrintName(),bs);
+        PD((MARSHAL,"name: %s",lit->getPrintName()));
       }
       trailCycle(lit->getRef(),bs,7);
       break;
@@ -920,15 +909,6 @@ loop:
     PD((UNMARSHAL,"float"));
     return;
 
-  case DIF_NEWNAME:
-    {
-      Assert(am.onToplevel());
-      *ret = makeTaggedLiteral(Name::newName(am.currentBoard()));
-      PD((UNMARSHAL,"newName"));
-      gotRef(bs,*ret);
-      return;
-    }
-
   case DIF_NAME:
     {
       GName *gname    = unmarshalGName(ret,bs);
@@ -1060,12 +1040,6 @@ loop:
       gotRef(bs,*ret);
       return;}
 
-  case DIF_URL:
-    {
-      warning("support no longer supported");
-      *ret = oz_newVariable();
-      return;
-    }
   case DIF_CHUNK:
     {
       PD((UNMARSHAL,"chunk"));
@@ -1121,21 +1095,17 @@ loop:
       PD((UNMARSHAL,"proc"));
 
       GName *gname  = unmarshalGName(ret,bs);
-      Bool hasNames = unmarshalNumber(bs);
-      Assert(hasNames==NO || hasNames==OK);
       OZ_Term name  = unmarshalTerm(bs);
       int arity     = unmarshalNumber(bs);
 
       Abstraction *pp;
-      if (gname || hasNames) {
+      if (gname) {
         PrTabEntry *pr = new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0,NO);
         Assert(am.onToplevel());
         pp = new Abstraction(pr,0,am.currentBoard());
         *ret = makeTaggedConst(pp);
-        if (!hasNames) {
-          pp->setGName(gname);
-          addGName(gname,*ret);
-        }
+        pp->setGName(gname);
+        addGName(gname,*ret);
       } else {
         Assert(isAbstraction(deref(*ret)));
         pp=0;

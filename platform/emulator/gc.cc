@@ -1801,8 +1801,6 @@ void AM::gc(int msgLevel)
 
   gc_tcl_sessions();
 
-  toplevelVars = gcRefsArray(toplevelVars);
-
   extRefs = extRefs->gc();
 
   PROFILE_CODE1(FDProfiles.gc());
@@ -2020,7 +2018,6 @@ void PrTabEntry::gcPrTabEntry()
   if (this == NULL) return;
 
   OZ_collectHeapTerm(info,info);
-  OZ_collectHeapTerm(names,names);
 }
 
 void AbstractionEntry::gcAbstractionEntries()
@@ -2040,7 +2037,6 @@ void CodeArea::gc() {
 
 void ThreadsPool::doGC () {
   Assert(_currentThread==NULL);
-  _rootThread         = _rootThread->gcThread();
   threadBodyFreeList = (RunnableThreadBody *) NULL;
 
   hiQueue.gc();

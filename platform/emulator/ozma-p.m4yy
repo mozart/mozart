@@ -92,7 +92,7 @@ static void lookupLabel(TaggedRef key, int *location) {
 %token <tagged> INTEGER FLOAT NIL ATOM TRUE FALSE UNIT NAME UNIQUENAME
 %token <tagged> FOREIGNPOINTER
 %token <index> XREGISTER YREGISTER GREGISTER
-%token LBL PID HT ONVAR ONSCALAR ONRECORD GCI AMI
+%token LBL PID HT ONSCALAR ONRECORD GCI AMI
 
 define(readArg,$1)
 define(writeArg,$1)
@@ -406,9 +406,7 @@ HashTableRef    : HT '(' DefLabel '[' HashTableEntries ']' ')'
                       entries = tail(entries);
                       const char *label =
                         rec->getLabelLiteral()->getPrintName();
-                      if (!strcmp(label,"onVar"))
-                        lookupLabel(rec->getArg(0),&ht->varLabel);
-                      else if (!strcmp(label,"onScalar")) {
+                      if (!strcmp(label,"onScalar")) {
                         TaggedRef value = rec->getArg(0);
                         if (isLiteral(value))
                           lookupLabel(rec->getArg(1),
@@ -430,8 +428,6 @@ HashTableRef    : HT '(' DefLabel '[' HashTableEntries ']' ')'
                     }
                     if (!ht->listLabel)
                       lookupLabel(elseLabel,&ht->listLabel);
-                    if (!ht->varLabel)
-                      lookupLabel(elseLabel,&ht->varLabel);
                     codeArea->writeAddress(ht);
                   }
                 ;
@@ -442,9 +438,7 @@ HashTableEntries: HashTableEntry
                   { $$ = OZ_cons($1,$2); }
                 ;
 
-HashTableEntry  : ONVAR '(' DefLabel ')'
-                  { $$ = OZ_mkTuple(OZ_atom("onVar"),1,$3); }
-                | ONSCALAR '(' NumOrLit DefLabel ')'
+HashTableEntry  : ONSCALAR '(' NumOrLit DefLabel ')'
                   { $$ = OZ_mkTuple(OZ_atom("onScalar"),2,$3,$4); }
                 | ONRECORD '(' ALiteral ARecordArity DefLabel ')'
                   { $$ = OZ_mkTuple(OZ_atom("onRecord"),3,$3,$4,$5); }
@@ -559,21 +553,6 @@ Location        : LocIndices '#' LocIndices
                       outs = tail(outs);
                     }
                     codeArea->writeAddress(loc);
-                  }
-                ;
-
-XRegisterIndexList
-                : LocIndices
-                  {
-                    TaggedRef xs = $1;
-                    int n = fastlength(xs);
-                    XRegisterIndexListClass *xlist =
-                      XRegisterIndexListClass::newXRegisterIndexList(n);
-                    for (int i = 0; i < n; i++) {
-                      xlist->set(i, smallIntValue(head(xs)));
-                      xs = tail(xs);
-                    }
-                    codeArea->writeAddress(xlist);
                   }
                 ;
 

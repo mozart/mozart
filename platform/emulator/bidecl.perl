@@ -1077,12 +1077,6 @@ $builtins = {
                              ibi => widthInline,
                              native => false},
 
-    'recordWidth'       => { in  => ['record'],
-                             out => ['int'],
-                             BI  => BIrecordWidth,
-                             native => true,
-                             unused => true},
-
     ###* Chunks
 
     'NewChunk'          => { in  => ['+record'],
@@ -1710,6 +1704,11 @@ $builtins = {
     'nop'               => { in  => [],
                              out => [],
                              BI  => BInop,
+                             native => false},
+
+    'setProcNames'      => { in  => ['value', 'value'],
+                             out => [],
+                             BI  => BIsetProcNames,
                              native => false},
 
     'onToplevel'        => { in  => [],
@@ -2445,16 +2444,6 @@ $builtins = {
                              BI  => BIsetProcInfo,
                              native => true},
 
-    'getProcNames'      => { in  => ['+procedure'],
-                             out => ['+[name]'],
-                             BI  => BIgetProcNames,
-                             native => true},
-
-    'setProcNames'      => { in  => ['+procedure','+[name]'],
-                             out => [],
-                             BI  => BIsetProcNames,
-                             native => true},
-
     ###* RegSets for the Compiler
     'RegSet.new'        => { in  => ['+int','+int'],
                              out => ['+chunk'],
@@ -2617,11 +2606,6 @@ $builtins = {
                              BI  => BInewHashTable,
                              native => true},
 
-    'storeHTVarLabel'   => { in  => ['+int','+int','+int'],
-                             out => [],
-                             BI  => BIstoreHTVarLabel,
-                             native => true},
-
     'storeHTScalar'     => { in  => ['+int','+int','+value','+int'],
                              out => [],
                              BI  => BIstoreHTScalar,
@@ -2657,11 +2641,6 @@ $builtins = {
                              out => [],
                              BI  => BIstoreLocation,
                              native => true},
-
-    'storeXRegisterIndexList' => { in => ['+int','+[tuple]'],
-                                   out => [],
-                                   BI  => BIstoreXRegisterIndexList,
-                                   native => true},
 
     'storeCache'        => { in  => ['+int','+value'],
                              out => [],
@@ -3647,23 +3626,6 @@ $builtins = {
 
     #* Unclassified
 
-    ##* not used any more ???
-
-    'getProcPos'        => { in  => ['+procedure'],
-                             out => ['+literal','+int'],
-                             BI  => BIgetProcPos,
-                             native => true},
-
-    'copyCode'          => { in  => ['+abstraction','+dictionary'],
-                             out => [],
-                             BI  => BIcopyCode,
-                             native => true},
-
-    'setAbstractionTabDefaultEntry' => { in  => ['value'],
-      out => [],
-      BI  => BIsetAbstractionTabDefaultEntry,
-                                         native => true},
-
     ##* Constraints
 
     'System.nbSusps'    => { in  => ['value'],
@@ -3708,17 +3670,8 @@ sub CTABLE {
         } else {
             die "*** native flag for $key must be 'true' or 'false'";
         }
-        if ($BI) {
-            # new style
-            print "{\"$key\",\t$inArity,\t$outArity,$BI,\t0,\t$native},\n";
-        } else {
-            # old style
-            my $bi     = $info->{bi};
-            my $ibi    = $info->{ibi};
-            if ($ibi) { $ibi = "(IFOR) $ibi"; }
-            else      { $ibi = "0"; }
-            print "{\"$key\",\t$inArity,\t$outArity,$bi,\t$ibi},\n";
-        }
+        $BI = $info->{bi} unless $BI;
+        print "{\"$key\",\t$inArity,\t$outArity,$BI,\t$native},\n";
         foreach $macro (@ifddef) { print "#endif\n"; }
         foreach $macro (@ifdef)  { print "#endif\n"; }
     }
@@ -3752,12 +3705,6 @@ sub argspec {
     return ($mod,$det,$typ,$own);
 }
 
-# $style==0     old style
-# $style==1     both
-# $style==2     new style
-
-my $style = 0;
-
 sub OZTABLE {
     my ($key,$info);
     while (($key,$info) = each %$builtins) {
@@ -3788,32 +3735,22 @@ sub OZTABLE {
             print "\t\ttypes: nil\n";
             print "\t\tdet: nil\n";
         }
-        if ($style<2) {
-            print "\t\teqeq: true\n" if $info->{eqeq};
-            print "\t\tdestroysArguments: true\n" if $destroys;
-            print "\t\tinlineFun: true\n"
-                if $info->{ibi} && (@{$info->{out}}==1);
-            print "\t\tinlineRel: true\n"
-                if $info->{ibi} && (@{$info->{out}}==0);
-            my $shallow = $info->{shallow};
-            print "\t\trel: '$shallow'\n" if $shallow;
+
+        if (@imods) {
+            print "\t\timods: [",join(' ',@imods),"]\n";
+        } else {
+            print "\t\timods: nil\n";
         }
-        if ($style>0) {
-            if (@imods) {
-                print "\t\timods: [",join(' ',@imods),"]\n";
-            } else {
-                print "\t\timods: nil\n";
-            }
-            if (@oowns) {
-                print "\t\toowns: [",join(' ',@oowns),"]\n";
-            } else {
-                print "\t\toowns: nil\n";
-            }
-            if ($#otyps == 0 && $otyps[0] eq '\'bool\''
-                && $odets[0] eq 'any(det)') {
-                print "\t\ttest: true\n";
-            }
+        if (@oowns) {
+            print "\t\toowns: [",join(' ',@oowns),"]\n";
+        } else {
+            print "\t\toowns: nil\n";
         }
+        if ($#otyps == 0 && $otyps[0] eq '\'bool\''
+            && $odets[0] eq 'any(det)') {
+            print "\t\ttest: true\n";
+        }
+
         print "\t\tdoesNotReturn: true\n" if $info->{doesNotReturn};
         print "\t)\n";
     }
@@ -3875,7 +3812,6 @@ while (@ARGV) {
     elsif ($option eq '-structure')   { $choice='structure'; }
     elsif ($option eq '-include')    { push @include,split(/\,/,shift); }
     elsif ($option eq '-exclude')    { push @exclude,split(/\,/,shift); }
-    elsif ($option eq '-style'  )    { $style=int(shift); }
     else { die "unrecognized option: $option"; }
 }
 

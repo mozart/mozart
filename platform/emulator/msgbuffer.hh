@@ -32,7 +32,6 @@ public:
   Bool unmarshallingOld;
 
   OZ_Term resources, nogoods;
-  OZ_Term names; /// goes away soon, when functors work
 
   BYTE* posMB;
   BYTE* endMB;
@@ -45,7 +44,6 @@ public:
 
   void init() {
     resources = nil();
-    names     = nil();
     nogoods   = nil();
     unmarshallingOld=NO;
   }
@@ -71,8 +69,6 @@ public:
   void addRes(OZ_Term t)    { resources = cons(t,resources); }
   void addNogood(OZ_Term t) { nogoods = cons(t,nogoods); }
   OZ_Term getNoGoods() { return nogoods; }
-  void marshaledProcHasNames(TaggedRef t){ names=t;}
-  Bool knownAsNewName(OZ_Term t){ return member(t,names); }
 };
 
 MsgBuffer* getComponentMsgBuffer();

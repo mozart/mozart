@@ -1,80 +1,18 @@
+ifdef(`instructionsUnneededForNewCompiler',,
+`define(`instructionsUnneededForNewCompiler',`')'
+)
+
 define(isReg,`ifelse($1,Register,1,0)')
 define(numOfRegs,`eval(isReg($1)+isReg($2)+isReg($3))')
 
 undefine(`incrop')
 define(incrop,`define(`OPCODE',eval(OPCODE+$1))')
 
-ifdef(`CONST',,
-define(CONST,`define($1,$2)')
-)
-
-ifdef(`instructionsUnneededForNewCompiler',,
-`define(`instructionsUnneededForNewCompiler',`')'
-)
-
-dnl   used by the old compiler for computing addresses
-
-define(`PointerSize',    1)
-define(`ShortSize',      1)
-define(`DoubleWordSize', 2)
-
-CONST(`OpcodeSize',            ShortSize)
-CONST(`NumberSize',            PointerSize)
-CONST(`LiteralSize',           PointerSize)
-CONST(`FeatureSize',           PointerSize)
-CONST(`ConstantSize',          PointerSize)
-CONST(`BuiltinnameSize',       PointerSize)
-CONST(`RelBuiltinnameSize',    PointerSize)
-CONST(`FunBuiltinnameSize',    PointerSize)
-CONST(`VariablenameSize',      PointerSize)
-CONST(`RegisterSize',          ShortSize)
-CONST(`XRegisterIndexSize',    ShortSize)
-CONST(`YRegisterIndexSize',    ShortSize)
-CONST(`AritySize',             ShortSize)
-CONST(`LabelSize',             PointerSize)
-CONST(`CountSize',             ShortSize)
-CONST(`NLiveRegsSize',         ShortSize)
-CONST(`IsTailSize',            ShortSize)
-CONST(`ArityAndIsTailSize',    ShortSize)
-CONST(`DummySize',             ShortSize)
-CONST(`PredicateRefSize',      PointerSize)
-CONST(`PredIdSize',            PointerSize)
-CONST(`HashTableRefSize',      PointerSize)
-CONST(`RecordAritySize',       PointerSize)
-CONST(`GenCallInfoSize',       PointerSize)
-CONST(`ApplMethInfoSize',      PointerSize)
-CONST(`GRegRefSize',           PointerSize)
-CONST(`LocationSize',          PointerSize)
-CONST(`XRegisterIndexListSize',PointerSize)
-CONST(`CacheSize',             DoubleWordSize)
-
-dnl   how the old compiler encodes different registers
-
-CONST(`TREG',0)
-CONST(`XREG',1)
-CONST(`YREG',2)
-CONST(`GREG',3)
-
-dnl   every bulk of thinks sent to the engine by the old compiler
-dnl   is preceeded by a spcification what it is
-
-CONST(`LOADCODE',0)
-CONST(`LOADMAPPING',1)
-CONST(`RESETMAPPING',2)
-
-dnl   how the old compiler encodes different terms for hashtable in
-dnl   "switchOnTerm"
-
-define(`ATOMTAG',1)
-define(`FUNCTORTAG',2)
-define(`NUMBERTAG',3)
-define(`LISTTAG',4)
-define(`VARTAG',5)
-
-
 
 define(`TOUPPER',
        `translit($1,abcdefghijklmnopqrstuvwxyz,ABCDEFGHIJKLMNOPQRSTUVWXYZ)')
+
+define(CacheSize,2)
 
 dnl
 dnl   Here come the instructions themselves
@@ -120,10 +58,16 @@ instruction(setConstant,Constant)
 instruction(setPredicateRef,PredicateRef)
 instruction(setVoid,Count)
 
-instruction(getRecordVars,Literal,RecordArity,readArg(Register),
-                          XRegisterIndexList)
-instruction(getListVarVar,readArg(Register),
-                          writeArg(XRegisterIndex),writeArg(XRegisterIndex))
+instruction(getRecord,Literal,RecordArity,readArg(Register))
+instruction(getList,readArg(Register))
+instruction(getListValVar,readArg(XRegisterIndex),readArg(Register),writeArg(XRegisterIndex))
+instruction(unifyVariable,writeArg(Register))
+instruction(unifyValue,readArg(Register))
+instruction(unifyValVar,readArg(Register),writeArg(Register))
+instruction(unifyNumber,Number)
+instruction(unifyLiteral,Literal)
+instruction(unifyVoid,Count)
+
 instruction(getLiteral,Literal,readArg(Register))
 instruction(getNumber,Number,readArg(Register))
 
@@ -214,6 +158,9 @@ instruction(shallowThen)
 instruction(testLiteral,readArg(Register),Literal,Label,Label,NLiveRegs)
 instruction(testNumber,readArg(Register),Number,Label,Label,NLiveRegs)
 
+instruction(testRecord,readArg(Register),Literal,RecordArity,Label,Label,NLiveRegs)
+instruction(testList,readArg(Register),Label,Label,NLiveRegs)
+
 instruction(testBool,readArg(Register),Label,Label,Label,NLiveRegs)
 
 instruction(match,readArg(Register),HashTableRef,NLiveRegs)
@@ -261,62 +208,11 @@ instruction(testLE,readArg(XRegisterIndex),
                    writeArg(XRegisterIndex),
                    Label,NLiveRegs)
 
-dnl   instructions soon to be removed
-
-instruction(getRecord,Literal,RecordArity,readArg(Register))
-instruction(getList,readArg(Register))
-instruction(getListValVar,readArg(XRegisterIndex),readArg(Register),writeArg(XRegisterIndex))
-instruction(unifyVariable,writeArg(Register))
-instruction(unifyValue,readArg(Register))
-instruction(unifyValVar,readArg(Register),writeArg(Register))
-instruction(unifyNumber,Number)
-instruction(unifyLiteral,Literal)
-instruction(unifyVoid,Count)
-instruction(switchOnTerm,readArg(Register),HashTableRef)
-instruction(weakDet,readArg(Register),NLiveRegs)
-
-dnl   instructions only used by the old compiler
+dnl   dummy instructions to allow easy testing of new
+dnl   instructions via assembler
 
 instructionsUnneededForNewCompiler
 
-instruction(createNamedVariable,writeArg(Register),Variablename)
-instruction(branchOnNonVar,readArg(Register),Label)
-instruction(putNumber,Number,writeArg(Register))
-instruction(putLiteral,Literal,writeArg(Register))
-instruction(setNumber,Number)
-instruction(setLiteral,Literal)
-instruction(callBuiltin,Builtinname,Arity)
-instruction(inlineFun1,FunBuiltinname,readArg(XRegisterIndex),
-                        writeArg(XRegisterIndex),NLiveRegs)
-instruction(inlineFun2,FunBuiltinname,readArg(XRegisterIndex),
-                        readArg(XRegisterIndex),
-                        writeArg(XRegisterIndex),NLiveRegs)
-instruction(inlineEqEq,FunBuiltinname,readArg(XRegisterIndex),
-                        readArg(XRegisterIndex),
-                        writeArg(XRegisterIndex),NLiveRegs)
-instruction(inlineFun3,FunBuiltinname,readArg(XRegisterIndex),
-                        readArg(XRegisterIndex),readArg(XRegisterIndex),
-                        writeArg(XRegisterIndex),NLiveRegs)
-instruction(inlineRel1,RelBuiltinname,readArg(XRegisterIndex),NLiveRegs)
-instruction(inlineRel2,RelBuiltinname,readArg(XRegisterIndex),
-                        readArg(XRegisterIndex),NLiveRegs)
-instruction(inlineRel3,RelBuiltinname,readArg(XRegisterIndex),
-                        readArg(XRegisterIndex),readArg(XRegisterIndex),
-                        NLiveRegs)
-instruction(shallowTest1,RelBuiltinname,readArg(XRegisterIndex),
-                         Label,NLiveRegs)
-instruction(shallowTest2,RelBuiltinname,readArg(XRegisterIndex),
-                         readArg(XRegisterIndex),
-                         Label,NLiveRegs)
-instruction(testLess,readArg(XRegisterIndex),
-                     readArg(XRegisterIndex),
-                     Label,NLiveRegs)
-instruction(testLessEq,readArg(XRegisterIndex),
-                       readArg(XRegisterIndex),
-                       Label,NLiveRegs)
-
-dnl   dummy instructions to allow easy testing of new
-dnl   instructions via assembler
 
 instruction(test1,Dummy,Dummy,Dummy)
 instruction(test2,Dummy,Dummy,Dummy)

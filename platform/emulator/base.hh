@@ -135,8 +135,6 @@ typedef OZ_Return (*InlineFun2)(TaggedRef In1, TaggedRef In2,
                                     TaggedRef &Out);
 typedef OZ_Return (*InlineFun3)(TaggedRef In1, TaggedRef In2,
                                     TaggedRef In3, TaggedRef &Out);
-typedef OZ_Return (*IFOR)(TaggedRef In1, ...);
-/* IFOR = InlineFunOrRel */
 
 //  ------------------------------------------------------------------------
 
@@ -317,7 +315,6 @@ class OzLock;
 
 class InlineCache;
 class OZ_Location;
-class XRegisterIndexListClass;
 
 class NetAddress;
 class GName;

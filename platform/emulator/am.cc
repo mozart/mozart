@@ -96,15 +96,12 @@ void usage(int /* argc */,char **argv) {
   fprintf(stderr,
           "usage: %s <options>\n",
           argv[0]);
-  fprintf(stderr, " -E           : running under emacs\n");
   fprintf(stderr, " -d           : debugging on\n");
-  fprintf(stderr, " -c <compiler>: start the compiler\n");
-  fprintf(stderr, " -S <fifo>    : connect to compiler via FIFO\n");
   fprintf(stderr, " -init <file> : load and execute init procedure\n");
   fprintf(stderr, " -u <url>     : start a compute server\n");
   fprintf(stderr, " -b <file>    : boot from assembly code\n");
   fprintf(stderr, " -B <dynlib>  : load ozma\n");
-  fprintf(stderr, " -f <file>    : execute precompiled file\n");
+  fprintf(stderr, " -browser     : undocumented\n");
   fprintf(stderr, " -a <args> ...: application arguments\n");
   fprintf(stderr, " -- <args> ...: same as above\n");
   osExit(1);
@@ -202,8 +199,6 @@ void AM::init(int argc,char **argv)
 
   preparedCalls = NULL;
 
-  char *compilerName = OzCompiler;
-
   char *tmp;
   if ((tmp = getenv("OZPATH"))) {
     ozconf.ozPath = tmp;
@@ -214,10 +209,6 @@ void AM::init(int argc,char **argv)
     ozconf.linkPath = tmp;
   }
 
-#ifdef OLD_COMPILER
-  char *compilerFIFO = NULL;  // path name where to connect to
-  char *precompiledFile = NULL;
-#endif
   char *url = NULL;
   char *initFile = getenv("OZINIT");
   char *assemblyCodeFile = NULL;
@@ -229,33 +220,12 @@ void AM::init(int argc,char **argv)
   ozconf.argC = 0;
 
   for (int i=url?2:1; i<argc; i++) {
-    if (strcmp(argv[i],"-E")==0) {
-      ozconf.runningUnderEmacs = 1;
-      continue;
-    }
     if (strcmp(argv[i],"-d")==0) {
 #ifdef DEBUG_TRACE
       ozd_tracerOn();
 #endif
       continue;
     }
-    if (strcmp(argv[i],"-c")==0) {
-      moreThanOne++;
-      compilerName = getOptArg(i,argc,argv);
-      continue;
-    }
-#ifdef OLD_COMPILER
-    if (strcmp(argv[i],"-S")==0) {
-      moreThanOne++;
-      compilerFIFO = getOptArg(i,argc,argv);
-      continue;
-    }
-    if (strcmp(argv[i],"-f")==0) {
-      moreThanOne++;
-      precompiledFile = getOptArg(i,argc,argv);
-      continue;
-    }
-#endif
     if (strcmp(argv[i],"-browser")==0) {
       ozconf.browser = 1;
       continue;
@@ -294,7 +264,7 @@ void AM::init(int argc,char **argv)
   }
 
   if (moreThanOne > 1) {
-    fprintf(stderr,"Atmost one of '-u', '-f', '-S', '-b' allowed.\n");
+    fprintf(stderr,"Atmost one of '-u', '-b' allowed.\n");
     usage(argc,argv);
    }
 
@@ -321,39 +291,11 @@ void AM::init(int argc,char **argv)
     else
       fprintf(stderr,"No init file\n");
 
-  isStandaloneF=NO;  // mm2 seems to be OLD_COMPILER only?
-#ifdef OLD_COMPILER
-  compStream = 0;
-#endif
-  if (url) {
-    isStandaloneF=OK;
-  } else if (assemblyCodeFile) {
-    isStandaloneF=OK;
-  } else {
-#ifdef OLD_COMPILER
-    if (compilerFIFO) {
-      compStream = connectCompiler(compilerFIFO);
-    } else if (precompiledFile) {
-      compStream = useFile(precompiledFile);
-      isStandaloneF=OK;
-    } else if (compilerName) {
-      compStream = execCompiler(compilerName);
-    }
-
-    if (compStream == NULL) {
-      fprintf(stderr,"Cannot open code input\n");
-      ossleep(5);
-      osExit(1);
-    }
-
-    checkVersion();
-#else
-      fprintf(stderr,"Cannot open code input\n");
-      ossleep(5);
-      osExit(1);
-#endif
+  if (url==0 && assemblyCodeFile==0) {
+    fprintf(stderr,"Exactly one of '-b' or '-u' must be given\n");
+    ossleep(5);
+    osExit(1);
   }
-
 
   (void) engine(OK);
 
@@ -384,9 +326,6 @@ void AM::init(int argc,char **argv)
 
   initThreads();
   ozstat.createdThreads.incf();
-  _rootThread = mkRunnableThread(DEFAULT_PRIORITY, _rootBoard);
-
-  toplevelQueue = (Toplevel *) NULL;
 
   // builtins
   initLiterals();
@@ -399,18 +338,7 @@ void AM::init(int argc,char **argv)
   extern void initTagged();
   initTagged();
 
-  toplevelVars      = allocateRefsArray(ozconf.numToplevelVars);
-  toplevelVarsCount = 0;
-
-  toplevelVars[0] = makeTaggedConst(entry);
-
   emptySuspendVarList(); // must be after initLiterals
-
-#ifdef OLD_COMPILER
-  if (!isStandalone()) {
-    osWatchFD(compStream->csfileno(),SEL_READ);
-  }
-#endif
 
   osInitSignals();
   osSetAlarmTimer(CLOCK_TICK/1000);
@@ -425,10 +353,7 @@ void AM::init(int argc,char **argv)
                   )?
       mkRunnableThread(DEFAULT_PRIORITY, _rootBoard):0;
 
-    if (!url) {
-      // --> make sure that we check for input from compiler
-      setSFlag(IOReady);
-    } else {
+    if (url) {
       TaggedRef proc = oz_newVariable();
       tt->pushCall(proc);
       tt->pushCall(BI_load,oz_atom(url),proc);
@@ -472,27 +397,8 @@ void AM::init(int argc,char **argv)
 
 }
 
-#ifdef OLD_COMPILER
-void AM::checkVersion()
-{
-  char s[100];
-  char *ss = compStream->csgets(s,100);
-  if (ss && ss[strlen(ss)-1] == '\n')
-    ss[strlen(ss)-1] = '\0';
-  if (ss != NULL && strcmp(ss,OZVERSION) != 0) {
-    fprintf(stderr,"*** Wrong version from compiler\n");
-    fprintf(stderr,"*** Expected: '%s', got: '%s'\n",OZVERSION,ss);
-    ossleep(3);
-    osExit(1);
-  }
-}
-#endif
-
 void AM::exitOz(int status)
 {
-#ifdef OLD_COMPILER
-  if (compStream) compStream->csclose();
-#endif
   osExit(status);
 }
 
@@ -1474,28 +1380,6 @@ void AM::setCurrent(Board *c, Bool checkNotGC)
   }
 }
 
-#ifdef OLD_COMPILER
-Bool AM::loadQuery(CompStream *fd)
-{
-  unsigned int starttime = 0;
-
-  if (ozconf.timeDetailed)
-    starttime = osUserTime();
-
-  ProgramCounter pc;
-
-  Bool ret = CodeArea::load(fd,pc);
-
-  if (ret == OK && pc != NOCODE) {
-    addToplevel(pc);
-  }
-
-  if (ozconf.timeDetailed)
-    ozstat.timeForLoading.incf(osUserTime()-starttime);
-
-  return ret;
-}
-#endif
 
 void AM::select(int fd, int mode, OZ_IOHandler fun, void *val)
 {
@@ -1575,18 +1459,6 @@ void AM::handleIO()
   unsetSFlag(IOReady);
   int numbOfFDs = osFirstSelect();
 
-#ifdef OLD_COMPILER
-  /* check input from compiler */
-  if (compStream) {
-    if (osNextSelect(compStream->csfileno(),SEL_READ) || /* do this FIRST, sideeffect! */
-        !compStream->bufEmpty()) {
-      do {
-        loadQuery(compStream);
-      } while(!compStream->bufEmpty());
-      numbOfFDs--;
-    }
-  }
-#endif
 
   // find the nodes to awake
   for (int index = 0; numbOfFDs > 0; index++) {
@@ -1622,11 +1494,7 @@ void checkIO(){
 void AM::checkIO()
 {
   int numbOfFDs = osCheckIO();
-  if (!isCritical() && (numbOfFDs > 0
-#ifdef OLD_COMPILER
-                        || (compStream && !compStream->bufEmpty())
-#endif
-                        )) {
+  if (!isCritical() && (numbOfFDs > 0)) {
     setSFlag(IOReady);
   }
 }
@@ -1645,25 +1513,13 @@ void AM::suspendEngine()
       handleUser();
     }
 
-    if (isSetSFlag(IOReady)
-#ifdef OLD_COMPILER
-        || (compStream && !compStream->bufEmpty())
-#endif
-        ) {
+    if (isSetSFlag(IOReady)) {
       handleIO();
     }
 
     if (!threadQueuesAreEmpty()) {
       break;
     }
-
-#ifdef OLD_COMPILER
-    if (compStream && isStandalone() && !compStream->cseof()) {
-      loadQuery(compStream);
-      continue;
-    }
-    Assert(!compStream || compStream->bufEmpty());
-#endif
 
     // mm2: test if system is idle (not yet working: perdio test is missing)
 #ifdef TEST_IDLE
@@ -1810,73 +1666,6 @@ Bool AM::isStableSolve(SolveActor *sa)
     return NO;
   // simply "don't worry" if in all other cases it is too weak;
   return sa->areNoExtSuspensions();
-}
-
-/* ------------------------------------------------------------------------
- * Threads
- *
- * running thread: currentThread
- * toplevel: rootThread and toplevelQueue
- * ------------------------------------------------------------------------ */
-
-
-/*
- * Toplevel is a queue of toplevel queries, which must be executed
- * sequentially.
- *   see checkToplevel()  called when disposing a thread
- *       addToplevel()    called when a new query arrives
- */
-class Toplevel {
-public:
-  ProgramCounter pc;
-  Toplevel *next;
-  Toplevel(ProgramCounter p, Toplevel *nxt) : pc(p), next(nxt) {}
-};
-
-/*
- * push a new toplevel continuation to the rootThread
- * PRE: the rootThread is empty
- * called from checkToplevel and addToplevel
- */
-void AM::pushToplevel(ProgramCounter pc)
-{
-  Assert(rootThread()->isEmpty());
-  // kost@ : MOD!!! TODO?
-  // rootBoard->incSuspCount();
-  rootThread()->getTaskStackRef()->pushCont(pc,toplevelVars,NULL);
-  if (rootThread()!=currentThread() && !isScheduledSlow(rootThread())) {
-    Assert(rootThread()->isRunnable());
-    scheduleThread(rootThread());
-  }
-}
-
-
-/*
- * in dispose: check if there are more toplevel tasks
- */
-void AM::checkToplevel()
-{
-  if (toplevelQueue) {
-    // Verbose((VERB_THREAD,"checkToplevel: pushNext: 0x%x\n",this));
-    Toplevel **last;
-    for (last = &toplevelQueue;
-         ((*last)->next) != NULL;
-         last = &((*last)->next)) {
-    }
-    pushToplevel((*last)->pc);
-    *last = (Toplevel *) NULL;
-  }
-}
-
-void AM::addToplevel(ProgramCounter pc)
-{
-  if (rootThread()->isEmpty() && rootThread()->isRunnable()) {
-    // Verbose((VERB_THREAD,"addToplevel: push\n"));
-    pushToplevel(pc);
-  } else {
-    // Verbose((VERB_THREAD,"addToplevel: delay\n"));
-    toplevelQueue = new Toplevel(pc,toplevelQueue);
-  }
 }
 
 

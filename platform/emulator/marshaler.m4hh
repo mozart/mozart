@@ -41,8 +41,6 @@ GName* unmarshalGName(TaggedRef*,MsgBuffer*);
 
 MessageType unmarshalHeader(MsgBuffer*);
 
-Bool changeMarshaledFastCall(ProgramCounter,TaggedRef,int);
-
 void initMarshaler();
 
 class ObjectFields{

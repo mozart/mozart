@@ -1903,9 +1903,9 @@ OzArray *tagged2Array(TaggedRef term)
  *=================================================================== */
 
 enum KindOfReg {
-  XReg = XREG,
-  YReg = YREG,
-  GReg = GREG
+  XReg,
+  YReg,
+  GReg
 };
 
 class AssReg {
@@ -1970,9 +1970,6 @@ private:
   TaggedRef fileName;
   int lineno;
   TaggedRef info;
-  TaggedRef names; // list of names for components: when loading
-                   // theses names are replaced
-                   // default: unit --> no replacements
 
 public:
   Bool copyOnce; // for functors
@@ -1998,7 +1995,6 @@ public:
     Assert((int)arity == getWidth(arityInit)); /* check for overflow */
     PC = NOCODE;
     info = nil();
-    names = NameUnit;
     numClosures = numCalled = heapUsed = samples = lastHeap = 0;
     copyOnce = co;
     next = allPrTabEntries;
@@ -2016,9 +2012,6 @@ public:
 
   void setInfo(TaggedRef t) { info = t; }
   TaggedRef getInfo()       { return info; }
-
-  void setNames(TaggedRef n) { names = n; }
-  TaggedRef getNames()       { return names; }
 
   void patchFileAndLine();
 
@@ -2112,7 +2105,6 @@ private:
   int inArity;
   int outArity;
   OZ_CFun fun;
-  IFOR inlineFun;
   Bool native;
 #ifdef PROFILE_BI
   unsigned long counter;
@@ -2126,8 +2118,8 @@ public:
   static void *operator new(size_t chunk_size)
   { return ::new char[chunk_size]; }
 
-  Builtin(const char *s,int inArity,int outArity, OZ_CFun fn, Bool nat, IFOR infun)
-  : inArity(inArity),outArity(outArity),fun(fn), inlineFun(infun), native(nat),
+  Builtin(const char *s,int inArity,int outArity, OZ_CFun fn, Bool nat)
+  : inArity(inArity),outArity(outArity),fun(fn), native(nat),
     ConstTerm(Co_Builtin)
   {
     printname = makeTaggedAtom(s);
@@ -2144,7 +2136,6 @@ public:
     return tagged2Literal(printname)->getPrintName();
   }
   TaggedRef getName() { return printname; }
-  IFOR getInlineFun() { return inlineFun; }
   Bool isNative()     { return native; }
 
 #ifdef PROFILE_BI

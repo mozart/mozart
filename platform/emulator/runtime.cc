@@ -82,9 +82,9 @@ OZ_Term oz_getLocation(Board *bb)
 BuiltinTab builtinTab(750);
 
 Builtin *BIadd(const char *name,int inArity, int outArity, OZ_CFun funn,
-               Bool native, IFOR infun)
+               Bool native)
 {
-  Builtin *builtin = new Builtin(name,inArity,outArity,funn,native,infun);
+  Builtin *builtin = new Builtin(name,inArity,outArity,funn,native);
 
   builtinTab.htAdd(name,builtin);
 
@@ -96,7 +96,7 @@ void BIaddSpec(BIspec *spec)
 {
   for (int i=0; spec[i].name; i++) {
     BIadd(spec[i].name,spec[i].inArity,spec[i].outArity,spec[i].fun,
-          spec[i].native,spec[i].ifun);
+          spec[i].native);
   }
 }
 

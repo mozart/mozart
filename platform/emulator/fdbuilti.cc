@@ -1141,7 +1141,7 @@ OZ_C_proc_end
 static
 BIspec fdSpec[] = {
 #include "fdbuilti.tbl"
-  {0,0,0,0,0}
+  {0,0,0,0}
 };
 
 void BIinitFD(void)

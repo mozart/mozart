@@ -42,7 +42,6 @@
 #include "os.hh"
 #include "codearea.hh"
 #include "debug.hh"
-#include "copycode.hh"
 
 #include "iso-ctype.hh"
 #include <string.h>
@@ -526,47 +525,6 @@ OZ_BI_define(BIsetProcInfo,2,0)
   }
 
   tagged2Abstraction(p)->getPred()->setInfo(t);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIgetProcNames,1,1)
-{
-  oz_declareNonvarIN(0,p); p = deref(p);
-
-  if (!isAbstraction(p)) {
-    oz_typeError(0,"Abstraction");
-  }
-
-  OZ_RETURN(tagged2Abstraction(p)->getPred()->getNames());
-} OZ_BI_end
-
-OZ_BI_define(BIsetProcNames,2,0)
-{
-  oz_declareNonvarIN(0,p); p = deref(p);
-  oz_declareIN(1,t);
-
-  if (!isAbstraction(p)) {
-    oz_typeError(0,"Abstraction");
-  }
-
-  tagged2Abstraction(p)->getPred()->setNames(t);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIgetProcPos,1,2)
-{
-  oz_declareNonvarIN(0,p); p = deref(p);
-
-  if (!isAbstraction(p)) {
-    oz_typeError(0,"Abstraction");
-  }
-
-  PrTabEntry *pte = tagged2Abstraction(p)->getPred();
-
-  OZ_out(0) = pte->getFileName();
-  OZ_out(1) = OZ_int(pte->getLine());
   return PROCEED;
 } OZ_BI_end
 
@@ -2556,33 +2514,6 @@ OZ_BI_define(BIchunkWidth, 1,1)
 
   default:
     oz_typeError(0,"Chunk");
-  }
-} OZ_BI_end
-
-OZ_BI_define(BIrecordWidth, 1,1)
-{
-  OZ_Term arg = OZ_in(0);
-
-  DEREF(arg, argPtr, argTag);
-
-  switch (argTag) {
-  case CVAR:
-    switch (tagged2CVar(arg)->getType ()) {
-    case OFSVariable:
-      {
-        GenOFSVariable *ofsVar = tagged2GenOFSVar(arg);
-        OZ_RETURN(makeTaggedSmallInt(ofsVar->getWidth ()));
-      }
-
-    default:
-      oz_typeError(0, "Record");
-    }
-
-  case SRECORD:
-    OZ_RETURN(makeTaggedSmallInt(tagged2SRecord(arg)->getWidth ()));
-
-  default:
-    oz_typeError(0, "Record");
   }
 } OZ_BI_end
 
@@ -5488,7 +5419,7 @@ OZ_BI_define(BIdlLoad,1,1)
       return oz_raise(E_ERROR,AtomForeign,
                       "cannotFindInterfaceFunction", 2,
                       OZ_in(0), oz_atom(I->name));
-    bi = new Builtin(I->name,I->inArity,I->outArity,*func,OK,(IFOR)NULL);
+    bi = new Builtin(I->name,I->inArity,I->outArity,*func,OK);
     l = cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
     I++;
   }
@@ -5571,9 +5502,7 @@ OZ_BI_define(BIsystemEq,2,1) {
   OZ_RETURN(oz_eq(a,b) ? NameTrue : NameFalse);
 } OZ_BI_end
 
-/*
- * unify: used by compiler if '\sw -optimize'
- */
+
 OZ_BI_define(BIunify,2,0)
 {
   oz_declareIN(0,a);
@@ -5591,6 +5520,13 @@ OZ_BI_define(BInop,0,0)
 {
   return PROCEED;
 } OZ_BI_end
+
+
+OZ_BI_define(BIsetProcNames,2,0)
+{
+  return PROCEED;
+} OZ_BI_end
+
 
 // ------------------------------------------------------------------------
 // --- Apply
@@ -5687,20 +5623,6 @@ OZ_BI_define(BIconstraints,1,1)
   OZ_RETURN_INT(len);
 } OZ_BI_end
 
-// ---------------------------------------------------------------------------
-// abstraction table
-// ---------------------------------------------------------------------------
-
-OZ_BI_define(BIsetAbstractionTabDefaultEntry,1,0)
-{
-  oz_declareDerefIN(0,in);
-  if (!isAbstraction(in)) {
-    oz_typeError(0,"Abstraction");
-  }
-
-  warning("setAbstractionTabDefaultEntry no longer needed");
-  return PROCEED;
-} OZ_BI_end
 
 /* ---------------------------------------------------------------------
  * System
@@ -6345,7 +6267,7 @@ OZ_BI_define(BIraiseDebug,1,0)
 
 
 /********************************************************************
- * builtins for the new compiler
+ * builtins for the compiler
  * (OPI and environment handling)
  ******************************************************************** */
 
@@ -6816,26 +6738,6 @@ OZ_BI_define(BIfinalize_setHandler,1,0)
 
 
 /********************************************************************
- * Copy Code
- ******************************************************************** */
-
-
-/* only for testing: */
-
-OZ_BI_define(BIcopyCode,2,0)
-{
-  oz_declareNonvarIN(0,proc);
-  oz_declareNonvarIN(1,alist);
-
-  if (!isAbstraction(proc)) { oz_typeError(0,"Abstraction"); }
-
-  (void) copyCode(tagged2Abstraction(proc)->getPC(),alist,OK);
-
-  return PROCEED;
-} OZ_BI_end
-
-
-/********************************************************************
  * Table of builtins
  ******************************************************************** */
 
@@ -6845,7 +6747,7 @@ OZ_C_proc_proto(BIdebugPrintLong);
 #include "builtins.dcl"
 BIspec allSpec[] = {
 #include "builtins.tbl"
-  {0,0,0,0,0}
+  {0,0,0,0}
 };
 
 

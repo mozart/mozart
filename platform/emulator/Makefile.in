@@ -46,7 +46,7 @@ CREATEDOTHERS = \
         fsbuilti.tbl fsbuilti.dcl
 
 CREATEDSRCS = \
-        scancode.cc copycode.cc opcodes.cc\
+        copycode.cc opcodes.cc\
         scanner.cc parser.cc version.cc initffuns.cc
 
 CREATEDFILES = $(CREATEDOTHERS) $(CREATEDSRCS)
@@ -67,7 +67,7 @@ CXXSRCS = \
         cpbag.cc tagged.cc value.cc\
         cont.cc ozconfig.cc trail.cc\
         foreign.cc \
-        compiler.cc ofgenvar.cc genhashtbl.cc\
+        ofgenvar.cc genhashtbl.cc\
         ozostream.cc runtime.cc unix.cc\
         tcl_tk.cc metavar.cc perdio.cc\
         urlc.cc iso-ctype.cc hashtbl.cc\
@@ -216,7 +216,8 @@ distclean::
 
 # dependencies
 marshaler.hh marshalMsg.cc: msgFormat.m4
-scancode.cc copycode.cc optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh config.h: instrDefs.m4
+copycode.cc optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh config.h: instrDefs.m4
+
 marshaler.o: marshalcode.cc
 
 # automatic configure
