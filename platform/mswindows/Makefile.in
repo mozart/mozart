@@ -49,7 +49,7 @@ bootstrap: all
 
 install: $(WINEXES)
         $(INSTALL_DIR) $(BINDIR)
-        $(INSTALL_BIN) $(WINEXES) $(SRCDIR)/oz.ico $(BINDIR)
+        $(INSTALL_BIN) $(WINEXES) $(SRCDIR)/mozart.ico $(BINDIR)
 
 
 $(BINDIR):
