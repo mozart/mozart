@@ -1607,9 +1607,6 @@ void AM::checkStatus()
       deinstallPath(_rootBoard);
       doGC();
   }
-  if (isSetSFlag(StopThread)) {
-    unsetSFlag(StopThread);
-  }
   if (isSetSFlag(UserAlarm)) {
     deinstallPath(_rootBoard);
     osBlockSignals();
