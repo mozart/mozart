@@ -450,6 +450,10 @@ void pushContX(TaskStack *stk,
       tmpCont->getX(X);                         \
   }
 
+/* Must save output register too !!! (RS) */
+#define MaxToSave(OutReg,LivingRegs) \
+        max(getRegArg(PC+OutReg)+1,getPosIntArg(PC+LivingRegs));
+
 // -----------------------------------------------------------------------
 // *** THREADED CODE
 // -----------------------------------------------------------------------
@@ -1054,11 +1058,11 @@ LBLdispatcher:
         SUSPENDONVARLIST;
 
       case BI_PREEMPT:
-        PushContX(PC+4,Y,G,X,getPosIntArg(PC+3));
+        PushContX(PC+4,Y,G,X,loc->max(getPosIntArg(PC+3)));
         return T_PREEMPT;
 
       case BI_REPLACEBICALL:
-        argsToSave = getPosIntArg(PC+3);
+        argsToSave = loc->max(getPosIntArg(PC+3));
         PC += 4;
         goto LBLreplaceBICall;
 
@@ -1095,7 +1099,7 @@ LBLdispatcher:
       case BI_TYPE_ERROR: RAISE_TYPE_NEW(bi,loc);
 
       case SUSPEND:
-        PushContX(PC,Y,G,X,getPosIntArg(PC+4));
+        PushContX(PC,Y,G,X,loc->max(getPosIntArg(PC+4)));
         SUSPENDONVARLIST;
 
       case BI_PREEMPT:
@@ -1421,11 +1425,6 @@ LBLdispatcher:
       case RAISE:
         RAISE_THREAD;
 
-
-/* Must save output register too !!! (RS) */
-#define MaxToSave(OutReg,LivingRegs) \
-        max(getRegArg(PC+OutReg)+1,getPosIntArg(PC+LivingRegs));
-
       case BI_REPLACEBICALL:
         argsToSave = MaxToSave(3,4);
         PC += 5;
@@ -1553,11 +1552,7 @@ LBLdispatcher:
       if (stateIsCell(state)) {
         rec = getState(state,NO,fea,XPC(2));
         if (rec==NULL) {
-          /*
-          argsToSave = MaxToSave(2,3);
-          PC += 6;
-          goto LBLreplaceBICall;*/
-          int argsToSave = CodeArea::livenessX(PC,X);
+          int argsToSave = MaxToSave(2,3);
           PushContX(PC+6,Y,G,X,argsToSave);
           return T_SUSPEND;
         }
@@ -1590,16 +1585,11 @@ LBLdispatcher:
 
       if (stateIsCell(state)) {
         rec = getState(state,OK,fea,XPC(2));
-        /*
         if (rec==NULL) {
-
-        argsToSave = getPosIntArg(PC+3);
-        PC += 6;
-          goto LBLreplaceBICall;*/
-        if(rec==NULL){
-            int argsToSave = CodeArea::livenessX(PC,X);
-            PushContX(PC+6,Y,G,X,argsToSave);
-            return T_SUSPEND;}
+          int argsToSave = getPosIntArg(PC+3);
+          PushContX(PC+6,Y,G,X,argsToSave);
+          return T_SUSPEND;
+        }
       } else {
         rec = getRecord(state);
       }

@@ -2142,6 +2142,14 @@ public:
   int getArity() { return inAr+outAr; }
   int getInArity() { return inAr; }
   int getOutArity() { return outAr; }
+  int max(int n) {
+    for (int i = inAr+outAr-1; i >= inAr; i--) {
+      if (out(i)>=n) {
+        n=out(i)+1;
+      }
+    }
+    return n;
+  }
 };
 
 
