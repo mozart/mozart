@@ -23,7 +23,7 @@
  *  WARRANTIES.
  *
  */
-
+ 
 #ifdef TEXT2PICKLE
 #define EmulatorOnly(Code)
 #else 

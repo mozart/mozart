@@ -335,10 +335,13 @@ void marshalClass(ObjectClass *cl, MsgBuffer *bs)
   marshalSRecord(cl->getFeatures(),bs);
 }
 
-void marshalNoGood(TaggedRef term, MsgBuffer *bs)
+void marshalNoGood(TaggedRef term, MsgBuffer *bs, Bool trail)
 {
-  bs->addNogood(term);
-  marshalTerm(NameNonExportable,bs); // to make bs consistent
+  if (ozconf.perdioMinimal || bs->getSite()==NULL){
+    bs->addNogood(term);
+    marshalTerm(NameNonExportable,bs);} // to make bs consistent
+  else{
+    marshalSPP(term,bs, trail); }
 }
 
 
@@ -439,6 +442,9 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
   case Co_Object:
     {
       CheckD0Compatibility;
+      Object *o = (Object*) t;
+      if(o->getClass()->isNative()) 
+	goto bomb;
       if (!bs->globalize()) return;
       marshalObject(t, bs);
       return;
@@ -454,7 +460,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
   case Co_Lock: HandleTert("lock",DIF_LOCK,OK); 
   case Co_Cell: HandleTert("cell",DIF_CELL,OK); 
   case Co_Port: HandleTert("port",DIF_PORT,NO); 
-
+  case Co_Resource:HandleTert("resource",DIF_RESOURCE_T,OK); 
 #undef HandleTert
 
   default:
@@ -464,7 +470,8 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
   Assert(0);
 
 bomb:
-  marshalNoGood(makeTaggedConst(t),bs);
+  marshalNoGood(makeTaggedConst(t),bs,true);
+  trailCycle(t->getCycleRef(),bs); 
 }
 
 void marshalTerm(OZ_Term t, MsgBuffer *bs)
@@ -575,7 +582,7 @@ loop:
 	marshalDIF(bs,DIF_EXTENSION);
 	marshalNumber(oz_tagged2Extension(t)->getIdV(),bs);
 	if (!oz_tagged2Extension(t)->marshalV(bs)) {
-	  marshalNoGood(t,bs);
+	  marshalNoGood(t,bs,false);
 	}
       }
       break;
@@ -615,7 +622,7 @@ loop:
 
   default:
   bomb:
-    marshalNoGood(t,bs);
+    marshalNoGood(t,bs, false);
     break;
   }
 
@@ -852,6 +859,7 @@ loop:
       *ret=unmarshalOwner(bs,tag);
       return;
     }
+  case DIF_RESOURCE_T:
   case DIF_PORT:
   case DIF_THREAD_UNUSED:
   case DIF_SPACE:
@@ -864,7 +872,12 @@ loop:
       gotRef(bs,*ret,refTag);
       return;
     }
-
+  case DIF_RESOURCE_N:
+    {
+      *ret=unmarshalTertiary(bs,tag);
+      return;
+    }
+    
   case DIF_CHUNK:
     {
       int refTag   = unmarshalRefTag(bs);
@@ -994,6 +1007,8 @@ loop:
     {
       int type = unmarshalNumber(bs);
       *ret = oz_extension_unmarshal(type,bs);
+      if(*ret == 0 && !ozconf.perdioMinimal) 
+	*ret = unmarshalTerm(bs);
       return;
     }
 

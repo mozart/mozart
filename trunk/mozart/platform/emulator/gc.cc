@@ -2415,7 +2415,12 @@ ConstTerm *ConstTerm::gcConstTerm() {
 
   case Co_Foreign_Pointer:
     return ((ForeignPointer*)this)->gc();
-
+  
+  case Co_Resource:{
+    ret = gcDistResource(this);
+    storeFwdField(this, ret);
+    return ret;}
+  
   default:
     Assert(0);
     return 0;

@@ -80,6 +80,8 @@ typedef enum {
   DIF_PASSIVE,
   DIF_COPYABLENAME,
   DIF_EXTENSION,
+  DIF_RESOURCE_T,
+  DIF_RESOURCE_N,
   DIF_LAST
 } MarshalTag;
 
@@ -122,6 +124,8 @@ const struct {MarshalTag tag; char *name;} dif_names[] = {
   { DIF_PASSIVE,      "PASSIVE"},
   { DIF_COPYABLENAME, "COPYABLENAME"},
   { DIF_EXTENSION,    "EXTENSION"},
+  { DIF_RESOURCE_T,     "RESOURCE_T"},
+  { DIF_RESOURCE_N,     "RESOURCE_N"},
   { DIF_LAST,         "LAST"}
 };
 
