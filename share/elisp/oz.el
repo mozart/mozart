@@ -1197,7 +1197,7 @@ the GDB commands `cd DIR' and `directory'."
 	    ;; Insert the text, moving the process-marker.
 	    (goto-char (process-mark proc))
 	    (setq old-point (point))
-	    (insert string)
+	    (insert-before-markers string)
 	    (set-marker (process-mark proc) (point))
 
 	    ;; show status messages of compiler in mini buffer
@@ -1244,7 +1244,8 @@ the GDB commands `cd DIR' and `directory'."
 	  (delete-region (point-min) (point-max)))
       (setq old-point (point-max))
       (goto-char old-point)
-      (insert string)
+      (insert-before-markers string)
+      (set-marker (process-mark proc) (point))
     
       ;; remove other than error messages
       (goto-char old-point)
@@ -1269,11 +1270,8 @@ the GDB commands `cd DIR' and `directory'."
   (interactive)
   (oz-print-region (point-min) (point-max)))
 
+
 (defun oz-print-region(start end)
   "Print region."
   (interactive "r")
   (shell-command-on-region start end "oz2lpr -"))
-    
-
-
-
