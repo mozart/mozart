@@ -419,6 +419,8 @@ def print_entries_by_module(items,which):
                     label = e.table['os']
             elif which=='macosx':
                 label = 'MacOSX package'
+            elif which=='ipaqpkg':
+                label = e.table['os']
             elif which=='debian':
                 label = 'Debian package'
             elif which=='cvs-tag' or which=='cvs-branch':
@@ -666,6 +668,31 @@ to update your local package database.</p>
     page_end()
 
 ######################################################################
+# iPaq
+######################################################################
+
+def page_ipaq(mozart_version):
+    l = []
+    for p in mozart_packages:
+        if p.mozart_version == mozart_version:
+            for e in p.entries:
+                if e.table['os'] == 'ipaq/linux' \
+                   and e.table['format'] == 'ipaqpkg':
+                    l.append(e)
+    l = presort_entries(l)
+    page_begin("iPaq Packages for Mozart")
+    page_feedback()
+    page_section("Download")
+    page_div_begin()
+    page_table_begin()
+    page_table_header("iPaq Packages")
+    print_entries_by_module(l,"ipaqpkg")
+    page_table_end()
+    page_div_end()
+    page_license()
+    page_end()
+
+######################################################################
 # CVS
 ######################################################################
 
@@ -827,6 +854,8 @@ def page_default(mozart_version):
     <dd>We now provide ebuilds for the Gentoo distribution of GNU/Linux.  Thus
     you can take advantage of <i>portage</i> to install and maintain your
     installation of Mozart.
+    <dt><a href="view.cgi?action=ipaq">iPaq Packages</a></dt>
+    <dd>Mozart if also available for your iPaq PDA.
     <dt><a href="view.cgi?action=cvs">CVS</a></dt>
     <dd>Mozart source code may also be downloaded directly from our anonymous
     CVS server.
@@ -863,6 +892,8 @@ elif ACTION == 'macosx':
     page_macosx(VERSION)
 elif ACTION == 'debian':
     page_debian(VERSION)
+elif ACTION == 'ipaq':
+    page_ipaq(VERSION)
 elif ACTION == 'cvs':
     page_cvs(VERSION)
 elif ACTION == 'print':
