@@ -998,14 +998,6 @@ void msgReceived(MsgContainer* msgC)
       receiveUnAskError(receiveAtOwner(OTI),toS,ec);
       break;
     }
-  case M_SEND_PING:
-    {
-      // the information received is not of any interest.
-      int unused;
-      DSite* fromS;
-      msgC->get_M_SEND_PING(fromS,unused);
-      break;
-    }
   case M_PING:
     {
       // Nothing specific needs to be done, the acknowledgement

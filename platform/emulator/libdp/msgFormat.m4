@@ -65,7 +65,7 @@ message(M_SEND_LAZY,3,Site,Index,Index2,FullTopTerm)
 message(M_UNASK_ERROR,3,Index,Site,Index2)
 
 message(M_REQUESTED,3,Index)
-message(M_SEND_PING,3,Site,Index)
+
 message(M_PING,4)
 
 message(C_PRESENT,5,String,Site)        //String is Version
