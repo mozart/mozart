@@ -191,6 +191,7 @@ define
          OutputDirectory: unit CurrentNode: unit NodeCounter: unit
          ToWrite: unit
          Split: unit
+         SomeSplit: unit
          % managing common attributes:
          Common: unit BodyCommon: unit
          ProgLang: unit
@@ -240,6 +241,7 @@ define
                         else unit
                         end
          Split <- Args.'split'
+         SomeSplit <- false
          CurrentNode <- "index.html"
          NodeCounter <- 0
          ToWrite <- nil
@@ -358,7 +360,7 @@ define
             %-----------------------------------------------------------
             % Document Structure
             %-----------------------------------------------------------
-            case Tag of book then HTML in
+            case Tag of book then HTML TopTOC in
                Floats <- nil
                FootNotes <- nil
                FigureCounters <- {NewDictionary}
@@ -370,6 +372,7 @@ define
                           OzDocToHTML, Process(M.3=back(...) $)
                        else EMPTY
                        end
+                       TopTOC
                        OzDocToHTML, Process(M.2='body'(...) $)
                        case {@MyBibliographyDB process($)} of unit then EMPTY
                        elseof VS then Title Label X HTML1 HTML in
@@ -383,6 +386,9 @@ define
                                       VERBATIM(VS)])   %--** VERBATIM?
                           OzDocToHTML, FinishNode(Title X HTML $)
                        end]
+               TopTOC = if @SomeSplit then EMPTY
+                        else SEQ([hr() {FormatTOC @TOC} hr()])
+                        end
                OzDocToHTML, MakeNode(@TopTitle SEQ(HTML))
                {@MyFontifier process(case @FontifyMode
                                      of color then 'html-color'
@@ -992,6 +998,7 @@ define
             andthen {Member {CondSelect M id unit}
                      {Dictionary.condGet @Meta 'html.split' nil}}
          then
+            SomeSplit <- true
             X = @CurrentNode#@TOC#@TOCMode
             NodeCounter <- @NodeCounter + 1
             CurrentNode <- 'node'#@NodeCounter#'.html'
@@ -1007,6 +1014,7 @@ define
       end
       meth PrepareBibNode(?X ?HTML)
          if @Split andthen {Dictionary.member @Meta 'html.split.bib'} then
+            SomeSplit <- true
             X = @CurrentNode#@TOC#@TOCMode
             CurrentNode <- 'bib.html'
             TOC <- nil
