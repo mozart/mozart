@@ -18,12 +18,24 @@
 #define inline
 #endif
 
+
+
+/* class Actor:
+     may be conditional or disjunction
+     member data:
+       flags: see enum ActorFlags
+       next: continuation for next clause
+       board: board in which actor is installed
+     */
+
+
 enum ActorFlags {
   Ac_None	= 0,
   Ac_Ask	= 1<<0,
   Ac_Wait	= 1<<1,
   Ac_Committed	= 1<<2,
   Ac_WaitTop	= 1<<3,
+  Ac_DisWait	= 1<<4,
 };
 
 // ------------------------------------------------------------------------
@@ -102,6 +114,10 @@ inline Bool Actor::isWait()
   return flags & Ac_Wait ? OK : NO;
 }
 
+inline Bool Actor::isDisWait()
+{
+  return flags & Ac_DisWait ? OK : NO;
+}
 
 inline void Actor::lastClause()
 {
@@ -118,7 +134,17 @@ inline void Actor::setCommitted()
   flags |= Ac_Committed;
 }
 
+void Actor::setDisWait()
+{
+  flags |= Ac_DisWait;
+}
+
 // ------------------------------------------------------------------------
+
+/* class AskActor:
+   member data
+     elsePC: programm counter of else
+     */
 
 AskActor::AskActor(Board *s,int prio,ProgramCounter elsepc,
 		   ProgramCounter p,RefsArray y,
@@ -140,6 +166,11 @@ AskActor *CastAskActor(Actor *a)
 }
 
 // ------------------------------------------------------------------------
+
+/* class WaitActor
+    member data
+      childs: list of childs
+      */
 
 WaitActor::WaitActor(Board *s,int prio,ProgramCounter p,RefsArray y,
 		     RefsArray g,RefsArray x,int i)
