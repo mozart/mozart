@@ -29,35 +29,45 @@ define
    LATEX2GIF = 'latex2gif'
 
    class LaTeXToGIFClass
-      attr DirName: unit N: unit
+      attr DirName: unit N: unit FileName: unit File: unit
       meth init(Dir)
          DirName <- Dir
          N <- 0
       end
-      meth convertMath(VS Display ?OutFileName) FileName File in
-         FileName = {OS.tmpnam}
-         File = {New Open.file init(name: FileName
-                                    flags: [write create truncate])}
-         {File write(vs: ('\\documentclass{report}\n'#
-                          '\\usepackage{wasysym}\n'#
-                          '\\pagestyle{empty}\n'#
-                          '\\begin{document}\n'#
-                          case Display of display then '\\[\n'#VS#'\n\\]\n'
+      meth convertMath(VS Display ?OutFileName)
+         LaTeXToGIFClass, OpenLaTex()
+         {@File write(vs: case Display of display then '\\[\n'#VS#'\n\\]\n'
                           [] inline then '$'#VS#'$\n'
-                          end#
-                          '\\end{document}\n'))}
-         {File close()}
+                          end#'\\clearpage\n')}
+         N <- @N + 1
+         OutFileName = 'latex'#@N#'.gif'
+      end
+      meth OpenLaTex()
+         case @File of unit then
+            FileName <- {OS.tmpnam}
+            File <- {New Open.file init(name: @FileName
+                                        flags: [write create truncate])}
+            {@File write(vs: ('\\documentclass{report}\n'#
+                              '\\usepackage{wasysym}\n'#
+                              '\\pagestyle{empty}\n'#
+                              '\\begin{document}\n'))}
+         else skip
+         end
+      end
+      meth process()
+         {@File write(vs: '\\end{document}\n')}
+         {@File close()}
          try
-            N <- @N + 1
-            OutFileName = 'math'#@N#'.gif'
             case
-               {OS.system LATEX2GIF#' '#FileName#' '#@DirName#'/'#OutFileName}
+               {OS.system LATEX2GIF#' '#@FileName#' '#@DirName}
             of 0 then skip
             elseof I then
-               {Exception.raiseError ozDoc(latexToGif VS I)}
+               {Exception.raiseError ozDoc(latexToGif I)}
             end
          finally
-            {OS.unlink FileName}
+            {OS.unlink @FileName}
+            File <- unit
+            FileName <- unit
          end
       end
    end
