@@ -1,7 +1,7 @@
 functor 
 import
    Tk
-   Widgets(popup)
+   Widgets(cardFrame)
    Graph(graph:GraphClass)
 export
    open:Open
@@ -22,25 +22,20 @@ export
    ninumber:NINumber
    nibyte:NIByte
 define
-	   SSites
-	   SActive
-	   SNumber
-OSites
-OActive
-ONumber
-BSites
-	   BActive
-BNumber
-NIList
-	   NINumber
-NIByte
-	   
-	   SiteVis={NewCell true}
-   OwnerVis={NewCell true}
-   BorrowVis={NewCell true}
-   NetInfoVis={NewCell true}
+   SSites
+   SActive
+   SNumber
+   OSites
+   OActive
+   ONumber
+   BSites
+   BActive
+   BNumber
+   NIList
+   NINumber
+   NIByte
    
-	   class TitleGraph from Tk.frame
+   class TitleGraph from Tk.frame
       feat graph 
 
       meth tkInit(parent:P title:T ...)=M
@@ -80,14 +75,16 @@ NIByte
 	 self.listbox=LB={New Tk.canvas tkInit(parent:self
 					       bd:2
 					       relief:sunken
-					       bg:lightgrey
+					       bg:white
 					       width:@width
 					       height:@height)}
 	 SY={New Tk.scrollbar tkInit(parent:self
 				     width:8)}
 	 {Tk.addYScrollbar LB SY}
-	 {Tk.batch [grid(LB row:0 column:0)
-		    grid(SY row:0 column:1 sticky:ns)]}
+	 {Tk.batch [grid(LB row:0 column:0 sticky:news)
+		    grid(SY row:0 column:1 sticky:ns)
+		    grid(columnconfigure self 0 weight:1)
+		    grid(rowconfigure self 0 weight:1)]}
 	 
 	 self.InternalHelpFun1 = proc{$ X} Y0 Y1
 				    DC=self.listbox
@@ -98,9 +95,9 @@ NIByte
 				    {DC tk(crea text 5 @cy text:X.text anchor:nw fill:X.fg tags:X.fgtag)}
 				    [_ Y0 _ Y1]={DC tkReturnListInt(bbox X.fgtag $)}
 				    cy<-Y1+1
-			       {DC tk(crea rect 0 Y0 1000 Y1+1 fill:X.bg tags:X.bgtag outline:X.bg)}
-			       {DC tk('raise' X.fgtag)}
-			    end
+				    {DC tk(crea rect 0 Y0 1000 Y1+1 fill:X.bg tags:X.bgtag outline:X.bg)}
+				    {DC tk('raise' X.fgtag)}
+				 end
 	 
 	 
       end
@@ -127,7 +124,7 @@ NIByte
 					    S=site(text:K.text
 						   key:K.key
 						   fg:{CondSelect K fg black}
-						   bg:{CondSelect K bg lightgrey}
+						   bg:{CondSelect K bg white}
 						   bgtag:T1
 						   fgtag:T2)
 					 in
@@ -184,148 +181,110 @@ NIByte
    end
    proc{Open}
       T={New Tk.toplevel tkInit(title:"Distribution Panel")}
-      SiteF
-      OwnerF
-      BorrowF
-      NetInfoF
+      CardF={New Widgets.cardFrame tkInit(parent:T padx:10 pady:10 width:900 height:190)}
+      SiteF OwnerF BorrowF NetInfoF
    in
       %% Site frame
-      SiteF={New Tk.frame tkInit(parent:T)}
+      SiteF={New Tk.frame tkInit(parent:CardF)}
       SSites={New SiteList tkInit(parent:SiteF)}
       SActive={New TitleGraph tkInit(parent:SiteF
 				     title:"#Activity/s"
-				 miny:1.0
+				     miny:1.0
 				     maxy:11.0
 				     dim:''
-				 fill:false)}
+				     fill:false)}
       SNumber={New TitleGraph tkInit(parent:SiteF
-				 title:"#Sites in store/s"
-				 miny:1.0
-				 maxy:11.0
-				 dim:''
-				 fill:true)}
+				     title:"#Sites in store/s"
+				     miny:1.0
+				     maxy:11.0
+				     dim:''
+				     fill:true)}
    
-   %% Owner frame
-   OwnerF={New Tk.frame tkInit(parent:T)}
-   OSites={New SiteList tkInit(parent:OwnerF)}
-   OActive={New TitleGraph tkInit(parent:OwnerF
-				 title:"#Active/s"
-				 miny:1.0
-				 maxy:11.0
-				 dim:''
-				 fill:true)}
-   ONumber={New TitleGraph tkInit(parent:OwnerF
-				 title:"#Entities/s"
-				 miny:1.0
-				 maxy:11.0
-				 dim:''
-				 fill:true)}
-   
-
-   %% Borrow frame
-   BorrowF={New Tk.frame tkInit(parent:T)}
-   BSites={New SiteList tkInit(parent:BorrowF)}
-   BActive={New TitleGraph tkInit(parent:BorrowF
-				 title:"#Active/s"
-				 miny:1.0
-				 maxy:11.0
-				 dim:''
-				 fill:true)}
-   BNumber={New TitleGraph tkInit(parent:BorrowF
-				 title:"#Entities/s"
-				 miny:1.0
-				 maxy:11.0
-				 dim:''
-				 fill:true)}
-   
-   %% Net info frame
-   NetInfoF={New Tk.frame tkInit(parent:T)}
-   NIList={New SiteList tkInit(parent:NetInfoF)}
-   NINumber={New TitleGraph tkInit(parent:NetInfoF
-				 title:"Number"
-				 miny:1.0
-				 maxy:11.0
-				 dim:''
-				 fill:false)}
-   NIByte={New TitleGraph tkInit(parent:NetInfoF
-				 title:"Byte"
-				 miny:1.0
-				 maxy:11.0
-				 dim:''
-				 fill:true)}
+      %% Owner frame
+      OwnerF={New Tk.frame tkInit(parent:CardF)}
+      OSites={New SiteList tkInit(parent:OwnerF)}
+      OActive={New TitleGraph tkInit(parent:OwnerF
+				     title:"#Active/s"
+				     miny:1.0
+				     maxy:11.0
+				     dim:''
+				     fill:true)}
+      ONumber={New TitleGraph tkInit(parent:OwnerF
+				     title:"#Entities/s"
+				     miny:1.0
+				     maxy:11.0
+				     dim:''
+				     fill:true)}
    
 
-   {Tk.send pack(SSites SActive SNumber side:left)}
-   {Tk.send pack(OSites OActive ONumber side:left)}
-   {Tk.send pack(BSites BActive BNumber side:left)}
-   {Tk.send pack(NIList NINumber NIByte side:left)}
+      %% Borrow frame
+      BorrowF={New Tk.frame tkInit(parent:CardF)}
+      BSites={New SiteList tkInit(parent:BorrowF)}
+      BActive={New TitleGraph tkInit(parent:BorrowF
+				     title:"#Active/s"
+				     miny:1.0
+				     maxy:11.0
+				     dim:''
+				     fill:true)}
+      BNumber={New TitleGraph tkInit(parent:BorrowF
+				     title:"#Entities/s"
+				     miny:1.0
+				     maxy:11.0
+				     dim:''
+				     fill:true)}
+   
+      %% Net info frame
+      NetInfoF={New Tk.frame tkInit(parent:CardF)}
+      NIList={New SiteList tkInit(parent:NetInfoF)}
+      NINumber={New TitleGraph tkInit(parent:NetInfoF
+				      title:"Number"
+				      miny:1.0
+				      maxy:11.0
+				      dim:''
+				      fill:false)}
+      NIByte={New TitleGraph tkInit(parent:NetInfoF
+				    title:"Byte"
+				    miny:1.0
+				    maxy:11.0
+				    dim:''
+				    fill:true)}
+   
 
-   {Tk.batch [grid(SiteF   row:0 column:0 sticky:news)
-	      grid(OwnerF  row:1 column:0 sticky:news)
-	      grid(BorrowF row:2 column:0 sticky:news)
-	      grid(NetInfoF row:3 column:0 sticky:news)]}
-	      
-   %%{Tk.send pack(SiteF OwnerF BorrowF fill:x)}
+      {Tk.batch [grid(SSites	row:0 column:0 sticky:news)
+		 grid(SActive	row:0 column:1 sticky:news)
+		 grid(SNumber	row:0 column:2 sticky:news) 
 
-   {T tkBind(event:'<3>'
-	     action:proc{$}
-		       {Widgets.popup
-			[if {Access SiteVis} then
-			    "Hide Site Frame"#proc{$}
-						 {Assign SiteVis false}
-						 {Tk.send grid(forget(SiteF))}
-					      end
-			 else
-			    "Show Site Frame"#
-			    proc{$}
-			       {Assign SiteVis true}
-			       {Tk.send grid(SiteF row:0 column:0 sticky:news)}
-			    end
-			 end
-			 if {Access OwnerVis} then
-			    "Hide Owner Frame"#
-			    proc{$}
-			       {Assign OwnerVis false}
-			       {Tk.send grid(forget(OwnerF))}
-			    end
-			 else
-			    "Show Owner Frame"#
-			    proc{$}
-			       {Assign OwnerVis true}
-			       {Tk.send
-				grid(OwnerF row:1 column:0 sticky:news)}
-			    end
-			 end
-			 if {Access BorrowVis} then
-			    "Hide Borrow Frame"#
-			    proc{$}
-			       {Assign BorrowVis false}
-			       {Tk.send grid(forget(BorrowF))}
-			    end
-			 else
-			    "Show Borrow Frame"#
-			    proc{$}
-			       {Assign BorrowVis true}
-			       {Tk.send
-				grid(BorrowF row:2 column:0 sticky:news)}
-			    end
-			 end
-			 if {Access NetInfoVis} then
-			    "Hide Net Info Frame"#
-			    proc{$}
-			       {Assign NetInfoVis false}
-			       {Tk.send grid(forget(NetInfoF))}
-			    end
-			 else
-			    "Show Net Info Frame"#
-			    proc{$}
-			       {Assign NetInfoVis true}
-			       {Tk.send
-				grid(NetInfoF row:3 column:0 sticky:news)}
-			    end
-			 end]
-			T}
-		    end)}
+		 grid(OSites	row:0 column:0 sticky:news)
+		 grid(OActive	 row:0 column:1 sticky:news)
+		 grid(ONumber	row:0 column:2 sticky:news) 
+
+		 grid(BSites	row:0 column:0 sticky:news)
+		 grid(BActive	row:0 column:1 sticky:news)
+		 grid(BNumber	row:0 column:2 sticky:news) 
+
+		 grid(NIList	row:0 column:0 sticky:news)
+		 grid(NINumber	row:0 column:1 sticky:news)
+		 grid(NIByte	row:0 column:2 sticky:news) 
+		 
+		 grid(columnconfigure SiteF 0 weight:1)
+		 grid(columnconfigure OwnerF 0 weight:1)
+		 grid(columnconfigure BorrowF 0 weight:1)
+		 grid(columnconfigure NetInfoF 0 weight:1)
+
+		 grid(rowconfigure SiteF 0 weight:1)
+		 grid(rowconfigure OwnerF 0 weight:1)
+		 grid(rowconfigure BorrowF 0 weight:1)
+		 grid(rowconfigure NetInfoF 0 weight:1)
+		]}
+
+      {CardF addCard(id:1 title:" Site Info " frame:SiteF)}
+      {CardF addCard(id:2 title:" Owner Info " frame:OwnerF)}
+      {CardF addCard(id:3 title:" Borrow Info " frame:BorrowF)}
+      {CardF addCard(id:4 title:" Net Info " frame:NetInfoF)}
+      
+      {Tk.batch [grid(columnconfigure T 0 weight:1)
+		 grid(rowconfigure T 0 weight:1)
+		 grid(CardF row:0 column:0 sticky:news)]}
    end
 end
 
