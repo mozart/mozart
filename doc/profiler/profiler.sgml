@@ -83,7 +83,7 @@ application below.  I call it <q/The 3 Little Piggies/, and it does
 nothing but waste time and memory:
 <code.extern display to="piggies.oz">
 The application can be compiled for profiling as follows:
-<code display proglang=sh/ozc -px piggies.oz/
+<code display proglang=sh/ozc -px piggies.oz -o piggies.exe/
 </p>
     </chapter>
 
@@ -92,7 +92,7 @@ The application can be compiled for profiling as follows:
       <p>The profiler interface is integrated in the Oz debugger
 tool <code proglang=sh/ozd/ and can be invoked using the <code/-p/
 option.  We can profile <q/The 3 Little Piggies/ as follows:
-<code display proglang=sh/ozd -p piggies -- --size 1000 --times 100/
+<code display proglang=sh/ozd -p piggies.exe -- --size 1000 --times 100/
 Note how the double dash separates <code proglang=sh/ozd/'s arguments
 from the application's arguments.  Shortly thereafter, the window
 shown below pops up:
