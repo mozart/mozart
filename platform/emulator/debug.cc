@@ -56,6 +56,20 @@ void dbgPrint(TaggedRef t)
   taggedPrint(t,ozconf.printDepth);
 }
 
+void debugStreamThread(Thread *tt) {
+  TaggedRef tail    = am.threadStreamTail;
+  TaggedRef newTail = OZ_newVariable();
+
+  TaggedRef pairlist = 
+    OZ_cons(OZ_pairA("thr",
+		     OZ_mkTupleC("#",2,makeTaggedConst(tt),
+				 OZ_int(tt->getID()))),
+	    OZ_nil());
+  
+  TaggedRef entry = OZ_recordInit(OZ_atom("thr"), pairlist);
+  OZ_unify(tail, OZ_cons(entry, newTail));
+  am.threadStreamTail = newTail;
+}
 
 // ------------------ explore a thread's taskstack ---------------------------
 
@@ -93,8 +107,11 @@ OZ_C_proc_begin(BIgetThreadByID, 2)
   OZ_declareArg(1,out);
   unsigned long n = OZ_intToC(id);
 
+#ifdef THREADARRAY
+  return OZ_unify(out, am.threadArray[n]);
+#else
   return OZ_unify(out, nil());
-  //return OZ_unify(out, am.threadArray[n]);
+#endif
 }
 OZ_C_proc_end
 
@@ -123,6 +140,12 @@ OZ_C_proc_begin(BIdisplayCode, 2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIbreakpoint, 0)
+{
+  am.breakflag = OK;
+  return PROCEED;
+}
+OZ_C_proc_end
 
 OZ_C_proc_begin(BInospy, 1)
 {
