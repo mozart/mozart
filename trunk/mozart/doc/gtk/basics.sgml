@@ -64,7 +64,7 @@
     When an event occurs, such as the press of a mouse button,
     the appropriate signal will be "emitted" by the widget that was pressed.
     This is how GTK+ does most of its useful work.
-    There are signals that all widgets inherit, such as "destroy",
+    There are signals that all widgets inherit, such as "delete-event",
     and there are signals that are widget specific,
     such as "toggled" on a toggle button.
   <Para class=apropos><Title/Connecting Handlers/
@@ -75,15 +75,21 @@
 <<<SignalId = {Button signalConnect(Signal SignalCallback $)}>>>
   <P>
     where <<Signal>> denotes the name of the signal you wish to catch
-    and <<SignalCallback>> denotes the function
+    and <<SignalCallback>> denotes the function or method name
     you wish to be called when it is caught. <<SignalId>> denotes an
     unique identifier which can be used to manually emit the signal.
   <Para class=apropos><Title/Callback Structure/
-    The function specified in the second argument
-    is called a "callback function", and should generally be of the form
+    The the second argument is called a "callback function",
+    and should generally be either of the form
 <<<proc {SignalCallback Args}
    &ellipsis; /* Computations */ &ellipsis;
 end>>>
+   <P>
+    or
+<<<meth signalCallBack(Args)
+   &ellipsis; /* Computations */ &ellipsis;
+end
+>>>
     where <<Args>> will be the list of arguments
     provided for the chosen signal.
   <Subsection><Title/Events/
