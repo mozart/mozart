@@ -14,6 +14,7 @@ local
    \insert manager
    \insert dialog
    \insert tkext
+   \insert tree
    \insert frontend
 
 in
