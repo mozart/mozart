@@ -63,7 +63,7 @@ distclean: clean
 
 clean:
         rm -f *.o $(WINEXES) *~
-        rm -f *.obj *.sym *.map *.mk* *.lk* *.err oz.res setup.res
+        rm -f *.obj *.sym *.map *.mk* *.lk* *.err oz.res
 
 Makefile: Makefile.in config.status
         ./config.status
@@ -79,16 +79,11 @@ depend:
 .cc.o:
         $(CXX) $(INCS) -c -o $@ $<
 
-setup.cc oz.cc ozengine.cc: version.h
-
-
-.cc.exe:
+.o.exe:
         $(CXX) $(INCS) -s -o $@ $<
 
 oz.exe: oz.o
         $(CXX) $(INCS) -s -o $@ $< -mwindows
-
-ozenginew.o ozengine.exe: oz.cc
 
 ozenginew.exe: ozenginew.o
         $(CXX) $(INCS) -s -o $@ $< -mwindows
@@ -96,6 +91,9 @@ ozenginew.exe: ozenginew.o
 ozwrapperw.exe: ozwrapperw.o
         $(CXX) $(INCS) -s -o $@ $< -mwindows
 
-
 version.h: $(SRCTOP)/OZVERSION
         echo "#define OZVERSION \"`$<`\"" > $@
+
+oz.o ozengine.o oztool.o ozwrapperw.o: misc.cc version.h
+
+ozengine.cc ozenginew.cc: oz.cc
