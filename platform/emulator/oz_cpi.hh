@@ -75,16 +75,21 @@ public:
   OZ_FiniteDomain(const OZ_FiniteDomain &);
   OZ_FiniteDomain(OZ_Term);
 
-  int constrainBool(void);
-  void copyExtension(void);
-  void dispose(void);
-
   int initRange(int, int);
   int initSingleton(int);
   int initDescr(OZ_Term);
   int initFull(void);
   int initEmpty(void);
   int initBool(void);
+
+  int getMidElem(void) const;
+  int getNextSmallerElem(int v) const;
+  int getNextLargerElem(int v) const;
+  int getSize(void) const { return size; }
+  int getMinElem(void) const { return min_elem; }
+  int getMaxElem(void) const { return max_elem; }
+  int getSingleElem(void) const;
+  OZ_Term getDescr(void) const;
 
   const OZ_FiniteDomain &operator = (const OZ_FiniteDomain &fd);
   OZ_Boolean operator == (const OZ_FDState) const;
@@ -104,17 +109,11 @@ public:
   int operator <= (const int);
   int operator >= (const int);
 
-  ostream &print(ostream &) const;
+  int constrainBool(void);
   OZ_Boolean isIn(int i) const;
-
-  int getMidElem(void) const;
-  int getNextSmallerElem(int v) const;
-  int getNextLargerElem(int v) const;
-  int getSize(void) const { return size; }
-  int getMinElem(void) const { return min_elem; }
-  int getMaxElem(void) const { return max_elem; }
-  int getSingleElem(void) const;
-  OZ_Term getDescr(void) const;
+  ostream &print(ostream &) const;
+  void copyExtension(void);
+  void dispose(void);
 };
 
 
@@ -126,7 +125,7 @@ ostream &operator << (ostream &ofile, const OZ_FiniteDomain &fd) {
 //-----------------------------------------------------------------------------
 // class OZ_Propagator
 
-// virtual base class; never create an object of this class
+// virtual base class; never create an object from this class
 class OZ_Propagator {
 public:
   OZ_Propagator(void) {}
@@ -136,19 +135,18 @@ public:
   static void operator delete(void *, size_t);
 
   OZ_Propagator * gc(void);
-
-  virtual size_t sizeOf(void) = 0;
-  virtual void gcRecurse(void) = 0;
-  virtual OZ_Return run(void) = 0;
-  virtual OZ_Term getArguments(void) const = 0;
-  virtual OZ_CFun getSpawner(void) const = 0;
-
   OZ_Boolean isEqualVarsPossible(void);
   OZ_Return replaceBy(OZ_Propagator *);
   OZ_Return replaceBy(OZ_Term, OZ_Term);
   OZ_Return replaceByInt(OZ_Term, int);
   OZ_Return postpone(void);
   OZ_Boolean postOn(OZ_Term);
+
+  virtual size_t sizeOf(void) = 0;
+  virtual void gcRecurse(void) = 0;
+  virtual OZ_Return run(void) = 0;
+  virtual OZ_Term getArguments(void) const = 0;
+  virtual OZ_CFun getSpawner(void) const = 0;
 };
 
 ostream& operator << (ostream& o, const OZ_Propagator &p);
@@ -156,17 +154,12 @@ ostream& operator << (ostream& o, const OZ_Propagator &p);
 //-----------------------------------------------------------------------------
 // class OZ_PropagatorExpect, etc.
 
-class OZ_expect_t {
-public:
+struct OZ_expect_t {
   int size, accepted;
   OZ_expect_t(int s, int a) : size(s), accepted(a) {}
 };
 
-enum OZ_PropagatorFlags {
-   NULL_flag,
-   OFS_flag,
-   CD_flag
-};
+enum OZ_PropagatorFlags { NULL_flag, OFS_flag, CD_flag };
 
 class OZ_PropagatorExpect;
 
@@ -184,6 +177,15 @@ public:
   OZ_PropagatorExpect(void);
   ~OZ_PropagatorExpect(void);
 
+  OZ_expect_t expectDomainDescription(OZ_Term, int = 4);
+  OZ_expect_t expectVar(OZ_Term t);
+  OZ_expect_t expectRecordVar(OZ_Term);
+  OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState);
+  OZ_expect_t expectIntVarAny(OZ_Term t) { return expectIntVar(t, fd_any); }
+  OZ_expect_t expectInt(OZ_Term);
+  OZ_expect_t expectLiteral(OZ_Term);
+  OZ_expect_t expectVector(OZ_Term, OZ_PropagatorExpectMeth);
+
   OZ_Return spawn(OZ_Propagator *, int prio = OZ_getPropagatorPrio(),
                   OZ_PropagatorFlags flags=NULL_flag);
   OZ_Return spawn(OZ_Propagator * p, OZ_PropagatorFlags flags) {
@@ -191,19 +193,6 @@ public:
   }
   OZ_Return suspend(OZ_Thread);
   OZ_Return fail(void);
-
-  OZ_expect_t expectDomainDescription(OZ_Term, int = 4);
-  OZ_expect_t expectVar(OZ_Term t);
-  OZ_expect_t expectRecordVar(OZ_Term);
-  OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState);
-    OZ_expect_t expectIntVarAny(OZ_Term t) {
-    return expectIntVar(t, fd_any);
-  }
-  OZ_expect_t expectInt(OZ_Term);
-  OZ_expect_t expectLiteral(OZ_Term);
-
-  OZ_expect_t expectVector(OZ_Term, OZ_PropagatorExpectMeth);
-
   OZ_Boolean isSuspending(OZ_expect_t r) {
     return (r.accepted == 0 || (0 < r.accepted && r.accepted < r.size));
   }
@@ -213,19 +202,10 @@ public:
 };
 
 
-
 //-----------------------------------------------------------------------------
-// class OZ_FDIntVar, etc.
+// class OZ_FDIntVar
 
-class OZ_VarState {
-protected:
-  enum State_e {loc_e = 1, glob_e = 2, spec_e = 3} state;
-public:
-  OZ_Boolean isState(State_e s) {return s == state;}
-  void setState(State_e s) {state = s;}
-};
-
-class OZ_FDIntVar : public OZ_VarState {
+class OZ_FDIntVar {
 private:
   OZ_FiniteDomain dom;
   OZ_FiniteDomain * domPtr;
@@ -233,6 +213,7 @@ private:
   OZ_Term * varPtr;
   int initial_size;
   enum Sort_e {sgl_e = 1, bool_e = 2, int_e  = 3} sort;
+  enum State_e {loc_e = 1, glob_e = 2, spec_e = 3} state;
 
   OZ_Boolean tell(void);
 public:
@@ -240,13 +221,18 @@ public:
   OZ_FDIntVar(OZ_Term v) { enter(v); }
 
   static void * operator new(size_t);
+  static void * operator new[](size_t);
   static void operator delete(void *, size_t);
+  static void operator delete[](void *, size_t);
 
   OZ_FiniteDomain &operator * (void) {return *domPtr;}
   OZ_FiniteDomain * operator -> (void) {return domPtr;}
-  OZ_Boolean isTouched(void) {return initial_size > domPtr->getSize();}
-  OZ_Boolean isSort(Sort_e s) {return s == sort;}
+
+  OZ_Boolean isTouched(void) const {return initial_size > domPtr->getSize();}
+  OZ_Boolean isSort(Sort_e s) const {return s == sort;}
   void setSort(Sort_e s) {sort = s;}
+  OZ_Boolean isState(State_e s) const {return s == state;}
+  void setState(State_e s) {state = s;}
 
   void ask(OZ_Term);
   void enter(OZ_Term);
@@ -255,16 +241,6 @@ public:
   void fail(void);
 };
 
-/*
-class OZ_ToStream {
-public:
-  OZ_Term term;
-  OZ_ToStream(OZ_Term t) : term(t) {};
-};
-
-ostream& operator << (ostream&, const OZ_ToStream &);
-inline OZ_ToStream OZ_toStream(OZ_Term t) { return OZ_ToStream(t); }
-*/
 //-----------------------------------------------------------------------------
 // Miscellaneous
 
