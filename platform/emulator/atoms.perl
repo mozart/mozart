@@ -44,7 +44,7 @@
           ( AtomException,  "exception"),
 
           ( AtomExport,     "export"),
-          ( AtomManager,    "manager"),
+          ( AtomObtain,     "obtain"),
           ( AtomBoot,       "Boot"),
 
           ( AtomNew,        "new"),
