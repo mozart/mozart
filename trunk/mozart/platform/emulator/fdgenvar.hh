@@ -69,7 +69,6 @@ public:
   // is X=val still valid, i.e. is val a smallint and is it still in the domain
   Bool valid(TaggedRef val);
 
-
   void setDom(OZ_FiniteDomain &fd) {
     Assert(fd != fd_bool);
     finiteDomain = fd;
@@ -95,7 +94,6 @@ public:
     fdSuspList[fd_det] = addSuspToList(fdSuspList[fd_det], 
 				       new SuspList(susp,NULL), home);
   }
-
 };
 
 inline Bool isGenFDVar(TaggedRef term);
