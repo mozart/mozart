@@ -22,21 +22,21 @@
   -->
 
   <chapter id=chapter.windows>
-    <title>MS Windows 9x/NT</title>
+    <title>Microsoft Windows 9x/NT</title>
 
     <p>Installing Mozart needs to be done in two steps.
 
 <list ENUM>
 <item> You have to install GNU Emacs first.
-<p>Download <Ref.Extern to="ftp://ftp.mozart-oz.org/pub/mozart/extras/emacs-20.3.1.exe">emacs-20.3.1.exe</Ref.Extern>
+<p>Download <Ref.Extern to="ftp://ftp.mozart-oz.org/pub/mozart/extras/emacs-20.3.1.exe">emacs-20.3.1.exe</Ref.Extern>,
 execute it, and follow the instructions.
 <p>
-More information about  GNU Emacs for MS Windows can be found under
+More information about  GNU Emacs for Windows can be found under
 <Ref.Extern to="http://www.cs.washington.edu/homes/voelker/ntemacs.html">
-http://www.cs.washington.edu/homes/voelker/ntemacs.html</Ref.Extern>
+http://www.cs.washington.edu/homes/voelker/ntemacs.html</Ref.Extern>.
 <P>
 <item> Afterwards you install Mozart. (If you upgrade to
-a newer version of Mozart you only have to perform the second step).
+a newer version of Mozart you only have to perform the second step.)
 <p>
 Get the self-extracting executable from the
 <Ref.Extern to="http://www.mozart-oz.org/download/winarchive.shtml">download page</Ref.Extern>,
