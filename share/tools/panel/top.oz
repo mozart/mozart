@@ -93,12 +93,12 @@ local
 	 InfoVisible <- {Not @InfoVisible}
       end
    end
-   
+
    class MemoryPage
       from UpdatePage
       prop final
       attr InfoVisible:  false
-      
+
       meth setInfo(I)
 	 InfoVisible <- I
       end
@@ -142,7 +142,7 @@ local
       in
 	 {Tk.batch case @InfoVisible then
 		      [pack(forget O.parameter.frame O.gc.frame)
-		       pack(O.showParameter.frame 
+		       pack(O.showParameter.frame
 			    after:O.usage.frame side:top fill:x padx:3)]
 		   else
 		      [pack(forget O.showParameter)
@@ -190,7 +190,7 @@ local
       end
 
    end
-   
+
    class OpiPage
       from UpdatePage
       prop final
@@ -218,9 +218,9 @@ local
    end
 
    fun {ProjectSnd X Y} Y end
-   
+
 in
-   
+
    class PanelTop
       from Tk.toplevel DialogClass
       prop
@@ -238,13 +238,14 @@ in
 	 MouseInside:   true
 	 DelayStamp:    0
 	 InfoVisible:   false
-      
+
       meth init(manager:Manager options:O)
 	 lock
 	    %% Switch to time detailed mode
 	    {System.set time(detailled:true)}
 	    Config = {Dictionary.get O config}
 	    Tk.toplevel,tkInit(title:              TitleName
+			       'class':            'OzTools'
 			       highlightthickness: 0
 			       withdraw:           true)
 	    {Tk.batch [wm(iconname   self TitleName)
@@ -257,7 +258,7 @@ in
 				 feature: panel
 				 font:    BoldFont
 				 menu:
-		        [command(label:   'About...'
+			[command(label:   'About...'
 				 action:  self # about
 				 font:    BoldFont
 				 feature: about)
@@ -284,7 +285,7 @@ in
 				 font:    BoldFont
 				 feature: options
 				 menu:
-		         [checkbutton(label: 'Configure'
+			 [checkbutton(label: 'Configure'
 				      font:    BoldFont
 				      variable: {New Tk.variable
 						 tkInit(Config)}
@@ -300,8 +301,6 @@ in
 				  feature: history)])
 		     ]
 		     nil}
-	    {Menu.panel.menu   tk(conf tearoff:false)}
-	    {Menu.options.menu tk(conf tearoff:false)}
 	    Frame = {New Tk.frame tkInit(parent: EventFrame
 					 highlightthickness: 0
 					 bd:                 4)}
@@ -462,9 +461,9 @@ in
 			      action:  proc {$ N}
 					  {System.set gc(tolerance: N)}
 				       end)]
-	            right:
+		    right:
 		       [button(text:   'Small'
-			       feature: small	   
+			       feature: small
 			       action:  proc {$}
 					   {System.set
 					    gc(max:       4 * MegaByteI
@@ -627,13 +626,13 @@ in
 				action:  proc {$}
 					    {System.set
 					     errors('thread': 10
-					            location: true
-					            hints:    true
+						    location: true
+						    hints:    true
 						    width:    10
 						    depth:    2)}
 					    {self update(false)}
 					 end)])]}
-         in
+	 in
 	    {Tk.batch [pack(Menu side:top fill:x)
 		       pack(Book)
 		       pack(Frame side:bottom)
@@ -746,7 +745,7 @@ in
 	    {self.memory  toggleInfo}
 	 end
       end
-      
+
       meth delay(ODS)
 	 DS UT
       in
@@ -764,7 +763,7 @@ in
 	    DelayStamp <- @DelayStamp + 1
 	 end
       end
-      
+
       meth enter
 	 {Thread.setThisPriority high}
 	 case
@@ -825,7 +824,7 @@ in
 		       else PanelTop,stop @DelayStamp
 		       end
 		    end
-	            case @UpdateTime==T then ~1
+		    case @UpdateTime==T then ~1
 		    else
 		       UpdateTime <- T
 		       PanelTop,stop
@@ -837,7 +836,7 @@ in
 	 elseof DS then {self delay(DS)}
 	 end
       end
-      
+
       meth optionUpdate
 	 {self.menu.options.update tk(entryconf state:disabled)}
 	 DialogClass, update
@@ -859,7 +858,7 @@ in
 	    {self.ps      clear}
 	 end
       end
-      
+
       meth tkClose
 	 lock
 	    {self.manager PanelTopClosed}
@@ -868,7 +867,7 @@ in
 	    {Wait _}
 	 end
       end
-      
+
    end
 
 
