@@ -50,7 +50,7 @@ void IHashTable::add(Literal *constant, ProgramCounter label)
   literalTable[hsh] = new HTEntry(constant,label,literalTable[hsh]);
 }
 
-void IHashTable::add(Literal *name, int arity, ProgramCounter label) 
+void IHashTable::add(Literal *name, SRecordArity arity, ProgramCounter label) 
 {
   int hsh = name->hash() % size;
   
