@@ -253,6 +253,7 @@ void Statistics::initCount() {
 
   currAbstr = NULL;
   PrTabEntry::profileReset();
+  OZ_CFunHeader::profileReset();
 }
 
 
