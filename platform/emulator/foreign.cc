@@ -795,6 +795,15 @@ int OZ_addBuiltin(char *name, int arity, OZ_CFun fun)
 OZ_Suspension OZ_makeSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
 				 OZ_Term *args,int arity)
 {
+#ifdef SHOW_SUSPENSIONS
+  static int xxx=0;
+  printf("Suspension(%d):",xxx++);
+  for(int i=0; i<arity; i++) {
+    printf("%s, ",tagged2String(args[i],2));
+  }
+  printf("\n");
+#endif
+
   am.currentBoard->incSuspCount();
   return (OZ_Suspension)
     new Suspension(new CFuncContinuation(am.currentBoard,
