@@ -1,7 +1,10 @@
 Hydra	mail -s "I have changed %s" mehl,scheidhr,tmueller
 Hydra/Compiler   mail -s "I have changed %s" henz
-Oz	mail -s "I have changed %s" mehl,scheidhr
+Oz	mail -s "I have changed %s" mehl
 Oz/lib	mail -s "I have changed %s" henz,wuertz
 Oz/lib/browser	mail -s "I have changed %s" latz
+Oz/handbook	mail -s "I have changed %s" scheidhr
+Oz/elisp	mail -s "I have changed %s" scheidhr
+Oz/papers	mail -s "I have changed %s" scheidhr
 Hydra	/usr/share/news/bin/inews -d hydra -n dfki.hydra.cvs -t "I have changed %s" -S
 Oz	/usr/share/news/bin/inews -d hydra -n dfki.hydra.cvs -t "I have changed  %s" -S
