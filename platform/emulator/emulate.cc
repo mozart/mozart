@@ -2041,7 +2041,7 @@ void engine() {
       ProgramCounter contPC = getLabelArg(PC+1);
 
       int prio = GET_CURRENT_PRIORITY();
-      int defPrio = conf.defaultPriority;
+      int defPrio = am.conf.defaultPriority;
       if (prio > defPrio) {
         prio = defPrio;
       }

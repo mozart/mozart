@@ -78,9 +78,9 @@ static int T_No_State = ~(T_Normal | T_SuspCont | T_SuspCCont | T_Nervous);
      Tail: pointer to the tail of the thread queue
      am.currentThread: pointer to the current thread
      am.rootThread: pointer to the root thread
-     conf.timeSlice: the overall time slice of a thread in msec
-     conf.defaultPriority: the user priority
-     conf.systemPriority: the system priority
+     am.conf.timeSlice: the overall time slice of a thread in msec
+     am.conf.defaultPriority: the user priority
+     am.conf.systemPriority: the system priority
    member data
      next: the next thread in the thread queue
      prev: the prev thread in the thread queue
@@ -104,7 +104,7 @@ void Thread::Init()
   Head = (Thread *) NULL;
   Tail = (Thread *) NULL;
    am.currentThread = (Thread *) NULL;
-   am.rootThread = new Thread(conf.systemPriority);
+   am.rootThread = new Thread(am.conf.systemPriority);
    am.currentTaskStack = NULL;
 }
 
@@ -192,7 +192,7 @@ Thread::Thread(int prio)
   init();
   flags = T_Normal;
   priority = prio;
-  u.taskStack = new TaskStack(conf.taskStackSize);
+  u.taskStack = new TaskStack(am.conf.taskStackSize);
 }
 
 // initialize the thread member data
@@ -390,7 +390,7 @@ Thread *Thread::GetFirst() {
 TaskStack *Thread::makeTaskStack()
 {
   Assert(isNormal() && !u.taskStack!=NULL);
-  u.taskStack = new TaskStack(conf.taskStackSize);
+  u.taskStack = new TaskStack(am.conf.taskStackSize);
   return u.taskStack;
 }
 

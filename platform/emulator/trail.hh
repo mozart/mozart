@@ -73,7 +73,7 @@ public:
 
   void popMark() {
     Assert(lastMark == tos-1);
-    lastMark -= (unsigned long) Stack::pop();
+    lastMark -= (unsigned int) Stack::pop();
   }
 
   int chunkSize()     { return (tos-1-lastMark)/2; }

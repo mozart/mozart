@@ -390,9 +390,9 @@ void getMemFromOS(size_t size)
 
   MemBlocks::list = new MemBlocks(heapStart,MemBlocks::list);
 
-  if (heapTotalSize > heapMaxSize)
-    statusMessage("Increasing heap memory to %d kilo bytes",
-                  heapTotalSize / 1024);
+  DebugCheck(heapTotalSize > heapMaxSize,
+             message("Increasing heap memory to %d kilo bytes",
+                     heapTotalSize / 1024));
 }
 
 
