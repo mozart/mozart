@@ -24,17 +24,15 @@
   -->
 
 <CHAPTER ID="chapter.mim">
-  <TITLE/Mozart Instance Messenger/
+  <TITLE/Mozart Instant Messenger/
     <AUTHOR.EXTERN TO="author.db" KEY="Nils.Franzen">
     <AUTHOR.EXTERN TO="author.db" KEY="Simon.Lindblom">
 
   <P><LIST CLASS=linkmenu>
       <ITEM/<REF.EXTERN
-      TO="http://www.sics.se/~nilsf/micq/clientz.oza"/Start Client
-      (45k - zipped)//
+      TO="http://www.sics.se/~nilsf/micq/clientz.oza"/Start Client//
       <ITEM/<REF.EXTERN
-      TO="http://www.sics.se/~nilsf/micq/client.oza"/Start Client
-      (95k)//
+      TO="http://www.sics.se/~nilsf/micq/"/More Information//
       <ITEM><REF.EXTERN TO="ozdoc:apptut" KEY="applets"/How to enable Applets/
     </LIST></P>
   <SECTION CLASS=unnumbered>
