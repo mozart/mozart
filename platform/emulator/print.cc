@@ -218,6 +218,20 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
       break;
     }
 
+  case BoolVariable:
+    {
+      stream << indent(offset)
+             << "<CV: "
+             << getVarName(v)
+             << " @"
+             << this;
+      if (isEffectiveList(suspList))
+        stream << " a" << suspList->length();
+
+      stream << " {0,1}>";
+      break;
+    }
+
   case OFSVariable:
     {
       stream << indent(offset)
@@ -225,7 +239,7 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
              << getVarName(v)
              << " @"
              << this;
-      if (isEffectiveList(suspList) == OK)
+      if (isEffectiveList(suspList))
         stream << " a" << suspList->length();
 
       stream << ' ';
@@ -1086,6 +1100,11 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
     stream << indent(offset) << "FD Domain:\n";
     ((GenFDVariable*)this)->getDom().printLong(stream, offset+3);
     break;
+
+  case BoolVariable:
+    stream << indent(offset) << "Boolean Domain: {0,1}";
+    break;
+
   case OFSVariable:
     {
       stream << indent(offset);
@@ -1096,6 +1115,7 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
       stream << endl;
       break;
     }
+
   case MetaVariable:
     {
       GenMetaVariable* me = (GenMetaVariable *) this;
