@@ -205,7 +205,7 @@ if test -n "${with_tcl}"
 then
     oz_tcl_lib_dir=$with_tcl/lib
     oz_tcl_inc_dir=$with_tcl/include
-    oz_tcl_lib_tcl_dir=$with_tcl/lib/tcl8.2
+    oz_tcl_lib_tcl_dir=$with_tcl/lib/tcl8.0
 fi
 
 AC_ARG_WITH(tcl_lib,
@@ -229,14 +229,14 @@ fi
 AC_MSG_CHECKING(for tcl library source)
 AC_ARG_WITH(tcl_lib_tcl,
     [--with-tcl-lib-tcl=<dir>
-    search tcl libraries (tcl) in <dir> (default: ${oz_tcl_lib_dir:-/usr/lib}/tcl8.2)])
+    search tcl libraries (tcl) in <dir> (default: ${oz_tcl_lib_dir:-/usr/lib}/tcl8.0)])
 
 if test -n "${with_tcl_lib_tcl}"
 then
     oz_tcl_lib_tcl_dir=$with_tcl_lib_tcl
 fi
 
-: ${oz_tcl_lib_tcl_dir=${oz_tcl_lib_dir:-/usr/lib}/tcl8.2}
+: ${oz_tcl_lib_tcl_dir=${oz_tcl_lib_dir:-/usr/lib}/tcl8.0}
 
 
 if test "$oz_coolness" != yes && test ! -f "$oz_tcl_lib_tcl_dir/init.tcl"
@@ -250,12 +250,12 @@ AC_MSG_RESULT($oz_tcl_lib_tcl_dir)
 oz_inc_path="$oz_tcl_inc_dir $oz_inc_path"
 oz_lib_path="$oz_tcl_lib_dir $oz_lib_path"
 
-OZ_CHECK_HEADER_PATH(tcl8.2.h,
+OZ_CHECK_HEADER_PATH(tcl8.0.h,
     AC_DEFINE(HAVE_TCL8_0_H),
     OZ_CHECK_HEADER_PATH(tcl.h,,
-	    AC_MSG_ERROR(required tcl8.2.h or tcl.h include file not found)))
+	    AC_MSG_ERROR(required tcl8.0.h or tcl.h include file not found)))
 
-OZ_CHECK_LIB_PATH(tcl8.2, Tcl_Init, ,
+OZ_CHECK_LIB_PATH(tcl8.0, Tcl_Init, ,
     OZ_CHECK_LIB_PATH(tcl, Tcl_Init, ,
 	OZ_CHECK_LIB_PATH(tcl80, Tcl_Init, ,
 	    AC_MSG_ERROR(required tcl80 or tcl library not found))))
@@ -269,7 +269,7 @@ if test -n "${with_tk}"
 then
     oz_tk_lib_dir=$with_tk/lib
     oz_tk_inc_dir=$with_tk/include
-    oz_tk_lib_tcl_dir=$with_tk/lib/tk8.2
+    oz_tk_lib_tcl_dir=$with_tk/lib/tk8.0
 fi
 
 AC_ARG_WITH(tk_lib,
@@ -293,14 +293,14 @@ fi
 AC_MSG_CHECKING(for tk library source)
 AC_ARG_WITH(tk_lib_tcl,
     [--with-tk-lib-tcl=<dir>
-    search tk libraries (tcl) in <dir> (default: ${oz_tk_lib_dir:-/usr/lib}/tk8.2)])
+    search tk libraries (tcl) in <dir> (default: ${oz_tk_lib_dir:-/usr/lib}/tk8.0)])
 
 if test -n "${with_tk_lib_tcl}"
 then
     oz_tk_lib_tcl_dir=$with_tk_lib_tcl
 fi
 
-: ${oz_tk_lib_tcl_dir=${oz_tk_lib_dir:-/usr/lib}/tk8.2}
+: ${oz_tk_lib_tcl_dir=${oz_tk_lib_dir:-/usr/lib}/tk8.0}
 
 if test "$oz_coolness" != yes && test ! -f "$oz_tk_lib_tcl_dir/tk.tcl"
 then
@@ -313,12 +313,12 @@ AC_MSG_RESULT($oz_tk_lib_tcl_dir)
 oz_inc_path="$oz_tk_inc_dir $oz_inc_path"
 oz_lib_path="$oz_tk_lib_dir $oz_lib_path"
 
-OZ_CHECK_HEADER_PATH(tk8.2.h,
+OZ_CHECK_HEADER_PATH(tk8.0.h,
     AC_DEFINE(HAVE_TK8_0_H),
     OZ_CHECK_HEADER_PATH(tk.h,,
-	    AC_MSG_ERROR(required tk8.2.h/tk.h include file not found)))
+	    AC_MSG_ERROR(required tk8.0.h/tk.h include file not found)))
 
-OZ_CHECK_LIB_PATH(tk8.2, Tk_Init, ,
+OZ_CHECK_LIB_PATH(tk8.0, Tk_Init, ,
     OZ_CHECK_LIB_PATH(tk, Tk_Init, ,
 	OZ_CHECK_LIB_PATH(tk80, Tk_Init, ,
 	    AC_MSG_ERROR(required lib "-ltk80/tk" not found))))
