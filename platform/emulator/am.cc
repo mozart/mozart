@@ -220,8 +220,9 @@ void AM::init(int argc,char **argv)
 
 
 // internal registers
-  statusReg   = (StatusBit)0;
-  xRegs       = allocateStaticRefsArray(NumberOfXRegisters);
+  statusReg    = (StatusBit)0;
+  criticalFlag = NO;
+  xRegs        = allocateStaticRefsArray(NumberOfXRegisters);
 
   rootBoard = new Board(NULL,Bo_Root);
   rootBoard->setInstalled();

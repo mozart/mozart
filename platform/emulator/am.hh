@@ -123,22 +123,25 @@ public:
   AM() {};
   void init(int argc,char **argv);
 
-  void setSFlagInt(StatusBit flag) {
+  Bool criticalFlag;  // if this is true we will NOT set Sflags
+                      // from within signal handlers
+
+  Bool isCritical() { return criticalFlag; }
+  
+  void setSFlag(StatusBit flag)
+  {
+    criticalFlag = OK;
     statusReg = (flag | statusReg);
+    criticalFlag = NO;
   }
-  void setSFlag(StatusBit flag) {
-    blockSignals();
-    setSFlagInt(flag);
-    unblockSignals();
-  }
-  void unsetSFlagInt(StatusBit flag) {
+
+  void unsetSFlag(StatusBit flag)
+  {
+    criticalFlag = OK;
     statusReg = (~flag & statusReg);
+    criticalFlag = NO;
   }
-  void unsetSFlag(StatusBit flag) {
-    blockSignals();
-    unsetSFlagInt(flag);
-    unblockSignals();
-  }
+
   Bool isSetSFlag(StatusBit flag) { return ( statusReg & flag ) ? OK : NO; }
   Bool isSetSFlag() { return statusReg ? OK : NO; }
 
