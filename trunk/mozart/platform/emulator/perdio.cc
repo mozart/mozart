@@ -347,6 +347,7 @@ typedef enum {
   DIF_CLASS,        // NA NAME obj class
   DIF_URL,              // gname url
   DIF_ARRAY,
+  DIF_FSETVALUE,	// finite set constant
   DIF_LAST
 } MarshallTag;
 
@@ -3367,6 +3368,16 @@ loop:
       break;
     }
 
+  case FSETVALUE:
+    {
+      PD((MARSHALL,"finite set value"));
+      OZ_FSetValue * fsetval = tagged2FSetValue(t);
+      marshallDIF(bs,DIF_FSETVALUE);
+      // tail recursion optimization
+      t = fsetval->getKnownInList();
+      goto loop;
+    }
+      
   case UVAR:
   case SVAR:
   case CVAR:
@@ -3891,6 +3902,16 @@ loop:
 
       *ret = makeTaggedConst(found);
       gotRef(bs,*ret);
+      return;
+    }
+
+  case DIF_FSETVALUE:
+    {
+      PD((UNMARSHALL,"finite set value"));
+      OZ_Term glb;
+      unmarshallTerm(bs,&glb);
+      extern void makeFSetValue(OZ_Term,OZ_Term*);
+      makeFSetValue(glb,ret);
       return;
     }
 
