@@ -165,10 +165,12 @@ public:
   Bool    cacIsAlive(void);
 
   Board * sCloneBoard(void);
+  Board * sCloneBoardDo(void);
   void    sCloneRecurse(void);
   void    sCloneMark(Board *);
 
   Board * gCollectBoard(void);
+  Board * gCollectBoardDo(void);
   void    gCollectRecurse(void);
   void    gCollectMark(Board *);
 
