@@ -190,6 +190,15 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
 
   case OFSVariable:
     {
+      stream << indent(offset)
+	     << "<CV: "
+	     << getVarName(v)
+	     << " @"
+	     << this;
+      if (isEffectiveList(suspList) == OK)
+        stream << " a" << suspList->length();
+
+      stream << ' ';
       if (depth<=1) {
           stream << "...(...)";
       } else {
@@ -590,6 +599,7 @@ PRINT(Suspension)
     if (isSurvSusp()) stream << 'S';
   if (isUnifySusp()) stream << 'U';
   if (isLocalSusp()) stream << 'L';
+  if (isTagged()) stream << 'T';
   stream << "] -> ";
   
   if (getCont())
@@ -965,7 +975,7 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v
     break;
   case OFSVariable:
     {
-      stream << ' ';
+      stream << indent(offset);
       if (depth<=1) {
           stream << "...(...)";
       } else {
@@ -974,6 +984,7 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v
           // me->getLabel()->print(stream, depth-1, offset);
           me->getTable()->print(stream, depth-1, offset+2);
       }
+      stream << endl;
       break;
     }
   case MetaVariable:
