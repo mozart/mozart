@@ -22,7 +22,7 @@ BOOTCOM=$(BOOTEMU) -u $(BUILDLIB)/ozc --
 BOOTENG=$(SRCTOP)/share/ozengine.sh
 BOOTOZL=$(BOOTENG) $(BUILDTOP)/share/lib/ozl
 BOOTOZTOOL="/bin/sh $(BUILDTOP)/platform/emulator/oztool.sh"
-BOOTOZTOOLINC="-I$(SRCTOP)/platform/emulator -I$(SRCTOP)/platform/tools/gump"
+BOOTOZTOOLINC="-I$(BUILDTOP)/platform/emulator -I$(SRCTOP)/platform/emulator -I$(SRCTOP)/platform/tools/gump"
 BOOTOZFLEX=$(BUILDTOP)/platform/tools/gump/ozflex/flex
 
 ifdef OZC
