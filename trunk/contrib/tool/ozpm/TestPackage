@@ -1,0 +1,6 @@
+name:This is a test package
+version:1.0
+file:QTk.ozf
+file:ozpm.exe
+description:Module for fast and easy GUI development in Oz
+pkg-name:QTk.pkg
