@@ -26,8 +26,6 @@ import
    NativeEmitter(coreResultType)
    Open
    Util
-   System(show)
-   Inspector(inspect)
 export
    'createFuncs'  : CreateFuncs
    'createFields' : CreateFields
@@ -99,7 +97,7 @@ define
     "   GetEvent   = GOZCore.getGdkEvent"
     "   class OzColorBase from OzBase"
     "      meth new(R G B)"
-    "         @object = {GOZCore.allocColor R G B}"
+    "         object <- {GOZCore.allocColor R G B}"
     "      end"
     "   end"
     "   \\insert 'GDKFIELDS.oz'"
@@ -497,6 +495,7 @@ define
          initStub   %% File Init Stub
          fileEnd    %% File End
          autoDetect %% Automatic Class Type detection
+         numConstr  %% Number of detected constructors
       meth init(Types AllTypes Name)
          @types      = Types
          @allTypes   = AllTypes
@@ -705,8 +704,9 @@ define
                               " = {Value.byNeed fun {$} class $"#
                               From#" "#Fields)
                TextFile, putS({Util.indent 2}#"meth toString($)")
-               TextFile, putS({Util.indent 3}#"\""#ValName#"\"")
+               TextFile, putS({Util.indent 3}#"\""#ClassSN#"\"")
                TextFile, putS({Util.indent 2}#"end")
+               numConstr <- 0
                GtkClasses, emitMethods({Util.firstLower ClassSN} Methods)
                TextFile, putS({Util.indent 1}#"end end}")
             end
@@ -753,7 +753,7 @@ define
                     then nil
                     else GtkClasses, checkResStart(RetType $)
                     end
-         ResStart = if IsNew then "@object = " elseif OA == 1
+         ResStart = if IsNew then "object <- " elseif OA == 1
                     then "Res = "#CheckRes else "" end
          ResEnd   = if IsNew orelse CheckRes == nil then "" else "}" end
          Self     = if HasSelf then "@object " else "" end
@@ -774,6 +774,14 @@ define
              proc {$ Line}
                 TextFile, putS(Line)
              end}
+         elsecase ShortName
+         of "ref" then
+            Var = if ResStart == nil then "" else " _" end
+         in
+            TextFile, putS({Util.indent 2}#"meth ref()")
+            TextFile, putS({Util.indent 3}#"{"#@module#
+                           "."#Name#" @object"#Var#"}")
+            TextFile, putS({Util.indent 2}#"end")
          else
             TextFile, putS({Util.indent 2}#"meth "#
                            {QuoteName ShortName}#"("#ArgStr#")")
@@ -784,10 +792,24 @@ define
             end
             TextFile, putS({Util.indent 3}#ResStart#"{"#@module#
                            "."#Name#" "#Self#CallStr#"}"#ResEnd)
-            if IsNew andthen {Not (@stdPrefix == "Gdk")}
-            then TextFile, putS({Util.indent 3}#"{self addToObjectTable}") end
+            if IsNew
+            then
+               numConstr <- (@numConstr + 1)
+               TextFile, putS({Util.indent 3}#"{self wrapperNew}")
+               TextFile, putS({Util.indent 3}#"{self addToObjectTable}")
+            end
             GtkClasses, handleOutArgs(CallArgs)
             TextFile, putS({Util.indent 2}#"end")
+            %% Gdk and GtkcanvasItems do not know the delete event
+            %% Therefore a different init is required
+            %% But of course only once for each object
+            if IsNew andthen (@numConstr == 1) andthen
+               ((Name == "gtkCanvasItemNew") orelse (@stdPrefix == "Gdk"))
+            then
+               TextFile, putS({Util.indent 2}#"meth wrapperNew")
+               TextFile, putS({Util.indent 3}#"signals <- {Cell.new nil}")
+               TextFile, putS({Util.indent 2}#"end")
+            end
          end
       end
       meth prepareArgs(InArgs I OutArgs $)

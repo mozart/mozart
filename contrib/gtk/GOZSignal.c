@@ -28,7 +28,10 @@
  * Signal Handling/Marshalling from Host Language <-> G(D|T)K
  */
 
+/* This holds the port variable */
 static OZ_Term signal_port = 0;
+/* Indicates that the marshaller has been called */
+static int had_events      = 0;
 
 OZ_BI_define (native_initialize_signal_port, 1, 0) {
   OZ_declareTerm (0, port);
@@ -42,17 +45,17 @@ OZ_BI_define (native_initialize_signal_port, 1, 0) {
 
 /*
  * Process all events in the queue and tell the host side
- * whether there were events or not
+ * whether there were events or not.
+ * had_events is set if the marshaller has been called.
+ * Otherwise, Oz would be notified too often.
  */
 
 OZ_BI_define (native_handle_pending_events, 0, 1) {
-  int had_events = 0;
-
   while (gtk_events_pending()) {
-    had_events = 1;
     gtk_main_iteration();
   }
   OZ_out(0) = (had_events ? OZ_true() : OZ_false());
+  had_events = 0;
   return OZ_ENTAILED;
 } OZ_BI_end
 
@@ -312,13 +315,21 @@ extern OZ_Term makeArgTerm(GtkArg *arg);
 
 static void signal_marshal(GtkObject *object, gpointer oz_id,
                            guint n_args, GtkArg *args) {
-  OZ_Term event = OZ_tuple(OZ_atom("event"), (n_args + 1));
+  OZ_Term event = OZ_nil();
 
-  OZ_putArg(event, 0, OZ_int((guint) oz_id));
-  for (int i = 0; i < n_args; i++) {
-    OZ_putArg(event, (i + 1), makeArgTerm(&(args[i])));
+  for (int i = n_args; i--;) {
+    event = OZ_cons(makeArgTerm(&(args[i])), event);
   }
+  event = OZ_cons(OZ_int((guint) oz_id), event);
+#if defined(DEBUG)
+  fprintf(stderr, "signal_marshal: sending `%s'\n", OZ_toC(event, 10, 10));
+#endif
   OZ_send(signal_port, event);
+
+  /* Now tell the oz side that meaningful events ocurred.
+   * This is checked during handle_pending_events.
+   */
+  had_events = 1;
 
   /* Assign Result Type; this is fake because it ALWAYS indicates non-handling.
    * This should be changed later on but will work fine (but slowly) for now.

@@ -21,7 +21,7 @@
 
 functor $
 import
-   Application
+   Application(exit)
    System(show)
    GTK at 'x-oz://system/gtk/GTK.ozf'
 define

@@ -21,7 +21,8 @@
 
 functor $
 import
-   Application
+   Application(exit)
+   System(show)
    GDK    at 'x-oz://system/gtk/GDK.ozf'
    GTK    at 'x-oz://system/gtk/GTK.ozf'
    Canvas at 'x-oz://system/gtk/GTKCANVAS.ozf'
@@ -42,7 +43,6 @@ define
          {Application.exit 0}
       end
    end
-
    Toplevel = {New CanvasToplevel new}
 
    %% Set up the Colors
