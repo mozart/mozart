@@ -752,5 +752,7 @@ void BIinitFD()
   BIadd("fdInB_body", 3, BIfdInB_body);
   BIadd("fdIsIntB", 2, BIfdIsIntB); 
   BIadd("fdIsIntB_body", 2, BIfdIsIntB_body);
+  BIadd("fdCardBIBin", 2, BIfdCardBIBin); 
+  BIadd("fdCardBIBin_body", 2, BIfdCardBIBin_body);
 }
 
