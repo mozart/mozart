@@ -1731,7 +1731,10 @@ OZ_Term OZ_FiniteDomainImpl::getAsList(void) const
 
   descr_type type = getType();
   if (type == fd_descr) {
-    return makeTaggedLTuple(new LTuple(min_elem == max_elem ? OZ_int(min_elem): oz_pairII(min_elem,max_elem), AtomNil));
+    return makeTaggedLTuple(new LTuple(min_elem == max_elem
+                                       ? OZ_int(min_elem)
+                                       : oz_pairII(min_elem, max_elem),
+                                       AtomNil));
   } else if (type == bv_descr) {
     return get_bv()->getAsList();
   } else {
