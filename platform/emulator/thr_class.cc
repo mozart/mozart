@@ -181,3 +181,11 @@ void Thread::ScheduleSolve (Board *b)
   b->setNervous();
   t->schedule();
 }
+
+
+TaskStack *Thread::makeTaskStack()
+{
+  Assert(isNormal() && !u.taskStack);
+  u.taskStack = new TaskStack(am.conf.taskStackSize);
+  return u.taskStack;
+}
