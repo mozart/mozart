@@ -535,6 +535,7 @@ local
      attr close:Close
      meth Close raise closeException end end
    end
+in
 fun {NewServer Class Init}
    S    % The stream of the port
    Port = {NewPort S}
