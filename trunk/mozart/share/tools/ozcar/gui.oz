@@ -583,13 +583,14 @@ in
 	       elseof ' forget' then
 		  ThreadManager,forget(T I)
 		  {self.StackText title(StackTitle)}
-		  Gui,rawStatus('I don\'t care anymore about thread #' # I)
+		  Gui,rawStatus(ForgetMessage # I # ForgetMessage2)
 	  
 	       elseof ' term' then
 		  ThreadManager,kill(T I)
-		  Gui,rawStatus('You have terminated thread #' # I)
+		  {self.StackText title(StackTitle)}
+		  Gui,rawStatus(TerminateMessage # I # TerminateMessage2)
 		  
-	       elseof ' stack' then  %% will go away, someday...
+	       elseof ' stack' then
 		  {Browse {Dbg.taskstack T MaxStackBrowseSize}}
 	       end
 	    end
