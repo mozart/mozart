@@ -6,7 +6,7 @@
 #
 
 : ${SRCDIR=.}
-: ${OZMAFILE=-b $SRCDIR/ozbatch.ozm}
+: ${OZMAFILE="-b $SRCDIR/ozbatch.ozm"}
 : ${OZPLATFORM=`$SRCDIR/../bin/ozplatform`}
 : ${OZPREFIX=/usr/local/oz}
 
