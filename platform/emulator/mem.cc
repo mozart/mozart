@@ -30,8 +30,7 @@ char *heapTop;
 
 char *heapEnd;
 
-int initMemoryManagement(void)
-{
+void initMemoryManagement(void) {
   // init free store list
   for(int i=0; i<freeListMaxSize; i++)
     FreeList[i] = NULL;
@@ -42,10 +41,7 @@ int initMemoryManagement(void)
    
   // allocate first chunck of memory;
   MemChunks::list = NULL;
-  Bool ret=getMemFromOS(0);
-  Assert(ret);
-
-  return 4711;
+  getMemFromOS(0);
 }
 
 
@@ -356,11 +352,11 @@ void *heapMallocOutline(size_t chunk_size)
 }
 
 
-Bool getMemFromOS(size_t sz)
+void getMemFromOS(size_t sz)
 {
   if ((int)sz > ozconf.heapBlockSize) {
-    warning("memory chunk too big (size=%d)\nTry\n\tsetenv OZHEAPBLOCKSIZE <x>\nwhere <x> is greater than %d.\n",sz,ozconf.heapBlockSize);
-    return NO;
+    warning("Memory chunk too big (size=%d)\nTry\n\tsetenv OZHEAPBLOCKSIZE <x>\nwhere <x> is greater than %d.\n",sz,ozconf.heapBlockSize);
+    osExit(1);
   }
 
   heapTotalSize += ozconf.heapBlockSize/KB;
@@ -403,14 +399,14 @@ Bool getMemFromOS(size_t sz)
 //  message("heapEnd: 0x%lx\n maxPointer: 0x%lx\n",heapEnd,maxPointer+1);
   if (tagValueOf(makeTaggedMisc(heapTop)) != heapTop) {
     warning("Oz adress space exhausted\n");
-    return NO;
+    osExit(1);
   }
   
   MemChunks::list = new MemChunks(heapEnd,MemChunks::list,ozconf.heapBlockSize);
   
   DebugCheck(heapTotalSize > ozconf.heapBlockSize/KB,
 	     message("Increasing heap memory to %d kilo bytes\n",heapTotalSize));
-  return OK;
+
 }
 
 
@@ -419,4 +415,5 @@ Bool getMemFromOS(size_t sz)
 #include "mem.icc"
 #undef inline
 #endif
+
 
