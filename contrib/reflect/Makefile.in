@@ -24,32 +24,34 @@ INSTALL_LIB     = $(INSTALL) -m 444
 INSTALL_DLL     = $(INSTALL) -m 555
 
 
-LIBS     = -lc -lm
+RM              = rm -f
 
-CFLAGS   =  -O3
-CFLAGS   += -UDEBUG
-CFLAGS   += -I$(SRCTOP)/platform/emulator
-CFLAGS   += -I$(BUILDTOP)/platform/emulator
+LIBS            = -lc -lm
 
-CXX      = oztool c++
-LD       = oztool ld
-DEPEND   = $(CXX) $(CFLAGS) -MM
+CFLAGS          =  -O3
+CFLAGS          += -UDEBUG
+CFLAGS          += -I$(SRCTOP)/platform/emulator
+CFLAGS          += -I$(BUILDTOP)/platform/emulator
 
-OZC      = ozc
-OZL      = ozl
-OZDEPEND = ozc -c -M
+CXX             = oztool c++
+LD              = oztool ld
+DEPEND          = $(CXX) $(CFLAGS) -MM
+
+OZC             = ozc
+OZL             = ozl
+OZDEPEND        = ozc -c -M
 
 #----------------------------------------------------------------------
 # Sources and targets
 #----------------------------------------------------------------------
 
-CSRCS   = reflect.cc
+CSRCS           = reflect.cc
 
-OZSRCS  = Reflect.oz
+OZSRCS          = Reflect.oz
 
-OZGSRCS =
+OZGSRCS         =
 
-OZFNCTS = $(OZSRCS:.oz=.ozf) $(OZGSRCS:.ozg=.ozf)
+OZFNCTS         = $(OZSRCS:.oz=.ozf) $(OZGSRCS:.ozg=.ozf)
 
 TARGETS         = Reflect.ozf reflect.so-$(PLATFORM)
 LIB_TARGETS     = $(TARGETS:%=$(LIB_DIR)/%)
@@ -76,9 +78,9 @@ $(LIB_DIR)/reflect.so-$(PLATFORM): reflect.so-$(PLATFORM)
 %.ozf: %.ozg
         $(OZC) -c --gump $< -o $@
 
-#
+#----------------------------------------------------------------------
 # C part
-#
+#----------------------------------------------------------------------
 
 %.so-$(PLATFORM): $(CSRCS:.cc=.o)
         $(LD) -o $@ $^ $(LDFLAGS) $(LIBS)
@@ -96,16 +98,16 @@ depend: Makefile $(CSRCS) $(OZSRCS) $(OZGSRCS)
         >> Makefile.deps
 
 clean:
-        -rm *.ozf
-        -rm *.o
-        -rm *.so-$(PLATFORM)
-        -rm *.so
-        -rm *.l
-        -rm *.C
-        -rm *~
+        $(RM) *.ozf
+        $(RM) *.o
+        $(RM) *.so-$(PLATFORM)
+        $(RM) *.so
+        $(RM) *.l
+        $(RM) *.C
+        $(RM) *~
 
 distclean: clean
-        -$(RM) config.* Makefile*
+        $(RM) config.* Makefile*
 
 include $(SRCTOP)/share/Makefile.boot
 
