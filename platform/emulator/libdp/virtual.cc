@@ -522,17 +522,18 @@ static Bool processProbes(unsigned long clock, void *poi)
 }
 
 //
-static Bool checkGCMsgChunks(unsigned long clock, 
-			     VSMsgChunkPoolManagerOwned *cpm)
+static Bool checkGCMsgChunks(unsigned long clock, void *poi)
+	
 {
+  VSMsgChunkPoolManagerOwned *cpm = (VSMsgChunkPoolManagerOwned*) poi;
   return ((clock > cpm->getLastGC() + VS_SEGS_MAXPHASE_MS) ? 
 	  TRUE : FALSE);
 }
 
 //
-static Bool processGCMsgChunks(unsigned long clock, 
-			       VSMsgChunkPoolManagerOwned *cpm)
+static Bool processGCMsgChunks(unsigned long clock, void *poi)
 {
+  VSMsgChunkPoolManagerOwned *cpm = (VSMsgChunkPoolManagerOwned*) poi;
   cpm->scavenge();
   return (TRUE);
 }
@@ -573,7 +574,7 @@ void virtualSitesExitImpl()
 
   //
   if (myVSChunksPoolManager) {
-    am.removeTask(myVSChunksPoolManager, checkGCMsgChunks);
+    //    am.removeTask(myVSChunksPoolManager, checkGCMsgChunks);
     delete myVSChunksPoolManager;
     myVSChunksPoolManager = (VSMsgChunkPoolManagerOwned *) 0;
   }
@@ -682,6 +683,7 @@ OZ_BI_define(BIVSnewMailbox,0,1)
 		    checkProbes, processProbes);
     am.registerTask((void *) myVSChunksPoolManager,
 		    checkGCMsgChunks, processGCMsgChunks);
+    
   }
 
   //
