@@ -245,11 +245,11 @@ oz_BFlag oz_isBetween(Board * to, Board * varHome) {
     // Just treat committed boards as ordinary boards, they
     // are not very common!
 
-    if (s == c)
+    if (s == c) {
       return B_BETWEEN;
-
-    if (s == varHome)
+    } else if (s == varHome) {
       return B_NOT_BETWEEN;
+    }
 
     Assert(!s->hasMarkOne() && !s->hasMarkTwo());
 
@@ -300,7 +300,7 @@ OZ_Return Board::merge(Board *bb, Bool sibling) {
   bb->incSuspCount(getSuspCount());
 
   // Merge constraints
-  DEBUG_CONSTRAIN_CVAR(("========== Merging ======\n"));
+  DEBUG_CONSTRAIN_CVAR(("\n==== Start Merging ===="));
 
 #ifdef DEBUG_CHECK
   am.setMerging();
@@ -311,6 +311,8 @@ OZ_Return Board::merge(Board *bb, Bool sibling) {
 #ifdef DEBUG_CHECK
   am.unsetMerging();
 #endif
+
+  DEBUG_CONSTRAIN_CVAR(("\n==== Stop Merging ===="));
 
   if (ret != PROCEED) return FAILED;
 
