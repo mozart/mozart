@@ -2468,7 +2468,7 @@ If it is, then remove it."
 
 (defun oz-to-coresyntax-region (start end)
   (interactive "r")
-  (oz-directive-on-region start end "\\core" ".ozc"))
+  (oz-directive-on-region start end "+core -codegen"))
 
 (defun oz-to-emulatorcode-buffer ()
   (interactive)
@@ -2486,24 +2486,15 @@ If it is, then remove it."
 
 (defun oz-to-emulatorcode-region (start end)
   (interactive "r")
-  (oz-directive-on-region start end "\\machine" ".ozm"))
+  (oz-directive-on-region
+   start end "-core +codegen +outputcode -feedtoemulator"))
 
-(defvar oz-temp-file (oz-make-temp-name "/tmp/ozemacs"))
-
-(defun oz-directive-on-region (start end directive suffix)
+(defun oz-directive-on-region (start end switches)
   "Applies a directive to the region."
-  (let ((file-1 (concat oz-temp-file ".oz"))
-	(file-2 (concat oz-temp-file suffix)))
-    (if (file-exists-p file-2)
-	(delete-file file-2))
-    (save-excursion
-      (let ((string (oz-get-region start end)))
-	(set-buffer (generate-new-buffer oz-temp-buffer))
-	(insert string)
-	(write-region (point-min) (point-max) file-1 nil 'quiet)
-	(kill-buffer (current-buffer))))
-    (oz-send-string (concat directive " '" file-1 "'")))
-  (oz-zmacs-stuff))
+  (oz-send-string (concat "\\pushSwitches\n"
+			  "\\switch " switches "\n"
+			  (oz-get-region start end) "\n"
+			  "\\popSwitches")))
 
 (defun oz-feed-region-browse (start end)
   "Feed the current region to the Oz Compiler.
@@ -2535,7 +2526,7 @@ of the procedure Browse."
 (defun oz-feed-file (file)
   "Feed a file to the Oz Compiler."
   (interactive "fFeed file: ")
-  (oz-send-string (concat "\\threadedfeed '" file "'")))
+  (oz-send-string (concat "\\feed '" file "'")))
 
 (defun oz-find-dvi-file ()
   "View a file from the Oz documentation directory."
