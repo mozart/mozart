@@ -6113,7 +6113,7 @@ OZ_C_proc_begin(BIgetPrintName,2)
     }
     break;
 
-  case UVAR:    return oz_unifyAtom(out, "_");
+  case UVAR:
   case SVAR:
   case CVAR:    return oz_unifyAtom(out, VariableNamer::getName(OZ_getCArg(0)));
   case LITERAL: {
