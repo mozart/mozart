@@ -349,7 +349,7 @@ ProgramCounter CodeArea::definitionStart(ProgramCounter from)
 ProgramCounter CodeArea::nextDebugInfo(ProgramCounter from)
 {
   ProgramCounter end = definitionEnd(from);
-  if (end==NOCODE) 
+  if (end==NOCODE || end==NOCODE_GLOBALVARNAME) 
     return NOCODE;
   
   ProgramCounter PC = from;

@@ -1499,6 +1499,12 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
     if (PC==C_EMPTY_STACK)
       break;
 
+    if (PC==C_DEBUG_CONT_Ptr) {
+      OzDebug *ozdeb = (OzDebug *) Y;
+      out = cons(OZ_mkTupleC("args",1,ozdeb->info), out);
+      continue;
+    }
+
     if (PC==C_CFUNC_CONT_Ptr) {
       OZ_CFun biFun    = (OZ_CFun) (void*) Y;
       RefsArray X      = (RefsArray) G;
