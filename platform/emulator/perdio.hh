@@ -351,8 +351,8 @@ GName *newGName(PrTabEntry *);
 
 PrTabEntry *findCodeGName(GName *);
 
-int loadURL(TaggedRef url, OZ_Term out);
-int loadURL(char *url, OZ_Term out);
+int loadURL(char *url, OZ_Term out, OZ_Term triggerVar);
+int loadURL(OZ_Term url, OZ_Term out, OZ_Term triggerVar);
 int perdioInit();
 
 // class ByteSource [Denys Duchier]
@@ -362,7 +362,7 @@ class ByteSource {
 public:
   virtual OZ_Return maybeSkipHeader();
   virtual OZ_Return getBytes(BYTE*,int&,int&);
-  virtual OZ_Return getTerm(OZ_Term);
+  virtual OZ_Return getTerm(OZ_Term,OZ_Term);
   virtual OZ_Return makeByteStream(ByteStream*&);
   virtual char*     emptyMsg();
 };
