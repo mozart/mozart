@@ -387,15 +387,20 @@ int FDIntervals::union_iv(const FDIntervals &x, const FDIntervals &y)
     }
 
     for (Bool cont = TRUE; cont; )
-      if (x_c < x.high && x.i_arr[x_c].left <= r+1 && r < x.i_arr[x_c].right) {
+      if (x_c < x.high &&
+          x.i_arr[x_c].left <= r + 1 && r <= x.i_arr[x_c].right) {
         r = x.i_arr[x_c].right;
         x_c += 1;
-      } else if (y_c < y.high && y.i_arr[y_c].left <= r+1 &&
-                 r < y.i_arr[y_c].right) {
+      } else if (y_c < y.high &&
+                 y.i_arr[y_c].left <= r + 1 && r <= y.i_arr[y_c].right) {
         r = y.i_arr[y_c].right;
         y_c += 1;
-      } else
+      } else {
         cont = FALSE;
+      }
+
+    for (; x_c < x.high && x.i_arr[x_c].right <= r; x_c += 1);
+    for (; y_c < y.high && y.i_arr[y_c].right <= r; y_c += 1);
 
     i_arr[z_c].right = r;
     z_c += 1;
