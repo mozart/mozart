@@ -134,7 +134,6 @@ local
 	       OP  = O.parameter
 	    in
 	       {OP.minSize    set(G.min div MegaByteI)}
-	       {OP.maxSize    set(G.max div MegaByteI)}
 	       {OP.free       set(G.free)}
 	       {OP.tolerance  set(G.tolerance)}
 	       {OG.active     set(G.on)}
@@ -142,7 +141,6 @@ local
 	       OP  = O.showParameter
 	    in
 	       {OP.minSize    set(G.min div MegaByteI)}
-	       {OP.maxSize    set(G.max div MegaByteI)}
 	    end
 	 end
       end
@@ -420,17 +418,8 @@ in
 			      dim:     'MB'
 			      init:    {Property.get gc}.min div MegaByteI
 			      action:  proc {$ N}
-					  S = Memory.options.parameter.maxSize
-				       in
-					  if {S get($)}<N then
-					     {S set(N)}
-					     {Property.put gc
-					      gc(min:N * MegaByteI
-						 max:N * MegaByteI)}
-					  else
-					     {Property.put gc
-					      gc(min:N * MegaByteI)}
-					  end
+					  {Property.put gc
+					   gc(min:N * MegaByteI)}
 				       end)
 			entry(text:    'Free:'
 			      feature: free
@@ -441,29 +430,6 @@ in
 					  {Property.put gc gc(free: N)}
 				       end
 			      dim:     '%')
-			entry(text:    'Maximal Size:'
-			      feature: maxSize
-			      min:     1
-			      max:     1024
-			      dim:     'MB'
-			      init:    local MS={Property.get gc}.max in
-					  if MS=<0 then 1024
-					  else MS div MegaByteI
-					  end
-				       end
-			      action:  proc {$ N}
-					  S = Memory.options.parameter.minSize
-				       in
-					  if {S get($)}>N then
-					     {S set(N)}
-					     {Property.put gc
-					      gc(min:N * MegaByteI
-						 max:N * MegaByteI)}
-					  else
-					     {Property.put gc
-					      gc(max:N * MegaByteI)}
-					  end
-				       end)
 			entry(text:    'Tolerance:'
 			      feature: tolerance
 			      max:     100
@@ -479,8 +445,7 @@ in
 			       feature: small
 			       action:  proc {$}
 					   {Property.put gc
-					    gc(max:       4 * MegaByteI
-					       min:       1 * MegaByteI
+					    gc(min:       1 * MegaByteI
 					       free:      75
 					       tolerance: 20)}
 					   {self update(false)}
@@ -489,8 +454,7 @@ in
 			       feature: medium
 			       action:  proc {$}
 					   {Property.put gc
-					    gc(max:       16 * MegaByteI
-					       min:       2  * MegaByteI
+					    gc(min:       2  * MegaByteI
 					       free:      80
 					       tolerance: 15)}
 					   {self update(false)}
@@ -499,8 +463,7 @@ in
 			       feature: large
 			       action:  proc {$}
 					   {Property.put gc
-					    gc(max:       64 * MegaByteI
-					       min:       8 * MegaByteI
+					    gc(min:       8 * MegaByteI
 					       free:      90
 					       tolerance: 10)}
 					   {self update(false)}
@@ -509,10 +472,7 @@ in
 		    feature: showParameter
 		    pack:    {Not Config}
 		    left:
-		       [size(text:    'Maximal Size:'
-			     feature: maxSize
-			     dim:     'MB')
-			size(text:    'Minimal Size:'
+		       [size(text:    'Minimal Size:'
 			     feature: minSize
 			     dim:     'MB')]
 		    right: nil)
@@ -714,7 +674,7 @@ in
 			    '%%\n'))}
 	       {ForAll
 		[priorities(high:unit medium:unit)
-		 gc(min:unit max:unit free:unit tolerance:unit on:unit)
+		 gc(min:unit free:unit tolerance:unit on:unit)
 		 messages(idle:unit gc:unit)
 		 print(depth:unit width:unit)
 		 errors(depth:unit width:unit 'thread':unit)]

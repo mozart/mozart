@@ -108,10 +108,8 @@ error include resources.hh before mozart.h
 #define RESIZESTACKMINSIZE 64 /* used for resizing a stack */
 
 #define TASKFRAMESIZE   3
-#define STACKMAXSIZE  8192 /* tasks */
 #define STACKMINSIZE    4    /* tasks */
 
-#define HEAPMAXSIZE	   64 * 1024 /* kByte   */
 #define HEAPMINSIZE	        1024 /* kByte   */
 #define HEAPFREE	          75 /* percent */
 #define HEAPTOLERANCE	          20 /* percent */
