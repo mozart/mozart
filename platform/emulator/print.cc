@@ -1051,7 +1051,7 @@ void Thread::printStream(ostream &stream, int depth)
 
   stream << (isSuspended() ? " (susp)" : " (run)");
 
-  stream << " Tasks #" << item.threadBody->taskStack.tasks();
+  stream << " Tasks #" << threadBody->taskStack.tasks();
 
   if ((getFlags ()) & T_ext)       stream << " ext";
   if ((getFlags ()) & T_tag)       stream << " tag";
@@ -1065,7 +1065,7 @@ void Thread::printLongStream(ostream &stream, int depth, int offset)
 {
   this->printStream(stream,depth);
   stream << endl;
-  item.threadBody->taskStack.printTaskStack(depth); //mm2: prints to stderr!
+  threadBody->taskStack.printTaskStack(depth); //mm2: prints to stderr!
 }
 
 void Propagator::printStream(ostream &stream, int depth)
