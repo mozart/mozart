@@ -149,6 +149,9 @@
 /* Define if your <sys/time.h> declares struct tm.  */
 #undef TM_IN_SYS_TIME
 
+/* Define if you have the sbrk function.  */
+#undef HAVE_SBRK
+
 /* Define if you have the getcwd function.  */
 #undef HAVE_GETCWD
 
