@@ -1720,7 +1720,7 @@ void marshalBorrowHeadSaved(MarshalerBuffer *bs, MarshalTag tag, DSite *ms,
 
 //
 // The problem with borrow entries is that they can go away.
-void discardBgorrowHeadSaved(DSite *ms, int oti,
+void discardBorrowHeadSaved(DSite *ms, int oti,
                             RRinstance *credit)
 {
   //
