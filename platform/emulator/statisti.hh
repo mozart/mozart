@@ -173,7 +173,7 @@ public:
   long sizeEnvs, numEnvAllocs, maxEnvSize;
 
   long fastcalls,optbicalls,nonoptcalls,inlinecalls,inlinedots,
-    sendmsg,applmeth,nonoptbicalls,nonoptsendmsg;
+    sendmsg,nonoptbicalls,nonoptsendmsg;
 
   long numNewName, numNewNamedName;
   long numThreads;

@@ -255,7 +255,7 @@ void Statistics::initCount() {
     lengthDerefs[i] = 0;
   }
 
-  fastcalls=optbicalls=nonoptcalls=inlinecalls=inlinedots=sendmsg=applmeth=0;
+  fastcalls=optbicalls=nonoptcalls=inlinecalls=inlinedots=sendmsg=0;
   nonoptbicalls=nonoptsendmsg=0;
   numNewName=numNewNamedName=0;
   numThreads=0;
@@ -404,14 +404,12 @@ void Statistics::printCount(char *file) {
 
   printDeref(out);
 
-  //int totCalls = fastcalls+optbicalls+nonoptcalls+inlinecalls+sendmsg+applmeth;
-  int totCalls = fastcalls+optbicalls+nonoptcalls+sendmsg+applmeth;
+  int totCalls = fastcalls+optbicalls+nonoptcalls+sendmsg;
 
   fprintf(out,"\nCalls\n");
   PrintVar(totCalls);
   PrintVarPercent(fastcalls,totCalls);
   PrintVarPercent(sendmsg,totCalls);
-  PrintVarPercent(applmeth,totCalls);
   PrintVarPercent(optbicalls,totCalls);
 
   int nonoptusercalls = nonoptcalls-nonoptbicalls-nonoptsendmsg;
