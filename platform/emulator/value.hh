@@ -31,7 +31,7 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        NameUnit,
        AtomKinded, AtomDet, AtomRecord, 
        // Atoms for System.get and System.set
-       AtomActive, AtomAtoms, AtomBuiltins, AtomCellHack, AtomCommitted, 
+       AtomActive, AtomAtoms, AtomBuiltins, AtomCommitted, 
        AtomMoreInfo, AtomTotal,
        AtomCloned, AtomCode, AtomCopy, AtomCreated, AtomDebug, AtomDepth, 
        AtomFeed, AtomForeign, AtomFree, AtomFreelist, AtomGC, AtomHigh, 

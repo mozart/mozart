@@ -32,7 +32,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   NameUnit,
   AtomKinded, AtomDet, AtomRecord, AtomLow,
   // Atoms for System.get and System.set
-  AtomActive, AtomAtoms, AtomBuiltins, AtomCellHack, AtomCommitted, 
+  AtomActive, AtomAtoms, AtomBuiltins, AtomCommitted, 
   AtomCloned, AtomCode, AtomCopy, AtomCreated, AtomDebug, AtomDepth, 
   AtomFeed, AtomForeign, AtomFree, AtomFreelist, AtomGC, AtomHigh, 
   AtomHints, AtomIdle, AtomInt, AtomInvoked, AtomLimits, AtomLoad, 
@@ -48,14 +48,14 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
 // Some often used constants
 void initLiterals()
 {
-  AtomNil   = makeTaggedAtom(NameOfNil);
-  AtomCons  = makeTaggedAtom(NameOfCons);
-  AtomPair  = makeTaggedAtom(NameOfPair);
-  AtomVoid  = makeTaggedAtom(NameOfVoid);
+  AtomNil   = makeTaggedAtom("nil");
+  AtomCons  = makeTaggedAtom("|");
+  AtomPair  = makeTaggedAtom("#");
+  AtomVoid  = makeTaggedAtom("_");
 
-  AtomBool  = makeTaggedAtom(NameOfBool);
-  AtomSup   = makeTaggedAtom(NameOfSup);
-  AtomCompl = makeTaggedAtom(NameOfCompl);
+  AtomBool  = makeTaggedAtom("bool");
+  AtomSup   = makeTaggedAtom("sup");
+  AtomCompl = makeTaggedAtom("compl");
 
   AtomEmpty     = makeTaggedAtom("");
   AtomUpper     = makeTaggedAtom("upper");
@@ -97,7 +97,6 @@ void initLiterals()
   AtomActive                = makeTaggedAtom("active");
   AtomAtoms                 = makeTaggedAtom("atoms");
   AtomBuiltins              = makeTaggedAtom("builtins");
-  AtomCellHack              = makeTaggedAtom("cellHack");
   AtomCommitted             = makeTaggedAtom("committed");
   AtomCloned                = makeTaggedAtom("cloned");
   AtomCode                  = makeTaggedAtom("code");
