@@ -165,8 +165,17 @@ OZ_C_proc_begin(BILazyNew,2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BILazyIs,2)
+{
+  OZ_declareArg(0,var);
+  OZ_declareArg(1,out);
+  return OZ_unify(out,isLazyVar(deref(var))?OZ_true():OZ_false());
+}
+OZ_C_proc_end
+
 static BIspec lazySpecs[] = {
   {"Lazy.new", 2, BILazyNew, 0},
+  {"Lazy.is" , 2, BILazyIs , 0},
   {0,0,0,0},
 };
 
