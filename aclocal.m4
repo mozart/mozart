@@ -285,8 +285,10 @@ changequote([,])
   fi
   if test -z "$oz_tmp_version"; then
     AC_MSG_RESULT([no (cannot find version)])
+  elif test $[$1] = no; then
+    AC_MSG_RESULT([no])
   else
-    AC_MSG_RESULT($[$1])
+    AC_MSG_RESULT([yes ($oz_tmp_version)])
   fi])
 
 dnl ==================================================================
@@ -307,16 +309,12 @@ AC_DEFUN(OZ_CXX_CHOOSE,[
       if oz_tmp=`$CXX --version 2>/dev/null`; then
         if expr "$oz_tmp" : egcs >/dev/null; then
 dnl I don't know what the appropriate version number is for egcs
-          :
-changequote(<,>)
-        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]*\)'`; then
-changequote([,])
-          AC_MSG_CHECKING($CXX version is at least OZ_VERSION_GXX)
-          OZ_CHECK_VERSION(oz_tmp_ok,$oz_tmp,OZ_VERSION_GXX)
-          AC_MSG_RESULT($oz_tmp_ok)
-          if test "$oz_tmp_ok" = no; then
+          AC_MSG_WARN([dont know how to check egcs version, assuming ok])
+	else
+	  OZ_PROG_VERSION_CHECK(oz_tmp_ok,$CXX,OZ_VERSION_GXX)
+	  if test "$oz_tmp_ok" = no; then
             AC_MSG_ERROR([
-configure found the GNU C++ compiler $CXX version $oz_tmp
+configure found the GNU C++ compiler $CXX version $oz_tmp_version
 but version] OZ_VERSION_GXX [or higher is required to build the
 system.  It can be retrieved from:
 
@@ -332,8 +330,6 @@ You may find a mirror archive closer to you by consulting:
 	http://www.gnu.org/order/ftp.html
 ])
           fi
-        else
-          AC_MSG_WARN([Could not check $CXX version, assuming ok])
         fi
       else
         AC_MSG_WARN([Could not check $CXX version, assuming ok])
@@ -438,16 +434,12 @@ AC_DEFUN(OZ_CC_CHOOSE,[
       if oz_tmp=`$CC --version 2>/dev/null`; then
         if expr "$oz_tmp" : egcs >/dev/null; then
 dnl I don't know what the appropriate version number is for egcs
-          :
-changequote(<,>)
-        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]*\)'`; then
-changequote([,])
-          AC_MSG_CHECKING($CC version is at least OZ_VERSION_GCC)
-          OZ_CHECK_VERSION(oz_tmp_ok,$oz_tmp,OZ_VERSION_GCC)
-          AC_MSG_RESULT($oz_tmp_ok)
+          AC_MSG_WARN([dont know how to check egcs version, assuming ok])
+	else
+          OZ_PROG_VERSION_CHECK(oz_tmp_ok,$CC,OZ_VERSION_GCC)
           if test "$oz_tmp_ok" = no; then
             AC_MSG_ERROR([
-configure found the GNU C compiler $CC version $oz_tmp
+configure found the GNU C compiler $CC version $oz_tmp_version
 but version] OZ_VERSION_GCC [or higher is required to build the
 system.  It can be retrieved from:
 
@@ -463,8 +455,6 @@ You may find a mirror archive closer to you by consulting:
 	http://www.gnu.org/order/ftp.html
 ])
           fi
-        else
-          AC_MSG_WARN([Could not check $CC version, assuming ok])
         fi
       else
         AC_MSG_WARN([Could not check $CC version, assuming ok])
