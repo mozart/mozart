@@ -761,8 +761,8 @@ void BIinitFD()
   BIadd("fdGenLinLessEqKillB_body", 4, BIfdGenLinLessEqKillB_body);
   BIadd("fdCardBI", 3, BIfdCardBI); 
   BIadd("fdCardBI_body", 3, BIfdCardBI_body);
-  BIadd("fdCardBIKill", 3, BIfdCardBIKill); 
-  BIadd("fdCardBIKill_body", 3, BIfdCardBIKill_body);
+  BIadd("fdCardBIKill", 4, BIfdCardBIKill); 
+  BIadd("fdCardBIKill_body", 4, BIfdCardBIKill_body);
   BIadd("fdCardNestableBI", 4, BIfdCardNestableBI); 
   BIadd("fdCardNestableBI_body", 4, BIfdCardNestableBI_body);
   BIadd("fdInB", 3, BIfdInB); 
