@@ -420,15 +420,14 @@ extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
 #endif
 
 #define OZ_ID_MAP 0
-#define OZ_in(N) OZ_args[OZ__LOC==OZ_ID_MAP?N:OZ__LOC[N]]
-#define OZ_out(N) OZ_args[OZ__LOC==OZ_ID_MAP?OZ_arity+N:OZ__LOC[OZ_arity+N]]
+#define OZ_in(N) _OZ_ARGS[_OZ_LOC==OZ_ID_MAP?N:_OZ_LOC[N]]
+#define OZ_out(N) _OZ_ARGS[_OZ_LOC==OZ_ID_MAP?_OZ_arity+N:_OZ_LOC[_OZ_arity+N]]
 #define OZ_result(V) OZ_out(0)=V
 
 #define OZ_BI_define(Name,Arity_IN,Arity_OUT)			\
 OZ_BI_proto(Name);						\
-OZ_Return _FUNDECL(Name,(OZ_Term OZ_args[],int OZ__LOC[])) {	\
-    const OZ_CFun OZ_self = Name;				\
-    const int OZ_arity = Arity_IN;
+OZ_Return _FUNDECL(Name,(OZ_Term _OZ_ARGS[],int _OZ_LOC[])) {	\
+    const int _OZ_arity = Arity_IN;
 
 #define OZ_BI_end }
 
@@ -528,12 +527,22 @@ void *VAR;					\
 
 #define OZ_C_proc_proto(Name)	OZ_BI_proto(Name)
 
-#define OZ_C_proc_begin(Name,arity)	OZ_BI_define(Name,arity,0)
+#define OZ_C_proc_begin(Name,arity)					  \
+OZ_BI_proto(Name);							  \
+OZ_Return _FUNDECL(Name,(OZ_Term _OZ_NEW_ARGS[],int _OZ_NEW_LOC[])) {	  \
+    const OZ_CFun OZ_self = Name;					  \
+    OZ_Term OZ_args[arity];						  \
+    const int OZ_arity = arity;						  \
+    { int i;								  \
+      for (i = arity; i--; ) {						  \
+        OZ_args[i]=_OZ_NEW_ARGS[_OZ_NEW_LOC==OZ_ID_MAP?i:_OZ_NEW_LOC[i]]; \
+    }									  \
+}
 
 #define OZ_C_proc_end			OZ_BI_end
 
 /* access arguments */
-#define OZ_getCArg(N) OZ_in(N)
+#define OZ_getCArg(N) OZ_args[N]
 
 /* useful macros and functions (mm 9.2.93) */
 
