@@ -89,8 +89,9 @@ static void lookupLabel(TaggedRef key, int *location) {
   int index;
 }
 
-%token <tagged> INTEGER FLOAT NIL ATOM TRUE FALSE UNIT NAME UNIQUENAME
-%token <tagged> FOREIGNPOINTER
+%token <tagged> INTEGER FLOAT NIL ATOM
+%token <tagged> TRUE FALSE UNIT NAMEDNAME COPYABLENAME UNIQUENAME
+%token <tagged> PREDICATEREF COPYABLEPREDICATEREF
 %token <index> XREGISTER YREGISTER GREGISTER
 %token LBL PID HT ONSCALAR ONRECORD GCI AMI
 
@@ -254,12 +255,27 @@ Name		: Bool
 		  { $$ = $1; }
 		| UNIT
 		  { $$ = OZ_unit(); }
-		| NAME
+		| NAMEDNAME
 		  {
 		    TaggedRef key = $1;
 		    TaggedRef theName;
 		    if (nameDict->getArg(key,theName) != PROCEED) {
-		      theName = OZ_newName();
+		      const char *s = tagged2Literal(key)->getPrintName();
+		      NamedName *lit = NamedName::newNamedName(s);
+		      theName = makeTaggedLiteral(lit);
+		      nameDict->setArg(key,theName);
+		    }
+		    $$ = theName;
+		  }
+		| COPYABLENAME
+		  {
+		    TaggedRef key = $1;
+		    TaggedRef theName;
+		    if (nameDict->getArg(key,theName) != PROCEED) {
+		      const char *s = tagged2Literal(key)->getPrintName();
+		      NamedName *lit = NamedName::newNamedName(s);
+		      lit->setFlag(Lit_isCopyableName);
+		      theName = makeTaggedLiteral(lit);
 		      nameDict->setArg(key,theName);
 		    }
 		    $$ = theName;
@@ -352,21 +368,6 @@ Dummy		: Integer
 
 PredicateRef	: UNIT
 		  { codeArea->writeAddress(NULL); }
-		| FOREIGNPOINTER
-		  {
-		    AbstractionEntry *predId;
-		    TaggedRef key = $1;
-		    TaggedRef abstrEntry;
-		    if (abstrEntryDict->getArg(key,abstrEntry) == PROCEED)
-		      predId =
-			(AbstractionEntry *) OZ_getForeignPointer(abstrEntry);
-		    else {
-		      predId = new AbstractionEntry(NO);
-		      abstrEntry = OZ_makeForeignPointer(predId);
-		      abstrEntryDict->setArg(key,abstrEntry);
-		    }
-		    codeArea->writeAddress(predId);
-		  }
 		| INTEGER
 		  {
 		    AbstractionEntry *predId = NULL;
@@ -378,6 +379,38 @@ PredicateRef	: UNIT
 			predId = (AbstractionEntry *) ToPointer(id);
 		      } else {
 			predId = new AbstractionEntry(NO);
+			abstrEntryDict->setArg(key,OZ_int(ToInt32(predId)));
+		      }
+		    }
+		    codeArea->writeAddress(predId);
+		  }
+		| PREDICATEREF
+		  {
+		    AbstractionEntry *predId = NULL;
+		    TaggedRef key = $1;
+		    if (OZ_intToC(key) != 0) {
+		      TaggedRef abstrEntry;
+		      if (abstrEntryDict->getArg(key,abstrEntry) == PROCEED) {
+			int id = OZ_intToC(abstrEntry);
+			predId = (AbstractionEntry *) ToPointer(id);
+		      } else {
+			predId = new AbstractionEntry(NO);
+			abstrEntryDict->setArg(key,OZ_int(ToInt32(predId)));
+		      }
+		    }
+		    codeArea->writeAddress(predId);
+		  }
+		| COPYABLEPREDICATEREF
+		  {
+		    AbstractionEntry *predId = NULL;
+		    TaggedRef key = $1;
+		    if (OZ_intToC(key) != 0) {
+		      TaggedRef abstrEntry;
+		      if (abstrEntryDict->getArg(key,abstrEntry) == PROCEED) {
+			int id = OZ_intToC(abstrEntry);
+			predId = (AbstractionEntry *) ToPointer(id);
+		      } else {
+			predId = new AbstractionEntry(OK);
 			abstrEntryDict->setArg(key,OZ_int(ToInt32(predId)));
 		      }
 		    }

@@ -2382,7 +2382,7 @@ $builtins = {
 
 
     ##* Compiler
-    ###* Compiler Misc
+    ###* OPI
 
     'setOPICompiler'	=> { in  => ['+object'],
 			     out => [],
@@ -2394,57 +2394,85 @@ $builtins = {
 			     BI  => BIgetOPICompiler,
 			     native => true},
 
-    'isBuiltin'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     BI  => BIisBuiltin,
-			     native => true},
+    ###* Misc
 
-    'getBuiltinName'	=> { in  => ['+value'],
-			     out => ['+atom'],
-			     BI  => BIgetBuiltinName,
-			     native => true},
+    'concatenateAtomAndInt' => { in  => ['+atom','+int'],
+				 out => ['+atom'],
+				 BI  => BIconcatenateAtomAndInt,
+				 native => true},
 
-    'nameVariable'	=> { in  => ['value','+atom'],
-			     out => [],
-			     BI  => BInameVariable,
-			     native => true},
+    'getProcInfo' => { in  => ['+procedure'],
+		       out => ['value'],
+		       BI  => BIgetProcInfo,
+		       native => true},
 
-    'newNamedName'	=> { in  => ['+atom'],
-			     out => ['+literal'],
-			     BI  => BInewNamedName,
-			     native => true},
+    'setProcInfo' => { in  => ['+procedure','value'],
+		       out => [],
+		       BI  => BIsetProcInfo,
+		       native => true},
 
-    'isUniqueName'	=> { in  => ['+value'],
-			     out => ['+bool'],
-			     BI  => BIisUniqueName,
-			     native => true},
+    'isBuiltin' => { in  => ['+value'],
+		     out => ['+bool'],
+		     BI  => BIisBuiltin,
+		     native => true},
 
+    'getBuiltinName' => { in  => ['+value'],
+			  out => ['+atom'],
+			  BI  => BIgetBuiltinName,
+			  native => true},
+
+    'nameVariable' => { in  => ['value','+atom'],
+			out => [],
+			BI  => BInameVariable,
+			native => true},
+
+    'newNamedName' => { in  => ['+atom'],
+			out => ['+literal'],
+			BI  => BInewNamedName,
+			native => true},
+
+    'newCopyableName' => { in  => ['+atom'],
+			   out => ['+literal'],
+			   BI  => BInewCopyableName,
+			   native => true},
+
+    'isCopyableName' => { in  => ['+value'],
+			  out => ['+bool'],
+			  BI  => BIisCopyableName,
+			  native => true},
+
+    'isUniqueName' => { in  => ['+value'],
+			out => ['+bool'],
+			BI  => BIisUniqueName,
+			native => true},
+
+    'newPredicateRef' => { in  => [],
+			   out => ['+foreignPointer'],
+			   BI  => BInewPredicateRef,
+			   native => true},
+
+    'newCopyablePredicateRef' => { in  => [],
+				   out => ['+foreignPointer'],
+				   BI  => BInewCopyablePredicateRef,
+				   native => true},
+
+    'isCopyablePredicateRef' => { in  => ['+foreignPointer'],
+				  out => ['+bool'],
+				  BI  => BIisCopyablePredicateRef,
+				  native => true},
+
+    'generateCopies' => { in  => ['+[value]'],
+			  out => ['+[value#value]'],
+			  BI  => BIgenerateCopies,
+			  native => true},
+
+    # will expire soon:
     'generateAbstractionTableID'=> { in  => ['+bool'],
 				     out => ['+foreignPointer'],
 				     BI  => BIgenerateAbstractionTableID,
 				     native => true},
 
-    'generateCopies'	=> { in  => ['+[value]'],
-			     out => ['+[value#value]'],
-			     BI  => BIgenerateCopies,
-			     native => true},
-
-    'concatenateAtomAndInt'	=> { in  => ['+atom','+int'],
-				     out => ['+atom'],
-				     BI  => BIconcatenateAtomAndInt,
-				     native => true},
-
-    'getProcInfo'	=> { in  => ['+procedure'],
-			     out => ['value'],
-			     BI  => BIgetProcInfo,
-			     native => true},
-
-    'setProcInfo'	=> { in  => ['+procedure','value'],
-			     out => [],
-			     BI  => BIsetProcInfo,
-			     native => true},
-
-    ###* RegSets for the Compiler
+    ###* RegSets
     'RegSet.new'	=> { in  => ['+int','+int'],
 			     out => ['+chunk'],
 			     BI  => BIregSet_new,
@@ -2495,7 +2523,12 @@ $builtins = {
 				     BI  => BIregSet_complementToList,
 				     native => true},
 
-    ###* Oz Parser
+    ###* Parser
+
+    'ozparser_fileExists'	=> { in  => ['+virtualString'],
+				     out => ['+bool'],
+				     bi  => ozparser_fileExists,
+				     native => true},
 
     'ozparser_parseFile'	=> { in  => ['+virtualString','+record'],
 				     out => ['+value'],
@@ -2507,13 +2540,7 @@ $builtins = {
 				      bi  => ozparser_parseVirtualString,
 				      native => true},
 
-    'ozparser_fileExists'	=> { in  => ['+virtualString'],
-				     out => ['+bool'],
-				     bi  => ozparser_fileExists,
-				     native => true},
-
-
-    ###* CodeArea: Allocation, Modification
+    ###* Assembler
 
     'newCodeBlock'	=> { in  => ['+int'],
 			     out => ['+int'],

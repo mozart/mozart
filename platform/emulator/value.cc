@@ -299,7 +299,7 @@ Name *Name::newName(Board *home)
   Name *ret = (Name*) heapMalloc(sizeof(Name));
   ret->init();
   ret->homeOrGName = ToInt32(home);
-  ret->setOthers(NameCurrentNumber++);
+  ret->setOthers(NameCurrentNumber += 1 << sizeOfCopyCount);
   ret->setFlag(Lit_isName);
   return ret;
 }
@@ -313,9 +313,26 @@ NamedName *NamedName::newNamedName(const char *pn)
   ret->init();
   Assert(am.onToplevel());
   ret->homeOrGName = ToInt32(am.currentBoard());
-  ret->setOthers(NameCurrentNumber++);
+  ret->setOthers(NameCurrentNumber += 1 << sizeOfCopyCount);
   ret->setFlag(Lit_isName|Lit_isNamedName);
   ret->printName = pn;
+  return ret;
+}
+
+
+NamedName *NamedName::generateCopy()
+{
+  COUNT(numNewNamedName);
+
+  NamedName *ret = (NamedName*) malloc(sizeof(NamedName));
+  ret->init();
+  //--** Assert(am.onToplevel() && isCopyableName());
+  ret->homeOrGName = ToInt32(am.currentBoard());
+  int seqNumber = getOthers();
+  setOthers(seqNumber++);
+  ret->setOthers(seqNumber);
+  ret->setFlag(Lit_isName|Lit_isNamedName);
+  ret->printName = printName;
   return ret;
 }
 

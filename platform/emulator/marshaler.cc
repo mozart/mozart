@@ -142,6 +142,7 @@ char *dif_names[DIF_LAST] = {
   "remote",
   "virtual",
   "perm",
+  "copyablename",
   "passive"
 };
 
@@ -686,6 +687,10 @@ loop:
 	marshalDIF(bs,DIF_UNIQUENAME);
 	marshalString(lit->getPrintName(),bs);	
 	PD((MARSHAL,"unique name: %s",lit->getPrintName()));
+      } else if (lit->isCopyableName()) {
+	marshalDIF(bs,DIF_COPYABLENAME);
+	marshalString(lit->getPrintName(),bs);
+	PD((MARSHAL,"copyable name: %s",lit->getPrintName()));
       } else {
 	marshalDIF(bs,DIF_NAME);
 	GName *gname = ((Name*)lit)->globalize();
@@ -931,6 +936,18 @@ loop:
 	*ret = makeTaggedLiteral(aux);
 	addGName(gname,*ret);
       }
+      delete printname;
+      gotRef(bs,*ret);
+      return;
+    }
+
+  case DIF_COPYABLENAME:
+    {
+      char *printname = unmarshalString(bs);
+
+      NamedName *aux = NamedName::newNamedName(ozstrdup(printname));
+      aux->setFlag(Lit_isCopyableName);
+      *ret = makeTaggedLiteral(aux);
       delete printname;
       gotRef(bs,*ret);
       return;
