@@ -363,6 +363,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case ALLOCATEL9:
     case ALLOCATEL10:
     case SHALLOWTHEN:
+    case RELEASEOBJECT:
           /* Commands with no args.   */
       fprintf(ofile, "\n");       
       DISPATCH();
@@ -401,7 +402,10 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case CREATEVARIABLEX: 
     case CREATEVARIABLEY: 
     case CREATEVARIABLEG: 
-	  /* OP Reg       */
+    case GETSELFX:
+    case GETSELFY:
+    case GETSELFG:
+      /* OP Reg       */
       fprintf(ofile, "(%d)\n", regToInt(getRegArg(PC+1)));
       DISPATCH();
 
@@ -536,6 +540,17 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       }
       DISPATCH();
       
+    case INLINEAT:
+    case INLINEASSIGN:
+      {
+	TaggedRef literal = getLiteralArg(PC+1);
+	fprintf (ofile,
+		 "(%s,X[%d])\n",
+		 OZ_toC(literal),
+		 regToInt(getRegArg(PC+2)));
+      }
+      DISPATCH();
+      
     case INLINEEQEQ:
       fprintf (ofile,
 	       "(%s,X[%d],X[%d],X[%d],%d)\n",
@@ -615,7 +630,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case WEAKDETG: 
     case DETX: 
     case DETY: 
-    case DETG: 
+    case DETG:
 	  /* ***type 3a:    OP Reg Int      */
       {
 	Reg reg = regToInt(getRegArg(PC+1));
@@ -794,9 +809,11 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case THREAD:
     case JOB:
     case SAVECONT:
+    case SETMODETODEEP:
 	  /* ***type 8:    OP Label */
       fprintf(ofile, "(@ 0x%x)\n", getLabelArg (PC+1));
       DISPATCH();
+
     case BRANCHONVARX: 
     case BRANCHONVARY: 
     case BRANCHONVARG: 
