@@ -1336,7 +1336,7 @@ char* OZ_vsToC(OZ_Term t,int*n)
   char * s;
   if (OZ_isNil(t)) {
     static char *null = "";
-    *n = 0;
+    if (n!=0) *n = 0;
     return null;
   }
   else if (OZ_isAtom(t)) {
