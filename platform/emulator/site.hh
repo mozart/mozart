@@ -166,7 +166,7 @@ public:
   Bool hasGCFlag() { return (flags & NSITE_GC_MARK); }
   void marshalSite(MsgBuffer *buf) {
     // can be optimized: DIF_PASSIVE is not really needed;
-    buf->put(DIF_PASSIVE);
+    marshalDIF(buf,DIF_PASSIVE);
     marshalBaseSite(buf);
   }
 };
