@@ -935,7 +935,52 @@ fi
 
   
   
-#OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
+  
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    # Extract the first word of "oztool", so it can be a program name with args.
+set dummy oztool; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:950: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$OZTOOL" in
+  /*)
+  ac_cv_path_OZTOOL="$OZTOOL" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_OZTOOL="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+OZTOOL="$ac_cv_path_OZTOOL"
+if test -n "$OZTOOL"; then
+  echo "$ac_t""$OZTOOL" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+    OZTOOL=`echo $OZTOOL | sed -e "s|//|/|g"`
+    if test ! -n "$OZTOOL"
+    then
+	OZTOOL=undefined
+	OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh"
+    fi
+    
 
 
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
@@ -948,7 +993,7 @@ fi
     # Extract the first word of "ozengine", so it can be a program name with args.
 set dummy ozengine; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:952: checking for $ac_word" >&5
+echo "configure:997: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZENGINE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -994,7 +1039,7 @@ fi
     # Extract the first word of "ozc", so it can be a program name with args.
 set dummy ozc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:998: checking for $ac_word" >&5
+echo "configure:1043: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1040,7 +1085,7 @@ fi
     # Extract the first word of "ozl", so it can be a program name with args.
 set dummy ozl; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1044: checking for $ac_word" >&5
+echo "configure:1089: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1231,6 +1276,7 @@ s%@INSTALL_DATA@%$INSTALL_DATA%g
 s%@INSTALL_DIR@%$INSTALL_DIR%g
 s%@HOMEURL@%$HOMEURL%g
 s%@HOMECACHE@%$HOMECACHE%g
+s%@OZTOOL@%$OZTOOL%g
 s%@OZENGINE@%$OZENGINE%g
 s%@OZC@%$OZC%g
 s%@OZL@%$OZL%g
