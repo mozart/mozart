@@ -51,10 +51,16 @@ public:
   WidthPropagator(OZ_Term r, OZ_Term w)
     : rawrec(r), rawwid(w) {}
 
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_collectHeapTerm(rawrec,rawrec);
-    OZ_collectHeapTerm(rawwid,rawwid);
+  virtual void gCollect(void) {
+    oz_gCollectTerm(rawrec,rawrec);
+    oz_gCollectTerm(rawwid,rawwid);
   }
+
+  virtual void sClone(void) {
+    oz_sCloneTerm(rawrec,rawrec);
+    oz_sCloneTerm(rawwid,rawwid);
+  }
+
   virtual size_t sizeOf(void) { return sizeof(WidthPropagator); }
   virtual OZ_Return propagate(void);
   virtual OZ_PropagatorProfile * getProfile(void) const {return &profile; }
@@ -71,14 +77,23 @@ public:
                          OZ_Term FH1, OZ_Term FT1)
     : X(X1), K(K1), L(L1), FH(FH1), FT(FT1) {}
 
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_collectHeapTerm(X,X);
-    OZ_collectHeapTerm(K,K);
-    OZ_collectHeapTerm(L,L);
+  virtual void gCollect(void) {
+    oz_gCollectTerm(X,X);
+    oz_gCollectTerm(K,K);
+    oz_gCollectTerm(L,L);
     if (FH)
-      OZ_collectHeapTerm(FH,FH);
+      oz_gCollectTerm(FH,FH);
     if (FT)
-      OZ_collectHeapTerm(FT,FT);
+      oz_gCollectTerm(FT,FT);
+  }
+  virtual void sClone(void) {
+    oz_sCloneTerm(X,X);
+    oz_sCloneTerm(K,K);
+    oz_sCloneTerm(L,L);
+    if (FH)
+      oz_sCloneTerm(FH,FH);
+    if (FT)
+      oz_sCloneTerm(FT,FT);
   }
   virtual size_t sizeOf(void) { return sizeof(MonitorArityPropagator); }
   virtual OZ_Return propagate(void);

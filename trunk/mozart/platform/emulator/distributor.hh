@@ -37,7 +37,9 @@ public:
   virtual int getAlternatives(void) = 0;
   virtual int commit(Board *, int, int) = 0;
 
-  virtual Distributor * gc(void) = 0;
+  virtual Distributor * gCollect(void) = 0;
+  virtual Distributor * sClone(void) = 0;
+
   virtual void dispose(void) = 0;
 
 };
@@ -72,7 +74,8 @@ public:
 
   DistBag * merge(DistBag * b);
 
-  DistBag * gc(void);
+  DistBag * gCollect(void);
+  DistBag * sClone(void);
 
 };
 

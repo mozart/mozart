@@ -1447,24 +1447,23 @@ Thread* pendThreadResumeFirst(PendThread **pt){
   return t;}
 
 
-// GARBAGE COLLECTION HACK
 inline
-void OZ_collectHeapTermUnsafe(TaggedRef & frm, TaggedRef & to) {
+void oz_gCollectTermUnsafe(TaggedRef & frm, TaggedRef & to) {
   if (frm)
-    OZ_collectHeapTerm(frm,to);
+    oz_gCollectTerm(frm,to);
   else
     to=frm;
 }
 
-void gcPendThreadEmul(PendThread **pt)
+void gCollectPendThreadEmul(PendThread **pt)
 {
   PendThread *tmp;
   while (*pt!=NULL) {
-    tmp=new PendThread(SuspToThread((*pt)->thread->gcSuspendable()),(*pt)->next);
+    tmp=new PendThread(SuspToThread((*pt)->thread->gCollectSuspendable()),(*pt)->next);
     tmp->exKind = (*pt)->exKind;
-    OZ_collectHeapTermUnsafe((*pt)->old,tmp->old);
-    OZ_collectHeapTermUnsafe((*pt)->nw,tmp->nw);
-    OZ_collectHeapTermUnsafe((*pt)->controlvar,tmp->controlvar);
+    oz_gCollectTermUnsafe((*pt)->old,tmp->old);
+    oz_gCollectTermUnsafe((*pt)->nw,tmp->nw);
+    oz_gCollectTermUnsafe((*pt)->controlvar,tmp->controlvar);
     *pt=tmp;
     pt=&(tmp->next);
   }

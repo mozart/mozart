@@ -183,18 +183,23 @@ public:
     suspList = suspList->appendToAndUnlink(lv->suspList, reset_local);
   }
 
-  Bool gcIsMarked(void) {
+  Bool cacIsMarked(void) {
     return IsMarkedPointer(suspList,1);
   }
-  TaggedRef * gcGetFwd(void) {
-    Assert(gcIsMarked());
+  TaggedRef * cacGetFwd(void) {
+    Assert(cacIsMarked());
     return (TaggedRef *) UnMarkPointer(suspList,1);
   }
 
-  void           gcMark(Bool, TaggedRef *);
-  OzVariable *   gcVarInline();
-  OzVariable *   gcVar();
-  void           gcVarRecurse(void);
+  void           gCollectMark(TaggedRef *);
+  OzVariable *   gCollectVarInline();
+  OzVariable *   gCollectVar();
+  void           gCollectVarRecurse(void);
+
+  void           sCloneMark(TaggedRef *);
+  OzVariable *   sCloneVarInline();
+  OzVariable *   sCloneVar();
+  void           sCloneVarRecurse(void);
 
   void setStoreFlag(void) {
     suspList = (SuspList *) (((long) suspList) | STORE_FLAG);

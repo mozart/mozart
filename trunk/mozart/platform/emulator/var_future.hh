@@ -47,7 +47,8 @@ public:
   OZ_Return valid(TaggedRef /* val */) {
     return TRUE;
   }
-  void gcRecurse(void);
+  void gCollectRecurse(void);
+  void sCloneRecurse(void);
   OZ_Return addSusp(TaggedRef*, Suspendable *, int);
   void dispose(void) {
     disposeS();

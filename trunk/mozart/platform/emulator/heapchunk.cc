@@ -43,7 +43,13 @@ public:
   }
 
   virtual
-  OZ_Extension *gcV(void) {
+  OZ_Extension *gCollectV(void) {
+    HeapChunk * ret = new HeapChunk(chunk_size);
+    ret->chunk_data = copyChunkData();
+    return ret;
+  }
+  virtual
+  OZ_Extension *sCloneV(void) {
     HeapChunk * ret = new HeapChunk(chunk_size);
     ret->chunk_data = copyChunkData();
     return ret;

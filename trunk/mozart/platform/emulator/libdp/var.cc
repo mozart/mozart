@@ -135,13 +135,13 @@ OZ_Return ProxyVar::addSuspV(TaggedRef *, Suspendable * susp, int unstable)
   return SUSPEND;
 }
 
-void ProxyVar::gcRecurseV(void)
+void ProxyVar::gCollectRecurseV(void)
 { 
   PD((GC,"ProxyVar b:%d",getIndex()));
   Assert(getIndex()!=BAD_BORROW_INDEX);
   BT->getBorrow(getIndex())->gcPO();
   if (binding)
-    OZ_collect(&binding);
+    OZ_gCollect(&binding);
   setInfo(gcEntityInfoInternal(getInfo()));
 } 
 
@@ -293,9 +293,9 @@ OZ_Return ManagerVar::addSuspV(TaggedRef *vPtr, Suspendable * susp, int unstable
   return SUSPEND;
 }
 
-void ManagerVar::gcRecurseV(void)
+void ManagerVar::gCollectRecurseV(void)
 {
-  origVar=origVar->gcVar();
+  origVar=origVar->gCollectVar();
   OT->getOwner(getIndex())->gcPO();
   PD((GC,"ManagerVar o:%d",getIndex()));
   ProxyList **last=&proxies;

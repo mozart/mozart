@@ -174,14 +174,23 @@ OZ_BI_end
 // COPYING
 //////////
 
-void FirstsLasts::updateHeapRefs(OZ_Boolean duplicate)
-{
-  if (!duplicate)
-    reg_durs[-1] = (int *) int(reg_durs[-1]) + 1;
+void FirstsLasts::gCollect(void) {
+  OZ_gCollectTerm(stream);
 
-  OZ_updateHeapTerm(stream);
+  reg_fds      = OZ_gCollectAllocBlock(reg_fds_size, reg_fds);
+  reg_ordered  = OZ_copyCInts(reg_fds_size, reg_ordered);
+  reg_nb_tasks = OZ_copyCInts(reg_nb_tasks_size, reg_nb_tasks);
+  reg_ordered_resources = OZ_copyCInts(reg_nb_tasks_size, 
+				       reg_ordered_resources);
 
-  reg_fds      = OZ_copyOzTerms(reg_fds_size, reg_fds);
+}
+
+void FirstsLasts::sClone(void) {
+  reg_durs[-1] = (int *) int(reg_durs[-1]) + 1;
+
+  OZ_sCloneTerm(stream);
+
+  reg_fds      = OZ_sCloneAllocBlock(reg_fds_size, reg_fds);
   reg_ordered  = OZ_copyCInts(reg_fds_size, reg_ordered);
   reg_nb_tasks = OZ_copyCInts(reg_nb_tasks_size, reg_nb_tasks);
   reg_ordered_resources = OZ_copyCInts(reg_nb_tasks_size, 

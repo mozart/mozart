@@ -56,7 +56,9 @@ protected:
 public:
   Propagator_D_D(OZ_Term x, OZ_Term y) : reg_x(x), reg_y(y) {}
 
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_D_D); }
   virtual OZ_Term getParameters(void) const;
 };
@@ -71,7 +73,9 @@ public:
   Propagator_D_D_D(OZ_Term x, OZ_Term y, OZ_Term z)
     : reg_x(x), reg_y(y), reg_z(z) {}
 
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_D_D_D); }
   virtual OZ_Term getParameters(void) const;
 };
@@ -85,7 +89,9 @@ public:
   Propagator_D_D_D_I(OZ_Term x, OZ_Term y, OZ_Term z, int c)
     : reg_c(c), Propagator_D_D_D(x, y, z) {}
 
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_D_D_D_I); }
   virtual OZ_Term getParameters(void) const;
   virtual OZ_Term getParametersC(char *) const;
@@ -101,7 +107,9 @@ public:
   Propagator_D_I_D(OZ_Term x, OZ_Term y, OZ_Term z)
     : reg_x(x), reg_y(OZ_intToC(y)), reg_z(z) {}
   
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_D_I_D); }
   virtual OZ_Term getParameters(void) const;
 };
@@ -116,7 +124,9 @@ public:
   Propagator_D_D_I(OZ_Term x, OZ_Term y, int c)
     : reg_x(x), reg_y(y), reg_c(c) {}
 
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_D_D_I); }
   virtual OZ_Term getParameters(void) const;
   virtual OZ_Term getParametersC(char *) const;
@@ -134,7 +144,9 @@ public:
   Propagator_D_VD_I(OZ_Term, OZ_Term, OZ_Term);
   virtual ~Propagator_D_VD_I(void);
   
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_D_VD_I); }
   virtual OZ_Term getParameters(void) const;
 };
@@ -150,7 +162,9 @@ public:
   Propagator_D_VI_D(OZ_Term, OZ_Term, OZ_Term);
   virtual ~Propagator_D_VI_D(void);
 
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_D_VI_D); }
   virtual OZ_Term getParameters(void) const;
 };
@@ -174,7 +188,9 @@ public:
 		     int a[], OZ_Term x[], int c);
   virtual ~Propagator_VI_VD_I(void);
 
-  virtual void updateHeapRefs(OZ_Boolean = OZ_FALSE);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_VI_VD_I); }
   virtual OZ_Term getParametersC(char *) const;
   
@@ -264,7 +280,9 @@ public:
   Propagator_VI_VD_I_D(OZ_Term x, OZ_Term c, OZ_Term b) 
     : reg_b(b), Propagator_VI_VD_I(x, c) {}
   
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_VI_VD_I_D); }
   virtual OZ_Term getParametersC(char *) const;
 };
@@ -279,7 +297,9 @@ public:
   Propagator_VD(OZ_Term);
   virtual ~Propagator_VD(void);
 
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_VD); }
   virtual OZ_Term getParameters(void) const;
 
@@ -311,7 +331,9 @@ public:
   Propagator_VD_VI(int);
   virtual ~Propagator_VD_VI(void);
 
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_VD_VI); }
   virtual OZ_Term getParameters(void) const;
 };
@@ -330,7 +352,9 @@ public:
   Propagator_VD_VI_VI_I(int);
   virtual ~Propagator_VD_VI_VI_I(void);
 
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_VD_VI_VI_I); }
   virtual OZ_Term getParameters(void) const;
 };
@@ -349,7 +373,9 @@ public:
   Propagator_VI_VVD_I(OZ_Term, OZ_Term, OZ_Term);
   virtual ~Propagator_VI_VVD_I(void);
 
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_VI_VVD_I); }
   virtual OZ_Term getParametersC(char *) const;
 };
@@ -364,7 +390,9 @@ public:
   Propagator_D_FD_D(OZ_Term, OZ_Term, OZ_Term);
   virtual ~Propagator_D_FD_D(void) {reg_domain.disposeExtension();}
 
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_D_FD_D); }
   virtual OZ_Term getParameters(void) const;
 };
@@ -380,7 +408,9 @@ public:
   Propagator_VD_D_D_D(OZ_Term, OZ_Term, OZ_Term, OZ_Term);
   virtual ~Propagator_VD_D_D_D(void);
 
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_VD_D_D_D); }
   virtual OZ_Term getParameters(void) const;
 };
@@ -395,7 +425,9 @@ public:
   Propagator_D_I_D_I(OZ_Term x, OZ_Term xd, OZ_Term y, OZ_Term yd)
     : reg_x(x), reg_xd(OZ_intToC(xd)), reg_y(y), reg_yd(OZ_intToC(yd)) {}
 
-  virtual void updateHeapRefs(OZ_Boolean = OZ_FALSE);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_D_I_D_I); }
   virtual OZ_Term getParameters(void) const;
 };
@@ -409,7 +441,9 @@ public:
   Propagator_D_I_D_I_D(OZ_Term x, OZ_Term xd, OZ_Term y, OZ_Term yd, OZ_Term b)
     : reg_b(b),  Propagator_D_I_D_I(x, xd, y, yd) {}
   
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_D_I_D_I_D); }
   virtual OZ_Term getParameters(void) const;
 };
@@ -424,7 +458,10 @@ protected:
 public:
   Propagator_VI_VD_D(OZ_Term, OZ_Term, OZ_Term);
   virtual ~Propagator_VI_VD_D(void);
-  virtual void updateHeapRefs(OZ_Boolean);
+
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual size_t sizeOf(void) { return sizeof(Propagator_VI_VD_D); }
   virtual OZ_Term getParametersC(char *) const;
   OZ_Boolean simplify(void);

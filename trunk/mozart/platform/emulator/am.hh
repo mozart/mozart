@@ -460,8 +460,8 @@ public:
     return _currentBoardIsRoot;
   }
 
-  void gc(int msgLevel);  // ###
-  void doGC();
+  void gCollect(int msgLevel);  // ###
+  void doGCollect();
 
   // unset the ThreadSwitch flag and reset the counter
   // only needed in emulate.cc

@@ -116,11 +116,11 @@ public:
   Bool getGCMark()   { return gcMark; }
   void resetGCMark() { gcMark = 0;}
 
-  void gcGName(){
+  void gCollectGName(){
     if (!getGCMark()) {
       setGCMark();
       gcMarkSite();
-      OZ_collectHeapTerm(value,value);}}
+      oz_gCollectTerm(value,value);}}
 
   void gcMarkSite() {
     site->setGCFlag();
@@ -138,7 +138,7 @@ public:
   void add(GName *name);
   GNameTable():GenHashTable(GNAME_HASH_TABLE_DEFAULT_SIZE) {}
   
-  void gcGNameTable();
+  void gCollectGNameTable();
 };
 
 extern GNameTable gnameTable;
@@ -149,7 +149,7 @@ void addGName(GName *gn, TaggedRef t);
 GName *newGName(TaggedRef t, GNameType gt);
 void deleteGName(GName *gn);
 
-inline void gcGName(GName* name) { if (name) name->gcGName(); }
+inline void gCollectGName(GName* name) { if (name) name->gCollectGName(); }
 
 #endif
 
