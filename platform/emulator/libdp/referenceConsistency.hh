@@ -48,7 +48,7 @@ public:
   RRinstance *next;
   int type;
   virtual void marshal_RR(MarshalerBuffer *buf)=0;
-  virtual void unmarshal_RR(MarshalerBuffer *buf, int *error)=0;
+  virtual void unmarshal_RR(MarshalerBuffer *buf)=0;
   virtual ~RRinstance(){}
 };
 
@@ -138,19 +138,9 @@ public:
 void marshalCredit(MarshalerBuffer*,RRinstance*);
 void marshalCreditToOwner(MarshalerBuffer *buf,RRinstance *,int oti);
 
-#ifdef USE_FAST_UNMARSHALER
-RRinstance  *unmarshalCredit(MarshalerBuffer *buf,int *error);
-RRinstance  *unmarshalCreditToOwner(MarshalerBuffer *buf,
-                                    MarshalTag mt, int &oti)
-#else
-
-
-RRinstance  *unmarshalCreditRobust(MarshalerBuffer *buf,int *error);
-RRinstance  *unmarshalCreditToOwnerRobust(MarshalerBuffer *buf,
-                                          MarshalTag mt, int &oti,
-                                          int *error);
-#endif
-
+RRinstance *unmarshalCredit(MarshalerBuffer *buf);
+RRinstance *unmarshalCreditToOwner(MarshalerBuffer *buf,
+                                   MarshalTag mt, int &oti);
 
 RRinstance *CreateRRinstance(int type, int val1, int val2);
 void sendReferenceBack(DSite *entitysite,int entityOTI,int type, int val1, int val2);

@@ -135,21 +135,17 @@ DSite *findDSite(ip_address a,int port,TimeStamp &stamp)
   return (unmarshalDSiteInternal(NULL, &tryS, DIF_SITE));
 }
 
-DSite* unmarshalDSiteRobust(MarshalerBuffer *buf, int *error)
+DSite* unmarshalDSite(MarshalerBuffer *buf)
 {
   PD((UNMARSHAL,"site"));
   MarshalTag mt = (MarshalTag) buf->get();
 
   // Shortcut when sending own site.
   if (mt == DIF_SITE_SENDER)
-    {
-      *error = NO;
-      return   ((ByteBuffer *)buf)->getSite();
-    }
+    return   ((ByteBuffer *)buf)->getSite();
   DSite tryS;
 
-  tryS.unmarshalBaseSiteRobust(buf, error);
-  if (*error) return ((DSite *) 0);
+  tryS.unmarshalBaseSite(buf);
   return unmarshalDSiteInternal(buf, &tryS, mt);
 }
 
@@ -209,16 +205,18 @@ char *oz_site2String(DSite *s) { return s->stringrep(); }
 /**********************************************************************/
 
 
-void DSite::marshalDSite(MarshalerBuffer *buf){
+void DSite::marshalDSite(MarshalerBuffer *buf)
+{
   PD((MARSHAL,"Site"));
-  unsigned int type=getType();
-  if(type & PERM_SITE){
-    marshalDIF(buf,DIF_SITE_PERM);
+  unsigned int type = getType();
+  if (type & PERM_SITE) {
+    marshalDIF(buf, DIF_SITE_PERM);
     marshalBaseSite(buf);
-    return;}
-  Assert((type & REMOTE_SITE) || (this==myDSite) );
-  marshalDIF(buf,DIF_SITE);
-  marshalBaseSite(buf);
+  } else {
+    Assert((type & REMOTE_SITE) || (this==myDSite) );
+    marshalDIF(buf, DIF_SITE);
+    marshalBaseSite(buf);
+  }
 }
 
 

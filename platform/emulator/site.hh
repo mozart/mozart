@@ -90,13 +90,8 @@ public:
   void marshalBaseSite(MarshalerBuffer* buf);
   void marshalBaseSiteForGName(MarshalerBuffer* buf);
   void marshalBaseSiteForGName(PickleMarshalerBuffer *buf);
-#ifdef USE_FAST_UNMARSHALER
   void unmarshalBaseSite(MarshalerBuffer* buf);
   void unmarshalBaseSiteGName(MarshalerBuffer* buf);
-#else
-  void unmarshalBaseSiteRobust(MarshalerBuffer* buf, int *error);
-  void unmarshalBaseSiteGNameRobust(MarshalerBuffer* buf, int *error);
-#endif
 
   int checkTimeStamp(time_t t){
     if(t==timestamp.start) return 0;
@@ -201,11 +196,7 @@ void gCollectSiteTable();
 
 //
 // Marshaller uses that;
-#ifdef USE_FAST_UNMARSHALER
 Site* unmarshalSite(MarshalerBuffer *);
-#else
-Site* unmarshalSiteRobust(MarshalerBuffer *, int *);
-#endif
 
 //
 // There is one universe-wide known site object:

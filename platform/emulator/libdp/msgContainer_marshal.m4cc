@@ -30,96 +30,114 @@
 #include "byteBuffer.hh"
 #include "msgContainer.hh"
 
-void MsgContainer::marshal(ByteBuffer *bb,
-                           TransController *transController) {
-  if(!checkFlag(MSG_HAS_MARSHALCONT)) {
-    mess_counter[mt].send();
-  }
-  else
-    clearFlag(MSG_HAS_MARSHALCONT);
+#define HandleTerm(AuxPreparation)                              \
+{                                                               \
+  Assert(cont == (void *) 0);                                   \
+  Assert(!checkFlag(MSG_HAS_MARSHALCONT));                      \
+  DPMarshaler *dpm = transController->getMarshaler();           \
+  DPMarshaler *dpmCont;                                         \
+  if (dpm == (DPMarshaler *) 0)                                 \
+    OZ_error("No marshalers");                                  \
+  AuxPreparation;                                               \
+  dpmCont = dpMarshalTerm((OZ_Term) msgFields[i].arg,           \
+                          bb, dpm, destination);                \
+  if (dpmCont == (DPMarshaler *) 0) {                           \
+    msgFields[i].ft = FT_NONE;                                  \
+    transController->returnMarshaler(dpm);                      \
+    continue;           /* negotiated the field; */             \
+  } else {                                                      \
+    Assert(dpm == dpmCont);                                     \
+    setFlag(MSG_HAS_MARSHALCONT);                               \
+    msgFields[i].ft = FT_TERMCONT;                              \
+    this->transController = transController;                    \
+    cont = (void *) dpmCont;                                    \
+    return;                                                     \
+  }                                                             \
+}
 
-  for(int i=0;i<MAX_NOF_FIELDS;i++) {
-    if(checkFlag(MSG_HAS_MARSHALCONT))
-      break;
-    void *ret=(void *) 0;
-    Bool fullTopFlag = NO;
-
+void
+MsgContainer::marshal(ByteBuffer *bb, TransController *transController)
+{
+  for (int i = MAX_NOF_FIELDS; i--; ) {
     switch(msgFields[i].ft) {
     case FT_NUMBER:
-      if(bb->availableSpace() >= MNumberMaxSize) {
+      if (bb->availableSpace() >= MNumberMaxSize) {
         marshalNumber(bb, (int) msgFields[i].arg);
-        msgFields[i].ft=FT_NONE;
+        msgFields[i].ft = FT_NONE;
+        continue;               // next field;
+      } else {
+        setFlag(MSG_HAS_MARSHALCONT); // maybe sets it again;
+        return;
       }
-      else
-        setFlag(MSG_HAS_MARSHALCONT);
-      break;
 
     case FT_CREDIT:
-      if(bb->availableSpace() >= MNumberMaxSize) {
+      if (bb->availableSpace() >= MNumberMaxSize) {
         marshalNumber(bb, (int) msgFields[i].arg);
-        msgFields[i].ft=FT_NONE;
-      }
-      else
-        setFlag(MSG_HAS_MARSHALCONT);
-      break;
-
-    //
-    case FT_FULLTOPTERM:
-      fullTopFlag = OK;
-    case FT_TERM: {
-      DPMarshaler *dpm;
-      if(cont == (void *) 0) {
-        dpm = transController->getMarshaler();
-        if (dpm==NULL) {OZ_error("No marshalers");}
-
-        if (fullTopFlag) {
-          dpm->genFullToplevel();
-          fullTopFlag = NO;
-        }
-        ret = (void *) dpMarshalTerm(bb, dpm,
-                                     (TaggedRef) msgFields[i].arg, msgTS);
+        msgFields[i].ft = FT_NONE;
+        continue;
       } else {
-        dpm = (DPMarshaler *) cont;
-        fullTopFlag = NO;
-        ret = (void *) dpMarshalTerm(bb, dpm, msgTS);
-      }
-      if(ret==(void *) 0) {
-        msgFields[i].ft=FT_NONE;
-        // ... otherwise lazy protocol didn't play out:
-        Assert(dpm->isFullToplevel() == FALSE);
-        transController->returnMarshaler(dpm);
-        cont=(void *) 0;
-      }
-      else {
         setFlag(MSG_HAS_MARSHALCONT);
-        cont=(void *) dpm;
-        this->transController=transController;
+        return;
       }
-      break;
-    }
+
+    case FT_FULLTOPTERM:
+      HandleTerm(dpm->genFullToplevel());
+
+    case FT_TERM:
+      HandleTerm(;);
+
+    case FT_TERMCONT:
+      {
+        Assert(checkFlag(MSG_HAS_MARSHALCONT));
+        Assert(cont != (void *) 0);
+        DPMarshaler *dpm = (DPMarshaler *) cont;
+        DPMarshaler *dpmCont;
+        //
+        dpmCont = dpMarshalContTerm(bb, dpm);
+        if (dpmCont == (DPMarshaler *) 0) {
+          msgFields[i].ft = FT_NONE;
+          transController->returnMarshaler(dpm);
+          cont = (void *) 0;    // already returned;
+          continue;             // FINALLY negotiated the field;
+        } else {
+          return;               // HAS_MARSHALCONT is still set;
+        }
+        Assert(0);
+      }
 
     case FT_STRING:
-      if(bb->availableSpace() >= MAX_DP_STRING) {
+      if (bb->availableSpace() >= MAX_DP_STRING) {
         marshalString(bb, (char*) msgFields[i].arg);
-        msgFields[i].ft=FT_NONE;
-      }
-      else
+        msgFields[i].ft = FT_NONE;
+        continue;
+      } else {
         setFlag(MSG_HAS_MARSHALCONT);
-      break;
+        return;
+      }
+      Assert(0);
 
     case FT_SITE:
-      if(bb->availableSpace() >= MDSiteMaxSize) {
+      if (bb->availableSpace() >= MDSiteMaxSize) {
         marshalDSite(bb, (DSite*) msgFields[i].arg);
-        msgFields[i].ft=FT_NONE;
-      }
-      else
+        msgFields[i].ft = FT_NONE;
+        continue;
+      } else {
         setFlag(MSG_HAS_MARSHALCONT);
-      break;
+        return;
+      }
+      Assert(0);
 
     case FT_NONE:
-      break;
+      continue;
     }
+
+    // We bail out of the case statement iff we have a suspension,
+    // otherwise do 'continue' directly:
+    Assert(0);
   }
+
+  // If all elements are done, then it's over:
+  clearFlag(MSG_HAS_MARSHALCONT);
 }
 
 undefine(`message')
@@ -191,143 +209,134 @@ define(argEnc,`ifelse($1,Index,FT_NUMBER,
                       $1,Site2,FT_SITE,
                       FT_NONE)')
 
-Bool MsgContainer::unmarshal(ByteBuffer *bb,
-                             TransController *transController)
+void MsgContainer::setMessageType(MessageType mtIn)
 {
-  if(!checkFlag(MSG_HAS_UNMARSHALCONT)) {
-    switch(mt) {
-      include(EMUDIR/msgFormat.m4)
-        default:
-          PD((TCP_INTERFACE,"unmarshal got unknown `message': %d",mt));
-    }
+  mt = mtIn;
+  switch (mtIn) {
+    include(EMUDIR/msgFormat.m4)
+      default:
+        PD((TCP_INTERFACE,"unmarshal got unknown `message': %d",mt));
   }
+}
 
-  clearFlag(MSG_HAS_UNMARSHALCONT);
-  for(int i=0;i<MAX_NOF_FIELDS;i++) {
-    if(msgFields[i].ft!=FT_NONE && !bb->canGetInFrame(1)) {
-      setFlag(MSG_HAS_UNMARSHALCONT);
-    }
-    else {
+Bool
+MsgContainer::unmarshal(ByteBuffer *bb, TransController *transController)
+{
+  // the MSG_HAS_UNMARSHALCONT flag can be set;
+  for (int i = MAX_NOF_FIELDS; i--; ) {
+    if (msgFields[i].ft != FT_NONE && !bb->canGetInFrame(1)) {
+      setFlag(MSG_HAS_UNMARSHALCONT); // maybe sets it again;
+      return (TRUE);
+    } else {
 
       switch(msgFields[i].ft) {
       case FT_NUMBER:
-#ifdef USE_FAST_UNMARSHALER
         msgFields[i].arg = (void *) unmarshalNumber(bb);
         msgFields[i].ft = FT_NONE;
-#else
-        {
-          int error;
-          msgFields[i].arg = (void *) unmarshalNumberRobust(bb, &error);
-          if (error) {
-            messageError(mt, "MsgContainer::unmarshal: bad Number");
-            return (FALSE);
-          } else {
-            msgFields[i].ft = FT_NONE;
-          }
-        }
-#endif
-        break;
+        continue;               // next field;
 
       case FT_CREDIT:
-#ifdef USE_FAST_UNMARSHALER
         msgFields[i].arg = (void *) unmarshalNumber(bb);
         msgFields[i].ft = FT_NONE;
-#else
-        {
-          int error;
-          msgFields[i].arg = (void *) unmarshalNumberRobust(bb, &error);
-          if (error) {
-            messageError(mt, "MsgContainer::unmarshal: bad Credit");
-            return (FALSE);
-          } else {
-            msgFields[i].ft = FT_NONE;
-          }
-        }
-#endif
-        break;
+        continue;
 
         //
         // There is one single unmarhslaer that understands also full
         // objects (and potentially also other structures with the
         // lazy protocol);
       case FT_FULLTOPTERM:
-      case FT_TERM: {
-        Builder *dpum;
-        if (cont != 0) {
-          dpum = (Builder *) cont;
-        } else {
-          dpum = transController->getUnmarshaler();
-          if (dpum==NULL) {OZ_error("No unmarshalers");}
+      case FT_TERM:
+        {
+          Assert(cont == (void *) 0);
+          Assert(!checkFlag(MSG_HAS_UNMARSHALCONT));
+          Builder *dpum = transController->getUnmarshaler();
+          if (dpum == (Builder *) 0)
+            OZ_error("No unmarshalers");
           dpUnmarshalerStartBatch(dpum);
+
+          //
+          OZ_Term utRet = dpUnmarshalTerm(bb, dpum);
+
+          //
+          switch (utRet) {
+          case (OZ_Term) 0:
+            dpUnmarshalerFinishBatch(dpum);
+            messageError(mt, "MsgContainer::unmarshal: bad Oz term");
+            return (FALSE);
+
+          case (OZ_Term) -1:
+            this->transController = transController;
+            msgFields[i].ft = FT_TERMCONT;
+            cont = (void *) dpum;
+            setFlag(MSG_HAS_UNMARSHALCONT);
+            return (TRUE);      // OK but not yet done;
+
+          default:
+            dpUnmarshalerFinishBatch(dpum);
+            msgFields[i].arg = (void *) utRet;
+            msgFields[i].ft = FT_NONE;
+            transController->returnUnmarshaler(dpum);
+            cont = (void *) 0;
+            continue;
+          }
         }
+        Assert(0);
 
-        //
-        OZ_Term utRet = dpUnmarshalTerm(bb, dpum);
+      case FT_TERMCONT:
+        {
+          Assert(cont != (void *) 0);
+          Assert(checkFlag(MSG_HAS_UNMARSHALCONT));
+          Builder *dpum = (Builder *) cont;
 
-        //
-        switch (utRet) {
-        case (OZ_Term) 0:
-          dpUnmarshalerFinishBatch(dpum);
-          messageError(mt, "MsgContainer::unmarshal: bad Oz term");
-          return (FALSE);
+          //
+          OZ_Term utRet = dpUnmarshalTerm(bb, dpum);
 
-        case (OZ_Term) -1:
-          this->transController=transController;
-          cont=(void *) dpum;
-          setFlag(MSG_HAS_UNMARSHALCONT);
-          break;
+          //
+          switch (utRet) {
+          case (OZ_Term) 0:
+            dpUnmarshalerFinishBatch(dpum);
+            messageError(mt, "MsgContainer::unmarshal: bad Oz term");
+            return (FALSE);
 
-        default:
-          dpUnmarshalerFinishBatch(dpum);
-          msgFields[i].arg = (void *) utRet;
-          msgFields[i].ft=FT_NONE;
-          transController->returnUnmarshaler(dpum);
-          cont = (void *) 0;
+          case (OZ_Term) -1:
+            return (TRUE);      // still not yet done;
+
+          default:
+            dpUnmarshalerFinishBatch(dpum);
+            msgFields[i].arg = (void *) utRet;
+            msgFields[i].ft = FT_NONE;
+            transController->returnUnmarshaler(dpum);
+            cont = (void *) 0;
+            continue;
+          }
         }
-        break;
-      }
+        Assert(0);
 
       case FT_STRING:
-#ifdef USE_FAST_UNMARSHALER
         msgFields[i].arg = (void *) unmarshalString(bb);
         msgFields[i].ft = FT_NONE;
-#else
-        {
-          int error;
-          msgFields[i].arg = (void *) unmarshalStringRobust(bb, &error);
-          if (error) {
-            messageError(mt, "MsgContainer::unmarshal: bad string");
-            return (FALSE);
-          } else {
-            msgFields[i].ft = FT_NONE;
-          }
-        }
-#endif
-        break;
+        continue;
 
       case FT_SITE:
-#ifdef USE_FAST_UNMARSHALER
         msgFields[i].arg = (void *) unmarshalDSite(bb);
         msgFields[i].ft = FT_NONE;
-#else
-        {
-          int error;
-          msgFields[i].arg = (void *) unmarshalDSiteRobust(bb, &error);
-          if (error) {
-            messageError(mt, "MsgContainer::unmarshal: bad site");
-            return (FALSE);
-          } else {
-            msgFields[i].ft = FT_NONE;
-          }
-        }
-#endif
-        break;
+        continue;
 
       case FT_NONE:
-        break;                  // nothing is expected;
+        continue;               // nothing is expected;
+
+      default:
+        OZ_error("unexpected tag in MsgContainer::unmarshal()");
       }
+
+      // We bail out of the case statement iff we have a suspension,
+      // otherwise do 'continue' directly:
+      Assert(0);
     }
   }
+
+  // all elements are finished;
+  clearFlag(MSG_HAS_UNMARSHALCONT);
   return (TRUE);
 }
 
@@ -395,7 +404,8 @@ define(argEnc,`ifelse($1,Index,,
                       $1,Site2,if(!checkFlag(MSG_HAS_UNMARSHALCONT) || $3==FT_NONE)
 ((DSite*) $2)->makeGCMarkSite();,)')
 
-void MsgContainer::gcMsgC() {
+void MsgContainer::gcMsgC()
+{
 //     printf("GC of %x (ucont %d term %x)\n",this,
 //             checkFlag(MSG_HAS_UNMARSHALCONT),
 //       (msgFields[1]).arg);
@@ -403,13 +413,11 @@ void MsgContainer::gcMsgC() {
     oz_gCollectTerm(cntrlVar,cntrlVar);
   if(destination!=NULL)
     destination->makeGCMarkSite();
-  if(checkFlag(MSG_HAS_MARSHALCONT) && cont != 0)
+  if (checkFlag(MSG_HAS_MARSHALCONT) && cont != 0) {
     ((DPMarshaler *) cont)->gCollect();
-  else if(checkFlag(MSG_HAS_UNMARSHALCONT) && cont != 0){
-//    printf("gcollect builder msgC: %x\n ",this);
-    ((Builder *) cont)->gCollect();}
-  if (msgTS)
-    gcTermSnapshot(msgTS);
+  } else if(checkFlag(MSG_HAS_UNMARSHALCONT) && cont != 0){
+    ((Builder *) cont)->gCollect();
+  }
 
   //
   switch(mt) {
@@ -417,6 +425,19 @@ include(EMUDIR/msgFormat.m4)
   default:
     PD((TCP_INTERFACE,"marshal got unknown `message': %d",mt));
   }
+}
+
+//
+void MsgContainer::gcStart()
+{
+  if (checkFlag(MSG_HAS_MARSHALCONT) && cont != 0)
+    ((DPMarshaler *) cont)->gcStart();
+}
+
+void MsgContainer::gcFinish()
+{
+  if (checkFlag(MSG_HAS_MARSHALCONT) && cont != 0)
+    ((DPMarshaler *) cont)->gcFinish();
 }
 
 undefine(`message')

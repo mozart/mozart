@@ -106,7 +106,7 @@ public:
 
   int findPC(ProgramCounter from, TaggedRef *X, int maxX)
   {
-    void *aux = htFind(ToInt32(from));
+    void *aux = htFind(from);
     if (aux==htEmpty)
       return -1;
 
@@ -133,7 +133,7 @@ public:
       if (xUsage[i]==1)
         aux |= (1<<i);
     }
-    htAdd(ToInt32(from),(void*) aux);
+    htAdd(from, (void *) aux);
   }
 };
 

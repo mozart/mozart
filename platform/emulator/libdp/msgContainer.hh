@@ -52,6 +52,7 @@ typedef enum {
   FT_CREDIT,
   FT_TERM,
   FT_FULLTOPTERM,
+  FT_TERMCONT,
   FT_STRING,
   FT_SITE
 } fieldType;
@@ -67,17 +68,12 @@ class MsgContainer:public CppObjMemory {
 private:
   MessageType mt;
   int flags;
-  // kost@ : currently, MsgContainer can contain at most one OZ_Term.
-  // Otherwise MsgTermSnapshot"s are to go into msgField"s;
-  MsgTermSnapshot *msgTS;
-
   struct msgField msgFields[MAX_NOF_FIELDS];
-
-  // For suspendable marshaler:
-  // opaque argument for continuing marshaling message fields;
+  // marshaling/unmarshaling continuation, if any;
   void *cont;
-  TransController *transController;
 
+  //
+  TransController *transController;
   int msgNum;
   int def_priority;
   LongTime sendTime;
@@ -126,13 +122,8 @@ public:
     return &sendTime;
   }
 
-  inline MessageType getMessageType() {
-    return mt;
-  }
-
-  inline void setMessageType(MessageType mt) {
-    this->mt=mt;
-  }
+  void setMessageType(MessageType mt);
+  MessageType getMessageType() { return (mt); }
 
   inline void setFlag(int flag) {
     flags |= flag;
@@ -154,11 +145,9 @@ public:
     return destination;
   }
 
-  void takeSnapshot();
-  void deleteSnapshot();
-
-  void gcStart() { if (msgTS) mtsStartGC(msgTS); }
-  void gcFinish() { if (msgTS) mtsFinishStartGC(msgTS); }
+  //
+  void gcStart();
+  void gcFinish();
 
   void resetMarshaling();
 

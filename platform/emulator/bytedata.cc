@@ -136,30 +136,22 @@ int BitString::toBePickledV()
   return (OK);
 }
 
-int BitString::pickleV(MarshalerBuffer *mb)
+void BitString::pickleV(MarshalerBuffer *mb, GenTraverser *gt)
 {
   marshalNumber(mb, getWidth());
   for (int i = 0; i < getSize(); i++)
     marshalByte(mb, data[i]);
-  return (OK);
 }
 
 static
-OZ_Term unmarshalBitString(MarshalerBuffer *mb)
+OZ_Term unmarshalBitString(MarshalerBuffer *mb, Builder*)
 {
-#ifdef USE_FAST_UNMARSHALER
   int width = unmarshalNumber(mb);
-#else
-  int error;
-  int width = unmarshalNumberRobust(mb, &error);
-  if (error)
-    return ((OZ_Term) 0);
-#endif
   BitString *s = new BitString(width);
   int size = s->getSize();
   for (int i = 0; i < size; i++)
     s->getByte(i) = mb->get();
-  return makeTaggedExtension(s);
+  return (makeTaggedExtension(s));
 }
 
 OZ_Term BitString::printV(int depth) {
@@ -299,14 +291,7 @@ void dpMarshalByteArrayCont(GenTraverser *gt, GTAbstractEntity *arg)
 static
 OZ_Term unmarshalByteArray(ByteBuffer *mb, DPMExtDesc *desc)
 {
-#ifdef USE_FAST_UNMARSHALER
   int cWidth = unmarshalNumber(mb);
-#else
-  int error;
-  int cWidth = unmarshalNumberRobust(mb, &error);
-  if (error)
-    return ((OZ_Term) 0);
-#endif
 
   //
   Assert(cWidth >= 0);
@@ -324,7 +309,7 @@ OZ_Term unmarshalByteArray(ByteBuffer *mb, DPMExtDesc *desc)
     delete desc;
     return (bst);
   } else {
-    return ((OZ_Term) -1);
+    return (UnmarshalEXT_Susp);
   }
 }
 
@@ -365,7 +350,7 @@ OZ_Boolean BitString::toBeMarshaledV()
 }
 
 //
-OZ_Boolean
+void
 BitString::marshalSuspV(OZ_Term oet, ByteBuffer *bs, GenTraverser *gt)
 {
   Assert(bs->availableSpace() > 2*MNumberMaxSize);
@@ -380,7 +365,6 @@ BitString::marshalSuspV(OZ_Term oet, ByteBuffer *bs, GenTraverser *gt)
   desc->setCurrentSize(bss);    // to be marshaled;
   //
   marshalByteArray(bs, gt, desc);
-  return (OK);
 }
 
 //
@@ -391,16 +375,10 @@ int BitString::minNeededSpace()
 
 //
 static
-OZ_Term suspUnmarshalBitString(ByteBuffer *mb, GTAbstractEntity* &bae)
+OZ_Term suspUnmarshalBitString(ByteBuffer *mb, Builder*,
+                               GTAbstractEntity* &bae)
 {
-#ifdef USE_FAST_UNMARSHALER
   int width = unmarshalNumber(mb);
-#else
-  int error;
-  int width = unmarshalNumberRobust(mb, &error);
-  if (error)
-    return ((OZ_Term) 0);
-#endif
 
   //
   BitString *s = new BitString(width);
@@ -415,15 +393,11 @@ OZ_Term suspUnmarshalBitString(ByteBuffer *mb, GTAbstractEntity* &bae)
 
 //
 static
-OZ_Term unmarshalBitStringCont(ByteBuffer *mb, GTAbstractEntity* bae)
+OZ_Term unmarshalBitStringCont(ByteBuffer *mb, Builder*,
+                               GTAbstractEntity* bae)
 {
   Assert(bae->getType() == GT_ExtensionSusp);
-#ifdef USE_FAST_UNMARSHALER
   Assert(((DPMExtDesc *) bae)->getExtID() == OZ_E_BITSTRING);
-#else
-  if (((DPMExtDesc *) bae)->getExtID() != OZ_E_BITSTRING)
-    return ((OZ_Term) 0);
-#endif
   DPMBitStringDesc *desc = (DPMBitStringDesc *) bae;
   return (unmarshalByteArray(mb, desc));
 }
@@ -617,30 +591,22 @@ int ByteString::toBePickledV()
   return (OK);
 }
 
-int ByteString::pickleV(MarshalerBuffer *mb)
+void ByteString::pickleV(MarshalerBuffer *mb, GenTraverser *gt)
 {
   int size = getWidth();
   marshalNumber(mb, size);
   for (int i = 0; i < size; i++)
     marshalByte(mb, data[i]);
-  return (OK);
 }
 
 static
-OZ_Term unmarshalByteString(MarshalerBuffer *mb)
+OZ_Term unmarshalByteString(MarshalerBuffer *mb, Builder*)
 {
-#ifdef USE_FAST_UNMARSHALER
   int width = unmarshalNumber(mb);
-#else
-  int error;
-  int width = unmarshalNumberRobust(mb, &error);
-  if (error)
-    return ((OZ_Term) 0);
-#endif
   ByteString *s = new ByteString(width);
   for (int i = 0; i < width; i++)
     s->getByte(i) = mb->get();
-  return makeTaggedExtension(s);
+  return (makeTaggedExtension(s));
 }
 
 OZ_Term ByteString::printV(int depth) {
@@ -704,7 +670,8 @@ OZ_Boolean ByteString::toBeMarshaledV()
 }
 
 //
-int ByteString::marshalSuspV(OZ_Term oet, ByteBuffer *bs, GenTraverser *gt)
+void
+ByteString::marshalSuspV(OZ_Term oet, ByteBuffer *bs, GenTraverser *gt)
 {
   Assert(bs->availableSpace() > 2*MNumberMaxSize);
 
@@ -718,7 +685,6 @@ int ByteString::marshalSuspV(OZ_Term oet, ByteBuffer *bs, GenTraverser *gt)
   desc->setCurrentSize(bss);    // to be marshaled;
   //
   marshalByteArray(bs, gt, desc);
-  return (OK);
 }
 
 //
@@ -729,16 +695,10 @@ int ByteString::minNeededSpace()
 
 //
 static
-OZ_Term suspUnmarshalByteString(ByteBuffer *mb, GTAbstractEntity* &bae)
+OZ_Term suspUnmarshalByteString(ByteBuffer *mb, Builder*,
+                                GTAbstractEntity* &bae)
 {
-#ifdef USE_FAST_UNMARSHALER
   int width = unmarshalNumber(mb);
-#else
-  int error;
-  int width = unmarshalNumberRobust(mb, &error);
-  if (error)
-    return ((OZ_Term) 0);
-#endif
 
   //
   ByteString *s = new ByteString(width);
@@ -753,15 +713,11 @@ OZ_Term suspUnmarshalByteString(ByteBuffer *mb, GTAbstractEntity* &bae)
 
 //
 static
-OZ_Term unmarshalByteStringCont(ByteBuffer *mb, GTAbstractEntity* bae)
+OZ_Term unmarshalByteStringCont(ByteBuffer *mb, Builder*,
+                                GTAbstractEntity* bae)
 {
   Assert(bae->getType() == GT_ExtensionSusp);
-#ifdef USE_FAST_UNMARSHALER
   Assert(((DPMExtDesc *) bae)->getExtID() == OZ_E_BYTESTRING);
-#else
-  if (((DPMExtDesc *) bae)->getExtID() != OZ_E_BYTESTRING)
-    return ((OZ_Term) 0);
-#endif
   DPMByteStringDesc *desc = (DPMByteStringDesc *) bae;
   return (unmarshalByteArray(mb, desc));
 }

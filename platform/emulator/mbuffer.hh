@@ -5,7 +5,7 @@
  *  Contributors:
  *    (too long to list them all)
  *
- *  Anti-contributor (aka "Victor, the cleaning man!")
+ *  Anti-contributor (aka "Victor, the cleaner!")
  *    Kostja Popov <kost@sics.se>
  *
  *  Copyright:

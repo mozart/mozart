@@ -105,7 +105,7 @@ public:
 
   void redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be);
   void acknowledge(TaggedRef *vPtr, BorrowEntry *be);
-  void marshal(ByteBuffer *) { OZ_error("ProxyVar::marshal!?"); }
+  void marshal(ByteBuffer *bs, Bool hasIndex);
 
   Bool isFuture(){ return is_future;}
   void addEntityCond(EntityCond);
@@ -224,7 +224,7 @@ public:
   void deregisterSite(DSite* sd);
   void deAutoSite(DSite*);
   void surrender(TaggedRef*, TaggedRef,DSite*);
-  void marshal(ByteBuffer *);
+  void marshal(ByteBuffer *bs, Bool hasIndex);
 
   inline void localize(TaggedRef *vPtr);
   Bool isFuture(){ // mm3
@@ -258,17 +258,78 @@ ManagerVar *oz_getManagerVar(TaggedRef v) {
   return (ManagerVar*) oz_getExtVar(v);
 }
 
+//
+// 'recDerigster()' needs the "find all variables in the term" service.
+
+//
+// Extract variables from a term into a list (former '::digOutVars()'
+// business;)
+#define ValuesITInitSize        2048
+
+class VariableExcavator : public GenTraverser {
+private:
+  MarshalerDict *vIT;
+  OZ_Term vars;
+
+  //
+private:
+  void addVar(OZ_Term v) { vars = oz_cons(v, vars); }
+
+  //
+public:
+  VariableExcavator() {
+    vIT = new MarshalerDict(ValuesITInitSize);
+  }
+  ~VariableExcavator() {}
+  void init() { vars = oz_nil(); }
+
+  //
+  void processSmallInt(OZ_Term siTerm);
+  void processFloat(OZ_Term floatTerm);
+  void processLiteral(OZ_Term litTerm);
+  void processExtension(OZ_Term extensionTerm);
+  void processBigInt(OZ_Term biTerm);
+  void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
+  void processLock(OZ_Term lockTerm, Tertiary *lockTert);
+  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
+  void processPort(OZ_Term portTerm, Tertiary *portTert);
+  void processResource(OZ_Term resTerm, Tertiary *tert);
+  void processNoGood(OZ_Term resTerm);
+  void processVar(OZ_Term v, OZ_Term *vRef);
+  Bool processLTuple(OZ_Term ltupleTerm);
+  Bool processSRecord(OZ_Term srecordTerm);
+  Bool processFSETValue(OZ_Term fsetvalueTerm);
+  Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
+  Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst);
+  Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
+  Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
+  Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
+  Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
+  void processSync();
+
+  //
+  void doit();                  // actual processor;
+  //
+  void traverse(OZ_Term t);
+  void resume(Opaque *o);
+  void resume();
+
+  //
+  OZ_Term getVars() { return (vars); }
+};
+
+#undef ValuesITInitSize
+
+//
+#define TRAVERSERCLASS  VariableExcavator
+#include "gentraverserLoop.hh"
+#undef  TRAVERSERCLASS
+
+
 /* ---------------------------------------------------------------------- */
 
 void sendRedirect(DSite*, int, TaggedRef);
-#ifdef USE_FAST_UNMARSHALER
 OZ_Term unmarshalVar(MarshalerBuffer*, Bool, Bool);
-#else
-OZ_Term unmarshalVarRobust(MarshalerBuffer*, Bool, Bool, int *error);
-#endif
-// kost@ : 'marshalVariable' gets 'ByteBuffer' since we need 'DSite'
-// for marshaling!
-Bool marshalVariable(TaggedRef *tPtr, ByteBuffer *bs);
 Bool triggerVariable(TaggedRef *);
 
 /* ---------------------------------------------------------------------- */

@@ -39,8 +39,8 @@ void marshalCredit(MarshalerBuffer *buf, RRinstance *r){
   int len = 0;
   RRinstance *tmp;
   for(tmp = r;tmp!=NULL; tmp = tmp->next,len ++);
-  buf->put(DIF_PRIMARY);
   marshalNumber(buf, len);
+  Assert(len <= MMaxNumOfCreditRRs);
   while(r!=NULL){
     r->marshal_RR(buf);
     tmp = r;
@@ -49,38 +49,22 @@ void marshalCredit(MarshalerBuffer *buf, RRinstance *r){
   }
 }
 
-#ifdef USE_FAST_UNMARSHALER
 RRinstance *unmarshalCredit(MarshalerBuffer *buf)
-#else
-  RRinstance *unmarshalCreditRobust(MarshalerBuffer *buf, int *error)
-#endif
 {
   RRinstance *ans=NULL;
   int len;
-  MarshalTag mt = (MarshalTag) buf->get();
-  Assert(mt == DIF_PRIMARY);
-#ifdef USE_FAST_UNMARSHALER
   len = unmarshalNumber(buf);
-#else
-  len = unmarshalNumberRobust(buf, error);
 
-#endif
-
-  for(;len>0; len --){
-#ifdef USE_FAST_UNMARSHALER
+  for ( ; len>0; len--) {
     int type = unmarshalNumber(buf);
-    int *error;
-#else
-    int type = unmarshalNumberRobust(buf, error);
-#endif
     switch(type){
     case GC_ALG_WRC:
       ans = new RRinstance_WRC(ans);
-      ans->unmarshal_RR(buf, error);
+      ans->unmarshal_RR(buf);
       break;
     case GC_ALG_TL:
       ans = new RRinstance_TL(ans);
-      ans->unmarshal_RR(buf, error);
+      ans->unmarshal_RR(buf);
       break;
     default:
       Assert(0);
@@ -90,13 +74,14 @@ RRinstance *unmarshalCredit(MarshalerBuffer *buf)
 }
 
 
-void marshalCreditToOwner(MarshalerBuffer *buf,RRinstance *r,int oti){
+void marshalCreditToOwner(MarshalerBuffer *buf,RRinstance *r,int oti)
+{
   int len= 0 ;
   RRinstance *tmp;
   for(tmp = r;tmp!=NULL; tmp = tmp->next,len ++);
-  buf->put(DIF_OWNER);
   marshalNumber(buf, oti);
   marshalNumber(buf, len);
+  Assert(len <= MMaxNumOfCreditRRs);
   while(r!=NULL){
     r->marshal_RR(buf);
     tmp = r;
@@ -105,40 +90,24 @@ void marshalCreditToOwner(MarshalerBuffer *buf,RRinstance *r,int oti){
   }
 }
 
-#ifdef USE_FAST_UNMARSHALER
-RRinstance  *unmarshalCreditToOwner(MarshalerBuffer *buf,
-                                    MarshalTag mt, int &oti)
+RRinstance *unmarshalCreditToOwner(MarshalerBuffer *buf,
+                                   MarshalTag mt, int &oti)
 
-#else
-RRinstance  *unmarshalCreditToOwnerRobust(MarshalerBuffer *buf,
-                                          MarshalTag mt, int &oti,
-                                          int *error)
-#endif
 {
   RRinstance *ans=NULL;
   int len;
-#ifdef USE_FAST_UNMARSHALER
   oti = unmarshalNumber(buf);
   len = unmarshalNumber(buf);
-#else
-  oti = unmarshalNumberRobust(buf, error);
-  len = unmarshalNumberRobust(buf, error);
-#endif
   for(;len>0; len --){
-#ifdef USE_FAST_UNMARSHALER
     int type = unmarshalNumber(buf);
-    int *error;
-#else
-    int type = unmarshalNumberRobust(buf, error);
-#endif
     switch(type){
     case GC_ALG_WRC:
       ans = new RRinstance_WRC(ans);
-      ans->unmarshal_RR(buf, error);
+      ans->unmarshal_RR(buf);
       break;
     case GC_ALG_TL:
       ans = new RRinstance_TL(ans);
-      ans->unmarshal_RR(buf, error);
+      ans->unmarshal_RR(buf);
       break;
     default:
       Assert(0);

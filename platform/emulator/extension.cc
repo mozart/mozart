@@ -111,29 +111,29 @@ static oz_suspUnmarshalProcType *suspUnmarshalRoutine = 0;
 static oz_unmarshalContProcType *unmarshalContRoutine = 0;
 static int unmarshalRoutineArraySize = 0;
 
-OZ_Term oz_extension_unmarshal(int type, MarshalerBuffer* bs)
+OZ_Term oz_extension_unmarshal(int type, MarshalerBuffer* bs, Builder *b)
 {
   oz_unmarshalProcType f = unmarshalRoutine[type];
   Assert(f);
-  return (f(bs));
+  return (f(bs, b));
 }
 
 //
-OZ_Term oz_extension_unmarshal(int type, ByteBuffer *bs,
+OZ_Term oz_extension_unmarshal(int type, ByteBuffer *bs, Builder *b,
                                GTAbstractEntity* &arg)
 {
   oz_suspUnmarshalProcType f = suspUnmarshalRoutine[type];
   Assert(f);
-  return (f(bs, arg));
+  return (f(bs, b, arg));
 }
 
 //
-OZ_Term oz_extension_unmarshalCont(int type, ByteBuffer *bs,
+OZ_Term oz_extension_unmarshalCont(int type, ByteBuffer *bs, Builder *b,
                                    GTAbstractEntity *arg)
 {
   oz_unmarshalContProcType f = unmarshalContRoutine[type];
   Assert(f);
-  return (f(bs, arg));
+  return (f(bs, b, arg));
 }
 
 void oz_registerExtension(int type,

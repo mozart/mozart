@@ -43,6 +43,11 @@
 #endif
 
 //
+// Define if you want to take the snapshot before first marshaling
+// step:
+// #define EVAL_EAGER_SNAPSHOT
+
+//
 // GenTraverser's abstract entities. They are used right now for
 // handling suspensions of the (dp)marshaler.
 //
@@ -118,12 +123,14 @@ private:
 
 public:
   // Note: htNDone must be initialized (to zero);
-  DPMarshalerCodeAreaDescriptor(ProgramCounter startIn, ProgramCounter endIn)
-    : MarshalerCodeAreaDescriptor(startIn, endIn), htNDone(0) {
+  DPMarshalerCodeAreaDescriptor(ProgramCounter startIn, ProgramCounter endIn,
+                                AddressHashTableO1Reset *lITin)
+    : MarshalerCodeAreaDescriptor(startIn, endIn, lITin), htNDone(0) {
     DebugCode(htIndex = -1);
   }
   virtual ~DPMarshalerCodeAreaDescriptor() {
     DebugCode(start = end = current = (ProgramCounter) -1;);
+    DebugCode(lIT = (AddressHashTableO1Reset *) -1;);
     DebugCode(htIndex = htNDone = -1;);
     DebugCode(htREntries = -1;);
     DebugCode(htable = (IHashTable *) -1;);
@@ -180,31 +187,20 @@ Bool dpMarshalHashTableRef(GenTraverser *gt,
                            int start, IHashTable *table,
                            ByteBuffer *bs);
 
-#ifdef USE_FAST_UNMARSHALER
 ProgramCounter
 dpUnmarshalHashTableRef(Builder *b,
                         ProgramCounter pc, MarshalerBuffer *bs,
                         DPBuilderCodeAreaDescriptor *desc, Bool &suspend);
-#else
-ProgramCounter
-dpUnmarshalHashTableRefRobust(Builder *b,
-                              ProgramCounter pc, MarshalerBuffer *bs,
-                              DPBuilderCodeAreaDescriptor *desc,
-                              Bool &suspend,
-                              int *error);
-#endif
 
-
-//
-class VariableExcavator;
 
 //
 // Deferred (or lazy) and concurrent (or suspendable) marshaling
 // require marshaling a snapshot of a value as it existed at the
 // moment of message generation by the protocol layer. This is because
-// messages are considered sent at the moment of their generation, so
-// any subsequent activity of the (centralized) engine does not
-// influence their content.
+// messages are considered sent at the moment of their generation (or,
+// as it is allowed by Oz - a little bit later, e.g. when first
+// marshaling step has begun), so any subsequent activity of the
+// (centralized) engine does not influence their content.
 //
 // Conceptually, such a snapshot can be either real or virtual. Real
 // snapshot can be achieved by copying the datastructure, which is
@@ -277,70 +273,120 @@ class VariableExcavator;
 // message from the site is then omitted. This results in faster
 // propagation of a variable binding.
 //
-// This optimization could be optimized even further by delaying
-// globalization of local variables. However, the globalization cannot
-// be delayed until e.g. marshaling. As an example consider a message
-// M0 that references a variable. If its globalization is postponed,
-// then it can be concurrently globalized & marshaled by some other
-// thread/marshaler for a message M-, so the receiving site obtains a
-// proxy of the variable. Now, should be globalization postponed
-// beyond binding, the M0 will contain already a variable's value. The
-// receiving site will observe then both the variable proxy due to M-
-// and its value due to M0. Due to FIFO of message delivery, the
-// message Mvb with a binding of the variable is delivered after M0.
-// Should a network failure occur before Mvb's delivery, the receiving
-// site has a hidden failure point associated with the variable proxy.
-//
-// The problem does not exist if globalization cannot be postponed
-// beyond thread preemption either due to I/O or another thread.
-// However, that still covers the interesting case of concurrent
-// producer thread and a thread that sends produced values over the
-// network.
+// Globalization of local variables can be (and actually IS in the
+// current system) delayed until (first phase) marshaling, and that is
+// transparent to the receiving site since it cannot distinguish
+// between points of message generations and message marshaling.
 //
 
-#if defined(DEBUG_CHECK)
-class MsgTermSnapshot;
-class MsgTermSnapshotImpl;
-#endif
+//
+#define ValuesITInitSize        2048
+#define LocationsITInitSize     256
+
+//
+// There are two marshalers, for the first and seconds stages.  Both
+// are inherited from the 'DPMarshaler' class (which does not contain
+// the marshaling code).
 
 //
 class DPMarshaler : public GenTraverser {
-  friend class VariableExcavator;
-private:
+  friend class VSnapshotBuilder;
+protected:
+  MarshalerDict *vIT;
+  AddressHashTableO1Reset *lIT;
+  OzValuePatch *expVars;
+  OZ_Term gcExpVars;            // "OZ_Term" version of 'expVars';
+
+  //
   // Support for lazy protocols: when 'doToplevel' is set to TRUE, a
   // complete representation of the first object (etc.?) is generated,
   // as opposed to its stub.
-  //
-  // Note that 'DPMarshaler' is not specialized (as opposed to the
-  // 'GenTraverser's spirit, when every single variation of a
-  // marshaling activity has its own class). This is because marshaler
-  // objects are large and, hence, cannot be re-created all the time.
-  // Instead, a pool of standard 'DPMarshaler's is kept.
   Bool doToplevel;
-#if defined(DEBUG_CHECK)
-  MsgTermSnapshotImpl *mts;
-#endif
 
   //
 public:
-  DPMarshaler() : doToplevel(FALSE) {}
-  ~DPMarshaler() {}
+  DPMarshaler() : doToplevel(FALSE) {
+    lIT = new AddressHashTableO1Reset(LocationsITInitSize);
+    vIT = new MarshalerDict(ValuesITInitSize);
+    expVars = (OzValuePatch *) 0;
+    gcExpVars = (OZ_Term) 0;
+  }
+  ~DPMarshaler() {
+    delete lIT;
+    delete vIT;
+    DebugCode(expVars = (OzValuePatch *) -1;);
+    DebugCode(lIT = (AddressHashTableO1Reset *) -1;);
+    DebugCode(vIT = (MarshalerDict *) -1;);
+    DebugCode(gcExpVars = (OZ_Term) -1;);
+  }
+
+  //
+  void reset() {
+    GenTraverser::reset();
+    lIT->mkEmpty();
+    vIT->mkEmpty();
+    if (expVars) {
+      deleteOzValuePatch(expVars);
+      expVars = (OzValuePatch *) 0;
+    }
+    Assert(gcExpVars == (OZ_Term) 0);
+  }
+
+  //
+  void gcStart() {
+    Assert(gcExpVars == (OZ_Term) 0);
+    if (expVars)
+      gcExpVars = gcStartOVP(expVars);
+    DebugCode(expVars = (OzValuePatch *) 0;);
+  }
+  void gcFinish() {
+    Assert(expVars == (OzValuePatch *) 0);
+    if (gcExpVars)
+      expVars = gcFinishOVP(gcExpVars);
+    DebugCode(gcExpVars = (OZ_Term) 0;);
+  }
+
+  //
+  void gCollect() {
+    Assert(expVars == (OzValuePatch *) 0);
+    GenTraverser::gCollect();
+    vIT->gCollect();
+    oz_gCollectTerm(gcExpVars, gcExpVars);
+  }
+
+  //
+  OzValuePatch* getExpVars() { return (expVars); }
+  void setExpVars(OzValuePatch *p) { expVars = p; }
+
+  //
+  // Support for lazy protocols: next marshaling will generate a full
+  // representation of a top-level object (as opposed to its stub);
+  void genFullToplevel() { doToplevel = TRUE; }
+  Bool isFullToplevel() { return (doToplevel); }
+
+  //
+  MarshalerDict *getVIT() { return (vIT); }
+};
+
+//
+class DPMarshaler1stP : public DPMarshaler {
+public:
+  DPMarshaler1stP() { Assert(0); }
 
   //
   void processSmallInt(OZ_Term siTerm);
   void processFloat(OZ_Term floatTerm);
   void processLiteral(OZ_Term litTerm);
   void processExtension(OZ_Term extensionTerm);
-  void processBigInt(OZ_Term biTerm, ConstTerm *biConst);
+  void processBigInt(OZ_Term biTerm);
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
   Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
   void processLock(OZ_Term lockTerm, Tertiary *lockTert);
   Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
   void processPort(OZ_Term portTerm, Tertiary *portTert);
   void processResource(OZ_Term resTerm, Tertiary *tert);
-  Bool processNoGood(OZ_Term resTerm, Bool trail);
+  void processNoGood(OZ_Term resTerm);
   void processVar(OZ_Term cv, OZ_Term *varTerm);
-  void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
   Bool processLTuple(OZ_Term ltupleTerm);
   Bool processSRecord(OZ_Term srecordTerm);
   Bool processFSETValue(OZ_Term fsetvalueTerm);
@@ -352,25 +398,11 @@ public:
   void processSync();
 
   //
-  void doit();                  // actual processor;
+  void doit();
   //
   void traverse(OZ_Term t);
   void resume(Opaque *o);
-
-  //
-  // Support for lazy protocols: next marshaling will generate a full
-  // representation of a top-level object (as opposed to its stub);
-  void genFullToplevel() { doToplevel = TRUE; }
-  DebugCode(Bool isFullToplevel() { return (doToplevel); })
-
-  //
-#if defined(DEBUG_CHECK)
-  void prepareTraversing(Opaque *o, MsgTermSnapshot *mtsIn) {
-    mts = (MsgTermSnapshotImpl *) mtsIn;
-    GenTraverser::prepareTraversing(o);
-  }
-  virtual void appTCheck(OZ_Term term);
-#endif
+  void resume();
 
   //
 private:
@@ -379,41 +411,248 @@ private:
 };
 
 //
-#define TRAVERSERCLASS  DPMarshaler
+#define TRAVERSERCLASS  DPMarshaler1stP
 #include "gentraverserLoop.hh"
 #undef  TRAVERSERCLASS
 
-
 //
-// Extract variables from a term into a list (former '::digOutVars()'
-// business;)
-class VariableExcavator : public GenTraverser {
-private:
-  Bool doToplevel;
-  OZ_Term vars;
-
-  //
-private:
-  void addVar(OZ_Term v) { vars = oz_cons(v, vars); }
-
-  //
+class DPMarshaler2ndP : public DPMarshaler {
 public:
-  ~VariableExcavator() {}
-  void init(Bool full) { vars = oz_nil(); doToplevel = full; }
+  DPMarshaler2ndP() { Assert(0); }
 
   //
   void processSmallInt(OZ_Term siTerm);
   void processFloat(OZ_Term floatTerm);
   void processLiteral(OZ_Term litTerm);
   void processExtension(OZ_Term extensionTerm);
-  void processBigInt(OZ_Term biTerm, ConstTerm *biConst);
+  void processBigInt(OZ_Term biTerm);
+  void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
+  Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
+  void processLock(OZ_Term lockTerm, Tertiary *lockTert);
+  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
+  void processPort(OZ_Term portTerm, Tertiary *portTert);
+  void processResource(OZ_Term resTerm, Tertiary *tert);
+  void processNoGood(OZ_Term resTerm);
+  void processVar(OZ_Term cv, OZ_Term *varTerm);
+  Bool processLTuple(OZ_Term ltupleTerm);
+  Bool processSRecord(OZ_Term srecordTerm);
+  Bool processFSETValue(OZ_Term fsetvalueTerm);
+  Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst);
+  Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
+  Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
+  Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
+  Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
+  void processSync();
+
+  //
+  void doit();
+  //
+  void traverse(OZ_Term t);
+  void resume(Opaque *o);
+  void resume();
+
+  //
+  DebugCode(void vHook();)
+
+  //
+private:
+  Bool marshalObjectStub(OZ_Term objTerm, ConstTerm *objConst);
+  Bool marshalFullObject(OZ_Term objTerm, ConstTerm *objConst);
+};
+
+//
+#define TRAVERSERCLASS  DPMarshaler2ndP
+#include "gentraverserLoop.hh"
+#undef  TRAVERSERCLASS
+
+//
+// Support for "virtual snapshot"s: patches that
+// . keep locations of variables
+// . hold internal (memory) representation of "exported" variables until
+//   their external (network) representations are sent out;
+class MgrVarPatch : public OzValuePatch {
+private:
+  Bool isMarshaled;             // for the case of transmission failure;
+  int oti;
+  RRinstance *remoteRef;        // '!' memory???
+  MarshalTag tag;               // future? auto?
+
+  //
+public:
+  MgrVarPatch(OZ_Term locIn, OzValuePatch *nIn,
+                 ManagerVar *mv, DSite *dest);
+  virtual ~MgrVarPatch() { Assert(0); }
+
+  //
+  virtual void          disposeV();
+  //
+  virtual ExtVarType    getIdV(void) { return (OZ_EVAR_MGRVARPATCH); }
+  //
+  virtual OzValuePatch* gCollectV() {
+    return (new MgrVarPatch(*this));
+  }
+  virtual void gCollectRecurseV() {
+    gcRecurseOVP();
+  }
+
+  //
+  void marshal(ByteBuffer *bs, Bool hasIndex);
+};
+
+inline
+Bool oz_isMgrVarPatch(OZ_Term v)
+{
+  return (oz_isExtVar(v) && (oz_getExtVar(v)->getIdV() == OZ_EVAR_MGRVARPATCH));
+}
+
+inline
+MgrVarPatch *oz_getMgrVarPatch(OZ_Term v)
+{
+  Assert(oz_isMgrVarPatch(v));
+  return ((MgrVarPatch *) oz_getExtVar(v));
+}
+
+//
+// MVarPatch holds a location of a *marshaled* variable, of whichever
+// type (but should not be marshaled itself: 'processVar()' methods
+// should recognize coreferences, and marshal them accordingly);
+class MVarPatch : public OzValuePatch {
+public:
+  MVarPatch(OZ_Term locIn, OzValuePatch *nIn)
+    : OzValuePatch(locIn, nIn) {}
+  ~MVarPatch() { Assert(0); }
+
+  //
+  virtual void          disposeV() {
+    disposeOVP();
+    oz_freeListDispose(this, sizeof(MVarPatch));
+  }
+  //
+  virtual ExtVarType    getIdV(void) { return (OZ_EVAR_MVARPATCH); }
+  //
+  virtual OzValuePatch* gCollectV() {
+    return (new MVarPatch(*this));
+  }
+  virtual void gCollectRecurseV() {
+    gcRecurseOVP();
+  }
+};
+
+//
+class PxyVarPatch : public OzValuePatch {
+private:
+  DebugCode(int bti;);
+  Bool isMarshaled;
+  int oti;
+  RRinstance *remoteRef;        // '!' memory???
+  DSite *ms;                    // manager site, always;
+  short isFuture;               //
+  short isToOwner;              //
+  BYTE  ec;                     // Entity Condition
+
+  //
+public:
+  PxyVarPatch(OZ_Term locIn, OzValuePatch *nIn,
+                 ProxyVar *pv, DSite *dest);
+  virtual ~PxyVarPatch() { Assert(0); }
+
+  //
+  virtual void          disposeV();
+  //
+  virtual ExtVarType    getIdV(void) { return (OZ_EVAR_PXYVARPATCH); }
+  //
+  virtual OzValuePatch* gCollectV() {
+    return (new PxyVarPatch(*this));
+  }
+  virtual void gCollectRecurseV() {
+    gcRecurseOVP();
+    ms->makeGCMarkSite();
+  }
+
+  //
+  void marshal(ByteBuffer *bs, Bool hasIndex);
+};
+
+inline
+Bool oz_isPxyVarPatch(OZ_Term v)
+{
+  return (oz_isExtVar(v) && (oz_getExtVar(v)->getIdV() == OZ_EVAR_PXYVARPATCH));
+}
+
+inline
+PxyVarPatch *oz_getPxyVarPatch(OZ_Term v)
+{
+  Assert(oz_isPxyVarPatch(v));
+  return ((PxyVarPatch *) oz_getExtVar(v));
+}
+
+//
+// Construct virtual snapshot;
+class VSnapshotBuilder : public GenTraverser {
+private:
+  DSite *dest;                  // for this message;
+  MarshalerDict *vIT;           // shared with the dpMarshaler;
+  OzValuePatch *expVars;
+  //
+  Bool doToplevel;
+
+  //
+private:
+  // This guy is re-mapping the DPMarshaler's task "processor"s into
+  // corresponding internal ones.
+  void copyStack(DPMarshaler *dpm);
+
+  //
+public:
+  VSnapshotBuilder() {
+    DebugCode(dest = (DSite *) -1;);
+    DebugCode(vIT = (MarshalerDict *) -1;);
+    DebugCode(expVars = (OzValuePatch *) -1;);
+    DebugCode(doToplevel = (Bool) -1;);
+  }
+
+  //
+  void init(DSite *destIn, DPMarshaler *dpm) {
+    dest = destIn;
+    vIT = dpm->getVIT();
+    doToplevel = dpm->isFullToplevel();
+    expVars = dpm->getExpVars();
+    copyStack(dpm);
+  }
+#if defined(EVAL_EAGER_SNAPSHOT)
+  void initEager(DSite *destIn, DPMarshaler *dpm, OZ_Term t) {
+    dest = destIn;
+    vIT = dpm->getVIT();
+    doToplevel = dpm->isFullToplevel();
+    expVars = (OzValuePatch *) 0;
+    put(t);
+  }
+#endif
+
+  void reset() {
+    GenTraverser::reset();
+    DebugCode(dest = (DSite *) -1;);
+    DebugCode(vIT = (MarshalerDict *) -1;);
+    DebugCode(doToplevel = (Bool) -1;);
+    DebugCode(doToplevel = (Bool) -1;);
+  }
+  ~VSnapshotBuilder() { reset(); }
+
+  //
+  OzValuePatch *takeExpVars () { return (expVars); }
+
+  //
+  void processSmallInt(OZ_Term siTerm);
+  void processFloat(OZ_Term floatTerm);
+  void processLiteral(OZ_Term litTerm);
+  void processExtension(OZ_Term extensionTerm);
+  void processBigInt(OZ_Term biTerm);
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
   void processLock(OZ_Term lockTerm, Tertiary *lockTert);
   void processPort(OZ_Term portTerm, Tertiary *portTert);
   void processResource(OZ_Term resTerm, Tertiary *tert);
-  Bool processNoGood(OZ_Term resTerm, Bool trail);
+  void processNoGood(OZ_Term resTerm);
   void processVar(OZ_Term cv, OZ_Term *varTerm);
-  void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
   Bool processLTuple(OZ_Term ltupleTerm);
   Bool processSRecord(OZ_Term srecordTerm);
   Bool processFSETValue(OZ_Term fsetvalueTerm);
@@ -431,25 +670,13 @@ public:
   //
   void traverse(OZ_Term t);
   void resume(Opaque *o);
-
-  //
-  // This guy is capable of re-mapping the DPMarshaler's task
-  // "processor"s into corresponding VariableExcavator's ones. So,
-  // it's not a generic routine - sadly but true;
-  //
-  // Not in use since we take a snapshot of a value ahead of
-  // marshaling now;
-  //   void copyStack(DPMarshaler *dpm);
-
-  //
-  OZ_Term getVars()      { return (vars); }
+  void resume();
 };
 
 //
-#define TRAVERSERCLASS  VariableExcavator
+#define TRAVERSERCLASS  VSnapshotBuilder
 #include "gentraverserLoop.hh"
 #undef  TRAVERSERCLASS
-
 
 //
 // Blocking factor for binary areas: how many Oz values a binary area
@@ -460,32 +687,7 @@ const int ozValuesBADP = 1024;
 // const int ozValuesBADP = 1;
 
 //
-extern VariableExcavator ve;
-
-//
-inline
-OZ_Term extractVars(OZ_Term in, Bool full)
-{
-  ve.init(full);
-  ve.prepareTraversing((Opaque *) 0);
-  ve.traverse(in);
-  ve.finishTraversing();
-  return (ve.getVars());
-}
-
-//
-// Not in use since we take a snapshot of a value ahead of
-// marshaling now;
-//
-//  static inline
-//  OZ_Term extractVars(DPMarshaler *dpm)
-//  {
-//    ve.init();
-//    ve.copyStack(dpm);
-//    ve.resume((Opaque *) 0);
-//    ve.finishTraversing();
-//    return (ve.getVars());
-//  }
+extern VSnapshotBuilder vsb;
 
 //
 // That's the corresponding 'CodeAreaProcessor':
@@ -494,139 +696,81 @@ Bool dpMarshalCode(GenTraverser *m, GTAbstractEntity *arg);
 // yeah?)
 Bool traverseCode(GenTraverser *m, GTAbstractEntity *arg);
 
+//
+// Interface procedures;
+//
 
 //
-// Virtual snapshot business.
-
-//
-class SntVarLocation : public CppObjMemory {
-private:
-  OZ_Term loc;
-  // A copy of the original OZ_Term for managers, or a fresh "var"
-  // tagged pointer to a dedicated "exported" proxy;
-  OZ_Term var;
-  OZ_Term aVal;                 // actual value;
-  //
-  SntVarLocation *next;
-
-public:
-  SntVarLocation(OZ_Term locIn, OZ_Term varIn, SntVarLocation *nextIn)
-    : loc(locIn), var(varIn), next(nextIn) {
-    Assert(oz_isRef(locIn));
-    DebugCode(aVal = (OZ_Term) -1;);
-  }
-
-  //
-  OZ_Term getLoc() { Assert(oz_isRef(loc)); return (loc); }
-  OZ_Term getVar() { return (var); }
-  //
-  OZ_Term &getLocRef() { return (loc); }
-  OZ_Term &getVarRef() { return (var); }
-  void gcSetLoc(OZ_Term locIn) { loc = locIn; }
-  //
-  void saveValue(OZ_Term value) { aVal = value; }
-  OZ_Term getSavedValue() { return (aVal); }
-  //
-  SntVarLocation* getNextLoc() { return (next); }
-};
-
-//
-#define MTS_NONE        0x0
-#define MTS_SET         0x1     // snapshot is currently actualized;
-
-//
-// MsgTermSnapshot"s are opaque for the container itself, but have to
-// be kept here just 'cause the snapshot is taken way before ever
-// begins;
-class MsgTermSnapshot {};
-
-//
-class MsgTermSnapshotImpl : public MsgTermSnapshot,
-                            public CppObjMemory {
-private:
-  DebugCode(int flags;);
-  SntVarLocation *locs;
-
-  //
-public:
-  MsgTermSnapshotImpl(SntVarLocation *l)
-    : locs(l) {  DebugCode(flags = MTS_NONE;); }
-
-  //
-  SntVarLocation* getLocs() { return (locs); }
-
-  //
-  void install()   {
-    Assert(!(flags&MTS_SET));
-    SntVarLocation* l = locs;
-    while (l) {
-      OZ_Term vr = l->getLoc();
-      OZ_Term *vp = tagged2Ref(vr);
-      OZ_Term v = l->getVar();
-      l->saveValue(*vp);
-      *vp = v;
-      l = l->getNextLoc();
-    }
-    DebugCode(flags |= MTS_SET);
-  }
-
-  //
-  void deinstall() {
-    Assert(flags&MTS_SET);
-    SntVarLocation* l = locs;
-    while (l) {
-      OZ_Term vr = l->getLoc();
-      OZ_Term *vp = tagged2Ref(vr);
-      OZ_Term val = l->getSavedValue();
-      DebugCode(l->saveValue((OZ_Term) -1););
-      *vp = val;
-      l = l->getNextLoc();
-    }
-    DebugCode(flags &= ~MTS_SET);
-  }
-
-  //
-  // 'start'/'finish' methods make sure that locations are kept by
-  // storing there temporary "GCStubVar"s.
-  //
-  // 'gc()' collects hidden values (manager variables that are already
-  // bound locally and "exported proxies", to be precise).
-  void gcStart();
-  void gc();
-  void gcFinish();
-
-  //
-#if defined(DEBUG_CHECK)
-  void checkVar(OZ_Term t);
-  int getSize() {
-    SntVarLocation* l = locs;
-    int cnt = 0;
-    while (l) {
-      cnt++;
-      l = l->getNextLoc();
-    }
-    return (cnt);
-  }
-#endif
-};
-
-//
-// auxilary service functions;
-static inline
-void dpMarshalerStartBatch(ByteBuffer *bs, DPMarshaler *dpm,
-                           MsgTermSnapshot *mtsIn)
+// 'dpMarshalTerm' with four arguments is called when a first frame
+// is marshaled, and with two arguments - for subsequent frames;
+inline
+DPMarshaler* dpMarshalTerm(OZ_Term term,
+                           ByteBuffer *bs, DPMarshaler *dpmIn, DSite *dest)
 {
-  MsgTermSnapshotImpl *mts = (MsgTermSnapshotImpl *) mtsIn;
-  mts->install();
+  Assert(dpmIn->isFinished());
+#if defined(EVAL_EAGER_SNAPSHOT)
+  DPMarshaler2ndP *dpm = (DPMarshaler2ndP *) dpmIn;
+  OzValuePatch *expVars;
+#else
+  DPMarshaler1stP *dpm = (DPMarshaler1stP *) dpmIn;
+#endif
+
+  //
+#if defined(EVAL_EAGER_SNAPSHOT)
+  vsb.initEager(dest, dpm, term);
+  DebugCode(vsb.prepareTraversing((Opaque *) bs));
+  vsb.resume();
+  vsb.finishTraversing();
+  dpm->setExpVars(vsb.takeExpVars());
+#endif
+
+  //
+  dpm->prepareTraversing((Opaque *) bs);
+#if defined(EVAL_EAGER_SNAPSHOT)
+  // Note that the patch can grow, but newly elements do not need to
+  // be deinstalled:
+  expVars = dpm->getExpVars();
+  if (expVars) installOVP(expVars);
+#endif
+  dpm->traverse(term);
+#if defined(EVAL_EAGER_SNAPSHOT)
+  if (expVars) deinstallOVP(expVars);
+#endif
+
+  //
+  if (dpm->isFinished()) {
+    dpm->finishTraversing();
+    marshalDIF(bs, DIF_EOF);
+    return ((DPMarshaler *) 0);
+  } else {
+#if !defined(EVAL_EAGER_SNAPSHOT)
+    // Now, take the snapshot:
+    vsb.init(dest, dpm);        // copy the marshaler's stack, among all;
+    DebugCode(vsb.prepareTraversing((Opaque *) bs));
+    vsb.resume();               // .. off the just copied stack;
+    vsb.finishTraversing();
+    dpm->setExpVars(vsb.takeExpVars());
+#endif
+    //
+    return (dpm);
+  }
 }
 
 //
-static inline
-DPMarshaler* dpMarshalerFinishBatch(ByteBuffer *bs, DPMarshaler *dpm,
-                                    MsgTermSnapshot *mtsIn)
+inline
+DPMarshaler* dpMarshalContTerm(ByteBuffer *bs, DPMarshaler *dpmIn)
 {
-  MsgTermSnapshotImpl *mts = (MsgTermSnapshotImpl *) mtsIn;
-  mts->deinstall();
+  Assert(!dpmIn->isFinished());
+  DPMarshaler2ndP *dpm = (DPMarshaler2ndP *) dpmIn;
+  OzValuePatch *expVars;
+
+  //
+  expVars = dpm->getExpVars();
+  if (expVars) installOVP(expVars);
+  dpm->resume((Opaque *) bs);
+  if (expVars) deinstallOVP(expVars);
+
+  //
   if (dpm->isFinished()) {
     dpm->finishTraversing();
     marshalDIF(bs, DIF_EOF);
@@ -634,88 +778,6 @@ DPMarshaler* dpMarshalerFinishBatch(ByteBuffer *bs, DPMarshaler *dpm,
   } else {
     return (dpm);
   }
-}
-
-//
-SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest);
-void deleteSntVarLocsOutline(SntVarLocation *locs);
-
-//
-// Interface procedures;
-//
-
-//
-inline
-MsgTermSnapshot* takeTermSnapshot(OZ_Term t, DSite *dest, Bool full) {
-  OZ_Term vars = extractVars(t, full);
-  SntVarLocation *svl;
-  //
-  svl = oz_isNil(vars) ?
-    (SntVarLocation *) 0 : takeSntVarLocsOutline(vars, dest);
-  return (new MsgTermSnapshotImpl(svl));
-}
-
-//
-inline
-void deleteTermSnapshot(MsgTermSnapshot *mtsIn) {
-  MsgTermSnapshotImpl *mts = (MsgTermSnapshotImpl *) mtsIn;
-  SntVarLocation *locs = mts->getLocs();
-  //
-  if (locs) deleteSntVarLocsOutline(locs);
-  delete mts;
-}
-
-//
-inline
-void gcTermSnapshot(MsgTermSnapshot *mtsIn) {
-  MsgTermSnapshotImpl *mts = (MsgTermSnapshotImpl *) mtsIn;
-  mts->gc();
-}
-
-//
-inline
-void mtsStartGC(MsgTermSnapshot *mtsIn) {
-  MsgTermSnapshotImpl *mts = (MsgTermSnapshotImpl *) mtsIn;
-  mts->gcStart();
-}
-inline
-void mtsFinishStartGC(MsgTermSnapshot *mtsIn) {
-  MsgTermSnapshotImpl *mts = (MsgTermSnapshotImpl *) mtsIn;
-  mts->gcFinish();
-}
-
-///
-// 'dpMarshalTerm' with three arguments is called when a first frame
-// is marshaled, and with two arguments - for subsequent frames;
-inline
-DPMarshaler* dpMarshalTerm(ByteBuffer *bs, DPMarshaler *dpm,
-                           OZ_Term term, MsgTermSnapshot *mts)
-{
-  Assert(dpm->isFinished());
-  Assert(mts);
-  //
-  dpm->prepareTraversing((Opaque *) bs DebugArg(mts));
-  //
-  dpMarshalerStartBatch(bs, dpm, mts);
-  //
-  dpm->traverse(term);
-  //
-  return (dpMarshalerFinishBatch(bs, dpm, mts));
-}
-
-//
-inline
-DPMarshaler* dpMarshalTerm(ByteBuffer *bs, DPMarshaler *dpm,
-                           MsgTermSnapshot *mts)
-{
-  Assert(!dpm->isFinished());
-  Assert(mts);
-  //
-  dpMarshalerStartBatch(bs, dpm, mts);
-  //
-  dpm->resume((Opaque *) bs);
-  //
-  return (dpMarshalerFinishBatch(bs, dpm, mts));
 }
 
 //
@@ -860,65 +922,40 @@ extern SendRecvCounter mess_counter[];
 
 //
 void marshalDSite(MarshalerBuffer *, DSite *);
-void marshalVarObject(ByteBuffer *bs, int BTI, GName *gnobj, GName *gnclass);
 
 // '-1' means the action is suspended;
 
-// var.cc
-OZ_Term
-unmarshalBorrowRobust(MarshalerBuffer *bs,
-                      OB_Entry *&ob, int &bi, BYTE &ec, int *error);
-
-void marshalBorrowHead(MarshalerBuffer *bs, MarshalTag tag, int bi);
-void saveMarshalBorrowHead(int bi, DSite* &ms, int &oti,
-                           RRinstance *&c);
-void marshalBorrowHeadSaved(MarshalerBuffer *bs, MarshalTag tag, DSite *ms,
-                            int oti, RRinstance *c,BYTE ec);
-void discardBorrowHeadSaved(DSite *ms, int oti,
-                            RRinstance *credit);
-void marshalToOwner(MarshalerBuffer *bs, int bi);
-void saveMarshalToOwner(int bi, int &oti,
-                        RRinstance *&c);
-void marshalToOwnerSaved(MarshalerBuffer *bs,RRinstance *c,
-                         int oti);
-inline
-void discardToOwnerSaved(DSite *ms, int oti,RRinstance *c) {
-  discardBorrowHeadSaved(ms, oti, c);
-}
-void marshalOwnHead(MarshalerBuffer *bs, int tag, int i);
-void saveMarshalOwnHead(int oti, RRinstance *&c);
-void marshalOwnHeadSaved(MarshalerBuffer *bs, int tag, int oti, RRinstance *c);
-void discardOwnHeadSaved(int oti, RRinstance *c);
-
 //
-void marshalTertiary(ByteBuffer *bs, Tertiary *t, MarshalTag tag);
-#ifdef USE_FAST_UNMARSHALER
+void marshalTertiary(ByteBuffer *bs,
+                     Tertiary *t, Bool hasIndex, MarshalTag tag);
 OZ_Term unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag);
 OZ_Term unmarshalOwner(MarshalerBuffer *bs, MarshalTag mt);
-#else
-OZ_Term unmarshalTertiaryRobust(MarshalerBuffer *bs,
-                                MarshalTag tag, int *error);
-OZ_Term unmarshalOwnerRobust(MarshalerBuffer *bs,
-                             MarshalTag mt, int *error);
-#endif
+// var.cc
+OZ_Term unmarshalBorrow(MarshalerBuffer *bs,
+                        OB_Entry *&ob, int &bi, BYTE &ec);
 void marshalObject(MarshalerBuffer *bs, ConstTerm* t);
-void marshalSPP(MarshalerBuffer *bs, TaggedRef entity, Bool trail);
-
 
 //
 // The maximal sizes for the marshal* routines are defined as follows:
 // aux:
-#define MCreditMaxSize MNumberMaxSize*6
+// kost@ : determining the size of a marshaled credit is broken right now:
+//         marshaling of only up to MMaxNumOfCreditRRs RR"s is allowed.
+#define MMaxNumOfCreditRRs 5
+#define MCreditRRSize (3*MNumberMaxSize)
+#define MCreditMaxSize                                                  \
+  (DIFMaxSize + MNumberMaxSize + MMaxNumOfCreditRRs*MCreditRRSize)
+#define MCreditToOwnerMaxSize                                           \
+  (DIFMaxSize + 2*MNumberMaxSize + MMaxNumOfCreditRRs*MCreditRRSize)
 #define MBaseSiteMaxSize (3*MNumberMaxSize + MShortMaxSize)
 #define MDSiteMaxSize (DIFMaxSize + MBaseSiteMaxSize)
-#define MBorrowHeadMaxSize (2*DIFMaxSize + 2*MDSiteMaxSize + MNumberMaxSize + MCreditMaxSize)
-#define MOwnHeadMaxSize (2*DIFMaxSize + MDSiteMaxSize + MNumberMaxSize + MCreditMaxSize)
-#define MObjectVarMaxSize (MBorrowHeadMaxSize + 2*MGNameMaxSize)
-// now:
-#define MTertiaryMaxSize MBorrowHeadMaxSize
-#define MDistVarMaxSize MObjectVarMaxSize
-#define MDistObjectMaxSize MObjectVarMaxSize
-#define MDistSPPMaxSize MOwnHeadMaxSize
+#define MBorrowHeadMaxSize                                              \
+  (DIFMaxSize + MDSiteMaxSize + MNumberMaxSize + MCreditMaxSize)
+#define MOwnHeadMaxSize                                                 \
+  (2*DIFMaxSize + MNumberMaxSize + MCreditMaxSize)
+#define MToOwnerMaxSize MCreditToOwnerMaxSize
+#define MTertiaryMaxSize                                                \
+  (DIFMaxSize +                                                         \
+   max(max(MOwnHeadMaxSize, MBorrowHeadMaxSize), MToOwnerMaxSize))
 
 //
 // Top-level management of marshalers (to be used by transport

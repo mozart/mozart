@@ -26,70 +26,23 @@
 #include "msgContainer.hh"
 #include "transObj.hh"
 
-void MsgContainer::init(DSite *site) {
-  flags=0;
+void MsgContainer::init(DSite *site)
+{
+  flags = 0;
   destination = site;
-  msgTS = (MsgTermSnapshot *) 0;
   next = NULL;
-  cntrlVar = (OZ_Term)0;
+  cntrlVar = (OZ_Term) 0;
   msgNum=-1;
   //  sendTime=-1; AN!
   cont = (void *) 0;
-  DebugCode(for (int i=0;i<MAX_NOF_FIELDS;i++)
-               msgFields[i].arg=NULL;)
-}
-
-void MsgContainer::takeSnapshot() {
-  Assert(!checkFlag(MSG_HAS_MARSHALCONT));
-  Assert(!checkFlag(MSG_HAS_UNMARSHALCONT));
-
-  //
-  for(int i = 0 ; i < MAX_NOF_FIELDS; i++) {
-    switch(msgFields[i].ft) {
-    case FT_FULLTOPTERM:
-      {
-        OZ_Term t = (OZ_Term) msgFields[i].arg;
-        // currently at most one term per message:
-        Assert(msgTS == (MsgTermSnapshot *) 0);
-        msgTS = takeTermSnapshot(t, destination, TRUE);
-      }
-      break;
-
-    case FT_TERM:
-      {
-        OZ_Term t = (OZ_Term) msgFields[i].arg;
-        // currently at most one term per message:
-        Assert(msgTS == (MsgTermSnapshot *) 0);
-        msgTS = takeTermSnapshot(t, destination, FALSE);
-      }
-      break;
-
-    case FT_NUMBER:
-    case FT_CREDIT:
-    case FT_STRING:
-    case FT_SITE:
-    case FT_NONE:
-      break;
-
-    default:
-      Assert(0);
-      break;
-    }
-  }
-}
-
-void MsgContainer::deleteSnapshot() {
-  if (msgTS) {
-    deleteTermSnapshot(msgTS);
-    // should not be reused before 'init':
-    DebugCode(msgTS = (MsgTermSnapshot *) -1);
-  }
+  DebugCode(for (int i=0;i<MAX_NOF_FIELDS;i++) msgFields[i].arg=NULL;);
 }
 
 // includes MessageType-specific get_,put_,marshal_,unmarshal_,gcMsgC_
 #include "msgContainer_marshal.cc"
 
-MsgContainerManager::~MsgContainerManager() {
+MsgContainerManager::~MsgContainerManager()
+{
   MsgContainer *msgC;
   FreeListEntry *f;
   int l=length();
@@ -102,8 +55,8 @@ MsgContainerManager::~MsgContainerManager() {
   Assert(length()==0);
 }
 
-
-MsgContainer *MsgContainerManager::newMsgContainer(DSite* site,int priority) {
+MsgContainer *MsgContainerManager::newMsgContainer(DSite* site,int priority)
+{
   MsgContainer *ret = newMsgContainer(site);
   //  printf("msgCprio %d\n",priority + 1);
   ret->setPriority(priority+1);
@@ -111,7 +64,8 @@ MsgContainer *MsgContainerManager::newMsgContainer(DSite* site,int priority) {
   return ret;
 }
 
-MsgContainer *MsgContainerManager::newMsgContainer(DSite* site) {
+MsgContainer *MsgContainerManager::newMsgContainer(DSite* site)
+{
   MsgContainer *msgC = new MsgContainer();
   msgC->init(site);
   ++wc;
@@ -119,12 +73,12 @@ MsgContainer *MsgContainerManager::newMsgContainer(DSite* site) {
   return msgC;
 }
 
-void MsgContainerManager::deleteMsgContainer(MsgContainer* msgC) {
-  if(msgC->checkFlag(MSG_HAS_MARSHALCONT) && msgC->cont!=0)
+void MsgContainerManager::deleteMsgContainer(MsgContainer* msgC)
+{
+  if (msgC->cont!=0 && msgC->checkFlag(MSG_HAS_MARSHALCONT))
     msgC->transController->returnMarshaler((DPMarshaler *) msgC->cont);
-  else if(msgC->checkFlag(MSG_HAS_UNMARSHALCONT) && msgC->cont!=0)
+  else if (msgC->cont!=0 && msgC->checkFlag(MSG_HAS_UNMARSHALCONT))
     msgC->transController->returnUnmarshaler((Builder *) msgC->cont);
-  msgC->deleteSnapshot();
   delete msgC;
 }
 

@@ -35,11 +35,7 @@
 #include <setjmp.h>
 #include "base.hh"
 
-// The default is the "robust" unmarshaler.
-// #define USE_FAST_UNMARSHALER
-
 #include "stack.hh"
-#include "hashtbl.hh"
 #include "indexing.hh"
 #include "tagged.hh"
 #include "value.hh"
@@ -47,6 +43,10 @@
 #include "codearea.hh"
 #include "am.hh"
 #include "dictionary.hh"
+
+//
+// 3#2 compatibility (alters assertions);
+// #define MFORMAT_3h2
 
 //
 #define GT_STACKSIZE    4096
@@ -59,12 +59,9 @@
 #define CrazyDebug(Code)
 #endif
 
-// Exception handling for robust unmarshaler
-#ifndef USE_FAST_UNMARSHALER
-extern jmp_buf unmarshal_error_jmp;
-#define RAISE_UNMARSHAL_ERROR longjmp(unmarshal_error_jmp,1)
-#define TRY_UNMARSHAL_ERROR if(setjmp(unmarshal_error_jmp)==0)
-#define CATCH_UNMARSHAL_ERROR else
+//
+#ifdef DEBUG_CHECK
+void marshalingErrorHook();
 #endif
 
 //
@@ -131,9 +128,8 @@ public:
     n = max(n, 0);
     n = min(n, cnt);
     n = min(n, NODEPROCESSOR_RINGBUFFER_ENTRIES);
-    fprintf(stdout,
-            "Note processor's ring buffer (%d tasks ever recorded):\n",
-            cnt);
+    fprintf(stdout, "Note processor's ring buffer.\n");
+    fprintf(stdout, "%d tasks ever recorded, FIFO:\n", cnt);
 
     //
     while (n--) {
@@ -179,7 +175,18 @@ public:
   void ensureFree(int n) {
     if (stackEnd <= tos+n)
       resize(n);
+    Assert(stackEnd > tos+n);
   }
+  StackEntry* extendBy(int n) {
+    StackEntry *newTop = tos + n;
+    if (stackEnd <= newTop) {
+      resize(n);
+      newTop = tos + n;
+    }
+    Assert(stackEnd > newTop);
+    return (newTop);
+  }
+
 
   //
 #if defined(DEBUG_CHECK)
@@ -340,73 +347,6 @@ public:
 };
 
 //
-// Keep OZ_Term"s already seen;
-class GTIndexTable : private AddressHashTableFastReset {
-public:
-  GTIndexTable() : AddressHashTableFastReset(2048) {
-    Assert(sizeof(OZ_Term) == sizeof(intlong));
-  }
-
-  //
-  int rememberTerm(OZ_Term l) {
-    Assert(!oz_isVar(l));
-    Assert(!oz_isRef(l));
-    Assert(findTerm(l) == -1);
-    int index = getSize();      // meets our needs...
-    htAddLastNotFound((intlong) l, ToPointer(index));
-    return (index);
-  }
-  int findTerm(OZ_Term l) {
-    Assert(!oz_isVar(l));
-    Assert(!oz_isRef(l));
-    void *ret = htFind((intlong) l);
-    return ((ret == htEmpty) ? -1 : (int) ToInt32(ret));
-  }
-
-  //
-  int rememberVarLocation(OZ_Term *p) {
-    Assert(oz_isVar(*p));
-    Assert(findVarLocation(p) == -1);
-    int index = getSize();
-    htAddLastNotFound((intlong) p, ToPointer(index));
-    return (index);
-  }
-  int findVarLocation(OZ_Term *p) {
-    Assert(oz_isVar(*p));
-    void *ret = htFind((intlong) p);
-    return ((ret == htEmpty) ? -1 : (int) ToInt32(ret));
-  }
-
-  //
-  // 'rememberLocal()'/'findLocation()' deal with non-relocatable
-  // objects (those that are not in heap and should not be GCed).
-  // What we do is we reuse the 'var' tag, since that one cannot
-  // appear among TaggedRef"s stored in the GTIndexTable.
-  int rememberLocation(void *p) {
-    Assert(findLocation(p) == -1);
-    OZ_Term aux = makePseudoTaggedVar(p);
-    int index = getSize();
-    htAddLastNotFound((intlong) aux, ToPointer(index));
-    return (index);
-  }
-  int findLocation(void *p) {
-    OZ_Term aux = makePseudoTaggedVar(p);
-    void *ret = htFind((intlong) aux);
-    return ((ret == htEmpty) ? -1 : (int) ToInt32(ret));
-  }
-
-protected:
-  //
-  void unwindGTIT() {
-    mkEmpty();
-    Assert(getSize() == 0);
-  }
-
-  //
-  void gCollectGTIT();
-};
-
-//
 // An object of the 'GenTraverser' class traverses the node graph. The
 // user of this class is supposed to create a subclass that specifies
 // what to do with each type of nodes. Traversing starts with
@@ -420,20 +360,14 @@ protected:
 // processXXX for each argument. The traverser works in depth-first
 // manner (it is based on 'NodeProcessor').
 //
-// For handling of cycles and co-references, the method 'remember()'
-// can be used inside 'processXXX()': it returns an integer uniquely
-// identifying the remembered node. Thereafter if the node is reached
-// again the traverser does not call 'processXXX(OZ_Term)' but rather
-// 'processRepetition(OZ_Term, OZ_Term *, int)'. The last method also
-// returns a Bool, indicating if traversal should continue or not. For
-// example, let's assume that 'remember(f(X Y))' returns '1'. Then
-// later 'processRepetition(t, tPtr, 1)' is called upon reaching a
-// repetition (pointer equality). Usually it would return 'TRUE' and
-// f(X Y) would not be traversed again. [Possibly you might want to
-// traverse the same thing twice, in which case you return FALSE].
+// Co-references and cycles are to be handled by a particular
+// marshaler itself (now). The pickler, for instance, relies on
+// "patches" produced by the preceeding "resource excavation". This
+// way, a hash table dealing with co-references is used only when
+// doing resource excavation.
 //
-// Note that the idea is that the idea is that you can easily create
-// subclasses for marshaling, export control, etc.
+// Note that the idea is that you can easily create subclasses for
+// marshaling, export control, etc.
 //
 // suspend/resume are inherited.
 //
@@ -490,7 +424,7 @@ typedef void (*TraverserContProcessor)(GenTraverser *m,
 
 //
 // An object of the class can be used for more than one traversing;
-class GenTraverser : protected NodeProcessor, public GTIndexTable {
+class GenTraverser : protected NodeProcessor {
 private:
   CrazyDebug(int debugNODES;);
   // 'doit()'s are templated from 'gentraverserLoop.cc' (see also
@@ -537,10 +471,9 @@ public:
   void reset() {
     CrazyDebug(debugNODES = 0;);
     Assert(proc == (ProcessNodeProc) -1); // not used;
-    NodeProcessorStack::mkEmpty();
-    unwindGTIT();
-    tosNotRunning = (StackEntry *) 0;
+    Assert(tosNotRunning == (StackEntry *) 0);
     DebugCode(opaque = (Opaque *) -1);
+    NodeProcessorStack::mkEmpty();
   }
 
   //
@@ -613,13 +546,12 @@ public:
     Assert(o != (Opaque *) -1);      // not allowed (limitation);
     opaque = o;
   }
-  void traverse(OZ_Term t) { Assert(0); }
+  // weak 'reset()': the stack is supposed to be empty;
   void finishTraversing() {
     Assert(isEmpty());
-    DebugCode(opaque = (Opaque *) -1);
     Assert(proc == (ProcessNodeProc) -1); // not used;
     Assert(tosNotRunning == (StackEntry *) 0);
-    unwindGTIT();
+    DebugCode(opaque = (Opaque *) -1);
   }
 
   //
@@ -656,7 +588,7 @@ protected:
   void processLiteral(OZ_Term litTerm);
   void processExtension(OZ_Term extensionTerm);
   // OzConst"s;
-  void processBigInt(OZ_Term biTerm, ConstTerm *biConst);
+  void processBigInt(OZ_Term biTerm);
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
   // 'Tertiary' OzConst"s;
   void processLock(OZ_Term lockTerm, Tertiary *lockTert);
@@ -664,13 +596,9 @@ protected:
   void processPort(OZ_Term portTerm, Tertiary *portTert);
   void processResource(OZ_Term resTerm, Tertiary *tert);
   // anything else:
-  // 'processNoGood(...)' returns NO if suspension occured;
-  Bool processNoGood(OZ_Term resTerm, Bool trail);
+  void processNoGood(OZ_Term resTerm);
   //
-  void processVar(OZ_Term cv, OZ_Term *varTerm);
-
-  //
-  void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
+  void processVar(OZ_Term v, OZ_Term *vRef);
 
   //
   // These methods return TRUE if the node to be considered a leaf;
@@ -684,7 +612,6 @@ protected:
   Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
   Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
   Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
-  //  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
   //
   // 'processAbstraction' also issues 'traverseBinary';
   Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
@@ -740,6 +667,9 @@ public:
   // marshal the area completely, and after that Oz values contained
   // in it), it's legal to use 'GenTraverser' as 'NodeProcessor', thus
   // to call 'traverseOzValue()' on its own;
+
+  //
+  DebugCode(void vHook() {})
 
 protected:
   //
@@ -1260,7 +1190,6 @@ public:
     tos = newTos;
     checkConsistency();
   }
-  void mkEmpty() { tos = array; }
   //
   StackEntry *ensureFree(StackEntry *frame, int n)
   {
@@ -1354,173 +1283,251 @@ public:
 };
 
 //
-#define BuilderIndexTableSize 100
-// This procedure determines the size of a reallocated BuilderIndexTable:
-inline int getNewTTSize(int oldsize, int newsize)
-{
-  while (oldsize <= newsize)
-    oldsize = (oldsize*3)/2;
-  return (oldsize);
-}
+// Tables that keep re-occurring values: OZ_Term"s and (C heap)
+// locations;
+//
 
 //
-// This stack is necessary for keeping track of allocated BuilderIndexTable
-// entities, such that GC could process only allocated ones.
+#define BuilderRTInitSize 100
+
 //
-// That's a proprietary implementation since i want to keep a
-// BuilderIndexTableStack of the size as a corresponding BuilderIndexTable;
-class BuilderIndexTableStack {
-private:
-  int *tos;
-  int *array;
-  int *stackEnd;
+// Location tables are filled sequentially, starting from slot 0;
+template<class T>
+class BuilderLocTable {
+  T *array;
   int size;
+  DebugCode(int lastIndex;);
+
+  //
+public:
+  // invariant: when a slot is not in use, it's -1;
+  void mkEmptyTable(void) {
+#if defined(DEBUG_CHECK)
+    for (int i = lastIndex+1; i--; )
+      array[i] = (T) -1;
+    lastIndex = -1;
+#endif
+  }
+  BuilderLocTable() {
+    size  = BuilderRTInitSize;
+    array = new T[size];
+    //
+    DebugCode(lastIndex = size-1;);
+    // is supposed to be reset before use;
+  }
+  ~BuilderLocTable() {
+    delete [] array;
+    DebugCode(array = (T *) 0;);
+    DebugCode(size = -1;);
+    DebugCode(lastIndex = -1;);
+  }
 
   //
 private:
-  void checkConsistency() {
-    Assert((tos >= array) && (tos <= stackEnd));
-  }
-
-  //
-protected:
-  BuilderIndexTableStack() {
-    size = BuilderIndexTableSize;
-    array = tos = new int[size];
-    stackEnd = array + size;
-  }
-  ~BuilderIndexTableStack() {
-    delete [] array;
-    DebugCode(size = -1;);
-    DebugCode(array = tos = stackEnd = (int *) 0;);
-  }
-
-  //
-  // for 'gCollect()';
-  int *getTTSTop()            { Assert(tos >= array); return (tos); }
-  int *getTTSBottom()         { return (array); }
-  void setTTSTop(int *newTos) {
-    tos = newTos;
-    checkConsistency();
-  }
-
-  //
-  void resizeTTStack(int newsize) {
+  void resize(int newIndex) {
     int oldsize = size;
-    int *oldarray = array;
-    size = getNewTTSize(oldsize, newsize);
-    array = new int[size];
-    tos = array + (tos - oldarray);
-    stackEnd = array + size;
-    for (int i = 0; i < oldsize; i++)
+    T *oldarray = array;
+
+    //
+    Assert(size < newIndex+1);
+    size = newIndex*2;
+    array = new T[size];
+    for (int i = oldsize; i--; )
       array[i] = oldarray[i];
+#if defined(DEBUG_CHECK)
+    for (int j = oldsize; j < size; j++)
+      array[j] = (T) -1;
+#endif
     delete [] oldarray;
   }
 
   //
-  // Observe that there is no 'pop' operation: it's not needed!
-  void putTTI(int index) {
-    checkConsistency();
-    *tos++ = index;
+public:
+
+  //
+  T get(int i) {
+    Assert(i >= 0 && i <= lastIndex);
+    return (array[i]);
   }
-  void mkEmptyTTStack(void)  { tos = array; }
+
+  //
+  void set(T val, int pos) {
+#if !defined(MFORMAT_3h2)
+    // .. in 3#2, both values and locations were kept in the same
+    // table, so there could be gaps:
+    Assert(pos == lastIndex+1);
+#endif
+    if (pos >= size)
+      resize(pos);
+    Assert(array[pos] == (T) -1);
+    Assert(pos < size);
+    array[pos] = val;
+    DebugCode(lastIndex = pos;);
+  }
 };
 
 //
-// That's also a piece of history (former 'RefTable');
-class BuilderIndexTable : public BuilderIndexTableStack {
-  OZ_Term *array;
+// Unfortunately, the traverser assignes indices not in the order of
+// traversal (and, thus, the order in which values appear from the
+// stream), but in the order nodes are found in the marshaler
+// dictionary for the first time. This means that there are unused
+// gaps between occupied slots. Occupied slots are now linked, so the
+// GC can find them.
+//
+// Additionally, the slot 0 is reserved by the dictionary;
+
+//
+typedef struct {
+  // 'n' must occupy the first slot for 'BuilderRefTable::getNextRef()';
+  OZ_Term n;                    // node;
+  int     p;                    // previous index;
+} BuilderRefTableNode;
+
+//
+class BuilderRefTable {
+  BuilderRefTableNode *array;
   int size;
-  int last_index; // used for robust marshaler
+  int lastIndex;
+
+  //
 public:
-  BuilderIndexTable() {
-    size     = BuilderIndexTableSize;
-    array    = new OZ_Term[size];
-    last_index = -1; // used for robust marshaler
+  // invariant: when a slot is not in use, it's -1;
+  void mkEmptyTable(void) {
+#if !defined(MFORMAT_3h2)
+    Assert(array[0].n == (OZ_Term) 0);
+#endif
+#if defined(DEBUG_CHECK)
+    int i = lastIndex;
+    while (i) {
+      int j = array[i].p;
+      array[i].n = (OZ_Term) -1;
+      array[i].p = -1;
+      i = j;
+    }
+#endif
+    lastIndex = 0;              // slot 0 is not used;
   }
-  ~BuilderIndexTable() {
+
+  BuilderRefTable() {
+    size  = BuilderRTInitSize;
+    array = new BuilderRefTableNode[size];
+    // 'n' must occupy the first slot for 'BuilderRefTable::getNextRef()':
+    Assert(((void *) &(array[0])) == ((void *) &(array[0].n)));
+    //
+    array[0].n = (OZ_Term) 0;
+    array[0].p = -1;
+#if defined(DEBUG_CHECK)
+    for (int i = 1; i < size; i++) {
+      array[i].n = (OZ_Term) -1;
+      array[i].p = -1;
+    }
+    lastIndex = 0;
+#endif
+    // is supposed to be reset before use;
+  }
+  ~BuilderRefTable() {
     delete [] array;
-    DebugCode(array = (OZ_Term *) 0;);
+    DebugCode(array = (BuilderRefTableNode *) 0;);
+    DebugCode(size = -1;);
+    DebugCode(lastIndex = -1;);
   }
 
   //
-  // GC is handled by the 'Builder::gCollect()';
-
-  //
-  void resize(int newsize) {
+private:
+  void resize(int newIndex) {
     int oldsize = size;
-    OZ_Term  *oldarray = array;
+    BuilderRefTableNode *oldarray = array;
 
     //
-    resizeTTStack(newsize);
-    //
-    size = getNewTTSize(oldsize, newsize);
-    array = new OZ_Term[size];
-    for (int i = 0; i < oldsize; i++)
+    Assert(size < newIndex+1);
+    size = newIndex*2;
+    array = new BuilderRefTableNode[size];
+    for (int i = oldsize; i--; )
       array[i] = oldarray[i];
+#if defined(DEBUG_CHECK)
+    for (int j = oldsize; j < size; j++) {
+      array[j].n = (OZ_Term) -1;
+      array[j].p = -1;
+    }
+#endif
     delete [] oldarray;
   }
 
   //
-  void mkEmptyTable(void)  { mkEmptyTTStack(); }
+public:
+  // GC;
+  OZ_Term* getFirstRef() {
+    return (lastIndex ? &(array[lastIndex].n) : ((OZ_Term *) 0));
+  }
+  OZ_Term* getNextRef(OZ_Term* in) {
+    BuilderRefTableNode *prev = (BuilderRefTableNode *) ((void *) in);
+    int index = prev->p;
+    return (index ? &(array[index].n) : ((OZ_Term *) 0));
+  }
 
   //
   OZ_Term get(int i) {
-    Assert(i < size);
-    return (array[i]);
+    Assert(i >= 0);             // also zeroth slot;
+    Assert(array[i].n != (OZ_Term) -1);   // occupied;
+    return (array[i].n);
   }
-  OZ_Term& getRef(int i) {
-    Assert(i < size);
-    return (array[i]);
-  }
+
+  //
   void set(OZ_Term val, int pos) {
-    Assert(pos >= 0);
+#if !defined(MFORMAT_3h2)
+    // .. in 3#2, the position 0 could be used as well;
+    Assert(pos > 0);
+#endif
     if (pos >= size)
       resize(pos);
-    putTTI(pos);                // record it in the stack;
-    array[pos] = val;
+#if !defined(MFORMAT_3h2)
+    Assert(array[pos].n == (OZ_Term) -1);
+#else
+    Assert(pos == 0 || array[pos].n == (OZ_Term) -1);
+#endif
+    Assert(pos < size);
+    array[pos].n = val;
+    array[pos].p = lastIndex;
+    lastIndex = pos;
   }
-  void setNoGC(OZ_Term val, int pos) {
-    Assert(pos >= 0);
+
+  //
+  void occupy(int pos){
+#if !defined(MFORMAT_3h2)
+    Assert(pos > 0);
+#endif
     if (pos >= size)
       resize(pos);
-    array[pos] = val;
+#if !defined(MFORMAT_3h2)
+    Assert(array[pos].n == (OZ_Term) -1);
+#else
+    Assert(pos == 0 || array[pos].n == (OZ_Term) -1);
+#endif
+    Assert(pos < size);
+    array[pos].n = (OZ_Term) 0;
+    array[pos].p = lastIndex;
+    lastIndex = pos;
   }
-  void update(OZ_Term val, int pos) {
-    Assert(pos >= 0 && pos < size);
-    array[pos] = val;
-  }
+
+  //
 #if defined(DEBUG_CHECK)
-  void occupy(int pos) {
+  void resetFilled(int pos) {
+    Assert(array[pos].n != (OZ_Term) 0 && array[pos].n != (OZ_Term) -1);
+    array[pos].n = (OZ_Term) 0;
+  }
+#endif
+
+  //
+  void fill(OZ_Term val, int pos) {
+    // any *occupied* slot;
+#if !defined(MFORMAT_3h2)
+    Assert(pos > 0);
+#else
     Assert(pos >= 0);
-    if (pos >= size)
-      resize(pos);
-    array[pos] = makeTaggedMarkInt(pos);
-  }
 #endif
-
-  //
-  // For robust unmarshaling. To check that RefTags occur in order.
-  Bool checkNewIndex(int index) {
-    int result = (index - last_index) == 1;
-    last_index = index;
-    return result;
+    Assert(array[pos].n == (OZ_Term) 0);
+    array[pos].n = val;
   }
-  // For robust unmarshaling. To check that ref refers to a known value.
-  Bool checkIndexFound(int ref) {
-    return ref <= last_index;
-  }
-  void resetIndexChecker() {
-    last_index = -1;
-  }
-
-  //
-#ifdef DEBUG_CHECK
-  void resetTT() {
-    for (int i = 0; i < size; i++)
-      array[i] = (OZ_Term) 0;
-  }
-#endif
 };
 
 //
@@ -1529,11 +1536,22 @@ typedef void (*OzValueProcessor)(GTAbstractEntity *arg, OZ_Term value);
 typedef void (*BuilderGenAction)(void *arg);
 
 //
-class Builder : private BuilderStack, public BuilderIndexTable {
+class Builder : private BuilderStack {
 private:
   CrazyDebug(int debugNODES;);
   OZ_Term result;               // used as a "container";
-  OZ_Term blackhole;            // ... for discarding stuff;
+  OZ_Term blackhole;            // .. for discarding stuff;
+
+  // Reference tables, for OZ_Term"s and locations.
+  // In the current implementation, where value construction is still
+  // not strictly top-down, builder still has to access the values'
+  // ref table. More specifically, values the construction of which is
+  // delayed are constructed by the builder as a side-effect of some
+  // 'buildValue()', so they have to be recorded in the ref table by
+  // the builder too.
+  BuilderRefTable *valueRT;
+  // Locations' ref table is here just for coding convenience;
+  BuilderLocTable<void *> *locationRT;
   DebugCode(BuilderRingBuffer ringbuf;);
 
 private:
@@ -1568,23 +1586,48 @@ private:
 
   //
 public:
-  Builder() : result((OZ_Term) 0), blackhole((OZ_Term) 0) {}
+  Builder()
+    : result((OZ_Term) 0), blackhole((OZ_Term) 0) {
+    valueRT = new BuilderRefTable;
+    locationRT = new BuilderLocTable<void *>;
+  }
   ~Builder() {}
+
+  // Index tables:
+  OZ_Term getTerm(int i) { return (valueRT->get(i)); }
+  void setTerm(OZ_Term t, int i) { valueRT->set(t, i); }
+  void occupyTerm(int i) { valueRT->occupy(i); }
+  // Filling a previously occupied slot can be either safe - if it is
+  // known that the slot is not accessed, and a non-safe case - if it
+  // can be referenced by 'buildValueRef()' (see also its comment);
+  void fillTermSafe(OZ_Term t, int i) { valueRT->fill(t, i); }
+  void fillTerm(OZ_Term t, int i) {
+    OZ_Term sc = valueRT->get(i);
+    if (sc) {
+      Assert(oz_isRef(sc));
+      OZ_Term *vp = tagged2Ref(sc);
+      DebugCode(OZ_Term v = *vp;);
+      Assert(!oz_isRef(v) && oz_isVar(v));
+      *vp = t;          // just overwrite it;
+      DebugCode(valueRT->resetFilled(i););
+    }
+    fillTermSafe(t, i);
+  }
+
+  //
+  void *getLocation(int i) { return (locationRT->get(i)); }
+  void setLocation(void *l, int i) { locationRT->set(l, i); }
 
   //
   // Called once for the whole batch:
   void prepareBuild() {
-    mkEmptyTable();             // allows GC;
-    DebugCode(resetTT(););
-    CrazyDebug(debugNODES = 0;);
-    DebugCode(ringbuf.init(););
-#ifndef USE_FAST_UNMARSHALER
-    resetIndexChecker();
-#endif
-    //
     // necessary for the GC: it has to distinguish between garbage and
     // a (partially instantiated) term in this cell;
     result = (OZ_Term) 0;
+    valueRT->mkEmptyTable();    // ditto (allows GC);
+    locationRT->mkEmptyTable();
+    CrazyDebug(debugNODES = 0;);
+    DebugCode(ringbuf.init(););
     putTask(BT_spointer, &result);
   }
 
@@ -1643,6 +1686,7 @@ public:
     putTask(BT_makeTuple, arity);
   }
   void buildTupleRemember(int arity, int n) {
+    occupyTerm(n);
     putTask(BT_makeTupleMemo, arity, n);
   }
 
@@ -1656,11 +1700,11 @@ public:
     SetBTFrame(frame);
   }
   void buildRecordRemember(int n) {
+    occupyTerm(n);
     GetBTFrame(frame);
     EnsureBTSpace(frame, 2);
     PutBTFrameArg(frame, n);
     PutBTTask(frame, BT_takeRecordLabelMemo);
-    DebugCode(occupy(n););
     SetBTFrame(frame);
   }
 
@@ -1669,13 +1713,18 @@ public:
     putTask(BT_fsetvalue);
   }
   void buildFSETValueRemember(int n) {
+    // FSet"s cannot be recursive. More precisely, construction of an
+    // Oz value needed for 'makeFSetValue()' cannot depend on that
+    // FSetValue itself (even though 'makeFSetValue()' will not use
+    // it, of course).
+    occupyTerm(n);
     putTask(BT_fsetvalueMemo, n);
   }
 
   //
   // New chunks/classes/procedures are built with 'buildXXX()' while
   // those that are already imported are placed with 'knownXXX()'.
-  // Note that one cann't do 'buildValue()' instead of 'knownXXX()'
+  // Note that one can't do 'buildValue()' instead of 'knownXXX()'
   // because the later one discards also the unused terms!
   void buildChunk(GName *gname) {
     Assert(gname);
@@ -1683,9 +1732,10 @@ public:
   }
   void buildChunkRemember(GName *gname, int n) {
     Assert(gname);
+    // ditto, chunks cannot be recursive either (see also
+    // 'buildFSETValueRemember()');
+    occupyTerm(n);
     putTask(BT_chunkMemo, gname, n);
-    //
-    set(oz_newVariable(oz_rootBoard()), n);
   }
 
   //
@@ -1722,7 +1772,7 @@ public:
     gname->gcMaybeOff();
     OZ_Term classTerm = makeTaggedConst(cl);
     //
-    set(classTerm, n);
+    setTerm(classTerm, n);
 
     //
     putTask(BT_classFeatures, cl, flags);
@@ -1744,13 +1794,9 @@ public:
     PutBTFramePtrArg(frame, gname, n);
     PutBTTask(frame, BT_takeObjectLockMemo);
     SetBTFrame(frame);
-    // fill up the ref table: since we don't have the real object yet,
-    // create a dummy object in the heap (that will be later
-    // overwritten with a ref pointing to the object). The dummy
-    // object is an optvar since (a) it should be unique (do the
-    // builder/unmarshaler(s) ever deref??), and (b) it has to be
-    // GC"able;
-    set(oz_newVariable(oz_rootBoard()), n);
+    // ditto, objects cannot be recursive either (see also
+    // 'buildFSETValueRemember()');
+    occupyTerm(n);
   }
 
   //
@@ -1778,6 +1824,7 @@ public:
                          int gsize, int maxX, int line, int column,
                          ProgramCounter pc, int memoIndex) {
     Assert(gname);
+    occupyTerm(memoIndex);
     GetBTFrame(frame);
     EnsureBTSpace(frame, 4);
     PutBTFrame2Args(frame, arity, gsize);
@@ -1970,15 +2017,31 @@ public:
     }
   }
 
+  //
   void buildValueRemember(OZ_Term value, int n) {
     buildValue(value);
-    set(value, n);
+    setTerm(value, n);
+  }
+
+  //
+  // Handle also the case when a value is not yet constructed, so a
+  // variable is temporarily substituted for it (see also
+  // 'buildFSETValueRemember()');
+  void buildValueRef(int n) {
+    OZ_Term v = getTerm(n);
+    if (v) {
+      buildValue(v);
+    } else {
+      OZ_Term vt = oz_newVariable(oz_rootBoard());
+      setTerm(vt, n);           // a reference to, of course;
+      buildValue(vt);
+    }
   }
 
   //
   // Process 'intermediate' tasks: nowadays it is abstracted away,
   // since we have to be eager with processing them 'cause of
-  // cross-references!
+  // cycles!
   void processSync() {
     GetBTFrame(frame);
     GetBTTaskType(frame, type);
@@ -1999,7 +2062,7 @@ public:
     LTuple *l = new LTuple();
     OZ_Term list = makeTaggedLTuple(l);
     buildValue(list);
-    set(list, n);
+    setTerm(list, n);
     GetBTFrame(frame);
     EnsureBTSpace(frame, 2);
     PutBTTaskPtr(frame, BT_spointer, l->getRefTail());
@@ -2029,7 +2092,7 @@ public:
     //
     OZ_Term dict = makeTaggedConst(aux);
     buildValue(dict);
-    set(dict, n);
+    setTerm(dict, n);
     //
     GetBTFrame(frame);
     EnsureBTSpace(frame, size);
@@ -2039,6 +2102,7 @@ public:
     SetBTFrame(frame);
   }
 
+  //
   void buildArray(int low, int high) {
     OzArray *aux = new OzArray(am.currentBoard(),low,high,oz_int(0));
     buildValue(makeTaggedConst(aux));
@@ -2054,7 +2118,7 @@ public:
     OzArray *aux = new OzArray(am.currentBoard(),low,high,oz_int(0));
     OZ_Term array = makeTaggedConst(aux);
     buildValue(array);
-    set(array, n);
+    setTerm(array, n);
     GetBTFrame(frame);
     int width = aux->getWidth();
     EnsureBTSpace(frame, width);
@@ -2064,6 +2128,7 @@ public:
     SetBTFrame(frame);
   }
 
+  //
   void buildClonedCell() {
     CellLocal *c = new CellLocal(oz_currentBoard(), oz_int(0));
     buildValue(makeTaggedConst(c));
@@ -2076,23 +2141,26 @@ public:
     CellLocal *c = new CellLocal(oz_currentBoard(), oz_int(0));
     OZ_Term cell = makeTaggedConst(c);
     buildValue(cell);
-    set(cell, n);
+    setTerm(cell, n);
     GetBTFrame(frame);
     EnsureBTSpace(frame, 1);
     PutBTTaskPtr(frame, BT_spointer, c->getRef());
     SetBTFrame(frame);
   }
 
+  //
   void knownChunk(OZ_Term chunkTerm) {
     buildValue(chunkTerm);
     putTask(BT_spointer, &blackhole);
   }
 
+  //
   void knownClass(OZ_Term classTerm) {
     buildValue(classTerm);
     putTask(BT_spointer, &blackhole); // class features;
   }
 
+  //
   void knownObject(OZ_Term objTerm) {
     buildValue(objTerm);
     putTask(BT_spointer, &blackhole); // lock;
@@ -2104,10 +2172,8 @@ public:
   // There is a need for 'knownProc' since a user is not supposed to
   // understand the structure of closure's (Oz) terms that are to be
   // skipped;
-  void knownProcRemember(OZ_Term procTerm, int memoIndex) {
+  void knownProc(OZ_Term procTerm) {
     buildValue(procTerm);
-    set(procTerm, memoIndex);
-
     //
     Abstraction *pp = (Abstraction *) tagged2Const(procTerm);
     Assert(isAbstraction(pp));
@@ -2121,6 +2187,10 @@ public:
     PutBTTaskPtr(frame, BT_spointer, &blackhole); // name;
     PutBTTaskPtr(frame, BT_spointer, &blackhole); // file;
     SetBTFrame(frame);
+  }
+  void knownProcRemember(OZ_Term procTerm, int memoIndex) {
+    setTerm(procTerm, memoIndex);
+    knownProc(procTerm);
   }
 
   //

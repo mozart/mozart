@@ -373,7 +373,7 @@ char *oz_site2String(DSite *s);
 
 //
 // Marshaller uses that;
-DSite* unmarshalDSiteRobust(MarshalerBuffer *mb, int *error);
+DSite* unmarshalDSite(MarshalerBuffer *mb);
 
 //
 // Faking a port from a ticket;

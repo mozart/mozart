@@ -117,6 +117,9 @@ void PickleBuffer::saveEnd()
 {
   Assert(pbState == PB_Save);
   DebugCode(pbState = PB_None;);
+  Assert(first == (CByteBuffer *) 0);
+  DebugCode(lastChunkSize = -1;);
+  first = last = (CByteBuffer *) 0;
 }
 
 BYTE* PickleBuffer::unlinkFirst(int &size)

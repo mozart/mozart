@@ -39,7 +39,7 @@
 
 
 //
-void LazyVar::marshal(ByteBuffer *bs)
+void LazyVar::marshal(ByteBuffer *bs, Bool hasIndex)
 {
   Assert(0);
 }

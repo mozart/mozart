@@ -49,6 +49,7 @@ enum OZ_Registered_Extension_Id {
 
 //
 class MarshalerBuffer;
+class Builder;
 // kost@ : (Un)marshaling with continuations is tricky: a partially
 //         unmarshaled result must be GC"able, so it is wrapped up in
 //         a 'GTAbstractEntity' object which can be GC"ed by the
@@ -59,13 +60,21 @@ class GTAbstractEntity;
 //
 typedef
 _FUNTYPEDECL(OZ_Term,
-             oz_unmarshalProcType, (MarshalerBuffer *));
+             oz_unmarshalProcType, (MarshalerBuffer*, Builder*));
 typedef
 _FUNTYPEDECL(OZ_Term,
-             oz_suspUnmarshalProcType, (ByteBuffer*, GTAbstractEntity* &));
+             oz_suspUnmarshalProcType, (ByteBuffer*, Builder*,
+                                        GTAbstractEntity* &));
 typedef
 _FUNTYPEDECL(OZ_Term,
-             oz_unmarshalContProcType, (ByteBuffer*, GTAbstractEntity*));
+             oz_unmarshalContProcType, (ByteBuffer*, Builder*,
+                                        GTAbstractEntity*));
+
+//
+// Unmarshaling can yield either a value (OZ_Term), or one of the
+// following:
+#define UnmarshalEXT_Error      ((OZ_Term) 0)
+#define UnmarshalEXT_Susp       ((OZ_Term) 1)
 
 //
 class MarshalerBuffer;
@@ -129,16 +138,12 @@ public:
   virtual OZ_Return     getFeatureV(OZ_Term,OZ_Term&) { return OZ_FAILED; }
   virtual OZ_Return     putFeatureV(OZ_Term,OZ_Term ) { return OZ_FAILED; }
   virtual OZ_Return     eqV(OZ_Term)               { return OZ_FAILED; }
-  // Both 'toBePickledV' and 'pickleV' must return 'TRUE'
-  // if pickling is defined for the extension;
+  //
   virtual OZ_Boolean    toBePickledV() { return (OZ_FALSE); }
-  virtual OZ_Boolean    pickleV(MarshalerBuffer *mb) { return (OZ_FALSE); }
-  // Both 'toBeMarshaledV' and 'marshalSuspV' must return 'TRUE'
-  // if marshaling for distribution is defined for the extension;
+  virtual void          pickleV(MarshalerBuffer *mb, GenTraverser *gt) {}
   virtual OZ_Boolean    toBeMarshaledV() { return (OZ_FALSE); }
-  virtual OZ_Boolean    marshalSuspV(OZ_Term te,
-                                     ByteBuffer *bs, GenTraverser *gt)
-  { return (OZ_FALSE); }
+  virtual void          marshalSuspV(OZ_Term te,
+                                     ByteBuffer *bs, GenTraverser *gt) {}
   virtual int           minNeededSpace() { return (0); }
 
   OZ_Boolean isLocal(void) {
@@ -153,10 +158,10 @@ _FUNDECL(OZ_Boolean,OZ_isExtension,(OZ_Term));
 _FUNDECL(OZ_Extension*,OZ_getExtension,(OZ_Term));
 _FUNDECL(OZ_Term,OZ_extension,(OZ_Extension *));
 
-_FUNDECL(OZ_Term,oz_extension_unmarshal,(int, MarshalerBuffer*));
-_FUNDECL(OZ_Term,oz_extension_unmarshal,(int, ByteBuffer*,
+_FUNDECL(OZ_Term,oz_extension_unmarshal,(int, MarshalerBuffer*, Builder*));
+_FUNDECL(OZ_Term,oz_extension_unmarshal,(int, ByteBuffer*, Builder*,
                                          GTAbstractEntity* &));
-_FUNDECL(OZ_Term,oz_extension_unmarshalCont,(int, ByteBuffer*,
+_FUNDECL(OZ_Term,oz_extension_unmarshalCont,(int, ByteBuffer*, Builder*,
                                              GTAbstractEntity*));
 
 _FUNDECL(void, oz_registerExtension, (int,

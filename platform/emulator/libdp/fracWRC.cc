@@ -121,18 +121,18 @@ RRinstance_WRC::RRinstance_WRC(int e, int d, RRinstance *n){
     denominator = d;
   }
 
-  void RRinstance_WRC::marshal_RR(MarshalerBuffer *buf){
-    marshalNumber(buf,type);
-    marshalNumber(buf, enumerator);
-    marshalNumber(buf, denominator);
-  }
+void RRinstance_WRC::marshal_RR(MarshalerBuffer *buf)
+{
+  marshalNumber(buf,type);
+  marshalNumber(buf, enumerator);
+  marshalNumber(buf, denominator);
+}
 
-  void RRinstance_WRC::unmarshal_RR(MarshalerBuffer *buf, int *error){
-    enumerator = unmarshalNumberRobust(buf, error);
-    if (*error) {enumerator = 0; denominator = 0; return;}
-    denominator = unmarshalNumberRobust(buf, error);
-    if (*error) {enumerator = 0; denominator = 0; return;}
-  }
+void RRinstance_WRC::unmarshal_RR(MarshalerBuffer *buf)
+{
+  enumerator = unmarshalNumber(buf);
+  denominator = unmarshalNumber(buf);
+}
 
 
 

@@ -90,7 +90,8 @@ void ComObj::init(DSite *site) {
 
 // Specifying priority -1 means accepting the default as in msgFormat.m4 and
 // should allways be used.
-void ComObj::send(MsgContainer *msgC) {
+void ComObj::send(MsgContainer *msgC)
+{
   // Erik, hack until the prio thing has been properly reworked.
   int priority = -1;
   globalSendCounter++;
@@ -126,14 +127,6 @@ void ComObj::send(MsgContainer *msgC) {
   default: // Eventually we will have a channel...
     break;
   }
-
-  //printf("snapshot started...\n");
-  //struct timeval start, end;
-  //gettimeofday(&start, NULL);
-  msgC->takeSnapshot();
-  //gettimeofday(&end, NULL);
-  //printf("  ... snapshot time %f s\n", (end.tv_sec - start.tv_sec)+
-  //     ((double) (end.tv_usec - start.tv_usec))/1000000);
 
   // Old priority calculation. If the suplied priority is different from
   // -1 then use it else get the default

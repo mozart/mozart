@@ -46,6 +46,8 @@
 #if !defined(TEXT2PICKLE)
 #include "mbuffer.hh"
 #include "gentraverser.hh"
+#include "marshalerDict.hh"
+#include "marshalerPatch.hh"
 #endif
 
 //
@@ -59,119 +61,177 @@
 // the DIFs
 // the protocol layer needs to know about some of these
 typedef enum {
-  DIF_UNUSED0,
+  DIF_UNUSED0 = 0,
   DIF_SMALLINT,
   DIF_BIGINT,
   DIF_FLOAT,
-  DIF_ATOM,
-  DIF_NAME,
-  DIF_UNIQUENAME,
-  DIF_RECORD,
-  DIF_TUPLE,
-  DIF_LIST,
+  DIF_ATOM_DEF,
+  DIF_NAME_DEF,
+  DIF_UNIQUENAME_DEF,
+  DIF_RECORD_DEF,
+  DIF_TUPLE_DEF,
+  DIF_LIST_DEF,
   DIF_REF,
-  DIF_REF_DEBUG,
-  DIF_OWNER,
-  DIF_OWNER_SEC,
-  DIF_PORT,
-  DIF_CELL,
-  DIF_LOCK,
-  DIF_VAR,
-  DIF_BUILTIN,
-  DIF_DICT,
-  DIF_OBJECT,           // full object;
-  DIF_THREAD_UNUSED,
-  DIF_SPACE,
-  DIF_CHUNK,            // SITE INDEX NAME value
-  DIF_PROC,             // SITE INDEX NAME ARITY globals code
-  DIF_CLASS,            // SITE INDEX NAME obj class
-  DIF_ARRAY,
-  DIF_FSETVALUE,        // finite set constant
-  DIF_ABSTRENTRY,       // AbstractionEntry (code instantiation)
-  DIF_PRIMARY,
-  DIF_SECONDARY,
+  DIF_UNUSED1,
+  DIF_OWNER_DEF,
+  DIF_UNUSED2,
+  DIF_PORT_DEF,
+  DIF_CELL_DEF,
+  DIF_LOCK_DEF,
+  DIF_VAR_DEF,
+  DIF_BUILTIN_DEF,
+  DIF_DICT_DEF,
+  DIF_OBJECT_DEF,               // full object;
+  DIF_UNUSED3,
+  DIF_UNUSED4,
+  DIF_CHUNK_DEF,                // SITE INDEX NAME value
+  DIF_PROC_DEF,                 // SITE INDEX NAME ARITY globals code
+  DIF_CLASS_DEF,                // SITE INDEX NAME obj class
+  DIF_ARRAY_DEF,
+  DIF_FSETVALUE,                // finite set constant
+  DIF_ABSTRENTRY,               // pseudo DIF (code instantiation)
+  DIF_UNUSED5,
+  DIF_UNUSED6,
   DIF_SITE,
-  DIF_SITE_VI,          // no longer in use (referred to VirtualInfo)
+  DIF_UNUSED7,
   DIF_SITE_PERM,
-  DIF_PASSIVE,
-  DIF_COPYABLENAME,
-  DIF_EXTENSION,
-  DIF_RESOURCE_T,
-  DIF_RESOURCE_N,
-  DIF_FUTURE,
-  DIF_VAR_AUTO,
-  DIF_FUTURE_AUTO,
+  DIF_UNUSED8,
+  DIF_COPYABLENAME_DEF,
+  DIF_EXTENSION_DEF,
+  DIF_RESOURCE_DEF,
+  DIF_RESOURCE,
+  DIF_FUTURE_DEF,
+  DIF_VAR_AUTO_DEF,
+  DIF_FUTURE_AUTO_DEF,
   DIF_EOF,
   DIF_CODEAREA,
-  DIF_VAR_OBJECT,               // var object exported;
+  DIF_VAR_OBJECT_DEF,           // var object exported;
   DIF_SYNC,
-  DIF_CLONEDCELL,
-  DIF_STUB_OBJECT,              // object exported (lazy objects);
+  DIF_CLONEDCELL_DEF,
+  DIF_STUB_OBJECT_DEF,          // object exported (lazy objects);
   DIF_SUSPEND,
   DIF_LIT_CONT,
   DIF_EXT_CONT,
-  DIF_SITE_SENDER,                // Sending a site representation
+  DIF_SITE_SENDER,              // Sending a site representation
+  DIF_RECORD,
+  DIF_TUPLE,
+  DIF_LIST,
+  DIF_PORT,
+  DIF_CELL,
+  DIF_LOCK,
+  DIF_BUILTIN,
+  DIF_DICT,
+  DIF_OBJECT,
+  DIF_CHUNK,
+  DIF_PROC,
+  DIF_CLASS,
+  DIF_EXTENSION,
+  DIF_STUB_OBJECT,
+  DIF_BIGINT_DEF,
+  DIF_CLONEDCELL,
+  DIF_ARRAY,
+  DIF_ATOM,
+  DIF_NAME,
+  DIF_UNIQUENAME,
+  DIF_COPYABLENAME,
+  DIF_OWNER,
+  DIF_VAR,
+  DIF_FUTURE,
+  DIF_VAR_AUTO,
+  DIF_FUTURE_AUTO,
+  DIF_VAR_OBJECT,
   DIF_LAST
 } MarshalTag;
+
+//
+// The map from non-DEF to DEF tags;
+extern MarshalTag defmap[DIF_LAST];
 
 //
 const struct {
   MarshalTag tag;
   char *name;
 } dif_names[] = {
-  { DIF_UNUSED0,      "UNUSED0"},
-  { DIF_SMALLINT,     "SMALLINT"},
-  { DIF_BIGINT,       "BIGINT"},
-  { DIF_FLOAT,        "FLOAT"},
-  { DIF_ATOM,         "ATOM"},
-  { DIF_NAME,         "NAME"},
-  { DIF_UNIQUENAME,   "UNIQUENAME"},
-  { DIF_RECORD,       "RECORD"},
-  { DIF_TUPLE,        "TUPLE"},
-  { DIF_LIST,         "LIST"},
-  { DIF_REF,          "REF"},
-  { DIF_REF_DEBUG,    "REF_DEBUG"},
-  { DIF_OWNER,        "OWNER"},
-  { DIF_OWNER_SEC,    "OWNER_SEC"},
-  { DIF_PORT,         "PORT"},
-  { DIF_CELL,         "CELL"},
-  { DIF_LOCK,         "LOCK"},
-  { DIF_VAR,          "VAR"},
-  { DIF_BUILTIN,      "BUILTIN"},
-  { DIF_DICT,         "DICT"},
-  { DIF_OBJECT,       "OBJECT"},
-  { DIF_THREAD_UNUSED,"THREAD"},
-  { DIF_SPACE,        "SPACE"},
-  { DIF_CHUNK,        "CHUNK"},
-  { DIF_PROC,         "PROC"},
-  { DIF_CLASS,        "CLASS"},
-  { DIF_ARRAY,        "ARRAY"},
-  { DIF_FSETVALUE,    "FSETVALUE"},
-  { DIF_ABSTRENTRY,   "ABSTRENTRY"},
-  { DIF_PRIMARY,      "PRIMARY"},
-  { DIF_SECONDARY,    "SECONDARY"},
-  { DIF_SITE,         "SITE"},
-  { DIF_SITE_VI,      "SITE_VI"},
-  { DIF_SITE_PERM,    "SITE_PERM"},
-  { DIF_PASSIVE,      "PASSIVE"},
-  { DIF_COPYABLENAME, "COPYABLENAME"},
-  { DIF_EXTENSION,    "EXTENSION"},
-  { DIF_RESOURCE_T,   "RESOURCE_T"},
-  { DIF_RESOURCE_N,   "RESOURCE_N"},
-  { DIF_FUTURE,       "FUTURE"},
-  { DIF_VAR_AUTO,     "AUTOMATICALLY_REGISTERED_VAR"},
-  { DIF_FUTURE_AUTO,  "AUTOMATICALLY_REGISTERED_FUTURE"},
-  { DIF_EOF,          "EOF"},
-  { DIF_CODEAREA,     "CODE_AREA_SEGMENT"},
-  { DIF_VAR_OBJECT,   "VAR_OBJECT_EXPORTED"},
-  { DIF_SYNC,         "SYNC"},
-  { DIF_CLONEDCELL,   "CLONEDCELL"},
-  { DIF_STUB_OBJECT,  "OBJECT_EXPORTED"},
-  { DIF_SUSPEND,      "MARSHALING_SUSPENDED"},
-  { DIF_LIT_CONT,     "DIF_LITERAL_CONTINUATION"},
-  { DIF_EXT_CONT,     "DIF_EXTENSION_CONTINUATION"},
-  { DIF_SITE_SENDER,  "SITE_OPT"},
-  { DIF_LAST,         "LAST"}
+  { DIF_UNUSED0,         "UNUSED0"},
+  { DIF_SMALLINT,        "SMALLINT"},
+  { DIF_BIGINT,          "BIGINT"},
+  { DIF_FLOAT,           "FLOAT"},
+  { DIF_ATOM_DEF,        "ATOM_DEF"},
+  { DIF_NAME_DEF,        "NAME_DEF"},
+  { DIF_UNIQUENAME_DEF,  "UNIQUENAME_DEF"},
+  { DIF_RECORD_DEF,      "RECORD_DEF"},
+  { DIF_TUPLE_DEF,       "TUPLE_DEF"},
+  { DIF_LIST_DEF,        "LIST_DEF"},
+  { DIF_REF,             "REF"},
+  { DIF_UNUSED1,         "UNUSED1"},
+  { DIF_OWNER_DEF,       "OWNER_DEF"},
+  { DIF_UNUSED2,         "UNUSED2"},
+  { DIF_PORT_DEF,        "PORT_DEF"},
+  { DIF_CELL_DEF,        "CELL_DEF"},
+  { DIF_LOCK_DEF,        "LOCK_DEF"},
+  { DIF_VAR_DEF,         "VAR_DEF"},
+  { DIF_BUILTIN_DEF,     "BUILTIN_DEF"},
+  { DIF_DICT_DEF,        "DICT_DEF"},
+  { DIF_OBJECT_DEF,      "OBJECT_DEF"},
+  { DIF_UNUSED3,         "UNUSED3"},
+  { DIF_UNUSED4,         "UNUSED4"},
+  { DIF_CHUNK_DEF,       "CHUNK_DEF"},
+  { DIF_PROC_DEF,        "PROC_DEF"},
+  { DIF_CLASS_DEF,       "CLASS_DEF"},
+  { DIF_ARRAY_DEF,       "ARRAY_DEF"},
+  { DIF_FSETVALUE,       "FSETVALUE"},
+  { DIF_ABSTRENTRY,      "ABSTRENTRY"},
+  { DIF_UNUSED5,         "UNUSED5"},
+  { DIF_UNUSED6,         "UNUSED6"},
+  { DIF_SITE,            "SITE"},
+  { DIF_UNUSED7,         "UNUSED7"},
+  { DIF_SITE_PERM,       "SITE_PERM"},
+  { DIF_UNUSED8,         "UNUSED8"},
+  { DIF_COPYABLENAME_DEF,"COPYABLENAME_DEF"},
+  { DIF_EXTENSION_DEF,   "EXTENSION_DEF"},
+  { DIF_RESOURCE_DEF,    "RESOURCE_DEF"},
+  { DIF_RESOURCE,        "RESOURCE"},
+  { DIF_FUTURE_DEF,      "FUTURE_DEF"},
+  { DIF_VAR_AUTO_DEF,    "AUTOMATICALLY_REGISTERED_VAR_DEF"},
+  { DIF_FUTURE_AUTO_DEF, "AUTOMATICALLY_REGISTERED_FUTURE_DEF"},
+  { DIF_EOF,             "EOF"},
+  { DIF_CODEAREA,        "CODE_AREA_SEGMENT"},
+  { DIF_VAR_OBJECT_DEF,  "VAR_OBJECT_EXPORTED_DEF"},
+  { DIF_SYNC,            "SYNC"},
+  { DIF_CLONEDCELL_DEF,  "CLONEDCELL_DEF"},
+  { DIF_STUB_OBJECT_DEF, "OBJECT_EXPORTED_DEF"},
+  { DIF_SUSPEND,         "MARSHALING_SUSPENDED"},
+  { DIF_LIT_CONT,        "DIF_LITERAL_CONTINUATION"},
+  { DIF_EXT_CONT,        "DIF_EXTENSION_CONTINUATION"},
+  { DIF_SITE_SENDER,     "SITE_OPT"},
+  { DIF_RECORD,          "RECORD"},
+  { DIF_TUPLE,           "TUPLE"},
+  { DIF_LIST,            "LIST"},
+  { DIF_PORT,            "PORT"},
+  { DIF_CELL,            "CELL"},
+  { DIF_LOCK,            "LOCK"},
+  { DIF_BUILTIN,         "BUILTIN"},
+  { DIF_DICT,            "DICT"},
+  { DIF_OBJECT,          "OBJECT"},
+  { DIF_CHUNK,           "CHUNK"},
+  { DIF_PROC,            "PROC"},
+  { DIF_CLASS,           "CLASS"},
+  { DIF_EXTENSION,       "EXTENSION"},
+  { DIF_STUB_OBJECT,     "OBJECT_EXPORTED"},
+  { DIF_BIGINT_DEF,      "BIGINT_DEF"},
+  { DIF_CLONEDCELL,      "CLONEDCELL"},
+  { DIF_ARRAY,           "ARRAY"},
+  { DIF_ATOM,            "ATOM"},
+  { DIF_NAME,            "NAME"},
+  { DIF_UNIQUENAME,      "UNIQUENAME"},
+  { DIF_COPYABLENAME,    "COPYABLENAME"},
+  { DIF_OWNER,           "OWNER"},
+  { DIF_VAR,             "VAR"},
+  { DIF_FUTURE,          "FUTURE"},
+  { DIF_VAR_AUTO,        "AUTOMATICALLY_REGISTERED_VAR"},
+  { DIF_FUTURE_AUTO,     "AUTOMATICALLY_REGISTERED_FUTURE"},
+  { DIF_VAR_OBJECT,      "VAR_OBJECT_EXPORTED"},
+  { DIF_LAST,            "LAST"}
 };
 
 // the names of the difs for statistics
@@ -277,7 +337,7 @@ inline void marshalTermRef(MarshalerBuffer *bs, int lbl) {
 #if !defined(TEXT2PICKLE)
 //
 // Globalization - needed for both pickling & distribution;
-GName *globalizeConst(ConstTerm *t, MarshalerBuffer *bs);
+GName *globalizeConst(ConstTerm *t);
 
 //
 void initRobustMarshaler();
@@ -321,24 +381,15 @@ void marshalStringNum(MarshalerBuffer *bs, const char *s, int num) {
 }
 
 //
-// The following procedures must be either macros, or be redefined for
-// different MarshalerBuffer"s. Otherwise only the predefined
-// 'marshalTermDef' etc. will be used;
-
-#define rememberNode(gt, bs, node)                              \
+// The following "remember" procedure(s) must be either macros, or be
+// redefined for different MarshalerBuffer"s. Otherwise only the
+// predefined 'marshalTermDef' etc. will be used;
+//
+#define rememberLocation(lIT, bs, p)                            \
 {                                                               \
-  int ind = gt->rememberTerm(node);                             \
-  marshalTermDef(bs, ind);                                      \
-}
-#define rememberVarNode(gt, bs, p)                              \
-{                                                               \
-  int ind = gt->rememberVarLocation(p);                         \
-  marshalTermDef(bs, ind);                                      \
-}
-#define rememberLocation(gt, bs, p)                             \
-{                                                               \
-  int ind = gt->rememberLocation(p);                            \
-  marshalTermDef(bs, ind);                                      \
+  int index = lIT->getSize();                                   \
+  lIT->htAdd((void *) p, ToPointer(index));                     \
+  marshalTermDef(bs, index);                                    \
 }
 
 //
@@ -368,8 +419,6 @@ static const Bool lowendian = isLowEndian();
 // Primitive:
 void marshalSmallInt(MarshalerBuffer *bs, OZ_Term siTerm);
 void marshalFloat(MarshalerBuffer *bs, OZ_Term floatTerm);
-void marshalLiteral(MarshalerBuffer *bs, OZ_Term litTerm, int litTermInd);
-void marshalBigInt(MarshalerBuffer *bs, OZ_Term biTerm, ConstTerm *biConst);
 
 //
 // Marshaling/unmarshaling of record arity also requires some special
@@ -385,7 +434,7 @@ enum RecordArityType {
 // Code area;
 //
 void marshalBuiltin(GenTraverser *gt, Builtin *entry);
-void marshalProcedureRef(GenTraverser *gt,
+void marshalProcedureRef(AddressHashTableO1Reset *lIT,
                          AbstractionEntry *entry, MarshalerBuffer *bs);
 void marshalRecordArity(GenTraverser *gt,
                         SRecordArity sra, MarshalerBuffer *bs);
@@ -423,12 +472,9 @@ unsigned short unmarshalShort(MarshalerBuffer *bs) {
 }
 
 //
-#ifdef USE_FAST_UNMARSHALER
-
-//
 unsigned int unmarshalNumber(MarshalerBuffer *bs);
 double unmarshalFloat(MarshalerBuffer *bs);
-char *unmarshalString(MarshalerBuffer *);
+char *unmarshalString(MarshalerBuffer *bs);
 
 //
 inline
@@ -437,27 +483,7 @@ int unmarshalRefTag(MarshalerBuffer *bs) {
 }
 
 //
-GName* unmarshalGName(TaggedRef*,MarshalerBuffer*);
-
-#else
-
-unsigned int unmarshalNumberRobust(MarshalerBuffer *bs, int *overflow);
-double unmarshalFloatRobust(MarshalerBuffer *bs, int *overflow);
-char *unmarshalStringRobust(MarshalerBuffer *, int *error);
-
-//
-inline
-int unmarshalRefTagRobust(MarshalerBuffer *bs, Builder *builder, int *error) {
-  int e;
-  int rt = unmarshalNumberRobust(bs, &e);
-  *error = e || !builder->checkNewIndex(rt); // RefTags are found in order?
-  return rt;
-}
-
-//
-GName* unmarshalGNameRobust(TaggedRef*,MarshalerBuffer*,int*);
-
-#endif
+GName* unmarshalGName(TaggedRef*, MarshalerBuffer *bs);
 
 //
 // 'CodeAreaProcessor' argument: keeps the location of a code area
@@ -465,12 +491,17 @@ GName* unmarshalGNameRobust(TaggedRef*,MarshalerBuffer*,int*);
 class MarshalerCodeAreaDescriptor : public GTAbstractEntity,
                                     public CppObjMemory {
 protected:
+  AddressHashTableO1Reset *lIT;
   ProgramCounter start, end, current;
+
+  //
 public:
-  MarshalerCodeAreaDescriptor(ProgramCounter startIn, ProgramCounter endIn)
-    : start(startIn), end(endIn), current(startIn) {}
+  MarshalerCodeAreaDescriptor(ProgramCounter startIn, ProgramCounter endIn,
+                              AddressHashTableO1Reset *lITin)
+    : start(startIn), end(endIn), current(startIn), lIT(lITin) {}
   virtual ~MarshalerCodeAreaDescriptor() {
     DebugCode(start = end = current = (ProgramCounter) -1;);
+    DebugCode(lIT = (AddressHashTableO1Reset *) -1;);
   }
 
   //
@@ -481,6 +512,7 @@ public:
   ProgramCounter getStart() { return (start); }
   ProgramCounter getEnd() { return (end); }
   ProgramCounter getCurrent() { return (current); }
+  AddressHashTableO1Reset *getLocationsIT() { return (lIT); }
   void setCurrent(ProgramCounter pc) { current = pc; }
 };
 
@@ -556,19 +588,11 @@ void getHashTableAtomEntryLabelCA(GTAbstractEntity *arg, OZ_Term value);
 void getHashTableNumEntryLabelCA(GTAbstractEntity *arg, OZ_Term value);
 
 //
-#ifdef USE_FAST_UNMARSHALER
 static inline
 RecordArityType unmarshalRecordArityType(MarshalerBuffer *bs)
 {
   return ((RecordArityType) unmarshalNumber(bs));
 }
-#else
-static inline
-RecordArityType unmarshalRecordArityTypeRobust(MarshalerBuffer *bs, int *error)
-{
-  return ((RecordArityType) unmarshalNumberRobust(bs, error));
-}
-#endif
 
 //
 #ifdef DEBUG_CHECK
@@ -592,28 +616,31 @@ ProgramCounter unmarshalBuiltin(Builder *b, ProgramCounter pc);
 //
 void handleDEBUGENTRY(void *arg);
 
-#ifdef USE_FAST_UNMARSHALER
-
 //
-inline ProgramCounter unmarshalNum(ProgramCounter pc, MarshalerBuffer *bs) {
+inline
+ProgramCounter unmarshalNum(ProgramCounter pc, MarshalerBuffer *bs) {
   int num = unmarshalNumber(bs);
   return (pc ? CodeArea::writeInt(num,pc) : (ProgramCounter) 0);
 }
-inline ProgramCounter unmarshalXReg(ProgramCounter pc, MarshalerBuffer *bs) {
+inline
+ProgramCounter unmarshalXReg(ProgramCounter pc, MarshalerBuffer *bs) {
   int idx = unmarshalNumber(bs);
   return (pc ? CodeArea::writeXRegIndex(idx, pc) : (ProgramCounter) 0);
 }
-inline ProgramCounter unmarshalYReg(ProgramCounter pc, MarshalerBuffer *bs) {
+inline
+ProgramCounter unmarshalYReg(ProgramCounter pc, MarshalerBuffer *bs) {
   int idx = unmarshalNumber(bs);
   return (pc ? CodeArea::writeYRegIndex(idx, pc) : (ProgramCounter) 0);
 }
-inline ProgramCounter unmarshalGReg(ProgramCounter pc, MarshalerBuffer *bs) {
+inline
+ProgramCounter unmarshalGReg(ProgramCounter pc, MarshalerBuffer *bs) {
   int idx = unmarshalNumber(bs);
   return (pc ? CodeArea::writeGRegIndex(idx, pc) : (ProgramCounter) 0);
 }
 
 //
-inline ProgramCounter unmarshalLabel(ProgramCounter PC, MarshalerBuffer *bs) {
+inline
+ProgramCounter unmarshalLabel(ProgramCounter PC, MarshalerBuffer *bs) {
   int offset = unmarshalNumber(bs);
   return (PC ? CodeArea::writeLabel(offset,0,PC) : (ProgramCounter) 0);
 }
@@ -631,72 +658,6 @@ ProgramCounter unmarshalHashTableRef(Builder *b, ProgramCounter pc,
                                      MarshalerBuffer *bs);
 ProgramCounter unmarshalProcedureRef(Builder *b, ProgramCounter pc,
                                      MarshalerBuffer *bs, CodeArea *code);
-
-#else
-
-//
-inline ProgramCounter unmarshalNumRobust(ProgramCounter pc,
-                                         MarshalerBuffer *bs, int *error) {
-  int num = unmarshalNumberRobust(bs, error);
-  return ((pc && !(*error)) ?
-          CodeArea::writeInt(num,pc) : (ProgramCounter) 0);
-}
-
-//
-inline ProgramCounter unmarshalXRegRobust(ProgramCounter pc,
-                                          MarshalerBuffer *bs, int *error) {
-  int idx = unmarshalNumberRobust(bs, error);
-  return ((pc && !(*error)) ?
-          CodeArea::writeXRegIndex(idx, pc) : (ProgramCounter) 0);
-}
-inline ProgramCounter unmarshalYRegRobust(ProgramCounter pc,
-                                          MarshalerBuffer *bs, int *error) {
-  int idx = unmarshalNumberRobust(bs, error);
-  return ((pc && !(*error)) ?
-          CodeArea::writeYRegIndex(idx, pc) : (ProgramCounter) 0);
-}
-inline ProgramCounter unmarshalGRegRobust(ProgramCounter pc,
-                                          MarshalerBuffer *bs, int *error) {
-  int idx = unmarshalNumberRobust(bs, error);
-  return ((pc && !(*error)) ?
-          CodeArea::writeGRegIndex(idx, pc) : (ProgramCounter) 0);
-}
-
-//
-inline ProgramCounter unmarshalLabelRobust(ProgramCounter pc,
-                                           MarshalerBuffer *bs, int *error) {
-  int offset = unmarshalNumberRobust(bs, error);
-  return ((pc && !(*error)) ?
-          CodeArea::writeLabel(offset,0,pc) : (ProgramCounter) 0);
-}
-
-//
-ProgramCounter unmarshalGRegRefRobust(ProgramCounter PC,
-                                      MarshalerBuffer *bs, int *error);
-ProgramCounter unmarshalLocationRobust(ProgramCounter PC, MarshalerBuffer *bs,
-                                       int *error);
-ProgramCounter unmarshalPredIdRobust(Builder *b, ProgramCounter pc,
-                                     ProgramCounter lastPC, MarshalerBuffer *bs,
-                                     int *error);
-ProgramCounter unmarshalRecordArityRobust(Builder *b, ProgramCounter pc,
-                                          MarshalerBuffer *bs, int *error);
-ProgramCounter unmarshalCallMethodInfoRobust(Builder *b, ProgramCounter pc,
-                                             MarshalerBuffer *bs, int *error);
-ProgramCounter unmarshalHashTableRefRobust(Builder *b, ProgramCounter pc,
-                                           MarshalerBuffer *bs, int *error);
-ProgramCounter unmarshalProcedureRefRobust(Builder *b, ProgramCounter pc,
-                                           MarshalerBuffer *bs, CodeArea *code,
-                                           int *error);
-
-// Return values from unmarshalCodeRobust etc.:
-typedef enum {
-  UCR_DONE = 0,
-  UCR_SUSPEND,
-  UCR_ERROR
-} UCRReturn;
-// 'U'nmarshal 'C'ode 'R'obust 'Return';
-
-#endif // defined(USE_FAST_UNMARSHALER)
 
 #endif // !defined(TEXT2PICKLE)
 

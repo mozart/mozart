@@ -199,7 +199,7 @@ public:
 #ifdef INLINEOPCODEMAP
     return Opcode (*((int32 *) (((char *) adr) - (1<<OPCODEALIGN))));
 #else
-    void * ret = opcodeTable->htFind(adr);
+    void * ret = opcodeTable->htFind((void *) adr);
     Assert(ret != htEmpty);
     return (Opcode) ToInt32(ret);
 #endif

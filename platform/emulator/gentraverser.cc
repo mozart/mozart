@@ -34,75 +34,12 @@
 #include "cac.hh"
 #include "gname.hh"
 
-//
-struct GCGTITEntry {
-  OZ_Term term;
-  int index;
-};
-
-//
-// Just 'gCollectTerm' all the entries in it;
-void GTIndexTable::gCollectGTIT()
-{
-  const int asize = getSize();
-  if (asize == 0)
-    return;
-
-  //
-  GCGTITEntry *ta = new GCGTITEntry[asize];
-  AHT_HashNodeCnt *n = getFirst();
-  int i = 0;
-  do {
-    ta[i].term = (OZ_Term) (n->getKey());
-    ta[i].index = ToInt32(n->getValue());
-    n = getNext(n);
-    i++;
-  } while (n);
-  Assert(i == asize);
-
-  //
-  unwindGTIT();
-
-  //
-  for (i = 0; i < asize; i++) {
-    OZ_Term t = ta[i].term;
-    // 't' is either an (immediate) non-variable, a reference to a
-    // variable (possibly GC"ed), or a pseudo-variable used for
-    // keeping of references to non-relocatable objects. Observe that
-    // no direct GC tags can be there;
-    //
-    Assert(!oz_isMark(t));
 #ifdef DEBUG_CHECK
-    Bool isVar;
-    if (oz_isRef(t)) {
-      isVar = OK;
-      Assert(oz_isVar(*tagged2Ref(t)) || isGCMarkedTerm(t));
-    } else {
-      isVar = NO;
-    }
-#endif
-
-    //
-    if (!oz_isVar(t)) {
-      oz_gCollectTerm(t, t);
-
-      //
-      // Now, the GC occasionaly adds (is free to!) references, so:
-      DEREF(t, tp);
-      Assert(!oz_isRef(t));
-      if (oz_isVarOrRef(t))
-        t = makeTaggedRef(tp);
-      // ... otherwise just leave it dereferenced;
-      Assert((isVar && oz_isRef(t)) || (!isVar && !oz_isRef(t)));
-    }
-
-    //
-    htAdd((intlong) t, ToPointer(ta[i].index));
-  }
-
-  //
-  delete ta;
+void marshalingErrorHook()
+{
+  return;
 }
+#endif
 
 //
 void GenTraverser::gCollect()
@@ -110,9 +47,6 @@ void GenTraverser::gCollect()
   StackEntry *top = getTop();
   StackEntry *bottom = getBottom();
   StackEntry *ptr = top;
-
-  //
-  gCollectGTIT();
 
   //
   while (ptr > bottom) {
@@ -177,25 +111,6 @@ jmp_buf unmarshal_error_jmp;
 // kost@ : there is no 'fsetcore.hh';
 extern void makeFSetValue(OZ_Term,OZ_Term*);
 
-#ifndef USE_FAST_UNMARSHALER
-Bool isArityList(OZ_Term l)
-{
-  OZ_Term old = l;
-  while (oz_isCons(l)) {
-    OZ_Term h = oz_head(l);
-    if(!oz_isFeature(h)) return NO;
-    l = oz_tail(l);
-    if (l==old) return NO; // cyclic
-  }
-  if (oz_isNil(l)) {
-    return OK;
-  }
-else {
-    return NO;
-  }
-}
-#endif
-
 //
 void
 Builder::buildValueOutline(OZ_Term value, BTFrame *frame,
@@ -251,7 +166,7 @@ repeat:
       OZ_Term recTerm = makeTaggedSRecord(rec);
       if (doMemo) {
         GetBTTaskArg2(frame, int, memoIndex);
-        set(recTerm, memoIndex);
+        fillTermSafe(recTerm, memoIndex);
         doMemo = NO;
       }
 
@@ -268,7 +183,7 @@ repeat:
         // put tasks in reverse order (since subtrees will appear in
         // the normal order):
         EnsureBTSpace(frame, arity);
-        while(arity-- > 0) {
+        while (arity-- > 0) {
           PutBTTaskPtr(frame, BT_spointer, args++);
         }
       } else {
@@ -311,10 +226,6 @@ repeat:
       Assert(value == (OZ_Term) 0);
       GetBTTaskArg1(frame, OZ_Term, label);
       GetBTTaskArg2(frame, OZ_Term, arity);
-#ifndef USE_FAST_UNMARSHALER
-      if (!OZ_isLiteral(label) || !isArityList(arity))
-        RAISE_UNMARSHAL_ERROR;
-#endif
       //
       arity = packlist(arity);
       OZ_Term sortedArity = arity;
@@ -329,7 +240,7 @@ repeat:
       OZ_Term recTerm = makeTaggedSRecord(rec);
       if (doMemo) {
         GetNextBTFrameArg1(frame, int, memoIndex);
-        set(recTerm, memoIndex);
+        fillTermSafe(recTerm, memoIndex);
         doMemo = NO;
       }
       DiscardBT2Frames(frame);
@@ -393,10 +304,6 @@ repeat:
 
   case BT_dictKey:
     {
-#ifndef USE_FAST_UNMARSHALER
-      if (!oz_isFeature(value))
-        RAISE_UNMARSHAL_ERROR;
-#endif
       // 'dict' remains in place:
       ReplaceBTTask2ndArg(frame, BT_dictVal, value);
       break;
@@ -431,7 +338,8 @@ repeat:
       makeFSetValue(listRep, &value);
       if (doMemo) {
         GetBTTaskArg1(frame, int, memoIndex);
-        set(value, memoIndex);
+        // The slot has been either accessed or not:
+        fillTerm(value, memoIndex);
         doMemo = NO;
       }
       DiscardBTFrame(frame);
@@ -449,10 +357,6 @@ repeat:
   case BT_chunk:
     {
       Assert(oz_onToplevel());
-#ifndef USE_FAST_UNMARSHALER
-      if (!oz_onToplevel() || !OZ_isRecord(value))
-        RAISE_UNMARSHAL_ERROR;
-#endif
       GetBTTaskPtr1(frame, GName*, gname);
 
       //
@@ -466,10 +370,7 @@ repeat:
       //
       if (doMemo) {
         GetBTTaskArg2(frame, int, memoIndex);
-        OZ_Term *drp = tagged2Ref(get(memoIndex));
-        Assert(oz_isOptVar(*drp));
-        *drp = chunkTerm;
-        update(chunkTerm, memoIndex);
+        fillTerm(chunkTerm, memoIndex);
         doMemo = NO;
       }
 
@@ -483,10 +384,6 @@ repeat:
   case BT_classFeatures:
     {
       Assert(oz_isSRecord(value));
-#ifndef USE_FAST_UNMARSHALER
-      if (!oz_isSRecord(value))
-        RAISE_UNMARSHAL_ERROR;
-#endif
       GetBTTaskPtr1(frame, ObjectClass*, cl);
       GetBTTaskArg2(frame, int, flags);
       DiscardBTFrame(frame);
@@ -542,7 +439,8 @@ repeat:
       //
       GetBTFramePtr1(frame, GName*, gname);
 
-      // 'value' is the free record:
+      // 'value' is the free record (incompete by now, - see also
+      // gentraverserLoop.cc, case Co_Object):
       SRecord *feat = oz_isNil(value) ?
         (SRecord *) NULL : tagged2SRecord(value);
       OzLock *lock = oz_isNil(lockTerm) ?
@@ -552,12 +450,7 @@ repeat:
       overwriteGName(gname, objTerm);
       if (doMemo) {
         GetBTFrameArg2(frame, int, memoIndex);
-        OZ_Term *drp = tagged2Ref(get(memoIndex));
-        Assert(oz_isOptVar(*drp));
-        *drp = objTerm;
-        // we do not need to have the indirection over that auxiliary
-        // heap ref anymore:
-        update(objTerm, memoIndex);
+        fillTerm(objTerm, memoIndex);
         doMemo = NO;
       }
       DiscardBTFrame(frame);
@@ -618,7 +511,7 @@ repeat:
 
       //
       if (doMemo) {
-        set(procTerm, maybeMemoIndex);
+        fillTerm(procTerm, maybeMemoIndex);
         doMemo = NO;
       }
 
@@ -720,11 +613,7 @@ repeat:
     break;
 
   default:
-#ifndef USE_FAST_UNMARSHALER
-    RAISE_UNMARSHAL_ERROR;
-#else
     OZ_error("Builder: unknown task!");
-#endif
   }
 
   //
@@ -827,11 +716,7 @@ BTFrame* Builder::liftTask(int sz)
     }
 
   default:
-#ifndef USE_FAST_UNMARSHALER
-    RAISE_UNMARSHAL_ERROR;
-#else
     OZ_error("Builder: unknown task!");
-#endif
   }
 
   //
@@ -913,11 +798,7 @@ BTFrame* Builder::findBinary(BTFrame *frame)
     goto repeat;
 
   default:
-#ifndef USE_FAST_UNMARSHALER
-    RAISE_UNMARSHAL_ERROR;
-#else
     OZ_error("Builder: unknown task!");
-#endif
   }
 
   //

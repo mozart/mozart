@@ -57,7 +57,7 @@ define(opAction,
         $1,Count,marshalNumber(bs,(unsigned int)getPosIntArg(PC++));,
         $1,ArityAndIsTail,marshalNumber(bs,(unsigned int)getPosIntArg(PC++));,
         $1,Dummy,marshalNumber(bs,(unsigned int)getPosIntArg(PC++));,
-        $1,ProcedureRef,marshalProcedureRef(gt,(AbstractionEntry*)getAdressArg(PC++),bs);,
+        $1,ProcedureRef,marshalProcedureRef(lIT,(AbstractionEntry*)getAdressArg(PC++),bs);,
         $1,PredId,marshalPredId(gt,(PrTabEntry*)getAdressArg(PC++),bs);ozValuesCnt--;,
         $1,HashTableRef,partialInst=dpMarshalHashTableRef(gt,desc,instrstart-start,(IHashTable *)getAdressArg(PC++),bs)||partialInst;ozValuesCnt--;,
         $1,RecordArity,marshalRecordArity(gt,(SRecordArity) getAdressArg(PC++),bs);ozValuesCnt--;,
@@ -80,6 +80,7 @@ Bool dpMarshalCode(GenTraverser *gt, GTAbstractEntity *arg)
     (DPMarshalerCodeAreaDescriptor *) arg;
   // ('bs' could be also saved in the argument;)
   ByteBuffer *bs = (ByteBuffer *) gt->getOpaque();
+  AddressHashTableO1Reset *lIT = desc->getLocationsIT();
   ProgramCounter start = desc->getStart(), end = desc->getEnd();
   ProgramCounter PC = desc->getCurrent();
   // when 'ozValuesCnt' hits zero, then the code area must be broken
@@ -295,7 +296,6 @@ static Bool needNewBuffer(Opcode op, ProgramCounter PC, int availSpace)
 }
 
 
-#ifdef USE_FAST_UNMARSHALER
 //
 undefine([[opAction]])
 
@@ -383,108 +383,3 @@ Bool dpUnmarshalCode(ByteBuffer *bs, Builder *b,
   }
   return (done);
 }
-
-#else
-
-// Robust unmarshaling
-undefine([[opAction]])
-
-#define ONERR(e)        \
-  if (e) { delete desc; return (UCR_ERROR); }
-
-define(opAction,
-[[ifelse($1,Number,PC=unmarshalOzValue(b,PC,code DebugArg(mIsNumber));ozValuesCnt--;,
-         $1,Literal,PC=unmarshalOzValue(b,PC,code DebugArg(mIsLiteral));ozValuesCnt--;,
-         $1,Feature,PC=unmarshalOzValue(b,PC,code DebugArg(mIsFeature));ozValuesCnt--;,
-         $1,Constant,PC=unmarshalOzValue(b,PC,code DebugArg(mIsConstant));ozValuesCnt--;,
-         $1,Builtinname,PC=unmarshalBuiltin(b,PC);ozValuesCnt--;,
-         $1,XRegisterIndex,PC=unmarshalXRegRobust(PC,bs,&e);ONERR(e);,
-         $1,YRegisterIndex,PC=unmarshalYRegRobust(PC,bs,&e);ONERR(e);,
-         $1,GRegisterIndex,PC=unmarshalGRegRobust(PC,bs,&e);ONERR(e);,
-         $1,Arity,PC=unmarshalNumRobust(PC,bs,&e);ONERR(e);,
-         $1,Label,PC=unmarshalLabelRobust(PC,bs,&e);ONERR(e);,
-         $1,Count,PC=unmarshalNumRobust(PC,bs,&e);ONERR(e);,
-         $1,ArityAndIsTail,PC=unmarshalNumRobust(PC,bs,&e);ONERR(e);,
-         $1,Dummy,PC=unmarshalNumRobust(PC,bs,&e);ONERR(e);,
-         $1,ProcedureRef,PC=unmarshalProcedureRefRobust(b,PC,bs,code,&e);ONERR(e);,
-         $1,PredId,PC=unmarshalPredIdRobust(b,PC,instPC,bs,&e);ozValuesCnt--;ONERR(e);,
-         $1,HashTableRef,PC=dpUnmarshalHashTableRefRobust(b,PC,bs,desc,partialInst,&e);ozValuesCnt--;ONERR(e);,
-         $1,RecordArity,PC=unmarshalRecordArityRobust(b,PC,bs,&e);ozValuesCnt--;ONERR(e);,
-         $1,CallMethodInfo,PC=unmarshalCallMethodInfoRobust(b,PC,bs,&e);ozValuesCnt--;ONERR(e);,
-         $1,GRegRef,PC=unmarshalGRegRefRobust(PC,bs,&e);ONERR(e);,
-         $1,Location,PC=unmarshalLocationRobust(PC,bs,&e);ONERR(e);,
-         $1,Cache,PC=unmarshalCache(PC,code);)]])
-
-
-//
-// Returning 'OK' means we are done (with the code area);
-// 'pc' can be zero meaning "discard the code". If it is non-zero,
-// then it is supposed to be large enough to hold the whole code;
-// Returning 'ERR' means that the buffer can not be marshalled.
-UCRReturn dpUnmarshalCodeRobust(ByteBuffer *bs, Builder *b,
-                                DPBuilderCodeAreaDescriptor *desc)
-{
-  int ozValuesCnt = ozValuesBADP;
-  ProgramCounter PC = desc->getCurrent();
-  ProgramCounter instPC;
-  DebugCode(instPC = (ProgramCounter) -1);
-  // 'CodeArea*' is passed in it itself:
-  CodeArea *code = desc->getCodeArea();
-  Bool done = NO;
-  Bool partialInst = NO;
-  int e;
-
-  //
-  while (ozValuesCnt > 0 && partialInst == NO) {
-    Opcode op = (Opcode) bs->get();
-#if defined(DBG_TRACE)
-    fprintf(dbgout, " %d", op);
-    fflush(dbgout);
-#endif
-    if (op == ENDOFFILE) {
-      done = OK;
-      break;
-    }
-    if (op == ENDOFCHUNK) {
-      break;
-    }
-
-    //
-    if (op == DEBUGENTRY && PC)
-      b->schedGenAction(handleDEBUGENTRY, PC);
-
-    //
-    Assert(op != CALLPROCEDUREREF);
-    if (PC) {
-      instPC = PC;
-      PC = CodeArea::writeOpcode(op, PC);
-    }
-
-    //
-    switch(op) {
-
-      changequote(`,') dnl '
-      include(EMUDIR/../instrDefs.m4)
-      changequote([[,]])
-
-    default:
-      delete desc;
-      return (UCR_ERROR);
-    }
-  }
-
-  //
-  if (done) {
-    delete desc;
-    return (UCR_DONE);
-  } else {
-    if (PC) {
-      if (partialInst == OK)
-        PC = instPC;
-      desc->setCurrent(PC);
-    }
-    return (UCR_SUSPEND);
-  }
-}
-
-#endif

@@ -69,8 +69,6 @@ void BaseSite::marshalBaseSiteForGName(PickleMarshalerBuffer* buf)
   marshalNumber(buf, timestamp.pid);
 }
 
-#ifdef USE_FAST_UNMARSHALER
-
 //
 void BaseSite::unmarshalBaseSite(MarshalerBuffer* buf)
 {
@@ -86,37 +84,6 @@ void BaseSite::unmarshalBaseSiteGName(MarshalerBuffer* buf)
   timestamp.start = unmarshalNumber(buf);
   timestamp.pid = unmarshalNumber(buf);
 }
-
-#else
-
-void BaseSite::unmarshalBaseSiteRobust(MarshalerBuffer* buf, int *error)
-{
-  address = unmarshalNumberRobust(buf, error);
-  // address should be of int32
-  if(*error || (address <= NON_BROADCAST_MIN)) {
-    return;
-  }
-  port = unmarshalShort(buf);
-  timestamp.start = unmarshalNumberRobust(buf, error);
-  if(*error || timestamp.start < 0) {
-    return;
-  }
-  timestamp.pid=unmarshalNumberRobust(buf, error);
-  // andreas & kost@ : Windows* return arbitrary pid_t"s,
-  // so no MAX_PID whatsoever!
-}
-void BaseSite::unmarshalBaseSiteGNameRobust(MarshalerBuffer* buf, int *error)
-{
-  address = unmarshalNumberRobust(buf, error);
-  if(*error) return;
-  port = 0;
-  timestamp.start = unmarshalNumberRobust(buf, error);
-  if(*error) return;
-  timestamp.pid = unmarshalNumberRobust(buf, error);
-  if(*error) return;
-}
-
-#endif
 
 
 static ip_address getMySiteIP()
@@ -201,7 +168,6 @@ void gCollectSiteTable() {
 
 Site *mySite;
 
-#ifdef USE_FAST_UNMARSHALER
 Site* unmarshalSite(MarshalerBuffer *buf)
 {
   Site tryS;
@@ -218,22 +184,3 @@ Site* unmarshalSite(MarshalerBuffer *buf)
   }
   return (s);
 }
-#else
-Site* unmarshalSiteRobust(MarshalerBuffer *buf, int *error)
-{
-  Site tryS;
-
-  //
-  tryS.unmarshalBaseSiteGNameRobust(buf, error);
-  if (*error) return ((Site *) 0);
-
-  //
-  int hvalue = tryS.hash();
-  Site *s = siteTable->find(&tryS, hvalue);
-  if (!s) {
-    s = new Site(&tryS);
-    siteTable->insert(s, hvalue);
-  }
-  return (s);
-}
-#endif
