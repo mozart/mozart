@@ -646,6 +646,9 @@ void engine() {
   ByteCode *shallowCP = NULL;
   Bool inShallowGuard = NO;
 
+  /* which kind of solve combinator to choose */
+  Bool isEatWaits = NO;
+  
   SRecord *predicate; NoReg(predicate);
   int predArity;      NoReg(predArity);
 
@@ -1563,9 +1566,18 @@ void engine() {
 
 	switch (bi->getType()) {
 
-	case BIsolve:	  goto LBLBIsolve;
-	case BIsolveCont: goto LBLBIsolveCont;
-	case BIsolved:    goto LBLBIsolved;
+	case BIsolve:
+	  {
+	    isEatWaits = NO;
+	    goto LBLBIsolve;
+	  }
+	case BIsolveEatWait:
+	  {
+	    isEatWaits = OK;
+	    goto LBLBIsolve;
+	  }
+	case BIsolveCont:    goto LBLBIsolveCont;
+	case BIsolved:       goto LBLBIsolved;
 
 	case BIDefault:
 	  {
@@ -1663,6 +1675,9 @@ void engine() {
        // Note: don't perform any derefencing on X[1];
        SolveActor *sa = new SolveActor (CBB, GET_CURRENT_PRIORITY(), X[1]);
 
+       if (isEatWaits)
+	 sa->setEatWaits();
+       
        e->setCurrent(new Board(sa, Bo_Solve), OK);
        CBB->setInstalled();
        e->trail.pushMark();
@@ -2182,16 +2197,18 @@ void engine() {
       DebugCheck ((e->trail.isEmptyChunk () == NO),
 		  error ("non-empty trail chunk for solve board"));
       // all possible reduction steps require this; 
-      e->trail.popMark ();
-      CBB->unsetInstalled ();
+
       SolveActor *solveAA = SolveActor::Cast (CBB->getActor ());
       Board *solveBB = CBB; 
-      e->setCurrent ((CBB->getParentBoard ())->getBoardDeref ());
-      CBB->decSuspCount ();
 
       if (solveBB->hasSuspension () == NO) {
 	// 'solved';
 	// don't unlink the subtree from the computation tree;
+	e->trail.popMark ();
+	CBB->unsetInstalled ();
+	e->setCurrent ((CBB->getParentBoard ())->getBoardDeref ());
+	CBB->decSuspCount ();
+
 	DebugCheckT (solveBB->setReflected ());
 	if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genSolved(), OK) ) {
 	  HF_NOMSG;
@@ -2202,6 +2219,11 @@ void engine() {
 	if (wa == (WaitActor *) NULL) {
 	  // "stuck" (stable without distributing waitActors);
 	  // don't unlink the subtree from the computation tree; 
+	  e->trail.popMark ();
+	  CBB->unsetInstalled ();
+	  e->setCurrent ((CBB->getParentBoard ())->getBoardDeref ());
+	  CBB->decSuspCount ();
+
 	  DebugCheckT (solveBB->setReflected ());
 	  if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genStuck(), OK) ) {
 	    HF_NOMSG;
@@ -2223,15 +2245,53 @@ void engine() {
 	    wa->decChilds ();
 	    DebugCheck((wa->hasNoChilds () == NO),
 		       error ("error in the '... [] true then false ro' case"));
-	    waitBoard->setActor (wa);
-	    ((AWActor *) wa)->addChild (waitBoard);
-	    solveAA->setBoardToInstall (waitBoard);
-	    DebugCheckT (solveBB->setReflected ());
-	    if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genEnumedFail() ,OK)) {
-	      HF_NOMSG;
+
+	    if (solveAA->isEatWaits()) {
+
+	      waitBoard->setCommitted(solveBB);
+	      if (!e->installScript(waitBoard->getScriptRef())) {
+		HF_FAIL(,
+			message("commit of wait disjunction failed\n"));
+	      }
+
+	      solveBB->incSuspCount(waitBoard->getSuspCount()-1);
+
+	      // Make the actor unstable by incremneting the thread counter
+	      solveAA->incThreads();
+	      
+	      // put ~'solve actor';
+	      e->pushCFun(solveBB, SolveActor::Waker);    // no args;
+	      
+	      if (waitBoard->isWaitTop()) {
+		goto LBLcheckEntailment;
+	      }
+
+	      LOADCONT(waitBoard->getBodyPtr());
+	      Assert(PC != NOCODE);
+
+	      goto LBLemulate;
+	      
+	    } else {
+	      e->trail.popMark ();
+	      CBB->unsetInstalled ();
+	      e->setCurrent ((CBB->getParentBoard ())->getBoardDeref ());
+	      CBB->decSuspCount ();
+
+	      waitBoard->setActor (wa);
+	      ((AWActor *) wa)->addChild (waitBoard);
+	      solveAA->setBoardToInstall (waitBoard);
+	      DebugCheckT (solveBB->setReflected ());
+	      if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genEnumedFail() ,OK)) {
+		HF_NOMSG;
+	      }
 	    }
 	  } else {
 	    // 'proper' enumeration; 
+	    e->trail.popMark ();
+	    CBB->unsetInstalled ();
+	    e->setCurrent ((CBB->getParentBoard ())->getBoardDeref ());
+	    CBB->decSuspCount ();
+
 	    WaitActor *nwa = new WaitActor (wa);
 	    solveBB->decSuspCount ();   // since WaitActor::WaitActor adds one; 
 	    waitBoard->setActor (nwa);
