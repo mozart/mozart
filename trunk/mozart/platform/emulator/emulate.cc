@@ -1702,7 +1702,6 @@ Case(GETVOID)
     retry:
       switch (tagTypeOf(term)) {
       case TAG_LTUPLE:
-	Assert(table->lookupLTuple());
 	sPointer = tagged2LTuple(term)->getRef();
 	JUMPRELATIVE(table->lookupLTuple());
       case TAG_SRECORD:
@@ -1749,16 +1748,12 @@ Case(GETVOID)
     {
       PushCont(PC+3);
       AbstractionEntry *entry = (AbstractionEntry *)getAdressArg(PC+1);
-      
       CallDoChecks(entry->getAbstr());
-
-      IHashTable *table = entry->getIndexTable();
-      PC = entry->getPC();
-      if (table && tagTypeOf(XREGS[0])==TAG_LTUPLE) {
+      if (tagTypeOf(XREGS[0])==TAG_LTUPLE) {
 	sPointer = tagged2LTuple(XREGS[0])->getRef();
-	JUMPRELATIVE(table->lookupLTuple());
+	JUMPABSOLUTE(entry->getListPC());
       } else {
-	DISPATCH(0);
+	JUMPABSOLUTE(entry->getPC());
       }
     }
 
@@ -1766,16 +1761,12 @@ Case(GETVOID)
   Case(FASTTAILCALL)
     {
       AbstractionEntry *entry = (AbstractionEntry *)getAdressArg(PC+1);
-      
       CallDoChecks(entry->getAbstr());
-
-      IHashTable *table = entry->getIndexTable();
-      PC = entry->getPC();
-      if (table && tagTypeOf(XREGS[0])==TAG_LTUPLE) {
+      if (tagTypeOf(XREGS[0])==TAG_LTUPLE) {
 	sPointer = tagged2LTuple(XREGS[0])->getRef();
-	JUMPRELATIVE(table->lookupLTuple());
+	JUMPABSOLUTE(entry->getListPC());
       } else {
-	DISPATCH(0);
+	JUMPABSOLUTE(entry->getPC());
       }
     }
 
