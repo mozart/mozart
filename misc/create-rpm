@@ -32,7 +32,7 @@ TMPDIR=/tmp
 : ${PACKAGER:="Konstantin Popov (mozart-oz.org)"}
 
 #
-COPYLIBS=yes
+COPYLIBS=no
 
 #
 # check whether copying of the 'libgcc_s' and 'libstdc++' libraries
@@ -41,6 +41,11 @@ while [ 1 ]; do
     case $1 in
         --no-lib-copies)
         COPYLIBS=no
+        shift 1
+        continue
+        ;;
+        --lib-copies)
+        COPYLIBS=yes
         shift 1
         continue
         ;;
