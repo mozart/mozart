@@ -77,13 +77,27 @@ case "$platform" in
         CPPFLAGS="$oz_a $CPPFLAGS"
         EXTRALDFLAGS="-mwindows -s"
         SRCS="winMain.c"
+        INSTALLWINDLLS=installwindlls
+        : ${WINDLLDIR=$windlldir}
+        for i in tcl80.dll tk80.dll msvcrt.dll; do
+          dll=$WINDLLDIR/$i
+          AC_MSG_CHECKING(checking DLL $dll)
+          if test -f $dll
+          then AC_MSG_RESULT(yes)
+          else AC_MSG_ERROR(required DLL  $dll include files not found)
+          fi
+        done
    ;;
 
    *)
+        WINDLLDIR=""
+        INSTALLWINDLLS=""
         SRCS="ozMain.c ozAppInit.c"
     ;;
 esac
 
+AC_SUBST(WINDLLDIR)
+AC_SUBST(INSTALLWINDLLS)
 
 AC_MSG_CHECKING(checking for S.u.S.E. Linux)
 if test -f "/sbin/SuSEconfig"

@@ -5,7 +5,7 @@ BUILDTOP        = @BUILDTOP@
 PLATFORM        = @PLATFORM@
 PLATFORMDIR     = $(PREFIX)/platform/$(PLATFORM)
 INSTALL         = @INSTALL@
-INSTALL_BIN     = $(INSTALL) -s -m 555
+INSTALL_BIN     = $(INSTALL) -m 555
 INSTALL_DIR     = @INSTALL_DIR@
 CC              = @CC@
 
@@ -20,6 +20,7 @@ PROVIDETCLLIBS  = @PROVIDETCLLIBS@
 TCLLIBTCLDIR    = @oz_tcl_lib_tcl_dir@
 TKLIBTCLDIR     = @oz_tk_lib_tcl_dir@
 
+WINDLLDIR       = @WINDLLDIR@
 
 OZWISH          = tk.exe
 SRCS            = @SRCS@
@@ -44,8 +45,15 @@ distclean: veryclean
         -rm -f conf.h config.* Makefile
         -rm -f ozwish80.mk ozwish.mk1 ozwish.lk1 ozwish.imp ozwish.map ozwish.sym
 
-install: $(PLATFORMDIR) $(OZWISH) $(PROVIDETCLLIBS)
+install: $(PLATFORMDIR) $(OZWISH) $(PROVIDETCLLIBS) @INSTALLWINDLLS@
         $(INSTALL_BIN) $(OZWISH) $(PLATFORMDIR)
+
+installwindlls: $(PLATFORMDIR)
+        $(INSTALL) $(WINDLLDIR)/tcl80.dll $(PLATFORMDIR)
+        $(INSTALL) $(WINDLLDIR)/tk80.dll $(PLATFORMDIR)
+        $(INSTALL) $(WINDLLDIR)/msvcrt.dll $(PLATFORMDIR)
+
+nothing:
 
 $(PLATFORMDIR):
         $(INSTALL_DIR) $@
