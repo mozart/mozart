@@ -12,6 +12,7 @@ AC_CHECK_PROGS(RM, rm)
 OZ_PATH_PROG(DYNLD, ozdynld)
 OZ_PATH_PROG(INSTALLSRC, ozinstallsrc)
 OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
+OZ_PATH_PROG(MKINSTALLDIRS, mkinstalldirs)
 : ${platform=`$PLATFORMSCRIPT`}
 AC_SUBST(platform)
 AC_CONFIG_SUBDIRS(ozflex)
