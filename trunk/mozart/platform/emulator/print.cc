@@ -1580,10 +1580,11 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
       continue;
     }
 
-    if (PC==C_ACTOR_Ptr) {
-      out = cons(OZ_atom("actor"), out);
-      continue;
-    }
+    // This needs some more work... -BL
+    //if (PC==C_ACTOR_Ptr) {
+    //  out = cons(OZ_atom("actor"), out);
+    //  continue;
+    //}
     
     if (PC==C_CFUNC_CONT_Ptr) {
       OZ_CFun biFun    = (OZ_CFun) (void*) Y;
