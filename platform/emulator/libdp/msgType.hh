@@ -30,8 +30,6 @@
 #ifndef __MSG_TYPE_HH
 #define __MSG_TYPE_HH
 
-#include "pickle.hh" // for PERDIOMAGICSTART
-
 //
 // kost@ : those who update this, must update 'mess_names' as well!!
 
@@ -73,7 +71,7 @@ enum MessageType {
   M_SEND_OBJECT,        //
   M_SEND_OBJECTANDCLASS,//
 
-  M_FILE = PERDIOMAGICSTART ,          // HACK ALERT see componentBuffer.cc
+  M_FILE_XXXUNUSED,
   M_EXPORT,
   M_UNASK_ERROR,
   M_SEND_GATE,
