@@ -224,6 +224,19 @@ static void pop_cond() {
                   xyFileName,xylino,xycharno());
 }
 
+static void toggle_cond() {
+  if (conditional_p > conditional_basep) {
+    // toggle top of flag stack
+    if (conditional[conditional_p])
+      conditional[conditional_p] = 0;
+    else
+      conditional[conditional_p] = 1;
+  } else if (get_cond())
+    xyreportError("macro directive error",
+                  "\\else without previous corresponding \\ifdef or \\ifndef",
+                  xyFileName,xylino,xycharno());
+}
+
 static int get_cond() {
   int i = conditional_p;
   while (i > conditional_basep)
@@ -634,16 +647,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 \\d(e(f(i(ne?)?)?)?)?          { BEGIN(DEFINE); }
 \\ifd(ef?)?                    { BEGIN(IFDEF); }
 \\ifn(d(ef?)?)?                { BEGIN(IFNDEF); }
-\\el(se?)?                     { if (conditional_p > conditional_basep) {
-                                   // toggle top of flag stack
-                                   if (conditional[conditional_p])
-                                     conditional[conditional_p] = 0;
-                                   else
-                                     conditional[conditional_p] = 1;
-                                 } else if (get_cond())
-                                   xyreportError("macro directive error",
-                                                 "\\endif without previous corresponding \\ifdef or \\ifndef",
-                                                 xyFileName,xylino,xycharno());
+\\el(se?)?                     { toggle_cond();
                                  BEGIN(DIRECTIVE);
                                }
 \\e(n(d(if?)?)?)?              { pop_cond();
