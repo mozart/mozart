@@ -767,10 +767,14 @@ void BIinitFD()
   BIadd("fdGenLinLessEqB", 4, BIfdGenLinLessEqB); 
   BIadd("fdGenNonLinLessEqB", 4, BIfdGenNonLinLessEqB); 
   BIadd("fdGenLinLessEqB_body", 4, BIfdGenLinLessEqB_body);
+  BIadd("fdCardBIKill", 3, BIfdCardBIKill); 
+  BIadd("fdCardBIKill_body", 3, BIfdCardBIKill_body);
   BIadd("fdCardBI", 3, BIfdCardBI); 
   BIadd("fdCardBI_body", 3, BIfdCardBI_body);
   BIadd("fdInB", 3, BIfdInB); 
   BIadd("fdInB_body", 3, BIfdInB_body);
+  BIadd("fdInKillB", 3, BIfdInKillB); 
+  BIadd("fdInKillB_body", 3, BIfdInKillB_body);
   BIadd("fdNotInB", 3, BIfdNotInB); 
   BIadd("fdNotInB_body", 3, BIfdNotInB_body);
   BIadd("fdIsIntB", 2, BIfdIsIntB); 
