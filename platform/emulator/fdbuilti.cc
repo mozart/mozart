@@ -861,7 +861,7 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
   for (c = clauses; c--; )
     for (v = variables; v--; )
       if (bifdbm_varptr[idx_vp(c, v)])
-	introduceLocal(idx_vp(c, v), TaggedRef(bifdbm_varptr[idx_vp(c, v)]));
+	introduceLocal(idx_vp(c, v), makeTaggedRef(bifdbm_varptr[idx_vp(c, v)]));
   
   // 2nd pass: undo marks
   for (v = 0; v < variables; v++) {
