@@ -23,4 +23,60 @@
 
 <Chapter id="chapter.board">
     <Title/Drawing Board/
+
+    <P>
+      The drawing board allows multiple, distributed users to create
+      and manipulate graphics. All users have the same, consistent
+      view of the drawing.
+    </p>
+
+    <Section class=unnumbered>
+      <Title/Drawing/
+
+      <P>
+        <List>
+          <Entry>
+            Tools
+          <Item>
+            The selected tool determines the kind of graphical object
+            that is created when clicking the drawing area.
+          <Entry>
+            Create
+          <Item>
+            Clicking over the drawing area, a graphical object as
+            determined by the selected is created at the
+            mousposition. 
+          <Entry>
+            Modify
+          <Item>
+            Object can be modified by clicking them with the middle
+            mouse button. While they are modified other users can not
+            alter the particulat object. 
+          <Entry>
+            Delete
+          <Item>
+            Clicking an object with the right mouse button deletes
+            it.
+        </List>
+     </P>
+
+    </Section>
+
+    <Section class=unnumbered>
+      <Title/Mailing Applets/
+
+       <P>
+         Pressing <Em/Send Mail/, generates a new board applet on the
+         fly and sends it by mail. The recipient can execute the
+         applet and can by this join into the existing drawing board. 
+       </p>
+
+       <P>
+         The currently participating users are listed by their mail
+         address in the <code>Users</code> area.
+       </P>
+
+    </Section>
+
+
 </Chapter>
