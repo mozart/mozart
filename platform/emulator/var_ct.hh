@@ -127,10 +127,10 @@ public:
     return _constraint->unify(val);
   }
 
-  void gCollect(void);
+  void gCollect(Board *);
   void gCollectRecurse(void);
 
-  void sClone(void);
+  void sClone(Board *);
   void sCloneRecurse(void);
 
   // methods for trailing
