@@ -828,7 +828,9 @@ in
 	       case T == undef then
 		  Gui,doStatus(FirstSelectThread)
 	       else
-		  {Browse {Thread.taskStack T MaxStackBrowseSize false}}
+		  P = {System.get errors}
+	       in
+		  {Browse {Thread.taskStack T P.'thread' false}}
 	       end
 	    end
 	 end
