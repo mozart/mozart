@@ -61,7 +61,7 @@ public:
     printStream(out,depth); out << endl;
   }
   OZ_Term inspect();
-  Bool kick(TaggedRef *);
+  OZ_Return kick(TaggedRef *);
 };
 
 inline

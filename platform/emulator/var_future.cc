@@ -50,11 +50,13 @@ OZ_BI_define(BIbindFuture,2,0)
 
 /* call `function' as
  *    thread Tmp in {function Tmp} {`Assign` Future Tmp} end
- * return TRUE, if ptr is bound during kick
+ * return PROCEED, if ptr is bound during kick
+ * return SUSPEND, if ptr remains unbound
+ * return RAISE, if kicking raises an exception
  */
-Bool Future::kick(TaggedRef *ptr)
+OZ_Return Future::kick(TaggedRef *ptr)
 {
-  if (!function) return FALSE;
+  if (!function) return SUSPEND;
 
   Board* bb      = GETBOARD(this);
   
@@ -64,47 +66,57 @@ Bool Future::kick(TaggedRef *ptr)
     thr->pushCall(BI_bindFuture,makeTaggedRef(ptr),newvar);
     thr->pushCall(function,newvar);
   } else {
-    Assert(oz_isTuple(function) && oz_eq(OZ_label(function),AtomDot));
-    OZ_Term fut=oz_arg(function,0);
-    OZ_Term fea=oz_arg(function,1);
+    Assert(oz_isTuple(function));
+    if (oz_eq(OZ_label(function),AtomDot)) {
+      OZ_Term fut=oz_arg(function,0);
+      OZ_Term fea=oz_arg(function,1);
 
-    if (oz_currentBoard()==bb) {
-      OZ_Term aux=0;
-      OZ_Term save=am.getSuspendVarList();
-      OZ_Return ret=dotInline(fut,fea,aux);
-      if (ret == PROCEED) {
-	oz_bindFuture(ptr,aux);
-	return TRUE;
-      } else {
-	switch (ret) {
-	case SUSPEND:
-	  am.emptySuspendVarList();
-	  am.putSuspendVarList(save);
-	  break;
-	case BI_REPLACEBICALL:
-	  am.emptyPreparedCalls();
-	  break;
-	default:
-	  break;
+      if (oz_currentBoard()==bb) {
+	OZ_Term aux=0;
+	OZ_Term save=am.getSuspendVarList();
+	OZ_Return ret=dotInline(fut,fea,aux);
+	if (ret == PROCEED) {
+	  oz_bindFuture(ptr,aux);
+	  return PROCEED;
+	} else {
+	  switch (ret) {
+	  case SUSPEND:
+	    am.emptySuspendVarList();
+	    am.putSuspendVarList(save);
+	    break;
+	  case BI_REPLACEBICALL:
+	    am.emptyPreparedCalls();
+	    break;
+	  default:
+	    break;
+	  }
 	}
+	// fall through
       }
-      // fall through
-    }
 
-    OZ_Term newvar = oz_newVar(bb);
-    Thread *thr = oz_newThreadInject(bb);
-    thr->pushCall(BI_bindFuture,makeTaggedRef(ptr),newvar);
-    thr->pushCall(BI_dot,fut,fea,newvar);
+      OZ_Term newvar = oz_newVar(bb);
+      Thread *thr = oz_newThreadInject(bb);
+      thr->pushCall(BI_bindFuture,makeTaggedRef(ptr),newvar);
+      thr->pushCall(BI_dot,fut,fea,newvar);
+    } else {
+      Assert(oz_eq(OZ_label(function),AtomFail));
+      OZ_Term exn=oz_arg(function,0);
+
+      return OZ_raiseDebug(exn);
+    }
   }
   function=0;
-  return FALSE;
+  return SUSPEND;
 }
 
 OZ_Return Future::bind(TaggedRef *vPtr, TaggedRef t)
 {
-  if (kick(vPtr)) {
+  switch (kick(vPtr)) {
+  case PROCEED:
     // redo unification, because vPtr is bound
     return oz_unify(makeTaggedRef(vPtr),t);
+  case RAISE:
+    return RAISE;
   }
 
   if (oz_isLocalVar(this)) {
@@ -129,11 +141,11 @@ OZ_Return Future::unify(TaggedRef *vPtr, TaggedRef *tPtr)
 }
 
 OZ_Return Future::addSusp(TaggedRef *tPtr, Suspendable * susp) {
-  if (kick(tPtr)) {
-    return PROCEED;
+  OZ_Return ret = kick(tPtr);
+  if (ret == SUSPEND) {
+    addSuspSVar(susp);
   }
-  addSuspSVar(susp);
-  return SUSPEND;
+  return ret;
 }
 
 void Future::printStream(ostream &out,int depth)
@@ -234,3 +246,9 @@ OZ_BI_define(BIbyNeedDot,2,1)
   }
 } OZ_BI_end
 
+OZ_BI_define(BIbyNeedFail,1,1)
+{
+  Future *newFut = new Future(oz_currentBoard(),
+			      OZ_mkTuple(AtomFail,1,OZ_in(0)));
+  OZ_RETURN(makeTaggedRef(newTaggedCVar(newFut)));
+} OZ_BI_end

@@ -67,6 +67,8 @@
 
 	  ( AtomLow,        "low"),
 
+	  ( AtomFail,       "fail"),
+
 	  # For system set and get
 	  ( AtomActive,      "active"),
 	  ( AtomAtoms,       "atoms"),
