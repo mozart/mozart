@@ -15,8 +15,8 @@ class ozostream {
   FILE *fd;
 public:
   ozostream(FILE *f) { fd=f;}
-  virtual ozostream &operator << (char *s);
-  virtual ozostream &operator << (void *p);
+  virtual ozostream &operator << (const char *s);
+  virtual ozostream &operator << (const void *p);
   virtual ozostream &operator << (char c); 
   virtual ozostream &operator << (long i);
   virtual ozostream &operator << (double f);
@@ -58,8 +58,8 @@ public:
   int pcount() { return cur; }
   char *str()  { set('\0'); return string; }
 
-  virtual ozostream &operator << (char *s);
-  virtual ozostream &operator << (void *p);
+  virtual ozostream &operator << (const char *s);
+  virtual ozostream &operator << (const void *p);
   virtual ozostream &operator << (char c)   { set(c); return (*this); }
   virtual ozostream &operator << (long i);
   virtual ozostream &operator << (double f);

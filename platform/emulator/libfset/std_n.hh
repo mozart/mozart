@@ -55,7 +55,7 @@ protected:
 public:
   FSetUnionNPropagator(OZ_Term vs, OZ_Term s) : Propagator_VS_S(vs, s) 
   {
-    _aux = (OZ_FSetConstraint *) 
+    _aux = (OZ_FSetConstraint *) (void*)
       OZ_hallocChars(_vs_size * sizeof(OZ_FSetConstraint));
     _init_aux();
 #ifdef EXPERIMENT
@@ -74,7 +74,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean dup) {
     Propagator_VS_S::updateHeapRefs(dup);
 
-    OZ_FSetConstraint * new_aux = (OZ_FSetConstraint *) 
+    OZ_FSetConstraint * new_aux = (OZ_FSetConstraint *) (void*)
       OZ_hallocChars(_vs_size * sizeof(OZ_FSetConstraint));
   
     for (int i = _vs_size; i--; )
@@ -89,8 +89,8 @@ public:
 #include <stdlib.h>
 int sortVarsOrder(const void * _a, const void  * _b) {
   OZ_FSetVar a, b;
-  a.ask(* (OZ_Term *) _a);
-  b.ask(* (OZ_Term *) _b);
+  a.ask(* (const OZ_Term *) _a);
+  b.ask(* (const OZ_Term *) _b);
   return a->getKnownNotIn() -  b->getKnownNotIn();
 }
 

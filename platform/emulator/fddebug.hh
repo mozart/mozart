@@ -5,7 +5,7 @@
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD)
 
 extern "C" {
-void error( char *format ...);
+void error( const char *format ...);
 }
 
 extern ostream * cpi_cout;

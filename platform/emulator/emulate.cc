@@ -59,7 +59,7 @@ int canOptimizeFailure(AM *e, Thread *tt)
 #ifdef DEBUG_CHECK
       PopFrame(tt->getTaskStackRef(),PC,Y,G);
       Assert(PC==C_CFUNC_CONT_Ptr);
-      Assert(((OZ_CFun)Y)==BIfail);
+      Assert(((OZ_CFun)(void*)Y)==BIfail);
       tt->pushCFun(BIfail,0,0,NO);
 #endif
     }
@@ -113,7 +113,7 @@ int AM::raise(OZ_Term cat, OZ_Term key, char *label,int arity,...)
   (void) e->raise(E_ERROR,E_KERNEL,"apply",2,fun,args); goto LBLraise;
 
 
-void AM::enrichTypeException(char *fun, OZ_Term args)
+void AM::enrichTypeException(const char *fun, OZ_Term args)
 {
   OZ_Term e = OZ_subtree(exception.value,OZ_int(1));
   OZ_putArg(e,1,OZ_atom(fun));
@@ -2469,7 +2469,7 @@ LBLdispatcher:
        CheckArity(bi->getArity(),makeTaggedConst(bi));
 	   
        if (e->debugmode() && e->currentThread->stepMode()) {
-	 char *name = builtinTab.getName((void *) bi->getFun());
+	 const char *name = builtinTab.getName((void *) bi->getFun());
 	 ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
 
 	 if (debugPC != NOCODE) {
@@ -3054,7 +3054,7 @@ LBLdispatcher:
      {
        // 
        // by kost@ : 'solve actors' are represented via a c-function; 
-       OZ_CFun biFun = (OZ_CFun) Y;
+       OZ_CFun biFun = (OZ_CFun) (void*) Y;
        RefsArray tmpX = G;
        G = Y = NULL;
        if (tmpX != NULL) {

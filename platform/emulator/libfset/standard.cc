@@ -159,12 +159,12 @@ OZ_Return FSetIntersectionPropagator::propagate(void)
     if (x->isSubsumedBy(*y)) {
       OZ_DEBUGPRINTTHIS("replace: (x subsumbed by y)");
       P.vanish();
-      return OZ_DEBUGRETURNPRINT(("%d",replaceBy(_x, _z)));
+      return OZ_DEBUGRETURNPRINT(replaceBy(_x, _z));
     }
     if (y->isSubsumedBy(*x)) {
       OZ_DEBUGPRINTTHIS("replace: (y subsumbed by xy)");
       P.vanish();
-      return OZ_DEBUGRETURNPRINT(("%d",replaceBy(_y, _z)));
+      return OZ_DEBUGRETURNPRINT(replaceBy(_y, _z));
     }
     
     FailOnInvalid(*x <= -(- *z & *y)); // lub
