@@ -22,14 +22,23 @@
 
 local
 
-   fun {MakeJobShop IMPORT}
-      \insert 'CP.env'
-      = IMPORT.'CP'
-      \insert 'WP.env'
-      = IMPORT.'WP'
-      \insert 'Explorer.env'
-      = IMPORT.'Explorer'
-   in
+   functor MakeJobShop prop once
+
+   import
+      FD
+
+      Explorer
+
+      Tk
+
+      TkTools
+
+      Applet.{Argv   = args
+	      toplevel}
+
+      Search
+      
+   body
       
       \insert 'job-shop/main.oz'
       
@@ -39,10 +48,6 @@ in
    
    {Application.applet
     'job-shop.oza'
-    
-    c('CP':       eager
-      'WP':       eager
-      'Explorer': lazy)
     
     MakeJobShop
 
