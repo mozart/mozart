@@ -850,10 +850,8 @@ OZ_Return installGlobalWatcher(EntityCond wc,TaggedRef proc,int kind){
   return PROCEED;}
 
 OZ_Return deInstallGlobalWatcher(EntityCond wc,TaggedRef proc,int kind){
+  if(wc!=globalWatcher->watchcond) {return IncorrectFaultSpecification;}
   if(globalWatcher==NULL) {return IncorrectFaultSpecification;}
-  if(globalWatcher->proc!=proc) {return IncorrectFaultSpecification;}
-  if(globalWatcher->kind!=kind) {return IncorrectFaultSpecification;}
-  if(globalWatcher->watchcond!=wc) {return IncorrectFaultSpecification;}  
   globalWatcher=NULL;
   return PROCEED;}
 
@@ -1044,7 +1042,6 @@ OZ_Return checkRetry(SRecord *condStruct,short &kind){
 
   aux = condStruct->getFeature(OZ_atom("prop"));
   if(aux==0) {
-    kind |= WATCHER_RETRY;
     return PROCEED;}
   DerefVarTest(aux);
   if(aux==AtomRetry){
