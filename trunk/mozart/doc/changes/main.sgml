@@ -154,6 +154,12 @@ ozmake --config=put --archive=http://www.mozart-oz.org/mogul/pkg/1.2.5/source
          the installed Mozart (e.g., 1.3.1).
         </p>
 
+      <subsection><title/loop support/
+      <p>Previously, the iterator <code proglang=oz/X in ?{E1}..?{E2};?{E3}/
+      only permitted to count from ?{E1} up to ?{E2} by increment of ?{E3}.  Now,
+      whether we intend to count up or down to ?{E2} is determined by the
+      sign of ?{E3}.
+
     </section>
 
     <section id="section.m131.fixes">
