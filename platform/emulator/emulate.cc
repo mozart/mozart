@@ -2673,7 +2673,7 @@ LBLdispatcher:
       OzDebug *ozdeb = (OzDebug *) Y;
       Y = NULL;
 
-      message("exit call: %s\n",toC(ozdeb->info));
+      //message("exit call: %s\n",toC(ozdeb->info));
 
       switch (ozdeb->dothis) {
       case DBG_NOOP : {
