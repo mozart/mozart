@@ -7,10 +7,6 @@ import
    Tokenizer  at 'Tokenizer.ozf'
 prepare
    MakeBS = ByteString.make
-   CharIsSpace = Char.isSpace
-   fun {AttrToAtom Name|Value}
-      {StringToAtom Name}|{StringToAtom Value}
-   end
 define
    class Processor
       attr
@@ -18,7 +14,7 @@ define
 	 %%
       meth INIT(Get)
 	 GET   <- Get
-	 MAP   <- {NameSpaces.newNameSpacePrefixMap}
+	 MAP   <- {NameSpaces.newPrefixMap}
 	 STACK <- nil
 	 TAG   <- unit
       end
@@ -55,9 +51,7 @@ define
 	    end
 	 [] stag(Name Alist Empty) then Tag2 Alist2 Map2 in
 	    {NameSpaces.processElement
-	     {StringToAtom Name}
-	     {Map Alist AttrToAtom}
-	     @MAP
+	     Name Alist @MAP
 	     Tag2 Alist2 Map2}
 	    {self startElement(Tag2 Alist2)}
 	    if Empty then {self endElement(Tag2)}
@@ -68,7 +62,7 @@ define
 	    end
 	    Parser,PARSE()
 	 [] etag(Name) then
-	    Tag={NameSpaces.processName {StringToAtom Name} @MAP}
+	    Tag={NameSpaces.processName Name @MAP}
 	 in
 	    if @TAG\=Tag then
 	       {Exception.raiseError
@@ -101,13 +95,12 @@ define
       attr
 	 STACK    : nil
 	 CONTENTS : nil
-	 N        : 1
 	 PARENT   : unit
 
+      meth getParent($) @PARENT end
+
       meth makeRoot(L $)
-	 root(contents : L
-	      index    : 0
-	      parent   : unit)
+	 root(L)
       end
       meth startDocument() L in
 	 CONTENTS <- L
@@ -116,22 +109,16 @@ define
       end
       meth endDocument() @CONTENTS=nil end
 
-      meth makeElement(Tag Alist Contents $) I=@N in
-	 N<-I+1
+      meth makeElement(Tag Alist Contents $)
 	 element(
 	    tag      : Tag
 	    alist    : Alist
-	    index    : I
-	    contents : Contents
-	    parent   : @PARENT)
+	    contents : Contents)
       end
-      meth makeAttribute(Key Val $) I=@N in
-	 N<-I+1
+      meth makeAttribute(Key Val $)
 	 attribute(
 	    name  : Key
-	    value : Val
-	    index : I
-	    parent: @PARENT)
+	    value : Val)
       end
       meth makeAlist(Alist $)
 	 {Map Alist
@@ -159,30 +146,25 @@ define
 	 end
       end
 
-      meth makeText(Chars $) I=@N in
-	 N<-I+1
-	 text({MakeBS Chars} index:I parent:@PARENT
-	      whitespace : {All Chars CharIsSpace})
+      meth makeText(Chars $)
+	 text({MakeBS Chars})
       end
       meth characters(Chars) L in
 	 @CONTENTS = {self makeText(Chars $)}|L
 	 CONTENTS<-L
       end
 
-      meth makePI(Target Data $) I=@N in
-	 N<-I+1
+      meth makePI(Target Data $)
 	 pi({StringToAtom Target}
-	    {StringToAtom Data}
-	    index:I parent:@PARENT)
+	    {StringToAtom Data})
       end
       meth processingInstruction(Target Data) L in
 	 @CONTENTS = {self makePI(Target Data $)}|L
 	 CONTENTS<-L
       end
 
-      meth makeComment(Chars $) I=@N in
-	 N<-I+1
-	 comment({MakeBS Chars} index:I parent:@PARENT)
+      meth makeComment(Chars $)
+	 comment({MakeBS Chars})
       end
       meth comment(Chars) L in
 	 @CONTENTS = {self makeComment(Chars $)}|L

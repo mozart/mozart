@@ -11,8 +11,10 @@ prepare
 
    MakeBS = ByteString.make
 
-   fun {AttrToAtom Name|Value}
-      {StringToAtom Name}|{StringToAtom Value}
+   fun {MakeAttribute Key|Val}
+      attribute(
+	 name  : Key
+	 value : Val)
    end
 
 define
@@ -28,17 +30,16 @@ define
 	 end
 
       [] stag(Name Alist Empty) then
-	 Tag2 Alist2 PrefixMap2 Siblings2 Contents
+	 Tag2 Alist2 PrefixMap2 Siblings2 Contents Alist3
       in
 	 Siblings=element(
 		     tag      : Tag2
-		     alist    : Alist2
+		     alist    : Alist3
 		     contents : Contents)|Siblings2
 	 {NameSpaces.processElement
-	  {StringToAtom Name}
-	  {Map Alist AttrToAtom}
-	  PrefixMap
+	  Name Alist  PrefixMap
 	  Tag2 Alist2 PrefixMap2}
+	 Alist3={Map Alist2 MakeAttribute}
 	 if Empty then Contents=nil
 	    {Loop Get Stack Siblings2 CurrentTag PrefixMap}
 	 else
@@ -47,8 +48,7 @@ define
 	 end
 
       [] etag(Name) then
-	 Tag={NameSpaces.processName
-	      {StringToAtom Name} PrefixMap}
+	 Tag={NameSpaces.processName Name PrefixMap}
       in
 	 Siblings=nil
 	 if CurrentTag\=Tag then
