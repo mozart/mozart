@@ -24,6 +24,10 @@
 #ifndef __EXTENSIONHH
 #define __EXTENSIONHH
 
+#ifdef INTERFACE
+#pragma interface
+#endif
+
 #include "value.hh"
 
 /*===================================================================
@@ -54,7 +58,7 @@ enum OZ_Registered_Extension_Id {
 
 class Extension: public ConstTerm {
 public:
-  virtual ~Extension() {} // C++ compiler requires this, mm2: why?
+  virtual ~Extension() {}
   Extension() : ConstTerm(Co_Extension) {}
 
   virtual int           getIdV() { return 0; }
