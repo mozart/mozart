@@ -10,6 +10,19 @@
      removes defaults for these features
    ozmake --config=list
      lists the current defaults
+** option --exe controls the name and platform of installed executables
+   the convention on Windows is that executables have an .exe extension
+   while on Unix there is normally no extension.
+   --exe=default only installs executables using the platform's convention
+   --exe=yes only installs executables with .exe extension
+   --exe=no only installs executables without extension
+   --exe=both installs both
+   --exe=multi installs both, but the .exe one is linked for Windows
+   while the no extension one is linked for Unix
+** additional features supported in makefile.oz
+   requires : [ ... ] for dependencies on other packages
+   topics   : [ ... ] for MOGUL classification
+   version  : ... a version number e.g. "2" or "3.2.7"
 
 * version 0.71
 ** ozmake --extract: default directory changed from current directory

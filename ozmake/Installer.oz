@@ -4,6 +4,7 @@ export
 import
    Path  at 'Path.ozf'
    Utils at 'Utils.ozf'
+   Windows at 'Windows.ozf'
 define
    class Installer
 
@@ -64,14 +65,19 @@ define
 		end}
       end
 
+      meth targets_to_installation_triples(L $)
+	 {self ToTriples(
+		  {self targets_to_installation_pairs(L $)} $)}
+      end
+
       meth install(Targets)
 	 if {self get_package_given($)} then Installer,install_from_package
 	 elseif Targets==nil then Installer,install_all
 	 else
 	    {self build_targets(Targets)}
-	    IPairs = Installer,targets_to_installation_pairs(Targets $)
+	    ITriples = Installer,targets_to_installation_triples(Targets $)
 	 in
-	    Installer,install_ipairs(IPairs)
+	    Installer,install_itriples(ITriples)
 	 end
       end
 
@@ -88,17 +94,62 @@ define
 	 {Reverse {Stack.toList}}
       end
 
+      meth get_installation_triples($)
+	 {self ToTriples({self get_installation_pairs($)} $)}
+      end
+
+      meth ToTriples(L $)
+	 %% bin targets are always named with a .exe extension
+	 %% however, when we install them we may want to install
+	 %% with or without the extension or both, or also both
+	 %% but the version with .exe for windows and the version
+	 %% without for unix.
+	 %%
+	 %% Thus, this conversion from pairs to triples may add new
+	 %% entries for bin targets.  Each triple is of the form
+	 %%            From # To # Action
+	 %% Action is one of file, exec, execUnix, execWindows
+	 %% file: install a regular file
+	 %% exec: install an executable file
+	 %% execUnix: relink for Unix before doing like exec
+	 %% execWindows: relink for Windows before doing like exec
+	 IsWin = Windows.isWin
+	 Actions = case {self get_exe($)}
+		   of default then if IsWin then [exe] else [plain] end
+		   [] yes     then [exe]
+		   [] no      then [plain]
+		   [] both    then [exe plain]
+		   [] multi   then if IsWin then [exe unix] else [plain windows] end
+		   end
+      in
+	 for From#To in L collect:Collect do
+	    case {Path.extensionAtom From}
+	    of 'exe' then
+	       for A in Actions do
+		  case A
+		  of exe     then {Collect From#To#exec}
+		  [] plain   then {Collect From#{Path.dropExtensionAtom To}#exec}
+		  [] unix    then {Collect From#{Path.dropExtensionAtom To}#execUnix}
+		  [] windows then {Collect From#To#execWindows}
+		  end
+	       end
+	    else
+	       {Collect From#To#file}
+	    end
+	 end
+      end
+
       meth install_all
 	 %% need to read the makefile before computing install targets
 	 {self makefile_read}
 	 {self build_all}
-	 IPairs = {self get_installation_pairs($)}
+	 ITriples = {self get_installation_triples($)}
 	 %%!!! Targets = {self get_install_targets($)}
       in
-	 Installer,install_ipairs(IPairs)
+	 Installer,install_itriples(ITriples)
       end
 
-      meth install_ipairs(IPairs) %installation pairs
+      meth install_itriples(ITriples) %installation triples
 	 %% need to read the makefile before building targets
 	 {self makefile_read}
 	 %% --grade=GRADE
@@ -111,11 +162,11 @@ define
 	 MOG       = {self get_mogul($)}
 	 PKG       = {self database_mutable_entry(MOG $)}
 	 LostStack = {Utils.newStack} LostFiles
-	 IFiles    = {Map IPairs fun {$ _#F} F end}
+	 IFiles    = {Map ITriples fun {$ _#F#_} F end}
       in
 	 %% compute the files that will be overwritten and
 	 %% belong to other packages
-	 for _#F in IPairs do
+	 for _#F#_ in ITriples do
 	    FMog = {self file_to_package(F $)}
 	 in
 	    if FMog\=unit andthen FMog\=MOG then {LostStack.push F} end
@@ -129,14 +180,12 @@ define
 	 {self trace('installing targets')}
 	 {self incr}
 	 try
-	    for From#To in IPairs do
-	       case {Path.extensionAtom From}
-	       of 'exe' then
-		  {self exec_install_exec(From To)}
-		  %% we should use a symbolic link
-		  {self exec_install_exec(From {Path.dropExtension To})}
-	       else
-		  {self exec_install_file(From To)}
+	    for From#To#Action in ITriples do
+	       case Action
+	       of file        then {self exec_install_file(From To)}
+	       [] exec        then {self exec_install_exec(From To)}
+	       [] execUnix    then {self exec_install_execUnix(From To)}
+	       [] execWindows then {self exec_install_execWindows(From To)}
 	       end
 	    end
 	 finally {self decr} end

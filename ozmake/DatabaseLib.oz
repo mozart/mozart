@@ -22,15 +22,15 @@ define
       end
 
       meth databaselib_save(F ToTxt L)
-	 {Path.makeDirRec {Path.dirname F}}
+	 {self exec_mkdir({Path.dirname F})}
 	 {self trace('writing pickled database '#F#'.ozf')}
-	 if {self get_justprint($)} then skip else
-	    {Pickle.save L F#'.ozf'}
-	 end
+	 {self incr}
+	 {self exec_save_to_file(L F#'.ozf')}
+	 {self decr}
 	 {self trace('writing textual database '#F#'.txt')}
-	 if {self get_justprint($)} then skip else
-	    {Utils.writeTextDB {Map L ToTxt} F#'.txt'}
-	 end
+	 {self incr}
+	 {self exec_writeTextDB({Map L ToTxt} F#'.txt')}
+	 {self decr}
       end
 	     
    end

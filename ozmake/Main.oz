@@ -93,6 +93,8 @@ prepare
       mogulpkgdir(single type:string)
       moguldocdir(single type:string)
       moguldbdir( single type:string)
+
+      exe(single type:atom(default no yes both multi))
       )
 
    OPTLIST =
@@ -143,6 +145,7 @@ prepare
     mogulpkgdir    # set_mogulpkgdir      # true
     moguldocdir    # set_moguldocdir      # true
     moguldbdir     # set_moguldbdir       # true
+    exe            # set_exe              # true
    ]
       
 define

@@ -10,7 +10,7 @@ export
    BasenameURL		Basename	BasenameAtom
    DirnameURL		Dirname		DirnameAtom
    Extension		ExtensionAtom
-   DropExtensionURL	DropExtension
+   DropExtensionURL	DropExtension   DropExtensionAtom
    AddExtensionURL	AddExtension	AddExtensionAtom
    ReplaceExtensionURL	ReplaceExtension ReplaceExtensionAtom
    MaybeAddPlatform
@@ -163,8 +163,9 @@ define
    in
       if E==unit then unit else {StringToAtom E} end
    end
-   fun {DropExtensionURL P} {SplitExtension P $ _} end
-   fun {DropExtension    P} {ToString {DropExtensionURL P}} end
+   fun {DropExtensionURL  P} {SplitExtension P $ _} end
+   fun {DropExtension     P} {ToString {DropExtensionURL P}} end
+   fun {DropExtensionAtom P} {ToAtom   {DropExtensionURL P}} end
 
    fun {AddExtensionURL P E}
       U = {ToURL P}

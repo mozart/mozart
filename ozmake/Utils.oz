@@ -12,6 +12,10 @@ export
    WriteTextDB
    HaveGNUC
    MogulToFilename MogulToPackagename
+   VersionToInts
+   VersionFromInts
+   IsVersion
+   VersionCompare
 import
    Open Compiler OS URL
    Path at 'Path.ozf'
@@ -93,6 +97,49 @@ prepare
 
    CTRL_A = 1
    
+
+   VS2S = VirtualString.toString
+   TOKS = String.tokens
+   fun {VersionToInts S}
+      {Map {TOKS {VS2S S} &.} StringToInt}
+   end
+   local
+      fun {Conc VS I}
+	 if VS==nil then I else VS#'.' end
+      end
+      fun {IsPos I} I>=0 end
+      fun {Cmp L1 L2}
+	 case L1
+	 of nil then
+	    case L2
+	    of nil then eq
+	    else lt end
+	 [] I1|L1 then
+	    case L2
+	    of nil then gt
+	    [] I2|L2 then
+	       if I1==I2 then {Cmp L1 L2}
+	       elseif I1>I2 then gt
+	       else lt end
+	    end
+	 end
+      end
+   in
+      fun {VersionFromInts L}
+	 {VS2S {FoldL L Conc nil}}
+      end
+      fun {IsVersion S}
+	 try L={VersionToInts S} in
+	    L\=nil andthen {All L IsPos}
+	 catch _ then false end
+      end
+      fun {VersionCompare S1 S2}
+	 {Cmp
+	  {VersionToInts S1}
+	  {VersionToInts S2}}
+      end
+   end
+
 define
 
    fun {SlurpFile F}
