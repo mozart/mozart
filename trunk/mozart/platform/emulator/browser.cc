@@ -195,7 +195,12 @@ OZ_BI_define(BIprocLoc,1,3)
     OZ_out(0) = p->getFile();
     OZ_out(1) = OZ_int(p->getLine());
     OZ_out(2) = OZ_int(p->getColumn());
-    return PROCEED;
+    return (PROCEED);
+  } else if (oz_isBuiltin(v)) {
+    OZ_out(0) = AtomBBuiltin;
+    OZ_out(1) = AtomDash;
+    OZ_out(2) = AtomDash;
+    return (PROCEED);
   } else {
     return oz_raise(E_ERROR,E_SYSTEM,"BIprocLoc: no procedure",1,v);
   }
