@@ -33,47 +33,44 @@
 %%%
 %%%
 
-functor $ prop once
+functor
 
 import
-   CTB.{isB getConstraintAsAtom getNameAsAtom}
-      from 'x-oz://boot/CTB'
-   
-   FDB.{isVarB}
-      from 'x-oz://boot/FDB'
+   CTB(isB getConstraintAsAtom getNameAsAtom) at 'x-oz://boot/CTB'
 
-   FSB.{getGlb
-	getLub
-	getCard
-	isVarB}
-      from 'x-oz://boot/FSB'
+   FDB(isVarB) at 'x-oz://boot/FDB'
 
-   BrowserSupport.{recordCIsVarB
-		   getTermSize
-		   getsBoundB
-		   deepFeed
-		   chunkArity
-		   chunkWidth
-		   addr}
-      from 'x-oz://boot/Browser'
+   FSB(getGlb
+       getLub
+       getCard
+       isVarB)
+   at 'x-oz://boot/FSB'
 
-   Debug
-      from 'x-oz://boot/Debug'
+   BrowserSupport(recordCIsVarB
+		  getTermSize
+		  getsBoundB
+		  deepFeed
+		  chunkArity
+		  chunkWidth
+		  addr)
+   at 'x-oz://boot/Browser'
 
-   FD.{reflect}
-   
-   Search.{one}
-   
-   System.{show
-	   valueToVirtualString
-	   printName
-	   eq
-	   onToplevel}
-   
+   Debug at 'x-oz://boot/Debug'
+
+   FD(reflect)
+
+   Search(one)
+
+   System(show
+	  valueToVirtualString
+	  printName
+	  eq
+	  onToplevel)
+
    Tk
 
    TkTools
-   
+
 export
    'class':  BrowserClass
    'object': Browser
@@ -81,7 +78,7 @@ export
    'browse': Browse
    'close':  CloseBrowser
 
-body
+define
 
    %%
    %%

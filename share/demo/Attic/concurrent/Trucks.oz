@@ -34,7 +34,7 @@ local
    ImageUrl    = 'http://www.ps.uni-sb.de/ozhome/demo/images/trucks/'
 
 in
-   
+
    functor
 
    import
@@ -42,7 +42,7 @@ in
       TkTools
       Application
 
-   body
+   define
       Images = {TkTools.images [ImageUrl#'truck-right.gif'
 				ImageUrl#'truck-left.gif']}
 

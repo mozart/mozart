@@ -1,4 +1,4 @@
-functor $ prop once
+functor
 
 import
 
@@ -9,9 +9,9 @@ import
 
 export
    Return
-body
+define
 
-   
+
    CartProd =
    proc {$ L P}
       {ForAllTail L proc {$ H|T} {ForAll T proc {$ E} {P H E} end} end}

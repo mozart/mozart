@@ -26,9 +26,9 @@ local
 
    ArgSpec = single(defaults(type:bool default:true)
 		    random(type:bool default:true))
-   
+
 in
-   
+
    functor
 
    import
@@ -39,10 +39,10 @@ in
       Search(base)
       FD
 
-   body
+   define
 
       Args = {Application.getCmdArgs ArgSpec}
-	      
+
       \insert 'transport/configure.oz'
       \insert 'transport/widgets.oz'
       \insert 'transport/randomizer.oz'

@@ -22,16 +22,16 @@
 %%% WARRANTIES.
 %%%
 
-functor $
+functor
 
 import
    System
    FD
-   
+
 export
    Return
 
-body
+define
 
    fun {DA R}
       {Record.monitorArity R _}

@@ -1,18 +1,18 @@
-functor $ prop once
+functor
 
 import
 
    FD
 
    FS
-   
+
    Search
 
-   System.{Show = show}
-   
+   System(show: Show)
+
 export
    Return
-body
+define
 
 
    MkFSetVar =

@@ -66,18 +66,18 @@ local
 
 in
    
-   functor $ prop once
+   functor
 
    import
       OS
       Open
       Property
       Module
-      
+
    export
       Return
 
-   body
+   define
       Return=
 
       link(equal(local
