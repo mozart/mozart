@@ -80,10 +80,7 @@ friend class AM;
 friend class Thread;
 private:
   TaskStack taskStack;
-  union {
-    ChachedOORegs ooregs;
-    RunnableThreadBody *next;  /* for linking in the freelist */
-  } u;
+  RunnableThreadBody *next;  /* for linking in the freelist */
 #ifdef LINKEDTHREADS
   TaggedRef parentThread;
   TaggedRef childThreads;
@@ -102,7 +99,6 @@ public:
   RunnableThreadBody(int sz) : taskStack(sz) { }
   RunnableThreadBody *gcRTBody();
 
-  void saveOORegs(ChachedOORegs regs) { u.ooregs = regs; }
   void makeRunning();
 
   void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
@@ -548,9 +544,6 @@ public:
     setCatchFlag();
     item.threadBody->taskStack.pushCatch();
   }
-  void pushSetFinal() { item.threadBody->taskStack.pushSetFinal(); }
-  void pushOORegs(ChachedOORegs);
-  void saveOORegs(ChachedOORegs);
 
   Bool findCatch() {
     return item.threadBody->taskStack.findCatch();
