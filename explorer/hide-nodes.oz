@@ -202,7 +202,9 @@ local
 
 in
 
-   HideNodes=c(inner: Inner
-               leaf:  Leaf)
+   HideNodes=c(choose:    Inner
+               failed:    Leaf
+               succeeded: Leaf
+               blocked:   Leaf)
 
 end
