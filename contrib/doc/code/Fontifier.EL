@@ -1,4 +1,4 @@
-;;; -*- emacs-lisp-mode -*-
+;;; -*- emacs-lisp -*-
 ;;;
 ;;; Author:
 ;;;   Denys Duchier <duchier@ps.uni-sb.de>
