@@ -27,19 +27,24 @@ in
 
    class PanelManager
       from BaseObject
+      prop locking final
       attr ThisPanelTop:unit
       
       meth open
-	 case @ThisPanelTop==unit then
-	    ThisPanelTop <- thread
-			       {New PanelTop init(manager:self)}
-			    end
-	 else skip
+	 lock
+	    case @ThisPanelTop==unit then
+	       ThisPanelTop <- thread
+				  {New PanelTop init(manager:self)}
+			       end
+	    else skip
+	    end
 	 end
       end
 
       meth !PanelTopClosed
-	 ThisPanelTop <- unit
+	 lock
+	    ThisPanelTop <- unit
+	 end
       end
 
    end
