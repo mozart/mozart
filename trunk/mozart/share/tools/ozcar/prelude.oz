@@ -17,14 +17,20 @@ NL = [10]  %% newline
 
 %% send a warning/error message
 
-proc {OzcarShow X}
-   %{Show X}
-   skip
-end
-
-proc {OzcarMessage M}
-   %{System.showInfo OzcarMessagePrefix # M}
-   skip
+local
+   Verbose = false
+   %Verbose = true
+in
+   proc {OzcarShow X}
+      case Verbose then
+	 {Show X}
+      else skip end
+   end
+   proc {OzcarMessage M}
+      case Verbose then
+	 {System.showInfo OzcarMessagePrefix # M}
+      else skip end
+   end
 end
 
 fun {VS2A X} %% virtual string to atom
