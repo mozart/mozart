@@ -147,7 +147,8 @@ char *OZ_atomToC(OZ_Term term)
 {
   DEREF(term,_1,tag);
   if (isXAtom(term)) {
-    return ozstrdup(tagged2Atom(term)->getPrintName());
+//    return ozstrdup(tagged2Atom(term)->getPrintName());
+    return tagged2Atom(term)->getPrintName();
   }
   OZ_warning("atomToC(%s): atom arg expected",tagged2String(term));
   return NULL;
@@ -218,7 +219,8 @@ char *OZ_toC(OZ_Term term)
         sprintf(TmpBuffer,"*%s-0x%x*",s,a);
         return ozstrdup(TmpBuffer);
       } else {
-        return ozstrdup(s);
+//      return ozstrdup(s);
+        return s;
       }
     }
   case FLOAT:
