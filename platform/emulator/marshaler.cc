@@ -1283,7 +1283,7 @@ loop:
     }
 
   default:
-    printf("unmarshal: unexpected tag: %d\n",tag);
+    error("unmarshal: unexpected tag: %d\n",tag);
     Assert(0);
     *ret = nil();
     return;
