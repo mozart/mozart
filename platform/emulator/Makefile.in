@@ -120,12 +120,12 @@ SPACESRCS=\
 	board.cc distributor.cc
 
 MEMSRCS=\
-	g-collect.cc mem.cc liveness.cc
+	g-collect.cc cmem.cc mem.cc liveness.cc
 
 PICKLESRCS=\
 	gname.cc site.cc \
 	gentraverser.cc marshalerBase.cc pickleBase.cc \
-        pickle.cc components.cc byteBuffer.cc
+        pickle.cc components.cc componentBuffer.cc byteBuffer.cc
 
 OFSRCS=	var_of.cc
 
@@ -484,7 +484,6 @@ g-collect.o: cac.cc
 s-clone.o: cac.cc
 text2pickle.o: marshalerBase.cc
 text2pickle.o: pickleBase.cc
-components.o: componentBuffer.cc
 
 # automatic configure
 #${srcdir}/configure: configure.in

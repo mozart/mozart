@@ -99,7 +99,7 @@ public:
   //
   void marshalBaseSite(MarshalerBuffer* buf);
   void marshalBaseSiteForGName(MarshalerBuffer* buf);
-  void marshalBaseSiteForGName(PickleBuffer *buf);
+  void marshalBaseSiteForGName(PickleMarshalerBuffer *buf);
 #ifdef USE_FAST_UNMARSHALER   
   void unmarshalBaseSite(MarshalerBuffer* buf);
   void unmarshalBaseSiteGName(MarshalerBuffer* buf);
@@ -165,7 +165,7 @@ public:
   void marshalSiteForGName(MarshalerBuffer *buf) {
     marshalBaseSiteForGName(buf);
   }
-  void marshalSiteForGName(PickleBuffer *buf) {
+  void marshalSiteForGName(PickleMarshalerBuffer *buf) {
     marshalBaseSiteForGName(buf);
   }
 };

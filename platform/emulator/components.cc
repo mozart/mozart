@@ -40,6 +40,7 @@
 #include "os.hh"
 #include "var_simple.hh"
 #include "pickle.hh"
+#include "componentBuffer.hh"
 
 #ifndef WINDOWS
 #include <sys/types.h>
@@ -59,14 +60,6 @@
 
 #include "zlib.h"
 
-
-// ATTENTION
-// kost@: PER-LOOK what it has to do here?!!
-#define tcpHeaderSize 	7
-
-
-#include "componentBuffer.cc"
-
 /* ********************************************************************** */
 /*              BUILTINS                                                  */
 /* ********************************************************************** */
@@ -76,11 +69,11 @@
 
 class ByteSource {
 public:
-  virtual OZ_Return getBytes(BYTE*,int&,int&) = 0;
+  virtual OZ_Return getBytes(BYTE*, int, int&) = 0;
   virtual char *getHeader() = 0;
   virtual Bool checkChecksum(crc_t) = 0;
   OZ_Return getTerm(OZ_Term, const char *compname, Bool);
-  OZ_Return makeByteStream(ByteStream*&, const char*);
+  OZ_Return loadPickleBuffer(PickleBuffer*&, const char*);
 };
 
 class ByteSourceFD : public ByteSource {
@@ -91,7 +84,7 @@ private:
 public:
   char *getHeader() {return header; }
   virtual ~ByteSourceFD() { free(header); gzclose(fd); }
-  OZ_Return getBytes(BYTE*,int&,int&);
+  OZ_Return getBytes(BYTE*, int, int&);
 
   virtual Bool checkChecksum(crc_t i) { return checkSum==i; }
 
@@ -147,7 +140,7 @@ public:
   char *getHeader() {return ""; }
   ByteSourceDatum(OZ_Datum d):dat(d),idx(0) {}
   virtual ~ByteSourceDatum() {}
-  OZ_Return getBytes(BYTE*,int&,int&);
+  OZ_Return getBytes(BYTE*, int, int&);
   virtual Bool checkChecksum(crc_t i) { return OK; }
 };
 
@@ -205,7 +198,7 @@ OZ_Return raiseGeneric(char *id, char *msg, OZ_Term arg)
   return OZ_raiseDebug(makeGenericExc(id,msg,arg));
 }
 
-static void saveTerm(ByteStream* buf, TaggedRef t, Bool cloneCells)
+static void saveTerm(PickleBuffer* buf, TaggedRef t, Bool cloneCells)
 {
   buf->marshalBegin();
   char *version  =  MARSHALERVERSION;
@@ -235,6 +228,9 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header,
 		  Bool textmode, Bool cloneCells)
 {
   OZ_Term resources, nogoods;
+  int total, len;
+  BYTE *pos;
+  crc_t crc;
 
   //
   extractResources(in, cloneCells, resources, nogoods);
@@ -259,32 +255,48 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header,
   }
 
   //
-  ByteStream* bs = bufferManager->getByteStream();
+  PickleBuffer* pb = new PickleBuffer();
   if (textmode)
-    bs->setTextmode();
-  saveTerm(bs, in, cloneCells);
+    pb->setTextmode();
+  saveTerm(pb, in, cloneCells);
 
-  bs->beginWrite();
-  bs->incPosAfterWrite(tcpHeaderSize);
+  //
+  pb->saveBegin();
+  total = 0;
 
-  int total=bs->calcTotLen();
-  allocateBytes(total,header,hlen,bs->crc(),textmode);
+  // crc"ing;
+  crc = init_crc();
+  pos = pb->accessFirst(len);
+  do {
+    Assert(pos != (BYTE *) 0);
+    total += len;
+    crc = update_crc(crc, pos, len);
+    pb->chunkDone();
+    pos = pb->accessNext(len);
+  } while (pos);
 
-  while (total) {
-    Assert(total>0);
-    int len=bs->getWriteLen();
-    BYTE* pos=bs->getWritePos();
+  // header;
+  allocateBytes(total, header, hlen, crc, textmode);
+
+  //
+  pos = pb->unlinkFirst(len);
+  do {
+    Assert(total > 0 && pos != (BYTE *) 0);
     total -= len;
     OZ_Return result = putBytes(pos,len);
-    if (result!=PROCEED) {
-      bufferManager->dumpByteStream(bs);
-      return result;
+    if (result != PROCEED) {
+      delete pb;
+      return (result);
     }
-    bs->sentFirst();
-  }
-  bs->writeCheck();
-  bufferManager->freeByteStream(bs);
-  return PROCEED;
+    pb->chunkWritten();
+    pos = pb->unlinkNext(len);
+  } while (total);
+  Assert(total == 0 && pos == (BYTE *) 0);
+
+  //
+  pb->saveEnd();
+  delete pb;
+  return (PROCEED);
 }
 
 
@@ -500,7 +512,7 @@ typedef enum {
 } LoadTermRet;
 
 static
-LoadTermRet loadTerm(ByteStream *buf, char* &vers, OZ_Term &t)
+LoadTermRet loadTerm(PickleBuffer *buf, char* &vers, OZ_Term &t)
 {
 #ifndef USE_FAST_UNMARSHALER   
   int error;
@@ -519,8 +531,6 @@ LoadTermRet loadTerm(ByteStream *buf, char* &vers, OZ_Term &t)
     return (CLT_NOPICKLE);
   if (major != MARSHALERMAJOR || minor != MARSHALERMINOR)
     return (CLT_WRONGVERS);
-
-  buf->setVersion(major,minor);
 
 #ifndef USE_FAST_UNMARSHALER   
   t = unpickleTermRobust(buf);
@@ -592,24 +602,22 @@ char *mv2ov(char *pvs)
 OZ_Return
 ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
 {
-  ByteStream * stream;
+  PickleBuffer * buffer;
    
-  OZ_Return result = makeByteStream(stream,compname);
+  OZ_Return result = loadPickleBuffer(buffer,compname);
   if (result != PROCEED) return (result);
 
-  stream->beforeInterpret(0);
-  stream->unmarshalBegin();	
+  buffer->unmarshalBegin();	
 
   char *versiongot = 0;
   OZ_Term val;
   LoadTermRet ret;
 
-  ret = loadTerm(stream, versiongot, val);
+  ret = loadTerm(buffer, versiongot, val);
 
   switch (ret) {
   case CLT_OK:
-    stream->afterInterpret();    
-    bufferManager->dumpByteStream(stream);
+    delete buffer;
     delete [] versiongot;
     if (wantHeader) {
       OZ_Return ret = oz_unify(out, oz_pair2(OZ_string(getHeader()), val));
@@ -625,13 +633,13 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
     Assert(0);
 
   case CLT_NOPICKLE:
-    bufferManager->dumpByteStream(stream);
+    delete buffer;
     return raiseGeneric("load:nonpickle", "Trying to load a non-pickle",
 			oz_cons(OZ_pairA("File",oz_atom(compname)),oz_nil()));
     Assert(0);
 
   case CLT_WRONGVERS:
-    bufferManager->dumpByteStream(stream);
+    delete buffer;
     {
       OZ_Term vergot = oz_atom(versiongot);
       char *vs = mv2ov(versiongot);
@@ -650,7 +658,7 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
     Assert(0);
 
   case CLT_FORMATERR:
-    bufferManager->dumpByteStream(stream);
+    delete buffer;
     return raiseGeneric("load:formaterr", "Error during unmarshaling",
 			oz_cons(OZ_pairA("File",oz_atom(compname)),oz_nil()));
     Assert(0);
@@ -663,33 +671,55 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
 }
 
 OZ_Return
-ByteSource::makeByteStream(ByteStream*& stream, const char *filename)
+ByteSource::loadPickleBuffer(PickleBuffer*& buffer, const char *filename)
 {
-  stream = bufferManager->getByteStream();
-  stream->getSingle();
-  int max,got;
+  BYTE *pos;
+  int max;
   int total = 0;
-  BYTE *pos = stream->initForRead(max);
+  //
+  buffer = new PickleBuffer();
   crc_t crc = init_crc();
-  while (TRUE) {
-    OZ_Return result = getBytes(pos,max,got);   
-    if (result!=PROCEED) return result;
-    crc = update_crc(crc,pos,got);
-    total += got;
-    stream->afterRead(got);
-    if (got<max) break;
-    pos = stream->beginRead(max);
-  }
-  if (total==0)
-    return raiseGeneric("bytesource:empty",
-			"Magic header not found (not a pickle?)",
-			oz_cons(OZ_pairA("File",oz_atom(filename)),oz_nil()));
-  
-  if (checkChecksum(crc)==NO)
-    return raiseGeneric("bytesource:crc","Checksum mismatch",
-			oz_cons(OZ_pairA("File",oz_atom(filename)),oz_nil()));
 
-  return PROCEED;
+  //
+  buffer->loadBegin();
+  pos = buffer->allocateFirst(max);
+  while (TRUE) {
+    int got;
+    OZ_Return result = getBytes(pos, max, got);   
+    if (result != PROCEED) {
+      delete buffer;
+      DebugCode(buffer = (PickleBuffer *) 0;);
+      return result;
+    }
+    total += got;
+    crc = update_crc(crc, pos, got);
+
+    //
+    buffer->chunkRead(got);
+    if (got < max)
+      break;
+    pos = buffer->allocateNext(max);
+  }
+  buffer->loadEnd();
+
+  //
+  if (total == 0) {
+    delete buffer;
+    DebugCode(buffer = (PickleBuffer *) 0;);
+    return (raiseGeneric("bytesource:empty",
+			 "Magic header not found (not a pickle?)",
+			 oz_cons(OZ_pairA("File",
+					  oz_atom(filename)), oz_nil())));
+  }
+  if (checkChecksum(crc) == NO) {
+    delete buffer;
+    DebugCode(buffer = (PickleBuffer *) 0;);
+    return (raiseGeneric("bytesource:crc","Checksum mismatch",
+			 oz_cons(OZ_pairA("File",
+					  oz_atom(filename)), oz_nil())));
+  }
+
+  return (PROCEED);
 }
 
 // ===================================================================
@@ -698,7 +728,7 @@ ByteSource::makeByteStream(ByteStream*& stream, const char *filename)
 
 
 OZ_Return
-ByteSourceFD::getBytes(BYTE*pos,int&max,int&got)
+ByteSourceFD::getBytes(BYTE *pos, int max, int &got)
 {
 loop:
   got = gzread(fd,pos,max);
@@ -721,7 +751,7 @@ loop:
 // ===================================================================
 
 OZ_Return
-ByteSourceDatum::getBytes(BYTE*pos,int&max,int&got)
+ByteSourceDatum::getBytes(BYTE *pos, int max, int &got)
 {
   if (idx >= dat.size) {
     got = 0;
@@ -1180,23 +1210,25 @@ OZ_BI_define(BIpickleUnpack, 2, 0) {
 typedef void (*marshalFun)(OZ_Term,MarshalerBuffer*);
 OZ_Term toXML(OZ_Term t,marshalFun f)
 {
-  ByteStream* bs=bufferManager->getByteStream();
-  bs->marshalBegin();
-  (*f)(t,bs);
-  bs->marshalEnd();
-  bs->beginWrite();
-  bs->incPosAfterWrite(tcpHeaderSize);
-  int total=bs->calcTotLen();
+  int len;
+  BYTE *pos;
+  PickleBuffer* pb = new PickleBuffer();
+
+  //
+  pb->marshalBegin();
+  (*f)(t,pb);
+  pb->marshalEnd();
+
+  pb->saveBegin();
+  int total=pb->calcTotLen();
   OZ_Term val = oz_nil();
-  while (total) {
-    int len=bs->getWriteLen();
-    BYTE* pos=bs->getWritePos();
-    total -= len;
+  pos = pb->getFirst(len);
+  do {
     val = OZ_pair2(val,OZ_mkByteString((char*)pos,len));
-    bs->sentFirst();
+    pos = pb->getNext(len);
   }
-  bs->writeCheck();
-  bufferManager->freeByteStream(bs);
+  pb->saveEnd();
+  delete pb;
   return val;
 }
 #endif
