@@ -408,9 +408,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case CREATEVARIABLEX:
     case CREATEVARIABLEY:
     case CREATEVARIABLEG:
-    case GETSELFX:
-    case GETSELFY:
-    case GETSELFG:
+    case GETSELF:
       /* OP Reg       */
       fprintf(ofile, "(%d)\n", regToInt(getRegArg(PC+1)));
       DISPATCH();
