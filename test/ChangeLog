@@ -1,0 +1,406 @@
+1999-07-12    <jrb@redhat.com>
+
+	* testgnome.c (create_druid): Updated to include a druid.
+
+1999-06-21  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* testgnome.c (select_icon unselect_icon): More tests for the icon
+	list widget.
+
+1999-03-27  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* Makefile.am (test): New target.  Use this to run `test-gnome' in
+	$srcdir.  This should be better than Miguel's fix below.
+	(test-debug): Similar, but runs gdb on the test-gnome binary.
+
+1999-03-25  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* canvas-primitives.c: Do not make me look like a dofus on a
+	demostration not ran from $cwd.
+	(plant_flower): ditto.
+
+1999-02-12  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas-primitives.c (create_canvas_primitives): Create the
+	canvas items before the visual/colormap have been popped.  This
+	makes the widget item test work on multivisual machines.
+
+1999-02-10  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* testgnome.c (create_pixmap): Use a gnome_pixmap.  Why we were
+	using a gtk_pixmap here is a mistery for the Big Manatee.
+
+1999-02-10  James Henstridge  <james@daa.com.au>
+
+	* testgnome.c(create_icon_list): do not add a viewport for the icon
+	list when adding it to the scrolled window -- it exports its own
+	scrolling behaviour.
+
+1999-01-21  Sebastian Wilhelmi  <wilhelmi@ira.uka.de>
+
+	* Makefile.am (INCLUDES): s%$(datadir)/locale%$(gnomelocaledir)%
+
+1999-01-17  Jeff Garzik  <jgarzik@pobox.com>
+
+	* testgnome.c:
+	s/gtk_container_border_width/gtk_container_set_border_width/
+
+1999-01-15  Szekeres István <szekeres@cyberspace.mht.bme.hu>
+        * testgnome.c: as gtk-clock is corrected, it will work here well so
+        we can enable it.
+
+1999-01-02  Jeff Garzik  <jgarzik@pobox.com>
+
+	* canvas-fifteen.c:
+	Silence uninitialized-var warnings.
+
+Thu Dec 31 23:41:57 1998  Raph Levien  <raph@gimp.org>
+
+	* canvas-primitives.c: more changes for antialiased rendering
+	(mostly use of half-transparent color instead of stippling where
+	appropriate).
+
+1998-12-14  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* testgnome.c (create_app_helper): Use gtk_widget_set_usize() to
+	set the size of the canvas window.
+	* canvas-arrowhead.c (create_canvas_arrowhead): Likewise.
+	* canvas-primitives.c (create_canvas_primitives): Likewise.
+	* canvas-fifteen.c (create_canvas_fifteen): Likewise.
+	* canvas-features.c (create_canvas_features): Likewise.
+
+1998-12-12  James Henstridge  <james@daa.com.au>
+
+	* testgnome.c (create_href): added a test of the GnomeHRef widget.
+
+Sun Dec  6 22:47:54 1998  Raph Levien  <raph@gimp.org>
+
+	* testgnome.h:
+	* canvas-primitives.c: added support for antialiased rendering.
+
+	* canvas.c: added an "Antialias" notebook tab for testing the
+	aa rendering back-end.
+
+1998-12-01  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* testgnome.c (help_menu): Removed the GNOME_APP_UI_HELP, since it
+	is not used and I got tired of the stupid warnings.
+
+1998-11-29  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* testgnome.c (create_icon_list): IconList now starts life in
+	normal state.
+
+1998-11-29  Justin Maurer  <justin@openprojects.net>
+
+	* get rid of deprecated gnome-color-selector and gnome-font-selector
+
+1998-11-29  Justin Maurer  <justin@openprojects.net>
+
+	* no more right-justify
+
+Thu Nov 26 00:59:07 1998  George Lebl  <jirka@5z.com>
+
+	* testgnome.c: added a test window for dentry-edit
+
+1998-11-25  Havoc Pennington  <hp@pobox.com>
+
+	* testgnome.c (create_test_dialog): Use gtk_window_set_modal in
+	place of deprecated dialog version.
+
+Tue Nov 24 02:00:46 1998  George Lebl  <jirka@5z.com>
+
+	* testgnome.c: add a test for gnome-icon-entry
+
+Mon Nov 23 02:20:03 PST 1998 Manish Singh <yosh@gimp.org>
+
+	* testgnome.c: use gtk_scrolled_window_add_with_viewport
+
+Sun Nov 22 03:40:52 1998  George Lebl  <jirka@5z.com>
+
+	* testgnome.c: added new test for the directory browsing of
+	  file-entry
+
+Fri Nov 20 01:48:17 1998  George Lebl  <jirka@5z.com>
+
+	* testgnome.c: added more tests for file-entry, and added a pixmap
+	  entry test
+
+Thu Nov 19 11:21:52 1998  Raph Levien  <raph@gimp.org>
+
+	* Makefile.am (test_gnome_LDADD): Added libart_lgpl.
+
+1998-11-16  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* testgnome.c (create_icon_list): Insert the icon list in a
+	scrolled window, now that it can handle the scrollbars for us.
+
+1998-11-07  Jeff Garzik  <jgarzik@pobox.com>
+
+	* testgnome.c: removed gnome-lamp references
+
+1998-11-04  Havoc Pennington  <hp@pobox.com>
+
+	* testgnome.c (create_guru): New gnome-guru test.
+
+1998-11-01  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas-primitives.c: Added some stippling to the items.
+
+1998-10-24  David Abilleira  <odaf@nexo.es>
+
+	* testgnome.c (create_font_picker) Changed gnome_pixmap_widget_new to
+        gnome_stock_new_with_icon
+
+1998-10-14  David Abilleira  <odaf@nexo.es>
+
+	* testgnome.c (create_font_picker) Added tests for new
+	gnome-font-picker widget
+
+1998-10-14  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas-primitives.c (setup_polygons): Added a test for the
+	polygon item.
+
+1998-10-13  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* testgnome.c (create_icon_list): Remove visual/colormap hack, as
+	the Icon list is more confident about itself now.
+
+1998-10-12  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* testgnome.c (create_icon_list): Use the new features in the
+	GnomeIconList.
+
+1998-09-27  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas-features.c: New file to test general features of the
+	canvas.  Right now it only has a test for item reparenting.
+
+	* Makefile.am (testgnome_SOURCES): Added canvas-features.c to the
+	list of sources.
+
+1998-09-18  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* testgnome.c (create_app_helper): Added tests for popup menus.
+
+	* canvas-fifteen.c: 
+	* canvas-arrowhead.c: 
+	* canvas-primitives.c: Removed occurrences of #ifdef GTK_HAVE_FEATURES_1_1_0.
+
+1998-09-16  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* testgnome.c (create_app_helper): Added a test for toolbars.
+
+	* testgnome.c (create_app_helper): Added a test for the new
+	GnomeAppHelper stuff.
+
+1998-09-01  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* testgnome.c (create_color_picker): New function to test the
+	GnomeColorPicker widget.
+
+1998-08-20  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas-primitives.c (setup_texts): Update tests for multiline,
+	justified, and clipped text.
+
+1998-08-18  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* testgnome.c (block_until_clicked): Fixed arguments.
+
+1998-08-04  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas-primitives.c (setup_widgets): Initial test of the widget
+	item type.
+
+	* canvas-fifteen.c (create_canvas_fifteen): Set the canvas
+	scrolling region correctly.
+	* canvas-arrowhead.c (create_canvas_arrowhead): Likewise.
+
+	* canvas-primitives.c (item_event): Drag the right way, not the
+	easy way.  Keep a flag that says whether we are dragging or not.
+
+1998-08-03  Richard Hestilow  <hestgray@ionet.net>
+
+	* testgnome.c (about_cb): Set the version to reflect what the current
+	gnome release is. (VERSION).
+	
+1998-07-30  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas-primitives.c (create_canvas_primitives): Made the
+	necessary changes for the new canvas.
+	(create_canvas_primitives): Use scrollbars instead of the stupid
+	scroll buttons we had before.  Removed the scroll() and
+	create_arrow() functions.
+
+	* canvas-arrowhead.c (create_canvas_arrowhead): Likewise.
+	* canvas-fifteen.c (create_canvas_fifteen): Likewise.
+
+1998-07-29  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas-arrowhead.c (create_canvas_arrowhead): New spiffy test
+	for the arrows in the line item.  It's a clone of Tk's arrowhead
+	editor.  It exposes a few bugs in the arrowheads, which I will be
+	fixing shortly.
+
+	* canvas-primitives.c:
+	* canvas-arrowhead.c:
+	* canvas-fifteen.c: New files.  I split up the canvas.c file
+	because it was getting too big.  Users may have an easier time
+	looking at the canvas demo sources this way.
+
+	* testgnome.h: Added prototypes for the canvas demo creation
+	functions.
+
+	* Makefile.am: Added the new files to the sources.
+
+1998-07-28  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas.c (free_imlib_image): New function to free the imlib
+	images once we are done.
+	(setup_images): More tests for image items.
+	(setup_lines): Spiffy test for line items.
+
+1998-07-24  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas.c (create_canvas): Split the item creation into separate
+	functions:  setup_rectangles(), setup_ellipses(), setup_texts(),
+	setup_images(), and setup_lines().
+
+1998-07-19  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas.c (item_event): Use gnome_canvas_item_raise_to_top() and
+	gnome_canvas_item_lower_to_bottom().
+
+1998-07-17  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas.c (create_fifteen create_primitives): Removed the canvas
+	parameter from calls to gnome_canvas_item_new().
+	(create_primitives): Added a test for the line item.
+
+1998-07-15  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas.c (item_event): Grab/ungrab the item on button
+	press/release, respectively.
+	(item_event): Now you can click buttons 2 or 3 on an item to
+	lower/raise it, respectively.  If shift is pressed as well, the
+	item will be sent to the bottom/top of the stack.
+
+	* testgnome.c (main): Do not call gnome_init() and gtk_init().
+
+1998-07-13  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas.c (piece_event): 
+	(create_primitives): 
+	(create_fifteen): Removed the "SomeGtkType::" prefixes for
+	arguments now that Gtk supports direct argument lookups.  The code
+	is actually nice right now :-)
+
+Sun Jul 12 23:01:56 1998  Havoc Pennington  <hp@pobox.com>
+
+	* testgnome.c (create_app_util): Added a test for the 
+	GnomeAppBar, gnome-app-util, and gnome-dialog-util (they're 
+	all interrelated, so it's just one test window). This is also
+	a decent demo for what these functions do (or don't).
+
+	Also added a "Reload preferences" button to load preferences
+	and observe the effect on the gnome libraries.
+
+1998-07-08  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas.c (scroll): Added buttons to scroll the canvas.  When I
+	think of how to make a decent adjustment system for the canvas,
+	these will be replace by scrollbars.
+
+1998-07-07  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas.c (zoom_changed): Added a scale to change the zoom
+	factor.  This exposes several bugs in the canvas, which I will be
+	fixing shortly.
+
+1998-07-06  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas.c (scramble): Don't flush the X queue now that
+	gnome_canvas_update_now() does it for us.
+	(create_primitives): Added a test for all the canvas primitives.
+
+1998-07-05  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas.c: Added text to the fifteen game.  The text items change
+	color when the mouse enters/leaves the squares.
+	(scramble): Added function to scramble the board.
+
+1998-07-01  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas.c (piece_event): Use gnome_canvas_item_move instead of
+	re-setting the coordinates explicitly.
+
+1998-06-30  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas.c: Implemented a simple "fifteen" game.  You can move the
+	pieces and reorder them to win.  It does not have text yet,
+	because I haven't written a GnomeCanvasText item type yet.
+
+	* canvas.c: New test for new canvas -- work in progress.
+
+1998-06-22  Richard Hestilow  <hestgray@ionet.net>
+	
+	* testgnome.c: 	Fixed icon list (create_icon_list) and changed
+			create_pixmap to use gdk_imlib.
+		
+Thu Jun 18 02:48:17 1998  George Lebl  <jirka@5z.com>
+
+	* testgnome.c: added test for number entry widget
+
+Sun Jun 14 13:47:41 1998  Tom Tromey  <tromey@cygnus.com>
+
+	* Makefile.am (INCLUDES): Include GTK_CFLAGS.  Look in intl source
+	and build directories.
+
+1998-05-30  Marius Vollmer  <mvo@zagadka.ping.de>
+
+	* testgnome.c (create_newwin): Do not connect to the
+	"delete_event" when being NORMAL.  This was causing segfaults left
+	and right.
+
+Wed Jun 10 14:19:39 EDT 1998 Gregory McLean <gregm@comstar.net>
+
+	* fixed up this so that the canvas is only built if it was built in 
+	  libgnomeui.
+
+1998-06-09  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* Makefile.am (testgnome_LDADD): Made it use the libraries from
+	the build directories.
+
+Sat Jun  6 13:55:49 CEST 1998  Eckehard Berns  <eb@berns.prima.de>
+
+	* testgnome.c (create_lamp): added call to gnome_lamp_set_window_type.
+
+Tue Jun  2 00:51:58 CEST 1998  Eckehard Berns  <eb@berns.prima.de>
+
+	* testgnome.c (create_lamp): adjusted sequence value.
+
+1998-05-27  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* canvas.c: New file to test the canvas.  It is on a separate file
+	because it will have a lot of stuff.
+
+	* testgnome.h: New file with declarations useful to the whole program.
+
+Sat May 23 22:10:23 1998  Havoc Pennington  <hp@pobox.com>
+
+	* testgnome.c: Add a more comprehensive dialog test.
+
+Thu May 21 18:51:02 CEST 1998  Eckehard Berns  <eb@berns.prima.de>
+
+	* testgnome.c (create_lamp, create_lamp_update): new functios.
+	(main): added GnomeLamp test.
+
+1998-05-11  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* testgnome.c (create_newwin): Create the menus with a data
+	pointer.  Add a routine to close the window, and not quit the
+	program. 
+
