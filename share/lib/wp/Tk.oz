@@ -25,7 +25,7 @@
 local
 
    VoidEntry = {NewName}
-      
+
    class Counter
       prop locking final
       attr n:0
@@ -40,9 +40,9 @@ in
 
    import
       WIF from 'x-oz://boot/Wif'
-	  
+
       Property.{get}
-   
+
       System.{apply
 	      showError
 	      valueToVirtualString}
@@ -52,7 +52,7 @@ in
 	  dispatch}
 
    ErrorRegistry.{put}
-   
+
    Open.{pipe
 	 text}
 
@@ -61,11 +61,11 @@ in
        stat}
 
    Resolve.{makeResolver}
-	   
+
    export
       send:          TkSend
       batch:         TkBatch
-      
+
       return:           TkReturnString
       returnString:     TkReturnString
       returnAtom:       TkReturnAtom
@@ -76,13 +76,13 @@ in
       returnListAtom:   TkReturnListAtom
       returnListInt:    TkReturnListInt
       returnListFloat:  TkReturnListFloat
-      
+
       getPrefix:        TkGetPrefix
       getId:            TkGetId
       getTclName:       TkGetTclName
-      
+
       invoke:        InvokeAction
-      
+
       button:        TkButton
       canvas:        TkCanvas
       checkbutton:   TkCheckbutton
@@ -98,42 +98,44 @@ in
       scrollbar:     TkScrollbar
       text:          TkText
       toplevel:      TkToplevel
-      
+
       menuentry:     TkMenuentries
-      
+
       image:         TkImage
-      
+
       textTag:       TkTextTag
       textMark:      TkTextMark
       canvasTag:     TkCanvasTag
-      
+
       action:        TkAction
       variable:      TkVariable
       string:        TkString
-      
+
       isColor:       IsColor
-      
-      addYScrollbar: AddYScrollbar
-      addXScrollbar: AddXScrollbar
-      
-      defineUserCmd: DefineUserCmd
-      localize:      TkLocalize
-      
+
+      addYScrollbar:   AddYScrollbar
+      addXScrollbar:   AddXScrollbar
+
+      defineUserCmd:   DefineUserCmd
+      localize:        TkLocalize
+
+      optionsManager:  OptionsManager
+
    body
-      
+
       TkString = string(toInt:        TkStringToInt
 			toFloat:      TkStringToFloat
 			toListString: TkStringToListString
 			toListAtom:   TkStringToListAtom
 			toListInt:    TkStringToListInt
 			toListFloat:  TkStringToListFloat)
-      
+
       %%
       %% Sending tickles
       %%
       TkInit         = WIF.init
       TkGetNames     = WIF.getNames
-      
+
       TkSend         = WIF.write
       TkBatch        = WIF.writeBatch
       TkReturn       = WIF.writeReturn
@@ -141,9 +143,9 @@ in
       TkSendTuple    = WIF.writeTuple
       TkSendTagTuple = WIF.writeTagTuple
       TkSendFilter   = WIF.writeFilter
-      
+
       TkClose        = WIF.close
-      
+
       %%
       %% Generation of Identifiers
       %%
@@ -152,7 +154,7 @@ in
       GenTagName    = WIF.genTagName
       GenVarName    = WIF.genVarName
       GenImageName  = WIF.genImageName
-      
+
 
       %%
       %% Master slave mechanism for widgets
@@ -171,7 +173,7 @@ in
 	     {System.valueToVirtualString Tcl P.depth P.width}
 	  end}
       end
-      
+
       %%
       %% Some Character/String stuff
       %%
@@ -192,9 +194,9 @@ in
 	 fun {TkStringToString S}
 	    S
 	 end
-	 
+
 	 TkStringToAtom = StringToAtom
-	 
+
 	 fun {TkStringToInt S}
 	    %% Read a number and convert it to an integer
 	    OS IsAFloat in OS={TkNum S false ?IsAFloat}
@@ -205,7 +207,7 @@ in
 	    else false
 	    end
 	 end
-	 
+
 	 fun {TkStringToFloat S}
 	    %% Read a number and convert it to a float
 	    OS IsAFloat in OS={TkNum S false ?IsAFloat}
@@ -216,25 +218,25 @@ in
 	    else false
 	    end
 	 end
-	 
+
 	 fun {TkStringToListString S}
 	    {String.tokens S & }
 	 end
-	 
+
 	 fun {TkStringToListAtom S}
 	    {Map {String.tokens S & } TkStringToAtom}
 	 end
-	 
+
 	 fun {TkStringToListInt S}
 	    {Map {String.tokens S & } TkStringToInt}
 	 end
-	 
+
 	 fun {TkStringToListFloat S}
 	    {Map {String.tokens S & } TkStringToFloat}
 	 end
       end
-      
-      
+
+
       %% expand a quoted Tcl/Tk string
       %%  \n     -> newline
       %%  \<any> -> <any>
@@ -250,27 +252,27 @@ in
 	    end
 	 end
       end
-      
+
       local
 	 proc {EnterMessageArgs As I T}
 	    case As of nil then skip
 	    [] A|Ar then T.I=A {EnterMessageArgs Ar I+1 T}
 	    end
 	 end
-	 
+
 	 proc {EnterPrefixArgs I MP M}
 	    case I>0 then  M.I=MP.I {EnterPrefixArgs I-1 MP M}
 	    else skip
 	    end
 	 end
-	 
+
 	 fun {MaxInt As M}
 	    case As of nil then M
 	    [] A|Ar then
 	       {MaxInt Ar case {IsInt A} then {Max M A} else M end}
 	    end
 	 end
-	 
+
 	 fun {NumberArgs As I}
 	    case As of nil then nil
 	    [] A|Ar then J=I+1 in J#A|{NumberArgs Ar J}
@@ -307,7 +309,7 @@ in
 	    end
 	 end
       end
-      
+
       fun {GetFields Ts}
 	 case Ts of nil then ''
 	 [] T|Tr then
@@ -328,7 +330,7 @@ in
 		   end # {GetFields Tr}
 	 end
       end
-      
+
       fun {GetCasts Ts}
 	 case Ts of nil then nil
 	 [] T|Tr then
@@ -347,14 +349,14 @@ in
 	    end | {GetCasts Tr}
 	 end
       end
-      
+
       IdCharacters = i(&a &b &c &d &e &f &g &h &i &j &k &l &m
 		       &n &o &p &q &r &s &t &u &v &w &x &y &z
 		       &A &B &C &D &E &F &G &H &I &J &K &L &M
 		       &N &O &P &Q &R &S &T &U &V &W &X &Y &Z)
-      
+
       IdNumber     = {Width IdCharacters}
-      
+
       fun {GenString N}
 	 case N>=IdNumber then
 	    IdCharacters.((N mod IdNumber) + 1)|{GenString N div IdNumber}
@@ -378,11 +380,11 @@ in
 		    end
 		init(cmd:CMD)}
 	    end
-      
+
    ActionIdServer = {New Counter get(_)}
 
    TkDict         = {Dictionary.new}
-   
+
    local
       TkInitStr =
       \insert TkInit.oz
@@ -390,9 +392,9 @@ in
       {Stream write(vs:TkInitStr)}
       {Stream flush(how:[send])}
    end
-   
+
    RetStream = {TkInit {Stream getDesc(_ $)} TkDict}
-   
+
    local
       fun {GetArgs N Ps}
 	 %% Get the next N line lines expanded
@@ -404,7 +406,7 @@ in
 	 else nil
 	 end
       end
-      
+
       fun {ReadUntilDot}
 	 case {Stream getS($)}
 	 of "." then ''
@@ -432,7 +434,7 @@ in
       %%   w
       %%   <data>
       %%   .
-      
+
       proc {TkReadLoop Rs}
 	 Is={Stream getS($)}
       in
@@ -468,7 +470,7 @@ in
 	    {Stream close}
 	 end
       end
-      
+
       %% Start reading wish's output
       thread
 	 {Thread.setId {Thread.this} 2}
@@ -476,7 +478,7 @@ in
 	 {TkReadLoop RetStream}
       end
    end
-   
+
    local
       IdBaseServer = {New Counter get(_)}
    in
@@ -484,7 +486,7 @@ in
 	 &o|&Z|{GenString {IdBaseServer get($)}}
       end
    end
-   
+
    local
       IdBase   = {String.toAtom {TkGetPrefix}}
       IdServer = {New Counter get(_)}
@@ -493,18 +495,18 @@ in
 	 IdBase#{IdServer get($)}
       end
    end
-   
+
    fun {TkGetTclName W}
       {VirtualString.toString W.TclName}
    end
-   
+
    TkReturnMethod = {NewName}
    TkClass        = {NewName}
    TkWidget       = {NewName}
-   
+
    TclSlaves TclSlaveEntry TclName
    {TkGetNames ?TclSlaves ?TclSlaveEntry ?TclName}
-   
+
    proc {DefineEvent Action Args AddIt BreakIt ?ActionId ?Command}
       Fields = {GetFields Args}
       Casts  = {GetCasts Args}
@@ -518,7 +520,7 @@ in
       Fields #
       case BreakIt then '; break' else '' end#'}'
    end
-   
+
    proc {DefineCommand Action Args ?ActionId ?Command}
       Casts = {GetCasts Args}
    in
@@ -528,7 +530,7 @@ in
 				      end}
       Command = '{ozp '#ActionId#'}'
    end
-   
+
    class TkAction
       prop
 	 native
@@ -536,7 +538,7 @@ in
 	 ActionId
 	 !TclName
 	 !TclSlaveEntry
-	 
+
       meth tkInit(parent:Parent action:Action args:Args<=nil) = M
 	 ParentSlaves = {CondSelect Parent TclSlaves unit}
 	 ThisTclName  = self.TclName
@@ -554,53 +556,53 @@ in
 	    ThisTclName = GetTclName
 	 end
       end
-      
+
       meth tkAction(action:Action args:Args<=nil)
 	 Casts        = {GetCasts Args}
       in
 	 {Dictionary.put TkDict self.ActionId
 	  case Action of O#M then O#M#Casts else Action#Casts end}
       end
-      
+
       meth tkClose
 	 {Dictionary.remove TkDict self.ActionId}
 	 {DelSlave self.TclSlaveEntry}
       end
-      
+
    end
-   
+
    fun {TkReturnString M}
       {TkReturn M TkStringToString}
    end
-   
+
    fun {TkReturnAtom M}
       {TkReturn M TkStringToAtom}
    end
-   
+
    fun {TkReturnInt M}
       {TkReturn M TkStringToInt}
    end
-   
+
    fun {TkReturnFloat M}
       {TkReturn M TkStringToFloat}
    end
-   
+
    fun {TkReturnListString M}
       {TkReturn M TkStringToListString}
    end
-   
+
    fun {TkReturnListAtom M}
       {TkReturn M TkStringToListAtom}
    end
-   
+
    fun {TkReturnListInt M}
       {TkReturn M TkStringToListInt}
    end
-   
+
    fun {TkReturnListFloat M}
       {TkReturn M TkStringToListFloat}
    end
-   
+
    class ReturnClass
       prop native
       meth tkReturn(...) = M
@@ -634,16 +636,16 @@ in
 	 {self TkReturnMethod(M TkStringToListFloat)}
       end
    end
-   
-   
+
+
    class Widget
       from ReturnClass
-	 
+
       feat
 	 !TclSlaves
 	 !TclSlaveEntry
 	 !TclName        % widget name
-	 
+
       meth tkBind(event:  Event
 		  action: Action  <= _
 		  args:   Args    <= nil
@@ -659,25 +661,25 @@ in
 	    {TkSend bind(self Event '')}
 	 end
       end
-      
+
       meth !TkReturnMethod(M Cast)
 	 {TkReturnMess self M unit Cast}
       end
-      
+
       meth tk(...) = M
 	 {TkSendTuple self M}
       end
-      
+
       meth tkClose
 	 {TkClose destroy(self) self}
       end
-      
+
    end
-   
-   
+
+
    class CommandWidget
       from Widget
-	 
+
       meth tkInit(parent:Parent ...) = Message
 	 ThisTclName = self.TclName
 	 case {IsDet ThisTclName} then
@@ -714,7 +716,7 @@ in
 	 end
 	 ThisTclName = NewTkName
       end
-      
+
       meth tkAction(action:Action<=_ args:Args <= nil) = Message
 	 case {HasFeature Message action} then ActionId Command in
 	    {DefineCommand Action Args ?ActionId ?Command}
@@ -723,12 +725,12 @@ in
 	 else {TkSend o(self configure command:'')}
 	 end
       end
-      
+
    end
-   
+
    class NoCommandWidget
       from Widget
-	 
+
       meth tkInit(parent:Parent ...) = Message
 	 ThisTclName = self.TclName
 	 case {IsDet ThisTclName} then
@@ -756,12 +758,12 @@ in
 	 {TkSendFilter self.TkClass NewTkName Message [parent] unit}
 	 ThisTclName = NewTkName
       end
-      
+
    end
-   
-   
+
+
    class TkToplevel from Widget
-		       
+
       meth tkInit(...) = Message
 	 ThisTclName = self.TclName
 	 case {IsDet ThisTclName} then
@@ -806,66 +808,66 @@ in
 	    v('; wm protocol '#MyTkName#' WM_DELETE_WINDOW '# CloseCommand))}
 	 ThisTclName = MyTkName
       end
-      
+
       meth tkWM(...) = M
 	 {TkSendTagTuple wm self M}
       end
-      
+
    end
-   
+
    class TkFrame from NoCommandWidget
       feat !TkClass:frame
    end
-   
+
    class TkButton from CommandWidget
       feat !TkClass:button
    end
-   
+
    class TkCheckbutton from CommandWidget
       feat !TkClass:checkbutton
    end
-   
+
    class TkListbox from NoCommandWidget
       feat !TkClass:listbox
    end
-   
+
    class TkRadiobutton from CommandWidget
       feat !TkClass:radiobutton
    end
-   
+
    class TkScrollbar from CommandWidget
       feat !TkClass:scrollbar
    end
-   
+
    class TkScale from CommandWidget
       feat !TkClass:scale
    end
-   
+
    class TkEntry from NoCommandWidget
       feat !TkClass:entry
    end
-   
+
    class TkLabel from NoCommandWidget
       feat !TkClass:label
    end
-   
+
    class TkMessage from NoCommandWidget
       feat !TkClass:message
    end
-   
+
    class TkMenubutton from NoCommandWidget
       feat !TkClass:menubutton
    end
-   
+
    class TkText from NoCommandWidget
       feat !TkClass: text
    end
-   
+
    class TkCanvas from NoCommandWidget
       feat !TkClass: canvas
    end
-   
-   
+
+
    local
       TkType      = {NewName}
       EntryVar    = {NewName}
@@ -873,19 +875,19 @@ in
       AddEntry    = {NewName}
       InsertEntry = {NewName}
       RemoveEntry = {NewName}
-      
+
       fun {MkMove Es I}
 	 case Es of nil then nil
 	 [] E|Er then v(';')|set(E.EntryVar I)|{MkMove Er I+1}
 	 end
       end
-      
+
       fun {Add Es EA I ?Tcl}
 	 case Es of nil then Tcl=[v(';') set(EA.EntryVar I)] [EA]
 	 [] E|Er then E|{Add Er EA I+1 ?Tcl}
 	 end
       end
-      
+
       fun {Insert Es EA EB I ?Tcl}
 	 case Es of nil then Tcl=[v(';') set(EA.EntryVar I)] [EA]
 	 [] E|Er then
@@ -894,7 +896,7 @@ in
 	    end
 	 end
       end
-      
+
       fun {Remove Es EA I ?Tcl}
 	 case Es of nil then Tcl=[unit] nil
 	 [] E|Er then
@@ -903,8 +905,8 @@ in
 	    end
 	 end
       end
-      
-      
+
+
       class TkMenuentry
 	 prop
 	    native
@@ -914,7 +916,7 @@ in
 	    !TclName        % widget name
 	    !EntryVar
 	    !TkWidget
-	    
+
 	 meth tkInit(parent: Parent
 		     before: Before <= _
 		     action: Action <= _
@@ -964,7 +966,7 @@ in
 	       end
 	    end
 	 end
-	 
+
 	 meth tk(...) = M
 	    Parent = self.TkWidget
 	 in
@@ -972,7 +974,7 @@ in
 	       {TkSendTagTuple Parent self M}
 	    end
 	 end
-	 
+
 	 meth tkClose
 	    Parent = self.TkWidget
 	 in
@@ -986,9 +988,9 @@ in
 	    end
 	 end
       end
-      
+
    in
-      
+
       class TkMenu from NoCommandWidget
 	 feat
 	    !TkClass: menu
@@ -1021,7 +1023,7 @@ in
 	    NoCommandWidget,tkClose
 	 end
       end
-      
+
       TkMenuentries = menuentry(cascade:     class $ from TkMenuentry
 						feat !TkType:cascade
 					     end
@@ -1037,18 +1039,18 @@ in
 				separator:   class $ from TkMenuentry
 						feat !TkType:separator
 					     end)
-      
+
    end
-   
-   
-   
+
+
+
    %%
    %% Tcl/Tk variables
    %%
    class TkVariable
       prop native
       feat !TclName
-	 
+
       meth tkInit(...) = Message
 	 MyTclName   = {GenVarName}
 	 ThisTclName = self.TclName
@@ -1062,11 +1064,11 @@ in
 	 end
 	 ThisTclName = MyTclName
       end
-      
+
       meth tkSet(X)
 	 {TkSend set(self X)}
       end
-      
+
       meth tkReturn($)
 	 {TkReturn set(self) TkStringToString}
       end
@@ -1097,19 +1099,19 @@ in
       meth tkReturnListFloat($)
 	 {TkReturn set(self) TkStringToListFloat}
       end
-      
+
    end
-   
-   
-   
-   
+
+
+
+
    class TkTagAndMark from ReturnClass
       feat
 	 !TkWidget
 	 !TclSlaves
 	 !TclSlaveEntry
 	 !TclName        % widget name
-	 
+
       meth tkInit(parent:Parent)
 	 ThisTclName  = self.TclName
 	 ParentSlaves = {CondSelect Parent TclSlaves unit}
@@ -1125,31 +1127,31 @@ in
 	 self.TkWidget      = Parent
 	 ThisTclName        = {GenTagName}
       end
-      
+
    end
-   
-   
+
+
    class TkTextMark
       from TkTagAndMark
-	 
+
       meth tk(...) = M
 	 {TkSendTagTuple o(self.TkWidget mark) self M}
       end
-      
+
       meth !TkReturnMethod(M Cast)
 	 {TkReturnMess o(self.TkWidget mark) M self Cast}
       end
-      
+
       meth tkClose
 	 {TkClose o(self.TkWidget mark delete self) self}
       end
-      
+
    end
-   
-   
+
+
    class TkCanvasTag
       from TkTagAndMark
-	 
+
       meth tkBind(event:  Event
 		  action: Action  <= _
 		  args:   Args    <= nil
@@ -1165,25 +1167,25 @@ in
 	    {TkSend o(self.TkWidget bind self Event '')}
 	 end
       end
-      
+
       meth tk(...) = M
 	 {TkSendTagTuple self.TkWidget self M}
       end
-      
+
       meth !TkReturnMethod(M Cast)
 	 {TkReturnMess self.TkWidget M self Cast}
       end
-      
+
       meth tkClose
 	 {TkClose o(self.TkWidget delete self) self}
       end
-      
+
    end
-   
-   
+
+
    class TkTextTag
       from TkTagAndMark
-	 
+
       meth tkBind(event:  Event
 		  action: Action  <= _
 		  args:   Args    <= nil
@@ -1199,21 +1201,21 @@ in
 	    {TkSend o(self.TkWidget tag bind self Event '')}
 	 end
       end
-      
+
       meth tk(...) = M
 	 {TkSendTagTuple o(self.TkWidget tag) self M}
       end
-      
+
       meth !TkReturnMethod(M Cast)
 	 {TkReturnMess o(self.TkWidget tag) M self Cast}
       end
-      
+
       meth tkClose
 	 {TkClose o(self.TkWidget tag delete self) self}
       end
-      
+
    end
-   
+
    local
       local
 	 Sep   = {Property.get 'path.separator'}
@@ -1240,10 +1242,10 @@ in
 			     end
 			  end
 		       end init}
-      
-      
+
+
    in
-      
+
       fun {TkLocalize Url}
 	 case {ImRes.localize Url}
 	 of old(F) then F
@@ -1254,7 +1256,7 @@ in
       class TkImage
 	 from ReturnClass
 	 feat !TclName
-	    
+
 	 meth tkInit(type:Type ...) = Message
 	    ThisTclName = self.TclName
 	    case {IsDet ThisTclName} then
@@ -1319,23 +1321,23 @@ in
 	 end
       end
    end
-   
+
    proc {AddYScrollbar T S}
       {TkBatch
        [o(T configure yscrollcommand: s(S set))
 	o(S configure command:        s(T yview))]}
    end
-   
+
    proc {AddXScrollbar T S}
       {TkBatch
        [o(T configure xscrollcommand: s(S set))
 	o(S configure command:        s(T xview))]}
    end
-   
+
    IsColor = thread
 		{TkReturnInt winfo(depth '.')}>1
 	     end
-   
+
    fun {DefineUserCmd TclCmd Action Args}
       Casts    = {GetCasts Args}
       ActionId = {ActionIdServer get($)}
@@ -1364,7 +1366,7 @@ in
 
    {ErrorRegistry.put
 
-    tk 
+    tk
 
     fun {$ Exc}
        E = {Error.dispatch Exc}
@@ -1383,7 +1385,7 @@ in
 
        elseof tk(alreadyInitialized O M) then
 
-         % expected O: object, M: record
+	 % expected O: object, M: record
 
 	  {Error.format T
 	   'Object already initialized'
@@ -1392,7 +1394,7 @@ in
 
        elseof tk(alreadyClosed O M) then
 
-         % expected O: object, M: record
+	 % expected O: object, M: record
 
 	  {Error.format T
 	   'Window already closed'
@@ -1401,7 +1403,7 @@ in
 
        elseof tk(alreadyClosed O) then
 
-         % expected O: object
+	 % expected O: object
 
 	  {Error.format T
 	   'Window already closed'
@@ -1412,7 +1414,7 @@ in
 	  {Error.formatGeneric T Exc}
       end
     end}
-   
+
 end
 
 end
