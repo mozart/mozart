@@ -546,7 +546,8 @@ void float2buffer(ostream &out, OZ_Term term)
     case '+':
       break;
     default:
-      if (isdigit(c)) hasDigits=OK;
+      if (!isdigit(c)) hasDot=OK;
+      hasDigits=OK;
       out << c;
       break;
     }
@@ -1017,6 +1018,28 @@ OZ_Term OZ_string(char *s)
   return ret;
 }
 
+void string2buffer(ostream &out,OZ_Term list)
+{
+  OZ_Term tmp = deref(list);
+  for (; isCons(tmp); tmp=deref(tail(tmp))) {
+    OZ_Term hh = deref(head(tmp));
+    if (!isSmallInt(hh)) {
+      message("no small int %s",toC(hh));
+      printf(" in string %s\n",toC(list));
+      return;
+    }
+    int i = smallIntValue(hh);
+    if (i <= 0 || i > 255) {
+      message("no small int %d",i);
+      printf(" in string %s\n",toC(list));
+      return;
+    }
+    out << (char) i;
+  }
+  if (!isNil(tmp)) {
+    message("no string %s\n",toC(list));
+  }
+}
 
 /*
  * convert Oz string to C string
@@ -1032,12 +1055,8 @@ char *OZ_stringToC(OZ_Term list)
 
   ostrstream out;
 
-  for (OZ_Term tmp = deref(list); isCons(tmp); tmp=deref(tail(tmp))) {
-    OZ_Term hh = deref(head(tmp));
-    int i = smallIntValue(hh);
-    if (i <= 0 || i > 255) return 0;
-    out << (char) i;
-  }
+  string2buffer(out,list);
+
   out << ends;
   tmpStr = out.str();
   return tmpStr;
@@ -1045,20 +1064,8 @@ char *OZ_stringToC(OZ_Term list)
 
 void OZ_printString(OZ_Term term)
 {
-  OZ_Term t=deref(term);
-  while (isCons(t)) {
-    OZ_Term hd=deref(head(t));
-    if (!isSmallInt(hd)) {
-      OZ_warning("OZ_printString: no string: %s",toC(term));
-      return;
-    }
-    int c=smallIntValue(hd);
-    printf("%c",c);
-    t=deref(tail(t));
-  }
-  if (!isNil(t)) {
-    OZ_warning("OZ_printString: no string: %s",toC(term));
-  }
+  string2buffer(cout,term);
+  cout << flush;
 }
 
 void OZ_printAtom(OZ_Term t)
@@ -1083,6 +1090,70 @@ void OZ_printFloat(OZ_Term t)
   char *s=toC(t);
   printf("%s",s);
 }
+
+
+
+inline
+void vsatom2buffer(ostream &out, OZ_Term term)
+{
+  char *s = tagged2Literal(term)->getPrintName();
+  out << s;
+}
+
+void virtualString2buffer(ostream &out,OZ_Term term)
+{
+  OZ_Term t=deref(term);
+  if (isCons(t)) {
+    string2buffer(out,t);
+    return;
+  }
+  if (isAtom(t)) {
+    if (isNil(t) || isPair(t)) return;
+    vsatom2buffer(out,t);
+    return;
+  }
+  if (isInt(t)) {
+    int2buffer(out,t);
+    return;
+  }
+  if (isFloat(t)) {
+    float2buffer(out,t);
+    return;
+  }
+
+  if (!isPair(t)) {
+    OZ_warning("no virtual string: %s",toC(term));
+    return;
+  }
+
+  SRecord *sr=tagged2SRecord(t);
+  int len=sr->getWidth();
+  for (int i=0; i < len; i++) {
+    virtualString2buffer(out,sr->getArg(i));
+  }
+}
+
+/*
+ * convert Oz virtual string to C string
+ * PRE: list is a virtual string
+ */
+char *OZ_virtualStringToC(OZ_Term t)
+{
+  static char *tmpStr = 0;
+  if (tmpStr) {
+    delete tmpStr;
+    tmpStr = 0;
+  }
+
+  ostrstream out;
+
+  virtualString2buffer(out,t);
+
+  out << ends;
+  tmpStr = out.str();
+  return tmpStr;
+}
+
 
 void OZ_printVirtualString(OZ_Term term)
 {
@@ -1548,6 +1619,21 @@ void OZ_addBISpec(OZ_BIspec *spec)
 OZ_Return OZ_raise(OZ_Term exc)
 {
   am.exception=exc;
+  return RAISE;
+}
+
+OZ_Return OZ_raiseC(char *label,int arity,...)
+{
+  va_list ap;
+  va_start(ap,arity);
+
+  OZ_Term tt=OZ_tuple(OZ_atom(label),arity);
+  for (int i = 0; i < arity; i++) {
+    OZ_putArg(tt,i,va_arg(ap,OZ_Term));
+  }
+
+  va_end(ap);
+  am.exception=tt;
   return RAISE;
 }
 

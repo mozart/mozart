@@ -30,6 +30,7 @@
 #define GC_FLAG		1
 #define GC_VERBOSITY	1
 
+#define STACKMAXSIZE	10000
 #define HEAPMAXSIZE	-1
 #define HEAPTHRESHOLD	4500	/* kByte */
 #define HEAPMARGIN	70	/* percent */

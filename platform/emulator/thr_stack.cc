@@ -103,3 +103,32 @@ int TaskStack::frameSize(ContFlag cFlag)
     return -1;
   }
 }
+
+void TaskStack::checkMax()
+{
+  int maxSize = getMaxSize();
+  if (ozconf.stackMaxSize != -1 &&
+      maxSize >= ozconf.stackMaxSize) {
+    int newMaxSize = (maxSize*3)/2;
+
+loop:
+    prefixError();
+    printf("\n\n*** Stack maxsize exceeded. Increase from %d to %d? (y/n/b) ",
+	   ozconf.stackMaxSize,newMaxSize);
+    fflush(stdout);
+    char buf[1000];
+    fgets(buf,1000,stdin);
+    switch (buf[0]) {
+    case 'n':
+      am.exitOz(1);
+    case 'y':
+      break;
+    case 'b':
+      printTaskStack();
+      goto loop;
+    default:
+      goto loop;
+    }
+    ozconf.stackMaxSize = newMaxSize;
+  }
+}
