@@ -40,7 +40,7 @@ OZLIBDIRS = \
 	$(OZLIB)/DP \
 	$(OZLIB)/compiler $(OZLIB)/panel $(OZLIB)/browser \
 	$(OZLIB)/explorer $(OZLIB)/ozcar $(OZLIB)/profiler \
-	$(OZLIB)/Init
+	$(OZLIB)/Init $(OZLIB)/AP
 OZCARBITMAPDIR = $(BITMAPDIR)/ozcar
 
 STANDARDSRC1 = \
@@ -59,8 +59,11 @@ INITSRC = $(INITSRC1:%=$(SRCDIR)/Init/%) $(SRCDIR)/Init.oz
 SPSRC1 = System.oz Debug.oz Foreign.oz Error.oz Finalize.oz
 SPSRC = $(SPSRC1:%=$(SRCDIR)/SP/%) $(SRCDIR)/SP.oz
 
-OPSRC1 = OS.oz Open.oz Component.oz Application.oz ArgParser.oz CgiParser.oz
+OPSRC1 = OS.oz Open.oz Component.oz ArgParser.oz CgiParser.oz
 OPSRC = $(OPSRC1:%.oz=$(SRCDIR)/OP/%.oz) $(SRCDIR)/OP.oz
+
+APSRC1 = Application.oz
+APSRC = $(APSRC1:%.oz=$(SRCDIR)/AP/%.oz) $(SRCDIR)/AP.oz
 
 CPSRC1 = Search.oz FD.oz FS.oz
 CPSRC = $(CPSRC1:%=$(SRCDIR)/CP/%) $(SRCDIR)/CP.oz
@@ -123,7 +126,7 @@ PROFILERSRC1 = \
 PROFILERSRC = $(PROFILERSRC1:%=$(SRCDIR)/profiler/%) $(SRCDIR)/Profiler.oz
 
 ALLSRCS = \
-	$(STANDARDSRC) $(SPSRC) $(OPSRC) $(CPSRC) $(DPSRC) $(WPSRC) \
+	$(STANDARDSRC) $(SPSRC) $(OPSRC) $(APSRC) $(CPSRC) $(DPSRC) $(WPSRC) \
 	$(COMPILERSRC) $(COMPILERPANELSRC) $(PANELSRC) $(BROWSERSRC) \
 	$(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC) $(INITSRC)
 
@@ -133,7 +136,7 @@ DUMPINTRO = $(DUMPINTRO1:%=$(SRCDIR)/%) Base.ozc Standard.ozc
 ENVS1 = \
 	Base.env Standard.env SP.env OP.env CP.env WP.env DP.env \
 	Compiler.env CompilerPanel.env Panel.env Browser.env Explorer.env \
-	Emacs.env Ozcar.env Profiler.env
+	Emacs.env Ozcar.env Profiler.env AP.env
 ENVS = $(ENVS1:%=$(SRCDIR)/%)
 TYPS = $(ENVS1:%.env=%.typ)
 TYCS = $(ENVS1:%.env=%.tyc)
@@ -147,7 +150,7 @@ LIBFILES = \
 HELPCOMPONENTS = Base.ozc Standard.ozc
 
 COMPONENTS = \
-	OPI.ozc SP.ozc OP.ozc CP.ozc WP.ozc DP.ozc \
+	OPI.ozc SP.ozc OP.ozc CP.ozc WP.ozc DP.ozc AP.ozc \
 	Compiler.ozc CompilerPanel.ozc Panel.ozc Browser.ozc Explorer.ozc \
 	Emacs.ozc Ozcar.ozc Profiler.ozc Init.ozc
 
@@ -188,7 +191,8 @@ ozbatch.ozm: $(SRCDIR)/MakeAssembly.oz \
 	/bin/mv -f /tmp/$$$$.ozm $@
 
 ozbatch: $(SRCDIR)/MakeBatch.oz $(SRCDIR)/BatchCompile.oz $(DUMPINTRO) \
-	OP.ozc $(SRCDIR)/OP.env SP.ozc $(SRCDIR)/SP.env
+	OP.ozc $(SRCDIR)/OP.env SP.ozc $(SRCDIR)/SP.env \
+	AP.ozc $(SRCDIR)/AP.env
 	$(EXECWITHSTD) $(SRCDIR)/MakeBatch.oz
 
 Base.ozc: Standard.ozc
@@ -254,12 +258,15 @@ $(OZBIN)/ozbatch: ozbatch
 
 Init.ozc: $(DUMPINTRO) $(INITSRC)
 
-OPI.ozc: $(DUMPINTRO) $(SRCDIR)/OPI.oz SP.ozc OP.ozc \
+OPI.ozc: $(DUMPINTRO) $(SRCDIR)/OPI.oz SP.ozc OP.ozc AP.ozc \
 	$(SRCDIR)/Compiler.env
 
 SP.ozc: $(DUMPINTRO) $(SPSRC) $(SRCDIR)/SP.env
 
 OP.ozc: $(DUMPINTRO) $(OPSRC) $(TYCS) $(SRCDIR)/SP.env $(SRCDIR)/OP.env
+
+AP.ozc: $(DUMPINTRO) $(APSRC) $(SRCDIR)/AP.env $(SRCDIR)/SP.env \
+	$(SRCDIR)/OP.env
 
 CP.ozc: $(DUMPINTRO) $(CPSRC) $(SRCDIR)/SP.env $(SRCDIR)/CP.env
 
@@ -267,7 +274,7 @@ WP.ozc: $(DUMPINTRO) $(WPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
 	$(SRCDIR)/WP.env
 
 DP.ozc: $(DUMPINTRO) $(DPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
-	$(SRCDIR)/WP.env $(SRCDIR)/DP.env
+	$(SRCDIR)/WP.env $(SRCDIR)/DP.env $(SRCDIR)/AP.env
 
 Compiler.ozc: $(DUMPINTRO) $(COMPILERSRC) $(SRCDIR)/SP.env \
 	$(SRCDIR)/CP.env $(SRCDIR)/Compiler.env

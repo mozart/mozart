@@ -29,6 +29,8 @@ fun
        = IMPORT.'SP'
    \insert 'OP.env'
        = IMPORT.'OP'
+   \insert 'AP.env'
+   = IMPORT.'AP'
    \insert 'WP.env'
        = IMPORT.'WP'
 in
