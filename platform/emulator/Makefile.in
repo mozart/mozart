@@ -135,7 +135,7 @@ $(BINDIR) $(INCDIR):
         $(INSTALL_DIR) $@
 
 initffuns.cc oz.c: oz.h $(OZVERSION)
-        $(SRCDIR)/makeffuns $(SRCDIR) `$(OZVERSION)`
+        $(SHELL) $(SRCDIR)/makeffuns $(SRCDIR) `$(OZVERSION)`
 
 version.cc: version.sed
         $(MAKE) version
