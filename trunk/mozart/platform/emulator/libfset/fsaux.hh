@@ -18,7 +18,6 @@
 
 //-----------------------------------------------------------------------------
 // debug macros
-
 //#define OZ_DEBUG
 #ifdef DEBUG_FSET
 #define OZ_DEBUG
@@ -26,6 +25,7 @@
 
 #ifdef OZ_DEBUG
 #define OZ_DEBUGCODE(C) C
+#define OZ_NONDEBUGCODE(C)
 extern "C" void oz_fsetdebugprint(char *format ...);
 #define _OZ_DEBUGPRINT(C) oz_fsetdebugprint C
 #define OZ_DEBUGPRINT(C) /* _OZ_DEBUGPRINT(C) */
@@ -55,6 +55,7 @@ OZ_Return __debugReturnPrint(OZ_Return r)
 }
 #else
 #define OZ_DEBUGCODE(C)
+#define OZ_NONDEBUGCODE(C) C
 #define _OZ_DEBUGPRINT(C)
 #define OZ_DEBUGPRINT(C)
 #define OZ_ASSERT(C)
