@@ -1701,11 +1701,17 @@ LBLsuspendThread:
     e->currentThread->setBoard (CBB);
     SaveSelf(e,NULL,NO);
     if (e->currentThread == e->rootThread) {
+#ifdef RESTART_ROOT
       e->rootThread = 
 	new Thread (e->currentThread->getPriority (), e->rootBoard);
       e->checkToplevel ();
       e->currentThread->markPropagated();
       DORAISE(OZ_atom("toplevelBlocked"));
+#else
+      if (ozconf.errorVerbosity>1) {
+	warning("The toplevel thread is blocked.");
+      }
+#endif
     }
 
     e->currentThread = (Thread *) NULL;
@@ -2768,10 +2774,16 @@ LBLsuspendThread:
        tt->pushCall(pred,argsArray,3);
 
        if (e->currentThread == e->rootThread) {
+#ifdef RESTART_ROOT
 	 e->rootThread = 
 	   new Thread (e->currentThread->getPriority (), e->rootBoard);
 	 e->checkToplevel ();
 	 DORAISE(OZ_atom("toplevelBlocked"));
+#else
+	 if (ozconf.errorVerbosity>1) {
+	   warning("The toplevel thread is blocked.");
+	 }
+#endif
        }
        e->currentThread=(Thread *) NULL;
        goto LBLstart;
