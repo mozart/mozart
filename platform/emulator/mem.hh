@@ -261,7 +261,6 @@ void scanFreeList(void);
 #include "mem.icc"
 #else
 void * freeListMalloc(size_t chunk_size);
-void freeListDisposeNoClean(void *addr, size_t chunk_size);
 void freeListDispose(void *addr, size_t chunk_size);
 
 // return free used kilo bytes on the heap
