@@ -129,7 +129,7 @@ Distributor * Board::getDistributor(void) {
 
 inline
 Bool Board::isStable(void) {
-  if (getThreads() != 0)
+  if (hasRunnableThreads())
     return NO;
 
   if (oz_isCurrentBoard(this) && !trail.isEmptyChunk())
@@ -145,17 +145,20 @@ Bool Board::isStable(void) {
 
 inline
 Bool Board::isBlocked(void) {
-  return (getThreads()==0) && !isStable();
+  return !hasRunnableThreads();
 }
 
 inline
-void Board::incSolveThreads(void) {
+void Board::incRunnableThreads(void) {
   Assert(!isCommitted() && !isRoot());
 
   Board * bb = this;
 
   do {
-    bb->incThreads(); bb = bb->getParent();
+    Assert(bb->crt >= 0);
+    if ((bb->crt)++ > 0)
+      return;
+    bb = bb->getParent();
   } while (!bb->isRoot());
 
 }
@@ -165,15 +168,16 @@ void Board::incSolveThreads(void) {
 Thread * oz_newThreadInject(Board * bb);
 
 inline
-void Board::decSolveThreads(void) {
+void Board::checkSolveThreads(void) {
   Assert(!isCommitted());
 
   Board * bb = this;
 
   while (!bb->isRoot()) {
-    // ... first - notification board below the failed solve board;
 
-    if (bb->decThreads()==0 && bb->isStable())
+    Assert(bb->crt >= 0);
+
+    if (bb->isStable())
       oz_newThreadInject(bb);
 
     bb = bb->getParent();
@@ -182,15 +186,21 @@ void Board::decSolveThreads(void) {
 }
 
 inline
-void Board::checkSolveThreads(void) {
+void Board::decRunnableThreads(void) {
   Assert(!isCommitted());
 
   Board * bb = this;
 
   while (!bb->isRoot()) {
+
+    Assert(bb->crt >= 0);
+
+    if (--(bb->crt) > 0)
+      break;
+    
     if (bb->isStable())
       oz_newThreadInject(bb);
-
+    
     bb = bb->getParent();
   }
 
@@ -311,8 +321,19 @@ OZ_Return Board::merge(Board *bb, Bool sibling) {
     scheduleNonMono();
   } else {
     // Update counters
-    if (sibling)
-      bb->incThreads(getThreads());
+    if (sibling) {
+      if (crt > 0) {
+	bb->crt += crt;
+	(bb->getParent()->crt)--;
+      }
+      Assert(bb->getParent()->isRoot() || bb->getParent()->crt > 0);
+      Assert(bb->crt >= 0);
+    } else {
+      if (crt > 0) {
+	bb->crt += crt-1;
+      }
+      Assert(bb->crt > 0);
+    }
 
     // Merge distributors
     bb->setDistBag(bb->getDistBag()->merge(getDistBag()));
@@ -367,42 +388,6 @@ Board * Board::cacGetFwd(void) {
   Assert(cacIsMarked());
   return getParentInternal();
 }
-
-
-/*
- * notification board == home board of thread
- * Although this may be discarded/failed, the solve actor must be announced.
- * Therefore this procedures searches for another living board.
- */
-inline
-Board* Board::cacGetNotificationBoard() {
-  Assert(this);
-
-  Board *bb = derefBoard();
-
-  Board *nb = bb;
-  
-  while (1) {
-  
-    if (bb->cacIsMarked() || bb->isRoot())  
-      return nb;
-    
-    Assert(!bb->isCommitted());
-
-    if (bb->isFailed()) {
-      /*
-       * notification board must be changed
-       */
-      bb = bb->getParent();
-      nb = bb;   // probably not dead;
-      continue;
-    }
-
-    bb = bb->getParent();
-    
-  }
-}
-
 
 #ifdef OUTLINE
 #undef inline

@@ -150,7 +150,6 @@ public:
   Bool    cacIsMarked(void);
   Board * cacGetFwd(void);
   Bool    cacIsAlive(void);
-  Board * cacGetNotificationBoard(void);
 
   Board * sCloneBoard(void);
   void    sCloneRecurse(void);
@@ -164,7 +163,7 @@ public:
   void setGlobalMarks(void);
   
   //
-  // Suspension counter
+  // Local suspendable counter
   //
 private:
   int suspCount;
@@ -186,29 +185,21 @@ public:
   }
   Bool isStable(void);
   Bool isBlocked(void);
-  void incSolveThreads(void);
-  void decSolveThreads(void);
   void checkSolveThreads(void);
   void checkStability(void);
   void checkExtSuspension(Suspendable *);
   
   //
-  // Thread counter
+  // Cascaded runnable thread counter
   //
 private:
-  int threads;
-
+  int crt;
 public:
-  void incThreads(int n = 1) { 
-    threads += n; 
+  int hasRunnableThreads(void) {
+    return (crt > 0);
   }
-  int decThreads()  { 
-    Assert (threads > 0); 
-    return (--threads); 
-  }
-  int getThreads(void) { 
-    return threads; 
-  }
+  void incRunnableThreads(void);
+  void decRunnableThreads(void);
 
   //
   // Script and script installation
