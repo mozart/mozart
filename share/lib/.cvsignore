@@ -3,8 +3,8 @@ Makefile
 compiler-Version.oz
 compiler-Opcodes.oz
 compiler-Builtins.oz
-tyc
+compiler-Env.oz
 *.ozc
 *.ozf
-ozc ozbatch ozserver ozvsserver
+ozc ozserver ozvsserver functor2env
 stage1 stage2 stage2b stage3 stage3b

@@ -19,59 +19,66 @@
 %%% WARRANTIES.
 %%%
 
-functor $ prop once
+local
 
-import
-   System.{gcDo
-	   printName
-	   valueToVirtualString
-	   get
-	   property
-	   printError
-	   show
-	   eq}
+   StandardEnv = \insert 'compiler-Env.oz'
 
-   Foreign.{pointer
-	    staticLoad}
+in
+   
+   functor $ prop once
 
-   Error.{formatExc
-	  formatPos
-	  formatLine
-	  msg}
-
-   FS.{include
-       var
-       subset
-       value
-       reflect
-       union
-       diff
-       cardRange
-       disjoint}
-
-   FD.{int
-       is
-       less
-       distinct
-       distribute}
-
-   Search.{SearchOne = 'SearchOne'}
-
+   import
+      System.{gcDo
+	      printName
+	      valueToVirtualString
+	      get
+	      property
+	      printError
+	      show
+	      eq}
+      
+      Foreign.{pointer
+	       staticLoad}
+      
+      Error.{formatExc
+	     formatPos
+	     formatLine
+	     msg}
+      
+      FS.{include
+	  var
+	  subset
+	  value
+	  reflect
+	  union
+	  diff
+	  cardRange
+	  disjoint}
+      
+      FD.{int
+	  is
+	  less
+	  distinct
+	  distribute}
+      
+      Search.{SearchOne = 'SearchOne'}
+      
 \ifndef OZM
-   Gump
+      Gump
 \endif
-
-
-export
-   engine:               CompilerEngine
-   compilerClass:        CompilerEngine   %--** deprecated
-   genericInterface:     GenericInterface
-   quietInterface:       QuietInterface
-   evalExpression:       EvalExpression
-   virtualStringToValue: VirtualStringToValue
-   assemble:             DoAssemble
-
-body
-   \insert 'compiler/InsertAll.oz'
+      
+      
+   export
+      engine:               CompilerEngine
+      compilerClass:        CompilerEngine   %--** deprecated
+      genericInterface:     GenericInterface
+      quietInterface:       QuietInterface
+      evalExpression:       EvalExpression
+      virtualStringToValue: VirtualStringToValue
+      assemble:             DoAssemble
+      
+   body
+      \insert 'compiler/InsertAll.oz'
+   end
 end
 
