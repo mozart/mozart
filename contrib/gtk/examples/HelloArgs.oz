@@ -86,7 +86,7 @@ define
               {GTK.getArg unit ArgH}#
               " Canvas!"}
    {GTK.freeArg ArgW}
-   {GTk.freeArg ArgH}
+   {GTK.freeArg ArgH}
    TextItem = ["text"#TextStr
                "x"#100.0
                "y"#100.0
