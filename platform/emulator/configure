@@ -1436,7 +1436,7 @@ echo "configure:1402: checking $LEX version is at least 2.5.3" >&5
     if test "$oz_tmp_ok" = yes; then
       oz_cv_LEX=$LEX
     else
-      { echo "configure: error: 
+      echo "configure: warning: 
 GNU flex version 2.5.3 or higher is needed to build the
 system.  It can be retrieved from:
 
@@ -1450,7 +1450,7 @@ packaged as the following archive:
 You may find a mirror archive closer to you by consulting:
 
 	http://www.gnu.org/order/ftp.html
-" 1>&2; exit 1; }
+" 1>&2
     fi
   else
     
@@ -1549,7 +1549,7 @@ echo "configure:1515: checking $YACC version is at least 1.25" >&5
     if test "$oz_tmp_ok" = yes; then
       oz_cv_YACC=$YACC
     else
-      { echo "configure: error: 
+      echo "configure: warning: 
 GNU bison version 1.25 or higher is needed to build the system.
 It can be retrieved from:
 
@@ -1564,7 +1564,7 @@ packaged as the following archive:
 You may find a mirror archive closer to you by consulting:
 
 	http://www.gnu.org/order/ftp.html
-" 1>&2; exit 1; }
+" 1>&2
     fi
   else
     
