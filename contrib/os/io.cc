@@ -1,5 +1,4 @@
-#include "oz_api.h"
-#include "extension.hh"
+#include "mozart.h"
 #include "bytedata.hh"
 #include "am.hh"
 #include "os.hh"
@@ -10,17 +9,17 @@
 #include <fcntl.h>
 #include <sys/socket.h>
 
-class FileDescriptor: public SituatedExtension {
+class FileDescriptor: public OZ_SituatedExtension {
 public:
   int fd;
-  FileDescriptor(int FD):SituatedExtension(),fd(FD){}
+  FileDescriptor(int FD):OZ_SituatedExtension(),fd(FD){}
   FileDescriptor(FileDescriptor&);
   // Situated Extension
   static int id;
   virtual int getIdV() { return id; }
   virtual OZ_Term typeV() { return OZ_atom("fileDescriptor"); }
-  virtual void printStreamV(ostream &out,int depth = 10);
-  virtual Extension* gcV();
+  virtual OZ_Term printV(int depth = 10);
+  virtual OZ_Extension* gcV();
   //
   void doFree();
   void doClose();
@@ -34,8 +33,8 @@ int FileDescriptor::id;
 
 inline Bool oz_isFileDescriptor(OZ_Term t)
 {
-  return oz_isExtension(t) &&
-    oz_tagged2Extension(t)->getIdV()==FileDescriptor::id;
+  return OZ_isExtension(t) &&
+    OZ_getExtension(t)->getIdV()==FileDescriptor::id;
 }
 
 Bool OZ_isFileDescriptor(OZ_Term t)
@@ -44,21 +43,20 @@ Bool OZ_isFileDescriptor(OZ_Term t)
 inline FileDescriptor* tagged2FileDescriptor(OZ_Term t)
 {
   Assert(oz_isFileDescriptor(t));
-  return (FileDescriptor*) oz_tagged2Extension(t);
+  return (FileDescriptor*) OZ_getExtension(t);
 }
 
 FileDescriptor* OZ_toFileDescriptor(OZ_Term t)
 { return tagged2FileDescriptor(oz_deref(t)); }
 
-void FileDescriptor::printStreamV(ostream &out,int depth = 10)
+OZ_Term FileDescriptor::printV(int depth = 10)
 {
-  out << "<fileDescriptor ";
-  if (fd < 0) out << "[closed]";
-  else out << fd;
-  out << ">";
+  return OZ_pair2(OZ_atom("<fileDescriptor "),
+                  OZ_pair2(fd < 0 ? OZ_atom("[closed]") : OZ_int(fd),
+                           OZ_atom(">")));
 }
 
-Extension* FileDescriptor::gcV()
+OZ_Extension* FileDescriptor::gcV()
 {
   return new FileDescriptor(fd);
 }
@@ -70,7 +68,7 @@ void FileDescriptor::doClose() {
 void FileDescriptor::doFree() { doClose(); }
 
 OZ_Term OZ_mkFileDescriptor(int fd) {
-  return oz_makeTaggedExtension(new FileDescriptor(fd));
+  return OZ_extension(new FileDescriptor(fd));
 }
 
 //

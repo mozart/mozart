@@ -1,4 +1,4 @@
-#include "oz_api.h"
+#include "mozart.h"
 #include "gdbm.h"
 #include <string.h>
 #include <stdio.h>
@@ -9,14 +9,13 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "extension.hh"
 #include "bytedata.hh"
 
-class GDBM: public SituatedExtension {
+class GDBM: public OZ_SituatedExtension {
 public:
   GDBM_FILE db;
   char *filename;
-  GDBM(char*f,GDBM_FILE d):SituatedExtension(),filename(f),db(d){}
+  GDBM(char*f,GDBM_FILE d):OZ_SituatedExtension(),filename(f),db(d){}
   //
   // Situated Extension
   //
@@ -25,7 +24,7 @@ public:
   virtual int getIdV() { return id; }
   virtual OZ_Term typeV() { return OZ_atom("gdbm"); }
   virtual void printStreamV(ostream &out,int depth = 10);
-  virtual Extension* gcV();
+  virtual OZ_Extension* gcV();
   //
   void release();
   void close();
@@ -40,14 +39,14 @@ int GDBM::id;
 inline Bool oz_isGdbm(OZ_Term t)
 {
   t = OZ_deref(t);
-  return oz_isExtension(t) &&
-    oz_tagged2Extension(t)->getIdV()==GDBM::id;
+  return OZ_isExtension(t) &&
+    OZ_getExtension(t)->getIdV()==GDBM::id;
 }
 
 inline GDBM* tagged2Gdbm(OZ_Term t)
 {
   Assert(oz_isGDBM(t));
-  return (GDBM*) oz_tagged2Extension(OZ_deref(t));
+  return (GDBM*) OZ_getExtension(OZ_deref(t));
 }
 
 void GDBM::printStreamV(ostream &out,int depth = 10)
@@ -57,7 +56,7 @@ void GDBM::printStreamV(ostream &out,int depth = 10)
   out << '"' << filename << "\">";
 }
 
-Extension* GDBM::gcV()
+OZ_Extension* GDBM::gcV()
 {
   return(new GDBM(filename,db));
 }
@@ -113,7 +112,7 @@ OZ_BI_define(cgdbm_open,4,1)
     return GdbmError("open",gdbm_strerror(gdbm_errno));
   else {
     GDBM* db = new GDBM(strdup(name),file);
-    OZ_RETURN(oz_makeTaggedExtension(db));
+    OZ_RETURN(OZ_extension(db));
   }
 } OZ_BI_end
 
