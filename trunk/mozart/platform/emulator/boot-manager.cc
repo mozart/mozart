@@ -58,6 +58,9 @@ TaggedRef dictionary_of_modules;
 #include "modProfile-if.cc"
 #include "modDistribution-if.cc"
 #include "modWeakDictionary-if.cc"
+#ifdef DENYS_EVENTS
+#include "modEvent-if.cc"
+#endif
 
 /*
  * Modules that are always in the emulator: Base
@@ -184,6 +187,9 @@ static ModuleEntry ext_module_table[] = {
   {"FDB",             mod_int_FDB},
   {"FSB",             mod_int_FSB},
   {"WeakDictionary",  mod_int_WeakDictionary},
+#ifdef DENYS_EVENTS
+  {"Event",	      mod_int_Event},
+#endif
 
 #ifdef MODULES_LINK_STATIC
   {"FSP",             mod_int_FSP},
