@@ -1,0 +1,258 @@
+%!PS-Adobe-2.0 EPSF-2.0
+%%Title: menubar.eps
+%%Creator: xwpick Version 2.20  Rev: 20/09/94 - by Evgeni Chernyaev
+%%CreationDate: Wed Nov  4 14:01:15 1998
+%%BoundingBox: 0 0 305 199
+%%EndComments
+%***********************************************************************
+%*                                                                     *
+%* Function: Display a Lempel-Ziv Welch (LZW) encoded color image.     *
+%*           This is an Encapsulated PostScript file suitable for any  *
+%            kind of PostScript printer: Level I/II, color/grayscale...*
+%*           To optimize output on GrayScale printers you may uncomment*
+%*           line '/GRAYneeded true def'.                              *
+%*                                                                     *
+%* Author: Evgeni CHERNYAEV (chernaev@vxcern.cern.ch)                  *
+%*                                                                     *
+%***********************************************************************
+gsave
+userdict begin
+/EPSneeded true def
+%/GRAYneeded true def
+end
+%***********************************************************************
+%*                              Image Description                      *
+%***********************************************************************
+/colomns 305 def
+/rows 199 def
+/mm {2.835 mul} def
+userdict /EPSneeded known {
+  /EPSneeded userdict /EPSneeded get def
+}{
+  /EPSneeded false def
+} ifelse
+userdict /GRAYneeded known {
+  /GRAYneeded userdict /GRAYneeded get def
+}{
+  /GRAYneeded false def
+} ifelse
+EPSneeded {
+  /IfRotate false def
+  /MarginX 0 def /MarginY 0 def
+  /Ymax rows def /Xmax colomns def /Ymin 0 def /Xmin 0 def
+}{
+  /IfRotate colomns rows gt {true} {false} ifelse def
+  /MarginX 8 mm def /MarginY 18 mm def
+  0 0 moveto clippath pathbbox
+  /Ymax exch def /Xmax exch def /Ymin exch def /Xmin exch def
+} ifelse
+/IfColor systemdict /colorimage known {true} {false} ifelse def
+GRAYneeded {/IfColor false def} if
+/IfLevel2 systemdict /filter known systemdict /setcolorspace known and
+  {true} {false} ifelse def
+%***********************************************************************
+%                               Procedures                             *
+%***********************************************************************
+/Table 4096 array def
+/StrArray 10 array def
+/InLine 70 string def
+/BinCodes 112 string def
+/CurBit 0 def /FreeCode 258 def /CurCodeSize 9 def /CurMask 511 def
+/incr IfColor {3} {1} ifelse def
+IfLevel2 not {/setcolorspace null def /filter null def} if
+%***********************************************************************
+/ReadLine {                     % Read Next Data Line (ASCII85 decode) *
+%***********************************************************************
+  BinCodes 0 BinCodes 56 56 getinterval putinterval
+  currentfile InLine readline pop pop
+  1 1 14 {
+    /i exch 1 sub def
+    /k i 5 mul def
+    /c1 InLine k get 33 sub 255 and def
+    /rest c1 1868977 mul
+      InLine k 1 add get 33 sub 255 and 614125 mul add
+      InLine k 2 add get 33 sub 255 and 7225 mul add
+      InLine k 3 add get 33 sub 255 and 85 mul add
+      InLine k 4 add get 33 sub 255 and add def
+    /k i 4 mul 56 add def
+    BinCodes k c1 3 mul rest 16777216 idiv add 255 and put
+    /rest rest 16777216 mod def
+    BinCodes k 1 add rest 65536 idiv put
+    BinCodes k 2 add rest 256 idiv 255 and put
+    BinCodes k 3 add rest 255 and put
+  } for
+} bind def
+%***********************************************************************
+/ReadCode {                     % Read next code                       *
+%***********************************************************************
+  /CurByte CurBit 8 idiv def
+  /CurCode
+    BinCodes CurByte get 8 bitshift
+    BinCodes CurByte 1 add get add 8 bitshift
+    BinCodes CurByte 2 add get add
+    CurCodeSize CurBit 7 and add 24 sub bitshift CurMask and def
+  /CurBit CurBit CurCodeSize add dup 448 ge {ReadLine 448 sub} if def
+} bind def
+%***********************************************************************
+/DecodeCode {                   % Decode CurCode                       *
+%***********************************************************************
+  ReadCode CurCode 256 eq {
+    /FreeCode 258 def /CurCodeSize 9 def /CurMask 511 def
+    /StrInd -1 def /Lrest 0 def ReadCode
+  }{
+    L Lrest gt {
+      /StrInd StrInd 1 add def /Lrest 65535 def
+      StrArray StrInd get null eq {StrArray StrInd 65535 string put} if
+      /CurStr StrArray StrInd get def
+    } if
+    Table FreeCode CurStr 65535 Lrest sub L getinterval
+    dup 0 Table OldCode get putinterval
+    dup L incr sub Table
+      CurCode FreeCode lt {CurCode} {OldCode} ifelse get
+    0 incr getinterval putinterval put
+    /Lrest Lrest L sub def /FreeCode FreeCode 1 add def
+    FreeCode CurMask ge CurCodeSize 12 lt and {
+      /CurCodeSize CurCodeSize 1 add def
+      /CurMask CurMask 1 bitshift 1 add def
+    } if
+  } ifelse
+  /OldCode CurCode def
+  Table CurCode get dup length incr add /L exch def
+} bind def
+%***********************************************************************
+/DisplayImage {          % Display a LZW-encoded color image           *
+%***********************************************************************
+  /DelX Xmax Xmin sub MarginX 2 mul sub def
+  /DelY Ymax Ymin sub MarginY 2 mul sub def
+  /SizeX IfRotate {rows} {colomns} ifelse def
+  /SizeY IfRotate {colomns} {rows} ifelse def
+  /FactorX DelX SizeX div def /FactorY DelY SizeY div def
+  /Factor FactorX FactorY le {FactorX} {FactorY} ifelse def
+  /ScaleX SizeX Factor mul def /ScaleY SizeY Factor mul def
+  Xmin DelX ScaleX sub 2 div MarginX add add
+  Ymin DelY ScaleY sub 2 div MarginY add add translate
+  IfRotate {ScaleY ScaleX} {ScaleX ScaleY} ifelse scale
+  /Palette currentfile 768 string readhexstring pop def
+  currentfile InLine readline pop pop
+  IfColor not {
+    0 1 255 {
+      Palette exch dup /i exch 3 mul def
+      Palette i 0 add get 0.299 mul
+      Palette i 1 add get 0.587 mul add
+      Palette i 2 add get 0.114 mul add cvi put
+    } for
+    /Palette Palette 0 256 getinterval def
+  } if
+  /Matr IfRotate
+    {[0 colomns rows 0 0 0]} {[colomns 0 0 rows neg 0 rows]} ifelse def
+  IfLevel2 {
+    [/Indexed IfColor {/DeviceRGB} {/DeviceGray} ifelse 255 Palette]
+    setcolorspace
+    /infile currentfile /ASCII85Decode filter /LZWDecode filter def
+    8 dict
+    dup /ImageType 1 put
+    dup /Width colomns put
+    dup /Height rows put
+    dup /BitsPerComponent 8 put
+    dup /ImageMatrix Matr put
+    dup /Interpolate false put
+    dup /Decode [0 255] put
+    dup /DataSource infile put image
+  }{
+    0 1 255 {
+      Table exch dup incr mul Palette exch incr getinterval put
+    } for
+    ReadLine ReadLine
+    colomns rows 8 Matr {DecodeCode}
+    IfColor {false 3 colorimage} {image} ifelse
+  } ifelse
+} bind def
+%***********************************************************************
+%*                              Image decoding                         *
+%***********************************************************************
+DisplayImage
+000000 ffffff fffff0 c0c0c0 bebebe 727272 7f7f7f 737373 000080 60c080
+808080 ffff00 808000 ff0000 800000 0000ff 008000 00ffff 00ff00 800080
+008080 00000f 0f000f 0f001f 0f0f0f 0f0f1f 1f001f 1f002f 1f0f1f 1f0f2f
+2f0040 2f0f40 400040 400050 400f40 400f50 400f60 500060 500f60 500f70
+50402f 50502f 505040 505050 600070 600f80 600f90 60402f 604040 606750
+700f90 700fa0 7020a0 705050 705060 706750 706760 800fa0 800fb0 800fcf
+8020cf 900fb0 900fcf 900fdf 9020cf a00fdf a00fef a020df a020ef a08770
+a09770 a0a8a0 b00fef b00fff b020ef b020ff b08770 b08780 cf0fff ffc8a0
+cd5c5c cd0000 00cd00 cdcd00 0000cd cd00cd 00cdcd e5e5e5 4d4d4d ff00ff
+828282 c3c3c3 d9d9d9 7090b0 f0f0f0 e0e0e0 d0d0d0 b0b0b0 a0a0a0 909090
+707070 606060 404040 303030 202020 999990 afeeee b4eeb4 b22222 bc8f8f
+a020f0 00868b da70d6 b8860b 228b22 5f9ea0 7070c0 5050a0 d05050 ff69b4
+ececec a3a3a3 f5deb3 93856b fffffb 8e8e8e b03060 6666cc 9999ff 222222
+429aa7 00373c ff6633 ff66cc 1a5f67 0000ee 551a8b a3a3a3 999999 000033
+000066 000099 0000cc 003300 003333 003366 003399 0033cc 0033ff 006600
+006633 006666 006699 0066cc 0066ff 009900 009933 009966 009999 0099cc
+0099ff 00cc00 00cc33 ff4500 00cc66 00cc99 00cccc 00ccff 00ff33 cdad00
+00ff66 00ff99 00ffcc 330000 330033 330066 330099 3300cc 3300ff 333300
+333333 333399 3333cc 3333ff 336600 336633 ffffe0 336666 336699 3366cc
+3366ff 339900 339933 339966 339999 3399cc 3399ff 33cc00 33cc33 33cc66
+33cc99 33cccc 33ccff 33ff00 33ff33 33ff66 33ff99 33ffcc 33ffff 660000
+660033 660066 660099 6600cc 6600ff 663300 663333 663366 663399 6633cc
+6633ff 666600 666633 666666 666699 6666ff 669900 669933 669966 669999
+6699cc 6699ff 66cc00 66cc33 66cc66 66cc99 66cccc 66ccff 66ff00 66ff33
+66ff66 66ff99 66ffcc 66ffff 990000 990033 990099 9900cc 9900ff 993300
+993333 993366 993399 9933cc 9933ff 996600 
+J,nM(3$]7K#D>EP:q1$o*=mro@So+\<\5,H5l^m=%!FcUO@Wn[3@'nb-^757;Rp>H>q_R=
+AlC\Q*]=%Xc=^(djS"!dTMT%FB]TS\8#0$s<4WeWED3<1C/m<k!hBDq<bk^Hj`\=EYZP^B
+4!g3;B=(iZ<kDqOh.hMki)]`Of'R[o?>ioWjbDeSXC#pK4=1jRDNt2V24Rbes$aKWnl\)P
+<qfCDc*It\[PAema$?dm3nQAcVQU);n4P)u?%Kb)1>=sh%lXg>5_'fek4:t@cU0N+r5E_Q
+W7'u)=WNK7?Y/A:H<iV0h@[:!msA:<%q[a&h=i`K4WSa-WiZ%I]c3IW\^0g14hE9VfAk0<
+rd(3Oi#AbM]+4ZEn$EMX_XB/H_oTVS.auZF4\o;Gq`bTr.`X`Q_rgL'd+g\h^Te.rs/9a4
+FG%Ah"8r80cqDCL[4Ock#qKn()[aK%oQ9mn:s=1s8.;jrK"s*.`9T\YF,8I2d"@F`4ccC(
+X[b,CT.@sfXFi+1;AoicT[?EDh*nL]QQ*UnF&(gdZ0\/8a78eA3)3B4m+X>d1UA;lEuY]9
+\8D*d.DcX;O#BAnD%eHfO+e6/dL5(hm6FKOT1Za/42FP)oF)O%afR-*2oa*QBgp=,I%q(t
+2/;SO]5.?u8lMuo]d6KM/!BL'F`i+>XgPcj@8F.4Kb[;R-%TX\Ml6[Zg(o[EBe`YZX_?;:
+]rtsJ11cqng^@D%ESQm!ZZ=KU<+0b%QYfr;MjKFbH/=mim<d\]V=]mW([_0Ni"uq-J`)nJ
+%>3UUQ/RDSGMX="McaR;M;jo*/W8P3?86dO\DA&S@Q='MOlVo_.ue)LmS/8n).$U8jr&VF
+P%@dUqj-Btc?5]9fq(^&kEhc[T]hgsM4\<^#)f2=g2<IJB@e1-h;8!.iniSHTXh16>%XD1
+lkmI!X+2$>\U&#Ef$A[0Gb2UQmMh15DP1(Nc`CrP;gFB'2l?&LlC6B-ZKlkp$cDEq-A@QL
+>]1X5Cj\_b_<d\pq7goS552a2]]V5hE1:1ka7PoU,Hc+B?JB_h>Q6(tp)SWo_d:"u9AAl?
+58?ds?)L^UFhH$LflLG[3P>'uB6!&-4.lhjGC7Zu_fu(jVpKJ?:HR5']bcsrHlE$-me_IZ
+!IF,sk<JA2*\Y^Y?9Pd8q<+@l]@;"rL%E%GSbLk8gV_'M%P@NB<fH*A_cC+3rJWrh%0P9f
+;-&WMTIu"qaImVdK1q.*0mFDGTOSdj0Q%LXBKF,*q`BIMQ520q:;pX73e_O])DG9"`?C."
+L2b]b3<u(tR"HN;;%=d<=H*pP6qMapp*N.?I`fG78r?J@.R[s>(#,1L1B7b77G,9iirieL
+;0@Z6=Nq`*$tG8oXu8c%h&GC-EK+`\3Cd2^)C*1G-@onn8(db^j90L`Op3h^R'=G1"GDn8
+/k/AZSKhVaL61aC7*,`e-00`3P7`rV8N9-\,i#)X;:\H6)'pYt,aFU7Y#\"P9.&a_W*iN'
+<m+W]/*+XRQ:q?`95/f&V8S^V0b*3f7HkCr/4,aV^19o^M)+'qc#IeBTe@jA0BU3=Qnhd,
+0/?$VQfIrg1P0Vl,!e4:4Q[m[U34bU4ZOUCTURa_9Z[$"/u@;$Re+sV8,9V>-cGgf'CL=r
+=WJ96*35_h$%#K@%7B/ls,jZ@L.pkU7H9@?Od&b$c"Z9/.0OC\;D*u,d()NC%4S)n.[&35
+;+bO+/!-"(MUM?07Hp%fVN`j*;gKN\A-G&f<;)q\>(IdL"B)&F>,'L2NutAq8X$@BTYSW8
+`@<0.Ss;K'eJ>2blFSdNcs?q(qR'"0[%aVH?1L*:$ML,%Dluh^!'Ns@a_K(5Rh]s*<k$IY
+*<Xr:-Yg6F=4ZmlF;V+0lA/N_lX-,MJ9Gj']>!SY@;;WqA(B_]95>OfXG#MXp0Q.VQ\Su8
+43+JsBoUfh4"G.FEO7CedClSQrh'r)I+I`/1-8cWj^#-O(<tE5.rALn43"g3m^q$c]4112
+r4#V<i]IU-qQ-f@Yn"Y+^.RJelrDH<[AHl&2F'iK>Dp-nrpi\ibXo!4*kcY6l,N"B5&L8i
+P5!NoeN;d+DpA-MZljorX8RP"rW0f41B'bdmk4*1$^"OL2;n:AKQ*0,_NCl,8rPKZBD(YY
+3$/8ZH_H6J%O.9BP7k'H5Dg\o)j31e(;-/G0<paN_m4V*j*EM=VWK_T\#UTT%"UYfN)du&
+0.(5bSJ?(/7?s8&0ZU8sQ,uGab#qLbd6*,Eo%%$0Gu?>+\L3GZ'Q_I)D_L5]d@+WiCS[B-
++m/^](ips0bgIRpB6_1_@eP/,)>??ah#SlZ"T$(5(Cb",=e.:MK[H5046[/XUpMb=!*T^[
+l&>S<[,a*f)N4[QbQn4<1C14M;As:DYG1.XT[M+pmm>Ct+)Ccbe'aFM;a"c1gnq-b%c:LV
+HURtCh$5c_V1ZOL?#$ep`RbnB?#'jgYA)S&J$3n[]Zk=8"3/<kgK.<i\aQu8gQHkE%FT+l
+_)bsVaiF7MAi=:rnMOq+h<]>^ZMil)23uMDp*XN7?#Mgm/CL<B;h`GpS\lh9&>\n]A*"Vg
+[OMdN[*Q"n<_"7JlC?\$blVhS5!q;I/EPtRLPtUqc]H'4#N)VpJ&_HiU25kN^78Z.EN0o#
+fj?Urgu"W+9p)ibpH5GqqLN_m:!fi"8uoW\I.Z^odNuY+YJ!h>ok$eF,A+7'rK"7-?Hj'C
+otK`0)jaU.ceJ>PEJ[tunFOBKUFEs"Z[K#0GCK'S?rT4%]n81dmf,fr[h<`mjal.*%H/`P
+>4D+5V/WPMjd7EU@(nufphqNJ.Yq7=_>B!Pg=pi/`O9:To+_#h5=(^=6M,_fdeLFIEc(0!
+opLl_HN%9ir>2g6O35W7?%^1o:V2u8pYT:]X8m\c_Vl&Xe(of2F0JH_PWEUBg'@CC^5.77
+HIqH7CNREUjC8"YG2^R#_<h1DjF+c&c$Z))K/H0cU&:"4qENtcmu$tb<o5Rsm`iuU8d]9-
+<,p74cOZEE%(re3o_f<-PAf%S$nB2W-N]@s:iJ+\YVq^73f@r@Src9Jcl.iS0*JAVl]28P
+WA+Qq=O0fKB[BZ'n/hjPHKS%-!:Y)rcq\&SDMukQ#OOGSVO%JppBNC2Z1*igOG;-/R0fp)
+`/b'+d$1"rV[A?\_!_ugVr%mnEqOB@TeO!AO"0.MW:KCN[]beaE3d8uI15S7iGKijDc3s'
+Nk8(/%Oi>&Y^Z9mR.dHH&?h+u;"jsL'b%/O%Zc)NO+>u#!tc'fh[g/#YON4M?N9Fo[\gK]
+cfl'\Yf>$!'/;?SYQ"Rb#83.d&PN39bS^e.:<-/cs,9Kc8';W[M\;.WTQ+A%E<-;AD%j/-
+\SEc//_HA/I_p)9(2V..ck^W*U5P.d#%js-Vb%e7"WFUIJP^t3l2)E]9,m$L)/0Bs:d5qX
+T+R.U)9d^<Oi&'AgsHUm*KfM*n`pmn4Wa);+#,JlEVRh!i4;eI*q@bhOnAj?!n$9OM/f@3
+bo69'(@,[t?a3)_Os#hud/ss/$h8OT0sr6F+S7AV%<)<XDlY)K9ch_0f?in2nCY$^#dlAD
+),aT`Xtq?&V[]h(!&6&-OqS8PE<gJCq=8"&BE#:O<5m9@`%iVeE4ZsD`@$R8.]Ta&W;Ru<
+&8&,d'8Ki%Z#np'.4Y]$.o5gTEfBjLY]K3']96qVdXr.;T^$;;)[7lCEF1'`k6]K]$1c%b
+o(=YTWi_HPnW6U!N+4!8k90590J`k^1&W.KT/#\F+DSA?;;EsiJKOFt16B*8;aAHG*Abni
+1c%g_P=IHn.4iqIe+5:OY\,hW@*LK=2Jfi\ZY[^hEAoFe2fj5_'7Dh+1H71D_/kGmX7\ID
+OM,4g.^P[+o:\2hW\edn3jYqLo<9G1WB2oH40uU^Jr!W0`B84`4L<9po?f]WeNJ!,4gWs-
+oAMkhjBBVV5-sW?oC5%$ofmNn5I:;QoDq36"[A^_
+~>
+showpage grestore
+%%Trailer
