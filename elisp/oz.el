@@ -1,6 +1,5 @@
 ;; Major mode for editing Oz, and for running Oz under Emacs
 ;; Copyright (C) 1993 DFKI GmbH
-;; $Id$
 ;; Author: Ralf Scheidhauer and Michael Mehl ([scheidhr|mehl]@dfki.uni-sb.de)
 
 ;; TODO
@@ -48,6 +47,7 @@
 ;;    so its output goes into the compiler buffer
 ;; ---------------------------------------------------------------------
 
+(defvar oz-win32 nil)
 (setq oz-win32 (eq system-type 'windows-nt))
 
 
@@ -1310,10 +1310,13 @@ and initial semicolons."
 
 ;; if you ever change these constants
 ;; adapt Compiler/frontend/cFunctions.cc
+(defvar oz-emulator-output-start nil)
+(defvar oz-emulator-output-end nil)
+
 (setq oz-emulator-output-start (char-to-string 5))
 (setq oz-emulator-output-end   (char-to-string 6))
 
-(setq oz-read-emulator-output nil)
+(defvar oz-read-emulator-output nil)
 
 (defun oz-current-switch ()
   (if oz-read-emulator-output 
@@ -1981,7 +1984,6 @@ line."
 
 (defun oz-mouse-goto-error (event)
   (interactive "e")
-  (setq xxx event)
   (let ((buf (if oz-lucid
 		 (event-buffer event) 
 	       (window-buffer (posn-window (event-end event))))))
