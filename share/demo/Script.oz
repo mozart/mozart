@@ -1,31 +1,35 @@
 declare
 
 
-proc {BinaryPartition ?S1 ?S2 S}
-   %% Sets S1 and S2 are binary partition of S
-   C1 C2
-in
-   {FS.disjoint S1 S2} {FS.union S1 S2 S}
-   C1={FS.card S1} C2={FS.card S2}
-   C1>:0 C2>:0 C1+C2=:{FS.card S}
+proc {Map3 Xs F ?Y1s ?Y2s ?Y3s}
+   case Xs of nil then Y1s=nil Y2s=nil Y3s=nil
+   [] X|Xr then Y1|Y1r=Y1s Y2|Y2r=Y2s Y3|Y3r=Y3s in
+      {F X ?Y1 ?Y2 ?Y3} {Map3 Xr F Y1r Y2r Y3r}
+   end
+end
+
+fun {SwapDir Dir}
+   case Dir of x then y [] y then x end
 end
 
 local
-   fun {Run I1 I2 Is}
-      I1|if I1==I2 then Is else {Run I1+1 I2 Is} end
+   proc {Do Bs N}
+      case Bs of nil then skip
+      [] B|Br then NN=1-N in
+	 choice skip end
+	 if {Not {IsDet B}} then
+	    choice B=N [] B=NN end
+	 end
+	 {Do Br NN}
+      end
    end
 in
-   fun {UnfoldSetSpec Ss}
-      case Ss of nil then nil
-      [] S|Sr then
-	 case S of I1#I2 then {Run I1 I2 {UnfoldSetSpec Sr}}
-	 else S|{UnfoldSetSpec Sr}
-	 end
-      end
+   proc {Alternate Bs}
+      {Do Bs 0}
    end
 end
 
-fun {Compile Spec PlaceAll}
+fun {Compile Spec}
 
    %% Specification is as follows:
    %%  Spec.x, Spec.y: size of the target plate
@@ -40,104 +44,57 @@ fun {Compile Spec PlaceAll}
    DY = Spec.y
 
 
-   %% Area covered by squares.
-   proc {Covered Sqs}
-      {FD.sum {Record.map Sqs proc {$ Sq ?Res}
-				 Area = Sq.d * Sq.d
-			      in
-				 Res :: [0 Area]
-				 Sq.placed =: (Area =: Res)
-			      end} '=<:' DX*DY}
-   end
-
-   proc {NoOverlap Sqs}
-      %% No rectangles must overlap, return variables for arrangement
-      thread
-	 {For 1 N 1
-	  proc {$ I}
-	     Sq1 = Sqs.I
-	  in
-	     if Sq1.placed==1 then
-		X1=Sq1.x Y1=Sq1.y D1=Sq1.d
-	     in
-		{For 1 I-1 1
-		 proc {$ J}
-		    Sq2=Sqs.J
-		 in
-		    if Sq2.placed==1 then
-		       X2=Sq2.x Y2=Sq2.y D2=Sq2.d
-		    in
-		       if D1==D2 then
-			  %% Simplified due to symmetry relations:
-			  %% Sq2 is either below or to the right of Sq1
-			  (X2 + D2 =<: X1) + (Y2 + D2 =<: Y1) >: 0
-		       else
-			  (X1 + D1 =<: X2) +  (X2 + D2 =<: X1) +
-			  (Y1 + D1 =<: Y2) +  (Y2 + D2 =<: Y1) >: 0
-		       end
-		    end
-		 end}
-	     end
-	  end}
-      end
-   end
-
-   proc {Map3 Xs F ?Y1s ?Y2s ?Y3s}
-      case Xs of nil then Y1s=nil Y2s=nil Y3s=nil
-      [] X|Xr then Y1|Y1r=Y1s Y2|Y2r=Y2s Y3|Y3r=Y3s in
-	 {F X ?Y1 ?Y2 ?Y3} {Map3 Xr F Y1r Y2r Y3r}
-      end
-   end
-
-   fun {SwapXY XY}
-      case XY of x then y [] y then x end
-   end
-
-   fun {Mix Xs Ys}
-      case Xs of nil then Ys
-      [] X|Xr then
-	 case Ys of nil then Xs
-	 [] Y|Yr then X|Y|{Mix Yr Xr}
-	 end
-      end
-   end
-	 
-   fun {MakeCuts Info Sqs}
-      XY  = Info.xy
-      SQS = Info.sqs
+   fun {MakeCuts Rect Sqs}
+      Dir = Rect.dir % Direction of the cut (x or y)
+      SQS = Rect.sqs % The set of squares to be cut
+      Cut = Rect.cut % The coordinate of cut
    in
-      cond {FS.card SQS}<:4 then
-	 {FD.distribute splitMin
-	  {FoldR {UnfoldSetSpec {FS.reflect.upperBound SQS}}
-	   fun {$ I XYr}
-	      Sqs.I.x|Sqs.I.y|XYr
-	   end nil}}
-	 Info.cut = 0
+      if {FS.card SQS}<:4==1 then
+	 %% Just go an place the squares
+	 %% Placing one suffices:
+	 %%  1) it can always be placed (due to capacity)
+	 %%  2) the upper left edge is okay, since all solutions
+	 %%     are symmetric with respect to rotation and
+	 %%     translation
+	 Sq=Sqs.({FS.reflect.upperBoundList SQS}.1)
+      in
+%	 choice skip end
+%	 Sq.x = {FD.reflect.min Sq.x}
+%	 choice skip end
+%	 Sq.y = {FD.reflect.min Sq.y}
+%	 {ForAll 
+%	  proc {$ I}
+%	     Sq=Sqs.I
+%	  in
+%	     {FD.distribute splitMin Sq.x#Sq.y}
+%	  end}
+	 %% Nothing to cut
+	 %% For at most three squares there always exists a cut
+	 Cut = 0
 	 nil
       else
-	 DimXY = Info.XY
-	 YX = {SwapXY XY}
-	 DimYX = Info.YX
+	 %% Partition the squares into two disjoint sets
 	 SQS1    = {FS.var.decl}
 	 SQS2    = {FS.var.decl}
-	 Cut     = {FD.decl}
+	 %% The other direction (direction of the next cut)
+	 Rid     = {SwapDir Dir}
+	 DimXY = Rect.Dir
+	 DimYX = Rect.Rid
 	 IsLs IsRs DDs
-	 DimD ={FD.decl}
-	 InfoL InfoR
-	 CurSqs  = {UnfoldSetSpec {FS.reflect.upperBound SQS}}
-	 DimL={FD.decl}
-	 DimR={FD.decl}
+	 DimD  = {FD.decl}
+	 DimL  = {FD.decl}
+	 DimR  = {FD.decl}
       in
-	 Cut=Info.cut
 	 DimD    =: DimYX.2 - DimYX.1
 	 %% SQS1 and SQS2 are are partition of the squares
-	 {BinaryPartition SQS1 SQS2 SQS}
-	 %% The cut must be inside the current dimensions
-	 DimXY.1<:Cut Cut<:DimXY.2
+	 {FS.union SQS1 SQS2 SQS}
+	 %% The cut must be inside the current dimensions, and
+	 %% of course the squares we consider here have at least size 2!
+	 DimXY.1+2=<:Cut Cut+2=<:DimXY.2
 	 %% Find Left and Right, just cardinality matters
-	 {Map3 CurSqs
+	 {Map3 {FS.reflect.upperBoundList SQS}
 	  proc {$ I ?IsL ?IsR ?DD}
-	     Sq=Sqs.I SqXY=Sq.XY SqD=Sq.d
+	     Sq=Sqs.I SqXY=Sq.Dir SqD=Sq.d
 	  in
 	     IsL = (Cut >=: SqXY + SqD)
 	     IsR = (Cut =<: SqXY)
@@ -152,10 +109,10 @@ fun {Compile Spec PlaceAll}
 	 DimR =: DimD * DimXY.2 - DimD * Cut
 	 {FD.sumC DDs IsRs '=<:' DimR} 
 	 %% Distribute squares to be either right or left
-	 {FD.distribute generic(value:max) {Mix IsLs IsRs}}
-	 %% Continue recursively
-	 info(xy:YX cut:_ XY:DimXY.1#Cut YX:DimYX sqs:SQS1)#
-	 info(xy:YX cut:_ XY:Cut#DimXY.2 YX:DimYX sqs:SQS2)
+	 {Alternate IsLs}
+	 %% These are the next rectangles to be cut
+	 rect(dir:Rid cut:{FD.decl} Dir:DimXY.1#Cut Rid:DimYX sqs:SQS1)#
+	 rect(dir:Rid cut:{FD.decl} Dir:Cut#DimXY.2 Rid:DimYX sqs:SQS2)
       end
    end
 
@@ -174,103 +131,115 @@ fun {Compile Spec PlaceAll}
    end
    
    proc {Distribute Sqs ?Cuts}
-      %% Place all rectangles
-      if PlaceAll then
-	 {Record.forAll Sqs proc {$ Sq}
-			       Sq.placed = 1
-			    end}
-      else
-	 {FD.distribute generic(order:naive value:max)
-	  {Record.map Sqs fun {$ Sq} Sq.placed end}}
-      end
-      %% Size down the unplaced sqaures
-      {Record.forAll Sqs proc {$ Sq}
-			    if Sq.placed==0 then
-			       Sq.x=0 Sq.y=0
-			    end
-			 end}
-      %% Now comes the real stragey:
       %%  1. Find a position for the cut, starting from the middle
       %%  2. Distribute all squares either to the left or right side
       %%     of the cut
       %%  3. Only consider squares with size graeter than 1
       Cuts={DriveCuts
-	    [info(xy:x cut:_ x:0#DX y:0#DY sqs:{FS.value.make [1#M]})] Sqs}
+	    [info(dir:x cut:{FD.decl} x:0#DX y:0#DY
+		  sqs:{FS.value.make [1#M]})] Sqs}
+      %% The rest is deterministic
       {For M+1 N 1 proc {$ I}
-		      {FD.distribute naive [Sqs.I.x Sqs.I.y]}
+		      choice skip end
+		      Sqs.I.x = {FD.reflect.min Sqs.I.x}
+		      choice skip end
+		      Sqs.I.y = {FD.reflect.min Sqs.I.y}
+%		      {FD.distribute naive [Sqs.I.x Sqs.I.y]}
 		   end}
+      %% The rest is deterministic
+      {ForAll {FoldL Cuts Append nil}
+       proc {$ Cut}
+	  choice skip end
+	  Cut = {FD.reflect.min Cut}
+       end}
 %      {FD.distribute naive
-%       {FoldL Cuts
-%	fun {$ XYs Infos}
-%	   {FoldL Infos fun {$ XYs Info}
-%			   Info.x.1|Info.x.2|Info.y.1|Info.y.2|XYs
-%			end XYs}
-%	end nil}}
-      {FD.distribute naive
-       {FoldL Cuts Append nil}}
+%       {FoldL Cuts Append nil}}
    end
 
    
 in
    
    proc {$ Root}
-      root(squares:Sqs cuts:Cuts x:!DX y:!DY) = Root
+      Sqs
+      Cuts
    in
 
-      Sqs = {MakeTuple '#' N}
+
       
+      Root = root(squares:Sqs cuts:Cuts x:DX y:DY)
+
+      Sqs  = {MakeTuple '#' N}
+      
+
       %% Set up problem variables
       {Record.foldRInd Spec.squares
        fun {$ D M I}
 	  {For I I+M-1 1 proc {$ J}
-			    Sqs.J=square(x:      {FD.int 0#{Max 0 DX-D}}
-					 y:      {FD.int 0#{Max 0 DY-D}}
-					 d:      D   
-					 placed: {FD.bool})
+			    Sqs.J=square(x: {FD.int 0#{Max 0 DX-D}}
+					 y: {FD.int 0#{Max 0 DY-D}}
+					 d: D)
 			 end}
 	  I+M
        end 1 _}
       
-      %% The placed squares must fit the target
-      {Covered Sqs}
+
+      %% The squares must fit the target
+      {Record.foldL Sqs fun {$ N Sq}
+			   N+Sq.d*Sq.d
+			end 0} =<: DX*DY
+      
 
       %% Fix some freedom for first square (wolg)
-      Sqs.1.x =<: Sqs.1.y
-      
+      Sqs.1.x=0 Sqs.1.y=0
+
+
       %% Remove permutations of equally-sized squares by ordering them
       {For 1 N-1 1 proc {$ I}
 		      Sq1=Sqs.I Sq2=Sqs.(I+1)
 		   in
 		      if Sq1.d==Sq2.d then
 			 %% This is respected by the no overlap
-			 Sq1.x*DY + Sq1.y + Sq1.d=<: Sq2.x*DY + Sq2.y
+			 Sq1.x =<: Sq2.x
 		      end
 		   end}
 
-      %% Squares must not overlap
-      {NoOverlap Sqs}
 
-      %% At any position (be it x or y) the placed squares must
+      %% No rectangles must overlap, return variables for arrangement
+      {For 1 N 1
+       proc {$ I}
+	  Sq1=Sqs.I X1=Sq1.x Y1=Sq1.y D1=Sq1.d
+       in
+	  {For 1 I-1 1
+	   proc {$ J}
+	      Sq2=Sqs.J X2=Sq2.x Y2=Sq2.y D2=Sq2.d
+	   in
+	      if D1==D2 then
+		 %% Simplified due to symmetry relations:
+		 %% Sq2 is either below or to the right of Sq1
+		 (X2 + D2 =<: X1) + (Y2 + D2 =<: Y1) >: 0
+	      else
+		 (X1 + D1 =<: X2) +  (X2 + D2 =<: X1) +
+		 (Y1 + D1 =<: Y2) +  (Y2 + D2 =<: Y1) >: 0
+	      end
+	   end}
+       end}
+
+      %% In any direction (be it x or y) the squares must
       %% fit into the height/width of the rectangle
       {ForAll [x#DY y#DX]
-       proc {$ XY#DXY}
+       proc {$ Dir#DXY}
 	  {For 0 DXY-1 1
 	   proc {$ I}
 	      {FD.sum {Record.map Sqs
 		       proc {$ Sq ?D}
 			  D :: [0 Sq.d]
-			  {FD.conj Sq.placed
-			   %% this the same as:
-			   %%  {FD.conj I=<:Sq.XY Sq.XY+Sq.d>=:I}
-			   (Sq.XY :: {Max 0 I-Sq.d+1}#I)
-			   (D=:Sq.d)}
+			  %% this the same as:
+			  %%  {FD.conj I=<:Sq.XY Sq.XY+Sq.d>=:I}
+			  (Sq.Dir :: {Max 0 I-Sq.d+1}#I)=(D=:Sq.d)
 		       end} '=<:' DXY}
 	   end}
        end}
-
       
-%      Cuts = {MakeCuts x {FS.value.make [1#N]} Sqs}
-
       Cuts={Distribute Sqs}
 
    end
@@ -284,11 +253,11 @@ declare
 %Spec = spec(x:7 y:9 squares:s(2:4 5:1 1:1 3:1))
 %Spec = spec(x:8 y:8 squares:s(4:4))
 %Spec = spec(x:14 y:14 squares:s(5:2 4:4 3:3 2:5 1:35))
+%Spec = spec(x:14 y:14 squares:s(5:2 4:4 3:3 2:10 1:15))
 Spec = spec(x:9 y:9 squares:d(4:2 3:2 2:5 1:3))
 %2*16+3*4+
-{ExploreOne {Compile
-	     Spec
-	     true}}
+{ExploreOne {Compile Spec}}
+
 /*
 
 declare
@@ -319,9 +288,7 @@ in
        SX = Sq.x
        SY = Sq.y
     in
-       if {IsDet Sq.placed} andthen Sq.placed==1 andthen
-	  {IsDet SX} andthen {IsDet SY}
-       then
+       if {IsDet SX} andthen {IsDet SY} then
 	  X=SX*DX
 	  Y=SY*DY
        in
