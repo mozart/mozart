@@ -39,11 +39,17 @@ import
    OS(getEnv system)
    Open(file socket)
    Ozcar(object)
+   Profiler(object)
    Pickle(load)
    Property(get put)
    System(printError)
 prepare
    ArgSpec = record(help(rightmost char: [&h &?] default: false)
+		    mode(rightmost
+			 type: atom(debugger profiler)
+			 default: debugger)
+		    debugger(char: &g alias: mode#debugger)
+		    profiler(char: &p alias: mode#profiler)
 		    useemacs(rightmost char: &E type: bool default: false)
 		    emacs(single type: string default: unit)
 		    opi(rightmost default: false))
@@ -51,6 +57,10 @@ prepare
    %% Note: The opi option is not documented here on purpose.
    UsageString =
    '--help, -h, -?  Display this message.\n'#
+   '--mode=debugger, --debugger, -g\n'#
+   '                Start Ozcar (the default).\n'#
+   '--mode=profiler, --profiler, -p\n'#
+   '                Start the Profiler.\n'#
    '--useemacs, -E  Start a subordinate Emacs process.\n'#
    '--nouseemacs    Do not start a subordinate Emacs process.\n'#
    '                This is the default.\n'#
@@ -81,22 +91,28 @@ define
       if Args.help then
 	 {Usage "" 0}
       end
-      case Args.1 of AppName|AppArgs then CloseAction MM F in
-	 {Ozcar.object on()}
+      case Args.1 of AppName|AppArgs then Target CloseAction MM F in
+	 Target = case Args.mode of debugger then Ozcar.object
+		  [] profiler then Profiler.object
+		  end
+	 {Target on()}
 	 {Property.put 'errors.toplevel' proc {$} skip end}
 	 {Property.put 'errors.subordinate' proc {$} fail end}
 	 if Args.useemacs then File E EMACS I in
 	    E = {New Compiler.engine init()}
 	    {E enqueue(mergeEnv(OPIEnv.full))}
 	    if Args.opi then
-	       local
-		  OZVERSION = {Property.get 'oz.version'}
-		  DATE      = {Property.get 'oz.date'}
-		  OZCARDATE = \insert ozcar-version.oz
+	       OZVERSION = {Property.get 'oz.version'}
+	       DATE      = {Property.get 'oz.date'}
+	       MOZART    = ('Mozart Engine '#OZVERSION#' of '#DATE#
+			    ' playing Oz 3\n')
+	    in
+	       case Args.mode of debugger then
+		  OZCAR = \insert ozcar-version.oz
 	       in
-		  {System.printError
-		   'Mozart Engine '#OZVERSION#' of '#DATE#' playing Oz 3\n'#
-		   'Ozcar Version of '#OZCARDATE#'\n\n'}
+		  {System.printError MOZART#'Ozcar Version of '#OZCAR#'\n\n'}
+	       [] profiler then
+		  {System.printError MOZART#'\n'}
 	       end
 	       File = {New Open.file init(name: stdout flags: [write])}
 	    else Port in
@@ -119,7 +135,7 @@ define
 			 {File write(vs: V)}
 		      end)}
 	    {Property.put 'opi.compiler' I}
-	    {Ozcar.object conf(emacsInterface: I)}
+	    {Target conf(emacsInterface: I)}
 	    thread {I readQueries()} end
 	    proc {CloseAction}
 	       if Args.opi then skip
@@ -132,7 +148,7 @@ define
 	       {Application.exit 0}
 	    end
 	 end
-	 {Ozcar.object conf(closeAction: CloseAction)}
+	 {Target conf(closeAction: CloseAction)}
 	 {Property.put 'ozd.args' AppArgs}
 	 F = {Pickle.load AppName}
 	 MM = {New Module.manager init()}
