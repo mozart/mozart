@@ -400,8 +400,9 @@ public:
   void gcPO() {
     if (isTertiary()) {
       PD((GC,"OT tertiary found"));
-      u.tert=(Tertiary *)(u.tert->gcConstTerm()); }
-    else {
+      if (!inToSpace(u.tert))
+	u.tert=(Tertiary *)(u.tert->gcConstTerm());
+    } else {
       Assert(isRef() || isVar());
       PD((GC,"OT var/ref"));
       OZ_updateHeapTerm(u.ref);}
