@@ -28,6 +28,7 @@
 #include "objects.hh"
 #include "stack.hh"
 #include "thread.hh"
+#include "ozdebug.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -1243,24 +1244,25 @@ void AbstractionTable::gc()
   while(aux != NULL)
     {
       // there may be NULL entries in the table during gc
-      if (aux->pred) {
-        if (GCISMARKED(*(int*)aux->pred)) {
-          aux->pred = (Abstraction*) GCUNMARK(*(int*)aux->pred);
-        } else {
-          INFROMSPACE(aux->pred);
-          Abstraction *newAddr =
-            (Abstraction*) gcRealloc(aux->pred,sizeof(Abstraction));
-
-          setHeapCell((int *)aux->pred, GCMARK(newAddr));
-          aux->pred = newAddr;
-
-          newAddr->gRegs = gcRefsArray(newAddr->gRegs);
-        } //if
-      } // if
+      aux->pred = aux->pred->gcAbstraction();
       aux->left->gc();
       aux = aux->right;    // tail recursion optimization
     }
 }
+
+Abstraction *Abstraction::gcAbstraction()
+{
+  if (this == NULL) return NULL;
+
+  CHECKCOLLECTED(*(int*)this,Abstraction*);
+  INFROMSPACE(this);
+  Abstraction *newAddr = (Abstraction*) gcRealloc(this,sizeof(Abstraction));
+
+  setHeapCell((int *)this, GCMARK(newAddr));
+  newAddr->gRegs = gcRefsArray(newAddr->gRegs);
+  return newAddr;
+}
+
 
 void CodeArea::gc()
 {
@@ -1283,16 +1285,16 @@ TaskStack *TaskStack::gc()
 
   while (!isEmpty()) {
 
-    Board *bb = (Board *) pop();
-    ContFlag cFlag = getContFlag(bb);
-    bb = clrContFlag(bb, cFlag);
+    TaggedBoard tb = (TaggedBoard) pop();
+    ContFlag cFlag = getContFlag(tb);
+    Board *bb = clrContFlag(tb, cFlag);
     RefsArray ra;
 
     switch (cFlag){
       case C_NERVOUS:
       newBB = bb->gcBoard();
       if (newBB) {
-        newStack->gcQueue(setContFlag(newBB,cFlag));
+        newStack->gcQueue((TaskStackEntry) setContFlag(newBB,cFlag));
       }
       break;
 
@@ -1311,7 +1313,7 @@ TaskStack *TaskStack::gc()
         break;
       }
 
-      newStack->gcQueue(setContFlag(newBB,cFlag));
+      newStack->gcQueue((TaskStackEntry) setContFlag(newBB,cFlag));
 
       newStack->gcQueue(pop()); // pc
       // y
@@ -1327,6 +1329,19 @@ TaskStack *TaskStack::gc()
       } // if
       break;
 
+    case C_DEBUG_CONT:
+      newBB = bb->gcBoard();
+      if (!newBB) {
+        pop(); // OzDebug *
+        break;
+      }
+
+      newStack->gcQueue((TaskStackEntry) setContFlag(newBB,cFlag));
+
+      OzDebug *deb = (OzDebug*) pop();
+      newStack->gcQueue(deb->gcOzDebug());
+      break;
+
     case C_CFUNC_CONT:
       {
         // Continuation to continue at c codeaddress
@@ -1338,7 +1353,7 @@ TaskStack *TaskStack::gc()
           break;
         } // if
 
-        newStack->gcQueue(setContFlag(newBB,cFlag));
+        newStack->gcQueue((TaskStackEntry) setContFlag(newBB,cFlag));
 
         newStack->gcQueue(pop()); // BIFun
 
@@ -1369,9 +1384,9 @@ int TaskStack::gcGetUsedSize()
   void **oldTop = top;
 
   while (!isEmpty()) {
-    Board *n = (Board *) pop();
-    ContFlag cFlag = getContFlag(n);
-    n = clrContFlag(n, cFlag);
+    TaggedBoard tb = (TaggedBoard) pop();
+    ContFlag cFlag = getContFlag(tb);
+    Board *n = clrContFlag(tb, cFlag);
 
     switch (cFlag){
     case C_NERVOUS:
@@ -1391,6 +1406,13 @@ int TaskStack::gcGetUsedSize()
       pop(3);
       if (n->gcGetBoardDeref()) {
         ret += 4;
+      }
+      break;
+
+    case C_DEBUG_CONT:
+      pop(1);
+      if (n->gcGetBoardDeref()) {
+        ret += 2;
       }
       break;
 
@@ -1607,6 +1629,7 @@ void SRecord::gcRecurse()
       o->gRegs       = gcRefsArray(o->gRegs);
       o->cell        = (Cell*)o->cell->gc();
       o->fastMethods = o->fastMethods->gc();
+      // "Atom *printName" needs no collection
       break;
     }
 
@@ -1787,6 +1810,13 @@ void regsInToSpace(TaggedRef *regs, int size)
 }
 
 #endif
+
+OzDebug *OzDebug::gcOzDebug()
+{
+  pred = pred->gc();
+  args = gcRefsArray(args);
+  return this;
+}
 
 
 #ifdef OUTLINE

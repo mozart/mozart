@@ -36,6 +36,7 @@ exported:
 #include "taskstack.hh"
 #include "term.hh"
 #include "thread.hh"
+#include "objects.hh"
 
 
 #define PRINT(C) \
@@ -88,9 +89,8 @@ static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
   DEREF(ref,refPtr,tag)
   switch(tag) {
   case UVAR:
-    stream << "<UV: _ @"
-           << refPtr
-           << ">" ;
+    stream << "UV@"
+           << refPtr;
     break;
   case SVAR:
     tagged2SVar(ref)->print(stream,depth,offset);
@@ -143,11 +143,11 @@ static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
 
 PRINT(SVariable)
 {
-  stream << "<SV: "
+  stream << "SV:"
          << getPrintName()
-         << " @"
+         << "@"
          << this
-         << (isEffectiveList(suspList) == OK ? " * >" : ">");
+         << (isEffectiveList(suspList) == OK ? "*" : "");
 }
 
 PRINT(GenCVariable){
@@ -236,7 +236,7 @@ PRINT(SRecord)
       tagged2Stream(feat,stream,depth,offset);
       ar = tail(ar);
       CHECK_DEREF(ar);
-      stream << " : ";
+      stream << ": ";
       tagged2Stream(getFeature(feat),stream,depth-1,offset+2);
       NEWLINE(offset+2);
     }
@@ -346,26 +346,27 @@ PRINT(BigInt)
 
 PRINT(Cell)
 {
-  stream << "<cell:"
+  stream << "C:"
          << getPrintName()
-         <<" @id" << getId()
-         << ">";
+         <<"@" << getId();
 }
 
 PRINT(Abstraction)
 {
-  stream << (getType() == R_OBJECT ? "<object:" : "<procedure:")
+  if (getType() == R_OBJECT) {
+    stream << "O:" << ((Object*)this)->getPrintName();
+    return;
+  }
+  stream << "P:"
          << getPrintName() << "/" << getArity()
-         << " @id" << getId()
-         << ">";
+         << "@" << (void*) getId();
 }
 
 PRINT(Builtin)
 {
-  stream << "<builtin:"
+  stream << "B:"
          << getPrintName() << "/" << getArity()
-         << " @id" << getId()
-         << ">";
+         << "@" << (void*) getId();
 }
 
 
