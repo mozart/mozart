@@ -1443,16 +1443,15 @@ void PrTabEntry::printPrTabEntries()
     heapTotal    += aux->heapUsed;
     callsTotal   += aux->numCalled;
     samplesTotal += aux->samples;
-    if (aux->numClosures || aux->numCalled || aux->heapUsed || aux->samples) {
+    if (aux->numClosures || aux->numCalled || aux->heapUsed || aux->samples ||
+        aux->szVars) {
       char *name = ozstrdup(toC(aux->printname)); // cannot have 2 toC in one line
-      printf("%20.20s Created: %5u Called: %6u Heap: %5u B, Samples: %5u",
+      printf("%20.20s Created: %5u Called: %6u Heap: %5u B, Samples: %5u, Vars: %5u",
              name,aux->numClosures,aux->numCalled,aux->heapUsed,
-             aux->samples);
-      OZ_Term pos=aux->getPos();
+             aux->samples,aux->szVars);
       printf(" %s(%d,%d)\n",
-             OZ_atomToC(OZ_getArg(pos,0)),
-             OZ_intToC(OZ_getArg(pos,1)),
-             OZ_intToC(OZ_getArg(pos,2)));
+             OZ_atomToC(aux->file),
+             aux->line,aux->colum);
       delete name;
     }
     aux = aux->next;
@@ -1494,10 +1493,9 @@ TaggedRef PrTabEntry::getProfileStats()
         rec->setFeature(calls,oz_unsignedInt(aux->numCalled));
         rec->setFeature(heap,oz_unsignedInt(aux->heapUsed));
         rec->setFeature(closures,oz_unsignedInt(aux->numClosures));
-        OZ_Term pos = aux->getPos(); // mm2
-        rec->setFeature(line,OZ_getArg(pos,1));
+        rec->setFeature(line,OZ_int(aux->line));
         rec->setFeature(name,aux->printname);
-        rec->setFeature(file,OZ_getArg(pos,0));
+        rec->setFeature(file,aux->file);
         ret = cons(makeTaggedSRecord(rec),ret);
       }
       aux = aux->next;
@@ -1535,6 +1533,7 @@ void PrTabEntry::profileReset()
     aux->numCalled   = 0;
     aux->heapUsed    = 0;
     aux->samples     = 0;
+    aux->szVars      = 0;
     aux = aux->next;
   }
 }
@@ -1546,9 +1545,12 @@ void PrTabEntry::patchFileAndLine()
 {
   Reg reg;
   int next;
-  TaggedRef newpos, comment, predName;
-  CodeArea::getDefinitionArgs(PC-sizeOf(DEFINITION),reg,next,newpos,predName);
-  pos = newpos;
+  TaggedRef newpos, comment, predName, fil;
+  int lin,colu;
+  CodeArea::getDefinitionArgs(PC-sizeOf(DEFINITION),reg,next,fil,lin,colu,predName);
+  file  = fil;
+  line  = lin;
+  colum = colu;
 }
 
 int featureEqOutline(TaggedRef a, TaggedRef b)

@@ -2110,14 +2110,15 @@ private:
   TaggedRef printname;
   unsigned short arity;
   SRecordArity methodArity;
-  TaggedRef pos;
+  TaggedRef file;
+  int line, colum;
   TaggedRef info;
   int flags;
   int gSize;
   int maxX;
 public:
   PrTabEntry *next;
-  unsigned int numClosures, numCalled, heapUsed, samples, lastHeap;
+  unsigned int numClosures, numCalled, heapUsed, samples, lastHeap, szVars;
   static PrTabEntry *allPrTabEntries;
   static void printPrTabEntries();
   static TaggedRef getProfileStats();
@@ -2128,16 +2129,14 @@ public:
 public:
   OZPRINT;
   NO_DEFAULT_CONSTRUCTORS(PrTabEntry);
-  PrTabEntry (TaggedRef name, SRecordArity arityInit,
-              TaggedRef apos, TaggedRef fl, int maxX)
-  : printname(name), pos(apos), maxX(maxX)
+  void init(TaggedRef name, SRecordArity arityInit,
+             TaggedRef fil, int lin, int colu, TaggedRef fl, int max)
   {
-    OZ_protect(&pos);
-    Assert(pos==0 ||
-           (OZ_isTuple(pos) && OZ_width(pos)==3 &&
-            OZ_isAtom(OZ_getArg(pos,0)) &&
-            OZ_isInt(OZ_getArg(pos,1)) &&
-            OZ_isInt(OZ_getArg(pos,2))));
+    printname = name;
+    maxX = max;
+    file  = fil;
+    line  = lin;
+    colum = colu;
 
     flags = 0;
     fl = oz_deref(fl);
@@ -2155,19 +2154,40 @@ public:
     Assert((int)arity == getWidth(arityInit)); /* check for overflow */
     PC = NOCODE;
     info = nil();
-    numClosures = numCalled = heapUsed = samples = lastHeap = 0;
+    numClosures = numCalled = heapUsed = samples = lastHeap = szVars = 0;
     next = allPrTabEntries;
     allPrTabEntries = this;
     DebugCheckT(gSize=-1);
   }
 
+  PrTabEntry(TaggedRef name, SRecordArity arityInit,
+             TaggedRef pos, TaggedRef fl, int maxX)
+  {
+    Assert(OZ_isTuple(pos) && OZ_width(pos)==3 &&
+           OZ_isAtom(OZ_getArg(pos,0)) &&
+           OZ_isInt(OZ_getArg(pos,1)) &&
+           OZ_isInt(OZ_getArg(pos,2)));
+
+    OZ_Term fil = OZ_getArg(pos,0);
+    int lin     = OZ_intToC(OZ_getArg(pos,1));
+    int colu    = OZ_intToC(OZ_getArg(pos,2));
+
+    init(name, arityInit, fil, lin, colu, fl, maxX);
+  }
+
+  PrTabEntry(TaggedRef name, SRecordArity arityInit,
+             TaggedRef fil, int lin, int colu, TaggedRef fl, int max)
+  {
+    init(name, arityInit, fil, lin, colu, fl, max);
+  }
+
+
   void setGSize(int n) { gSize = n; }
   int getGSize() { return gSize; }
   int getArity () { return (int) arity; }
 
-  OZ_Term getPos()      { return pos; }
-
   SRecordArity getMethodArity() { return methodArity; }
+  void setMethodArity(SRecordArity sra) { methodArity = sra; }
   const char *getPrintName () { return tagged2Literal(printname)->getPrintName(); }
   TaggedRef getName () { return printname; }
   ProgramCounter getPC() { return PC; }
@@ -2187,10 +2207,13 @@ public:
   }
 
   int getMaxX()    { return maxX; }
+  int getLine()   { return line; }
+  int getColumn() { return colum; }
+  TaggedRef getFile() { return file; }
 
   void patchFileAndLine();
 
-  void gcPrTabEntry();
+  static void gcPrTabEntries();
 };
 
 

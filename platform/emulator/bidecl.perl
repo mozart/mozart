@@ -1445,6 +1445,18 @@ $builtins = {
                              ifdef=>'PROFILE_INSTR',
                              native => true},
 
+    'instructionsPrintCollapsable' => { in  => [],
+                             out => [],
+                             BI  => BIinstructionsPrintCollapsable,
+                             ifdef=>'PROFILE_INSTR',
+                             native => true},
+
+    'instructionsPrintReset' => { in  => [],
+                             out => [],
+                             BI  => BIinstructionsPrintReset,
+                             ifdef=>'PROFILE_INSTR',
+                             native => true},
+
     'biPrint'           => { in  => [],
                              out => [],
                              BI  => BIbiPrint,

@@ -460,15 +460,55 @@ void Statistics::derefChain(int n)
 
 #ifdef PROFILE_INSTR
 #include "codearea.hh"
+
+#define AUXFILE "instrprofile.out"
+
 void Statistics::printInstr()
 {
-  printf("Instruction profile:\n");
+  FILE *out = fopen(AUXFILE,"w");
+  if (out==NULL) {
+    perror("fopen");
+    return;
+  }
   unsigned long sum = 0;
   for (int i=0; i<PROFILE_INSTR_MAX; i++) {
     sum += instr[i];
     if (instr[i]!=0)
-      printf("%010lu x %s\n",instr[i],CodeArea::opToString[i]);
+      fprintf(out,"%010lu x %s\n",instr[i],CodeArea::opToString[i]);
   }
-  printf("----------\n%010lu\n",sum);
+  fprintf(out,"----------\n%010lu\n",sum);
+  fclose(out);
+
+  printf("Instruction profile printed to '%s'.\n",AUXFILE);
 }
+
+void Statistics::printInstrCollapsable()
+{
+  FILE *out = fopen(AUXFILE,"w");
+  if (out==NULL) {
+    perror("fopen");
+    return;
+  }
+  for (int i=0; i<PROFILE_INSTR_MAX; i++) {
+    for (int j=0; j<PROFILE_INSTR_MAX; j++) {
+      if (instrCollapsable[i][j]!=0)
+        fprintf(out,"%010lu x %s %s\n",
+                instrCollapsable[i][j],
+                CodeArea::opToString[i],CodeArea::opToString[j]);
+    }
+  }
+  fclose(out);
+  printf("Collapsable instruction profile printed to '%s'.\n",AUXFILE);
+}
+
+void Statistics::printInstrReset()
+{
+  for (int i=0; i<PROFILE_INSTR_MAX; i++) {
+    instr[i]=0;
+    for (int j=0; j<PROFILE_INSTR_MAX; j++) {
+      instrCollapsable[i][j]=0;
+    }
+  }
+}
+
 #endif
