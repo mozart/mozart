@@ -277,14 +277,13 @@ extern void      _FUNDECL(OZ_deSelect,(int));
 
 typedef int _FUNDECL((*OZ_IOHandler),(int,void *));
 
-extern void      _FUNDECL(OZ_registerReadHandler,
-			  (int fd,OZ_IOHandler fun,void *val));
+extern void _FUNDECL(OZ_registerReadHandler,(int,OZ_IOHandler,void *));
+extern void _FUNDECL(OZ_unregisterRead,(int));
 
-extern void      _FUNDECL(OZ_registerWriteHandler,
-			  (int fd,OZ_IOHandler fun,void *val));
+extern void _FUNDECL(OZ_registerWriteHandler,(int,OZ_IOHandler,void *));
+extern void _FUNDECL(OZ_unregisterWrite,(int));
 
-extern void      _FUNDECL(OZ_registerAcceptHandler,
-			  (int fd,OZ_IOHandler fun,void *val));
+extern void _FUNDECL(OZ_registerAcceptHandler,(int,OZ_IOHandler,void *));
 
 /* garbage collection */
 extern int _FUNDECL(OZ_protect,(OZ_Term *));
