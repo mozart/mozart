@@ -119,6 +119,7 @@ error include resources.hh before mozart.h
 #else
 #define HEAPBLOCKSIZE        512*1024  /* byte    */
 #endif
+#define MEM_C_HEAP_SIZE      1024*1024*32
 
 
 #define TIMEDETAILED            0
