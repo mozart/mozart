@@ -468,7 +468,7 @@ case P: { CHECK_REC; DO; return PROCEED; }
 // expected type T
 
 #define BAD_FEAT(F,T)				\
-return oz_raise(E_ERROR,E_KERNEL,"putProperty",2,F,oz_atom(T));
+return oz_raise(E_ERROR,E_SYSTEM,"putProperty",2,F,oz_atom(T));
 
 // Lookup feature F.  If it exists, make sure that it is a
 // determined integer, then DO something (presumably with INT__)
@@ -754,7 +754,7 @@ OZ_BI_define(BIgetProperty,1,1)
   if (status == PROP__NOT__READABLE)
     return oz_raise(E_ERROR,E_SYSTEM,"getProperty",1,key);
   else if (status == PROP__NOT__FOUND)
-    return oz_raise(E_SYSTEM,E_KERNEL,"getProperty",1,key);
+    return oz_raise(E_SYSTEM,E_SYSTEM,"getProperty",1,key);
   else return status;
 } OZ_BI_end
 
@@ -764,7 +764,7 @@ OZ_BI_define(BIcondGetProperty,2,1)
   OZ_declareIN(1,def);
   OZ_Return status = GetProperty(key,OZ_out(0));
   if (status == PROP__NOT__READABLE)
-    return oz_raise(E_ERROR,E_KERNEL,"condGetProperty",1,key);
+    return oz_raise(E_ERROR,E_SYSTEM,"condGetProperty",1,key);
   else if (status == PROP__NOT__FOUND)
     OZ_RETURN(def);
   else return status;
@@ -776,7 +776,7 @@ OZ_BI_define(BIputProperty,2,0)
   OZ_declareIN(1,val);
   OZ_Return status = PutProperty(key,val);
   if (status == PROP__NOT__WRITABLE)
-    return oz_raise(E_ERROR,E_KERNEL,"putProperty",1,key);
+    return oz_raise(E_ERROR,E_SYSTEM,"putProperty",1,key);
   else if (status == PROP__NOT__GLOBAL)
     return oz_raise(E_ERROR,E_KERNEL,"globalState",
 		    1,oz_atom("putProperty"));
