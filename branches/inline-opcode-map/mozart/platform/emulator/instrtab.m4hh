@@ -34,16 +34,35 @@ define(instruction,
 
 #ifdef __GNUC__
 
+#ifdef AS_CAN_INLINE_OPCODE_MAP
+
+/* trick GCC into believing that we actually need the FAKE_... labels */
+
+#define INSTR(instr) \
+  *ptr = && FAKE_##instr; \
+  asm("movl $TRUE_"#instr",%0" : "=m" (*ptr)); \
+  ++ptr;
+
+#define INSTR_FINISH }
+
+static void* instrTable[OZERROR+1];
+{ void** ptr = instrTable;
+
+#else /* AS_CAN_INLINE_OPCODE_MAP */
+
 #define INSTR(instr) && instr##LBL,
+#define INSTR_FINISH 0};
 static void *instrTable[OZERROR+1] = {
 
-#else
+#endif
+
+#else /* __GNUC__ */
 
 #define INSTR(instr) {					\
 	__asm mov instrTable[eax], OFFSET instr 	\
 	__asm add eax,4					\
       }
-
+#define INSTR_FINISH
 
 static void *instrTable[OZERROR+1];
 
@@ -51,28 +70,9 @@ static void *instrTable[OZERROR+1];
 
 #endif
 
+include(EMUDIR/instrDefs.m4)
 
-
-  include(EMUDIR/instrDefs.m4)
-
-
-#ifdef __GNUC__
-0};
-#else
-#endif
+INSTR_FINISH
 
 #undef INSTR
-
-#ifdef INLINEOPCODEMAP
-
-#define INSTR(instr) && instr##FAKE,
-
-static void * instrFakeTable[OZERROR+1] = {
-  include(EMUDIR/instrDefs.m4)
-0};
-
-#undef INSTR
-
-#endif
-
-
+#undef INSTR_FINISH
