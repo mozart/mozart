@@ -1,2 +1,3 @@
 Hydra	mail -s "Hydra-Dir changed: %s" mehl
+Hydra	mail -s "Hydra-Dir changed: %s" scheidhr
 Hydra	mail -s "Hydra-Dir changed: %s" tmueller
