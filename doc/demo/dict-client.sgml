@@ -40,9 +40,10 @@
     This application implements an interactive graphical client for
     the DICT protocol.  Enter a word in the top text field and click on
     <Q/Lookup/ to retrieve definitions for it, displayed in a separate
-    window.  Activate <Q/Match/ and you are presented a list of close
-    matches in a new window; clicking on a line in this window retrieves
-    the corresponding definition.
+    window.  Words highlighted in blue are links to other definitions.
+    Activate <Q/Match/ and you are presented a list of close matches
+    in a new window; clicking on a line in this window retrieves the
+    corresponding definition.
   <Para class=apropos><Title/Selecting Databases/
     The left list box allows to select the databases in which to look
     for definitions and&slash;or matches:  you always have the choice of
@@ -66,8 +67,9 @@
       <List>
         <Entry><Menu key="C-o"/Open &ellipsis;/
         <Item>
-          Choose another server and port instead of the default.
-        <Entry><Menu key="C-s"/Status &ellipsis;/
+          Choose another server and&slash;or port instead of the default.
+          The default is port 2628 on server <File/dict.org/.
+        <Entry><Menu key="C-s"/Status/
         <Item>
           Retrieve short status information from the server currently
           connected to and display it in the text line at the bottom of
