@@ -40,6 +40,10 @@ character by character. It is a mixin class that can be combined with
 any of the classes of the <<Open>> module.
 </list>
 
+<p>
+A tutorial account on open programming can be found in <Ptr.extern
+to="ozdoc:op">.
+
 <section><title/Exceptions/
 <p>
 The methods of any of the <<Open>> module classes can raise three different
@@ -57,7 +61,7 @@ operating system or <<net>> for network layer).
 <item> The integer ?_{I} gives an operating system dependent error
 number.
 <item> The string ?_{S} describes the exception by some text.
-<item> The value ?_{D} might contain some additional debug information.
+<item> The value ?_{X} might contain some additional debug information.
 </list>
 
 <para><title/already initialized/An exception of the format
@@ -87,6 +91,9 @@ The class <<Open.file>> has the following public methods.
 init(name: ?+{NameV}
      flags:?+{FlagsAs} &lt;= [read]
      mode: ?+{ModeR}   &lt;= mode(owner:[write] all:[read]))
+init(url:  ?+{UrlV}
+     flags:?+{FlagsAs} &lt;= [read]
+     mode: ?+{ModeR}   &lt;= mode(owner:[write] all:[read]))
 </code><item>
 <index class=module/Open<AND>file<AND>init/
 Initializes the file object and associates it with a Unix file.
@@ -94,6 +101,9 @@ Initializes the file object and associates it with a Unix file.
 ?_{NameV} is either a valid filename or one of the atoms <<stdin>>,
 <<stdout>>, and <<stderr>>. In this case, the standard input, standard
 output, or standard error stream is opened, respectively.  
+<p>
+In addition to using a filename to open a file also a url ?_{UrlV} can be
+used. Only one of the features <<name>> or <<url>> is allowed.
 <p>
 The value of ?_{FlagsAs} must be a list, with its elements chosen from
 the following atoms:
@@ -108,7 +118,8 @@ the following atoms:
 For reading a file, the atom <<read>> must be
 included in ?_{FlagsAs}. Similarly, the atom <<write>> must be
 included for writing. It is possible to include both atoms, giving both
-read and write access to the file.
+read and write access to the file. For files attached to an url, only
+reading access is possible.
 <p>
 When a file object is opened, the <def/seek pointer/<index/seek pointer/, 
 pointing to the current position in the file, is initialized
@@ -712,3 +723,8 @@ Note that this method is only for advanced purposes.
 </list>
 </section>
 </chapter>
+
+
+
+
+
