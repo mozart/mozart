@@ -9,13 +9,11 @@ LIB_DIR		= $(PREFIX)/contrib/os
 HOMEURL         = @HOMEURL@
 
 OZC		= @OZC@
-OZDYNLD		= @OZDYNLD@
-
-CXX		= @CXX@
+OZTOOL		= @OZTOOL@
 CPPFLAGS	= -I$(SRCTOP)/platform/emulator \
 		  -I$(BUILDTOP)/platform/emulator \
 		  -I$(PREFIX)/include @CPPFLAGS@
-CXXFLAGS	= @CXXAVOID@ @CXXFLAGS@
+CXXFLAGS	= @CXXFLAGS@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
 
@@ -47,10 +45,10 @@ $(LIB_NATIVES): $(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
 	$(OZC) -c $< -o $@
 
 %.so-$(PLATFORM): %.o
-	$(OZDYNLD) $< -o $@ $(LDFLAGS) $(LIBS)
+	$(OZTOOL) ld $< -o $@ $(LDFLAGS) $(LIBS)
 
 %.o: %.cc
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(OZTOOL) c++ $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 clean veryclean:
 	-$(RM) *~ *.ozf *.so-* *.o
