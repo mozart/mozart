@@ -36,6 +36,7 @@
     <Meta name="html.split" value="appendix.switches">
     <Meta name="html.split" value="appendix.queries">
     <Meta name="html.split" value="appendix.notifications">
+    <Meta name="html.split.bib" value="">
 
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
