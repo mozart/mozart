@@ -25,7 +25,9 @@
  */
 
 #include "fdaux.hh"
+#include "base.hh"
 
+#ifdef FDCD
 class CDSuppl : public OZ_Propagator {
 protected:
   OZ_Term reg_b;
@@ -41,3 +43,4 @@ public:
   virtual OZ_PropagatorProfile * getProfile(void) const { return NULL; }
 };
 
+#endif
