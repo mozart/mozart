@@ -1455,7 +1455,7 @@ documentation and in <Ptr to="section.extension.example"> an example.
 <Title/The class <<Oz_Extension>>/
 
  <p>The class <<OZ_Extension>> implements the methods defined below.
- The methods <<getIdV>> and <<gcV>> which are marked as
+ The methods <<getIdV>>, <<gCollectV>>, and <<sCloneV>> which are marked as
  required are pure virtual and have to be implemented in every
  subclass.
 
@@ -1471,17 +1471,29 @@ documentation and in <Ptr to="section.extension.example"> an example.
       <p>Ids can be statically assigned by extending the enumeration
       <<OZ_Registered_Extension_Id>>.
 
-  <ENTRY><<virtual Extension* gcV()>> // required
-  <index class=tails/<<OZ_Extension>> <and> <<gcV>>/
+  <ENTRY><<virtual Extension* gCollectV()>> // required
+  <index class=tails/<<OZ_Extension>> <and> <<gCollectV>>/
 
-<ITEM>Invoked when copying is request. Needed for garbage collection and
-      in the case of <<OZ_SituatedExtension>> also for copying.
+<ITEM>Needed for garbage collection.
 
-  <ENTRY><<virtual void gcRecurseV()>> // default: do nothing
-<index class=tails/<<OZ_Extension>> <and> <<gcRecurseV>>/
-<ITEM>Invoked on the copy obtained from <<gcV>>.  The VM has marked the data
-such that recursive updates of fields, e.g. running <<OZ_gcHeapNode>>,
-do not run into cycles.
+  <ENTRY><<virtual Extension* sCloneV()>> // required
+  <index class=tails/<<OZ_Extension>> <and> <<sCloneV>>/
+
+<ITEM>Needed for cloning of computation spaces
+(for <<OZ_SituatedExtension>>).
+
+
+  <ENTRY><<virtual void gCollectRecurseV()>> // default: do nothing
+<index class=tails/<<OZ_Extension>> <and> <<gCollectRecurseV>>/
+<ITEM>Invoked on the copy obtained from <<gCollectV>>.  The VM has marked the data
+such that recursive updates of fields, e.g. running <<OZ_gCollect>>,
+does not run into cycles.
+
+  <ENTRY><<virtual void sCloneRecurseV()>> // default: do nothing
+<index class=tails/<<OZ_Extension>> <and> <<sCloneRecurseV>>/
+<ITEM>Invoked on the copy obtained from <<sCloneV>>.  The VM has marked the data
+such that recursive updates of fields, e.g. running <<OZ_sClone>>,
+does not run into cycles.
 
   <ENTRY><<virtual OZ_Term printV(int depth = 10)>> // default: return
   <index class=tails/<<OZ_Extension>> <and> <<printV>>/
