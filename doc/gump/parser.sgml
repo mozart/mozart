@@ -37,8 +37,9 @@
 	&Gump; Parser Generator.  This example will be examined in detail in
 	the following.
 	<Figure float id="program.parser.example" class=program>
-	  <Caption>The <<LambdaParser>> parser specification.
-	  <Code.Extern display to="LambdaParser.ozg">
+	  <Caption>The <<LambdaParser>> parser specification.</Caption>
+	  <P>
+	    <Code.Extern to="LambdaParser.ozg" class=linenumbers>
 	</Figure>
       <Para class=apropos><Title/Class Descriptors/
 	Again, a &Gump; specification resembles a class definition introduced
@@ -201,8 +202,9 @@
 	both the generated scanner from the last chapter and the generated
 	parser from above.
 	<Figure float id="program.parser.test" class=program>
-	  <Caption>A program making use of the generated parser.
-	  <Code.Extern display to="TestParser.ozg">
+	  <Caption>A program making use of the generated parser.</Caption>
+	  <P>
+	    <Code.Extern to="TestParser.ozg">
 	</Figure>
       <Para class=apropos><Title/Initialization/
 	First, the scanner and parser classes are loaded.  After instantiating
@@ -269,7 +271,7 @@
 	      ><<token>> { ?={token declaration} }+</Grammar.Alt>
 	  <Grammar.Rule>?={token declaration}
 	    <Grammar.Alt type=def
-	      >?={atom} [ <<:>> ?={phrase} ]</Grammar.Alt>
+	      >?={atom} [ <Q class=terminal/<<:>>/ ?={phrase} ]</Grammar.Alt>
 	<P>
 	  The optional phrase following the colon in a token declaration
 	  must be a tuple with arity&nbsp;1 and one of the labels
@@ -305,7 +307,8 @@
 		>?={variable label} ?={syn formals}</Grammar.Alt>
 	    <Grammar.Rule>?={syn formals}
 	      <Grammar.Alt type=def
-		><<(>> { ?={syn formal} } <<)>></Grammar.Alt>
+		><Q class=terminal/<<(>>/ { ?={syn formal} } <Q
+		class=terminal/<<)>>/</Grammar.Alt>
 	  <P>
 	    The body of a syntax rule is an EBNF phrase.  It is distinguished
 	    between EBNF statements and EBNF expressions:  EBNF expressions
@@ -319,8 +322,8 @@
 	    corresponding actual parameter upon application of the nonterminal.
 	    <Grammar.Rule>?={syn formal}
 	      <Grammar.Alt type=def>?={variable}</Grammar.Alt>
-	      <Grammar.Alt type=or><<_>></Grammar.Alt>
-	      <Grammar.Alt type=or><<$>></Grammar.Alt>
+	      <Grammar.Alt type=or><Q class=terminal/<<_>>/</Grammar.Alt>
+	      <Grammar.Alt type=or><Q class=terminal/<<$>>/</Grammar.Alt>
 	  <P>
 	    An alternation specifies several sequences (called <Def
 	    >alternatives</Def>), separated by the choice operator&nbsp;<<[]>>.
@@ -329,19 +332,21 @@
 	    alternation is an expression and yields at runtime the value of
 	    the selected sequence at runtime.
 	    <Grammar.Rule>?={syn alt}
-	      <Grammar.Alt type=def
-		>?={syn seq} { <<[]>> ?={syn seq} }</Grammar.Alt>
+	      <Grammar.Alt type=def>?={syn seq} { <Q
+		class=terminal/<<[]>>/ ?={syn seq} }</Grammar.Alt>
 	  <P>
 	    At the beginning of an sequence, local variables may be declared.
 	    These are visible only inside the sequence.  The sequence itself
-	    is composed of <Math>n \ge 0</Math> EBNF factors, optionally
-	    followed by a semantic action.  If an EBNF expression is expected
-	    at the place the sequence stands, then a semantic action must
-	    either be an expression or omitted.  In the latter case, the
-	    last EBNF phrase must be an EBNF expression, the value of the
-	    sequence then is the value of this EBNF expression.  All other
-	    EBNF factors must be statements.  If <Math>n = 0</Math>, then the
-	    sequence may be written as <<skip>>.
+	    is composed of <Math.Choice><Math type=html><I>n&lt;/I> >= 0</Math>
+	    <Math type=latex>n \ge 0</Math></Math.Choice> EBNF factors,
+	    optionally followed by a semantic action.  If an EBNF expression
+	    is expected at the place the sequence stands, then a semantic
+	    action must either be an expression or omitted.  In the latter
+	    case, the last EBNF phrase must be an EBNF expression, the value
+	    of the sequence then is the value of this EBNF expression.  All
+	    other EBNF factors must be statements.  If <Math.Choice><Math
+	    type=html><I>n&lt;/I> = 0</Math><Math type=latex>n = 0</Math>
+	    </Math.Choice>, then the sequence may be written as <<skip>>.
 	    <Grammar.Rule>?={syn seq}
 	      <Grammar.Alt type=def
 		>[ { ?={variable} }+ <<in>> ]</Grammar.Alt>
@@ -376,7 +381,8 @@
 	      <Grammar.Alt type=or
 		>?={variable label} ?={syn actuals}</Grammar.Alt>
 	    <Grammar.Rule>?={syn actuals}
-	      <Grammar.Alt type=def><<(>> { ?={phrase} } <<)>></Grammar.Alt>
+	      <Grammar.Alt type=def><Q class=terminal/<<(>>/ { ?={phrase} } <Q
+		class=terminal/<<)>>/</Grammar.Alt>
 	  <P>
 	    Two grammar symbols are predefined which receive a special
 	    treatment:
@@ -406,8 +412,8 @@
 	    must have been declared local within the current syntax rule (or
 	    be a formal parameter).  An assignment is always a statement.
 	    <Grammar.Rule>?={syn assignment}
-	      <Grammar.Alt type=def
-		>?={escaped variable} <<=>> ?={syn factor}</Grammar.Alt>
+	      <Grammar.Alt type=def>?={escaped variable} <Q
+		class=terminal/<<=>>/ ?={syn factor}</Grammar.Alt>
 	<SubSubSection>
 	  <Title/Definition of Production Templates/
 	  <P>
@@ -422,7 +428,7 @@
 	    after their definition.  (This is to avoid cyclic production
 	    template expansions.)  Production templates may be redefined.
 	    <Grammar.Rule>?={parser descriptor}
-	      <Grammar.Alt type=add><?={prod clause}</Grammar.Alt>
+	      <Grammar.Alt type=add>?={prod clause}</Grammar.Alt>
 	  <P>
 	    A production template definition consists of a head and a body.
 	    The body specifies the EBNF phrase the production template is
@@ -472,32 +478,33 @@
 	    to="program.parser.example"> in line&nbsp;21.)
 	    <Grammar.Rule>?={prod head}
 	      <Grammar.Alt type=def>?={template definition}</Grammar.Alt>
-	      <Grammar.Alt type=or
-		>?={variable} <<=>> ?={template definition}</Grammar.Alt>
-	      <Grammar.Alt type=or
-		><<$>> <<=>> ?={template definition}</Grammar.Alt>
+	      <Grammar.Alt type=or>?={variable} <Q
+		class=terminal/<<=>>/ ?={template definition}</Grammar.Alt>
+	      <Grammar.Alt type=or><Q class=terminal/<<$>>/ <Q
+		class=terminal/<<=>>/ ?={template definition}</Grammar.Alt>
 	    <Grammar.Rule>?={template definition}
 	      <Grammar.Alt type=def>?={prod formal list}</Grammar.Alt>
-	      <Grammar.Alt type=or
-		>?={atom} <<:>> ?={prod formal list}</Grammar.Alt>
+	      <Grammar.Alt type=or>?={atom} <Q
+		class=terminal/<<:>>/ ?={prod formal list}</Grammar.Alt>
 	    <Grammar.Rule>?={prod formal list}
-	      <Grammar.Alt type=def
-		><<(>> ?={prod formals} <<)>> [ ?={prod postfix} ]</Grammar.Alt
-		>
-	      <Grammar.Alt type=or
-		><<[>> ?={prod formals} <<]>> [ ?={prod postfix} ]</Grammar.Alt
-		>
-	      <Grammar.Alt type=or
-		><<{>> ?={prod formals} <<}>> [ ?={prod postfix} ]</Grammar.Alt
-		>
+	      <Grammar.Alt type=def><Q
+		class=terminal/<<(>>/ ?={prod formals} <Q
+		class=terminal/<<)>>/ [ ?={prod postfix} ]</Grammar.Alt>
+	      <Grammar.Alt type=or><Q
+		class=terminal/<<[>>/ ?={prod formals} <Q
+		class=terminal/<<]>>/ [ ?={prod postfix} ]</Grammar.Alt>
+	      <Grammar.Alt type=or><Q
+		class=terminal/<<{>>/ ?={prod formals} <Q
+		class=terminal/<<}>>/ [ ?={prod postfix} ]</Grammar.Alt>
 	      <Grammar.Alt type=or
 		>?={variable} ?={prod postfix}</Grammar.Alt>
 	    <Grammar.Rule>?={prod formals}
-	      <Grammar.Alt type=def
-		>?={variable} { <<//>> ?={variable} }</Grammar.Alt>
+	      <Grammar.Alt type=def>?={variable} { <Q
+		class=terminal><<//>></Q> ?={variable} }</Grammar.Alt>
 	    <Grammar.Rule>?={prod postfix}
-	      <Grammar.Alt type=def
-		><<+>> | <<->> | <<*>> | <</>></Grammar.Alt>
+	      <Grammar.Alt type=def><Q class=terminal/<<+>>/ | <Q
+		class=terminal/<<->>/ | <Q class=terminal/<<*>>/ | <Q
+		class=terminal><</>></Q></Grammar.Alt>
 	<SubSubSection>
 	  <Title/Expansion of Production Templates/
 	  <P>
@@ -511,23 +518,23 @@
 	    actual EBNF phrases are allowed.
 	    <Grammar.Rule>?={template instantiation}
 	      <Grammar.Alt type=def>?={prod actual list}</Grammar.Alt>
-	      <Grammar.Alt type=or
-		>?={atom} <<:>> ?={prod actual list}</Grammar.Alt>
+	      <Grammar.Alt type=or>?={atom} <Q
+		class=terminal/<<:>>/ ?={prod actual list}</Grammar.Alt>
 	    <Grammar.Rule>?={prod actual list}
-	      <Grammar.Alt type=def
-		><<(>> ?={prod actuals} <<)>> [ ?={prod postfix} ]</Grammar.Alt
-		>
-	      <Grammar.Alt type=or
-		><<[>> ?={prod actuals} <<]>> [ ?={prod postfix} ]</Grammar.Alt
-		>
-	      <Grammar.Alt type=or
-		><<{>> ?={prod actuals} <<}>> [ ?={prod postfix} ]</Grammar.Alt
-		>
+	      <Grammar.Alt type=def><Q
+		class=terminal/<<(>>/ ?={prod actuals} <Q
+		class=terminal/<<)>>/ [ ?={prod postfix} ]</Grammar.Alt>
+	      <Grammar.Alt type=or><Q
+		class=terminal/<<[>>/ ?={prod actuals} <Q
+		class=terminal/<<]>>/ [ ?={prod postfix} ]</Grammar.Alt>
+	      <Grammar.Alt type=or><Q
+		class=terminal/<<{>>/ ?={prod actuals} <Q
+		class=terminal/<<}>>/ [ ?={prod postfix} ]</Grammar.Alt>
 	      <Grammar.Alt type=or
 		>?={syn application} ?={prod postfix}</Grammar.Alt>
 	    <Grammar.Rule>?={prod actuals}
-	      <Grammar.Alt type=def
-		>?={syn alt} { <<//>> ?={syn alt} }</Grammar.Alt>
+	      <Grammar.Alt type=def>?={syn alt} { <Q
+		class=terminal><<//>></Q> ?={syn alt} }</Grammar.Alt>
 	  <P>
 	    When a production template is expanded, name clashes must be
 	    avoided.  This is why the expansion proceeds in several steps:
@@ -622,15 +629,18 @@
 	    Before this algorithm is explained in the following, we need to
 	    introduce a definition.
 	  <Para class=apropos><Title/Definition/
-	    Let <Math>S</Math> be an expanded sequence (&ie;, template
+	    Let <Var type=meta>S</Var> be an expanded sequence (&ie;, template
 	    instantiations and assignments have been expanded) with EBNF
-	    factors <Math>0, \ldots, n</Math>.  Let <Math>i</Math> be the
-	    index of the first EBNF factor (application or semantic action) in
-	    which a local Variable&nbsp;<Math>V</Math> (which is not a formal
-	    parameter) of the sequence occurs.  Then we say that <Math>V</Math>
-	    is <Def/initialized/ in all EBNF factors with indices&nbsp;<Math
-	    >j</Math>, <Math>j \ge i</Math>, and <Def/uninitialized/ in all
-	    others.
+	    factors <Math.Choice><Math type=html>0, ..., <I>n&lt;/I></Math>
+	    <Math type=latex>0, \ldots, n</Math></Math.Choice>.  Let
+	    <Var type=meta>i</Var> be the index of the first EBNF factor
+	    (application or semantic action) in which a local
+	    Variable&nbsp;<Var type=meta>V</Var> (which is not a formal
+	    parameter) of the sequence occurs.  Then we say that <Var
+	    type=meta>V</Var> is <Def/initialized/ in all EBNF factors with
+	    indices&nbsp;<Var type=meta>j</Var>, <Math.Choice><Math type=html
+	    ><I>j&lt;/I> >= <I>i&lt;/I></Math><Math type=latex>j \ge i</Math>
+	    </Math.Choice>, and <Def/uninitialized/ in all others.
 	  <P>
 	    The following rules describe how attribute types are derived from
 	    their uses in applications of grammar symbols:
@@ -642,31 +652,33 @@
 		  the token value).
 	      <Item>
 		<P.silent><!--**-->
-		  Let the <Math>i</Math>th actual parameter of an application
-		  of a grammar symbol&nbsp;<Math>B</Math> be either an
-		  uninitialized local variable&nbsp;<Math>V</Math> or a
-		  nesting marker.  Then the <Math>i</Math>th formal parameter
-		  of&nbsp;<Math>B</Math> is a synthesized attribute.
-		  Furthermore, <Math>V</Math>&nbsp;may not occur in any
-		  other actual parameter of the application.
+		  Let the <Var type=meta>i</Var>th actual parameter of an
+		  application of a grammar symbol&nbsp;<Var type=meta>B</Var>
+		  be either an uninitialized local variable&nbsp;<Var type=meta
+		  >V</Var> or a nesting marker.  Then the <Var type=meta
+		  >i</Var>th formal parameter of&nbsp;<Var type=meta>B</Var>
+		  is a synthesized attribute.  Furthermore, <Var type=meta
+		  >V</Var>&nbsp;may not occur in any other actual parameter
+		  of the application.
 	      <Item>
 		<P.silent><!--**-->
-		  Let the <Math>i</Math>th actual parameter of an application
-		  of a grammar symbol&nbsp;<Math>B</Math> be either an
-		  initialized local variable&nbsp;<Math>V</Math> or a complex
-		  &Oz; expression (&ie;, neither a variable nor a
-		  nesting marker).  Then the <Math>i</Math>th formal parameter
-		  of&nbsp;<Math>B</Math> is an inherited attribute.
-		  Furthermore, no uninitialized variable may occur in said
-		  actual parameter.
+		  Let the <Var type=meta>i</Var>th actual parameter of an
+		  application of a grammar symbol&nbsp;<Var type=meta>B</Var>
+		  be either an initialized local variable&nbsp;<Var type=meta
+		  >V</Var> or a complex &Oz; expression (&ie;, neither a
+		  variable nor a nesting marker).  Then the <Var type=meta
+		  >i</Var>th formal parameter of&nbsp;<Var type=meta>B</Var>
+		  is an inherited attribute.  Furthermore, no uninitialized
+		  variable may occur in said actual parameter.
 	      <Item>
 		<P.silent><!--**-->
 		  If a formal parameter of the syntax rule for a
-		  nonterminal&nbsp;<Math>A</Math> is used as actual parameter
-		  of an application of a nonterminal&nbsp;<Math>B</Math>, then
-		  the corresponding formal parameters of <Math>A</Math>
-		  and&nbsp;<Math>B</Math> are attributes of the same type,
-		  &ie;, either both synthesized or both inherited.
+		  nonterminal&nbsp;<Var type=meta>A</Var> is used as actual
+		  parameter of an application of a nonterminal&nbsp;<Var
+		  type=meta>B</Var>, then the corresponding formal parameters
+		  of <Var type=meta>A</Var> and&nbsp;<Var type=meta>B</Var>
+		  are attributes of the same type, &ie;, either both
+		  synthesized or both inherited.
 	    </List>
 	    Note that nothing can be concluded from the use of a formal
 	    parameter variable in a semantic action, since Oz does not
@@ -721,8 +733,7 @@
 	  <Item>
 	    <P.silent><!--**-->
 	      This method is invoked each time a reduction takes place.
-	      The parameter&nbsp;<Var type=meta>I</Var> is the number of
-	      the rule reduced.
+	      The parameter&nbsp;<<I>> is the number of the rule reduced.
 	</List>
       <P>
 	<<GumpParser.'class'>> defines several attributes and methods that
@@ -746,23 +757,21 @@
 	  <Item>
 	    <P.silent><!--**-->
 	      This initializes the internal structures of the
-	      <<GumpParser.'class'>> and connects it to a scanner&nbsp;<Var
-	      type=meta>P</Var>.  <Var type=meta>P</Var>&nbsp;must at least
-	      understand the messages <<putToken>> and <<getToken>> as
-	      described in <Ptr to="section.scanner.class">.
+	      <<GumpParser.'class'>> and connects it to a scanner&nbsp;<<P>>.
+	      <<P>>&nbsp;must at least understand the messages <<putToken>> and
+	      <<getToken>> as described in <Ptr to="section.scanner.class">.
 	  <Entry><<meth parse(?+{T} ??{B})>>
 	  <Item>
 	    <P.silent><!--**-->
-	      This methods initates a parse.  The label of tuple&nbsp;<Var
-	      type=meta>T</Var> denotes the start symbol to use (which
-	      must be a declared nonterminal named by an atom); its features
-	      correspond to the parameters of the corresponding syntax rule.
-	      Values of inherited attributes are extracted from this tuple,
-	      values of synthesized attributes are unified with the
-	      corresponding features after the parse is finished
-	      (successfully).  The parameter&nbsp;<Var type=meta>B</Var>
-	      is unified with <<true>> if the parse was successful and with
-	      <<false>>.
+	      This methods initates a parse.  The label of tuple&nbsp;<<T>>
+	      denotes the start symbol to use (which must be a declared
+	      nonterminal named by an atom); its features correspond to
+	      the parameters of the corresponding syntax rule.  Values of
+	      inherited attributes are extracted from this tuple, values
+	      of synthesized attributes are unified with the corresponding
+	      features after the parse is finished (successfully).  The
+	      parameter&nbsp;<<B>> is unified with <<true>> if the parse was
+	      successful and with <<false>> otherwise.
 	  <Entry><<meth accept()>>
 	  <Item>
 	    <P.silent><!--**-->
@@ -799,12 +808,12 @@
 	    <P.silent><!--**-->
 	      This method is always invoked when (during normal parsing) an
 	      error in the input is recognized.  It is handed a diagnostic
-	      message in&nbsp;<Var type=meta>V</Var>.  This method may be
-	      overridden in derived classes.
+	      message in&nbsp;<<V>>.  This method may be overridden in derived
+	      classes.
 	  <Entry><<meth getScanner(??{P})>>
 	  <Item>
 	    <P.silent><!--**-->
-	      Returns the scanner object or procedure&nbsp;<Var type=meta
-	      >P</Var> currently used as the token source.
+	      Returns the scanner object or procedure&nbsp;<<P>> currently
+	      used as the token source.
 	</List>
 </Chapter>
