@@ -40,8 +40,11 @@ prepare
    %% URI.  The ADT exports the function `get' which takes as argument
    %% an atom representing the local part of the name and returns the
    %% corresponding XML name in this namespace.  KeyURI is an atom.
+   %% the exported `toList' function returns the list of all XML names
+   %% currently in the namespace.
    %% ================================================================
 
+   DictItems = Dictionary.items
    fun {NewNameSpace KeyURI}
       Table = {NewDictionary}
       fun {Get LocalPart}
@@ -57,10 +60,12 @@ prepare
 	    Name
 	 else Name end
       end
+      fun {ToList} {DictItems Table} end
    in
       namespace(
-	 uri : KeyURI
-	 get : Get)
+	 uri    : KeyURI
+	 get    : Get
+	 toList : ToList)
    end
 
    %% ================================================================
@@ -68,7 +73,9 @@ prepare
    %% space collection.  Its purpose is to map namespace URIs to
    %% namespace ADTs (see above).  It exports a `get' function which
    %% takes an atom KeyURI as argument and returns the corresponding
-   %% namespace ADT, creating it if necessary.
+   %% namespace ADT, creating it if necessary.  The exported `toList'
+   %% function returns a list of all namespaces currently in the
+   %% collection.
    %% ================================================================
 
    fun {NewNameSpaceCollection}
@@ -83,9 +90,11 @@ prepare
 	    NameSpace
 	 else NameSpace end
       end
+      fun {ToList} {DictItems Table} end
    in
       namespaceCollection(
-	 get : Get)
+	 get    : Get
+	 toList : ToList)
    end
 
    %% ================================================================

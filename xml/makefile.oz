@@ -1,8 +1,8 @@
 makefile(
-   bin : ['demo.exe']
    lib : ['Tokenizer.ozf'
 	  'Parser.ozf'
 	  'NameSpaces.ozf'
+	  'SAX.ozf'
 	  'TEST.oz'
 	  %'apptut.xml'
 	 ]
