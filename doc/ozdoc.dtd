@@ -684,11 +684,15 @@
 <!ATTLIST see
         %common.attr;
 >
-<!ATTLIST (index|and)
+<!ATTLIST index
         %common.attr;
         sort.as CDATA #IMPLIED
         scope IDREFS #IMPLIED
         see IDREF #IMPLIED
+>
+<!ATTLIST and
+        %common.attr;
+        sort.as CDATA #IMPLIED
 >
 
 <!--==================== BNF MARKUP ===============================-->
