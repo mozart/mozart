@@ -171,11 +171,11 @@ class SendRecvCounter;
 
 OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg);
 OZ_Return portSend(Tertiary *p, TaggedRef msg,Thread* t);
-void cellDoExchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
-void cellDoAccess(Tertiary*,TaggedRef);
-void cellAtAccess(Tertiary*,TaggedRef,TaggedRef);
-void cellAtExchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
-void cellAssignExchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
+OZ_Return cellDoExchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
+OZ_Return cellDoAccess(Tertiary*,TaggedRef);
+OZ_Return cellAtAccess(Tertiary*,TaggedRef,TaggedRef);
+OZ_Return cellAtExchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
+OZ_Return cellAssignExchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
 void lockInstallHandler(Tertiary*,TaggedRef,TaggedRef,Thread*);
 TaggedRef cellGetContentsFast(Tertiary *c);
 int perdioInit();
