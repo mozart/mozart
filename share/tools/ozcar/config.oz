@@ -16,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = 'May 01 1997'
+Version                = 'May 08 1997'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -122,12 +122,12 @@ HashAtom               = "'#'"
 TrueName               = 'true'
 FalseName              = 'false'
 
-MagicAtom              = 'noActionPlease'
+NoAction               = {NewName}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Geometry
 %%
-ToplevelGeometry       = '510x360+30+40'
+ToplevelGeometry       = '510x360+46+3'
 
 ThreadTreeWidth        = 120
 ThreadTreeStretchX     = 11
@@ -201,6 +201,9 @@ TimeoutToSwitch        = 260
 TimeoutToStatus        = 240
 
 HelpEvent              = '<3>'
+
+PrintDepth             = 2  % for System.valueToVirtualString
+PrintWidth             = 3
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Colors and colormodel related stuff

@@ -47,7 +47,12 @@ Dget     = Dictionary.get
 Ditems   = Dictionary.items
 Dremove  = Dictionary.remove
 Dmember  = Dictionary.member
+DcondGet = Dictionary.condGet
 
+fun {V2VS X}
+   {System.valueToVirtualString X PrintDepth PrintWidth}
+end
+ 
 BreakpointStaticHelp   = {NewName}
 BreakpointDynamicHelp  = {NewName}
 StatusHelp             = {NewName}
@@ -130,7 +135,7 @@ in
       case S.1 == &/ then
 	 try                   % absolute path
 	    {OS.stat F _}
-	    {OzcarMessage LS # F # ' really is ' # F}
+	    {OzcarMessage LS # F # ' found'}
 	    F
 	 catch system(...) then
 	    {OzcarError LS # F # ' NOT FOUND!'} % should not happen!

@@ -80,44 +80,47 @@ in
 	    
 	 of step(thr:T#I file:File line:Line builtin:IsBuiltin
 		 time:Time frame:FrameId ...) then
-	    Name = case {Value.hasFeature M name} then M.name else nil end
-	    Args = case {Value.hasFeature M args} then M.args else nil end
+	    Name = {CondSelect M name nil}
+	    Args = {CondSelect M args nil}
+	    Ok   = {AppOK Name}
 	 in
-	    case {Thread.is T} then
-	       Ok = {AppOK Name}
-	    in
-	       case ThreadManager,Exists(I $) then
-		  case Ok then
-		     ThreadManager,step(file:File line:Line thr:T id:I
-					name:Name args:Args frame:FrameId
-					builtin:IsBuiltin time:Time)
-		  else
-		     ThreadManager,AddToSkippedProcs(Name T I FrameId)
-		  end
-	       elsecase (File == '' orelse File == 'nofile') then
-		  {Dbg.trace T false}
-		  {Dbg.stepmode T false}
-		  {Thread.resume T}
-		  case {HasFeature Args 1} andthen {IsRecord Args.1} andthen
-		     (Args.1 == off orelse {Label Args.1} == bpAt) then
-		     {OzcarMessage 'message from Emacs detected.'}
-		  else
-		     Gui,status(IgnoreNoFileStep)
-		  end
+	    case ThreadManager,Exists(I $) then
+	       case Ok then
+		  ThreadManager,step(file:File line:Line thr:T id:I
+				     name:Name args:Args frame:FrameId
+				     builtin:IsBuiltin time:Time)
 	       else
-		  {OzcarMessage WaitForThread}
-		  {Delay 240} % thread should soon be added
-		  case @Breakpoint then
-		     Breakpoint <- false
-		  else
-		     % case Ok then
-		     ThreadManager,step(file:File line:Line thr:T id:I
-					name:Name args:Args frame:FrameId
-					builtin:IsBuiltin time:Time)
-		  end
+		  ThreadManager,AddToSkippedProcs(Name T I FrameId)
 	       end
+
 	    else
-	       {OzcarMessage InvalidThreadID}
+	       ForMe = try {Nth Args 3} == self
+		       catch failure(...) then false end
+	    in
+	      case ForMe then
+		 {Dbg.trace T false}
+		 {Dbg.stepmode T false}
+		 {Thread.resume T}
+		 {OzcarMessage 'message for Ozcar detected.'}
+
+	      elsecase (File == '' orelse File == 'nofile') then
+		 {Dbg.trace T false}
+		 {Dbg.stepmode T false}
+		 {Thread.resume T}
+		 Gui,status(IgnoreNoFileStep)
+
+	      else
+		 {OzcarMessage WaitForThread}
+		 {Delay 240} % thread should soon be added
+		 case @Breakpoint then
+		    Breakpoint <- false
+		 else
+		    %% case Ok then
+		    ThreadManager,step(file:File line:Line thr:T id:I
+				       name:Name args:Args frame:FrameId
+				       builtin:IsBuiltin time:Time)
+		 end
+	      end
 	    end
 
 	 [] exit(thr:T#I frame:Frame) then
@@ -246,7 +249,8 @@ in
 		     Gui,markNode(I runnable)
 		     case T == @currentThread then
 			F L in
-			{StackObj getPos(file:F line:L)}
+			{ForAll [rebuild(true) getPos(file:F line:L)
+				 print] StackObj}
 			Gui,status('Thread #' # I # ' is runnable again')
 			SourceManager,scrollbar(file:F line:L what:appl
 						color:ScrollbarApplColor)
@@ -444,11 +448,11 @@ in
 	 Stack = @currentStack
       in
 	 case Stack == undef then
-	    Gui,status(FirstSelectThread)
+	    Gui,doStatus(FirstSelectThread)
 	 else
-	    Gui,status(RebuildMessage # {Thread.id @currentThread} # '...')
+	    Gui,doStatus(RebuildMessage # {Thread.id @currentThread} # '...')
 	    {ForAll [rebuild(true) print] Stack}
-	    Gui,status(DoneMessage append)
+	    Gui,doStatus(DoneMessage append)
 	 end
       end
       
