@@ -302,21 +302,21 @@ void exitCheckSpace() {
  * into a structure in the from-space.
  *
  */
-#define STOREFWDNOMARK(fromPtr, newValue)  \
-  CPTRAIL(fromPtr);                        \
+#define STOREFWDNOMARK(fromPtr, newValue)		\
+  CPTRAIL(fromPtr);					\
   *((int32 *) fromPtr) = ToInt32(newValue);
 
-#define STOREFWDMARK(fromPtr, newValue)   \
-  Assert(isDWAligned(newValue));		  \
-  CPTRAIL(fromPtr);                       \
+#define STOREFWDMARK(fromPtr, newValue)			\
+  Assert(isSTAligned(newValue));			\
+  CPTRAIL(fromPtr);					\
   *((int32 *) fromPtr) = makeTaggedMarkPtr(newValue);
 
-#define STOREPSEUDOFWDMARK(fromPtr, newValue)   \
-  CPTRAIL(fromPtr);                       \
+#define STOREPSEUDOFWDMARK(fromPtr, newValue)		\
+  CPTRAIL(fromPtr);					\
   *((int32 *) fromPtr) = makeTaggedRef(newValue);
 
-#define STOREFWDFIELD(d,t) \
-  CPTRAIL(d->cacGetMarkField()); \
+#define STOREFWDFIELD(d,t)				\
+  CPTRAIL(d->cacGetMarkField());			\
   d->cacMark(t);
 
 
@@ -905,13 +905,12 @@ void VarFix::_cacFix(void)
       Board *bb = ov->getBoardInternal()->derefBoard()->cacGetFwd();
       to_ptr = newTaggedOptVar(bb->getOptVar());
 
-      // Now, 'to_ptr' is either double-word aligned, or it is not.
-      // Depending on that, either a usual "GC forward" is stored, or
-      // the REF2 is used;
-      if (isDWAligned(to_ptr)) {
+      // Now, 'to_ptr' is either double-word aligned (isSTAligned()),
+      // or it is not.  Depending on that, either a usual "GC forward"
+      // is stored, or the REF2 is used;
+      if (isSTAligned(to_ptr)) {
 	STOREFWDMARK(aux_ptr, to_ptr);
       } else {
-	Assert(isSWAligned(to_ptr));
 	STOREPSEUDOFWDMARK(aux_ptr, to_ptr);
       }
     } else {
@@ -920,7 +919,7 @@ void VarFix::_cacFix(void)
       if (oz_isMark(aux)) {
 	to_ptr = (TaggedRef *) tagged2UnmarkedPtr(aux);
       } else {
-	Assert(oz_isRef(aux) && isSWAligned(tagged2Ref(aux)));
+	Assert(oz_isRef(aux));
 	to_ptr = tagged2Ref(aux);
       }
     }
@@ -1441,9 +1440,9 @@ TaskStack * TaskStack::_cac(void) {
   Frame * newtop = newstack->tos;
 
   while (1) {
-    ProgramCounter PC    = (ProgramCounter) *(--newtop);
+    ProgramCounter   PC  = (ProgramCounter) *(--newtop);
     RefsArray     ** Y   = (RefsArray **)     --newtop;
-    TaggedRef      * CAP = (TaggedRef *)      --newtop;
+    void          ** CAP = (void **)          --newtop;
     
 #ifdef G_COLLECT
     gCollectCode(PC);
@@ -1461,26 +1460,38 @@ TaskStack * TaskStack::_cac(void) {
       (void) CodeArea::livenessX(pc,*Y);
       *Y = (*Y)->_cac();
     } else if (PC == C_LOCK_Ptr) {
-      oz_cacTerm(*CAP, *CAP);
+      TaggedRef ct = makeTaggedConst((ConstTerm *) *CAP);
+      oz_cacTerm(ct, ct);
+      *CAP = tagged2Const(ct);
     } else if (PC == C_SET_SELF_Ptr) {
-      oz_cacTerm(*CAP, *CAP);
+      ConstTerm *ct = (ConstTerm *) *CAP;;
+      if (ct) {
+	TaggedRef ctt = makeTaggedConst(ct);
+	oz_cacTerm(ctt, ctt);
+	*CAP = tagged2Const(ctt);
+      }
     } else if (PC == C_SET_ABSTR_Ptr) {
       ;
     } else if (PC == C_DEBUG_CONT_Ptr) {
 #ifdef G_COLLECT
       *Y = (RefsArray *) ((OzDebug *) *Y)->gCollectOzDebug();
 #endif
+      Literal *l = (Literal *) *CAP;
+      if (l) {
+	TaggedRef lt = makeTaggedLiteral(l);
+	oz_cacTerm(lt, lt);
+	*CAP = tagged2Literal(lt);
+      }
     } else if (PC == C_CALL_CONT_Ptr) {
       oz_cacTerm(*((TaggedRef *) Y), *((TaggedRef *) Y));
-      *CAP = makeTaggedVerbatim(((RefsArray *) 
-				 tagged2Verbatim(*CAP))->_cac());
+      *CAP = ((RefsArray *) *CAP)->_cac();
     } else { // usual continuation
       *Y   = (*Y)->_cac();
-      oz_cacTerm(*CAP, *CAP);
+      TaggedRef ct = makeTaggedConst((ConstTerm *) *CAP);
+      oz_cacTerm(ct, ct);
+      *CAP = tagged2Const(ct);
     }
-
   }
-
 }
 
 inline 
@@ -1937,7 +1948,7 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
 
        // Now, if we've reached a variable through a REF2, that
        // variable can be already GC"ed:
-       if (isSWAligned(aux_ptr) &&
+       if (!isSTAligned(aux_ptr) &&
 	   IsToSpaceBoard(cv->getBoardInternal())) {
 	 GCDBG_INTOSPACE(aux_ptr);
 	 *t = makeTaggedRef(aux_ptr);
@@ -1988,19 +1999,17 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
 	 // collected (but not necessarily scanned);
 	 Assert(bb);
 	 *t = bb->getOptVar();
-	 if (isDWAligned(f)) {
+	 if (isSTAligned(f)) {
 	   STOREFWDMARK(f, t);
 	 } else {
-	   Assert(isSWAligned(f));
 	   STOREPSEUDOFWDMARK(f, t);
 	 }
        } else {
 	 *f = makeTaggedRef(t);
 	 *t = aux;
-	 if (isDWAligned(f)) {
+	 if (isSTAligned(f)) {
 	   STOREFWDMARK(f, t);
 	 } else {
-	   Assert(isSWAligned(f));
 	   STOREPSEUDOFWDMARK(f, t);
 	 }
        }

@@ -54,6 +54,19 @@
 # define NULL 0
 #endif
 
+//
+#define MAX_DP_STRING		4
+// MARSHALERMAJOR "#" MARSHALERMINOR:
+#define MARSHALERVERSION	"3#0"
+#define MARSHALERMAJOR		3
+#define MARSHALERMINOR		0
+
+//
+#define PERDIOVERSION     "3#0" /* PERDIOMAJOR "#" PERDIOMINOR */
+#define PERDIOMAJOR          3
+#define PERDIOMINOR          0
+
+
 const unsigned int KB = 1024;
 const unsigned int MB = KB*KB;
 

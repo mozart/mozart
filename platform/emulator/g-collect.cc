@@ -998,8 +998,8 @@ void AM::doGCollect(void) {
   unsetSFlag(StartGC);
 }
 
-void AM::gCollect(int msgLevel) {
-
+void AM::gCollect(int msgLevel)
+{
   gCollectWeakDictionariesInit();
   vf.init();
   cacStack.init();

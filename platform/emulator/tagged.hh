@@ -138,8 +138,8 @@ inline int hasLtag(TaggedRef t, ltag_t lt) { return __hasLtag(t,lt); }
  *
  */
 
-#define isSWAligned(ptr)  (ToInt32(ptr) & STAG_MASK)
-#define isDWAligned(ptr)  (!isSWAligned(ptr))
+#define isSTAligned(ptr)  (!(ToInt32(ptr) & STAG_MASK))
+#define isLTAligned(ptr)  (!(ToInt32(ptr) & LTAG_MASK))
 
 
 
@@ -174,7 +174,6 @@ inline int hasLtag(TaggedRef t, ltag_t lt) { return __hasLtag(t,lt); }
 
 #define _tagValueOf2(tag,ref)    TaggedToPointer(((ref)>>TAG_PTRBITS) - ((tag)>>TAG_PTRBITS))
 #define _tagValueOf(ref)         TaggedToPointer(((ref)>>TAG_PTRBITS)&~TAG_LOWERMASK)
-#define _tagValueOfVerbatim(ref) ((void*)(((ref) >> TAG_PTRBITS)&~TAG_LOWERMASK))
 #define _makeTaggedRef2(tag,i)   ((i << TAG_PTRBITS) | tag)
 
 #define _makeTaggedRef2i(tag,ptr) _makeTaggedRef2(tag,(int32)ToInt32(ptr))
@@ -183,7 +182,7 @@ inline int hasLtag(TaggedRef t, ltag_t lt) { return __hasLtag(t,lt); }
 /* small ints are the only TaggedRefs that do not
  * contain a pointer in the value part */
 #define _makeTaggedSmallInt(s) ((s << LTAG_BITS) | LTAG_SMALLINT)
-// kost@ : both generic traverser and builder exploit 'TAG_GCMARK':
+#define _makeTaggedMarkInt(s) ((s << LTAG_BITS) | LTAG_MARK0)
 
 #define _makeTaggedRef(s) ((TaggedRef) ToInt32(s))
 #define _isRef(term)      ((term & TAG_LOWERMASK) == 0)
@@ -217,10 +216,6 @@ inline void * tagValueOf(TaggedRef ref) {
 inline void * tagValueOf2(ltag_t tag, TaggedRef ref) {
   return _tagValueOf2(tag,ref);
 }
-inline void * tagValueOfVerbatim(TaggedRef ref) { 
-  return _tagValueOfVerbatim(ref);
-}
-
 inline TaggedRef makeTaggedRef2i(ltag_t tag, int32 i) {
   Assert((i&3) == 0); return _makeTaggedRef2(tag,i);
 }
@@ -271,14 +266,22 @@ inline ConstTerm * tagged2Const(TaggedRef ref) {
   Assert(oz_isConst(ref));
   return (ConstTerm *) tagValueOf2(LTAG_CONST0,ref);
 }
-inline void * tagged2Verbatim(TaggedRef t) {
-  return (void *) _tagValueOfVerbatim(t);
-}
 inline void * tagged2UnmarkedPtr(TaggedRef ref) {
   Assert(oz_isMark(ref));
   return (void *) tagValueOf2(LTAG_MARK0,ref);
 }
-#define tagged2UnmarkedInt(t) ((int32) ((t) >> LTAG_BITS))
+
+inline int tagged2UnmarkedInt(TaggedRef t) {
+  Assert(oz_isMark(t));
+  int help = (int) t;
+
+  if (WE_DO_ARITHMETIC_SHIFTS) {
+    return (help>>LTAG_BITS);
+  } else {
+    return (help >= 0) ? help >> LTAG_BITS
+                       : ~(~help >> LTAG_BITS);
+  }
+}
 
 inline int tagged2SmallInt(TaggedRef t) {
   Assert(oz_isSmallInt(t));
@@ -304,37 +307,45 @@ inline TaggedRef makeTaggedRef(TaggedRef * s) {
   return _makeTaggedRef(s);
 }
 inline TaggedRef makeTaggedVar(OzVariable *s) {
-  Assert(s != NULL && oz_isHeapAligned(s));
+  Assert(s != NULL && isSTAligned(s));
   return makeTaggedRef2p(LTAG_VAR0, s);
 }
+// For the GenTraverser (non-relocatable pointers are masqueraded as
+// tagged variables);
+inline TaggedRef makePseudoTaggedVar(void *p) {
+  Assert(p != NULL && isSTAligned(p));
+  return makeTaggedRef2p(LTAG_VAR0, p);
+}
 inline TaggedRef makeTaggedLTuple(LTuple *s) {
-  Assert(s != NULL && oz_isHeapAligned(s));
+  Assert(s != NULL && isSTAligned(s));
   return makeTaggedRef2p(LTAG_LTUPLE0,s);
 }
 inline TaggedRef makeTaggedSRecord(SRecord *s) {
-  Assert(s != NULL && oz_isHeapAligned(s));
+  Assert(s != NULL && isSTAligned(s));
   return makeTaggedRef2p(LTAG_SRECORD0,s);
 }
 inline TaggedRef makeTaggedLiteral(Literal *s) {
-  Assert(s != NULL && oz_isDoubleHeapAligned(s));
+  Assert(s != NULL && isLTAligned(s));
   return makeTaggedRef2p(LTAG_LITERAL,s);
 }
 inline TaggedRef makeTaggedConst(ConstTerm *s) {
-  Assert(s != NULL && oz_isHeapAligned(s));
+  Assert(s != NULL && isSTAligned(s));
   return makeTaggedRef2p(LTAG_CONST0,s);
 }
 inline TaggedRef makeTaggedMarkPtr(void * s) {
-  Assert(oz_isHeapAligned(s));
+  Assert(isSTAligned(s));
   return makeTaggedRef2p(LTAG_MARK0,s);
 }
-#define makeTaggedMarkInt(s) (((s) << LTAG_BITS) | LTAG_MARK0)
+inline TaggedRef makeTaggedMarkInt(int si) {
+  Assert(tagged2UnmarkedInt(_makeTaggedMarkInt(si)) == si);
+  return (_makeTaggedMarkInt(si));
+}
+// e.g. gentraverser needs static constants;
+#define makeTaggedMarkIntNOTEST(si)	_makeTaggedMarkInt(si)
 
 inline TaggedRef makeTaggedSmallInt(int s) {
   Assert(s >= OzMinInt && s <= OzMaxInt);
   return _makeTaggedSmallInt(s);
-}
-inline TaggedRef makeTaggedVerbatim(void * s) {
-  return makeTaggedRef2p((ltag_t)0,s);
 }
 
 
@@ -446,6 +457,10 @@ inline Bool oz_eq(TaggedRef t1, TaggedRef t2) {
 
 #endif
 
+/*
+ * generic "address of" routine;
+ */
+void *tagged2Addr(TaggedRef t);
 
 
 

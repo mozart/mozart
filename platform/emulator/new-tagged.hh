@@ -132,12 +132,15 @@ inline int hasLtag(TaggedRef t, ltag_t lt) { return __hasLtag(t,lt); }
 
 
 /*
- * Alignment tests
+ * Alignment tests: "is Short/Long Tag Aligned"
+ * The memory initialization routine ('initMemoryManagement()') checks
+ * whether this can be really fulfilled. 
  *
  */
 
-#define isSWAligned(ptr)  (ToInt32(ptr) & STAG_MASK)
-#define isDWAligned(ptr)  (!isSWAligned(ptr))
+#define isRTAligned(ptr)  (!(ToInt32(ptr) & RTAG_MASK))
+#define isSTAligned(ptr)  (!(ToInt32(ptr) & STAG_MASK))
+#define isLTAligned(ptr)  (!(ToInt32(ptr) & LTAG_MASK))
 
 
 
@@ -164,7 +167,6 @@ inline int hasLtag(TaggedRef t, ltag_t lt) { return __hasLtag(t,lt); }
 
 #define __unltag_ptr(t,lt)   ((void *) ((t)-(lt)))
 #define __unstag_ptr(t,st)   ((void *) ((t)-(st)))
-#define __unstag_verbatim(t) ((void *) ((t)&(~STAG_MASK)))
 
 // FIXME
 #define ARITHMETIC_SHIFTS
@@ -259,10 +261,6 @@ int tagged2SmallInt(TaggedRef t) {
   Assert(oz_isSmallInt(t));
   return (int) __unltag_int(t);
 }
-inline 
-void * tagged2Verbatim(TaggedRef t) {
-  return (void *) __unstag_verbatim(t);
-}
 
 #else
 
@@ -275,7 +273,6 @@ void * tagged2Verbatim(TaggedRef t) {
 #define tagged2UnmarkedPtr(t) ((void *) __unstag_ptr(t,STAG_MARK))
 #define tagged2UnmarkedInt(t) ((int) __unstag_int(t))
 #define tagged2SmallInt(t)    ((int) __unltag_int(t))
-#define tagged2Verbatim(t)    ((void *) __unstag_verbatim(t))
 
 #endif
 
@@ -290,50 +287,56 @@ void * tagged2Verbatim(TaggedRef t) {
 
 inline 
 TaggedRef makeTaggedRef(TaggedRef *s) {
-  Assert(s != NULL); 
+  Assert(s != NULL && isRTAligned(s)); 
   return (TaggedRef) s;
 }
 inline 
 TaggedRef makeTaggedVar(OzVariable *s) {
-  Assert(s != NULL && oz_isHeapAligned(s));
+  Assert(s != NULL && isSTAligned(s));
   return __stag_ptr(s,STAG_VAR);
+}
+// For the GenTraverser (non-relocatable pointers are masqueraded as
+// tagged variables);
+inline TaggedRef makePseudoTaggedVar(void *p) {
+  Assert(p != NULL && isSTAligned(p));
+  return (__stag_ptr(p, STAG_VAR));
 }
 inline 
 TaggedRef makeTaggedLTuple(LTuple *s) {
-  Assert(s != NULL && oz_isHeapAligned(s));
+  Assert(s != NULL && isSTAligned(s));
   return __stag_ptr(s,STAG_LTUPLE);
 }
 inline 
 TaggedRef makeTaggedSRecord(SRecord *s) {
-  Assert(s != NULL && oz_isHeapAligned(s));
+  Assert(s != NULL && isSTAligned(s));
   return __stag_ptr(s,STAG_SRECORD);
 }
 inline 
 TaggedRef makeTaggedLiteral(Literal *s) {
-  Assert(s != NULL && oz_isDoubleHeapAligned(s));
+  Assert(s != NULL && isLTAligned(s));
   return __ltag_ptr(s,LTAG_LITERAL);
 }
 inline 
 TaggedRef makeTaggedConst(ConstTerm *s) {
-  Assert(s != NULL && oz_isHeapAligned(s));
+  Assert(s != NULL && isSTAligned(s));
   return __stag_ptr(s,STAG_CONST);
 }
 inline 
-TaggedRef makeTaggedMarkPtr(void * s) {
-  Assert(oz_isHeapAligned(s));
-  return __stag_ptr(s,STAG_MARK);
+TaggedRef makeTaggedMarkPtr(void *p) {
+  Assert(isSTAligned(p));
+  return __stag_ptr(p, STAG_MARK);
 }
-#define makeTaggedMarkInt(s) __stag_int(s,STAG_MARK)
-
+inline
+TaggedRef makeTaggedMarkInt(int si) {
+  Assert((int) __unstag_int(__stag_int(si, STAG_MARK)) == si);
+  return (__stag_int(si, STAG_MARK));
+}
+// e.g. gentraverser needs static constants;
+#define makeTaggedMarkIntNOTEST(si)	__stag_int(si, STAG_MARK)
 inline 
 TaggedRef makeTaggedSmallInt(int s) {
   Assert(s >= OzMinInt && s <= OzMaxInt);
   return __ltag_int(s,LTAG_SMALLINT);
-}
-inline 
-TaggedRef makeTaggedVerbatim(void * s) {
-  Assert(oz_isHeapAligned(s));
-  return (TaggedRef) s;
 }
 
 #else
@@ -346,8 +349,8 @@ TaggedRef makeTaggedVerbatim(void * s) {
 #define makeTaggedConst(s)    __stag_ptr(s,STAG_CONST)
 #define makeTaggedMarkPtr(s)  __stag_ptr(s,STAG_MARK)
 #define makeTaggedMarkInt(s)  __stag_int(s,STAG_MARK)
+#define makeTaggedMarkIntNOTEST(si)	__stag_int(si, STAG_MARK)
 #define makeTaggedSmallInt(s) __ltag_int(s,LTAG_SMALLINT)
-#define makeTaggedVerbatim(s) ((TaggedRef) s)
 
 #endif
 
@@ -470,6 +473,10 @@ inline Bool oz_eq(TaggedRef t1, TaggedRef t2) {
 
 #endif
 
+/*
+ * generic "address of" routine;
+ */
+void *tagged2Addr(TaggedRef t);
 
 
 

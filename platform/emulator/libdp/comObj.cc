@@ -29,9 +29,9 @@
 #include "connection.hh"
 #include "timers.hh"
 
-#define OPEN_TIMEOUT ozconf.dpProbeTimeout / 10
-#define CLOSE_TIMEOUT ozconf.dpProbeTimeout
-#define WF_REMOTE_TIMEOUT ozconf.dpProbeTimeout*10
+#define OPEN_TIMEOUT		(ozconf.dpProbeTimeout / 10)
+#define CLOSE_TIMEOUT		(ozconf.dpProbeTimeout)
+#define WF_REMOTE_TIMEOUT	(ozconf.dpProbeTimeout * 10)
 
 #define MSG_ACK_TIMEOUT 1000
 #define MSG_ACK_LENGTH 50
