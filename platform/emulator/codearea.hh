@@ -155,6 +155,7 @@ class CodeArea {
   static HashTable atomTab;
   static HashTable nameTab;
   friend TaggedRef OZ_atom(OZ_CONST char *str);
+  friend TaggedRef oz_atomNoDup(OZ_CONST char *str);
   friend TaggedRef oz_uniqueName(const char *str);
   friend inline void printAtomTab();
   friend inline void printNameTab();

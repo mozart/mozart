@@ -230,6 +230,7 @@ inline
 TaggedRef oz_atom(OZ_CONST char *s) {
   return OZ_atom(s);
 }
+extern TaggedRef oz_atomNoDup(const char *s);
 extern TaggedRef oz_uniqueName(const char *s);
 
 
