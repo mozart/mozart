@@ -1166,7 +1166,7 @@ urlc::parse_http(const char* line)
     else {
         long i = 0;
         i = strtol(p_collon, NULL, 10); // ANSI
-        if((0 >= i) || (USHRT_MAX < i))
+        if((0 >= i) || (USHRT_MAX < (unsigned long)i))
             th1(URLC_EINVAL);
         port = (unsigned short)i;
     }
