@@ -89,25 +89,8 @@ inline uint32 ToInt32(uint32 t) { return t; }
 inline void *orPointer(void *p, int i)  { return (void*) ((intlong)p|(intlong)i); }
 inline void *andPointer(void *p, int i) { return (void*) ((intlong)p&(intlong)i); }
 
-#ifdef THREADED
-
-#if defined(AS_HAS_MULTIPLE_ALIGN) || defined(AS_HAS_POWER_ALIGN)
-
+#if defined(THREADED) && defined(AS_CAN_INLINE_OPCODE_MAP)
 #define INLINEOPCODEMAP
-#define OPCODEALIGN 4
-
-#ifdef AS_HAS_MULTIPLE_ALIGN
-#define OPCODEALIGNINSTR ".align 16"
-#endif
-
-#ifdef AS_HAS_POWER_ALIGN
-#define OPCODEALIGNINSTR ".align 4"
 #endif
 
 #endif
-#endif
-
-
-#endif
-
-
