@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
-1040
-1066
-7520
-8699
+1197
+0
+7514
+8691
 2
 MProject
 3
@@ -32,9 +32,9 @@ WVList
 VComponent
 9
 WRect
-0
-0
-1440
+116
+128
+1430
 3840
 0
 0
@@ -48,9 +48,9 @@ oz.tgt
 VComponent
 12
 WRect
-1680
-0
-1280
+1742
+140
+1275
 4480
 0
 0
@@ -59,5 +59,5 @@ WFileName
 9
 setup.tgt
 0
-1
+3
 8
