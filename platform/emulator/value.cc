@@ -478,6 +478,8 @@ void bigIntInit()
   mp_set_memory_functions(bigint_alloc,bigint_realloc,bigint_dealloc);
   TaggedOzOverMaxInt = makeTaggedConst(newBigInt(OzMaxInt+1));
   TaggedOzOverMinInt = makeTaggedConst(newBigInt(OzMinInt-1));
+  oz_protect(&TaggedOzOverMaxInt);
+  oz_protect(&TaggedOzOverMinInt);
 }
 
 
