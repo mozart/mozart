@@ -606,8 +606,8 @@ the variable `oz-pedantic-spaces' is non-nil."
      ("Paragraph"          oz-browse-paragraph t))
     ("Panel"               oz-view-panel t)
     ("Compiler Panel"      oz-compiler-panel t)
-    ("Debugger"            oz-debug-start t)
-    ("Profiler"            oz-profiler-start t)
+    ("Debugger"            oz-debugger t)
+    ("Profiler"            oz-profiler t)
     ("-----")
     ("Next Oz Buffer"      oz-next-buffer t)
     ("Previous Oz Buffer"  oz-previous-buffer t)
@@ -626,17 +626,11 @@ the variable `oz-pedantic-spaces' is non-nil."
 ;;}}}
 ;;{{{ Interacting with the Oz Debugger
 
-(defun oz-debug-start (arg)
+(defun oz-debugger (arg)
   "Start the Oz debugger.
 With ARG, stop it instead."
   (interactive "P")
   (oz-send-string (if arg "{Ozcar.close}" "{Ozcar.open}") t))
-
-(defun oz-debug-stop (arg)
-  "Stop the Oz debugger.
-With ARG, start it instead."
-  (interactive "P")
-  (oz-debug-start (not arg)))
 
 (defun oz-breakpoint-key-set (arg)
   "Set breakpoint at current line.
@@ -684,17 +678,11 @@ With ARG, set it instead."
 ;;}}}
 ;;{{{ Interacting with the Oz Profiler
 
-(defun oz-profiler-start (arg)
+(defun oz-profiler (arg)
   "Start the profiler.
 With ARG, stop it instead."
   (interactive "P")
   (oz-send-string (if arg "{Profiler.close}" "{Profiler.open}") t))
-
-(defun oz-profiler-stop (arg)
-  "Stop the profiler.
-With ARG, start it instead."
-  (interactive "P")
-  (oz-profiler-start (not arg)))
 
 ;;}}}
 ;;{{{ Start/Stop Oz
@@ -1915,6 +1903,9 @@ If point is not inside a proc/fun/class definition, move to end of buffer."
 
   (define-key map "\C-x`"        'oz-goto-next-error)
 
+  (define-key map "\C-c\C-d"     'oz-debugger)
+  (define-key map "\C-c\C-f"     'oz-profiler)
+
   (if (not oz-pc-keys)
       (progn
 	(define-key map "\M-r"         'oz-feed-region)
@@ -1926,15 +1917,7 @@ If point is not inside a proc/fun/class definition, move to end of buffer."
 
 	(define-key map "\C-cm"        'oz-set-other)
 	(define-key map "\C-co"        'oz-other)
-	(define-key map "\C-cd"        'oz-gdb)
-
-	(define-key map "\C-c\C-d\C-r" 'oz-debug-start)
-	(define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
-	(define-key map "\C-c\C-d\C-b" 'oz-breakpoint-key-set)
-	(define-key map "\C-c\C-d\C-d" 'oz-breakpoint-key-delete)
-
-	(define-key map "\C-c\C-f\C-r" 'oz-profiler-start)
-	(define-key map "\C-c\C-f\C-h" 'oz-profiler-stop))))
+	(define-key map "\C-cd"        'oz-gdb))))
 
 (oz-mode-commands oz-mode-map)
 
