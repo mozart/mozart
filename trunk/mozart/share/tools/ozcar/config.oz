@@ -167,11 +167,11 @@ HelpFont               = '-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*'
 %% Files
 %%
 
-OzToolsDir             = {System.get home} # '/tools/'
-OzBitmapDir            = '@' # OzToolsDir # 'images/'
-OzcarBitmapDir         = OzBitmapDir # 'ozcar/'
-IconBitMap             = OzcarBitmapDir # 'ozcar' # BitmapExtension
-BitmapExtension        = '.xbm'
+UrlDefaults = \insert '../../url-defaults.oz'
+OzcarBitmap = fun {$ Bitmap}
+		 '@' # {Tk.localize UrlDefaults.home #
+			'tools/images/ozcar/' # Bitmap # '.xbm'}
+	      end
 
 StepButtonBitmap       = step
 NextButtonBitmap       = next
@@ -180,8 +180,8 @@ StopButtonBitmap       = stop
 DetachButtonBitmap     = detach
 TermButtonBitmap       = term
 
-AddQueriesBitmap       = {VirtualString.toAtom queries  # BitmapExtension}
-AddSubThreadsBitmap    = {VirtualString.toAtom children # BitmapExtension}
+AddQueriesBitmap       = {VirtualString.toAtom queries  # '.xbm'}
+AddSubThreadsBitmap    = {VirtualString.toAtom children # '.xbm'}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

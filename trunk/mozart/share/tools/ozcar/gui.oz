@@ -181,7 +181,7 @@ in
 						 delete:   self # off
 						 withdraw: true)}
 	 {Tk.batch [wm(iconname   self.toplevel IconName)
-		    wm(iconbitmap self.toplevel IconBitMap)
+		    wm(iconbitmap self.toplevel {OzcarBitmap ozcar})
 		    wm(minsize    self.toplevel MinX MinY)
 		    wm(maxsize    self.toplevel MaxX MaxY)
 		    wm(geometry   self.toplevel ToplevelGeometry)]}
@@ -219,17 +219,17 @@ in
 		  fun {$ S}
 		     Bitmap # ForegroundColor # _ = S
 		     B = {New Tk.button
-			  tkInit(parent:           self.ButtonFrame
-				 bitmap:           (OzcarBitmapDir # Bitmap #
-						    BitmapExtension)
-				 fg:               ForegroundColor
-				 activeforeground: case UseColors then
-						      ForegroundColor
-						   else
-						      SelectedForeground
-						   end
-				 relief:           raised
-				 action:           self # action(Bitmap))}
+			  tkInit(parent: self.ButtonFrame
+				 bitmap: {OzcarBitmap Bitmap}
+				 fg:     ForegroundColor
+				 activeforeground:
+				    case UseColors then
+				       ForegroundColor
+				    else
+				       SelectedForeground
+				    end
+				 relief: raised
+				 action: self # action(Bitmap))}
 		  in
 		     {B tkBind(event:  HelpEvent
 			       action: self # help(Bitmap))}
