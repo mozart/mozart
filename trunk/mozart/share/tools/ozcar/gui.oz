@@ -11,7 +11,8 @@ class Gui from Menu Dialog
 
       ThreadTree
       StackText
-      EnvText
+      GlobalEnvText
+      LocalEnvText
    
       ApplFrame
       ApplPrefix
@@ -19,6 +20,9 @@ class Gui from Menu Dialog
    
       StatusFrame
       StatusLabel
+
+   attr
+      LastSelectedFrame : undef
 
    meth init
       %% create the main window, but delay showing it
@@ -37,10 +41,10 @@ class Gui from Menu Dialog
 				   relief:ridge)}
        end}
       
-      {Tk.batch [grid(self.menuBar     row:0 column:0 sticky:we columnspan:2)
-		 grid(self.ButtonFrame row:1 column:0 sticky:we columnspan:2)
-		 grid(self.ApplFrame   row:2 column:0 sticky:we columnspan:2)
-		 grid(self.StatusFrame row:6 column:0 sticky:we columnspan:2)
+      {Tk.batch [grid(self.menuBar     row:0 column:0 sticky:we columnspan:3)
+		 grid(self.ButtonFrame row:1 column:0 sticky:we columnspan:3)
+		 grid(self.ApplFrame   row:2 column:0 sticky:we columnspan:3)
+		 grid(self.StatusFrame row:6 column:0 sticky:we columnspan:3)
 		]}
       
       %% the buttons
@@ -78,7 +82,7 @@ class Gui from Menu Dialog
 	 F = {New Tk.frame tkInit(parent:self.toplevel height:3
 				  relief:ridge bd:1)}
       in
-	 {Tk.send grid(F row:5 column:0 sticky:we columnspan:2)}
+	 {Tk.send grid(F row:5 column:0 sticky:we columnspan:3)}
       end
       
       %% status line
@@ -92,13 +96,14 @@ class Gui from Menu Dialog
 					 width:  ThreadTreeWidth
 					 bg:     DefaultBackground)}
       %% ...and the text widgets for stack and environment
-      {ForAll [self.StackText # StackTitle
-	       self.EnvText   # EnvTitle  ]
+      {ForAll [self.StackText       # StackTitle      # StackTextWidth
+	       self.LocalEnvText    # LocalEnvTitle   # EnvTextWidth
+	       self.GlobalEnvText   # GlobalEnvTitle  # EnvTextWidth ]
        proc {$ T}
 	  T.1 = {New ScrolledTitleText tkInit(parent: self.toplevel
 					      title:  T.2
 					      state:  disabled
-					      width:  TextWidth
+					      width:  T.3
 					      bd:     SmallBorderSize
 					      cursor: TextCursor
 					      font:   DefaultFont
@@ -106,77 +111,96 @@ class Gui from Menu Dialog
        end}
       {Tk.batch [grid(self.ThreadTree row:3 column:0
 		      sticky:nswe rowspan:2)
-		 grid(self.StackText  row:3 column:1 sticky:nswe)
-		 grid(self.EnvText    row:4 column:1 sticky:nswe)
-		 grid(rowconfigure    self.toplevel 3 weight:1)
-		 grid(rowconfigure    self.toplevel 4 weight:1)
-		 grid(columnconfigure self.toplevel 0 weight:1)
-		 grid(columnconfigure self.toplevel 1 weight:2)
+		 grid(self.StackText     row:3 column:1 sticky:nswe
+		                               columnspan:2)
+		 grid(self.LocalEnvText  row:4 column:1 sticky:nswe)
+		 grid(self.GlobalEnvText row:4 column:2 sticky:nswe)
+		 grid(rowconfigure       self.toplevel 3 weight:1)
+		 grid(rowconfigure       self.toplevel 4 weight:1)
+		 grid(columnconfigure    self.toplevel 0 weight:1)
+		 grid(columnconfigure    self.toplevel 1 weight:2)
+		 grid(columnconfigure    self.toplevel 2 weight:2)
 		]}
    end
 
+   meth DoPrintEnv(Widget Vars CV CP)
+      {ForAll Vars
+       proc{$ V}
+	  AT = {ArgType V.2}
+       in
+	  case CV orelse {Atom.toString V.1}.1 \= 96 then
+	     case CP orelse AT \= '<procedure>' then
+		T = {TagCounter get($)}
+		Ac = {New Tk.action
+		      tkInit(parent: Widget
+			     action: proc{$}{Browse V.2}end)}
+	     in
+		{ForAll [tk(insert 'end' {PrintF ' ' # V.1 15})
+			 tk(insert 'end' AT # NL T)
+			 tk(tag bind T '<1>' Ac)
+			 tk(tag conf T font:BoldFont)] Widget}
+	     else skip end
+	  else skip end
+       end}
+   end
+
+   meth Clear(Widget)
+      {ForAll [tk(conf state:normal)
+	       tk(delete '0.0' 'end')] Widget}
+   end
+
+   meth Disable(Widget)
+      {Widget tk(conf state:disabled)}
+   end
+   
    meth printEnv(frame:I vars:V<=undef)
       CV = {Not {Cget envSystemVariables}}
       CP = {Not {Cget envProcedures}}
-      E  = self.EnvText
    in
       case I == 0 then
-	 {self.EnvText title(EnvTitle)}
+	 {self.LocalEnvText title(LocalEnvTitle)}
+	 {self.GlobalEnvText title(GlobalEnvTitle)}
       else
-	 {self.EnvText title(AltEnvTitle # I)}
+	 {self.LocalEnvText title(AltLocalEnvTitle # I)}
+	 {self.GlobalEnvText title(AltGlobalEnvTitle # I)}
       end
-      
-      {ForAll [tk(conf state:normal)
-	       tk(delete '0.0' 'end')] E}
       
       case V == undef then
 	 skip
       else
-	 {ForAll V.'G'
-	  proc{$ V}
-	     AT = {ArgType V.2}
-	  in
-	     case CV orelse {Atom.toString V.1}.1 \= 96 then
-		case CP orelse AT \= '<procedure>' then
-		   T = {TagCounter get($)}
-		   Ac = {New Tk.action
-			 tkInit(parent: E
-				action: proc{$}{Browse V.2}end)}
-		in
-		   {ForAll [tk(insert 'end' ' ' # {PrintF V.1 13})
-			    tk(insert 'end' AT # NL T)
-			    tk(tag bind T '<1>' Ac)
-			    tk(tag conf T font:BoldFont)] E}
-		else skip end
-	     else skip end
-	  end}
-	 {E tk(insert 'end' NL)}
-	 
-	 {ForAll V.'Y'
-	  proc{$ V}
-	     T = {TagCounter get($)}
-	     Ac = {New Tk.action
-		   tkInit(parent: E
-			  action: proc{$}{Browse V.2}end)}
-	  in
-	     {ForAll [tk(insert 'end' ' ' # {PrintF V.1 13})
-		      tk(insert 'end' {ArgType V.2} # NL T)
-		      tk(tag bind T '<1>' Ac)
-		      tk(tag conf T font:BoldFont)] E}
-	  end}
-	 {E tk(insert 'end' NL)}
+	 Gui,Clear(self.LocalEnvText)
+	 Gui,Clear(self.GlobalEnvText)
+	 Gui,DoPrintEnv(self.LocalEnvText  V.'Y' CV CP)
+	 Gui,DoPrintEnv(self.GlobalEnvText V.'G' CV CP)
+	 Gui,Disable(self.LocalEnvText)
+	 Gui,Disable(self.GlobalEnvText)
       end
-      
-      {E tk(conf state:disabled)}
    end
    
-   meth frameClick(nr:I frame:F)
+   meth frameClick(nr:I frame:F tag:T)
+      Gui,SelectStackFrame(T)
       Gui,printEnv(frame:I vars:F.vars)
       SourceManager,scrollbar(file:F.file line:F.line
 			      color:ScrollbarStackColor what:stack)
    end
    
-   meth printStack(id:ThrID stack:Stack)
+   meth SelectStackFrame(T)
+      W = self.StackText
+   in
+      case @LastSelectedFrame \= undef then
+	 {W tk(tag conf @LastSelectedFrame
+	       relief:flat borderwidth:0
+	       background: DefaultBackground
+	       foreground: DefaultForeground)}
+      else skip end
+      {W tk(tag conf T
+	    relief:raised borderwidth:0  %% borderwidth:1 looks somehow ugly...
+	    background: SelectedBackground
+	    foreground: SelectedForeground)}
+      LastSelectedFrame <- T
+   end
+   
+   meth printStack(id:ThrID stack:Stack top:Top<=true)
       W = self.StackText
       S = {List.filter Stack fun{$ X}
 				{Label X} == 'proc'
@@ -192,7 +216,12 @@ class Gui from Menu Dialog
 	 Gui,printEnv(frame:0)
       else
 	 {self.StackText title(AltStackTitle # ThrID)}
-	 Gui,printEnv(frame:1 vars:S.1.vars)
+	 case Top then
+	    Gui,printEnv(frame:1 vars:S.1.vars)
+	 else
+	    Gui,printEnv(frame:2 vars:S.2.1.vars)
+	 end
+	 
 	 %SourceManager,scrollbar(file:S.1.file line:S.1.line
 		%		 color:ScrollbarStackColor what:stack)
 
@@ -203,13 +232,20 @@ class Gui from Menu Dialog
 	     T = {TagCounter get($)}
 	     Ac = {New Tk.action
 		   tkInit(parent: W
-			  action: Ozcar # frameClick(nr:I frame:F))}
+			  action: Ozcar # frameClick(nr:I frame:F tag:T))}
 	  in
-     	     {ForAll [tk(insert 'end' I # ' ' # case F.name == ''
-						then '$' else F.name
-						end # NL T)
+     	     {ForAll [tk(insert 'end'
+		      {PrintF ' ' # I # ' ' # case F.name == ''
+					      then '$' else F.name
+					      end 30} #
+		      {StripPath F.file} # ' ' # F.line # NL T)
 		      tk(tag bind T '<1>' Ac)
 		      tk(tag conf T font:BoldFont)] W}
+	     case I == 1 andthen Top
+		orelse I == 2 andthen {Not Top} then
+		LastSelectedFrame <- undef
+		Gui,SelectStackFrame(T)
+	     else skip end
 	  end}
 	 {W tk(conf state:disabled)}
       end

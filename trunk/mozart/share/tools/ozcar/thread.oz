@@ -144,10 +144,13 @@ in
 	    I = M.thr.2  %% ...with it's id
 	    F = M.file
 	    L = M.line
+	    N = M.name
+	    A = M.args
+	    B = M.builtin
 	    E = {Ozcar exists(T $)}
 	 in
 	    case E then
-	       ThreadManager,block(T I F L)
+	       ThreadManager,block(T I F L N A B)
 	    else
 	       {OzcarMessage 'Unknown suspending thread'}
 	    end
@@ -171,15 +174,15 @@ in
 	 end
       end
 
-      meth block(T I F L)
+      meth block(T I F L N A B)
 	 ThreadManager,setThrPos(id:I file:F line:L
-				 name:undef args:undef builtin:false)
+				 name:N args:A builtin:B)
 	 Gui,markNode(I blocked)
 	 case T == @currentThread then
 	    SourceManager,scrollbar(file:F line:L
 				    color:ScrollbarBlockedColor what:appl)
 	    SourceManager,scrollbar(file:'' line:undef color:undef what:stack)
-	    Gui,printAppl(id:I name:undef args:undef builtin:false)
+	    Gui,printAppl(id:I name:N args:A builtin:B)
 	    Gui,printStack(id:I stack:{Dbg.taskstack T 25})
 	    Gui,status(I blocked)
 	 else skip end
@@ -269,7 +272,8 @@ in
 	    SourceManager,scrollbar(file:F line:L
 				    color:ScrollbarApplColor what:appl)
 	    Gui,printAppl(id:I name:N args:A builtin:IsBuiltin)
-	    Gui,printStack(id:I stack:{Dbg.taskstack T 25})
+	    Gui,printStack(id:I stack:{Dbg.taskstack T 25}
+			   top:IsBuiltin)
 	 end
 	 SourceManager,scrollbar(file:'' line:undef color:undef what:stack)
 	 ThreadManager,setThrPos(id:I file:F line:L
