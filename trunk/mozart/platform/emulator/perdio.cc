@@ -8,9 +8,12 @@
   State: $State$
 
   $Log$
-  Revision 1.4  1996/08/02 11:14:17  mehl
-  perdio uses tcp now
+  Revision 1.5  1996/08/02 14:20:18  mehl
+  bug fixes
 
+// Revision 1.4  1996/08/02  11:14:17  mehl
+// perdio uses tcp now
+//
   Revision 1.2  1996/07/26 15:17:43  mehl
   perdio communication: see ~mehl/perdio.oz
 
@@ -340,7 +343,11 @@ loop:
       goto processArgs;
     }
   default:
-    warning("Cannot marshal %s",toC(t));
+    if (isAnyVar(t)) {
+      warning("Cannot marshal variables");
+    } else {
+      warning("Cannot marshal %s",toC(t));
+    }
     marshalTerm(nil(),bs);
     return;
   }
