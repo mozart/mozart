@@ -158,9 +158,9 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
 
 #define SHALLOWFAIL if (!NOFLATGUARD) { goto LBLshallowFail; }
 
-#define CheckArity(arityExp,proc)					\
-if (predArity != arityExp && VarArity != arityExp) {			\
-  DORAISE(OZ_mkTupleC("arityCheck",1,mkSTupleX("proc",proc,X,predArity)));	\
+#define CheckArity(arityExp,proc)					   \
+if (predArity != arityExp && VarArity != arityExp) {			   \
+  DORAISE(OZ_mkTupleC("arityCheck",1,mkSTupleX("proc",proc,X,predArity))); \
 }
 
 
@@ -420,7 +420,7 @@ Bool AM::hookCheckNeeded()
 
 #define INCFPC(N) PC += N
 
-#define WANT_INSTRPROFILE
+//#define WANT_INSTRPROFILE
 #if defined(WANT_INSTRPROFILE) && defined(__GNUC__)
 #define asmLbl(INSTR) asm(" " #INSTR ":");
 #else
@@ -1164,7 +1164,100 @@ void engine()
    *  Note that we cover the case for 'propagator' threads specially, 
    *  since they don't differ in 'suspended' and 'runnable' states;
    */
-  if (e->currentThread->isPropagator ()) {
+  if (e->currentThread->isNewPropagator ()) {
+    CFuncContinuation *ccont;
+
+    //
+    //  First, get the home board of that propagator, 
+    // and try to install it;
+    tmpBB = e->currentThread->getBoardFast ();
+    DebugTrace (trace ("propagator thread", tmpBB));
+
+    // 
+    //  HERE: a special version of INSTALLPATH for propagators;
+    //  This is because we have to go for the 'LBLdiscardThread'
+    // if the installation is rejected;
+    if (CBB != tmpBB) {
+      switch (e->installPath (tmpBB)) {
+      case INST_OK:
+	break;
+
+      case INST_REJECTED:
+	//
+	//  Note that once a propagator is failed, its thread is 
+	// scheduled for execution again (!), and at this place it 
+	// should be catched and forwarded to the 
+	// 'LBLdiscardThread';
+	DebugCode (e->currentThread->removeNewPropagator ());
+	goto LBLdiscardThread;
+
+      case INST_FAILED:
+	//
+	//  The thread must be killed;
+	//  So, first go to the 'LBLfailure', and there it must be 
+	// scheduled once again - and then the 'INST_REJECTED' case
+	// hits ...
+	DebugCode (e->currentThread->removeNewPropagator ());
+	goto LBLfailure;
+      }
+    }
+
+    //  i.e. nothing to do below a reflected solve-board;
+    {
+      DebugCode (Board *fsb);
+      Assert ((fsb = tmpBB->getSolveBoard ()) == 0 || 
+	      !(fsb->isReflected ()));
+    }
+
+    CBB->unsetNervous();
+
+    LOCAL_PROPAGATION(Assert(localPropStore.isEmpty ()););
+
+    switch (e->currentThread->runNewPropagator()) {
+    case SLEEP: 
+      e->currentThread->suspendPropagator ();
+      if (e->currentSolveBoard != (Board *) NULL) {
+	e->decSolveThreads (e->currentSolveBoard);
+	//  but it's still "in solve";
+      }
+      e->currentThread = (Thread *) NULL;
+      LOCAL_PROPAGATION(if (!(localPropStore.do_propagation ()))
+			 goto localhack7;);
+      goto LBLstart;
+
+    case SCHEDULED:
+      e->currentThread->scheduledPropagator ();
+      if (e->currentSolveBoard != (Board *) NULL) {
+	e->decSolveThreads (e->currentSolveBoard);
+	//  but it's still "in solve";
+      }
+      e->currentThread = (Thread *) NULL;
+      LOCAL_PROPAGATION(if (!(localPropStore.do_propagation ()))
+			 goto localhack7;);
+      goto LBLstart;
+
+    case PROCEED:
+      // Note: e->currentThread must be reset in 'LBLkillXXX';
+      LOCAL_PROPAGATION(if (!(localPropStore.do_propagation ()))
+			 goto localhack7;);
+      if (e->isToplevel ()) {
+	goto LBLkillToplevelThread;
+      } else {
+	goto LBLkillThread;
+      }
+
+      //  Note that *propagators* never yield 'SUSPEND';
+    case FAILED:
+      LOCAL_PROPAGATION(localPropStore.reset());
+
+    localhack7:
+      HF_FAIL(INFO_BI);
+
+    default:
+      error ("Unexpected value returned from a propagator.");
+      goto LBLerror;
+    }
+  } else if (e->currentThread->isPropagator ()) {
     CFuncContinuation *ccont;
 
     //
@@ -1554,7 +1647,7 @@ LBLkillThread:
     Assert (tmpThread->isRunnable ());
 
     Assert (!(e->isToplevel ()));
-    Assert (tmpThread->isPropagator () || 
+    Assert (tmpThread->isPropagator () || tmpThread->isNewPropagator () || 
 	    tmpThread->isEmpty ());
     //  Note that during debugging the thread does not carry 
     // the board pointer (== NULL) wenn it's running;
@@ -1730,9 +1823,9 @@ LBLdiscardThread:
     Assert (tmpThread);
     Assert (!(tmpThread->isDeadThread ()));
     Assert (tmpThread->isRunnable ());
-    Assert (!tmpThread->isPropagator () || 
+    Assert (!tmpThread->isPropagator () || !tmpThread->isNewPropagator () || 
 	    tmpThread->getPropagator () == (OZ_CFun) NULL);
-    Assert (tmpThread->isPropagator () || 
+    Assert (tmpThread->isPropagator () || tmpThread->isNewPropagator () || 
 	    !(tmpThread->hasStack ()) || 
 	    tmpThread->isEmpty ());
     // 

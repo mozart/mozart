@@ -382,6 +382,7 @@ enum TypeOfPtr {
   PTR_RTBODY,			// RunnableThreadBody;
   PTR_CONT,
   PTR_CFUNCONT,
+  PTR_PROPAGATOR,
   PTR_DYNTAB,
   PTR_CONSTTERM
 };
@@ -879,16 +880,22 @@ RunnableThreadBody *RunnableThreadBody::gcRTBody ()
 
 OZ_Propagator * OZ_Propagator::gc(void)
 {
-  board = ((Board *) board)->gcBoard();
-  return gcPropagator();
+  GCMETHMSG("OZ_Propagator::gc");
+  GCOLDADDRMSG(this);
+
+  OZ_Propagator * p = (OZ_Propagator *) gcRealloc(this, sizeOf());
+
+  GCNEWADDRMSG (p);
+
+  ptrStack.push(p, PTR_PROPAGATOR);
+  
+  return p;
 }
 
-OZ_Term OZ_gcTerm(OZ_Term i)
+void OZ_gcTerm(OZ_Term &t)
 {
-  Assert(isRef(i) || !isAnyVar(i));
-  OZ_Term o = i;
-  gcTagged(o, o);
-  return o;
+  Assert(isRef(t) || !isAnyVar(t));
+  gcTagged(t, t);
 }
 
 //
@@ -1049,6 +1056,7 @@ Thread *Thread::gcThread ()
   FDPROFILE_GC(cp_size_susp, sizeof(*this));
 
   storeForward (&item.threadBody, newThread);
+
   return (newThread);
 }
 
@@ -1128,7 +1136,7 @@ void Thread::gcRecurse ()
     break;
 
   case S_NEW_PR_THR:
-    item.propagator = item.propagator->gcPropagator ();
+    item.propagator = item.propagator->gc();
     Assert (item.propagator);
     break;
 
@@ -2114,7 +2122,14 @@ Board * Board::gcBoard()
   CHECKCOLLECTED(*bb->getGCField(), Board *);
   if (!bb->gcIsAlive()) return 0;
 
-  Assert(opMode != IN_TC || isInTree(bb));
+  // kost@, TMUELLER
+  // process.oz causes the assertion to fire!!! 
+  // Presumably a register allocation problem
+  // See the cure below:
+  //  if (opMode == IN_TC && !isInTree(bb)) return 0; 
+
+  // In an optimized machine the assertion is absent
+  Assert(opMode != IN_TC || isInTree(bb)); 
 
   COUNT(board);
   size_t sz = sizeof(Board);
@@ -2351,6 +2366,7 @@ void performCopying(void)
       ((RunnableThreadBody *) ptr)->gcRecurse();                 break;
     case PTR_CONT:      ((Continuation*) ptr)->gcRecurse();      break;
     case PTR_CFUNCONT:  ((CFuncContinuation*) ptr)->gcRecurse(); break;
+    case PTR_PROPAGATOR:((OZ_Propagator *) ptr)->gcRecurse();   break;
     case PTR_DYNTAB:    ((DynamicTable *) ptr)->gcRecurse();     break;
     case PTR_CONSTTERM: ((ConstTerm *) ptr)->gcConstRecurse();   break;
     default:

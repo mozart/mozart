@@ -185,7 +185,7 @@ Bool SolveActor::checkExtSuspList()
      */
 
     if (thr->isDeadThread () ||
-	(thr->isPropagated () && !(thr->isPropagator ()))) {
+	(thr->isPropagated () && !(thr->isPropagator()||thr->isNewPropagator()))) {
       tmpSuspList = tmpSuspList->dispose ();
       continue;
     }
