@@ -231,40 +231,6 @@ OZ_BI_define(BIbreakpoint, 0,0)
   return PROCEED;
 } OZ_BI_end
 
-#ifdef MISC_BUILTINS
-
-OZ_BI_define(BIdisplayDef, 2,0)
-{
-  OZ_declareIntIN(0,pc);
-  OZ_declareIntIN(1,size);
-  displayDef((ProgramCounter)ToPointer(pc),size);
-  return PROCEED;
-} OZ_BI_end
-
-OZ_BI_define(BIdisplayCode, 2,0)
-{
-  OZ_declareIntIN(0,pc);
-  OZ_declareIntIN(1,size);
-  displayCode((ProgramCounter)ToPointer(pc),size);
-  return PROCEED;
-} OZ_BI_end
-
-OZ_BI_define(BIprocedureCode, 1,1)
-{
-  oz_declareNonvarIN(0,proc);
-  if (!oz_isProcedure(proc)) {
-    oz_typeError(0,"Procedure");
-  }
-  if (oz_isBuiltin(proc)) {
-    oz_typeError(0,"Procedure (no builtin)");
-  }
-
-  Abstraction *a=tagged2Abstraction(proc);
-  OZ_RETURN_INT(ToInt32(a->getPred()->getPC()));
-} OZ_BI_end
-
-#endif
-
 OZ_BI_define(BIprocedureCoord, 1,1)
 {
   oz_declareNonvarIN(0,proc);
