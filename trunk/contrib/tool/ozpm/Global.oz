@@ -41,7 +41,7 @@ define
    INFO             = 'ozpm.info'
    MOGULDB          = {ByNeed fun{$}
 				 try {Pickle.load {URL.resolve {URL.toBase Args.'mogul'} INFO}}
-				 catch _ then nil end
+				 catch _ then o(packages:nil authors:nil) end
 			      end}
 
       
