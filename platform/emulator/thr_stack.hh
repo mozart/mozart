@@ -34,16 +34,18 @@
 #include "tagged.hh"
 #include "stack.hh"
 
-// if you ever change this check POPTASK, ie. in other words:
-// keep your hands off this definition if you don't
-// fully understand the macro POPTASK
+/*
+ * - if you ever change this check POPTASK, ie. in other words:
+ *   keep your hands off this definition if you don't
+ *   fully understand the macro POPTASK
+ * - there are 4 tag bits  */
 enum ContFlag {
   C_CONT       = 0,  // a continuation without X registers
   C_XCONT      = 1,  // a continuation with    X registers
-  C_NERVOUS    = 2,  // a task to install a node
+  C_NERVOUS    = 2,  // check for stability & distribution after solved
   C_CFUNC_CONT = 3,  // a continuation  to call a c-function
   C_DEBUG_CONT = 4,  // a continuation for debugging
-  C_CALL_CONT  = 5   // 
+  C_CALL_CONT  = 5,  // 
 };
 
 
@@ -154,8 +156,7 @@ public:
     checkNode(n);
     push((TaskStackEntry) setContFlag(n, C_NERVOUS));
   }
-  
-  
+
   void pushCFunCont(Board *n, OZ_CFun f, Suspension* s,
 		    RefsArray  x=NULL, int i=0, Bool copy=OK)
   {
