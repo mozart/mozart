@@ -124,9 +124,8 @@
     <Meta name="html.split.bib"   value="">
     <Meta name="html.split.index" value="">
 
-    <Meta name=latex.table.spec arg1=table.intro.start arg2="cc">
-    <Meta name=latex.table.spec arg1=table.widgets-2.event arg2="lllll">
-    <Meta name=latex.table.spec arg1="table.widgets-2.event-args" arg2="cccc">
+    <Meta name=latex.table.spec arg1=table.intro.start arg2="CC">
+    <Meta name=latex.table.spec arg1="table.widgets-2.event-args" arg2="CCCC">
 
 <meta name="latex.picture.width" arg1="pict.ext.canvas.barchart" arg2="">
 <meta name="latex.picture.width" arg1="pict.ext.canvas.tags" arg2="">
