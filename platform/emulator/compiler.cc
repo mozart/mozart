@@ -568,7 +568,7 @@ OZ_BI_define(BInameVariable,2,0)
 {
   oz_declareIN(0,var);
   oz_declareAtomIN(1,name);
-  VariableNamer::addName(var,name);
+  oz_varAddName(var,name);
   return PROCEED;
 } OZ_BI_end
 
