@@ -53,11 +53,6 @@
                              out    => [],
                              BI     => BIshowError},
 
- 'exit'                 => { in  => ['+int'],
-                             out => [],
-                             BI  => BIshutdown,
-                             doesNotReturn => 1},
-
  'gcDo'                 => { in  => [],
                              out => [],
                              BI  => BIgarbageCollection},
