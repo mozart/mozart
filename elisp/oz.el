@@ -346,8 +346,13 @@ Positions are returned as a pair ( START . END )."
   (if (not (buffer-file-name))
       (setq oz-last-fed-buffer (current-buffer)))
   (concat "\\line " (1+ (count-lines 1 start))
-	  " '" (or (buffer-file-name) "nofile") "' % fromemacs\n"
+	  " '" (or (buffer-file-name) (buffer-name)) "' % fromemacs\n"
 	  (buffer-substring start end)))
+
+(defun oz-find-buffer-or-file (name)
+  (or (get-buffer name)
+      (find-buffer-visiting name)
+      (find-file-noselect name)))
 
 
 ;;------------------------------------------------------------
@@ -563,7 +568,7 @@ With ARG, start it instead."
   (if (string-equal file "unchanged")
       (oz-bar-configure state)
     (let* ((last-nonmenu-event t)
-	   (buffer (find-file-noselect file))
+	   (buffer (oz-find-buffer-or-file file))
 	   (window (display-buffer buffer))
 	   start end oldpos)
       (save-excursion
@@ -2173,7 +2178,8 @@ splitting, the outputs are passed to the common oz-filter."
 		(if (eq (window-buffer window) buffer)
 		    (cond (errs-found
 			   ;; (set-window-point window errs-found)
-			   (set-window-point window end-of-output))
+			   (set-window-point window errs-found)
+			   (set-window-start window errs-found))
 			  ((>= (window-point window) start-of-output)
 			   (set-window-point window end-of-output)))))))))
       (set-buffer old-buffer))))
@@ -2524,7 +2530,7 @@ When in emulator buffer, visit place indicated in next callstack line."
 	       (column (and column-string (string-to-number column-string)))
 	       (buf (if (string-equal file "nofile")
 			oz-last-fed-buffer
-		      (compilation-find-file error-marker file nil)))
+		      (oz-find-buffer-or-file file)))
 	       source-marker)
 	  (if (not buf)
 	      (error "No source buffer found"))
