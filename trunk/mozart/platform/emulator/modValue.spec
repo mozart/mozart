@@ -90,6 +90,10 @@
 			     out => ['value'],
 			     BI  => BIbyNeedDot},
 
+     'byNeedFail'	=> { in  => ['value'],
+			     out => ['value'],
+			     BI  => BIbyNeedFail},
+
      'future'		=> { in  => ['value'],
 			     out => ['value'],
 			     BI  => BIfuture},
