@@ -50,12 +50,12 @@ public:
   {
     ensureFree(2);
     Stack::push((StackEntry) val,NO);
-    Stack::push((StackEntry) old,NO);
+    Stack::push((StackEntry) ToPointer(old),NO);
   }
 
   void popRef(TaggedRef *&val, TaggedRef &old)
   {
-    old = (TaggedRef)  Stack::pop();
+    old = (TaggedRef)  ToInt32(Stack::pop());
     val = (TaggedRef*) Stack::pop();
   }
 
@@ -73,7 +73,7 @@ public:
 
   void popMark() {
     Assert(lastMark == tos-1);
-    lastMark -= (unsigned int) Stack::pop();
+    lastMark -= (unsigned intlong) Stack::pop();
   }
 
   int chunkSize()     { return (tos-1-lastMark)/2; }
