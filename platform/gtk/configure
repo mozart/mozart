@@ -2060,7 +2060,7 @@ GTK_CFLAGS=`$gtk_path --cflags`
 GTK_LIBS=`$gtk_path --libs`
 GTK_HDRS=`$gtk_path --prefix`/include/gtk
 GDK_HDRS=`$gtk_path --prefix`/include/gdk
-CFLAGS="$CFLAGS $GTK_CFLAGS"
+CPPFLAGS="$CPPFLAGS $GTK_CFLAGS"
 LIBS="$LIBS $GTK_LIBS"
 echo "$ac_t""ok" 1>&6
 
