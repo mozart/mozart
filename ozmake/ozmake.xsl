@@ -27,8 +27,8 @@ H2 {	color		: #FF9933; }
 H4 {	color		: slateblue; }
 H3 {	color		: #881155; }
 H5 {	color		: darkslateblue; }
-CODE, SPAN.CMD {	color		: #663366; }
-CODE,TT,PRE,SPAN.CMD,SPAN.FILE {
+CODE, SPAN.CMD, PRE.OZDISPLAY {	color		: #663366; }
+CODE,TT,PRE,SPAN.CMD,SPAN.FILE,PRE.OZDISPLAY {
 	font-family	: "lucida console",courier,monospace;
 }
 SPAN.FILE {
@@ -41,6 +41,9 @@ CODE.DISPLAY {
 	margin-left	: 2cm;
 	margin-top	: 1em;
 	margin-bottom	: 1em;
+}
+PRE.OZDISPLAY {
+	margin-left : 2cm;
 }
 SPAN.CMD {
 	white-space	: pre;
@@ -57,6 +60,9 @@ P.AUTHOR {
 }
 SPAN.MODULE {
 	color		: steelblue;
+}
+P.CENTER {
+	text-align	: center;
 }
 A {	color		: steelblue; }
 SPAN.TOOL {
@@ -102,10 +108,37 @@ TABLE.ALIGN {
 	</xsl:for-each>
       </P>
       <xsl:apply-templates select="head/blurb"/>
+      <DL>
+        <xsl:call-template name="pkgversion"/>
+	<xsl:call-template name="pkgprovides"/>
+      </DL>
       <HR/>
       <xsl:apply-templates select="*[not(self::head)]"/>
+      <HR/>
+      <ADDRESS>
+        <xsl:for-each select="head/author">
+	  <xsl:if test="position()>1">, </xsl:if>
+	  <xsl:apply-templates select="."/>
+	</xsl:for-each>
+      </ADDRESS>
     </BODY>
   </HTML>
+</xsl:template>
+
+<xsl:template name="pkgversion">
+  <xsl:for-each select="/*/head/version[1]">
+    <DT><B>version</B></DT>
+    <DD><SPAN CLASS="MODULE"><xsl:apply-templates/></SPAN></DD>
+  </xsl:for-each>
+</xsl:template>
+
+<xsl:template name="pkgprovides">
+  <xsl:for-each select="/*/head/provides">
+    <xsl:if test="position()=1">
+      <DT><B>provides</B></DT>
+    </xsl:if>
+    <DD><SPAN CLASS="MODULE"><xsl:apply-templates/></SPAN></DD>
+  </xsl:for-each>
 </xsl:template>
 
 <xsl:template name="title">
@@ -142,28 +175,35 @@ TABLE.ALIGN {
   </SPAN>
 </xsl:template>
 
-<xsl:template match="section/section/section/section">
+<xsl:template match="section/section/section/section/section" priority="5.0">
+  <H6>
+    <xsl:call-template name="title"/>
+  </H6>
+  <xsl:call-template name="nonhead"/>
+</xsl:template>
+
+<xsl:template match="section/section/section/section" priority="4.0">
   <H5>
     <xsl:call-template name="title"/>
   </H5>
   <xsl:call-template name="nonhead"/>
 </xsl:template>
 
-<xsl:template match="section/section/section">
+<xsl:template match="section/section/section" priority="3.0">
   <H4>
     <xsl:call-template name="title"/>
   </H4>
   <xsl:call-template name="nonhead"/>
 </xsl:template>
 
-<xsl:template match="section/section">
+<xsl:template match="section/section" priority="2.0">
   <H3>
     <xsl:call-template name="title"/>
   </H3>
   <xsl:call-template name="nonhead"/>
 </xsl:template>
 
-<xsl:template match="section">
+<xsl:template match="section" priority="1.0">
   <H2>
     <xsl:call-template name="title"/>
   </H2>
@@ -173,6 +213,10 @@ TABLE.ALIGN {
 <!-- dlist -->
 
 <xsl:template match="dlist">
+  <!-- apparently konqueror requires a newline before the stag DL
+       otherwise it won't properly display the list indented -->
+  <xsl:text>
+</xsl:text>
   <DL>
     <xsl:apply-templates/>
   </DL>
@@ -198,17 +242,48 @@ TABLE.ALIGN {
   <xsl:apply-templates/>
 </xsl:template>
 
+<xsl:template match="label[@type='default']">
+  <DT>
+    <SPAN CLASS="DEFAULT">
+      <xsl:choose>
+        <xsl:when test="@text"><xsl:value-of select="@text"/></xsl:when>
+	<xsl:otherwise>default</xsl:otherwise>
+      </xsl:choose>
+      <xsl:text>:  </xsl:text>
+    </SPAN>
+    <xsl:apply-templates/>
+  </DT>
+</xsl:template>
+
 <xsl:template match="label">
   <DT>
     <xsl:apply-templates/>
   </DT>
 </xsl:template>
 
+<!--
 <xsl:template name="item">
-  <xsl:for-each select="p">
+  <xsl:variable name="compact" select="parent::*[@compact='yes']"/>
+  <xsl:for-each select="*[not(self::label)]">
     <xsl:apply-templates/>
-    <P/>
+    <xsl:choose>
+      <xsl:when test="$compact"/>
+      <xsl:otherwise><P/></xsl:otherwise>
+    </xsl:choose>
   </xsl:for-each>
+</xsl:template>
+-->
+<xsl:template name="item">
+  <xsl:apply-templates select="*[not(self::label)]"/>
+  <xsl:choose>
+    <xsl:when test="parent::*[@compact='yes']"/>
+    <xsl:when test="position()=last()"/>
+    <xsl:otherwise><P/></xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+
+<xsl:template match="item/p[position()=1 or not(preceding-sibling::p)]" priority="1.0">
+  <xsl:apply-templates/>
 </xsl:template>
 
 <xsl:template match="p">
@@ -239,13 +314,25 @@ TABLE.ALIGN {
   <xsl:text>i.e.</xsl:text>
 </xsl:template>
 
+<xsl:template match="eg">
+  <xsl:text>e.g.</xsl:text>
+</xsl:template>
+
+<xsl:template match="resp">
+  <xsl:text>resp.</xsl:text>
+</xsl:template>
+
+<xsl:template match="cc">
+  <CODE>
+    <xsl:apply-templates/>
+  </CODE>
+</xsl:template>
+
 <xsl:template match="a">
   <A>
-    <xsl:for-each select="@href">
-      <xsl:attribute name="HREF">
-        <xsl:value-of select="@href"/>
-      </xsl:attribute>
-    </xsl:for-each>
+    <xsl:if test="@href">
+      <xsl:attribute name="HREF"><xsl:value-of select="@href"/></xsl:attribute>
+    </xsl:if>
     <xsl:apply-templates/>
   </A>
 </xsl:template>
@@ -270,6 +357,30 @@ TABLE.ALIGN {
   <TD>
     <xsl:apply-templates/>
   </TD>
+</xsl:template>
+
+<xsl:template match="oz">
+  <CODE>
+    <xsl:apply-templates/>
+  </CODE>
+</xsl:template>
+
+<xsl:template match="oz.display">
+  <PRE CLASS="OZDISPLAY">
+    <xsl:apply-templates/>
+  </PRE>
+</xsl:template>
+
+<xsl:template match="em">
+  <EM>
+    <xsl:apply-templates/>
+  </EM>
+</xsl:template>
+
+<xsl:template match="p.center">
+   <P CLASS="CENTER">
+     <xsl:apply-templates/>
+   </P>
 </xsl:template>
 
 <!-- catch all elements that are not explicitly matched -->
