@@ -30,35 +30,55 @@ define(writeArg,$1)
 define(instruction,
 	`ifelse(numOfRegs($2,$3,$4),1,oneReg(TOUPPER($1)),
 		numOfRegs($2,$3,$4),2,twoRegs(TOUPPER($1)),
-		&& TOUPPER($1)LBL`,')
+		INSTR(TOUPPER($1)LBL))
 ')
 
 
 define(oneReg,
-	`&& $1XLBL`,'
-	 && $1YLBL`,'
-	 && $1GLBL`,'
+	`INSTR($1XLBL)
+	 INSTR($1YLBL)
+	 INSTR($1GLBL)
 ')
 
 define(twoRegs,
-	`&& $1XXLBL`,'
-	 && $1XYLBL`,'
-	 && $1XGLBL`,'
-	 && $1YXLBL`,'
-	 && $1YYLBL`,'
-	 && $1YGLBL`,'
-	 && $1GXLBL`,'
-	 && $1GYLBL`,'
-	 && $1GGLBL`,'
+	`INSTR($1XXLBL)
+	 INSTR($1XYLBL)
+	 INSTR($1XGLBL)
+	 INSTR($1YXLBL)
+	 INSTR($1YYLBL)
+	 INSTR($1YGLBL)
+	 INSTR($1GXLBL)
+	 INSTR($1GYLBL)
+	 INSTR($1GGLBL)
 ')
 
 
 
+#ifdef __GNUC__
 
-static void *instrTable[] = {
+#define INSTR(instr) && instr,
+static void *instrTable[OZERROR+1] = {
+
+#else
+
+#define INSTR(instr) {					\
+	__asm mov instrTable[eax], OFFSET instr 	\
+	__asm add eax,4					\
+      }
+
+
+static void *instrTable[OZERROR+1];
+
+   _asm mov eax,0
+
+#endif
+
+
 
   include(EMUDIR/instrDefs.m4)
+
+
+#ifdef __GNUC__
 0};
-
-
-
+#else
+#endif
