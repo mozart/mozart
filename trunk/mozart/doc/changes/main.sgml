@@ -127,6 +127,9 @@ debugging of distributed applications.</item>
 	<item/Sort and Merge are now stable/
 	<item>new environment variable <code/OZ_DOTOZ/ to override
 	default <file>~/.oz</file>. corresponding property <code/oz.dotoz/</item>
+	<item><code/List.take/, <code/List.drop/ and
+	  <code/List.takeDrop/ no longer unnecessarily block on nondet
+	  list tail that is not looked at</item>
       </list>
     </section>
     <section id="sec.m124.windows">
@@ -188,10 +191,12 @@ debugging of distributed applications.</item>
       <title/Oz Language/
       <p>changes and fixes concerning the Oz language
       <list>
-        <item><code/for/ loop now supports new features <code/while:E/
+        <item><code/for/ loop now supports new experimental features <code/while:E/
 	and <code/until:E/<!--   (and X from G) --></item>
 	<item><file>doc/loop</file> slightly improved</item>
 	<item><code/for _ in 1..5 do ... end/ now works (it used to block)</item>
+	<item>eliminated unnecessary memory allocation for experimental
+	<code/collect/ feature</item>
       </list>
     </section>
     <section id="sec.m124.system">
