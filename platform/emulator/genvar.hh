@@ -100,7 +100,7 @@ public:
   }
 
   // methods relevant for term copying (gc and solve)
-  void gc(void);
+  GenCVariable * gc(void);
   size_t getSize(void);
 
   // unifies a generic variable with another generic variable
