@@ -9,7 +9,7 @@ EXPLORERSRCS = \
         tree invoke object summary
 
 OTHERSRCS = \
-        linker
+        linker panel
 
 SGMLSRCS0 = \
         $(EXPLORERSRCS:%=e-%) \
@@ -21,7 +21,11 @@ HTMLEXTRAFILES0 = \
         note-gui-l1 note-gui-l2 \
         note-gui-m1 note-gui-m2 \
         note-gui-r1 note-gui-r2 \
-        explain arrow-r post search draw
+        explain arrow-r post search draw \
+        memory-heap \
+        runtime-dist runtime-load \
+        threads-runnable
+
 HTMLEXTRAFILES = \
         $(HTMLEXTRAFILES0:%=pictures/%.gif)
 HTMLEXTRASUPPORTFILES = \
