@@ -24,5 +24,5 @@ define
    end
    Table = {NewDictionary}
    fun {CondGet K D} {CondSelect Table K D} end
-   Table.gumpdir := {VersionIsAtLeast '1.2.4'}
+   Table.gumpdir := {VersionIsAtLeast '1.2.5'}
 end
