@@ -188,6 +188,12 @@
 #define OUTLINE
 #endif
 
+#ifdef RS_PROFILE
+#define HEAP_PROFILE
+#define OUTLINE
+#endif
+
+
 // avoid inlining some functions
 #if defined(OUTLINE)
 #define INLINE
