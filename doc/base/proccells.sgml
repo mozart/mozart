@@ -88,128 +88,128 @@ First-class computation spaces can be used to program inference
 engines for problem solving.
 
 <list>
-<entry><<IsSpace>>
-<index class=module/IsSpace/
+<entry><Span class=index/<<IsSpace>>/
+<index class=tails/<<Space>><And><<is>>/
 <synopsis>
-<<<{IsSpace ?+{X} ??{B}}>>>
+<<{IsSpace ?+{X} ??{B}}>>
 <item>
-tests whether ?{X} is a space.
+tests whether ?_{X} is a space.
 
 <entry><<new>>
-<index class=module/Space<and>new/
+<index class=tails/<<Space>><and><<new>>/
 <synopsis>
-<<<{Space.new ?+{P} ??{Space}}>>>
+<<{Space.new ?+{P} ??{Space}}>>
 <item>
 returns a newly created space, in which a thread containing an
-application of the unary procedure ?{P} to the root variable of
-?{Space} is created.
+application of the unary procedure&nbsp;?_{P} to the root variable of
+?_{Space} is created.
 
 <entry><<ask>>
-<index class=module/Space<and>ask/
+<index class=tails/<<Space>><and><<ask>>/
 <synopsis>
-<<<{Space.ask ?+{Space} ??{T}}>>>
+<<{Space.ask ?+{Space} ??{T}}>>
 <item>
-waits until ?{Space} becomes stable or merged and then returns the
-status of ?{Space}. 
+waits until ?_{Space} becomes stable or merged and then returns the
+status of ?_{Space}. 
 <p>
-If ?{Space} is merged, the atom <<merged>> is returned.
+If ?_{Space} is merged, the atom <<merged>> is returned.
 <p>
-If ?{Space} is stable and:
+If ?_{Space} is stable and:
 <list>
 <entry>failed
 <item>the atom <<failed>> is returned.
 <entry>succeeded
-<item>and there are no threads in ?{Space} synchronizing on
+<item>and there are no threads in ?_{Space} synchronizing on
 choices,  the atom <<succeeded>> is returned.
 <entry>succeeded
-<item>and there is at least one thread in ?{Space} which
+<item>and there is at least one thread in ?_{Space} which
 synchronizes on a choice the tuple <<alternatives(?{I})>> is returned, where ?{I} gives the number of alternatives of the selected choice.
 </list>
 
-<entry>askVerbose
-<index class=module/Space<and>askVerbose/
+<entry><<askVerbose>>
+<index class=tails/<<Space>><and><<askVerbose>>/
 <synopsis>
-<<<{Space.askVerbose ?+{Space} ??{T}}>>>
+<<{Space.askVerbose ?+{Space} ??{T}}>>
 <item>
-returns the status of ?{Space} in verbose form. Reduces when
-?{Space} becomes merged or stable.
+returns the status of ?_{Space} in verbose form. Reduces when
+?_{Space} becomes merged or stable.
 <p>
-If ?{Space} becomes merged, the atom <<merged>> is returned.
+If ?_{Space} becomes merged, the atom <<merged>> is returned.
 <p>
-If ?{Space} becomes blocked but not stable, ?{T} is bound to the tuple
+If ?_{Space} becomes blocked but not stable, ?_{T} is bound to the tuple
 <<blocked(?{T1})>>. ?{T1} is bound to the status of
-?{Space} when ?{Space} becomes unblocked again.
+?_{Space} when ?_{Space} becomes unblocked again.
 <p>
-If ?{Space} is stable and:
+If ?_{Space} is stable and:
 <list>
 <entry>failed
 <item>the atom <<failed>> is returned.
 <entry>succeeded
-<item>and there are no threads in ?{Space} synchronizing on
+<item>and there are no threads in ?_{Space} synchronizing on
 choices,  the tuple <<succeeded(?{A})>> is returned.
-The atom ?{A} is either <<suspended>>, when ?+{Space} still contains threads, or <<entailed>> otherwise. 
+The atom ?{A} is either <<suspended>>, when ?_{Space} still contains threads, or <<entailed>> otherwise. 
 <entry>succeeded
-<item>and there is at least one thread in ?{Space} which
+<item>and there is at least one thread in ?_{Space} which
 synchronizes on a choice the tuple <<alternatives(?{I})>> is returned, where ?{I} gives the number of alternatives of the selected choice.
 </list>
 
 <entry><<merge>>
-<index class=module/Space<and>merge/
+<index class=tails/<<Space>><and><<merge>>/
 <synopsis>
-<<<{Space.merge ?+{Space} ?{X}}>>>
+<<{Space.merge ?+{Space} ?_{X}}>>
 <item>
-merges ?{Space} with the current space and constrains ?{X} to the
-root variable of ?{Space}.
+merges ?_{Space} with the current space and constrains ?_{X} to the
+root variable of ?_{Space}.
 
 <p>
-Raises a runtime error if ?{Space} is already merged, or if the
-current space is subordinated to ?{Space}.
+Raises a runtime error if ?_{Space} is already merged, or if the
+current space is subordinated to ?_{Space}.
 
 <entry><<clone>>
-<index class=module/Space<and>clone/
+<index class=tails/<<Space>><and><<clone>>/
 <synopsis>
-<<<{Space.clone ?+{Space1} ??{Space2}}>>>
+<<{Space.clone ?+{Space1} ??{Space2}}>>
 <item>
-blocks until ?{Space1} becomes stable and returns a new space which is a copy of ?{Space1}.
+blocks until ?_{Space1} becomes stable and returns a new space which is a copy of ?_{Space1}.
 
 <p>
-Raises a runtime error if ?{Space1} has been merged already.
+Raises a runtime error if ?_{Space1} has been merged already.
 
 <entry><<inject>>
-<index class=module/Space<and>inject/
+<index class=tails/<<Space>><and><<inject>>/
 <synopsis>
-<<<{Space.inject ?+{Space} ?+{P}}>>>
+<<{Space.inject ?+{Space} ?+{P}}>>
 <item>
-creates a thread in the space ?{Space} which contains an application
-of the unary procedure ?{P} to the root variable of ?{Space}.
+creates a thread in the space ?_{Space} which contains an application
+of the unary procedure&nbsp;?_{P} to the root variable of ?_{Space}.
 
 <p>
-Raises a runtime error if ?{Space} has been merged already or if the
-current space is subordinated to ?{Space}.
+Raises a runtime error if ?_{Space} has been merged already or if the
+current space is subordinated to ?_{Space}.
 
 <entry><<commit>>
-<index class=module/Space<and>commit/
+<index class=tails/<<Space>><and><<commit>>/
 <synopsis>
-<<<{Space.commit ?+{Space} ?+{IT}}>>>
+<<{Space.commit ?+{Space} ?+{IT}}>>
 <item>
-blocks until ?{Space} becomes stable and then commits to alternatives
-of the selected choice of ?{Space}.
+blocks until ?_{Space} becomes stable and then commits to alternatives
+of the selected choice of ?_{Space}.
 
 <p>
-If ?{IT} is a pair of integers <<l#r>> then all but the
-l, l+1, &ellipsis;, r alternatives of the selected choice 
-of ?+{Space} are discarded. If a single
+If ?_{IT} is a pair of integers <<?{l}#?{r}>> then all but the
+?{l}, ?{l} + 1, &ellipsis;, ?{r} alternatives of the selected choice 
+of ?_{Space} are discarded. If a single
 alternative remains, the topmost choice is replaced by this alternative.
 If no alternative remains, the space is failed.
 
 <p>
-An integer value for ?{IT} is  an abbrevation for the pair
-<<?{IT}#?{IT}>>.
+An integer value for ?_{IT} is an abbrevation for the pair
+<<?_{IT}#?_{IT}>>.
 
 <p>
-Raises a runtime error, if ?{Space} has been merged already, if there
-exists no selected choice in ?{Space}, or if the
-current space is subordinated to ?{Space}.
+Raises a runtime error, if ?_{Space} has been merged already, if there
+exists no selected choice in ?_{Space}, or if the
+current space is subordinated to ?_{Space}.
 </list>
 
 
