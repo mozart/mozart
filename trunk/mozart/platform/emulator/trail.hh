@@ -39,14 +39,11 @@
 #include "tagged.hh"
 #include "stack.hh"
 
-/* ***common trail;                         */
 
 const StackEntry trailMark = (StackEntry) -1l;
 
 class  Trail: public Stack {
 public:
-  void gc();
-
   Trail(): Stack(DEFAULT_TRAIL_SIZE,Stack_WithMalloc) {}
   Trail(int sizeInit): Stack(sizeInit,Stack_WithMalloc) {}
   
@@ -62,12 +59,6 @@ public:
   {
     old = (TaggedRef)  ToInt32(Stack::pop());
     val = (TaggedRef*) Stack::pop();
-  }
-
-  void pushIfVar(TaggedRef A)
-  {
-    DEREF(A,Aptr,_1);
-    if (oz_isVariable(A)) { pushRef(Aptr,A); }
   }
 
   void pushMark() { Stack::push(trailMark); }
