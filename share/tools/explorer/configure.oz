@@ -17,7 +17,7 @@ Options = o(drawing:    o(hide:   !True
 			  update: 10)
 	    search:     o(search:      1
 			  information: 5
-			  order:       !False)
+			  failed:      !True)
 	    postscript: o(color:       case Tk.isColor then color else mono end
 			  width:       6.5 * FactorsToCm.i
 			  height:      9.5 * FactorsToCm.i
@@ -29,7 +29,7 @@ StatusUpdateCnt = 50
 
 TitleName    = 'Oz Explorer'
 BitMapDir    = {System.get home} # '/lib/bitmaps/'
-BitMap       = '@' # BitMapDir # 'explorer.xbm'
+BitMap       = '@' # !BitMapDir # 'explorer.xbm'
 
 MinSizeX     = 500
 MinSizeY     = 300
@@ -47,13 +47,13 @@ AboutFont       = '-Adobe-times-bold-r-normal--*-240*'
 FontFamily      = '-*-helvetica-medium-r-normal--*-'
 BoldFontFamily  = '-*-helvetica-bold-r-normal--*-'
 FontMatch       = '-*-*-*-*-*-*'
-NumberFonts     = [font(name:FontFamily#180#FontMatch scale:1.8/FloatScaleBase)
-		   font(name:FontFamily#140#FontMatch scale:1.4/FloatScaleBase)
-		   font(name:FontFamily#120#FontMatch scale:1.2/FloatScaleBase)
-		   font(name:FontFamily#100#FontMatch scale:1.0/FloatScaleBase)
-		   font(name:FontFamily# 80#FontMatch scale:0.8/FloatScaleBase)]
-StatusFont      = FontFamily#100#FontMatch
-BoldStatusFont  = BoldFontFamily#100#FontMatch
+NumberFonts     = [font(name:!FontFamily#180#!FontMatch scale:1.8/FloatScaleBase)
+		   font(name:!FontFamily#140#!FontMatch scale:1.4/FloatScaleBase)
+		   font(name:!FontFamily#120#!FontMatch scale:1.2/FloatScaleBase)
+		   font(name:!FontFamily#100#!FontMatch scale:1.0/FloatScaleBase)
+		   font(name:!FontFamily# 80#!FontMatch scale:0.8/FloatScaleBase)]
+StatusFont      = !FontFamily     # 100 # !FontMatch
+BoldStatusFont  = !BoldFontFamily # 100 # !FontMatch
 
 %% Width of the scroller, applies also to the width of the scale
 ScrollerWidth   = 12
@@ -81,8 +81,8 @@ HalfVerSpaceF    = {IntToFloat HalfVerSpaceI}
 
 %% Initial coordinates of the root of the tree
 RootX            = 0
-RootY            = HalfVerSpaceI
-SentinelX        = RootX
+RootY            = !HalfVerSpaceI
+SentinelX        = !RootX
 SentinelY        = RootY - VerSpaceI
 
 %% Sizes for the nodes and links
@@ -156,3 +156,4 @@ NodePrefix = {String.toAtom {Tk.getPrefix}}
 TreePrefix = {String.toAtom {Tk.getPrefix}}
 LinkPrefix = {String.toAtom {Tk.getPrefix}}
 
+	    

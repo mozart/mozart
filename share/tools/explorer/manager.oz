@@ -111,13 +111,9 @@ in
 	    case StatusManager,hasBlocked($) then
 	       MenuManager,disable(search([next all step]))
 	    else
-	       %% Check whether order is liberal
-	       IsLiberal = {Not {Dictionary.get self.options.search order}}
-	    in
-	       MenuManager,state({CurNode isNextPossible(IsLiberal $)}
+	       MenuManager,state({CurNode isNextPossible($)}
 				 search([next all]))
-	                  ,state({CurNode isStepPossible(IsLiberal $)}
-				 search(step))
+	                  ,state({CurNode isStepPossible($)} search(step))
 	    end
 	    %% Nodes
 	    MenuManager,state({CurNode isHidable($)} hide(toggle))
@@ -188,7 +184,6 @@ in
 	 curNode <- False
 	 PrevSol <- False
 	 {self.status setBAB(@IsBAB)}
-	 {self.status setOrder({Dictionary.get self.options.search order})}
 	 StatusManager,start(_)
 	 root <- {MakeRoot self Query Order}
 	 Manager,prepare
@@ -462,7 +457,6 @@ in
 	    ToplevelManager,scaleToFit
 	 else skip
 	 end
-	 {self.status setOrder({Dictionary.get self.options.search order})}
       end
       
       meth guiOptions(What)

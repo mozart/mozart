@@ -54,10 +54,10 @@ in
       meth Init()
 	 case @MyManager\=False then skip else
 	    MyManager <- {New Manager init(self)}
-	    ExplorerClass,
+	    ExplorerClass
 	       %% Include the standard actions
                \insert default-actions.oz
-	                 ,{Reverse @Stacked}
+	    ExplorerClass,{Reverse @Stacked}
 	    Stacked <- nil
 	 end
       end
@@ -68,8 +68,7 @@ in
       
       meth solver(Solver Order <=False)
 	 ExplorerClass,Init
-	 {@MyManager query(proc {$ X} {Solver X} end
-			   Order)}
+	 {@MyManager query(proc {$ X} {Solver X} end Order)}
       end
 
       meth one(Solver Order <=False)
@@ -79,7 +78,7 @@ in
 
       meth all(Solver Order <=False)
 	 ExplorerClass,solver(Solver Order)
-	 {@MyManager.menu.search.all tk(invoke)}
+	 {@MyManager.menu.search.all  tk(invoke)}
       end
 
 
@@ -156,7 +155,7 @@ in
 	       {List.sub {Arity OM} [1 color orientation size]}
 	    then O=@MyManager.options.postscript in
 	       case {HasFeature OM size} then
-		  case {Misc.check {VirtualString.toString OM.size}}
+		  case {CheckSize {VirtualString.toString OM.size}}
 		  of !False then False
 		  elseof S then
 		     {Dictionary.put O width  S.width}
@@ -184,7 +183,7 @@ in
 	       else True end
 	    elsecase
 	       What==search andthen
-	       {List.sub {Arity OM} [1 information order search]}
+	       {List.sub {Arity OM} [1 information search]}
 	    then O=@MyManager.options.search in
 	       case {HasFeature OM search} then S=OM.search in
 		  case S
@@ -204,11 +203,12 @@ in
 		  end
 	       else True end
 	       andthen
-	       case {HasFeature OM order} then OO=OM.order in
-		  case {IsBool OO} then {Dictionary.put O order OO} True
+	       case {HasFeature OM failed} then F=OM.failed in
+		  case {IsBool F} then {Dictionary.put O failed F} True
 		  else False
 		  end
-	       else True end
+	       else True
+	       end
 	    elsecase
 	       What==drawing andthen
 	       {List.sub {Arity OM} [1 hide scale update]}

@@ -7,11 +7,6 @@
 
 local
 
-   ArrowLength = 24
-   ArrowHeight = 10
-   DarkColor   = '#828282'
-   BrightColor = '#ffffff'
-
    fun {AddZero N}
       case N<10 then '0'#N else N end
    end
@@ -54,7 +49,6 @@ local
       feat
 	 Time
 	 Bab
-	 Order
 	 Choose
 	 ChooseImage
 	 Depth
@@ -71,10 +65,7 @@ local
 	 BabField   = {New Tk.label tkInit(parent: self
 					   text:   ''
 					   font:   BoldStatusFont)}
-	 OrderField = {New Tk.canvas tkInit(parent: self
-					    highlightthickness: 0
-					    width:  ArrowLength
-					    height: ArrowHeight+1)}
+
 	 TimeFrame = {New Tk.frame tkInit(parent: self)}
 	 
 	 TimeLabel = {New Tk.label tkInit(parent: TimeFrame
@@ -115,11 +106,10 @@ local
 		    pack(ChooseIm ChooseNumber
 			 SolImage SolNumber
 			 FailedImage FailedNumber side:left)
-		    pack(BabField OrderField TimeFrame NodeFrame DepthFrame
+		    pack(BabField TimeFrame NodeFrame DepthFrame
 			 side:left padx:HugePad)]}
 	 self.Time          = TimeField
 	 self.Bab           = BabField
-	 self.Order         = OrderField
 	 self.Depth         = DepthField
 	 self.Choose        = ChooseNumber
 	 self.ChooseImage   = ChooseIm
@@ -133,23 +123,6 @@ local
 	 {self.Bab tk(conf text: case IsBAB then 'BAB' else '' end)}
       end
 
-      meth setOrder(IsOrder)
-	 H = ArrowHeight div 2 
-	 A = case IsOrder then last else both end
-      in
-	 {self.Order tk(delete all)}
-	 {self.Order tk(crea line 2 H ArrowLength-2 H
-			arrow:      A
-			arrowshape: q(7 7 4)
-			fill:       BrightColor
-			width:      5)}
-	 {self.Order tk(crea line 3 H ArrowLength-3 H
-			arrow:      A
-			arrowshape: q(5 5 3)
-			fill:       DarkColor
-			width:      3)}
-      end
-      
       meth setTime(T)
 	 {self.Time tk(conf text:T)}
       end
