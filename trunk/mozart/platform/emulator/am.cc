@@ -268,6 +268,16 @@ void AM::init(int argc,char **argv)
       precompiledFile = getOptArg(i,argc,argv);
       continue;
     }
+    if (strcmp(argv[i],"-applet")==0) {
+      moreThanOne++;
+      ozconf.applet = 1;
+      continue;
+    }
+    if (strcmp(argv[i],"-browser")==0) {
+      moreThanOne++;
+      ozconf.browser = 1;
+      continue;
+    }
 
     if (strcmp(argv[i],"-u")==0) {
       moreThanOne++;

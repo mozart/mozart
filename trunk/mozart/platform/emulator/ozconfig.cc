@@ -108,6 +108,7 @@ void ConfigData::init() {
 
   runningUnderEmacs     = 0;
   browser               = 0;
+  applet                = 0;
 
   debugPerdio = 0;
   debugIP = 0;
