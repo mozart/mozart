@@ -3231,7 +3231,6 @@ OZ_C_proc_begin(BImarshall,2)
   OZ_Term l=nil();
 
   int total=bs->calcTotLen();
-  printf("marshall total: %d\n",total);
   while (total){
     Assert(total>0);
     int len=bs->getWriteLen();
@@ -3280,7 +3279,6 @@ OZ_C_proc_begin(BIunmarshall,2)
     int i = smallIntValue(hh);
     Assert(i>=0 && i <= 255);
     *pos++ = (unsigned char) i;
-    printf("unmarshall: c %d\n",i);
     max--;
     len++;
     if (max<=0) {
