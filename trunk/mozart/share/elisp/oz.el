@@ -284,13 +284,13 @@ All strings matching this regular expression are removed.")
   "Internal counter for gensym.")
 
 (defun oz-make-temp-name (prefix)
-  "gensym implementation."
+  ;; gensym implementation.
   (setq oz-temp-counter (1+ oz-temp-counter))
   (format "%s%d" (make-temp-name prefix) oz-temp-counter))
 
 (defun oz-line-region (arg)
-  "Return starting and ending positions of ARG lines surrounding point.
-Positions are returned as a pair ( START . END )."
+  ;; Return starting and ending positions of ARG lines surrounding point.
+  ;; Positions are returned as a pair ( START . END ).
   (save-excursion
     (let (start end)
       (cond ((> arg 0)
@@ -310,8 +310,8 @@ Positions are returned as a pair ( START . END )."
       (cons start end))))
 
 (defun oz-paragraph-region (arg)
-  "Return starting and ending positions of ARG paragraphs surrounding point.
-Positions are returned as a pair ( START . END )."
+  ;; Return starting and ending positions of ARG paragraphs surrounding point.
+  ;; Positions are returned as a pair ( START . END ).
   (save-excursion
     (let (start end)
       (cond ((> arg 0)
@@ -330,6 +330,9 @@ Positions are returned as a pair ( START . END )."
       (cons start end))))
 
 (defun oz-get-region (start end)
+  ;; Return the region from START to END from the current buffer as a string.
+  ;; Leading and terminating whitespace is trimmed from the string and
+  ;; a \\line directive is prepended to it.
   (save-excursion
     (goto-char start)
     (skip-chars-forward " \t\n")
@@ -345,9 +348,22 @@ Positions are returned as a pair ( START . END )."
 	  (buffer-substring start end)))
 
 (defun oz-find-buffer-or-file (name)
+  ;; Try to find a buffer or file named NAME.
   (or (get-buffer name)
       (find-buffer-visiting name)
       (find-file-noselect name)))
+
+(defun oz-shell-command-to-string (command)
+  ;; Execute shell command COMMAND and return its output as a string.
+  (let ((buffer (generate-new-buffer "*Oz Shell Command Output*"))
+	string)
+    (save-excursion
+      (set-buffer buffer)
+      (shell-command command buffer)
+      (re-search-forward "[A-Za-z0-9-]+" nil t)
+      (setq string (match-string 0))
+      (kill-buffer buffer))
+    string))
 
 
 ;;------------------------------------------------------------
@@ -852,7 +868,7 @@ The emulator to use for debugging is set via \\[oz-set-emulator]."
     (setenv "OZ_PI" "1")
     (if (getenv "OZPLATFORM")
 	t
-      (let ((res (shell-command-to-string
+      (let ((res (oz-shell-command-to-string
 		  (concat (oz-home) "/bin/ozplatform"))))
 	(string-match "[a-z0-9-]+" res)
 	(setenv "OZPLATFORM" (match-string 0 res))))
