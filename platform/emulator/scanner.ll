@@ -553,21 +553,21 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
 
 
-\\l(i(ne?)?)?                  { if (get_cond()) BEGIN(LINE); }
-\\s(w(i(t(ch?)?)?)?)?          { BEGIN(SWITCHDIR); return SWITCH; }
-\\lo(c(a(l(Switches)?)?)?)?    { BEGIN(DIRECTIVE); return LOCALSWITCHES; }
-\\pu(s(h(Switches)?)?)?        { BEGIN(DIRECTIVE); return PUSHSWITCHES; }
-\\po(p(Switches)?)?            { BEGIN(DIRECTIVE); return POPSWITCHES; }
+\\switch                       { BEGIN(SWITCHDIR); return SWITCH; }
+\\pushSwitches                 { BEGIN(DIRECTIVE); return PUSHSWITCHES; }
+\\popSwitches                  { BEGIN(DIRECTIVE); return POPSWITCHES; }
+\\localSwitches                { BEGIN(DIRECTIVE); return LOCALSWITCHES; }
 
-\\in(s(e(rt?)?)?)?             { BEGIN(INSERT); }
-\\d(e(f(i(ne?)?)?)?)?          { BEGIN(DEFINE); }
-\\u(n(d(ef?)?)?)?              { BEGIN(UNDEF); }
-\\ifd(ef?)?                    { BEGIN(IFDEF); }
-\\ifn(d(ef?)?)?                { BEGIN(IFNDEF); }
-\\el(se?)?                     { toggle_cond();
+\\line                         { if (get_cond()) BEGIN(LINE); }
+\\insert                       { BEGIN(INSERT); }
+\\define                       { BEGIN(DEFINE); }
+\\undef                        { BEGIN(UNDEF); }
+\\ifdef                        { BEGIN(IFDEF); }
+\\ifndef                       { BEGIN(IFNDEF); }
+\\else                         { toggle_cond();
 				 BEGIN(DIRECTIVE);
 			       }
-\\e(n(d(if?)?)?)?              { pop_cond();
+\\endif                        { pop_cond();
 				 BEGIN(DIRECTIVE);
 			       }
 
