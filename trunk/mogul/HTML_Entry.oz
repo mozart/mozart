@@ -6,6 +6,7 @@ import
       makeBS
       )
    Open(file html)
+   Directory(mkDirForFile)
 export
    'class' : HTML_Entry
 define
@@ -15,7 +16,7 @@ define
       meth bodyTitle($) tt({HtmlQuote @id}) end
       %%
       meth toPage($)
-	 CSS           = {Manager get_css($)}
+	 CSS           = {Manager getCssLink($)}
 	 HeadTitle     = {self headTitle($)}
 	 BodyTitle     = {self bodyTitle($)}
 	 FormatHeaders = {self formatHeaders($)}
@@ -24,10 +25,7 @@ define
 	 html(
 	    head(
 	       title(HeadTitle)
-	       link(
-		  rel : 'stylesheet'
-		  type: 'text/css'
-		  href: CSS))
+	       CSS)
 	    body(
 	       h1('class':'title' BodyTitle)
 	       'div'(
@@ -75,9 +73,10 @@ define
 	 {Manager incTrace('--> updateHtml '#@id)}
 	 try
 	    Page = {self toPage($)}
+	    FileName = {Manager id_to_html_filename(@id $)}
+	    {Directory.mkDirForFile FileName}
 	    Out  = {New HTML_File
-		    init(name:{Manager id_to_html_filename(@id $)}
-			 flags:[write truncate create])}
+		    init(name:FileName flags:[write truncate create])}
 	 in
 	    {Out tag(Page)}
 	    {Out close}

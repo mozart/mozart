@@ -5,18 +5,17 @@ import
       split1	: Split1
       split	: Split
       strip	: Strip
-      makeBS	: MakeBS
       )
    Open
    Except('raise':Raise)
+   URL(toAtom resolve make toBase)
+   MogulID(normalizeID:NormalizeID)
 export
    'class'	: Message
    ParseInternal Parse ParseNodup
    BurstInternal Burst BurstNodup
    Slurp
 define
-   ID_BAD_CHAR = {Regex.make '[^[:alnum:]_.-]'}
-   %%
    class Message
       attr head body:unit
       meth init
@@ -65,46 +64,15 @@ define
 	     {Append {Map {Split RE_WORD_SEPARATOR V} Strip} Accu}
 	  end nil}
       end
-      meth check_id_expected(EID)
-	 ID = {VirtualString.toAtom {self condGet1('id' EID $)}}
+      meth check_id_expected(EID PID)
+	 PID2 = if PID==unit then 'mogul:' else PID end
+	 Base = {URL.toBase {URL.make PID2}}
+	 Want = {NormalizeID EID Base}
+	 Got  = {NormalizeID {self condGet1('id' EID $)} Base}
       in
-	 if ID\=EID then
-	    {Raise mogule(id_expected(want:EID got:ID))}
+	 if Want\=Got then
+	    {Raise mogule(id_expected(want:Want got:Got))}
 	 end
-      end
-      meth check_id_prefix(ID PREFIX)
-	 try
-	    Id = {MakeBS ID}
-	    if {Regex.search ID_BAD_CHAR Id}\=false then
-	       {Raise mogul(id_syntax(Id))}
-	    end
-	    Prefix = {MakeBS PREFIX}
-	    N = {ByteString.width Prefix}
-	    if {ByteString.width Id}=<N orelse
-	       {ByteString.slice Id 0 N}\=Prefix
-	    then
-	       raise mogul(id_prefix(want:Prefix got:Id)) end
-	    end
-	    C = {ByteString.get Id N}
-	 in
-	    if C\=&- andthen C\=&_ andthen C\=&. then
-	       raise mogul(id_prefix(want:Prefix got:Id)) end
-	    end
-	 catch mogul(id_prefix(...))=E then
-	    if {Not {Has_Mogul_Prefix PREFIX}} orelse
-	       {Has_Mogul_Prefix ID}
-	    then
-	       {Raise E}
-	    end
-	 end
-      end
-   end
-   %%
-   local
-      RE_MOGUL = {Regex.make '^mogul-'}
-   in
-      fun {Has_Mogul_Prefix S}
-	 {Regex.search RE_MOGUL S}\=false
       end
    end
    %%

@@ -4,11 +4,12 @@ import
    Admin(manager:Manager)
    GetSlot('class':GS)
    Wget(wgetPkg wgetDoc)
-   URL(toString resolve toBase)
+   URL(toString resolve toBase make)
    Entry('class':EntryClass)
    HTML_Package('class':HTMLClass)
    Regex(compile search group allMatches make) at 'x-oz://contrib/regex'
    Text(strip:Strip split:Split)
+   MogulID(normalizeID:NormalizeID)
 export
    'class' : Package
 define
@@ -22,7 +23,7 @@ define
 	 {Manager incTrace('--> init Package '#Id)}
 	 try
 	    EntryClass,init(Msg)
-	    id           <- Id
+	    id           <- {NormalizeID Id Pid}
 	    pid          <- Pid
 	    url          <- Url
 	    blurb        <- {Msg condGet1('blurb' unit $)}
@@ -58,12 +59,16 @@ define
 	    {Manager decTrace('<-- updatePub package '#@id)}
 	 end
       end
+      meth get_id_as_rel_path($)
+	 {AdjoinAt {URL.make @id} scheme unit}
+      end
       meth UpdatePkg(U DB)
 	 {Manager trace('Downloading pkg '#U)}
 	 try {Wget.wgetPkg U
 	      {URL.toString
 	       {URL.resolve
-		{URL.toBase {Manager get_pkgdir($)}} @id}}}
+		{URL.toBase {Manager get_pkgdir($)}}
+		{self get_id_as_rel_path($)}}}}
 	 catch mogul(...)=E then
 	    {Manager addReport(update_pub_pkg(@id) E)}
 	 end
@@ -73,7 +78,8 @@ define
 	 try {Wget.wgetDoc U
 	      {URL.toString
 	       {URL.resolve
-		{URL.toBase {Manager get_docdir($)}} @id}}}
+		{URL.toBase {Manager get_docdir($)}}
+		{self get_id_as_rel_path($)}}}}
 	 catch mogul(...)=E then
 	    {Manager addReport(update_pub_doc(@id) E)}
 	 end

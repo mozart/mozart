@@ -23,7 +23,7 @@ INSTALL_BIN	= $(INSTALL) -m 555
 INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_DIR	= @VAR_INSTALL_DIR@
 CFLAGS		= @CFLAGS@
-OZCFLAGS	= -z 9
+OZCFLAGS	= -z 9 -DHYPHEN_HACK
 OZLFLAGS	= -z 9
 PLATFORM	= $(shell $(OZTOOL) platform)
 OZHOME		= @OZHOME@
@@ -45,7 +45,8 @@ MAIN_DEPS = Text.ozf Message.ozf Admin.ozf \
 	Contact.ozf Database.ozf Except.ozf Package.ozf \
 	Section.ozf Externalizable.ozf GetSlot.ozf Wget.ozf \
 	ContactName.ozf Entry.ozf HTML_Entry.ozf HTML_Contact.ozf \
-	HTML_Section.ozf Author.ozf HTML_Package.ozf Category.ozf
+	HTML_Section.ozf Author.ozf HTML_Package.ozf Category.ozf \
+	MogulID.ozf Directory.ozf
 TARGETS_TOP	= Librarian.exe
 TARGETS_SUB	=
 TARGETS_BIN	=

@@ -79,7 +79,7 @@ define
 	 try
 	    {Manager trace('Fetching info from '#Url)}
 	    Msg   = {Parse {Slurp Url}}
-	    {Msg check_id_expected(Id)}
+	    {Msg check_id_expected(Id Pid)}
 	    {Msg check_keys(['type'])}
 	    Type  = {VirtualString.toAtom {ToLower {Msg get1('type' $)}}}
 	    Class = case Type
@@ -91,7 +91,7 @@ define
 	    Prev  = Database,condGet(Id unit $)
 	    Entry = {New Class init(Msg Id Url Pid Prev)}
 	 in
-	    Database,put(Id Entry)
+	    Database,put({Entry getSlot('id' $)} Entry)
 	    if Type=='section' then
 	       {Manager trace('Processing entries')}
 	       {Record.forAllInd {Entry getSlot('toc' $)}

@@ -6,6 +6,7 @@ import
    ContactName('class':CName)
    Entry('class':EntryClass)
    HTML_Contact('class':HTMLClass)
+   MogulID(normalizeID:NormalizeID)
 export
    'class' : Contact
 define
@@ -16,7 +17,7 @@ define
 	 NAME = {New CName init({Msg get1('name' $)})}
       in
 	 EntryClass,init(Msg)
-	 id    <- Id
+	 id    <- {NormalizeID Id Pid}
 	 pid   <- Pid
 	 url   <- Url
 	 email <- {Msg condGet1('email' unit $)}
