@@ -202,7 +202,7 @@ int splitFDs(fd_set *in, fd_set *out)
   /* hack: optimized scanning "in" by using definition of adt "fd_set" */
   int ret=0;
   fd_set copyin = *in;
-  for (int i = 0; i < copyin.fd_count ; i++) {
+  for (unsigned i = 0; i < copyin.fd_count ; i++) {
     int fd = copyin.fd_array[i];
     if (isSocket(fd)) {
       ret++;

@@ -585,7 +585,9 @@ void ozFree(char *p, size_t ignored)
 
 #elif defined(WINDOWS)
 
-#include <windows.h>
+/* need windows.h: */
+#include "wsock.hh"
+
 
 void ozFree(char *ptr, int sz)
 {
