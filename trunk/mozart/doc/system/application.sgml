@@ -487,7 +487,14 @@
     </Section>
 
     <Section id="Section.Modules.Link">
-      <Title/Using Module Managers/
+      <Title/The Class <<Module.manager>>/
+
+      <P>
+        Module managers are created as instances of the class
+        <<Module.manager>>. For predefined abstractions that are build
+        on top of module managers see <Ptr
+        to="section.modules.abstractions">.
+      </P>
 
       <P>
         <List>
@@ -543,6 +550,73 @@
             module under that particular URL installed.
         </List>
        </P>         
+    </Section>
+
+    <Section id="Section.Modules.Abstractions">
+      <Title/Predefined Abstractions/
+
+      <P>
+        <List>
+          <Entry><Span class=index/<<link>>/
+	    <Index/<<Module>><And><<link>>/
+          <Synopsis>
+	    <<<{Module.link ?+{UrlVs} ?_{Rs}}>>>
+          <Item>
+             Takes a list ?_{UrlVs} of urls (as virtual strings) at
+             which pickled functors must reside.
+          <P>
+            Returns a list of modules computed by linking the
+            functors.
+          <P>
+            All functors are linked by the same module manager,
+            however each application of Module.link employs a new and
+            private module manager. This has the following
+            consequences:
+            <List>
+              <Item> 
+                Modules imported by several functors are shared.
+              <Item>
+                Each application of <<Module.link>> links required
+                functors anew. That is, after replacing a functor on
+                the file system, an application of <<Module.link>>
+                considers the new functor.
+            </List>
+          <P>
+            <<Module.link>> is defined as follows:
+<<<fun {Module.link UrlVs}
+   ModMan = {New Module.manager init}
+in
+   {Map UrlVs fun {$ Url}
+	         {ModMan link(url:Url $)}
+	      end}
+end>>>
+
+          <Entry><Span class=index/<<apply>>/
+	    <Index/<<Module>><And><<apply>>/
+          <Synopsis>
+            <<<{Module.apply ?+{Xs} ?_{Rs}}>>>
+          <Item>
+            Takes a list of functors or pairs of urls (as virtual
+            strings) as input. The url in a pair of url and functor
+            describes the base url with which the import urls of the
+            functor gets resolved. If it is missing the base url './'
+            is used for url resolution. 
+          <P>
+            Returns a list of modules computed by functor application.
+          <P>
+            <<Module.apply>> is defined as follows:
+<<<fun {Module.apply UrlVs}
+   ModMan = {New Module.manager init}
+in
+   {Map UFs fun {$ UF}
+               U#F = if {Functor.is UF} then './'#UF else UF end
+            in
+               {ModMan apply(url:U F $)}
+            end}
+end>>>
+        </List>
+       </P>         
+      
     </Section>
 
     <Section id="Section.Modules.Example">
