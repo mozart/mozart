@@ -18,7 +18,7 @@ HTMLSUBDIR	= mogul-html
 HTMLEXTRA	= mogul.css page.gif
 SGMLFILES	= mogul.sgml
 
-default: hack-all
+default: all
 all:: all.doc
 all.doc:: $(HTMLSUBDIR)/index.html
 install.doc:: $(HTMLSUBDIR)/index.html
