@@ -211,15 +211,13 @@ int OZ_getFDSup(void)
   return fd_sup; 
 }
 
-int OZ_vectorSize(OZ_Term t) 
-{
-  if (OZ_isCons(t)) {
+int OZ_vectorSize(OZ_Term t) {
+  t = oz_deref(t);
+  if (oz_isCons(t)) {
     return OZ_length(t);
-  } else if (OZ_isTuple(t)) {
-    return OZ_width(t);
-  } else if (OZ_isRecord(t)) {
-    return OZ_width(t);
-  } else if (OZ_isLiteral(t)) {
+  } else if (oz_isSRecord(t)) {
+    return tagged2SRecord(t)->getWidth();
+  } else if (oz_isLiteral(t)) {
     return 0;
   } 
   return -1;
@@ -229,26 +227,30 @@ OZ_Term * OZ_getOzTermVector(OZ_Term t, OZ_Term * v)
 {
   int i = 0;
 
-  if (OZ_isLiteral(t)) {
+  t=oz_deref(t);
+  
+  if (oz_isLiteral(t)) {
 
     ;
 
-  } if (OZ_isCons(t)) {
+  } if (oz_isCons(t)) {
 
-    for (; OZ_isCons(t); t = OZ_tail(t)) 
-      v[i++] = OZ_head(t);
+    do {
+      v[i++] = oz_head(t);
+      t = oz_deref(oz_tail(t));
+    } while (oz_isCons(t));
 
-  } else if (OZ_isTuple(t)) {
+  } else if (oz_isTuple(t)) {
 
-    for (int sz = OZ_width(t); i < sz; i += 1) 
-      v[i] = OZ_getArg(t, i);
+    for (int sz = tagged2SRecord(t)->getWidth(); i < sz; i += 1) 
+      v[i] = tagged2SRecord(t)->getArg(i);
 
-  } else if (OZ_isRecord(t)) {
+  } else if (oz_isRecord(t)) {
 
     OZ_Term al = OZ_arityList(t);
 
-    for (; OZ_isCons(al); al = OZ_tail(al)) 
-      v[i++] = OZ_subtree(t, OZ_head(al));
+    for (; oz_isCons(al); al = oz_tail(al)) 
+      v[i++] = tagged2SRecord(t)->getFeature(oz_head(al));
 
   } else {
     OZ_warning("OZ_getOzTermVector: Unexpected term, expected vector.");
@@ -261,27 +263,31 @@ int * OZ_getCIntVector(OZ_Term t, int * v)
 {
   int i = 0;
 
-  if (OZ_isLiteral(t)) {
+  t = oz_deref(t);
+  
+  if (oz_isLiteral(t)) {
 
     ;
 
-  } if (OZ_isCons(t)) {
+  } if (oz_isCons(t)) {
 
-    for (; OZ_isCons(t); t = OZ_tail(t)) 
-      v[i++] = OZ_intToC(OZ_head(t));
+    do {
+      v[i++] = smallIntValue(oz_deref((oz_head(t))));
+      t = oz_deref(oz_tail(t));
+    } while (oz_isCons(t));
+    
+  } else if (oz_isTuple(t)) {
 
-  } else if (OZ_isTuple(t)) {
+    for (int sz = tagged2SRecord(t)->getWidth(); i < sz; i += 1) 
+      v[i] = smallIntValue(oz_deref((tagged2SRecord(t)->getArg(i))));
 
-    for (int sz = OZ_width(t); i < sz; i += 1) 
-      v[i] = OZ_intToC(OZ_getArg(t, i));
-
-  } else if (OZ_isRecord(t)) {
+  } else if (oz_isRecord(t)) {
 
     OZ_Term al = OZ_arityList(t);
 
-    for (; OZ_isCons(al); al = OZ_tail(al)) 
-      v[i++] = OZ_intToC(OZ_subtree(t, OZ_head(al)));
-
+    for (; oz_isCons(al); al = oz_tail(al)) 
+      v[i++] = smallIntValue(oz_deref((tagged2SRecord(t)->getFeature(al))));
+    
   } else {
     OZ_warning("OZ_getCIntVector: Unexpected term, expected vector.");
     return NULL;
