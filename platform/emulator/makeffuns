@@ -20,7 +20,7 @@ srcdir=$1
 OZVERSION=$2
 
 ozc=mozart.c
-in=$srcdir/mozart.h
+in="$srcdir/mozart.h $srcdir/extension.hh"
 initffuns=initffuns.cc
 
 cat > $ozc << EOF
@@ -30,9 +30,11 @@ cat > $ozc << EOF
 
 #define extern
 
+#define OZ_Extension void
+
 EOF
 
-grep _FUNDECL $in | grep -v define >> $ozc
+cat $in | grep _FUNDECL | grep -v define >> $ozc
 
 echo "#define OZVERSION \"$OZVERSION\"" >> $ozc
 
@@ -56,7 +58,7 @@ ozdeclspec int ozcdecl OZ_linkFF(char *version, void** funs)
 EOF
 
 
-grep _FUNDECL $in | grep -v define >> $ozc
+cat $in | grep _FUNDECL | grep -v define >> $ozc
 
 cat >> $ozc << EOF
 
@@ -84,7 +86,7 @@ void initffuns()
 
 EOF
 
-grep _FUNDECL $in | grep -v define >> $initffuns
+cat $in | grep _FUNDECL | grep -v define >> $initffuns
 
 cat >> $initffuns << EOF
   Assert(i<numffuns);
