@@ -563,7 +563,6 @@ define
 	    {self set_includelibs(ILIBS)}
 	    {self set_includebins(IBINS)}
 	    {self set_includedocs(IDOCS)}
-	    end
 	 end
 	 %% create and install package if necessary
 	 if {self get_tar_targets($)}\=nil then
