@@ -15,7 +15,9 @@ specify what distribution behavior he wants, e.g.,
 mobile (cached) objects, stationary objects,
 stationary single-threaded objects.
 
-The most critical entities in an application
+<SUBSECTION><TITLE>Objects</TITLE>
+
+The most critical entities in a distributed application
 in terms of network efficiency are the objects.
 Objects have a state that is updated in a
 globally consistent way.
@@ -63,9 +65,20 @@ A cached object is created with <<New>>,
 a stationary object is created with <<NewStat>>,
 and a server is created with <<NewServer>>.
 
-The other language entities have the following
+<SUBSECTION><TITLE>Other stateful entities</TITLE>
+
+The other stateful language entities have the following
 distribution behaviors:
 <LIST>
+<ITEM> <EM>Thread</EM>:
+A thread is an entity
+that actively executes a sequence of instructions.
+The thread is stationary on the site it is created.
+Threads communicate through shared data and
+block when the data is unavailable, i.e.,
+when trying to access unbound logic variables.
+This makes Oz a dataflow language.
+
 <ITEM> <EM>Port</EM>:
 A port is an asynchronous many-to-one channel
 that respects FIFO for messages sent from within the same thread.
@@ -86,13 +99,27 @@ may need up to three network messages,
 but once the cell is local, then further
 updates do not use the network any more.
 
+<ITEM> <EM>Thread-reentrant lock</EM>:
+A thread-reentrant lock allows only a single
+thread to enter a given program region.
+These locks can be created dynamically
+and nested recursively.
+These locks have the same distribution behavior
+as cached objects and cells.
+</LIST>
+
+<SUBSECTION><TITLE>Single-assignment entities</TITLE>
+
+An important category of language entities
+are those that can be assigned only to one value:
+<LIST>
 <ITEM> <EM>Logic variable</EM>:
 A logic variable is a kind of single-assignment variable.
 It is more than that because two logic variables can
 be bound together even before they are assigned,
 and because a variable can be assigned more than
 once, if it is always to the same value.
-Logic variables are important for two reasons:
+Logic variables are important for three reasons:
 <LIST>
 <ITEM> They have a more efficient protocol than cells.
 Often, variables are just used like placeholders, that is,
@@ -105,6 +132,21 @@ or stored in a data structure
 even before it is assigned its value.
 When the value is there, then
 it is sent to all sites that need it.
+<ITEM> They are the basic mechanism
+for synchronization and communication
+in the concurrent execution.
+Mozart does not need an explicit
+monitor or signal concept--rather,
+logic variables let programs
+wait for data availability,
+which is 90% of the needs of concurrency,
+and 9% more is provided by reentrant locking,
+which is implemented by logic variables and cells.
+The remaining 1% are not so simply
+handled by these two cases and must be
+programmed explicitly.
+The reader is advised not to take
+the above numbers too seriously.
 </LIST>
 When a logic variable is bound,
 the value is sent to its owner site
@@ -133,13 +175,14 @@ in which they were sent in the thread.
 <P>A port together with a stream implement an
 asynchronous many-to-many channel
 that respects the order of messages
-from the same thread.
+sent from the same thread.
 
 </LIST>
 
-Finally, there are the stateless entities.
+<SUBSECTION><TITLE>Stateless entities</TITLE>
+
 Stateless entities never
-change, i.e., they do not have any internal state.
+change, i.e., they do not have any internal state whatsoever.
 Their distribution behavior is very efficient:
 they are copied across the net in a single message.
 The different kinds of stateless entities differ
@@ -149,7 +192,7 @@ can exist on a site:
 <LIST>
 
 <ITEM> <EM>Records, lists, and numbers</EM>:
-these entities are copied eagerly across the network,
+These entities are copied eagerly across the network,
 in the message that references them.
 The same record, list, and number may occur many
 times on a site, once per copy
@@ -183,7 +226,7 @@ the site until the object is called.
 However, if a class is passed to a site,
 then it is copied eagerly.
 
-<ITEM> <EM>Chunks</EM>
+<ITEM> <EM>Chunks</EM>:
 A chunk is a lazy record.
 If a chunk is passed to a site,
 then the site initially only
@@ -195,6 +238,84 @@ Chunks exist to make it easy to introduce
 laziness into large data structures when needed.
 
 </LIST>
+
+<SUBSECTION><TITLE>Sited entities</TITLE>
+
+Entities that can be used only on one site
+are called <EM>sited</EM>.
+References to these entities can be passed to other
+sites, but they do not work there.
+They work only on their home site.
+
+<P> In Mozart, a module is a chunk that
+encapsulates related operations and
+that possibly has some internal state.
+The modules that are available in a Mozart
+process when it starts up are called system modules.
+
+<P> System modules can be either sited or unsited.
+A sited system module is called a <EM>resource</EM>.
+A system module is sited if it refers to
+anything whose access is considered limited
+to the machine hosting the Mozart process.
+Most system modules are sited, including
+<<Tk>> and <<Browser>> (access to system graphics),
+<<Connection>> and <<Remote>> (access to site-specific distributed operations),
+<<Application>> and <<Module>> (access to application management),
+<<Search>> and <<FD>> (access to constraint programming),
+<<Open>> and <<Pickle>> (access to the file system),
+<<OS>> and <<Property>> (access to the OS and emulator),
+and so forth.
+
+<P> A few system modules are unsited, namely those containing
+basic system built-in operations (see Standard Modules).
+For example, a procedure that does additions
+can be copied to another site,
+whereas a procedure that accesses <<Tk>> cannot.
+
+<P> There are a few other entities that are sited
+due to limitations of the current release.
+For example, threads, dictionaries, arrays, and spaces are sited.
+In the current release, any entity
+that has state and that could
+be implemented as an object is sited.
+Many of these entities will become
+unsited in future releases.
+
+<SUBSECTION><TITLE>Bringing it all together</TITLE>
+
+Does the above classification
+give programmers a warm, fuzzy feeling when
+writing distributed applications?
+In short, yes it does.
+The distribution model has been designed in tandem
+with many application prototypes and incredible
+numbers of Gedankenexperimenten.
+
+Here's how to use the distribution model
+to build applications.
+Typically, the large-scale structure
+of an application consists of a graph
+of threads and objects, which access resources.
+The objects are given distribution behaviors
+to satisfy the geographic constraints
+(placement of resources, dependencies between sites)
+and
+the performance constraints
+(network bandwidth, machine memory and speed).
+Threads are created initially and during
+execution to ensure that each site does
+the desired part of the execution.
+Objects exchange messages,
+which may refer to objects
+or other entities.
+Records and procedures,
+both stateless entities,
+are the basic data structures
+of the application--they are
+passed between sites when needed.
+Logic variables and locks are
+used to manage the dataflow and the concurrency.
 
 <SECTION><TITLE>Global naming</TITLE>
 
