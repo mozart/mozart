@@ -318,11 +318,6 @@ public:
   Bool inShallowGuard()             { return _shallowHeapTop!=0; }
   void setShallowHeapTop(char *sht) { _shallowHeapTop=sht; }
   char* getShallowHeapTop()         { return _shallowHeapTop; }
-#ifdef DEBUG_CHECK
-  Bool checkShallow(ByteCode *scp) { 
-    return inShallowGuard() ? scp!=0 : scp==0;
-  }
-#endif
 
   TaggedRef getX(int i) { return xRegs[i]; }
   TaggedRef getDefaultExceptionHdl() { return defaultExceptionHdl; }

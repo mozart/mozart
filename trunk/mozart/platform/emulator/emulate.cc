@@ -208,8 +208,6 @@ void buildRecord(ProgramCounter PC, RefsArray X, RefsArray Y, Abstraction *CAP);
 // *** ???
 // -----------------------------------------------------------------------
 
-#define NOFLATGUARD   (shallowCP)
-
 #define IMPOSSIBLE(INSTR) OZ_error("%s: impossible instruction",INSTR)
 
 #define DoSwitchOnTerm(indexTerm,table)					\
@@ -237,10 +235,10 @@ void buildRecord(ProgramCounter PC, RefsArray X, RefsArray Y, Abstraction *CAP);
 // if (isUVar(var) && isCurrentBoard(tagged2VarHome(var))) {
 // more efficient:
 inline
-void bindOPT(OZ_Term *varPtr, OZ_Term term, ByteCode *scp)
+void bindOPT(OZ_Term *varPtr, OZ_Term term)
 {
   Assert(isUVar(*varPtr));
-  if (!am.currentUVarPrototypeEq(*varPtr) || scp!=0) {
+  if (!am.currentUVarPrototypeEq(*varPtr)) {
     if (!oz_isLocalUVar(varPtr)) {
       am.trail.pushRef(varPtr,*varPtr);
     }
@@ -255,34 +253,28 @@ void bindOPT(OZ_Term *varPtr, OZ_Term term, ByteCode *scp)
  *     2. test two non-variables for equality
  */
 inline
-OZ_Return fastUnify(OZ_Term A, OZ_Term B, ByteCode *scp=0)
-{
-  if (scp) goto fallback;
-
-  {
-    OZ_Term term1 = A;
-    DEREF0(term1,term1Ptr,_1);
+OZ_Return fastUnify(OZ_Term A, OZ_Term B) {
+  OZ_Term term1 = A;
+  DEREF0(term1,term1Ptr,_1);
   
-    OZ_Term term2 = B;
-    DEREF0(term2,term2Ptr,_2);
+  OZ_Term term2 = B;
+  DEREF0(term2,term2Ptr,_2);
 
-    if (!oz_isVariable(term2)) {
-      if (am.currentUVarPrototypeEq(term1)) {
-	doBind(term1Ptr,term2);
-	goto exit;
-      }
-      if (term1==term2) {
-	goto exit;
-      }
-    } else if (!oz_isVariable(term1) && am.currentUVarPrototypeEq(term2)) {
-	doBind(term2Ptr,term1);
-	goto exit;
+  if (!oz_isVariable(term2)) {
+    if (am.currentUVarPrototypeEq(term1)) {
+      doBind(term1Ptr,term2);
+      goto exit;
     }
+    if (term1==term2) {
+      goto exit;
+    }
+  } else if (!oz_isVariable(term1) && am.currentUVarPrototypeEq(term2)) {
+    doBind(term2Ptr,term1);
+    goto exit;
   }
-
-fallback:
-  return oz_unify(A,B,scp);
-
+  
+  return oz_unify(A,B,NULL);
+  
  exit:
   COUNT(varOptUnify);
   return PROCEED;
@@ -499,17 +491,14 @@ Bool hookCheckNeeded()
 // ??? <- Bob, Justus und Peter
 // -----------------------------------------------------------------------
 
-// failure in shallow guard can never be handled
 #define RAISE_THREAD_NO_PC			\
   e->exception.pc=NOCODE;			\
-  e->setShallowHeapTop(0);			\
   return T_RAISE;
 
 #define RAISE_THREAD				\
   e->exception.pc=PC;				\
   e->exception.y=Y;				\
   e->exception.cap=CAP;				\
-  e->setShallowHeapTop(0);			\
   return T_RAISE;
 
 
@@ -836,9 +825,6 @@ int engine(Bool init)
 
   RefsArray HelpReg1 = NULL, HelpReg2 = NULL;
   #define HelpReg sPointer  /* more efficient */
-
-  /* shallow choice pointer */
-  ByteCode *shallowCP = NULL;
 
   ConstTerm *predicate;	    NoReg(predicate);
   int predArity;    	    NoReg(predArity);
@@ -1279,7 +1265,6 @@ LBLdispatcher:
 	DISPATCH(4);
 
       case SUSPEND:
-	  Assert(!shallowCP);
 	  OZ_suspendOnInternal2(XPC(1),XPC(2));
 	  CheckLiveness(PC);
 	  PushContX(PC);
@@ -2586,17 +2571,6 @@ LBLdispatcher:
 
   LBLunifySpecial:
   {
-    if (shallowCP) {
-      if (e->trail.isEmptyChunk()) {
-	e->trail.popMark();
-      } else {
-	oz_reduceTrailOnFail();
-      }
-      PC=shallowCP;
-      shallowCP=0;
-      e->setShallowHeapTop(NULL);
-    }
-
     switch (tmpRet) {
     case BI_REPLACEBICALL:
       Assert(!e->isEmptyPreparedCalls());
@@ -2611,23 +2585,9 @@ LBLdispatcher:
     }
   }
 
-// ------------------------------------------------------------------------
-// *** FAILURE
-// ------------------------------------------------------------------------
+  Assert(0);
+  return T_ERROR;
 
-LBLshallowFail:
-  {
-    asmLbl(SHALLOW_FAIL);
-    if (e->trail.isEmptyChunk()) {
-      e->trail.popMark();
-    } else {
-      oz_reduceTrailOnFail();
-    }
-    PC                 = shallowCP;
-    shallowCP          = NULL;
-    e->setShallowHeapTop(NULL);
-    JUMPRELATIVE(getLabelArg(PC+1));
-  }
 } // end engine
 
 
@@ -2712,7 +2672,7 @@ void buildRecord(ProgramCounter PC, RefsArray X, RefsArray Y,Abstraction *CAP)
 	Assert(isUVar(term));
 	int numArgs = getWidth(ff);
 	SRecord *srecord = SRecord::newSRecord(label,ff, numArgs);
-	bindOPT(termPtr,makeTaggedSRecord(srecord), NULL);
+	bindOPT(termPtr,makeTaggedSRecord(srecord));
 	sPointer = srecord->getRef();
 	DISPATCH(4,numArgs);
       }
@@ -2729,7 +2689,7 @@ void buildRecord(ProgramCounter PC, RefsArray X, RefsArray Y,Abstraction *CAP)
       TaggedRef term = RegAccess(auxReg,getRegArg(PC+2));
       DEREF(term,termPtr,tag);
       Assert(isUVar(tag));
-      bindOPT(termPtr, i,NULL);
+      bindOPT(termPtr, i);
       DISPATCH(3,-1);
     }
 
@@ -2746,7 +2706,7 @@ void buildRecord(ProgramCounter PC, RefsArray X, RefsArray Y,Abstraction *CAP)
 	LTuple *ltuple = new LTuple();
 	ltuple->setHead(RegAccess(auxReg,getRegArg(PC+2)));
 	ltuple->setTail(am.currentUVarPrototype());
-	bindOPT(termPtr,makeTaggedLTuple(ltuple),NULL);
+	bindOPT(termPtr,makeTaggedLTuple(ltuple));
 	RegAccess(X,getRegArg(PC+3)) = makeTaggedRef(ltuple->getRef()+1);
 	DISPATCH(4,0);
       }
@@ -2762,7 +2722,7 @@ void buildRecord(ProgramCounter PC, RefsArray X, RefsArray Y,Abstraction *CAP)
 	Assert(isUVar(aux));
 	LTuple *ltuple = new LTuple();
 	sPointer = ltuple->getRef();
-	bindOPT(auxPtr,makeTaggedLTuple(ltuple),NULL);
+	bindOPT(auxPtr,makeTaggedLTuple(ltuple));
 	DISPATCH(2,2);
       }
 
