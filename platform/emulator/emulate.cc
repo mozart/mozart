@@ -1697,8 +1697,8 @@ void engine() {
 		   solveBB->isFailed () == OK), 
 		  error ("Solve board in solve continuation builtin is gone"));
        SolveActor *solveAA = SolveActor::Cast (solveBB->getActor ()); 
-       DebugCheck((solveAA->getBoard () != NULL),
-		  error ("SolveCont: actors's board is linked to computation tree?"));
+//        DebugCheck((solveAA->getBoard () != NULL),
+// 		  error ("SolveCont: actors's board is linked to computation tree?"));
 
        // link and commit the board (actor will be committed too); 
        solveBB->setCommitted (CBB);
@@ -1717,10 +1717,16 @@ void engine() {
        // install (i.e. perform 'unit commmit') 'board-to-install' if any;
        Board *boardToInstall = solveAA->getBoardToInstall ();
        if (boardToInstall != (Board *) NULL) {
+	 DebugCheck ((boardToInstall->isCommitted () == OK ||
+		      boardToInstall->isFailed () == OK ||
+		      boardToInstall->isDiscarded () == OK),
+		     error ("boardToInstall is already committed")); 
 	 boardToInstall->setCommitted (CBB);
 #ifdef DEBUG_CHECK
 	 if ( !e->installScript (boardToInstall->getScriptRef ()) ) {
-	   error ("installScript has failed in solveCont");
+	   // error ("installScript has failed in solveCont");
+	   message ("installScript has failed in solveCont (0x%x to 0x%x)\n",
+		    (void *) boardToInstall, (void *) solveBB);
 	 }
 #else
 	 (void) e->installScript (boardToInstall->getScriptRef ());
@@ -1773,14 +1779,14 @@ void engine() {
 		     solveBB->isDiscarded () == OK ||
 		     solveBB->isFailed () == OK), 
 		    error ("Solve board in solve continuation builtin is gone"));
-	 DebugCheck((solveBB->getParentBoard () != NULL),
-		    error ("SolveCont: taken board is linked to computation tree?"));
+// 	 DebugCheck((solveBB->getParentBoard () != NULL),
+// 		    error ("SolveCont: taken board is linked to computation tree?"));
 
 	 SolveActor::Cast (solveBB->getActor ())->setBoard (CBB);
 
 	 Bool isGround;
 	 Board *newSolveBB = (Board *) e->copyTree (solveBB, &isGround);
-	 SolveActor::Cast (solveBB->getActor ())->unsetBoard ();
+//	 SolveActor::Cast (solveBB->getActor ())->unsetBoard ();
 	 SolveActor *solveAA = SolveActor::Cast (newSolveBB->getActor ());
 
 	 if (isGround == OK) {
@@ -2154,6 +2160,8 @@ void engine() {
 // WAIT: no rule
   }  else if (CBB->isSolve ()) {
     // try to reduce a solve board;
+    DebugCheck ((CBB->isReflected () == OK),
+		error ("trying to reduce an already reflected solve actor"));
     if (SolveActor::Cast (CBB->getActor ())->isStable () == OK) {
       // all possible reduction steps require this; 
       e->trail.popMark ();
@@ -2165,7 +2173,7 @@ void engine() {
 
       if (solveBB->hasSuspension () == NO) {
 	// 'solved';
-	solveAA->unsetBoard ();   // unlink from the computation tree;
+// 	solveAA->unsetBoard ();   // unlink from the computation tree;
 	DebugCheckT (solveBB->setReflected ());
 	if ( !e->fastUnify (solveAA->getResult (), solveAA->genSolved ()) ) {
 	  warning ("unification of solved tuple with variable has failed");
@@ -2176,7 +2184,7 @@ void engine() {
 	WaitActor *wa = solveAA->getDisWaitActor ();
 	if (wa == (WaitActor *) NULL) {
 	  // "stuck" (stable without distributing waitActors);
-	  solveAA->unsetBoard ();   // unlink from the computation tree; 
+// 	  solveAA->unsetBoard ();   // unlink from the computation tree; 
 	  DebugCheckT (solveBB->setReflected ());
 	  if ( !e->fastUnify (solveAA->getResult (), solveAA->genStuck ()) ) {
 	    warning ("unification of solved tuple with variable has failed");
@@ -2205,11 +2213,26 @@ void engine() {
 	  // and all the tree from solve blackboard (*solveBB) will be now copied.
 	  // Moreover, the copy has already the 'boardToInstall' setted properly;
 	  Board *newSolveBB = e->copyTree (solveBB, (Bool *) NULL);
+#ifdef DEBUG_CHECK
+	  Board *tmpSolveBB = e->copyTree (solveBB, (Bool *) NULL);
+	  Board *bbti =
+	    SolveActor::Cast (tmpSolveBB->getActor ())->getBoardToInstall ();
+	  e->dontPropagate = OK;
+	  Board *cb = e->currentBoard;
+	  tmpSolveBB->setInstalled ();
+	  e->setCurrent (tmpSolveBB);
+	  if ( !e->installScript (bbti->getScriptRef ()) ) {
+	    error ("BANG!!!");
+	  }
+	  tmpSolveBB->unsetInstalled ();
+	  e->setCurrent (cb);
+	  e->dontPropagate = NO;
+#endif
 	  // ... and now set the original waitActor backward;
-	  nwa->setCommitted ();     // this subtree is discarded;
+	  waitBoard->flags |= Bo_Failed;   // this subtree is discarded;
 	  wa->setBoard (solveBB);   // original waitActor;
-	  SolveActor::Cast (newSolveBB->getActor ())->unsetBoard ();
-	  solveAA->unsetBoard ();
+// 	  SolveActor::Cast (newSolveBB->getActor ())->unsetBoard ();
+// 	  solveAA->unsetBoard ();
 	  if (wa->hasOneChild () == OK) {
 	    solveAA->setBoardToInstall (wa->getChild ());
 	  } else {
