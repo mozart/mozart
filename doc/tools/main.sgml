@@ -1,0 +1,114 @@
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % input.local.2 SYSTEM "tools.extra">
+<!ENTITY % p.mix.local "|Em|note.gui|menu">
+<!ELEMENT Em - - (#PCDATA)>
+<!ENTITY % proglang.values.local "|lambda">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+<!-- Include Files -->
+<!ENTITY explorer.actions   SYSTEM "e-actions.sgml">
+<!ENTITY explorer.interface SYSTEM "e-interface.sgml">
+<!ENTITY explorer.invoke    SYSTEM "e-invoke.sgml">
+<!ENTITY explorer.menu      SYSTEM "e-menu.sgml">
+<!ENTITY explorer.object    SYSTEM "e-object.sgml">
+<!ENTITY explorer.status    SYSTEM "e-status.sgml">
+<!ENTITY explorer.summary   SYSTEM "e-summary.sgml">
+<!ENTITY explorer.tree      SYSTEM "e-tree.sgml">
+
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY dot "." -- to distinguish it from periods -->
+<!ENTITY Oz "Oz">
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY endash PI "endash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY wrt PI "wrt">
+<!ENTITY eg PI "eg">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <!-- Splitting the document into different HTML nodes -->
+
+    <Meta name="html.split"       value="chapter.explorer">
+    <Meta name="html.split"       value="section.explorer.summary">
+    <Meta name="html.split"       value="section.explorer.interface">
+    <Meta name="html.split"       value="section.explorer.status">
+    <Meta name="html.split"       value="section.explorer.invoke">
+    <Meta name="html.split"       value="section.explorer.tree">
+    <Meta name="html.split"       value="section.explorer.menu">
+    <Meta name="html.split"       value="section.explorer.actions">
+    <Meta name="html.split"       value="section.explorer.object">
+
+    <Meta name="html.split"       value="chapter.linker">
+
+    <Meta name="html.split.bib"   value="">
+    <Meta name="html.split.index" value="">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=revised>
+    <Title//
+    <Author.Extern to="author.db" key="Christian.Schulte">
+    <Abstract>
+      <P.silent><!--**-->
+    </Abstract>
+  <Body>
+
+  <Part id="Part.Graphical">
+    <Title/Graphical Tools/
+
+    <Chapter id="Chapter.Explorer">
+      <Title/Oz Explorer&emdash; Visual Constraint Programming Support/
+
+      <P>
+      The Oz Explorer is a graphical and interactive tool to
+      visualize and analyze search trees.  A research paper on the
+      Oz Explorer is&nbsp;<Ptr to="Schulte97">.
+      </P>
+
+      &explorer.summary;
+      &explorer.invoke;
+      &explorer.interface;
+      &explorer.tree;
+      &explorer.status;
+      &explorer.menu;
+      &explorer.actions;
+      &explorer.object;
+
+    </Chapter>
+
+  </Part>
+
+  <Part id="Part.Cmd">
+    <Title/Commandline Tools/
+
+    <Chapter id="Chapter.Linker">
+      <Title/The Oz Linker: <Kbd/ozl//
+
+      <P>
+      The Oz Linker is a commandline tool to create functors
+      that are prelinked with respect to some of the imported
+      functors. This can ease the deployment of functors by
+      combining a large hierarchy of functors into a single functor.
+      A short introduction can be found in ???.
+      </P>
+
+    </Chapter>
+
+  </Part>
+
+  <Back>
+    <Bib.Extern id="Schulte97" to="tools.bib" key="Schulte97">
+</Book>
