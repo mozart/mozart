@@ -1,0 +1,67 @@
+# -*- Makefile -*-
+
+PREFIX		= @prefix@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
+OZENGINE	= @OZENGINE@
+OZDOC		= @OZDOC@
+OZDOCFLAGS	=
+DOCIFY		= $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
+
+DOCDIR		= $(PREFIX)/doc/$(WHAT)
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_DIR	= @INSTALL_DIR@
+
+HTMLSUPPORTFILES0 = \
+	ozdoc.css page.gif
+HTMLSUPPORTFILES = \
+	$(addprefix $(SRCTOP)/doc/utilities/,$(HTMLSUPPORTFILES0))
+
+.PHONY: all validate install clean veryclean distclean
+
+all: $(WHAT)-html/index.html
+
+include $(SRCTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+Makefile: Makefile.in $(SRCTOP)/doc/config.status
+	cd $(SRCTOP)/doc && ./config.status
+
+$(SRCTOP)/doc/Makefile.common: $(SRCTOP)/doc/Makefile.common.in \
+	$(SRCTOP)/doc/config.status
+	cd $(SRCTOP)/doc && ./config.status
+
+$(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
+	$(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
+	--type=html-stylesheets --stylesheet=ozdoc.css && \
+	cp -p $(HTMLSUPPORTFILES) $(WHAT)-html && \
+	for i in $(HTMLEXTRAFILES); do cp -p $$i $(WHAT)-html; done
+
+$(WHAT)-tex/$(WHAT).ps: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
+	$(DOCIFY) $(OZDOCTEXFLAGS) --in=$< --out=$(WHAT)-tex \
+	--type=latex && \
+	for i in $(TEXEXTRAFILES); do cp -p $$i $(WHAT)-tex; done
+
+verify: $(MAIN)
+	nsgmls -c$(PREFIX)/share/doc/catalog $< -s $<
+
+validate: $(WHAT)-html
+	nsgmls -cHTML4.soc -sB $(WHAT)-html/*.html
+
+install: $(WHAT)-html $(DOCDIR)
+	for i in $(WHAT)-html/*; do $(INSTALL_FILE) $$i $(DOCDIR); done
+
+$(DOCDIR):
+	$(INSTALL_DIR) $@
+
+clean:
+	-rm -rf $(WHAT)-html $(WHAT)-tex *~
+
+veryclean: clean
+
+distclean: veryclean
+	-rm -f Makefile
