@@ -42,3 +42,4 @@ Misc/papers/Elephant	mail -s "I have changed %s" mmueller tmueller vanroy
 Misc/papers/FD-CDR	mail -s "I have changed %s" tmueller,wuertz
 Misc/papers/ICLP97	mail -s "I have changed %s" tmueller,wuertz
 Misc/papers/FD-JICSLP96-WS	mail -s "I have changed %s" tmueller,wuertz
+Misc/papers/fset	mail -s "I have changed %s" tmueller,mmueller
