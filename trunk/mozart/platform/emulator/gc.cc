@@ -1468,20 +1468,23 @@ DynamicTable* DynamicTable::gc(void)
   // Take care of all TaggedRefs in the table:
   ptrStack.push(ret,PTR_DYNTAB);
   // (no storeForward needed since only one place points to the dynamictable)
+
+#ifdef DEBUG_CHECK
   for (dt_index i=size; i--; ) {
-    if (table[i].ident != makeTaggedNULL() && isDirectVar(table[i].ident)) {
-      gcTagged(table[i].ident, ret->table[i].ident);
-      gcTagged(table[i].value, ret->table[i].value);
+    if (table[i].ident != makeTaggedNULL()) {
+      Assert(!isDirectVar(table[i].ident));
+      Assert(!isDirectVar(table[i].value));
     }
   }
+#endif
+  
   return ret;
 }
 
 
-void DynamicTable::gcRecurse()
-{
+void DynamicTable::gcRecurse() {
   for (dt_index i=size; i--; ) {
-    if (table[i].ident!=makeTaggedNULL() && !isDirectVar(table[i].ident)) {
+    if (table[i].ident != makeTaggedNULL()) {
       gcTagged(table[i].ident, table[i].ident);
       gcTagged(table[i].value, table[i].value);
     }
