@@ -1176,7 +1176,7 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
   }
 }
 
-char *OZ_toC(OZ_Term term, int depth,int width)
+char *OZ_toC(OZ_Term term, int depth, int width)
 {
   static char *tmpString = 0;
   if (tmpString) {
