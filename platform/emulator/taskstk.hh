@@ -58,7 +58,7 @@ inline TaggedBoard setContFlag(Board *n, ContFlag flag)
 
 inline Board *getBoard(TaggedBoard n,ContFlag flag)
 {
-  return (Board *) tagValueOf((TaggedRef) n);
+  return (Board *) tagValueOf((TypeOfTerm) flag, (TaggedRef) n);
 }
 
 inline ContFlag getContFlag(TaggedBoard n)
