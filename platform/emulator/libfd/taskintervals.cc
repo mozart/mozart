@@ -81,7 +81,7 @@ TaskIntervalsPropagator::TaskIntervalsPropagator(OZ_Term tasks,
 OZ_C_proc_begin(sched_taskIntervals, 3)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," 
-		   OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT);
+		   OZ_EM_RECORD OZ_EM_FD "," OZ_EM_RECORD OZ_EM_INT);
   
   {
     PropagatorExpect pe;
@@ -312,6 +312,7 @@ tiloop:
 	    int releaseL = MinMax[l].min;
 	    if ( (cset->low <= releaseL)
 		 && (dueL <= cset->up) ) {
+	      // task in is interval
 	      cdur += durL;
 	      cset->ext[csize++] = l;
 	      maxEct = intMax(maxEct, releaseL+durL);
@@ -350,11 +351,13 @@ tiloop:
     for (right = 0; right < ts; right++) {
       struct Set *cset = &taskints[left][right];
       int setSize = cset->extSize;
+      // do it only for non-empty task intervals
       if (setSize > 1) {
 	int releaseTI = cset->low;
 	int dueTI     = cset->up;
 	int durTI     = cset->dur;
 	for (i = 0; i < ts; i++) {
+	  // code to avoid duplication of tests for t inside cset or not
 	  int maxI     = MinMax[i].max;
 	  int durI     = dur[i];
 	  int releaseI = MinMax[i].min;
@@ -642,8 +645,8 @@ CPIteratePropagatorCumTI::CPIteratePropagatorCumTI(OZ_Term tasks,
 
 OZ_C_proc_begin(sched_cumulativeTI, 5)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_VECT OZ_EM_FD 
-		   "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT 
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_RECORD OZ_EM_FD 
+		   "," OZ_EM_RECORD OZ_EM_INT "," OZ_EM_RECORD OZ_EM_INT 
 		   "," OZ_EM_VECT OZ_EM_INT);
   
   {
@@ -851,6 +854,7 @@ tiloop:
   for (left = 0; left < ts; left++) 
     for (right = 0; right < ts; right++) {
       struct TISet *cset = &taskints[left][right];
+      // test whether task interval is empty
       if (cset->empty == 0) {
 	int releaseTI = cset->low;
 	int dueTI     = cset->up;
