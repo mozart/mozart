@@ -213,7 +213,7 @@ public:
 #endif
   }
 
-  list<T> (list<T> &E) :generic() {
+  list<T> (const list<T> &E) :generic() {
     dlink<T> *p = E.root;
     dlink<T> *q = NULL;
     dlink<T> *r = NULL;
@@ -873,8 +873,8 @@ bool graph::bfs(node s, node t, edge_array<int>& layered) {
 
 /* ------------------------------------------------------------------------ */
 
-inline list<edge> graph::MAX_CARD_BIPARTITE_MATCHING(const list<node>& A, 
-					      const list<node>& B ) {
+  inline list<edge> graph::MAX_CARD_BIPARTITE_MATCHING(const list<node>& A, 
+	 				               const list<node>& B ) {
 
   // G is a bipartite graph with sides A and B, all edges must be directed 
   // from A to B. We compute a matching of maximum cardinality using the 
