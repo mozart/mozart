@@ -6,13 +6,11 @@
   ------------------------------------------------------------------------
 */
 
-#if defined(INTERFACE) && !defined(PEANUTS)
+#if defined(INTERFACE)
 #pragma implementation "os.hh"
 #endif
 
 #include "wsock.hh"
-
-#include "am.hh"
 
 #include <errno.h>
 #include <limits.h>
