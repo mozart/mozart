@@ -166,7 +166,7 @@ local
 	 case @IsPackedBlocked then
 	    {Tk.send pack(forget self.Blocked self.BlockedImage)}
 	    IsPackedBlocked <- False 
-	 else true end
+	 else skip end
 	 <<Status update>>
 	 <<Status start>>
 	 <<Status setBAB(False)>>
@@ -245,7 +245,7 @@ local
 	       IsPackedBlocked <- True
 	       {Tk.send pack(self.BlockedImage self.Blocked side:left)}
 	    end
-	 else true end
+	 else skip end
 	 {self.Depth    tk(conf text:GetDepth)}
 	 {self.Choose   tk(conf
 			   text:GetNodes-(GetSolutions+GetFailures+GetBlocked))}
@@ -261,7 +261,7 @@ local
 	 CurSolutions <- @CurSolutions + 1
 	 CurNodes     <- IncNodes
 	 case IncNodes mod StatusUpdateCnt==0 then <<Status update>>
-	 else true
+	 else skip
 	 end
       end
 
@@ -272,7 +272,7 @@ local
 	 CurBlocked  <- @CurBlocked + 1
 	 CurNodes    <- IncNodes
 	 case IncNodes mod StatusUpdateCnt==0 then <<Status update>>
-	 else true end
+	 else skip end
       end
 
       meth removeBlocked
@@ -287,7 +287,7 @@ local
 	 CurFailures <- @CurFailures + 1
 	 CurNodes    <- IncNodes
 	 case IncNodes mod StatusUpdateCnt==0 then <<Status update>>
-	 else true end
+	 else skip end
       end
 
       meth addChoose(Depth)
@@ -296,7 +296,7 @@ local
 	 CurNodes <- IncNodes
 	 MaxDepth <- {Max @MaxDepth Depth}
 	 case IncNodes mod StatusUpdateCnt==0 then <<Status update>>
-	 else true end
+	 else skip end
       end
 
       meth getKill(?Flag ?Id)

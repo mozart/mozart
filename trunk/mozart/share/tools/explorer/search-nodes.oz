@@ -30,7 +30,7 @@ local
       end
       
       proc {ReDo S Is}
-	 case Is of nil then true
+	 case Is of nil then skip
 	 [] I|Ir then {ReDo S Ir} {Space.choose S I}
 	 end
       end
@@ -69,13 +69,13 @@ local
 	 meth leaveNode(IsSolBelow IsDirty DecChoices)
 	    ChoicesReachZero
 	 in
-	    case IsSolBelow  then isSolBelow <- True          else true end
-	    case IsDirty     then isDirty    <- True          else true end
+	    case IsSolBelow  then isSolBelow <- True          else skip end
+	    case IsDirty     then isDirty    <- True          else skip end
 	    case DecChoices  then
 	       case @choices of 1 then
 		  ChoicesReachZero = True
 		  choices <- 0
-		  case @copy of transient(_) then copy <- False else true end
+		  case @copy of transient(_) then copy <- False else skip end
 	       elseof Choices then
 		  ChoicesReachZero = False
 		  choices    <- Choices - 1
@@ -238,7 +238,7 @@ local
 		  %% I'm finished
 		  toDo     <- nil
 		  choices  <- @choices  - 1
-		  case @copy of transient(_) then copy <- False else true end
+		  case @copy of transient(_) then copy <- False else skip end
 		  {Space.inject UseCopy 
 		   proc {$ X}
 		      {self.order {Space.merge ToMerge} X}
@@ -267,8 +267,8 @@ local
 		  {K Next(Break PrevSol CurDepth InfoDist
 			  CurSearchDist SearchDist N|CurNs CurCopy
 			  ?SolBelow ?IsDirtyBelow ?DecChoices)}
-		  case DecChoices   then choices  <- @choices-1  else true end
-		  case IsDirtyBelow then isDirty  <- True        else true end
+		  case DecChoices   then choices  <- @choices-1  else skip end
+		  case IsDirtyBelow then isDirty  <- True        else skip end
 		  case SolBelow of !False then
 		     <<Choose NextKids(Break PrevSol CurDepth InfoDist
 				       CurSearchDist SearchDist CurNs CurCopy
@@ -310,7 +310,7 @@ local
 				?SolBelow _
 				?DecChoicesBelow)}
 		  case DecChoicesBelow  then choices <- @choices - 1
-		  else true end
+		  else skip end
 		  case SolBelow of !False then
 		     <<Choose NextLocal(Break PrevSol CurDepth InfoDist
 					CurSearchDist SearchDist
@@ -475,7 +475,7 @@ local
 
    class Sentinel
       meth leaveNode(_ _ _)
-	 true
+	 skip
       end
       meth findDepth(CurDepth $)
 	 CurDepth

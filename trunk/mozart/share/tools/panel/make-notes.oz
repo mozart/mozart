@@ -41,7 +41,7 @@ local
 	 <<PrintNumber tkInit(parent:P text:0 anchor:e width:LabelWidth)>>
       end
       meth set(N)
-	 case N==@Saved then true else
+	 case N==@Saved then skip else
 	    Saved <- N
 	    <<PrintNumber tk(conf text:(N-@Clear))>>
 	 end
@@ -69,7 +69,7 @@ local
 	 self.Dim = D
       end
       meth set(N)
-	 case N==@Saved then true else
+	 case N==@Saved then skip else
 	    C = N - @Clear
 	    DimText
 	    PrintText
@@ -104,22 +104,22 @@ local
       from Tk.scale
       attr Saved:0
       meth init(parent:P range:R action:A state:S)
-	 <<Tk.scale tkInit(parent:    P
-			   length:    200
-			   font:      ScaleFont
-			   'from':    R.1
+	 <<Tk.scale tkInit(parent:             P
+			   length:             200
+			   font:               ScaleFont
+			   'from':             R.1
 			   highlightthickness: 0
-			   to:        R.2
-			       orient:    horizontal
-			   action: self # noop
-			       width:     8
-			       showvalue: True)>>
+			   to:                 R.2
+			   orient:             horizontal
+			   action:             self # noop
+			   width:              8
+			   showvalue:          True)>>
 	 Saved <- S
 	 <<Tk.scale tk(set S)>>
 	 <<Tk.scale tkAction(action:A args:[int])>>
       end
       meth set(N)
-	 case N==@Saved then true else
+	 case N==@Saved then skip else
 	    Saved <- N
 	    <<Scale tk(set N)>>
 	 end
@@ -151,7 +151,7 @@ local
 	 {self.Action @Saved}
       end
       meth set(N)
-	 case N==@Saved then true else
+	 case N==@Saved then skip else
 	    Saved <- N
 	    {self.Var tkSet(N)}
 	 end
@@ -194,7 +194,7 @@ local
 	 end
       end
       meth set(N)
-	 case N==@Save then true else
+	 case N==@Save then skip else
 	    Save <- N
 	    <<Tk.entry tk(delete 0 'end')>>
 	    <<Tk.entry tk(insert 0 N)>>
@@ -282,7 +282,7 @@ local
 	    B = {New Button init(parent: P
 				 text:   L.text
 				 action: {CondSelect L action
-					  proc {$} true end})}
+					  proc {$} skip end})}
 	 in
 	    R.{GetFeature L}=B
 	    grid(B sticky:w column:0 row:N) | TclR
@@ -362,7 +362,7 @@ in
       Page = {New Class init(parent:Book options:R text:' '#Mark#' ')}
    in
       {Tk.batch {MakeFrames PageSpec Page R nil}}
-      case Add then {Book add(Page)} else true end
+      case Add then {Book add(Page)} else skip end
       Page
    end
 

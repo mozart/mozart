@@ -32,17 +32,17 @@ local
 	 P   = {System.get priorities}
 	 R   = {System.get time}
       in
-	 case What==nosample then true else
+	 case What==nosample then skip else
 	    {OT.load        display([{IntToFloat T.runnable}])}
 	 end
-	 case What==sample then true else
+	 case What==sample then skip else
 	    {OR.timebar     display(R)}
 	    {OT.created     set(T.created)}
 	    {OT.runnable    set(T.runnable)}
 	    case @InfoVisible then
 	       {OP.high        set(P.high)}
 	       {OP.medium      set(P.medium)}
-	    else true
+	    else skip
 	    end
 	    {OR.run         set(R.run)}
 	    {OR.gc          set(R.gc)}
@@ -89,12 +89,12 @@ local
 	 OU  = O.usage
 	 G   = {System.get gc}
       in
-	 case What==nosample then true else
+	 case What==nosample then skip else
 	    {OU.load       display([{IntToFloat G.threshold} / MegaByteF
 				    {IntToFloat G.size} / MegaByteF
 				    {IntToFloat G.active} / MegaByteF])}
 	 end
-	 case What==sample then true else
+	 case What==sample then skip else
 	    {OU.active     set(G.active div KiloByteI)}
 	    {OU.size       set(G.size div KiloByteI)}
 	    {OU.threshold  set(G.threshold div KiloByteI)}
@@ -354,7 +354,7 @@ in
 					  in
 					     case {S get($)}>N then
 						{S set(N)}
-					     else true end
+					     else skip end
 					     {System.set 
 					      gc(max: N * MegaByteI)}
 					  end)
@@ -369,7 +369,7 @@ in
 					  in
 					     case {S get($)}<N then
 						{S set(N)}
-					     else true end
+					     else skip end
 					     {System.set
 					      gc(min: N * MegaByteI)}
 					  end)
@@ -584,7 +584,7 @@ in
 	       {TopNote update}
 	    end
 	    <<PanelTop delay>>
-	 else true
+	 else skip
 	 end
       end
 
@@ -592,7 +592,7 @@ in
 	 {self.menu.panel.shutdown tk(entryconf state:disabled)}
 	 thread
 	    case {DoShutdown self} then {System.shutDown exit}
-	    else true
+	    else skip
 	    end
 	    {self.menu.panel.shutdown tk(entryconf state:normal)}
 	 end
@@ -631,7 +631,7 @@ in
 	 case @RequireMouse then
 	    <<PanelTop stop>>
 	    <<PanelTop delay>>
-	 else true
+	 else skip
 	 end
       end
 
@@ -639,7 +639,7 @@ in
 	 MouseInside <- False
 	 case @RequireMouse then
 	    <<PanelTop stop>>
-	 else true
+	 else skip
 	 end
       end
       
@@ -663,7 +663,7 @@ in
 		   True
 		end}
 	 then <<PanelTop delay>>
-	 else true
+	 else skip
 	 end
       end
 
@@ -689,7 +689,7 @@ in
       end
 
       meth setHistory(H)
-	 case H==@HistoryRange then true else
+	 case H==@HistoryRange then skip else
 	    HistoryRange <- H
 	    <<PanelTop setSlice>>
 	 end
