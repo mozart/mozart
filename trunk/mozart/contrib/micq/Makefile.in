@@ -6,12 +6,13 @@ SRCDIR		= @srcdir@
 VPATH		= @srcdir@
 HOMEURL		= @HOMEURL@
 LIB_DIR		= $(PREFIX)/contrib/micq
-OZC		= @OZC@
+OZC		= @OZC@ --baseurl=$(BUILDTOP)/contrib/micq/
 OZL		= @OZL@
 INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
 INSTALL_LIB	= $(INSTALL) -m 444
 APPLETS		= server.oza client.oza
+EXECUTES	= micq client
 
 all:		$(APPLETS)
 %.ozf: %.oz
@@ -19,7 +20,7 @@ all:		$(APPLETS)
 install:	$(LIB_DIR) $(addprefix $(LIB_DIR)/,$(APPLETS))
 $(LIB_DIR):
 	$(INSTALL_DIR) $@
-$(LIB_DIR)/%.ozf: %.ozf
+$(LIB_DIR)/%.oza: %.oza
 	$(INSTALL_LIB) $< $@
 
 server.oza: micq
@@ -30,12 +31,12 @@ client.oza: client
 micq: startserver.oz server.ozf defaultsettings.ozf
 	$(OZC) -x $< -o $@
 
-client: client.ozf startclient.oz
+client: startclient.oz client.ozf 
 	$(OZC) -x $< -o $@
 
-server.ozf: methods.ozf database.ozf mobility.ozf newaccountgui.ozf \
-	log.ozf server.oz sysadm.ozf
-	$(OZL) -c $< -o $@
+server.ozf: server.oz methods.ozf database.ozf mobility.ozf newaccountgui.ozf \
+	log.ozf  sysadm.ozf
+	$(OZC) -c $< -o $@
 
 addapplicationgui.ozf: addapplicationgui.oz methods.ozf
 	$(OZC) -c $< -o $@
