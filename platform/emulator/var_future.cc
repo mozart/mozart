@@ -63,8 +63,8 @@ OZ_Return Future::kick(TaggedRef *ptr)
   if (oz_isProcedure(function)) {
     Thread* thr    = oz_newThreadInject(bb);
     OZ_Term newvar = oz_newVariable(bb);
-    thr->pushCall(BI_bindFuture,makeTaggedRef(ptr),newvar);
-    thr->pushCall(function,newvar);
+    thr->pushCall(BI_bindFuture,RefsArray::make(makeTaggedRef(ptr),newvar));
+    thr->pushCall(function,RefsArray::make(newvar));
   } else {
     Assert(oz_isTuple(function));
     if (oz_eq(OZ_label(function),AtomDot)) {
@@ -96,8 +96,8 @@ OZ_Return Future::kick(TaggedRef *ptr)
 
       OZ_Term newvar = oz_newVariable(bb);
       Thread *thr = oz_newThreadInject(bb);
-      thr->pushCall(BI_bindFuture,makeTaggedRef(ptr),newvar);
-      thr->pushCall(BI_dot,fut,fea,newvar);
+      thr->pushCall(BI_bindFuture,RefsArray::make(makeTaggedRef(ptr),newvar));
+      thr->pushCall(BI_dot,RefsArray::make(fut,fea,newvar));
     } else {
       Assert(oz_eq(OZ_label(function),AtomFail));
       OZ_Term exn=oz_arg(function,0);
@@ -189,9 +189,7 @@ OZ_BI_define(BIfuture,1,1)
     OzVariable *ov = tagged2Var(*vPtr);
     Board *bb = GETBOARD(ov);
     TaggedRef f = oz_newFuture(bb);
-    RefsArray * args = RefsArray::allocate(2, NO);
-    args->setArg(0,v);
-    args->setArg(1,f);
+    RefsArray * args = RefsArray::make(v,f);
     if (bb != oz_currentBoard()) {
       Thread *thr = oz_newThreadInject(bb);
       thr->pushCall(BI_varToFuture, args);

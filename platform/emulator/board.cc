@@ -116,15 +116,9 @@ void Board::clearStatus() {
 
 void Board::wakeServeLPQ(void) {
   Assert(lpq.isEmpty());
-
   if (board_served == this)
     return;
-  
-  Thread * thr = oz_newThreadInject(this);
-
-  // Push run lpq builtin
-  thr->pushCall(BI_PROP_LPQ, 0, 0);
-
+  oz_newThreadInject(this)->pushCall(BI_PROP_LPQ, NULL);
 }
 
 inline
@@ -489,7 +483,7 @@ OZ_Return Board::installScript(Bool isMerging)
       //       script are discarded
       if (res == SUSPEND) {
 	res = BI_REPLACEBICALL;
-	am.prepareCall(BI_Unify,x,y);
+	am.prepareCall(BI_Unify,RefsArray::make(x,y));
       }
       if (res == BI_REPLACEBICALL) {
 	while (oz_isCons(xys)) {
@@ -498,7 +492,7 @@ OZ_Return Board::installScript(Bool isMerging)
 	  TaggedRef x = oz_head(xy);
 	  TaggedRef y = oz_tail(xy);
 	  xys = oz_deref(oz_tail(xys));
-	  am.prepareCall(BI_Unify,x,y);
+	  am.prepareCall(BI_Unify,RefsArray::make(x,y));
 	}
       }
       return res;

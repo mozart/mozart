@@ -27,6 +27,7 @@
 //  internal interface to AMOZ
 
 #include "am.hh"
+#include "refsarray.hh"
 
 /*
  * Control Vars
@@ -35,7 +36,8 @@
 OZ_Return suspendOnControlVar()
 {
   Assert(oz_currentThread() != NULL);
-  am.prepareCall(BI_controlVarHandler,am.emptySuspendVarList());
+  am.prepareCall(BI_controlVarHandler,
+		 RefsArray::make(am.emptySuspendVarList()));
   return BI_REPLACEBICALL;
 }
 
