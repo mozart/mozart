@@ -432,7 +432,9 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 			 nil
 			 nil
 			 t
-			 nil))))
+			 nil)))
+  (if (getenv "OZMACHINE")
+      (setenv "OZMACHINE" oz-machine)))
 
 (defun oz-gdb()
   (interactive)
@@ -660,10 +662,8 @@ the GDB commands `cd DIR' and `directory'."
 ;; arg: no-empty-line: t = do not indent empty lines and comment lines
 
 (defun oz-calc-indent(no-empty-line)
-  (cond ((and no-empty-line (oz-is-left) (oz-is-right))
+  (cond ((and no-empty-line (oz-is-empty))
 	  ;; empty lines are not changed
-	 -1)
-	((and no-empty-line (looking-at "%"))
 	 -1)
 	((looking-at "\\<in\\>")
 	 (oz-search-matching-begin nil))
@@ -762,6 +762,9 @@ the GDB commands `cd DIR' and `directory'."
 	t
       (goto-char p)
       nil)))
+
+(defun oz-is-empty ()
+  (and (oz-is-left) (oz-is-right)))
 
 (defun oz-is-left ()
   (save-excursion
