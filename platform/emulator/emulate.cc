@@ -2400,11 +2400,12 @@ LBLdispatcher:
     {
       Reg reg                     = getRegArg(PC+1);
       ProgramCounter nxt          = getLabelArg(PC+2);
-      PrTabEntry *predd           = getPredArg(PC+5);
-      AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+6);
+      PrTabEntry *predd           = getPredArg(PC+3);
+      AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
+      AssRegArray *list           = (AssRegArray*) getAdressArg(PC+5);
 
-      AssRegArray &list = predd->gRegs;
-      int size = list.getSize();
+
+      int size = list->getSize();
       RefsArray gRegs = (size == 0) ? (RefsArray) NULL : allocateRefsArray(size);
 
       Abstraction *p = new Abstraction (predd, gRegs, CBB);
@@ -2414,10 +2415,10 @@ LBLdispatcher:
       }
 
       for (int i = 0; i < size; i++) {
-        switch (list[i].kind) {
-        case XReg: gRegs[i] = X[list[i].number]; break;
-        case YReg: gRegs[i] = Y[list[i].number]; break;
-        case GReg: gRegs[i] = G[list[i].number]; break;
+        switch ((*list)[i].kind) {
+        case XReg: gRegs[i] = X[(*list)[i].number]; break;
+        case YReg: gRegs[i] = Y[(*list)[i].number]; break;
+        case GReg: gRegs[i] = G[(*list)[i].number]; break;
         }
       }
       Xreg(reg) = makeTaggedConst(p);

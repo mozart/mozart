@@ -373,9 +373,9 @@ void CodeArea::getDefinitionArgs(ProgramCounter PC,
   Assert(getOpcode(PC) == DEFINITION);
   reg  = regToInt(getRegArg(PC+1));
   next = getLabelArg(PC+2);
-  file = getLiteralArg(PC+3);
-  line = smallIntValue(getNumberArg(PC+4));
-  pred = getPredArg(PC+5);
+  pred = getPredArg(PC+3);
+  file = pred->getFileName();
+  line = pred->getLine();
 }
 
 void CodeArea::getDebugInfoArgs(ProgramCounter PC,
@@ -796,18 +796,17 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
         int line;
         PrTabEntry *pred;
         getDefinitionArgs(PC,reg,next,file,line,pred);
+        AssRegArray *list = (AssRegArray*) getAdressArg(PC+5);
 
         fprintf(ofile, "(X%d,0x%x,%s,%s,%d,[",reg,next,
                 pred ? pred->getPrintName() : "(NULL)",
                 toC(file), line);
 
-        AssRegArray &list = pred->gRegs;
-
-        for (int k = 0; k < list.getSize(); k++) {
-          switch (list[k].kind) {
-          case XReg: fprintf(ofile,"X%d ",list[k].number); break;
-          case YReg: fprintf(ofile,"Y%d ",list[k].number); break;
-          case GReg: fprintf(ofile,"G%d ",list[k].number); break;
+        for (int k = 0; k < list->getSize(); k++) {
+          switch ((*list)[k].kind) {
+          case XReg: fprintf(ofile,"X%d ",(*list)[k].number); break;
+          case YReg: fprintf(ofile,"Y%d ",(*list)[k].number); break;
+          case GReg: fprintf(ofile,"G%d ",(*list)[k].number); break;
           }
         }
 

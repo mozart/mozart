@@ -1210,8 +1210,7 @@ PRINTLONG(PrTabEntry)
   CHECKDEPTHLONG;
   stream << indent(offset)
          <<  "Name: " << getPrintName()
-         << "/" << arity
-         << "/" << gRegs.getSize() << endl
+         << "/" << arity << endl
          << indent(offset)
          <<  "ProgramCounter: " << (void *) PC << endl
          << indent(offset) <<  "Arity: " << arity << endl;
