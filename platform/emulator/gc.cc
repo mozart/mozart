@@ -580,7 +580,7 @@ if (GCISMARKED(elem)) {return (Type) GCUNMARK(elem);}
  *
  */
 inline
-void storeForward (int32* fromPtr, void *newValue, Bool domark=OK)
+void storeFwd (int32* fromPtr, void *newValue, Bool domark=OK)
 {
   if (opMode == IN_TC) {
     savedPtrStack.pushPtr(fromPtr);
@@ -591,10 +591,14 @@ void storeForward (int32* fromPtr, void *newValue, Bool domark=OK)
 }
 
 inline
-void storeForward(void* fromPtr, void *newValue)
+void storeFwd(void* fromPtr, void *newValue)
 {
-  storeForward((int32*) fromPtr, newValue);
+  storeFwd((int32*) fromPtr, newValue);
 }
+
+
+#define storeFwdField(t) \
+  storeFwd((int32*) this->gcGetMarkField(), t, NO); this->gcMark(t);
 
 //*****************************************************************************
 //               Functions to gc external references into heap
@@ -811,6 +815,27 @@ Bool isInTree (Board *b)
 // This procedure derefences cluster chains and collects only the object at 
 // the end of such a chain.
 
+
+inline  
+Bool Board::gcIsMarked(void) {
+  return body.gcIsMarked();
+}
+
+inline
+void Board::gcMark(Board * fwd) {
+  body.gcMark((Continuation *) fwd);
+}
+
+inline
+void ** Board::gcGetMarkField(void) {
+  return body.gcGetMarkField();
+}
+
+inline
+Board * Board::gcGetFwd(void) {
+  return (Board *) body.gcGetFwd();
+}
+
 inline
 Board * Board::gcDerefedBoard() {
   GCMETHMSG("Board::gcDerefedBoard");
@@ -822,9 +847,11 @@ Board * Board::gcDerefedBoard() {
 
   Assert(bb);
 
-  CHECKCOLLECTED(*bb->getGCField(), Board *);
+  if (gcIsMarked())
+    return gcGetFwd();
   
-  if (!bb->gcIsAlive()) return 0;
+  if (!bb->gcIsAlive()) 
+    return 0;
 
   // kost@, TMUELLER
   // process.oz causes the assertion to fire!!! 
@@ -845,7 +872,9 @@ Board * Board::gcDerefedBoard() {
 	
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_BOARD);
-  storeForward(bb->getGCField(),ret);
+
+  storeFwdField(ret);
+
   return ret;
 }
 
@@ -895,7 +924,7 @@ Name *Name::gcName()
     Name *aux = (Name*) gcReallocStatic(this,sizeof(Name));
     GCNEWADDRMSG(aux);
     ptrStack.push(aux, PTR_NAME);
-    storeForward(&homeOrGName, aux);
+    storeFwd(&homeOrGName, aux);
     
     FDPROFILE_GC(cp_size_literal,sizeof(*this));
     dogcGName(gn);
@@ -1042,7 +1071,7 @@ DynamicTable* DynamicTable::gc(void)
   GCNEWADDRMSG(ret);
   // Take care of all TaggedRefs in the table:
   ptrStack.push(ret,PTR_DYNTAB);
-  // (no storeForward needed since only one place points to the dynamictable)
+  // (no storeFwd needed since only one place points to the dynamictable)
 
 #ifdef DEBUG_CHECK
   for (dt_index i=size; i--; ) {
@@ -1077,7 +1106,34 @@ void GenOFSVariable::gc(void)
 }
 
 inline
+Bool GenCVariable::gcIsMarked(void) {
+  return IsMarkedPointer(suspList);
+}
+
+inline
+void ** GenCVariable::gcGetMarkField(void) {
+  Assert(!gcIsMarked());
+  return (void **) &suspList;
+}
+
+inline
+void GenCVariable::gcMark(GenCVariable * fwd) {
+  suspList = (SuspList *) MarkPointer(fwd);
+}
+
+inline
+GenCVariable * GenCVariable::gcGetFwd(void) {
+  return (GenCVariable *) UnMarkPointer(suspList);
+}
+
+inline
 Bool GenCVariable::gcNeeded(void) {
+
+  if (this->gcIsMarked()) {
+    Assert(!home->isCommitted());
+    return OK;
+  }
+  
   Board * bb = home->derefBoard();
 
   home = bb;
@@ -1093,16 +1149,15 @@ GenCVariable * GenCVariable::gc(void) {
 
   Assert(gcNeeded());
 
-  SuspList * sl = suspList;
-
-  if (GCISMARKED(ToInt32(sl)))
-    return (GenCVariable *) GCUNMARK(ToInt32(sl));
-
+  if (gcIsMarked())
+    return gcGetFwd();
+  
   Board * bb = home->gcDerefedBoard();
-
+  
   Assert(bb);
   
-    
+  SuspList * sl = suspList;
+  
   setVarCopied;
 
   GenCVariable * to;
@@ -1111,48 +1166,48 @@ GenCVariable * GenCVariable::gc(void) {
   case FDVariable:
     to = (GenCVariable *) heapMalloc(sizeof(GenFDVariable));
     to->u = this->u;
-    storeForward(&suspList, to);
+    storeFwdField(to);
     ((GenFDVariable *) to)->gc((GenFDVariable *) this);
     FDPROFILE_GC(cp_size_fdvar, sizeof(GenFDVariable));
     break;
   case BoolVariable:
     to = (GenCVariable *) heapMalloc(sizeof(GenBoolVariable));
     to->u = this->u;
-    storeForward(&suspList, to);
+    storeFwdField(to);
     ((GenBoolVariable *) to)->gc((GenBoolVariable *) this);
     FDPROFILE_GC(cp_size_boolvar, sizeof(GenBoolVariable));
     break;
   case OFSVariable:
     to = (GenCVariable *) gcReallocStatic(this, sizeof(GenOFSVariable));
-    storeForward(&suspList, to);
+    storeFwdField(to);
     ((GenOFSVariable *) to)->gc();
     FDPROFILE_GC(cp_size_ofsvar, sizeof(GenOFSVariable));
     break;
   case MetaVariable:
     to = (GenCVariable *) gcReallocStatic(this, sizeof(GenMetaVariable));
-    storeForward(&suspList, to);
+    storeFwdField(to);
     ((GenMetaVariable *) to)->gc();
     FDPROFILE_GC(cp_size_metavar, sizeof(GenMetaVariable));
     break;
   case AVAR:
     to = (GenCVariable *) gcReallocStatic(this, sizeof(AVar));
-    storeForward(&suspList, to);
+    storeFwdField(to);
     ((AVar *) to)->gc();
     break;
   case PerdioVariable:
     to = (GenCVariable *) gcReallocStatic(this, sizeof(PerdioVar));
-    storeForward(&suspList, to);
+    storeFwdField(to);
     ((PerdioVar *) to)->gc();
     break;
   case FSetVariable:
     // TMUELLER: must be reset to `gcReallocStatic'
     to = (GenCVariable *) gcReallocDynamic(this, sizeof(GenFSetVariable));
-    storeForward(&suspList, to);
+    storeFwdField(to);
     ((GenFSetVariable *) to)->gc();
     break;
   case LazyVariable:
     to = (GenCVariable *) gcReallocStatic(this, sizeof(GenLazyVariable));
-    storeForward(&suspList, to);
+    storeFwdField(to);
     ((GenLazyVariable*) to)->gc();
     break;
   default:
@@ -1166,10 +1221,36 @@ GenCVariable * GenCVariable::gc(void) {
     
   return to;
 }
-  
+
+inline  
+Bool SVariable::gcIsMarked(void) {
+  return IsMarkedPointer(suspList);
+}
+
+inline
+void SVariable::gcMark(SVariable * fwd) {
+  suspList = (SuspList *) MarkPointer(fwd);
+}
+
+inline
+void ** SVariable::gcGetMarkField(void) {
+  Assert(!gcIsMarked());
+  return (void **) &suspList;
+}
+
+inline
+SVariable * SVariable::gcGetFwd(void) {
+  return (SVariable *) UnMarkPointer(suspList);
+}
 
 inline
 Bool SVariable::gcNeeded(void) {
+
+  if (this->gcIsMarked()) {
+    Assert(!home->isCommitted());
+    return OK;
+  }
+  
   Board * bb = home->derefBoard();
 
   home = bb;
@@ -1183,27 +1264,25 @@ SVariable * SVariable::gc() {
 
   Assert(gcNeeded());
 
-  SuspList * sl = suspList;
-
-  if (GCISMARKED(ToInt32(sl)))
-    return (SVariable *) GCUNMARK(ToInt32(sl));
-
+  if (gcIsMarked()) 
+    return gcGetFwd();
+  
   Board * bb = home->gcDerefedBoard();
     
   Assert(bb);
   
   setVarCopied;
 
-  SVariable * to = (SVariable *) gcReallocStatic(this, sizeof(SVariable));
-  
-  to->suspList = suspList->gc();
-
-  storeForward(&suspList, to);
+  SVariable * to = (SVariable *) heapMalloc(sizeof(SVariable));
   
   Assert(opMode != IN_GC || to->home != bb);
 
-  to->home = bb;
-    
+  to->suspList = suspList->gc();
+  to->home     = bb;
+
+  storeFwdField(to);
+  
+
   return to;
 }
 
@@ -1321,7 +1400,7 @@ BigInt * BigInt::gc() {
 
   BigInt *ret = new BigInt();
   mpz_set(&ret->value,&value);
-  storeForward((int *)&value, ret);
+  storeFwd((int *)&value, ret);
   return ret;
 }
 
@@ -1382,7 +1461,7 @@ inline Bool refsArrayIsMarked(RefsArray r)
 
 inline void refsArrayMark(RefsArray r, void *ptr)
 {
-  storeForward((int32*)&r[-1],ToPointer(ToInt32(ptr)|RAGCTag),NO);
+  storeFwd((int32*)&r[-1],ToPointer(ToInt32(ptr)|RAGCTag),NO);
 }
 
 inline RefsArray refsArrayUnmark(RefsArray r)
@@ -1482,17 +1561,41 @@ void Continuation::gcRecurse ()
   xRegs = gcRefsArray(xRegs);
 }
 
+inline  
+Bool Continuation::gcIsMarked(void) {
+  return GCISMARKED((TaggedRef) pc);
+}
+
+inline
+void Continuation::gcMark(Continuation * fwd) {
+  pc = (ProgramCounter) GCMARK(fwd);
+}
+
+inline
+void ** Continuation::gcGetMarkField(void) {
+  return (void **) &pc;
+}
+
+inline
+Continuation * Continuation::gcGetFwd(void) {
+  Assert(gcIsMarked());
+  return (Continuation *) GCUNMARK((int32) pc);
+}
+
 Continuation *Continuation::gc()
 {
   GCMETHMSG ("Continuation::gc");
-  CHECKCOLLECTED (ToInt32 (pc), Continuation *);
 
+  if (gcIsMarked())
+    return gcGetFwd();
+  
   COUNT(continuation);
   Continuation *ret =
     (Continuation *) gcReallocStatic(this, sizeof(Continuation));
   GCNEWADDRMSG (ret);
   ptrStack.push (ret, PTR_CONT);
-  storeForward (&pc, ret);
+
+  storeFwdField(ret);
 
   FDPROFILE_GC(cp_size_cont, sizeof(Continuation));
 
@@ -1546,14 +1649,14 @@ LTuple * LTuple::gc() {
     }
 
     // Store forward
-    storeForward(&(l->args[0]), &(c->args[0]));
+    storeFwd(&(l->args[0]), &(c->args[0]));
     
     TaggedRef t = l->args[1];
 
     // Process list tail
     if (isDirectVar(t)) {
       gcDirectVar(&(l->args[1]),&(c->args[1]));
-      storeForward(&(l->args[1]), &(c->args[1]));
+      storeFwd(&(l->args[1]), &(c->args[1]));
       
       LTuple * ret = tagged2LTuple(start);
 
@@ -1615,7 +1718,7 @@ SRecord *SRecord::gcSRecord()
 
     if (isDirectVar(from)) {
       gcDirectVar(a + i, c + i);
-      storeForward((int *) a + i, c + i);
+      storeFwd((int *) a + i, c + i);
     } else {
       c[i] = from;
     }
@@ -1624,7 +1727,7 @@ SRecord *SRecord::gcSRecord()
 
   ptrStack.push(ret,PTR_SRECORD);
 
-  storeForward((int32*)&label, ret);
+  storeFwd((int32*)&label, ret);
 
   FDPROFILE_GC(cp_size_record, len);
 
@@ -1687,7 +1790,7 @@ Thread *Thread::gcThread ()
 
   FDPROFILE_GC(cp_size_susp, sizeof(*this));
 
-  storeForward(&item.threadBody, newThread);
+  storeFwd(&item.threadBody, newThread);
 
   return newThread;
 }
@@ -1712,7 +1815,7 @@ Thread *Thread::gcDeadThread()
   //  newThread->state.flags=0;
   Assert(newThread->item.threadBody==NULL);
 
-  storeForward (&item.threadBody, newThread);
+  storeFwd (&item.threadBody, newThread);
   setSelf(getSelf()->gcObject());
   getAbstr()->gcPrTabEntry();
 
@@ -1787,7 +1890,7 @@ ForeignPointer * ForeignPointer::gc(void)
     (ForeignPointer*) gcReallocStatic(this,sizeof(ForeignPointer));
   ret->ptr = ptr;
   GCNEWADDRMSG(ret);
-  storeForward(getGCField(),ret);
+  storeFwdField(ret);
   return ret;
 }
 #endif
@@ -1812,7 +1915,7 @@ void gc_finalize()
     OZ_Term pair = head(old_guardian_list);
     old_guardian_list = tail(old_guardian_list);
     OZ_Term obj = head(pair);
-    if (GCISMARKED(*tagged2Const(obj)->getGCField()))
+    if (tagged2Const(obj)->gcIsMarked())
       // reachable through live data
       guardian_list = oz_cons(pair,guardian_list);
     else
@@ -2166,10 +2269,9 @@ void processUpdateStack(void) {
 
 	INFROMSPACE(sv);
   
-	Assert(GCISMARKED(ToInt32(sv->suspList)));
+	Assert(sv->gcIsMarked());
 	  
-	*to = makeTaggedRef(newTaggedSVar((SVariable *) 
-					  GCUNMARK(ToInt32(sv->suspList))));
+	*to = makeTaggedRef(newTaggedSVar(sv->gcGetFwd()));
       
 	COUNT(svar);
 	break;
@@ -2181,10 +2283,11 @@ void processUpdateStack(void) {
 	
 	Assert(cv->gcNeeded());
 
-	Assert(GCISMARKED(ToInt32(cv->suspList)));
+	INFROMSPACE(cv);
+
+	Assert(cv->gcIsMarked());
 	
-	*to = makeTaggedRef(newTaggedCVar((GenCVariable *) 
-					  GCUNMARK(ToInt32(cv->suspList))));
+	*to = makeTaggedRef(newTaggedCVar(cv->gcGetFwd()));
     
 	COUNT(cvar);
 	break;
@@ -2200,7 +2303,7 @@ void processUpdateStack(void) {
     
     INFROMSPACE(aux_ptr);
     
-    storeForward((int *) aux_ptr, ToPointer(*to));
+    storeFwd((int *) aux_ptr, ToPointer(*to));
     
   } // while
 
@@ -2532,6 +2635,27 @@ void TaskStack::gc(TaskStack *newstack)
 //*********************************************************************
 
 
+inline  
+Bool ConstTerm::gcIsMarked(void) {
+  return GCISMARKED(ctu.tagged);
+}
+
+inline
+void ConstTerm::gcMark(ConstTerm * fwd) {
+  ctu.tagged = GCMARK(fwd);
+}
+
+inline
+void ** ConstTerm::gcGetMarkField(void) {
+  return (void **) &ctu.tagged;
+}
+
+inline
+ConstTerm * ConstTerm::gcGetFwd(void) {
+  Assert(gcIsMarked());
+  return (ConstTerm *) GCUNMARK((int) ctu.tagged);
+}
+
 void ConstTermWithHome::gcConstTermWithHome()
 {
   if (hasGName()) {
@@ -2772,7 +2896,8 @@ ConstTerm *ConstTerm::gcConstTerm()
   if (this == NULL) 
     return NULL;
 
-  CHECKCOLLECTED(*getGCField(), ConstTerm *);
+  if (gcIsMarked())
+    return gcGetFwd();
 
   GName *gn = NULL;
 
@@ -2823,7 +2948,7 @@ ConstTerm *ConstTerm::gcConstTerm()
 	  DebugCode(cf->resetAccessBit());
 	  void* forward=cf->getForward();
 	  ((CellFrame*)forward)->resetAccessBit();
-	  *getGCField()=GCMARK(forward);
+	  gcMark((ConstTerm *) forward);
 	  return (ConstTerm*) forward;
 	}
 	ret = (ConstTerm *) gcReallocStatic(this,sizeof(CellFrame));
@@ -2886,7 +3011,7 @@ ConstTerm *ConstTerm::gcConstTerm()
 	  DebugCode(lf->resetAccessBit());
 	  void* forward=lf->getForward();
 	  ((LockFrame*)forward)->resetAccessBit();
-	  *getGCField()=GCMARK(forward);
+	  gcMark((ConstTerm *) forward);
 	  return (ConstTerm*) forward;}
 	ret = (ConstTerm *) gcReallocStatic(this,sizeof(LockFrame));
 	break;}
@@ -2919,7 +3044,7 @@ ConstTerm *ConstTerm::gcConstTerm()
 
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_CONSTTERM);
-  storeForward(getGCField(), ret);
+  storeFwdField(ret);
   dogcGName(gn);
   return ret;
 }
@@ -2937,7 +3062,10 @@ ConstTerm *ConstTerm::gcConstTerm()
 ConstTerm* ConstTerm::gcConstTermSpec()
 {
   GCMETHMSG("ConstTerm::gcConstTerm");
-  CHECKCOLLECTED(*getGCField(), ConstTerm *);
+
+  if (gcIsMarked())
+    return gcGetFwd();
+
   Tertiary *t=(Tertiary*)this;
   Assert((t->getType()==Co_Cell) || (t->getType()==Co_Lock));
   Assert(t->getTertType()==Te_Frame);
@@ -2969,7 +3097,7 @@ HeapChunk * HeapChunk::gc(void)
   ret->chunk_data = copyChunkData();
   
   GCNEWADDRMSG(ret);
-  storeForward(getGCField(), ret);
+  storeFwdField(ret);
   return ret;
 }
 
@@ -2981,14 +3109,23 @@ HeapChunk * HeapChunk::gc(void)
 Board* Board::gcGetNotificationBoard()
 {
   GCMETHMSG("Board::gcGetNotificationBoard");
-  if (this == 0) return 0; // no notification board
+  
+  if (this == 0) 
+    return 0; // no notification board
 
   Board *bb = this->derefBoard();
+
   Board *nb = bb;
- loop:
-  if (GCISMARKED(*bb->getGCField()) || bb->_isRoot())  return nb;
+  
+loop:
+  
+  if (bb->gcIsMarked() || bb->_isRoot())  
+    return nb;
+
   Assert(!bb->isCommitted());
+
   Actor *aa=bb->getActor();
+  
   if (bb->isFailed() || aa->isCommitted()) {
     /*
      * notification board must be changed
@@ -2997,7 +3134,10 @@ Board* Board::gcGetNotificationBoard()
     nb = bb;   // probably not dead;
     goto loop;
   }
-  if (GCISMARKED(*aa->getGCField())) return nb;
+
+  if (aa->gcIsMarked())
+    return nb;
+
   bb = GETBOARD(aa);
   goto loop;
 }
@@ -3021,13 +3161,22 @@ Bool Board::gcIsAlive()
   // must be applied to a result of 'getBoard()';
   Assert (!(bb->isCommitted ()));
 
-  if (bb->isFailed ()) return (NO);
-  if (bb->_isRoot () || GCISMARKED (*(bb->getGCField ()))) return (OK);
+  if (bb->isFailed ()) 
+    return (NO);
+
+  if (bb->_isRoot () || bb->gcIsMarked())
+    return (OK);
   
   aa=bb->getActor();
-  if (aa->isCommitted ()) return (NO);
-  if (GCISMARKED (*(aa->getGCField ()))) return (OK);
+
+  if (aa->isCommitted()) 
+    return (NO);
+
+  if (aa->gcIsMarked())
+    return OK;
+
   bb = GETBOARD(aa);
+
   goto loop;
 }
 
@@ -3042,6 +3191,28 @@ void Board::gcRecurse()
   script.Script::gc();
 }
 
+
+inline  
+Bool Actor::gcIsMarked(void) {
+  return (gcField != 0);
+}
+
+inline
+void Actor::gcMark(Actor * fwd) {
+  gcField = fwd;
+}
+
+inline
+void ** Actor::gcGetMarkField(void) {
+  return (void **) &gcField;
+}
+
+inline
+Actor * Actor::gcGetFwd(void) {
+  Assert(gcIsMarked());
+  return gcField;
+}
+
 Actor *Actor::gcActor()
 {
   if (this==0) return 0;
@@ -3049,9 +3220,10 @@ Actor *Actor::gcActor()
   Assert(board->derefBoard()->gcIsAlive());
 
   GCMETHMSG("Actor::gc");
-  CHECKCOLLECTED(*getGCField(), Actor *);
-  // by kost@; flags are needed for getBoard
 
+  if (gcIsMarked())
+    return gcGetFwd();
+  
   Actor *ret;
 
   if (isWait()) {
@@ -3070,8 +3242,11 @@ Actor *Actor::gcActor()
 		  : cp_size_solveactor), sz);
 	
   GCNEWADDRMSG(ret);
+
   ptrStack.push(ret,PTR_ACTOR);
-  storeForward(getGCField(), ret);
+
+  storeFwdField(ret);
+
   return ret;
 }
 
