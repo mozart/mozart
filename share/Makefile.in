@@ -1,6 +1,6 @@
 @SET_MAKE@
 
-SUBDIRS = bin lib tools test demo elisp examples
+SUBDIRS = bin lib tools elisp test demo examples
 
 .PHONY: bootstrap all install clean distclean veryclean check depend
 
