@@ -71,6 +71,7 @@ CPSRC2  = Schedule ParSearch ParWorker ParLogging
 DPSRC   = Connection Remote RemoteServer Fault URL $(DENYS_DPSRCS)
 WPSRC   = Tk TkTools
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
+MACSRC	= Macro BackquoteMacro LoopMacro
 
 RUNFUNCTORS = \
 	$(SPSRC:%=%.ozf) \
@@ -85,6 +86,7 @@ FUNCTORS = \
 	$(WPSRC:%=%.ozf) \
 	$(SUPPSRC:%=%.ozf) \
 	$(CPSRC2:%=%.ozf) \
+	$(MACSRC:%=%.ozf) \
 	Compiler.ozf
 
 SYSLETS = ozc ozl
