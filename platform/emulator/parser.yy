@@ -1,4 +1,14 @@
 %{
+///  Programming Systems Lab,
+///  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5609
+///  Original Author: Martin Henz
+///  Extensive modifications by Leif Kornstaedt <kornstae@ps.uni-sb.de>
+
+//
+// See Oz/tools/compiler/Doc/TupleSyntax for an description of the
+// generated parse trees.
+//
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -130,9 +140,9 @@ static CTerm newCTerm(char *l, CTerm t1, CTerm t2, CTerm t3, CTerm t4, CTerm t5,
 #define YYERROR_VERBOSE
 
 
-//**********************
-// INTERFACE TO SCANNER
-//**********************
+//----------------------
+// Interface to Scanner
+//----------------------
 
 void xyscannerInit();
 int xy_init_from_file(char *file);
@@ -157,12 +167,17 @@ static void xyerror(char *);
 extern "C" int xyreportError(char *, char *, char *, int ,int);
 
 static inline int xycharno() {
-  int n = (xytext - xylastline) + 1;
+  int n = xytext - xylastline;
   if (n > 0)
     return n;
   else
     return 0;
 }
+
+
+//----------------------
+// Operations on CTerms
+//----------------------
 
 static CTerm yyoutput;
 
@@ -170,29 +185,29 @@ inline CTerm pos() {
   return newCTerm("pos",xyFileNameAtom,OZ_int(xylino),OZ_int(xycharno()));
 }
 
-inline CTerm makeVar(char *functor) {
-  return newCTerm("fVar",newCTerm(functor),pos());
+inline CTerm makeVar(char *printName) {
+  return newCTerm("fVar",newCTerm(printName),pos());
 }
 
-inline CTerm makeCompound(char *functor, CTerm first, CTerm second) {
+inline CTerm makeCons(CTerm first, CTerm second, CTerm pos) {
    return newCTerm("fRecord",
-                   newCTerm("fAtom",newCTerm(functor),pos()),
+                   newCTerm("fAtom",newCTerm("|"),pos),
                    consList(first,consList(second,nilAtom)));
 }
 
-static CTerm makeInt(char *chars) {
-  return newCTerm("fInt",OZ_CStringToInt(chars),pos());
+static CTerm makeInt(char *chars, CTerm pos) {
+  return newCTerm("fInt",OZ_CStringToInt(chars),pos);
 }
 
-static CTerm makeInt(char c) {
-  return newCTerm("fInt",OZ_int((unsigned char) c),pos());
+static CTerm makeInt(char c, CTerm pos) {
+  return newCTerm("fInt",OZ_int((unsigned char) c),pos);
 }
 
-static CTerm makeString(char *chars) {
+static CTerm makeString(char *chars, CTerm pos) {
   if (chars[0] == '\0')
-    return newCTerm("fAtom",newCTerm("nil"),pos());
+    return newCTerm("fAtom",newCTerm("nil"),pos);
   else
-    return makeCompound("|",makeInt(chars[0]),makeString(&chars[1]));
+    return makeCons(makeInt(chars[0],pos),makeString(&chars[1],pos),pos);
 }
 
 
@@ -225,109 +240,103 @@ static CTerm decls[DEPTH];
   int i;
 }
 
+%token HELP SWITCH SHOWSWITCHES FEED THREADEDFEED
+%token CORETREE CORE MACHINE TOPVARS
+%token SWITCHNAME FILENAME
+%token OZATOM ATOM_LABEL OZFLOAT OZINT AMPER DOTINT STRING
+%token VARIABLE VARIABLE_LABEL
+%token DEFAULT CHOICE LDOTS OBJPATTERNOPEN OBJPATTERNCLOSE
+%token attr _case_ catch choice _class_ _condis_ declare dis
+%token _else_ elsecase elseif elseof end fail false FALSE_LABEL
+%token feat finally _from_ _fun_ _if_ _in_ local _lock_ _meth_
+%token not of or proc prop raise self skip then
+%token thread true TRUE_LABEL try unit UNIT_LABEL with
+
 %token ENDOFFILE
-%token proc _fun_ OZATOM
-%token OZFLOAT OZINT end CHOICE
-%token VARIABLE VARIABLE_LABEL UNIT_LABEL TRUE_LABEL FALSE_LABEL
-%token _if_ then _else_ elseif elseof elsecase
-%token or dis choice
-%token skip true fail false unit local LOCK declare ATOM_LABEL
-%token _in_ thread not catch finally try raise
-%token ASSIGN _meth_ _class_ _from_ attr feat prop
-%token _condis_
-%token LDOTS DOTINT
-%token FEED THREADEDFEED
-%token MACHINE PRECOMPILE HELP FILENAME SWITCH
-%token SHOWSWITCHES SWITCHNAME ON OFF
-%token CORE CORETREE TOPVARS
-%token STRING with
-%token OBJPATTERNOPEN OBJPATTERNCLOSE
-%token self _case_ of DEFAULT andthen orelse
-%token ADD FDMUL COMPARE FDCOMPARE FDIN AMPER
 
 %token REGEX lex _mode_ _parser_ prod _scanner_ syn token
 %token REDUCE SEP
 
+%right    '='
+%right    ASSIGN
+%right    orelse
+%right    andthen
+%nonassoc COMPARE FDCOMPARE
+%nonassoc FDIN
+%right    '|'
+%right    '#'
+%left     ADD
+%left     FDMUL OTHERMUL
+%right    ','
+%left     '~'
+%left     '.' '^' DOTINT
+%left     '@'
+
 %type <t>  file
 %type <t>  queries
 %type <t>  queries1
-
-%type <t>  add
-%type <t>  amper
-%type <t>  at
-%type <t>  argumentList
-%type <t>  apply
-%type <t>  caseClause
-%type <t>  caseClauseList
-%type <t>  choicE
-%type <t>  choiceList
-%type <t>  choiceList1
-%type <t>  classDescriptor
-%type <t>  classDescriptorList
-%type <t>  clause
-%type <t>  clauseList
-%type <t>  ifMain
-%type <t>  ifRest
-%type <t>  caseMain
-%type <t>  elseOfList
-%type <t>  compare
-%type <t>  createExpression
-%type <t>  createMeth
-%type <t>  createMethList
-%type <t>  colonPair
-%type <t>  attrFeat
-%type <t>  attrFeatList
-%type <t>  constant
-%type <t>  condisClause
-%type <t>  condisClauseList
-%type <t>  condisClauseList1
 %type <t>  directive
-%type <t>  caseRest
-%type <t>  expression
-%type <t>  fdcompare
-%type <t>  fdexpression
-%type <t>  fdin
-%type <t>  fdmul
-%type <t>  funExpression
-%type <t>  functor
-%type <t>  inexpression
-%type <t>  int
+%type <t>  switchList
+%type <t>  switch
+%type <t>  sequence
+%type <t>  phrase
+%type <t>  hashes
+%type <t>  phrase2
+%type <t>  compare
+%type <t>  fdCompare
+%type <t>  fdIn
+%type <t>  add
+%type <t>  fdMul
+%type <t>  otherMul
+%type <t>  inSequence
+%type <t>  phraseList
+%type <t>  fixedListArgs
+%type <t>  optCatch
+%type <t>  optFinally
 %type <t>  label
+%type <t>  recordArguments
+%type <t>  feature
+%type <t>  caseMain
+%type <t>  caseRest
+%type <t>  elseOfList
+%type <t>  caseClauseList
+%type <t>  caseClause
+%type <t>  class
+%type <t>  phraseOpt
+%type <t>  classDescriptorList
+%type <t>  classDescriptor
+%type <t>  attrFeatList
+%type <t>  attrFeat
+%type <t>  attrFeatFeature
+%type <t>  methList
+%type <t>  meth
 %type <t>  methHead
 %type <t>  methHead1
-%type <t>  methHeadFunctor
+%type <t>  methHeadLabel
 %type <t>  methHeadArgumentList
 %type <t>  methHeadArgumentList1
 %type <t>  methHeadTerm
 %type <t>  methHeadColonPair
 %type <t>  methHeadDefaultEquation
-%type <t>  feature
-%type <t>  attrFeatFeature
+%type <t>  ifMain
+%type <t>  ifRest
+%type <t>  ifClauseList
+%type <t>  ifClause
+%type <t>  condisClauseList
+%type <t>  condisClause
+%type <t>  fdExpression
+%type <t>  orClauseList
+%type <t>  orClause
+%type <t>  choiceClauseList
+%type <t>  choiceClause
+%type <t>  atom
 %type <t>  nakedVariable
-%type <t>  number
-%type <t>  dotint
-%type <t>  optcatch
-%type <t>  optfinally
-%type <t>  othermul
-%type <t>  phi
-%type <t>  position
-%type <t>  pred
-%type <t>  string
-%type <t>  switchList
-%type <t>  switch
-%type <t>  term
-%type <t>  hashes
-%type <t>  termNoHash
-%type <t>  fixedListArgs
-%type <t>  termList
-%type <t>  termOpt
-%type <t>  uminus
 %type <t>  variable
-%type <t>  xi
-%type <t>  xiList
-%type <t>  xiList1
-
-%type <t>  prodClauseList
+%type <t>  string
+%type <t>  int
+%type <t>  float
+%type <t>  thisCoord
+%type <t>  coord
 
 %type <t>  scannerSpecification
 %type <t>  scannerRules
@@ -344,6 +353,7 @@ static CTerm decls[DEPTH];
 %type <t>  tokenClause
 %type <t>  tokenList
 %type <t>  tokenDecl
+%type <t>  prodClauseList
 %type <t>  prodClause
 %type <t>  prodHeadRest
 %type <t>  prodKey
@@ -366,25 +376,8 @@ static CTerm decls[DEPTH];
 %type <t>  synPrimNoVar
 %type <t>  synPrimNoVarNoAssign
 %type <t>  synInstTerm
-%type <t>  synFunctor
+%type <t>  synLabel
 %type <t>  synProdCallParams
-
-/* Operator precedences */
-
-%right    '='
-%right    ASSIGN
-%right    orelse
-%right    andthen
-%nonassoc COMPARE FDCOMPARE
-%nonassoc FDIN
-%right    '|'
-%right    '#'
-%left     ADD
-%left     FDMUL OTHERMUL
-%right    ','
-%left     '~'
-%left     '.' '^' DOTINT
-%left     '@'
 
 %%
 
@@ -412,7 +405,7 @@ file            : queries ENDOFFILE
                   }
                 ;
 
-queries         : expression queries1
+queries         : sequence queries1
                   { $$ = consList($1,$2); }
                 | queries1
                   { $$ = $1; }
@@ -420,9 +413,9 @@ queries         : expression queries1
 
 queries1        : directive queries
                   { $$ = consList($1,$2); }
-                | declare position expression _in_ expression queries1
+                | declare coord sequence _in_ sequence queries1
                   { $$ = consList(newCTerm("fDeclare",$3,$5,$2),$6); }
-                | declare position expression position queries1
+                | declare coord sequence thisCoord queries1
                   { $$ = consList(newCTerm("fDeclare",$3,
                                            newCTerm("fSkip",$4),$2),$5); }
                 | /* empty */
@@ -445,8 +438,6 @@ directive       : HELP
                   { $$ = newCTerm("dirCore",newCTerm(xyhelpFileName)); }
                 | MACHINE FILENAME
                   { $$ = newCTerm("dirMachine",newCTerm(xyhelpFileName)); }
-                | PRECOMPILE FILENAME
-                  { $$ = newCTerm("dirPreCompile",newCTerm(xyhelpFileName)); }
                 | TOPVARS FILENAME
                   { $$ = newCTerm("dirTopVars",newCTerm(xyhelpFileName)); }
                 ;
@@ -457,88 +448,78 @@ switchList      : /* empty */
                   { $$ = consList($1,$2); }
                 ;
 
-switch          : ON SWITCHNAME
+switch          : '+' SWITCHNAME
                   { $$ = newCTerm("on",newCTerm(xytext),pos()); }
-                | OFF SWITCHNAME
+                | '-' SWITCHNAME
                   { $$ = newCTerm("off",newCTerm(xytext),pos()); }
                 ;
 
-prodClauseList  : prodClause
-                  { $$ = consList($1,nilAtom); }
-                | prodClause prodClauseList
-                  { $$ = consList($1,$2); }
-                ;
-
-inexpression    : expression _in_ position expression
-                  { $$ = newCTerm("fLocal",$1,$4,$3); }
-                | expression
+sequence        : phrase
                   { $$ = $1; }
-
-expression      : term
-                  { $$ = $1; }
-                | term expression
+                | phrase sequence
                   { $$ = newCTerm("fAnd",$1,$2); }
                 ;
 
-term            : term '=' position term
+phrase          : phrase '=' coord phrase
                   { $$ = newCTerm("fEq",$1,$4,$3); }
-                | term ASSIGN position term
+                | phrase ASSIGN coord phrase
                   { $$ = newCTerm("fAssign",$1,$4,$3); }
-                | term orelse position term
+                | phrase orelse coord phrase
                   { $$ = newCTerm("fOrElse",$1,$4,$3); }
-                | term andthen position term
+                | phrase andthen coord phrase
                   { $$ = newCTerm("fAndThen",$1,$4,$3); }
-                | term compare position term %prec COMPARE
+                | phrase compare coord phrase %prec COMPARE
                   { $$ = newCTerm("fOpApply",$2,
                                   consList($1,consList($4,nilAtom)),$3); }
-                | term fdcompare position term   %prec FDIN
+                | phrase fdCompare coord phrase %prec FDIN
                   { $$ = newCTerm("fFdCompare",$2,$1,$4,$3); }
-                | term fdin position term   %prec FDIN
+                | phrase fdIn coord phrase %prec FDIN
                   { $$ = newCTerm("fFdIn",$2,$1,$4,$3); }
-                | term '|' term
-                  { $$ = makeCompound("|",$1,$3); }
-                | termNoHash
+                | phrase '|' coord phrase
+                  { $$ = makeCons($1,$4,$3); }
+                | phrase2
                   { $$ = $1; }
-                | termNoHash '#' hashes
+                | phrase2 '#' coord hashes
                   { $$ = newCTerm("fRecord",
-                                  newCTerm("fAtom",newCTerm("#"),pos()),
-                                  consList($1,$3)); }
+                                  newCTerm("fAtom",newCTerm("#"),$3),
+                                  consList($1,$4)); }
                 ;
 
-hashes          : termNoHash
+hashes          : phrase2
                   { $$ = consList($1,nilAtom); }
-                | termNoHash '#' hashes
+                | phrase2 '#' hashes
                   { $$ = consList($1,$3); }
                 ;
 
-termNoHash      : termNoHash add position termNoHash %prec ADD
+phrase2         : phrase2 add coord phrase2 %prec ADD
                   { $$ = newCTerm("fOpApply",$2,
                                   consList($1,consList($4,nilAtom)),$3); }
-                | termNoHash fdmul position termNoHash %prec FDMUL
+                | phrase2 fdMul coord phrase2 %prec FDMUL
                   { $$ = newCTerm("fOpApply",$2,
                                   consList($1,consList($4,nilAtom)),$3); }
-                | termNoHash othermul position termNoHash %prec OTHERMUL
+                | phrase2 otherMul coord phrase2 %prec OTHERMUL
                   { $$ = newCTerm("fOpApply",$2,
                                   consList($1,consList($4,nilAtom)),$3); }
-                | termNoHash ',' position termNoHash
+                | phrase2 ',' coord phrase2
                   { $$ = newCTerm("fObjApply",$1,$4,$3); }
-                | uminus position termNoHash %prec '~'
-                  { $$ = newCTerm("fOpApply",$1,
+                | '~' coord phrase2 %prec '~'
+                  { $$ = newCTerm("fOpApply",newCTerm("~"),
                                   consList($3,nilAtom),$2); }
-                | termNoHash '.' position termNoHash
+                | phrase2 '.' coord phrase2
                   { $$ = newCTerm("fOpApply",newCTerm("."),
                                   consList($1,consList($4,nilAtom)),$3); }
-                | termNoHash dotint
+                | phrase2 DOTINT
                   { $$ = newCTerm("fOpApply",newCTerm("."),
-                                  consList($1,consList($2,nilAtom)),pos()); }
-                | termNoHash '^' position termNoHash
+                                  consList($1,consList(makeInt(xytext,pos()),
+                                                       nilAtom)),pos()); }
+                | phrase2 '^' coord phrase2
                   { $$ = newCTerm("fOpApply",newCTerm("^"),
                                   consList($1,consList($4,nilAtom)),$3); }
-                | at
-                  { $$ = $1; }
-                | '(' inexpression ')'
+                | '@' coord phrase2
+                  { $$ = newCTerm("fAt",$3,$2); }
+                | '(' inSequence ')'
                   { $$ = $2; }
-                | constant
+                | atom
                   { $$ = $1; }
                 | variable
                   { $$ = $1; }
@@ -549,60 +530,64 @@ termNoHash      : termNoHash add position termNoHash %prec ADD
                 | true
                   { $$ = newCTerm("fEscape",makeVar("`true`"),pos()); }
                 | false
-                   { $$ = newCTerm("fEscape",makeVar("`false`"),pos()); }
+                  { $$ = newCTerm("fEscape",makeVar("`false`"),pos()); }
                 | self
                   { $$ = newCTerm("fSelf",pos()); }
                 | '$'
                   { $$ = newCTerm("fDollar",pos()); }
                 | string
                   { $$ = $1; }
-                | number
+                | int
                   { $$ = $1; }
-                | functor OBJPATTERNOPEN argumentList OBJPATTERNCLOSE
-                  { $$ = newCTerm("fObjPattern",$1,$3); }
-                | functor '(' argumentList ')'
+                | float
+                  { $$ = $1; }
+                | label '(' recordArguments ')'
                   { $$ = newCTerm("fRecord",$1,$3); }
-                | functor '(' argumentList LDOTS ')'
+                | label '(' recordArguments LDOTS ')'
                   { $$ = newCTerm("fOpenRecord",$1,$3); }
+                | label OBJPATTERNOPEN recordArguments OBJPATTERNCLOSE
+                  { $$ = newCTerm("fObjPattern",$1,$3); }
                 | '[' fixedListArgs ']'
                   { $$ = $2; }
-                | apply
+                | '{' coord phrase phraseList '}'
+                  { $$ = newCTerm("fApply",$3,$4,$2); }
+                | proc coord '{' phrase phraseList '}' inSequence end
+                  { $$ = newCTerm("fProc",$4,$5,$7,$2); }
+                | _fun_ coord '{' phrase phraseList '}' inSequence end
+                  { $$ = newCTerm("fFun",$4,$5,$7,$2); }
+                | class
                   { $$ = $1; }
-                | pred
-                  { $$ = $1; }
-                | funExpression
-                  { $$ = $1; }
-                | createExpression
-                  { $$ = $1; }
+                | local coord sequence _in_ sequence end
+                  { $$ = newCTerm("fLocal",$3,$5,$2); }
                 | _case_ caseMain
                   { $$ = $2; }
-                | local position expression _in_ expression end
-                  { $$ =  newCTerm("fLocal",$3,$5,$2); }
-                | LOCK position inexpression end
-                  { $$ =  newCTerm("fLock",$3,$2); }
-                | LOCK position term then inexpression end
-                  { $$ =  newCTerm("fLockThen",$3,$5,$2); }
-                | thread position inexpression end
+                | _lock_ coord inSequence end
+                  { $$ = newCTerm("fLock",$3,$2); }
+                | _lock_ coord phrase then inSequence end
+                  { $$ = newCTerm("fLockThen",$3,$5,$2); }
+                | thread coord inSequence end
                   { $$ = newCTerm("fThread",$3,$2); }
-                | try position inexpression optcatch optfinally end
+                | try coord inSequence optCatch optFinally end
                   { $$ = newCTerm("fTry",$3,$4,$5,$2); }
-                | raise position inexpression end
+                | raise coord inSequence end
                   { $$ = newCTerm("fRaise",$3,$2); }
-                | raise position inexpression with inexpression end
+                | raise coord inSequence with inSequence end
                   { $$ = newCTerm("fRaiseWith",$3,$5,$2); }
-                | phi      /* constraint */
-                  { $$ = $1; }
-                | not position inexpression end
+                | skip
+                  { $$ = newCTerm("fSkip",pos()); }
+                | fail
+                  { $$ = newCTerm("fFail",pos()); }
+                | not coord inSequence end
                   { $$ = newCTerm("fNot",$3,$2); }
                 | _if_ ifMain
                   { $$ = $2; }
-                | or position xiList end
+                | or coord orClauseList end
                   { $$ = newCTerm("fOr",$3,newCTerm("for"),$2); }
-                | dis position xiList end
+                | dis coord orClauseList end
                   { $$ = newCTerm("fOr",$3,newCTerm("fdis"),$2); }
-                | choice position choiceList1 end
+                | choice coord choiceClauseList end
                   { $$ = newCTerm("fOr",$3,newCTerm("fchoice"),$2); }
-                | _condis_ position condisClauseList end
+                | _condis_ coord condisClauseList end
                   { $$ = newCTerm("fCondis",$3,$2); }
                 | scannerSpecification
                   { $$ = $1; }
@@ -610,64 +595,113 @@ termNoHash      : termNoHash add position termNoHash %prec ADD
                   { $$ = $1; }
                 ;
 
-fixedListArgs   : term
-                  { $$ = newCTerm("fRecord",
-                                  newCTerm("fAtom",newCTerm("|"),pos()),
-                                  consList($1,consList(newCTerm("fAtom",
-                                                                newCTerm("nil"),
-                                                                pos()),
-                                                       nilAtom))); }
-                | term fixedListArgs
-                  { $$ = newCTerm("fRecord",
-                                  newCTerm("fAtom",newCTerm("|"),pos()),
-                                  consList($1,consList($2,nilAtom))); }
+compare         : COMPARE
+                  { $$ = newCTerm(xytext); }
                 ;
 
-optcatch        : /* empty */
+fdCompare       : FDCOMPARE
+                  { $$ = newCTerm(xytext); }
+                ;
+
+fdIn            : FDIN
+                  { $$ = newCTerm(xytext); }
+                ;
+
+add             : ADD
+                  { $$=newCTerm(xytext); }
+                ;
+
+fdMul           : FDMUL
+                  { $$=newCTerm(xytext); }
+                ;
+
+otherMul        : OTHERMUL
+                  { $$=newCTerm(xytext); }
+                ;
+
+inSequence      : sequence _in_ coord sequence
+                  { $$ = newCTerm("fLocal",$1,$4,$3); }
+                | sequence
+                  { $$ = $1; }
+                ;
+
+phraseList      : /* empty */
+                  { $$ = nilAtom; }
+                | phrase phraseList
+                  { $$ = consList($1,$2); }
+                ;
+
+fixedListArgs   : thisCoord phrase
+                  { $$ = newCTerm("fRecord",
+                                  newCTerm("fAtom",newCTerm("|"),$1),
+                                  consList($2,consList(newCTerm("fAtom",
+                                                                newCTerm("nil"),
+                                                                $1),
+                                                       nilAtom))); }
+                | thisCoord phrase fixedListArgs
+                  { $$ = newCTerm("fRecord",
+                                  newCTerm("fAtom",newCTerm("|"),$1),
+                                  consList($2,consList($3,nilAtom))); }
+                ;
+
+optCatch        : /* empty */
                   { $$ = newCTerm("fNoCatch"); }
                 | catch caseClauseList
                   { $$ = $2; }
                 ;
 
-optfinally      : /* empty */
+optFinally      : /* empty */
                   { $$ = newCTerm("fNoFinally"); }
-                | finally inexpression
+                | finally inSequence
                   { $$ = $2; }
                 ;
 
-
-ifMain          : position clauseList ifRest
-                  { $$ = newCTerm("fIf",$2,$3,$1); }
+label           : ATOM_LABEL
+                  { $$ = newCTerm("fAtom",newCTerm(xytext),pos()); }
+                | VARIABLE_LABEL
+                  { $$ = makeVar(xytext); }
+                | UNIT_LABEL
+                  { $$ = makeVar("`unit`"); }
+                | TRUE_LABEL
+                  { $$ = makeVar("`true`"); }
+                | FALSE_LABEL
+                  { $$ = makeVar("`false`"); }
                 ;
 
-ifRest          : elseif ifMain
-                  { $$ = $2; }
-                | _else_ inexpression end
-                  { $$ = $2; }
-                | end
-                  { $$ = newCTerm("fNoElse",pos()); }
+recordArguments : /* empty */
+                  { $$ = nilAtom; }
+                | phrase recordArguments
+                  { $$ = consList($1,$2); }
+                | feature ':' phrase recordArguments
+                  { $$ = consList(newCTerm("fColon",$1,$3),$4); }
                 ;
 
-clauseList      : clause
-                  { $$ = consList($1,nilAtom); }
-                | clause CHOICE clauseList
-                  { $$ = consList($1,$3); }
+feature         : atom
+                  { $$ = $1; }
+                | nakedVariable
+                  { $$ = $1; }
+                | int
+                  { $$ = $1; }
+                | unit
+                  { $$ = makeVar("`unit`"); }
+                | true
+                  { $$ = makeVar("`true`"); }
+                | false
+                  { $$ = makeVar("`false`"); }
                 ;
 
-
-
-caseMain        : position expression then inexpression caseRest
+caseMain        : coord sequence then inSequence caseRest
                   { $$ = newCTerm("fBoolCase",$2,$4,$5,$1); }
-                | position expression of elseOfList caseRest
+                | coord sequence of elseOfList caseRest
                   { $$ = newCTerm("fCase",$2,$4,$5,$1); }
                 ;
 
 caseRest        : elsecase caseMain
                   { $$ = $2; }
-                | _else_ inexpression end
+                | _else_ inSequence end
                   { $$ = $2; }
-                | end position
-                  { $$ = newCTerm("fNoElse",$2); }
+                | end
+                  { $$ = newCTerm("fNoElse",pos()); }
                 ;
 
 elseOfList      : caseClauseList
@@ -682,228 +716,35 @@ caseClauseList  : caseClause
                   { $$ = consList($1,$3); }
                 ;
 
-caseClause      : inexpression then inexpression
+caseClause      : inSequence then inSequence
                   { $$ = newCTerm("fCaseClause",$1,$3); }
                 ;
 
-
-
-clause          : position expression _in_ expression
-                  then inexpression
-                  { $$ = newCTerm("fClause",$2,$4,$6,$1); }
-                | position expression then position inexpression
-                  { $$ = newCTerm("fClause",
-                                  newCTerm("fSkip",$1),$2,$5,$4); }
-                ;
-
-
-
-xiList          : xi CHOICE xiList1
-                  { $$ = consList($1,$3); }
-                ;
-
-xiList1         : xi
-                  { $$ = consList($1,nilAtom); }
-                | xiList
-                  { $$ = $1; }
-
-                ;
-
-xi              : expression _in_ expression then inexpression
-                  { $$ = newCTerm("fClause",$1,$3,$5); }
-                | expression _in_ expression
-                  { $$ = newCTerm("fClause",$1,$3,newCTerm("fNoThen",pos())); }
-
-                | expression then inexpression
-                  { $$ = newCTerm("fClause",
-                                  newCTerm("fSkip",pos()),$1,$3); }
-                | expression
-                  { $$ = newCTerm("fClause",
-                                  newCTerm("fSkip",pos()),
-                                  $1,newCTerm("fNoThen",pos())); }
-                ;
-
-choiceList      : choicE CHOICE choiceList1
-                  { $$ = consList($1,$3); }
-                ;
-
-choiceList1     : choicE
-                  { $$ = consList($1,nilAtom); }
-                | choiceList
-                  { $$ = $1; }
-
-                ;
-
-choicE          : expression _in_ position expression then inexpression
-                  { $$ = newCTerm("fClause",$1,$4,$6); }
-                | inexpression
-                  { $$ = newCTerm("fClause",
-                                  newCTerm("fSkip",pos()),
-                                  newCTerm("fSkip",pos()),
-                                  $1); }
-                | expression then inexpression
-                  { $$ = newCTerm("fClause",
-                                  newCTerm("fSkip",pos()),$1,$3); }
-                ;
-
-condisClauseList
-                : condisClause CHOICE condisClauseList1
-                  { $$ = consList($1,$3); }
-                ;
-
-condisClauseList1
-                : condisClause
-                  { $$ = consList($1,nilAtom); }
-                | condisClauseList
-                  { $$ = $1; }
-                ;
-
-condisClause    : fdexpression
-                  { $$ = consList($1,nilAtom); }
-                | fdexpression condisClause
-                  { $$ = consList($1,$2); }
-                ;
-
-fdexpression    : term fdcompare position term
-                  { $$ = newCTerm("fFdCompare",$2,$1,$4,$3); }
-                | term fdin position term
-                  { $$ = newCTerm("fFdIn",$2,$1,$4,$3); }
-                ;
-
-createExpression: _class_ position
-                  termOpt
-                  classDescriptorList
-                  createMethList
-                  end
+class           : _class_ coord phraseOpt classDescriptorList methList end
                   { $$ = newCTerm("fClass",$3,$4,$5,$2); }
                 ;
 
-classDescriptorList: /* empty */
+phraseOpt       : phrase
+                  { $$ = $1; }
+                | thisCoord
+                  { $$ = newCTerm("fDollar",$1); }
+                ;
+
+classDescriptorList
+                : /* empty */
                   { $$ = nilAtom; }
                 |  classDescriptor classDescriptorList
                   { $$ = consList($1,$2); }
+                ;
 
-classDescriptor: _from_ position term termList
+classDescriptor : _from_ coord phrase phraseList
                   { $$ = newCTerm("fFrom",consList($3,$4),$2); }
-                | attr position attrFeat attrFeatList
+                | attr coord attrFeat attrFeatList
                   { $$ = newCTerm("fAttr",consList($3,$4),$2); }
-                | feat position attrFeat attrFeatList
+                | feat coord attrFeat attrFeatList
                   { $$ = newCTerm("fFeat",consList($3,$4),$2); }
-                | prop position term termList
+                | prop coord phrase phraseList
                   { $$ = newCTerm("fProp",consList($3,$4),$2); }
-                ;
-
-termOpt         : term
-                  { $$ = $1; }
-                | /* empty */
-                  { $$ = newCTerm("fDollar",pos()); }
-                ;
-
-
-phi             : skip
-                  { $$ = newCTerm("fSkip",pos()); }
-                | fail
-                  { $$ = newCTerm("fFail",pos()); }
-                ;
-
-position        : /* empty */
-                  { $$ = pos(); }
-                ;
-
-label           : constant
-                  { $$ = $1; }
-                | variable
-                  { $$ = $1; }
-                ;
-
-termList        :  /* empty */
-                  { $$ = nilAtom; }
-                |  term termList
-                  { $$ = consList($1,$2); }
-                ;
-
-argumentList    :  /* empty */
-                  { $$ = nilAtom; }
-                | term argumentList
-                  { $$ = consList($1,$2); }
-                |  colonPair argumentList
-                  { $$ = consList($1,$2); }
-                ;
-
-colonPair       : feature ':' term
-                  { $$ = newCTerm("fColon",$1,$3); }
-                ;
-
-pred            : proc position '{' term termList '}' inexpression end
-                  { $$ = newCTerm("fProc",$4,$5,$7,$2); }
-                ;
-
-funExpression   : _fun_ position '{' term termList '}' inexpression end
-                  { $$ = newCTerm("fFun",$4,$5,$7,$2); }
-                ;
-
-amper           : AMPER
-                  { $$ = makeInt(xytext[0]); }
-                ;
-
-at              : '@' position termNoHash
-                  { $$ = newCTerm("fAt",$3,$2); }
-                ;
-
-apply           : '{' position term termList '}'
-                  { $$ = newCTerm("fApply",$3,$4,$2); }
-                ;
-
-constant        : OZATOM
-                  { $$ = newCTerm("fAtom",newCTerm(xytext),pos()); }
-                ;
-
-string          : STRING
-                  { $$ = makeString(xytext); }
-                ;
-
-functor         : ATOM_LABEL
-                  { $$ =  newCTerm("fAtom",newCTerm(xytext),pos()); }
-                | VARIABLE_LABEL
-                  { $$ = makeVar(xytext); }
-                | UNIT_LABEL
-                  { $$ = makeVar("`unit`"); }
-                | TRUE_LABEL
-                  { $$ = makeVar("`true`"); }
-                | FALSE_LABEL
-                  { $$ = makeVar("`false`"); }
-                ;
-
-nakedVariable   : VARIABLE
-                  { $$ = makeVar(xytext); }
-                ;
-
-variable        : nakedVariable
-                  { $$ = $1; }
-                | '!' position nakedVariable
-                  { $$ = newCTerm("fEscape",$3,$2); }
-                ;
-
-number          : int
-                  { $$ = $1; }
-                | OZFLOAT
-                  { $$ = newCTerm("fFloat",OZ_CStringToFloat(xytext),pos()); }
-                ;
-
-int             : OZINT
-                  { $$ = makeInt(xytext); }
-                | amper
-                  { $$ = $1; }
-                ;
-
-dotint          : DOTINT
-                  { $$ = makeInt(xytext); }
-                ;
-
-attrFeat        : attrFeatFeature ':' term
-                  { $$ = pair($1,$3); }
-                | attrFeatFeature
-                  { $$ = $1; }
                 ;
 
 attrFeatList    : /* empty */
@@ -912,29 +753,63 @@ attrFeatList    : /* empty */
                   { $$ = consList($1,$2); }
                 ;
 
-createMeth      : _meth_ position methHead inexpression end
+attrFeat        : attrFeatFeature ':' phrase
+                  { $$ = pair($1,$3); }
+                | attrFeatFeature
+                  { $$ = $1; }
+                ;
+
+attrFeatFeature : atom
+                  { $$ = $1; }
+                | variable
+                  { $$ = $1; }
+                | int
+                  { $$ = $1; }
+                | unit
+                  { $$ = newCTerm("fEscape",makeVar("`unit`"),pos()); }
+                | true
+                  { $$ = newCTerm("fEscape",makeVar("`true`"),pos()); }
+                | false
+                  { $$ = newCTerm("fEscape",makeVar("`false`"),pos()); }
+                ;
+
+methList        : /* empty */
+                  { $$ = nilAtom; }
+                | meth methList
+                  { $$ = consList($1,$2); }
+                ;
+
+meth            : _meth_ coord methHead inSequence end
                   { $$ = newCTerm("fMeth",$3,$4,$2); }
                 ;
 
 methHead        : methHead1
                   { $$ = $1; }
-                | methHead1 '=' position nakedVariable
+                | methHead1 '=' coord nakedVariable
                   { $$ = newCTerm("fEq",$1,$4,$3); }
                 ;
 
-methHead1       : label
+methHead1       : atom
                   { $$ = $1; }
-                | methHeadFunctor '(' methHeadArgumentList ')'
+                | variable
+                  { $$ = $1; }
+                | unit
+                  { $$ = newCTerm("fEscape",makeVar("`unit`"),pos()); }
+                | true
+                  { $$ = newCTerm("fEscape",makeVar("`true`"),pos()); }
+                | false
+                  { $$ = newCTerm("fEscape",makeVar("`false`"),pos()); }
+                | methHeadLabel '(' methHeadArgumentList ')'
                   { $$ = newCTerm("fRecord",$1,$3); }
-                | methHeadFunctor '(' methHeadArgumentList LDOTS ')'
+                | methHeadLabel '(' methHeadArgumentList LDOTS ')'
                   { $$ = newCTerm("fOpenRecord",$1,$3); }
                 ;
 
-methHeadFunctor : ATOM_LABEL
-                  { $$ =  newCTerm("fAtom",newCTerm(xytext),pos()); }
+methHeadLabel   : ATOM_LABEL
+                  { $$ = newCTerm("fAtom",newCTerm(xytext),pos()); }
                 | VARIABLE_LABEL
                   { $$ = makeVar(xytext); }
-                | '!' position VARIABLE_LABEL
+                | '!' coord VARIABLE_LABEL
                   { $$ = newCTerm("fEscape",makeVar(xytext),$2); }
                 | UNIT_LABEL
                   { $$ = newCTerm("fEscape",makeVar("`unit`"),pos()); }
@@ -957,12 +832,12 @@ methHeadArgumentList
                 ;
 
 methHeadArgumentList1
-                : /* empty */
-                  { $$ = nilAtom; }
-                | methHeadDefaultEquation methHeadArgumentList1
+                : methHeadDefaultEquation methHeadArgumentList1
                   { $$ = consList($1,$2); }
                 | methHeadColonPair methHeadArgumentList1
                   { $$ = consList($1,$2); }
+                | /* empty */
+                  { $$ = nilAtom; }
                 ;
 
 methHeadTerm    : nakedVariable
@@ -977,83 +852,144 @@ methHeadColonPair
                 : feature ':' methHeadTerm
                   { $$ = newCTerm("fMethColonArg",$1,$3,
                                   newCTerm("fNoDefault")); }
-                | feature ':' methHeadTerm DEFAULT position term
+                | feature ':' methHeadTerm DEFAULT coord phrase
                   { $$ = newCTerm("fMethColonArg",$1,$3,
                                   newCTerm("fDefault",$6,$5)); }
                 ;
 
 methHeadDefaultEquation
-                : methHeadTerm DEFAULT position term
+                : methHeadTerm DEFAULT coord phrase
                   { $$ = newCTerm("fMethArg",$1,newCTerm("fDefault",$4,$3)); }
                 ;
 
-feature         : constant
-                  { $$ = $1; }
-                | nakedVariable
-                  { $$ = $1; }
-                | int
-                  { $$ = $1; }
-                | unit
-                  { $$ = makeVar("`unit`"); }
-                | true
-                  { $$ = makeVar("`true`"); }
-                | false
-                  { $$ = makeVar("`false`"); }
+ifMain          : coord ifClauseList ifRest
+                  { $$ = newCTerm("fIf",$2,$3,$1); }
                 ;
 
-attrFeatFeature : constant
-                  { $$ = $1; }
-                | variable
-                  { $$ = $1; }
-                | int
-                  { $$ = $1; }
-                | unit
-                  { $$ = newCTerm("fEscape",makeVar("`unit`"),pos()); }
-                | true
-                  { $$ = newCTerm("fEscape",makeVar("`true`"),pos()); }
-                | false
-                  { $$ = newCTerm("fEscape",makeVar("`false`"),pos()); }
+ifRest          : elseif ifMain
+                  { $$ = $2; }
+                | _else_ inSequence end
+                  { $$ = $2; }
+                | end
+                  { $$ = newCTerm("fNoElse",pos()); }
                 ;
 
-createMethList  : /* empty */
-                  { $$ = nilAtom; }
-                | createMeth createMethList
+ifClauseList    : ifClause
+                  { $$ = consList($1,nilAtom); }
+                | ifClause CHOICE ifClauseList
+                  { $$ = consList($1,$3); }
+                ;
+
+ifClause        : sequence then coord inSequence
+                  { $$ = newCTerm("fClause",newCTerm("fSkip",$3),$1,$4); }
+                | sequence _in_ sequence then inSequence
+                  { $$ = newCTerm("fClause",$1,$3,$5); }
+                ;
+
+condisClauseList: condisClause CHOICE condisClause
+                  { $$ = consList($1,consList($3,nilAtom)); }
+                | condisClause CHOICE condisClauseList
+                  { $$ = consList($1,$3); }
+                ;
+
+condisClause    : fdExpression
+                  { $$ = consList($1,nilAtom); }
+                | fdExpression condisClause
                   { $$ = consList($1,$2); }
                 ;
 
-compare         : COMPARE
-                  { $$=newCTerm(xytext); }
+fdExpression    : phrase fdCompare coord phrase
+                  { $$ = newCTerm("fFdCompare",$2,$1,$4,$3); }
+                | phrase fdIn coord phrase
+                  { $$ = newCTerm("fFdIn",$2,$1,$4,$3); }
                 ;
 
-fdcompare       : FDCOMPARE
-                  { $$=newCTerm(xytext); }
+orClauseList    : orClause CHOICE orClause
+                  { $$ = consList($1,consList($3,nilAtom)); }
+                | orClause CHOICE orClauseList
+                  { $$ = consList($1,$3); }
                 ;
 
-fdin            : FDIN
-                  { $$=newCTerm(xytext); }
+orClause        : sequence thisCoord
+                  { $$ = newCTerm("fClause",
+                                  newCTerm("fSkip",$2),
+                                  $1,newCTerm("fNoThen",$2)); }
+                | sequence _in_ sequence thisCoord
+                  { $$ = newCTerm("fClause",$1,$3,newCTerm("fNoThen",$4)); }
+                | sequence thisCoord then inSequence
+                  { $$ = newCTerm("fClause",
+                                  newCTerm("fSkip",$2),$1,$4); }
+                | sequence _in_ sequence then inSequence
+                  { $$ = newCTerm("fClause",$1,$3,$5); }
                 ;
 
-fdmul           : FDMUL
-                  { $$=newCTerm(xytext); }
+choiceClauseList: choiceClause
+                  { $$ = consList($1,nilAtom); }
+                | choiceClause CHOICE choiceClauseList
+                  { $$ = consList($1,$3); }
                 ;
 
-othermul        : OTHERMUL
-                  { $$=newCTerm(xytext); }
+choiceClause    : sequence thisCoord
+                  { $$ = newCTerm("fClause",
+                                  newCTerm("fSkip",$2),
+                                  newCTerm("fSkip",$2),
+                                  $1); }
+                | sequence thisCoord _in_ sequence
+                  { $$ = newCTerm("fClause",
+                                  newCTerm("fSkip",$2),
+                                  newCTerm("fSkip",$2),
+                                  newCTerm("fLocal",$1,$4,$2)); }
+                | sequence thisCoord then inSequence
+                  { $$ = newCTerm("fClause",
+                                  newCTerm("fSkip",$2),$1,$4); }
+                | sequence thisCoord _in_ sequence then inSequence
+                  { $$ = newCTerm("fClause",$1,$4,$6); }
                 ;
 
-uminus          : '~'
-                  { $$=newCTerm(xytext); }
+atom            : OZATOM
+                  { $$ = newCTerm("fAtom",newCTerm(xytext),pos()); }
                 ;
 
-add             : ADD
-                  { $$=newCTerm(xytext); }
+nakedVariable   : VARIABLE
+                  { $$ = makeVar(xytext); }
+                ;
+
+variable        : nakedVariable
+                  { $$ = $1; }
+                | '!' coord nakedVariable
+                  { $$ = newCTerm("fEscape",$3,$2); }
+                ;
+
+string          : STRING
+                  { $$ = makeString(xytext,pos()); }
+                ;
+
+int             : OZINT
+                  { $$ = makeInt(xytext,pos()); }
+                | AMPER
+                  { $$ = makeInt(xytext[0],pos()); }
+                ;
+
+float           : OZFLOAT
+                  { $$ = newCTerm("fFloat",OZ_CStringToFloat(xytext),pos()); }
+                ;
+
+thisCoord       : /* empty */
+                  { $$ = pos(); }   /*--** should be: coords of next token */
+                ;
+
+coord           : /* empty */
+                  { $$ = pos(); }
                 ;
 
 
+/*--------------------------------------------------------------------*/
+/* Gump Extensions                                                    */
+/*--------------------------------------------------------------------*/
 
 scannerSpecification
-                : _scanner_ position nakedVariable
-                  classDescriptorList createMethList scannerRules end
+                : _scanner_ coord nakedVariable
+                  classDescriptorList methList scannerRules end
                   { $$ = newCTerm("fScanner",$3,$4,$5,$6,$2); }
                 ;
 
@@ -1071,13 +1007,13 @@ scannerRules    : lexAbbrev
                   { $$ = consList($1,$2); }
                 ;
 
-lexAbbrev       : lex constant '=' regex end
+lexAbbrev       : lex atom '=' regex end
                   { $$ = newCTerm("fLexicalAbbreviation",$2,$4); }
                 | lex nakedVariable '=' regex end
                   { $$ = newCTerm("fLexicalAbbreviation",$2,$4); }
                 ;
 
-lexRule         : lex regex inexpression end
+lexRule         : lex regex inSequence end
                   { $$ = newCTerm("fLexicalRule",$2,$3); }
                 ;
 
@@ -1104,10 +1040,9 @@ modeDescr       : _from_ modeFromList
                 ;
 
 
-
 parserSpecification
-                : _parser_ position nakedVariable
-                  classDescriptorList createMethList
+                : _parser_ coord nakedVariable
+                  classDescriptorList methList
                   tokenClause parserRules end
                   { $$ = newCTerm("fParser",$3,$4,$5,$6,$7,$2); }
                 ;
@@ -1132,15 +1067,21 @@ tokenList       : tokenDecl
                   { $$ = consList($1,$2); }
                 ;
 
-tokenDecl       : constant
+tokenDecl       : atom
                   { $$ = $1; }
-                | constant ':' term
+                | atom ':' phrase
                   { $$ = pair($1,$3); }
                 ;
 
 modeFromList    : nakedVariable
                   { $$ = consList($1,nilAtom); }
                 | nakedVariable modeFromList
+                  { $$ = consList($1,$2); }
+                ;
+
+prodClauseList  : prodClause
+                  { $$ = consList($1,nilAtom); }
+                | prodClause prodClauseList
                   { $$ = consList($1,$2); }
                 ;
 
@@ -1168,7 +1109,7 @@ prodName        : prodNameAtom
                 | /* empty */
                 ;
 
-prodNameAtom    : constant ':'
+prodNameAtom    : atom ':'
                   { prodName[depth] = OZ_string(OZ_atomToC(OZ_getArg($1,0))); }
                 ;
 
@@ -1202,7 +1143,8 @@ terminatorOp    : ADD { *prodKey[depth]++ = xytext[0]; }
                 | FDMUL { *prodKey[depth]++ = xytext[0]; }
                 ;
 
-prodMakeKey     : { *prodKey[depth] = '\0';
+prodMakeKey     : /* empty */
+                  { *prodKey[depth] = '\0';
                     $$ = pair(prodName[depth],OZ_string(prodKeyBuffer[depth]));
                     prodName[depth] = newCTerm("none");
                     prodKey[depth] = prodKeyBuffer[depth];
@@ -1221,11 +1163,11 @@ localRulesSub   : synClause
                   { $$ = consList($1,$2); }
                 ;
 
-synClause       : syn constant synAlt end
+synClause       : syn atom synAlt end
                   { $$ = newCTerm("fSyntaxRule",$2,nilAtom,$3); }
                 | syn nakedVariable synAlt end
                   { $$ = newCTerm("fSyntaxRule",$2,nilAtom,$3); }
-                | syn synFunctor '(' synParams ')' synAlt end
+                | syn synLabel '(' synParams ')' synAlt end
                   { $$ = newCTerm("fSyntaxRule",$2,$4,$6); }
                 ;
 
@@ -1237,7 +1179,7 @@ synParams       : /* empty */
 
 synParam        : nakedVariable
                   { $$ = $1; }
-                | '$' position
+                | '$'
                   { $$ = newCTerm("fDollar",pos()); }
                 | '_'
                   { $$ = newCTerm("fWildcard",pos()); }
@@ -1268,13 +1210,13 @@ synSeq          : nonEmptySeq
 
 optSynAction    : /* empty */
                   { $$ = nilAtom; }
-                | REDUCE inexpression
+                | REDUCE inSequence
                   { $$ = consList(newCTerm("fSynAction",$2),nilAtom); }
                 ;
 
 nonEmptySeq     : synVariable nonEmptySeq
                   { $$ = $2; }
-                | synVariable terminatorOp position synPrims prodMakeKey
+                | synVariable terminatorOp coord synPrims prodMakeKey
                   { $$ = consList(newCTerm("fSynTemplateInstantiation", $5,
                                            consList(newCTerm("fSynApplication",
                                                              terms[depth]->term,
@@ -1320,7 +1262,7 @@ synPrim         : variable '=' synPrimNoAssign
 
 synPrimNoAssign : nakedVariable
                   { $$ = newCTerm("fSynApplication",$1,nilAtom); }
-                | nakedVariable terminatorOp position prodMakeKey
+                | nakedVariable terminatorOp coord prodMakeKey
                   { $$ = newCTerm("fSynTemplateInstantiation",$4,
                                   consList(newCTerm("fSynApplication",$1,
                                                     nilAtom),
@@ -1330,7 +1272,7 @@ synPrimNoAssign : nakedVariable
                   { $$ = $1; }
                 ;
 
-synPrimNoVar    : '!' position nakedVariable '=' synPrimNoAssign
+synPrimNoVar    : '!' coord nakedVariable '=' synPrimNoAssign
                   { $$ = newCTerm("fSynAssignment",
                                   newCTerm("fEscape",$3,$2),$5); }
                 | synPrimNoVarNoAssign
@@ -1340,35 +1282,35 @@ synPrimNoVar    : '!' position nakedVariable '=' synPrimNoAssign
 synPrimNoVarNoAssign
                 : synInstTerm
                   { $$ = $1; }
-                | prodNameAtom position synInstTerm optTerminatorOp prodMakeKey
+                | prodNameAtom coord synInstTerm optTerminatorOp prodMakeKey
                   { $$ = newCTerm("fSynTemplateInstantiation",$5,
                                   consList($3,nilAtom),$2);
                   }
-                | synInstTerm terminatorOp position prodMakeKey
+                | synInstTerm terminatorOp coord prodMakeKey
                   { $$ = newCTerm("fSynTemplateInstantiation",$4,
                                   consList($1,nilAtom),$3);
                   }
-                | prodName position '(' { *prodKey[depth]++ = '('; depth++; }
+                | prodName coord '(' { *prodKey[depth]++ = '('; depth++; }
                   synProdCallParams ')' { depth--; }
                   optTerminatorOp prodMakeKey
                   { $$ = newCTerm("fSynTemplateInstantiation",$9,$5,$2); }
-                | prodName position '[' { *prodKey[depth]++ = '['; depth++; }
+                | prodName coord '[' { *prodKey[depth]++ = '['; depth++; }
                   synProdCallParams ']' { depth--; }
                   optTerminatorOp prodMakeKey
                   { $$ = newCTerm("fSynTemplateInstantiation",$9,$5,$2); }
-                | prodName position '{' { *prodKey[depth]++ = '{'; depth++; }
+                | prodName coord '{' { *prodKey[depth]++ = '{'; depth++; }
                   synProdCallParams '}' { depth--; }
                   optTerminatorOp prodMakeKey
                   { $$ = newCTerm("fSynTemplateInstantiation",$9,$5,$2); }
                 ;
 
-synInstTerm     : constant
+synInstTerm     : atom
                   { $$ = newCTerm("fSynApplication",$1,nilAtom); }
-                | synFunctor position '(' termList ')'
+                | synLabel coord '(' phraseList ')'
                   { $$ = newCTerm("fSynApplication",$1,$4); }
                 ;
 
-synFunctor      : ATOM_LABEL
+synLabel        : ATOM_LABEL
                   { $$ = newCTerm("fAtom",newCTerm(xytext),pos()); }
                 | VARIABLE_LABEL
                   { $$ = makeVar(xytext); }
@@ -1432,7 +1374,7 @@ int xyreportError(char *kind, char *msg, char *file, int line, int offset) {
   } while (c != '\n' &&  c != EOF);
   fclose(pFile);
   fprintf(stderr, "%%**\t");
-  for (int i = 0; i < (offset - 1) + (TabSpaces - 1) * TabCount; i++)
+  for (int i = 0; i < offset + (TabSpaces - 1) * TabCount; i++)
     putc(' ',stderr);
   fprintf(stderr, "^-- *** here\n%%**\n");
   return 1;
