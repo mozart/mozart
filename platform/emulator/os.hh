@@ -113,8 +113,10 @@ int oswrite(int fd, void *buf, unsigned int len);
 int osclose(int fd);
 void ossleep(int sec);
 int osgetpid();
+int ossockerrno();
 int osopen(const char *path, int flags, int mode);
 int ossocket(int domain, int type, int protocol);
+int osaccept(int s, struct sockaddr *addr, int *addrlen);
 void registerSocket(int fd);
 
 char *osfgets(char *s, int n, FILE *stream);
