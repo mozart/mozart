@@ -97,6 +97,9 @@ void Thread::Init()
 {
   Head = (Thread *) NULL;
   Tail = (Thread *) NULL;
+  am.currentThread = (Thread *) NULL;
+  am.rootThread = new Thread(conf.systemPriority);
+  am.currentTaskStack = NULL;
 }
 
 /* for gdb debugging: cannot access static member data */

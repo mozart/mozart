@@ -211,15 +211,8 @@ void AM::init(int argc,char **argv)
   statusReg   = (StatusBit)0;
   xRegs       = allocateStaticRefsArray(NumberOfXRegisters);
 
-  currentBoard = (Board *) NULL;
-  rootBoard = Board::NewRoot();
-
+  Board::Init();
   Thread::Init();
-
-  currentThread = (Thread *) NULL;
-  rootThread = new Thread(conf.systemPriority);
-
-  currentTaskStack = NULL;
 
   // builtins
   BuiltinTabEntry *entry = BIinit();

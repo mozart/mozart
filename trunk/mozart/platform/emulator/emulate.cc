@@ -466,7 +466,7 @@ void engine() {
       {
 	Thread *c = am.currentThread;
 	if (c->isNervous()) {
-	  tmpBB = c->popBoard();
+	  tmpBB = c->popBoard()->getBoardDeref();
 	  goto LBLTaskNervous;
 	}
 	if (c->isWarm()) {
@@ -475,6 +475,7 @@ void engine() {
 	  if (!tmpBB) {
 	    goto LBLfindWork;
 	  }
+	  tmpBB = tmpBB->getBoardDeref();
 	  SuspContinuation *cont = susp->getCont();
 	  if (cont) {
 	    PC = cont->getPC();
@@ -509,7 +510,7 @@ void engine() {
 	goto LBLTaskEmpty;
       }
       ContFlag cFlag = getContFlag(tb);
-      tmpBB = clrContFlag(tb,cFlag);
+      tmpBB = clrContFlag(tb,cFlag)->getBoardDeref();
       switch (cFlag){
       case C_CONT:
 	PC = (ProgramCounter) TaskStackPop(--topCache);
@@ -1775,6 +1776,7 @@ void engine() {
 	Bool ret = e->installScript(bb->getScriptRef());
 	DebugCheck(!ret,error("WAIT"));
 	bb->setCommitted(CBB);
+	CBB->addSuspension(bb->getSuspCount());
 	DISPATCH(1);
       }
 
@@ -1814,6 +1816,7 @@ void engine() {
 	Bool ret = e->installScript(bb->getScriptRef());
 	DebugCheck(!ret,error("WAITTOP"));
 	bb->setCommitted(CBB);
+	CBB->addSuspension(bb->getSuspCount());
 	CBB->removeSuspension();
 	goto LBLreduce;
       }
@@ -2140,6 +2143,8 @@ void engine() {
 			   );
 	  }
 
+	  CBB->addSuspension(waitBoard->getSuspCount());
+
 	  /* unit commit & WAITTOP */
 	  if (waitBoard->isWaitTop()) {
 	    CBB->removeSuspension();
@@ -2153,8 +2158,6 @@ void engine() {
 
 	  /* unit commit & WAIT, e.g. or X = 1 ... then ... [] false ro */
 	  LOADCONT(waitBoard->getBodyPtr());
-
-
 	  DebugCheck(PC == NOCODE,error("reduce actor"));
 
 	  goto LBLemulateCheckSwitch;
