@@ -95,7 +95,7 @@ void ClassVar::disposeV()
 TaggedRef newClassProxy(int bi, GName *gnclass)
 {
   ClassVar *pvar = new ClassVar(oz_currentBoard(), bi, gnclass);
-  TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
+  TaggedRef val = makeTaggedRef(newTaggedVar(pvar));
   return (val);
 }
 

@@ -2582,7 +2582,6 @@ public:
   void  markMerged(void) {
     solve = (Board *) 1;
   }
-
 };
 
 

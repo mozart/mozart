@@ -79,33 +79,33 @@ void OZ_FSetVar::read(OZ_Term v)
     //
     // found variable
     //
-    Assert(oz_isCVar(v));
+    Assert(oz_isVar(v));
     //
     setSort(var_e);
     //
-    OzFSVariable * cvar = tagged2GenFSetVar(v);
+    OzFSVariable * var = tagged2GenFSetVar(v);
     //
     // check if this variable has already been read as encapsulated
     // parameter and if so, initilize forward reference appropriately
     //
-    OZ_FSetVar * forward = (cvar->isParamEncapTagged()
-                            ? ((OzFSVariable *) cvar)->getTag()
+    OZ_FSetVar * forward = (var->isParamEncapTagged()
+                            ? ((OzFSVariable *) var)->getTag()
                             : this);
     //
     if (Propagator::getRunningPropagator()->isLocal()
-        || oz_isLocalVar(cvar)) {
+        || oz_isLocalVar(var)) {
       //
       // local variable
       //
       setState(loc_e);
       //
-      if (cvar->isParamNonEncapTagged()) {
+      if (var->isParamNonEncapTagged()) {
         //
         // has already been read
         //
         // get previous
         //
-        OZ_FSetVar * prev = cvar->getTag();
+        OZ_FSetVar * prev = var->getTag();
         _set = prev->_set;
         prev->_nb_refs += 1;
         //
@@ -113,12 +113,12 @@ void OZ_FSetVar::read(OZ_Term v)
         //
         // is being read the first time
         //
-        _set = &((OzFSVariable *) cvar)->getSet();
+        _set = &((OzFSVariable *) var)->getSet();
         // special treatment of top-level variables
         if (oz_onToplevel()) {
           forward->_copy = *_set;
         }
-        cvar->tagNonEncapParam(forward);
+        var->tagNonEncapParam(forward);
         forward->_nb_refs += 1;
         //
       }
@@ -128,13 +128,13 @@ void OZ_FSetVar::read(OZ_Term v)
       //
       setState(glob_e);
       //
-      if (cvar->isParamNonEncapTagged()) {
+      if (var->isParamNonEncapTagged()) {
         //
         // has already been read
         //
         // get previous
         //
-        OZ_FSetVar * prev = cvar->getTag();
+        OZ_FSetVar * prev = var->getTag();
         _set = &(prev->_copy);
         prev->_nb_refs += 1;
         //
@@ -142,9 +142,9 @@ void OZ_FSetVar::read(OZ_Term v)
         //
         // is being read the first time
         //
-        forward->_copy = cvar->getSet();
+        forward->_copy = var->getSet();
         _set = &(forward->_copy);
-        cvar->tagNonEncapParam(forward);
+        var->tagNonEncapParam(forward);
         forward->_nb_refs += 1;
         //
       }
@@ -178,20 +178,20 @@ void OZ_FSetVar::readEncap(OZ_Term v)
     setSort(var_e);
     setState(encap_e);
     //
-    OzFSVariable * cvar = tagged2GenFSetVar(v);
+    OzFSVariable * var = tagged2GenFSetVar(v);
     //
     // check if this variable has already been read as non-encapsulated
     // parameter and if so, initilize forward reference appropriately
     //
-    OZ_FSetVar * forward = (cvar->isParamNonEncapTagged()
-                            ? ((OzFSVariable *) cvar)->getTag()
+    OZ_FSetVar * forward = (var->isParamNonEncapTagged()
+                            ? ((OzFSVariable *) var)->getTag()
                             : this);
     //
-    if (cvar->isParamEncapTagged()) {
+    if (var->isParamEncapTagged()) {
       //
       // has already been read
       //
-      OZ_FSetVar * prev = cvar->getTag();
+      OZ_FSetVar * prev = var->getTag();
       //
       _set = &(prev->_encap);
       //
@@ -201,9 +201,9 @@ void OZ_FSetVar::readEncap(OZ_Term v)
       //
       // is being read the first time
       //
-      forward->_encap = cvar->getSet();
+      forward->_encap = var->getSet();
       _set = &(forward->_encap);
-      cvar->tagEncapParam(forward);
+      var->tagEncapParam(forward);
       forward->_nb_refs += 1;
       //
     }
@@ -218,7 +218,7 @@ OZ_Boolean OZ_FSetVar::tell(void)
   //
   // if the parameter is a variable it returns 1 else 0
   //
-  DEBUG_CONSTRAIN_CVAR(("OZ_FSetVar::tell "));
+  DEBUG_CONSTRAIN_VAR(("OZ_FSetVar::tell "));
   //
   // this parameter has become an integer by a previous tell
   //
@@ -228,11 +228,11 @@ OZ_Boolean OZ_FSetVar::tell(void)
     //
   } else {
     //
-    OzFSVariable * cvar = tagged2GenFSetVar(var);
+    OzFSVariable *ov = tagged2GenFSetVar(var);
     //
-    int is_non_encap = cvar->isParamNonEncapTagged();
+    int is_non_encap = ov->isParamNonEncapTagged();
     //
-    cvar->untagParam();
+    ov->untagParam();
     //
     if (! is_non_encap) {
       //
@@ -314,14 +314,14 @@ OZ_Boolean OZ_FSetVar::tell(void)
   //
   // variable is determined
   //
-  DEBUG_CONSTRAIN_CVAR(("FALSE\n"));
+  DEBUG_CONSTRAIN_VAR(("FALSE\n"));
   return OZ_FALSE;
   //
  oz_true:
   //
   // variable is still undetermined
   //
-  DEBUG_CONSTRAIN_CVAR(("TRUE\n"));
+  DEBUG_CONSTRAIN_VAR(("TRUE\n"));
   return OZ_TRUE;
 }
 
@@ -331,11 +331,11 @@ void OZ_FSetVar::fail(void)
     return;
   } else {
     //
-    OzFSVariable * cvar = tagged2GenFSetVar(var);
+    OzFSVariable *ov = tagged2GenFSetVar(var);
     //
-    int is_non_encap = cvar->isParamNonEncapTagged();
+    int is_non_encap = ov->isParamNonEncapTagged();
     //
-    cvar->untagParam();
+    ov->untagParam();
     //
     if (! is_non_encap) {
       //

@@ -237,8 +237,7 @@ public:
   virtual void processPort(OZ_Term portTerm, Tertiary *portTert);
   virtual void processResource(OZ_Term resTerm, Tertiary *tert);
   virtual void processNoGood(OZ_Term resTerm, Bool trail);
-  virtual void processUVar(OZ_Term uv, OZ_Term *uvarTerm);
-  virtual void processCVar(OZ_Term cv, OZ_Term *cvarTerm);
+  virtual void processVar(OZ_Term cv, OZ_Term *varTerm);
   virtual void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
   virtual Bool processLTuple(OZ_Term ltupleTerm);
   virtual Bool processSRecord(OZ_Term srecordTerm);
@@ -289,8 +288,7 @@ public:
   virtual void processPort(OZ_Term portTerm, Tertiary *portTert);
   virtual void processResource(OZ_Term resTerm, Tertiary *tert);
   virtual void processNoGood(OZ_Term resTerm, Bool trail);
-  virtual void processUVar(OZ_Term uv, OZ_Term *uvarTerm);
-  virtual void processCVar(OZ_Term cv, OZ_Term *cvarTerm);
+  virtual void processVar(OZ_Term cv, OZ_Term *varTerm);
   virtual void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
   virtual Bool processLTuple(OZ_Term ltupleTerm);
   virtual Bool processSRecord(OZ_Term srecordTerm);
@@ -369,7 +367,7 @@ Bool traverseCode(GenTraverser *m, void *arg);
 class SntVarLocation : public NMMemoryManager {
 private:
   OZ_Term loc;
-  // A copy of the original OZ_Term for managers, or a fresh "cvar"
+  // A copy of the original OZ_Term for managers, or a fresh "var"
   // tagged pointer to a dedicated "exported" proxy;
   OZ_Term var;
   OZ_Term aVal;                 // actual value;

@@ -295,9 +295,7 @@ TaggedRef oz_valueType(OZ_Term term) {
   Assert(!oz_isRef(term));
 
   switch (tagTypeOf(term)) {
-  case TAG_UVAR:
-    // FUT
-  case TAG_CVAR:
+  case TAG_VAR:
     return AtomVariable;
   case TAG_SMALLINT:
     return AtomInt;
@@ -1076,17 +1074,15 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
 
   DEREF(term,termPtr,tag);
   switch(tag) {
-  case TAG_UVAR:
-    // FUT
-  case TAG_CVAR:
+  case TAG_VAR:
     {
       if (!termPtr) {
         out << "<Oz_Dereferenced variable>";
         break;
       }
       const char *s = oz_varGetName(makeTaggedRef(termPtr));
-      if (oz_isCVar(term)) {
-        oz_var_printStream(out, s,tagged2CVar(term),depth);
+      if (oz_isVar(term)) {
+        oz_var_printStream(out, s,tagged2Var(term),depth);
       } else {
         out << s;
       }

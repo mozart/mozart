@@ -33,9 +33,13 @@ $module_init_fun_name = "browser_init";
                              out => ['+int'],
                              BI  => BIaddr},
 
+    'varSpace'          => { in  => ['value'],
+                             out => ['+int'],
+                             BI  => BIvarSpace},
+
     'recordCIsVarB'     => { in  => ['value'],
                              out => ['+bool'],
-                             BI  => BIisRecordCVarB},
+                             BI  => BIisRecordVarB},
 
     'chunkWidth'        => { in  => ['+chunk'],
                              out => ['+int'],

@@ -90,7 +90,7 @@ OZ_Return ProxyManagerVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr)
   if (!oz_isExtVar(rVal)) {
     // switch order
     if (isSimpleVar(rVal))  {
-      return oz_var_bind(tagged2CVar(rVal),rPtr,makeTaggedRef(lPtr));
+      return oz_var_bind(tagged2Var(rVal),rPtr,makeTaggedRef(lPtr));
     } else {
       return bindV(lPtr,makeTaggedRef(rPtr));
     }
@@ -474,11 +474,11 @@ ManagerVar* globalizeFreeVariable(TaggedRef *tPtr){
   int i = ownerTable->newOwner(oe);
   PD((GLOBALIZING,"globalize var index:%d",i));
   oe->mkVar(makeTaggedRef(tPtr));
-  OzVariable *cv = oz_getVar(tPtr);
+  OzVariable *cv = oz_getNonOptVar(tPtr);
   ManagerVar *mv = new ManagerVar(cv,i);
   mv->setSuspList(cv->unlinkSuspList());
-  *tPtr=makeTaggedCVar(mv);
-  return mv;
+  *tPtr = makeTaggedVar(mv);
+  return (mv);
 }
 
 // Returning 'NO' means we are going to proceed with 'marshal bomb';
@@ -533,7 +533,7 @@ Bool triggerVariable(TaggedRef *tPtr){
       ManagerVar *mv = oz_getManagerVar(var);
       fut = (Future *) mv->getOrigVar();
     } else {
-      fut = (Future *) tagged2CVar(var);
+      fut = (Future *) tagged2Var(var);
     }
     Assert(fut->getType() == OZ_VAR_FUTURE);
 
@@ -589,7 +589,7 @@ OZ_Term unmarshalVar(MarshalerBuffer* bs, Bool isFuture, Bool isAuto){
   PD((UNMARSHAL,"var miss: b:%d",bi));
   ProxyVar *pvar = new ProxyVar(oz_currentBoard(),bi,isFuture);
 
-  TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
+  TaggedRef val = makeTaggedRef(newTaggedVar(pvar));
   ob->changeToVar(val); // PLEASE DONT CHANGE THIS
   if(!isAuto) {
     sendRegister((BorrowEntry *)ob);}
@@ -627,7 +627,7 @@ OZ_Term unmarshalVarRobust(MarshalerBuffer* bs, Bool isFuture,
   PD((UNMARSHAL,"var miss: b:%d",bi));
   ProxyVar *pvar = new ProxyVar(oz_currentBoard(),bi,isFuture);
 
-  TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
+  TaggedRef val = makeTaggedRef(newTaggedVar(pvar));
   ob->changeToVar(val); // PLEASE DONT CHANGE THIS
   if(!isAuto) {
     sendRegister((BorrowEntry *)ob);}

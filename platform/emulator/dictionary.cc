@@ -393,8 +393,8 @@ Bool DynamicTable::srecordcheck(SRecord &sr, PairList* &pairs) {
 
 TaggedRef DynamicTable::getOpenArityList(TaggedRef* ftail, Board* home)
 {
-    TaggedRef thehead=oz_newVar(home);
-    TaggedRef thetail=thehead;
+    TaggedRef thehead = oz_newVariable(home);
+    TaggedRef thetail = thehead;
     thehead=getArityList(thetail);
     *ftail = thetail;
     return thehead;

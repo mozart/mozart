@@ -74,7 +74,7 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
       switch (between) {
       case B_BETWEEN:
         oz_wakeupThread(t);
-        DEBUG_CONSTRAIN_CVAR(("Suspendable::_wakeup_thread [t:%p s:%p c:%p]\n",
+        DEBUG_CONSTRAIN_VAR(("Suspendable::_wakeup_thread [t:%p s:%p c:%p]\n",
                               t, sb, oz_currentBoard()));
         return OK;
 
@@ -99,7 +99,7 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
           setUnify();
         setRunnable();
 
-        DEBUG_CONSTRAIN_CVAR(("Suspendable::_wakeup_prop [p:%p s:%p c:%p]\n",
+        DEBUG_CONSTRAIN_VAR(("Suspendable::_wakeup_prop [p:%p s:%p c:%p]\n",
                               SuspToPropagator(this)->getPropagator(),
                               sb, oz_currentBoard()));
 
@@ -238,7 +238,7 @@ Bool Suspendable::_wakeupLocal(Board * sb, PropCaller calledBy) {
   if (!isRunnable()) {
     setRunnable();
 
-    DEBUG_CONSTRAIN_CVAR(("Suspendable::_wakeupLocal [%p]\n",
+    DEBUG_CONSTRAIN_VAR(("Suspendable::_wakeupLocal [%p]\n",
                           SuspToPropagator(this)->getPropagator()));
 
     if (isNMO() && !oz_onToplevel()) {

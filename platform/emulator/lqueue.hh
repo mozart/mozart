@@ -28,7 +28,7 @@
 // contains an array of pointers and knows the size of this array.
 // Blocks in a queue are not necessarily all the same size: for
 // example because different kinds of queues may be merged, e.g.
-// propagator queues and cvar suspension lists.  A queue may have
+// propagator queues and var suspension lists.  A queue may have
 // holes represented by null pointers: operations on queues will
 // skip these holes.  Holes may be created by removing an element,
 // which is realized by setting to 0 the location where it appears

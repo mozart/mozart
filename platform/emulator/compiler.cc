@@ -1573,13 +1573,13 @@ OZ_BI_define(BIisCopyableProcedureRef,1,1)
 OZ_BI_define(BIisLocalDet,1,1)
 {
   oz_declareDerefIN(0,var);
-  if (oz_isUVar(var))
+  if (oz_isOptVar(var))
     OZ_RETURN(oz_false());
 
-  if (!oz_isCVar(var))
+  if (!oz_isVar(var))
     OZ_RETURN(oz_true());
 
-  OZ_RETURN(oz_bool(oz_check_var_status(tagged2CVar(var))==EVAR_STATUS_DET));
+  OZ_RETURN(oz_bool(oz_check_var_status(tagged2Var(var))==EVAR_STATUS_DET));
 } OZ_BI_end
 
 

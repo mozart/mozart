@@ -38,6 +38,7 @@
 #include "value.hh"
 #include "var_base.hh"
 #include "var_future.hh"
+#include "var_opt.hh"
 #include "os.hh"
 #include "trail.hh"
 
@@ -63,6 +64,7 @@ Board::Board()
     status(taggedVoidValue), rootVar(taggedVoidValue),
     script(taggedVoidValue)
 {
+  optVar = makeTaggedVar(new OptVar(this));
   parentAndFlags.set((void *) 0, (int) BoTag_Root);
   lpq.init();
 }
@@ -75,7 +77,8 @@ Board::Board(Board * p)
 {
   Assert(!p->isCommitted());
   status  = oz_newFuture(p);
-  rootVar = oz_newVar(this);
+  optVar = makeTaggedVar(new OptVar(this));
+  rootVar = makeTaggedRef(newTaggedOptVar(optVar));
   parentAndFlags.set((void *) p, 0);
   lpq.init();
 #ifdef CS_PROFILE
@@ -260,9 +263,9 @@ Bool extParameters(TaggedRef list, Board * solve_board) {
 
     if (oz_isVariable(h)) {
 
-      Assert(!oz_isUVar(h));
+      Assert(!oz_isOptVar(h));
 
-      Board * home = GETBOARD(tagged2CVar(h));
+      Board * home = GETBOARD(tagged2Var(h));
       Board * tmp  = solve_board;
 
       // from solve board go up to root; if you step over home
@@ -387,7 +390,7 @@ void Board::checkStability(void) {
         } else {
           trail.popMark();
           Assert(!oz_onToplevel() || trail.isEmptyChunk());
-          am.setCurrent(pb);
+          am.setCurrent(pb, pb->getOptVar());
           bindStatus(genAlt(n));
         }
         Assert(!oz_onToplevel() || trail.isEmptyChunk());
@@ -396,7 +399,7 @@ void Board::checkStability(void) {
         // succeeded
         trail.popMark();
         Assert(!oz_onToplevel() || trail.isEmptyChunk());
-        am.setCurrent(pb);
+        am.setCurrent(pb, pb->getOptVar());
 
         bindStatus(genSucceeded(getSuspCount() == 0));
         Assert(!oz_onToplevel() || trail.isEmptyChunk());
@@ -408,7 +411,7 @@ void Board::checkStability(void) {
 
     setScript(trail.unwind(this));
     Assert(!oz_onToplevel() || trail.isEmptyChunk());
-    am.setCurrent(pb);
+    am.setCurrent(pb, pb->getOptVar());
 
     if (n == 0) {
       // No runnable threads: blocked
@@ -433,7 +436,7 @@ void Board::fail(void) {
 
   trail.unwindFailed();
 
-  am.setCurrent(pb);
+  am.setCurrent(pb, pb->getOptVar());
 
   bindStatus(genFailed());
 
@@ -520,7 +523,7 @@ Bool Board::installDown(Board * frm) {
   if (!getParent()->installDown(frm))
     return NO;
 
-  am.setCurrent(this);
+  am.setCurrent(this, optVar);
   trail.pushMark();
 
   OZ_Return ret = installScript(NO);
@@ -579,10 +582,10 @@ Bool Board::install(void) {
       s->unsetMarkOne();
       s->setScript(trail.unwind(s));
       s=s->getParent();
-      am.setCurrent(s);
+      am.setCurrent(s, s->getOptVar());
     }
 
-    am.setCurrent(ancestor);
+    am.setCurrent(ancestor, ancestor->getOptVar());
 
     // Purge remaining marks
     for ( ; !s->isRoot() ; s=s->getParent()) {

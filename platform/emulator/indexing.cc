@@ -111,20 +111,20 @@ void IHashTable::addScalar(TaggedRef t, int lbl) {
 }
 
 
-Bool IHashTable::disentailed(OzVariable *cvar) {
-  switch (cvar->getType()) {
+Bool IHashTable::disentailed(OzVariable *var) {
+  switch (var->getType()) {
   case OZ_VAR_FD:
   case OZ_VAR_BOOL:
     {
       for (int i = getSize(); i--; )
         if (entries[i].val && oz_isSmallInt(entries[i].val) &&
-            oz_var_valid(cvar,entries[i].val))
+            oz_var_valid(var,entries[i].val))
           return NO;
       break;
     }
   case OZ_VAR_OF:
     {
-      OzOFVariable * ofsvar = (OzOFVariable*) cvar;
+      OzOFVariable * ofsvar = (OzOFVariable*) var;
       if (!ofsvar->disentailed(tagged2Literal(AtomCons),2))
         return NO;
       for (int i = getSize(); i--; )
@@ -144,7 +144,7 @@ Bool IHashTable::disentailed(OzVariable *cvar) {
 
   case OZ_VAR_EXT:
     // hack: an arbitrary number is check for validity
-    return !oz_var_valid(cvar,makeTaggedSmallInt(4711));
+    return !oz_var_valid(var,makeTaggedSmallInt(4711));
   default:
     return NO;
   }

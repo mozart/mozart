@@ -329,7 +329,7 @@ void BorrowEntry::gcBorrowRoot(int i) {
       gcPO();
       return;}
     PD((GC,"BT1 b:%d variable found",i));
-    if (tagged2CVar(*getPtr())->getSuspList()!=0) {
+    if (tagged2Var(*getPtr())->getSuspList()!=0) {
       gcPO();
       return;
     }

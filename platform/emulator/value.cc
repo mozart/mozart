@@ -1424,7 +1424,7 @@ TaggedRef oz_getPrintName(TaggedRef t) {
       }
       break;
     }
-  case TAG_UVAR: case TAG_CVAR: // FUT
+  case TAG_VAR:
     return oz_atom((OZ_CONST char*) oz_varGetName(ot));
   case TAG_LITERAL:
     {

@@ -35,14 +35,14 @@ inline
 OzCtVariable * tagged2GenCtVar(OZ_Term t)
 {
   GCDEBUG(t);
-  return (OzCtVariable *) tagged2CVar(t);
+  return (OzCtVariable *) tagged2Var(t);
 }
 
 inline
 Bool isGenCtVar(TaggedRef term)
 {
   GCDEBUG(term);
-  return oz_isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_CT);
+  return oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_CT);
 }
 
 inline

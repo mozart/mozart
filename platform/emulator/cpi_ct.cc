@@ -78,34 +78,34 @@ void OZ_CtVar::read(OZ_Term v)
     //
     // found constrained variable
     //
-    Assert(isCVarTag(vtag));
+    Assert(isVarTag(vtag));
     //
     setSort(var_e);
     //
-    OzCtVariable * cvar = tagged2GenCtVar(v);
+    OzCtVariable * var = tagged2GenCtVar(v);
     //
     //
     // check if this variable has already been read as encapsulated
     // parameter and if so, initilize forward reference appropriately
     //
-    OZ_CtVar * forward = (cvar->isParamEncapTagged()
-                          ? ((OzCtVariable *) cvar)->getTag()
+    OZ_CtVar * forward = (var->isParamEncapTagged()
+                          ? ((OzCtVariable *) var)->getTag()
                           : this);
     //
     if (Propagator::getRunningPropagator()->isLocal()
-        || oz_isLocalVar(cvar)) {
+        || oz_isLocalVar(var)) {
       //
       // local variable
       //
       setState(loc_e);
       //
-      if (cvar->isParamNonEncapTagged()) {
+      if (var->isParamNonEncapTagged()) {
         //
         // has already been read
         //
         // get previous
         //
-        OZ_CtVar * prev = cvar->getTag();
+        OZ_CtVar * prev = var->getTag();
         //
         ctRefConstraint(prev->ctGetConstraint());
         prev->_nb_refs += 1;
@@ -114,12 +114,12 @@ void OZ_CtVar::read(OZ_Term v)
         //
         // is being read the first time
         //
-        OZ_Ct * constr = ctRefConstraint(cvar->getConstraint());
+        OZ_Ct * constr = ctRefConstraint(var->getConstraint());
         // special treament for top-level variables
         if (oz_onToplevel()) {
           forward->ctSaveConstraint(constr);
         }
-        cvar->tagNonEncapParam(forward);
+        var->tagNonEncapParam(forward);
         forward->_nb_refs += 1;
         //
       }
@@ -129,13 +129,13 @@ void OZ_CtVar::read(OZ_Term v)
       //
       setState(glob_e);
       //
-      if (cvar->isParamNonEncapTagged()) {
+      if (var->isParamNonEncapTagged()) {
         //
         // has already been read
         //
         // get previous
         //
-        OZ_CtVar * prev = cvar->getTag();
+        OZ_CtVar * prev = var->getTag();
         ctRefConstraint(prev->ctGetConstraint());
         prev->_nb_refs += 1;
         //
@@ -143,9 +143,9 @@ void OZ_CtVar::read(OZ_Term v)
         //
         // is being read the first time
         //
-        OZ_Ct * constr = cvar->getConstraint();
+        OZ_Ct * constr = var->getConstraint();
         ctRefConstraint(forward->ctSaveConstraint(constr));
-        cvar->tagNonEncapParam(forward);
+        var->tagNonEncapParam(forward);
         forward->_nb_refs += 1;
         //
       }
@@ -175,25 +175,25 @@ void OZ_CtVar::readEncap(OZ_Term v)
     //
     // found variable
     //
-    Assert(isCVarTag(vtag));
+    Assert(isVarTag(vtag));
     //
     setState(encap_e);
     setSort(var_e);
     //
-    OzCtVariable * cvar = tagged2GenCtVar(v);
+    OzCtVariable * var = tagged2GenCtVar(v);
     //
     // check if this variable has already been read as non-encapsulated
     // parameter and if so, initilize forward reference appropriately
     //
-    OZ_CtVar * forward = (cvar->isParamNonEncapTagged()
-                          ? ((OzCtVariable *) cvar)->getTag()
+    OZ_CtVar * forward = (var->isParamNonEncapTagged()
+                          ? ((OzCtVariable *) var)->getTag()
                           : this);
     //
-    if (cvar->isParamEncapTagged()) {
+    if (var->isParamEncapTagged()) {
       //
       // has already been read
       //
-      OZ_CtVar * prev = cvar->getTag();
+      OZ_CtVar * prev = var->getTag();
       //
       ctRefConstraint(prev->ctGetConstraint());
       //
@@ -203,8 +203,8 @@ void OZ_CtVar::readEncap(OZ_Term v)
       //
       // is being read the first time
       //
-      ctRefConstraint(forward->ctSaveEncapConstraint(cvar->getConstraint()));
-      cvar->tagEncapParam(forward);
+      ctRefConstraint(forward->ctSaveEncapConstraint(var->getConstraint()));
+      var->tagEncapParam(forward);
       forward->_nb_refs += 1;
       //
     }
@@ -225,7 +225,7 @@ OZ_Boolean OZ_CtVar::tell(void)
   //
   // if the parameter is a variable it returns 1 else 0
   //
-  DEBUG_CONSTRAIN_CVAR(("OZ_CtVar::tell "));
+  DEBUG_CONSTRAIN_VAR(("OZ_CtVar::tell "));
   //
   // this parameter has become an integer by a previous tell
   //
@@ -235,11 +235,11 @@ OZ_Boolean OZ_CtVar::tell(void)
     //
   } else {
     //
-    OzCtVariable * cvar = tagged2GenCtVar(var);
+    OzCtVariable *ov = tagged2GenCtVar(var);
     //
-    int is_non_encap = cvar->isParamNonEncapTagged();
+    int is_non_encap = ov->isParamNonEncapTagged();
     //
-    cvar->untagParam();
+    ov->untagParam();
     //
     if (! is_non_encap) {
       //
@@ -275,7 +275,7 @@ OZ_Boolean OZ_CtVar::tell(void)
           //
           // wake up
           //
-          cvar->propagate(OZ_WAKEUP_ALL, pc_propagator);
+          ov->propagate(OZ_WAKEUP_ALL, pc_propagator);
           bindLocalVarToValue(varPtr, constr->toValue());
         } else {
           //
@@ -283,7 +283,7 @@ OZ_Boolean OZ_CtVar::tell(void)
           //
           // wake up
           //
-          cvar->propagate(OZ_WAKEUP_ALL, pc_propagator);
+          ov->propagate(OZ_WAKEUP_ALL, pc_propagator);
           bindGlobalVarToValue(varPtr, constr->toValue());
         }
         goto oz_false;
@@ -293,7 +293,7 @@ OZ_Boolean OZ_CtVar::tell(void)
         //
         // wake up ...
         OZ_CtWakeUp wakeup_descr = ctGetWakeUpDescriptor();
-        cvar->propagate(wakeup_descr, pc_propagator);
+        ov->propagate(wakeup_descr, pc_propagator);
         //
         if (isState(glob_e)) {
           //
@@ -311,14 +311,14 @@ OZ_Boolean OZ_CtVar::tell(void)
   //
   // variable is determined
   //
-  DEBUG_CONSTRAIN_CVAR(("FALSE\n"));
+  DEBUG_CONSTRAIN_VAR(("FALSE\n"));
   return OZ_FALSE;
   //
  oz_true:
   //
   // variable is still undetermined
   //
-  DEBUG_CONSTRAIN_CVAR(("TRUE\n"));
+  DEBUG_CONSTRAIN_VAR(("TRUE\n"));
   return OZ_TRUE;
 }
 
@@ -328,11 +328,11 @@ void OZ_CtVar::fail(void)
     return;
   } else {
     //
-    OzCtVariable * cvar = tagged2GenCtVar(var);
+    OzCtVariable *ov = tagged2GenCtVar(var);
     //
-    int is_non_encap = cvar->isParamNonEncapTagged();
+    int is_non_encap = ov->isParamNonEncapTagged();
     //
-    cvar->untagParam();
+    ov->untagParam();
     //
     if (! is_non_encap) {
       //

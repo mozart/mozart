@@ -187,8 +187,7 @@ public:
   // space ourselves;
   void put(OZ_Term term) {
     Assert(tagTypeOf(term) != TAG_GCMARK);
-    Assert(tagTypeOf(term) != TAG_UVAR);
-    Assert(tagTypeOf(term) != TAG_CVAR);
+    Assert(tagTypeOf(term) != TAG_VAR);
     checkConsistency();
     *tos++ = ToPointer(term);
   }
@@ -601,7 +600,7 @@ public:
 protected:
   //
   // Note that co-references are discovered not among all nodes, but
-  // only among: literals, cvar"s, ltuples, srecords, and all oz
+  // only among: literals, var"s, ltuples, srecords, and all oz
   // const"s;
   //
   // OZ_Term"s are dereferenced;
@@ -620,8 +619,7 @@ protected:
   // anything else:
   virtual void processNoGood(OZ_Term resTerm, Bool trail) = 0;
   //
-  virtual void processUVar(OZ_Term uv, OZ_Term *uvarTerm) = 0;
-  virtual void processCVar(OZ_Term cv, OZ_Term *cvarTerm) = 0;
+  virtual void processVar(OZ_Term cv, OZ_Term *varTerm) = 0;
 
   //
   virtual void processRepetition(OZ_Term t, OZ_Term *tPtr,
@@ -1636,7 +1634,7 @@ public:
     Assert(gname);
     putTask(BT_chunkMemo, gname, n);
     //
-    set(oz_newVar(oz_rootBoard()), n);
+    set(oz_newVariable(oz_rootBoard()), n);
   }
 
   //
@@ -1698,10 +1696,10 @@ public:
     // fill up the ref table: since we don't have the real object yet,
     // create a dummy object in the heap (that will be later
     // overwritten with a ref pointing to the object). The dummy
-    // object is a uvar since (a) it should be unique (do the
+    // object is an optvar since (a) it should be unique (do the
     // builder/unmarshaler(s) ever deref??), and (b) it has to be
     // GC"able;
-    set(oz_newVar(oz_rootBoard()), n);
+    set(oz_newVariable(oz_rootBoard()), n);
   }
 
   //

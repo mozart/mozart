@@ -55,8 +55,8 @@ Bool isCacMarkedNamer(OZ_Term t)
 {
   OZ_Term t_deref = oz_deref(t);
   return oz_isRef(t) && (oz_isGcMark(t_deref) ||
-                         (oz_isCVar(t_deref) &&
-                          tagged2CVar(t_deref)->cacIsMarked()));
+                         (oz_isVar(t_deref) &&
+                          tagged2Var(t_deref)->cacIsMarked()));
 }
 
 void GCollectIndexNamer(OZ_Term &t)
@@ -67,8 +67,8 @@ void GCollectIndexNamer(OZ_Term &t)
 OZ_Term getCacForward(OZ_Term t)
 {
   OZ_Term t_deref = oz_deref(t);
-  return (oz_isCVar(t_deref)
-          ? makeTaggedRef(tagged2CVar(t_deref)->cacGetFwd())
+  return (oz_isVar(t_deref)
+          ? makeTaggedRef(tagged2Var(t_deref)->cacGetFwd())
           : (OZ_Term) tagged2GcUnmarked(t));
 }
 

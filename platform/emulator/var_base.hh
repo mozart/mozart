@@ -38,11 +38,11 @@
 
 #if defined(DEBUG_CONSTRAINT_UNIFY)
 
-#define DEBUG_CONSTRAIN_CVAR(ARGS) printf ARGS; fflush(stdout);
+#define DEBUG_CONSTRAIN_VAR(ARGS) printf ARGS; fflush(stdout);
 
 #else
 
-#define DEBUG_CONSTRAIN_CVAR(ARGS)
+#define DEBUG_CONSTRAIN_VAR(ARGS)
 
 #endif
 
@@ -56,23 +56,60 @@
 //#define DEBUG_TELLCONSTRAINTS
 
 // NOTE:
-//   this order is used in the case of CVAR=CVAR unification
+//   this order is used in the case of VAR=VAR unification
+//
+// kost@ : the following description (who compiled it??!), the
+// 'cmpVar(...)'  with its usage, and the table used before (just
+// below) are contradictory!!
+// -----
 //   e.g. SimpleVariable are bound prefered
 // partial order required:
 //  Simple<<Future<<Distributed<<everything
 //  Bool<<FD
-// see int cmpCVar(OzVariable *, OzVariable *)
+// see int cmpVar(OzVariable *, OzVariable *)
+//
+//  enum TypeOfVariable {
+//    OZ_VAR_FD      = 0,
+//    OZ_VAR_BOOL    = 1,
+//    OZ_VAR_FS      = 2,
+//    OZ_VAR_CT      = 3,
+//    OZ_VAR_EXT     = 4,
+//    OZ_VAR_SIMPLE  = 5,
+//    OZ_VAR_FUTURE  = 6,
+//    OZ_VAR_OF      = 7
+//  };
+// -----
+
+//
+// kost@ : Now, we keep the 'cmpVar(...)'  definition, so: variables
+// with GREATER types are bound to variables with SMALLER types. Here
+// we go:
 
 enum TypeOfVariable {
+  // group 0:  constraint stuff, both built-in and extensible.
+  //           Cannot be moved from this position since Tobias (ab)uses
+  //           it also for additional tagging.
   OZ_VAR_FD      = 0,
   OZ_VAR_BOOL    = 1,
   OZ_VAR_FS      = 2,
   OZ_VAR_CT      = 3,
-  OZ_VAR_EXT     = 4,
-  OZ_VAR_SIMPLE  = 5,
-  OZ_VAR_FUTURE  = 6,
-  OZ_VAR_OF      = 7
+  // group 0a: constraints, but without a need for additional tagging;
+  OZ_VAR_OF      = 4,
+  // group 1: futures: anything but constrained variables should be
+  //          bound to them. Note that a constrained variable cannot
+  //          be bound to a future since that means that the future
+  //          has to be converted to a FD variable, which is not
+  //          possible.
+  OZ_VAR_FUTURE  = 5,
+  // group 2:  extensions, notably the distributed variables;
+  OZ_VAR_EXT     = 6,
+  // group 3:  simple variables;
+  OZ_VAR_SIMPLE  = 7,
+  // group 4:  optimized variables are bound to anything else anyway
+  //           whenever possible (since they are optimized);
+  OZ_VAR_OPT     = 8
 };
+
 
 #ifdef DEBUG_CHECK
 #define OZ_VAR_INVALID ((TypeOfVariable) -1)
@@ -82,7 +119,7 @@ enum TypeOfVariable {
 #define REIFIED_FLAG 2
 
 #define SVAR_UNUSED    0x1
-#define CVAR_TRAILED   0x2
+#define VAR_TRAILED   0x2
 #define SVAR_FLAGSMASK 0x3
 
 #define DISPOSE_SUSPLIST(SL)                    \
@@ -153,13 +190,13 @@ public:
   }
 
   Bool isTrailed(void) {
-    return homeAndFlags&CVAR_TRAILED;
+    return homeAndFlags&VAR_TRAILED;
   }
   void setTrailed(void) {
-    homeAndFlags |= CVAR_TRAILED;
+    homeAndFlags |= VAR_TRAILED;
   }
   void unsetTrailed(void) {
-    homeAndFlags &= ~CVAR_TRAILED;
+    homeAndFlags &= ~VAR_TRAILED;
   }
 
   void disposeS(void) {
@@ -292,7 +329,10 @@ public:
   //
   // end of tagging ...
   //
+
+  //
   void addSuspSVar(Suspendable * susp) {
+    Assert(getType() != OZ_VAR_OPT);
     suspList = new SuspList(susp, suspList);
     if (!oz_onToplevel())
       getBoardInternal()->checkExtSuspension(susp);
@@ -313,8 +353,8 @@ public:
 
 /* ---------------------------------------------------------------------- */
 
-// mm2: not inlined
-OzVariable *oz_getVar(TaggedRef *v);
+//
+OzVariable *oz_getNonOptVar(TaggedRef *v);
 
 Bool oz_var_valid(OzVariable*,TaggedRef);
 OZ_Return oz_var_unify(OzVariable*,TaggedRef*,TaggedRef*);
@@ -333,33 +373,33 @@ OZ_Return oz_var_cast(TaggedRef *&, Board *, TypeOfVariable);
 inline
 Bool oz_var_hasSuspAt(TaggedRef v, Board * b) {
   Assert(oz_isVariable(v) && !oz_isRef(v));
-  return oz_isUVar(v) ? NO : tagged2CVar(v)->getSuspList()->hasSuspAt(b);
+  return oz_isOptVar(v) ? NO : tagged2Var(v)->getSuspList()->hasSuspAt(b);
 }
 
 inline
 Bool isFuture(TaggedRef term)
 {
   GCDEBUG(term);
-  return oz_isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_FUTURE);
+  return oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_FUTURE);
 }
 
 inline
 Future *tagged2Future(TaggedRef t) {
   Assert(isFuture(t));
-  return (Future *) tagged2CVar(t);
+  return (Future *) tagged2Var(t);
 }
 
 inline
 Bool isSimpleVar(TaggedRef term)
 {
   GCDEBUG(term);
-  return oz_isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_SIMPLE);
+  return oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_SIMPLE);
 }
 
 inline
 SimpleVar *tagged2SimpleVar(TaggedRef t) {
   Assert(isSimpleVar(t));
-  return (SimpleVar *) tagged2CVar(t);
+  return (SimpleVar *) tagged2Var(t);
 }
 
 /* -------------------------------------------------------------------------
@@ -394,16 +434,18 @@ VarStatus oz_check_var_status(OzVariable *cv)
   switch (cv->getType()) {
   case OZ_VAR_FD:
   case OZ_VAR_BOOL:
-  case OZ_VAR_OF:
   case OZ_VAR_FS:
   case OZ_VAR_CT:
+  case OZ_VAR_OF:
     return EVAR_STATUS_KINDED;
+  case OZ_VAR_EXT:
+    return _var_check_status(cv);
   case OZ_VAR_SIMPLE:
     return EVAR_STATUS_FREE;
   case OZ_VAR_FUTURE:
     return EVAR_STATUS_FUTURE;
-  case OZ_VAR_EXT:
-    return _var_check_status(cv);
+  case OZ_VAR_OPT:
+    return EVAR_STATUS_FREE;
   ExhaustiveSwitch();
   }
   return EVAR_STATUS_UNKNOWN;
@@ -413,20 +455,20 @@ VarStatus oz_check_var_status(OzVariable *cv)
 inline
 int oz_isFree(TaggedRef r)
 {
-  return oz_isUVar(r) ||
-    (oz_isCVar(r) && oz_check_var_status(tagged2CVar(r))==EVAR_STATUS_FREE);
+  return (oz_isVar(r) &&
+          oz_check_var_status(tagged2Var(r)) == EVAR_STATUS_FREE);
 }
 
 inline
 int oz_isKinded(TaggedRef r)
 {
-  return oz_isCVar(r) && oz_check_var_status(tagged2CVar(r))==EVAR_STATUS_KINDED;
+  return oz_isVar(r) && oz_check_var_status(tagged2Var(r))==EVAR_STATUS_KINDED;
 }
 
 inline
 int oz_isFuture(TaggedRef r)
 {
-  return oz_isCVar(r) && oz_check_var_status(tagged2CVar(r))==EVAR_STATUS_FUTURE;
+  return oz_isVar(r) && oz_check_var_status(tagged2Var(r))==EVAR_STATUS_FUTURE;
 }
 
 inline

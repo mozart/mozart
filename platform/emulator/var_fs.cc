@@ -57,17 +57,17 @@ void OzFSVariable::dispose(void) {
 
 OZ_Return OzFSVariable::bind(OZ_Term * vptr, OZ_Term term)
 {
-  DEBUG_CONSTRAIN_CVAR(("bindFS "));
+  DEBUG_CONSTRAIN_VAR(("bindFS "));
 
   Assert(!oz_isRef(term));
 
   if (!oz_isFSetValue(term)) {
-    DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
+    DEBUG_CONSTRAIN_VAR(("FAILED\n"));
     return FAILED;
   }
   if (! ((FSetConstraint *) &_fset)->
       valid(* (FSetValue *) tagged2FSetValue(term))) {
-    DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
+    DEBUG_CONSTRAIN_VAR(("FAILED\n"));
     return FALSE;
   }
 
@@ -82,23 +82,23 @@ OZ_Return OzFSVariable::bind(OZ_Term * vptr, OZ_Term term)
     bindGlobalVarToValue(vptr, term);
   }
 
-  DEBUG_CONSTRAIN_CVAR(("PROCEED\n"));
+  DEBUG_CONSTRAIN_VAR(("PROCEED\n"));
   return PROCEED;
 }
 
 OZ_Return OzFSVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
 {
-  DEBUG_CONSTRAIN_CVAR(("unifyFS "));
+  DEBUG_CONSTRAIN_VAR(("unifyFS "));
   //
   OZ_Term right_var       = * right_varptr;
-  OzVariable * right_cvar = tagged2CVar(right_var);
-  OzFSVariable * right_fsvar    = (OzFSVariable *) right_cvar;
+  OzVariable *right_ov = tagged2Var(right_var);
+  OzFSVariable * right_fsvar    = (OzFSVariable *) right_ov;
   //
   Bool left_var_is_local  = oz_isLocalVar(this);
   Bool right_var_is_local = oz_isLocalVar(right_fsvar);
   //
   if (!left_var_is_local && right_var_is_local) {
-    DEBUG_CONSTRAIN_CVAR(("global-local (swapping)"));
+    DEBUG_CONSTRAIN_VAR(("global-local (swapping)"));
     //
     // left variable is global and right variable is local
     //
@@ -106,7 +106,7 @@ OZ_Return OzFSVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
     return unify(right_varptr, left_varptr);
   }
   //
-  if (right_cvar->getType() != OZ_VAR_FS) {
+  if (right_ov->getType() != OZ_VAR_FS) {
     goto failed;
   }
   //
@@ -123,7 +123,7 @@ OZ_Return OzFSVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
       goto failed;
     }
     if (left_var_is_local && right_var_is_local) {
-      DEBUG_CONSTRAIN_CVAR(("local-local"));
+      DEBUG_CONSTRAIN_VAR(("local-local"));
       //
       // left and right variable are local
       //
@@ -167,7 +167,7 @@ OZ_Return OzFSVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
         right_fsvar->dispose();
       }
     } else if (left_var_is_local && !right_var_is_local ) {
-      DEBUG_CONSTRAIN_CVAR(("local-global"));
+      DEBUG_CONSTRAIN_VAR(("local-global"));
       //
       // left variable is local and right variable is global
       //
@@ -198,7 +198,7 @@ OZ_Return OzFSVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
         dispose();
       }
     } else if (!left_var_is_local && !right_var_is_local) {
-      DEBUG_CONSTRAIN_CVAR(("global-global"));
+      DEBUG_CONSTRAIN_VAR(("global-global"));
       //
       // left variable and right variable are global
       //
@@ -226,17 +226,17 @@ OZ_Return OzFSVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
     }
   }
   //
-  DEBUG_CONSTRAIN_CVAR(("SUCCEEDED\n"));
+  DEBUG_CONSTRAIN_VAR(("SUCCEEDED\n"));
   return TRUE;
   //
  failed:
-  DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
+  DEBUG_CONSTRAIN_VAR(("FAILED\n"));
   return FAILED;
 }
 
 OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
 {
-  DEBUG_CONSTRAIN_CVAR(("tellBasicConstraintFS "));
+  DEBUG_CONSTRAIN_VAR(("tellBasicConstraintFS "));
   //
   DEREF(v, vptr, vtag);
   //
@@ -255,9 +255,9 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
       FSetValue * set_value  = new FSetValue(*(FSetConstraint *) fs);
       OZ_Term set_value_term = makeTaggedFSetValue(set_value);
 
-      if (oz_isLocalVariable(vptr)) {
-        if (!oz_isUVar(v)) {
-          oz_checkSuspensionListProp(tagged2CVar(v));
+      if (oz_isLocalVariable(v)) {
+        if (!oz_isOptVar(v)) {
+          oz_checkSuspensionListProp(tagged2Var(v));
         }
         bindLocalVarToValue(vptr, set_value_term);
       } else {
@@ -272,11 +272,11 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
       fs ? new OzFSVariable(*fs, oz_currentBoard())
       : new OzFSVariable(oz_currentBoard());
 
-    OZ_Term *  tfsv = newTaggedCVar(fsv);
+    OZ_Term *  tfsv = newTaggedVar(fsv);
 
-    if (oz_isLocalVariable(vptr)) {
-      if (!oz_isUVar(v)) {
-        oz_checkSuspensionListProp(tagged2CVar(v));
+    if (oz_isLocalVariable(v)) {
+      if (!oz_isOptVar(v)) {
+        oz_checkSuspensionListProp(tagged2Var(v));
       }
       bindLocalVar(vptr, tfsv);
     } else {
@@ -352,11 +352,11 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
   }
 
 failed:
-  DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
+  DEBUG_CONSTRAIN_VAR(("FAILED\n"));
   return FAILED;
 
 proceed:
-  DEBUG_CONSTRAIN_CVAR(("PROCEED\n"));
+  DEBUG_CONSTRAIN_VAR(("PROCEED\n"));
   return PROCEED;
 }
 

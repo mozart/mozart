@@ -68,11 +68,11 @@ public:
         return (OK);
       }
 
-    case TAG_CVAR:
+    case TAG_VAR:
       {
-        OzVariable *cvar = tagged2CVar(cl);
-        Assert(cvar->getType() == OZ_VAR_EXT);
-        ExtVar *evar = (ExtVar *) cvar;
+        OzVariable *var = tagged2Var(cl);
+        Assert(var->getType() == OZ_VAR_EXT);
+        ExtVar *evar = (ExtVar *) var;
         Assert(evar->getIdV() == OZ_EVAR_LAZY);
         LazyVar *lvar = (LazyVar *) evar;
         Assert(lvar->getLazyType() == LT_CLASS);
@@ -95,11 +95,11 @@ public:
         return (((ObjectClass *) ct)->getGName());
       }
 
-    case TAG_CVAR:
+    case TAG_VAR:
       {
-        OzVariable *cvar = tagged2CVar(cl);
-        Assert(cvar->getType() == OZ_VAR_EXT);
-        ExtVar *evar = (ExtVar *) cvar;
+        OzVariable *var = tagged2Var(cl);
+        Assert(var->getType() == OZ_VAR_EXT);
+        ExtVar *evar = (ExtVar *) var;
         Assert(evar->getIdV() == OZ_EVAR_LAZY);
         LazyVar *lvar = (LazyVar *) evar;
         Assert(lvar->getLazyType() == LT_CLASS);

@@ -46,8 +46,6 @@
 
 #include <string.h>
 
-// more includes at end!
-
 #ifdef __FCC_VERSION
 #undef HAVE_STRDUP
 #endif

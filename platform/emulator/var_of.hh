@@ -153,7 +153,7 @@ public:
     // (future optimization: a second suspList only waiting on features)
     if (prev==makeTaggedNULL()) {
       // propagate(suspList, pc_propagator);
-      addFeatOFSSuspensionList(makeTaggedCVar(this),suspList,feature,FALSE);
+      addFeatOFSSuspensionList(makeTaggedVar(this),suspList,feature,FALSE);
       return TRUE;
     } else {
       return FALSE;
@@ -238,16 +238,16 @@ public:
 /**** Low-level utilities ****/
 
 inline
-Bool cvarIsOFSvar(TaggedRef term)
+Bool varIsOFSvar(TaggedRef term)
 {
-    return (tagged2CVar(term)->getType() == OZ_VAR_OF);
+    return (tagged2Var(term)->getType() == OZ_VAR_OF);
 }
 
 inline
 Bool isGenOFSVar(TaggedRef term)
 {
     GCDEBUG(term);
-    return oz_isCVar(term) && cvarIsOFSvar(term);
+    return oz_isVar(term) && varIsOFSvar(term);
 }
 
 inline
@@ -258,7 +258,7 @@ OzOFVariable* tagged2GenOFSVar(TaggedRef term)
     if(isGenOFSVar(term) == NO)
         OZ_error("ofs variable expected");
 #endif
-    return (OzOFVariable*) tagged2CVar(term);
+    return (OzOFVariable*) tagged2Var(term);
 }
 
 inline

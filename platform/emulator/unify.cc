@@ -41,37 +41,12 @@
 
 #ifdef DEBUG_CHECK
 static
-Board *varHome(TaggedRef val) {
-  if (oz_isUVar(val)) {
-    return tagged2VarHome(val)->derefBoard();
-  } else {
-    return GETBOARD(tagged2CVar(val));
-  }
-}
-static
 Bool checkHome(TaggedRef *vPtr) {
   TaggedRef val = oz_deref(*vPtr);
-
-  return !oz_isVariable(val) ||
-    oz_isBelow(oz_currentBoard(),varHome(val));
+  return (!oz_isVariable(val) ||
+          oz_isBelow(oz_currentBoard(), GETBOARD(tagged2Var(val))));
 }
 #endif
-
-/*
- * oz_bindUVar: bind an opt. variable to a value
- *   - trail global vars
- *   - redirect REF
- */
-inline
-void oz_bindUVar(TaggedRef *varPtr, TaggedRef term)
-{
-  Assert(oz_isUVar(*varPtr));
-  if (!oz_isLocalUVar(varPtr)) {
-    Assert(am.inEqEq() || checkHome(varPtr));
-    trail.pushBind(varPtr);
-  }
-  doBind(varPtr,term);
-}
 
 /*
  * oz_bindVar: bind a variable to a value
@@ -83,7 +58,7 @@ void oz_bindUVar(TaggedRef *varPtr, TaggedRef term)
  */
 void oz_bindGlobalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
 {
-  Assert(tagged2CVar(*varPtr)==ov);
+  Assert(tagged2Var(*varPtr)==ov);
   Assert(!oz_isLocalVar(ov));
   Assert(am.inEqEq() || checkHome(varPtr));
   oz_checkSuspensionList(ov, pc_std_unif);
@@ -93,21 +68,25 @@ void oz_bindGlobalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
 
 void oz_bindLocalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
 {
-  Assert(tagged2CVar(*varPtr)==ov);
+  Assert(tagged2Var(*varPtr)==ov);
   Assert(oz_isLocalVar(ov));
   Assert(!am.inEqEq());
   oz_checkSuspensionList(ov, pc_std_unif);
   DEREF(term,termPtr,_);
-  if (oz_isCVar(term)) {
-    OzVariable *sv=tagged2CVar(term);
+  if (oz_isVar(term)) {
+    OzVariable *sv=tagged2Var(term);
     Assert(sv!=ov);
     ov->relinkSuspListTo(sv);
     term=makeTaggedRef(termPtr);
-  } else if (oz_isUVar(term)){
-    // mm2: problems with fsp_monitorIn, monitorArity,...
-    // Assert(ov->isEmptySuspList());
-    term=makeTaggedRef(termPtr);
   }
+  // kost@ : cut away so far;
+  /*
+    else if (oz_isUVar(term)){
+      // mm2: problems with fsp_monitorIn, monitorArity,...
+      // Assert(ov->isEmptySuspList());
+      term = makeTaggedRef(termPtr);
+    }
+  */
   oz_var_dispose(ov);
   doBind(varPtr,term);
 }
@@ -115,12 +94,12 @@ void oz_bindLocalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
 void oz_bind_global(TaggedRef var, TaggedRef term)
 {
   DEREF(var,varPtr,_);
-  if (oz_isCVar(var)) {
-    OzVariable *ov=tagged2CVar(var);
+  if (!oz_isOptVar(var)) {
+    OzVariable *ov=tagged2Var(var);
     oz_checkSuspensionList(ov, pc_all);
     DEREF(term,termPtr,_);
-    if (oz_isCVar(term)) {
-      OzVariable *sv=tagged2CVar(term);
+    if (oz_isVar(term)) {
+      OzVariable *sv=tagged2Var(term);
       Assert(sv!=ov);
       ov->relinkSuspListTo(sv);
       term=makeTaggedRef(termPtr);
@@ -128,8 +107,6 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
       Assert(ov->isEmptySuspList());
     }
     oz_var_dispose(ov);
-  } else {
-    Assert(oz_isUVar(var));
   }
   doBind(varPtr,term);
 }
@@ -142,12 +119,7 @@ inline
 Board *getVarBoard(TaggedRef var)
 {
   CHECK_ISVAR(var);
-
-  if (oz_isUVar(var)) {
-    return tagged2VarHome(var);
-  } else {
-    return tagged2CVar(var)->getBoardInternal();
-  }
+  return tagged2Var(var)->getBoardInternal();
 }
 
 inline
@@ -158,13 +130,10 @@ Bool isMoreLocal(TaggedRef var1, TaggedRef var2)
   return oz_isBelow(board1,board2);
 }
 
-inline
-int cmpCVar(OzVariable *v1, OzVariable *v2)
-{
-  TypeOfVariable t1 = v1->getType();
-  TypeOfVariable t2 = v2->getType();
-  return t1-t2;
-}
+//
+// kost@ : Variables with GREATER types are bound to variables with
+// SMALLER types;
+#define CMPVAR(v1, v2)          (v1->getType() - v2->getType())
 
 const StackEntry mark=(StackEntry)-1;
 class UnifyStack : public Stack {
@@ -211,7 +180,7 @@ loop:
   _DEREF(term2,termPtr2,tag2);
 
   // identical terms ?
-  if (oz_isUVar(term1) ? termPtr1 == termPtr2 : term1 == term2) {
+  if (oz_isVar(term1) ? termPtr1 == termPtr2 : term1 == term2) {
     goto next;
   }
 
@@ -236,44 +205,43 @@ loop:
  /*************/
  var_nonvar:
 
-  if (oz_isCVar(term1)) {
-    int res = oz_var_bind(tagged2CVar(term1),termPtr1, term2);
-    if (res == PROCEED)
+  if (oz_isOptVar(term1)) {
+    doBind(termPtr1, term2);
+    goto next;
+  } else {
+    int res = oz_var_bind(tagged2Var(term1),termPtr1, term2);
+    if (res == PROCEED) {
       goto next;
-    result = res;
-    goto fail;
+    } else {
+      result = res;
+      goto fail;
+    }
   }
-
-  Assert(oz_isUVar(term1));
-  oz_bindUVar(termPtr1, term2);
-  goto next;
-
+  Assert(0);
 
 
  /*************/
  var_var:
 
   /*
-   * Specially optimized: local uvars
+   * Specially optimized: local simple vars without suspensions
    */
 
-  if (oz_isUVar(term1) && oz_isLocalUVar(termPtr1)) {
+  if (oz_isOptVar(term1)) {
     // Both have the same home, order them according to age
-    if (term1 == term2 && heapNewer(termPtr2,termPtr1)) {
-      oz_bindUVar(termPtr2, makeTaggedRef(termPtr1));
-      goto next;
-    }
-    oz_bindUVar(termPtr1, makeTaggedRef(termPtr2));
+    if (term1 == term2 && heapNewer(termPtr2, termPtr1))
+      doBind(termPtr2, makeTaggedRef(termPtr1));
+    else
+      doBind(termPtr1, makeTaggedRef(termPtr2));
     goto next;
   }
 
-  if (oz_isUVar(term2) && oz_isLocalUVar(termPtr2)) {
+  if (oz_isOptVar(term2)) {
     // Both have the same home, order them according to age
-    if (term1 == term2 && heapNewer(termPtr1,termPtr2)) {
-      oz_bindUVar(termPtr1, makeTaggedRef(termPtr2));
-      goto next;
-    }
-    oz_bindUVar(termPtr2, makeTaggedRef(termPtr1));
+    if (term1 == term2 && heapNewer(termPtr1, termPtr2))
+      doBind(termPtr1, makeTaggedRef(termPtr2));
+    else
+      doBind(termPtr2, makeTaggedRef(termPtr1));
     goto next;
   }
 
@@ -288,41 +256,21 @@ loop:
     Board * tb1 = getVarBoard(term1)->derefBoard();
     Board * tb2 = getVarBoard(term2)->derefBoard();
 
-    if (oz_isBelow(tb2,tb1)) {
+    if (oz_isBelow(tb2, tb1)) {
       // t2 should be bound to t1
-      Swap(term1,term2,TaggedRef);
-      Swap(termPtr1,termPtr2,TaggedRef *);
-      Swap(tb1,tb2,Board *);
-    }
-
-    if (oz_isUVar(term1)) {
-      // Both have the same home, order them according to age
-      if (term1 == term2 && heapNewer(termPtr2,termPtr1)) {
-        oz_bindUVar(termPtr2, makeTaggedRef(termPtr1));
-        goto next;
-      }
-      oz_bindUVar(termPtr1, makeTaggedRef(termPtr2));
-      goto next;
-    }
-
-    Assert(oz_isCVar(term1));
-
-    if (oz_isUVar(term2)) {
-      *termPtr2 = term2 = makeTaggedCVar(oz_newSimpleVar(tb2));
-    }
-
-    Assert(oz_isCVar(term1) && oz_isCVar(term2));
-
-    /* preferred binding of perdio vars */
-    if (tb1 == tb2 && cmpCVar(tagged2CVar(term1),tagged2CVar(term2))>0) {
-      Swap(term1,term2,TaggedRef);
-      Swap(termPtr1,termPtr2,TaggedRef*);
-      Swap(tb1,tb2,Board *);
+      Swap(term1, term2, TaggedRef);
+      Swap(termPtr1, termPtr2, TaggedRef*);
+      Swap(tb1, tb2, Board*);
+    } else if (tb1 == tb2 &&
+               CMPVAR(tagged2Var(term1), tagged2Var(term2)) < 0) {
+      Swap(term1, term2, TaggedRef);
+      Swap(termPtr1, termPtr2, TaggedRef*);
+      Swap(tb1, tb2, Board *);
     }
 
     // Make the variable to which the binding is done fit!
 
-    int res = oz_var_cast(termPtr2, tb2, tagged2CVar(term1)->getType());
+    int res = oz_var_cast(termPtr2, tb2, tagged2Var(term1)->getType());
 
     // termPtr2 is changed!
 
@@ -331,7 +279,7 @@ loop:
       goto fail;
     }
 
-    res = oz_var_unify(tagged2CVar(*termPtr1),termPtr1, termPtr2);
+    res = oz_var_unify(tagged2Var(*termPtr1), termPtr1, termPtr2);
 
     if (res == PROCEED)
       goto next;

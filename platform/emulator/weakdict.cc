@@ -187,11 +187,15 @@ OZ_BI_define(weakdict_put,3,0)
  OZ_declareTerm(2,v);
  TaggedRef w = v;
  DEREF(w,w_ptr,w_tag);
- if (isUVarTag(w_tag)) {
-   // we must bind the UVAR to a CVAR (simple)
-   OZ_Return r = oz_unify(makeTaggedRef(newTaggedCVar(oz_newSimpleVar(tagged2VarHome(*w_ptr)))),
-                          v);
-   if (r!=PROCEED) return r;
+ if (oz_isOptVar(w)) {
+   // we must bind the UVAR to a VAR (simple)
+   // kost@ : didn't get exactly "why", but now that means that
+   // OptVar"s are to be eliminated:
+   OzVariable *wv = tagged2Var(w);
+   Board *wh = wv->getBoardInternal();
+   OZ_Return r =
+     oz_unify(makeTaggedRef(newTaggedVar(oz_newSimpleVar(wh))), v);
+   if (r != PROCEED) return r;
  }
  d->put(k,v);
  return PROCEED;

@@ -46,7 +46,7 @@ void Trail::pushBind(TaggedRef *varPtr) {
 }
 
 void Trail::pushVariable(TaggedRef * varPtr) {
-  OzVariable * v = tagged2CVar(*varPtr);
+  OzVariable * v = tagged2Var(*varPtr);
 
   if (v->isTrailed())
     return;
@@ -75,8 +75,8 @@ void Trail::pushMark(void) {
       goto exit;
     case Te_Variable: {
       TaggedRef * varPtr = (TaggedRef *) *(top-2);
-      Assert(oz_isCVar(*varPtr));
-      OzVariable * v = tagged2CVar(*varPtr);
+      Assert(oz_isVar(*varPtr));
+      OzVariable * v = tagged2Var(*varPtr);
       Assert(v->isTrailed());
       v->unsetTrailed();
       break;
@@ -103,7 +103,7 @@ void Trail::test(void) {
       goto exit;
     case Te_Variable: {
       TaggedRef * varPtr = (TaggedRef *) *(top-2);
-      Assert(oz_isCVar(*varPtr));
+      Assert(oz_isVar(*varPtr));
       break;
     }
     default:
@@ -152,8 +152,8 @@ void Trail::popMark(void) {
       return;
     case Te_Variable: {
       TaggedRef * varPtr = (TaggedRef *) *(top-2);
-      Assert(oz_isCVar(*varPtr));
-      OzVariable * v = tagged2CVar(*varPtr);
+      Assert(oz_isVar(*varPtr));
+      OzVariable * v = tagged2Var(*varPtr);
       Assert(!v->isTrailed());
       v->setTrailed();
       break;
@@ -231,13 +231,13 @@ TaggedRef Trail::unwind(Board * b) {
         OzVariable * copy;
         popVariable(varPtr, copy);
 
-        Assert(oz_isCVar(*varPtr));
+        Assert(oz_isVar(*varPtr));
 
-        oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
+        oz_var_restoreFromCopy(tagged2Var(*varPtr), copy);
 
-        Assert(tagged2CVar(*varPtr)->isTrailed());
+        Assert(tagged2Var(*varPtr)->isTrailed());
 
-        tagged2CVar(*varPtr)->unsetTrailed();
+        tagged2Var(*varPtr)->unsetTrailed();
 
         if (hasNoRunnable && !oz_var_hasSuspAt(*varPtr,b)) {
           AssureThread;
@@ -245,7 +245,7 @@ TaggedRef Trail::unwind(Board * b) {
         }
 
         s = oz_cons(oz_cons(makeTaggedRef(varPtr),
-                            makeTaggedRef(newTaggedCVar(copy))),
+                            makeTaggedRef(newTaggedVar(copy))),
                     s);
 
         break;
@@ -283,13 +283,13 @@ void Trail::unwindFailed(void) {
       OzVariable * copy;
       popVariable(varPtr, copy);
 
-      Assert(oz_isCVar(*varPtr));
+      Assert(oz_isVar(*varPtr));
 
-      oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
+      oz_var_restoreFromCopy(tagged2Var(*varPtr), copy);
 
-      Assert(tagged2CVar(*varPtr)->isTrailed());
+      Assert(tagged2Var(*varPtr)->isTrailed());
 
-      tagged2CVar(*varPtr)->unsetTrailed();
+      tagged2Var(*varPtr)->unsetTrailed();
 
       break;
     }
@@ -340,13 +340,13 @@ void Trail::unwindEqEq(void) {
       OzVariable * copy;
       popVariable(varPtr, copy);
 
-      Assert(oz_isCVar(*varPtr));
+      Assert(oz_isVar(*varPtr));
 
-      oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
+      oz_var_restoreFromCopy(tagged2Var(*varPtr), copy);
 
-      Assert(tagged2CVar(*varPtr)->isTrailed());
+      Assert(tagged2Var(*varPtr)->isTrailed());
 
-      tagged2CVar(*varPtr)->unsetTrailed();
+      tagged2Var(*varPtr)->unsetTrailed();
 
       am.addSuspendVarList(varPtr);
 

@@ -60,8 +60,8 @@ OZ_BI_define(BIconstraints,1,1)
   oz_declareDerefIN(0,in);
 
   int len = 0;
-  if (oz_isCVar(in)) {
-    len=oz_var_getSuspListLength(tagged2CVar(in));
+  if (oz_isVar(in)) {
+    len=oz_var_getSuspListLength(tagged2Var(in));
   }
   OZ_RETURN_INT(len);
 } OZ_BI_end

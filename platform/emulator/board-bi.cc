@@ -72,7 +72,7 @@ public:
   BaseDistributor::BaseDistributor(Board * bb, const int n) {
     offset = 0;
     num    = n;
-    var    = oz_newVar(bb);
+    var    = oz_newVariable(bb);
   }
 
   void dispose(void) {
@@ -488,7 +488,7 @@ OZ_BI_define(BIchooseSpace, 1, 1) {
   Board * bb = oz_currentBoard();
 
   if (bb->isRoot()) {
-    OZ_out(0) = oz_newVar(bb);
+    OZ_out(0) = oz_newVariable(bb);
   } else if (bb->getDistributor()) {
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   } else {
@@ -515,7 +515,7 @@ OZ_BI_define(BIwaitStableSpace, 0, 0) {
   args[0] = OZ_out(0);
 
   if (bb->isRoot()) {
-    args[0] = oz_newVar(bb);
+    args[0] = oz_newVariable(bb);
   } else if (bb->getDistributor()) {
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   } else {

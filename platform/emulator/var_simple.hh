@@ -34,8 +34,6 @@
 #include "var_base.hh"
 
 class SimpleVar: public OzVariable {
-private:
-  // OZ_Term future;
 public:
   SimpleVar(Board *bb) : OzVariable(OZ_VAR_SIMPLE,bb) {}
 

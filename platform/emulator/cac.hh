@@ -83,7 +83,7 @@ enum TypeOfPtr {
   PTR_LTUPLE         =  0,  // 0000
   PTR_SRECORD        =  1,  // 0001
   PTR_BOARD          =  2,  // 0010
-  PTR_CVAR           =  3,  // 0011
+  PTR_VAR           =  3,  // 0011
   PTR_CONSTTERM      =  4,  // 0100
   PTR_EXTENSION      =  5,  // 0101
   PTR_SUSPLIST       =  6,  // 0110

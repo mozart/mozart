@@ -44,6 +44,7 @@
 #include "var_ct.hh"
 #include "var_future.hh"
 #include "var_simple.hh"
+#include "var_opt.hh"
 #include "var_ext.hh"
 #include "thr_int.hh"
 #include "debug.hh"
@@ -412,9 +413,16 @@ Board * Board::_cacBoardDo(void) {
   Board * ret;
   cacReallocStatic(Board,bb,ret,sizeof(Board));
 
-  cacStack.push(ret,PTR_BOARD);
+  // kost@ : the OptVar template has to be already there since it is
+  // needed when collecting OptVar"s;
+  ret->optVar = makeTaggedVar(new OptVar(ret));
+#ifdef G_COLLECT
+  DebugCode(optVar = taggedInvalidVar);
+#endif
 
-  STOREFWDFIELD(bb,ret);
+  cacStack.push(ret, PTR_BOARD);
+
+  STOREFWDFIELD(bb, ret);
 
   return ret;
 }
@@ -562,23 +570,28 @@ OzVariable * OzVariable::_cacVarInline(void) {
   OzVariable * to;
 
   switch (getType()) {
-  case OZ_VAR_EXT:
-    to = ((ExtVar *) this)->_cacV();
-    cacStack.push(to, PTR_CVAR);
-    break;
+  case OZ_VAR_OPT:
+    cacReallocStatic(OzVariable, this, to, sizeof(OptVar));
+    Assert(to->suspList == (SuspList *) 0);
+    to->setHome(bb);
+    return (to);
   case OZ_VAR_SIMPLE:
     cacReallocStatic(OzVariable,this,to,sizeof(SimpleVar));
     break;
+  case OZ_VAR_EXT:
+    to = ((ExtVar *) this)->_cacV();
+    cacStack.push(to, PTR_VAR);
+    break;
   case OZ_VAR_FUTURE:
     cacReallocStatic(OzVariable,this,to,sizeof(Future));
-    cacStack.push(to, PTR_CVAR);
+    cacStack.push(to, PTR_VAR);
     break;
   case OZ_VAR_BOOL:
     cacReallocStatic(OzVariable,this,to,sizeof(OzBoolVariable));
     break;
   case OZ_VAR_OF:
     cacReallocStatic(OzVariable,this,to,sizeof(OzOFVariable));
-    cacStack.push(to, PTR_CVAR);
+    cacStack.push(to, PTR_VAR);
     break;
   case OZ_VAR_FD:
     cacReallocStatic(OzVariable,this,to,sizeof(OzFDVariable));
@@ -591,15 +604,14 @@ OzVariable * OzVariable::_cacVarInline(void) {
   case OZ_VAR_CT:
     cacReallocStatic(OzVariable,this,to,sizeof(OzCtVariable));
     ((OzCtVariable*) to)->_cac(bb);
-    cacStack.push(to, PTR_CVAR);
+    cacStack.push(to, PTR_VAR);
     break;
   }
 
   to->setHome(bb);
   cacStack.push(&(to->suspList), PTR_SUSPLIST);
 
-  return to;
-
+  return (to);
 }
 
 
@@ -853,8 +865,8 @@ Bool isGCMarkedTerm(OZ_Term t)
     return ((*(int32*) tagged2Extension(t)->__getSpaceRefInternal())&1);
   case TAG_CONST:
     return (tagged2Const(t)->cacIsMarked());
-  case TAG_CVAR:
-    return tagged2CVar(t)->cacIsMarked();
+  case TAG_VAR:
+    return tagged2Var(t)->cacIsMarked();
 
   case TAG_GCMARK:
     return OK;
@@ -933,8 +945,8 @@ void WeakDictionary::weakGC()
  * After collection has finished, update variable references
  *
  */
-void VarFix::_cacFix(void) {
-
+void VarFix::_cacFix(void)
+{
   if (isEmpty())
     return;
 
@@ -945,21 +957,27 @@ void VarFix::_cacFix(void) {
 
     Assert(oz_isRef(*to));
 
-    TaggedRef * aux_ptr = tagged2Ref(*to);
-    TaggedRef   aux     = *aux_ptr;
+    TaggedRef *aux_ptr = tagged2Ref(*to);
+    TaggedRef  aux     = *aux_ptr;
+    TaggedRef *to_ptr;
 
-    TaggedRef * to_ptr  =
-      (tagTypeOf(aux) == TAG_UVAR) ?
-      newTaggedUVar(tagged2VarHome(aux)->derefBoard()->cacGetFwd()) :
-      (TaggedRef *) tagged2GcUnmarked(aux);
+    if (tagTypeOf(aux) == TAG_VAR) {
+      // not yet collected.
+      OzVariable *ov = tagged2Var(aux);
+      Assert(ov->getType() == OZ_VAR_OPT);
+      Board *bb = ov->getBoardInternal()->derefBoard()->cacGetFwd();
+      to_ptr = newTaggedOptVar(bb->getOptVar());
+    } else {
+      Assert(tagTypeOf(aux) == TAG_GCMARK);
+      // already there (either due to another "var fix" entry, or was
+      // reached directly);
+      to_ptr = (TaggedRef *) tagged2GcUnmarked(aux);
+    }
 
-    Assert(tagTypeOf(aux) == TAG_UVAR || tagTypeOf(aux) == TAG_GCMARK);
-
+    //
     *to = makeTaggedRef(to_ptr);
     STOREFWDMARK(aux_ptr, to_ptr);
-
   } while (!isEmpty());
-
 }
 
 
@@ -1741,7 +1759,7 @@ void CacStack::_cacRecurse(void) {
     case PTR_BOARD:
       ((Board *) ptr)->_cacRecurse();
       break;
-    case PTR_CVAR:
+    case PTR_VAR:
       ((OzVariable *) ptr)->_cacVarRecurse();
       break;
     case PTR_CONSTTERM:
@@ -1779,8 +1797,8 @@ void CacStack::_cacRecurse(void) {
  */
 
 
-void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
-
+void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
+{
   register TaggedRef * f = frm - 1;
   register TaggedRef * t = to - 1;
 
@@ -1808,9 +1826,9 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
     case TAG_SRECORD:    goto DO_SRECORD;
     case TAG_FLOAT:      goto DO_FLOAT;
     case TAG_CONST:      goto DO_CONST;
-    case TAG_UNUSED:     goto DO_UNUSED;
-    case TAG_UVAR:       goto DO_D_UVAR;
-    case TAG_CVAR:       goto DO_D_CVAR;
+    case TAG_UNUSED_UVAR:     goto DO_UNUSED;
+    case TAG_UNUSED_SVAR:     goto DO_UNUSED;
+    case TAG_VAR:       goto DO_D_VAR;
     }
 
   DO_DEREF:
@@ -1831,9 +1849,9 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
     case TAG_SRECORD:    goto DO_SRECORD;
     case TAG_FLOAT:      goto DO_FLOAT;
     case TAG_CONST:      goto DO_CONST;
-    case TAG_UNUSED:     goto DO_UNUSED;
-    case TAG_UVAR:       goto DO_I_UVAR;
-    case TAG_CVAR:       goto DO_I_CVAR;
+    case TAG_UNUSED_UVAR:     goto DO_UNUSED;
+    case TAG_UNUSED_SVAR:     goto DO_UNUSED;
+    case TAG_VAR:       goto DO_I_VAR;
     }
 
   DO_GCMARK:
@@ -1880,9 +1898,17 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
      Assert(0);
      continue;
 
-  DO_I_UVAR:
-     {
-       Board * bb = tagged2VarHome(aux);
+     OzVariable * cv;
+     TaggedRef  * var_ptr;
+
+  DO_I_VAR:
+     cv = tagged2Var(aux);
+
+     // Note: the optimized variables are checked first, before
+     // "cacIsMarked"!
+     if (cv->getType() == OZ_VAR_OPT) {
+       Board *bb = cv->getBoardInternal();
+       // 'bb' is the "from space" board;
 
        if (NEEDSCOPYING(bb)) {
          bb = bb->_cacBoard();
@@ -1891,34 +1917,12 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
        } else {
          *t = makeTaggedRef(aux_ptr);
        }
+
+       continue;
      }
-     continue;
-
-  DO_D_UVAR:
-     {
-       Board * bb = tagged2VarHome(aux);
-
-       if (NEEDSCOPYING(bb)) {
-         bb = bb->_cacBoard();
-         Assert(bb);
-         *t = makeTaggedUVar(bb);
-         STOREFWDMARK(f, t);
-       } else {
-         *f = makeTaggedRef(t);
-         *t = aux;
-         STOREFWDMARK(f, t);
-       }
-     }
-     continue;
-
-     OzVariable * cv;
-     TaggedRef  * var_ptr;
-
-  DO_I_CVAR:
-     cv = tagged2CVar(aux);
 
      if (cv->cacIsMarked()) {
-       Assert(oz_isCVar(*(cv->cacGetFwd())));
+       Assert(oz_isVar(*(cv->cacGetFwd())));
        *t = makeTaggedRef(cv->cacGetFwd());
        continue;
      }
@@ -1931,16 +1935,38 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
      var_ptr = (TaggedRef *) heapMalloc(sizeof(TaggedRef));
      *t = makeTaggedRef(var_ptr);
 
-  DO_CVAR:
-     *var_ptr = makeTaggedCVar(cv->_cacVarInline());
+  DO_VAR:
+     *var_ptr = makeTaggedVar(cv->_cacVarInline());
      cv->_cacMark(var_ptr);
      continue;
 
-  DO_D_CVAR:
-     cv = tagged2CVar(aux);
+  DO_D_VAR:
+     cv = tagged2Var(aux);
+
+     if (cv->getType() == OZ_VAR_OPT) {
+       Board *bb = cv->getBoardInternal();
+       // 'bb' is the "from space" board;
+
+       if (NEEDSCOPYING(bb)) {
+         bb = bb->_cacBoard();
+         // 'bb' can be unscanned yet (not "cacRecurse"d, in our
+         // terminology). Note that the OptVar in it is already
+         // collected (but not necessarily scanned);
+         Assert(bb);
+         *t = bb->getOptVar();
+         Assert(*t != taggedInvalidVar);
+         STOREFWDMARK(f, t);
+       } else {
+         *f = makeTaggedRef(t);
+         *t = aux;
+         STOREFWDMARK(f, t);
+       }
+
+       continue;
+     }
 
      if (cv->cacIsMarked()) {
-       Assert(oz_isCVar(*(cv->cacGetFwd())));
+       Assert(oz_isVar(*(cv->cacGetFwd())));
        *t = makeTaggedRef(cv->cacGetFwd());
        continue;
      }
@@ -1958,12 +1984,11 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
      }
 
      var_ptr = t;
-     goto DO_CVAR;
-
+     goto DO_VAR;
   }
-
 }
 
+//
 Suspendable * Suspendable::_cacSuspendable(void) {
   return (this == NULL) ? (Suspendable *) NULL : _cacSuspendableInline();
 }

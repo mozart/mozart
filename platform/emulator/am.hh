@@ -236,7 +236,7 @@ public:
 
 private:
   Bool _inEqEq;
-  TaggedRef _currentUVarPrototype; // opt: cache
+  TaggedRef _currentOptVar;     // (former uvar"s;)
 
   TaggedRef _suspendVarList;
   CallList *preparedCalls;      // for BI_REPLACEBICALL
@@ -358,16 +358,20 @@ public:
     }
   }
 
-  int currentUVarPrototypeEq(TaggedRef t) {
-    return _currentUVarPrototype == t;
+  //
+  // kost@ : "optimized var" is a local var without suspensions (a
+  // former local uvar). Faked non-locality for '==' undoes this
+  // optimization (so, full-fledged binding & unification are used).
+  // An OptVar body is constant and is shared between all OptVar"s in
+  // a space. Note that an OptVar from a merged space is not
+  // recognized as such; instead, a regular binding routine is used.
+  int isOptVar(TaggedRef t) {
+    return (t == _currentOptVar && !_inEqEq);
   }
-  TaggedRef currentUVarPrototype() {
-    Assert(tagged2VarHome(_currentUVarPrototype)==_currentBoard);
-#if defined(DEBUG_NO_UVAR)
-    return makeTaggedRef(newTaggedUVar(_currentUVarPrototype));
-#else
-    return _currentUVarPrototype;
-#endif
+
+  TaggedRef getCurrentOptVar() {
+    // kost@ : cannot inline tests of the _currentOptVar;
+    return (_currentOptVar);
   }
 
   TaggedRef emptySuspendVarList(void) {
@@ -443,9 +447,11 @@ public:
   Bool isPropagatorLocation(void)    { return propLocation; }
   void setPropagatorLocation(Bool x) { propLocation = x; }
 
-  void setCurrent(Board *c) {
+  // kost@ : it takes the corresponding OptVar in order to be able to
+  // inline it;
+  void setCurrent(Board *c, TaggedRef ov) {
     _currentBoard         = c;
-    _currentUVarPrototype = makeTaggedUVar(c);
+    _currentOptVar        = ov;
     _currentBoardIsRoot   = (c == _rootBoard);
   }
   void setCurrentThread(Thread * t) {
@@ -518,6 +524,7 @@ inline Board *oz_rootBoard() { return am.rootBoard(); }
 inline Board *oz_currentBoard() { return am.currentBoard(); }
 inline Bool oz_isRootBoard(Board *bb) { return oz_rootBoard() == bb; }
 inline Bool oz_isCurrentBoard(Board *bb) { return oz_currentBoard() == bb; }
+inline Bool oz_isOptVar(TaggedRef t) { return (am.isOptVar(t)); }
 inline int  oz_onToplevel() { return am.isCurrentRoot(); }
 inline Thread *oz_currentThread() { return am.currentThread(); }
 inline OZ_Term oz_newName()
@@ -532,8 +539,6 @@ inline OZ_Term oz_newCell(OZ_Term val)
 {
   return makeTaggedConst(new CellLocal(oz_currentBoard(),val));
 }
-inline
-OZ_Term oz_newVariable() { return oz_newVar(oz_currentBoard()); }
 
 #else
 
@@ -541,6 +546,7 @@ OZ_Term oz_newVariable() { return oz_newVar(oz_currentBoard()); }
 #define oz_currentBoard()     (am.currentBoard())
 #define oz_isRootBoard(bb)    (oz_rootBoard()    == (bb))
 #define oz_isCurrentBoard(bb) (oz_currentBoard() == (bb))
+#define oz_isOptVar(t)        (am.isOptVar(t))
 #define oz_onToplevel()       (am.isCurrentRoot())
 #define oz_currentThread()    (am.currentThread())
 
@@ -548,17 +554,22 @@ OZ_Term oz_newVariable() { return oz_newVar(oz_currentBoard()); }
 #define oz_newPort(val) \
   makeTaggedConst(new PortWithStream(oz_currentBoard(), (val)))
 #define oz_newCell(val) makeTaggedConst(new CellLocal(oz_currentBoard(),(val)))
-#define oz_newVariable()         oz_newVar(oz_currentBoard())
 #endif
 
-
+//
+// The 'make new var in a space' is not inlined since it uses the
+// 'Board' class;
 inline
-TaggedRef oz_newVariableOPT()
+TaggedRef oz_newVariable()
 {
   TaggedRef *ret = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
-  *ret = am.currentUVarPrototype();
-  return makeTaggedRef(ret);
+  *ret = am.getCurrentOptVar(); // cached in AM;
+  return (makeTaggedRef(ret));
 }
+
+TaggedRef oz_newVariable(Board *b);
+
+
 
 /* -----------------------------------------------------------------------
  * Debugger

@@ -57,9 +57,7 @@ OZ_BI_define(BIchunkWidth, 1,1)
   DEREF(ch, chPtr, chTag);
 
   switch(chTag) {
-  case TAG_UVAR:
-    // FUT
-  case TAG_CVAR:
+  case TAG_VAR:
     oz_suspendOn(makeTaggedRef(chPtr));
 
   case TAG_CONST:
@@ -80,7 +78,7 @@ OZ_BI_define(BIchunkWidth, 1,1)
 } OZ_BI_end
 
 
-OZ_BI_define(BIisRecordCVarB,1,1)
+OZ_BI_define(BIisRecordVarB,1,1)
 {
   TaggedRef t = OZ_in(0);
   DEREF(t, tPtr, tag);
@@ -89,12 +87,10 @@ OZ_BI_define(BIisRecordCVarB,1,1)
   case TAG_LITERAL:
   case TAG_SRECORD:
     break;
-  case TAG_CVAR:
-    if (tagged2CVar(t)->getType()!=OZ_VAR_OF)
+  case TAG_VAR:
+    if (tagged2Var(t)->getType()!=OZ_VAR_OF)
       OZ_RETURN(oz_false());
     break;
-  case TAG_UVAR:
-    OZ_RETURN(oz_false());
   default:
     OZ_RETURN(oz_false());
   }
@@ -125,7 +121,7 @@ OZ_BI_define(BIgetsBoundB, 2, 0)
     args[0] = OZ_in(1);
 
     Thread *thr =
-      (Thread *) OZ_makeSuspendedThread (BI_GetsBoundDummy, args, 1);
+      (Thread *) OZ_makeSuspendedThread(BI_GetsBoundDummy, args, 1);
     OZ_Return ret = oz_var_addSusp(vPtr, thr);
     if (ret == PROCEED) oz_wakeupThread(thr);
     if (ret != SUSPEND) return ret;
@@ -142,9 +138,7 @@ OZ_BI_define(BIchunkArityBrowser,1,1)
   DEREF(ch, chPtr, chTag);
 
   switch(chTag) {
-  case TAG_UVAR:
-    // FUT
-  case TAG_CVAR:
+  case TAG_VAR:
     oz_suspendOn(makeTaggedRef(chPtr));
 
   case TAG_CONST:
@@ -165,12 +159,29 @@ OZ_BI_define(BIchunkArityBrowser,1,1)
 } OZ_BI_end
 
 
-
 OZ_BI_define(BIgetTermSize,3,1) {
   oz_declareIN(0,t);
   oz_declareIntIN(1,depth);
   oz_declareIntIN(2,width);
   OZ_RETURN_INT(OZ_termGetSize(t, depth, width));
+} OZ_BI_end
+
+
+OZ_BI_define(BIvarSpace,1,1)
+{
+  oz_declareIN(0,v);
+  void *addr;
+
+  DEREF(v,vPtr,vTag);
+
+  if (isVariableTag(vTag)) {
+    OzVariable *ov = tagged2Var(v);
+    addr = ov->getBoardInternal();
+  } else {
+    addr = 0;
+  }
+
+  OZ_RETURN_INT(ToInt32(addr));
 } OZ_BI_end
 
 /*
