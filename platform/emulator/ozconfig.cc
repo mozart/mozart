@@ -82,6 +82,8 @@ void ConfigData::init() {
   bwlIterationsPerMS    = 0;
   bwlMSs                = DEFAULT_BWL_MS;
 
+  pickleCells           = DEFAULT_PICKLE_CELLS;
+
 #ifdef DEBUG_CHECK
   dumpCore              = 0;
 #else
