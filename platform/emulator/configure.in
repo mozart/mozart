@@ -557,9 +557,14 @@ dnl *****************************************************************
 AC_MSG_CHECKING(for --enable-tmphack)
 AC_ARG_ENABLE(tmphack,
   [--enable-tmphack=<host>   link and compile in /tmp (default=no)])
-if test -n "${enable_tmphack}" && test $enable_tmphack != no
+if test -n "${enable_tmphack}"
 then
-    oz_tmphack_host=$enable_tmphack
+    if test $enable_tmphack = no
+    then
+	oz_tmphack_host=
+    else
+	oz_tmphack_host=$enable_tmphack
+    fi
 fi
 
 if test -n "$oz_tmphack_host"
