@@ -286,23 +286,23 @@ void dealWithContinue(Tertiary* t,PendThread* pd){
   case Co_Cell:{
     switch(pd->exKind){
     case EXCHANGE:{
-      pd->thread->pushCall(BI_exchangeCell,makeTaggedTert(t),
+      pd->thread->pushCall(BI_exchangeCell,makeTaggedConst(t),
                                 pd->nw, pd->old);
       return;}
     case ASSIGN:{
-      pd->thread->pushCall(BI_assign,makeTaggedTert(t),pd->old,pd->nw);
+      pd->thread->pushCall(BI_assign,makeTaggedConst(t),pd->old,pd->nw);
       return;}
     case AT:{
-      pd->thread->pushCall(BI_atRedo,makeTaggedTert(t),pd->old,pd->nw);
+      pd->thread->pushCall(BI_atRedo,makeTaggedConst(t),pd->old,pd->nw);
       return;}
     default: Assert(0);}}
   case Co_Lock:{
     // mm2: no builtin lockLock available
-    // pd->thread->pushCall(BI_lockLock,makeTaggedTert(t));
+    // pd->thread->pushCall(BI_lockLock,makeTaggedConst(t));
     Assert(0);
     return;}
   case Co_Port:
-    pd->thread->pushCall(BI_send, makeTaggedTert(t), pd->old);
+    pd->thread->pushCall(BI_send, makeTaggedConst(t), pd->old);
   default:
     Assert(0);
   }}
@@ -357,7 +357,7 @@ Bool entityProblemPerWatcher(Tertiary*t, Watcher* w,Bool &hit){
     watcherRemoved(w,t);
     return TRUE;}
   if(ec==ENTITY_NORMAL) return FALSE;
-  w->invokeWatcher(makeTaggedTert(t),ec);
+  w->invokeWatcher(makeTaggedConst(t),ec);
   return TRUE;
 }
 
@@ -402,7 +402,7 @@ if(!isFired()){
   Assert(!isInjector());
   TaggedRef lis;
   if(isWatcherEligible(t)){
-    lis=listifyWatcherCond(ec,tagged2Tert(t));}
+    lis=listifyWatcherCond(ec, (Tertiary *) tagged2Const(t));}
   else{
     lis=listifyWatcherCond(ec);}
   Thread *tt = oz_newThreadToplevel();
@@ -421,7 +421,7 @@ void Watcher::invokeInjector(Tertiary* t,EntityCond ec,
   Assert(!isFired());
   Assert(th!=NULL);
   TaggedRef listified=listifyWatcherCond(ec,t);
-  th->pushCall(proc,makeTaggedTert(t),listified,Op);
+  th->pushCall(proc,makeTaggedConst(t),listified,Op);
   ControlVarResume(controlvar);
 }
 
@@ -1075,7 +1075,7 @@ Bool distHandlerInstallImpl(unsigned short kind,unsigned short ec,
   if(!oz_isVariable(oz_deref(entity))){
     entity=oz_deref(entity);
     if(!isWatcherEligible(entity)) return TRUE;
-    Tertiary* tert = tagged2Tert(entity);
+    Tertiary * tert = (Tertiary *) tagged2Const(entity);
     return installWatcher(tert,ec,proc,th,kind);}
 
   DEREF(entity,vs_ptr,vs_tag);
@@ -1090,7 +1090,7 @@ Bool distHandlerDeInstallImpl(unsigned short kind,unsigned short ec,
   if(!oz_isVariable(oz_deref(entity))){
     entity=oz_deref(entity);
     if(!isWatcherEligible(entity)) return TRUE;
-    Tertiary* tert = tagged2Tert(entity);
+    Tertiary* tert = (Tertiary *) tagged2Const(entity);
     return deinstallWatcher(tert,ec,proc,th,kind);}
 
   DEREF(entity,vs_ptr,vs_tag);
@@ -1379,6 +1379,6 @@ Bool tertiaryFail(Tertiary *t,EntityCond &ec,TaggedRef &proc){
 OZ_Return tertiaryFailHandle(Tertiary* c,TaggedRef proc,EntityCond ec,
                               TaggedRef op){
   Assert(oz_currentThread()!=NULL);
-  am.prepareCall(proc,makeTaggedTert(c),
+  am.prepareCall(proc,makeTaggedConst(c),
                  listifyWatcherCond(ec,c),op);
   return BI_REPLACEBICALL;}

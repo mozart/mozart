@@ -152,44 +152,44 @@ void ozd_printStream(OZ_Term val, ostream &stream, int depth)
   OZ_Term ref=oz_deref(val);
 
   switch(tagTypeOf(ref)) {
-  case UVAR:
+  case TAG_UVAR:
     stream << oz_varGetName(val);
     stream << "<UV @" << &ref << ">";
     break;
 
     //FUT
 
-  case CVAR:
+  case TAG_CVAR:
     stream << oz_varGetName(val);
     tagged2CVar(ref)->printStream(stream, depth);
     break;
-  case SRECORD:
+  case TAG_SRECORD:
     tagged2SRecord(ref)->printStream(stream,depth);
     break;
-  case LTUPLE:
+  case TAG_LTUPLE:
     tagged2LTuple(ref)->printStream(stream,depth);
     break;
-  case LITERAL:
+  case TAG_LITERAL:
     tagged2Literal(ref)->printStream(stream,depth);
     break;
-  case OZFLOAT:
+  case TAG_FLOAT:
     tagged2Float(ref)->printStream(stream,depth);
     break;
-  case SMALLINT:
+  case TAG_SMALLINT:
     stream << "<SmallInt @" << &ref << ": " << toC(ref) << ">";
     break;
-  case EXT:
+  case TAG_EXT:
     {
       int n;
-      char * s = OZ_virtualStringToC(oz_tagged2Extension(ref)->printV(depth),
+      char * s = OZ_virtualStringToC(tagged2Extension(ref)->printV(depth),
                                      &n);
       stream << s;
       break;
     }
-  case OZCONST:
+  case TAG_CONST:
     tagged2Const(ref)->printStream(stream,depth);
     break;
-  case FSETVALUE:
+  case TAG_FSETVALUE:
     ((FSetValue *) tagged2FSetValue(ref))->print(stream,depth);
     break;
   default:
@@ -228,7 +228,7 @@ void ozd_printLongStream(OZ_Term val, ostream &stream, int depth, int offset)
   }
 
   switch(tagTypeOf(ref)) {
-  case UVAR:
+  case TAG_UVAR:
     stream << indent(offset) << oz_varGetName(val);
     stream << indent(offset) << "<UV @" << &ref << ">" << endl;
     stream << indent(offset) << "Home: ";
@@ -239,38 +239,38 @@ void ozd_printLongStream(OZ_Term val, ostream &stream, int depth, int offset)
 
     // FUT
 
-  case CVAR:
+  case TAG_CVAR:
     stream << indent(offset) << oz_varGetName(val);
     tagged2CVar(ref)->printLongStream(stream, depth, offset);
     break;
-  case SRECORD:
+  case TAG_SRECORD:
     tagged2SRecord(ref)->printLongStream(stream,depth,offset);
     break;
-  case LTUPLE:
+  case TAG_LTUPLE:
     tagged2LTuple(ref)->printLongStream(stream,depth,offset);
     break;
-  case LITERAL:
+  case TAG_LITERAL:
     tagged2Literal(ref)->printLongStream(stream,depth,offset);
     break;
-  case OZFLOAT:
+  case TAG_FLOAT:
     tagged2Float(ref)->printLongStream(stream,depth,offset);
     break;
-  case SMALLINT:
+  case TAG_SMALLINT:
     stream << indent(offset);
     ozd_printStream(val,stream,depth);
     stream << endl;
     break;
-  case EXT:
+  case TAG_EXT:
     {
       int n;
-      char* s = OZ_virtualStringToC(oz_tagged2Extension(ref)->printLongV(depth,offset),&n);
+      char* s = OZ_virtualStringToC(tagged2Extension(ref)->printLongV(depth,offset),&n);
       stream << s;
       break;
     }
-  case OZCONST:
+  case TAG_CONST:
     tagged2Const(ref)->printLongStream(stream,depth,offset);
     break;
-  case FSETVALUE:
+  case TAG_FSETVALUE:
     ((FSetValue *) tagged2FSetValue(ref))
       ->print(stream,depth);
     break;

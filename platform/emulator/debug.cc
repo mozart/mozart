@@ -49,7 +49,7 @@ TaggedRef OzDebug::toRecord(OZ_Term label, Thread *thread, int frameId) {
   } else {
     pairlist = oz_cons(OZ_pair2(AtomFrameID,OZ_int(frameId)),pairlist);
   }
-  int iline = smallIntValue(getNumberArg(PC+2));
+  int iline = tagged2SmallInt(getNumberArg(PC+2));
   pairlist =
     oz_cons(OZ_pair2(AtomThr,oz_thread(thread)),
         oz_cons(OZ_pair2(AtomFile,getTaggedArg(PC+1)),

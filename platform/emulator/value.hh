@@ -146,17 +146,17 @@ public:
   }
 
   Bool cacIsMarked(void) {
-    return GCISMARKED(homeOrGName);
+    return oz_isGcMark(homeOrGName);
   }
   void cacMark(Name * fwd) {
-    homeOrGName = GCMARK(fwd);
+    homeOrGName = makeTaggedGcMark(fwd);
   }
   int32 ** cacGetMarkField(void) {
     return (int32**) &homeOrGName;
   }
   Name * cacGetFwd(void) {
     Assert(cacIsMarked());
-    return (Name *) GCUNMARK(homeOrGName);
+    return (Name *) tagged2GcUnmarked(homeOrGName);
   }
 
   Name * gCollectName(void);
@@ -279,57 +279,7 @@ extern "C" {
  * SmallInt
  *=================================================================== */
 
-/* ----------------------------------------------------------------------
-   SmallInts represented as follows
-   Gxx...xxTTTT
-
-   G = GC bit, T = tag bits, x = value bits (left shifted value)
-   ----------------------------------------------------------------------
-
-   Search for string "INTDEP" to see procedures that depend on it !!
-
-*/
-
-
-#if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__)
-#define OzMaxInt 134217727
-#define OzMinInt ~134217728
-#else
-const int OzMaxInt = INT_MAX>>tagSize;
-const int OzMinInt = -OzMaxInt;
-#endif
-
-const unsigned long OzMaxUnsignedLong = ~0;
-
-const TaggedRef TaggedOzMaxInt = makeTaggedSmallInt(OzMaxInt);
-const TaggedRef TaggedOzMinInt = makeTaggedSmallInt(OzMinInt);
-
-inline
-TaggedRef newSmallInt(int val)
-{
-  Assert(val >= OzMinInt && val <= OzMaxInt);
-
-  return makeTaggedSmallInt((int32)val);
-}
-
-
-/* The C++ standard does not specify whether shifting right negative values
- * means shift logical or shift arithmetical. So we test what this C++ compiler
- * does.
- */
-inline
-int smallIntValue(TaggedRef t)
-{
-  Assert(oz_isSmallInt(t));
-  int help = (int) t;
-
-  if (1||(-1>>1) == -1) {  /* -1>>1  means SRA? */
-    return (help>>tagSize);
-  } else {
-    return (help >= 0) ? help >> tagSize
-                       : ~(~help >> tagSize);
-  }
-}
+#ifdef DEBUG_CHECK
 
 inline
 Bool smallIntLess(TaggedRef A, TaggedRef B)
@@ -352,7 +302,7 @@ Bool smallIntLE(TaggedRef A, TaggedRef B)
 inline
 unsigned int smallIntHash(TaggedRef n)
 {
-  return ((int)n)>>tagSize;
+  return ((int)n)>>TAG_SIZE;
 }
 
 
@@ -363,12 +313,22 @@ Bool smallIntEq(TaggedRef a, TaggedRef b)
   return (a == b);
 }
 
+#else
+
+#define smallIntLess(A,B) (((int) (A)) < ((int) (B)))
+#define smallIntLE(A,B)   (((int) (A)) <= ((int) (B)))
+#define smallIntHash(A)   (((int) (A)) >> TAG_SIZE)
+#define smallIntEq(A,B)   ((A)==(B))
+
+#endif
+
 inline
 Bool smallIntCmp(TaggedRef a, TaggedRef b)
 {
   Assert(oz_isSmallInt(a) && oz_isSmallInt(b));
   return smallIntLess(a,b) ? -1 : (smallIntEq(a,b) ? 0 : 1);
 }
+
 
 /*===================================================================
  * Float
@@ -439,13 +399,13 @@ public:
   }
 
   int cacIsMarked(void) {
-    return GCISMARKED(args[0]);
+    return oz_isGcMark(args[0]);
   }
   void cacMark(LTuple * fwd) {
-    args[0] = GCMARK(fwd);
+    args[0] = makeTaggedGcMark(fwd);
   }
   LTuple * cacGetFwd(void) {
-    return (LTuple *) GCUNMARK(args[0]);
+    return (LTuple *) tagged2GcUnmarked(args[0]);
   }
   int32 ** cacGetMarkField(void) {
     return (int32**) &args[0];
@@ -695,6 +655,8 @@ public:
  * BigInt
  *=================================================================== */
 
+const unsigned long OzMaxUnsignedLong = ~0;
+
 BigInt *newBigInt();
 BigInt *newBigInt(long i);
 BigInt *newBigInt(unsigned long i);
@@ -780,8 +742,8 @@ public:
   }
 
   /* make an 'unsigned long' if <Big> fits into it, else return 0,~0 */
-  unsigned long getUnsignedLong()
-  {
+  unsigned long getUnsignedLong(void) {
+
     if (mpz_cmp_ui(&value,OzMaxUnsignedLong) > 0) {
       return OzMaxUnsignedLong;
     } else if (mpz_cmp_si(&value,0) < 0) {
@@ -870,7 +832,7 @@ inline
 int oz_intToC(TaggedRef term)
 {
   if (oz_isSmallInt(term)) {
-    return smallIntValue(term);
+    return tagged2SmallInt(term);
   }
 
   return tagged2BigInt(term)->getInt();
@@ -880,7 +842,7 @@ inline
 long oz_intToCL(TaggedRef term)
 {
   if (oz_isSmallInt(term)) {
-    return (long) smallIntValue(term);
+    return (long) tagged2SmallInt(term);
   }
 
   return tagged2BigInt(term)->getLong();
@@ -911,9 +873,9 @@ Bool oz_numberEq(TaggedRef a, TaggedRef b)
   TypeOfTerm tag = tagTypeOf(a);
   if (tag != tagTypeOf(b)) return NO;
   switch(tag) {
-  case OZFLOAT:  return floatEq(a,b);
-  case SMALLINT: return smallIntEq(a,b);
-  case OZCONST:  return bigIntEq(a,b);
+  case TAG_FLOAT:    return floatEq(a,b);
+  case TAG_SMALLINT: return smallIntEq(a,b);
+  case TAG_CONST:    return bigIntEq(a,b);
   default:       return NO;
   }
 }
@@ -1032,35 +994,34 @@ int featureEq(TaggedRef a,TaggedRef b)
  *        1: a>b
  */
 inline
-int featureCmp(TaggedRef a,TaggedRef b)
-{
+int featureCmp(TaggedRef a, TaggedRef b) {
   CHECK_FEATURE(a);
   CHECK_FEATURE(b);
   TypeOfTerm tagA = tagTypeOf(a);
   TypeOfTerm tagB = tagTypeOf(b);
   if (tagA != tagB) {
-    if (tagA==SMALLINT) {
-      if (tagB==LITERAL)
+    if (isSmallIntTag(tagA)) {
+      if (isLiteralTag(tagB))
         return -1;
 
-      Assert(tagB==OZCONST);
-      return -tagged2BigInt(b)->cmp(smallIntValue(a));
+      Assert(isConstTag(tagB));
+      return -tagged2BigInt(b)->cmp(tagged2SmallInt(a));
     }
-    if (tagA==OZCONST) {
-      if (tagB==SMALLINT)
-        return tagged2BigInt(a)->cmp(smallIntValue(b));
-      Assert(tagB==LITERAL);
+    if (isConstTag(tagA)) {
+      if (isSmallIntTag(tagB))
+        return tagged2BigInt(a)->cmp(tagged2SmallInt(b));
+      Assert(isLiteralTag(tagB));
       return -1;
     }
-    Assert(tagA==LITERAL);
+    Assert(isLiteralTag(tagA));
     return 1;
   }
   switch (tagA) {
-  case LITERAL:
+  case TAG_LITERAL:
     return atomcmp(tagged2Literal(a),tagged2Literal(b));
-  case SMALLINT:
+  case TAG_SMALLINT:
     return smallIntCmp(a,b);
-  case OZCONST:
+  case TAG_CONST:
     return tagged2BigInt(a)->cmp(tagged2BigInt(b));
   default:
     Assert(0);
@@ -1074,13 +1035,12 @@ int featureCmp(TaggedRef a,TaggedRef b)
  * NOTE: all bigints are hashed to the same value (mm2)
  */
 inline
-unsigned int featureHash(TaggedRef a)
-{
+unsigned int featureHash(TaggedRef a) {
   CHECK_FEATURE(a);
   const TypeOfTerm tag = tagTypeOf(a);
-  if (tag == LITERAL) {
+  if (isLiteralTag(tag)) {
     return tagged2Literal(a)->hash();
-  } else if (tag == SMALLINT) {
+  } else if (isSmallIntTag(tag)) {
     return smallIntHash(a);
   } else {
     return tagged2BigInt(a)->hash();
@@ -1341,7 +1301,7 @@ public:
     CHECK_FEATURE(feature);
     if (isTuple()) {
       if (!oz_isSmallInt(feature)) return -1;
-      int f=smallIntValue(feature);
+      int f=tagged2SmallInt(feature);
       return (1 <= f && f <= getWidth()) ? f-1 : -1;
     }
     return getRecordArity()->lookupInternal(feature);
@@ -1531,7 +1491,7 @@ OZ_Term oz_checkList(OZ_Term l, OzCheckList check=OZ_CHECK_ANY)
       } else {
         Assert(check==OZ_CHECK_CHAR || check==OZ_CHECK_CHAR_NONZERO);
         if (!oz_isSmallInt(h)) return oz_false();
-        int i=smallIntValue(h);
+        int i=tagged2SmallInt(h);
         if (i<0 || i>255) return oz_false();
         if (check == OZ_CHECK_CHAR_NONZERO && i==0) return oz_false();
       }

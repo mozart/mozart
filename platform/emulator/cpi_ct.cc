@@ -91,7 +91,7 @@ void OZ_CtVar::read(OZ_Term v)
   if (oz_isVariable(vtag)) {
     // `v' designates a variable
 
-    Assert(isCVar(vtag));
+    Assert(isCVarTag(vtag));
 
     if (Propagator::getRunningPropagator()->isLocal()) {
       // local variable per definition
@@ -156,7 +156,7 @@ void OZ_CtVar::readEncap(OZ_Term v)
   //
   if (oz_isVariable(v)) {
     //`v' designates a variable
-    Assert(isCVar(vtag));
+    Assert(isCVarTag(vtag));
 
     // set flags
     setState(encap_e);

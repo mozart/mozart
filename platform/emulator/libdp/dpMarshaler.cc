@@ -300,8 +300,10 @@ void unmarshalFullObjectRobustInternal(ObjectFields *o, MsgBuffer *bs,
 
 void fillInObject(ObjectFields *of, Object *o){
   o->setFreeRecord(of->feat);
-  o->setState(tagged2Tert(of->state));
-  o->setLock(oz_isNil(of->lock) ? (LockProxy*)NULL : (LockProxy*)tagged2Tert(of->lock));}
+  o->setState((Tertiary *) tagged2Const(of->state));
+  o->setLock(oz_isNil(of->lock) ?
+             (LockProxy*) NULL :
+             (LockProxy*) tagged2Const(of->lock));}
 
 #ifdef USE_FAST_UNMARSHALER
 void unmarshalFullObjectAndClass(ObjectFields *o, MsgBuffer *bs)

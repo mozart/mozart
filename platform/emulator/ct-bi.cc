@@ -33,7 +33,7 @@ OZ_BI_define(BIIsGenCtVarB, 1,1)
 {
   OZ_getINDeref(0, v, vptr, vtag);
 
-  OZ_RETURN(oz_bool(isGenCtVar(v, vtag)));
+  OZ_RETURN(oz_bool(isGenCtVar(v)));
 } OZ_BI_end
 
 OZ_BI_define(BIGetCtVarConstraintAsAtom, 1, 1)
@@ -44,7 +44,7 @@ OZ_BI_define(BIGetCtVarConstraintAsAtom, 1, 1)
 
   if (!oz_isVariable(vartag)) {
     OZ_RETURN(var);
-  } else if (isGenCtVar(var, vartag)) {
+  } else if (isGenCtVar(var)) {
     OZ_RETURN(oz_atom(((OzCtVariable *) tagged2CVar(var))->getConstraint()->toString(ozconf.printDepth)));
   } else if (oz_isNonKinded(var)) {
     oz_suspendOnPtr(varptr);
@@ -62,7 +62,7 @@ OZ_BI_define(BIGetCtVarNameAsAtom, 1, 1)
 
   if (!oz_isVariable(vartag)) {
     OZ_RETURN(var);
-  } else if (isGenCtVar(var, vartag)) {
+  } else if (isGenCtVar(var)) {
     OZ_RETURN(oz_atom(((OzCtVariable*)tagged2CVar(var))->getDefinition()->getName()));
   } else if (oz_isNonKinded(var)) {
     oz_suspendOnPtr(varptr);

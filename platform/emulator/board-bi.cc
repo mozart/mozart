@@ -394,8 +394,8 @@ OZ_BI_define(BIcommitSpace, 2,0) {
     return oz_raise(E_ERROR,E_KERNEL,"spaceNoChoice",1,tagged_space);
 
   int n = d->commit(sb,
-                    smallIntValue(left),
-                    smallIntValue(right));
+                    tagged2SmallInt(left),
+                    tagged2SmallInt(right));
 
   if (n>1) {
     sb->patchAltStatus(n);
@@ -534,7 +534,7 @@ TaggedRef Board::getCloneDiff(void) {
         }
 
         LTuple *lt = new LTuple();
-        lt->setHead(newSmallInt(d));
+        lt->setHead(makeTaggedSmallInt(d));
         lt->setTail(l);
         l = makeTaggedLTuple(lt);
       } else {
@@ -545,7 +545,7 @@ TaggedRef Board::getCloneDiff(void) {
 
     free(copy_start);
 
-    TaggedRef ret = OZ_pair2(newSmallInt(copy_size),l);
+    TaggedRef ret = OZ_pair2(makeTaggedSmallInt(copy_size),l);
 
     copy_start = (int32 *) 0;
     copy_size  = 0;
@@ -554,7 +554,7 @@ TaggedRef Board::getCloneDiff(void) {
     return ret;
 
   } else {
-    return OZ_pair2(newSmallInt(0),l);
+    return OZ_pair2(makeTaggedSmallInt(0),l);
   }
 
 }

@@ -33,7 +33,7 @@ static
 SRecordArity getArity(TaggedRef arity)
 {
   if (oz_isSmallInt(arity)) {
-    return mkTupleWidth(smallIntValue(arity));
+    return mkTupleWidth(tagged2SmallInt(arity));
   } else {
     Assert(oz_isSmallInt(oz_checkList(arity)));
     TaggedRef sortedarity = arity;
@@ -451,7 +451,7 @@ OZ_BI_define(BIstoreGRegRef,2,0)
     if (!oz_isSmallInt(index)) {
       oz_typeError(1,"RegisterList");
     }
-    (*gregs)[i].set(smallIntValue(index),regType);
+    (*gregs)[i].set(tagged2SmallInt(index),regType);
   }
 
   code->writeAddress(gregs);
@@ -486,7 +486,7 @@ OZ_BI_define(BIstoreLocation,2,0)
     if (!oz_isSmallInt(index)) {
       oz_typeError(1,"Location");
     }
-    int j = smallIntValue(index);
+    int j = tagged2SmallInt(index);
     if (j < 0 || j >= NumberOfXRegisters) {
       return oz_raise(E_ERROR,AtomAssembler,
                       "registerIndexOutOfRange",1,OZ_in(1));
@@ -503,7 +503,7 @@ OZ_BI_define(BIstoreLocation,2,0)
     if (!oz_isSmallInt(index)) {
       oz_typeError(1,"Location");
     }
-    int j = smallIntValue(index);
+    int j = tagged2SmallInt(index);
     if (j < 0 || j >= NumberOfXRegisters) {
       return oz_raise(E_ERROR,AtomAssembler,
                       "registerIndexOutOfRange",1,OZ_in(1));
@@ -642,10 +642,10 @@ OZ_BI_define(BIisCopyableProcedureRef,1,1)
 OZ_BI_define(BIisLocalDet,1,1)
 {
   oz_declareDerefIN(0,var);
-  if (isUVar(var))
+  if (oz_isUVar(var))
     OZ_RETURN(oz_false());
 
-  if (!isCVar(var))
+  if (!oz_isCVar(var))
     OZ_RETURN(oz_true());
 
   OZ_RETURN(oz_bool(oz_check_var_status(tagged2CVar(var))==EVAR_STATUS_DET));

@@ -1429,14 +1429,14 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
     *this = ~ *this;
     return size;
   } else if (isSmallIntTag(d_tag)) {
-    return initSingleton(smallIntValue(d));
+    return initSingleton(tagged2SmallInt(d));
   } else if (AtomSup == d) {
     return initSingleton(fd_sup);
   } else if (oz_isSTuple(d)) {
     SRecord &t = *tagged2SRecord(d);
     OZ_Term t0 = oz_deref(t[0]), t1 = oz_deref(t[1]);
-    return initRange(AtomSup == t0 ? fd_sup : smallIntValue(t0),
-                     AtomSup == t1 ? fd_sup : smallIntValue(t1));
+    return initRange(AtomSup == t0 ? fd_sup : tagged2SmallInt(t0),
+                     AtomSup == t1 ? fd_sup : tagged2SmallInt(t1));
   } else if (AtomBool == d) {
     return initRange(0, 1);
   } else if (oz_isNil(d)) {
@@ -1454,7 +1454,7 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
       DEREF(val, valptr, valtag);
 
       if (isSmallIntTag(valtag)) {
-        int v = smallIntValue(val);
+        int v = tagged2SmallInt(val);
         if (v < fd_inf || fd_sup < v) goto for_loop;
 
         left_arr[len_arr] = right_arr[len_arr] = v;
@@ -1478,8 +1478,8 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
         SRecord &t = *tagged2SRecord(val);
         OZ_Term t0 = oz_deref(t[0]), t1 = oz_deref(t[1]);
 
-        int l = max(0, AtomSup == t0 ? fd_sup : smallIntValue(t0));
-        int r = min(fd_sup, AtomSup == t1 ? fd_sup : smallIntValue(t1));
+        int l = max(0, AtomSup == t0 ? fd_sup : tagged2SmallInt(t0));
+        int r = min(fd_sup, AtomSup == t1 ? fd_sup : tagged2SmallInt(t1));
 
         if (l > r) goto for_loop;
 

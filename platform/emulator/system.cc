@@ -60,7 +60,7 @@ OZ_BI_define(BIconstraints,1,1)
   oz_declareDerefIN(0,in);
 
   int len = 0;
-  if (isCVar(inTag)) {
+  if (oz_isCVar(in)) {
     len=oz_var_getSuspListLength(tagged2CVar(in));
   }
   OZ_RETURN_INT(len);
@@ -134,7 +134,7 @@ OZ_BI_define(BIgetPrintName,1,1)
 {
   oz_declareDerefIN(0,t);
   switch (tTag) {
-  case OZCONST:
+  case TAG_CONST:
     {
       ConstTerm *rec = tagged2Const(t);
       switch (rec->getType()) {
@@ -149,9 +149,9 @@ OZ_BI_define(BIgetPrintName,1,1)
       }
       break;
     }
-  case UVAR: case CVAR: // FUT
+  case TAG_UVAR: case TAG_CVAR: // FUT
     OZ_RETURN_ATOM((OZ_CONST char*)oz_varGetName(OZ_in(0)));
-  case LITERAL:
+  case TAG_LITERAL:
     {
       const char *s = tagged2Literal(t)->getPrintName();
       OZ_RETURN(s? oz_atom(s): AtomEmpty);

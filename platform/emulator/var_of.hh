@@ -247,14 +247,7 @@ inline
 Bool isGenOFSVar(TaggedRef term)
 {
     GCDEBUG(term);
-    return isCVar(term) && cvarIsOFSvar(term);
-}
-
-inline
-Bool isGenOFSVar(TaggedRef term, TypeOfTerm tag)
-{
-    GCDEBUG(term);
-    return isCVar(tag) && cvarIsOFSvar(term);
+    return oz_isCVar(term) && cvarIsOFSvar(term);
 }
 
 inline

@@ -141,7 +141,7 @@ OZ_Term unmarshalBitString(void*bs1) {
   int size = s->getSize();
   for (int i=0; i<size; i++)
     s->getByte(i) = unmarshalByte(bs);
-  return oz_makeTaggedExtension(s);
+  return makeTaggedExtension(s);
 }
 #ifndef USE_FAST_UNMARSHALER
 OZ_Term unmarshalBitStringRobust(void*bs1, int *overflow) {
@@ -151,7 +151,7 @@ OZ_Term unmarshalBitStringRobust(void*bs1, int *overflow) {
   int size = s->getSize();
   for (int i=0; i<size; i++)
     s->getByte(i) = unmarshalByte(bs);
-  return oz_makeTaggedExtension(s);
+  return makeTaggedExtension(s);
 }
 #endif
 
@@ -219,7 +219,7 @@ OZ_BI_define(BIBitString_make,2,1)
       tail = OZ_tail(tail);
     }
   }
-  OZ_RETURN(oz_makeTaggedExtension(bs));
+  OZ_RETURN(makeTaggedExtension(bs));
 } OZ_BI_end
 
 OZ_BI_define(BIBitString_conj,2,1)
@@ -232,7 +232,7 @@ OZ_BI_define(BIBitString_conj,2,1)
                     OZ_in(0),OZ_in(1));
   BitString*b3 = b1->clone();
   b3->conj(b2);
-  OZ_RETURN(oz_makeTaggedExtension(b3));
+  OZ_RETURN(makeTaggedExtension(b3));
 } OZ_BI_end
 
 OZ_BI_define(BIBitString_disj,2,1)
@@ -245,7 +245,7 @@ OZ_BI_define(BIBitString_disj,2,1)
                     OZ_in(0),OZ_in(1));
   BitString*b3 = b1->clone();
   b3->disj(b2);
-  OZ_RETURN(oz_makeTaggedExtension(b3));
+  OZ_RETURN(makeTaggedExtension(b3));
 } OZ_BI_end
 
 OZ_BI_define(BIBitString_nega,1,1)
@@ -253,7 +253,7 @@ OZ_BI_define(BIBitString_nega,1,1)
   oz_declareBitStringIN(0,b1);
   BitString*b3 = b1->clone();
   b3->nega();
-  OZ_RETURN(oz_makeTaggedExtension(b3));
+  OZ_RETURN(makeTaggedExtension(b3));
 } OZ_BI_end
 
 OZ_BI_define(BIBitString_get,2,1)
@@ -281,7 +281,7 @@ OZ_BI_define(BIBitString_put,3,1)
                     OZ_in(0),OZ_in(1));
   BitString *b3 = b1->clone();
   b3->put(i,on==OZ_true());
-  OZ_RETURN(oz_makeTaggedExtension(b3));
+  OZ_RETURN(makeTaggedExtension(b3));
 } OZ_BI_end
 
 OZ_BI_define(BIBitString_width,1,1)
@@ -365,7 +365,7 @@ OZ_Term unmarshalByteString(void*bs1) {
   ByteString*s = new ByteString(width);
   for (int i=0; i<width; i++)
     s->getByte(i) = unmarshalByte(bs);
-  return oz_makeTaggedExtension(s);
+  return makeTaggedExtension(s);
 }
 #ifndef USE_FAST_UNMARSHALER
 OZ_Term unmarshalByteStringRobust(void*bs1, int *overflow) {
@@ -374,7 +374,7 @@ OZ_Term unmarshalByteStringRobust(void*bs1, int *overflow) {
   ByteString*s = new ByteString(width);
   for (int i=0; i<width; i++)
     s->getByte(i) = unmarshalByte(bs);
-  return oz_makeTaggedExtension(s);
+  return makeTaggedExtension(s);
 }
 #endif
 
@@ -439,7 +439,7 @@ OZ_BI_define(BIByteString_make,1,1)
     // initialize the corresponding byte of the ByteString
     bs->put(i,(BYTE)c);
   }
-  OZ_RETURN(oz_makeTaggedExtension(bs));
+  OZ_RETURN(makeTaggedExtension(bs));
 } OZ_BI_end
 
 OZ_BI_define(BIByteString_get,2,1)
@@ -461,7 +461,7 @@ OZ_BI_define(BIByteString_append,2,1)
   ByteString *b3 = new ByteString(w);
   b3->copy(b1,0);
   b3->copy(b2,b1->getWidth());
-  OZ_RETURN(oz_makeTaggedExtension(b3));
+  OZ_RETURN(makeTaggedExtension(b3));
 } OZ_BI_end
 
 OZ_BI_define(BIByteString_slice,3,1)
@@ -476,7 +476,7 @@ OZ_BI_define(BIByteString_slice,3,1)
                     OZ_in(0),OZ_in(1),OZ_in(2));
   ByteString *b3 = new ByteString(to-from);
   b3->slice(b1,from,to);
-  OZ_RETURN(oz_makeTaggedExtension(b3));
+  OZ_RETURN(makeTaggedExtension(b3));
 } OZ_BI_end
 
 OZ_BI_define(BIByteString_width,1,1)
@@ -506,7 +506,7 @@ OZ_BI_define(BIByteString_toStringWithTail,2,1)
 OZ_Term OZ_mkByteString(char*s,int n) {
   ByteString* bs = new ByteString(n);
   memcpy((void*)bs->getData(),(void*)s,n);
-  return oz_makeTaggedExtension(bs);
+  return makeTaggedExtension(bs);
 }
 
 inline unsigned char* find_char(unsigned char*s,int c,int n)

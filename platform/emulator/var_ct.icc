@@ -39,18 +39,17 @@ OzCtVariable * tagged2GenCtVar(OZ_Term t)
 }
 
 inline
-Bool isGenCtVar(TaggedRef term, TypeOfTerm tag)
+Bool isGenCtVar(TaggedRef term)
 {
   GCDEBUG(term);
-  Assert(tag == tagTypeOf(term));
-  return isCVar(tag) && (tagged2CVar(term)->getType() == OZ_VAR_CT);
+  return oz_isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_CT);
 }
 
 
 inline
 OZ_Ct * unpatchReifiedCt(OZ_Term t)
 {
-  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
+  Assert(!oz_isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
   OzCtVariable * ctv = ((OzCtVariable *) tagValueOf(t));;
 
   ctv->unpatchReified();

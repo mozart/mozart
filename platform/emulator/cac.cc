@@ -317,7 +317,7 @@ void exitCheckSpace() {
 
 #define STOREFWDMARK(fromPtr, newValue)   \
   CPTRAIL(fromPtr);                       \
-  *((int32 *) fromPtr) = GCMARK(newValue);
+  *((int32 *) fromPtr) = makeTaggedGcMark(newValue);
 
 #define STOREFWDFIELD(d,t) \
   CPTRAIL(d->cacGetMarkField()); \
@@ -360,8 +360,6 @@ RefsArray _cacRefsArray(RefsArray r) {
   if (RefsArrayIsMarked(r)) {
     return RefsArrayUnmark(r);
   }
-
-  Assert(!isFreedRefsArray(r));
 
   int sz = getRefsArraySize(r);
 
@@ -719,7 +717,7 @@ SRecord *SRecord::_cacSRecord(void) {
 
 inline
 TaggedRef _cacExtension(TaggedRef term) {
-  OZ_Extension *ex = oz_tagged2Extension(term);
+  OZ_Extension *ex = tagged2Extension(term);
 
   Assert(ex);
 
@@ -728,7 +726,7 @@ TaggedRef _cacExtension(TaggedRef term) {
 
   // hack alert: write forward into something
   if ((*((int32*)spa))&1) {
-    return oz_makeTaggedExtension((OZ_Extension *)ToPointer((*(int32*)spa)&~1));
+    return makeTaggedExtension((OZ_Extension *)ToPointer((*(int32*)spa)&~1));
   }
 
   Board *bb=(Board*)(*spa);
@@ -752,7 +750,7 @@ TaggedRef _cacExtension(TaggedRef term) {
 
   *fromPtr = ToInt32(ret)|1;
 
-  return oz_makeTaggedExtension(ret);
+  return makeTaggedExtension(ret);
 }
 
 // ===================================================================
@@ -828,14 +826,13 @@ void WeakStack::recurse(void)
 //      t is a marked name, extension, const, var
 // the logic is adapted from gcTagged(TaggedRef&,TaggedRef&)
 // and simplified according to a suggestion by Christian.
-inline int isNowMarked(OZ_Term t)
-{
+inline int isNowMarked(OZ_Term t) {
  redo:
   switch (tagTypeOf(t)) {
-  case REF:
-  case REFTAG2:
-  case REFTAG3:
-  case REFTAG4:
+  case TAG_REF:
+  case TAG_REF2:
+  case TAG_REF3:
+  case TAG_REF4:
     {
       TaggedRef * ptr;
       do {
@@ -844,30 +841,35 @@ inline int isNowMarked(OZ_Term t)
       } while (oz_isRef(t));
       goto redo;
     }
-  case GCTAG     : goto RETURN_YES;
-  case SMALLINT  : goto RETURN_NO;
-  case FSETVALUE : goto RETURN_NO;
-  case LITERAL   :
+  case TAG_LITERAL:
     {
       Literal * lit = tagged2Literal(t);
-      if (lit->isAtom()) return 1;
-      else return ((Name*)lit)->cacIsMarked();
+      if (lit->isAtom())
+        return 1;
+      else
+        return ((Name*)lit)->cacIsMarked();
     }
-  case EXT       : return
-                     ((*(int32*) oz_tagged2Extension(t)->__getSpaceRefInternal())&1);
-  case LTUPLE    : goto RETURN_NO;
-  case SRECORD   : goto RETURN_NO;
-  case OZFLOAT   : goto RETURN_NO;
-  case OZCONST   : return (tagged2Const(t)->cacIsMarked());
-  case UNUSED_VAR: goto IMPOSSIBLE;
-  case UVAR      : goto IMPOSSIBLE;
-  case CVAR      : return tagged2CVar(t)->cacIsMarked();
-  default        : Assert(0);
+  case TAG_EXT:
+    return ((*(int32*) tagged2Extension(t)->__getSpaceRefInternal())&1);
+  case TAG_CONST:
+    return (tagged2Const(t)->cacIsMarked());
+  case TAG_CVAR:
+    return tagged2CVar(t)->cacIsMarked();
+
+  case TAG_GCMARK:
+    return OK;
+
+  case TAG_SRECORD:
+  case TAG_LTUPLE:
+  case TAG_FSETVALUE:
+  case TAG_FLOAT:
+  case TAG_SMALLINT :
+    return NO;
+
+  default:
+    Assert(0);
+    return 0;
   }
-  return 0;
- RETURN_YES: return 1;
- IMPOSSIBLE: Assert(0);
- RETURN_NO : return 0;
 }
 
 void WeakDictionary::gCollectRecurseV(void) {
@@ -947,11 +949,11 @@ void VarFix::_cacFix(void) {
     TaggedRef   aux     = *aux_ptr;
 
     TaggedRef * to_ptr  =
-      (tagTypeOf(aux) == UVAR) ?
+      (tagTypeOf(aux) == TAG_UVAR) ?
       newTaggedUVar(tagged2VarHome(aux)->derefBoard()->cacGetFwd()) :
-      (TaggedRef *) GCUNMARK(aux);
+      (TaggedRef *) tagged2GcUnmarked(aux);
 
-    Assert(tagTypeOf(aux) == UVAR || tagTypeOf(aux) == GCTAG);
+    Assert(tagTypeOf(aux) == TAG_UVAR || tagTypeOf(aux) == TAG_GCMARK);
 
     *to = makeTaggedRef(to_ptr);
     STOREFWDMARK(aux_ptr, to_ptr);
@@ -1785,26 +1787,26 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
     aux = *f;
 
     switch (tagTypeOf(aux)) {
-    case REF:
+    case TAG_REF:
       if (aux)
         goto DO_DEREF;
       *t = makeTaggedNULL();
       continue;
-    case REFTAG2:    goto DO_DEREF;
-    case REFTAG3:    goto DO_DEREF;
-    case REFTAG4:    goto DO_DEREF;
-    case GCTAG:      goto DO_GCTAG;
-    case SMALLINT:   goto DO_SMALLINT;
-    case FSETVALUE:  goto DO_FSETVALUE;
-    case LITERAL:    goto DO_LITERAL;
-    case EXT:        goto DO_EXT;
-    case LTUPLE:     goto DO_LTUPLE;
-    case SRECORD:    goto DO_SRECORD;
-    case OZFLOAT:    goto DO_OZFLOAT;
-    case OZCONST:    goto DO_OZCONST;
-    case UNUSED_VAR: goto DO_UNUSED_VAR;
-    case UVAR:       goto DO_D_UVAR;
-    case CVAR:       goto DO_D_CVAR;
+    case TAG_REF2:       goto DO_DEREF;
+    case TAG_REF3:       goto DO_DEREF;
+    case TAG_REF4:       goto DO_DEREF;
+    case TAG_GCMARK:     goto DO_GCMARK;
+    case TAG_SMALLINT:   goto DO_SMALLINT;
+    case TAG_FSETVALUE:  goto DO_FSETVALUE;
+    case TAG_LITERAL:    goto DO_LITERAL;
+    case TAG_EXT:        goto DO_EXT;
+    case TAG_LTUPLE:     goto DO_LTUPLE;
+    case TAG_SRECORD:    goto DO_SRECORD;
+    case TAG_FLOAT:      goto DO_FLOAT;
+    case TAG_CONST:      goto DO_CONST;
+    case TAG_UNUSED:     goto DO_UNUSED;
+    case TAG_UVAR:       goto DO_D_UVAR;
+    case TAG_CVAR:       goto DO_D_CVAR;
     }
 
   DO_DEREF:
@@ -1812,26 +1814,26 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
     aux     = *aux_ptr;
 
     switch (tagTypeOf(aux)) {
-    case REF:        goto DO_DEREF;
-    case REFTAG2:    goto DO_DEREF;
-    case REFTAG3:    goto DO_DEREF;
-    case REFTAG4:    goto DO_DEREF;
-    case GCTAG:      goto DO_GCTAG;
-    case SMALLINT:   goto DO_SMALLINT;
-    case FSETVALUE:  goto DO_FSETVALUE;
-    case LITERAL:    goto DO_LITERAL;
-    case EXT:        goto DO_EXT;
-    case LTUPLE:     goto DO_LTUPLE;
-    case SRECORD:    goto DO_SRECORD;
-    case OZFLOAT:    goto DO_OZFLOAT;
-    case OZCONST:    goto DO_OZCONST;
-    case UNUSED_VAR: goto DO_UNUSED_VAR;
-    case UVAR:       goto DO_I_UVAR;
-    case CVAR:       goto DO_I_CVAR;
+    case TAG_REF:        goto DO_DEREF;
+    case TAG_REF2:       goto DO_DEREF;
+    case TAG_REF3:       goto DO_DEREF;
+    case TAG_REF4:       goto DO_DEREF;
+    case TAG_GCMARK:     goto DO_GCMARK;
+    case TAG_SMALLINT:   goto DO_SMALLINT;
+    case TAG_FSETVALUE:  goto DO_FSETVALUE;
+    case TAG_LITERAL:    goto DO_LITERAL;
+    case TAG_EXT:        goto DO_EXT;
+    case TAG_LTUPLE:     goto DO_LTUPLE;
+    case TAG_SRECORD:    goto DO_SRECORD;
+    case TAG_FLOAT:      goto DO_FLOAT;
+    case TAG_CONST:      goto DO_CONST;
+    case TAG_UNUSED:     goto DO_UNUSED;
+    case TAG_UVAR:       goto DO_I_UVAR;
+    case TAG_CVAR:       goto DO_I_CVAR;
     }
 
-  DO_GCTAG:
-    *t = makeTaggedRef((TaggedRef*) GCUNMARK(aux));
+  DO_GCMARK:
+    *t = makeTaggedRef((TaggedRef*) tagged2GcUnmarked(aux));
     continue;
 
   DO_FSETVALUE:
@@ -1840,7 +1842,7 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
     continue;
 #endif
 
-  DO_OZFLOAT:
+  DO_FLOAT:
 #ifdef G_COLLECT
     *t = makeTaggedFloat(tagged2Float(aux)->gCollect());
     continue;
@@ -1866,11 +1868,11 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
      *t = makeTaggedSRecord(tagged2SRecord(aux)->_cacSRecord());
      continue;
 
-  DO_OZCONST:
+  DO_CONST:
      *t = makeTaggedConst(tagged2Const(aux)->_cacConstTermInline());
      continue;
 
-  DO_UNUSED_VAR:
+  DO_UNUSED:
      Assert(0);
      continue;
 
@@ -1912,7 +1914,7 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
      cv = tagged2CVar(aux);
 
      if (cv->cacIsMarked()) {
-       Assert(tagTypeOf(*(cv->cacGetFwd())) == CVAR);
+       Assert(oz_isCVar(*(cv->cacGetFwd())));
        *t = makeTaggedRef(cv->cacGetFwd());
        continue;
      }
@@ -1934,7 +1936,7 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
      cv = tagged2CVar(aux);
 
      if (cv->cacIsMarked()) {
-       Assert(tagTypeOf(*(cv->cacGetFwd())) == CVAR);
+       Assert(oz_isCVar(*(cv->cacGetFwd())));
        *t = makeTaggedRef(cv->cacGetFwd());
        continue;
      }

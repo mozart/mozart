@@ -109,7 +109,7 @@ void OZ_hfreeChars(char * is, int n)
   if (n) OZDISPOSESAFE(char, n, is);
 }
 
-#define FDTAG               OZCONST
+#define FDTAG               TAG_CONST
 #define MAKETAGGEDINDEX(I)  makeTaggedRef2i(FDTAG,(int32) (I<<2))
 #define GETINDEX(T)         (ToInt32(tagValueOfVerbatim(T))>>2);
 
@@ -172,7 +172,7 @@ int * OZ_findSingletons(int sz, OZ_Term * ts)
     OZ_Term t = ts[i];
     DEREF(t, tptr, ttag);
     if (isSmallIntTag(ttag) || isLiteralTag(ttag)) { // mm2
-      sgl[i] = smallIntValue(t);
+      sgl[i] = tagged2SmallInt(t);
     } else {
       sgl[i] = -1;
     }
@@ -264,21 +264,21 @@ int * OZ_getCIntVector(OZ_Term t, int * v)
   } if (oz_isCons(t)) {
 
     do {
-      v[i++] = smallIntValue(oz_deref((oz_head(t))));
+      v[i++] = tagged2SmallInt(oz_deref((oz_head(t))));
       t = oz_deref(oz_tail(t));
     } while (oz_isCons(t));
 
   } else if (oz_isTuple(t)) {
 
     for (int sz = tagged2SRecord(t)->getWidth(); i < sz; i += 1)
-      v[i] = smallIntValue(oz_deref((tagged2SRecord(t)->getArg(i))));
+      v[i] = tagged2SmallInt(oz_deref((tagged2SRecord(t)->getArg(i))));
 
   } else if (oz_isRecord(t)) {
 
     OZ_Term al = OZ_arityList(t);
 
     for (; oz_isCons(al); al = oz_tail(al))
-      v[i++] = smallIntValue(oz_deref((tagged2SRecord(t)->getFeature(al))));
+      v[i++] = tagged2SmallInt(oz_deref((tagged2SRecord(t)->getFeature(al))));
 
   } else {
     OZ_warning("OZ_getCIntVector: Unexpected term, expected vector.");

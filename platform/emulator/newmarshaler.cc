@@ -156,7 +156,7 @@ void Marshaler::processSmallInt(OZ_Term siTerm)
 {
   MsgBuffer *bs = (MsgBuffer *) getOpaque();
   marshalDIF(bs, DIF_SMALLINT);
-  marshalNumber(smallIntValue(siTerm), bs);
+  marshalNumber(tagged2SmallInt(siTerm), bs);
 }
 
 void Marshaler::processFloat(OZ_Term floatTerm)
@@ -235,8 +235,8 @@ void Marshaler::processExtension(OZ_Term t)
   MsgBuffer *bs = (MsgBuffer *) getOpaque();
   if (bs->visit(t)) {
     marshalDIF(bs,DIF_EXTENSION);
-    marshalNumber(oz_tagged2Extension(t)->getIdV(),bs);
-    if (!oz_tagged2Extension(t)->marshalV(bs)) {
+    marshalNumber(tagged2Extension(t)->getIdV(),bs);
+    if (!tagged2Extension(t)->marshalV(bs)) {
       processNoGood(t, NO);     // not remembered!
     }
   }

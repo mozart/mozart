@@ -966,7 +966,7 @@ void BorrowEntry::freeBorrowEntry(){
 
 void BorrowEntry::gcBorrowRoot(int i) {
   if (isVar()) {
-    if(GCISMARKED(getRef())){
+    if(oz_isGcMark(getRef())){
       gcPO();
       return;}
     PD((GC,"BT1 b:%d variable found",i));

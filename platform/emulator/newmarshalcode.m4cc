@@ -865,7 +865,7 @@ static void handleDEBUGENTRY(void *arg)
   Assert(PC);
 
   TaggedRef file = getTaggedArg(PC+1);
-  int line = smallIntValue(getNumberArg(PC+2));
+  int line = tagged2SmallInt(getNumberArg(PC+2));
   CodeArea::writeDebugInfo(PC, file, line);
 }
 

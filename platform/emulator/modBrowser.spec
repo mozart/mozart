@@ -37,10 +37,6 @@ $module_init_fun_name = "browser_init";
                              out => ['+bool'],
                              BI  => BIisRecordCVarB},
 
-    'deepFeed'          => { in  => ['+cell','value'],
-                             out => [],
-                             BI  => BIdeepFeed},
-
     'chunkWidth'        => { in  => ['+chunk'],
                              out => ['+int'],
                              BI  => BIchunkWidth},

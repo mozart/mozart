@@ -298,14 +298,14 @@ OZ_Return oz_var_cast(TaggedRef *&, Board *, TypeOfVariable);
 inline
 Bool oz_var_hasSuspAt(TaggedRef v, Board * b) {
   Assert(oz_isVariable(v) && !oz_isRef(v));
-  return isUVar(v) ? NO : tagged2CVar(v)->getSuspList()->hasSuspAt(b);
+  return oz_isUVar(v) ? NO : tagged2CVar(v)->getSuspList()->hasSuspAt(b);
 }
 
 inline
 Bool isFuture(TaggedRef term)
 {
   GCDEBUG(term);
-  return isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_FUTURE);
+  return oz_isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_FUTURE);
 }
 
 inline
@@ -318,7 +318,7 @@ inline
 Bool isSimpleVar(TaggedRef term)
 {
   GCDEBUG(term);
-  return isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_SIMPLE);
+  return oz_isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_SIMPLE);
 }
 
 inline
@@ -378,20 +378,20 @@ VarStatus oz_check_var_status(OzVariable *cv)
 inline
 int oz_isFree(TaggedRef r)
 {
-  return isUVar(r) ||
-    (isCVar(r) && oz_check_var_status(tagged2CVar(r))==EVAR_STATUS_FREE);
+  return oz_isUVar(r) ||
+    (oz_isCVar(r) && oz_check_var_status(tagged2CVar(r))==EVAR_STATUS_FREE);
 }
 
 inline
 int oz_isKinded(TaggedRef r)
 {
-  return isCVar(r) && oz_check_var_status(tagged2CVar(r))==EVAR_STATUS_KINDED;
+  return oz_isCVar(r) && oz_check_var_status(tagged2CVar(r))==EVAR_STATUS_KINDED;
 }
 
 inline
 int oz_isFuture(TaggedRef r)
 {
-  return isCVar(r) && oz_check_var_status(tagged2CVar(r))==EVAR_STATUS_FUTURE;
+  return oz_isCVar(r) && oz_check_var_status(tagged2CVar(r))==EVAR_STATUS_FUTURE;
 }
 
 inline
@@ -408,13 +408,13 @@ int oz_isNonKinded(TaggedRef r)
 inline
 void setStoreFlag(OZ_Term t)
 {
-  tagged2SVarPlus(t)->setStoreFlag();
+  tagged2CVar(t)->setStoreFlag();
 }
 
 inline
 void setReifiedFlag(OZ_Term t)
 {
-  tagged2SVarPlus(t)->setReifiedFlag();
+  tagged2CVar(t)->setReifiedFlag();
 }
 
 inline
@@ -438,19 +438,19 @@ OZ_Boolean testBoolPatched(OZ_Term t)
 inline
 OZ_Boolean testResetStoreFlag(OZ_Term t)
 {
-  return tagged2SVarPlus(t)->testResetStoreFlag();
+  return tagged2CVar(t)->testResetStoreFlag();
 }
 
 inline
 OZ_Boolean testStoreFlag(OZ_Term t)
 {
-  return tagged2SVarPlus(t)->testStoreFlag();
+  return tagged2CVar(t)->testStoreFlag();
 }
 
 inline
 OZ_Boolean testResetReifiedFlag(OZ_Term t)
 {
-  return tagged2SVarPlus(t)->testResetReifiedFlag();
+  return tagged2CVar(t)->testResetReifiedFlag();
 }
 
 inline

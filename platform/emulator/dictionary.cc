@@ -25,7 +25,7 @@
  *
  */
 
-#if defined(INTERFACE) && !defined(VAL_ALL)
+#if defined(INTERFACE)
 #pragma implementation "dictionary.hh"
 #endif
 
@@ -501,7 +501,7 @@ Bool DynamicTable::hasExtraFeatures(int tupleArity) {
         if (table[i].value!=makeTaggedNULL()) {
             feat=table[i].ident;
             if (!oz_isSmallInt(feat)) return TRUE;
-            if (smallIntValue(feat)>tupleArity) return TRUE;
+            if (tagged2SmallInt(feat)>tupleArity) return TRUE;
         }
     }
     return FALSE;

@@ -46,21 +46,13 @@ inline
 Bool isGenFSetVar(TaggedRef term)
 {
   GCDEBUG(term);
-  return isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_FS);
-}
-
-inline
-Bool isGenFSetVar(TaggedRef term, TypeOfTerm tag)
-{
-  GCDEBUG(term);
-  Assert(tag == tagTypeOf(term));
-  return isCVar(tag) && (tagged2CVar(term)->getType() == OZ_VAR_FS);
+  return oz_isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_FS);
 }
 
 inline
 OZ_FSetConstraint * unpatchReifiedFSet(OZ_Term t)
 {
-  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
+  Assert(!oz_isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
   OzFSVariable * fsv = ((OzFSVariable *) tagValueOf(t));;
 
   fsv->unpatchReified();
@@ -74,7 +66,7 @@ void OzFSVariable::becomesFSetValueAndPropagate(TaggedRef * trPtr)
   Assert(!oz_isFSetValue(*trPtr));
   if (oz_isFSetValue(*trPtr)) return;
 
-  Assert(this == tagged2SVarPlus(*trPtr));
+  Assert(this == tagged2CVar(*trPtr));
 
   OZ_Term set_val = makeTaggedFSetValue(new OZ_FSetValue(_fset));
 

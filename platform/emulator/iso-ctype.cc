@@ -126,7 +126,7 @@ const unsigned char iso_conv_tab[]
  if (!oz_isSmallInt(tc)) {             \
    oz_typeError(1,"Char");          \
  } else {                           \
-   i = smallIntValue(tc);           \
+   i = tagged2SmallInt(tc);         \
    if ((i < 0) || (i > 255)) {      \
      oz_typeError(1,"Char");        \
    }                                \
@@ -140,7 +140,7 @@ OZ_BI_define(BIcharIs,1,1) {
  oz_declareNonvarIN(0,c);
  c = oz_deref(c);
  if (!oz_isSmallInt(c)) OZ_RETURN(oz_false());
- int i = smallIntValue(c);
+ int i = tagged2SmallInt(c);
  OZ_RETURN(oz_bool(i >=0 && i <= 255));
 } OZ_BI_end
 
@@ -190,7 +190,7 @@ OZ_BI_define(BIcharToAtom,1,1) {
  if (!oz_isSmallInt(tc)) {             \
    oz_typeError(1,"Char");          \
  } else {                           \
-   i = smallIntValue(tc);           \
+   i = tagged2SmallInt(tc);         \
    if ((i < 0) || (i > 255)) {      \
      oz_typeError(1,"Char");        \
    }                                \

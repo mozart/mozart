@@ -235,8 +235,8 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
     if (constr->isValue()) {
       //
       if (oz_isLocalVariable(vptr)) {
-        if (!isUVar(vtag))
-          oz_checkSuspensionListProp(tagged2SVarPlus(v));
+        if (!oz_isUVar(v))
+          oz_checkSuspensionListProp(tagged2CVar(v));
         bindLocalVarToValue(vptr, constr->toValue());
       } else {
         bindGlobalVarToValue(vptr, constr->toValue());
@@ -253,9 +253,9 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
     OZ_Term *  tctv = newTaggedCVar(ctv);
     //
     if (oz_isLocalVariable(vptr)) {
-      if (!isUVar(vtag)) {
-        oz_checkSuspensionListProp(tagged2SVarPlus(v));
-        ctv->setSuspList(tagged2SVarPlus(v)->unlinkSuspList());
+      if (!oz_isUVar(v)) {
+        oz_checkSuspensionListProp(tagged2CVar(v));
+        ctv->setSuspList(tagged2CVar(v)->unlinkSuspList());
       }
       bindLocalVar(vptr, tctv);
     } else {
@@ -264,7 +264,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
     //
     goto proceed;
     //
-  } else if (isGenCtVar(v, vtag)) {
+  } else if (isGenCtVar(v)) {
     //
     // tell constraint to constrained variable
     //
@@ -362,8 +362,8 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
     // constr denotes a value --> v becomes value
     if (constr->isValue()) {
       if (oz_isLocalVariable(vptr)) {
-        if (!isUVar(vtag))
-          oz_checkSuspensionListProp(tagged2SVarPlus(v));
+        if (!oz_isUVar(v))
+          oz_checkSuspensionListProp(tagged2CVar(v));
         DoBind(vptr, constr->toValue());
       } else {
         DoBindAndTrail(vptr, constr->toValue());
@@ -379,9 +379,9 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
       OZ_Term *  tctv = newTaggedCVar(ctv);
 
       if (oz_isLocalVariable(vptr)) {
-        if (!isUVar(vtag)) {
-          oz_checkSuspensionListProp(tagged2SVarPlus(v));
-          ctv->setSuspList(tagged2SVarPlus(v)->unlinkSuspList());
+        if (!oz_isUVar(v)) {
+          oz_checkSuspensionListProp(tagged2CVar(v));
+          ctv->setSuspList(tagged2CVar(v)->unlinkSuspList());
         }
         DoBind(vptr, makeTaggedRef(tctv));
       } else {
@@ -389,7 +389,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
       }
       goto proceed;
     }
-  } else if (isGenCtVar(v, vtag)) {
+  } else if (isGenCtVar(v)) {
     // tell constraint to constrained variable
     if (! constr) goto proceed;
 

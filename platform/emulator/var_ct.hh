@@ -177,7 +177,7 @@ OZ_Return tellBasicConstraint(OZ_Term, OZ_Ct *, OZ_CtDefinition *);
 #undef inline
 
 OzCtVariable * tagged2GenCtVar(OZ_Term);
-Bool isGenCtVar(OZ_Term term, TypeOfTerm tag);
+Bool isGenCtVar(OZ_Term term);
 OZ_Ct * unpatchReifiedCt(OZ_Term t);
 void addSuspCtVar(OZ_Term, Suspendable *, OZ_CtWakeUp);
 

@@ -256,8 +256,8 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
       OZ_Term set_value_term = makeTaggedFSetValue(set_value);
 
       if (oz_isLocalVariable(vptr)) {
-        if (!isUVar(vtag)) {
-          oz_checkSuspensionListProp(tagged2SVarPlus(v));
+        if (!oz_isUVar(v)) {
+          oz_checkSuspensionListProp(tagged2CVar(v));
         }
         bindLocalVarToValue(vptr, set_value_term);
       } else {
@@ -275,9 +275,9 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
     OZ_Term *  tfsv = newTaggedCVar(fsv);
 
     if (oz_isLocalVariable(vptr)) {
-      if (!isUVar(vtag)) {
-        oz_checkSuspensionListProp(tagged2SVarPlus(v));
-        fsv->setSuspList(tagged2SVarPlus(v)->unlinkSuspList());
+      if (!oz_isUVar(v)) {
+        oz_checkSuspensionListProp(tagged2CVar(v));
+        fsv->setSuspList(tagged2CVar(v)->unlinkSuspList());
       }
       bindLocalVar(vptr, tfsv);
     } else {
@@ -286,7 +286,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
     //
     goto proceed;
     //
-  } else if (isGenFSetVar(v, vtag)) {
+  } else if (isGenFSetVar(v)) {
     //
     // tell finite set constraint to finite set variable
     //

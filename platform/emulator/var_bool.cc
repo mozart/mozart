@@ -43,7 +43,7 @@ OZ_Return OzBoolVariable::bind(OZ_Term * vPtr, OZ_Term term)
     DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
     return FAILED;
   }
-  int term_val = smallIntValue(term);
+  int term_val = tagged2SmallInt(term);
   if (term_val < 0 || 1 < term_val) {
     DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
     return FAILED;
@@ -156,7 +156,7 @@ OZ_Return OzBoolVariable::unify(OZ_Term  * left_varptr, OZ_Term * right_varptr)
       //
       if (intersection != -1) {
         // intersection is singleton
-        OZ_Term int_var = newSmallInt(intersection);
+        OZ_Term int_var = makeTaggedSmallInt(intersection);
         right_fdvar->propagate(fd_prop_singl, pc_cv_unif);
         propagateUnify();
         bindLocalVarToValue(left_varptr, int_var);
@@ -187,7 +187,7 @@ OZ_Return OzBoolVariable::unify(OZ_Term  * left_varptr, OZ_Term * right_varptr)
       //
       if (intersection != -1) {
         // intersection has singleton domain
-        OZ_Term int_val = newSmallInt(intersection);
+        OZ_Term int_val = makeTaggedSmallInt(intersection);
         right_fdvar->propagate(fd_prop_singl, pc_cv_unif);
         propagate(pc_cv_unif);
         bindLocalVarToValue(left_varptr, int_val);
@@ -210,7 +210,7 @@ OZ_Return OzBoolVariable::unify(OZ_Term  * left_varptr, OZ_Term * right_varptr)
       //
       if(intersection != -1) {
         // intersection is singleton
-        OZ_Term int_val = newSmallInt(intersection);
+        OZ_Term int_val = makeTaggedSmallInt(intersection);
         propagateUnify();
         right_fdvar->propagate(fd_prop_singl, pc_cv_unif);
         bindLocalVarToValue(right_varptr, int_val);
@@ -231,7 +231,7 @@ OZ_Return OzBoolVariable::unify(OZ_Term  * left_varptr, OZ_Term * right_varptr)
       //
       if (intersection != -1) {
         // intersection is singleton
-        OZ_Term int_val = newSmallInt(intersection);
+        OZ_Term int_val = makeTaggedSmallInt(intersection);
         //
         propagateUnify();
         right_fdvar->propagate(fd_prop_singl, pc_cv_unif);
@@ -263,7 +263,7 @@ Bool OzBoolVariable::valid(TaggedRef val)
 {
   Assert(!oz_isRef(val));
   if (oz_isSmallInt(val)) {
-    int intval = smallIntValue(val);
+    int intval = tagged2SmallInt(val);
     return (intval == 0 || intval == 1);
   }
   return FALSE;

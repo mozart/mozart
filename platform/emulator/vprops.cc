@@ -544,7 +544,7 @@ else oz_typeError(1,"Bool");
 
 #define CHECK_NAT                               \
 if (!isSmallIntTag(val_tag) ||                  \
-    (INT__=smallIntValue(val))<0)               \
+    (INT__=tagged2SmallInt(val))<0)             \
   oz_typeError(1,"Int>=0");
 
 // Handle the case of indexed property P that should be an int>=0
@@ -556,7 +556,7 @@ if (!isSmallIntTag(val_tag) ||                  \
 
 #define CHECK_PERCENT                           \
 if (!isSmallIntTag(val_tag) ||                  \
-    (INT__=smallIntValue(val))<1 ||             \
+    (INT__=tagged2SmallInt(val))<1 ||           \
     (INT__>100))                                \
   oz_typeError(1,"Int[1..100]");
 
@@ -597,7 +597,7 @@ if (INT__) {                                    \
   DEREF(INT__,PTR__,TAG__);                     \
   if (oz_isVariable(TAG__)) oz_suspendOnPtr(PTR__); \
   if (oz_isSmallInt(TAG__)) {                   \
-    INT__=smallIntValue(INT__);                 \
+    INT__=tagged2SmallInt(INT__);                       \
   } else if (oz_isBigInt(INT__)) {              \
     INT__=tagged2BigInt(INT__)->getInt();       \
   } else {                                      \
@@ -842,7 +842,7 @@ OZ_Term system_registry;        // eventually make it static [TODO]
 inline
 void VirtualProperty::add(const char * s, const int p) {
   tagged2Dictionary(vprop_registry)->setArg(oz_atomNoDup(s),
-                                            newSmallInt(p));
+                                            makeTaggedSmallInt(p));
 }
 
 // in addition to the usual OZ_Return values, the following
