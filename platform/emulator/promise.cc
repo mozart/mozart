@@ -66,7 +66,7 @@ OZ_Return Future::unifyFuture(TaggedRef* vPtr)
 
 OZ_BI_define(BIPromiseNew,0,1)
 {
-  if (!am.onToplevel()) {
+  if (!oz_onToplevel()) {
     return oz_raise(E_ERROR,E_KERNEL,"promisesOnlyAllowedOnToplevelSoFar",0);
   }
   TaggedRef *p = newTaggedUVar(am.currentBoard());

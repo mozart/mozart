@@ -258,7 +258,6 @@ public:
   Board *currentBoard()         { return _currentBoard; }
   Board *currentSolveBoard()    { return _currentSolveBoard; }
   Board *rootBoardGC()          { return _rootBoard; }
-  int isCurrentBoard(Board *bb) { return bb==_currentBoard; }
   int isBelowSolveBoard()       { return _currentSolveBoard!=0; }
   Bool inShallowGuard()         { return shallowHeapTop!=0; }
 #ifdef DEBUG_CHECK
@@ -276,9 +275,9 @@ public:
   TaggedRef getDebugStreamTail() { return debugStreamTail; }
 
   void debugStreamMessage(TaggedRef message) {
-    Assert(onToplevel());
+    Assert(_currentBoard==_rootBoard);
     TaggedRef newTail = OZ_newVariable();
-    OZ_Return ret     = OZ_unify(debugStreamTail,cons(message,newTail));
+    OZ_Return ret     = OZ_unify(debugStreamTail,oz_cons(message,newTail));
     debugStreamTail   = newTail;
     Assert(ret == PROCEED);
   }
@@ -291,9 +290,9 @@ public:
   }
   void setExceptionInfo(TaggedRef inf) {
     if (exception.info == NameUnit) {
-      exception.info=nil();
+      exception.info=oz_nil();
     }
-    exception.info = cons(inf,exception.info);
+    exception.info = oz_cons(inf,exception.info);
   }
   TaggedRef getExceptionValue() { return exception.value; }
   Bool hf_raise_failure();
@@ -312,7 +311,7 @@ public:
     return _currentUVarPrototype == t;
   }
   TaggedRef currentUVarPrototype() {
-    Assert(isCurrentBoard(tagged2VarHome(_currentUVarPrototype)));
+    Assert(tagged2VarHome(_currentUVarPrototype)==_currentBoard);
 #ifdef OPT_VAR_IN_STRUCTURE
     return _currentUVarPrototype;
 #else
@@ -322,17 +321,17 @@ public:
 
   TaggedRef emptySuspendVarList(void) {
     TaggedRef tmp=_suspendVarList;
-    _suspendVarList=nil();
+    _suspendVarList=oz_nil();
     return tmp;
   }
 
-  int isEmptySuspendVarList(void) { return OZ_eq(_suspendVarList,nil()); }
+  int isEmptySuspendVarList(void) { return OZ_eq(_suspendVarList,oz_nil()); }
 
   void addSuspendVarList(TaggedRef t)
   {
     Assert(oz_isVariable(oz_deref(t)));
 
-    _suspendVarList=cons(t,_suspendVarList);
+    _suspendVarList=oz_cons(t,_suspendVarList);
   }
   void addSuspendVarList(TaggedRef *t)
   {
@@ -492,15 +491,10 @@ public:
   INLINE void closeDonePropagatorCD(Propagator *);
   INLINE void closeDonePropagatorThreadCD(Propagator *);
 
-  Bool onToplevel() { return _currentBoard == _rootBoard; }
-
   void gc(int msgLevel);  // ###
   void doGC();
   // coping of trees (and terms);
   Board* copyTree(Board* node, Bool *isGround);
-
-  static int awakeIO(int fd, void *var);
-  void awakeIOVar(TaggedRef var);
 
   // entailment check
   Bool entailment() {
@@ -546,15 +540,7 @@ public:
 
   void restartThread();
 
-  void handleIO();
   void handleTasks();
-  void select(int fd, int mode, OZ_IOHandler fun, void *val);
-  void acceptSelect(int fd, OZ_IOHandler fun, void *val);
-  int select(int fd,int mode, TaggedRef l, TaggedRef r);
-  void acceptSelect(int fd, TaggedRef l, TaggedRef r);
-  void deSelect(int fd);
-  void deSelect(int fd,int mode);
-  void checkIO();
 
   //
   // Tasks are handled with certain minimal interval;
@@ -594,6 +580,26 @@ public:
 };
 
 extern AM am;
+
+
+/* -----------------------------------------------------------------------
+ * Spaces
+ * -----------------------------------------------------------------------*/
+
+inline
+Board *oz_rootBoard() { return am._rootBoard; }
+
+inline
+Board *oz_currentBoard() { return am._currentBoard; }
+
+inline
+int oz_isRootBoard(Board *bb) { return bb==oz_rootBoard(); }
+
+inline
+int oz_isCurrentBoard(Board *bb) { return oz_currentBoard() == bb; }
+
+inline
+int oz_onToplevel() { return oz_currentBoard() == oz_rootBoard(); }
 
 #include "cpi_heap.hh"
 #include "cpbag.hh"

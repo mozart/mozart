@@ -311,7 +311,7 @@ OZ_Return procedureArityInline(TaggedRef procedure, TaggedRef &out)
   goto typeError;
 
 typeError:
-  out = nil();
+  out = oz_nil();
   oz_typeError(0,"Procedure");
 }
 
@@ -629,7 +629,7 @@ OZ_BI_define(BIcommitSpace, 2,0) {
     oz_typeError(1, "Integer or pair of integers");
   }
 
-  if (!am.isCurrentBoard(space->getSolveBoard()->getParent()))
+  if (!oz_isCurrentBoard(space->getSolveBoard()->getParent()))
     return oz_raise(E_ERROR,E_KERNEL,"spaceParent",1,tagged_space);
 
   int l = smallIntValue(left) - 1;
@@ -681,7 +681,7 @@ OZ_BI_define(BIinjectSpace, 2,0)
   if (space->isFailed())
     return PROCEED;
 
-  if (!am.isCurrentBoard(space->getSolveBoard()->getParent()))
+  if (!oz_isCurrentBoard(space->getSolveBoard()->getParent()))
     return oz_raise(E_ERROR,E_KERNEL,"spaceParent", 1, tagged_space);
 
   DEREF(proc, proc_ptr, proc_tag);
@@ -1520,7 +1520,7 @@ OZ_BI_define(BIchunkArity,1,1)
     case Co_Chunk : OZ_RETURN(tagged2SChunk(ch)->getArityList());
     default:
       // no features
-      OZ_RETURN(nil());
+      OZ_RETURN(oz_nil());
     }
 
   default:
@@ -1729,7 +1729,7 @@ OZ_BI_define(BIthreadSuspend,1,0)
   oz_declareThreadIN(0,th);
 
   if (th->isProxy()) {
-    return remoteSend(th,"Thread.suspend",nil());
+    return remoteSend(th,"Thread.suspend",oz_nil());
   }
 
   th->setStop(OK);
@@ -1754,7 +1754,7 @@ OZ_BI_define(BIthreadResume,1,0)
   oz_declareThreadIN(0,th);
 
   if (th->isProxy()) {
-    return remoteSend(th,"Thread.resume",nil());
+    return remoteSend(th,"Thread.resume",oz_nil());
   }
 
 
@@ -1864,7 +1864,7 @@ OZ_BI_define(BIthreadTaskStack,3,1)
   oz_declareNonvarIN(2,verbose);
 
   if (thread->isDeadThread() || !thread->hasStack())
-    OZ_RETURN(nil());
+    OZ_RETURN(oz_nil());
 
   Bool doverbose;
   if (OZ_isTrue(verbose))
@@ -1884,7 +1884,7 @@ OZ_BI_define(BIthreadTaskStackError,2,1)
   oz_declareNonvarIN(1,verbose);
 
   if (thread->isDeadThread() || !thread->hasStack())
-    OZ_RETURN(nil());
+    OZ_RETURN(oz_nil());
 
   Bool doverbose;
   if (OZ_isTrue(verbose))
@@ -1915,7 +1915,7 @@ OZ_BI_define(BIthreadLocation,1,1)
   oz_declareThreadIN(0,thread);
 
   if (thread->isDeadThread()) {
-    OZ_RETURN(nil());
+    OZ_RETURN(oz_nil());
   } else {
     OZ_RETURN(oz_getLocation(GETBOARD(thread)));
   }
@@ -2194,7 +2194,7 @@ OZ_BI_define(BIcharToAtom,1,1) {
   OZ_FirstCharArg;
   if (i) {
      char s[2]; s[0]= (char) i; s[1]='\0';
-     OZ_RETURN(makeTaggedAtom(s));
+     OZ_RETURN(oz_atom(s));
   }
   OZ_RETURN(AtomEmpty);
 } OZ_BI_end
@@ -2344,7 +2344,7 @@ OZ_BI_define(BIadjoinAt,3,1)
   case LITERAL:
     if (oz_isFeature(fea)) {
       SRecord *newrec
-        = SRecord::newSRecord(rec,aritytable.find(cons(fea,nil())));
+        = SRecord::newSRecord(rec,aritytable.find(oz_cons(fea,oz_nil())));
       newrec->setArg(0,value);
       OZ_RETURN(makeTaggedSRecord(newrec));
     }
@@ -2402,7 +2402,7 @@ TaggedRef getArityFromPairList(TaggedRef list)
   TaggedRef old = list;
 loop:
   if (oz_isLTuple(list)) {
-    TaggedRef pair = head(list);
+    TaggedRef pair = oz_head(list);
     DerefReturnVar(pair);
     if (!oz_isPair2(pair)) return 0;
 
@@ -2416,18 +2416,18 @@ loop:
     lt->setHead(fea);
     next=lt->getRefTail();
 
-    list = tail(list);
+    list = oz_tail(list);
     DerefReturnVar(list);
     if (list==old) return 0;
     if (updateFlag) {
-      old=oz_deref(tail(old));
+      old=oz_deref(oz_tail(old));
     }
     updateFlag=1-updateFlag;
     goto loop;
   }
 
   if (oz_isNil(list)) {
-    *next=nil();
+    *next=oz_nil();
     return arity;
   }
 
@@ -2502,9 +2502,9 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
   switch (tag0) {
   case LITERAL:
     {
-      int len1 = fastlength(arity);
+      int len1 = oz_fastlength(arity);
       arity = sortlist(arity,len1);
-      int len = fastlength(arity); // NOTE: duplicates may be removed
+      int len = oz_fastlength(arity); // NOTE: duplicates may be removed
       if (!recordFlag && len!=len1) {  // handles case f(a:_ a:_)
         return oz_raise(E_ERROR,E_KERNEL,"recordConstruction",2,
                         t0,list
@@ -3527,13 +3527,13 @@ OZ_BI_define(BIlockLock,1,0)
   Tertiary *t=tagged2Tert(lock);
   if(t->isLocal()){
     LockLocal *ll=(LockLocal*)t;
-    if (!am.onToplevel()) {
-      if (!am.isCurrentBoard(GETBOARD(ll))) {
+    if (!oz_onToplevel()) {
+      if (!oz_isCurrentBoard(GETBOARD(ll))) {
         return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("lock"));
       }}
     ll->lock(am.currentThread());
     return PROCEED;}
-  if(!am.onToplevel()){
+  if(!oz_onToplevel()){
     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("lock"));}
 
   switch(t->getTertType()){
@@ -3790,10 +3790,10 @@ OZ_BI_define(BIcontrolVarHandler,1,0)
   {
     TaggedRef aux = varlist;
     while (oz_isCons(aux)) {
-      TaggedRef car = head(aux);
+      TaggedRef car = oz_head(aux);
       if (oz_isVariable(oz_deref(car))) {
         am.addSuspendVarList(car);
-        aux = tail(aux);
+        aux = oz_tail(aux);
       } else {
         am.emptySuspendVarList();
         goto no_suspend;
@@ -3804,8 +3804,8 @@ OZ_BI_define(BIcontrolVarHandler,1,0)
   }
 
 no_suspend:
-  for ( ; oz_isCons(varlist); varlist = oz_deref(tail(varlist))) {
-    TaggedRef car = oz_deref(head(varlist));
+  for ( ; oz_isCons(varlist); varlist = oz_deref(oz_tail(varlist))) {
+    TaggedRef car = oz_deref(oz_head(varlist));
     if (oz_isVariable(car))
       continue;
     if (oz_isLiteral(car) && literalEq(car,NameUnit))
@@ -3836,13 +3836,13 @@ no_suspend:
       Assert(OZ_width(car)==1);
       TaggedRef list = reverseC(oz_deref(tpl->getArg(0)));
       while(oz_isCons(list)) {
-        TaggedRef car = head(list);
+        TaggedRef car = oz_head(list);
         if (!OZ_isPair(car))
           return oz_raise(E_ERROR,E_SYSTEM,"applyList: pair expected",1,car);
         OZ_Return aux = applyProc(OZ_getArg(car,0),OZ_getArg(car,1));
         if (aux != BI_REPLACEBICALL)
           return aux;
-        list = oz_deref(tail(list));
+        list = oz_deref(oz_tail(list));
       }
       return BI_REPLACEBICALL;
     }
@@ -4324,7 +4324,7 @@ OZ_BI_define(BIfindFunction,3,0)
 
 TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I)
 {
-  OZ_Term l = nil();
+  OZ_Term l = oz_nil();
 
   Builtin *bi;
 
@@ -4335,7 +4335,7 @@ TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I)
    builtinTab.htAdd(I->name, bi);
 #endif
 
-    l = cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
+    l = oz_cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
     I++;
   }
 
@@ -4379,14 +4379,14 @@ OZ_BI_define(BIalarm,2,0) {
   oz_declareIntIN(0,t);
   oz_declareIN(1,out);
 
-  if (!am.onToplevel()) {
+  if (!oz_onToplevel()) {
     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("io"));
   }
 
   if (t <= 0)
     return oz_unify(NameUnit,out);
 
-  am.insertUser(t,cons(NameUnit,out));
+  am.insertUser(t,oz_cons(NameUnit,out));
   return PROCEED;
 } OZ_BI_end
 
@@ -4394,7 +4394,7 @@ OZ_BI_define(BIalarm,2,0) {
 OZ_BI_define(BIdelay,1,0) {
   oz_declareIntIN(0,t);
 
-  if (!am.onToplevel()) {
+  if (!oz_onToplevel()) {
     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("io"));
   }
 
@@ -4403,7 +4403,7 @@ OZ_BI_define(BIdelay,1,0) {
 
   TaggedRef var = oz_newVariable();
 
-  am.insertUser(t,cons(NameUnit,var));
+  am.insertUser(t,oz_cons(NameUnit,var));
   DEREF(var, var_ptr, var_tag);
 
   if (isVariableTag(var_tag)) {
@@ -4511,7 +4511,7 @@ OZ_BI_define(BIdeepFeed,2,0)
 
   TaggedRef newVar = oz_newVariable();
   TaggedRef old = cell->exchangeValue(newVar);
-  OZ_Return ret = oz_unify(old,cons(val,newVar));
+  OZ_Return ret = oz_unify(old,oz_cons(val,newVar));
 
   switch (am.installPath(savedNode)) {
   case INST_FAILED:
@@ -4772,7 +4772,7 @@ SRecord *getStateInline(RecOrCell state, Bool isAssign, Bool newVar,
     EmCode = SUSPEND;
     return NULL;}
 
-  if (am.onToplevel()) {
+  if (oz_onToplevel()) {
     if(isAssign) {
       EmCode = cellAssignExchange(t,fea,val);
     } else {
@@ -5128,7 +5128,7 @@ OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, ObjectClass *clas)
   if (!oz_isSRecord(initState)) {
     if (dummyRecord==makeTaggedNULL()) {
       SRecord *rec = SRecord::newSRecord(OZ_atom("noattributes"),
-                                         aritytable.find(cons(OZ_newName(),nil())));
+                                         aritytable.find(oz_cons(OZ_newName(),oz_nil())));
       rec->setArg(0,OZ_atom("novalue"));
       dummyRecord = makeTaggedSRecord(rec);
     }
@@ -5262,7 +5262,7 @@ OZ_BI_define(BIbiExceptionHandler,1,0)
   message("UNCAUGHT EXCEPTION: %s\n",toC(arg));
   errorTrailer();
 
-  return am.onToplevel() ? PROCEED : FAILED;
+  return oz_onToplevel() ? PROCEED : FAILED;
 } OZ_BI_end
 
 OZ_BI_define(BIraise,1,0)
@@ -5554,7 +5554,7 @@ OZ_BI_define(BIaddFastGroup,2,1)
   TaggedRef group = oz_deref(OZ_in(0));
 
   if (oz_isCons(group)) {
-    TaggedRef member = cons(OZ_in(1),findAliveEntry(tail(group)));
+    TaggedRef member = oz_cons(OZ_in(1),findAliveEntry(oz_tail(group)));
     tagged2LTuple(group)->setTail(member);
     OZ_RETURN(member);
   }
@@ -5568,7 +5568,7 @@ OZ_BI_define(BIdelFastGroup,1,0)
 
   if (oz_isCons(member)) {
     tagged2LTuple(member)->setHead(NameGroupVoid);
-    tagged2LTuple(member)->setTail(findAliveEntry(tail(member)));
+    tagged2LTuple(member)->setTail(findAliveEntry(oz_tail(member)));
   }
 
   return PROCEED;
@@ -5583,17 +5583,17 @@ OZ_BI_define(BIgetFastGroup,1,1)
   DEREF(group, _1, _2);
 
   if (oz_isCons(group)) {
-    TaggedRef out = nil();
+    TaggedRef out = oz_nil();
 
-    group = oz_deref(tail(group));
+    group = oz_deref(oz_tail(group));
 
     while (oz_isCons(group)) {
-      TaggedRef ahead = oz_deref(head(group));
+      TaggedRef ahead = oz_deref(oz_head(group));
 
       if (!(oz_isLiteral(ahead) && literalEq(ahead,NameGroupVoid)))
-        out = cons(ahead, out);
+        out = oz_cons(ahead, out);
 
-      group = oz_deref(tail(group));
+      group = oz_deref(oz_tail(group));
     }
 
     if (oz_isNil(group)) OZ_RETURN(out);
@@ -5611,19 +5611,19 @@ OZ_BI_define(BIdelAllFastGroup,1,1)
   DEREF(group, _1, _2);
 
   Assert(oz_isCons(group));
-  TaggedRef out = nil();
+  TaggedRef out = oz_nil();
 
-  group = oz_deref(tail(group));
+  group = oz_deref(oz_tail(group));
 
   while (oz_isCons(group)) {
-    TaggedRef ahead = oz_deref(head(group));
+    TaggedRef ahead = oz_deref(oz_head(group));
 
     if (!(oz_isLiteral(ahead) && literalEq(ahead,NameGroupVoid))) {
-      out = cons(ahead, out);
+      out = oz_cons(ahead, out);
       tagged2LTuple(group)->setHead(NameGroupVoid);
     }
 
-    group = oz_deref(tail(group));
+    group = oz_deref(oz_tail(group));
   }
 
   Assert(oz_isNil(group));

@@ -147,18 +147,18 @@ OZ_BI_define(BImakeProc,2,1)
   }
   const int maxX=-1; // should never suspend
   PrTabEntry *pte = new PrTabEntry(OZ_atom("toplevelAbstraction"),
-                                   mkTupleWidth(0), AtomEmpty, 0, -1, nil(),
+                                   mkTupleWidth(0), AtomEmpty, 0, -1, oz_nil(),
                                    maxX);
   pte->setGSize(numGlobals);
   pte->PC = code->getStart();
 
-  Assert(am.onToplevel());
+  Assert(oz_onToplevel());
   Abstraction *p = Abstraction::newAbstraction(pte,am.currentBoard());
 
   globals = oz_deref(globals);
   for (int i = 0; i < numGlobals; i++) {
-    p->initG(i,head(globals));
-    globals = oz_deref(tail(globals));
+    p->initG(i,oz_head(globals));
+    globals = oz_deref(oz_tail(globals));
   }
 
   OZ_RETURN(makeTaggedConst(p));
@@ -465,8 +465,8 @@ OZ_BI_define(BIstoreGRegRef,2,0)
   AssRegArray *gregs = new AssRegArray(numGlobals);
   globals = oz_deref(globals);
   for (int i = 0; i < numGlobals; i++) {
-    OZ_Term reg = oz_deref(head(globals));
-    globals = oz_deref(tail(globals));
+    OZ_Term reg = oz_deref(oz_head(globals));
+    globals = oz_deref(oz_tail(globals));
     if (!oz_isTuple(reg) || OZ_width(reg) != 1) {
       return OZ_typeError(1,"RegisterList");
     }
@@ -513,7 +513,7 @@ OZ_BI_define(BIstoreLocation,2,0)
 
   OZ_Location *loc = OZ_Location::newLocation(inArity,outArity);
   for (int i = 0; i < inArity; i++) {
-    OZ_Term reg = oz_deref(head(inLocs));
+    OZ_Term reg = oz_deref(oz_head(inLocs));
     if (!oz_isTuple(reg) || OZ_width(reg) != 1) {
       return OZ_typeError(1,"Location");
     }
@@ -527,10 +527,10 @@ OZ_BI_define(BIstoreLocation,2,0)
                       "registerIndexOutOfRange",1,OZ_in(1));
     }
     loc->in(i) = j;
-    inLocs = oz_deref(tail(inLocs));
+    inLocs = oz_deref(oz_tail(inLocs));
   }
   for (int i = 0; i < outArity; i++) {
-    OZ_Term reg = oz_deref(head(outLocs));
+    OZ_Term reg = oz_deref(oz_head(outLocs));
     if (!oz_isTuple(reg) || OZ_width(reg) != 1) {
       return OZ_typeError(1,"Location");
     }
@@ -544,7 +544,7 @@ OZ_BI_define(BIstoreLocation,2,0)
                       "registerIndexOutOfRange",1,OZ_in(1));
     }
     loc->out(i) = j;
-    outLocs = oz_deref(tail(outLocs));
+    outLocs = oz_deref(oz_tail(outLocs));
   }
 
   code->writeAddress(loc);

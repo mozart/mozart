@@ -54,8 +54,8 @@ public:
   virtual void unmarshalEnd()=0;
 
   void init() {
-    resources = nil();
-    nogoods   = nil();
+    resources = oz_nil();
+    nogoods   = oz_nil();
   }
 
   //
@@ -80,9 +80,9 @@ public:
   virtual Bool isPersistentBuffer()=0;
   virtual void unmarshalReset()                 {} // only for network receovery
 
-  void addRes(OZ_Term t)    { resources = cons(t,resources); }
+  void addRes(OZ_Term t)    { resources = oz_cons(t,resources); }
   OZ_Term getResources()    { return (resources); }
-  void addNogood(OZ_Term t) { nogoods = cons(t,nogoods); }
+  void addNogood(OZ_Term t) { nogoods = oz_cons(t,nogoods); }
   OZ_Term getNoGoods() { return nogoods; }
 };
 

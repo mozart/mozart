@@ -177,24 +177,24 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
       frame = auxframe;
 
       RefsArray X = (RefsArray) G;
-      TaggedRef args = nil();
+      TaggedRef args = oz_nil();
       if (X) {
         for (int i = getRefsArraySize(X) - 1; i >= 0; i--)
-          args = cons(X[i],args);
+          args = oz_cons(X[i],args);
       }
 
       TaggedRef pairlist =
-        cons(OZ_pairA("args",args),
-             cons(OZ_pairA("kind",OZ_atom("call")),
-                  cons(OZ_pairA("thr",makeTaggedConst(thread)),
-                       cons(OZ_pairAI("time",CodeArea::findTimeStamp(PC)),
-                            cons(OZ_pairA("origin",OZ_atom("builtinFrame")),
-                                 nil())))));
+        oz_cons(OZ_pairA("args",args),
+             oz_cons(OZ_pairA("kind",OZ_atom("call")),
+                  oz_cons(OZ_pairA("thr",makeTaggedConst(thread)),
+                       oz_cons(OZ_pairAI("time",CodeArea::findTimeStamp(PC)),
+                            oz_cons(OZ_pairA("origin",OZ_atom("builtinFrame")),
+                                 oz_nil())))));
       if (frameId != -1)
-        pairlist = cons(OZ_pairAI("frameID",frameId),pairlist);
+        pairlist = oz_cons(OZ_pairAI("frameID",frameId),pairlist);
       Builtin *bi = builtinTab.getEntry((void *) Y);
       Assert(bi != NULL);
-      pairlist = cons(OZ_pairA("data",makeTaggedConst(bi)),pairlist);
+      pairlist = oz_cons(OZ_pairA("data",makeTaggedConst(bi)),pairlist);
 
       return OZ_recordInit(OZ_atom("entry"), pairlist);
     }
@@ -238,7 +238,7 @@ Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC,
   Assert(this);
 
   if (out) {
-    *out = nil();
+    *out = oz_nil();
     if (PC != NOCODE) {
       Frame *auxframe = getTop();
       GetFrame(auxframe,auxPC,auxY,auxG);
@@ -250,7 +250,7 @@ Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC,
           TaggedRef frameRec =
             CodeArea::dbgGetDef(PC,definitionPC,-1,Y,G);
           if (frameRec != makeTaggedNULL())
-            *out = cons(frameRec,*out);
+            *out = oz_cons(frameRec,*out);
         }
       }
     }
@@ -261,7 +261,7 @@ Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC,
       Frame *frame = getTop();
       TaggedRef frameRec = frameToRecord(frame,thr,verbose);
       if (frameRec != makeTaggedNULL())
-        *out = cons(frameRec,*out);
+        *out = oz_cons(frameRec,*out);
     }
 
     PopFrame(this,PC,Y,G);
@@ -331,12 +331,12 @@ void TaskStack::printTaskStack(int depth)
 TaggedRef TaskStack::getTaskStack(Thread *tt, Bool verbose, int depth) {
   Assert(this);
 
-  TaggedRef out = nil();
+  TaggedRef out = oz_nil();
   Frame *auxtos = getTop();
   while (auxtos != NULL && (depth > 0 || depth == -1)) {
     TaggedRef frameRec = frameToRecord(auxtos,tt,verbose);
     if (frameRec != makeTaggedNULL()) {
-      out = cons(frameRec,out);
+      out = oz_cons(frameRec,out);
       if (depth != -1)
         depth--;
     }

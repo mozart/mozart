@@ -32,6 +32,8 @@
 #include "runtime.hh"
 #include "dictionary.hh"
 
+#include <stdarg.h>
+
 /*===================================================================
  * global names and atoms
  *=================================================================== */
@@ -103,44 +105,44 @@ TaggedRef getUniqueName(const char *s)
 // Some often used constants
 void initLiterals()
 {
-  AtomNil   = makeTaggedAtom("nil");
-  AtomCons  = makeTaggedAtom("|");
-  AtomPair  = makeTaggedAtom("#");
-  AtomVoid  = makeTaggedAtom("_");
+  AtomNil   = oz_atom("nil");
+  AtomCons  = oz_atom("|");
+  AtomPair  = oz_atom("#");
+  AtomVoid  = oz_atom("_");
 
-  AtomBool  = makeTaggedAtom("bool");
-  AtomSup   = makeTaggedAtom("sup");
-  AtomCompl = makeTaggedAtom("compl");
+  AtomBool  = oz_atom("bool");
+  AtomSup   = oz_atom("sup");
+  AtomCompl = oz_atom("compl");
 
-  AtomEmpty     = makeTaggedAtom("");
-  AtomUpper     = makeTaggedAtom("upper");
-  AtomLower     = makeTaggedAtom("lower");
-  AtomDigit     = makeTaggedAtom("digit");
-  AtomCharSpace = makeTaggedAtom("space");
-  AtomPunct     = makeTaggedAtom("punct");
-  AtomOther     = makeTaggedAtom("other");
+  AtomEmpty     = oz_atom("");
+  AtomUpper     = oz_atom("upper");
+  AtomLower     = oz_atom("lower");
+  AtomDigit     = oz_atom("digit");
+  AtomCharSpace = oz_atom("space");
+  AtomPunct     = oz_atom("punct");
+  AtomOther     = oz_atom("other");
 
-  AtomSucceeded    = makeTaggedAtom("succeeded");
-  AtomAlt          = makeTaggedAtom("alternatives");
-  AtomEntailed     = makeTaggedAtom("entailed");
-  AtomSuspended    = makeTaggedAtom("suspended");
-  AtomBlocked      = makeTaggedAtom("blocked");
-  AtomMerged       = makeTaggedAtom("merged");
-  AtomFailed       = makeTaggedAtom("failed");
+  AtomSucceeded    = oz_atom("succeeded");
+  AtomAlt          = oz_atom("alternatives");
+  AtomEntailed     = oz_atom("entailed");
+  AtomSuspended    = oz_atom("suspended");
+  AtomBlocked      = oz_atom("blocked");
+  AtomMerged       = oz_atom("merged");
+  AtomFailed       = oz_atom("failed");
 
-  AtomDebugCallC   = makeTaggedAtom("call/c");
-  AtomDebugCallF   = makeTaggedAtom("call/f");
-  AtomDebugCondC   = makeTaggedAtom("conditional/c");
-  AtomDebugCondF   = makeTaggedAtom("conditional/f");
-  AtomDebugLockC   = makeTaggedAtom("lock/c");
-  AtomDebugLockF   = makeTaggedAtom("lock/f");
-  AtomDebugNameC   = makeTaggedAtom("name generation/c");
-  AtomDebugNameF   = makeTaggedAtom("name generation/f");
+  AtomDebugCallC   = oz_atom("call/c");
+  AtomDebugCallF   = oz_atom("call/f");
+  AtomDebugCondC   = oz_atom("conditional/c");
+  AtomDebugCondF   = oz_atom("conditional/f");
+  AtomDebugLockC   = oz_atom("lock/c");
+  AtomDebugLockF   = oz_atom("lock/f");
+  AtomDebugNameC   = oz_atom("name generation/c");
+  AtomDebugNameF   = oz_atom("name generation/f");
 
-  AtomUnify        = makeTaggedAtom("unify");
-  AtomException    = makeTaggedAtom("exception");
+  AtomUnify        = oz_atom("unify");
+  AtomException    = oz_atom("exception");
 
-  AtomExport       = makeTaggedAtom("export");
+  AtomExport       = oz_atom("export");
 
   NameUnit          = getUniqueName("unit");
   NameGroupVoid     = getUniqueName("group(void)");
@@ -162,119 +164,119 @@ void initLiterals()
   NameOoFallback    = getUniqueName("ooFallback");
   NameOoId          = getUniqueName("ooId");
 
-  AtomNew           = makeTaggedAtom("new");
-  AtomApply         = makeTaggedAtom("apply");
-  AtomApplyList     = makeTaggedAtom("applyList");
+  AtomNew           = oz_atom("new");
+  AtomApply         = oz_atom("apply");
+  AtomApplyList     = oz_atom("applyList");
 
-  AtomMin     = makeTaggedAtom("min");
-  AtomMax     = makeTaggedAtom("max");
-  AtomMid     = makeTaggedAtom("mid");
-  AtomNaive   = makeTaggedAtom("naive");
-  AtomSize    = makeTaggedAtom("size");
-  AtomNbSusps = makeTaggedAtom("nbSusps");
+  AtomMin     = oz_atom("min");
+  AtomMax     = oz_atom("max");
+  AtomMid     = oz_atom("mid");
+  AtomNaive   = oz_atom("naive");
+  AtomSize    = oz_atom("size");
+  AtomNbSusps = oz_atom("nbSusps");
 
-  AtomLow          = makeTaggedAtom("low");
+  AtomLow          = oz_atom("low");
 
   // For system set and get
-  AtomActive                = makeTaggedAtom("active");
-  AtomAtoms                 = makeTaggedAtom("atoms");
-  AtomBuiltins              = makeTaggedAtom("builtins");
-  AtomCache                 = makeTaggedAtom("cache");
-  AtomCommitted             = makeTaggedAtom("committed");
-  AtomCloned                = makeTaggedAtom("cloned");
-  AtomCode                  = makeTaggedAtom("code");
-  AtomCopy                  = makeTaggedAtom("copy");
-  AtomCreated               = makeTaggedAtom("created");
-  AtomDebug                 = makeTaggedAtom("debug");
-  AtomDepth                 = makeTaggedAtom("depth");
+  AtomActive                = oz_atom("active");
+  AtomAtoms                 = oz_atom("atoms");
+  AtomBuiltins              = oz_atom("builtins");
+  AtomCache                 = oz_atom("cache");
+  AtomCommitted             = oz_atom("committed");
+  AtomCloned                = oz_atom("cloned");
+  AtomCode                  = oz_atom("code");
+  AtomCopy                  = oz_atom("copy");
+  AtomCreated               = oz_atom("created");
+  AtomDebug                 = oz_atom("debug");
+  AtomDepth                 = oz_atom("depth");
   // AtomFailed
-  AtomFeed                  = makeTaggedAtom("feed");
-  AtomForeign               = makeTaggedAtom("foreign");
-  AtomFree                  = makeTaggedAtom("free");
-  AtomFreelist              = makeTaggedAtom("freelist");
-  AtomGC                    = makeTaggedAtom("gc");
-  AtomHigh                  = makeTaggedAtom("high");
-  AtomHints                 = makeTaggedAtom("hints");
-  AtomIdle                  = makeTaggedAtom("idle");
-  AtomInt                   = makeTaggedAtom("int");
-  AtomInvoked               = makeTaggedAtom("invoked");
-  AtomLimits                = makeTaggedAtom("limits");
-  AtomLoad                  = makeTaggedAtom("load");
-  AtomLocation              = makeTaggedAtom("location");
+  AtomFeed                  = oz_atom("feed");
+  AtomForeign               = oz_atom("foreign");
+  AtomFree                  = oz_atom("free");
+  AtomFreelist              = oz_atom("freelist");
+  AtomGC                    = oz_atom("gc");
+  AtomHigh                  = oz_atom("high");
+  AtomHints                 = oz_atom("hints");
+  AtomIdle                  = oz_atom("idle");
+  AtomInt                   = oz_atom("int");
+  AtomInvoked               = oz_atom("invoked");
+  AtomLimits                = oz_atom("limits");
+  AtomLoad                  = oz_atom("load");
+  AtomLocation              = oz_atom("location");
   // AtomMax
-  AtomMedium                = makeTaggedAtom("medium");
+  AtomMedium                = oz_atom("medium");
   // AtomMin
-  AtomNames                 = makeTaggedAtom("names");
-  AtomOn                    = makeTaggedAtom("on");
-  AtomPropagate             = makeTaggedAtom("propagate");
-  AtomPropagators           = makeTaggedAtom("propagators");
-  AtomRun                   = makeTaggedAtom("run");
-  AtomRunnable              = makeTaggedAtom("runnable");
-  AtomShowSuspension        = makeTaggedAtom("showSuspension");
+  AtomNames                 = oz_atom("names");
+  AtomOn                    = oz_atom("on");
+  AtomPropagate             = oz_atom("propagate");
+  AtomPropagators           = oz_atom("propagators");
+  AtomRun                   = oz_atom("run");
+  AtomRunnable              = oz_atom("runnable");
+  AtomShowSuspension        = oz_atom("showSuspension");
   // AtomSize
-  AtomStopOnToplevelFailure = makeTaggedAtom("stopOnToplevelFailure");
+  AtomStopOnToplevelFailure = oz_atom("stopOnToplevelFailure");
   // AtomSucceeded
-  AtomSystem                = makeTaggedAtom("system");
-  AtomThread                = makeTaggedAtom("thread");
-  AtomThreshold             = makeTaggedAtom("threshold");
-  AtomTolerance             = makeTaggedAtom("tolerance");
-  AtomTotal                 = makeTaggedAtom("total");
-  AtomUser                  = makeTaggedAtom("user");
-  AtomVariables             = makeTaggedAtom("variables");
-  AtomWidth                 = makeTaggedAtom("width");
-  AtomHeap                  = makeTaggedAtom("heap");
-  AtomDetailed              = makeTaggedAtom("detailed");
-  AtomBrowser               = makeTaggedAtom("browser");
-  AtomApplet                = makeTaggedAtom("applet");
+  AtomSystem                = oz_atom("system");
+  AtomThread                = oz_atom("thread");
+  AtomThreshold             = oz_atom("threshold");
+  AtomTolerance             = oz_atom("tolerance");
+  AtomTotal                 = oz_atom("total");
+  AtomUser                  = oz_atom("user");
+  AtomVariables             = oz_atom("variables");
+  AtomWidth                 = oz_atom("width");
+  AtomHeap                  = oz_atom("heap");
+  AtomDetailed              = oz_atom("detailed");
+  AtomBrowser               = oz_atom("browser");
+  AtomApplet                = oz_atom("applet");
 
-  // AtomFree                  = makeTaggedAtom("free");
-  AtomKinded                = makeTaggedAtom("kinded");
-  AtomDet                   = makeTaggedAtom("det");
-  AtomRecord                = makeTaggedAtom("record");
-  AtomFSet                  = makeTaggedAtom("fset");
-  // AtomInt                   = makeTaggedAtom("int");
+  // AtomFree                  = oz_atom("free");
+  AtomKinded                = oz_atom("kinded");
+  AtomDet                   = oz_atom("det");
+  AtomRecord                = oz_atom("record");
+  AtomFSet                  = oz_atom("fset");
+  // AtomInt                   = oz_atom("int");
 
-  AtomDebugIP               = makeTaggedAtom("debugIP");
-  AtomDebugPerdio           = makeTaggedAtom("debugPerdio");
+  AtomDebugIP               = oz_atom("debugIP");
+  AtomDebugPerdio           = oz_atom("debugPerdio");
 
   // Atom Handlers
-  AtomTempBlocked             = makeTaggedAtom("tempBlocked");
-  AtomPermBlocked             = makeTaggedAtom("permBlocked");
-  AtomTempMe                  = makeTaggedAtom("tempMe");
-  AtomPermMe                  = makeTaggedAtom("permMe");
-  AtomTempAllOthers           = makeTaggedAtom("tempAllOthers");
-  AtomPermAllOthers           = makeTaggedAtom("permAllOthers");
-  AtomTempSomeOther           = makeTaggedAtom("tempSomeOther");
-  AtomPermSomeOther           = makeTaggedAtom("permSomeOther");
-  AtomEntityNormal            = makeTaggedAtom("entityNormal");
-  AtomTemp                    = makeTaggedAtom("temp");
-  AtomTempHome                = makeTaggedAtom("tempHome");
-  AtomTempForeign             = makeTaggedAtom("tempForeign");
-  AtomPerm                    = makeTaggedAtom("perm");
-  AtomPermHome                = makeTaggedAtom("permHome");
-  AtomPermForeign             = makeTaggedAtom("permForeign");
-  AtomContinue                = makeTaggedAtom("continue");
-  AtomRetry                   = makeTaggedAtom("retry");
-  AtomYes                     = makeTaggedAtom("yes");
-  AtomNo                      = makeTaggedAtom("no");
-  AtomPerSite                 = makeTaggedAtom("perSite");
-  AtomPerThread               = makeTaggedAtom("perThread");
-  AtomHandler                 = makeTaggedAtom("handler");
-  AtomWatcher                 = makeTaggedAtom("watcher");
-  AtomAny                     = makeTaggedAtom("any");
-  AtomAll                     = makeTaggedAtom("all");
+  AtomTempBlocked             = oz_atom("tempBlocked");
+  AtomPermBlocked             = oz_atom("permBlocked");
+  AtomTempMe                  = oz_atom("tempMe");
+  AtomPermMe                  = oz_atom("permMe");
+  AtomTempAllOthers           = oz_atom("tempAllOthers");
+  AtomPermAllOthers           = oz_atom("permAllOthers");
+  AtomTempSomeOther           = oz_atom("tempSomeOther");
+  AtomPermSomeOther           = oz_atom("permSomeOther");
+  AtomEntityNormal            = oz_atom("entityNormal");
+  AtomTemp                    = oz_atom("temp");
+  AtomTempHome                = oz_atom("tempHome");
+  AtomTempForeign             = oz_atom("tempForeign");
+  AtomPerm                    = oz_atom("perm");
+  AtomPermHome                = oz_atom("permHome");
+  AtomPermForeign             = oz_atom("permForeign");
+  AtomContinue                = oz_atom("continue");
+  AtomRetry                   = oz_atom("retry");
+  AtomYes                     = oz_atom("yes");
+  AtomNo                      = oz_atom("no");
+  AtomPerSite                 = oz_atom("perSite");
+  AtomPerThread               = oz_atom("perThread");
+  AtomHandler                 = oz_atom("handler");
+  AtomWatcher                 = oz_atom("watcher");
+  AtomAny                     = oz_atom("any");
+  AtomAll                     = oz_atom("all");
 
   RecordFailure = OZ_record(OZ_atom("failure"),
                             OZ_cons(OZ_atom("debug"),OZ_nil()));
   OZ_putSubtree(RecordFailure,OZ_atom("debug"),NameUnit);
   OZ_protect(&RecordFailure);
 
-  E_ERROR = makeTaggedAtom("error");
-  E_KERNEL= makeTaggedAtom("kernel");
-  E_OBJECT= makeTaggedAtom("object");
-  E_TK    = makeTaggedAtom("tk");
-  E_OS    = makeTaggedAtom("os");
-  E_SYSTEM= makeTaggedAtom("system");
+  E_ERROR = oz_atom("error");
+  E_KERNEL= oz_atom("kernel");
+  E_OBJECT= oz_atom("object");
+  E_TK    = oz_atom("tk");
+  E_OS    = oz_atom("os");
+  E_SYSTEM= oz_atom("system");
 
 }
 
@@ -325,7 +327,7 @@ NamedName *NamedName::newNamedName(const char *pn)
 
   NamedName *ret = (NamedName*) malloc(sizeof(NamedName));
   ret->init();
-  Assert(am.onToplevel());
+  Assert(oz_onToplevel());
   ret->homeOrGName = ToInt32(am.currentBoard());
   ret->setOthers(NameCurrentNumber += 1 << sizeOfCopyCount);
   ret->setFlag(Lit_isName|Lit_isNamedName);
@@ -340,7 +342,7 @@ NamedName *NamedName::generateCopy()
 
   NamedName *ret = (NamedName*) malloc(sizeof(NamedName));
   ret->init();
-  Assert(am.onToplevel() && isCopyableName());
+  Assert(oz_onToplevel() && isCopyableName());
   ret->homeOrGName = ToInt32(am.currentBoard());
   int seqNumber = getOthers();
   seqNumber++;
@@ -422,10 +424,10 @@ TaggedRef appendI(TaggedRef x,TaggedRef y)
 
   x=oz_deref(x);
   while (oz_isCons(x)) {
-    LTuple *lt=new LTuple(head(x),makeTaggedNULL());
+    LTuple *lt=new LTuple(oz_head(x),makeTaggedNULL());
     *out=makeTaggedLTuple(lt);
     out=lt->getRefTail();
-    x=oz_deref(tail(x));
+    x=oz_deref(oz_tail(x));
   }
   *out=y;
   return ret;
@@ -436,9 +438,9 @@ Bool member(TaggedRef elem,TaggedRef list)
   elem = oz_deref(elem);
   list = oz_deref(list);
   while (oz_isCons(list)) {
-    if (elem==oz_deref(head(list)))
+    if (elem==oz_deref(oz_head(list)))
       return OK;
-    list = oz_deref(tail(list));
+    list = oz_deref(oz_tail(list));
   }
   return NO;
 }
@@ -448,7 +450,7 @@ Bool member(TaggedRef elem,TaggedRef list)
  */
 TaggedRef reverseC(TaggedRef l)
 {
-  TaggedRef out=nil();
+  TaggedRef out=oz_nil();
   l=oz_deref(l);
   while (oz_isCons(l)) {
     LTuple *lt=tagged2LTuple(l);
@@ -465,21 +467,21 @@ TaggedRef reverseC(TaggedRef l)
 TaggedRef duplist(TaggedRef list, int &len)
 {
   len = 0;
-  TaggedRef ret = nil();
+  TaggedRef ret = oz_nil();
   TaggedRef *aux = &ret;
 
   while(oz_isCons(list)) {
     len++;
-    *aux = cons(head(list),*aux);
+    *aux = oz_cons(oz_head(list),*aux);
     aux = tagged2LTuple(*aux)->getRefTail();
-    list = tail(list);
+    list = oz_tail(list);
   }
   return ret;
 }
 
 TaggedRef Object::getArityList()
 {
-  TaggedRef ret = nil();
+  TaggedRef ret = oz_nil();
 
   SRecord *feat=getFreeRecord();
   if (feat) ret = feat->getArityList();
@@ -573,12 +575,12 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X
 
   int argno;
   int argnoProvided = 0;
-  for (argno = 0; oz_isCons(def); def = tail(def), argno++) {
-    TaggedRef feat  = head(def);
+  for (argno = 0; oz_isCons(def); def = oz_tail(def), argno++) {
+    TaggedRef feat  = oz_head(def);
     TaggedRef value = oz_deref(rec->getArg(argno));
 
-    if (!oz_isNil(arityList) && featureEq(head(arityList),feat)) {
-      arityList = tail(arityList);
+    if (!oz_isNil(arityList) && featureEq(oz_head(arityList),feat)) {
+      arityList = oz_tail(arityList);
       auxX[argno] = X[argnoProvided];
       argnoProvided++;
     } else if (literalEq(value,NameOoDefaultVar)) {
@@ -801,10 +803,10 @@ Bool listequal(TaggedRef lista, TaggedRef listb)
 {
   while (oz_isCons(lista)) {
     if (!oz_isCons(listb)) return NO;
-    if ( !featureEq(head(lista),head(listb)) ) return NO;
+    if ( !featureEq(oz_head(lista),oz_head(listb)) ) return NO;
 
-    lista = tail(lista);
-    listb = tail(listb);
+    lista = oz_tail(lista);
+    listb = oz_tail(listb);
   }
   Assert(oz_isNil(lista));
   return oz_isNil(listb);
@@ -827,7 +829,7 @@ TaggedRef insert(TaggedRef a, TaggedRef list) {
   TaggedRef *ptr=&out;
 
   while (oz_isCons(list)) {
-    TaggedRef oldhead = head(list);
+    TaggedRef oldhead = oz_head(list);
     CHECK_DEREF(oldhead);
 
     switch (featureCmp(a,oldhead)) {
@@ -835,14 +837,14 @@ TaggedRef insert(TaggedRef a, TaggedRef list) {
       *ptr = list;
       return out;
     case -1:
-      *ptr = cons(a,list);
+      *ptr = oz_cons(a,list);
       return out;
     case 1:
       {
         LTuple *lt = new LTuple(oldhead,makeTaggedNULL());
         *ptr = makeTaggedLTuple(lt);
         ptr = lt->getRefTail();
-        list=tail(list);
+        list=oz_tail(list);
       }
       break;
     default:
@@ -851,7 +853,7 @@ TaggedRef insert(TaggedRef a, TaggedRef list) {
     }
   }
   Assert(oz_isNil(list));
-  *ptr=cons(a,nil());
+  *ptr=oz_cons(a,oz_nil());
 
   return out;
 }
@@ -871,9 +873,9 @@ TaggedRef insertlist(TaggedRef ins, TaggedRef old)
   CHECK_NONVAR(ins);
 
   while (oz_isCons(ins)) {
-    old = insert(oz_deref(head(ins)),old);
+    old = insert(oz_deref(oz_head(ins)),old);
     CHECK_DEREF(old);
-    ins = oz_deref(tail(ins));
+    ins = oz_deref(oz_tail(ins));
     CHECK_NONVAR(ins);
   }
 
@@ -926,9 +928,9 @@ Bool isSorted(TaggedRef list)
   if (oz_isNil(list)) return OK;
 
   while(1) {
-    TaggedRef cdr = oz_deref(tail(list));
+    TaggedRef cdr = oz_deref(oz_tail(list));
     if (oz_isNil(cdr)) return OK;
-    if (featureCmp(head(list),head(cdr))!=-1) return NO;
+    if (featureCmp(oz_head(list),oz_head(cdr))!=-1) return NO;
     list = cdr;
   }
   return OK;
@@ -947,7 +949,7 @@ TaggedRef sortlist(TaggedRef list,int len)
   int i = 0;
   while (oz_isCons(tmp)) {
     r[i++] = tagged2LTuple(tmp)->getRef();
-    tmp = tail(tmp);
+    tmp = oz_tail(tmp);
   }
 
   // sort array r using quicksort
@@ -978,7 +980,7 @@ TaggedRef packsort(TaggedRef list)
 {
   list=oz_deref(list);
   if (oz_isNil(list)) {
-    return nil();
+    return oz_nil();
   }
   int len=0;
 
@@ -1030,7 +1032,7 @@ unsigned int intlog(unsigned int i)
 
 Arity *Arity::newArity(TaggedRef entrylist , Bool itf)
 {
-  int w = fastlength(entrylist);
+  int w = oz_fastlength(entrylist);
 
   if (itf) {
     Arity *ar = (Arity *) (void *) new char[sizeof(Arity)];
@@ -1053,7 +1055,7 @@ Arity *Arity::newArity(TaggedRef entrylist , Bool itf)
   int j=0;
   for (int i=0 ; i<size ; ar->table[i++].key = 0);
   while (oz_isCons(entrylist)) {
-    const TaggedRef entry = head(entrylist);
+    const TaggedRef entry = oz_head(entrylist);
     const int hsh         = featureHash(entry);
     int i                 = ar->hashfold(hsh);
     const int step        = ar->scndhash(hsh);
@@ -1063,7 +1065,7 @@ Arity *Arity::newArity(TaggedRef entrylist , Bool itf)
     }
     ar->table[i].key   = entry;
     ar->table[i].index = j++;
-    entrylist = tail(entrylist);
+    entrylist = oz_tail(entrylist);
   }
   return ar;
 }
@@ -1126,14 +1128,14 @@ Bool ArityTable::hashvalue( TaggedRef list, int &ret )
   int i = 0;
   int len = 0;
   while(oz_isCons(list)){
-    TaggedRef it=head(list);
+    TaggedRef it=oz_head(list);
     if (len>=0 && oz_isSmallInt(it) && smallIntValue(it)==len+1) {
       len++;
     } else {
       len = -1;
     }
     i += featureHash(it);
-    list = tail(list);
+    list = oz_tail(list);
   }
   Assert(oz_isNil(list));
   ret = hashfold(i);
@@ -1218,25 +1220,25 @@ TaggedRef merge(TaggedRef lista, TaggedRef listb)
 
   Assert(oz_isCons(lista) && oz_isCons(listb));
 
-  TaggedRef a = head(lista);
-  TaggedRef b = head(listb);
+  TaggedRef a = oz_head(lista);
+  TaggedRef b = oz_head(listb);
   TaggedRef newHead;
 
   switch (featureCmp(a,b)) {
 
   case 0:
     newHead = a;
-    lista = tail(lista);
-    listb = tail(listb);
+    lista = oz_tail(lista);
+    listb = oz_tail(listb);
     break;
   case -1:
     newHead = a;
-    lista = tail(lista);
+    lista = oz_tail(lista);
     break;
   case 1:
   default:
     newHead = b;
-    listb = tail(listb);
+    listb = oz_tail(listb);
     break;
   }
 
@@ -1270,20 +1272,20 @@ TaggedRef oz_adjoin(SRecord *lrec, SRecord* hrecord)
   TaggedRef ar = list1;
   CHECK_DEREF(ar);
   while (oz_isCons(ar)) {
-    TaggedRef a = head(ar);
+    TaggedRef a = oz_head(ar);
     CHECK_DEREF(a);
     newrec->setFeature(a,lrec->getFeature(a));
-    ar = tail(ar);
+    ar = oz_tail(ar);
     CHECK_DEREF(ar);
   }
 
   TaggedRef har = list2;
   CHECK_DEREF(har);
   while (oz_isCons(har)) {
-    TaggedRef a = head(har);
+    TaggedRef a = oz_head(har);
     CHECK_DEREF(a);
     newrec->setFeature(a,hrecord->getFeature(a));
-    har = tail(har);
+    har = oz_tail(har);
     CHECK_DEREF(har);
   }
   return newrec->normalize();
@@ -1310,10 +1312,10 @@ TaggedRef oz_adjoinAt(SRecord *rec, TaggedRef feature, TaggedRef value)
 
     CHECK_DEREF(oldArityList);
     while (oz_isCons(oldArityList)) {
-      TaggedRef a = head(oldArityList);
+      TaggedRef a = oz_head(oldArityList);
       CHECK_DEREF(a);
       newrec->setFeature(a,rec->getFeature(a));
-      oldArityList = tail(oldArityList);
+      oldArityList = oz_tail(oldArityList);
       CHECK_DEREF(oldArityList);
     }
     Assert(oz_isNil(oldArityList));
@@ -1333,15 +1335,15 @@ TaggedRef oz_adjoinList(SRecord *lrec,TaggedRef arityList,TaggedRef proplist)
   Arity *newArity = aritytable.find(newArityList);
 
   SRecord *newrec = SRecord::newSRecord(lrec->getLabel(),newArity);
-  Assert(fastlength(newArityList) == newrec->getWidth());
+  Assert(oz_fastlength(newArityList) == newrec->getWidth());
 
   TaggedRef ar = lrec->getArityList();
   CHECK_DEREF(ar);
   while (oz_isCons(ar)) {
-    TaggedRef a = head(ar);
+    TaggedRef a = oz_head(ar);
     CHECK_DEREF(a);
     newrec->setFeature(a,lrec->getFeature(a));
-    ar = tail(ar);
+    ar = oz_tail(ar);
     CHECK_DEREF(ar);
   }
 
@@ -1355,10 +1357,10 @@ void SRecord::setFeatures(TaggedRef proplist)
   DEREF(proplist,_1,_2);
   CHECK_NONVAR(proplist);
   while (oz_isCons(proplist)) {
-    TaggedRef pair = head(proplist);
+    TaggedRef pair = oz_head(proplist);
     DEREF(pair,_3,_4);
     CHECK_NONVAR(pair);
-    proplist = oz_deref(tail(proplist));
+    proplist = oz_deref(oz_tail(proplist));
     CHECK_NONVAR(proplist);
 
     TaggedRef fea = oz_left(pair);
@@ -1416,9 +1418,9 @@ TaggedRef SRecord::replaceFeature(TaggedRef feature,TaggedRef value)
 TaggedRef makeTupleArityList(int i)
 {
   Assert(i>=0);
-  TaggedRef out = nil();
+  TaggedRef out = oz_nil();
   while (i>0) {
-    out=cons(newSmallInt(i),out);
+    out=oz_cons(newSmallInt(i),out);
     i--;
   }
   return out;
@@ -1497,7 +1499,7 @@ void PrTabEntry::printPrTabEntries()
 
 TaggedRef PrTabEntry::getProfileStats()
 {
-  TaggedRef ret      = nil();
+  TaggedRef ret      = oz_nil();
   TaggedRef ps       = oz_atom("profileStats");
   TaggedRef samples  = oz_atom("samples");
   TaggedRef heap     = oz_atom("heap");
@@ -1507,14 +1509,14 @@ TaggedRef PrTabEntry::getProfileStats()
   TaggedRef line     = oz_atom("line");
   TaggedRef file     = oz_atom("file");
 
-  TaggedRef list = cons(file,
-                        cons(line,
-                             cons(name,
-                                  cons(samples,
-                                       cons(heap,
-                                            cons(calls,
-                                                 cons(closures,nil())))))));
-  Arity *arity = aritytable.find(sortlist(list,fastlength(list)));
+  TaggedRef list = oz_cons(file,
+                        oz_cons(line,
+                             oz_cons(name,
+                                  oz_cons(samples,
+                                       oz_cons(heap,
+                                            oz_cons(calls,
+                                                 oz_cons(closures,oz_nil())))))));
+  Arity *arity = aritytable.find(sortlist(list,oz_fastlength(list)));
 
   {
     PrTabEntry *aux = allPrTabEntries;
@@ -1528,7 +1530,7 @@ TaggedRef PrTabEntry::getProfileStats()
         rec->setFeature(line,OZ_int(aux->line));
         rec->setFeature(name,aux->printname);
         rec->setFeature(file,aux->file);
-        ret = cons(makeTaggedSRecord(rec),ret);
+        ret = oz_cons(makeTaggedSRecord(rec),ret);
       }
       aux = aux->next;
     }
@@ -1547,7 +1549,7 @@ TaggedRef PrTabEntry::getProfileStats()
         rec->setFeature(line,oz_int(1));
         rec->setFeature(name,oz_atom(aux->getPropagatorName()));
         rec->setFeature(file,noname);
-        ret = cons(makeTaggedSRecord(rec),ret);
+        ret = oz_cons(makeTaggedSRecord(rec),ret);
       }
       aux = aux->getNext();
     }
@@ -1640,3 +1642,33 @@ TaggedRef oz_unsignedLong(unsigned long i)
 }
 
 Board *oz_rootBoardOutline() { return oz_rootBoard(); }
+
+/*
+ * simplified list generation, e.g.
+ *  oz_list(oz_atom("a"),
+ *          oz_atom("b"),
+ *          oz_atom("c"),
+ *          0)
+ * returns the Oz list [a b c].
+ */
+OZ_Term oz_list(OZ_Term t1, ...)
+{
+  va_list ap;
+  va_start(ap,t1);
+
+  LTuple *lt=new LTuple();
+  OZ_Term ret=makeTaggedLTuple(lt);
+  lt->setHead(t1);
+  while (1) {
+    OZ_Term t2 = va_arg(ap,OZ_Term);
+    if (!t2) break;
+    LTuple *nl=new LTuple();
+    lt->setTail(makeTaggedLTuple(nl));
+    lt=nl;
+    lt->setHead(t2);
+  }
+
+  lt->setTail(oz_nil());
+  va_end(ap);
+  return ret;
+}

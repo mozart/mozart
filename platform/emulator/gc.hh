@@ -44,14 +44,6 @@ extern int     cs_copy_size;
 #endif
 
 extern Bool isCollecting;
-Bool gcStaticProtect(TaggedRef *);
-Bool gcProtect(TaggedRef *);
-Bool gcUnprotect(TaggedRef *);
-
-void OZ_collectHeapTerm(TaggedRef &, TaggedRef &);
-void OZ_collectLocalHeapBlock(TaggedRef *, TaggedRef *, int);
-void OZ_updateLocalHeapTerm(TaggedRef &);
-void * OZ_hrealloc(void *, size_t);
 
 void protectInlineCache(InlineCache *);
 

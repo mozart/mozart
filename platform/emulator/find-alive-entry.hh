@@ -29,12 +29,12 @@ TaggedRef findAliveEntry(TaggedRef group) {
   group = oz_deref(group);
 
   while (oz_isCons(group)) {
-      TaggedRef ahead = oz_deref(head(group));
+      TaggedRef ahead = oz_deref(oz_head(group));
 
       if (!(oz_isLiteral(ahead) && literalEq(ahead,NameGroupVoid)))
         return group;
 
-      group = oz_deref(tail(group));
+      group = oz_deref(oz_tail(group));
   }
 
   return group;

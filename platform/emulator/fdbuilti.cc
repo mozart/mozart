@@ -263,7 +263,7 @@ BIfdBodyManager::BIfdBodyManager(int s) {
 }
 
 void BIfdBodyManager::saveDomainOnTopLevel(int i) {
-  if (am.onToplevel()) {
+  if (oz_onToplevel()) {
     if (bifdbm_vartag[i] == pm_fd)
       bifdbm_domain[i] = tagged2GenFDVar(bifdbm_var[i])->getDom();
   }
@@ -420,7 +420,7 @@ OZ_Boolean BIfdBodyManager::areIdentVar(int a, int b) {
 }
 
 void BIfdBodyManager::restoreDomainOnToplevel(void) {
-  if (am.onToplevel()) {
+  if (oz_onToplevel()) {
     for (int i = curr_num_of_vars; i--; )
       if (bifdbm_vartag[i] == pm_fd)
         tagged2GenFDVar(bifdbm_var[i])->getDom() = bifdbm_domain[i];
@@ -788,7 +788,7 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
     fdbm_var_state var_state = bifdbm_var_state[0] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
     if (var_state == fdbm_local) {
       bifdbm_dom[0] = &fdvar->getDom();
-      if (am.onToplevel())
+      if (oz_onToplevel())
         bifdbm_domain[0] = fdvar->getDom();
     } else {
       bifdbm_domain[0] = fdvar->getDom();

@@ -385,8 +385,8 @@ OZ_Return raiseGeneric(char *msg, OZ_Term arg);
     if (!oz_isNil(nogoods)) {                                           \
        Cleanup;                                                         \
        return raiseGeneric(msg,                                         \
-                           mklist(OZ_pairA("Resources",nogoods),        \
-                                  OZ_pairA("Contained in",val)));       \
+                           oz_mklist(OZ_pairA("Resources",nogoods),     \
+                                     OZ_pairA("Contained in",val)));    \
     }                                                                   \
   }
 

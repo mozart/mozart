@@ -36,35 +36,35 @@
 #include "builtins.hh"
 
 TaggedRef OzDebug::toRecord(const char *label, Thread *thread, int frameId) {
-  TaggedRef pairlist = nil();
+  TaggedRef pairlist = oz_nil();
   if (data != makeTaggedNULL()) {
-    pairlist = cons(OZ_pairA("data",data),pairlist);
+    pairlist = oz_cons(OZ_pairA("data",data),pairlist);
   }
   if (arguments != (RefsArray) NULL) {
-    TaggedRef arglist = nil();
+    TaggedRef arglist = oz_nil();
     for(int i = getRefsArraySize(arguments) - 2; i >= 0; i--) {
       if (arguments[i] == makeTaggedNULL())
         arguments[i] = OZ_newVariable();
-      arglist = cons(arguments[i],arglist);
+      arglist = oz_cons(arguments[i],arglist);
     }
-    pairlist = cons(OZ_pairA("args",arglist),pairlist);
+    pairlist = oz_cons(OZ_pairA("args",arglist),pairlist);
   }
   if (frameId == -1) {
-    pairlist = cons(OZ_pairA("vars",getFrameVariables()),pairlist);
+    pairlist = oz_cons(OZ_pairA("vars",getFrameVariables()),pairlist);
   } else {
-    pairlist = cons(OZ_pairAI("frameID",frameId),pairlist);
+    pairlist = oz_cons(OZ_pairAI("frameID",frameId),pairlist);
   }
   int iline = smallIntValue(getNumberArg(PC+2));
   pairlist =
-    cons(OZ_pairAI("time",CodeArea::findTimeStamp(PC)),
-         cons(OZ_pairA("thr",makeTaggedConst(thread)),
-              cons(OZ_pairA("file",getTaggedArg(PC+1)),
-                   cons(OZ_pairAI("line",iline < 0? -iline: iline),
-                        cons(OZ_pairA("column",getTaggedArg(PC+3)),
-                             cons(OZ_pairA("origin",
+    oz_cons(OZ_pairAI("time",CodeArea::findTimeStamp(PC)),
+         oz_cons(OZ_pairA("thr",makeTaggedConst(thread)),
+              oz_cons(OZ_pairA("file",getTaggedArg(PC+1)),
+                   oz_cons(OZ_pairAI("line",iline < 0? -iline: iline),
+                        oz_cons(OZ_pairA("column",getTaggedArg(PC+3)),
+                             oz_cons(OZ_pairA("origin",
                                            OZ_atom("OzDebug::toRecord")),
-                                  cons(OZ_pairAI("PC",(int)PC),
-                                       cons(OZ_pairA("kind",
+                                  oz_cons(OZ_pairAI("PC",(int)PC),
+                                       oz_cons(OZ_pairA("kind",
                                                      getTaggedArg(PC+4)),
                                             pairlist))))))));
 
@@ -79,25 +79,25 @@ TaggedRef OzDebug::getFrameVariables() {
 
 void debugStreamBreakpoint(Thread *thread) {
   TaggedRef pairlist =
-    cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
+    oz_cons(OZ_pairA("thr",makeTaggedConst(thread)),oz_nil());
   am.debugStreamMessage(OZ_recordInit(OZ_atom("breakpoint"), pairlist));
 }
 
 void debugStreamBlocked(Thread *thread) {
   TaggedRef pairlist =
-    cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
+    oz_cons(OZ_pairA("thr",makeTaggedConst(thread)),oz_nil());
   am.debugStreamMessage(OZ_recordInit(OZ_atom("blocked"), pairlist));
 }
 
 void debugStreamReady(Thread *thread) {
   TaggedRef pairlist =
-    cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
+    oz_cons(OZ_pairA("thr",makeTaggedConst(thread)),oz_nil());
   am.debugStreamMessage(OZ_recordInit(OZ_atom("ready"), pairlist));
 }
 
 void debugStreamTerm(Thread *thread) {
   TaggedRef pairlist =
-    cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
+    oz_cons(OZ_pairA("thr",makeTaggedConst(thread)),oz_nil());
   am.debugStreamMessage(OZ_recordInit(OZ_atom("term"), pairlist));
 }
 
@@ -105,8 +105,8 @@ void debugStreamException(Thread *thread, TaggedRef exc) {
   am.currentThread()->setStop(OK);
 
   TaggedRef pairlist =
-    cons(OZ_pairA("thr",makeTaggedConst(thread)),
-         cons(OZ_pairA("exc",exc),nil()));
+    oz_cons(OZ_pairA("thr",makeTaggedConst(thread)),
+         oz_cons(OZ_pairA("exc",exc),oz_nil()));
   am.debugStreamMessage(OZ_recordInit(OZ_atom("exception"), pairlist));
 }
 
@@ -123,7 +123,7 @@ void debugStreamExit(OzDebug *dbg, int frameId) {
 
 void debugStreamUpdate(Thread *thread) {
   TaggedRef pairlist =
-    cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
+    oz_cons(OZ_pairA("thr",makeTaggedConst(thread)),oz_nil());
   am.debugStreamMessage(OZ_recordInit(OZ_atom("update"), pairlist));
 }
 
@@ -224,7 +224,7 @@ void execBreakpoint(Thread *t) {
 
 OZ_BI_define(BIbreakpoint, 0,0)
 {
-  if (am.debugmode() && am.onToplevel())
+  if (am.debugmode() && oz_onToplevel())
     execBreakpoint(am.currentThread());
   return PROCEED;
 } OZ_BI_end
@@ -277,10 +277,10 @@ OZ_BI_define(BIprocedureCoord, 1,1)
     TaggedRef file, predName;
     CodeArea::getDefinitionArgs(definitionPC,reg,next,file,line,colum,predName);
     TaggedRef pairlist =
-      cons(OZ_pairA("file",file),
-           cons(OZ_pairAI("line",line),
-                cons(OZ_pairAI("column",colum),
-                     cons(OZ_pairAI("PC",ToInt32(definitionPC)),nil()))));
+      oz_cons(OZ_pairA("file",file),
+           oz_cons(OZ_pairAI("line",line),
+                oz_cons(OZ_pairAI("column",colum),
+                     oz_cons(OZ_pairAI("PC",ToInt32(definitionPC)),oz_nil()))));
     OZ_RETURN(OZ_recordInit(OZ_atom("def"), pairlist));
   } else   // should never happen
     OZ_RETURN(NameUnit);

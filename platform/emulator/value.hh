@@ -285,7 +285,6 @@ public:
   unsigned int hash() { return ToInt32(this)>>3; }
 };
 
-
 /* This one goes onto the heap */
 class Name: public Literal {
 protected:
@@ -327,7 +326,6 @@ public:
   NamedName *generateCopy();
 };
 
-
 unsigned int Literal::hash()
 {
   if (isAtom()) return ((Atom*)this)->hash();
@@ -344,6 +342,9 @@ Bool oz_isName(TaggedRef term) {
   return oz_isLiteral(term) && tagged2Literal(term)->isName();
 }
 
+inline OZ_Term oz_true()  { return NameTrue; }
+inline OZ_Term oz_false() { return NameFalse; }
+inline OZ_Term oz_unit()  { return NameUnit; }
 
 //mm2: one argument is guarantueed to be a literal ???
 inline
@@ -575,64 +576,65 @@ Bool oz_isNil(TaggedRef term) {
 }
 
 inline
-TaggedRef nil() { return AtomNil; }
+TaggedRef oz_nil() { return AtomNil; }
 
 inline
-TaggedRef cons(TaggedRef head, TaggedRef tail)
+TaggedRef oz_cons(TaggedRef head, TaggedRef tail)
 {
   return makeTaggedLTuple(new LTuple(head,tail));
 }
 
 inline
-TaggedRef cons(Literal *head, TaggedRef tail)
+TaggedRef oz_cons(Literal *head, TaggedRef tail)
 {
-  return cons(makeTaggedLiteral(head),tail);
+  return oz_cons(makeTaggedLiteral(head),tail);
 }
 
 inline
-TaggedRef cons(char *head, TaggedRef tail)
+TaggedRef oz_cons(char *head, TaggedRef tail)
 {
-  return cons(makeTaggedAtom(head),tail);
+  return oz_cons(oz_atom(head),tail);
 }
 
 inline
-TaggedRef mklist(TaggedRef l1,TaggedRef l2) {
-  return cons(l1,cons(l2,nil()));
+TaggedRef oz_mklist(TaggedRef l1,TaggedRef l2) {
+  return oz_cons(l1,oz_cons(l2,oz_nil()));
 }
 
 inline
-TaggedRef mklist(TaggedRef l1,TaggedRef l2,TaggedRef l3) {
-  return cons(l1,mklist(l2,l3));
+TaggedRef oz_mklist(TaggedRef l1,TaggedRef l2,TaggedRef l3) {
+  return oz_cons(l1,oz_mklist(l2,l3));
 }
 
 inline
-TaggedRef mklist(TaggedRef l1,TaggedRef l2,TaggedRef l3,TaggedRef l4) {
-  return cons(l1,mklist(l2,l3,l4));
+TaggedRef oz_mklist(TaggedRef l1,TaggedRef l2,TaggedRef l3,TaggedRef l4) {
+  return oz_cons(l1,oz_mklist(l2,l3,l4));
 }
 
+OZ_Term oz_list(OZ_Term t, ...);
 
 inline
-TaggedRef head(TaggedRef list)
+TaggedRef oz_head(TaggedRef list)
 {
   Assert(oz_isLTuple(list));
   return tagged2LTuple(list)->getHead();
 }
 
 inline
-TaggedRef tail(TaggedRef list)
+TaggedRef oz_tail(TaggedRef list)
 {
   Assert(oz_isLTuple(list));
   return tagged2LTuple(list)->getTail();
 }
 
 inline
-int fastlength(OZ_Term l)
+int oz_fastlength(OZ_Term l)
 {
   int len = 0;
   l = oz_deref(l);
   while (oz_isCons(l)) {
     len++;
-    l = oz_deref(tail(l));
+    l = oz_deref(oz_tail(l));
   }
   return len;
 }
@@ -1655,7 +1657,7 @@ OZ_Term getArityList(OZ_Term term)
     return makeTupleArityList(2);
   }
   if (oz_isLiteral(term)) {
-    return nil();
+    return oz_nil();
   }
   return 0;
 }
@@ -2175,10 +2177,10 @@ public:
     flags = 0;
     fl = oz_deref(fl);
     while (oz_isCons(fl)) {
-      OZ_Term ff=oz_deref(head(fl));
+      OZ_Term ff=oz_deref(oz_head(fl));
       if (oz_eq(ff,OZ_atom("once"))) { flags |= PR_COPYONCE; }
       else if (oz_eq(ff,OZ_atom("native"))) { flags |= PR_NATIVE; }
-      fl = oz_deref(tail(fl));
+      fl = oz_deref(oz_tail(fl));
     }
     Assert(oz_isNil(fl));
 
@@ -2187,7 +2189,7 @@ public:
     arity =  (unsigned short) getWidth(arityInit);
     Assert((int)arity == getWidth(arityInit)); /* check for overflow */
     PC = NOCODE;
-    info = nil();
+    info = oz_nil();
     numClosures = numCalled = heapUsed = samples = lastHeap = szVars = 0;
     next = allPrTabEntries;
     allPrTabEntries = this;
@@ -2234,9 +2236,9 @@ public:
   int isCopyOnce() { return flags&PR_COPYONCE; }
   int getFlags()   { return flags; }
   OZ_Term getFlagsList() {
-    OZ_Term ret = nil();
-    if (isNative()) ret = cons(OZ_atom("native"),ret);
-    if (isCopyOnce()) ret = cons(OZ_atom("once"),ret);
+    OZ_Term ret = oz_nil();
+    if (isNative()) ret = oz_cons(OZ_atom("native"),ret);
+    if (isCopyOnce()) ret = oz_cons(OZ_atom("once"),ret);
     return ret;
   }
 
@@ -2364,7 +2366,7 @@ public:
   : inArity(inArity),outArity(outArity),fun(fn), native(nat),
     ConstTerm(Co_Builtin)
   {
-    printname = makeTaggedAtom(s);
+    printname = oz_atom(s);
 #ifdef PROFILE_BI
     counter = 0;
 #endif
@@ -3000,12 +3002,12 @@ extern OZ_Term system_registry;
 extern OZ_Term registry_get(OZ_Term);
 inline OZ_Term registry_get(char*s)
 {
-  return registry_get(makeTaggedAtom(s));
+  return registry_get(oz_atom(s));
 }
 extern void registry_put(OZ_Term,OZ_Term);
 inline void registry_put(char*s,OZ_Term v)
 {
-  registry_put(makeTaggedAtom(s),v);
+  registry_put(oz_atom(s),v);
 }
 
 #endif

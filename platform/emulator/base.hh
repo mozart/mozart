@@ -123,9 +123,12 @@ typedef unsigned int32 TaggedRef;
 
 enum PropCaller {pc_propagator = 0, pc_std_unif = 1, pc_cv_unif = 2};
 
-// duplicated from oz.h !!! Not nice, but
+// duplicated from oz.h !!! Not nice, but ...
 typedef unsigned int OZ_Term;
 typedef unsigned int OZ_Return;
+extern "C" {
+  typedef int (* OZ_IOHandler)(int,void *);
+}
 
 typedef OZ_Return (*InlineRel1)(TaggedRef In1);
 typedef OZ_Return (*InlineRel2)(TaggedRef In1, TaggedRef In2);
@@ -421,6 +424,26 @@ OZ_Return BILessOrLessEq(Bool callLess, TaggedRef A, TaggedRef B);
 SuspList *oz_installPropagators(SuspList *local_list, SuspList *glob_list,
                                 Board *glob_home);
 
+// see ioHandler.cc
+void oz_io_select(int fd, int mode, OZ_IOHandler fun, void *val);
+void oz_io_acceptSelect(int fd, OZ_IOHandler fun, void *val);
+int oz_io_select(int fd, int mode,TaggedRef l,TaggedRef r);
+void oz_io_acceptSelect(int fd,TaggedRef l,TaggedRef r);
+void oz_io_deSelect(int fd,int mode);
+void oz_io_deSelect(int fd);
+void oz_io_handle();
+void oz_io_check();
+void oz_io_awakeVar(TaggedRef var);
+
+// see gc.cc
+Bool oz_staticProtect(TaggedRef *);
+Bool oz_protect(TaggedRef *);
+Bool oz_unprotect(TaggedRef *);
+
+void OZ_collectHeapTerm(TaggedRef &, TaggedRef &);
+void OZ_collectLocalHeapBlock(TaggedRef *, TaggedRef *, int);
+void OZ_updateLocalHeapTerm(TaggedRef &);
+void * OZ_hrealloc(void *, size_t);
 
 
 /* Ultrix does not have 'strdup' */

@@ -28,14 +28,10 @@
 #pragma implementation "solve.hh"
 #endif
 
-#include "am.hh"
+#include "runtime.hh"
 
 #include "cpbag.hh"
 #include "solve.hh"
-
-#ifdef DEBUG_NONMONOTONIC
-#include "runtime.hh"
-#endif
 
 /*
  * class SolveActor:

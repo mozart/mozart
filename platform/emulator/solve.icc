@@ -77,7 +77,7 @@ TaggedRef SolveActor::merge(Board *bb, Bool isSibling) {
     return makeTaggedNULL();
   }
 
-  Assert(am.isCurrentBoard(bb));
+  Assert(oz_isCurrentBoard(bb));
 
   // adjoin the list of or-actors to the list in actual solve actor!
 

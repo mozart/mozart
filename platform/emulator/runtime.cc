@@ -30,36 +30,6 @@
 
 #include <stdarg.h>
 
-/*
- * simplified list generation, e.g.
- *  oz_list(oz_atom("a"),
- *          oz_atom("b"),
- *          oz_atom("c"),
- *          0)
- * returns the Oz list [a b c].
- */
-OZ_Term oz_list(OZ_Term t1, ...)
-{
-  va_list ap;
-  va_start(ap,t1);
-
-  LTuple *lt=new LTuple();
-  OZ_Term ret=makeTaggedLTuple(lt);
-  lt->setHead(t1);
-  while (1) {
-    OZ_Term t2 = va_arg(ap,OZ_Term);
-    if (!t2) break;
-    LTuple *nl=new LTuple();
-    lt->setTail(makeTaggedLTuple(nl));
-    lt=nl;
-    lt->setHead(t2);
-  }
-
-  lt->setTail(oz_nil());
-  va_end(ap);
-  return ret;
-}
-
 int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...)
 {
   Assert(!oz_isRef(cat));
@@ -77,8 +47,8 @@ int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...)
 
 
   OZ_Term ret = OZ_record(cat,
-                          cons(OZ_int(1),
-                               cons(AtomDebug,OZ_nil())));
+                          oz_cons(OZ_int(1),
+                                  oz_cons(AtomDebug,oz_nil())));
   OZ_putSubtree(ret,OZ_int(1),exc);
   OZ_putSubtree(ret,AtomDebug,NameUnit);
 
@@ -88,16 +58,16 @@ int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...)
 
 OZ_Term oz_getLocation(Board *bb)
 {
-  OZ_Term out = nil();
+  OZ_Term out = oz_nil();
   while (!oz_isRootBoard(bb)) {
     if (bb->isSolve()) {
-      out = cons(OZ_atom("space"),out);
+      out = oz_cons(OZ_atom("space"),out);
     } else if (bb->isAsk()) {
-      out = cons(OZ_atom("cond"),out);
+      out = oz_cons(OZ_atom("cond"),out);
     } else if (bb->isWait()) {
-      out = cons(OZ_atom("dis"),out);
+      out = oz_cons(OZ_atom("dis"),out);
     } else {
-      out = cons(OZ_atom("???"),out);
+      out = oz_cons(OZ_atom("???"),out);
     }
     bb=bb->getParent();
   }

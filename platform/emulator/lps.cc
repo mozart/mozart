@@ -74,7 +74,7 @@ Bool LocalPropagationStore::propagate_locally () {
   while (!(isEmpty ())) {
     Propagator * prop = pop ();
     Propagator::setRunningPropagator(prop);
-    Assert(am.isCurrentBoard(GETBOARD(prop)));
+    Assert(oz_isCurrentBoard(GETBOARD(prop)));
     //
     //  No 'runnable' threads are allowed here,
     // because only true propagators are in the LPS;
@@ -86,7 +86,7 @@ Bool LocalPropagationStore::propagate_locally () {
 
     switch (ret_val) {
     case FAILED:
-      if (am.onToplevel()) {
+      if (oz_onToplevel()) {
         errorHeader();
 
         ostrstream buf;

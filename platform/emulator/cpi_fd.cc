@@ -129,7 +129,7 @@ int OZ_FDIntVar::read(OZ_Term v)
 
         setSort(int_e);
 
-        if (am.onToplevel())
+        if (oz_onToplevel())
           dom = ((GenFDVariable *) cvar)->getDom();
         domPtr = &((GenFDVariable *) cvar)->getDom();
         initial_size = domPtr->getSize();
@@ -166,7 +166,7 @@ int OZ_FDIntVar::read(OZ_Term v)
       } else {
       global_fd:
 
-        if (isState(glob_e) || am.onToplevel())
+        if (isState(glob_e) || oz_onToplevel())
           dom = ((GenFDVariable *) cvar)->getDom();
         domPtr = &((GenFDVariable *) cvar)->getDom();
         initial_size = domPtr->getSize();
@@ -305,7 +305,7 @@ void OZ_FDIntVar::fail(void)
   // dont't change the order of the calls (side effects!)
   if (testResetStoreFlag(var) && isState(glob_e) && isSort(int_e)) {
     *domPtr = dom;
-  } else if (am.onToplevel()) {
+  } else if (oz_onToplevel()) {
     *domPtr = dom;
   }
 }
