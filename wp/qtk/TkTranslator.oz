@@ -5,17 +5,16 @@ export
    i2u:I2U
    i2t:I2T
    
-require Open Compiler
+require Compiler
    
 prepare
 
+   
    Escape=27
-   Length=l(226:3)
-   
-   class TextFile from Open.text Open.file end
-   
-   F={New TextFile init(name:"utf2iso.dat")}
-   
+   Length=l(226:3) 
+
+   \insert utf2iso.dat
+  
    PatternDict={NewDictionary}
    InvDict={NewDictionary}
    proc{Put D L C}
@@ -35,17 +34,20 @@ prepare
 	 end
       end
    end
-   proc{Loop}
-      S={F getS($)}
+   
+   proc{Loop Data}
+      S R2
+      {List.takeDropWhile Data fun{$ C} C>=32 end S R2}
    in
-      if S\=false then
+      if S\="" then
 	 L R {List.takeDropWhile S fun{$ C} C\=&: end L R}
 	 C={Compiler.evalExpression L nil _}
 	 V={Compiler.evalExpression R.2 nil _}
       in
 	 {Put PatternDict V C}
 	 {Dictionary.put InvDict C V}
-	 {Loop}
+	 {Loop {List.dropWhile R2 fun{$ C} C<32 end}
+}
       end
    end
    
@@ -58,8 +60,7 @@ prepare
 	 D
       end
    end
-   {Loop}
-   {F close}
+   {Loop Data}
    
    DU2I={ToRecord PatternDict}
    DI2U={Dictionary.toRecord c InvDict}
