@@ -433,15 +433,16 @@ public:
     _size = s; 
     _array = (T *) malloc(s * sizeof(T));
   }
-  
+  ~IndexCheckArray(void) 
+  {
+    free(_array);
+  }
   inline
   T &operator [](int i) { 
     OZ_ASSERT(0 <= i && i < _size);
     return _array[i]; 
   }
   
-  inline 
-
   inline
   operator T*() { return _array; } // conversion operator
 };
