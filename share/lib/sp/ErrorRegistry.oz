@@ -53,24 +53,24 @@ local
    end
 
 in
-   
-   functor $ prop once
+
+   functor
 
    import
-      Error.{formatGeneric
-	     formatAppl
-	     formatTypes
-	     formatHint
-	     format
-	     dispatch
-	     info}
-      
+      Error(formatGeneric
+	    formatAppl
+	    formatTypes
+	    formatHint
+	    format
+	    dispatch
+	    info)
+
    export
-      put:     NewFormatter 
-      get:     GetFormatter 
+      put:     NewFormatter
+      get:     GetFormatter
       exists:  ExFormatter
 
-   body 
+   define
 
       %%
       %% kernel related errors

@@ -35,12 +35,12 @@ local
 		    detached(type:bool))
 
 in
-   
-   functor $ prop once
+
+   functor
 
    import
       Connection(take)
-       
+
       Application(exit getCmdArgs)
 
       Module(manager)
@@ -48,7 +48,7 @@ in
       System(showError)
 
       Fault(install)
-      
+
    define
 
       %% Get the arguments
