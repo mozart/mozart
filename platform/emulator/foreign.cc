@@ -830,8 +830,8 @@ int OZ_onToplevel()
  * 
  * -----------------------------------------------------------------*/
 
-void OZ_typeError(char *f,int pos,char *type, OZ_Term val)
+void OZ_typeError(char *f,int pos,char *typeStr, OZ_Term val)
 {
-  TYPE_ERROR(typeErrorBI(f,pos,type),printArgs(1,val));
+  TYPE_ERROR(typeErrorBI(f,pos,typeStr),printArgs(1,val));
 }
 
