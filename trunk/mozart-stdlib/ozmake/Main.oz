@@ -27,7 +27,6 @@ prepare
       libroot(   single type:string)
       docroot(   single type:string)
       extractdir(single type:string)
-      publishdir(single type:string)
       archive(   single type:string)
       tmpdir(    single type:string)
 
@@ -123,7 +122,6 @@ prepare
     libroot        # set_libroot          # true
     docroot        # set_docroot          # true
     extractdir     # set_extractdir       # false
-    publishdir     # set_publishdir       # true
     mogulpkgurl    # set_mogulpkgurl      # true
     moguldocurl    # set_moguldocurl      # true
     moguldburl     # set_moguldburl       # true

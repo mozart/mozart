@@ -34,6 +34,7 @@ define
 	 ExtractDir : unit
 	 Database   : unit
 	 DatabaseGiven : false
+	 DatabaseIgnore : false
 	 Released   : unit
 	 Clean      : unit
 	 Veryclean  : unit
@@ -64,7 +65,6 @@ define
 	 GNU        : unit
 	 Package    : unit
 	 PackageGiven:false
-	 PublishDir : unit
 	 Archive    : 'http://www.mozart-oz.org/mogul/pkg'
 	 LineWidth  : 70
 	 NoMakefile : true
@@ -252,6 +252,10 @@ define
 	 end
 	 if @Mogul==unit then raise ozmake(get_mogul) end
 	 else @Mogul end
+      end
+      meth get_mogul_relax($)
+	 try {self get_mogul($)}
+	 catch E then {Value.byNeedFail E} end
       end
 
       meth set_xmogul(ID) XMogul<-ID end
@@ -559,13 +563,6 @@ define
 	 if @Superman\=unit
 	 then {@Superman get_package_given($)}
 	 else @PackageGiven end
-      end
-
-      meth set_publishdir(D)
-	 {self set_mogulpkgdir(D)}
-      end
-      meth get_publishdir($)
-	 {self get_mogulpkgdir($)}
       end
 
       meth set_archive(U) Archive<-U end
@@ -888,5 +885,8 @@ define
 
       meth set_config_action(A) ConfigAction<-{self config_validate_action(A $)} end
       meth get_config_action($) @ConfigAction end
+
+      meth set_database_ignore(B) DatabaseIgnore<-B end
+      meth get_database_ignore($) @DatabaseIgnore end
    end
 end

@@ -127,9 +127,7 @@ SPAN.BUILTIN      { color: #DA70D6; }
   </xsl:call-template>
 </DL>
 <HR/>
-  <P CLASS="WARNING">this is an alpha-release -  feedback is welcome<BR/>
-ozmake support for automated publication in MOGUL is still under development
-</P>
+  <P CLASS="WARNING">ozmake is now in beta-release - feedback is extremely welcome</P>
 <P>see <A HREF="CHANGES">CHANGES</A> for a list of changes between
 successive versions of <FILE>ozmake</FILE>.</P>
 </xsl:if>
@@ -229,6 +227,19 @@ successive versions of <FILE>ozmake</FILE>.</P>
 <xsl:apply-templates/>
 </DD>
 </xsl:template>
+
+<xsl:template match="default[@type='glob']" mode="USAGELIST">
+<DD><SPAN CLASS="DEFAULT">default glob patterns: </SPAN>
+<xsl:apply-templates/>
+</DD>
+</xsl:template>
+
+<xsl:template match="default" mode="USAGELIST">
+<DD><SPAN CLASS="DEFAULT">default: </SPAN>
+<xsl:apply-templates/>
+</DD>
+</xsl:template>
+
 
 <xsl:template match="item" mode="OPTLIST">
 <DD><xsl:apply-templates/></DD>

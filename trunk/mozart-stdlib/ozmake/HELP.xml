@@ -8,10 +8,10 @@
 <p><tool>ozmake</tool> is a tool for building Mozart-based projects
 and for creating and installing Mozart packages.  It was inspired by
 the Unix tools <tool>make</tool> and <tool>rpm</tool>, but is much,
-much simpler and specialized for Mozart-based software development and
-deployment.</p>
-
-<p><tool>ozmake</tool> must currently be invoked from a shell, but it
+much simpler, is specialized for Mozart-based software development and
+deployment, and transparently supports all platforms on which Mozart
+has been ported.
+<tool>ozmake</tool> must currently be invoked from a shell, but it
 will eventually acquire additionally an optional, user-friendly
 graphical interface.</p>
 </section>
@@ -20,9 +20,8 @@ graphical interface.</p>
 
 <usagelist>
   <usage>ozmake --help</usage>
-  <usage>ozmake [--build]</usage>
-  <usage>ozmake [--build] FILES...</usage>
-  <usage>ozmake --install FILES...</usage>
+  <usage>ozmake [--build] [TARGETS...]</usage>
+  <usage>ozmake --install [TARGETS...]</usage>
   <usage>ozmake --install --package=PKG</usage>
   <usage>ozmake --uninstall [--package=PKG]</usage>
   <usage>ozmake --clean</usage>
@@ -30,9 +29,9 @@ graphical interface.</p>
   <usage>ozmake --create --package=FILE</usage>
   <usage>ozmake --publish</usage>
   <usage>ozmake --extract --package=PKG</usage>
-  <usage>ozmake --list</usage>
-  <usage>ozmake --list --package=MOGUL</usage>
-  <usage>ozmake --config=(set|unset|list) ...</usage>
+  <usage>ozmake --list [--package=MOGUL]</usage>
+  <usage>ozmake --config=(put|delete|list) ...</usage>
+  <usage>ozmake --mogul=(put|delete|list|export) ...</usage>
 </usagelist>
 
 </section>
@@ -50,7 +49,8 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
     <opt>-v</opt>
     <opt>--verbose</opt>
   </option>
-  <item>print out more tracing information that the default</item>
+  <item>print out more tracing information that the default.  By supplying
+  this option twice, you will sometimes get even more information.</item>
 </optentry>
 <optentry>
   <option>
@@ -75,9 +75,14 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
 </optentry>
 </optlist>
 
+<p>What you should remember here, is that <opt>-vn</opt> is your friend.  Add
+<opt>-vn</opt> at the end of any <tool>ozmake</tool> invocation, and it will
+tell you in great detail what the command would do, without actually doing
+it.</p>
+
 </subsection>
 
-<subsection><title>Directories</title>
+<subsection><title>Directories and URLs</title>
 
 <optlist>
 <optentry>
@@ -186,23 +191,6 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
 </optentry>
 <optentry>
   <option>
-    <opt>--publishdir=<meta>PUBLISHDIR</meta></opt>
-  </option>
-  <default><file><meta>PREFIX</meta>/pkg</file></default>
-  <item>directory where to place packages for publication in the mogul
-  archive</item>
-  <example>
-    <eqlist>
-      <eqentry>
-        <eqleft><meta>MOGUL</meta></eqleft>
-        <eqright><file>mogul:/aaa/bbb/ccc</file></eqright>
-      </eqentry>
-    </eqlist>
-    is published as <file><meta>PUBLISHDIR</meta>/aaa-bbb-ccc.pkg</file>
-  </example>
-</optentry>
-<optentry>
-  <option>
     <opt>--archive=<meta>ARCHIVE</meta></opt>
   </option>
   <default><file>http://ww.mozart-oz.org/mogul/pkg</file></default>
@@ -218,6 +206,20 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
     is downloaded from
     <file><meta>ARCHIVE</meta>/aaa-bbb-ccc.pkg</file>
   </example>
+</optentry>
+<optentry>
+  <option>
+    <opt>--moguldir=<meta>MOGULDIR</meta></opt>
+  </option>
+  <item>directory in which are placed sub-directories for the user's
+contributions: a directory for packages, one for documentation,
+one for mogul database entries.</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--mogulurl=<meta>MOGULURL</meta></opt>
+  </option>
+  <item>url corresponding to the <meta>MOGULDIR</meta> directory</item>
 </optentry>
 </optlist>
 
@@ -646,8 +648,10 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
 <usagelist>
   <usage>ozmake --publish</usage>
   <item>
-        create a package and place it in the user's area for
-        publication in the mogul archive
+        automatically take care of all the steps necessary for
+        creating/updating a package contributed by the user and
+	making all necessary data available to the MOGUL librarian.
+	See documentation for <opt>--mogul</opt> below.
   </item>
 </usagelist>
 
@@ -693,21 +697,141 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
 <subsection><title>Config</title>
 
 <usagelist>
-  <usage>ozmake --config=set <meta>OPTIONS</meta></usage>
+  <usage>ozmake --config=put <meta>OPTIONS</meta></usage>
   <item>record the given <meta>OPTIONS</meta> in <tool>ozmake</tool>'s
   configuration database, and use them as defaults in subsequent
   invocations of <tool>ozmake</tool> unless explicitly
   overriden on the command line.  For example:
-  <opt>ozmake --config=set --prefix=/usr/local/oz</opt>
+  <opt>ozmake --config=put --prefix=/usr/local/oz</opt>
   saves <file>/usr/local/oz</file> as the default value for option
   <opt>--prefix</opt></item>
-  <usage>ozmake --config=unset <meta>OPT1</meta> ... <meta>OPTn</meta></usage>
+  <usage>ozmake --config=delete <meta>OPT1</meta> ... <meta>OPTn</meta></usage>
   <item>deletes some entries from the configuration database.  For example:
-  <opt>ozmake --config=unset prefix</opt>
+  <opt>ozmake --config=delete prefix</opt>
   removes the default for <opt>--prefix</opt> from the configuration database</item>
   <usage>ozmake --config=list</usage>
   <item>lists the contents of <tool>ozmake</tool>'s configuration database</item>
 </usagelist>
+<p>the argument to <opt>--config</opt> can be abbreviated to any non-ambiguous
+prefix</p>
+</subsection>
+
+<subsection><title>Mogul</title>
+
+<p>If you choose to contribute packages to the MOGUL archive,
+<opt>ozmake --mogul=<meta>ACTION</meta></opt> simplifies your task.
+It makes it easy for you to maintain a database of your contributions
+and to export them so that the MOGUL librarian may automatically
+find them.  In fact, the simplest way is to use
+<opt>ozmake --mogul=publish</opt> which will take take care of all
+defails for you.</p>
+
+<usagelist>
+  <usage>ozmake --mogul=put</usage>
+  <item>update the user's database of own mogul contributions with
+  the data for this contribution (in local directory)</item>
+  <usage>ozmake --mogul=put --package=<meta>PKG</meta></usage>
+  <item>same as above, but using the package <meta>PKG</meta> explicitly given</item>
+  <usage>ozmake --mogul=delete <meta>MOG1</meta> ... <meta>MOGn</meta></usage>
+  <item>remove the entries with mogul ids <meta>MOG1</meta> through <meta>MOGn</meta>
+  from the user's database of own contribution</item>
+  <usage>ozmake --mogul=delete</usage>
+  <item>remove entry for current contribution</item>
+  <usage>ozmake --list</usage>
+  <item>show the recorded data for all entries in the user's database of own
+  mogul contributions</item>
+  <usage>ozmake --list <meta>MOG1</meta> ... <meta>MOGn</meta></usage>
+  <item>show the recorded data for entries <meta>MOG1</meta> through <meta>MOGn</meta>
+  in the user's database of own mogul contributions</item>
+  <usage>ozmake --export</usage>
+  <item>write all necessary mogul entries for the user's own mogul contributions.
+  These are the entries which will be read by the MOGUL librarian to automatically
+  assemble the full MOGUL database.</item>
+</usagelist>
+
+<p>The data for your contributions need to be made available to the MOGUL librarian
+on the WEB.  You want to just update a local directory with your contributions, but,
+in order for the MOGUL librarian to find them, these directories must also be available
+through URLs on the WEB.  Here are some options that allow you to control this
+correspondance, and for which you should set default using
+<opt>ozmake --config=put</opt></p>
+
+<optlist>
+  <optentry>
+    <option>
+      <opt>--moguldir=<meta>MOGULDIR</meta></opt>
+    </option>
+    <option>
+      <opt>--mogulurl=<meta>MOGULURL</meta></opt>
+    </option>
+    <item><meta>MOGULDIR</meta> is a directory which is also available on the WEB
+    through url <meta>MOGULURL</meta>.  <meta>MOGULDIR</meta> is intended as a
+    root directory in which sub-directories for packages, documentation, and
+    mogul entries will be found.</item>
+  </optentry>
+</optlist>
+
+<p>For those who really enjoy pain, <tool>ozmake</tool> has of course many
+options to shoot yourself in the foot.  In the options below <meta>ID</meta> stands
+for the filename version of the package's mogul id (basically replace slashes by
+dashes).  You can control where packages, their documentation and mogul database
+entries and stored and made available using the options below:</p>
+
+<optlist>
+  <optentry>
+    <option>
+      <opt>--mogulpkgdir=<meta>MOGULPKGDIR</meta></opt>
+    </option>
+    <default><meta>MOGULDIR</meta>/pkg/<meta>ID</meta>/</default>
+  </optentry>
+  <optentry>
+    <option>
+      <opt>--mogulpkgurl=<meta>MOGULPKGURL</meta></opt>
+    </option>
+    <default><meta>MOGULURL</meta>/pkg/<meta>ID</meta>/</default>
+  </optentry>
+  <optentry>
+    <option>
+      <opt>--moguldocdir=<meta>MOGULDOCDIR</meta></opt>
+    </option>
+    <default><meta>MOGULDIR</meta>/doc/<meta>ID</meta>/</default>
+  </optentry>
+  <optentry>
+    <option>
+      <opt>--moguldocurl=<meta>MOGULDOCURL</meta></opt>
+    </option>
+    <default><meta>MOGULURL</meta>/doc/<meta>ID</meta>/</default>
+  </optentry>
+  <optentry>
+    <option>
+      <opt>--moguldbdir=<meta>MOGULDBDIR</meta></opt>
+    </option>
+    <default><meta>MOGULDIR</meta>/db/<meta>ID</meta>/</default>
+  </optentry>
+  <optentry>
+    <option>
+      <opt>--moguldburl=<meta>MOGULDBURL</meta></opt>
+    </option>
+    <default><meta>MOGULURL</meta>/db/<meta>ID</meta>/</default>
+  </optentry>
+</optlist>
+
+<p>Your contributions should all have mogul ids which are <em>below</em>
+the mogul id which you where granted for your section of the mogul
+database.  For convenience, <tool>ozmake</tool> will attempt to guess
+the root mogul id of your section as soon as there are entries in
+your database of your own contributions.  However, it is much preferable
+to tell <tool>ozmake</tool> about it using:</p>
+
+<optlist>
+  <optentry>
+    <option>
+      <opt>--mogulrootid=<meta>ROOTID</meta></opt>
+    </option>
+  </optentry>
+</optlist>
+
+<p>and to set it using <opt>ozmake --config=put --mogulrootid=<meta>ROOTID</meta></opt></p>
 
 </subsection>
 
@@ -1098,5 +1222,29 @@ is a string that consist of integers separated by single dots, e.g.
 </subsubsection>
 
 </subsection>
+</section>
+
+<section><title>CONTACTS</title>
+
+<p>Authors should really be referred to by mogul ids denoting mogul entries
+that describe them.  In order to make this easier, a <file>makefile.oz</file>
+may also contain a <oz>contact</oz> feature which is either a record
+describing a person, or a list of such records.</p>
+
+<p>You should not have a <oz>contact</oz> feature in every makefile.  Rather,
+the <oz>contact</oz> feature is intended for makefiles that only have a
+<oz>contact</oz> feature, i.e. whose only purpose is to create mogul entries
+for the corresponding persons. Here is an example of such a makefile:</p>
+<oz.display>
+        makefile(
+           contact :
+              o(
+                 mogul : 'mogul:/duchier/denys'
+                 name  : 'Denys Duchier'
+                 email : 'duchier@ps.uni-sb.de'
+                 www   : 'http://www.ps.uni-sb.de/~duchier/'))
+</oz.display>
+<p>You can invoke <opt>ozmake --publish</opt> on such a makefile to contribute
+the cotrresponding mogule database entries</p>
 </section>
 </doc>
