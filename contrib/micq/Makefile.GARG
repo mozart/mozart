@@ -99,7 +99,7 @@ ScrollFrame.ozf : ScrollFrame.oz
 	ozc -c ScrollFrame.oz
 
 clientgui.ozf : messagedisplay.ozf manager.ozf defaultsettings.ozf popup.ozf messagegui.ozf editaccount.ozf draganddrop.ozf addapplicationgui.ozf configureclient.ozf clientgui.oz editapplicationgui.ozf FaqEdit.ozf ScrollFrame.ozf Logo_gif.ozf Letter_gif.ozf Away_gif.ozf Online_gif.ozf Offline_gif.ozf Eyes_gif.ozf Makefile.GARG
-	ozc -c clientgui.oz --define SCROLLFRAME
+	ozc -c clientgui.oz
 
 addapplicationgui.ozf: addapplicationgui.oz
 	ozc -c addapplicationgui.oz -o addapplicationgui.ozf
@@ -111,11 +111,14 @@ editapplicationgui.ozf: editapplicationgui.oz
 configureclient.ozf: configureclient.oz
 	ozc -c configureclient.oz -o configureclient.ozf
 
-messagegui.ozf : popup.ozf messagegui.oz
+messagegui.ozf : popup.ozf BrowserControl.ozf messagegui.oz 
 	ozc -c messagegui.oz -o messagegui.ozf
 
 newfriendsgui.ozf : newfriendsgui.oz
 	ozc -c newfriendsgui.oz -o newfriendsgui.ozf
+
+BrowserControl.ozf : BrowserControl.oz
+	ozc -c BrowserControl.oz -o BrowserControl.ozf
 
 editaccount.ozf : editaccount.oz
 	ozc -c editaccount.oz -o editaccount.ozf
