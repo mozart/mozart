@@ -35,19 +35,8 @@ in
 	    ThisPanelTop <- thread
 			       {New PanelTop init(manager:self)}
 			    end
-	 elseof T then
-	    thread {T deiconify} end
+	 else true
 	 end
-      end
-
-      meth iconify
-	 case @ThisPanelTop of !Unit then true elseof T then
-	    thread {T iconify} end
-	 end
-      end
-	 
-      meth deiconify
-	 <<PanelManager open>>
       end
 
       meth options
