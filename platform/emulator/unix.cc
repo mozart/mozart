@@ -608,66 +608,6 @@ OZ_Term timeval2Oz(struct timeval tv)
   pl=cons(OZ_pairA("usec",oz_long(tv.tv_usec)),pl);
   return OZ_recordInit(OZ_atom("timeval"),pl);
 }
-
-// #define HAVERUSAGE LINUX
-
-OZ_BI_iodefine(unix_getRUsage,1,1)
-{
-#if HAVERUSAGE
-  OZ_declareVsIN(0,whoS);
-  int who;
-  if (whoS[0]=='c') { // children
-    who=RUSAGE_CHILDREN;
-  } else { // self
-    who=RUSAGE_SELF;
-  }
-  struct rusage buf;
-  if (getrusage(who,&buf) < 0)
-    RETURN_UNIX_ERROR("getrusage");
-
-  OZ_Term pl=nil();
-
-  /* user time used */
-  pl=cons(OZ_pairA("utime",timeval2Oz(buf.ru_utime)),pl);
-  /* system time used */
-  pl=cons(OZ_pairA("stime",timeval2Oz(buf.ru_stime)),pl);
-  /* maximum resident set size */
-  pl=cons(OZ_pairA("maxrss",oz_long(buf.ru_maxrss)),pl);
-#ifdef LINUX
-  /* integral shared memory size */
-  pl=cons(OZ_pairA("ixrss",oz_long(buf.ru_ixrss)),pl);
-  /* integral unshared stack size */
-  pl=cons(OZ_pairA("isrss",oz_long(buf.ru_isrss)),pl);
-#endif
-  /* integral unshared data size */
-  pl=cons(OZ_pairA("idrss",oz_long(buf.ru_idrss)),pl);
-  /* page reclaims */
-  pl=cons(OZ_pairA("minflt",oz_long(buf.ru_minflt)),pl);
-  /* page faults */
-  pl=cons(OZ_pairA("majflt",oz_long(buf.ru_majflt)),pl);
-  /* swaps */
-  pl=cons(OZ_pairA("nswap",oz_long(buf.ru_nswap)),pl);
-  /* block input operations */
-  pl=cons(OZ_pairA("inblock",oz_long(buf.ru_inblock)),pl);
-  /* block output operations */
-  pl=cons(OZ_pairA("oublock",oz_long(buf.ru_oublock)),pl);
-  /* messages sent */
-  pl=cons(OZ_pairA("msgsnd",oz_long(buf.ru_msgsnd)),pl);
-  /* messages received */
-  pl=cons(OZ_pairA("msgrcv",oz_long(buf.ru_msgrcv)),pl);
-  /* signals received */
-  pl=cons(OZ_pairA("nsignals",oz_long(buf.ru_nsignals)),pl);
-  /* voluntary context switches */
-  pl=cons(OZ_pairA("nvcsw",oz_long(buf.ru_nvcsw)),pl);
-  /* involuntary context switches */
-  pl=cons(OZ_pairA("nivcsw",oz_long(buf.ru_nivcsw)),pl);
-
-  OZ_RETURN(OZ_recordInit(OZ_atom("rusage"),pl));
-
-#else
-  OZ_RETURN(OZ_atom("rusageIsNotPosix"));
-#endif
-} OZ_BI_ioend
 #endif
 
 
@@ -1790,7 +1730,6 @@ OZ_BI_iodefine(Fun,Arity)                               \
 NotAvail("OS.getServByName",   3, unix_getServByName);
 NotAvail("OS.wait",            2, unix_wait);
 NotAvail("OS.uName",           1, unix_uName);
-NotAvail("OS.getRUsage",       2, unix_getRUsage);
 #endif
 
 #ifdef _MSC_VER
