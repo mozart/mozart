@@ -323,11 +323,10 @@ PRINT(Atom)
 {
   char *s = getPrintName();
   if (isXName()) {
-    stream << "*"
+    stream << "N:"
            << s
            << "-"
-           << this
-           << "*";
+           << seqNumber;
   } else {
 #define WELLFORMED
 #ifdef WELLFORMED
