@@ -64,6 +64,8 @@ void ResourceHashTable::gcResourceTable(){
   gcResourceTableRecurse(aux, index);
 }
 
+// kost@ : WHAT IS ALL THAT?!! Not used anymore:
+/*
 inline
 Bool isReallyBuiltin(TaggedRef b) {
   if (!oz_isConst(b))
@@ -76,29 +78,51 @@ Bool isReallyBuiltin(TaggedRef b) {
 
   return isBuiltin(c);
 }
+*/
 
-void ResourceHashTable::gcResourceTableRecurse(GenHashNode *in, int index){
+//
+void ResourceHashTable::gcResourceTableRecurse(GenHashNode *in, int index)
+{
   int  OTI;
   OwnerEntry *oe;
   GenHashNode *aux = in;
   if(aux==NULL) return;
 
+  // kost@ : WHAT IS ALL THAT?!! Not used anymore:
+  /*
   TaggedRef entity = (TaggedRef) aux->getBaseKey();
-
   if(!isReallyBuiltin(entity)) {
     entity = oz_deref(entity);
     Assert(!oz_isVariable(entity));
   }
-  
+  */
+
   OTI =  (int) aux->getEntry();
   if(htSub(index,aux)) ;
-  
+
   aux = getNext(aux,index);
+  // kost@ : oh man.. Sorry, but i won't fix this recursion here...
   gcResourceTableRecurse(aux,index);
-  
+
   oe = OT->getEntry(OTI);
-  if(oe && (!oe->isFree()) && oe->getRef()==entity)
-    add(entity, OTI);
+  // kost@ : i've replaced next two lines:
+  //    if(oe && (!oe->isFree()) && oe->getRef()==entity)
+  //      add(entity, OTI);
+  // kost@ : Now, like this:
+  // Must be alive, and, therefore, a reference, since RHT entries are
+  // discarded explicitly:
+  Assert(oe);
+  Assert(!oe->isFree());
+  Assert(oe->isRef());
+
+  //
+  OZ_Term t = oe->getRef();
+  DEREF(t, tPtr, _tag);
+  if (oz_isVariable(t)) {
+    add(makeTaggedRef(tPtr), OTI);
+  } else {
+    add(t, OTI);
+  }
 }
 
 ConstTerm* gcDistResourceImpl(ConstTerm* term){
