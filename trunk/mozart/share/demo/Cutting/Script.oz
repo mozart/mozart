@@ -129,88 +129,120 @@ define
 	    end
 
 	    local
-	       fun {Group Is GIs GIr S}
-		  case Is
-		  of nil then
-		     GIr=nil [GIs]
-		  [] I|Ir then SI=SqsSize.I in
-		     if S==SI then NGIr in
-			GIr=I|NGIr
-			{Group Ir GIs NGIr S}
-		     else NGIr NGIs in
-			NGIs=I|NGIr GIr=nil
-			GIs|{Group Ir NGIs NGIr SI}
+	       proc {Get Is Ps S N ?M ?SPs ?NIs ?NPs}
+		  case Is of nil then
+		     M=N SPs=nil NIs=nil NPs=nil
+		  [] I|Ir then
+		     if SqsSize.I==S then P|Pr=Ps in
+			SPs=P|{Get Ir Pr S N+1 ?M $ ?NIs ?NPs}
+		     else
+			M=N SPs=nil NIs=Is NPs=Ps
 		     end
 		  end
 	       end
 	    in
-	       fun {GroupBySize I|Ir}
-		  GIs GIr in GIs=I|GIr {Group Ir GIs GIr SqsSize.I}
+	       proc {GetSameSize Is Ps ?M ?SPs ?NIs ?NPs}
+		  case Is of nil then
+		     SPs=nil M=0 NIs=nil NPs=nil
+		  [] I|Ir then P|Pr=Ps in
+		     SPs=P|{Get Ir Pr SqsSize.I 1 ?M $ ?NIs ?NPs}
+		  end
 	       end
 	    end
 
-	    
-	    proc {ArrangeOneSize Is SqsXY0 SqsXY1 Cut ?Ls Lr ?Rs Rr}
-	       case Is of nil then Ls=Lr Rs=Rr
-	       [] I|Ir then
-		  dis
-		     SqsXY1.I =<: Cut
-		     {ForAll Ir proc {$ I}
-				   SqsXY0.I>=:Cut
-				end}
-		  then
-		     Ls=I|Lr Rs={Append Ir Rr}
-		  []
-		     SqsXY0.I >=: Cut
-		  then
-		     Rs=I|{ArrangeOneSize Ir SqsXY0 SqsXY1 Cut Ls Lr $ Rr}
+	    local
+	       proc {AssignZero Ps}
+		  case Ps of nil then skip
+		  [] P|Pr then P=0 {AssignZero Pr}
+		  end
+	       end
+	       proc {AssignOne Ps M}
+		  if M>0 then 1|Pr=Ps in {AssignOne Pr M-1}
+		  else {AssignZero Ps}
+		  end
+	       end
+	    in
+	       proc {Arrange Is Ps}
+		  if Is\=nil then SPs NIs NPs N M in
+		     {GetSameSize Is Ps ?N ?SPs ?NIs ?NPs}
+		     M::0#N
+		     {FD.distribute generic(value:mid) '#'(M)}
+		     {AssignOne SPs M}
+		     {Arrange NIs NPs}
+		  end
+	       end
+	    end
+
+	    proc {Arrangement Ps Is ?Ls ?Rs}
+	       case Ps of nil then
+		  Ls=nil Rs=nil
+	       [] P|Pr then I|Ir=Is in
+		  case P
+		  of 0 then Rs=I|{Arrangement Pr Ir Ls $}
+		  [] 1 then Ls=I|{Arrangement Pr Ir $ Rs}
 		  end
 	       end
 	    end
 	    
-	    proc {Arrange Gs SqsXY0 SqsXY1 Cut ?Ls ?Rs}
-	       case Gs
-	       of nil then Ls=nil Rs=nil
-	       [] Is|Gr then Lr Rr in
-		  {ArrangeOneSize Is SqsXY0 SqsXY1 Cut ?Ls Lr ?Rs Rr}
-		  {Arrange Gr SqsXY0 SqsXY1 Cut ?Lr ?Rr}
+	    fun {GetPos Is SqsXY0 SqsXY1 Cut}
+	       case Is of nil then nil
+	       [] I|Ir then
+		  ((SqsXY1.I=<:Cut) = (SqsXY0.I<:Cut))
+		  |{GetPos Ir SqsXY0 SqsXY1 Cut}
 	       end
 	    end
 
 	    proc {FindCutM Is X0 X1 Y0 Y1 ?Info}
 	       %% More than three squares
 	       Cut      = {FD.decl}
-	       I1|I1r = Is
-	       I2|I2r = I1r
-	       MinSize  = {FoldL I2r fun {$ M I}
-					{Min SqsSize.I M}
-				     end SqsSize.I2}
-	       Gs       = {GroupBySize I1r}
+	       I|Ir     = Is
+	       As       = {Map Is fun {$ I} SqsArea.I end}
+	       Area     = {FoldL As Number.'+' 0}
+	       MinSize  = {FoldL Ir fun {$ M I}
+				       {Min SqsSize.I M}
+				    end SqsSize.I}
 	    in
 	       %% Arrange first square
-	       SqsX0.I1 = X0
-	       SqsY0.I1 = Y0
+	       SqsX0.I = X0
+	       SqsY0.I = Y0
 	       choice
 		  Ls Rs InfoL InfoR
+		  Ps
+		  DL={FD.decl}
+		  PL={FD.decl}
 	       in
-		  Cut >=: X0+SqsSize.I1
+		  Cut >=: X0+SqsSize.I
 		  Cut + MinSize =<: X1
+		  DL =: (Cut - X0) * (Y1 - Y0)
+		  Ps = {GetPos Is SqsX0 SqsX1 Cut}
+		  {FD.sumC As Ps '=:' PL}
+		  PL <: Area
+		  PL =<: DL
 		  Info = info(dir:y cut:Cut InfoL InfoR)
 		  {FD.distribute generic(value:mid) [Cut]}
-		  {Arrange Gs SqsX0 SqsX1 Cut ?Ls ?Rs}
-		  InfoL={FindCut I1|Ls X0 Cut Y0 Y1}
-		  InfoR={FindCut Rs    Cut X1 Y0 Y1}
+		  {Arrange Is Ps}
+		  {Arrangement Ps Is ?Ls ?Rs}
+		  InfoL={FindCut Ls X0 Cut Y0 Y1}
+		  InfoR={FindCut Rs Cut X1 Y0 Y1}
 	       []
 		  Ls Rs InfoL InfoR
+		  Ps
+		  DL={FD.decl}
+		  PL={FD.decl}
 	       in
-		  %% Cut
-		  Cut >=: Y0+SqsSize.I1
+		  Cut >=: Y0+SqsSize.I
 		  Cut + MinSize =<: Y1
+		  DL =: (Cut - Y0) * (X1 - X0)
+		  Ps = {GetPos Is SqsY0 SqsY1 Cut}
+		  {FD.sumC As Ps '=:' PL}
+		  PL <: Area
+		  PL =<: DL
 		  Info = info(dir:x cut:Cut InfoL InfoR)
 		  {FD.distribute generic(value:mid) [Cut]}
-		  {Arrange Gs SqsY0 SqsY1 Cut ?Ls ?Rs}
-		  InfoL = {FindCut I1|Ls X0 X1 Y0 Cut}
-		  InfoR = {FindCut Rs    X0 X1 Cut Y1}
+		  {Arrange Is Ps}
+		  {Arrangement Ps Is ?Ls ?Rs}
+		  InfoL = {FindCut Ls X0 X1 Y0 Cut}
+		  InfoR = {FindCut Rs X0 X1 Cut Y1}
 	       end
 	    end
 	    
@@ -276,9 +308,12 @@ define
 
 	 %% Remove permutations of equally-sized squares by ordering them
 	 {For 1 N-1 1 proc {$ I}
-			 if SqsSize.I==SqsSize.(I+1) then
+			 I1 = I+1
+		      in
+			 if SqsSize.I==SqsSize.I1 then
 			    %% This is respected by the no overlap
-			    SqsX0.I =<: SqsX0.(I+1)
+			    SqsX0.I * DY + SqsY0.I =<:
+			    SqsX0.I1 * DY + SqsY0.I1
 			 end
 		      end}
 
