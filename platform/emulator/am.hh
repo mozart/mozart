@@ -178,12 +178,15 @@ public:
 
   unsigned long lastThreadID;
 
+  // Debugging stuff
   TaggedRef threadStream;
   TaggedRef threadStreamTail;
-
-  //TaggedRef *threadArray;
-
+  Bool breakflag;
+#ifdef THREADARRAY
+  TaggedRef *threadArray;
+#endif
   Toplevel *toplevelQueue;
+
 
   void printBoards();
 

@@ -46,8 +46,11 @@ void ThreadsPool::initThreads ()
   rootThread = am.mkRunnableThread (SYSTEM_PRIORITY, am.rootBoard,0,NO,OK);
   rootThread->setParent(makeTaggedConst(rootThread));// has itself as daddy -BL
 #endif
-  //am.threadArray[1] = makeTaggedConst(rootThread);
-  //
+
+#ifdef THREADARRAY
+  am.threadArray[1] = makeTaggedConst(rootThread);
+#endif
+
   threadBodyFreeList = NULL;
 }
 
