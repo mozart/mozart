@@ -79,7 +79,7 @@ public:
   virtual OZ_Return getBytes(BYTE*,int&,int&) = 0;
   virtual char *getHeader() = 0;
   virtual Bool checkChecksum(crc_t) = 0;
-  OZ_Return getTerm(OZ_Term, const char *compname,Bool);
+  OZ_Return getTerm(OZ_Term, const char *compname, Bool);
   OZ_Return makeByteStream(ByteStream*&, const char*);
 };
 
@@ -454,6 +454,7 @@ OZ_BI_define(BIsaveWithCells,4,0)
 
 
 OZ_Return loadFD(int fd, OZ_Term out, const char *compname);
+
 Bool pickle2text()
 {
   OZ_Term res    =   oz_newVariable();
@@ -587,8 +588,17 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
     stream->afterInterpret();    
     bufferManager->dumpByteStream(stream);
     delete versiongot;
-    return wantHeader ? oz_unify(out,oz_pair2(OZ_string(getHeader()),val)) // mm_u
-                      : oz_unify(out,val);
+    if (wantHeader) {
+      OZ_Return ret = oz_unify(out, oz_pair2(OZ_string(getHeader()), val));
+      // kost@ : that's how it is used;
+      Assert(ret == PROCEED);
+      return (ret);
+    } else {
+      OZ_Return ret = oz_unify(out, val);
+      // kost@ : cannot handle suspensions;
+      Assert(ret == PROCEED || ret == FAILED);
+      return (ret);
+    }
   }
       
   bufferManager->dumpByteStream(stream);
@@ -687,16 +697,16 @@ ByteSourceDatum::getBytes(BYTE*pos,int&max,int&got)
   return PROCEED;
 }
 
-OZ_Return loadDatum(OZ_Datum dat,OZ_Term out)
+OZ_Return loadDatum(OZ_Datum dat, OZ_Term out)
 {
   ByteSourceDatum src(dat);
-  return src.getTerm(out,"filename unknown",NO);
+  return src.getTerm(out, "filename unknown", NO);
 }
 
 OZ_Return loadFD(int fd, OZ_Term out, const char *compname)
 {
   ByteSourceFD src(fd);
-  return src.getTerm(out,compname,OK);
+  return src.getTerm(out, compname, OK);
 }
 
 
@@ -804,7 +814,6 @@ int pipeHandler(int, void *arg)
 	  if (aux==RAISE) {
 	    ControlVarRaise(controlvar,am.getExceptionValue());
 	  } else {
-	    Assert(aux==PROCEED); // mm_u
 	    unlink(pi->file);
 	    ControlVarUnify(controlvar,pi->out,other);
 	  }
@@ -1047,7 +1056,7 @@ OZ_BI_define(BIurl_load,1,1)
   if (aux != 0) {
     OZ_Term aux2 = oz_newVariable();
     OZ_Return unifyret = OZ_unify(oz_pair2(oz_newVariable(),aux2),aux);
-    Assert(unifyret==PROCEED);
+    Assert(unifyret == PROCEED);
     OZ_result(aux2);
   }
 
@@ -1076,9 +1085,9 @@ OZ_Return OZ_valueToDatum(OZ_Term t, OZ_Datum* d)
 }
 
 
-OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
+OZ_Return OZ_datumToValue(OZ_Datum d, OZ_Term t)
 {
-  return loadDatum(d,t);
+  return loadDatum(d, t);
 }
 
 OZ_BI_define(BIpicklePack, 1, 1) {
@@ -1099,10 +1108,14 @@ OZ_BI_define(BIpicklePack, 1, 1) {
 OZ_BI_define(BIpickleUnpack, 2, 0) {
   OZ_declareVS(0,string,sz);
   OZ_declareTerm(1,out);
+  // 
+  if (!(!OZ_isVariable(out) || oz_isFree(oz_deref(out))))
+    return (OZ_typeError(1, "value or a free variable"));
+
   OZ_Datum d;
   d.data = string;
   d.size = sz;
-  return OZ_datumToValue(d,out);
+  return OZ_datumToValue(d, out);
 } OZ_BI_end 
 
 #ifdef DENYS_XML

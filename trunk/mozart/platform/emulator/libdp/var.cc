@@ -89,7 +89,7 @@ OZ_Return ProxyManagerVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr)
 
   if (!oz_isExtVar(rVal)) {
     // switch order
-    if (isSimpleVar(rVal))  {
+    if (oz_isFree(rVal))  {
       return oz_var_bind(tagged2Var(rVal),rPtr,makeTaggedRef(lPtr));
     } else {
       return bindV(lPtr,makeTaggedRef(rPtr));
