@@ -1,0 +1,39 @@
+<chapter id=chapter.src.get>
+  <title/Retrieving The Sources/
+
+  <section>
+    <title/Source Tarball/
+  </section>
+
+  <section>
+    <title/Anonymous CVS/
+    <p>You can retrieve the complete sources of the Mozart
+system from our anonymous CVS server.  First you need to <em/login/.
+This is a one-time only operation: <code/cvs/ correspondingly updates your
+<file>~/.cvspass</file> and remembers the login for the next time
+you access our server.  After typing the command below, your are
+prompted for the <code/CVS password/ which happens to be <code/anoncvs/.
+<code display proglang=none>
+% cvs -d :pserver:anoncvs@ps.uni-sb.de:/CVS login
+(Logging in to anoncvs@ps.uni-sb.de)
+CVS password: anoncvs
+</code>
+From now on, you can always obtain a complete snapshot of the Mozart
+system using the command below:
+<code display>
+% cvs -d :pserver:anoncvs@ps.uni-sb.de:/CVS get mozart
+</code>
+This creates a directory <file/mozart/ in which the full source tree
+is placed.</p>
+  </section>
+
+</chapter>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
