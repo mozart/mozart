@@ -287,8 +287,8 @@ unsigned __stdcall selectThread(void *arg)
   int timestamp = si->timestamp;
 
   while(1) {
-    /* poll every 5 seconds */
-    int mstowait = min(timeout,5000);
+    /* poll every 2 seconds */
+    int mstowait = min(timeout,2000);
     timeout -= mstowait;
 
     struct timeval tv;
