@@ -46,7 +46,7 @@ in
       Finalize(register	:Register)
       Resolve( expand	:Expand) URL
       Error ErrorRegistry
-      MODE at 'x-oz://contrib/io/mode'
+      MODE at 'x-oz://contrib/os/mode'
    export
       is	: IS
       open	: Open
