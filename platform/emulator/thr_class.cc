@@ -113,10 +113,8 @@ Bool Thread::isBelowFailed (Board *top)
 
 /*
  * remove local tasks
- * return OK, if done
- * return NO, if no C_LOCAL found
  */
-Bool Thread::discardLocalTasks()
+void Thread::discardUpTo(Board *bb)
 {
   TaskStack *ts;
   TaskStackEntry *tos;
@@ -124,25 +122,31 @@ Bool Thread::discardLocalTasks()
   Assert (hasStack ());
 
   ts = &(item.threadBody->taskStack);
-  tos = ts->getTop ();
+  tos = ts->getTop();
   while (TRUE) {
     TaskStackEntry entry=*(--tos);
     if (ts->isEmpty (entry)) {
       ts->setTop(tos+1);
-      return (NO);
+      return;
     }
 
     ContFlag cFlag = getContFlag(ToInt32(entry));
 
     switch (cFlag) {
-    case C_LOCAL:
-      ts->setTop(tos);
-      if (obj) {
-	ts->pushSelf(obj);
+    case C_ACTOR:
+      {
+	AWActor *aa = (AWActor *) *(--tos);
+	if (aa->getBoardFast()==bb) {
+	  ts->setTop(tos+2);
+	  if (obj) {
+	    ts->pushSelf(obj);
+	  }
+	  return;
+	}
+	break;
       }
-      return (OK);
-
-    /* have to take care that 'self' is set correctly after resuming thread! */
+      /* have to take care that 'self' is set correctly
+	 after resuming thread! */
     case C_SET_SELF:
       obj = (Object*) *(--tos);
       break;
@@ -197,10 +201,7 @@ Bool Thread::terminate()
     ContFlag cFlag = getContFlag(ToInt32(entry));
 
     switch (cFlag) {
-    case C_LOCAL:
-#ifdef TERMINATE_ONLY_JOB
-    case C_JOB: // mm2: in case of JOB too?
-#endif
+    case C_ACTOR:
       return OK;
 
     default:

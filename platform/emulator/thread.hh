@@ -149,6 +149,10 @@ private:
     int flags:  (sizeof(int) - sizeof(char)) * sizeof(char) * 8;
   } state;
 
+#ifdef DEBUG_CHECK
+  int id;
+#endif
+
   TaggedRef cell;
   ThreadBodyItem item;		// NULL if it's a deep 'unify' suspension;
 
@@ -179,7 +183,11 @@ protected:
   int getFlags () { return (state.flags); }
 
 public:
-  Thread (int flags, int prio, Board *bb, TaggedRef val);
+  Thread();
+  Thread(const Thread &tt);
+  Thread &operator = (const Thread& tt);
+
+  Thread(int flags, int prio, Board *bb, TaggedRef val);
 
   USEHEAPMEMORY;
   OZPRINT;
@@ -485,7 +493,7 @@ public:
 
   //
   //  Runnable (running) threads;
-  Bool discardLocalTasks();
+  void discardUpTo(Board *bb);
   // 
   //  The iterative procedure which cleans up all the tasks 
   // up to the 'current' board, and sets the 'current' to the 
@@ -506,10 +514,12 @@ public:
     return item.threadBody->taskStack.findCatch(traceback);
   }
   void pushJob();
-  void pushSetCaa(AskActor *aa);
   void pushSelf(Object *obj);
   void pushSetModeTop();
-  void pushLocal();
+  void pushActor(Actor *aa) {
+    Assert (hasStack ());
+    item.threadBody->taskStack.pushActor(aa);
+  }
   void pushCFunCont (OZ_CFun f, RefsArray  x, int n, Bool copyF);
   void pushCont (ProgramCounter pc, 
 		 RefsArray y, RefsArray g, RefsArray x, int n);
@@ -579,7 +589,6 @@ public:
   Bool wakeUp (Board *home, PropCaller calledBy);
 
 };
-
 
 //
 const size_t threadBodySize = sizeof (RunnableThreadBody);
