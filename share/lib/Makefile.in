@@ -18,13 +18,15 @@ INSTALL_BIN     = $(INSTALL) -m 555
 INSTALL_SRC     = @INSTALL_SRC@
 INSTALL_DIR     = @INSTALL_DIR@
 
+OZENGINE        = @OZENGINE@
+
 OZFLAGS         =
 OZC             = @OZC@
 
 SCOMPILE        = $(OZC) $(OZFLAGS) -c
-COMPILE         = $(OZC) $(OZFLAGS) -l ./Standard.ozf -c
+COMPILE         = $(OZC) $(OZFLAGS) -l Standard.ozf -c
 EXEC            = $(OZC) $(OZFLAGS)
-EXECWITHSTD     = $(OZC) $(OZFLAGS) -l ./Standard.ozf,Application
+EXECWITHSTD     = $(OZC) $(OZFLAGS) -l Standard.ozf,Application
 OZMA            = $(OZC) $(OZFLAGS) -DOZM --ozma
 
 # exports
@@ -47,15 +49,17 @@ DPSRC = Connection Remote
 WPSRC = Tk TkTools
 MISCSRC = Misc
 
-FUNCTORS = \
+RUNFUNCTORS = \
         $(SPSRC:%=%.ozf) \
         $(OPSRC:%=%.ozf) \
         $(APSRC:%=%.ozf) \
         $(CPSRC:%=%.ozf) \
         $(DPSRC:%=%.ozf) \
         $(WPSRC:%=%.ozf) \
-        $(MISCSRC:%=%.ozf) \
-        Compiler.ozf
+        $(MISCSRC:%=%.ozf)
+
+FUNCTORS = \
+        $(RUNFUNCTORS) Compiler.ozf
 
 SYSLETS = \
         ozc ozserver # ozvsserver
@@ -140,7 +144,8 @@ COMPILERSRC1 = \
 
 COMPILERSRCNOVER = \
         $(COMPILERSRC1:%=compiler/%) \
-        compiler-Builtins.oz compiler-Opcodes.oz Compiler.oz
+        compiler-Builtins.oz compiler-Opcodes.oz compiler-Env.oz \
+        Compiler.oz
 
 COMPILERSRC = $(COMPILERSRCNOVER) compiler-Version.oz
 
@@ -156,6 +161,12 @@ compiler-Opcodes.oz: compiler/Opcodes.m4oz ../../platform/emulator/instrDefs.m4
         $(M4) -DEMUDIR=$(SRCDIR)/../../platform/emulator < $< > $@ \
         || (rm -f $@; exit 1)
 
+functor2env: $(RUNFUNCTORS) Standard.ozf MakeFunctorToEnv.oz
+        $(EXECWITHSTD) MakeFunctorToEnv.oz
+
+compiler-Env.oz: $(RUNFUNCTORS) Standard.ozf functor2env
+        $(OZENGINE) functor2env -in=Standard.ozf -out=compiler-Env.oz
+
 Compiler.ozf: $(COMPILERSRC)
 
 
@@ -163,6 +174,8 @@ Compiler.ozf: $(COMPILERSRC)
 #---------------------------------------------------------------------
 # Syslets
 #---------------------------------------------------------------------
+
+$(SYSLETS): $(RUNFUNCTORS)
 
 ozc: Standard.ozf MakeBatch.oz BatchCompile.oz
         $(EXECWITHSTD) MakeBatch.oz
@@ -177,7 +190,7 @@ ozvsserver: Standard.ozf MakeOzVSServer.oz
 # Boot compiler
 #---------------------------------------------------------------------
 
-ozc.ozm: compiler-Opcodes.oz compiler-Builtins.oz
+ozc.ozm: compiler-Opcodes.oz compiler-Builtins.oz compiler-Env.oz
         $(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
         mv -f /tmp/$$$$.ozm $@
 
@@ -262,7 +275,9 @@ Makefile: Makefile.in ../config.status
 
 clean:
         -rm -f *~ *.bak
-        -rm -f compiler-Version.oz compiler-Builtins.oz compiler-Opcodes.oz
+        -rm -f compiler-Version.oz compiler-Builtins.oz
+        -rm -f compiler-Opcodes.oz
+        -rm -f envgen compiler-Env.oz
         -rm -f $(FUNCTORS) Standard.ozf
         -rm -f $(SYSLETS)
 
