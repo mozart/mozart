@@ -16,26 +16,6 @@ disabled, however, it is <<32*fset_high>>.
 
 <!-- ********************************************************************** -->
 
-<subsection id="r_fsc.misc">
-<title/Miscellaneous/
-<p>
-
-<List proglang=cc>
-
-<Entry class="enumtype"><<OZ_FSetPropState>>
-<Index class=proglang><<OZ_FSetPropState>></Index>
-<Synopsis>
-<<
-enum OZ_FSetPropState {fs_prop_glb = 0, fs_prop_lub, fs_prop_val, 
-		       fs_prop_any, fs_prop_bounds};
->>
-
-<Item> [fixme]
-
-</List>
-
-<!-- ********************************************************************** -->
-
 <subsection id="r_fsc.constr">
 <title/Constructor Member Functions/
 <p>
@@ -506,26 +486,29 @@ containing all possible values (&ie , <math/\{0, \ldots, fs\_sup\}/).
 
 <Item> Returns <<true>> if <<*this>> is subsumed by <<fsc>>.
 
+
+<Entry class="member function"><<copyExtension>>
+<Index class=proglang><<OZ_FSetConstraint>><And><<copyExtension>></Index>
+<Synopsis> <<void copyExtension(void);>>
+
+<Item> This member function replaces the current extension of the
+set constraint representation by a copy of it.
+
+
+<Entry class="member function"><<disposeExtension>>
+<Index class=proglang><<OZ_FSetConstraint>><And><<disposeExtension>></Index>
+<Synopsis> <<void disposeExtension(void);>>
+
+<Item> This member function frees the heap memory occupied by the
+extension of the set constraint.
+
+<Entry class="constant member function"><<toString>>
+<Index class=proglang><<OZ_FSetConstraint>><And><<toString>></Index>
+<Synopsis><<char * toString(void) const;>>
+
+<Item> Returns a textual representation of the finite set constraint
+pointing to a static array of <<char>>s.
+
+
 </List>
-
-<!--
-<para class=apropos><title/<<toString>>/
-<em/member function/
-<p>
-<<
-char * toString(void)
->>
-<p>
-
-<p>
--->
-
-
-
-
-
-
-
-
-
 
