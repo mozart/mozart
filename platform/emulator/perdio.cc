@@ -126,9 +126,10 @@ static FatInt *idCounter;
 
 class MarshallInfo {
 public:
-  OZ_Term resources,saveTheseURLsToo, urlsFound;
+  OZ_Term resources,saveTheseURLsToo, urlsFound, names;
   MarshallInfo(OZ_Term ds, OZ_Term urls) { 
     resources = nil(); 
+    names     = nil(); 
     saveTheseURLsToo = deref(ds);
     urlsFound = literalEq(urls,NameUnit) ? NameUnit : nil();
   }
@@ -331,12 +332,12 @@ void sendObject(Site* sd, Object *o, Bool);
  * the DIFs
  */
 typedef enum {
-  DIF_SMALLINT,           // int
-  DIF_BIGINT,             // string
+  DIF_SMALLINT,         // int
+  DIF_BIGINT,           // string
   DIF_FLOAT, 		// string
   DIF_ATOM,		// string
   DIF_NAME,		// ???
-  DIF_UNIQUENAME,		// ???
+  DIF_UNIQUENAME,	// ???
   DIF_RECORD,		// 
   DIF_TUPLE,
   DIF_LIST,
@@ -351,12 +352,14 @@ typedef enum {
   DIF_OBJECT,
   DIF_THREAD,		// NA CREDIT
   DIF_SPACE,		// NA CREDIT
-  DIF_CHUNK,        // NA NAME value
+  DIF_CHUNK,            // NA NAME value
   DIF_PROC,		// NA NAME ARITY globals code
-  DIF_CLASS,        // NA NAME obj class
+  DIF_CLASS,            // NA NAME obj class
   DIF_URL,              // gname url
   DIF_ARRAY,
   DIF_FSETVALUE,	// finite set constant
+  DIF_NEWNAME,		// allways create a new name (code instantiation)
+  DIF_ABSTRENTRY,	// AbstractionEntry (code instantiation)
   DIF_LAST
 } MarshallTag;
 
@@ -389,6 +392,8 @@ char *dif_names[DIF_LAST] = {
   "url",
   "array",
   "fsetvalue",
+  "newname"
+  "abstractionentry"
 };
 
 void sendMessage(int bi, MessageType msg);
@@ -3152,6 +3157,12 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs, MarshallInfo *mi)
 
       marshallDIF(bs,DIF_PROC);
       marshallGName(gname,bs);
+      TaggedRef names = pp->getPred()->getNames();
+      Bool hasNames = !literalEq(names,NameUnit);
+      marshallNumber(hasNames,bs);
+      if (hasNames) {
+	mi->names = names;
+      }
       marshallTerm(sd,pp->getName(),bs,mi);
       marshallNumber(pp->getArity(),bs);
       ProgramCounter pc = pp->getPC();
@@ -3339,11 +3350,15 @@ loop:
 	marshallString(lit->getPrintName(),bs);	
 	PD((MARSHALL,"unique name: %s",lit->getPrintName()));
       } else {
-	marshallDIF(bs,DIF_NAME);
-	GName *gname = ((Name*)lit)->globalize();
-	marshallGName(gname,bs);
-	marshallString(lit->getPrintName(),bs);
-	PD((MARSHALL,"name: %s",lit->getPrintName()));
+	if (member(t,mi->names)) {
+	  marshallDIF(bs,DIF_NEWNAME);
+	} else {
+	  marshallDIF(bs,DIF_NAME);
+	  GName *gname = ((Name*)lit)->globalize();
+	  marshallGName(gname,bs);
+	  marshallString(lit->getPrintName(),bs);
+	  PD((MARSHALL,"name: %s",lit->getPrintName()));
+	}
       }
       trailCycle(lit->getRef(),bs,7);
       break;
@@ -3564,6 +3579,13 @@ loop:
     *ret = OZ_float(unmarshallFloat(bs)); 
     PD((UNMARSHALL,"float"));
     return;
+
+  case DIF_NEWNAME:
+    {
+      *ret = makeTaggedLiteral(Name::newName(am.currentBoard));
+      gotRef(bs,*ret);
+      return;
+    }
 
   case DIF_NAME:
     {
@@ -3880,17 +3902,20 @@ loop:
     {
       PD((UNMARSHALL,"proc"));
 
-      GName *gname = unmarshallGName(ret,bs);
-      OZ_Term name = unmarshallTerm(bs);
-      int arity    = unmarshallNumber(bs);
+      GName *gname  = unmarshallGName(ret,bs);
+      Bool hasNames = unmarshallNumber(bs);
+      OZ_Term name  = unmarshallTerm(bs);
+      int arity     = unmarshallNumber(bs);
 
       Abstraction *pp;
-      if (gname) {
-	PrTabEntry *pr=new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0);
-	pp=new Abstraction(pr,0,am.rootBoard);
-	pp->setGName(gname);
+      if (gname || hasNames) {
+	PrTabEntry *pr = new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0);
+	pp = new Abstraction(pr,0,am.rootBoard);
 	*ret = makeTaggedConst(pp);
-	addGName(gname,*ret);
+	if (!hasNames) {
+	  pp->setGName(gname);
+	  addGName(gname,*ret);
+	}
       } else if (!isAbstraction(deref(*ret))) {
 	DEREF(*ret,chPtr,_1);
 	PerdioVar *pv;
@@ -3911,9 +3936,10 @@ loop:
       gotRef(bs,*ret);
 
       RefsArray globals = unmarshallClosure(bs);
-      ProgramCounter PC = unmarshallCode(bs,pp==NULL);
       if (pp) {
-	pp->import(globals,PC);
+	pp->import(globals,unmarshallCode(bs,NO));
+      } else {
+	(void) unmarshallCode(bs,OK);
       }
       return;
     }

@@ -754,13 +754,16 @@ private:
     return data;
   }
   char * allocate(int size) {
+    COUNT1(sizeHeapChunks,size);
     return (char *) alignedMalloc(size, sizeof(double));
   }
 public:
   HeapChunk(HeapChunk&);
   HeapChunk(int size)
-  : ConstTerm(Co_HeapChunk), chunk_size(size), chunk_data(allocate(size)) {
-    }
+  : ConstTerm(Co_HeapChunk), chunk_size(size), chunk_data(allocate(size)) 
+  {
+    COUNT1(sizeHeapChunks,sizeof(HeapChunk));
+  }
 
   size_t getChunkSize(void) { return chunk_size; }
 
@@ -1631,6 +1634,9 @@ private:
   TaggedRef fileName;
   int lineno;
   TaggedRef info;
+  TaggedRef names; // list of names for components: when loading
+                   // theses names are replaced
+                   // default: unit --> no replacements
 
 public:
   PrTabEntry *next;
@@ -1655,8 +1661,9 @@ public:
     Assert((int)arity == getWidth(arityInit)); /* check for overflow */
     PC = NOCODE;
     info = nil();
+    names = NameUnit;
     numClosures = numCalled = heapUsed = samples = lastHeap =0;
-    next = allPrTabEntries; 
+    next = allPrTabEntries;     
     allPrTabEntries = this;
   }
 
@@ -1676,6 +1683,9 @@ public:
 
   void setInfo(TaggedRef t) { info = t; }
   TaggedRef getInfo()       { return info; }
+
+  void setNames(TaggedRef n) { names = n; }
+  TaggedRef getNames()       { return names; }
 
   void gcPrTabEntry();
 };
