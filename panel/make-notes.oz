@@ -10,7 +10,7 @@ local
    Pad          = 4
    Border       = 2
    LabelWidth   = 8
-   TextWidth    = 20
+   TextWidth    = 18
    ButtonWidth  = 6
    BackColor    = white
 
