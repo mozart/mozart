@@ -32,8 +32,10 @@ require
          messageAck:S_messageAck
          getUserName:S_getUserName
          getUserInfo:S_getUserInfo
-         dumpDB:S_dumpDB) at 'methods.ozf'
+         dumpDB:S_dumpDB
+         getFAQ:S_getFAQ) at 'methods.ozf'
 import
+   FaqEdit(start)
    Open(file)
    DP(open) at 'x-oz://contrib/tools/DistPanel'
    Tk TkTools(dialog error)
@@ -50,6 +52,9 @@ import
    ConfigClient(start) at 'configureclient.ozf'
    EditApplicationGUI( start: EditApp) at 'editapplicationgui.ozf'
    DisplayMess(display) at 'messagedisplay.ozf'
+\ifdef SCROLLFRAME
+   ScrollFrame
+\endif
 export
    dlgBox:DlgBox
    start:Start
@@ -451,8 +456,6 @@ define
                                                                  {Client startClient(application: self.id)}
                                                               end
                                      ("Halt "#T#" Server")#proc {$} {HaltApplication ID} end
-                                     separator
-                                     "Logout"#Kill
                                     ] self}
                           end)}
       end
@@ -879,11 +882,20 @@ define
 
       %% Start Graphics
       T={New Tk.toplevel tkInit(title:"Client" delete:Kill)}
+
+\ifdef SCROLLFRAME
+      F={New ScrollFrame.scrollFrame tkInit(parent:T relief:sunken bd:2 width:100)}
+      Online={New UserBox tkInit(parent:F.frame name:"online" type:online)}
+      Offline={New UserBox tkInit(parent:F.frame name:"offline" type:offline)}
+      Others={New OthersBox tkInit(parent:F.frame name:"others" type:others)}
+      Apps={New AppBox tkInit(parent:F.frame name:"apps")}
+\else
       F={New Tk.frame tkInit(parent:T relief:sunken bd:2)}
       Online={New UserBox tkInit(parent:F name:"online" type:online)}
       Offline={New UserBox tkInit(parent:F name:"offline" type:offline)}
       Others={New OthersBox tkInit(parent:F name:"others" type:others)}
       Apps={New AppBox tkInit(parent:F name:"apps")}
+\endif
 
       StatusV={New Tk.variable tkInit('Online')}
 
@@ -901,11 +913,16 @@ define
                  grid(Offline   column:0 row:2 sticky:news)
 %                grid(Others    column:0 row:3 sticky:news) % Added in OthersBox
 %                grid(Apps      column:0 row:4 sticky:news) % Added in AppBox
-                 grid(F         column:0 row:5 sticky:news ipady:1 ipadx:1 padx:2 pady:2)
-                 grid(StatusF   column:0 row:7 sticky:news pady:1 padx:2)
+                 grid(F         column:0 row:0 sticky:news ipady:1 ipadx:1 padx:2 pady:2)
+                 grid(StatusF   column:0 row:1 sticky:news pady:1 padx:2)
                  grid(columnconfigure T 0 weight:1)
                  grid(columnconfigure F 0 weight:1)
-                 wm(resizable T 1 0)]}
+                 grid(rowconfigure T 0 weight:1)
+                 grid(rowconfigure F 0 weight:1)
+\ifdef SCROLLFRAME
+                 grid(columnconfigure F.frame 0 weight:1)
+\endif
+                 wm(resizable T 1 1)]}
 
       thread
          AnimateThread={Thread.this}
@@ -979,6 +996,12 @@ define
                                           if Aps1==nil then ignore else "Remove Application"#Aps1 end
                                           if Aps2==nil then ignore else "Edit Application"#Aps2 end
                                          ]
+                                         separator
+                                         "Edit FAQ"#proc{$}
+                                                       Fs={Server S_getFAQ($)}
+                                                    in
+                                                       {FaqEdit.start Fs Server}
+                                                    end
                                          separator
                                          "Broadcast Message (all)"#proc{$}
                                                                       {ComposeMess
