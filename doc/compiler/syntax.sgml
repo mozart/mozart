@@ -56,6 +56,7 @@
 	<Grammar.Alt/<<fOpApply(?={atom} [?={phrase}] ?={coord})>>/
 	<Grammar.Alt/<<fOpApplyStatement(?={atom} [?={phrase}]>>/
 	<Grammar.Alt space/<<                  ?={coord})>>/
+	<Grammar.Alt/<<fDotAssign(?={phrase} ?={phrase} ?={coord})>>/
 	<Grammar.Alt/<<fObjApply(?={phrase} ?={phrase} ?={coord})>>/
 	<Grammar.Alt/<<fAt(?={phrase} ?={coord})>>/
 	<Grammar.Alt/?={atom literal}/
