@@ -29,13 +29,17 @@
   -
   -->
 
-<chapter id=chapter.problem><title/Writing Problem Solvers in Oz/<p>
+<chapter id=chapter.problem>
+  <title/Writing Problem Solvers in Oz/
 
+<p>
 We are now well-prepared to write and run our
 first finite domain problem solvers in Oz.  For
 running, analyzing, and debugging problem solvers
-we will use the Explorer, a graphical tool of the
-DFKI Oz programming environment.
+we will use the <Ref.extern to="ozdoc:tools"
+key="chapter:explorer"/Explorer/, a graphical tool of the 
+Mozart programming environment.
+
 <p>
 A <def/script/ for a finite domain problem is a
 program that can compute one or all solutions of
@@ -51,16 +55,17 @@ We then obtain an executable script by
 implementing the model and distribution strategy
 with the predefined abstractions available in Oz.
 
-<section><title/Format of Scripts/<p>
+<section>
+  <title/Format of Scripts/<p>
 
 In Oz, a script takes the form of a
 procedure
 <<<
 proc {Script Root}
-   % declare variables
+   %% declare variables
 in
-   % post constraints
-   % specify distribution strategy
+   %% post constraints
+   %% specify distribution strategy
 end
 >>>
 The procedure declares the variables needed, posts
@@ -81,6 +86,7 @@ The procedure
 will run the script ?{Script} until the entire
 search tree is explored and return the list of
 the solutions found. 
+
 <p>
 The procedure
 <<<
@@ -91,7 +97,9 @@ solution is found.  If a solution is found, it
 is returned as the single element of a list;
 otherwise, the empty list is returned.
 </section>
-<section id="SecConMoney"><title/Example: Send More Money/<p>
+
+<section id="SecConMoney">
+  <title/Example: Send More Money/<p>
 
 We will now write a script for the Send
 More Money Puzzle.
@@ -100,12 +108,15 @@ More Money Puzzle.
   <title/Problem Specification/
 
 <P>
-The Send More Money Puzzle consists in finding
-distinct digits for the letters ?{D}, ?{E}, ?{M}, ?{N},
-?{O}, ?{R}, ?{S}, ?{Y} such that&fsp;<math/S,M\neq0/ (no leading
-zeros) and the equation
-<math/SEND\;+\;MORE\;=\;MONEY/
-is satisfied.  The unique solution of the puzzle
+The Send More Money Problem
+consists in finding distinct digits for the letters
+<math/D/, <math/E/, <math/M/, <math/N/, <math/O/, <math/R/, <math/S/,
+<math/Y/ such that <math/S/ and <math/M/ are different from zero (no
+leading zeros) and the equation
+<math display>
+SEND\;+\;MORE\;=\;MONEY
+</math>
+is satisfied.  The unique solution of the problem
 is <math/9567+1085=10652/.
 
 <subsection class=unnumbered>
@@ -157,23 +168,23 @@ script first declares a local variable for every
 letter.  Then it posts the following constraints:
 <list enum>
 <item>
-?{Root} is a record that has a field for every
-letter.  The fields of ?{Root} are the digits for
+<<Root>> is a record that has a field for every
+letter.  The fields of <<Root>> are the digits for
 the corresponding letters.  This constraint is
 basic.
 <item>
-The fields of ?{Root} are integers in the domain
-<math/0\#9/.  This constraint is basic.
+The fields of <<Root>> are integers in the domain
+<<0#9>>.  This constraint is basic.
 <item>
-The fields of ?{Root} are pairwise distinct.  This
+The fields of <<Root>> are pairwise distinct.  This
 constraint is nonbasic.
 <item>
-The values of the variables ?{S} and ?{M} are
+The values of the variables <<S>> and <<M>> are
 different from zero (no leading zeros).  These
 constraints are nonbasic.
 <item>
 The digits for the letters satisfy the equation
-<math/SEND+MORE=MONEY/.  This constraint is nonbasic.
+<<SEND+MORE=MONEY>>.  This constraint is nonbasic.
 </list>
 
 <subsection class=unnumbered>
@@ -185,24 +196,27 @@ differently for basic and nonbasic constraints.
 Basic constraints are posted by telling them to
 the constraint store.  Nonbasic constraints are
 posted by creating propagators implementing them.
+
 <p>
-Note that the propagators for $\?S?\neq0$ and
-$\?M?\neq0$ can immediately write their complete
+Note that the propagators for <<S\=:0>> and
+<<M\=:0>> can immediately write their complete
 information into the constraint store since the
-store already knows domains for ?{S}  and ?{M}.
+store already knows domains for <<S>> and <<M>>.
+
 <p>
 The last line <<{FD.distribute ff Root}>> posts a
 distributor that will distribute on the field of
-?{Root} with the first-fail strategy (specified by
-the atom ?{ff}).  Equivalently, we could write
+<<Root>> with the first-fail strategy (specified by
+the atom <<ff>>).  Equivalently, we could write
 <<<
 {FD.distribute ff [D E M N O R S Y]}
 >>>
 and thus specify the variables and their order
 explicitly.  The order of the fields of ?{Root} is
 given by the canonical ordering of the respective
-features ?{d}, ?{e}, ?{m}, ?{n}, ?{o}, ?{r}, ?{s},
-and ?{y}.
+features <<d>>, <<e>>, <<m>>, <<n>>, <<o>>, <<r>>, <<s>>,
+and <<y>>.
+
 <p>
 The statement
 <<<
@@ -213,9 +227,10 @@ of the Send More Money Puzzle:
 <<<
 [sol(d:7 e:5 m:1 n:6 o:0 r:8 s:9 y:2)]
 >>>
+
 <p>
 To understand the search process defined by
-?{Money}, we need more information than just the
+<<Money>>, we need more information than just the
 list of solutions found.  Obviously, it would be
 useful to see a graphical representation of the
 search tree.  It would also be nice if we could
@@ -225,18 +240,19 @@ the constraint store when the respective space
 became stable.  Finally, it would be nice to see
 for every arc of the tree with which constraint it
 was distributed.
+
 <p>
 <ptr to="figConMoneyTree"> shows the search tree
-explored by ?{Money} together with the information
+explored by <<Money>> together with the information
 just mentioned.  This gives us a good understanding
-of the search process defined by ?{Money}.  Note
+of the search process defined by <<Money>>.  Note
 that the search tree is quite small compared to the
 <math/10^8/ candidates a naive generate and test method
 would have to consider.
 <p>
 
-<figure class="figure Maxi" id="figConMoneyTree">
-<caption/The search tree explored by ?{Money}./
+<figure id="figConMoneyTree">
+<caption/The search tree explored by <<Money>>./
 <picture latex>
 \begin{pspicture}(33,23)\footnotesize
 
@@ -271,19 +287,22 @@ e:[6\#7]\ m:1\ n:[7\#8]\ o:0\ r:[2\#8]\ s:9\ y:[2\#8])}}
 </figure>
 </section>
 
-<section><title/The Explorer/<p>
+<section>
+  <title/The Explorer/
 
+<p>
 The Explorer is a graphical tool of the Mozart
 programming environment.  It can run scripts and
 display the explored search trees.  It can also
 display the information in the constraint stores
 associated with the nodes of the search tree.
+
 <p>
 The statement
 <<<
 {ExploreAll Money}
 >>>
-tells the Explorer to run the script ?{Money} and
+tells the Explorer to run the script <<Money>> and
 explore the entire search tree.  The Explorer
 will pop up a window and display the explored
 nodes of the search tree (see left part of
@@ -292,40 +311,31 @@ appear as blue circles, failure
 nodes as red boxes, and solution nodes as
 green diamonds.  Fully explored
 subtrees not containing solution nodes are
-collapsed into a single red triangle <math/\triangle/.
+collapsed into a single red triangle.
 
-<figure class="Figure maxi" id="figConOzSolver">
-<caption/The Explorer with the search tree of ?{Money}./
-<picture latex>
-\newlength{\dumpwidth}
-\setlength{\dumpwidth}{.49 \textwidth}
-\mbox{}\hfill
-\begin{minipage}{\dumpwidth}
-\epsfxsize=\dumpwidth
-\epsffile{pictures/explorer-one.ps}
-\end{minipage}
-\hfill
-\begin{minipage}{\dumpwidth}
-\epsfxsize=\dumpwidth
-\epsffile{pictures/explorer-two.ps}
-\end{minipage}
-\hfill
-\mbox{}
-</picture>
+<P>
+<figure id="figConOzSolver">
+<caption/The Explorer with the search tree of <<Money>>./
+<table class=dyptic>
+<tr><td><Picture.Extern to="explorer-a.gif" type=gif></td> 
+    <td><Picture.Extern to="explorer-b.gif" type=gif></td>
+</tr>
+</table>
 </figure>
-<p>
 
+<p>
 You can select any node of the displayed search
 tree by clicking it with the left mouse button.
-Select the red triangle and type the command ?{h}
-(hide / unhide).  This will replace the triangle with
+Select the red triangle and type the command <KBD/h/
+(hide/unhide).  This will replace the triangle with
 the actual nodes of the tree (see right part of
 <Ptr to="figConOzSolver">).  You now see the
-full search tree of ?{Money}, which consists of
+full search tree of <<Money>>, which consists of
 three choice nodes, three failure nodes, and one
-solution node.  Typing the command ?{h} once more
+solution node.  Typing the command <KBD/h/ once more
 will switch back to the compact representation of
 the failed subtree.
+
 <Para><title/double clicking nodes/
 Next, double click the green solution node with
 the left mouse button.
@@ -347,12 +357,13 @@ sol(d:_[2#8]  e:_[4#7]  m:1  n:_[5#8]
 in the Browser.  This way, the Explorer and the
 Browser can display the annotated search tree
 shown in <Ptr to="figConMoneyTree">.
+
 <para><title/open and closed choice nodes/
 The statement
 <<<
 {ExploreOne Money}
 >>>
-tells the Explorer to run the script ?{Money}
+tells the Explorer to run the script <<Money>>
 until the first solution is found.  This time the
 Explorer will show a partial search tree that
 contains the solution node in the rightmost
@@ -369,7 +380,7 @@ open choice node are not displayed.
 <p>
 To check whether there are further solutions, you
 can resume the search process by selecting the
-root node and typing the command ?{n} (next).
+root node and typing the command <KBD/n/ (next).
 This will resume the search until either the next
 solution is found or all nodes of the search tree
 are explored.
@@ -382,10 +393,10 @@ by typing the command <kbd/C-g/.
 You can resume the exploration of a partial
 search tree by
 selecting any choice node and typing the command
-?{n}  or ?{a}.  The command ?{n}  (next) will
+<kbd/n/  or <kbd/a/.  The command <kbd/n/  (next) will
 resume the exploration of the selected subtree
 until a further solution is found or the subtree
-is fully explored.  The command ?{a}  (all) will
+is fully explored.  The command <kbd/a/  (all) will
 resume the exploration of the selected subtree
 until it is fully explored.
 
@@ -396,16 +407,16 @@ root node of the search tree.  By double clicking
 you can see in the Browser what is known about the
 solution before the first distribution step.  You
 can request the exploration of the seach tree by
-typing ?{n} or ?{a}.
+typing <kbd/n/ or <kbd/a/.
 
 <para><title/hand-guided exploration/
 You can guide the search of the Explorer by
 hand.  Reset
 the Explorer by typing <kbd/C-r/.  This will select
 the root node, which is an open choice node.  Now
-type the command ?{o} (one) to compute the first
+type the command <kbd/o/ (one) to compute the first
 descendent of the root.  Select the root once
-more and type ?{o} again.  This will compute the
+more and type <kbd/o/ again.  This will compute the
 second and final descendent of the root.  Note
 that the root has now changed from light blue
 indicating an open choice node to dark blue
@@ -423,7 +434,7 @@ clicking the zoom bar with the right mouse button.
 With the Explorer it is easy to observe the
 effect of different distribution strategies.
 Replace the first-fail distribution strategy in
-?{Money}  with the naive strategy
+<<Money>>  with the naive strategy
 <<<
 {FD.distribute naive Root}
 >>>
@@ -434,10 +445,15 @@ that it is twice as large as the tree obtained
 with first-fail distribution.
 </Exercise>
 
+<Answer to="problem.ex.a">
+This does not really require to be answered. Just try it.
+</Answer>
+
 <Exercise id="problem.ex.b">
 Write a script that finds distinct digits for the
-letters ?{A}, ?{B}, ?{D}, ?{E}, ?{G}, ?{L}, ?{N}, ?{O},
-?{R}, and ?{T} such that the equation
+letters <math/A/, <math/B/, <math/D/, <math/E/, <math/G/, <math/L/,
+<math/N/, <math/O/,
+<math/R/, and <math/T/ such that the equation
 <math display/
 DONALD+GERALD=ROBERT
 /
@@ -493,7 +509,6 @@ the domain of a variable in the current
 constraint store, an expressivity needed for
 programming distribution strategies.
 
-<p>
 <para><title/first-class spaces/
 Oz provides spaces as first-class citizens that can be created,
 distributed, and killed, among other things.  A
@@ -506,7 +521,7 @@ threads.  One important difference between the
 top-level and first-class spaces is the treatment
 of failure, which is considered an error at the
 top level and a regular event in first-class
-spaces (<q/this space has no solution/).
+spaces (<em/this space has no solution/).
 
 <para><title/attributes of global objects cannot be assigned/
 The <def/parent/ of a first-class space is the
@@ -526,20 +541,20 @@ The details of first-class spaces need only concern
 programmers who want to implement new search
 engines.  For finite domain problems, the necessary
 search engines are already available as
-predefined functionality (&eg;, ?{SearchOne} and
-?{SearchAll}).
+predefined functionality (&eg;, <<SearchOne>> and
+<<SearchAll>>).
 
 <p>
 All functionality related to finite domain
 constraints is provided through the procedures of
-the module ?{FD}.  We have already seen
-\?FD.distinct?  (creates a propagator) and
-\?FD.distribute?  (creates a distributor) in the
+the module <<FD>>.  We have already seen
+<<FD.distinct>>  (creates a propagator) and
+<<FD.distribute>>  (creates a distributor) in the
 script for the Send More Money Puzzle (see
 <Ptr to="SecConMoney">).  
 
 <para><title/infix notations/
-For some of the procedures of the module ?{FD},
+For some of the procedures of the module <<FD>>,
 Oz provides special
 infix notations governed by the following
 operators:
@@ -547,7 +562,7 @@ operators:
    ::    :::    =:    \=:    <:    >:    =<:    >=:
 >>>
 You have already seen examples of the use of
-<<:::>>, <<\=:>>, and <<=:>> in the script ?{Money}.
+<<:::>>, <<\=:>>, and <<=:>> in the script <<Money>>.
 An equivalent version of Money not using these
 notational conveniences appears in
 <Ptr to="ProgMoneyNoGadgets">
@@ -574,13 +589,14 @@ end>>>
 </figure>
 </section>
 
-<section><title/Watching Propagators/<p>
+<section><title/Watching Propagators/
 
+<p>
 It is illuminating to watch the effect of
 one or several propagators with the Browser.
 Enter the following statements line by line and
 observe in the Browser the shrinking domains of
-the variables ?{X}, ?{Y}, and ?{Z}:
+the variables <<X>>, <<Y>>, and <<Z>>:
 <<<
 declare X Y Z 
 {Browse [X Y Z]}         % [X Y Z]
@@ -605,10 +621,9 @@ domain propagation.
 
 <P>
 The code of Professor Smart's safe is a sequence of
-?{9} distinct nonzero digits <math/C_1,\ldots,C_9/ such that&fsp;the
+<math/9/ distinct nonzero digits <math/C_1,\ldots,C_9/ such that the
 following equations and inequations are satisfied:
-<p>
-<p><math/
+<math display/
 \begin{array}{rcl}
 &   C_4 - C_6 = C_7\\
 &   C_1 * C_2 * C_3 = C_8 + C_9\\
@@ -616,14 +631,18 @@ following equations and inequations are satisfied:
 &   C_9 < C_8\\
 &   C_1\neq1,\ldots, C_9\neq9
 \end{array}
-/<p>
+/
 Can you determine the code?
 
-<para><title/Model and Distribution Strategy./
+<subsection class=unnumbered>
+  <title/Model and Distribution Strategy/
+
+<p>
 We choose the obvious model that has a variable
 for every digit <math/C_1,\ldots,C_9/.  We distribute over
 these variables with the standard first-fail
 strategy.
+
 <p>
 <figure class="Figure" id="ProgSafe">
 <caption/A script for the Safe Puzzle./
@@ -646,19 +665,22 @@ Puzzle.  The statement
 <<<
 {FD.tuple code 9 1#9 C}
 >>>
-constrains the root variable ?{C} to a tuple
-?{code}<math/(c_1,\ldots,c_9)/ whose components <math/c_1,\ldots,c_9/ are
-integers in the domain <math/1\#9/.  The auxiliary
-variables <math/c_1,\ldots,c_9/ remain anonymous.  The statement
+constrains the root variable <<C>> to a tuple
+with label <<code>> whose components are
+integers in the domain <<1#9>>.  The statement
 <<<
 {For 1 9 1 proc {$ I} C.I \=: I end}
 >>>
 posts the constraint <math/c.i\neq i/ for every
 <math/i=1,\ldots,9/.
+
 <p>
-The full search tree of ?{Safe} has 23 nodes and
+The full search tree of <<Safe>> has 23 nodes and
 contains the unique solution
-?{code}(4 3 1 8 9 2 6 7 5).
+<<code(4 3 1 8 9 2 6 7 5)>>.
 </section>
 </chapter>
+
+
+
 
