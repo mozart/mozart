@@ -241,6 +241,7 @@ in
       
       meth init(manager:Manager options:O)
 	 lock
+	    {System.set time(detailled:true)}
 	    Config = {Dictionary.get O config}
 	    Tk.toplevel,tkInit(title:              TitleName
 			       highlightthickness: 0
@@ -861,6 +862,7 @@ in
       meth tkClose
 	 lock
 	    {self.manager PanelTopClosed}
+	    {System.set time(detailled:false)}
 	    Tk.toplevel, tkClose
 	    {Wait _}
 	 end
