@@ -1749,7 +1749,8 @@ void gc_finalize()
 
 
 inline
-Bool gcTagged(TaggedRef & frm, TaggedRef & to, Bool isAliased) {
+void gcTagged(TaggedRef & frm, TaggedRef & to, 
+	      Bool isAliased, Bool directStoreFwd) {
   // Returns OK if a direct variable has been collected
   Assert(!isInGc || !fromSpace->inChunkChain(&to));
 
@@ -1765,7 +1766,7 @@ update:
     if (aux == makeTaggedNULL()) {
       if (!isAliased)
 	to = aux;
-      return NO;
+      return;
     }
 
   case REFTAG2:
@@ -1861,8 +1862,8 @@ update:
 	} else {
 	  Assert(isDirectVar(frm));
 	  to = makeTaggedSVar(sv_gc);
-	  storeFwd(&frm, &to);
-	  return OK;
+	  if (directStoreFwd)
+	    storeFwd(&frm, &to);
 	}
 	
       } else {
@@ -1879,8 +1880,8 @@ update:
 	  // the original variable is replaced by a reference!
 	  to  = aux;
 	  frm = makeTaggedRef(&to);
-	  storeFwd(&frm, &to);
-	  return OK;
+	  if (directStoreFwd)
+	    storeFwd(&frm, &to);
 	}
 	
       }
@@ -1901,8 +1902,8 @@ update:
 	} else {
 	  Assert(isDirectVar(frm));
 	  to = makeTaggedCVar(cv_gc);
-	  storeFwd(&frm, &to);
-	  return OK;
+	  if (directStoreFwd)
+	    storeFwd(&frm, &to);
 	}
 	
       } else {
@@ -1919,8 +1920,8 @@ update:
 	  // the original variable is replaced by a reference!
 	  to  = aux;
 	  frm = makeTaggedRef(&to);
-	  storeFwd(&frm, &to);
-	  return OK;
+	  if (directStoreFwd)
+	    storeFwd(&frm, &to);
 	}
 	
       }
@@ -1944,8 +1945,8 @@ update:
 	} else {
 	  Assert(isDirectVar(frm));
 	  to = gcUVar(aux);
-	  storeFwd(&frm, &to);
-	  return OK;
+	  if (directStoreFwd)
+	    storeFwd(&frm, &to);
 	}
 
       } else {
@@ -1958,8 +1959,8 @@ update:
 	  // See above
 	  to  = aux;
 	  frm = makeTaggedRef(&to);
-	  storeFwd(&frm, &to);
-	  return OK;
+	  if (directStoreFwd)
+	    storeFwd(&frm, &to);
 	}
 
       }
@@ -1968,8 +1969,6 @@ update:
     }
   }
  
-  return NO;
-
 }
 
 
@@ -1989,13 +1988,13 @@ update:
 void OZ_updateHeapTerm(TaggedRef &to) {
   GCPROCMSG("OZ_updateHeapTerm");
 
-  (void) gcTagged(to, to, OK);
+  gcTagged(to, to, OK, NO);
 
 }
 
 void OZ_collectHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
   while (sz--) {
-    (void) gcTagged(*frm, *to, NO);
+    (void) gcTagged(*frm, *to, NO, OK);
     frm++; to++;
   }
 }
@@ -3250,8 +3249,9 @@ void LTuple::gcRecurse() {
   while (1) {
     // Collect element and if store fwd has not been done in gcTagged
     // do it here!
-    if (!gcTagged(frm->args[0], to->args[0], NO)) 
-      storeFwd(frm->args, to->args);
+    gcTagged(frm->args[0], to->args[0], NO, NO);
+    
+    storeFwd(frm->args, to->args);
     
     TaggedRef t = deref(frm->args[1]);
 
