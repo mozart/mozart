@@ -38,7 +38,7 @@
 #include "atoms.hh"
 
 // this builtin is only internally available
-OZ_BI_define(BIbyNeedAssign,2,0)
+OZ_BI_define(BIbindFuture,2,0)
 {
   OZ_Term var = OZ_in(0);
   DEREF(var,varPtr,_);
@@ -61,7 +61,7 @@ Bool Future::kick(TaggedRef *ptr)
   if (oz_isProcedure(function)) {
     Thread* thr    = oz_newThreadInject(bb);
     OZ_Term newvar = oz_newVar(bb);
-    thr->pushCall(BI_ByNeedAssign,makeTaggedRef(ptr),newvar);
+    thr->pushCall(BI_bindFuture,makeTaggedRef(ptr),newvar);
     thr->pushCall(function,newvar);
   } else {
     Assert(oz_isTuple(function) && oz_eq(OZ_label(function),AtomDot));
@@ -93,7 +93,7 @@ Bool Future::kick(TaggedRef *ptr)
 
     OZ_Term newvar = oz_newVar(bb);
     Thread *thr = oz_newThreadInject(bb);
-    thr->pushCall(BI_ByNeedAssign,makeTaggedRef(ptr),newvar);
+    thr->pushCall(BI_bindFuture,makeTaggedRef(ptr),newvar);
     thr->pushCall(BI_dot,fut,fea,newvar);
   }
   function=0;

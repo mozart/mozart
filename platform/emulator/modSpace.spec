@@ -71,10 +71,6 @@ $module_init_fun_name = "space_init";
      'waitStable'       => { in  => [],
                              out => [],
                              BI  => BIwaitStableSpace},
-
-     'send'             => { in  => ['+port','value'],
-                             out => ['value'],
-                             BI  => BIsendFromSpace},
                  
      );
 1;;
