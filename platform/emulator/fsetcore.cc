@@ -16,10 +16,35 @@
 
 //*****************************************************************************
 
+OZ_C_proc_begin(BIfsValueToString, 2)
+{
+  oz_declareNonvarArg(0,in);
+  oz_declareArg(1,out);
+
+  if (isFSetValue(in)) {
+    char *s = OZ_toC(in,100,100); // mm2
+    return oz_unify(out,OZ_string(s));
+  }
+  oz_typeError(0,"FSetValue");
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BIfsIsVarB, 2)
 { 
   return OZ_unify(OZ_getCArg (1),
 		  (isGenFSetVar(deref(OZ_getCArg(0))) ? NameTrue : NameFalse));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIfsIsValueB, 2)
+{
+  OZ_Term term = OZ_args[0];
+  DEREF(term, term_ptr, term_tag);
+  if (isAnyVar(term_tag)) 
+    return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, term_ptr);
+
+  return OZ_unify(OZ_getCArg (1),
+		  (isFSetValue(deref(OZ_getCArg(0))) ? NameTrue : NameFalse));
 }
 OZ_C_proc_end
 
@@ -323,7 +348,9 @@ static
 BIspec fdSpec[] = {
 
 // fsetcore.cc
+  {"fsValueToString", 2, BIfsValueToString},
   {"fsIsVarB", 2, BIfsIsVarB},
+  {"fsIsValueB", 2, BIfsIsValueB},
   {"fsSetValue", 2, BIfsSetValue},
   {"fsSet", 3, BIfsSet},
   {"fsSup", 1, BIfsSup},
@@ -364,6 +391,7 @@ BIspec fdSpec[] = {
   {"fsp_diff",         3, fsp_diff},
   {"fsp_includeR",     3, fsp_includeR},
   {"fsp_bounds",       5, fsp_bounds},
+  {"fsp_boundsN",      5, fsp_boundsN},
   {"fsp_disjointN",    1, fsp_disjointN},
   {"fsp_unionN",       2, fsp_unionN},
   {"fsp_partition",    2, fsp_partition},

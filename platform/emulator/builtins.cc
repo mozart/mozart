@@ -7048,10 +7048,6 @@ OZ_C_proc_begin(BIgetDefaultExceptionHandler,1)
   OZ_declareArg(0,ret);
   OZ_Term hdl = am.defaultExceptionHandler;
 
-  if (!oz_isProcedure(ret) && !oz_isVariable(ret)) {
-    oz_typeError(0,"Procedure or Variable");
-  }
-
   if (hdl==makeTaggedNULL()) {
     return am.raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
 		    oz_atom("setDefaultExceptionHandler"));
