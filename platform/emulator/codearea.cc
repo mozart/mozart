@@ -429,6 +429,17 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
                regToInt(getRegArg(PC+4)));
       DISPATCH();
 
+    case INLINEDOT:
+      {
+        TaggedRef literal = getLiteralArg(PC+2);
+        fprintf (ofile,
+                 "(X[%d],%s,X[%d])\n",
+                 regToInt(getRegArg(PC+1)),
+                 OZ_toC(literal),
+                 regToInt(getRegArg(PC+3)));
+      }
+      DISPATCH();
+
     case INLINEEQEQ:
       fprintf (ofile,
                "(%s,X[%d],X[%d],X[%d],%d)\n",

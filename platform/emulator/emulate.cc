@@ -2228,6 +2228,8 @@ void engine() {
   Case(TEST3):
   Case(TEST4):
 
+  Case(INLINEDOT):
+
   Case(ENDOFFILE):
   Case(ENDDEFINITION):
 
