@@ -61,7 +61,7 @@ Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy)
 
   Board *cb_cache = oz_currentBoard();
   
-  if (prop->isNonMonotonicPropagator() && am.isBelowSolveBoard()) {
+  if (prop->isNonMonotonicPropagator() && !oz_onToplevel()) {
 #ifdef DEBUG_NONMONOTONIC
     OZ_PropagatorProfile * profile = prop->getPropagator()->getProfile();
     char * pn = profile->getPropagatorName();
@@ -74,7 +74,7 @@ Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy)
     Assert(!prop->getPropagator()->isMonotonic());
 
     WAKEUP_PROPAGATOR(prop->markRunnable();
-		      SolveActor::Cast(am.currentSolveBoard()->getActor())->addToNonMonoSuspList(prop));
+		      SolveActor::Cast(am.currentBoard()->getActor())->addToNonMonoSuspList(prop));
   }
   
   if (localPropStore.isUseIt()) {
@@ -105,17 +105,13 @@ Thread * oz_mkLPQ(Board *bb, int prio)
   //printf("+");fflush(stdout);
 #endif
 
-  if (am.isBelowSolveBoard()) {
+  if (!bb->isRoot()) {
 #ifdef DEBUG_THREADCOUNT
     //printf("!");fflush(stdout);
 #endif
-    Assert(oz_isInSolveDebug(bb));
     oz_incSolveThreads(bb);
-    th->setInSolve();
-  } else {
-    Assert(!oz_isInSolveDebug(GETBOARD(th)));
   }
-
+  
   th->pushLPQ(bb);
 
   return th;

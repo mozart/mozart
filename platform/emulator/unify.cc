@@ -84,13 +84,10 @@ void wakeup_Wakeup(Thread *tt)
   tt->markRunnable();
   am.threadsPool.scheduleThread(tt);
 
-  if (am.isBelowSolveBoard() || tt->isExtThread()) {
-    Assert (oz_isInSolveDebug(GETBOARD(tt)));
+  if (!(GETBOARD(tt))->isRoot() || tt->isExtThread()) {
     oz_incSolveThreads(GETBOARD(tt));
-    tt->setInSolve();
-  } else {
-    Assert(!oz_isInSolveDebug(GETBOARD(tt)));
-  }
+  } 
+
 }
 
 inline
@@ -155,7 +152,6 @@ Bool wakeup_Board(Thread *tt, Board *home, PropCaller calledBy)
   //  General case;
   switch (oz_isBetween(bb, home)) {
   case B_BETWEEN:
-    Assert(!oz_currentBoard()->isSolve() || am.isBelowSolveBoard());
     wakeup_Wakeup(tt);
     return OK;
 

@@ -47,7 +47,6 @@ public:
   void printLongStreamSolve(ostream &stream, int depth, int offset);
 
   static SolveActor *Cast(Actor *a) {
-    Assert(a->isSolve());
     return ((SolveActor *) a);
   }
 private:
