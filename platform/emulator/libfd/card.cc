@@ -190,6 +190,17 @@ OZ_Return LinEqBPropagator::propagate(void)
 
   DECL_DYN_ARRAY(OZ_FDIntVar, x, sz);
   OZ_FDIntVar b(reg_b);
+
+  if (*b == fd_singl) {
+    OZ_DEBUGPRINT(("imposing (not) eq %d", b->getSingleElem()));
+    OZ_Propagator *prop = (b->getSingleElem() == 1
+                           ? new LinEqPropagator(*this)
+                           : new LinNotEqPropagator(*this));
+    b.leave();
+    return replaceBy(prop);
+  }
+
+
   PropagatorController_VV_V P(sz, x, b);
   DECL_DYN_ARRAY(OZ_Boolean, flag_txl, sz);
   DECL_DYN_ARRAY(OZ_Boolean, flag_txu, sz);
@@ -239,19 +250,9 @@ OZ_Return LinEqBPropagator::propagate(void)
   // if every variable was already a singleton and no failure occured,
   // the reified equation is entailed.
   if (dom_size == sz) {
+    OZ_DEBUGPRINT(("entailed b <- 1"));
     FailOnEmpty(*b &= 1);
     return P.vanish();
-  }
-
-  if (*b == fd_singl) {
-    OZ_DEBUGPRINT(("imposing (not) eq %d",b->getSingleElem()));
-    P.vanish();
-    OZ_Propagator *prop;
-    if (b->getSingleElem() == 1)
-      prop = new LinEqPropagator(*this);
-    else
-      prop = new LinNotEqPropagator(*this);
-    return replaceBy(prop);
   }
 
   OZ_DEBUGPRINTTHIS("out ");
