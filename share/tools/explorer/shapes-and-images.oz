@@ -49,7 +49,7 @@ local
    end
 
 
-   fun {BlockedShape ScaledMyX ScaledMyY Scale}
+   fun {SuspendedShape ScaledMyX ScaledMyY Scale}
       ScaledHalfWidth = Scale * SmallRectangleWidthF
       ScaledFullWidth = Scale * RectangleWidthF
       X0          = ScaledMyX - ScaledFullWidth
@@ -159,16 +159,16 @@ local
 	 end
       end
 
-      class BlockedImage
+      class SuspendedImage
 	 from Image
 	 prop final
 	    
 	 meth init(parent:Parent bg:Bg<=NoArg)
 	    Image,init(parent: Parent
 		       bg:     Bg
-		       tcl:    o({BlockedShape ImageCenter ImageCenter
+		       tcl:    o({SuspendedShape ImageCenter ImageCenter
 				  ImageScale}
-				 fill:    BlockedColor
+				 fill:    SuspendedColor
 				 outline: LineColor
 				 width:   NodeBorderWidth))
 	 end
@@ -179,12 +179,12 @@ local
 in
 
    Images = images(succeeded: SucceededImage
-		   blocked:   BlockedImage
+		   suspended:   SuspendedImage
 		   choose:    ChooseImage
 		   failed:    FailedImage)
 
    Shapes = shapes(succeeded: SucceededShape
-		   blocked:   BlockedShape
+		   suspended:   SuspendedShape
 		   choose:    ChooseShape
 		   failed:    FailedShape
 		   hidden:    HiddenShape)

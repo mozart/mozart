@@ -280,7 +280,7 @@ local
 in
 
    LayoutNodes = c(choose:    LayoutNode
-		   blocked:   LayoutLeaf
+		   suspended: LayoutLeaf
 		   failed:    LayoutLeaf
 		   succeeded: LayoutLeaf)
    

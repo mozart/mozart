@@ -48,7 +48,7 @@ ChooseTermColor      #
 EntailedColor        #
 StuckColor           #
 FailedColor          #
-BlockedColor         #
+SuspendedColor       #
 PartialFailedColor   #
 LineColor            #
 BackColor            #
@@ -59,7 +59,7 @@ PopupBgColor         = if Tk.isColor then
 			  'MediumSeaGreen'  # % EntailedColor
 			  'olivedrab1'      # % StuckColor
 			  'firebrick2'      # % FailedColor
-			  'orange'          # % BlockedColor
+			  'orange'          # % SuspendedColor
 			  'purple1'         # % PartialFailedColor
 			  black             # % LineColor
 			  white             # % BackColor
@@ -71,7 +71,7 @@ PopupBgColor         = if Tk.isColor then
 			  white # % EntailedColor
 			  white # % StuckColor
 			  white # % FailedColor
-			  white # % BlockedColor
+			  white # % SuspendedColor
 			  white # % PartialFailedColor
 			  black # % LineColor
 			  white # % BackColor
