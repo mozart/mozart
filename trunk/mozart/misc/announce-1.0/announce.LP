@@ -5,11 +5,11 @@ Available at: http://www.mozart-oz.org
 
 Systems supported: Many Unix-based platforms, Windows 95/98/NT
 
-The Mozart consortium (DFKI & UdS, SICS, UCL) is pleased to announce
-the release of Mozart 1.0, a major development platform for logic
-programming, constraint programming, and distributed programming.
-Mozart implements the Oz language and is the fruit of a decade of
-research into concurrent constraint, logic, and distributed
+The Mozart consortium (DFKI & UdS & SFB 378, SICS, UCL) is pleased to
+announce the release of Mozart 1.0, a major development platform for
+logic programming, constraint programming, and distributed
+programming.  Mozart implements the Oz language and is the fruit of a
+decade of research into concurrent constraint, logic, and distributed
 programming.  The platform is released with a very liberal license
 (BSD style) that allows both commercial and non-commercial use.  Full
 source code is available.  There is extensive documentation including
