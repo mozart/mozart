@@ -47,6 +47,7 @@
 #include "records.hh"
 #include "thread.hh"
 #include "unify.hh"
+#include "fdbuiltin.hh"
 
 AM am;
 
@@ -201,6 +202,9 @@ void AM::init(int argc,char **argv)
   extern void DLinit(char *name);
   DLinit(argv[0]);
 
+  BIfdHeadManager::initStaticData();
+  BIfdBodyManager::initStaticData();
+  
   initMemoryManagement();
 
 // not changeable
