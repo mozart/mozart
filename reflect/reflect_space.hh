@@ -53,11 +53,13 @@ public:
   }
 
   void push(Propagator * p) {
-    Stack::push((StackEntry) makeTaggedRef2p((TypeOfTerm) Entry_Variable, 
+    DEBUGPRINT(("ReflectStack::push(Propagator *)"));
+    Stack::push((StackEntry) makeTaggedRef2p((TypeOfTerm) Entry_Propagator, 
 					     (OZ_Term) p));
   }
 
   void push(OZ_Term * v) {
+    DEBUGPRINT(("ReflectStack::push(OZ_Term *)"));
     Stack::push((StackEntry) makeTaggedRef2p((TypeOfTerm) Entry_Variable, 
 					     (OZ_Term) v));
   }
@@ -69,28 +71,38 @@ public:
 
 //-----------------------------------------------------------------------------
 
+// This kind of table stores the id of an item. In case the id is
+// preliminary, i.e., the item has not been reflected yet, the id is
+// (internally) negative. The id of a reflected item is (internally)
+// positive. To the outside a table provides only positive ids.
+
 template <class T_WHAT>
 class TableClass : protected HashTable {
 private:
   int id_counter;
+
 public:
-  TableClass(void) : HashTable(HT_INTKEY, 2000), id_counter(0) {}
+  TableClass(void) : HashTable(HT_INTKEY, 2000), id_counter(-1) {}
 
   int add(T_WHAT k, Bool &is_reflected) {
-    int i = (int) HashTable::htFind((intlong) k);
+    DEBUGPRINT(("TableClass::add"));
+
+    int i = (int) htFind((intlong) k);
     is_reflected = ((i != (int) htEmpty) && (i >= 0));
     if (i != (int) htEmpty) {
-      return abs(i);
+      return abs(i)-1;
     }
     id_counter -= 1;
-    HashTable::htAdd((intlong) k, (void *) id_counter);
-    return abs(id_counter);
+    htAdd((intlong) k, (void *) id_counter);
+    return abs(id_counter)-1;
   }
 
   void reflected(T_WHAT k) {
-    int i = (int) HashTable::htFind((intlong) k);
-    Assert(!((i != (int) htEmpty) && (i >= 0)));
-    HashTable::htAdd((intlong) k, (void *) id_counter);
+    DEBUGPRINT(("TableClass::reflected"));
+
+    int i = (int) htFind((intlong) k);
+    Assert((i != (int) htEmpty) && (i < 0));
+    htAdd((intlong) k, (void *) -i);
   }
 };
 

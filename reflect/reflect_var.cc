@@ -30,7 +30,7 @@
 
 OZ_Term reflect_variable(OZ_Term var) 
 {
-  DEBUGPRINT(("reflect_variable \n"));
+  DEBUGPRINT(("reflect_variable (in)\n"));
   
   OZ_Term var_itself = var;
   DEREF(var, varptr, vartag);
