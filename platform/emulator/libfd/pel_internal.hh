@@ -193,7 +193,7 @@ class PEL_Engine;
 
 //-----------------------------------------------------------------------------
 
-typedef PushArray<int, HeapAlloc> IntHeapPushArray;
+typedef PushArray<int, class HeapAlloc> IntHeapPushArray;
 
 class _PEL_EventList : public IntHeapPushArray {
 public:
@@ -212,7 +212,7 @@ typedef enum { pf_failed, pf_entailed, pf_sleep } pf_return_t;
 // has to be power of 2
 #define ALIGN_SIZE sizeof(double)
 
-class _PEL_PropagatorHeap : public EnlargeableArrayWithBase<char,HeapAlloc> {
+class _PEL_PropagatorHeap : public EnlargeableArrayWithBase<char, class HeapAlloc> {
 protected:
   int _high;
 public:
