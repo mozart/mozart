@@ -39,7 +39,7 @@
 
     <P>
     <para class=apropos><title/actions/
-      Button widgets are similar to label widgets in that they display text,
+      <def/Button/ widgets are similar to label widgets in that they display text,
       bitmaps, or images.  Additionally, they provide for <Def/actions/:
       pressing the mouse button over the button widget, invokes an
       action.  An action is either a procedure or a pair of object and
@@ -60,6 +60,7 @@
         <Caption/Buttons with attached actions./
         <P>
           <Picture.Extern to="button.gif" type=gif>
+<index class=tails/<<Tk>><and><<button>>/
 <chunk class=anonymous><title/button/
 B1={New Tk.button tkInit(parent: W 
                          text:   'Press me!'
@@ -129,6 +130,9 @@ B2={New Tk.button tkInit(parent: W
         <Caption/A checkbutton and three radiobuttons./
         <P>
           <Picture.Extern to="check-and-radio.gif" type=gif>
+<index class=tails/<<Tk>><and><<variable>>/
+<index class=tails/<<Tk>><and><<checkbutton>>/
+<index class=tails/<<Tk>><and><<radiobutton>>/
 <chunk class=anonymous><title/check and radio/
 V1={New Tk.variable tkInit(false)}
 C ={New Tk.checkbutton tkInit(parent:W variable:V1
@@ -171,7 +175,9 @@ Rs={Map ['Times' 'Helvetica' 'Courier']
       <Figure id="figure.widgets-2.check-and-radio-action">
         <Caption/Actions for radiobuttons and checkbuttons./
         <P>
-          <Picture.Extern to="check-and-radio-action.gif" type=gif>
+          <Picture.Extern
+to="check-and-radio-action.gif" type=gif>
+<index/<<tkAction>>/
 <chunk class=anonymous><title/LC/
 fun {GetWeight}
    if {V1 tkReturnInt($)}==1 then bold else normal end
@@ -334,6 +340,7 @@ L={New Tk.label tkInit(parent:W text:'A test text.' font:F)}
         The command <<winfo>> is helpful to query parameters of widgets.  For
         instance, to query the position and geometry of a widget&nbsp;?_{T}, we
         can use the following:
+<index class=tails/<<Tk>><and><<returnInt>>/
 <<<{Browse {Map [rootx width rooty height]
          fun {$ A} 
             {Tk.returnInt winfo(A ?_{T})} 
@@ -375,6 +382,10 @@ L={New Tk.label tkInit(parent:W text:'A test text.' font:F)}
         <Caption/A menu with entries, including a cascaded sub menu./
         <P>
           <Picture.Extern to="menu.gif" type=gif>
+<index class=tails/<<Tk>><and><<menu>>/
+<index class=tails/<<Tk>><and><<menuentry>><and><<cascade>>/
+<index class=tails/<<Tk>><and><<menuentry>><and><<separator>>/
+<index class=tails/<<Tk>><and><<menuentry>><and><<command>>/
 <chunk class=anonymous><title/menu/
 Cs =['Wheat' 'Firebrick' 'Navy' 'Darkorange']
 M1 ={New Tk.menu tkInit(parent:W  tearoff:false)}
@@ -463,6 +474,8 @@ CEs={Map Cs fun {$ C}
 
       <Figure id="figure.widgets-2.event-menu">
         <Caption/Action to popup menu./
+<index class=tails/<<tkBind>>/
+<index class=tails/<<tk_popup>>/
 <chunk class=anonymous><title/popup/
 {W tkBind(event:  '&lt;Button-1&gt;'
           args:   [int(x) int(y)]
@@ -679,6 +692,7 @@ CEs={Map Cs fun {$ C}
       of a subclass of <<Tk.listener>> has a thread of its own in
       which it serves action messages in order of invocation.
       For example, in
+<index class=tails/<<Tk>><and><<listener>>/
 <chunk class=anonymous><title/listener/
 L ={New class $ from Tk.listener
             meth b1 {Browse b1} end
@@ -728,6 +742,7 @@ B2={New Tk.button tkInit(parent:W text:'Two' action: L#b2)}
         <Caption/An entry widget to enter text./
         <P>
           <Picture.Extern to="entry.gif" type=gif>
+<index class=tails/<<Tk>><and><<entry>>/
 <chunk class=anonymous><title/entry/
 L={New Tk.label tkInit(parent:W text:'File name:')}
 E={New Tk.entry tkInit(parent:W width:20)}
@@ -784,6 +799,8 @@ E={New Tk.entry tkInit(parent:W width:20)}
         <Caption/Scales to configure a frame's background color./
         <P>
           <Picture.Extern to="scale.gif" type=gif>
+<index class=tails/<<Tk>><and><<listener>>/
+<index class=tails/<<Tk>><and><<scale>>/
 <chunk class=anonymous><title/scale/
 L ={New class $ from Tk.listener
            attr red:0 green:0 blue:0
@@ -852,6 +869,10 @@ Ss={Map [red green blue]
         <Caption/A listbox together with a vertical scrollbar./
         <P>
           <Picture.Extern to="listbox.gif" type=gif>
+<index class=tails/<<Tk>><and><<listbox>>/
+<index class=tails/<<Tk>><and><<scrollbar>>/
+<index class=tails/<<Tk>><and><<addXScrollbar>>/
+<index class=tails/<<Tk>><and><<addYScrollbar>>/
 <chunk class=anonymous><title/listbox/
 L={New Tk.listbox tkInit(parent:W height:6)}
 {L tkBind(event:  '&lt;1&gt;'
@@ -907,6 +928,7 @@ S={New Tk.scrollbar tkInit(parent:W)}
 
     <para class=apropos><title/titled toplevel/
       For example
+<index class=tails/<<Tk>><and><<toplevel>>/
 <chunk class=anonymous><title/wm title/
 W={New Tk.toplevel tkInit(title:'Something different')}
 </chunk>
@@ -954,6 +976,7 @@ W={New Tk.toplevel tkInit(withdraw:true)}
         <Caption/Selecting files./
         <P>
           <Picture.Extern to="file.gif" type=gif>
+<index/<<tk_getOpenFile>>/
 <chunk class=anonymous><title/file/
 case {Tk.return tk_getOpenFile}
 of nil then skip
