@@ -17,7 +17,7 @@ OZ_Extension* WeakDictionary::gCollectV()
 {
   // copy to the new heap and enter into linked list
   // WeakDictionary's gcRecurseV does nothing.
-  // the real worked is done in gcWeakDictionaries.
+  // the real worked is done in gCollectWeakDictionaries.
   WeakDictionary* d = new WeakDictionary(table,stream);
   d->next = gcLinkedList;
   gcLinkedList = d;
