@@ -1896,8 +1896,10 @@ redo:
   gcing = 1;
 
 #ifdef CS_PROFILE
-  if (across_chunks)
+  if (across_chunks) {
+    printf("Allocation across heap chunks. Redoing.\n");
     goto redo;
+  }
 
   cs_copy_size = cs_orig_start - ((int32 *) heapTop);
 
@@ -2754,7 +2756,7 @@ void SolveActor::gcRecurse () {
   localThreadQueue = localThreadQueue->gc();
   nonMonoSuspList  = nonMonoSuspList->gc();
 #ifdef CS_PROFILE
-  if((copy_size>0) && copy_start) {
+  if((copy_size>0) && copy_start && (opMode == IN_GC)) {
     free(copy_start);
   }
   orig_start = (int32 *) NULL;

@@ -217,7 +217,7 @@ SolveActor::SolveActor(Board *bb)
 TaggedRef SolveActor::getCloneDiff(void) {
   TaggedRef l = nil();
 
-  if (orig_start && (copy_size>0)) {
+  if (copy_start && orig_start && (copy_size>0)) {
     int n = 0;
 
     while (n < copy_size) {
