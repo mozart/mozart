@@ -1943,6 +1943,8 @@ public:
     getArgs()[n] = val;
     return TRUE;
   }
+
+  TaggedRef *getRef() { return args; }
 };
 
 
