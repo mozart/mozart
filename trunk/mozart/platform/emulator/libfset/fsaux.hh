@@ -83,7 +83,7 @@ OZ_Return __debugReturnPrint(OZ_Return r)
 #define _OZ_DEBUGPRINTTHIS(string) 		\
    _OZ_DEBUGPRINT(("%s%s",string,this->toString()))
 
-#define OZ_DEBUGPRINTTHIS(string) _OZ_DEBUGPRINTTHIS(string) 
+#define OZ_DEBUGPRINTTHIS(string) /* _OZ_DEBUGPRINTTHIS(string) */
 
 //-----------------------------------------------------------------------------
 
