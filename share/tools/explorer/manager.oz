@@ -33,26 +33,27 @@ in
 	 explorer
 
       attr
-	 IsBAB:        False
-	 root:         False
-	 query:        False
-	 order:        False
-	 PrevSol:   False
-	 ToClose:      nil
+	 IsBAB:   False
+	 root:    False
+	 query:   False
+	 order:   False
+	 PrevSol: False
+	 ToClose: nil
 
       
       meth init(EXPLORER)
 	 PackAll = <<ToplevelManager init($)>>
       in
-	 <<DialogManager   init>>
-	 <<MenuManager     init>>
-	 <<StatusManager   init>>
-	 self.explorer       = EXPLORER
+	 <<DialogManager init>>
+	 <<MenuManager   init>>
+	 <<StatusManager init>>
+	 self.explorer = EXPLORER
 	 {PackAll}
 	 <<ToplevelManager configurePointer(idle)>>
       end
       
       meth clear
+	 <<Manager clearDialogs>>
 	 <<MenuManager     clear>>
 	 <<StatusManager   clear>>
 	 <<ToplevelManager clear>>
@@ -77,21 +78,6 @@ in
 	 end
       end
 
-      meth setOptions(O)
-	 case {HasSubtreeAt O search} then
-	    <<setSearchOptions(O.search)>>
-	 else true end
-	 case {HasSubtreeAt O information} then
-	    <<setInfoOptions(O.information)>>
-	 else true end
-	 case {HasSubtreeAt O drawing} then
-	    <<setLayoutOptions(O.drawing)>>
-	 else true end
-	 case {HasSubtreeAt O postscript} then
-	    <<setPostscriptOptions(O.postscript)>>
-	 else true end
-      end
-      
       meth reset
 	 case @query of !False then true elseof Query then
 	    <<Manager query(Query @order)>>
@@ -127,9 +113,12 @@ in
 	    case <<StatusManager hasBlocked($)>> then
 	       <<MenuManager disable(search([next all step]))>>
 	    else
-	       <<MenuManager state({CurNode isNextPossible({Not @IsBAB} $)}
+	       %% Check whether order is liberal
+	       IsLiberal = {Not {Dictionary.get self.options.search order}}
+	    in
+	       <<MenuManager state({CurNode isNextPossible(IsLiberal $)}
 				   search([next all]))>>
-	       <<MenuManager state({CurNode isStepPossible({Not @IsBAB} $)}
+	       <<MenuManager state({CurNode isStepPossible(IsLiberal $)}
 				   search(step))>>
 	    end
 	    %% Nodes
@@ -176,14 +165,19 @@ in
 	       <<ToplevelManager makeDirty(<<StatusManager
 					   getBrokenNodes($)>>)>>
 	       {Root layout(_ Scale Font)}
-	       <<ToplevelManager refreshNumbers>>
 	    else true
 	    end
+	    <<ToplevelManager refreshNumbers>>
+	 end
+	 case {Dictionary.get self.options.drawing scale} then
+	    <<ToplevelManager scaleToFit>>
+	 else true
 	 end
       end
 
       meth LayoutAfterSearch
-	 case <<DialogManager getAutoHide($)>> then {@curNode hideFailed}
+	 case {Dictionary.get self.options.drawing hide} then
+	    {@curNode hideFailed}
 	 else true
 	 end
 	 <<Manager Layout>>
@@ -197,6 +191,7 @@ in
 	 curNode <- False
 	 PrevSol <- False
 	 {self.status setBAB(@IsBAB)}
+	 {self.status setOrder({Dictionary.get self.options.search order})}
 	 <<StatusManager start(_)>>
 	 root <- {MakeRoot self Query Order}
 	 <<Manager prepare>>
@@ -230,10 +225,6 @@ in
 	 end
       end
 
-      meth busy
-	 <<MenuManager busy>>
-      end
-
       meth idle
 	 <<MenuManager     idle>>
 	 <<ToplevelManager configurePointer(idle)>>
@@ -250,8 +241,8 @@ in
       end
       
       meth startSearch($ <= _)
-	 <<Manager         busy>>
-	 <<MenuManager     normal(explorer(halt))>>
+	 <<MenuManager     busy>>
+	 <<MenuManager     normal(explorer([halt break]))>>
 	 <<ToplevelManager configurePointer(searching)>>
 	 <<StatusManager   start($)>>
       end
@@ -282,23 +273,26 @@ in
       meth next
 	 CurNode = @curNode
 	 Break   = <<Manager startSearch($)>>
+	 O       = self.options.search
       in
-	 <<Manager stopSearch({CurNode next(Break <<getPrevSol($)>>
-					    <<getSearchDist($)>>
-					    <<getInfoDist($)>> $)})>>
+	 <<Manager stopSearch({CurNode
+			       next(Break <<Manager getPrevSol($)>>
+				    {Dictionary.get O search}
+				    {Dictionary.get O information} $)})>>
       end
       
       meth all
 	 <<Manager startSearch>>
-	 <<Manager DoAll(<<DialogManager getUpdateSol($)>>)>>
+	 <<Manager DoAll({Dictionary.get self.options.drawing update})>>
       end
 
       meth DoAll(NoSol)
 	 Break   = <<StatusManager getBreakFlag($)>>
 	 CurNode = @curNode
+	 O       = self.options.search
 	 Sol     = {CurNode next(Break <<getPrevSol($)>>
-				 <<getSearchDist($)>>
-				 <<getInfoDist($)>> $)}
+				 {Dictionary.get O search}
+				 {Dictionary.get O information} $)}
       in
 	 case Sol\=False andthen <<StatusManager getBreakStatus($)>>==none then
 	    case @IsBAB then PrevSol <- Sol
@@ -309,7 +303,9 @@ in
 	       <<Manager       hideCursor>>
 	       <<Manager       LayoutAfterSearch>>
 	       <<StatusManager unbreak>>
-	       <<Manager       DoAll(<<DialogManager getUpdateSol($)>>)>>
+	       <<StatusManager startTime>>
+	       <<Manager       DoAll({Dictionary.get self.options.drawing
+				      update})>>
 	    else
 	       <<Manager DoAll(NoSol-1)>>
 	    end
@@ -321,12 +317,15 @@ in
 	 CurNode = @curNode
       in
 	 <<Manager startSearch(_)>>
-	 <<Manager stopSearch({CurNode step(<<getPrevSol($)>>
-					    <<getInfoDist($)>> $)})>>
+	 <<Manager stopSearch({CurNode
+			       step(<<Manager getPrevSol($)>>
+				    {Dictionary.get self.options.search
+				     information} $)})>>
       end
 
       meth nodes(ToDo)
-	 <<Manager busy>>
+	 <<MenuManager busy>>
+	 <<MenuManager normal(explorer(break))>>
 	 <<StatusManager clearBreak>>
 	 <<Manager hideCursor>>
 	 {@curNode ToDo}
@@ -343,7 +342,7 @@ in
       in
 	 case StatNode==False then true else
 	    Number  = <<Manager getNumber(StatNode $)>>
-	    Handler = {self.statAction get($)}
+	    Handler = {self.statAction get($)}.3
 	    Stat    = {StatNode stat($)}
 	 in
 	    case {Procedure.arity Handler}
@@ -381,22 +380,20 @@ in
 	 RealNode = case Node==False then @curNode else Node end
       in
 	 case RealNode of !False then true elseof CurNode then
-	    <<Manager busy>>
-	    case {self.infoAction get($)}
-	    of !False then true
-	    elseof Handler then
-	       Number = <<Manager getNumber(RealNode $)>>
-	       Info   = {RealNode findSpace($)}
-	    in
-	       case Info==False then
-		  <<DialogManager
-		  error('Recomputation of information failed.')>>
-	       elsecase {Procedure.arity Handler}
-	       of 2 then thread {Handler Number Info} end
-	       [] 3 then CloseAction in
-		  ToClose <- CloseAction|@ToClose
-		  thread {Handler Number Info ?CloseAction} end
-	       end
+	    <<MenuManager busy>>
+	    Action  = {self.infoAction get($)}
+	    Handler = Action.3
+	    Cast    = Action.4
+	    Number  = <<Manager getNumber(RealNode $)>>
+	    Info    = {RealNode findSpace($)}
+	 in
+	    case Info==False then
+	       <<DialogManager error('Recomputation of information failed.')>>
+	    elsecase {Procedure.arity Handler}
+	    of 2 then thread {Handler Number {Cast Info}} end
+	    [] 3 then CloseAction in
+	       ToClose <- CloseAction|@ToClose
+	       thread {Handler Number {Cast Info} ?CloseAction} end
 	    end
 	    <<Manager setCursor(CurNode)>>
 	    <<Manager idle>>
@@ -424,23 +421,27 @@ in
 	 CurNode = @curNode
       in
 	 case CurNode==CmpNode then true else
-	    <<Manager busy>>
+	    <<MenuManager busy>>
 	    CurNumber = <<ToplevelManager getNumber(CurNode $)>>
 	    CmpNumber = <<ToplevelManager getNumber(CmpNode $)>>
+	    Action    = {self.cmpAction get($)}
+	    Handler   = Action.3
+	    Cast      = Action.4
 	    CurInfo   = {CurNode findSpace($)}
 	    CmpInfo   = {CmpNode findSpace($)}
-	    Handler   = {self.cmpAction get($)}
 	 in
 	    case CmpInfo==False orelse CurInfo==False then
-	       <<DialogManager
-	       error('Recomputation of information failed.')>>
+	       <<DialogManager error('Recomputation of information failed.')>>
 	    elsecase {Procedure.arity Handler}
 	    of 4 then
-	       thread {Handler CmpNumber CmpInfo CurNumber CurInfo} end
+	       thread
+		  {Handler CmpNumber {Cast CmpInfo} CurNumber {Cast CurInfo}}
+	       end
 	    [] 5 then CloseAction in
 	       ToClose <- CloseAction|@ToClose
 	       thread
-		  {Handler CmpNumber CmpInfo CurNumber CurInfo ?CloseAction}
+		  {Handler CmpNumber {Cast CmpInfo} CurNumber {Cast CurInfo}
+		   ?CloseAction}
 	       end
 	    end
 	    <<Manager setCursor(CurNode)>>
@@ -463,10 +464,29 @@ in
 	 end
       end
 
+      meth updateAfterOption
+	 case {Dictionary.get self.options.drawing scale} then
+	    <<ToplevelManager scaleToFit>>
+	 else true
+	 end
+	 {self.status setOrder({Dictionary.get self.options.search order})}
+      end
+      
+      meth guiOptions(What)
+	 <<MenuManager busy>>
+	 <<DialogManager guiOptions(What)>>
+	 <<Manager updateAfterOption>>
+	 <<Manager idle>>
+	 case @curNode\=False then
+	    <<Manager setCursor(@curNode False)>>
+	 else true
+	 end
+      end
+      
       meth postscript
 	 <<Manager hideCursor>>
 	 <<ToplevelManager hideNumbers>>
-	 <<Manager busy>>
+	 <<MenuManager busy>>
 	 <<DialogManager postscript>>
 	 <<ToplevelManager unhideNumbers>>
 	 <<Manager idle>>

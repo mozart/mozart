@@ -33,7 +33,7 @@ end
 
 
 proc {Queens Board}
-   Board = {FD.list 8 1#8}
+   Board = {FD.list 6 1#6}
    {List.forAllTail Board 
     proc{$ Q|Qs}
        {List.forAllInd Qs
@@ -79,14 +79,26 @@ in
 
 end
 
+proc {Picture X}
+   choice X=1
+   [] false
+   [] choice choice false [] false end [] X=2 end
+   end
+end
+	 
 
 /*
 
 % Test Move, Search, Nodes, and Hide
 {ExploreOne Queens}
 
+{ExploreAll Picture}
+
 {ExploreBest Photo MaxSat}
 
+%%
+%% Test blocking
+%%
 
 declare
 fun {P1 U V}
@@ -151,4 +163,169 @@ U=1
 V=1
 
 
+%%
+%% Test recomputation
+%%
+{Explorer option(search search:full information:full)}
+
+declare U
+{ExploreOne proc {$ X}
+	       choice
+		  case {System.isVar U} then
+		     choice X=11 [] X=12 end
+		  else false
+		  end
+	       []
+		  case {System.isVar U} then
+		     choice X=11 [] X=12 end
+		  else false
+		  end
+	       []
+		  case {System.isVar U} then
+		     choice X=11 [] X=12 end
+		  else false
+		  end
+	       end
+	    end}
+U=1
+% access info
+
+
+%%
+%% Test options
+%%
+
+{Explorer option(search search:4 information:8 order:True)}
+
+{Explorer option(search search:0 information:1)}
+{Explorer option(search search:none information:full)}
+{Explorer option(search search:full information:none)}
+
+{Explorer option(drawing hide:False scale:True update:40)}
+
+{Explorer option(postscript color:grayscale orientation:landscape
+		 size:6#i#x#7#i)}
+{Explorer option(postscript color:full orientation:portrait
+		 size:6#p#x#7#c)}
+{Explorer option(postscript color:bw
+		 size:6#m#x#7#m)}
+
+%% wrong options
+{Explorer option(gargel)}
+
+{Explorer option(search search:a)}
+{Explorer option(search information:a)}
+{Explorer option(search order:a)}
+{Explorer option(search wuff:c)}
+
+{Explorer option(drawing hide:a)}
+{Explorer option(drawing scale:a)}
+{Explorer option(drawing update:a)}
+{Explorer option(drawing quff:a)}
+
+{Explorer option(postscript color:a)}
+{Explorer option(postscript orientation:a)}
+{Explorer option(postscript size:a)}
+{Explorer option(postscript chack:a)}
+
+
+  
+%%
+%% Test actions
+%%
+
+{Explorer add(information separator)}
+{Explorer add(information proc {$ N X}
+			     {Show N#X}
+			  end)}
+{Explorer add(information proc {$ N X}
+			     {Show N#X}
+			  end
+	      label:test_root type:root)}
+{Explorer add(information proc {$ N X}
+			     {Show N#{Space.merge X}}
+			  end
+	      label:test_space type:space)}
+{Explorer add(information proc {$ N X}
+			     {Show N#{X}#{X}}
+			  end
+	      label:test_procedure type:procedure)}
+
+{Explorer add(compare separator)}
+{Explorer add(compare proc {$ N1 X1 N2 X2}
+			 {Show N1#X1#N2#X2}
+		      end)}
+{Explorer add(compare proc {$ N1 X1 N2 X2}
+			 {Show N1#X1#N2#X2}
+		      end 
+	      label:test_root type:root)}
+{Explorer add(compare proc {$ N1 X1 N2 X2}
+			 {Show N1#{Space.merge X1}#N2#{Space.merge X2}}
+		      end 
+	      label:test_space type:space)}
+{Explorer add(compare proc {$ N1 X1 N2 X2}
+			 {Show N1#{X1}#{X1}#N2#{X2}#{X2}}
+		      end 
+	      label:test_procedure type:procedure)}
+
+declare
+proc {P1 _ _} true end
+proc {P2 _ _} true end
+{Explorer add(information separator)}
+{Explorer add(information P1)}
+{Explorer add(information separator)}
+{Explorer add(information P2)}
+{Explorer add(information separator)}
+
+{Explorer delete(information P2)}
+{Explorer delete(information P1)}
+
+{Explorer add(information separator)}
+{Explorer add(information P1)}
+{Explorer add(information separator)}
+{Explorer add(information P2)}
+{Explorer add(information separator)}
+
+{Explorer delete(information all)}
+{Explorer delete(compare all)}
+{Explorer delete(statistics all)}
+
+%%
+%% Check reset, clear, or close
+%%
+declare
+create ShowCloseInfo from UrObject
+   meth close {Show close_info} end
+end
+create ShowCloseCmp from UrObject
+   meth close {Show close_compare} end
+end
+create ShowCloseStat from UrObject
+   meth close {Show close_stat} end
+end
+
+{Explorer add(information fun {$ _ _}
+			     proc {$} {Show get_rid_info} end
+			  end)}
+{Explorer add(information fun {$ _ _}
+			     ShowCloseInfo
+			  end)}
+{Explorer add(compare fun {$ _ _ _ _}
+			 proc {$} {Show get_rid_compare} end
+		      end)}
+{Explorer add(compare fun {$ _ _ _ _}
+			 ShowCloseCmp
+		      end)}
+{Explorer add(statistics fun {$ _ _}
+			    proc {$} {Show get_rid_statistics} end
+			  end)}
+{Explorer add(information fun {$ _ _}
+			     ShowCloseStat
+			  end)}
+
+
 */
+
+
+
+
