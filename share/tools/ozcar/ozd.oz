@@ -21,8 +21,19 @@
 %%% WARRANTIES.
 %%%
 
+%%
 %% TODO:
 %% -- synchronize environment of created compiler with Ozcar's stack display
+%% -- map Application.exit of the debugged application to the following
+%%    actions:
+%%     * remove emacs bar
+%%     * ask `Exit Emacs?' in Emacs
+%% -- if the debugged application has no debug information, exit is
+%%    highly ungraceful
+%% -- is it possible to attach to a running Emacs instead of starting
+%%    a new one?  Alternatively, provide for a means to start ozd from
+%%    the OPI
+%%
 
 functor
 import
@@ -31,27 +42,34 @@ import
    Debug(breakpoint) at 'x-oz://boot/Debug'
    Emacs(interface)
    Module(manager)
-   OS(system)
+   OS(getEnv system)
    Open(socket)
    Ozcar(object)
    Pickle(load)
    Property(get put)
    System(showError)
 prepare
-   ArgSpec = record(emacs(rightmost char: &E type: bool default: false))
+   ArgSpec = record(useemacs(rightmost char: &E type: bool default: false)
+		    emacs(single type: string default: unit))
 define
    try Args in
       Args = {Application.getCmdArgs ArgSpec}
       case Args.1 of AppName|AppArgs then AppFunc MM in
 	 {Property.put 'ozd.argv' AppArgs}
 	 {Ozcar.object on()}
-	 if Args.emacs then Socket Port E I in
+	 if Args.useemacs then Socket Port E EMACS I in
 	    thread
 	       Socket = {New Open.socket server(port: ?Port)}
 	    end
 	    E = {New Compiler.engine init()}
+	    EMACS = case Args.emacs of unit then
+		       case {OS.getEnv 'OZEMACS'} of false then 'emacs'
+		       elseof X then X
+		       end
+		    elseof X then X
+		    end
 	    {OS.system
-	     'emacs -L '#{Property.get 'oz.home'}#
+	     EMACS#' -L '#{Property.get 'oz.home'}#
 	     '/share/elisp -l oz -f oz-attach '#Port#' \&' _}
 	    I = {New Emacs.interface
 		 init(E unit
