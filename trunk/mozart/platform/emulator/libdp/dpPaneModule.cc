@@ -34,7 +34,6 @@
 
 #include "builtins.hh"
 #include "os.hh"
-#include "dpMarshaler.hh"
 
 
 OZ_BI_define(BItablesExtract,0,1)
@@ -154,9 +153,71 @@ OZ_BI_define(BI_DistMemInfo,0,1)
 
 
 //
-// kost@: who put the following comment???
-// note that the marshaler always give you these statistics - should
-// be changed
+// The names from marshalBase is not printable. 
+// A new set of names are defined here.
+// If incompatibilites should ocour please update this
+// array to the same number of entries as the master copy.
+// Erik 
+
+const struct {
+  MarshalTag tag;
+  char *name;
+} dif_Mynames[] = {
+  { DIF_UNUSED0,      "unused"},
+  { DIF_SMALLINT,     "smallint"},
+  { DIF_BIGINT,       "bigint"},
+  { DIF_FLOAT,        "float"},
+  { DIF_ATOM,         "atom"},
+  { DIF_NAME,  	      "name"},
+  { DIF_UNIQUENAME,   "uniquename"},
+  { DIF_RECORD,       "record"},
+  { DIF_TUPLE,        "tuple"},
+  { DIF_LIST,         "list"},
+  { DIF_REF,          "ref"},
+  { DIF_REF_DEBUG,    "ref_debug"},
+  { DIF_OWNER,        "owner"},
+  { DIF_OWNER_SEC,    "owner_sec"},
+  { DIF_PORT,	      "port"},
+  { DIF_CELL,         "cell"},
+  { DIF_LOCK,         "lock"},
+  { DIF_VAR,          "var"},
+  { DIF_BUILTIN,      "builtin"},
+  { DIF_DICT,         "dict"},
+  { DIF_OBJECT,       "object"},
+  { DIF_THREAD_UNUSED,"thread"},
+  { DIF_SPACE,	      "space"},
+  { DIF_CHUNK,        "chunk"},
+  { DIF_PROC,	      "proc"},
+  { DIF_CLASS,        "class"},
+  { DIF_ARRAY,        "array"},
+  { DIF_FSETVALUE,    "fsetvalue"},
+  { DIF_ABSTRENTRY,   "abstrentry"},
+  { DIF_PRIMARY,      "primary"},
+  { DIF_SECONDARY,    "secondary"},
+  { DIF_SITE,         "site"},
+  { DIF_SITE_VI,      "site_vi"},
+  { DIF_SITE_PERM,    "site_perm"},
+  { DIF_PASSIVE,      "passive"},
+  { DIF_COPYABLENAME, "copyablename"},
+  { DIF_EXTENSION,    "extension"},
+  { DIF_RESOURCE_T,   "resource_t"},
+  { DIF_RESOURCE_N,   "resource_n"},
+  { DIF_FUTURE,       "future"},
+  { DIF_VAR_AUTO,     "autoreg_var"},
+  { DIF_FUTURE_AUTO,  "autoreg_future"},
+  { DIF_EOF,          "eof"},
+  { DIF_CODEAREA,     "code_area_segment"},
+  { DIF_VAR_OBJECT,   "var_object_exported"},
+  { DIF_SYNC,         "sync"},
+  { DIF_CLONEDCELL,   "clonedcell"},
+  { DIF_STUB_OBJECT,  "object_exported"},
+  { DIF_SUSPEND,      "marshaling_suspended"},
+  { DIF_LIT_CONT,     "literal_continuation"},
+  { DIF_EXT_CONT,     "extension_continuation"},
+  { DIF_LAST,         "last"}
+};
+
+
 OZ_BI_define(BIperdioStatistics,0,1)
 {
   initDP();
@@ -165,26 +226,15 @@ OZ_BI_define(BIperdioStatistics,0,1)
   OZ_Term dif_recv_ar=oz_nil();
   int i;
   for (i=0; i<DIF_LAST; i++) {
-    dif_send_ar=oz_cons(oz_pairAI(dif_names[i].name,dif_counter[i].getSend()),
+    dif_send_ar=oz_cons(oz_pairAI(dif_Mynames[i].name,dif_counter[i].getSend()),
 			dif_send_ar);
-    dif_recv_ar=oz_cons(oz_pairAI(dif_names[i].name,dif_counter[i].getRecv()),
+    dif_recv_ar=oz_cons(oz_pairAI(dif_Mynames[i].name,dif_counter[i].getRecv()),
 			dif_recv_ar);
   }
   OZ_Term dif_send=OZ_recordInit(oz_atom("dif"),dif_send_ar);
   OZ_Term dif_recv=OZ_recordInit(oz_atom("dif"),dif_recv_ar);
+  
 
-  OZ_Term misc_send_ar=oz_nil();
-  OZ_Term misc_recv_ar=oz_nil();
-  /*
-  for (i=0; i<MISC_LAST; i++) {
-    misc_send_ar=oz_cons(oz_pairAI(misc_names[i],misc_counter[i].getSend()),
-			 misc_send_ar);
-    misc_recv_ar=oz_cons(oz_pairAI(misc_names[i],misc_counter[i].getRecv()),
-			 misc_recv_ar);
-  }
-  */
-  OZ_Term misc_send=OZ_recordInit(oz_atom("misc"),misc_send_ar);
-  OZ_Term misc_recv=OZ_recordInit(oz_atom("misc"),misc_recv_ar);
 
   OZ_Term mess_send_ar=oz_nil();
   OZ_Term mess_recv_ar=oz_nil();
@@ -198,19 +248,18 @@ OZ_BI_define(BIperdioStatistics,0,1)
   OZ_Term mess_recv=OZ_recordInit(oz_atom("messages"),mess_recv_ar);
 
 
+  
   OZ_Term send_ar=oz_nil();
   send_ar = oz_cons(oz_pairA("dif",dif_send),send_ar);
-  send_ar = oz_cons(oz_pairA("misc",misc_send),send_ar);
   send_ar = oz_cons(oz_pairA("messages",mess_send),send_ar);
   OZ_Term send=OZ_recordInit(oz_atom("send"),send_ar);
 
   OZ_Term recv_ar=oz_nil();
   recv_ar = oz_cons(oz_pairA("dif",dif_recv),recv_ar);
-  recv_ar = oz_cons(oz_pairA("misc",misc_recv),recv_ar);
   recv_ar = oz_cons(oz_pairA("messages",mess_recv),recv_ar);
   OZ_Term recv=OZ_recordInit(oz_atom("recv"),recv_ar);
 
-
+  
   OZ_Term ar=oz_nil();
   ar=oz_cons(oz_pairA("send",send),ar);
   ar=oz_cons(oz_pairA("recv",recv),ar);
