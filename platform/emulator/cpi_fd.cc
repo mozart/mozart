@@ -260,7 +260,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
 	int singl = domPtr->getSingleElem();
 	*domPtr = dom;
 	tagged2GenFDVar(var)->propagate(fd_prop_singl);
-	DoBindAndTrail(varPtr, OZ_int(singl));
+	DoBindAndTrail(varPtr, newSmallInt(singl));
       }
     } else if (*domPtr == fd_bool) {
       if (isState(loc_e)) {
@@ -293,7 +293,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
       tagged2GenBoolVar(var)->becomesSmallIntAndPropagate(varPtr, *domPtr);
     } else {
       tagged2GenBoolVar(var)->propagate();
-      DoBindAndTrail(varPtr, OZ_int(domPtr->getSingleElem()));
+      DoBindAndTrail(varPtr, newSmallInt(domPtr->getSingleElem()));
     }
   }
   return OZ_FALSE;

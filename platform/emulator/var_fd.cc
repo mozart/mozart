@@ -38,7 +38,7 @@ OZ_Return OzFDVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
 {
   Assert(!oz_isRef(term));
   if (!oz_isSmallInt(term)) return FAILED;
-  if (! finiteDomain.isIn(OZ_intToC(term))) {
+  if (! finiteDomain.isIn(smallIntValue(term))) {
     return FAILED;
   }
 
@@ -107,7 +107,7 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
       printf("fd-fd local local\n"); fflush(stdout);
 #endif
       if (intsct == fd_singl) {
-	TaggedRef int_var = OZ_int(intsct.getSingleElem());
+	TaggedRef int_var = newSmallInt(intsct.getSingleElem());
 	termVar->propagateUnify();
 	propagateUnify();
 	DoBind(vPtr, int_var);
@@ -154,7 +154,7 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
 #endif
       if (intsct.getSize() != termDom.getSize()){
 	if (intsct == fd_singl) {
-	  TaggedRef int_var = OZ_int(intsct.getSingleElem());
+	  TaggedRef int_var = newSmallInt(intsct.getSingleElem());
 	  if (isNotInstallingScript) termVar->propagateUnify();
 	  if (varIsConstrained) propagateUnify();
 	  DoBind(vPtr, int_var);
@@ -191,7 +191,7 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
 #endif
       if (intsct.getSize() != finiteDomain.getSize()){
 	if(intsct == fd_singl) {
-	  TaggedRef int_term = OZ_int(intsct.getSingleElem());
+	  TaggedRef int_term = newSmallInt(intsct.getSingleElem());
 	  if (isNotInstallingScript) propagateUnify();
 	  if (termIsConstrained) termVar->propagateUnify();
 	  DoBind(tPtr, int_term);
@@ -227,7 +227,7 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
       printf("fd-fd global global\n"); fflush(stdout);
 #endif
       if (intsct == fd_singl){
-	TaggedRef int_val = OZ_int(intsct.getSingleElem());
+	TaggedRef int_val = newSmallInt(intsct.getSingleElem());
 	if (scp==0) {
 	  if (varIsConstrained) propagateUnify();
 	  if (termIsConstrained) termVar->propagateUnify();
@@ -273,7 +273,7 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
 Bool OzFDVariable::valid(TaggedRef val)
 {
   Assert(!oz_isRef(val));
-  return (oz_isSmallInt(val) && finiteDomain.isIn(OZ_intToC(val)));
+  return (oz_isSmallInt(val) && finiteDomain.isIn(smallIntValue(val)));
 }
 
 void OzFDVariable::relinkSuspListTo(OzBoolVariable * lv, Bool reset_local)
@@ -329,9 +329,9 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       if (oz_isLocalVariable(vptr)) {
 	if (!isUVar(vtag))
 	  oz_checkSuspensionListProp(tagged2SVarPlus(v));
-	DoBind(vptr, OZ_int(fd->getSingleElem()));
+	DoBind(vptr, newSmallInt(fd->getSingleElem()));
       } else {
-	DoBindAndTrail(vptr, OZ_int(fd->getSingleElem()));
+	DoBindAndTrail(vptr, newSmallInt(fd->getSingleElem()));
       }
       goto proceed;
     }
@@ -379,7 +379,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       } else {
 	int singl = dom.getSingleElem();
 	fdvar->propagate(fd_prop_singl);
-	DoBindAndTrail(vptr, OZ_int(singl));
+	DoBindAndTrail(vptr, newSmallInt(singl));
       }
     } else if (dom == fd_bool) {
       if (oz_isLocalVar(fdvar)) {
@@ -417,7 +417,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       boolvar->becomesSmallIntAndPropagate(vptr, dom);
     } else {
       boolvar->propagate();
-      DoBindAndTrail(vptr, OZ_int(dom));
+      DoBindAndTrail(vptr, newSmallInt(dom));
     }
     goto proceed;
 // tell finite domain constraint to integer, i.e. check for compatibility
