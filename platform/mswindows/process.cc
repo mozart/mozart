@@ -57,12 +57,22 @@ int createProcess(char *cmdline)
     if (CreatePipe(&hRead,&hWrite,&sa,0) == FALSE) {
       panic(true,"Could not create pipe.\n");
     }
-    si.dwFlags = STARTF_USESTDHANDLES;
-    si.hStdInput  = GetStdHandle(STD_INPUT_HANDLE);
-    // Is it OK to pass the same handle twice?
-    si.hStdOutput = hWrite;
-    si.hStdError  = hWrite;
   }
+  HANDLE hDummyRead,hDummyWrite;
+  {
+    SECURITY_ATTRIBUTES sa;
+    ZeroMemory(&sa,sizeof(sa));
+    sa.nLength = sizeof(sa);
+    sa.lpSecurityDescriptor = NULL;
+    sa.bInheritHandle = TRUE;
+    if (CreatePipe(&hDummyRead,&hDummyWrite,&sa,0) == FALSE) {
+      panic(true,"Could not create pipe.\n");
+    }
+  }
+  si.dwFlags = STARTF_USESTDHANDLES;
+  si.hStdInput  = hDummyRead;
+  si.hStdOutput = hWrite;
+  si.hStdError  = hWrite;
 
   PROCESS_INFORMATION pi;
   DWORD ret = CreateProcess(NULL,cmdline,NULL,NULL,TRUE,
