@@ -28,7 +28,6 @@ functor
 import
    Tk
    QTkDevel(splitParams:        SplitParams
-	    condFeat:           CondFeat
 	    tkInit:             TkInit
 	    assert:             Assert
 	    qTkClass:           QTkClass
@@ -109,11 +108,11 @@ define
 	    A B
 	 in
 	    QTkClass,{Record.adjoin M init}
-	    self.Return={CondFeat M return _}
+	    self.Return={CondSelect M return _}
 	    {SplitParams M [ipadx ipady init key] A B}
-	    Tk.button,{Record.adjoin {TkInit A} tkInit(padx:{CondFeat B ipadx 2}
-						       pady:{CondFeat B ipady 2}
-						       text:{CondFeat B init {CondFeat A text ""}}
+	    Tk.button,{Record.adjoin {TkInit A} tkInit(padx:{CondSelect B ipadx 2}
+						       pady:{CondSelect B ipady 2}
+						       text:{CondSelect B init {CondSelect A text ""}}
 						       action:self.toplevel.port#r(self Execute)
 						      )}
 	    if {HasFeature B key} then

@@ -27,7 +27,6 @@ functor
 import
    Tk
    QTkDevel(splitParams:        SplitParams
-	    condFeat:           CondFeat
 	    tkInit:             TkInit
 	    assert:             Assert
 	    qTkClass:           QTkClass
@@ -103,9 +102,9 @@ define
 	    QTkClass,{Record.adjoin M init}
 	    P={self.action get($)}
 	    {self.action set(proc{$} skip end)}
-	    self.Return={CondFeat M return _}
+	    self.Return={CondSelect M return _}
 	    {SplitParams M [init] A B}
-	    self.TkVar={New Tk.variable tkInit({CondFeat B init 0.0})}
+	    self.TkVar={New Tk.variable tkInit({CondSelect B init 0.0})}
 	    Tk.scale,{Record.adjoin {TkInit A} tkInit(action:self.toplevel.port#r(self Execute)
 						      variable:self.TkVar
 						      orient:Orient

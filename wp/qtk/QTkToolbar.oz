@@ -28,7 +28,6 @@ functor
 import
    Tk
    QTkDevel(splitParams:        SplitParams
-	    condFeat:           CondFeat
 	    assert:             Assert
 	    qTkClass:           QTkClass
 	    subtracts:          Subtracts
@@ -417,7 +416,7 @@ define
 	    {Assert self.widgetType self.typeInfo B}
 	    {self SetBorderRec(B)} % set initial state
 	    {self SetBorder}
-	    {self Display({CondFeat B text @text})}
+	    {self Display({CondSelect B text @text})}
 	    {self tkBind(event:"<Enter>"
 			 append:true
 			 action:self#Enter)}
@@ -481,7 +480,7 @@ define
 	 
       meth tbbutton(...)=M
 	 lock
-	    self.Return={CondFeat M return _}
+	    self.Return={CondSelect M return _}
 	    {Assert self.widgetType self.typeInfo init(return:self.Return)}
 	    TbButtonArea,{Record.adjoin {Subtracts M [return]} init}
 	 end
@@ -525,8 +524,8 @@ define
 	 
       meth tbcheckbutton(...)=M
 	 lock
-	    sel<-{CondFeat M init false}
-	    self.Return={CondFeat M return _}
+	    sel<-{CondSelect M init false}
+	    self.Return={CondSelect M return _}
 	    {Assert self.widgetType self.typeInfo init(return:self.Return
 						       init:@sel)}
 	    TbButtonArea,{Record.adjoin {Subtracts M [init return]} init}
@@ -614,8 +613,8 @@ define
 	    if {HasFeature M group}==false then
 	       {Exception.raiseError qtk(missingParameter group self.widgetType M)}
 	    end
-	    sel<-{CondFeat M init false}
-	    self.Return={CondFeat M return _}
+	    sel<-{CondSelect M init false}
+	    self.Return={CondSelect M return _}
 	    self.Name=M.group
 	    {Assert self.widgetType self.typeInfo init(return:self.Return
 						       init:@sel

@@ -28,7 +28,6 @@ functor
 import
    Tk
    QTkDevel(splitParams:        SplitParams
-	    condFeat:           CondFeat
 	    tkInit:             TkInit
 	    assert:             Assert
 	    execTk:             ExecTk
@@ -97,11 +96,11 @@ define
 	    A B
 	 in
 	    QTkClass,{Record.adjoin M init}
-	    self.Return={CondFeat M return _}
+	    self.Return={CondSelect M return _}
 	    {SplitParams M [ipadx ipady init] A B}
-	    Tk.label,{Record.adjoin {TkInit A} tkInit(padx:{CondFeat B ipadx 0}
-						      pady:{CondFeat B ipady 0}
-						      text:{CondFeat B init {CondFeat A text ""}})}
+	    Tk.label,{Record.adjoin {TkInit A} tkInit(padx:{CondSelect B ipadx 0}
+						      pady:{CondSelect B ipady 0}
+						      text:{CondSelect B init {CondSelect A text ""}})}
 	 end
       end
    
@@ -189,11 +188,11 @@ define
 	    A B
 	 in
 	    QTkClass,{Record.adjoin M init}
-	    self.Return={CondFeat M return _}
+	    self.Return={CondSelect M return _}
 	    {SplitParams M [ipadx ipady init] A B}
-	    Tk.message,{Record.adjoin {TkInit A} tkInit(padx:{CondFeat B ipadx 0}
-							pady:{CondFeat B ipady 0}
-							text:{CondFeat B init {CondFeat A text ""}})}
+	    Tk.message,{Record.adjoin {TkInit A} tkInit(padx:{CondSelect B ipadx 0}
+							pady:{CondSelect B ipady 0}
+							text:{CondSelect B init {CondSelect A text ""}})}
 	 end
       end
    

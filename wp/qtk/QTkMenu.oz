@@ -31,7 +31,6 @@ import
 	    tkInit:             TkInit
 	    assert:             Assert
 	    execTk:             ExecTk
-	    condFeat:           CondFeat
 	    subtracts:          Subtracts
 	    returnTk:           ReturnTk
 	    checkType:          CheckType
@@ -62,7 +61,7 @@ define
 	 Def1={Subtracts Def [handle feature]}
 	 Obj={New {MakeClass QTkMenu Def1} Def1} % Def is a declaration of a menu : menu(...)
       in
-	 {CondFeat Def handle _}=Obj
+	 {CondSelect Def handle _}=Obj
 	 if {HasFeature Def feature} then
 	    (Def.parent).(Def.feature)=Obj
 	 end
@@ -128,8 +127,8 @@ define
 	    QTkClass,{Record.adjoin M init}
 	    {SplitParams M [menu action ipadx ipady] A B}
 	    Tk.menubutton,{Record.adjoin {TkInit {Record.subtract A menu}}
-			   tkInit(padx:{CondFeat B ipadx 2}
-				  pady:{CondFeat B ipady 2})}
+			   tkInit(padx:{CondSelect B ipadx 2}
+				  pady:{CondSelect B ipady 2})}
 	    if {HasFeature B menu} then
 	       Menu<-{MakeMenu {Record.adjoinAt B.menu parent self}}
 	       Tk.menubutton,tk(configure menu:@Menu)
@@ -138,7 +137,7 @@ define
 	    end
 	    self.Act={New Tk.action tkInit(parent:self
 					   action:{{New QTkAction init(parent:self
-								       action:{CondFeat B action proc{$} skip end}
+								       action:{CondSelect B action proc{$} skip end}
 								      )} action($)})}
 	    if @Menu\=nil then
 	       {@Menu tk(configure postcommand:self.Act)}
@@ -245,7 +244,7 @@ define
 	    {Assert self.widgetType self.typeInfo M}
 	    nu<-M.nu
 	    if {HasFeature self action} then % action widget
-	       self.action={New QTkAction init(parent:self action:{CondFeat M action proc{$} skip end})}
+	       self.action={New QTkAction init(parent:self action:{CondSelect M action proc{$} skip end})}
 	    end
 	    self.Private=M.private
 	 end
@@ -364,8 +363,8 @@ define
 	    Tk.menuentry.command,{Record.adjoin {Subtracts M [return text nu private]}
 				  tkInit(action:self.toplevel.port#r(self Execute)
 					 accelerator:{MakeAccel self M}
-					 label:{CondFeat M text ""})}
-	    self.Return={CondFeat M return _}
+					 label:{CondSelect M text ""})}
+	    self.Return={CondSelect M return _}
 	 end
       end
       
@@ -467,15 +466,15 @@ define
       meth checkbutton(...)=M
 	 lock
 	    MenuEntry,{Record.adjoin M init}
-	    self.TkVar={New Tk.variable tkInit({CondFeat M init false})}
+	    self.TkVar={New Tk.variable tkInit({CondSelect M init false})}
 	    Tk.menuentry.checkbutton,{Record.adjoin {Subtracts M [text return nu private init]}
 				      tkInit(variable:self.TkVar
 					     offvalue:false
 					     onvalue:true
 					     action:{self.action action($)}
 					     accelerator:{MakeAccel self M}
-					     label:{CondFeat M text ""})}
-	    self.Return={CondFeat M return _}
+					     label:{CondSelect M text ""})}
+	    self.Return={CondSelect M return _}
 	 end
       end
 
@@ -584,7 +583,7 @@ define
 	    if {HasFeature M group}==false then
 	       {Exception.raiseError qtk(missingParameter group self.widgetType M)}
 	    end
-	    self.Return={CondFeat M return _}
+	    self.Return={CondSelect M return _}
 	    {SplitParams M [init nu private label return] A _}
 	    self.Name=A.group
 	    local
@@ -593,7 +592,7 @@ define
 	       self.TkVar=R.1
 	       self.Value=R.2+1
 	    end
-	    if {CondFeat M init false} then
+	    if {CondSelect M init false} then
 	       {self.TkVar tkSet(self.Value)}
 	       {self.toplevel notifyRadioButton(self.Name)}
 	    end
@@ -602,7 +601,7 @@ define
 					     value:self.Value
 					     action:self.toplevel.port#r(self Execute)
 					     accelerator:{MakeAccel self M}
-					     label:{CondFeat M text ""})}
+					     label:{CondSelect M text ""})}
 	 end
       end
 
@@ -709,7 +708,7 @@ define
 	    Tk.menuentry.cascade,{Record.adjoin A
 				  tkInit(action:{self.action action($)}
 					 accelerator:{MakeAccel self M}
-					 label:{CondFeat M text ""})}
+					 label:{CondSelect M text ""})}
 	    Menu<-{MakeMenu {Record.adjoinAt B.menu parent self.parent}}
 	    Pad={self.parent tkReturnInt(cget("-tearoff") $)}
 	    {self.parent tk(entryconfigure B.nu+Pad-1 menu:@Menu)}
@@ -770,7 +769,7 @@ define
 	     end
 	     A B}
 	    local
-	       Err={CheckType action {CondFeat B action proc{$} skip end}}
+	       Err={CheckType action {CondSelect B action proc{$} skip end}}
 	    in
 	       if Err==unit then skip else
 		  {Exception.raiseError qtk(typeError action self.widgetType Err M)}

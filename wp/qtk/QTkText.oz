@@ -31,7 +31,6 @@ import
 	    assert:             Assert
 	    execTk:             ExecTk
 	    lastInt:            LastInt
-	    condFeat:           CondFeat
 	    subtracts:          Subtracts
 	    returnTk:           ReturnTk
 	    mapLabelToObject:   MapLabelToObject
@@ -163,13 +162,13 @@ define
 	    QTkClass,{Record.adjoin M init}
 	    {SplitParams M [lrscrollbar tdscrollbar scrollwidth init return ipadx ipady] A B}
 	    Tk.text,{Record.subtract
-		     {Record.adjoin {TkInit A} tkInit(padx:{CondFeat B ipadx 0}
-						      pady:{CondFeat B ipady 0})}
+		     {Record.adjoin {TkInit A} tkInit(padx:{CondSelect B ipadx 0}
+						      pady:{CondSelect B ipady 0})}
 		     state}
 	    {self tkBind(event:"<KeyRelease>" action:{self.action action($)})}
 	    if {HasFeature B init} then {self set(B.init)} end
 	    {self tk(configure state:{CondSelect A state normal})}
-	    self.Return={CondFeat B return _}
+	    self.Return={CondSelect B return _}
 	 end
       end
 
@@ -536,7 +535,7 @@ define
 					  d({Record.adjoinAt
 					     {Subtracts M [1 2]}
 					     window self.Window}))}
-		     {CondFeat M handle _}=self.Window
+		     {CondSelect M handle _}=self.Window
 		  end
 	       end
 	       meth set(...)=M

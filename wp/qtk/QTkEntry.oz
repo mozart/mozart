@@ -28,7 +28,6 @@ functor
 import
    Tk
    QTkDevel(splitParams:        SplitParams
-	    condFeat:           CondFeat
 	    tkInit:             TkInit
 	    assert:             Assert
 	    execTk:             ExecTk
@@ -111,12 +110,12 @@ define
 	    A B
 	 in
 	    QTkClass,{Record.adjoin M init}
-	    self.Return={CondFeat M return _}
+	    self.Return={CondSelect M return _}
 	    {SplitParams M [init lrscrollbar scrollwidth] A B}
 	    self.TkVar={New Tk.variable tkInit("")}
 	    Tk.entry,{Record.adjoin {TkInit A} tkInit(textvariable:self.TkVar)}
 	    Tk.entry,tkBind(event:"<KeyRelease>" action:{self.action action($)})
-	    Tk.entry,tk(insert 0 {CondFeat B init ""})
+	    Tk.entry,tk(insert 0 {CondSelect B init ""})
 	    Tk.entry,tkBind(event:"<FocusIn>"
 			    action:proc{$}
 				      {self tk(selection 'from' 0)}

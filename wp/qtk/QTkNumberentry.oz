@@ -29,7 +29,6 @@ import
    Tk
    QTkImage
    QTkDevel(splitParams:        SplitParams
-	    condFeat:           CondFeat
 	    convertToType:      ConvertToType
 	    qTkClass:           QTkClass
 	    subtracts:          Subtracts
@@ -56,7 +55,7 @@ define
    Lib={QTkImage.buildImageLibrary BL}
 %   IncStep     = 10
 %   IncTime     = 100
-   IncWait     = 500
+%   IncWait     = 500
 %   Border      = 1
    
    class QTkNumberentry
@@ -117,10 +116,10 @@ define
 	    QEntry={GetWidget entry}
 	 in
 	    QTkClass,{Record.adjoin M init}
-	    Min<-{CondFeat M min 1}
-	    Max<-{CondFeat M max 100}
+	    Min<-{CondSelect M min 1}
+	    Max<-{CondSelect M max 100}
 	    LastVal<-""
-	    self.Return={CondFeat M return _}
+	    self.Return={CondSelect M return _}
 	    Tk.frame,tkInit(parent:M.parent)
 	    self.Entry={New QEntry {Record.adjoin
 				    {Subtracts M [feature handle min max]}
@@ -159,7 +158,7 @@ define
 			   action: self # Inc(~1))}
 	    {self.Dec bind(event:  '<ButtonRelease-1>'
 			   action: self # IncStop)}
-%	    {self.Entry set({CondFeat M init @Min})}
+%	    {self.Entry set({CondSelect M init @Min})}
 	    {self Assert(exec:false)}
 	 end
       end

@@ -28,12 +28,10 @@ functor
 import
    Tk
    QTkDevel(splitParams:        SplitParams
-	    condFeat:           CondFeat
 	    tkInit:             TkInit
 	    execTk:             ExecTk
 	    returnTk:           ReturnTk
 	    mapLabelToObject:   MapLabelToObject
-	    newRedirector:      NewRedirector
 	    qTkClass:           QTkClass
 	    qTkAction:          QTkAction
 	    globalInitType:     GlobalInitType
@@ -111,9 +109,9 @@ define
 	    {Exception.raiseError qtk(missingParameter event canvas M)}
 	 else skip end
 	 {What tkBind(event:M.event
-		      args:{CondFeat M args nil}
+		      args:{CondSelect M args nil}
 		      action:{{New QTkAction init(parent:self
-						  action:{CondFeat M action proc{$} skip end})} action($)})}
+						  action:{CondSelect M action proc{$} skip end})} action($)})}
       end
 
       meth bind(...)=M

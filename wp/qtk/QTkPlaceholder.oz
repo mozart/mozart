@@ -31,7 +31,6 @@ import
 	    mapLabelToObject:   MapLabelToObject
 %	    subtracts:          Subtracts
 	    execTk:             ExecTk
-	    condFeat:           CondFeat
 	    assert:             Assert
 	    qTkClass:           QTkClass
 	    propagateLook:      PropagateLook
@@ -132,9 +131,9 @@ define
 %		     B.handle=NC
 %		  end
 		  Pack<-r(obj:NC
-			  sticky:{CondFeat B glue ""}
-			  padx:{CondFeat B padx 0}
-			  pady:{CondFeat B pady 0})|@Pack
+			  sticky:{CondSelect B glue ""}
+			  padx:{CondSelect B padx 0}
+			  pady:{CondSelect B pady 0})|@Pack
 	       end
 	       if {IsFree NC} then {Exception.raiseError qtk(badParameter 1 self.widgetType M)} end
 	       {ForAll @Pack proc{$ R} if R.obj==NC then P=R end end}
@@ -158,7 +157,7 @@ define
 	    {SplitParams M [1] A B}
 	    QTkClass,A
 	    {Assert self.widgetType self.typeInfo B}
-	    {CondFeat B 1 _}=@Child.Redirector
+	    {CondSelect B 1 _}=@Child.Redirector
 	 end
       end
 

@@ -31,7 +31,6 @@ import
 	    tkInit:             TkInit
 	    assert:             Assert
 	    checkType:          CheckType
-	    condFeat:           CondFeat
 	    execTk:             ExecTk
 	    returnTk:           ReturnTk
 	    qTkClass:           QTkClass
@@ -121,7 +120,7 @@ define
 	    if {HasFeature B selection} then {self set(selection:B.selection)} end
 	    {self tkBind(event:"<B1-ButtonRelease>" action:{self.action action($)})}
 	    {self tkBind(event:"<KeyRelease>" action:{self.action action($)})}
-	    self.Return={CondFeat B return _}
+	    self.Return={CondSelect B return _}
 	 end
       end
 
