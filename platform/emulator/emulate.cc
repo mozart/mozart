@@ -2581,17 +2581,12 @@ LBLdispatcher:
        if (e->exception.debug) {
 
          OZ_Term traceBack;
-         foundHdl = CTT->getTaskStackRef()->findCatch(&traceBack);
+         foundHdl=CTT->getTaskStackRef()->findCatch(&traceBack,e->debugmode());
          if (PC != NOCODE) traceBack = cons(CodeArea::dbgGetDef(PC),traceBack);
-
-#ifdef MM2
-         if (e->debugmode()) {
-           traceBack = CTT->getTaskStackRef()->dbgGetTaskStack(PC,100,lastTop);
-         }
-#endif
 
          OZ_Term loc = e->dbgGetLoc(CBB);
          e->formatError(traceBack,loc);
+
        } else {
          foundHdl = CTT->getTaskStackRef()->findCatch();
        }

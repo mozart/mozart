@@ -136,14 +136,13 @@ public:
   Bool isEmpty() { return ::isEmpty(tos); }
 
   void printTaskStack(ProgramCounter pc = NOCODE,
-                      Bool verbose = NO, int depth = 10000);
-  TaggedRef dbgGetTaskStack(ProgramCounter pc = NOCODE, int depth = 10000,
-                            Frame *top = NULL);
+                      Bool verbose = NO, int depth = 1000);
+  TaggedRef dbgGetTaskStack(ProgramCounter pc = NOCODE, int depth = 1000);
   TaggedRef dbgFrameVariables(int frameId);
 
   void gc(TaskStack *);
 
-  Bool findCatch(TaggedRef *traceBack=0);
+  Bool findCatch(TaggedRef *traceBack=0, Bool verbose=0);
 
   void pushCFunCont(OZ_CFun f, RefsArray  x, int i, Bool copy)
   {
@@ -281,9 +280,8 @@ public:
   ~TaskStack() { Assert(0); }
 
   void printTaskStack(ProgramCounter pc = NOCODE,
-                      Bool verbose = NO, int depth = 10000);
-  TaggedRef dbgGetTaskStack(ProgramCounter pc = NOCODE, int depth = 10000,
-                            Frame *top = NULL);
+                      Bool verbose = NO, int depth = 1000);
+  TaggedRef dbgGetTaskStack(ProgramCounter pc = NOCODE, int depth = 1000);
   TaggedRef dbgFrameVariables(int frameId);
 
   Bool isEmpty() { return ::isEmpty(tos); }
@@ -295,7 +293,7 @@ public:
 
   void gc(TaskStack *newstack);
 
-  Bool findCatch(TaggedRef *traceBack=0);
+  Bool findCatch(TaggedRef *traceBack=0, Bool verbose=0);
 
   void pushCFunCont(OZ_CFun f, RefsArray  x, int i, Bool copy)
   {
