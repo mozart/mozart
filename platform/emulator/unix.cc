@@ -1521,9 +1521,11 @@ OZ_BI_define(unix_pipe,2,2) {
 } OZ_BI_end
 
 
-OZ_BI_define(unix_exec,2,1){
+OZ_BI_define(unix_exec,3,1){
   OZ_declareVsIN(0, s);
   OZ_declareTerm(1, args);
+  OZ_declareBool(2, do_kill);
+
   // OZ_out(0) == rpid
 
   int argno;
@@ -1611,7 +1613,10 @@ OZ_BI_define(unix_exec,2,1){
   for (i=1 ; i<argno ; i++)
     free(argv[i]);
 
-  addChildProc(pid);
+  if (do_kill) {
+    message("Adding %d\n",pid);
+    addChildProc(pid);
+  }
 
   OZ_RETURN(OZ_int(pid));
 } OZ_BI_end
