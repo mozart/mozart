@@ -44,7 +44,7 @@ local
 	    {Ozcar PrivateSend(readStreamMessage(H))}
 	 catch E then
 	    {OzcarError 'Whoooops, got an unhandled exception:'}
-	    {System.show E}
+	    {Error.printExc E}
 	 end
 	 {OzcarMessage 'OzcarReadEvalLoop: waiting for next message...'}
 	 {OzcarReadEvalLoop T}
