@@ -183,6 +183,20 @@ public:
   void init(int from, int to);
   void init(LeGeFull_e type, int n = -1);
 
+  void fullDomain(void) {
+    bitArray = setRange(NULL);
+    lower = fdMinR;
+    upper = fdMaxR;
+  }
+  void singletonDomain(int n) {
+    if (n > fdMaxR || n < fdMinR){
+      setEmpty();
+      return;
+    }
+    bitArray = setRange(NULL);
+    lower = upper = n;
+  }
+
   // non-destructive operators
   FiniteDomain &operator &(const FiniteDomain &y) const; // intersection
   FiniteDomain &operator |(const FiniteDomain &y) const; // union
