@@ -162,6 +162,7 @@ void ResourceHashTable::gcResourceTable()
 //
 ConstTerm* gcDistResourceImpl(ConstTerm* term)
 {
+  gcEntityInfoImpl((Tertiary *)term);
   term = (ConstTerm *) oz_hrealloc((void*)term,sizeof(DistResource));
   gcProxyRecurseImpl((Tertiary *)term);
   return term;
