@@ -37,6 +37,8 @@
 #pragma aux (cdecl) Tcl_AsyncCreate;
 #pragma aux (cdecl) Tcl_AsyncMark;
 #pragma aux (cdecl) Tcl_DoWhenIdle;
+#pragma aux (cdecl) Tcl_Alloc;
+#pragma aux (cdecl) Tcl_Free;
 #pragma aux (cdecl) PutsCmd;
 #pragma aux (cdecl) idleProc;
 #pragma aux (cdecl) asyncHandler;
@@ -169,6 +171,50 @@ typedef struct {
  *
  *----------------------------------------------------------------------
  */
+
+
+
+/* THE TWO FOLLOWING FUNCTIONS HAVE BEEN COPIED FROM EMULATOR */
+
+
+unsigned __stdcall watchEmulatorThread(void *arg)
+{
+  HANDLE handle = (HANDLE) arg;
+  DWORD ret = WaitForSingleObject(handle,INFINITE);
+  if (ret != WAIT_OBJECT_0) {
+    WishPanic("WaitForSingleObject(0x%x) failed: %d (error=%d)",
+              handle,ret,GetLastError());
+    ExitThread(0);
+  }
+  ExitProcess(0);
+  return 1;
+}
+
+/* there are no process groups under Win32
+ * so Emulator hands its pid via envvar OZPPID to emulator
+ * it then creates a thread watching whether the Emulator is still living
+ * and terminating otherwise
+ */
+void watchParent()
+{
+  char buf[100];
+  int pid;
+  HANDLE handle;
+  unsigned thrid;
+
+  if (GetEnvironmentVariable("OZPPID",buf,sizeof(buf)) == 0) {
+    WishPanic("getenv failed");
+  }
+
+  pid = atoi(buf);
+  handle = OpenProcess(SYNCHRONIZE, 0, pid);
+  if (handle==0) {
+    WishPanic("OpenProcess(%d) failed",pid);
+  } else {
+    _beginthreadex(0,0,watchEmulatorThread,handle,0,&thrid);
+  }
+}
+
 
 
 int APIENTRY
@@ -361,6 +407,7 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
       }
     }
 
+    watchParent();
     Tk_MainLoop();
 
     /*
@@ -432,7 +479,7 @@ void cdecl idleProc(ClientData cd)
   int code;
 
 #ifdef DEBUG
-  fprintf(dbgin,"************* idleProc called:\n0x%x\n", ri->cmd);
+  fprintf(dbgin,"************* idleProc called:\n%s\n", ri->cmd);
   fflush(dbgin);
 #endif
 

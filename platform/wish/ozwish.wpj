@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
-840
-133
-7740
-10000
+1040
+0
+7733
+9991
 2
 MProject
 3
@@ -30,8 +30,8 @@ VComponent
 WRect
 0
 0
-5690
-4080
+5688
+4077
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 10
 ozwish.tgt
 0
-4
+3
 7
