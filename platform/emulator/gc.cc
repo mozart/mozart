@@ -180,86 +180,6 @@ void protectInlineCache(InlineCache *cache)
 }
 
 
-/**************************************************
- *  Dumping of threads
- **************************************************/
-
-class ThreadList {
-public:
-  static ThreadList *allthreads;
-  ThreadList *next;
-  Thread *elem;
-  ThreadList(Thread *el, ThreadList *nxt): next(nxt), elem(el) {};
-
-  static void add(Thread *t)
-  {
-    allthreads = new ThreadList(t,allthreads);
-  }
-
-  static void dispose()
-  {
-    ThreadList *aux = allthreads;
-    allthreads = NULL;
-    while(aux) {
-      ThreadList *aux1 = aux;
-      aux = aux->next;
-      delete aux1;
-    }
-  }
-
-  static void print()
-  {
-    for (ThreadList *aux = allthreads; aux; aux=aux->next) {
-      char *s;
-      if (aux->elem->isDeadThread())
-	s = "terminated";
-      else if (aux->elem->isRunnable())
-	s = "ready";
-      else
-	s = "blocked";
-      message("Thread: id = %d, parent = %d, state: %s\n",
-	      aux->elem->getID() & THREAD_ID_MASK,
-	      (aux->elem->getID() >> THREAD_ID_SIZE) & THREAD_ID_MASK,
-	      s);
-      //message("---------------------------------------------\n");
-      aux->elem->printTaskStack(ozconf.errorThreadDepth);
-    }
-  }
-  
-  static OZ_Term list()
-  {
-    OZ_Term out = OZ_nil();
-
-    for (ThreadList *aux = allthreads; aux; aux=aux->next) {
-      out = OZ_cons(makeTaggedConst(aux->elem),
-		    out);
-    }
-    return out;
-  }
-  
-};
-
-ThreadList *ThreadList::allthreads = NULL;
-
-static int collectThreads = 0;
-
-OZ_BI_define(BIprepareDumpThreads, 0,0) {
-  collectThreads++;
-  return PROCEED;
-} OZ_BI_end
-
-OZ_BI_define(BIlistThreads,0,1) {
-  collectThreads--;
-  OZ_RETURN(ThreadList::list());
-} OZ_BI_end
-
-OZ_BI_define(BIdumpThreads,0,0) {
-  ThreadList::print();
-  collectThreads--;
-  return PROCEED;
-} OZ_BI_end
-
-
 /*
  * Allocate and copy memory blocks.
  * 
@@ -897,9 +817,6 @@ Thread *Thread::gcThreadInline() {
     return (Thread *) NULL;
   
   Thread * newThread = (Thread *) gcReallocStatic(this, sizeof(Thread));
-
-  if ((collectThreads > 0) && (isRunnable() || hasStack()))
-    ThreadList::add(newThread);
 
   gcStack.push(newThread, PTR_THREAD);
 
@@ -3046,7 +2963,6 @@ void checkGC() {
 
 void AM::doGC() {
   osBlockSignals();
-  ThreadList::dispose();
   Assert(oz_onToplevel());
 
   /* do gc */
