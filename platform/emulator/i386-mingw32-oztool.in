@@ -2,6 +2,18 @@
 
 plat=i386-mingw32
 
+if test $# -eq 0
+then
+  cat <<EOF
+Usage:
+	oztool c++ SourceFile
+	oztool cc  SourceFile
+	oztool ld -o TargetLib FileList
+	oztool platform
+EOF
+  exit 2
+fi
+
 cmd=$1
 shift
 
