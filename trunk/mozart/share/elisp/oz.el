@@ -1444,7 +1444,7 @@ and initial semicolons."
 		    (line  (string-to-number (match-string 2)))
 		    (what (match-string 3)))
                 (replace-match "" nil t)
-		(if (string-equal what "hide")
+		(if (string-equal file "undef")
 		    (if (not (eq scrollbar-overlay nil))
 			(overlay-put scrollbar-overlay 'face 'default))
 		  (oz-scrollbar file line what)))))
