@@ -215,7 +215,7 @@ OZ_Return iLinEqProp::propagate(void) {
       all_ones = 0;
 
   _OZ_DEBUGPRINT("reg_sz="<< reg_sz<<" all_ones="<<all_ones);
-  if (reg_sz == 0) return reg_c ? FAILED : ENTAILED;
+  if (reg_sz == 0) return reg_c ? FAILED : OZ_ENTAILED;
 
   DECL_DYN_ARRAY(OZ_FDIntVar, var, reg_sz);
   DECL_DYN_ARRAY(OZ_FiniteDomain, buffer, reg_sz);
@@ -318,8 +318,8 @@ do_fail:
 
 do_leave:
   OZ_Return value =P.leave();
-  if (value == ENTAILED) _OZ_DEBUGPRINT("ENTAILED");
-  else                   _OZ_DEBUGPRINT("SLEEP");
+  if (value == OZ_ENTAILED) _OZ_DEBUGPRINT("ENTAILED");
+  else                      _OZ_DEBUGPRINT("SLEEP");
   return value;
 }
 
@@ -340,7 +340,7 @@ OZ_Return iLinLessEqProp::propagate(void) {
       all_ones=0;
 
   _OZ_DEBUGPRINT("reg_sz="<< reg_sz);
-  if (reg_sz == 0) return reg_c ? FAILED : ENTAILED;
+  if (reg_sz == 0) return reg_c ? FAILED : OZ_ENTAILED;
 
   DECL_DYN_ARRAY(OZ_FDIntVar, var, reg_sz);
   DECL_DYN_ARRAY(OZ_FiniteDomain, buffer, reg_sz);
@@ -455,11 +455,11 @@ do_leave:
 
   OZ_Return value =P.leave();
 
-  if (value == ENTAILED) _OZ_DEBUGPRINT("ENTAILED");
-  else                   _OZ_DEBUGPRINT("SLEEP");
+  if (value == OZ_ENTAILED) _OZ_DEBUGPRINT("ENTAILED");
+  else                      _OZ_DEBUGPRINT("SLEEP");
   if (already_entailed) {
     _OZ_DEBUGPRINT("ALREADY_ENTAILED");
-    return ENTAILED; 
+    return OZ_ENTAILED; 
   }
   else return value;
 }
@@ -486,7 +486,7 @@ OZ_Return iLinNEqProp::propagate(void) {
   // all vars gone and still a remainder? good...
   if (reg_sz == 0) {
     _OZ_DEBUGPRINT("reg_sz==0)");
-    return reg_c ? ENTAILED : FAILED;
+    return reg_c ? OZ_ENTAILED : FAILED;
   }
 
   DECL_DYN_ARRAY(OZ_FDIntVar, var, reg_sz);
@@ -587,12 +587,12 @@ do_fail:
   // Equality has failed, so Inequality is entailed
    _OZ_DEBUGPRINT("Equality FAILED -> Inequality ENTAILED");
   P.fail();
-  return ENTAILED;
+  return OZ_ENTAILED;
 
 do_leave:
   // if Equality is entailed, fail; otherwise, sleep
   OZ_Return value =P.leave();
-  if (value == ENTAILED) {
+  if (value == OZ_ENTAILED) {
     
     // all variables determined? then fail
     if (sum_sizes == reg_sz) {

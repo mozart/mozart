@@ -204,7 +204,7 @@ OZ_Return FSetUnionPropagator::propagate(void)
       FailOnInvalid(*x <<= aux);
       FailOnInvalid(*y <<= aux);
       P.vanish();
-      return ENTAILED;
+      return OZ_ENTAILED;
     }
     if (x->isSubsumedBy(*y)) {
       P.vanish();

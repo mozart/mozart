@@ -51,7 +51,7 @@ OZ_Return __debugReturnPrint(OZ_Return r)
   case FAILED: 
     *cpi_cout << "FAILED";
     break;
-  case ENTAILED:
+  case OZ_ENTAILED:
     *cpi_cout << "ENTAILED";
     break;
   case SLEEP:
@@ -108,17 +108,17 @@ public:
     : v1(i1), v2(i2) {}
 
   OZ_Return leave(void) {
-    return (v1.leave() | v2.leave()) ? SLEEP : ENTAILED;
+    return (v1.leave() | v2.leave()) ? SLEEP : OZ_ENTAILED;
   }
   OZ_Return leave1(void) {
     int r1 = v1.leave() ? 1 : 0;
     int r2 = v2.leave() ? 1 : 0;
-    return (r1 + r2 <= 0) ? ENTAILED : SLEEP; // TMUELLER
+    return (r1 + r2 <= 0) ? OZ_ENTAILED : SLEEP; // TMUELLER
   }
   OZ_Return vanish(void) {
     v1.leave();
     v2.leave();
-    return ENTAILED;
+    return OZ_ENTAILED;
   }
   OZ_Return fail(void) {
     v1.fail();
@@ -135,19 +135,19 @@ public:
     : v1(i1), v2(i2), v3(i3) {}
 
   OZ_Return leave(void) {
-    return (v1.leave()|v2.leave()|v3.leave())  ? SLEEP : ENTAILED;
+    return (v1.leave()|v2.leave()|v3.leave())  ? SLEEP : OZ_ENTAILED;
   }
   OZ_Return leave1(void) {
     int r1 = v1.leave() ? 1 : 0;
     int r2 = v2.leave() ? 1 : 0;
     int r3 = v3.leave() ? 1 : 0;
-    return (r1 + r2 + r3 <= 0) ? ENTAILED : SLEEP; // TMUELLER
+    return (r1 + r2 + r3 <= 0) ? OZ_ENTAILED : SLEEP; // TMUELLER
   }
   OZ_Return vanish(void) {
     v1.leave();
     v2.leave();
     v3.leave();
-    return ENTAILED;
+    return OZ_ENTAILED;
   }
   OZ_Return fail(void) {
     v1.fail();
@@ -166,17 +166,17 @@ public:
     : v1(i1), v2(i2) {}
 
   OZ_Return leave(void) {
-    return (v1.leave() | v2.leave()) ? SLEEP : ENTAILED;
+    return (v1.leave() | v2.leave()) ? SLEEP : OZ_ENTAILED;
   }
   OZ_Return leave1(void) {
     int r1 = v1.leave() ? 1 : 0;
     int r2 = v2.leave() ? 1 : 0;
-    return (r1 + r2 <= 1) ? ENTAILED : SLEEP;
+    return (r1 + r2 <= 1) ? OZ_ENTAILED : SLEEP;
   }
   OZ_Return vanish(void) {
     v1.leave();
     v2.leave();
-    return ENTAILED;
+    return OZ_ENTAILED;
   }
   OZ_Return fail(void) {
     v1.fail();
