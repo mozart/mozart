@@ -158,12 +158,14 @@ AC_SUBST(TK_XINCLUDES)
 dnl check if we have the combination of an old style Xlib.h and gcc
 PERMISSIVEOPT=
 if test "$GCC" = yes; then
-OZ_CC_OPTIONS(-fpermissive,PERMISSIVEOPT)
+OZ_CXX_OPTIONS(-fpermissive,PERMISSIVEOPT)
 if test -n "$PERMISSIVEOPT"; then
 AC_MSG_CHECKING([whether we need -fpermissive for Xlib.h])
 AC_CACHE_VAL(ac_cv_xlib_permissive,
   save_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$TK_XINCLUDES $CPPFLAGS"
+  AC_LANG_SAVE
+  AC_LANG_CPLUSPLUS
   AC_TRY_COMPILE([
 #include <X11/Xlib.h>
 ],[
@@ -173,6 +175,7 @@ void foo() {}
 ],[
   ac_cv_xlib_permissive=yes
 ])
+  AC_LANG_RESTORE
 CPPFLAGS="$save_CPPFLAGS")
 AC_MSG_RESULT($ac_cv_xlib_permissive)
 else
@@ -238,6 +241,7 @@ else
 fi
 
 AC_SUBST(TK_INCLUDES)
+
 
 dnl *****************************************************************
 dnl copy libs
