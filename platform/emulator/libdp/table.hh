@@ -49,115 +49,84 @@ class RemoteReference;
 Bool withinBorrowTable(int i);
 #endif
 
-#define NET_HASH_TABLE_DEFAULT_SIZE 100
+#define END_FREE -1
 
-class NetHashTable: public GenHashTable{
-  int hashFunc(NetAddress *);
-  inline Bool findPlace(int ,NetAddress *, GenHashNode *&);
+class BucketHashNode {
+friend class BucketHashTable;
+protected:
+  unsigned int prim_key;
+  unsigned int sec_key;
+  BucketHashNode *next;
 public:
-  NetHashTable():GenHashTable(NET_HASH_TABLE_DEFAULT_SIZE){}
-  int findNA(NetAddress *);
-  void add(NetAddress *,int);
-  void sub(NetAddress *);
-};
+  BucketHashNode(unsigned int k,unsigned int kb) {
+    prim_key=k;
+    sec_key=kb;
+    next=NULL;}
 
-inline NetAddress * GenHashNode2NetAddr(GenHashNode *ghn){
-  NetAddress *na;
-  GenCast(ghn->getBaseKey(),GenHashBaseKey*,na,NetAddress*);
-  return na;}
+  BucketHashNode(unsigned int k,unsigned int kb, BucketHashNode* ne){
+    prim_key=k;
+    sec_key=kb;
+    next=ne;}
 
-inline int GenHashNode2BorrowIndex(GenHashNode *ghn){
-  int i;
-  GenCast(ghn->getEntry(),GenHashEntry*,i,int);
-  Assert(i>=0);
-  Assert(withinBorrowTable(i));
-  return i;}
-
-inline Bool NetHashTable::findPlace(int hvalue,NetAddress *na,GenHashNode *&ghn){
-  PD((HASH,"find Place hvalue=%d, net%d:%d",hvalue,
-               na->site,na->index));
-  ghn=htFindFirst(hvalue);
-  NetAddress *na2;
-  while(ghn!=NULL){
-    na2=GenHashNode2NetAddr(ghn);
-    if(na->same(na2)){
-      PD((HASH,"compare success hvalue=%d bk=%x net%d:%d",
-                    ghn->getKey(),ghn->getBaseKey(),na2->site,na2->index));
-      return TRUE;}
-    PD((HASH,"compare fail hvalue=%d bk=%x net%d:%d",
-                  ghn->getKey(),ghn->getBaseKey(),na2->site,na2->index));
-    ghn=htFindNext(ghn,hvalue);}
-  return FALSE;}
-
-/* -------------------------------------------------------------------- */
-
-
-class OidHashTable: public GenHashTable {
-  int hash(int Oid){return Oid;}
-
-public:
-  OidHashTable(int i):GenHashTable(i){}
-
-  //
-  void add(int Oid, int OTI) {
-    int hvalue;
-    GenHashBaseKey *ghbk;
-    GenHashEntry *ghe;
-    //
-    hvalue = hash(Oid);
-    GenCast(Oid, int, ghbk, GenHashBaseKey*);
-    GenCast(OTI, int, ghe, GenHashEntry*);
-    GenHashTable::htAdd(hvalue, ghbk, ghe);
-  }
-
-  //
-  int find(int Oid) {
-    int hvalue = hash(Oid);
-    int shv;
-    GenHashNode *aux;
-    aux = htFindFirst(hvalue);
-    while (aux){
-      //
-      GenCast(aux->getBaseKey(), GenHashBaseKey*, shv, int);
-      if (shv == Oid)
-        {
-          int OTI;
-          GenCast(aux->getEntry(), GenHashEntry*, OTI, int);
-          return OTI;
-
-        }
-      aux = htFindNext(aux, hvalue);
-    }
-    return -1;
-  }
-
-  void remove(int Oid)
-  {
-    int hvalue = hash(Oid);
-    int te;
-    GenHashNode *aux;
-    aux = htFindFirst(hvalue);
-    while (aux){
-      //
-      GenCast(aux->getBaseKey(), GenHashBaseKey*, te, int);
-      if (te == Oid)
-        {
-          htSub(hvalue, aux);
-          return;
-        }
-      aux = htFindNext(aux, hvalue);
-    }
-  }
+  void setNext(BucketHashNode *n){next=n;}
+  BucketHashNode *getNext(){return next;}
+  unsigned int getSecKey(){return sec_key;}
+  unsigned int getPrimKey(){return prim_key;}
 };
 
 
 
+class BucketHashTable {
+protected:
+  int counter;      // number of entries
+  double top_percent;      // if more than percent is used, we reallocate
+  double bottom_percent;
+  int minSize;
+  int tableSize;
+
+  void init(int low,int high) {
+    int i;
+    for(i=low; i<high; i++) {
+      table[i] = NULL;}}
+  void basic_htAdd(unsigned int,BucketHashNode *);
+  void rehash(BucketHashNode**,int);
+  void resize();
+  void calc_percents();
+
+public:
+  void compactify();
+  BucketHashNode **table;
+  void clear(){
+    counter=0;
+    for(int i=0; i<tableSize; i++)
+      {
+        BucketHashNode *tmp, *next = table[i];
+        while(next)
+          {
+            tmp = next;
+            next = next->next;
+            delete tmp;
+          }
+        table[i]=NULL;
+      }
+  }
+
+  int getSize(){return tableSize;}
+  int getUsed(){return counter;}
+  BucketHashNode* getBucket(int i){return table[i];}
+  BucketHashTable(int);
+  void htAdd(unsigned int,BucketHashNode*);
+  void htSubPkEn(unsigned int,BucketHashNode *);
+  void* htSubPkSk(unsigned int,unsigned int);
+  BucketHashNode* htFindPk(unsigned int);
+  BucketHashNode* htFindPkSk(unsigned int,unsigned int);
+
+};
 
 enum PO_TYPE {
   PO_Var,
   PO_Tert,
-  PO_Ref,
-  PO_Free
+  PO_Ref
 };
 
 enum PO_FLAGS{
@@ -173,16 +142,12 @@ protected:
   union {
     TaggedRef ref;
     TaggedRef tert;
-    int nextfree;
   } u;
 public:
   ProtocolObject()            { DebugCode(type=(PO_TYPE)4711; )}
   Bool isTertiary()           { return type==PO_Tert; }
   Bool isRef()                { return type==PO_Ref; }
   Bool isVar()                { return type==PO_Var; }
-  Bool isFree()               { return type==PO_Free; }
-  void setFree()              { type = PO_Free; }
-  void unsetFree()            { DebugCode(type=(PO_TYPE)4712); }
   Bool initialized()          { DebugCode(return type!=(PO_TYPE)4712);return TRUE;}
 
   void setTert(Tertiary * t) {
@@ -263,17 +228,6 @@ public:
 
 class OB_Entry : public ProtocolObject {
 protected:
-//    union {
-//      int nextfree;
-//    } uOB;
-
-  void makeFree(int next) {
-    setFree();
-    u.nextfree=next;}
-
-  int getNextFree(){
-    Assert(isFree());
-    return u.nextfree;}
 
 public:
   void makeGCMark(){addFlags(PO_GC_MARK);}
@@ -292,8 +246,6 @@ public:
 
   void print();
 
-//    virtual Bool isPersistent()=0;
-//    virtual void makePersistent()=0;
 };
 
 
@@ -301,27 +253,28 @@ public:
 /*   SECTION 10:: OwnerEntry                                               */
 /* ********************************************************************** */
 
-class OwnerEntry: public OB_Entry {
-friend class OwnerTable;
+class OwnerEntry: public OB_Entry,public BucketHashNode {
+friend class NewOwnerTable;
 public:
   HomeReference homeRef;
 
-  void setUp(int index, int algs);
+  OwnerEntry(int odi, int algs):BucketHashNode((unsigned int) odi, (unsigned int) odi)
+  {
+    setFlags(0);
+    homeRef.setUp(odi, algs);
+  }
 
   void localize(int index);
 
   inline RRinstance *getCreditBig() {
-    Assert(!isFree());
     return homeRef.getBigReference();
   }
 
   inline RRinstance *getCreditSmall() {
-    Assert(!isFree());
     return homeRef.getSmallReference();
   }
 
   inline void mergeReference(RRinstance *r) {
-    Assert(!isFree());
     if(homeRef.mergeReference(r)){
       localize(homeRef.oti);
     }
@@ -330,68 +283,53 @@ public:
   void updateReference(DSite *rsite);
 
   Bool isPersistent(){
-    Assert(!isFree());
     return homeRef.isPersistent();}
 
   void makePersistent(){
-    Assert(!isFree());
     Assert(!isPersistent());
     homeRef.makePersistent();
     Assert(isPersistent());
   }
+
+  int getOdi(){ return homeRef.oti;}
 };
 
 /* ********************************************************************** */
 /*   SECTION 11:: OwnerTable                                               */
 /* ********************************************************************** */
 
-#define END_FREE -1
-
-class OwnerTable {
-  OwnerEntry* array;
-  int size;
-  int no_used;
-  int nextfree;
+class NewOwnerTable:public BucketHashTable {
   int localized;  /* Used by the distpane */
   int nxtId;
 
   void init(int,int);
   void compactify();
+unsigned int hash(int Oid){return (unsigned int)Oid;}
+
 public:
-  OidHashTable *hshtbl;
   void print();
 
   OZ_Term extract_info();
 
 
-  int getSize() {return size;}
-
-  OwnerTable(int sz) {
-    size = sz;
-    array = (OwnerEntry*) malloc(size*sizeof(OwnerEntry));
-    Assert(array!=NULL);
-    nextfree = END_FREE;
-    no_used=0;
+  NewOwnerTable(int sz):BucketHashTable(sz) {
     localized = 0;
-    nxtId = 10000;
-    init(0,sz);
-    hshtbl = new OidHashTable(100);
- }
+    nxtId = 0;
+  }
 
-  /*
-    Used when direct access to the array holding all the
-    owner entrys is needed. E.g gc, statistics...
-  */
-  OwnerEntry *getOtiEntry(int oti) { return &array[oti]; }
+  OwnerEntry* index2entry(int oe)
+  {
+    Assert(oe > 10000);
+    return (OwnerEntry*) oe;
+  }
 
-  /*
-     Used when accessing owner entries from their unique id's
-     formaly known as OTI.
-  */
-  OwnerEntry* getEntry(int odi){
-    int oti = hshtbl->find(odi);
-    if((oti == -1) || array[oti].isFree()) return NULL;
-    return &array[oti];}
+  OwnerEntry* odi2entry(int odi);
+
+  int entry2odi(int oe)
+  {
+    Assert(oe > 10000);
+    return ((OwnerEntry*)oe)->getOdi();
+  }
 
   void gcOwnerTableRoots();
   void gcOwnerTableFinal();
@@ -407,21 +345,20 @@ public:
   }
 
   void freeOwnerEntry(int);
-  void localizing(){localized = (localized + 1) % 100000;}
   int  getLocalized(){int ret=localized; localized = 0; return ret;}
-
+  int getNxtId() {return nxtId;}
 };
 
-extern OwnerTable *ownerTable;
+
+extern NewOwnerTable *ownerTable;
 #define OT ownerTable
 
 /* **********************************************************************  */
 /*   SECTION 14:: BorrowEntry                                              */
 /* **********************************************************************  */
 
-class BorrowEntry: public OB_Entry {
+class BorrowEntry: public OB_Entry, public BucketHashNode {
   friend class BorrowTable;
-  friend class RemoteReference;
 
 protected:
   Bool canBeFreed();
@@ -429,33 +366,21 @@ protected:
 public:
   RemoteReference remoteRef;
 
+  BorrowEntry(DSite* s, int i,RRinstance *r):BucketHashNode((unsigned int)i, (unsigned int)s)
+  {
+    setFlags(0);
+    remoteRef.setUp(r,s,i);
+  }
 
-  void print_entry(int);
-  OZ_Term extract_info(int);
+  OZ_Term extract_info();
 
   Bool isPersistent(){
-    Assert(!isFree());
     return remoteRef.isPersistent();}
-  /*
-  void makePersistent(){
-    Assert(!isFree());
-    Assert(!isPersistent());
-    remoteRef.makePersistent();
-    Assert(isPersistent());
-  }
-  */
+
   void gcBorrowRoot(int);
   void gcBorrowUnusedFrame(Tertiary*);
 
-  void copyBorrow(BorrowEntry* from,int i);
-
-  void initBorrowPersistent(DSite* s,int i);
-
-  void initBorrow(RRinstance *r,DSite* s,int i);
-
-
   inline NetAddress* getNetAddress() {
-    Assert(!isFree());
     return &(remoteRef.netaddr);
   }
 
@@ -464,17 +389,14 @@ public:
   int getOTI(){return remoteRef.netaddr.index;}
 
   inline RRinstance *getBigReference() {
-    Assert(!isFree());
     return remoteRef.getBigReference();
   }
 
   inline RRinstance *getSmallReference() {
-    Assert(!isFree());
     return remoteRef.getSmallReference();
   }
 
   inline void mergeReference(RRinstance *r) {
-    Assert(!isFree());
     remoteRef.mergeReference(r);
   }
 
@@ -485,43 +407,18 @@ public:
   }
 };
 
-/* ********************************************************************** */
-/*   SECTION 15:: BorrowTable                                             */
-/* ********************************************************************** */
 
-class BorrowTable {
+class BorrowTable:public BucketHashTable {
 private:
-  int no_used;
-  BorrowEntry* array;
-  int size;
-  int nextfree;
 
-  void init(int,int);
-  void compactify();
+  void compactify(){
+    printf("New Borrow table not compactified\n");
+  }
 
 public:
-  NetHashTable *hshtbl;
   void print();
 
-  BorrowEntry *getBorrow(int i)  { Assert(i>=0 && i<size); return &array[i];}
-
-  int ptr2Index(BorrowEntry *a) { return(a-array);}
-
-  int getSize() {return size;}
-
-  BorrowEntry* getEntry(int i){
-    Assert(i<=size);
-    if(array[i].isFree()) return NULL;
-    return &array[i];}
-
-  BorrowTable(int sz)  {
-    size= sz;
-    array = (BorrowEntry*) malloc(size *sizeof(BorrowEntry));
-    Assert(array!=NULL);
-    nextfree = END_FREE;
-    init(0,sz);
-    no_used=0;
-    hshtbl = new NetHashTable();  }
+  BorrowTable(int sz):BucketHashTable(sz)  {}
 
   void gcBorrowTableRoots();
   void gcBorrowTableUnusedFrames();
@@ -530,38 +427,28 @@ public:
 
   Bool notGCMarked();
 
-  BorrowEntry* find(NetAddress *na)  {
-    int i = hshtbl->findNA(na);
-    if(i<0) {
-      PD((LOOKUP,"borrow not found"));
-      return 0;
-    } else {
-      PD((LOOKUP,"borrow found b:%d",i));
-      return getBorrow(i);
-      // mm2 was: return borrowTable->getBorrow(i);
-    }
-  }
+  BorrowEntry* find(NetAddress *na);
+  BorrowEntry* find(int,DSite*);
 
-  void resize();
+
+  void resize(){printf("resize\n");}
 
   int newBorrow(RRinstance *,DSite*,int);
-  int newBorrowPersistent(DSite*,int);
 
   Bool maybeFreeBorrowEntry(int);
 
-  void freeSecBorrow(int);
-
   DSite* getOriginSite(int bi){
-    return getBorrow(bi)->getNetAddress()->site;}
+    return ((BorrowEntry *) bi)->getNetAddress()->site;}
 
   int getOriginIndex(int bi){
-    return getBorrow(bi)->getNetAddress()->index;}
+    return ((BorrowEntry*)bi)->getNetAddress()->index;}
 
-  void copyBorrowTable(BorrowEntry *,int);
+  BorrowEntry *bi2borrow(int bi) {return (BorrowEntry*) bi;}
 
-  // 'dumpFrames()' returns the number remaining frames;
   int dumpFrames();
   void dumpProxies();
+
+  OZ_Term extract_info();
 };
 
 extern BorrowTable *borrowTable;
