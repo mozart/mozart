@@ -299,8 +299,8 @@ the above numbers too seriously.
 </LIST>
 
 <ITEM> <EM>Future</EM>:
-<index id=idx.future/future/
-<index id=idx.logicvariablereadonly/logic variable<and>read-only (future)/
+<index/future/
+<index/logic variable<and>read-only (future)/
 A future is a read-only logic variable,
 i.e., it can only be <em>read</em>, not bound.
 Attempting to bind a future will block.
@@ -374,7 +374,20 @@ or a list.
 
 <ITEM> <EM>Procedures, functions, classes, functors,
 chunks, atoms, and names</EM>:
-<index id=idx.distributedsemanticsprocedure/distributed semantics<and>procedure/
+<index/distributed semantics<and>procedure/
+<index/procedure/
+<index/distributed semantics<and>function/
+<index/function/
+<index/distributed semantics<and>class/
+<index/class/
+<index/distributed semantics<and>functor/
+<index/functor/
+<index/distributed semantics<and>chunk/
+<index/chunk/
+<index/distributed semantics<and>atom/
+<index/atom/
+<index/distributed semantics<and>name/
+<index/name/
 These entities are copied eagerly across the
 network, but can only exist once on a given site.
 For example, an object's class contains the code
@@ -392,10 +405,14 @@ one way to think of it is that a new Oz name is created
 for every procedure instance.
 This is true for functions, classes, functors,
 chunks, and of course for names too.
-This is not true for atoms; two atoms with the
+It is not true for atoms; two atoms with the
 same print name are identical, even if created separately.
 
 <ITEM> <EM>Object-records</EM>:
+<index/distributed semantics<and>object-record/
+<index/distributed semantics<and>object/
+<index/record<and>object-record/
+<index/object<and>object-record/
 An object is a composite entity consisting
 of an object-record that references
 the object's features, a cell, and a class.
@@ -413,7 +430,7 @@ to a site is copied eagerly.
 
 </LIST>
 <P>In terms of the language semantics,
-there are only two different language
+there are only two different stateless language
 entities: procedures and records.
 All other entities are derived.
 Functions are syntactic sugar for procedures.
@@ -428,25 +445,38 @@ where a module is a record.
 
 <P>Entities that can be used only on one site
 are called <EM>sited</EM>.
+<index/sited entity/
+<index/language entity/sited/
+<index/owner site/
+<index/home site/
 We call this site their <EM>owner site</EM>
 or <EM>home site</EM>.
 References to these entities can be passed to other
 sites, but they do not work there.
 They work only on their owner site.
 Entities that can be used on any site
+<index/unsited entity/
+<index/language entity<and>unsited/
 are called <EM>unsited</EM>.
 Since Oz is a network-transparent
 
 <P>In Mozart, all sited entities are modules,
 except for a few exceptional cases listed below.
 Not all modules are sited, though.
+<index/module/
+<index/language entity/module/
+<index/record<and>module/
 A <EM>module</EM> is a record that
 groups related operations and
 that possibly has some internal state.
 The modules that are available in a Mozart
+<index/base module/
+<index/module<and>base/
 process when it starts up are called <EM>base modules</EM>.
 The base modules contain all operations on
 all basic Oz types.
+<index/system module/
+<index/module<and>system/
 There are additional modules, called <EM>system modules</EM>,
 that are part of the system but loaded only when needed.
 Furthermore, an application can define more
@@ -457,6 +487,15 @@ imported from other modules.
 For example, a procedure that does additions
 can be used on another site,
 since the addition operation is
+<index/module<and>base<and><<Number>>/
+<index/module<and>base<and><<Int>>/
+<index/module<and>base<and><<Float>>/
+<index/module<and>base<and><<Record>>/
+<index/module<and>base<and><<List>>/
+<index/module<and>base<and><<Procedure>>/
+<index/module<and>base<and><<Port>>/
+<index/module<and>base<and><<Cell>>/
+<index/module<and>base<and><<Lock>>/
 part of the base module <<Number>>.
 Some commonly-used base modules are
 <<Number>>, <<Int>>, and <<Float>> (operations on numbers),
@@ -466,19 +505,40 @@ and
 (operations on common entities).
 
 <P>Due to limitations of the current release,
+<index/sited entity<and>thread/
+<index/thread<and>sited entity/
+<index/sited entity<and>dictionary/
+<index/dictionary<and>sited entity/
+<index/sited entity<and>array/
+<index/array<and>sited entity/
+<index/sited entity<and>space/
+<index/space<and>sited entity/
 threads, dictionaries, arrays, and spaces are sited
 even though they are in base modules.
 These entities will become
 unsited in future releases.
 
 <P>When a reference to a constrained variable
+<index/constrained variable/
+<index/logic variable<and>constrained variable/
+<index/logic variable<and>constrained/
+<index/finite domain variable/
+<index/logic variable<and>finite domain/
+<index/finite set variable/
+<index/logic variable<and>free record/
+<index/free record variable/
+<index/variable<see>logic variable/
 (finite domain, finite set, or free record)
 is passed to another site, then this reference
+<index/future/
+<index/logic variable<and>read-only (future)/
 is converted to a <em>future</em>
 (see <ptr to="single.assignment">).
 The future will be bound when the constrained
 variable becomes determined.
 
+<index/resource/
+<index/sited entity<and>resource/
 <P>We call <EM>resource</EM> any module
 that is either a system module
 or that imports directly or
@@ -492,6 +552,18 @@ Access to this state
 is limited to the machine hosting
 the Mozart process.
 Some commonly-used system modules are
+<index/module<and>system<and><<Tk>>/
+<index/module<and>system<and><<Browser>>/
+<index/module<and>system<and><<Connection>>/
+<index/module<and>system<and><<Remote>>/
+<index/module<and>system<and><<Application>>/
+<index/module<and>system<and><<Module>>/
+<index/module<and>system<and><<Search>>/
+<index/module<and>system<and><<FD>>/
+<index/module<and>system<and><<Open>>/
+<index/module<and>system<and><<Pickle>>/
+<index/module<and>system<and><<OS>>/
+<index/module<and>system<and><<Property>>/
 <<Tk>> and <<Browser>> (system graphics),
 <<Connection>> and <<Remote>> (site-specific distributed operations),
 <<Application>> and <<Module>>
@@ -506,9 +578,11 @@ and so forth.
 <SUBSECTION id="section.distmodel.shutdown"><TITLE>Controlled system shutdown</TITLE>
 
 <P>A site can be stopped in two ways: normally or abnormally.
+<index/shutdown<and>normal/
 The normal way is a controlled shutdown initiated
 by <<{Application.exit I}>>, where <<I>> is
 the return status (see the module <<Application>>).
+<index/shutdown<and>abnormal/
 The abnormal way is a site crash
 triggered by an external problem.
 The failure model (see <ptr to="chapter.failure">) is used
@@ -533,10 +607,13 @@ then that entity will no longer work.
 <P>All memory management in Mozart is automatic;
 the programmer does not have to worry about when
 an entity is no longer referenced.
+<index/garbage collection/
 Mozart implements an efficient distributed garbage collection
 algorithm that reclaims all unused entities
-except those that form a cycle of references
-that exists
+except those that form a
+<index/cycle/
+<index/cross-site cycle/
+cycle of references that exists
 on at least two different owner sites.
 For example, if two sites each own an object
 that references the other, then they will
@@ -551,12 +628,12 @@ let's say a client references a server and
 vice versa.  If the client wishes to disconnect
 from the server, then it is sufficient that the
 server forget all references to the client.
-This will ensure there are no cross-site
-cycles.
+This will ensure there are no cross-site cycles.
 
 <SECTION id="bringing"><TITLE>Bringing it all together</TITLE>
 
 <P>Does the Mozart distribution model
+<index/feeling<and>warm, fuzzy/
 give programmers a warm, fuzzy feeling when
 writing distributed applications?
 In short, yes it does.
@@ -598,8 +675,10 @@ See <ptr to="practical.tips"> for more
 information on how to organize an application.
 
 <P>Functors and resources are the key players
+<index/component-based programming/
+<index/programming<and>component-based/
 in distributed component-based programming.
-A functor is essentially a software component.
+A functor specifies a software component.
 A functor is stateless, so it can be transparently copied
 anywhere across the net and made persistent by pickling on a file
 (see the module <ref.extern to="ozdoc:system" key="chapter.pickle"
