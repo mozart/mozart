@@ -511,13 +511,13 @@ OZ_Return CDSuppl::propagate(void)
   OZ_DEBUGPRINT(("cdsuppl.in: b=%s",b->toString()));
 
   if (*b == 0) {
-    ((Thread *) thr)->closeDonePropagatorCD();	
+    am.closeDonePropagatorCD((Thread *) thr);	
     return PROCEED;
   } 
 
   if (*b == 1) {
     OZ_Propagator * p = ((Thread *) thr)->swapPropagator(this);
-    ((Thread *) thr)->closeDonePropagatorThreadCD();	
+    am.closeDonePropagatorThreadCD((Thread *) thr);	
     return replaceBy(p);
   }
 
@@ -529,18 +529,18 @@ OZ_Return CDSuppl::propagate(void)
     ((Thread *) thr)->markUnifyThread();
   }
 
-  OZ_Return ret_val = ((Thread *) thr)->runPropagator();
+  OZ_Return ret_val = am.runPropagator((Thread *) thr);
 
   am.currentThread = backup_currentThread;
 
   OZ_ASSERT(b->getMaxElem() >= 2);
 
   if (ret_val == PROCEED) {
-    ((Thread *) thr)->closeDonePropagatorCD();	
+    am.closeDonePropagatorCD((Thread *) thr);	
     *b <= (b->getMaxElem() - 1);
     OZ_ASSERT(b->getMaxElem() >= 2);
   } else if (ret_val == FAILED) {
-    ((Thread *) thr)->closeDonePropagatorCD();	
+    am.closeDonePropagatorCD((Thread *) thr);	
     *b &= 0;
   }
 

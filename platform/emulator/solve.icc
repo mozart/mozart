@@ -102,8 +102,8 @@ TaggedRef SolveActor::merge(Board *bb, Bool isSibling) {
       while (!localThreadQueue->isEmpty()) {
 	Thread * thr = localThreadQueue->dequeue();
 	DebugCode (thr->unmarkRunnable());
-	thr->propagatorToRunnable ();
-	am.scheduleThreadInline (thr, thr->getPriority());
+	am.propagatorToRunnable(thr);
+	am.scheduleThreadInline(thr, thr->getPriority());
       }
       
       // empty taskstack of ltq thread and dispose ltq

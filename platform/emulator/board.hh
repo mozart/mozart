@@ -73,7 +73,7 @@ enum BoardFlags {
 };
 
 
-class Board : public ConstTerm {
+class Board {
 friend void engine(Bool init);
 private:
   int flags;
@@ -85,9 +85,9 @@ private:
   } u;
   Script script;
 public:
-  Board();
-  ~Board();
-  Board(Board&);
+  Board(); // fake compiler
+  ~Board(); // fake compiler
+  Board(Board&); // fake compiler
   Board(Actor *a,int type);
 
   USEHEAPMEMORY;
@@ -96,6 +96,7 @@ public:
   Bool gcIsAlive();
   Bool checkAlive();
   Board *gcGetNotificationBoard ();
+  int32 *getGCField() { return body.getGCField(); }
 
   OZPRINT;
   OZPRINTLONG;

@@ -588,20 +588,20 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
   
   Thread * backup_currentThread = am.currentThread;	
   am.currentThread = thr;				
-  switch (thr->runPropagator()) {			
+  switch (am.runPropagator(thr)) {
   case FAILED:						
-    thr->closeDonePropagator();			
+    am.closeDonePropagator(thr);
     am.currentThread = backup_currentThread;		
     staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
     return FAILED;					        
   case SLEEP:		
-    thr->suspendPropagator();		
+    am.suspendPropagator(thr);
     break;						
   case SCHEDULED:					
-    thr->scheduledPropagator();
+    am.scheduledPropagator(thr);
     break;						
   case PROCEED:						
-    thr->closeDonePropagator();			
+    am.closeDonePropagator(thr);
     am.currentThread = backup_currentThread;              
     staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
     return PROCEED;                                     

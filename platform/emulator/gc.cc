@@ -1102,7 +1102,7 @@ Thread *Thread::gcThread ()
   Thread *ret = isCollected(this,item.threadBody);
   if (ret) return ret;
 
-  if (isDeadThread ()) return ((Thread *) NULL);
+  if (isDeadThread()) return ((Thread *) NULL);
 
   //  Some invariants:
   // nothing can be copied (IN_TC) until stability;
@@ -1112,31 +1112,31 @@ Thread *Thread::gcThread ()
     return this;
   }
 
-  Assert (opMode == IN_GC || !(isRunnable ()));
+  Assert(opMode == IN_GC || !isRunnable());
 
   // 
   //  Note that runnable threads can be also counted 
   // in solve actors (for stability check), and, therefore, 
   // might not just dissappear!
-  if (isSuspended () && !((GETBOARD(this))->gcIsAlive ())) {
+  if (isSuspended() && !GETBOARD(this)->gcIsAlive()) {
     return ((Thread *) NULL);
   }
 
   COUNT(thread);
-  Thread *newThread = (Thread *) gcRealloc (this, sizeof (*this));
-  GCNEWADDRMSG (newThread);
+  Thread *newThread = (Thread *) gcRealloc(this, sizeof (*this));
+  GCNEWADDRMSG(newThread);
 
-  if (isRunnable () || hasStack ()) {
-    ThreadList::add (newThread);
+  if (isRunnable() || hasStack()) {
+    ThreadList::add(newThread);
   }
 
-  ptrStack.push (newThread, PTR_THREAD);
+  ptrStack.push(newThread, PTR_THREAD);
 
   FDPROFILE_GC(cp_size_susp, sizeof(*this));
 
-  storeForward (&item.threadBody, newThread);
+  storeForward(&item.threadBody, newThread);
 
-  return (newThread);
+  return newThread;
 }
 
 inline
@@ -2258,8 +2258,6 @@ ConstTerm *ConstTerm::gcConstTerm()
 
   size_t sz = 0;
   switch (getType()) {
-  case Co_Board:     return ((Board *) this)->gcBoard();
-  case Co_Actor:     return ((Actor *) this)->gcActor();
   case Co_HeapChunk: return ((HeapChunk *) this)->gc();
   case Co_Abstraction: 
     {

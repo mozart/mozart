@@ -23,6 +23,7 @@ public:
   USEFREELISTMEMORY
   void gcRecurse(void);
   Continuation * gc();
+  int32 *getGCField() { return (int32*) &pc; }
 
   Continuation(void)
   : pc(NOCODE), yRegs(NULL), gRegs(NULL) , xRegs(NULL) {}

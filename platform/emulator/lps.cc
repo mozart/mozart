@@ -110,7 +110,7 @@ Bool LocalPropagationStore::propagate_locally () {
 
     OZ_Return ret_val;
     
-    ret_val = thr->runPropagator();
+    ret_val = am.runPropagator(thr);
 
     switch (ret_val) {
     case FAILED:
@@ -123,7 +123,7 @@ Bool LocalPropagationStore::propagate_locally () {
 	message("Propagator %s failed\n", str);
 	delete str;
       }
-      am.currentThread->closeDonePropagator ();
+      am.closeDonePropagator(am.currentThread);
       am.currentThread = savedCurrentThread;
       return reset();
 
@@ -134,15 +134,15 @@ Bool LocalPropagationStore::propagate_locally () {
       error ("propagate_locally: 'SUSPEND' is returned?\n");
 
     case SLEEP:
-      am.currentThread->suspendPropagator ();
+      am.suspendPropagator(am.currentThread);
       break;
 
     case SCHEDULED:
-      am.currentThread->scheduledPropagator ();
+      am.scheduledPropagator(am.currentThread);
       break;
 
     case PROCEED:
-      am.currentThread->closeDonePropagator ();
+      am.closeDonePropagator(am.currentThread);
       break;
     }
     

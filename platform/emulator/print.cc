@@ -751,8 +751,6 @@ PRINTLONG(ConstTerm)
 {
   CHECKDEPTHLONG;
   switch (getType()) {
-  case Co_Board:      ((Board *) this)->printLong(stream, depth, offset);     break;
-  case Co_Actor:      ((Actor *) this)->printLong(stream, depth, offset);     break;
   case Co_HeapChunk:  ((HeapChunk *) this)->printLong(stream, depth, offset); break;
   case Co_Abstraction:((Abstraction *) this)->printLong(stream,depth,offset); break;
   case Co_Object:     ((Object *) this)->printLong(stream,depth,offset);      break;
@@ -797,8 +795,6 @@ PRINT(ConstTerm)
 {
   CHECKDEPTH;
   switch (getType()) {
-  case Co_Board:       ((Board *) this)->print(stream, depth, offset);     break;
-  case Co_Actor:       ((Actor *) this)->print(stream, depth, offset);     break;
   case Co_HeapChunk:   ((HeapChunk *) this)->print(stream, depth, offset); break;
   case Co_Abstraction: ((Abstraction *) this)->print(stream,depth,offset); break;
   case Co_Object:      ((Object *) this)->print(stream,depth,offset);      break;

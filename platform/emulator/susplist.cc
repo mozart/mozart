@@ -10,14 +10,12 @@
 */
 
 
-#if defined(INTERFACE) && !defined(PEANUTS)
+#if defined(INTERFACE)
 #pragma implementation "susplist.hh"
 #endif
 
-#include "am.hh"
-
-#include "genvar.hh"
-#include "fdprofil.hh"
+#include "susplist.hh"
+#include "board.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -53,47 +51,6 @@ int SuspList::lengthProp(void)
 }
 
 //-----------------------------------------------------------------------------
-
-SuspList * installPropagators(SuspList * local_list, SuspList * glob_list,
-			      Board * glob_home)
-{
-  Assert((local_list && glob_list && (local_list != glob_list)) || 
-	 !local_list || !glob_list);
-
-  SuspList * aux = local_list, * ret_list = local_list;
-
-  
-  // mark up local suspensions to avoid copying them
-  while (aux) {
-    aux->getElem()->markTagged();
-    aux = aux->getNext();
-  }
-
-  // create references to suspensions of global variable
-  aux = glob_list;
-  while (aux) {
-    Thread *thr = aux->getElem();
-    
-    if (!(thr->isDeadThread ()) && 
-	(thr->isPropagator()) &&
-	!(thr->isTagged ()) && /* TMUELLER possible optimization 
-				  isTaggedAndUntag */
-	am.isBetween (GETBOARD(thr), glob_home) == B_BETWEEN) {
-      ret_list = new SuspList (thr, ret_list);
-    }
-    
-    aux = aux->getNext();
-  }
-
-  // unmark local suspensions 
-  aux = local_list;
-  while (aux) {
-    aux->getElem()->unmarkTagged();
-    aux = aux->getNext();
-  }
-  
-  return ret_list;
-}
 
 //-----------------------------------------------------------------------------
 
