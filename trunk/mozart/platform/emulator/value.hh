@@ -2101,6 +2101,21 @@ public:
     return TRUE;
   }
 
+  OZ_Term exchange(int n,TaggedRef val) 
+  { 
+    Assert(oz_isRef(val) || !oz_isVar(val));
+
+    n -= offset;
+    if (n>=getWidth() || n<0) return FALSE;
+
+    OZ_Term out = getArgs()[n];
+    Assert(oz_isRef(out) || !oz_isVar(out));
+
+    getArgs()[n] = val;
+
+    return out;
+  }
+
   TaggedRef *getRef() { return args; }
 };
 
