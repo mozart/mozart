@@ -68,9 +68,9 @@ $module_init_fun_name = "space_init";
 			     out => [],
 			     BI  => BIinjectSpace},
 
-     'discard'	        => { in  => ['+space'],
+     'kill'	        => { in  => ['+space'],
 			     out => [],
-			     BI  => BIdiscardSpace},
+			     BI  => BIkillSpace},
 
      'choose'           => { in  => ['+int'],
                              out => ['value'],
