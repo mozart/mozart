@@ -145,10 +145,10 @@ extern void OZ_free _PROTOTYPE((char *));
 extern void OZ_warning _PROTOTYPE((char * ...));
 
 /* generate the unix error string from an errno (see perror(3)) */
-char *OZ_unixError(int errno);
+char *OZ_unixError _PROTOTYPE((int errno));
 
 /* check for toplevel */
-extern int OZ_onToplevel();
+extern int OZ_onToplevel ();
 
 /* replace new builtins */
 extern int OZ_addBuiltin _PROTOTYPE((char *, int, OZ_CFun));
