@@ -38,17 +38,13 @@
 #include "oz_cpi.hh"
 #include "gc.hh"
 
+// exported functions
 Builtin *BIinit();
-
 void threadRaise(Thread *th,OZ_Term E,int debug=0);
-
-// -----------------------------------------------------------------------
-// tables
-
+TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I);
 extern OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
 extern OZ_Return uparrowInlineBlocking(TaggedRef term, TaggedRef fea,
 				       TaggedRef &out);
-
 OZ_Return BIarityInline(TaggedRef, TaggedRef &);
 OZ_Return adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
 			     Bool recordFlag);
