@@ -485,6 +485,10 @@ void BIfdBodyManager::processFromTo(int from, int to)
   vars_left = glob_vars_touched = FALSE;
 
   for (int i = from; i < to; i += 1) {
+
+    if (bifdbm_var_state[i] == fdbm_speculative)
+      continue;
+
     TypeOfTerm vartag = bifdbm_vartag[i];
 
     if (vartag == SMALLINT || isSmallInt(*bifdbm_varptr[i])) {
@@ -561,6 +565,9 @@ void BIfdBodyManager::process(void) {
 
 void BIfdBodyManager::processNonRes(void)
 {
+  if (bifdbm_var_state[0] == fdbm_speculative)
+    return;
+
   Suspension * susp = NULL;
 
   TypeOfTerm vartag = bifdbm_vartag[0];
