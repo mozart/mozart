@@ -952,17 +952,21 @@ void BorrowEntry::freeBorrowEntry(){
 
 void BorrowEntry::gcBorrowRoot(int i) {
   if (isVar()) {
+    if(GCISMARKED(getRef())){
+      gcPO();
+      return;}
     PD((GC,"BT1 b:%d variable found",i));
     if (tagged2CVar(*getPtr())->getSuspList()!=0) {
-      gcPO();
-    }
-    return;
-  }
+      gcPO();}
+    return;}
   if(isRef()) {
-    Assert(isExtended());
+     Assert(isExtended());
     gcPO(); 
     return;}
   Assert(isTertiary());
+  if(getTertiary()->gcIsMarked()){
+     u.tert=(Tertiary *)u.tert->gcConstTerm();
+    return;}
   if(isTertiaryPending(getTertiary())) gcPO();
 }
 
