@@ -107,7 +107,7 @@ in
       fun {GetGroup K}
          case {Atom.toString K.1} of C|_ then C1 in
             C1 = InverseOrderMap.C
-            if {Char.isAlpha C1} then {Char.toLower C1}
+            if {Char.isAlpha C1} then {Char.toUpper C1}
             elseif {Char.isDigit C1} then &0
             else &*
             end
@@ -131,13 +131,12 @@ in
          end
          meth enter(Ands HTML) Key Entry in
             Key = {Map Ands fun {$ K#_} K end}
-            Entry = p(SEQ({List.foldRTail Ands
-                           fun {$ _#A|Ar In}
-                              A|case Ar of _|_ then PCDATA(', ')
-                                else EMPTY
-                                end|In
-                           end nil})
-                      PCDATA(': ') HTML)
+            Entry = SEQ({List.foldRTail Ands
+                         fun {$ _#A|Ar In}
+                            A|case Ar of _|_ then PCDATA(', ')
+                              else EMPTY
+                              end|In
+                         end [PCDATA(': ') HTML]})
             Entries <- Key#Entry|@Entries
          end
          meth empty($)
@@ -157,7 +156,10 @@ in
                                               [] &0 then 'Numbers'
                                               else [G]
                                               end))
-                                    SEQ({Map Es fun {$ _#HTML} HTML end}))
+                                    SEQ({Map Es
+                                         fun {$ _#HTML}
+                                            SEQ([HTML br()])
+                                         end}))
                            end})
             end
          end
