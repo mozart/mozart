@@ -36,7 +36,7 @@ local
 	    X3 = X2 + 1
 	    Y0 = 0
 	    Y1 = Y0 + 1
-	    Y2 = !TickSize - 2
+	    Y2 = TickSize - 2
 	    Y3 = Y2 + 1
 	 in
 	    TickCanvas,tk(crea rectangle X0 Y0 X3 Y3 outline:BrightColor)

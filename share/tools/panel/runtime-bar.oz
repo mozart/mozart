@@ -12,8 +12,8 @@ local
    Height       = 30
    Gap          = 2
    Border       = 2
-   Y0           = !Gap + 1
-   Y1           = !Height
+   Y0           = Gap + 1
+   Y1           = Height
    Home         = ~10
 
    ZeroTime     = time(copy:      0 
@@ -111,7 +111,7 @@ in
 	       CopyWidth = (CopyTime * ThisWidth + HalfTime) div RunTime
 	       PropWidth = (PropTime * ThisWidth + HalfTime) div RunTime
 	       LoadWidth = (LoadTime * ThisWidth + HalfTime) div RunTime
-	       LoadEnd   = !Width
+	       LoadEnd   = Width
 	       LoadStart = LoadEnd - LoadWidth
 	       PropEnd   = LoadStart - LoadZero * Gap
 	       PropStart = PropEnd - PropWidth

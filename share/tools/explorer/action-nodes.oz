@@ -29,7 +29,7 @@ local
    in
       class Choose
 	 meth FindKids(Ks Depth CurX FindX $)
-	    K|Kr = !Ks
+	    K|Kr = Ks
 	 in
 	    case Kr==nil then
 	       case K.kind of choose then
@@ -65,10 +65,10 @@ local
    
 in
 
-   ActionNodes=c(succeeded: !Leaf
-		 failed:    !Leaf
-		 blocked:   !Leaf
-		 choose:    !Choose
-		 sentinel:  !EmptyClass)
+   ActionNodes=c(succeeded: Leaf
+		 failed:    Leaf
+		 blocked:   Leaf
+		 choose:    Choose
+		 sentinel:  EmptyClass)
 
 end

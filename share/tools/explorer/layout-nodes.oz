@@ -29,11 +29,11 @@ local
 	 fun {DoMerge As Bs DL DR}
 	    case As of nil then
 	       case Bs of nil then nil
-	       [] B|Br then BL|BR=!B in ((BL + DL)|BR)|Br
+	       [] B|Br then BL|BR=B in ((BL + DL)|BR)|Br
 	       end
 	    [] A|Ar then
-	       case Bs of nil then AL|AR=!A in (AL|(AR + DR))|Ar
-	       [] B|Br then AL|AR=!A BL|BR=!B in
+	       case Bs of nil then AL|AR=A in (AL|(AR + DR))|Ar
+	       [] B|Br then AL|AR=A BL|BR=B in
 		  (AL|BR)|{DoMerge Ar Br DL-AL+BL DR+AR-BR}
 	       end
 	    end
@@ -41,7 +41,7 @@ local
       in
 	 fun {MergeShapes As Bs D}
 	    %% Merges two shapes As and Bs where Bs is translated by D
-	    (AL|AR)|Ar=!As (BL|BR)|Br=!Bs
+	    (AL|AR)|Ar=As (BL|BR)|Br=Bs
 	 in
 	    (AL|(BR+D))|{DoMerge Ar Br BL-AL+D AR-BR-D}
 	 end
@@ -86,7 +86,7 @@ local
 	 fun {GetOffsets As Bs RelPos}
 	    case As of nil then nil
 	    [] A|Ar then
-	       B|Br      = !Bs
+	       B|Br      = Bs
 	       NewRelPos = (A + B) div 2 + RelPos
 	    in
 	       NewRelPos|{GetOffsets Ar Br NewRelPos}
@@ -138,7 +138,7 @@ local
       proc {Box Ss CL CR ML MR CD ?L ?R ?D}
 	 case Ss
 	 of nil then L=ML R=MR D=CD
-	 [] S|Sr then SL|SR=!S NL=CL+SL NR=CR+SR in
+	 [] S|Sr then SL|SR=S NL=CL+SL NR=CR+SR in
 	    {Box Sr NL NR {Min NL ML} {Max NR MR} CD+1 ?L ?R ?D}
 	 end
       end
@@ -152,8 +152,8 @@ local
    end
    
    RootExtent  = 0|0
-   RootShape   = [!RootExtent]
-   HiddenShape = [!RootExtent ~!HalfHorSpaceI|!HalfHorSpaceI]
+   RootShape   = [RootExtent]
+   HiddenShape = [RootExtent ~HalfHorSpaceI|HalfHorSpaceI]
 
    Layout = {NewName}
    Adjust = {NewName}
@@ -198,7 +198,7 @@ local
 
    fun {LayoutKids Ks ?Os}
       case Ks of nil then Os=nil nil
-      [] K|Kr then O|Or=!Os in {K Layout($ O)} | {LayoutKids Kr Or}
+      [] K|Kr then O|Or=Os in {K Layout($ O)} | {LayoutKids Kr Or}
       end
    end
 
@@ -272,10 +272,10 @@ local
 
 in
 
-   LayoutNodes = c(choose:    !LayoutNode
-		   blocked:   !LayoutLeaf
-		   failed:    !LayoutLeaf
-		   succeeded: !LayoutLeaf
-		   sentinel:  !EmptyClass)
+   LayoutNodes = c(choose:    LayoutNode
+		   blocked:   LayoutLeaf
+		   failed:    LayoutLeaf
+		   succeeded: LayoutLeaf
+		   sentinel:  EmptyClass)
    
 end
