@@ -40,8 +40,8 @@
     to="chapter.api">.
   <P>
     Note that there is another widely used application of the compiler,
-    namely the <Def/Oz Programming Interface/.  See&nbsp;<Ptr to="mozart-opi">
-    for a description.
+    namely the <Def/Oz Programming Interface/.  See <Ptr.Extern
+    to="ozdoc:opi" key="section.mozart"> for a description.
   <Section class=unnumbered>
     <Title/The Compiler's State/
     <P>

@@ -29,8 +29,8 @@
     <Title/Additional Secondary Types/
     <P>
       This section describes additional secondary types used in the
-      descriptions in this chapter.  The conventions defined in <Ptr
-      to="mozart-base"> will be respected.
+      descriptions in this chapter.  The conventions defined in <Ptr.Extern
+      to="ozdoc:base" key="section.typestruct.format"> will be respected.
       <List>
         <Entry>?_{Coord}
         <Item>
@@ -78,7 +78,7 @@
           data structures:  Because it is much more powerful than
           <<System.virtualStringToValue>>, it can also be much less
           efficient.  Rather, you should use pickling and unpickling
-          of data structures&nbsp;<Ptr to="mozart-ap">.
+          of data structures&nbsp;<Ptr to="mozart-ap">.<!--**-->
 
         <Entry><<engine>>
         <Synopsis>
