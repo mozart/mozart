@@ -105,6 +105,10 @@ public:
 
   Statistics stat;
   ConfigData conf;
+
+#ifdef DEBUG_CHECK
+  Bool dontPropagate;
+#endif
 public:
   AM() {};
   void init(int argc,char **argv);

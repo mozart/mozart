@@ -340,7 +340,6 @@ OZ_Bool SolveActor::Waker (int n, TaggedRef *args)
 
   DebugCheck ((bb->isReflected () == OK),
               error ("already reflected board in SolveActor::Waker"));
-  sa->unsetSolveDet ();   // sequential part is done;
   sa->decThreads ();      // get rid of threads - '1' in creator;
   // after return we are going to the "reduce" state,
   // so reduce the actor if possible;
@@ -356,7 +355,6 @@ SolveActor::SolveActor (Board *bb, int prio, TaggedRef resTR)
 {
   solveBoard = NULL;
   solveVar= makeTaggedNULL();
-  flags |= Ac_SolveDet;
 }
 
 void SolveActor::setSolveBoard(Board *bb) {

@@ -441,8 +441,32 @@ inline void ConsList::gc()
     Equation *aux = (Equation*)gcRealloc(first,size);
     GCNEWADDRMSG(aux);
     for(int i = 0; i < numbOfCons; i++){
+// #ifdef DEBUG_CHECK
+//       TaggedRef auxTerm = first[i].getLeft ();
+//       TaggedRef *auxTermPtr;
+//       if (IsRef(auxTerm)) {
+//      do {
+//        if (auxTerm == makeTaggedNULL ())
+//          error ("NULL in script");
+//        if (GCISMARKED(auxTerm)) {
+//          auxTerm = GCUNMARK(auxTerm);
+//          continue;
+//        }
+//        if (isRef (auxTerm)) {
+//          auxTermPtr = tagged2Ref (auxTerm);
+//          auxTerm = *auxTermPtr;
+//          continue;
+//        }
+//        if (isAnyVar (auxTerm))
+//          break;   // ok;
+//        error ("non-variable is found at left side in consList");
+//      } while (1);
+//       }
+// #endif
       gcTagged(*first[i].getLeftRef(),  *aux[i].getLeftRef());
       gcTagged(*first[i].getRightRef(), *aux[i].getRightRef());
+//       DebugCheck (((aux[i].getLeft ()) & 0x3),
+//                error ("non-ref at left side in consList"));
     }
 
     first = aux;
@@ -653,9 +677,13 @@ inline SRecord *SRecord::gcSRecord()
 inline Bool isInTree (Board *b)
 {
   while (b != (Board *)NULL) {
+    DebugCheck ((b->isCommitted () == OK),
+                error ("committed board in 'isInTree ()'"));
     if (b == fromCopyBoard)
       return OK;
-    b = b->getParentBoard()->getBoardDeref();
+    b = b->getParentBoard();
+    if (b != (Board *) NULL)
+      b = b->gcGetBoardDeref();
   }
   return NO;
 }
@@ -676,7 +704,7 @@ inline Suspension *Suspension::gcSuspension(Bool tcFlag)
   }
 
   // mm2: el may be a GCMARK'ed board
-  if (tcFlag && !isInTree(el)) {
+  if (tcFlag == OK && isInTree(el) == NO) {
     return NULL;
   }
 
@@ -1410,6 +1438,7 @@ void Thread::gcRecurse()
   } else {
     error("Thread::gcRecurse");
   }
+  notificationBoard = notificationBoard->gcBoard ();
 }
 
 

@@ -138,7 +138,7 @@ void taggedPrintLong(TaggedRef ref, int depth = 10, int offset = 0);
 #define CHECK_NONVAR(term) Assert(isRef(term) || !isAnyVar(term))
 #define CHECK_ISVAR(term)  Assert(isAnyVar(term))
 #define CHECK_DEREF(term)  Assert(!isRef(term) && !isAnyVar(term))
-#define CHECK_NONNULL(s)   Assert(s != NULL)
+#define CHECK_NONNULL(s)   Assert(s != NULL && !((int)s & 0x3))
 #define CHECKTAG(Tag)      Assert(tagTypeOf(ref) == Tag)
 
 
@@ -654,7 +654,6 @@ private:
   TaggedRef left;
   TaggedRef right;
 public:
-  void setLeft(TaggedRef l) { left = l; }
   void setLeft(TaggedRef *l) { left = makeTaggedRef(l); }
   void setRight(TaggedRef r) { right = r; }
   TaggedRef getLeft() { return left; }

@@ -233,6 +233,9 @@ void AM::init(int argc,char **argv)
   toplevelVars[0] = makeTaggedSRecord(bi);
 
   IO::init();
+#ifdef DEBUG_CHECK
+  dontPropagate = NO;
+#endif
 }
 
 // ----------------------- unification
@@ -483,7 +486,7 @@ Bool AM::checkExtSuspension (Suspension *susp)
                   error ("no solve board is found in AM::checkExtSuspension"));
 
       SolveActor *sa = SolveActor::Cast (sb->getActor ());
-      if (sa->isStable () == OK && sa->isSolveDet () == NO) {
+      if (sa->isStable () == OK) {
         Thread::ScheduleSolve (sb);
         // Note:
         //  The observation is that some actors which have imposed instability
@@ -533,7 +536,7 @@ void AM::decSolveThreads (Board *bb)
                   error ("reflected board is found in AM::decSolveThreads ()"));
       SolveActor *sa = SolveActor::Cast (bb->getActor ());
       sa->decThreads ();
-      if (sa->isStable () == OK && sa->isSolveDet () == NO) {
+      if (sa->isStable () == OK) {
         Thread::ScheduleSolve (bb);
       }
     }
@@ -555,6 +558,10 @@ SuspList* AM::checkSuspensionList(SVariable* var, TaggedRef taggedvar,
                                   TaggedRef term, SVariable* rightVar)
 {
   SuspList* retSuspList = NULL;
+#ifdef DEBUG_CHECK
+  if (dontPropagate == OK)
+    return (suspList);
+#endif
 
   while (suspList) {
     Suspension* susp = suspList->getElem();
@@ -780,8 +787,15 @@ void AM::reduceTrailOnSuspend()
         svar->addSuspension (susp);
       }
     }
+#ifdef DEBUG_CHECK
+    TaggedRef aux = value;
+    DEREF(aux, ptr, tag);
+    if (isAnyVar (tag) == NO)
+      error ("non-variable is found in AM::reduceTrailOnSuspend ()");
+    if (isUVar (tag) == OK)
+      error ("UVar is found as value in trail;");
+#endif
     tagged2SuspVar(value)->addSuspension(susp);
-
     *refPtr = value;
   }
   trail.popMark();
