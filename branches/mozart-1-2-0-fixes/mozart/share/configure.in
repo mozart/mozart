@@ -57,13 +57,16 @@ win32*)
     oztmp=`${SRCTOP}/share/lib/cygpath.sh "${SRCTOP}/platform/mswindows/ozwrapper.bin"`
     OZEXECFILE="--execfile=\"$oztmp\""
     EMULATOR_EXE=emulator.dll
+    EXE_EXT='.exe'
     ;;
 *)
     EMULATOR_EXE=emulator.exe
+    EXE_EXT=''
     ;;
 esac
 AC_SUBST(OZEXECFILE)
 AC_SUBST(EMULATOR_EXE)
+AC_SUBST(EXE_EXT)
 
 dnl *****************************************************************
 dnl Checks for programs.
