@@ -167,7 +167,7 @@ local
    end
 
    InstallNewColors    = {NewName}
-   DoLoadVariable      = {NewName}
+   DoUnpickleVariable  = {NewName}
    DoFeedVirtualString = {NewName}
 
    class VSEntryDialog from TkTools.dialog
@@ -369,18 +369,18 @@ local
    class URLEntryDialog from TkTools.dialog
       prop final
       meth init(Master Port PrintName URL)
-	 proc {DoLoad} URL in
+	 proc {DoUnpickle} URL in
 	    {Entry tkReturnString(get ?URL)}
 	    TkTools.dialog, tkClose()
-	    {Send Port DoLoadVariable(PrintName URL)}
+	    {Send Port DoUnpickleVariable(PrintName URL)}
 	 end
 	 proc {DoClear}
 	    {Entry tk(delete '0' 'end')}
 	 end
 	 TkTools.dialog, tkInit(master: Master
 				root: pointer
-				title: 'Oz Compiler: Load variable from URL'
-				buttons: ['Ok'#DoLoad
+				title: 'Oz Compiler: Unpickle from URL'
+				buttons: ['Ok'#DoUnpickle
 					  'Clear'#DoClear
 					  'Cancel'#tkClose()]
 				default: 1
@@ -388,7 +388,7 @@ local
 	 Frame = {New Tk.frame tkInit(parent: self
 				      highlightthickness: 0)}
 	 Title = {New Tk.label tkInit(parent: Frame
-				      text: 'URL to load into variable '#
+				      text: 'URL to unpickle into variable '#
 					    PrintName#':')}
 	 TextFont = {Options get(compilerTextFont $)}
 	 TextForeground = {Options get(compilerTextForeground $)}
@@ -950,12 +950,16 @@ in
 	 Remove = {New Tk.button tkInit(parent: EnvOptionsFrame
 					text: 'Remove'
 					action: {MkAction RemoveVariable()})}
-	 Load = {New Tk.button tkInit(parent: EnvOptionsFrame
-				      text: 'Load ...'
-				      action: {MkAction LoadVariable()})}
-	 Save = {New Tk.button tkInit(parent: EnvOptionsFrame
-				      text: 'Save ...'
-				      action: {MkAction SaveVariable()})}
+	 Pickle = {New Tk.button tkInit(parent: EnvOptionsFrame
+					text: 'Pickle ...'
+					action: {MkAction PickleVariable()})}
+	 Unpickle = {New Tk.button tkInit(parent: EnvOptionsFrame
+					  text: 'Unpickle ...'
+					  action:
+					     {MkAction UnpickleVariable()})}
+	 Syslet = {New Tk.button tkInit(parent: EnvOptionsFrame
+					text: 'Create syslet ...'
+					action: {MkAction CreateSyslet()})}
 
 	 Switches = {New TkTools.note tkInit(parent: self.Book
 					     text: 'Switches')}
@@ -1264,7 +1268,7 @@ in
 		    pack(self.Text TextYScrollbar side: left fill: y)
 		    %% "Environment" note:
 		    pack(EnvOptionsFrame side: bottom fill: x)
-		    pack(Save Load Remove side: right)
+		    pack(Syslet Unpickle Pickle Remove side: right)
 		    pack(self.EditedVariable side: left fill: x expand: true)
 		    pack(self.EnvDisplay EnvYScrollbar side: left fill: y)
 		    %% "Switches" note:
@@ -1342,7 +1346,7 @@ in
 				   runwithdebugger: RunWithDebugger
 				   debuginfocontrol: DebugInfoControl
 				   debuginfovarnames: DebugInfoVarnames)
-	 self.ToGray = [Remove Load Save
+	 self.ToGray = [Remove Pickle Unpickle Syslet
 			self.MaxNumberOfErrors.inc self.MaxNumberOfErrors.dec
 			self.MaxNumberOfErrors.entry DoMaxErrors
 			CompilerPassesSw ShowInsertSw EchoQueriesSw
@@ -1599,7 +1603,31 @@ in
 		    text: 'Non-existing variable "'#PrintName#'"') _}
 	 end
       end
-      meth LoadVariable() S in
+      meth PickleVariable() PrintName in
+	 {self.EditedVariable tkReturnAtom(get ?PrintName)}
+	 case {HasFeature @CachedEnv PrintName} then Value in
+	    Value = @CachedEnv.PrintName
+	    {Send Compiler.genericInterface, getPort($)
+	     DoPickleVariable(Value)}
+	 else
+	    {New TkTools.error
+	     tkInit(master: self.TopLevel
+		    text: 'Non-existing variable "'#PrintName#'"') _}
+	 end
+      end
+      meth DoPickleVariable(Value) FileName in
+	 FileName =
+	 {Tk.return tk_getSaveFile(parent: self.TopLevel
+				   title: 'Oz Compiler: Pickle Value'
+				   filetypes:
+				      q(q('Oz Pickles'
+					  q(UrlDefaults.pickle))
+					q('All Files' '*')))}
+	 case FileName == "" then skip
+	 else {Pickle.save Value FileName}
+	 end
+      end
+      meth UnpickleVariable() S in
 	 {self.EditedVariable tkReturnString(get ?S)}
 	 try PrintName in
 	    PrintName = {StringToPrintName S}
@@ -1612,39 +1640,39 @@ in
 		    text: 'Illegal variable name syntax "'#S#'"') _}
 	 end
       end
-      meth !DoLoadVariable(PrintName URL) Value in
+      meth !DoUnpickleVariable(PrintName URL) Value in
 	 LastURL <- URL
 	 try
 	    Value = {Pickle.load URL}
 	 catch error(...) then
 	    {New TkTools.error
 	     tkInit(master: self.TopLevel
-		    text: 'Load failed for URL "'#URL#'"') _}
+		    text: 'Unpickle failed for URL "'#URL#'"') _}
 	 end
 	 Compiler.genericInterface,
 	 enqueue(mergeEnv(env(PrintName: Value)))
       end
-      meth SaveVariable() PrintName in
+      meth CreateSyslet() PrintName in
 	 {self.EditedVariable tkReturnAtom(get ?PrintName)}
 	 case {HasFeature @CachedEnv PrintName} then Value in
 	    Value = @CachedEnv.PrintName
-	    {Send Compiler.genericInterface, getPort($) DoSaveVariable(Value)}
+	    {Send Compiler.genericInterface, getPort($) DoCreateSyslet(Value)}
 	 else
 	    {New TkTools.error
 	     tkInit(master: self.TopLevel
 		    text: 'Non-existing variable "'#PrintName#'"') _}
 	 end
       end
-      meth DoSaveVariable(Value) FileName in
+      meth DoCreateSyslet(Value) FileName in
 	 FileName =
 	 {Tk.return tk_getSaveFile(parent: self.TopLevel
-				   title: 'Oz Compiler: Save Variable'
+				   title: 'Oz Compiler: Create Syslet'
 				   filetypes:
-				      q(q('Oz Pickle Files'
+				      q(q('Oz Pickles'
 					  q(UrlDefaults.pickle))
 					q('All Files' '*')))}
 	 case FileName == "" then skip
-	 else {Pickle.save Value FileName}
+	 else {Application.save FileName Value}
 	 end
       end
 
