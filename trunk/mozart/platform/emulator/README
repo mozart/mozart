@@ -28,7 +28,22 @@ change to directory Oz
 % make Makefiles SUBDIRS="include AM"
 % make all SUBDIRS="include AM"
 
+-----------------------------
 
+Debugging with Emacs:
+
+C-c C-d
+	use gdb mode
+
+C-c m
+	choose an emulator
+
+M-x set-variable oz-gdb-autostart nil
+	allows to set breakpoints before the emulator starts.
+	After setting your breakpoints type 'r' to start the emulator.
+
+C-x SPACE
+	in C files sets a breakpoint at point.
 
 -----------------------------
 
