@@ -62,6 +62,7 @@ public:
   }
   OZ_Term inspect();
   OZ_Return kick(TaggedRef *);
+  Bool isFailed();
 };
 
 inline
