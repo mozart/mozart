@@ -1096,8 +1096,6 @@ void engine()
 
     CBB->unsetNervous();
 
-    LOCAL_PROPAGATION(Assert(localPropStore.isEmpty ()););
-    
     //    unsigned int starttime = osUserTime();
     switch (e->currentThread->runPropagator()) {
     case SLEEP: 
@@ -1107,8 +1105,7 @@ void engine()
 	//  but it's still "in solve";
       }
       e->currentThread = (Thread *) NULL;
-      LOCAL_PROPAGATION(if (!(localPropStore.do_propagation ()))
-			 goto localhack7;);
+
       //ozstat.timeForPropagation.incf(osUserTime()-starttime);
       goto LBLstart;
 
@@ -1119,15 +1116,13 @@ void engine()
 	//  but it's still "in solve";
       }
       e->currentThread = (Thread *) NULL;
-      LOCAL_PROPAGATION(if (!(localPropStore.do_propagation ()))
-			 goto localhack7;);
+
       //      ozstat.timeForPropagation.incf(osUserTime()-starttime); 
       goto LBLstart;
 
     case PROCEED:
       // Note: e->currentThread must be reset in 'LBLkillXXX';
-      LOCAL_PROPAGATION(if (!(localPropStore.do_propagation ()))
-			 goto localhack7;);
+
       //ozstat.timeForPropagation.incf(osUserTime()-starttime);
       if (e->isToplevel ()) {
 	goto LBLkillToplevelThread;
@@ -1137,9 +1132,6 @@ void engine()
 
       //  Note that *propagators* never yield 'SUSPEND';
     case FAILED:
-      LOCAL_PROPAGATION(localPropStore.reset());
-
-    localhack7:
       //ozstat.timeForPropagation.incf(osUserTime()-starttime);
       HF_FAIL(OZ_mkTupleC("fail",1,OZ_atom("propagator")));
 
@@ -1378,27 +1370,19 @@ LBLpopTask:
 
 	DebugTrace(trace("cfunc cont task",CBB));
 
-	LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
-  
 	switch (biFun(predArity, X)) {
 	default:
 	case FAILED:
-	  LOCAL_PROPAGATION(localPropStore.reset());
-	localhack1:
 	  HF_BI;
 
 	case SLEEP:
 	  error ("popTask: CFunCont returns 'SLEEP'!");
 
 	case PROCEED:
-	  LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
-			    goto localhack1;);
 	  goto LBLpopTask;
 
 	case SUSPEND:
 	  {
-	    LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
-			      goto localhack1;);
 	    e->pushCFun(biFun,X,predArity);
 	    Thread *thr = e->mkSuspThread ();
 	    e->suspendOnVarList (thr);
@@ -1931,8 +1915,6 @@ LBLsuspendThread:
       CheckArity(entry->getArity(),
 		 OZ_findBuiltin(entry->getPrintName(), OZ_atom("noHandler")));
 
-      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
-
       switch (biFun(predArity, X)){
       case SUSPEND:
 	e->pushTask(PC,Y,G,X,predArity);
@@ -1941,15 +1923,11 @@ LBLsuspendThread:
 
       default:
       case FAILED:
-	LOCAL_PROPAGATION(localPropStore.reset());
-      localhack2:
 	HF_BI;
 
       case SLEEP: // no break
 	error ("'CALLBUILTIN' has got 'SLEEP' back!\n");
       case PROCEED:
-	LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
-			  goto localhack2;);
 	DISPATCH(3);
 
       case RAISE:
@@ -2115,9 +2093,7 @@ LBLsuspendThread:
 
       
       // note: XPC(4) is maybe the same as XPC(2) or XPC(3) !!
-      OZ_Return ret = fun(XPC(2),XPC(3),XPC(4));
-      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
-      switch(ret) {
+      switch(fun(XPC(2),XPC(3),XPC(4))) {
       case PROCEED:
 	DISPATCH(6);
 
@@ -2167,9 +2143,7 @@ LBLsuspendThread:
 	DISPATCH(7);	
       }
       {
-	OZ_Return ret = dotInline(XPC(1),feature,XPC(3));
-	LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
-	switch(ret) {
+	switch(dotInline(XPC(1),feature,XPC(3))) {
 	case PROCEED: DISPATCH(7);
 	case FAILED:
 	  error("dot fail");
@@ -2238,14 +2212,8 @@ LBLsuspendThread:
 
   Case(INLINEUPARROW)
     {
-      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
-
-      OZ_Return ret = uparrowInline(XPC(1),XPC(2),XPC(3));
-
-      switch(ret) {
+      switch(uparrowInline(XPC(1),XPC(2),XPC(3))) {
       case PROCEED:
-	LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
-			  goto localhack4;);
 	DISPATCH(5);
 
       case SUSPEND:
@@ -2256,8 +2224,6 @@ LBLsuspendThread:
 	  CHECK_CURRENT_THREAD;
 
       case FAILED:
-        LOCAL_PROPAGATION(localPropStore.reset());
-      localhack4:
 	HF_FAIL(OZ_mkTupleC("failHat",3,XPC(1),XPC(2),OZ_newVariable()));
 
       case RAISE:
@@ -2775,8 +2741,6 @@ LBLsuspendThread:
 	     
 	   case BIDefault:
 	     {
-	       LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
-
 	       if (e->isSetSFlag(DebugMode)) {
 		 enterCall(CBB,makeTaggedConst(bi),predArity,X);
 	       }
@@ -2790,8 +2754,6 @@ LBLsuspendThread:
 	       switch (res) {
 	    
 	       case SUSPEND:
-		 LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
-
 		 {
 		   TaggedRef sh = bi->getSuspHandler();
 		   if (sh==makeTaggedNULL()) {
@@ -2805,16 +2767,11 @@ LBLsuspendThread:
 		 }
 		 goto LBLcall; 
 	       case FAILED:
-		 LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
-		 LOCAL_PROPAGATION(localPropStore.reset());
-	       localHack3:
 		 HF_BI;
 
 	       case SLEEP: // no break
 		 error ("'xxxCALLxxx' has got 'SLEEP' back!\n");
 	       case PROCEED:
-		 LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
-				   goto localHack3;);
 		 if (isTailCall) {
 		   goto LBLpopTask;
 		 }
