@@ -96,7 +96,7 @@ extern void version(); // mm2
 
 void usage(int /* argc */,char **argv) {
   fprintf(stderr,
-          "usage: %s [-E] [-s port | -S file | -f file] [-d] [-c compiler]\n",
+          "usage: %s [-E] [-S file | -f file] [-d] [-c compiler]\n",
           argv[0]);
   exit(1);
 }
@@ -175,8 +175,6 @@ void AM::init(int argc,char **argv)
   extern char *optarg;
   extern int optind, opterr;
 
-  int port = -1; // read from Compiler
-
   char *compilerFile;
   if (!(compilerFile = getenv("OZCOMPILER"))) {
     compilerFile = OzCompiler;
@@ -207,11 +205,6 @@ void AM::init(int argc,char **argv)
       tracerOn();
       continue;
     }
-    if (strcmp(argv[i],"-s")==0) {
-      port = atoi(getOptArg(i,argc,argv));
-      compilerFile = (char *) NULL;
-      continue;
-    }
     if (strcmp(argv[i],"-c")==0) {
       compilerFile = getOptArg(i,argc,argv);
       continue;
@@ -236,14 +229,13 @@ void AM::init(int argc,char **argv)
 
   int moreThanOne = 0;
   moreThanOne += (comPath != NULL);
-  moreThanOne += (port != -1);
   moreThanOne += (queryFileName != NULL);
   if (moreThanOne > 1) {
      fprintf(stderr,"Specify only one of '-s' and '-f' and '-S'.\n");
      usage(argc,argv);
    }
 
-  IO::initQuery(comPath,queryFileName,port,compilerFile);
+  IO::initQuery(comPath,queryFileName,compilerFile);
 
   extern void DLinit(char *name);
   DLinit(argv[0]);
