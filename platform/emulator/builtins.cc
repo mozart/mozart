@@ -1063,10 +1063,8 @@ OZ_BI_define(BIthreadSetPriority,2,0)
   th->setPriority(prio);
 
   if (oz_currentThread() == th) {
-    if (prio <= oldPrio) {
-      am.setSFlag(ThreadSwitch);
+    if (prio <= oldPrio)
       return BI_PREEMPT;
-    }
   } else {
     if (th->isRunnable()) {
       am.threadsPool.rescheduleThread(th);
