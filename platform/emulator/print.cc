@@ -544,20 +544,9 @@ PRINT(SuspList)
   } // for
 }
 
-PRINT(CFuncContinuation)
-{
-  CHECKDEPTH;
-  stream  << "ccont = "
-	  << builtinTab.getName((void *)getCFunc())
-	  << '(' << getXSize() << ", "
-	  << (void *) getX() << "[]), ";
-}
-
-
 // ----------------------------------------------------------------
 // PRINT LONG
 // ----------------------------------------------------------------
-
 
 static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
 			      int depth = 1,int offset = 0)
@@ -942,7 +931,7 @@ void ThreadsPool::printThreads()
     }
   }
 }
-    
+
 PRINT(Thread)
 {
   CHECKDEPTH;
@@ -950,56 +939,42 @@ PRINT(Thread)
     stream << indent(offset) << "(NULL Thread)" << endl;
     return;
   }
-  
+
   if (isDeadThread ()) {
     stream << indent(offset) << "(Dead Thread @" << this << ")" << endl;
     return;
   }
-  
+
   stream << indent(offset) << 
     (isSuspended() ? "Suspended " : "Runnable ") <<
     "Thread @" << this << endl << 
     indent(offset+2) << " [prio: " << getPriority();
-  
+
   switch (getThrType ()) {
   case S_RTHREAD:
     stream << " 'seq thread'";
     stream << ", stack depth #" << item.threadBody->taskStack.getUsed()-1;
-    
+
   case S_WAKEUP: 
     stream << " 'board'";
     break;
 
-  case S_CFUN:
-    stream << " 'ccont', fun=" 
-	   << builtinTab.getName(((void *) getCCont ()->getCFunc ()))
-	     << '(' << getCCont()->getXSize() << ", "
-	     << (void *) getCCont()->getX() << "[])";
-    break;
-    
   case S_PR_THR:
-      stream << " 'prop', fun=" 
-	     << builtinTab.getName(((void *) getCCont ()->getCFunc ()))
-	       << '(' << getCCont()->getXSize() << ", "
-	       << (void *) getCCont()->getX() << "[])";
-      break;
-      
-  case S_NEW_PR_THR:
-    stream << " 'new prop'" << *getNewPropagator();
+    stream << " 'new prop'" << *getPropagator();
     break;
-    
+
   default:
     stream << "(unknown)";
   }
 
   stream << ", flags: <";
-  if ((getFlags ()) & T_T_solve)     stream << 'S';
-  if ((getFlags ()) & T_S_ext)       stream << 'E';
-  if ((getFlags ()) & T_S_loca)      stream << 'L';
-  if ((getFlags ()) & T_S_unif)      stream << 'U';
-  if ((getFlags ()) & T_S_ofs)       stream << 'O';
-  if ((getFlags ()) & T_S_tag)       stream << 'T';
-  if ((getFlags ()) & T_S_ltq)       stream << 'Q';
+  if ((getFlags ()) & T_solve)     stream << 'S';
+  if ((getFlags ()) & T_ext)       stream << 'E';
+  if ((getFlags ()) & T_loca)      stream << 'L';
+  if ((getFlags ()) & T_unif)      stream << 'U';
+  if ((getFlags ()) & T_ofs)       stream << 'O';
+  if ((getFlags ()) & T_tag)       stream << 'T';
+  if ((getFlags ()) & T_ltq)       stream << 'Q';
   stream << ">]" << endl;
 
   if (board) {

@@ -1105,7 +1105,7 @@ void engine()
    *  Note that we cover the case for 'propagator' threads specially, 
    *  since they don't differ in 'suspended' and 'runnable' states;
    */
-  if (e->currentThread->isNewPropagator ()) {
+  if (e->currentThread->isPropagator ()) {
     //
     //  First, get the home board of that propagator, 
     // and try to install it;
@@ -1127,7 +1127,7 @@ void engine()
 	// scheduled for execution again (!), and at this place it 
 	// should be catched and forwarded to the 
 	// 'LBLdiscardThread';
-	DebugCode (e->currentThread->removeNewPropagator ());
+	DebugCode (e->currentThread->removePropagator ());
 	goto LBLdiscardThread;
 
       case INST_FAILED:
@@ -1136,7 +1136,7 @@ void engine()
 	//  So, first go to the 'LBLfailure', and there it must be 
 	// scheduled once again - and then the 'INST_REJECTED' case
 	// hits ...
-	DebugCode (e->currentThread->removeNewPropagator ());
+	DebugCode (e->currentThread->removePropagator ());
 	goto LBLfailure;
       }
     }
@@ -1146,7 +1146,7 @@ void engine()
     LOCAL_PROPAGATION(Assert(localPropStore.isEmpty ()););
     
     //    unsigned int starttime = osUserTime();
-    switch (e->currentThread->runNewPropagator()) {
+    switch (e->currentThread->runPropagator()) {
     case SLEEP: 
       e->currentThread->suspendPropagator ();
       if (e->currentSolveBoard != (Board *) NULL) {
@@ -1188,88 +1188,6 @@ void engine()
 
     localhack7:
       //ozstat.timeForPropagation.incf(osUserTime()-starttime);
-      HF_FAIL(INFO_BI);
-
-    default:
-      error ("Unexpected value returned from a propagator.");
-      goto LBLerror;
-    }
-  } else if (e->currentThread->isPropagator ()) {
-    CFuncContinuation *ccont;
-
-    //
-    //  First, get the home board of that propagator, 
-    // and try to install it;
-    tmpBB = e->currentThread->getBoardFast ();
-    DebugTrace (trace ("propagator thread", tmpBB));
-
-    // 
-    //  HERE: a special version of INSTALLPATH for propagators;
-    //  This is because we have to go for the 'LBLdiscardThread'
-    // if the installation is rejected;
-    if (CBB != tmpBB) {
-      switch (e->installPath (tmpBB)) {
-      case INST_OK:
-	break;
-
-      case INST_REJECTED:
-	//
-	//  Note that once a propagator is failed, its thread is 
-	// scheduled for execution again (!), and at this place it 
-	// should be catched and forwarded to the 
-	// 'LBLdiscardThread';
-	DebugCode (e->currentThread->removePropagator ());
-	goto LBLdiscardThread;
-
-      case INST_FAILED:
-	//
-	//  The thread must be killed;
-	//  So, first go to the 'LBLfailure', and there it must be 
-	// scheduled once again - and then the 'INST_REJECTED' case
-	// hits ...
-	DebugCode (e->currentThread->removePropagator ());
-	goto LBLfailure;
-      }
-    }
-
-    ccont = e->currentThread->getCCont ();
-    biFun = ccont->getCFunc ();
-    RefsArray tmpX = ccont->getX ();
-    Assert (tmpX != (RefsArray) NULL);
-    predArity = getRefsArraySize (tmpX);
-
-    CBB->unsetNervous();
-
-    LOCAL_PROPAGATION(Assert(localPropStore.isEmpty ()););
-
-    Assert (biFun);
-    switch (biFun (predArity, tmpX)) {
-    case SLEEP: 
-      e->currentThread->suspendPropagator ();
-      if (e->currentSolveBoard != (Board *) NULL) {
-	e->decSolveThreads (e->currentSolveBoard);
-	//  but it's still "in solve";
-      }
-      e->currentThread = (Thread *) NULL;
-      LOCAL_PROPAGATION(if (!(localPropStore.do_propagation ()))
-			 goto localhack0;);
-      goto LBLstart;
-
-    case PROCEED:
-      // Note: e->currentThread must be reset in 'LBLkillXXX';
-      LOCAL_PROPAGATION(if (!(localPropStore.do_propagation ()))
-			 goto localhack0;);
-      if (e->isToplevel ()) {
-	goto LBLkillToplevelThread;
-      } else {
-	goto LBLkillThread;
-      }
-
-      //  Note that *propagators* never yield 'SUSPEND';
-    case FAILED:
-      LOCAL_PROPAGATION(localPropStore.reset());
-
-    localhack0:
       HF_FAIL(INFO_BI);
 
     default:
@@ -1387,7 +1305,7 @@ LBLpopTask:
 	  
 	  Assert(!thr->isDeadThread());
 	  
-	  OZ_Return r = thr->runNewPropagator();
+	  OZ_Return r = thr->runPropagator();
 	  
 	  if (r == SLEEP) {
 	    thr->suspendPropagator();
@@ -1493,7 +1411,6 @@ LBLpopTask:
 
     case C_CFUNC_CONT:
       {
-	Assert (!(e->currentThread->isPropagator ()));
 	// 
 	// by kost@ : 'solve actors' are represented via a c-function; 
         biFun = (OZ_CFun) TaskStackPop(--topCache);
@@ -1590,9 +1507,7 @@ LBLkillToplevelThread:
 	//  ... no, we have fetched something - go ahead;
 	goto LBLpreemption;
       }
-    } else if (e->currentThread->isNewPropagator() || 
-	  e->currentThread->isPropagator()) {
-      
+    } else if (e->currentThread->isPropagator()) {
       e->currentThread->disposeRunnableThread ();
       e->currentThread = (Thread *) NULL;
 
@@ -1658,8 +1573,7 @@ LBLkillThread:
     Assert (tmpThread->isRunnable ());
 
     Assert (!(e->isToplevel ()));
-    Assert (tmpThread->isPropagator () || tmpThread->isNewPropagator () || 
-	    tmpThread->isEmpty ());
+    Assert (tmpThread->isPropagator () || tmpThread->isEmpty ());
     //  Note that during debugging the thread does not carry 
     // the board pointer (== NULL) wenn it's running;
     // Assert (CBB == tmpThread->getBoardFast ());
@@ -1833,9 +1747,9 @@ LBLdiscardThread:
     Assert (tmpThread);
     Assert (!(tmpThread->isDeadThread ()));
     Assert (tmpThread->isRunnable ());
-    Assert (!tmpThread->isPropagator () || !tmpThread->isNewPropagator () || 
-	    tmpThread->getPropagator () == (OZ_CFun) NULL);
-    Assert (tmpThread->isPropagator () || tmpThread->isNewPropagator () || 
+    Assert (!tmpThread->isPropagator () || 
+	    tmpThread->getPropagator () == (OZ_Propagator *) NULL);
+    Assert (tmpThread->isPropagator () || 
 	    !(tmpThread->hasStack ()) || 
 	    tmpThread->isEmpty ());
     // 

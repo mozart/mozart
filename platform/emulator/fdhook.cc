@@ -53,12 +53,12 @@ SuspList * addSuspToList(SuspList * list, Thread * elem, Board * hoome)
   return sl_elem;
 }
 
-Thread * createNewPropagator (OZ_Propagator * p, int prio)
+Thread * createPropagator (OZ_Propagator * p, int prio)
 {
-  Assert(!(am.currentThread->isNewPropagator ()));
+  Assert(!(am.currentThread->isPropagator ()));
   
   Thread * thr = makeHeadThread (p, prio);
-  thr->headInitNewPropagator();
+  thr->headInitPropagator();
 
   return thr;
 }
