@@ -4,3 +4,6 @@ scancode.cc instrtab.hh  opcodes.hh optostr.hh register.hh
 opcodes.cc
 marshallcode.cc
 ozlib.lnk
+scanner.cc
+parser.hh
+parser.cc
