@@ -1,0 +1,238 @@
+-*-outline-*-
+
+This file outlines the design changes for the new style of
+ozmake/mogul support in Mozart.
+
+* Old and New Regimes
+
+  in the old regime there was only one notion: the package.  in the
+  new regime, we distinguish 2 notions: the package and its instances.
+  A package may have many source instances for different versions, but
+  also binary instances for different platforms and different
+  versions.
+
+  However, an installation can only contain one instance per package
+  (only a single instance of package can be installed).
+
+* What this means for the MOGUL database of published packages
+
+  The user's mogul database contains all the necessary information
+  about the packages and their instances published by the user.  Since
+  we want to be transparently backward compatible, and since probably
+  some packages were published before the move to the new regime, the
+  database will initially contain only packages in the old-style:
+  i.e. where the package and its unique published instance are
+  conflated.
+
+** automated conversion to the new regime
+
+   when the mogul database is loaded, ozmake must check if any entry
+   is in the old-style.  If so, they must all be converted to the
+   new-style.  Here is how:
+
+   add a new "instances" field to the package representation and
+   populate it with a list of one instance representation.  An
+   instance contains essentially the same stuff as a package except
+   the "url-doc" and "instances" fields.
+
+   I consider documentation to be package-level rather than
+   instance-level information.  Furthermore (for practical reasons), I
+   don't want to have to keep an installation of documentation for
+   every published instance.
+
+* What this means a user's mogul publication database
+
+  The publication database contains info about all packages and their
+  instances published by the user.  The mogul entries are created from
+  this information.
+
+  Nothing needs to be republished because the mogul librarian will be
+  similarly modified to support old and new style of publications.
+  However, new publications will consist of both packages and
+  instances and will have the format described below.
+
+** instances
+
+   an instance of a package is uniquely distinguished from other
+   instances of the same package by the following information:
+
+   - FORMAT: 1.2.5 for an old-style package and 1.3.0 for a new-style
+     package
+
+   - PLATFORM: "source" for an ordinary source package, and the
+     platform name (e.g. "win32-i486") for a binary package.
+
+   - VERSION: e.g. "3.87", but maybe missing.
+
+   the basename of the file in which to save the mogul entry
+   describing an instance is:
+
+   SECTION-PACKAGE__FORMAT__PLATFORM__VERSION.mogul
+
+   where SECTION is the representation of the section for the package,
+   PACKAGE is the name of the package, and the others are as described
+   above.  Note that if VERSION is missing __VERSION should be
+   omitted.
+
+   The "type" field should have value "instance".  The rest should be
+   as old-style packages, except that the "url-doc" field should be
+   omitted and a new field "basename" should be added that contains
+   the atom:
+
+   SECTION-PACKAGE__FORMAT__PLATFORM__VERSION
+
+   basename is convenient (but not necessary) to avoid duplicate
+   entries.
+
+** packages
+
+   a new-style package has the same fields as an old-style package,
+   and the corresponding mogul entry is similar too except that
+   "uri-pkg" fields are omitted and "instance" fields are added.  Each
+   "instance" field should contain a relative reference to the file
+   containing a mogul entry for an instance of the package (see
+   above).
+
+   The fields of the package are computed using information from its
+   "representative" instance.
+
+*** representative instance of a package
+
+    a published package has at least one instance.  Among those, we
+    pick one whose information we wish to advertise as representative
+    of the most up-to-date state of the package.  Typically this
+    should be the highest (and hopefully source) version of the
+    package.
+
+    The algorithm for picking the "representative" is:
+
+    - sort according to these criteria
+      + first by version
+      + then by platform with "source" preceding everything
+      + then by format (1.3.0 better than 1.2.5)
+      + then by publication date
+    - pick the first one in the sorted list
+
+* What this means for ozmake package publication
+
+  the created package needs to be copied into the appropriate
+  publication area under the basename:
+
+  SECTION-PACKAGE__FORMAT__PLATFORM__VERSION.pkg
+
+  the "instances" field should be updated: a previous instance for the
+  same basename should be removed, and the new instance should be
+  added.  The instance's mogul entry "url-pkg" field should point to
+  the *.pkg file created above.
+
+* Support for binary packages and what this mean for ozmake
+
+  When you invoke "ozmake -i mogul:/duchier/select" ozmake
+  automatically contacts the mogul archive, downloads the most recent
+  version of mogul:/duchier/select and installs it.  Now, we would
+  like to make it possible for ozmake to first try to obtain an
+  appropriate binary version of the package.
+
+** "search path" for ozmake download and how to download
+
+   I fully expect that specialized mogul archives will be set up that
+   offer e.g. Windows specific binary instances of packages.  The
+   binary instances will be automatically created from published
+   source packages.
+
+   We need some sort of resolver functionality adapted to the needs of
+   ozmake.  So instead of just attempting to download from the
+   official mogul archive, we could try various archives - some of
+   them might provide binary instances.
+
+   The search path is an ordered list of triples specifications:
+
+	(FORMAT,PLATFORM,LOCATION)
+
+   FORMAT is either '1.2.5', '1.3.0', or '*'.  PLATFORM is either
+   'source' or a platform atom or '*', and LOCATION is a resolver
+   method specification.
+
+   Each triple should be attempted in turn.
+
+*** attempting a triple
+
+    We write CURRENT_FORMAT, CURRENT_PLATFORM for resp. the format
+    handled by the executing ozmake and the platform on which it
+    executes.
+
+    if FORMAT is not '*' and is not CURRENT_FORMAT, then go to next
+    triple
+
+    if PLATFORM is '*':
+    	ASK_BINARY=true
+	ASK_SOURCE=true
+    else if PLATFORM=='source':
+        ASK_BINARY=false
+	ASK_SOURCE=true
+    else if PLATFORM==CURRENT_PLATFORM:
+	ASK_BINARY=true
+	ASK_SOURCE=false
+
+    using resolving method LOCATION,
+
+    if ASK_BINARY:
+	try SECTION-PACKAGE__FORMAT__PLATFORM.pkg
+    elseif ASK_SOURCE:
+	try SECTION-PACKAGE__FORMAT__source.pkg
+
+    We do not need to attempt to download an old-style package because
+    the mogul archives all support new-style (since there is currently
+    only one such archive, it will be so updated).  However, mogul
+    archives still need to support old-style ozmake - this is
+    explained below.
+
+    The resolution mechanism outlined above can be implemented by
+    leveraging existing resolver support: new methods need to be
+    implemented to do what triples are supposed to do.
+
+* What this means for the mogul librarian
+
+  The mogul librarian must be prepared to deal with both old-style and
+  new-style packages, and it must be extended to handle instances.
+  Unlike with ozmake where we can migrate to the new style database
+  (because we can use a modern ozmake for both 1.2.5 and 1.3.0
+  installations), the mogul librarian will have to handle old-style
+  contributions and new-style, and it should provide continued support
+  for both (at least the official mogul archive site must do so).
+
+  The new-style mogul web pages should adopt the distinction between
+  packages and instances.  Basically a package doesn't have to change
+  much: it is as before but instead of showing "format", "download",
+  "provides" (etc), it should have a "download" pointer to a page of
+  links to instances.  Each instance is much like the original
+  package, but without the "documentation" and with a "download"
+  pointer to an actual package file.
+
+** what files must the official mogul site make available
+
+   a new-style instance contributes a package file:
+
+   SECTION-PACKAGE__FORMAT__PLATFORM__VERSION.pkg
+
+   where __VERSION may be missing.  old-style ozmake only knows to ask
+   for SECTION-PACKAGE.pkg.  Therefore, if there is:
+
+   SECTION-PACKAGE__1.2.5__source__VERSION.pkg
+
+   then the most recent version of this should also be made available
+   as:
+
+   SECTION-PACKAGE.pkg
+
+   Similarly, since a client typically cannot know what versions are
+   available, the most recent version of
+
+   SECTION-PACKAGE__FORMAT__PLATFORM__VERSION.pkg
+
+   should be made available as:
+
+   SECTION-PACKAGE__FORMAT__PLATFORM.pkg
+
+   a platform-specific mogul site does not need to make source version
+   of packages available nor provide old-style support.

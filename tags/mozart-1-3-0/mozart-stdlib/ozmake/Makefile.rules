@@ -1,0 +1,84 @@
+# -*-makefile-*-
+# this file was provided by ozskel - read the ozskel documentation
+# Here you may provide additional make rules for use in Makefile.in
+
+OZMAKE_FILES = \
+	Main.ozf Utils.ozf Path.ozf Shell.ozf Executor.ozf Attribs.ozf \
+	Builder.ozf Makefiler.ozf Manager.ozf Installer.ozf Database.ozf \
+	Cleaner.ozf Creator.ozf Extractor.ozf Lister.ozf Help.ozf \
+	Uninstaller.ozf Errors.ozf Windows.ozf MakeGUI.ozf Fixes.ozf \
+	DatabaseLib.ozf Config.ozf Mogul.ozf Pickler.ozf \
+	ExecutorFast.ozf Depends.ozf Requires.ozf
+
+ozmake: ozmake.ozf
+	$(OZL) $(OZLFLAGS) -x $< -o $@
+
+ozmake.exe: ozmake.ozf
+	$(OZL) $(OZLFLAGS) --target=windows -x $< -o $@
+
+ozmake.ozf: $(OZMAKE_FILES)
+	$(OZL) $(OZLFLAGS) Main.ozf -o $@
+
+Help.ozf: Help.oz HELP.txt Utils.ozf
+Utils.ozf: Utils.oz Path.ozf Windows.ozf Shell.ozf
+Help.ozf: Utils.ozf HELP.txt
+
+clean::
+	-rm -f ozmake ozmake.exe
+
+doc:
+	$(MAKE) doc.html
+	$(MAKE) doc.text
+
+ifeq ($(XSLTPROC),UNDEFINED)
+doc.html:
+	echo >&2 "xsltproc not found, but necessary to build the (html) documentation"
+	echo >&2 "(see http://xmlsoft.org/XSLT/xsltproc2.html)"
+	exit -1
+else
+doc.html:
+	$(XSLTPROC) -o $(SRCDIR)/HELP.html \
+		--stringparam OZMAKEOUTPUT text \
+		--stringparam OZMAKEVERSION $(VERSION) \
+		$(SRCDIR)/HELP.xsl $(SRCDIR)/HELP.xml
+	cp $(SRCDIR)/HELP.html $(SRCDIR)/index.html
+endif
+
+ifeq ($(HTML_TO_TEXT),lynx)
+doc.text:
+	$(LYNX) -dump $(SRCDIR)/HELP.html > $(SRCDIR)/HELP.txt
+endif
+
+ifeq ($(HTML_TO_TEXT),elinks)
+doc.text:
+	$(ELINKS) -dump $(SRCDIR)/HELP.html > $(SRCDIR)/HELP.txt
+endif
+
+ifeq ($(HTML_TO_TEXT),UNDEFINED)
+doc.text:
+	echo >&2 "neither lynx nor elinks were found"
+	echo >&2 "but one of them is necessary to build the (text) documentation"
+	echo >&2 "(see http://lynx.browser.org/)"
+	exit -1
+endif
+
+other.doc: have.xsltproc ozmake.xml ozmake.xsl
+	$(XSLTPROC) -o ozmake.html \
+		ozmake.xsl ozmake.xml
+
+#publish: duchier-ozmake-$(VERSION).pkg
+#duchier-ozmake-$(VERSION).pkg: $(OZMAKE_SOURCES) ./ozmake
+#	./ozmake --publish -v -p duchier-ozmake-$(VERSION).pkg
+
+duchier-ozmake.pkg: ozmake
+	$(OZE) ./ozmake -cvp $@
+
+install-prebuilt:: ozmake.ozf ozmake ozmake.exe duchier-ozmake.pkg
+	$(INSTALL_FILE) ozmake.ozf $(PKGDIR)/ozmake.ozf
+	$(INSTALL_FILE) ozmake $(PKGDIR)/ozmake
+	$(INSTALL_FILE) ozmake.exe $(PKGDIR)/ozmake.exe
+	$(INSTALL_FILE) ozmake.ozf $(PKGDIR)/ozmake-$(VERSION).ozf
+	$(INSTALL_FILE) ozmake $(PKGDIR)/ozmake-$(VERSION)
+	$(INSTALL_FILE) ozmake.exe $(PKGDIR)/ozmake-$(VERSION).exe
+	$(INSTALL_FILE) duchier-ozmake.pkg $(PKGDIR)/duchier-ozmake.pkg
+	$(INSTALL_FILE) duchier-ozmake.pkg $(PKGDIR)/duchier-ozmake-$(VERSION).pkg

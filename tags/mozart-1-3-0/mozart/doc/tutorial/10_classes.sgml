@@ -1,0 +1,881 @@
+<!--
+  - Authors:
+  -   Seif Haridi (seif@sics.se)
+  -   Nils Franzen (nilsf@sics.se)
+  -
+  - Copyright:
+  -   Seif Haridi, Nils Franzen, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<CHAPTER ID="chapter.classes">
+<TITLE>Classes and Objects</TITLE>
+
+<P>A Class in Oz is a chunk that contains:
+
+<LIST>
+
+<ITEM>A collection of methods in a method table.
+
+<ITEM>A description of the attributes that each instance of the class
+will possess. Each attribute is a stateful cell that is accessed by
+the attribute-name, which is either an atom or an Oz-name.
+
+<ITEM>A description of the features that each instance of the class
+will possess. A feature is an immutable component (a variable) that is
+accessed by the feature-name, which is either an atom or an Oz-name.
+
+<ITEM>Classes are stateless Oz-values<NOTE FOOT>In fact, classes may
+have some invisible state. In the current implementation, a class
+usually has method cache, which is stateful</NOTE>. Contrary to
+languages like Smalltalk, or Java etc., they are just descriptions of
+how the objects of the class should behave.
+
+</LIST>
+
+
+<SECTION id=section.classes.classprinciples><TITLE/Classes from First Principles/
+<P><PTR TO="classConstr"> shows how a class is constructed from first
+principles as outlined above. Here we construct a <<Counter>>
+class. It has a single attribute accessed by the atom val. It has a
+method table, which has three methods accessed through the chunk
+features <<browse>>, <<init>> and <<inc>>. A method is a procedure
+that takes a message, always a record, an extra parameter representing
+the state of the current object, and the object itself known
+internally as <<self>>.
+
+<P><FIGURE ID="classConstr" CLASS="Figure">
+<CAPTION>An Example of Class construction</CAPTION>
+<<<
+declare Counter
+local
+   Attrs = [val]
+   MethodTable = m(browse:MyBrowse init:Init inc:Inc)
+   proc {Init M S Self}
+      init(Value) = M in
+      (S.val) := Value
+   end
+   proc {Inc M S Self}
+      X inc(Value)=M
+   in 
+      X = @(S.val) (S.val) := X+Value 
+   end
+   proc {MyBrowse M=browse S Self}
+      {Browse @(S.val)}
+   end
+in
+   Counter = {NewChunk c(methods:MethodTable attrs:Attrs)}
+end
+>>>
+</FIGURE>
+
+<P> As we can see, the method <<init>> assigns the attribute <<val>> the
+value <<Value>>, the method <<inc>> increments the attribute <<val>>, and
+the method <<browse>> browses the current value of <<val>>.
+
+<SECTION id=section.classes.objectprinciples><TITLE/Objects from First Principles/
+<P><PTR TO="objectConstr"> shows a generic procedure that creates an
+object from a given class. This procedure creates an object state from
+the attributes of the class. It initializes the attributes of the
+object, each to a cell (with unbound initial value). We use here the
+iterator <<Record.forAll/2>> that iterates over all fields of a
+record. <<NewObject>> returns a procedure <<Object>> that identifies
+the object. Notice that the state of the object is visible only within
+<<Object>>. One may say that <<Object>> is a procedure that
+encapsulates the state<NOTE FOOT>This is a simplification; an object
+in Oz is a chunk that has the above procedure in one of its fields;
+other fields contain the object features</NOTE>.
+
+<P><FIGURE ID="objectConstr" CLASS="Figure">
+<CAPTION>Object Construction</CAPTION>
+<<<
+proc {NewObject Class InitialMethod ?Object}
+   State O
+in
+   State = {MakeRecord s Class.attrs}
+   {Record.forAll State proc {$ A} {NewCell _ A} end}
+   proc {O M}
+      {Class.methods.{Label M} M State O}
+   end
+   {O InitialMethod}
+   Object = O
+end
+>>>
+</FIGURE>
+
+<P>We can try our program as follows
+
+<<<
+declare C
+{NewObject Counter init(0) C}
+{C inc(6)} {C inc(6)}
+{C browse}
+>>>
+
+<P>Try to execute the following statement. 
+
+<<<local X in {C inc(X)} X=5 end {C browse}>>>
+
+<P>You will see that nothing happens. The reason is that the object
+application
+
+<<<{C inc(X)}>>>
+
+<P>suspends inside the procedure <<Inc/3>> that implements method
+<<inc>>. Do you know where exactly? If you on the other hand execute
+the following statement, things will work as expected.
+
+<<<local X in thread {C inc(X)} end X=5 end  {C browse}>>>
+
+<SECTION id=section.classes.forreal><TITLE/Objects and Classes for Real/
+<P>Oz supports object-oriented programming following the methodology
+outlined above. There is also syntactic support and optimized
+implementation so that object application (calling a method in
+objects) is as cheap as procedure calls. The class <<Counter>> defined
+earlier has the syntactic form shown in <PTR TO="counterClass">:
+
+<P><FIGURE ID="counterClass" CLASS="Figure">
+<CAPTION>Counter Class</CAPTION>
+<<<
+class Counter
+   attr val
+   meth browse
+      {Browse @val}
+   end
+   meth inc(Value)
+      val := @val + Value
+   end
+   meth init(Value)
+      val := Value
+   end
+end
+>>>
+</FIGURE>
+
+<P>A class ?{X} is defined by: 
+
+<<<class ?{X} ... end>>>
+
+<P>Attributes are defined using the attribute-declaration part 
+before the method-declaration part:
+
+<<<attr ?{A1} ... ?{AN}>>>
+
+<P>Then follows the method declarations, each has the form:
+
+<<<meth ?{E} ?{S} end>>>
+
+<P>where the expression ?{E} evaluates to a method head, which is a
+record whose label is the method name.  An attribute ?{A} is accessed
+using the expression <<@?{A}>>. It is assigned a value using the
+statement <<?{A} := ?{E}>>.
+
+<P>A class can be defined anonymously by:
+
+<<<X = class $ ... end>>>
+
+<P>The following shows how an object is created from a class using the
+procedure <<New/3>>, whose first argument is the class, the second is
+the initial method, and the result is the object. <<New/3>> is a
+generic procedure for creating objects from classes.
+
+<<<
+declare C in
+C = {New Counter init(0)}
+{C browse}
+{C inc(1)}
+local X in thread {C inc(X)} end X=5 end
+>>>
+
+
+<SUBSECTION><TITLE/Static Method Calls/
+<P>Given a class ?{C} and a method head <<?{m}(...)>>, a method call has 
+the following form:
+
+<<<?{C}, ?{m}(...)>>>
+
+<P>A method call invokes the method defined in the class argument. A
+method call can only be used inside method definitions. This is
+because a method call takes the current object denoted by <<self>> as
+implicit argument. The method could be defined at the class <<C>> or inherited
+from a super class. Inheritance will be explained shortly.
+
+
+<SUBSECTION><TITLE/Classes as Modules/
+<P>Static method calls have in general the same efficiency as
+procedure calls. This allows classes to be used as module-specification. This 
+may be
+advantageous because classes can be built incrementally by
+inheritance. The program shown in <PTR TO="listClass"> shows a
+possible class acting as a module specification. The class <<ListC>> defines some
+common list-procedures as methods. <<ListC>> defines the methods
+<<append/3>>, <<member/2>>, <<length/2>>, and <<nrev/2>>. Notice that
+a method body is similar to any Oz statement but in addition, method
+calls are allowed. We also see the first example of inheritance.
+
+<<<class ListC from BaseObject>>>
+
+We also show functional methods, i.e. methods that return results similar
+to functions. A functional method has in general the following form:
+<<< meth m( ... $) S E end >>>
+
+<P>Here the class <<ListC>> inherits from the predefined class <<BaseObject>>
+that has only one trivial method: <<meth noop() skip end>>.
+
+<P><FIGURE ID="listClass" CLASS="Figure">
+<CAPTION>List Class</CAPTION>
+<<<
+class ListC from BaseObject
+   meth append(Xs Ys $)
+      case Xs
+      of nil then Ys
+      [] X|Xr then
+         X|(ListC , append(Xr Ys $))
+      end
+   end
+   meth member(X L $)
+      {Member X L}    % This defined in List.oz
+   end
+   meth length(Xs $)
+      case Xs
+      of nil then 0
+      [] _|Xr then
+        (ListC , length(Xr $)) + 1
+      end
+   end
+   meth nrev(Xs ?Ys)
+      case Xs
+      of nil then Ys = nil
+      [] X|Xr then Yr in
+         ListC , nrev(Xr Yr)
+         ListC , append(Yr [X] Ys)
+      end
+   end
+end
+>>>
+</FIGURE>
+
+<P>To create a module from the module specification one needs to
+create an object from the class.  This is done by:
+
+<<<declare ListM = {New ListC noop}>>>
+
+<P><<ListM>> is an object that acts as a module, i.e. it encapsulates
+a group of procedures (methods). We can try this module by performing
+some method calls:
+
+<<<{Browse {ListM append([1 2 3] [4 5] $)}}>>>
+
+<<<{Browse {ListM length([1 2 3]  $)}}>>>
+
+<<<{Browse {ListM nrev([1 2 3]  $)}}>>>
+
+
+<SECTION id=section.classes.inheritance><TITLE/Inheritance/
+<P>Classes may inherit from one or several classes appearing after the
+keyword: <<from>>. A class ?{B} is a <EM>superclass</EM> of a class
+?{A} if:
+
+<LIST>
+
+<ITEM>?{B} appears in the <<from>> declaration of ?{A}, or
+
+<ITEM>?{B} is a superclass of a class appearing in the <<from>>
+declaration of ?{A}.
+
+</LIST>
+
+<P>Inheritance is a way to construct new classes from existing
+classes. It defines what attributes, features<NOTE FOOT>To be defined
+shortly</NOTE>, and methods are available in the new class. We will
+restrict our discussion of inheritance to methods. Nonetheless, the
+same rules apply to features and attributes.
+
+<P>The methods available in a class ?{C} (i.e. visible) are
+defined through a precedence relation on the methods that appear in
+the class hierarchy. We call this relation the 
+<EM>overriding relation</EM>:
+
+<LIST>
+
+<ITEM>A method in a class ?{C} overrides any method, with the same
+label, in any super class of ?{C}.
+
+</LIST>
+
+<P>Now a class hierarchy with the super-class relation can be seen as
+a directed graph with the class being defined as the root. The edges
+are directed towards the subclasses. There are two requirements for
+the inheritance to be valid. First, the inheritance relation is
+directed and acyclic. So the following is not allowed:
+
+<<<
+class A from B ... end
+class B from A ... end
+>>>
+
+<P><FIGURE ID="cycle" CLASS="Figure">
+<CAPTION>Illegal class hierarchy</CAPTION>
+<PICTURE.CHOICE DISPLAY>
+<PICTURE.EXTERN TO="image161.gif" TYPE="gif" >
+</PICTURE.CHOICE>
+</FIGURE>
+
+<P>Second, after striking out all overridden methods each remaining
+method should have a unique label and is defined only in one class in
+the hierarchy. Hence, class <<C>> in the following example is not
+valid because the two methods labeled <<m>> remain.
+
+<<<
+class A1 meth m(...) ... end end
+class B1 meth m(...) ... end end
+class B from B1 end
+class A from A1 end
+class C from A B end
+>>>
+
+<P><FIGURE ID="illegalClassInheritance" CLASS="Figure">
+<CAPTION>Illegal class hierarchy in method <<m>></CAPTION>
+<PICTURE.CHOICE DISPLAY>
+<PICTURE.EXTERN TO="inheritance1.gif" TYPE=gif>
+</PICTURE.CHOICE>
+</FIGURE>
+
+
+<P>Also the class <<C>> below is invalid, since two methods <<m>> is available in <<C>>.
+
+<<<
+class A meth m(...) ... end end
+class B meth m(...) ... end end
+class C from A B end
+>>>
+
+<P>Notice that if you run a program with an invalid hierarchy, the
+system will not complain until an object is created that tries to
+access an invalid method. Only at this point of time, you are going to
+get a runtime exception. The reason is that classes are partially
+formed at compile time, and are completed by demand, using method
+caches, at execution time.
+
+<SUBSECTION><TITLE/Multiple inheritance or Not/
+<P>My opinion is the following:
+
+<LIST>
+
+<ITEM>In general, to use multiple inheritance correctly, one has to
+understand the total inheritance hierarchy, which is sometimes worth
+the effort. This is important when there is a shared common ancestor.
+
+<ITEM> Oz restricts multiple inheritance in a way that most
+the problems with it do not occur.
+
+<!--
+<ITEM>Oz forces the programming methodology that when a method-name conflict 
+between immediate super classes occur, 
+-->
+<ITEM>Oz enforces a programming methodology which requres one to
+override a method which is defined at more than one superclass, one
+has to define the method locally to overrides the conflict-causing
+methods.
+
+
+<ITEM>There is another problem with multiple inheritance when sibling
+super-classes share (directly or indirectly) a common ancestor-class
+that is stateful (i.e. has attributes). One may get replicated
+operations on the same attribute. This typically happens when
+executing an initialization method in a class, one has to initialize
+its super classes. The only remedy here is to understand carefully the
+inheritance hierarchy to avoid such replication. Alternatively, you
+should only inherit from multiple classes that do not share stateful
+common ancestor. This problem is known as the implementation-sharing
+problem.
+
+</LIST>
+
+
+<SECTION id=section.classes.features><TITLE/Features/
+<P>Objects may have features similar to records. Features are
+stateless components that are specified in the class declaration:
+
+<<<
+class ?{C} from ...
+   feat ?{A1} ... ?{AN}
+...
+end
+>>>
+
+<P>As in a record, a feature of an object has an associated field. The
+field is a logic variable that can be bound to any Oz value (including
+cells, objects, classes etc.). Features of objects are accessed using
+the infix '<<.>>' operator. The following shows an example using
+features:
+
+<<<
+class ApartmentC from BaseObject
+    meth init skip end
+end
+class AptC from ApartmentC
+   feat
+      streetName: york
+      streetNumber:100
+      wallColor:white
+      floorSurface:wood
+end
+>>>
+
+
+<SUBSECTION><TITLE/Feature initialization/
+<P>The example shows how features could be initialized at the time the
+class is defined. In this case, all instances of the class <<AptC>>
+will have the features of the class, with their corresponding
+values. Therefore, the following program will display <<york>> twice.
+
+<<<
+declare Apt1 Apt2
+Apt1 = {New AptC init}
+Apt2 = {New AptC init}
+{Browse Apt1.streetName}
+{Browse Apt2.streetName}
+>>>
+
+<P>We may leave a feature uninitialized as in:
+
+<<<
+class MyAptC1 from ApartmentC
+   feat streetName
+end
+>>>
+
+<P>In this case whenever an instance is created, the field of the
+feature is assigned a new fresh variable. Therefore, the following
+program will bind the feature <<streetName>> of object <<Apt3>> to the
+atom <<kungsgatan>>, and the corresponding feature of <<Apt4>> to the
+atom <<sturegatan>>.
+
+<<<
+declare Apt3 Apt4
+Apt3 = {New MyAptC1 init}
+Apt4 = {New MyAptC1 init}
+Apt3.streetName = kungsgatan
+Apt4.streetName = sturegatan
+>>>
+
+<P>One more form of initialization is available. A feature may be
+initialized in the class declaration to a variable or an Oz-value that
+has a variable. In the following, the feature is initialized to a
+tuple with an anonymous variable. In this case, all instances of the
+class will <EM>share</EM> the same variable. Consider the following
+program.
+
+<<<
+class MyAptC1 from ApartmentC
+   feat streetName:f(_)
+end 
+
+local Apt1 Apt2 in
+Apt1 = {New MyAptC1 init}
+Apt2 = {New MyAptC1 init}
+{Browse Apt1.streetName}
+{Browse Apt2.streetName}
+Apt1.streetName = f(york)
+>>>
+
+<P>If entered incrementally, will show that the statement 
+
+<<<Apt1.streetName = f(york)>>>
+
+<P>binds the corresponding feature of <<Apt2>> to the same value as 
+that of <<Apt1>>. 
+
+<P> What has been said of features also holds for attributes.
+
+<SECTION id=section.classes.parametrized><TITLE/Parameterized Classes/
+<P>There are many ways to get your classes more generic, which later
+may be specialized for specific purposes. The common way to do this in
+object-oriented programming is to define first <EM>an abstract
+class</EM> in which some methods are left unspecified. Later these
+methods are defined in the subclasses. Suppose you have defined a
+generic class for sorting where the comparison operator <<less>> is
+needed. This operator depends on what kinds of data are being
+sorted. Different realizations are needed for integer, rational, or
+complex numbers, etc. In this case, by subclassing we can specialize
+the abstract class to a <EM/concrete/ class.
+
+<P>In Oz, we have also another natural method for creating generic
+classes. Since classes are first-class values, we can instead define a
+function that takes some type argument(s) and return a class that is
+specialized for the type(s). In <PTR TO="paramClass">, the function
+<<SortClass>> is defined that takes a class as its single argument and
+returns a sorting class specialized for the argument.
+
+<P><FIGURE ID="paramClass" CLASS="Figure">
+<CAPTION>Parameterized Classes</CAPTION>
+<<<
+fun {SortClass Type}
+   class $ from BaseObject
+      meth qsort(Xs Ys)
+	 case Xs
+	 of nil then Ys = nil
+	 [] P|Xr then S L in
+	    {self partition(Xr P S L)}
+	    ListC, append({self qsort(S $)} P|{self qsort(L $)} Ys)
+	 end
+      end
+      meth partition(Xs P Ss Ls)
+	 case Xs
+	 of nil then Ss = nil Ls = nil
+	 [] X|Xr then Sr Lr in
+	    case Type,less(X P $) then
+	       Ss = X|Sr Lr = Ls
+	    else
+	       Ss = Sr Ls = X|Lr
+	    end
+	    {self partition(Xr P Sr Lr)}
+	 end
+      end
+   end
+end
+>>>
+</FIGURE>
+
+<P>We can now define two classes for integers and rationals:
+
+<<<
+class Int
+   meth less(X Y $)
+      X&lt;Y
+   end
+end
+class Rat from Object
+   meth less(X Y $)
+     '/'(P Q) = X
+     '/'(R S) = Y
+      in
+     P*S &lt; Q*R
+   end
+end
+>>>
+
+<P>Thereafter, we can execute the following statements:
+
+<<<
+{Browse {{New {SortClass Int} noop} qsort([1 2 5 3 4] $)}}
+{Browse {{New {SortClass Rat} noop}
+     qsort(['/'(23 3) '/'(34 11) '/'(47 17)] $)}}
+>>>
+
+
+<SECTION id=section.classes.self><TITLE/Self Application/
+<P>The program in <PTR TO="paramClass"> shows in the method <<qsort>>
+an object application using the keyword <<self>> (see below).
+
+<<<
+meth qsort(Xs Ys)
+   case Xs
+     ...
+      {self partition(Xr P S L)}
+     ...
+   end
+>>>
+
+<P>We use here the phrase <EM>object-application</EM> instead of the
+commonly known phrase <EM>message sending</EM> because message sending
+is misleading in a concurrent language like Oz. When we use <<self>>
+instead of a specific object as in
+
+<<<{self partition(Xr P S L)}>>>
+
+<P>We mean that we dynamically pick the method <<partition>> that is
+defined (available) in the current object.  Thereafter we apply the
+object (as a procedure) to the message. This is a form of dynamic
+binding common in all object-oriented languages.
+
+
+<SECTION id=section.classes.attributes><TITLE/Attributes/
+<P>We have touched before on the notion of attributes. Attributes are
+the carriers of state in objects. Attributes are declared similar to
+features, but using the keyword <<attr>> instead. When an object is
+created each attribute is assigned a new cell as its value. These
+cells are initialized very much the same way as features. The
+difference lies in the fact that attributes are cells that can be
+assigned, reassigned and accessed at will. However, attributes are
+private to their objects. The only way to manipulate an attribute from
+outside an object is to force the class designer to write a method
+that manipulates the attribute. In the <PTR TO="pointClass"> we define
+the class <<Point>>. Note that the attributes <<x>> and <<y>> are
+initialized to zero before the initial message is applied. The method
+<<move>> uses <<self>>-application internally.
+
+<P><FIGURE ID="pointClass" CLASS="Figure">
+<CAPTION>The class Point</CAPTION>
+<<<
+class Point from BaseObject
+   attr x:0 y:0
+   meth init(X Y)
+      x := X
+      y := Y             % attribute update
+   end
+   meth location(L)
+      L = l(x:@x y:@y)     % attribute access
+   end
+   meth moveHorizontal(X)
+      x := X
+   end
+   meth moveVertical(Y)
+      y := Y
+   end
+   meth move(X Y)
+      {self moveHorizontal(X)}
+      {self moveVertical(Y)}
+   end
+   meth display
+    % Switch the browser to virtual string mode
+     {Browse "point at ("#@x#" , "#@y#")\n"} 
+   end
+end
+>>>
+</FIGURE>
+
+<P>Try to create an instance of <<Point>> and apply some few messages:
+
+<<<
+declare P
+P = {New Point init(2 0)}
+{P display}
+{P move(3 2)}
+>>>
+
+
+<SECTION id=section.classes.private><TITLE/Private and Protected Methods/
+<P>Methods may be labeled by variables instead of literals. These
+methods are <EM>private</EM> to the class in which they are defined,
+as in:
+
+<<<
+class C from ...
+  meth A(X) ... end
+  meth a(...) {self A(5)} ... end
+  ....
+end
+>>>
+
+<P>The method <<A>> is visible only within the class <<C>>. In fact
+the notation above is just an abbreviation of the following expanded
+definition:
+
+<<<
+local A = {NewName} in
+   class C from ...
+      meth !A(X) ... end
+      meth a(...) {self A(5)} ... end
+      ...
+   end
+end
+>>>
+
+<P>A is bound to a new name in the lexical scope of the class definition. 
+
+<P>Some object-oriented languages have also the notion of protected
+methods. A method is <EM>protected</EM> if it is accessible only in
+the class it is defined or in descendant classes, i.e. subclasses and
+subsubclasses etc. In Oz there is no direct way to define a method to
+be protected.  However there is a programming technique that gives the
+same effect. We know that attributes are only visible inside a class
+or to descendants of a class by inheritance.  We may make a method
+protected by first making it private and second by storing it in
+an attribute.  Consider the following example:
+
+<<<
+class C from ...
+  attr pa:A
+  meth A(X) ... end
+  meth a(...) {self A(5)} ... end
+  ...
+end
+>>>
+
+<P>Now, we create a subclass <<C1>> of <<C>> and access method 
+<<A>> as follows:
+
+<<<
+class C1 from C
+  meth b(...) L=@pa in {self L(5)} ... end
+  ...
+end
+>>>
+
+<P>Method <<b>> accesses method <<A>> through the attribute <<pa>>.
+
+<P> Let us continue our simple example in <PTR TO="pointClass"> by
+defining a specialization of the class that in addition of being a
+point, it stores a history of the previous movement. This is shown in
+<PTR TO="histPointClass">.
+
+<P><FIGURE ID="histPointClass" CLASS="Figure">
+<CAPTION>The class History Point</CAPTION>
+<<<
+class HistoryPoint from Point
+   attr
+      history: nil
+      displayHistory: DisplayHistory
+   meth init(X Y)
+      Point,init(X Y)  % call your super
+      history := [l(X Y)]
+   end
+   meth move(X Y)
+      Point,move(X Y)
+      history := l(X Y)|@history
+   end
+   meth display
+      Point,display
+      {self DisplayHistory}
+   end
+   meth DisplayHistory  % made protected method
+      {Browse "with location history: "}
+      {Browse @history}
+   end
+end
+>>>
+</FIGURE>
+
+<P>There are a number of remarks on the class definition
+<<HistoryPoint>>. First observe the typical pattern of method
+refinement. The method <<move>> specializes that of class
+<<Point>>. It first calls the super method, and then does what is
+specific to being a <<HistoryPoint>> class. Second, <<DisplayHistory>>
+method is made private to the class. Moreover it is made available for
+subclasses, i.e. protected, by storing it in the attribute
+<<displayHistory>>. You can now try the class by the following
+statements:
+
+<<<
+declare P
+P = {New HistoryPoint init(2 0)}
+{P display}
+{P move(3 2)}
+>>>
+
+
+<SECTION id=section.classes.defaultargs><TITLE/Default Argument Values/
+<P>A method head may have default argument values. Consider the following 
+example.
+
+<<<meth m(X Y d1:Z&lt;=0 d2:W&lt;=0) ... end>>>
+
+<P>A call of the method <<m>> may leave the arguments of features
+<<d1>> and <<d2>> unspecified. In this case these arguments will
+assume the value zero.
+
+<P>We continue our <<Point>> example by specializing <<Point>> in a
+different direction. We define the class <<BoundedPoint>> as a point
+that moves in a constrained rectangular area. Any attempt to move such
+a point outside the area will be ignored. The class is shown in <PTR
+TO="boundedPoint">. Notice that the method <<init>> has two default
+arguments that give a default area if not specified in the
+initialization of a new instance of <<BoundedPoint>>.
+
+<P><FIGURE ID="boundedPoint" CLASS="Figure">
+<CAPTION>The class BoundedPoint</CAPTION>
+<<<
+class BoundedPoint from Point
+   attr
+      xbounds: 0#0
+      ybounds: 0#0
+      boundConstraint: BoundConstraint
+   meth init(X Y xbounds:XB &lt;= 0#10 ybounds:YB &lt;= 0#10)
+      Point,init(X Y) % call your super
+      xbounds := XB
+      ybounds := YB
+   end
+   meth move(X Y)
+      if {self BoundConstraint(X Y $)} then
+        Point,move(X Y)
+      end
+   end
+   meth BoundConstraint(X Y $)
+      (X &gt;= @xbounds.1 andthen
+       X =&lt; @xbounds.2 andthen
+       Y &gt;= @ybounds.1 andthen
+       Y =&lt; @ybounds.2 )
+   end
+   meth display
+      Point,display
+      {self DisplayBounds}
+   end
+   meth DisplayBounds
+      X0#X1 = @xbounds
+      Y0#Y1 = @ybounds
+      S = "xbounds=("#X0#","#X1#"),ybounds=("
+          #Y0#","#Y1#")"
+   in
+      {Browse S}
+   end
+end
+>>>
+</FIGURE>
+
+<P>We conclude this section by finishing our example in a way that
+shows the multiple inheritance problem. We would like now a
+specialization of both <<HistoryPoint>> and <<BoundedPoint>> as a
+bounded-history point. A point that keeps track of the history and
+moves in a constrained area. We do this by defining the class
+<<BHPoint>> that inherits from the two previously defined
+classes. Since they both share the class <<Point>>, which contains
+stateful attributes, we encounter the implementation-sharing
+problem. We, any way, anticipated this problem and therefore created
+two protected methods stored in <<boundConstraint>> and
+<<displayHistory>> to avoid repeating the same actions. In any case,
+we have to refine the methods <<init>>, <<move>> and <<display>>
+since they occur in the two sibling classes. The solution is shown in
+<PTR TO="bhClass">. Notice how we use the protected methods. We did
+not care avoiding the repetition of initializing the attributes <<x>>
+and <<y>> since it does not make any harm. Try the following example:
+
+<<<
+declare P
+P = {New BHPoint init(2 0)}
+{P display}
+{P move(1 2)}
+>>>
+
+<P>This pretty much covers most of the object system. What is left is how
+to deal with concurrent threads sharing a common space of objects.
+
+<P><FIGURE ID="bhClass" CLASS="Figure">
+<CAPTION>The class BHPoint</CAPTION>
+<<<
+class BHPoint from HistoryPoint BoundedPoint
+   meth init(X Y xbounds:XB &lt;= 0#10 ybounds:YB &lt;= 0#10)
+    % repeats init
+      HistoryPoint,init(X Y)
+      BoundedPoint,init(X Y xbounds:XB ybounds:YB) 
+   end
+   meth move(X Y)
+      L = @boundConstraint in
+      if {self L(X Y $)} then
+        HistoryPoint,move(X Y)
+      end
+   end
+   meth display
+      BoundedPoint,display
+      {self @displayHistory}
+   end
+end
+>>>
+</FIGURE>
+
+</CHAPTER>

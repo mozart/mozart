@@ -1,0 +1,97 @@
+<chapter id="chapter.connections">
+<title/Connection Establishment/
+
+<p>When a Mozart site is a participant in a distributed computation,
+entities are automatically distributed via lexical scoping and
+connections are opened when needed. Before this can take place an
+initial entry point in the distributed application must exist. This is
+what we refer to as bootstrapping a connection.
+
+<section>
+<title/Bootstrapping a Connection/
+
+<p>The Mozart programmer establishes connections to the outside world
+by offering a ticket to an entity. Such a ticket is an character string
+containing enough information for other Mozart sites to connect to the
+offering site and access the offered entity. This connection
+establishment procedure is illustrated in <ptr
+to="figure.bootstrap">.
+
+<figure id=figure.bootstrap>
+<caption>Bootstrapping a Connection
+</caption>
+<picture.choice display>
+      <picture.extern to="bootstrap.gif" type=gif>
+</picture.choice>
+</figure>
+
+<list enum>
+
+<item>Site <<A>> offers a ticket to entity X and saves the string to
+persistent storage available to B. 
+
+<item>Site <<B>> loads the string and <em>takes</em> this ticket which
+will cause a representation of site <<A>> and a representation of X to
+be created at B.
+
+<item>Site <<B>> creates a message requesting access to X and passes the
+message down to the representation of <<A>>.
+
+<item>A connection to <<A>> is requested from the connect-accept-module.
+
+<item>At site <<A>> an incoming request for a connection is
+accepted. During a hand-shake phase the representation of <<B>> is passed
+to <<A>>.
+
+<item>Site <<B>> marshals the message and sends it to <<A>>.
+
+<item>Site <<A>> unmarshals the message and passes it to the appropriate
+protocol message handler.
+
+</list>
+
+<section>
+<title/Dynamic Connection Establishment through Connect-Accept-Pairs/
+
+<p>How a message is transferred between two sites, and how a physical
+connection is initialized is of no importance to the semantics of
+entities. However, this is of great importance when it comes to
+communicating over different types of networks with different
+restrictions such as security requirements or firewalls. Mozart offers
+a default connect-accept-module with non-secure initialization of a
+connection over TCP, but the interfaces are open for the programmer to
+customize parts or all of the procedure. This is possible through the
+notion of Connect-Accept-Pairs and the three layer design, allowing
+for replacement of the transport layer.
+
+
+<para class=apropos><title/Connect-Accept-Pairs/</para>
+
+<p>To define how a physical connection is initialized, a pair
+consisting of a connection and an accept procedure can be customly
+defined. The accept procedure defines how a site accepts incoming
+requests for connections and runs locally at that specific site. The
+connection and accept procedure must agree on a scheme to establish a
+connection, and the connection procedure should in the future be
+possible to pass around with any reference to the site. Currently an
+application programmer can create a custom pair and manually install
+it in all processes involved in a distributed application. This will
+create a subdomain only accessible to those processes.
+
+<para class=apropos><title/Transport Modules/</para>
+
+<p>A transport module is responsible of delivering messages from one
+site to another. It may be a very lean layer interfacing TCP or
+contain a complete implementation of a new transport protocol.
+
+<section>
+<title/Automatic Connection Opening and Closing/
+
+<p>For efficiency reasons, physical connections should be open while
+there is a need for them from at least one end, and there are enough
+resources to maintain them. To achieve this, connections are
+automatically established when the need arises and closed when the
+need no longer remains. The latter part is handled by the garbage
+collector; once the last reference is garbage collected locally, the
+connection will be closed. When resources are low, connections will be
+taken down temporarily.

@@ -1,0 +1,116 @@
+-*-outline-*-
+
+An executable is distinguished by the .exe extension.  On all
+platforms they are installed both with and without the extension.
+
+A rule is represented by a record:
+
+	rule(tool:TOOL file:FILE options:[OPTIONS...])
+
+Options for cc:
+	library(foo) -> -lfoo
+
+* MAKEFILE
+
+makefile(
+  bin      : [ FILES... ]
+  lib      : [ FILES... ]
+  doc      : [ FILES... ]
+  src      : [ FILES... ]
+  depends  :
+     o( T1 : [ D1 D2 ... ]
+        ...
+      )
+  rules    :
+     o( T1 : TOOL1(S1)
+        T2 : TOOL2(S2)
+        ...
+      )
+  uri      : URI
+  mogul    : MOGUL
+  author   : [ A1 A2 ... ]
+  released : DATE
+  clean    : [ GLOB... ]
+  veryclean: [ GLOB... ]
+)
+
+The src targets are included in the distribution.  In particular, if a
+bin or lib target occurs in src, it is prebuilt for the distribution
+and the sources necessary to build it are not included.
+
+* PACKAGE DATABASE
+
+there should be a single entry for each package. the only way to have
+multiple versions of the `same' package is to actually make the
+packages of these versions different, maybe by adding a version number
+to the mogul id and doing the same for the uri.
+
+the database entry should only record the files that have actually
+been installed.
+
+package(
+  mogul     : MOGUL
+  uri       : URI
+  author    : [ A1 A2 ... ]
+  released  : DATE
+  installed : DATE
+  blurb     : TEXT
+  info_html : TEXT
+  info_text : TEXT
+  files     : FILE
+  lost      : FILES
+  zombies   : FILES
+  )
+
+* INSTALLATION
+
+** is the package already in the database?
+
+*** yes
+
+**** --grade=none (default)
+signal an error
+**** --grade=same
+release dates must be identical
+**** --grade=up
+new package must have more recent release date
+**** --grade=down
+new package must have less recent release date
+**** --grade=any
+ok
+
+*** no
+just fine
+
+** do package files collide with database files?
+
+*** yes
+
+**** --replacefiles
+just fine
+**** all files are owned by an installed version of the package
+if --grade=none signal an error (already done earlier)
+**** else
+signal an error
+
+** install files keeping track of which ones are overwritting files in the database
+
+*** for all other packages
+move the affected files to their lost list
+*** if the package is installed
+take all the non-overwritten files of the previous installation
+**** if --extendpackage
+leave them alone, keep them in the new installation
+**** if --keepzombies
+move them to the zombie list of the new installation
+**** else
+remove them
+*** update database entry
+using new installation
+
+* RECURSING INTO SUBDIRECTORIES
+
+the makefile record may have a subdirs feature which holds a list of
+subdirectories (bare filenames).
+
+create

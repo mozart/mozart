@@ -1,0 +1,45 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+PREFIX		= @prefix@
+CYGPATH		= $(SRCDIR)/cygpath.sh
+CYG_PREFIX	= $(shell $(CYGPATH) $(PREFIX))
+CYG_SRCDIR	= $(shell $(CYGPATH) $(SRCDIR))
+OZENGINE	= @VAR_OZE@
+BUILDDIR	= @BUILDDIR@
+CYG_BUILDDIR_OZMAKE = $(shell $(CYGPATH) $(BUILDDIR)/ozmake)
+OZTOOL		= @VAR_OZTOOL@
+PLATFORM	= $(shell $(OZTOOL) platform)
+
+ifeq ($(PLATFORM),win32-i486)
+OZEMULATOR	= $(shell $(CYGPATH) $(PREFIX)/platform/win32-i486/emulator.dll)
+export OZEMULATOR
+endif
+
+all: build.ozmake
+	$(OZENGINE) ozmake/ozmake.ozf --prefix=$(CYG_PREFIX) --srcdir=$(CYG_SRCDIR)
+
+build.ozmake:
+	cd ozmake && $(MAKE) ozmake.ozf
+
+install: all
+	$(OZENGINE) ozmake/ozmake.ozf --prefix=$(CYG_PREFIX) --srcdir=$(CYG_SRCDIR) --install --nosavedb
+	$(OZENGINE) ozmake/ozmake.ozf --prefix=$(CYG_PREFIX) --srcdir=$(CYG_SRCDIR)/ozmake --builddir=$(CYG_BUILDDIR_OZMAKE) --install --nosavedb
+
+export CLEANDIR
+
+clean:
+	$(MAKE) CLEANDIR="$(BUILDDIR)"          clean.dir
+	$(MAKE) CLEANDIR="$(BUILDDIR)/adt"      clean.dir
+	$(MAKE) CLEANDIR="$(BUILDDIR)/os"       clean.dir
+	$(MAKE) CLEANDIR="$(BUILDDIR)/wp"       clean.dir
+	$(MAKE) CLEANDIR="$(BUILDDIR)/wp/qhtml" clean.dir
+	$(MAKE) CLEANDIR="$(BUILDDIR)/wp/qtk"   clean.dir
+	$(MAKE) CLEANDIR="$(BUILDDIR)/xml"      clean.dir
+	cd ozmake && $(MAKE) clean
+
+clean.dir:
+	-cd $(CLEANDIR) && rm -f *~ *.ozf
+
+distclean: clean
+	-cd ozmake && $(MAKE) distclean
+	-rm -f Makefile config.cache config.log config.status

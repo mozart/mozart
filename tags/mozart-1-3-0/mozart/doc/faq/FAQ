@@ -1,0 +1,45 @@
+-*-outline-*-
+
+* general information and availability
+** what is Mozart
+** what is Oz
+** why is it called Oz
+** is there a WWW page devoted to Mozart
+** how do I get documentation on Mozart
+** is the documentation available on the WWW
+** how do I install the system
+** what platforms are supported
+** are there newsgroups or mailing lists for Mozart
+** is there a CVS server for Mozart
+** are there licensing/copyright restrictions on Mozart
+** what is Mozart good for
+* building Mozart and misc problems
+* programming with Mozart
+** is there a source code level debugger with breakpoints, etc
+** can I have modules that mutually import each other
+** are there database interfaces
+** what GUI toolkits are available for Mozart
+* language/design issues
+** why is the syntax so weird
+** what is constraint programming
+** can I have state
+** does Oz support object-oriented programming
+** does Oz support functional programming
+** does Oz support logic programming
+** does Oz support constraint programming
+** does Oz support modular programming
+** does Oz support concurrent programming
+** does Oz support distributed programming
+** can I do backtracking
+** what is a computation space
+** how do I program a search problem
+** why is [] not the empty list
+** what is the meaning of the $ marker
+** what is the meaning of the , marker
+** does it have garbage collection
+** what datatypes does Oz provide
+** what is a basic constraint
+** what is a propagator
+* extending Mozart
+* Misc
+** saraswat

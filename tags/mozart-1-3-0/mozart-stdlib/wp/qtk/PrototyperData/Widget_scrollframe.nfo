@@ -1,0 +1,5 @@
+This example shows the scrollframe widget.
+
+A scrollframe is a rectangular are where other widgets can be put. You can use scrollbars if the widgets displayed in the scrollframe are too big.
+
+- the tdscrollbar and lrscrollbar parameters allows you to specify whether you want vertical and horizontal scrollbars or not.

@@ -1,0 +1,1207 @@
+<!--
+  - Authors:
+  -   Benjamin Lorenz <lorenz@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Benjamin Lorenz, 1998
+  -   Leif Kornstaedt, 2001
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh">
+<!ENTITY % input.local.2 SYSTEM "ozcar.extra">
+<!ENTITY % p.mix.local "|note.gui|menu">
+<!-- Processing Instructions -->
+<!ENTITY emdash   PI "emdash">
+<!ENTITY endash   PI "endash">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY ie       PI "ie">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <!-- Splitting the document into different HTML nodes -->
+    <Meta name="html.split" value="chapter.intro">
+    <Meta name="html.split" value="chapter.invoking">
+    <Meta name="html.split" value="chapter.gui">
+    <Meta name="html.split" value="chapter.sample">
+    <Meta name="html.split" value="chapter.control">
+    <Meta name="html.split" value="chapter.data">
+    <Meta name="html.split" value="chapter.exceptions">
+    <Meta name="html.split" value="chapter.remote">
+    <Meta name="html.split" value="chapter.limitations">
+    <Meta name="html.split" value="appendix.menus">
+    <Meta name="html.split" value="appendix.api">
+    <Meta name="html.split.bib" value="">
+    <Meta name="html.split.index" value="">
+
+    <meta name="proglang.mode" arg1="sh" arg2="sh-mode">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=revised>
+
+    <Title/The Mozart Debugger/
+    <Author.Extern to="author.db" key="Benjamin.Lorenz">
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
+    <Abstract>
+      This manual describes Ozcar, a symbolic debugger which provides
+      well-known debugging features such as breakpoints, single-stepping,
+      and environment inspection.  It supports debugging of multiple
+      threads and debugging of distributed applications.  Concurrent
+      behaviour can be observed and manipulated.
+    <P>
+      Ozcar can be used from within the Oz Programming Interface or
+      it can be used as a standalone program to debug Oz applications.
+      It uses Emacs as a source viewer, highlighting the current
+      position in a debugged program, and allowing to set breakpoints
+      at arbitrary source lines.
+    </Abstract>
+  <Body>
+    <Chapter id="chapter.intro">
+      <Title/Introduction/
+      <P>
+	Thank you for choosing Ozcar, your friendly debugger.
+	This manual will help you to make first steps in using Ozcar,
+	hopefully enabling you to make proper use of it for your daily
+	development work in Oz, and will serve as a reference to its
+	functionality and peculiarities.
+      <Para class=apropos><Title/Manual Structure/
+	<Ptr to="chapter.invoking"> describes how Ozcar can be started,
+	followed by a description of the components of its user interface
+	in <Ptr to="chapter.gui">.  <Ptr to="chapter.sample"> aims to
+	convey an intuition of how to interact with this user interface;
+	if you found <Ptr to="chapter.gui"> a hard read, you might want to
+	look at it again after this.  The fundamental knowledge of how to
+	control debugged programs and how to examine their data is presented
+	in <Ptr to="chapter.control"> and <Ptr to="chapter.data">.  The
+	more advanced features of post-mortem debugging in the presence
+	of unhandled exceptions and remote debugging of distributed
+	applications are dealt with in <Ptr to="chapter.exceptions">
+	and <Ptr to="chapter.remote">, respectively.  Finally,
+	<Ptr to="chapter.limitations"> summarizes limitations to
+	remember when working with Ozcar.
+      <Para class=apropos><Title/Appendices/
+	The reference section of this manual offers detailed descriptions
+	of all of Ozcar's menu items in <Ptr to="appendix.menus">, and
+	of the Application Programming Interface in <Ptr to="appendix.api">.
+
+    <Chapter id="chapter.invoking">
+      <Title/Invoking the Debugger/
+      <P>
+	There are several ways to start Ozcar: from the Oz Programming
+	Interface, during interactive development; and from the shell,
+	to debug standalone applications.  Furthermore, an API is provided
+	to enable user applications to control the debugger.
+      <Para class=apropos><Title/Startup Effects/
+	When Ozcar is started, the following actions will be performed:
+	<List>
+	  <Item>
+	    The interaction window is opened.
+	  <Item>
+	    Concurrent threads are observed:  When a thread reaches a
+	    breakpoint or raises an unhandled exception, the debugger
+	    takes control of this thread.  This is called <Def/attaching/
+	    a thread.
+	  <Item>
+	    When running under the OPI, the compiler's switches are
+	    configured to generate code with debug information.
+	</List>
+      <Section>
+	<Title/Debugging within the Oz Programming Interface/
+	<P>
+	  Ozcar can directly be started from the OPI using the Oz menu.
+	  This executes the Emacs command <Code proglang=elisp/oz-debugger/
+	  (see also <Ptr.Extern to="ozdoc:opi" key="chapter.tools">), which
+	  is also bound to the key sequence <Key/C-. C-. d/ by default.
+	  Any code you feed within the OPI will now run under control of
+	  the debugger.
+	<Para class=apropos><Title/Suspending Ozcar/
+	  With a prefix argument (<Key/C-u C-. C-. d/), Ozcar is suspended
+	  and its window is closed.  Note that this means that all attached
+	  threads remain under the control of the debugger (but no new
+	  threads will be attached).  Starting Ozcar again will allow you
+	  to continue debugging exactly where you stopped.
+      <Section>
+	<Title/Debugging Standalone Applications/
+	<P>
+	  It is also possible to run standalone applications under control
+	  of the debugger.  For this purpose, the <Code proglang=sh/ozd/
+	  application is provided (which, incidentally, is itself an Oz
+	  application).  For instance, to debug an application <File/foo/,
+	  run <Code proglang=sh/ozd/ as follows:
+	  <Code display proglang=sh/ozd -E foo -- ?{args}/
+	  This invokes Ozcar, with an associated Emacs for source handling
+	  (since the <Code proglang=sh/-E/ option was given), and attaches
+	  the main thread of the application <File/foo/.
+	<Para class=apropos><Title/Command Line Options/
+	  For more information on <Code proglang=sh/ozd/'s command
+	  line options, refer to <Ptr.Extern to="ozdoc:tools"
+	  key="chapter.debugger">.
+      <Section>
+	<Title/Invoking Ozcar through its API/
+	<P>
+	  Ozcar is implemented as an Oz functor and as such is immediately
+	  available to the application programmer.  After importing the
+	  module <<Ozcar>> from its URL <File>x-oz://system/Ozcar</File>,
+	  Ozcar can be opened by <<{Ozcar.open}>> and suspended again
+	  by <<{Ozcar.close}>>.  A detailed description of the API is
+	  given in <Ptr to="appendix.api">.
+
+    <Chapter id="chapter.gui">
+      <Title/Ozcar's User Interface/
+      <P>
+	Ozcar's main window, depicted in <Ptr to="picture.initial"> as it
+	appears when Ozcar is first invoked, displays a number of views:
+	the Thread Forest View, the Stack View, and the Environment Views.
+	Below these is the Status Line, and Emacs serves as the Source View.
+	In the following, each of these elements of Ozcar's user interface
+	will be described.
+	<Figure class=picture id="picture.initial">
+	  <Caption/The Main Window/
+	  <P><Picture.Extern gif to="ozcar-initial.gif">
+	</Figure>
+      <Section>
+	<Title/Thread Forest View/
+	<P>
+	  The pane on the left, labeled <Samp/Thread Forest/, gives an
+	  overview of all currently attached threads.  The fact that every
+	  thread has been created by some other thread (its <Def/parent/)
+	  defines a tree-shaped relation between threads.  The attached
+	  threads form a number of partial subtrees of the whole thread
+	  hierarchy&emdash;this is why we refer to this view as a
+	  <Def/thread forest/.  The way threads are displayed reflects
+	  this tree structure:  Children are inserted below their parent
+	  and indented to the right.
+	<Para class=apropos><Title/Thread IDs/
+	  For the purpose of debugging, threads are assigned integer IDs
+	  internally.  These IDs do not carry any semantic significance and
+	  are only used to allow easier recognition of individual threads
+	  by the user, as well as to construct the tree representation.  Note
+	  however that thread IDs need not be unique.  In the thread forest,
+	  each thread node is depicted by the textual representation of its
+	  ID.  (In the case of distributed debugging, the remote site's node
+	  name and process ID are also included.)
+	<Para class=apropos><Title/Thread States/
+	  The color of each node in the thread forest reflects the
+	  corresponding thread's state, similar to what the <<Thread.state>>
+	  operation returns:
+	  <List>
+	    <Entry>green: runnable
+	    <Item>
+	      The thread's computation can proceed.
+	    <Entry>yellow: blocked
+	    <Item>
+	      The thread waits for a synchronization condition, &ie;,
+	      it currently cannot proceed.
+	    <Entry>gray: terminated
+	    <Item>
+	      The thread is dead.
+	    <Entry>red: crashed
+	    <Item>
+	      The thread died of an exception it did not handle.
+	  </List>
+	<Para class=apropos><Title/Stopped Threads/
+	  For the purpose of debugging, thread state actually has an
+	  additional dimension, namely whether the thread has currently
+	  been stopped by the debugger or not.  This is reflected by
+	  a normal font (thread is stopped) or a bold font (thread is
+	  running), respectively.
+	<Para class=apropos><Title/Selected Thread/
+	  If at least one thread is attached, then one thread will always
+	  be the <Def/selected thread/; its node is marked with an asterisk.
+	  This is the thread that thread actions operate on, and whose
+	  information is displayed in the other views.  You can select
+	  a thread by clicking its node with the left mouse button, or
+	  you can navigate in the thread forest using the left and right
+	  cursor keys.
+      <Section>
+	<Title/Stack View/
+	<Para class=apropos><Title/Stack Frames/
+	  On the top right, the pane labeled <Samp/Stack/ or <Samp/Stack of Thread/
+          ?{id} displays the stack of the currently selected thread.
+	  The <Def/stack/ is a sequence of <Def/frames/, where each frame
+	  describes a nested construct or procedure activation.  The stack
+	  provides a trace of how the computation reached its current point
+	  of execution; the latter is called the <Def/topmost/ frame.
+	<Para class=apropos><Title/Stack Display/
+	  The Stack View displays the stack as one line of text per frame,
+	  where the first entry corresponds to the oldest activation frame
+	  and the last entry to the most recent frame (the <Em/topmost/ one).
+	  Each line consists of three columns.  The first column contains
+	  an arrow indicating whether control is at the entry (right arrow)
+	  or at the exit of the corresponding nested construct, the second
+	  column gives the number of the stack frame, and the third column
+	  a description.  The description may contain arguments (values),
+	  printed in bold face, which can be clicked on for examination
+	  with the Inspector.
+	<Para class=apropos><Title/Selected Frame/
+	  Some debugging actions refer to specific stack frames.  To this
+	  purpose, stack frames can be clicked (in a place not displaying
+	  a value) to become the <Def/selected frame/.  The selected frame
+	  is indicated by a blue background.  The up and down cursor keys
+	  also permit navigation through the stack.
+	<Para class=apropos><Title/Disabled Stacks/
+	  When the selected thread is running, its stack is grayed out to
+	  indicate that it is out of date, but contained values will still
+	  react to clicks.
+      <Section>
+	<Title/Environment Views/
+	<P>
+	  Below the Stack View, there are two panes labeled <Samp/Local Variables/ 
+          and <Samp/Global Variables/, displaying the values
+	  of local and global variables of the selected stack frame (or
+	  the topmost frame if no frame is selected).  The variables of
+	  the local environment are sorted by order of introduction in the
+	  source code; the global environment is sorted alphabetically.
+	  Clicking the values causes them to be inspected.
+      <Section>
+	<Title/Status Line/
+	<P>
+	  The Status Line at the bottom of the main window provides feedback
+	  about actions performed and the current state of the debugger.
+      <Section>
+	<Title/Source View/
+	<P>
+	  The Source View is not located within Ozcar's main window;
+	  instead, Emacs is instructed to display the source position
+	  corresponding to any selected frame.
+	<Para class=apropos><Title/Color Coding/
+	  Emacs highlights the line of source code corresponding to the
+	  selected frame in a color reflecting the selected thread's state:
+	  When the thread is running, highlighting will be done in gray;
+	  when it is stopped, in blue; and when the thread died of an
+	  exception or stopped at a breakpoint, in red.
+
+    <Chapter id="chapter.sample">
+      <Title/Sample Debugging Session/
+      <P>
+	In the following, we will perform a first sample session to get
+	a feeling of how threads behave under the control of Ozcar.  For
+	this, we'll use the following small program:
+<<<local
+   S = 'hello'
+in
+   {Show S#' world!'}
+end>>>
+      <Para class=apropos><Title/Attaching the Thread/
+	Let's check how this code is executed&emdash;step by step.
+	By default, Ozcar attaches all threads created by feeding code
+	in the OPI, so this is what we're going to do, for example using
+	<Code proglang=elisp/oz-feed-paragraph/ (<Key/C-. C-p/).  Ozcar
+	responds as shown in <Ptr to="picture.hello">.
+	<Figure class=picture id="picture.hello">
+	  <Caption/The Main Window after Feeding the Program/
+	  <P><Picture.Extern gif to="ozcar-hello.gif">
+	</Figure>
+	The status line informs us that a new thread with ID 53 has been
+	attached, and it was immediately selected.  Accordingly, the thread
+	forest contains a singleton tree with a node labeled 53 and marked
+	with an asterisk.
+      <Para class=apropos><Title/Stack and Environment/
+	The thread has been stopped immediately after its creation, so the
+	Stack View displays a single frame, containing the first application
+	in the program, <<S = 'hello'>>, which, expressed in Oz core syntax,
+	corresponds to <<{Value.'=' _ hello}>>.  Instead of the variable
+	name the variable's value is displayed in the Stack View (where the
+	underscore stands for a logic variable).  If we explicitly needed
+	to check what the value of <<S>> is, we could look it up in the Local
+	Variables View.
+      <Para class=apropos><Title/Source View/
+	If we look over to Emacs, we'll find that the source line which
+	corresponds to <<{Value.'=' _ hello}>> is highlighted, as shown
+	in <Ptr to="picture.hello-emacs">.
+	<Figure class=picture id="picture.hello-emacs">
+	  <Caption/Emacs Showing the Position of the Stopped Thread/
+	  <P><Picture.Extern gif to="ozcar-hello-emacs.gif">
+	</Figure>
+      <Para class=apropos><Title/Single-Stepping/
+	The right arrow at the beginning of the current stack frame means:
+	We are about to apply the function, but we haven't yet!  One way
+	to do this is to use the Step Into (<Picture.Extern inline gif
+	to="step.gif">) action, which continues execution, but only until
+	the next stop within the body of the applied procedure.  In this
+	case, <<Value.'='>> is a primitive procedure, which is why execution
+	only stops when the application returns, indicated by the arrow in
+	the stack frame turning into a left arrow.  Note also that the
+	arguments of the procedure have been updated.
+      <Para class=apropos><Title/Detaching the Thread/
+	Performing the Step Into action another two times, we also evaluate
+	the application of the primitive procedure <<Show>>, after which the
+	stack becomes empty, and the thread terminates.  Accordingly, the
+	thread's node in the thread forest turns gray.  We'll now detach
+	this thread using the Detach (<Picture.Extern inline gif
+	to="detach.gif">) action.
+
+    <Chapter id="chapter.control">
+      <Title/Execution Control/
+      <P>
+	This chapter describes the various possibilities of exercising
+	fine-grained control over the execution of programs.  To do so,
+	we'll first define at what program points thread execution can
+	be stopped, the so-called <Def/step points/.
+      <Section>
+	<Title/Step Points/
+	<P>
+	  Step points are defined in terms of syntactic constructs in
+	  source code (in particular, debugging is not line-oriented).
+	  Many Oz constructs are designated to define step points, and in
+	  fact each such construct defines <Em/two/ step points: one at the
+	  entry and one at the exit.  The entry point creates a new stack
+	  frame, which is popped at the corresponding exit point.  When
+	  stopping at a step point, Emacs highlights the line containing
+	  it and inserts an additional mark within the line to indicate
+	  its exact position (where the precise syntactic construct begins
+	  or ends).
+	<Para class=apropos><Title/Constructs/
+	  The following gives a non-exhaustive list of what constructs
+	  constitute step points and how they are described in stack frames.
+	  <List>
+	    <Entry>Definitions
+	    <Item>
+	      The definition of a procedure, function or class constitutes
+	      a step point.  The entry point is the <<proc>>, <<fun>>, or
+	      <<class>> keyword, respectively, while the exit is the <<end>>
+	      keyword.  The frame description consists of the single word
+	      <Samp/definition/.
+	    <Entry>Applications
+	    <Item>
+	      Procedure, function, object and method applications are step
+	      points.  The entry and exit points are the opening and closing
+	      braces (or the comma in the case of a method application).
+	      The frame description mimics application syntax, displaying
+	      the procedure name (or <<$>> if it is anonymous) and the
+	      argument values.
+	    <Entry>Conditionals
+	    <Item>
+	      Boolean and pattern-matching conditionals are step points.
+	      The entry point is the <<if>> or <<case>> keyword (or <<elseif>>,
+	      <<elsecase>>, or <<catch>>, to be precise), the exit point the
+	      corresponding <<end>>.  The frame description consists of the
+	      word <Samp/conditional/, followed by the value tested by the
+	      conditional, if it could be determined.
+	    <Entry>Thread Creation
+	    <Item>
+	      Thread creation using the <<thread &ellipsis end>> construct
+	      is a step point, with the obvious entry and exit points.
+	      Thread creation frames consist of the word <Samp/thread/.
+	    <Entry>Installation of Exception Handlers
+	    <Item>
+	      The <<try &ellipsis end>> construct defines step points (unless
+	      it has neither <<catch>> nor <<finally>>, in which case it is
+	      ignored), with a frame description of <Samp/exception handler/.
+	      The actual handling of exceptions is a step point by virtue of
+	      the fact that conditionals are step points.
+	    <Entry>Critical Sections
+	    <Item>
+	      The <<lock &ellipsis end>> constructs are step points,
+	      with the frame description containing both the word <Samp/lock/
+	      and the lock itself.
+	    <Entry>Loops
+	    <Item>
+	      The <<for &ellipsis end>> construct defines step points,
+	      with frame description <Samp/loop/.
+	  </List>
+	<Section>
+	  <Title/Actions/
+	  <Para class=apropos><Title/Step Into/
+	    The simplest way to control the execution of a thread is
+	    to single-step, &ie;, to proceed from one step point to the
+	    next.  This is exactly what Step Into (<Picture.Extern inline
+	    gif to="step.gif">) does.  This is the most fine-grained
+	    visualization of program execution.
+	  <Para class=apropos><Title/Step Over/
+	    In contrast, the Step Over action (<Picture.Extern inline gif
+	    to="next.gif">), when performed at an entry point, causes thread
+	    execution to next stop at the corresponding exit point, not
+	    stopping at any nested step points.  On an exit point, it
+	    behaves exactly as Step Into does.
+	  <Para class=apropos><Title/Action Unleash/
+	    Actually, Step Over is a special case of a more generic action,
+	    called Unleash (<Picture.Extern inline gif to="unleash.gif">).
+	    It causes execution of the thread to continue until the
+	    <Em/selected/ stack frame is about to be popped from the stack
+	    (or until the thread has finished executing the whole stack if
+	    no stack frame is selected); this makes Step Over identical to
+	    an Unleash with the topmost frame selected.  Remember you can
+	    select a stack frame by clicking on it or by walking to it using
+	    the up and down cursor keys.
+	  <Para class=apropos><Title/Example/
+	    To illustrate the unleash action, we'll consider the following
+	    program which computes the factorial function:
+<<<local
+   fun {Fac N}
+      if N < 2 then 1
+      else
+	 N * {Fac N-1}
+      end
+   end
+in
+   {Show {Fac 5}}
+end>>>
+	    Go and activate Step Into (<Picture.Extern inline gif
+	    to="step.gif">) a couple of times, so as to build up a
+	    bit of stack, and select Frame 5.  Your Ozcar should look
+	    similar to <Ptr to="picture.fac1">.
+	    <Figure class=picture id="picture.fac1">
+	      <Caption/Before the Action <Q/Unleash 5//
+	      <P><Picture.Extern gif to="fac1.gif">
+	    </Figure>
+	    Let's decide to immediately compute the value of <<{Fac 3}>>,
+	    in other words, continue the thread's execution until Frame 5
+	    is about to be removed from the stack.  Unleash (<Picture.Extern
+	    inline gif to="unleash.gif">) with Frame 5 selected does exactly
+	    this.  <Ptr to="picture.fac2"> displays the result of this action.
+	    <Figure class=picture id="picture.fac2">
+	      <Caption/After the Action <Q/Unleash 5//
+	      <P><Picture.Extern gif to="fac2.gif">
+	    </Figure>
+      <Section>
+	<Title/Breakpoints/
+	<P>
+	  Single-stepping is nice, but often somewhat inconvenient, because
+	  you may need a lot of steps until you reach the interesting section
+	  of your program.  This is where breakpoints come in.  Ozcar supports
+	  them in two flavours: <Def/static breakpoints/ and <Def/dynamic
+	  breakpoints/.
+	<SubSection id="section.static-breakpoints">
+	  <Title/Static Breakpoints/
+	  <P>
+	    A static breakpoint can be defined by editing source code to
+	    contain an application <<{Ozcar.breakpoint}>> and recompiling
+	    the program (which is why they're called <Em/static/).  This
+	    also means that static breakpoints will persist across multiple
+	    debugging sessions.
+	  <Para class=apropos><Title/Example/
+	    Let's take the factorial example again and assume we need to
+	    debug the base case of the recursion.  We can do this with a
+	    static breakpoint as follows:
+<<<local
+   fun {Fac N}
+      if N < 2 then
+	 {Ozcar.breakpoint} 1
+      else
+	 N * {Fac N-1}
+      end
+   end
+in
+   {Show {Fac 5}}
+end>>>
+	    After feeding the code and performing the Unleash (<Picture.Extern
+	    inline gif to="unleash.gif">) action twice, we arrive directly at
+	    the desired program point.
+	<SubSection id="section.dynamic-breakpoints">
+	  <Title/Dynamic Breakpoints/
+	  <P>
+	    Sometimes we'll want to insert a breakpoint in the course of
+	    a debugging session.  Then we need dynamic breakpoints.
+	  <Para class=apropos><Title/Setting Breakpoints/
+	    Dynamic breakpoints can easily be set from within Emacs:
+	    Position the cursor on the line where you want to set or reset
+	    breakpoints and press <Key/C-x space/ to set or <Key/C-u C-x space/ 
+            to delete breakpoints.  Note that this will affect 
+            <Em/all entry points/ on the corresponding line (there may be several,
+	    or none).
+	  <P>
+	    Currently, there is no way to list all currently defined
+	    dynamic breakpoints.
+
+    <Chapter id="chapter.data">
+      <Title/Environments/
+      <P>
+	In this chapter we'll learn how to examine and use the environment,
+	&ie;, how to access the values of variables.  In fact, we need to
+	distinguish between different kinds of environments.  First, there
+	is the toplevel environment.  This is the environment relative to
+	which code was compiled (in the case of <Code proglang=sh/ozc/,
+	this normally is the Base Environment defined in <Ptr.Extern
+	to="ozdoc:base">).  The procedure <<NewName>> is one example, the
+	module <<String>> is another.  Then there exist environments for
+	each procedure (and accordingly, for each frame of a thread's stack).
+	For one there is a procedure's global environment, which contains
+	variables referenced within the procedure, but defined outside it
+	(&ie;, global to the procedure); for the purpose of debugging, we
+	consider this to not contain all toplevel variables since they are
+	always visible.  Finally, there come the procedure's local variables,
+	which include its formal parameters.
+      <Section>
+	<Title/Inspecting the Environment/
+	<P>
+	  Environment inspection is easy with Ozcar.  In fact, it is done
+	  automatically for you.  Whenever you select a stack frame, the
+	  variables visible at the program point corresponding to this frame
+	  are displayed in the Environment Views.  You can further examine
+	  the values using the Inspector by clicking on them.
+      <Section>
+        <Title/Using Values/
+	<P>
+	  Ozcar allows you to access the value you have last clicked
+	  to inspect it.  It can be requested by the expression
+	  <<<{Ozcar.object lastClickedValue($)}>>>
+      <Section>
+	<Title/Compiling against the Environment/
+	<P>
+	  There are situations where you want to operate on the values
+	  found in the local or global environment, for example, to convert
+	  a data structure, or to bind a logic variable which causes your
+	  program to hang.  In these cases, you can use the Query dialog,
+	  opened by selecting the <Samp/Query /&ellipsis; entry in the
+	  <Samp/Stack/ menu.
+	<Para class=apropos><Title/Evaluating Expressions/
+	  Using the Query dialog, you can evaluate arbitrary Oz expressions
+	  in the environment of the selected stack frame.  Just enter the
+	  expression to evaluate on the <Samp/Query/ line and press the
+	  <Samp/Eval/ button to make the result appear on the <Samp/Result/
+	  line.  <Ptr to="picture.eval-expression"> shows an example.
+	  <Figure class=picture id="picture.eval-expression">
+	    <Caption/Evaluating Arbitrary Expressions/
+	    <P><Picture.Extern gif to="eval-expression.gif">
+	  </Figure>
+	<Para class=apropos><Title/Executing Statements/
+	  Besides evaluating expressions, the Query dialog allows to
+	  execute statements using the <Samp/Exec/ button.  The result
+	  of executing a statement will always be <<unit>>.  <Ptr
+	  to="picture.exec-statement"> shows an example scenario:  An
+	  unbound variable, <<G2>>, is bound to the value <<7>>.  (Note
+	  that the Environment Views are only updated when the stack frame
+	  is selected again.)
+	  <Figure class=picture id="picture.exec-statement">
+	    <Caption/Executing Statements/
+	    <P><Picture.Extern gif to="exec-statement.gif">
+	  </Figure>
+	<Para class=apropos><Title/Compilation Environment/
+	  The exact environment used for compiling the code in the
+	  <Samp/Query/ line is the currently active toplevel environment
+	  of the OPI (or the full default OPI environment when running
+	  standalone).  Over this the selected frame's global environment
+	  is adjoined, and again the local environment is adjoined.
+	  Since the exact toplevel environment relative to which the code
+	  currently being debugged has been compiled is not available,
+	  this may be an incorrect approximation.  Note also that the
+	  environment is constructed using the frame selected at the time
+	  the <Samp/Eval/ or <Samp/Exec/ button is pressed, not when the
+	  Query dialog is opened.
+	<Para class=apropos><Title/Multiple Queries/
+	  You can have as many Query dialogs as you like.  This makes it
+	  possible to evaluate multiple pieces of code more than once without
+	  retyping them.
+
+    <Chapter id="chapter.exceptions">
+      <Title/Unhandled Exceptions/
+      <P>
+	Errors in programs often manifest themselves by unhandled exceptions.
+	Ozcar supports post-mortem inspection of threads that died of
+	a system or error exception.  (User exceptions do not provide
+	debugging information&emdash;work around this by raising your
+	exceptions as error exceptions, using <<Exception.raiseError>>.)
+      <Para class=apropos><Title/Exception Handling/
+	Any unhandled exception, which is normally just printed out
+	to standard error, is caught by Ozcar.  It attaches the dying
+	thread and displays the stack from the time the exception was
+	raised (or re-raised).  The topmost frame gets the description
+	<Samp/exception/ followed by the exception value itself.
+	Note that all stack frames include environment information.
+	The description of the exception itself is provided in the
+	Status Line.
+      <Para class=apropos><Title/Example/
+        Consider the following code.  Its author forgot to handle some
+	value in his patterns, leading to a missing <<else>> exception,
+	as depicted in <Ptr to="picture.exception">:
+<<<local
+   proc {Check X}
+      case X
+      of foo then {Show 'This is a foo'}
+      [] bar then {Show 'This is a bar'}
+      end
+   end
+in
+   {Check foobar}
+end>>>
+	<Figure class=picture id="picture.exception">
+	  <Caption/An Exception has not been Handled/
+	  <P><Picture.Extern gif to="exception.gif">
+	</Figure>
+      <Para class=apropos><Title/Source View/
+	Emacs displays the location in the source code where the exception
+	was raised.  Note that the bar is colored red, as the position has
+	been reached unexpectedly.
+	<Figure class=picture id="picture.exception-emacs">
+	  <Caption/Emacs Showing the Error Position/
+	  <P><Picture.Extern gif to="exception-emacs.gif">
+	</Figure>
+
+    <Chapter id="chapter.remote">
+      <Title/Remote Debugging/
+      <P>
+	So far, we have only used Ozcar to debug threads running in the same
+	process as the debugger itself.  However, Ozcar also supports the same
+	features for threads running remotely, and thus also the debugging of
+	distributed applications.
+      <Para class=apropos><Title/Model/
+	In this case, debugging is a client/server application.  The debugger
+	itself (&ie;, the site where the user interface is running) doubles
+	as a server, accepting connections of clients (&ie;, debugging
+	sessions on remote sites).  Clients forward events to the server,
+	for example when threads stop at step points or become blocked.
+	All attached threads, whether remote or local, are displayed in the
+	same thread forest:  Nodes corresponding to remote threads will be
+	named by their site name and process ID in addition to their thread
+	ID.  All control operations are supported on remote threads:
+	Commands are sent to the corresponding site so that the actual
+	operations can be carried out locally.
+      <Para class=apropos><Title/Reflection/
+	Note that when inspecting remote stacks, any contained values will
+	be <Def/reflected/ before they are displayed.  This means that an
+	approximating copy will be made on the remote site and the debugger
+	will only be able to operate on the copy.
+      <Para class=apropos><Title/Chapter Structure/
+	This chapter will first take a look at how the server is started,
+	then at how remote debugging sessions are initiated and how clients
+	connect to the server.
+      <Section>
+	<Title/Starting the Server/
+	<P>
+	  There are two ways to start a server: using the user interface or
+	  the API.
+	<Para class=apropos><Title/Using the Menus/
+	  In the <Samp/Ozcar/ menu, you'll find an entry called <Samp/Start Server/.  
+          Activating this will cause Ozcar to open a port where it
+	  listens for clients that want to connect.  This port is identified
+	  by a <Def/ticket/: a string describing the server's location on
+	  the net.  Clients will need this ticket in order to connect.
+	  A dialog will be opened showing the ticket.  You can use
+	  <Q/copy and paste/ to create clients.
+	<Para class=apropos><Title/Using the API/
+	  Another way to start the server is to use the API, for instance
+	  to start the server automatically from your application or to
+	  implement automatic connection of clients.  The expression
+	  <<<{Ozcar.startServer}>>> will return the required ticket.
+	<Para class=apropos><Title/Multiple Activations/
+	  Once Ozcar has started its server, the server will live as long
+	  as the Mozart process it runs in.  Clicking <Samp/Start Server/
+	  or evaluating <<{Ozcar.startServer}>> again will yield the same
+	  ticket.
+      <Section>
+	<Title/Connecting a Client to the Server/
+	<P>
+	  Once a server has been started, clients can connect to it.  Again,
+	  there are two ways to start a client: using the <Code proglang=sh
+	  /ozd/ application or the API.  Note that you should not have
+	  started Ozcar on the site where you want to start a server:
+	  Both debuggers will attempt to take over control of threads
+	  and will confuse each other.
+	<Para class=apropos><Title/From the Command Line/
+	  The command line debugger can be used to start a client:
+	  <Code display proglang=sh
+	  /ozd --remotedebugger --ticket=?{ticket} ?{url} -- ?{args}/
+	  This will use ?{ticket} to connect to the server.  Otherwise,
+	  behaviour is similar to <Code proglang=sh/ozd --debugger/,
+	  see <Ptr.Extern to="ozdoc:tools" key="chapter.debugger"> for
+	  more information.
+	<Para class=apropos><Title/Using the API/
+	  The API provides the module <<OzcarClient>> at URL
+	  <File>x-oz://system/OzcarClient</File>.  This can also be
+	  used to start a client:
+	  <<<{OzcarClient.start ?_{Ticket}}>>>
+	<Para class=apropos><Title/Fault Handling/
+	  When a client dies, the server will still consider its threads
+	  attached.  Only when you invoke an operation on a thread will
+	  it notice this fact and consider the corresponding thread dead.
+
+    <Chapter id="chapter.limitations">
+      <Title/Limitations/
+      <P>
+	Ozcar currently suffers from a number of limitations.  Most of
+	these are not severe, since simple workarounds are available.
+	<List>
+	  <Entry>Non-debug code
+	  <Item>
+	    Often, it is not be practical or possible to recompile all code
+	    of an application (including all used libraries) with debug
+	    information.  Ozcar will happily attach threads executing mixed
+	    debug and non-debug code, but only if they execute a step point
+	    within code compiled with debug information <Em/or/ a static
+	    breakpoint.  Furthermore, single-stepping and environment
+	    information will not be available within non-debug code.
+	  <Entry>Tail-calls
+	  <Item>
+	    Long-running applications, such as server applications, depend
+	    on <Em/tail-call optimization/ to implement their toplevel loop.
+	    Tail-call optimization causes stack frames to be popped before
+	    the activation of another procedure if the corresponding call is
+	    the last thing to happen within a procedure body.  Thus, tail-call
+	    optimization limits stack growth.  Within debug code, tail-call
+	    optimization is disabled, and long-running programs as well as
+	    programs with deep recursion may abort due to excessive stack
+	    growth.
+	  <P>
+	    As a workaround, implement the top-level loop of server
+	    applications in a separate component compiled without debug
+	    information.
+	  <Entry>Pickling and Garbage Collection
+	  <Item>
+	    Due to maintenance of the runtime environments, values may
+	    be referenced from closures that would not be referenced in
+	    production code.  This can lead to different dynamic behaviour
+	    with respect to pickling and garbage collection:  Pickling may
+	    produce larger pickles or fail due to resources or stateful
+	    data structures.  Garbage collection may not be able to release
+	    as much memory.  Finalizers may be called later.
+	  <Entry>Thread IDs
+	  <Item>
+	    Thread IDs are 16-bit integers, and as such wrap around pretty
+	    quickly.  As a consequence, they may often not be unique.
+	    This can cause the thread forest display and in particular
+	    navigation to become confused when debugging massively concurrent
+	    applications, because parent-child relationships cannot be
+	    correctly determined.  Note however that actions performed on
+	    and events generated by threads will always be associated
+	    correctly.
+	  <Entry>Spaces
+	  <Item>
+	    Currently, Ozcar will not attach any thread that is not
+	    executing in the toplevel space.  To debug a search script,
+	    execute it on the toplevel as a workaround.
+	  <Entry>Reflection of remote values
+	  <Item>
+	    When debugging remote threads (or distributed applications),
+	    the values displayed in stack frames and environments are
+	    only approximations of the actual values on the remote site
+	    obtained through <Def/reflection/.  Currently, the Query
+	    dialog executes queries locally and thus operates on the
+	    approximations instead of executing remotely and operating
+	    on the actual values.
+	</List>
+
+    <Appendix id="appendix.menus">
+      <Title/Menu Reference/
+      <P>
+	This chapter gives a complete description of all the menus
+	available within Ozcar.
+      <Section>
+	<Title/The Main Menu/
+	<P>
+	  The main menu is located on the top of Ozcar's main window.
+	<SubSection id="section.menu-ozcar">
+	  <Title/Ozcar/
+	  <P>
+	    <Picture.Extern gif to="menu-ozcar.gif">
+	    <List>
+	      <Entry><Menu/About&ellipsis;/
+	      <Item>
+		Pops up an info box containing platform and bug reporting
+		information.
+	      <Entry><Menu/Start Server/
+	      <Item>
+		Starts a server locally (if not already started) to accept
+		incoming connections for remote debugging.  Furthermore,
+		a dialog box is popped up displaying the ticket that remote
+		sites need to connect to.  Once a server has been started,
+		this operation will always return the same ticket.
+	      <Entry><Menu/Destroy/
+	      <Item>
+		Closes the internal Ozcar object.  Use this menu entry only
+		if Ozcar hangs, as all information about currently attached
+		threads gets lost.  Threads are not killed explicitly, but
+		unless some other reference to them is retained, they are
+		likely to be garbage collected if they had been stopped.
+	      <Entry><Menu key="C-x"/Suspend/
+	      <Item>
+		By default, closes the main window, sets the virtual machine
+		to non-debug mode, and causes the compiler to generate
+		non-debug code.  Information about currently attached
+		threads is preserved.  Can be reconfigured using the API
+		by the <<closeAction>> parameter.
+	    </List>
+	<SubSection>
+	  <Title/Action/
+	  <P>
+	    <Picture.Extern gif to="menu-action.gif">
+	    <List>
+	      <Entry><Menu key="s"/Step Into/
+	      <Item>
+		Do exactly one step (stop again at the next step point, enter
+		procedures).  Identical to pressing the <Picture.Extern inline
+		gif to="step.gif"> button.
+	      <Entry><Menu key="n"/Step Over/
+	      <Item>
+		Do one step, not stopping on nested constructs which constitute
+		a step point.  Identical to pressing the <Picture.Extern inline
+		gif to="next.gif"> button.
+	      <Entry><Menu key="c"/Unleash/
+	      <Item>
+		Continue execution until the selected stack frame is about to
+		be popped from the stack, or until the stack is empty if no
+		frame is selected.  Identical to pressing the <Picture.Extern
+		inline gif to="unleash.gif"> button.
+	      <Entry><Menu key="z"/Stop/
+	      <Item>
+		Stop the selected thread at the next step point it reaches,
+		or immediately if it is blocked.  Identical to pressing the
+		<Picture.Extern inline gif to="stop.gif"> button.
+	    </List>
+	  <SubSubSection>
+	    <Title/Detach/
+	    <P>
+	      This menu contains some useful entries to detach one or more
+	      attached threads.
+	    <P>
+	      <Picture.Extern gif to="submenu-detach.gif">
+	      <List>
+		<Entry><Menu key="d"/Current/
+		<Item>
+		  Detach the selected thread.  Identical to pressing the
+		  <Picture.Extern inline gif to="detach.gif"> button.
+		<Entry><Menu key="C-d"/All But Current/
+		<Item>
+		  Leave the current thread alone in the thread forest.
+		  Detach all others, letting them run freely (unless dead).
+		<Entry><Menu key="M-d"/All/
+		<Item>
+		  Detach all threads, letting them run freely (unless dead).
+		<Entry><Menu key="M-u"/All Dead/
+		<Item>
+		  Detach all dead threads.
+	      </List>
+	  <SubSubSection>
+	    <Title/Terminate/
+	    <P>
+	      This menu contains some useful entries to detach <Em/and kill/
+	      one or more attached threads.
+	    <P>
+	      <Picture.Extern gif to="submenu-terminate.gif">
+	      <List>
+		<Entry><Menu key="t"/Current/
+		<Item>
+		  Detach and kill the current thread.  Identical to pressing
+		  the <Picture.Extern inline gif to="kill.gif"> button.
+		<Entry><Menu key="C-t"/All But Current/
+		<Item>
+		  Leave the current thread alone in the thread forest.
+		  Detach and kill all others.
+		<Entry><Menu key="M-t"/All/
+		<Item>
+		  Detach and kill all threads.
+	    </List>
+	<SubSection>
+	  <Title/Thread/
+	  <P>
+	    <Picture.Extern gif to="menu-thread.gif">
+	    <List>
+	      <Entry><Menu key="Left"/Previous/
+	      <Item>
+		Select the thread which is located above the selected thread
+		in the thread forest.  If the selected thread is the topmost
+		thread in the forest, the bottommost thread is selected.
+	      <Entry><Menu key="Right"/Next/
+	      <Item>
+		Select the thread which is located below the selected thread
+		in the thread forest.  If the selected thread is the bottommost
+		thread in the forest, the topmost thread is selected.
+	      <Entry><Menu key="C-s"/Status/
+	      <Item>
+		Print some useful information about the currently attached
+		threads, for example:  
+                <Samp>2 attached threads, currently selected: 58/1 (stopped, runnable)</Samp>.  
+                The two numbers
+		associated with the selected thread are the thread ID and
+		the parent's thread ID.  In parentheses, the thread's state
+		is given.
+	    </List>
+	<SubSection>
+	  <Title/Stack/
+	  <P>
+	    <Picture.Extern gif to="menu-stack.gif">
+	    <List>
+	      <Entry><Menu key="Up"/Previous Frame/
+	      <Item>
+		Select the previous stack frame (if it exists) of the
+		selected thread.  Note that the stack grows downwards,
+		so you will reach an older frame.
+	      <Entry><Menu key="Down"/Next Frame/
+	      <Item>
+		Select the next stack frame (if it exists) of the selected
+		thread; you will reach a younger frame.
+	      <Entry><Menu key="C-l"/Recalculate/
+	      <Item>
+		Update the Stack View.  You may see internal stack frames
+		appear, as well updated values in the Environment Views.
+		(There is <Em/no/ automatic update to display a value as
+		soon as it changes.)
+	      <Entry><Menu key="v"/Update Env/
+	      <Item>
+		Immediately recalculates and redisplays the environment
+		of the selected stack frame.
+	      <Entry><Menu key="e"/Query&ellipsis/
+	      <Item>
+		Opens a dialog box where statements can be executed or
+		expressions evaluated in the context of the currently
+		selected stack frame's environment.  If the computation
+		does not terminate, use the Reset button to cancel the
+		operation and kill the computation.
+	    </List>
+	<SubSection>
+	  <Title/Options/
+	  <P>
+	    <Picture.Extern gif to="menu-options.gif">
+	    <List>
+	      <Entry><Menu key="C-e"/Use Emacs/
+	      <Item>
+		If turned off Emacs is not used as a Source View, so you
+		don't get any source position information.
+	      <Entry><Menu key="C-a"/Env Auto Update/
+	      <Item>
+		If you debug threads with huge environments, it may be a
+		good idea to turn of the automatic update of the environment
+		(recalculation and redisplay every time you make a step) in
+		order to save time and memory.  When the variables display
+		is not up to date, it will be displayed in gray.  You can
+		always request the current environment by pressing <Key/v/
+		(see above, item <Samp/Update Env/).
+	      <Entry><Menu key="C-o"/Preferences&ellipsis;/
+	      <Item>
+		Opens a dialog box to adjust preferences.  For instance,
+		many events are handled in batch mode if they arrive in
+		quick succession.  The <Samp/Idle Time To Perform Action/
+		preferences define what a <Q/quick succession/ is.
+		You can also adjust the width and depth to which values
+		are displayed in the Stack and Environment Views (if
+		<Samp/Value Printing/ is set to <Samp/Complete/).
+		Furthermore, the display of <Q/system variables/ can be
+		suppressed in the Environment Views (<Def/system variables/
+		are variables starting with a backquote&emdash;they are
+		used by the compiler for built-in runtime operations).
+		Application of the primitive procedures <<.>> (feature
+		selection) and <<NewName>> can be ignored for purposes of
+		stepping.  Last but not least some logging of the workings
+		of Ozcar can be printed to standard output&emdash;should
+		you ever want to report a bug in the debugger itself, you
+		should try to include this information in your report.
+	    </List>
+	  <SubSubSection>
+	    <Title/Value Printing/
+	    <P>
+	      In this menu you can determine how to display values in the
+	      Stack and Environment Views.  There is the short form which
+	      only prints type information for most values, and a long form
+	      which always prints the actual value (up to a given print
+	      width and depth, which can be set in the Preferences dialog
+	      box, see below).
+	    <P>
+	      <Picture.Extern gif to="submenu-valueprinting.gif">
+	      <List>
+		<Entry><Menu key="<"/Types Only/
+		<Item>
+		  This is the default setting.  You just see type information,
+		  which leads to a very compact display style.
+		<Entry><Menu key=">"/Complete/
+		<Item>
+		  You see the actual value, using the function <Code
+		  proglang=oz/Value.toVirtualString/.  This display mode
+		  can be quite unhandy if the values to be printed are large
+		  tuples or records.  You should carefully adjust the print
+		  depth and print width to your needs.
+	      </List>
+      <Section>
+	<Title/SubThreads/
+	<P>
+	  This menu is located to the right of the button bar, below the menu
+	  bar.  You can select how child threads of <Em/already attached/
+	  threads should be treated.
+	  <List>
+	    <Entry><Menu/Ignore/
+	    <Item>
+	      Children will not be attached at all, but run freely.
+	    <Entry><Menu/Attach/
+	    <Item>
+	      Children will be attached and immediately stopped.  This is
+	      the default.
+	    <Entry><Menu/Unleash 0/
+	    <Item>
+	      Children will be attached and the command <Samp/Unleash 0/ be
+	      executed.  This gives you a good feeling about how threads
+	      are created in a concurrent application.  They will terminate
+	      normally (unless they block somewhere), but will still be
+	      included in the thread view.
+	    <Entry><Menu/Unleash 1/
+	    <Item>
+	      Children will be attached and the command <Samp/Unleash 1/ be
+	      executed.  This makes it possible to explore the environment
+	      of every child thread just before it terminates.
+	  </List> 
+      <Section>
+	<Title/Queries/
+	<P>
+	  This menu is located to the right of the button bar, next to the
+	  <Samp/SubThreads/ menu.  You can select how threads created by
+	  the OPI are treated by Ozcar.
+	  <List>
+	    <Entry><Menu/Ignore/
+	    <Item>
+	      OPI threads are not attached, neither are any of their
+	      subthreads (unless, of course, they run into a breakpoint).
+	    <Entry><Menu/Attach/
+	    <Item>
+	      OPI threads are attached and immediately stopped.  This is
+	      the default.
+	  </List>
+
+    <Appendix id="appendix.api">
+      <Title/Application Programming Interface/
+      <Section>
+	<Title/The <<Ozcar>> Module/
+	<P>
+	  The <<Ozcar>> module, available at <File>x-oz://system/Ozcar</File>,
+	  exports the following features.
+	  <List>
+	    <Entry><<object>><Index class=module/Ozcar<And>object/
+	    <Synopsis><<{Ozcar.object ?+{Message}}>>
+	    <Item>
+	      provides the interface to the running debugger itself.
+	      It is described below.
+	    <Entry><<open>><Index class=module/Ozcar<And>open/
+	    <Synopsis><<{Ozcar.open}>>
+	    <Item>
+	      is identical to <<{Ozcar.object on}>>.
+	    <Entry><<close>><Index class=module/Ozcar<And>close/
+	    <Synopsis><<{Ozcar.close}>>
+	    <Item>
+	      is identical to <<{Ozcar.object off}>>.
+	    <Entry><<breakpoint>><Index class=module/Ozcar<And>breakpoint/
+	    <Synopsis><<{Ozcar.breakpoint}>>
+	    <Item>
+	      sets a static breakpoint (see
+	      <Ptr to="section.static-breakpoints">).
+	      Execution of <<{Ozcar.breakpoint}>> causes the current
+	      thread to be stopped and attached to the debugger if
+	      the debugger has been started, and is ignored otherwise.
+	    <Entry><<startServer>><Index class=module/Ozcar<And>startServer/
+	    <Synopsis><<{Ozcar.startServer ??{Ticket}}>>
+	    <Item>
+	      starts a server to accept connections of remote debugging
+	      clients (see <Ptr to="chapter.remote">) and returns a ticket
+	      with which clients can connect.  Once the server has been
+	      started, the expression <<{Ozcar.startServer}>> will always
+	      return the same ticket.
+	  </List>
+      <Section>
+	<Title/<<Ozcar.object>>/
+	<P>
+	  <List>
+	    <Entry><<init>><Index class=module/Ozcar.object<And>init/
+	    <Synopsis><<{Ozcar.object init()}>>
+	    <Item>
+	      closes and recreates the internal Ozcar object,
+	      discarding all information about attached threads.
+	      Identical to the <Samp/Destoy/ menu item described
+	      in <Ptr to="section.menu-ozcar">.
+	    <Entry><<on>><Index class=module/Ozcar.object<And>on/
+	    <Synopsis><<{Ozcar.object on()}>>
+	    <Item>
+	      starts Ozcar, opening the Ozcar window, setting the virtual
+	      machine to debug mode, and configuring the OPI compiler to
+	      generate debug code.
+	    <Entry><<off>><Index class=module/Ozcar.object<And>off/
+	    <Synopsis><<{Ozcar.object off()}>>
+	    <Item>
+	      by default, suspends Ozcar, closing its window, but keeping all
+	      information about attached threads.  Restarting Ozcar (using
+	      <<on()>>) will resume a debugging session exactly where it has
+	      been left before.  Can be reconfigured by <<closeAction>> (see
+	      below).
+	    <Entry><<conf>><Index class=module/Ozcar.object<And>conf/
+	    <Synopsis><<{Ozcar.object conf(?_{FeatureA}: ?+{ValueX} ...)}>>
+	    <Item>
+	      configures Ozcar parameters.  The method must be a record
+	      where each feature ?_{FeatureA} is a configuration parameter
+	      and the corresponding subtree ?_{ValueX} the value to set the
+	      parameter to.  See <Ptr to="section.configuration"> for a list
+	      of parameters.
+	    <Entry><<bpAt>><Index class=module/Ozcar.object<And>bpAt/
+	    <Synopsis><<{Ozcar.object bpAt(?+{FileV} ?+{LineI} ?+{EnableB})}>>
+	    <Item>
+	      sets or resets dynamic breakpoints.  All step points in files
+	      with name ?_{FileV} and in line ?_{LineI} are affected.  The
+	      flag ?_{EnableB} specifies whether dynamic breakpoints at these
+	      step points should be enabled (<<true>>) or disabled (<<false>>).
+	      See <Ptr to="section.dynamic-breakpoints"> for more information
+	      on dynamic breakpoints.
+	    <Entry><<lastClickedValue>>
+	      <Index class=module/Ozcar.object<And>lastClickedValue/
+	    <Synopsis><<{Ozcar.object lastClickedValue(?_{X})}>>
+	    <Item>
+	      returns the value that has last been clicked on in the user
+	      interface, causing it to be passed to the Inspector.
+	  </List>
+      <Section id="section.configuration">
+	<Title/Configuration Options/
+	<P>
+	  <Table id="table.prop.application">
+	    <Tr><Th/Feature/<Th/Type/<Th/Default/<Th/Description/</Tr>
+	    <Tr>
+	      <Td/<Span class=index/<<timeoutToSwitch>>//
+	      <Td/integer/
+	      <Td/100/
+	      <Td/Timeout in milliseconds before a thread switch is performed,
+		unless another thread switch is initiated before it./
+	    </Tr>
+	    <Tr>
+	      <Td/<Span class=index/<<timeoutToUpdateEnv>>//
+	      <Td/integer/
+	      <Td/200/
+	      <Td/Timeout in milliseconds before the Environment Views are
+		updated, unless another environment has been requested
+		before this./
+	    </Tr>
+	    <Tr>
+	      <Td/<Span class=index/<<emacsInterface>>//
+	      <Td/<<false>> or an object/
+	      <Td/The OPI/
+	      <Td/The object to talk to for source display and highlighting
+		requests.  Typically an instance of <<Emacs.interface>>./
+	    </Tr>
+	    <Tr>
+	      <Td/<Span class=index/<<closeAction>>//
+	      <Td/<<unit>> or a nullary procedure/
+	      <Td/<<unit>>/
+	      <Td/Configures how the <<off()>> method behaves&emdash;and
+		thus, how the <Samp/Suspend/ menu item and <<Ozcar.close>>
+		API function behave.  If the <<closeAction>> is <<unit>>,
+		then Ozcar is suspended, else the specified procedure is
+		invoked./
+	    </Tr>
+	  </Table>
+      <Section>
+	<Title/The <<OzcarClient>> Module/
+	<P>
+	  <List>
+	    <Entry><<start>><Index class=module/OzcarClient<And>start/
+	    <Synopsis><<{OzcarClient.start ?+{Ticket}}>>
+	    <Item>
+	      starts a local debug session, connecting to a remote debugger
+	      using ?_{Ticket}.  This sets the virtual machine to debug
+	      mode (if and only if the remote debugger is active) and sets
+	      up threads to forward debug events to the remote debugger and
+	      to locally execute control operations generated by the remote
+	      debugger.  This should not be used with a local Ozcar runnning.
+	      See <Ptr to="chapter.remote"> for more information on remote
+	      debugging.
+	  </List>
+</Book>

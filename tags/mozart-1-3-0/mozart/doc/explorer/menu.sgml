@@ -1,0 +1,421 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<chapter id="chapter.menu">
+  <Title/The Menu Bar/
+
+  <P>
+    All operations available with the Explorer can be chosen from menu
+    entries. Some operations can invoked by keyboard accelerators. The
+    most important operations can be invoked with the mouse.
+  </P>
+ 
+  <P>
+    Keyboard accelerators are shown to the right of menu
+    entries. Accelerators beginning with <Kbd>C-</Kbd> require the
+    control-key to be pressed together with the key.  Operations available
+    via mouse buttons are tagged by a small figure to the left of the
+    explanation.
+  </P>
+
+  <section id="section.menu.explorer">
+    <Title/The Explorer Menu/
+
+    <P>
+      This menu contains operations to stop, reset, and quit the
+      Explorer.
+    </P>
+
+    <P>
+    <List>
+      <Entry><Menu/About&ellipsis;/
+      <Item>
+	Displays a window containing short information on the
+	Explorer.
+
+      <Entry><Menu key="C-g"/Halt/
+      <Item>
+	Halts exploration of the search tree, but does not halt drawing of
+	newly explored parts.
+
+      <Entry><Menu key="C-c"/Break/
+      <Item>
+	Breaks both exploration and drawing of the search
+	tree. Drawing is stopped as follows: not yet drawn subtrees
+	are drawn as hidden.
+
+      <Entry><Menu key="C-r"/Reset/
+      <Item>
+	Resets the Explorer such that only the top node
+	of the search tree is explored and drawn.
+
+      <Entry><Menu/Export Postscript&ellipsis;/
+      <Item>
+	Opens a window to choose a file. After a file has been selected,
+	the drawing of the search tree is dumped to this file in postscript
+	format.
+
+      <Entry><Menu key="C-x"/Close/
+      <Item>
+	The Explorer window is closed. When the Explorer is
+	invoked again, a new Explorer window is created.
+    </List>
+    </P>
+  </section>
+
+  <section id="section.menu.move">
+    <Title/The Move Menu/
+
+    <P>
+       Operations accessible from this menu manipulate the current node.
+    </P>
+
+    <P>
+    <List>
+      <Entry><Menu key="c"/Center/
+      <Item>
+	Scrolls the search tree such that the current node is centered
+	 (if possible).
+
+      <Entry><Menu key="t"/Top Node/
+      <Item>
+	Makes the top most node of the search tree the current node.
+
+      <Entry><Menu key="-"/Leftmost/
+      <Item>
+	Makes the leftmost node of the search tree the current node.
+
+      <Entry><Menu key="+"/Rightmost/
+      <Item>
+	Makes the rightmost node of the search tree the current node.
+
+      <Entry><Menu key="b"/Backtrack/
+      <Item>
+	Makes the nearest open choice node the current node. Nearest
+	means the nearest node which is above and to the left of the
+	current node. 
+
+      <Entry><Menu key="<"/Previous Solution/
+      <Item>
+	Makes the previous solution (i.e., the nearest solution to the
+	left of the current node) the current node.
+
+      <Entry><Menu key=">"/Next Solution/
+      <Item>
+	Makes the next solution (i.e., the nearest solution to the
+	right of the current node) the current node.
+
+    </List>
+    </P>
+  </section>
+
+  <section id="section.menu.search">
+    <Title/The Search Menu/
+
+    <P>
+      Operations available from this menu explore the search tree.
+    </P>
+
+    <P>
+    <List>
+      <Entry><Menu mouse=r2 key="n"/Next Solution/
+      <Item>
+	Explores the search tree starting from the current node up to
+	the next solution. Exploration can be stopped as described in
+	<Ptr to="section.menu.explorer">. 
+
+      <Entry><Menu key="a"/All Solutions/
+      <Item>
+	Explores the entire current subtree. Exploration can be
+	stopped as described in <Ptr
+	to="section.menu.explorer">. 
+
+      <Entry><Menu mouse=r1 key="o"/One Step/
+      <Item>
+	Performs a single distribution step starting from the current
+	choice node. 
+
+    </List>
+    </P>
+  </section>
+
+
+  <section id="section.menu.nodes">
+    <Title/The Nodes Menu/
+
+    <P>
+      Operations available from this menu allow to select and invoke
+      actions. 
+    </P>
+
+    <P>
+    <List>
+      <Entry><Menu/Information Action/
+      <Item>
+	Shows a sub menu from which an information action can be
+	selected. <Ptr to="chapter.actions"> describes how new actions
+	can be defined.
+
+      <Entry><Menu mouse=l2 key="i"/Information/
+      <Item>
+	Invokes the currently selected  information action (see above) on the
+	current node.
+
+      <Entry><Menu/Compare Action/
+      <Item>
+	Shows a sub menu from which a compare action can be
+	selected. <Ptr to="chapter.actions"> describes how new actions
+	can be defined.
+
+      <Entry><Menu key="1"/Select Compare/
+      <Item>
+	Selects the current node as <Em/compare node/. Selecting a
+	different node draws an arrow  from the compare node 
+	to the new current node.
+
+      <Entry><Menu key="0"/Deselect Compare/
+      <Item>
+	Deselects the compare node and deletes the arrow.
+
+      <Entry><Menu key="2"/Compare/
+      <Item>
+	Applies the currently selected compare action to the compare node
+	(i.e., the node from which the arrow issues) and the current node.
+
+      <Entry><Menu/Statistics Action/
+      <Item>
+	Shows a sub menu from which a statistics action can be
+	selected. <Ptr to="chapter.actions"> describes how new actions
+	can be defined.
+
+      <Entry><Menu key="s"/Statistics/
+      <Item>
+	Applies the currently selected statistics action to the
+	current node. 
+
+    </List>
+    </P>
+  </section>
+
+
+  <section id="section.menu.hide">
+    <Title/The Hide Menu/
+
+    <P>
+      This menu features operations for hiding and unhiding
+      subtrees. The drawing of subtrees during unhiding can be stopped
+      as described in <Ptr to="section.menu.explorer">.
+    </P>
+
+    <P>
+    <List>
+      <Entry><Menu key="h" mouse=m1>Hide/Unhide</Menu>
+      <Item>
+        If the current subtree is hidden, it gets unhidden. If the
+        current subtree is not hidden, it gets hidden. Unhiding is not
+        recursive: If the hidden tree contains hidden subtrees itself,
+        they remain hidden. 
+
+      <Entry><Menu key="f"/Hide Failed/
+      <Item>
+        All completely explored subtrees in the current subtree that
+        do not contain a solution are hidden.
+
+      <Entry><Menu key="u" mouse=m2/Unhide But Failed/
+      <Item>
+        All subtrees of the current subtree with the exception of
+        completely explored subtrees not containing a solution are
+        unhidden. 
+
+      <Entry><Menu key="C-u"/Unhide All/
+      <Item>
+        All subtrees of the current subtree are unhidden.
+
+    </List>
+    </P>
+
+    <P>
+    <Figure id="figure.hidestar">
+      <Caption/Example for hiding and unhiding subtrees./
+      <Table class=dyptic id="fig.hidestar.table">
+        <Tr>
+          <Td><p.silent>&nbsp;
+          </Td>
+          <Td>
+            <Picture.Extern id="pic.hide-1.a"
+			    to="pictures/hide-1.ps" 
+                            type=ps info="-width 70">
+          </Td>
+          <Td>
+            Hide/Unhide
+            <Picture.Extern id="pic.arrow-r.a"
+			    to="arrow-r.gif" type=gif> 
+          </Td>
+          <Td>
+            <Picture.Extern id="pic.hide-2"
+			    to="pictures/hide-2.ps" 
+                            type=ps info="-width 40">
+          </Td>
+          <Td>
+            Hide/Unhide
+            <Picture.Extern id="pic.arrow-r.b"
+			    to="arrow-r.gif" type=gif> 
+          </Td>
+          <Td>
+            <Picture.Extern id="pic.hide-1.b"
+			    to="pictures/hide-1.ps" 
+                            type=ps info="-width 70">
+          </Td>
+        </Tr>
+        <Tr>
+          <Td>
+            Hide Failed
+            <Picture.Extern id="pic.arrow-r.c"
+			    to="arrow-r.gif" type=gif> 
+          </Td>
+          <Td>
+            <Picture.Extern id="pic.hide-3"
+			    to="pictures/hide-3.ps" 
+                            type=ps info="-width 70">
+          </Td>
+          <Td>
+            Unhide But Failed
+            <Picture.Extern id="pic.arrow-r.d"
+			    to="arrow-r.gif" type=gif> 
+          </Td>
+          <Td>
+            <Picture.Extern id="pic.hide-4"
+			    to="pictures/hide-4.ps" 
+                            type=ps info="-width 70">
+          </Td>
+          <Td>
+            Unhide All
+            <Picture.Extern id="pic.arrow-r.e"
+			    to="arrow-r.gif" type=gif> 
+          </Td>
+          <Td>
+            <Picture.Extern id="pic.hide-5"
+			    to="pictures/hide-5.ps" 
+                            type=ps info="-width 70">
+          </Td>
+        </Tr>
+      </Table>
+    </Figure>
+    </P>
+
+    <P>
+      The different operations to hide and unhide trees are
+      illustrated by an example in <Ptr
+      to="figure.hidestar">. All operations are invoked with
+      the entire tree as current subtree.
+    </P>
+
+  </section>
+
+
+  <section id="section.menu.options">
+    <Title/The Options Menu/
+
+    <P>
+      This menu contains access to dialogs from which the Explorer can
+      be configured.
+    </P>
+
+    <P>
+    <List>
+      <Entry><Menu/Search &ellipsis;/
+      <Item>
+	Creates a dialog to set options for the Explorer's search engine.
+      <P><Picture.extern to="search.gif" type=gif></P>
+      <P>
+	In the <Em/Search/ entry the kind of recomputation used during
+	next and all solution search (see also <Ptr
+	to="section.menu.search">) can be entered. Entering
+	<Kbd/none/ means that in each distribution step during search
+	a space is stored. Entering <Kbd/full/ means that no spaces at
+	all are stored during search. Entering a number <Math/n/ means that
+	only in each <Math/n/-th distribution step a space gets
+	stored. Roughly, with a recomputation distance of <Math/n/, the
+	time needed during search is increased by a factor of <Math/n/ and
+	memory occupied is decreased by a factor of <Math/n/. 
+      <P>
+	In the <Em/Information/ entry the kind of recomputation used
+	for accessing the information attached to nodes. Entering <Kbd/none/
+	means that each choice and solved node stores a computation
+	space. Entering <Kbd/full/ means that only the top node stores its
+	corresponding computation space. The space of any other node is
+	recomputed by redoing all distribution steps. The number of required
+	distribution steps thus depends on the depth of the node. Entering a
+	number <Math/n/ means that only nodes at a depth
+	<Math/1/, <Math/n+1/, <Math/2n+1/, &ellipsis; store a computation
+	space. Thus, in the worst case the access to a node's
+	space recomputes <Math/n-1/ distribution steps.
+      <P>
+	Selecting <Em/Full Recomputation in Failed Subtrees/ means that in
+	subtrees that are explored completely and do not contain a solution,
+	no spaces are stored.
+      <P>
+	Pressing the buttons <Em/Normal/, <Em/Large/, and <Em/Huge/ enter
+	values to the recomputation entries. <Em/Normal/ is the default setting
+	for scripts which do not contain very much propagators (i.e., about a
+	few hundred). The other two buttons suggest values for scripts
+	with more propagators or deep search trees.
+
+      <Entry><Menu/Drawing &ellipsis;/
+      <Item>
+	Creates a dialog to set options used for the drawing of the search
+	tree.
+      <P><Picture.extern to="draw.gif" type=gif></P>
+      <P>The entries in the dialog are self-explanatory.
+
+      <Entry><Menu/Postscript &ellipsis;/
+      <Item>
+	Creates a dialog to set options used for dumping the search
+	tree in postscript format (see also <Ptr
+	to="section.menu.explorer">).
+      <P><Picture.extern to="post.gif" type=gif></P>
+      <P>
+        The format of the
+	string to be entered in the <Em/Maximal size/ field 
+	must be as follows:
+      <P>
+        <Em/num dim x num dim/
+      </P>
+      <P>
+	where <Em/dim/ must be one of <Kbd/i/ (inch), <Kbd/c/
+	(centimeter), <Kbd/m/ (millimeter), or <Em/p/ (point, that is
+	<Math>1/72</Math> inch).
+      </P>
+
+    </List>
+    </P>
+
+    <P>
+      The options can also be configured by sending a message to
+      <<Explorer.object>>, for details see <Ptr to="chapter.object">.
+    </P>
+
+  </section>
+
+</chapter>
+
