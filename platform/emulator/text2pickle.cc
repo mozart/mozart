@@ -101,7 +101,7 @@ inline
 int skipBlanks(FILE *in)
 {
   while(1) {
-    char c = nextchar(in);
+    int c = nextchar(in);
     if (c==EOF || !isspace(c))
       return c;
   }
@@ -259,7 +259,7 @@ char *scanComment(FILE *in)
 {
   int i = 0;
   while(1) {
-    char c = nextchar(in);
+    int c = nextchar(in);
     if (c==EOF || c=='\n') {
       setBuf(i,0);
       return strdup(buf);

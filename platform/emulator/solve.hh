@@ -66,7 +66,7 @@ public:
 #endif
 
 public:
-  NO_DEFAULT_CONSTRUCTORS(SolveActor);
+  NO_DEFAULT_CONSTRUCTORS(SolveActor)
   SolveActor(Board *bb);
 
   Board *getSolveBoard() { 

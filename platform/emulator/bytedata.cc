@@ -139,7 +139,7 @@ OZ_Term unmarshalBitString(void*bs1) {
   return oz_makeTaggedExtension(s);
 }
 
-OZ_Term BitString::printV(int depth = 10) {
+OZ_Term BitString::printV(int depth) {
   int w = getWidth();
   OZ_Term tup=OZ_tupleC("#",w);    
   for (int i=0; i<w; i++) OZ_putArg(tup,i,oz_int(get(i)?1:0));
@@ -339,7 +339,7 @@ void ByteString_init() {
   }
 }
 
-OZ_Term ByteString::printV(int depth = 10) {
+OZ_Term ByteString::printV(int depth) {
   return oz_pair2(oz_atom("<ByteString \""),
 		  oz_pair2(oz_makeTaggedExtension(this),
 			   oz_atom("\">")));

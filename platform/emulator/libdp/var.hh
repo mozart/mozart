@@ -48,7 +48,7 @@ public:
   VarStatus checkStatusV() = 0;
   Bool validV(TaggedRef v) { return TRUE; }
   virtual int getIdV() = 0;
-  virtual ExtVar *gcV(void) = 0;
+  virtual OzVariable *gcV(void) = 0;
   virtual void gcRecurseV(void) = 0;
   virtual void disposeV(void) = 0;
   virtual void printStreamV(ostream &out,int depth = 10) = 0;
@@ -81,7 +81,7 @@ public:
   int getIdV() { return OZ_EVAR_PROXY; }
   OZ_Term statusV();
   VarStatus checkStatusV();
-  ExtVar *gcV() { return new ProxyVar(*this); }
+  OzVariable *gcV() { return new ProxyVar(*this); }
   void gcRecurseV(void);
   void disposeV(void) { // PER-LOOK when is this used
     disposeS();
@@ -170,7 +170,7 @@ public:
   int getIdV() { return OZ_EVAR_MANAGER; }
   OZ_Term statusV();
   VarStatus checkStatusV();
-  ExtVar *gcV() { return new ManagerVar(*this); }
+  OzVariable *gcV() { return new ManagerVar(*this); }
   void gcRecurseV(void);
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:mgr>"; }
   OZ_Return bindV(TaggedRef *vptr, TaggedRef t);

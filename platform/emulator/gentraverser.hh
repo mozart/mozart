@@ -42,7 +42,7 @@
 #include "dictionary.hh"
 #include "gname.hh"
 
-#define CrazyDebug(Code) ;
+#define CrazyDebug(Code) 
 // let's count nodes processed...
 // #define CrazyDebug(Code) Code
 
@@ -224,8 +224,8 @@ public:
 // An object of the class can be used for more than one traversing;
 class GenTraverser : private NodeProcessor, protected IndexTable {
 private:
-  DebugCode(int debugNODES;);
-  CrazyDebug(int debugNODES;);
+  DebugCode(int debugNODES;)
+  CrazyDebug(int debugNODES;)
   void doit();			// actual processor;
 
   //
@@ -650,8 +650,8 @@ public:
 //
 class Builder : private BuilderStack, public TermTable {
 private:
-  DebugCode(int debugNODES;);
-  CrazyDebug(int debugNODES;);
+  DebugCode(int debugNODES;)
+  CrazyDebug(int debugNODES;)
   OZ_Term result;		// used as a "container";
   OZ_Term blackhole;		// ... for discarding stuff;
 
