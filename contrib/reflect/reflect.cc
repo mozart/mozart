@@ -86,8 +86,8 @@ extern "C"
     atom_bool              = OZ_atom("bool");  
     atom_bounds            = OZ_atom("bounds");  
     atom_val               = OZ_atom("val");  
-    atom_glb               = OZ_atom("glb");  
-    atom_lub               = OZ_atom("lub");  
+    atom_glb               = OZ_atom("lowerbound");  
+    atom_lub               = OZ_atom("upperbound");  
     atom_flat              = OZ_atom("flat actor");  
     atom_local             = OZ_atom("home");  
     atom_ask               = OZ_atom("ask actor");  
