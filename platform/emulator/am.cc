@@ -115,7 +115,7 @@ void AM::init(int argc,char **argv)
   ozconf.init();
 
   suspCallHandler=makeTaggedNULL();
-  suspendVar=0;
+  suspendVarList=makeTaggedNULL();
 
   int c;
 
