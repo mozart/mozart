@@ -37,14 +37,14 @@ relative to a language entity on a given site:
 <LIST>
 <ITEM> The entity works normally (fault state <<ok>>).
 <ITEM> The entity is temporarily not working
-(fault state <<tempBlock>>).
+(fault state <<tempFail>>).
 This is because a site crucial to the entity's operation
 is unreachable due to a network problem.
 This fault state can go away.
 The network layer actively tries
 to reestablish another connection.
 <ITEM> The entity is permanently not working
-(fault state <<permBlock>>).
+(fault state <<permFail>>).
 This is because a site crucial to the entity's operation
 has crashed.
 This fault state is permanent.
@@ -87,7 +87,7 @@ Upon arrival, if the code is not present,
 then it will be immediately requested.
 This will guarantee that code is sent at most
 once to a given site.
-This will introduce fault states <<tempBlock>> and <<permBlock>>
+This will introduce fault states <<tempFail>> and <<permFail>>
 if the site containing the code
 becomes unreachable or crashes.
 
@@ -109,8 +109,8 @@ and a set of proxy sites.
 The following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
-<ITEM> Owner site down (<<permBlock>>).
-<ITEM> Owner site unreachable (<<tempBlock>>).
+<ITEM> Owner site down (<<permFail>>).
+<ITEM> Owner site unreachable (<<tempFail>>).
 </LIST>
 A port has a single operation, <<Send>>,
 which can complete if the fault state is <<ok>>.
@@ -122,8 +122,8 @@ and a set of proxy sites.
 The following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
-<ITEM> Owner site down (<<permBlock>>).
-<ITEM> Owner site unreachable (<<tempBlock>>).
+<ITEM> Owner site down (<<permFail>>).
+<ITEM> Owner site unreachable (<<tempFail>>).
 <ITEM> Some proxy sites down (<<remoteProblem>>).
 <ITEM> Some proxy sites unreachable (<<remoteProblem>>).
 </LIST>
@@ -160,10 +160,10 @@ or in the network.
 The following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
-<ITEM> Owner site down and state pointer not present (<<permBlock>>).
-<ITEM> Owner site unreachable and state pointer not present (<<tempBlock>>).
-<ITEM> State pointer lost (owner site up) (<<permBlock>>).
-<ITEM> State pointer unreachable (owner site up) (<<tempBlock>>).
+<ITEM> Owner site down and state pointer not present (<<permFail>>).
+<ITEM> Owner site unreachable and state pointer not present (<<tempFail>>).
+<ITEM> State pointer lost (owner site up) (<<permFail>>).
+<ITEM> State pointer unreachable (owner site up) (<<tempFail>>).
 </LIST>
 <P> Objects and cells have one primitive operation,
 namely a state update.
