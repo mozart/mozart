@@ -1267,11 +1267,6 @@ BIspec fdSpec[] = {
 
   // Distribution builtins: fddist.cc
   {"fddistribute", 5, BIfdDistribute},
-  {"fdgetCandidates", 5, BIfdGetCandidates},
-  {"fddistributeMinPairs", 5, BIfdDistributeMinPairs},
-  {"fddistributeTaskIntervals", 7, BIfdDistributeTaskIntervals},
-  {"fddistributeTaskIntervalsOpt", 7, BIfdDistributeTaskIntervalsOpt},
-
 
   {0,0,0,0}
 };

@@ -63,10 +63,6 @@ OZ_C_proc_proto(BIfdTellConstraintCD)
 
 // fddist.cc
 OZ_C_proc_proto(BIfdDistribute)
-OZ_C_proc_proto(BIfdGetCandidates)
-OZ_C_proc_proto(BIfdDistributeTaskIntervals)
-OZ_C_proc_proto(BIfdDistributeTaskIntervalsOpt)
-OZ_C_proc_proto(BIfdDistributeMinPairs)
 
 #ifndef FOREIGNFDPROPS
 OZ_C_proc_proto(fdp_init)
