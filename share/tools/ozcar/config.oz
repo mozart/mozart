@@ -1,10 +1,6 @@
 %%% $Id$
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
-%% Until the emacs interface has been fixed, you'll find
-%% lines with "funny" comments like here:
-%% StatusInitText = 'No current thread' /* end */
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% some helpers
@@ -38,37 +34,37 @@ GlobalEnvTitle         = 'Global Variables'
 ApplPrefixText         = 'Application:'
 ApplFilePrefixText     = 'File:'
 
-InvalidThreadID        = 'Invalid Thread ID in step message' /* end */
+InvalidThreadID        = 'Invalid Thread ID in step message'
 NoFileInfo             = 'step message without line number information, ' #
-                         'continuing thread #' /* end */
+                         'continuing thread #'
 NoFileBlockInfo        = ' blocks without line number information'
-EarlyThreadDeath       = 'won\'t add thread #' /* end */
-EarlyTermThread        = 'Early terminating thread' /* end */
-KnownThread            = 'Got known thread' /* end */
-NewThread              = 'Got new thread' /* end */
+EarlyThreadDeath       = 'won\'t add thread #'
+EarlyTermThread        = 'Early terminating thread'
+KnownThread            = 'Got known thread'
+NewThread              = 'Got new thread'
 NextOnLeave            = '\'next\' while leaving procedure - ' #
                          'substituting by \'step\''
 
-UnknownSuspThread      = 'Unknown suspending thread' /* end */
-UnknownWokenThread     = 'Unknown woken thread' /* end */
+UnknownSuspThread      = 'Unknown suspending thread'
+UnknownWokenThread     = 'Unknown woken thread'
 UnknownMessage         = 'Unknown message on stream'
 
-WaitForThread          = 'waiting for thread to be added ' # /* end */
-                         'to dictionary of debugged threads...' /* end */
+WaitForThread          = 'waiting for thread to be added ' #
+                         'to dictionary of debugged threads...'
 
 ErrorExcText           = 'Exception: '
 UserExcText            = 'Exception: '
 NoStackText            = ' / no stack available'
 
-FirstSelectThread      = 'You must select a thread first!' /* end */
-IgnoreNoFileStep       = 'Ignoring new thread as there\'s' # /* end */
+FirstSelectThread      = 'You must select a thread first!'
+IgnoreNoFileStep       = 'Ignoring new thread as there\'s' #
                          ' no line information available. ' #
                          ' Hint: save your Emacs buffer!'
 
 DoneMessage            = ' done'
 
-SwitchMessage          = 'You have selected thread #' /* end */
-RebuildMessage         = 'Re-calculating stack of thread #' /* end */
+SwitchMessage          = 'You have selected thread #'
+RebuildMessage         = 'Re-calculating stack of thread #'
 ForgetMessage          = 'Thread #'
 ForgetMessage2         = ' is not traced anymore'
 TerminateMessage       = 'Thread #'
@@ -80,10 +76,10 @@ OzcarMessagePrefix     = fun {$}
 			 end
 OzcarErrorPrefix       = 'Ozcar ERROR: '
 
-BraceLeft              = '{'  /* } */
+BraceLeft              = '{'
 BraceRight             = '}'
 
-BracketLeft            = '['  /* ] */
+BracketLeft            = '['
 BracketRight           = ']'
 
 DotEnd                 = '.end'
@@ -101,18 +97,18 @@ ResetAction            = {NewName}
 %% Types, Names and Atoms
 %%
 ArrayType              = '<array>'
-ThreadType             = '<thread>' /* end */
+ThreadType             = '<thread>'
 CellType               = '<cell>'
-ClassType              = '<class>' /* end */
+ClassType              = '<class>'
 DictionaryType         = '<dict>'
 FloatType              = '<float>'
 ListType               = '<list>'
 UnitType               = 'unit'
 NameType               = '<name>'
-LockType               = '<lock>' /* end */
+LockType               = '<lock>'
 ObjectType             = '<object>'
 PortType               = '<port>'
-ProcedureType          = '<proc>' /* end */
+ProcedureType          = '<proc>'
 TupleType              = '<tuple>'
 RecordType             = '<record>'
 ChunkType              = '<chunk>'
