@@ -1,0 +1,28 @@
+SRCTOP          = @SRCTOP@
+SRCDIR          = @srcdir@
+VPATH           = @srcdir@
+PREFIX          = @prefix@
+
+INSTALL         = @INSTALL@
+INSTALL_FILE    = $(INSTALL) -m 444
+INSTALL_DIR     = @INSTALL_DIR@
+WHAT            = overview
+DOCDIR          = $(PREFIX)/doc/$(WHAT)
+
+FILES = index.html getstarted.html tutorials.html reference.html \
+        ozdoc.css page.gif
+
+all:
+
+install: $(DOCDIR) $(addprefix $(DOCDIR)/,$(FILES))
+$(DOCDIR):
+        $(INSTALL_DIR) $(DOCDIR)
+$(DOCDIR)/%: %
+        $(INSTALL_FILE) $< $@
+$(DOCDIR)/ozdoc.css: $(SRCDIR)/../utilities/ozdoc.css
+        $(INSTALL_FILE) $< $@
+$(DOCDIR)/page.gif: $(SRCDIR)/../utilities/page.gif
+        $(INSTALL_FILE) $< $@
+
+Makefile: $(SRCDIR)/Makefile.in ../config.status
+        cd .. && ./config.status
