@@ -15,6 +15,12 @@ SOURCETOOLS=$(SRCTOP)/share/tools
 BOOTEMU=$(BUILDTOP)/platform/emulator/oz.emulator.bin
 BOOTCOM=$(BOOTEMU) -u $(BUILDLIB)/ozc --
 BOOTENG=$(SRCTOP)/share/ozengine.sh
+BOOTAR=$(BOOTENG) $(BUILDTOP)/share/lib/ozar
+
+OZ_ELISP_DIR=$(PREFIX)/share/elisp
+export OZ_ELISP_DIR
+export OZ_DOC_PATH
+export OZ_DOC_BIBINPUTS
 
 ifdef OZC
 export OZC
@@ -43,7 +49,11 @@ boot-%:
         OZC="$(BOOTCOM)" \
         OZINIT=$(BUILDLIB)/Init.ozf \
         OZPATH=.:$(BUILDLIB):$(BUILDTOOLS):$(SOURCELIB):$(SOURCETOOLS) \
-        OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(URL)/share/=$(BUILDLIB)/:prefix=$(URL)/share/=$(BUILDTOOLS)/:=
+        OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(URL)/share/=$(BUILDLIB)/:prefix=$(URL)/share/=$(BUILDTOOLS)/:= \
+        OZAR="$(BOOTAR)" \
+        OZ_ELISP_DIR=$(BUILDSHARE)/elisp \
+        OZ_DOC_PATH=$(SRCTOP)/doc \
+        OZ_DOC_BIBINPUTS=.:$(SRCDIR):$(SRCTOP)/doc/utilities
 
 # stage1-all: create the components using the BUILDTOP/share/lib/stage1
 STAGE1_LIB=$(BUILDLIB)/stage1

@@ -22,11 +22,13 @@
 functor prop once
 import
    Property(get)
-   OS(system)
+   OS(system getEnv)
 export
    'class': ThumbnailsClass
 define
-   GIF2THUMBNAIL = {Property.get 'oz.home'}#'/share/doc/gif2thumbnail'
+   GIF2THUMBNAIL = case {OS.getEnv 'OZ_DOC_PATH'} of false
+                   then {Property.get 'oz.home'}#'/share/doc/gif2thumbnail'
+                   elseof X then X#'/utilities/gif2thumbnail' end
 
    class ThumbnailsClass
       attr DirName: unit N: unit

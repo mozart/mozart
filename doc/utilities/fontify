@@ -20,12 +20,9 @@
 # WARRANTIES.
 #
 
-if test -z "${OZHOME}"
-then
-    OZHOME=/usr/local/oz
-fi
-export OZHOME
+: ${OZHOME=/usr/local/oz}
+: ${OZ_ELISP_DIR=$OZHOME/share/elisp}
 
 exec emacs --batch \
--L $OZHOME/share/elisp -l oz.elc -l ozdoc.elc \
+-L $OZ_ELISP_DIR -l oz.elc -l ozdoc.elc \
 -f ozdoc-fontify $*

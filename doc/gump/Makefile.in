@@ -1,5 +1,12 @@
-OZDOC = ozdoc
-OZDOCFLAGS =
+PREFIX          = @prefix@
+VPATH           = @srcdir@
+SRCDIR          = @srcdir@
+BUILDTOP        = @BUILDTOP@
+SRCTOP          = @SRCTOP@
+OZENGINE        = @OZENGINE@
+OZDOC           = @OZDOC@
+OZDOCFLAGS      =
+DOCIFY          = $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
 
 DOCDIR          = /www/mozart/gump
 
@@ -21,15 +28,19 @@ GIFSRCS = \
 
 all: gump-html
 
+include $(SRCDIR)/../../share/Makefile.boot
+
+bootstrap: boot-all
+
 Makefile: Makefile.in config.status
         ./config.status
 
 gump-html: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
-        $(OZDOC) $(OZDOCFLAGS) --in=gump.sgml --out=$@ --type=html-stylesheets
+        $(DOCIFY) --in=$(SRCDIR)/gump.sgml --out=$@ --type=html-stylesheets
         cp -p $(GIFSRCS) $@
 
 gump-tex: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
-        $(OZDOC) $(OZDOCFLAGS) --in=gump.sgml --out=gump-tex --type=latex
+        $(DOCIFY) --in=$(SRCDIR)/gump.sgml --out=gump-tex --type=latex
 
 validate: gump-html
         nsgmls -cHTML4.soc -sB gump-html/*.html
