@@ -171,8 +171,7 @@ in
 			     font:      ButtonFont
 			     %% tearoff _must_ be false, otherwise
 			     %% we get wrong offsets when popping up
-			     tearoff:   false
-			     transient: true)}
+			     tearoff:   false)}
 	 {ForAll @SortList
 	  proc {$ S}
 	     {New Tk.menuentry.command tkInit(parent: self.SortMenu

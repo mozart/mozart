@@ -27,9 +27,8 @@ local
 			       root:    pointer
 			       title:   'About'
 			       buttons: ['Ok' # tkClose]
-			       focus:   1
-			       pack:    false
-			       default: 1)
+			       default: 1
+			       pack:    false)
 	 T = {New Tk.label tkInit(parent: self
 				  fg:     SelectedBackground
 				  font:   HelpTitleFont

@@ -32,7 +32,7 @@ end
 %% Text
 %%
 
-Version                = 'Feb 15 1998'
+Version                = 'Mar 15 1998'
 TitleName              = 'Oz Profiler'
 IconName               = 'Profiler'
 
@@ -53,8 +53,8 @@ BarCanvasTitle         = 'Procedures'
 ProcTextTitle          = 'Proc Info'
 SumTextTitle           = 'Summary'
 
-UpdateButtonText       = ' update'
-ResetButtonText        = ' reset'
+UpdateButtonText       = 'update'
+ResetButtonText        = 'reset'
 SortButtonText         = 'Sort By:'
 
 
