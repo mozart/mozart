@@ -173,7 +173,7 @@ and has the following form:
 
 <<<?{G} then ?{S1}>>>
 
-<P> The guard ?{G} has thw form:
+<P> The guard ?{G} has the form:
 <<< ?{X1} ... ?{Xn} in ?{S0} >>>
 
 where the variables ?{Xi} are existentially quantified with scope extending
@@ -487,6 +487,7 @@ of <<Append>> will create a choice-point with two alternatives:
 >>>
 </list>
 
+<!-- the following text is a duplicate from 12.4.1 (part 1/2)
 <<<
 or
    ?{G1} then ?{S1}
@@ -511,9 +512,14 @@ one of the child spaces is not failed.
 
 <ITEM>If all children spaces are failed, the parent thread raises a
 failure condition in its space.
+
+-->
+
 <!-- DENYS: this is wrong! a failure exception is always raised.
 it is the semantics of an escaping failure exception which varies
 according to whether the space is top level or not -->
+
+<!-- The following text is a duplicate from 12.4.1 (part 2/2)
 This means that if the space of
 the parent thread is the top space, a failure exception is raised.
 Otherwise the space is local and it becomes a failed space.
@@ -530,6 +536,8 @@ This rule of execution is called <EM>unit commit</EM> in Oz because
 execution commits to one alternative disjunct (the only one that is left).
 
 </LIST>
+-->
+
 <SUBSECTION><TITLE/Define Clause Grammer/
 <P>
 
