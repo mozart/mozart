@@ -25,14 +25,8 @@
   <Section>
     <Title/The <<Narrator>> Module/
     <P>
-      <!--**-->
-      <List>
-	<Entry><<'class'>>
-	<Synopsis>
-	  <<Narrator.'class'>>
-	<Item>
-	  <P.silent><!--**-->
-      </List>
+      The <<Narrator>> module, located at <File>x-oz://system/Narrator</File>,
+      exports the class <<Narrator.'class'>> with the following methods.
     <Para class=apropos><Title/Methods/
       <List>
 	<Entry><<init(??{PrivateNarratorO})>>
@@ -51,53 +45,55 @@
 	<Item>
 	  <P.silent><!--**-->
       </List>
-  <Section>
-    <Title/The <<PrivateNarrator>> Class/
-    <!--**-->
-    <Para class=apropos><Title/Methods/
-      <List>
-	<Entry><<setLogPhases(?+{B})>>
-	<Item>
-	  <P.silent><!--**-->
-	<Entry><<setMaxNumberOfErrors(?+{I})>>
-	<Item>
-	  <P.silent><!--**-->
-	<Entry><<tell(?_{X})>>
-	<Item>
-	  <P.silent><!--**-->
-	<Entry><<startBatch()>>
-	<Item>
-	  <P.silent><!--**-->
-	<Entry><<startPhase(?+{V})>>
-	<Item>
-	  <P.silent><!--**-->
-	<Entry><<startSubPhase(?+{V})>>
-	<Item>
-	  <P.silent><!--**-->
-	<Entry><<endBatch(?+{A})>>
-	<Item>
-	  <P.silent>
-	    <!--** accepted, rejected, aborted, crashed, interrupted -->
-	<Entry><<error(coord: ?+{Coord} &lt;= unit
+    <SubSection class=unnumbered>
+      <Title/The <<PrivateNarrator>> Class/
+      <!--**-->
+      <Para class=apropos><Title/Methods/
+	<List>
+	  <Entry><<setLogPhases(?+{B})>>
+	  <Item>
+	    <P.silent><!--**-->
+	  <Entry><<setMaxNumberOfErrors(?+{I})>>
+	  <Item>
+	    <P.silent><!--**-->
+	  <Entry><<tell(?_{X})>>
+	  <Item>
+	    <P.silent><!--**-->
+	  <Entry><<startBatch()>>
+	  <Item>
+	    <P.silent><!--**-->
+	  <Entry><<startPhase(?+{V})>>
+	  <Item>
+	    <P.silent><!--**-->
+	  <Entry><<startSubPhase(?+{V})>>
+	  <Item>
+	    <P.silent><!--**-->
+	  <Entry><<endBatch(?+{A})>>
+	  <Item>
+	    <P.silent>
+	      <!--** accepted, rejected, aborted, crashed, interrupted -->
+	  <Entry><<error(coord: ?+{Coord} &lt;= unit
       kind:  ?+{KindV} &lt;= unit
       msg:   ?+{MsgV}  &lt;= unit
       items: ?+{Ts}    &lt;= unit
       abort: ?+{B}     &lt;= true)>>
-	<Item>
-	  <P.silent><!--**-->
-	<Entry><<warn(coord: ?+{Coord} &lt;= unit
+	  <Item>
+	    <P.silent><!--**-->
+	  <Entry><<warn(coord: ?+{Coord} &lt;= unit
      kind:  ?+{KindV} &lt;= unit
      msg:   ?+{MsgV}  &lt;= unit
      items: ?+{Ts}    &lt;= unit)>>
-	<Item>
-	  <P.silent><!--**-->
-      	<Entry><<hasSeenError(??{B})>>
-	<Item>
-	  <P.silent><!--**-->
-      </List>      
+	  <Item>
+	    <P.silent><!--**-->
+	  <Entry><<hasSeenError(??{B})>>
+	  <Item>
+	    <P.silent><!--**-->
+	</List>      
   <Section>
     <Title/The <<Listener>> Module/
-    <!--**-->
+    <P>
+      The <<Listener>> module, located at <File>x-oz://system/Listener</File>,
+      exports the class <<Listener.'class'>> with the following methods.
     <Para class=apropos><Title/Methods/
       <List>
 	<Entry><<init(?+{NarratorO} ?+{ServeL})>>
@@ -120,11 +116,14 @@
       </List>
   <Section>
     <Title/The <<ErrorListener>> Module/
-    <!--**-->
+    <P>
+      The <<ErrorListener>> module, located at <File
+      >x-oz://system/ErrorListener</File>, exports the class
+      <<ErrorListener.'class'>> with the following methods.
     <Para class=apropos><Title/Methods/
       <List>
 	<Entry>
-	  <<init(?+{NarratorO} ?+{ServeOneL} &lt;= unit ??{L} &lt;= unit)>>
+	  <<init(?+{NarratorO} ?+{ServeOneL} &lt;= unit ??{VerboseL} &lt;= false)>>
 	<Item>
 	  <P.silent><!--**-->
 	<Entry><<reset()>>
@@ -149,7 +148,4 @@
 	<Item>
 	  <P.silent><!--**-->
       </List>
-  <Section>
-    <Title/Example/
-      <!--** from ozdoc -->
 </Appendix>
