@@ -346,7 +346,7 @@ int atomcmp(Literal *a, Literal *b)
 #include <limits.h>
 
 extern "C" {
-#include "gmp.h"
+#include <gmp.h>
 }
 
 

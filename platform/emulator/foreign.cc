@@ -34,7 +34,6 @@
 #include "value.hh"
 #include "genvar.hh"
 
-#include "gmp.h"
 #include "os.hh"
 #include "threadInterface.hh"
 #include "builtins.hh"
