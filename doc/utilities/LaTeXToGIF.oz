@@ -90,7 +90,7 @@ define
             OutFileName = FileName
          end
       end
-      meth process(Packages Reporter)
+      meth process(Packages Inputs Reporter)
          case @Keys of nil then skip
          else FileName File Outs in
             {Reporter startSubPhase('converting LaTeX sections to GIF')}
@@ -105,6 +105,10 @@ define
                 else
                    {File write(vs: '\\usepackage{'#P#'}\n')}
                 end
+             end}
+            {ForAll Inputs
+             proc {$ I}
+                {File write(vs: '\\input '#I#'\n')}
              end}
             {File write(vs: ('\\pagestyle{empty}\n'#
                              '\\begin{document}\n'#
