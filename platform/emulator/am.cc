@@ -1080,7 +1080,12 @@ void AM::incSolveThreads(Board *nb,int n)
       if (!sa->isCommitted()) { // notification board below failed solve
         sa->incThreads(n);
         if (isStableSolve(sa)) {
+#ifdef NEWCOUNTER
+          bb->incSuspCount ();
+          scheduleWakeup (bb, OK);
+#else
           scheduleSolve(bb);
+#endif
         }
       }
     }
@@ -1148,7 +1153,12 @@ Bool AM::_checkExtSuspension (Suspension *susp)
 
     SolveActor *sa = SolveActor::Cast(sb->getActor());
     if (isStableSolve(sa)) {
+#ifdef NEWCOUNTER
+      sb->incSuspCount ();
+      scheduleWakeup (sb, OK);
+#else
       scheduleSolve(sb);
+#endif
       /*
        * Note:
        *  The observation is that some actors which have
@@ -1236,7 +1246,7 @@ void AM::scheduleSuspCCont(Board *bb, int prio,
   scheduleThread(th);
 }
 
-
+#ifndef NEWCOUNTER
 // create a new thread to reduce a solve actor;
 void AM::scheduleSolve(Board *bb)
 {
@@ -1259,6 +1269,7 @@ void AM::scheduleSolve(Board *bb)
   bb->setNervous();
   scheduleThread(th);
 }
+#endif
 
 // create a new thread after wakeup (nervous)
 void AM::scheduleWakeup(Board *bb, Bool wasExtSusp)
