@@ -2073,11 +2073,15 @@ update:
       
       Board * bb = tagged2VarHome(aux)->derefBoard();
       
+      Assert(bb);
+
       if (opMode == IN_TC && !isLocalBoard(bb)) {
 	to = makeTaggedRef(aux_ptr);
       } else {
 	(void) bb->gcDerefedBoard();
       
+	Assert(bb->gcIsAlive());
+
 	updateStack.push(&to);
       
 	to = makeTaggedRefToFromSpace(aux_ptr);
