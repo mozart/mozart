@@ -1001,7 +1001,7 @@ OZ_Thread OZ_makeThread(OZ_Bool (*fun)(int,OZ_Term[]),
   /* create a CFuncContinuation */
   return (OZ_Thread)
     new Suspension(am.currentBoard,
-                   am.currentThread->getPriority(),
+                   ozconf.defaultPriority,
                    fun, args, arity);
 }
 
