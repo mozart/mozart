@@ -404,30 +404,6 @@ public:
 
   INLINE int newId();
 
-  // 
-  //  Note: killing the suspended thread *might not* make any
-  // actor reducible OR reducibility must be tested somewhere else !!!
-  //
-  //  Invariant: 
-  // There can be no threads which are suspended not in its 
-  // "proper" home, i.e. not in the comp. space where it is started;
-  // 
-  //  Note that this is true for wakeups, continuations etc. anyway, 
-  // *and* this is also true for threads suspended in the sequential 
-  // mode! The point is that whenever a thread tries to suspend in a 
-  // deep guard, a new (local) thread is created which carries the 
-  // rest of the guard (Hi, Michael!);
-  //
-  //  Note also that these methods don't decrement suspCounters, 
-  // thread counters or whatever because their home board might 
-  // not exist at all - such things should be done outside!
-  INLINE void oz_disposeSuspendedThread(Thread *tt);
-  //
-  //  It marks the thread as dead and disposes it;
-  INLINE void oz_disposeRunnableThread(Thread *tt);
-  //
-  INLINE void disposeThread(Thread *tt);
-
   void gc(int msgLevel);  // ###
   void doGC();
   // coping of trees (and terms);
@@ -569,6 +545,27 @@ INLINE void oz_closeDonePropagator(Propagator *);
 INLINE void oz_closeDonePropagatorCD(Propagator *);
 INLINE void oz_closeDonePropagatorThreadCD(Propagator *);
 
+
+  // 
+  //  Note: killing the suspended thread *might not* make any
+  // actor reducible OR reducibility must be tested somewhere else !!!
+  //
+  //  Invariant: 
+  // There can be no threads which are suspended not in its 
+  // "proper" home, i.e. not in the comp. space where it is started;
+  // 
+  //  Note that this is true for wakeups, continuations etc. anyway, 
+  // *and* this is also true for threads suspended in the sequential 
+  // mode! The point is that whenever a thread tries to suspend in a 
+  // deep guard, a new (local) thread is created which carries the 
+  // rest of the guard (Hi, Michael!);
+  //
+  //  Note also that these methods don't decrement suspCounters, 
+  // thread counters or whatever because their home board might 
+  // not exist at all - such things should be done outside!
+INLINE void oz_disposeSuspendedThread(Thread *tt);
+//  It marks the thread as dead and disposes it;
+INLINE void oz_disposeRunnableThread(Thread *tt);
 
 /* -----------------------------------------------------------------------
  * XXX
