@@ -173,7 +173,7 @@ local
    class Entry
       from Tk.entry
       feat Action Top
-      attr Save: Unit
+      attr Save:unit
       meth init(parent:P action:A top:T)
 	 Tk.entry,tkInit(parent: P
 			 bg:     EnterColor

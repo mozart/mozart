@@ -28,10 +28,10 @@ in
    class PanelManager
       from UrObject
 
-      attr ThisPanelTop: Unit
+      attr ThisPanelTop: unit
       
       meth open
-	 case @ThisPanelTop of !Unit then
+	 case @ThisPanelTop==unit then
 	    ThisPanelTop <- thread
 			       {New PanelTop init(manager:self)}
 			    end
@@ -40,12 +40,12 @@ in
       end
 
       meth !PanelTopClosed
-	 ThisPanelTop <- Unit
+	 ThisPanelTop <- unit
       end
 
       meth close
 	 UrObject,close
-	 case @ThisPanelTop of !Unit then skip elseof T then
+	 case @ThisPanelTop of unit then skip elseof T then
 	    thread {T close} end
 	 end
       end
