@@ -807,7 +807,7 @@ inline
 Bool initRefsArray(RefsArray a, int size, Bool init) {
 
   setRefsArraySize(a,size);
-  register nvr = NameVoidRegister;
+  register TaggedRef nvr = NameVoidRegister;
   if (init) {
     switch (size) {
     case 10: a[9] = nvr;
