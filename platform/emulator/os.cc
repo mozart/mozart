@@ -783,7 +783,6 @@ void osSetAlarmTimer(int t)
 #ifdef WINDOWS
 
   if (timerthread==NULL) {
-    unsigned tid;
     timerthread = new TimerThread(t);
   }
 

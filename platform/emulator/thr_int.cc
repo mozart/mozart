@@ -45,7 +45,7 @@ Thread * _newThread(int prio, Board *bb) {
   return th;
 }
 
-Thread * oz_newThread(int prio=DEFAULT_PRIORITY) {
+Thread * oz_newThread(int prio) {
   Board *bb  = oz_currentBoard();
   Thread *tt = _newThread(prio,bb);
 
@@ -78,7 +78,7 @@ Thread * oz_newThreadInject(Board *bb) {
   return tt;
 }
 
-Thread * oz_newThreadSuspended(int prio=DEFAULT_PRIORITY) {
+Thread * oz_newThreadSuspended(int prio) {
   return _newThread(prio,oz_currentBoard());
 }
 

@@ -58,7 +58,7 @@ void Chain::makeGhost(ChainElem* ce){
   ce->resetFlagAndCheck(CHAIN_QUESTION_ASKED);}
 
 void Chain::removeBefore(DSite* s){
-  ChainElem **base,*ce;
+  ChainElem **base;
   base=getFirstNonGhostBase();
   Assert(siteExists(s));
   while(((*base)->site!=s) || (*base)->flagIsSet(CHAIN_DUPLICATE)){

@@ -233,7 +233,6 @@ OZ_Term OwnerTable::extract_info(){
   OZ_Term list = oz_nil();
   OZ_Term credit;
 
-  char *str;
   for(int ctr = 0; ctr<size;ctr++){
     OwnerEntry *oe = OT->getEntry(ctr);
     if(oe==NULL){continue;}

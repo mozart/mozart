@@ -1340,7 +1340,6 @@ Bool tertiaryFail(Tertiary *t,EntityCond &ec,TaggedRef &proc){
   if(ec == ENTITY_NORMAL) return FALSE;
 
   EntityCond oldC=getSummaryWatchCond(t);
-  Watcher* w;
   Bool hit=FALSE;
   Watcher** aux=getWatcherBase(t);
   if(aux==NULL){
