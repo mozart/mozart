@@ -408,11 +408,14 @@ extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
    */
 
 #ifdef __cplusplus
+#define _OZ_BI_proto(Name) \
+  OZ_Return _FUNDECL(Name,(OZ_Term [],int []))
 #define OZ_BI_proto(Name) \
-  extern "C" OZ_Return _FUNDECL(Name,(OZ_Term [],int []));
+  extern "C" _OZ_BI_proto(Name);
 #else
-#define OZ_BI_proto(Name) \
-  OZ_Return _FUNDECL(Name,(OZ_Term [],int []));
+#define _OZ_BI_proto(Name) \
+  OZ_Return _FUNDECL(Name,(OZ_Term [],int []))
+#define OZ_BI_proto(Name) _OZ_BI_proto(Name);
 #endif
 
 #define OZ_ID_MAP 0
