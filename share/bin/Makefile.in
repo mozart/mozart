@@ -28,9 +28,6 @@ SRCDIR=         @srcdir@
 VPATH=          @srcdir@
 BINDIR=         $(PREFIX)/bin
 
-CC=             @CC@
-CXX=            @CXX@
-
 @SET_MAKE@
 LN_S=           @LN_S@
 INSTALL=        @INSTALL@
@@ -42,8 +39,6 @@ LINKS=          ozengine text2pickle pickle2text oldpickle2text oztool
 LIB_SCRIPTS=    $(addprefix $(BINDIR)/,$(SCRIPTS))
 LIB_LINKS=      $(addprefix $(BINDIR)/,$(LINKS))
 
-WINEXES=        setup.exe oz.exe ozengine.exe ozwrapper.exe
-MSWIN=          @MSWIN@
 
 .PHONY: bootstrap all install clean veryclean distclean depend check
 
@@ -54,19 +49,7 @@ oz:
 
 bootstrap:
 
-ifeq ($(MSWIN),yes)
-
-install: $(WINEXES)
-        $(INSTALL_DIR) $(PREFIX)/winbin
-        $(INSTALL_BIN) $(WINEXES) ozwindynld oz.ico setup.ico $(PREFIX)/winbin
-
-all: $(WINEXES)
-
-else
-
 install: $(BINDIR) $(LIB_SCRIPTS) $(LIB_LINKS)
-
-endif
 
 
 $(LIB_SCRIPTS): $(BINDIR)/% : %
@@ -96,38 +79,3 @@ Makefile: Makefile.in ../config.status
 check:
 
 depend:
-
-
-
-#
-# Windows
-#
-
-ifeq ($(MSWIN),yes)
-
-setup.cc oz.cc ozengine.cc: version.h
-
-ozengine.exe: ozengine.cc
-        $(CC) -s -o $@ $<
-
-oz.o: oz.cc
-        $(CC) -c -o $@ $<
-
-oz.exe: oz.o
-        $(CC) -s -o $@ $< -mwindows
-
-setup.o: setup.cc
-        $(CC) -c -o $@ $<
-
-setup.exe: setup.o
-        $(CC) -s -o $@ $< -mwindows
-
-ozwrapper.exe: ozwrapper.cc
-        $(CC) -s -o $@ $<
-
-
-version.h: $(SRCTOP)/OZVERSION
-        echo "#define OZVERSION \"`$<`\"" > $@
-
-
-endif
