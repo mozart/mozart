@@ -17,9 +17,24 @@ fi
 cmd=$1
 shift
 
+# determine oztool includes
+if test "${OZTOOL_INCLUDES-NONE}" = NONE; then
+  if test -n "$OZHOME" && test -r "$OZHOME/include/mozart.h"; then
+    OZTOOL_INCLUDES="-I$OZHOME/include"
+  else
+    oz_tmp=`dirname $0`
+    oz_tmp=`cd $oz_tmp/.. & pwd`
+    if test -r "$oz_tmp/include/mozart.h"; then
+      OZTOOL_INCLUDES="-I$oz_tmp/include"
+    else
+      OZTOOL_INCLUDES="-I@prefix@/include";
+    fi
+  fi
+fi
+
 case "$cmd" in
-  c++)      exec ${plat}-g++ -I@srcdir@ -I@srcdir@/../tools/gump "$@" ;;
-  cc)       exec ${plat}-gcc -I@srcdir@ -I@srcdir@/../tools/gump "$@" ;;
+  c++)      exec ${plat}-g++ $OZTOOL_INCLUDES "$@" ;;
+  cc)       exec ${plat}-gcc $OZTOOL_INCLUDES "$@" ;;
   platform)
     case "$1" in
     -o) echo "win32-i486" > "$2";;
