@@ -1,5 +1,6 @@
 <!DOCTYPE Book SYSTEM "ozdoc.dtd" [
 
+
 <!-- Extension to the DTD -->
 <!ENTITY % p.mix.local "|Em">
 <!ELEMENT Em - - (#PCDATA)>
@@ -111,7 +112,7 @@
    &classes;
    &objectscc;
   </BODY>
-
+  <!-- Hallo -->
   <BACK>
     <Bib.Extern id="saraswat94" to="bibliography.bib" key="saraswat94">
     <Bib.Extern id="smolka95" to="bibliography.bib" key="smolka95">
