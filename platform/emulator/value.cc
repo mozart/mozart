@@ -462,6 +462,11 @@ void quicksort(TaggedRef** first, TaggedRef** last)
 
   if (first >= last)
     return;
+
+  /* use middle element as pivot --> much better for sorted inputs */
+  TaggedRef **middle = first + (last-first)/2;
+  swap(first,middle);
+
   for (i = first, j = last; ; j--) {
     while (i != j && featureCmp(**i, **j) <= 0)
       j--;
