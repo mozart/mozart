@@ -722,12 +722,12 @@ test -n "$MAKE" || MAKE="NONE"
 GNU make is needed to build the system.
 It can be retrieved from:
 
-	ftp://ftp.gnu.org/pub/gnu/
+	ftp://ftp.gnu.org/pub/gnu/make/
 
-The latest version at this time is 3.77 and is available
+The latest version at this time is 3.80 and is available
 packaged as the following archive:
 
-	make-3.77.tar.gz
+	make-3.80.tar.gz
 
 You may find a mirror archive closer to you by consulting:
 
