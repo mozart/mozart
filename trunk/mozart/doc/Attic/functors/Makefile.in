@@ -8,4 +8,4 @@ SGMLSRCS = \
 	Syslet.oz Test.oz
 HTMLEXTRAFILES =
 
-include $(SRCDIR)/../Makefile.common
+include ../Makefile.common
