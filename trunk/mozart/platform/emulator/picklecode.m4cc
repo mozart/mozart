@@ -69,7 +69,7 @@ define(opAction,
 
 //
 //
-Bool pickleCode(GenTraverser *gt, void *arg)
+Bool pickleCode(GenTraverser *gt, GTAbstractEntity *arg)
 {
   MarshalerCodeAreaDescriptor *desc = (MarshalerCodeAreaDescriptor *) arg;
   // ('bs' could be also saved in the argument;)
@@ -175,7 +175,7 @@ define(opAction,
 
 //
 //
-Bool traverseCode(GenTraverser *gt, void *arg)
+Bool traverseCode(GenTraverser *gt, GTAbstractEntity *arg)
 {
   MarshalerCodeAreaDescriptor *desc = (MarshalerCodeAreaDescriptor *) arg;
   ProgramCounter start = desc->getStart(), end = desc->getEnd();
