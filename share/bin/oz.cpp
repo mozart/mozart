@@ -1,8 +1,12 @@
 #include "misc.cpp"
 
+#ifdef CONSOLEAPP
+int main(int argc, char **argv)
+#else
 int PASCAL
 WinMain(HANDLE hInstance, HANDLE hPrevInstance,
 	LPSTR lpszCmdLine, int nCmdShow)
+#endif
 {
   char buffer[5000];
 
@@ -60,7 +64,10 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   } else if (stricmp(progname,"ozdemo.exe")==0) {
     sprintf(buffer,"%s/platform/%s/ozemulator -f %s/demo/rundemo",
 	    ozhome,ozplatform,ozhome);
-    //    console = CREATE_NEW_CONSOLE;
+  } else if (stricmp(progname,"ozsa.exe")==0) {
+    sprintf(buffer,"%s/platform/%s/ozemulator -E -quiet -f %s",
+	    ozhome,ozplatform,lpszCmdLine);
+    // console = CREATE_NEW_CONSOLE;
   } else {
     OzPanic(1,"Unknown invocation: %s", progname);
   }
