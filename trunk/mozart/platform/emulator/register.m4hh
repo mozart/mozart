@@ -25,13 +25,13 @@ changequote(``,'')
 
 
 define(CaseOneReg,``''
-       Case($1X):
+       Case($1X)
        ``define(``Reg1'',Xreg(``$''1))''{$2}
 
-       Case($1Y):
+       Case($1Y)
        ``define(``Reg1'',Yreg(``$''1))''{$2}
 
-       Case($1G):
+       Case($1G)
        ``define(``Reg1'',Greg(``$''1))''{$2}
 
        ``undefine(``Reg1'')''
@@ -39,25 +39,25 @@ define(CaseOneReg,``''
 
 
 define(CaseTwoRegs,``''
-       Case($1XX):
+       Case($1XX)
        ``define(``Reg1'',Xreg(``$''1))'' ``define(``Reg2'',Xreg(``$''1))''{$2}
-       Case($1XY):
+       Case($1XY)
        ``define(``Reg1'',Xreg(``$''1))'' ``define(``Reg2'',Yreg(``$''1))''{$2}
-       Case($1XG):
+       Case($1XG)
        ``define(``Reg1'',Xreg(``$''1))'' ``define(``Reg2'',Greg(``$''1))''{$2}
 
-       Case($1YX):
+       Case($1YX)
        ``define(``Reg1'',Yreg(``$''1))'' ``define(``Reg2'',Xreg(``$''1))''{$2}
-       Case($1YY):
+       Case($1YY)
        ``define(``Reg1'',Yreg(``$''1))'' ``define(``Reg2'',Yreg(``$''1))''{$2}
-       Case($1YG):
+       Case($1YG)
        ``define(``Reg1'',Yreg(``$''1))'' ``define(``Reg2'',Greg(``$''1))''{$2}
 
-       Case($1GX):
+       Case($1GX)
        ``define(``Reg1'',Greg(``$''1))'' ``define(``Reg2'',Xreg(``$''1))''{$2}
-       Case($1GY):
+       Case($1GY)
        ``define(``Reg1'',Greg(``$''1))'' ``define(``Reg2'',Yreg(``$''1))''{$2}
-       Case($1GG):
+       Case($1GG)
        ``define(``Reg1'',Greg(``$''1))'' ``define(``Reg2'',Greg(``$''1))''{$2}
 
        ``undefine(``Reg1'')''
@@ -78,7 +78,7 @@ define(CaseTwoRegs,``''
 
 
   // move X[i] --> Y[j], X[k] --> Y[l]
-  Case(MOVEMOVEXYXY):
+  Case(MOVEMOVEXYXY)
     {
       Yreg(getRegArg(PC+2)) = Xreg(getRegArg(PC+1));
       Yreg(getRegArg(PC+4)) = Xreg(getRegArg(PC+3));
@@ -86,7 +86,7 @@ define(CaseTwoRegs,``''
     }
 
   // move Y[i] --> X[j], Y[k] --> X[l]
-  Case(MOVEMOVEYXYX):
+  Case(MOVEMOVEYXYX)
     {
       Xreg(getRegArg(PC+2)) = Yreg(getRegArg(PC+1));
       Xreg(getRegArg(PC+4)) = Yreg(getRegArg(PC+3));      
@@ -94,7 +94,7 @@ define(CaseTwoRegs,``''
     }
 
   // move Y[i] --> X[j], X[k] --> Y[l]
-  Case(MOVEMOVEYXXY):
+  Case(MOVEMOVEYXXY)
     {
       Xreg(getRegArg(PC+2)) = Yreg(getRegArg(PC+1));
       Yreg(getRegArg(PC+4)) = Xreg(getRegArg(PC+3));      
@@ -102,7 +102,7 @@ define(CaseTwoRegs,``''
     }
 
   // move X[i] --> Y[j], Y[k] --> X[l]
-  Case(MOVEMOVEXYYX):
+  Case(MOVEMOVEXYYX)
     {
       Yreg(getRegArg(PC+2)) = Xreg(getRegArg(PC+1));
       Xreg(getRegArg(PC+4)) = Yreg(getRegArg(PC+3));      
@@ -126,33 +126,33 @@ define(CaseTwoRegs,``''
 
 #define MakeVar makeTaggedRef(newTaggedUVar(e->currentUVarPrototype))
 
-Case(CREATEVARIABLEX):
+Case(CREATEVARIABLEX)
    {
      Xreg(getRegArg(PC+1)) = MakeVar;
      DISPATCH(2);
    }
-Case(CREATEVARIABLEY):
+Case(CREATEVARIABLEY)
    {
      Yreg(getRegArg(PC+1)) = MakeVar;
      DISPATCH(2);
    }
-Case(CREATEVARIABLEG):
+Case(CREATEVARIABLEG)
    {
      error("CREATEVARIABLEG: impossible");
      DISPATCH(2);
    }
 
-Case(CREATEVARIABLEMOVEX):
+Case(CREATEVARIABLEMOVEX)
    {
      Xreg(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = MakeVar;
      DISPATCH(3);
    }
-Case(CREATEVARIABLEMOVEY):
+Case(CREATEVARIABLEMOVEY)
    {
      Yreg(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = MakeVar;
      DISPATCH(3);
    }
-Case(CREATEVARIABLEMOVEG):
+Case(CREATEVARIABLEMOVEG)
    {
      error("CREATEVARIABLEMOVEG: impossible");
      DISPATCH(3);
@@ -187,9 +187,9 @@ Case(CREATEVARIABLEMOVEG):
 	       )
 
 
-  Case(PUTRECORDX): ONREG(PutRecord,X);
-  Case(PUTRECORDY): ONREG(PutRecord,Y);
-  Case(PUTRECORDG): ONREG(PutRecord,G);
+  Case(PUTRECORDX) ONREG(PutRecord,X);
+  Case(PUTRECORDY) ONREG(PutRecord,Y);
+  Case(PUTRECORDG) ONREG(PutRecord,G);
          PutRecord:
           {
             TaggedRef label = getLiteralArg(PC+1);
@@ -202,16 +202,16 @@ Case(CREATEVARIABLEMOVEG):
 	    DISPATCH(4);
           }
 
-  Case(PUTCONSTANTX):
-  Case(PUTINTX):
+  Case(PUTCONSTANTX)
+  Case(PUTINTX)
      Xreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
 
-  Case(PUTCONSTANTY):
-  Case(PUTINTY):
+  Case(PUTCONSTANTY)
+  Case(PUTINTY)
      Yreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
 
-  Case(PUTCONSTANTG):
-  Case(PUTINTG):
+  Case(PUTCONSTANTG)
+  Case(PUTINTG)
      Greg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
 
   CaseOneReg( PUTLIST,
@@ -242,15 +242,15 @@ Case(CREATEVARIABLEMOVEG):
 	       )
 
 
-Case(SETCONSTANT):
-  Case(SETINT):
+Case(SETCONSTANT)
+  Case(SETINT)
     {
       *sPointer++ = getTaggedArg(PC+1);
       DISPATCH(2);
     }
 
 
-Case(SETVOID):
+Case(SETVOID)
     {
       int n = getPosIntArg(PC+1);
       TaggedRef newVar = e->currentUVarPrototype;
@@ -302,9 +302,9 @@ Case(SETVOID):
 	       )
 
 
-  Case(GETRECORDX): ONREG(GetRecord,X);
-  Case(GETRECORDY): ONREG(GetRecord,Y);
-  Case(GETRECORDG): ONREG(GetRecord,G);
+  Case(GETRECORDX) ONREG(GetRecord,X);
+  Case(GETRECORDY) ONREG(GetRecord,Y);
+  Case(GETRECORDG) ONREG(GetRecord,G);
       GetRecord:
          {
 	   TaggedRef label = getLiteralArg(PC+1);
@@ -576,7 +576,7 @@ Case(SETVOID):
 
 
   /* a unify void in read case mode */
-Case(GETVOID):
+Case(GETVOID)
     {
       sPointer += getPosIntArg(PC+1);
       DISPATCH(2);
@@ -620,15 +620,15 @@ Case(GETVOID):
   
 
 
-  Case(UNIFYVALVARXX): ONREG2(UnifyValVar,X,X);
-  Case(UNIFYVALVARXY): ONREG2(UnifyValVar,X,Y);
-  Case(UNIFYVALVARXG): ONREG2(UnifyValVar,X,G);
-  Case(UNIFYVALVARYX): ONREG2(UnifyValVar,Y,X);
-  Case(UNIFYVALVARYY): ONREG2(UnifyValVar,Y,Y);
-  Case(UNIFYVALVARYG): ONREG2(UnifyValVar,Y,G);
-  Case(UNIFYVALVARGX): ONREG2(UnifyValVar,G,X);
-  Case(UNIFYVALVARGY): ONREG2(UnifyValVar,G,Y);
-  Case(UNIFYVALVARGG): ONREG2(UnifyValVar,G,G);
+  Case(UNIFYVALVARXX) ONREG2(UnifyValVar,X,X);
+  Case(UNIFYVALVARXY) ONREG2(UnifyValVar,X,Y);
+  Case(UNIFYVALVARXG) ONREG2(UnifyValVar,X,G);
+  Case(UNIFYVALVARYX) ONREG2(UnifyValVar,Y,X);
+  Case(UNIFYVALVARYY) ONREG2(UnifyValVar,Y,Y);
+  Case(UNIFYVALVARYG) ONREG2(UnifyValVar,Y,G);
+  Case(UNIFYVALVARGX) ONREG2(UnifyValVar,G,X);
+  Case(UNIFYVALVARGY) ONREG2(UnifyValVar,G,Y);
+  Case(UNIFYVALVARGG) ONREG2(UnifyValVar,G,G);
    UnifyValVar:
      {
        Reg reg = getRegArg(PC+1);
@@ -656,7 +656,7 @@ Case(GETVOID):
      }
   
 
-Case(UNIFYCONSTANT):
+Case(UNIFYCONSTANT)
      {
        if (InWriteMode) {
 	 TaggedRef *sp = GetSPointerWrite(sPointer);
@@ -693,7 +693,7 @@ Case(UNIFYCONSTANT):
        HF_UNIFY("%s = %s failed\n", getTaggedArg(PC+1), *(sPointer-1), "In instruction UNIFYCONSTANT\n" );
      }
 
-  Case(UNIFYINT):
+  Case(UNIFYINT)
     {
       if (InWriteMode) {
 	TaggedRef *sp = GetSPointerWrite(sPointer);
@@ -730,7 +730,7 @@ Case(UNIFYCONSTANT):
     }
 
 
-  Case(UNIFYVOID):
+  Case(UNIFYVOID)
     {
       int n = getPosIntArg(PC+1);
       if (InWriteMode) {
