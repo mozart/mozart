@@ -74,7 +74,7 @@ is indeed the optimal one.
 
 <p>
 In this section we replace this ad-hoc approach by branch
-and bound. We first restate the script for the problem by ommitting the
+and bound. We first restate the script for the problem by omitting the
 distribution code for the variable summing up the satisfied
 preferences. The resulting script is shown in
 <Ptr to="ProgPhotoRevised">.
