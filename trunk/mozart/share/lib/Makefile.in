@@ -78,6 +78,7 @@ RUNFUNCTORS = \
 	$(OPSRC:%=%.ozf) \
 	$(APSRC:%=%.ozf) \
 	$(CPSRC1:%=%.ozf) \
+	$(MACSRC:%=%.ozf) \
 	Init.ozf
 
 FUNCTORS = \
@@ -86,7 +87,6 @@ FUNCTORS = \
 	$(WPSRC:%=%.ozf) \
 	$(SUPPSRC:%=%.ozf) \
 	$(CPSRC2:%=%.ozf) \
-	$(MACSRC:%=%.ozf) \
 	Compiler.ozf
 
 SYSLETS = ozc ozl
