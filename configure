@@ -1302,6 +1302,7 @@ if test "${with_stdlib+set}" = set; then
 fi
 
 : ${oz_stdlib=}
+oz_stdlib=`cd $oz_stdlib && pwd`
 echo "$ac_t""$oz_stdlib" 1>&6
 OZSTDLIB="$oz_stdlib"
 
