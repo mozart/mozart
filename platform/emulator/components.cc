@@ -65,6 +65,17 @@
 #include <strings.h>
 #include <netdb.h>
 
+#ifdef USE_ZLIB
+#include "zlib.h"
+#else
+#define gzFile              int
+#define gzdopen(fd,flags)   fd
+#define gzclose(fd)         close(fd)
+#define gzread(fd,buf,len)  read(fd,buf,len)
+#define gzwrite(fd,buf,len) write(fd,buf,len)
+#endif
+
+
 // ATTENTION
 #define tcpHeaderSize   7
 
@@ -81,22 +92,20 @@
 
 class ByteSource {
 public:
-  virtual OZ_Return maybeSkipHeader();
-  virtual OZ_Return getBytes(BYTE*,int&,int&);
+  virtual OZ_Return getBytes(BYTE*,int&,int&) = 0;
   virtual OZ_Return getTerm(OZ_Term, const char *compname);
   virtual OZ_Return makeByteStream(ByteStream*&);
-  virtual char*     emptyMsg();
 };
 
 class ByteSourceFD : public ByteSource {
 private:
-  int fd;
+  gzFile fd;
   Bool del;
 public:
-  ByteSourceFD(int i,Bool d=FALSE):fd(i),del(d){}
-  virtual ~ByteSourceFD(){ if (del) close(fd); }
-  char* emptyMsg();
-  OZ_Return maybeSkipHeader();
+  ByteSourceFD(int i, Bool d=FALSE):del(d) {
+    fd = gzdopen(i,"r");
+  }
+  virtual ~ByteSourceFD(){ if (del) gzclose(fd); }
   OZ_Return getBytes(BYTE*,int&,int&);
 };
 
@@ -111,8 +120,6 @@ public:
   virtual ~ByteSourceDatum() {
     if (del) free(dat.data);
   }
-  char* emptyMsg();
-  OZ_Return maybeSkipHeader();
   OZ_Return getBytes(BYTE*,int&,int&);
 };
 
@@ -123,14 +130,10 @@ public:
 class ByteSink {
 public:
   virtual OZ_Return putTerm(OZ_Term,char*,Bool text);
-  virtual OZ_Return putBytes(BYTE*,int);
-  virtual OZ_Return allocateBytes(int);
-  virtual OZ_Return maybeSaveHeader(ByteStream*);
+  virtual OZ_Return putBytes(BYTE*,int) = 0;
+  virtual OZ_Return allocateBytes(int) = 0;
 };
 
-OZ_Return ByteSink::maybeSaveHeader(ByteStream*){
-   Assert(0);
-   return PROCEED;}
 
 class ByteSinkFD : public ByteSink {
 private:
@@ -140,18 +143,17 @@ public:
   ByteSinkFD(int f,Bool b=FALSE):fd(f),del(b){}
   ByteSinkFD():fd(0),del(FALSE){}
   virtual ~ByteSinkFD() { if (del) close(fd); }
-  OZ_Return allocateBytes(int);
+  OZ_Return allocateBytes(int n) { return PROCEED; }
   OZ_Return putBytes(BYTE*,int);
 };
 
 class ByteSinkFile : public ByteSink {
 private:
-  char* filename;
   int fd;
+  char *filename;
 public:
-  ByteSinkFile(char*s):filename(s),fd(-1){};
-  ByteSinkFile():filename(0),fd(-1){};
-  virtual ~ByteSinkFile() { if (fd>=0) close(fd); }
+  ByteSinkFile(char *s):filename(s),fd(-1){};
+  virtual ~ByteSinkFile() { if (fd!=-1) osclose(fd); }
   OZ_Return allocateBytes(int);
   OZ_Return putBytes(BYTE*,int);
 };
@@ -164,27 +166,12 @@ public:
   ByteSinkDatum():idx(0){ dat.size=0; dat.data=0; }
   OZ_Return allocateBytes(int);
   OZ_Return putBytes(BYTE*,int);
-  OZ_Return maybeSaveHeader(ByteStream*);
 };
 
 
 // ===================================================================
 // class ByteSink
 // ===================================================================
-
-OZ_Return
-ByteSink::putBytes(BYTE*pos,int n)
-{
-  Assert(0);
-  return FAILED;
-}
-
-OZ_Return
-ByteSink::allocateBytes(int n)
-{
-  Assert(0);
-  return FAILED;
-}
 
 OZ_Term makeGenericExc(char *msg, OZ_Term arg)
 {
@@ -244,9 +231,6 @@ ByteSink::putTerm(OZ_Term in, char *filename, Bool textmode)
 // ===================================================================
 
 OZ_Return
-ByteSinkFD::allocateBytes(int n) { return PROCEED; }
-
-OZ_Return
 ByteSinkFD::putBytes(BYTE*pos,int len)
 {
  loop:
@@ -268,7 +252,7 @@ OZ_Return
 ByteSinkFile::allocateBytes(int n)
 {
   fd = strcmp(filename,"-")==0 ? STDOUT_FILENO
-                               : open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
+                                      : open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
   if (fd < 0)
     return raiseGeneric("Open failed during save",
                         oz_mklist(OZ_pairA("File",oz_atom(filename)),
@@ -311,13 +295,6 @@ ByteSinkDatum::putBytes(BYTE*pos,int len)
 {
   memcpy(&(dat.data[idx]),pos,len);
   idx += len;
-  return PROCEED;
-}
-
-OZ_Return
-ByteSinkDatum::maybeSaveHeader(ByteStream*)
-{
-        // saveHeader(bs)
   return PROCEED;
 }
 
@@ -392,34 +369,11 @@ OZ_BI_define(BIexport,1,0)
 // ===================================================================
 
 OZ_Return
-ByteSource::maybeSkipHeader()
-{
-  Assert(0);
-  return FAILED;
-}
-
-OZ_Return
-ByteSource::getBytes(BYTE*pos,int&max,int&got)
-{
-  Assert(0);
-  return FAILED;
-}
-
-char*
-ByteSource::emptyMsg()
-{
-  Assert(0);
-  return "emptyByteSource";
-}
-
-OZ_Return
 ByteSource::getTerm(OZ_Term out, const char *compname)
 {
-  OZ_Return result = maybeSkipHeader();
-  if (result!=PROCEED) return result;
   ByteStream * stream;
 
-  result = makeByteStream(stream);
+  OZ_Return result = makeByteStream(stream);
   if (result!=PROCEED) return result;
   // EK fast fix
 
@@ -476,20 +430,12 @@ ByteSource::makeByteStream(ByteStream*& stream)
 // class ByteSourceFD
 // ===================================================================
 
-char*
-ByteSourceFD::emptyMsg() { return "emptyFile"; }
-
-OZ_Return
-ByteSourceFD::maybeSkipHeader() {
-
-  return PROCEED;
-}
 
 OZ_Return
 ByteSourceFD::getBytes(BYTE*pos,int&max,int&got)
 {
 loop:
-  got = osread(fd,pos,max);
+  got = gzread(fd,pos,max);
   if (got < 0) {
     if (errno==EINTR) goto loop;
     return raiseGeneric("Read error during load",
@@ -502,12 +448,6 @@ loop:
 // ===================================================================
 // class ByteSourceDatum
 // ===================================================================
-
-char*
-ByteSourceDatum::emptyMsg() { return "emptyDatum"; }
-
-OZ_Return
-ByteSourceDatum::maybeSkipHeader() { return PROCEED; }
 
 OZ_Return
 ByteSourceDatum::getBytes(BYTE*pos,int&max,int&got)
