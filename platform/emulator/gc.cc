@@ -1720,6 +1720,7 @@ void Chunk::gcRecurse()
       Object *o = (Object *) this;
       Bool isc = o->getIsClass();
       o->claas = o->getClass()->gcClass();
+      o->unfreeFeatures = o->unfreeFeatures->gcSRecord();
       gcTagged(o->cell,o->cell);
       if (o->getIsClass())
         o->setIsClass();
