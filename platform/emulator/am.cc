@@ -339,6 +339,7 @@ void AM::init(int argc,char **argv)
     OZ_Return ret = loadURL(url,v,makeTaggedNULL());
     if (ret!=PROCEED) {
       char *aux = (ret==RAISE) ? toC(exception.value) : "unknown error";
+      prefixError();
       fprintf(stderr,"Loading from URL '%s' failed: %s\n",url,aux);
       fprintf(stderr,"Maybe recompilation needed?\n");
       exit(1);
