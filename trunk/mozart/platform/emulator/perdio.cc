@@ -14,26 +14,24 @@
  *
  *   cell protocol
  *     test
- *     use proxy addressing for frames
  *   object protocol
- *     all
- *   stationary object, dictionary, array, lock
+ *     locks
+ *   ?stationary object?, dictionary, array
  *     all
  *   pendlinkHandle simplify
- *   chunks
- *     all
  *   builtin
  *     classify secure/insecure
- *   names
- *     true, false, unit and others (o-o)
- *       new procedure makeGlobalName(Atom)
- *     test (don't work at all?)
  *   ip
  *     cache does not work together with close detection
  *     fairness for IO
  *     errors
  *     flow control
  *     timer
+ *     unregisterAccept
+ *        The reason is that one site may have a full cache of connections
+ *        and does not want to accept any more until it can close some other
+ *        connections. 
+ *     void OZ_registerTimer(int ms,OZ_TimeHandler,void *);
  *   port
  *     close: must fail client?
  *   gen hashtable
@@ -57,39 +55,24 @@
  *     Space.clone should return a local clone
  *     Space.choose may fail, suspend
  *     Space.inject may fail, suspend
+ *   gname
+ *     use ip class Site
+ *   marshal/unmarshal
+ *     ref technique for Site*, GName*, and PrTabEntry*
+ *   SAVE
+ *     Saving proxies for resources must suspend until manager is
+ *       persistent
+ *   GETURLS
+ *     How to implement? Cycles!
+ *     same for IsFixed, IsGround, ...
+ *     IDEA: implement {Flatten X ?Xs} Xs is a list of a reachable nodes
+ *   URL
+ *     implementation for HTTP and FTP protocol
+ *   how to interface I/O - emulator?
+ *     IDEA: create OS threads
+ *           communicate via shared memory
+ *   FAILURE handling
  * -----------------------------------------------------------------------*/
-
-/*
- * clusters
- *   implement URLs
- *     a URL is an atom
- *     make a quick and dirty implementation of file: and http:
- *       load into ByteStream
- *   save bytestream into file
- *
- *   add URL to gname
- *
- *   proxies for URLs:
- *     have gname, if loaded from a cluster or send from other site
- *     have no gname, if linked with X={Link URL} (should this be impl?)
- *     unification of a URL proxies must load URL data.
- *     implemenation use Ralfs PerdioVar extension
- *
- *   creating a URL {SAVE X URL} ***1
- *     check if server supports upload (PUT)
- *     save also resources
- *       must set manager credit to infinity
- *       must write infinite credit to cluster
- *       must set borrow credit to infinity
- *     save proxies for already tagged gnames
- *     mark all saved procedures and chunks with URL
- *
- *   procedures and chunks must be eager if they are not tagged with a URL
- *     with a switch to turn it on/off (#ifdef LAZY)
- * BUGS:
- *   Saving proxies for resources must suspend until manager is made persistent
- *  
- */   
 
 #ifdef PERDIO
 
@@ -123,9 +106,23 @@ class BorrowTable;
 class OwnerTable;
 class ByteStream;
 class DebtRec;
+class FatInt;
+// global variables
 DebtRec* debtRec;
-
 TaggedRef currentURL;
+BorrowTable *borrowTable;
+OwnerTable *ownerTable;
+OZ_Term loadHook;
+static FatInt *idCounter;
+// refTable
+// ozport
+// refTrail
+// pendLinkManager
+// pendEntryManager
+// mySite
+
+#define OT ownerTable
+#define BT borrowTable
 
 
 void marshallTerm(Site* sd,OZ_Term t, ByteStream *bs);
@@ -164,16 +161,10 @@ void lockReceiveLock(LockFrame*);
 
 void lockSendDump(BorrowEntry*,LockFrame*);
 
-OZ_C_proc_proto(BIapply);
-
-BorrowTable *borrowTable;
-OwnerTable *ownerTable;
-
-#define OT ownerTable
-#define BT borrowTable
 #define BTOS(A) BT->getOriginSite(A)
 #define BTOI(A) BT->getOriginIndex(A)
 
+OZ_C_proc_proto(BIapply);
 extern TaggedRef BI_Unify;
 extern TaggedRef BI_Show;
 
@@ -266,9 +257,6 @@ typedef enum {
 } MarshallTag;
 
 
-void sendMessage(int bi, MessageType);
-
-
 /**********************************************************************/
 /**********************************************************************/
 /*                        INITIAL                                     */
@@ -335,8 +323,6 @@ public:
   }
 
 };
-
-typedef Tertiary Proxy;
 
 class ByteStream;
 
@@ -683,8 +669,6 @@ public:
     return OK;
   }
 };
-
-static FatInt *idCounter = NULL;
 
 class GNameSite {
 public:
@@ -5162,7 +5146,9 @@ OZ_C_proc_begin(BIsave,2)
   OZ_declareVirtualStringArg(1,url);
 
   if (strncmp(url,"file:",5)!=0) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"only \"file:\" allowed",0);
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"save",2,
+		    oz_atom("onlyFileURL"),
+		    OZ_args[1]);
   }
 
   char *filename = url+5;
@@ -5177,8 +5163,10 @@ OZ_C_proc_begin(BIsave,2)
 
   int fd = open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
   if (fd < 0) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"open",1,
-		    oz_atom(OZ_unixError(errno)));
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"save",3,
+		    oz_atom("open"),
+		    oz_atom(OZ_unixError(errno)),
+		    oz_atom(filename));
   }
   bs->beginWrite();
   bs->incPosAfterWrite(tcpHeaderSize);
@@ -5193,8 +5181,11 @@ OZ_C_proc_begin(BIsave,2)
     int ret=oswrite(fd,pos,len);
     if (ret < 0) {
       if (errno==EINTR) goto again;
-      return oz_raise(E_ERROR,OZ_atom("perdio"),"write",1,
-		      oz_atom(OZ_unixError(errno)));
+      close(fd);
+      return oz_raise(E_ERROR,OZ_atom("perdio"),"save",3,
+		      oz_atom("write"),
+		      oz_atom(OZ_unixError(errno)),
+		      oz_atom(filename));
     }
     bs->sentFirst();
   }
@@ -5219,8 +5210,10 @@ int loadFile(char *filename,OZ_Term out)
 {
   int fd = open(filename,O_RDONLY);
   if (fd < 0) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"open",1,
-		    oz_atom(OZ_unixError(errno)));
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",3,
+		    oz_atom("open"),
+		    oz_atom(OZ_unixError(errno)),
+		    oz_atom(filename));
   }
 
   ByteStream *bs=bufferManager->getByteStream();
@@ -5234,8 +5227,11 @@ int loadFile(char *filename,OZ_Term out)
     int ret=osread(fd,pos,max);
     if (ret < 0) {
       if (errno==EINTR) continue;
-      return oz_raise(E_ERROR,OZ_atom("perdio"),"read",1,
-		      oz_atom(OZ_unixError(errno)));
+      close(fd);
+      return oz_raise(E_ERROR,OZ_atom("perdio"),"load",3,
+		      oz_atom("read"),
+		      oz_atom(OZ_unixError(errno)),
+		      oz_atom(filename));
     }
     len+=ret;
     if (ret < max) {
@@ -5247,8 +5243,9 @@ int loadFile(char *filename,OZ_Term out)
   }
 
   if (len==0) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"fileEmpty",1,
-		      oz_atom(filename));
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",2,
+		    oz_atom("fileEmpty"),
+		    oz_atom(filename));
   }
   bs->beforeInterpret(0);
   bs->unmarshalBegin();
@@ -5265,7 +5262,6 @@ int loadFile(char *filename,OZ_Term out)
   return PROCEED;
 }
 
-OZ_Term loadHook;
 int loadURL(char *url, OZ_Term out)
 {
   switch (url[0]) {
