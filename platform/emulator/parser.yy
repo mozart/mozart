@@ -476,6 +476,9 @@ queries         : sequence queries1
 
 queries1        : directive queries
                   { $$ = consList($1,$2); }
+                | declare coord sequence _in_ thisCoord queries1
+                  { $$ = consList(newCTerm("fDeclare",$3,newCTerm("fSkip",$5),
+                                           $2),$6); }
                 | declare coord sequence _in_ sequence queries1
                   { $$ = consList(newCTerm("fDeclare",$3,$5,$2),$6); }
                 | declare coord sequence thisCoord queries1
