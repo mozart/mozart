@@ -38,14 +38,8 @@ Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity,
 {
   Assert(isFeature(label));
 
-  if (!am.isToplevel() || obj->isClosedOrClassOrDeep()) {
-    /* send to object in guard */
-    if (obj->isClosed() || obj->isClass() ||
-        am.currentBoard != obj->getBoardFast())
+  if (obj->isClosedOrClass())
       return NULL;
-  }
-
-  Assert(!obj->isClosed() && !obj->isClass());
 
   return cache->lookup(obj,label,arity,X);
 }
@@ -2316,6 +2310,13 @@ LBLdispatcher:
       if (obj->isClosed()) {
         DORAISE(OZ_atom("attempt to lock closed object"));
       }
+
+      if (!e->isToplevel()) {
+        if (am.currentBoard != obj->getBoardFast()) {
+          DORAISE(OZ_atom("attempt to lock object in guard"));
+        }
+      }
+
       if (obj->isLocked()) {
         TaggedRef suspvar = obj->attachThread();
         int regsToSave = getPosIntArg(PC+1);

@@ -1148,9 +1148,9 @@ public:
   Object(Object&);
 
 
-  Bool isClosedOrClassOrDeep()
+  Bool isClosedOrClass()
   {
-    return (flags & (int)(OFlagClosed|OFlagDeep|OFlagDeep));
+    return (flags & (int)(OFlagClosed|OFlagClass));
   }
 
   void setFlag(OFlag f)   { flags |= (int) f; }
