@@ -519,16 +519,6 @@ esac
 AC_SUBST(COPT)
 
 
-OZ_ENABLE_YES(ozma,[     include Oz assembler],
-	AC_MSG_RESULT(static (-DOZMA))
-	AC_DEFINE(OZMA)
-	OZMALIB="libozma.a"
-	LIBS="-L. -lozma $LIBS",
-	AC_MSG_RESULT(dynamic)
-	TARGETS="$TARGETS ozma.so"
-	)
-AC_SUBST(OZMALIB)
-
 OZ_ENABLE_YES(threaded,[ threaded code emulator],
 	AC_MSG_RESULT(yes (-DTHREADED))
 	AC_DEFINE(THREADED)
@@ -606,6 +596,19 @@ OZ_ENABLE_YES(linkparser,[ link libparser statically],
 	)
 AC_SUBST(PARSERTARGETS)
 AC_SUBST(PARSERINSTALL)
+
+OZ_ENABLE_YES(linkozma,[ link libozma statically],
+        AC_MSG_RESULT(yes (-DSTATIC_LIBOZMA))
+	AC_DEFINE(STATIC_LIBOZMA)
+	OZMATARGETS="libozma.a"
+	LIBS="-L. -lozma $LIBS"
+	,
+        AC_MSG_RESULT(no (-USTATIC_LIBOZMA))
+	OZMATARGETS="libozma.so"
+	OZMAINSTALL="install-ozma"
+	)
+AC_SUBST(OZMATARGETS)
+AC_SUBST(OZMAINSTALL)
 
 
 dnl *****************************************************************
