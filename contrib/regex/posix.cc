@@ -25,6 +25,7 @@
 #endif
 
 #include "oz.h"
+#include <sys/types.h>
 #include <regex.h>
 
 OZ_Return re_error(int code,regex_t* re,int must_free)
