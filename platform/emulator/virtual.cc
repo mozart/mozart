@@ -137,7 +137,9 @@ void marshalVirtualInfo(VirtualInfo *vi, MsgBuffer *mb)
 VirtualInfo* unmarshalVirtualInfo(MsgBuffer *mb)
 {
   VirtualInfo *vi = freeVirtualInfoPool.allocate();
+#ifdef VIRTUALSITES
   vi->VirtualInfo::VirtualInfo(mb);
+#endif
   return (vi);
 }
 //
@@ -250,7 +252,9 @@ void dumpVirtualInfo(VirtualInfo* vi)
 MsgBuffer* getVirtualMsgBuffer(Site* site)
 {
   VSMsgBuffer *buf = freeMsgBufferPool.allocate();
+#ifdef VIRTUALSITES
   buf->VSMsgBuffer::VSMsgBuffer(myVSChunksPoolManager, site);
+#endif
 
   //
   return (buf);                 // upcast;
@@ -284,8 +288,9 @@ static void readVSMessages(void *vMBox)
       //
       VSMsgBuffer *buf = freeMsgBufferPool.allocate();
       VSMsgChunkPoolManager *cpm = chunkPoolRegister.import(msgChunkPoolKey);
+#ifdef VIRTUALSITES
       buf->VSMsgBuffer::VSMsgBuffer(cpm, chunkNumber);
-
+#endif
       //
       // Note that the mailbox is NOT locked at this place;
       msgReceived(buf);
@@ -404,7 +409,9 @@ OZ_BI_define(BIVSnewMailbox,0,1)
 
   //
   Assert(sizeof(key_t) <= sizeof(int));
+#ifdef VIRTUALSITES
   sprintf(keyChars, "0x%x", mbm->getSHMKey());
+#endif
   OZ_RETURN(OZ_string(keyChars));
 } OZ_BI_end
 
@@ -451,7 +458,9 @@ OZ_BI_define(BIVSinitServer,1,0)
   //
   VSMsgBuffer *buf = freeMsgBufferPool.allocate();
   VSMsgChunkPoolManager *cpm = chunkPoolRegister.import(msgChunkPoolKey);
+#ifdef VIRTUALSITES
   buf->VSMsgBuffer::VSMsgBuffer(cpm, chunkNumber);
+#endif
   msgReceived(buf);
 
   //

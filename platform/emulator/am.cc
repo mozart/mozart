@@ -329,8 +329,10 @@ void AM::init(int argc,char **argv)
 
   //
   taskNodes = new TaskNode[MAXTASKS];
+#ifdef VIRTUALSITES
   for (int i = 0; i < MAXTASKS; i++)
     taskNodes[i].TaskNode::TaskNode();
+#endif
 
   //
   osInitSignals();

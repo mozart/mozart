@@ -30,8 +30,12 @@
 #pragma interface
 #endif
 
+#ifdef VIRTUALSITES
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#else
+#define key_t int
+#endif
 
 #include "base.hh"
 #include "genhashtbl.hh"
@@ -209,7 +213,9 @@ public:
   // As for the message buffer class, there are two constructors:
   // one for the receiver site (owner), and another - for senders:
   VSMailboxManager(long memSizeIn); // 'long' because of data type clash;
+#ifdef VIRTUALSITES
   VSMailboxManager(key_t shmkeyIn);
+#endif
 
   //
   // 'delete' just unmaps the shm page, and 'destroy' deletes it from

@@ -129,7 +129,9 @@ int VirtualSite::sendTo(VSMsgBuffer *mb, MessageType mt,
       // Failed to enqueue it inline - then create a job which will
       // try to do that later;
       VSMessage *m = fmp->allocate();
+#ifdef VIRTUALSITES
       m->VSMessage::VSMessage(mb, mt, storeSite, storeIndex);
+#endif
 
       //
       // These queues are checked and processed on regular intervals
