@@ -73,7 +73,7 @@ private:
   Pair* list;
 
 public:
-  NO_DEFAULT_CONSTRUCTORS1(PairList);
+  NO_DEFAULT_CONSTRUCTORS2(PairList);
   PairList() { list=NULL; }
 
   USEFREELISTMEMORY;

@@ -45,7 +45,6 @@ class  Trail: public Stack {
 public:
   void gc();
 
-  NO_DEFAULT_CONSTRUCTORS1(Trail);
   Trail(): Stack(DEFAULT_TRAIL_SIZE,Stack_WithMalloc) {}
   Trail(int sizeInit): Stack(sizeInit,Stack_WithMalloc) {}
   

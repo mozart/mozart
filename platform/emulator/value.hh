@@ -1803,7 +1803,7 @@ enum KindOfReg {
 class AssReg {
 public:
   OZPRINT;
-  NO_DEFAULT_CONSTRUCTORS1(AssReg);
+  NO_DEFAULT_CONSTRUCTORS2(AssReg);
   AssReg() {}
   
   PosInt number;
@@ -2156,8 +2156,9 @@ private:
 public:
   OZPRINT;
 
-  NO_DEFAULT_CONSTRUCTORS(CellManager);
-    
+  NO_DEFAULT_CONSTRUCTORS2(CellManager);
+  CellManager() : Tertiary(0,Co_Cell,Te_Manager) {} // hack
+
   CellSec* getSec(){return sec;}
 
   Chain *getChain() {return (Chain*) getPtr();}
@@ -2196,7 +2197,8 @@ private:
 public:
   OZPRINT;
 
-  NO_DEFAULT_CONSTRUCTORS(CellFrame);
+  NO_DEFAULT_CONSTRUCTORS2(CellFrame);
+  CellFrame() : Tertiary(0,Co_Cell,Te_Frame) {} // hack
 
   void setDumpBit(){sec->state |= Cell_Lock_Dump_Asked;}
 
@@ -2273,7 +2275,8 @@ class PortManager: public PortWithStream {
 friend void ConstTerm::gcConstRecurse(void);
 public:
   OZPRINTLONG;
-  NO_DEFAULT_CONSTRUCTORS(PortManager);
+  NO_DEFAULT_CONSTRUCTORS2(PortManager);
+  PortManager() : PortWithStream(0,0) {} // hack
 };
 
 /* ----------------------------------------------------
@@ -2477,7 +2480,8 @@ private:
 public:
   OZPRINT;
 
-  NO_DEFAULT_CONSTRUCTORS(LockFrame);
+  NO_DEFAULT_CONSTRUCTORS2(LockFrame);
+  LockFrame() : OzLock(0,(TertType)0) {} // hack
 
   Bool hasLock(Thread *t){if(t==sec->getLocker()) return TRUE;return FALSE;}
   
@@ -2494,7 +2498,8 @@ public:
   void resetDumpBit(){sec->state &= ~Cell_Lock_Dump_Asked;}
 
   Bool dumpCandidate(){
-    if((sec->state & Cell_Lock_Valid) && (!(sec->state & Cell_Lock_Dump_Asked))){
+    if((sec->state & Cell_Lock_Valid)
+       && (!(sec->state & Cell_Lock_Dump_Asked))){
       setDumpBit();
       return OK;}
     return NO;}
@@ -2543,7 +2548,8 @@ private:
 public:
   OZPRINT;
 
-  NO_DEFAULT_CONSTRUCTORS(LockManager);
+  NO_DEFAULT_CONSTRUCTORS2(LockManager);
+  LockManager() : OzLock(0,(TertType)0) {} // hack
 
   void initOnGlobalize(int index,Chain* ch,LockSec *secX);
 
