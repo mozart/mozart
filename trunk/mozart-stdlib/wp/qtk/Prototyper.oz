@@ -24,10 +24,14 @@ prepare
       [] Le|Ls then Le|{Purge Ls}
       else nil end
    end
+   QTK_DIR = case {OS.getEnv 'OZMAKE_SOURCE_DIR'}
+	     of false then '.'
+	     [] nil   then '.'
+	     [] S     then S end
    FileListInc={List.map
 		{List.sort
 		 {List.map
-		  {List.filter {OS.getDir "./PrototyperData"}
+		  {List.filter {OS.getDir QTK_DIR#"/PrototyperData"}
 		   fun{$ N}
 		      {List.take {Reverse N} 3}=="zo." % file ending by a .oz extension
 		   end}	       
@@ -40,7 +44,7 @@ prepare
 			    Ret
 			 in
 			    try
-			       HOZ={New Open.file init(url:"./PrototyperData/"#Name#".oz" flags:[read])}
+			       HOZ={New Open.file init(url:QTK_DIR#"/PrototyperData/"#Name#".oz" flags:[read])}
 			       COZ={HOZ read(list:$ size:all)}
 			       {HOZ close}
 			    in
@@ -51,7 +55,7 @@ prepare
 				  Ret
 			       in
 				  try
-				     HOZ={New Open.file init(url:"./PrototyperData/"#Name#".nfo" flags:[read])}
+				     HOZ={New Open.file init(url:QTK_DIR#"/PrototyperData/"#Name#".nfo" flags:[read])}
 				     COZ={HOZ read(list:$ size:all)}
 				     {HOZ close}
 				  in
