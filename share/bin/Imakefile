@@ -3,7 +3,7 @@ SHELL   = /bin/sh
 
 SCRIPTS = oz oz+ ozplatform ozwish
 LINKS   = oz- ozc ozsa ozsac oz.compiler oz.emulator ozdo \
-          ozwindowmanager ozemacs ozdemo
+          ozemacs ozdemo
 
 all::
 	@echo ""

@@ -209,11 +209,6 @@ case "$cmd" in
 	echo ""
    ;;
 
-   ozwindowmanager)
-	: ${OZWINDOWMANAGER=$OZHOME/unsupported/platform/$OZPLATFORM/ozwindowmanager}
-	exec $OZWINDOWMANAGER "$@"
-   ;;
-
    ozdo)
 	exec "$@"
    ;;
