@@ -82,6 +82,7 @@ local
 	 elsecase {IsTuple X}      then TupleType
 	 elsecase {IsRecord X}     then RecordType
 	 elsecase {IsChunk X}      then ChunkType
+	 elsecase {IsSpace X}      then SpaceType
 	 else                           UnknownType
 	 end
       else                              UnboundType
@@ -816,6 +817,7 @@ in
 
 			%% delete all tags
 			{self.StackText resetTags}
+			Gui,resetLastSelectedFrame
 
 			Gui,markNode({Thread.id T} running)
 			Gui,markStack(inactive)
