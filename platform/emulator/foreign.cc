@@ -18,6 +18,8 @@
 #include "genvar.hh"
 #include "ofgenvar.hh"
 
+#include "../include/gmp.h"
+
 /* ------------------------------------------------------------------------ *
  * tests
  * ------------------------------------------------------------------------ */
@@ -348,9 +350,6 @@ int OZ_intToC(OZ_Term term)
   return tagged2BigInt(term)->getInt();
 }
 
-/*
- * PRE: OZ_parseInt was successful !
- */
 OZ_Term OZ_CStringToInt(char *str)
 {
   if (!str || str[0] == '\0') {
@@ -358,44 +357,57 @@ OZ_Term OZ_CStringToInt(char *str)
     return 0;
   }
 
-  {
-    char *aux = str;
-    int sign = 1;
-    if (aux[0] == '~') { aux++; sign = -1; }
-    int i = 0;
-    while(*aux) {
-      if (!iso_isdigit((unsigned char) *aux)) {
-	OZ_warning("OZ_CStringToInt: no digit in %s",str);
+  char *aux = str;
+  int sign = 1;
+  if (aux[0] == '~') {
+    aux++;
+    sign = -1;
+  }
+
+  MP_INT theInt;
+  mpz_init(&theInt);
+  if (aux[0] == '0') {
+    switch (aux[1]) {
+    case '\0':
+      return newSmallInt(0);
+    case 'x': case 'X':
+      if (aux[2] == '\0' || mpz_set_str(&theInt, &aux[2], 16) == -1) {
+	mpz_clear(&theInt);
 	return 0;
       }
-      i = i*10 + (*aux - '0');
-      if (i > OzMaxInt)
-	goto bigInt;
-      aux++;
+      break;
+    case 'b': case 'B':
+      if (aux[2] == '\0' || mpz_set_str(&theInt, &aux[2], 2) == -1) {
+	mpz_clear(&theInt);
+	return 0;
+      }
+      break;
+    case '0': case '1': case '2': case '3':
+    case '4': case '5': case '6': case '7':
+      if (mpz_set_str(&theInt, &aux[1], 8) == -1) {
+	mpz_clear(&theInt);
+	return 0;
+      }
+      break;
+    default:
+      mpz_clear(&theInt);
+      return 0;
     }
-
-    i *= sign;
-    return newSmallInt(i);
-  }
-  
- bigInt:
-  {
-    int sign = 1;
-    Assert(str[0] != '-');
-
-    if (str[0] == '~') { str[0] = '-'; sign = -1; }
-    OZ_Term ret = (new BigInt(str))->shrink();
-
-    // undo destructive change of str
-    if (sign < 0) str[0] = '-';
-
-    return ret;
+  } else if (aux[0] == '\0' || mpz_set_str(&theInt, aux, 10) == -1) {
+    mpz_clear(&theInt);
+    return 0;
   }
 
+  BigInt *theBigInt = new BigInt(&theInt);
+  mpz_clear(&theInt);
+  if (sign > 0)
+    return theBigInt->shrink();
+  else
+    return theBigInt->neg();
 }
 
 /*
- * parse: [~]<int>.<digit>*[(e|E)<int>]
+ * parse: [~]<digit>+.<digit>*[(e|E)[~]<digit>+]
  */
 char *OZ_parseFloat(char *s) {
   char *p = OZ_parseInt(s);
