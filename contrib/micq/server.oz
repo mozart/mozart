@@ -112,9 +112,12 @@ define
          catch _ then {WriteLog "Could not return applicaion "#I} end
       end
 
-      meth !S_message(receiver:ID message:M sender:SID reply_to:R mid:Mid date:Date) D={GetDate} GlobalMID={GetID} in
+      meth !S_message(receiver:ID message:M sender:SID reply_to:R mid:Mid date:Date faq:FAQ<=unit) D={GetDate} GlobalMID={GetID} in
          {WriteLog "Received and stored message "#GlobalMID#" from "#SID#" to: "#{Value.toVirtualString ID 30 30}}
          {DB storeMessage(receiver:ID id:GlobalMID sender:SID message:M date:D reply_to:R)}
+         if FAQ\=unit then
+            {WriteLog "Message "#GlobalMID#" is added to FAQ"}
+         end
          {ForAll ID proc {$ I}
                        thread E in
                           try E={DB get(id:I entry:$)}
