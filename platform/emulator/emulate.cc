@@ -1927,66 +1927,146 @@ Case(GETVOID)
       case SLEEP:
       case FAILED:
       default:
-	OZ_error("unexcpeted return value in TESTBI: %d",ret);
+	OZ_error("unexpected return value in TESTBI: %d",ret);
       }
     }
 
 
   Case(INLINEMINUS)
     {
-      TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
-      
-      if (isSmallIntTag(tagA)) {
-	TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
-	if (isSmallIntTag(tagB) ) {
-	  XPC(3) = oz_int(smallIntValue(A) - smallIntValue(B));
+      TaggedRef A = XPC(1); 
+
+    retryINLINEMINUSA:
+
+      if (oz_isSmallInt(A)) {
+	TaggedRef B = XPC(2);
+
+      retryINLINEMINUSB1:
+
+	if (oz_isSmallInt(B)) {
+#if defined(__GNUC__) && defined(__i386__)
+	  asm volatile("
+                       subl %1, %0
+                       jno noverflowInlineMinus
+                       "
+		       : "=r" (B)
+		       : "g" (ToInt32(B)-SMALLINT), "0" (A));
+	  B = oz_int(smallIntValue(A) - smallIntValue(oz_deref(XPC(2))));
+#else
+	  B = oz_int(smallIntValue(A) - smallIntValue(B));
+#endif
+
+#if defined(__GNUC__) && defined(__i386__)
+	  asm("noverflowInlineMinus: ");
+#endif
+	  XPC(3) = B;
 	  DISPATCH(4);
 	}
+
+	if (oz_isRef(B)) {
+	  B = oz_derefOne(B);
+	  goto retryINLINEMINUSB1;
+	}
+
       }
       
-      if (isFloatTag(tagA)) {
-	TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
-	if (isFloatTag(tagB)) {
+      if (oz_isFloat(A)) {
+	TaggedRef B = XPC(2);
+	
+      retryINLINEMINUSB2:
+
+	if (oz_isFloat(B)) {
 	  XPC(3) = oz_float(floatValue(A) - floatValue(B));
 	  DISPATCH(4);
 	}
+
+	if (oz_isRef(B)) {
+	  B = oz_derefOne(B);
+	  goto retryINLINEMINUSB2;
+	}
+
       }
             
+      if (oz_isRef(A)) {
+	A = oz_derefOne(A);
+	goto retryINLINEMINUSA;
+      }
+
       auxTaggedA = XPC(1);
       auxTaggedB = XPC(2);
       auxInt     = 4;
       auxString = "-";
 
-      tmpRet = BIminusOrPlus(NO,auxTaggedA,auxTaggedB,XPC(3));
+      tmpRet = BIminusInline(auxTaggedA,auxTaggedB,XPC(3));
       goto LBLhandlePlusMinus;
     }
 
   Case(INLINEPLUS)
     {
-      TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
-      
-      if ( isSmallIntTag(tagA)) {
-	TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
-	if (isSmallIntTag(tagB) ) {
-	  XPC(3) = oz_int(smallIntValue(A) + smallIntValue(B));
+      TaggedRef A = XPC(1); 
+
+    retryINLINEPLUSA:
+
+      if (oz_isSmallInt(A)) {
+	TaggedRef B = XPC(2);
+
+      retryINLINEPLUSB1:
+
+	if (oz_isSmallInt(B)) {
+#if defined(__GNUC__) && defined(__i386__)
+	  asm volatile("
+                       addl %1, %0
+                       jno noverflowInlinePlus
+                       "
+		       : "=r" (B)
+		       : "g" (A), "0" (ToInt32(B)-SMALLINT));
+	  B = oz_int(smallIntValue(A) + smallIntValue(oz_deref(XPC(2))));
+#else
+	  B = oz_int(smallIntValue(A) + smallIntValue(B));
+#endif
+
+#if defined(__GNUC__) && defined(__i386__)
+	  asm("noverflowInlinePlus: ");
+#endif
+	  XPC(3) = B;
 	  DISPATCH(4);
 	}
+
+	if (oz_isRef(B)) {
+	  B = oz_derefOne(B);
+	  goto retryINLINEPLUSB1;
+	}
+
       }
       
-      if (isFloatTag(tagA)) {
-	TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
-	if (isFloatTag(tagB)) {
+      if (oz_isFloat(A)) {
+	TaggedRef B = XPC(2);
+	
+      retryINLINEPLUSB2:
+
+	if (oz_isFloat(B)) {
 	  XPC(3) = oz_float(floatValue(A) + floatValue(B));
 	  DISPATCH(4);
 	}
+
+	if (oz_isRef(B)) {
+	  B = oz_derefOne(B);
+	  goto retryINLINEPLUSB2;
+	}
+
       }
             
+      if (oz_isRef(A)) {
+	A = oz_derefOne(A);
+	goto retryINLINEPLUSA;
+      }
+
       auxTaggedA = XPC(1);
       auxTaggedB = XPC(2);
       auxInt     = 4;
       auxString = "+";
 
-      tmpRet = BIminusOrPlus(OK,auxTaggedA,auxTaggedB,XPC(3));
+      tmpRet = BIplusInline(auxTaggedA,auxTaggedB,XPC(3));
       goto LBLhandlePlusMinus;
     }
 
@@ -1995,28 +2075,26 @@ Case(GETVOID)
       TaggedRef A = XPC(1);
 
     retryINLINEMINUS1:
-      TypeOfTerm tagA = tagTypeOf(A);
 
-      if (isSmallIntTag(tagA)) {
+      if (oz_isSmallInt(A)) {
 	/* INTDEP */
-	int res = (int)A - (1<<tagSize);
-	if ((int)A > res) {
-	  XPC(2) = res;
-	  DISPATCH(3);
-	}
+	XPC(2) = (A != TaggedOzMinInt) ? 
+	  (int) A - (1<<tagSize) :
+	  TaggedOzOverMinInt;
+	DISPATCH(3);
       }
 
-      if (oz_isRef(tagA)) {
-	A = oz_deref(A);
+      if (oz_isRef(A)) {
+	A = oz_derefOne(A);
 	goto retryINLINEMINUS1;
       }
 
       auxTaggedA = XPC(1);
       auxTaggedB = makeTaggedSmallInt(1);
       auxInt     = 3;
-      auxString = "-1";
+      auxString  = "-1";
 
-      tmpRet = BIminusOrPlus(NO,auxTaggedA,auxTaggedB,XPC(2));
+      tmpRet = BIminusInline(auxTaggedA,auxTaggedB,XPC(2));
       goto LBLhandlePlusMinus;
     }
 
@@ -2025,19 +2103,17 @@ Case(GETVOID)
       TaggedRef A = XPC(1); 
 
     retryINLINEPLUS1:
-      TypeOfTerm tagA = tagTypeOf(A);
 
-      if (isSmallIntTag(tagA)) {
+      if (oz_isSmallInt(A)) {
 	/* INTDEP */
-	int res = (int)A + (1<<tagSize);
-	if ((int)A < res) {
-	  XPC(2) = res;
-	  DISPATCH(3);
-	}
+	XPC(2) = (A != TaggedOzMaxInt) ? 
+	  (int) A + (1<<tagSize) :
+	  TaggedOzOverMaxInt;
+	DISPATCH(3);
       }
 
-      if (oz_isRef(tagA)) {
-	A = oz_deref(A);
+      if (oz_isRef(A)) {
+	A = oz_derefOne(A);
 	goto retryINLINEPLUS1;
       }
 
@@ -2046,7 +2122,7 @@ Case(GETVOID)
       auxInt     = 3;
       auxString = "+1";
 
-      tmpRet = BIminusOrPlus(OK,auxTaggedA,auxTaggedB,XPC(2));
+      tmpRet = BIplusInline(auxTaggedA,auxTaggedB,XPC(2));
       goto LBLhandlePlusMinus;
     }
 
