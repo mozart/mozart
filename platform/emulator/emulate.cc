@@ -421,15 +421,15 @@ void suspendInlineFun(TaggedRef A, TaggedRef B, TaggedRef C, TaggedRef &Out,
 
 
 static
-TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
+TaggedRef makeMethod(int arity, TaggedRef label, TaggedRef *X)
 {
   if (arity == 0) {
-    return makeTaggedAtom(label);
+    return label;
   } else {
-    if (arity == 2 && sameLiteral(makeTaggedAtom(label),AtomCons)) {
+    if (arity == 2 && sameLiteral(label,AtomCons)) {
       return makeTaggedLTuple(new LTuple(X[3],X[4]));
     } else {
-      STuple *tuple = STuple::newSTuple(makeTaggedAtom(label),arity);
+      STuple *tuple = STuple::newSTuple(label,arity);
       for (int i = arity-1;i >= 0; i--) {
         tuple->setArg(i,X[i+3]);
       }
@@ -439,7 +439,7 @@ TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
 }
 
 static
-TaggedRef createNamedVariable(int regIndex, Atom *name, AM *e, RefsArray Y)
+TaggedRef createNamedVariable(int regIndex, TaggedRef name, AM *e, RefsArray Y)
 {
   int size = getRefsArraySize(e->toplevelVars);
   if (LessIndex(size,regIndex)) {
@@ -449,12 +449,12 @@ TaggedRef createNamedVariable(int regIndex, Atom *name, AM *e, RefsArray Y)
     Y = e->toplevelVars;
     // no deletion of old array --> GC does it
   }
-  SVariable *svar = new SVariable(e->currentBoard, makeTaggedAtom(name));
+  SVariable *svar = new SVariable(e->currentBoard, name);
   return makeTaggedRef(newTaggedSVar(svar));
 }
 
 static
-STuple *newSTupleOutline(Atom *atom, int arity)
+STuple *newSTupleOutline(TaggedRef atom, int arity)
 {
   return STuple::newSTuple(atom,arity);
 }
@@ -1422,7 +1422,7 @@ void engine() {
 
  SendMethod:
   {
-    Atom *label       = getAtomArg(PC+1);
+    TaggedRef label   = getAtomArg(PC+1);
     TaggedRef origObj = RegAccess(HelpReg1,getRegArg(PC+2));
     TaggedRef object  = origObj;
     int arity         = getPosIntArg(PC+3);
@@ -1486,7 +1486,7 @@ void engine() {
 
  ApplyMethod:
   {
-    Atom *label            = getAtomArg(PC+1);
+    TaggedRef label        = getAtomArg(PC+1);
     TaggedRef origObject   = RegAccess(HelpReg1,getRegArg(PC+2));
     TaggedRef object       = origObject;
     int arity              = getPosIntArg(PC+3);
@@ -2102,15 +2102,14 @@ void engine() {
 
   INSTRUCTION(DEBUGINFO)
     {
-      Atom *filename = getAtomArg(PC+1);
-      int line       = smallIntValue(getNumberArg(PC+2));
-      int absPos     = smallIntValue(getNumberArg(PC+3));
+      TaggedRef filename = getAtomArg(PC+1);
+      int line           = smallIntValue(getNumberArg(PC+2));
+      int absPos         = smallIntValue(getNumberArg(PC+3));
       DISPATCH(4);
     }
 
   INSTRUCTION(NOOP)
     DISPATCH(1);
-
 
   INSTRUCTION(TESTLABEL1)
   INSTRUCTION(TESTLABEL2)
