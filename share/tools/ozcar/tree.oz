@@ -115,7 +115,6 @@ class Tree from BaseTree ScrolledTitleCanvas
       case L \= nil then
 	 Selected <- L.1
       else skip end
-      Tree,display
    end
 
    meth display
@@ -127,9 +126,10 @@ class Tree from BaseTree ScrolledTitleCanvas
       {ForAll @nodes
        proc{$ N}
 	  X Y DY I T
-	  CT = {New Tk.canvasTag tkInit(parent:self)}
+	  CT = {New Tk.canvasTag tkInit(parent:{self w($)})}
        in
 	  node(x:X y:Y dy:DY i:I t:T ...) = {N get($)}
+	  {Show hugo(x:X y:Y dy:DY i:I t:T)}
 	  {ForAll [tk(crea oval X*SF-OS Y*SF-OS X*SF+OS Y*SF+OS
 		      outline:black width:3 tags:CT
 		      fill:white)

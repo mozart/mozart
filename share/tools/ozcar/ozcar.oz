@@ -18,7 +18,7 @@ Ozcar =
 	   {Debug.off}
 	   ThreadManager,close
 	   SourceManager,close
-	   Gui,printStatus("See you again...")  {Delay 900}
+	   Gui,status("See you again...")  {Delay 900}
 	   {self.toplevel tkClose}
 	end
      end init}

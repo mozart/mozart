@@ -11,7 +11,7 @@ local
                                focus:   1
                                pack:    false
                                default: 1)
-         Title = {New Tk.label tkInit(parent: self
+	 Title = {New Tk.label tkInit(parent: self
                                       text:
 					 "This is " # IconName #
 				         " V" # Version)}

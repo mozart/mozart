@@ -5,35 +5,25 @@
 local
    class SourceWindow from Tk.text
       feat
-	 StatusLine
+	 filename
       attr
-	 CurrentFile : undef
 	 CurrentLine : undef
       
-      meth init(parent:P width:W<=80 height:H<=50)
-	 self.StatusLine =
-	 {New Tk.label tkInit(parent:P font:BoldFont
-			      text:"No file loaded")}
-	 Tk.text,tkInit(parent:P width:W height:H
-                        bg: DefaultBackground
-			font:SmallFont bd:BorderSize)
-	 {ForAll [pack(self.StatusLine fill:x expand:no)
-		  pack(self fill:both expand:yes)] Tk.send}
-	 {self tk(conf state:disabled)}
+      meth init(parent:P file:F
+		width: Width <=SourceWindowTextSize.1
+		height:Height<=SourceWindowTextSize.2)
+	 Tk.text,tkInit(parent: P         bg: SourceTextBackground
+			font:   SmallFont bd: BorderSize
+			width:  Width     height:Height)
+	 {self Load(file:F)}
       end
       
-      meth load(file:F)
+      meth Load(file:F)
 	 File = {New class $ from Open.file Open.text end
 		 init(name:F flags:[read])}
       in
-	 CurrentFile <- F
-	 {self.StatusLine tk(conf text:F)}
+	 self.filename = F
 	 {self DoLoad(File 1)}
-      end
-      
-      meth current(file:F line:L)
-	 F = @CurrentFile
-	 L = @CurrentLine
       end
       
       meth DoLoad(F L)
@@ -55,62 +45,79 @@ local
 		     foreground:black
 		     background:white)}
 	 else skip end
-         {ForAll [tk(tag conf q(L) foreground:white background:C)
-                  tk(see L#'.0')] self}
+	 {ForAll [tk(tag conf q(L) foreground:white background:C)
+		  tk(see L#'.0')] self}
 	 CurrentLine <- L
       end
    end
    
 in
    
-   class SourceManager
+   class SourceManager from Tk.toplevel
+      feat
+	 NoteBook
       attr
-	 Windows
+	 WindowList : nil
+	 Current    : nil
+	 WithDrawn  : true
       
       meth init
-	 Windows <- nil
+	 Tk.toplevel,tkInit(title:SourceWindowTitle withdraw:true)
+	 self.NoteBook = {New TkTools.notebook tkInit(parent:self)}
+	 {Tk.batch [pack(self.NoteBook expand:yes fill:both)
+		    wm(iconname   self SourceWindowIcon)
+		    wm(iconbitmap self BitMap)
+		    wm(geometry   self SourceWindowGeometry)
+		    wm(resizable  self false false)
+		   ]}
       end
       
-      meth lookup(file:F window:?W)
-	 {ForAll @Windows
-	  proc{$ X}
-	     case {X.1 current(file:$ line:_)} == F then
-		W = X.1   % there is only one matching object... (hope so :-))
-	     else skip end
-	  end}
+      meth lookup(file:F entry:?E)
+         {ForAll @WindowList
+          proc{$ X}
+             case X.1.filename == F then
+                E = X   % there is only one matching object... (hope so :-))
+             else skip end
+          end}
       end
       
-      meth highlight(file:F line:L color:C<=black)
-	 W = {self lookup(file:F window:$)}
+      meth scrollbar(file:F line:L color:C)
+         E = {self lookup(file:F entry:$)}
       in
-	 case {IsDet W} then
-	    {W highlight(line:L color:C)}
-	 else
-	    T = {New Tk.toplevel tkInit(title:'Oz Source')}
-	    NewW = {New SourceWindow init(parent:T)}
-	 in
-	    Windows <- NewW # T | @Windows
-	    {ForAll [load(file:F) highlight(line:L color:C)] NewW}
-	 end
+         case {IsDet E} then
+	    {self ToTop(entry:E line:L color:C)}
+         else
+	    {self NewFile(file:F line:L color:C)}
+         end
+	 case @WithDrawn then
+	    {Tk.send wm(deiconify self)}
+	    WithDrawn <- false
+	 else skip end
       end
-
+      
+      meth NewFile(file:F line:L color:C)
+	 N = {New TkTools.note tkInit(parent:self.NoteBook
+				      text: {Str.rchr {Atom.toString F} &/}.2)}
+	 W = {New SourceWindow init(parent:N file:F)}
+      in
+	 WindowList <- W#N | @WindowList
+	 {Tk.send pack(W expand:yes fill:both)}
+	 {self.NoteBook add(N)}
+	 {self ToTop(entry:W#N line:L color:C)}
+      end
+      
+      meth ToTop(entry:E line:L color:C)
+	 case @Current == E.1 then
+	    skip
+	 else
+	    Current <- E.1
+	    {self.NoteBook toTop(E.2)}
+	 end
+	 {E.1 highlight(line:L color:C)}
+      end
+      
       meth close
-	 {ForAll @Windows
-	  proc {$ W}
-	     {W.2 tkClose}
-	  end}
+	 Tk.toplevel,tkClose
       end
    end
 end
-
-
-/*
-
-declare
-SM = {New SourceManager init}
-
-{SM display(file:"/etc/passwd" line:9)}
-{SM display(file:"/etc/hosts" line:8)}
-
-*/
-
