@@ -1065,6 +1065,9 @@
             <TD/?{P}, ?{P1}, &ellipsis;, ?{Pk}, ?{Pn}/
             <TD/?={pattern}/
           <TR>
+            <TD/?{EP}, ?{P1}, &ellipsis;, ?{EPn}/
+            <TD/?={expression} or ?={pattern}/
+          <TR>
             <TD/?{C}, ?{C1}, &ellipsis;, ?{Cn}/
             <TD/?={case statement clause} or ?={case expression clause}/
           <TR>
@@ -1445,17 +1448,17 @@ end
         <SubSection class=unnumbered>
           <Title/Records/
           <P>
-            <Rewrite>?={expression}
-              <Rewrite.From/<<[?{E1} &ellipsis; ?{En}]>>/
-              <Rewrite.To/<<?{E1}|&ellipsis;|?{En}|nil>>/
+            <Rewrite>?={expression} ?={pattern}
+              <Rewrite.From/<<[?{EP1} &ellipsis; ?{EPn}]>>/
+              <Rewrite.To/<<?{EP1}|&ellipsis;|?{EPn}|nil>>/
             </Rewrite>
-            <Rewrite>?={expression}
-              <Rewrite.From/<<?{E1}|?{E2}>>/
-              <Rewrite.To/<<'|'(?{E1} ?{E2})>>/
+            <Rewrite>?={expression} ?={pattern}
+              <Rewrite.From/<<?{EP1}|?{EP2}>>/
+              <Rewrite.To/<<'|'(?{EP1} ?{EP2})>>/
             </Rewrite>
-            <Rewrite>?={expression}
-              <Rewrite.From/<<?{E1}#&ellipsis;#?{En}>>/
-              <Rewrite.To/<<'#'(?{E1} &ellipsis; ?{En})>>/
+            <Rewrite>?={expression} ?={pattern}
+              <Rewrite.From/<<?{EP1}#&ellipsis;#?{EPn}>>/
+              <Rewrite.To/<<'#'(?{EP1} &ellipsis; ?{EPn})>>/
             </Rewrite>
             <!--** missing: dots, omitted features -->
         <SubSection class=unnumbered>
@@ -1464,6 +1467,10 @@ end
             <Rewrite>?={expression}
               <Rewrite.From/<<_>>/
               <Rewrite.To/<<local X in X end>>/
+            </Rewrite>
+            <Rewrite>?={pattern}
+              <Rewrite.From/<<_>>/
+              <Rewrite.To/<<X>>/
             </Rewrite>
         <SubSection class=unnumbered>
           <Title/Named Constants/
