@@ -475,13 +475,20 @@ PRINT(Cell)
 PRINT(Abstraction)
 {
   CHECKDEPTH;
-  if (getCType() == C_OBJECT) {
-    stream << "O:" << ((Object*)this)->getPrintName();
-    return;
-  }
   stream << "P:"
 	 << getPrintName() << "/" << getArity();
 //	 << "@" << this;
+}
+
+PRINT(Object)
+{
+  CHECKDEPTH;
+  stream << "<O:" << getPrintName()
+         << ", ";
+  getRecord()->print(stream,depth,offset);
+  stream << ", State: ";
+  tagged2Stream(getCell(),stream,depth,offset);
+  stream << ">";
 }
 
 PRINT(Builtin)
@@ -695,43 +702,16 @@ PRINTLONG(ConstTerm)
 {
   CHECKDEPTHLONG;
   switch (typeOf()) {
-  case Co_Board:
-    ((Board *) this)->printLong(stream, depth, offset);
-    break;
-  case Co_Thread:
-    ((Thread *) this)->printLong(stream, depth, offset);
-    break;
-  case Co_Actor:
-    ((Actor *) this)->printLong(stream, depth, offset);
-    break;
-  case Co_HeapChunk:
-    ((HeapChunk *) this)->printLong(stream, depth, offset);
-    break;
-  case Co_Chunk:
-    {
-      Chunk *ch = (Chunk*) this;
-      switch (ch->getCType()) {
-      case C_ABSTRACTION:
-      case C_OBJECT:
-	((Abstraction *) this)->printLong(stream,depth,offset);
-	break;
-      case C_CELL:
-	((Cell *) this)->printLong(stream,depth,offset);
-      break;
-      case C_BUILTIN:
-	((Builtin *) this)->printLong(stream,depth,offset);
-	break;
-      default:
-      Assert(NO);
-      }
-      if (ch->getRecord()) {
-	ch->getRecord()->printLong(stream,depth,offset);
-      }
-      break;
-    }
-
-  default:
-    error("ConstTerm::printLong");
+  case Co_Board:        ((Board *) this)->printLong(stream, depth, offset);      break;
+  case Co_Thread:       ((Thread *) this)->printLong(stream, depth, offset);     break;
+  case Co_Actor:        ((Actor *) this)->printLong(stream, depth, offset);      break;
+  case Co_HeapChunk:    ((HeapChunk *) this)->printLong(stream, depth, offset);  break;
+  case Co_Class:        ((ObjectClass *) this)->printLong(stream, depth, offset);break;
+  case Co_Abstraction:  ((Abstraction *) this)->printLong(stream,depth,offset);  break;
+  case Co_Object:	((Object *) this)->printLong(stream,depth,offset); 	 break;
+  case Co_Cell:	        ((Cell *) this)->printLong(stream,depth,offset);         break;
+  case Co_Builtin:	((Builtin *) this)->printLong(stream,depth,offset);      break;
+  default: 	        Assert(NO);
   }
 }
 
@@ -739,43 +719,16 @@ PRINT(ConstTerm)
 {
   CHECKDEPTH;
   switch (typeOf()) {
-  case Co_Board:
-    ((Board *) this)->print(stream, depth, offset);
-    break;
-  case Co_Thread:
-    ((Thread *) this)->print(stream, depth, offset);
-    break;
-  case Co_Actor:
-    ((Actor *) this)->print(stream, depth, offset);
-    break;
-  case Co_HeapChunk:
-    ((HeapChunk *) this)->print(stream, depth, offset);
-    break;
-  case Co_Chunk:
-    {
-      Chunk *ch = (Chunk*) this;
-      switch (ch->getCType()) {
-      case C_ABSTRACTION:
-      case C_OBJECT:
-	((Abstraction *) this)->print(stream,depth,offset);
-	break;
-      case C_CELL:
-	((Cell *) this)->print(stream,depth,offset);
-      break;
-      case C_BUILTIN:
-	((Builtin *) this)->print(stream,depth,offset);
-	break;
-      default:
-      Assert(NO);
-      }
-      if (ch->getRecord()) {
-	ch->getRecord()->print(stream,depth,offset);
-      }
-      break;
-    }
-
-  default:
-    error("ConstTerm::print");
+  case Co_Board:       ((Board *) this)->print(stream, depth, offset);       break;
+  case Co_Thread:      ((Thread *) this)->print(stream, depth, offset);      break;
+  case Co_Actor:       ((Actor *) this)->print(stream, depth, offset);       break;
+  case Co_HeapChunk:   ((HeapChunk *) this)->print(stream, depth, offset);   break;
+  case Co_Class:       ((ObjectClass *) this)->print(stream, depth, offset); break;
+  case Co_Abstraction: ((Abstraction *) this)->print(stream,depth,offset);   break;
+  case Co_Object:      ((Object *) this)->print(stream,depth,offset);        break;
+  case Co_Cell:        ((Cell *) this)->print(stream,depth,offset);          break;
+  case Co_Builtin:     ((Builtin *) this)->print(stream,depth,offset);       break;
+  default:              Assert(NO);
   }
 }
 
@@ -798,6 +751,31 @@ PRINTLONG(HeapChunk)
   CHECKDEPTHLONG;
   stream << indent(offset)
 	 << "heap chunk: " << chunk_size << " bytes at " << this << '.';
+}
+
+
+PRINT(ObjectClass)
+{
+  CHECKDEPTH;
+  stream << indent(offset) << "class(fastMethods: ";
+  fastMethods->print(stream,depth,offset);
+  stream << ", printName: ";
+  printName->print(stream,depth,offset);
+  stream << ", slowMethods: " << OZ_toC(slowMethods) << ", send: ";
+  send->print(stream,depth,offset);
+  stream << ")";
+}
+
+PRINTLONG(ObjectClass)
+{
+  CHECKDEPTHLONG;
+  stream << indent(offset) << "class(fastMethods: ";
+  fastMethods->printLong(stream,depth,offset);
+  stream << ", printName: ";
+  printName->printLong(stream,depth,offset);
+  stream << ", slowMethods: " << OZ_toC(slowMethods) << ", send: ";
+  send->printLong(stream,depth,offset);
+  stream << ")";
 }
 
 void AM::print()
@@ -1165,11 +1143,23 @@ PRINTLONG(LTuple)
   tagged2StreamLong(getTail(),stream,DEC(depth),offset+2);
 }
 
+PRINTLONG(Object)
+{
+  CHECKDEPTHLONG;
+  stream << indent(offset)
+	 << "Object: "
+	 << getPrintName() << endl
+         << "Features: ";
+  getRecord()->printLong(stream,depth,offset);
+  stream << endl;
+  stream << "State: ";
+  tagged2StreamLong(getCell(),stream,depth,offset);
+}
+
 PRINTLONG(Abstraction)
 {
   CHECKDEPTHLONG;
   stream << indent(offset)
-	 << (getCType() == C_OBJECT ? "Object " : "")
 	 << "Abstraction @id"
 	 << this << endl;
   pred->printLong(stream,depth,offset);
