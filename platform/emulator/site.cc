@@ -35,8 +35,11 @@
 #include "am.hh"
 #include "os.hh"
 #include <sys/types.h>
+
+#ifndef WINDOWS
 #include <netinet/in.h>
 #include <netdb.h>
+#endif
 
 int BaseSite::hash() {
   BYTE *p=(BYTE*)&address;
