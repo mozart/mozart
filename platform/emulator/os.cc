@@ -522,6 +522,26 @@ int oskill(int pid, int sig)
 int osSystem(char *cmd)
 {
 #ifdef WINDOWS
+#if 0
+  STARTUPINFO si;
+  ZeroMemory(&si,sizeof(si));
+  si.cb = sizeof(si);
+  si.dwFlags = STARTF_USESTDHANDLES;
+  si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+  si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+  si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+
+  SECURITY_ATTRIBUTES sa;
+  sa.nLength = sizeof(sa);
+  sa.lpSecurityDescriptor = NULL;
+  sa.bInheritHandle = TRUE;
+
+  PROCESS_INFORMATION pinf;
+  BOOL ret = CreateProcess(NULL,cmd,&sa,NULL,TRUE,
+                           0,NULL,NULL,&si,&pinf);
+
+  return (WaitForSingleObject(pinf.hProcess,INFINITE) == WAIT_FAILED) ? 1:0;
+#endif
   return system(cmd);
 #else
   if (cmd == NULL) {
@@ -726,6 +746,10 @@ void registerSocket(int fd)
 unsigned __stdcall timerFun(void *p)
 {
   TimerThread *ti = (TimerThread*) p;
+  /* make sure that this thread is not mixed with others */
+  if (SetThreadPriority(GetCurrentThread(),THREAD_PRIORITY_HIGHEST)==FALSE) {
+    OZ_warning("SetThreadPriority failed: %d\n",GetLastError());
+  }
   while(1) {
     Sleep(ti->wait);
     handlerALRM(0);
@@ -1145,7 +1169,7 @@ void osWatchAccept(int fd)
 void osClrWatchedFD(int fd, int mode)
 {
   CheckMode(mode);
-  FD_CLR(fd,&globalFDs[mode]);
+  OZ_FD_CLR(fd,&globalFDs[mode]);
 }
 
 
@@ -1257,7 +1281,7 @@ Bool osNextSelect(int fd, int mode)
   CheckMode(mode);
 
   if (FD_ISSET(fd,&tmpFDs[mode])) {
-    FD_CLR(fd,&tmpFDs[mode]);
+    OZ_FD_CLR(fd,&tmpFDs[mode]);
     return OK;
   }
   return NO;
@@ -1393,6 +1417,9 @@ int ossafewrite(int fd, char *buf, unsigned int len)
 
 int osclose(int fd)
 {
+  OZ_FD_CLR((unsigned int)fd,&globalFDs[SEL_READ]);
+  OZ_FD_CLR((unsigned int)fd,&globalFDs[SEL_WRITE]);
+
 #ifdef WINDOWS
   // never close stdin on Windows, leads to problems
   if (fd == wrappedStdin)
@@ -1401,22 +1428,14 @@ int osclose(int fd)
   Assert(fd!=STDIN_FILENO);
 
   if (isSocket(fd)) {
-    FD_CLR((unsigned int)fd,&socketFDs);
+    OZ_FD_CLR((unsigned int)fd,&socketFDs);
     return closesocket(fd);
   }
 
   IOChannel *ch = lookupChannel(fd);
   if (ch) { ch->close(); }
   WrappedHandle *wh = WrappedHandle::find(fd);
-  if (wh) { wh->close(); }
-#endif
-
-  FD_CLR((unsigned int)fd,&globalFDs[SEL_READ]);
-  FD_CLR((unsigned int)fd,&globalFDs[SEL_WRITE]);
-  FD_CLR((unsigned int)fd,&socketFDs);
-
-#ifdef WINDOWS
-  if (wh) return 0;
+  if (wh) { wh->close(); return 0; }
 #endif
   return close(fd);
 }
@@ -1425,7 +1444,7 @@ int osopen(const char *path, int flags, int mode)
 {
   int ret = open(path,flags,mode);
   if (ret >= 0)
-    FD_CLR((unsigned int)ret,&socketFDs);
+    OZ_FD_CLR((unsigned int)ret,&socketFDs);
   return ret;
 }
 

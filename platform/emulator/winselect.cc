@@ -40,6 +40,7 @@ void printfds(fd_set *fds);
 
 /* under windows FD_SET is not idempotent */
 #define OZ_FD_SET(i,fds) if (!FD_ISSET(i,fds)) { FD_SET(i,fds); }
+#define OZ_FD_CLR(i,fds) if (FD_ISSET(i,fds))  { FD_CLR(i,fds); }
 
 
 /* abstract timeout values */
@@ -129,8 +130,12 @@ unsigned __stdcall readerThread(void *arg)
     HANDLE hd = WrappedHandle::find(sr->fd)->hd;
     Assert(hd!=0);
     unsigned int ret;
-    if (ReadFile(hd,&sr->chr, sizeof(char),&ret,0)==FALSE)
-      ret = (unsigned)-1;
+    if (ReadFile(hd,&sr->chr, sizeof(char),&ret,0)==FALSE) {
+      if (ERROR_BROKEN_PIPE==GetLastError()) // mimic Unix behaviour
+        ret = 0;
+      else
+        ret = (unsigned)-1;
+    }
     if (ret < 0) {
       sr->status = ST_ERROR;
       break;
@@ -200,7 +205,7 @@ int splitFDs(fd_set *in, fd_set *out)
   for (int i=0; i <= maxSocket; i++) {
     if (isSocket(i) && FD_ISSET(i,in)) {
       ret++;
-      FD_CLR(i,in);
+      OZ_FD_CLR(i,in);
       OZ_FD_SET(i,out);
     }
   }
@@ -220,6 +225,12 @@ int getAvailFDs(fd_set *rfds, fd_set *wfds)
   int ret = 0;
   if (numsockets>0) {
     ret += nonBlockSelect(maxSocket+1,&rselectfds,&wselectfds);
+    if (ret<0) {
+      return ret;
+      //message("ret<0: %d,%d,%d\n",maxSocket+1,WSAGetLastError(),numsockets);
+      //printfds(&rselectfds);
+      //printfds(&socketFDs);
+    }
   }
 
   IOChannel *aux = channels;
