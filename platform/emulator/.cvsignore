@@ -22,4 +22,4 @@ perdio.cc
 .gdbinit
 i386-mingw32-oztool
 vc50.pdb
-
+emulator0.def emulator.def
