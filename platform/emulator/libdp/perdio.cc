@@ -807,10 +807,10 @@ void msgReceived(MsgContainer* msgC)
 
       NetAddress na=NetAddress(sd,si);
       BorrowEntry *be=BT->find(&na);
-      Assert(be);
-
-      Assert(be->isVar());
-      GET_VAR(be,Proxy)->acknowledge(be->getPtr(), be);
+      if (be) {
+	Assert(be->isVar());
+	GET_VAR(be,Proxy)->acknowledge(be->getPtr(), be);
+      }
 
       break;
     }
@@ -1261,21 +1261,30 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
 
   oz_rootBoard()->install();
   osSetAlarmTimer(0);
-
+  
   if((int) timeUntilClose > 0)
     BT->closeFrameToProxy(timeUntilClose);
-  while ((int) timeUntilClose > 0 && proxiesLeft) {
-    //    printf("times left %d\n", timeUntilClose);
-    //    printf("proxies left %d\n", proxiesLeft);
-    unsigned long idle_start = osTotalTime();
-    proxiesLeft = BT->closeProxyToFree(timeUntilClose);
-    osUnblockSignals();
-    timeToSleep = 50;
-    osBlockSelect(timeToSleep);
-    osBlockSignals(NO);
-    timeUntilClose -= (osTotalTime() - idle_start);
-    oz_io_handle();
-  }
+
+  // This section was used to empty the borrowtable.
+  // This caused bugs when a cell entry was removed after
+  // having sent dump in the previous line, if the contents
+  // were requested and they refferred to some other (removed) proxy
+  //
+  // Instead let it be the responsibilty of the programmer to
+  // drop all references and let them be garbagecollected before
+  // calling Application.exit.
+//    while ((int) timeUntilClose > 0 && proxiesLeft) {
+//      //    printf("times left %d\n", timeUntilClose);
+//      //    printf("proxies left %d\n", proxiesLeft);
+//      unsigned long idle_start = osTotalTime();
+//      proxiesLeft = BT->closeProxyToFree(timeUntilClose);
+//      osUnblockSignals();
+//      timeToSleep = 50;
+//      osBlockSelect(timeToSleep);
+//      osBlockSignals(NO);
+//      timeUntilClose -= (osTotalTime() - idle_start);
+//      oz_io_handle();
+//    }
   //  printf("times left %d\n", timeUntilClose);
   //  printf("proxies left %d\n", proxiesLeft);
 
@@ -1293,6 +1302,10 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
     timeUntilClose -= (osTotalTime() - idle_start);
     oz_io_handle();
   }
+
+  // Close any remaining connections violently.
+
+
   //  printf("times left %d\n", timeUntilClose);
   //  printf("connections left %d\n", connectionsLeft);
   //  printf("Close done at %s\n", myDSite->stringrep());
