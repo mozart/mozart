@@ -215,7 +215,7 @@ OZ_CFunHeader FSetsConvexPropagator::header = fsp_convex;
 
 OZ_Return FSetsConvexPropagator::propagate(void)
 {
-  OZ_DEBUGPRINTTHIS("in: ");
+  _OZ_DEBUGPRINTTHIS("in: ");
   
   OZ_FSetVar s(_s);
 
@@ -257,43 +257,51 @@ OZ_Return FSetsConvexPropagator::propagate(void)
       } // if
     } // for
 #else
-    OZ_DEBUGPRINT(("a"));  
+    _OZ_DEBUGPRINT(("a"));  
     
     // find minimal and maximal element in glb and fill it up
     int min_in = s->getGlbMinElem();
-    int max_in = s->getGlbMaxElem();
-    OZ_FSetValue fillup(min_in, max_in);
-    FailOnInvalid(*s <<= *s | fillup);
-    
-    OZ_DEBUGPRINT(("b"));
-    
-    // find next smaller element to minimal element in glb not contained
-    // and remove all elements starting from this element to `inf'
-    {
-      int next_smaller = s->getNotInNextSmallerElem(min_in);
-      FailOnInvalid(*s >= next_smaller);
+    // lower bound is not empty
+
+    _OZ_DEBUGPRINT(("min_in=%d", min_in));
+
+    if (min_in != -1) {
+      int max_in = s->getGlbMaxElem();
+      OZ_ASSERT(max_in != -1);
+      
+      OZ_FSetValue fillup(min_in, max_in);
+      FailOnInvalid(*s <<= *s | fillup);
+      
+      _OZ_DEBUGPRINT(("b"));
+      
+      // find next smaller element to minimal element in glb not contained
+      // and remove all elements starting from this element to `inf'
+      {
+	int next_smaller = s->getNotInNextSmallerElem(min_in);
+	FailOnInvalid(*s >= next_smaller);
+      }
+      
+      _OZ_DEBUGPRINT(("c"));
+      
+      // find next larger element to maximal element in glb not contained
+      // and remove all elements starting from this element to `sup'
+      {
+	int next_larger = s->getNotInNextLargerElem(max_in);
+	FailOnInvalid(*s <= next_larger);
+      }
     }
     
-    OZ_DEBUGPRINT(("c"));
-    
-    // find next larger element to maximal element in glb not contained
-    // and remove all elements starting from this element to `sup'
-    {
-      int next_larger = s->getNotInNextLargerElem(max_in);
-      FailOnInvalid(*s <= next_larger);
-    }
-    
-    OZ_DEBUGPRINT(("d"));
+    _OZ_DEBUGPRINT(("d"));
     
 #endif
   }
 
-  OZ_DEBUGPRINTTHIS("out: ");
+  _OZ_DEBUGPRINTTHIS("out: ");
   
   return s.leave() ? OZ_SLEEP : OZ_ENTAILED;
 
 failure:
-  OZ_DEBUGPRINTTHIS("fail: ");
+  _OZ_DEBUGPRINTTHIS("fail: ");
   
   s.fail();
   return FAILED;
