@@ -2041,8 +2041,10 @@ void NetMsgBuffer::constructMsg(RemoteSite* rs, tcpMessageType msg){
 static 
 int nagleOff(int fd)
 {
-  char ON = 1;
-  return setsockopt(fd,IPPROTO_TCP,TCP_NODELAY,&ON,sizeof(ON));
+  int ON = 1;
+  return setsockopt(fd,IPPROTO_TCP,TCP_NODELAY,
+		    (char*)&ON,  /* the cast is historical cruft */
+		    sizeof(ON));
 }
     
 
