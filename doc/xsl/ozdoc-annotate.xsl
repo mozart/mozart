@@ -17,7 +17,7 @@
   </copy>
 </template>
 
-<template match="CODE|CHUNK.SILENT">
+<template match="CODE|CHUNK.SILENT|VAR[@TYPE='PROG']">
   <element name="HILITE.MODE" namespace="">
     <attribute name="PROGLANG">
       <value-of select="ancestor-or-self::*[@PROGLANG][1]/@PROGLANG"/>
@@ -58,7 +58,7 @@
   </element>
 </template>
 
-<template match="CHUNK.REF" mode="ok">
+<template match="CHUNK.REF|VAR[@TYPE!='PROG']" mode="ok">
   <copy-of select="."/>
 </template>
 
