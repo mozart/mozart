@@ -95,7 +95,7 @@ Board::Board(Board * p)
     result  = oz_newVar(p);
     rootVar = oz_newVar(this);
   } else {
-    rootVar = result = oz_nil();
+    rootVar = result = taggedVoidValue;
   }
 #ifdef CS_PROFILE
   orig_start  = (int32 *) NULL;
@@ -551,8 +551,7 @@ OZ_BI_define(BImergeSpace, 1,1) {
 
   TaggedRef result = space->getSpace()->getResult();
 
-  if (result == makeTaggedNULL())
-    return FAILED;
+  Assert(result);
 
   if (OZ_isVariable(result)) {
 
