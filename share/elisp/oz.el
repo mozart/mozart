@@ -74,126 +74,150 @@
 ;; GNU and Lucid Emacsen Support
 ;;------------------------------------------------------------
 
-(defvar oz-gnu-emacs
-  (string-match "\\`[0-9]+\\(\\.[0-9]+\\)*\\'" emacs-version)
-  "Non-nil iff we're running under GNU Emacs.")
-(defvar oz-lucid-emacs
-  (string-match "\\<XEmacs\\>\\|\\<Lucid\\>" emacs-version)
-  "Non-nil iff we're running under XEmacs.")
+(eval-and-compile
+  (defvar oz-gnu-emacs
+    (string-match "\\`[0-9]+\\(\\.[0-9]+\\)*\\'" emacs-version)
+    "Non-nil iff we're running under GNU Emacs.")
+  (defvar oz-lucid-emacs
+    (string-match "\\<XEmacs\\>\\|\\<Lucid\\>" emacs-version)
+    "Non-nil iff we're running under XEmacs.")
 
-(defvar oz-old-frame-title
-  (cond (oz-gnu-emacs
-	 (cdr (assoc 'name (frame-parameters (car (visible-frame-list))))))
-	(oz-lucid-emacs
-	 frame-title-format))
-  "Saved Emacs window title.")
+  (defvar oz-old-frame-title
+    (cond (oz-gnu-emacs
+	   (cdr (assoc 'name (frame-parameters (car (visible-frame-list))))))
+	  (oz-lucid-emacs
+	   frame-title-format))
+    "Saved Emacs window title."))
 
 
 ;;------------------------------------------------------------
 ;; Customization
 ;;------------------------------------------------------------
 
-(eval-when-compile
-  (if (featurep 'custom)
-      (defgroup oz nil
-	"DFKI Oz Programming Interface.")
+(eval-and-compile
+  (condition-case ()
+      (require 'custom)
+    (error nil))
+  (if (and (featurep 'custom)
+	   (fboundp 'custom-declare-variable)
+	   (fboundp 'custom-declare-group))
+      nil
+    (defmacro defgroup (&rest args)
+      nil)
     (defmacro defcustom (symbol value doc &rest args)
       (` (defvar (, symbol) (, value) (, doc))))))
 
-(defcustom oz-want-font-lock t
-  "*If non-nil, automatically enter font-lock-mode for oz-mode."
-  :type 'boolean
-  :group 'oz)
+(eval-and-compile
+  (eval '(defgroup oz nil
+	   "DFKI Oz Programming Interface.")))
+
+(eval-and-compile
+  (eval '(defcustom oz-want-font-lock t
+	   "*If non-nil, automatically enter font-lock-mode for oz-mode."
+	   :type 'boolean
+	   :group 'oz)))
 (put 'oz-want-font-lock 'variable-interactive
      "XAutomatically enter font-lock-mode in the Oz modes? (t or nil): ")
 
-(defcustom oz-auto-indent t
-  "*If non-nil, automatically indent lines."
-  :type 'boolean
-  :group 'oz)
+(eval-and-compile
+  (eval '(defcustom oz-auto-indent t
+	   "*If non-nil, automatically indent lines."
+	   :type 'boolean
+	   :group 'oz)))
 (put 'oz-auto-indent 'variable-interactive
      "XAutomatically indent lines in Oz and Oz-Gump modes? (t or nil): ")
 
-(defcustom oz-indent-chars 3
-  "*Number of spaces Oz statements are indented wrt. containing block."
-  :type 'integer
-  :group 'oz)
+(eval-and-compile
+  (eval '(defcustom oz-indent-chars 3
+	   "*Number of spaces statements are indented wrt. containing block."
+	   :type 'integer
+	   :group 'oz)))
 (put 'oz-indent-chars 'variable-interactive
      "nNumber of characters to indent in Oz and Oz-Gump modes: ")
 
-(defcustom oz-pedantic-spaces nil
-  "*If non-nil, highlight ill-placed whitespace.
+(eval-and-compile
+  (eval '(defcustom oz-pedantic-spaces nil
+	   "*If non-nil, highlight ill-placed whitespace.
 Note that this variable is only checked once when oz.el is loaded."
-  :type 'boolean
-  :group 'oz)
+	   :type 'boolean
+	   :group 'oz)))
 (put 'oz-pedantic-spaces 'variable-interactive
      "XHighlight ill-spaced whitespace? (t or nil): ")
 
-(defcustom oz-change-title t
-  "*If non-nil, change the title of the Emacs frame while Oz is running."
-  :type 'boolean
-  :group 'oz)
+(eval-and-compile
+  (eval '(defcustom oz-change-title t
+	   "*If non-nil, change the Emacs frame title while Oz is running."
+	   :type 'boolean
+	   :group 'oz)))
 (put 'oz-change-title 'variable-interactive
      "XChange frame title when Oz is running? (t or nil): ")
 
-(defcustom oz-frame-title
-  (concat "Oz Programming Interface (" oz-old-frame-title ")")
-  "*String to be used as Emacs window title while Oz is running."
-  :type 'string
-  :group 'oz)
+(eval-and-compile
+  (eval '(defcustom oz-frame-title
+	   (concat "Oz Programming Interface (" oz-old-frame-title ")")
+	   "*String to be used as Emacs window title while Oz is running."
+	   :type 'string
+	   :group 'oz)))
 (put 'oz-frame-title 'variable-interactive
      "sFrame title to use while Oz is running: ")
 
-(defcustom oz-emulator
-  (concat (getenv "HOME") "/Oz/Emulator/oz.emulator.bin")
-  "*Path to the Oz Emulator for gdb mode and for \\[oz-other]."
-  :type 'string
-  :group 'oz)
+(eval-and-compile
+  (eval '(defcustom oz-emulator
+	   (concat (getenv "HOME") "/Oz/Emulator/oz.emulator.bin")
+	   "*Path to the Oz Emulator for gdb mode and for \\[oz-other]."
+	   :type 'string
+	   :group 'oz)))
 (put 'oz-emulator 'variable-interactive
      "fChoose Oz Emulator binary: ")
 
-(defcustom oz-components-url
-  (concat "file:" (getenv "HOME") "/Oz/lib/")
-  "*URL relative to which the Oz Components are loaded (used by \\[oz-other])."
-  :type 'string
-  :group 'oz)
+(eval-and-compile
+  (eval '(defcustom oz-components-url
+	   (concat (getenv "HOME") "/Oz/lib/")
+	   "*URL base of the Oz Components (used by \\[oz-other])."
+	   :type 'string
+	   :group 'oz)))
 (put 'oz-components-url 'variable-interactive
      "sBase URL of the Oz components: ")
 
-(defcustom oz-gdb-autostart t
-  "*If non-nil, start emulator immediately when in gdb mode.
+(eval-and-compile
+  (eval '(defcustom oz-gdb-autostart t
+	   "*If non-nil, start emulator immediately when in gdb mode.
 If nil, you have the possibility to first set breakpoints and only
 run the emulator when you issue the command `run' to gdb."
-  :type 'boolean
-  :group 'oz)
+	   :type 'boolean
+	   :group 'oz)))
 (put 'oz-gdb-autostart 'variable-interactive
      "XStart emulator immediately when in gdb mode? (t or nil): ")
 
-(defcustom oz-other-buffer-size 35
-  "*Percentage of screen to use for Oz Compiler and Emulator windows."
-  :type 'integer
-  :group 'oz)
+(eval-and-compile
+  (eval '(defcustom oz-other-buffer-size 35
+	   "*Percentage of screen to use for Oz Compiler and Emulator windows."
+	   :type 'integer
+	   :group 'oz)))
 (put 'oz-other-buffer-size 'variable-interactive
      "nPercentage of screen to use for Oz windows: ")
 
-(defcustom oz-popup-on-error t
-  "*If non-nil, pop up Compiler resp. Emulator buffer upon error."
-  :type 'boolean
-  :group 'oz)
+(eval-and-compile
+  (eval '(defcustom oz-popup-on-error t
+	   "*If non-nil, pop up Compiler resp. Emulator buffer upon error."
+	   :type 'boolean
+	   :group 'oz)))
 (put 'oz-popup-on-error 'variable-interactive
      "XPop up Oz buffers on error? (t or nil): ")
 
-(defcustom oz-halt-timeout 30
-  "*Number of seconds to wait for shutdown in oz-halt."
-  :type 'integer
-  :group 'oz)
+(eval-and-compile
+  (eval '(defcustom oz-halt-timeout 30
+	   "*Number of seconds to wait for shutdown in oz-halt."
+	   :type 'integer
+	   :group 'oz)))
 (put 'oz-halt-timeout 'variable-interactive
      "nNumer of seconds to wait for shutdown of the Oz system: ")
 
-(defcustom oz-previewer "xdvi"
-  "*Viewer command for Oz documentation files."
-  :type 'string
-  :group 'oz)
+(eval-and-compile
+  (eval '(defcustom oz-previewer "xdvi"
+	   "*Viewer command for Oz documentation files."
+	   :type 'string
+	   :group 'oz)))
 (put 'oz-previewer 'variable-interactive
      "sViewer command for Oz documentation files: ")
 
@@ -842,12 +866,10 @@ Can be selected by \\[oz-other-emulator]."
 Can be selected by \\[oz-other-components]."
   (interactive)
   (setq oz-components-url
-	(concat
-	 "file://"
-	 (expand-file-name
-	  (read-file-name (format "Oz components base URL (default %s): "
-				  oz-components-url)
-			  nil oz-components-url t nil))))
+	(expand-file-name
+	 (read-file-name (format "Oz components base URL (default %s): "
+				 oz-components-url)
+			 nil oz-components-url t nil)))
   (if (getenv "OZCOMPONENTS")
       (setenv "OZCOMPONENTS" oz-components-url)))
 
