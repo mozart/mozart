@@ -160,28 +160,65 @@
 % has "label" flushed left in the left margin.  If there is enough
 % space the body of the environment starts on the same line. You can use
 % \\ in the label to obtain multiple lines.
-\newcommand{\explain@par}{\egroup\hbox\bgroup\strut}
+\newcommand{\explain@par}{\egroup\hbox\bgroup\strut\ignorespaces}
 \newcommand{\explain@makelabel}[1]{%
   \setbox\@tempboxa\hbox{\ttfamily %\large
-	\vbox\bgroup\let\\\explain@par\hbox\bgroup\strut#1\egroup\egroup}%
+	\vbox\bgroup\let\\\explain@par
+	  \hbox\bgroup\strut\ignorespaces#1\egroup\egroup}%
   \@tempdima\leftmarginwidth
-%  \@tempdima 0.5\leftmarginwidth
   \advance\@tempdima-\labelsep
   \ifdim\wd\@tempboxa<\@tempdima
 	\box\@tempboxa\hfil
   \else
     \@tempdima\textwidth
     \advance\@tempdima\labelwidth
-%    \advance\@tempdima 0.5\leftmarginwidth
     \hbox to\@tempdima{\unhbox\@tempboxa\hfil}\fi}
 \newenvironment{explain}[1]
   {\trivlist\let\makelabel\explain@makelabel
    \setlength{\labelwidth}{\leftmarginwidth}%
    \addtolength{\labelwidth}{-\labelsep}%
-%   \setlength{\labelwidth}{0.5\leftmarginwidth}%
 	\item[{#1}]}
   {\endtrivlist}
 
+% \begin{multiexplain}{{label1}{desc1}...{labeln}{descn}}...\end{...}
+% is similar to explain but introduces several labels with corresponding
+% descriptions.  This is better than using \\ with explain because here
+% labels are aligned with their descriptions.
+
+\newcommand{\multiexplain@first}[2]{%
+  \def\@tempa{#1}%
+  \ifx\@tempa\@nnil \def\@tempa{}%
+  \else
+    \def\@tempa{\multiexplain@arg{#1}{#2}\multiexplain@next}\fi
+  \@tempa}
+\newcommand{\multiexplain@next}[2]{%
+  \def\@tempa{#1}%
+  \ifx\@tempa\@nnil \def\@tempa{}%
+  \else
+    \def\@tempa{\\\multiexplain@arg{#1}{#2}\multiexplain@next}\fi
+  \@tempa}
+\newcommand{\multiexplain@arg}[2]{%
+  \ignorespaces#1&\ignorespaces#2}
+\newlength{\@labelsep}
+\newenvironment{multiexplain}[1]
+  {\trivlist
+   \setlength{\labelwidth}{\leftmarginwidth}%
+% save value of \labelsep and set it to zero
+   \setlength{\@labelsep}{\labelsep}%
+   \setlength{\labelsep}{0pt}%
+   \setbox\explain@box\hbox{\ttfamily
+% use saved value of \labelsep
+	\advance\labelwidth-\@labelsep
+        \begin{tabular}%
+	  {@{}p{\labelwidth}@{\hspace{\@labelsep}}p{\linewidth}@{}}%
+        \multiexplain@first#1\@nil\@nil
+	\end{tabular}}%
+   \item[{\box\explain@box}]%
+   \mbox{}\vspace*{\topsep}\\%
+% restore value of \labelsep
+   \setlength{\labelsep}{\@labelsep}%
+   \ignorespaces}
+  {\endtrivlist}
 
 \newcommand{\ozmetafont}{\ttfamily\slshape\small}
 %% Usage: \MV{Name of a meta variable}
