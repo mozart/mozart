@@ -136,14 +136,15 @@ FirstsLasts::~FirstsLasts()
 //////////
 OZ_C_proc_begin(sched_firstsLasts, 5)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_STREAM "," OZ_EM_INT);
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_RECORD OZ_EM_FD 
+		   "," OZ_EM_RECORD OZ_EM_INT "," OZ_EM_STREAM "," OZ_EM_INT);
 
   PropagatorExpect pe;
 
   pe.collectVarsOff();
   OZ_EXPECT(pe, 0, expectVectorVectorLiteral);
-  OZ_EXPECT(pe, 1, expectVectorIntVarAny);
-  OZ_EXPECT(pe, 2, expectVectorInt);
+  OZ_EXPECT(pe, 1, expectProperRecordIntVarMinMax);
+  OZ_EXPECT(pe, 2, expectProperRecordInt);
   pe.collectVarsOn();
 
   OZ_EXPECT(pe, 3, expectStream);

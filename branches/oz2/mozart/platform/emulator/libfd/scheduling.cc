@@ -177,7 +177,7 @@ CPIteratePropagator::CPIteratePropagator(OZ_Term tasks,
 OZ_C_proc_begin(sched_cpIterate, 3)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," 
-		   OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT);
+		   OZ_EM_RECORD OZ_EM_FD "," OZ_EM_RECORD OZ_EM_INT);
   
   {
     PropagatorExpect pe;
@@ -826,7 +826,7 @@ failure:
 OZ_C_proc_begin(sched_disjunctive, 3)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," 
-		   OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT);
+		   OZ_EM_RECORD OZ_EM_FD "," OZ_EM_RECORD OZ_EM_INT);
     
   {
     PropagatorExpect pe;
@@ -1037,8 +1037,8 @@ CPIteratePropagatorCap::CPIteratePropagatorCap(OZ_Term tasks,
 //////////
 OZ_C_proc_begin(sched_cpIterateCap, 6)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_VECT OZ_EM_FD 
-		   "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT 
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_RECORD OZ_EM_FD 
+		   "," OZ_EM_RECORD OZ_EM_INT "," OZ_EM_RECORD OZ_EM_INT 
 		   "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_INT);
   
   {
@@ -2046,8 +2046,8 @@ CPIteratePropagatorCapUp::CPIteratePropagatorCapUp(OZ_Term tasks,
 
 OZ_C_proc_begin(sched_cpIterateCapUp, 5)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_VECT OZ_EM_FD 
-		   "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT 
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_RECORD OZ_EM_FD 
+		   "," OZ_EM_RECORD OZ_EM_INT "," OZ_EM_RECORD OZ_EM_INT 
 		   "," OZ_EM_VECT OZ_EM_INT);
   
   {
