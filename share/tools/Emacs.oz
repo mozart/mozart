@@ -126,8 +126,9 @@ fun {NewEmacs IMPORT}
 	   meth setVerbose(B) Verbose <- B end
 	   meth checkVerbose($) @Verbose end
 
-	   meth bar(file:F line:L column:C state:S)
+	   meth bar(file:F line:L column:C state:S)=M
 	      BarSync <- _ = unit
+	      {Trace {V2VS M}}
 	      case {UnknownFile F} orelse L == unit then
 		 {self removeBar}
 	      else
@@ -145,8 +146,9 @@ fun {NewEmacs IMPORT}
 	      end
 	   end
 
-	   meth configureBar(State)
+	   meth configureBar(State)=M
 	      New in BarSync <- New = unit
+	      {Trace {V2VS M}}
 	      thread
 		 {WaitOr New {Alarm TimeoutToConfigBar}}
 		 case {IsDet New} then skip else
@@ -157,7 +159,7 @@ fun {NewEmacs IMPORT}
 
 	   meth removeBar
 	      BarSync <- _ = unit
-	      {Trace 'removing bar...'}
+	      {Trace 'removing bar'}
 	      {MagicEmacsBar nofile 0 0 hide}
 	   end
 
