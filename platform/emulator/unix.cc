@@ -1807,18 +1807,3 @@ NotAvail("OS.getpwnam",        1,1, unix_getpwnam);
 #endif
 
 
-#ifdef WINDOWS
-
-void initWinSockets() {
-  WSADATA wsa_data;
-  WORD req_version = MAKEWORD(1,1);
-
-  int ret = WSAStartup(req_version, &wsa_data);
-  if (ret != 0 && ret != WSASYSNOTREADY)
-    OZ_warning("Initialization of socket interface failed\n");
-
-  //  fprintf(stderr, "szDescription = \"%s\"", wsa_data.szDescription);
-  //  fprintf(stderr, "szSystemStatus = \"%s\"", wsa_data.szSystemStatus);
-}
-
-#endif
