@@ -199,7 +199,7 @@ win32-i486: $(PACKDIR) $(PACKDIR)/mozart
                    cache/x-oz/contrib cache/x-oz/system \
                    winbin platform/win32-i486 \
         ) | (cd $(MPD); $(TAR) xf -)
-        find $(MPD) -name '*.so-*' -and -not -name '*.so-win32-i486' \
+        find $(MPD) -name '*.so-*' -and \! \( -name '*.so-win32-i486' \) \
                 -exec rm -f '{}' ';'
         for i in ozc ozd ozl; do \
           cat $(MPD)/winbin/ozwrapper.bin \
@@ -276,4 +276,4 @@ files.doc:
                 -path './cache/x-oz/system/gump/examples/*' -or \
                 -path './cache/http/www.mozart-oz.org/home-'`$(OZVERSION)`'/doc/*' -or \
                 -path './examples/*' \
-        \) -and -not -path './doc/Mozart.hh?' ) > $@
+        \) -and \! \( -path './doc/Mozart.hh?' \) ) > $@
