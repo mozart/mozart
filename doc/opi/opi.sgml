@@ -1,3 +1,25 @@
+<!--
+  - Author:
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Leif Kornstaedt, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://mozart.ps.uni-sb.de
+  -
+  - See the file "LICENSE" or
+  -   http://mozart.ps.uni-sb.de/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
 <!DOCTYPE Book SYSTEM "ozdoc.dtd" [
 
 <!-- Extension to the DTD -->
@@ -282,28 +304,17 @@
 	    through Emacs' <Index/<<describe-mode>>/<Key/M-x describe-mode/
 	    (<Key/C-h m/).  In this manual, the key sequences a command is
 	    bound to by default will always be shown in parenthesis following
-	    the command name.  The following user option affects which key
-	    bindings are installed by default.
+	    the command name.
 	    <List>
-	      <Entry class=useroption><Span class=index/<<oz-pc-keys>>/
-		(default: <<nil>>)
-	      <Item>
-		If non-<<nil>>, use only <Index/key bindings<And
-		>politically correct/<Q class=quasi/politically correct/
-		key bindings.  This means that <Key/M-l/ and <Key/M-r/ are
-		not locally rebound in Oz buffers, and that no command will
-		be bound to <Key/C-c/ followed by a letter.  Note that this
-		user option must be set before the <File/oz/ library is
-		loaded.
 	      <Entry class=useroption><Span class=index/<<oz-mode-map>>/
 	      <Item>
 		<Index/keymap/Keymap used in the Oz modes.
 	    </List>
-	    Note that if a key binding is not installed if <<oz-pc-keys>>
-	    is non-<<nil>>, but there is an alternative binding, then
-	    only the alternative binding is listed in this manual.  The
-	    non-politically-correct may be eradicated in a future version
-	    of the &OPI;.
+	    Generally, Oz-specific commands are made available both with
+	    <Key/C-./ and <Key/C-c ./ as prefix.  This manual always lists
+	    only the first of these.  However, some terminals may not be
+	    able to generate <Key/C-./; this is why the second one is
+	    provided.
     <Chapter id="chapter.editing">
       <Title/Editing Oz Code/
       <P>
@@ -317,7 +328,7 @@
 	    and quickly switching between Oz buffers:
 	    <List>
 	      <Entry class=command><Span class=index/<<oz-new-buffer>>/
-		(<Key/C-c C-n/)
+		(<Key/C-. n/)
 	      <Item>
 		Create a new buffer using the Oz major mode.
 		Note that this buffer has no associated file name,
@@ -399,8 +410,8 @@
 	    <<<(setq font-lock-maximum-decoration 3)>>>
 	    The default level depends on your version of Emacs.
 	  <P>
-	    The following user option and command control automatic
-	    fontification in the &OPI;.
+	    The following user option controls automatic fontification
+	    in the &OPI;.
 	    <List>
 	      <Entry class=useroption><Span class=index/<<oz-want-font-lock>>/
 		(default: <<t>>)
@@ -409,12 +420,6 @@
 		any of the Oz modes is activated.  If you prefer to control
 		this via <<global-font-lock-mode>>, you can set this to
 		<<nil>>.
-	      <Entry class=command><Span class=index/<<oz-fontify-buffer>>/
-		<<&amp;optional ?_{ARG}>> (<Key/M-l/)
-	      <Item>
-		Center point in window, redisplay frame and re-fontify
-		buffer.  The ?_{ARG} is interpreted just as with the
-		<<recenter>> command (usually bound to <Key/C-l/).
 	    </List>
 	    You might like the following user option and command if you care
 	    about superfluous (usually invisible) <Index/whitespace/<Span
@@ -588,7 +593,7 @@
 	  The following commands are used to start and halt the Mozart
 	  sub-process.
 	  <List>
-	    <Entry class=command><Span class=index/<<run-oz>>/ (<Key/C-c C-r/)
+	    <Entry class=command><Span class=index/<<run-oz>>/ (<Key/C-. r/)
 	    <Item>
 	      Start Mozart as a sub-process if it is not already running.
 	      Handle input and output via the Oz Emulator buffer.  If the
@@ -606,7 +611,7 @@
 	      is running.  In the default shown above, the old frame title
 	      will be inserted in place of the ellipsis.
 	    <Entry class=command><Span class=index/<<oz-halt>>/
-	      <<FORCE>> (<Key/C-c C-h/)
+	      <<FORCE>> (<Key/C-. h/)
 	    <Item>
 	      Halt the Mozart sub-process.  If <<FORCE>> is <<nil>>, send
 	      a <Index/<Code proglang=oz/System.exit//<Code proglang=oz
@@ -630,11 +635,11 @@
 	  buffers easier.
 	  <List>
 	    <Entry class=command><Span class=index/<<oz-toggle-emulator>>/
-	      (<Key/C-c C-e/)
+	      (<Key/C-. e/)
 	    <Entry class=command><Span class=index/<<oz-toggle-compiler>>/
-	      (<Key/C-c C-c/)
+	      (<Key/C-. c/)
 	    <Entry class=command><Span class=index/<<oz-toggle-temp>>/
-	      (<Key/C-c C-t/)
+	      (<Key/C-. t/)
 	    <Item>
 	      Toggle visibility of the Oz Emulator, Compiler or Temporary
 	      window respectively.  If the buffer is not visible in any
@@ -674,20 +679,28 @@
 	  </List>
 	  <List>
 	    <Entry class=command><Span class=index/<<oz-feed-buffer>>/
-	      (<Key/M-RET/)
+	      (<Key/C-. C-b/)
 	    <Entry class=command><Span class=index/<<oz-feed-region>>/
-	      <<?_{START} ?_{END}>>
-	      (<Key/M-r/<Note foot>This key binding is only available if the
-	      <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
+	      <<?_{START} ?_{END}>> (<Key/C-. C-r/)
 	    <Entry class=command><Span class=index/<<oz-feed-line>>/
-	      <<?_{COUNT}>>
-	      (<Key/M-l/<Note foot>This key binding is only available if the
-	      <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
+	      <<?_{COUNT}>> (<Key/C-. C-l/)
 	    <Entry class=command><Span class=index/<<oz-feed-paragraph>>/
-	      <<?_{COUNT}>> (<Key/C-c C-p/)
+	      <<?_{COUNT}>> (<Key/C-. C-p/, <Key/M-C-x/)
 	    <Item>
 	      The corresponding text region is fed to the compiler and
 	      processed with its currently active switches.
+	    <Entry class=command><Span class=index/<<oz-show-buffer>>/
+	      (<Key/C-. s C-b/)
+	    <Entry class=command><Span class=index/<<oz-show-region>>/
+	      <<?_{START} ?_{END}>> (<Key/C-. s C-r/)
+	    <Entry class=command><Span class=index/<<oz-show-line>>/
+	      <<?_{COUNT}>> (<Key/C-. s C-l/)
+	    <Entry class=command><Span class=index/<<oz-show-paragraph>>/
+	      <<?_{COUNT}>> (<Key/C-. s C-p/)
+	    <Item>
+	      Feed the corresponding text region to the Oz Compiler.
+	      Assuming it to contain an expression, enclose it by an
+	      application of the procedure <Code proglang=oz/Show/.
 	    <Entry class=command><Span class=index/<<oz-to-coresyntax-buffer>>/
 	    <Entry class=command><Span class=index/<<oz-to-coresyntax-region>>/
 	      <<?_{START} ?_{END}>>
@@ -831,40 +844,39 @@
       <Para class=apropos><Title/<Span class=index/Browser//
 	<List>
 	  <Entry class=command><Span class=index/<<oz-browse-buffer>>/
+	    (<Key/C-. b C-b/)
 	  <Entry class=command><Span class=index/<<oz-browse-region>>/
-	    <<?_{START} ?_{END}>> (<Key/C-c C-b/)
+	    <<?_{START} ?_{END}>> (<Key/C-. b C-r/)
 	  <Entry class=command><Span class=index/<<oz-browse-line>>/
-	    <<?_{COUNT}>>
-	    (<Key/C-c b/<Note foot>This key binding is only available if the
-	    <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
+	    <<?_{COUNT}>> (<Key/C-. b C-l/)
 	  <Entry class=command><Span class=index/<<oz-browse-paragraph>>/
-	    <<?_{COUNT}>>
+	    <<?_{COUNT}>> (<Key/C-. b C-p/)
 	  <Item>
 	    Feed the corresponding text region to the Oz Compiler.
 	    Assuming it to contain an expression, enclose it by an
-	    application of the procedure <Code proglang=oz>Browse</Code>.
+	    application of the procedure <Code proglang=oz/Browse/.
 	</List>
 <!--
       <Para class=apropos><Title/<Span class=index/Inspector//
 	<List>
 	  <Entry class=command><Span class=index/<<oz-inspect-buffer>>/
+	    (<Key/C-. i C-b/)
 	  <Entry class=command><Span class=index/<<oz-inspect-region>>/
-	    <<?_{START} ?_{END}>> (<Key/C-c C-i/)
+	    <<?_{START} ?_{END}>> (<Key/C-. i C-r/)
 	  <Entry class=command><Span class=index/<<oz-inspect-line>>/
-	    <<?_{COUNT}>>
+	    <<?_{COUNT}>> (<Key/C-. i C-l/)
 	  <Entry class=command><Span class=index/<<oz-inspect-paragraph>>/
-	    <<?_{COUNT}>>
+	    <<?_{COUNT}>> (<Key/C-. i C-p/)
 	  <Item>
 	    Feed the corresponding text region to the Oz Compiler.
 	    Assuming it to contain an expression, enclose it by an
 	    application of the procedure <Code proglang=oz>Inspect</Code>.
 	</List>
 -->
-      <Para class=apropos><Title/<Span class=index/Panel//
+      <Para class=apropos><Title/<Span class=index/System Panel//
 	<List>
 	  <Entry class=command><Span class=index/<<oz-open-panel>>/
-	    (<Key/C-c p/<Note foot>This key binding is only available if the
-	    <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
+	    (<Key/C-. C-. s/)
 	  <Item>
 	    Open the System Panel by feeding the statement <Code proglang=oz
 	    >{Panel.open}</Code> to the Oz Compiler.
@@ -872,8 +884,7 @@
       <Para class=apropos><Title/<Span class=index/Compiler Panel//
 	<List>
 	  <Entry class=command><Span class=index/<<oz-open-compiler-panel>>/
-	    (<Key/C-c c/<Note foot>This key binding is only available if the
-	    <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
+	    (<Key/C-. C-. c/)
 	  <Item>
 	    Open the Compiler Panel by feeding the statement <Code
 	    proglang=oz>{New CompilerPanel.'class' init(`Compiler`) _}</Code
@@ -882,7 +893,7 @@
       <Para class=apropos><Title/<Span class=index/Debugger//
 	<List>
 	  <Entry class=command><Span class=index/<<oz-debugger>>/
-	    <<?_{ARG}>> (<Key/C-c C-d/)
+	    <<?_{ARG}>> (<Key/C-. C-. d/)
 	  <Item>
 	    Open the Oz Debugger by feeding the statement <Code proglang=oz
 	    >{Ozcar.open}</Code> to the Oz Compiler.  With ?_{ARG}, close
@@ -895,18 +906,11 @@
 	    carrying the current source file name (or buffer name) and line
 	    number as debugging information.  With ?_{ARG}, delete any
 	    breakpoints at these coordinates instead.
-	  <Entry class=command><Span class=index/<<oz-breakpoint-mouse-set>>/
-	    (<Key/M-S-&lt;button-1>/)
-	  <Entry class=command><Span class=index
-	    /<<oz-breakpoint-mouse-delete>>/ (<Key/M-S-&lt;button-3>/)
-	  <Item>
-	    Set &resp; delete a dynamic breakpoint at the point clicked with
-	    the mouse.  See <<oz-breakpoint-at-point>> for details.
 	</List>
       <Para class=apropos><Title/<Span class=index/Profiler//
 	<List>
 	  <Entry class=command><Span class=index/<<oz-profiler>>/
-	    <<?_{ARG}>> (<Key/C-c C-f/)
+	    <<?_{ARG}>> (<Key/C-. C-. p/)
 	  <Item>
 	    Open the Oz Profiler by feeding the statement <Code proglang=oz
 	    >{Profiler.open}</Code> to the Oz Compiler.  With ?_{ARG}, close
@@ -998,35 +1002,35 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
 	      Name of the <Index/functor<And>root/<Span class=index
 	      /root functor/ to load on startup.
 	    <Entry class=command><Span class=index/<<oz-set-other>>/
-	      <<?_{SET-FUNCTOR-PATH}>> (<Key/C-c C-m/)
+	      <<?_{SET-FUNCTOR-PATH}>> (<Key/C-. m/)
 	    <Item>
 	      If ?_{SET-FUNCTOR-PATH} is <<nil>>, call <<oz-set-emulator>>,
 	      else call <<oz-set-functor-path>>.
 	    <Entry class=command><Span class=index/<<oz-set-emulator>>/
-	      (<Key/C-c C-m/)
+	      (<Key/C-. m/)
 	    <Item>
 	      Interactively set the value of the variable <<oz-emulator>>.
 	      Also, if the environment variable <Var type=env/OZEMULATOR/ is
 	      set, replace its value by this one.
 	    <Entry class=command><Span class=index/<<oz-set-functor-path>>/
-	      (<Key/C-u C-c C-m/)
+	      (<Key/C-u C-. m/)
 	    <Item>
 	      Interactively set the value of the variable
 	      <<oz-functor-path>>.  Also, if the environment variable
 	      <Var type=env/OZ_LOAD/ is set, replace its value by this one.
 	    <Entry class=command><Span class=index/<<oz-other>>/
-	      <<?_{SET-FUNCTOR-PATH}>> (<Key/C-c C-o/)
+	      <<?_{SET-FUNCTOR-PATH}>> (<Key/C-. o/)
 	    <Item>
 	      If ?_{SET-FUNCTOR-PATH} is <<nil>>, call <<oz-other-emulator>>,
 	      else call <<oz-other-functor-path>>.
 	    <Entry class=command><Span class=index/<<oz-other-emulator>>/
-	      (<Key/C-c C-o/)
+	      (<Key/C-. o/)
 	    <Item>
 	      Toggle between global and local Oz Emulator.  The local
 	      emulator is given by the user option <<oz-emulator>>; see
 	      <<oz-set-emulator>>.
 	    <Entry class=command><Span class=index/<<oz-other-functor-path>>/
-	      (<Key/C-u C-c C-o/)
+	      (<Key/C-u C-. o/)
 	    <Item>
 	      Toggle between global and local Oz functor search path.
 	      The local functors are given by the user option
@@ -1040,7 +1044,7 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
 	  class=index/gdb/.
 	  <!--** reference to gdb -->
 	  <List>
-	    <Entry class=command><Span class=index/<<oz-gdb>>/
+	    <Entry class=command><Span class=index/<<oz-gdb>>/ (<Key/C-. d/)
 	    <Item>
 	      <!--** reference to gud-mode -->
 	      <Index/<<oz>> shell script/
