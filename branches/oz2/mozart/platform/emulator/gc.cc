@@ -1809,6 +1809,29 @@ LocalThreadQueue * LocalThreadQueue::gc()
   return new_ltq;
 }
 
+// Note: the order of the list must be maintained
+inline
+OrderedSuspList * OrderedSuspList::gc()
+{
+  GCMETHMSG("OrderedSuspList::gc");
+
+  OrderedSuspList * ret = NULL, * help = this, ** p = & ret;
+
+  while (help != NULL) {
+
+    Thread * aux = help->t->gcThread();
+
+    if (aux) {
+      *p = new OrderedSuspList(aux, NULL);
+      p = & (*p)->n;
+    }
+
+    help = help->n;
+  }
+  GCNEWADDRMSG (ret);
+  return (ret);
+}
+
 void TaskStack::gc(TaskStack *newstack)
 {
   COUNT(taskStack);
@@ -2361,6 +2384,7 @@ void SolveActor::gcRecurse () {
   suspList         = suspList->gc();
   cpb              = cpb->gc();
   localThreadQueue = localThreadQueue->gc();
+  nonMonoSuspList  = nonMonoSuspList->gc();
 }
 
 CpBag * CpBag::gc(void) {

@@ -664,6 +664,11 @@ void AM::checkEntailment()
       return;
     }
 
+    // check for nonmonotonic propagators
+    solveAA->scheduleNonMonoSuspList();
+    if (! isStableSolve(solveAA))
+      return;
+
     WaitActor *wa = solveAA->getChoice();
 
     if (wa == NULL) {

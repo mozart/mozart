@@ -94,5 +94,33 @@ void SuspList::disposeList(void) {
   for (SuspList * l = this; l; l = l->dispose());
 }
 
+//-----------------------------------------------------------------------------
+// class OrderedSuspList
+
+inline   
+OrderedSuspList * OrderedSuspList::insert(Thread * n)
+{
+  Assert(n->isNonMonotonicPropagatorThread());
+
+  OrderedSuspList * r = this, ** p = &r;
+  OZ_NonMonotonic::order_t n_order = n->getPropagator()->getOrder();
+  while (*p && (n_order > (*p)->t->getPropagator()->getOrder()))
+    p = &((*p)->n);
+
+  *p = new OrderedSuspList(n, *p);
+
+  return r;
+}
+
+inline
+void OrderedSuspList::print(void)
+{
+  for (OrderedSuspList * p = this; p != NULL; p = p->n) {
+    OZ_Propagator * pr = p->t->getPropagator();
+    cout << "   " << *pr 
+	 << endl << flush;
+  }
+}
+
 #endif
 

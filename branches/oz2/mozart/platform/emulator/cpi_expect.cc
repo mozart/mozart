@@ -343,7 +343,6 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
   }
   
   Thread * thr = am.mkPropagator(am.currentBoard, prio, p);
-  thr->headInitPropagator();
 
   ozstat.propagatorsCreated.incf();
   ozstat.propagatorsInvoked.incf();
