@@ -306,23 +306,15 @@ Bool hookCheckNeeded(AM *e)
 // -----------------------------------------------------------------------
 // THREADED CODE
 
-#ifndef THREADED
-#define THREADED 0
-#endif
-
-#if defined(RECINSTRFETCH) && THREADED > 0
+#if defined(RECINSTRFETCH) && defined(THREADED)
  Error: RECINSTRFETCH requires THREADED == 0;
 #endif
 
 #define INCFPC(N) PC += N
 
-#if THREADED > 0
+#ifdef THREADED
 
-#if THREADED == 2
-#   define DODISPATCH goto* (void *)help;
-#else
-#   define DODISPATCH goto* *(void **)(((char *)instrTable)+help);
-#endif
+#define DODISPATCH goto* ToPointer(help);
 
 //#define WANT_INSTRPROFILE
 #if defined(WANT_INSTRPROFILE) && defined(sparc)
@@ -335,9 +327,9 @@ Bool hookCheckNeeded(AM *e)
 
 
 // let gcc fill in the delay slot of the "jmp" instruction:
-#   define DISPATCH(INC) { int help=*(PC+INC); INCFPC(INC); DODISPATCH; }
+#   define DISPATCH(INC) { ByteCode help=*(PC+INC); INCFPC(INC); DODISPATCH; }
 
-#else // THREADED == 0
+#else /* THREADED */
 
 #   define asmLbl(INSTR)
 
@@ -348,7 +340,7 @@ Bool hookCheckNeeded(AM *e)
 #else
 #   define INSTRUCTION(INSTR)   case INSTR: 
 #endif
-#endif //THREADED
+#endif /* THREADED */
 
 #define JUMP(absAdr) PC = absAdr; DISPATCH(0)
 
@@ -577,11 +569,9 @@ void engine() {
   SRecord *predicate;
   int predArity;
 
-#if THREADED > 0
+#ifdef THREADED
 #  include "instrtab.hh"
-#if THREADED == 2
   CodeArea::globalInstrTable = instrTable;
-#endif
 #else
   Opcode op = (Opcode) -1;
 #endif
@@ -948,7 +938,7 @@ void engine() {
 
   JUMP( PC );
 
-#if THREADED == 0
+#ifndef THREADED
 
  LBLdispatcher:
 
@@ -975,7 +965,7 @@ void engine() {
 
   switch (op) {
 
-#endif // THREADED
+#endif /* THREADED */
 
 // the instructions are classified into groups
 // to find a certain class of instructions search for the String "CLASS:"
@@ -2199,7 +2189,7 @@ void engine() {
     warning("emulate: Unimplemented command");
     goto LBLcheckEntailment;
 
-#if ! defined THREADED || THREADED == 0
+#ifndef THREADED
   default:
     warning("emulate instruction: default should never happen");
     break;
