@@ -158,7 +158,7 @@ COMPILERSRC1 = \
 	UnnestFD.oz Assembler.oz GenericInterface.oz QuietInterface.oz \
 	Abstractions.oz Errors.oz RunTime.oz
 
-COMPILERSRCEXTRA = compiler-Builtins.oz compiler-Opcodes.oz compiler-Env.oz
+COMPILERSRCEXTRA = compiler-Builtins.oz compiler-Opcodes.oz
 
 COMPILERSRCNOVER = \
 	$(COMPILERSRC1:%=compiler/%) $(COMPILERSRCEXTRA)
@@ -186,12 +186,6 @@ compiler-Opcodes.oz: compiler/Opcodes.m4oz $(EMUSRCDIR)/instrDefs.m4
 	$(M4) -DEMUDIR=$(EMUSRCDIR) < $< > $@ \
 	|| (rm -f $@; exit 1)
 
-functor2env: $(RUNFUNCTORS) Base.ozf MakeFunctorToEnv.oz
-	$(COMPILESYSLET) MakeFunctorToEnv.oz -o $@
-
-compiler-Env.oz: $(RUNFUNCTORS) Base.ozf functor2env
-	$(OZENGINE) functor2env -in=Base.ozf -out=compiler-Env.oz
-
 FUNFUNCTORS = PrintName.ozf Builtins.ozf Unnester.ozf Core.ozf \
 	StaticAnalysis.ozf CodeGen.ozf Assembler.ozf Main.ozf RunTime.ozf
 
@@ -213,11 +207,12 @@ CodeGen.ozf: compiler/CodeGen.oz compiler/CodeStore.oz compiler/CodeEmitter.oz
 
 Assembler.ozf: compiler/Assembler.oz compiler-Opcodes.oz
 
-Main.ozf: compiler/Main.oz compiler-Env.oz compiler/FormatStrings.oz \
+Main.ozf: compiler/Main.oz compiler/FormatStrings.oz \
 	compiler/CheckTupleSyntax.oz compiler/Reporter.oz compiler/ParseOz.oz \
 	compiler/CompilerClass.oz compiler/GenericInterface.oz \
 	compiler/QuietInterface.oz compiler/Abstractions.oz \
-	compiler/Errors.oz compiler-Version.oz 
+	compiler/Errors.oz compiler-Version.oz \
+	Base.ozf
 
 RunTime.ozf: compiler/RunTime.oz Base.ozf BaseBuiltins.ozf
 	$(COMPILE) -l BaseBuiltins $< -o $@
@@ -312,7 +307,6 @@ $(OZLIB)/boot-%: boot-%
 CLEANFILES = \
 	compiler-Version.oz compiler-Builtins.oz \
 	compiler-Opcodes.oz \
-	functor2env compiler-Env.oz \
 	Base.ozf BaseBuiltins.ozf \
 	$(FUNCTORS) $(FUNFUNCTORS) \
 	$(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc

@@ -3,10 +3,8 @@ Makefile
 compiler-Version.oz
 compiler-Opcodes.oz
 compiler-Builtins.oz
-compiler-Env.oz
-*.ozp
 *.ozf
-ozc functor2env ozar ozremote
+ozc ozar ozremote
 stage1 stage2 stage3 save
 boot-init boot-ozc
 boot-init.ozt boot-ozc.ozt
