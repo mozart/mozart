@@ -35,40 +35,54 @@ class WindowManagerClass from MyClosableObject BatchObject
    %%
    %%
    meth initWindow
-      %%
-      %% This procedure maps (abstract) entries to "full-qualified"
-      %% paths to corresponding 'menubar' entries;
-      self.Entry2Path = 
-      fun {$ Entry}
-	 case Entry
-	 of break             then browser(break)
-	 [] unselect          then browser(unselect)
-	 [] toggleMenus       then browser(toggleMenus)
-	 [] about             then browser(about)
-	 [] checkLayout       then browser(checkLayout)
-	 [] close             then browser(close)
-	 [] clear             then browser(clear)
-	 [] clearAllButLast   then browser(clearAllButLast)
-	 [] expand            then selection(expand)
-	 [] shrink            then selection(shrink)
-	 [] deref             then selection(deref)
-	 [] rebrowse          then selection(rebrowse)
-	 [] process           then selection(process)
-	 else InitValue
-	 end
-      end
+      local Actions in 
+	 Actions = {Dictionary.new}
 
-      %%
-      self.Button2Path =
-      fun {$ Button}
-	 case Button 
-	 of break             then break
-	 else InitValue
+	 %%
+	 %% This procedure maps (abstract) entries to "full-qualified"
+	 %% paths to corresponding 'menubar' entries;
+	 self.Entry2Path = 
+	 fun {$ Entry}
+	    case Entry
+	    of break             then browser(break)
+	    [] unselect          then browser(unselect)
+	    [] toggleMenus       then browser(toggleMenus)
+	    [] about             then browser(about)
+	    [] refineLayout       then browser(refineLayout)
+	    [] close             then browser(close)
+	    [] clear             then browser(clear)
+	    [] clearAllButLast   then browser(clearAllButLast)
+	    [] expand            then selection(expand)
+	    [] shrink            then selection(shrink)
+	    [] deref             then selection(deref)
+	    [] rebrowse          then selection(rebrowse)
+	    [] process           then selection(process)
+	    else InitValue
+	    end
 	 end
-      end
 
-      %%
-      self.CleanUp = fun {$ A} A \= InitValue end
+	 %%
+	 self.Button2Path =
+	 fun {$ Button}
+	    case Button 
+	    of break             then break
+	    else InitValue
+	    end
+	 end
+
+	 %%
+	 self.CleanUp = fun {$ A} A \= InitValue end
+
+	 %%
+	 {Dictionary.put Actions 0 r(action:Show
+				     label:'Show'
+				     number:0)} % must be 0th;
+	 {Dictionary.put Actions 1 r(action:Browse
+				     label:'Browse'
+				     number:1)} % must be 1st!
+	 actions <- Actions
+	 nextANumber <- 2	% two pre-defined actions;
+      end
    end
 
    %%
@@ -114,8 +128,7 @@ class WindowManagerClass from MyClosableObject BatchObject
 	 Store = self.store
 	 BO = self.browserObj
 	 Window = @window
-	 Actions = {Dictionary.new}
-	 actions <- Actions
+	 Actions = @actions
 
 	 %%
 	 %%  All the elements of the menubar
@@ -151,7 +164,7 @@ class WindowManagerClass from MyClosableObject BatchObject
 			    command(label:   'Clear'
 				 % key:     ctrl(u)
 				    acc:     '     C-u'
-				    action:  BO#reset
+				    action:  BO#clear
 				    feature: clear)
 			    command(label:   'Clear All But Last'
 				    acc:     '     C-w'
@@ -163,8 +176,8 @@ class WindowManagerClass from MyClosableObject BatchObject
 			    command(label:   'Refine Layout'
 				    % key:     ctrl(l)
 				    acc:     '     C-l'
-				    action:  BO#checkLayout
-				    feature: checkLayout)
+				    action:  BO#refineLayout
+				    feature: refineLayout)
 			    separator
 
 			    %%
@@ -251,7 +264,7 @@ class WindowManagerClass from MyClosableObject BatchObject
 				   fg:    IStopFG
 				   activeforeground:IStopAFG)
 			     "Break")
-		  createTkVar(1	% must be 0;
+		  createTkVar(1	% that's the 'Browse' action;
 			      proc {$ V}
 				 Action = {Dictionary.get Actions
 					   {String.toInt V}}.action
@@ -262,7 +275,6 @@ class WindowManagerClass from MyClosableObject BatchObject
 			      ActionVar)
 		  exposeMenuBar]}
 	 actionVar <- ActionVar
-	 nextANumber <- 2	% two pre-defined actions;
 
 	 %%
 	 %%  everything else is done asynchronously;
@@ -279,23 +291,23 @@ class WindowManagerClass from MyClosableObject BatchObject
 	    {Window [bindKey(key: ctrl(c)      action: BO#break)
 		     bindKey(key: ctrl(b)      action: BO#rebrowse)
 		     bindKey(key: ctrl(p)      action: BO#Process)
-		     bindKey(key: ctrl(l)      action: BO#checkLayout)
+		     bindKey(key: ctrl(l)      action: BO#refineLayout)
 		     bindKey(key: ctrl(alt(m)) action: BO#toggleMenus)
 		     bindKey(key: ctrl(h)      action: BO#About)
 		     bindKey(key: ctrl(x)      action: BO#close)
-		     bindKey(key: ctrl(u)      action: BO#reset)
+		     bindKey(key: ctrl(u)      action: BO#clear)
 		     bindKey(key: ctrl(w)      action: BO#clearAllButLast)
 		     bindKey(key: d            action: BO#SelDeref)
 		     bindKey(key: e            action: BO#SelExpand)
 		     bindKey(key: s            action: BO#SelShrink)]}
 
 	    %%
-	    {Window addRadioEntry(selection(action(menu))
-				  'Show' ActionVar 0)}
-	    {Window addRadioEntry(selection(action(menu))
-				  'Browse' ActionVar 1)}
-	    {Dictionary.put Actions 0 r(action:Show number:0)} % must be 0;
-	    {Dictionary.put Actions 1 r(action:Browse number:1)} % must be 1;
+	    {ForAll {Sort {Dictionary.keys Actions} `<`}
+	     proc {$ K}
+		{Window addRadioEntry(selection(action(menu))
+				      {Dictionary.get Actions K}.label
+				      ActionVar K)}
+	     end}
 	    {Store store(StoreProcessAction Browse)}
 
 	    %%
@@ -370,7 +382,6 @@ class WindowManagerClass from MyClosableObject BatchObject
 	 {@window [closeMenuBar setMinSize]}
 	 actions <- InitValue
 	 actionVar <- InitValue
-	 nextANumber <- InitValue
 	 {self.store store(StoreAreMenus false)}
       else skip
       end
@@ -396,7 +407,6 @@ class WindowManagerClass from MyClosableObject BatchObject
 	 window <- InitValue
 	 actions <- InitValue
 	 actionVar <- InitValue
-	 nextANumber <- InitValue
 	 {self.store store(StoreIsWindow false)}
       end
 \ifdef DEBUG_WM
@@ -473,15 +483,21 @@ class WindowManagerClass from MyClosableObject BatchObject
       {Show 'WindowManagerClass::addProcessAction is applied'}
 \endif 
       %%
-      case @window \= InitValue andthen {self.store read(StoreAreMenus $)}
-      then Actions N PA in
+      local Actions N PA in 
 	 Actions = @actions
 	 N = @nextANumber
 	 PA = {Dictionary.get Actions (N-1)}      % cannot be empty;
-	 {@window addRadioEntry(selection(action(menu)) Label @actionVar N)}
-	 {Dictionary.put @actions N r(action:Action number:(PA.number+1))}
+	 {Dictionary.put @actions N r(action:Action
+				      label: Label
+				      number:(PA.number+1))}
 	 nextANumber <- N + 1
-      else skip
+
+	 %%
+	 case @window \= InitValue andthen {self.store read(StoreAreMenus $)}
+	 then {@window
+	       addRadioEntry(selection(action(menu)) Label @actionVar N)}
+	 else skip
+	 end
       end
 \ifdef DEBUG_WM
       {Show 'WindowManagerClass::addProcessAction is finished'}
@@ -495,10 +511,20 @@ class WindowManagerClass from MyClosableObject BatchObject
       {Show 'WindowManagerClass::removeProcessAction is applied'}
 \endif 
       %%
-      case @window \= InitValue andthen {self.store read(StoreAreMenus $)}
-      then Window Actions in
-	 Window = @window
+      local
 	 Actions = @actions
+	 WClearProc
+      in
+	 case @window \= InitValue andthen {self.store read(StoreAreMenus $)}
+	 then Window = @window in
+	    proc {WClearProc  N}
+	       {Window removeRadioEntry(selection(action(menu)) N)}
+	    end
+	 else
+	    proc {WClearProc _} skip end
+	 end
+
+	 %%
 	 {ForAll
 	  {List.filter {Dictionary.keys Actions}
 	   fun {$ K}
@@ -511,7 +537,7 @@ class WindowManagerClass from MyClosableObject BatchObject
 	      end
 	   end}
 	  proc {$ N}
-	     {Window removeRadioEntry(selection(action(menu)) N)}
+	     {WClearProc N}
 	     {Dictionary.remove Actions N}
 	  end}
 
@@ -527,7 +553,6 @@ class WindowManagerClass from MyClosableObject BatchObject
 	     I + 1
 	  end
 	  0}			% must be 0;
-      else skip
       end
 \ifdef DEBUG_WM
       {Show 'WindowManagerClass::removeProcessAction is finished'}
@@ -541,7 +566,8 @@ class WindowManagerClass from MyClosableObject BatchObject
       {Show 'WindowManagerClass::setAction is applied'}
 \endif
       %%
-      local Actions AVar in
+      case @window \= InitValue andthen {self.store read(StoreAreMenus $)}
+      then Actions AVar in
 	 Actions = @actions
 	 AVar = @actionVar
 
@@ -556,6 +582,7 @@ class WindowManagerClass from MyClosableObject BatchObject
 	     else skip
 	     end
 	  end}
+      else skip			% don't set the thing that cannot be used :-)
       end
 \ifdef DEBUG_WM
       {Show 'WindowManagerClass::setAction is finished'}
