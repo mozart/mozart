@@ -398,6 +398,31 @@ Some commonly-used system modules are
 <<OS>> and <<Property>> (the OS and emulator),
 and so forth.
 
+<SECTION><TITLE>Distributed memory management</TITLE>
+
+<P>All memory management in Mozart is automatic;
+the programmer does not have to worry about when
+an entity is no longer referenced.
+Mozart implements an efficient distributed garbage collection
+algorithm that reclaims all unused entities
+except those that form a cycle of references
+with at least two different owner sites.
+For example, if two sites each own an object
+that references the other, then they will
+not be reclaimed.
+If the objects are both owned by the same site,
+then they will be reclaimed.
+
+<P>This means that the programmer must be
+somewhat careful when an application references
+an entity on another site.   For example,
+let's say a client references a server and
+vice versa.  If the client wishes to disconnect
+from the server, then it is sufficient that the
+server forget all references to the client.
+This will ensure there are no cross-site
+cycles.
+
 <SECTION><TITLE>Controlled system shutdown</TITLE>
 
 <P>A site can be stopped in two ways: normally or abnormally.
