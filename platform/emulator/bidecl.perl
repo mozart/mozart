@@ -1415,6 +1415,7 @@ $builtins = {
     'shutdown'          => { in  => ['+int'],
                              out => [],
                              BI  => BIshutdown,
+                             doesNotReturn => 1,
                              native => true},
 
     'Alarm'             => { in  => ['+int','unit'],
