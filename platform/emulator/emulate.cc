@@ -1557,6 +1557,20 @@ LBLkillToplevelThread:
         goto LBLpreemption;
       }
     } else {
+      // Tell the debugger about termination of current thread
+      TaggedRef dbgVar = e->currentThread->getDebugVar();
+      OZ_Term dbgTuple = OZ_mkTupleC("debugInfo",
+                                     5,
+                                     OZ_int(0),
+                                     OZ_atom("nofile"),
+                                     OZ_atom(""),
+                                     OZ_atom(""),
+                                     OZ_atom("finished")
+                                     );
+      OZ_unify(dbgVar,dbgTuple);
+
+      DebugCheckT(printf("toplevel thread finished\n"));
+
       e->currentThread->disposeRunnableThread ();
       e->currentThread = (Thread *) NULL;
 
@@ -1615,6 +1629,8 @@ LBLkillThread:
     Assert (tmpThread->isInSolve () || !e->currentSolveBoard);
     Assert (e->currentSolveBoard || !(tmpThread->isInSolve ()));
     asmLbl(killThread);
+
+    DebugCheckT(printf("thread finished\n"));
 
     e->currentThread = (Thread *) NULL;
     tmpThread->disposeRunnableThread ();
@@ -3276,17 +3292,6 @@ LBLsuspendThread:
       int absPos         = smallIntValue(getNumberArg(PC+3));
       TaggedRef comment  = getLiteralArg(PC+4);
       int noArgs         = smallIntValue(getNumberArg(PC+5));
-      /*
-      printf("%s in line %d in file: %s\n",
-             toC(comment),line,toC(filename));
-      if (noArgs != -1) {
-        printf("\t");
-        for (int i=0; i<noArgs; i++) {
-          printf("%s ",toC(X[i]));
-        }
-      }
-      printf("\n");
-      */
 
       TaggedRef dbgVar = e->currentThread->getDebugVar();
       if (! OZ_isVariable(dbgVar)) {
@@ -3301,14 +3306,15 @@ LBLsuspendThread:
       OZ_Term newDbgVar = OZ_newVariable();
       e->currentThread->setDebugVar(newDbgVar);
 
-      OZ_Term dbgTuple = OZ_mkTupleC("dbgInfo",
+      OZ_Term dbgTuple = OZ_mkTupleC("debugInfo",
                                      5,
+                                     filename,
                                      makeInt(line),
-                                     makeInt(absPos),
+                                     comment,
                                      waitFor,
-                                     newDbgVar,
-                                     comment
+                                     newDbgVar
                                      );
+
       if (!OZ_unify(dbgVar,dbgTuple)) {
         warning("returnDebugVar(%s,%s) failed",toC(dbgVar),toC(dbgTuple));
         e->currentBoard = b;
