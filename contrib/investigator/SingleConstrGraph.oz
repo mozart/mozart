@@ -6,7 +6,12 @@ export
 import
 
    Aux(counterClass)
-   Config(paramColour edgeColour eventColour)
+   Config(paramColour
+          edgeColour
+          eventColour
+          paramNodeShape
+          propNodeShape
+          eventNodeShape)
    FS
 
    System
@@ -28,6 +33,7 @@ define
       #"a(\"OBJECT\",\""#VarStr#"\"),"
       #"a(\"COLOR\",\""#Config.paramColour#"\"),"
       #{Hist get_param_node_attr(VarId $)}
+      #"a(\"_GO\",\""#Config.paramNodeShape#"\"),"
       #"m(["
       #{Hist insert_menu($)}
       #{Hist insert_menu_mark_param(VarId VarStr $)}
@@ -70,9 +76,10 @@ define
       "l(\"e<"#{IdCounter next($)}
       #">\",e(\"\", [a(\"_DIR\",\"none\"),a(\"EDGECOLOR\",\""#Config.edgeColour
       #"\")],l(\""#Event.1
-      #"\",n(\"\",[a(\"OBJECT\",\""
-      #Event.1#"\"),a(\"COLOR\",\""#Config.eventColour#"\"),"
-
+      #"\",n(\"\",["
+      #"a(\"OBJECT\",\""#Event.1#"\"),"
+      #"a(\"COLOR\",\""#Config.eventColour#"\"),"
+      #"a(\"_GO\",\""#Config.eventNodeShape#"\"),"
       #"m(["
       #{Hist insert_menu($)}
       #"menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
@@ -158,6 +165,7 @@ define
               #"a(\"COLOR\",\""#{Hist get_prop_node_failed(ReflC.reference $)}
               #"\"),"
               #{Hist get_prop_node_attr(PropId $)}
+              #"a(\"_GO\",\""#Config.propNodeShape#"\"),"
 
               #"m(["
               #{Hist insert_menu($)}
