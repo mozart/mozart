@@ -41,6 +41,8 @@ OZ_Return GenCtVariable::unifyV(OZ_Term * vptr, OZ_Term term,
 {
   TypeOfTerm ttag = tagTypeOf(term);
   
+  Assert(vptr);
+
   if (! oz_isRef(ttag)) {
     // `term' and `tptr' refer to a value
 
@@ -65,14 +67,14 @@ OZ_Return GenCtVariable::unifyV(OZ_Term * vptr, OZ_Term term,
       }
       if (isLocalVar) {
 	doBind(vptr, term);
-	dispose();
+	disposeV();
       } else {
 	am.doBindAndTrail(vptr, term);
       }
     }
     goto t;
   } else {
-    TaggedRef *tptr = tagged2Ref(term);
+    OZ_Term  * tptr = tagged2Ref(term);
     term = *tptr;
     GenCVariable *cv = tagged2CVar(term);
     if (cv->getType() == CtVariable) {
@@ -85,7 +87,6 @@ OZ_Return GenCtVariable::unifyV(OZ_Term * vptr, OZ_Term term,
       // bind temporarily to avoid looping in unification on cyclic terms
       OZ_Term trail = *vptr;
       *vptr = term;
-
       OZ_GenConstraint * new_constr = constr->unify(t_constr);
     
       // undo binding
@@ -112,22 +113,22 @@ OZ_Return GenCtVariable::unifyV(OZ_Term * vptr, OZ_Term term,
 	    propagateUnify();
 	    doBind(vptr, new_value);
 	    doBind(tptr, new_value);
-	    dispose(); 
-	    term_var->dispose(); 
+	    disposeV(); 
+	    term_var->disposeV(); 
 	  } else if (heapNewer(vptr, tptr)) { // bind var to term
 	    term_var->copyConstraint(new_constr);
 	    propagateUnify();
 	    term_var->propagateUnify();
 	    relinkSuspListTo(term_var);
 	    doBind(vptr, makeTaggedRef(tptr));
-	    dispose();
+	    disposeV();
 	  } else { // bind term to var
 	    copyConstraint(new_constr);
 	    term_var->propagateUnify();
 	    propagateUnify();
 	    term_var->relinkSuspListTo(this);
 	    doBind(tptr, makeTaggedRef(vptr));
-	    term_var->dispose();
+	    term_var->disposeV();
 	  }
 	} // TRUE + 2 * TRUE:
       break;
@@ -144,7 +145,7 @@ OZ_Return GenCtVariable::unifyV(OZ_Term * vptr, OZ_Term term,
 		propagateUnify();
 	      doBind(vptr, new_value);
 	      am.doBindAndTrail(tptr, new_value);
-	      dispose();
+	      disposeV();
 	    } else {
 	      copyConstraint(new_constr);
 	      if (is_not_installing_script) 
@@ -161,7 +162,7 @@ OZ_Return GenCtVariable::unifyV(OZ_Term * vptr, OZ_Term term,
 	      propagateUnify();
 	    relinkSuspListTo(term_var, TRUE);
 	    doBind(vptr, makeTaggedRef(tptr));
-	    dispose();
+	    disposeV();
 	  }
 	} // TRUE + 2 * FALSE:
       break;
@@ -178,7 +179,7 @@ OZ_Return GenCtVariable::unifyV(OZ_Term * vptr, OZ_Term term,
 		term_var->propagateUnify();
 	      doBind(tptr, new_value);
 	      am.doBindAndTrail(vptr, new_value);
-	      term_var->dispose();
+	      term_var->disposeV();
 	    } else {
 	      term_var->copyConstraint(new_constr);
 	      if (is_not_installing_script) 
@@ -195,7 +196,7 @@ OZ_Return GenCtVariable::unifyV(OZ_Term * vptr, OZ_Term term,
 	      propagateUnify();
 	    term_var->relinkSuspListTo(this, TRUE);
 	    doBind(tptr, makeTaggedRef(vptr));
-	    term_var->dispose();
+	    term_var->disposeV();
 	  }
 	} // FALSE + 2 * TRUE:
       break;
@@ -388,12 +389,84 @@ void GenCtVariable::installPropagators(GenCtVariable * glob_var,
 					  glob_home);
 }
 
+//-----------------------------------------------------------------------------
+// built-ins
+
+#define OZ_getINDeref(N, V, VPTR, VTAG)		\
+  OZ_Term V = OZ_in(N);				\
+  DEREF(V, VPTR, VTAG);
+
+OZ_BI_define(BIIsGenCtVarB, 1,1)
+{
+  OZ_getINDeref(0, v, vptr, vtag);
+
+  OZ_RETURN(isGenCtVar(v, vtag) ? NameTrue : NameFalse);
+} OZ_BI_end
+
+OZ_C_proc_begin(BIGetCtVarConstraintAsAtom, 2)
+{ 
+  ExpectedTypes("GenCtVariable<ConstraintData>,Atom");
+  
+  OZ_getCArgDeref(0, var, varptr, vartag);
+
+  if(! oz_isVariable(vartag)) {
+    return OZ_unify(var, OZ_getCArg(1));   
+  } else if (isGenCtVar(var, vartag)) {
+    return OZ_unify(makeTaggedAtom(((GenCtVariable *) tagged2CVar(var))->getConstraint()->toString(ozconf.printDepth)),
+		    OZ_getCArg(1));
+  } else if (isNotCVar(vartag)) {
+    OZ_addThread(makeTaggedRef(varptr),
+		 OZ_makeSuspendedThread(OZ_self, OZ_args, OZ_arity));
+    return PROCEED;
+  } else {
+    TypeError(0, "");
+  }
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIGetCtVarNameAsAtom, 2)
+{ 
+  ExpectedTypes("GenCtVariable<ConstraintData>,Atom");
+  
+  OZ_getCArgDeref(0, var, varptr, vartag);
+
+  if(! oz_isVariable(vartag)) {
+    return OZ_unify(var, OZ_getCArg(1));   
+  } else if (isGenCtVar(var, vartag)) {
+    return
+      OZ_unify(makeTaggedAtom(((GenCtVariable*)tagged2CVar(var))->getDefinition()->getName()),
+	       OZ_getCArg(1));   
+  } else if (isNotCVar(vartag)) {
+    OZ_addThread(makeTaggedRef(varptr),
+		 OZ_makeSuspendedThread(OZ_self, OZ_args, OZ_arity));
+    return PROCEED;
+  } else {
+    TypeError(0, "");
+  }
+}
+OZ_C_proc_end
+
+
 
 #ifdef OUTLINE 
 #define inline
 #include "ctgenvar.icc"
 #undef inline
 #endif
+
+//-----------------------------------------------------------------------------
+
+#include "ctgenvar.dcl"
+static
+BIspec fdSpec[] = {
+#include "ctgenvar.tbl"
+  {0,0,0,0}
+};
+
+void BIinitCtVar(void)
+{
+  BIaddSpec(fdSpec);
+}
 
 // eof
 //-----------------------------------------------------------------------------

@@ -44,32 +44,25 @@
 // 0x1000. Flags up to 0x1000 and above 0x1000 should not be mixed, 
 // because then three instructions are required (for testing, i mean);
 enum ThreadFlag {
-  T_null   = 0x000000,   // no flag is set;
-  T_dead   = 0x000001,   // the thread is dead;
-  T_runnable=0x000002,   // the thread is runnable;
-  //T_p_thr  = 0x000004,   // 'real' propagators by Tobias;
-  T_stack  = 0x000008,   // it has an (allocated) stack;
-  T_catch  = 0x000010,   // has or has had an exception handler
-  T_solve  = 0x000020,   // it was created in a search CS
-  			 // (former notificationBoard);
-  T_ext    = 0x000040,   // an external suspension wrt current search problem;
-  //T_unif   = 0x000080,   // the thread is due to a (proper) unification 
-                         // of fd variables; 
-  //T_loca   = 0x000100,   // all variables of this propagator are local;
-  T_tag    = 0x000200,   // a special stuff for fd (Tobias, please comment?);
-  //T_ofs    = 0x000400,   // the OFS thread (needed for DynamicArity);
+  T_null     = 0x000000,  // no flag is set;
+  T_dead     = 0x000001,  // the thread is dead;
+  T_runnable = 0x000002,  // the thread is runnable;
+  T_stack    = 0x000004,  // it has an (allocated) stack;
+  T_catch    = 0x000008,  // has or has had an exception handler
+  T_solve    = 0x000010,  // it was created in a search CS
+  			  // (former notificationBoard);
+  T_ext      = 0x000020,  // an external suspension wrt current search problem
+  T_tag      = 0x000040,  // used to avoid duplication of threads
+  T_lpq      = 0x000080,  // designates local thread queue
 
-  T_lpq    = 0x000800,   // designates local thread queue
-  //T_nmo    = 0x001000,   // designates nonmonotonic propagator
-
-  T_noblock= 0x002000,   // if this thread blocks, raise an exception
+  T_noblock  = 0x000100,  // if this thread blocks, raise an exception
 
   // debugger
-  T_G_trace= 0x010000,   // thread is being traced
-  T_G_step = 0x020000,   // step mode turned on
-  T_G_stop = 0x040000,   // no permission to run
+  T_G_trace  = 0x010000,   // thread is being traced
+  T_G_step   = 0x020000,   // step mode turned on
+  T_G_stop   = 0x040000,   // no permission to run
 
-  T_max    = 0x800000    // MAXIMAL FLAG;
+  T_max      = 0x800000    // MAXIMAL FLAG;
 };
 
 
@@ -604,13 +597,16 @@ private:
     _s._t = (Thread *) ((_ToInt32(t)) | THREADTAG);
   }
 public:
-  Suspension(void) {}
+  Suspension(void);
+
   Suspension(Thread * t) {
     _markAsThread(t);
   }
   Suspension(Propagator * p) : _s(p) {}
 
-  USEHEAPMEMORY;
+  static void *operator new(size_t);
+  static void operator delete(void *, size_t);
+
 
   OZPRINTLONG;
 

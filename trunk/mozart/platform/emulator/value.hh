@@ -1491,10 +1491,10 @@ public:
   
   int getWidth() { return ::getWidth(getSRecordArity()); }
 
-  void downSize(unsigned int s) { // TMUELLER
+  void downSize(unsigned int s) {
     Assert(isTuple());
     setTupleWidth(s);
-  } // FD
+  }
   
   static SRecord *newSRecord(TaggedRef lab, SRecordArity arity, int width)
   {

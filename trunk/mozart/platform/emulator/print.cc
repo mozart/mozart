@@ -364,7 +364,7 @@ void GenCVariable::printStream(ostream &stream, int depth)
     {
       GenCtVariable * me = (GenCtVariable *) this;
 
-      for (int i = 0; i < me->_noOfSuspLists; i += 1) {
+      for (int i = 0; i < me->getNoOfSuspLists(); i += 1) {
 	SuspList * sl = me->_susp_lists[i];
 	if (isEffectiveList(sl))
 	  stream << "sl[" << i << "]("
@@ -373,7 +373,7 @@ void GenCVariable::printStream(ostream &stream, int depth)
 		 << sl->lengthProp()
 		 << ')';
       }
-      stream << ' ' <<  me->getConstraint()->toString();
+      stream << ' ' <<  me->getConstraint()->toString(PRINT_DEPTH_DEC(depth));
       break;
     }
 
@@ -454,12 +454,12 @@ void GenCVariable::printLongStream(ostream &stream, int depth, int offset)
     {
       GenCtVariable * me = (GenCtVariable *) this;
 
-      for (int i = 0; i < me->_noOfSuspLists; i += 1) {
+      for (int i = 0; i < me->getNoOfSuspLists(); i += 1) {
 	SuspList * sl = me->_susp_lists[i];
 	stream << indent(offset) << "Ct Var SuspList[" << i << "]:\n"; 
 	sl->printLongStream(stream, depth, offset+3);
       }
-      stream << ' ' <<  me->getConstraint()->toString();
+      stream << ' ' <<  me->getConstraint()->toString(PRINT_DEPTH_DEC(depth));
       break;
     }
 
