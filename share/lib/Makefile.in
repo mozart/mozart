@@ -1,6 +1,5 @@
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
-export SRCDIR
 TOPDIR		= @TOPDIR@
 
 PREFIX=		@prefix@
@@ -27,24 +26,11 @@ ENV2TYPE	= @PERL@ @ENV2TYPE@
 
 OZFLAGS		=
 OZBATCH		= @OZBATCH@
-OZMAINIT	= Init.ozc
-export OZMAINIT
-OZMAFILE	= ozbatch.ozm
-export OZMAFILE
 
-OZ_EMULATOR_DIR = @OZ_EMULATOR_DIR@
-export OZ_EMULATOR_DIR
-
-OZPATH		= .:compiler:ozcar:$(SRCDIR)
-export OZPATH
-OZ_PI		= 1
-export OZ_PI
-OZ_LOAD		= root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZLIB)/
-export OZ_LOAD
-COMPILE		= $(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz -c
-EXEC		= $(OZBATCH) $(OZFLAGS)
-EXECWITHSTD	= $(OZBATCH) $(OZFLAGS) -l AP --include=DumpIntro.oz
-OZMA		= $(OZBATCH) $(OZFLAGS) --ozma
+COMPILE		= . ./env && $(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz -c
+EXEC		= . ./env && $(OZBATCH) $(OZFLAGS)
+EXECWITHSTD	= . ./env && $(OZBATCH) $(OZFLAGS) -l AP --include=DumpIntro.oz
+OZMA		= . ./env && $(OZBATCH) $(OZFLAGS) --ozma
 
 OZVERSION	= $(TOPDIR)/OZVERSION
 
@@ -207,7 +193,7 @@ OZCARBITMAPS = $(OZCARBITMAPS1:%=$(OZCARBITMAPDIR)/%)
 
 .PHONY: all install clean realclean veryclean tags
 
-all: Makefile $(TYPS) $(TYCS) $(COMPONENTS) ozbatch ozserver
+all: Makefile env $(TYPS) $(TYCS) $(COMPONENTS) ozbatch ozserver
 
 ozbatch.ozm: MakeAssembly.oz \
 	$(STANDARDSRC) Base.env Standard.env \
@@ -365,6 +351,9 @@ GumpScanner.ozc: $(DUMPINTRO) $(GUMPSCANNERSRC) SP.env GumpScanner.env
 GumpParser.ozc: $(DUMPINTRO) $(GUMPPARSERSRC) SP.env GumpParser.env
 
 Makefile: Makefile.in config.status
+	./config.status
+
+env: env.in config.status
 	./config.status
 
 config.status: configure
