@@ -637,6 +637,7 @@ void marshalTerm(OZ_Term t, MsgBuffer *bs)
 {
 loop:
   DEREF(t,tPtr,tTag);
+  PD((MARSHAL,"tag:%d",tTag));
   switch(tTag) {
 
   case GCTAG: {
@@ -895,7 +896,7 @@ void unmarshalTerm(MsgBuffer *bs, OZ_Term *ret)
 {
 loop:
   MarshalTag tag = (MarshalTag) bs->get();
-  PD((UNMARSHAL,"term tag:%s",dif_names[(int) tag]));
+  PD((UNMARSHAL,"term tag:%s %d",dif_names[(int) tag],tag));
 
   dif_counter[tag].recv();
   switch(tag) {
