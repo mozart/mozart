@@ -1,6 +1,7 @@
 #!/bin/sh
 # Make directory hierarchy.
 # Written by Noah Friedman <friedman@prep.ai.mit.edu>
+# Added chgrp command by Benjamin Lorenz <lorenz@ps.uni-sb.de>
 # Public domain.
 
 # INSTALL_DIR_CHMOD=775 to also give write permission to group members
@@ -11,6 +12,10 @@ if test -z "$INSTALL_DIR_CHMOD"; then
 dochmod(){ true; }
 else
 dochmod() {
+  if test -z "$INSTALL_DIR_GROUP"; then true; else
+    echo "chgrp $INSTALL_DIR_GROUP $1" 1>&2;
+    chgrp $INSTALL_DIR_GROUP $1 || errstatus=$?;
+  fi
   echo "chmod $INSTALL_DIR_CHMOD $1" 1>&2;
   chmod $INSTALL_DIR_CHMOD $1 || errstatus=$?; }
 fi
