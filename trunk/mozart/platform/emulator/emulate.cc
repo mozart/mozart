@@ -1331,7 +1331,7 @@ LBLsuspendThread:
 	  RefsArray X      = (RefsArray) G;
 	
 	  TaggedRef name = OZ_atom(builtinTab.getName((void *) biFun));
-	  TaggedRef args;
+	  TaggedRef args = nil();
 	  if (X)
 	    for (int i=getRefsArraySize(X)-1; i>=0; i--)
 	      args = cons(X[i],args);
