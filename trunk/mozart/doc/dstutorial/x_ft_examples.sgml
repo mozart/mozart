@@ -244,7 +244,40 @@ with the client and then gives up.
 This does not affect the continued execution of the server.
 </LIST>
 
-<P>We present the implementation of <<NewStat>>.
+<P>We present two quite different ways of implementing
+this specification, one using watchers and the other
+using exceptions.
+The watcher-based technique is the shortest and simplest to understand.
+The exception-based technique is similar to what one would
+do in standard languages such as Java.
+
+<SUBSECTION><TITLE>Watcher-based stationary objects</TITLE>
+
+<P>The simplest way to implement fault-tolerant stationary objects
+is by using a <EM>guard</EM>.  A guard watches
+over a computation, and if there is a distribution fault, then it
+gracefully terminates the computation.
+To be precise, we introduce the procedure <<Guard>> with the
+following specification:
+<LIST>
+<ITEM> <<{Guard E FS S1 S2}>> guards entity <<E>> for
+fault states <<FS>> during statement <<S1>>.
+That is, it first executes <<S1>>;
+if there is a fault on <<E>> in <<S1>> then it interrupts <<S1>> when
+a faulty operation is attempted on any entity.
+It then executes statement <<S2>>.
+<<S1>> should never raise distribution exceptions.
+The application is responsible
+for cleaning up from the partial work done in <<S1>>.
+</LIST>
+<P>With the above procedure, we define <<NewSafeStat>> as follows:
+
+
+
+<SUBSECTION><TITLE>Exception-based stationary objects</TITLE>
+
+<P>We show how to implement <<NewSafeStat>>
+in the basic failure model.
 First <<New>> makes
 an instance of the object
 and then <<MakeStat>> makes it stationary.
@@ -252,12 +285,7 @@ In <<MakeStat>>, we distinguish four parts.
 The first two implement the client interface
 to the server.
 
-<chunk><title/Making stationary objects/
-declare
-proc {NewStat Class Init Object}
-   Object={MakeStat {New Class Init}}
-end
-
+<<<
 declare
 proc {MakeStat PO ?StatP}
    S P={NewPort S}
@@ -271,7 +299,11 @@ in
    <chunk.ref/Main server loop/
    <chunk.ref/Server synchronizes with the client/
 end
-</chunk>
+
+proc {NewSafeStat Class Init ?Object}
+   Object={MakeStat {New Class Init}}
+end
+>>>
 
 <P>First the client sends its message to the
 server together with a synchronizing variable.
