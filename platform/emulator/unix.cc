@@ -1801,6 +1801,7 @@ OZ_C_proc_end
 
 
 
+#ifdef WINDOWS
 
 #define NotAvail(Name,Arity,Fun)                                \
 OZ_C_ioproc_begin(Fun,Arity)                                    \
@@ -1811,7 +1812,6 @@ OZ_C_ioproc_begin(Fun,Arity)                                    \
 OZ_C_proc_end
 
 
-#ifdef WINDOWS
 NotAvail("Unix.bind",            3, unix_bindUnix);
 NotAvail("Unix.sendToUnix",      5, unix_sendToUnix);
 NotAvail("Unix.connectUnix",     3, unix_connectUnix);
@@ -1877,11 +1877,11 @@ void BIinitUnix()
   WSADATA wsa_data;
   WORD req_version = MAKEWORD(1,1);
 
-  if (WSAStartup(req_version, &wsa_data) != 0)
-    fprintf(stderr, "WSAStartup() failed\n"); /* for now */
+  int ret = WSAStartup(req_version, &wsa_data);
+  if (ret != 0 && ret != WSASYSNOTREADY)
+    OZ_warning("Initialization of socket interface failed failed\n");
 
-  /* for now: */
-  fprintf(stderr, "szDescription = \"%s\"", wsa_data.szDescription);
-  fprintf(stderr, "szSystemStatus = \"%s\"", wsa_data.szSystemStatus);
+  //  fprintf(stderr, "szDescription = \"%s\"", wsa_data.szDescription);
+  //  fprintf(stderr, "szSystemStatus = \"%s\"", wsa_data.szSystemStatus);
 #endif
 }
