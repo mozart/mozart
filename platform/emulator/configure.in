@@ -1,6 +1,9 @@
 dnl Process this file with autoconf to produce a configure script.
 
 dnl This will check that we are in the Oz directory and initiate
+
+PSDIR= /project/ps
+
 AC_INIT(oz.h)
 
 AC_CANONICAL_HOST
@@ -12,7 +15,7 @@ AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
-AC_PROG_MAKE_SET
+#AC_PROG_MAKE_SET
 
 AC_CHECK_PROGS(M4, gm4 m4)
 AC_CHECK_PROGS(RM, rm)
@@ -21,16 +24,46 @@ AC_CHECK_PROGS(MV, mv)
 AC_CHECK_PROGS(ECHO, echo true)
 AC_CHECK_PROGS(SED, gnused sed)
 
-AC_MSG_CHECKING(for --with-debug)
-AC_ARG_WITH(debug,
-  [--with-debug       include garbage collection (default=yes)])
-if test "x$with_debug" = xyes; then
+AC_MSG_CHECKING(for --with-threaded)
+AC_ARG_WITH(threaded,
+  [--with-threaded       threaded code emulator (default=yes)])
+if test "x$with_threaded" != xno; then
         AC_MSG_RESULT(yes)
-        AC_DEFINE(DEBUG)
+        AC_DEFINE(THREADED)
+else
+        AC_MSG_RESULT(no)
+fi
+AC_MSG_CHECKING(for --with-fastreg)
+AC_ARG_WITH(fastreg,
+  [--with-fastreg       fast register access (default=yes)])
+if test "x$with_fastreg" != xno; then
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(FASTREGACCESS)
+else
+        AC_MSG_RESULT(no)
+fi
+AC_MSG_CHECKING(for --with-regopt)
+AC_ARG_WITH(regopt,
+  [--with-regopt        register optimization (default=yes)])
+if test "x$with_regopt" != xno; then
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(REGOPT)
 else
         AC_MSG_RESULT(no)
 fi
 
+
+AC_MSG_CHECKING(for --with-linkprop)
+AC_ARG_WITH(linkprop,
+  [--with-dlinkprop     link propagators statically (default=yes)])
+if test "x$with_dlinkprop" != xno; then
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(FOREIGNFDPROPS)
+        POBJ="\$(PROPOBJ)"
+else
+        POBJ=""
+        AC_MSG_RESULT(no)
+fi
 
 dnl Checks for libraries.
 AC_CHECK_LIB(dl, dlopen)
@@ -87,15 +120,14 @@ MOREWARN="-Wall -pedantic-errors -W -Wtraditional -Wshadow -Wpointer-arith -Wbad
 
 CWARN="-Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wsynth -Wno-unused -Wno-reorder -Wno-uninitialized"
 
-DEFINES="-DTHREADED -DFASTREGACCESS -DREGOPT"
-
 case $host_os in
         linux*)
                 AC_DEFINE(LINUX)
-                COPT="-O6 -fomit-frame-pointer -Wuninitialized"
+                COPT="-O6 -fomit-frame-pointer"
         ;;
         solaris*)
                 AC_DEFINE(SOLARIS)
+                LIBS="$LIBS -lsocket -lnsl -lintl"
         ;;
         sunos*)
                 AC_DEFINE(SUNOS)
@@ -123,24 +155,27 @@ esac
 
 case "$host" in
 i?86-*-linux)
-        PLATFORM="-DLINUX_I486=1"
+        AC_DEFINE(DLINUX_I486)
         ;;
 sparc-sun-sunos4*)
-        PLATFORM="-DSUNOS_SPARC=1 -DSPARC"
+        AC_DEFINE(SUNOS_SPARC)
         ;;
 aix-*)
         COPT=-O
         ;;
 esac
 
-AC_SUBST(PLATFORM)
-AC_SUBST(COPT)
-AC_SUBST(DEFINES)
+OzPlatform="$host"
 
 AC_ARG_ENABLE(sun-pro,
         --enable-sun-pro  use the Sun Pro Compiler,
-        DEFINES="-DFASTREGACCESS";COPT="-fast")
+        AC_DEFINE(FASTREGACCESS)
+        COPT="-fast")
 
+
+AC_SUBST(COPT)
+AC_SUBST(POBJ)
+AC_SUBST(OzPlatform)
 
 # AC_CONFIG_HEADER(conf.h)
 

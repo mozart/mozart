@@ -10,10 +10,12 @@ SED             = @SED@
 ECHO            = @@ECHO@
 M4              = @M4@
 RM              = @RM@ -f
-CFLAGS          = @DEFS@ @DEFINES@ @PLATFORM@ @COPT@ $(CDYN) $(CUSR)
+COPT            = @COPT@
+DEFS            = @DEFS@
+CFLAGS          = $(COPT) $(DEFS) $(CDYN) $(CUSR)
 CCFLAGS         = $(CFLAGS) $(CCINCLUDES)
 CXXDEPEND       = $(CXX) $(CCFLAGS) -MM
-LIBS =          = @LIBS@
+LIBS            = @LIBS@
 
 INSTRDEFS = ../include/instrDefs.m4
 
@@ -66,42 +68,42 @@ FSETSRCS =      fset.cc fsetcore.cc fsgenvar.cc
 
 SRCS = $(FDSRCS) $(FSETSRCS) $(CPISRCS) $(CXXSRCS)
 
-FDOBJS = $(FDSRCS:.cc=.o)
-OBJS = $(CXXSRCS:.cc=.o) $(FDOBJS)
+OBJS = $(SRCS:.cc=.o)
 
-FDLIB_O = fdlib.o
-SCHEDLIB_O = schedlib.o
-ARGS += -DOPTIMIZED
+FDDIR = $(srcdir)/FDLib
 
-FDLIB = $(FDLIBPATH)/$(FDLIB_O)
-SCHEDLIB = $(FDLIBPATH)/$(SCHEDLIB_O)
+FDLIBSRCS = $(FDDIR)/arith.cc $(FDDIR)/fdaux.cc $(FDDIR)/bool.cc \
+            $(FDDIR)/card.cc $(FDDIR)/cd.cc $(FDDIR)/count.cc \
+            $(FDDIR)/rel.cc $(FDDIR)/disjoint.cc $(FDDIR)/std.cc \
+            $(FDDIR)/sum.cc $(FDDIR)/sumequal.cc \
+            $(FDDIR)/distance.cc $(FDDIR)/misc.cc $(FDDIR)/streamProps.cc \
+            $(FDDIR)/sumd.cc $(FDDIR)/sumabs.cc
 
-FDLIBLINKED = $(FDLIB) $(SCHEDLIB)
-ARGS += -DLINKFOREIGNFD
 
-$(FDLIB)::
-        (cd $(FDLIBPATH); make)
+FDLIBOBJS = $(FDLIBSRCS:.cc=.o)
 
-$(SCHEDLIB)::
-        (cd $(FDLIBPATH); make)
+SCHEDLIBSRCS = $(FDDIR)/scheduling.cc $(FDDIR)/schedulingDist.cc \
+               $(FDDIR)/schedulingDistAux.cc $(FDDIR)/taskintervals.cc
 
-Makefile::
-        (cd $(FDLIBPATH); ozmkmf $(ARGS) $(MAKEMAKEFILEOPT))
+# ??? #ifdef LINKFOREIGNFD
+SCHEDLIBSRCS += $(FDDIR)/std.cc $(FDDIR)/fdaux.cc $(FDDIR)/rel.cc
 
-clean::
-        (cd $(FDLIBPATH); make clean)
+SCHEDLIBOBJS = $(SCHEDLIBSRCS:.cc=.o)
 
-realclean::
-        (cd $(FDLIBPATH); make realclean)
+FSETDIR = $(srcdir)/FSetLib
 
-depend::
-        (cd $(FDLIBPATH); make depend)
+FSETLIBSRCS =   $(FSETDIR)/standard.cc $(FSETDIR)/telling.cc \
+                $(FSETDIR)/testing.cc $(FSETDIR)/fsaux.cc \
+                $(FSETDIR)/intsets.cc $(FSETDIR)/monitor.cc \
+                $(FSETDIR)/reified.cc $(FSETDIR)/fsstd.cc \
+                $(FSETDIR)/std_n.cc
 
-install::
-        (cd $(FDLIBPATH); make install)
+FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 
-DESTBIN = $(OZHOME)/platform/OzPlatform
+PROPOBJ = $(FDLIBOBJS) $(SCHEDLIBOBJS) $(FSETLIBOBJS)
+POBJ = @POBJ@
 
+DESTBIN = $(OZHOME)/platform/@OzPlatform@
 
 EMUEXE = oz.emulator.bin
 
@@ -119,9 +121,9 @@ first: version $(M4FILES) $(SRCS)
 
 fd: $(FDLIB) $(SCHEDLIB)
 
-$(EMUEXE): first main.o $(OBJS) $(FDLIB) $(SCHEDLIB)
+$(EMUEXE): first main.o $(OBJS) $(POBJ) $(FDLIB) $(SCHEDLIB)
         $(CXX) $(LDFLAGS) $(LDOPT) -o /tmp/$@.$$$$ \
-           main.o $(OBJS) $(FDLIBLINKED) $(LIBS); \
+           main.o $(OBJS) $(POBJ) $(LIBS); \
         echo 'moving ...'; mv /tmp/$@.$$$$ $@
 
 oz.emulator.o: first $(OBJS)
@@ -146,10 +148,10 @@ version.cc: version
 
 emulate.cc:: register.hh
 
-ThePlatform=OzPlatform
+ThePlatform=@OzPlatform@
 version::
         $(SED) -e "s/HEREGOESDATE/`date '+%a %h, %d, 19%y \(%T\)'`/" \
-             -e "s/OZPLATFORM/${ThePlatform}/" \
+             -e "s/OZPLATFORM/ThePlatform/" \
              $(srcdir)/version.sed > version.cc
 
 
