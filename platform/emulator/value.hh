@@ -12,6 +12,12 @@
 #pragma interface
 #endif
 
+#if defined(OUTLINE)
+#define INLINE
+#else
+#define INLINE inline
+#endif
+
 /*===================================================================
  * global names and atoms
  *=================================================================== */
@@ -670,7 +676,7 @@ public:
   Bool checkTertiary(TypeOfConst s,TertType t){
     return (s==getType() && t==getTertType());}
 
-  Board *getBoard();
+  INLINE Board *getBoard();
   Board *getBoardInternal();
   void setBoard(Board *b);
 
