@@ -1,5 +1,22 @@
 declare
 
+local
+   fun {SkipDet Is}
+      case Is of nil then nil
+      [] I|Ir then
+	 if {FD.reflect.size I}>1 then Is else {SkipDet Ir} end
+      end
+   end
+in
+   proc {AssignMin Is}
+      choice skip end
+      case {SkipDet Is}
+      of nil then skip
+      [] I|Ir then
+	 I={FD.reflect.min I} {AssignMin Ir}
+      end
+   end
+end
 
 proc {Map3 Xs F ?Y1s ?Y2s ?Y3s}
    case Xs of nil then Y1s=nil Y2s=nil Y3s=nil
@@ -79,8 +96,6 @@ fun {Compile Spec}
 
    %% Number of all squares
    N  = {Record.foldL Spec.squares Number.'+' 0}
-   %% The number of all squares of size greater than 1
-   M  = N - {CondSelect Spec.squares 1 0}
    %% Dimension of X and Y
    DX = Spec.x
    DY = Spec.y
@@ -96,18 +111,43 @@ in
       proc {MakeCuts N SQS Dir RectDir RectRid ?Info}
 	 thread
 	    Rid  = {SwapDir Dir}
+	    Card = {FS.card SQS}
 	 in
-	    cond {FS.card SQS}<:4 then
+	    Card >: 0
+	    cond Card<:3 then
 	       %% Just go an place the squares
-	       Info=nil
-	       {DM add(N+2 proc {$}
-			      {ForAll {FS.reflect.upperBoundList SQS}
-			       proc {$ I}
-				  Sq=Sqs.I
-			       in
-				  {FD.distribute splitMin Sq.x#Sq.y}
-			       end}
-			   end)}
+	       {DM add(N
+		       proc {$}
+			  Is = {FS.reflect.upperBoundList SQS}
+		       in
+			  case Card
+			  of 1 then [I]=Is Sq=Sqs.I in
+			     Info   = nil
+			     Sq.Dir = RectDir.1
+			     Sq.Rid = RectRid.1
+			     Sq.Dir + Sq.d =<: RectDir.2
+			     Sq.Rid + Sq.d =<: RectRid.2
+			  [] 2 then [I1 I2]=Is Sq1=Sqs.I1 Sq2=Sqs.I2 in
+			     case Dir
+			     of x then
+				Sq1.x = RectDir.1
+				Sq1.y = RectRid.1
+				Sq2.x =: Sq1.x + Sq1.d
+				Sq2.y = RectRid.1
+				Sq2.x + Sq2.d =<: RectDir.2
+				Sq2.y         =<: RectRid.2
+				Info  = info(cut:Sq2.x nil nil) 
+			     [] y then
+				Sq1.y = RectDir.1
+				Sq1.x = RectRid.1
+				Sq2.y =: Sq1.y + Sq1.d
+				Sq2.x = RectRid.1
+				Sq2.y + Sq2.d =<: RectDir.2
+				Sq2.x         =<: RectRid.2
+				Info  = info(cut:Sq2.y nil nil) 
+			     end
+			  end
+		       end)}
 	    else
 	       %% Partition the squares into two disjoint sets
 	       SQS1 = {FS.var.decl}
@@ -147,9 +187,6 @@ in
 	       {DM add(N proc {$}
 			    {Alternate IsLs}
 			 end)}
-	       {DM add(N+1 proc {$}
-			      {FD.distribute generic(value:mid) [Cut]}
-			   end)}
 	       %% These are the next rectangles to be cut
 	       {MakeCuts N+1 SQS1 Rid RectRid RectDir.1#Cut InfoL}
 	       {MakeCuts N+1 SQS2 Rid RectRid Cut#RectDir.2 InfoR}
@@ -157,37 +194,34 @@ in
 	 end
       end
 
-      proc {AssignCuts Cut}
-	 if Cut\=nil then
-	    choice skip end
-	    {FD.reflect.min Cut.cut}=Cut.cut
-	    {AssignCuts Cut.1}
-	    {AssignCuts Cut.2}
+      fun {GetCuts Cut Cs}
+	 if Cut==nil then
+	    Cs
+	 else
+	    Cut.cut|{GetCuts Cut.1 {GetCuts Cut.2 Cs}}
 	 end
       end
 
-      proc {NoOverlap N1 N2}
-	 {For N1 N2 1
+      proc {Fit Dir Cap}
+	 Tasks = {Tuple.make tasks N}
+	 {For 1 N 1
 	  proc {$ I}
-	     Sq1=Sqs.I X1=Sq1.x Y1=Sq1.y D1=Sq1.d
-	  in
-	     {For 1 I-1 1
-	      proc {$ J}
-		 Sq2=Sqs.J X2=Sq2.x Y2=Sq2.y D2=Sq2.d
-	      in
-		 if D1==D2 then
-		    %% Simplified due to symmetry relations:
-		    %% Sq2 is either below or to the right of Sq1
-		    (X2 + D1 =<: X1) + (Y2 + D2 =<: Y1) >: 0
-		    skip
-		 else
-		    (X1 + D1 =<: X2) + (X2 + D2 =<: X1) +
-		    (Y1 + D1 =<: Y2) + (Y2 + D2 =<: Y1) >: 0
-		 end
-	      end}
+	     Tasks.I = {VirtualString.toAtom I}
 	  end}
+	 As    = {Record.foldR Tasks fun {$ A Ar} A|Ar end nil}
+	 Dur   = {Record.make dur   As}
+	 Start = {Record.make start As}
+	 Use   = Dur
+      in
+	 {For 1 N 1
+	  proc {$ I}
+	     A = Tasks.I
+	  in
+	     Dur.A=Sqs.I.d Start.A=Sqs.I.Dir
+	  end}
+	 {Schedule.cumulative [Tasks] Start Dur Use [Cap]}
       end
-
+      
    in
       
       Root = root(squares:Sqs cuts:Cuts x:DX y:DY)
@@ -223,80 +257,55 @@ in
 		   in
 		      if Sq1.d==Sq2.d then
 			 %% This is respected by the no overlap
-			 Sq1.x =<: Sq2.x
-			 skip
+			 Sq1.x * DY + Sq1.y <: Sq2.x * DY + Sq2.y
 		      end
 		   end}
 
-      {NoOverlap 1 M}
+      %% No Overlaps allowed
+      local
+	 Xsqs = {Record.map Sqs fun {$ Sq} Sq.x end}
+	 Ysqs = {Record.map Sqs fun {$ Sq} Sq.y end}
+	 Dsqs = {Record.map Sqs fun {$ Sq} Sq.d end}
+      in
+	 {FD.distinct2 Xsqs Dsqs Ysqs Dsqs}
+      end
 
       %% In any direction (be it x or y) the squares must
       %% fit into the height/width of the rectangle
-      {ForAll [x#DY y#DX]
-       proc {$ Dir#DXY}
-	  {For 0 DXY-1 1
-	   proc {$ I}
-	      {FD.sum {Record.map Sqs
-		       proc {$ Sq ?D}
-			  D :: [0 Sq.d]
-			  %% this the same as:
-			  %%  {FD.conj I=<:Sq.XY Sq.XY+Sq.d>=:I}
-			  (Sq.Dir :: {Max 0 I-Sq.d+1}#I)=(D=:Sq.d)
-		       end} '=<:' DXY}
-	   end}
-       end}
+      {Fit x DY}
+      {Fit y DX}
       
       %%  1. Find a position for the cut, starting from the middle
       %%  2. Distribute all squares either to the left or right side
       %%     of the cut
       %%  3. Only consider squares with size graeter than 1
-      Cuts={MakeCuts 0 {FS.value.make [1#M]} x 0#DX 0#DY} 
+      Cuts={MakeCuts 0 {FS.value.make [1#N]} x 0#DX 0#DY} 
 
       {DM wait}
       %% The rest is deterministic
+      {AssignMin {GetCuts Cuts nil}}
 
-      {NoOverlap M+1 N}
-      
-      {AssignCuts Cuts}
-
-      {For M+1 N 1 proc {$ I}
-		      choice skip end
-		      Sqs.I.x = {FD.reflect.min Sqs.I.x}
-		      choice skip end
-		      Sqs.I.y = {FD.reflect.min Sqs.I.y}
-		   end}
+      {AssignMin {Record.foldL Sqs fun {$ XYs Sq}
+				      Sq.x|Sq.y|XYs
+				   end nil}}
 
    end
 
 end
 
 
-
+/*
 declare
 %Spec = spec(x:5 y:5 squares:s(3:1 2:2))
 %Spec = spec(x:7 y:9 squares:s(2:4 5:1 1:1 3:1))
 %Spec = spec(x:8 y:8 squares:s(4:4 1:1))
 %Spec = spec(x:7 y:7 squares:s(5:1 3:1 2:3))
 %Spec = spec(x:14 y:14 squares:s(5:2 4:4 3:3 2:5 1:35))
-Spec = spec(x:14 y:14 squares:s(5:2 4:4 3:3 2:10 1:15))
-%Spec = spec(x:13 y:15 squares:s(5:2 4:3 3:3 2:5 1:5))
-%Spec = spec(x:9 y:8 squares:d(4:2 3:2 2:5 1:2))
+%Spec = spec(x:14 y:14 squares:s(5:2 4:4 3:3 2:10 1:15))
+Spec = spec(x:17 y:20 squares:s(5:2 4:3 3:3 2:5 1:5))
+%Spec = spec(x:10 y:12 squares:d(4:2 3:2 2:7 1:2))
 %2*16+3*4+
 {ExploreOne {Compile Spec}}
-
-/*
-
-declare
-S={Compile
-	     Spec
-   true}
-declare R
-{Browse R}
-
-{S R}
-*/
-
-	     
 
 declare
 fun {DrawSquares N Sol}
@@ -342,3 +351,4 @@ end
 
 
 
+*/
