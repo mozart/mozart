@@ -959,7 +959,7 @@ void marshalBorrowHead(MarshalerBuffer *bs, MarshalTag tag, int bi)
   na->site->marshalDSite(bs);
   marshalNumber(bs, na->index);
 
-  marshalCredit(bs, b->getCreditSmall());
+  marshalCredit(bs, b->getCreditBig());
 }
 
 //
@@ -975,7 +975,7 @@ void saveMarshalBorrowHead(int bi, DSite* &ms, int &oti,
   ms = na->site;
   oti = na->index;
   //
-  c = b->getCreditSmall();
+  c = b->getCreditBig();
 }
 
 //
