@@ -32,8 +32,9 @@ define
 	 %% compute the files to be included in the package
 	 Needed = Creator,GetNeeded($)
 	 %% make sure that they are all available
-	 %% we set --fullbuild to force the build of src targets
-	 {self set_fullbuild(true)}
+	 %% we do not simulate --fullbuild because that would prevent
+	 %% repackaging prebuilt files for which the sources are not
+	 %% available.
 	 for F in Needed do {self build_target(F)} end
 	 %% make a record with all the package stuff in it
 	 REC = packed(
