@@ -1,6 +1,6 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Flaviu Turean (tf@info.ucl.ac.be)
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -23,10 +23,11 @@
  *  WARRANTIES.
  *
  */
-/* urlc.cc
-   declaration and definitions for the URL client class.
-   definition for the openUrl function.
-   */
+
+/*
+  declaration and definitions for the URL client class.
+  definition for the openUrl function.
+  */
 
 
 /* int openUrl(const char*);

@@ -1,3 +1,5 @@
+% Copyright: Michael Mehl (1996)
+
 actor           if/or conditionals
 am              emulator, unification, ...
 assemble        builtins for assembling

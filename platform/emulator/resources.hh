@@ -1,6 +1,6 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Michael Mehl (mehl@dfki.de)
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -23,7 +23,8 @@
  *  WARRANTIES.
  *
  */
-/* $Id$
+
+/*
  *
  * ### #     # ######   #####  ######  #######    #    #     # #######
  *  #  ##   ## #     # #     # #     #    #      # #   ##    #    #

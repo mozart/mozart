@@ -1,11 +1,33 @@
+/*
+ *  Authors:
+ *    Martin Henz (henz@iscs.nus.sg)
+ *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
+ *
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
+ *
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ *
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ *
+ *  This file is part of Mozart, an implementation
+ *  of Oz 3:
+ *     $MOZARTURL$
+ *
+ *  See the file "LICENSE" or
+ *     $LICENSEURL$
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
+ *  WARRANTIES.
+ *
+ */
+
 %option noyywrap noreject nodefault
 
 %{
-///  Programming Systems Lab,
-///  Stuhlsatzenhausweg 3, 66123 Saarbruecken, Phone (+49) 681 302-5609
-///  Original Author: Martin Henz
-///  Extensive modifications by Leif Kornstaedt <kornstae@ps.uni-sb.de>
-
 #include <string.h>
 #include <pwd.h>
 #include <sys/param.h>

@@ -1,6 +1,7 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Michael Mehl (mehl@dfki.de)
+ *    Kostja Popow (popow@ps.uni-sb.de)
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -23,17 +24,8 @@
  *  WARRANTIES.
  *
  */
-/*
-  Hydra Project, DFKI Saarbruecken,
-  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
-  Author: mehl
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
 
-  implementation of threads
-  ------------------------------------------------------------------------
-*/
+// implementation of threads
 
 #if defined(INTERFACE)
 #pragma implementation "thread.hh"

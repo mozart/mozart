@@ -1,6 +1,7 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Michael Mehl (mehl@dfki.de)
+ *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -23,13 +24,8 @@
  *  WARRANTIES.
  *
  */
-/*
-  Hydra Project, DFKI Saarbruecken,
-  Stuhlsatzenhausweg 3, D-W-6600 Saarbruecken 11, Phone (+49) 681 302-5312
-  ------------------------------------------------------------------------
-  Unix/Posix functions
-  ------------------------------------------------------------------------
-*/
+
+// Unix/Posix functions
 
 #if defined(INTERFACE)
 #pragma implementation "os.hh"

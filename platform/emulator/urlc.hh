@@ -1,6 +1,6 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Flaviu Turean (tf@info.ucl.ac.be)
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
