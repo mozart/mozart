@@ -129,6 +129,7 @@ AC_DEFUN(OZ_INIT, [
   OZ_PATH_SRCTOP
   OZ_PATH_BUILDTOP
   AC_CONFIG_AUX_DIR($SRCTOP)
+  OZ_PROG_MAKE
   AC_PROG_MAKE_SET
   OZ_PROG_INSTALL
 #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
@@ -603,7 +604,7 @@ dnl locate GNU make. sets MAKE
 dnl ------------------------------------------------------------------
 
 AC_DEFUN(OZ_PROG_MAKE_GNU,[
-  if oz_tmp=`$MAKE --version 2>/dev/null` && \
+  if oz_tmp=`$MAKE -n --version 2>/dev/null` && \
      oz_tmp=`expr "$oz_tmp" : GNU`; then
     GNU_MAKE=yes
   else
