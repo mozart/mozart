@@ -1470,7 +1470,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
       !CreatePipe(&rh2,&wh2,&sa,0)  ||
       !SetStdHandle(STD_OUTPUT_HANDLE,wh1) ||
       !SetStdHandle(STD_INPUT_HANDLE,rh2) ||
-      !CreateProcess(NULL,buf,&sa,NULL,TRUE,DETACHED_PROCESS,
+      !CreateProcess(NULL,buf,&sa,NULL,TRUE,0,
                      NULL,NULL,&si,&pinf)) {
     return OZ_raiseC("os",1,OZ_string("Create Process"));
   }
