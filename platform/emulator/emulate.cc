@@ -2383,21 +2383,16 @@ LBLdispatcher:
              RAISE_APPLY(makeTaggedConst(predicate),
                          OZ_toList(predArity,X));
            }
-           CheckArity(1,makeTaggedConst(o));
            Assert(e->sendHdl != makeTaggedNULL());
            def = tagged2Abstraction(e->sendHdl);
            /* {Obj Msg} --> {Send Msg Class Obj} */
            X[predArity++] = makeTaggedConst(o->getOzClass());
            X[predArity++] = makeTaggedConst(o);
-           if (!isTailCall) {
-             CallPushCont(PC);
-           }
-           ChangeSelf(o);
          } else {
            def = (Abstraction *) predicate;
-           CheckArity(def->getArity(), makeTaggedConst(def));
-           if (!isTailCall) { CallPushCont(PC); }
          }
+         CheckArity(def->getArity(), makeTaggedConst(def));
+         if (!isTailCall) { CallPushCont(PC); }
          if (def->isProxy()) {
            CTS->pushCall(makeTaggedConst(def),X,def->getArity());
            TaggedRef var = ((ProcProxy*)def)->getSuspvar();
