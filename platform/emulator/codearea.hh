@@ -548,41 +548,25 @@ public:
 
 class OZ_Location {
 private:
-  int inAr,outAr;
   TaggedRef * map[1];
 public:
   NO_DEFAULT_CONSTRUCTORS(OZ_Location)
-  static OZ_Location *newLocation(int inArity,int outArity)
-  {
-    int sz = sizeof(OZ_Location)+sizeof(TaggedRef*)*(inArity+outArity-1);
+  static OZ_Location *newLocation(int n) {
+    int sz = sizeof(OZ_Location)+sizeof(TaggedRef*)*(n-1);
     OZ_Location *loc = (OZ_Location *)new char[sz];
-    loc->inAr=inArity;
-    loc->outAr=outArity;
     return loc;
   }
   TaggedRef ** getMapping(void) { 
     return map; 
   }
-  int getArity(void) { 
-    return inAr+outAr; 
-  }
-  int getInArity(void) { 
-    return inAr; 
-  }
-  int getOutArity(void) { 
-    return outAr; 
-  }
   int getIndex(int n) {
-    Assert(n>=0 && n<inAr+outAr);
     return (map[n]-XREGS);
   }
   int getInIndex(int n) {
-    Assert(n>=0 && n<inAr);
     return getIndex(n);
   }
-  int getOutIndex(int n) {
-    Assert(n>=0 && n<outAr);
-    return getIndex(inAr + n);
+  int getOutIndex(Builtin * bi, int n) {
+    return getIndex(bi->getInArity() + n);
   }
   TaggedRef getValue(int n) {
     return *map[n];
@@ -590,23 +574,14 @@ public:
   TaggedRef getInValue(int n) {
     return getValue(n);
   }
-  TaggedRef getOutValue(int n) {
-    return getValue(inAr+n);
+  TaggedRef getOutValue(Builtin * bi, int n) {
+    return getValue(bi->getInArity()+n);
   }
-  void set(int n,int i) {
-    Assert(n>=0 && n<inAr+outAr);
+  void set(int n, int i) {
     map[n]=&(XREGS[i]);
   }
-  void setIn(int n,int i) {
-    Assert(n>=0 && n<inAr);
-    set(n,i);
-  }
-  void setOut(int n,int i) {
-    Assert(n>=0 && n<outAr);
-    set(n+inAr,i);
-  }
-  TaggedRef getInArgs(void);
-  TaggedRef getArgs(void);
+  TaggedRef getInArgs(Builtin *);
+  TaggedRef getArgs(Builtin *);
 };
 
 extern OZ_Location * OZ_ID_LOC;
