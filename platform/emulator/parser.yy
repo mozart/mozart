@@ -1298,7 +1298,7 @@ synSeqs         : synSeq
                 ;
 
 synSeq          : thisCoord nonEmptySeq
-                  { OZ_Term t = $1;
+                  { OZ_Term t = $2;
                     while (terms[depth]) {
                       t = consList(newCTerm("fSynApplication", terms[depth]->term, nilAtom), t);
                       TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
