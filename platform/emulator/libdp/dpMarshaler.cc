@@ -1576,31 +1576,32 @@ void marshalOwnHead(MarshalerBuffer *bs, int tag, int i)
   dif_counter[tag].send();
   myDSite->marshalDSite(bs);
   marshalNumber(bs, i);
-
-  marshalCredit(bs,ownerTable->getEntry(i)->getCreditBig());
+  bs->put((BYTE)ENTITY_NORMAL);
+  marshalCredit(bs,OT->getEntry(i)->getCreditBig());
 }
 
 //
-void saveMarshalOwnHead(int oti, Credit &c)
+void saveMarshalOwnHead(int oti, RRinstance *&c)
 {
   c = ownerTable->getEntry(oti)->getCreditBig();
 }
 
 //
-void marshalOwnHeadSaved(MarshalerBuffer *bs, int tag, int oti, Credit c)
+void marshalOwnHeadSaved(MarshalerBuffer *bs, int tag, int oti, RRinstance *c)
 {
   PD((MARSHAL_CT,"OwnHead"));
   bs->put(tag);
   dif_counter[tag].send();
   myDSite->marshalDSite(bs);
   marshalNumber(bs, oti);
+  bs->put((BYTE)ENTITY_NORMAL);
   marshalCredit(bs,c);
 }
 
 //
-void discardOwnHeadSaved(int oti, Credit c)
+void discardOwnHeadSaved(int oti, RRinstance *c)
 {
-  ownerTable->getEntry(oti)->addCredit(c);
+  ownerTable->getEntry(oti)->mergeReference(c);
 }
 
 //
@@ -1609,32 +1610,32 @@ void marshalToOwner(MarshalerBuffer *bs, int bi)
   PD((MARSHAL,"toOwner"));
   BorrowEntry *b = borrowTable->getBorrow(bi); 
   int OTI = b->getOTI();
-  marshalCreditToOwner(bs,b->getCreditSmall(),OTI);
+  marshalCreditToOwner(bs,b->getSmallReference(),OTI);
 }
 
 //
 // 'saveMarshalToOwner'/'marshalToOwnerSaved' are complimentary. These
 // are used for immediate exportation of variable proxies and
 // marshaling corresponding "exported variable proxies" later.
-void saveMarshalToOwner(int bi, int &oti, Credit &c)
+void saveMarshalToOwner(int bi, int &oti, RRinstance *&c)
 {
   PD((MARSHAL,"toOwner"));
   BorrowEntry *b = borrowTable->getBorrow(bi); 
 
   //
   oti = b->getOTI();
-  c = b->getCreditSmall();
+  c = b->getSmallReference();
 }
 
 //
-void marshalToOwnerSaved(MarshalerBuffer *bs,Credit c,
+void marshalToOwnerSaved(MarshalerBuffer *bs,RRinstance  *c,
 			 int oti)
 {
   marshalCreditToOwner(bs,c,oti);
 }
 
 //
-void marshalBorrowHead(MarshalerBuffer *bs, MarshalTag tag, int bi)
+void marshalBorrowHead(MarshalerBuffer *bs, MarshalTag tag, int bi, BYTE ec)
 {
   PD((MARSHAL,"BorrowHead"));	
   bs->put((BYTE)tag);
@@ -1642,13 +1643,13 @@ void marshalBorrowHead(MarshalerBuffer *bs, MarshalTag tag, int bi)
   NetAddress *na = b->getNetAddress();
   na->site->marshalDSite(bs);
   marshalNumber(bs, na->index);
-
-  marshalCredit(bs, b->getCreditBig());
+  bs->put(ec);
+  marshalCredit(bs, b->getBigReference());
 }
 
 //
 void saveMarshalBorrowHead(int bi, DSite* &ms, int &oti,
-			   Credit &c)
+			   RRinstance *&c)
 {
   PD((MARSHAL,"BorrowHead"));
 
@@ -1659,17 +1660,17 @@ void saveMarshalBorrowHead(int bi, DSite* &ms, int &oti,
   ms = na->site;
   oti = na->index;
   //
-  c = b->getCreditBig();
+  c = b->getBigReference();
 }
 
 //
 void marshalBorrowHeadSaved(MarshalerBuffer *bs, MarshalTag tag, DSite *ms,
-			    int oti, Credit c)
+			    int oti, RRinstance *c,BYTE ec)
 {
   bs->put((BYTE) tag);
   marshalDSite(bs, ms);
   marshalNumber(bs, oti);
-
+  bs->put((BYTE) ec);
   //
   marshalCredit(bs, c);
 }
@@ -1677,7 +1678,7 @@ void marshalBorrowHeadSaved(MarshalerBuffer *bs, MarshalTag tag, DSite *ms,
 //
 // The problem with borrow entries is that they can go away.
 void discardBorrowHeadSaved(DSite *ms, int oti,
-			    Credit credit)
+			    RRinstance *credit)
 {
   //
   NetAddress na = NetAddress(ms, oti); 
@@ -1686,64 +1687,35 @@ void discardBorrowHeadSaved(DSite *ms, int oti,
   //
   if (b) {
     // still there - then just nail credits back;
-    b->addCredit(credit);
+    b->mergeReference(credit);
   } else {
     printf("discardBorrowHeadSaved - weird case reached\n");
-    sendCreditBack(ms,oti,credit);
+    sendRRinstanceBack(ms,oti,credit);
   }
 }
 
 OZ_Term
-#ifndef USE_FAST_UNMARSHALER
 unmarshalBorrowRobust(MarshalerBuffer *bs,
-		      OB_Entry *&ob, int &bi, int *error)
-#else
-unmarshalBorrow(MarshalerBuffer *bs, OB_Entry* &ob, int &bi)
-#endif
+		      OB_Entry *&ob, int &bi, BYTE &ec,int *error)
 {
   PD((UNMARSHAL,"Borrow"));
-#ifndef USE_FAST_UNMARSHALER
   DSite *sd = unmarshalDSiteRobust(bs, error);
-  if (*error)
-    return ((OZ_Term) 0);	// carry on the error;
+  if (*error) return ((OZ_Term) 0);	// carry on the error;
   int si = unmarshalNumberRobust(bs, error);
-  if (*error)
-    return ((OZ_Term) 0);
-#else
-  DSite* sd = unmarshalDSite(bs);
-  int si = unmarshalNumber(bs);
-#endif
+  if (*error) return ((OZ_Term) 0);
   PD((UNMARSHAL,"borrow o:%d",si));
-  if(sd==myDSite){
-    Assert(0); 
-//     if(mt==DIF_PRIMARY){
-//       cred = unmarshalCredit(bs);      
-//       PD((UNMARSHAL,"myDSite is owner"));
-//       OwnerEntry* oe=ownerTable->getOwner(si);
-//       if(cred != PERSISTENT_CRED)
-// 	oe->returnCreditOwner(cred);
-//       OZ_Term ret = oe->getValue();
-//       return ret;}
-//     Assert(mt==DIF_SECONDARY);
-//     cred = unmarshalCredit(bs);      
-//     DSite* cs=unmarshalDSite(bs);
-//     sendSecondaryCredit(cs,myDSite,si,cred);
-//     PD((UNMARSHAL,"myDSite is owner"));
-//     OwnerEntry* oe=ownerTable->getOwner(si);
-//     OZ_Term ret = oe->getValue();
-//     return ret;
-  }
+
+  if(sd==myDSite){ Assert(0);}
+  
   NetAddress na = NetAddress(sd,si); 
   BorrowEntry *b = borrowTable->find(&na);
-#ifndef USE_FAST_UNMARSHALER
-  Credit cred = unmarshalCreditRobust(bs, error);    
-  if (*error)
-    return ((OZ_Term) 0);
-#else
-  Credit cred = unmarshalCredit(bs);
-#endif 
+  
+  ec = bs->get();
+  RRinstance* cred = unmarshalCreditRobust(bs, error);    
+  if (*error)  return ((OZ_Term) 0);
+
   if (b!=NULL) {
-    b->addCredit(cred);
+    b->mergeReference(cred);
     ob = b;
     // Assert(b->getValue() != (OZ_Term) 0);
     return b->getValue();
@@ -1775,7 +1747,8 @@ void marshalVarObject(ByteBuffer *bs, int BTI, GName *gnobj, GName *gnclass)
   if (sd && borrowTable->getOriginSite(BTI) == sd) {
     marshalToOwner(bs, BTI);
   } else {
-    marshalBorrowHead(bs, DIF_VAR_OBJECT, BTI);
+    // ERIK, entity condition not yet taken care of
+    marshalBorrowHead(bs, DIF_VAR_OBJECT, BTI, ENTITY_NORMAL);
 
     //
     if (gnobj) marshalGName(bs, gnobj);
@@ -1815,8 +1788,10 @@ void marshalTertiary(ByteBuffer *bs, Tertiary *t, MarshalTag tag)
       DSite* sd=bs->getSite();
       if (sd && borrowTable->getOriginSite(BTI)==sd)
 	marshalToOwner(bs, BTI);
-      else
-	marshalBorrowHead(bs, tag, BTI);
+      else{
+	EntityInfo *ei = t->getInfo(); 
+	BYTE ec = (ei?(ei->getEntityCond() & (PERM_FAIL)):ENTITY_NORMAL);
+	marshalBorrowHead(bs, tag, BTI,ec);}
       break;
     }
   default:
@@ -1866,21 +1841,14 @@ char *tagToComment(MarshalTag tag)
 }}
 
 OZ_Term
-#ifndef USE_FAST_UNMARSHALER
 unmarshalTertiaryRobust(MarshalerBuffer *bs, MarshalTag tag, int *error)
-#else
-unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
-#endif
 {
   OB_Entry* ob;
   int bi;
-#ifndef USE_FAST_UNMARSHALER
-  OZ_Term val = unmarshalBorrowRobust(bs, ob, bi, error);
-  if (*error)
-    return ((OZ_Term) 0);
-#else
-  OZ_Term val = unmarshalBorrow(bs, ob, bi);
-#endif
+  BYTE ec; 
+  OZ_Term val = unmarshalBorrowRobust(bs, ob, bi, ec, error);
+  if (*error)   return ((OZ_Term) 0);
+
   if(val){
     PD((UNMARSHAL,"%s hit b:%d",tagToComment(tag),bi));
     switch (tag) {
@@ -1889,34 +1857,25 @@ unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
     case DIF_PORT:
     case DIF_THREAD_UNUSED:
     case DIF_SPACE:
+    case DIF_CELL:
+    case DIF_LOCK:
       break;
-    case DIF_CELL:{
-      Tertiary *t=ob->getTertiary(); // mm2: bug: ob is 0 if I am the owner
-      // kost@ : i'm the f$ck really puzzled by this comment!
-      DebugCode((void) ((ConstTerm *) t)->getType());
-      break;}
-    case DIF_LOCK:{
-      Tertiary *t=ob->getTertiary();
-      break;}
     case DIF_STUB_OBJECT:
     case DIF_VAR_OBJECT:
       TaggedRef obj;
       TaggedRef clas;
-#ifndef USE_FAST_UNMARSHALER
       (void) unmarshalGNameRobust(&obj, bs, error);
       if (*error)
 	return ((OZ_Term) 0);
       (void) unmarshalGNameRobust(&clas, bs, error);
       if (*error)
 	return ((OZ_Term) 0);
-#else
-      (void) unmarshalGName(&obj, bs);
-      (void) unmarshalGName(&clas, bs);
-#endif
       break;
     default:         
       Assert(0);
     }
+    // If the entity had a failed condition, propagate it.
+    if (ec & PERM_FAIL) deferProxyTertProbeFault(ob->getTertiary(),PROBE_PERM);
     return val;
   }
 
@@ -1949,17 +1908,10 @@ unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
       OZ_Term obj;
       OZ_Term clas;
       OZ_Term val;
-#ifndef USE_FAST_UNMARSHALER
       GName *gnobj = unmarshalGNameRobust(&obj, bs, error);
-      if (*error)
-	return ((OZ_Term) 0);
+      if (*error)return ((OZ_Term) 0);
       GName *gnclass = unmarshalGNameRobust(&clas, bs, error);
-      if (*error)
-	return ((OZ_Term) 0);
-#else
-      GName *gnobj = unmarshalGName(&obj, bs);
-      GName *gnclass = unmarshalGName(&clas, bs);
-#endif
+      if (*error)return ((OZ_Term) 0);
       if(!gnobj) {	
 //  	printf("Had Object %d:%d flags:%d\n",
 //  	       ((BorrowEntry *)ob)->getNetAddress()->index,
@@ -1997,41 +1949,50 @@ unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
   }
   val=makeTaggedConst(tert);
   ob->changeToTertiary(tert); 
-  switch(((BorrowEntry*)ob)->getSite()->siteStatus()){
-  case SITE_OK:{
-    break;}
-  case SITE_PERM:{
-    deferProxyTertProbeFault(tert,PROBE_PERM);
-    break;}
-  case SITE_TEMP:{
-    deferProxyTertProbeFault(tert,PROBE_TEMP);
-    break;}
-  default:
-    Assert(0);
-  } 
+  
+  // If the entity carries failure info react to it
+  // othervise check the local environment. The present 
+  // representation of the entities site might have information
+  // about the failure state.
+  
+  if (ec & PERM_FAIL)
+    {  
+      deferProxyTertProbeFault(tert,PROBE_PERM);
+    }
+  else
+    {
+    switch(((BorrowEntry*)ob)->getSite()->siteStatus()){
+    case SITE_OK:{
+      break;}
+    case SITE_PERM:{
+      deferProxyTertProbeFault(tert,PROBE_PERM);
+      break;}
+    case SITE_TEMP:{
+      deferProxyTertProbeFault(tert,PROBE_TEMP);
+      break;}
+    default:
+      Assert(0);
+    } 
+    }
   return val;
 }
 
 
 OZ_Term 
-#ifndef USE_FAST_UNMARSHALER
 unmarshalOwnerRobust(MarshalerBuffer *bs, MarshalTag mt, int *error)
-#else
-unmarshalOwner(MarshalerBuffer *bs, MarshalTag mt)
-#endif
+
 {
   int OTI;
-#ifndef USE_FAST_UNMARSHALER
-  Credit c = unmarshalCreditToOwnerRobust(bs, mt, OTI, error);
-  if (*error)
-    return ((OZ_Term) 0);
-#else
-  Credit c = unmarshalCreditToOwner(bs, mt, OTI);
-#endif
+  OZ_Term oz;
+  RRinstance  *c = unmarshalCreditToOwnerRobust(bs, mt, OTI, error);
+  if (*error) return ((OZ_Term) 0);
   PD((UNMARSHAL,"OWNER o:%d",OTI));
   OwnerEntry* oe=ownerTable->getEntry(OTI);
-  oe->addCredit(c);
-  OZ_Term oz=oe->getValue();
+  if (oe){
+    oe->mergeReference(c);
+    oz=oe->getValue();}
+  else
+    oz = createFailedEntity(OTI,TRUE);
   return oz;
 }
 
@@ -2599,16 +2560,12 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_OWNER:
       case DIF_OWNER_SEC:
 	{
-#ifndef USE_FAST_UNMARSHALER
 	  int error;
 	  OZ_Term tert = unmarshalOwnerRobust(bs, tag, &error);
 	  RETURN_ON_ERROR(error);
 	  int refTag = unmarshalRefTagRobust(bs, b, &error);
 	  RETURN_ON_ERROR(error);
-#else
-	  OZ_Term tert = unmarshalOwner(bs, tag);
-	  int refTag = unmarshalRefTag(bs);
-#endif
+
 #if defined(DBG_TRACE)
 	  fprintf(dbgout, " = %s (at %d)\n", toC(tert), refTag);
 	  fflush(dbgout);
