@@ -99,7 +99,26 @@ void Thread::Init()
   FreeList = (Thread *) NULL;
   ToplevelQueue = (Toplevel *) NULL;
   am.currentThread = (Thread *) NULL;
-  am.rootThread = new Thread(am.conf.defaultPriority,am.rootBoard);
+  am.rootThread = new Thread();
+  am.rootThread->init(am.conf.defaultPriority,am.rootBoard);
+}
+
+/*
+ * the mode is 3, if all tasks on the thread have seq mode
+ */
+void Thread::switchMode(int newMode) {
+  Assert((mode&1) != newMode);
+  Assert(SEQMODE==1 && PARMODE==0);
+  if (taskStack.isEmpty()) {
+    if (newMode == SEQMODE) {
+      mode=ALLSEQMODE;
+    } else {
+      mode=newMode;
+    }
+  } else {
+    taskStack.pushMode(mode&1);
+    mode=newMode;
+  }
 }
 
 /*

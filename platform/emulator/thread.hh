@@ -24,6 +24,8 @@
 
 class Toplevel;
 
+const int ALLSEQMODE=3;
+
 class Thread : public ConstTerm
 {
 friend void engine();
@@ -52,15 +54,14 @@ private:
   Thread *next;
   Thread *prev;
   int priority;
-#ifdef NEWCOUNTER
   Board *home;
-#endif
   Board *notificationBoard; // for search capabilities;
+  int mode;
+  Thread();
 public:
   TaskStack taskStack;
 
 public:
-  Thread(int prio,Board *home);
   static Thread *newThread(int prio,Board *home);
 
   USEFREELISTMEMORY;
@@ -82,11 +83,13 @@ public:
   void checkToplevel();
   void addToplevel(ProgramCounter pc);
   void pushToplevel(ProgramCounter pc);
-#ifdef NEWCOUNTER
   Board *getHome() { return home->getBoardDeref(); }
   void setHome(Board *b) { home=b; }
-#endif
+  int getMode() { return mode; }
+  void checkMode(int newMode);
+  void switchMode();
 private:
+  void switchMode(int newMode);
   void init(int prio,Board *home);
   Bool isScheduled();
   void insertFromTail();
