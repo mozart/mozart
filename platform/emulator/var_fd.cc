@@ -35,7 +35,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
   case SMALLINT:
     {
       if (! finiteDomain.contains(smallIntValue(term))) return FALSE;
-      propagate(var, fd_det, term, pc_propagator);
+      if (prop) propagate(var, fd_det, term, pc_propagator);
 
       if (prop && isLocalVariable()) {
         doBind(vPtr, term);
