@@ -248,8 +248,12 @@ make bin</code>
         <p>If your platform uses RPMs, then you are in luck.  Download
         the source RPM from our download page, become somebody really
         important (I mean <code/root/) and execute:
+        <code display>rpmbuild --rebuild mozart-$VERSION.$DATE-src.rpm</code>
+        for newer versions of <code/rpm/.  If you have an old version
+        of <code/rpm/ which does not provide <code/rpmbuild/, then
+        just invoke <code/rpm/ directly as follows:
         <code display>rpm --rebuild mozart-$VERSION.$DATE-src.rpm</code>
-        This will create the binary RPMs in
+        In either case, this will create the binary RPMs in
         <file>/usr/src/redhat/RPMS/i386</file>.
       </section>
       <section>
