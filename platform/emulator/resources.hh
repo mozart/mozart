@@ -58,7 +58,7 @@
 
 /* task manager */
 /* 4 tasks are needed by virtual sites, see virtual.cc */
-/* 1 needed by ports se perdio.cc */
+/* 1 needed by ports see perdio.cc */
 /* 1 for timers, see network.cc/timers.hh */
 #define MAXTASKS                6
 
@@ -83,33 +83,26 @@
 #define DEFAULT_HI_MID_RATIO    10
 #define DEFAULT_MID_LOW_RATIO   10
 
-/* dp tables default values */
-
-#define DEFAULT_CLOSE_TIME      1000
-
-#define DEFAULT_OWNER_TABLE_SIZE    100
-#define DEFAULT_BORROW_TABLE_SIZE   100
-#define DP_TABLE_LOW_LIMIT          20
-#define DP_TABLE_EXPAND_FACTOR      200
-#define DP_TABLE_BUFFER             50
-#define DP_TABLE_WORTHWHILE_REALLOC 200
-
-
 #define DEFAULT_TRAIL_SIZE      1024
 
 #define SHOW_IDLE_MESSAGE       0
 #define SHOW_SUSPENSION         0
 #define STOP_ON_TOPLEVEL_FAILURE        0
+#define TIMEDETAILED            0
 
 #define GC_FLAG         1
 #define GC_VERBOSITY    0
 #define CODE_GC_CYLES   5
 
-#define RESIZESTACKMINSIZE 64 /* used for resizing a stack */
+#define NumberOfXRegisters      4096
+#define RESIZESTACKMINSIZE      64   /* used for resizing a stack */
+#define TASKFRAMESIZE           3
+#define STACKMINSIZE            4    /* tasks */
 
-#define TASKFRAMESIZE   3
-#define STACKMINSIZE    4    /* tasks */
+// C heap
+#define CMEM_FLENTRIES  1088 /* areas up around 4k */
 
+// Oz heap
 #define HEAPMINSIZE             1024 /* kByte   */
 #define HEAPFREE                  75 /* percent */
 #define HEAPTOLERANCE             20 /* percent */
@@ -121,15 +114,13 @@
 #endif
 #define MEM_C_HEAP_SIZE      1024*1024*32
 
-
-#define TIMEDETAILED            0
-
-#define NumberOfXRegisters      4096
-
 /* threads */
 #define THREAD_ID_SIZE          16
 #define THREAD_ID_MAX           ((1 << THREAD_ID_SIZE) - 1)
 #define THREAD_ID_MASK          THREAD_ID_MAX
+
+// Components;
+#define PICKLEBUFFER_SIZE       4096
 
 //
 // Tasks manager;
@@ -139,10 +130,18 @@
 
 //
 // Distributed Oz - general;
+
+/* dp tables default values */
+#define DEFAULT_CLOSE_TIME      1000
+#define DEFAULT_OWNER_TABLE_SIZE    100
+#define DEFAULT_BORROW_TABLE_SIZE   100
+#define DP_TABLE_LOW_LIMIT          20
+#define DP_TABLE_EXPAND_FACTOR      200
+#define DP_TABLE_BUFFER             50
+#define DP_TABLE_WORTHWHILE_REALLOC 200
 #define DP_FLOWBUFFERSIZE            10000   /* lower limit on nof msg for
                                                 flowcontrol */
 #define DP_FLOWBUFFERTIME            1000
-
 #define DP_RETRYTIMECEILING          200000
 #define DP_RETRYTIMEFLOOR            500
 #define DP_RETRYTIMEFACTOR           50

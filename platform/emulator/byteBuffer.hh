@@ -46,19 +46,21 @@
     endMB |        |
           ----------
 
-    ///=filled area
+    /// = filled area
     view each line as a byte and the pointers as pointing to the
     byte of their line
 
     buf:      the beginning of the buffer
     endMB:    the end (last byte) of the buffer
-    getptr:   the beginning of the filled area
+    getptr:   the beginning of the filled area,
+              except in the case of an empty buffer: putptr==getptr
     posMB:    the next byte to be read (unmarshaling) or written (marshaling)
-    putptr:   the beginning of the empty area
+    putptr:   the beginning of the empty area,
+              except in the case of a full buffer:   putptr==getptr
 
-    getptr and putptr are static while marshaling or unmarshaling and will
-    be adjusted together with the used field when getCommit or putEnd are
-    called.
+    getptr and putptr are static while marshaling or unmarshaling and
+    will be adjusted together with the used field when getCommit or
+    marshalEnd are called.
 
     posMB is moved by the get and put methods implemented in
     mbuffer.hh. For efficiency reasons it is not possible to adjust
@@ -66,9 +68,11 @@
     buffer the corresponding putNext or getNext method will be called,
     allowing this buffer to be circular.
 
-    Note that the condition on when posMB reaches the end is
-    assymetric in mbuffer.hh (posMB==endMB vs posMB>endMB) and that
-    endMB points to the last byte making the size=endMB+1-buf.
+    Note:
+    . getPtr,putPtr always point to a byte WITHIN buffer;
+    . posMB can point (temporarily) to the byte immediately after
+      the buffer;
+    . endMB points to the last byte, thus size = (endMB+1)-buf
 
 */
 
@@ -92,83 +96,87 @@ protected:
 private:
   BYTE *putptr;
   BYTE *getptr;
-
   int size;
   int used;
+  //
   int mode;
-  int framesize; // For unmarshaling
+  int framesize;                // For unmarshaling;
+  DSite *site;
 
   inline void int2net(int i);
   inline int net2int();
   inline void putSize();
+
+  //
 public:
-  ByteBuffer();
+  ByteBuffer() {}
 
   void init(int size,BYTE *buf);
   void reinit();
 
-  Bool isEmpty();
+  Bool isEmpty() { return (used == 0); }
 
 // For sending
-  int getUsed();
+  int getUsed() { return (used); }
+  // prepare for writing out a portion of the buffer.
+  // A size/location of a sequential chunk of bytes is returned:
   int getWriteParameters(BYTE *&buf);
+  // ... and report writing out that portion:
   void clearWrite(int sizeWritten);
 
 // For marshaler
-  void putBegin();
+  void marshalBegin();
   inline int availableSpace() {
     Assert(mode == BYTE_MODE_MARSHALING || mode == BYTE_MODE_NONE);
-    // used does not contain ongoing usage
-    // leave one byte for trailer
+    // 'used' does not contain ongoing usage;
+    // always leave one byte for trailer ("-1");
     if (mode==BYTE_MODE_NONE)
-      return size-used-1;
+      return ((size-used) - 1);
     else if (putptr<=posMB)
-      return size-used-(posMB-putptr)-1;
+      return ((size-used) - (posMB-putptr) - 1);
     else
-      return size-used-(posMB-buf+endMB+1-putptr)-1;
+      return ((size-used) - ((posMB-buf) + ((endMB+1)-putptr)) - 1);
   }
   void putInt(int i);
   void putNext(BYTE);
-  void putEnd();
+  void marshalEnd();
 
 // For unmarshaler
-  void getBegin();
-  inline Bool canGet(int size) {
+  void unmarshalBegin();
+  inline Bool canGet(int cgSize) {
     Assert(mode == BYTE_MODE_UNMARSHALING);
-    if (posMB>=getptr)
-      return (used-(posMB-getptr))>=size;
+    if (posMB >= getptr)
+      return ((used - (posMB-getptr)) >= cgSize);
     else
-      return (used-((endMB-getptr)+(posMB-buf))+1)>=size;
+      return ((used - (((endMB+1)-getptr) + (posMB-buf))) >= cgSize);
   }
-  void setFrameSize(int size);
-  inline Bool frameCanGet(int size) {
+
+  //
+  void setFrameSize(int size) { framesize = size; }
+  inline Bool canGetInFrame(int cgSize) {
     Assert(mode == BYTE_MODE_UNMARSHALING);
-    if (posMB>=getptr)
-      return (framesize-(posMB-getptr))>=size;
+    if (posMB >= getptr)
+      return ((framesize - (posMB-getptr)) >= cgSize);
     else
-      return (framesize-((endMB-getptr)+(posMB-buf)) +1)>=size;
+      return ((framesize - (((endMB+1)-getptr) + (posMB-buf))) >= cgSize);
   }
   int getInt();
   BYTE getNext();
-  // getCommit may never be called when no data has been read, that
-  // case looks equivalent to the case of all data being read.
+  // 'getCommit()' is called when a frame is successfully unmarshaled;
+  // 'getCommit()' may never be called when no data has been read,
+  // that case looks equivalent to the case of all data being read.
   void getCommit();
-  void getEnd();
+  void unmarshalEnd();
 
 // For receiving
+  // locate a char buffer for reading:
   int getReadParameters(BYTE *&buf);
+  // ... and make the byteBuffer of the read operation:
   void hasRead(int sizeRead);
 
-// Glue and fixes during development.
-// To be REMOVED!
-  void marshalBegin();
-  void marshalEnd();
-  void unmarshalBegin();
-  void unmarshalEnd();
-  DSite* getSite();
-  DSite *fixsite;
-// End of development fixes
-//
+  // kost@:  still needed for marshaling tertiaries and variables..
+  DSite* getSite() { return (site); }
+  void setSite(DSite* siteIn) { site = siteIn; }
 
   //
   DebugCode(BYTE* getGetptr() { return (getptr); })
@@ -187,7 +195,7 @@ public:
   ByteBuffer * getByteBuffer(int size,BYTE *buf);
   BYTE *deleteByteBuffer(ByteBuffer* bb);
 
-  int getCTR(){ return wc;}
+  //  int getCTR(){ return wc;}
 };
 
 extern ByteBufferManager *byteBufferManager;

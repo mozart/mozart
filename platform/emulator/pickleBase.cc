@@ -137,7 +137,7 @@ void putString(MarshalerBuffer *bs, const char *s)
 
 //
 static
-void putNumber(PickleBuffer *bs, unsigned int i)
+void putNumber(PickleMarshalerBuffer *bs, unsigned int i)
 {
   Assert(bs->textmode());
   char buf[100];
@@ -147,7 +147,7 @@ void putNumber(PickleBuffer *bs, unsigned int i)
 
 //
 static
-void putTag(PickleBuffer *bs, char tag)
+void putTag(PickleMarshalerBuffer *bs, char tag)
 {
   if (bs->textmode()) {
     switch (tag) {
@@ -166,7 +166,7 @@ void putTag(PickleBuffer *bs, char tag)
 }
 
 //
-void marshalDIF(PickleBuffer *bs, MarshalTag tag)
+void marshalDIF(PickleMarshalerBuffer *bs, MarshalTag tag)
 {
   if (bs->textmode()) {
     putTag(bs, TAG_DIF);
@@ -177,7 +177,7 @@ void marshalDIF(PickleBuffer *bs, MarshalTag tag)
 }
 
 //
-void marshalByte(PickleBuffer *bs, unsigned char c)
+void marshalByte(PickleMarshalerBuffer *bs, unsigned char c)
 {
   if (bs->textmode()) {
     putTag(bs, TAG_BYTE);
@@ -188,7 +188,7 @@ void marshalByte(PickleBuffer *bs, unsigned char c)
 }
 
 //
-void marshalShort(PickleBuffer *bs, unsigned short i)
+void marshalShort(PickleMarshalerBuffer *bs, unsigned short i)
 {
   if (bs->textmode()) {
     for (int k=0; k<shortSize; k++) {
@@ -202,7 +202,7 @@ void marshalShort(PickleBuffer *bs, unsigned short i)
 }
 
 //
-void marshalNumber(PickleBuffer *bs, unsigned int i)
+void marshalNumber(PickleMarshalerBuffer *bs, unsigned int i)
 {
   if (bs->textmode()) {
     putTag(bs, TAG_INT);
@@ -213,7 +213,7 @@ void marshalNumber(PickleBuffer *bs, unsigned int i)
 }
 
 //
-void marshalString(PickleBuffer *bs, const char *s)
+void marshalString(PickleMarshalerBuffer *bs, const char *s)
 {
   if (bs->textmode()) {
     putTag(bs, TAG_STRING);
@@ -224,7 +224,7 @@ void marshalString(PickleBuffer *bs, const char *s)
 }
 
 //
-void marshalLabel(PickleBuffer *bs, int start, int lbl)
+void marshalLabel(PickleMarshalerBuffer *bs, int start, int lbl)
 {
   if (bs->textmode()) {
     putTag(bs, TAG_LABELREF);
@@ -236,7 +236,7 @@ void marshalLabel(PickleBuffer *bs, int start, int lbl)
 }
 
 //
-void marshalOpCode(PickleBuffer *bs, int lbl, Opcode op, Bool showLabel)
+void marshalOpCode(PickleMarshalerBuffer *bs, int lbl, Opcode op, Bool showLabel)
 {
   if (bs->textmode()) {
     if (showLabel) {
@@ -251,7 +251,7 @@ void marshalOpCode(PickleBuffer *bs, int lbl, Opcode op, Bool showLabel)
 }
 
 //
-void marshalCodeStart(PickleBuffer *bs)
+void marshalCodeStart(PickleMarshalerBuffer *bs)
 {
   if (bs->textmode()) {
     putTag(bs, TAG_CODESTART);
@@ -262,7 +262,7 @@ void marshalCodeStart(PickleBuffer *bs)
 }
 
 //
-void marshalCodeEnd(PickleBuffer *bs)
+void marshalCodeEnd(PickleMarshalerBuffer *bs)
 {
   if (bs->textmode()) {
     putTag(bs, TAG_CODEEND);
@@ -272,7 +272,7 @@ void marshalCodeEnd(PickleBuffer *bs)
 }
 
 //
-void marshalTermDef(PickleBuffer *bs, int lbl)
+void marshalTermDef(PickleMarshalerBuffer *bs, int lbl)
 {
   if (bs->textmode()) {
     putTag(bs, TAG_TERMDEF);
@@ -283,7 +283,7 @@ void marshalTermDef(PickleBuffer *bs, int lbl)
 }
 
 //
-void marshalTermRef(PickleBuffer *bs, int lbl)
+void marshalTermRef(PickleMarshalerBuffer *bs, int lbl)
 {
   if (bs->textmode()) {
     putTag(bs, TAG_TERMREF);
@@ -296,7 +296,7 @@ void marshalTermRef(PickleBuffer *bs, int lbl)
 #if !defined(TEXT2PICKLE)
 
 //
-#define MARSHALERBUFFER         PickleBuffer
+#define MARSHALERBUFFER         PickleMarshalerBuffer
 #include "marshalerBaseShared.cc"
 #undef  MARSHALERBUFFER
 
@@ -305,7 +305,7 @@ void marshalTermRef(PickleBuffer *bs, int lbl)
 
 //
 static
-char *getString(PickleBuffer *bs, unsigned int i)
+char *getString(PickleMarshalerBuffer *bs, unsigned int i)
 {
   char *ret = new char[i+1];
   if (ret == (char *) 0)
@@ -322,14 +322,14 @@ char *getString(PickleBuffer *bs, unsigned int i)
 }
 
 //
-char *unmarshalString(PickleBuffer *bs)
+char *unmarshalString(PickleMarshalerBuffer *bs)
 {
   unsigned int i = unmarshalNumber(bs);
   return (getString(bs,i));
 }
 
 //
-char *unmarshalVersionString(PickleBuffer *bs)
+char *unmarshalVersionString(PickleMarshalerBuffer *bs)
 {
   unsigned int i = bs->get();
   return getString(bs,i);
@@ -339,7 +339,7 @@ char *unmarshalVersionString(PickleBuffer *bs)
 
 //
 static
-char *getStringRobust(PickleBuffer *bs, unsigned int i, int *error)
+char *getStringRobust(PickleMarshalerBuffer *bs, unsigned int i, int *error)
 {
   char *ret = new char[i+1];
   if (ret == (char *) 0) {
@@ -360,7 +360,7 @@ char *getStringRobust(PickleBuffer *bs, unsigned int i, int *error)
 }
 
 //
-char *unmarshalStringRobust(PickleBuffer *bs, int *error)
+char *unmarshalStringRobust(PickleMarshalerBuffer *bs, int *error)
 {
   char *string;
   unsigned int i = unmarshalNumberRobust(bs,error);
@@ -370,7 +370,7 @@ char *unmarshalStringRobust(PickleBuffer *bs, int *error)
 }
 
 //
-char *unmarshalVersionStringRobust(PickleBuffer *bs, int *error)
+char *unmarshalVersionStringRobust(PickleMarshalerBuffer *bs, int *error)
 {
   unsigned int i = bs->get();
   return getStringRobust(bs,i,error);

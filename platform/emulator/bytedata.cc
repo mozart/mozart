@@ -184,7 +184,7 @@ BitString* BitString::clone()
 
 //
 //
-class DPMExtDesc : public GTAbstractEntity, public NMMemoryManager {
+class DPMExtDesc : public GTAbstractEntity, public CppObjMemory {
 protected:
   OZ_Term term;
   // these appear to be common:

@@ -42,7 +42,6 @@
 static Bool isInitialized;
 void initPickleMarshaler()
 {
-  NMMemoryManager::init();
   isInitialized = OK;
   Assert(DIF_LAST == 51);  /* new dif(s) added? */
   initRobustMarshaler();        // called once - from here;
@@ -56,21 +55,21 @@ void initPickleMarshaler()
 //
 void Pickler::processSmallInt(OZ_Term siTerm)
 {
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   marshalSmallInt(bs, siTerm);
 }
 
 //
 void Pickler::processFloat(OZ_Term floatTerm)
 {
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   marshalFloat(bs, floatTerm);
 }
 
 //
 void Pickler::processLiteral(OZ_Term litTerm)
 {
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   int litTermInd = rememberTerm(litTerm);
 
   //
@@ -80,7 +79,7 @@ void Pickler::processLiteral(OZ_Term litTerm)
 //
 void Pickler::processBigInt(OZ_Term biTerm, ConstTerm *biConst)
 {
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   marshalBigInt(bs, biTerm, biConst);
 }
 
@@ -94,7 +93,7 @@ Bool Pickler::processNoGood(OZ_Term resTerm, Bool trail)
 //
 void Pickler::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
 {
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   Builtin *bi= (Builtin *) biConst;
   const char *pn = bi->getPrintName();
   Assert(!bi->isSited());
@@ -109,7 +108,7 @@ void Pickler::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
 void Pickler::processExtension(OZ_Term t)
 {
   Assert(tagged2Extension(t)->toBePickledV());
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
 
   //
   marshalDIF(bs,DIF_EXTENSION);
@@ -136,7 +135,7 @@ void Pickler::processLock(OZ_Term term, Tertiary *tert)
 Bool Pickler::processCell(OZ_Term term, Tertiary *tert)
 {
   //  MsgBuffer *bs = (MsgBuffer *) getOpaque();
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   Assert(cloneCells() && tert->isLocal());
   marshalDIF(bs, DIF_CLONEDCELL);
   rememberNode(this, bs, term);
@@ -163,7 +162,7 @@ void Pickler::processVar(OZ_Term cv, OZ_Term *varTerm)
 void Pickler::processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber)
 {
   Assert(repNumber >= 0);
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
 
   //
   marshalDIF(bs, DIF_REF);
@@ -173,7 +172,7 @@ void Pickler::processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber)
 //
 Bool Pickler::processLTuple(OZ_Term ltupleTerm)
 {
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
 
   //
   marshalDIF(bs, DIF_LIST);
@@ -184,7 +183,7 @@ Bool Pickler::processLTuple(OZ_Term ltupleTerm)
 //
 Bool Pickler::processSRecord(OZ_Term srecordTerm)
 {
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   SRecord *rec = tagged2SRecord(srecordTerm);
   TaggedRef label = rec->getLabel();
 
@@ -205,7 +204,7 @@ Bool Pickler::processSRecord(OZ_Term srecordTerm)
 //
 Bool Pickler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 {
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   SChunk *ch    = (SChunk *) chunkConst;
   GName *gname  = globalizeConst(ch, bs);
   Assert(gname);
@@ -222,7 +221,7 @@ Bool Pickler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 //
 Bool Pickler::processFSETValue(OZ_Term fsetvalueTerm)
 {
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   marshalDIF(bs, DIF_FSETVALUE);
   return (NO);
 }
@@ -231,7 +230,7 @@ Bool Pickler::processFSETValue(OZ_Term fsetvalueTerm)
 Bool Pickler::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 {
   OzDictionary *d = (OzDictionary *) dictConst;
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   Assert(d->isSafeDict());
 
   //
@@ -243,7 +242,7 @@ Bool Pickler::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 
 Bool Pickler::processArray(OZ_Term arrayTerm, ConstTerm *arrayConst)
 {
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   OzArray *array = (OzArray *) arrayConst;
   Assert(cloneCells());
 
@@ -259,7 +258,7 @@ Bool Pickler::processArray(OZ_Term arrayTerm, ConstTerm *arrayConst)
 Bool Pickler::processClass(OZ_Term classTerm, ConstTerm *classConst)
 {
   ObjectClass *cl = (ObjectClass *) classConst;
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   Assert(!cl->isSited());
   GName *gn = globalizeConst(cl, bs);
   Assert(gn);
@@ -275,7 +274,7 @@ Bool Pickler::processClass(OZ_Term classTerm, ConstTerm *classConst)
 //
 Bool Pickler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 {
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   Abstraction *pp = (Abstraction *) absConst;
 
   //
@@ -323,7 +322,7 @@ Bool Pickler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 //
 void Pickler::processSync()
 {
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   marshalDIF(bs, DIF_SYNC);
 }
 
@@ -496,7 +495,7 @@ Builder unpickler;
 
 //
 //
-OZ_Term unpickleTermInternal(PickleBuffer *bs)
+OZ_Term unpickleTermInternal(PickleMarshalerBuffer *bs)
 {
   Assert(isInitialized);
   Assert(oz_onToplevel());

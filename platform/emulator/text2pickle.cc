@@ -72,7 +72,7 @@ public:
 };
 
 //
-// MarshalerBuffer is needed to make the compiler happy (PickleBuffer
+// MarshalerBuffer is needed to make the compiler happy (PickleMarshalerBuffer
 // is inherited from it), as well as to have additional debug checkss;
 class MarshalerBuffer {
 protected:
@@ -104,15 +104,15 @@ public:
 };
 
 //
-// Here (in 'text2pickle'), the 'marshal*(PickleBuffer *bs, ...)'
-// functions are made to see this definition of PickleBuffer instead
+// Here (in 'text2pickle'), the 'marshal*(PickleMarshalerBuffer *bs, ...)'
+// functions are made to see this definition of PickleMarshalerBuffer instead
 // of the 'pickeBase.hh's one!
-class PickleBuffer : public MarshalerBuffer {
+class PickleMarshalerBuffer : public MarshalerBuffer {
 private:
   int mode;
 
 public:
-  PickleBuffer(int f, int m)
+  PickleMarshalerBuffer(int f, int m)
     : MarshalerBuffer(f), mode(m) {}
 
   int textmode() { return mode!=0; }
@@ -134,7 +134,7 @@ public:
 
 //
 static
-void marshalComment(PickleBuffer *bs, char *s)
+void marshalComment(PickleMarshalerBuffer *bs, char *s)
 {
   if (bs->textmode()) {
     putTag(bs, TAG_COMMENT);
@@ -148,7 +148,7 @@ void marshalComment(PickleBuffer *bs, char *s)
 
 //
 static
-void marshalLabelDef(PickleBuffer *bs, char *lbl)
+void marshalLabelDef(PickleMarshalerBuffer *bs, char *lbl)
 {
   if (bs->textmode()) {
     putTag(bs, TAG_LABELDEF);
@@ -156,7 +156,7 @@ void marshalLabelDef(PickleBuffer *bs, char *lbl)
   }
 }
 
-unsigned long PickleBuffer::crc()
+unsigned long PickleMarshalerBuffer::crc()
 {
   TextBlock *aux = first;
   unsigned long i = init_crc();
@@ -528,7 +528,7 @@ public:
 
 /************************************************************/
 
-void pickle(TaggedPair *aux, PickleBuffer *out)
+void pickle(TaggedPair *aux, PickleMarshalerBuffer *out)
 {
   /* write new version number */
   // kost@ : i don't get: why new version number??! Say when a lexical
@@ -715,6 +715,6 @@ int main(int argc, char **argv)
 
   TaggedPair *aux = unpickle(stdin);
 
-  PickleBuffer fbuf(STDOUT_FILENO,textmode);
+  PickleMarshalerBuffer fbuf(STDOUT_FILENO,textmode);
   pickle(aux,&fbuf);
 }

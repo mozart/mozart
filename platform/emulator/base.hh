@@ -42,6 +42,7 @@
 
 #include "machine.hh"
 #include "config.h"
+#include "cmem.hh"
 
 #include "ozostream.hh"
 
@@ -313,7 +314,7 @@ class SuspQueue;
 
 class ProxyList;
 class MarshalerBuffer;
-class PickleBuffer;
+class PickleMarshalerBuffer;
 
 // source level debugger
 class Atom;

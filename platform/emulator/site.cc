@@ -83,7 +83,7 @@ void BaseSite::marshalBaseSiteForGName(MarshalerBuffer* buf)
   marshalNumber(buf, timestamp.start);
   marshalNumber(buf, timestamp.pid);
 }
-void BaseSite::marshalBaseSiteForGName(PickleBuffer* buf)
+void BaseSite::marshalBaseSiteForGName(PickleMarshalerBuffer* buf)
 {
   marshalNumber(buf, address);
   Assert(port == 0); // kost@ : otherwise hashing will be broken;

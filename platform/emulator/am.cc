@@ -151,6 +151,7 @@ void AM::init(int argc,char **argv)
   }
 #endif
 
+  init_cmem();
   ozconf.init();
   osInit();
   AssRegArray::init();

@@ -60,7 +60,7 @@
 //
 // Abstract continuation for literals' 'suspendAC':
 class DPMarshalerLitSusp : public GTAbstractEntity,
-                           public NMMemoryManager {
+                           public CppObjMemory {
 private:
   OZ_Term lt;
   int totalSize;
@@ -482,7 +482,7 @@ Bool traverseCode(GenTraverser *m, GTAbstractEntity *arg);
 // Virtual snapshot business.
 
 //
-class SntVarLocation : public NMMemoryManager {
+class SntVarLocation : public CppObjMemory {
 private:
   OZ_Term loc;
   // A copy of the original OZ_Term for managers, or a fresh "var"
@@ -525,7 +525,7 @@ class MsgTermSnapshot {};
 
 //
 class MsgTermSnapshotImpl : public MsgTermSnapshot,
-                            public NMMemoryManager {
+                            public CppObjMemory {
 private:
   DebugCode(int flags;);
   SntVarLocation *locs;
@@ -707,7 +707,7 @@ DPMarshaler* dpMarshalTerm(ByteBuffer *bs, DPMarshaler *dpm,
 
 //
 class DPUnmarshalerLitSusp : public GTAbstractEntity,
-                             public NMMemoryManager {
+                             public CppObjMemory {
 private:
   int refTag;
   int nameSize;
