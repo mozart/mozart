@@ -10,8 +10,8 @@
 #   Leif Kornstaedt, 1998
 #
 # Last change:
-#   $Date: 1998/09/04 15:17:07 $ by $Author: kornstae $
-#   $Revision: 1.5 $
+#   $Date: 1998/09/04 15:43:01 $ by $Author: kornstae $
+#   $Revision: 1.6 $
 #
 # This file is part of Mozart, an implementation of Oz 3:
 #   $MOZARTURL$
@@ -47,7 +47,7 @@ cp $infile $tmpdir/x.tex
     mkfifo moo
 
     gs -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r102 \
-    -sDEVICE=ppmraw -sOutputFile=latex%d.ppm x.ps < moo |
+    -sDEVICE=pnmraw -sOutputFile=latex%d.ppm x.ps < moo |
     (
         i=0
         while [ $i -lt $count ]; do
