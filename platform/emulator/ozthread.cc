@@ -58,8 +58,9 @@ public:
   void gCollectRecurseV(void) {
     Thread *tmpThread = SuspToThread(thread->gCollectSuspendable());
     if (!tmpThread) {
-      tmpThread=new Thread(thread->getFlags(),thread->getPriority(),
-                           oz_rootBoard(),thread->getID());
+      tmpThread = new Thread(thread->getFlags(),thread->getPriority(),
+                             oz_rootBoard(),thread->getID());
+      thread->cacMark(tmpThread);
     }
     thread=tmpThread;
   }
