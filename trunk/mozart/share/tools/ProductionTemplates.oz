@@ -30,7 +30,7 @@ local
 	     end
 	  end
 	  fun {$ _} true end
-	  nil}
+	  {NewDictionary}}
 
    if {Access HasErrors} then
       {Exception.raiseError gump(errorsInProductionTemplates)}
