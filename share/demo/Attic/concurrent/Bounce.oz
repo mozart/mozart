@@ -33,7 +33,7 @@ import
    Tk
    Application(exit)
 
-body
+define
 
    CanvasWidth  = 400.0
    CanvasHeight = 400.0

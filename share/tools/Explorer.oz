@@ -30,25 +30,25 @@ local
 
 in
 
-   functor $ prop once
+   functor
 
    import
-      Property.{get}
+      Property(get)
 
-      System.{show
-              printName}
+      System(show
+             printName)
 
-      Error.{formatGeneric
-             format
-             dispatch}
+      Error(formatGeneric
+            format
+            dispatch)
 
-      ErrorRegistry.{put}
+      ErrorRegistry(put)
 
       Tk
 
       TkTools
 
-      Browser.{browse}
+      Browser(browse)
 
    export
       'class':  ExplorerClass
@@ -60,7 +60,7 @@ in
 
       'close':  CloseExplorer
 
-   body
+   define
 
       \insert 'explorer/errors.oz'
       \insert 'explorer/main.oz'

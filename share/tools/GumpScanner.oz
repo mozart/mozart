@@ -23,7 +23,7 @@
 %%% WARRANTIES.
 %%%
 
-functor prop once
+functor
 import
    Error(formatGeneric format dispatch)
    ErrorRegistry(put)

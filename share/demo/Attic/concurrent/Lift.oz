@@ -31,7 +31,7 @@ import
    TkTools
    Application
 
-body
+define
    %%
    %% Lift Simulation -- Randomised and Interactive Lift Requests
    %%

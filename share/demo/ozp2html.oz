@@ -69,7 +69,7 @@ in
       Application
       Pickle
 
-   body
+   define
 
       Args = {Application.getCmdArgs ArgSpec}
 

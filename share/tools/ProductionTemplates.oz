@@ -42,7 +42,7 @@ in
    functor
    export
       Default
-   body
+   define
       [fSynTopLevelProductionTemplates(Default)] = AST
    end
 end

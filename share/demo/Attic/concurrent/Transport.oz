@@ -39,7 +39,7 @@ in
       Search(base)
       FD
 
-   body
+   define
 
       Args = {Application.getCmdArgs ArgSpec}
 

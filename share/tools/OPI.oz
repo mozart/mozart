@@ -2,9 +2,9 @@
 %%% Author:
 %%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%
-%%% Contributor:
+%%% Contributors:
 %%%   Christian Schulte <schulte@dfki.de>
-%%%   Denys Duchier, <duchier@ps.uni-sb.de>
+%%%   Denys Duchier <duchier@ps.uni-sb.de>
 %%%
 %%% Copyright:
 %%%   Leif Kornstaedt, 1997
@@ -26,10 +26,9 @@
 %%%
 
 local
-
    %% List of all functors
    local
-      ModuleDefs = \insert '../functor-defaults.oz'
+      ModuleDefs = \insert ../functor-defaults
    in
       Modules = {FoldL [ModuleDefs.lib
                         ModuleDefs.tools
@@ -54,19 +53,15 @@ local
                            'ExploreAll':  [all]
                            'ExploreBest': [best])
 
-                'Inspector'('Inspect': [inspect])
-               ]
+                'Inspector'('Inspect': [inspect])]
 
    fun {Dots M Fs}
       case Fs of nil then M
       [] F|Fr then {Dots M.F Fr}
       end
    end
-
 in
-
-   functor prop once
-
+   functor
    import
       Module(manager)
       System(printError)
@@ -75,9 +70,7 @@ in
       Open(file)
       Compiler(engine)
       Emacs(interface)
-
-   body
-
+   define
       local
          OZVERSION = {Property.get 'oz.version'}
          DATE      = {Property.get 'oz.date'}
@@ -116,7 +109,6 @@ in
           in
             {OPICompiler enqueue(mergeEnv(Env))}
           end}
-
       end
 
       CompilerUI = {New Emacs.interface init(OPICompiler)}

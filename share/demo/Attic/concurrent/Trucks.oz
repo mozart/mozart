@@ -42,7 +42,7 @@ in
       TkTools
       Application
 
-   body
+   define
       Images = {TkTools.images [ImageUrl#'truck-right.gif'
                                 ImageUrl#'truck-left.gif']}
 
