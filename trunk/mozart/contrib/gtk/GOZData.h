@@ -145,7 +145,8 @@ static inline OZ_Term goz_import_glist(GList *ptr) {
     cons = OZ_cons(OZ_makeForeignPointer(ptr->data), cons);
     ptr  = g_list_next(ptr);
   }
-  g_list_free(ptr);
+  /* To be checked */
+  g_list_free(anchor);
 
   return cons;
 }
@@ -166,11 +167,13 @@ static inline GList *goz_export_glist(OZ_Term cons) {
   return list;
 }
 
-#define GOZ_importGList(val) \
-  goz_import_glist(val)
+#define GOZ_declareGList(i, val) \
+  GList *val; \
+  OZ_declareTerm(i, GOZ_(val)) \
+  val = goz_export_glist(GOZ_(val));
 
-#define GOZ_exportGList(val) \
-  goz_export_glist(val)
+#define GOZ_makeGList(val) \
+  goz_import_glist(val)
 
 /* Generic Argument Handling */
 #define GOZ_declareTerm(i, val) \
