@@ -2,8 +2,6 @@
 Makefile
 ozcar-version.oz
 ProductionTemplates.oz
-tyc
-*.ozc
 *.ozf
-opi
+ozd
 stage1
