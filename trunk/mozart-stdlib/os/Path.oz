@@ -106,6 +106,8 @@ define
 	    in
 	       if {Pred H} then
 		  {Reverse {List.dropWhile T Pred}}
+	       else
+		  STR1
 	       end
 	    end	       
 	 end
