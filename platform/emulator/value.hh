@@ -1964,6 +1964,7 @@ public:
   {
     Assert(prd->getGSize()>=0);
     int sz=sizeof(Abstraction)+sizeof(TaggedRef)*(prd->getGSize()-1);
+    COUNT1(sizeClosures,sz);
     Abstraction *ab = (Abstraction *) int32Malloc(sz);
     ab->ConstTermWithHome::init(bb,Co_Abstraction);
     ab->pred=prd;

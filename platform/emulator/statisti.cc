@@ -246,18 +246,19 @@ void Statistics::initCount() {
   freeListAllocated = 0;
   freeListDisposed = 0;
   totalAllocated = 0;
-  nonvarNonvarUnify = varNonvarUnify = varVarUnify = recRecUnify = totalUnify = 0;
+  nonvarNonvarUnify = varOptUnify = varNonvarUnify = varVarUnify
+      = recRecUnify = 0;
   maxStackDepth = 0;
   maxEnvSize = 0;
   sizeClosures = numClosures = sizeGs = 0;
-  sizeObjects = sizeRecords = sizeLists = 0;
+  sizeObjects = sizeRecords = sizeLists = sizeFloats = sizeFreeListObjs = 0;
   sizeHeapChunks = sizeBitArrays = sizeStackVars = sizeEnvs = numEnvAllocs = 0;
   numDerefs = longestDeref = 0;
   for(int i=0; i<=maxDerefLength; i++) {
     lengthDerefs[i] = 0;
   }
 
-  fastcalls=bicalls=nonoptcalls=inlinecalls=inlinedots=sendmsg=applmeth=0;
+  fastcalls=optbicalls=nonoptcalls=inlinecalls=inlinedots=sendmsg=applmeth=0;
   nonoptbicalls=nonoptsendmsg=0;
   numNewName=numNewNamedName=0;
   numThreads=0;
@@ -309,6 +310,7 @@ void Statistics::printCount(char *file) {
     OZ_warning("cannot open '%s': %s\n",file,OZ_unixError(ossockerrno()));
     return;
   }
+#ifndef RS_PROFILE
   fprintf(out,"Heap after last GC:\n\n");
   fprintf(out,"values:\n");
   fprintf(out,"literal         %ld (%dB)\n",literal,sizeof(Literal));
@@ -355,35 +357,48 @@ void Statistics::printCount(char *file) {
   fprintf(out,"suspList        %ld (%dB)\n",suspList,sizeof(SuspList));
 
   fprintf(out,"\nOFS\n");
+#endif
 
   fprintf(out,"\nRS\n");
   PrintVar(freeListAllocated);
   PrintVar(freeListDisposed);
   PrintVar(totalAllocated);
+
+  int totalUnify = varVarUnify+varNonvarUnify+nonvarNonvarUnify;
   PrintVar(totalUnify);
   PrintVarPercent(varVarUnify,totalUnify);
   PrintVarPercent(varNonvarUnify,totalUnify);
   PrintVarPercent(nonvarNonvarUnify,totalUnify);
   PrintVarPercent(recRecUnify,totalUnify);
+  PrintVarPercent(varOptUnify,totalUnify);
+
   PrintVar(maxStackDepth);
   PrintVar(maxEnvSize);
 
-  int szAbstr = sizeof(Abstraction);
-  int sztr = sizeof(TaggedRef);
+  //int szAbstr = sizeof(Abstraction);
+  // PrintVar(szAbstr);
   double avrgNumGs = sizeGs / (double) numClosures;
   PrintVar(numClosures);
-  PrintVarPercent(sizeClosures,totalAllocated);
-  PrintVar(szAbstr);
   PrintFloat(avrgNumGs);
-  PrintVarPercent(sizeObjects,totalAllocated);
-  PrintVarPercent(sizeRecords,totalAllocated);
-  PrintVarPercent(sizeLists,totalAllocated);
-  int freeListSize = getMemoryInFreeList();
-  PrintVarPercent(freeListSize,totalAllocated);
 
-  PrintVarPercent(sizeHeapChunks,totalAllocated);
-  PrintVarPercent(sizeBitArrays,totalAllocated);
-  PrintVarPercent(sizeStackVars,totalAllocated);
+#define PrintHeapVar(Var)                       \
+  heapCoverage += Var;                          \
+  PrintVarPercent(Var,totalAllocated);
+
+  int heapCoverage = 0;
+  PrintHeapVar(sizeClosures);
+  PrintHeapVar(sizeObjects);
+  PrintHeapVar(sizeRecords);
+  PrintHeapVar(sizeLists);
+  PrintHeapVar(sizeFloats);
+  PrintHeapVar(sizeHeapChunks);
+  PrintHeapVar(sizeBitArrays);
+  PrintHeapVar(sizeStackVars);
+  PrintHeapVar(sizeFreeListObjs);
+
+  int freeListSize = getMemoryInFreeList();
+  //  PrintHeapVar(freeListSize);
+  PrintVarPercent(heapCoverage,totalAllocated);
 
   double avrgEnvSize = ((double) sizeEnvs) / (double) numEnvAllocs;
   PrintVar(sizeEnvs);
@@ -396,25 +411,28 @@ void Statistics::printCount(char *file) {
 
   printDeref(out);
 
-  //int totCalls = fastcalls+bicalls+nonoptcalls+inlinecalls+inlinedots+sendmsg+applmeth;
-  int totCalls = fastcalls+bicalls+nonoptcalls+inlinecalls+sendmsg+applmeth;
+  //int totCalls = fastcalls+optbicalls+nonoptcalls+inlinecalls+sendmsg+applmeth;
+  int totCalls = fastcalls+optbicalls+nonoptcalls+sendmsg+applmeth;
 
   fprintf(out,"\nCalls\n");
   PrintVar(totCalls);
   PrintVarPercent(fastcalls,totCalls);
-  PrintVarPercent(nonoptcalls,totCalls);
-  PrintVar(nonoptbicalls);
-  PrintVar(nonoptsendmsg);
-  PrintVarPercent(bicalls,totCalls);
-  PrintVarPercent(inlinecalls,totCalls);
   PrintVarPercent(sendmsg,totCalls);
   PrintVarPercent(applmeth,totCalls);
+  PrintVarPercent(optbicalls,totCalls);
+
+  PrintVarPercent(nonoptcalls,totCalls);
+  fprintf(out,"   "); PrintVarPercent(nonoptbicalls,nonoptcalls);
+  fprintf(out,"   "); PrintVarPercent(nonoptsendmsg,nonoptcalls);
+
+  PrintVar(inlinecalls);
   PrintVar(inlinedots);
 
-  int userCalls = fastcalls+sendmsg+nonoptcalls+applmeth-nonoptbicalls;
+  int userCalls = totCalls-optbicalls-nonoptbicalls;
   int envsPerUserCall = numEnvAllocs;
   fprintf(out,"\n");
   PrintVar(userCalls);
+  PrintVarPercent(nonoptcalls,userCalls);
   PrintVarPercent(envsPerUserCall,userCalls);
 
   if (out != stdout)
