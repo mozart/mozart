@@ -245,7 +245,7 @@ public:
   static ProgramCounter writeLabel(int label, ProgramCounter start, ProgramCounter ptr,
 				   Bool checkLabel)
   {
-    //  label==0 means fail in switchOnTerm and createCond
+    //  label==0 means fail in createCond
     //  in this case do not add start
     return writeWord(checkLabel && label==0 ? NOCODE : start+label,ptr);    
   }
