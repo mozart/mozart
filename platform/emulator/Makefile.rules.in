@@ -57,7 +57,7 @@ clean::
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 .cc.lo:
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(CDYNOPT) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(CDYNOPT) -c -o $@.o $< && mv $@.o $@
 
 .cc.s:
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -S -o $@ $<
