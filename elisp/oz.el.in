@@ -2106,8 +2106,8 @@ This serves to distinguish between the directive `\\else' and the keyword
 The first subexpression matches the keyword proper (for fontification).")
 
 (defconst oz-keywords-matcher-3
-  "[.#!:@,]\\|\\[\\]"
-  "Regular expression matching non-identifier keywords.")
+  "[!#|.@,~*/+-]\\|\\[\\]\\|:::?\\|=?<:?\\|>=?:?\\|=:\\|\\\\=:?\\|=="
+  "Regular expression matching non-identifier keywords and operators.")
 
 (defconst oz-proc-fun-matcher
   (concat "\\<\\(proc\\|fun\\)\\>\\([^{\n]*\\){!?"
