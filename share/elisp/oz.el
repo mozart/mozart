@@ -1489,20 +1489,20 @@ OZ compiler, emulator and error window")
   (interactive "FFeed file: ")
   (oz-send-string (concat "\\feed '" file "'"))) 
 
-(defun oz-insert-file (file)
-  "Insert an file into the Oz Compiler"
-  (if oz-debug-mode
-      (oz-send-string (concat 
-            "local T = {Thread.this} thread {Ozcar add(T)} end "
-            "{Thread.suspend T} in \n\\insert '" file "'\nend"))
-    (oz-send-string (concat "\\threadedfeed '" file "'"))))
-
 ;;(defun oz-insert-file (file)
 ;;  "Insert an file into the Oz Compiler"
 ;;  (if oz-debug-mode
-;;      (progn (write-region 1 1 "/tmp/ozdebugmagic")
-;;	     (oz-send-string (concat "\\threadedfeed '" file "'")))
+;;      (oz-send-string (concat 
+;;            "local T = {Thread.this} thread {Ozcar add(T)} end "
+;;            "{Thread.suspend T} in \n\\insert '" file "'\nend"))
 ;;    (oz-send-string (concat "\\threadedfeed '" file "'"))))
+
+(defun oz-insert-file (file)
+  "Insert an file into the Oz Compiler"
+  (if oz-debug-mode
+      (progn (write-region 1 1 "/tmp/ozdebugmagic")
+	     (oz-send-string (concat "\\threadedfeed '" file "'")))
+    (oz-send-string (concat "\\threadedfeed '" file "'"))))
 
 (defun oz-precompile-file (file)
   "precompile an Oz file"
