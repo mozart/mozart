@@ -104,7 +104,7 @@ INSPECTORTOPSRC = \
 INSPECTORTREEWIDGETSRC = \
 	CreateObjects LayoutObjects DrawObjects \
         TreeNodes StoreListener GraphicSupport \
-	RelationManager Aux
+	RelationManager Helper
 
 INSPECTORTOPOBJS = \
 	$(INSPECTORTOPSRC:%=%.ozf)
