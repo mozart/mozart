@@ -1090,7 +1090,6 @@ prepare
       meth PARSE()
 	 case Parser,GetToken($)
 	 of unit then
-	    @CONTENTS=nil
 	    if @TAG\=unit then
 	       Parser,ERROR(nonTerminatedElement(
 			       name : @TAG.name
