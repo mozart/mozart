@@ -58,7 +58,10 @@
       <Figure id="figure.tools.dialog">
 	<Caption/A dialog to remove files./
 	<P>
+               <picture.choice>
 	  <Picture.Extern to="dialog.gif" type=gif>
+	  <Picture.extern to="pictures/tools/dialog.eps" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/dialog/
 D={New TkTools.dialog
    tkInit(title:   'Remove File'
@@ -120,7 +123,10 @@ E={New Tk.entry tkInit(parent:D bg:wheat width:20)}
       <Figure id="figure.tools.error">
 	<Caption/A transient error dialog./
 	<P>
+               <picture.choice>
 	  <Picture.Extern to="error.gif" type=gif>
+	  <Picture.extern to="pictures/tools/error.eps" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/error/
 E={New TkTools.error
    tkInit(master:W
@@ -176,7 +182,10 @@ E={New TkTools.error
       <Figure id="figure.tools.menubar">
 	<Caption/A menubar./
 	<P>
+               <picture.choice>
 	  <Picture.Extern to="menubar.gif" type=gif>
+	  <Picture.extern to="pictures/tools/menubar.eps" type=ps>
+               </picture.choice>
 <index class=tails/<<TkTools>><and><<menubar>>/
 <chunk class=anonymous><title/menubar/
 V={New Tk.variable tkInit(0)}

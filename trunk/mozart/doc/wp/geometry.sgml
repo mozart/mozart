@@ -148,7 +148,10 @@ end
     <p>
       <Figure id="figure.geometry.pack-basic">
 	<Caption/Plain geometry computed by the packer./
+               <picture.choice>
 	<Picture.Extern to="packer-plain.gif" type=gif>
+	<Picture.extern to="pictures/geometry/packer-plain.eps" type=ps>
+               </picture.choice>
       </Figure>
      
 
@@ -175,11 +178,17 @@ end
 	  <Caption
 	    /Geometries computed by the packer according to <<side>> option./
 	  <P>
+               <picture.choice>
 	    <Picture.Extern to="packer-left.gif" type=gif>
+	    <Picture.extern to="pictures/geometry/packer-left.eps" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/pack left/
 {Tk.send pack(b({NewLabels}) side:left)}
 </chunk>
+               <picture.choice>
 	    <Picture.Extern to="packer-bottom.gif" type=gif>
+	    <Picture.extern to="pictures/geometry/packer-bottom.eps" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/pack bottom/
 {Tk.send pack(b({NewLabels}) side:bottom)}
 </chunk>
@@ -211,11 +220,17 @@ end
 	<Figure id="figure.geometry.packer-pad">
 	  <Caption/Additional space provided by the packer./
 	  <P>
+               <picture.choice>
 	    <Picture.Extern to="packer-pad.gif" type=gif>
+	    <Picture.extern to="pictures/geometry/packer-pad.eps" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/pack pad/
 {Tk.send pack(b({NewLabels}) padx:1#m pady:1#m)}
 </chunk>
+               <picture.choice>
 	    <Picture.Extern to="packer-ipad.gif" type=gif>
+	    <Picture.extern to="pictures/geometry/packer-ipad.eps" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/pack ipad/
 {Tk.send pack(b({NewLabels}) ipadx:2#m ipady:2#m)}
 </chunk>
@@ -238,7 +253,10 @@ end
 	<Figure id="figure.geometry.packer-anchor">
 	  <Caption/Using the <<anchor>> option for packing./
 	  <P>
+               <picture.choice>
 	    <Picture.Extern to="packer-anchor.gif" type=gif>
+	    <Picture.extern to="pictures/geometry/packer-anchor.eps" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/pack anchor/
 {Tk.send pack(b({NewLabels}) anchor:w padx:1#m pady:1#m)}
 </chunk>
@@ -270,7 +288,10 @@ end
 	<Figure id="figure.geometry.packer-fill">
 	  <Caption/Using the <<fill>> option for packing./
 	  <P>
+               <picture.choice>
 	    <Picture.Extern to="packer-fill.gif" type=gif>
+	    <Picture.extern to="pictures/geometry/packer-fill.eps" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/pack fill/
 {Tk.send pack(b({NewLabels}) fill:x)}
 </chunk>
@@ -297,15 +318,24 @@ end
 	<Figure id="figure.geometry.packer-resize">
 	  <Caption/Resizing effects for filling and expansion./
 	  <P>
+               <picture.choice>
 	    <Picture.Extern to="packer-resize-fill.gif" type=gif>
+	    <Picture.extern to="pictures/geometry/packer-resize-fill.eps" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/pack fill expand/
 {Tk.send pack(b({NewLabels}) fill:x)}
 </chunk>
+               <picture.choice>
 	    <Picture.Extern to="packer-resize-expand.gif" type=gif>
+	    <Picture.extern to="pictures/geometry/packer-resize-expand.eps" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/pack expand expand/
 {Tk.send pack(b({NewLabels}) expand:true)}
 </chunk>
+               <picture.choice>
 	    <Picture.Extern to="packer-resize-both.gif" type=gif>
+	    <Picture.extern to="pictures/geometry/packer-resize-both.eps" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/pack both expand/
 {Tk.send pack(b({NewLabels}) fill:both expand:true)}
 </chunk>
@@ -332,7 +362,10 @@ end
       <Figure id="figure.geometry.grid">
 	<Caption/Using the <<grid>> command./
 	<P>
+               <picture.choice>
 	  <Picture.Extern to="grid.gif" type=gif>
+	  <Picture.extern to="pictures/geometry/grid.eps" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/grid basic/
 proc {GL W R C S}
    L={New Tk.label tkInit(parent:W text:S)}
@@ -375,7 +408,10 @@ end
 	<Figure id="figure.geometry.span">
 	  <Caption/Using the <<columnspan>> and <<rowspan>> options./
 	  <P>
+               <picture.choice>
 	    <Picture.Extern to="grid-span.gif" type=gif>
+	    <Picture.extern to="pictures/geometry/grid-span.eps" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/grid span/
 {Tk.send grid({New Tk.label tkInit(parent:W text:'Upper left')} 
 	      row:1    rowspan:2
@@ -409,7 +445,10 @@ end
 	<Figure id="figure.geometry.sticky">
 	  <Caption/Using the <<sticky>> option with the <<grid>> command./
 	  <P>
+               <picture.choice>
 	    <Picture.Extern to="grid-sticky.gif" type=gif>
+	    <Picture.extern to="pictures/geometry/grid-sticky.eps" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/grid sticky/
 {Tk.send grid({New Tk.label tkInit(parent:W text:'Upper left')} 
 	      row:1    rowspan:2
@@ -442,7 +481,10 @@ end
 
 	<Figure id="figure.geometry.weight">
 	  <Caption/Result of resizing a window./
+               <picture.choice>
 	  <Picture.Extern to="grid-weight.gif" type=gif>
+	  <Picture.extern to="pictures/geometry/grid-weight.eps" type=ps>
+               </picture.choice>
 	</Figure>
 
   <Section id="section.geometry.anchor">
@@ -465,7 +507,10 @@ end
       <Figure id="figure.geometry.widget-anchor">
 	<Caption/Widgets with <<anchor>> options./
 	<P>
+               <picture.choice>
 	  <Picture.Extern to="widget-anchor.gif" type=gif>
+	  <Picture.extern to="pictures/geometry/widget-anchor.eps" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/widget anchor/
 [L1 L2 L3]={NewLabels}
 {Tk.send pack(L1 L2 L3 fill:x)}

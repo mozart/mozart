@@ -46,7 +46,10 @@
       <figure id="figure.text.started">
         <caption/Displaying text./
         <p>
+               <picture.choice>
           <picture.extern to="display.gif" type=gif>
+          <picture.extern to="pictures/text/display.eps" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/text display/
 T={New Tk.text tkInit(parent:W width:28 height:5 bg:white)}
 {T tk(insert 'end' "The quick brown fox jumps over the lazy dog.")}
@@ -173,7 +176,10 @@ B={New Tk.textTag tkInit(parent:T foreground:brown)}
     <p>
       <figure id="figure.text.tags">
         <caption/Using tags with text widgets./
+               <picture.choice>
         <picture.extern to="text-tags.gif" type=gif>
+        <picture.extern to="pictures/text/text-tags.eps" type=ps>
+               </picture.choice>
       </figure>
 
     <p>
@@ -302,7 +308,10 @@ end
       <figure id="figure.text.toy">
         <caption/A ToyText browser./
       <p>
+               <picture.choice>
         <picture.extern to="toy.gif" type=gif>  
+        <picture.extern to="pictures/text/toy.eps" type=ps>  
+               </picture.choice>
 <chunk class=anonymous><title/ToyBrowse/
 proc {ToyBrowse ToyText Root}
    W={New Tk.toplevel tkInit}
