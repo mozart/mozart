@@ -294,9 +294,9 @@ public:
 
 
 inline TaggedRef makeRangeTuple(int from, int to){
-  OZ_Term s = OZ_makeTuple("#",2);
-  OZ_putArg(s,1,OZ_intToTerm(from));
-  OZ_putArg(s,2,OZ_intToTerm(to));
+  OZ_Term s = OZ_tuple(OZ_CToAtom("#"),2);
+  OZ_putArg(s,1,OZ_CToInt(from));
+  OZ_putArg(s,2,OZ_CToInt(to));
   return s;
 } // makeRangeTupel
 
