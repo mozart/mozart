@@ -95,8 +95,6 @@
 
 #define DEFAULT_TRAIL_SIZE      200
 
-#define SHOW_FAST_LOAD          0
-#define SHOW_FOREIGN_LOAD       0
 #define SHOW_IDLE_MESSAGE       0
 #define SHOW_SUSPENSION         0
 #define STOP_ON_TOPLEVEL_FAILURE        0

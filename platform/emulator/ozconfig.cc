@@ -61,8 +61,6 @@ char *getenvDefault(char *envvar, char *def) {
 }
 
 void ConfigData::init() {
-  showLoad              = 0;
-  showCacheLoad         = 0;
   ozHome                = getenvDefault("OZHOME","unknown");
   ozPath                = OZ_PATH;
   printDepth            = PRINT_DEPTH;
@@ -74,8 +72,6 @@ void ConfigData::init() {
   errorLocation         = ERROR_LOCATION;
   errorHints            = ERROR_HINTS;
 
-  showFastLoad          = SHOW_FAST_LOAD;
-  showForeignLoad       = SHOW_FOREIGN_LOAD;
   showIdleMessage       = SHOW_IDLE_MESSAGE;
   showSuspension        = SHOW_SUSPENSION;
 

@@ -34,8 +34,6 @@
 // this class contains the configurable parameters
 class ConfigData {
 public:
-  int showLoad;
-  int showCacheLoad;
   int printDepth;
   int printWidth;
 
@@ -46,8 +44,6 @@ public:
   int errorHints;       // bool, print hints
   int errorDebug;       // bool, add debug information
 
-  int showForeignLoad;  // show message on load
-  int showFastLoad;     // show message on fast load
   int showIdleMessage;  // show message on idle
   int showSuspension;   // show message when a suspension is created
 

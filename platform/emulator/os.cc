@@ -1208,10 +1208,6 @@ TaggedRef osDlopen(char *filename, OZ_Term& ret)
 {
   OZ_Term err=NameUnit;
 
-  if (ozconf.showForeignLoad) {
-    message("Linking file %s\n",filename);
-  }
-
 #ifdef HAVE_DLOPEN
 #ifdef HPUX_700
   {

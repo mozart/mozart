@@ -73,7 +73,6 @@ public:
   unsigned int gcLastActive;
   StatCounter gcCollected;
   StatCounter timeForCopy;
-  StatCounter timeForLoading;
   StatCounter timeForGC;
   StatCounter timeUtime;
   StatCounter timeForPropagation;
