@@ -3358,9 +3358,9 @@ OZ_BI_define(BItermToVS,3,1)
 
 OZ_BI_define(BIvalueNameVariable,2,0)
 {
-  oz_declareIN(0,var);
-  oz_declareAtomIN(1,name);
-  oz_varAddName(var,name);
+  oz_declareIN(0, var);
+  oz_declareAtomIN(1, name);
+  oz_varAddName(var, name);
   return PROCEED;
 } OZ_BI_end
 
