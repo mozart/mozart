@@ -44,7 +44,7 @@ CREATEDOTHERS = \
 	ozma-p.yy ozma-s.ll config.h
 
 CREATEDSRCS = \
-	scancode.cc opcodes.cc ozma-p.cc ozma-s.cc\
+	scancode.cc copycode.cc opcodes.cc ozma-p.cc ozma-s.cc\
 	scanner.cc parser.cc version.cc initffuns.cc
 
 CREATEDFILES = $(CREATEDOTHERS) $(CREATEDSRCS)
@@ -221,7 +221,7 @@ distclean::
 
 # dependencies
 marshaler.hh marshalMsg.cc: msgFormat.m4
-scancode.cc ozma-s.ll ozma-p.yy optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh: instrDefs.m4
+scancode.cc copycode.cc ozma-s.ll ozma-p.yy optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh: instrDefs.m4
 
 # automatic configure
 ${srcdir}/configure: configure.in

@@ -1143,7 +1143,7 @@ loop:
 
       Abstraction *pp;
       if (gname || hasNames) {
-	PrTabEntry *pr = new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0);
+	PrTabEntry *pr = new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0,NO);
 	Assert(am.onToplevel());
 	pp = new Abstraction(pr,0,am.currentBoard());
 	*ret = makeTaggedConst(pp);
@@ -1159,7 +1159,7 @@ loop:
 	  warning("unmarshal proc gname mismatch: %s",toC(makeTaggedRef(ret)));
 	  return;
 	}
-	PrTabEntry *pr=new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0);
+	PrTabEntry *pr=new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0,NO);
 	Assert(am.onToplevel());
 	pp=new Abstraction(pr,0,am.currentBoard());
 	pp->setGName(pv->getGName());
