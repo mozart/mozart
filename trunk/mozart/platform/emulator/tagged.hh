@@ -25,12 +25,6 @@
  *
  */
 
-/* classes:
-     TaggedRef
-     RefsArray
-     */
-
-
 #ifndef __TAGGEDH
 #define __TAGGEDH
 
@@ -51,7 +45,7 @@
 // --- TaggedRef: Type Declaration
 
 enum TypeOfTerm {
-  REFTAG1          =  0,   // 0000
+  REF              =  0,   // 0000
   REFTAG2          =  4,   // 0100
   REFTAG3          =  8,   // 1000
   REFTAG4          = 12,   // 1100
@@ -79,44 +73,50 @@ enum TypeOfTerm {
 // --- TaggedRef: CLASS / BASIC ACCESS FUNCTIONS
 
 
-typedef TaggedRef *TaggedRefPtr;
-
 #define tagSize 4
 #define tagMask 0xF
 
 
 // ------------------------------------------------------
+// Basic macros
+#define _tagTypeOf(ref)          ((TypeOfTerm)(ref&tagMask))
+#define TaggedToPointer(t)       ((void*) (mallocBase|t))
+
+#ifdef LARGEADRESSES
+#define _tagValueOf2(tag,ref)    TaggedToPointer((ref-tag) >> (tagSize-2))
+#define _tagValueOf(ref)         TaggedToPointer(((ref) >> (tagSize-2))&~3)
+#define _tagValueOfVerbatim(ref) ((void*)(((ref) >> (tagSize-2))&~3))
+#define _makeTaggedRef2(tag,i)   ((i << (tagSize-2)) | tag)
+#else
+#define _tagValueOf2(tag,ref)    TaggedToPointer((ref) >> tagSize)
+#define _tagValueOf(ref)         TaggedToPointer((ref) >> tagSize)
+#define _tagValueOfVerbatim(ref) ((ref) >> tagSize)
+#define _makeTaggedRef2(tag,i)   ((i << tagSize) | (tag))
+#endif
+
+#define _makeTaggedRef2i(tag,ptr) _makeTaggedRef2(tag,(int32)ToInt32(ptr))
+
+#define NEW_TAGGING
+#ifdef NEW_TAGGING
+#define _makeTaggedRef(s) _makeTaggedRef2i(REF,s)
+#define _isRef(term)      (tagTypeOf(term)==REF)
+#define _tagged2Ref(ref)  ((TaggedRef *) tagValueOf2(REF,ref))
+#else
+#define _makeTaggedRef(s) ((TaggedRef) ToInt32(s))
+#define _isRef(term)      ((term & 3) == 0)
+#define _tagged2Ref(ref)  ((TaggedRef *) ToPointer(ref))
+#endif
+
+// ------------------------------------------------------
 // Debug macros for debugging outside of gc
 
-#define _tagTypeOf(ref) ((TypeOfTerm)(ref&tagMask))
-
 #ifdef DEBUG_GC  
-#define GCDEBUG(X)                            \
-  if (!isCollecting && (_tagTypeOf(X)==GCTAG ) )     \
+#define GCDEBUG(X)					\
+  if (!isCollecting && (_tagTypeOf(X)==GCTAG ) )	\
     error("GcTag unexpectedly found.");
 #else
 #define GCDEBUG(X)
 #endif
-
-
-#define TaggedToPointer(t) ((void*) (mallocBase|t))
-
-
-#ifdef LARGEADRESSES
-#define _tagValueOf(ref)         TaggedToPointer(((ref) >> (tagSize-2))&~3)
-#define _tagValueOfVerbatim(ref) ((void*)(((ref) >> (tagSize-2))&~3))
-#define _makeTaggedRef2(tag,i)   ((i << (tagSize-2)) | tag)
-
-#else
-#define _tagValueOf(ref)         TaggedToPointer((ref) >> tagSize)
-#define _tagValueOfVerbatim(ref) ((ref) >> tagSize)
-#define _makeTaggedRef2(tag,i)   ((i << tagSize) | (tag))
-
-#endif
-
-#define _isNullPtr(p)             ((p&~(tagMask)) == 0)
-#define _makeTaggedRef(s)         ((TaggedRef) ToInt32(s))
-#define _makeTaggedRef2i(tag,ptr) _makeTaggedRef2(tag,(int32)ToInt32(ptr))
 
 
 #ifdef DEBUG_CHECK
@@ -156,9 +156,6 @@ TaggedRef makeTaggedRef2p(TypeOfTerm tag, void *ptr)
   return _makeTaggedRef2i(tag,ptr);
 }
 
-inline
-Bool isNullPtr(TaggedRef p) { return _isNullPtr(p); }
-
 #else
 
 #define tagValueOf(ref)         _tagValueOf((TaggedRef)ref)
@@ -166,17 +163,12 @@ Bool isNullPtr(TaggedRef p) { return _isNullPtr(p); }
 #define tagTypeOf(ref)          _tagTypeOf((TaggedRef)ref)
 #define makeTaggedRef2i(tag,i)  _makeTaggedRef2(tag,i)
 #define makeTaggedRef2p(tag,i)  _makeTaggedRef2i(tag,i)
-#define isNullPtr(p)            _isNullPtr(p)
-#define makeTaggedRef(s)        _makeTaggedRef(s)
 
 #endif
 
 // ---------------------------------------------------------------------------
 // --- TaggedRef: CHECK_xx
 
-// Philosophy:
-//   Arguments which are passed around are never variables, but only
-//     REF or bound data
 #define CHECK_NONVAR(term) Assert(oz_isRef(term) || !oz_isVariable(term))
 #define CHECK_ISVAR(term)  Assert(oz_isVariable(term))
 #define CHECK_DEREF(term)  Assert(!oz_isRef(term) && !oz_isVariable(term))
@@ -187,23 +179,62 @@ Bool isNullPtr(TaggedRef p) { return _isNullPtr(p); }
 
 
 // ---------------------------------------------------------------------------
+// --- REF
+
+// mm2: compile with CUSR="-DDEBUG_REF allows to visualize
+//      tagged2Ref '*', makeTaggedRef 'm', and tagged2NonVar 'n'
+//  can be removed if the new tagging scheme is used ...
+#ifdef DEBUG_REF
+#define NO_MACROS
+extern int debugRef;
+#define DebugRef(s) do { if (debugRef) { s ; } } while (0)
+#else
+#define DebugRef(s)
+#endif
+
+#ifdef NO_MACROS
+inline
+TaggedRef makeTaggedRef(TaggedRef *s)
+{
+  DebugRef(printf("m"));
+  CHECK_POINTER_N(s);
+  return _makeTaggedRef(s);
+}
+
+inline
+Bool oz_isRef(TaggedRef term) {
+  GCDEBUG(term);
+  return _isRef(term);
+}
+
+inline
+TaggedRef *tagged2Ref(TaggedRef ref)
+{
+  DebugRef(printf("*"));
+  GCDEBUG(ref);
+  Assert(oz_isRef(ref));
+  return _tagged2Ref(ref);
+}
+#else
+
+#define makeTaggedRef(s) _makeTaggedRef(s)
+#define oz_isRef(t)      _isRef(t)
+#define tagged2Ref(ref)  _tagged2Ref(ref)
+
+#endif
+
+// ---------------------------------------------------------------------------
 // --- TaggedRef: BASIC TYPE TESTS
 
 // if you want to test a term:
 //   1. if you have the tag: is<Type>(tag)
-//   2. if you have the term: is<Type>(term)
+//   2. if you have the term: oz_is<Type>(term)
 //   3. if you need many tests:
 //        switch(typeOf(term)) { ... }
 //    or  switch(tag) { ... }
 
 
-#define IsRef(term) ((term & 3) == 0)
-inline
-Bool oz_isRef(TaggedRef term) {
-  GCDEBUG(term);
-  return IsRef(term);
-}
-
+// REFs
 
 // ---------------------------------------------------------------------------
 // Tests for variables and their semantics:
@@ -235,18 +266,10 @@ Bool isCVar(TaggedRef term) {
  */
 
 #define _oz_isVariable(val) (((TaggedRef) val&2)==0)       /* mask = 0010 */
-#define _isUVar(val)      (((TaggedRef) val&14)==0)      /* mask = 1110 */
-#define _isLTuple(val)    (((TaggedRef) val&13)==0)      /* mask = 1101 */
+#define _isUVar(val)        (((TaggedRef) val&14)==0)      /* mask = 1110 */
+#define _isLTuple(val)      (((TaggedRef) val&13)==0)      /* mask = 1101 */
 
 #ifdef DEBUG_CHECK
-
-inline
-TaggedRef makeTaggedRef(TaggedRef *s)
-{
-  CHECK_POINTER_N(s);
-  return _makeTaggedRef(s);
-}
-
 
 inline
 Bool isLTupleTag(TypeOfTerm tag) { return _isLTuple(tag);}
@@ -367,18 +390,6 @@ TaggedRef makeTaggedNULL()
 }
 
 inline
-TaggedRef makeTaggedMiscp(void *s)
-{
-  return makeTaggedRef2p((TypeOfTerm)0,s);
-}
-
-inline
-TaggedRef makeTaggedMisci(int32 s)
-{
-  return makeTaggedRef2i((TypeOfTerm)0,s);
-}
-
-inline
 TaggedRef makeTaggedUVar(Board *s)
 {
   CHECK_POINTER_N(s);
@@ -457,8 +468,6 @@ TaggedRef makeTaggedTert(Tertiary *s)
 #else
 
 #define makeTaggedNULL()       ((TaggedRef) 0)
-#define makeTaggedMiscp(s)     makeTaggedRef2p((TypeOfTerm)0,s)
-#define makeTaggedMisci(s)     makeTaggedRef2i((TypeOfTerm)0,s)
 #define makeTaggedUVar(s)      makeTaggedRef2p(UVAR,s)
 #define makeTaggedCVar(s)      makeTaggedRef2p(CVAR,s)
 #define makeTaggedFSetValue(s) makeTaggedRef2p(FSETVALUE,s)
@@ -478,18 +487,31 @@ TaggedRef makeTaggedTert(Tertiary *s)
 
 #endif
 
+
+inline
+TaggedRef makeTaggedMiscp(void *s)
+{
+  return makeTaggedRef2p((TypeOfTerm)0,s);
+}
+
 // getArg() and the like may never return variables
+// NOTE: this must very efficient, because its heavily used!
+#ifdef NO_MACRO
 inline
 TaggedRef tagged2NonVariable(TaggedRef *term)
 {
+  DebugRef(printf("n"));
   GCDEBUG(*term);
   TaggedRef ret = *term;
-  if (!IsRef(ret) && oz_isVariable(ret)) {
+  if (_oz_isVariable(ret) && !oz_isRef(ret)) {
     ret = makeTaggedRef(term);
   }
   return ret;
 }
-
+#else
+#define tagged2NonVariable(t) \
+          ((_oz_isVariable(*(t)) && !oz_isRef(*(t))) ? makeTaggedRef(t) : *(t))
+#endif
 
 // ---------------------------------------------------------------------------
 // --- TaggedRef: allocate on heap, an return a ref to it
@@ -516,11 +538,7 @@ TaggedRef *newTaggedUVar(Board *c)
   return newTaggedUVar(makeTaggedUVar(c));
 }
 
-#ifdef DEBUG_NO_UVAR
 #define oz_newVar(bb)            makeTaggedRef(newTaggedUVar(bb))
-#else
-#define oz_newVar(bb)            makeTaggedRef(newTaggedUVar(bb))
-#endif
 
 inline
 TaggedRef *newTaggedCVar(GenCVariable *c) {
@@ -545,20 +563,8 @@ void *tagValueOf2(TypeOfTerm tag, TaggedRef ref)
 #endif
 }
 
-#define _tagged2Ref(ref) ((TaggedRef *) ToPointer(ref))
-
 #ifdef DEBUG_CHECK
-inline
-TaggedRef *tagged2Ref(TaggedRef ref)
-{
-  GCDEBUG(ref);
-// cannot use CHECKTAG(REF); because only last two bits must be zero
-  Assert((ref & 3) == 0);
-  return _tagged2Ref(ref);
-}
 #else
-/* macros are faster */
-#define tagged2Ref(ref) _tagged2Ref(ref)
 #endif
 
 /* does not deref home pointer! */
@@ -669,7 +675,7 @@ GenCVariable *tagged2CVar(TaggedRef ref) {
 
 #define __DEREF(term, termPtr, tag)			\
   ProfileCode(ozstat.lenDeref=0);			\
-  while(IsRef(term)) {					\
+  while(oz_isRef(term)) {					\
     COUNT(lenDeref);					\
     termPtr = tagged2Ref(term);				\
     term = *termPtr;					\
@@ -695,7 +701,7 @@ GenCVariable *tagged2CVar(TaggedRef ref) {
   _DEREF(term,termPtr,tag);
 
 #define SAFE_DEREF(term)				\
-if (IsRef(term)) {					\
+if (oz_isRef(term)) {					\
   DEREF(term,SAFE__PTR__,SAFE__TAG__);			\
   if (_oz_isVariable(term)) term=makeTaggedRef(SAFE__PTR__);	\
 }
@@ -728,6 +734,13 @@ inline
 void doBind(TaggedRef *p, TaggedRef t)
 {
   CHECK_NONVAR(t);
+  Assert(p!=_derefPtr(t));
+  *p = t;
+}
+
+inline
+void doUnbind(TaggedRef *p, TaggedRef t)
+{
   Assert(p!=_derefPtr(t));
   *p = t;
 }
@@ -936,11 +949,6 @@ Bool oz_eq(TaggedRef t1, TaggedRef t2)
   return t1==t2;
 }
 
-inline
-OZ_Term mkTuple(int from, int to) {
-  return OZ_pair2(OZ_int(from), OZ_int(to));
-}
-
 
 /*===================================================================
  * TaggedPtr
@@ -1003,18 +1011,13 @@ int nextPowerOf2(int n)
  * Idea: only if the unit is a ref it can be a variable
  *=================================================================== */
 
-#define DerefIfVarDo(v,v1,Block)		\
+#define DerefIfVarDo(v,Block)			\
  if (oz_isRef(v)) {				\
-   TaggedRef v1;				\
-   while (1) {					\
-     v1 = v;					\
-     v = *tagged2Ref(v);			\
-     if (!oz_isRef(v)) break;			\
-   }						\
-   if (oz_isVariable(v)) { Block; }		\
+   v=oz_safeDeref(v);				\
+   if (oz_isRef(v)) { Block; }			\
  }
 
-#define DerefReturnVar(v)     DerefIfVarDo(v,_v,return _v);
-#define DerefReturnSuspend(v) DerefIfVarDo(v,_v, return SUSPEND);
+#define DerefIfVarReturnIt(v)   DerefIfVarDo(v, return v);
+#define DerefIfVarSuspend(v)    DerefIfVarDo(v, return SUSPEND);
 
 #endif

@@ -23,17 +23,15 @@
 #pragma implementation "trace.hh"
 #endif
 
-#ifdef HAVE_CONFIG_H
-#include "conf.h"
-#endif
+#include "trace.hh"
+#include "codearea.hh"
+#include "builtins.hh"
+#include "board.hh"
+#include "os.hh"
 
 #include <string.h>
 #include <signal.h>
 #include <setjmp.h>
-
-#include "trace.hh"
-#include "codearea.hh"
-#include "builtins.hh"
 
 /*----------------------------------------------------------------------
  * the machine level debugger starts here
@@ -70,7 +68,7 @@ Bool ozd_trace(char *info, ProgramCounter PC,RefsArray Y,Abstraction *CAP)
     oz_currentBoard()->print();
   }
 
-  if (skip > 0) {
+  if (PC != NOCODE && skip > 0) {
     skip--;
     return OK;
   }

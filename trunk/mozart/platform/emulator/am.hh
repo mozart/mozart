@@ -412,10 +412,6 @@ public:
   // coping of trees (and terms);
   Board* copyTree(Board* node, Bool *isGround);
 
-  // Unification
-  void doTrail(TaggedRef *vp, TaggedRef v) {
-    trail.pushRef(vp,v);
-  }
   void doBindAndTrail(TaggedRef * vp, TaggedRef t);
 
 #define DoBindAndTrailAndIP(vp,t,lv,gv) {	\
@@ -482,20 +478,19 @@ extern AM am;
  * -----------------------------------------------------------------------*/
 
 OZ_Return oz_unify(OZ_Term t1, OZ_Term t2, ByteCode *scp=0);
-void oz_bind(OZ_Term *varPtr, OZ_Term var, OZ_Term term);
+void oz_bind(OZ_Term *varPtr, OZ_Term term);
 void oz_bind_global(OZ_Term var, OZ_Term term);
 
 inline
-void oz_bindToNonvar(OZ_Term *varPtr, OZ_Term var,
-		     OZ_Term a, ByteCode *scp=0)
+void oz_bindToNonvar(OZ_Term *varPtr, OZ_Term a, ByteCode *scp=0)
 {
   // most probable case first: local UVar
   // if (isUVar(var) && isCurrentBoard(tagged2VarHome(var))) {
   // more efficient:
-  if (am.currentUVarPrototypeEq(var) && scp==0) {
+  if (am.currentUVarPrototypeEq(*varPtr) && scp==0) {
     doBind(varPtr,a);
   } else {
-    oz_bind(varPtr,var,a);
+    oz_bind(varPtr,a);
   }
 }
 
