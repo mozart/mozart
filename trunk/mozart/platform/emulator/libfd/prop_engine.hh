@@ -61,8 +61,10 @@ public:
 
 template <class T, class M>
 class EnlargeableArray : public M {
-private:
+
+protected:
   static const int _margin = 10;
+private:
   virtual void _gc(void) {
     T * new_array = (T *) alloc(_size * sizeof(T));
     for (int i = _size; i--; )
