@@ -6304,13 +6304,13 @@ BIspec allSpec1[] = {
   {"String.isFloat",  2, BIstringIsFloat,       0},
 
   {"IsArray",   2, BIisArray,   (IFOR) isArrayInline},
-  {"Array.new",  4, BIarrayNew, 0},
+  {"NewArray",  4, BIarrayNew,  0},
   {"Array.high", 2, BIarrayHigh, (IFOR) arrayHighInline},
   {"Array.low",  2, BIarrayLow,  (IFOR) arrayLowInline},
-  {"Array.get",  3, BIarrayGet,  (IFOR) arrayGetInline},
-  {"Array.put",  3, BIarrayPut,  (IFOR) arrayPutInline},
+  {"Get",  3, BIarrayGet,  (IFOR) arrayGetInline},
+  {"Put",  3, BIarrayPut,  (IFOR) arrayPutInline},
 
-  {"Dictionary.new",    1, BIdictionaryNew,     0},
+  {"NewDictionary",     1, BIdictionaryNew,     0},
   {"IsDictionary",      2, BIisDictionary,     (IFOR) isDictionaryInline},
   {"Dictionary.get",    3, BIdictionaryGet,    (IFOR) dictionaryGetInline},
   {"Dictionary.getIf",  4, BIdictionaryGetIf,  (IFOR) dictionaryGetIfInline},
