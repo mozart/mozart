@@ -128,7 +128,8 @@ define
    end
    %%
    %%
-   fun {Dirname F}
+   fun {Dirname F1}
+      F = {VirtualString.toString F1}
       U = {URL.make {Encode F}}
       L = case U.path of unit then unit
 	  [] nil then nil
