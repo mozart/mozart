@@ -1,0 +1,48 @@
+OZHOME		= @prefix@
+SRCDIR		= @SRCDIRA@
+ELISPDIR	= $(OZHOME)/lib/elisp
+
+EMACS		= @EMACS@
+ECHO		= @ECHO@
+RM		= @RM@ -f
+
+INSTALL		= @INSTALL@
+INSTALLFILE	= $(INSTALL) -m 444
+INSTALLSRC	= @INSTALLSRC@
+INSTALLDIR	= $(INSTALL) -m 775 -d
+
+LIBFILES = $(ELISPDIR)/oz.el $(ELISPDIR)/oz.elc
+
+.PHONY: all install clean veryclean realclean distclean tags
+
+all: Makefile oz.elc
+
+oz.elc: $(SRCDIR)/oz.el
+	@$(ECHO) "(setq byte-compile-compatibility t) \
+	(byte-compile-file \"$<\")" > compile.el
+	$(EMACS) -q -batch -l compile.el
+	@$(RM) compile.el
+
+install: $(ELISPDIR) $(LIBFILES)
+
+$(ELISPDIR):
+	$(INSTALLDIR) $@
+
+$(ELISPDIR)/%.el: $(SRCDIR)/%.el
+	$(INSTALLSRC) $< $@
+
+$(ELISPDIR)/%.elc: %.elc
+	$(INSTALLFILE) $< $@
+
+clean:
+	$(RM) $(ELCS) TAGS
+
+veryclean: clean
+
+realclean: clean
+
+distclean:
+	$(RM) Makefile Makefile.bak
+
+tags:
+	etags oz.el
