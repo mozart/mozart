@@ -25,6 +25,7 @@
     <Meta name="html.split" value="chapter.parsingconventions">
     <Meta name="html.split" value="chapter.specifications">
     <Meta name="html.split" value="section.list.examples">
+    <Meta name="html.split" value="section.record.examples">
     <Meta name="html.split" value="chapter.accessing">
 
     <Meta name=ozversion value="3.0">
@@ -198,7 +199,7 @@
 	    <Grammar.Alt/?={string}/
 	  </Grammar.Rule>
 	<SubSection class=unnumbered id="section.list.examples">
-	  <Title/Examples/
+	  <Title/List Examples/
 	  <P>
 	    The following will give some examples taken from the <File/ozc/
 	    program, which is the Oz command-line compiler.
@@ -272,7 +273,7 @@
 	    For atom arguments, sometimes only a limited set of values is
 	    sensible:
 <<<mode(type: atom(help core outputcode
-		   feedtoemulator dump executable)>>>
+		feedtoemulator dump executable)>>>
 	    For these, <File/ozc/ also provides the better known aliases
 	    such as:
 	    <<<dump(char: &amp;c alias: mode#dump)>>>
@@ -327,7 +328,61 @@
 	    <Grammar.Alt/<<       ?={option name}: ?={value}>> &ellipsis;/
 	    <Grammar.Alt/<<       ?={option name}: ?={value}>>/
 	  </Grammar.Rule>
-	<!--** Examples -->
+	<SubSection class=unnumbered id="section.record.examples">
+	  <Title/Record Examples/
+	  <P>
+	    Naturally, all examples given for <<list>> are also valid for
+	    <<record>>, but in order to make them appear in the resulting
+	    option record, we have to specify some additional things.  This
+	    section illustrates this.
+	  <Para class=apropos><Title/Basics/
+	    For example, with the <<mode>> as specified earlier, the argument
+	    list <Samp/--mode=dump/ would result in the following option
+	    record:
+	    <<<optRec(1: [mode#dump])>>>
+	    In order to make it appear, we add the keyword <<single>> to the
+	    specification, stating at the same time that this option can be
+	    given at most once:
+<<<mode(single
+     type: atom(help core outputcode
+		feedtoemulator dump executable))>>>
+	    Then the option record for <Samp/--mode=dump/ would look like this:
+	    <<<optRec(1: nil mode: dump)>>>
+	  <Para class=apropos><Title/Default or Required/
+	    Since the <<mode>> gives the basic mode of operation for <File
+	    /ozc/, we would be lost if was not given in the arguments, because
+	    it would not appear in the option record.  To enforce its presence,
+	    we can either supply a default:
+	    <<<mode(single type: atom(&ellipsis;) default: feedtoemulator)>>>
+	    or make it a required option:
+	    <<<mode(single type: atom(&ellipsis;) optional: false)>>>
+	  <Para class=apropos><Title/Multiple Occurrences/
+	    The keyword <<single>> stated that an option may appear at most
+	    once in the option record.  For some options, this in inadequate.
+	    If we want an option to be allowed to occur multiply in the
+	    argument list, we have to specify what this means.  For instance,
+	    <<<verbose(rightmost char: &amp;v type: bool)>>>
+	    means that all but the last occurrences of <<verbose>> are ignored.
+	    By the way, in <File/ozc/, <<verbose>> actually has a non-boolean
+	    default:
+	    <<<verbose(rightmost char: &amp;v type: bool default: auto)>>>
+	    This allows for three modes of operation:  The default is to only
+	    output messages if they are <Q/interesting/.  When being <Samp
+	    /--verbose/, also uninteresting messages are output, whereas
+	    being <Samp/--quiet/, even the interesting messages are
+	    suppressed.
+	  <Para class=apropos><Title/Collecting in Lists/
+	    It is also possible to state that one wished all occurrences
+	    of the same option to be collected in a list.  This does not
+	    occur in <File/ozc/, so we give a fictitious example here:
+	    <<<cattle(multiple type: list(atom) default: nil)>>>
+	    Giving this argument several times, say, <Samp
+	    /--cattle=angus,belgianred/, <Samp/--cattle=charolais/, and
+	    <Samp/--cattle=dexter,highland/ on one command line would
+	    result in the following option record:
+<<<optRec(1: nil
+       cattle: [angus belgianred charolais
+		dexter highland])>>>
       <Section>
 	<Title/Backward Compatibility/
 	<P>
