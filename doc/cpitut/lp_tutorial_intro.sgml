@@ -94,7 +94,14 @@ a branch&amp;bound solver to obtain an integral solution. Finally, we
 combine both solvers.
 
 <P>
-Throughout this tutorial, we use the following multi-knapsack problem (taken from <Ptr to="BeringerDeBacker:95a">:
+Throughout this tutorial, we use a multi-knapsack problem (taken from
+<Ptr to="BeringerDeBacker:95a">. The problem variables <Math>\mbox{\bf
+x}</Math> represent the number of goods to be produced. Each good
+requires certain resources: man power, materials, and machines
+(represented by matrix <Math>\mbox{\bf A}</Math>) where a given
+capacity per resource (<Math>\mbox{\bf b}</Math>) may not be
+exceeded. Each good generates a profit according to <Math>\mbox{\bf
+c}</Math> where the overall profit shall be maximal.
 
 <P>
 <Math display type=latex id="lp.tutorial.lp.det">
@@ -107,25 +114,14 @@ Throughout this tutorial, we use the following multi-knapsack problem (taken fro
 \mbox{where}\\
 \begin{array}{l}
 \mbox{\bf A}=\left[
-\begin{array}{cccccccccccccc}
-1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1\\
-0 & 4 & 5 & 0 & 0 & 0 & 0 & 4 & 5 & 0 & 0 & 0 & 0\\
-4 & 0 & 3 & 0 & 0 & 0 & 3 & 0 & 4 & 0 & 0 & 0 & 0\\
-7 & 0 & 0 & 6 & 0 & 0 & 7 & 0 & 0 & 6 & 0 & 0 & 0\\
-0 & 0 & 0 & 4 & 5 & 0 & 0 & 0 & 0 & 5 & 4 & 0 & 0\\
-0 & 0 & 0 & 0 & 4 & 3 & 0 & 0 & 0 & 0 & 4 & 2 & 1\\
-0 & 3 & 0 & 0 & 0 & 5 & 0 & 3 & 0 & 0 & 0 & 3 & 3\\
-\end{array}
-\right]
-\mbox{\bf x}=\left[
-\begin{array}{c}
-x_1\\
-x_2\\
-x_3\\
-x_4\\
-x_5\\
-x_6\\
-x_7\\
+\begin{array}{lcccccccccccccc}
+\mbox{\textit{man:}} & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1\\
+\mbox{\textit{material 1:}} & 0 & 4 & 5 & 0 & 0 & 0 & 0 & 4 & 5 & 0 & 0 & 0 & 0\\
+\mbox{\textit{material 2:}} & 4 & 0 & 3 & 0 & 0 & 0 & 3 & 0 & 4 & 0 & 0 & 0 & 0\\
+\mbox{\textit{machine 1:}} & 7 & 0 & 0 & 6 & 0 & 0 & 7 & 0 & 0 & 6 & 0 & 0 & 0\\
+\mbox{\textit{machine 2:}} & 0 & 0 & 0 & 4 & 5 & 0 & 0 & 0 & 0 & 5 & 4 & 0 & 0\\
+\mbox{\textit{machine 3:}} & 0 & 0 & 0 & 0 & 4 & 3 & 0 & 0 & 0 & 0 & 4 & 2 & 1\\
+\mbox{\textit{machine 4:}} & 0 & 3 & 0 & 0 & 0 & 5 & 0 & 3 & 0 & 0 & 0 & 3 & 3\\
 \end{array}
 \right]
 \mbox{\bf b}=\left[
@@ -143,6 +139,11 @@ x_7\\
 \mbox{\bf c}=\left[
 \begin{array}{ccccccccccccc}
 5 & 7 & 5 & 11 & 8 & 10 & 6 & 8 & 3 & 12 & 9 & 8 & 4\\
+\end{array}
+\right]\\ \\
+\mbox{\bf x}=\left[
+\begin{array}{ccccccccccccc}
+x_1 & x_2 & x_3 & x_4 & x_5 & x_6 & x_7 & x_8 & x_9 & x_{10} & x_{11} & x_{12} & x_{13}\\
 \end{array}
 \right]\\
 \end{array}\\
