@@ -198,6 +198,7 @@ public:
   virtual Bool processSRecord(OZ_Term srecordTerm);
   virtual Bool processFSETValue(OZ_Term fsetvalueTerm);
   virtual Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst);
+  virtual Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
   virtual Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
   virtual Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
   virtual Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);

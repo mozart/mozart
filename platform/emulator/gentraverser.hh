@@ -574,6 +574,7 @@ protected:
   virtual Bool processFSETValue(OZ_Term fsetvalueTerm) = 0;
   // composite OzConst"s;
   virtual Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst) = 0;
+  virtual Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst) = 0;
   virtual Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst) = 0;
   virtual Bool processClass(OZ_Term classTerm, ConstTerm *classConst) = 0;
   //
@@ -1707,6 +1708,31 @@ public:
     EnsureBTSpace(frame, size);
     while(size-- > 0) {
       PutBTTaskPtr(frame, BT_dictKey, aux);
+    }
+    SetBTFrame(frame);
+  }
+
+  void buildArray(int low, int high) {
+    OzArray *aux = new OzArray(am.currentBoard(),low,high,oz_int(0));
+    buildValue(makeTaggedConst(aux));
+    GetBTFrame(frame);
+    int width = aux->getWidth();
+    EnsureBTSpace(frame, width);
+    while (width-- > 0) {
+      PutBTTaskPtr(frame, BT_spointer, &aux->getRef()[width]);
+    }
+    SetBTFrame(frame);
+  }
+  void buildArrayRemember(int low, int high, int n) {
+    OzArray *aux = new OzArray(am.currentBoard(),low,high,oz_int(0));
+    OZ_Term array = makeTaggedConst(aux);
+    buildValue(array);
+    set(array, n);
+    GetBTFrame(frame);
+    int width = aux->getWidth();
+    EnsureBTSpace(frame, width);
+    while (width-- > 0) {
+      PutBTTaskPtr(frame, BT_spointer, &aux->getRef()[width]);
     }
     SetBTFrame(frame);
   }
