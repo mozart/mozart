@@ -156,6 +156,9 @@ public:
     setAbstr(NULL);
     setSelf(NULL);
 
+    if (flags & T_stack)
+      ozstat.createdThreads.incf();
+
     stopCount=0;
   }
 
