@@ -102,6 +102,12 @@ Bool osHasJobControl();
 int osOpenMax();
 void osInit();
 
+#ifdef WINDOWS
+#define oskill(pid,sig) raise(sig)
+#else
+#define oskill(pid,sig) kill(pid,sig)
+#endif
+
 int osread(int fd, void *buf, unsigned int len);
 int oswrite(int fd, void *buf, unsigned int len);
 
