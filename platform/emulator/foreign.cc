@@ -1689,10 +1689,9 @@ OZ_Term OZ_adjoinAt(OZ_Term rec, OZ_Term fea, OZ_Term val)
     SRecord *srec = SRecord::newSRecord(rec,aritytable.find(cons(fea,nil())));
     srec->setArg(0,val);
     return makeTaggedSRecord(srec);
+  } else {
+    return oz_adjoinAt(makeRecord(rec),fea,val);
   }
-
-  SRecord *srec = makeRecord(rec);
-  return srec->adjoinAt(fea,val);
 }
 
 OZ_Term OZ_subtree(OZ_Term term, OZ_Term fea)

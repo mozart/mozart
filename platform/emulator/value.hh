@@ -1045,22 +1045,12 @@ public:
   TaggedRef *getRef(int i) { return args+i; }
   TaggedRef &operator [] (int i) {return args[i];}
   
-  TaggedRef adjoinAt(TaggedRef feature, TaggedRef value);
-
-  SRecord *replaceLabel(TaggedRef newlabel)
-  {	
-    SRecord *copy = newSRecord(this);
-    copy->label = newlabel;
-    return copy;
-  }
-
-  TaggedRef adjoin(SRecord* highstr);
-  TaggedRef adjoinList(TaggedRef arity, TaggedRef proplist);
   void setFeatures(TaggedRef proplist);
   
   TaggedRef getLabel() { return label; }
+  void setLabelInternal(TaggedRef l) { label=l; }
   Literal *getLabelLiteral() { return tagged2Literal(label); }
-  void setLabel(TaggedRef newLabel) { label = newLabel; }
+  void setLabelForAdjoinOpt(TaggedRef newLabel) { label = newLabel; }
   
   TaggedRef getArityList() {
     return sraGetArityList(getSRecordArity());
@@ -1108,6 +1098,9 @@ public:
   TaggedRef *getCycleAddr() { return &label; }
 };
 
+TaggedRef oz_adjoinAt(SRecord *, TaggedRef feature, TaggedRef value);
+TaggedRef oz_adjoin(SRecord *, SRecord *);
+TaggedRef oz_adjoinList(SRecord *, TaggedRef arity, TaggedRef proplist);
 
 Bool isSorted(TaggedRef list);
 
