@@ -12,12 +12,14 @@
 /* -----------------------------------------------------------------------
  * TODO
  *
- *   variable protocol:
- *     testing
  *   cell protocol
- *     all
+ *     test
+ *     use proxy addressing for frames
  *   object protocol
  *     all
+ *   stationary object, dictionary, array, lock
+ *     all
+ *   pendlinkHandle simplify
  *   chunks
  *     all
  *   builtin
@@ -25,7 +27,7 @@
  *   names
  *     true, false, unit and others (o-o)
  *       new procedure makeGlobalName(Atom)
- *     don't work at all?
+ *     test (don't work at all?)
  *   ip
  *     cache does not work together with close detection
  *     fairness for IO
@@ -34,8 +36,27 @@
  *     timer
  *   port
  *     close: must fail client?
- *   gen hashtable: if hash value is negative: crash!
- *   owner table compactify
+ *   gen hashtable
+ *     if hash value is negative: crash!
+ *   owner table
+ *     compactify
+ *     maybe hash values: sparse tables?
+ *   emulator
+ *     builtin can return SUSPEND_EXTERNAL
+ *        immediately stop the current thread (suspends on external event)
+ *        idea: use return SUSPEND, and if am.suspVarList=0 do nothing.
+ *        add to oz_stop am.suspVarList = 0!
+ *        don't forget to save X register!
+ *   ConstTerm/Tertiary
+ *     unify and rename to Entity
+ *   malloc bug for refTrail if sending Lists>100000 elements
+ *   spaces
+ *     Space.ask[Verbose] may suspend?
+ *     Space.merge may fail.
+ *     Space.clone may suspend
+ *     Space.clone should return a local clone
+ *     Space.choose may fail, suspend
+ *     Space.inject may fail, suspend
  * -----------------------------------------------------------------------*/
 
 #ifdef PERDIO
@@ -123,7 +144,7 @@ Thread *th=am.mkRunnableThread(DEFAULT_PRIORITY,am.rootBoard);
  * Message formats
  */
 enum MessageType {
-  M_PORTSEND,           // OTI DIF (implicit 1 credit)
+  M_REMOTE_SEND,        // OTI STRING DIF (implicit 1 credit)
   M_ASK_FOR_CREDIT,     // OTI SITE (implicit 1 credit)
   M_OWNER_CREDIT,	// OTI CREDIT
   M_BORROW_CREDIT,      // NA  CREDIT
@@ -135,14 +156,12 @@ enum MessageType {
   M_REDIRECT,           // NA  DIF
   M_ACKNOWLEDGE,        // NA (implicit 1 credit)
   M_SURRENDER,          // OTI SITE DIF (implicit 1 credit)
-  M_PORTCLOSE,		// OTI (implicit 1 credit)
   M_CELL_GET,           // OTI* SITE-OTI (implicit CELLCREDITSIZE credits)
   M_CELL_CONTENTS,      // OTI* DIF
   M_CELL_READ,          // OTI* VAR-DIF 
   M_CELL_REMOTEREAD,    // OTI* VAR-DIF
   M_CELL_FORWARD,       // OTI* INTEGER SITE-OTI*
   M_CELL_DUMP,          // OTI* SITE-OTI*
-  M_APPL		// DIF DIF
 };
 
 /*
@@ -2269,7 +2288,7 @@ Site * unmarshallSiteId(ByteStream *bs){
   if(importSite(ip,port,timestamp,sd)==NET_OK){
     PD(UNMARSHALL,"site (10) s:%s", pSite(sd));
     return sd;}
-  OZ_fail("timeStamp exception");
+  OZ_warning("timeStamp exception\n");
   return sd;}
 
 
@@ -2913,40 +2932,37 @@ void siteReceive(ByteStream* bs)
   
   MessageType mt= (MessageType) bs->get(); 
   switch (mt) {
-  case M_PORTSEND:    /* M_PORTSEND index term */
+  case M_REMOTE_SEND:    /* index string term */
     {
-      int portIndex = unmarshallNumber(bs);
+      int i = unmarshallNumber(bs);
+      char *biName = unmarshallString(bs);
       OZ_Term t;
       unmarshallTerm(bs,&t);
       Assert(t);
       bs->unmarshalEnd();
-      PD(MSG_RECEIVED,"PORTSEND: o:%d v:%s",portIndex,toC(t));
+      PD(MSG_RECEIVED,"REMOTE_SEND: o:%d bi:%s v:%s",i,biName,toC(t));
 
-      Tertiary *tert= ownerTable->getOwner(portIndex)->getTertiary();
-      ownerTable->returnCreditAndCheck(portIndex,1);
-      Assert(tert->checkTertiary(Co_Port,Te_Manager));
-      PortManager *pm=(PortManager*)tert;
+      Tertiary *tert= ownerTable->getOwner(i)->getTertiary();
+      ownerTable->returnCreditAndCheck(i,1);
 
-      LTuple *lt = new LTuple(t,am.currentUVarPrototype());
-      OZ_Term old = pm->exchangeStream(lt->getTail());
-      PD(SPECIAL,"just after send port");
-      SiteUnify(makeTaggedLTuple(lt),old);
-      break;
+      BuiltinTabEntry *found = builtinTab.find(biName);
+
+      if (!found) {
+	PD(WEIRD,"builtin %s not found",biName);
+	break;
       }
-  case M_PORTCLOSE:    /* M_PORTCLOSE index */
-    {
-      int portIndex = unmarshallNumber(bs);
-      bs->unmarshalEnd();
-      PD(MSG_RECEIVED,"PORTCLOSE o:%d",portIndex);
 
-      Tertiary *tert= ownerTable->getOwner(portIndex)->getTertiary();
-      ownerTable->returnCreditAndCheck(portIndex,1);
-      Assert(tert->checkTertiary(Co_Port,Te_Manager) ||
-	     tert->checkTertiary(Co_Port,Te_Local));
-      closePort(makeTaggedConst(tert));
-      PD(SPECIAL,"just after close port");
-      break;
+      RefsArray args=allocateRefsArray(2,NO);
+      args[0]=makeTaggedConst(tert);
+      args[1]=t;
+      int arity=found->getArity();
+      Assert(arity<=2);
+      OZ_Return ret = found->getFun()(arity,args);
+      if (ret != PROCEED) {
+	PD(SPECIAL,"REMOTE_SEND failed: %d\n",ret);
       }
+      break;
+    }
   case M_ASK_FOR_CREDIT:
     {
       int na_index=unmarshallNumber(bs);
@@ -3243,22 +3259,6 @@ void siteReceive(ByteStream* bs)
       cellReceiveDump(oe,rsite,OTI2);
       break;
     }
-  case M_APPL:    /* M_APPL proc args */
-    {
-      OZ_Term proc;
-      unmarshallTerm(bs,&proc);
-      Assert(proc);
-      OZ_Term args;
-      unmarshallTerm(bs,&args);
-      Assert(args);
-      PD(MSG_RECEIVED,"APPL: t:%s",toC(cons(proc,args)));
-
-      RefsArray arr = allocateRefsArray(2,NO);
-      arr[0]=proc;
-      arr[1]=args;
-      OZ_makeRunnableThread(BIapply,arr,2);
-      break;
-    }
   default:
     error("siteReceive: unknown message %d\n",mt);
     break;
@@ -3280,125 +3280,46 @@ void domarshallTerm(Site * sd,OZ_Term t, ByteStream *bs)
 
 inline void reliableSendFail(Site * sd, ByteStream *bs,Bool p,int i){
   InterfaceCode ret=reliableSend(sd,bs,p);
-  if(ret!=NET_OK){OZ_fail("reliableSend %d",i);}}
+  if(ret!=NET_OK){OZ_warning("reliableSend %d failed\n",i);}}
 
 /* engine-interface */
-void remoteSend(PortProxy *p, TaggedRef msg) {
+OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg) {
   BorrowEntry *b= borrowTable->getBorrow(p->getIndex());
-  ByteStream *bs = bufferManager->getByteStream();
-  bs->marshalBegin();
   NetAddress *na = b->getNetAddress();
-  PendEntry *pe;
   Site* site = na->site;
   int index = na->index;
 
-  if(!(b->getOneCredit())){
-      PD(DEBT_MAIN,"remoteSend");
-      pe= pendEntryManager->newPendEntry(bs,site,b);
-      b->inDebtFIFO(1,pe);}
-  else pe=NULL;
-
-  bs->put(M_PORTSEND);                    
-  marshallNumber(index,bs);               
+  ByteStream *bs = bufferManager->getByteStream();
+  bs->marshalBegin();
+  bs->put(M_REMOTE_SEND);                    
+  marshallNumber(index,bs);
+  marshallString(biName,bs);
   domarshallTerm(site,msg,bs);
   bs->marshalEnd();
-  PD(MSG_SENT,"PORTSEND s:%s o:%d v:%s",pSite(site),index,toC(msg));
 
-  if(pe==NULL){
-    if(debtRec->isEmpty()){
+  PD(MSG_SENT,"REMOTE_SEND s:%s o:%d bi:%s v:%s",
+     pSite(site),index,biName,toC(msg));
+
+  if (b->getOneCredit()) {
+    if(debtRec->isEmpty()) {
       reliableSendFail(site,bs,FALSE,11);
-      return;
+    } else {
+      PD(DEBT_SEC,"remoteSend");
+      PendEntry *pe=pendEntryManager->newPendEntry(bs,site,b);
+      b->inDebtFIFO(0,pe);
+      debtRec->handler(pe);
     }
-    PD(DEBT_SEC,"remoteSend");
-    pe=pendEntryManager->newPendEntry(bs,site,b);
-    b->inDebtFIFO(0,pe);
-    debtRec->handler(pe);
-    return;}
-  if(debtRec->isEmpty()){return;}
-  debtRec->handler(pe);  
-  return;
-}
-
-void remoteClose(PortProxy *p) {
-  BorrowEntry *b= borrowTable->getBorrow(p->getIndex());
-  ByteStream *bs = bufferManager->getByteStream();
-  bs->marshalBegin();
-  NetAddress *na = b->getNetAddress();
-  Site* site = na->site;
-  int index = na->index;
-
-  bs->put(M_PORTCLOSE);
-  marshallNumber(index,bs);               
-  bs->marshalEnd();
-  PD(MSG_SENT,"PORTCLOSE s:%s o:%d",pSite(site),index);
-  if(b->getOneCredit()) {
-    reliableSendFail(site,bs,FALSE,12);
-    return;
-  }
-  PD(DEBT_MAIN,"remoteClose");
-  PendEntry *pe = pendEntryManager->newPendEntry(bs,site,b);
-  b->inDebtFIFO(1,pe);
-}
-
-OZ_Return remoteApplication(Site *site, TaggedRef proc, TaggedRef args)
-{
-  ByteStream *bs = bufferManager->getByteStream();
-  bs->marshalBegin();
-  bs->put(M_APPL);
-  domarshallTerm(site,proc,bs);
-  domarshallTerm(site,args,bs);
-  bs->marshalEnd();
-  PD(MSG_SENT,"remoteAppl to s:%s",pSite(site));
-
-  if (!debtRec->isEmpty()) {  
-    PD(DEBT_SEC,"remoteAppl");
-    debtRec->handler(pendEntryManager->newPendEntry(bs,site));
   } else {
-    reliableSendFail(site,bs,FALSE,11);
+    PD(DEBT_MAIN,"remoteSend");
+    PendEntry *pe=pendEntryManager->newPendEntry(bs,site,b);
+    pe= pendEntryManager->newPendEntry(bs,site,b);
+    b->inDebtFIFO(1,pe);
+    if(!debtRec->isEmpty()){
+      PD(DEBT_SEC,"remoteSend");
+      debtRec->handler(pe);  
+    }
   }
   return PROCEED;
-}
-
-OZ_Return remoteBIApplication(int i, char *biName, TaggedRef args)
-{
-  BorrowEntry *b= borrowTable->getBorrow(i);
-  NetAddress *na = b->getNetAddress();
-  Site* site = na->site;
-
-  ByteStream *bs = bufferManager->getByteStream();
-  bs->marshalBegin();
-  bs->put(M_APPL);
-
-  bs->put(M_BUILTIN);
-  marshallString(biName,bs);
-
-  domarshallTerm(site,args,bs);
-
-  bs->marshalEnd();
-
-  PD(MSG_SENT,"remoteAppl to s:%s",pSite(site));
-
-  if (!debtRec->isEmpty()) {
-    PD(DEBT_SEC,"remoteAppl");
-    debtRec->handler(pendEntryManager->newPendEntry(bs,site));
-  } else {
-    reliableSendFail(site,bs,FALSE,11);
-  }
-  return PROCEED;
-}
-
-OZ_Return remoteApplication(char *biName, Tertiary *tert, TaggedRef arg)
-{
-  int i=tert->getIndex();
-  return remoteBIApplication(i, biName,
-			     cons(makeTaggedConst(tert),cons(arg,nil())));
-}
-
-OZ_Return remoteApplication(char *biName, Tertiary *tert)
-{
-  int i=tert->getIndex();
-  return remoteBIApplication(i, biName,
-			     cons(makeTaggedConst(tert),nil()));
 }
 
 void sendMessage(Tertiary *tert, MessageType msg)

@@ -2011,25 +2011,6 @@ void OZ_main(int argc,char **argv)
   am.exitOz(0);
 }
 
-OZ_C_proc_proto(BIfail);
-void OZ_fail(char *format, ...)
-{
-  va_list ap;
-
-  va_start(ap,format);
-
-  prefixWarning();
-
-  fprintf(stderr, "*** Failure: ");
-  vfprintf(stderr,format,ap);
-  fprintf(stderr, "\n");
-
-  va_end(ap);
-
-  OZ_makeRunnableThread(BIfail,0,0);
-}
-
-
 OZ_Term OZ_newPort(OZ_Term val) 
 {
   return oz_newPort(val);
