@@ -59,9 +59,8 @@ in
 	    >>
 	    <<ExplorerClass {Reverse @Stacked}>>
 	    Stacked <- nil
-	    case {Det {@MyManager sync($)}} then
-	       MyManager <- @MyManager
-	    end
+	    {Wait {@MyManager sync($)}} 
+	    MyManager <- @MyManager
 	 end
       end
 

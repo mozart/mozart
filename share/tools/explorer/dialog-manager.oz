@@ -424,7 +424,8 @@ local
 					     previous: @Options
 					     options:  $) _}
       in
-	 case {Det NewOptions} then Options <- NewOptions end
+	 {Wait NewOptions}
+	 Options <- NewOptions 
       end
 
       meth setSearchOptions(O)
@@ -444,7 +445,8 @@ local
 					   previous: @Options
 					   options:  $) _}
       in
-	 case {Det NewOptions} then Options <- NewOptions end
+	 {Wait NewOptions} 
+	 Options <- NewOptions 
       end
 
       meth setInfoOptions(O)
@@ -465,7 +467,8 @@ local
 					     previous: @Options
 					     options:  $) _}
       in
-	 case {Det NewOptions} then Options <- NewOptions end
+	 {Wait NewOptions}
+	 Options <- NewOptions 
       end
 
       meth setLayoutOptions(O)
