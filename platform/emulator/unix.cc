@@ -209,7 +209,7 @@ char *errnoToString(int aErrno) {
     return "Bad filedescriptor";
 
   default:
-    return "Unknown error";
+    return OZ_unixError(aErrno);
   }
 }
 
