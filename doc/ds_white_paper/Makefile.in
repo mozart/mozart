@@ -4,7 +4,7 @@ VPATH           = @srcdir@
 
 WHAT = ds_white_paper
 WHATCLASS=other
-PRINTNAME=Oz
+PRINTNAME=DistributionSubsystem
 HTMLEXTRAFILES=Simulator.gif bootstrap.gif core_three_layers.gif log_tool.gif \
                 proxy_manager.gif three_states.gif time_sharing.gif \
                 DistributionPanel.gif
