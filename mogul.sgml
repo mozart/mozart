@@ -67,8 +67,7 @@
 	  </tr>
 	</table>
 A <name>MOGUL Archive</name> is maintained automatically by a
-<name>MOGUL Librarian</name>.  In other words, <name>MOGUL</name> is
-also a framework
+<name>MOGUL Librarian</name>.
     </chapter>
     <chapter id="chap.design">
       <title/Design of the Database/
@@ -99,16 +98,21 @@ an <q/author/ field in a <q/package/ entry./
 particular, it typically gives a URL for downloading the package./
 	  </list></p>
 	<para id="valid.id"><title/Valid IDs/
-Each entry is assigned, and denoted by, a unique ID.  To guarantee
-that no ID collision can occur, the use of <em/valid/ IDs is
-enforced.  A valid ID is defined as follows:
+Each entry is assigned, and denoted by, a unique ID that is a URI of
+the general form:
+<code display>mogul:/sherlock/BakerStreet/pipe</code>
+To guarantee that no ID collision can occur, the use of <em/valid/ IDs
+is enforced.  A valid ID is defined as follows:
 <list>
 	    <item/Either it was obtained from the <name/Mozart
 Consortium/ by email request to <ref.extern
 to="mailto:contrib@mozart-oz.org"/<samp/contrib@mozart-oz.org//./
-	    <item/Or it is of the form ?{SUP}-?{SUB} where
-?{SUP} is a valid id for the section in which it occurs./
+	    <item>Or it is of the form <code>?{SUP}/?{SUB}</code>
+where <code/?{SUP}/ is a valid id for the section in which it
+occurs.
 	  </list>
+Thus, once you have obtained a valid id, you can construct new ones by
+appending new path components.
       </section>
       <section id="sec.format">
 	<title/Format of Entries/
@@ -143,7 +147,7 @@ email).</para>
 	  <p>A contact describes an individual or organization. For example
 <code display>
 type:    contact
-id:      sherlock-holmes
+id:      mogul:/sherlock/holmes
 email:   Holmes.Sherlock@baker-street.com
 www:     http://www.baker-street.com/~holmes/
 name:    Sherlock Holmes
@@ -159,7 +163,7 @@ so simply analyzed and you can help the librarian by providing a
 <code/name-for-index/ header.  For example:
 <code display>
 type:    contact
-id:      mozart-consortium
+id:      mogul:/mozart
 www:     http://www.mozart-oz.org/
 name:    Mozart Consortium
 name-for-index: Mozart Consortium
@@ -171,7 +175,13 @@ Mozart/.</p>
 	  <title/Section Entry/
 	  <p>Sections provide a means of hierarchically structuring
 the database.  A section is simply a container for subentries, much like
-a directory or a folder.  An individual contributor obtains an id from
+a directory or a folder.  If <code>mogul:/sherlock/BakerStreet</code>
+is the URI id of a section, then the URI of an immediate entry might
+be <code>mogul:/sherlock/BakerStreet/pipe</code>.  This makes it easy
+to structure the database into sections and subsections, just like you
+would organize your files into directories and subdirectories.</p>
+
+	  <p>An individual contributor obtains an id from
 the <name/Mozart Consortium/ and typically will use it to denote a
 section entry in which he accumulates all his package entries, plus
 possibly one contact entry for himself.  A larger group, however,
@@ -185,13 +195,29 @@ type:  section
 id:    sherlock
 email: watson@baker-street.com
 
-sherlock-holmes: SherlockHolmes.entry
-sherlock-lestrade: http://www.scotland-yard.uk/people/lestrade/MeForMogul
-sherlock-irregulars: BakerStreetIrregulars.entry
+holmes: SherlockHolmes.entry
+lestrade: http://www.scotland-yard.uk/people/lestrade/MeForMogul
+irregulars: BakerStreetIrregulars.entry
 </code>
-Relative urls are resolved relative to the location of the section's
-entry.  Note that the optional <code/email/ header permits to
-introduce an administrative address for a subsection that is different
+The id of a subentry <em/must/ be given in a <q/relative/ form.<note
+foot>Actually it may be given in an absolute form provided that the
+<code>mogul:</code> scheme prefix is omitted.  Otherwise, the colon is
+mistaken for the end of the header key.</note>  The
+actual id is then computed by resolving relative to the section's ID.
+Thus the relative URI id <code>irregulars</code> is resolved relative
+to <code>mogul:/sherlock</code> to produce the absolute URI id
+<code>mogul:/sherlock/irregulars</code></p>
+
+<p>Similarly, URLs of entries <em/may/ be given in a relative form:
+they are then resolved relative to the URL of the section entry.
+For example, assuming that the URL of the section entry above is
+<code display>http://www.baker-street.com/~watson/mogul/db/sherlock.main</code>
+then, the URL for subentry <code>mogul:/sherlock/holmes</code>, which
+was supplied in the relative form <code>SherlockHolmes.entry</code>,
+will be resolved to:
+<code display>http://www.baker-street.com/~watson/mogul/db/SherlockHolmes.entry</code>
+Note that the optional <code/email/ header permits to introduce an
+administrative address for a subsection that is different
 from that of its parent section.</p>
 	</subsection>
 	<subsection id="sec.format.package">
@@ -200,8 +226,8 @@ from that of its parent section.</p>
 now look at a real example (at least it was at some point).
 <code display>
 type:         package
-id:           duchier-expat
-author:       duchier-denys
+id:           mogul:/duchier/expat
+author:       mogul:/duchier/denys
 blurb:        A SAX-like XML processor using Jame Clark's expat library, and a parser derived from it.
 url-pkg:      http://fox.ps.uni-sb.de/~denys/mogul/pub/tar/duchier-expat.tgz
 url-doc:      http://fox.ps.uni-sb.de/~denys/mogul/pub/doc/x-ozlib/duchier/xml/expat/index.html
@@ -218,9 +244,11 @@ SAX events are invoked as methods.  Each application should specialize
 these methods to do something useful.
 ...
 </code>
-This is the entry for package <code/duchier-expat/ (in section
-<code/duchier/ of course).  It has an <code/author/ header that
-refers to the database entry with id <code/duchier-denys/.  An
+This is the entry for package <code>mogul:/duchier/expat</code> (in
+section <code>mogul:/duchier</code> of course).  It has an
+<code/author/ header that
+refers to the database entry with id
+<code>mogul:/duchier/denys</code>.  An
 arbitrary number of <code/author/ and <code/contact/ headers can be
 supplied.  The <code/blurb/ provides a very short description of the
 package.  <code/url-pkg/ provides a url to a downloadable archive of
@@ -286,7 +314,7 @@ known to the <name/MOGUL Librarian/ so that it can automatically
 update your contributions in the <name/MOGUL Archive/.  You need to
 obtain an ID from the <name/Mozart Consortium/.  Simply send email to
 <ref.extern to="mailto:contrib@mozart-oz.org">contrib@mozart-oz.org</ref.extern>
-to request a <name/MOGUL/ id.  You email should contain the following
+to request a <name/MOGUL/ id.  Your email should contain the following
 information:
 <list>
 	    <item/An email address for administrative purposes.  It
@@ -335,7 +363,7 @@ cache, then it will be automatically downloaded from your site
 	    <item>You can pick an <q/abstract/ uri, like:
 <code display>x-ozuser://quux/CL.ozf</code>
 This has the advantage of making it a little more independent of
-physical location.  Typically users would then either install you
+physical location.  Typically users would then either install your
 package into their local cache, or point the <q/resolver/ to an
 appropriate cache by setting the <var env/OZ_SEARCH_PATH/ variable.
 	  </list>
