@@ -76,8 +76,9 @@ void osBlockSignals(Bool check=NO); // check: check if no other signals are bloc
 void osUnblockSignals();
 typedef void OsSigFun(void);
 
-OsSigFun *osSignal(int signo, OsSigFun *fun); /* Oz version of signal(2) */
 int osSystem(char *cmd);     /* Oz version of system(3) */
+
+void addChildProc(pid_t pid);
 
 
 #define SEL_READ  0
@@ -94,10 +95,9 @@ int  osFirstSelect();
 Bool osNextSelect(int fd, int mode);
 int  osCheckIO();
 
-void osKillChildren();
-Bool osHasJobControl();
 int osOpenMax();
 void osInit();
+void osExit();
 
 #ifdef WINDOWS
 #define oskill(pid,sig) raise(sig)
