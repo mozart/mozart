@@ -482,6 +482,24 @@ int cmpCVar(GenCVariable *v1, GenCVariable *v2)
 
 
 static Stack unifyStack(100,Stack_WithMalloc);
+static Stack rebindTrail(100,Stack_WithMalloc);
+
+inline
+void rebind(TaggedRef *refPtr, TaggedRef *ptr2)
+{
+  if (!am.isToplevel()) {
+    rebindTrail.ensureFree(2);
+    rebindTrail.push(refPtr,NO);
+    rebindTrail.push(ToPointer(*refPtr),NO);
+  }
+  doBind(refPtr,makeTaggedRef(ptr2));
+}
+
+
+#define PopRebindTrail(value,refPtr)                    \
+    TaggedRef value   = ToInt32(rebindTrail.pop());     \
+    TaggedRef *refPtr = (TaggedRef*) rebindTrail.pop();
+
 
 Bool AM::unify(TaggedRef t1, TaggedRef t2, ByteCode *scp)
 {
@@ -609,7 +627,7 @@ loop:
       LTuple *lt1 = tagged2LTuple(term1);
       LTuple *lt2 = tagged2LTuple(term2);
 
-      rebind(termPtr2,term1);
+      rebind(termPtr2,termPtr1);
       argSize = 2;
       termPtr1 = lt1->getRef();
       termPtr2 = lt2->getRef();
@@ -625,7 +643,7 @@ loop:
       if (! sr1->compareFunctor(sr2))
         goto fail;
 
-      rebind(termPtr2,term1);
+      rebind(termPtr2,termPtr1);
       argSize  = sr1->getWidth();
       termPtr1 = sr1->getRef();
       termPtr2 = sr2->getRef();
@@ -675,9 +693,7 @@ fail:
 
 exit:
   while (!rebindTrail.isEmpty ()) {
-    TaggedRef *refPtr;
-    TaggedRef value;
-    rebindTrail.popCouple(refPtr, value);
+    PopRebindTrail(value,refPtr);
     doBind(refPtr,value);
   }
 
