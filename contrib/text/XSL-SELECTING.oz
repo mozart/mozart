@@ -127,7 +127,7 @@ define
       fun {$ Node Stack Info Yes No}
          try
             {FindId ID Info
-             case Stack==nil then Node
+             if Stack==nil then Node
              else {List.last Stack} end nil}
             {No}
          catch idFound(Node Stack) then
