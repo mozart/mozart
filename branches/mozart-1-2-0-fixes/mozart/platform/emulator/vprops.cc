@@ -684,6 +684,8 @@ DO_INT(F,if (INT__<1||INT__>100) {oz_typeError(1,"Int[1..100]");}; DO);
 // val is guaranteed to be determined and derefed
 OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
   DEREF(val,val_ptr);
+  if (oz_isVar(val))
+    return SUSPEND;
   int      INT__;
   SRecord* REC__;
   switch (prop) {
@@ -731,9 +733,6 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
 	     DO_NAT(AtomThreshold,reInitFDs(INT__)););
     // ERRORS
   case PROP_ERRORS_HANDLER: {
-    if (oz_isVar(val))
-      return SUSPEND;
-    
     if (!oz_isProcedure(val) || tagged2Const(val)->getArity()!=1) {
       oz_typeError(0,"Procedure/1");
     }
