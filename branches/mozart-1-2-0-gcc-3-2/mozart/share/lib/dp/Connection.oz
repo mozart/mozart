@@ -25,7 +25,7 @@
 
 functor
 
-import
+import System(show:Show)
    DPB                             at 'x-oz://boot/DPB'
    PID(get getCRC received toPort) at 'x-oz://boot/PID'
 
@@ -235,7 +235,9 @@ define
       P = {ToPort T}
       X Alarm 
       thread
+	 {Show delay(Time)}
 	 {Delay Time}
+	 {Show delay(done)}
 	 Alarm=_#time
       end
       proc {Watch _ _}
@@ -262,12 +264,12 @@ define
 	    {Fault.deInstallWatcher P Watch _}
 	    Entity=A
 	 end
-      [] 2 then
+      [] 2 then {Show one(X Alarm)}
 	 case{Record.waitOr Alarm} of 1 then
 	    {Fault.deInstall P 'thread'(this) _}
 	    {Fault.deInstallWatcher P Watch _}
 	    {Exception.raiseError connection(ticketToDeadSite V)}
-	 [] 2 then
+	 [] 2 then {Show two(X Alarm)}
 	    {Fault.deInstall P 'thread'(this) _}
 	    {Fault.deInstallWatcher P Watch _}
 	    {Exception.raiseError connection(ticketTakeTimeOut V)}	    

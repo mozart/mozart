@@ -597,6 +597,7 @@ OZ_PropagatorProfile IsInRPropagator::profile;
 OZ_PropagatorProfile BoundsPropagator::profile;
 OZ_PropagatorProfile BoundsNPropagator::profile;
 OZ_PropagatorProfile PartitionReifiedPropagator::profile;
+OZ_PropagatorProfile PartitionReified1Propagator::profile;
 OZ_PropagatorProfile EqualRPropagator::profile;
 OZ_PropagatorProfile IncludeRPropagator::profile;
 

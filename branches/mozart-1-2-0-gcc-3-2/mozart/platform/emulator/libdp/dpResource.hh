@@ -88,8 +88,8 @@ public:
 
     //
     hvalue = hash(entity);
-    GenCast(entity, OZ_Term, ghbk, GenHashBaseKey*);
-    GenCast(oti, int, ghe, GenHashEntry*);
+    ghbk = (GenHashBaseKey*) entity;
+    ghe  = (GenHashEntry*) oti;
     GenHashTable::htAdd(hvalue, ghbk, ghe);
   }
 
@@ -108,7 +108,7 @@ public:
       OZ_Term te;
 
       //
-      GenCast(aux->getBaseKey(), GenHashBaseKey*, te, OZ_Term);
+      te = (OZ_Term) aux->getBaseKey();
 
       //
       // Now, there are three cases: found, not found, and found a
@@ -120,7 +120,7 @@ public:
 	OwnerEntry *oe;
 
 	//
-	GenCast(aux->getEntry(), GenHashEntry*, oti, int);
+	oti = (int) aux->getEntry();
 	oe = OT->getEntry(oti);
 
 	//

@@ -61,12 +61,12 @@ public:
 
 inline NetAddress * GenHashNode2NetAddr(GenHashNode *ghn){
   NetAddress *na;
-  GenCast(ghn->getBaseKey(),GenHashBaseKey*,na,NetAddress*);
+  na = (NetAddress*)(void*) ghn->getBaseKey();
   return na;}
 
 inline int GenHashNode2BorrowIndex(GenHashNode *ghn){
   int i;
-  GenCast(ghn->getEntry(),GenHashEntry*,i,int);
+  i = (int) ghn->getEntry();
   Assert(i>=0);
   Assert(withinBorrowTable(i));
   return i;}

@@ -57,11 +57,11 @@ public:
 
   //
   virtual ExtVarType    getIdV() { return (OZ_EVAR_EMANAGER); }
-  virtual OzVariable*   gCollectV() { return new ExportedManagerVar(*this); }
+  virtual ExtVar*       gCollectV() { return new ExportedManagerVar(*this); }
   virtual void          gCollectRecurseV() {
     DebugCode(PD((GC, "ExportedProxyVar oti:%d", oti)););
   }
-  virtual OzVariable*   sCloneV() {
+  virtual ExtVar*   sCloneV() {
     Assert(0);
     return ((ExportedManagerVar *) 0);
   }

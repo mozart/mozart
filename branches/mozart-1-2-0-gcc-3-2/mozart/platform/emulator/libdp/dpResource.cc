@@ -86,7 +86,7 @@ void ResourceHashTable::gcResourceTable()
     Bool teWasVar;
 
     //
-    GenCast(aux->getBaseKey(), GenHashBaseKey*, te, OZ_Term);
+    te = (OZ_Term) aux->getBaseKey();
     teWasVar = oz_isRef(te);
 
     //
@@ -96,7 +96,7 @@ void ResourceHashTable::gcResourceTable()
       OwnerEntry *oe;
 
       //
-      GenCast(aux->getEntry(), GenHashEntry*, oti, int);
+      oti = (int) aux->getEntry();
       oe = OT->getEntry(oti);
 
       //

@@ -78,7 +78,7 @@ void ExportedProxyVar::gCollectRecurseV()
 //
 void ExportedProxyVar::disposeV()
 {
-  Assert(isEmptySuspList());
+  Assert(extVar2Var(this)->isEmptySuspList());
   //
   if (!isMarshaled) {
     if (isToOwner) {
@@ -87,6 +87,6 @@ void ExportedProxyVar::disposeV()
       discardBorrowHeadSaved(ms, oti, credit);
     }
   }
-  oz_freeListDispose(this, sizeof(ExportedProxyVar));
+  freeListDispose(sizeof(ExportedProxyVar));
 }
 

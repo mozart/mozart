@@ -138,7 +138,7 @@ void GNameTable::gCollectGNameTable()
   GenHashNode *ghn1,*ghn=getFirst(i);
   while(ghn!=NULL){
     GName *gn;
-    GenCast(ghn->getBaseKey(),GenHashBaseKey*,gn,GName*);
+    gn = (GName*) (ghn->getBaseKey());
     if (checkGName(gn)==NO) {
       deleteFirst(ghn);
       ghn=getByIndex(i);
@@ -146,7 +146,7 @@ void GNameTable::gCollectGNameTable()
     }
     ghn1=ghn->getNext();
     while(ghn1!=NULL) {
-      GenCast(ghn1->getBaseKey(),GenHashBaseKey*,gn,GName*);
+      gn = (GName*) (ghn1->getBaseKey());
       if (checkGName(gn)==NO) {
 	deleteNonFirst(ghn,ghn1);
 	ghn1=ghn->getNext();

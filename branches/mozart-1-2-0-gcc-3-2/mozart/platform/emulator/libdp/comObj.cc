@@ -1186,7 +1186,7 @@ ComObj *ComController::newComObj(DSite *site){
 //      printf("new ComObj %x at %d\n",comObj,osgetpid());
   }
   else {
-    GenCast(f,FreeListEntry*,comObj,ComObj*);
+    comObj = (ComObj*) f;
     comObj->init(site);
   }
   ++wc;
@@ -1204,7 +1204,7 @@ void ComController::deleteComObj(ComObj* comObj){
 
   FreeListEntry *f;
   --wc;
-  GenCast(comObj,ComObj*,f,FreeListEntry*);
+  f = (FreeListEntry*)(void*) comObj;
   
   ComObj *prev=NULL;
   ComObj *tmp=list;
@@ -1234,7 +1234,7 @@ ComController::~ComController(){
   for(int i=0;i<l;i++) {
     f=getOne();
     Assert(f!=NULL);
-    GenCast(f,FreeListEntry*,comObj,ComObj*);
+    comObj = (ComObj*) f;
     delete comObj;
   }
   Assert(length()==0);
