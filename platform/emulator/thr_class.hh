@@ -119,10 +119,13 @@ public:
     taskStack->pushCall(pred, arg0,arg1,arg2,arg3,arg4);
   }
 
-  void pushCall(TaggedRef pred, RefsArray  x, int n) {
+  void pushCall(TaggedRef pred, TaggedRef * x, int n) {
     taskStack->pushCall(pred, x, n);
   }
-  void pushCallNoCopy(TaggedRef pred, RefsArray  x) {
+  void pushCall(TaggedRef pred, RefsArray * x) {
+    taskStack->pushCall(pred, x);
+  }
+  void pushCallNoCopy(TaggedRef pred, RefsArray * x) {
     taskStack->pushCallNoCopy(pred, x);
   }
 
