@@ -7,7 +7,7 @@
 
 local
 
-   FindPathAndCopy = {NewName}
+   FindSpace = {NewName}
    
    local
 
@@ -68,7 +68,7 @@ local
 	    elseof TaggedCopy then
 	       RevNr       = nil
 	       CurDistOut  = CurDistIn
-	       CurCopy     = {Procedure.clone TaggedCopy.1}
+	       CurCopy     = {Space.clone TaggedCopy.1}
 	       CurDepthOut = {FindDepth self CurDepthIn + 1}
 	    end
 	 end
@@ -80,29 +80,23 @@ local
 				       1 ?CurDist
 				       ?RevNs ?CurCopy)}
 	    elseof TaggedCopy then
-	       CurCopy  = {Procedure.clone TaggedCopy.1}
+	       CurCopy  = {Space.clone TaggedCopy.1}
 	       CurDist  = 0
 	       RevNs    = nil
 	       CurDepth = {FindDepth self 0}
 	    end
 	 end
 
-	 meth !FindPathAndCopy(Node YetNs ?CurNs ?CurCopy)
-	    case @copy of !False then
-	       {self.mom FindPathAndCopy(self {GetIndex @kids Node 1}|YetNs
-					 ?CurNs ?CurCopy)}
-	    elseof TaggedCopy then
-	       CurCopy = {Procedure.clone TaggedCopy.1}
-	       CurNs   = {GetIndex @kids Node 1}|YetNs
+	 meth !FindSpace(Node Copy)
+	    case @copy of !False then {self.mom FindSpace(self Copy)}
+	    elseof TaggedCopy then Copy={Space.clone TaggedCopy.1}
 	    end
+	    {Space.choose Copy {GetIndex @kids Node 1}}
 	 end
 	 
-	 meth findPathAndCopy(?CurNs ?CurCopy)
-	    case @copy of !False then
-	       {self.mom FindPathAndCopy(self nil ?CurNs ?CurCopy)}
-	    elseof TaggedCopy then
-	       CurCopy = {Procedure.clone TaggedCopy.1}
-	       CurNs   = nil
+	 meth findSpace($)
+	    case @copy of !False then {self.mom FindSpace(self $)}
+	    elseof TaggedCopy then {Space.clone TaggedCopy.1}
 	    end
 	 end
 	 
@@ -123,11 +117,11 @@ local
 
    in
 
-      class Solved from Leaf
+      class Succeeded from Leaf
 	 meth isFinished($)      True  end
 	 meth hasSolutions($)    True  end
-	 meth findPathAndCopy(?CurNs ?CurCopy)
-	    {self.mom FindPathAndCopy(self nil ?CurNs ?CurCopy)}
+	 meth findSpace($)
+	    {self.mom FindSpace(self $)}
 	 end
       end
       
@@ -136,7 +130,7 @@ local
 	 meth hasSolutions($)    False end
       end
       
-      class Unstable from Leaf
+      class Blocked from Leaf
 	 meth isFinished($)      False end
 	 meth hasSolutions($)    False end
       end
@@ -145,9 +139,9 @@ local
    
 in
    
-   SearchNodes = classes(choice:   Choice
-			 solved:   Solved
-			 failed:   Failed
-			 unstable: Unstable)
+   SearchNodes = classes(choice:    Choice
+			 succeeded: Succeeded
+			 failed:    Failed
+			 blocked:   Blocked)
 
 end

@@ -29,15 +29,15 @@ local
    class Status
       from Tk.frame
       attr
-	 MaxDepth:         0
-	 CurNodes:         0
-	 CurSolutions:     0
-	 CurFailures:      0
-	 CurUnstable:      0
-	 BreakFlag:        nil
-	 BreakStatus:      none
-	 BrokenNodes:      nil
-	 IsPackedUnstable: False
+	 MaxDepth:        0
+	 CurNodes:        0
+	 CurSolutions:    0
+	 CurFailures:     0
+	 CurBlocked:      0
+	 BreakFlag:       nil
+	 BreakStatus:     none
+	 BrokenNodes:     nil
+	 IsPackedBlocked: False
 
       feat
 	 Time
@@ -47,8 +47,8 @@ local
 	 Depth
 	 Solution
 	 Failure
-	 Unstable
-	 UnstableImage
+	 Blocked
+	 BlockedImage
       
       meth init(Parent)
 	 <<Tk.frame tkInit(parent:             Parent
@@ -73,7 +73,7 @@ local
 	 ChoiceNumber   = {New Tk.label tkInit(parent: NodeFrame
 					       font:   BoldStatusFont
 					       text:   '0')}
-	 SolImage       = {New Images.solved init(parent: NodeFrame)}
+	 SolImage       = {New Images.succeeded init(parent: NodeFrame)}
 	 SolNumber      = {New Tk.label tkInit(parent: NodeFrame
 					       font:   BoldStatusFont
 					       text:   '0')}
@@ -81,8 +81,8 @@ local
 	 FailedNumber   = {New Tk.label tkInit(parent: NodeFrame
 					       font:   BoldStatusFont
 					       text:   '0')}
-	 UnstableIm     = {New Images.unstable init(parent: NodeFrame)}
-	 UnstableNumber = {New Tk.label tkInit(parent: NodeFrame
+	 BlockedIm      = {New Images.blocked init(parent: NodeFrame)}
+	 BlockedNumber  = {New Tk.label tkInit(parent: NodeFrame
 					       font:   BoldStatusFont
 					       text:   '0')}
 	 DepthFrame = {New Tk.frame tkInit(parent: self)}
@@ -108,8 +108,8 @@ local
 	 self.ChoiceImage   = ChoiceIm
 	 self.Solution      = SolNumber
 	 self.Failure       = FailedNumber
-	 self.Unstable      = UnstableNumber
-	 self.UnstableImage = UnstableIm
+	 self.Blocked       = BlockedNumber
+	 self.BlockedImage  = BlockedIm
       end
 
       meth setBAB(?IsBAB)
@@ -125,10 +125,10 @@ local
 	 CurNodes      <- 0
 	 CurSolutions  <- 0
 	 CurFailures   <- 0
-	 CurUnstable   <- 0
-	 case @IsPackedUnstable then
-	    {Tk.send pack(forget self.Unstable self.UnstableImage)}
-	    IsPackedUnstable <- False 
+	 CurBlocked   <- 0
+	 case @IsPackedBlocked then
+	    {Tk.send pack(forget self.Blocked self.BlockedImage)}
+	    IsPackedBlocked <- False 
 	 else true end
 	 <<Status update>>
 	 <<Status start>>
@@ -136,8 +136,8 @@ local
 	 {self.ChoiceImage clear}
       end
 
-      meth hasUnstable($)
-	 @CurUnstable>0
+      meth hasBlocked($)
+	 @CurBlocked>0
       end
       
       meth halt
@@ -198,23 +198,23 @@ local
 	 GetNodes     = @CurNodes
 	 GetSolutions = @CurSolutions
 	 GetFailures  = @CurFailures
-	 GetUnstable  = @CurUnstable
+	 GetBlocked  = @CurBlocked
       in
-	 case (GetUnstable==0) == (@IsPackedUnstable) then
-	    case @IsPackedUnstable then
-	       IsPackedUnstable <- False
-	       {Tk.send pack(forget self.Unstable self.UnstableImage)}
+	 case (GetBlocked==0) == (@IsPackedBlocked) then
+	    case @IsPackedBlocked then
+	       IsPackedBlocked <- False
+	       {Tk.send pack(forget self.Blocked self.BlockedImage)}
 	    else
-	       IsPackedUnstable <- True
-	       {Tk.send pack(self.UnstableImage self.Unstable o(side:left))}
+	       IsPackedBlocked <- True
+	       {Tk.send pack(self.BlockedImage self.Blocked o(side:left))}
 	    end
 	 else true end
 	 {self.Depth    tk(conf(text:GetDepth))}
 	 {self.Choice   tk(conf(text:GetNodes -
-				(GetSolutions+GetFailures+GetUnstable)))}
+				(GetSolutions+GetFailures+GetBlocked)))}
 	 {self.Solution tk(conf(text:GetSolutions))}
 	 {self.Failure  tk(conf(text:GetFailures))}
-	 {self.Unstable tk(conf(text:GetUnstable))}
+	 {self.Blocked tk(conf(text:GetBlocked))}
       end
       
       meth addSolution(Depth)
@@ -228,19 +228,19 @@ local
 	 end
       end
 
-      meth addUnstable(Depth)
+      meth addBlocked(Depth)
 	 IncNodes = @CurNodes + 1
       in
 	 MaxDepth    <- {Max @MaxDepth Depth}
-	 CurUnstable <- @CurUnstable + 1
+	 CurBlocked <- @CurBlocked + 1
 	 CurNodes    <- IncNodes
 	 case IncNodes mod StatusUpdateCnt==0 then <<Status update>>
 	 else true end
       end
 
-      meth removeUnstable
+      meth removeBlocked
 	 CurNodes    <- @CurNodes - 1
-	 CurUnstable <- @CurUnstable - 1
+	 CurBlocked <- @CurBlocked - 1
       end
       
       meth addFailed(Depth)
@@ -315,8 +315,8 @@ in
 	 {self.status getBrokenNodes($)}
       end
 
-      meth hasUnstable($)
-	 {self.status hasUnstable($)}
+      meth hasBlocked($)
+	 {self.status hasBlocked($)}
       end
       
       meth finish

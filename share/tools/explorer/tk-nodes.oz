@@ -212,7 +212,7 @@ local
 			     o(tags:    q(Node Tree Actions)
 			       fill:    case @isSolBelow then
 					   case @choices>0 then
-					      StableColor
+					      SuspendedColor
 					   else EntailedColor end
 					else
 					   case @choices>0 then
@@ -326,9 +326,9 @@ local
 			  '-fill '#FailedColor#
 			  ' -width '#TermNodeBorderWidth#
 			  ' -outline '#LineColor}})
-      TkUnstableOpt = v({String.toAtom
+      TkBlockedOpt = v({String.toAtom
 			 {VirtualString.toString
-			  '-fill '#UnstableColor#
+			  '-fill '#BlockedColor#
 			  ' -width '#TermNodeBorderWidth#
 			  ' -outline '#LineColor}})
       TkEntailedOpt = v({String.toAtom
@@ -336,9 +336,9 @@ local
 			  '-fill '#EntailedColor#
 			  ' -width '#TermNodeBorderWidth#
 			  ' -outline '#LineColor}})
-      TkStableOpt   = v({String.toAtom
+      TkSuspendedOpt   = v({String.toAtom
 			 {VirtualString.toString
-			  '-fill '#StableColor#
+			  '-fill '#SuspendedColor#
 			  ' -width '#TermNodeBorderWidth#
 			  ' -outline '#LineColor}})
 
@@ -395,7 +395,7 @@ local
       
       end
 
-      class UnstableNode
+      class BlockedNode
 	 from LeafNode
 	 
 	 meth drawTree(Break MomTree MomX MyY Scale Font)
@@ -433,7 +433,7 @@ local
 	    end
 	    {Canvas tk(crea polygon
 		       X0 Y0 X2 Y1 X4 Y0 X3 Y2 X4 Y4 X2 Y3 X0 Y4 X1 Y2
-		       TkUnstableOpt
+		       TkBlockedOpt
 		       o(tags: q(Node Tree)))}
 	    isDrawn <- True
 	 end
@@ -455,7 +455,7 @@ local
       end
 
       local
-	 class SolvedNode
+	 class SucceededNode
 	    from LeafNode NumberNode
 	    
 	    meth drawTree(MomTree MomX MyY Scale Font TkOpt)
@@ -521,22 +521,22 @@ local
       in
 	 
 	 class EntailedNode
-	    from SolvedNode
+	    from SucceededNode
 	    
 	    meth drawTree(Break MomTree MomX MyY Scale Font)
-	       <<SolvedNode drawTree(MomTree MomX MyY Scale Font
-				     TkEntailedOpt)>>
+	       <<SucceededNode drawTree(MomTree MomX MyY Scale Font
+					TkEntailedOpt)>>
 	    end
 	    
 	 end
 
    
-	 class StableNode
-	    from SolvedNode
+	 class SuspendedNode
+	    from SucceededNode
 
 	    meth drawTree(Break MomTree MomX MyY Scale Font)
-	       <<SolvedNode drawTree(MomTree MomX MyY Scale Font
-				     TkStableOpt)>>
+	       <<SucceededNode drawTree(MomTree MomX MyY Scale Font
+					TkSuspendedOpt)>>
 	    end
 	    
 	 end
@@ -547,11 +547,11 @@ local
    
 in
 
-   TkNodes=c(choice:   ChoiceNode
-	     failed:   FailedNode
-	     unstable: UnstableNode
-	     stable:   StableNode
-	     entailed: EntailedNode)
+   TkNodes=c(choice:    ChoiceNode
+	     failed:    FailedNode
+	     blocked:   BlockedNode
+	     suspended: SuspendedNode
+	     entailed:  EntailedNode)
 
 end
 

@@ -8,13 +8,13 @@
 local
 
    InfoActions = [add(information:
-			 proc {$ N P}
-			    {Show N#{P}}
+			 proc {$ N S}
+			    {Show N#{Space.merge S}}
 			 end
 		      label: 'Show')
 		  add(information:
-			 proc {$ N P}
-			    {Browse N#{P}}
+			 proc {$ N S}
+			    {Browse N#{Space.merge S}}
 			 end
 		      label: 'Browse')
 		  add(information:separator)]
@@ -90,20 +90,20 @@ local
 
       fun {NotEqual X Y} X#Y end
    
-      fun {Merge P1 P2}
-	 {MergeTree {P1} {P2} Equal NotEqual}
+      fun {Merge X Y}
+	 {MergeTree X Y Equal NotEqual}
       end
 
    in
 
       CmpActions = [add(compare:
-			   proc {$ N1 P1 N2 P2}
-			      {Show N1#N2#{Merge P1 P2}}
+			   proc {$ N1 S1 N2 S2}
+			      {Show N1#N2#{Merge {Space.merge S1} {Space.merge S2}}}
 			   end
 			label: 'Show Merge')
 		    add(compare:
-			   proc {$ N1 P1 N2 P2}
-			      {Browse N1#N2#{Merge P1 P2}}
+			   proc {$ N1 S1 N2 S2}
+			      {Browse N1#N2#{Merge {Space.merge S1} {Space.merge S2}}}
 			   end
 			label: 'Browse Merge')
 		    add(compare:separator)]
