@@ -219,7 +219,6 @@
 	<Grammar.Alt/<<fOr([?={clause opt then}] ?={coord})>>/
 	<Grammar.Alt/<<fDis([?={clause opt then}] ?={coord})>>/
 	<Grammar.Alt/<<fChoice([?={phrase}] ?={coord})>>/
-	<Grammar.Alt/<<fCondis([[?={fd expression}]] ?={coord})>>/
       <Grammar.Rule class=compact>?={fd expression}
 	<Grammar.Alt/<<fFdCompare(?={atom} ?={phrase} ?={phrase} ?={coord})>>/
 	<Grammar.Alt/<<fFdIn(?={atom} ?={phrase} ?={phrase} ?={coord})>>/
