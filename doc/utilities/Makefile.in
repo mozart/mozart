@@ -41,8 +41,8 @@ EMACS		= emacs
 OZENGINE	= @OZENGINE@
 
 FUNCTORS = \
-	SGML.ozf AuthorDB.ozf BibliographyDB.ozf Fontifier.ozf Thumbnails.ozf \
-	MathToGIF.ozf HTML.ozf OzDocToHTML.ozf Main.ozf
+	SGML.ozf AuthorDB.ozf BibliographyDB.ozf Indexer.ozf Fontifier.ozf \
+	Thumbnails.ozf MathToGIF.ozf HTML.ozf OzDocToHTML.ozf Main.ozf
 SYSLETS = ozdoc
 ELS = ozdoc.el
 ELCS = $(ELS:%.el=%.elc)
