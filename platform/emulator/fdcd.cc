@@ -221,13 +221,8 @@ OZ_Return CDPropagator::run(void)
 	} 
   }
 
-// propagate till you reach a fixpoint
-  localPropStore.backup(0x10);
-
-#ifndef TM_LP
   Assert(localPropStore.isEmpty());
   localPropStore.setUseIt();
-#endif
 
   for (c = clauses; c--; ) {
     if (x[idx_b(c)] == 0) {
@@ -255,11 +250,7 @@ OZ_Return CDPropagator::run(void)
   
   }
 
-#ifndef TM_LP
   localPropStore.unsetUseIt();
-#endif
-
-  localPropStore.restore();
 
 // Note: since Bs and Vps are local, reintroduction is actual superfluous,
 // since domains can get singletons and the according variable get disposed,

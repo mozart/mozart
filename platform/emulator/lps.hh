@@ -28,14 +28,9 @@
  *
  */ 
 
-#ifndef LTQ
-#define TM_LP
-#endif
-
 class LocalPropagationQueue {
 private:
   int head, tail, size, maxsize;
-  int backup_head, backup_tail, backup_size, backup_maxsize;
 #ifdef DEBUG_CHECK  
   enum {initmaxsize = 0x10}; // expected to be power of 2
 #else
@@ -43,7 +38,7 @@ private:
 #endif
   struct queue_t {
     Thread *thr;
-  } *queue, *backup_queue;
+  } *queue;
 
 public:
   void resize(void);
@@ -70,9 +65,6 @@ public:
     queue = new queue_t[maxsize];
   }
   
-  void backupQueue (int s);
-  void restoreQueue ();
-  
   Bool isEmpty () { return (size == 0); }
   void reset () {
     head = 0; 
@@ -90,28 +82,18 @@ public:
  */
 class LocalPropagationStore : protected LocalPropagationQueue {
 private:
-  Bool in_local_propagation, backup_in_local_propagation;
   Bool propagate_locally ();
-  //#ifndef TM_LP
   Bool useit;
-  //#endif
 
   DebugCode (Bool checkIsPropagator (Thread *thr);)
 public:
-  LocalPropagationStore ()
-  : in_local_propagation(FALSE)
-       //#ifndef TM_LP
-       , useit(FALSE)
-       //#endif
-  {};
+  LocalPropagationStore () {}
 
   Bool reset () {
     LocalPropagationQueue::reset ();
-    return (in_local_propagation = FALSE);
+    return FALSE;
   }
 
-  Bool isInLocalPropagation () { return (in_local_propagation); }
-  
   Bool isEmpty () {
     return (LocalPropagationQueue::isEmpty ());
   }
@@ -130,30 +112,12 @@ public:
     return (dequeue ());
   }
 
-  void backup (int s) {
-    backup_in_local_propagation = in_local_propagation;
-    backupQueue (s);
-  }
-
-  void restore () {
-    in_local_propagation = backup_in_local_propagation;
-    restoreQueue ();
-  }
-
-  //#ifndef TM_LP
   void setUseIt () { useit = TRUE; }
   void unsetUseIt () { useit = FALSE; }
   Bool isUseIt () { return (useit); }
-  //#endif    
 };
 
 extern LocalPropagationStore localPropStore;
-
-#ifdef TM_LP
-#  define LOCAL_PROPAGATION(CODE) CODE
-#else
-#  define LOCAL_PROPAGATION(CODE)
-#endif
 
 #ifdef OUTLINE
 #undef inline
