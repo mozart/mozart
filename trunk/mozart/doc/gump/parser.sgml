@@ -717,7 +717,7 @@
 	  <Entry><<meth synExecuteAction(?+{I})>>
 	  <Item>
 	    This method is invoked each time a reduction takes place.
-	    The parameter&nbsp;<<I>> is the number of the rule reduced.
+	    The parameter&nbsp;?_{I} is the number of the rule reduced.
 	</List>
       <P>
 	<<GumpParser.'class'>> defines several attributes and methods that
@@ -737,19 +737,19 @@
 	  <Entry><<meth init(?+{P})>>
 	  <Item>
 	    This initializes the internal structures of the
-	    <<GumpParser.'class'>> and connects it to a scanner&nbsp;<<P>>.
-	    <<P>>&nbsp;must at least understand the messages <<putToken>> and
+	    <<GumpParser.'class'>> and connects it to a scanner&nbsp;?_{P}.
+	    ?_{P}&nbsp;must at least understand the messages <<putToken>> and
 	    <<getToken>> as described in <Ptr to="section.scanner.class">.
 	  <Entry><<meth parse(?+{T} ??{B})>>
 	  <Item>
-	    This methods initates a parse.  The label of tuple&nbsp;<<T>>
+	    This methods initates a parse.  The label of tuple&nbsp;?_{T}
 	    denotes the start symbol to use (which must be a declared
 	    nonterminal named by an atom); its features correspond to
 	    the parameters of the corresponding syntax rule.  Values of
 	    inherited attributes are extracted from this tuple, values
 	    of synthesized attributes are unified with the corresponding
 	    features after the parse is finished (successfully).  The
-	    parameter&nbsp;<<B>> is unified with <<true>> if the parse was
+	    parameter&nbsp;?_{B} is unified with <<true>> if the parse was
 	    successful and with <<false>> otherwise.
 	  <Entry><<meth accept()>>
 	  <Item>
@@ -781,11 +781,11 @@
 	  <Item>
 	    This method is always invoked when (during normal parsing) an
 	    error in the input is recognized.  It is handed a diagnostic
-	    message in&nbsp;<<V>>.  This method may be overridden in derived
+	    message in&nbsp;?_{V}.  This method may be overridden in derived
 	    classes.
 	  <Entry><<meth getScanner(??{P})>>
 	  <Item>
-	    Returns the scanner object or procedure&nbsp;<<P>> currently
+	    Returns the scanner object or procedure&nbsp;?_{P} currently
 	    used as the token source.
 	</List>
 </Chapter>
