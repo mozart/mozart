@@ -739,6 +739,7 @@ int osOpenMax()
 
 char *oslocalhostname()
 {
+#ifdef WINDOWS
   char buf[1000];
   int aux = gethostname(buf,sizeof(buf));
   if (aux < 0) {
@@ -746,6 +747,13 @@ char *oslocalhostname()
     sprintf(buf,"%s","localhost");
   }
   return strdup(buf);
+#else
+  struct utsname unp;
+  int n = uname(&unp);
+  if(0 > n) /* braindead Solaris, returns >0 if OK. POSIX says 0 */
+    return 0;
+  return strdup(unp.nodename);
+#endif
 }
 
 
