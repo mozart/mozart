@@ -38,9 +38,7 @@ define
 	 %% Caution: At this time, the underlying GTK object
 	 %% Caution: has been destroyed already
 	 %% Caution: Destruction also includes all attached child objects.
-	 %% Caution: This event is solely intended to do OZ side
-	 %% Caution: cleanup via calling close
-	 {self close}
+	 %% Caution: This event is solely intended to do OZ side cleanups.
 	 {Application.exit 0}
       end
    end
@@ -58,7 +56,7 @@ define
    {Colormap allocColor(Black 0 1 _)}
 
    %% This will be our canvasItem
-   TextItem = ["text"#"Hello, Canvas World!"
+   TextItem = ["text"#"Hallo, schöne Canvas Welt!"
 	       "x"#100.0
 	       "y"#100.0
 	       "font"#

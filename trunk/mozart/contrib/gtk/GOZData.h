@@ -23,7 +23,6 @@
 #ifndef __GOZ_DATA_H__
 #define __GOZ_DATA_H__
 
-#include <string.h>
 #include <stdlib.h>
 
 #define GOZ_(name) name ## _
@@ -132,14 +131,14 @@
 #if defined(__CYGWIN32__) || defined(__MINGW32__)
 static inline gchar *goz_import_string(gchar *source) {
   GError *res;
-  return g_locale_to_utf8(strdup(source), &res);
+  return g_locale_to_utf8(g_strdup(source), &res);
 }
 
 #define GOZ_importString(str) \
   goz_import_string(str);
 #else
 #define GOZ_importString(str) \
-  strdup(str);
+  g_strdup(str);
 #endif
 
 #define GOZ_declareString(i, val) \
@@ -218,6 +217,13 @@ static inline GList *goz_export_glist(OZ_Term cons) {
 #define GOZ_ARG_object(val) \
   OZ_mkTuple(OZ_atom("object"), 1, OZ_makeForeignPointer(val));
 
+/* These two objects are no GTK objects but are provided for convenience */
+#define GOZ_ARG_accel(val) \
+  OZ_mkTuple(OZ_atom("accel"), 1, OZ_makeForeignPointer(val));
+
+#define GOZ_ARG_style(val) \
+  OZ_mkTuple(OZ_atom("style"), 1, OZ_makeForeignPointer(val));
+
 /*
  * This is a simple collection of known GDK objects
  */
@@ -238,6 +244,14 @@ static inline GList *goz_export_glist(OZ_Term cons) {
 #define GOZ_ARG_map(val) \
   OZ_mkTuple(OZ_atom("map"), 1, OZ_makeForeignPointer(val));
 
+/* GDK Cursor */
+#define GOZ_ARG_cursor(val)\
+  OZ_mkTuple(OZ_atom("cursor"), 1, OZ_makeForeignPointer(val));
+
+/* GDK DragContext */
+#define GOZ_ARG_drag(val)\
+  OZ_mkTuple(OZ_atom("drag"), 1, OZ_makeForeignPointer(val));
+
 /* GDK Drawable */
 #define GOZ_ARG_drawable(val) \
   OZ_mkTuple(OZ_atom("drawable"), 1, OZ_makeForeignPointer(val));
@@ -253,6 +267,10 @@ static inline GList *goz_export_glist(OZ_Term cons) {
 /* GDK Image */
 #define GOZ_ARG_image(val) \
   OZ_mkTuple(OZ_atom("image"), 1, OZ_makeForeignPointer(val));
+
+/* GDK Visual */
+#define GOZ_ARG_visual(val) \
+  OZ_mkTuple(OZ_atom("visual"), 1, OZ_makeForeignPointer(val));
 
 /* GDK Window */
 #define GOZ_ARG_window(val) \

@@ -91,7 +91,7 @@ define
    
    GdkInitStub =
    ["define"
-    "   OzBase     = GOZCore.gdkOzBase"
+    "   OzBase     = GOZCore.ozBase"
     "   P2O        = GOZCore.pointerToObject"
     "   O2P        = GOZCore.objectToPointer"
     "   ExportList = GOZCore.exportList"
@@ -112,11 +112,6 @@ define
     "   O2P         = GOZCore.objectToPointer"
     "   ExportList  = GOZCore.exportList"
     "   ImportList  = GOZCore.importList"
-    "   GdkWindow   = GDK.window"
-    "   GdkGC       = GDK.gC"
-    "   GdkColor    = GDK.color"
-    "   GdkFont     = GDK.font"
-    "   GdkImage    = GDK.image"
     "   fun {MakeArg S Val}"
     "      {GOZCore.makeArg S {O2P Val}}"
     "   end"
@@ -157,17 +152,45 @@ define
     "   P2O          = GOZCore.pointerToObject"
     "   O2P          = GOZCore.objectToPointer"
     "   ImportList   = GOZCore.importList"
-    "   GtkWidget    = GTK.widget"
-    "   GtkLayout    = GTK.layout"
-    "   GtkObject    = GTK.object"
-    "   GdkGC        = GDK.gC"
-    "   GdkColorContext = GDK.colorContext"
     "  \\insert 'GTKCANVASFIELDS.oz'"
     "  \\insert 'OzCanvasBase.oz'"
    ]
 
    GtkEnd   = ["end"]
 
+   %%
+   %% Special Functions
+   %%
+
+   WidgetGetCode =
+   ["      meth get(String Result)"
+    "         Arg = {GOZCore.makeEmptyArg String}"
+    "      in"
+    "         {GtkNative.gtkWidgetGet @object Arg}"
+    "         Result = {GOZCore.getArg Arg}"
+    "         {GOZCore.freeData Arg}"
+    "      end"
+   ]
+
+   ColorSelectionGetColorCode =
+   [
+    "      meth getColor($)"
+    "         Array = {GOZCore.makeColorArr [0.0 0.0 0.0 0.0]}"
+    "      in"
+    "         {GtkNative.gtkColorSelectionGetColor @object Array}"
+    "         {GOZCore.getColorList Array}"
+    "      end"
+   ]
+
+   ColorSelectionSetColorCode =
+   [
+    "      meth setColor(Cols)"
+    "         Array = {GOZCore.makeColorArr Cols}"
+    "      in"
+    "         {GtkNative.gtkColorSelectionGetColor @object Array}"
+    "      end"
+   ]
+   
    fun {MakeClassName Prefix Name}
       {Util.toAtom {Util.firstLower {Util.cutPrefix Prefix Name}}}
    end
@@ -371,10 +394,15 @@ define
 		 "newWithValues" %% GdkGC
 		 "load"          %% GkdFont
 		 "getSystem"     %% GdkColormap
+		 "newFromPixmap" %% GdkCursor
 		]
    in
       fun {IsConstructor S}
 	 {Member S Constrs}
+      end
+
+      fun {IsSpecConstructor S}
+	 S == "gtkThemeEngineGet"
       end
    end
 
@@ -411,15 +439,48 @@ define
    fun {QuoteName Name}
       case Name
       of "raise" then "'raise'"
+      [] "lock"  then "'lock'"
       [] Name    then Name
       end
    end
 
-   fun {CheckHint Flag NameS}
-      if Flag
-      then if {Util.checkPrefix "Gdk" NameS} then NameS else "auto" end
-      else NameS
+   %% This List contains classes which must not be checked for
+   %% because they are not inherited from GtkObject
+   HintList = {Cell.new nil}
+
+   local
+      fun {VerifyHints Name Ls}
+	 case Ls
+	 of LName|Lr then
+	    if LName == Name then LName else {VerifyHints Name Lr} end
+	 [] nil then "auto"
+	 end
       end
+   in
+      fun {CheckHint Flag NameS}
+	 if Flag
+	 then
+	    if {Util.checkPrefix "Gdk" NameS}
+	    then {ToS "GDK."#{Util.firstLower {Util.cutPrefix "Gdk" NameS}}}
+	    else {VerifyHints NameS {Cell.access HintList}}
+	    end
+	 else NameS
+	 end
+      end
+   end
+
+   fun {StripUnderscore V}
+      case {Util.toString V}
+      of &_|Sr then Sr 
+      [] Sv    then Sv
+      end
+   end
+
+   fun {Exists Ls F}
+      case Ls
+      of L|Lr then  {F L} orelse {Exists Lr F}
+      [] nil  then false
+      end 
    end
    
    class GtkClasses from TextFile
@@ -542,7 +603,24 @@ define
       end
       meth collectChilds(Ss)
 	 case GtkClasses, searchAnchor({Dictionary.keys @classes} $)
-	 of nil  then GtkClasses, removeAnchors({Dictionary.keys @classes})
+	 of nil  then
+	    case GtkClasses, searchRoots(Ss $)
+	    of nil   then GtkClasses, removeAnchors({Dictionary.keys @classes})
+	    [] Roots then
+	       {ForAll Roots
+		proc {$ SN#_}
+		   Prefix     = @impPrefix
+		   SNS        = {ToS SN}
+		   NewSN      = {StripUnderscore SNS}
+		   HintSN     = {Util.cutPrefix Prefix NewSN}
+		   Hints      = {Cell.access HintList}
+		   BasePrefix = {Util.toAtom {ToS Prefix#"OzBase"}}
+		in
+		   {Cell.assign HintList HintSN|Hints}
+		   GtkClasses, addClass(BasePrefix {Util.toAtom NewSN} nil)
+		end}
+	       GtkClasses, collectChilds(Ss)
+	    end
 	 [] Root then
 	    GtkClasses, collectSingleChilds({Util.toString Root} Ss)
 	    GtkClasses, collectChilds(Ss)
@@ -551,6 +629,57 @@ define
       meth collect(Ss)
 	 GtkClasses, addClass('GtkOzBase' 'GtkObject' nil)
 	 GtkClasses, collectChilds(Ss)
+      end
+      meth searchRoots(Ss $)
+	 KnownClasses  = {Dictionary.keys @classes}
+	 PossibleRoots =
+	 {Filter Ss
+	  fun {$ SN#_}
+	     %% Eliminate already processed Classes
+	     %% and their struct definititions
+	     if {Member SN KnownClasses} orelse
+		{Member {Util.toAtom {StripUnderscore SN}}
+		 KnownClasses}
+	     then false
+	     else
+		SNS = {Util.toString SN}
+	     in
+		%% Eliminate remaining <Type>Class Objects
+		if {Util.checkPrefix "ssalC" {Reverse SNS}}
+		then false
+		   %% Consider current namespace only
+		else
+		   Prefix  = @impPrefix
+		   PrefixU = {ToS "_"#Prefix}
+		in
+		   
+		   {Util.checkPrefix PrefixU SNS} orelse
+		   {Util.checkPrefix Prefix SNS}
+		end
+	     end
+	  end}
+% 	 RealRoots =
+% 	 {Filter PossibleRoots
+% 	  fun {$ SN#_}
+% 	     SNS     = {StripUnderscore {Util.toString SN}}
+% 	     Prefix  = {MakeClassPrefix {Util.firstLower SNS}}
+% 	     Methods = {Filter @entries {FuncPrefix Prefix nil}}
+% 	  in
+% 	     {Exists Methods
+% 	      fun {$ _#function(Name _ _)}
+% 		 {Util.checkPrefix "fer_" {Reverse {Util.toString Name}}}
+% 	      end} andthen
+% 	     {Exists Methods
+% 	      fun {$ _#function(Name _ _)}
+% 		 {Util.checkPrefix "fernu_" {Reverse {Util.toString Name}}}
+% 	      end}
+% 	  end}
+% 	 Structs = {Filter PossibleRoots
+% 		    fun {$ X}
+% 		       {Not {Member X RealRoots}}
+% 		    end}
+      in
+	 PossibleRoots
       end
       meth emitClasses(Keys)
 	 case Keys
@@ -599,7 +728,7 @@ define
 		      {Util.cutPrefix {Util.firstLower Prefix} Name}}
 	 IsVoid    = case Args of [arg(type("void" "") _)]
 		     then true else false end
-	 IsNew     = {IsConstructor ShortName}
+	 IsNew     = {IsConstructor ShortName} orelse {IsSpecConstructor Name}
 	 HasSelf   = {CheckFirstArg Prefix Args}
 	 IA        = if IsVoid
 		     then 0
@@ -629,21 +758,37 @@ define
 	 ResEnd   = if IsNew orelse CheckRes == nil then "" else "}" end
 	 Self     = if HasSelf then "@object " else "" end
       in
-	 TextFile, putS({Util.indent 2}#"meth "#
-			{QuoteName ShortName}#"("#ArgStr#")")
-	 if CallDef \= nil
-	 then
-	    TextFile, putS(CallDef)
-	    TextFile, putS({Util.indent 2}#"in")
+	 case Name
+	 of "gtkwidgetGet" then
+	    {ForAll WidgetGetCode
+	     proc {$ Line}
+		TextFile, putS(Line)
+	     end}
+	 [] "gtkColorSelectionGetColor" then
+	    {ForAll ColorSelectionGetColorCode
+	     proc {$ Line}
+		TextFile, putS(Line)
+	     end}
+	 [] "gtkColorSelectionSetColor" then
+	    {ForAll ColorSelectionSetColorCode
+	     proc {$ Line}
+		TextFile, putS(Line)
+	     end}
+	 else
+	    TextFile, putS({Util.indent 2}#"meth "#
+			   {QuoteName ShortName}#"("#ArgStr#")")
+	    if CallDef \= nil
+	    then
+	       TextFile, putS(CallDef)
+	       TextFile, putS({Util.indent 2}#"in")
+	    end
+	    TextFile, putS({Util.indent 3}#ResStart#"{"#@module#
+			   "."#Name#" "#Self#CallStr#"}"#ResEnd)
+	    if IsNew andthen {Not (@stdPrefix == "Gdk")}
+	    then TextFile, putS({Util.indent 3}#"{self addToObjectTable}") end
+	    GtkClasses, handleOutArgs(CallArgs)
+	    TextFile, putS({Util.indent 2}#"end")
 	 end
-%	 TextFile, putS({Util.indent 3}#"{System.show '"#Name#": enter'}")
-	 TextFile, putS({Util.indent 3}#ResStart#"{"#@module#
-			"."#Name#" "#Self#CallStr#"}"#ResEnd)
-	 if IsNew andthen {Not (@stdPrefix == "Gdk")}
-	 then TextFile, putS({Util.indent 3}#"{self addToObjectTable}") end
-	 GtkClasses, handleOutArgs(CallArgs)
-%	 TextFile, putS({Util.indent 3}#"{System.show '"#Name#": leave'}")
-	 TextFile, putS({Util.indent 2}#"end")
       end
       meth prepareArgs(InArgs I OutArgs $)
 	 case InArgs
@@ -803,9 +948,19 @@ define
       end
    end
 
-   GdkClassList = ["GdkWindow"
-		   "GdkColor" "GdkColorContext" "GdkColor" "GdkColormap"
-		   "GdkDrawable" "GdkFont" "GdkGC" "GdkImage" "GdkImlib"]
+   %% These are classes not containing any ref and unref handling
+   %% but they are needed anyway
+   GdkClassList = ["GdkOzBase"#"GdkWindow"
+		   "GdkOzColorBase"#"GdkColor"
+		   "GdkOzBase"#"GdkColorContext"
+		   "GdkOzBase"#"GdkImlib"]
+
+   fun {MakeGdkForbidden Hints GdkClasses}
+      NewHints   = {Map Hints fun {$ Class} {ToS "Gdk"#Class} end}
+      NewClasses = {Map GdkClasses fun {$ _#Class} Class end}
+   in
+      {Append NewClasses NewHints}
+   end
    
    class GdkClasses from GtkClasses
       meth init(Types AllTypes Name)
@@ -823,33 +978,31 @@ define
 	 @autoDetect = false
 	 TextFile, init(name: Name
 			flags:[write create truncate])
-	 GdkClasses, collect(GdkClassList)
+	 GdkClasses, collect({Filter @entries IsStruct})
 	 GtkClasses, emit
 	 GtkClasses, saveDict("GdkClasses.ozp")
       end
-      meth collect(Keys)
-	 case Keys
-	 of Key|Kr then
-	    Base = if Key == "GdkColor"
-		   then "GdkOzColorBase"
-		   else "GdkOzBase"
-		   end
-	 in
-	    GtkClasses, addClass({Util.toAtom Base} {Util.toAtom Key} nil)
-	    GdkClasses, collect(Kr)
-	 [] nil then
-	    %% Collect remaining functions not contained in the
-	    %% other classes
-	    GtkClasses, addClass({Util.toAtom "GdkOzBase"}
-				 {Util.toAtom "Gdk"}
-				 GdkClassList)
-	 end
+      meth collect(Ss)
+	 {Cell.assign HintList nil}
+	 {ForAll GdkClassList proc {$ Base#Class}
+				 BaseA  = {Util.toAtom Base}
+				 ClassA = {Util.toAtom Class}
+			      in
+				 GtkClasses, addClass(BaseA ClassA nil)
+			      end}
+	 GtkClasses, collectChilds(Ss)
+	 %% Collect remaining functions not contained in the
+	 %% other classes
+	 GtkClasses, addClass('GdkOzBase' 'Gdk'
+			      {MakeGdkForbidden
+			       {Cell.access HintList}
+			       GdkClassList})
       end
    end
 
    CanvasClassList = ["GtkCanvasOzCanvasBase"#"GtkCanvas"#
 		      ["GtkCanvasCanvasItem" "GtkCanvasGroup"]
-		      "GtkObject"#"GtkCanvasItem"#nil
+		      "GTK.object"#"GtkCanvasItem"#nil
 		      "GtkCanvasCanvasItem"#"GtkCanvasGroup"#nil]
    
    class CanvasClasses from GtkClasses
