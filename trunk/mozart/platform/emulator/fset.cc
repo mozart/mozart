@@ -307,6 +307,11 @@ ostream &FSetValue::print2stream(ostream &o) const
   return o;
 }
 
+void FSetValue::print(ostream &stream, int depth, int offset)
+{
+  print2stream(stream);
+}
+
 inline 
 FSetValue FSetValue::operator & (const FSetValue &y) const
 {

@@ -2341,6 +2341,73 @@ OZ_Boolean OZ_FiniteDomain::operator != (const int i) const
   return CASTTHIS->operator != (i);
 }
 
+#define RANGESTR "#"
+
+void FDBitVector::print(ostream &ofile, int idnt) const
+{
+  Bool flag = FALSE;
+
+  ofile << '{';
+
+  int len = mkRawOutline(fd_bv_left_conv, fd_bv_right_conv);
+  for (int i = 0; i < len; i += 1) {
+    if (flag) ofile << ' '; else flag = TRUE; 
+    ofile << fd_bv_left_conv[i];
+    if (fd_bv_left_conv[i] != fd_bv_right_conv[i])
+      if (fd_bv_left_conv[i] + 1 == fd_bv_right_conv[i])
+	ofile << ' ' << fd_bv_right_conv[i];
+      else
+	ofile << RANGESTR << fd_bv_right_conv[i];
+  }
+  ofile << '}';
+}
+
+void printFromTo(ostream &ofile, int f, int t)
+{
+  if (f == t)
+    ofile << f;
+  else if ((t - f) == 1)
+    ofile << f << ' ' << t;
+  else
+    ofile << f << RANGESTR << t;
+}
+
+void FDIntervals::print(ostream &ofile, int idnt) const
+{
+  Bool flag = FALSE;
+
+  ofile << '{';
+  for (int i = 0; i < high; i += 1) {
+    if (flag) ofile << ' '; else flag = TRUE; 
+    printFromTo(ofile, i_arr[i].left, i_arr[i].right);
+  }
+  ofile << "}";
+}
+
+
+void OZ_FiniteDomainImpl::print(ostream &ofile, int idnt) const
+{
+  if (getSize() == 0)
+    ofile << "{ empty }";
+  else switch (getType()) {
+  case fd_descr:    
+      ofile << '{';
+      printFromTo(ofile, min_elem, max_elem);
+      ofile << "}";
+    break;
+  case bv_descr:
+    get_bv()->print(ofile, idnt);
+    break;
+  case iv_descr:
+    get_iv()->print(ofile, idnt);
+    break;
+  default:
+    error("unexpected case");
+  }
+  //  DEBUG_FD_IR(FALSE, ((getType() == fd_descr) ? 'f' :
+  //	      (getType() == bv_descr ? 'b' : 'i')) << '#' << size);
+}
+
 char *OZ_FiniteDomain::toString() const
 {
   static ozstrstream str;

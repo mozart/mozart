@@ -142,3 +142,117 @@ Bool TaskStack::findCatch(TaggedRef *out, Bool verbose)
 }
 
 
+void printStack()
+{
+  am.currentThread->getTaskStackRef()->printTaskStack(NOCODE,OK,1000);
+}
+
+void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
+{
+  message("\n");
+  message("Stack dump:\n");
+  message("-----------\n");
+
+  Assert(this);
+  if (pc == NOCODE && isEmpty()) {
+    message("\tEMPTY\n");
+    return;
+  }
+
+  if (pc != NOCODE) {
+    CodeArea::printDef(pc);
+  }
+
+  Frame *auxtos = getTop();
+
+  while (depth-- > 0) {
+    GetFrame(auxtos,PC,Y,G);
+    if (PC==C_EMPTY_STACK)
+      return;
+    CodeArea::printDef(PC);
+    if (verbose) { message("\t\tPC=0x%x, Y=0x%x, G=0x%x\n",PC, Y, G); }
+  }
+  message("\t ...\n");
+}
+
+
+TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
+{
+  Assert(this);
+
+  TaggedRef out = nil();
+
+  if (pc != NOCODE) {
+    out = cons(CodeArea::dbgGetDef(pc),out);
+  }
+
+  Frame *auxtos = getTop();
+
+  while (depth-- > 0) {
+    GetFrame(auxtos,PC,Y,G);
+    if (PC==C_EMPTY_STACK)
+      break;
+
+    if (PC==C_DEBUG_CONT_Ptr) {
+      OzDebug *ozdeb = (OzDebug *) Y;
+      out = cons(OZ_mkTupleC("debug",1,ozdeb->info), out);
+      continue;
+    }
+
+    if (PC==C_CFUNC_CONT_Ptr) {
+      OZ_CFun biFun    = (OZ_CFun) (void*) Y;
+      RefsArray X      = (RefsArray) G;
+      TaggedRef args = nil();
+      
+      if (X)
+	for (int i=getRefsArraySize(X)-1; i>=0; i--)
+	  args = cons(X[i],args);
+      else
+	args = nil();
+
+      TaggedRef pairlist = 
+	cons(OZ_pairA("name", OZ_atom(builtinTab.getName((void *) biFun))),
+	     cons(OZ_pairA("args", args),
+		  nil()));
+      TaggedRef entry = OZ_recordInit(OZ_atom("builtin"), pairlist);
+      out = cons(entry, out);
+      continue;
+    }
+
+    TaggedRef def = CodeArea::dbgGetDef(PC);
+    if (def != nil())
+      out = cons(def,out);
+    else
+      // definitionStart(PC) == NOCODE_GLOBALVARNAME
+      ;
+  }
+  return reverseC(out);
+}
+
+TaggedRef TaskStack::dbgFrameVariables(int frameId)
+{
+  int     depth = 10000;
+  Bool    match = NO;
+
+  Frame *auxtos = getTop();
+  
+  while (depth-- > 0) {
+    GetFrame(auxtos,PC,Y,G);
+
+    if (PC==C_EMPTY_STACK)
+      break;
+
+    if (PC==C_DEBUG_CONT_Ptr) {
+      if (match) continue;
+      OzDebug *ozdeb = (OzDebug *) Y;
+      int curId = OZ_intToC(OZ_head(ozdeb->info));
+      if (frameId == curId)
+	match = OK;
+      continue;
+    }
+    
+    if (match)
+      return CodeArea::varNames(PC,G,Y);
+  }
+  return nil();
+}

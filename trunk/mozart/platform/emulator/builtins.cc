@@ -5890,6 +5890,7 @@ OZ_Return showInline(TaggedRef term)
 
 DECLAREBI_USEINLINEREL1(BIshow,showInline)
 
+#ifdef PRINT_LONG
 OZ_C_proc_begin(BIprintLong,2)
 {
   oz_declareArg(0,t);
@@ -5898,6 +5899,7 @@ OZ_C_proc_begin(BIprintLong,2)
   return PROCEED;
 }
 OZ_C_proc_end
+#endif
 
 // ---------------------------------------------------------------------------
 // ???
@@ -7690,7 +7692,9 @@ BIspec allSpec[] = {
   {"Thread.isSuspended",2,BIthreadIsSuspended},
   {"Thread.state",2,BIthreadState},
 
+#ifdef PRINT_LONG
   {"printLong",2,BIprintLong},
+#endif
 
   {"statisticsReset",     0, BIstatisticsReset},
   {"statisticsPrint",     0, BIstatisticsPrint},
@@ -7706,7 +7710,10 @@ BIspec allSpec[] = {
   {"frameVariables", 3, BIframeVariables},
   {"location",       2, BIlocation},
 
+#ifdef MM_DEBUG
   {"halt",0,BIhalt},
+#endif
+
   {"System.printName",2,BIgetPrintName},
 
   {"ozparser_init",0,ozparser_init},
