@@ -104,9 +104,9 @@ public:
 };
 
 //
-// Linux has the structure already defined, while others 
+// Some systems have the structure already defined, while others 
 // (e.g. Solaris) have not;
-#if defined(LINUX)
+#if defined(LINUX) || defined(NETBSD)
 typedef union semun SemOptArg;
 #else
 typedef union semun {
