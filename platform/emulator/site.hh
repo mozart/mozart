@@ -116,12 +116,14 @@ public:
     marshalNumber(timestamp.start,buf);
     marshalNumber(timestamp.pid,buf);
   }
+#ifdef USE_FAST_UNMARSHALER   
   void unmarshalBaseSite(MsgBuffer* buf){
     address=unmarshalNumber(buf);
     port=unmarshalShort(buf);  
     timestamp.start=unmarshalNumber(buf);
     timestamp.pid=unmarshalNumber(buf);
   }
+#else
   void unmarshalBaseSiteRobust(MsgBuffer* buf, int *error){
     int o;
     address=unmarshalNumberRobust(buf, &o);
@@ -138,13 +140,16 @@ public:
     timestamp.pid=unmarshalNumberRobust(buf, &o);
     *error = o || (timestamp.pid > MAX_PID);
   }
+#endif
 
+#ifdef USE_FAST_UNMARSHALER   
   void unmarshalBaseSiteGName(MsgBuffer* buf, int minor){
     address=unmarshalNumber(buf);
     port = 0;
     timestamp.start=unmarshalNumber(buf);
     timestamp.pid=unmarshalNumber(buf);
   }
+#else
   void unmarshalBaseSiteGNameRobust(MsgBuffer* buf, int minor, int *error){
     int o1, o2, o3;
     address=unmarshalNumberRobust(buf, &o1);
@@ -153,6 +158,7 @@ public:
     timestamp.pid=unmarshalNumberRobust(buf, &o3);
     *error= o1 || o2 || o3;
   }
+#endif
 
   int checkTimeStamp(time_t t){
     if(t==timestamp.start) return 0;
@@ -258,8 +264,11 @@ void gCollectSiteTable();
 
 //
 // Marshaller uses that;
+#ifdef USE_FAST_UNMARSHALER   
 Site* unmarshalSite(MsgBuffer *);
+#else
 Site* unmarshalSiteRobust(MsgBuffer *, int *);
+#endif
 
 //
 // There is one universe-wide known site object:

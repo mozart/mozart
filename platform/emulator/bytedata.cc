@@ -131,13 +131,19 @@ int BitString::marshalV(void* bs1) {
 
 OZ_Term unmarshalBitString(void*bs1) {
   MsgBuffer*bs=(MsgBuffer*)bs1;
+#ifdef USE_FAST_UNMARSHALER
   int width = unmarshalNumber(bs);
+#else
+  int trash;
+  int width = unmarshalNumberRobust(bs, &trash);
+#endif
   BitString*s = new BitString(width);
   int size = s->getSize();
   for (int i=0; i<size; i++)
     s->getByte(i) = unmarshalByte(bs);
   return oz_makeTaggedExtension(s);
 }
+#ifndef USE_FAST_UNMARSHALER
 OZ_Term unmarshalBitStringRobust(void*bs1, int *overflow) {
   MsgBuffer*bs=(MsgBuffer*)bs1;
   int width = unmarshalNumberRobust(bs, overflow);
@@ -147,6 +153,7 @@ OZ_Term unmarshalBitStringRobust(void*bs1, int *overflow) {
     s->getByte(i) = unmarshalByte(bs);
   return oz_makeTaggedExtension(s);
 }
+#endif
 
 OZ_Term BitString::printV(int depth) {
   int w = getWidth();
@@ -333,12 +340,17 @@ int ByteString::marshalV(void*bs1) {
 
 OZ_Term unmarshalByteString(void*bs1) {
   MsgBuffer*bs=(MsgBuffer*)bs1;
+#ifdef USE_FAST_UNMARSHALER
   int width = unmarshalNumber(bs);
+#else
+  int width = unmarshalNumberRobust(bs, NULL);
+#endif
   ByteString*s = new ByteString(width);
   for (int i=0; i<width; i++)
     s->getByte(i) = unmarshalByte(bs);
   return oz_makeTaggedExtension(s);
 }
+#ifndef USE_FAST_UNMARSHALER
 OZ_Term unmarshalByteStringRobust(void*bs1, int *overflow) {
   MsgBuffer*bs=(MsgBuffer*)bs1;
   int width = unmarshalNumberRobust(bs, overflow);
@@ -347,6 +359,7 @@ OZ_Term unmarshalByteStringRobust(void*bs1, int *overflow) {
     s->getByte(i) = unmarshalByte(bs);
   return oz_makeTaggedExtension(s);
 }
+#endif
 
 void ByteString_init() {
   static int done = 0;

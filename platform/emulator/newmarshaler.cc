@@ -65,6 +65,7 @@ void marshalGName(GName *gname, MsgBuffer *bs)
 }
 
 
+#ifdef USE_FAST_UNMARSHALER
 void unmarshalGName1(GName *gname, MsgBuffer *bs)
 {
   gname->site=unmarshalSite(bs);
@@ -73,6 +74,7 @@ void unmarshalGName1(GName *gname, MsgBuffer *bs)
   }
   gname->gnameType = (GNameType) unmarshalNumber(bs);
 }
+#else
 void unmarshalGName1Robust(GName *gname, MsgBuffer *bs, int *error)
 {
   int e1,e2;
@@ -87,7 +89,9 @@ void unmarshalGName1Robust(GName *gname, MsgBuffer *bs, int *error)
   gname->gnameType = (GNameType) unmarshalNumberRobust(bs, &e2);
   *error = e1 || e2 || (gname->gnameType > MAX_GNT);
 }
+#endif
 
+#ifdef USE_FAST_UNMARSHALER
 GName *unmarshalGName(TaggedRef *ret, MsgBuffer *bs)
 {
   misc_counter[MISC_GNAME].recv();
@@ -101,6 +105,7 @@ GName *unmarshalGName(TaggedRef *ret, MsgBuffer *bs)
   }
   return new GName(gname);
 }
+#else
 GName *unmarshalGNameRobust(TaggedRef *ret, MsgBuffer *bs, int *error)
 {
   misc_counter[MISC_GNAME].recv();
@@ -114,6 +119,7 @@ GName *unmarshalGNameRobust(TaggedRef *ret, MsgBuffer *bs, int *error)
   }
   return new GName(gname);
 }
+#endif
 
 //
 int32* NMMemoryManager::freelist[NMMM_SIZE];
@@ -474,8 +480,11 @@ Marshaler marshaler;
 Builder builder;
 
 // for newUnmarshalTerm see unmarshaling.cc
+#ifndef USE_FAST_UNMARSHALER
 #include "robust_unmarshaling.cc"
+#else
 #include "fast_unmarshaling.cc"
+#endif
 
 SendRecvCounter dif_counter[DIF_LAST];
 SendRecvCounter misc_counter[MISC_LAST];

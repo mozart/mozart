@@ -162,8 +162,11 @@ const struct {MarshalTag tag; char *name;} dif_names[] = {
 class MsgBuffer;
 
 void marshalNumber(unsigned int i, MsgBuffer *bs);
+#ifdef USE_FAST_UNMARSHALER   
 unsigned int unmarshalNumber(MsgBuffer *bs);
+#else
 unsigned int unmarshalNumberRobust(MsgBuffer *bs, int *overflow);
+#endif
 void skipNumber(MsgBuffer *bs);
 BYTE unmarshalByte(MsgBuffer *bs);
 void marshalCode(ProgramCounter,MsgBuffer*);
@@ -191,12 +194,15 @@ void marshalDIF(MsgBuffer *bs, MarshalTag tag) ;
 void marshalFloat(double d, MsgBuffer *bs);
 
 unsigned short unmarshalShort(MsgBuffer*);
+#ifdef USE_FAST_UNMARSHALER   
 char *unmarshalVersionString(MsgBuffer *);
-double unmarshalFloatRobust(MsgBuffer *bs, int *overflow);
 double unmarshalFloat(MsgBuffer *bs);
 char *unmarshalString(MsgBuffer *);
+#else
+char *unmarshalVersionStringRobust(MsgBuffer *, int *error);
+double unmarshalFloatRobust(MsgBuffer *bs, int *overflow);
 char *unmarshalStringRobust(MsgBuffer *, int *error);
-
+#endif
 
 typedef unsigned int32 crc_t;
 
