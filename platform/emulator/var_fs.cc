@@ -240,7 +240,7 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr, ByteCode * scp)
       break;
     } // FALSE + 2 * FALSE:
   default:
-    error("unexpected case in unifyFSet");
+    OZ_error("unexpected case in unifyFSet");
     break;
   } // switch (varIsLocal + 2 * termIsLocal)
 

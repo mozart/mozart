@@ -160,7 +160,7 @@ typedef OZ_Return (*InlineFun3)(TaggedRef In1, TaggedRef In2,
 #define Assert(Cond)                                                          \
   if (! (Cond)) {                                                             \
     WHERE(stderr);                                                            \
-    error(" assertion '%s' failed", #Cond);                                   \
+    OZ_error(" assertion '%s' failed", #Cond);                                \
   }
 #else
 #define WHERE(file)
@@ -561,7 +561,6 @@ public:
 #ifdef __cplusplus
 
 extern "C" {
-  void error( const char *format ...);
   void message( const char *format ...);
   Bool isDeadSTDOUT();
   void statusMessage( const char *format ...);

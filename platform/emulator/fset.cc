@@ -284,11 +284,11 @@ void setBits(OZ_Term t, int high, int * bv, int neg = 0)
               if (0 <= i && i < 32 * high)
                 bv[div32(i)] |= (1 << mod32(i));
         } else {
-          error("Unexpected case when creating finite set.");
+          OZ_error("Unexpected case when creating finite set.");
         }
       }
     } else {
-      error("Unexpected case when creating finite set.");
+      OZ_error("Unexpected case when creating finite set.");
     }
 
     if (neg)
@@ -418,7 +418,7 @@ void FSetValue::toNormal(void)
   _normal = true;
 
 #else
-  error("FSetValue::toNormal called with small sets!\n");
+  OZ_error("FSetValue::toNormal called with small sets!\n");
 #endif
 }
 
@@ -442,7 +442,7 @@ void FSetValue::toExtended(void)
   _normal = false;
 
 #else
-  error("FSetValue::toExtended called with small sets!\n");
+  OZ_error("FSetValue::toExtended called with small sets!\n");
 #endif
 }
 
@@ -465,7 +465,7 @@ bool FSetValue::maybeToNormal(void)
   toNormal();
   return true;
 #else
-  error("FSetValue::maybeToNormal called with small sets!\n");
+  OZ_error("FSetValue::maybeToNormal called with small sets!\n");
   return false;
 #endif
 }
@@ -570,7 +570,7 @@ void FSetValue::init(OZ_FSetState s)
     break;
   }
   default:
-    error("Unexpected case (%d) in \"FSetValue::init(OZ_FSetState\".", s);
+    OZ_error("Unexpected case (%d) in \"FSetValue::init(OZ_FSetState\".", s);
   }
 #else
   switch(s) {
@@ -588,7 +588,7 @@ void FSetValue::init(OZ_FSetState s)
     break;
   }
   default:
-    error("Unexpected case (%d) in \"FSetValue::init(OZ_FSetState\".", s);
+    OZ_error("Unexpected case (%d) in \"FSetValue::init(OZ_FSetState\".", s);
   }
 #endif
   FSDEBUG(DP());
@@ -614,7 +614,7 @@ void FSetValue::init(int min_elem, int max_elem)
     _other = false;
 #ifdef DEBUG
      if (maybeToNormal())
-       error("big fsets: unexpected toNormal conversion\n");
+       OZ_error("big fsets: unexpected toNormal conversion\n");
 #endif
   }
 
@@ -1711,7 +1711,7 @@ void FSetConstraint::init(OZ_FSetState s)
     break;
   }
   default:
-    error("Unexpected case (%d) in \"FSetConstraint::init(OZ_FSetState\".", s);
+    OZ_error("Unexpected case (%d) in \"FSetConstraint::init(OZ_FSetState\".", s);
   }
 #else
   switch(s) {
@@ -1728,7 +1728,7 @@ void FSetConstraint::init(OZ_FSetState s)
     break;
   }
   default:
-    error("Unexpected case (%d) in \"FSetConstraint::init(OZ_FSetState\".", s);
+    OZ_error("Unexpected case (%d) in \"FSetConstraint::init(OZ_FSetState\".", s);
   }
 #endif
   FSDEBUG(DP());
@@ -3427,7 +3427,7 @@ void * OZ_FSetValue::operator new(size_t s)
 
 void OZ_FSetValue::operator delete(void *, size_t)
 {
-  error("deleting heap mem");
+  OZ_error("deleting heap mem");
 }
 
 //-----------------------------------------------------------------------------

@@ -103,8 +103,8 @@
 /*  SECTION 1:  Enums & Defines                                            */
 /* ************************************************************************ */
 
-#define NETWORK_ERROR(Args) {error Args;}
-#define IMPLEMENT(Args) {error Args;}
+#define NETWORK_ERROR(Args) {OZ_error Args;}
+#define IMPLEMENT(Args) {OZ_error Args;}
 
 
 /* free list sizes */
@@ -3879,13 +3879,13 @@ void initNetwork()
   tcpCache->nowAccept();  // can be removed ??
 
   if(!am.registerTask(NULL, checkTcpCache, wakeUpTcpCache))
-    error("Unable to register TCPCACHE task");
+    OZ_error("Unable to register TCPCACHE task");
 
 
 #ifdef SLOWNET
   TSC = new TSCQueue();
   if(!am.registerTask(NULL, checkIncTimeSlice, incTimeSlice))
-    error("Unable to register TSC task");
+    OZ_error("Unable to register TSC task");
   TSC_LATENCY = 300;
   TSC_TOTAL_A = 4000;
 #endif

@@ -566,7 +566,7 @@ public:
 
   void monitorInvoke(MonitorReturn mt,int size,int noMsgs){
     Assert(0);
-    error("not implemented");
+    OZ_error("not implemented");
     return;}
 
   Bool isMySite(){
@@ -652,7 +652,7 @@ public:
 
   //
   // There is free list management of virtual info"s;
-  ~VirtualInfo() { error("VirtualInfo is destroyed?"); }
+  ~VirtualInfo() { OZ_error("VirtualInfo is destroyed?"); }
   // There is nothing to be done when disposed;
   void destroy() {
     DebugCode(address = (ip_address) 0);

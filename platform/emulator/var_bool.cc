@@ -165,7 +165,7 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
         }
 
       default:
-        error("unexpected case in unifyBool Bool <--> Bool");
+        OZ_error("unexpected case in unifyBool Bool <--> Bool");
         break;
       } // switch
       return TRUE;
@@ -294,7 +294,7 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
           break;
         }
       default:
-        error("unexpected case in unifyBool Bool <--> FD");
+        OZ_error("unexpected case in unifyBool Bool <--> FD");
         break;
       } // switch
     }

@@ -71,7 +71,7 @@ public:
 
       _heap = (_heap_top = new char[_heap_size]) + tmp_size;
       if (!_heap)
-        error("CPI heap memory exhausted.");
+        OZ_error("CPI heap memory exhausted.");
       _heap_left = _heap_size - tmp_size;
       return _heap_top;
     }

@@ -142,7 +142,7 @@ OZ_BI_define(BIdeepFeed,2,0)
   switch (oz_installPath(home1)) {
   case INST_FAILED:
   case INST_REJECTED:
-    error("deep: install");
+    OZ_error("deep: install");
   case INST_OK:
     break;
   }
@@ -154,7 +154,7 @@ OZ_BI_define(BIdeepFeed,2,0)
   switch (oz_installPath(savedNode)) {
   case INST_FAILED:
   case INST_REJECTED:
-    error("deep: install back");
+    OZ_error("deep: install back");
   case INST_OK:
     break;
   }

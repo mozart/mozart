@@ -560,7 +560,7 @@ TaggedRef insert(TaggedRef a, TaggedRef list) {
       }
       break;
     default:
-      error("insert");
+      OZ_error("insert");
       return 0;
     }
   }
@@ -1081,7 +1081,7 @@ void SRecord::setFeatures(TaggedRef proplist)
 
 #ifdef DEBUG_CHECK
     if (!setFeature(fea, oz_right(pair))) {
-      error("SRecord::setFeatures: improper feature: %s",
+      OZ_error("SRecord::setFeatures: improper feature: %s",
             toC(oz_left(pair)));
     }
 #else

@@ -287,7 +287,7 @@ Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC,
       case Te_Local: ((LockLocal*)lck)->unlock();break;
       case Te_Frame: ((LockFrameEmul*)lck)->unlock(thr);break;
       case Te_Manager: ((LockManagerEmul*)lck)->unlock(thr);break;
-      case Te_Proxy: error("lock proxy unlocking\n");break;}
+      case Te_Proxy: OZ_error("lock proxy unlocking\n");break;}
     } else if (PC==C_SET_SELF_Ptr) {
       Object *newSelf = (Object*)Y;
       thr->setSelf(newSelf);

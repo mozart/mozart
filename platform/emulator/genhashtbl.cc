@@ -104,7 +104,7 @@ void GenHashTable::resize(){
   table= (GenHashNode *) malloc(newSize * sizeof(GenHashNode));
   Assert(table!=NULL);
   if(table==NULL){
-    error("Memory allocation: could not resize Hash Table");}
+    OZ_error("Memory allocation: could not resize Hash Table");}
   init(0,newSize);
   int oldSize=tableSize;
   tableSize=newSize;

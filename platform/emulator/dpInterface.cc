@@ -42,32 +42,32 @@ Bool isPerdioInitializedStub()
 //
 OZ_Return portSendStub(Tertiary *p, TaggedRef msg)
 {
-  error("'portSend' called without DP library?");
+  OZ_error("'portSend' called without DP library?");
   return (PROCEED);
 }
 OZ_Return cellDoExchangeStub(Tertiary*,TaggedRef,TaggedRef)
 {
-  error("'cellDoExchange' called without DP library?");
+  OZ_error("'cellDoExchange' called without DP library?");
   return (PROCEED);
 }
 OZ_Return cellDoAccessStub(Tertiary*,TaggedRef)
 {
-  error("'cellDoAccess' called without DP library?");
+  OZ_error("'cellDoAccess' called without DP library?");
   return (PROCEED);
 }
 OZ_Return cellAtAccessStub(Tertiary*,TaggedRef,TaggedRef)
 {
-  error("'cellAtAccess' called without DP library?");
+  OZ_error("'cellAtAccess' called without DP library?");
   return (PROCEED);
 }
 OZ_Return cellAtExchangeStub(Tertiary*,TaggedRef,TaggedRef)
 {
-  error("'cellAtExchange' called without DP library?");
+  OZ_error("'cellAtExchange' called without DP library?");
   return (PROCEED);
 }
 OZ_Return cellAssignExchangeStub(Tertiary*,TaggedRef,TaggedRef)
 {
-  error("'cellAssignExchange' called without DP library?");
+  OZ_error("'cellAssignExchange' called without DP library?");
   return (PROCEED);
 }
 
@@ -77,108 +77,108 @@ OZ_Return cellAssignExchangeStub(Tertiary*,TaggedRef,TaggedRef)
 // interface;
 void lockLockProxyStub(Tertiary *t, Thread *thr)
 {
-  error("'lockLockProxy' called without DP library?");
+  OZ_error("'lockLockProxy' called without DP library?");
 }
 void lockLockManagerOutlineStub(LockManagerEmul *lfu, Thread *thr)
 {
-  error("'lockLockManagerOutline' called without DP library?");
+  OZ_error("'lockLockManagerOutline' called without DP library?");
 }
 void unlockLockManagerOutlineStub(LockManagerEmul *lfu, Thread *thr)
 {
-  error("'unlockLockManagerOutline' called without DP library?");
+  OZ_error("'unlockLockManagerOutline' called without DP library?");
 }
 void lockLockFrameOutlineStub(LockFrameEmul *lfu, Thread *thr)
 {
-  error("'lockLockFrameOutline' called without DP library?");
+  OZ_error("'lockLockFrameOutline' called without DP library?");
 }
 void unlockLockFrameOutlineStub(LockFrameEmul *lfu, Thread *thr)
 {
-  error("'unlockLockFrameOutline' called without DP library?");
+  OZ_error("'unlockLockFrameOutline' called without DP library?");
 }
 
 //
 Bool marshalTertiaryStub(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
 {
-  error("'marshalTertiary' called without DP library?");
+  OZ_error("'marshalTertiary' called without DP library?");
   return (NO);
 }
 OZ_Term unmarshalTertiaryStub(MsgBuffer *bs, MarshalTag tag)
 {
-  error("'unmarshalTertiary' called without DP library?");
+  OZ_error("'unmarshalTertiary' called without DP library?");
   return ((OZ_Term) 0);
 }
 OZ_Term unmarshalOwnerStub(MsgBuffer *bs,MarshalTag mt)
 {
-  error("'unmarshalOwner' called without DP library?");
+  OZ_error("'unmarshalOwner' called without DP library?");
   return ((OZ_Term) 0);
 }
 //
 OZ_Term unmarshalVarStub(MsgBuffer*)
 {
-  error("'unmarshalVar' called without DP library?");
+  OZ_error("'unmarshalVar' called without DP library?");
   return ((OZ_Term) 0);
 }
 Bool marshalVariableStub(TaggedRef*, MsgBuffer*)
 {
-  error("'marshalVariable' called without DP library?");
+  OZ_error("'marshalVariable' called without DP library?");
   return (NO);
 }
 void marshalObjectStub(ConstTerm *t, MsgBuffer *bs)
 {
-  error("'marshalObject' called without DP library?");
+  OZ_error("'marshalObject' called without DP library?");
 }
 void marshalSPPStub(TaggedRef term, MsgBuffer *bs,Bool trail)
 {
-  error("'marshalSPP' called without DP library?");
+  OZ_error("'marshalSPP' called without DP library?");
 }
 
 // interface for GC;
 void gcProxyRecurseStub(Tertiary *t)
 {
-  error("'gcProxyRecurse' called without DP library?");
+  OZ_error("'gcProxyRecurse' called without DP library?");
 }
 void gcManagerRecurseStub(Tertiary *t)
 {
-  error("'gcManagerRecurse' called without DP library?");
+  OZ_error("'gcManagerRecurse' called without DP library?");
 }
 ConstTerm* gcDistResourceStub(ConstTerm*)
 {
-  error("'gcDistResource' called without DP library?");
+  OZ_error("'gcDistResource' called without DP library?");
   return ((ConstTerm *) 0);
 }
 
 //
 void gcDistCellRecurseStub(Tertiary *t)
 {
-  error("'gcDistCellRecurse' called without DP library?");
+  OZ_error("'gcDistCellRecurse' called without DP library?");
 }
 void gcDistLockRecurseStub(Tertiary *t)
 {
-  error("'gcDistLockRecurse' called without DP library?");
+  OZ_error("'gcDistLockRecurse' called without DP library?");
 }
 //
 void gcDistPortRecurseStub(Tertiary *t)
 {
-  error("'gcDistPortRecurse' called without DP library?");
+  OZ_error("'gcDistPortRecurse' called without DP library?");
 }
 //
 // (Only) gc method - for cells & locks (because we have to know
 // whether they are accessible locally or not);
 ConstTerm* auxGcDistCellStub(Tertiary *t)
 {
-  error("'auxGcDistCell' called without DP library?");
+  OZ_error("'auxGcDistCell' called without DP library?");
   return ((ConstTerm *) 0);
 }
 ConstTerm* auxGcDistLockStub(Tertiary *t)
 {
-  error("'auxGcDistLock' called without DP library?");
+  OZ_error("'auxGcDistLock' called without DP library?");
   return ((ConstTerm *) 0);
 }
 
 //
 ConstTerm *gcStatefulSpecStub(Tertiary *t)
 {
-  error("'gcStatefulSpec' called without DP library?");
+  OZ_error("'gcStatefulSpec' called without DP library?");
   return ((ConstTerm *) 0);
 }
 

@@ -269,7 +269,7 @@ static TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I,
   int nam_len;
 
   mod_len = (mod_name)?strlen(mod_name):0;
-  if (mod_len>=255) error("module name too long: %s\n",mod_name);
+  if (mod_len>=255) OZ_error("module name too long: %s\n",mod_name);
   if (mod_len > 0) {
     memcpy((void*)buffer,(const void*)mod_name,mod_len);
     buffer[mod_len] = '.';
@@ -279,7 +279,7 @@ static TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I,
   while (I && I->name) {
     nam_len = strlen(I->name);
     if ((mod_len+nam_len)>=255)
-      error("builtin name too long: %s.%s\n",mod_name,I->name);
+      OZ_error("builtin name too long: %s.%s\n",mod_name,I->name);
     memcpy((void*)(buffer+mod_len),(const void*)I->name,nam_len);
     buffer[mod_len+nam_len] = '\0';
     bi = new Builtin(buffer,I->inArity,I->outArity,I->func,isSited);
@@ -499,13 +499,13 @@ void initBuiltins() {
       TaggedRef val;
       if (tagged2Dictionary(dictionary_of_builtins)
           ->getArg(oz_new,val) != PROCEED)
-        error("new builtin not found: [old: %s] [new: %s]\n",
-              help_ptr->oldName,help_ptr->newName);
+        OZ_error("new builtin not found: [old: %s] [new: %s]\n",
+                 help_ptr->oldName,help_ptr->newName);
       TaggedRef ignore;
       if (tagged2Dictionary(dictionary_of_builtins)
           ->getArg(oz_old,ignore) == PROCEED)
-        error("old builtin exists already: [old: %s] [new: %s]\n",
-              help_ptr->oldName,help_ptr->newName);
+        OZ_error("old builtin exists already: [old: %s] [new: %s]\n",
+                 help_ptr->oldName,help_ptr->newName);
       tagged2Dictionary(dictionary_of_builtins)
         ->setArg(oz_old,val);
     }

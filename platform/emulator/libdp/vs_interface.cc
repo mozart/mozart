@@ -35,94 +35,94 @@
 //
 VirtualSite* createVirtualSiteStub(DSite *)
 {
-  error("'createVirtualSite' called without 'VIRTUALSITES'?");
+  OZ_error("'createVirtualSite' called without 'VIRTUALSITES'?");
   return ((VirtualSite *) 0);
 }
 //
 void zeroRefsToVirtualStub(VirtualSite *)
 {
-  error("'zeroRefsToVirtual' called without 'VIRTUALSITES'?");
+  OZ_error("'zeroRefsToVirtual' called without 'VIRTUALSITES'?");
 }
 //
 int sendTo_VirtualSiteStub(VirtualSite*, MsgBuffer*, MessageType, DSite*, int)
 {
-  error("'sendTo_VirtualSite' called without 'VIRTUALSITES'?");
+  OZ_error("'sendTo_VirtualSite' called without 'VIRTUALSITES'?");
   return (-1);
 }
 //
 int discardUnsentMessage_VirtualSiteStub(VirtualSite*, int)
 {
-  error("'discardUnsentMessage_VirtualSite' called without 'VIRTUALSITES'?");
+  OZ_error("'discardUnsentMessage_VirtualSite' called without 'VIRTUALSITES'?");
   return (-1);
 }
 //
 int getQueueStatus_VirtualSiteStub(VirtualSite*, int &)
 {
-  error("'getQueueStatus_VirtualSite' called without 'VIRTUALSITES'?");
+  OZ_error("'getQueueStatus_VirtualSite' called without 'VIRTUALSITES'?");
   return (-1);
 }
 //
 SiteStatus siteStatus_VirtualSiteStub(VirtualSite *)
 {
-  error("'siteStatus_VirtualSite' called without 'VIRTUALSITES'?");
+  OZ_error("'siteStatus_VirtualSite' called without 'VIRTUALSITES'?");
   return ((SiteStatus) -1);
 }
 //
 MonitorReturn monitorQueue_VirtualSiteStub(VirtualSite*, int, int, void*)
 {
-  error("'monitorQueue_VirtualSite' called without 'VIRTUALSITES'?");
+  OZ_error("'monitorQueue_VirtualSite' called without 'VIRTUALSITES'?");
   return ((MonitorReturn) -1);
 }
 //
 MonitorReturn demonitorQueue_VirtualSiteStub(VirtualSite *)
 {
-  error("'demonitorQueue_VirtualSite' called without 'VIRTUALSITES'?");
+  OZ_error("'demonitorQueue_VirtualSite' called without 'VIRTUALSITES'?");
   return ((MonitorReturn) -1);
 }
 //
 ProbeReturn installProbe_VirtualSiteStub(VirtualSite*, ProbeType, int)
 {
-  error("'installProbe_VirtualSite' called without 'VIRTUALSITES'?");
+  OZ_error("'installProbe_VirtualSite' called without 'VIRTUALSITES'?");
   return ((ProbeReturn) -1);
 }
 //
 ProbeReturn deinstallProbe_VirtualSiteStub(VirtualSite*, ProbeType pt)
 {
-  error("'installProbe_VirtualSite' called without 'VIRTUALSITES'?");
+  OZ_error("'installProbe_VirtualSite' called without 'VIRTUALSITES'?");
   return ((ProbeReturn) -1);
 }
 //
 ProbeReturn probeStatus_VirtualSiteStub(VirtualSite*, ProbeType&, int&, void*&)
 {
-  error("'probeStatus_VirtualSite' called without 'VIRTUALSITES'?");
+  OZ_error("'probeStatus_VirtualSite' called without 'VIRTUALSITES'?");
   return ((ProbeReturn) -1);
 }
 //
 GiveUpReturn giveUp_VirtualSiteStub(VirtualSite *)
 {
-  error("'giveUp_VirtualSite' called without 'VIRTUALSITES'?");
+  OZ_error("'giveUp_VirtualSite' called without 'VIRTUALSITES'?");
   return ((GiveUpReturn) -1);
 }
 //
 void discoveryPerm_VirtualSiteStub(VirtualSite *)
 {
-  error("'discoveryPerm_VirtualSite' called without 'VIRTUALSITES'?");
+  OZ_error("'discoveryPerm_VirtualSite' called without 'VIRTUALSITES'?");
 }
 //
 MsgBuffer* getVirtualMsgBufferStub(DSite *)
 {
-  error("'getVirtualMsgBuffer' called without 'VIRTUALSITES'?");
+  OZ_error("'getVirtualMsgBuffer' called without 'VIRTUALSITES'?");
   return ((MsgBuffer *) 0);
 }
 //
 void dumpVirtualMsgBufferStub(MsgBuffer *)
 {
-  error("'dumpVirtualMsgBuffer' called without 'VIRTUALSITES'?");
+  OZ_error("'dumpVirtualMsgBuffer' called without 'VIRTUALSITES'?");
 }
 //
 void siteAlive_VirtualSiteStub(VirtualSite *vs)
 {
-  error("'siteAlive_VirtualSite' called without 'VIRTUALSITES'?");
+  OZ_error("'siteAlive_VirtualSite' called without 'VIRTUALSITES'?");
 }
 // This one may be called;
 void virtualSitesExitStub() {}

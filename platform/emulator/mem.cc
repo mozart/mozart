@@ -442,7 +442,7 @@ class SbrkMemory {
 #endif
       lastBrk = sbrk(0);
       if (ret == -1) {
-        error("*** Something wrong when shrinking memory");
+        OZ_error("*** Something wrong when shrinking memory");
       }
       return NULL;
     }

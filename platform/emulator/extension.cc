@@ -26,7 +26,7 @@
 
 unsigned int oz_newUniqueId() {
   static unsigned int counter=OZ_E_LAST;
-  if (counter==0) error("oz_newUniqueId: counter overflow");
+  if (counter==0) OZ_error("oz_newUniqueId: counter overflow");
   return counter++;
 }
 
@@ -52,7 +52,7 @@ unsigned int OZ_getUniqueId(void)
 
 OZ_Extension::~OZ_Extension()
 {
-  error("invoking destructor ~OZ_Extension()");
+  OZ_error("invoking destructor ~OZ_Extension()");
 }
 
 void* OZ_Extension::operator new(size_t n) {
@@ -61,7 +61,7 @@ void* OZ_Extension::operator new(size_t n) {
 
 void OZ_Extension::operator delete(void*,size_t)
 {
-  error("invoking OZ_Extension::operator delete(void*,size_t)");
+  OZ_error("invoking OZ_Extension::operator delete(void*,size_t)");
 }
 
 OZ_Term OZ_Extension::printV(int depth)

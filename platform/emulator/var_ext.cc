@@ -30,6 +30,6 @@
 unsigned int oz_newVarId()
 {
   static unsigned int counter=OZ_EVAR_LAST;
-  if (counter==0) error("oz_newVarId: counter overflow");
+  if (counter==0) OZ_error("oz_newVarId: counter overflow");
   return counter++;
 }

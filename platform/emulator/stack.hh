@@ -73,7 +73,7 @@ protected:
     array = alloc==Stack_WithMalloc
          ? (StackEntry*)malloc(auxsz):(StackEntry*)freeListMalloc(auxsz);
     if(array==NULL) { // mm2: bad message and crash follows
-      error("Cannot alloc stack memory at %s:%d.", __FILE__, __LINE__);
+      OZ_error("Cannot alloc stack memory at %s:%d.", __FILE__, __LINE__);
     }
     tos = array;
     stackEnd = array+sz;

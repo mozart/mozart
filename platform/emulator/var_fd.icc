@@ -111,7 +111,7 @@ void addSuspFDVar(TaggedRef v, Suspension susp, OZ_FDPropState list_index)
     AddSuspToList(fv->suspList, susp, fv->getHome1());
     break;
   default:
-    error("list index out of range.");
+    OZ_error("list index out of range.");
     break;
   }
 }

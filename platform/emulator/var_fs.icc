@@ -125,7 +125,7 @@ void addSuspFSetVar(OZ_Term v, Suspension susp, OZ_FSetPropState list_index)
     AddSuspToList(fsv->suspList, susp, fsv->getHome1());
     break;
   default:
-    error("list index out of range.");
+    OZ_error("list index out of range.");
     break;
   }
 }

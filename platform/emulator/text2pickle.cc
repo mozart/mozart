@@ -8,11 +8,9 @@
 #include "config.h"
 #include "opcodes.hh"
 
-
-
 static int line=1, col=0;
 
-void error(const char *format, ...)
+void OZ_error(const char *format, ...)
 {
   va_list ap;
   va_start(ap,format);
@@ -112,7 +110,7 @@ void scanQuotedString(FILE *in)
   int i = 0;
   while (c != '\'') {
     if (c == EOF) {
-      error("end-of-file in string");
+      OZ_error("end-of-file in string");
     } else if (c == '\\') {
       c = nextchar(in);
       switch (c) {
@@ -145,11 +143,11 @@ void scanQuotedString(FILE *in)
           hexstring[1] = c;
           hexstring[2] = '\0';
           if (c == EOF)
-            error("end-of-file in string");
+            OZ_error("end-of-file in string");
           char *end;
           int hexnum = (int) strtol(hexstring, &end, 16);
           if (hexnum == 0 || *end != '\0')
-            error("illegal number in hexadecimal notation");
+            OZ_error("illegal number in hexadecimal notation");
           setBuf(i++,hexnum);
         }
         break;
@@ -161,7 +159,7 @@ void scanQuotedString(FILE *in)
         setBuf(i++,c);
         break;
       case EOF:
-        error("end-of-file in string");
+        OZ_error("end-of-file in string");
       case '0': case '1': case '2': case '3':
       case '4': case '5': case '6': case '7':
         {
@@ -172,16 +170,16 @@ void scanQuotedString(FILE *in)
           octstring[2] = c;
           octstring[3] = '\0';
           if (c == EOF)
-            error("end-of-file in string");
+            OZ_error("end-of-file in string");
           char *end;
           int octnum = (int) strtol(octstring, &end, 8);
           if (octnum == 0 || octnum > 255 || *end != '\0')
-            error("illegal number in octal notation");
+            OZ_error("illegal number in octal notation");
           setBuf(i++,octnum);
         }
         break;
       default:
-        error("illegal character in string");
+        OZ_error("illegal character in string");
       }
     } else {
       setBuf(i++,c);
@@ -204,10 +202,10 @@ char *scanString(FILE *in)
       c = nextchar(in);
     }
     if (!isspace(c))
-      error("illegal character in string");
+      OZ_error("illegal character in string");
     setBuf(i,'\0');
   } else {
-    error("string expected");
+    OZ_error("string expected");
   }
   return buf;
 }
@@ -536,7 +534,7 @@ TaggedPair *unpickle(FILE *in)
   int major, minor;
   int aux = sscanf(val.string,"%d#%d",&major,&minor);
   if (aux !=2 && strcmp(val.string,"3.0.10#15")!=0) { // hard coded old version
-    error("Version too new. Got: '%s', expected: '%s'.\n",val.string,PERDIOVERSION);
+    OZ_error("Version too new. Got: '%s', expected: '%s'.\n",val.string,PERDIOVERSION);
   }
 
   ProgramCounter PC = 0;
@@ -578,7 +576,7 @@ TaggedPair *unpickle(FILE *in)
     case TAG_TERMREF:   val.ttag = termTags.find(scanString(in)); Assert(val.ttag); break;
 
     default:
-      error("unknown tag: '%c'\n",tag);
+      OZ_error("unknown tag: '%c'\n",tag);
     }
 
     AddPair(lastPair,tag,val);

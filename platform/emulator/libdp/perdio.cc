@@ -856,7 +856,7 @@ void msgReceived(MsgBuffer* bs)
     }
 
   default:
-    error("siteReceive: unknown message %d\n",mt);
+    OZ_error("siteReceive: unknown message %d\n",mt);
     break;
   }
 
