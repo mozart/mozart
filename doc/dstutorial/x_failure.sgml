@@ -49,14 +49,6 @@ This chapter and the next one give the first results
 of this research.
 All comments and suggestions for improvements are welcome.
 
-<P>This chapter carefully indicates where the current release
-is incomplete with respect to the specification
-(this is called a <EM>limitation</EM>)
-or has a different behavior (this is called a <EM>modification</EM>).
-All limitations and modifications are listed where
-they occur.
-A complete list is given at the end of the chapter.
-
 <SECTION><TITLE>Fault states</TITLE>
 
 <P>All failure modes are defined with respect to
@@ -375,7 +367,7 @@ All other threads will raise the exception <<tempFail>>.
 Thread <<T1>> will continue the operation when and
 if the <<tempFail>> state goes away.
 
-<SUBSUBSECTION><TITLE>Levels and sitedness</TITLE>
+<SUBSECTION><TITLE>Levels and sitedness</TITLE>
 
 <P>The act of enabling or installing on <<global>> or <<site>> levels
 is <EM>sited</EM>.
@@ -654,50 +646,6 @@ the object-record can be temporarily or permanently absent.
 In both cases the object
 cannot be used, so we simply consider the new failure modes
 to be instances of <<tempFail>> and <<permFail>>.
-
-<section><title/Limitations and modifications/
- 
-<P>The current release has the following limitations
-and modifications with respect to the specification.
-A <EM>limitation</EM> is an operation that is specified
-but not possible in the current release.
-A <EM>modification</EM> is an operation that is specified
-but behaves differently in the current release.
-The limitations are:
-<list>
-<item>The code of functions, procedures, classes, and functors
-(but not objects) is always inserted in messages,
-even this code is already present at the destination.
-In future releases, these entities will be copied
-across the network only
-if they are not present on the destination site.
-In both current and future releases, at most a single copy
-of these entities can exist per site.
-<item>The fault state <<tempFail>> is indicated only after
-a long delay.
-<item>If an exception is raised or a handler or watcher
-is invoked for an <EM>object</EM>,
-then the <<Entity>> argument is undefined.
-For handlers and watchers, this limitation can
-be circumvented by letting the handler or watcher
-reference the object.
-<item>If an exception is raised or a handler is invoked
-for an <EM>object</EM>,
-then the attempted object operation cannot be retried.
-<item>A handler cannot be installed at the <<global>> level,
-i.e., the call <<{Fault.install _ global _ _}>> is undefined.
-If an attempt is made to install a <<global>> handler,
-then a <<notImplemented>> exception is given.
-</list>
-<P>The modifications are:
-<list>
-<item>A handler installed on a <EM>variable</EM> will retry
-the operation (i.e., bind or wait) after it returns.
-That is, the handler is inserted before the operation
-instead of replacing the operation.
-</list>
-<P>These limitations and modifications
-will be removed in future releases.
 
 </CHAPTER>
 
