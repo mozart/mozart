@@ -1,5 +1,3 @@
-Hydra	mail -s "I have changed %s" mehl
-Hydra	mail -s "I have changed %s" scheidhr
-Hydra	mail -s "I have changed %s" tmueller
+Hydra	mail -s "I have changed %s" mehl,scheidhr,tmueller
 Hydra/Compiler   mail -s "I have changed %s" henz
 Oz	mail -s "I have changed %s" mehl,henz,wuertz
