@@ -100,8 +100,8 @@ public:
   Bool test(int);
   int getLower(void) { return lowerBound; }
   int getUpper(void) { return upperBound; }
-  void or(const BitArray *);
-  void and(const BitArray *);
+  void bor(const BitArray *);
+  void band(const BitArray *);
   Bool disjoint(const BitArray *);
   int card();
   void nimpl(const BitArray *);
@@ -153,14 +153,14 @@ Bool BitArray::test(int i) {
   return array[relative / BITS_PER_INT] & 1 << (relative % BITS_PER_INT);
 }
 
-void BitArray::or(const BitArray *b) {
+void BitArray::bor(const BitArray *b) {
   Assert(lowerBound == b->lowerBound && upperBound == b->upperBound);
   int size = getSize();
   for (int i = 0; i < size; i++)
     array[i] |= b->array[i];
 }
 
-void BitArray::and(const BitArray *b) {
+void BitArray::band(const BitArray *b) {
   Assert(lowerBound == b->lowerBound && upperBound == b->upperBound);
   int size = getSize();
   for (int i = 0; i < size; i++)
@@ -344,7 +344,7 @@ OZ_BI_define(BIbitArray_or,2,0)
   oz_declareBitArrayIN(0,b1);
   oz_declareBitArrayIN(1,b2);
   if (b1->checkBounds(b2)) {
-    b1->or(b2);
+    b1->bor(b2);
     return PROCEED;
   } else
     return oz_raise(E_ERROR,E_KERNEL,"BitArray.binop",2,OZ_in(0),OZ_in(1));
@@ -355,7 +355,7 @@ OZ_BI_define(BIbitArray_and,2,0)
   oz_declareBitArrayIN(0,b1);
   oz_declareBitArrayIN(1,b2);
   if (b1->checkBounds(b2)) {
-    b1->and(b2);
+    b1->band(b2);
     return PROCEED;
   } else
     return oz_raise(E_ERROR,E_KERNEL,"BitArray.binop",2,OZ_in(0),OZ_in(1));
