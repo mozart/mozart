@@ -41,15 +41,6 @@
 
 #include "os.hh"
 
-// GARBAGE COLLECTION HACK
-inline
-void OZ_collectHeapTermUnsafe(TaggedRef & frm, TaggedRef & to) {
-  if (frm)
-    oz_gCollectTerm(frm,to);
-  else
-    to=frm;
-}
-
 int NetHashTable::hashFunc(NetAddress *na){
   unsigned char *p = (unsigned char*) na;
   int i;
@@ -989,7 +980,7 @@ void BorrowEntry::gcBorrowRoot(int i) {
   Assert(isTertiary());
   if(getTertiary()->cacIsMarked()){
     makeGCMark();    
-    u.tert=(Tertiary *)u.tert->gCollectConstTerm();
+    oz_gCollectTerm(u.tert,u.tert);
     return;}
   if(isTertiaryPending(getTertiary())) gcPO();
 }
@@ -1143,11 +1134,11 @@ void OB_Entry::gcPO() {
   makeGCMark();
   if (isTertiary()) {
     PD((GC,"OT tertiary found"));
-    u.tert=(Tertiary *)u.tert->gCollectConstTerm();
+    oz_gCollectTerm(u.tert, u.tert);
   } else {
     Assert(isRef() || isVar());
     PD((GC,"OT var/ref"));
-    OZ_collectHeapTermUnsafe(u.ref,u.ref);}
+    oz_gCollectTerm(u.ref,u.ref);}
 }
 
 Bool withinBorrowTable(int i){
