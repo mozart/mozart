@@ -114,3 +114,7 @@ void dumpVirtualInfo(VirtualInfo* vi){
 MsgBuffer* getVirtualMsgBuffer(Site* s){
   Assert(0);
   return NULL;}
+
+void dumpVirtualMsgBuffer(MsgBuffer* m){
+  Assert(0);
+  return;}

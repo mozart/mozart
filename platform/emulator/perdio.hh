@@ -58,44 +58,38 @@ enum MessageType {
   M_ASK_FOR_CREDIT,     // OTI SITE (implicit 1 credit)
   M_OWNER_CREDIT,       // OTI CREDIT
   M_OWNER_SEC_CREDIT,   // NA CREDIT
+
   M_BORROW_CREDIT,      // NA  CREDIT
   M_REGISTER,           // OTI SITE (implicit 1 credit)
   M_REDIRECT,           // NA  DIF
   M_ACKNOWLEDGE,        // NA (implicit 1 credit)
   M_SURRENDER,          // OTI SITE DIF (implicit 1 credit)
-  M_CELL_GET,           // OTI* SITE
+
+  M_CELL_LOCK_GET,      // OTI* SITE
+  M_CELL_LOCK_FORWARD,  // NA* INTEGER SITE
+  M_CELL_LOCK_DUMP,     // OTI* SITE
   M_CELL_CONTENTS,      // NA* DIF
   M_CELL_READ,          // OTI* DIF
+
   M_CELL_REMOTEREAD,    // NA* DIF
-  M_CELL_FORWARD,       // NA* INTEGER SITE
-  M_CELL_DUMP,          // OTI* SITE
-  M_CELL_ACK,           // OTI* SITE
+  M_CELL_READANS,
   M_CELL_CANTPUT,
-  M_CELL_DIDSEND,
-  M_CELL_ANS_DIDSEND,
-  M_CELL_DIDGET,
-  M_CELL_ANS_DIDGET,
-
-  M_LOCK_GET,           // OTI* SITE
   M_LOCK_TOKEN,          // NA*
-  M_LOCK_FORWARD,       // NA* SITE
-  M_LOCK_DUMP,          // OTI* SITE
-  M_LOCK_ACK,           // OTI* SITE
   M_LOCK_CANTPUT,
-  M_LOCK_DIDSEND,
-  M_LOCK_ANS_DIDSEND,
-  M_FILE,
 
-  M_LOCK_DIDGET,
-  M_LOCK_ANS_DIDGET,
-  M_LOCK_PERMBLOCKED,
-
+  M_CHAIN_ACK,
+  M_CHAIN_QUESTION,
+  M_CHAIN_ANSWER,
+  M_ASK_ERROR,
+  M_TELL_ERROR,
 
   M_GET_OBJECT,         // OTI* SITE
   M_GET_OBJECTANDCLASS, // OTI* SITE
   M_SEND_OBJECT,        //
   M_SEND_OBJECTANDCLASS,//
   M_REGISTER_VS,
+
+  M_FILE,
   M_INIT_VS,
   M_LAST
 };
@@ -321,12 +315,15 @@ public:
 
   void setGCMark()   { gcMark = 1; }
   Bool getGCMark()   { return gcMark; }
-  void resetGCMark() { gcMark = 0; }
+  void resetGCMark() { gcMark = 0;}
 
   void gcGName(){
     if (getGNameType()!=GNT_CODE && !getGCMark()) {
       setGCMark();
+      gcMarkSite();
       gcTagged(value,value);}}
+
+  void gcMarkSite();
 };
 
 /* ************************************************************************ */
@@ -357,6 +354,12 @@ void initComponents();
 void networkTimer();
 extern int tempTimeCtr;
 #define TIME_CTR_THRESHOLD 100
+
+/* ************************************************************************ */
+/*  SECTION ::  misc                                                        */
+/* ************************************************************************ */
+
+#define NOT_IMPLEMENTED   {warning("not implemented - perdio");Assert(0);}
 
 /* __PERDIOHH */
 #endif

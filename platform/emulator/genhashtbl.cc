@@ -214,6 +214,17 @@ Bool GenHashTable::htSub(int bigIndex,GenHashNode *cur){
     manager->deleteGenHashNode(cur);}
   return TRUE;}
 
+void GenHashTable::deleteFirst(GenHashNode *cur){
+  GenHashNode *next=cur->next;
+  if(next==NULL){
+    cur->makeEmpty();}
+  cur->copyFrom(next);
+  manager->deleteGenHashNode(next);}
+
+void GenHashTable::deleteNonFirst(GenHashNode *before,GenHashNode *cur){
+  before->next=cur->next;
+  manager->deleteGenHashNode(cur);}
+
 GenHashNode *GenHashTable::htFindFirst(int bigIndex){
   int index=bigIndex % tableSize;
   Assert(index>=0);
@@ -272,3 +283,5 @@ void GenHashTable::printStatistics(){
   printf("\tfreelistHashNodememory    : %d\n",manager->length());
 }
 #endif
+
+GenFreeListManager *genFreeListManager;

@@ -1980,83 +1980,70 @@ LBLdispatcher:
     }
 
   Case(LOCKTHREAD)
-    {
-      ProgramCounter lbl = getLabelArg(PC+1);
-      TaggedRef aux      = XPC(2);
-      int toSave         = getPosIntArg(PC+3);
+{
+  ProgramCounter lbl = getLabelArg(PC+1);
+  TaggedRef aux      = XPC(2);
+  int toSave         = getPosIntArg(PC+3);
 
-      DEREF(aux,auxPtr,_1);
-      if (isAnyVar(aux)) {
-        SUSP_PC(auxPtr,toSave,PC);
-      }
+  DEREF(aux,auxPtr,_1);
+  if (isAnyVar(aux)) {
+    SUSP_PC(auxPtr,toSave,PC);}
 
-      if (!isLock(aux)) {
-        /* arghhhhhhhhhh! fucking exceptions (RS) */
-        (void) oz_raise(E_ERROR,E_KERNEL,
-                  "type",5,NameUnit,NameUnit,
-                  OZ_atom("Lock"),
-                  OZ_int(1),
-                  OZ_string(""));
-        RAISE_TYPE1("lock",cons(aux,nil()));
-        goto LBLraise;
-      }
+  if (!isLock(aux)) {
+    /* arghhhhhhhhhh! fucking exceptions (RS) */
+    (void) oz_raise(E_ERROR,E_KERNEL,"type",5,NameUnit,NameUnit,OZ_atom("Lock"),
+    OZ_int(1),
+    OZ_string(""));
+    RAISE_TYPE1("lock",cons(aux,nil()));
+    goto LBLraise;
+  }
 
-      OzLock *t = (OzLock*)tagged2Tert(aux);
-      Thread *th=e->currentThread();
+  OzLock *t = (OzLock*)tagged2Tert(aux);
+  Thread *th=e->currentThread();
 
+  if(t->getTertType()==Te_Local){
+    if(!e->onToplevel()){
+      if (!e->isCurrentBoard(GETBOARD((LockLocal*)t))) {
+        (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
+        goto LBLraise;}}
+    if(((LockLocal*)t)->hasLock(th)) {goto has_lock;}
+    if(((LockLocal*)t)->lockB(th)) {goto got_lock;}
+    goto no_lock;}
 
-      switch(t->getTertType()){
-      case Te_Local:{
-        if(!e->onToplevel()){
-          if (!e->isCurrentBoard(GETBOARD((LockLocal*)t))) {
-            (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
-            goto LBLraise;}}
-        if(((LockLocal*)t)->hasLock(th)) {goto has_lock;}
-        if(((LockLocal*)t)->lockB(th)) {goto got_lock;}
-        goto no_lock;}
-      case Te_Frame:{
-        if(((LockFrame*)t)->hasLock(th)) {goto has_lock;}
-        if(((LockFrame*)t)->lockB(e->currentThread())){goto got_lock;}
-        if(t->getNetCondition()!=NotBlocked &&
-           t->threadHasHandler(th)) {goto lost_lock_n;}
-        goto no_lock;}
-      case Te_Proxy:{
-        ((LockProxy*)t)->lock(th);
-        if(t->getNetCondition()!=NotBlocked &&
-           t->threadHasHandler(th)) {goto lost_lock_n;}
-        goto no_lock;}
-      case Te_Manager:{
-        if(((LockManager*)t)->hasLock(th)) {goto has_lock;}
-        if(((LockManager*)t)->lockB(th)){goto got_lock;}
-        goto no_lock;}}
+  if(!e->onToplevel()){
+    (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));}
 
-      Assert(0);
+  switch(t->getTertType()){
+  case Te_Frame:{
+    if(((LockFrame*)t)->hasLock(th)) {goto has_lock;}
+    if(((LockFrame*)t)->lockB(e->currentThread())){goto got_lock;}
+    goto no_lock;}
+  case Te_Proxy:{
+    ((LockProxy*)t)->lock(th);
+    goto no_lock;}
+  case Te_Manager:{
+    if(((LockManager*)t)->hasLock(th)) {goto has_lock;}
+    if(((LockManager*)t)->lockB(th)){goto got_lock;}
+    goto no_lock;}
+  default:
+    Assert(0);}
 
-      got_lock:
-        PushCont(lbl,Y,G);
-      CTS->pushLock(t);
-      DISPATCH(4);
+  got_lock:
+    PushCont(lbl,Y,G);
+    CTS->pushLock(t);
+    DISPATCH(4);
 
-    has_lock:
-      PushCont(lbl,Y,G);
-      DISPATCH(4);
+  has_lock:
+    PushCont(lbl,Y,G);
+    DISPATCH(4);
 
-      lost_lock_n:
-      PushCont(lbl,Y,G);
-      CTS->pushLock(t);
-      PushContX((PC+4),Y,G,X,toSave);      /* ATTENTION */
-      ((LockFrame*)t)->blocked(t->getNetCondition(),false);
-      DISPATCH(4);
-
-      no_lock:
-        PushCont(lbl,Y,G);
-        CTS->pushLock(t);
-        CheckLiveness(PC+4,toSave);
-        PushContX((PC+4),Y,G,X,toSave);      /* ATTENTION */
-        goto LBLsuspendThread;
-
-
-    }
+  no_lock:
+    PushCont(lbl,Y,G);
+    CTS->pushLock(t);
+    CheckLiveness(PC+4,toSave);
+    PushContX((PC+4),Y,G,X,toSave);      /* ATTENTION */
+    goto LBLsuspendThread;
+  }
 
   Case(RETURN)
     LBLpopTask:
