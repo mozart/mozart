@@ -57,10 +57,6 @@ ProcTextHeight         = 7
 SumTextWidth           = 24
 SumTextHeight          = 5
 
-NoBorderSize           = 0
-SmallBorderSize        = 1
-BorderSize             = 2
-
 PadXButton             = 5
 PadYButton             = 3
 
