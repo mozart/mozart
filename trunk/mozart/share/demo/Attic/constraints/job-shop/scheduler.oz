@@ -85,7 +85,7 @@ in
       end
 
       meth setSol(I S)
-	 case I==@Stamp then
+	 if I==@Stamp then
 	    {self.Stop tk(configure state:disabled)}
 	    case S of nil then
 	       {self.Next tk(configure state:disabled)}
@@ -100,7 +100,6 @@ in
 	       {self.Next tk(configure state:normal)}
 	       {self.Best tk(configure state:normal)}
 	    end
-	 else skip
 	 end
       end
 

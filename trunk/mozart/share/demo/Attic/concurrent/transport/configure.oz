@@ -46,7 +46,7 @@ HighGood = Capacity        % Upper bound for random weight of goods
 %% Colors
 BackColor # StreetColor # CityColor #
 TruckColors # FrameColor # WinColor # GoodColor =  
-case Tk.isColor then
+if Tk.isColor then
    aquamarine # black # red #
    [red blue yellow green plum cyan tan bisque] #
    black # steelblue # brown

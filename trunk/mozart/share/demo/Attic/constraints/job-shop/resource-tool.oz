@@ -84,8 +84,7 @@ in
 			tags:    q(T DT))}
 		 {T tkBind(event:  '<1>'
 			   action: self # Choose(Res T))}
-		 case Res==MaxRes then Selected <- T
-		 else skip
+		 if Res==MaxRes then Selected <- T
 		 end
 	      end}
 	  end}
@@ -108,15 +107,14 @@ in
       end
       
       meth disable
-	 case @Enabled then
+	 if @Enabled then
 	    {self.DisableTag tk(move 0 HideY)}
 	    Enabled <- false
-	 else skip
 	 end
       end
       
       meth enable
-	 case @Enabled then skip else
+	 if @Enabled then skip else
 	    {self.DisableTag tk(move 0 ~HideY)}
 	    Enabled <- true
 	    {self.Action}

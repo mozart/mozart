@@ -23,27 +23,26 @@
 local
 
    \insert 'transport/country.oz'
+
+   ArgSpec = single(defaults(type:bool default:true)
+		    random(type:bool default:true))
    
-   functor MakeTransport prop once
+in
+   
+   functor
 
    import
       Tk
-
       TkTools
-
-      Applet
-
+      Application
       OS
-
-      Search.{SearchBest = 'SearchBest'}
-
+      Search(base)
       FD
 
    body
-      Applet.spec = single(defaults(type:bool default:true)
-			   random(type:bool default:true)
-			   title(type:string default:"Transportation"))
 
+      Args = {Application.getCmdArgs ArgSpec}
+	      
       \insert 'transport/configure.oz'
       \insert 'transport/widgets.oz'
       \insert 'transport/randomizer.oz'
@@ -56,21 +55,19 @@ local
       \insert 'transport/company.oz'
       \insert 'transport/broker.oz'
 
-      F = {New Frontend init(toplevel:Applet.toplevel)}
-
-      case Applet.args.defaults orelse Applet.args.random then
+      T = {New Tk.toplevel tkInit(title:  'Transportation'
+				  delete: Application.exit # 0)}
+      
+      F = {New Frontend init(toplevel:T)}
+      
+      if Args.defaults orelse Args.random then
 	 {F addDefaults}
-      else skip
       end
-      case Applet.args.random then
+
+      if Args.random then
 	 {F random}
-      else skip
       end
    
    end
-
-in
-    
-    MakeTransport
 
 end

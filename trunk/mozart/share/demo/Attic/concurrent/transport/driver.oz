@@ -56,15 +56,13 @@ class Driver from History
       [] idle   then
 	 N={Length @plan}
       in
-	 case N>1 then
+	 if N>1 then
 	    act(load:Load ...)|act(load:NewLoad city:Dst ...)|_ = @plan
 	 in
 	    plan <- @plan.2
-	    case N>2 then status <- active
-	    else skip
+	    if N>2 then status <- active
 	    end
 	    {self.truck drive(Dst Load NewLoad)}
-	 else skip
 	 end
       [] active then skip
       end
@@ -80,7 +78,7 @@ class Driver from History
 	 act(load:Load ...)|act(load:NewLoad city:Dst ...)|_ = @plan
       in
 	 plan <- @plan.2
-	 case {Length @plan}>1 then skip else
+	 if {Length @plan}=<1 then
 	    status <- idle
 	 end
 	 drive(Dst Load NewLoad)
@@ -89,7 +87,7 @@ class Driver from History
 
    meth close
       History, tkClose
-      case @status of idle then {self.truck close}
+      if @status==idle then {self.truck close}
       else status <- closed
       end
    end

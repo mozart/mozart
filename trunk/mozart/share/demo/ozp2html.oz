@@ -58,17 +58,20 @@ local
       end
    end
 
-
-   functor MakeOzp2Html
+   ArgSpec = single(ozp(type:string optional:false))
+   
+in
+   
+   functor
 
    import
       Open
-      Syslet
+      Application
       Pickle
       
    body
 
-      Syslet.spec = single(ozp(type:string optional:false))
+      Args = {Application.getCmdArgs ArgSpec}
       
       class HtmlOut
 	 from Open.html Open.file
@@ -80,7 +83,7 @@ local
 
       F = {New HtmlOut init}
       
-      Page = {Pickle.load Syslet.args.ozp}
+      Page = {Pickle.load Args.ozp}
       
       {F
        tag(html(head(title(Page.title)
@@ -112,7 +115,7 @@ local
 						       end}
 				'#'}
 		       in
-			  case Body=='#' then
+			  if Body=='#' then
 			     h2('Not yet available')
 			  else
 			     Body
@@ -128,12 +131,7 @@ local
 		       address({FormatAuthors Page.authors}))))}
       
       {F close}
-      {Syslet.exit 0}
+      {Application.exit 0}
    end
-      
-      
-in
-
-    MakeOzp2Html
 
 end
