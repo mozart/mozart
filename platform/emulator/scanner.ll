@@ -1168,7 +1168,7 @@ int xy_init_from_file(char *file, OZ_Term defines) {
   if (fullname == NULL)
     return 0;
   xy_errorMessages = OZ_cons(OZ_mkTupleC("logInsert",1,OZ_atom(fullname)),
-                             xy_errorMessages);
+                             OZ_nil());
   xyin = fopen(fullname, "r");
   if (xyin == NULL)
     return 0;
@@ -1182,6 +1182,7 @@ int xy_init_from_file(char *file, OZ_Term defines) {
 }
 
 void xy_init_from_string(char *str, OZ_Term defines) {
+  xy_errorMessages = OZ_nil();
   xyFileName[0] = '\0';
   xyFileNameAtom = OZ_atom(xyFileName);
   xyin = NULL;
