@@ -244,9 +244,13 @@ OZ_BI_define(BIstoreBuiltinname,2,0)
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,builtin);
   if (!oz_isBuiltin(builtin)) {
-    return OZ_typeError(1,"Builtin");
+    return OZ_typeError(1,"UnsitedBuiltin");
   }
-  code->writeBuiltin(tagged2Builtin(builtin));
+  Builtin *bi = tagged2Builtin(builtin);
+  if (bi->isNative()) {
+    return OZ_typeError(1,"UnsitedBuiltin");
+  }
+  code->writeBuiltin(bi);
   return PROCEED;
 } OZ_BI_end
 
@@ -563,7 +567,8 @@ OZ_BI_define(BIisBuiltin,1,1)
 {
   oz_declareNonvarIN(0,val);
 
-  OZ_RETURN(oz_isBuiltin(val)?NameTrue:NameFalse);
+  OZ_RETURN(oz_isBuiltin(val) && !tagged2Builtin(val)->isNative()?
+            NameTrue: NameFalse);
 } OZ_BI_end
 
 OZ_BI_define(BInameVariable,2,0)
