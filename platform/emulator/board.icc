@@ -268,43 +268,54 @@ void Board::inject(TaggedRef proc, int arity) {
 }
 
 inline
-OZ_Return Board::merge(Board *bb) {
+OZ_Return Board::merge(Board * dst, Bool isUpward) {
   // this is the board that gets merged
   //   --- it is merged with bb
 
   // First the things that must done even for merging with root board
 
   // Mark as merged
-  Board * p = getParent();
+  Board * src   = this;
+  Board * src_p = src->getParent();
 
-  setCommitted(bb);
+  src->setCommitted(dst);
 
   // Must be before script installation
-  bb->incSuspCount(getSuspCount());
+  dst->incSuspCount(src->getSuspCount());
 
   // Merge constraints
   OZ_Return ret = installScript(OK);
 
   // Merge propagators (must be after script installation, since script
   //                    installation might wake some propagators!!!!)
-  (bb->lpq).merge(lpq);
+  (dst->lpq).merge(src->lpq);
   // This might cause two serving threads for the same board!
 
-  Assert(oz_isCurrentBoard(bb));
+  Assert(oz_isCurrentBoard(dst));
 
-  if (bb->isRoot()) {
-    scheduleNonMono();
+  if (dst->isRoot()) {
+    src->scheduleNonMono();
   } else {
-    // p looses a runnable space
-    if (crt > 0) {
-      (p->crt)--;
-      Assert(p->crt > 0); // remains runnable (bb is subordinated to p)
-      // bb acquires new runnable threads
-      bb->crt += crt;
-      Assert(bb->crt > 0);
+    if (isUpward) {
+      // Handle runnable threads
+      if (src->crt > 0)
+        dst->crt += src->crt-1;
+    } else {
+      // Handle runnable threads
+      if (src->crt > 0) {
+        src_p->crt--;
+        dst->crt += src->crt;
+      }
+      // Handle globally suspended threads
+      // Clean them
+      dst->clearSuspList(NULL);
+      // Enter all upwards
+      for (Board * up = dst; up != src_p; up = up->getParent())
+        for (SuspList * sl = dst->suspList; sl; sl = sl->getNext())
+          up->addSuspension(sl->getSuspendable());
     }
     // Merge nonmonotonic propagators
-    bb->setNonMono(bb->getNonMono()->merge(getNonMono()));
+    dst->setNonMono(dst->getNonMono()->merge(src->getNonMono()));
 
   }
 
