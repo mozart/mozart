@@ -840,21 +840,6 @@ int loadURL(const char *url0, OZ_Term out, OZ_Term triggerVar, Thread *th)
       char *filename = url+strlen(prefix);
       return loadFile(filename,out,triggerVar);
     }
-  case 'o':
-    {
-      int OTI;
-      if (strncmp(url,"ozp:",4)!=0) goto bomb;
-      url+=4;
-      char* rem;
-      Site *s=stringToSite(url,rem);
-      if(s==NULL) {
-	Assert(0);   // ATTENTION
-	goto bomb;}
-      if(sscanf(rem,"%d",&OTI)!=1){
-	Assert(0);   // ATTENTION
-	goto bomb;}
-      return oz_unify(out,makeBorrowRef(s,OTI));
-    }
   }
 
 bomb:
@@ -899,24 +884,9 @@ OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
 }
 
 
-OZ_C_proc_begin(BInewGate,2)
-{
-  OZ_declareArg(0,in);
-  OZ_declareArg(1,out);
-
-  int OTI=makeOwnerRef(in);
-  static char url[100];
-  sprintf(url,"ozp:%s %d",mySite->toString(),OTI);
-  return oz_unifyAtom(out,url);
-}
-OZ_C_proc_end
-
-
-
 BIspec componentsSpec[] = {
   {"smartSave",    6, BIsmartSave, 0},
   {"load",         2, BIload, 0},
-  {"newGate",      2, BInewGate, 0},
 
   {"getURLMap",1,BIperdioGetURLMap,0},
   {"setURLMap",1,BIperdioSetURLMap,0},

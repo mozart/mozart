@@ -352,14 +352,6 @@ int loadURL(const char *,OZ_Term,OZ_Term, Thread *th);
 void initComponents();
 
 /* ************************************************************************ */
-/*  SECTION ::  provided to components                                      */
-/* ************************************************************************ */
-
-Site* stringToSite(char*, char* &);
-int makeOwnerRef(OZ_Term);
-OZ_Term makeBorrowRef(Site*,int);
-
-/* ************************************************************************ */
 /*  SECTION ::  provided to engine                                      */
 /* ************************************************************************ */
 void networkTimer();
