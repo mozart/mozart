@@ -118,11 +118,11 @@
     <Meta name=status value=revised>
 
     <Title/The &Oz; Base Environment/
+    <Author.Extern to="author.db" key="Denys.Duchier">
     <Author.Extern to="author.db" key="Martin.Henz">
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
     <Author.Extern to="author.db" key="Martin.Mueller">
     <Author.Extern to="author.db" key="Christian.Schulte">
-    <Author.Extern to="author.db" key="Leif.Kornstaedt">
-    <Author.Extern to="author.db" key="Denys.Duchier">
     <Comic>
       <Picture.Choice>
         <Picture.Extern to="base.gif" type=gif>
