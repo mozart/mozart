@@ -16,7 +16,7 @@ in
 
 \insert 'explorer/main.oz'
 
-Explorer = {New ExplorerClass noop}
+Explorer = {New ExplorerClass init}
 
 proc {ExploreOne P}
    {Explorer one(P)}

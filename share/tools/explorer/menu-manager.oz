@@ -130,13 +130,6 @@ in
 				     state:   disabled
 				     key:     ctrl(r)
 				     feature: reset)
-			     command(label:   'Clear'
-				     action:  proc {$}
-						 {self.status kill}
-						 {self clear}
-					      end
-				     state:   disabled
-				     feature: clear)
 			     separator
 			     command(label:   'Export Postscript...'
 				     action:  self # postscript
@@ -303,7 +296,7 @@ in
       end
       
       meth clear
-	 {DoEntries self.menu [explorer([clear postscript break halt reset])
+	 {DoEntries self.menu [explorer([postscript break halt reset])
 			       move([cur leftMost rightMost
 				     nextSol prevSol top back])
 			       search([all next step])
