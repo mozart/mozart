@@ -48,8 +48,6 @@ Bool inToSpace(void *p);
 
 Bool needsNoCollection(TaggedRef t);
 
-void* gcRealloc(void * p, size_t sz);
-
 #endif //__GC_H__
 
 
