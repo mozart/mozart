@@ -347,7 +347,7 @@ Bool hookCheckNeeded(AM *e)
 
 
 #ifdef FASTREGACCESS
-#define RegAccess(Reg,Index) (*(RefsArray)((char*)Reg + Index))
+#define RegAccess(Reg,Index) (*(RefsArray)((int)Reg + Index))
 #define LessIndex(Index,CodedIndex) (Index <= CodedIndex/sizeof(TaggedRef))
 #else
 #define RegAccess(Reg,Index) (Reg[Index])
@@ -566,12 +566,10 @@ void engine() {
     break;
 
   case SEGVIO:
-    message("Trying to catch segmentation violation...\n");
-    e->currentTaskStack->makeEmpty();
+    HF_FAIL(message("segmentation violation"),);
     break;
   case BUSERROR:
-    message("Trying to catch bus error...\n");
-    e->currentTaskStack->makeEmpty();
+    HF_FAIL(message("bus error"),);
     break;
   }
 
@@ -629,8 +627,7 @@ void engine() {
     DebugCheckT(CAA = NULL);
 
     // POPTASK
-    TaskStack *stk = e->currentTaskStack;
-    if (stk == NULL) {
+    if (e->currentTaskStack == NULL) {
       {
         Thread *c = e->currentThread;
         if (c->isNervous()) {
@@ -680,7 +677,7 @@ void engine() {
         goto LBLTaskEmpty;
       }
     } else {
-      TaskStack *taskStack = stk;
+      TaskStack *taskStack = e->currentTaskStack;
       TaskStackEntry *topCache = taskStack->getTop();
       TaggedBoard tb = (TaggedBoard) TaskStackPop(topCache-1);
 
@@ -831,7 +828,9 @@ void engine() {
     {
       Thread *tmpThread = e->currentThread;
       e->currentThread=(Thread *) NULL;
-      tmpThread->dispose();
+      if (tmpThread) {  /* may happen if catching SIGSEGV and SIGBUS */
+        tmpThread->dispose();
+      }
     }
     goto LBLstart;
 
