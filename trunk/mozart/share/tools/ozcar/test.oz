@@ -4,13 +4,15 @@
 local
    A = proc{$ X Y Z}
 	  AA = proc{$}
+		  {Debug.breakpoint}
 		  {Show 'X'#X}
 	       end
        in
 	  Z = X + Y
 	  {Show 'Z'#Z}
-	  {Debug.breakpoint}
-	  {AA}
+	  thread
+	     {AA}
+	  end
 	  {B Z}
        end
    B = proc{$ X}
