@@ -156,8 +156,8 @@ T={New Tk.toplevel tkInit(width:150 height:50)}
 
       <p>
         The graphics engine does not understand tickles but strings
-        that follow are particular structure. This means that each
-        tickle send to the graphics engine is first translated to a
+        that follow a particular structure. This means that each
+        tickle sent to the graphics engine is first translated to a
         string. The translation is generic, for our purposes here it
         suffices to give a
         short example. The full translation details can be found in
@@ -167,7 +167,7 @@ T={New Tk.toplevel tkInit(width:150 height:50)}
         For example,
         <<<example("test" 1 2.0 side:left(right:true) fill:x)>>>
         is translated to
-        <<<"example test 1 2.0 -side left -right 1 -fill x">>>. That
+        <<<"example test 1 2.0 -side left -right 1 -fill x">>> That
         is, a record is translated to a string consisting of the label
         and the features and the translation of the fields.
         Atomic features are prepended by a <<"-">> and integer
@@ -356,7 +356,8 @@ Fs={Map [groove ridge flat sunken raised]
       </Table>
 
       <p>
-      Besides of synonyms it is possible to abbreviate options provided that
+      In addition to synonyms, it is also possible to abbreviate options
+      provided that
       the abbreviation is unambiguous.  For example, it is correct to
       abbreviate the <<background>> option by <<ba>> but not by <<b>> since
       <<b>> is also an abbreviation for <<bitmap>> and
@@ -367,7 +368,7 @@ Fs={Map [groove ridge flat sunken raised]
 
       <p>
         The full Tk-reference information for each widget is shipped with
-        a Mozart system. For an example, see the reference information
+        the Mozart distribution. For an example, see the reference information
         for a <ref.extern to="&tkcmd;/frame.htm"/<kbd/frame//.
 
       <p>
