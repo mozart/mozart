@@ -566,6 +566,9 @@ void AM::checkStatus(Bool block)
     osBlockSignals();
   }
 
+  unsetSFlag(TimerInterrupt);
+  handleAlarm(); // must be done first since it might set other flags
+
   if (isSetSFlag(StartGC))
     doGC();
 
@@ -744,7 +747,12 @@ void handlerCHLD(int)
 // Signal handler;
 void handlerALRM(int)
 {
-  am.handleAlarm(CLOCK_TICK/1000);
+  am.emulatorClock += CLOCK_TICK/1000;
+
+  if (am.isCritical()) /* wait for next ALRM signal */
+    return;
+
+  am.setSFlag(TimerInterrupt);
 }
 
 //
@@ -758,18 +766,15 @@ void handlerUSR2(int)
  * Alarm handling
  * -------------------------------------------------------------------------*/
 
-void AM::handleAlarm(unsigned int ms)
+void AM::handleAlarm(int ms)
 {
-  emulatorClock = emulatorClock + (unsigned long) ms;
+  if (ms>0)
+    emulatorClock += (unsigned long) ms;
 
   if (ozstat.currPropagator) {
     ozstat.currPropagator->incSamples();
   } else if (ozstat.currAbstr) {
     ozstat.currAbstr->samples++;
-  }
-
-  if (isCritical()) {  /* wait for next ALRM signal */
-    return;
   }
 
   if (threadSwitchCounter > 0) {
