@@ -37,6 +37,7 @@
 #include "byteBuffer.hh"
 #include "connection.hh"
 #include "timers.hh"
+#include "msgContainer.hh"
 
 ComController *comController;
 TCPTransController *tcptransController;
@@ -88,8 +89,20 @@ ComObj *createComObj(DSite *site,int recCtr) {
   return comObj;
 }
 
-void comController_gcComObjs() {
+//
+void comController_gcComObjs()
+{
   comController->gcComObjs();
+}
+
+//
+void comController_startGCComObjs()
+{
+  comController->startGCComObjs();
+}
+void comController_finishGCComObjs()
+{
+  comController->finishGCComObjs();
 }
 
 /* *****************************************************************

@@ -43,7 +43,11 @@
 #include "dpInterface.hh"
 #include "var.hh"
 #include "var_obj.hh"
+#include "var_future.hh"
 #include "var_class.hh"
+#include "var_emanager.hh"
+#include "var_eproxy.hh"
+#include "var_gcstub.hh"
 #include "gname.hh"
 #include "state.hh"
 #include "port.hh"
@@ -373,44 +377,34 @@ void DPMarshaler::processResource(OZ_Term term, Tertiary *tert)
 //
 void DPMarshaler::processUVar(OZ_Term uv, OZ_Term *uvarTerm)
 {
-#ifdef DEBUG_CHECK
-  OZ_Term term = processCVar(uv, uvarTerm);
-  Assert(term == (OZ_Term) 0);
-#else
-  (void) processCVar(uv, uvarTerm);
-#endif
+  processCVar(uv, uvarTerm);
 }
 
 //
-OZ_Term DPMarshaler::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
+void DPMarshaler::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
 {
   Assert(cvarTerm);
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
-  // to trigger?
-  if (triggerVariable(cvarTerm))
-    return (makeTaggedRef(cvarTerm));
-
   //
-  if (bs->availableSpace() >= DIFMaxSize + MNumberMaxSize +
-      max(MDistVarMaxSize, MDistSPPMaxSize)) {
+  if (triggerVariable(cvarTerm)) {
+    replaceOzValue(makeTaggedRef(cvarTerm));
+  } else if (bs->availableSpace() >= DIFMaxSize + MNumberMaxSize +
+	     max(MDistVarMaxSize, MDistSPPMaxSize)) {
     if (marshalVariable(cvarTerm, bs)) {
-      // kost@24.08.99: we remembered ptr!!!
-      rememberNode(this, bs, *cvarTerm);
+      rememberVarNode(this, bs, cvarTerm);
     } else {
       processNoGood(makeTaggedRef(cvarTerm), OK);
-      // kost@24.08.99: we remembered ptr!!!
-      rememberNode(this, bs, *cvarTerm);
+      rememberVarNode(this, bs, cvarTerm);
     }
   } else {
     marshalDIF(bs, DIF_SUSPEND);
     suspend(makeTaggedRef(cvarTerm));
   }
-  return (0);
 }
 
 //
-void DPMarshaler::processRepetition(OZ_Term t, int repNumber)
+void DPMarshaler::processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber)
 {
   Assert(repNumber >= 0);
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
@@ -701,24 +695,20 @@ void VariableExcavator::processResource(OZ_Term rTerm, Tertiary *tert)
 //
 void VariableExcavator::processUVar(OZ_Term uv, OZ_Term *uvarTerm)
 {
-#ifdef DEBUG_CHECK
-  OZ_Term term = processCVar(uv, uvarTerm);
-  Assert(term == (OZ_Term) 0);
-#else
-  (void) processCVar(uv, uvarTerm);
-#endif
+  processCVar(uv, uvarTerm);
 }
 
 //
-OZ_Term VariableExcavator::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
+void VariableExcavator::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
 {
   Assert(oz_isVariable(cv));
-  addVar(cv);
-  return ((OZ_Term) 0);
+  rememberVarLocation(cvarTerm);
+  addVar(makeTaggedRef(cvarTerm));
 }
 
 //
-void VariableExcavator::processRepetition(OZ_Term t, int repNumber) {}
+void VariableExcavator::processRepetition(OZ_Term t, OZ_Term *tPtr,
+					  int repNumber) {}
 Bool VariableExcavator::processLTuple(OZ_Term ltupleTerm)
 {
   rememberTerm(ltupleTerm);
@@ -812,6 +802,72 @@ Bool VariableExcavator::processAbstraction(OZ_Term absTerm,
 void VariableExcavator::processSync() {}
 
 //
+// Not in use since we take a snapshot of a value ahead of
+// marshaling now;
+
+/*
+static void contProcNOOP(GenTraverser *gt, GTAbstractEntity *cont)
+{}
+
+//
+void VariableExcavator::copyStack(DPMarshaler *dpm)
+{
+  StackEntry *copyTop = dpm->getTop();
+  StackEntry *copyBottom = dpm->getBottom();
+  StackEntry *top = getTop();
+
+  top += copyTop - copyBottom;
+  setTop(top);
+
+  //
+  while (copyTop > copyBottom) {
+    OZ_Term& t = (OZ_Term&) *(--copyTop);
+    OZ_Term tc = t;
+    DEREF(tc, tPtr, tTag);
+
+    //
+    *(--top) = (StackEntry) t;
+
+    //
+    switch (tTag) {
+    case TAG_GCMARK:
+      //
+      switch (tc) {
+      case taggedBATask:
+	{
+	  *(--top) = *(--copyTop);
+	  TraverserBinaryAreaProcessor proc =
+	    (TraverserBinaryAreaProcessor) *(--copyTop);
+	  Assert(proc == dpMarshalCode);
+	  *(--top) = (StackEntry) traverseCode;
+	}
+	break;
+
+      case taggedSyncTask:
+	break;
+
+      case taggedContTask:
+	{
+	  *(--top) = *(--copyTop);
+	  TraverserContProcessor proc = 
+	    (TraverserContProcessor) *(--copyTop);
+	  Assert(proc == dpMarshalLitCont ||
+		 proc == dpMarshalByteArrayCont);
+	  *(--top) = (StackEntry) contProcNOOP;
+	}
+	break;
+      }
+      break;
+
+    default:
+      break;
+    }      
+  }
+}
+*/
+
+
+//
 //
 VariableExcavator ve;
 
@@ -840,52 +896,162 @@ Credit unmarshalCreditRobustOutline(MarshalerBuffer *bs, int *error)
 /*  basic borrow, owner */
 /**********************************************************************/
 
-void marshalOwnHead(MarshalerBuffer *bs, int tag, int i){
+//
+void marshalOwnHead(MarshalerBuffer *bs, int tag, int i)
+{
   PD((MARSHAL_CT,"OwnHead"));
   bs->put(tag);
   myDSite->marshalDSite(bs);
   marshalNumber(bs, i);
   bs->put(DIF_PRIMARY);
-  Credit c=ownerTable->getOwner(i)->getSendCredit();
-//    DebugCode(if (tag==DIF_STUB_OBJECT) printf("m-ms i:%d c:-%d %d\n",i,c,osgetpid());)
+  Credit c = ownerTable->getOwner(i)->getSendCredit();
+// DebugCode(if (tag==DIF_STUB_OBJECT) printf("m-ms i:%d c:-%d %d\n",i,c,osgetpid());)
   marshalNumber(bs, c);
   PD((MARSHAL,"ownHead o:%d rest-c: ",i));
-  return;}
+}
 
-void marshalToOwner(MarshalerBuffer *bs, int bi){
+//
+void saveMarshalOwnHead(int oti, Credit &c)
+{
+  c = ownerTable->getOwner(oti)->getSendCredit();
+}
+
+//
+void marshalOwnHeadSaved(MarshalerBuffer *bs, int tag, int oti, Credit c)
+{
+  PD((MARSHAL_CT,"OwnHead"));
+  bs->put(tag);
+  myDSite->marshalDSite(bs);
+  marshalNumber(bs, oti);
+  bs->put(DIF_PRIMARY);
+  marshalNumber(bs, c);
+  PD((MARSHAL,"ownHead o:%d rest-c: ",oti));
+}
+
+//
+void marshalToOwner(MarshalerBuffer *bs, int bi)
+{
   PD((MARSHAL,"toOwner"));
-  BorrowEntry *b=BT->getBorrow(bi); 
-  int OTI=b->getOTI();
-  if(b->getOnePrimaryCredit()){
-//      printf("p-mto i:%d c:-%d %d\n",b->getOTI(),1,b->getNetAddress()->site->getTimeStamp()->pid);
+  BorrowEntry *b = BT->getBorrow(bi); 
+  int OTI = b->getOTI();
+  if (b->getOnePrimaryCredit()) {
+// printf("p-mto i:%d c:-%d %d\n",b->getOTI(),1,b->getNetAddress()->site->getTimeStamp()->pid);
     bs->put((BYTE) DIF_OWNER);
     marshalNumber(bs, OTI);
     PD((MARSHAL,"toOwner Borrow b:%d Owner o:%d",bi,OTI));
-    return;}
-  bs->put((BYTE) DIF_OWNER_SEC);
-  DSite* xcs = b->getOneSecondaryCredit();
-  marshalNumber(bs, OTI);
-  xcs->marshalDSite(bs);
-  return;}
+  } else {
+    bs->put((BYTE) DIF_OWNER_SEC);
+    DSite* xcs = b->getOneSecondaryCredit();
+    marshalNumber(bs, OTI);
+    xcs->marshalDSite(bs);
+  }
+}
 
-void marshalBorrowHead(MarshalerBuffer *bs, MarshalTag tag, int bi){
+//
+// 'saveMarshalToOwner'/'marshalToOwnerSaved' are complimentary. These
+// are used for immediate exportation of variable proxies and
+// marshaling corresponding "exported variable proxies" later.
+void saveMarshalToOwner(int bi, int &oti,
+			CreditType &ct, Credit &c, DSite* &scm)
+{
+  PD((MARSHAL,"toOwner"));
+  BorrowEntry *b = BT->getBorrow(bi); 
+
+  //
+  oti = b->getOTI();
+  c = 1;
+  if (b->getOnePrimaryCredit()) {
+    ct = CT_Primary;
+    scm = (DSite *) 0;
+    PD((MARSHAL,"toOwner Borrow b:%d Owner o:%d", bi, oti));
+  } else {
+    ct = CT_Secondary;
+    scm = b->getOneSecondaryCredit();
+  }
+}
+
+//
+void marshalToOwnerSaved(MarshalerBuffer *bs,
+			 CreditType ct, int oti, DSite *scm)
+{
+  if (ct == CT_Primary) {
+    bs->put((BYTE) DIF_OWNER);
+    marshalNumber(bs, oti);
+    Assert(scm == (DSite *) 0);
+  } else {
+    Assert(ct == CT_Secondary);
+    bs->put((BYTE) DIF_OWNER_SEC);
+    marshalNumber(bs, oti);
+    scm->marshalDSite(bs);
+  }
+}
+
+//
+void marshalBorrowHead(MarshalerBuffer *bs, MarshalTag tag, int bi)
+{
   PD((MARSHAL,"BorrowHead"));	
   bs->put((BYTE)tag);
-  BorrowEntry *b=borrowTable->getBorrow(bi);
-  NetAddress *na=b->getNetAddress();
+  BorrowEntry *b = borrowTable->getBorrow(bi);
+  NetAddress *na = b->getNetAddress();
   na->site->marshalDSite(bs);
   marshalNumber(bs, na->index);
-  Credit cred=b->getSmallPrimaryCredit();
+  Credit cred = b->getSmallPrimaryCredit();
   if(cred) {
     PD((MARSHAL,"borrowed b:%d remCredit c: give c:%d",bi,cred));
     bs->put(DIF_PRIMARY);
     marshalCredit(bs, cred);
-    return;}
-  DSite* ss=b->getSmallSecondaryCredit(cred);  
-  bs->put(DIF_SECONDARY);
-  marshalCredit(bs, cred);
-  marshalDSite(bs, ss);
-  return;}
+  } else {
+    DSite* ss = b->getSmallSecondaryCredit(cred);  
+    bs->put(DIF_SECONDARY);
+    marshalCredit(bs, cred);
+    marshalDSite(bs, ss);
+  }
+}
+
+//
+void saveMarshalBorrowHead(int bi, DSite* &ms, int &oti,
+			   CreditType &ct, Credit &c, DSite* &scm)
+{
+  PD((MARSHAL,"BorrowHead"));
+
+  BorrowEntry *b = borrowTable->getBorrow(bi);
+  NetAddress *na = b->getNetAddress();
+
+  //
+  ms = na->site;
+  oti = na->index;
+  //
+  c = b->getSmallPrimaryCredit();
+  if (c) {
+    PD((MARSHAL,"borrowed b:%d remCredit c: give c:%d", bi, c));
+    ct = CT_Primary;
+    scm = (DSite *) 0;
+  } else {
+    ct = CT_Secondary;
+    scm = b->getSmallSecondaryCredit(c);
+  }
+}
+
+//
+void marshalBorrowHeadSaved(MarshalerBuffer *bs, MarshalTag tag, DSite *ms,
+			    int oti, CreditType ct, Credit c, DSite *scm)
+{
+  bs->put((BYTE) tag);
+  marshalDSite(bs, ms);
+  marshalNumber(bs, oti);
+
+  //
+  if (ct == CT_Primary) {
+    bs->put(DIF_PRIMARY);
+    marshalCredit(bs, c);
+    Assert(scm == (DSite *) 0);
+  } else {
+    Assert(ct == CT_Secondary);
+    bs->put(DIF_SECONDARY);
+    marshalCredit(bs, c);
+    marshalDSite(bs, scm);
+  }
+}
 
 #ifndef USE_FAST_UNMARSHALER
 OZ_Term unmarshalBorrowRobust(MarshalerBuffer *bs,OB_Entry *&ob,int &bi,int *error)
@@ -2331,4 +2497,205 @@ void DPMarshalers::dpReturnUnmarshaler(Builder* dpb)
     }
   }
   OZ_error("dpReturnMarshaler got an unallocated builder!!");
+}
+
+//
+//
+SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
+{
+  SntVarLocation *svl = (SntVarLocation *) 0;
+  Assert(!oz_isNil(vars));
+
+  //
+  do {
+    OZ_Term vr = oz_head(vars);
+    Assert(oz_isRef(vr));
+    OZ_Term *vp = tagged2Ref(vr);
+    Assert(oz_isVariable(*vp));
+    OZ_Term v = *vp;
+
+    //
+    if (oz_isExtVar(v)) {
+      ExtVarType evt = oz_getExtVar(v)->getIdV();
+      switch (evt) {
+      case OZ_EVAR_MANAGER:
+	{
+	  // if it's a future, let's kick it now:
+	  if (triggerVariable(vp))
+	    v = oz_deref(*vp);
+	  // make&save an "exported" manager;
+	  ManagerVar *mvp = oz_getManagerVar(v);
+	  ExportedManagerVar *emvp = new ExportedManagerVar(mvp, dest);
+	  OZ_Term emv = makeTaggedCVar(emvp);
+	  //
+	  svl = new SntVarLocation(makeTaggedRef(vp), emv, svl);
+	}
+	break;
+
+      case OZ_EVAR_PROXY:
+	{
+	  // make&save an "exported" proxy:
+	  ProxyVar *pvp = oz_getProxyVar(v);
+	  ExportedProxyVar *epvp = new ExportedProxyVar(pvp, dest);
+	  OZ_Term epv = makeTaggedCVar(epvp);
+	  //
+	  svl = new SntVarLocation(makeTaggedRef(vp), epv, svl);
+	}
+	break;
+
+      case OZ_EVAR_LAZY:
+	// First, lazy variables are transparent for the programmer.
+	// Secondly, the earlier an object gets over the network the
+	// better for failure handling (aka "no failure - simple
+	// failure handling!"). Altogether, delayed exportation is a
+	// good thing here, so we ignore these vars;
+	break;
+
+      case OZ_EVAR_EMANAGER:
+      case OZ_EVAR_EPROXY:
+      case OZ_EVAR_GCSTUB:
+	Assert(0);
+	break;
+
+      default:
+	Assert(0);
+	break;
+      }
+    } else if (oz_isFree(v) || oz_isFuture(v)) {
+      Assert(perdioInitialized);
+
+      // if it's a future, let's kick it now:
+      if (triggerVariable(vp))
+	v = oz_deref(*vp);
+      //
+      ManagerVar *mvp = globalizeFreeVariable(vp);
+      ExportedManagerVar *emvp = new ExportedManagerVar(mvp, dest);
+      OZ_Term emv = makeTaggedCVar(emvp);
+      //
+      svl = new SntVarLocation(makeTaggedRef(vp), emv, svl);
+    } else { 
+      //
+
+      // Actualy, we should copy all these types of variables
+      // (constraint stuff), and then marshal them as "nogood"s.  So,
+      // just ignoring them is a limitation: the system behaves
+      // differently when such variables are bound between logical
+      // sending of a message and their marshaling.
+    }
+
+    //
+    vars = oz_tail(vars);
+  } while (!oz_isNil(vars));
+
+  //
+  return (svl);
+}
+
+//
+void deleteSntVarLocsOutline(SntVarLocation *locs)
+{
+  Assert(locs);
+  do {
+    OZ_Term vr = locs->getLoc();
+    OZ_Term *vp = tagged2Ref(vr);
+    OZ_Term v = locs->getVar();
+    Assert(oz_isExtVar(v));	// must be distributed by now;
+    ExtVarType evt = oz_getExtVar(v)->getIdV();
+
+    //
+    switch (evt) {
+    case OZ_EVAR_EPROXY:
+      {
+	ExportedProxyVar *epvp = oz_getEProxyVar(v);
+	epvp->disposeV();
+      }
+      break;
+
+    case OZ_EVAR_EMANAGER:
+      {
+	ExportedManagerVar *emvp = oz_getEManagerVar(v);
+	emvp->disposeV();
+      }
+      break;
+
+    case OZ_EVAR_MANAGER:
+    case OZ_EVAR_PROXY:
+    case OZ_EVAR_LAZY:
+    case OZ_EVAR_GCSTUB:
+    default:
+      Assert(0);
+      break;
+    }
+
+    //
+    SntVarLocation *locsTmp = locs;
+    locs = locs->getNextLoc();
+    delete locsTmp;
+  } while (locs);
+}
+
+//
+void MsgTermSnapshotImpl::gcStart()
+{
+  Assert(!(flags&MTS_SET));
+  SntVarLocation* l = locs;
+  while(l) {
+    OZ_Term hvr = l->getLoc();
+    OZ_Term *hvp = tagged2Ref(hvr);
+    OZ_Term hv = *hvp;
+    DebugCode(OZ_Term v = l->getVar(););
+    Assert(oz_isExtVar(v));
+    Assert(l->getSavedValue() == (OZ_Term) -1);
+
+    //
+    // Keep variables. It can also happen that the variable appears in
+    // more than one snapshot currently being GCed:
+    if (!oz_isVariable(hv) && !oz_isGCStubVar(hv)) {
+      GCStubVar *svp = new GCStubVar(hv);
+      *hvp = makeTaggedCVar(svp);
+    }
+
+    //    
+    l = l->getNextLoc();
+  }
+}
+
+//
+void MsgTermSnapshotImpl::gcFinish()
+{
+  SntVarLocation* l = locs;
+  while(l) {
+    OZ_Term hvr = l->getLoc();
+    OZ_Term *hvp = tagged2Ref(hvr);
+    OZ_Term hv = *hvp;
+
+    //
+    if (oz_isGCStubVar(hv)) {
+      GCStubVar *gcsv = oz_getGCStubVar(hv);
+      *hvp = gcsv->getValue();
+      gcsv->disposeV();
+    }
+
+    //    
+    l = l->getNextLoc();
+  }
+}
+
+//
+void MsgTermSnapshotImpl::gc()
+{
+  SntVarLocation* l = locs;
+  while(l) {
+    OZ_Term &vr = l->getLocRef();
+    OZ_Term &v = l->getVarRef();
+
+    //
+    oz_gCollectTerm(vr, vr);
+    // Note: 'v' is a direct variable here. This is OK since nobody
+    // else can access it:
+    oz_gCollectTerm(v, v);
+
+    //    
+    l = l->getNextLoc();
+  }
 }

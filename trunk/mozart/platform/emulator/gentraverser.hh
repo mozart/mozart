@@ -314,7 +314,7 @@ public:
 
 //
 // Keep OZ_Term"s already seen;
-class GTIndexTable : public HashTableFastReset {
+class GTIndexTable : private HashTableFastReset {
 public:
   GTIndexTable() : HashTableFastReset(2000) {}
 
@@ -326,29 +326,47 @@ public:
     htAdd((intlong) l, ToPointer(index));
     return (index);
   }
-
-  //
-  int rememberPtr(void* p) {
-    Assert(oz_isRef((OZ_Term) p));
-    Assert(findPtr(p) == -1);
-    int index = getSize();
-    htAdd((intlong) p, ToPointer(index));
-    return (index);
-  }
-  int findPtr(void *p) {
-    Assert(oz_isRef((OZ_Term) p));
-    void *ret = htFind((intlong) p);
-    return ((ret == htEmpty) ? -1 : (int) ToInt32(ret));
-  }
-
-  //
-protected:
   int findTerm(OZ_Term l) {
     Assert(!oz_isRef(l));
     void *ret = htFind((intlong) l);
     return ((ret == htEmpty) ? -1 : (int) ToInt32(ret));
   }
 
+  //
+  int rememberVarLocation(OZ_Term *p) {
+    Assert(oz_isVariable(*p));
+    Assert(findLocation(p) == -1);
+    int index = getSize();
+    htAdd((intlong) p, ToPointer(index));
+    return (index);
+  }
+  int findVarLocation(OZ_Term *p) {
+    Assert(oz_isVariable(*p));
+    void *ret = htFind((intlong) p);
+    return ((ret == htEmpty) ? -1 : (int) ToInt32(ret));
+  }
+
+  //
+  // Arbitrary locations are non-relocatable (that is, cannot point
+  // into heap), and limited in address space (but the only current
+  // usage of it ('marshalProcedureRef()') is a hack anyway:
+  // abstractions and "AbstractionEntry"s should be one unified
+  // entity!!!)
+  int rememberLocation(void *p) {
+    Assert(findLocation(p) == -1);
+    OZ_Term aux = makeGCTaggedInt(ToInt32(p));
+    int index = getSize();
+    htAdd((intlong) aux, ToPointer(index));
+    return (index);
+  }
+  int findLocation(void *p) {
+    Assert(ToInt32(p) == getGCTaggedInt(makeGCTaggedInt(ToInt32(p))));
+    OZ_Term aux = makeGCTaggedInt(ToInt32(p));
+    void *ret = htFind((intlong) aux);
+    return ((ret == htEmpty) ? -1 : (int) ToInt32(ret));
+  }
+
+protected:
   //
   void unwindGTIT() {
     mkEmpty();
@@ -377,13 +395,13 @@ protected:
 // can be used inside 'processXXX()': it returns an integer uniquely
 // identifying the remembered node. Thereafter if the node is reached
 // again the traverser does not call 'processXXX(OZ_Term)' but rather
-// 'processRepetition(OZ_Term, int)'. The last method also returns a
-// Bool, indicating if traversal should continue or not. For example,
-// let's assume that 'remember(f(X Y))' returns '1'. Then later
-// 'processRepetition(t, 1)' is called upon reaching a repetition
-// (pointer equality). Usually it would return 'TRUE' and f(X Y) would
-// not be traversed again. [Possibly you might want to traverse the
-// same thing twice, in which case you return FALSE].
+// 'processRepetition(OZ_Term, OZ_Term *, int)'. The last method also
+// returns a Bool, indicating if traversal should continue or not. For
+// example, let's assume that 'remember(f(X Y))' returns '1'. Then
+// later 'processRepetition(t, tPtr, 1)' is called upon reaching a
+// repetition (pointer equality). Usually it would return 'TRUE' and
+// f(X Y) would not be traversed again. [Possibly you might want to
+// traverse the same thing twice, in which case you return FALSE].
 // 
 // Note that the idea is that the idea is that you can easily create
 // subclasses for marshaling, export control, etc.
@@ -430,7 +448,7 @@ typedef void (*TraverserContProcessor)(GenTraverser *m,
 
 //
 // An object of the class can be used for more than one traversing;
-class GenTraverser : private NodeProcessor, public GTIndexTable {
+class GenTraverser : protected NodeProcessor, public GTIndexTable {
 private:
   CrazyDebug(int debugNODES;);
   void doit();			// actual processor;
@@ -545,14 +563,16 @@ public:
     Assert(o != (Opaque *) -1);	     // not allowed (limitation);
     opaque = o;
   }
-  void traverse(OZ_Term t) {
-    ensureFree(1);
-    put(t);
-    //
+  void traverse() {
     keepRunning = OK;
     doit();
     // CrazyDebug(fprintf(stdout, " --- %d nodes.\n", debugNODES););
     // CrazyDebug(fflush(stdout););
+  }
+  void traverse(OZ_Term t) {
+    ensureFree(1);
+    put(t);
+    traverse();
   }
   void finishTraversing() {
     Assert(isEmpty());
@@ -563,6 +583,14 @@ public:
   Opaque* getOpaque() {
     Assert(opaque != (Opaque *) -1);
     return (opaque);
+  }
+
+  //
+  // 'process*' methods may refuse to marshal anything, but specify
+  // a new term to be marshaled instead:
+  void replaceOzValue(OZ_Term term) {
+    ensureFree(1);
+    put(term);
   }
 
   //	
@@ -589,12 +617,11 @@ protected:
   virtual void processNoGood(OZ_Term resTerm, Bool trail) = 0;
   //
   virtual void processUVar(OZ_Term uv, OZ_Term *uvarTerm) = 0;
-  // If 'processCVar' return non-zero, then this means we have to
-  // process that value instead of the variable;
-  virtual OZ_Term processCVar(OZ_Term cv, OZ_Term *cvarTerm) = 0;
+  virtual void processCVar(OZ_Term cv, OZ_Term *cvarTerm) = 0;
 
   //
-  virtual void processRepetition(OZ_Term t, int repNumber) = 0;
+  virtual void processRepetition(OZ_Term t, OZ_Term *tPtr, 
+				 int repNumber) = 0;
 
   //
   // These methods return TRUE if the node to be considered a leaf;
@@ -1403,8 +1430,14 @@ public:
     putTTI(pos);		// record it in the stack;
     array[pos] = val;
   }
-  void update(OZ_Term val, int pos) {
+  void setNoGC(OZ_Term val, int pos) {
     Assert(pos >= 0);
+    if (pos >= size) 
+      resize(pos);
+    array[pos] = val;
+  }
+  void update(OZ_Term val, int pos) {
+    Assert(pos >= 0 && pos < size);
     array[pos] = val;
   }
 #if defined(DEBUG_CHECK)

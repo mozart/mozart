@@ -1009,7 +1009,7 @@ void AM::gCollect(int msgLevel) {
   vf.init();
   cacStack.init();
 
-  (*gCollectFrameToProxy)();
+  (*gCollectPerdioStart)();
 
 #ifdef DEBUG_CHECK
   isCollecting = OK;
@@ -1073,6 +1073,7 @@ void AM::gCollect(int msgLevel) {
   weakReviveStack.recurse();	// copy stuff scheduled for finalization
   cacStack.gCollectRecurse();
 
+  // Erik+kost: All local roots must be processed at this point!
   (*gCollectBorrowTableUnusedFrames)();
   cacStack.gCollectRecurse();
 
@@ -1084,7 +1085,7 @@ void AM::gCollect(int msgLevel) {
   weakStack.recurse();		// must come after namer gc
 
 // -----------------------------------------------------------------------
-// ** second phase: the reference update stack has to checked now
+// ** second phase: the reference update stack has to be checked now
 
   vf.gCollectFix();
 

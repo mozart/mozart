@@ -1,6 +1,8 @@
 #ifndef __PRIOQUEUES_HH
 #define __PRIOQUEUES_HH
-typedef int Bool;
+
+#include "base.hh"
+#include "dpBase.hh"
 
 class MsgContainer;
 struct Queue {
@@ -38,7 +40,9 @@ public:
   Bool hasQueued();
   void clear5();  // Clears prio 5 (+ recList no Unmarshalcont)
   void clearAll();
+  void startGCMsgCs();
   void gcMsgCs();
+  void finishGCMsgCs();
 };
 
 #endif
