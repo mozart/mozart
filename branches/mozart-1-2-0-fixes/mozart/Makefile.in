@@ -135,7 +135,7 @@ NOTDIRSRCTOP	= $(notdir $(SRCTOP))
 
 src: $(PACKDIR)
 	echo "[" $(NOTDIRSRCTOP) "]"
-	test -n $(NOTDIRSRCTOP) || { echo "bad"; exit 1; }
+	test -n "$(NOTDIRSRCTOP)" || { echo "bad"; exit 1; }
 	(cd $(PACKDIR); \
 	 (cd $(SRCTOP)/..; \
 	  $(TAR) -cf - $(NOTDIRSRCTOP)) | $(TAR) -xf - ; \
@@ -264,6 +264,12 @@ win32-i486-cross: $(PACKDIR) $(PACKDIR)/mozart
 	rm -f mozart-win32.zip
 	$(ZIP) -r mozart-win32.zip mozart-win32
 	rm -rf mozart-win32
+
+STDLIB=
+std:
+	test -n "$(STDLIB)" || { echo "set STDLIB to source dir for mozart standard library"; exit 1; }
+	(cd $(STDLIB) && $(MAKE) VERSION=$(shell $(OZVERSION)) TODAY=$(OZBUILD) distrib)
+	mv $(STDLIB)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std.tar.gz .
 
 files.base:
 	(cd $(PREFIX); \
