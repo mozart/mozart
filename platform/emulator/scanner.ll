@@ -573,7 +573,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 %x COMMENT
 %x DIRECTIVE
-%x LINE SWITCHDIR INPUTFILE OUTPUTFILE INSERT DEFINE IFDEF IFNDEF UNDEF
+%x LINE SWITCHDIR INPUTFILE INSERT DEFINE IFDEF IFNDEF UNDEF
 
 %s LEX
 
@@ -616,7 +616,6 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 \\threadedfeed                 { BEGIN(INPUTFILE); return THREADEDFEED; }
 \\c(o(re?)?)?                  { BEGIN(INPUTFILE); return CORE; }
 \\m(a(c(h(i(ne?)?)?)?)?)?      { BEGIN(INPUTFILE); return OZMACHINE; }
-\\t(o(p(v(a(rs?)?)?)?)?)?      { BEGIN(OUTPUTFILE); return TOPVARS; }
 
 \\in(s(e(rt?)?)?)?             { BEGIN(INSERT); }
 \\d(e(f(i(ne?)?)?)?)?          { BEGIN(DEFINE); }
@@ -719,33 +718,6 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				     delete[] help;
 				   } else
 				     strncpy(xyhelpFileName, xytext, 99);
-				   BEGIN(DIRECTIVE);
-				   return FILENAME;
-				 } else
-				   BEGIN(DIRECTIVE);
-			       }
-  {BLANK}                      ;
-  .                            { errorFlag = 1; }
-  \n                           { if (errorFlag) {
-				   xyreportError("directive error",
-						 "illegal directive syntax",
-						 xyFileName,xylino,xycharno());
-				   errorFlag = 0;
-				 }
-                                 BEGIN(INITIAL);
-			       }
-  <<EOF>>                      { xyreportError("directive error",
-					       "unterminated directive",
-					       xyFileName,xylino,xycharno());
-				 BEGIN(DIRECTIVE);
-				 if (pop_insert())
-				   return ENDOFFILE;
-			       }
-}
-<OUTPUTFILE>{
-  {FILENAME}                   { if (cond()) {
-				   strip('\'');
-				   strncpy(xyhelpFileName, xytext, 99);
 				   BEGIN(DIRECTIVE);
 				   return FILENAME;
 				 } else
