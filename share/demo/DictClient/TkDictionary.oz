@@ -162,9 +162,9 @@ define
    %%
 
    class InformationWindow
-      feat toplevel text
+      feat toplevel text status
       attr Withdrawn: true
-      meth init(Master Title Cursor <= xterm)
+      meth init(Master Title cursor: Cursor <= xterm status: Status <= false)
          self.toplevel = {New Tk.toplevel tkInit(parent: Master
                                                  title: Title
                                                  'class': 'OzTools'
@@ -194,10 +194,28 @@ define
                                               borderwidth: ScrollBorder
                                               width: ScrollWidth)}
          {Tk.addYScrollbar self.text Scrollbar}
+         if Status then
+            self.status = {New Tk.text tkInit(parent: self.toplevel
+                                              cursor: left_ptr
+                                              border: 0
+                                              wrap: none
+                                              font: NormalFont
+                                              width: 0
+                                              height: 1
+                                              state: disabled)}
+         else
+            self.status = unit
+         end
       in
-         {Tk.batch [pack(Menu side: top fill: x)
-                    pack(self.text side: left expand: true fill: both)
-                    pack(Scrollbar side: left fill: y)]}
+         {Tk.batch
+          grid(columnconfigure self.toplevel 0 weight: 1)|
+          grid(Menu row: 0 column: 0 columnspan: 2 sticky: nsew)|
+          grid(self.text row: 1 column: 0 sticky: nsew)|
+          grid(Scrollbar row: 1 column: 1 sticky: nsew)|
+          if Status then
+             [grid(self.status row: 2 column: 0 columnspan: 2 sticky: nsew)]
+          else nil
+          end}
          {SetMinsize self.toplevel}
       end
       meth append(VS Tag <= unit)
@@ -213,6 +231,16 @@ define
             end
          catch _ then skip   % window already closed
          end
+      end
+      meth status(VS)
+         if @Withdrawn then
+            {Tk.send wm(deiconify self.toplevel)}
+            Withdrawn <- false
+         end
+         {Tk.batch [o(self.status configure state: normal)
+                    o(self.status delete p(1 0) 'end')
+                    o(self.status insert 'end' VS)
+                    o(self.status configure state: disabled)]}
       end
       meth close()
          {self.toplevel tkClose()}
@@ -241,14 +269,14 @@ define
 
    class DefinitionWindow from InformationWindow
       meth init(Master)
-         InformationWindow, init(Master 'Definition')
+         InformationWindow, init(Master 'Definitions' status: true)
       end
-      meth append(Definitions)
-         {ForAll Definitions
-          proc {$ definition(word: Word db: _ dbname: DBName body: Body)}
-             InformationWindow, append(Word#', '#DBName titleTag)
-             InformationWindow, append('\n\n'#Body#'\n\n')
-          end}
+      meth append(Definition)
+         case Definition
+         of definition(word: Word db: _ dbname: DBName body: Body) then
+            InformationWindow, append(Word#', '#DBName titleTag)
+            InformationWindow, append('\n\n'#Body#'\n\n')
+         end
       end
    end
 
@@ -261,24 +289,23 @@ define
       attr TagIndex: 0
       meth init(Master Action)
          self.action = Action
-         InformationWindow, init(Master 'Matches' left_ptr)
+         InformationWindow, init(Master 'Matches'
+                                 cursor: left_ptr status: true)
       end
-      meth append(Matches Databases)
-         {ForAll Matches
-          proc {$ DB#Word} N Action in
-             N = @TagIndex + 1
-             TagIndex <- N
-             InformationWindow, append(Word#', '#{CondSelect Databases
-                                                  {String.toAtom DB} DB}#'\n'
-                                       N)
-             Action = {New Tk.action
-                       tkInit(parent: self.text
-                              action: proc {$} DBs in
-                                         DBs = [{String.toAtom DB}]
-                                         {self.action Word DBs}
-                                      end)}
-             {self.text tk(tag bind N '<1>' Action)}
-          end}
+      meth append(Match Databases)
+         case Match of DB#Word then N Action in
+            N = @TagIndex + 1
+            TagIndex <- N
+            InformationWindow, append(Word#', '#{CondSelect Databases
+                                                 {String.toAtom DB} DB}#'\n' N)
+            Action = {New Tk.action
+                      tkInit(parent: self.text
+                             action: proc {$} DBs in
+                                        DBs = [{String.toAtom DB}]
+                                        {self.action Word DBs}
+                                     end)}
+            {self.text tk(tag bind N '<1>' Action)}
+         end
       end
    end
 
@@ -649,26 +676,34 @@ define
                VS = ('Looking up `'#Word#'\' in: '#{FormatDBs DBs @Databases}#
                      ' ...')
                TkDictionary, Status(VS)
-               try T W Found in
+               try T W TotalCount in
                   T = {Thread.this}
                   W = {New DefinitionWindow init(self.Toplevel)}
-                  Found = {NewCell false}
+                  TotalCount = {NewCell 0}
                   {ForAll DBs
-                   proc {$ DB} Res in
+                   proc {$ DB} Count Res in
                       thread
                          try
-                            {self.NetDict 'define'(Word db: DB ?Res)}
+                            {self.NetDict 'define'(Word db: DB
+                                                   count: ?Count ?Res)}
                          catch E then
                             {Thread.injectException T E}
                          end
                       end
-                      if Res \= unit then
-                         {Assign Found true}
-                         {W append(Res)}
+                      if Count > 0 then Got ToGet in
+                         Got = {Access TotalCount}
+                         ToGet = Got + Count
+                         {Assign TotalCount ToGet}
+                         {W status('Retrieved '#Got#'; found '#ToGet)}
+                         {List.forAllInd Res
+                          proc {$ I Definition}
+                             {W status('Retrieved '#Got + I#'; found '#ToGet)}
+                             {W append(Definition)}
+                          end}
                       end
                    end}
-                  if {Access Found} then skip
-                  else
+                  {W status('Total: '#{Access TotalCount})}
+                  if {Access TotalCount} == 0 then
                      {New TkTools.error
                       tkInit(master: self.Toplevel
                              text: 'No matches for `'#Word#'\' found.') _}
@@ -682,24 +717,32 @@ define
                VS = ('Matching `'#Word#'\' in: '#{FormatDBs DBs @Databases}#
                      ' using: '#@Strategies.Strategy#' ...')
                TkDictionary, Status(VS)
-               try Action W Found in
+               try Action W TotalCount in
                   proc {Action Word DBs}
-                     TkDictionary, Log('Look up `'#Word#'\' in: '#
+                     TkDictionary, Log('Match `'#Word#'\' in: '#
                                        {FormatDBs DBs @Databases})
                      {Send NetPort getDefinitions(Word DBs)}
                   end
                   W = {New MatchWindow init(self.Toplevel Action)}
-                  Found = {NewCell false}
+                  TotalCount = {NewCell 0}
                   {ForAll DBs
-                   proc {$ DB} Res in
-                      {self.NetDict match(Word db: DB strategy: Strategy ?Res)}
-                      if Res \= unit then
-                         {W append(Res @Databases)}
-                         {Assign Found true}
+                   proc {$ DB} Count Res in
+                      {self.NetDict match(Word db: DB strategy: Strategy
+                                          count: ?Count ?Res)}
+                      if Count > 0 then Got ToGet in
+                         Got = {Access TotalCount}
+                         ToGet = Got + Count
+                         {Assign TotalCount ToGet}
+                         {W status('Retrieving '#Got#'; found '#ToGet)}
+                         {List.forAllInd Res
+                          proc {$ I Match}
+                             {W status('Retrieved '#Got + I#'; found '#ToGet)}
+                             {W append(Match @Databases)}
+                          end}
                       end
                    end}
-                  if {Access Found} then skip
-                  else
+                  {W status('Total: '#{Access TotalCount})}
+                  if {Access TotalCount} == 0 then
                      {New TkTools.error
                       tkInit(master: self.Toplevel
                              text: 'No matches for `'#Word#'\' found.') _}
