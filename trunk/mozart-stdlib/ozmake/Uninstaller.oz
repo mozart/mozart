@@ -3,8 +3,13 @@ export
    'class' : Uninstaller
 prepare
    VSToAtom = VirtualString.toAtom
+   fun {UnitToNil X}
+      if X==unit then nil else X end
+   end
+   DictKeys = Dictionary.keys
 import
    Utils at 'Utils.ozf'
+   Path  at 'Path.ozf'
 define
    class Uninstaller
 
@@ -33,8 +38,16 @@ define
 	 if PKG==unit then
 	    raise ozmake(uninstall:packagenotfound(MOG)) end
 	 else
-	    FILES   = {CondSelect PKG files nil}
-	    ZOMBIES = {CondSelect PKG zombies nil}
+	    DFILES = {NewDictionary}
+	    for F in {UnitToNil {CondSelect PKG files nil}} do
+	       DFILES.F := unit
+	    end
+	    FILES = {Sort {DictKeys DFILES} Value.'>'}
+	    DZOMBIES = {NewDictionary}
+	    for F in {UnitToNil {CondSelect PKG zombies nil}} do
+		  DZOMBIES.F := unit
+	    end
+	    ZOMBIES = {Sort {DictKeys DZOMBIES} Value.'>'}
 	 in
 	    {self trace('uninstalling package '#MOG)}
 	    {self incr}
@@ -42,20 +55,29 @@ define
 	       {self trace('removing files')}
 	       {self incr}
 	       try
-		  if FILES\=unit then
-		     for F in FILES do {self exec_rm(F)} end
-		  end
+		  for F in FILES do {self exec_rm(F)} end
 	       finally {self decr} end
 	       {self trace('removing zombies')}
 	       {self incr}
 	       try
-		  if ZOMBIES\=unit then
-		     for F in ZOMBIES do {self exec_rm(F)} end
-		  end
+		  for F in ZOMBIES do {self exec_rm(F)} end
+	       finally {self decr} end
+	       {self trace('removing empty directories')}
+	       {self incr}
+	       try
+		  for F in FILES   do {self rmEmptyDirs({Path.dirnameURL F})} end
+		  for F in ZOMBIES do {self rmEmptyDirs({Path.dirnameURL F})} end
 	       finally {self decr} end
 	       {self database_remove_package(MOG)}
 	       {self database_save}
 	    finally {self decr} end
+	 end
+      end
+
+      meth rmEmptyDirs(F)
+	 if {Path.isDir F} andthen {Path.ls F}==nil then
+	    {self exec_rmdir(F)}
+	    {self rmEmptyDirs({Path.dirnameURL F})}
 	 end
       end
 

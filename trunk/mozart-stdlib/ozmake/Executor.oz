@@ -80,7 +80,7 @@ define
 
       meth make_src(F $)	% input of a tool
 	 FF={Path.maybeAddPlatform F}
-	 DST={Path.resolve {self get_builddir($)} FF}%look in build dir
+	 DST={Path.resolveAtom {self get_builddir($)} FF}%look in build dir
       in
 	 if {self exec_exists(DST $)} then DST
 	    /*
@@ -89,7 +89,7 @@ define
 	 then DST
 	    */
 	 else
-	    SRC={Path.resolve {self get_srcdir($)} FF}%else in source dir
+	    SRC={Path.resolveAtom {self get_srcdir($)} FF}%else in source dir
 	 in
 	    if {self exec_exists(SRC $)} then SRC
 	    /*
@@ -458,7 +458,9 @@ define
 	    else
 	       try {Path.removeRec D}
 	       catch error(path(remove(S)) ...) then
-		  raise ozmake(rmdir:S) end
+		  if {Path.exists D} then
+		     raise ozmake(rmdir:S) end
+		  end
 	       end
 	    end
 	 end
@@ -475,7 +477,9 @@ define
 	    else
 	       try {Path.remove F}
 	       catch error(path(remove(S)) ...) then
-		  raise ozmake(rm:S) end
+		  if {Path.exists F} then
+		     raise ozmake(rm:S) end
+		  end
 	       end
 	    end
 	 end
