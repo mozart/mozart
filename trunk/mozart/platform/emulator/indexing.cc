@@ -195,7 +195,7 @@ int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
     return offset;
   }
 
-  if (isNotCVar(term)) {
+  if (isUVar(term)) {
     return 0;
   }
 
@@ -224,6 +224,10 @@ int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
   }
 
   if (isCVar(term) && !table->disentailed(tagged2CVar(term),termPtr)) {
+    return 0;
+  }
+
+  if (isSVar(term)) {
     return 0;
   }
 
