@@ -37,8 +37,6 @@ Dbg = dbg(on:           proc {$}
 	  unleash:      {`Builtin` 'Thread.unleash' 2}
 	 )
 
-IsBuiltin = {`Builtin` 'isBuiltin' 2}
-
 proc {EnqueueCompilerQuery M}
    case {Compiler.getOPICompiler} of false then
       skip
