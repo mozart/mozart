@@ -97,10 +97,10 @@ OZ_BI_define(Name,InArity,OutArity)					\
    status = buffer_vs(OZ_in(ARG), VAR, &len, &rest, &susp);		\
    if (status == SUSPEND) {						\
      if (OZ_isVariable(susp)) {						\
-       OZ_suspendOn(susp);						\
+	OZ_suspendOn(susp);						\
      } else {								\
-       return oz_raise(E_SYSTEM,E_SYSTEM,"limitInternal",1,		\
-			OZ_string("virtual string too long"));		\
+	return oz_raise(E_SYSTEM,E_SYSTEM,"limitInternal",1,		\
+			 OZ_string("virtual string too long"));		\
      }									\
    } else if (status != PROCEED) {					\
      return status;							\
@@ -241,7 +241,7 @@ static char* h_strerror(const int err) {
     }							\
   }							\
 }
-                             
+
 #define CHECK_WRITE(FD)					\
 { int sel = osTestSelect(FD,SEL_WRITE);			\
   if (sel < 0)  { RETURN_UNIX_ERROR("select"); }	\
@@ -267,7 +267,7 @@ static OZ_Term openbuff2list(int len, const char *s, const OZ_Term tl) {
   hd = OZ_tupleC("|", 2);
   OZ_putArg(hd, 0, OZ_int((unsigned char) *s++));
   prev = hd;
-  
+
   while (--len) {
     OZ_Term next = OZ_tupleC("|", 2); 
 
@@ -287,16 +287,16 @@ static OZ_Term openbuff2list(int len, const char *s, const OZ_Term tl) {
 
 inline OZ_Term buff2list(int len, const char *s) 
 {
-  return openbuff2list(len, s, nil()); 
+  return openbuff2list(len, s, oz_nil()); 
 }
 
 
 
 OZ_Return atom2buff(OZ_Term atom, char **write_buff, int *len, 
-		  OZ_Term *rest, OZ_Term *susp)
+		   OZ_Term *rest, OZ_Term *susp)
 {
   char c;
-  
+
   if (!OZ_isAtom(atom)) {
     return OZ_typeError(-1,"VirtualString");
   }
@@ -305,9 +305,9 @@ OZ_Return atom2buff(OZ_Term atom, char **write_buff, int *len,
 
   if (IsPair(string))
     return PROCEED;
-  
+
   while ((c = *string) &&
-	 *len < max_vs_length) {
+	  *len < max_vs_length) {
     **write_buff = c;
     (*write_buff)++;
     (*len)++;
@@ -322,18 +322,18 @@ OZ_Return atom2buff(OZ_Term atom, char **write_buff, int *len,
 
   return PROCEED;
 }
-    
+
 
 OZ_Return int2buff(OZ_Term ozint, char **write_buff, int *len,
-		 OZ_Term *rest, OZ_Term *susp)
+		  OZ_Term *rest, OZ_Term *susp)
 {
   char *string = OZ_toC(ozint,0,0);
   if (*string == '~') *string='-';
   char c;
-  
+
   char *help = string;
   while ((c = *help) &&
-	 *len < max_vs_length) {
+	  *len < max_vs_length) {
     **write_buff = c;
     (*write_buff)++;
     (*len)++;
@@ -346,7 +346,7 @@ OZ_Return int2buff(OZ_Term ozint, char **write_buff, int *len,
     return SUSPEND;
   }
 
-  return PROCEED;
+    return PROCEED;
 }
 
 OZ_Return float2buff(OZ_Term ozfloat, char **write_buff, int *len,
@@ -519,10 +519,10 @@ static OZ_Term readEntries(DIR *dp) {
   OZ_Term dirEntry;
   if ((dirp = readdir(dp)) != NULL) {
     dirEntry = OZ_string(dirp->d_name);
-    return cons(dirEntry, readEntries(dp));
+    return oz_cons(dirEntry, readEntries(dp));
   }
   else 
-    return nil();
+    return oz_nil();
 }
 
 OZ_BI_iodefine(unix_getDir,1,1)
@@ -564,10 +564,10 @@ OZ_BI_iodefine(unix_stat,1,1)
     fileType = "unknown";
 
   OZ_Term pairlist=
-    cons(OZ_pairAA("type",fileType),
-            cons(OZ_pairAI("size",buf.st_size),
-		 cons(OZ_pairAI("mtime",buf.st_mtime),
-                    nil())));
+    oz_cons(OZ_pairAA("type",fileType),
+            oz_cons(OZ_pairAI("size",buf.st_size),
+		 oz_cons(OZ_pairAI("mtime",buf.st_mtime),
+                    oz_nil())));
   OZ_RETURN(OZ_recordInit(OZ_atom("stat"),pairlist));
 } OZ_BI_ioend
 
@@ -584,14 +584,14 @@ OZ_BI_iodefine(unix_uName,0,1)
   OZ_Term t5=OZ_pairAS("sysname",buf.sysname);
   OZ_Term t6=OZ_pairAS("version",buf.version);
 
-  OZ_Term pairlist = cons(t2,cons(t3,cons(t4,cons(t5,cons(t6,nil())))));
+  OZ_Term pairlist = oz_cons(t2,oz_cons(t3,oz_cons(t4,oz_cons(t5,oz_cons(t6,oz_nil())))));
 
 #if defined(SUNOS_SPARC) || defined(LINUX)
   char dname[65];
   if (getdomainname(dname, 65)) {
     RETURN_UNIX_ERROR("getdomainname");
   }
-  pairlist = cons(OZ_pairAS("domainname",dname),pairlist);
+  pairlist = oz_cons(OZ_pairAS("domainname",dname),pairlist);
 #endif
 
   OZ_RETURN(OZ_recordInit(OZ_atom("utsname"),pairlist));
@@ -604,9 +604,9 @@ inline
 static
 OZ_Term timeval2Oz(struct timeval tv)
 {
-  OZ_Term pl=nil();
-  pl=cons(OZ_pairA("sec",oz_long(tv.tv_sec)),pl);
-  pl=cons(OZ_pairA("usec",oz_long(tv.tv_usec)),pl);
+  OZ_Term pl=oz_nil();
+  pl=oz_cons(OZ_pairA("sec",oz_long(tv.tv_sec)),pl);
+  pl=oz_cons(OZ_pairA("usec",oz_long(tv.tv_usec)),pl);
   return OZ_recordInit(OZ_atom("timeval"),pl);
 }
 #endif
@@ -803,7 +803,7 @@ OZ_BI_iodefine(unix_write, 2,1)
 	OZ_RETURN_INT(len);
       } else {
 	Assert(len > ret);
-	NEW_RETURN_SUSPEND(OZ_int(ret), nil(), rest);
+	NEW_RETURN_SUSPEND(OZ_int(ret), oz_nil(), rest);
       }
     } else {
       Assert(status == SUSPEND);
@@ -1137,7 +1137,7 @@ OZ_BI_iodefine(unix_send, 3,1)
     }
     
     if (status != SUSPEND) {
-      susp = nil();
+      susp = oz_nil();
       rest = susp;
     }
     
@@ -1203,7 +1203,7 @@ OZ_BI_iodefine(unix_sendToInet, 5,1)
     }
     
     if (status != SUSPEND) {
-      susp = nil();
+      susp = oz_nil();
       rest = susp;
     }
     
@@ -1480,9 +1480,9 @@ OZ_BI_define(unix_pipe,2,2)
 
 static OZ_Term mkAliasList(char **alias)
 {
-  OZ_Term ret = nil();
+  OZ_Term ret = oz_nil();
   while (*alias != 0) {
-    ret = cons(OZ_string(*alias), ret);
+    ret = oz_cons(OZ_string(*alias), ret);
     alias++;
   }
   return ret;
@@ -1490,9 +1490,9 @@ static OZ_Term mkAliasList(char **alias)
 
 static OZ_Term mkAddressList(char **lstptr)
 {
-  OZ_Term ret = nil();
+  OZ_Term ret = oz_nil();
   while (*lstptr != NULL) {
-    ret = cons(OZ_string(inet_ntoa(**((struct in_addr **) lstptr))),
+    ret = oz_cons(OZ_string(inet_ntoa(**((struct in_addr **) lstptr))),
                   ret);
     lstptr++;
   }
@@ -1512,7 +1512,7 @@ OZ_BI_iodefine(unix_getHostByName, 1,1)
   OZ_Term t1=OZ_pairAS("name", hostaddr->h_name);
   OZ_Term t2=OZ_pairA("aliases",mkAliasList(hostaddr->h_aliases));
   OZ_Term t3=OZ_pairA("addrList",mkAddressList(hostaddr->h_addr_list));
-  OZ_Term pairlist= cons(t1,cons(t2,cons(t3,nil())));
+  OZ_Term pairlist= oz_cons(t1,oz_cons(t2,oz_cons(t3,oz_nil())));
 
   OZ_RETURN(OZ_recordInit(OZ_atom("hostent"),pairlist));
 } OZ_BI_ioend
@@ -1621,8 +1621,8 @@ OZ_Term make_time(const struct tm* tim)
   OZ_Term t8=OZ_pairAI("yDay",tim->tm_yday);
   OZ_Term t9=OZ_pairAI("year",tim->tm_year);
 
-  OZ_Term l1=cons(t6,cons(t7,cons(t8,cons(t9,nil()))));
-  OZ_Term l2=cons(t1,cons(t2,cons(t3,cons(t4,cons(t5,l1)))));
+  OZ_Term l1=oz_cons(t6,oz_cons(t7,oz_cons(t8,oz_cons(t9,oz_nil()))));
+  OZ_Term l2=oz_cons(t1,oz_cons(t2,oz_cons(t3,oz_cons(t4,oz_cons(t5,l1)))));
   return OZ_recordInit(OZ_atom("time"),l2);
 }
 

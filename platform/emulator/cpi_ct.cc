@@ -100,7 +100,7 @@ void OZ_GenCtVar::read(OZ_Term v)
       GenCtVariable * ctvar = tagged2GenCtVar(v);
       OZ_GenConstraint * constr = ctvar->getConstraint();
       
-      if (am.onToplevel())
+      if (oz_onToplevel())
 	ctSaveConstraint(constr);
       
       ctSetLocalConstraint(constr);
@@ -117,7 +117,7 @@ void OZ_GenCtVar::read(OZ_Term v)
       GenCtVariable * ctvar = tagged2GenCtVar(v);
       OZ_GenConstraint * constr = ctvar->getConstraint();
 
-      if (isState(glob_e) || am.onToplevel()) {
+      if (isState(glob_e) || oz_onToplevel()) {
 	ctSetGlobalConstraint(constr);
       } else {
 	ctSetLocalConstraint(constr);
@@ -266,7 +266,7 @@ void OZ_GenCtVar::fail(void)
   // dont't change the order of the calls (side effects!)
   if (testResetStoreFlag(var) && isState(glob_e) && isSort(var_e)) {
     ctRestoreConstraint();
-  } else if (am.onToplevel()) {
+  } else if (oz_onToplevel()) {
     ctRestoreConstraint();
   }
 }

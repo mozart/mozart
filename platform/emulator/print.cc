@@ -542,10 +542,10 @@ void SRecord::printStream(ostream &stream, int depth)
     Assert(oz_isCons(as));
     while (oz_isCons(as)) {
       stream << ' ';
-      ozd_printStream(head(as), stream, PRINT_DEPTH_DEC(depth));
+      ozd_printStream(oz_head(as), stream, PRINT_DEPTH_DEC(depth));
       stream << ": ";
-      ozd_printStream(getFeature(head(as)), stream, PRINT_DEPTH_DEC(depth));
-      as = tail(as);
+      ozd_printStream(getFeature(oz_head(as)), stream, PRINT_DEPTH_DEC(depth));
+      as = oz_tail(as);
     }
   }
   stream << ')';
@@ -1423,10 +1423,10 @@ void SRecord::printLongStream(ostream &stream, int depth, int offset)
   CHECK_DEREF(ar);
   while (oz_isCons(ar)) {
     stream << indent(offset+2);
-    TaggedRef feat = head(ar);
+    TaggedRef feat = oz_head(ar);
     CHECK_DEREF(feat);
     ozd_printStream(feat,stream);
-    ar = tail(ar);
+    ar = oz_tail(ar);
     CHECK_DEREF(ar);
     stream << ": ";
     ozd_printLongStream(getFeature(feat),stream,

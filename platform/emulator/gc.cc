@@ -565,7 +565,7 @@ Bool needsNoCollection(TaggedRef t)
 }
 
 
-Bool gcProtect(TaggedRef *ref)
+Bool oz_protect(TaggedRef *ref)
 {
   extRefs = extRefs->protect(ref);
   return OK;
@@ -574,15 +574,15 @@ Bool gcProtect(TaggedRef *ref)
 /* protect a ref, that will never change its initial value
  *  --> no need to remember it, if it's a small int or atom 
  */
-Bool gcStaticProtect(TaggedRef *ref)
+Bool oz_staticProtect(TaggedRef *ref)
 {
   if (needsNoCollection(*ref))
     return OK;
 
-  return gcProtect(ref);
+  return oz_protect(ref);
 }
 
-Bool gcUnprotect(TaggedRef *ref)
+Bool oz_unprotect(TaggedRef *ref)
 {
   ExtRefNode *aux = extRefs->find(ref);
 
@@ -1511,9 +1511,9 @@ void gc_finalize()
   guardian_list = finalize_list = oz_nil();
   if (old_guardian_list==0) return;
   while (!oz_isNil(old_guardian_list)) {
-    OZ_Term pair = head(old_guardian_list);
-    old_guardian_list = tail(old_guardian_list);
-    OZ_Term obj = head(pair);
+    OZ_Term pair = oz_head(old_guardian_list);
+    old_guardian_list = oz_tail(old_guardian_list);
+    OZ_Term obj = oz_head(pair);
     if (tagged2Const(obj)->gcIsMarked())
       // reachable through live data
       guardian_list = oz_cons(pair,guardian_list);
@@ -1525,11 +1525,11 @@ void gc_finalize()
   // since these lists have been freshly consed in the new half space
   // this simply means to go through both and gc the pairs
   // in the head of each cons
-  for (OZ_Term l=guardian_list;!oz_isNil(l);l=tail(l)) {
+  for (OZ_Term l=guardian_list;!oz_isNil(l);l=oz_tail(l)) {
     LTuple *t = tagged2LTuple(l);
     OZ_collectHeapTerm(*t->getRefHead(),*t->getRefHead());
   }
-  for (OZ_Term l1=finalize_list;!oz_isNil(l1);l1=tail(l1)) {
+  for (OZ_Term l1=finalize_list;!oz_isNil(l1);l1=oz_tail(l1)) {
     LTuple *t = tagged2LTuple(l1);
     OZ_collectHeapTerm(*t->getRefHead(),*t->getRefHead());
   }
@@ -3074,7 +3074,7 @@ void checkGC() {
 void AM::doGC() {
   osBlockSignals();
   ThreadList::dispose();
-  Assert(onToplevel());
+  Assert(oz_onToplevel());
 
   /* do gc */
   gc(ozconf.gcVerbosity);

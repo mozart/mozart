@@ -545,7 +545,7 @@ inline void trailCycle(LTuple *l, MsgBuffer *bs)
 
 void marshalSRecord(SRecord *sr, MsgBuffer *bs)
 {
-  TaggedRef t = nil();
+  TaggedRef t = oz_nil();
   if (sr) {
     t = makeTaggedSRecord(sr);
   }
@@ -887,7 +887,7 @@ void unmarshalDict(MsgBuffer *bs, TaggedRef *ret)
 {
   int size = unmarshalNumber(bs);
   PD((UNMARSHAL,"dict size:%d",size));
-  Assert(am.onToplevel());
+  Assert(oz_onToplevel());
   OzDictionary *aux = new OzDictionary(am.currentBoard(),size);
   aux->markSafe();
   *ret = makeTaggedConst(aux);
@@ -953,7 +953,7 @@ OZ_Term unmarshalTerm(MsgBuffer *bs)
 
 inline
 ObjectClass *newClass(GName *gname) {
-  Assert(am.onToplevel());
+  Assert(oz_onToplevel());
   ObjectClass *ret = new ObjectClass(NULL,NULL,NULL,NULL,NO,NO,am.currentBoard());
   ret->setGName(gname);
   return ret;
@@ -1108,7 +1108,7 @@ loop:
 	TaggedRef aux = duplist(arity,len);
 	sortedarity = sortlist(aux,len);
       }
-      PD((UNMARSHAL,"record no:%d",fastlength(arity)));
+      PD((UNMARSHAL,"record no:%d",oz_fastlength(arity)));
       TaggedRef label = unmarshalTerm(bs);
       SRecord *rec    = SRecord::newSRecord(label,aritytable.find(sortedarity));
       *ret = makeTaggedSRecord(rec);
@@ -1116,8 +1116,8 @@ loop:
 
       while(oz_isCons(arity)) {
 	TaggedRef val = unmarshalTerm(bs);
-	rec->setFeature(head(arity),val);
-	arity = tail(arity);
+	rec->setFeature(oz_head(arity),val);
+	arity = oz_tail(arity);
       }
       return;
     }
@@ -1166,7 +1166,7 @@ loop:
       
       SChunk *sc;
       if (gname) {
-	Assert(am.onToplevel());
+	Assert(oz_onToplevel());
 	sc=new SChunk(am.currentBoard(),0);
 	sc->setGName(gname);
 	*ret = makeTaggedConst(sc);
@@ -1221,9 +1221,9 @@ loop:
       int maxX      = unmarshalNumber(bs);
 
       if (gname) {
-	PrTabEntry *pr = new PrTabEntry(name,mkTupleWidth(arity),0,0,0,nil(),
-					maxX);
-	Assert(am.onToplevel());
+	PrTabEntry *pr = new PrTabEntry(name,mkTupleWidth(arity),0,0,0,
+					oz_nil(), maxX);
+	Assert(oz_onToplevel());
 	pr->setGSize(gsize);
 	Abstraction *pp = Abstraction::newAbstraction(pr,am.currentBoard());
 	*ret = makeTaggedConst(pp);
@@ -1266,7 +1266,7 @@ loop:
 
       if (found == htEmpty) {
 	warning("Builtin '%s' not in table.", name);
-	*ret = nil();
+	*ret = oz_nil();
 	return;
       }
 
@@ -1291,7 +1291,7 @@ loop:
   default:
     error("unmarshal: unexpected tag: %d\n",tag); 
     Assert(0);
-    *ret = nil();
+    *ret = oz_nil();
     return;
   }
 
@@ -1334,7 +1334,7 @@ void marshalFullObject(Object *o,MsgBuffer* bs){
   marshalSRecord(o->getFreeRecord(),bs);
   marshalTerm(makeTaggedConst(getCell(o->getState())),bs);
   if (o->getLock()) {marshalTerm(makeTaggedConst(o->getLock()),bs);}
-  else {marshalTerm(nil(),bs);}}
+  else {marshalTerm(oz_nil(),bs);}}
   
 void marshalFullObjectAndClass(Object *o,MsgBuffer* bs){
   PD((MARSHAL,"full object and class"));

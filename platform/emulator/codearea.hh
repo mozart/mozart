@@ -204,7 +204,7 @@ public:
   static ProgramCounter writeTagged(TaggedRef t, ProgramCounter ptr)
   {
     ProgramCounter ret = writeWord(t,ptr);
-    gcStaticProtect((TaggedRef *)ptr);
+    oz_staticProtect((TaggedRef *)ptr);
     return ret;
   }
 
@@ -391,7 +391,7 @@ public:
   {
     arity = i;
     methName = mn;
-    gcStaticProtect(&methName);
+    oz_staticProtect(&methName);
     protectInlineCache(&methCache);
   }
 };

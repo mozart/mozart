@@ -9,10 +9,10 @@ TaggedRef formatError(TaggedRef info,TaggedRef val,
 		      OZ_Term traceBack,OZ_Term loc)
 {
   OZ_Term d = OZ_record(OZ_atom("d"),
-			cons(OZ_atom("info"),
-			     cons(OZ_atom("stack"),
-				  cons(OZ_atom("loc"),
-				       nil()))));
+			oz_cons(OZ_atom("info"),
+			     oz_cons(OZ_atom("stack"),
+				  oz_cons(OZ_atom("loc"),
+				       oz_nil()))));
   OZ_putSubtree(d,OZ_atom("stack"),traceBack);
   OZ_putSubtree(d,OZ_atom("loc"),loc);
   OZ_putSubtree(d,OZ_atom("info"),info);
@@ -24,7 +24,7 @@ TaggedRef formatError(TaggedRef info,TaggedRef val,
 static
 int canOptimizeFailure(AM *e, Thread *tt)
 {
-  if (tt->hasCatchFlag() || e->onToplevel()) { // catch failure
+  if (tt->hasCatchFlag() || oz_onToplevel()) { // catch failure
     if (tt->isSuspended()) {
       tt->pushCall(BI_fail,0,0);
       e->suspThreadToRunnableOPT(tt);
@@ -190,7 +190,7 @@ LBLterminate:
     Assert(CBB != (Board *) NULL);
     Assert(!CBB->isFailed());
 
-    Assert(e->onToplevel() ||
+    Assert(oz_onToplevel() ||
 	   ((CTT->isInSolve() || !e->isBelowSolveBoard()) &&
 	    (e->isBelowSolveBoard() || !CTT->isInSolve())));
 
@@ -228,7 +228,7 @@ LBLcheckEntailmentAndStability:
      */ 
 
     // maybe optimize?
-    if (e->onToplevel()) goto LBLstart;
+    if (oz_onToplevel()) goto LBLstart;
 
     Board *nb = 0; // notification board
 
@@ -394,7 +394,7 @@ LBLsuspend1:
 
     //  No counter decrement 'cause the thread is still alive!
 
-    if (e->onToplevel()) {
+    if (oz_onToplevel()) {
       //
       //  Note that in this case no (runnable) thread counters 
       // in solve actors can be affected, just because this is 
@@ -404,7 +404,7 @@ LBLsuspend1:
 
     // 
     //  So, from now it's somewhere in a deep guard;
-    Assert (!(e->onToplevel ()));
+    Assert (!oz_onToplevel());
 
     goto LBLcheckEntailmentAndStability;
   }
@@ -542,7 +542,7 @@ LBLraise:
       goto LBLrunThread;  // execute task with no preemption!
     }
 
-    if (!e->onToplevel() &&
+    if (!oz_onToplevel() &&
 	OZ_eq(OZ_label(e->exception.value),OZ_atom("failure"))) {
       goto LBLfailure;
     }

@@ -58,7 +58,7 @@ static SRecordArity getArity(TaggedRef arity) {
     return mkTupleWidth(smallIntValue(arity));
   }
 
-  int len = fastlength(arity);
+  int len = oz_fastlength(arity);
   arity = sortlist(arity,len);
   Arity *ari = aritytable.find(arity);
   return (ari->isTuple())? mkTupleWidth(ari->getWidth()): mkRecordArity(ari);
@@ -210,12 +210,12 @@ Instruction	: LBL '(' DefLabel ')'
 			ozmaerror("label multiply defined");
 		      else
 			while (!literalEq(backpatchList,AtomNil)) {
-			  TaggedRef pair = head(backpatchList);
+			  TaggedRef pair = oz_head(backpatchList);
 			  ProgramCounter opcodePC =
-			      (ProgramCounter) OZ_intToC(head(pair));
-			  int *location = (int *) OZ_intToC(tail(pair));
+			      (ProgramCounter) OZ_intToC(oz_head(pair));
+			  int *location = (int *) OZ_intToC(oz_tail(pair));
 			  *location = PC - opcodePC;
-			  backpatchList = tail(backpatchList);
+			  backpatchList = oz_tail(backpatchList);
 			}
 		    }
 		    labelDict->setArg($3,OZ_int((int) PC));
@@ -428,12 +428,12 @@ HashTableRef	: HT '(' DefLabel '[' HashTableEntries ']' ')'
 		  {
 		    TaggedRef elseLabel = $3;
 		    TaggedRef entries = $5;
-		    int size = fastlength(entries);
+		    int size = oz_fastlength(entries);
 		    ht = new IHashTable(size,0);
 		    lookupLabel(elseLabel,&ht->elseLabel);
 		    for (int i = 0; i < size; i++) {
-		      SRecord *rec = tagged2SRecord(head(entries));
-		      entries = tail(entries);
+		      SRecord *rec = tagged2SRecord(oz_head(entries));
+		      entries = oz_tail(entries);
 		      const char *label =
 			rec->getLabelLiteral()->getPrintName();
 		      if (!strcmp(label,"onScalar")) {
@@ -524,11 +524,11 @@ ApplMethInfo	: AMI '(' ALiteral ARecordArity ')'
 GRegRef		: '[' Registers ']'
 		  {
 		    TaggedRef globals = $2;
-		    int numglobals = fastlength(globals);
+		    int numglobals = oz_fastlength(globals);
 		    AssRegArray *gregs = new AssRegArray(numglobals);
 		    for (int i = 0; i < numglobals; i++) {
-		      SRecord *rec = tagged2SRecord(oz_deref(head(globals)));
-		      globals = oz_deref(tail(globals));
+		      SRecord *rec = tagged2SRecord(oz_deref(oz_head(globals)));
+		      globals = oz_deref(oz_tail(globals));
 		      const char *label =
 			rec->getLabelLiteral()->getPrintName();
 		      KindOfReg regType;
@@ -570,17 +570,17 @@ Location	: LocIndices '#' LocIndices
 		  {
 		    TaggedRef ins = $1;
 		    TaggedRef outs = $3;
-		    int inArity = fastlength(ins);
-		    int outArity = fastlength(outs);
+		    int inArity = oz_fastlength(ins);
+		    int outArity = oz_fastlength(outs);
 		    OZ_Location *loc =
 		      OZ_Location::newLocation(inArity,outArity);
 		    for (int i = 0; i < inArity; i++) {
-		      loc->in(i) = smallIntValue(head(ins));
-		      ins = tail(ins);
+		      loc->in(i) = smallIntValue(oz_head(ins));
+		      ins = oz_tail(ins);
 		    }
 		    for (int i = 0; i < outArity; i++) {
-		      loc->out(i) = smallIntValue(head(outs));
-		      outs = tail(outs);
+		      loc->out(i) = smallIntValue(oz_head(outs));
+		      outs = oz_tail(outs);
 		    }
 		    codeArea->writeAddress(loc);
 		  }
@@ -625,7 +625,7 @@ OZ_BI_define(ozma_readProc,1,1)
     = new PrTabEntry(OZ_atom("toplevelAbstraction"),
 		mkTupleWidth(0),
 		OZ_mkTupleC("pos",3,OZ_atom(""),OZ_int(0),OZ_int(0)),
-		nil(),maxX);
+		oz_nil(),maxX);
   pte->PC = codeArea->getStart();
   pte->setGSize(0);
   Abstraction *ab=Abstraction::newAbstraction(pte,am.currentBoard());

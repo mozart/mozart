@@ -55,7 +55,7 @@ OZ_Term OZ_Stream::get(void)
   } 
 
   OZ_Term deref_tail = oz_deref(tail);
-  OZ_Term r = head(deref_tail);
+  OZ_Term r = oz_head(deref_tail);
   tail = makeTaggedRef(tagged2LTuple(deref_tail)->getRefTail());
   setFlags();
   return r;

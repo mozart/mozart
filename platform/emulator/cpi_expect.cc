@@ -559,7 +559,7 @@ OZ_expect_t OZ_Expect::expectList(OZ_Term t,
 	acc += 1;
       } 
 
-      t = tail(t);
+      t = oz_tail(t);
       __DEREF(t, tptr, ttag);
     } while (oz_isCons(ttag));
 
@@ -614,7 +614,7 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
 	acc += 1;
       } 
 
-      t = tail(t);
+      t = oz_tail(t);
       __DEREF(t, tptr, ttag);
     } while (oz_isCons(ttag));
 
@@ -650,7 +650,7 @@ OZ_expect_t OZ_Expect::expectStream(OZ_Term st)
     
     do {
       len += 1;
-      st = tail(st);
+      st = oz_tail(st);
       __DEREF(st, stptr, sttag);
     } while (oz_isCons(sttag));
     

@@ -32,8 +32,6 @@
 #pragma interface
 #endif
 
-#include "runtime.hh"
-
 // optimize: inline ....
 
 INLINE
@@ -49,7 +47,7 @@ void AM::deinstallPath(Board *top)
 {
   Assert(!top->isCommitted() && !top->isFailed());
   
-  while (!isCurrentBoard(top)) {
+  while (!oz_isCurrentBoard(top)) {
     deinstallCurrent();
   }
 }
@@ -71,7 +69,7 @@ Bool AM::isLocalUVar(TaggedRef var,TaggedRef *varPtr)
 INLINE
 Bool AM::isLocalSVar(SVariable *var) {
   ShallowCheckLocal(var);
-  return (isCurrentBoard(var->getHome1())) || isLocalSVarOutline(var);
+  return (oz_isCurrentBoard(var->getHome1())) || isLocalSVarOutline(var);
 }
 
 INLINE
@@ -177,7 +175,7 @@ Thread *AM::mkRunnableThreadOPT(int prio, Board *bb)
 {
   Thread *th = newThreadInternal(prio,bb);
 
-  Assert(isCurrentBoard(bb) || isCurrentBoard(bb->getParent()));
+  Assert(oz_isCurrentBoard(bb) || oz_isCurrentBoard(bb->getParent()));
   if (isBelowSolveBoard()) {
     int inSolve=incSolveThreads(bb);
     Assert(inSolve);
@@ -234,8 +232,8 @@ void AM::suspThreadToRunnableOPT(Thread *tt)
 
   tt->markRunnable();
 
-  Assert(isCurrentBoard(GETBOARD(tt)) || tt->isExtThread() ||
-	 (isCurrentBoard(GETBOARD(tt)->getParent())
+  Assert(oz_isCurrentBoard(GETBOARD(tt)) || tt->isExtThread() ||
+	 (oz_isCurrentBoard(GETBOARD(tt)->getParent())
 	  && !GETBOARD(tt)->isSolve()));
 
   if (debugmode() && tt->getTrace()) {
@@ -371,7 +369,7 @@ void AM::scheduledPropagator(Propagator * prop)
 {
   Assert(prop);
   Assert(!prop->isDeadPropagator());
-  Assert(isCurrentBoard(GETBOARD(prop)));
+  Assert(oz_isCurrentBoard(GETBOARD(prop)));
 
   prop->unmarkRunnable();
   wakeUpPropagator(prop, currentBoard(), pc_propagator);
@@ -385,7 +383,7 @@ void AM::suspendPropagator(Propagator * prop)
 {
   Assert(prop);
   Assert(!prop->isDeadPropagator());
-  Assert(isCurrentBoard(GETBOARD(prop)));
+  Assert(oz_isCurrentBoard(GETBOARD(prop)));
 
   prop->unmarkRunnable();
   prop->unmarkUnifyPropagator();
@@ -449,7 +447,7 @@ void AM::closeDonePropagator(Propagator * prop)
 {
   Assert(prop);
   Assert(!prop->isDeadPropagator());
-  Assert(isCurrentBoard(GETBOARD(prop)));
+  Assert(oz_isCurrentBoard(GETBOARD(prop)));
 
   // constructive disjunction ???
   // kost@: i don't know what's going on here - just keep it as it was;
