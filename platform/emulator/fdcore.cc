@@ -286,9 +286,9 @@ OZ_C_proc_begin(BIfdPutList, 3)
 	TypeError(1, "Expected SmallInt in 2-tuple.");
       }
 
-      if (0 <= left_arr[len_arr] &&
-	  left_arr[len_arr] <= right_arr[len_arr] &&
+      if (left_arr[len_arr] <= right_arr[len_arr] &&
 	  right_arr[len_arr] <= fd_iv_max_elem) {
+	if (left_arr[len_arr] < 0) left_arr[len_arr] = 0;
 	min_arr = min(min_arr, left_arr[len_arr]);
 	max_arr = max(max_arr, right_arr[len_arr]);
 	len_arr += 1;
@@ -314,7 +314,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
   LocalFD aux; aux.initList(len_arr, left_arr, right_arr, min_arr, max_arr);
 
   if (smallIntValue(s) != 0) aux = ~aux;
-  
+
   FailOnEmpty(*x &= aux);
 
   return x.releaseNonRes();
