@@ -22,22 +22,6 @@
 
 #include "types.hh"
 
-/* enum ThreadFlags:
-   Normal: thread has a taskStack and is scheduled
-   SuspCont: thread has no taskStack,
-             but 'suspCont' contains a SuspContinuation
-   SuspCCont: thread has no taskStack,
-             but 'suspCCont' contains a CFuncContinuation
-   Nervous: thread has no taskStack, but 'board' contains the board to visit
-   */
-
-enum ThreadFlags
-{
-  T_Normal =      0x01,
-  T_SuspCont =    0x02,
-  T_SuspCCont =   0x04,
-  T_Nervous =     0x08
-};
 
 class Toplevel;
 
@@ -48,6 +32,7 @@ private:
   static Thread *Head;
   static Thread *Tail;
   static Toplevel *ToplevelQueue;
+  static Thread *FreeList;
 
 public:
   static void Init();
@@ -67,43 +52,27 @@ public:
 private:
   Thread *next;
   Thread *prev;
-  int flags;
-  union {
-    TaskStack *taskStack;
-    SuspContinuation *suspCont;
-    CFuncContinuation *suspCCont;
-    Board *board;
-  } u;
   int priority;
   Board *notificationBoard; // for search capabilities;
-  Suspension *resSusp;      // resident suspension (mainly for finite domains)
+
 public:
+  TaskStack taskStack;
   Thread(int prio);
+  static Thread *newThread(int prio);
 
   USEFREELISTMEMORY;
   OZPRINT;
   OZPRINTLONG;
   Thread *gc();
-  void gcRecurse(void);
+  void gcRecurse();
 
-public:
   int getPriority();
-  TaskStack *getTaskStack();
-  Suspension *getResSusp();
-  Bool isNormal();
-  Bool isNervous();
-  Bool isSuspCont();
-  Bool isSuspCCont();
   Bool isSolve () { return ((notificationBoard == (Board *) NULL) ? NO : OK); }
   void setNotificationBoard (Board *b) { notificationBoard = b; }
   Board* getNotificationBoard () { return (notificationBoard); }
-  TaskStack *makeTaskStack();
-  Board *popBoard();
-  SuspContinuation *popSuspCont();
-  CFuncContinuation *popSuspCCont();
   void pushTask(Board *n,ProgramCounter pc,
                        RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
-  void pushTask (Board *n, OZ_CFun f, RefsArray x=NULL, int i=0);
+  void pushTask(Board *n, OZ_CFun f, RefsArray x=NULL, int i=0);
   void schedule();
   void setPriority(int prio);
   void checkToplevel();
@@ -111,8 +80,7 @@ public:
   void pushToplevel(ProgramCounter pc);
 
 private:
-  Thread() : ConstTerm(Co_Thread) { init(); resSusp = NULL; }
-  void init();
+  void init(int prio);
   Bool isScheduled();
   void insertFromTail();
   void insertFromHead();
