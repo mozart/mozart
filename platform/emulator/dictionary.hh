@@ -23,6 +23,8 @@ class OzDictionary: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 private:
   DynamicTable *table;
+  Bool isSafe; // Perdio: safe dictionaries (i.e. those used
+               // within objects) can be marshalled
 
 public:
   OzDictionary();
@@ -31,10 +33,12 @@ public:
   OzDictionary(Board *b, int sz=4) : ConstTermWithHome(b,Co_Dictionary)
   {
     table = DynamicTable::newDynamicTable(sz);
+    isSafe = NO;
   }
   OzDictionary(Board *b, DynamicTable *t) : ConstTermWithHome(b,Co_Dictionary)
   {
     table = t->copyDynamicTable();
+    isSafe = NO;
   }
 
   OZ_Return getArg(TaggedRef key, TaggedRef &out)
@@ -63,35 +67,24 @@ public:
     Assert(valid);
   }
 
-  void remove(TaggedRef key)
-  {
-    DynamicTable *tab = table->remove(key);
+  void remove(TaggedRef key) { table = table->remove(key); }
 
-    table = tab;
-  }
+  TaggedRef keys()  { return table->getKeys(); }
+  TaggedRef pairs() { return table->getPairs(); }
+  TaggedRef items() { return table->getItems(); }
 
-  TaggedRef keys() {
-    return table->getKeys();
-  }
-
-  TaggedRef pairs() {
-    return table->getPairs();
-  }
-
-  TaggedRef items() {
-    return table->getItems();
-  }
+  Bool isSafeDict() { return isSafe; }
+  void markSafe()   { isSafe=OK; }
+  int getSize()     { return table->numelem; }
 
   TaggedRef clone() {
-    return makeTaggedConst(new OzDictionary(getBoard(), table));
+    OzDictionary *aux = new OzDictionary(getBoard(), table);
+    if (isSafe)
+      aux->markSafe();
+    return makeTaggedConst(aux);
   }
 
-  TaggedRef toRecord(TaggedRef lbl)
-  {
-    return table->toRecord(lbl);
-  }
-
-  int getSize() { return table->numelem; }
+  TaggedRef toRecord(TaggedRef lbl) { return table->toRecord(lbl); }
 
   // iteration
   int getFirst()            { return table->getFirst(); }
