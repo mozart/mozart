@@ -16,7 +16,7 @@
 #include "fdprofil.hh"
 #include "fdbuilti.hh"
 
-char * ProfileData::print_msg[no_high] = {
+char * ProfileData::print_msg1[no_high1] = {
   "Number of propagators                 ",
   "Number variables copied               ",
   "Size of variables copied              ",
@@ -34,53 +34,31 @@ char * ProfileData::print_msg[no_high] = {
   "Number of calls of propagate_p        ",
   "Number of susps of propagate_p        ",
   "Number of calls of checkSuspList      ",
-  "Number of susps of checkSuspList    ",
+  "Number of susps of checkSuspList      "
+};
 
-  "Number of copied LITERALs             ",
-  "Size of copied LITERALs               ",
-  "Number of copied SCRIPTs              ",
-  "Size of copied SCRIPTs                ",
-  "Number of copied SUSPCONTINUATIONs    ",
-  "Size of copied SUSPCONTINUATIONs      ",
-  "Number of copied REFSARRAYs           ",
-  "Size of copied REFSARRAYs             ",
-  "Number of copied CFUNCCONTINUATIONs   ",
-  "Size of copied CFUNCCONTINUATIONs     ",
-  "Number of copied CONTINUATIONs        ",
-  "Size of copied CONTINUATIONs          ",
-  "Number of copied STUPLEs              ",
-  "Size of copied STUPLEs                ",
-  "Number of copied LTUPLEs              ",
-  "Size of copied LTUPLEs                ",
-  "Number of copied RECORDs              ",
-  "Size of copied RECORDs                ",
-  "Number of copied SUSPENSIONs          ",
-  "Size of copied SUSPENSIONs            ",
-  "Number of copied CONDSUSPLISTs        ",
-  "Size of copied CONDSUSPLISTs          ",
-  "Number of copied SUSPLISTs            ",
-  "Size of copied SUSPLISTs              ",
-  "Number of copied SVARs                ",
-  "Size of copied SVARs                  ",
-  "Number of copied FDVARs               ",
-  "Size of copied FDVARs                 ",
-  "Number of copied OFSVARs              ",
-  "Size of copied OFSVARs                ",
-  "Number of copied BOARDs               ",
-  "Size of copied BOARDs                 ",
-  "Number of copied ASKACTORs            ",
-  "Size of copied ASKACTORs              ",
-  "Number of copied WAITACTORs           ",
-  "Size of copied WAITACTORs             ",
-  "Number of copied SOLVEACTORs          ",
-  "Size of copied SOLVEACTORs            ",
-
-  "Number of boolean FDVARs              ",
-  "Bytes saved for boolean FDVARs        ",
-  "Number of bitvector domains           ",
-  "Bytes saved for bitvector domains     ",
-  "Number of interval list domains       ",
-  "Bytes saved for interval list domains ",
+char * ProfileData::print_msg2[no_high2] = {
+  "LITERALs           ",
+  "SCRIPTs            ",
+  "SUSPCONTINUATIONs  ",
+  "REFSARRAYs         ",
+  "CFUNCCONTINUATIONs ",
+  "CONTINUATIONs      ",
+  "STUPLEs            ",
+  "LTUPLEs            ",
+  "RECORDs            ",
+  "SUSPENSIONs        ",
+  "CONDSUSPLISTs      ",
+  "SUSPLISTs          ",
+  "SVARs              ",
+  "FDVARs             ",
+  "OFSVARs            ",
+  "BOOLVARs           ",
+  "METAVARs           ",
+  "BOARDs             ",
+  "ASKACTORs          ",
+  "WAITACTORs         ",
+  "SOLVEACTORs        "
 };
 
 ProfileHost FDProfiles;
@@ -123,13 +101,50 @@ OZ_C_proc_begin(BIfdReset, 0)
 OZ_C_proc_end
 
 void ProfileData::print(void) {
-  for (int i = 0; i < no_high; i += 1)
-    cout << "\t" << print_msg[i] << " = " << items[i] << endl;
+  for (int i = 0; i < no_high1; i += 1)
+    cout << "\t" << print_msg1[i] << " = " << items1[i] << endl;
+  for (int i = 0; i < no_high2; i += 1)
+    cout << "\t" << print_msg2[i] << ": no=" << items2[i].no
+         << " size=" << items2[i].size << endl;
 }
 
-void ProfileData::operator += (ProfileData &y) {
-  for (int i = no_high; i--; ) {
-    items[i] += y.items[i];
+void ProfileDataTotal::printTotal(unsigned n) {
+  printf("Average of %d distributions.\n", n);
+  for (int i = 0; i < no_high1; i += 1)
+    printf("\t%s = %u  (%.2f)\n", print_msg1[i], items1[i],
+           n ? float(items1[i]) / n : 0.0);
+
+  unsigned sum = 0;
+  for (int i = 0; i < no_high2; i += 1)
+    sum += items2[i].size;
+
+  printf("\n\n Bytes copied: %u\n", sum);
+
+  for (int i = 0; i < no_high2; i += 1)
+    printf("\t%s = no=%u (%.2f) size=%u (%.0f%%) (%u/%.2f/%u)\n",
+           print_msg2[i],
+           items2[i].no, n ? float(items2[i].no) / n : 0.0,
+           items2[i].size, 100 * float(items2[i].size) / sum,
+           min2[i] == UINT_MAX ? 0 : min2[i],
+           n ? float(items2[i].size) / n : 0.0, max2[i]);
+
+  printf(" Bytes copied: %u\n", sum);
+
+  printf("Average of %d distributions.\n", n);
+}
+
+inline unsigned min(unsigned a, unsigned b) {return (a < b && 0 < a) ? a : b;}
+inline unsigned max(unsigned a, unsigned b) {return a > b ? a : b;}
+
+void ProfileDataTotal::operator += (ProfileData &y) {
+  for (int i = no_high1; i--; ) {
+    items1[i] += y.items1[i];
+  }
+  for (int i = no_high2; i--; ) {
+    items2[i].no += y.items2[i].no;
+    items2[i].size += y.items2[i].size;
+    min2[i] = min(y.items2[i].size, min2[i]);
+    max2[i] = max(y.items2[i].size, max2[i]);
   }
 }
 
@@ -143,12 +158,7 @@ void ProfileHost::print_total_average(void) {
     aux = aux->get_next();
   }
 
-  printf("Average of %d distributions.\n", n - 1);
-  for (int i = 0; i < no_high; i += 1)
-    printf("\t%s = %u  (%.2f)\n",
-           ProfileData::getPrintMsg(i), total.getItem(i),
-           n ? float(total.getItem(i)) / n : 0.0);
-  printf("Average of %d distributions.\n", n - 1);
+  total.printTotal(n - 1);
 }
 
 
