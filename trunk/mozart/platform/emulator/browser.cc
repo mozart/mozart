@@ -164,7 +164,7 @@ OZ_BI_define(BIdeepFeed,2,0)
   return ret;
 } OZ_BI_end
 
-OZ_BI_define(BIchunkArity,1,1)
+OZ_BI_define(BIchunkArityBrowser,1,1)
 {
   OZ_Term ch =  OZ_in(0);
 

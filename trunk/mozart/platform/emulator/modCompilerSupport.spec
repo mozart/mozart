@@ -30,7 +30,7 @@
 
     'chunkArity'                => { in  => ['+chunk'],
 				     out => ['+[feature]'],
-				     BI  => BIchunkArity},
+				     BI  => BIchunkArityCompiler},
 
     'featureLess'		=> { in  => ['+feature','+feature'],
 				     out => ['+bool'],
