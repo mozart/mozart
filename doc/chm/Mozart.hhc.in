@@ -257,6 +257,12 @@
                       <PARAM name="ImageNumber" value="11">
                     </OBJECT>
                     <!--#include "ozdoc/ozdoc.hhc"-->
+                  <LI><OBJECT type="text/sitemap">
+                      <PARAM name="Name" value="Distribution Subsystem">
+                      <PARAM name="Local" value="ds_white_paper/index.html">
+                      <PARAM name="ImageNumber" value="11">
+                    </OBJECT>
+                    <!--#include "ds_white_paper/ds_white_paper.hhc"-->
                 </UL>
             </UL>
         </UL>
