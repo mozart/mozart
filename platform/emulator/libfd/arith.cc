@@ -617,10 +617,12 @@ OZ_Return ModIPropagator::propagate(void)
   int &y = reg_y;
   OZ_Boolean touched;
 
-  int xl = x->getMinElem(), xu = x->getMaxElem();
-  int zl = z->getMinElem(), zu = z->getMaxElem();
+  int xl,xu,zl,zu;
 
   FailOnEmpty(*z <= y - 1);
+
+  xl = x->getMinElem(), xu = x->getMaxElem();
+  zl = z->getMinElem(), zu = z->getMaxElem();
 
   if (xu < y) {
     P.vanish();
