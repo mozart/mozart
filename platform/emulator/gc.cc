@@ -856,17 +856,6 @@ Object *Object::gcObject() {
   return (Object *) gcConstTerm();
 }
 
-Promise *Promise::gcPromise()
-{
-  CHECKCOLLECTED(future,Promise *);
-  Promise *ret = new Promise(future,gname);
-  dogcGName(gname);
-  OZ_collectHeapTerm(future,ret->future);
-  storeFwd((int32*)&future, ret);
-  return ret;
-}
-
-
 /*
  *  Preserve runnable threads which home board is dead, because
  * solve counters have to be updated (while, of course, discard
@@ -1189,11 +1178,7 @@ GenCVariable * GenCVariable::gc(void) {
     break;
 
   case PerdioVariable:
-    if (((PerdioVar*)this)->isFuture()) {
-      to = new Future(*(Future*) this);
-    } else {
-      to = new PerdioVar(*(PerdioVar*) this);
-    }
+    to = new PerdioVar(*(PerdioVar*) this);
     break;
 
   default:
@@ -1210,10 +1195,6 @@ GenCVariable * GenCVariable::gc(void) {
   to->home     = bb;
 
   return to;
-}
-
-void Future::gcFuture() {
-  OZ_collectHeapTerm(requested,requested);
 }
 
 inline
@@ -1577,7 +1558,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
       case SMALLINT:  goto DO_SMALLINT;
       case FSETVALUE: goto DO_FSETVALUE;
       case LITERAL:   goto DO_LITERAL;
-      case PROMISE:   goto DO_PROMISE;
+      case UNUSED7:   error("unused7");
       case LTUPLE:    goto DO_LTUPLE;
       case SRECORD:   goto DO_SRECORD;
       case OZFLOAT:   goto DO_OZFLOAT;
@@ -1692,9 +1673,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
       return;
     }
 
-  case PROMISE: DO_PROMISE:
-    to = makeTaggedPromise(tagged2Promise(aux)->gcPromise());
-    return;
+  case UNUSED7: error("unused7");
 
   case LTUPLE: DO_LTUPLE:
     to = makeTaggedLTuple(tagged2LTuple(aux)->gc());

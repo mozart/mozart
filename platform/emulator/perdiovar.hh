@@ -79,8 +79,7 @@ public:
   PendBinding *gcPendBinding();
 };
 
-#define PV_FUTURE   0x1
-#define PV_EXPORTED 0x2 /* non-exported futures look like PerdioVars,
+#define PV_EXPORTED 0x1 /* non-exported futures look like PerdioVars,
                            but can be bound to non-exportables */
 
 class PerdioVar: public GenCVariable {
@@ -99,17 +98,15 @@ public:
   void setpvType(PV_TYPES t) { pvtype = (short) t; }
   PV_TYPES getpvType()       { return (PV_TYPES) pvtype; }
 
-  PerdioVar() : GenCVariable(PerdioVariable) {}
-
-  PerdioVar(Bool isf) : GenCVariable(PerdioVariable) {
+  PerdioVar() : GenCVariable(PerdioVariable) {
     u.proxies=0;
-    flags = isf ? PV_FUTURE : 0;
+    flags = 0;
     setpvType(PV_MANAGER);
   }
 
-  PerdioVar(int i, Bool isf) : GenCVariable(PerdioVariable) {
+  PerdioVar(int i) : GenCVariable(PerdioVariable) {
     u.bindings=0;
-    flags = isf ? PV_FUTURE : 0;
+    flags = 0;
     setpvType(PV_PROXY);
     setIndex(i);
   }
@@ -120,7 +117,6 @@ public:
     flags = 0;
   }
 
-  int isFuture()      { return (flags&PV_FUTURE); }
   int isExported()    { return (flags&PV_EXPORTED); }
   void markExported() { flags |= PV_EXPORTED; }
 
@@ -200,17 +196,8 @@ public:
   OZ_Return validV(TaggedRef* ptr, TaggedRef val ) { return valid(ptr,val); }
   GenCVariable* gcV() { error("not impl"); return 0; }
   void gcRecurseV() { error("not impl"); }
-  void addSuspV(Suspension susp, TaggedRef* ptr, int state) {
-    // mm2: addSuspFDVar(makeTaggedRef(ptr),susp,state);
-  }
   void disposeV(void) { dispose(); }
-  int getSuspListLengthV() { return getSuspListLength(); }
   void printStreamV(ostream &out,int depth = 10) {
-    if (isFuture()) {
-      out << "<future>";
-      return;
-    }
-
     out << "<dist:";
     char *type = "";
     if (isManager()) {

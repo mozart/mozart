@@ -85,9 +85,9 @@ CXXSRCS= \
         os.cc emulate.cc scheduler.cc builtins.cc \
         components.cc network.cc virtual.cc \
         comm.cc marshaler.cc liveness.cc gc.cc \
-        vprops.cc promise.cc \
+        vprops.cc \
         vs_comm.cc vs_mailbox.cc vs_msgbuffer.cc \
-        ctgenvar.cc simplevar.cc byNeed.cc \
+        ctgenvar.cc simplevar.cc \
         ofbi.cc ioHandler.cc future.cc
 
 FDSRCS=\
@@ -253,6 +253,8 @@ marshaler.hh marshalMsg.cc: msgFormat.m4
 copycode.cc optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh config.h: instrDefs.m4
 
 marshaler.o: marshalcode.cc
+
+components.o: componentBuffer.cc
 
 # automatic configure
 #${srcdir}/configure: configure.in

@@ -267,13 +267,11 @@ void addSuspCVarOutline(TaggedRef * v, Suspension susp, int unstable = TRUE);
 #include "ofgenvar.hh"
 #include "ctgenvar.hh"
 #include "perdiovar.hh"
-#include "promise.hh"
 
 #ifdef OUTLINE
 void addSuspCVar(TaggedRef * v, Suspension susp, int unstable = TRUE);
 #else
 #include "genvar.icc"
 #endif
-
 
 #endif

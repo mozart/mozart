@@ -69,7 +69,6 @@ enum MessageType {
   M_ACKNOWLEDGE,        // NA (implicit 1 credit)
   M_SURRENDER,          // OTI SITE DIF (implicit 1 credit)
 
-  M_REQUEST_FUTURE,     // OTI* SITE
   M_CELL_LOCK_GET,      // OTI* SITE
   M_CELL_LOCK_FORWARD,  // NA* INTEGER SITE
   M_CELL_LOCK_DUMP,     // OTI* SITE
@@ -93,7 +92,7 @@ enum MessageType {
   M_SEND_OBJECT,        //
   M_SEND_OBJECTANDCLASS,//
 
-  M_FILE,
+  M_FILE = 31,          // HACK ALERT see componentBuffer.cc
   M_EXPORT,
   M_UNASK_ERROR,
   M_SEND_GATE,
@@ -107,7 +106,7 @@ extern char *mess_names[];
 // the protocol layer needs to know about some of these
 
 typedef enum {
-  DIF_PROMISE,
+  DIF_UNUSED0,
   DIF_SMALLINT,
   DIF_BIGINT,
   DIF_FLOAT,
@@ -220,7 +219,7 @@ TaggedRef findGNameOutline(GName*);
 void deleteGName(GName*);
 
 // isn't this a variety of globalization - ATTENTION
-PerdioVar *var2PerdioVar(TaggedRef *, Bool);
+PerdioVar *var2PerdioVar(TaggedRef *);
 
 void SiteUnifyCannotFail(TaggedRef,TaggedRef); // ATTENTION
 void pushUnify(Thread *,TaggedRef,TaggedRef); // ATTENTION - for compponents

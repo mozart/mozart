@@ -235,7 +235,6 @@ char *mess_names[M_LAST] = {
   "acknowledge",
   "surrender",
 
-  "request_future",
   "cell_lock_get",
   "cell_lock_forward",
   "cell_lock_dump",
@@ -2319,9 +2318,6 @@ void sendHelpX(MessageType mt,BorrowEntry *be)
   case M_GET_OBJECTANDCLASS:
     marshal_M_GET_OBJECTANDCLASS(bs,na->index,mySite);
     break;
-  case M_REQUEST_FUTURE:
-    marshal_M_REQUEST_FUTURE(bs,mySite,na->index);
-    break;
   default:
     Assert(0);
   }
@@ -2336,17 +2332,6 @@ void PerdioVar::addSuspPerdioVar(TaggedRef * v, Suspension susp, int unstable)
   }
 
   addSuspSVar(susp, unstable);
-
-  if (isFuture()) {
-    if (isManager()) {
-      ((Future*)this)->request();
-    } else {
-      Assert(isProxy());
-      BorrowEntry *be=BT->getBorrow(getIndex());
-      sendHelpX(M_REQUEST_FUTURE,be);
-    }
-    return;
-  }
 
   if (isObjectClassNotAvail()) {
     MessageType mt;
@@ -2739,9 +2724,6 @@ void PerdioVar::gcRecurse(void)
       last = &newPL->next;}
     *last = 0;
 
-    if (isFuture()) {
-      ((Future*)this)->gcFuture();
-    }
     return;
   }
   Assert(isObject());
@@ -2754,14 +2736,6 @@ void PerdioVar::gcRecurse(void)
 /**********************************************************************/
 /*   SECTION 19 :: Globalizing                                        */
 /**********************************************************************/
-
-GName *Promise::globalize()
-{
-  if (gname==0) {
-    gname = newGName(makeTaggedPromise(this),GNT_PROMISE);
-  }
-  return gname;
-}
 
 GName *Name::globalize()
 {
@@ -2922,7 +2896,7 @@ inline void maybeConvertCellProxyToFrame(Tertiary *t){
 
 
 
-PerdioVar *var2PerdioVar(TaggedRef *tPtr, Bool isFuture)
+PerdioVar *var2PerdioVar(TaggedRef *tPtr)
 {
   if (isCVar(*tPtr)) {
     return isPerdioVar(*tPtr) ? tagged2PerdioVar(*tPtr) : (PerdioVar*) NULL;
@@ -2934,7 +2908,7 @@ PerdioVar *var2PerdioVar(TaggedRef *tPtr, Bool isFuture)
 
   oe->mkVar(makeTaggedRef(tPtr));
 
-  PerdioVar *ret = isFuture ? new Future() : new PerdioVar(NO);
+  PerdioVar *ret = new PerdioVar();
   ret->setIndex(i);
 
   if (isSVar(*tPtr))
@@ -3118,11 +3092,6 @@ void marshalVar(PerdioVar *pvar,MsgBuffer *bs)
     PD((MARSHAL,"var manager o:%d",i));
     marshalOwnHead(DIF_VAR,i,bs);
   }
-  Bool isf = pvar->isFuture();
-  marshalNumber(isf,bs);
-  if (isf) {
-    marshalTerm(((Future*)pvar)->getRequested(),bs);
-  }
 }
 
 Bool marshalTertiary(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
@@ -3261,15 +3230,13 @@ OZ_Term unmarshalVar(MsgBuffer* bs){
   OB_Entry *ob;
   int bi;
   OZ_Term val1 = unmarshalBorrow(bs,ob,bi);
-  int isfuture = unmarshalNumber(bs);
-  TaggedRef requested = isfuture ? unmarshalTerm(bs) : makeTaggedNULL();
 
   if (val1) {
     PD((UNMARSHAL,"var/chunk hit: b:%d",bi));
     return val1;}
 
   PD((UNMARSHAL,"var miss: b:%d",bi));
-  PerdioVar *pvar = isfuture ? new Future(bi,requested) : new PerdioVar(bi,NO);
+  PerdioVar *pvar = new PerdioVar(bi);
   TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
   ob->mkVar(val);
   sendRegister((BorrowEntry *)ob);
@@ -3444,20 +3411,6 @@ void msgReceived(MsgBuffer* bs)
           PD((WEIRD,"REGISTER o:%d s:%s already registered",OTI,rsite->stringrep()));}}
       else {
         sendRedirect(rsite,OTI,OT->getOwner(OTI)->getRef());}
-      break;
-    }
-
-  case M_REQUEST_FUTURE:
-    {
-      int OTI;
-      Site *rsite;
-      unmarshal_M_REQUEST_FUTURE(bs,rsite,OTI);
-      PD((MSG_RECEIVED,"M_REQUEST_FUTURE site:%s index:%d",rsite->stringrep(),OTI));
-      //      OwnerEntry *oe=receiveAtOwner(OTI);
-      OwnerEntry *oe=OT->getOwner(OTI);
-      if (oe->isVar()) {
-        ((Future*)oe->getVar())->request();
-      }
       break;
     }
 
@@ -4054,9 +4007,7 @@ OZ_Return bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
   PD((PD_VAR,"bind proxy b:%d v:%s",pv->getIndex(),toC(v)));
   Assert(pv->isProxy());
   if (pv->hasVal()) {
-    return pv->isFuture() ? oz_raise(E_ERROR,E_KERNEL,"promiseAssignTwice",
-                                     1,makeTaggedRef(lPtr))
-                          : pv->pushVal(v); // save binding for ack message, ...
+    return pv->pushVal(v); // save binding for ack message, ...
   }
 
   BorrowEntry *be=BT->getBorrow(pv->getIndex());

@@ -34,18 +34,27 @@
 #include "genvar.hh"
 #include "value.hh"
 
-class PropFuture: public GenCVariable {
+class Future: public GenCVariable {
+private:
+  OZ_Term function;
+
+  void kick(TaggedRef *);
 public:
-  PropFuture() : GenCVariable(OZ_VAR_FUTURE) {}
+  Future(OZ_Term function=0)
+    : GenCVariable(OZ_VAR_FUTURE), function(function) {}
   virtual OZ_Return unifyV(TaggedRef* vPtr,TaggedRef t,ByteCode* scp);
   virtual OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef /* val */) {
     return TRUE;
   }
-  virtual GenCVariable* gcV() { return new PropFuture(*this); }
-  virtual void gcRecurseV()   {}
+  virtual GenCVariable* gcV() { return new Future(*this); }
+  virtual void gcRecurseV()   {
+    if (function) {
+      OZ_collectHeapTerm(function,function);
+    }
+  }
   virtual void addSuspV(Suspension, TaggedRef*, int);
   virtual void disposeV(void) {
-    freeListDispose(this, sizeof(PropFuture));
+    freeListDispose(this, sizeof(Future));
   }
   virtual void printStreamV(ostream &out,int depth = 10);
   virtual void printLongStreamV(ostream &out,int depth = 10,

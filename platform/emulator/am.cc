@@ -507,39 +507,13 @@ Bool isMoreLocal(TaggedRef var1, TaggedRef var2)
 }
 
 
-/* Define a partial order on CVARs:
- *
- *              Future
- *                |
- *                |
- *               Lazy
- *                |
- *                |
- *              Perdio
- *                |
- *           +----------+
- *           |    |     |
- *             any other
-*/
-
-
-/* return <0, if (v1<v2), >0 if (v1>v2), =0 (dont care) */
-
-int isFuture(GenCVariable *t, TypeOfGenCVariable tag)
-{
-  return (tag==PerdioVariable) && ((PerdioVar*)t)->isFuture();
-}
-
 static
 int cmpCVar(GenCVariable *v1, GenCVariable *v2)
 {
   TypeOfGenCVariable t1 = v1->getType();
   TypeOfGenCVariable t2 = v2->getType();
-  if (isFuture(v1,t1))    return  1;
-  if (isFuture(v2,t2))    return -1;
   return t1-t2;
 }
-
 
 // global vars!!!
 static Stack unifyStack(100,Stack_WithMalloc);
@@ -742,7 +716,6 @@ cvar:
     goto fail;
 
   case LITERAL:
-  case PROMISE:
     /* literals and constants unify if their pointers are equal */
   default:
     goto fail;

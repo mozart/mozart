@@ -4845,7 +4845,7 @@ OZ_BI_define(BIat,1,1)
       return ret;
     }
     // mm2
-    oz_typeError(0,"Feature|Promise|Cell");
+    oz_typeError(0,"Feature|Cell");
   }
 
   RecOrCell state = am.getSelf()->getState();
@@ -4889,7 +4889,7 @@ OZ_BI_define(BIassign,2,0)
       return exchangeCell(fea,value,oldIgnored);
     }
     // mm2
-    oz_typeError(0,"Feature|Promise|Cell"); // mm2: new name: assignable
+    oz_typeError(0,"Feature|Cell"); // mm2: new name: assignable
   }
 
   Object *self = am.getSelf();
@@ -4947,7 +4947,7 @@ OZ_BI_define(BIexchange,2,1)
       return ret;
     }
     // mm2
-    oz_typeError(1,"Feature|Promise|Cell");
+    oz_typeError(1,"Feature|Cell");
   }
 
   RecOrCell state = am.getSelf()->getState();
@@ -5635,6 +5635,7 @@ OZ_BI_define(BIdelAllFastGroup,1,1)
  *          | generic
  *  SUBKIND = byNeed(requested)
  *          | byNeed(FUN)
+ *          | simple
  *  FUN     = an null-ary function
  */
 
