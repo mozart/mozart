@@ -127,8 +127,7 @@ Application.ozf: ap/ArgParser.oz
 Open.ozf: op/HtmlTable.oz
 
 # wp dependencies
-Tk.ozf: wp/TkInit.oz
-TkTools.ozf: wp/TkOptions.oz
+Tk.ozf: wp/TkInit.oz wp/TkOptions.oz
 
 # compiler dependencies
 COMPILERSRC1 = \
