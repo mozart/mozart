@@ -1691,7 +1691,7 @@ BIspec fdSpec[] = {
 #endif
 
 // fdcore.cc
-  {"fdIs", 1, BIfdIs},
+  {"fdIs", 2, BIfdIs},
   {"fdIsVar", 1, BIisFdVar},
   {"fdIsVarB", 2, BIisFdVarB},
   {"fdGetLimits", 2, BIgetFDLimits},
