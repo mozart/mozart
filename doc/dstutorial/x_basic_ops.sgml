@@ -453,6 +453,29 @@ declare Stream in
 by doing <<Stream=a|b|c|_>>
 then Application 2's browse window will show the bindings.
 
+<P> The operation <<Connection.offer>> creates
+a <EM>one-shot</EM> ticket, i.e., a ticket
+that can be taken only once.
+Within the module <<Connection>>,
+a ticket that can be taken any
+number of times can be defined
+easily as follows:
+<<<
+declare
+proc {Connection_many X ?Ticket ?Close}
+   G={New Connection.gate init(X Ticket)}
+in
+   proc {Close} {G close} end
+end
+>>>
+Given a reference <<X>>, <<Connection_many>>
+defines a many-shot ticket <<Ticket>>
+and a zero-argument procedure <<Close>>
+that is used to close the ticket, i.e.,
+to make the ticket invalid.
+Attempting to take a ticket after a
+close will raise an exception.
+
 
 <SUBSECTION><TITLE>Persistent data structures</TITLE>
 
@@ -580,7 +603,7 @@ end
 
 % Make server available through given URL:
 {Pickle.save 
-   {Connection.offer Srv}
+   {Connection_many Srv}
    "http://www.sics.se/~pvr/hw"}
 >>>
 <P>All the above must be executed on the server site.
@@ -618,7 +641,7 @@ The first is creating a stationary object:
 declare
 Object={NewStat Class Init}
 >>>
-When executed on a site,
+<P> When executed on a site,
 the procedure <<NewStat>> takes a class and an initial message
 and creates an object that is stationary on that site.
 We define <<NewStat>> as follows:
@@ -628,9 +651,42 @@ proc {NewStat Class Init Object}
    Object={MakeStat {New Class Init}}
 end
 >>>
-where <<MakeStat>> takes an object or a one-argument
+<P> The procedure <<MakeStat>> takes an object or a one-argument
 procedure and returns a one-argument procedure that
 obeys exactly the same language semantics and is stationary.
+We define <<{MakeStat PO StatP}>> as follows,
+where
+<<PO>> is an object or a one-argument procedure
+and <<StatP>> is a one-argument procedure:
+
+<<<
+declare
+proc {MakeStat PO ?StatP}
+   S P = {NewPort S}
+   N = {NewName}
+in
+   proc {StatProc M}
+   R in
+      {Send P M#R}
+      case R==N then skip
+      else raise R end
+      end
+   end
+   thread
+      {ForAll S
+       proc {$ M#R}
+          thread
+             try {ProcOrObj M} R=N
+             catch X then R=X end
+          end
+       end}
+   end
+end
+>>>
+
+<P> <<StatP>> preserves exactly the same language semantics
+as <<PO>>.  That is, it raises the same exceptions
+
 
 <NOTE FOOT>One-argument procedures are not exactly
 objects, since they do not have features.
@@ -642,8 +698,8 @@ are identical.</NOTE>
 
 <P> The previous section showed how to build a basic server
 using a port to collect messages.
-There is in fact a much cleaner way, namely by using
-stationary objects.
+There is in fact a much cleaner way,
+namely by using stationary objects.
 Here's how to create the server:
 <<<
 declare
@@ -776,38 +832,29 @@ session, and upgrades the server while it is running.
 <P> Let's first define a generic upgradable server:
 <<<
 declare
-proc {NewUpgradableStat Class Init ?Upgrade ?Srv}
+proc {NewUpgradableStat Class Init ?Upg ?Srv}
    Obj={New Class Init}
    C={NewCell Obj}
 in
-   Srv={MakeStat proc {$ M} S in {Exchange C S S} {S M} end}
-   proc {Upgrade Class2 Init2}
-      Obj2={New Class2 Init2}
-      {Assign C Obj2}
-   end
+   Srv={MakeStat 
+          proc {$ M} {{Access C} M} end}
+   Upg={MakeStat
+          proc {$ Class2#Init2} {Assign C {New Class2 Init2}} end}
 end
 >>>
 <P> This definition must be executed 
 on the server site.
-It returns a server <<Srv>> and a procedure
-<<Upgrade>> used for upgrading the server.
-Because of <<MakeStat>>, all object calls will
-be done on the server site.
+It returns a server <<Srv>> and a stationary procedure
+<<Upg>> used for upgrading the server.
 The server is upgradable because it does
-all object calls indirectly through <<C>>.
-Since <<Obj2>> is a mobile object,
-<<Upgrade>> can be executed from anywhere.
-The object will move to the
-server site the first time it is called.
-From then on,
-the object stays on the server site permanently.
+all object calls indirectly through the cell <<C>>.
 
 <P> A client creates an upgradable compute server almost
 exactly as it creates a fixed compute server,
 by executing the following on the server site:
 <<<
-declare Srv Upgrade in
-Srv={NewUpgradableStat ComputeServer init Upgrade}
+declare Srv Upg in
+Srv={NewUpgradableStat ComputeServer init Upg}
 >>>
 <P> Let's now upgrade the compute server while
 it is running.
@@ -825,14 +872,14 @@ class CComputeServer from ComputeServer
    end
 end
 
-Srv2={Upgrade CComputeServer init}
+Srv2={Upg CComputeServer init}
 >>>
 
 <P> That's all there is to it.
-The upgraded compute server runs
-each compute job in its own thread and
-has two method calls, <<run(P)>>
-and <<run(P Prio)>>, where <<Prio>>
+The upgraded compute server has
+a new method <<run>> with a default,
+so that it supports the original call <<run(P)>>
+and adds a new call <<run(P Prio)>>, where <<Prio>>
 sets the priority of the thread doing computation <<P>>.
 
 <P> The compute server can be
