@@ -6092,29 +6092,44 @@ OZ_BI_define(BIcopyRecord,1,1)
 
 // perdio
 inline
-SRecord *getStateInline(RecOrCell state, Bool isAssign, Bool newVar,
-			OZ_Term fea, OZ_Term &val, int &EmCode)
+SRecord *getRecordFromState(RecOrCell state)
 {
-  if (!stateIsCell(state)) {
-    return getRecord(state);}
+  if (!stateIsCell(state))
+    return getRecord(state);
 
   Tertiary *t=getCell(state);          // shortcut
   if(t->isLocal()) { // can happen if globalized object becomes localized again
     return tagged2SRecord(oz_deref(((CellLocal*)t)->getValue()));
   }
 
-  if(!t->isProxy()){
+  if(!t->isProxy()) {
     CellSec* sec;
-    if(t->getTertType()==Te_Frame){
-      sec=((CellFrame*)t)->getSec();}
-    else{
-      sec=((CellManager*)t)->getSec();}    
-    if(sec->getState()==Cell_Lock_Valid){
+    if(t->getTertType()==Te_Frame) {
+      sec=((CellFrame*)t)->getSec();
+    } else {
+      sec=((CellManager*)t)->getSec();
+    }
+    if(sec->getState()==Cell_Lock_Valid) {
       TaggedRef old=oz_deref(sec->getContents());
       if (!oz_isVariable(old))
-	return tagged2SRecord(old);}}
+	return tagged2SRecord(old);
+    }
+  }
+  return NULL;
+}
   
   
+
+// perdio
+inline
+SRecord *getStateInline(RecOrCell state, Bool isAssign, Bool newVar,
+			OZ_Term fea, OZ_Term &val, int &EmCode)
+{
+  SRecord *aux = getRecordFromState(state);
+  if (aux)
+    return aux;
+  
+  Tertiary *t=getCell(state);          // shortcut
   DEREF(fea, _1, feaTag);
   if (oz_isVariable(fea)) {
     EmCode = SUSPEND;
@@ -6300,12 +6315,18 @@ OZ_BI_define(BIexchange,2,1)
   }
 
   RecOrCell state = am.getSelf()->getState();
+  SRecord *rec;
   if (stateIsCell(state)) {
-    // mm2: hey men
-    return oz_raise(E_ERROR,E_SYSTEM,"ooExchOnDistObject",3,state,fea,newVal);
+    rec = getRecordFromState(state);
+    if (!rec) {      
+      // mm2: hey men
+      return oz_raise(E_ERROR,E_SYSTEM,
+		      "ooExchOnDistObjectNotImplemented",3,
+		      state,fea,newVal);
+    }
+  } else {
+    rec = getRecord(state);
   }
-  
-  SRecord *rec = getRecord(state);
   Assert(rec!=NULL);
 
   // mm2: why twice? getFea and replaceFea
