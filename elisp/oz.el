@@ -95,7 +95,7 @@ starts the emulator under gdb")
 (defvar oz-temp-counter 0
   "gensym counter")
 
-(defconst oz-title-format
+(defvar oz-title-format
   (concat "Oz Programming Interface ("
 	  (cdr (assoc 'name (frame-parameters))) ")")
   "The format string for the window title" )
