@@ -3819,20 +3819,6 @@ fi
 : ${platform=`$PLATFORMSCRIPT`}
 
 
-case "$platform" in
-   win32-i486)
-        INSTALLWINDLLS=installwindlls
-        : ${WINDLLDIR=$windlldir}
-   ;;
-
-   *)
-        INSTALLWINDLLS=""
-   ;;
-esac
-
-
-
-
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure
@@ -4008,8 +3994,6 @@ s%@CXX@%$CXX%g
 s%@CXXCPP@%$CXXCPP%g
 s%@PLATFORMSCRIPT@%$PLATFORMSCRIPT%g
 s%@platform@%$platform%g
-s%@WINDLLDIR@%$WINDLLDIR%g
-s%@INSTALLWINDLLS@%$INSTALLWINDLLS%g
 
 CEOF
 EOF

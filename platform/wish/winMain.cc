@@ -118,12 +118,25 @@ void watchParent()
 
   int pid = atoi(buf);
   HANDLE handle = OpenProcess(SYNCHRONIZE, 0, pid);
-  if (handle==0) {
-    WishPanic("OpenProcess(%d) failed",pid);
-  } else {
-    DWORD thrid;
-    CreateThread(0,10000,watchEmulatorThread,handle,0,&thrid);
+  if (!handle) {
+    char buf[1024];
+    LPVOID lpMsgBuf;
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                  FORMAT_MESSAGE_FROM_SYSTEM |
+                  FORMAT_MESSAGE_IGNORE_INSERTS,
+                  NULL,
+                  GetLastError(),
+                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                  (LPTSTR) &lpMsgBuf,
+                  0,
+                  NULL);
+    sprintf(buf, "OpenProcess(%d) failed: %s",pid,lpMsgBuf);
+    LocalFree(lpMsgBuf);
+    WishPanic(buf,pid);
   }
+
+  DWORD thrid;
+  CreateThread(NULL,10000,watchEmulatorThread,handle,0,&thrid);
 }
 
 // 2000.08.14 dragan: lock the readHandler so that it cannot be
@@ -207,6 +220,12 @@ void readHandler(ClientData clientData, int mask)
 int APIENTRY
 WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
 {
+    DebugCode(dbgin  = fopen("y:\\mozart-1.2.1\\wishdbgin","w");
+              dbgout = fopen("y:\\mozart-1.2.1\\wishdbgout","w");
+              if (dbgin == NULL || dbgout == NULL)
+                WishPanic("cannot open dbgin/dbgout"));
+    DebugCode(fprintf(dbgin,"### Started\n"); fflush(dbgin));
+
     watchParent();
 
     Tcl_FindExecutable("");
@@ -255,13 +274,6 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCm
     Tcl_SetStdChannel(inout,TCL_STDIN);
     Tcl_SetStdChannel(inout,TCL_STDOUT);
     Tcl_SetStdChannel(inout,TCL_STDERR);
-
-#ifdef DEBUG
-    dbgin  = fopen("c:\\tmp\\wishdbgin","w");
-    dbgout = fopen("c:\\tmp\\wishdbgout","w");
-    if (dbgin == NULL || dbgout == NULL)
-      WishPanic("cannot open dbgin/dbgout");
-#endif
 
     /* mm: do not show the main window */
     code = Tcl_GlobalEval(interp, "wm withdraw . ");

@@ -34,6 +34,12 @@ int main(int argc, char **argv)
   ZeroMemory(&si,sizeof(si));
   si.cb = sizeof(si);
   si.dwFlags = STARTF_FORCEOFFFEEDBACK|STARTF_USESTDHANDLES;
+  SetHandleInformation(GetStdHandle(STD_INPUT_HANDLE),
+                       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
+  SetHandleInformation(GetStdHandle(STD_OUTPUT_HANDLE),
+                       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
+  SetHandleInformation(GetStdHandle(STD_ERROR_HANDLE),
+                       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
   si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
   si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
   si.hStdError = GetStdHandle(STD_ERROR_HANDLE);

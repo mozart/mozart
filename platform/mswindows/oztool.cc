@@ -183,6 +183,12 @@ int execute(char **argv, bool dontQuote)
   ZeroMemory(&si,sizeof(si));
   si.cb = sizeof(si);
   si.dwFlags = STARTF_FORCEOFFFEEDBACK|STARTF_USESTDHANDLES;
+  SetHandleInformation(GetStdHandle(STD_INPUT_HANDLE),
+                       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
+  SetHandleInformation(GetStdHandle(STD_OUTPUT_HANDLE),
+                       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
+  SetHandleInformation(GetStdHandle(STD_ERROR_HANDLE),
+                       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
   si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
   si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
   si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
@@ -201,6 +207,21 @@ int execute(char **argv, bool dontQuote)
   CloseHandle(pi.hProcess);
 
   return ret;
+}
+
+static char *getIncDir(int &argc, char **argv) {
+  char *incdir = concat(getOzHome(true),"/include");
+  for (int i = 1; i < argc; i++)
+    if (!strcmp(argv[i],"-inc")) {
+      if (i + 1 == argc)
+        usage("Missing argument to `-inc'.\n");
+      incdir = argv[i + 1];
+      for (int j = i + 2; j < argc; j++)
+        argv[j - 2] = argv[j];
+      argc -= 2;
+      break;
+    }
+  return incdir;
 }
 
 enum system_type {
@@ -251,12 +272,7 @@ int main(int argc, char **argv)
     argv++; argc--;
   }
 
-  char *incdir = concat(getOzHome(true),"/include");
-  if (argc >= 3 && !strcmp(argv[1],"-inc")) {
-    incdir = argv[2];
-    argv += 2;
-    argc -= 2;
-  }
+  char *incdir = getIncDir(argc,argv);
 
   if (!strcmp(argv[1],"cc") || !strcmp(argv[1],"c++")) {
     int cxx = !strcmp(argv[1],"c++");

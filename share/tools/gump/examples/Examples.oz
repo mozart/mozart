@@ -66,8 +66,8 @@ in
    {MyParser parse(program(?Definitions ?Terms) ?Status)}
    {MyScanner close()}
    if Status then
-      {Browse Definitions}
-      {Browse Terms}
+      {Inspect Definitions}
+      {Inspect Terms}
       {System.showInfo 'accepted'}
    else
       {System.showInfo 'rejected'}

@@ -54,10 +54,10 @@ regex.ozf: regex.oz
         $(COMPILE) -z 9 $(shell $(CYGPATH) "$<") -o $@
 
 regex.so-$(PLATFORM): regex.o
-        $(OZTOOL) ld -o $@ $< $(LDFLAGS) $(LIBS)
+        $(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
 
 regex.o: regex.cc
-        $(OZTOOL) c++ $(CPPFLAGS) $(CXXFLAGS) -c $<
+        $(OZTOOL) c++ $(WINOZTOOLCXXFLAGS) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 clean veryclean:
         -$(RM) *~ *.ozf *.o *.so-*
