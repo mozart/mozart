@@ -194,7 +194,7 @@ void OZ_Propagator::spawn(OZ_Propagator * p, int prio)
     }
 
     if (isGenFDVar(v, vtag)) {
-      addSuspFDVar(v, thr, staticSpawnVars[i].state);
+      addSuspFDVar(v, thr, staticSpawnVars[i].state.fd);
       all_local &= am.isLocalCVar(v);
     } else if (isGenOFSVar(v, vtag)) {
       addSuspOFSVar(v, thr);
