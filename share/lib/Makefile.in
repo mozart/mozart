@@ -99,7 +99,7 @@ support/DefaultURL.oz: support/DefaultURL.oz.in ../config.status
 # Init
 #---------------------------------------------------------------------
 
-INITSRC0 = Init Resolve Prop Module ModuleAbstractions
+INITSRC0 = Init Resolve Prop Module ModuleAbstractions UrlExpand
 
 INITSRC = $(INITSRC0:%=init/%.oz)
 
