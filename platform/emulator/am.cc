@@ -146,7 +146,6 @@ void AM::init(int argc,char **argv)
   Assert(PROCEED && !FAILED);
 
   ozconf.init();
-  ProfileCode(ozstat.initCount());
   osInit();
   bigIntInit();
   initffuns();
