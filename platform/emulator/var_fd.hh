@@ -53,9 +53,6 @@ public:
    
   ProgramCounter index(ProgramCounter elseLabel, IHashTable * table);
 
-  OZPRINT;
-  OZPRINTLONG;
-
   void setDom(FiniteDomain &fd){finiteDomain = fd;}
   FiniteDomain &getDom(void){return finiteDomain;}
 
@@ -82,6 +79,7 @@ public:
 
   void propagate(TaggedRef var, FDState state, TaggedRef term);  
   void propagate(TaggedRef var, FDState state, TaggedRef * tPtr);
+
 };
 
 
