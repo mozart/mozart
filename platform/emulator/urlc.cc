@@ -115,7 +115,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#ifndef IRIX6
 #include <sys/uio.h>
+#endif
 #endif
 #include <netdb.h>
 #include <sys/utsname.h>

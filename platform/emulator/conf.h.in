@@ -36,7 +36,7 @@
 #undef LINUX
 #undef SOLARIS
 #undef SUNOS
-#undef IRIX
+#undef IRIX6
 #undef NETBSD
 #undef FREEBSD
 #undef IRIX
