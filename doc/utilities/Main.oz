@@ -25,7 +25,7 @@
 
 functor
 import
-   Applocation(getCmdArgs exit)
+   Application(getCmdArgs exit)
    Property(get put)
    System(printError)
    Error(printExc)
@@ -50,7 +50,7 @@ define
                   'elisp-path'( type:string optional:false default:unit)
                   'sbin-path'(  type:string optional:false default:unit)
                   'catalog'(    type:string optional:false default:unit)
-                 )
+                 )}
    % Process path name options and store results in ozdoc.* properties
    local
       % Determine the directory in which document source files are located:
