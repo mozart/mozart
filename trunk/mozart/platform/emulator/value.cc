@@ -35,12 +35,13 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
 // Some often used constants
 void initLiterals()
 {
-  AtomNil  = makeTaggedAtom(NameOfNil);
-  AtomCons = makeTaggedAtom(NameOfCons);
-  AtomPair = makeTaggedAtom(NameOfPair);
-  AtomVoid = makeTaggedAtom(NameOfVoid);
-  AtomBool = makeTaggedAtom(NameOfBool);
-  AtomSup  = makeTaggedAtom(NameOfSup);
+  AtomNil   = makeTaggedAtom(NameOfNil);
+  AtomCons  = makeTaggedAtom(NameOfCons);
+  AtomPair  = makeTaggedAtom(NameOfPair);
+  AtomVoid  = makeTaggedAtom(NameOfVoid);
+  AtomBool  = makeTaggedAtom(NameOfBool);
+  AtomSup   = makeTaggedAtom(NameOfSup);
+  AtomCompl = makeTaggedAtom(NameOfCompl);
   
   AtomLess         = makeTaggedAtom("less");
   AtomSame         = makeTaggedAtom("same");
