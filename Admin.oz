@@ -101,6 +101,16 @@ define
 	    db <- unit
 	 end
       end
+      meth 'export-db'(V)
+	 if @db==unit then
+	    {Raise mogul('export-db'(no_db_is_opened))}
+	 else
+	    {@db export_db(V)}
+	 end
+      end
+      meth 'import-db'(V)
+	 {@db import_db(V)}
+      end
       meth 'update-info'(V)
 	 if V then
 	    if @db==unit then
