@@ -46,18 +46,10 @@ else
     PLATFORMDIRS="emulator tools"
 fi
 
-: ${oz_enable_gtk=no}
-AC_MSG_CHECKING(for --enable-gtk)
-AC_ARG_ENABLE(gtk,
-    [--enable-gtk,
-	include gtk in configuration (default: $oz_enable_gtk)])
-if test -n "${enable_gtk}"; then
-    case "${enable_gtk}" in
-    yes) PLATFORMDIRS="$PLATFORMDIRS gtk";;
-    no) ;;
-    esac
+OZ_GTK_ENABLED
+if test "${GTK_ENABLED}" = yes; then
+    PLATFORMDIRS="$PLATFORMDIRS gtk"
 fi
-AC_MSG_RESULT($oz_enable_gtk)
 
 case "$target" in
    NONE) 
