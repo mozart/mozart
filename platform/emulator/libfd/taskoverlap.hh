@@ -27,6 +27,7 @@
 #define __TASKOVERLAP_HH__
 
 #include "std.hh"
+#include "rel.hh"
 #include "pel_fncts.hh"
 
 //-----------------------------------------------------------------------------
