@@ -19,7 +19,7 @@ define
 	       raise ozmake(mogul:filenotfound(F#'.txt')) end
 	    else
 	       {self trace('no mogul database')}
-	       Mogul,Init(nil)
+	       PubMogul,Init(nil)
 	    end
 	 end
       end
