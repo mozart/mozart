@@ -54,6 +54,9 @@
   <Front>
     <meta name="proglang.mode" arg1="oz" arg2="oz-mode">
 
+    <meta name="html.split"       value="chapter.m123">
+    <meta name="html.split"       value="chapter.m122">
+
     <Meta name="html.split"       value="chapter.m121">
     <Meta name="html.split"       value="chapter.m120">
     <Meta name="html.split"       value="chapter.m110">
@@ -90,6 +93,54 @@ particular, it lists the changes from
       implementation Mozart).
     </Abstract>
   <Body>
+
+  <chapter id="chapter.m123">
+    <title/Mozart 1.2.3/
+    <p>Mozart 1.2.3 is primarily a bug-fix release addressing 
+recently discovered memory leaks.  It also contains enhancements
+and is fully backward compatible with 1.2.2
+    <list>
+      <item>Fixed a memory leak in the regex contrib: memory occupied by a compiled
+regex was not properly released during finalization.</item>
+      <item>Fixed a memory leak in the unpickler.  The leak affected particularly
+applications that performed:
+        <list>
+	  <item/numerous loading of compiled functors/
+	  <item/numerous retrieval of values from a GDBM database/
+	</list>
+      </item>
+      <item>Windows: setting environment variable <code proglang=sh/OZ_TRACE_LOAD/
+caused the system to misbehave.  This was actually due to forgetting to copy the
+value returned by the environment variable lookup out of a static buffer.</item>
+      <item>The Ozcar manual has been largely reworked to be more precise
+and readable.  Ozcar itself has been extended by an (experimental)
+feature to debug threads remotely, which can also be used for
+debugging of distributed applications.</item>
+      <item>Many holes have been filled in the compiler documentation.
+In particular, the main chapters are all complete; only
+the appendices lack explanation.</item>
+    </list>
+  </chapter>
+
+  <chapter id="chapter.m122">
+    <title/Mozart 1.2.2/
+    <p>Mozart 1.2.2 is an improvement release and is fully backward compatible
+with Mozart 1.2.1
+    <list>
+      <item>Improved debugging support for <code/for/ loops: they now provide
+meaningful debug info and can be stepped in</item>
+      <item>Reference documentation added to TkTools</item>
+      <item>Windows:
+      <list>
+        <item>Release 1.2.1 for Windows omitted file <file>cache/x-oz/contrib/os/mode.ozf</file>
+which is required by the GDBM contrib.  This is now included.</item>
+        <item><code/OS.uName/ now correctly fills <code/machine/, <code/release/ and <code/version/ fields;
+Before, they always contained <code/"unknown"/, and provides more information in the
+<code/sysname/ field.  Before, the <code/sysname/ field always contained <code/"WIN32"/; it is now
+<code/"win32s"/, <code/"win32_windows"/ or <code/"win32_nt"/.</item>
+      </list>
+    </list>
+  </chapter>
 
      <chapter id="chapter.m121">
       <title/Changes between Mozart 1.2.0 and Mozart 1.2.1/
