@@ -79,7 +79,7 @@ Bool SolveActor::isBlocked() {
   return ((getThreads()==0) && !am.isStableSolve(this));
 }
 
-void SolveActor::clearSuspList(Thread *killThr = NULL) {
+void SolveActor::clearSuspList(Thread *killThr) {
   SuspList *tmpSuspList = suspList;
 
   suspList = NULL;
