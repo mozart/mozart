@@ -297,6 +297,10 @@ define
 	       Out <- @Out#'w.&nbsp;r.&nbsp;t.'
 	    [] eg then
 	       Out <- @Out#'e.&nbsp;g.'
+	    [] 'PI:LATEX' then
+	       Out <- @Out#'LaTeX'
+	    [] 'PI:EG' then
+	       Out <- @Out#'e.&nbsp;g.'
 	    else
 	       {Exception.raiseError
 		ozDoc(sgmlToHTML unsupportedProcessingInstruction M.1)}
@@ -696,10 +700,6 @@ define
 	       Out <- @Out#'<EM>'
 	       OzDocToHTML, Batch(M 1)
 	       Out <- @Out#'</EM>'
-	    [] em then   %--** Gump special
-	       Out <- @Out#'<EM>'
-	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</EM>'
 	    %-----------------------------------------------------------
 	    % Figure
 	    %-----------------------------------------------------------
@@ -730,53 +730,49 @@ define
 	    %-----------------------------------------------------------
 	    [] 'grammar.rule' then
 	       %--** display attribute?
-	       Out <- @Out#'</P><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>\n'
-	       case M.1
-	       of X=var(...) then Var in
-		  OzDocToHTML, Excursion(X ?Var)
-		  Out <- @Out#'<TR><TD>&lt;<I>'#Var#'</I>&gt;</TD>'
-	       [] 'grammar.head' then
-		  Out <- @Out#'<TR><TD>'
-		  OzDocToHTML, Batch(M.1 1)
-		  Out <- @Out#'</TD>\n'
-	       end
+	       Out <- @Out#'</P><TABLE border=0 cellpadding=0 cellspacing=0>\n'
+	       Out <- @Out#'<TR><TD>'
+	       OzDocToHTML, Batch(M.1 1)
+	       Out <- @Out#'</TD>\n'
 	       OzDocToHTML, Batch(M 2)
 	       Out <- @Out#'</TABLE><P'#@Align#'>\n'
 	    [] 'grammar.head' then
-	       {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
+	       OzDocToHTML, Batch(M 1)
 	    [] 'grammar.alt' then
-	       Out <- @Out#case {CondSelect M type unit}
-			   of def then
-			      '<TD ALIGN=CENTER>&nbsp;::=&nbsp;</TD>'
+	       Out <- @Out#case {CondSelect M type unit} of def then
+			      '<TD align=center>&nbsp;::=&nbsp;'
 			   [] add then
-			      '<TD ALIGN="CENTER">&nbsp;+=&nbsp;</TD>'
+			      '<TD align="center">&nbsp;+=&nbsp;'
 			   [] 'or' then
-			      '<TR><TD></TD><TD ALIGN=CENTER>&nbsp;|&nbsp;</TD>'
+			      '<TR><TD></TD><TD align=center>&nbsp;|&nbsp;'
 			   [] space then
-			      '<TR><TD></TD><TD ALIGN=CENTER></TD>'
+			      '<TR><TD></TD><TD align=center>'
 			   [] unit then
-			      '<TR><TD></TD><TD ALIGN=CENTER></TD>'
+			      '<TR><TD></TD><TD align=center>'
 			   end
-	       Out <- @Out#'<TD>'
+	       Out <- @Out#'</TD><TD>'
 	       OzDocToHTML, Batch(M 1)
 	       Out <- @Out#'</TD><TR>\n'
 	    [] 'grammar.note' then
-	       Out <- @Out#'<TD ALIGN=LEFT><I>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;% '
+	       Out <- @Out#'<TD align=left><I>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;% '
 	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</I></TD>'	       
+	       Out <- @Out#'</I></TD>'
 	    [] 'grammar' then
 	       OzDocToHTML, Batch(M 1)
 	    %-----------------------------------------------------------
 	    % Tables
 	    %-----------------------------------------------------------
-	    [] table then Mr in
+	    [] table then Title Mr in
 	       %--** display attribute
-	       case {SGML.getSubtree M title ?Mr} of unit then skip
+	       Title = {SGML.getSubtree M title ?Mr}
+	       Out <- @Out#'</P>'
+	       case Title of unit then skip
 	       else
-		  {Exception.raiseError
-		   ozDoc(sgmlToHTML unsupportedTableTitle M)}
+		  Out <- @Out#'<P align=center><B>'
+		  OzDocToHTML, Batch(Title 1)
+		  Out <- @Out#'</B></P>\n'
 	       end
-	       Out <- @Out#'</P><TABLE align=center border=1>\n'
+	       Out <- @Out#'<TABLE align=center border=1>\n'
 	       OzDocToHTML, Batch(Mr 1)
 	       Out <- @Out#'</TABLE><P'#@Align#'>\n'
 	    [] tr then
@@ -799,6 +795,24 @@ define
 			    '>\n')
 	       OzDocToHTML, Batch(M 1)
 	       Out <- @Out#'</TD>\n'
+	    %-----------------------------------------------------------
+	    %--** gump.sgml Specials
+	    %-----------------------------------------------------------
+	    [] em then
+	       Out <- @Out#'<EM>'
+	       OzDocToHTML, Batch(M 1)
+	       Out <- @Out#'</EM>'
+	    %-----------------------------------------------------------
+	    %--** ozdoc.sgml Specials
+	    %-----------------------------------------------------------
+	    [] tag then
+	       Out <- @Out#'<CODE>'
+	       OzDocToHTML, Batch(M 1)
+	       Out <- @Out#'</CODE>'
+	    [] attrib then
+	       Out <- @Out#'<CODE>'
+	       OzDocToHTML, Batch(M 1)
+	       Out <- @Out#'</CODE>'
 	    else
 	       {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
 	    end
