@@ -32,6 +32,11 @@ enum ErrorClass {
   PERM              // This perm only means the transObj should give up
 };
 
+#ifdef WINDOWS
+#define ETIMEDOUT    WSAETIMEDOUT
+#define EHOSTUNREACH WSAEHOSTUNREACH
+#endif
+
 ErrorClass classifyError() {
   switch(ossockerrno()) {
   case EINTR:
