@@ -9,6 +9,8 @@
 #ifndef __CPI__H__
 #define __CPI__H__
 
+#define GAGA // TMUELLER
+
 #if defined(INTERFACE)
 #pragma interface
 #endif
@@ -28,9 +30,16 @@ struct _spawnVars_t {
   union {OZ_FDPropState fd; OZ_FSetPropState fs;} state;
 };
 
+#ifdef GAGA
+extern EnlargeableArray<_spawnVars_t> staticSpawnVars;
+extern EnlargeableArray<_spawnVars_t> staticSpawnVarsProp;
+extern EnlargeableArray<_spawnVars_t> staticSuspendVars;
+#else
 extern _spawnVars_t * staticSpawnVars;
 extern _spawnVars_t * staticSpawnVarsProp;
 extern _spawnVars_t * staticSuspendVars;
+#endif
+
 extern int staticSpawnVarsNumber;
 extern int staticSpawnVarsNumberProp;
 extern int staticSuspendVarsNumber;
@@ -57,7 +66,7 @@ OZ_Boolean isPosSmallInt(OZ_Term v);
 OZ_Boolean isPosSmallFDInt(OZ_Term v); 
 OZ_Boolean isPosSmallSetInt(OZ_Term v);
 
-#define MAXFDBIARGS 1000 // maximum number of arguments of fd built-ins
+#define CPIINITSIZE 1000 
 
 #define EXPECT_BLOCK(O, P, F)						\
 {									\
