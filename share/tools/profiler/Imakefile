@@ -29,5 +29,5 @@ $(PROFILER):
 	$(INSTALL) -m 775 -d $@
 
 $(PROFILER)/%.oz: %.oz
-	$(INSTALL) -m 444 '$<' '$@'
+	$(INSTALLSRC) '$<' '$@'
 

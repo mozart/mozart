@@ -34,5 +34,5 @@ $(OZPANEL):
 	$(INSTALL) -m 775 -d $@
 
 $(OZPANEL)/%.oz: %.oz
-	$(INSTALL) -m 444 '$<' '$@'
+	$(INSTALLSRC) '$<' '$@'
 
