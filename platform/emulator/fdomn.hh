@@ -318,6 +318,7 @@ public:
   
 }; // FiniteDomain
 
+typedef FiniteDomain * FiniteDomainPtr;
 
 class FDIterator {
 private:

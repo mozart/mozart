@@ -146,7 +146,7 @@ void BitArray::print(ostream &ofile, int offset) const
 {
   ofile << indent(offset) << '{';
   
-  int i, r, l;
+  int i, r, l = 0;
   for (i = fdMinBA, r = 1; i < fdMaxBA + 2; i++)
     if (contains(i) == OK){
       if (r) ofile << ' '<< i;
