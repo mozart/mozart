@@ -105,54 +105,91 @@ Bool checkAddress(void *ptr) {
 #include <fcntl.h>
 
 #if !defined(USE_AUTO_PLACEMENT)
+
 //
-// Entries are double-linked with a "core" element;
-class MappedMemChunkEntry {
+// When addresses for memory chunks are explicitly assigned, the space
+// for them is managed as follows:
+// (1) Chunks are allocated downward from the highest address possible.
+//     There is a pointer to the highest byte used - 'top';
+// (2) When a new chunk is allocated based on 'top', its address is
+//     checked against text area, data & bss.
+// (3) Released chunks are recorded in two bins: the standard size 
+//     (HEAPBLOCKSIZE), which is unsorted, and with all the larger 
+//     sizes, which is sorted by size. Note that all the chunk sizes 
+//     are a multiple of HEAPBLOCKSIZE.
+// (4) Allocating a chunk of the standard size proceeds as (a) try
+//     the standard-size bin, (b) split a smallest one in the other
+//     bin ("best-fit" strategy), (c) allocate a new one from 'top'.
+// (5) Allocating a chunk of a different size proceeds as (a) find 
+//     exact size in the second bin, (b) split the smallest possible
+//     there, (c) allocate a new from 'top'.
+//
+
+//
+// "standard size" bin elements: just address...
+class MemSTDHoleHandle {
 private:
   caddr_t addr;
-  size_t size;			// bytes;
-  MappedMemChunkEntry *next, *prev;
+  MemSTDHoleHandle *next;
 
-  //
-protected:
-#ifdef DEBUG_CHECK
-  void cleanup() {
-    Assert(addr == (caddr_t) 0);    
-    Assert(size == (size_t) 0);
-    next = (MappedMemChunkEntry *) -1;
-    prev = (MappedMemChunkEntry *) -1;
-  }
-#endif
-
-  //
 public:
-  // Make a "core" entry linked to itself:
-  MappedMemChunkEntry()
-    : addr((caddr_t) 0), size((size_t) 0),
-      next((MappedMemChunkEntry *) this),
-      prev((MappedMemChunkEntry *) this) {}
-  // We require explicit linking:
-  MappedMemChunkEntry(caddr_t addrIn, size_t sizeIn)
-    : addr(addrIn), size(sizeIn) {
-    DebugCode(next = prev = (MappedMemChunkEntry *) -1);
-  }
-  // We require also explicit unlinking:
-  ~MappedMemChunkEntry() {
-    Assert(next == (MappedMemChunkEntry *) -1);
-    Assert(prev == (MappedMemChunkEntry *) -1);
+  MemSTDHoleHandle(caddr_t addrIn, MemSTDHoleHandle *nextIn)
+    : addr(addrIn), next(nextIn) {}
+  ~MemSTDHoleHandle() {
+    DebugCode(addr = (caddr_t) -1);
+    DebugCode(next = (MemSTDHoleHandle *) -1);
   }
 
   //
   caddr_t getAddr() { return (addr); }
-  size_t getSize() { return (size); }
-  //
-  // only 'getNext()' is given: traverse it as it is sorted;
-  MappedMemChunkEntry* getNext() { return (next); }
+  MemSTDHoleHandle* getNext() { return (next); }
+};
+  
+//
+// The second bin: address&size, as well as the ability to
+// insert&delete elements in the middle of the queue;
+class MemOtherHoleHandle {
+private:
+  caddr_t addr;
+  size_t size;
+  MemOtherHoleHandle *next, *prev; // bubbled up with a 'start' token;
+
+public:
+  // 'start' token;
+  MemOtherHoleHandle()
+    : addr(0), size(0), next(this), prev(this) {}
+  MemOtherHoleHandle(caddr_t addrIn, size_t sizeIn)
+    : addr(addrIn), size(sizeIn) {
+      Assert(addrIn);		// since it is used for 'start' one;
+    DebugCode(next = (MemOtherHoleHandle *) -1);
+    DebugCode(prev = (MemOtherHoleHandle *) -1);
+  }
+  ~MemOtherHoleHandle() {
+    DebugCode(addr = (caddr_t) -1);
+    DebugCode(size = (size_t) -1);
+    Assert(next == (MemOtherHoleHandle *) -1);
+    Assert(prev == (MemOtherHoleHandle *) -1);
+  }
 
   //
-  void linkBefore(MappedMemChunkEntry *before) {
-    Assert(next == (MappedMemChunkEntry *) -1);
-    Assert(prev == (MappedMemChunkEntry *) -1);
+  Bool isNotLast() { return ((Bool) addr); }
+  caddr_t getAddr() { return (addr); }
+  size_t getSize() { return (size); }
+  // only 'getNext()' : travel it in that direction;
+  MemOtherHoleHandle* getNext() { return (next); }
+
+  //
+  void shrink(size_t factor) {
+    Assert(size > factor);
+    addr += factor;
+    size -= factor;
+  }
+
+  //
+  void linkBefore(MemOtherHoleHandle *before) {
+    Assert(isNotLast());
+    Assert(next == (MemOtherHoleHandle *) -1);
+    Assert(prev == (MemOtherHoleHandle *) -1);
     //
     next = before;
     prev = before->prev;
@@ -160,35 +197,68 @@ public:
     prev->next = this;
   }
   void unlink() {
+    Assert(isNotLast());
     next->prev = prev;
     prev->next = next;
-    DebugCode(next = prev = (MappedMemChunkEntry *) -1);
+    DebugCode(next = prev = (MemOtherHoleHandle *) -1);
   }
+  DebugCode(void drop() { next = prev = (MemOtherHoleHandle *) -1; })
 };
 
 //
-class MappedMemChunks : private MappedMemChunkEntry {
+#if defined(SOLARIS_SPARC)
+extern char _end;
+#endif
+
+//
+// Allocator;
+class MemAllocator {
 private:
-  // 'top' is the first upper non-valid address;
+  // 'top' is the first upper non-valid address. It starts
+  // with Mozart-specific address, and goes down over time.
   caddr_t top;
+  caddr_t realTop;
   size_t pagesize;		// cached up;
+#if defined(SOLARIS_SPARC)
+  // It is possible to figure out exactly where the memory pages are
+  // located, but that will be non-portable between Solaris
+  // versions... Thus, the (contemporary) property of Solaris
+  // process/memory management routines is used: text, data & bss are
+  // allocated right from bottom addresses, so we just keep track
+  // where bss finishes...
+  caddr_t bottom;
+#endif
+  MemSTDHoleHandle *std;	// unsorted;
+  MemOtherHoleHandle *other;	// sorted: small sizes first;
+  // observe that splitting the best - i.e. the first - keeps it 
+  // in place;
 
   //
 public:
-  MappedMemChunks() {
+  MemAllocator() {
     pagesize = sysconf(_SC_PAGESIZE);
-    top = (caddr_t) 
+    realTop = top = (caddr_t) 
       (((((unsigned int32) -1) >> lostPtrBits) / pagesize) * pagesize);
+#if defined(SOLARIS_SPARC)
+    bottom = &_end + MEM_C_HEAP_SIZE;
+#endif
+    std = (MemSTDHoleHandle *) 0;
+    other = new MemOtherHoleHandle(); // 'start' token;
   }
-  ~MappedMemChunks() {
-    MappedMemChunkEntry *entry = MappedMemChunkEntry::getNext();
-    while (entry != this) {
-      MappedMemChunkEntry *next = entry->getNext();
-      entry->unlink();
-      delete entry;
-      entry = next;
+  ~MemAllocator() {
+    while (std) {
+      MemSTDHoleHandle *next = std->getNext();
+      delete std;
+      std = next;
     }
-    DebugCode(cleanup(););
+    while (other->isNotLast()) {
+      MemOtherHoleHandle *next = other->getNext();
+      DebugCode(other->drop(););
+      delete other;
+      other = next;
+    }
+    DebugCode(other->drop(););
+    delete other;		// 'start' token;
   }
 
   //
@@ -197,56 +267,121 @@ public:
   // (double-linked) list of pages is sorted (in the 'getNext()'
   // direction) in decreasing addresses;
   caddr_t reservePlace(size_t reqSize) {
-    caddr_t upper = top;
-    MappedMemChunkEntry* entry = MappedMemChunkEntry::getNext();
+    Assert(reqSize >= HEAPBLOCKSIZE);
+    Assert(reqSize%HEAPBLOCKSIZE == 0);
+    caddr_t addr;
+    DebugCode(addr = (caddr_t) -1);
 
     //
-    while (entry != this) {
-      //
-      // Is there - between 'upper' and next's page end - enough room
-      // for the page?
-      caddr_t addr = upper - reqSize;
-      if (entry->getAddr() + entry->getSize() <= addr) {
-	MappedMemChunkEntry *newCE = 
-	  new MappedMemChunkEntry(addr, reqSize);
-	newCE->linkBefore(entry);
-	return (addr);
+    if (reqSize == HEAPBLOCKSIZE) {
+      if (std) {
+	MemSTDHoleHandle *next = std->getNext();
+	addr = std->getAddr();
+	delete std;
+	std = next;
       } else {
-	// no, go to the next one:
-	upper = entry->getAddr();
-	entry = entry->getNext();
+	MemOtherHoleHandle *ptr = other->getNext();
+	if (ptr->isNotLast()) {
+	  // 'best fit' - here, just split the first one (because the
+	  // list is sorted);
+	  addr = ptr->getAddr();
+	  if (ptr->getSize() > reqSize) {
+	    ptr->shrink(reqSize);
+	  } else {
+	    // observe: it can happen that in the 'other' bin there are
+	    // pages of standard size: that's due to split-up"s;
+	    Assert(ptr->getSize() == reqSize);
+	    ptr->unlink();
+	    delete ptr;
+	  }
+	} else {
+	  // allocate from the 'top';
+	  top -= reqSize;
+#if defined(SOLARIS_SPARC)
+	  if (top < bottom)
+	    addr = (caddr_t) 0;
+	  else
+#endif
+	    addr = top;
+	}
+      }
+    } else {			// reqSize != HEAPBLOCKSIZE
+      if (other) {
+	// exact size or 'best fit';
+	MemOtherHoleHandle *ptr = other->getNext();
+
+	// find the smallest hole that fits 'reqSize';
+	while (ptr->isNotLast()) {
+	  if (ptr->getSize() >= reqSize)
+	    break;		// no need to go further;
+	  ptr = ptr->getNext();
+	}
+
+	//
+	if (ptr->isNotLast()) {
+	  // that is, there is hole large enough - the question is
+	  // only whether it is to be split up;
+	  addr = ptr->getAddr();
+	  if (ptr->getSize() == reqSize) {
+	    ptr->unlink();
+	    delete ptr;
+	  } else {
+	    Assert(ptr->getSize() > reqSize);
+	    // split it up;
+	    ptr->shrink(reqSize);
+	  }
+	} else {
+	  // no page which is large enough - allocate from top;
+	  top -= reqSize;
+#if defined(SOLARIS_SPARC)
+	  if (top < bottom)
+	    addr = (caddr_t) 0;
+	  else
+#endif
+	    addr = top;
+	}
+      } else {			// 'other' bin is empty;
+	// ... then allocate from the 'top';
+	top -= reqSize;
+#if defined(SOLARIS_SPARC)
+	if (top < bottom)
+	  addr = (caddr_t) 0;
+	else
+#endif
+	  addr = top;
       }
     }
 
-    //
-    // None found: make a last one (i.e. prior the core one (itself));
-    caddr_t addr = upper - reqSize;
-    MappedMemChunkEntry *newCE = 
-      new MappedMemChunkEntry(addr, reqSize);
-    newCE->linkBefore(this);
+    Assert(addr != (caddr_t) -1);
     return (addr);
-  }    
+  }
 
   //
   void markFree(caddr_t addr, size_t size) {
-    MappedMemChunkEntry* entry = getNext();
-
+    Assert(size >= HEAPBLOCKSIZE);
+    Assert(size%HEAPBLOCKSIZE == 0);
     //
-    while (entry != this) {
-      if (entry->getAddr() == addr) {
-	Assert(size == entry->getSize());
-	entry->unlink();
-	delete entry;
-	return;
+    if (size == HEAPBLOCKSIZE) {
+      std = new MemSTDHoleHandle(addr, std);
+    } else {
+      MemOtherHoleHandle *nh = new MemOtherHoleHandle(addr, size);
+      MemOtherHoleHandle *ptr = other->getNext();
+
+      // now, find the place: just before a handle of a larger hole;
+      while (ptr->isNotLast()) {
+	if (ptr->getSize() >= size)
+	  break;		// no need to go further;
+	ptr = ptr->getNext();
       }
-      entry = entry->getNext();
+
+      // regardless wither one was found or not:
+      nh->linkBefore(ptr);
     }
-    OZ_error("mappedChunks: has not found a page for removal!");
   }
 };
 
 //
-static MappedMemChunks mappedChunks;
+static MemAllocator memAllocator;
 
 #endif
 
@@ -255,7 +390,7 @@ static MappedMemChunks mappedChunks;
 void ozFree(char *addr, size_t size) 
 {
 #if !defined(USE_AUTO_PLACEMENT)
-  mappedChunks.markFree(addr, size);
+  memAllocator.markFree(addr, size);
 #endif
   if (munmap(addr, size)) {
     ozperror("munmap");
@@ -264,9 +399,12 @@ void ozFree(char *addr, size_t size)
 
 //
 #if defined(LINUX_I486) && defined(USE_AUTO_PLACEMENT)
-extern char __bss_start;
-static void *lowNoMap  = &__bss_start;
-static void *highNoMap = &__bss_start + MEM_C_HEAP_SIZE;
+extern char _end;
+// linux kernel (at least the 2.0.33 i'm currently using) seems to
+// reserve around 8Mb for potential expantion of bss. Which is not
+// always sufficient...
+static void *lowNoMap  = &_end;
+static void *highNoMap = &_end + MEM_C_HEAP_SIZE;
 #endif
 
 void *ozMalloc(size_t size) 
@@ -286,12 +424,14 @@ void *ozMalloc(size_t size)
   //  when allocating more memory than is really used
   //  the memory of the remainder of the page is not used.
   //  ozMalloc should return the size allocated.
+  // kost@ : why?? it's perfectly used by subsequent Oz heap 
+  // allocations...
   if (size % pagesize != 0) {
     // OZ_warning("*** WEIRD: ozMalloc: pagesize alignment problem ***\n");
     size = (size / pagesize) * pagesize + pagesize;
   }
 #if !defined(USE_AUTO_PLACEMENT)
-  char *nextAddr = mappedChunks.reservePlace(size);
+  char *nextAddr = memAllocator.reservePlace(size);
 #endif
 
   //
@@ -304,7 +444,7 @@ void *ozMalloc(size_t size)
 #if defined(LINUX_I486)
   // 
   // kost@ : make sure that there is some place for C heap.
-  // For that, check where __bss_start points to, and skip some
+  // For that, check where _end_start points to, and skip some
   // MEM_C_HEAP_SIZE bytes, round it up, and try it again...
   if (ret >= lowNoMap && ret < highNoMap) { // implies ret != MAP_FAILED
     if (munmap((char *) ret, size))
@@ -697,7 +837,12 @@ void MemChunks::print() {
 
 void _oz_getNewHeapChunk(const size_t raw_sz) {
   size_t sz          = (raw_sz + HEAP_SAFETY_FOR_ALIGN) & ~7;
-  size_t thisBlockSz = max(HEAPBLOCKSIZE,sz);
+  size_t thisBlockSz =
+    ((sz / ((size_t) HEAPBLOCKSIZE)) * ((size_t) HEAPBLOCKSIZE)) +
+    ((size_t) HEAPBLOCKSIZE);
+  // kost@ : these are the invariants now:
+  Assert(thisBlockSz >= HEAPBLOCKSIZE);
+  Assert(thisBlockSz%HEAPBLOCKSIZE == 0);
 
   heapTotalSize      += thisBlockSz/KB;
   heapTotalSizeBytes += thisBlockSz;
