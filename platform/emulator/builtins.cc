@@ -4182,15 +4182,6 @@ int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...)
   return RAISE;
 }
 
-OZ_Term oz_getLocation(Board *bb)
-{
-  OZ_Term out = oz_nil();
-  while (!oz_isRootBoard(bb)) {
-    out = oz_cons(OZ_atom("space"),out);
-    bb=bb->getParent();
-  }
-  return out;
-}
 
 /*===================================================================
  * type errors
