@@ -78,7 +78,8 @@ define
 	 {Manager incTrace('--> updateInfo '#Id)}
 	 try
 	    {Manager trace('Fetching info from '#Url)}
-	    Msg   = {Parse {Slurp Url}}
+	    Msg   = try {Parse {Slurp Url}}
+		    catch _ then {Raise mogul(notFound(Url))} unit end
 	    {Msg check_id_expected(Id Pid)}
 	    {Msg check_keys(['type'])}
 	    Type  = {VirtualString.toAtom {ToLower {Msg get1('type' $)}}}
