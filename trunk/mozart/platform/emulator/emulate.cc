@@ -639,6 +639,7 @@ void engine() {
   /* which kind of solve combinator to choose */
   Bool isEatWaits    = NO;
   Bool isSolveGuided = NO;
+  Bool isSolveDebug  = NO;
   
   Chunk *predicate; NoReg(predicate);
   int predArity;    NoReg(predArity);
@@ -1638,20 +1639,32 @@ void engine() {
 
 	case BIsolve:
 	  {
-	    isSolveGuided = NO;
-	    isEatWaits    = NO;
+	    isSolveGuided = NO;  isEatWaits = NO;  isSolveDebug = NO;
 	    goto LBLBIsolve;
 	  }
 	case BIsolveEatWait:
 	  {
-	    isSolveGuided = NO;
-	    isEatWaits    = OK;
+	    isSolveGuided = NO;  isEatWaits = OK;  isSolveDebug = NO;
 	    goto LBLBIsolve;
 	  }
 	case BIsolveGuided:
 	  {
-	    isSolveGuided = OK;
-	    isEatWaits    = OK;
+	    isSolveGuided = OK;  isEatWaits = NO;  isSolveDebug = NO;
+	    goto LBLBIsolve;
+	  }
+	case BIsolveGuidedEatWait:
+	  {
+	    isSolveGuided = OK;  isEatWaits = OK;  isSolveDebug = NO;
+	    goto LBLBIsolve;
+	  }
+	case BIsolveDebug:
+	  {
+	    isSolveGuided = NO;  isSolveDebug = OK;
+	    goto LBLBIsolve;
+	  }
+	case BIsolveDebugGuided:
+	  {
+	    isSolveGuided = OK;  isSolveDebug = OK;
 	    goto LBLBIsolve;
 	  }
 	case BIsolveCont:    goto LBLBIsolveCont;
@@ -1743,12 +1756,41 @@ void engine() {
 	   !(chunkCast(x0)->getCType () == C_ABSTRACTION ||
 	     chunkCast(x0)->getCType () == C_BUILTIN)) {
 	 HF_FAIL (,
-		  message("Application failed: no abstraction or builtin in solve combinator\n"));
+		  message("Application failed: no procedure in solve combinator\n"));
 
        }
 
        TaggedRef output, guidance;
        
+       if (isSolveDebug) {
+	 // Check the third argument whether it is true or false
+	 TaggedRef flag = isSolveGuided ? X[2] : X[1];
+	 DEREF(flag, _1, flagTag);
+
+	 if (isAnyVar(flagTag)) {
+	   predicate = bi->getSuspHandler();
+	   if (!predicate) {
+	     HF_WARN(applFailure(bi),
+		     message("No suspension handler\n"));
+	   }
+	   goto LBLcall;
+	 }
+
+	 if (isLiteral(flagTag)) {
+	   if (sameLiteral(flag,NameTrue)) {
+	     isEatWaits = OK;
+	   } else if (sameLiteral(flag,NameFalse)) {
+	     isEatWaits = NO;
+	   } else {
+	     HF_FAIL (,
+             message("Illegal wait flag in solve combinator\n"));
+	   }
+	 } else {
+	   HF_FAIL (,
+             message("Illegal wait flag in solve combinator\n"));
+	 }
+       }
+	
        if (isSolveGuided) {
 	 // This is a guided solver, check whether the input list is ground
 	 TaggedRef guide = deref(X[1]);
@@ -1766,10 +1808,11 @@ void engine() {
 	   goto LBLcall;
 	 }
 
-	 output   = X[2];
+
+	 output   = isSolveDebug ? X[3] : X[2];
 	 guidance = X[1];
        } else {
-	 output   = X[1];
+	 output   = isSolveDebug ? X[2] : X[1];
 	 guidance = 0;
        }
        
@@ -1783,11 +1826,9 @@ void engine() {
        SolveActor *sa = new SolveActor (CBB,CPP,
 					output, guidance);
 
-       if (isSolveGuided)
-	 sa->setGuided();
-       
-       if (isEatWaits)
-	 sa->setEatWaits();
+       if (isSolveGuided) sa->setGuided();
+       if (isEatWaits)    sa->setEatWaits();
+       if (isSolveDebug)  sa->setDebug();
        
        e->setCurrent(new Board(sa, Bo_Solve), OK);
        CBB->setInstalled();
@@ -2295,13 +2336,14 @@ void engine() {
     // try to reduce a solve board;
     DebugCheck ((CBB->isReflected () == OK),
 		error ("trying to reduce an already reflected solve actor"));
-    if (e->isStableSolve(SolveActor::Cast(CBB->getActor()))) {
+
+    SolveActor *solveAA = SolveActor::Cast (CBB->getActor ());
+    Board      *solveBB = CBB; 
+
+    if (e->isStableSolve(solveAA)) {
       DebugCheck ((e->trail.isEmptyChunk () == NO),
 		  error ("non-empty trail chunk for solve board"));
       // all possible reduction steps require this; 
-
-      SolveActor *solveAA = SolveActor::Cast (CBB->getActor ());
-      Board *solveBB = CBB; 
 
       if (solveBB->hasSuspension () == NO) {
 	// 'solved';
@@ -2516,6 +2558,22 @@ void engine() {
 	  }
 	}
       }
+    } else if (solveAA->isDebug() && solveAA->getThreads() == 0) {
+      // There are some external suspensions to this solver!
+
+      INSTALLPATH(solveBB->getParentFast());
+
+      TaggedRef newVar = makeTaggedRef(newTaggedUVar(CBB));
+      TaggedRef result = solveAA->getResult();
+      
+      solveAA->setResult(newVar);
+
+      if ( !e->fastUnifyOutline(result,
+				solveAA->genUnstable(newVar),
+				OK)) {
+	HF_NOMSG;
+      }
+      
     }
   } else {
     Assert(CBB->isRoot());
