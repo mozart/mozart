@@ -68,8 +68,8 @@ public:
     fdSuspList[fd_prop_singl] = fdSuspList[fd_prop_bounds] = NULL;
   }
 
-  void gCollect(void);
-  void sClone(void);
+  void gCollect(Board *);
+  void sClone(Board *);
 
 
   inline void dispose(void);

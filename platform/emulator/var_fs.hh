@@ -58,8 +58,8 @@ public:
       fsSuspList[i] = NULL;
   }
 
-  void gCollect(void);
-  void sClone(void);
+  void gCollect(Board *);
+  void sClone(Board *);
 
   void dispose(void);
 

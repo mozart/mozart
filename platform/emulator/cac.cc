@@ -184,17 +184,43 @@ void * _cacReallocStatic(void * p, size_t sz) {
   DebugCheck(sz%sizeof(int) != 0,
              OZ_error("_cacReallocStatic: can only handle word sized blocks"););
 
-  if (sz > 12) {
+  if (sz > 24) {
     return memcpy(CAC_MALLOC(sz), p, sz);
   } else {
     register int32 * frm = (int32 *) p;
     register int32 * to  = (int32 *) CAC_MALLOC(sz);
 
     switch(sz) {
-    case 12:
-      to[2]=frm[2];
-    case 8:
+    case 24:
+      to[0]=frm[0];
       to[1]=frm[1];
+      to[2]=frm[2];
+      to[3]=frm[3];
+      to[4]=frm[4];
+      to[5]=frm[5];
+      break;
+    case 20:
+      to[0]=frm[0];
+      to[1]=frm[1];
+      to[2]=frm[2];
+      to[3]=frm[3];
+      to[4]=frm[4];
+      break;
+    case 16:
+      to[0]=frm[0];
+      to[1]=frm[1];
+      to[2]=frm[2];
+      to[3]=frm[3];
+      break;
+    case 12:
+      to[0]=frm[0];
+      to[1]=frm[1];
+      to[2]=frm[2];
+      break;
+    case 8:
+      to[0]=frm[0];
+      to[1]=frm[1];
+      break;
     case 4:
       to[0]=frm[0];
       break;
@@ -505,7 +531,7 @@ Board * Board::_cacBoard() {
 
   Assert(bb->cacIsAlive());
 
-  Board *ret = (Board *) oz_hrealloc(bb, sizeof(Board));
+  Board *ret = (Board *) _cacReallocStatic(bb, sizeof(Board));
 
   cacStack.push(ret,PTR_BOARD);
 
@@ -603,24 +629,24 @@ void OzVariable::_cacMark(TaggedRef * fwd) {
 }
 
 inline
-void OzFDVariable::_cac(void) {
+void OzFDVariable::_cac(Board * bb) {
   ((OZ_FiniteDomainImpl *) &finiteDomain)->copyExtension();
 
-  cacLocalSuspList(getBoardInternal(), &(fdSuspList[0]), fd_prop_any);
+  cacLocalSuspList(bb, &(fdSuspList[0]), fd_prop_any);
 }
 
 inline
-void OzFSVariable::_cac(void) {
+void OzFSVariable::_cac(Board * bb) {
 
 #ifdef BIGFSET
   _fset.copyExtension();
 #endif
 
-  cacLocalSuspList(getBoardInternal(), &(fsSuspList[0]), fs_prop_any);
+  cacLocalSuspList(bb, &(fsSuspList[0]), fs_prop_any);
 }
 
 inline
-void OzCtVariable::_cac(void) {
+void OzCtVariable::_cac(Board * bb) {
   // suspension lists
   int noOfSuspLists = getNoOfSuspLists();
 
@@ -631,7 +657,7 @@ void OzCtVariable::_cac(void) {
     new_susp_lists[i] = _susp_lists[0];
   _susp_lists = new_susp_lists;
   // collect
-  cacLocalSuspList(getBoardInternal(), _susp_lists, noOfSuspLists);
+  cacLocalSuspList(bb, _susp_lists, noOfSuspLists);
 
 }
 
@@ -642,18 +668,6 @@ void OzCtVariable::_cacRecurse(void)
   _constraint = _constraint->copy();
 }
 
-const int _cac_varSizes[] = {
-  sizeof(ExtVar),         // OZ_VAR_EXT
-  sizeof(SimpleVar),      // OZ_VAR_SIMPLE
-  sizeof(Future),         // OZ_VAR_FUTURE
-  sizeof(OzBoolVariable), // OZ_VAR_BOOL
-  sizeof(OzFDVariable),   // OZ_VAR_FD
-  sizeof(OzOFVariable),   // OZ_VAR_OF
-  sizeof(OzFSVariable),   // OZ_VAR_FS
-  sizeof(OzCtVariable),   // OZ_VAR_CT
-};
-
-
 inline
 OzVariable * OzVariable::_cacVarInline(void) {
   GCDBG_INFROMSPACE(this);
@@ -661,44 +675,46 @@ OzVariable * OzVariable::_cacVarInline(void) {
   Assert(!cacIsMarked());
   Assert(!isTrailed());
 
-  TypeOfVariable t = getType();
+  Board * bb = getBoardInternal()->_cacBoard();
 
   OzVariable * to;
 
-  Board * bb = getBoardInternal()->_cacBoard();
-
-  if (t != OZ_VAR_EXT) {
-
-    to = (OzVariable *) oz_hrealloc(this,_cac_varSizes[t]);
-
-    to->setHome(bb);
-    // Only after board is collected!
-    cacSuspList(&(to->suspList));
-
-    switch (t){
-    case OZ_VAR_FD:
-      ((OzFDVariable *) to)->_cac();
-      return to;
-    case OZ_VAR_FS:
-      ((OzFSVariable *) to)->_cac();
-      return to;
-    case OZ_VAR_SIMPLE:
-    case OZ_VAR_BOOL:
-      return to;
-    case OZ_VAR_CT:
-      ((OzCtVariable*) to)->_cac();
-      break;
-    default:
-      break;
-    }
-
-  } else {
+  switch (getType()) {
+  case OZ_VAR_EXT:
     to = ((ExtVar *) this)->_cacV();
-    to->setHome(bb);
-    cacSuspList(&(to->suspList));
+    cacStack.push(to, PTR_CVAR);
+    break;
+  case OZ_VAR_SIMPLE:
+    to = (OzVariable *) _cacReallocStatic(this,sizeof(SimpleVar));
+    break;
+  case OZ_VAR_FUTURE:
+    to = (OzVariable *) _cacReallocStatic(this,sizeof(Future));
+    cacStack.push(to, PTR_CVAR);
+    break;
+  case OZ_VAR_BOOL:
+    to = (OzVariable *) _cacReallocStatic(this,sizeof(OzBoolVariable));
+    break;
+  case OZ_VAR_OF:
+    to = (OzVariable *) _cacReallocStatic(this,sizeof(OzOFVariable));
+    cacStack.push(to, PTR_CVAR);
+    break;
+  case OZ_VAR_FD:
+    to = (OzVariable *) _cacReallocStatic(this,sizeof(OzFDVariable));
+    ((OzFDVariable *) to)->_cac(bb);
+    break;
+  case OZ_VAR_FS:
+    to = (OzVariable *) _cacReallocStatic(this,sizeof(OzFSVariable));
+    ((OzFSVariable *) to)->_cac(bb);
+    break;
+  case OZ_VAR_CT:
+    to = (OzVariable *) _cacReallocStatic(this,sizeof(OzCtVariable));
+    ((OzCtVariable*) to)->_cac(bb);
+    cacStack.push(to, PTR_CVAR);
+    break;
   }
 
-  cacStack.push(to, PTR_CVAR);
+  to->setHome(bb);
+  cacSuspList(&(to->suspList));
 
   return to;
 
