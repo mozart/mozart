@@ -39,3 +39,6 @@ bei Exceptions: wenn Emacs Bar einmal geloescht wurde, kommt er
 beim Selektieren anderer (gesicherter) Stack Frames nie mehr zurueck;
 im File wird jedoch an die richtige Stelle gesprungen.
 
+Mon Nov 10 14:59:14 CET 1997
+Kontext-Menues fuer Stackframe: u.a. unleash
+                    Thread    : kill etc...

@@ -3,11 +3,11 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% some helpers
+%% some helpers to be used already in this file
+%% (prelude.oz not yet inserted here)
 
-S2A = String.toAtom  %% string to atom
 fun {VS2A X}         %% virtual string to atom
-   {S2A {VirtualString.toString X}}
+   {String.toAtom {VirtualString.toString X}}
 end
 
 
@@ -226,7 +226,7 @@ DeadThreadText
 
 ProcColor
 BuiltinColor
-OldStackColor
+DirtyColor
 
 UseColors = {And Tk.isColor Platform \= WindowsPlatform}
 
@@ -264,7 +264,7 @@ case UseColors then
    %% application trace window
    ProcColor               = '#0000c0'
    BuiltinColor            = '#c00000'
-   OldStackColor           = grey50
+   DirtyColor              = grey59
 else
    %% main window
    DefaultBackground       = white
@@ -297,7 +297,7 @@ else
    %% application trace window
    ProcColor               = black
    BuiltinColor            = black
-   OldStackColor           = black
+   DirtyColor              = black
 end
 
 
@@ -307,39 +307,38 @@ end
 
 ConfigVerbose              = false  %% debug messages in Emulator buffer?
 
-ConfigStepSystemProcedures = false  %% step on all system procedures (`...`)?
+ConfigStepDotBuiltin       = false  %% step on builtin '.'?
+ConfigStepNewNameBuiltin   = false  %% step on builtin 'NewName'?
 
-ConfigStepRecordBuiltin    = false  %% step on builtin 'record'  ?
-ConfigStepDotBuiltin       = false  %% step on builtin '.'       ?
-ConfigStepWidthBuiltin     = false  %% step on builtin 'width'   ?
-ConfigStepNewNameBuiltin   = false  %% step on builtin 'NewName' ?
-ConfigStepSetSelfBuiltin   = false  %% step on builtin 'setSelf' ?
+ConfigEnvSystemVariables   = false  %% show system variables in Env Windows?
 
-ConfigEnvSystemVariables   = true   %% filter system variables in Env Window?
-ConfigEnvProcedures        = false  %% filter procedures in Env Window?
+ConfigEnvPrintTypes        = true   %% use builtin printer (instead of
+				    %%   System.valueToVirtualString
 
 ConfigEmacsThreads         = true   %% default value of Emulator
 ConfigSubThreads           = true   %% dito
+
+ConfigUpdateEnv            = true   %% update env windows after each step?
+ConfigUseEmacsBar          = {Not {System.get standalone}} % use Emacs?
 
 Config =
 {New
  class
 
     attr
-       verbose :                   ConfigVerbose
+       verbose :               ConfigVerbose
 
-       stepSystemProcedures :      ConfigStepSystemProcedures
-       stepRecordBuiltin :         ConfigStepRecordBuiltin
-       stepDotBuiltin :            ConfigStepDotBuiltin
-       stepWidthBuiltin :          ConfigStepWidthBuiltin
-       stepNewNameBuiltin :        ConfigStepNewNameBuiltin
-       stepSetSelfBuiltin :        ConfigStepSetSelfBuiltin
+       stepDotBuiltin :        ConfigStepDotBuiltin
+       stepNewNameBuiltin :    ConfigStepNewNameBuiltin
 
-       envSystemVariables :        ConfigEnvSystemVariables
-       envProcedures :             ConfigEnvProcedures
+       envSystemVariables :    ConfigEnvSystemVariables
+       envPrintTypes :         ConfigEnvPrintTypes
 
-       emacsThreads :              {New Tk.variable tkInit(ConfigEmacsThreads)}
-       subThreads :                {New Tk.variable tkInit(ConfigSubThreads)}
+       emacsThreads :          {New Tk.variable tkInit(ConfigEmacsThreads)}
+       subThreads :            {New Tk.variable tkInit(ConfigSubThreads)}
+
+       updateEnv :             ConfigUpdateEnv
+       useEmacsBar :           ConfigUseEmacsBar
 
     meth init
        skip
@@ -347,8 +346,23 @@ Config =
 
     meth toggle(What)
        What <- {Not @What}
+       {OzcarMessage 'Config: setting `' # What #
+	'\' to value `' # {V2VS @What} # '\''}
        case What == verbose then
 	  {Emacs setVerbose(@What)}
+       elsecase What == envSystemVariables then
+	  {Ozcar PrivateSend(rebuildCurrentStack)}
+       elsecase What == updateEnv andthen @What == true then
+	  {Ozcar PrivateSend(What)}
+       else skip end
+    end
+
+    meth set(What Value)
+       {OzcarMessage 'Config: setting `' # What #
+	'\' to value `' # {V2VS Value} # '\''}
+       What <- Value
+       case What == envPrintTypes then
+	  {Ozcar PrivateSend(rebuildCurrentStack)}
        else skip end
     end
 
@@ -363,6 +377,10 @@ Config =
     end
 
  end init}
+
+proc {Ctoggle What}
+   {Config toggle(What)}
+end
 
 fun {Cget What}
    {Config get(What $)}

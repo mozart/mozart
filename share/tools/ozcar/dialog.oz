@@ -55,12 +55,7 @@ local
 	    CurComp <- C
 	    CurEnv  <- {Record.adjoinList env {Append AuxEnv.'G' AuxEnv.'Y'}}
 
-	    {C putEnv(\insert Base.env
-		      )}
-	    {C mergeEnv(\insert Standard.env
-		       )}
-	    {C mergeEnv(\insert Browser.env
-		       )}
+	    {C putEnv({{Compiler.getOPICompiler} getEnv($)})}
 	    {C mergeEnv(@CurEnv)}
 	    {C reset}
 
@@ -70,14 +65,14 @@ local
 	    C
 	 end
 
-	 proc {Dots W X}
+	 proc {Spinner W X}
 	    case {IsFree X} then
 	       S|Sr = @SlashList
 	    in
 	       {Delay 80}
 	       {W tk(conf text:S)}
 	       SlashList <- Sr
-	       {Dots W X}
+	       {Spinner W X}
 	    else skip end
 	 end
 
@@ -111,7 +106,7 @@ local
 		     end
 		  end
 		  {Thread.preempt {Thread.this}}
-		  {Dots self.Result Sync}
+		  {Spinner self.Result Sync}
 		  {self.Result tk(conf text:{V2VS R})}
 	       end
 	       EvalThread <- unit
@@ -133,10 +128,15 @@ local
 	       {Thread.terminate @EvalThread}
 	       EvalThread <- unit
 	    end
-	    {Thread.preempt {Thread.this}}
+	    {Delay 120}
 	    {self.Result tk(conf fg:DefaultForeground)}
 	    {self.Result tk(conf text:'')}
 	    %{self.Expr   tk(delete 0 'end')}
+	 end
+
+	 proc {Close}
+	    {Kill}
+	    {self tkClose}
 	 end
 
 	 TkTools.dialog,tkInit(master:  Master
@@ -145,9 +145,9 @@ local
 			       buttons: ['Eval'  # Eval
 					 'Exec'  # Exec
 					 'Reset' # Kill
-					 'Done'  # tkClose]
+					 'Done'  # Close]
 			       pack:    false
-			       default: 1)
+			       default: 1 /* <Return> calls `Eval' */)
 
 	 ExprLabel = {New Tk.label tkInit(parent: self
 					  width:  7
@@ -174,10 +174,15 @@ local
 	 self.Expr = ExprEntry
 	 self.Result = ResultEntry
 
+	 %% how to close the dialog
+	 {ExprEntry tkBind(event: '<Escape>'
+			   action: Close)}
 	 {ExprEntry tkBind(event: '<Control-x>'
-			   action: self # tkClose)}
+			   action: Close)}
+	 %% resetting (kill eval/exec thread)
 	 {ExprEntry tkBind(event: '<Control-r>'
 			   action: Kill)}
+	 %% exec statement
 	 {ExprEntry tkBind(event: '<Meta-Return>'
 			   action: Exec)}
 

@@ -27,11 +27,15 @@ local
    fun {FormatArgs A}
       {Map A
        fun {$ X}
-	  {ArgType X} # X
+	  case {Cget envPrintTypes} then
+	     {CheckType X} # X
+	  else
+	     {V2VS X} # X
+	  end
        end}
    end
 
-   fun {ArgType X}
+   fun {CheckType X}
       case {IsDet X} then
 	 case     {IsArray X}      then ArrayType
 	 elsecase {IsThread X}     then ThreadType
@@ -337,44 +341,56 @@ in
 	 end
       end
 
-      meth DoPrintEnv(Widget Vars CV CP)
+      meth updateEnv
+	 V = Gui,getEnv(unit $)
+      in
+	 Gui,PrintEnv(vars:V)
+      end
+
+      meth DoPrintEnv(Widget Vars SV)
 	 {ForAll Vars
 	  proc{$ V}
-	     AT = {ArgType V.2}
+	     Name # Value = V
+	     Print        = case {Cget envPrintTypes} then
+			       {CheckType Value}
+			    else
+			       {V2VS Value}
+			    end
 	  in
-	     case CV orelse {Atom.toString V.1}.1 \= &` then
-		case CP orelse AT \= ProcedureType then
-		   T  = {Widget newTag($)}
-		   Ac = {New Tk.action
-			 tkInit(parent: Widget
-				action: proc {$}
-					      {Browse V.2} LastClicked <- V.2
-					end)}
-		in
-		   {ForAll [tk(insert 'end' {PrintF ' ' # V.1 EnvVarWidth})
-			    tk(insert 'end' AT # '\n' T)
-			    tk(tag bind T '<1>' Ac)
-			    tk(tag conf T font:BoldFont)] Widget}
-		else skip end
+	     case SV orelse {Atom.toString Name}.1 \= &` then
+		T  = {Widget newTag($)}
+		Ac = {New Tk.action
+		      tkInit(parent: Widget
+			     action: proc {$}
+					{Browse Value} LastClicked <- Value
+				     end)}
+	     in
+		{ForAll [tk(insert 'end' {PrintF ' ' # Name EnvVarWidth})
+			 tk(insert 'end' Print # '\n' T)
+			 tk(tag bind T '<1>' Ac)
+			 tk(tag conf T font:BoldFont)] Widget}
 	     else skip end
 	  end}
       end
 
-      meth printEnv(frame:I vars:V<=unit)
-	 New in
-	 EnvSync <- New = unit
-	 thread
-	    {WaitOr New {Alarm TimeoutToUpdateEnv}}
-	    case {IsDet New} then skip else
-	       {OzcarMessage 'printing environment of frame #' # I}
-	       Gui,PrintEnv(frame:I vars:V)
+      meth printEnv(vars:V<=unit)
+	 case {Cget updateEnv} then
+	    New in
+	    EnvSync <- New = unit
+	    thread
+	       {WaitOr New {Alarm TimeoutToUpdateEnv}}
+	       case {IsDet New} then skip else
+		  Gui,PrintEnv(vars:V)
+	       end
 	    end
+	 else
+	    {self.LocalEnvText  tk(conf foreground:DirtyColor)}
+	    {self.GlobalEnvText tk(conf foreground:DirtyColor)}
 	 end
       end
 
-      meth PrintEnv(frame:I vars:V)
-	 CV  = {Not {Cget envSystemVariables}}
-	 CP  = {Not {Cget envProcedures}}
+      meth PrintEnv(vars:V)
+	 SV  = {Cget envSystemVariables}
 	 Y#G = case V == unit then
 		  nil # nil
 	       else
@@ -384,9 +400,12 @@ in
 	 Gui,Clear(self.LocalEnvText)
 	 Gui,Clear(self.GlobalEnvText)
 
+	 {self.LocalEnvText  tk(conf foreground:DefaultForeground)}
+	 {self.GlobalEnvText tk(conf foreground:DefaultForeground)}
+
 	 case V == unit then skip else
-	    Gui,DoPrintEnv(self.LocalEnvText  Y CV CP)
-	    Gui,DoPrintEnv(self.GlobalEnvText G CV CP)
+	    Gui,DoPrintEnv(self.LocalEnvText  Y SV)
+	    Gui,DoPrintEnv(self.GlobalEnvText G SV)
 	 end
 
 	 Gui,Disable(self.LocalEnvText)
@@ -413,12 +432,12 @@ in
 	    case Highlight then
 	       L = case F.line == unit then unit else {Abs F.line} end
 	    in
-	       {Emacs delayedBar(file:F.file line:L column:F.column)}
+	       {SendEmacs delayedBar(file:F.file line:L column:F.column)}
 	       Gui,SelectStackFrame(F.nr)
 	    else
 	       Gui,SelectStackFrame(0)
 	    end
-	    Gui,printEnv(frame:F.nr vars:Vars)
+	    Gui,printEnv(vars:Vars)
 	 else %% thread is running -- do nothing
 	    skip
 	 end
@@ -601,7 +620,7 @@ in
       end
 
       meth clearEnv
-	 Gui,printEnv(frame:0)
+	 Gui,printEnv
       end
 
       meth selectNode(I)
@@ -681,7 +700,7 @@ in
 	 [] inactive then
 	    {OzcarMessage 'deactivating stack'}
 	    {ForAll [tk(tag 'raise' StackTag)
-		     tk(tag conf StackTag foreground:OldStackColor)
+		     tk(tag conf StackTag foreground:DirtyColor)
 		    ] self.StackText}
 	 else skip end
       end
@@ -690,7 +709,7 @@ in
 	 Gui,UnselectStackFrame
 	 Gui,markNode({Thread.id T} running)
 	 Gui,markStack(inactive)
-	 {Emacs configureBar(running)}
+	 {SendEmacs configureBar(running)}
 	 case Frame.frameID of unit then
 	    {Dbg.unleash T 0}
 	 elseof FrameID then
@@ -814,7 +833,7 @@ in
 			Gui,doStatus('Unleashing thread #' # I #
 				     ' to frame ' #
 				     case LSF == 0 then 1 else LSF end)
-			{Emacs configureBar(running)}
+			{SendEmacs configureBar(running)}
 			{Thread.resume T}
 		     end
 		  end
@@ -841,7 +860,7 @@ in
 			   {Thread.suspend T}
 			   {ForAll [rebuild(true) print
 				    getPos(file:F line:L column:C)] Stack}
-			   {Emacs bar(file:F line:L column:C state:S)}
+			   {SendEmacs bar(file:F line:L column:C state:S)}
 			else
 			   {Stack rebuild(true)}
 			end
@@ -886,6 +905,25 @@ in
 	       end
 	    end
 	 end
+      end
+
+      meth toggleEmacs
+	 case {Cget useEmacsBar} then
+	    Gui,doStatus('Not using Emacs Bar')
+	    {Emacs removeBar}
+	 else
+	    Gui,doStatus('Using Emacs Bar')
+	 end
+	 {Ctoggle useEmacsBar}
+      end
+
+      meth toggleUpdateEnv
+	 case {Cget updateEnv} then
+	    Gui,doStatus('Turning auto update off')
+	 else
+	    Gui,doStatus('Turning auto update on')
+	 end
+	 {Ctoggle updateEnv}
       end
 
       meth Clear(Widget)
