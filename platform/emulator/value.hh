@@ -86,6 +86,7 @@ enum EntityCondFlags{
 
 typedef unsigned int EntityCond;
 
+// mm2: why defined here?
 #define DefaultThread ((Thread*)0x3)
 
 class EntityInfo{
@@ -704,13 +705,12 @@ public:
 
 class ConstTermWithHome: public ConstTerm {
 private:
-  TaggedPtr boardOrGName;
+  Tagged2 boardOrGName;
 
 protected:
   void setBoard(Board *b)
   {
-    boardOrGName.setPtr(b);
-    boardOrGName.setType(CWH_Board);
+    boardOrGName.set(b,CWH_Board);
   }
 public:
   ConstTermWithHome() { Assert(0); }
@@ -725,10 +725,9 @@ public:
   void gcConstTermWithHome();
   void setGName(GName *gn) { 
     Assert(gn);
-    boardOrGName.setPtr(gn);
-    boardOrGName.setType(CWH_GName);
+    boardOrGName.set(gn,CWH_GName);
   }
-  Bool hasGName() { return (boardOrGName.getType()&CWH_GName); }
+  Bool hasGName() { return (boardOrGName.getTag()&CWH_GName); }
   GName *getGName1() {
     return hasGName()?(GName *)boardOrGName.getPtr():(GName *)NULL;
   }
@@ -948,12 +947,12 @@ Bool oz_numberEq(TaggedRef a, TaggedRef b)
 
 class Tertiary: public ConstTerm {
 private:
-  TaggedPtr tagged; // TertType + Board || TertType + OTI
+  Tagged2 tagged; // TertType + Board || TertType + OTI
   EntityInfo* info;
 public:
 
-  TertType getTertType()       { return (TertType) tagged.getType(); }
-  void setTertType(TertType t) { tagged.setType((int) t); }
+  TertType getTertType()       { return (TertType) tagged.getTag(); }
+  void setTertType(TertType t) { tagged.set(tagged.getData(),(int) t); }
 
   NO_DEFAULT_CONSTRUCTORS(Tertiary);
   Tertiary(Board *b, TypeOfConst s,TertType t) : ConstTerm(s) {
@@ -1049,8 +1048,8 @@ public:
   Bool handlerExists(Thread *);
   Bool handlerExistsThread(Thread *);
   
-  void setIndex(int i) { tagged.setIndex(i); }
-  int getIndex() { return tagged.getIndex(); }
+  void setIndex(int i) { tagged.setVal(i); }
+  int getIndex() { return tagged.getData(); }
   void setPointer (void *p) { tagged.setPtr(p); }
   void *getPointer() { return tagged.getPtr(); }
 
@@ -2914,7 +2913,7 @@ public:
 class LockProxy:public OzLock{
 friend void ConstTerm::gcConstRecurse(void);
 private:
-  int holder;
+  int holder; // mm2: on alpha sizeof(int) != sizeof(void *)
   void *dummy; // mm2
 public:
   OZPRINT;
