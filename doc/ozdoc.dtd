@@ -114,12 +114,12 @@
 	| q       | span           | def        | name
 	| ref     | ptr            | ref.extern | ptr.extern
 	| var
-	| code    |    code.extern | code.annotated
+	| code    |    code.extern
 	| picture | picture.extern | picture.choice
 	| math    |    math.extern | math.choice
 	| list
 	| figure  | note
-	| table   | grammar.rule
+	| table   | grammar.rule   | grammar
 	%p.mix.local;
 ">
 <!ENTITY % p.chars.mix "#PCDATA|%p.mix;">
@@ -384,23 +384,18 @@
 
      CODE contains code text in a programming language which is either
      specified by the PROGLANG attribute, or inherited from a PROGLANG
-     attribute on an surrounding (ancestor) element. This code text is
-     just data and cannot e.g. contain embeded elements.
-
-     Sometimes we need code to contains annotations.  Since this is
-     not supported by CODE, we introduce CODE.ANNOTATED for that
-     purpose.  In addition to code text, it allows occurrences of the
-     VAR element.
+     attribute on an surrounding (ancestor) element.  This code may
+     contain embedded annotations in the form of VAR and SPAN
+     elements.
 
      CODE.EXTERN refers to code to be obtained from an external
      resource, e.g. a file.
 
   -->
-<!ELEMENT code		 - -    CDATA     >
-<!ELEMENT code.annotated - - (#PCDATA|var)*>
+<!ELEMENT code		 - - (#PCDATA|var|span)*>
 <!ELEMENT code.extern    - O EMPTY>
 
-<!ATTLIST (code|code.annotated)
+<!ATTLIST (code)
 	%common.attr;
 	%inline.attr;
 >
@@ -444,8 +439,7 @@
 
      Since mode annotations etc arise frequently in Oz documentation,
      we provide the abbreviations below; they ar legal as phrasal
-     elements and inside CODE.ANNOTATED, but, for example, not within
-     CODE which does not interpret its contents.
+     elements and inside CODE.
 
      ?+{X}	<var mode=in  >X</var>
      ??{X}	<var mode=out >X</var>
@@ -455,11 +449,11 @@
      ?_{X}	<var          >X</var>
      ?={X}	<var type=grammar>X</var>
 
-     Furthermore CODE.ANNOTATED is such a common element that it also
-     deserves an abbreviation.
+     Furthermore CODE is such a common element that it also deserves
+     an abbreviation.
 
-     <<...>>	<CODE.ANNOTATED>...</CODE.ANNOTATED>
-     <<<...>>>	<CODE.ANNOTATED DISPLAY>...</CODE.ANNOTATED>
+     <<...>>	<CODE>...</CODE>
+     <<<...>>>	<CODE DISPLAY>...</CODE>
 
   -->
 
@@ -479,8 +473,8 @@
 	'?@{'	var.start.cnin
 	'?_{'	var.start.any
 	'?={'	var.start.gram
-	'<<<'	code.start.annotated.display
-	'<<'	code.start.annotated.inline
+	'<<<'	code.start.display
+	'<<'	code.start.inline
 ">
 
 <!SHORTREF var.start.map
@@ -493,15 +487,15 @@
 <!USEMAP var.start.map		book>
 <!USEMAP var.end.map		var>
 
-<!ENTITY code.start.annotated.inline  STARTTAG "code.annotated">
-<!ENTITY code.start.annotated.display STARTTAG "code.annotated display">
-<!ENTITY code.end.annotated ENDTAG "code.annotated">
-<!SHORTREF code.annotated.map
+<!ENTITY code.start.inline  STARTTAG "code">
+<!ENTITY code.start.display STARTTAG "code display">
+<!ENTITY code.end ENDTAG "code">
+<!SHORTREF code.map
 	%var.start.map.def;
-	">>>" code.end.annotated
-	">>"  code.end.annotated
+	">>>" code.end
+	">>"  code.end
 >
-<!USEMAP code.annotated.map body>
+<!USEMAP code.map body>
 
 <!--==================== CROSS REFERENCES =========================-->
 <!--
@@ -714,10 +708,20 @@
 
   -->
 
-<!ELEMENT grammar.rule - O (var,grammar.alt+)>
+<!ELEMENT grammar.rule - O ((var|grammar.head),grammar.alt+)>
 <!ATTLIST grammar.rule
 	%common.attr;
 	%display.attr;
+>
+<!-- accepts more than just a VAR. this is because sometimes
+     you need grammar-like structure but with slightly different
+     conventions about what goes in the head: there could be
+     more than one symbol, or it could be something which is
+     not a grammar symbol, but e.g. a CODE element.
+  -->
+<!ELEMENT grammar.head - O (%p.chars.mix;)*>
+<!ATTLIST grammar.head
+	%common.attr;
 >
 <!ENTITY % grammar.type.values "def|add|or|space">
 <!ENTITY % grammar.type.default "#IMPLIED">
@@ -731,6 +735,10 @@
 >
 <!ELEMENT grammar.note - O (%p.chars.mix;)*>
 <!ATTLIST grammar.note
+	%common.attr;
+>
+<!ELEMENT grammar - O (grammar.rule)+>
+<!ATTLIST grammar
 	%common.attr;
 >
 
