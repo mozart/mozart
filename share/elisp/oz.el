@@ -3,8 +3,24 @@
 ;; Author: Ralf Scheidhauer and Michael Mehl ([scheidhr|mehl]@dfki.uni-sb.de)
 ;; $Id$
 
+;; BUGS
+;; - `/*' ... `*/' style comments are ignored for purposes of indentation
+;;   for reasons of nesting and line breaks.
+;; - Line breaks inside strings, quotes or backquote variables
+;;   are not allowed for auto-indent.
+;; - fontification does not work after character constants
+;;   such as in {Show &%} or {Show [&thread]}
+;; - in the fragment
+;;     {Show (X Y
+;;           in
+;;            Z)
+;;   trying to indent the line with the `in' raises an error
+;; - 10thread is not recognized as a keyword as it should be
+;;
 ;; TODO
-;; - state message: Should we use the mode-line ???
+;; - should we use the mode-line?
+;; - how about highlighting identifiers after proc, fun, class, meth
+;;   (as in lisp-mode after defun, defconst)?
 
 (require 'comint)
 (require 'compile)
@@ -107,7 +123,7 @@ starts the emulator under gdb")
   (let ((ret (getenv "OZHOME")))
     (if ret
 	ret
-      (message "OZHOME not set using fallback: %s" OZ-HOME)
+      (message "OZHOME not set, using fallback: %s" OZ-HOME)
       (setenv "OZHOME" OZ-HOME)
       OZ-HOME)))
 
@@ -228,7 +244,7 @@ starts the emulator under gdb")
 
 (defun oz-make-temp-name (name)
   "gensym implementation"
-  (setq oz-temp-counter (+ 1 oz-temp-counter))
+  (setq oz-temp-counter (1+ oz-temp-counter))
   (format "%s%d" (make-temp-name name) oz-temp-counter))
 
 (defun oz-line-pos ()
@@ -245,8 +261,34 @@ starts the emulator under gdb")
 ;; Fonts
 ;;------------------------------------------------------------
 
-(defun oz-set-fontlock-keywords ()
-  (setq font-lock-keywords (list oz-keywords)))
+(defconst oz-keywords
+  '("declare" "local" "in" "end"
+    "proc" "fun"
+    "case" "then" "else" "of" "elseof" "elsecase"
+    "class" "from" "prop" "attr" "feat" "meth" "self"
+    "true" "false" "unit"
+    "div" "mod" "andthen" "orelse"
+    "if" "elseif" "or" "dis" "choice" "condis" "not"
+    "thread" "try" "catch" "finally" "raise" "with" "lock"
+    "skip" "fail"))
+
+(defconst oz-keywords-matcher-1
+  (concat "^\\(" (mapconcat 'identity oz-keywords "\\|") "\\)\\>"))
+
+;; This regular expression ensures that directives such as \else
+;; are not formatted as keywords.
+(defconst oz-keywords-matcher-2
+  (concat "[^\\A-Za-z0-9_]\\("
+	  (mapconcat 'identity oz-keywords "\\|") "\\)\\>"))
+
+(defconst oz-keywords-matcher-3
+  "[.#!:@,]\\|\\[\\]")
+
+(defun oz-set-font-lock-keywords ()
+  (setq font-lock-keywords
+	(list oz-keywords-matcher-1
+	      (cons oz-keywords-matcher-2 1)
+	      oz-keywords-matcher-3)))
 
 ;;------------------------------------------------------------
 ;; Menus
@@ -372,20 +414,6 @@ starts the emulator under gdb")
 (oz-make-menu oz-menu)
 
 ;;------------------------------------------------------------
-;; Profiler stuff
-;;------------------------------------------------------------
-
-(defun oz-profiler-start ()
-  "Start the profiler."
-  (interactive)
-  (oz-send-string "{Profiler on}"))
-
-(defun oz-profiler-stop ()
-  "Stop the profiler."
-  (interactive)
-  (oz-send-string "{Profiler off}"))
-
-;;------------------------------------------------------------
 ;; Debugger stuff
 ;;------------------------------------------------------------
 
@@ -418,7 +446,7 @@ starts the emulator under gdb")
       (oz-send-string (concat "{Ozcar bpAt('"
 			      (buffer-file-name)
 			      "' "
-			      (count-lines (point-min) (+ (point) 1))
+			      (count-lines (point-min) (1+ (point)))
 			      flag
 			      ")}"))
     (message oz-breakpoint-error)))
@@ -453,7 +481,7 @@ starts the emulator under gdb")
 (make-face 'bar-runnable)
 (make-face 'bar-blocked)
 
-(let ((planes (x-display-planes)))
+(let ((planes (if (eq window-system 'x) (x-display-planes) 1)))
   (modify-face 'bar-running      "white"
 	       (if (eq planes 1) "black" "#b0b0b0")
 	       nil nil nil nil)
@@ -482,7 +510,7 @@ starts the emulator under gdb")
 	  (widen)
 	  (setq oldpos (point))
 	  (goto-line line) (setq beg (point))
-	  (end-of-line)    (setq end (+ (point) 1))
+	  (end-of-line)    (setq end (1+ (point)))
 	  
 	  (or bar-overlay (setq bar-overlay (make-overlay beg end)))
 	  (move-overlay bar-overlay beg end (current-buffer))
@@ -510,6 +538,20 @@ starts the emulator under gdb")
 		      'bar-blocked))))
 
 ;;------------------------------------------------------------
+;; Profiler stuff
+;;------------------------------------------------------------
+
+(defun oz-profiler-start ()
+  "Start the profiler."
+  (interactive)
+  (oz-send-string "{Profiler on}"))
+
+(defun oz-profiler-stop ()
+  "Stop the profiler."
+  (interactive)
+  (oz-send-string "{Profiler off}"))
+
+;;------------------------------------------------------------
 ;; Start/Stop oz
 ;;------------------------------------------------------------
 
@@ -528,7 +570,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 (defun oz-halt (force)
   (interactive "P")
 
-  (message "halting Oz...")
+  (message "Halting Oz ...")
   (if (get-buffer "*Oz Temp*") (kill-buffer "*Oz Temp*"))
   (if (and (get-buffer-process oz-compiler-buffer)
 	   (or oz-win32 (get-buffer-process oz-emulator-buffer)))
@@ -657,7 +699,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
       (setenv "OZPLATFORM" "sunos-sparc"))
     (if (getenv "OZHOME")
 	t
-      (message "no OZHOME using fallback: %s" OZ-HOME)
+      (message "OZHOME not set, using fallback: %s" OZ-HOME)
       (setenv "OZHOME" OZ-HOME))
     (setenv "OZPATH" 
 	    (concat (or (getenv "OZPATH") ".") ":"
@@ -748,7 +790,7 @@ the GDB commands `cd DIR' and `directory'."
   "Feeds the region."
   (interactive "r")
   (oz-send-string (concat "\\line "
-			  (+ 1 (count-lines (point-min) start))
+			  (1+ (count-lines (point-min) start))
 			  " '"
 			  (if (buffer-file-name)
 			      (buffer-file-name)
@@ -815,7 +857,7 @@ the GDB commands `cd DIR' and `directory'."
 )
 
 ;;------------------------------------------------------------
-;;Indent
+;; Indent
 ;;------------------------------------------------------------
 
 (defun oz-make-keywords-for-match (args)
@@ -823,68 +865,71 @@ the GDB commands `cd DIR' and `directory'."
 	  (mapconcat 'identity args "\\|")
 	  "\\)\\>"))
 
-(defconst oz-keywords
-   (concat
-    (oz-make-keywords-for-match
-     '(
-       "proc" "fun" "local" "declare" "in" "end"
-       "if" "or" "dis" "choice" "case" "then" "andthen" "orelse" 
-       "else" "elseif" "of" "elseof" "elsecase"
-       "class" "from" "with" "self"
-       "attr" "feat" "prop" "meth" 
-       "true" "false" "unit"
-       "div" "mod" 
-       "condis" "not"
-       "thread" "try" "catch" "raise" "lock" "finally" "skip" "fail"
-       ))
-    "\\|\\.\\|\\[\\]\\|#\\|!\\|:\\|\\@\\|\\,"
-    ))
-
-(defconst oz-declare-pattern (oz-make-keywords-for-match '("declare")))
+(defconst oz-declare-pattern
+  (oz-make-keywords-for-match '("declare")))
 
 (defconst oz-begin-pattern
-      (oz-make-keywords-for-match 
-	         '(
-		   "proc" "fun" "try"
-		   "local"
-		   "if" "or" "dis" "choice" "case"
-		   "class" "meth"
-		   "not" "thread" "lock"
-		   "condis" "thread" "raise"
-		   )))
-
-(defconst oz-left-pattern "[[({]")
-(defconst oz-right-pattern "[])}]")
-
-(defconst oz-end-pattern
-      (oz-make-keywords-for-match '("end")))
+  (oz-make-keywords-for-match 
+   '("local"
+     "proc" "fun"
+     "case"
+     "class" "meth"
+     "if" "or" "dis" "choice" "condis" "not"
+     "thread" "try" "raise" "lock")))
 
 (defconst oz-between-pattern 
-      (concat (oz-make-keywords-for-match
-	       '("from" "attr" "feat" "prop" "with"
-		 ))))
+  (oz-make-keywords-for-match '("from" "prop" "attr" "feat")))
 
 (defconst oz-middle-pattern 
   (concat (oz-make-keywords-for-match
-	   '(
-	     "in" "then" "else" "elseif" "of" "elseof" "elsecase"
-	     "catch" "finally"
-	     ))
+	   '("in"
+	     "then" "else" "of" "elseof" "elsecase"
+	     "elseif"
+	     "catch" "finally" "with"))
 	  "\\|" "\\[\\]"))
 
-(defconst oz-feat-end-pattern
-  ":[ \t]*")
+(defconst oz-end-pattern
+  (oz-make-keywords-for-match '("end")))
+
+(defconst oz-left-pattern
+  "[[({]")
+(defconst oz-right-pattern
+  "[])}]")
+(defconst oz-left-or-right-pattern
+  (concat oz-left-pattern "\\|" oz-right-pattern))
 
 (defconst oz-key-pattern
-      (concat oz-declare-pattern "\\|" oz-begin-pattern "\\|"
-	      oz-between-pattern "\\|"
-	      oz-left-pattern "\\|" oz-right-pattern "\\|"
-	      oz-middle-pattern "\\|" oz-end-pattern
-	      ))
+  (concat oz-declare-pattern "\\|" oz-begin-pattern "\\|"
+	  oz-between-pattern "\\|" oz-middle-pattern "\\|"
+	  oz-end-pattern "\\|" oz-left-or-right-pattern))
+
+;; Note: The following do not allow for newlines inside quoted tokens
+;; to make matching easier ...
+;; Furthermore, `/*' ... `*/' style comments are not included here
+;; because of the problems of nesting and line breaks.
+(defconst oz-string-pattern
+  "\"\\([^\"\C-@\\\n]\\|\\\\.\\)*\"")
+(defconst oz-atom-pattern
+  "'\\([^'\C-@\\\n]\\|\\\\.\\)*'")
+(defconst oz-variable-pattern
+  "`\\([^`\C-@\\\n]\\|\\\\.\\)*`")
+(defconst oz-char-pattern
+  "&\\([^\C-@\\\n]\\|\\\\.\\)")
+(defconst oz-comment-pattern
+  "%.*")
+(defconst oz-quoted-pattern
+  (concat oz-string-pattern "\\|" oz-atom-pattern "\\|"
+	  oz-variable-pattern "\\|" oz-char-pattern "\\|"
+	  oz-comment-pattern))
+
+(defconst oz-directive-pattern
+  "\\\\[a-zA-Z]+\\>")
+
+;;------------------------------------------------------------
 
 (defun oz-indent-buffer ()
   (interactive)
-  (goto-char 0)
+  (goto-char (point-min))
   (while (< (point) (point-max))
     (oz-indent-line t)
     (forward-line 1)))
@@ -925,8 +970,8 @@ the GDB commands `cd DIR' and `directory'."
       (setq case-fold-search old-cc))))
 
 ;; calculate the indent column (<0 means: don't change)
-;; pre: point is at beginning of text
-;; arg: no-empty-line: t = do not indent empty lines and comment lines
+;; pre: point is at the first non-blank character in the line to indent
+;; arg: no-empty-line = t: do not indent empty lines
 (defun oz-calc-indent (no-empty-line)
   (cond ((and no-empty-line (oz-is-empty))
 	  ;; empty lines are not changed
@@ -961,11 +1006,11 @@ the GDB commands `cd DIR' and `directory'."
 	     (setq col (oz-search-matching-begin t))
 	     (if (< col 0)
 		 (cond ((= col -1)
-			(setq ret col))
+			(setq ret -1))
 		       ((= col -3) ;; start of file
 			(setq ret 0))
 		       ;; previous block begin found:
-		       ;; check if is first in column
+		       ;; check if is first in line
 		       ((= col -2)
 			(let ((found-col (current-column))
 			      first-col)
@@ -981,15 +1026,12 @@ the GDB commands `cd DIR' and `directory'."
 		      (setq ret (oz-indent-after-paren)))
 		     ((looking-at oz-begin-pattern)
 		      (setq ret (+ (current-column) oz-indent-chars)))
-		     ((= (point) 1)
+		     ((= (point) (point-min))
 		      (setq ret 0))
 		     (t
 		      (error "mm2: never be here")
 		      (setq ret (+ (current-column) oz-indent-chars))))))
 	   ret))
-	((looking-at ",")
-	 (search-backward "," nil t)
-	 (current-column))
 	(t (oz-calc-indent1))
 	)
   )
@@ -997,12 +1039,8 @@ the GDB commands `cd DIR' and `directory'."
 ;; the heavy case
 ;; backward search for the next oz-key-pattern
 (defun oz-calc-indent1 ()
-  (if (re-search-backward
-       (concat oz-key-pattern 
-;mm2	       "\\|" "^[ \t]*[^ \t\n]"
-	       )
-       0 t)
-      (cond ((oz-comment-start)
+  (if (re-search-backward oz-key-pattern nil t)
+      (cond ((or (oz-is-quoted) (oz-is-directive))
 	     (oz-calc-indent1))
 	    ((looking-at oz-declare-pattern)
 	     (current-column))
@@ -1020,26 +1058,25 @@ the GDB commands `cd DIR' and `directory'."
 	     (let ((col (current-column)))
 	       (goto-char (match-end 0))
 	       (if (oz-is-right)
-		   (+ col 2)
-		 (re-search-forward "[^ \t]")
+		   (1+ col)
+		 (re-search-forward "[^ \t]" nil t)
 		 (1- (current-column)))))
 	    ((looking-at oz-middle-pattern)
-	     ;; we are the first token after 'then of'
+	     ;; we are the first token after 'then' 'of' ...
 	     (let ((col (oz-search-matching-begin nil)))
 	       (if (< col 0)
 		   -1
 		 (+ col oz-indent-chars))))
 	    ((looking-at oz-between-pattern)
-	     ;; we are the first token after 'attr feat'
+	     ;; we are the first token after 'attr' 'feat' ...
 	     (+ (current-column) oz-indent-chars))
 	    ((looking-at oz-end-pattern)
-	     ;; we are the first token after an 'fi' 'end'
+	     ;; we are the first token after an 'end'
 	     (oz-search-matching-begin nil)
 	     (oz-calc-indent1)
-	     ;; (current-column)
 	     )
 	    ((looking-at oz-right-pattern)
-	     ;; we are the first token after an ')' '}'
+	     ;; we are the first token after ')' '}' ...
 	     (oz-search-matching-paren)
 	     (oz-calc-indent1)
 	     )
@@ -1053,15 +1090,16 @@ the GDB commands `cd DIR' and `directory'."
   )
 
 ;; check for record fields with seperate line for feature and value
-;;  f( arity:
-;;        myarity)
+;;    label(feature:
+;;             value)
+;; if yes, move point to the ":"
 (defun oz-is-field-value ()
   (let ((old (point)))
-    (skip-chars-backward " \t\n")
-    (if (= (point) 1)
+    (skip-chars-backward "? \n\t\r\v\f")
+    (if (= (point) (point-min))
 	t
       (backward-char))
-    (if (and (looking-at ":") (null (oz-comment-start)))
+    (if (and (looking-at ":") (not (oz-is-quoted)))
 	t
       (goto-char old)
       nil)))
@@ -1071,14 +1109,50 @@ the GDB commands `cd DIR' and `directory'."
   (let ((col (current-column)))
     (forward-char)
     (if (oz-is-right)
-	(+ col 2)
-      (re-search-forward "[^ \t]")
+	(1+ col)
+      (re-search-forward "[^ \t]" nil t)
       (1- (current-column)))))
 
-(defun oz-comment-start ()
+;; predicate whether the point is quoted (i.e., inside a string, quoted atom,
+;; backquote variable, ampersand-denoted character or one-line comment);
+;; if yes, the point is moved to the beginning of the corresponding token
+;; as side-effect
+(defun oz-is-quoted ()
+  (let ((ret nil) (p (point)) cont-point)
+    (beginning-of-line)
+    (while (and (not ret)
+		(prog1
+		    (re-search-forward "[\"'`&%]\\|$" nil t)
+		  (setq cont-point (match-end 0))
+		  (goto-char (match-beginning 0)))
+		(< (point) p))
+      (cond ((looking-at oz-quoted-pattern)
+	     (let ((quote-end (match-end 0)))
+	       (if (< p quote-end)
+		   (setq ret t)
+		 (goto-char quote-end))))
+	    ((looking-at "\"")
+	     (error
+	      "Illegal string syntax or unterminated string"))
+	    ((looking-at "'")
+	     (error
+	      "Illegal atom syntax or unterminated quoted atom"))
+	    ((looking-at "`")
+	     (error
+	      "Illegal variable syntax or unterminated backquote variable"))
+	    (t (goto-char cont-point))))
+    (if (not ret) (goto-char p))
+    ret))
+
+;; predicate whether the point is inside a directive and at the first
+;; character after the backslash;
+;; if yes, the point is moved to the backslash as side-effect
+(defun oz-is-directive ()
   (let ((p (point)))
-    (re-search-backward "%\\|^" (point-min) t)
-    (if (looking-at "%")
+    (if (= p (point-min))
+	t
+      (backward-char))
+    (if (looking-at oz-directive-pattern)
 	t
       (goto-char p)
       nil)))
@@ -1089,22 +1163,18 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-is-left ()
   (save-excursion
     (skip-chars-backward " \t")
-    (if (= (current-column) 0)
-	t
-      nil)))
+    (= (current-column) 0)))
 
 (defun oz-is-right ()
-  (if (looking-at "[ \t]*$")
-      t
-    nil))
+  (looking-at "[ \t]*$"))
 
 (defun oz-search-matching-begin (search-paren)
   (let ((ret nil)
 	(nesting 0)
 	(second-nesting nil))
     (while (not ret)
-      (if (re-search-backward oz-key-pattern 0 t) 
-	  (cond ((oz-comment-start)
+      (if (re-search-backward oz-key-pattern nil t)
+	  (cond ((or (oz-is-quoted) (oz-is-directive))
 		 t)
 		((looking-at oz-declare-pattern)
 		 (setq ret (current-column)))
@@ -1119,7 +1189,7 @@ the GDB commands `cd DIR' and `directory'."
 		 ;; '('
 		 (if (and search-paren (= nesting 0))
 		     (setq ret (current-column))
-		   (message "unbalanced open paren.")
+		   (message "Unbalanced open parenthesis")
 		   (setq ret -1)))
 		((looking-at oz-middle-pattern)
 		 ;; 'then' '[]'
@@ -1135,20 +1205,22 @@ the GDB commands `cd DIR' and `directory'."
 		 (oz-search-matching-paren))
 		(t (error "mm2: beg"))
 		)
-	(goto-char 1)
+	(goto-char (point-min))
 	(if (= nesting 0)
 	    (setq ret -3)
-	  (message "no matching begin token")
+	  (message "No matching begin token")
 	  (setq ret -1))))
     ret))
 
+;; skip backwards until point is at the next opening parenthesis,
+;; skipping matched pairs of parentheses;
+;; return the column of the matching parenthesis
 (defun oz-search-matching-paren ()
   (let ((do-loop t)
 	(nesting 0))
     (while do-loop
-      (if (re-search-backward (concat oz-left-pattern "\\|" oz-right-pattern)
-			      0 t) 
-	  (cond ((oz-comment-start)
+      (if (re-search-backward oz-left-or-right-pattern nil t)
+	  (cond ((oz-is-quoted)
 		 t)
 		((looking-at oz-left-pattern)
 		 ;; '('
@@ -1160,7 +1232,7 @@ the GDB commands `cd DIR' and `directory'."
 		 (setq nesting (+ nesting 1)))
 		(t (error "mm2: paren"))
 		)
-	(message "no matching open paren")
+	(message "No matching open parenthesis")
 	(setq do-loop nil))))
   (current-column))
 
@@ -1168,12 +1240,13 @@ the GDB commands `cd DIR' and `directory'."
 ;; oz-mode
 ;;------------------------------------------------------------
 
-;(setq oz-mode-syntax-table nil)
+;; Use this for testing modifications to the syntax table:
+;;    (setq oz-mode-syntax-table nil)
 (if oz-mode-syntax-table
     ()
   (let ((table (make-syntax-table)))
     (modify-syntax-entry ?_ "w" table)
-    (modify-syntax-entry ?\\ "w" table)
+    (modify-syntax-entry ?\\ "/" table)
     (modify-syntax-entry ?+ "." table)
     (modify-syntax-entry ?- "." table)
     (modify-syntax-entry ?= "." table)
@@ -1202,8 +1275,6 @@ the GDB commands `cd DIR' and `directory'."
   (setq paragraph-ignore-fill-prefix t)
   (make-local-variable 'fill-paragraph-function)
   (setq fill-paragraph-function 'oz-fill-paragraph)
-;  (make-local-variable 'auto-fill-function)
-;  (setq auto-fill-function 'oz-auto-fill)
   (make-local-variable 'indent-line-function)
   (setq indent-line-function 'oz-indent-line)
   (make-local-variable 'comment-start)
@@ -1214,6 +1285,8 @@ the GDB commands `cd DIR' and `directory'."
   (setq comment-start-skip "/\\*+ *\\|% *")
   (make-local-variable 'parse-sexp-ignore-comments)
   (setq parse-sexp-ignore-comments t)
+  (make-local-variable 'words-include-escapes)
+  (setq words-include-escapes t)
   (set (make-local-variable 'compilation-last-buffer)
        (get-buffer-create oz-compiler-buffer))
 )
@@ -1253,7 +1326,6 @@ the GDB commands `cd DIR' and `directory'."
 
     (define-key map "\C-c\C-f\C-r" 'oz-profiler-start)
     (define-key map "\C-c\C-f\C-h" 'oz-profiler-stop)
-
     )
 
   (define-key map "\M-\C-x"	'oz-feed-paragraph)
@@ -1305,7 +1377,7 @@ if that value is non-nil."
    (set-buffer-menubar (oz-insert-menu oz-menubar current-menubar)))
 
   ; font lock stuff
-  (oz-set-fontlock-keywords)
+  (oz-set-font-lock-keywords)
   (if (and oz-want-font-lock (oz-window-system))
       (font-lock-mode 1))
   (run-hooks 'oz-mode-hook))
@@ -1354,7 +1426,7 @@ and initial semicolons."
 	    (skip-chars-forward "^%\n\\\\")
 	    (cond
 	     ((eq (char-after (point)) ?\\) (forward-char 2))))
-	  (looking-at "%+[\t ]*"))
+	  (looking-at "%+[ \t]*"))
 	(setq has-comment t)
 	(setq comment-fill-prefix
 	      (concat (make-string (current-column) ? )
@@ -1386,11 +1458,6 @@ and initial semicolons."
 	      (fill-prefix comment-fill-prefix))
 	  (fill-paragraph justify))))
     t))
-
-;; oz auto fill not impl (mm)
-;(defun oz-auto-fill ()
-;  (let ((start (oz-comment-start)))
-;  (message "Oz auto fill: not implemented"))
 
 ;;------------------------------------------------------------
 ;; Fontification
@@ -1706,7 +1773,7 @@ OZ compiler, emulator and error window")
 
 (defun oz-insert-file (file)
   "Insert an file into the Oz Compiler"
-    (oz-send-string (concat "\\threadedfeed '" file "'")))
+  (oz-send-string (concat "\\threadedfeed '" file "'")))
 
 (defun oz-precompile-file (file)
   "precompile an Oz file"
@@ -1721,8 +1788,8 @@ OZ compiler, emulator and error window")
 	       oz-doc-dir
 	       nil t)))
     (if (file-exists-p name)
-	(start-process "OZ Doc" "*Preview*" oz-preview name)
-      (error "file %s doesn't exist" name))))
+	(start-process "Oz Doc" "*Preview*" oz-preview name)
+      (error "File %s does not exist" name))))
 
 (defun oz-find-docu-file ()
   "find a text in the doc directory"
@@ -1840,7 +1907,7 @@ With argument, do it that many times. Negative ARG means backwards."
     (goto-char pos)
     (if found
 	t
-      (error "Unbalanced OZ expression"))))
+      (error "Unbalanced Oz expression"))))
 
 
 (defun backward-oz-expr (&optional arg)
@@ -1885,7 +1952,7 @@ With argument, do it that many times. Argument must be positive."
     (goto-char pos)
     (if found
 	t
-      (error "Unbalanced OZ expression"))))
+      (error "Unbalanced Oz expression"))))
 
 
 
@@ -1974,7 +2041,7 @@ Negative arg -N means kill N OZ expressions after the cursor."
 	      (setq lineno (car (read-from-string 
 				 (buffer-substring
 				  posy (match-end 0)))))
-	    (error "error format not recognized"))
+	    (error "Error format not recognized"))
 	  (if (setq posx (search-forward "in file" limit t))
 	      (setq file (car (read-from-string 
 			       (buffer-substring posx limit)))))
@@ -1988,7 +2055,7 @@ Negative arg -N means kill N OZ expressions after the cursor."
 	  (setq oz-next-error-marker (point-marker))
 	  (list error-marker file lineno column))
       (goto-char (point-max))
-      (message "no next error")
+      (message "No next error")
       (sit-for 1)
       nil)))
 
@@ -2012,7 +2079,7 @@ Negative arg -N means kill N OZ expressions after the cursor."
 			     (buffer-substring posx limit))))
 	  (forward-line 1)
 	  (list error-marker file lineno))
-      (message "no file/line info found")
+      (message "No file and line information found")
       (sit-for 1)
       nil)))
 
@@ -2050,7 +2117,7 @@ line."
        (t (error "No compilation found")))
       (setq error-data (fetch-next-error-data))
       (switch-to-buffer-other-window old-buffer))
-     (t (error "no Oz compiler buffer found")))
+     (t (error "No Oz compiler buffer found")))
     (and error-data
 	 (let ((errfile (car (cdr error-data)))
 	       (line (nth 1 (cdr error-data)))
