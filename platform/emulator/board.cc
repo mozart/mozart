@@ -62,10 +62,9 @@ Board::Board()
   : suspCount(0), dist(0),
     crt(0), suspList(0), nonMonoSuspList(0),
     status(taggedVoidValue), rootVar(taggedVoidValue),
-    script(taggedVoidValue)
+    script(taggedVoidValue), parent(NULL), flags(BoTag_Root)
 {
   optVar = makeTaggedVar(new OptVar(this));
-  parentAndFlags.set((void *) 0, (int) BoTag_Root);
   lpq.init();
 }
 
@@ -73,13 +72,12 @@ Board::Board()
 Board::Board(Board * p)
   : suspCount(0), dist(0),
     crt(0), suspList(0), nonMonoSuspList(0),
-    script(taggedVoidValue)
+    script(taggedVoidValue), parent(p), flags(0)
 {
   Assert(!p->isCommitted());
   status  = oz_newFuture(p);
   optVar = makeTaggedVar(new OptVar(this));
   rootVar = makeTaggedRef(newTaggedOptVar(optVar));
-  parentAndFlags.set((void *) p, 0);
   lpq.init();
 #ifdef CS_PROFILE
   orig_start  = (int32 *) NULL;
@@ -560,17 +558,17 @@ Bool Board::install(void) {
     Board * s;
 
     for (s = frm; !s->isRoot(); s=s->getParent()) {
-      Assert(!s->hasMarkOne());
-      s->setMarkOne();
+      Assert(!s->hasMark());
+      s->setMark();
     }
-    Assert(!s->hasMarkOne());
-    s->setMarkOne();
+    Assert(!s->hasMark());
+    s->setMark();
   }
 
   // Step 2: Find ancestor
   Board * ancestor = this;
 
-  while (!ancestor->hasMarkOne())
+  while (!ancestor->hasMark())
     ancestor = ancestor->getParent();
 
   // Step 3: Deinstall from "frm" to "ancestor", also purge marks
@@ -578,8 +576,8 @@ Bool Board::install(void) {
     Board * s = frm;
 
     while (s != ancestor) {
-      Assert(s->hasMarkOne());
-      s->unsetMarkOne();
+      Assert(s->hasMark());
+      s->unsetMark();
       s->setScript(trail.unwind(s));
       s=s->getParent();
       am.setCurrent(s, s->getOptVar());
@@ -589,11 +587,11 @@ Bool Board::install(void) {
 
     // Purge remaining marks
     for ( ; !s->isRoot() ; s=s->getParent()) {
-      Assert(s->hasMarkOne());
-      s->unsetMarkOne();
+      Assert(s->hasMark());
+      s->unsetMark();
     }
-    Assert(s->hasMarkOne());
-    s->unsetMarkOne();
+    Assert(s->hasMark());
+    s->unsetMark();
 
   }
 
@@ -616,8 +614,8 @@ void Board::setGlobalMarks(void) {
 
   while (!b->isRoot()) {
     b = b->getParentInternal();
-    Assert(!b->hasMarkOne());
-    b->setMarkOne();
+    Assert(!b->hasMark());
+    b->setMark();
   }
 
 }
@@ -631,8 +629,8 @@ void Board::unsetGlobalMarks(void) {
 
   while (!b->isRoot()) {
     b = b->getParentInternal();
-    Assert(b->hasMarkOne());
-    b->unsetMarkOne();
+    Assert(b->hasMark());
+    b->unsetMark();
   }
 
 }

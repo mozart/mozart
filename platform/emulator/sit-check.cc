@@ -96,7 +96,7 @@ static ScStack scStack;
  * Test whether a space is good
  *
  */
-#define ISGOOD(space) ((space)->hasMarkOne())
+#define ISGOOD(space) ((space)->hasMark())
 
 /*
  * Main routine
@@ -123,14 +123,14 @@ void Board::checkSituatedness(TaggedRef * x, TaggedRef *f,TaggedRef *b) {
   scStack.init();
 
   setGlobalMarks();
-  setMarkOne();
+  setMark();
 
   checkSituatedBlock(x,1);
 
   scStack.check();
 
   unsetGlobalMarks();
-  unsetMarkOne();
+  unsetMark();
 
   scTrail.unwind();
 

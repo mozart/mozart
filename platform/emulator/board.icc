@@ -233,14 +233,12 @@ oz_BFlag oz_isBetween(Board * to, Board * varHome) {
       return B_NOT_BETWEEN;
     }
 
-    Assert(!s->hasMarkOne() && !s->hasMarkTwo());
+    Assert(!s->hasMark() && !s->cacIsMarked());
 
-    register int t = s->getTag();
-
-    if (t == BoTag_Failed)
+    if (s->isFailed())
       return B_DEAD;
 
-    Assert(t != BoTag_Root);
+    Assert(!s->isRoot());
 
     s = s->getParentInternal();
 
@@ -367,16 +365,10 @@ Bool Board::cacIsAlive(void) {
   Board * s = this;
 
   do {
-    int t = s->getTag();
-
-    if (t & (BoTag_MarkOne | BoTag_MarkTwo))
+    if (s->hasMark() || s->cacIsMarked() || s->isRoot())
       return OK;
 
-    if (t == BoTag_Root) {
-      return OK;
-    }
-
-    if (t == BoTag_Failed) {
+    if (s->isFailed()) {
       return NO;
     }
 
