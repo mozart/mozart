@@ -214,6 +214,17 @@ GenHashNode *GenHashTable::htFindFirst(int bigIndex){
     try0=try0->next;}
   return NULL;}
 
+GenHashNode *GenHashTable::getByIndex(int &i){
+  while(TRUE){
+    if(!table[i].isEmpty()) break;
+    i++;
+    if(i>=tableSize) return NULL;}
+  return &table[i];}
+
+GenHashNode *GenHashTable::getFirst(int &i){
+  i=0;
+  return getByIndex(i);}
+
 GenHashNode *GenHashTable::htFindNext(GenHashNode *try0,int bigIndex){
   Assert(try0!=NULL);
   try0=try0->next;
@@ -221,6 +232,12 @@ GenHashNode *GenHashTable::htFindNext(GenHashNode *try0,int bigIndex){
     if(try0->key==bigIndex) {return try0;}
     try0=try0->next;}
   return NULL;}
+
+GenHashNode *GenHashTable::getNext(GenHashNode *ghn,int &i){
+  if(ghn->next!=NULL) return ghn->next;
+  i++;
+  return getByIndex(i);}
+
 
 #ifdef DEBUG_PERDIO
 void GenHashTable::printStatistics(){

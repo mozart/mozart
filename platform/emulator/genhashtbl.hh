@@ -107,9 +107,6 @@ protected:
     entry=from->entry;}
 
 public:
-  void makeEmptyForRS() {makeEmpty();} /* RSTODO */
-  Bool isEmptyForRS() {return isEmpty();} /* RSTODO */
-
   void setNext(GenHashNode *n){next=n;}
   GenHashNode *getNext(){return next;}
   GenHashBaseKey *getBaseKey(){return basekey;}
@@ -152,6 +149,7 @@ protected:
   void rehash(GenHashNode *,int);
   void resize();
   void calc_percents();
+  GenHashNode* getByIndex(int&);
 
 public:
   void compactify();
@@ -163,6 +161,8 @@ public:
   void htAdd(int,GenHashBaseKey*,GenHashEntry*);
   void htSub(int,GenHashNode*);
   GenHashNode* htFindFirst(int);
+  GenHashNode* getFirst(int&);
+  GenHashNode* getNext(GenHashNode*,int&);
   GenHashNode* htFindNext(GenHashNode*,int);
   GenHashBaseKey *htGetBaseKey(int i) {return table[i].getBaseKey();}
   GenHashEntry *htGetEntry(int i) {return table[i].getEntry();}
