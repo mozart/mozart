@@ -85,6 +85,7 @@ extern "C" int dlclose(void *);
 
 #ifdef WINDOWS
 #include <time.h>
+#include <ctype.h>
 #ifdef _MSC_VER
 #include <io.h>
 #else
