@@ -1183,7 +1183,7 @@ void GenCVariable::gc(void)
     FDPROFILE_GC(cp_size_boolvar, sizeof(GenBoolVariable));
     break;
   case AVAR:
-    ((AVar *) this)->gc();
+    ((AVar *) this)->gcAVar();
     break;
   case DVAR:
     ((DVar *) this)->gcDVar();
@@ -1311,12 +1311,12 @@ void AorDVar::gcADVar(void)
 
 void AVar::gcAVar(void)
 {
-  AorDVar::gc();
+  gcADVar();
 }
 
 void DVar::gcDVar(void)
 {
-  AorDVar::gc();
+  gcADVar();
 }
 
 DynamicTable* DynamicTable::gc(void)
