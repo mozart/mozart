@@ -714,8 +714,8 @@ raised by <<ProcOrObj>>.
 
 <NOTE FOOT>One-argument procedures are not exactly
 objects, since they do not have features.
-For all practical purposes, though, they
-are identical.</NOTE>
+For all practical purposes, though, one-argument
+procedures and objects have identical calling patterns.</NOTE>
 
 
 <SUBSECTION><TITLE>The hello server with stationary objects</TITLE>

@@ -20,16 +20,17 @@ the fault-tolerant abstractions.
 
 <P> The failure model is designed to cover the
 vast majority of failures occurring in distributed systems,
-namely instantaneous and permanent site failures (fail-stop)
+namely instantaneous, permanent site failures (fail-stop)
 and both temporary and permanent communication failures.
 This failure model is reflected in each language entity.
 The system provides mechanisms to be informed of failures
-and to program with language entities in case of failures.
+and to program with language entities that are subject
+to failures.
 
 <P> All failure modes are defined with respect to
 a given language entity on a given site.
-For example, one would like to send to a port
-from a given site.
+For example, one would like to send a message
+to a port from a given site.
 In general,
 there are four situations that can occur
 relative to a language entity on a given site:
@@ -46,6 +47,7 @@ to reestablish another connection.
 (fault state <<permBlock>>).
 This is because a site crucial to the entity's operation
 has crashed.
+This fault state is permanent.
 <ITEM> The entity works normally on the given site
 (fault state <<remoteProblem>>),
 but there are some remote problems that might
@@ -59,7 +61,10 @@ remote problems are temporary.
 <P> An entity on a site therefore has four
 possible basic fault states.
 We now explain how these fault states occur
-for the different language entities.
+in terms of the possible system failures.
+Each language entity has a different
+distributed protocol, and therefore the
+fault states occur in different ways.
 In the case of <<remoteProblem>>, it is usually
 possible to find out something about what the
 problem is, depending on the type of the entity.
