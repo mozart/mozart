@@ -2094,16 +2094,6 @@ OZ_Return neqInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   }
 }
 
-OZ_BI_define(BIlength,1,1)
-{
-  OZ_Term in=OZ_in(0);
-
-  OZ_Term ret = oz_isList(in);
-  if (oz_isRef(ret)) oz_suspendOnVar(ret);
-  if (ret==NameFalse) oz_typeError(0,"finite list");
-  OZ_RETURN(ret);
-} OZ_BI_end
-
 // ---------------------------------------------------------------------
 // String
 // ---------------------------------------------------------------------

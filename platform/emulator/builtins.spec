@@ -17,376 +17,18 @@ $cmode='stat';
                        BI     => BIBootManager,
                        native => true},
 
-    #* NATIVE IS HERE ONLY TEMPORARYLY FALSE IN ORDER TO DEBUG THE SYSTEM!
 
-    #* Core
 
-    ##* Type Tests
 
-    'IsNumber'          => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisNumberB,
-                             native => false},
 
-    'IsInt'             => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisIntB,
-                             native => false},
-
-    'IsFloat'           => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisFloatB,
-                             native => false},
-
-    'IsRecord'          => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisRecordB,
-                             native => false},
-
-    'IsTuple'           => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisTupleB,
-                             native => false},
-
-    'IsLiteral'         => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisLiteralB,
-                             native => false},
-
-    'IsLock'            => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisLockB,
-                             native => false},
-
-    'IsCell'            => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisCellB,
-                             native => false},
-
-    'IsPort'            => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisPortB,
-                             native => false},
-
-    'IsProcedure'       => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisProcedureB,
-                             native => false},
-
-    'IsName'            => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisNameB,
-                             native => false},
-
-    'IsAtom'            => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisAtomB,
-                             native => false},
-
-    'IsBool'            => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisBoolB,
-                             native => false},
-
-    'IsUnit'            => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisUnitB,
-                             native => false},
-
-    'IsChunk'           => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisChunkB,
-                             native => false},
-
-    'IsRecordC'         => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisRecordCB,
-                             native => false},
-
-    'IsObject'          => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisObjectB,
-                             native => false},
-
-    'IsDictionary'      => { in  => ['+value'],
-                             out => ['+bool'],
-                             bi  => BIisDictionary,
-                             native => false},
+    ##
+    ## Module: Array
+    ##
 
     'IsArray'           => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisArray,
                              native => false},
-
-    'IsChar'            => { in  => ['+value'],
-                             out => ['+bool'],
-                             BI  => BIcharIs,
-                             native => false},
-
-    'IsString'          => { in  => ['+value'],
-                             out => ['+bool'],
-                             BI  => BIisString,
-                             native => false},
-
-    'IsVirtualString'   => { in  => ['!+value'],
-                             out => ['+bool'],
-                             BI  => BIvsIs,
-                             native => false},
-
-    'IsFree'            => { in  => ['value'],
-                             out => ['+bool'],
-                             bi  => BIisFree,
-                             native => false},
-
-    'IsKinded'          => { in  => ['value'],
-                             out => ['+bool'],
-                             bi  => BIisKinded,
-                             native => false},
-
-    'IsDet'             => { in  => ['value'],
-                             out => ['+bool'],
-                             bi  => BIisDet,
-                             native => false},
-
-    'Type.ofValue'      => { in  => ['+value'],
-                             out => ['+atom'],
-                             bi  => BItermType,
-                             native => false},
-
-    'fdIs'              => { in  => ['*value','bool'],
-                             out => [],
-                             bi  => BIfdIs,
-                             native => false},
-
-    'fsIsVarB'          => { in  => ['value'],
-                             out => ['+bool'],
-                             BI  => BIfsIsVarB,
-                             native => false},
-
-    'fsIsValueB'        => { in  => ['+value','bool'],
-                             out => [],
-                             bi  => BIfsIsValueB,
-                             native => false},
-
-
-    ##* Type Conversion
-
-    'AtomToString'      => { in  => ['+atom'],
-                             out => ['+string'],
-                             bi  => BIatomToString,
-                             native => false},
-
-    'StringToAtom'      => { in  => ['+string'],
-                             out => ['+atom'],
-                             BI  => BIstringToAtom,
-                             native => false},
-
-    'IntToFloat'        => { in  => ['+int'],
-                             out => ['+float'],
-                             bi  => BIintToFloat,
-                             native => false},
-
-    'FloatToInt'        => { in  => ['+float'],
-                             out => ['+int'],
-                             bi  => BIfloatToInt,
-                             native => false},
-
-    'IntToString'       => { in  => ['+int'],
-                             out => ['+string'],
-                             BI  => BIintToString,
-                             native => false}, # new style builtin
-
-    'FloatToString'     => { in  => ['+float'],
-                             out => ['+string'],
-                             BI  => BIfloatToString,
-                             native => false},
-
-    'StringToInt'       => { in  => ['+string'],
-                             out => ['+int'],
-                             BI  => BIstringToInt,
-                             native => false},
-
-    'StringToFloat'     => { in  => ['+string'],
-                             out => ['+float'],
-                             BI  => BIstringToFloat,
-                             native => false},
-
-
-    'String.isInt'      => { in  => ['+string'],
-                             out => ['+bool'],
-                             BI  => BIstringIsInt,
-                             native => false},
-
-    'String.isFloat'    => { in  => ['+string'],
-                             out => ['+bool'],
-                             BI  => BIstringIsFloat,
-                             native => false},
-
-    'String.isAtom'     => { in  => ['+string'],
-                             out => ['+bool'],
-                             BI  => BIstringIsAtom,
-                             native => false},
-
-
-    ##* Operations on different units
-
-    ###* Numbers (arithmetics)
-
-    '/'         => { in  => ['+float','+float'],
-                     out => ['+float'],
-                     bi  => BIfdiv,
-                     native => false},
-
-    '*'         => { in  => ['+number','+number'],
-                     out => ['+number'],
-                     bi  => BImult,
-                     native => false},
-
-    'div'       => { in  => ['+int','+int'],
-                     out => ['+int'],
-                     bi  => BIdiv,
-                     native => false},
-
-    'mod'       => { in  => ['+int','+int'],
-                     out => ['+int'],
-                     bi  => BImod,
-                     native => false},
-
-    '-'         => { in  => ['+number','+number'],
-                     out => ['+number'],
-                     bi  => BIminus,
-                     native => false},
-
-    '+'         => { in  => ['+number','+number'],
-                     out => ['+number'],
-                     bi  => BIplus,
-                     native => false},
-
-    'Max'       => { in  => ['+comparable','+comparable'],
-                     out => ['+comparable'],
-                     bi  => BImax,
-                     native => false},
-
-    'Min'       => { in  => ['+comparable','+comparable'],
-                     out => ['+comparable'],
-                     bi  => BImin,
-                     native => false},
-
-    '<'         => { in  => ['+comparable','+comparable'],
-                     out => ['+bool'],
-                     bi  => BIlessFun,
-                     negated => '>=',
-                     native => false},
-
-    '=<'        => { in  => ['+comparable','+comparable'],
-                     out => ['+bool'],
-                     bi  => BIleFun,
-                     negated => '>',
-                     native => false},
-
-    '>'         => { in  => ['+comparable','+comparable'],
-                     out => ['+bool'],
-                     bi  => BIgreatFun,
-                     negated => '=<',
-                     native => false},
-
-    '>='        => { in  => ['+comparable','+comparable'],
-                     out => ['+bool'],
-                     bi  => BIgeFun,
-                     negated => '<',
-                     native => false},
-
-    '~'         => { in  => ['+number'],
-                     out => ['+number'],
-                     bi  => BIuminus,
-                     native => false},
-
-    '+1'        => { in  => ['+int'],
-                     out => ['+int'],
-                     bi  => BIadd1,
-                     native => false},
-
-    '-1'        => { in  => ['+int'],
-                     out => ['+int'],
-                     bi  => BIsub1,
-                     native => false},
-
-    'Exp'       => { in  => ['+float'],
-                     out => ['+float'],
-                     bi  => BIexp,
-                     native => false},
-
-    'Log'       => { in  => ['+float'],
-                     out => ['+float'],
-                     bi  => BIlog,
-                     native => false},
-
-    'Sqrt'      => { in  => ['+float'],
-                     out => ['+float'],
-                     bi  => BIsqrt,
-                     native => false},
-
-    'Sin'       => { in  => ['+float'],
-                     out => ['+float'],
-                     bi  => BIsin,
-                     native => false},
-
-    'Asin'      => { in  => ['+float'],
-                     out => ['+float'],
-                     bi  => BIasin,
-                     native => false},
-
-    'Cos'       => { in  => ['+float'],
-                     out => ['+float'],
-                     bi  => BIcos,
-                     native => false},
-
-    'Acos'      => { in  => ['+float'],
-                     out => ['+float'],
-                     bi  => BIacos,
-                     native => false},
-
-    'Tan'       => { in  => ['+float'],
-                     out => ['+float'],
-                     bi  => BItan,
-                     native => false},
-
-    'Atan'      => { in  => ['+float'],
-                     out => ['+float'],
-                     bi  => BIatan,
-                     native => false},
-
-    'Ceil'      => { in  => ['+float'],
-                     out => ['+float'],
-                     bi  => BIceil,
-                     native => false},
-
-    'Floor'     => { in  => ['+float'],
-                     out => ['+float'],
-                     bi  => BIfloor,
-                     native => false},
-
-    'Abs'       => { in  => ['+number'],
-                     out => ['+number'],
-                     bi  => BIabs,
-                     native => false},
-
-    'Round'     => { in  => ['+float'],
-                     out => ['+float'],
-                     bi  => BIround,
-                     native => false},
-
-    'Atan2'     => { in  => ['+float','+float'],
-                     out => ['+float'],
-                     bi  => BIatan2,
-                     native => false},
-
-    'fPow'      => { in  => ['+float','+float'],
-                     out => ['+float'],
-                     bi  => BIfPow,
-                     native => false},
-
-    ###* Array/Dictionaries
 
     'NewArray'          => { in  => ['+int','+int','value'],
                              out => ['+array'],
@@ -413,6 +55,279 @@ $cmode='stat';
                              bi  => BIarrayPut,
                              native => false},
 
+
+
+    ##
+    ## Module: Atom
+    ##
+
+    'IsAtom'            => { in  => ['+value'],
+                             out => ['+bool'],
+                             bi  => BIisAtomB,
+                             native => false},
+
+    'AtomToString'      => { in  => ['+atom'],
+                             out => ['+string'],
+                             bi  => BIatomToString,
+                             native => false},
+
+
+
+    ##
+    ## Module: BitArray
+    ##
+
+    'BitArray.new'      => { in  => ['+int','+int'],
+                             out => ['+bitArray'],
+                             BI  => BIbitArray_new,
+                             native => false},
+
+    'BitArray.is'       => { in  => ['+value'],
+                             out => ['+bool'],
+                             BI  => BIbitArray_is,
+                             native => false},
+
+    'BitArray.set'      => { in  => ['+bitArray','+int'],
+                             out => [],
+                             BI  => BIbitArray_set,
+                             native => false},
+
+    'BitArray.clear'    => { in  => ['+bitArray','+int'],
+                             out => [],
+                             BI  => BIbitArray_clear,
+                             native => false},
+
+    'BitArray.test'     => { in  => ['+bitArray','+int'],
+                             out => ['+bool'],
+                             BI  => BIbitArray_test,
+                             native => false},
+
+    'BitArray.low'      => { in  => ['+bitArray'],
+                             out => ['+int'],
+                             BI  => BIbitArray_low,
+                             native => false},
+
+    'BitArray.high'     => { in  => ['+bitArray'],
+                             out => ['+int'],
+                             BI  => BIbitArray_high,
+                             native => false},
+
+    'BitArray.clone'    => { in  => ['+bitArray'],
+                             out => ['+bitArray'],
+                             BI  => BIbitArray_clone,
+                             native => false},
+
+    'BitArray.or'       => { in  => ['+bitArray','+bitArray'],
+                             out => [],
+                             BI  => BIbitArray_or,
+                             native => false},
+
+    'BitArray.and'      => { in  => ['+bitArray','+bitArray'],
+                             out => [],
+                             BI  => BIbitArray_and,
+                             native => false},
+
+    'BitArray.card'     => { in  => ['+bitArray'],
+                             out => ['+int'],
+                             BI  => BIbitArray_card,
+                             native => false},
+
+    'BitArray.disjoint' => { in  => ['+bitArray','+bitArray'],
+                             out => ['+bool'],
+                             BI  => BIbitArray_disjoint,
+                             native => false},
+
+    'BitArray.nimpl'    => { in  => ['+bitArray','+bitArray'],
+                             out => [],
+                             BI  => BIbitArray_nimpl,
+                             native => false},
+
+    'BitArray.toList'   => { in  => ['+bitArray'],
+                             out => ['+[int]'],
+                             BI  => BIbitArray_toList,
+                             native => false},
+
+    'BitArray.complementToList' => { in  => ['+bitArray'],
+                                     out => ['+[int]'],
+                                     BI  => BIbitArray_complementToList,
+                                     native => false},
+
+
+
+    ##
+    ## Module: Bool
+    ##
+
+    'IsBool'            => { in  => ['+value'],
+                             out => ['+bool'],
+                             bi  => BIisBoolB,
+                             native => false},
+
+    'Not'               => { in  => ['+bool'],
+                             out => ['+bool'],
+                             bi  => BInot,
+                             native => false},
+
+    'And'               => { in  => ['+bool','+bool'],
+                             out => ['+bool'],
+                             bi  => BIand,
+                             native => false},
+
+    'Or'                => { in  => ['+bool','+bool'],
+                             out => ['+bool'],
+                             bi  => BIor,
+                             native => false},
+
+
+    ##
+    ## Module: Cell
+    ##
+
+    'IsCell'            => { in  => ['+value'],
+                             out => ['+bool'],
+                             bi  => BIisCellB,
+                             native => false},
+
+    'NewCell'           => { in  => ['value'],
+                             out => ['+cell'],
+                             BI  => BInewCell,
+                             native => false},
+
+    'Exchange'          => { in  => ['+cell','value','value'],
+                             out => [],
+                             bi  => BIexchangeCell,
+                             native => false},
+
+    'Access'            => { in  => ['+cell'],
+                             out => ['value'],
+                             bi  => BIaccessCell,
+                             native => false},
+
+    'Assign'            => { in  => ['+cell','value'],
+                             out => [],
+                             bi  => BIassignCell,
+                             native => false},
+
+    ##
+    ## Module: Char
+    ##
+
+    'IsChar'            => { in  => ['+value'],
+                             out => ['+bool'],
+                             BI  => BIcharIs,
+                             native => false},
+
+    'Char.isAlNum'      => { in  => ['+char'],
+                             out => ['+bool'],
+                             BI  => BIcharIsAlNum,
+                             native => false},
+
+    'Char.isAlpha'      => { in  => ['+char'],
+                             out => ['+bool'],
+                             BI  => BIcharIsAlpha,
+                             native => false},
+
+    'Char.isCntrl'      => { in  => ['+char'],
+                             out => ['+bool'],
+                             BI  => BIcharIsCntrl,
+                             native => false},
+
+    'Char.isDigit'      => { in  => ['+char'],
+                             out => ['+bool'],
+                             BI  => BIcharIsDigit,
+                             native => false},
+
+    'Char.isGraph'      => { in  => ['+char'],
+                             out => ['+bool'],
+                             BI  => BIcharIsGraph,
+                             native => false},
+
+    'Char.isLower'      => { in  => ['+char'],
+                             out => ['+bool'],
+                             BI  => BIcharIsLower,
+                             native => false},
+
+    'Char.isPrint'      => { in  => ['+char'],
+                             out => ['+bool'],
+                             BI  => BIcharIsPrint,
+                             native => false},
+
+    'Char.isPunct'      => { in  => ['+char'],
+                             out => ['+bool'],
+                             BI  => BIcharIsPunct,
+                             native => false},
+
+    'Char.isSpace'      => { in  => ['+char'],
+                             out => ['+bool'],
+                             BI  => BIcharIsSpace,
+                             native => false},
+
+    'Char.isUpper'      => { in  => ['+char'],
+                             out => ['+bool'],
+                             BI  => BIcharIsUpper,
+                             native => false},
+
+    'Char.isXDigit'     => { in  => ['+char'],
+                             out => ['+bool'],
+                             BI  => BIcharIsXDigit,
+                             native => false},
+
+    'Char.toLower'      => { in  => ['+char'],
+                             out => ['+char'],
+                             BI  => BIcharToLower,
+                             native => false},
+
+    'Char.toUpper'      => { in  => ['+char'],
+                             out => ['+char'],
+                             BI  => BIcharToUpper,
+                             native => false},
+
+    'Char.toAtom'       => { in  => ['+char'],
+                             out => ['+atom'],
+                             BI  => BIcharToAtom,
+                             native => false},
+
+    'Char.type'         => { in  => ['+char'],
+                             out => ['+atom'],
+                             BI  => BIcharType,
+                             native => false},
+
+
+
+    ##
+    ## Module: Chunk
+    ##
+
+    'IsChunk'           => { in  => ['+value'],
+                             out => ['+bool'],
+                             bi  => BIisChunkB,
+                             native => false},
+
+    'NewChunk'          => { in  => ['+record'],
+                             out => ['+chunk'],
+                             BI  => BInewChunk,
+                             native => false},
+
+
+    ##
+    ## Module: Class
+    ##
+
+    'getClass'          => { in  => ['+object'],
+                             out => ['+class'],
+                             bi  => BIgetClass,
+                             native => false},
+
+
+
+    ##
+    ## Module: Dictionary
+    ##
+
+    'IsDictionary'      => { in  => ['+value'],
+                             out => ['+bool'],
+                             bi  => BIisDictionary,
+                             native => false},
 
     'NewDictionary'     => { in  => [],
                              out => ['+dictionary'],
@@ -496,30 +411,205 @@ $cmode='stat';
                                BI  => BIdictionaryMarkSafe,
                                native => false},
 
-    ###* Groups
 
 
-    'addFastGroup'      => { in  => ['+value','value'],
-                             out => ['value'],
-                             BI  => BIaddFastGroup,
-                             native => false},
+    ##
+    ## Module: Exception
+    ##
 
-    'delFastGroup'      => { in  => ['value'],
+    'raise'             => { in  => ['value'],
                              out => [],
-                             BI  => BIdelFastGroup,
+                             BI  => BIraise,
+                             doesNotReturn => 1,
                              native => false},
 
-    'getFastGroup'      => { in  => ['+value'],
-                             out => ['+value'],
-                             BI  => BIgetFastGroup,
+    'raiseError'        => { in  => ['value'],
+                             out => [],
+                             BI  => BIraiseError,
+                             doesNotReturn => 1,
                              native => false},
 
-    'delAllFastGroup'   => { in  => ['+value'],
-                             out => ['+value'],
-                             BI  => BIdelAllFastGroup,
+    'raiseDebug'        => { in  => ['value'],
+                             out => [],
+                             BI  => BIraiseDebug,
+                             doesNotReturn => 1,
                              native => false},
 
-    ###* Locks, Cells, Ports
+    'Exception.raiseDebugCheck' => { in  => ['value'],
+                                        out => ['+bool'],
+                                        BI  => BIraiseDebugCheck,
+                                        native => false},
+
+    'Thread.taskStackError' => { in  => ['+thread','+bool'],
+                             out => ['+[record]'],
+                             BI  => BIthreadTaskStackError,
+                             native => false},
+
+
+    ##
+    ## Module: Float
+    ##
+
+    'IsFloat'           => { in  => ['+value'],
+                             out => ['+bool'],
+                             bi  => BIisFloatB,
+                             native => false},
+
+    'Exp'       => { in  => ['+float'],
+                     out => ['+float'],
+                     bi  => BIexp,
+                     native => false},
+
+    'Log'       => { in  => ['+float'],
+                     out => ['+float'],
+                     bi  => BIlog,
+                     native => false},
+
+    'Sqrt'      => { in  => ['+float'],
+                     out => ['+float'],
+                     bi  => BIsqrt,
+                     native => false},
+
+    'Sin'       => { in  => ['+float'],
+                     out => ['+float'],
+                     bi  => BIsin,
+                     native => false},
+
+    'Asin'      => { in  => ['+float'],
+                     out => ['+float'],
+                     bi  => BIasin,
+                     native => false},
+
+    'Cos'       => { in  => ['+float'],
+                     out => ['+float'],
+                     bi  => BIcos,
+                     native => false},
+
+    'Acos'      => { in  => ['+float'],
+                     out => ['+float'],
+                     bi  => BIacos,
+                     native => false},
+
+    'Tan'       => { in  => ['+float'],
+                     out => ['+float'],
+                     bi  => BItan,
+                     native => false},
+
+    'Atan'      => { in  => ['+float'],
+                     out => ['+float'],
+                     bi  => BIatan,
+                     native => false},
+
+    'Ceil'      => { in  => ['+float'],
+                     out => ['+float'],
+                     bi  => BIceil,
+                     native => false},
+
+    'Floor'     => { in  => ['+float'],
+                     out => ['+float'],
+                     bi  => BIfloor,
+                     native => false},
+
+    'Round'     => { in  => ['+float'],
+                     out => ['+float'],
+                     bi  => BIround,
+                     native => false},
+
+    'Atan2'     => { in  => ['+float','+float'],
+                     out => ['+float'],
+                     bi  => BIatan2,
+                     native => false},
+
+    'fPow'      => { in  => ['+float','+float'],
+                     out => ['+float'],
+                     bi  => BIfPow,
+                     native => false},
+
+    'FloatToString'     => { in  => ['+float'],
+                             out => ['+string'],
+                             BI  => BIfloatToString,
+                             native => false},
+
+    'FloatToInt'        => { in  => ['+float'],
+                             out => ['+int'],
+                             bi  => BIfloatToInt,
+                             native => false},
+
+    ##
+    ## Module: Foreign Pointer
+    ##
+
+    'IsForeignPointer'  => { in  => ['+value'],
+                             out => ['+bool'],
+                             BI  => BIisForeignPointer ,
+                             native => false},
+
+    'ForeignPointer.toInt'=> { in  => ['+foreignPointer'],
+                               out => ['+int'],
+                               BI  => BIForeignPointerToInt,
+                               native => false},
+
+
+    ##
+    ## Module: Int
+    ##
+
+    'IsInt'             => { in  => ['+value'],
+                             out => ['+bool'],
+                             bi  => BIisIntB,
+                             native => false},
+
+    'IntToFloat'        => { in     => ['+int'],
+                             out    => ['+float'],
+                             bi     => BIintToFloat,
+                             native => false},
+
+    'IntToString'       => { in     => ['+int'],
+                             out    => ['+string'],
+                             BI     => BIintToString,
+                             native => false},
+
+    'div'       => { in  => ['+int','+int'],
+                     out => ['+int'],
+                     bi  => BIdiv,
+                     native => false},
+
+    'mod'       => { in  => ['+int','+int'],
+                     out => ['+int'],
+                     bi  => BImod,
+                     native => false},
+
+    '+1'        => { in  => ['+int'],
+                     out => ['+int'],
+                     bi  => BIadd1,
+                     native => false},
+
+    '-1'        => { in  => ['+int'],
+                     out => ['+int'],
+                     bi  => BIsub1,
+                     native => false},
+
+
+
+    ##
+    ## Module: Literal
+    ##
+
+    'IsLiteral'         => { in  => ['+value'],
+                             out => ['+bool'],
+                             bi  => BIisLiteralB,
+                             native => false},
+
+
+
+    ##
+    ## Module: Lock
+    ##
+
+    'IsLock'            => { in  => ['+value'],
+                             out => ['+bool'],
+                             bi  => BIisLockB,
+                             native => false},
 
     'NewLock'           => { in  => [],
                              out => ['+lock'],
@@ -537,244 +627,72 @@ $cmode='stat';
                              native => false},
 
 
-    'NewPort'           => { in  => ['value'],
-                             out => ['+port'],
-                             BI  => BInewPort,
-                             native => false},
 
-    'Send'              => { in  => ['+port','value'],
-                             out => [],
-                             BI  => BIsendPort,
-                             native => false},
+    ##
+    ## Module: Name
+    ##
 
-    'NewCell'           => { in  => ['value'],
-                             out => ['+cell'],
-                             BI  => BInewCell,
-                             native => false},
-
-    'Exchange'          => { in  => ['+cell','value','value'],
-                             out => [],
-                             bi  => BIexchangeCell,
-                             native => false},
-
-    'Access'            => { in  => ['+cell'],
-                             out => ['value'],
-                             bi  => BIaccessCell,
-                             native => false},
-
-    'Assign'            => { in  => ['+cell','value'],
-                             out => [],
-                             bi  => BIassignCell,
-                             native => false},
-
-    ###* Characters
-
-    'Char.isAlNum'      => { in  => ['+char'],
+    'IsName'            => { in  => ['+value'],
                              out => ['+bool'],
-                             BI  => BIcharIsAlNum,
+                             bi  => BIisNameB,
                              native => false},
-
-    'Char.isAlpha'      => { in  => ['+char'],
-                             out => ['+bool'],
-                             BI  => BIcharIsAlpha,
-                             native => false},
-
-    'Char.isCntrl'      => { in  => ['+char'],
-                             out => ['+bool'],
-                             BI  => BIcharIsCntrl,
-                             native => false},
-
-    'Char.isDigit'      => { in  => ['+char'],
-                             out => ['+bool'],
-                             BI  => BIcharIsDigit,
-                             native => false},
-
-    'Char.isGraph'      => { in  => ['+char'],
-                             out => ['+bool'],
-                             BI  => BIcharIsGraph,
-                             native => false},
-
-    'Char.isLower'      => { in  => ['+char'],
-                             out => ['+bool'],
-                             BI  => BIcharIsLower,
-                             native => false},
-
-    'Char.isPrint'      => { in  => ['+char'],
-                             out => ['+bool'],
-                             BI  => BIcharIsPrint,
-                             native => false},
-
-    'Char.isPunct'      => { in  => ['+char'],
-                             out => ['+bool'],
-                             BI  => BIcharIsPunct,
-                             native => false},
-
-    'Char.isSpace'      => { in  => ['+char'],
-                             out => ['+bool'],
-                             BI  => BIcharIsSpace,
-                             native => false},
-
-    'Char.isUpper'      => { in  => ['+char'],
-                             out => ['+bool'],
-                             BI  => BIcharIsUpper,
-                             native => false},
-
-    'Char.isXDigit'     => { in  => ['+char'],
-                             out => ['+bool'],
-                             BI  => BIcharIsXDigit,
-                             native => false},
-
-    'Char.toLower'      => { in  => ['+char'],
-                             out => ['+char'],
-                             BI  => BIcharToLower,
-                             native => false},
-
-    'Char.toUpper'      => { in  => ['+char'],
-                             out => ['+char'],
-                             BI  => BIcharToUpper,
-                             native => false},
-
-    'Char.toAtom'       => { in  => ['+char'],
-                             out => ['+atom'],
-                             BI  => BIcharToAtom,
-                             native => false},
-
-    'Char.type'         => { in  => ['+char'],
-                             out => ['+atom'],
-                             BI  => BIcharType,
-                             native => false},
-
-    ###* Tuples, Records, OFS
-
-
-    'Adjoin'            => { in  => ['+record','+record'],
-                             out => ['+record'],
-                             bi  => BIadjoin,
-                             native => false},
-
-    'AdjoinList'        => { in  => ['+record','+[feature#value]'],
-                             out => ['+record'],
-                             BI  => BIadjoinList,
-                             native => false},
-
-    'record'            => { in  => ['+literal','+[feature#value]'],
-                             out => ['+record'],
-                             BI  => BImakeRecord,
-                             native => false},
-
-    'Arity'             => { in  => ['+record'],
-                             out => ['+[feature]'],
-                             bi  => BIarity,
-                             native => false},
-
-    'AdjoinAt'          => { in  => ['+record','+feature','value'],
-                             out => ['+record'],
-                             BI  => BIadjoinAt,
-                             native => false},
-
-    'MakeTuple'         => { in  => ['+literal','+int'],
-                             out => ['+tuple'],
-                             bi  => BItuple,
-                             native => false},
-
-    'Label'             => { in  => ['*recordC'],
-                             out => ['+literal'],
-                             bi  => BIlabel,
-                             native => false},
-
-    'hasLabel'          => { in  => ['value'],
-                             out => ['+bool'],
-                             bi  => BIhasLabel,
-                             native => false},
-
-    'TellRecord'        => { in  => ['+literal','record'],
-                             out => [],
-                             BI  => BIrecordTell,
-                             native => false},
-
-    'WidthC'            => { in  => ['*record','int'],
-                             out => [],
-                             BI  => BIwidthC,
-                             native => false},
-
-    'monitorArity'      => { in  => ['*recordC','value','[feature]'],
-                             out => [],
-                             BI  => BImonitorArity,
-                             native => false},
-
-    'tellRecordSize'    => { in  => ['+literal','+int','record'],
-                             out => [],
-                             BI  => BIsystemTellSize,
-                             native => false},
-
-    ###* Records and Chunks
-
-    '.'                 => { in  => ['*recordCOrChunk','+feature'],
-                             out => ['value'],
-                             bi  => BIdot,
-                             native => false},
-
-    '^'                 => { in  => ['*recordCOrChunk','+feature'],
-                             out => ['value'],
-                             bi  => BIuparrowBlocking,
-                             native => false},
-
-    'HasFeature'        => { in  => ['*recordCOrChunk','+feature'],
-                             out => ['+bool'],
-                             bi  => BIhasFeatureB,
-                             native => false},
-
-    'CondSelect'        => { in  => ['*recordCOrChunk','+feature','value'],
-                             out => ['value'],
-                             bi  => BImatchDefault,
-                             native => false},
-
-    'Width'             => { in  => ['+record'],
-                             out => ['+int'],
-                             bi  => BIwidth,
-                             native => false},
-
-    ###* Chunks
-
-    'NewChunk'          => { in  => ['+record'],
-                             out => ['+chunk'],
-                             BI  => BInewChunk,
-                             native => false},
-
-    ###* Names
 
     'NewName'           => { in  => [],
                              out => ['+name'],
                              BI  => BInewName,
                              native => false},
 
-    'NewUniqueName'     => { in  => ['+atom'],
-                             out => ['+name'],
-                             BI  => BInewUniqueName,
+
+
+    ##
+    ## Module: Number
+    ##
+
+    'IsNumber'          => { in  => ['+value'],
+                             out => ['+bool'],
+                             bi  => BIisNumberB,
                              native => false},
 
-    ###* Procedures
+    'Abs'       => { in  => ['+number'],
+                     out => ['+number'],
+                     bi  => BIabs,
+                     native => false},
 
-    'ProcedureArity'    => { in  => ['+procedure'],
-                             out => ['+int'],
-                             bi  => BIprocedureArity,
+    '/'         => { in  => ['+float','+float'],
+                     out => ['+float'],
+                     bi  => BIfdiv,
+                     native => false},
+
+    '*'         => { in  => ['+number','+number'],
+                     out => ['+number'],
+                     bi  => BImult,
+                     native => false},
+
+    '-'         => { in  => ['+number','+number'],
+                     out => ['+number'],
+                     bi  => BIminus,
+                     native => false},
+
+    '+'         => { in  => ['+number','+number'],
+                     out => ['+number'],
+                     bi  => BIplus,
+                     native => false},
+
+    '~'         => { in  => ['+number'],
+                     out => ['+number'],
+                     bi  => BIuminus,
+                     native => false},
+
+
+
+    ##
+    ## Module: Object
+    ##
+
+    'IsObject'          => { in  => ['+value'],
+                             out => ['+bool'],
+                             bi  => BIisObjectB,
                              native => false},
-
-    ###* Functions
-
-    'funReturn'         => { in  => ['value'],
-                             out => [],
-                             doesNotReturn => 1,
-                             BI  => BIfunReturn,
-                             native => false},
-
-    'getReturn'         => { in  => [],
-                             out => ['value'],
-                             BI  => BIgetReturn,
-                             native => false},
-
-
-    ###* Object-Oriented Primitives
 
     '@'                 => { in  => ['value'],
                              out => ['value'],
@@ -812,11 +730,6 @@ $cmode='stat';
                              bi  => BIsend,
                              native => false},
 
-    'getClass'          => { in  => ['+object'],
-                             out => ['+class'],
-                             bi  => BIgetClass,
-                             native => false},
-
     'ooGetLock'         => { in  => ['lock'],
                              out => [],
                              bi  => BIooGetLock,
@@ -832,7 +745,151 @@ $cmode='stat';
                              bi  => BINew,
                              native => false},
 
-    ###* Spaces
+    'addFastGroup'      => { in  => ['+value','value'],
+                             out => ['value'],
+                             BI  => BIaddFastGroup,
+                             native => false},
+
+    # Also used in tcl/tk interface!
+
+    'delFastGroup'      => { in  => ['value'],
+                             out => [],
+                             BI  => BIdelFastGroup,
+                             native => false},
+
+    'getFastGroup'      => { in  => ['+value'],
+                             out => ['+value'],
+                             BI  => BIgetFastGroup,
+                             native => false},
+
+    'delAllFastGroup'   => { in  => ['+value'],
+                             out => ['+value'],
+                             BI  => BIdelAllFastGroup,
+                             native => false},
+
+
+    ##
+    ## Module: Port
+    ##
+
+    'IsPort'            => { in  => ['+value'],
+                             out => ['+bool'],
+                             bi  => BIisPortB,
+                             native => false},
+
+    'NewPort'           => { in  => ['value'],
+                             out => ['+port'],
+                             BI  => BInewPort,
+                             native => false},
+
+    'Send'              => { in  => ['+port','value'],
+                             out => [],
+                             BI  => BIsendPort,
+                             native => false},
+    ##
+    ## Module: Procedure
+    ##
+
+    'IsProcedure'       => { in  => ['+value'],
+                             out => ['+bool'],
+                             bi  => BIisProcedureB,
+                             native => false},
+
+    'ProcedureArity'    => { in  => ['+procedure'],
+                             out => ['+int'],
+                             bi  => BIprocedureArity,
+                             native => false},
+
+
+
+    ##
+    ## Module: Record
+    ##
+
+    'IsRecord'          => { in  => ['+value'],
+                             out => ['+bool'],
+                             bi  => BIisRecordB,
+                             native => false},
+
+    'IsRecordC'         => { in  => ['+value'],
+                             out => ['+bool'],
+                             bi  => BIisRecordCB,
+                             native => false},
+
+    'Adjoin'            => { in  => ['+record','+record'],
+                             out => ['+record'],
+                             bi  => BIadjoin,
+                             native => false},
+
+    'AdjoinList'        => { in  => ['+record','+[feature#value]'],
+                             out => ['+record'],
+                             BI  => BIadjoinList,
+                             native => false},
+
+    'record'            => { in  => ['+literal','+[feature#value]'],
+                             out => ['+record'],
+                             BI  => BImakeRecord,
+                             native => false},
+
+    'Arity'             => { in  => ['+record'],
+                             out => ['+[feature]'],
+                             bi  => BIarity,
+                             native => false},
+
+    'AdjoinAt'          => { in  => ['+record','+feature','value'],
+                             out => ['+record'],
+                             BI  => BIadjoinAt,
+                             native => false},
+
+    'Label'             => { in  => ['*recordC'],
+                             out => ['+literal'],
+                             bi  => BIlabel,
+                             native => false},
+
+    'hasLabel'          => { in  => ['value'],
+                             out => ['+bool'],
+                             bi  => BIhasLabel,
+                             native => false},
+
+    'TellRecord'        => { in  => ['+literal','record'],
+                             out => [],
+                             BI  => BIrecordTell,
+                             native => false},
+
+    'WidthC'            => { in  => ['*record','int'],
+                             out => [],
+                             BI  => BIwidthC,
+                             native => false},
+
+    'monitorArity'      => { in  => ['*recordC','value','[feature]'],
+                             out => [],
+                             BI  => BImonitorArity,
+                             native => false},
+
+    'tellRecordSize'    => { in  => ['+literal','+int','record'],
+                             out => [],
+                             BI  => BIsystemTellSize,
+                             native => false},
+
+    '.'                 => { in  => ['*recordCOrChunk','+feature'],
+                             out => ['value'],
+                             bi  => BIdot,
+                             native => false},
+
+    '^'                 => { in  => ['*recordCOrChunk','+feature'],
+                             out => ['value'],
+                             bi  => BIuparrowBlocking,
+                             native => false},
+
+    'Width'             => { in  => ['+record'],
+                             out => ['+int'],
+                             bi  => BIwidth,
+                             native => false},
+
+
+    ##
+    ## Module: Space
+    ##
 
     'Space.new'         => { in  => ['+procedure/1'],
                              out => ['+space'],
@@ -875,7 +932,50 @@ $cmode='stat';
                              native => false},
 
 
-    ###* Threads
+
+    ##
+    ## Module: String
+    ##
+
+    'IsString'          => { in  => ['+value'],
+                             out => ['+bool'],
+                             BI  => BIisString,
+                             native => false},
+
+    'StringToAtom'      => { in  => ['+string'],
+                             out => ['+atom'],
+                             BI  => BIstringToAtom,
+                             native => false},
+
+    'StringToInt'       => { in  => ['+string'],
+                             out => ['+int'],
+                             BI  => BIstringToInt,
+                             native => false},
+
+    'StringToFloat'     => { in  => ['+string'],
+                             out => ['+float'],
+                             BI  => BIstringToFloat,
+                             native => false},
+
+
+    'String.isInt'      => { in  => ['+string'],
+                             out => ['+bool'],
+                             BI  => BIstringIsInt,
+                             native => false},
+
+    'String.isFloat'    => { in  => ['+string'],
+                             out => ['+bool'],
+                             BI  => BIstringIsFloat,
+                             native => false},
+
+    'String.isAtom'     => { in  => ['+string'],
+                             out => ['+bool'],
+                             BI  => BIstringIsAtom,
+                             native => false},
+
+    ##
+    ## Module: Thread
+    ##
 
     'Thread.is'         => { in  => ['+value'],
                              out => ['+bool'],
@@ -962,11 +1062,6 @@ $cmode='stat';
                              BI  => BIthreadTaskStack,
                              native => false},
 
-    'Thread.taskStackError' => { in  => ['+thread','+bool'],
-                             out => ['+[record]'],
-                             BI  => BIthreadTaskStackError,
-                             native => false},
-
     'Thread.frameVariables'=> { in  => ['+thread','+int'],
                                 out => ['+record'],
                                 BI  => BIthreadFrameVariables,
@@ -983,99 +1078,146 @@ $cmode='stat';
                             BI  => BIthreadCreate,
                             native => false},
 
-    ###* Foreign Pointers
-
-    'isForeignPointer'  => { in  => ['+value'],
-                             out => ['+bool'],
-                             BI  => BIisForeignPointer ,
-                             native => false},
-
-    'ForeignPointerToInt'=> { in  => ['+foreignPointer'],
-                              out => ['+int'],
-                              BI  => BIForeignPointerToInt,
-                              native => false},
 
 
-    ###* Bit Arrays
+    ##
+    ## Module: Time
+    ##
 
-    'BitArray.new'      => { in  => ['+int','+int'],
-                             out => ['+bitArray'],
-                             BI  => BIbitArray_new,
-                             native => false},
-
-    'BitArray.is'       => { in  => ['+value'],
-                             out => ['+bool'],
-                             BI  => BIbitArray_is,
-                             native => false},
-
-    'BitArray.set'      => { in  => ['+bitArray','+int'],
+    'Alarm'             => { in  => ['+int','unit'],
                              out => [],
-                             BI  => BIbitArray_set,
+                             BI  => BIalarm,
                              native => false},
 
-    'BitArray.clear'    => { in  => ['+bitArray','+int'],
+    'Delay'             => { in  => ['!+int'],
                              out => [],
-                             BI  => BIbitArray_clear,
+                             BI  => BIdelay,
                              native => false},
 
-    'BitArray.test'     => { in  => ['+bitArray','+int'],
-                             out => ['+bool'],
-                             BI  => BIbitArray_test,
-                             native => false},
-
-    'BitArray.low'      => { in  => ['+bitArray'],
+    'Time.time'         => { in  => [],
                              out => ['+int'],
-                             BI  => BIbitArray_low,
+                             BI  => BItimeTime,
                              native => false},
 
-    'BitArray.high'     => { in  => ['+bitArray'],
-                             out => ['+int'],
-                             BI  => BIbitArray_high,
-                             native => false},
 
-    'BitArray.clone'    => { in  => ['+bitArray'],
-                             out => ['+bitArray'],
-                             BI  => BIbitArray_clone,
-                             native => false},
+    ##
+    ## Module: Tuple
+    ##
 
-    'BitArray.or'       => { in  => ['+bitArray','+bitArray'],
-                             out => [],
-                             BI  => BIbitArray_or,
-                             native => false},
-
-    'BitArray.and'      => { in  => ['+bitArray','+bitArray'],
-                             out => [],
-                             BI  => BIbitArray_and,
-                             native => false},
-
-    'BitArray.card'     => { in  => ['+bitArray'],
-                             out => ['+int'],
-                             BI  => BIbitArray_card,
-                             native => false},
-
-    'BitArray.disjoint' => { in  => ['+bitArray','+bitArray'],
+    'IsTuple'           => { in  => ['+value'],
                              out => ['+bool'],
-                             BI  => BIbitArray_disjoint,
+                             bi  => BIisTupleB,
                              native => false},
 
-    'BitArray.nimpl'    => { in  => ['+bitArray','+bitArray'],
+    'MakeTuple'         => { in  => ['+literal','+int'],
+                             out => ['+tuple'],
+                             bi  => BItuple,
+                             native => false},
+
+
+
+
+    ##
+    ## Module: Type
+    ##
+
+    'UnSitedPrintName'  => { in  => ['value'],
+                             out => ['+atom'],
+                             BI  => BIgetPrintName,
+                             native => false},
+
+    'Type.ofValue'      => { in  => ['+value'],
+                             out => ['+atom'],
+                             bi  => BItermType,
+                             native => false},
+
+    'fdIs'              => { in  => ['*value','bool'],
                              out => [],
-                             BI  => BIbitArray_nimpl,
+                             bi  => BIfdIs,
                              native => false},
 
-    'BitArray.toList'   => { in  => ['+bitArray'],
-                             out => ['+[int]'],
-                             BI  => BIbitArray_toList,
+    'fsIsVarB'          => { in  => ['value'],
+                             out => ['+bool'],
+                             BI  => BIfsIsVarB,
                              native => false},
 
-    'BitArray.complementToList' => { in  => ['+bitArray'],
-                                     out => ['+[int]'],
-                                     BI  => BIbitArray_complementToList,
-                                     native => false},
+    'fsIsValueB'        => { in  => ['+value','bool'],
+                             out => [],
+                             bi  => BIfsIsValueB,
+                             native => false},
 
 
-    ##* Misc Operations
-    ###* Equalities
+
+    ##
+    ## Module: Unit
+    ##
+
+    'IsUnit'            => { in  => ['+value'],
+                             out => ['+bool'],
+                             bi  => BIisUnitB,
+                             native => false},
+
+
+
+
+    ##
+    ## Module: Value
+    ##
+
+    'Wait'              => { in  => ['+value'],
+                             out => [],
+                             bi  => BIisValue,
+                             native => false},
+
+    'WaitOr'            => { in  => ['value','value'],
+                             out => [],
+                             BI  => BIwaitOr,
+                             native => false},
+
+    'IsFree'            => { in  => ['value'],
+                             out => ['+bool'],
+                             bi  => BIisFree,
+                             native => false},
+
+    'IsKinded'          => { in  => ['value'],
+                             out => ['+bool'],
+                             bi  => BIisKinded,
+                             native => false},
+
+    'IsDet'             => { in  => ['value'],
+                             out => ['+bool'],
+                             bi  => BIisDet,
+                             native => false},
+
+    'Max'       => { in  => ['+comparable','+comparable'],
+                     out => ['+comparable'],
+                     bi  => BImax,
+                     native => false},
+
+    'Min'       => { in  => ['+comparable','+comparable'],
+                     out => ['+comparable'],
+                     bi  => BImin,
+                     native => false},
+
+    'HasFeature'        => { in  => ['*recordCOrChunk','+feature'],
+                             out => ['+bool'],
+                             bi  => BIhasFeatureB,
+                             native => false},
+
+    'CondSelect'        => { in  => ['*recordCOrChunk','+feature','value'],
+                             out => ['value'],
+                             bi  => BImatchDefault,
+                             native => false},
+
+    'ByNeed'            => { in  => ['value'],
+                             out => ['value'],
+                             BI  => BIbyNeed,
+                             native => false},
+
+    'Future'            => { in  => ['value'],
+                             out => ['value'],
+                             BI  => BIfuture,
+                             native => false},
 
     '=='                => { in  => ['*value','*value'],
                              out => ['+bool'],
@@ -1089,16 +1231,49 @@ $cmode='stat';
                              negated => '==',
                              native => false},
 
-    ###* Other Misc Operations
+    '<'         => { in  => ['+comparable','+comparable'],
+                     out => ['+bool'],
+                     bi  => BIlessFun,
+                     negated => '>=',
+                     native => false},
 
-    'Wait'              => { in  => ['+value'],
+    '=<'        => { in  => ['+comparable','+comparable'],
+                     out => ['+bool'],
+                     bi  => BIleFun,
+                     negated => '>',
+                     native => false},
+
+    '>'         => { in  => ['+comparable','+comparable'],
+                     out => ['+bool'],
+                     bi  => BIgreatFun,
+                     negated => '=<',
+                     native => false},
+
+    '>='        => { in  => ['+comparable','+comparable'],
+                     out => ['+bool'],
+                     bi  => BIgeFun,
+                     negated => '<',
+                     native => false},
+
+    '='                 => { in  => ['value','value'],
                              out => [],
-                             bi  => BIisValue,
+                             BI  => BIunify,
                              native => false},
 
-    'WaitOr'            => { in  => ['value','value'],
-                             out => [],
-                             BI  => BIwaitOr,
+    'Value.status'      => { in  => ['value'],
+                             out => ['+tuple'],
+                             bi  => BIstatus,
+                             native => false},
+
+
+
+    ##
+    ## Module: VirtualString
+    ##
+
+    'IsVirtualString'   => { in  => ['!+value'],
+                             out => ['+bool'],
+                             BI  => BIvsIs,
                              native => false},
 
     'virtualStringLength'=> { in  => ['!virtualString','!+int'],
@@ -1106,29 +1281,54 @@ $cmode='stat';
                               BI  => BIvsLength,
                               native => false},
 
-    'Length'            => { in  => ['+[value]'],
-                             out => ['+int'],
-                             BI  => BIlength,
+
+
+
+    ##
+    ## Basic runtime support
+    ##
+
+    'NewUniqueName'     => { in  => ['+atom'],
+                             out => ['+name'],
+                             BI  => BInewUniqueName,
                              native => false},
 
-    'Not'               => { in  => ['+bool'],
+    'fail'              => { in  => [],
+                             out => [],
+                             BI  => BIfail,
+                             native => false},
+
+    'nop'               => { in  => [],
+                             out => [],
+                             BI  => BInop,
+                             native => false},
+
+
+
+
+
+
+
+
+    ######
+    ###### TO EXPIRE
+    ######
+    ###* Foreign Pointers
+
+    'isForeignPointer'  => { in  => ['+value'],
                              out => ['+bool'],
-                             bi  => BInot,
+                             BI  => BIisForeignPointer ,
                              native => false},
 
-    'And'               => { in  => ['+bool','+bool'],
+    'ForeignPointerToInt'=> { in  => ['+foreignPointer'],
+                              out => ['+int'],
+                              BI  => BIForeignPointerToInt,
+                              native => false},
+
+
+    'onToplevel'        => { in  => [],
                              out => ['+bool'],
-                             bi  => BIand,
-                             native => false},
-
-    'Or'                => { in  => ['+bool','+bool'],
-                             out => ['+bool'],
-                             bi  => BIor,
-                             native => false},
-
-    'Value.status'      => { in  => ['value'],
-                             out => ['+tuple'],
-                             bi  => BIstatus,
+                             BI  => BIonToplevel,
                              native => false},
 
     ##* Exceptions
@@ -1147,80 +1347,6 @@ $cmode='stat';
                                      out => ['+procedure/1'],
                                      BI  => BIgetDefaultExceptionHandler,
                                      native => true},
-
-    'raise'             => { in  => ['value'],
-                             out => [],
-                             BI  => BIraise,
-                             doesNotReturn => 1,
-                             native => false},
-
-    'raiseError'        => { in  => ['value'],
-                             out => [],
-                             BI  => BIraiseError,
-                             doesNotReturn => 1,
-                             native => false},
-
-    'raiseDebug'        => { in  => ['value'],
-                             out => [],
-                             BI  => BIraiseDebug,
-                             doesNotReturn => 1,
-                             native => false},
-
-    'Exception.raiseDebugCheck' => { in  => ['value'],
-                                        out => ['+bool'],
-                                        BI  => BIraiseDebugCheck,
-                                        native => false},
-
-    ##* Diffent Kinds of Special Variables
-
-    ##* Statistics
-
-    'statisticsPrint'   => { in  => ['+virtualString'],
-                             out => [],
-                             BI  => BIstatisticsPrint,
-                             native => true},
-
-    'statisticsPrintProcs'=> { in  => [],
-                               out => [],
-                               BI  => BIstatisticsPrintProcs,
-                               native => true},
-
-    'instructionsPrint' => { in  => [],
-                             out => [],
-                             BI  => BIinstructionsPrint,
-                             ifdef=>'PROFILE_INSTR',
-                             native => true},
-
-    'instructionsPrintCollapsable' => { in  => [],
-                             out => [],
-                             BI  => BIinstructionsPrintCollapsable,
-                             ifdef=>'PROFILE_INSTR',
-                             native => true},
-
-    'instructionsPrintReset' => { in  => [],
-                             out => [],
-                             BI  => BIinstructionsPrintReset,
-                             ifdef=>'PROFILE_INSTR',
-                             native => true},
-
-    'biPrint'           => { in  => [],
-                             out => [],
-                             BI  => BIbiPrint,
-                             ifdef=>'PROFILE_BI',
-                             native => true},
-
-    'halt'              => { in  => [],
-                             out => [],
-                             BI  => BIhalt,
-                             ifdef=>'DEBUG_TRACE',
-                             native => true},
-
-    ##* System Printing Primitives
-
-    'UnSitedPrintName'  => { in  => ['value'],
-                             out => ['+atom'],
-                             BI  => BIgetPrintName,
-                             native => false},
 
     ##* Browser Support
 
@@ -1254,48 +1380,8 @@ $cmode='stat';
                              BI  => BIgetTermSize,
                              native => false},
 
-    ##* Misc. System Procs
-
-    'Alarm'             => { in  => ['+int','unit'],
-                             out => [],
-                             BI  => BIalarm,
-                             native => false},
-
-    'Delay'             => { in  => ['!+int'],
-                             out => [],
-                             BI  => BIdelay,
-                             native => false},
-
-    'Time.time'         => { in  => [],
-                             out => ['+int'],
-                             BI  => BItimeTime,
-                             native => false},
 
 
-    '='                 => { in  => ['value','value'],
-                             out => [],
-                             BI  => BIunify,
-                             native => false},
-
-    'fail'              => { in  => [],
-                             out => [],
-                             BI  => BIfail,
-                             native => false},
-
-    'nop'               => { in  => [],
-                             out => [],
-                             BI  => BInop,
-                             native => false},
-
-    'onToplevel'        => { in  => [],
-                             out => ['+bool'],
-                             BI  => BIonToplevel,
-                             native => false},
-
-    'getConstraints'    => { in  => ['+value','+[value]'],
-                             out => [],
-                             bi  => BIgetConstraints,
-                             native => true},
 
 
     #* Dynamic Linking
@@ -1464,12 +1550,6 @@ $cmode='stat';
                                   module => vs,
                                   native => true},
 
-    #* Tools
-
-
-    ##* Debugger
-
-
     ###* Debugger Internal
 
     'Debug.getStream'   => { in  => [],
@@ -1582,21 +1662,51 @@ $cmode='stat';
                              ifdef  => MODULES_LINK_STATIC,
                              native => true},
 
-    ###* ByNeed
 
-    'ByNeed'            => { in  => ['value'],
-                             out => ['value'],
-                             BI  => BIbyNeed,
-                             native => false},
-
-    'Future'            => { in  => ['value'],
-                             out => ['value'],
-                             BI  => BIfuture,
-                             native => false},
 
     ###
     ### Misc stuff
     ###
+
+    'statisticsPrint'   => { in  => ['+virtualString'],
+                             out => [],
+                             BI  => BIstatisticsPrint,
+                             native => true},
+
+    'statisticsPrintProcs'=> { in  => [],
+                               out => [],
+                               BI  => BIstatisticsPrintProcs,
+                               native => true},
+
+    'instructionsPrint' => { in  => [],
+                             out => [],
+                             BI  => BIinstructionsPrint,
+                             ifdef=>'PROFILE_INSTR',
+                             native => true},
+
+    'instructionsPrintCollapsable' => { in  => [],
+                             out => [],
+                             BI  => BIinstructionsPrintCollapsable,
+                             ifdef=>'PROFILE_INSTR',
+                             native => true},
+
+    'instructionsPrintReset' => { in  => [],
+                             out => [],
+                             BI  => BIinstructionsPrintReset,
+                             ifdef=>'PROFILE_INSTR',
+                             native => true},
+
+    'biPrint'           => { in  => [],
+                             out => [],
+                             BI  => BIbiPrint,
+                             ifdef=>'PROFILE_BI',
+                             native => true},
+
+    'halt'              => { in  => [],
+                             out => [],
+                             BI  => BIhalt,
+                             ifdef=>'DEBUG_TRACE',
+                             native => true},
 
     ###
     ### Christian's private stuff
@@ -1608,6 +1718,35 @@ $cmode='stat';
                              ifdef=>'CS_PROFILE',
                              native => true},
 
+
+    ###
+    ### Ralf's private stuff
+    ###
+
+    'funReturn'         => { in  => ['value'],
+                             out => [],
+                             doesNotReturn => 1,
+                             BI  => BIfunReturn,
+                             native => false},
+
+    'getReturn'         => { in  => [],
+                             out => ['value'],
+                             BI  => BIgetReturn,
+                             native => false},
+
+
+    ###
+    ### Tobias's private stuff
+    ###
+
+    'getConstraints'    => { in  => ['+value','+[value]'],
+                             out => [],
+                             bi  => BIgetConstraints,
+                             native => true},
+
+    ###
+    ### Michael's private stuff
+    ###
 
 
 
