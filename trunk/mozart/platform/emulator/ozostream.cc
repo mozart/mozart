@@ -82,7 +82,7 @@ ozostream &ozstrstream::operator << (long i)
 ozostream &ozstrstream::operator << (double f)
 {
   char buf[100];
-  sprintf(buf,"%f",f);
+  sprintf(buf,"%g",f);
   (*this) << buf;
   return *this;
 }
