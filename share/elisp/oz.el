@@ -316,10 +316,10 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 	    (eproc (get-buffer-process oz-emulator-buffer))
 	    (cproc (get-buffer-process oz-compiler-buffer)))
 	(oz-send-string "\\halt ")
-	(while (and (not (eq (process-status eproc) 'exit))
-		    (not (eq (process-status cproc) 'exit))
+	(while (and (or (eq (process-status eproc) 'run)
+			(eq (process-status cproc) 'run))
 		    (> i 0))
-	  (sleep-for 0.5)
+	  (sleep-for 1)
 	  (setq i (1- i)))))
 
   (if (get-buffer-process oz-compiler-buffer)
