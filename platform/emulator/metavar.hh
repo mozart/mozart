@@ -81,7 +81,7 @@ public:
   TaggedRef getData(void) { return data; }
   void setData(TaggedRef d) { data = d; }
 
-  void gc(void);
+  void gcRecurse(void);
 
   char * getName(void) { return tag->name; }
 

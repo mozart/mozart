@@ -220,9 +220,7 @@ public:
   ostream &newprint(ostream &, int depth);
 
     // Copy the dynamictable from 'from' to 'to' space:
-    DynamicTable* gc(void); // See definition in gc.cc
-    void gcRecurse(void);
-
+    DynamicTable * gc(void); // See definition in gc.cc
 
     // Create an initially empty dynamictable of size s
     static DynamicTable* newDynamicTable(dt_index s=4);

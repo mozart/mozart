@@ -178,7 +178,7 @@ public:
 
   void addSuspPerdioVar(TaggedRef *v,Thread *el, int unstable);
 
-  void gc(void);
+  void gcRecurse(void);
 };
 
 inline

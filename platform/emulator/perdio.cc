@@ -2612,7 +2612,7 @@ void gcBorrowNow(int i){
     be->gcPO();}}
 
 
-void PerdioVar::gc(void)
+void PerdioVar::gcRecurse(void)
 {
   if (isProxy()) {
     PD((GC,"PerdioVar b:%d",getIndex()));
