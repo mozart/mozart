@@ -253,6 +253,11 @@
 	  # browser-related;
           ( AtomBBuiltin,       "(builtin)" ),
           ( AtomDash,           "-" ),
+
+	  # alice-related;
+          ( E_ALICE,            "alice" ),
+          ( AtomAliceRPC,       "alice.rpc" ),
+
 	  );
 
 
