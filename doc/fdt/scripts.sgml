@@ -178,7 +178,7 @@ that the sequences
 <tr> <td><<Row.1-1>></td> <td/<p.silent/&ellipsis;// <td><<Row.N-N>></td></tr>
 <tr> <td><<Row.1+1>></td> <td/<p.silent/&ellipsis;// <td><<Row.N+N>></td></tr>
 </table>
-be nonrepetitive.
+be non repetitive.
 
 
 </section>

@@ -142,7 +142,7 @@ finite sets of nonnegative integers.  Consequently,
 the problems could be solved by simply checking all
 possible combinations of the values of the
 variables.  This naive generate and test method is
-however unfeasible for most realistic problems
+however infeasible for most realistic problems
 since there are just too many possible
 combinations.
 

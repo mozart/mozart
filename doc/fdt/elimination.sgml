@@ -235,26 +235,16 @@ first-fail strategy.  The strategy splits the
 domain of the selected variable and tries the
 lower part of the domain first.
 
+<subsection class=unnumbered>
+  <title/Script/
+
+<p>
 <figure id="ProgFamily">
 <caption/A script for the Family Puzzle./
-
 <chunk class=anonymous><title/Family/
 proc {Family Root}
-   proc {IsFamily Name F}
-      Coeffs = [1 1 1 ~1 ~1 ~1]
-      Ages
-   in
-      F = Name(boys:{AgeList} girls:{AgeList})
-      Ages = {Append F.boys F.girls}
-      {FD.distinct Ages}
-      {FD.sumC Coeffs Ages '=:' 0}
-      {FD.sumCN Coeffs {Map Ages fun {$ A} [A A] end} '=:' 0}
-   end
-   proc {AgeList L}
-      {FD.list 3 0#9 L}
-      {Nth L 1} >: {Nth L 2}
-      {Nth L 2} >: {Nth L 3}
-   end
+   <chunk.ref/Definition of IsFamily/
+   <chunk.ref/Definition of AgeList/
    Maria = {IsFamily maria}
    Clara = {IsFamily clara}
    AgeOfMariasYoungestGirl = {Nth Maria.girls 3}
@@ -272,26 +262,51 @@ end
 </figure>
 
 
-<subsection class=unnumbered>
-  <title/Script/
-
-
 <p>
 The script in <Ptr to="ProgFamily"> introduces
 two defined constraints.  The defined constraint
 <<<
-{IsFamily ?{Name} ?{F}}
+?{F}={IsFamily ?{Name}}
 >>>
 imposes constraints saying that ?{F} is the
-representation of a family with name ?{Name}.
+representation of a family with name ?{Name} (see <Ptr
+to="figure.elim.familydef">).
 The defined constraint
 <<<
-{AgeList ?{L}}
+?{L}={AgeList}
 >>>
 imposes constraints saying that ?{L} is a list of
 three integers between <<0>> and <<9>> appearing in
-descending order.
+descending order (see <Ptr to="figure.elim.familydef">).
 
+<p>
+<figure id="figure.elim.familydef">
+<caption/Defined constraints for the Family Puzzle./
+<p>
+<chunk><title/Definition of AgeList/
+proc {AgeList L}
+   {FD.list 3 0#9 L}
+   {Nth L 1} >: {Nth L 2}
+   {Nth L 2} >: {Nth L 3}
+end
+</chunk>
+<chunk><title/Definition of IsFamily/
+fun {IsFamily Name}
+   Coeffs    = [1 1 1 ~1 ~1 ~1]
+   BoysAges  = {AgeList}
+   GirlsAges = {AgeList}
+   Ages      = {Append BoysAges GirlsAges}
+in
+   {FD.distinct Ages}
+   {FD.sumC Coeffs Ages '=:' 0}
+   {FD.sumCN Coeffs {Map Ages fun {$ A} [A A] end} '=:' 0}
+   Name(boys:BoysAges girls:GirlsAges)
+end
+</chunk>
+</figure>
+
+
+<p>
 The statement
 <<<
 {FD.sumC Coeffs Ages '=:' 0}

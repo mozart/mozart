@@ -76,7 +76,7 @@ Thus, the variable <<Fs>> in <ptr to=fig.naiveDist> denotes the
 list of  undetermined variables after the space
 has become stable. To detect undetermined variables we use the procedure
 <<FD.reflect.size>> which reflects the current size of a variable's
-domain. If the domain size is one, the variabe is determined.
+domain. If the domain size is one, the variable is determined.
 
 <p>
 Then the least possible value for the first

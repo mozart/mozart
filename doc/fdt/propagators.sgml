@@ -66,7 +66,7 @@ holds:
 <title/Model/
 
 <p>
-We have a variable for every letter, similiar as
+We have a variable for every letter, similar as
 in the Send More Money Puzzle.  Since the three
 fractions are symmetric, we can impose the order
 <math display/
@@ -151,7 +151,7 @@ will learn how to do it.
 <p>
 The example also illustrates the case where a
 propagator for a redundant constraint improves
-the performace of a script by decreasing the
+the performance of a script by decreasing the
 number of necessary propagation steps, but
 without significantly changing the search tree.
 
