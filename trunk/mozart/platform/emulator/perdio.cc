@@ -2296,9 +2296,16 @@ void sendHelpX(MessageType mt,BorrowEntry *be)
 
 void PerdioVar::addSuspPerdioVar(TaggedRef *v,Thread *el, int unstable)
 {
+  if (suspList!=NULL) {
+    addSuspSVar(el,unstable);
+    return;
+  }
+
+  addSuspSVar(el,unstable);
+
   if (isFuture()) {
     if (isManager()) {
-      ((Future*)this)->addSuspFuture(v,el,unstable);
+      ((Future*)this)->request();
     } else {
       Assert(isProxy());
       BorrowEntry *be=BT->getBorrow(getIndex());      
@@ -2306,12 +2313,6 @@ void PerdioVar::addSuspPerdioVar(TaggedRef *v,Thread *el, int unstable)
     }
     return;
   }
-
-  if (suspList!=NULL) {
-    addSuspSVar(el,unstable);
-    return;  }
-
-  addSuspSVar(el,unstable);
 
   if (isObjectClassNotAvail()) {
     MessageType mt; 
@@ -3399,7 +3400,7 @@ void Site::msgReceived(MsgBuffer* bs)
       PD((MSG_RECEIVED,"M_REQUEST_FUTURE site:%s index:%d",rsite->stringrep(),OTI));
       //      OwnerEntry *oe=receiveAtOwner(OTI);
       OwnerEntry *oe=OT->getOwner(OTI);
-      if (!oe->isTertiary()) {
+      if (oe->isVar()) {
 	((Future*)oe->getVar())->request();
       }
       break;
