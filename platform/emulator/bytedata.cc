@@ -139,16 +139,12 @@ OZ_Term unmarshalBitString(void*bs1) {
   return oz_makeTaggedExtension(s);
 }
 
-void BitString::printStreamV(ostream &out,int depth = 10) {
-  out << "<BitString \"";
-  bitPrintStream(out);
-  out << "\">";
-}
-
-void BitString::printLongStreamV(ostream &out,
-				 int depth=10,int offset=0) {
-  out << "bit string: " << width
-      << " bits at " << this << '.' << endl;
+OZ_Term BitString::printV(int depth = 10) {
+  int w = getWidth();
+  OZ_Term tup=OZ_tupleC("#",w);    
+  for (int i=0; i<w; i++) OZ_putArg(tup,i,oz_int(get(i)?1:0));
+  return oz_pair2(oz_atom("<BitString \""),
+		  oz_pair2(tup,oz_atom("\">")));
 }
 
 void BitString_init() {
@@ -343,16 +339,12 @@ void ByteString_init() {
   }
 }
 
-void ByteString::printStreamV(ostream &out,int depth = 10) {
-  out << "<ByteString \"";
-  bytePrintStream(out);
-  out << "\">";
-}
-
-void ByteString::printLongStreamV(ostream &out,
-				  int depth=10,int offset=0) {
-  out << "byte string: " << width
-      << " bytes at " << this << '.' << endl;
+OZ_Term ByteString::printV(int depth = 10) {
+  int w = getWidth();
+  OZ_Term tup=OZ_tupleC("#",w);    
+  for (int i=0; i<w; i++) OZ_putArg(tup,i,oz_int(get(i)));
+  return oz_pair2(oz_atom("<ByteString \""),
+		  oz_pair2(tup,oz_atom("\">")));
 }
 
 ByteString* ByteString::clone() {
