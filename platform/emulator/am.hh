@@ -70,8 +70,11 @@ enum InstType {
 };
 
 
+typedef int (*IOHandler)(int fd,OZ_Term val);
+
 class IONode {
 public:
+  IOHandler handler[2];
   TaggedRef readwritepair[2];
 };
 
@@ -102,8 +105,6 @@ public:
 
   Board *currentSolveBoard;       // current 'solve' board or NULL if none;
   Bool wasSolveSet; 
-
-  int siteFD;
 
   CompStream *compStream;
   Bool isStandaloneF;
@@ -248,6 +249,7 @@ public:
   // coping of trees (and terms);
   Board* copyTree (Board* node, Bool *isGround);
 
+  static int awakeIO(int fd,TaggedRef var);
   void awakeIOVar(TaggedRef var);
 
   // entailment check
@@ -309,6 +311,7 @@ public:
 
   void handleIO();
   Bool loadQuery(CompStream *fd);
+  void select(int fd, int mode, IOHandler fun, TaggedRef val);
   int select(int fd,int mode, TaggedRef l, TaggedRef r);
   void acceptSelect(int fd, TaggedRef l, TaggedRef r);
   void deSelect(int fd);
