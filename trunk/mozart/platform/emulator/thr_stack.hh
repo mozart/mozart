@@ -146,17 +146,6 @@ public:
     pushEmpty();
   }
 
-  void pushX(int i) {
-    Assert(i>=0);
-    if (i>0) {
-      RefsArray * x = RefsArray::copy(XREGS,i);
-#ifdef DEBUG_LIVENESS
-      checkLiveness(x);
-#endif
-      pushFrame(C_XCONT_Ptr,x,makeTaggedNULL());
-    }
-  }
-
   void pushCont(ProgramCounter pc,RefsArray *y,Abstraction *cap) {
 #ifdef DEBUG_MEM
     Assert(!y || MemChunks::areRegsInHeap(y,y->getLen()));
@@ -164,21 +153,18 @@ public:
     pushFrame(pc, y, makeTaggedConst((ConstTerm *) cap));
   }
 
-  void pushCall(TaggedRef pred, TaggedRef arg0, TaggedRef arg1, 
-		TaggedRef arg2, TaggedRef arg3, TaggedRef arg4);
-
-  void pushCallNoCopy(TaggedRef pred, RefsArray * x) {
+  void pushCall(TaggedRef pred, RefsArray * x) {
     pushFrame(C_CALL_CONT_Ptr, (void *) pred, makeTaggedVerbatim(x));
   }
-
-  void pushCall(TaggedRef pred, TaggedRef * x, int i) {
+  void pushX(int i) {
     Assert(i>=0);
-    pushCallNoCopy(pred, i>0 ? RefsArray::copy(x,i) : (RefsArray *) NULL);
-  }
-
-  void pushCall(TaggedRef pred, RefsArray * x) {
-    Assert(x->getLen()>0);
-    pushCallNoCopy(pred,RefsArray::copy(x,x->getLen()));
+    if (i>0) {
+      RefsArray * x = RefsArray::make(XREGS,i);
+#ifdef DEBUG_LIVENESS
+      checkLiveness(x);
+#endif
+      pushFrame(C_XCONT_Ptr,x,makeTaggedNULL());
+    }
   }
 
   void pushLock(OzLock *lck)     { 

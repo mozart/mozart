@@ -43,22 +43,12 @@
 
 inline
 void telleq(Board * bb, const TaggedRef a, const TaggedRef b) {
-  RefsArray * args = RefsArray::allocate(2, NO);
-  args->setArg(0,a);
-  args->setArg(1,b);
-
-  Thread * t = oz_newThreadInject(bb);
-  t->pushCall(BI_Unify,args);
+  oz_newThreadInject(bb)->pushCall(BI_Unify,RefsArray::make(a,b));
 }
 
 inline
 void bindfut(Board * bb, const TaggedRef a, const TaggedRef b) {
-  RefsArray * args = RefsArray::allocate(2, NO);
-  args->setArg(0,a);
-  args->setArg(1,b);
-
-  Thread * t = oz_newThreadInject(bb);
-  t->pushCall(BI_bindFuture,args);
+  oz_newThreadInject(bb)->pushCall(BI_bindFuture,RefsArray::make(a,b));
 }
 
 

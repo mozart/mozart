@@ -48,25 +48,6 @@ int TaskStack::tasks()
   return (tos-array)/frameSz - 1;
 }
 
-void TaskStack::pushCall(TaggedRef pred, TaggedRef arg0, TaggedRef arg1, 
-			 TaggedRef arg2, TaggedRef arg3, TaggedRef arg4)
-{
-  TaggedRef a[5];
-  int argno = 0;
-  if (arg0) argno++;
-  if (arg1) argno++;
-  if (arg2) argno++;
-  if (arg3) argno++;
-  if (arg4) argno++;
-  a[0] = arg0;
-  a[1] = arg1;
-  a[2] = arg2;
-  a[3] = arg3;
-  a[4] = arg4;
-  pushCall(pred,a,argno);
-}
-
-
 static Bool isUninterestingTask(ProgramCounter PC) {
   return
     PC == C_XCONT_Ptr ||
