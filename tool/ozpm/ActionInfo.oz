@@ -81,13 +81,6 @@ define
    end
    %%
    fun {Info Id1}
-      Id = {ByteString.make Id1}
-   in
-      try
-	 for Entry in LocalDB do
-	    if Entry.id==Id then raise found(Entry) end end
-	 end
-	 notFound
-      catch found(E) then E end
+      {LocalDB condGet(Id1 notFound $)}
    end
 end
