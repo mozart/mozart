@@ -36,6 +36,7 @@
 #include "os.hh"
 #include "genvar.hh"
 #include "fdbuilti.hh"
+#include "trace.hh"
 
 AM am;
 

@@ -1,4 +1,5 @@
 #include "runtime.hh"
+#include "trace.hh"
 
 # define CBB (e->currentBoard())
 # define CTT (e->currentThread())
