@@ -54,9 +54,9 @@ class Script {
 public:
   void gc();
 
+  NO_DEFAULT_CONSTRUCTORS2(Script);
   Script() { numbOfCons = 0; first = (Equation *)NULL; }
   Script(int sizeInit);
-  ~Script();
   OZPRINT;
   void allocate(int sizeInit);
   void dealloc();
@@ -102,9 +102,7 @@ private:
   } u;
   Script script;
 public:
-  Board(); // fake compiler
-  ~Board(); // fake compiler
-  Board(Board&); // fake compiler
+  NO_DEFAULT_CONSTRUCTORS(Board);
   Board(Actor *a,int type);
 
   USEHEAPMEMORY;

@@ -51,12 +51,11 @@ private:
   Thread *thr;
   SuspList *next;
 public:
-  ~SuspList (void); // fake compiler
-
   USEFREELISTMEMORY;
   SuspList * gc();
   OZPRINTLONG;
 
+  NO_DEFAULT_CONSTRUCTORS(SuspList);
   SuspList(Thread *t, SuspList * n = NULL)
     : thr(t), next(n)
   {

@@ -57,9 +57,7 @@ protected:
   Board *board;
   Actor * gcField;// mm2: hack: flags and board seem to be needed for copying?
 public:
-  Actor(); // fake for compiler
-  Actor(Actor &); // fake for compiler
-  // ~Actor(); // fake for compiler
+  NO_DEFAULT_CONSTRUCTORS(Actor);
 
 protected:
   Actor(int typ,Board *bb)
@@ -122,9 +120,7 @@ protected:
   Continuation next;
   int childCount;
 public:
-  AWActor();  // fake for compiler
-  //~AWActor();  // fake for compiler
-  AWActor(AWActor&);  // fake for compiler
+  NO_DEFAULT_CONSTRUCTORS(AWActor);
   AWActor(int typ,Board *bb,Thread *tt,
 	  ProgramCounter p=NOCODE,RefsArray y=0,RefsArray g=0,
 	  RefsArray x=0,int i=0)
@@ -168,9 +164,7 @@ public:
 private:
   ProgramCounter elsePC;
 public:
-  AskActor(); // fake for compiler
-  ~AskActor(); // fake for compiler
-  AskActor(AskActor&); // fake for compiler
+  NO_DEFAULT_CONSTRUCTORS(AskActor);
   AskActor(Board *s,Thread *tt,
 	   ProgramCounter elsepc,
 	   ProgramCounter p, RefsArray y,RefsArray g, RefsArray x, int i)
@@ -208,9 +202,7 @@ private:
   Board **children;
   CpBag *cpb;
 public:
-  WaitActor();  // fake compiler
-  ~WaitActor();  // fake compiler
-  WaitActor(WaitActor&);  // fake compiler
+  NO_DEFAULT_CONSTRUCTORS(WaitActor);
 
   WaitActor(Board *s,Thread *tt,
 	    ProgramCounter p,RefsArray y,RefsArray g,RefsArray x, int i,

@@ -57,6 +57,7 @@ private:
 
   USEFREELISTMEMORY;
 
+  NO_DEFAULT_CONSTRUCTORS(Pair);
   Pair(TaggedRef t1, TaggedRef t2, Pair* list) {
      term1=t1;
      term2=t2;
@@ -72,6 +73,7 @@ private:
   Pair* list;
 
 public:
+  NO_DEFAULT_CONSTRUCTORS1(PairList);
   PairList() { list=NULL; }
 
   USEFREELISTMEMORY;
@@ -195,7 +197,10 @@ public:
     dt_index size;
     HashElement table[1]; // 1 == placeholder.  Actual size set when allocated.
 
-    USEFREELISTMEMORY;
+public:
+  USEFREELISTMEMORY;
+  OZPRINT;
+  NO_DEFAULT_CONSTRUCTORS(DynamicTable);
 
   // iteration
   int getFirst() { return -1; }
@@ -212,15 +217,12 @@ public:
   TaggedRef getKey(int i)   { return table[i].ident; }
   TaggedRef getValue(int i) { return table[i].value; }
 
-  OZPRINT;
-
   ostream &newprint(ostream &, int depth);
 
     // Copy the dynamictable from 'from' to 'to' space:
     DynamicTable* gc(void); // See definition in gc.cc
     void gcRecurse(void);
 
-    DynamicTable() { error("use newDynamicTable instead of new DynamicTable"); }
 
     // Create an initially empty dynamictable of size s
     static DynamicTable* newDynamicTable(dt_index s=4);
@@ -359,9 +361,7 @@ private:
                // within objects) can be marshalled
 
 public:
-  OzDictionary();
-  ~OzDictionary();
-  OzDictionary(OzDictionary&);
+  NO_DEFAULT_CONSTRUCTORS(OzDictionary);
   void init(int sz = DictDefaultSize)
   {
     table = DynamicTable::newDynamicTable(sz);
