@@ -364,7 +364,7 @@ though, one-argument procedures
 and objects are interchangeable.</NOTE>
 
 
-<SUBSECTION id="compute server"><TITLE>A compute server</TITLE>
+<SUBSECTION id="compute.server"><TITLE>A compute server</TITLE>
 
 <P>One of the promises of distributed computing is making
 computations go faster by exploiting the parallelism
