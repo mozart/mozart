@@ -539,6 +539,9 @@ inline OZ_Return buffer_vs(OZ_Term vs, char *write_buff, int *len,
   return vs2buff(vs, &write_buff, len, rest, susp);
 }
 
+OZ_Return OZ_buffer_vs(OZ_Term vs, char *write_buff, int *len,
+                       OZ_Term *rest, OZ_Term *susp)
+{ return buffer_vs(vs,write_buff,len,rest,susp); }
 
 // -------------------------------------------------
 // unix IO

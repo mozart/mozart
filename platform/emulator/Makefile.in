@@ -37,7 +37,7 @@ MODULE_NAMES =                                                  \
         PID Fault DPMisc DPB VirtualSite DPStatistics Tk Schedule FDP FSP \
         Parser \
         CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
-        Win32 Profile OsTime
+        Win32 Profile OsTime ZlibIO
 
 STATIC_MODULES=         @STATIC_MODULES@
 DYNAMIC_MODULES=        @DYNAMIC_MODULES@
@@ -70,6 +70,7 @@ MODSPECS= \
         CompilerSupport Compat Win32 Profile \
         Debug Fault Browser Misc DPMisc \
         VirtualSite Application DPStatistics OsTime \
+        ZlibIO \
         $(BIMODSPECS) \
         $(DENYS_SPECS)
 
@@ -183,6 +184,8 @@ SYSTEMSRCS =
 #       system.cc
 PROFILESRCS = \
         profile.cc
+ZLIBIOSRCS=\
+        zlibio.cc
 
 TKOBJS= $(TKSRCS:%.cc=%.lo)
 COMPILERSUPPORTOBJS=    $(COMPILERSUPPORTSRCS:%.cc=%.lo)
@@ -198,20 +201,21 @@ COMPATOBJS=     $(COMPATSRCS:%.cc=%.lo)
 WIN32OBJS=      $(WIN32SRCS:%.cc=%.lo)
 SYSTEMOBJS=     $(SYSTEMSRCS:%.cc=%.lo)
 PROFILEOBJS=    $(PROFILESRCS:%.cc=%.lo)
+ZLIBIOOBJS=     $(ZLIBIOSRCS:%.cc=%.lo)
 
 ALLSRCS= $(SRCS) \
         $(TKSRCS) $(COMPILERSUPPORTSRCS) $(BROWSERSRCS) \
         $(SPACEOPSRCS) $(FDBSRCS) $(FSBSRCS) $(CTBSRCS) \
         $(RECORDCSRCS) $(COMPATSRCS) $(WIN32SRCS) $(SYSTEMSRCS) \
         $(PROFILESRCS) $(OSTIMESRCS) \
-        $(DEBUGSRCS) $(TEXT2PICKLESRCS)
+        $(DEBUGSRCS) $(TEXT2PICKLESRCS) $(ZLIBIOSRCS)
 
 ALLOBJS= $(OBJS) \
         $(TKOBJS) $(COMPILERSUPPORTOBJS) $(BROWSEROBJS) \
         $(SPACEOPOBJS) $(FDBOBJS) $(FSBOBJS) $(CTBOBJS) \
         $(RECORDCOBJS) $(COMPATOBJS) $(WIN32OBJS) $(SYSTEMOBJS) \
         $(PROFILEOBJS) $(OSTIMEOBJS) \
-        $(DEBUGOBJS)
+        $(DEBUGOBJS) $(ZLIBIOOBJS)
 
 ############################################################################
 ### TARGETS
@@ -259,6 +263,14 @@ libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM):
 .PHONY: libFSP.a FSP.so-$(PLATFORM)
 libFSP.a FSP.so-$(PLATFORM):
         cd libfset; $(MAKE) ../$@
+
+ZlibIO.so-$(PLATFORM): $(ZLIBIOOBJS)
+        $(DYNLD) -o $@ $(ZLIBIOOBJS)
+
+ZlibIO.a: $(ZLIBIOOBJS)
+        $(AR) -rc $@ $(ZLIBIOOBJS) && $(RANLIB) $@
+
+zlibio.o: modZlibIO-if.cc
 
 Tk.so-$(PLATFORM): $(TKOBJS)
         $(DYNLD) -o $@ $(TKOBJS)
