@@ -7,7 +7,7 @@
   */
 
 #include "oz.h"
-#include "sun-proto.h"
+#include "sunproto.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -24,14 +24,16 @@ extern int h_errno;
 
 #include <time.h>
 #include <sys/param.h>
-#include <sys/socket.h>
 #include <sys/stat.h>
 
+#ifndef MSDOS
+#include <sys/socket.h>
 #include <sys/uio.h>
+#include <sys/un.h>
+#endif
 #include <sys/time.h>
 #include <sys/times.h>
 #include <sys/resource.h>
-#include <sys/un.h>
 #include <sys/wait.h>
 #include <netinet/in.h>
 #include <signal.h>
@@ -571,7 +573,10 @@ OZ_C_ioproc_begin(unix_open,4)
 
     if (OZ_isVariable(head))
       return SUSPEND;
-
+#ifdef MSDOS
+    OZ_warning("open: illegal mode");
+    return FAILED;
+#else
     if (OZ_unifyString(head,"S_IRUSR") == PROCEED) { mode |= S_IRUSR; }
     else if (OZ_unifyString(head,"S_IWUSR") == PROCEED) { mode |= S_IWUSR; }
     else if (OZ_unifyString(head,"S_IXUSR") == PROCEED) { mode |= S_IXUSR; }
@@ -585,7 +590,7 @@ OZ_C_ioproc_begin(unix_open,4)
       OZ_warning("open: illegal mode");
       return FAILED;
     }
-
+#endif
     OzMode = tail;
   }
 
@@ -844,6 +849,7 @@ OZ_C_ioproc_begin(unix_bindInet,3)
 }
 OZ_C_proc_end
 
+#ifndef MSDOS
 OZ_C_ioproc_begin(unix_bindUnix,3)
 {
   OZ_declareIntArg("bindUnix",0,s);
@@ -889,7 +895,6 @@ OZ_C_ioproc_begin(unix_listen,3)
   return OZ_unifyInt(out,ret);
 }
 OZ_C_proc_end
-
 
 static void blockSignals()
 {
@@ -1020,8 +1025,6 @@ OZ_C_ioproc_begin(unix_acceptUnix,3)
     && OZ_unifyInt(out, fd) == PROCEED) ? PROCEED: FAILED;
 }
 OZ_C_proc_end
-
-
 
 static OZ_Bool get_send_recv_flags(OZ_Term OzFlags, int * flags)
 {
@@ -1330,44 +1333,6 @@ OZ_C_proc_end
 
 
 
-
-// Misc stuff
-
-OZ_C_ioproc_begin(unix_unlink, 2)
-{
-  OZ_declareVsArg("unlink",0,path);
-  OZ_declareArg(1, out);
-
-  WRAPCALL(unlink(path),ret,out);
-  return OZ_unifyInt(out, ret);
-}
-OZ_C_proc_end
-  
-
-OZ_C_ioproc_begin(unix_system,2)
-{
-  OZ_declareVsArg("system", 0, vs);
-  OZ_declareArg(1, out);
-
-  WRAPCALL(system(vs),ret,out);
-
-  return OZ_unifyInt(out,ret);
-}
-OZ_C_proc_end
-
-OZ_C_ioproc_begin(unix_wait,2)
-{
-  OZ_declareArg(0, rpid);
-  OZ_declareArg(1, rstat);
-
-  int status;
-  int pid = waitpid(-1, &status, WNOHANG | WUNTRACED);
-  
-  return (OZ_unifyInt(rpid,pid) == PROCEED
-	  && OZ_unifyInt(rstat,status) == PROCEED) ? PROCEED : FAILED;
-}
-OZ_C_proc_end
-
 OZ_C_ioproc_begin(unix_pipe,4)
 {
   OZ_declareVsArg("pipe",0,s);
@@ -1466,9 +1431,99 @@ OZ_C_ioproc_begin(unix_pipe,4)
     return OZ_unifyInt(rpid,pid) == PROCEED
       && OZ_unifyInt(rsock,sv[0]) == PROCEED ? PROCEED : FAILED;
   }
+
+  return FAILED;
 }
 OZ_C_proc_end
 
+
+static OZ_Term mkAliasList(char **alias)
+{
+  if (*alias == 0) {
+    return OZ_nil();
+  } else {
+    return OZ_cons(OZ_CToList(*alias), mkAliasList(++alias));
+  }
+}
+
+static OZ_Term mkAddressList(char **lstptr)
+{
+  if (*lstptr == 0) {
+    return OZ_nil();
+  } else {
+    
+#ifdef SUNOS_SPARC
+    return OZ_cons(OZ_CToList(inet_ntoa(*(struct in_addr *)lstptr)),
+		   mkAddressList(++lstptr));
+#else  
+    return OZ_cons(OZ_CToList(inet_ntoa(*((struct in_addr *) *lstptr))),
+		   mkAddressList(++lstptr));
+#endif
+  }
+}
+
+OZ_C_ioproc_begin(unix_getHostByName, 4)
+{
+  OZ_declareVsArg("getHostByName", 0, name);
+  OZ_declareArg(1, offName);
+  OZ_declareArg(2, aliases);
+  OZ_declareArg(3, addresses);
+
+  struct hostent *hostaddr;
+
+  if ((hostaddr = gethostbyname(name)) == NULL) {
+    RETURN_NET_ERROR(offName);
+  }
+
+  return (OZ_unify(offName,OZ_CToList(hostaddr->h_name)) == PROCEED &&
+	  OZ_unify(aliases,mkAliasList(hostaddr->h_aliases)) == PROCEED &&
+	  OZ_unify(addresses,mkAddressList(hostaddr->h_addr_list)) ==
+	  PROCEED)
+    ? PROCEED : FAILED;
+}
+OZ_C_proc_end
+
+#endif
+
+
+
+
+// Misc stuff
+
+OZ_C_ioproc_begin(unix_unlink, 2)
+{
+  OZ_declareVsArg("unlink",0,path);
+  OZ_declareArg(1, out);
+
+  WRAPCALL(unlink(path),ret,out);
+  return OZ_unifyInt(out, ret);
+}
+OZ_C_proc_end
+  
+
+OZ_C_ioproc_begin(unix_system,2)
+{
+  OZ_declareVsArg("system", 0, vs);
+  OZ_declareArg(1, out);
+
+  WRAPCALL(system(vs),ret,out);
+
+  return OZ_unifyInt(out,ret);
+}
+OZ_C_proc_end
+
+OZ_C_ioproc_begin(unix_wait,2)
+{
+  OZ_declareArg(0, rpid);
+  OZ_declareArg(1, rstat);
+
+  int status;
+  int pid = waitpid(-1, &status, WNOHANG | WUNTRACED);
+  
+  return (OZ_unifyInt(rpid,pid) == PROCEED
+	  && OZ_unifyInt(rstat,status) == PROCEED) ? PROCEED : FAILED;
+}
+OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_getEnv,3)
 {
@@ -1544,18 +1599,18 @@ OZ_C_proc_end
 
 
 
-static OZ_Bool copy_time(const struct tm* time, OZ_Term *term)
+static OZ_Bool copy_time(const struct tm* tim, OZ_Term *term)
 {
   return (
-	  OZ_unifyInt(OZ_getRecordArgC(*term, "sec"), time->tm_sec) == PROCEED
-	  && OZ_unifyInt(OZ_getRecordArgC(*term, "min"), time->tm_min) == PROCEED
-	  && OZ_unifyInt(OZ_getRecordArgC(*term, "hour"), time->tm_hour) == PROCEED
-	  && OZ_unifyInt(OZ_getRecordArgC(*term, "mDay"), time->tm_mday) == PROCEED
-	  && OZ_unifyInt(OZ_getRecordArgC(*term, "mon"), time->tm_mon) == PROCEED
-	  && OZ_unifyInt(OZ_getRecordArgC(*term, "year"), time->tm_year) == PROCEED
-	  && OZ_unifyInt(OZ_getRecordArgC(*term, "wDay"), time->tm_wday) == PROCEED
-	  && OZ_unifyInt(OZ_getRecordArgC(*term, "yDay"), time->tm_yday) == PROCEED
-	  && OZ_unifyInt(OZ_getRecordArgC(*term, "isDst"), time->tm_isdst) == PROCEED
+	  OZ_unifyInt(OZ_getRecordArgC(*term, "sec"), tim->tm_sec) == PROCEED
+	  && OZ_unifyInt(OZ_getRecordArgC(*term, "min"), tim->tm_min) == PROCEED
+	  && OZ_unifyInt(OZ_getRecordArgC(*term, "hour"), tim->tm_hour) == PROCEED
+	  && OZ_unifyInt(OZ_getRecordArgC(*term, "mDay"), tim->tm_mday) == PROCEED
+	  && OZ_unifyInt(OZ_getRecordArgC(*term, "mon"), tim->tm_mon) == PROCEED
+	  && OZ_unifyInt(OZ_getRecordArgC(*term, "year"), tim->tm_year) == PROCEED
+	  && OZ_unifyInt(OZ_getRecordArgC(*term, "wDay"), tim->tm_wday) == PROCEED
+	  && OZ_unifyInt(OZ_getRecordArgC(*term, "yDay"), tim->tm_yday) == PROCEED
+	  && OZ_unifyInt(OZ_getRecordArgC(*term, "isDst"), tim->tm_isdst) == PROCEED
 	  ) ? PROCEED : FAILED;
 }
 
@@ -1578,52 +1633,6 @@ OZ_C_ioproc_begin(unix_localTime, 1)
   time(&timebuf);
   return copy_time(localtime(&timebuf), &out);
   
-}
-OZ_C_proc_end
-
-static OZ_Term mkAliasList(char **alias)
-{
-  if (*alias == 0) {
-    return OZ_nil();
-  } else {
-    return OZ_cons(OZ_CToList(*alias), mkAliasList(++alias));
-  }
-}
-
-static OZ_Term mkAddressList(char **lstptr)
-{
-  if (*lstptr == 0) {
-    return OZ_nil();
-  } else {
-    
-#ifdef SUNOS_SPARC
-    return OZ_cons(OZ_CToList(inet_ntoa(*(struct in_addr *)lstptr)),
-		   mkAddressList(++lstptr));
-#else  
-    return OZ_cons(OZ_CToList(inet_ntoa(*((struct in_addr *) *lstptr))),
-		   mkAddressList(++lstptr));
-#endif
-  }
-}
-
-OZ_C_ioproc_begin(unix_getHostByName, 4)
-{
-  OZ_declareVsArg("getHostByName", 0, name);
-  OZ_declareArg(1, offName);
-  OZ_declareArg(2, aliases);
-  OZ_declareArg(3, addresses);
-
-  struct hostent *hostaddr;
-
-  if ((hostaddr = gethostbyname(name)) == NULL) {
-    RETURN_NET_ERROR(offName);
-  }
-
-  return (OZ_unify(offName,OZ_CToList(hostaddr->h_name)) == PROCEED &&
-	  OZ_unify(aliases,mkAliasList(hostaddr->h_aliases)) == PROCEED &&
-	  OZ_unify(addresses,mkAddressList(hostaddr->h_addr_list)) ==
-	  PROCEED)
-    ? PROCEED : FAILED;
 }
 OZ_C_proc_end
 
@@ -1678,6 +1687,21 @@ void MyinitUnix()
   OZ_addBuiltin("unix_read",5,unix_read);
   OZ_addBuiltin("unix_lSeek",4,unix_lSeek);
   OZ_addBuiltin("unix_unlink",2,unix_unlink);
+  OZ_addBuiltin("unix_getServByName",4,unix_getServByName);
+  OZ_addBuiltin("unix_select",2,unix_select);
+  OZ_addBuiltin("unix_openIO",2,unix_openIO);
+  OZ_addBuiltin("unix_closeIO",2,unix_closeIO);
+  OZ_addBuiltin("unix_system",2,unix_system);
+  OZ_addBuiltin("unix_wait",2,unix_wait);
+  OZ_addBuiltin("unix_getEnv",3,unix_getEnv);
+  OZ_addBuiltin("unix_putEnv",2,unix_putEnv);
+  OZ_addBuiltin("unix_tempName",3,unix_tempName);
+  OZ_addBuiltin("unix_gmTime",1,unix_gmTime);
+  OZ_addBuiltin("unix_localTime",1,unix_localTime);
+  OZ_addBuiltin("unix_srand",1,unix_srand);
+  OZ_addBuiltin("unix_rand",1,unix_rand);
+  OZ_addBuiltin("unix_randLimits",2,unix_randLimits);
+#ifndef MSDOS
   OZ_addBuiltin("unix_socket",4,unix_socket);
   OZ_addBuiltin("unix_bindInet",3,unix_bindInet);
   OZ_addBuiltin("unix_bindUnix",3,unix_bindUnix);
@@ -1693,21 +1717,8 @@ void MyinitUnix()
   OZ_addBuiltin("unix_receiveFromUnix",7,unix_receiveFromUnix);
   OZ_addBuiltin("unix_receiveFromInet",8,unix_receiveFromInet);
   OZ_addBuiltin("unix_getSockName",2,unix_getSockName);
-  OZ_addBuiltin("unix_getServByName",4,unix_getServByName);
-  OZ_addBuiltin("unix_select",2,unix_select);
-  OZ_addBuiltin("unix_openIO",2,unix_openIO);
-  OZ_addBuiltin("unix_closeIO",2,unix_closeIO);
-  OZ_addBuiltin("unix_system",2,unix_system);
-  OZ_addBuiltin("unix_wait",2,unix_wait);
   OZ_addBuiltin("unix_pipe",4,unix_pipe);
-  OZ_addBuiltin("unix_getEnv",3,unix_getEnv);
-  OZ_addBuiltin("unix_putEnv",2,unix_putEnv);
-  OZ_addBuiltin("unix_tempName",3,unix_tempName);
-  OZ_addBuiltin("unix_gmTime",1,unix_gmTime);
-  OZ_addBuiltin("unix_localTime",1,unix_localTime);
   OZ_addBuiltin("unix_getHostByName",4,unix_getHostByName);
-  OZ_addBuiltin("unix_srand",1,unix_srand);
-  OZ_addBuiltin("unix_rand",1,unix_rand);
-  OZ_addBuiltin("unix_randLimits",2,unix_randLimits);
+#endif
 }
 

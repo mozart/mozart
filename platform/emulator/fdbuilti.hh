@@ -709,7 +709,7 @@ public:
 
 
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
-#include "fdbuiltin.icc"
+#include "fdbuilti.icc"
 #else
 OZ_Bool addNonResSuspForDet(TaggedRef v, TaggedRefPtr vp, TypeOfTerm vt,
 			    Suspension * s);
