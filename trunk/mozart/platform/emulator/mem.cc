@@ -28,11 +28,11 @@
 #pragma implementation "mem.hh"
 #endif
 
-#include <sys/types.h>
-
 #include "mem.hh"
 #include "os.hh"
 #include "am.hh"
+
+#include <unistd.h>
 
 #ifdef CS_PROFILE
 Bool across_chunks;
@@ -135,36 +135,9 @@ void freeListChop(void * addr, size_t size) {
 }
 
 // ----------------------------------------------------------------
-// mem from os with 2 alternatives
-//   USESBRK
-//   USEMALLOC
+// mem from os with 2 alternatives SBRK or MALLOC
 
-#if !defined(CCMALLOC) && (defined(SUNOS_SPARC) || defined(SOLARIS) || defined(LINUX) || defined(IRIX) )
-#define USESBRK
-#else
-#define USEMALLOC
-#endif
-
-
-
-#if defined(USEMALLOC)
-#include <memory.h>
-
-void ozFree(void *addr) {
-  free(addr);
-}
-
-void *ozMalloc(size_t size) {
-  return malloc(size);
-}
-
-#elif defined(USESBRK)
-
-extern "C" void *sbrk(int incr);
-
-/* have to define this, that gcc is quiet */
-extern "C"  int brk(void *incr);
-
+#if !defined(CCMALLOC) && defined(HAVE_SBRK)
 
 /* remember the last sbrk(0), if it changed --> malloc needs more
  * memory, so call fakeMalloc
@@ -330,11 +303,13 @@ void ozFree(void *p)
 
 #else
 
- ERROR ERROR
- 
- non valid OSMEM in mem.cc
+void ozFree(void *addr) {
+  free(addr);
+}
 
- ERROR ERROR
+void *ozMalloc(size_t size) {
+  return malloc(size);
+}
 
 #endif
 

@@ -397,6 +397,8 @@ dnl AC_TYPE_SIGNAL
 dnl AC_FUNC_VPRINTF
 dnl AC_CHECK_FUNCS(getcwd gethostname gettimeofday putenv select socket strdup strerror strstr strtod strtol strtoul uname setpgid)
 
+AC_CHECK_FUNCS(sbrk)
+
 dnl *****************************************************************
 dnl MISC
 dnl *****************************************************************
