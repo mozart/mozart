@@ -7,30 +7,49 @@
 
 # where Oz resides:
 
-howcalled=$0	
-: ${OZHOME=`dirname \`dirname $howcalled\``}
-echo "Setting Oz installation directory to: $OZHOME"
+howcalled=$0
 
-# determine machine architecture
-if [ ${OZARCH-0} = 0 ]; then
-  if   [ -f /bin/arch ]; then OZARCH=`/bin/arch`
-  elif [ -f /bin/machine ]; then OZARCH=`/bin/machine`
-  else echo 1>&2 "error: cannot determine machine type"
-       exit 1;
-  fi
+if [ ${OZHOME-xx} = xx ]
+then
+  OZHOME =`dirname \`dirname $howcalled\``
+  echo "Setting Oz installation directory to: $OZHOME"
+  export OZHOME
 fi
 
-: ${OZARCHBIN=$OZHOME/bin/$OZARCH}
+# determine machine architecture
+if [ ${OZARCH-xx} = xx ]
+then
+  if   [ -f /usr/bin/arch ]; then OZARCH=`/usr/bin/arch`
+  elif [ -f /bin/machine ]; then OZARCH=`/bin/machine`
+  else echo 1>&2 "error: cannot determine machine type"; exit 1
+  fi
+fi
+export OZARCH
+#echo "OZARCH = $OZARCH"
 
-# where Oz searches for files:
-: ${OZPATH=.}
-OZPATH=${OZPATH}:${OZHOME}/lib:${OZHOME}/lib/${OZARCH}:${OZHOME}/demo}
-export OZPATH
+
+: ${OZCOMPILER:=$OZHOME/bin/$OZARCH/oz.compiler.bin}
+#echo "OZCOMPILER = $OZCOMPILER"
+
+: ${OZMACHINE:=$OZHOME/bin/$OZARCH/oz.machine.bin}
+#echo "OZMACHINE = $OZMACHINE"
 
 
-# increment path
-PATH=${PATH}:${OZHOME}/bin:${OZHOME}/bin/${OZARCH}
-export PATH
+# set OZPATH & PATH
+if [ ${OZ_PI-xx} = xx ]; then
+
+	# where Oz searches for files:
+	: ${OZPATH:=.}
+	OZPATH=${OZPATH}:${OZHOME}/lib:${OZHOME}/lib/${OZARCH}:${OZHOME}/demo
+	export OZPATH
+#echo "OZPATH = $OZPATH"
+	# increment path
+	PATH=${PATH}:${OZHOME}/bin:${OZHOME}/bin/${OZARCH}
+	export PATH
+#echo "PATH = $PATH"
+        OZ_PI=1
+	export OZ_PI
+fi
 
 # load fonts
 if [ -d ${OZHOME}/lib/fonts ]; then 
@@ -83,26 +102,30 @@ case "$cmd" in
    ;;
 
    oz.compiler)
+
+
        if [ $TERM = "emacs" ]; then
-          exec $OZARCHBIN/oz.compiler.bin +E `echo $* |  sed -e 's/-/+/g'`
+          exec $OZCOMPILER +E `echo $* |  sed -e 's/-/+/g'`
        else
           exec xterm -name "OzCompiler" \
                -T "Oz Compiler Input Window" \
-	       -e $ILE $OZARCHBIN/oz.compiler.bin `echo $* |  sed -e 's/-/+/g'`
+	       -e $ILE $OZCOMPILER `echo $* |  sed -e 's/-/+/g'`
        fi
    ;;
 
    oz.machine)
+
+
       if [ $TERM = "emacs" ]; then
-        exec $OZARCHBIN/oz.machine.bin -E $*
+        exec $OZMACHINE -E $*
       else
-        xterm -title 'Oz Machine' -e $OZARCHBIN/oz.machine.bin $* > /dev/null 2>&1 &
+        xterm -title 'Oz Machine' -e $OZMACHINE $* > /dev/null 2>&1 &
       fi
       exit 0
    ;;
 
    oz-)
-       exec $ILE $OZARCHBIN/oz.compiler.bin $*
+	exec $ILE $OZCOMPILER $*
    ;;
 
    *)
