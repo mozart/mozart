@@ -6952,6 +6952,14 @@ OZ_C_proc_begin(BInameVariable,2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BInewNamedName,2)
+{
+  oz_declareAtomArg(0,printName);
+  oz_declareArg(1,res);
+  return oz_unify(makeTaggedLiteral(addToNameTab(printName)),res);
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BIgenerateAbstractionTableID,1)
 {
   oz_declareArg(0,res);
@@ -7487,6 +7495,7 @@ BIspec allSpec[] = {
   {"getBuiltinName",             2, BIgetBuiltinName,             0},
   {"getAbstractionTableID",      2, BIgetAbstractionTableID,      0},
   {"nameVariable",               2, BInameVariable,               0},
+  {"newNamedName",               2, BInewNamedName,               0},
   {"generateAbstractionTableID", 1, BIgenerateAbstractionTableID, 0},
   {"RegSet.new",                 3, BIregSet_new,                 0},
   {"RegSet.copy",                2, BIregSet_copy,                0},
