@@ -30,7 +30,8 @@
 
 #include "thr_pool.hh"
 
-ThreadsPool::ThreadsPool(void) : hi(0), mid(0) {
+void ThreadsPool::init(void) {
+  hi = mid = 0;
   _q[ HI_PRIORITY] = new SuspQueue();
   _q[MID_PRIORITY] = new SuspQueue();
   _q[LOW_PRIORITY] = new SuspQueue();
