@@ -891,6 +891,8 @@ void BIinitFD(void)
   BIadd("fdMaximum_body", 3, BIfdMaximum_body);
   BIadd("fdUnion", 3, BIfdUnion);
   BIadd("fdUnion_body", 3, BIfdUnion_body);
+  BIadd("fdIntersection", 3, BIfdIntersection);
+  BIadd("fdIntersection_body", 3, BIfdIntersection_body);
   BIadd("fdSubsume_body", 3, BIfdSubsume_body);
   BIadd("fdLessEqOff", 3, BIfdLessEqOff);
   BIadd("fdLessEqOff_body", 3, BIfdLessEqOff_body);
