@@ -45,27 +45,16 @@
 /*
  * Note for DEC Alpha:
  * by default the text segment on the alpha starts at adress
- * 0x120000000 and the data segment at 0x140000000 (i.e. a bit in the upper
- * 4 bytes of addresses is set).
- * This makes converting an int32 to a void* and converting an
- * int32 to a program adress (used in threaded code) more expensive.
- * So we can either use the -T and -D option of the linker or create an
- * NMAGIC file using the -n link option, which lets start segments at
- * 0x20000000 and 0x40000000. We choose to use -T/-D since -n requires
- * static linking, which does not support dlopen/dlsym dynamic linking
- * We also let the data segment start at 0x3000000 this makes mallocBase==0x0
- * See also man page of ld(1)
+ * 0x120000000 and the data segment at 0x140000000 (i.e. a bit in the
+ * upper 4 bytes of addresses is set).  This makes converting an int32
+ * to a void* and converting an int32 to a program adress (used in
+ * threaded code) more expensive.  So we can either use the -T and -D
+ * option of the linker or create an NMAGIC file using the -n link
+ * option, which lets start segments at 0x20000000 and 0x40000000. We
+ * choose to use -T/-D since -n requires static linking, which does
+ * not support dlopen/dlsym dynamic linking.  See also man page of
+ * ld(1)
  */
-
-#if defined(LINUX_M68K)
-#define mallocBase 0x80000000
-#else
-#ifdef HPUX_700
-#define mallocBase 0x40000000
-#else
-#define mallocBase 0x0
-#endif
-#endif
 
 
 #if defined(ARCH_MIPS) || defined(ARCH_SPARC) || defined(OSF1_ALPHA)
@@ -97,10 +86,6 @@ inline uint32 ToInt32(uint32 t) { return t; }
 /* (un)set bits in a pointer */
 inline void *orPointer(void *p, int i)  { return (void*) ((intlong)p|(intlong)i); }
 inline void *andPointer(void *p, int i) { return (void*) ((intlong)p&(intlong)i); }
-
-
-/* consistency check */
-inline int isPointer(void *p) { return (((intlong)p) & mallocBase) != 0;}
 
 // Memory management gets a register
 #if __GNUC__ >= 2 && defined(sparc) && defined(REGOPT)

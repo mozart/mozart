@@ -67,16 +67,16 @@ void GTIndexTable::gCollectGTIT()
   for (i = 0; i < asize; i++) {
     OZ_Term t = ta[i].term;
     // 't' is either an (immediate) non-variable, a reference to a
-    // variable, or a pseudo-variable used for keeping of references
-    // to non-relocatable objects. Observe that no GC tags can be
-    // there;
+    // variable (possibly GC"ed), or a pseudo-variable used for
+    // keeping of references to non-relocatable objects. Observe that
+    // no direct GC tags can be there;
     //
     Assert(!oz_isMark(t));
 #ifdef DEBUG_CHECK
     Bool isVar;
     if (oz_isRef(t)) {
       isVar = OK;
-      Assert(oz_isVar(*tagged2Ref(t)));
+      Assert(oz_isVar(*tagged2Ref(t)) || isGCMarkedTerm(t));
     } else {
       isVar = NO;
     }
@@ -921,8 +921,11 @@ repeat:
       PrTabEntry *pr = new PrTabEntry(name, mkTupleWidth(arity),
                                       file, line, column,
                                       oz_nil(), maxX);
-      pr->PC = pc;
+      Assert(pc != NOCODE && gsize >= 0);
+      pr->setPC(pc);
       pr->setGSize(gsize);
+
+      //
       Abstraction *pp = Abstraction::newAbstraction(pr, am.currentBoard());
       procTerm = makeTaggedConst(pp);
       pp->setGName(gname);

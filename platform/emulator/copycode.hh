@@ -25,4 +25,9 @@
 
 #include "value.hh"
 
-ProgramCounter copyCode(ProgramCounter start, TaggedRef alist);
+//
+// kost@ : 'ope' is the original PrTabEntry.
+// kost@ : 'pe' is the PrTabEntry for the copy.
+//         'start' points to the first procedure's instruction;
+ProgramCounter copyCode(PrTabEntry *ope, PrTabEntry *pe,
+                        ProgramCounter start, TaggedRef alist);

@@ -188,7 +188,7 @@ Bool dpMarshalCode(GenTraverser *gt, void *arg)
 // ArityAndIsTail int
 // Dummy int
 // ProcedureRef int,dif,int
-// PredId [ov],int,int|[ov],[ov],int,int,[ov],int
+// PredId [ov],int,int|[ov],[ov],int,int,[ov],int,int
 // HashTableRef int,int,int,N=int,(int,int,[ov])|(int,int,[ov],int,(int|[oz]))*N
 // RecordArity int,int|[oz]
 // CallMethodInfo int,[oz],int,int|[oz]
@@ -214,7 +214,7 @@ define(opAction,
          $1,ArityAndIsTail,size+=MNumberMaxSize;PC++;,
          $1,Dummy,size+=MNumberMaxSize;PC++;,
          $1,ProcedureRef,size+=(2*MNumberMaxSize + DIFMaxSize);PC++;,
-         $1,PredId,size+=5*MNumberMaxSize;PC++;,
+         $1,PredId,size+=6*MNumberMaxSize;PC++;,
          $1,HashTableRef,size+=(((IHashTable *)getAdressArg(PC++))->getEntries()*4*5*MNumberMaxSize + 3*MNumberMaxSize);,
          $1,RecordArity,size+=2*MNumberMaxSize;PC++;,
          $1,CallMethodInfo,size+=3*MNumberMaxSize;PC++;,
@@ -264,7 +264,7 @@ define(opAction,
         $1,ArityAndIsTail,PC=unmarshalNum(PC,bs);,
         $1,Dummy,PC=unmarshalNum(PC,bs);,
         $1,ProcedureRef,PC=unmarshalProcedureRef(b,PC,bs,code);,
-        $1,PredId,PC=unmarshalPredId(b,PC,lastPC,bs);ozValuesCnt--;,
+        $1,PredId,PC=unmarshalPredId(b,PC,instPC,bs);ozValuesCnt--;,
         $1,HashTableRef,PC=unmarshalHashTableRef(b,PC,bs);ozValuesCnt--;,
         $1,RecordArity,PC=unmarshalRecordArity(b,PC,bs);ozValuesCnt--;,
         $1,CallMethodInfo,PC=unmarshalCallMethodInfo(b,PC,bs);ozValuesCnt--;,
@@ -281,14 +281,14 @@ Bool dpUnmarshalCode(ByteBuffer *bs, Builder *b,
 {
   int ozValuesCnt = ozValuesBADP;
   ProgramCounter PC = desc->getCurrent();
-  ProgramCounter lastPC;
+  ProgramCounter instPC;
+  DebugCode(instPC = (ProgramCounter) -1);
   // 'CodeArea*' is passed in it itself:
   CodeArea *code = desc->getCodeArea();
   Bool done = NO;
 
   //
   while (ozValuesCnt > 0) {
-    lastPC = PC;
     Opcode op = (Opcode) bs->get();
     if (op == ENDOFFILE) {
       done = OK;
@@ -304,8 +304,10 @@ Bool dpUnmarshalCode(ByteBuffer *bs, Builder *b,
 
     //
     Assert(op != CALLPROCEDUREREF);
-    if (PC)
-      PC = CodeArea::writeOpcode(op,PC);
+    if (PC) {
+      instPC = PC;
+      PC = CodeArea::writeOpcode(op, PC);
+    }
 
     //
     switch(op) {
@@ -346,7 +348,7 @@ define(opAction,
         $1,ArityAndIsTail,PC=unmarshalNumRobust(PC,bs,&e);if(e) return ERR;,
         $1,Dummy,PC=unmarshalNumRobust(PC,bs,&e);if(e) return ERR;,
         $1,ProcedureRef,PC=unmarshalProcedureRefRobust(b,PC,bs,code,&e);if(e) return ERR;,
-        $1,PredId,PC=unmarshalPredIdRobust(b,PC,lastPC,bs,&e);ozValuesCnt--;if(e) return ERR;,
+        $1,PredId,PC=unmarshalPredIdRobust(b,PC,instPC,bs,&e);ozValuesCnt--;if(e) return ERR;,
         $1,HashTableRef,PC=unmarshalHashTableRefRobust(b,PC,bs,&e);ozValuesCnt--;if(e) return ERR;,
         $1,RecordArity,PC=unmarshalRecordArityRobust(b,PC,bs,&e);ozValuesCnt--;if(e) return ERR;,
         $1,CallMethodInfo,PC=unmarshalCallMethodInfoRobust(b,PC,bs,&e);ozValuesCnt--;if(e) return ERR;,
@@ -365,14 +367,14 @@ Bool dpUnmarshalCodeRobust(ByteBuffer *bs, Builder *b,
 {
   int ozValuesCnt = ozValuesBADP;
   ProgramCounter PC = desc->getCurrent();
-  ProgramCounter lastPC;
+  ProgramCounter instPC;
+  DebugCode(instPC = (ProgramCounter) -1);
   // 'CodeArea*' is passed in it itself:
   CodeArea *code = desc->getCodeArea();
   Bool done = NO;
 
   //
   while (ozValuesCnt > 0) {
-    lastPC = PC;
     Opcode op = (Opcode) bs->get();
     if (op == ENDOFFILE) {
       done = OK;
@@ -388,8 +390,10 @@ Bool dpUnmarshalCodeRobust(ByteBuffer *bs, Builder *b,
 
     //
     Assert(op != CALLPROCEDUREREF);
-    if (PC)
-      PC = CodeArea::writeOpcode(op,PC);
+    if (PC) {
+      instPC = PC;
+      PC = CodeArea::writeOpcode(op, PC);
+    }
 
     //
     switch(op) {

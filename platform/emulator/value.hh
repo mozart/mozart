@@ -2132,6 +2132,7 @@ private:
     unsigned int isSited : 1;
   } p;
 
+  ProgramCounter PC;
   int gSize;
 
 public:
@@ -2142,8 +2143,6 @@ public:
   static void profileReset();
 
   PrTabEntryProfile * pprof;
-
-  ProgramCounter PC;
 
   CodeArea *codeBlock; // cache surrounding code block for code GC
 

@@ -145,6 +145,7 @@ public:
     _size = s;
     _array = (T *) malloc(s * sizeof(T));
   }
+  // kost@ : where is the destructor function?
   inline
   T &operator [](int i) {
     OZ_ASSERT(0 <= i && i < _size);

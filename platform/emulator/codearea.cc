@@ -1147,36 +1147,283 @@ ProgramCounter
 
 CodeArea * CodeArea::skipInGC = NULL;
 
-CodeArea::~CodeArea(void) {
+CodeArea::~CodeArea(void)
+{
   Assert(this != CodeArea::skipInGC);
   // Find dynamically allocate data structures that must be deallocated
   ProgramCounter PC = getStart();
+
   while (OK) {
     Opcode op = getOpcode(PC);
+    DebugCode(ProgramCounter prevPC = PC;);
+
+    //
     switch (op) {
+    case PROFILEPROC:
+    case RETURN:
+    case POPEX:
+    case DEALLOCATEL10:
+    case DEALLOCATEL9:
+    case DEALLOCATEL8:
+    case DEALLOCATEL7:
+    case DEALLOCATEL6:
+    case DEALLOCATEL5:
+    case DEALLOCATEL4:
+    case DEALLOCATEL3:
+    case DEALLOCATEL2:
+    case DEALLOCATEL1:
+    case DEALLOCATEL:
+    case ALLOCATEL10:
+    case ALLOCATEL9:
+    case ALLOCATEL8:
+    case ALLOCATEL7:
+    case ALLOCATEL6:
+    case ALLOCATEL5:
+    case ALLOCATEL4:
+    case ALLOCATEL3:
+    case ALLOCATEL2:
+    case ALLOCATEL1:
+    case SKIP:
+      PC += 1;
+      break;
+
     case ENDOFFILE:
-      Assert(PC+1 == getStart()+size);
-      return;
+      Assert(PC+1 == getStart() + size);
+      goto finish;
+
+    case DEFINITIONCOPY:
+    case DEFINITION:
+      // PrTabEntry"s and AbstractionEntry"s are (supposed to be)
+      // reclaimed by the GC directly.
+      PC += 6;
+      break;
+
+    case CLEARY:
+    case GETVOID:
+    case GETVARIABLEY:
+    case GETVARIABLEX:
+    case FUNRETURNG:
+    case FUNRETURNY:
+    case FUNRETURNX:
+    case GETRETURNG:
+    case GETRETURNY:
+    case GETRETURNX:
+    case EXHANDLER:
+    case BRANCH:
+    case SETSELFG:
+    case GETSELF:
+    case ALLOCATEL:
+    case UNIFYVOID:
+    case UNIFYNUMBER:
+    case UNIFYVALUEG:
+    case UNIFYVALUEY:
+    case UNIFYVALUEX:
+    case UNIFYVARIABLEY:
+    case UNIFYVARIABLEX:
+    case GETLISTG:
+    case GETLISTY:
+    case GETLISTX:
+    case SETVOID:
+    case SETVALUEG:
+    case SETVALUEY:
+    case SETVALUEX:
+    case SETVARIABLEY:
+    case SETVARIABLEX:
+    case PUTLISTY:
+    case PUTLISTX:
+    case CREATEVARIABLEY:
+    case CREATEVARIABLEX:
+    case ENDDEFINITION:
+      PC += 2;
+      break;
+    case INLINEMINUS1:
+    case INLINEPLUS1:
+    case GETVARVARYY:
+    case GETVARVARYX:
+    case GETVARVARXY:
+    case GETVARVARXX:
+    case TESTLISTG:
+    case TESTLISTY:
+    case TESTLISTX:
+    case LOCKTHREAD:
+    case TAILCALLG:
+    case TAILCALLX:
+    case CALLG:
+    case CALLY:
+    case CALLX:
+    case CALLGLOBAL:
+    case GETNUMBERG:
+    case GETNUMBERY:
+    case GETNUMBERX:
+    case UNIFYVALVARGY:
+    case UNIFYVALVARGX:
+    case UNIFYVALVARYY:
+    case UNIFYVALVARYX:
+    case UNIFYVALVARXY:
+    case UNIFYVALVARXX:
+    case UNIFYXG:
+    case UNIFYXY:
+    case UNIFYXX:
+    case CREATEVARIABLEMOVEY:
+    case CREATEVARIABLEMOVEX:
+    case MOVEGY:
+    case MOVEGX:
+    case MOVEYY:
+    case MOVEYX:
+    case MOVEXY:
+    case MOVEXX:
+      PC += 3;
+      break;
+    case TESTLE:
+    case TESTLT:
+    case MOVEMOVEYXXY:
+    case MOVEMOVEXYYX:
+    case MOVEMOVEYXYX:
+    case MOVEMOVEXYXY:
+      PC += 5;
+      break;
+
+    case GETRECORDG:
+    case GETRECORDY:
+    case GETRECORDX:
+    case PUTRECORDY:
+    case PUTRECORDX:
+      // Records are in heap;
+      // TODO: record arity"s are not GC"ed?
+      PC += 4;
+      break;
+
+    case CALLCONSTANT:
+    case GETLITERALG:
+    case GETLITERALY:
+    case GETLITERALX:
+    case PUTCONSTANTY:
+    case PUTCONSTANTX:
+      // tagged in heap;
+      PC += 3;
+      break;
+
+    case LOCALVARNAME:
+    case GLOBALVARNAME:
+    case UNIFYLITERAL:
+    case SETCONSTANT:
+      // tagged in heap;
+      PC += 2;
+      break;
+
+    case SETPROCEDUREREF:
+      // AbstractionEntry"s are (supposed to be) reclaimed by the GC
+      // directly.
+      PC += 2;
+      break;
+
+    case INLINEMINUS:
+    case INLINEPLUS:
+    case TESTBOOLG:
+    case TESTBOOLY:
+    case TESTBOOLX:
+    case TESTNUMBERG:
+    case TESTNUMBERY:
+    case TESTNUMBERX:
+    case GETLISTVALVARX:
+      PC += 4;
+      break;
+
+    case CALLMETHOD:
+      delete ((CallMethodInfo*) getAdressArg(PC+1));
+      PC += 3;
+      break;
+
+    case FASTTAILCALL:
+    case FASTCALL:
+    case CALLPROCEDUREREF:
+      // AbstractionEntry"s are (supposed to be) reclaimed by the GC
+      // directly.
+      PC += 3;
+      break;
+
+    case TAILSENDMSGG:
+    case TAILSENDMSGY:
+    case TAILSENDMSGX:
+    case SENDMSGG:
+    case SENDMSGY:
+    case SENDMSGX:
+      // Tagged is in the heap;
+      // TODO: record arity"s are not GC"ed?
+      // caches are ignored;
+      PC += 6;
+      break;
+
+    case INLINEASSIGN:
+    case INLINEAT:
+      // Tagged is in the heap;
+      // caches are ignored;
+      PC += 5;
+      break;
+
+    case TESTLITERALG:
+    case TESTLITERALY:
+    case TESTLITERALX:
+      // Tagged is in the heap;
+      PC += 4;
+      break;
+
+    case TESTRECORDG:
+    case TESTRECORDY:
+    case TESTRECORDX:
+      // Tagged is in the heap;
+      // TODO: record arity"s are not GC"ed?
+      PC += 5;
+      break;
+
+    case MATCHG:
+    case MATCHY:
+    case MATCHX:
+      ((IHashTable *) getAdressArg(PC+2))->deallocate();
+      PC += 3;
+      break;
+
+    case DEBUGEXIT:
+      // Tagged"s are in the heap;
+      PC += 5;
+      break;
+
+    case DEBUGENTRY:
+      // TODO: DbgInfo"s are not GC"ed!
+      PC += 5;
+      break;
+
+    case INLINEDOT:
+      // Tagged is in the heap;
+      // caches are ignored;
+      PC += 6;
+      break;
+
+      // special: contain OZ_Location;
     case TESTBI:
+      ((OZ_Location *) getAdressArg(PC+2))->deallocate();
+      PC += 4;
+      break;
     case CALLBI:
       ((OZ_Location *) getAdressArg(PC+2))->deallocate();
+      PC += 3;
       break;
-    case MATCHX:
-    case MATCHY:
-    case MATCHG:
-      ((IHashTable *) getAdressArg(PC+2))->deallocate();
-      break;
+
     default:
+      Assert(0);
       break;
     }
-    PC += sizeOf(op);
+
+    Assert(PC == prevPC + sizeOf(op));
   }
 
-#ifdef DEBUG_CHECK
-  memset(getStart(),-1,size*sizeof(ByteCode));
-#else
+ finish:
+  // kost@ : activate it if something bizarre is happening;
+  //  #ifdef DEBUG_CHECK
+  //    memset(getStart(),-1,size*sizeof(ByteCode));
+  //  #else
   delete [] getStart();
-#endif
+  //  #endif
 }
 
 

@@ -246,7 +246,7 @@ define(opAction,
         $1,ArityAndIsTail,PC=unmarshalNum(PC,bs);,
         $1,Dummy,PC=unmarshalNum(PC,bs);,
         $1,ProcedureRef,PC=unmarshalProcedureRef(b,PC,bs,code);,
-        $1,PredId,PC=unmarshalPredId(b,PC,lastPC,bs);ozValuesCnt--;,
+        $1,PredId,PC=unmarshalPredId(b,PC,instPC,bs);ozValuesCnt--;,
         $1,HashTableRef,PC=unmarshalHashTableRef(b,PC,bs);ozValuesCnt--;,
         $1,RecordArity,PC=unmarshalRecordArity(b,PC,bs);ozValuesCnt--;,
         $1,CallMethodInfo,PC=unmarshalCallMethodInfo(b,PC,bs);ozValuesCnt--;,
@@ -263,14 +263,14 @@ Bool unpickleCode(PickleBuffer *bs, Builder *b,
 {
   int ozValuesCnt = ozValuesBAPickles;
   ProgramCounter PC = desc->getCurrent();
-  ProgramCounter lastPC;
+  ProgramCounter instPC;
+  DebugCode(instPC = (ProgramCounter) -1);
   // 'CodeArea*' is passed in it itself:
   CodeArea *code = desc->getCodeArea();
   Bool done = NO;
 
   //
   while (ozValuesCnt > 0) {
-    lastPC = PC;
     Opcode op = (Opcode) bs->get();
     if (op == ENDOFFILE) {
       done = OK;
@@ -283,8 +283,10 @@ Bool unpickleCode(PickleBuffer *bs, Builder *b,
 
     //
     Assert(op != CALLPROCEDUREREF);
-    if (PC)
-      PC = CodeArea::writeOpcode(op,PC);
+    if (PC) {
+      instPC = PC;
+      PC = CodeArea::writeOpcode(op, PC);
+    }
 
     //
     switch(op) {
@@ -325,7 +327,7 @@ define(opAction,
         $1,ArityAndIsTail,PC=unmarshalNumRobust(PC,bs,&e);if(e) return ERR;,
         $1,Dummy,PC=unmarshalNumRobust(PC,bs,&e);if(e) return ERR;,
         $1,ProcedureRef,PC=unmarshalProcedureRefRobust(b,PC,bs,code,&e);if(e) return ERR;,
-        $1,PredId,PC=unmarshalPredIdRobust(b,PC,lastPC,bs,&e);ozValuesCnt--;if(e) return ERR;,
+        $1,PredId,PC=unmarshalPredIdRobust(b,PC,instPC,bs,&e);ozValuesCnt--;if(e) return ERR;,
         $1,HashTableRef,PC=unmarshalHashTableRefRobust(b,PC,bs,&e);ozValuesCnt--;if(e) return ERR;,
         $1,RecordArity,PC=unmarshalRecordArityRobust(b,PC,bs,&e);ozValuesCnt--;if(e) return ERR;,
         $1,CallMethodInfo,PC=unmarshalCallMethodInfoRobust(b,PC,bs,&e);ozValuesCnt--;if(e) return ERR;,
@@ -343,14 +345,14 @@ Bool unpickleCodeRobust(PickleBuffer *bs, Builder *b,
 {
   int ozValuesCnt = ozValuesBAPickles;
   ProgramCounter PC = desc->getCurrent();
-  ProgramCounter lastPC;
+  ProgramCounter instPC;
+  DebugCode(instPC = (ProgramCounter) -1);
   // 'CodeArea*' is passed in it itself:
   CodeArea *code = desc->getCodeArea();
   Bool done = NO;
 
   //
   while (ozValuesCnt > 0) {
-    lastPC = PC;
     Opcode op = (Opcode) bs->get();
     if (op == ENDOFFILE) {
       done = OK;
@@ -363,8 +365,10 @@ Bool unpickleCodeRobust(PickleBuffer *bs, Builder *b,
 
     //
     Assert(op != CALLPROCEDUREREF);
-    if (PC)
-      PC = CodeArea::writeOpcode(op,PC);
+    if (PC) {
+      instPC = PC;
+      PC = CodeArea::writeOpcode(op, PC);
+    }
 
     //
     switch(op) {

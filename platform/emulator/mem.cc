@@ -644,3 +644,15 @@ unsigned int FL_Manager::getSize(void)
 
   return s;
 }
+
+
+#if defined(DEBUG_CHECK)
+extern "C" {
+void *__real_malloc(size_t sz);
+//
+void *__wrap_malloc(size_t sz)
+{
+  return (__real_malloc(sz));
+}
+};
+#endif // DEBUG_CHECK

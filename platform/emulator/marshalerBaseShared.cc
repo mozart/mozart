@@ -167,6 +167,10 @@ void marshalPredId(GenTraverser *gt, PrTabEntry *p, MARSHALERBUFFER *bs)
   marshalNumber(bs, p->getColumn());
   gt->traverseOzValue(p->getFlagsList());
   marshalNumber(bs, p->getMaxX());
+  // Actually, 'gSize' is marshaled twice: the other copy is for
+  // 'gRegRef'. I see no easy way to fix that, and it is also used for
+  // redundancy check in the 'DEFINITION' instruction;
+  marshalNumber(bs, p->getGSize());
 }
 
 //

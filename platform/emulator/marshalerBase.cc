@@ -433,19 +433,23 @@ public:
 // 'PrTabEntry' be really constructed.
 class PredIdLocation : public CodeAreaLocation {
 private:
-  int line, column, maxX;
+  int line, column, maxX, gSize;
   // 'name' will be supplied last and does not need to be stored;
   SRecordArity sra;             // of a tuple
   OZ_Term arityList;            // of a record;
   OZ_Term file;
   OZ_Term flagsList;
+  ProgramCounter defPC;
 public:
-  PredIdLocation(ProgramCounter ptrIn)
-    : CodeAreaLocation(ptrIn), sra((SRecordArity) 0)
+  PredIdLocation(ProgramCounter ptrIn, ProgramCounter defPCIn)
+    : CodeAreaLocation(ptrIn), sra((SRecordArity) 0), defPC(defPCIn)
   {
     DebugCode(line = column = maxX = -1;);
     DebugCode(file = flagsList = arityList = (OZ_Term) -1;);
   }
+
+  //
+  ProgramCounter getDefPC() { return (defPC); }
 
   //
   void setSRA(SRecordArity sraIn) { sra = sraIn; }
@@ -464,6 +468,8 @@ public:
   int getColumn() { return (column); }
   void setMaxX(int maxXIn) { maxX = maxXIn; }
   int getMaxX() { return (maxX); }
+  void setGSize(int gSizeIn) { gSize = gSizeIn; }
+  int getGSize() { return (gSize); }
 };
 
 //
@@ -561,7 +567,7 @@ static void putRealRecordArityCA(void *arg, OZ_Term value) {
 }
 
 //
-// Thus, there are four processors, out of which three saves values
+// Thus, there are four processors, first three of them save values
 // and the last one does the job:
 static void getPredIdNameCA(void *arg, OZ_Term value)
 {
@@ -576,20 +582,22 @@ static void getPredIdNameCA(void *arg, OZ_Term value)
 
   //
   // 'value' is the name argument;
-  PrTabEntry *pred = new
-    PrTabEntry(value,
-               sra, loc->getFile(),
-               loc->getLine(), loc->getColumn(),
-               loc->getFlagsList(), loc->getMaxX());
+  PrTabEntry *pred =
+    new PrTabEntry(value,
+                   sra, loc->getFile(),
+                   loc->getLine(), loc->getColumn(),
+                   loc->getFlagsList(), loc->getMaxX());
   CodeArea::writeAddressAllocated(pred, loc->getPtr());
+  pred->setPC(loc->getDefPC());
+  pred->setGSize(loc->getGSize());
   //
   delete loc;
 }
 
 //
 // Note that these processors do not delete the argument;
-// Note also that 'saveSRACA' is used only when the arity is of a real
-// record (i.e. not a tuple);
+// Note also that 'saveRecordArityPredIdCA' is used only when the
+// arity is of a real record (i.e. not a tuple);
 static void saveRecordArityPredIdCA(void *arg, OZ_Term value)
 {
   PredIdLocation *loc = (PredIdLocation *) arg;
@@ -805,10 +813,11 @@ ProgramCounter unmarshalRecordArity(Builder *b,
 //
 // (of course, this code must resemble 'marshalPredId()')
 ProgramCounter unmarshalPredId(Builder *b, ProgramCounter pc,
-                               ProgramCounter lastPC, MarshalerBuffer *bs)
+                               ProgramCounter instPC, MarshalerBuffer *bs)
 {
   if (pc) {
-    PredIdLocation *loc = new PredIdLocation(pc);
+    Assert(sizeOf(DEFINITION) == 6);
+    PredIdLocation *loc = new PredIdLocation(pc, instPC + 6);
 
     //
     b->getOzValue(getPredIdNameCA, loc);
@@ -832,6 +841,7 @@ ProgramCounter unmarshalPredId(Builder *b, ProgramCounter pc,
     b->getOzValue(saveFlagsListCA, loc);
     //
     loc->setMaxX(unmarshalNumber(bs));
+    loc->setGSize(unmarshalNumber(bs));
 
     //
     return (CodeArea::allocateWord(pc));
@@ -856,6 +866,7 @@ ProgramCounter unmarshalPredId(Builder *b, ProgramCounter pc,
     b->discardOzValue();        // flags list;
     //
     skipNumber(bs);             // maxX;
+    skipNumber(bs);             // GSize;
 
     //
     return ((ProgramCounter) 0);
@@ -1097,11 +1108,12 @@ ProgramCounter unmarshalRecordArityRobust(Builder *b, ProgramCounter pc,
 //
 // (of course, this code must resemble 'marshalPredId()')
 ProgramCounter unmarshalPredIdRobust(Builder *b, ProgramCounter pc,
-                                     ProgramCounter lastPC, MarshalerBuffer *bs,
+                                     ProgramCounter instPC, MarshalerBuffer *bs,
                                      int *error)
 {
   if (pc) {
-    PredIdLocation *loc = new PredIdLocation(pc);
+    Assert(sizeOf(DEFINITION) == 6);
+    PredIdLocation *loc = new PredIdLocation(pc, instPC + 6);
 
     //
     b->getOzValue(getPredIdNameCA, loc);
@@ -1130,6 +1142,9 @@ ProgramCounter unmarshalPredIdRobust(Builder *b, ProgramCounter pc,
     //
     loc->setMaxX(unmarshalNumberRobust(bs, error));
     if(*error) return ((ProgramCounter) 0);
+    //
+    loc->setGSize(unmarshalNumberRobust(bs, error));
+    if(*error) return ((ProgramCounter) 0);
 
     //
     return (CodeArea::allocateWord(pc));
@@ -1155,6 +1170,7 @@ ProgramCounter unmarshalPredIdRobust(Builder *b, ProgramCounter pc,
     b->discardOzValue();        // flags list;
     //
     skipNumber(bs);             // maxX;
+    skipNumber(bs);             // GSize;
 
     //
     return ((ProgramCounter) 0);
