@@ -29,7 +29,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #define NEW_NAMER
-
+//#define NEW_NAMER_DEBUG
 #ifdef NEW_NAMER
 #define NAME_PROPAGATORS
 #endif
@@ -136,13 +136,15 @@ public:
     return (T_NAME) NULL;
   }
   static void addName(T_INDEX index, T_NAME name) {
+    Assert(index != 0);
+
     for (Namer<T_INDEX, T_NAME> * tmp = _head; tmp; tmp = tmp->_next)
       if (tmp->_index == index)  // it is already contained
         return;
 
     _head = new Namer<T_INDEX, T_NAME>(index, name, _head);
 
-    //NEW_NAMER_DEBUG_PRINT(("adding %s at index %x\n", toStringNamer(name), (int) index));
+    NEW_NAMER_DEBUG_PRINT(("adding %s at index %x\n", toStringNamer(name), (int) index));
   }
   static void cloneEntry(T_INDEX index_org, T_INDEX index_clone) {
     T_NAME name = getName(index_org);

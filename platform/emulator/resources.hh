@@ -217,7 +217,7 @@ error include resources.hh before mozart.h
 //#define DEBUG_FSET
 //#define DEBUG_FSET_CONSTRREP
 
-//#define NEW_NAMER_DEBUG
+#define NEW_NAMER_DEBUG
 
 //#define DEBUG_FDCD
 

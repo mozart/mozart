@@ -44,7 +44,11 @@ const char * oz_varGetName(OZ_Term v)
 
 void oz_varAddName(OZ_Term v, const char *nm)
 {
-  varNamer.addName(derefIndexNamer(v), nm);
+  DEREF(v, vptr, vtag);
+
+  if (! oz_isVariable(vtag))
+    return;
+  varNamer.addName(makeTaggedRef(vptr), nm);
 }
 
 Bool isGcMarkedNamer(OZ_Term t)
