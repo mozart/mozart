@@ -77,10 +77,6 @@ public:
     return ret;
   }
 
-  void disposeList(void) {
-    for (SuspList * l = this; l; l = l->dispose());
-  }
-
   int length(void);
   int lengthProp(void);
   

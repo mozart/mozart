@@ -115,9 +115,8 @@ Bool extParameters(OZ_Term list, Board * solve_board)
 static
 void oz_solve_clearSuspList(SolveActor *sa,Suspension killSusp)
 {
-  SuspList * tmpSuspList = sa->getSuspList();
+  SuspList * tmpSuspList = sa->unlinkSuspList();
 
-  sa->setSuspList(NULL);
   while (tmpSuspList) {
     Suspension susp = tmpSuspList->getSuspension();
 
@@ -259,5 +258,5 @@ Bool oz_solve_checkExtSuspList (SolveActor *sa)
 {
   // Kostja: Christian's; (no spaces!);
   oz_solve_clearSuspList(sa,(Thread *) NULL);
-  return (sa->getSuspList() == NULL);
+  return sa->isEmptySuspList();
 }

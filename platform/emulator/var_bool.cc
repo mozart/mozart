@@ -53,10 +53,10 @@ OZ_Return OzBoolVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
   if (scp==0 && (isNotInstallingScript || isLocalVar)) propagate();
 
   if (oz_isLocalVar(this)) {
-    doBind(vPtr, term);
+    DoBind(vPtr, term);
     dispose();
   } else {
-    doBindAndTrail(vPtr, term);
+    DoBindAndTrail(vPtr, term);
   }
       
   return PROCEED;
@@ -100,13 +100,13 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
 	    propagate(pc_cv_unif);
 	    termvar->propagate(pc_cv_unif);
 	    relinkSuspListTo(termvar);
-	    doBind(vPtr, makeTaggedRef(tPtr));
+	    DoBind(vPtr, makeTaggedRef(tPtr));
 	    dispose();
 	  } else { // bind term to var
 	    termvar->propagate(pc_cv_unif);
 	    propagate(pc_cv_unif);
 	    termvar->relinkSuspListTo(this);
-	    doBind(tPtr, makeTaggedRef(vPtr));
+	    DoBind(tPtr, makeTaggedRef(vPtr));
 	    termvar->dispose();
 	  }
 	  break;
@@ -123,7 +123,7 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
 	    propagate(pc_cv_unif);
 	  }
 	  relinkSuspListTo(termvar, TRUE);
-	  doBind(vPtr, makeTaggedRef(tPtr));
+	  DoBind(vPtr, makeTaggedRef(tPtr));
 	  dispose();
 	  break;
 	}
@@ -138,7 +138,7 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
 	    propagate(pc_cv_unif);
 	  }
 	  termvar->relinkSuspListTo(this, TRUE);
-	  doBind(tPtr, makeTaggedRef(vPtr));
+	  DoBind(tPtr, makeTaggedRef(vPtr));
 	  termvar->dispose();
 	  break;
 	}
@@ -196,21 +196,21 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
 	    TaggedRef int_var = OZ_int(intsct);
 	    termvar->propagate(fd_prop_singl, pc_cv_unif);
 	    propagate(pc_cv_unif);
-	    doBind(vPtr, int_var);
-	    doBind(tPtr, int_var);
+	    DoBind(vPtr, int_var);
+	    DoBind(tPtr, int_var);
 	    dispose(); termvar->dispose();
 	  } else if (heapNewer(vPtr, tPtr)) { // bind var to term
 	    propagate(pc_cv_unif);
 	    termvar->propagate(fd_prop_bounds, pc_cv_unif);
 	    termvar->becomesBool();
 	    relinkSuspListTo(termvar);
-	    doBind(vPtr, makeTaggedRef(tPtr));
+	    DoBind(vPtr, makeTaggedRef(tPtr));
 	    dispose();
 	  } else { // bind term to var
 	    termvar->propagate(fd_prop_bounds, pc_cv_unif);
 	    propagate(pc_cv_unif);
 	    termvar->relinkSuspListTo(this);
-	    doBind(tPtr, makeTaggedRef(vPtr));
+	    DoBind(tPtr, makeTaggedRef(vPtr));
 	    termvar->dispose();
 	  }
 	  break;
@@ -226,8 +226,8 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
 	    if (isNotInstallingScript) 
 	      termvar->propagate(fd_prop_singl, pc_cv_unif);
 	    if (isConstrainedVar) propagate(pc_cv_unif);
-	    doBind(vPtr, int_var);
-	    doBindAndTrail(tPtr, int_var);
+	    DoBind(vPtr, int_var);
+	    DoBindAndTrail(tPtr, int_var);
 	    dispose();
 	  } else {
 	    if (isNotInstallingScript) 
@@ -250,15 +250,15 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
 	    if (isNotInstallingScript) propagate(pc_cv_unif);
 	    if (isConstrainedTerm) 
 	      termvar->propagate(fd_prop_singl, pc_cv_unif);
-	    doBind(tPtr, int_term);
-	    doBindAndTrail(vPtr, int_term);
+	    DoBind(tPtr, int_term);
+	    DoBindAndTrail(vPtr, int_term);
 	    termvar->dispose();
 	  } else {
 	    if (isConstrainedTerm) 
 	      termvar->propagate(fd_prop_bounds, pc_cv_unif);
 	    if (isNotInstallingScript) propagate(pc_cv_unif);
 	    termvar->relinkSuspListTo(this, TRUE);
-	    doBind(tPtr, makeTaggedRef(vPtr));
+	    DoBind(tPtr, makeTaggedRef(vPtr));
 	    termvar->dispose();
 	  }
 	  break;
@@ -276,8 +276,8 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
 	      propagate(pc_cv_unif);
 	      termvar->propagate(fd_prop_singl, pc_cv_unif);
 	    }
-	    doBindAndTrail(vPtr, int_val);
-	    doBindAndTrail(tPtr, int_val);
+	    DoBindAndTrail(vPtr, int_val);
+	    DoBindAndTrail(tPtr, int_val);
 	  } else {
 	    OzBoolVariable * bool_var
 	      = new OzBoolVariable(oz_currentBoard());

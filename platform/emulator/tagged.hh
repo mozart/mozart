@@ -738,30 +738,6 @@ inline int32  GCMARK(int32 S)    { return makeTaggedRef2i(GCTAG,S); }
 inline void *GCUNMARK(int32 S)   { return tagValueOf2(GCTAG,S); }
 inline Bool GCISMARKED(int32 S)  { return GCTAG==tagTypeOf((TaggedRef)S); }
 
-inline
-void doBind(TaggedRef *p, TaggedRef t)
-{
-  CHECK_NONVAR(t);
-  Assert(p!=_derefPtr(t));
-  *p = t;
-}
-
-/* ------------------------------------------------------------------- */
-
-inline
-void doUnbind(TaggedRef *p, TaggedRef t)
-{
-  Assert(p!=_derefPtr(t));
-  *p = t;
-}
-
-// mm2: no assertions???
-inline
-void doBindCVar(TaggedRef *p, OzVariable *cvar)
-{
-  *p = makeTaggedCVar(cvar);
-}
-
 /*===================================================================
  * RefsArray
  *=================================================================== */

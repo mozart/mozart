@@ -328,9 +328,9 @@ void oz_bindLocalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
     term=makeTaggedRef(termPtr);
   } else {
     // mm2: problems with fsp_monitorIn, monitorArity,...
-    // Assert(ov->getSuspList()==0);
+    // Assert(ov->isEmptySuspList());
   }
-  ov->dispose();
+  oz_var_dispose(ov);
   doBind(varPtr,term);
 }
 
@@ -347,24 +347,11 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
       ov->relinkSuspListTo(sv);
       term=makeTaggedRef(termPtr);
     } else {
-      Assert(ov->getSuspList()==0);
+      Assert(ov->isEmptySuspList());
     }
-    ov->dispose();
+    oz_var_dispose(ov);
   }
   doBind(varPtr,term);
-}
-
-// mm2: why not inline?
-void doBindAndTrail(TaggedRef * vp, TaggedRef t)
-{
-  Assert(am.inShallowGuard() || checkHome(vp));
-  am.trail.pushRef(vp, *vp);
-
-  
-  CHECK_NONVAR(t);
-  *vp = t;
-
-  Assert(oz_isRef(*vp) || !oz_isVariable(*vp));
 }
 
 /* -------------------------------------------------------------------------
