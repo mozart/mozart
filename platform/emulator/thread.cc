@@ -126,16 +126,7 @@ void Thread::ScheduleSuspCont(SuspContinuation *c, Bool wasExtSusp)
   Thread *t=new Thread;
   if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     t->flags = (T_SuspCont|T_Solve);
-    Board *tmpBoard = (c->getNode ())->getBoardDeref ();
-    while (tmpBoard != (Board *) NULL) {
-      if (tmpBoard->isSolve () == OK &&
-	  tmpBoard->isCommitted () == NO &&
-	  tmpBoard->isFailed () == NO &&
-	  tmpBoard->isDiscarded () == NO) {
-	CastSolveActor (tmpBoard->getActor ())->incThreads ();
-      }
-      tmpBoard = (tmpBoard->getParentBoard ())->getBoardDeref ();
-    }
+    am.incSolveThreads (c->getNode ());
   } else {
     t->flags = T_SuspCont;
   }
@@ -149,16 +140,7 @@ void Thread::ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp)
   Thread *t=new Thread;
   if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     t->flags = (T_SuspCCont|T_Solve);
-    Board *tmpBoard = (c->getNode ())->getBoardDeref ();
-    while (tmpBoard != (Board *) NULL) {
-      if (tmpBoard->isSolve () == OK &&
-	  tmpBoard->isCommitted () == NO &&
-	  tmpBoard->isFailed () == NO &&
-	  tmpBoard->isDiscarded () == NO) {
-	CastSolveActor (tmpBoard->getActor ())->incThreads ();
-      }
-      tmpBoard = (tmpBoard->getParentBoard ())->getBoardDeref ();
-    }
+    am.incSolveThreads (c->getNode ());
   } else {
     t->flags = T_SuspCCont;
   }
@@ -192,16 +174,7 @@ void Thread::ScheduleWakeup(Board *b, Bool wasExtSusp)
   Thread *t = new Thread;
   if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     t->flags = (T_Nervous|T_Solve);
-    Board *tmpBoard = b->getBoardDeref ();
-    while (tmpBoard != (Board *) NULL) {
-      if (tmpBoard->isSolve () == OK &&
-	  tmpBoard->isCommitted () == NO &&
-	  tmpBoard->isFailed () == NO &&
-	  tmpBoard->isDiscarded () == NO) {
-	CastSolveActor (tmpBoard->getActor ())->incThreads ();
-      }
-      tmpBoard = (tmpBoard->getParentBoard ())->getBoardDeref ();
-    }
+    am.incSolveThreads (b);
   } else {
     t->flags = T_Nervous;
   }

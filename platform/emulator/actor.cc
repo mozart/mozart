@@ -199,7 +199,7 @@ WaitActor* SolveActor::getDisWaitActor ()
     // though it's actually discarded). There are currently no serious reasons
     // to implement this properly; it can be considered as an optimization. 
 
-    if (bb == this) {
+    if (bb == solveBoard) {
       unlinkLastWaitActor ();
       return (wa);
     } else {
@@ -262,9 +262,9 @@ TaggedRef SolveActor::genEnumed (Board *newSolveBB)
   status = allocateRefsArray (1);
   contGRegs = allocateRefsArray (1);
   if (boardToInstall == (Board *) NULL) {
-    status[0] = lastAtom;
-  } else {
     status[0] = moreAtom;
+  } else {
+    status[0] = lastAtom;
   }
   contGRegs[0] = makeTaggedConst (solveBoard);
   stuple->setArg (1, makeTaggedSRecord
@@ -284,12 +284,12 @@ TaggedRef SolveActor::genFailed ()
 // private members; 
 WaitActor* SolveActor::getTopWaitActor ()
 {
-  return (CastWaitActor ((Actor *) orActors.getTop ()));
+  return ((WaitActor *) orActors.getTop ());
 }
 
 WaitActor* SolveActor::getNextWaitActor ()
 {
-  return (CastWaitActor ((Actor *) orActors.getNext ()));
+  return ((WaitActor *) orActors.getNext ());
 }
 
 void SolveActor::unlinkLastWaitActor ()
@@ -304,17 +304,20 @@ Bool SolveActor::checkExtSuspList ()
   suspList = NULL;
   while (tmpSuspList) {
     Suspension *susp = tmpSuspList->getElem();
-    Board *n = (susp->getNode ())->getBoardDeref ();
 
-    SuspList *helpList;
-
-    if (n == (Board *) NULL) {
-      susp->markDead ();
+    if (susp->isDead () == OK) {
       tmpSuspList = tmpSuspList->dispose ();
       continue;
     }
 
-    if (susp->isDead () == OK) {
+    Board *b = (susp->getNode ())->getBoardDeref ();
+    Board *sb = b->getSolveBoard (); 
+    SuspList *helpList;
+
+    if (b == (Board *) NULL || sb == (Board *) NULL) {
+      // note that the board *b could be discarded; therefore
+      // it is needed to try to find its solve board; 
+      susp->markDead ();
       tmpSuspList = tmpSuspList->dispose ();
       continue;
     }

@@ -23,15 +23,15 @@
 #include "suspension.hh"
 
 enum BoardFlags {
-  Bo_Ask	= 1<<0,
+  Bo_Ask	= 1<<0,  // 0xf
   Bo_Wait	= 1<<1,
   Bo_Solve      = 1<<2,
   Bo_Root	= 1<<3,
-  Bo_Installed	= 1<<4,
+  Bo_Installed	= 1<<4,  // 0xf0
   Bo_Nervous	= 1<<5,
   Bo_WaitTop	= 1<<6,
   Bo_PathMark	= 1<<7,
-  Bo_Failed	= 1<<8,
+  Bo_Failed	= 1<<8,  // 0xf00
   Bo_Committed	= 1<<9,
   Bo_Discarded	= 1<<10,
   Bo_Waiting    = 1<<11
@@ -41,7 +41,6 @@ class Board : public ConstTerm {
 friend void engine();
 public:
   static void Init();
-  static Board* GetSolveBoard (); 
   static void SetCurrent(Board *c, Bool checkNotGC=OK);
   static void NewCurrentAsk(Actor *a);
   static void NewCurrentWait(Actor *a);
@@ -80,6 +79,7 @@ public:
   Board *getBoardDeref();
   Continuation *getBodyPtr() { return &body; }
   Board *getParentBoard();
+  Board* getSolveBoard (); 
   ConsList &getScriptRef() { return script; }
   int getSuspCount() { return suspCount; }
   Bool hasSuspension() { return suspCount == 0 ? NO : OK; }
