@@ -38,7 +38,6 @@
 #include "distributor.hh"
 #include "suspendable.hh"
 #include "susp_queue.hh"
-#include "pointer-marks.hh"
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
 
