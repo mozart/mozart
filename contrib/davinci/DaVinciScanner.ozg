@@ -46,9 +46,9 @@ define
          {Exception.raiseError daVinci(programError S)}
       end
 
-      lex <^"parse error".*> S in
+      lex <^"parser error".*> S in
          GumpScanner.'class', getString(?S)
-         {Exception.raiseError daVinci(parseError S)}
+         {Exception.raiseError daVinci(parserError S)}
       end
 
       lex <.*> A in

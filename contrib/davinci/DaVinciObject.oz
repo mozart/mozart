@@ -139,7 +139,7 @@ define
        [] daVinci(programError Msg) then
           error(kind: T
                 msg: Msg)
-       [] daVinci(parseError Msg) then
+       [] daVinci(parserError Msg) then
           error(kind: T
                 msg: Msg)
        else
