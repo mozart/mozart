@@ -256,7 +256,6 @@
   {\mozart@specials@other
    \epsfig{file=\mozart@basename,height=\mozart@comic@height}}}
 
-\iftrue % IS NEW DESIGN
 \newcommand{\mozart@version}{\@mozartVersion}
 \newcommand{\mozart@date}{\expandafter\@mozart@date\@mozartBuildDate}
 
@@ -386,7 +385,6 @@
     \end{FULLWIDTH}%
   \end{titlepage}%
 \egroup}
-\fi
 
 \providecommand{\mozart@titlepage@bottom@left}{%
   \begin{tabular}{@{}l@{}}%
