@@ -102,11 +102,9 @@ void enrichTypeException(TaggedRef value,const char *fun, OZ_Term args)
 
 Bool AM::hf_raise_failure()
 {
-  if (!oz_onToplevel() &&
-      (!oz_currentThread()->isCatch() || 
-       !oz_isCurrentBoard(GETBOARD(oz_currentThread())))) {
+  if (!oz_onToplevel() && !oz_currentThread()->isCatch())
     return OK;
-  }
+
   exception.info  = NameUnit;
   exception.value = RecordFailure;
   exception.debug = ozconf.errorDebug;

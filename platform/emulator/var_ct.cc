@@ -376,10 +376,11 @@ void OzCtVariable::relinkSuspListTo(OzCtVariable * lv, Bool reset_local)
 void OzCtVariable::installPropagators(OzCtVariable * glob_var) 
 {
   installPropagatorsG(glob_var);
+  Board * gb = glob_var->getBoardInternal();
   for (int i = _definition->getNoOfWakeUpLists(); i--; )
     _susp_lists[i] = oz_installPropagators(_susp_lists[i],
-					  glob_var->_susp_lists[i],
-					  GETBOARD(glob_var));
+					   glob_var->_susp_lists[i],
+					   gb);
 }
 
 //-----------------------------------------------------------------------------

@@ -107,12 +107,6 @@ private:
 protected:
   SuspList * suspList;
 
-protected:
-  
-  void propagate(SuspList *& sl, PropCaller unifyVars) {
-    sl=oz_checkAnySuspensionList(sl,GETBOARD(this), unifyVars);
-  }
-
 public:
   TypeOfVariable getType(void) { 
     return u.var_type; 
@@ -154,7 +148,17 @@ public:
     suspList= NULL;
     return sl;
   }
+  SuspList ** getSuspListRef(void) {
+    return &suspList;
+  }
 
+protected:
+  
+  void propagate(SuspList *& sl, PropCaller unifyVars) {
+    oz_checkAnySuspensionList(&sl, this->getBoardInternal(), unifyVars);
+  }
+
+public:
   // takes the suspensionlist of var and  appends it to the
   // suspensionlist of leftVar
   void relinkSuspListTo(OzVariable * lv, Bool reset_local = FALSE) {
@@ -217,7 +221,7 @@ public:
 	    glob_var->getType() == OZ_VAR_FD));
     suspList = oz_installPropagators(suspList,
 				     glob_var->getSuspList(),
-				     GETBOARD(glob_var));
+				     glob_var->getBoardInternal());
   }
 
   // needed to catch multiply occuring reified vars in propagators

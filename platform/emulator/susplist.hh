@@ -63,6 +63,9 @@ public:
   SuspList * getNext(void)   { 
     return _next; 
   }
+  SuspList ** getNextRef(void)   { 
+    return &_next; 
+  }
   void setNext(SuspList * n) { 
     _next = n; 
   }

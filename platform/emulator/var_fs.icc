@@ -87,10 +87,11 @@ inline
 void OzFSVariable::installPropagators(OzFSVariable * glob_var)
 {
   installPropagatorsG(glob_var);
+  Board * gb = glob_var->getBoardInternal();
   for (int i = 0; i < fs_prop_any; i += 1)
     fsSuspList[i] = oz_installPropagators(fsSuspList[i],
 					  glob_var->fsSuspList[i],
-					  GETBOARD(glob_var));
+					  gb);
 }
 
 inline
