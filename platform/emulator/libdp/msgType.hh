@@ -81,6 +81,7 @@ enum MessageType {
 
   M_REQUESTED,
   M_DEREGISTER,
+  M_SEND_PING,              // Used by network to ping other network sites.
   M_LAST
 };
 

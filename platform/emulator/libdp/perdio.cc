@@ -931,7 +931,12 @@ void msgReceived(MsgBuffer* bs)
       receiveUnAskError(receiveAtOwner(OTI),toS,ec);
       break;
     }
-
+  case M_SEND_PING:
+    {
+      // the information received is not of any interest.
+      int unused1, unused2;
+      unmarshal_M_SEND_PING(bs,unused1,unused2);
+    }
   default:
     OZ_error("siteReceive: unknown message %d\n",mt);
     break;
@@ -1111,6 +1116,12 @@ void initDPCore()
 /**********************************************************************/
 /*   MISC                                                */
 /**********************************************************************/
+
+void sendPing(DSite* s){
+  MsgBuffer *bs=msgBufferManager->getMsgBuffer(s);
+  marshal_M_SEND_PING(bs,42,42);
+  SendTo(s,bs,M_SEND_PING,myDSite,0);
+}
 
 void marshalDSite(DSite* s,MsgBuffer *buf){
   s->marshalDSite(buf);
