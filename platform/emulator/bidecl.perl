@@ -239,7 +239,10 @@ sub OZTABLE {
 	} else {
 	    print "\t\timods: nil\n";
 	}
-	if ($otyps[0] eq '\'bool\'' && $odets[0] eq 'any(det)') {
+
+	if (exists $info->{test}) {
+	    print "\t\ttest: true\n" if $info->{test};
+	} elsif ($otyps[0] eq '\'bool\'' && $odets[0] eq 'any(det)') {
 	    print "\t\ttest: true\n";
 	}
 
