@@ -42,7 +42,7 @@ ac_help="$ac_help
 ac_help="$ac_help
 --with-malloc=<obj>      use malloc from object file <obj> (default: NONE)"
 ac_help="$ac_help
---enable-virtualsites    provide support for virtual sites (default=no)"
+--enable-virtualsites    provide support for virtual sites (default=$ac_cv_can_vs)"
 ac_help="$ac_help
 --enable-miscbuiltins    include misc builtins (default=no)"
 
@@ -4599,16 +4599,500 @@ fi
 fi
 
 
+echo "checking whether we can virtual sites..." 1>&6
+echo "configure:4604: checking whether we can virtual sites..." >&5
+if eval "test \"`echo '$''{'ac_cv_can_vs'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  can_vs=yes
+ ac_safe=`echo "sys/types.h" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for sys/types.h""... $ac_c" 1>&6
+echo "configure:4611: checking for sys/types.h" >&5
+if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 4616 "configure"
+#include "confdefs.h"
+#include <sys/types.h>
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:4621: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out`
+if test -z "$ac_err"; then
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=yes"
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=no"
+fi
+rm -f conftest*
+fi
+if eval "test \"`echo '$ac_cv_header_'$ac_safe`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  :
+else
+  echo "$ac_t""no" 1>&6
+can_vs=no
+fi
+
+ ac_safe=`echo "unistd.h" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for unistd.h""... $ac_c" 1>&6
+echo "configure:4645: checking for unistd.h" >&5
+if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 4650 "configure"
+#include "confdefs.h"
+#include <unistd.h>
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:4655: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out`
+if test -z "$ac_err"; then
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=yes"
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=no"
+fi
+rm -f conftest*
+fi
+if eval "test \"`echo '$ac_cv_header_'$ac_safe`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  :
+else
+  echo "$ac_t""no" 1>&6
+can_vs=no
+fi
+
+ ac_safe=`echo "sys/ipc.h" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for sys/ipc.h""... $ac_c" 1>&6
+echo "configure:4679: checking for sys/ipc.h" >&5
+if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 4684 "configure"
+#include "confdefs.h"
+#include <sys/ipc.h>
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:4689: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out`
+if test -z "$ac_err"; then
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=yes"
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=no"
+fi
+rm -f conftest*
+fi
+if eval "test \"`echo '$ac_cv_header_'$ac_safe`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  :
+else
+  echo "$ac_t""no" 1>&6
+can_vs=no
+fi
+
+ ac_safe=`echo "sys/shm.h" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for sys/shm.h""... $ac_c" 1>&6
+echo "configure:4713: checking for sys/shm.h" >&5
+if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 4718 "configure"
+#include "confdefs.h"
+#include <sys/shm.h>
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:4723: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out`
+if test -z "$ac_err"; then
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=yes"
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=no"
+fi
+rm -f conftest*
+fi
+if eval "test \"`echo '$ac_cv_header_'$ac_safe`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  :
+else
+  echo "$ac_t""no" 1>&6
+can_vs=no
+fi
+
+ for ac_func in shmget
+do
+echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
+echo "configure:4748: checking for $ac_func" >&5
+if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 4753 "configure"
+#include "confdefs.h"
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char $ac_func(); below.  */
+#include <assert.h>
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char $ac_func();
+
+int main() {
+
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_$ac_func) || defined (__stub___$ac_func)
+choke me
+#else
+$ac_func();
+#endif
+
+; return 0; }
+EOF
+if { (eval echo configure:4779: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  eval "ac_cv_func_$ac_func=yes"
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_func_$ac_func=no"
+fi
+rm -f conftest*
+fi
+
+if eval "test \"`echo '$ac_cv_func_'$ac_func`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+    ac_tr_func=HAVE_`echo $ac_func | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+  cat >> confdefs.h <<EOF
+#define $ac_tr_func 1
+EOF
+ 
+else
+  echo "$ac_t""no" 1>&6
+can_vs=no
+fi
+done
+
+ for ac_func in shmat
+do
+echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
+echo "configure:4807: checking for $ac_func" >&5
+if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 4812 "configure"
+#include "confdefs.h"
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char $ac_func(); below.  */
+#include <assert.h>
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char $ac_func();
+
+int main() {
+
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_$ac_func) || defined (__stub___$ac_func)
+choke me
+#else
+$ac_func();
+#endif
+
+; return 0; }
+EOF
+if { (eval echo configure:4838: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  eval "ac_cv_func_$ac_func=yes"
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_func_$ac_func=no"
+fi
+rm -f conftest*
+fi
+
+if eval "test \"`echo '$ac_cv_func_'$ac_func`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+    ac_tr_func=HAVE_`echo $ac_func | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+  cat >> confdefs.h <<EOF
+#define $ac_tr_func 1
+EOF
+ 
+else
+  echo "$ac_t""no" 1>&6
+can_vs=no
+fi
+done
+
+ for ac_func in shmdt
+do
+echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
+echo "configure:4866: checking for $ac_func" >&5
+if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 4871 "configure"
+#include "confdefs.h"
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char $ac_func(); below.  */
+#include <assert.h>
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char $ac_func();
+
+int main() {
+
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_$ac_func) || defined (__stub___$ac_func)
+choke me
+#else
+$ac_func();
+#endif
+
+; return 0; }
+EOF
+if { (eval echo configure:4897: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  eval "ac_cv_func_$ac_func=yes"
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_func_$ac_func=no"
+fi
+rm -f conftest*
+fi
+
+if eval "test \"`echo '$ac_cv_func_'$ac_func`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+    ac_tr_func=HAVE_`echo $ac_func | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+  cat >> confdefs.h <<EOF
+#define $ac_tr_func 1
+EOF
+ 
+else
+  echo "$ac_t""no" 1>&6
+can_vs=no
+fi
+done
+
+ for ac_func in shmctl
+do
+echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
+echo "configure:4925: checking for $ac_func" >&5
+if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 4930 "configure"
+#include "confdefs.h"
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char $ac_func(); below.  */
+#include <assert.h>
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char $ac_func();
+
+int main() {
+
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_$ac_func) || defined (__stub___$ac_func)
+choke me
+#else
+$ac_func();
+#endif
+
+; return 0; }
+EOF
+if { (eval echo configure:4956: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  eval "ac_cv_func_$ac_func=yes"
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_func_$ac_func=no"
+fi
+rm -f conftest*
+fi
+
+if eval "test \"`echo '$ac_cv_func_'$ac_func`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+    ac_tr_func=HAVE_`echo $ac_func | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+  cat >> confdefs.h <<EOF
+#define $ac_tr_func 1
+EOF
+ 
+else
+  echo "$ac_t""no" 1>&6
+can_vs=no
+fi
+done
+
+ if test $can_vs = yes; then
+    echo $ac_n "checking shared memory with a test program""... $ac_c" 1>&6
+echo "configure:4983: checking shared memory with a test program" >&5
+    if test "$cross_compiling" = yes; then
+  echo "$ac_t""dunno (no)" 1>&6
+    can_vs=no
+else
+  cat > conftest.$ac_ext <<EOF
+#line 4989 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C" void exit(int);
+#endif
+#include <sys/types.h>
+ #include <unistd.h>
+ #include <sys/ipc.h>
+ #include <sys/shm.h>
+ 
+ #define VS_KEYTYPE_SIZE		4
+ #define VS_SEQ_SIZE		12
+ #define VS_PID_MASK		0xffff
+ #define SEQ_NUM			0x5
+ #define VS_MSGBUFFER_KEY	0x1
+ #define SHMSIZE			(1024*1024)
+ #define	PERMS			0666
+ #define SHM_OPT			0
+ 
+ key_t vsTypeToKey(int type)
+ {
+   int idOffset = sizeof(key_t)*8 - VS_KEYTYPE_SIZE;
+   int seqOffset = idOffset - VS_SEQ_SIZE;
+   return ((key_t) ((type << idOffset) |
+ 		    (SEQ_NUM << seqOffset) |
+ 		    (getpid() & VS_PID_MASK)));
+ }
+ 
+ main()
+ {
+   int shmkey;
+   int shmid;
+   void *shm;
+   struct shmid_ds ds;
+ 
+   shmkey = vsTypeToKey(VS_MSGBUFFER_KEY);
+   if ((shmid = shmget(shmkey, SHMSIZE, (PERMS|IPC_CREAT))) < 0)
+     exit(-1);
+   if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+     exit(-2);
+   for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+     *addr = (char) 0;
+   if (shmdt((char *) shm) < 0)
+     exit(-3);
+ 
+   if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+     exit(-4);
+   for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+     if (*addr != (char) 0) 
+       exit(-5);
+   if (shmdt((char *) shm) < 0)
+     exit(-6);
+ 
+   if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+     exit(-7);
+   for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+     *addr = (char) 0x4f;
+   if (shmdt((char *) shm) < 0)
+     exit(-8);
+ 
+   if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+     exit(-9);
+   for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+     if (*addr != (char) 0x4f) 
+       exit(-10);
+   if (shmdt((char *) shm) < 0)
+     exit(-11);
+ 
+   if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) < 0)
+     exit(-12);
+ 
+   exit(0);
+     }
+EOF
+if { (eval echo configure:5063: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
+then
+  echo "$ac_t""succeeded" 1>&6
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -fr conftest*
+  echo "$ac_t""failed" 1>&6
+    can_vs=no
+fi
+rm -fr conftest*
+fi
+
+ fi
+ ac_cv_can_vs=$can_vs
+fi
+
+
+if test $ac_cv_can_vs = yes; then
+    echo "$ac_t""... yes, we can do virtual sites!" 1>&6
+else
+    echo "$ac_t""... sorry, we cannot do virtual sites." 1>&6
+fi
+
 
     echo $ac_n "checking for --enable-virtualsites""... $ac_c" 1>&6
-echo "configure:4605: checking for --enable-virtualsites" >&5
+echo "configure:5089: checking for --enable-virtualsites" >&5
     # Check whether --enable-virtualsites or --disable-virtualsites was given.
 if test "${enable_virtualsites+set}" = set; then
   enableval="$enable_virtualsites"
   :
 fi
 
-    : ${oz_enable_virtualsites=no}
+    : ${oz_enable_virtualsites=$ac_cv_can_vs}
     if test -n "${enable_virtualsites}"; then
 	oz_enable_virtualsites=$enable_virtualsites
     fi
@@ -4627,7 +5111,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-miscbuiltins""... $ac_c" 1>&6
-echo "configure:4631: checking for --enable-miscbuiltins" >&5
+echo "configure:5115: checking for --enable-miscbuiltins" >&5
     # Check whether --enable-miscbuiltins or --disable-miscbuiltins was given.
 if test "${enable_miscbuiltins+set}" = set; then
   enableval="$enable_miscbuiltins"
