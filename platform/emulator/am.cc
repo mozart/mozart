@@ -209,8 +209,7 @@ void AM::init(int argc,char **argv)
   extern void DLinit(char *name);
   DLinit(argv[0]);
 
-  BIfdHeadManager::initStaticData();
-  BIfdBodyManager::initStaticData();
+  initFDs();
   
   initMemoryManagement();
 
