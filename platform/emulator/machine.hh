@@ -33,26 +33,6 @@
  */
 
 
-/*
- * We use 4 bits for tags --> adress space is 2^28 == 256MB
- *
- * We can do better, if you define
- *     #define LARGEADRESSES
- *
- * if the value part of a TaggedRef contains a pointer (this holds for all
- * except small ints , than it will be word aligned,
- * i.e. its two lower bits are 00
- * --> makeTaggedRefs shifts only up by 2 bits
- * --> tagValueOf shifts down by 2 bits AND zeros the two lowest bits
- *
- */
-
-#ifndef LINUX_M68K
-#define LARGEADRESSES
-#endif
-
-
-
 /* a 32 bit integer, the same on alpha and other machines */
 #define int32 int
 
@@ -73,20 +53,10 @@
  * NMAGIC file using the -n link option, which lets start segments at
  * 0x20000000 and 0x40000000. We choose to use -T/-D since -n requires
  * static linking, which does not support dlopen/dlsym dynamic linking
- * We also let the data segment start at 0x3000000 --> if LARGEADRESSES is 
- * defined this makes mallocBase==0x0
+ * We also let the data segment start at 0x3000000 this makes mallocBase==0x0
  * See also man page of ld(1)
  */
 
-#if defined(MIPS) && !defined(LARGEADRESSES)
-#define mallocBase 0x10000000
-#else
-#if defined(AIX3_RS6000) && !defined(LARGEADRESSES)
-#define mallocBase 0x20000000
-#else
-#if defined(OSF1_ALPHA) && !defined(LARGEADRESSES)
-#define mallocBase 0x30000000
-#else
 #if defined(LINUX_M68K)
 #define mallocBase 0x80000000
 #else
@@ -94,9 +64,6 @@
 #define mallocBase 0x40000000
 #else
 #define mallocBase 0x0
-#endif
-#endif
-#endif
 #endif
 #endif
 
