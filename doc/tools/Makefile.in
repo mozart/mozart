@@ -9,7 +9,7 @@ EXPLORERSRCS = \
         tree invoke object summary
 
 OTHERSRCS = \
-        linker panel
+        linker panel browser compiler
 
 SGMLSRCS0 = \
         $(EXPLORERSRCS:%=e-%) \
