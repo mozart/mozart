@@ -153,7 +153,11 @@
 	<Grammar.Alt/?={variable}/
     <Para class=apropos><Title/Other/
       <Grammar.Rule>?={case clause}
-	<Grammar.Alt/<<fCaseClause(?={phrase} ?={phrase})>>/
+	<Grammar.Alt/<<fCaseClause(?={pattern} ?={phrase})>>/
+      <Grammar.Rule>?={pattern}
+	<Grammar.Alt/?={phrase}/
+	<Grammar.Alt
+	  /<<fSideCondition(?={phrase} ?={phrase} ?={phrase} ?={coord})>>/
       <Grammar.Rule>?={catch}
 	<Grammar.Alt/<<fNoCatch>>/
 	<Grammar.Alt/<<fCatch([?={case clause}] ?={coord})>>/
@@ -167,8 +171,10 @@
       Each triple consisting of an ?={atom} and two ?={int}s denotes a
       file name (<<''>> if none known), a line number (starting at&nbsp;<<1>>;
       required) and a column number (starting at&nbsp;<<0>>; <<~1>> if none
-      known).  A <<pos>> may be turned into a <<fineStep>> or a <<coarseStep>>,
-      denoting a step point for debugging.  <<unit>> is an unknown coordinate.
+      known).  If two triples are given, then they denote the starting and
+      ending coordinates of a construct.  A <<pos>> may be turned into a
+      <<fineStep>> or a <<coarseStep>>, denoting a step point for debugging.
+      <<unit>> is an unknown coordinate.
       <Grammar.Rule>?={coord}
 	<Grammar.Alt/<<pos(?={atom} ?={int} ?={int})>>/
 	<Grammar.Alt
