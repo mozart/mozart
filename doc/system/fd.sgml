@@ -78,7 +78,7 @@ exist if the current upper bound of <<X>> is smaller than or equal to the
 current lower bound of <<Y>>.
 </section>
 
-<section><title/Constructive Disjunction/
+<section id="section.fd.condis"><title/Constructive Disjunction/
 
 <p>
 The operational semantics of some propagators is based on constructive
