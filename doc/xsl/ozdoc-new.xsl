@@ -338,7 +338,9 @@
 <template mode="list.enum.entry" match="ENTRY">
   <txt:usemap>\item{}</txt:usemap>
   <call-template name="maybe.label"/>
+  <txt:usemap>\textit{</txt:usemap>
   <apply-templates/>
+  <txt:usemap>\quad}</txt:usemap>
 </template>
 
 <!-- 4. itemized description -->
@@ -399,6 +401,12 @@
 </template>
 
 <!-- format code -->
+
+<template match="REWRITE.FROM/P.SILENT/CODE|REWRITE.TO/P.SILENT/CODE" priority="2.0">
+  <txt:usemap name="code">
+    <apply-templates/>
+  </txt:usemap>
+</template>
 
 <template match="CODE[@DISPLAY='INLINE']">
   <txt:usemap>\CODEINLINE{</txt:usemap>
@@ -689,6 +697,18 @@
   </if>
 </template>
 
+<template name="maybe.really.display.begin">
+  <if test="@DISPLAY='DISPLAY'">
+    <txt:usemap>\begin{DISPLAY}</txt:usemap>
+  </if>
+</template>
+
+<template name="maybe.really.display.end">
+  <if test="@DISPLAY='DISPLAY'">
+    <txt:usemap>\end{DISPLAY}</txt:usemap>
+  </if>
+</template>
+
 <template match="TR">
   <apply-templates/>
   <if test="not(position()=last())">
@@ -705,7 +725,7 @@
     <txt:usemap>\multicolumn{<value-of select="@COLSPAN"/>}{l}{</txt:usemap>
   </if>
   <if test="local-part(.)='TH'">
-    <txt:usemap>\bf{}</txt:usemap>
+    <txt:usemap>\mozartTH{}</txt:usemap>
   </if>
   <apply-templates/>
   <if test="@COLSPAN">
@@ -716,6 +736,7 @@
 <!-- figures -->
 
 <template match="FIGURE">
+  <if test="msg:saynl('FOUND NON LEIF EXAMPLE')"/>
   <txt:usemap>\begin{FIGURE}</txt:usemap>
   <apply-templates/>
   <if test="@ID and not(CAPTION)">
@@ -741,6 +762,32 @@
   </if>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
+</template>
+
+<!--  At Leif's request: try to identify figures
+      whose sole content is one displayed element
+      and don't indent it.
+  -->
+
+<template match="FIGURE[node()[not(self::TITLE  ) and
+                               not(self::CAPTION) and
+                               not(self::INDEX  )]
+                              [last()=1]
+                              [self::P[node()[last()=1 and
+                                              @DISPLAY='DISPLAY']]
+                               or
+                               node()[@DISPLAY='DISPLAY']]]"
+          priority="2.0">
+  <if test="msg:say('FOUND LEIF EXAMPLE ID=') and
+            msg:saynl(string(@ID))"/>
+  <txt:usemap>\begin{FIGURENODISPLAY}</txt:usemap>
+  <apply-templates/>
+  <if test="@ID and not(CAPTION)">
+    <txt:usemap>\CAPTIONID{</txt:usemap>
+    <value-of select="@ID"/>
+    <txt:usemap>}</txt:usemap>
+  </if>
+  <txt:usemap>\end{FIGURENODISPLAY}</txt:usemap>
 </template>
 
 <!-- comic pictures -->
@@ -851,13 +898,13 @@
 <!-- grammar thingies -->
 
 <template match="GRAMMAR.RULE | GRAMMAR">
-  <call-template name="maybe.display.begin"/>
+  <call-template name="maybe.really.display.begin"/>
   <txt:usemap>\begin{tabular}{lrll}
 </txt:usemap>
   <apply-templates/>
   <txt:usemap>\end{tabular}
 </txt:usemap>
-  <call-template name="maybe.display.end"/>
+  <call-template name="maybe.really.display.end"/>
 </template>
 
 <template match="GRAMMAR/GRAMMAR.RULE" priority="2.0">
