@@ -49,7 +49,7 @@
 
 // mm2 --> config.m4
 #define DEFAULT_TIME_SLICE 50 // msec
-#define DEFAULT_USER_PRIORITY 0
+#define DEFAULT_DEFAULT_PRIORITY 50
 #define DEFAULT_SYSTEM_PRIORITY 100
 
 
@@ -78,7 +78,7 @@ enum ThreadFlags
      Current: pointer to the current thread
      Root: pointer to the root thread
      TimeSlice: the overall time slice of a thread in msec
-     UserPriority: the user priority
+     DefaultPriority: the user priority
      SystemPriority: the system priority
    member data
      next: the next thread in the thread queue
@@ -107,13 +107,13 @@ Thread *Thread::Root;
 int Thread::TimeSlice;
 
 // the user and system priorities
-int Thread::UserPriority;
+int Thread::DefaultPriority;
 int Thread::SystemPriority;
 
 void Thread::Init()
 {
   TimeSlice = DEFAULT_TIME_SLICE;
-  UserPriority = DEFAULT_USER_PRIORITY;
+  DefaultPriority = DEFAULT_DEFAULT_PRIORITY;
   SystemPriority = DEFAULT_SYSTEM_PRIORITY;
 
   Head = (Thread *) NULL;
@@ -141,9 +141,9 @@ Thread *Thread::GetTail()
 {
   return Tail;
 }
-int Thread::GetUserPriority()
+int Thread::GetDefaultPriority()
 {
-  return UserPriority;
+  return DefaultPriority;
 }
 int Thread::GetSystemPriority()
 {
@@ -263,6 +263,12 @@ int Thread::getPriority()
 {
   DebugCheck(priority < 0,error("Thread::getPriority"));
   return priority;
+}
+
+void Thread::setPriority(int prio)
+{
+  DebugCheck(prio < 0,error("Thread::setPriority"));
+  priority=prio;
 }
 
 // add a thread to the thread queue
