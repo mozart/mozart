@@ -8,9 +8,10 @@
 #pragma implementation "builtins.hh"
 #endif
 
+#include "wsock.hh"
+
 #include "types.hh"
 
-#include "wsock.hh"
 
 #include "iso-ctype.hh"
 #include <string.h>
@@ -2727,6 +2728,7 @@ void threadRaise(Thread *th,OZ_Term E) {
   th->pushCFun(BIraise, args, 1, OK);
 
   th->setStop(NO);
+  th->zeroPStop();
 
   if (th->isSuspended())
     am.suspThreadToRunnable(th);

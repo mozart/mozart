@@ -314,6 +314,7 @@ public:
   int pStop() { return stopCount++; }
   int pCont() { return --stopCount; }
   int getPStop() { return stopCount; }
+  void zeroPStop() { stopCount=0; }
 
   int getThrType() { return (state.flags & S_TYPE_MASK); }
 
