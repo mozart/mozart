@@ -134,8 +134,6 @@ Board *WaitActor::getChild()
 // ------------------------------------------------------------------------
 //
 
-
-
 BuiltinTabEntry *solveContBITabEntry = NULL;
 BuiltinTabEntry *solvedBITabEntry    = NULL;
 TaggedRef SolveContFList             = makeTaggedNULL();
@@ -299,7 +297,7 @@ void SolveActor::unlinkLastWaitActor ()
   orActors.unlinkLast ();
 }
 
-Bool SolveActor::areNoExtSuspensions ()
+Bool SolveActor::checkExtSuspList ()
 {
   SuspList *tmpSuspList = suspList;
 

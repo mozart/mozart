@@ -121,19 +121,47 @@ Thread *Thread::GetTail()
 }
 
 
-void Thread::ScheduleSuspCont(SuspContinuation *c)
+void Thread::ScheduleSuspCont(SuspContinuation *c, Bool wasExtSusp)
 {
   Thread *t=new Thread;
-  t->flags = T_SuspCont;
+  if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
+    t->flags = (T_SuspCont|T_Solve);
+    Board *tmpBoard = (c->getNode ())->getBoardDeref ();
+    while (tmpBoard != (Board *) NULL) {
+      if (tmpBoard->isSolve () == OK &&
+          tmpBoard->isCommitted () == NO &&
+          tmpBoard->isFailed () == NO &&
+          tmpBoard->isDiscarded () == NO) {
+        CastSolveActor (tmpBoard->getActor ())->incThreads ();
+      }
+      tmpBoard = (tmpBoard->getParentBoard ())->getBoardDeref ();
+    }
+  } else {
+    t->flags = T_SuspCont;
+  }
   t->priority = c->getPriority();
   t->u.suspCont = c;
   t->schedule();
 }
 
-void Thread::ScheduleSuspCCont(CFuncContinuation *c)
+void Thread::ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp)
 {
   Thread *t=new Thread;
-  t->flags = T_SuspCCont;
+  if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
+    t->flags = (T_SuspCCont|T_Solve);
+    Board *tmpBoard = (c->getNode ())->getBoardDeref ();
+    while (tmpBoard != (Board *) NULL) {
+      if (tmpBoard->isSolve () == OK &&
+          tmpBoard->isCommitted () == NO &&
+          tmpBoard->isFailed () == NO &&
+          tmpBoard->isDiscarded () == NO) {
+        CastSolveActor (tmpBoard->getActor ())->incThreads ();
+      }
+      tmpBoard = (tmpBoard->getParentBoard ())->getBoardDeref ();
+    }
+  } else {
+    t->flags = T_SuspCCont;
+  }
   t->priority = c->getPriority();
   t->u.suspCCont = c;
   t->schedule();
@@ -159,10 +187,24 @@ void Thread::queueCont(Board *bb,ProgramCounter PC,RefsArray y) {
 }
 
 // create a new thread after wakeup (nervous)
-void Thread::ScheduleWakeup(Board *b)
+void Thread::ScheduleWakeup(Board *b, Bool wasExtSusp)
 {
   Thread *t = new Thread;
-  t->flags = T_Nervous;
+  if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
+    t->flags = (T_Nervous|T_Solve);
+    Board *tmpBoard = b->getBoardDeref ();
+    while (tmpBoard != (Board *) NULL) {
+      if (tmpBoard->isSolve () == OK &&
+          tmpBoard->isCommitted () == NO &&
+          tmpBoard->isFailed () == NO &&
+          tmpBoard->isDiscarded () == NO) {
+        CastSolveActor (tmpBoard->getActor ())->incThreads ();
+      }
+      tmpBoard = (tmpBoard->getParentBoard ())->getBoardDeref ();
+    }
+  } else {
+    t->flags = T_Nervous;
+  }
   t->priority = b->getActor()->getPriority();
   t->u.board = b;
   b->setNervous();
@@ -184,9 +226,6 @@ Thread::Thread(int prio)
 void Thread::init()
 {
   prev=next= (Thread *) NULL;
-#ifdef KP
-  Threads_Total++;
-#endif
   DebugCheckT(priority = -1; u.taskStack = (TaskStack *) -1; flags = -1);
 }
 

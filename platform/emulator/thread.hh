@@ -30,10 +30,6 @@ private:
   static Thread *Tail;
 
 public:
-#ifdef KP
-  static int Threads_Total;
-  int getThreadsTotal();
-#endif
   static void Init();
   static void GC();
   static void Print();
@@ -43,9 +39,9 @@ public:
   static Bool QueueIsEmpty();
   static Thread *GetFirst();
   static void NewCurrent(int prio);
-  static void ScheduleSuspCont(SuspContinuation *c);
-  static void ScheduleSuspCCont(CFuncContinuation *c);
-  static void ScheduleWakeup(Board *n);
+  static void ScheduleSuspCont(SuspContinuation *c, Bool wasExtSusp);
+  static void ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp);
+  static void ScheduleWakeup(Board *n, Bool wasExtSusp);
 
 private:
   Thread *next;
