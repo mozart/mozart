@@ -558,7 +558,7 @@ SbrkMemory * SbrkMemory::shrink()
 #ifdef DEBUG_TRACEMEM
     printf("*** Returning %d bytes to the operating system\n",size);
 #endif
-#if defined(NETBSD) || defined(OSF1_ALPHA)
+#if defined(NETBSD) || defined(FREEBSD) || defined(OSF1_ALPHA)
     int ret = (int)brk((char*)oldBrk);
 #else
     int ret = brk(oldBrk);
