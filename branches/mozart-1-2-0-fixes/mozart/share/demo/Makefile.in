@@ -31,7 +31,8 @@ PLATFORM	= @PLATFORM@
 PREFIX		= @prefix@
 OZDEMOSUFFIX    = doc/demo/applets
 OZDEMO		= $(PREFIX)/$(OZDEMOSUFFIX)
-SYSTEM		= $(PREFIX)/doc/system
+SYSTEMDOC	= $(PREFIX)/doc/system
+SYSTEMOZF	= $(PREFIX)/cache/x-oz/doc/system
 
 SHELL		= /bin/sh
 LN_S            = @LN_S@
@@ -82,15 +83,18 @@ all: dirs $(APPLETS) MT10.ozf
 #
 
 install:: $(OZDEMO) $(DEMOAPPLETS) \
-	$(SYSTEM) $(SYSTEM)/MT10.ozf $(SYSTEM)/MT10.oz
+	$(SYSTEMDOC) $(SYSTEMOZF) $(SYSTEMOZF)/MT10.ozf $(SYSTEMDOC)/MT10.oz
 
-$(OZDEMO) $(SYSTEM):
+$(OZDEMO) $(SYSTEMDOC) $(SYSTEMOZF):
 	$(INSTALL_DIR) $@
 
 $(OZDEMO)/%.oza: %.oza
 	$(INSTALL_FILE) $< $@
 
-$(SYSTEM)/%: %
+$(SYSTEMOZF)/%: %
+	$(INSTALL_FILE) $< $@
+
+$(SYSTEMDOC)/%: %
 	$(INSTALL_FILE) $< $@
 
 #
