@@ -1,0 +1,93 @@
+-*-outline-*-
+
+In the following, $SRC, $BUILD, $INSTALL denote respectively the
+source directory for the release, the build directory, and the install
+directory.
+
+* tag the release, or release update:
+
+Check out the current CVS branch, then tag it.  For example:
+
+	cvs tag -c mozart-1-2-2-a
+
+* configure, build and install the release
+
+	cd $BUILD
+	$SRC/configure --with-documents=all --enable-chm
+	make depend bootstrap
+	make PREFIX=$INSTALL install
+
+Note that --prefix is NOT supplied: the release should be built using
+the default prefix.  I believe this only affects the sgml catalog.
+(this ought to be fixed: the right catalog should be generated at
+_installation_ time).
+
+* build and install the ps/pdf documentation
+
+	cd $BUILD/doc
+	make ps pdf
+	make PREFIX=$INSTALL installps
+
+* create the src and doc tars
+
+	cd $BUILD
+	make PREFIX=$INSTALL src tar
+
+* create the RPMs
+
+	become root
+	$SRC/misc/create-rpm $BUILD $BUILD
+
+* create and populate the ftp tree for the release
+
+Of course, this needs to be done on the ftp server.  In the following,
+$REL stands for the release number (e.g. 1.2.2).
+
+	become root
+	become ftp: su -s /bin/sh ftp
+
+create the directory structure:
+
+	$SRC/misc/mkftp --release=$REL --create
+
+move the documentation into place:
+
+	$SRC/misc/mkftp --release=$REL --doc=$INSTALL
+
+move the RPMs into place.  $LINUX stands for your linux distribution
+(e.g. redhat-7.1):
+
+	$SRC/misc/mkftp --release=$REL --rpm=$LINUX $BUILD/*.rpm
+
+move the TARs into place:
+
+	$SRC/misc/mkftp --release=$REL --tar $BUILD/*.tar.gz
+
+* create a statically linked binary tarball
+
+use a more standard compiler rather than a redhat improvement:
+
+	setenv PATH /opt/gcc-2.95.3/bin:$PATH
+
+in the following we write $STATIC for the directory in which to build
+a statically linked mozart:
+
+	cd $STATIC
+	$SRC/configure --enable-link-static --enable-modules-static
+	make depend bootstrap
+	make PREFIX=$INSTALL install
+	make PREFIX=$INSTALL linux-i486
+
+I don't know what *-internal.tar.gz is for, so drop it:
+
+	rm *-internal.tar.gz
+
+create the README.linux-i486 file using the following information:
+
+       c++ --version
+       ldd platform/emulator/emulator.exe
+       ldd platform/wish/tk.exe
+
+* move the binary tarballs to the ftp directory
+
+	$SRC/misc/mkftp --release=$REL --tar $STATIC/*.tar.gz $STATIC/README.*

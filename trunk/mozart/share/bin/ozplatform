@@ -23,6 +23,9 @@ case $system in
     #;;
     #parisc32\ Linux\ *)	OZARCH=linux-hppa32
     #;;
+    # so far: userspace is 32 bits on linux-parisc / hppa
+   parisc*\ Linux\ *)	OZARCH=linux-parisc
+    ;;
     #-----------------------------------------------------------------
    ppc\ Linux\ 2.*)	OZARCH=linux-ppc
    ;;

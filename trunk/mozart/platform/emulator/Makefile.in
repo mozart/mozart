@@ -392,7 +392,7 @@ $(NEWCACHEDIR)/% : %
 
 install-inc: $(INCDIR)
 	$(INSTALL_FILE) $(SRCDIR)/mozart.h $(INCDIR)
-	$(INSTALL_FILE) $(BUILDDIR)/extension.hh $(INCDIR)
+	$(INSTALL_FILE) $(SRCDIR)/extension.hh $(INCDIR)
 	$(INSTALL_FILE) $(SRCDIR)/mozart_cpi.hh $(INCDIR)
 	if [ -r emulator.def ]; then $(INSTALL_FILE) emulator.def $(INCDIR); fi
 	if [ -r emulator.cmd ]; then $(INSTALL_FILE) emulator.cmd $(INCDIR); fi

@@ -165,38 +165,21 @@ bin: $(PLATFORM)
 $(PLATFORMS): $(PACKDIR) $(PACKDIR)/mozart
 	rm -f files.base files.base-$@ files.contrib files.contrib-$@ 
 	$(MAKE) files.base files.base-$@ files.contrib files.contrib-$@
-	rm -f files.all files.base-all files.contrib-all
-	cat files.base files.base-$@ > files.base-all
-	cat files.contrib files.contrib-$@ > files.contrib-all
-	cat files.base-$@ files.contrib-$@ > files.all
-	rm -rf $(PACKDIR)/mozart
-	$(INSTALL_DIR) $(PACKDIR)/mozart
-	( (cd $(PREFIX); \
-	   $(TAR) -cf - -T $(BUILDTOP)/files.base-all ) | \
-           (cd $(PACKDIR)/mozart; $(TAR) -xf - ) )
-	(cd $(PACKDIR); $(TAR) -cf - mozart ) | \
-	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-$@.tar.gz
-	rm -rf $(PACKDIR)/mozart
-	$(INSTALL_DIR) $(PACKDIR)/mozart
-	( (cd $(PREFIX); \
-	   $(TAR) -cf - -T $(BUILDTOP)/files.contrib-all ) | \
-           (cd $(PACKDIR)/mozart; $(TAR) -xf - ) )
-	(cd $(PACKDIR); $(TAR) -cf - mozart ) | \
-	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-$@-contrib.tar.gz
+	rm -f files.all
+	cat files.base files.base-$@ files.contrib files.contrib-$@ > files.all
 	rm -rf $(PACKDIR)/mozart
 	$(INSTALL_DIR) $(PACKDIR)/mozart
 	( (cd $(PREFIX); \
 	   $(TAR) -cf - -T $(BUILDTOP)/files.all ) | \
            (cd $(PACKDIR)/mozart; $(TAR) -xf - ) )
 	(cd $(PACKDIR); $(TAR) -cf - mozart ) | \
-	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-$@-internal.tar.gz
+	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-$@.tar.gz
+	rm -rf $(PACKDIR)/mozart
 	ldd $(PREFIX)/platform/$(PLATFORM)/emulator.exe \
 	    $(PREFIX)/platform/$(PLATFORM)/tk.exe | \
 	sed 's/^.*emulator.exe:/emulator.exe dynamically linked against:/' | \
 	sed 's/^.*tk.exe:/tk.exe dynamically linked against:/' > README-`$(OZVERSION)`.$(OZBUILD)-$@
-	rm -rf $(PACKDIR)/mozart
-	rm -f files.base files.base-$@ files.contrib files.contrib-$@
-	rm -f files.base-all files.contrib-all files.all
+	rm -f files.base files.base-$@ files.contrib files.contrib-$@ files.all
 
 $(PACKDIR) $(PACKDIR)/mozart:
 	$(INSTALL_DIR) $@
@@ -279,7 +262,8 @@ files.base:
 		! -path './share/doc/*' -a  \
 		! -path './bin/ozdoc' -a \
 		! -path './bin/convertTextPickle' -a \
-		! -name '*.so-*' \
+		! -name '*.so-*' -a \
+		! -path './share/elisp/Fontifier.el' \
 	\) ) > $@
 
 
@@ -297,7 +281,8 @@ files.contrib:
 		\( -path './cache/x-oz/contrib/*' -a ! -name '*.so-*' \) -o \
 		-path './bin/ozdoc' -o \
 		-path './bin/convertTextPickle' -o \
-		-path './share/doc/*' \
+		-path './share/doc/*' -o \
+		-path './share/elisp/Fontifier.el' \
 	\) ) > $@
 
 files.contrib-%:
@@ -311,11 +296,11 @@ files.doc:
 	(cd $(PREFIX); \
 	 find . \( -type f -o -type l \) -a \( \
 		-path './doc/*' -o \
-		-path './print/*' -o \
 		-path './cache/x-oz/system/gump/examples/*' -o \
 		-path './cache/x-oz/doc/*' -o \
 		-path './examples/*' \
-	\) -a \! \( -path './doc/Mozart.hh?' \) ) > $@
+	\) -a \! \( -path './doc/Mozart.hh?' -o \
+		    -path './doc/add-ons/*/*' \) ) > $@
 
 ######################################################################
 # standard library support

@@ -83,9 +83,9 @@ AC_ARG_WITH(tk-aqua,
     [--with-tk-aqua=DIR
      build with AquaTk (default: no)],
     : ${oz_tk_aqua="$with_tk_aqua"}
-    $oztmp="yes using $oz_tk_aqua",
+    oztmp="yes using $oz_tk_aqua",
     : ${oz_tk_aqua=""}
-    $oztmp="no")
+    oztmp="no")
 AC_MSG_RESULT($oztmp)
 
 dnl ****************************************************************
@@ -108,7 +108,8 @@ AC_ARG_WITH(tcl,
 if test -n "${with_tcl}"
 then
     oz_tcl_search="$with_tcl $oz_tcl_search"
-    echo kost: $oz_tcl_search
+elif test -n "${oz_tk_aqua}"; then
+    oz_tcl_search="${oz_tk_aqua}/Tcl.framework/Resources $oz_tcl_search"
 fi
 
 TCL_LIB_DIR=""
@@ -145,6 +146,8 @@ AC_ARG_WITH(tk,
 if test -n "${with_tk}"
 then
     oz_tk_search="$with_tk $oz_tk_search"
+elif test -n "${oz_tk_aqua}"; then
+    oz_tk_search="${oz_tk_aqua}/Tk.framework/Resources $oz_tk_search"
 fi
 
 TK_LIB_DIR=""
@@ -212,6 +215,10 @@ if test x"${with_tclinclude}" != x ; then
     else
       AC_MSG_ERROR([${with_tclinclude} directory does not contain Tcl public header file tcl.h])
     fi
+elif test -n "${oz_tk_aqua}"; then
+    if test -f "${oz_tk_aqua}/Tcl.framework/Headers/tcl.h"; then
+	TCL_INCLUDES="${oz_tk_aqua}/Tcl.framework/Headers"
+    fi
 else
     for i in $TCL_PREFIX/include $TCL_PREFIX/include/tcl$TCL_VERSION ; do
         if test -f "$i/tcl.h" ; then
@@ -238,6 +245,10 @@ if test x"${with_tkinclude}" != x ; then
       TK_INCLUDES=${with_tkinclude}
     else
       AC_MSG_ERROR([${with_tkinclude} directory does not contain Tk public header file tk.h])
+    fi
+elif test -n "${oz_tk_aqua}"; then
+    if test -f "${oz_tk_aqua}/Tk.framework/Headers/tk.h"; then
+	TK_INCLUDES="${oz_tk_aqua}/Tk.framework/Headers"
     fi
 else
     for i in $TK_PREFIX/include $TK_PREFIX/include/tcl$TK_VERSION ; do
@@ -277,7 +288,22 @@ dnl *****************************************************************
 
 AC_CONFIG_HEADER(conf.h)
 
-AC_OUTPUT(Makefile)
+IS_DARWIN=no
+AC_SUBST(IS_DARWIN)
+
+TODO="Makefile"
+
+case ${platform} in
+*-darwin)
+	IS_DARWIN=yes
+	if ! test -d MacOSX; then
+	    mkdir MacOSX
+	fi
+	TODO="$TODO MacOSX/OzWish.pbxproj/project.pbxproj"
+	;;
+esac
+
+AC_OUTPUT($TODO)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded
