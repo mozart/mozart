@@ -938,7 +938,7 @@ void ManagerVar::wakeAll(){
 // message will be lost.
 void recDeregister(TaggedRef tr,DSite* s)
 {
-  OZ_Term vars = extractVars(tr);
+  OZ_Term vars = extractVars(tr, NO);
   while (!oz_isNil(vars)) {
     OZ_Term t = oz_head(vars);
     OZ_Term *tp = tagged2Ref(t);
