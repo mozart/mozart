@@ -233,11 +233,9 @@ end
 
 <P>Cells and higher-order iterators allow conventional assignment-based 
 programming in Oz. The following program accumulates in the cell <<J>> 
-<math/\sum_{i=1}^n i/
-<P CLASS=WARNING>
-<!-- DENYS: this file does not exist
-<MATH.EXTERN TO="file:Image53.gif" TYPE=gif>
--->
+the value of <math/\sum_{i=1}^10 i/.
+
+
 <<<
 declare J in
 J = {NewCell 0}
