@@ -105,6 +105,7 @@ OZ_C_proc_proto(sched_cpIterateCap)
 OZ_C_proc_proto(sched_cpIterateCapUp)
 OZ_C_proc_proto(sched_disjunctive)
 OZ_C_proc_proto(sched_taskIntervalsProof)
+OZ_C_proc_proto(sched_firstsLasts)
 
 // dummies
 OZ_C_proc_proto(fdp_twice)
