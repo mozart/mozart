@@ -160,9 +160,10 @@ applications is to use the basic model.
 
 <P>By default, an exception will be raised on fault states
 <<tempFail>> or <<permFail>>.
-A <<remoteProblem>> is ignored, i.e., the operation
+A <<remoteProblem>> is ignored by default since the operation
 completes normally.
-The following operations are provided to change this behavior:
+The following operations are provided to do other
+kinds of fault detection:
 <LIST>
 <ITEM> <<proc {Fault.defaultEnable FStates}>> sets the global default.
 <<FStates>> is a list of fault states that cause exceptions.
@@ -252,7 +253,7 @@ object-record is fetched over the network, which might fail.
 The operation <<{Probe Entity}>> can be done on all
 entities and will block forever until a distribution fault
 causes an exception to be raised or a handler to be called.
-Watchers (see below) are implemented by means of <<Probe>>.
+Watchers (see the Advanced Model) are implemented by means of <<Probe>>.
 A temporary limitation of the current release is that
 the <<Probe>> operation is not available to users.
 </LIST>
@@ -309,7 +310,7 @@ on an entity with a problem,
 then a handler call replaces the operation.
 This call is done in the context of the thread
 that attempted the operation.
-If the entity is working again later
+If the entity works again later
 (which is possible with <<tempFail>>
 and <<remoteProblem>>) then the
 handler can just try the operation again.
@@ -336,7 +337,7 @@ enabled for that level.
 Both functions raise a type error exception if their arguments
 do not have the correct type.
 A temporary limitation of the current release is that
-one cannot install global handlers.
+one cannot install <<global>> handlers.
 
 <P>A handler <<HandlerProc>> is a three-argument
 procedure that is called as <<{HandlerProc E FS OP}>>.
@@ -392,7 +393,7 @@ all proxies will see a <<permFail>>.
 <SUBSECTION><TITLE>Eager stateless data</TITLE>
 
 <P>Eager stateless data, namely records, procedures,
-functions, and functors, are
+functions, classes, and functors, are
 copied immediately in messages.
 There are no remote references to eager
 stateless data, which are always local to a site.
@@ -551,12 +552,20 @@ to be instances of <<permFail>> and <<tempFail>>.
 
 <P>The current release has the following limitations:
 <LIST>
-<ITEM>If an exception is raised or a handler invoked
+<ITEM>Functions, procedures, classes, and functors
+are copied immediately in messages,
+even if they are already present at the destination.
+In future releases, these entities will be copied
+across the network only
+if they are not present on the destination site.
+In both current and future releases, at most a single copy
+of such an entity can exist per site.
+<ITEM>If an exception is raised or a handler or a watcher is invoked
 due to a distribution fault of an object,
 then the entity argument <<E>> is undefined.
 <ITEM>The <<global>> level is not implemented for handler installation,
 i.e., the call <<{Fault.install global _ _}>> is not implemented.
-If an attempt is made to install a global handler,
+If an attempt is made to install a <<global>> handler,
 then a <<notImplemented>> exception is given.
 <ITEM>The operation <<Probe>> is not available to the user.
 </LIST>
