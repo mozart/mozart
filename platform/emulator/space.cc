@@ -29,13 +29,6 @@
 #include "thr_int.hh"
 #include "var_base.hh"
 
-inline
-void unBind(TaggedRef *p, TaggedRef t)
-{
-  Assert(oz_isVariable(t));
-  *p = t;
-}
-
 OZ_Return oz_installScript(Script &script)
 {
   OZ_Return ret = PROCEED;
@@ -89,175 +82,6 @@ OZ_Return oz_installScript(Script &script)
  *      'am.currentBoard' stays unchanged;
  *
  */
-
-// only used in deinstall
-// Three cases may occur:
-// any global var G -> ground ==> add susp to G
-// any global var G -> constrained local var ==> add susp to G
-// unconstrained global var G1 -> unconstrained global var G2
-//    ==> add susp to G1 and G2
-
-void oz_reduceTrailOnSuspend() {
-
-  if (!am.trail.isEmptyChunk()) {
-
-    int numbOfCons = am.trail.chunkSize();
-
-    Board * bb = oz_currentBoard();
-
-    bb->newScript(numbOfCons);
-
-    // one single suspended thread for all;
-    Thread *thr = oz_newThreadPropagate(bb);
-
-    for (int index = 0; index < numbOfCons; index++) {
-
-      switch (am.trail.getTeType()) {
-      case Te_Bind: {
-
-        TaggedRef * refPtr, value;
-
-        am.trail.popBind(refPtr, value);
-        Assert(oz_isRef(*refPtr) || !oz_isVariable(*refPtr));
-        Assert(oz_isVariable(value));
-
-        bb->setScript(index,refPtr,*refPtr);
-
-        TaggedRef vv= *refPtr;
-        DEREF(vv,vvPtr,_vvTag);
-        if (oz_isVariable(vv)) {
-          oz_var_addSusp(vvPtr,thr,NO);  // !!! Makes space *not* unstable !!!
-        }
-
-        unBind(refPtr, value);
-
-        // value is always global variable, so add always a thread;
-        if (oz_var_addSusp(refPtr,thr)!=SUSPEND) {
-          Assert(0);
-        }
-
-        break;
-      }
-      case Te_Variable: {
-        TaggedRef * varPtr;
-        OzVariable * copy;
-        am.trail.popVariable(varPtr, copy);
-
-        Assert(isCVar(*varPtr));
-
-        oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
-
-        oz_var_addSusp(varPtr, thr);
-
-        bb->setScript(index, varPtr,
-                      makeTaggedRef(newTaggedCVar(copy)));
-
-        break;
-      }
-      case Te_Cast:
-        am.trail.popCast();
-        break;
-      default:
-        break;
-      }
-    }
-
-  }
-
-  am.trail.popMark();
-}
-
-
-void oz_reduceTrailOnFail(void) {
-
-  do {
-
-    switch (am.trail.getTeType()) {
-    case Te_Bind: {
-      TaggedRef *refPtr;
-      TaggedRef value;
-      am.trail.popBind(refPtr,value);
-      unBind(refPtr,value);
-      break;
-    }
-    case Te_Variable: {
-      TaggedRef * varPtr;
-      OzVariable * copy;
-      am.trail.popVariable(varPtr, copy);
-
-      Assert(isCVar(*varPtr));
-
-      oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
-
-      break;
-    }
-    case Te_Cast:
-      am.trail.popCast();
-      break;
-    case Te_Mark:
-      am.trail.popMark();
-      return;
-    default:
-      Assert(0);
-      break;
-    }
-
-  } while (1);
-
-}
-
-void oz_reduceTrailOnEqEq(void) {
-  am.emptySuspendVarList();
-
-  do {
-
-    switch (am.trail.getTeType()) {
-    case Te_Bind: {
-      TaggedRef *refPtr;
-      TaggedRef value;
-      am.trail.popBind(refPtr,value);
-
-      Assert(oz_isVariable(value));
-
-      TaggedRef oldVal = makeTaggedRef(refPtr);
-      DEREF(oldVal,ptrOldVal,_1);
-
-      unBind(refPtr,value);
-
-      if (oz_isVariable(oldVal))
-        am.addSuspendVarList(ptrOldVal);
-
-      am.addSuspendVarList(refPtr);
-
-      break;
-    }
-    case Te_Variable: {
-      TaggedRef * varPtr;
-      OzVariable * copy;
-      am.trail.popVariable(varPtr, copy);
-
-      Assert(isCVar(*varPtr));
-
-      oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
-
-      am.addSuspendVarList(varPtr);
-
-      break;
-    }
-    case Te_Cast:
-      am.trail.popCast();
-      break;
-    case Te_Mark:
-      am.trail.popMark();
-      return;
-    default:
-      Assert(0);
-      break;
-    }
-
-  } while (1);
-
-}
 
 
 static
@@ -325,7 +149,7 @@ Bool oz_installPath(Board * to) {
     while (s != ancestor) {
       Assert(s->hasMarkOne());
       s->unsetMarkOne();
-      oz_reduceTrailOnSuspend();
+      am.trail.unwind();
       s=s->getParent();
       am.setCurrent(s);
     }

@@ -235,7 +235,7 @@ void scheduler(void) {
 
       cb->setFailed();
 
-      oz_reduceTrailOnFail();
+      e->trail.unwindFailed();
 
       am.setCurrent(pb);
 

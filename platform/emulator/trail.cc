@@ -29,6 +29,7 @@
 
 #include "trail.hh"
 #include "var_base.hh"
+#include "thr_int.hh"
 
 /*
  * Tests
@@ -118,6 +119,7 @@ void Trail::pushMark(void) {
  *
  */
 
+inline
 void Trail::popBind(TaggedRef *&val, TaggedRef &old) {
   Assert(getTeType() == Te_Bind);
   (void) Stack::pop();
@@ -125,6 +127,7 @@ void Trail::popBind(TaggedRef *&val, TaggedRef &old) {
   val = (TaggedRef*) Stack::pop();
 }
 
+inline
 void Trail::popVariable(TaggedRef *&varPtr, OzVariable *&orig) {
   Assert(getTeType() == Te_Variable);
   (void) Stack::pop();
@@ -132,6 +135,7 @@ void Trail::popVariable(TaggedRef *&varPtr, OzVariable *&orig) {
   varPtr = (TaggedRef *)  Stack::pop();
 }
 
+inline
 void Trail::popCast(void) {
 }
 
@@ -158,5 +162,190 @@ void Trail::popMark(void) {
     }
     top -= 3;
   } while (OK);
+
+}
+
+
+/*
+ * Deinstallation of trail
+ *
+ */
+
+inline
+void unBind(TaggedRef *p, TaggedRef t) {
+  Assert(oz_isVariable(t));
+  *p = t;
+}
+
+void Trail::unwind(void) {
+
+  if (!isEmptyChunk()) {
+
+    int numbOfCons = chunkSize();
+
+    Board * bb = oz_currentBoard();
+
+    bb->newScript(numbOfCons);
+
+    // one single suspended thread for all;
+    Thread *thr = oz_newThreadPropagate(bb);
+
+    for (int index = 0; index < numbOfCons; index++) {
+
+      switch (getTeType()) {
+      case Te_Bind: {
+
+        TaggedRef * refPtr, value;
+
+        popBind(refPtr, value);
+        Assert(oz_isRef(*refPtr) || !oz_isVariable(*refPtr));
+        Assert(oz_isVariable(value));
+
+        bb->setScript(index,refPtr,*refPtr);
+
+        TaggedRef vv= *refPtr;
+        DEREF(vv,vvPtr,_vvTag);
+        if (oz_isVariable(vv)) {
+          oz_var_addSusp(vvPtr,thr,NO);  // !!! Makes space *not* unstable !!!
+        }
+
+        unBind(refPtr, value);
+
+        // value is always global variable, so add always a thread;
+        if (oz_var_addSusp(refPtr,thr)!=SUSPEND) {
+          Assert(0);
+        }
+
+        break;
+      }
+      case Te_Variable: {
+        TaggedRef * varPtr;
+        OzVariable * copy;
+        popVariable(varPtr, copy);
+
+        Assert(isCVar(*varPtr));
+
+        oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
+
+        oz_var_addSusp(varPtr, thr);
+
+        bb->setScript(index, varPtr,
+                      makeTaggedRef(newTaggedCVar(copy)));
+
+        break;
+      }
+      case Te_Cast:
+        popCast();
+        break;
+      default:
+        break;
+      }
+    }
+
+  }
+
+  popMark();
+}
+
+
+void Trail::unwindFailed(void) {
+
+  do {
+
+    switch (getTeType()) {
+
+    case Te_Bind: {
+      TaggedRef *refPtr;
+      TaggedRef value;
+      popBind(refPtr,value);
+      unBind(refPtr,value);
+      break;
+    }
+
+    case Te_Variable: {
+      TaggedRef * varPtr;
+      OzVariable * copy;
+      popVariable(varPtr, copy);
+
+      Assert(isCVar(*varPtr));
+
+      oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
+
+      break;
+    }
+
+    case Te_Cast:
+      popCast();
+      break;
+
+    case Te_Mark:
+      popMark();
+      return;
+
+    default:
+      Assert(0);
+      break;
+    }
+
+  } while (1);
+
+}
+
+void Trail::unwindEqEq(void) {
+
+  am.emptySuspendVarList();
+
+  do {
+
+    switch (getTeType()) {
+
+    case Te_Bind: {
+      TaggedRef *refPtr;
+      TaggedRef value;
+      popBind(refPtr,value);
+
+      Assert(oz_isVariable(value));
+
+      TaggedRef oldVal = makeTaggedRef(refPtr);
+      DEREF(oldVal,ptrOldVal,_1);
+
+      unBind(refPtr,value);
+
+      if (oz_isVariable(oldVal))
+        am.addSuspendVarList(ptrOldVal);
+
+      am.addSuspendVarList(refPtr);
+
+      break;
+    }
+
+    case Te_Variable: {
+      TaggedRef * varPtr;
+      OzVariable * copy;
+      popVariable(varPtr, copy);
+
+      Assert(isCVar(*varPtr));
+
+      oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
+
+      am.addSuspendVarList(varPtr);
+
+      break;
+    }
+
+    case Te_Cast:
+      popCast();
+      break;
+
+    case Te_Mark:
+      popMark();
+      return;
+
+    default:
+      Assert(0);
+      break;
+    }
+
+  } while (1);
 
 }
