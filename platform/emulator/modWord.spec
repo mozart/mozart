@@ -54,6 +54,10 @@
 				     out => ['+value'],
 				     BI  => BIwordTimes},
 
+    'div'			=> { in  => ['+value','+value'],
+				     out => ['+value'],
+				     BI  => BIwordDiv},
+
     'mod'			=> { in  => ['+value','+value'],
 				     out => ['+value'],
 				     BI  => BIwordMod},
