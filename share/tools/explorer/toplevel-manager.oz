@@ -208,9 +208,7 @@ local
 	 bottom <- 0.0
 	 <<Tk.canvas tk(delete all)>>
 	 <<ScrollCanvas AdjustRegion>>
-	 {self.genNodeId tkReset}
-	 {self.genTreeId tkReset}
-	 {self.genLinkId tkReset}
+	 {self.genTagId clear}
       end
 
       meth scrollTo(X Y)
