@@ -23,8 +23,6 @@ dnl
 #include "conf.h"
 #include "resources.hh"
 
-#ifdef OZMA
-
 #undef OZMA_DEBUG
 
 #include "am.hh"
@@ -536,7 +534,10 @@ Cache		: Atom
 
 %%
 
-TaggedRef ozma_readProc(const char *filename) {
+extern "C" TaggedRef ozma_readProc(const char *filename);
+
+TaggedRef ozma_readProc(const char *filename)
+{
   FILE *file = fopen(filename,"r");
   if (file == NULL) {
     ozmaerror("could not open input file");
@@ -555,5 +556,3 @@ TaggedRef ozma_readProc(const char *filename) {
   pte->PC = codeArea->getStart();
   return makeTaggedConst(new Abstraction(pte,gRegs,am.currentBoard()));
 }
-
-#endif
