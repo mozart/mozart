@@ -72,7 +72,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
               termVar->setDom(intsct);
               propagate(var, left_dom, TaggedRef(tPtr), TRUE);
               termVar->propagate(term, right_dom, TaggedRef(vPtr), TRUE);
-              relinkSuspList(termVar);
+              relinkSuspListTo(termVar);
               doBind(vPtr, TaggedRef(tPtr));
             }
           } else { // bind term to var
@@ -86,7 +86,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
               setDom(intsct);
               termVar->propagate(term, right_dom, TaggedRef(vPtr), TRUE);
               propagate(var, left_dom, TaggedRef(vPtr), TRUE);
-              termVar->relinkSuspList(this);
+              termVar->relinkSuspListTo(this);
               doBind(tPtr, TaggedRef(vPtr));
             }
           }
@@ -112,6 +112,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
           } else {
             termVar->propagate(term, right_dom, TaggedRef(tPtr), TRUE);
             propagate(var, left_dom, TaggedRef(tPtr), TRUE);
+            relinkSuspListTo(termVar);
             doBind(vPtr, TaggedRef(tPtr));
           }
           break;
@@ -136,7 +137,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
           } else {
             termVar->propagate(term, right_dom, TaggedRef(vPtr), TRUE);
             propagate(var, left_dom, TaggedRef(vPtr), TRUE);
-            termVar->relinkSuspList(this);
+            termVar->relinkSuspListTo(this);
             doBind(tPtr, TaggedRef(vPtr));
           }
           break;
