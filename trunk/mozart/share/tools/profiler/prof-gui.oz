@@ -103,7 +103,7 @@ in
 						 delete:   self # off
 						 withdraw: true)}
 	 {Tk.batch [wm(iconname   self.toplevel IconName)
-		    wm(iconbitmap self.toplevel BitMap)
+		    %wm(iconbitmap self.toplevel BitMap)
 		    wm(geometry   self.toplevel ToplevelGeometry)]}
 
 	 Menu,init
