@@ -40,13 +40,12 @@
 #include "am.hh"
 #include "bignum.hh"
 #include "builtins.hh"
+#include "debug.hh"
 #include "genvar.hh"
 #include "io.hh"
 #include "misc.hh"
 #include "records.hh"
 #include "thread.hh"
-#include "tracer.hh"
-#include "ozdebug.hh"
 #include "unify.hh"
 
 AM am;
@@ -58,6 +57,9 @@ ConfigData::ConfigData() {
   showFastLoad		= SHOW_FAST_LOAD;
   showForeignLoad	= SHOW_FOREIGN_LOAD;
   showIdleMessage	= SHOW_IDLE_MESSAGE;
+
+  stopOnToplevelFailure = STOP_ON_TOPLEVEL_FAILURE;
+
   gcFlag		= GC_FLAG;
   gcVerbosity		= GC_VERBOSITY;
   timeSlice		= TIME_SLICE;

@@ -23,14 +23,13 @@
 #include "alarm.hh"
 #include "am.hh"
 #include "builtins.hh"
+#include "debug.hh"
 #include "genvar.hh"
 #include "indexing.hh"
 #include "io.hh"
 #include "objects.hh"
 #include "board.hh"
 #include "thread.hh"
-#include "tracer.hh"
-#include "ozdebug.hh"
 #include "fdhook.hh"
 
 
@@ -45,7 +44,7 @@ extern TaggedRef getSuspHandlerBool(InlineFun2);
   if (e->isToplevel()) { 						      \
     prefixError(); message("*** TOPLEVEL FAILED: "); 			      \
     { MSG; } message("\n"); 						      \
-    DebugTrace(tracerOn(); trace("toplevel failed")); 			      \
+    if (e->conf.stopOnToplevelFailure) { tracerOn(); trace("toplevel failed"); } \
     if (pc) { JUMP(pc); } else { goto LBLpopTask; } 			      \
   } else { goto LBLfailure; } 						      \
 }
