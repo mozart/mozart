@@ -1019,6 +1019,15 @@ define
 	       case M.type of 'LATEX' then FileName in
 		  case @MyLaTeXToGIF of unit then
 		     HTML = code(PCDATA(M.1))
+
+		     %% if the math element contains just a number
+		     %% then we really don't need a gif
+		  elseif {All M.1 fun {$ C}
+				     {Char.isDigit C} orelse
+				     {Char.isSpace C} orelse
+				     C==&. orelse C==&- orelse C==&+
+				  end} then
+		     HTML = PCDATA(M.1)
 		  else
 		     {@MyLaTeXToGIF convertMath(M.1 Display ?FileName)}
 		     HTML = img(src: FileName
