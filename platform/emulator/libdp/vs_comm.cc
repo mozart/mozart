@@ -64,7 +64,8 @@ void VirtualSite::connect()
 VirtualSite::VirtualSite(DSite *s,
                          VSFreeMessagePool *fmpIn,
                          VSSiteQueue *sqIn)
-  : site(s), status(SITE_OK), vsStatus(0),
+  : VSRegisterNode(this), VSSiteQueueNode(this),
+    site(s), status(SITE_OK), vsStatus(0),
     isAliveSent(0), aliveAck(0),
     probeAllCnt(0), probePermCnt(0),
     fmp(fmpIn), sq(sqIn),
@@ -74,7 +75,6 @@ VirtualSite::VirtualSite(DSite *s,
   connect();
 }
 
-//
 //
 void VirtualSite::disconnect()
 {

@@ -374,6 +374,7 @@ public:
     Assert(!(getType() & REMOTE_SITE));
     return u.vsite;}
 
+  // Actually not used now...
   void dumpVirtualSite(void) {
     Assert(getType() & CONNECTED);
     Assert(getType() & VIRTUAL_SITE);

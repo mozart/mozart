@@ -174,7 +174,7 @@ MonitorReturn
 monitorQueue_VirtualSiteImpl(VirtualSite *vs,
                              int size, int no_msgs, void *storePtr)
 {
-  warning("'monitorQueue_VirtualSite()' is not implemented!");
+  OZ_warning("'monitorQueue_VirtualSite()' is not implemented!");
   return (MONITOR_OK);
 }
 
@@ -619,8 +619,7 @@ OZ_BI_define(BIVSnewMailbox,0,1)
 {
   //
   // Zeroth, init perdio if it isn't;
-  if (!isPerdioInitialized())
-    perdioInitLocal();
+  perdioInitLocal();
 
   //
   // First, link the interface:
@@ -731,8 +730,7 @@ OZ_BI_define(BIVSinitServer,1,0)
   DSite *ms;
 
   //
-  if (!isPerdioInitialized())
-    perdioInitLocal();
+  perdioInitLocal();
 
   //
   // First, link the interface:

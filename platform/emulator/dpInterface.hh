@@ -124,9 +124,8 @@ void maybeDebugBufferGet(BYTE b);
 void maybeDebugBufferPut(BYTE b);
 
 //
-// kost@ : temporarily interface methods;
+// kost@ : temporarily interface method;
 // Ralf will fix it;
-Bool isPerdioInitialized();
 void perdioInitLocal();
 
 #endif // __DPINTERFACE_HH
