@@ -8,24 +8,18 @@
 ;;   (Nesting and line breaks are problematic.)
 ;; - Line breaks inside strings, quotes or backquote variables
 ;;   are not allowed for auto-indent.
-;; - In the fragment
-;;     {Show (X Y
-;;           in
-;;            Z)
-;;   trying to indent the line with the `in' raises an error.
 ;; - 10thread is not recognized as a keyword as it should be.
-;; - an ampersand as the last character in a string or before a
-;;   backslash escaped quote in a string messes up fontification
-;; - case is not respected when doing expression-hopping: variables like
-;;   `Thread' confuse it
-;; - hitting return after `attr x:' or `token x:' (in Oz-Gump mode) causes an
-;;   error: "no matching open parenthesis"
-;; - recognition of regular expressions `<...>' in Oz-Gump mode is far from
-;;   perfect
-;;
-;; TODO
-;; - should we use the mode-line?
-;; - do we still support oz-emacs-connect?
+;; - An ampersand as the last character in a string or before a
+;;   backslash-escaped double quote in a string messes up fontification.
+;; - The use of non-escaped double quotes in Oz-Gump regular expression
+;;   tokens confuses fontification
+;; - Oz-Gump regular expressions are not ignored for indentation.
+;; - Some indentation rules do not work correctly with infix operators, e.g.:
+;;      feat
+;;         f:
+;;            5 +
+;;         7
+;;   The 7 should be underneath the 5.
 
 (require 'comint)
 (require 'compile)
@@ -383,9 +377,6 @@ The point is moved to the end of the line."
     ("Profiler" . oz-profiler-start)
     ))
   "Contents of the Oz menu.")
-
-(autoload 'oz-emacs-connect "$OZHOME/tools/oztoemacs/oztoemacs"
-  "Load the definitions for communicating from Oz to Emacs." t)
 
 (oz-make-menu oz-menu)
 
@@ -815,7 +806,7 @@ paragraph."
 
 
 ;;------------------------------------------------------------
-;; Indentation
+;; Patterns for Indentation and Expression Hopping
 ;;------------------------------------------------------------
 
 (defun oz-make-keywords-for-match (args)
@@ -826,53 +817,109 @@ paragraph."
 (defconst oz-declare-pattern
   (oz-make-keywords-for-match '("declare")))
 
+(defconst oz-class-begin-pattern
+  (oz-make-keywords-for-match
+   '("class")))
+(defconst oz-gump-class-begin-pattern
+  (oz-make-keywords-for-match
+   '("scanner" "parser")))
+
+(defconst oz-class-member-pattern
+  (oz-make-keywords-for-match
+   '("meth")))
+(defconst oz-gump-class-member-pattern
+  (oz-make-keywords-for-match
+   '("lex" "mode" "prod" "syn")))
+
+(defconst oz-class-between-pattern
+  (oz-make-keywords-for-match
+   '("from" "prop" "attr" "feat")))
+(defconst oz-gump-class-between-pattern
+  (oz-make-keywords-for-match '("token")))
+
 (defconst oz-begin-pattern
   (oz-make-keywords-for-match
-   '("local"
-     "proc" "fun"
-     "case"
-     "class" "meth"
-     "if" "or" "dis" "choice" "condis" "not"
+   '("local" "proc" "fun" "case" "if" "or" "dis" "choice" "condis" "not"
      "thread" "try" "raise" "lock")))
 
-(defconst oz-gump-begin-pattern
-  (oz-make-keywords-for-match
-   '("scanner" "parser" "lex" "syn" "prod" "mode")))
-
-(defconst oz-between-pattern
-  (oz-make-keywords-for-match '("from" "prop" "attr" "feat")))
-
 (defconst oz-gump-between-pattern
-  (concat (oz-make-keywords-for-match '("token")) "\\|" "=>"))
+  "=>")
 
 (defconst oz-middle-pattern
   (concat (oz-make-keywords-for-match
-	   '("in"
-	     "then" "else" "of" "elseof" "elsecase"
-	     "elseif"
+	   '("in" "then" "else" "of" "elseof" "elsecase" "elseif"
 	     "catch" "finally" "with"))
 	  "\\|" "\\[\\]"))
+(defconst oz-gump-middle-pattern
+  "//")
 
 (defconst oz-end-pattern
   (oz-make-keywords-for-match '("end")))
 
 (defconst oz-left-pattern
-  "[[({]")
+  "\\[\\($\\|[^]]\\)\\|[({]")
 (defconst oz-right-pattern
   "[])}]")
 (defconst oz-left-or-right-pattern
-  (concat oz-left-pattern "\\|" oz-right-pattern))
+  "[][(){}]")
 
-(defconst oz-key-pattern
-  (concat oz-declare-pattern "\\|" oz-begin-pattern "\\|"
-	  oz-between-pattern "\\|" oz-middle-pattern "\\|"
-	  oz-end-pattern "\\|" oz-left-or-right-pattern))
+(defconst oz-any-pattern
+  (concat "\\<\\(attr\\|c\\(ase\\|atch\\|lass\\|hoice\\|ondis\\)\\|"
+	  "declare\\|dis\\|e\\(lse\\(case\\|if\\|of\\)?\\|nd\\)\\|"
+	  "f\\(eat\\|inally\\|rom\\|un\\)\\|if\\|in\\|"
+	  "local\\|lock\\|meth\\|not\\|of\\|or\\|proc\\|prop\\|raise\\|"
+	  "t\\(hen\\|hread\\|ry\\)\\|with\\)\\>\\|\\[\\]\\|"
+	  oz-left-or-right-pattern))
+(defconst oz-gump-any-pattern
+  (concat "\\<\\(attr\\|c\\(ase\\|atch\\|lass\\|hoice\\|ondis\\)\\|"
+	  "declare\\|dis\\|e\\(lse\\(case\\|if\\|of\\)?\\|nd\\)\\|"
+	  "f\\(eat\\|inally\\|rom\\|un\\)\\|if\\|in\\|"
+	  "l\\(ex\\|ocal\\|ock\\)\\|meth\\|mode\\|not\\|of\\|or\\|"
+	  "p\\(arser\\|roc\\|rod\\|rop\\)\\|raise\\|scanner\\|syn\\|"
+	  "t\\(hen\\|hread\\|oken\\|ry\\)\\|with\\)\\>\\|=>\\|\\[\\]\\|"
+	  "//\\|" oz-left-or-right-pattern))
 
-(defconst oz-gump-key-pattern
-  (concat oz-declare-pattern "\\|" oz-begin-pattern "\\|"
-	  oz-gump-begin-pattern "\\|" oz-between-pattern "\\|"
-	  oz-gump-between-pattern "\\|" oz-middle-pattern "\\|"
-	  oz-end-pattern "\\|" oz-left-or-right-pattern))
+;;------------------------------------------------------------
+;; Moving Among Oz Expressions
+;;------------------------------------------------------------
+
+(defun oz-forward-keyword ()
+  "Search forward for the next keyword or parenthesis following point.
+Return non-nil iff such a keyword was found.  Ignore quoted keywords.
+Point is left at the first character of the keyword."
+  (let ((pattern (if oz-gump-indentation oz-gump-any-pattern oz-any-pattern))
+	(continue t)
+	(ret nil))
+    (while continue
+      (if (re-search-forward pattern nil t)
+	  (save-match-data
+	    (goto-char (match-beginning 0))
+	    (cond ((oz-is-quoted)
+		   (goto-char (match-end 0)))
+		  ((oz-is-directive)
+		   (forward-line))
+		  (t
+		   (setq ret t continue nil))))
+	(setq continue nil)))
+    ret))
+
+(defun oz-backward-keyword ()
+  "Search backward for the last keyword or parenthesis preceding point.
+Return non-nil iff such a keyword was found.  Ignore quoted keywords.
+Point is left at the first character of the keyword."
+  (let ((pattern (if oz-gump-indentation oz-gump-any-pattern oz-any-pattern))
+	(continue t)
+	(ret nil))
+    (while continue
+      (if (re-search-backward pattern nil t)
+	  (cond ((oz-is-quoted) t)
+		((oz-is-directive) t)
+		((oz-is-box)
+		 (setq ret t continue nil))
+		(t
+		 (setq ret t continue nil)))
+	(setq continue nil)))
+    ret))
 
 ;; Note: The following do not allow for newlines inside quoted tokens
 ;; to make matching easier ...
@@ -896,223 +943,15 @@ paragraph."
 (defconst oz-directive-pattern
   "\\\\[a-zA-Z]+\\>")
 
-;;------------------------------------------------------------
-
-(defun oz-electric-terminate-line ()
-  "Terminate current line.
-If variable `oz-auto-indent' is non-nil, indent the terminated line
-and the following line."
-  (interactive)
-  (cond (oz-auto-indent (oz-indent-line)))
-  (delete-horizontal-space) ; Removes trailing whitespace
-  (newline)
-  (cond (oz-auto-indent (oz-indent-line))))
-
-(defun oz-indent-buffer ()
-  "Indent each line in the current buffer."
-  (interactive)
-  (goto-char (point-min))
-  (while (< (point) (point-max))
-    (oz-indent-line t)
-    (forward-line 1)))
-
-(defun oz-indent-region (b e)
-  "Indent each line in the current region."
-  (interactive "r")
-  (let ((end (copy-marker e)))
-    (goto-char b)
-    (while (< (point) end)
-      (oz-indent-line t)
-      (forward-line 1))))
-
-(defun oz-indent-line (&optional dont-change-empty-lines)
-  "Indent the current line.
-If DONT-CHANGE-EMPTY-LINES is non-nil and the current line is empty
-save for whitespace, then its indentation is not changed.  If the
-point was inside the line's leading whitespace, then it is moved to
-the end of this whitespace after indentation."
-  (interactive)
-  (let ((old-cc case-fold-search))
-    (setq case-fold-search nil) ; respect case
-    (unwind-protect
-	(save-excursion
-	  (beginning-of-line)
-	  (skip-chars-forward " \t")
-	  (let ((col (save-excursion
-		       (oz-calc-indent dont-change-empty-lines))))
-	    ;; a negative result means: do not change indentation
-	    (cond ((>= col 0)
-		   (delete-horizontal-space)
-		   (indent-to col)))))
-      (if (oz-is-left)
-	  (skip-chars-forward " \t"))
-      (setq case-fold-search old-cc))))
-
-(defun oz-calc-indent (dont-change-empty-lines)
-  "Calculate the required indentation for the current line.
-The point must be at the beginning of the current line.
-Return a negative value if the indentation is not to be changed,
-else return the column up to where the line should be indented.
-If DONT-CHANGE-EMPTY-LINES is non-nil, empty lines are not indented."
-  (cond ((and dont-change-empty-lines (oz-is-empty))
-	 -1)
-	((looking-at oz-declare-pattern)
-	 0)
-	((looking-at "\\\\")
-	 0)
-	((looking-at "%%%")
-	 0)
-	((looking-at "%[^%]")
-	 -1)
-	((oz-is-field-value)
-	 (oz-search-matching-paren)
-	 (+ (oz-indent-after-paren) oz-indent-chars))
-	((or (looking-at oz-end-pattern) (looking-at oz-middle-pattern))
-	 ;; we must indent to the same column as the matching begin
-	 (oz-search-matching-begin nil))
-	((looking-at oz-right-pattern)
-	 (oz-search-matching-paren))
-	((or (looking-at oz-between-pattern)
-	     (and oz-gump-indentation (looking-at oz-gump-between-pattern)))
-	 (let ((col (oz-search-matching-begin nil)))
-	   (if (< col 0)
-	       -1
-	     (+ col oz-indent-chars))))
-	((or (looking-at oz-begin-pattern)
-	     (and oz-gump-indentation (looking-at oz-gump-begin-pattern))
-	     (looking-at oz-left-pattern)
-	     (looking-at "$")
-	     (looking-at "%"))
-	 (let (col (ret nil))
-	   (while (not ret)
-	     (setq col (oz-search-matching-begin t))
-	     (if (< col 0)
-		 (cond ((= col -1)
-			(setq ret -1))
-		       ((= col -3) ;; start of file
-			(setq ret 0))
-		       ;; previous block begin found:
-		       ;; check if is first in line
-		       ((= col -2)
-			(let ((found-col (current-column))
-			      first-col)
-			  (beginning-of-line)
-			  (skip-chars-forward " \t")
-			  (setq first-col (current-column))
-			  (if (= first-col found-col)
-			      (setq ret first-col))))
-		       (t (error "mm2: special hack")))
-	       (cond ((looking-at oz-declare-pattern)
-		      (setq ret (current-column)))
-		     ((looking-at oz-left-pattern)
-		      (setq ret (oz-indent-after-paren)))
-		     ((looking-at oz-begin-pattern)
-		      (setq ret (+ (current-column) oz-indent-chars)))
-		     ((and oz-gump-indentation
-			   (looking-at oz-gump-begin-pattern))
-		      (setq ret (+ (current-column) oz-indent-chars)))
-		     ((= (point) (point-min))
-		      (setq ret 0))
-		     (t
-		      (error "mm2: never be here")
-		      (setq ret (+ (current-column) oz-indent-chars))))))
-	   ret))
-	(t (oz-calc-indent1))))
-
-(defun oz-search-backward-keyword ()
-  (re-search-backward
-   (if oz-gump-indentation oz-gump-key-pattern oz-key-pattern) nil t))
-
-(defun oz-calc-indent1 ()
-  "Subroutine for oz-calc-indent.
-Search backward for Oz keywords to determine the start of the construct
-that encloses the current line.  From its column and its kind derive
-the exact indentation and return it.  Return a negative value if the
-syntax we find does not correspond to what we expect."
-  (if (oz-search-backward-keyword)
-      (cond ((or (oz-is-quoted) (oz-is-directive))
-	     (oz-calc-indent1))
-	    ((looking-at oz-declare-pattern)
-	     (current-column))
-	    ((looking-at "\\<in\\>")
-	     ;; we are the first token after an 'in'
-	     (oz-search-matching-begin nil)
-	     (if (looking-at oz-declare-pattern)
-		 (current-column)
-	       (+ (current-column) oz-indent-chars)))
-	    ((looking-at oz-begin-pattern)
-	     ;; we are the first token after 'if' 'proc' ...
-	     (+ (current-column) oz-indent-chars))
-	    ((and oz-gump-indentation (looking-at oz-gump-begin-pattern))
-	     ;; we are the first token after 'scanner' 'parser' ...
-	     (+ (current-column) oz-indent-chars))
-	    ((looking-at oz-left-pattern)
-	     ;; we are the first token after '(' '{' ...
-	     (let ((col (current-column)))
-	       (goto-char (match-end 0))
-	       (if (oz-is-right)
-		   (1+ col)
-		 (re-search-forward "[^ \t]" nil t)
-		 (1- (current-column)))))
-	    ((looking-at oz-middle-pattern)
-	     ;; we are the first token after 'then' 'of' ...
-	     (let ((col (oz-search-matching-begin nil)))
-	       (if (< col 0)
-		   -1
-		 (+ col oz-indent-chars))))
-	    ((looking-at oz-between-pattern)
-	     ;; we are the first token after 'attr' 'feat' ...
-	     (+ (current-column) oz-indent-chars))
-	    ((and oz-gump-indentation (looking-at oz-gump-between-pattern))
-	     ;; we are the first token after 'token' '=>'
-	     (+ (current-column) oz-indent-chars))
-	    ((looking-at oz-end-pattern)
-	     ;; we are the first token after an 'end'
-	     (oz-search-matching-begin nil)
-	     (oz-calc-indent1))
-	    ((looking-at oz-right-pattern)
-	     ;; we are the first token after ')' '}' ...
-	     (oz-search-matching-paren)
-	     (oz-calc-indent1)))
-    ;; if we couldn't find a keyword, then the current line stands at
-    ;; the top level and is not to be indented:
-    0))
-
-(defun oz-is-field-value ()
-  "Return non-nil iff the token preceding the point is a colon.
-This is to realize the indentation rule that in records with a feature
-on one line and the corresponding subtree expression on another, the
-expression has to be indented relative to the feature.  If this is the
-case, move the point to the colon character."
-  (let ((old (point)))
-    (skip-chars-backward "? \n\t\r\v\f")
-    (if (= (point) (point-min))
-	t
-      (backward-char))
-    (if (and (looking-at ":") (not (oz-is-quoted)))
-	t
-      (goto-char old)
-      nil)))
-
-(defun oz-indent-after-paren ()
-  "Determine how much whitespace to leave after an opening parenthesis.
-Precondition: The point must be at an opening parenthesis.  Return the
-column number of the first non-blank character to follow the parenthesis
-(or of the end of the line, whichever comes first)."
-  (let ((col (current-column)))
-    (forward-char)
-    (if (oz-is-right)
-	(1+ col)
-      (re-search-forward "[^ \t]" nil t)
-      (1- (current-column)))))
-
 (defun oz-is-quoted ()
   "Return non-nil iff the position of the point is quoted.
 Return non-nil iff the point is inside a string, quoted atom, backquote
 variable, ampersand-denoted character or one-line comment.  In this case,
 move the point to the beginning of the corresponding token.  Else the
 point is not moved."
-  (let ((ret nil) (p (point)) cont-point)
+  (let ((ret nil)
+	(p (point))
+	cont-point)
     (beginning-of-line)
     (while (and (not ret)
 		(prog1
@@ -1151,9 +990,285 @@ backslash.  If yes, the point is moved to the backslash."
       (goto-char p)
       nil)))
 
-(defun oz-is-empty ()
-  "Return non-nil iff the current line is empty save for whitespace."
-  (and (oz-is-left) (oz-is-right)))
+(defun oz-is-box ()
+  "Return non-nil if point is at the second character of a `[]' token.
+In this case, move point to the first character of this token."
+  (let ((p (point)))
+    (if (= p (point-min))
+	t
+      (backward-char))
+    (if (and (looking-at "\\[\\]")
+	     (not (oz-is-quoted)))   ; consider the list '[&[]'!
+	t
+      (goto-char p)
+      nil)))
+
+;;------------------------------------------------------------
+;; Moving to Expression Boundaries
+
+(defun oz-backward-begin (&optional is-field-value)
+  "Move to the last unmatched begin and return column of point.
+If IS-FIELD-VALUE is non-nil, a between-pattern of the same nesting
+level is also considered a begin-pattern.  This is used by indentation
+to handle lines like 'attr a:'."
+  (let ((ret nil)
+	(nesting 0))
+    (while (not ret)
+      (if (oz-backward-keyword)
+	  (cond ((looking-at oz-declare-pattern)
+		 (setq ret (current-column)))
+		((or (looking-at oz-class-begin-pattern)
+		     (looking-at oz-class-member-pattern)
+		     (looking-at oz-begin-pattern)
+		     (looking-at oz-left-pattern)
+		     (and is-field-value
+			  (or (looking-at oz-class-between-pattern)
+			      (and oz-gump-indentation
+				   (looking-at
+				    oz-gump-class-between-pattern))))
+		     (and oz-gump-indentation
+			  (or (looking-at oz-gump-class-begin-pattern)
+			      (looking-at oz-gump-class-member-pattern))))
+		 (if (= nesting 0)
+		     (setq ret (current-column))
+		   (setq nesting (1- nesting))))
+		((looking-at oz-end-pattern)
+		 (setq nesting (1+ nesting)))
+		((looking-at oz-right-pattern)
+		 (oz-backward-paren)))
+	(goto-char (point-min))
+	(if (= nesting 0)
+	    (setq ret 0)
+	  (error "No matching begin token"))))
+    ret))
+
+(defun oz-backward-paren ()
+  "Move to the last unmatched opening parenthesis and return column of point."
+  (let ((continue t)
+	(nesting 0))
+    (while continue
+      (if (re-search-backward oz-left-or-right-pattern nil t)
+	  (cond ((oz-is-quoted) t)
+		((looking-at oz-left-pattern)
+		 (if (= nesting 0)
+		     (setq continue nil)
+		   (setq nesting (1- nesting))))
+		((oz-is-box) t)
+		(t
+		 (setq nesting (1+ nesting))))
+	(error "No matching opening parenthesis"))))
+  (current-column))
+
+(defun oz-forward-end ()
+  "Move point to next unmatched end."
+  (let ((continue t)
+	(nesting 0))
+    (while continue
+      (if (oz-forward-keyword)
+	  (let ((cont-point (match-end 0)))
+	    (cond ((or (looking-at oz-class-begin-pattern)
+		       (looking-at oz-class-member-pattern)
+		       (looking-at oz-begin-pattern)
+		       (and oz-gump-indentation
+			    (or (looking-at oz-gump-class-begin-pattern)
+				(looking-at oz-gump-class-member-pattern))))
+		   (setq nesting (1+ nesting))
+		   (goto-char cont-point))
+		  ((looking-at oz-end-pattern)
+		   (cond ((= nesting 1)
+			  (setq continue nil))
+			 ((= nesting 0)
+			  (error "Containing expression ends prematurely"))
+			 (t
+			  (setq nesting (1- nesting))
+			  (goto-char cont-point))))
+		  ((looking-at oz-left-pattern)
+		   (forward-char)
+		   (oz-forward-paren)
+		   (forward-char))
+		  ((looking-at oz-right-pattern)
+		   (error "Containing expression ends prematurely"))
+		  (t
+		   (goto-char cont-point))))
+	(setq continue nil)))))
+
+(defun oz-forward-paren ()
+  "Move to the next unmatched closing parenthesis."
+  (let ((continue t)
+	(nesting 0))
+    (while continue
+      (if (re-search-forward oz-left-or-right-pattern nil t)
+	  (progn
+	    (goto-char (match-beginning 0))
+	    (cond ((oz-is-quoted)
+		   (goto-char (match-end 0)))
+		  ((looking-at oz-right-pattern)
+		   (if (= nesting 0)
+		       (setq continue nil)
+		     (setq nesting (1- nesting))
+		     (forward-char)))
+		  ((looking-at "\\[\\]")
+		   (goto-char (match-end 0)))
+		  (t
+		   (setq nesting (1+ nesting)))))
+	(error "No matching closing parenthesis")))))
+
+
+;;------------------------------------------------------------
+;; Indentation
+;;------------------------------------------------------------
+
+(defun oz-electric-terminate-line ()
+  "Terminate current line.
+If variable `oz-auto-indent' is non-nil, indent the terminated line
+and the following line."
+  (interactive)
+  (cond (oz-auto-indent (oz-indent-line)))
+  (delete-horizontal-space) ; Removes trailing whitespace
+  (newline)
+  (cond (oz-auto-indent (oz-indent-line))))
+
+(defun oz-indent-buffer ()
+  "Indent each line in the current buffer."
+  (interactive)
+  (goto-char (point-min))
+  (let ((current-line 1))
+    (while (< (point) (point-max))
+      (message "Indenting line %s ..." current-line)
+      (oz-indent-line t)
+      (setq current-line (1+ current-line))
+      (forward-line 1)))
+  (message nil))
+
+(defun oz-indent-region (b e)
+  "Indent each line in the current region."
+  (interactive "r")
+  (let ((end (copy-marker e)))
+    (goto-char b)
+    (while (< (point) end)
+      (oz-indent-line t)
+      (forward-line 1))))
+
+(defun oz-indent-line (&optional dont-change-empty-lines)
+  "Indent the current line.
+If DONT-CHANGE-EMPTY-LINES is non-nil and the current line is empty
+save for whitespace, then its indentation is not changed.  If the
+point was inside the line's leading whitespace, then it is moved to
+the end of this whitespace after indentation."
+  (interactive)
+  (let ((old-case-fold-search case-fold-search))
+    (setq case-fold-search nil)   ; respect case
+    (unwind-protect
+	(save-excursion
+	  (beginning-of-line)
+	  (skip-chars-forward " \t")
+	  (if (and dont-change-empty-lines (oz-is-empty)) t
+	    (let ((col (save-excursion (oz-calc-indent))))
+	      ;; a negative result means: do not change indentation
+	      (cond ((>= col 0)
+		     (delete-horizontal-space)
+		     (indent-to col))))))
+      (if (oz-is-left)
+	  (skip-chars-forward " \t"))
+      (setq case-fold-search old-case-fold-search))))
+
+(defun oz-calc-indent ()
+  "Calculate the required indentation for the current line.
+The point must be at the beginning of the current line.
+Return a negative value if the indentation is not to be changed,
+else return the column up to where the line should be indented."
+  (cond ((looking-at oz-declare-pattern)
+	 0)
+	((looking-at "\\\\")   ; directive
+	 0)
+	((looking-at "%%%")
+	 0)
+	((looking-at "%[^%]")
+	 -1)
+	((oz-is-field-value)
+	 (oz-backward-begin t)
+	 (cond ((looking-at oz-left-pattern)   ; e.g., 'f(x:'
+		(forward-char)
+		(+ (oz-get-column-of-next-nonwhite) oz-indent-chars))
+	       (t   ; e.g., 'attr x:'
+		(+ (current-column) (* oz-indent-chars 2)))))
+	((or (looking-at oz-middle-pattern)
+	     (looking-at oz-end-pattern)
+	     (and oz-gump-indentation
+		  (looking-at oz-gump-middle-pattern)))
+	 (oz-backward-begin))
+	((looking-at oz-right-pattern)
+	 (oz-backward-paren))
+	(t
+	 (let ((ret nil)
+	       (is-class-member
+		(or (looking-at oz-class-member-pattern)
+		    (looking-at oz-class-between-pattern)
+		    (and oz-gump-indentation
+			 (or (looking-at oz-gump-class-member-pattern)
+			     (looking-at oz-gump-class-between-pattern))))))
+	   (while (not ret)
+	     (if (oz-backward-keyword)
+		 (cond ((looking-at oz-declare-pattern)
+			(setq ret (current-column)))
+		       ((or (looking-at oz-class-begin-pattern)
+			    (looking-at oz-class-member-pattern)
+			    (looking-at oz-begin-pattern)
+			    (and oz-gump-indentation
+				 (or (looking-at oz-gump-class-begin-pattern)
+				     (looking-at oz-gump-class-member-pattern)
+				     (looking-at oz-gump-between-pattern))))
+			(setq ret (+ (current-column) oz-indent-chars)))
+		       ((or (looking-at oz-class-between-pattern)
+			    (and oz-gump-indentation
+				 (looking-at oz-gump-class-between-pattern)))
+			(if is-class-member t
+			  (setq ret (+ (current-column) oz-indent-chars))))
+		       ((or (looking-at oz-middle-pattern)
+			    (and oz-gump-indentation
+				 (looking-at oz-gump-middle-pattern)))
+			(oz-backward-begin)
+			(if (looking-at oz-declare-pattern)
+			    ;; do not indent after 'declare X in'
+			    (setq ret (current-column))
+			  (setq ret (+ (current-column) oz-indent-chars))))
+		       ((looking-at oz-end-pattern)
+			(oz-backward-begin)
+			(if (oz-is-left)
+			    ;; this is an approximation made for efficiency
+			    (setq ret (current-column))))
+		       ((looking-at oz-left-pattern)
+			(forward-char)
+			(setq ret (oz-get-column-of-next-nonwhite)))
+		       ((looking-at oz-right-pattern)
+			(oz-backward-paren)))
+	       (setq ret 0)))
+	   ret))))
+
+(defun oz-is-field-value ()
+  "Return non-nil iff the token preceding the point is a colon.
+This is to realize the indentation rule that in records with a feature
+on one line and the corresponding subtree expression on another, the
+expression has to be indented relative to the feature.  If this is the
+case, move the point to the colon character."
+  (let ((old (point)))
+    (skip-chars-backward "? \n\t\r\v\f")
+    (if (= (point) (point-min))
+	t
+      (backward-char))
+    (if (and (looking-at ":") (not (oz-is-quoted)))
+	t
+      (goto-char old)
+      nil)))
+
+(defun oz-get-column-of-next-nonwhite ()
+  "Return the column number of the first non-white character to follow point.
+If there is none until the end of line, return the column of point."
+  (let ((col (current-column)))
+    (if (oz-is-right)
+	col
+      (re-search-forward "[^ \t]" nil t)
+      (1- (current-column)))))
 
 (defun oz-is-left ()
   "Return non-nil iff the point is only preceded by whitespace in the line."
@@ -1165,68 +1280,119 @@ backslash.  If yes, the point is moved to the backslash."
   "Return non-nil iff the point is only followed by whitespace in the line."
   (looking-at "[ \t]*$"))
 
-(defun oz-search-matching-begin (search-paren)
-  (let ((ret nil)
-	(nesting 0)
-	(second-nesting nil))
-    (while (not ret)
-      (if (oz-search-backward-keyword)
-	  (cond ((or (oz-is-quoted) (oz-is-directive))
-		 t)
-		((looking-at oz-declare-pattern)
-		 (setq ret (current-column)))
-		((or (looking-at oz-begin-pattern)
-		     (and oz-gump-indentation
-			  (looking-at oz-gump-begin-pattern)))
-		 ;; 'if'
-		 (if (= nesting 0)
-		     (setq ret (current-column))
-		   (if (and search-paren second-nesting (= nesting 1))
-		       (setq ret -2)
-		     (setq nesting (- nesting 1)))))
-		((looking-at oz-left-pattern)
-		 ;; '('
-		 (if (and search-paren (= nesting 0))
-		     (setq ret (current-column))
-		   (error "Unbalanced open parenthesis")))
-		((looking-at oz-middle-pattern)
-		 ;; 'then' '[]'
-		 t)
-		((looking-at oz-between-pattern)
-		 ;; 'attr' 'feat'
-		 t)
-		((and oz-gump-indentation (looking-at oz-gump-between-pattern))
-		 ;; 'token' '=>'
-		 t)
-		((looking-at oz-end-pattern)
-		 ;; 'end'
-		 (setq second-nesting t)
-		 (setq nesting (+ nesting 1)))
-		((looking-at oz-right-pattern)
-		 (oz-search-matching-paren)))
-	(goto-char (point-min))
-	(if (= nesting 0)
-	    (setq ret -3)
-	  (error "No matching begin token"))))
-    ret))
+(defun oz-is-empty ()
+  "Return non-nil iff the current line is empty save for whitespace."
+  (and (oz-is-left) (oz-is-right)))
 
-(defun oz-search-matching-paren ()
-  "Return the column of the preceding opening parenthesis.
-While searching backwards, matched pairs of parentheses are skipped."
-  (let ((do-loop t)
-	(nesting 0))
-    (while do-loop
-      (if (re-search-backward oz-left-or-right-pattern nil t)
-	  (cond ((oz-is-quoted)
-		 t)
-		((looking-at oz-left-pattern)
-		 (if (= nesting 0)
-		     (setq do-loop nil)
-		   (setq nesting (- nesting 1))))
-		((looking-at oz-right-pattern)
-		 (setq nesting (1+ nesting))))
-	(error "No matching open parenthesis"))))
-  (current-column))
+
+;;------------------------------------------------------------
+;; Oz Expression Hopping
+;;------------------------------------------------------------
+
+(defun forward-oz-expr (&optional arg)
+  "Move forward one balanced Oz expression.
+With argument, do it that many times. Negative ARG means backwards."
+  (interactive "p")
+  (let ((old-case-fold-search case-fold-search) pos)
+    (setq case-fold-search nil)
+    (or arg (setq arg 1))
+    (if (< arg 0)
+	(backward-oz-expr (- arg))
+      (while (> arg 0)
+	(if (oz-is-quoted)
+	    (goto-char (match-end 0))
+	  (let ((pos (scan-sexps (point) 1)))
+	    (if (not pos)
+		(progn (end-of-buffer) (setq arg 0))
+	      (goto-char pos)
+	      (if (= (char-syntax (preceding-char)) ?w)
+		  (progn
+		    (forward-word -1)
+		    (cond ((or (looking-at oz-class-begin-pattern)
+			       (looking-at oz-class-member-pattern)
+			       (looking-at oz-begin-pattern)
+			       (and oz-gump-indentation
+				    (or (looking-at
+					 oz-gump-class-begin-pattern)
+					(looking-at
+					 oz-gump-class-member-pattern))))
+			   (oz-forward-end)
+			   (goto-char (match-end 0)))
+			  ((or (looking-at oz-class-between-pattern)
+			       (looking-at oz-middle-pattern)
+			       (and oz-gump-indentation
+				    (or (looking-at
+					 oz-gump-class-between-pattern)
+					(looking-at
+					 oz-gump-between-pattern))))
+			   (goto-char (match-end 0))
+			   (setq arg (1+ arg)))
+			  ((looking-at oz-end-pattern)
+			   (error "Containing expression ends prematurely"))
+			  (t
+			   (forward-word 1)))))
+	      (setq arg (1- arg)))))))
+    (setq case-fold-search old-case-fold-search)))
+
+(defun backward-oz-expr (&optional arg)
+  "Move backward one balanced Oz expression.
+With argument, do it that many times. Argument must be positive."
+  (interactive "p")
+  (let ((old-case-fold-search case-fold-search))
+    (setq case-fold-search nil)
+    (or arg (setq arg 1))
+    (while (> arg 0)
+      (let ((pos (scan-sexps (point) -1)))
+	(if (equal pos nil)
+	    (progn (beginning-of-buffer) (setq arg 0))
+	  (goto-char pos)
+	  (cond ((looking-at oz-end-pattern)
+		 (oz-backward-begin))
+		((looking-at oz-expr-between-pattern)
+		 (setq arg (1+ arg)))
+		((and oz-gump-indentation
+		      (or (looking-at oz-gump-between-pattern)
+			  (looking-at oz-gump-middle-pattern)))
+		 (setq arg (1+ arg)))
+		((looking-at oz-begin-pattern)
+		 (error "Containing expression ends prematurely")))
+	  (setq arg (1- arg)))))
+    (setq case-fold-search old-case-fold-search)))
+
+(defun mark-oz-expr (arg)
+  "Set mark ARG balanced Oz expressions from point.
+The place mark goes is the same place \\[forward-oz-expr] would
+move to with the same argument."
+  (interactive "p")
+  (push-mark
+    (save-excursion
+      (forward-oz-expr arg)
+      (point))
+    nil t))
+
+(defun transpose-oz-exprs (arg)
+  "Like \\[transpose-words] but applies to balanced Oz expressions.
+Does not work in all cases."
+  (interactive "*p")
+  (transpose-subr 'forward-oz-expr arg))
+
+(defun kill-oz-expr (arg)
+  "Kill the balanced Oz expression following the cursor.
+With argument, kill that many Oz expressions after the cursor.
+Negative arg -N means kill N Oz expressions before the cursor."
+  (interactive "p")
+  (let ((pos (point)))
+    (forward-oz-expr arg)
+    (kill-region pos (point))))
+
+(defun backward-kill-oz-expr (arg)
+  "Kill the balanced Oz expression preceding the cursor.
+With argument, kill that many Oz expressions before the cursor.
+Negative arg -N means kill N Oz expressions after the cursor."
+  (interactive "p")
+  (let ((pos (point)))
+    (forward-oz-expr (- arg))
+    (kill-region pos (point))))
 
 
 ;;------------------------------------------------------------
@@ -1606,7 +1772,7 @@ This serves to distinguish between the directive `\\else' and the keyword
 The first subexpression matches the keyword proper (for fontification).")
 
 (defconst oz-gump-keywords-matcher-3
-  "=>"
+  "=>\\|//"
   "Regular expression matching non-identifier keywords.")
 
 (defconst oz-gump-scanner-parser-matcher
@@ -2016,188 +2182,6 @@ of the procedure Browse."
 
 (defun oz-find-file (prompt file)
   (find-file (read-file-name prompt (concat (oz-home) "/" file) nil t nil)))
-
-
-;;------------------------------------------------------------
-;; Oz Expression Hopping
-;;------------------------------------------------------------
-;; Simulation of the -sexp functions for Oz expressions (i.e., support
-;; for moving over complete proc (fun, meth etc.) ... end blocks)
-;;
-;; Method: We use scan-sexp and count keywords delimiting Oz
-;; expressions appropriately. When an infix keyword (like in, then,
-;; but also attr) is encountered, this is treated like white space.
-;;
-;; Limitations:
-;; 1) The method used means that we might happily hop over balanced
-;; s-expressions (i.e. delimited with parens, braces ...) in which Oz
-;; keywords are not properly balanced.
-;; 2) When encountering an infix expression, it is ambiguous which
-;; expression to move over, the sub-expression or the whole. We
-;; choose to always move over the smallest balanced expression
-;; (i.e. the first subexpression).
-;; 3) transpose-oz-expr is not very useful, since it does not know,
-;; when space must be inserted.
-
-;; Unfortunately, one more pattern, since those used for indenting
-;; are not exactly what is required; but they are used to define the
-;; new one here:
-(defconst oz-expr-between-pattern
-  (concat oz-declare-pattern "\\|" oz-between-pattern "\\|"
-	  oz-middle-pattern))
-
-(defun forward-oz-expr (&optional arg)
-  "Move forward one balanced Oz expression.
-With argument, do it that many times. Negative ARG means backwards."
-  (interactive "p")
-  (or arg (setq arg 1))
-  (if (< arg 0) (backward-oz-expr (- arg))
-    (while (> arg 0)
-      (let ((pos (scan-sexps (point) 1))
-	    keyword-kind)
-	(if (equal pos nil)
-	    (progn (end-of-buffer) (setq arg 0))
-	  (goto-char pos)
-	  (and (= (char-syntax (preceding-char)) ?w)
-	       (save-excursion
-		 (forward-word -1)
-		 (cond ((looking-at oz-begin-pattern)
-			(setq keyword-kind 'begin))
-		       ((and oz-gump-indentation
-			     (looking-at oz-gump-begin-pattern))
-			(setq keyword-kind 'begin))
-		       ((looking-at oz-expr-between-pattern)
-			(setq keyword-kind 'between))
-		       ((and oz-gump-indentation
-			     (looking-at oz-gump-between-pattern))
-			(setq keyword-kind 'between))
-		       ((looking-at oz-end-pattern)
-			(setq keyword-kind 'end))))
-	       (cond ((eq keyword-kind 'begin)
-		      (oz-goto-matching-end 1))
-		     ((eq keyword-kind 'end)
-		      (error "Containing expression ends"))
-		     (t ;; (eq keyword-kind 'between)
-		      (setq arg (1+ arg)))))
-	  (setq arg (1- arg)))))))
-
-(defun oz-goto-matching-end (nest-level)
-  ;; move point to NEST-LEVELth unbalanced "end"
-  (let ((loop t)
-	found
-	(pos (point)))
-    (while loop
-      (setq pos (scan-sexps pos 1))
-      (if (equal pos nil)
-	  (setq loop nil
-		pos (point-max))
-	(goto-char pos)
-	(if (= (char-syntax (preceding-char)) ?w)
-	    (and (forward-word -1)
-		 (cond ((looking-at oz-end-pattern)
-			(setq nest-level (1- nest-level)))
-		       ((looking-at oz-begin-pattern)
-			(setq nest-level (1+ nest-level)))
-		       ((and oz-gump-indentation
-			     (looking-at oz-gump-begin-pattern))
-			(setq nest-level (1+ nest-level)))
-		       (t t))
-		 (goto-char pos)))
-	(if (< nest-level 1)
-	    (setq loop nil
-		  found t))))
-    (goto-char pos)
-    (if found
-	t
-      (error "Unbalanced Oz expression"))))
-
-(defun backward-oz-expr (&optional arg)
-  "Move backward one balanced Oz expression.
-With argument, do it that many times. Argument must be positive."
-  (interactive "p")
-  (or arg (setq arg 1))
-  (while (> arg 0)
-    (let ((pos (scan-sexps (point) -1)))
-      (if (equal pos nil)
-	  (progn (beginning-of-buffer) (setq arg 0))
-	(goto-char pos)
-	(cond ((looking-at oz-end-pattern)
-	       (oz-goto-matching-begin 1))
-	      ((looking-at oz-expr-between-pattern)
-	       (setq arg (1+ arg)))
-	      ((and oz-gump-indentation (looking-at oz-gump-between-pattern))
-	       (setq arg (1+ arg)))
-	      ((looking-at oz-begin-pattern)
-	       (error "Containing expression ends"))
-	      ((and oz-gump-indentation (looking-at oz-gump-begin-pattern))
-	       (error "Containing expression ends")))
-	(setq arg (1- arg))))))
-
-(defun oz-goto-matching-begin (nest-level)
-  ;; move point to NEST-LEVELth unbalanced begin of block
-  (let ((loop t)
-	found
-	(pos (point)))
-    (while loop
-      (setq pos (scan-sexps pos -1))
-      (if (equal pos nil)
-	  (setq loop nil
-		pos (point-min))
-	(goto-char pos)
-	(if (= (char-syntax (following-char)) ?w)
-	    (cond ((looking-at oz-end-pattern)
-		   (setq nest-level (1+ nest-level)))
-		  ((looking-at oz-begin-pattern)
-		   (setq nest-level (1- nest-level)))
-		  ((and oz-gump-indentation (looking-at oz-begin-pattern))
-		   (setq nest-level (1- nest-level)))
-		  (t t)))
-	(if (< nest-level 1)
-	    (setq loop nil
-		  found t))))
-    (goto-char pos)
-    (if found
-	t
-      (error "Unbalanced Oz expression"))))
-
-
-;; the other functions (mark-, transpose-, kill-(bw)-oz-expr are
-;; straightforward adaptions of their "sexpr"-counterparts
-
-(defun mark-oz-expr (arg)
-  "Set mark ARG balanced Oz expressions from point.
-The place mark goes is the same place \\[forward-oz-expr] would
-move to with the same argument."
-  (interactive "p")
-  (push-mark
-    (save-excursion
-      (forward-oz-expr arg)
-      (point))
-    nil t))
-
-(defun transpose-oz-exprs (arg)
-  "Like \\[transpose-words] but applies to balanced Oz expressions.
-Does not work in all cases."
-  (interactive "*p")
-  (transpose-subr 'forward-oz-expr arg))
-
-(defun kill-oz-expr (arg)
-  "Kill the balanced Oz expression following the cursor.
-With argument, kill that many Oz expressions after the cursor.
-Negative arg -N means kill N Oz expressions before the cursor."
-  (interactive "p")
-  (let ((pos (point)))
-    (forward-oz-expr arg)
-    (kill-region pos (point))))
-
-(defun backward-kill-oz-expr (arg)
-  "Kill the balanced Oz expression preceding the cursor.
-With argument, kill that many Oz expressions before the cursor.
-Negative arg -N means kill N Oz expressions after the cursor."
-  (interactive "p")
-  (let ((pos (point)))
-    (forward-oz-expr (- arg))
-    (kill-region pos (point))))
 
 
 ;;------------------------------------------------------------
