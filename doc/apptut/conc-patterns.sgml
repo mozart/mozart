@@ -53,7 +53,7 @@ Typically, the tail of the stream is uninstantiated, at which point
 the <code/ForAll/ procedure, and thus the thread, suspends until a new
 message comes in that instantiates the stream further.</p>
 
-    <subsection>
+    <subsection id=subsection.stream.merging>
       <title/Stream Merging/
       <p>As an application of this technique, we consider now the
 <em/fair merge/ of two streams <code/L1/ and <code/L2/ into one single
