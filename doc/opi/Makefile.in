@@ -35,11 +35,13 @@ Makefile: Makefile.in ../config.status
 
 opi-html: $(SGMLSRCS) $(ELSRCS) $(GIFSRCS)
         $(DOCIFY) --in=$(SRCDIR)/opi.sgml --out=$@ --type=html-stylesheets \
-        --autoindex && \
+        --autoindex \
+        --bib-path=$(SRCDIR):$(SRCTOP)/doc \
+        --bst-path=$(SRCTOP)/doc/utilities && \
         cp -p $(addprefix $(SRCDIR)/,$(GIFSRCS)) $@
 
 opi-tex: $(SGMLSRCS)
-        $(DOCIFY) --in=$(SRCDIR)/opi.sgml --out=opi-tex --type=latex
+        $(DOCIFY) --in=$(SRCDIR)/opi.sgml --out=$@ --type=latex --autoindex
 
 validate: opi-html
         nsgmls -cHTML4.soc -sB opi-html/*.html

@@ -210,7 +210,7 @@
               <Item>
                 <P.silent><!--**-->
                   This is the major mode for editing Oz code with embedded
-                  Gump specifications&nbsp;<Ptr to="kornstaedt96">.  Loading
+                  Gump specifications&nbsp;<Ptr to="mozart-gump">.  Loading
                   a file with extension <File/.ozg/ automatically puts a
                   buffer in Oz-Gump mode.  You can tell a buffer is in
                   Oz-Gump mode by the string <Samp/Oz-Gump/ in its mode line.
@@ -1089,6 +1089,6 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
         Please send any interesting commands you formulate using these
         functions to the author.
   <Back>
-    <Bib.Extern id="kornstaedt96" to="opi.bib" key="kornstaedt96">
+    <Bib.Extern id="mozart-gump" to="mozart.bib" key="Mozart-Gump">
     <Bib.Extern id="stallman91" to="opi.bib" key="stallman91">
 </Book>
