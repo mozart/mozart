@@ -930,8 +930,6 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "class"/\(                     { return _class_; }
 "cond"                         { return cond; }
 "cond"/\(                      { return cond; }
-"condis"                       { return _condis_; }
-"condis"/\(                    { return _condis_; }
 "declare"                      { return declare; }
 "declare"/\(                   { return declare; }
 "define"                       { return define; }
