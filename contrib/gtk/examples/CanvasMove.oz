@@ -21,10 +21,9 @@
 
 functor $
 import
-   Application
-   GDK    at 'x-oz://system/gtk/GDK.ozf'
-   GTK    at 'x-oz://system/gtk/GTK.ozf'
-   Canvas at 'x-oz://system/gtk/GTKCANVAS.ozf'
+   Application(exit)
+   GTK at 'x-oz://system/gtk/GTK.ozf'
+   GTKCANVAS at 'x-oz://system/gtk/GTKCANVAS.ozf'
 define
    %% Create Toplevel window class
    class CanvasToplevel from GTK.window
@@ -32,65 +31,71 @@ define
 	 GTK.window, new(GTK.'WINDOW_TOPLEVEL')
 	 GTK.window, setBorderWidth(10)
 	 GTK.window, setTitle("Canvas Move")
-	 {self signalConnect('delete_event' deleteEvent _)}
+	 {self signalConnect('delete-event' deleteEvent _)}
       end
-      meth deleteEvent(Event)
-	 %% Caution: At this time, the underlying GTK object has been destroyed already
-	 %% Caution: Destruction also includes all attached child objects.
-	 %% Caution: This event is solely intended to do OZ side cleanup via calling close
-	 {self close}
+      meth deleteEvent(Args)
+	 {self gtkClose}
 	 {Application.exit 0}
       end
    end
-
    Toplevel = {New CanvasToplevel new}
  
-   %% Setup the Colors
-   %% 1. Obtain the system colormap
-   %% 2. Allocate the color structure with R, G, B preset
-   %% 3. Try to alloc appropriate system colors, non-writeable and with best-match
-   %% 4. Use colors black and white
-   Colormap = {New GDK.colormap getSystem}
-   Black    = {New GDK.color new(0 0 0)}
-   White    = {New GDK.color new(65535 65535 65535)}
-   {Colormap allocColor(Black 0 1 _)}
-   {Colormap allocColor(White 0 1 _)}
-
-   %% Setup canvas
-   MyCanvas = {New Canvas.canvas new}
-   {MyCanvas setUsize(400 400)}
-   {MyCanvas setScrollRegion(0.0 0.0 400.0 400.0)}
+   %% Setup canvas without image support
+   Canvas = {New GTKCANVAS.canvas new(false)}
+   %% Set canvas dimensions
+   {Canvas setUsize(400 400)}
+   {Canvas setScrollRegion(0.0 0.0 400.0 400.0)}
    %% Make Canvas child of toplevel
-   {Toplevel add(MyCanvas)}
-   
-   %% Setup Canvas Items
-   %% Create a text item (member of root group) and ignore item obj
-   TextItemPars = ["x"#10.0 "y"#10.0
-		   "text"#"Press Button to move canvas item below"
-		   "font"#"-adobe-helvetica-medium-r-normal--12-*-72-72-p-*-iso8859-1"
-		   "fill_color_gdk"#Black
-		   "anchor"#GTK.aNCHOR_NORTH_WEST]
-   _ = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas textGetType($)} TextItemPars $)}
+   {Toplevel add(Canvas)}
 
-   %% Create a rectangle item
-   RectItemPars = ["x1"#200.0 "y1"#60.0 "x2"#400.0 "y2"#180.0
-		   "fill_color_gdk"#Black "outline_color_gdk"#White]
-   RectItem = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas rectGetType($)} RectItemPars $)}
+   %% Setup the Item Colors
+   Black = {Canvas itemColor('#000000' $)}
+   White = {Canvas itemColor('#FFFFFF' $)}
+  
+   %% Create a text item (member of root group)
+   RootItem = {Canvas rootItem($)}
+   local
+      Font = '-adobe-helvetica-medium-r-normal--12-*-72-72-p-*-iso8859-1'
+   in
+      TextDesc = text(parent         : RootItem
+		      text           : "Press Button to move canvas item below"
+		      x              : 10.0
+		      y              : 10.0
+		      font           : Font
+		      fill_color_gdk : Black
+		      anchor         : GTK.'ANCHOR_NORTH_WEST')
+   end
+   _ = {Canvas newItem(TextDesc $)}
 
-   %% Create Rectangle Item Event Handler
+   %% Create a rectangle item (member of root group)
+   RectDesc = rectangle(parent            : RootItem
+			x1                : 200.0
+			y1                : 60.0
+			x2                : 400.0
+			y2                : 180.0
+			fill_color_gdk    : Black
+			outline_color_gdk : White)
+
+   %% Canvas items are unwrapped by default.
+   %% However, event connection requires an Oz object.
+   %% The resulting object must be freed explicitly
+   %% (i.e. {RectObject gtkClose}).
+   RectItem#RectObject = {Canvas newWrappedItem(RectDesc $)}
+
+   %% Create Rectangle Event Handler
    local
       proc {ToggleColor Item Fill Outline}
-	 {Item set("fill_color_gdk" Fill)}
-	 {Item set("outline_color_gdk" Outline)}
+	 {Canvas configureItem(Item options(fill_color_gdk : Fill))}
+	 {Canvas configureItem(Item options(outline_color_gdk : Outline))}
       end
    in
-      fun {MakeRectEvent Item}
+      fun {MakeRectangleEvent Item}
 	 ButtonX = {Cell.new 0.0}
 	 ButtonY = {Cell.new 0.0}
 	 Pressed = {Cell.new false}
       in
-	 proc {$ Event}
-	    case {GDK.getEvent Event}
+	 proc {$ [Event]}
+	    case Event
 	    of 'GDK_BUTTON_PRESS'(button:Button x:X y:Y ...) then
 	       case Button
 	       of 1 then
@@ -106,10 +111,7 @@ define
 	    [] 'GDK_MOTION_NOTIFY'(x:X y:Y ...) then
 	       if {Cell.access Pressed}
 	       then
-		  NewX = X - {Cell.access ButtonX}
-		  NewY = Y - {Cell.access ButtonY}
-	       in
-		  {Item move(NewX NewY)}
+		  {Canvas moveItemTo(Item {Float.toInt X} {Float.toInt Y})}
 		  {Cell.assign ButtonX X}
 		  {Cell.assign ButtonY Y}
 	       end
@@ -118,8 +120,10 @@ define
 	 end
       end
    end
-   {RectItem signalConnect('event' {MakeRectEvent RectItem} _)}
-      
+   %% Items only have the generic 'event' signal which contains
+   %% all appropriate events
+   {RectObject signalConnect('event' {MakeRectangleEvent RectItem} _)}
+
    %% Make it all visible
    {Toplevel showAll}
 end
