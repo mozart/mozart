@@ -1074,7 +1074,7 @@ static void xy_init(OZ_Term defines0) {
 
   bufferStack = NULL;
 
-  defines = tagged2Dictionary(defines0);
+  defines = tagged2Dictionary(OZ_deref(defines0));
   conditional_p = 0;
   conditional_basep = 0;
   commentdepth = 0;
