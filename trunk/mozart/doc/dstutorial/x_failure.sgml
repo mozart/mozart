@@ -432,7 +432,7 @@ object-record is fetched over the network, which might fail.
 
 <SUBSECTION id="levels"><TITLE>Levels of fault detection</TITLE>
 
-<index/fault detection/level/
+<index/fault detection<and>level/
 <index/level of fault detection/
 <P>There are three levels of fault detection, namely
 default site-based, site-based, and thread-based.
