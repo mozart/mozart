@@ -20,7 +20,7 @@
 %%% WARRANTIES.
 %%%
 
-{ErrorRegistry.put explorer
+{Error.registerFormatter explorer
  fun {$ E}
     T = 'error in Oz Explorer'
  in
