@@ -572,15 +572,16 @@ echo "$ac_t""$host" 1>&6
 
     if test -z "$TOPDIR"
     then
-        TOPDIR=$srcdir
-        if test ! -r $TOPDIR/OZVERSION
-        then
-            TOPDIR=$srcdir/..
-            if test ! -r $TOPDIR/OZVERSION
-            then
-               TOPDIR=$srcdir/../..
-            fi
-       fi
+        for TOPDIR in   $srcdir \
+                        $srcdir/.. \
+                        $srcdir/../.. \
+                        $srcdir/../../.. \
+                        $srcdir/../../../..; do
+          if test -r $TOPDIR/OZVERSION
+          then
+                break
+          fi
+        done
     fi
     if test ! -r $TOPDIR/OZVERSION
     then
@@ -601,7 +602,7 @@ echo "$ac_t""$host" 1>&6
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:605: checking for a BSD compatible install" >&5
+echo "configure:606: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -654,10 +655,12 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 #OZ_PATH_PROG(DYNLD,          ozdynld)
 
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e "s/\(^\|:\)\.\(\$\|:\|\/\)/\1$dummy_PWD\2/g"`
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:661: checking for $ac_word" >&5
+echo "configure:664: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_MKINSTALLDIRS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -667,7 +670,7 @@ else
   ;;
   *)
   IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH:$oz_topdira/share/bin:$oz_topdira$ac_dummy; do
+  for ac_dir in $dummy_PATH:$oz_topdira/share/bin:$oz_topdira$ac_dummy; do
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
       ac_cv_path_MKINSTALLDIRS="$ac_dir/$ac_word"
@@ -692,7 +695,8 @@ fi
     fi
 
 
-subdirs="bin elisp ozwish Emulator lib"
+#AC_CONFIG_SUBDIRS(bin elisp ozwish Emulator lib)
+subdirs="platform/emulator platform/tools/gump platform/wish share"
 
 
 trap '' 1 2 15
@@ -985,7 +989,7 @@ if test "$no_recursion" != yes; then
     esac
   done
 
-  for ac_config_dir in bin elisp ozwish Emulator lib; do
+  for ac_config_dir in platform/emulator platform/tools/gump platform/wish share; do
 
     # Do not complain, so a configure script can configure whichever
     # parts of a large source tree are present.
