@@ -119,7 +119,6 @@ void Statistics::reset()
   timeForPropagation.reset();
   timeForGC.reset();
   timeForCopy.reset();
-  timeForLoading.reset();
   timeIdle = 0;
 
   solveAlt.reset();
@@ -182,7 +181,6 @@ void Statistics::printIdle(FILE *fd)
   timeForPropagation.idle();
   timeForGC.idle();
   timeForCopy.idle();
-  timeForLoading.idle();
   timeUtime.idle();
 }
 

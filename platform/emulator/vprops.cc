@@ -36,7 +36,6 @@ enum EmulatorPropertyIndex {
   // TIME
   PROP_TIME_COPY,
   PROP_TIME_GC,
-  PROP_TIME_LOAD,
   PROP_TIME_PROPAGATE,
   PROP_TIME_RUN,
   PROP_TIME_SYSTEM,
@@ -87,7 +86,6 @@ enum EmulatorPropertyIndex {
   PROP_MESSAGES_IDLE,
   PROP_MESSAGES_FEED,
   PROP_MESSAGES_FOREIGN,
-  PROP_MESSAGES_LOAD,
   PROP_MESSAGES_CACHE,
   PROP_MESSAGES,
   // MEMORY
@@ -218,12 +216,10 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     // TIME
     CASE_INT(PROP_TIME_COPY,ozconf.timeDetailed?ozstat.timeForCopy.total:0);
     CASE_INT(PROP_TIME_GC,ozconf.timeDetailed?ozstat.timeForGC.total:0);
-    CASE_INT(PROP_TIME_LOAD,ozconf.timeDetailed?ozstat.timeForLoading.total:0);
     CASE_INT(PROP_TIME_PROPAGATE,ozconf.timeDetailed?ozstat.timeForPropagation.total:0);
     CASE_INT(PROP_TIME_RUN,ozconf.timeDetailed ?
 	     (osUserTime() - (ozstat.timeForCopy.total +
 			      ozstat.timeForGC.total +
-			      ozstat.timeForLoading.total +
 			      ozstat.timeForPropagation.total)):0);
     CASE_INT(PROP_TIME_SYSTEM,osSystemTime());
     CASE_INT(PROP_TIME_TOTAL,osTotalTime());
@@ -231,24 +227,21 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_TIME_IDLE,(int) ozstat.timeIdle);
     CASE_BOOL(PROP_TIME_DETAILED,ozconf.timeDetailed);
     CASE_REC(PROP_TIME,"time",
-	     (10,AtomCopy,AtomGC,AtomLoad,AtomPropagate,AtomRun,
+	     (9,AtomCopy,AtomGC,AtomPropagate,AtomRun,
 	      AtomSystem,AtomTotal,AtomUser,AtomDetailed,AtomIdle),
 	     unsigned int timeNow = osUserTime();
 	     unsigned int copy = 0;
 	     unsigned int gc   = 0;
-	     unsigned int load = 0;
 	     unsigned int prop = 0;
 	     unsigned int run  = 0;
 	     if (ozconf.timeDetailed) {
 	       copy = ozstat.timeForCopy.total;
 	       gc   = ozstat.timeForGC.total;
-	       load = ozstat.timeForLoading.total;
 	       prop = ozstat.timeForPropagation.total;
-	       run  = timeNow-(copy + gc + load + prop);
+	       run  = timeNow - (copy + gc + prop);
 	     }
 	     SET_INT(AtomCopy,copy);
 	     SET_INT(AtomGC,gc);
-	     SET_INT(AtomLoad,load);
 	     SET_INT(AtomPropagate,prop);
 	     SET_INT(AtomRun,run);
 	     SET_INT(AtomSystem,osSystemTime());
@@ -330,18 +323,10 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     // MESSAGES
     CASE_BOOL(PROP_MESSAGES_GC,ozconf.gcVerbosity);
     CASE_BOOL(PROP_MESSAGES_IDLE,ozconf.showIdleMessage);
-    CASE_BOOL(PROP_MESSAGES_FEED,ozconf.showFastLoad);
-    CASE_BOOL(PROP_MESSAGES_FOREIGN,ozconf.showForeignLoad);
-    CASE_BOOL(PROP_MESSAGES_LOAD,ozconf.showLoad);
-    CASE_BOOL(PROP_MESSAGES_CACHE,ozconf.showCacheLoad);
     CASE_REC(PROP_MESSAGES,"messages",
-	     (6,AtomGC,AtomIdle,AtomFeed,AtomForeign,AtomLoad,AtomCache),
+	     (2,AtomGC,AtomIdle),
 	     SET_BOOL(AtomGC,ozconf.gcVerbosity);
-	     SET_BOOL(AtomIdle,ozconf.showIdleMessage);
-	     SET_BOOL(AtomFeed,ozconf.showFastLoad);
-	     SET_BOOL(AtomForeign,ozconf.showForeignLoad);
-	     SET_BOOL(AtomLoad,ozconf.showLoad);
-	     SET_BOOL(AtomCache,ozconf.showCacheLoad););
+	     SET_BOOL(AtomIdle,ozconf.showIdleMessage););
     // MEMORY
     CASE_INT(PROP_MEMORY_ATOMS,ozstat.getAtomMemory());
     CASE_INT(PROP_MEMORY_NAMES,ozstat.getNameMemory());
@@ -631,17 +616,9 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     // MESSAGES
     CASE_BOOL(PROP_MESSAGES_GC,ozconf.gcVerbosity);
     CASE_BOOL(PROP_MESSAGES_IDLE,ozconf.showIdleMessage);
-    CASE_BOOL(PROP_MESSAGES_FEED,ozconf.showFastLoad);
-    CASE_BOOL(PROP_MESSAGES_FOREIGN,ozconf.showForeignLoad);
-    CASE_BOOL(PROP_MESSAGES_LOAD,ozconf.showLoad);
-    CASE_BOOL(PROP_MESSAGES_CACHE,ozconf.showCacheLoad);
     CASE_REC(PROP_MESSAGES,
 	     SET_BOOL(AtomGC,ozconf.gcVerbosity);
-	     SET_BOOL(AtomIdle,ozconf.showIdleMessage);
-	     SET_BOOL(AtomFeed,ozconf.showFastLoad);
-	     SET_BOOL(AtomForeign,ozconf.showForeignLoad);
-	     SET_BOOL(AtomLoad,ozconf.showLoad);
-	     SET_BOOL(AtomCache,ozconf.showCacheLoad););
+	     SET_BOOL(AtomIdle,ozconf.showIdleMessage););
     // INTERNAL
     CASE_BOOL_DO(PROP_INTERNAL_DEBUG,
 		 if (INT__) am.setdebugmode(OK);
@@ -811,7 +788,6 @@ void initVirtualProperties()
   // TIME
   VirtualProperty::add("time.copy",PROP_TIME_COPY);
   VirtualProperty::add("time.gc",PROP_TIME_GC);
-  VirtualProperty::add("time.load",PROP_TIME_LOAD);
   VirtualProperty::add("time.propagate",PROP_TIME_PROPAGATE);
   VirtualProperty::add("time.run",PROP_TIME_RUN);
   VirtualProperty::add("time.system",PROP_TIME_SYSTEM);
@@ -860,10 +836,6 @@ void initVirtualProperties()
   // MESSAGES
   VirtualProperty::add("messages.gc",PROP_MESSAGES_GC);
   VirtualProperty::add("messages.idle",PROP_MESSAGES_IDLE);
-  VirtualProperty::add("messages.feed",PROP_MESSAGES_FEED);
-  VirtualProperty::add("messages.foreign",PROP_MESSAGES_FOREIGN);
-  VirtualProperty::add("messages.load",PROP_MESSAGES_LOAD);
-  VirtualProperty::add("messages.cache",PROP_MESSAGES_CACHE);
   VirtualProperty::add("messages",PROP_MESSAGES);
   // MEMORY
   VirtualProperty::add("memory.atoms",PROP_MEMORY_ATOMS);
