@@ -7,7 +7,7 @@ OZPREFIX        = $(PREFIX)
 
 OZBIN           = $(PREFIX)/bin
 OZLIB           = $(PREFIX)/lib
-IMAGESDIR       = $(OZLIB)/bitmaps
+IMAGESDIR       = $(OZLIB)/images
 
 SHELL           = @SH@
 RM              = @RM@ -f
