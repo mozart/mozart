@@ -33,10 +33,7 @@ $(ELIB_TARGETS): $(ELIB_DIR)/% : %
         $(OZC) -c $< -o $@
 
 %.elc: %.el
-        @echo "(setq byte-compile-compatibility t) \
-        (byte-compile-file \"$<\")" > compile.el
-        $(EMACS) -q -batch -l compile.el
-        @rm -f compile.el
+        $(EMACS) -q -batch -f batch-byte-compile $<
 
 %.el: %.EL
         @cp -f $< $@

@@ -1,4 +1,3 @@
-;;; -*- emacs-lisp -*-
 ;;;
 ;;; Author:
 ;;;   Denys Duchier <duchier@ps.uni-sb.de>
@@ -293,3 +292,9 @@ the result spec."
       (ozdoc-process-request))
     (set-buffer out-buffer)
     (write-region (point-min) (point-max) out)))
+
+;;; Local Variables: ***
+;;; mode: emacs-lisp ***
+;;; byte-compile-dynamic-docstrings: nil ***
+;;; byte-compile-compatibility: t ***
+;;; End: ***
