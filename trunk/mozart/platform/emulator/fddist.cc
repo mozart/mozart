@@ -188,7 +188,7 @@ OZ_BI_define(BIfdd_select_min, 1, 1) {
 
     int curmin = getMin(d_arg);
 
-    if (curmin > minmin) {
+    if (curmin < minmin) {
       minmin = curmin;
       var    = arg; 
     }
