@@ -189,7 +189,7 @@ ProgramCounter unmarshalPredicateRef(ProgramCounter PC,MsgBuffer *bs)
       entry = (AbstractionEntry*) ToPointer(refTable->get(i));
     } else {
       Assert(tag==DIF_ABSTRENTRY);
-      entry = new AbstractionEntry(NO);
+      entry = new AbstractionEntry(OK);
       gotRef(bs,ToInt32(entry));
     }
   }
