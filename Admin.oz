@@ -141,9 +141,6 @@ define
       meth get_docdir($)
 	 {RelativeTo @mogulDIR 'doc'}
       end
-      meth get_pkgdir($)
-	 {RelativeTo @mogulDIR 'pkg'}
-      end
       meth get_catdir($)
 	 {RelativeTo @mogulDIR 'info/category'}
       end
@@ -152,6 +149,9 @@ define
       end
       meth get_uploaddir($)
 	 {RelativeTo @mogulDIR 'upload'}
+      end
+      meth get_populatedir($)
+	 {RelativeTo @mogulDIR 'populate'}
       end
       meth 'wget'(V) wget<-V end
       meth get_wget($) @wget end
