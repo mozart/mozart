@@ -120,6 +120,10 @@ in
       Sock = {CompilerUI getSocket($)}
       {Property.put 'opi.compiler' CompilerUI}
 
+      %% Make the error handler non-halting
+      {Property.put 'errors.toplevel'    proc {$} skip end}
+      {Property.put 'errors.subordinate' proc {$} fail end}
+      
       % Try to load some ozrc file:
       local
 	 fun {FileExists FileName}
