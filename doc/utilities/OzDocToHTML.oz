@@ -552,13 +552,22 @@ define
                OzDocToHTML, FinishNode(NodeTitle X 'div'(COMMON: @Common
                                                          HTML2 HTML3) ?HTML4)
                SEQ([HTML1 HTML4])
-            [] subsubsection then Title in
+            [] subsubsection then Title TheLabel in
                Title = case {Label M.1} of title then
                           OzDocToHTML, Batch(M.1 1 $)
                        else unit
                        end
+               if {HasFeature M id} then
+                  OzDocToHTML, ID(M.id @CurrentNode
+                                  SEQ([PCDATA('Section ``') Title
+                                       PCDATA('\'\'')]))
+                  TheLabel = M.id
+               else
+                  ToGenerate <- TheLabel|@ToGenerate
+               end
+               TOC <- {Append @TOC [5#TheLabel#@CurrentNode#Title]}
                'div'(COMMON: @Common
-                     h4(Title)
+                     h4(a(name: TheLabel Title))
                      OzDocToHTML, Batch(M 2 $))
             %-----------------------------------------------------------
             % Paragraphs
@@ -916,6 +925,14 @@ define
                 ozDoc(sgmlToHTML unsupported M)} unit   %--**
             end
          end = Res
+         case {CondSelect M id unit} of unit then skip
+         elseof L then N T in
+            OzDocToHTML, ID(L N T)
+            if {IsFree N} then
+               N = @CurrentNode
+               T = PCDATA('???')
+            end
+         end
          OzDocToHTML, PopCommon(OldCommon)
          Res
       end
