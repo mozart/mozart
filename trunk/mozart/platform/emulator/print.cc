@@ -926,17 +926,13 @@ void Script::printStream(ostream &stream, int depth)
     return;
   }
   for (int i = 0; i < getSize(); i++) {
-    (*this)[i].printStream(stream,depth);
+    ozd_printStream((*this)[i].left,stream,depth);
+    stream << " = ";
+    ozd_printStream((*this)[i].right,stream,depth);
     stream << ", ";
   }
 }
 
-void Equation::printStream(ostream &stream, int depth)
-{
-  ozd_printStream(getLeft(),stream,depth);
-  stream << " = ";
-  ozd_printStream(getRight(),stream,depth);
-}
 
 void ThreadsPool::printThreads() {
   cout << "Threads" << endl;
