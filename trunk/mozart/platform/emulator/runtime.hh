@@ -344,11 +344,17 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X);
 
 extern TaggedRef builtinRecord;
 
-#define atom2Builtin(a) \
-  (tagged2Builtin(tagged2SRecord(builtinRecord)->getFeature(a)))
+inline
+Builtin * atom2Builtin(TaggedRef a) {
+  TaggedRef b = tagged2SRecord(builtinRecord)->getFeature(a);
 
-#define string2Builtin(s) \
-  atom2Builtin(oz_atom(s))
+  return (b ? tagged2Builtin(b) : ((Builtin *) 0));
+}
+
+inline
+Builtin * string2Builtin(const char * s) {
+  return atom2Builtin(oz_atom(s));
+}
 
 Builtin * cfunc2Builtin(void * f);
 
