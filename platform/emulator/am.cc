@@ -438,9 +438,10 @@ Bool AM::installScript(Script &script)
       if (!onToplevel()) {
         break;
       }
+    } else {
+      // mm2:
+      error("installScript: unify suspended: %d",res);
     }
-    // mm2:
-    error("installScript: unify suspended: %d",res);
   }
   installingScript = FALSE;
 #ifndef DEBUG_CHECK
