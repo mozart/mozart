@@ -421,7 +421,7 @@ void Thread::makeRunning ()
     am.cachedStack = getTaskStackRef();
     am.cachedSelf = getSelf();
     setSelf(0);
-    ozstat.enterCall(abstr);
+    ozstat.leaveCall(abstr);
     abstr=0;
     break;			// nothing to do;
 
@@ -2750,8 +2750,7 @@ LBLdispatcher:
 
   Case(TASKPROFILECALL)
     {
-      ozstat.leaveCall(ozstat.currAbstr);
-      ozstat.enterCall((PrTabEntry*)Y);
+      ozstat.leaveCall((PrTabEntry*)Y);
       goto LBLpopTaskNoPreempt;
     }
 
@@ -2839,7 +2838,7 @@ LBLdispatcher:
 	break;
       }
       case DBG_NEXT : {
-	if (CTT->isTraced() && CTT->stepMode()) {
+if (CTT->isTraced() && CTT->stepMode()) {
 	  debugStreamExit(info);
 	  goto LBLpreemption;
 	}
@@ -3165,8 +3164,7 @@ LBLdispatcher:
       pred->numCalled++;
       if (pred!=ozstat.currAbstr) {
 	CTS->pushAbstr(ozstat.currAbstr);
-	ozstat.leaveCall(ozstat.currAbstr);
-	ozstat.enterCall(pred);
+	ozstat.leaveCall(pred);
       }
       
       DISPATCH(1);
