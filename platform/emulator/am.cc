@@ -106,6 +106,7 @@ void printBanner()
 
 
 extern void bigIntInit(); /* from value.cc */
+extern void initffuns();  /* from initffuns.cc */
 
 void AM::init(int argc,char **argv)
 {  
@@ -113,6 +114,7 @@ void AM::init(int argc,char **argv)
   ozconf.init();
   osInit();
   bigIntInit();
+  initffuns();
 
   installingScript = FALSE;
 

@@ -17,24 +17,34 @@
 /* calling convention "cdecl" under win32 */
 #ifdef __WATCOMC__
 #define ozcdecl __cdecl
+#define OZWIN
 #else
 #ifdef __BORLANDC__
 #define ozcdecl __export __cdecl
+#define OZWIN
 #else
-#ifdef __MSC_VER
-#define ozcdecl __cdecl
+#ifdef _MSC_VER
+#define ozcdecl cdecl
+#define OZWIN
 #else
 #define ozcdecl
 #endif
 #endif
 #endif
 
+#if defined(OZWIN) || defined(OZC)
+#define OzFun(fun) (ozcdecl *fun)
+#else
+#define OzFun(fun) fun
+#endif
 
-#ifdef __cplusplus
-#define _FUNDECL(fun,arglist) ozcdecl fun arglist
+#if defined(__cplusplus)
+#define _FUNDECL(fun,arglist) OzFun(fun) arglist
+#define _FUNTYPEDECL(fun,arglist) (ozcdecl *fun) arglist
 extern "C" {
 #else
-#define _FUNDECL(fun,ignore) ozcdecl fun ()
+#define _FUNDECL(fun,ignore) OzFun(fun) ()
+#define _FUNTYPEDECL(fun,ignore) (ozcdecl *fun) ()
 #endif
 
 
@@ -65,7 +75,7 @@ typedef unsigned int OZ_Return;
 typedef void *OZ_Thread;
 typedef void *OZ_Arity;
 
-typedef OZ_Return _FUNDECL((*OZ_CFun),(int, OZ_Term *));
+typedef OZ_Return _FUNTYPEDECL(OZ_CFun,(int, OZ_Term *));
 
 /* for tobias */
 typedef int OZ_Boolean;
@@ -226,7 +236,7 @@ extern int       _FUNDECL(OZ_eq,(OZ_Term, OZ_Term));
 #define OZ_unifyAtom(t1,s)       OZ_unify(t1, OZ_atom(s))
 
 /* create a new oz variable */
-extern OZ_Term OZ_newVariable();
+extern OZ_Term _FUNDECL(OZ_newVariable,());
 
 extern OZ_Term _FUNDECL(OZ_newChunk,(OZ_Term));
 
@@ -246,7 +256,7 @@ extern void _FUNDECL(OZ_warning,(char * ...));
 extern void _FUNDECL(OZ_fail,(char * ...));
 
 /* generate the unix error string from an errno (see perror(3)) */
-char * _FUNDECL(OZ_unixError,(int err));
+extern char * _FUNDECL(OZ_unixError,(int err));
 
 /* check for toplevel */
 extern int _FUNDECL(OZ_onToplevel,());
@@ -261,7 +271,7 @@ struct OZ_BIspec {
 };
 
 /* add specification to builtin table */
-void _FUNDECL(OZ_addBISpec,(OZ_BIspec *spec));
+extern void _FUNDECL(OZ_addBISpec,(OZ_BIspec *spec));
 
 /* IO */
 
@@ -276,7 +286,7 @@ extern void      _FUNDECL(OZ_deSelect,(int));
  *   else (return FALSE) its called again, when something is available
  */
 
-typedef int _FUNDECL((*OZ_IOHandler),(int,void *));
+typedef int _FUNTYPEDECL(OZ_IOHandler,(int,void *));
 
 extern void _FUNDECL(OZ_registerReadHandler,(int,OZ_IOHandler,void *));
 extern void _FUNDECL(OZ_unregisterRead,(int));
@@ -302,9 +312,9 @@ extern OZ_Return _FUNDECL(OZ_raiseA,(char*, int, int));
 
 /* Suspending builtins */
 
-void      _FUNDECL(OZ_makeRunnableThread,(OZ_CFun, OZ_Term *, int));
-OZ_Thread _FUNDECL(OZ_makeSuspendedThread,(OZ_CFun, OZ_Term *, int));
-void      _FUNDECL(OZ_addThread,(OZ_Term, OZ_Thread));
+extern void      _FUNDECL(OZ_makeRunnableThread,(OZ_CFun, OZ_Term *, int));
+extern OZ_Thread _FUNDECL(OZ_makeSuspendedThread,(OZ_CFun, OZ_Term *, int));
+extern void      _FUNDECL(OZ_addThread,(OZ_Term, OZ_Thread));
 
 #define OZ_makeSelfSuspendedThread() \
   OZ_makeSuspendedThread(OZ_self, OZ_args,OZ_arity)
@@ -315,9 +325,9 @@ void      _FUNDECL(OZ_addThread,(OZ_Term, OZ_Thread));
    OZ_addThread(t2,s);
    */
 
-void _FUNDECL(OZ_suspendOnInternal,(OZ_Term));
-void _FUNDECL(OZ_suspendOnInternal2,(OZ_Term,OZ_Term));
-void _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
+extern void _FUNDECL(OZ_suspendOnInternal,(OZ_Term));
+extern void _FUNDECL(OZ_suspendOnInternal2,(OZ_Term,OZ_Term));
+extern void _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
 
 #define OZ_suspendOn(t1) \
    { OZ_suspendOnInternal(t1); return SUSPEND; }

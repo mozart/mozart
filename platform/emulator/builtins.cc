@@ -17,6 +17,7 @@
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include <ctype.h>
 
 #if defined(LINUX) || defined(SOLARIS_SPARC) || defined(SUNOS_SPARC) || defined(IRIX5_MIPS) || defined(OSF1_ALPHA)
 #   define DLOPEN 1
@@ -4951,7 +4952,11 @@ char *expandFileName(char *fileName,char *path) {
 
   char *ret;
 
+#ifdef WINDOWS
+  if (isalpha(*fileName) && fileName[1]==':') {
+#else
   if (*fileName == '/') {
+#endif
     if (access(fileName,F_OK) == 0) {
       ret = new char[strlen(fileName)+1];
       strcpy(ret,fileName);
@@ -5159,6 +5164,18 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
     void *handle = (void *)LoadLibrary(ofiles[0]);
     if (handle==NULL) {
       OZ_warning("failed in linkObjectFiles: %d",GetLastError());
+      goto raise;
+    }
+
+    FARPROC winLink(HMODULE handle, char *name);
+    FARPROC linkit = winLink(handle, "OZ_linkFF");
+    if (linkit==0) {
+      OZ_warning("OZ_linkFF not found, maybe not exported from DLL?");
+      goto raise;
+    }
+    extern void **ffuns;
+    if (linkit(OZVERSION,ffuns)==0) {
+      OZ_warning("call of 'OZ_linkFF' failed, maybe recompilation needed?");
       goto raise;
     }
     return OZ_unifyInt(out,ToInt32(handle));
