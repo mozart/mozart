@@ -86,6 +86,13 @@ enum InstType {
   INST_REJECTED
 };
 
+
+class IONode {
+public:
+  TaggedRef readwritepair[2];
+};
+
+
 // this class contains the central global data
 class AM : public ThreadsPool {
 friend void engine();
@@ -112,7 +119,7 @@ public:
 
   jmp_buf engineEnvironment;
 
-  TaggedRef *ioNodes;           // node that must be waked up on io
+  IONode *ioNodes;              // node that must be waked up on io
 
 #ifdef DEBUG_CHECK
   Bool dontPropagate;
@@ -285,7 +292,8 @@ public:
 
   void handleIO();
   Bool loadQuery(CompStream *fd);
-  OZ_Bool readSelect(int fd,TaggedRef l,TaggedRef r);
+  OZ_Bool select(int fd,int mode,TaggedRef l,TaggedRef r);
+  void deSelect(int fd);
   void checkIO();
 
   void handleAlarm();

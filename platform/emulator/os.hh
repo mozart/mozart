@@ -60,28 +60,32 @@ extern "C" {
 unsigned int osSystemTime(); // return current systemtime in milliseconds
 unsigned int osUserTime();   // return current usertime in milliseconds
 void osInitSignals();        // initialize signal handler
-int osSetAlarmTimer(int t);  // set alarm timer
+void osSetAlarmTimer(int t, Bool interval=OK);
 void osBlockSignals(Bool check=NO); // check: check if no other signals are blocked
 void osUnblockSignals();
 typedef void OsSigFun(void);
 OsSigFun *osSignal(int signo, OsSigFun *fun); /* Oz version of signal(2) */
 int osSystem(char *cmd);     /* Oz version of system(3) */
-int osSelect(int nfds, fd_set *readfds, fd_set *writefds,
-             fd_set *exceptfds, struct timeval *timeout);
+
+
+#define SEL_READ  0
+#define SEL_WRITE 1
+
+int osTestSelect(int fd, int mode);
+
+void osWatchFD(int fd, int mode);
+Bool osIsWatchedFD(int fd, int mode);
+void osClrWatchedFD(int fd, int mode);
+int osBlockSelect(int ticks);
+void osClearSocketErrors();
+int  osFirstSelect();
+Bool osNextSelect(int fd, int mode);
+int  osCheckIO();
+
+void osKillChildren();
 Bool osHasJobControl();
 int osOpenMax();
 void osInit();
-void osWatchReadFD(int fd);
-Bool osIsWatchedReadFD(int fd);
-void osClrWatchedReadFD(int fd);
-void osBlockSelect();
-void osClearSocketErrors();
-Bool osTestSelect(int fd);
-int osFirstReadSelect();
-Bool osNextReadSelect(int fd);
-int osCheckIO();
-void osKillChilds();
-
 
 inline
 int osMsToClockTick(int ms)

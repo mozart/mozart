@@ -253,14 +253,14 @@ void AM::init(int argc,char **argv)
   toplevelVars[0] = makeTaggedConst(bi);
 
   osInit();
-  ioNodes = new TaggedRef[osOpenMax()];
+  ioNodes = new IONode[osOpenMax()];
 
   if (!isStandalone()) {
-    osWatchReadFD(compStream->csfileno());
+    osWatchFD(compStream->csfileno(),SEL_READ);
   }
 
   osInitSignals();
-  osSetAlarmTimer(CLOCK_TICK);
+  osSetAlarmTimer(CLOCK_TICK/1000);
 
   // --> make sure that we check for input from compiler
   setSFlag(IOReady);
@@ -272,7 +272,6 @@ void AM::init(int argc,char **argv)
 
 void AM::checkVersion()
 {
-  /* check version */
   char s[100];
   char *ss = compStream->csgets(s,100);
   if (ss && ss[strlen(ss)-1] == '\n')
@@ -288,16 +287,14 @@ void AM::checkVersion()
 void AM::exitOz(int status)
 {
   compStream->csclose();
-  osKillChilds();
+  osKillChildren();
   exit(status);
 }
 
 
 void AM::suspendEngine()
 {
- // ******** GC **********
   idleGC();
-
   ozstat.printIdle(stdout);
 
   osBlockSignals(OK);
@@ -312,24 +309,32 @@ void AM::suspendEngine()
       handleIO();
     }
 
-    if (threadQueueIsEmpty()) {
-      if (isStandalone() && !compStream->cseof()) {
-        loadQuery(compStream);
-        continue;
-      }
-    } else {
+    if (!threadQueueIsEmpty()) {
       break;
     }
 
-    // turn off alarm if no user request
-    if (userCounter == 0) {
-      osSetAlarmTimer(0);
+    if (isStandalone() && !compStream->cseof()) {
+      loadQuery(compStream);
+      continue;
     }
-
     Assert(compStream->bufEmpty());
 
-    osBlockSelect();
+#ifdef DEBUG_DET
+  /* directly execute pending sleeps */
+    if (userCounter>0) {
+      handleUser();
+      continue;
+    }
+#endif
+
+    int ticksleft = osBlockSelect(userCounter);
     setSFlag(IOReady);
+
+    if (userCounter>0 && ticksleft==0) {
+      handleUser();
+      continue;
+    }
+    userCounter = ticksleft;
   }
 
   if (DebugCheckT(1||) ozconf.showIdleMessage) {
@@ -337,7 +342,7 @@ void AM::suspendEngine()
   }
 
   // restart alarm
-  osSetAlarmTimer(CLOCK_TICK);
+  osSetAlarmTimer(CLOCK_TICK/1000);
 
   osUnblockSignals();
 }
@@ -552,12 +557,12 @@ start:
 
 BFlag AM::isBetween(Board *to, Board *varHome)
 {
- loop:
-  if (to == currentBoard) return B_BETWEEN;
-  if (to == varHome) return B_NOT_BETWEEN;
-  to = to->getParentAndTest();
-  if (!to) return B_DEAD;
-  goto loop;
+  while (1) {
+    if (to == currentBoard) return B_BETWEEN;
+    if (to == varHome) return B_NOT_BETWEEN;
+    to = to->getParentAndTest();
+    if (!to) return B_DEAD;
+  }
 }
 
 // val is used because it may be a variable which must suspend.
@@ -954,8 +959,8 @@ void AM::awakeIOVar(TaggedRef var)
   Assert(!sl);
 #else
   Assert(isToplevel());
-
   Assert(isCons(var));
+
   if (OZ_unify(head(var),tail(var)) != PROCEED) {
     warning("select or sleep failed");
   }
@@ -1008,26 +1013,34 @@ Bool AM::loadQuery(CompStream *fd)
   return ret;
 }
 
-OZ_Bool AM::readSelect(int fd,TaggedRef l,TaggedRef r)
+OZ_Bool AM::select(int fd, int mode,TaggedRef l,TaggedRef r)
 {
   if (!isToplevel()) {
     warning("select only on toplevel");
     return PROCEED;
   }
-  if (osTestSelect(fd)) return OZ_unify(l,r);
-  ioNodes[fd]=cons(l,r);
-  osWatchReadFD(fd);
+  if (osTestSelect(fd,mode)==1) return OZ_unify(l,r);
+  ioNodes[fd].readwritepair[mode]=cons(l,r);
+  osWatchFD(fd,mode);
   return PROCEED;
+}
+
+void AM::deSelect(int fd)
+{
+  osClrWatchedFD(fd,SEL_READ);
+  osClrWatchedFD(fd,SEL_WRITE);
+  ioNodes[fd].readwritepair[SEL_READ]  = makeTaggedNULL();
+  ioNodes[fd].readwritepair[SEL_WRITE] = makeTaggedNULL();
 }
 
 // called if IOReady (signals are blocked)
 void AM::handleIO()
 {
   unsetSFlag(IOReady);
-  int numbOfFDs=osFirstReadSelect();
+  int numbOfFDs = osFirstSelect();
 
   /* check input from compiler */
-  if (osNextReadSelect(compStream->csfileno()) || /* do this FIRST, sideeffect! */
+  if (osNextSelect(compStream->csfileno(),SEL_READ) || /* do this FIRST, sideeffect! */
       !compStream->bufEmpty()) {
     do {
       loadQuery(compStream);
@@ -1035,13 +1048,15 @@ void AM::handleIO()
     numbOfFDs--;
   }
 
-  // find the node to awake
-  for ( int index = 0; numbOfFDs > 0; index++ ) {
-    if ( osNextReadSelect(index) ) {
-      numbOfFDs--;
-      awakeIOVar(ioNodes[index]);
-      ioNodes[index] = makeTaggedNULL();
-      osClrWatchedReadFD(index);
+  // find the nodes to awake
+  for (int index = 0; numbOfFDs > 0; index++) {
+    for(int mode=SEL_READ; mode <= SEL_WRITE; mode++) {
+      if (osNextSelect(index, mode) ) {
+        numbOfFDs--;
+        awakeIOVar(ioNodes[index].readwritepair[mode]);
+        ioNodes[index].readwritepair[mode] = makeTaggedNULL();
+        osClrWatchedFD(index,mode);
+      }
     }
   }
 }
