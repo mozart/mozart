@@ -61,9 +61,9 @@ The <<Open.html>> class has support for this (see example below).
 <p>The following example follows this structure.
 It uses a class <<Open.html>> to generate HTML code on the fly.
 You can test it by sending a URL that looks like this:
-<code display proglang=fundamental>
+<<<
 'http://www.yourdomain.edu/~yourname/small.cgi?number=3D10&amp;text=3DHi+Guys'
-</code>
+>>>
 <p>In this example,
 the value <<10>> is passed
 for the argument <<'number'>>
