@@ -3,7 +3,7 @@
 
 <p>When a Mozart site is a participant in a distributed computation,
 entities are automatically distributed via lexical scoping and
-connections are opened when needed. Before this can be the case an
+connections are opened when needed. Before this can take place an
 initial entry point in the distributed application must exist. This is
 what we refer to as bootstrapping a connection.
 
@@ -11,8 +11,8 @@ what we refer to as bootstrapping a connection.
 <title/Bootstrapping a Connection/
 
 <p>The Mozart programmer establishes connections to the outside world
-by offering a ticket to an entity. Such a ticket is an ascii string
-containing enough information for any Mozart site to connect to the
+by offering a ticket to an entity. Such a ticket is an character string
+containing enough information for other Mozart sites to connect to the
 offering site and access the offered entity. This connection
 establishment procedure is illustrated in <ptr
 to="figure.bootstrap">.
@@ -62,7 +62,8 @@ a default connect-accept-module with non-secure initialization of a
 connection over TCP, but the interfaces are open for the programmer to
 customize parts or all of the procedure. This is possible through the
 notion of Connect-Accept-Pairs and the three layer design, allowing
-the transport layer to be replaced.
+for replacement of the transport layer.
+
 
 <para class=apropos><title/Connect-Accept-Pairs/</para>
 
@@ -80,7 +81,7 @@ create a subdomain only accessible to those processes.
 <para class=apropos><title/Transport Modules/</para>
 
 <p>A transport module is responsible of delivering messages from one
-site to another. It may be a very slim layer interfacing TCP or
+site to another. It may be a very lean layer interfacing TCP or
 contain a complete implementation of a new transport protocol.
 
 <section>

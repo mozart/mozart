@@ -49,7 +49,7 @@
     <Author.Extern to="author.db" key="Erik.Klintskog">
     <Author.Extern to="author.db" key="Anna.Neiderud">
     <ABSTRACT>
-    Mozart has support for distributed programming. This is realized
+    Mozart provides support for distributed programming. This is realized
     by a Distribution Subsystem that offers communication with an
     arbitrary number of sites, a modular design that allows
     customization, communication over multiple platforms, and reliable
