@@ -56,15 +56,14 @@ public:
   void resize(void);
   
   void enqueue (Propagator * prop) {
-    if (size == maxsize) resize ();
+    if (size == maxsize) resize();
     tail = (tail + 1) & (maxsize - 1); // reason for maxsize to be power of 2
     queue[tail].prop = prop;
     size += 1;
   }
 
-  Propagator * dequeue () {
-    if (size == 0) 
-      OZ_error ( "Cannot dequeue from empty queue.");
+  Propagator * dequeue() {
+    Assert(size > 0); 
     Propagator * prop = queue[head].prop;
     head = (head + 1) & (maxsize - 1);
     size -= 1;
@@ -77,7 +76,9 @@ public:
     queue = new queue_t[maxsize];
   }
   
-  Bool isEmpty () { return (size == 0); }
+  Bool isEmpty () { 
+    return (size == 0); 
+  }
   void reset () {
     head = 0; 
     tail = maxsize - 1; 
@@ -87,41 +88,5 @@ public:
 
   OZPRINT;
 };
-
-/*
- *  Local propagation queue of *propagators*;
- *
- */
-class LocalPropagationStore : protected LocalPropagationQueue {
-private:
-  Bool useit;
-
-public:
-  LocalPropagationStore () {}
-
-  Bool reset () {
-    LocalPropagationQueue::reset ();
-    return FALSE;
-  }
-
-  Bool isEmpty () {
-    return (LocalPropagationQueue::isEmpty ());
-  }
-
-  void push (Propagator * prop) {
-    enqueue (prop);
-  }
-
-  Propagator * pop () {
-    return (dequeue ());
-  }
-
-  void setUseIt (void) { useit = TRUE; }
-  void unsetUseIt (void) { useit = FALSE; }
-  Bool isUseIt (void) { return (useit); }
-  int getSize (void) { return LocalPropagationQueue::getSize(); }
-};
-
-extern LocalPropagationStore localPropStore;
 
 #endif //__LPS_H__
