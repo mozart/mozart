@@ -30,11 +30,11 @@ $module_init_fun_name = "fsp_init";
                              out => [],
                              bi  => fsp_isIn},
 
-    'equalR'    => { in  => ['fset','fset','bool'],
+    'reified.equal'     => { in  => ['fset','fset','bool'],
                              out => [],
                              bi  => fsp_equalR},
 
-    'isInR'             => { in  => ['int','fset','int'],
+    'reified.isIn'              => { in  => ['int','fset','int'],
                              out => [],
                              bi  => fsp_isInR},
 
@@ -46,19 +46,19 @@ $module_init_fun_name = "fsp_init";
                              out => [],
                              bi  => fsp_exclude},
 
-    'match'             => { in  => ['fset','+value'],
+    'ini.match'         => { in  => ['fset','+value'],
                              out => [],
                              bi  => fsp_match},
 
-    'seq'               => { in  => ['+value'],
+    'int.seq'           => { in  => ['+value'],
                              out => [],
                              bi  => fsp_seq},
 
-    'minN'              => { in  => ['fset','+value'],
+    'int.minN'          => { in  => ['fset','+value'],
                              out => [],
                              bi  => fsp_minN},
 
-    'maxN'              => { in  => ['fset','+value'],
+    'int.maxN'          => { in  => ['fset','+value'],
                              out => [],
                              bi  => fsp_maxN},
 
@@ -70,7 +70,7 @@ $module_init_fun_name = "fsp_init";
                              out => [],
                              bi  => fsp_union},
 
-    'intersection'      => { in  => ['fset','fset','fset'],
+    'intersect' => { in  => ['fset','fset','fset'],
                              out => [],
                              bi  => fsp_intersection},
 
@@ -94,15 +94,15 @@ $module_init_fun_name = "fsp_init";
                              out => [],
                              bi  => fsp_monitorOut},
 
-    'min'               => { in  => ['fset','int'],
+    'int.min'           => { in  => ['fset','int'],
                              out => [],
                              bi  => fsp_min},
 
-    'max'               => { in  => ['fset','int'],
+    'int.max'           => { in  => ['fset','int'],
                              out => [],
                              bi  => fsp_max},
 
-    'convex'    => { in  => ['fset'],
+    'int.convex'        => { in  => ['fset'],
                              out => [],
                              bi  => fsp_convex},
 
@@ -110,15 +110,15 @@ $module_init_fun_name = "fsp_init";
                              out => [],
                              bi  => fsp_diff},
 
-    'includeR'  => { in  => ['int','fset','int'],
+    'reified.include'   => { in  => ['int','fset','int'],
                              out => [],
                              bi  => fsp_includeR},
 
-    'bounds'    => { in  => ['+fset','fset','int','int','int'],
+    'reified.bounds'    => { in  => ['+fset','fset','int','int','int'],
                              out => [],
                              bi  => fsp_bounds},
 
-    'boundsN'   => { in  => ['+value','+value','+value',
+    'reified.boundsN'   => { in  => ['+value','+value','+value',
                                      '+value','+value'],
                              out => [],
                              bi  => fsp_boundsN},
@@ -135,7 +135,7 @@ $module_init_fun_name = "fsp_init";
                              out => [],
                              bi  => fsp_partition},
 
-    'partitionReified'=> { in  => ['+value','fset','+value'],
+    'reified.partition'=> { in  => ['+value','fset','+value'],
                              out => [],
                              bi  => fsp_partitionReified},
 

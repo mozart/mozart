@@ -27,10 +27,12 @@
 #ifndef __FDDEBUG_HH__
 #define __FDDEBUG_HH__
 
-//#define DEBUG_FD_CONSTRREP
-//#define DEBUG_FD
-//#define DEBUG_FSET
-//#define DEBUG_FSET_CONSTRREP
+#ifdef DEBUG_CHECK
+#define DEBUG_FD_CONSTRREP
+#define DEBUG_FD
+#define DEBUG_FSET
+#define DEBUG_FSET_CONSTRREP
+#endif
 
 extern ostream * cpi_cout;
 

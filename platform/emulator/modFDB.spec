@@ -44,55 +44,55 @@
                              out => ['+int','+int'],
                              BI  => BIgetFDLimits},
 
-    'getMin'            => { in  => ['*int','int'],
+    'reflect.min'               => { in  => ['*int','int'],
                              out => [],
                              bi  => BIfdMin},
 
-    'getMid'            => { in  => ['*int','int'],
+    'reflect.mid'               => { in  => ['*int','int'],
                              out => [],
                              bi  => BIfdMid},
 
-    'getMax'            => { in  => ['*int','int'],
+    'reflect.max'               => { in  => ['*int','int'],
                              out => [],
                              bi  => BIfdMax},
 
-    'getDom'            => { in  => ['*int','+[value]'],
+    'reflect.dom'               => { in  => ['*int','+[value]'],
                              out => [],
                              bi  => BIfdGetAsList},
 
-    'getCard'           => { in  => ['*int','int'],
+    'reflect.size'              => { in  => ['*int','int'],
                              out => [],
                              bi  => BIfdGetCardinality},
 
-    'getNextSmaller'    => { in  => ['+int','*int','int'],
+    'reflect.nextSmaller'       => { in  => ['+int','*int','int'],
                              out => [],
                              bi  => BIfdNextSmaller},
 
-    'getNextLarger'     => { in  => ['+int','*int','int'],
+    'reflect.nextLarger'        => { in  => ['+int','*int','int'],
                              out => [],
                              bi  => BIfdNextLarger},
 
-    'tellConstraint'    => { in  => ['+value', 'int'],
+    'int'       => { in  => ['+value', 'int'],
                              out => [],
                              bi  => BIfdTellConstraint},
 
-    'tellBoolConstraint'=> { in  => ['int'],
+    'bool'=> { in  => ['int'],
                              out => [],
                              bi  => BIfdBoolTellConstraint},
 
-    'tellDeclConstraint'=> { in  => ['int'],
+    'decl'=> { in  => ['int'],
                              out => [],
                              bi  => BIfdDeclTellConstraint},
 
-    'watchSize' => { in  => ['*int','+int','bool'],
+    'watch.size'        => { in  => ['*int','+int','bool'],
                              out => [],
                              bi  => BIfdWatchSize},
 
-    'watchMin'  => { in  => ['*int','+int','bool'],
+    'watch.min' => { in  => ['*int','+int','bool'],
                              out => [],
                              bi  => BIfdWatchMin},
 
-    'watchMax'  => { in  => ['*int','+int','bool'],
+    'watch.max' => { in  => ['*int','+int','bool'],
                              out => [],
                              bi  => BIfdWatchMax},
 
@@ -106,7 +106,7 @@
                              ifdef => FDCD,
                              bi  => BIfdConstrDisj},
 
-    'tellConstraintCD'=> { in  => ['value','value','value'],
+    'tellConstraintCD' => { in  => ['value','value','value'],
                              out => [],
                              ifdef => FDCD,
                              bi  => BIfdTellConstraintCD},
