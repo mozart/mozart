@@ -113,13 +113,21 @@ the following atoms:
 <<append>>,
 <<create>>,
 <<truncate>>,
-<<exclude>>
+<<exclude>>,
+<<text>>,
+<<binary>>
 <p>
 For reading a file, the atom <<read>> must be
 included in ?_{FlagsAs}. Similarly, the atom <<write>> must be
 included for writing. It is possible to include both atoms, giving both
 read and write access to the file. For files attached to an url, only
 reading access is possible.
+<p>Atom <<text>> opens a file in text mode.  This is important on
+platforms where the line ends are represented on disk by <samp/CRLF/
+rather than just <samp/LF/.  When opened in text mode, the conversion
+from <samp/CRLF/ to <samp/LF/ on reading (and in the reverse direction
+on writing) happes automatically.  Atom <<binary>> opens a file in
+binary mode, where no such translation happens.
 <p>
 When a file object is opened, the <def/seek pointer/<index/seek pointer/,
 pointing to the current position in the file, is initialized
