@@ -185,12 +185,10 @@ int perdioInit();
 /*  SECTION ::  provided to gc                                              */
 /* ************************************************************************ */
 
-void gcOwnerTable();
-void gcBorrowTableRoots();
+void gcPerdioFinal();
+void gcPerdioRoots();
 void gcBorrowTableUnusedFrames();
-void gcBorrowTableFinal();
 void gcFrameToProxy();
-void gcGNameTable();
 void gcGName(GName*);
 
 /* ************************************************************************ */
