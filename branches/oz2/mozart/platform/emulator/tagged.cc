@@ -43,7 +43,9 @@ void initTagged()
   tts[SMALLINT] = "SMALLINT";  //  3
   tts[4]        = "REF";       //  4
   tts[CVAR]     = "CVAR";      //  5
+#ifdef FSETVAR
   tts[FSETVALUE]= "FSETVALUE"; //  6
+#endif 
   tts[BIGINT]   = "BIGINT";    //  7
   tts[8]        = "REF";       //  8
   tts[SVAR]     = "SVAR";      //  9

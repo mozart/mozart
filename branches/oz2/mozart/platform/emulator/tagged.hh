@@ -1,4 +1,4 @@
-/*
+#/*
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
   Author: scheidhr
@@ -46,7 +46,9 @@ enum TypeOfTerm {
   GCTAG            =  13,  // 1101    --> !!! isAnyVar(GCTAG) = 1 !!!
 	    
   LTUPLE           =  2,   // 0010
+#ifdef FSETVAR
   FSETVALUE        = 14,   // 1110
+#endif
   SRECORD          =  3,   // 0011
 		  
   LITERAL          = 15,   // 1111
@@ -287,7 +289,7 @@ Bool isNotCVar(TaggedRef term) {
 #endif
 
 
-
+#ifdef FSETVAR
 inline
 Bool isFSetValue(TypeOfTerm tag) {
   return tag == FSETVALUE;
@@ -298,6 +300,7 @@ Bool isFSetValue(TaggedRef term) {
   GCDEBUG(term);
   return isFSetValue(tagTypeOf(term));
 }
+#endif /* FSETVAR */
 
 inline
 Bool isLiteral(TypeOfTerm tag) {
@@ -441,12 +444,14 @@ TaggedRef makeTaggedCVar(GenCVariable *s) {
   return makeTaggedRef(CVAR, s);
 }
 
+#ifdef FSETVAR
 inline
 TaggedRef makeTaggedFSetValue(FSetValue * s)
 {
   CHECK_POINTER_N(s);
   return makeTaggedRef(FSETVALUE, s);
 }
+#endif /* FSETVAR */
 
 inline
 TaggedRef makeTaggedLTuple(LTuple *s)
@@ -623,6 +628,7 @@ Board *tagged2VarHome(TaggedRef ref)
   return (Board *) tagValueOf(UVAR,ref);
 }
 
+#ifdef FSETVAR
 inline
 FSetValue *tagged2FSetValue(TaggedRef ref)
 {
@@ -630,6 +636,7 @@ FSetValue *tagged2FSetValue(TaggedRef ref)
   CHECKTAG(FSETVALUE);
   return (FSetValue *) tagValueOf(FSETVALUE,ref);
 }
+#endif /* FSETVAR */
 
 inline
 SRecord *tagged2SRecord(TaggedRef ref)

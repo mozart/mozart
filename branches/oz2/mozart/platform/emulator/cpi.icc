@@ -62,6 +62,7 @@ OZ_Boolean isPosSmallFDInt(OZ_Term v)
   return OZ_FALSE;
 }
 
+#ifdef FSETVAR
 inline 
 OZ_Boolean isPosSmallSetInt(OZ_Term v) 
 {
@@ -71,5 +72,6 @@ OZ_Boolean isPosSmallSetInt(OZ_Term v)
   }
   return OZ_FALSE;
 }
+#endif /* FSETVAR */
 
 #endif /* __CPI_ICC__ */

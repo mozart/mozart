@@ -9,6 +9,8 @@
   ------------------------------------------------------------------------
 */
 
+#ifdef FSETVAR
+
 #if defined(INTERFACE)
 #pragma implementation "fsgenvar.hh"
 #endif
@@ -211,3 +213,4 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
 #undef inline
 #endif
 
+#endif /* FSETVAR */

@@ -31,18 +31,24 @@
 enum TypeOfGenCVariable {
   FDVariable,
   OFSVariable,
-  MetaVariable, 
+#ifdef METAVAR
+  MetaVariable,
+#endif 
   BoolVariable,
+#ifdef FSETVAR
   FSetVariable,
+#endif
   AVAR,
   PerdioVariable
 };
 
-#define GenVarCheckType(t)				\
-    Assert(t == FDVariable || t == OFSVariable || 	\
-	   t == MetaVariable || t == BoolVariable || 	\
-	   t==AVAR || t==PerdioVariable || t == FSetVariable )
-
+#define GenVarCheckType(t)			\
+Assert(t == FDVariable || 			\
+       t == OFSVariable ||			\
+       t == BoolVariable ||			\
+       t==AVAR || 				\
+       t==PerdioVariable )
+  
 class GenCVariable: public SVariable {
 
 friend class GenFDVariable;

@@ -46,9 +46,6 @@
 #define OZ_EM_INT       "integer"
 #define OZ_EM_FD        "finite domain integer"
 #define OZ_EM_FDDESCR   "description of finite domain integer"
-#define OZ_EM_FSETVAL   "finite set of integers value"
-#define OZ_EM_FSET      "finite set of integers"
-#define OZ_EM_FSETDESCR "description of finite set of integers"
 #define OZ_EM_VECT      "vector of "
 #define OZ_EM_TNAME     "truth name"
 #define OZ_EM_STREAM    "stream"
@@ -122,32 +119,6 @@ ostream &operator << (ostream &ofile, const OZ_FiniteDomain &fd) {
 }
 
 //-----------------------------------------------------------------------------
-// OZ_FiniteSet 
-
-const int fset_high = 2;
-
-enum OZ_FSetPropState {fs_glb = 0, fs_lub, fs_val, fs_any};
-
-class OZ_FiniteSet {
-friend ostream &operator << (ostream &, const OZ_FiniteSet &);
-
-protected:
-  int _card_min, _card_max; 
-  int _known_not_in, _known_in;
-  int _in[fset_high], _not_in[fset_high];
-
-  ostream &print(ostream &) const;
-public:
-  OZ_FiniteSet(void) {};
-};   
-
-
-inline
-ostream &operator << (ostream &ofile, const OZ_FiniteSet &fs) {
-  return fs.print(ofile);
-}
-
-//-----------------------------------------------------------------------------
 // class OZ_Propagator
 
 enum OZ_FDPropState {fd_singl = 0, fd_bounds, fd_any};
@@ -211,14 +182,11 @@ public:
   void collectVarsOff(void);
 
   OZ_expect_t expectDomDescr(OZ_Term descr, int level = 4);
-  OZ_expect_t expectSetDescr(OZ_Term descr, int level = 3);
   OZ_expect_t expectVar(OZ_Term t);
   OZ_expect_t expectRecordVar(OZ_Term);
   OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState);
-  OZ_expect_t expectSetVar(OZ_Term, OZ_FSetPropState);
   OZ_expect_t expectIntVarAny(OZ_Term t) { return expectIntVar(t, fd_any); }
   OZ_expect_t expectInt(OZ_Term);
-  OZ_expect_t expectSet(OZ_Term);
   OZ_expect_t expectLiteral(OZ_Term);
   OZ_expect_t expectVector(OZ_Term, OZ_ExpectMeth);
   OZ_expect_t expectStream(OZ_Term st); 
@@ -277,50 +245,6 @@ public:
   void read(OZ_Term);
   void readEncap(OZ_Term);
   OZ_Boolean leave(void) { return isSort(sgl_e) ? OZ_FALSE : tell(); }
-  void fail(void);
-};
-
-
-//-----------------------------------------------------------------------------
-// class OZ_FSetVar
-
-class OZ_FSetVar {
-private:
-  OZ_FiniteSet set;
-  OZ_FiniteSet * setPtr;
-  OZ_Term var;
-  OZ_Term * varPtr;
-  int initial_size;
-  enum Sort_e {val_e = 1, var_e = 2} sort;
-  enum State_e {loc_e = 1, glob_e = 2, spec_e = 3} state;
-  OZ_Boolean isSort(Sort_e s) const {return s == sort;}
-  void setSort(Sort_e s) {sort = s;}
-  OZ_Boolean isState(State_e s) const {return s == state;}
-  void setState(State_e s) {state = s;}
-
-  OZ_Boolean tell(void);
-public:
-  OZ_FSetVar(void) {}
-  OZ_FSetVar(OZ_Term v) { read(v); }
-		      
-  static void * operator new(size_t);
-  static void operator delete(void *, size_t);
-
-#ifndef _MSC_VER
-  // mm2: portability ?
-  static void * operator new[](size_t);
-  static void operator delete[](void *, size_t);
-#endif
-
-  OZ_FiniteSet &operator * (void) {return *setPtr;}
-  OZ_FiniteSet * operator -> (void) {return setPtr;}
-
-  OZ_Boolean isTouched(void) const;
-
-  void ask(OZ_Term);
-  void read(OZ_Term);
-  void readEncap(OZ_Term);
-  OZ_Boolean leave(void) { return isSort(val_e) ? OZ_FALSE : tell(); }
   void fail(void);
 };
 

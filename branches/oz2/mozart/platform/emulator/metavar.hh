@@ -9,9 +9,46 @@
 #include "genvar.hh"
 #include "oz.h"
 
+#ifdef METAVAR
+
 #if defined(OUTLINE)
 #define inline
 #endif
+
+typedef enum {
+  meta_unconstr     = 0,
+  meta_det          = 1,
+  meta_left_constr  = 2,
+  meta_right_constr = 4,
+  meta_fail         = 8
+} mur_t;
+
+typedef enum {
+  OZ_Type_Cell,
+  OZ_Type_Chunk,
+  OZ_Type_Cons,
+  OZ_Type_HeapChunk,
+  OZ_Type_CVar,
+  OZ_Type_Float,
+  OZ_Type_Int,
+  OZ_Type_Literal,
+  OZ_Type_Procedure,
+  OZ_Type_Record,
+  OZ_Type_Tuple,
+  OZ_Type_Var,
+  OZ_Type_Unknown
+} OZ_TermType;
+
+
+typedef void * OZ_MetaType;
+
+typedef mur_t _FUNDECL((* OZ_UnifyMetaDet), (OZ_Term, OZ_Term, OZ_Term, 
+					     OZ_TermType, OZ_Term *));
+typedef mur_t _FUNDECL((* OZ_UnifyMetaMeta), (OZ_Term, OZ_Term, OZ_Term, 
+					      OZ_Term, OZ_MetaType, OZ_Term *));
+
+typedef char * _FUNDECL((* OZ_PrintMeta), (OZ_Term, int));
+typedef int    _FUNDECL((* OZ_IsSingleValue), (OZ_Term));
 
 struct MetaTag {
 friend class GenMetaVariable;
@@ -94,5 +131,6 @@ Bool isGenMetaVar(TaggedRef term, TypeOfTerm tag);
 #undef inline
 #endif
 
+#endif /* METAVAR */
 
 #endif

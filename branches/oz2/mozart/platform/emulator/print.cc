@@ -230,6 +230,7 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
       break;
    }
 
+#ifdef METAVAR
   case MetaVariable:
     {
       GenMetaVariable* me = (GenMetaVariable *) this;
@@ -242,6 +243,8 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
       stream << ' ' << me->toString(DEC(depth)) << '>';
       break;
     }
+#endif /* METAVAR */
+
   case AVAR:
     stream << indent(offset) << "<AVAR "
 	     << getVarName(v) << " @" << this << ">";
@@ -1097,6 +1100,7 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
       break;
     }
 
+#ifdef METAVAR
   case MetaVariable:
     {
       GenMetaVariable* me = (GenMetaVariable *) this;
@@ -1107,6 +1111,8 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
       stream << endl << indent(offset) << ">>" << endl;
       break;
     }
+#endif /* METAVAR */
+
   case AVAR:
     {
       AVar* me = (AVar *) this;

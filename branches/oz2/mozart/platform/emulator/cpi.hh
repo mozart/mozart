@@ -28,7 +28,7 @@
 struct _spawnVars_t {
   OZ_Term * var; 
   TypeOfGenCVariable expected_type;
-  union {OZ_FDPropState fd; OZ_FSetPropState fs;} state;
+  union {OZ_FDPropState fd;} state;
 };
 
 extern _spawnVars_t * staticSpawnVars;

@@ -9,6 +9,8 @@
   ------------------------------------------------------------------------
 */
 
+#ifdef FSETVAR
+
 #ifndef __FSET_HH__
 #define __FSET_HH__
 
@@ -19,6 +21,8 @@
 #include <iostream.h>
 
 #include "oz_cpi.hh"
+
+const int fset_high = 2;
 
 class FSetValue {
 friend class OZ_FSetImpl;
@@ -81,3 +85,5 @@ typedef OZ_FSetImpl OZ_FSet;
 
 
 #endif // __FSET_HH__
+
+#endif /* FSETVAR */

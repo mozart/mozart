@@ -510,8 +510,10 @@ start:
 
   switch ( tag1 ) {
 
+#ifdef FSETVAR
   case FSETVALUE:
     return tagged2FSetValue(term1)->unify(term2);
+#endif /* FSETVAR */
 
   case OZCONST:
     return tagged2Const(term1)->unify(term2,prop);

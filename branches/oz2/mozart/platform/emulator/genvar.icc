@@ -29,23 +29,31 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
 	return FALSE;
     }
     break;
+
+#ifdef FSETVAR
   case FSetVariable:
     {
       if (! ((GenFSetVariable *)this)->unifyFSet(tptr1, term1, tptr2, term2, prop))
 	return FALSE;
     }
     break;
+#endif
+
   case OFSVariable:
     if (! ((GenOFSVariable *)this)->unifyOFS(tptr1, term1, tptr2, term2, prop)) {
       return FALSE;
     }
     break;
+
+#ifdef METAVAR
   case MetaVariable:
     {
       if (! ((GenMetaVariable *)this)->unifyMeta(tptr1, term1, tptr2, term2, prop))
 	return FALSE;
     }
     break;
+#endif 
+
   case BoolVariable:
     {
       if (! ((GenBoolVariable *)this)->unifyBool(tptr1, term1, tptr2, term2, prop))
@@ -81,8 +89,10 @@ int GenCVariable::getSuspListLength(void)
     return ((GenBoolVariable *)this)->getSuspListLength();
   case OFSVariable:
     return ((GenOFSVariable *)this)->getSuspListLength();
+#ifdef FSETVAR
   case FSetVariable:
     return ((GenFSetVariable *)this)->getSuspListLength();
+#endif /* FSETVAR */
   default:
     break;
   }
@@ -95,9 +105,13 @@ size_t GenCVariable::getSize(void)
   switch (getType()){
   case FDVariable:   return ((GenFDVariable*)this)->getSize();
   case OFSVariable:  return ((GenOFSVariable*)this)->getSize();
+#ifdef METAVAR
   case MetaVariable: return ((GenMetaVariable*)this)->getSize();
+#endif
   case BoolVariable: return ((GenBoolVariable*)this)->getSize();
+#ifdef FSETVAR
   case FSetVariable: return ((GenFSetVariable*)this)->getSize();
+#endif
   case AVAR:         return ((AVar *)this)->getSize();
   case PerdioVariable: return ((PerdioVar *)this)->getSize();
   default:           Assert(0);
@@ -111,9 +125,13 @@ Bool GenCVariable::valid(TaggedRef *ptr,TaggedRef val)
   switch (getType()){
   case FDVariable:   return ((GenFDVariable*)this)->valid(val);
   case OFSVariable:  return ((GenOFSVariable*)this)->valid(val);
+#ifdef METAVAR
   case MetaVariable: return ((GenMetaVariable*)this)->valid(val);
+#endif
   case BoolVariable: return ((GenBoolVariable*)this)->valid(val);
+#ifdef FSETVAR
   case FSetVariable: return ((GenFSetVariable*)this)->valid(val);
+#endif
   case AVAR:         return ((AVar *)this)->valid(val);
   case PerdioVariable: return ((PerdioVar *)this)->valid(ptr,val);
   default: Assert(0); break;
@@ -143,11 +161,15 @@ void GenCVariable::installPropagators(GenCVariable * glob_var, Bool prop)
     case BoolVariable:     
       ((GenBoolVariable *)this)->installPropagators((GenFDVariable *) glob_var, glob_home);
     break;
-    case OFSVariable: 
+    case OFSVariable:
+#ifdef METAVAR 
     case MetaVariable: 
+#endif
     case AVAR:
     case PerdioVariable:
+#ifdef FSETVAR
     case FSetVariable:
+#endif
       break;
     default:
       Assert(0);
@@ -184,14 +206,14 @@ void GenCVariable::dispose(void)
   case BoolVariable:
     ((GenBoolVariable *)this)->dispose();
     break;
+#ifdef FSETVAR
   case FSetVariable:
     ((GenFSetVariable *)this)->dispose();
     break;
+#endif /* FSETVAR */
   default:
     break;
   }
 }
 
 #endif //__genvar_icc__
-
-
