@@ -3477,7 +3477,10 @@ OZ_Return bigtest(TaggedRef A, TaggedRef B,
       return res;
     }
   }
-  return (isAnyVar(A) || isAnyVar(B)) ? SUSPEND : FAILED;
+  if (isAnyVar(A) || isAnyVar(B))
+    return SUSPEND;
+
+  TypeErrorM("Not comparable");
 }
 
 
@@ -3507,9 +3510,11 @@ OZ_Return BIminInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   }
 
   OZ_Return ret = bigtest(A,B,bigintLess);
-  if (ret != SUSPEND) {
-    out = (ret == PROCEED ? A : B);
-    return PROCEED;
+  switch (ret) {
+  case PROCEED: out = A; return PROCEED;
+  case FAILED:  out = B; return PROCEED;
+  case RAISE:   return RAISE;
+  default:      break;
   }
 
   return suspendOnNumbersAndAtoms(A,B);
@@ -3541,9 +3546,11 @@ OZ_Return BImaxInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   }
 
   OZ_Return ret = bigtest(A,B,bigintLess);
-  if (ret != SUSPEND) {
-    out = (ret == PROCEED ? B : A);
-    return PROCEED;
+  switch (ret) {
+  case PROCEED: out = B; return PROCEED;
+  case FAILED:  out = A; return PROCEED;
+  case RAISE:   return RAISE;
+  default:      break;
   }
 
   return suspendOnNumbersAndAtoms(A,B);
@@ -3643,31 +3650,21 @@ OZ_Return BInumneqInline(TaggedRef A, TaggedRef B)
 
 OZ_Return BInumneqInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
-  switch (BInumneqInline(A,B)) {
-  case PROCEED:
-    out = NameTrue;
-    return PROCEED;
-  case FAILED:
-    out = NameFalse;
-    return PROCEED;
-  case SUSPEND:
-  default:
-    return SUSPEND;
+  OZ_Return ret = BInumneqInline(A,B);
+  switch (ret) {
+  case PROCEED: out = NameTrue;  return PROCEED;
+  case FAILED:  out = NameFalse; return PROCEED;
+  default:      return ret;
   }
 }
 
 OZ_Return BIlessInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
-  switch (BIlessInline(A,B)) {
-  case PROCEED:
-    out = NameTrue;
-    return PROCEED;
-  case FAILED:
-    out = NameFalse;
-    return PROCEED;
-  case SUSPEND:
-  default:
-    return SUSPEND;
+  OZ_Return ret = BIlessInline(A,B);
+  switch (ret) {
+  case PROCEED: out = NameTrue;  return PROCEED;
+  case FAILED:  out = NameFalse; return PROCEED;
+  default:      return ret;
   }
 }
 
