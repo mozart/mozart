@@ -1233,6 +1233,11 @@ public:
   OzDictionary *getDefMethods()  { return defaultMethods; }
   OzDictionary *getfastMethods() { return fastMethods; }
 
+  Abstraction *getMethod(TaggedRef label, SRecordArity arity, RefsArray X,
+                         Bool &defaultsUsed);
+
+  Bool lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X);
+
   TaggedRef classGetFeature(TaggedRef lit) { return features->getFeature(lit); }
 
   SRecord *getUnfreeRecord() { return unfreeFeatures; }
@@ -1327,18 +1332,11 @@ public:
   OzLock *getLock() { return lock; }
   void setLock(OzLock *l) { lock=l; }
 
-  ObjectClass *getClass() { return (ObjectClass*) getPtr(); }
-
+  ObjectClass *getClass()       { return (ObjectClass*) getPtr(); }
   OzDictionary *getMethods()    { return getClass()->getfastMethods(); }
-  Abstraction *getMethod(TaggedRef label, SRecordArity arity, RefsArray X,
-                         Bool &defaultsUsed);
-
   char *getPrintName()          { return getClass()->getPrintName(); }
-  Bool lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X);
   RecOrCell getState()          { return state; }
-  void setState(SRecord *s) {
-    Assert(s!=0); state=makeRecCell(s);
-  }
+  void setState(SRecord *s)     { Assert(s!=0); state=makeRecCell(s); }
   void setState(Tertiary *c)    { state = makeRecCell(c); }
   OzDictionary *getDefMethods() { return getClass()->getDefMethods(); }
 
@@ -1659,6 +1657,7 @@ public:
       PrTabEntry *next;
       int numClosures;
       int numCalled;
+      int heapUsed;
       static PrTabEntry *allPrTabEntries;
       static void printPrTabEntries();
       static void profileReset();)
@@ -1674,7 +1673,8 @@ public:
     Assert((int)arity == getWidth(arityInit)); /* check for overflow */
     PC = NOCODE;
     info = nil();
-    ProfileCode(numClosures=0; numCalled=0; next=allPrTabEntries; allPrTabEntries=this);
+    ProfileCode(numClosures=0; numCalled=0; heapUsed = 0;
+                next=allPrTabEntries; allPrTabEntries=this);
   }
 
   OZPRINTLONG;
