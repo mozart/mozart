@@ -146,7 +146,7 @@ Explorer.ozf: $(EXPLORERSRC)
 Emacs.ozf: $(EMACSSRC)
 
 ozcar-version.oz: $(OZCARSRCNOVER)
-	echo \'`date '+%b %d'`\' > $@
+	echo \'`date '+%b %d %H:%M'`\' > $@
 
 Ozcar.ozf: $(OZCARSRC)
 
