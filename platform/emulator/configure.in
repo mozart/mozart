@@ -132,7 +132,7 @@ fi
 
 if test "x$GXX" = xyes; then
     COPT="-O6"
-    G_OPT="-g3"
+    G_OPT="-g3 -DINTERFACE"
     M4_S="$M4 -s"
     DEPEND="$CXX -MM"
 fi
@@ -375,7 +375,7 @@ case $host_os in
 	if test -r $PSDIR/lib/linux-i486/gmalloc.o
 	then
 	    AC_MSG_RESULT(yes)
-	    LIBS="$LIBS $psdir/lib/linux-i486/gmalloc.o"
+	    LIBS="$LIBS $PSDIR/lib/linux-i486/gmalloc.o"
 	else
 	    AC_MSG_RESULT(no)
 	fi
