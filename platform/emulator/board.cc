@@ -249,13 +249,14 @@ Bool extParameters(TaggedRef list, Board * solve_board) {
 
   list = oz_deref(list);
 
-  while (oz_isCons(list)) {
+  Assert(!oz_isRef(list));
+  while (oz_isLTuple(list)) {
     TaggedRef h = oz_head(list);
 
     Bool found = FALSE;
 
     DEREF(h, hptr);
-
+    Assert(!oz_isRef(h));
     if (oz_isVar(h)) {
 
       Assert(!oz_isOptVar(h));
@@ -277,13 +278,14 @@ Bool extParameters(TaggedRef list, Board * solve_board) {
         }
       } while (!tmp->isRoot());
 
-    } else if (oz_isCons(h)) {
+    } else if (oz_isLTupleOrRef(h)) {
       found = extParameters(h, solve_board);
     }
 
     if (found) return TRUE;
 
     list = oz_tail(oz_deref(list));
+    Assert(!oz_isRef(list));
   } // while
   return FALSE;
 }
@@ -448,13 +450,15 @@ OZ_Return Board::installScript(Bool isMerging)
 
   setScript(oz_nil());
 
-  while (oz_isCons(xys)) {
+  Assert(!oz_isRef(xys));
+  while (oz_isLTuple(xys)) {
     TaggedRef xy = oz_deref(oz_head(xys));
     Assert(oz_isCons(xy));
     TaggedRef x = oz_head(xy);
     TaggedRef y = oz_tail(xy);
 
     xys = oz_deref(oz_tail(xys));
+    Assert(!oz_isRef(xys));
 
     if (!isMerging) {
       /*
@@ -468,7 +472,7 @@ OZ_Return Board::installScript(Bool isMerging)
        * script will be simplified!
        *
        */
-      if (!oz_isVar(oz_deref(x)) && !oz_isVar(oz_deref(y)))
+      if (!oz_isVarOrRef(oz_deref(x)) && !oz_isVarOrRef(oz_deref(y)))
         Board::ignoreWakeUp(NO);
       else
         Board::ignoreWakeUp(OK);
@@ -486,7 +490,7 @@ OZ_Return Board::installScript(Bool isMerging)
         am.prepareCall(BI_Unify,RefsArray::make(x,y));
       }
       if (res == BI_REPLACEBICALL) {
-        while (oz_isCons(xys)) {
+        while (oz_isLTuple(xys)) {
           TaggedRef xy = oz_deref(oz_head(xys));
           Assert(oz_isCons(xy));
           TaggedRef x = oz_head(xy);
@@ -497,6 +501,7 @@ OZ_Return Board::installScript(Bool isMerging)
       }
       return res;
     }
+    Assert(!oz_isRef(xys));
   }
   return PROCEED;
 }

@@ -405,11 +405,12 @@ DefFdAssignClass(FdAssign_Max,selectValMax);
 #define TestElement(v) \
   {                                         \
     DEREF(v, v_ptr);                        \
+    Assert(!oz_isRef(v));                   \
     if (isGenFDVar(v) || isGenBoolVar(v)) { \
       n++;                                  \
     } else if (oz_isSmallInt(v)) {          \
       ;                                     \
-    } else if (oz_isVar(v)) {               \
+    } else if (oz_isVarOrRef(v)) {          \
       oz_suspendOnPtr(v_ptr);               \
     } else {                                \
       goto bomb;                            \
@@ -444,18 +445,20 @@ OZ_BI_define(fdd_distribute, 3, 1) {
   int n = 0;
   TaggedRef * vars;
 
+  Assert(!oz_isRef(vv));
   if (oz_isLiteral(vv)) {
     ;
-  } else if (oz_isCons(vv)) {
+  } else if (oz_isLTupleOrRef(vv)) {
 
     TaggedRef vs = vv;
 
-    while (oz_isCons(vs)) {
+    while (oz_isLTuple(vs)) {
       TaggedRef v = oz_head(vs);
       TestElement(v);
       vs = oz_tail(vs);
       DEREF(vs, vs_ptr);
-      if (oz_isVar(vs))
+      Assert(!oz_isRef(vs));
+      if (oz_isVarOrRef(vs))
         oz_suspendOnPtr(vs_ptr);
     }
 
@@ -478,14 +481,16 @@ OZ_BI_define(fdd_distribute, 3, 1) {
   // This is inverse order!
   vars = (TaggedRef *) oz_freeListMalloc(sizeof(TaggedRef) * n);
 
-  if (oz_isCons(vv)) {
+  Assert(!oz_isRef(vv));
+  if (oz_isLTupleOrRef(vv)) {
     TaggedRef vs = vv;
     int i = n;
-    while (oz_isCons(vs)) {
+    while (oz_isLTuple(vs)) {
       TaggedRef v = oz_head(vs);
       if (!oz_isSmallInt(oz_deref(v)))
         vars[--i] = v;
       vs = oz_deref(oz_tail(vs));
+      Assert(!oz_isRef(vs));
     }
   } else {
     int j = 0;
@@ -565,18 +570,21 @@ OZ_BI_define(fdd_assign, 2, 1) {
   int n = 0;
   TaggedRef * vars;
 
+  Assert(!oz_isRef(vv));
   if (oz_isLiteral(vv)) {
     ;
-  } else if (oz_isCons(vv)) {
+  } else if (oz_isLTupleOrRef(vv)) {
 
     TaggedRef vs = vv;
 
-    while (oz_isCons(vs)) {
+    Assert(!oz_isRef(vs));
+    while (oz_isLTuple(vs)) {
       TaggedRef v = oz_head(vs);
       TestElement(v);
       vs = oz_tail(vs);
       DEREF(vs, vs_ptr);
-      if (oz_isVar(vs))
+      Assert(!oz_isRef(vs));
+      if (oz_isVarOrRef(vs))
         oz_suspendOnPtr(vs_ptr);
     }
 
@@ -599,14 +607,16 @@ OZ_BI_define(fdd_assign, 2, 1) {
   // This is inverse order!
   vars = (TaggedRef *) oz_freeListMalloc(sizeof(TaggedRef) * n);
 
-  if (oz_isCons(vv)) {
+  Assert(!oz_isRef(vv));
+  if (oz_isLTupleOrRef(vv)) {
     TaggedRef vs = vv;
     int i = n;
-    while (oz_isCons(vs)) {
+    while (oz_isLTuple(vs)) {
       TaggedRef v = oz_head(vs);
       if (!oz_isSmallInt(oz_deref(v)))
         vars[--i] = v;
       vs = oz_deref(oz_tail(vs));
+      Assert(!oz_isRef(vs));
     }
   } else {
     int j = 0;

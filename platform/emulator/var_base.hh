@@ -441,6 +441,8 @@ VarStatus oz_check_var_status(OzVariable *cv)
   return EVAR_STATUS_UNKNOWN;
 }
 
+#if defined(DEBUG_CHECK)
+
 // isKinded || isFree || isFuture
 inline
 int oz_isFree(TaggedRef r)
@@ -452,20 +454,48 @@ int oz_isFree(TaggedRef r)
 inline
 int oz_isKinded(TaggedRef r)
 {
-  return oz_isVar(r) && oz_check_var_status(tagged2Var(r))==EVAR_STATUS_KINDED;
+  return (oz_isVar(r) &&
+          oz_check_var_status(tagged2Var(r))==EVAR_STATUS_KINDED);
+}
+
+inline
+int oz_isKindedVar(TaggedRef r)
+{
+  Assert(oz_isVar(r));
+  return (oz_check_var_status(tagged2Var(r)) == EVAR_STATUS_KINDED);
 }
 
 inline
 int oz_isFuture(TaggedRef r)
 {
-  return oz_isVar(r) && oz_check_var_status(tagged2Var(r))==EVAR_STATUS_FUTURE;
+  return (oz_isVar(r) &&
+          oz_check_var_status(tagged2Var(r))==EVAR_STATUS_FUTURE);
 }
 
 inline
 int oz_isNonKinded(TaggedRef r)
 {
-  return oz_isVar(r) && !oz_isKinded(r);
+  return (oz_isVar(r) && !oz_isKindedVar(r));
 }
+
+#else
+
+#define oz_isFree(r)                                                    \
+((oz_isVar(r) && oz_check_var_status(tagged2Var(r)) == EVAR_STATUS_FREE))
+
+#define oz_isKinded(r)                                                  \
+((oz_isVar(r) && oz_check_var_status(tagged2Var(r))==EVAR_STATUS_KINDED))
+
+#define oz_isKindedVar(r)                                               \
+((oz_check_var_status(tagged2Var(r)) == EVAR_STATUS_KINDED))
+
+#define oz_isFuture(r)                                                  \
+((oz_isVar(r) && oz_check_var_status(tagged2Var(r))==EVAR_STATUS_FUTURE))
+
+#define oz_isNonKinded(r)                                               \
+((oz_isVar(r) && !oz_isKindedVar(r)))
+
+#endif
 
 /* -------------------------------------------------------------------------
  *

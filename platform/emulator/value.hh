@@ -339,7 +339,7 @@ private:
   TaggedRef args[2];
 
 public:
-  USEFREELISTMEMORY;
+  USEHEAPMEMORY;
   OZPRINTLONG
 
   NO_DEFAULT_CONSTRUCTORS2(LTuple)
@@ -368,6 +368,7 @@ public:
   void sCloneRecurse(void);
   LTuple * sClone(void);
 
+  // kost@ : don't do 'tagged2NonVariableFast' here: things become slow!
   TaggedRef getHead()          { return tagged2NonVariable(args); }
   TaggedRef getTail()          { return tagged2NonVariable(args+1); }
   void setHead(TaggedRef term) { args[0] = term;}
@@ -1615,7 +1616,9 @@ OZ_Term oz_checkList(OZ_Term l, OzCheckList check=OZ_CHECK_ANY) {
   OZ_Term old = l;
   Bool updateF = 0;
   int len = 0;
-  while (oz_isCons(l)) {
+
+  Assert(!oz_isRef(l));
+  while (oz_isLTupleOrRef(l)) {
     len++;
     if (check != OZ_CHECK_ANY) {
       OZ_Term h = oz_safeDeref(oz_head(l));
@@ -1639,6 +1642,7 @@ OZ_Term oz_checkList(OZ_Term l, OzCheckList check=OZ_CHECK_ANY) {
       old=oz_deref(oz_tail(old));
     }
     updateF=1-updateF;
+    Assert(!oz_isRef(l));
   }
   if (oz_isNil(l)) {
     return oz_int(len);
@@ -2238,12 +2242,14 @@ public:
     codeBlock = NULL;
     p.isSited = 0;
     fl = oz_deref(fl);
-    while (oz_isCons(fl)) {
+    Assert(!oz_isRef(fl));
+    while (oz_isLTuple(fl)) {
       OZ_Term ff=oz_deref(oz_head(fl));
       if (oz_eq(ff,AtomSited)) {
         p.isSited = 1;
       }
       fl = oz_deref(oz_tail(fl));
+      Assert(!oz_isRef(fl));
     }
     Assert(oz_isNil(fl));
 

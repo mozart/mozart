@@ -359,18 +359,6 @@ void marshalSmallInt(MarshalerBuffer *bs, OZ_Term siTerm);
 void marshalFloat(MarshalerBuffer *bs, OZ_Term floatTerm);
 void marshalLiteral(MarshalerBuffer *bs, OZ_Term litTerm, int litTermInd);
 void marshalBigInt(MarshalerBuffer *bs, OZ_Term biTerm, ConstTerm *biConst);
-void marshalBuiltin(MarshalerBuffer *bs,
-                    OZ_Term biTerm, ConstTerm *biConst, int biTermInd);
-
-void marshalExtension(MarshalerBuffer *bs, OZ_Term extTerm);
-// "nogoods", objects, tertiaries and variables are of no interest here;
-void marshalRepetition(MarshalerBuffer *bs, int repNumber);
-// Compound:
-void marshalLTupleHead(MarshalerBuffer *bs, OZ_Term ltupleTerm, int ltupleTermInd);
-void marshalSRecordHead(MarshalerBuffer *bs,
-                        OZ_Term srecordTerm, int srecordTermInd);
-void marshalChunk(MarshalerBuffer *bs, OZ_Term chunkTerm,
-                  ConstTerm *chunkConst, int chunkTermInd);
 
 //
 // Marshaling/unmarshaling of record arity also requires some special
@@ -400,6 +388,7 @@ void marshalHashTableRef(GenTraverser *gt,
 //
 enum { ATOMTAG, NUMBERTAG, RECORDTAG};
 
+
 //
 // Scanning for certain data structures (ResourceExcavator etc.)
 // needs just to traverse nodes without writing anything into the
@@ -409,7 +398,6 @@ void traversePredId(GenTraverser *gt, PrTabEntry *p);
 void traverseRecordArity(GenTraverser *gt, SRecordArity sra);
 void traverseHashTableRef(GenTraverser *gt, int start, IHashTable *table);
 void traverseCallMethodInfo(GenTraverser *gt, CallMethodInfo *cmi);
-
 
 //
 // Unmarshaling;
@@ -551,8 +539,70 @@ ProgramCounter writeAddress(void *ptr, ProgramCounter pc);
 ProgramCounter unmarshalCache(ProgramCounter PC, CodeArea *code);
 
 //
-ProgramCounter unmarshalOzValue(Builder *b,
-                                ProgramCounter pc, CodeArea *code);
+// Hash table entries are constructed using the table itself, label,
+// and either an Oz value or an Oz value and SRecordArity. Thus, a
+// descriptor of an entry used for the 'Builder::getOzValue()' task
+// keeps table, label and may be a record arity list.
+class HashTableEntryDesc : public NMMemoryManager {
+private:
+  IHashTable *table;
+  int label;
+  SRecordArity sra;             // for "tuple" record entries only;
+  OZ_Term arityList;            // for "proper" record entries only;
+public:
+  HashTableEntryDesc(IHashTable *tableIn, int labelIn)
+    : table(tableIn), label(labelIn), sra((SRecordArity) 0)
+  {
+    DebugCode(arityList = (OZ_Term) -1;);
+  }
+
+  //
+  IHashTable* getTable() { return (table); }
+  int getLabel() { return (label); }
+  SRecordArity getSRA() { return (sra); }
+  void setSRA(SRecordArity sraIn) { sra = sraIn; }
+  void setArityList(OZ_Term ra) { arityList = ra; }
+  OZ_Term getArityList() { return (arityList); }
+};
+
+//
+void getHashTableRecordEntryLabelCA(void *arg, OZ_Term value);
+void saveRecordArityHashTableEntryCA(void *arg, OZ_Term value);
+void getHashTableAtomEntryLabelCA(void *arg, OZ_Term value);
+void getHashTableNumEntryLabelCA(void *arg, OZ_Term value);
+
+//
+#ifdef USE_FAST_UNMARSHALER
+static inline
+RecordArityType unmarshalRecordArityType(MarshalerBuffer *bs)
+{
+  return ((RecordArityType) unmarshalNumber(bs));
+}
+#else
+static inline
+RecordArityType unmarshalRecordArityTypeRobust(MarshalerBuffer *bs, int *error)
+{
+  return ((RecordArityType) unmarshalNumberRobust(bs, error));
+}
+#endif
+
+//
+#ifdef DEBUG_CHECK
+// Oz value type check procedures;
+
+typedef Bool (*OzTermTypeCheck)(TaggedRef);
+
+Bool mIsAny(TaggedRef t);
+Bool mIsNumber(TaggedRef t);
+Bool mIsLiteral(TaggedRef t);
+Bool mIsFeature(TaggedRef t);
+Bool mIsConstant(TaggedRef t);
+
+#endif
+
+//
+ProgramCounter unmarshalOzValue(Builder *b, ProgramCounter pc,
+                                CodeArea *code DebugArg(OzTermTypeCheck tp));
 ProgramCounter unmarshalBuiltin(Builder *b, ProgramCounter pc);
 
 //

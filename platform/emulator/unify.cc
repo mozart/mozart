@@ -43,7 +43,8 @@
 static
 Bool checkHome(TaggedRef *vPtr) {
   TaggedRef val = oz_deref(*vPtr);
-  return (!oz_isVar(val) ||
+  Assert(!oz_isRef(val));
+  return (!oz_isVarOrRef(val) ||
           oz_isBelow(oz_currentBoard(), GETBOARD(tagged2Var(val))));
 }
 #endif
@@ -73,7 +74,8 @@ void oz_bindLocalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
   Assert(!am.inEqEq());
   oz_checkSuspensionList(ov, pc_std_unif);
   DEREF(term,termPtr);
-  if (oz_isVar(term)) {
+  Assert(!oz_isRef(term));
+  if (oz_isVarOrRef(term)) {
     OzVariable *sv=tagged2Var(term);
     Assert(sv!=ov);
     ov->relinkSuspListTo(sv);
@@ -98,7 +100,8 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
     OzVariable *ov=tagged2Var(var);
     oz_checkSuspensionList(ov, pc_all);
     DEREF(term,termPtr);
-    if (oz_isVar(term)) {
+    Assert(!oz_isRef(term));
+    if (oz_isVarOrRef(term)) {
       OzVariable *sv=tagged2Var(term);
       Assert(sv!=ov);
       ov->relinkSuspListTo(sv);
@@ -174,18 +177,21 @@ loop:
   _DEREF(term2,termPtr2);
 
   // identical terms ?
-  if (oz_isVar(term1) ? termPtr1 == termPtr2 : term1 == term2) {
+  Assert(!oz_isRef(term1));
+  if (oz_isVarOrRef(term1) ? termPtr1 == termPtr2 : term1 == term2) {
     goto next;
   }
 
-  if (oz_isVar(term1)) {
-    if (oz_isVar(term2)) {
+  Assert(!oz_isRef(term1));
+  Assert(!oz_isRef(term2));
+  if (oz_isVarOrRef(term1)) {
+    if (oz_isVarOrRef(term2)) {
       goto var_var;
     } else {
       goto var_nonvar;
     }
   } else {
-    if (oz_isVar(term2)) {
+    if (oz_isVarOrRef(term2)) {
       Swap(term1,term2,TaggedRef);
       Swap(termPtr1,termPtr2,TaggedRef*);
       goto var_nonvar;
@@ -202,7 +208,7 @@ loop:
     doBind(termPtr1, term2);
     goto next;
   } else {
-    int res = oz_var_bind(tagged2Var(term1),termPtr1, term2);
+    int res = oz_var_bind(tagged2Var(term1), termPtr1, term2);
     if (res == PROCEED) {
       goto next;
     } else {

@@ -44,10 +44,10 @@ define(instruction,
           break;)
 
 define(opAction,
-[[ifelse($1,Number,gt->traverseOzValue(getTaggedArg(PC++));ozValuesCnt--;,
-        $1,Literal,gt->traverseOzValue(getTaggedArg(PC++));ozValuesCnt--;,
-        $1,Feature,gt->traverseOzValue(getTaggedArg(PC++));ozValuesCnt--;,
-        $1,Constant,gt->traverseOzValue(getTaggedArg(PC++));ozValuesCnt--;,
+[[ifelse($1,Number,{TaggedRef t=getTaggedArg(PC++);Assert(mIsNumber(t));gt->traverseOzValue(t);};ozValuesCnt--;,
+        $1,Literal,{TaggedRef t=getTaggedArg(PC++);Assert(mIsLiteral(t));gt->traverseOzValue(t);};ozValuesCnt--;,
+        $1,Feature,{TaggedRef t=getTaggedArg(PC++);Assert(mIsFeature(t));gt->traverseOzValue(t);};ozValuesCnt--;,
+        $1,Constant,{TaggedRef t=getTaggedArg(PC++);Assert(mIsConstant(t));gt->traverseOzValue(t);};ozValuesCnt--;,
         $1,Builtinname,_m_bi = (Builtin*)getAdressArg(PC++); marshalBuiltin(gt,_m_bi);ozValuesCnt--;,
         $1,XRegisterIndex,marshalNumber(bs,XRegToInt(getXRegArg(PC++)));,
         $1,YRegisterIndex,marshalNumber(bs,YRegToInt(getYRegArg(PC++)));,
@@ -59,7 +59,7 @@ define(opAction,
         $1,Dummy,marshalNumber(bs,(unsigned int)getPosIntArg(PC++));,
         $1,ProcedureRef,marshalProcedureRef(gt,(AbstractionEntry*)getAdressArg(PC++),bs);,
         $1,PredId,marshalPredId(gt,(PrTabEntry*)getAdressArg(PC++),bs);ozValuesCnt--;,
-        $1,HashTableRef,marshalHashTableRef(gt,instrstart-start,(IHashTable *)getAdressArg(PC++),bs);ozValuesCnt--;,
+        $1,HashTableRef,partialInst=dpMarshalHashTableRef(gt,desc,instrstart-start,(IHashTable *)getAdressArg(PC++),bs)||partialInst;ozValuesCnt--;,
         $1,RecordArity,marshalRecordArity(gt,(SRecordArity) getAdressArg(PC++),bs);ozValuesCnt--;,
         $1,CallMethodInfo,marshalCallMethodInfo(gt,(CallMethodInfo*)getAdressArg(PC++),bs);ozValuesCnt--;,
         $1,GRegRef,marshalGRegRef((AssRegArray*)getAdressArg(PC++),bs);,
@@ -69,14 +69,15 @@ define(opAction,
 
 //
 // Returns OK if the instructioN 'op' at 'PC' won't fit in
-// 'avaliSpace'. Defined ahead, since it redefines m4 macros;
+// 'availSpace'. Defined ahead, since it redefines m4 macros;
 static Bool needNewBuffer(Opcode op, ProgramCounter PC, int availSpace);
 
 //
 //
 Bool dpMarshalCode(GenTraverser *gt, void *arg)
 {
-  MarshalerCodeAreaDescriptor *desc = (MarshalerCodeAreaDescriptor *) arg;
+  DPMarshalerCodeAreaDescriptor *desc =
+    (DPMarshalerCodeAreaDescriptor *) arg;
   // ('bs' could be also saved in the argument;)
   ByteBuffer *bs = (ByteBuffer *) gt->getOpaque();
   ProgramCounter start = desc->getStart(), end = desc->getEnd();
@@ -84,23 +85,43 @@ Bool dpMarshalCode(GenTraverser *gt, void *arg)
   // when 'ozValuesCnt' hits zero, then the code area must be broken
   // in two pieces (before a next instructioN):
   int ozValuesCnt = ozValuesBADP;
-  Builtin * _m_bi; // Needed for passing information from marshalling
-                   // builtins to locations
+  ProgramCounter instrstart; // last marshaled instructioN;
+  // '_m_bi' Needed for passing information from marshalling builtins
+  // to locations
+  Builtin * _m_bi;
+  // 'partialInst' is OK if the last instructioN marshaled didn't fit
+  // completely, so next time marshaling is resumed with it (and not
+  // with the next one);
+  Bool partialInst = NO;
 
   //
   if (bs->availableSpace() < 2*DIFMaxSize + OpcodeMaxSize) {
+    // either way, there must be sufficient space for a 'DIF';
     marshalDIF(bs, DIF_SUSPEND);
     gt->suspendBA();
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) in front of a code area\n",
+            dif_names[DIF_SUSPEND].name, DIF_SUSPEND);
+    fflush(dbgout);
+#endif
     return (FALSE);
   }
 
   //
   if (PC == start) marshalCodeStart(bs);
   marshalDIF(bs, DIF_CODEAREA);
+#if defined(DBG_TRACE)
+  fprintf(dbgout,
+          "> tag:  %s(%d) [begin=%p, end=%p, current=%p]",
+          dif_names[DIF_CODEAREA].name, DIF_CODEAREA,
+          start, end, PC);
+  fflush(dbgout);
+#endif
 
   //
-  while (ozValuesCnt > 0 && PC < end) {
-    ProgramCounter instrstart = PC;
+  while (ozValuesCnt > 0 && PC < end && partialInst == NO) {
+    instrstart = PC;
     Opcode op = CodeArea::getOpcode(PC);
 
     //
@@ -110,6 +131,11 @@ Bool dpMarshalCode(GenTraverser *gt, void *arg)
       // 'ENDOFCHUNK' is not necessary normally (since the receiver
       // counts Oz values and PC as well), but here we need it 'cause
       // the receiver does not know that we had to suspend here:
+#if defined(DBG_TRACE)
+      fprintf(dbgout, " %d (suspended: %d does not fit in %d bytes)",
+              ENDOFCHUNK, op, bs->availableSpace());
+      fflush(dbgout);
+#endif
       marshalOpCode(bs, instrstart-start, ENDOFCHUNK);
       marshalDIF(bs, DIF_SUSPEND);
       gt->suspendBA();
@@ -146,6 +172,10 @@ Bool dpMarshalCode(GenTraverser *gt, void *arg)
     }
 
     //
+#if defined(DBG_TRACE)
+    fprintf(dbgout, " %d", op);
+    fflush(dbgout);
+#endif
     marshalOpCode(bs, instrstart-start, op);
     switch(op) {
 
@@ -159,13 +189,27 @@ Bool dpMarshalCode(GenTraverser *gt, void *arg)
   }
 
   // (don't indent the next line:)
-  if (PC >= end) {
+  // Since the unmarshaler immediately suspends once 'ozValuesCnt'
+  // hits zero, we cannot write out 'ENDOFFILE' in that case either:
+  if (PC >= end && ozValuesCnt > 0) {
+    Assert(partialInst == NO);
     marshalOpCode(bs, PC-start, ENDOFFILE);
     marshalCodeEnd(bs);
-    //
+#if defined(DBG_TRACE)
+    fprintf(dbgout, " %d (finished)\n", ENDOFFILE);
+    fflush(dbgout);
+#endif
     delete desc;
     return (TRUE);
+
+    //
   } else {
+#if defined(DBG_TRACE)
+    fprintf(dbgout, "\n");
+    fflush(dbgout);
+#endif
+    if (partialInst == OK)
+      PC = instrstart;
     desc->setCurrent(PC);
     return (FALSE);
   }
@@ -189,10 +233,16 @@ Bool dpMarshalCode(GenTraverser *gt, void *arg)
 // Dummy int
 // ProcedureRef int,dif,int
 // PredId [ov],int,int|[ov],[ov],int,int,[ov],int,int
-// HashTableRef int,int,int,N=int,(int,int,[ov])|(int,int,[ov],int,(int|[oz]))*N
+// - hash tables are splitted up, thus require just one entry
+//   to be written out: MinN = 1
+// HashTableRef int,int,int,N=int,(int,int,[ov])|(int,int,[ov],int,(int|[oz]))*MinN
 // RecordArity int,int|[oz]
 // CallMethodInfo int,[oz],int,int|[oz]
+// - 'GRegRef"s' are to be splitted as well, but that's not implemented
+//   currently
 // GRegRef N=int,int*N
+// - yet less probable, Location"s can cause problems as well, but that
+//   would require builtins with very large number of arguments;
 // Location N1=int,N2=int,int*(N1+N2)
 // Cache
 //
@@ -215,7 +265,7 @@ define(opAction,
          $1,Dummy,size+=MNumberMaxSize;PC++;,
          $1,ProcedureRef,size+=(2*MNumberMaxSize + DIFMaxSize);PC++;,
          $1,PredId,size+=6*MNumberMaxSize;PC++;,
-         $1,HashTableRef,size+=(((IHashTable *)getAdressArg(PC++))->getEntries()*4*5*MNumberMaxSize + 3*MNumberMaxSize);,
+         $1,HashTableRef,size+=(1*4*MNumberMaxSize + 4*MNumberMaxSize);,
          $1,RecordArity,size+=2*MNumberMaxSize;PC++;,
          $1,CallMethodInfo,size+=3*MNumberMaxSize;PC++;,
          $1,GRegRef,size+=((((AssRegArray *)getAdressArg(PC++))->getSize() + 1)*MNumberMaxSize);,
@@ -250,10 +300,10 @@ static Bool needNewBuffer(Opcode op, ProgramCounter PC, int availSpace)
 undefine([[opAction]])
 
 define(opAction,
-[[ifelse($1,Number,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
-        $1,Literal,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
-        $1,Feature,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
-        $1,Constant,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
+[[ifelse($1,Number,PC=unmarshalOzValue(b,PC,code DebugArg(mIsNumber));ozValuesCnt--;,
+        $1,Literal,PC=unmarshalOzValue(b,PC,code DebugArg(mIsLiteral));ozValuesCnt--;,
+        $1,Feature,PC=unmarshalOzValue(b,PC,code DebugArg(mIsFeature));ozValuesCnt--;,
+        $1,Constant,PC=unmarshalOzValue(b,PC,code DebugArg(mIsConstant));ozValuesCnt--;,
         $1,Builtinname,PC=unmarshalBuiltin(b,PC);ozValuesCnt--;,
         $1,XRegisterIndex,PC=unmarshalXReg(PC,bs);,
         $1,YRegisterIndex,PC=unmarshalYReg(PC,bs);,
@@ -265,7 +315,7 @@ define(opAction,
         $1,Dummy,PC=unmarshalNum(PC,bs);,
         $1,ProcedureRef,PC=unmarshalProcedureRef(b,PC,bs,code);,
         $1,PredId,PC=unmarshalPredId(b,PC,instPC,bs);ozValuesCnt--;,
-        $1,HashTableRef,PC=unmarshalHashTableRef(b,PC,bs);ozValuesCnt--;,
+        $1,HashTableRef,PC=dpUnmarshalHashTableRef(b,PC,bs,desc,partialInst);ozValuesCnt--;,
         $1,RecordArity,PC=unmarshalRecordArity(b,PC,bs);ozValuesCnt--;,
         $1,CallMethodInfo,PC=unmarshalCallMethodInfo(b,PC,bs);ozValuesCnt--;,
         $1,GRegRef,PC=unmarshalGRegRef(PC,bs);,
@@ -277,7 +327,7 @@ define(opAction,
 // 'pc' can be zero meaning "discard the code". If it is non-zero,
 // then it is supposed to be large enough to hold the whole code;
 Bool dpUnmarshalCode(ByteBuffer *bs, Builder *b,
-                     BuilderCodeAreaDescriptor *desc)
+                     DPBuilderCodeAreaDescriptor *desc)
 {
   int ozValuesCnt = ozValuesBADP;
   ProgramCounter PC = desc->getCurrent();
@@ -286,9 +336,10 @@ Bool dpUnmarshalCode(ByteBuffer *bs, Builder *b,
   // 'CodeArea*' is passed in it itself:
   CodeArea *code = desc->getCodeArea();
   Bool done = NO;
+  Bool partialInst = NO;
 
   //
-  while (ozValuesCnt > 0) {
+  while (ozValuesCnt > 0 && partialInst == NO) {
     Opcode op = (Opcode) bs->get();
     if (op == ENDOFFILE) {
       done = OK;
@@ -321,10 +372,15 @@ Bool dpUnmarshalCode(ByteBuffer *bs, Builder *b,
   }
 
   //
-  if (done)
+  if (done) {
     delete desc;
-  else
-    desc->setCurrent(PC);
+  } else {
+    if (PC) {
+      if (partialInst == OK)
+        PC = instPC;
+      desc->setCurrent(PC);
+    }
+  }
   return (done);
 }
 
@@ -337,10 +393,10 @@ undefine([[opAction]])
   if (e) { delete desc; return (UCR_ERROR); }
 
 define(opAction,
-[[ifelse($1,Number,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
-         $1,Literal,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
-         $1,Feature,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
-         $1,Constant,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
+[[ifelse($1,Number,PC=unmarshalOzValue(b,PC,code DebugArg(mIsNumber));ozValuesCnt--;,
+         $1,Literal,PC=unmarshalOzValue(b,PC,code DebugArg(mIsLiteral));ozValuesCnt--;,
+         $1,Feature,PC=unmarshalOzValue(b,PC,code DebugArg(mIsFeature));ozValuesCnt--;,
+         $1,Constant,PC=unmarshalOzValue(b,PC,code DebugArg(mIsConstant));ozValuesCnt--;,
          $1,Builtinname,PC=unmarshalBuiltin(b,PC);ozValuesCnt--;,
          $1,XRegisterIndex,PC=unmarshalXRegRobust(PC,bs,&e);ONERR(e);,
          $1,YRegisterIndex,PC=unmarshalYRegRobust(PC,bs,&e);ONERR(e);,
@@ -352,7 +408,7 @@ define(opAction,
          $1,Dummy,PC=unmarshalNumRobust(PC,bs,&e);ONERR(e);,
          $1,ProcedureRef,PC=unmarshalProcedureRefRobust(b,PC,bs,code,&e);ONERR(e);,
          $1,PredId,PC=unmarshalPredIdRobust(b,PC,instPC,bs,&e);ozValuesCnt--;ONERR(e);,
-         $1,HashTableRef,PC=unmarshalHashTableRefRobust(b,PC,bs,&e);ozValuesCnt--;ONERR(e);,
+         $1,HashTableRef,PC=dpUnmarshalHashTableRefRobust(b,PC,bs,desc,partialInst,&e);ozValuesCnt--;ONERR(e);,
          $1,RecordArity,PC=unmarshalRecordArityRobust(b,PC,bs,&e);ozValuesCnt--;ONERR(e);,
          $1,CallMethodInfo,PC=unmarshalCallMethodInfoRobust(b,PC,bs,&e);ozValuesCnt--;ONERR(e);,
          $1,GRegRef,PC=unmarshalGRegRefRobust(PC,bs,&e);ONERR(e);,
@@ -366,7 +422,7 @@ define(opAction,
 // then it is supposed to be large enough to hold the whole code;
 // Returning 'ERR' means that the buffer can not be marshalled.
 UCRReturn dpUnmarshalCodeRobust(ByteBuffer *bs, Builder *b,
-                                BuilderCodeAreaDescriptor *desc)
+                                DPBuilderCodeAreaDescriptor *desc)
 {
   int ozValuesCnt = ozValuesBADP;
   ProgramCounter PC = desc->getCurrent();
@@ -375,11 +431,16 @@ UCRReturn dpUnmarshalCodeRobust(ByteBuffer *bs, Builder *b,
   // 'CodeArea*' is passed in it itself:
   CodeArea *code = desc->getCodeArea();
   Bool done = NO;
+  Bool partialInst = NO;
   int e;
 
   //
-  while (ozValuesCnt > 0) {
+  while (ozValuesCnt > 0 && partialInst == NO) {
     Opcode op = (Opcode) bs->get();
+#if defined(DBG_TRACE)
+    fprintf(dbgout, " %d", op);
+    fflush(dbgout);
+#endif
     if (op == ENDOFFILE) {
       done = OK;
       break;
@@ -413,11 +474,17 @@ UCRReturn dpUnmarshalCodeRobust(ByteBuffer *bs, Builder *b,
   }
 
   //
-  if (done)
+  if (done) {
     delete desc;
-  else
-    desc->setCurrent(PC);
-  return ((done == OK) ? UCR_DONE : UCR_SUSPEND);
+    return (UCR_DONE);
+  } else {
+    if (PC) {
+      if (partialInst == OK)
+        PC = instPC;
+      desc->setCurrent(PC);
+    }
+    return (UCR_SUSPEND);
+  }
 }
 
 #endif

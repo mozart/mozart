@@ -78,7 +78,8 @@ OZ_BI_define(BIgetEntityCond,2,0){
   EntityCond ec=ENTITY_NORMAL;
 
   DEREF(e0,vs_ptr);
-  if(oz_isVar(e0)){
+  Assert(!oz_isRef(e0));
+  if(oz_isVarOrRef(e0)){
     VarKind vk=classifyVar(vs_ptr);
     if((vk!=VAR_KINDED) && (vk!=VAR_FREE) && (vk!=VAR_FUTURE))
       ec=varGetEntityCond(vs_ptr);}

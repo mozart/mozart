@@ -69,55 +69,6 @@ SendRecvCounter dif_counter[DIF_LAST];
 SendRecvCounter misc_counter[MISC_LAST];
 
 //
-void marshalBuiltin(MarshalerBuffer *bs,
-                    OZ_Term biTerm, ConstTerm *biConst, int biTermInd)
-{
-  Builtin *bi= (Builtin *) biConst;
-  marshalDIF(bs, DIF_BUILTIN);
-  marshalTermDef(bs, biTermInd);
-  marshalString(bs, bi->getPrintName());
-}
-
-//
-void marshalExtension(MarshalerBuffer *bs, OZ_Term extTerm)
-{
-  marshalDIF(bs, DIF_EXTENSION);
-  marshalNumber(bs, tagged2Extension(extTerm)->getIdV());
-}
-
-//
-void marshalRepetition(MarshalerBuffer *bs, int repNumber)
-{
-  Assert(repNumber >= 0);
-  marshalDIF(bs, DIF_REF);
-  marshalTermRef(bs, repNumber);
-}
-
-//
-void marshalLTupleHead(MarshalerBuffer *bs, OZ_Term ltupleTerm, int ltupleTermInd)
-{
-  marshalDIF(bs, DIF_LIST);
-  marshalTermDef(bs, ltupleTermInd);
-}
-
-//
-void marshalSRecordHead(MarshalerBuffer *bs,
-                        OZ_Term srecordTerm, int srecordTermInd)
-{
-  SRecord *rec = tagged2SRecord(srecordTerm);
-  TaggedRef label = rec->getLabel();
-
-  if (rec->isTuple()) {
-    marshalDIF(bs, DIF_TUPLE);
-    marshalTermDef(bs, srecordTermInd);
-    marshalNumber(bs, rec->getTupleWidth());
-  } else {
-    marshalDIF(bs, DIF_RECORD);
-    marshalTermDef(bs, srecordTermInd);
-  }
-}
-
-//
 GName *globalizeConst(ConstTerm *t, MarshalerBuffer *bs)
 {
   switch(t->getType()) {
@@ -127,18 +78,6 @@ GName *globalizeConst(ConstTerm *t, MarshalerBuffer *bs)
   case Co_Abstraction: return ((Abstraction*)t)->globalize();
   default: Assert(0); return NULL;
   }
-}
-
-//
-void marshalChunk(MarshalerBuffer *bs, OZ_Term chunkTerm,
-                  ConstTerm *chunkConst, int chunkTermInd)
-{
-  SChunk *ch    = (SChunk *) chunkConst;
-  GName *gname  = globalizeConst(ch, bs);
-
-  marshalDIF(bs, DIF_CHUNK);
-  marshalTermDef(bs, chunkTermInd);
-  if (gname) marshalGName(bs, gname);
 }
 
 //
@@ -412,14 +351,19 @@ class CodeAreaLocation : public NMMemoryManager {
 private:
   ProgramCounter ptr;
   CodeArea *code;
+  DebugCode(OzTermTypeCheck tp;);
 public:
-  CodeAreaLocation(ProgramCounter ptrIn, CodeArea* codeIn)
-    : ptr(ptrIn), code(codeIn) {}
+  CodeAreaLocation(ProgramCounter ptrIn, CodeArea* codeIn DebugArg(OzTermTypeCheck tpIn))
+    : ptr(ptrIn), code(codeIn) DebugArg(tp(tpIn)){}
   CodeAreaLocation(ProgramCounter ptrIn)
-    : ptr(ptrIn) { DebugCode(code = (CodeArea *) -1;); }
+    : ptr(ptrIn) {
+    DebugCode(code = (CodeArea *) -1;);
+    DebugCode(tp = (OzTermTypeCheck) -1;);
+  }
   //
   ProgramCounter getPtr() { return (ptr); }
   CodeArea *getCodeArea() { return (code); }
+  DebugCode(OzTermTypeCheck getTP() { return (tp); })
 };
 
 //
@@ -497,37 +441,11 @@ public:
 };
 
 //
-// Hash table entries are constructed using the table itself, label,
-// and either an Oz value or an Oz value and SRecordArity. Thus, a
-// descriptor of an entry used for the 'Builder::getOzValue()' task
-// keeps table, label and may be a record arity list.
-class HashTableEntryDesc : public NMMemoryManager {
-private:
-  IHashTable *table;
-  int label;
-  SRecordArity sra;             // for "tuple" record entries only;
-  OZ_Term arityList;            // for "proper" record entries only;
-public:
-  HashTableEntryDesc(IHashTable *tableIn, int labelIn)
-    : table(tableIn), label(labelIn), sra((SRecordArity) 0)
-  {
-    DebugCode(arityList = (OZ_Term) -1;);
-  }
-
-  //
-  IHashTable* getTable() { return (table); }
-  int getLabel() { return (label); }
-  SRecordArity getSRA() { return (sra); }
-  void setSRA(SRecordArity sraIn) { sra = sraIn; }
-  void setArityList(OZ_Term ra) { arityList = ra; }
-  OZ_Term getArityList() { return (arityList); }
-};
-
-//
 static void putOzValueCA(void *arg, OZ_Term value)
 {
   CodeAreaLocation *loc = (CodeAreaLocation *) arg;
   //
+  Assert((*loc->getTP())(value));
   (void) (loc->getCodeArea())->writeTagged(value, loc->getPtr());
   delete loc;
 }
@@ -647,7 +565,7 @@ static void saveCallMethodInfoRecordArityCA(void *arg, OZ_Term value)
 
 //
 // Processors...
-static void getHashTableRecordEntryLabelCA(void *arg, OZ_Term value)
+void getHashTableRecordEntryLabelCA(void *arg, OZ_Term value)
 {
   HashTableEntryDesc *desc = (HashTableEntryDesc *) arg;
   SRecordArity sra = desc->getSRA();
@@ -666,14 +584,14 @@ static void getHashTableRecordEntryLabelCA(void *arg, OZ_Term value)
 }
 
 //
-static void saveRecordArityHashTableEntryCA(void *arg, OZ_Term value)
+void saveRecordArityHashTableEntryCA(void *arg, OZ_Term value)
 {
   HashTableEntryDesc *desc = (HashTableEntryDesc *) arg;
   desc->setArityList(value);
 }
 
 //
-static void getHashTableAtomEntryLabelCA(void *arg, OZ_Term value)
+void getHashTableAtomEntryLabelCA(void *arg, OZ_Term value)
 {
   HashTableEntryDesc *desc = (HashTableEntryDesc *) arg;
 
@@ -683,7 +601,7 @@ static void getHashTableAtomEntryLabelCA(void *arg, OZ_Term value)
 }
 
 //
-static void getHashTableNumEntryLabelCA(void *arg, OZ_Term value)
+void getHashTableNumEntryLabelCA(void *arg, OZ_Term value)
 {
   HashTableEntryDesc *desc = (HashTableEntryDesc *) arg;
 
@@ -713,13 +631,47 @@ ProgramCounter unmarshalCache(ProgramCounter pc, CodeArea *code)
   return (pc ? code->writeCache(pc) : 0);
 }
 
+#ifdef DEBUG_CHECK
+
+Bool mIsAny(TaggedRef t)
+{
+  return (OK);
+}
+
+// Oz value type check procedures;
+Bool mIsNumber(TaggedRef t)
+{
+  return (oz_isNumber(t));
+}
+
+Bool mIsLiteral(TaggedRef t)
+{
+  return (oz_isLiteral(t));
+}
+
+Bool mIsFeature(TaggedRef t)
+{
+  return (oz_isFeature(t));
+}
+
+Bool mIsConstant(TaggedRef t)
+{
+  return (oz_isNumber(t) ||
+          oz_isLiteral(t) ||
+          oz_isLTuple(t) ||
+          oz_isProcedure(t) ||
+          oz_isSRecord(t));
+}
+
+#endif
+
 //
-ProgramCounter unmarshalOzValue(Builder *b,
-                                ProgramCounter pc, CodeArea *code)
+ProgramCounter unmarshalOzValue(Builder *b, ProgramCounter pc,
+                                CodeArea *code DebugArg(OzTermTypeCheck tp))
 {
   ProgramCounter retPC;
   if (pc) {
-    CodeAreaLocation *loc = new CodeAreaLocation(pc, code);
+    CodeAreaLocation *loc = new CodeAreaLocation(pc, code DebugArg(tp));
     b->getOzValue(putOzValueCA, loc);
     retPC = CodeArea::allocateWord(pc);
   } else {
@@ -774,13 +726,6 @@ ProgramCounter unmarshalLocation(ProgramCounter PC, MarshalerBuffer *bs)
   }
 
   return (writeAddress(OZ_Location::getLocation(inAr+outAr), PC));
-}
-
-//
-static inline
-RecordArityType unmarshalRecordArityType(MarshalerBuffer *bs)
-{
-  return ((RecordArityType) unmarshalNumber(bs));
 }
 
 //
@@ -1068,13 +1013,6 @@ ProgramCounter unmarshalLocationRobust(ProgramCounter PC, MarshalerBuffer *bs,
     OZ_Location::set(i,n);
   }
   return (writeAddress(OZ_Location::getLocation(inAr+outAr), PC));
-}
-
-//
-static inline
-RecordArityType unmarshalRecordArityTypeRobust(MarshalerBuffer *bs, int *error)
-{
-  return ((RecordArityType) unmarshalNumberRobust(bs, error));
 }
 
 //

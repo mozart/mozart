@@ -119,7 +119,8 @@ const unsigned char iso_conv_tab[]
  TaggedRef tc = OZ_in(0);               \
  int i;                                 \
  { DEREF(tc, tc_ptr);                   \
- if (oz_isVar(tc)) {                    \
+ Assert(!oz_isRef(tc));                 \
+ if (oz_isVarOrRef(tc)) {               \
    return oz_addSuspendVarList(tc_ptr); \
  }                                      \
  if (!oz_isSmallInt(tc)) {              \

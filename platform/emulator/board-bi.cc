@@ -132,10 +132,11 @@ public:
 //
 
 
-#define declareSpace                            \
+#define declareSpace                                    \
   OZ_Term tagged_space = OZ_in(0);                      \
   DEREF(tagged_space, space_ptr);                       \
-  if (oz_isVar(tagged_space))                           \
+  Assert(!oz_isRef(tagged_space));                      \
+  if (oz_isVarOrRef(tagged_space))                      \
     oz_suspendOn(makeTaggedRef(space_ptr));             \
   if (!oz_isSpace(tagged_space))                        \
     oz_typeError(0, "Space");                           \
@@ -149,7 +150,8 @@ OZ_BI_define(BInewSpace, 1,1) {
   OZ_Term proc = OZ_in(0);
 
   DEREF(proc, proc_ptr);
-  if (oz_isVar(proc))
+  Assert(!oz_isRef(proc));
+  if (oz_isVarOrRef(proc))
     oz_suspendOn(makeTaggedRef(proc_ptr));
 
   if (!oz_isProcedure(proc))
@@ -176,7 +178,8 @@ OZ_BI_define(BIisSpace, 1,1) {
 
   DEREF(tagged_space, space_ptr);
 
-  if (oz_isVar(tagged_space))
+  Assert(!oz_isRef(tagged_space));
+  if (oz_isVarOrRef(tagged_space))
     oz_suspendOn(makeTaggedRef(space_ptr));
 
   OZ_RETURN(oz_bool(oz_isSpace(tagged_space)));
@@ -199,7 +202,8 @@ OZ_BI_define(BIaskSpace, 1,1) {
 
   DEREF(answer, answer_ptr);
 
-  if (oz_isVar(answer))
+  Assert(!oz_isRef(answer));
+  if (oz_isVarOrRef(answer))
     oz_suspendOn(makeTaggedRef(answer_ptr));
 
   OZ_RETURN((oz_isSTuple(answer) &&
@@ -300,7 +304,8 @@ OZ_BI_define(BIcloneSpace, 1,1) {
 
   DEREF(status, status_ptr);
 
-  if (oz_isVar(status))
+  Assert(!oz_isRef(status));
+  if (oz_isVarOrRef(status))
     oz_suspendOn(makeTaggedRef(status_ptr));
 
   ozstat.incSolveCloned();
@@ -337,7 +342,8 @@ OZ_BI_define(BIcommit1Space, 2, 0) {
   TaggedRef status = space->getSpace()->getStatus();
 
   DEREF(status, status_ptr);
-  if (oz_isVar(status))
+  Assert(!oz_isRef(status));
+  if (oz_isVarOrRef(status))
     oz_suspendOn(makeTaggedRef(status_ptr));
 
   if (!sb->getDistributor())
@@ -366,7 +372,8 @@ OZ_BI_define(BIcommit2Space, 3,0) {
   TaggedRef status = space->getSpace()->getStatus();
 
   DEREF(status, status_ptr);
-  if (oz_isVar(status))
+  Assert(!oz_isRef(status));
+  if (oz_isVarOrRef(status))
     oz_suspendOn(makeTaggedRef(status_ptr));
 
   if (!sb->getDistributor())
@@ -394,12 +401,13 @@ OZ_BI_define(BIcommitSpace, 2,0) {
   TaggedRef status = space->getSpace()->getStatus();
 
   DEREF(status, status_ptr);
-  if (oz_isVar(status))
+  Assert(!oz_isRef(status));
+  if (oz_isVarOrRef(status))
     oz_suspendOn(makeTaggedRef(status_ptr));
 
   DEREF(choice, choice_ptr);
-
-  if (oz_isVar(choice))
+  Assert(!oz_isRef(choice));
+  if (oz_isVarOrRef(choice))
     oz_suspendOn(makeTaggedRef(choice_ptr));
 
   TaggedRef left, right;
@@ -414,14 +422,16 @@ OZ_BI_define(BIcommitSpace, 2,0) {
     left  = tagged2SRecord(choice)->getArg(0);
     DEREF(left, left_ptr);
 
-    if (oz_isVar(left))
+    Assert(!oz_isRef(left));
+    if (oz_isVarOrRef(left))
       oz_suspendOn(makeTaggedRef(left_ptr));
 
     right = tagged2SRecord(choice)->getArg(1);
 
     DEREF(right, right_ptr);
 
-    if (oz_isVar(right))
+    Assert(!oz_isRef(right));
+    if (oz_isVarOrRef(right))
       oz_suspendOn(makeTaggedRef(right_ptr));
   } else {
     oz_typeError(1, "Integer or pair of integers");
@@ -455,7 +465,8 @@ OZ_BI_define(BIinjectSpace, 2,0)
 
   DEREF(proc, proc_ptr);
 
-  if (oz_isVar(proc))
+  Assert(!oz_isRef(proc));
+  if (oz_isVarOrRef(proc))
     oz_suspendOn(makeTaggedRef(proc_ptr));
 
   if (!oz_isProcedure(proc))

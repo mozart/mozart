@@ -134,7 +134,7 @@ Bool pickleCode(GenTraverser *gt, void *arg)
   }
 
   // (don't indent the next line:)
-  if (PC >= end) {
+  if (PC >= end && ozValuesCnt > 0) {
     marshalOpCode(bs, PC-start, ENDOFFILE);
     marshalCodeEnd(bs);
     //
@@ -232,10 +232,10 @@ Bool traverseCode(GenTraverser *gt, void *arg)
 undefine([[opAction]])
 
 define(opAction,
-[[ifelse($1,Number,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
-        $1,Literal,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
-        $1,Feature,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
-        $1,Constant,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
+[[ifelse($1,Number,PC=unmarshalOzValue(b,PC,code DebugArg(mIsNumber));ozValuesCnt--;,
+        $1,Literal,PC=unmarshalOzValue(b,PC,code DebugArg(mIsLiteral));ozValuesCnt--;,
+        $1,Feature,PC=unmarshalOzValue(b,PC,code DebugArg(mIsFeature));ozValuesCnt--;,
+        $1,Constant,PC=unmarshalOzValue(b,PC,code DebugArg(mIsConstant));ozValuesCnt--;,
         $1,Builtinname,PC=unmarshalBuiltin(b,PC);ozValuesCnt--;,
         $1,XRegisterIndex,PC=unmarshalXReg(PC,bs);,
         $1,YRegisterIndex,PC=unmarshalYReg(PC,bs);,
@@ -316,10 +316,10 @@ undefine([[opAction]])
   if (e) { delete desc; return (UCR_ERROR); }
 
 define(opAction,
-[[ifelse($1,Number,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
-         $1,Literal,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
-         $1,Feature,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
-         $1,Constant,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
+[[ifelse($1,Number,PC=unmarshalOzValue(b,PC,code DebugArg(mIsNumber));ozValuesCnt--;,
+         $1,Literal,PC=unmarshalOzValue(b,PC,code DebugArg(mIsLiteral));ozValuesCnt--;,
+         $1,Feature,PC=unmarshalOzValue(b,PC,code DebugArg(mIsFeature));ozValuesCnt--;,
+         $1,Constant,PC=unmarshalOzValue(b,PC,code DebugArg(mIsConstant));ozValuesCnt--;,
          $1,Builtinname,PC=unmarshalBuiltin(b,PC);ozValuesCnt--;,
          $1,XRegisterIndex,PC=unmarshalXRegRobust(PC,bs,&e);ONERR(e);,
          $1,YRegisterIndex,PC=unmarshalYRegRobust(PC,bs,&e);ONERR(e);,

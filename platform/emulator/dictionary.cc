@@ -746,7 +746,8 @@ OZ_BI_define(BIdictionaryWaitOr,1,1)
     dict->getArg(f,v);
 
     DEREF(v,vPtr);
-    if (!oz_isVar(v)) {
+    Assert(!oz_isRef(v));
+    if (!oz_isVarOrRef(v)) {
       am.emptySuspendVarList();
       OZ_RETURN(f);
     }

@@ -255,6 +255,7 @@ fail:
 OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
 {
   DEREF(descr, descr_ptr);
+  Assert(!oz_isRef(descr));
 
   if (level >= 4) {
     if (oz_isFree(descr)||oz_isKinded(descr)) {
@@ -264,7 +265,7 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
                AtomCompl == tagged2SRecord(descr)->getLabel()) {
       //mm2: use tagged2Ref
       return expectDomDescr(makeTaggedRef(&(*tagged2SRecord(descr))[0]), 3);
-    } else if (oz_isVar(descr)) {
+    } else if (oz_isVarOrRef(descr)) {
       addSuspend(descr_ptr);
       return expectExceptional();
     }
@@ -292,7 +293,7 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
     return expectProceed(1, 1);
   } else if (oz_isNil(descr) && (level == 3)) {
     return expectProceed(1, 1);
-  } else if (oz_isLTuple(descr) && (level == 3)) {
+  } else if (oz_isLTupleOrRef(descr) && (level == 3)) {
 
     do {
       LTuple &list = *tagged2LTuple(descr);
@@ -304,6 +305,7 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
       descr = makeTaggedRef(list.getRefTail());
 
       _DEREF(descr, descr_ptr);
+      Assert(!oz_isRef(descr));
     } while (oz_isLTuple(descr));
 
     if (oz_isNil(descr)) return expectProceed(1, 1);
@@ -311,7 +313,7 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
   } else if (oz_isFree(descr)||oz_isKinded(descr)) {
     addSuspend(descr_ptr);
     return expectSuspend(1, 0);
-  } else if (oz_isVar(descr)) {
+  } else if (oz_isVarOrRef(descr)) {
     addSuspend(descr_ptr);
     return expectExceptional();
   }
@@ -617,7 +619,8 @@ OZ_expect_t OZ_Expect::expectList(OZ_Term t,
 
   DEREF(t, tptr);
 
-  if (oz_isCons(t)) {
+  Assert(!oz_isRef(t));
+  if (oz_isLTupleOrRef(t)) {
 
     int len = 0, acc = 0;
 
@@ -634,7 +637,8 @@ OZ_expect_t OZ_Expect::expectList(OZ_Term t,
 
       t = oz_tail(t);
       _DEREF(t, tptr);
-    } while (oz_isCons(t));
+      Assert(!oz_isRef(t));
+    } while (oz_isLTupleOrRef(t));
 
     if (oz_isNil(t)) {
       return expectProceed(len, acc);
@@ -664,6 +668,7 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
 
   DEREF(t, tptr);
 
+  Assert(!oz_isRef(t));
   if (oz_isLiteral(t)) { // subsumes nil
     return expectProceed(1, 1);
   } else if (oz_isSTuple(t) || oz_isSRecord(t)) {
@@ -681,7 +686,7 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
     }
     return expectProceed(width + 1, acc);
 
-  } else if (oz_isCons(t)) {
+  } else if (oz_isLTupleOrRef(t)) {
 
     int len = 0, acc = 0;
 
@@ -697,7 +702,8 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
 
       t = oz_tail(t);
       _DEREF(t, tptr);
-    } while (oz_isCons(t));
+      Assert(!oz_isRef(t));
+    } while (oz_isLTupleOrRef(t));
 
     if (oz_isNil(t)) {
       return expectProceed(len, acc);
@@ -725,9 +731,10 @@ OZ_expect_t OZ_Expect::expectStream(OZ_Term st)
 
   DEREF(st, stptr);
 
+  Assert(!oz_isRef(st));
   if (oz_isNil(st)) {
     return expectProceed(1, 1);
-  } else if (oz_isCons(st)) {
+  } else if (oz_isLTupleOrRef(st)) {
 
     int len = 0;
 
@@ -735,7 +742,9 @@ OZ_expect_t OZ_Expect::expectStream(OZ_Term st)
       len += 1;
       st = oz_tail(st);
       _DEREF(st, stptr);
-    } while (oz_isCons(st));
+      Assert(!oz_isRef(st));
+      Assert(!oz_isRef(st));
+    } while (oz_isLTupleOrRef(st));
 
     if (oz_isNil(st)) {
       return expectProceed(len, len);
@@ -927,7 +936,8 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
     OZ_Term v = makeTaggedRef(staticSpawnVars[i].var);
     DEREF(v, vptr);
 
-    if (oz_isVar(v)) {
+    Assert(!oz_isRef(v));
+    if (oz_isVarOrRef(v)) {
 
       if (OZ_CPIVar::is_in_vars_removed(vptr)) {
 #ifdef DEBUG_REMOVE_PARAMS
@@ -969,7 +979,8 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
     OZ_Term v = makeTaggedRef(staticSuspendVars[i].var);
     DEREF(v, vptr);
 
-    if (oz_isVar(v)) {
+    Assert(!oz_isRef(v));
+    if (oz_isVarOrRef(v)) {
       oz_var_addSusp(vptr, prop);
       all_local &= oz_isLocalVar(tagged2Var(v));
     }

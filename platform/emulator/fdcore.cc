@@ -151,7 +151,8 @@ OZ_BI_define(BIfdNextSmaller, 2, 1)
   OZ_getINDeref(1, val, valptr);
 
   int value = -1;
-  if (oz_isVar(val)) {
+  Assert(!oz_isRef(val));
+  if (oz_isVarOrRef(val)) {
     oz_suspendOnPtr(valptr);
   } else if (oz_isSmallInt(val)) {
     value = tagged2SmallInt(val);
@@ -189,7 +190,8 @@ OZ_BI_define(BIfdNextLarger, 2, 1)
   OZ_getINDeref(1, val, valptr);
 
   int value = -1;
-  if (oz_isVar(val)) {
+  Assert(!oz_isRef(val));
+  if (oz_isVarOrRef(val)) {
     oz_suspendOnPtr(valptr);
   } else if (oz_isSmallInt(val)) {
     value = tagged2SmallInt(val);
@@ -306,7 +308,8 @@ OZ_BI_define(BIfdWatchSize, 3, 0)
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
 
   OZ_getINDeref(2, t, tptr);
-  if (!oz_isVar(t)) {
+  Assert(!oz_isRef(t));
+  if (!oz_isVarOrRef(t)) {
     if (oz_isBool(t))
       return PROCEED;
     return FAILED;
@@ -332,7 +335,8 @@ OZ_BI_define(BIfdWatchSize, 3, 0)
   OZ_getINDeref(1, vs, vsptr);
   int size = 0;
 
-  if (oz_isVar(vs)) {
+  Assert(!oz_isRef(vs));
+  if (oz_isVarOrRef(vs)) {
     oz_suspendOnPtr(vsptr);
   } else if (oz_isSmallInt(vs)) {
     size = tagged2SmallInt(vs);
@@ -344,9 +348,11 @@ OZ_BI_define(BIfdWatchSize, 3, 0)
   if (vsize < size) return OZ_unify (OZ_in(2), oz_true());
   if (size < 1) return (OZ_unify (OZ_in(2), oz_false()));
 
-  if (oz_isVar(v)){
+  Assert(!oz_isRef(v));
+  if (oz_isVarOrRef(v)){
     //  must return SUSPEND;
-    if (oz_isVar(t))
+    Assert(!oz_isRef(t));
+    if (oz_isVarOrRef(t))
       oz_suspendOn2(makeTaggedRef(vptr), makeTaggedRef(tptr));
     oz_suspendOnPtr(vptr);
   }
@@ -360,7 +366,8 @@ OZ_BI_define(BIfdWatchMin, 3, 0)
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
 
   OZ_getINDeref(2, t, tptr);
-  if (!oz_isVar(t)) {
+  Assert(!oz_isRef(t));
+  if (!oz_isVarOrRef(t)) {
     if (oz_isBool(t))
       return PROCEED;
     return FAILED;
@@ -388,7 +395,8 @@ OZ_BI_define(BIfdWatchMin, 3, 0)
   OZ_getINDeref(1, vm, vmptr);
   int min = -1;
 
-  if (oz_isVar(vm)) {
+  Assert(!oz_isRef(vm));
+  if (oz_isVarOrRef(vm)) {
     oz_suspendOnPtr(vmptr);
   } else if (oz_isSmallInt(vm)) {
     min = tagged2SmallInt(vm);
@@ -399,9 +407,11 @@ OZ_BI_define(BIfdWatchMin, 3, 0)
   if (min < 0) return (OZ_unify (OZ_in(2), oz_false()));
   if (vmin > min) return OZ_unify (OZ_in(2), oz_true());
 
-  if (oz_isVar(v) && min < vmax){
+  Assert(!oz_isRef(v));
+  if (oz_isVarOrRef(v) && min < vmax){
     //  must return SUSPEND;
-    if (oz_isVar(t))
+    Assert(!oz_isRef(t));
+    if (oz_isVarOrRef(t))
       oz_suspendOn2(makeTaggedRef(vptr), makeTaggedRef(tptr));
     oz_suspendOnPtr(vptr);
   }
@@ -414,7 +424,8 @@ OZ_BI_define(BIfdWatchMax, 3, 0)
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
 
   OZ_getINDeref(2, t, tptr);
-  if (!oz_isVar(t)) {
+  Assert(!oz_isRef(t));
+  if (!oz_isVarOrRef(t)) {
     if (oz_isBool(t))
       return PROCEED;
     return FAILED;
@@ -442,7 +453,8 @@ OZ_BI_define(BIfdWatchMax, 3, 0)
   OZ_getINDeref(1, vm, vmptr);
   int max = -1;
 
-  if (oz_isVar(vm)) {
+  Assert(!oz_isRef(vm));
+  if (oz_isVarOrRef(vm)) {
     oz_suspendOnPtr(vmptr);
   } else if (oz_isSmallInt(vm)) {
     max = tagged2SmallInt(vm);
@@ -453,9 +465,11 @@ OZ_BI_define(BIfdWatchMax, 3, 0)
   if (vmax < max) return OZ_unify (OZ_in(2), oz_true());
   if (max < 0) return (OZ_unify (OZ_in(2), oz_false()));
 
-  if (oz_isVar(v) && vmin < max){
+  Assert(!oz_isRef(v));
+  if (oz_isVarOrRef(v) && vmin < max){
     //  must return SUSPEND;
-    if (oz_isVar(t))
+    Assert(!oz_isRef(t));
+    if (oz_isVarOrRef(t))
       oz_suspendOn2(makeTaggedRef(vptr), makeTaggedRef(tptr));
     oz_suspendOnPtr(vptr);
   }

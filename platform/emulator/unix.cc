@@ -281,7 +281,8 @@ static char* h_strerror(const int err) {
     TaggedRef t = oz_newVariable();                     \
     (void) OZ_readSelect(FD, NameUnit, t);              \
     DEREF(t, t_ptr);                                    \
-    if (oz_isVar(t)) {                                  \
+    Assert(!oz_isRef(t));                               \
+    if (oz_isVarOrRef(t)) {                             \
       return oz_addSuspendVarList(t_ptr);               \
     }                                                   \
   }                                                     \
@@ -294,7 +295,8 @@ static char* h_strerror(const int err) {
     TaggedRef t = oz_newVariable();                     \
     (void) OZ_writeSelect(FD, NameUnit, t);             \
     DEREF(t, t_ptr);                                    \
-    if (oz_isVar(t)) {                                  \
+    Assert(!oz_isRef(t));                               \
+    if (oz_isVarOrRef(t)) {                             \
       return oz_addSuspendVarList(t_ptr);               \
     }                                                   \
   }                                                     \
@@ -959,7 +961,8 @@ OZ_BI_iodefine(unix_readSelect, 1,0) {
     (void) OZ_readSelect(fd, NameUnit, t);
     DEREF(t, t_ptr);
 
-    if (oz_isVar(t)) {
+    Assert(!oz_isRef(t));
+    if (oz_isVarOrRef(t)) {
       return oz_addSuspendVarList(t_ptr);
     }
   }
@@ -979,7 +982,8 @@ OZ_BI_iodefine(unix_writeSelect,1,0) {
     (void) OZ_writeSelect(fd, NameUnit, t);
     DEREF(t, t_ptr);
 
-    if (oz_isVar(t)) {
+    Assert(!oz_isRef(t));
+    if (oz_isVarOrRef(t)) {
       return oz_addSuspendVarList(t_ptr);
     }
   }
@@ -1000,7 +1004,8 @@ OZ_BI_iodefine(unix_acceptSelect,1,0) {
     (void) OZ_acceptSelect(fd, NameUnit, t);
     DEREF(t, t_ptr);
 
-    if (oz_isVar(t)) {
+    Assert(!oz_isRef(t));
+    if (oz_isVarOrRef(t)) {
       return oz_addSuspendVarList(t_ptr);
     }
   }

@@ -99,6 +99,68 @@ public:
 };
 
 //
+// Code area descriptors for suspendable marshaler are extended with
+// support for split instructions (e.g. 'match')
+class DPMarshalerCodeAreaDescriptor : public MarshalerCodeAreaDescriptor {
+private:
+  // index in the hash table we're suspended on;
+  int htIndex;
+  // number of hash table entries that have already been processed;
+  int htNDone;
+
+public:
+  // Note: htNDone must be initialized (to zero);
+  DPMarshalerCodeAreaDescriptor(ProgramCounter startIn, ProgramCounter endIn)
+    : MarshalerCodeAreaDescriptor(startIn, endIn), htNDone(0) {
+    DebugCode(htIndex = -1);
+  }
+
+  //
+  int getHTIndex() { return (htIndex); }
+  void setHTIndex(int htIndexIn) { htIndex = htIndexIn; }
+  int getHTNDone() { return (htNDone); }
+  void setHTNDone(int htNDoneIn) { htNDone = htNDoneIn; }
+};
+
+//
+class DPBuilderCodeAreaDescriptor : public BuilderCodeAreaDescriptor {
+private:
+  // number of hash table entries that have already been processed;
+  int htNDone;
+
+public:
+  // Note: htNDone must be initialized (to zero);
+  DPBuilderCodeAreaDescriptor(ProgramCounter startIn, ProgramCounter endIn,
+                              CodeArea *codeIn)
+    : BuilderCodeAreaDescriptor(startIn, endIn, codeIn), htNDone(0) {}
+
+  //
+  int getHTNDone() { return (htNDone); }
+  void setHTNDone(int htNDoneIn) { htNDone = htNDoneIn; }
+};
+
+//
+Bool dpMarshalHashTableRef(GenTraverser *gt,
+                           DPMarshalerCodeAreaDescriptor *desc,
+                           int start, IHashTable *table,
+                           ByteBuffer *bs);
+
+#ifdef USE_FAST_UNMARSHALER
+ProgramCounter
+dpUnmarshalHashTableRef(Builder *b,
+                        ProgramCounter pc, MarshalerBuffer *bs,
+                        DPBuilderCodeAreaDescriptor *desc, Bool &suspend);
+#else
+ProgramCounter
+dpUnmarshalHashTableRefRobust(Builder *b,
+                              ProgramCounter pc, MarshalerBuffer *bs,
+                              DPBuilderCodeAreaDescriptor *desc,
+                              Bool &suspend,
+                              int *error);
+#endif
+
+
+//
 class VariableExcavator;
 
 //
@@ -215,6 +277,9 @@ private:
   // objects are large and, hence, cannot be re-created all the time.
   // Instead, a pool of standard 'DPMarshaler's is kept.
   Bool doToplevel;
+#if defined(DEBUG_CHECK)
+  OZ_Term mValue;
+#endif
 
   //
 public:
@@ -233,7 +298,7 @@ public:
   virtual Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
   virtual void processPort(OZ_Term portTerm, Tertiary *portTert);
   virtual void processResource(OZ_Term resTerm, Tertiary *tert);
-  virtual void processNoGood(OZ_Term resTerm, Bool trail);
+  virtual Bool processNoGood(OZ_Term resTerm, Bool trail);
   virtual void processVar(OZ_Term cv, OZ_Term *varTerm);
   virtual void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
   virtual Bool processLTuple(OZ_Term ltupleTerm);
@@ -251,6 +316,14 @@ public:
   // representation of a top-level object (as opposed to its stub);
   void genFullToplevel() { doToplevel = TRUE; }
   DebugCode(Bool isFullToplevel() { return (doToplevel); })
+
+  //
+#if defined(DEBUG_CHECK)
+  void traverse(OZ_Term t) {
+    mValue = t;
+    GenTraverser::traverse(t);
+  }
+#endif
 
   //
 private:
@@ -284,7 +357,7 @@ public:
   virtual void processLock(OZ_Term lockTerm, Tertiary *lockTert);
   virtual void processPort(OZ_Term portTerm, Tertiary *portTert);
   virtual void processResource(OZ_Term resTerm, Tertiary *tert);
-  virtual void processNoGood(OZ_Term resTerm, Bool trail);
+  virtual Bool processNoGood(OZ_Term resTerm, Bool trail);
   virtual void processVar(OZ_Term cv, OZ_Term *varTerm);
   virtual void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
   virtual Bool processLTuple(OZ_Term ltupleTerm);
@@ -319,6 +392,7 @@ public:
 // instance, count instruction fields with Oz values but not values
 // themselves);
 const int ozValuesBADP = 1024;
+// const int ozValuesBADP = 1;
 
 //
 extern VariableExcavator ve;

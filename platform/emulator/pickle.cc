@@ -85,9 +85,10 @@ void Pickler::processBigInt(OZ_Term biTerm, ConstTerm *biConst)
 }
 
 //
-void Pickler::processNoGood(OZ_Term resTerm, Bool trail)
+Bool Pickler::processNoGood(OZ_Term resTerm, Bool trail)
 {
   OZ_error("Pickler::processNoGood is called!");
+  return (OK);
 }
 
 //
@@ -334,20 +335,21 @@ void ResourceExcavator::processLiteral(OZ_Term litTerm) {}
 void ResourceExcavator::processBigInt(OZ_Term biTerm, ConstTerm *biConst) {}
 
 //
-void ResourceExcavator::processNoGood(OZ_Term resTerm, Bool trail)
+Bool ResourceExcavator::processNoGood(OZ_Term resTerm, Bool trail)
 {
   addNogood(resTerm);
+  return (OK);
 }
 void ResourceExcavator::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
 {
   rememberTerm(biTerm);
   if (((Builtin *) biConst)->isSited())
-    processNoGood(biTerm, OK);
+    (void) processNoGood(biTerm, OK);
 }
 void ResourceExcavator::processExtension(OZ_Term t)
 {
   if (!tagged2Extension(t)->toBePickledV())
-    processNoGood(t, NO);
+    (void) processNoGood(t, NO);
 }
 Bool ResourceExcavator::processObject(OZ_Term objTerm, ConstTerm *objConst)
 {
@@ -424,7 +426,7 @@ Bool ResourceExcavator::processDictionary(OZ_Term dictTerm,
   if (d->isSafeDict()) {
     return (NO);
   } else {
-    processNoGood(dictTerm, OK);
+    (void) processNoGood(dictTerm, OK);
     return (OK);
   }
 }
@@ -437,7 +439,7 @@ Bool ResourceExcavator::processArray(OZ_Term arrayTerm,
   if (cloneCells()) {
     return (NO);
   } else {
-    processNoGood(arrayTerm, OK);
+    (void) processNoGood(arrayTerm, OK);
     return (OK);
   }
 }
@@ -449,7 +451,7 @@ Bool ResourceExcavator::processClass(OZ_Term classTerm,
   ObjectClass *cl = (ObjectClass *) classConst;
   rememberTerm(classTerm);
   if (cl->isSited()) {
-    processNoGood(classTerm, OK);
+    (void) processNoGood(classTerm, OK);
     return (OK);                // done - a leaf;
   } else {
     return (NO);
@@ -466,7 +468,7 @@ Bool ResourceExcavator::processAbstraction(OZ_Term absTerm,
   //
   rememberTerm(absTerm);
   if (pred->isSited()) {
-    processNoGood(absTerm, OK);
+    (void) processNoGood(absTerm, OK);
     return (OK);                // done - a leaf;
   } else {
     ProgramCounter start = pp->getPC() - sizeOf(DEFINITION);

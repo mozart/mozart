@@ -107,7 +107,10 @@ public:
     return (OZ_TRUE);
   }
 
-  virtual OZ_Boolean marshalSuspV(OZ_Term te, ByteBuffer *bs, GenTraverser *gt)
+  //
+  virtual OZ_Boolean toBeMarshaledV() { return (NO); }
+  virtual
+  OZ_Boolean marshalSuspV(OZ_Term te, ByteBuffer *bs, GenTraverser *gt)
   { return (NO); }
 };
 

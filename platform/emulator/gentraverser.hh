@@ -633,7 +633,8 @@ protected:
   virtual void processPort(OZ_Term portTerm, Tertiary *portTert) = 0;
   virtual void processResource(OZ_Term resTerm, Tertiary *tert) = 0;
   // anything else:
-  virtual void processNoGood(OZ_Term resTerm, Bool trail) = 0;
+  // 'processNoGood(...)' returns NO if suspension occured;
+  virtual Bool processNoGood(OZ_Term resTerm, Bool trail) = 0;
   //
   virtual void processVar(OZ_Term cv, OZ_Term *varTerm) = 0;
 
@@ -903,6 +904,7 @@ static char* builderTaskNames[] = {
   "procMemo",
   "closureElem",
   "closureElem_iterate",
+  "abstractEntity",
   "binary",
   "binary_getValue",
   "binary_getValue(sync)",
@@ -1532,6 +1534,9 @@ private:
   BTFrame* findBinary(BTFrame *frame);
 
   //
+  DebugCode(void dbgWrap(););
+
+  //
 public:
   Builder() : result((OZ_Term) 0), blackhole((OZ_Term) 0) {}
   ~Builder() {}
@@ -1804,13 +1809,16 @@ public:
   repeat:
     GetBTTaskType(frame, type);
     if (type != BT_binary) {
-      // This means that there is some 'sync' task in the stream,
-      // which covers the binary task, which must be searched for:
+      // This means that there is either a 'sync' or an
+      // '_intermediate' task which covers the binary task. A 'sync'
+      // task corresponds to a 'sync' token in the stream, and
+      // '_intermediate' tasks are transparent...  Thus,
       Assert(type == BT_makeRecordSync ||
              type == BT_makeRecordMemoSync ||
              type == BT_fsetvalueSync ||
              type == BT_fsetvalueMemoSync ||
-             type == BT_binary_getValueSync);
+             type == BT_binary_getValueSync ||
+             type == BT_binary_doGenAction_intermediate);
       //
       frame = findBinary(frame);
       GetBTTaskPtr1NoDecl(frame, void*, bp);

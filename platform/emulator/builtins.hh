@@ -36,10 +36,11 @@
  * Macros
  ******************************************************************** */
 
-#define NONVAR(X,term)                  \
-TaggedRef term = X;                     \
-{ DEREF(term,_myTermPtr);               \
-  if (oz_isVar(term)) return SUSPEND;   \
+#define NONVAR(X,term)                          \
+TaggedRef term = X;                             \
+{ DEREF(term,_myTermPtr);                       \
+  Assert(!oz_isRef(term));                      \
+  if (oz_isVarOrRef(term)) return SUSPEND;      \
 }
 
 // Suspend on free variables
@@ -167,7 +168,8 @@ VAR=oz_safeDeref(VAR);
 #define oz_declareNonvarIN(ARG,VAR)             \
 oz_declareDerefIN(ARG,VAR);                     \
 {                                               \
-  if (oz_isVar(VAR)) {                          \
+  Assert(!oz_isRef(VAR));                       \
+  if (oz_isVarOrRef(VAR)) {                     \
     oz_suspendOnPtr(VAR ## Ptr);                \
   }                                             \
 }
@@ -193,7 +195,8 @@ TT VAR;                                         \
       _VAR = * tagged2Ref(_VAR);                \
       continue;                                 \
     }                                           \
-    if (oz_isVar(_VAR)) {                       \
+    Assert(!oz_isRef(_VAR));                    \
+    if (oz_isVarOrRef(_VAR)) {                  \
       oz_suspendOn(OZ_in(ARG));                 \
     }                                           \
     oz_typeError(ARG, #TYPE);                   \
@@ -236,7 +239,8 @@ int VAR;                                        \
       VAR = tagged2BigInt(_VAR)->getInt();      \
       break;                                    \
     }                                           \
-    if (oz_isVar(_VAR)) {                       \
+    Assert(!oz_isRef(_VAR));                    \
+    if (oz_isVarOrRef(_VAR)) {                  \
       oz_suspendOn(OZ_in(ARG));                 \
     }                                           \
     oz_typeError(ARG, "Int");                   \
@@ -260,7 +264,8 @@ Bool VAR;                                       \
       _VAR = * tagged2Ref(_VAR);                \
       continue;                                 \
     }                                           \
-    if (oz_isVar(_VAR)) {                       \
+    Assert(!oz_isRef(_VAR));                    \
+    if (oz_isVarOrRef(_VAR)) {                  \
       oz_suspendOn(OZ_in(ARG));                 \
     }                                           \
     oz_typeError(ARG, "Bool");                  \

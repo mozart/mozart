@@ -34,14 +34,14 @@ void OZ_Stream::setFlags(void)
   OZ_Term t = tail;
 
   DEREF(t, tptr);
-
+  Assert(!oz_isRef(t));
   if (oz_isNil(t)) {
     eostr = closed = TRUE;
     return;
   } else if (oz_isFree(t)) {
     eostr = TRUE;
     return;
-  } else if (oz_isCons(t)) {
+  } else if (oz_isLTupleOrRef(t)) {
     return;
   }
   valid = FALSE;

@@ -222,6 +222,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
   if (constr && constr->isEmpty()) {
     goto failed;
   }
+  Assert(!oz_isRef(v));
   if (oz_isFree(v)) {
     //
     // tell a finite set constraint to an unconstrained variable
@@ -304,7 +305,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
       }
     }
     goto proceed;
-  } else if (! oz_isVar(v)) {
+  } else if (!oz_isVarOrRef(v)) {
     //
     // tell a ct constraint to a ct variable
     //
@@ -315,7 +316,8 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
       goto proceed;
     }
     goto failed;
-  } else if (oz_isVar(v)) {
+  } else {
+    Assert(oz_isVar(v));
     //
     // future stuff, no idea what is going on here
     TaggedRef newVar = oz_newVariable();
