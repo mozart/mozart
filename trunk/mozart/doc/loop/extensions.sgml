@@ -22,105 +22,95 @@
   -->
 <chapter id=chapter.extensions>
   <title>Experimental Extensions</title>
-  <p>There are 3 categories of experimental extensions: (1) more
-general iterators, (2) control extensions, (3) support for loop
-expressions and accumulation.</p>
+  <p>The extensions that remain experimental in Mozart&nbsp;1.1.1
+support the use of loops as expressions, &ie; loops that return a
+value.  These extensions are supported by means of additional loop
+features.</p>
   <section>
-    <title/Iterators/
-    <p>Some generators have a syntax which is not yet universally
-loved.  For this reason they are described in this <q/experimental
-section/.  Either the user community can suggest a better syntax or we
-can promote the experimental syntax to official status.  However, a
-proposal that requires the introduction of a new keyword is unlikely
-to be looked upon favorably.
+    <title/Find And Return a Value/
+    <p>The simplest way for a loop to return a value is to
+<em/explicitly/ do so.
 <list>
-	<entry><code/X in ?{I}..?{J} ; ?{K}/
-	<item>iterates upward from ?{I} to ?{J} by increments of ?{K}.
-	<entry><code/X in ?{Init} ; ?{Next}/
-	<item>initial value of <code/X/ is ?{Init}.  At each
-subsequent iteration, <code/X/ is bound to the result of evaluating
-?{Next} in the current scope of the loop.  Thus, an infinite integer
-iterator starting at ?{I} and proceeding by increment of <code/K/ can
-be written:
-<code display/X in ?{I} ; X+K/
-      </list>
-For example, instead of
-<code display/{List.forAllInd L proc {$ I X} ... end}/
-you can write
-<code display
-/for
-   X in L
-   I in 1 ; I+1
-do
-   ...
-end/
-</p>
+	<entry/<code/return:R//
+	<item/binds <code/R/ to a unary procedure.  Invoking
+<code/{R E1}/ immediately terminates the loop returning <code/E1/ as
+its value./
+	<entry/<code/default:E2//
+	<item/if the loop terminates without the return procedure
+having been called, then <code/E2/ is returned as the <q/default/
+value of the loop.  Currently <code/E2/ is evaluated before starting
+the loop, but this will hopefully change so that it is only evaluated
+on exit if necessary.  If no default is specified and the return
+procedure is not invoked, then the loop raises an exception on
+termination/
+      </list></p>
   </section>
   <section>
-    <title/Control/
-    <p>All extensions other than iterators use the new experimental
-syntax <code/&lt;&lt; ... &gt;&gt;/.  The following extensions permit
-finer control on the execution of the loop.  They may occur in the
-body of the loop.
+    <title/List Accumulator/
+    <p>A loop can be given a <em/hidden/ accumulator in which
+a list is incrementally constructed and returned as the value of
+the loop when the latter terminates.  This functionality is obtained
+by using one or more of the following loop features:
 <list>
-	<entry><code/&lt;&lt;leave&gt;&gt;/
-	<entry><code/&lt;&lt;leave X&gt;&gt;/
-	<item>immediately terminates the current loop (resp.&nbsp;the
-loop identified by variable <code/X/)
-	<entry><code/&lt;&lt;while ?{B}&gt;&gt;/
-	<item>terminates the current loop when ?{B} evaluates to false.
-	<entry><code/&lt;&lt;until ?{B}&gt;&gt;/
-	<item>terminates the current loop when ?{B} evaluates to true.
-	<entry><code/&lt;&lt;next&gt;&gt;/
-	<entry><code/&lt;&lt;next X&gt;&gt;/
-	<item>immediately goes on to the next iteration of the current
-loop (resp.&nbsp;the loop identified by variable <code/X/)
-	<entry><code/&lt;&lt;named X&gt;&gt;/
-	<item>The current loop is identified by variable <code/X/.
+	<entry/<code/collect:C//
+	<item/binds <code/C/ to a unary procedure to accumulate
+elements of the list.  Thus <code/{C E3}/ adds <code/E3/ as another
+element of the list.  The value will appear in the list in
+chronological order of collection: the last one collected appears
+as last element of the list./
+	<entry/<code/append:A//
+	<item/binds <code/A/ to a unary procedure to append a list
+of values to the accumulator./
+	<entry/<code/prepend:P//
+	<item/Similar, but for prepending to the accumulator./
       </list>
+Note that it is possible to use the features above in conjunction
+with <code/return/.  Thus you can accumulate a list, but you can also
+return a different value &eg; in an exceptional situation.</p>
   </section>
   <section>
-    <title/Loop Expressions and Accumulation/
-    <p>Only loop statements are officially supported.  However loop
-expressions are also very convenient; perhaps even more so than
-statements.  In order to turn a loop into an expression, it needs to
-return a value:  for this reason, each loop expression has a
-<q/hidden accumulator/.  The content of this accumulator is returned
-when the loop terminates.
+    <title/Integer Accumulator/
+    <p>This functionality is even less official than for the list
+accumulator: we are not at all convinced that it is sufficiently
+frequently convenient to warrant special support.  It is included
+simply because it was also in the Common Lisp loop macro which was
+one source of inspiration.</p>
+    <subsection>
+      <title/Computing an Extremum/
+      <p>One way to use an <q/hidden/ integer accumulator is for
+computing the maximum or minimum of a set of values.
 <list>
-	<entry><code/&lt;&lt;collect ?{E}&gt;&gt;/
-	<item>the accumulator is of type <q/list/ and the value of
-?{E} is inserted at the end of this list.
-	<entry><code/&lt;&lt;append ?{L}&gt;&gt;/
-	<item>same as above, except that the value of ?{L} is appended
-to the end of the accumulator.
-	<entry><code/&lt;&lt;count ?{B}&gt;&gt;/
-	<item>the accumulator is of type <q/integer/ and it is
-incremented iff ?{B} is true.
-	<entry><code/&lt;&lt;sum ?{N}&gt;&gt;/
-	<item>the accumulator is of type <q/integer/ and it is
-incremented by the value of ?{N}.
-	<entry><code/&lt;&lt;maximize ?{N}&gt;&gt;/
-	<item>the accumulator is of type <q/integer/ and it records
-the maximal value of ?{N}.
-	<entry><code/&lt;&lt;minimize ?{N}&gt;&gt;/
-	<item>the accumulator is of type <q/integer/ and it records
-the minimal value of ?{N}.
-      </list>
-when <code/&lt;&lt;leave&gt;&gt;/ is executed in a loop expression,
-the loop is terminated and the current value of the accumulator is
-returned.
-</p>
-<p>Here is the loop version of <code/{List.zip L1 L2 fun {$ X Y} ... end}/:
-<code display
-/for X in L1
-    Y in L2
-do
-   &lt;&lt;collect ...&gt;&gt;
-end/
-unlike <code/List.zip/, however, it doesn't complain if the lists are
-of different lengths: it behaves as it the longer one had been
-truncated to the length of the smaller one.</p>
+	  <entry/<code/maximize:M//
+	  <item/binds <code/M/ to a unary procedure to accumulate
+a maximum./
+	  <entry/<code/minimum:M//
+	  <item/similar but to accumulate a minimum/
+	</list>
+Note that <code/minimum/ and <code/maximum/ can both be used in the same
+loop to update the value of the hidden accumulator.  Feature
+<code/default/ can be used to provide a default value in case nothing
+is accumulated.  Feature <code/return/ can also be used to return an
+arbitrary value in exceptional cases.</p>
+    </subsection>
+    <subsection>
+      <title/Summing Values/
+      <p>Another way to use the integer accumulator is for computing
+the sum of a sequence of values.
+<list>
+	  <entry/<code/sum:S//
+	  <item/The initial value of the accumulator is 0.  Invoking
+<code/{S E}/ adds <code/E/ to the accumulator./
+	</list></p>
+    </subsection>
+    <subsection>
+      <title/Multiplying Values/
+      <p>Same idea, but using multiplication
+<list>
+	  <entry/<code/multiply:M//
+	  <item/The initial value of the accumulator is 1.  Invoking
+<code/{M E}/ multiplies the value of the accumulator by <code/E/./
+	</list></p>
+    </subsection>
   </section>
 </chapter>
 <!--
