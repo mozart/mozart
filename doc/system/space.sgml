@@ -67,6 +67,13 @@ choices,  the atom <<succeeded>> is returned.
 synchronizes on a choice the tuple <<alternatives(?{I})>> is returned, where ?{I} gives the number of alternatives of the selected choice.
 </list>
 
+<p>
+Synchronizes on stability of ?_{Space}.
+
+<p>
+Raises a runtime error if the current space is not addmissible
+for ?_{Space}.
+
 <entry><<askVerbose>>
 <index class=tails/<<Space>><and><<askVerbose>>/
 <synopsis>
@@ -94,6 +101,13 @@ synchronizes on a choice the tuple <<alternatives(?{I})>> is returned,
 where ?_{I} gives the number of alternatives of the selected choice. 
 </list>
 
+<p>
+Does not synchronize on stability of ?_{Space}.
+
+<p>
+Raises a runtime error if the current space is not addmissible
+for ?_{Space}.
+
 <entry><<merge>>
 <index class=tails/<<Space>><and><<merge>>/
 <synopsis>
@@ -103,18 +117,27 @@ merges ?_{Space} with the current space and constrains ?_{X} to the
 root variable of ?_{Space}.
 
 <p>
+Does not synchronize on stability of ?_{Space}.
+
+<p>
 Raises a runtime error if ?_{Space} is already merged, or if the
-current space is subordinated to ?_{Space}.
+current space is not addmissible for ?_{Space}.
 
 <entry><<clone>>
 <index class=tails/<<Space>><and><<clone>>/
 <synopsis>
 <<{Space.clone ?+{Space1} ??{Space2}}>>
 <item>
-blocks until ?_{Space1} becomes stable and returns a new space which is a copy of ?_{Space1}.
+blocks until ?_{Space1} becomes stable and returns a new space
+which is a copy of ?_{Space1}.
 
 <p>
-Raises a runtime error if ?_{Space1} has been merged already.
+Synchronizes on stability of ?_{Space}.
+
+<p>
+Raises a runtime error if ?_{Space} is already merged, or if the
+current space is not addmissible for ?_{Space}.
+
 
 <entry><<inject>>
 <index class=tails/<<Space>><and><<inject>>/
@@ -125,8 +148,33 @@ creates a thread in the space ?_{Space} which contains an application
 of the unary procedure&nbsp;?_{P} to the root variable of ?_{Space}.
 
 <p>
-Raises a runtime error if ?_{Space} has been merged already or if the
-current space is subordinated to ?_{Space}.
+Does not synchronize on stability of ?_{Space}.
+
+<p>
+Raises a runtime error if ?_{Space} is already merged, or if the
+current space is not addmissible for ?_{Space}.
+
+
+<entry><<kill>>
+<index class=tails/<<Space>><and><<kill>>/
+<synopsis>
+<<{Space.kill ?+{Space}}>>
+<item>
+kills a space by injecting failure into ?_{Space}. 
+
+<p>Can be defined by
+<<<
+proc {Space.kill S}
+   {Space.inject S proc {$ _} fail end}
+end
+>>>
+
+<p>
+Does not synchronize on stability of ?_{Space}.
+
+<p>
+Raises a runtime error if ?_{Space} is already merged, or if the
+current space is not addmissible for ?_{Space}.
 
 <entry><<commit>>
 <index class=tails/<<Space>><and><<commit>>/
@@ -148,9 +196,13 @@ An integer value for ?_{IT} is an abbrevation for the pair
 <<?_{IT}#?_{IT}>>.
 
 <p>
-Raises a runtime error, if ?_{Space} has been merged already, if there
-exists no selected choice in ?_{Space}, or if the
-current space is subordinated to ?_{Space}.
+Synchronizes on stability of ?_{Space}.
+
+<p>
+Raises a runtime error, if ?_{Space} has been merged already, if
+there exists no selected choice in ?_{Space}, or if the current
+space is not addmissible for ?_{Space}.
+
 
 <entry><<waitStable>>
 <index class=tails/<<Space>><and><<waitStable>>/
