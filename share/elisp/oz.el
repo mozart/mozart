@@ -82,14 +82,14 @@
   "Feed the current line to the Oz Compiler." t)
 (autoload 'oz-browse-paragraph "mozart"
   "Feed the current paragraph to the Oz Compiler." t)
-(autoload 'oz-inspect-buffer "mozart"
-  "Feed the current buffer to the Oz Compiler." t)
-(autoload 'oz-inspect-region "mozart"
-  "Feed the current region to the Oz Compiler." t)
-(autoload 'oz-inspect-line "mozart"
-  "Feed the current line to the Oz Compiler." t)
-(autoload 'oz-inspect-paragraph "mozart"
-  "Feed the current paragraph to the Oz Compiler." t)
+;; (autoload 'oz-inspect-buffer "mozart"
+;;   "Feed the current buffer to the Oz Compiler." t)
+;; (autoload 'oz-inspect-region "mozart"
+;;   "Feed the current region to the Oz Compiler." t)
+;; (autoload 'oz-inspect-line "mozart"
+;;   "Feed the current line to the Oz Compiler." t)
+;; (autoload 'oz-inspect-paragraph "mozart"
+;;   "Feed the current paragraph to the Oz Compiler." t)
 (autoload 'oz-open-panel "mozart"
   "Feed `{Panel.open}' to the Oz Compiler." t)
 (autoload 'oz-open-compiler-panel "mozart"
@@ -960,7 +960,7 @@ buffer."
     (define-key map (oz-kbd "C-c C-p")     'oz-feed-paragraph)
     (define-key map (oz-kbd "M-C-x")       'oz-feed-paragraph)
     (define-key map (oz-kbd "C-c C-b")     'oz-browse-region)
-    (define-key map (oz-kbd "C-c C-i")     'oz-inspect-region)
+;;     (define-key map (oz-kbd "C-c C-i")     'oz-inspect-region)
 
     (define-key map (oz-kbd "M-n")         'oz-next-buffer)
     (define-key map (oz-kbd "M-p")         'oz-previous-buffer)
@@ -1016,7 +1016,7 @@ buffer."
     (define-key map [(control ?c) (control ?p)] 'oz-feed-paragraph)
     (define-key map [(meta control ?x)]         'oz-feed-paragraph)
     (define-key map [(control ?c) (control ?b)] 'oz-browse-region)
-    (define-key map [(control ?c) (control ?i)] 'oz-inspect-region)
+;;     (define-key map [(control ?c) (control ?i)] 'oz-inspect-region)
 
     (define-key map [(meta ?n)]                 'oz-next-buffer)
     (define-key map [(meta ?p)]                 'oz-previous-buffer)
@@ -1169,16 +1169,16 @@ buffer."
      ("Region"             oz-browse-region (mark t))
      ("Line"               oz-browse-line t)
      ("Paragraph"          oz-browse-paragraph t))
-    ("Inspect" nil
-     ("Buffer"             oz-inspect-buffer t)
-     ("Region"             oz-inspect-region (mark t))
-     ("Line"               oz-inspect-line t)
-     ("Paragraph"          oz-inspect-paragraph t))
-    ("Panel"               oz-open-panel t)
-    ("Compiler Panel"      oz-open-compiler-panel t)
-    ("Debugger"            oz-debugger t)
+;;     ("Inspect" nil
+;;      ("Buffer"             oz-inspect-buffer t)
+;;      ("Region"             oz-inspect-region (mark t))
+;;      ("Line"               oz-inspect-line t)
+;;      ("Paragraph"          oz-inspect-paragraph t))
+    ("Open Panel"          oz-open-panel t)
+    ("Open Compiler Panel" oz-open-compiler-panel t)
+    ("Start Debugger"      oz-debugger t)
     ("Debug Application"   oz-debug-application (not (oz-is-running)))
-    ("Profiler"            oz-profiler t)
+    ("Start Profiler"      oz-profiler t)
     ("-----")
     ("Show/Hide" nil
      ("Compiler"           oz-toggle-compiler (get-buffer oz-compiler-buffer))

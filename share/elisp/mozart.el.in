@@ -859,42 +859,42 @@ feed that many preceding paragraphs as well as the current paragraph."
   (let ((region (oz-paragraph-region arg)))
     (oz-browse-region (car region) (cdr region))))
 
-(defun oz-inspect-buffer ()
-  "Feed the current buffer to the Oz Compiler.
-Assuming it to contain an expression, enclose it by an application
-of the procedure Inspect."
-  (interactive)
-  (oz-inspect-region (point-min) (point-max)))
+;; (defun oz-inspect-buffer ()
+;;  "Feed the current buffer to the Oz Compiler.
+;; Assuming it to contain an expression, enclose it by an application
+;; of the procedure Inspect."
+;;   (interactive)
+;;  (oz-inspect-region (point-min) (point-max)))
 
-(defun oz-inspect-region (start end)
-  "Feed the current region to the Oz Compiler.
-Assuming it to contain an expression, enclose it by an application
-of the procedure Inspect."
-  (interactive "r")
-  (let ((contents (oz-get-region start end)))
-    (oz-send-string (concat "{Inspect\n" contents "}")))
-  (oz-zmacs-stuff))
+;; (defun oz-inspect-region (start end)
+;;   "Feed the current region to the Oz Compiler.
+;; Assuming it to contain an expression, enclose it by an application
+;; of the procedure Inspect."
+;;   (interactive "r")
+;;   (let ((contents (oz-get-region start end)))
+;;     (oz-send-string (concat "{Inspect\n" contents "}")))
+;;   (oz-zmacs-stuff))
 
-(defun oz-inspect-line (arg)
-  "Feed the current line to the Oz Compiler.
-Assuming it to contain an expression, enclose it by an application
-of the procedure Inspect.
-With ARG, feed that many lines.  If ARG is negative, feed that many
-preceding lines as well as the current line."
-  (interactive "p")
-  (let ((region (oz-line-region arg)))
-    (oz-inspect-region (car region) (cdr region))))
+;; (defun oz-inspect-line (arg)
+;;   "Feed the current line to the Oz Compiler.
+;; Assuming it to contain an expression, enclose it by an application
+;; of the procedure Inspect.
+;; With ARG, feed that many lines.  If ARG is negative, feed that many
+;; preceding lines as well as the current line."
+;;   (interactive "p")
+;;   (let ((region (oz-line-region arg)))
+;;     (oz-inspect-region (car region) (cdr region))))
 
-(defun oz-inspect-paragraph (arg)
-  "Feed the current paragraph to the Oz Compiler.
-Assuming it to contain an expression, enclose it by an application
-of the procedure Inspect.
-If the point is exactly between two paragraphs, feed the preceding
-paragraph.  With ARG, feed that many paragraphs.  If ARG is negative,
-feed that many preceding paragraphs as well as the current paragraph."
-  (interactive "p")
-  (let ((region (oz-paragraph-region arg)))
-    (oz-inspect-region (car region) (cdr region))))
+;; (defun oz-inspect-paragraph (arg)
+;;   "Feed the current paragraph to the Oz Compiler.
+;; Assuming it to contain an expression, enclose it by an application
+;; of the procedure Inspect.
+;; If the point is exactly between two paragraphs, feed the preceding
+;; paragraph.  With ARG, feed that many paragraphs.  If ARG is negative,
+;; feed that many preceding paragraphs as well as the current paragraph."
+;;   (interactive "p")
+;;   (let ((region (oz-paragraph-region arg)))
+;;     (oz-inspect-region (car region) (cdr region))))
 
 ;;}}}
 ;;{{{ Oz Debugger
