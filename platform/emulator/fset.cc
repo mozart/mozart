@@ -378,7 +378,7 @@ OZ_Boolean FSetValue::operator <= (const FSetValue &fs) const
 
   // all elements in `*this' must be in `fs'
   for (int i = fset_high; i--; ) {
-    if (_in[i] & fs._in[i] != _in[i])
+    if ((_in[i] & fs._in[i]) != _in[i])
       return FALSE;
   }
 
