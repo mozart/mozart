@@ -114,7 +114,7 @@ so they are not subject to this restriction.
 <section class=unnumbered><title/Procedures/
 
 <p>
-Procedures can have no more than 10000 arguments.
+Procedures can have no more than 4096 arguments.
 
 <section class=unnumbered><title/Finite Domains and Finite Sets/
 
