@@ -26,7 +26,9 @@
 #include <string.h>
 #include <io.h>
 #include <process.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 
 #include "startup.hh"
 
@@ -508,4 +510,5 @@ int main(int argc, char **argv)
     }
   }
   usage();
+  return 2;
 }
