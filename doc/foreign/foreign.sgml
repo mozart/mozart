@@ -1517,7 +1517,7 @@ documentation and in <Ptr to="section.extension.example"> an example.
   <Title/Reference/
 
     <SubSection id="section.extension.reference.class">
-<Title/The class <<Oz_Extension>>/
+<Title/The class <<OZ_Extension>>/
 
  <p>The class <<OZ_Extension>> implements the methods defined below.
  The methods <<getIdV>>, <<gCollectV>>, and <<sCloneV>> which are marked as
@@ -1536,12 +1536,12 @@ documentation and in <Ptr to="section.extension.example"> an example.
       <p>Ids can be statically assigned by extending the enumeration
       <<OZ_Registered_Extension_Id>>.
 
-  <ENTRY><<virtual Extension* gCollectV()>> // required
+  <ENTRY><<virtual OZ_Extension* gCollectV()>> // required
   <index class=tails/<<OZ_Extension>> <and> <<gCollectV>>/
 
 <ITEM>Needed for garbage collection.
 
-  <ENTRY><<virtual Extension* sCloneV()>> // required
+  <ENTRY><<virtual OZ_Extension* sCloneV()>> // required
   <index class=tails/<<OZ_Extension>> <and> <<sCloneV>>/
 
 <ITEM>Needed for cloning of computation spaces
