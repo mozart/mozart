@@ -12,7 +12,7 @@ SGMLSRCS0 = \
 
 SGMLSRCS = $(SGMLSRCS0:%=%.sgml)
 
-PICTURES = explorer-a explorer-b queen fdt
+PICTURES = explorer-a explorer-b queen fdt search-tree bridge gantt
 
 HTMLEXTRAFILES = $(PICTURES:%=pictures/%.gif)
 
