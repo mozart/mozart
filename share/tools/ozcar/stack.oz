@@ -97,7 +97,7 @@ local
 			   case {IsProcedure Data} then
 			      {System.printName Data}
 			   else
-			      {System.valueToVirtualString Data 0 0}
+			      {Value.toVirtualString Data 0 0}
 			   end
 			else
 			   {System.printName Data}

@@ -534,10 +534,10 @@ local
       [] getDefines(?Xs) then
 	 'get defines'
       [] getSwitch(SwitchName ?B) then
-	 'get switch '#{System.valueToVirtualString SwitchName 0 0}
+	 'get switch '#{Value.toVirtualString SwitchName 0 0}
       [] setSwitch(SwitchName B) then
-	 'set switch '#{System.valueToVirtualString SwitchName 0 0}#
-	 ' to '#{System.valueToVirtualString B 0 0}
+	 'set switch '#{Value.toVirtualString SwitchName 0 0}#
+	 ' to '#{Value.toVirtualString B 0 0}
       [] pushSwitches() then
 	 'push switches'
       [] popSwitches() then
@@ -545,7 +545,7 @@ local
       [] getMaxNumberOfErrors(?N) then
 	 'get maximal number of errors'
       [] setMaxNumberOfErrors(N) then
-	 'set maximal number of errors to '#{System.valueToVirtualString N 0 0}
+	 'set maximal number of errors to '#{Value.toVirtualString N 0 0}
       [] addToEnv(PrintName Value) then
 	 'add variable '#{PrintNameToVirtualString PrintName}#
 	 ' to environment'
@@ -572,7 +572,7 @@ local
       [] ping(?HereIAm) then
 	 'ping'
       else
-	 'unknown query ('#{System.valueToVirtualString {Label M} 0 0}#')'
+	 'unknown query ('#{Value.toVirtualString {Label M} 0 0}#')'
       end
    end
 

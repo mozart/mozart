@@ -27,7 +27,6 @@ import
 	    put)
 
    System(gcDo
-	  valueToVirtualString
 	  exit)
 
    Error(formatGeneric
