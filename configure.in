@@ -61,7 +61,12 @@ else
     AC_MSG_RESULT(no)
 fi
 
-: ${oz_subdirs="platform share $oz_enable_contrib $oz_enable_doc"}
+if test "$target" = "i386-mingw32"
+then
+    : ${oz_subdirs="platform $oz_enable_contrib"}
+else
+    : ${oz_subdirs="platform share $oz_enable_contrib $oz_enable_doc"}
+fi
 
 AC_MSG_CHECKING(for --enable-subdirs)
 AC_ARG_ENABLE(subdirs,
