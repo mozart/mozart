@@ -1954,6 +1954,7 @@ void TaskStack::gc(TaskStack *newstack)
 //                           NODEs
 //*********************************************************************
 
+
 void ConstTerm::gcConstRecurse()
 {
   setVarCopied;
@@ -1976,13 +1977,11 @@ void ConstTerm::gcConstRecurse()
     {
       Abstraction *a = (Abstraction *) this;
       a->gRegs = gcRefsArray(a->gRegs);
-
-      a->home = a->home->gcBoard();
-
-      Assert(a->home != (Board *) ToPointer(ALLBITS) &&
-	     a->home != NULL);
-
-      INTOSPACE(a->home);
+      a->gcTertiary();
+      if (a->isProxy()) {
+	ProcProxy *pp = (ProcProxy*) a;
+	gcTagged(pp->suspVar,pp->suspVar);
+      }
       break;
     }
     
@@ -1994,33 +1993,16 @@ void ConstTerm::gcConstRecurse()
       break;
     }
     
-  case Co_Port:   
-    switch(((Tertiary *)this)->getTertType()) {
-    case Te_Local:
-      {
-	PortLocal *pl= (PortLocal*)this;
-	pl->setBoard((pl->getBoard())->gcBoard());
-	gcTagged(pl->strm,pl->strm);
-	break;
+  case Co_Port:
+    {
+      Port *p = (Port*) p;
+      p->gcTertiary();
+      if (!p->isProxy()) {
+	PortWithStream *pws = (PortWithStream *) this;
+	gcTagged(pws->strm,pws->strm);
       }
-    case Te_Manager:
-      {
-	PortManager *pm= (PortManager*)this;
-	gcPortManager(pm);
-	gcTagged(pm->strm,pm->strm);
-	break;
-      }
-    case Te_Proxy:
-      {
-	PortProxy *pp = (PortProxy*) this;
-	gcPortProxy(pp);
-	break;
-      }
-    default:
-	Assert(0);
-	break;
+      break;
     }
-    break;
   case Co_Space:
     {
       Space *s = (Space *) this;
@@ -2113,11 +2095,13 @@ ConstTerm *ConstTerm::gcConstTerm()
   case Co_Actor:     return ((Actor *) this)->gcActor();
   case Co_HeapChunk: return ((HeapChunk *) this)->gc();
   case Co_Abstraction: 
-    CheckLocal((Abstraction *) this);
-    sz = sizeof(Abstraction);
-    COUNT(abstraction);
-    // DebugGCT(if (opMode == IN_GC) NOTINTOSPACE(bb));
-    break;
+    {
+      Abstraction *a = (Abstraction *) this;
+      CheckLocal(a);
+      sz = a->isProxy() ? sizeof(ProcProxy) : sizeof(Abstraction);
+      COUNT(abstraction);
+      break;
+    }
 
   case Co_Object: 
     {
