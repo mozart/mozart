@@ -142,30 +142,43 @@ src: $(PACKDIR)
 	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-src.tar.gz
 	rm -rf $(PACKDIR)/mozart
 
-doc: $(PACKDIR) $(PACKDIR)/mozart/doc
-	(cd $(PACKDIR); \
-	(cd $(PREFIX)/doc; \
-	 $(TAR) -cf - .) | (cd mozart/doc; $(TAR) -xf -); \
-	 $(TAR) -cf - mozart ) | \
+doc: $(PACKDIR) $(PACKDIR)/mozart
+	rm -f files.doc
+	$(MAKE) files.doc
+	rm -rf $(PACKDIR)/mozart
+	$(INSTALL_DIR) $(PACKDIR)/mozart
+	( (cd $(PREFIX); \
+	   $(TAR) -cf - -T $(BUILDTOP)/files.doc ) | \
+           (cd $(PACKDIR)/mozart; $(TAR) -xf - ) )
+	(cd $(PACKDIR); $(TAR) -cf - mozart ) | \
 	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-doc.tar.gz
 	rm -rf $(PACKDIR)/mozart
+	rm -f files.doc
 
 $(PLATFORMS): $(PACKDIR) $(PACKDIR)/mozart
-	(cd $(PACKDIR); \
-	 (cd $(PREFIX); \
-	  $(TAR) -cf - $(PLATFORMFILES) platform/$@ ) | \
-	 (cd mozart; $(TAR) -xf - ); \
-	 find mozart -name '*.so-*' \
-                     -not -name \*.so-$@ -exec rm -f '{}' ';' )
-	(cd $(PACKDIR); $(TAR) -cf - mozart/contrib ) | \
-	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-$@-contrib.tar.gz
-	rm -rf $(PACKDIR)/mozart/contrib
-	(cd $(PACKDIR); $(TAR) -cf - mozart ) | \
-	$(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-$@.tar.gz
+	rm -f files.base files.base-$@ files.contrib files.contrib-$@
+	$(MAKE) files.base files.base-$@ files.contrib files.contrib-$@
+	cat files.base files.base-$@ > files.base-all
+	cat files.contrib files.contrib-$@ > files.contrib-all
 	rm -rf $(PACKDIR)/mozart
+	$(INSTALL_DIR) $(PACKDIR)/mozart
+	( (cd $(PREFIX); \
+	   $(TAR) -cf - -T $(BUILDTOP)/files.base-all ) | \
+           (cd $(PACKDIR)/mozart; $(TAR) -xf - ) )
+	(cd $(PACKDIR); $(TAR) -cf - mozart ) | \
+	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-$@.tar.gz
+	rm -rf $(PACKDIR)/mozart
+	$(INSTALL_DIR) $(PACKDIR)/mozart
+	( (cd $(PREFIX); \
+	   $(TAR) -cf - -T $(BUILDTOP)/files.contrib-all ) | \
+           (cd $(PACKDIR)/mozart; $(TAR) -xf - ) )
+	(cd $(PACKDIR); $(TAR) -cf - mozart ) | \
+	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-$@-contrib.tar.gz
+	rm -rf $(PACKDIR)/mozart
+	rm -f files.base files.base-$@ files.contrib files.contrib-$@
+	rm -f files.base-all files.contrib-all
 
-
-$(PACKDIR) $(PACKDIR)/mozart $(PACKDIR)/mozart/doc:
+$(PACKDIR) $(PACKDIR)/mozart $(PACKDIR)/mozart:
 	$(INSTALL_DIR) $@
 
 win32-i486 oz-win oz3:
@@ -196,4 +209,50 @@ win32-i486 oz-win oz3:
         done
 	i386-mingw32-strip oz3/platform/win32-i486/*.exe
 	mv oz3/winbin oz3/bin
+
+
+files.base:
+	(cd $(PREFIX); \
+         find . \( -type f -or -type l \) -and \( \
+		-not -path './platform/*' -and \
+		-not -path './contrib/*' -and  \
+		-not -path './doc/*' -and  \
+		-not -path './examples/*' -and  \
+		-not -path './share/gump/examples/*' -and  \
+		-not -path './share/doc/*' -and  \
+		-not -path './bin/ozdoc' -and \
+		-not -path './bin/convertTextPickle' -and \
+		-not -name '*.so-*' \
+	\) ) > $@
+
+files.base-%:
+	(cd $(PREFIX); \
+         find . \( -type f -or -type l \) -and \
+		\( -path './platform/$*/*' -or \
+		   -path './share/*.so-$*' \) \
+	) > $@
+
+files.contrib:
+	(cd $(PREFIX); \
+	 find . \( -type f -or -type l \) -and \( \
+		\( -path './contrib/*' -and -not -name '*.so-*' \) -or \
+		-path './bin/ozdoc' -or \
+		-path './bin/convertTextPickle' -or \
+		-path './share/doc/*' \
+	\) ) > $@
+
+files.contrib-%:
+	(cd $(PREFIX); \
+	 find . \( -type f -or -type l \) -and \
+		-path './contrib/*' -and \
+		-name '*.so-$*' \
+	) > $@
+
+files.doc:
+	(cd $(PREFIX); \
+         find . \( -type f -or -type l \) -and \( \
+         	-path './doc/*' -or \
+         	-path './share/gump/examples/*' -or \
+         	-path './examples/*' \
+	\) ) > $@
 
