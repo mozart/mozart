@@ -179,9 +179,7 @@ public:
   TaggedRef getDebugStreamTail() { return debugStreamTail; }
 
   void debugStreamMessage(TaggedRef message) {
-    // mm2: maybe change this into an assertion
-    if (!onToplevel()) return;
-
+    Assert(onToplevel());
     TaggedRef newTail = OZ_newVariable();
     OZ_Return ret     = OZ_unify(debugStreamTail,cons(message,newTail));
     debugStreamTail   = newTail;
@@ -281,8 +279,8 @@ public:
   int isSetSFlag()                { return statusReg & ~DebugMode; }
 
   Bool debugmode() { return isSetSFlag(DebugMode); }
-  void checkDebug(Thread *tt) {
-    if (debugmode()) checkDebugOutline(tt);
+  void checkDebug(Thread *tt, Board *bb) {
+    if (debugmode() && isRootBoard(bb)) checkDebugOutline(tt);
   }
   void checkDebugOutline(Thread *tt);
 
