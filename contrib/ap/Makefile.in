@@ -11,21 +11,25 @@ INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
 INSTALL_LIB	= $(INSTALL) -m 444
 FUNCTORS	= OptionSheet.ozf
+NEWCACHEDIR	= $(PREFIX)/cache/x-oz/contrib/ap
+PLATFORM	= @PLATFORM@
 
 all:		$(FUNCTORS)
 %.ozf: %.oz
 	$(OZC) -z 9 -c $< -o $@
-install:	$(LIB_DIR) $(addprefix $(LIB_DIR)/,$(FUNCTORS))
-$(LIB_DIR):
+install: $(NEWCACHEDIR) $(addprefix $(NEWCACHEDIR)/,$(FUNCTORS))
+$(LIB_DIR) $(NEWCACHEDIR):
 	$(INSTALL_DIR) $@
 $(LIB_DIR)/%.ozf: %.ozf
 	$(INSTALL_LIB) $< $@
+$(NEWCACHEDIR)/% : %
+	$(INSTALL_LIB) $< $@
 
 clean veryclean:
-	-rm *~ *.ozf
+	-rm -f *~ *.ozf
 
 distclean: veryclean
-	-rm Makefile config.*
+	-rm -f Makefile config.*
 
 include $(SRCTOP)/share/Makefile.boot
 
