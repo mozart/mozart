@@ -150,7 +150,7 @@ Name: mozart
 Version: ${VERSION}
 Release: ${BUILD}
 Summary: Mozart, an efficient and distributed implementation of Oz
-Copyright: BSD (similar)
+Copyright: Free
 Vendor: Mozart Consortium
 Url: http://www.mozart-oz.org/
 Group: Development/Languages
