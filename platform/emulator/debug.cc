@@ -71,6 +71,16 @@ OZ_C_proc_begin(BIspy, 1)
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(BIdisplayCode, 2)
+{
+  OZ_declareIntArg("displayCode",0,pc);
+  OZ_declareIntArg("displayCode",1,size);
+  displayCode((ProgramCounter)ToPointer(pc),size);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
 OZ_C_proc_begin(BInospy, 1)
 {
   NONVAR(OZ_getCArg(0),predd,predTag);

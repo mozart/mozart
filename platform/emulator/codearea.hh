@@ -298,4 +298,6 @@ inline ProgramCounter getLabelArg(ProgramCounter PC)
 }
 
 
+void displayCode(ProgramCounter from, int ssize);
+
 #endif
