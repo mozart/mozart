@@ -21,7 +21,7 @@ SGMLSRCS = \
 	api.sgml engines.sgml interfaces.sgml \
 	switches.sgml narrator.sgml
 OZSRCS = \
-	QuietInterface.oz EmacsInterface.oz CompilerPanel.oz
+	QuietInterface.oz CompilerPanel.oz
 
 .PHONY: all validate install clean veryclean distclean
 
