@@ -720,9 +720,11 @@ int rawread(int fd, void *buf, int sz)
   if (fd==STDIN_FILENO)
     fd = wrappedStdin;
 
-  if (isSocket(fd))
-    return recv(fd,((char*)buf),sz,0);
-  
+  if (isSocket(fd)) {
+    int res = recv(fd,((char*)buf),sz,0);
+    if (res < 0 && WSAGetLastError() == WSAECONNRESET) return 0;
+    return res;
+  }
   return read(fd,buf,sz);
 }
 
@@ -2048,16 +2050,27 @@ static DWORD __stdcall readerThread(void *p)
   while(1) {
     DWORD count;
     if (ReadFile(in,buf,bufSz,&count,0)==FALSE) {
-      //message("ReadFile(%d) failed: %d\n",in,GetLastError());
+      if (GetLastError() != ERROR_BROKEN_PIPE) {
+	LPVOID lpMsgBuf;
+	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+		      FORMAT_MESSAGE_FROM_SYSTEM |
+		      FORMAT_MESSAGE_IGNORE_INSERTS,
+		      NULL, GetLastError(),
+		      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		      (LPTSTR) &lpMsgBuf, 0, NULL);
+	message("ReadFile(%d) failed: %s\n",in,GetLastError(),
+		(LPTSTR)lpMsgBuf);
+	LocalFree(lpMsgBuf);
+      }
       break;
     }
     if (count==0)
       break;
     int totalSent = 0;
   loop:
-    int sent= send(out,&buf[totalSent],count,0);
+    int sent = send(out,&buf[totalSent],count,0);
     if (sent<0) {
-      // message("send failed: %d\n",WSAGetLastError());
+      message("send failed: %d\n",WSAGetLastError());
       break;
     }
     count -= sent;
@@ -2067,8 +2080,7 @@ static DWORD __stdcall readerThread(void *p)
   }
   CloseHandle(in);
   osclose(out);
-  ExitThread(1);
-  return 1;
+  return 0;
 }
 
 
@@ -2083,7 +2095,8 @@ static DWORD __stdcall writerThread(void *p)
   while(1) {
     int got = recv(in,buf,bufSz,0);
     if (got<0) {
-      //message("recv(%d) failed: %d\n",in,WSAGetLastError());
+      if (WSAGetLastError() != WSAECONNABORTED)
+	message("recv(%d) failed: %d\n",in,WSAGetLastError());
       break;
     }
     if (got==0)
@@ -2092,7 +2105,7 @@ static DWORD __stdcall writerThread(void *p)
   loop:
     DWORD count;
     if (WriteFile(out,&buf[totalWritten],got,&count,0)==FALSE) {
-      //message("WriteFile(%d) failed: %d\n",out,GetLastError());
+      message("WriteFile(%d) failed: %d\n",out,GetLastError());
       break;
     }
     got -= count;
@@ -2101,9 +2114,8 @@ static DWORD __stdcall writerThread(void *p)
       goto loop;
   }
   CloseHandle(out);
-  osclose(in);
-  ExitThread(1);
-  return 1;
+  //osclose(in);
+  return 0;
 }
 
 
