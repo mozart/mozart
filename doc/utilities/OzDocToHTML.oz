@@ -1047,6 +1047,38 @@ define
 		       PCDATA('>'))
 	       end
 	    %-----------------------------------------------------------
+	    % Literate Programming
+	    %-----------------------------------------------------------
+	    [] chunk then
+	       Title = OzDocToHTML,Batch(M.1 1 $)
+	       Left  = span(COMMON  : @Common
+			    'class' : [chunkborder]
+			    VERBATIM('&lt;'))
+	       Right = span(COMMON  : @Common
+			    'class' : [chunkborder]
+			    VERBATIM('&gt;='))
+	       TITLE = span(COMMON  : @Common
+			    'class' : [chunktitle]
+			    SEQ([Left Title Right]))
+	       Body  = OzDocToHTML, BatchCode(M.2 1 $)
+	       CHUNK = dl(COMMON:@Common
+			  dt(COMMON:@Common TITLE)
+			  dd(COMMON:@Common 'class':[code] Body))
+	    in
+	       BLOCK(CHUNK)
+	    [] 'chunk.ref' then
+	       Title = OzDocToHTML,Batch(M 1 $)
+	       Left  = span(COMMON  : @Common
+			    'class' : [chunkborder]
+			    VERBATIM('&lt;'))
+	       Right = span(COMMON  : @Common
+			    'class' : [chunkborder]
+			    VERBATIM('&gt;'))
+	    in
+	       span(COMMON : @Common
+		    'class' : [chunktitle]
+		    SEQ([Left Title Right]))
+	    %-----------------------------------------------------------
 	    % Cross References
 	    %-----------------------------------------------------------
 	    [] ref then Node in
