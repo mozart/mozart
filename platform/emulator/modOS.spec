@@ -201,9 +201,4 @@
                              out => ['+int'],
                              BI  => unix_getpid },
 
-    'getPPID'           => { in  => [],
-                             out => ['+int'],
-                             BI  => unix_getppid },
-
-
  );
