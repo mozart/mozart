@@ -20,9 +20,7 @@
 
 #include "fdprofil.hh"
 
-#include "tagged.hh"
-#include "value.hh"
-#include "board.hh"
+#include "am.hh"
 
 char * ProfileData::print_msg1[no_high1] = {
   "Number of propagators                 ",

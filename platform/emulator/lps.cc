@@ -150,17 +150,11 @@ Bool LocalPropagationStore::propagate_locally () {
             buf << * thr->getNewPropagator() << '\0';
             message("Propagator %s failed\n", buf.str());
           } else {
-            message("Propagator %s failed\n",
+            message("Propagator %s failed.\n",
                     builtinTab.getName((void *)(c->getCFunc())));
-            if (ozconf.errorVerbosity > 1) {
-              message ("\n");
-              for (int i=0; i < getRefsArraySize(args); i++) {
-                message("Argument %d = %s\n",i,args[i]);
-              }
-            }
+            errorTrailer ();
+            allowTopLevelFailureMsg = FALSE;
           }
-          errorTrailer ();
-          allowTopLevelFailureMsg = FALSE;
         }
       }
       am.currentThread->closeDonePropagator ();
