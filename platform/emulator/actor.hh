@@ -56,7 +56,7 @@ public:
   OZPRINTLONG;
 
   int getPriority() { return (priority); }
-  inline Board *getBoardFast();
+  inline Board *getBoard();
   inline Board *getBoardAndTest();
   Bool isCommitted() { return flags & Ac_Committed; }
   Bool isAsk() { return ((flags & Ac_Ask) ? OK : NO); }

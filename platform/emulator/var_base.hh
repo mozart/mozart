@@ -46,18 +46,18 @@ public:
   Board *getHome1() { return home; }
   Board *getHomeUpdate() {
     if (home->isCommitted()) {
-      home=home->getBoardFast();
+      home=home->derefBoard();
     }
     return home;
   }
-  Board *getBoardFast() { return home->getBoardFast (); }
+  Board *getBoard() { return home->derefBoard(); }
   SuspList *getSuspList() { return suspList; }
   void setSuspList(SuspList *inSuspList) { suspList = inSuspList; }
   void unlinkSuspList() { suspList = NULL; }
 
   void addSuspension (Thread *thr)
   {
-    thr->updateExtThread(getBoardFast());
+    thr->updateExtThread(getBoard());
 
     suspList = new SuspList(thr, suspList);
   }

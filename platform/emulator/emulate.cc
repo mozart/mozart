@@ -158,7 +158,7 @@ enum ExceptionTypes {
 #define HF_FAIL(R)                                              \
    {                                                            \
      if (!e->isToplevel()) {                                    \
-       if (!CTT->hasCatchFlag() || CBB!=CTT->getBoardFast()) {  \
+       if (!CTT->hasCatchFlag() || CBB!=CTT->getBoard()) {      \
          goto LBLfailure;                                       \
        } else {                                                 \
          exceptionType=E_DEEP_FAILURE;                          \
@@ -733,7 +733,7 @@ void AM::checkEntailment()
       // don't unlink the subtree from the computation tree;
       trail.popMark();
       currentBoard->unsetInstalled();
-      setCurrent(currentBoard->getParentFast());
+      setCurrent(currentBoard->getParent());
       // don't decrement counter of parent board!
 
       if (!fastUnifyOutline(solveAA->getResult(),
@@ -750,7 +750,7 @@ void AM::checkEntailment()
       // don't unlink the subtree from the computation tree;
       trail.popMark();
       currentBoard->unsetInstalled();
-      setCurrent (currentBoard->getParentFast());
+      setCurrent (currentBoard->getParent());
 
       // don't decrement counter of parent board!
 
@@ -782,7 +782,7 @@ void AM::checkEntailment()
     // give back number of clauses
     trail.popMark();
     currentBoard->unsetInstalled();
-    setCurrent(currentBoard->getParentFast());
+    setCurrent(currentBoard->getParent());
 
     // don't decrement counter of parent board!
 
@@ -848,7 +848,6 @@ void engine()
 
   Bool isTailCall              = NO;                NoReg(isTailCall);
   AWActor *CAA                 = NULL;
-  Board *tmpBB                 = NULL;              NoReg(tmpBB);
   DebugCheckT(Board *currentDebugBoard=0);
 
   RefsArray HelpReg1 = NULL, HelpReg2 = NULL;
@@ -904,7 +903,7 @@ void engine()
  LBLpreemption:
 
   SaveSelf(e,NULL,NO);
-  Assert(CTT->getBoardFast()==CBB);
+  Assert(CTT->getBoard()==CBB);
   e->scheduleThreadInline(CTT, CPP);
   CTT=0;
 
@@ -976,7 +975,7 @@ LBLinstallThread:
     //
     //  First, get the home board of that propagator,
     // and try to install it;
-    tmpBB = CTT->getBoardFast ();
+    Board *tmpBB = CTT->getBoard();
     DebugTrace (trace ("propagator thread", tmpBB));
 
     //
@@ -1068,7 +1067,7 @@ LBLinstallThread:
     /*
      * install board
      */
-    Board *bb=CTT->getBoardFast();
+    Board *bb=CTT->getBoard();
 
     if (CBB != bb) {
       switch (e->installPath(bb)) {
@@ -1469,7 +1468,7 @@ LBLkillThread:
     Assert (tmpThread->isPropagator () || tmpThread->isEmpty ());
     //  Note that during debugging the thread does not carry
     // the board pointer (== NULL) wenn it's running;
-    // Assert (CBB == tmpThread->getBoardFast ());
+    // Assert (CBB == tmpThread->getBoard());
     Assert (CBB != (Board *) NULL);
     Assert (!(CBB->isFailed ()));
     //
@@ -1521,7 +1520,7 @@ LBLkillThread:
         sa = SolveActor::Cast (CBB->getActor ());
         //  'nb' points to some board above the current one,
         // so, 'decSolveThreads' will start there!
-        nb = sa->getBoardFast ();
+        nb = sa->getBoard();
 
         //
         //  kost@ : optimize the most probable case!
@@ -1543,7 +1542,7 @@ LBLkillThread:
     e->checkEntailment();
     //
     //  deref nb, because it maybe just committed!
-    if (nb) e->decSolveThreads (nb->getBoardFast ());
+    if (nb) e->decSolveThreads (nb->derefBoard());
     goto LBLstart;
   }
 
@@ -1577,7 +1576,7 @@ LBLdiscardThread:
     //  Note that we may not use the 'currentSolveBoard' test here,
     // because it may point to an irrelevant board!
     if (tmpThread->isInSolve ()) {
-      Board *tmpBB = tmpThread->getBoardFast ();
+      Board *tmpBB = tmpThread->getBoard();
 
       if (tmpBB->isSolve ()) {
         //
@@ -1586,7 +1585,7 @@ LBLdiscardThread:
         Assert (sa);
         Assert (sa->getSolveBoard () == tmpBB);
 
-        e->decSolveThreads (sa->getBoardFast ());
+        e->decSolveThreads (sa->getBoard());
       } else {
         e->decSolveThreads (tmpBB);
       }
@@ -1631,7 +1630,7 @@ LBLsuspendThread:
     //
     //  First, set the board and self, and perform special action for
     // the case of blocking the root thread;
-    Assert(CTT->getBoardFast()==CBB);
+    Assert(CTT->getBoard()==CBB);
     SaveSelf(e,NULL,NO);
 
 #ifdef DEBUG_CHECK
@@ -1664,7 +1663,7 @@ LBLsuspendThread:
         sa = SolveActor::Cast (CBB->getActor ());
         //  'nb' points to some board above the current one,
         // so, 'decSolveThreads' will start there!
-        nb = sa->getBoardFast ();
+        nb = sa->getBoard();
 
         //
         //  kost@ : optimize the most probable case!
@@ -1681,7 +1680,7 @@ LBLsuspendThread:
     DebugCode (CTT = (Thread *) NULL);
     e->checkEntailment();
     //
-    if (nb) e->decSolveThreads (nb->getBoardFast ());
+    if (nb) e->decSolveThreads (nb->derefBoard());
     goto LBLstart;
   }
 
@@ -2306,7 +2305,7 @@ LBLdispatcher:
       }
 
       if (!e->isToplevel()) {
-        if (am.currentBoard != obj->getBoardFast()) {
+        if (am.currentBoard != obj->getBoard()) {
           DORAISE(OZ_atom("attempt to lock object in guard"));
         }
       }
@@ -2718,7 +2717,8 @@ LBLdispatcher:
 
    LBLraise:
      {
-       DebugCheck(ozconf.stopOnToplevelFailure, tracerOn();trace("raise"));
+       DebugCheck(ozconf.stopOnToplevelFailure,
+                  DebugTrace(tracerOn();trace("raise")));
 
        Assert(CTT && !CTT->isPropagator());
 
@@ -2796,9 +2796,9 @@ LBLdispatcher:
 
         e->trail.popMark();
 
-        tmpBB = CBB;
+        Board *tmpBB = CBB;
 
-        e->setCurrent(CBB->getParentFast());
+        e->setCurrent(CBB->getParent());
         DebugCheckT(currentDebugBoard=CBB);
         tmpBB->unsetInstalled();
         tmpBB->setCommitted(CBB);
@@ -2824,8 +2824,8 @@ LBLdispatcher:
           CTT->pop();
         }
         e->trail.popMark();
-        tmpBB = CBB;
-        e->setCurrent(CBB->getParentFast());
+        Board *tmpBB = CBB;
+        e->setCurrent(CBB->getParent());
         DebugCheckT(currentDebugBoard=CBB);
         tmpBB->unsetInstalled();
         tmpBB->setCommitted(CBB);
@@ -3142,7 +3142,7 @@ LBLdispatcher:
 
   e->reduceTrailOnFail();
   CBB->unsetInstalled();
-  e->setCurrent(aa->getBoardFast());
+  e->setCurrent(aa->getBoard());
   DebugCheckT(currentDebugBoard=CBB);
 
 
@@ -3174,7 +3174,7 @@ LBLdispatcher:
 
       //  The following must hold because 'tt' can suspend
       // only in the board where the actor itself is located;
-      Assert(tt->getBoardFast () == CBB);
+      Assert(tt->getBoard() == CBB);
 
       tt->suspThreadToRunnable();
 

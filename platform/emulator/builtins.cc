@@ -267,7 +267,7 @@ OZ_Return BIifun(TaggedRef val1, TaggedRef val2, TaggedRef &out)        \
 DECLAREBI_USEINLINEFUN2(BIfun,BIifun)
 
 #define CheckLocalBoard(Object,Where);                  \
-  if (am.currentBoard != Object->getBoardFast()) {      \
+  if (am.currentBoard != Object->getBoard()) {  \
     am.currentBoard->incSuspCount();                    \
     return OZ_raiseC("globalState",1,OZ_atom(Where));           \
   }
@@ -1380,7 +1380,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
         return PROCEED;
       }
 
-      if (am.currentBoard == ofsvar->getBoardFast()) {
+      if (am.currentBoard == ofsvar->getBoard()) {
         TaggedRef uvar=makeTaggedRef(newTaggedUVar(am.currentBoard));
         Bool ok=ofsvar->addFeatureValue(fea,uvar);
         Assert(ok);
@@ -1458,7 +1458,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
             // Feature does not yet exist
             // Add feature by (1) creating new ofsvar with one feature,
             // (2) unifying the new ofsvar with the old.
-            if (am.currentBoard == ofsvar->getBoardFast()) {
+            if (am.currentBoard == ofsvar->getBoard()) {
                 // Optimization:
                 // If current board is same as ofsvar board then can add feature directly
                 TaggedRef uvar=makeTaggedRef(newTaggedUVar(am.currentBoard));
@@ -1670,7 +1670,7 @@ OZ_C_proc_begin(BIaskVerboseSpace, 2) {
 OZ_C_proc_begin(BImergeSpace, 2) {
   declareUnmergedSpace();
 
-  if (am.isBelow(am.currentBoard,space->getSolveBoard()->getBoardFast()))
+  if (am.isBelow(am.currentBoard,space->getSolveBoard()->derefBoard()))
     return OZ_raiseC("spaceSuper",1,tagged_space);
 
   if (space->isFailed())
@@ -1764,11 +1764,11 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
     TypeErrorT(1, "Integer or pair of integers");
   }
 
-  if (am.currentBoard != space->getSolveBoard()->getParentFast())
+  if (am.currentBoard != space->getSolveBoard()->getParent())
     return OZ_raiseC("spaceParent",1,tagged_space);
 
   space->getSolveActor()->unsetGround();
-  space->getSolveActor()->clearResult(space->getBoardFast());
+  space->getSolveActor()->clearResult(space->getBoard());
 
   RefsArray args = allocateRefsArray(2, NO);
   args[0] = left;
@@ -1792,7 +1792,7 @@ OZ_C_proc_begin(BIinjectSpace, 2) {
   if (space->isFailed())
     return PROCEED;
 
-  if (am.currentBoard != space->getSolveBoard()->getParentFast())
+  if (am.currentBoard != space->getSolveBoard()->getParent())
     return OZ_raiseC("spaceParent", 1, tagged_space);
 
   OZ_Term proc = OZ_getCArg(1);
@@ -1810,7 +1810,7 @@ OZ_C_proc_begin(BIinjectSpace, 2) {
 
   // clear status
   sa->unsetGround();
-  sa->clearResult(space->getBoardFast());
+  sa->clearResult(space->getBoard());
 
   // inject
   sa->inject(sa->getPriority(), proc);
@@ -2834,7 +2834,7 @@ OZ_C_proc_begin(BIthreadTerminate,1)
     return BI_TERMINATE;
   }
 
-  if (isLocal) th->getBoardFast()->setFailed();
+  if (isLocal) th->getBoard()->setFailed();
   if (!th->isRunnable()) {
     am.scheduleThread(th);
   }
@@ -5562,7 +5562,7 @@ OZ_C_proc_begin(BIdeepFeed,2)
   Cell *cell1 = tagged2Cell(rec);
 
   Board *savedNode = am.currentBoard;
-  Board *home1 = cell1->getBoardFast();
+  Board *home1 = cell1->getBoard();
 
   switch (am.installPath(home1)) {
   case INST_FAILED:
@@ -6004,7 +6004,7 @@ TaggedRef SuspList::DBGmakeList() {
   }
 
   Thread *t = getElem();
-  Board *b = t->getBoardFast ();
+  Board *b = t->getBoard();
   return cons(makeTaggedConst(b),getNext()->DBGmakeList());
 }
 
@@ -6471,7 +6471,6 @@ OZ_C_proc_begin(BIhalt,0)
   return PROCEED;
 }
 OZ_C_proc_end
-
 
 // ---------------------------------------------------------------------------
 // Debugging: special builtins for Benni
@@ -7388,8 +7387,6 @@ BIspec allSpec2[] = {
   {"suspensions",2,BIsuspensions},
   {"globals",2,BIglobals},
 
-  {"halt",0,BIhalt},
-
   // Debugging
   {"globalThreadStream",1,BIglobalThreadStream},
   {"currentThread",1,BIcurrentThread},
@@ -7427,6 +7424,9 @@ BIspec allSpec2[] = {
 
   {"printLong",1,BIprintLong},
 
+  {"halt",0,BIhalt},
+  {"traceBack",0,BItraceBack},
+
   {"taskstack",   2, BItaskStack},
   {"getThreadByID",2,BIgetThreadByID},
   {"spy",         1, BIspy},
@@ -7436,7 +7436,6 @@ BIspec allSpec2[] = {
   {"displayCode", 2, BIdisplayCode},
 
   {"System_getPrintName",2,BIgetPrintName},
-  {"traceBack",0,BItraceBack},
 
   {"ozparser_parse",2,ozparser_parse},
   {"ozparser_init",0,ozparser_init},

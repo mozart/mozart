@@ -163,7 +163,7 @@ loop:
   if (bb->isRoot()) return OK;
   Actor *aa=bb->getActor();
   if (aa->isCommitted()) return NO;
-  bb=aa->getBoardFast();
+  bb=aa->getBoard();
   goto loop;
 }
 #endif
@@ -172,7 +172,7 @@ Board * Board::getHighestSolveDebug(void)
 {
   Board * r = NULL;
 
-  for (Board * c = this; !c->isRoot(); c = c->getParentFast())
+  for (Board * c = this; !c->isRoot(); c = c->getParent())
     if (c->isSolve())
       r = c;
 

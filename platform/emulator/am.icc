@@ -97,7 +97,7 @@ void AM::deinstallCurrent()
 {
   reduceTrailOnSuspend();
   currentBoard->unsetInstalled();
-  setCurrent(currentBoard->getParentFast());
+  setCurrent(currentBoard->getParent());
 }
 
 inline
@@ -159,7 +159,7 @@ Bool AM::isLocalUVar(TaggedRef var)
   // variables are usually bound
   // in the node where they are created
   if (var == currentUVarPrototype) return OK;
-  return tagged2VarHome(var)->getBoardFast()==currentBoard;
+  return tagged2VarHome(var)->derefBoard()==currentBoard;
 }
 
 
@@ -265,26 +265,26 @@ void AM::addSuspendVarList(TaggedRef * t)
  */
 
 inline
-Board *Literal::getBoardFast()
+Board *Literal::getBoard()
 {
-  return home->getBoardFast();
+  return home->derefBoard();
 }
 
 inline
-Board *Object::getBoardFast()
+Board *Object::getBoard()
 {
-  return isDeep() ? ((DeepObject*)this)->home->getBoardFast() : am.rootBoard;
+  return isDeep() ? ((DeepObject*)this)->home->derefBoard() : am.rootBoard;
 }
 
 inline
-Board *SChunk::getBoardFast()
+Board *SChunk::getBoard()
 {
-  return ((Board *) getPtr())->getBoardFast();
+  return ((Board *) getPtr())->derefBoard();
 }
 
 inline
-Board *ConstTermWithHome::getBoardFast() {
-  return home->getBoardFast();
+Board *ConstTermWithHome::getBoard() {
+  return home->derefBoard();
 }
 
 
@@ -326,7 +326,7 @@ Thread *AM::mkRunnableThread(int prio, Board *bb, TaggedRef val,
   th->setBody(allocateBody());
 
   Assert(bb==currentBoard ||
-         bb->getParentFast() == currentBoard ||
+         bb->getParent() == currentBoard ||
          inSolve);
   if (currentSolveBoard != (Board *) NULL || inSolve) {
     Assert (isInSolveDebug (bb));
@@ -376,7 +376,7 @@ inline
 int AM::commit(Board *bb, Thread *tt=0)
 {
   Assert(!currentBoard->isCommitted());
-  Assert(bb->getParentFast()==currentBoard);
+  Assert(bb->getParent()==currentBoard);
 
   AWActor *aw = AWActor::Cast(bb->getActor());
 

@@ -30,7 +30,7 @@ SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * hoome)
   }
 #endif
 
-  (elem->getElem ())->updateExtThread (hoome->getBoardFast());
+  (elem->getElem ())->updateExtThread (hoome->derefBoard());
   elem->setNext(list);
   return elem;
 }
@@ -49,7 +49,7 @@ SuspList * addSuspToList(SuspList * list, Thread * elem, Board * hoome)
   }
 #endif
 
-  elem->updateExtThread(hoome->getBoardFast());
+  elem->updateExtThread(hoome->derefBoard());
   return sl_elem;
 }
 
@@ -69,7 +69,7 @@ void printBC(ostream &ofile, Board * b)
   while (sl != NULL) {
     Thread *thr = sl->getElem ();
     if (thr->isDeadThread () ||
-        (hb = thr->getBoardFast ()) == NULL ||
+        (hb = thr->getBoard()) == NULL ||
         hb->isFailed ()) {
       sl = sl->dispose ();
       continue;

@@ -131,11 +131,11 @@ Bool WaitActor::isAliveUpToSolve(void) {
   if (isCommitted())
     return NO;
 
-  Board *bb = this->getBoardFast();
+  Board *bb = this->getBoard();
   Actor *aa;
 
 loop:
-  // must be applied to a result of 'getBoardFast ()';
+  // must be applied to a result of 'getBoard()';
   Assert (!(bb->isCommitted ()));
 
   if (bb->isFailed())
@@ -147,7 +147,7 @@ loop:
   if (aa->isCommitted())
     return NO;
 
-  bb = aa->getBoardFast();
+  bb = aa->getBoard();
 
   goto loop;
   // should never come here

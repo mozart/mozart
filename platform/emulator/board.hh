@@ -108,9 +108,9 @@ public:
 
   inline void incSuspCount(int n=1);
   void decSuspCount();
-  inline Board *getBoardFast();
+  inline Board *derefBoard();
   Board *getParentAndTest();
-  Board *getParentFast();
+  Board *getParent();
 
   Actor *getActor();
 //  Board *getRef() { return u.ref; }

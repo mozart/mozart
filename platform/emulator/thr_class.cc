@@ -57,7 +57,7 @@ void Thread::setExtThreadOutlined (Board *varHome)
       sa->addSuspension (this);
       wasFound = OK;
     }
-    bb = bb->getParentFast ();
+    bb = bb->getParent();
   }
 
   if (wasFound) {
@@ -80,7 +80,7 @@ void Thread::checkExtThreadOutlined ()
 {
   Assert (wasExtThread ());
 
-  Board *sb = (getBoardFast ())->getSolveBoard ();
+  Board *sb = (getBoard())->getSolveBoard ();
   AM *e = &am;
 
   while (sb) {
@@ -90,7 +90,7 @@ void Thread::checkExtThreadOutlined ()
     if (e->isStableSolve (sa)) {
       e->scheduleThread (e->mkRunnableThread (sa->getPriority (),sb,0));
     }
-    sb = (sa->getBoardFast ())->getSolveBoard ();
+    sb = (sa->getBoard())->getSolveBoard ();
   }
 }
 
@@ -99,7 +99,7 @@ void Thread::removeExtThreadOutlined ()
 {
   Assert (wasExtThread ());
 
-  Board *sb = (getBoardFast ())->getSolveBoard ();
+  Board *sb = (getBoard())->getSolveBoard ();
   AM *e = &am;
 
   while (sb) {
@@ -107,7 +107,7 @@ void Thread::removeExtThreadOutlined ()
 
     SolveActor *sa = SolveActor::Cast (sb->getActor ());
     sa->clearSuspList(this);
-    sb = (sa->getBoardFast ())->getSolveBoard ();
+    sb = (sa->getBoard())->getSolveBoard ();
   }
 }
 
@@ -118,12 +118,12 @@ Bool Thread::isBelowFailed (Board *top)
 {
   Assert (isRunnable ());
 
-  Board *bb=getBoardFast();
+  Board *bb=getBoard();
   while (bb!=top) {
     if (bb->isFailed()) {
       return TRUE;
     }
-    bb=bb->getParentFast();
+    bb=bb->getParent();
   }
   return FALSE;
 }
