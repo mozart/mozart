@@ -142,7 +142,7 @@ OZ_Return CPIteratePropagator::run(void)
   int mSi;
 
   constraints = initConstraints;
-  int * constraintsExtension;
+  int * constraintsExtension = NULL;
 
   int constraintLimit = INITIALSIZE;
 
@@ -935,7 +935,7 @@ OZ_Return CPIteratePropagatorCap::run(void)
   int mSi;
 
   constraints = initConstraints;
-  int * constraintsExtension;
+  int * constraintsExtension = NULL;
 
   int constraintLimit = INITIALSIZE;
 
