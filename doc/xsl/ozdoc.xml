@@ -4,6 +4,7 @@
   xmlns:tex="http://www.jclark.com/xt/java/TeX"
   xmlns:id="http://www.jclark.com/xt/java/ID"
   xmlns:msg="http://www.jclark.com/xt/java/Msg"
+  xmlns:meta="http://www.jclark.com/xt/java/Meta"
   xmlns="java:com.jclark.xsl.sax.NXMLOutputHandler"
   result-ns=""
 >
@@ -17,8 +18,15 @@
 </xsl:for-each>
 </xsl:template>
 
+<xsl:template name="makeMeta">
+ <xsl:for-each select="/BOOK/FRONT/META[@NAME='LATEX.TABLE.SPEC']">
+  <xsl:if test="meta:latexTableSpecPut((string(@ARG1)),(string(@ARG2)))"/>
+ </xsl:for-each>
+</xsl:template>
+
 <xsl:template match="/">
 <xsl:call-template name="makeID"/>
+<xsl:call-template name="makeMeta"/>
 <xsl:apply-templates/>
 </xsl:template>
 
@@ -28,6 +36,7 @@
 <xsl:text>\documentclass{book}
 \lefthyphenmin=2
 \righthyphenmin=2
+\usepackage{verbatim}
 </xsl:text>
 <xsl:for-each select="FRONT/META[@NAME='LATEX.PACKAGE']">
 \usepackage{<xsl:value-of select="@VALUE"/>}
@@ -47,6 +56,12 @@
 \hfill\hbox{}\begin{alltt}}
   {\end{alltt}\end{list}}
 \newcommand{\GRAMMARNOTE}[1]{\textsl{\% #1}}
+\newenvironment{CODEDISPLAY}
+  {\begin{list}{}{\leftmargin=1cm}\item[]\begin{alltt}}
+  {\end{alltt}\end{list}}
+\newcommand{\CODEEXTERN}[1]{%
+  \begin{list}{}{\leftmargin=1cm}\item[]\verbatiminput{#1}\end{list}}
+\newcommand{\APPENDIX}{\appendix\let\APPENDIX\chapter\chapter}
 \title{</xsl:text>
 <xsl:apply-templates select="FRONT/TITLE"/>
 <xsl:text>}
@@ -102,6 +117,12 @@
 <xsl:template match="CHAPTER">
 <xsl:call-template name="seccmd">
   <xsl:param name="seccmd">chapter</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
+<xsl:template match="APPENDIX">
+<xsl:call-template name="seccmd">
+  <xsl:param name="seccmd">APPENDIX</xsl:param>
 </xsl:call-template>
 </xsl:template>
 
@@ -234,14 +255,20 @@
 <xsl:text>}</xsl:text>
 </xsl:template>
 
+<xsl:template match="CODE.EXTERN[@DISPLAY='DISPLAY']">
+ <xsl:text>\CODEEXTERN{</xsl:text>
+ <xsl:value-of select="@TO"/>
+ <xsl:text>}</xsl:text>
+</xsl:template>
+
 <xsl:template match="SYNOPSIS/P.SILENT/CODE[@DISPLAY='DISPLAY']" priority="2.0">
 \begin{alltt}<xsl:apply-templates/>\end{alltt}
 </xsl:template>
 
 <xsl:template match="CODE[@DISPLAY='DISPLAY']">
-<xsl:text>\begin{list}{}{\leftmargin=1cm}\item[]\begin{alltt}</xsl:text>
+<xsl:text>\begin{CODEDISPLAY}</xsl:text>
 <xsl:apply-templates/>
-<xsl:text>\end{alltt}\end{list}</xsl:text>
+<xsl:text>\end{CODEDISPLAY}</xsl:text>
 </xsl:template>
 
 <xsl:template match="VAR">
@@ -359,6 +386,12 @@
 </xsl:call-template>
 </xsl:template>
 
+<xsl:template mode="ref" match="APPENDIX">
+<xsl:call-template name="secref">
+  <xsl:param name="label">Appendix</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
 <xsl:template mode="ref" match="SECTION|SUBSECTION|SUBSUBSECTION">
 <xsl:call-template name="secref">
   <xsl:param name="label">Section</xsl:param>
@@ -404,6 +437,33 @@
     <xsl:when test="$to='ozdoc:notation'">
      <xsl:text>The Oz Notation</xsl:text>
     </xsl:when>
+    <xsl:when test="$to='ozdoc:base'">
+     <xsl:text>The Oz Base Environment</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:browser'">
+     <xsl:text>The Oz Browser</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:explorer'">
+     <xsl:text>Oz Explorer - Visual Constraint Programming Support</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:panel'">
+     <xsl:text>Oz Panel</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:ozcar'">
+     <xsl:text>The Mozart Debugger</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:profiler'">
+     <xsl:text>The Mozart Profiler</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:dstutorial'">
+     <xsl:text>Distributed Programming in Mozart - A Tutorial Introduction</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:install'">
+     <xsl:text>Installation Manual</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:tools'">
+     <xsl:text>Oz Shell Utilities</xsl:text>
+    </xsl:when>
     <xsl:otherwise>
      <xsl:text>!!!UNKNOWN REF!!!</xsl:text>
      <xsl:value-of select="@TO"/>
@@ -430,9 +490,16 @@
   <xsl:text>\begin{center}</xsl:text>
 </xsl:if>
 <xsl:text>\begin{tabular}{</xsl:text>
-<xsl:for-each select="TR[position()=1]/*">
-  <xsl:text>l</xsl:text>
-</xsl:for-each>
+<xsl:choose>
+ <xsl:when test="@ID and meta:latexTableSpecExists((string(@ID)))">
+  <xsl:value-of select="meta:latexTableSpecGet((string(@ID)))"/>
+ </xsl:when>
+ <xsl:otherwise>
+  <xsl:for-each select="TR[position()=1]/*">
+    <xsl:text>l</xsl:text>
+  </xsl:for-each>
+ </xsl:otherwise>
+</xsl:choose>
 <xsl:text>}</xsl:text>
 <xsl:apply-templates/>
 <xsl:text>\end{tabular}</xsl:text>
@@ -448,14 +515,36 @@
 </xsl:if>
 </xsl:template>
 
-<xsl:template match="TD">
+<xsl:template match="TD[@COLSPAN]">
+<xsl:if test="not(position()=1)">
+  <data>&amp;</data>
+</xsl:if>
+<xsl:text>\multicolumn{</xsl:text>
+<xsl:value-of select="@COLSPAN"/>
+<xsl:text>}{l}{</xsl:text>
+<xsl:apply-templates/>
+<xsl:text>}</xsl:text>
+</xsl:template>
+
+<xsl:template match="TD[not(@COLSPAN)]">
 <xsl:if test="not(position()=1)">
   <data>&amp;</data>
 </xsl:if>
 <xsl:apply-templates/>
 </xsl:template>
 
-<xsl:template match="TH">
+<xsl:template match="TH[@COLSPAN]">
+<xsl:if test="not(position()=1)">
+  <data>&amp;</data>
+</xsl:if>
+<xsl:text>\multicolumn{</xsl:text>
+<xsl:value-of select="@COLSPAN"/>
+<xsl:text>}{l}{\bf{}</xsl:text>
+<xsl:apply-templates/>
+<xsl:text>}</xsl:text>
+</xsl:template>
+
+<xsl:template match="TH[not(@COLSPAN)]">
 <xsl:if test="not(position()=1)">
   <data>&amp;</data>
 </xsl:if>
