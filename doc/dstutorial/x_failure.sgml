@@ -435,8 +435,8 @@ However, any attempt to execute either call
 on a site different from the <<Fault>> module's
 home site will raise an exception.<NOTE
 FOOT>Note that each site has its own <<Fault>> module.</NOTE>
-The calls <<{Fault.enable E thread(T) ...}>>
-and <<{Fault.install E thread(T) ...}>> will work anywhere.
+The calls <<{Fault.enable E 'thread'(T) ...}>>
+and <<{Fault.install E 'thread'(T) ...}>> will work anywhere.
 A procedure containing these calls may be passed around
 the network at will, and will work correctly anywhere.
 
