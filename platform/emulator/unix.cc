@@ -1409,6 +1409,44 @@ OZ_BI_iodefine(unix_accept_nonblocking,1,3)
 } OZ_BI_ioend
 
 
+/* This has the same functionality as unix_accept_nonblocking but with
+   a small difference. That is, there is no name service query. The
+   Host output parameter will be a string representing the IP of the
+   end-host. */
+OZ_BI_iodefine(unix_accept_nonblocking_noDnsLookup,1,3)
+{
+  OZ_declareInt(0, sock);
+  // OZ_out(0) == host
+  // OZ_out(1) == port
+  // OZ_out(2) == fd
+
+  struct sockaddr_in from;
+  int fromlen = sizeof from;
+
+  WRAPCALL("accept",osaccept(sock,(struct sockaddr *)&from, &fromlen),fd);
+
+  // Nonblocking
+  int one=1;
+  if(setsockopt(fd,IPPROTO_TCP,TCP_NODELAY,(char*) &one,sizeof(one))<0){
+    RETURN_UNIX_ERROR("acceptNonblocking");
+  }
+
+#ifdef WINDOWS
+  osSetNonBlocking(fd,OK);
+#else
+  fcntl(fd,F_SETFL,O_NDELAY);
+#endif
+  //
+
+  char *host = inet_ntoa(from.sin_addr);
+
+  OZ_out(0) = OZ_string(host);
+  OZ_out(1) = OZ_int(ntohs(from.sin_port));
+  OZ_out(2) = OZ_int(fd);
+  return PROCEED;
+} OZ_BI_ioend
+
+
 static OZ_Return get_send_recv_flags(OZ_Term OzFlags, int * flags)
 {
   OZ_Term hd, tl;
