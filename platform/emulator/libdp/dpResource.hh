@@ -84,7 +84,6 @@ public:
 			(GenHashEntry*)index);}
   
   int find(TaggedRef entity){
-    fprintf(stderr,"finding %d \n",(int) this);
     int hvalue = hash(entity);
     GenHashNode *aux = htFindFirst(hvalue);
     if(aux)
