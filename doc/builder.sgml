@@ -41,6 +41,9 @@
     implemented using the binding API directly:  You get more checking, in
     particular type-checking of arguments, and many errors are reported by
     Oz exceptions.
+  <Para class=apropos><Title/Related Work/
+    The design of the GBuilder has been inspired by QTk, a description-based
+    user interface builder for Tk, available in the Mozart Standard Library.
   <Section>
     <Title/<Q/Hello, World/ Revisited/
     <P>
