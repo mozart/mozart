@@ -28,7 +28,9 @@
 functor
 import
    OS(system tmpnam unlink)
+\ifdef VERBOSE
    System(showError)
+\endif
 export
    'class': PostScriptToGIFClass
 define
@@ -54,7 +56,8 @@ define
               else 'pnmscale '#Info#'  2>/dev/null | '
               end #
               'ppmquant 256 2>/dev/null | ' #
-              'ppmtogif -interlace -transparent rgbi:1/1/1 2>/dev/null > '#GifName)
+              'ppmtogif -interlace -transparent rgbi:1/1/1 2>/dev/null > '#
+              GifName)
 \ifdef VERBOSE
       {System.showError Cmd}
 \endif
