@@ -28,62 +28,6 @@
 #include "var_fd.hh"
 #include "var_bool.hh"
 
-//-----------------------------------------------------------------------------
-// fd built-ins don't cause stuck threads, but may cause their minds, therefore
-
-#undef FDBISTUCK
-
-#ifdef FDBISTUCK
-
-#define SUSPEND_PROCEED SUSPEND
-
-#else
-
-#define SUSPEND_PROCEED PROCEED
-
-#endif
-
-
-#ifdef FDBISTUCK
-
-inline
-OZ_Return BI_FD_suspendOnVar(OZ_CFun, int, OZ_Term *,
-                             OZ_Term * t)
-{
-  OZ_suspendOn(makeTaggedRef(t));
-}
-
-OZ_Return BI_FD_suspendOnVar(OZ_CFun, int, OZ_Term *,
-                             OZ_Term * t1, OZ_Term * t2)
-{
-  OZ_suspendOn2(makeTaggedRef(t1),
-                makeTaggedRef(t2));
-}
-
-#else
-
-inline
-OZ_Return BI_FD_suspendOnVar(OZ_CFun f, int a, OZ_Term * x,
-                             OZ_Term * t)
-{
-  OZ_addThread(makeTaggedRef(t), OZ_makeSuspendedThread(f, x, a));
-  return PROCEED;
-}
-
-inline
-OZ_Return BI_FD_suspendOnVar(OZ_CFun f, int a, OZ_Term * x,
-                             OZ_Term * t1, OZ_Term * t2)
-{
-  OZ_Thread th = OZ_makeSuspendedThread(f, x, a);
-  OZ_addThread(makeTaggedRef(t1), th);
-  OZ_addThread(makeTaggedRef(t2), th);
-  return PROCEED;
-}
-
-#endif
-
-// ---------------------------------------------------------------------
-// misc stuff
 
 OZ_BI_define(BIisFdVar, 1,0)
 {
@@ -109,7 +53,7 @@ OZ_C_proc_begin(BIfdIs, 2)
   OZ_getCArgDeref(0, fd, fdptr, fdtag);
 
   if (oz_isNonKinded(fd))
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, fdptr);
+    oz_suspendOnPtr(fdptr);
 
   return oz_unify(OZ_getCArg(1),
                   oz_bool(isPosSmallFDInt(fd) ||
@@ -135,7 +79,7 @@ OZ_C_proc_begin(BIfdMin, 2)
   } else if (isGenBoolVar(var,vartag)) {
     return OZ_unify(oz_int(0), OZ_getCArg(1));
   } else if (oz_isNonKinded(var)) {
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
+    oz_suspendOnPtr(varptr);
   } else {
     TypeError(0, "");
   }
@@ -156,7 +100,7 @@ OZ_C_proc_begin(BIfdMax, 2)
   } else if (isGenBoolVar(var,vartag)) {
     return OZ_unify(oz_int(1), OZ_getCArg(1));
   } else if (oz_isNonKinded(var)) {
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
+    oz_suspendOnPtr(varptr);
   } else {
     TypeError(0, "");
   }
@@ -177,7 +121,7 @@ OZ_C_proc_begin(BIfdMid, 2)
   } else if (isGenBoolVar(var,vartag)) {
     return OZ_unify(oz_int(0), OZ_getCArg(1));
   } else if (oz_isNonKinded(var)) {
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
+    oz_suspendOnPtr(varptr);
   } else {
     TypeError(0, "");
   }
@@ -192,7 +136,7 @@ OZ_C_proc_begin(BIfdNextSmaller, 3)
 
   int value = -1;
   if (isVariableTag(valtag)) {
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, valptr);
+    oz_suspendOnPtr(valptr);
   } else if (isSmallIntTag(valtag)) {
     value = smallIntValue(val);
   } else {
@@ -214,7 +158,7 @@ OZ_C_proc_begin(BIfdNextSmaller, 3)
     else if (value > 0)
       return OZ_unify(oz_int(0), OZ_getCArg(2));
   } else if (oz_isNonKinded(var)) {
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
+    oz_suspendOnPtr(varptr);
   } else {
     TypeError(0, "");
   }
@@ -230,7 +174,7 @@ OZ_C_proc_begin(BIfdNextLarger, 3)
 
   int value = -1;
   if (oz_isVariable(valtag)) {
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, valptr);
+    oz_suspendOnPtr(valptr);
   } else if (isSmallIntTag(valtag)) {
     value = smallIntValue(val);
   } else {
@@ -252,7 +196,7 @@ OZ_C_proc_begin(BIfdNextLarger, 3)
     else if (value < 1)
       return OZ_unify(oz_int(1), OZ_getCArg(2));
   } else if (oz_isNonKinded(var)) {
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
+    oz_suspendOnPtr(varptr);
   } else {
     TypeError(0, "");
   }
@@ -276,7 +220,7 @@ OZ_C_proc_begin(BIfdGetAsList, 2)
     return OZ_unify(makeTaggedLTuple(new LTuple(oz_pairII(0, 1), AtomNil)),
                     OZ_getCArg(1));
   } else if (oz_isNonKinded(var)) {
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
+    oz_suspendOnPtr(varptr);
   } else {
     TypeError(0, "");
   }
@@ -297,7 +241,7 @@ OZ_C_proc_begin(BIfdGetCardinality, 2)
   } else if (isGenBoolVar(var,vartag)) {
     return OZ_unify(oz_int(2), OZ_getCArg(1));
   } else if (oz_isNonKinded(var)) {
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
+    oz_suspendOnPtr(varptr);
   } else {
     TypeError(0, "");
   }
@@ -363,7 +307,7 @@ OZ_C_proc_begin(BIfdWatchSize, 3)
   } else if (isGenBoolVar(v, vtag)) {
     vsize = 2;
   } else if (oz_isNonKinded(v)) {
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+    oz_suspendOnPtr(vptr);
   } else {
     TypeError(0, "");
   }
@@ -373,7 +317,7 @@ OZ_C_proc_begin(BIfdWatchSize, 3)
   int size = 0;
 
   if (isVariableTag(vstag)) {
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, vsptr);
+    oz_suspendOnPtr(vsptr);
   } else if (isSmallIntTag(vstag)) {
     size = smallIntValue(vs);
   } else {
@@ -387,9 +331,8 @@ OZ_C_proc_begin(BIfdWatchSize, 3)
   if (isVariableTag(vtag)){
     //  must return SUSPEND;
     if (isVariableTag(ttag))
-      return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args,
-                                           vptr, tptr);
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+      oz_suspendOn2(makeTaggedRef(vptr), makeTaggedRef(tptr));
+    oz_suspendOnPtr(vptr);
   }
 
   return (OZ_unify (OZ_getCArg(2), oz_false()));
@@ -419,7 +362,7 @@ OZ_C_proc_begin(BIfdWatchMin, 3)
     vmin = 0;
     vmax = 1;
   } else if (oz_isNonKinded(v)) {
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+    oz_suspendOnPtr(vptr);
   } else {
     TypeError(0, "");
   }
@@ -429,7 +372,7 @@ OZ_C_proc_begin(BIfdWatchMin, 3)
   int min = -1;
 
   if (isVariableTag(vmtag)) {
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, vmptr);
+    oz_suspendOnPtr(vmptr);
   } else if (isSmallIntTag(vmtag)) {
     min = smallIntValue(vm);
   } else {
@@ -442,9 +385,8 @@ OZ_C_proc_begin(BIfdWatchMin, 3)
   if (isVariableTag(vtag) && min < vmax){
     //  must return SUSPEND;
     if (isVariableTag(ttag))
-      return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args,
-                                           vptr, tptr);
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+      oz_suspendOn2(makeTaggedRef(vptr), makeTaggedRef(tptr));
+    oz_suspendOnPtr(vptr);
   }
 
   return (OZ_unify (OZ_getCArg(2), oz_false()));
@@ -474,7 +416,7 @@ OZ_C_proc_begin(BIfdWatchMax, 3)
     vmin = 0;
     vmax = 1;
   } else if (oz_isNonKinded(v)) {
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+    oz_suspendOnPtr(vptr);
   } else {
     TypeError(0, "");
   }
@@ -484,7 +426,7 @@ OZ_C_proc_begin(BIfdWatchMax, 3)
   int max = -1;
 
   if (isVariableTag(vmtag)) {
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, vmptr);
+    oz_suspendOnPtr(vmptr);
   } else if (isSmallIntTag(vmtag)) {
     max = smallIntValue(vm);
   } else {
@@ -497,9 +439,8 @@ OZ_C_proc_begin(BIfdWatchMax, 3)
   if (isVariableTag(vtag) && vmin < max){
     //  must return SUSPEND;
     if (isVariableTag(ttag))
-      return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args,
-                                           vptr, tptr);
-    return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+      oz_suspendOn2(makeTaggedRef(vptr), makeTaggedRef(tptr));
+    oz_suspendOnPtr(vptr);
   }
 
   return (OZ_unify (OZ_getCArg(2), oz_false()));

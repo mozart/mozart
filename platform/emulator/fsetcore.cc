@@ -61,7 +61,7 @@ OZ_C_proc_begin(BIfsIsValueB, 2)
   OZ_Term term = OZ_args[0];
   DEREF(term, term_ptr, term_tag);
   if (isVariableTag(term_tag))
-    return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, term_ptr);
+    oz_suspendOnPtr(term_ptr);
 
   return OZ_unify(OZ_getCArg (1),
                   oz_bool(oz_isFSetValue(oz_deref(OZ_getCArg(0)))));
@@ -144,7 +144,7 @@ OZ_C_proc_begin(BIfsGetKnownIn, 2)
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
     return OZ_unify(OZ_getCArg(1), fsetconstr->getKnownInList());
   } else if (oz_isNonKinded(v)) {
-    return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+    oz_suspendOnPtr(vptr);
   }
   TypeError(0, "");
 }
@@ -164,7 +164,7 @@ OZ_C_proc_begin(BIfsGetNumOfKnownIn, 2)
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
     return OZ_unify(OZ_getCArg(1), OZ_int(fsetconstr->getKnownIn()));
   } else if (oz_isNonKinded(v)) {
-    return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+    oz_suspendOnPtr(vptr);
   }
   TypeError(0, "");
 }
@@ -186,7 +186,7 @@ OZ_C_proc_begin(BIfsGetKnownNotIn, 2)
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
     return OZ_unify(OZ_getCArg(1), fsetconstr->getKnownNotInList());
   } else if (oz_isNonKinded(v)) {
-    return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+    oz_suspendOnPtr(vptr);
   }
   TypeError(0, "");
 }
@@ -206,7 +206,7 @@ OZ_C_proc_begin(BIfsGetNumOfKnownNotIn, 2)
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
     return OZ_unify(OZ_getCArg(1), OZ_int(fsetconstr->getKnownNotIn()));
   } else if (oz_isNonKinded(v)) {
-    return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+    oz_suspendOnPtr(vptr);
   }
   TypeError(0, "");
 }
@@ -227,7 +227,7 @@ OZ_C_proc_begin(BIfsGetUnknown, 2)
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
     return OZ_unify(OZ_getCArg(1), fsetconstr->getUnknownList());
   } else if (oz_isNonKinded(v)) {
-    return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+    oz_suspendOnPtr(vptr);
   }
   TypeError(0, "");
 }
@@ -246,7 +246,7 @@ OZ_C_proc_begin(BIfsGetNumOfUnknown, 2)
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
     return OZ_unify(OZ_getCArg(1), OZ_int(fsetconstr->getUnknown()));
   } else if (oz_isNonKinded(v)) {
-    return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+    oz_suspendOnPtr(vptr);
   }
   TypeError(0, "");
 }
@@ -268,7 +268,7 @@ OZ_C_proc_begin(BIfsGetLub, 2)
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
     return OZ_unify(OZ_getCArg(1), fsetconstr->getLubList());
   } else if (oz_isNonKinded(v)) {
-    return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+    oz_suspendOnPtr(vptr);
   }
   TypeError(0, "");
 }
@@ -288,7 +288,7 @@ OZ_C_proc_begin(BIfsGetCard, 2)
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
     return OZ_unify(OZ_getCArg(1), fsetconstr->getCardTuple());
   } else if (oz_isNonKinded(v)) {
-    return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+    oz_suspendOnPtr(vptr);
   }
   TypeError(0, "");
 }
@@ -306,7 +306,7 @@ OZ_C_proc_begin(BIfsCardRange, 3)
     if (isSmallIntTag(lttag)) {
       l = smallIntValue(lt);
     } else if (isVariableTag(lttag)) {
-      return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, ltptr);
+      oz_suspendOnPtr(ltptr);
     } else {
       TypeError(0, "");
     }
@@ -320,7 +320,7 @@ OZ_C_proc_begin(BIfsCardRange, 3)
     if (isSmallIntTag(uttag)) {
       u = smallIntValue(ut);
     } else if (isVariableTag(uttag)) {
-      return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, utptr);
+      oz_suspendOnPtr(utptr);
     } else {
       TypeError(1, "");
     }
@@ -346,7 +346,7 @@ OZ_C_proc_begin(BIfsCardRange, 3)
         tagged2GenFSetVar(v)->becomesFSetValueAndPropagate(vptr);
       return PROCEED;
     } else if (oz_isNonKinded(v)) {
-      return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+      oz_suspendOnPtr(vptr);
     }
   }
   TypeError(2, "");
