@@ -22,6 +22,8 @@ SGMLSRCS = \
         switches.sgml narrator.sgml syntax.sgml
 OZSRCS = \
         EvalExpression.oz VirtualStringToValue.oz
+HTMLUTILFILES = \
+        ozdoc.css
 
 .PHONY: all validate install clean veryclean distclean
 
@@ -36,15 +38,12 @@ Makefile: Makefile.in ../config.status
 
 compiler-html: $(OZSRCS) $(SGMLSRCS)
         $(DOCIFY) --in=$(SRCDIR)/compiler.sgml --out=$@ \
-        --type=html-stylesheets \
-        --bib-path=$(SRCDIR):$(SRCTOP)/doc \
-        --bst-path=$(SRCTOP)/doc/utilities
+        --type=html-stylesheets --stylesheet ozdoc.css && \
+        cp -p $(HTMLUTILFILES:%=$(SRCDIR)/../utilities/%) compiler-html
 
 compiler-tex: $(OZSRCS) $(SGMLSRCS)
         $(DOCIFY) --in=$(SRCDIR)/compiler.sgml --out=compiler-tex \
-        --type=latex \
-        --bib-path=$(SRCDIR):$(SRCTOP)/doc \
-        --bst-path=$(SRCTOP)/doc/utilities
+        --type=latex
 
 validate: compiler-html
         nsgmls -cHTML4.soc -sB compiler-html/*.html
