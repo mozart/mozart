@@ -166,8 +166,11 @@ define
 		   [] 'define'(S) then {Collect '-D'#S}
 		   end
 		end
+	 SYS  = for D in {self get_sysincludedirs($)} collect:Collect do
+		   {Collect '-I'#D}
+		end
 	 L0 = [SRC '-o' DST]
-	 L1 = {Append INCS {Append OPTS L0}}
+	 L1 = {Append INCS {Append OPTS {Append SYS L0}}}
 	 L2 = case {self get_optlevel($)}
 	      of debug then '-g'|L1
 	      [] optimize then
@@ -198,8 +201,11 @@ define
 		   of library(D) then {Collect '-l'#D}
 		   end
 		end
+	 SYS  = for D in {self get_syslibrarydirs($)} collect:Collect do
+		   {Collect '-L'#D}
+		end
 	 L1 = [ld SRC '-o' DST]
-	 L2 = {Append L1 {Append LIBS OPTS}}
+	 L2 = {Append L1 {Append LIBS {Append SYS OPTS}}}
       in
 	 {self xtrace({Utils.listToVS oztool|L2})}
 	 if {self get_justprint($)} then
