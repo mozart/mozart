@@ -37,7 +37,7 @@
       <P.silent><!--**-->
 	The Oz Programming Interface (&OPI;) is the primary tool for
 	interaction with the Mozart development system.  It offers special
-	support for editing Oz code, running Mozart as a sub-process and
+	support for editing Oz code, running Mozart as a sub-process, and
 	running Mozart's development tools.
     </Abstract>
   <Body>
@@ -86,7 +86,7 @@
 	above respectively.  <Ptr to="chapter.gdb"> details how to run Mozart
 	under <Name type=tool/gdb/.  Finally, <Ptr to="chapter.internals">
 	documents some internal functions of the &OPI; that might be useful
-	for users who want to write their own editing functions.
+	for users who want to write their own editing commands.
       <Para class=apropos><Title/Learning Emacs/
 	In order to exploit the power of the &OPI; you will have to get
 	some acquaintance with Emacs.  A good place to start is the Emacs
@@ -165,7 +165,7 @@
 	    You can also configure your Emacs so that you can use all of
 	    the &OPI;'s functionality without using the <File/oz/ script.
 	    Here's what you would typically add to your Emacs startup file
-	    (usually called <File>~/.emacs</File> under Unix or <File
+	    (usually called <File>~/.emacs</File> under Unix and <File
 	    >C:\_emacs</File> under Windows):
 	    <Code.Extern display to="oz.el">
       <Section>
@@ -179,15 +179,15 @@
 		<P.silent><!--**-->
 		  This is the major mode for editing Oz code.  Loading a file
 		  with extension <File/.oz/ automatically puts a buffer into
-		  Oz mode.  You can identify a buffer is in Oz mode by the
-		  string <Samp/Oz/ in its mode line.
+		  Oz mode.  You can tell a buffer is in Oz mode by the string
+		  <Samp/Oz/ in its mode line.
 	      <Entry class=command><<oz-gump-mode>>
 	      <Item>
 		<P.silent><!--**-->
 		  This is the major mode for editing Oz code with embedded
 		  Gump specifications&nbsp;<Ptr to="kornstaedt96">.  Loading
 		  a file with extension <File/.ozg/ automatically puts a
-		  buffer in Oz-Gump mode.  You can identify a buffer is in
+		  buffer in Oz-Gump mode.  You can tell a buffer is in
 		  Oz-Gump mode by the string <Samp/Oz-Gump/ in its mode line.
 	    </List>
 	  <Para class=apropos><Title/Oz Mode Hook/
@@ -196,15 +196,15 @@
 	      <Entry class=variable><<oz-mode-hook>>
 	      <Item>
 		<P.silent><!--**-->
-		  This variable contains a list of functions that are
-		  run when either Oz mode or Oz-Gump mode is activated.
-		  These functions are applied without arguments.  Change
-		  using Emacs functions <<add-hook>> and <<remove-hook>>.
+		  A list of functions to be run when either Oz mode or Oz-Gump
+		  mode is activated.  These functions are applied without
+		  arguments.  Change using Emacs functions <<add-hook>> and
+		  <<remove-hook>>.
 	    </List>
       <Section>
 	<Title/Inspecting the &OPI;'s Commands and Variables/
 	  <Para class=apropos><Title/The Oz Menu/
-	    The Oz major modes add a menu to the menu bar called <Samp/Oz/
+	    The Oz major modes add a menu called <Samp/Oz/ to the menu bar
 	    (see <Ptr to="figure.menu">); in XEmacs, this menu is also
 	    accessible by pressing the right mouse button in an Oz buffer.
 	    Many of the commands described in the next chapters are accessible
@@ -220,7 +220,7 @@
 	      <Item>
 		<P.silent><!--**-->
 		  Nearly all functions and variables start with
-		  <<oz-&ellipsis>>.
+		  <<oz-&ellipsis>>
 	      <Item>
 		<P.silent><!--**-->
 		  If the documentation string of a variable starts with an
@@ -237,8 +237,10 @@
 		  string with <Key/M-x describe-key/ (<Key/C-h k/).
 	      <Item>
 		<P.silent><!--**-->
-		  The &OPI; provides the feature <File/oz/.  See Emacs'
-		  <<require>> function for more details.
+		  The &OPI; provides the feature <Code><Span class=ignore
+		  /(provide '/oz<Span class=ignore/)/</Code>.  See Emacs'
+		  <Code><Span class=ignore/(/require</Code> function for
+		  more details.
 	    </List>
 	  <Para class=apropos><Title/Customization/
 	    New Emacsen offer a feature called <Def/customization/, which
@@ -247,14 +249,14 @@
 	    <Key/M-x customize/; look at the group <Name type=buffer
 	    /Programming/&slash;<Name type=buffer/Languages/&slash;<Name
 	    type=buffer/Oz/.  You can also access this group directly via
-	    <Key/M-x customize RET oz/.
+	    <Key/M-x customize-group RET oz/.
 	  <Para class=apropos><Title/Key Bindings/
 	    A short description of the current major mode and its key
 	    bindings can be obtained through Emacs' <Key/M-x describe-mode/
-	    (usually bound to <Key/C-h m/).  In this manual, the key sequences
-	    a command is bound to by default will always be shown in
-	    parenthesis following the command name.  The following variable
-	    affects which key bindings are installed by default.
+	    (<Key/C-h m/).  In this manual, the key sequences a command is
+	    bound to by default will always be shown in parenthesis following
+	    the command name.  The following variable affects which key
+	    bindings are installed by default.
 	    <List>
 	      <Entry class=variable><<oz-pc-keys>> (default: <<nil>>)
 	      <Item>
@@ -274,26 +276,26 @@
       <Section>
 	<Title/Managing Oz Buffers/
 	  <P>
-	    The Oz modes support some useful functions for creating new
-	    interactive buffers and navigating between Oz buffers:
+	    The Oz modes offer commands for creating new interactive buffers
+	    and quickly switching between Oz buffers:
 	    <List>
 	      <Entry class=command><<oz-new-buffer>> (<Key/C-c C-n/)
 	      <Item>
 		<P.silent><!--**-->
-		  Create a new buffer and enters the Oz major mode.
+		  Create a new buffer using the Oz major mode.
 		  Note that this buffer has no associated file name,
 		  so quitting Emacs will kill it without warning.
 	      <Entry class=command><<oz-previous-buffer>> (<Key/M-p/)
 	      <Item>
 		<P.silent><!--**-->
 		  Switch to the previous buffer in the buffer list that
-		  runs in an Oz mode.  If no buffer is in Oz mode, an error
+		  runs in an Oz mode.  If no such buffer exists, an error
 		  is signalled.
 	      <Entry class=command><<oz-next-buffer>> (<Key/M-n/)
 	      <Item>
 		<P.silent><!--**-->
 		  Switch to the next buffer in the buffer list that runs
-		  in an Oz mode.  If no buffer is in Oz mode, an error is
+		  in an Oz mode.  If no such buffer exists, an error is
 		  signalled.
 	    </List>
       <Section>
@@ -329,7 +331,9 @@
 	      <Item>
 		<P.silent><!--**-->
 		  Indent all lines at least partly covered by the Oz
-		  expression following point.
+		  expression following point.  For a description of
+		  what constitutes an Oz expression, see <Ptr
+		  to="section.expression-commands">.
 	    </List>
 	    The following command assists in authoring Oz code.
 	    <List>
@@ -337,7 +341,7 @@
 	      <Item>
 		<P.silent><!--**-->
 		  Terminate the current line, &ie;, delete all whitespace
-		  around and break the line at point.  If the variable
+		  around point and break the line.  If the variable
 		  <<oz-auto-indent>> is non-<<nil>>, indent both lines.
 	      <Entry class=variable><<oz-auto-indent>> (default: <<t>>)
 	      <Item>
@@ -351,24 +355,24 @@
 	  <P>
 	    <Def/Fontification/ is the term used in Emacs for displaying
 	    text in different faces, depending on syntactical properties,
-	    to ease reading code.  For example, comments and strings may
-	    be displayed in different colors.
+	    to ease reading of code.  For example, comments and strings may
+	    be displayed in different colours.
 	  <P>
 	    Many major modes in Emacs provide several levels of fontification
 	    with increasing use of colours, but also increasing resource
 	    consumption.  In the Oz modes, there are three levels.  You can
 	    select one using the <<font-lock-maximum-decoration>> variable,
 	    &eg;, add the following line to your <File/.emacs/:
-	    <<<(setq font-lock-maximum-decoration t)>>>
+	    <<<(setq font-lock-maximum-decoration 3)>>>
 	  <P>
 	    The following variable and command control automatic
-	    fontification in the &OPI;:
+	    fontification in the &OPI;.
 	    <List>
 	      <Entry class=variable><<oz-want-font-lock>> (default: <<t>>)
 	      <Item>
 		<P.silent><!--**-->
-		  If non-<<nil>>, automatically enter <<font-lock-mode>> for
-		  the Oz modes.
+		  If non-<<nil>>, automatically invoke <<font-lock-mode>> when
+		  any of the Oz modes is activated.
 	      <Entry class=command><<oz-fontify-buffer &amp;optional ARG>>
 		(<Key/M-l/)
 	      <Item>
@@ -378,7 +382,7 @@
 		  <<recenter>> command (usually bound to <Key/C-l/).
 	    </List>
 	    You might like the following variable and command if you care
-	    about superfluous (invisible) spaces:
+	    about superfluous (usually invisible) spaces:
 	    <List>
 	      <Entry class=variable><<oz-pedantic-spaces>> (default: <<nil>>)
 	      <Item>
@@ -393,20 +397,21 @@
 	      <Item>
 		<P.silent><!--**-->
 		  Remove all ill-placed whitespace from the current buffer.
-		  This is all the whitespace that is hightlighted in
+		  This is all the whitespace that is highlighted in
 		  <<oz-space-face>>.
 	    </List>
       <Section>
 	<Title/Comments/
 	  <P>
 	    <List>
-	      <Entry class=command><<oz-fill-paragraph>>
+	      <Entry class=command><<oz-fill-paragraph &amp;optional JUSTIFY>>
 	      <Item>
 		<P.silent><!--**-->
 		  Like the <<fill-paragraph>> command, but handles Oz comments.
 		  If any of the current line is a comment, fill the comment
 		  or the paragraph of it that point is in, preserving the
-		  comment's indentation and initial percent signs.
+		  comment's indentation and initial percent signs.  Bound to
+		  the buffer-local variable <<fill-paragraph-function>>.
 	      <Entry class=command>
 		<<oz-comment-region START END &amp;optional ARG>>
 	      <Item>
@@ -423,9 +428,9 @@
 		<P.silent><!--**-->
 		  Comment or uncomment each line in the region.  See the
 		  <<oz-comment-region>> command for more information; note
-		  that the prefix argument is negated.
+		  that the prefix argument is negated though.
 	    </List>
-      <Section>
+      <Section id="section.expression-commands">
 	<Title/Expression-Level Commands/
 	  <P>
 	    In this section, we use the term <Def/Oz definition/ to stand
@@ -459,7 +464,7 @@
 		<P.silent><!--**-->
 		  Like the <<transpose-words>> command (usually bound to
 		  <Key/M-t/) but applies to balanced Oz expressions.  Caveat:
-		  This might not work well in all cases.
+		  This might not produce nice results in all cases.
 	      <Entry class=command><<kill-oz-expr ARG>> (<Key/M-C-k/)
 	      <Item>
 		<P.silent><!--**-->
