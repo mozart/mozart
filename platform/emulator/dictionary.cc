@@ -613,10 +613,9 @@ OZ_DECLAREBI_USEINLINEREL3(BIdictionaryPut,dictionaryPutInline)
 OZ_Return dictionaryExchangeInline(OZ_Term d, OZ_Term k, OZ_Term value, OZ_Term& old)
 {
   GetDictAndKey(d,k,dict,key,OK);
-  if (dict->exchangeExisting(key,value,old) != PROCEED) {
-    return oz_raise(E_SYSTEM,E_KERNEL,"dict",2,d,k);
-  }
-  return PROCEED;
+  // do not create entry if it does not already exist
+  if (dict->exchange(key,value,old,false)) return PROCEED;
+  else return oz_raise(E_SYSTEM,E_KERNEL,"dict",2,d,k);
 }
 
 OZ_DECLAREBI_USEINLINEFUN3(BIdictionaryExchange,dictionaryExchangeInline)
@@ -624,9 +623,9 @@ OZ_DECLAREBI_USEINLINEFUN3(BIdictionaryExchange,dictionaryExchangeInline)
 OZ_Return dictionaryCondExchangeInline(OZ_Term d, OZ_Term k, OZ_Term deflt, OZ_Term value, OZ_Term& old)
 {
   GetDictAndKey(d,k,dict,key,OK);
-  if (dict->exchangeExisting(key,value,old) != PROCEED) {
-    // Feature k non-existent, set entry and return default
-    dict->setArg(key,value);
+  // create entry if it does not already exist
+  if (! dict->exchange(key,value,old,true)) {
+    // if feature was non-existent, return default
     old = deflt;
   }
   return PROCEED;
