@@ -338,7 +338,6 @@ ProgramCounter CodeArea::definitionEnd(ProgramCounter PC)
       DISPATCH();
     }
   }
-  return NOCODE;
 }
 
 void displayCode(ProgramCounter from, int ssize)
@@ -584,7 +583,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case TESTLISTY:
     case TESTLISTG:
       {
-	TaggedRef tagged = getTaggedArg(PC+2);
 	fprintf(ofile,
 		"(%d %p)\n",
 		regToInt(getRegArg(PC+1)),

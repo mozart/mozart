@@ -42,7 +42,7 @@ enum OZ_Registered_Extension_Id {
   OZ_E_THREAD,
   OZ_E_HEAPCHUNK,
   OZ_E_CHUNK,
-  OZ_E_LAST,
+  OZ_E_LAST
 };
 
 class OZ_Extension {
@@ -60,8 +60,8 @@ public:
   virtual OZ_Term       typeV();
   virtual OZ_Term       inspectV() { return typeV(); }
   virtual OZ_Boolean    isChunkV() { return OZ_TRUE; }
-  virtual OZ_Term       getFeatureV(OZ_Term fea)   { return 0; }
-  virtual OZ_Return     eqV(OZ_Term t)             { return OZ_FAILED; }
+  virtual OZ_Term       getFeatureV(OZ_Term)       { return 0; }
+  virtual OZ_Return     eqV(OZ_Term)               { return OZ_FAILED; }
   virtual OZ_Boolean    marshalV(void *)           { return OZ_FALSE; }
   virtual void *        __getSpaceInternal()       { return 0; }
   virtual void          __setSpaceInternal(void *) {}
