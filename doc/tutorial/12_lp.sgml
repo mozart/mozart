@@ -15,11 +15,11 @@ programming part of Oz.
 
 <SECTION><TITLE/Constraint Store/
 <P>Oz threads share a store where variable bindings are stored in the
-form of equalities: <MATH>X_1=U_1, ..., X_n=U_n</MATH> where
+form of equalities: <MATH>X_1=U_1, \ldots, X_n=U_n</MATH> where
 <MATH/X_i/ are variables and <MATH/U_i/ are either Oz entities or
 variables. If we restrict the Oz values to records, numbers, names or
 variables, the store can be considered as a conjunctive logical
-formula: <MATH>X_1=U_1 &and; ... &and; X_n=U_n</MATH>. The store is
+formula: <MATH>X_1=U_1 \wedge \ldots \wedge X_n=U_n</MATH>. The store is
 said to be a <EM>constraint store</EM>.
 
 
@@ -75,24 +75,26 @@ increase the information already there.
 
 <SUBSECTION><TITLE/Examples/
 
-<P>Consider the store: <IMG="Image63.gif">, the conditions:
+<P>Consider the store:
+<MATH/\sigma \equiv X = 1 \weddge \ldots \wedge Y = f(X Y)/
+, the conditions:
 
 <LIST>
 
-<ITEM> <IMG="Image64.gif">. Since adding this binding does not
-increase the information in the store.
+<ITEM><MATH/X=1/. Since adding this binding does not increase the
+information in the store.
 
-<ITEM> <IMG="Image65.gif"> is also entailed. Adding this
-information does not increase our information. There is a ?{Z} that
-satisfies the above condition. Notice that we do not know which value
-?{Z} will assume. But whatever value assumed by ?{Z}, the condition
-would be still satisfied.
+<ITEM>There exists a <MATH/U/, such that <MATH/Y=f(1 U)/ is also entailed.
+Adding this information does not increase our information. There is a
+<MATH/Z/ that satisfies the above condition. Notice that we do not know
+which value <MATH/Z/ will assume. But whatever value assumed by <MATH/Z/,
+the condition would be still satisfied.
 
-<ITEM> <IMG="Image66.gif"> is not entailed by the store, since adding
+<ITEM><MATH/Y=f(1 2)/ is not entailed by the store, since adding
 this equality will increase the information there, namely by
-<IMG="Image67.gif">.
+<MATH/Z=2/.
 
-<ITEM><IMG="Image68.gif"> are both disentailed since they
+<ITEM><MATH/X=2/ or <MATH/Y=f(3 U)/ are both disentailed since they
 contradict information already there. They we normally lead to raised
 exceptions.
 
@@ -102,7 +104,7 @@ exceptions.
 <SECTION><TITLE/Disjunctions/
 <P>Now we are in a position to understand the nondeterminate
 constructs of Oz. Oz provides several disjunctive constructs for
-<EM>nondeterminate choice</EM>, also known as <EM>don’t know
+<EM>nondeterminate choice</EM>, also known as <EM>don't know
 choice</EM> statements.
 
 
@@ -110,7 +112,8 @@ choice</EM> statements.
 <P>In all the disjunctive statements we are going to use the notion of
 guard. A guard has the following form.
 
-<P><IMG="Image69.gif">
+<<<?{X1} ... ?{XN} in ?{S}>>>
+<P CLASS=WARNING>How to show &lt;IMG="Image69.gif"&gt;
 
 <P>The first disjunctive statement has the following form:
 
@@ -130,27 +133,50 @@ executing the statement in space ?{SP}.
 
 <ITEM>The thread is blocked.
 
-<ITEM>?{N} spaces are created ?{SP}<SUB>1</SUB>,…,?{SP}<SUB>N</SUB> with ?{N} new threads executing the guards ?{G}<SUB>1</SUB>,…, ?{G}<SUB>N</SUB>.
+<ITEM>?{N} spaces are created ?{SP1}, ...,?{SPN} with ?{N} new threads
+executing the guards ?{G1}, ..., ?{GN}.
 
-<ITEM>Execution of the father thread will remain blocked until at most one of the constraint stores of the children spaces is not disentailed. We call a space with a disentailed store a failed space.
+<ITEM>Execution of the father thread will remain blocked until at most
+one of the constraint stores of the children spaces is not
+disentailed. We call a space with a disentailed store a failed space.
 
-<ITEM>If all children spaces are failed, the parent thread raises a failure exception.
+<ITEM>If all children spaces are failed, the parent thread raises a
+failure exception.
 
-<ITEM>Otherwise, there is one space that is not failed that corresponds to the disjunct <IMG="Image71.gif"8018>. Assume also that ?{G}<SUB>i</SUB> has been reduced to the goal <IMG="Image72.gif"16> and the constraint <IMG="Image73.gif"1014>. In this case, the space is merged with the parent store with <IMG="Image74.gif"1014> added, <IMG="Image75.gif"16> executes in its own thread, and the suspending thread resumes executing the statement <IMG="Image76.gif"1318>
+<ITEM>Otherwise, there is one space that is not failed that corresponds to the disjunct <<?{Gi} then ?{Si}>>. Assume also that ?{Gi} has been reduced to the goal <IMG="Image72.gif"16> and the constraint <IMG="Image73.gif"1014>. In this case, the space is merged with the parent store with <IMG="Image74.gif"1014> added, <IMG="Image75.gif"16> executes in its own thread, and the suspending thread resumes executing the statement <IMG="Image76.gif"1318>.
 
 </LIST>
-. The rule of execution is called <EM>unit commit</EM> in Oz because execution commits to one alternative disjunct.
 
-<P>Shorthand Notation
+<P>The rule of execution is called <EM>unit commit</EM> in Oz because
+execution commits to one alternative disjunct.
 
-<P><IMG="Image77.gif"116172>
+<SUBSECTION><TITLE/Shorthand Notation/
 
-<P>Determinacy Driven Execution
+<<<
+or
+...
+[] ?{Gi}
+...
+end
+>>>
 
-<P>The or-statement of Oz allows a pure logical form of programming style where computations are synchronized by determinacy conditions. Consider the following program.
+<P>Stands for
 
-<<
-<P>proc {Ints N Xs}
+<<<
+or
+...
+[] ?{Gi} then skip
+...
+end
+>>>
+
+<SECTION><TITLE/Determinacy Driven Execution/
+<P>The <<or>>-statement of Oz allows a pure logical form of programming
+style where computations are synchronized by determinacy
+conditions. Consider the following program.
+
+<<<
+proc {Ints N Xs}
    or N = 0 Xs = nil
    [] Xr in
       N > 0 = true Xs = N|Xr
@@ -171,50 +197,89 @@ local N S R in
    thread {Sum S {Browse}} end
    N = 1000
 end
+>>>
 
->>
-<P>The thread executing <<Ints>> will suspend until <<N>> is known, because it cannot decide on which disjunct to take. Similarly, <<Sum3>> will wait until the list <<S>> is known. <<S>> will be defined incrementally and that will lead to the suspension and resumption of <<Sum3>>. Things will start to take off when the main thread binds <<N>> to <<1000>>. This shows clearly that determinacy driven execution gives the synchronization information need to mimic producer/consumer behavior.
+<P>The thread executing <<Ints>> will suspend until <<N>> is known,
+because it cannot decide on which disjunct to take. Similarly,
+<<Sum3>> will wait until the list <<S>> is known. <<S>> will be
+defined incrementally and that will lead to the suspension and
+resumption of <<Sum3>>. Things will start to take off when the main
+thread binds <<N>> to <<1000>>. This shows clearly that determinacy
+driven execution gives the synchronization information need to mimic
+producer/consumer behavior.
 
-<P>More to come on logic programming.
+<P CLASS=WARNING>More to come on logic programming.
 
-<P><"_Toc411617883">Conditionals</A>
+<SECTION><TITLE/Conditionals/
+<SUBSECTION><TITLE/Simple Conditionals/
+<P>A statement having the following form:
 
-<P>Simple Conditionals. A statement having the following form:
+<<<if ?{X1} ... ?{XN} in ?{C} then ?{S1} else ?{S2} end>>>
 
-<P><IMG="Image78.gif"268>
+<P>where ?{C} is a sequence of simple equalities, is called a simple
+conditional. The subexpression <<if ?{X1} ... ?{XN} in ?{C} then
+?{S1}>> is usually called a <EM>clause</EM>, and
+<<if ?{X1} ... ?{XN} in ?{C}>> is the <EM>condition</EM> of the
+clause. A thread executing such as conditional will first check
+whether the condition: "There are <<?{X1} ... ?{XN}>> such that ?{C}
+is true" is satisfied or falsified by the current state of the
+store. If the condition is satisfied, statement ?{S1} is executed; if
+it is falsified, the thread executes ?{S2}; and if neither hold, the
+thread suspends.
 
-<P>where <IMG="Image79.gif"1617> is a sequence of simple equalities, is called a simple conditional. The subexpression <IMG="Image80.gif"185> is usually called a <EM>clause</EM>, and <IMG="Image81.gif"126> is the <EM>condition</EM> of the clause. A thread executing such as conditional will first check whether the condition:  "There are <IMG="Image82.gif"58> such that <IMG="Image83.gif"1617> is true" is satisfied or falsified by the current state of the store. If the condition is satisfied, statement <IMG="Image84.gif"17> is executed; if it is falsified, the thread executes <IMG="Image85.gif"18>; and if neither hold, the thread suspends.
+<P>A simple equality has the general form <MATH/x = t/ where
+<MATH/t/ is a record or a variable. Examples of simple
+conditions follow.
 
-<P>A simple equality has the general form <IMG="Image86.gif"3614>where <IMG="Image87.gif"1014> is a record or a variable. Examples of simple conditions follow.
+<<<
+X = true           % X is bound to true in the store
+Y Z in X = f(Y Z)  % X is bound to a tuple of 2 arguments
+X = Y              % X and Y label the same cell in the store
+>>>
 
-<<
-<P>X = true              % X is bound to true in the store
-Y Z in X = f(Y Z)     % X is bound to a tuple of 2 arguments
-X = Y        % X and Y label the same cell in the store
+<SUBSUBSECTION><TITLE/Comparison Procedures/
+<P>Oz provides a number of built-in tertiary procedures used for
+comparison. These include <<==>> that we have seen earlier as well as
+<<\=>>, <<=&lt;>>, <<&lt;>>, <<&gt;=>>, <<&gt;>>, <<andthen>>, and
+<<orelse>>. Common to these procedures is that they are used as
+Boolean functions in an infix notation. The following example
+illustrates the use of a conditional in conjunction with the
+greater-than operator <<&gt;>>. In this example <<Z>> is bound to the
+maximum of <<X>> and <<Y,>> i.e. to <<Y:
 
->>
-<P>Comparison Procedures. Oz provides a number of built-in tertiary procedures used for comparison. These include <<==>> that we have seen earlier as well as <<\=>>, <<=&lt;, &lt;, &gt;=, &gt;,>> <<andthen>>, and <<orelse>>. Common to these procedures is that they are used as Boolean functions in an infix notation.  The following example illustrates the use of a conditional in conjunction with the greater-than operator <<&gt;>>. In this example <<Z>> is bound to the maximum of <<X>> and <<Y,>> i.e. to <<Y:
-
->><<
-<P>local X Y F Z in
+<<<
+local X Y F Z in
    X = 5
    Y = 10
    F = X > Y
    if F = true then Z = X
    else Z = Y end
 end
->><<
-<P>Parallel Conditional. A parallel conditional is of the from:
+>>>
 
->>
-<P><IMG="Image88.gif"11680>
+<SUBSECTION><TITLE/Parallel Conditional/
+<P>A parallel conditional is of the from
 
+<<<
+if ?{C1} then ?{S1}
+[] ?{C2} then ?{S2}
+...
+else ?{SN} end
+>>>
 
+<P>A parallel conditional is executed by evaluating all conditions
+<<?{C1} ... ?{C(N-1)}>> in an <EM>arbitrary</EM> order, possibly
+concurrently. If one of the conditions say ?{Ci} is
+true, its corresponding statement ?{Si} is chosen. If
+all conditions are false, the else statement ?{SN} is
+chosen, otherwise the executing thread suspends. Parallel conditionals
+are useful mostly in concurrent programming, e.g. for programming
+time-out on certain events. However, it is often used in a
+deterministic manner with mutually exclusive conditions. So, the above
+example could be written as
 
-<P>A parallel conditional is executed by evaluating all conditions <IMG="Image89.gif"61> in an <EM>arbitrary</EM> order, possibly concurrently. If one of the conditions say <IMG="Image90.gif"17>is true, its corresponding statement <IMG="Image91.gif"17> is chosen. If all conditions are false, the else statement <IMG="Image92.gif"21> is chosen, otherwise the executing thread suspends. Parallel conditionals are useful mostly in concurrent programming, e.g. for programming time-out on certain events. However, it is often used in a deterministic manner with mutually exclusive conditions. So, the above example could be written as:
-
-<<
-<P>local X Y F Z in
+<<<
+local X Y F Z in
    X = 5
    Y = 10
    F = X &gt;= Y
@@ -224,9 +289,9 @@ end
       Z = Y
    end
 end
+>>>
 
->>
-<P>Notice that the <<else>> part is missing. This is just a shorthand notation for an <<else>> clause that raises an exception.
-<OL>
+<P>Notice that the <<else>> part is missing. This is just a shorthand
+notation for an <<else>> clause that raises an exception.
 
 </CHAPTER>
