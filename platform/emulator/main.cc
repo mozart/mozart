@@ -1,6 +1,5 @@
 #include "am.hh"
 #include "io.hh"
-#include "thread.hh"
 
 int main (int argc,char **argv)
 {

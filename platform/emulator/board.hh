@@ -17,7 +17,7 @@
 #endif
 
 
-#include "types.hh"
+#include "constterm.hh"
 
 #include "constr.hh"
 #include "suspension.hh"
