@@ -854,7 +854,7 @@ If FORCE is non-nil, kill it immediately."
 	  (let ((opi "http://www.ps.uni-sb.de/ozhome/bin/opi"))
 	    (if oz-win32
 		(make-comint "Oz Emulator" "ozemulator" nil "-u" opi)
-	      (make-comint "Oz Emulator" "ozengine" nil opi)))
+	      (make-comint "Oz Emulator" "opi" nil)))
 	  (oz-create-buffer oz-emulator-buffer 'emulator))
 
 	(let ((proc (get-buffer-process oz-emulator-buffer)))
