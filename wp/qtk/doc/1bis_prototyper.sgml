@@ -3,7 +3,7 @@
 <p>
 The Prototyper application is an application that displays commented Oz code. 
 The Run button executes the code. The user can edit the code and click Run again to see its modifications instantly. The Prototyper proposes a list of topics of interest for QTk. The Prototyper application can be started from the OPI by:
-<<<[Prototyper]={Module.link ["x-oz://system/wp/qtk/Prototyper.ozf"]}
+<<<[Prototyper]={Module.link ["x-oz://system/wp/Prototyper.ozf"]}
 {Prototyper.run}
 >>>
 <figure id="figure.picture100">
