@@ -276,7 +276,7 @@ COMPILERSRC1 = \
 	Unnester.oz UnnestFD.oz Assembler.oz Interface.oz Abstractions.oz \
 	Errors.oz RunTime.oz
 
-COMPILERSRCEXTRA = compiler-Builtins.oz compiler-Opcodes.oz
+COMPILERSRCEXTRA = compiler-Builtins.oz
 
 COMPILERSRCNOVER = \
 	$(COMPILERSRC1:%=compiler/%) $(COMPILERSRCEXTRA)
@@ -298,10 +298,6 @@ first: $(COMPILERSRCEXTRA)
 
 compiler-Builtins.oz: $(BIMODFILES)
 	$(PERL) $(BIDECL) -srcdir $(EMUSRCDIR) -builtins $(BIMODSPECS) > $@
-
-compiler-Opcodes.oz: compiler/Opcodes.m4oz $(EMUSRCDIR)/instrDefs.m4
-	$(M4) -DEMUDIR=$(EMUSRCDIR) $< > $@ \
-	|| (rm -f $@; exit 1)
 
 FUNFUNCTORS = PrintName.ozf Builtins.ozf Unnester.ozf Core.ozf \
 	StaticAnalysis.ozf CodeGen.ozf Assembler.ozf \
@@ -327,7 +323,7 @@ StaticAnalysis.ozf: compiler/StaticAnalysis.oz compiler/POTypes.oz \
 CodeGen.ozf: compiler/CodeGen.oz compiler/PatternMatching.oz \
 	compiler/CodeStore.oz compiler/CodeEmitter.oz
 
-Assembler.ozf: compiler/Assembler.oz compiler-Opcodes.oz
+Assembler.ozf: compiler/Assembler.oz
 
 Main.ozf: compiler/Main.oz compiler/FormatStrings.oz \
 	compiler/CheckTupleSyntax.oz compiler/ParseOz.oz \
