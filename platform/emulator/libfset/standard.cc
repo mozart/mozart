@@ -275,9 +275,25 @@ failure:
 
 OZ_Return FSetDistinctPropagator::propagate(void)
 {
-  cout << "FSetDistinctPropagator::propagate not implemented yet."
-       << endl << flush;
-  return FAILED;
+  OZ_DEBUGPRINT("in " << *this);
+  OZ_FSetVar x(_x), y(_y);
+  PropagatorController_S_S P(x, y);
+
+  // cardinality differs
+  if (x->getCardMax() < y->getCardMin() ||
+      y->getCardMax() < x->getCardMin()) {
+    return P.vanish();
+  }
+
+  OZ_FSetConstraint aux = *x;
+
+  if(! (aux <<= *y))
+    return P.vanish();
+
+  if (*x == *y)
+    return P.fail();
+
+  return P.leave();
 }
 
 //--------------------------------------------------------------------
