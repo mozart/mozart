@@ -21,7 +21,8 @@ define
    IdCounter = {New Aux.counterClass init}
    
    fun {MakeParameterEdge Hist VarTable Event VarId EventPs AllParams}
-      VarStr = VarTable.VarId.nameconstraint
+      VarStr = {Hist get_sol_var(VarId $)}
+      #VarTable.VarId.nameconstraint
 \ifdef SHOW_ID
       #" ["#VarId#"]"
 \endif      
@@ -37,16 +38,8 @@ define
       #"m(["
       #{Hist insert_menu($)}
       #{Hist insert_menu_mark_param(VarId VarStr $)}
-      #"menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
-      #",menu_entry(\"vg<"
-      #AllParams.1
-      #{FoldL AllParams.2
-	fun {$ L R} if R == nil then L
-		    else L#'|'#R
-		    end
-	end ""}
-      #">\",\"Variable graph of all variables reachable by that constraint\")"
-      
+
+      #"menu_entry(\"svg<"#VarId#">\",\"Single variable graph of "#VarStr#"\")"
       #",menu_entry(\"vg<"
       
       #EventPs.1
@@ -55,11 +48,21 @@ define
 				    end
 			end ""}
       
-      #">\",\"Variable graph of all variables reachable by that constraint at event ["#Event#"]\")"
+      #">\",\"Variable graph of all variables reachable by that propagator at event ["#Event#"]\")"
       
-      #",menu_entry(\"svg<"#VarId#">\",\"Single variable graph of "
-      #VarStr#"\")])"
+      #",menu_entry(\"vg<"
+      #AllParams.1
+      #{FoldL AllParams.2
+	fun {$ L R} if R == nil then L
+		    else L#'|'#R
+		    end
+	end ""}
+      #">\",\"Variable graph of all variables reachable by that propagator\")"
       
+      #",menu_entry(\"vg<solvar>\",\"Variable graph of root variables\")"
+      #",menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
+
+      #"])"
       #"],[]))))"
    end
    
@@ -82,7 +85,14 @@ define
       #"a(\"_GO\",\""#Config.eventNodeShape#"\"),"      
       #"m(["
       #{Hist insert_menu($)}
-      #"menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
+      #"menu_entry(\"vg<"
+      #Event.2.1
+      #{FoldL Event.2.2 fun {$ L R} if R == nil then L
+				    else L#'|'#R
+				    end
+			end ""}
+      
+      #">\",\"Variable graph of all variables reachable by that propagator at event ["#Event.1#"]\")"
       #",menu_entry(\"vg<"
       #AllParams.1
       #{FoldL AllParams.2
@@ -90,15 +100,10 @@ define
 		    else L#'|'#R
 		    end
 	end ""}
-      #">\",\"Variable graph of all variables reachable by that constraint\")"
-      #",menu_entry(\"vg<"
-      #Event.2.1
-      #{FoldL Event.2.2 fun {$ L R} if R == nil then L
-				    else L#'|'#R
-				    end
-			end ""}
-      
-      #">\",\"Variable graph of all variables reachable by that constraint at event ["#Event.1#"]\")])"
+      #">\",\"Variable graph of all variables reachable by that propagator\")"
+      #",menu_entry(\"vg<solvar>\",\"Variable graph of root variables\")"
+      #",menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
+      #"])"
       
       #"],["
       #{MakeParameterEdges Hist VarTable Event.1 Event.2 Event.2 AllParams}
@@ -171,9 +176,9 @@ define
 	      #{Hist insert_menu($)}
 	      #{Hist insert_menu_mark_prop(PropId
 					   ReflC.name#" ("#Location#")" $)}
-	      #"menu_entry(\"cg<all>\",\"Constraint graph of all constraints\")"
-	      #",menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
-	      #",menu_entry(\"vg<solvar>\",\"Variable graph of solution variables\")"
+	      
+	      #"menu_entry(\"cg<all>\",\"Propagator graph of all propagators\")"
+	      #",blank"
 	      #",menu_entry(\"vg<"
 	      #ParamsList.1
 	      #{FoldL ParamsList.2
@@ -181,8 +186,10 @@ define
 			    else L#'|'#R
 			    end
 		end ""}
-	      #">\",\"Variable graph of all variables reachable by that constraint\")])"
-	      
+	      #">\",\"Variable graph of all variables reachable by that propagator\")"
+	      #",menu_entry(\"vg<solvar>\",\"Variable graph of root variables\")"
+	      #",menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
+	      #"])"
 	      #"],["
 	      #{MakeEventEdges Hist VarTable ParamEvents ParamsList}
 	      #"]))]")
