@@ -1689,7 +1689,8 @@ public:
             }
           else
             {
-              ((ReadConnection*)c)->closeConnection();
+              if(!c->isOpening()){
+                ((ReadConnection*)c)->closeConnection();}
             }
         }
       c = cc;}
@@ -2790,6 +2791,10 @@ int tcpPreReadHandler(int fd,void *r0){
   ackStartNr = unmarshalNumber(tcpOpenMsgBuffer);
   maxNrSize= unmarshalNumber(tcpOpenMsgBuffer);
   si = unmarshalDSite(tcpOpenMsgBuffer);
+  if(si->getRemoteSite() == NULL)
+    goto tcpPreFailure;
+
+
   old = si->getRemoteSite()->getReadConnection();
   if(old!=NULL){
     PD((TCP,"ReadConnection has been disconnected, not discovered"));
@@ -2803,8 +2808,8 @@ int tcpPreReadHandler(int fd,void *r0){
 
   r->setMaxSizeAck(maxNrSize);
   r->clearOpening();
-  OZ_registerReadHandler(fd,tcpReadHandler,(void *)r);
-  return 0;
+OZ_registerReadHandler(fd,tcpReadHandler,(void *)r);
+return 0;
 
 tcpPreFailure:
   osclose(fd);
@@ -3406,7 +3411,7 @@ int RemoteSite::readRecMsgCtr(){
 /************************************************************/
 
 void RemoteSite::sitePrmDwn(){
-  //printf("Site prm %s\n",site->stringrep());
+  //  printf("Site prm %s\n",site->stringrep());
   status = SITE_PERM;
   if(readConnection!=NULL && readConnection->isReading()){
     readConnection->setCrashed();
@@ -3582,8 +3587,9 @@ void ReadConnection::closeConnection(){
   PD((TCP_CONNECTIONH,"tcpCloserReader r:%x",this));
   msg=TCP_CLOSE_REQUEST_FROM_READER;
   if(tcpAckReader(this,remoteSite->getRecMsgCtr())
-     && IP_OK ==writeI(fd,&msg)){
+     && fd != LOST && IP_OK ==writeI(fd,&msg)){
     setClosing();}
+
   return;}
 
 void ReadConnection::close(){

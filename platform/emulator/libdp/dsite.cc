@@ -193,7 +193,8 @@ DSite* unmarshalDSiteInternal(MsgBuffer *buf, DSite *tryS, MarshalTag mt)
   case SAME: {
     PD((SITE,"unmarshalsite SAME"));
     if(mt==DIF_SITE_PERM){
-      if(s->isPerm()){return s;}
+      if(s->isPerm()){
+        return s;}
       s->discoveryPerm();
       return s;}
 
