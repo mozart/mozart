@@ -1054,7 +1054,7 @@ Bool distHandlerInstallImpl(unsigned short kind,unsigned short ec,
     return installGlobalWatcher(ec,proc,kind);}
   if(!oz_isVariable(oz_deref(entity))){
     entity=oz_deref(entity);
-    if(!isWatcherEligible(entity)) return FALSE;
+    if(!isWatcherEligible(entity)) return TRUE;
     Tertiary* tert = tagged2Tert(entity);
     return installWatcher(tert,ec,proc,th,kind);}
 
@@ -1069,7 +1069,7 @@ Bool distHandlerDeInstallImpl(unsigned short kind,unsigned short ec,
     return deInstallGlobalWatcher(ec,proc,kind);}
   if(!oz_isVariable(oz_deref(entity))){
     entity=oz_deref(entity);
-    if(!isWatcherEligible(entity)) return FALSE;
+    if(!isWatcherEligible(entity)) return TRUE;
     Tertiary* tert = tagged2Tert(entity);
     return deinstallWatcher(tert,ec,proc,th,kind);}
 

@@ -215,7 +215,7 @@ OZ_BI_define(BIinterDistHandlerInstall,2,1){
   Assert(entity!=0);
   if(!oz_isVariable(oz_deref(entity))){
     if(!isWatcherEligible(oz_deref(entity))){
-      OZ_RETURN(oz_bool(FALSE));}}
+      OZ_RETURN(oz_bool(TRUE));}}
   if(perdioInitialized){
     if((*distHandlerInstall)(kind,ec,th,entity,proc)){
       OZ_RETURN(oz_bool(TRUE));}
@@ -247,7 +247,7 @@ OZ_BI_define(BIinterDistHandlerDeInstall,2,0){
   Assert(entity!=0);
   if(!oz_isVariable(oz_deref(entity))){
     if(!isWatcherEligible(oz_deref(entity))){
-      OZ_RETURN(oz_bool(FALSE));}}
+      OZ_RETURN(oz_bool(TRUE));}}
   if(perdioInitialized){
     if((*distHandlerDeInstall)(kind,ec,th,entity,proc)){
       OZ_RETURN(oz_bool(TRUE));}
