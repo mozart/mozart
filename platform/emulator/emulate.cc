@@ -284,6 +284,7 @@ fallback:
 OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
 {
   Assert(am.isEmptySuspendVarList());
+  Assert(am.isEmptyPreparedCalls());
 
   const int inAr = bi->getInArity();
   const int outAr = bi->getOutArity();
@@ -920,6 +921,7 @@ LBLdispatcher:
 #endif
 
   Assert(am.isEmptySuspendVarList());
+  Assert(am.isEmptyPreparedCalls());
   switch (op) {
 #endif
 

@@ -3125,6 +3125,7 @@ OZ_Return accessCell(OZ_Term cell,OZ_Term &out)
 
 OZ_Return exchangeCell(OZ_Term cell, OZ_Term newVal, OZ_Term &oldVal)
 {
+  CHECK_NONVAR(newVal);
   Tertiary *tert = tagged2Tert(cell);
   if(tert->isLocal()){
     CellLocal *cellLocal=(CellLocal*)tert;
