@@ -5807,7 +5807,7 @@ void BIinitPerdio()
 #endif
 
   initMarshaler();
-  initComponents();
+  // initComponents();
 
   creditSite=NULL;
 
