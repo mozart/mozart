@@ -55,6 +55,14 @@ void printBanner()
   warning("DEBUG_DET implies eager waking of sleep.");
 #endif
 
+#ifdef NO_LTQ
+  warning("LTQ is turned off.");
+#else
+#ifdef LOCAL_THREAD_STACK
+  warning("LTQ is a STACK.");
+#endif
+#endif
+
 #ifdef DEBUG_CHECK
   printf("Compile Flags:"
          " DEBUG_CHECK"

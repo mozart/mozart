@@ -96,6 +96,9 @@ typedef OZ_expect_t (PropagatorExpect::*PropagatorExpectMeth) (OZ_Term);
 
 class PropagatorExpect : public OZ_Expect {
 public:
+  OZ_expect_t expectIntVarAny(OZ_Term t) {
+    return expectIntVar(t);
+  }
   OZ_expect_t expectIntVarMin(OZ_Term t) {
     return expectIntVar(t, fd_prop_bounds);
   }
@@ -125,7 +128,7 @@ public:
     return expectVector(t, &PropagatorExpect::expectIntVarSingl);
   }
   OZ_expect_t expectVectorIntVarAny(OZ_Term t) {
-    return expectVector(t, (PropagatorExpectMeth) &OZ_Expect::expectIntVarAny);
+    return expectVector(t, &PropagatorExpect::expectIntVarAny);
   }
   OZ_expect_t expectVectorVectorIntVarMinMax(OZ_Term t) {
     return expectVector(t, &PropagatorExpect::expectVectorIntVarMinMax);

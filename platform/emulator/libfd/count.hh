@@ -23,8 +23,8 @@ public:
   ExactlyPropagator(OZ_Term n, OZ_Term l, OZ_Term v)
     : Propagator_D_VD_I(n, l, v) {}
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 //-----------------------------------------------------------------------------
@@ -36,8 +36,8 @@ public:
   AtLeastPropagator(OZ_Term n, OZ_Term l, OZ_Term v)
     : Propagator_D_VD_I(n, l, v) {}
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 //-----------------------------------------------------------------------------
@@ -49,8 +49,8 @@ public:
   AtMostPropagator(OZ_Term n, OZ_Term l, OZ_Term v)
     : Propagator_D_VD_I(n, l, v) {}
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 //-----------------------------------------------------------------------------
@@ -62,8 +62,8 @@ public:
   ElementPropagator(OZ_Term n, OZ_Term l, OZ_Term v)
     : Propagator_D_VI_D(n, l, v) {}
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 #endif // __COUNT_HH__

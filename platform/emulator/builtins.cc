@@ -853,9 +853,9 @@ OZ_C_proc_begin(BIwidthC, 2)
 
     OZ_Expect pe;
     OZ_EXPECT(pe, 0, expectRecordVar);
-    OZ_EXPECT(pe, 1, expectIntVarAny);
+    OZ_EXPECT(pe, 1, expectIntVar);
 
-    return pe.spawn(new WidthPropagator(rawrec, rawwid)); // oz_args[0], oz_args[1]));
+    return pe.impose(new WidthPropagator(rawrec, rawwid)); // oz_args[0], oz_args[1]));
 }
 OZ_C_proc_end
 
@@ -867,7 +867,7 @@ OZ_CFun WidthPropagator::spawner = BIwidthC;
 // Assume: wid is FD or SMALLINT or BIGINT.
 // This is the simplest most straightforward possible
 // implementation and it can be optimized in many ways.
-OZ_Return WidthPropagator::run(void)
+OZ_Return WidthPropagator::propagate(void)
 {
     int recwidth;
     OZ_Return result = SLEEP;
@@ -1051,7 +1051,7 @@ OZ_C_proc_begin(BImonitorArity, 3)
         OZ_EXPECT(pe, 1, expectVar);
 
         TaggedRef uvar=makeTaggedRef(newTaggedUVar(home));
-        return pe.spawn(
+        return pe.impose(
             new MonitorArityPropagator(rec,kill,feattail,uvar,uvar),
             OZ_getMediumPrio(),
             OFS_flag);
@@ -1069,7 +1069,7 @@ OZ_CFun MonitorArityPropagator::spawner = BImonitorArity;
 // check in addFeatOFSSuspList that the suspension is waiting for the right
 // variable.  FH and FT are a difference list that holds the features that
 // have been added.
-OZ_Return MonitorArityPropagator::run(void)
+OZ_Return MonitorArityPropagator::propagate(void)
 {
     // Check if killed:
     TaggedRef kill=K;

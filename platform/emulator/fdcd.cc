@@ -130,9 +130,9 @@ public:
     OZ_updateHeapTerm(vp_tuple);
   }
   virtual size_t sizeOf(void) { return sizeof(CDPropagator); }
-  virtual OZ_Return run(void);
-  virtual OZ_Term getArguments(void) const { return OZ_nil(); }
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
+  virtual OZ_Term getParameters(void) const { return OZ_nil(); }
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 int unifiedVars(int sz, OZ_Term * v)
@@ -173,7 +173,7 @@ int unifiedVars(int sz, OZ_Term * v)
 //   o constrain global variables with union of corresponding local vars
 //-----------------------------------------------------------------------------
 
-OZ_Return CDPropagator::run(void)
+OZ_Return CDPropagator::propagate(void)
 {
   DEREF(b_tuple, b_tupleptr, b_tupletag);
   DEREF(v_tuple, v_tupleptr, v_tupletag);
@@ -482,8 +482,8 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
   PropagatorExpect pe;
   OZ_EXPECT(pe, 1, expectVectorIntVarAny);
 
-  return pe.spawn(new CDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]),
-                  OZMAX_PRIORITY - 1);
+  return pe.impose(new CDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]),
+                   OZMAX_PRIORITY - 1);
 }
 OZ_C_proc_end
 
@@ -501,7 +501,7 @@ void CDSuppl::updateHeapRefs(OZ_Boolean) {
   OZ_updateHeapTerm(reg_b);
 }
 
-OZ_Return CDSuppl::run(void)
+OZ_Return CDSuppl::propagate(void)
 {
   OZ_FDIntVar b(reg_b);
   PropagatorController_V P(b);

@@ -14,9 +14,9 @@ OZ_C_proc_begin(fsp_intersection, 3)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new FSetIntersectionPropagator(OZ_args[0],
-                                                 OZ_args[1],
-                                                 OZ_args[2]));
+  return pe.impose(new FSetIntersectionPropagator(OZ_args[0],
+                                                  OZ_args[1],
+                                                  OZ_args[2]));
 }
 OZ_C_proc_end
 
@@ -36,9 +36,9 @@ OZ_C_proc_begin(fsp_union, 3)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new FSetUnionPropagator(OZ_args[0],
-                                          OZ_args[1],
-                                          OZ_args[2]));
+  return pe.impose(new FSetUnionPropagator(OZ_args[0],
+                                           OZ_args[1],
+                                           OZ_args[2]));
 }
 OZ_C_proc_end
 
@@ -57,8 +57,8 @@ OZ_C_proc_begin(fsp_subsume, 2)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new FSetSubsumePropagator(OZ_args[0],
-                                            OZ_args[1]));
+  return pe.impose(new FSetSubsumePropagator(OZ_args[0],
+                                             OZ_args[1]));
 }
 OZ_C_proc_end
 
@@ -78,8 +78,8 @@ OZ_C_proc_begin(fsp_disjoint, 2)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new FSetDisjointPropagator(OZ_args[0],
-                                             OZ_args[1]));
+  return pe.impose(new FSetDisjointPropagator(OZ_args[0],
+                                              OZ_args[1]));
 }
 OZ_C_proc_end
 
@@ -87,7 +87,7 @@ OZ_CFun FSetDisjointPropagator::spawner = fsp_disjoint;
 
 //*****************************************************************************
 
-OZ_Return FSetIntersectionPropagator::run(void)
+OZ_Return FSetIntersectionPropagator::propagate(void)
 {
   _OZ_DEBUGPRINT("in " << *this);
 
@@ -137,7 +137,7 @@ failure:
   return P.fail();
 }
 
-OZ_Return FSetUnionPropagator::run(void)
+OZ_Return FSetUnionPropagator::propagate(void)
 {
   _OZ_DEBUGPRINT("in " << *this);
 
@@ -187,7 +187,7 @@ failure:
   return P.fail();
 }
 
-OZ_Return FSetSubsumePropagator::run(void)
+OZ_Return FSetSubsumePropagator::propagate(void)
 {
   OZ_DEBUGPRINT("int " << *this);
   OZ_FSetVar x(_x), y(_y);
@@ -205,7 +205,7 @@ failure:
   return P.fail();
 }
 
-OZ_Return FSetDisjointPropagator::run(void)
+OZ_Return FSetDisjointPropagator::propagate(void)
 {
   OZ_DEBUGPRINT("in " << *this);
   OZ_FSetVar x(_x), y(_y);

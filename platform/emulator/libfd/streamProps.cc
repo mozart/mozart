@@ -58,7 +58,7 @@ OZ_C_proc_begin(sched_disjunctiveStream, 3)
   OZ_EXPECT(pe, 1, expectVectorInt);
   OZ_EXPECT(pe, 2, expectStream);
 
-  return pe.spawn(new DisjunctivePropagatorStream(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new DisjunctivePropagatorStream(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
@@ -86,7 +86,7 @@ void DisjunctivePropagatorStream::updateHeapRefs(OZ_Boolean duplicate)
 // RUN METHOD
 //////////
 
-OZ_Return DisjunctivePropagatorStream::run(void)
+OZ_Return DisjunctivePropagatorStream::propagate(void)
 {
   OZ_Stream st(stream);
 
@@ -154,7 +154,7 @@ OZ_Return DisjunctivePropagatorStream::run(void)
     for (i = 0; i<new_items; i++ ) {
       new_reg_durs[ts+i] = my_list->dur;
       new_reg_fds[ts+i] = my_list->fd;
-      postOn(my_list->fd);
+      imposeOn(my_list->fd);
       :: delete my_list;
       my_list = my_list->next;
     }
@@ -277,7 +277,7 @@ OZ_C_proc_begin(fdp_distinctStream, 2)
   OZ_EXPECT(pe, 0, expectVectorIntVarAny);
   OZ_EXPECT(pe, 1, expectStream);
 
-  return pe.spawn(new DistinctPropagatorStream(OZ_args[0], OZ_args[1]));
+  return pe.impose(new DistinctPropagatorStream(OZ_args[0], OZ_args[1]));
 }
 OZ_C_proc_end
 
@@ -300,7 +300,7 @@ void DistinctPropagatorStream::updateHeapRefs(OZ_Boolean duplicate)
 // RUN METHOD
 //////////
 
-OZ_Return DistinctPropagatorStream::run(void)
+OZ_Return DistinctPropagatorStream::propagate(void)
 {
   OZ_Stream st(stream);
 
@@ -355,7 +355,7 @@ OZ_Return DistinctPropagatorStream::run(void)
 
     for (i = 0; i<new_items; i++ ) {
       new_reg_fds[ts+i] = my_list->fd;
-      postOn(my_list->fd);
+      imposeOn(my_list->fd);
       :: delete my_list;
       my_list = my_list->next;
     }

@@ -31,7 +31,7 @@ OZ_C_proc_begin(fdp_distance, 4)
     OZ_EXPECT(pe, 1, expectIntVarSingl);
     OZ_EXPECT(pe, 3, expectIntVarSingl);
 
-    return pe.spawn(new DistancePropagatorNeq(OZ_args[0], OZ_args[1],
+    return pe.impose(new DistancePropagatorNeq(OZ_args[0], OZ_args[1],
                                               OZ_args[3], 0));
   } else {
     OZ_EXPECT(pe, 0, expectIntVarMinMax);
@@ -39,19 +39,19 @@ OZ_C_proc_begin(fdp_distance, 4)
     OZ_EXPECT(pe, 3, expectIntVarMinMax);
 
     if (!strcmp(SUM_OP_EQ, op)) {
-      return pe.spawn(new DistancePropagatorEq(OZ_args[0], OZ_args[1],
+      return pe.impose(new DistancePropagatorEq(OZ_args[0], OZ_args[1],
                                                OZ_args[3], 0));
     } else if (!strcmp(SUM_OP_LEQ, op)) {
-      return pe.spawn(new DistancePropagatorLeq(OZ_args[0], OZ_args[1],
+      return pe.impose(new DistancePropagatorLeq(OZ_args[0], OZ_args[1],
                                                 OZ_args[3], 0));
     } else if (!strcmp(SUM_OP_LT, op)) {
-      return pe.spawn(new DistancePropagatorLeq(OZ_args[0], OZ_args[1],
+      return pe.impose(new DistancePropagatorLeq(OZ_args[0], OZ_args[1],
                                               OZ_args[3], 1));
     } else if (!strcmp(SUM_OP_GEQ, op)) {
-      return pe.spawn(new DistancePropagatorGeq(OZ_args[0], OZ_args[1],
+      return pe.impose(new DistancePropagatorGeq(OZ_args[0], OZ_args[1],
                                                 OZ_args[3], 0 ));
     } else if (!strcmp(SUM_OP_GT, op)) {
-      return pe.spawn(new DistancePropagatorGeq(OZ_args[0], OZ_args[1],
+      return pe.impose(new DistancePropagatorGeq(OZ_args[0], OZ_args[1],
                                                 OZ_args[3], 1));
     }
   }
@@ -62,7 +62,7 @@ OZ_C_proc_end
 
 //=============================================================================
 
-OZ_Return DistancePropagatorGeq::run(void)
+OZ_Return DistancePropagatorGeq::propagate(void)
 {
   OZ_DEBUGPRINT("in: " << *this);
 
@@ -132,7 +132,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_Return DistancePropagatorLeq::run(void)
+OZ_Return DistancePropagatorLeq::propagate(void)
 {
   OZ_DEBUGPRINT("in: " << *this);
 
@@ -207,7 +207,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_Return DistancePropagatorEq::run(void)
+OZ_Return DistancePropagatorEq::propagate(void)
 {
   // y + xd =: x  or  x + xd =: y
 
@@ -400,7 +400,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_Return DistancePropagatorNeq::run(void)
+OZ_Return DistancePropagatorNeq::propagate(void)
 {
   OZ_DEBUGPRINT("in: " << *this);
 

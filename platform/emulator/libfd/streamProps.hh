@@ -31,9 +31,9 @@ public:
   ~DisjunctivePropagatorStream();
   virtual size_t sizeOf(void) { return sizeof(DisjunctivePropagatorStream); }
   virtual void updateHeapRefs(OZ_Boolean);
-  virtual OZ_Return run(void);
-  virtual OZ_Term getArguments(void) const { RETURN_LIST1(stream); }
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
+  virtual OZ_Term getParameters(void) const { RETURN_LIST1(stream); }
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 //-----------------------------------------------------------------------------
@@ -52,7 +52,7 @@ public:
   ~DistinctPropagatorStream();
   virtual size_t sizeOf(void) { return sizeof(DistinctPropagatorStream); }
   virtual void updateHeapRefs(OZ_Boolean);
-  virtual OZ_Return run(void);
-  virtual OZ_Term getArguments(void) const { RETURN_LIST1(stream); }
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
+  virtual OZ_Term getParameters(void) const { RETURN_LIST1(stream); }
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };

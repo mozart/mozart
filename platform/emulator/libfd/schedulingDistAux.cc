@@ -149,7 +149,8 @@ OZ_C_proc_begin(sched_firstsLasts, 5)
   OZ_EXPECT(pe, 3, expectStream);
   OZ_EXPECT(pe, 4, expectInt);
 
-  return pe.spawn(new FirstsLasts(OZ_args[0], OZ_args[1], OZ_args[2], OZ_args[3], OZ_intToC(OZ_args[4])));
+  return pe.impose(new FirstsLasts(OZ_args[0], OZ_args[1], OZ_args[2],
+                                   OZ_args[3], OZ_intToC(OZ_args[4])));
 }
 OZ_C_proc_end
 
@@ -198,7 +199,7 @@ OZ_CFun FirstsLasts::spawner = sched_firstsLasts;
 // RUN METHOD
 //////////
 
-OZ_Return FirstsLasts::run(void)
+OZ_Return FirstsLasts::propagate(void)
 {
   OZ_DEBUGPRINT("in " << *this);
 

@@ -24,12 +24,12 @@ OZ_C_proc_begin(fdp_notEqOff, 3)
   OZ_EXPECT(pe, 1, expectIntVarSingl);
   OZ_EXPECT(pe, 2, expectInt);
 
-  return pe.spawn(new NotEqOffPropagator(OZ_args[0], OZ_args[1],
-                                         OZ_intToC(OZ_args[2])));
+  return pe.impose(new NotEqOffPropagator(OZ_args[0], OZ_args[1],
+                                          OZ_intToC(OZ_args[2])));
 }
 OZ_C_proc_end
 
-OZ_Return NotEqOffPropagator::run(void)
+OZ_Return NotEqOffPropagator::propagate(void)
 {
   int &c = reg_c;
 
@@ -64,12 +64,12 @@ OZ_C_proc_begin(fdp_lessEqOff, 3)
   OZ_EXPECT(pe, 1, expectIntVarMinMax);
   OZ_EXPECT(pe, 2, expectInt);
 
-  return pe.spawn(new LessEqOffPropagator(OZ_args[0], OZ_args[1],
-                                          OZ_intToC(OZ_args[2])));
+  return pe.impose(new LessEqOffPropagator(OZ_args[0], OZ_args[1],
+                                           OZ_intToC(OZ_args[2])));
 }
 OZ_C_proc_end
 
-OZ_Return LessEqOffPropagator::run(void)
+OZ_Return LessEqOffPropagator::propagate(void)
 {
   OZ_DEBUGPRINT("in " << *this);
 
@@ -112,11 +112,11 @@ OZ_C_proc_begin(fdp_minimum, 3)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new MinimumPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new MinimumPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return MinimumPropagator::run(void)
+OZ_Return MinimumPropagator::propagate(void)
 {
   SimplifyOnUnify(replaceBy(reg_x, reg_z),
                   replaceBy(new LessEqOffPropagator(reg_x, reg_y, 0)),
@@ -153,11 +153,11 @@ OZ_C_proc_begin(fdp_maximum, 3)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new MaximumPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new MaximumPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return MaximumPropagator::run(void)
+OZ_Return MaximumPropagator::propagate(void)
 {
   SimplifyOnUnify(replaceBy(reg_x, reg_z),
                   replaceBy(new LessEqOffPropagator(reg_y, reg_x, 0)),
@@ -194,11 +194,12 @@ OZ_C_proc_begin(fdp_inter, 3)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new IntersectionPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new IntersectionPropagator(OZ_args[0], OZ_args[1],
+                                              OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return IntersectionPropagator::run(void)
+OZ_Return IntersectionPropagator::propagate(void)
 {
   SimplifyOnUnify(replaceBy(new SubSetPropagator(reg_z, reg_x)),
                   replaceBy(new SubSetPropagator(reg_x, reg_y)),
@@ -230,11 +231,11 @@ OZ_C_proc_begin(fdp_union, 3)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new UnionPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new UnionPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return UnionPropagator::run(void)
+OZ_Return UnionPropagator::propagate(void)
 {
   SimplifyOnUnify(replaceBy(new SubSetPropagator(reg_z, reg_x)),
                   PROCEED, PROCEED);
@@ -259,7 +260,7 @@ OZ_C_proc_begin(fdp_subset, 2)
 }
 OZ_C_proc_end
 
-OZ_Return SubSetPropagator::run(void)
+OZ_Return SubSetPropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y);
   PropagatorController_V_V P(x, y);
@@ -285,11 +286,11 @@ OZ_C_proc_begin(fdp_distinct, 1)
 
   OZ_EXPECT(pe, 0, expectVectorIntVarSingl);
 
-  return pe.spawn(new DistinctPropagator(OZ_args[0]));
+  return pe.impose(new DistinctPropagator(OZ_args[0]));
 }
 OZ_C_proc_end
 
-OZ_Return DistinctPropagator::run(void)
+OZ_Return DistinctPropagator::propagate(void)
 {
   if (reg_l_sz == 0) return PROCEED;
 
@@ -358,11 +359,11 @@ OZ_C_proc_begin(fdp_distinctOffset, 2)
   OZ_EXPECT(pe, 1, expectVectorInt);
   SAMELENGTH_VECTORS(0, 1);
 
-  return pe.spawn(new DistinctOffsetPropagator(OZ_args[0], OZ_args[1]));
+  return pe.impose(new DistinctOffsetPropagator(OZ_args[0], OZ_args[1]));
 }
 OZ_C_proc_end
 
-OZ_Return DistinctOffsetPropagator::run(void)
+OZ_Return DistinctOffsetPropagator::propagate(void)
 {
   OZ_DEBUGPRINT("in " << *this);
 

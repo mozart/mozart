@@ -121,12 +121,12 @@ int OZ_getFDSup(void)
 {
   return fd_sup;
 }
-
+/*
 OZ_expect_t expectIntVarAny(OZ_Expect* p,OZ_Term t)
 {
   return p->expectIntVarAny(t);
 }
-
+*/
 int OZ_vectorSize(OZ_Term t)
 {
   if (OZ_isCons(t)) {

@@ -44,6 +44,9 @@ typedef OZ_expect_t (PropagatorExpect::*PropagatorExpectMeth) (OZ_Term);
 
 class PropagatorExpect : public OZ_Expect {
 public:
+  OZ_expect_t expectIntVarAny(OZ_Term t) {
+    return expectIntVar(t);
+  }
   OZ_expect_t expectIntVarMinMax(OZ_Term t) {
     return expectIntVar(t, fd_prop_bounds);
   }

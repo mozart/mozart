@@ -18,9 +18,9 @@ public:
   DistancePropagatorLeq(OZ_Term x, OZ_Term y,  OZ_Term z, int c)
     : Propagator_D_D_D_I(x, y, z, c) {}
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Term getArguments(void) const { return Propagator_D_D_D_I::getArguments(SUM_OP_LEQ); }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Term getParameters(void) const { return Propagator_D_D_D_I::getParameters(SUM_OP_LEQ); }
 };
 
 class DistancePropagatorGeq : public Propagator_D_D_D_I {
@@ -30,9 +30,9 @@ public:
   DistancePropagatorGeq(OZ_Term x, OZ_Term y,  OZ_Term z, int c)
     : Propagator_D_D_D_I(x, y, z, c) {}
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Term getArguments(void) const { return Propagator_D_D_D_I::getArguments(SUM_OP_GEQ); }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Term getParameters(void) const { return Propagator_D_D_D_I::getParameters(SUM_OP_GEQ); }
 };
 
 class DistancePropagatorEq : public Propagator_D_D_D_I {
@@ -42,9 +42,9 @@ public:
   DistancePropagatorEq(OZ_Term x, OZ_Term y,  OZ_Term z, int c)
     : Propagator_D_D_D_I(x, y, z, c) {}
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Term getArguments(void) const { return Propagator_D_D_D_I::getArguments(SUM_OP_EQ); }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Term getParameters(void) const { return Propagator_D_D_D_I::getParameters(SUM_OP_EQ); }
 };
 
 class DistancePropagatorNeq : public Propagator_D_D_D_I {
@@ -54,7 +54,7 @@ public:
   DistancePropagatorNeq(OZ_Term x, OZ_Term y,  OZ_Term z, int c)
     : Propagator_D_D_D_I(x, y, z, c) {}
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Term getArguments(void) const { return Propagator_D_D_D_I::getArguments(SUM_OP_NEQ); }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Term getParameters(void) const { return Propagator_D_D_D_I::getParameters(SUM_OP_NEQ); }
 };

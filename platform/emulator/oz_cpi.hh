@@ -239,15 +239,15 @@ public:
   OZ_Return replaceBy(OZ_Term, OZ_Term);
   OZ_Return replaceByInt(OZ_Term, int);
   OZ_Return postpone(void);
-  OZ_Boolean postOn(OZ_Term);
-  OZ_Boolean addSpawn(OZ_FDPropState s, OZ_Term v);
-  OZ_Boolean addSpawn(OZ_FSetPropState s, OZ_Term v);
-  void spawn(OZ_Propagator * p, int prio = OZ_getMediumPrio());
+  OZ_Boolean imposeOn(OZ_Term);
+  OZ_Boolean addImpose(OZ_FDPropState s, OZ_Term v);
+  OZ_Boolean addImpose(OZ_FSetPropState s, OZ_Term v);
+  void impose(OZ_Propagator * p, int prio = OZ_getMediumPrio());
   virtual size_t sizeOf(void) = 0;
   virtual void updateHeapRefs(OZ_Boolean duplicate) = 0;
-  virtual OZ_Return run(void) = 0;
-  virtual OZ_Term getArguments(void) const = 0;
-  virtual OZ_CFun getSpawner(void) const = 0;
+  virtual OZ_Return propagate(void) = 0;
+  virtual OZ_Term getParameters(void) const = 0;
+  virtual OZ_CFun getHeaderFunc(void) const = 0;
 };
 
 ostream& operator << (ostream& o, const OZ_Propagator &p);
@@ -290,18 +290,17 @@ public:
   }
   OZ_expect_t expectVar(OZ_Term t);
   OZ_expect_t expectRecordVar(OZ_Term);
-  OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState);
+  OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState = fd_prop_any);
   OZ_expect_t expectFSetVar(OZ_Term, OZ_FSetPropState);
-  OZ_expect_t expectIntVarAny(OZ_Term t) { return expectIntVar(t, fd_prop_any); }
   OZ_expect_t expectInt(OZ_Term);
   OZ_expect_t expectFSetValue(OZ_Term);
   OZ_expect_t expectLiteral(OZ_Term);
   OZ_expect_t expectVector(OZ_Term, OZ_ExpectMeth);
   OZ_expect_t expectStream(OZ_Term st);
 
-  OZ_Return spawn(OZ_Propagator * p,
-                  int prio = OZ_getMediumPrio(),
-                  OZ_PropagatorFlags flags=NULL_flag);
+  OZ_Return impose(OZ_Propagator * p,
+                   int prio = OZ_getMediumPrio(),
+                   OZ_PropagatorFlags flags=NULL_flag);
   OZ_Return suspend(OZ_Thread);
   OZ_Return fail(void);
   OZ_Boolean isSuspending(OZ_expect_t r) {

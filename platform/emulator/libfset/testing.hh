@@ -19,9 +19,9 @@ public:
   IsInPropagator(OZ_Term v, OZ_Term i, OZ_Term b)
     : Propagator_S_I_D(v, i, b) { }
 
-  virtual OZ_Return run(void);
+  virtual OZ_Return propagate(void);
 
-  virtual OZ_CFun getSpawner(void) const {
+  virtual OZ_CFun getHeaderFunc(void) const {
     return spawner;
   }
 };
