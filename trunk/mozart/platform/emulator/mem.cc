@@ -198,23 +198,20 @@ class SbrkMemory {
 
   SbrkMemory *find(int sz, void *&ptr) 
   {
-    SbrkMemory* ret;
     if (this == NULL) {
-      ret = NULL;
-    } else {
-
-      if (sz == size) {
-	ptr = (void *) (this +1);
-#ifdef DEBUG_TRACEMEM
-	printf("*** Reusing %d bytes from free list\n", size);
-#endif
-	ret = next;
-      } else {
-	next = next->find(sz,ptr);
-	ret = this;
-      }
+      return NULL;
     }
-    return ret;
+
+    if (sz <= size) {
+      ptr = (void *) (this +1);
+#ifdef DEBUG_TRACEMEM
+      printf("*** Reusing %d bytes from free list\n", size);
+#endif
+      return next;
+    } 
+
+    next = next->find(sz,ptr);
+    return this;
   }
 };
 
@@ -393,13 +390,16 @@ void *heapMallocOutline(size_t chunk_size)
 
 
 void getMemFromOS(size_t sz) {
+  int thisBlockSz = ozconf.heapBlockSize;
   if ((int)sz > ozconf.heapBlockSize) {
-    warning("Memory chunk too big (size=%d)\nTry\n\tsetenv OZHEAPBLOCKSIZE <x>\nwhere <x> is greater than %d.\n",sz,ozconf.heapBlockSize);
-    osExit(1);
+    thisBlockSz = sz;
+    warning("Allocating very large heap block: size = %d kB",sz/KB);
+    //    warning("Memory chunk too big (size=%d)\nTry\n\tsetenv OZHEAPBLOCKSIZE <x>\nwhere <x> is greater than %d.\n",sz,ozconf.heapBlockSize);
+    //    osExit(1);
   }
 
-  heapTotalSize      += ozconf.heapBlockSize/KB;
-  heapTotalSizeBytes += ozconf.heapBlockSize;
+  heapTotalSize      += thisBlockSz/KB;
+  heapTotalSizeBytes += thisBlockSz;
   
   if (ozconf.heapMaxSize != -1 && 
       ((gc_is_running == NO) ?
@@ -419,7 +419,7 @@ void getMemFromOS(size_t sz) {
     ozconf.heapMaxSize = newSize;
   }
 
-  heapEnd = (char *) ozMalloc(ozconf.heapBlockSize);
+  heapEnd = (char *) ozMalloc(thisBlockSz);
   
   if (heapEnd == NULL) {
     fprintf(stderr,"Virtual memory exceeded\n");
@@ -432,9 +432,9 @@ void getMemFromOS(size_t sz) {
   }
   
   /* initialize with zeros */
-  DebugCheckT(memset(heapEnd,0,ozconf.heapBlockSize));
+  DebugCheckT(memset(heapEnd,0,thisBlockSz));
 
-  heapTop = heapEnd+ozconf.heapBlockSize;
+  heapTop = heapEnd+thisBlockSz;
 
   //message("heapTop: 0x%lx\n",heapTop);
   if (tagValueOf(makeTaggedMiscp(heapTop)) != heapTop) {
@@ -442,11 +442,10 @@ void getMemFromOS(size_t sz) {
     osExit(1);
   }
   
-  MemChunks::list = new MemChunks(heapEnd,MemChunks::list,ozconf.heapBlockSize);
+  MemChunks::list = new MemChunks(heapEnd,MemChunks::list,thisBlockSz);
   
-  DebugCheck(heapTotalSize > ozconf.heapBlockSize/KB,
+  DebugCheck(heapTotalSize > thisBlockSz/KB,
 	     message("Increasing heap memory to %d kilo bytes\n",heapTotalSize));
-  //return OK;
 }
 
 
