@@ -76,9 +76,10 @@ case "$platform" in
 	CPPFLAGS="$oz_a $CPPFLAGS"
 	EXTRALDFLAGS="-mwindows -s"
 	SRCS="winMain.cc"
+	WITH_TCLTK=$with_tcl/lib
 	INSTALLWINDLLS=installwindlls
 	: ${WINDLLDIR=$windlldir}
-	for i in tcl80.dll tk80.dll msvcrt.dll; do
+	for i in tcl83.dll tk83.dll msvcrt.dll; do
 	  dll=$WINDLLDIR/$i
 	  AC_MSG_CHECKING(for DLL $dll)
 	  if test -f $dll
@@ -103,7 +104,7 @@ dnl ****************************************************************
 dnl   Places where to look for configuration scripts...
 dnl ****************************************************************
 
-: ${oz_tcltk_search="$prefix/lib /usr/lib /usr/local/lib /usr/pkg /usr/X11R6/lib /usr/X11/lib /opt/X11R6/lib /opt/X11/lib"}
+: ${oz_tcltk_search="$WITH_TCLTK $WITH_TCLTK/lib  $prefix/lib /usr/lib /usr/local/lib /usr/pkg /usr/X11R6/lib /usr/X11/lib /opt/X11R6/lib /opt/X11/lib"}
 : ${oz_tcl_search="$oz_tcltk_search /usr/local/lib/tcl8.3 /usr/local/lib/tcl8.2 /usr/local/lib/tcl8.0"}
 : ${oz_tk_search="$oz_tcltk_search /usr/local/lib/tk8.3 /usr/local/lib/tk8.2 /usr/local/lib/tk8.0"}
 
@@ -118,7 +119,8 @@ AC_ARG_WITH(tcl,
 
 if test -n "${with_tcl}"
 then
-    oz_tcl_search=$with_tcl
+    oz_tcl_search="$with_tcl $oz_tcl_search"
+    echo kost: $oz_tcl_search
 fi
 
 TCL_LIB_DIR=""
@@ -154,7 +156,7 @@ AC_ARG_WITH(tk,
 
 if test -n "${with_tk}"
 then
-    oz_tk_search=$with_tk
+    oz_tk_search="$with_tk $oz_tk_search"
 fi
 
 TK_LIB_DIR=""
