@@ -55,12 +55,16 @@
       Initially, the set of macro names consists of entries describing the
       Oz version number, for instance, when running Oz&nbsp;3.0.10, all of
       <<Oz_3>>, <<Oz_3_0>>, and <<Oz_3_0_10>> are macro names.
-    <Para class=apropos><Title/Compiler Switches/
-      The compiler's behaviour is influenced by a number of boolean switches.
+    <Para class=apropos><Title/Switches and Options/
+      The compiler's behaviour is influenced by a number of boolean switches
+      and non-boolean options.  While the switch settings can conveniently
+      be changed by several methods as described later, the options are
+      only accessible to users of the application programmer's interface.
+    <P>
       The active switch settings are given by a mapping from switch names
-      to boolean values.  The compiler manages a stack of switch states, the
-      top element of which is taken as the active state.  This allows to
-      temporarily escape into a different mode of compiler operation.
+      to boolean values.  The compiler manages a stack of switch states,
+      the top element of which is taken as the active state.  This allows
+      to temporarily escape into a different mode of compiler operation.
     <P>
       The available switches, their initial settings and their
       effects on the compilation process are described in detail
