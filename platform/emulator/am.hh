@@ -19,8 +19,6 @@
 #pragma interface
 #endif
 
-#include <setjmp.h>
-
 #include "oz.h"
 #include "oz_cpi.hh"
 
@@ -100,7 +98,7 @@ public:
 
   int statusReg;
   Trail trail;
-  RefsArray xRegs;
+  TaggedRef xRegs[NumberOfXRegisters];
 
   RefsArray toplevelVars;
   int toplevelVarsCount;
@@ -139,8 +137,6 @@ public:
   CompStream *compStream;
   Bool isStandaloneF;
   Bool isStandalone() { return isStandaloneF; }
-
-  jmp_buf engineEnvironment;
 
   IONode *ioNodes;              // node that must be waked up on io
 
@@ -196,7 +192,6 @@ public:
   void checkToplevel();
   void addToplevel(ProgramCounter pc);
 
-  int catchError() { return setjmp(engineEnvironment); }
 public:
   AM() {};
   void init(int argc,char **argv);
