@@ -87,7 +87,7 @@ void module_init_ri(void)
 
 } // module_init_ri(void)
 
-
+#define STATICALLY_INCLUDED
 #include "modRI-table.cc"
 
 // End of File
