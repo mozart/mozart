@@ -250,54 +250,31 @@ OZ_BI_define(BImergeSpace, 1,1) {
   if (isFailedSpace)
     return FAILED;
 
-  if (!space->getSpace()->isAdmissible())
+  Board * sb = space->getSpace()->derefBoard();
+
+  if (!sb->isAdmissible())
     return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
 
-  Board *CBB = oz_currentBoard();
-  Board *SBB = space->getSpace()->derefBoard();
-  Board *SBP = SBB->getParent();
+  Board * sc = oz_currentBoard();
+  Board * sp = sb->getParent();
 
-  /* There can be two different situations during merging:
-   *  1) SBB is subordinated to CBB:          CBB  <-+
-   *                                           |     |
-   *                                          SBB   -+
-   *   
-   *   
-   *  2) SBB is a sibling of CBB:            parent
-   *                                          /   \
-   *                                        CBB   SBB
-   *                                         ^     |
-   *                                         +-----+
-   */
-
-  Assert(CBB == CBB->derefBoard());
-
-  if (CBB->getDistributor() && SBB->getDistributor())
+  if (sc->getDistributor() && sb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor",0);
-  
-  Bool isSibling = (!CBB->isRoot() && 
-		    CBB->getParent() == SBP &&
-		    CBB != SBB);
 
-  Assert(!oz_isBelow(CBB,SBB));
+  Bool isUpward = (sc == sp);
   
-  if (OZ_isVariable(SBB->getStatus())) {
-    
-    if (isSibling) {
-
-      // Inject a thread to SBP to make the tell
-      bindfut(SBP,SBB->getStatus(),AtomMerged);
-      
+  if (OZ_isVariable(sb->getStatus())) {
+    if (isUpward) {
+      sb->bindStatus(AtomMerged);
     } else {
-      SBB->bindStatus(AtomMerged);
+      // Inject a thread to SBP to make the tell
+      bindfut(sp,sb->getStatus(),AtomMerged);
     }
-
   }
 
-  
-  OZ_result(SBB->getRootVar());
+  OZ_result(sb->getRootVar());
 
-  OZ_Return ret = SBB->merge(CBB);
+  OZ_Return ret = sb->merge(sc,isUpward);
 
   space->markMerged();
 
