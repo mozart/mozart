@@ -507,6 +507,10 @@ public:
   void wakeUser();
   int  nextUser();
   Bool checkUser();
+#ifdef DENYS_SIGNAL
+  void doSignalHandler();
+  void leaveSignalHandler();
+#endif
 
 };
 

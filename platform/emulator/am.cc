@@ -569,6 +569,20 @@ void AM::suspendEngine()
   osUnblockSignals();
 }
 
+#ifdef DENYS_SIGNAL
+void AM::leaveSignalHandler() {
+  if (use_wake_jmp) {
+    use_wake_jmp;
+    siglongjmp(wake_jmp,1);
+  }
+}
+
+void AM::doSignalHandler() {
+  setSFlag(SigPending);
+  leaveSignalHandler();
+}
+#endif // DENYS_SIGNAL
+
 void AM::checkStatus(Bool block)
 {
   if (!isSetSFlag())
