@@ -41,7 +41,7 @@ do domain propagation (&ie; cut holes into domains).
 <p>
 Equality between variables is exploited, except for some non-linear
 propagators.  For example, <<A+A=:B>> is equivalent to <<2*A=:B>> (for
-notation see&nbsp;sec.infix-ps.
+notation see&nbsp;sec.infix-ps).
 <p>
 The constraint store is amplified with constraints <<X::Spec>>  and
 equality between variables, &eg;, <<X=:Y>> is equivalent to <<X=Y>>.
@@ -55,6 +55,7 @@ possible atoms and the associated relations are summarized below.
 <tr/<td/<math>\sim_A</math> /<td/ <math>=</math> /<td/ <math>&gt;</math> /<td/ <math>\geq</math> /<td/ <math><</math> /<td/ <math>\leq</math> /<td/ <math>\neq</math>//
 </table>
 
+<!-- ********************************************************************** -->
 <section id="section.fd.facts"><title/Some Facts About Propagators/
 
 <para><title/domain propagation,
@@ -78,34 +79,37 @@ exist if the current upper bound of <<X>> is smaller than or equal to the
 current lower bound of <<Y>>.
 </section>
 
-<section id="section.fd.condis"><title/Constructive Disjunction/
+<!-- ********************************************************************** -->
+<section id="section.fd.condis"><title/The Concept of Constructive Disjunction/
 
 <p>
-The operational semantics of some propagators is based on constructive
-disjunction which allows to lift common information from clauses
-of a disjunction.
+The operational semantics of some propagators is based on the concept
+of constructive disjunction which allows to lift common information
+from different clauses of a disjunctive constraint.
 
 <p>
-In Oz, constructive disjunction is available through a syntax like the
-one for nondistributable disjunction <<or ... end>> which uses the
-keyword <<condis>> instead or <<or>>.
+Constructive disjunction is <em/not/ available as program combinator
+in Oz. Anyway, we use it in Oz program fragments (by the keyword
+<Code/<span class=keyword/condis//) to describe the operational semantics
+of certain propagators. For example such propagators are <ref
+to="ref_tasksoverlap"><<FD.tasksOverlap>></ref> and <ref
+to="ref_disjoint"><<FD.disjoint>></ref>.
 
 <p>
 Constructive disjunction adopts the operational semantics of the
-nondistributable disjunction concerning entailment and failure of
-clauses. It enriches the semantics as follows.
-
-<p>
-Assume a disjunction with ?{n} clauses and let ?{S} be the constraint
-store of the computation space in which it resides.  Let
-<math/S_1,\ldots,S_n/ denote the local stores of the ?{n} clauses.  Then the
-strongest constraint ?{C} consisting of basic constraints <math/X\in D/ with
-<math/S_i\models C/ for <math/1\leq i \leq n/ is lifted and added to&nbsp;?{S}.
+nondistributable disjunction of Oz (<<or ... end>>) concerning
+entailment and failure of clauses. Furthermore, it extends the
+semantics as follows: Assume a disjunction with ?{n} clauses and let
+?{S} be the constraint store of the computation space in which it
+resides.  Let <math/S_1,\ldots,S_n/ denote the local stores of the
+?{n} clauses.  Then the strongest constraint ?{C} consisting of basic
+constraints <math/X\in D/ with <math/S_i\models C/ for <math/1\leq i
+\leq n/ is lifted and added to&nbsp;?{S}.
 
 <p>
 As an example consider the store <<X, Y>><math/\in\{0,\ldots,10\}/ and
 <<<
-condis X + 9 =<: Y
+<span class=keyword/condis/ X + 9 =<: Y
 [] Y + 9 =<: X
 end
 >>>
@@ -113,6 +117,7 @@ Constructive disjunction narrows the domains of <<X>> and <<Y>>
 to&nbsp;<math/\{0,1,9,10\}/.
 </section>
 
+<!-- ********************************************************************** -->
 <section id="section.fd.general"><title/Finite Domains/
 <p>
 <index scope="section.fd.general"/Finite Domains/
@@ -153,6 +158,7 @@ tests whether ?_{D} is an integer between 0 and <<FD.sup>>.
 </list>
 </section>
 
+<!-- ********************************************************************** -->
 <section id="section.fd.telling"><title/Telling Domains/
 <p>
 <list>
@@ -227,6 +233,7 @@ Abbreviates <<{FD.int 0#FD.sup ?_{D}}>>.
 </list>
 </section>
 
+<!-- ********************************************************************** -->
 <section id="section.fd.reflection"><title/Reflection/
 <p>
 <list>
@@ -327,6 +334,7 @@ returns the current number of suspensions  on ?_{D}.
 </list>
 </section>
 
+<!-- ********************************************************************** -->
 <section id="section.fd.watching"><title/Watching Domains/
 <p>
 <list>
@@ -367,6 +375,7 @@ than ?_{D2}.
 </list>
 </section>
 
+<!-- ********************************************************************** -->
 <section id="section.fd.arithmetic"><title/Generic Propagators/
 <p>
 The generic propagators <<FD.sum>>, <<FD.sumC>> and <<FD.sumCN>> do
@@ -712,6 +721,7 @@ The operational semantics is defined analogously to <<FD.sumAC>>.
 </list>
 </section>
 
+<!-- ********************************************************************** -->
 <section id="section.fd.nonlinear"><title/Symbolic Propagators/
 <p>
 The following propagators do domain propagation or amplify the store by
@@ -814,6 +824,7 @@ to <math/\{5,7\}/.
 ?_{D1} is constrained to be greater than 0.
 </list></section>
 
+<!-- ********************************************************************** -->
 <section id="section.fd.bool"><title>0/1 Propagators</title>
 <p>
 Using the mapping from <<0>> and <<1>> to the truth values <def/false/ and
@@ -904,6 +915,7 @@ end
 (<Q/<math/{\tt D1}\leftrightarrow{\tt D2}//).
 </list></section>
 
+<!-- ********************************************************************** -->
 <section id="section.fd.reified"><title/Reified Constraints/
 <p>
 Reified constraints reflect the validity of a constraint ?{C} into a 0/1-valued
@@ -1053,6 +1065,7 @@ end
 >>>
 </list></section>
 
+<!-- ********************************************************************** -->
 <section id="section.fd.misc"><title/Miscellaneous Propagators/
 <p>
 <list>
@@ -1125,7 +1138,7 @@ instead, which constrains the variables <<D1>> and <<D2>> as follows.
 \lceil \sqrt{\underline{{\tt D3}}} \rceil \leq {\tt D1} \leq \lfloor
 \sqrt{\overline{{\tt D3}}} \rfloor
 </math><p>
-For notation see&nbsp;<ptr to="section.fd.arithmetic">.
+For notation see&nbsp;<ptr to="section.fd.arithmetic">n.
 
 <entry>
 <index class=module/FD<and>timesD/
@@ -1315,7 +1328,7 @@ Equivalent to ?_{D1}<<&gt;:>>?_{D2}.
 <item>
 Equivalent to ?_{D1}<<&gt;=:>>?_{D2}.
 
-<entry>
+<entry id="ref_disjoint">
 <index class=module/FD<and>disjoint/
 <<disjoint>>
 <synopsis>
@@ -1339,7 +1352,7 @@ end
 >>>
 
 <entry>
-<index class=module/FD<and>disjoint/
+<index class=module/FD<and>disjointC/
 <<disjointC>>
 <synopsis>
 <<<
@@ -1360,10 +1373,46 @@ condis D1 + I1 =&lt;: D2
    D3 =: 1
 end
 >>>
-</list></section>
+
+<entry id="ref_tasksoverlap">
+<index class=module/FD<and>tasksOverlap/
+<<tasksOverlap>>
+<synopsis>
+<<<
+{FD.tasksOverlap ?*{D1} ?+{I1} ?*{D2} ?+{I2} ?_{D3}}
+>>>
+<item>
+creates a propagator for
+<p>
+<math/
+(({\tt D1}+{\tt I1}>{\tt D2} \;\wedge\; {\tt D2}+{\tt I2}>{\tt D1} \;\wedge \; {\tt D3}=1) \;\vee\; ({\tt D1}+{\tt I1}\leq{\tt D2} \;\wedge\; {\tt D3}=0) \;\vee\;({\tt D2}+{\tt I2}\leq{\tt D1} \;\wedge\; {\tt D3}=0)) \;\wedge\; ({\tt D3}\in\{0,1\})/.
+
+<p>
+Its operational semantics  is defined through
+<<<
+condis
+   D1 + I1 &gt;: D2
+   D2 + I2 &gt;: D1
+   D3 =: 1
+[]
+   D1 + I1 =&lt;: D2
+   D3 =: 0
+[] D2 + I2 =&lt;: D1
+   D3 =: 0
+end
+>>>
+</list>
+
+Informally, in case <<B>> is 0 the propagator behaves like
+<<FD.disjoint>>, i.e., in context of task scheduling two tasks must
+not overlap. Otherwise, if <<B>> is 1, the two tasks must overlap.
+
+</section>
 
 
-<section id="section.fd.distribution"><title/Distribution/
+<!--
+**********************************************************************
+--> <section id="section.fd.distribution"><title/Distribution/
 <p>
 In this section it is shown how Oz supports distribution with
 constraints.  The following procedure creates binary
