@@ -29,9 +29,15 @@
 #include "connection.hh"
 #include "timers.hh"
 
-#define OPEN_TIMEOUT            (ozconf.dpProbeTimeout / 10)
-#define CLOSE_TIMEOUT           (ozconf.dpProbeTimeout)
-#define WF_REMOTE_TIMEOUT       (ozconf.dpProbeTimeout * 10)
+#include <sys/time.h>
+#include <unistd.h> // AN! only for debug
+
+#define OPEN_TIMEOUT            (ozconf.dpProbeTimeout / 10) // Has to be this
+                                                             // short to begin
+                                                             // with for
+                                                             // Connection.take
+#define CLOSE_TIMEOUT           (ozconf.dpProbeTimeout * 10)
+#define WF_REMOTE_TIMEOUT       (ozconf.dpProbeTimeout * 100)
 
 #define MSG_ACK_TIMEOUT 1000
 #define MSG_ACK_LENGTH 50
@@ -68,8 +74,10 @@ void ComObj::init(DSite *site) {
 
   nosm=norm=0;
   lastrtt=-1;
-  connectVar=0;
+  connectgrantrequested=FALSE;
   queues.init();
+
+  DebugCode(next_cache=NULL);
 }
 
 // Specifying priority -1 means accepting the default as in msgFormat.m4 and
@@ -107,8 +115,15 @@ void ComObj::send(MsgContainer *msgC,int priority) {
     break;
   }
 
-  //
+  //printf("snapshot started...\n");
+  //struct timeval start, end;
+  //gettimeofday(&start, NULL);
   msgC->takeSnapshot();
+  //gettimeofday(&end, NULL);
+  //printf("  ... snapshot time %f s\n", (end.tv_sec - start.tv_sec)+
+  //     ((double) (end.tv_usec - start.tv_usec))/1000000);
+
+
   Assert(priority==-1); // Have a good reason before removing this
   if(priority==-1) priority=msgC->getPriority();
   Assert(msgC->getMessageType()>C_FIRST || msgC->getMessageType()==M_PING
@@ -164,13 +179,9 @@ Bool ComObj::reopen() {
        retryTimeout>ozconf.dpRetryTimeCeiling)
       retryTimeout=ozconf.dpRetryTimeCeiling;
     open();
-
-    return TRUE;   // Cannot know yet if the problem is resolved or not
   }
-  else {
-    reopentimer=NULL;
-    return FALSE;  // The problem has been resolved
-  }
+  reopentimer=NULL;
+  return FALSE;
 }
 
 // Called by builtin when this comObj can have its communication
@@ -179,13 +190,6 @@ Bool ComObj::handover(TransObj *transObj) {
   PD((TCP_INTERFACE,"Connection handover (from %d to %d (%x))",
       myDSite->getTimeStamp()->pid,site->getTimeStamp()->pid,this));
   if(DO_CONNECT_LOG) {
-    /*
-    fprintf(logfile,"handover(\"%s\" ",
-            myDSite->stringrep_notype());
-    fprintf(logfile,"\"%s\" %d)\n",
-           site!=NULL?site->stringrep_notype():"-",
-           (int) am.getEmulatorClock());
-    */
     fprintf(logfile,"handover(%d %d %d)\n",
             myDSite->getTimeStamp()->pid,
             site!=NULL?site->getTimeStamp()->pid:0,
@@ -254,8 +258,8 @@ void ComObj::accept(TransObj *transObj) {
   PD((TCP_INTERFACE,"***** Connection accepted by %d (%x) *****",
       myDSite->getTimeStamp()->pid,this));
   this->transObj=transObj;
-  transObj->setOwner(this);
-  transObj->getTransController()->addRunning(this);
+  //transObj->setOwner(this);
+  //  transObj->getTransController()->addRunning(this);
   state=ANONYMOUS_WF_NEGOTIATE;
   timers->setTimer(timer,OPEN_TIMEOUT,
                    comObj_openTimerExpired,(void *) this);
@@ -276,25 +280,18 @@ void ComObj::close(CState statetobe,Bool merging) {
 //    printf("---Closing a connection at %d (comObj %x) from state %d to %d\n",
 //       myDSite->getTimeStamp()->pid,this,state,statetobe);
 
+  if(DO_CONNECT_LOG) {
+    fprintf(logfile,"close(%d %d %d %d %d)\n",
+            myDSite->getTimeStamp()->pid,
+            site!=NULL?site->getTimeStamp()->pid:0,
+            (int) am.getEmulatorClock(),
+            state,statetobe);
+  }
+
   clearTimers();
   lastrtt=-1;
 
   if(transObj!=NULL) {
-    if(DO_CONNECT_LOG) {
-      /*
-      fprintf(logfile,"close(\"%s\" ",
-              myDSite->stringrep_notype());
-      fprintf(logfile,"\"%s\" %d %d %d)\n",
-              site!=NULL?site->stringrep_notype():"-",
-              (int) am.getEmulatorClock(),
-              state,statetobe);
-      */
-      fprintf(logfile,"close(%d %d %d %d %d)\n",
-              myDSite->getTimeStamp()->pid,
-              site!=NULL?site->getTimeStamp()->pid:0,
-              (int) am.getEmulatorClock(),
-              state,statetobe);
-    }
     handback(this,transObj);
     transObj=NULL;
   }
@@ -302,7 +299,7 @@ void ComObj::close(CState statetobe,Bool merging) {
           (statetobe==CLOSED || statetobe==CLOSED_PROBLEM))
     // No transObj but yet expecting one => cancel
     comObjDone(this);
-  Assert(connectVar==0);
+  Assert(!connectgrantrequested);
   queues.clear5();
 
   switch(statetobe) {
@@ -500,13 +497,6 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
       transObj->setSite(site);
 
       if(DO_CONNECT_LOG) {
-        /*
-        fprintf(logfile,"accept(\"%s\" ",
-                myDSite->stringrep_notype());
-        fprintf(logfile,"\"%s\" %d)\n",
-                site!=NULL?site->stringrep_notype():"-",
-                (int) am.getEmulatorClock());
-        */
         fprintf(logfile,"accept(%d %d %d)\n",
                 myDSite->getTimeStamp()->pid,
                 site!=NULL?site->getTimeStamp()->pid:0,
@@ -752,10 +742,19 @@ void ComObj::adoptCI(OZ_Term channelinfo){
 }
 
 Bool ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
+  if(DO_CONNECT_LOG) {
+    fprintf(logfile,"beginmerge(%d %d %d %d %d)\n",
+            myDSite->getTimeStamp()->pid,
+            site!=NULL?site->getTimeStamp()->pid:0,
+            (int) am.getEmulatorClock(),
+            old->state, anon->state);
+  }
   switch(old->state) {
   case CLOSED:
     goto adopt_anon;
   case CLOSED_WF_HANDOVER:
+    old->close(CLOSED,TRUE);
+    goto adopt_anon;
   case CLOSED_WF_REMOTE:
   case CLOSED_PROBLEM:
   case OPENING_WF_PRESENT:
@@ -785,7 +784,7 @@ Bool ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
  drop_anon:
   anon->close(CLOSED,TRUE);
   if(DO_CONNECT_LOG) {
-    fprintf(logfile,"merge(%d %d %d anon_dropped)\n",
+    fprintf(logfile,"endmerge(%d %d %d anon_dropped)\n",
             myDSite->getTimeStamp()->pid,
             site!=NULL?site->getTimeStamp()->pid:0,
             (int) am.getEmulatorClock());
@@ -794,16 +793,16 @@ Bool ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
 
  adopt_anon:
   if(DO_CONNECT_LOG) {
-    fprintf(logfile,"merge(%d %d %d anon_adopted)\n",
+    fprintf(logfile,"endmerge(%d %d %d anon_adopted)\n",
             myDSite->getTimeStamp()->pid,
             site!=NULL?site->getTimeStamp()->pid:0,
             (int) am.getEmulatorClock());
   }
   anon->transObj->setOwner(old);
+  transObj->getTransController()->switchRunning(anon,old);
   Assert(old->transObj==NULL);
   old->transObj=anon->transObj;
   PD((TCPCACHE,"Switch running anon: %d old: %d",anon->state,old->state));
-  transObj->getTransController()->switchRunning(anon,old);
   anon->transObj=NULL;
   anon->state=CLOSED;
   old->state=ANONYMOUS_WF_NEGOTIATE; // Being in the correct
@@ -916,6 +915,12 @@ void ComObj::connectionLost() {
   PD((TCP_INTERFACE,"Connection lost, state=%d %x",state,this));
 //    printf("Connection lost, state=%d %x to %d\n",state,(int) transObj,
 //       site->getTimeStamp()->pid);
+  if(DO_CONNECT_LOG)
+    fprintf(logfile,"lost(%d %d %d %d)\n",
+            myDSite->getTimeStamp()->pid,
+            site!=NULL?site->getTimeStamp()->pid:0,
+            (int) am.getEmulatorClock(),
+            state);
   switch(state) {
   case OPENING_WF_PRESENT:
   case OPENING_WF_NEGOTIATE_ANS:
@@ -1170,7 +1175,7 @@ void ComController::deleteComObj(ComObj* comObj){
   PD((TCPCACHE,"ComObj being deleted %x",comObj));
   //  printf("dl %x\n",(int) comObj);
   comObj->shutDown();
-  Assert(comObj->connectVar==0);
+  Assert(!comObj->connectgrantrequested);
 
   FreeListEntry *f;
   --wc;

@@ -175,7 +175,7 @@ public:
 
   // For connection.cc usage
   OZ_Term connectVar;
-  OZ_Term transType;
+  Bool connectgrantrequested;
 };
 
 void comController_acceptHandler(TransObj *);

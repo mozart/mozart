@@ -49,10 +49,12 @@ Bool transController_closeOne(void *arg) {
 // The comObj must report in as soon as he gets the transObj.
 TransObj *TransController::getTransObj() {
   PD((TCPCACHE,"TransObj for accept requested"));
+//    fprintf(logfile,"pd_tcpcache TransObj for accept requested\n");
   if (used<getMaxNumOfResources()) {
     used++;
     if(used>getWeakMaxNumOfResources() && timer==NULL) {
       PD((TCPCACHE,"CloseOne timer set"));
+//        fprintf(logfile,"pd_tcpcache CloseOne timer set\n");
       timers->setTimer(timer,ozconf.dpRetryTimeFloor,
                        transController_closeOne,this);
     }
@@ -60,6 +62,7 @@ TransObj *TransController::getTransObj() {
   }
   else {
     PD((TCPCACHE,"No transObj for accept provided"));
+//      fprintf(logfile,"pd_tcpcache No transObj for accept provided\n");
     return NULL;
   }
 }
@@ -72,6 +75,7 @@ void TransController::addRunning(ComObj *comObj) {
 // Called when comObj:s pass on a connection
 void TransController::switchRunning(ComObj *inList,ComObj *newc) {
   PD((TCPCACHE,"switch running from %x to %x",inList,newc));
+//    fprintf(logfile,"pd_tcpcache switch running from %x to %x\n",(int) inList,(int) newc);
   ComObj *prev=NULL;
   ComObj *tmp=running;
   while(tmp!=NULL && tmp!=inList) {
@@ -80,6 +84,7 @@ void TransController::switchRunning(ComObj *inList,ComObj *newc) {
   }
 
   Assert(tmp!=NULL && tmp==inList);
+
   if(prev!=NULL)
     prev->next_cache=newc;
   else
@@ -94,6 +99,8 @@ void TransController::switchRunning(ComObj *inList,ComObj *newc) {
 void TransController::getTransObj(ComObj *comObj) {
   PD((TCPCACHE,"TransObj for connect requested %d %d",used,
       getWeakMaxNumOfResources()));
+//    fprintf(logfile,"pd_tcpcache TransObj for connect requested %d %d\n",used,
+//        getWeakMaxNumOfResources());
   TransObj *transObj;
   if(used<getWeakMaxNumOfResources()) {
     used++;
@@ -106,20 +113,26 @@ void TransController::getTransObj(ComObj *comObj) {
 
 // After comObj->preemptTransObj this method shall be called by comObj
 // It should also be called when returning a TransObj after everything is done
-void TransController::transObjFreed(ComObj *comObj,TransObj *transObj) {
+void TransController::transObjFreed(ComObj *comObj,TransObj *transObj,
+                                    Bool isrunning) {
   PD((TCPCACHE,"TransObj returned, used:%d",used));
-  remove(running,running_last,comObj);
+//    fprintf(logfile,"pd_tcpcache TransObj returned, used:%d %d\n",used,isrunning);
+  if(isrunning)
+    remove(running,running_last,comObj);
   if(used<=getWeakMaxNumOfResources()) {
     ComObj *next=getFirst(waiting,waiting_last);
     if (next!=NULL) {
       PD((TCPCACHE,"Reusing a resource"));
+//        fprintf(logfile,"pd_tcpcache Reusing a resource\n");
       transObj->init(); // Refresh!
       transObjReady(next,transObj);
       return;
     }
     PD((TCPCACHE,"Have a resource, but no one who wants it"));
+//      fprintf(logfile,"pd_tcpcache Have a resource, but no one who wants it\n");
   }
   PD((TCPCACHE,"Deleting a transObj, now used: %d",used-1));
+//    fprintf(logfile,"pd_tcpcache Deleting a transObj, now used: %d\n",used-1);
   deleteTransObj(transObj);
   used--;
 }
@@ -142,17 +155,20 @@ void TransController::allocateMarshalersForResources(int numOfResources)
 
 void TransController::changeNumOfResources() {
   PD((TCPCACHE,"****************************** CHANGE *************"));
+//    fprintf(logfile,"pd_tcpcache ****************************** CHANGE *************\n");
 
   int weakmax=getWeakMaxNumOfResources();
   int hardmax=getMaxNumOfResources();
 
   PD((TCPCACHE,"Now hard %d, weak %d",hardmax,weakmax));
+//    fprintf(logfile,"pd_tcpcache Now hard %d, weak %d\n",hardmax,weakmax);
   Assert(hardmax>=weakmax);
 
   allocateMarshalersForResources(hardmax);
 
   if(used>weakmax && timer==NULL) { // If timer is set things will work
     PD((TCPCACHE,"CloseOne timer set"));
+//      fprintf(logfile,"pd_tcpcache CloseOne timer set\n");
     timers->setTimer(timer,ozconf.dpRetryTimeFloor,
                      transController_closeOne,this);
   }
@@ -168,6 +184,7 @@ void TransController::changeNumOfResources() {
     else { // All satisfied, can clear timer!
       timers->clearTimer(timer);
       PD((TCPCACHE,"Have a new resource, but no one who wants it"));
+//        fprintf(logfile,"pd_tcpcache Have a new resource, but no one who wants it\n");
     }
   }
 }
@@ -226,11 +243,13 @@ ComObj *TransController::getFirst(ComObj *&list, ComObj *&list_last) {
       list_last=NULL;
   }
   PD((TCPCACHE,"getFirst found %x",first));
+//    fprintf(logfile,"pd_tcpcache getFirst found %x\n",(int) first);
   return first;
 }
 
 void TransController::addLast(ComObj *&list,ComObj *&list_last,ComObj *c) {
   PD((TCPCACHE,"''''''''''addLast %x %x %x",list,list_last,c));
+//    fprintf(logfile,"pd_tcpcache ''''''''''addLast %x %x %x\n",(int) list,(int) list_last,(int) c);
   if(list_last!=NULL) {
     list_last->next_cache=c;
     list_last=c;
@@ -244,12 +263,14 @@ void TransController::addLast(ComObj *&list,ComObj *&list_last,ComObj *c) {
 
 void TransController::enqueue(ComObj *c) {
   PD((TCPCACHE,"enqueue timer is %x",timer));
+//    fprintf(logfile,"pd_tcpcache enqueue timer is %x\n",(int) timer);
   addLast(waiting,waiting_last,c);
   if(timer==NULL) {
     //    closeOne(); // UNHEALTHY
     // Set timer to wake us up to close someones connection soon.
     // ozconf.dpRetryTimeFloor used as timer interval for now
     PD((TCPCACHE,"CloseOne timer set"));
+//      fprintf(logfile,"pd_tcpcache CloseOne timer set\n");
     timers->setTimer(timer,ozconf.dpRetryTimeFloor,
                      transController_closeOne,this);
   }
@@ -257,6 +278,7 @@ void TransController::enqueue(ComObj *c) {
 
 void TransController::remove(ComObj *&list,ComObj *&list_last,ComObj *c) {
   PD((TCPCACHE,".............remove %x %x %x",list,list_last,c));
+//    fprintf(logfile,"pd_tcpcache .............remove %x %x %x\n",(int) list,(int) list_last,(int) c);
   ComObj *cur=list;
   ComObj *prev=NULL;
   while(cur!=NULL && c!=NULL) {
@@ -275,6 +297,7 @@ void TransController::remove(ComObj *&list,ComObj *&list_last,ComObj *c) {
       cur=cur->next_cache;
     }
   }
+  DebugCode(if(c!=NULL) c->next_cache=NULL);
 }
 
 Bool TransController::closeOne() {
@@ -287,6 +310,7 @@ Bool TransController::closeOne() {
   if(used>getWeakMaxNumOfResources() ||
      (used==getWeakMaxNumOfResources() && waiting!=NULL)) {
     PD((TCPCACHE,"Trying to close one"));
+//      fprintf(logfile,"pd_tcpcache Trying to close one\n");
     while(cur!=NULL) {
       if(cur->canBeClosed()) {
         if(cur->transObj->hasEmptyBuffers()) {
@@ -311,6 +335,7 @@ Bool TransController::closeOne() {
       b->preemptTransObj();
     else
       PD((TCPCACHE,"found no one to close (running %x)",running));
+//        fprintf(logfile,"pd_tcpcache found no one to close (running %x)\n",(int) running);
 
     return TRUE;
   }
