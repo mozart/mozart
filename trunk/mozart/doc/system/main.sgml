@@ -145,7 +145,8 @@
 <Meta name="html.split" value="section.property.messages">  
 <Meta name="html.split" value="section.property.memory">  
 <Meta name="html.split" value="section.property.limits">  
-<Meta name="html.split" value="section.property.misc">  
+<Meta name="html.split" value="section.property.application">  
+<Meta name="html.split" value="section.property.platform">  
 
     <Meta name="html.split"       value="chapter.error">
     <Meta name="html.split"       value="chapter.errorregistry">
