@@ -112,6 +112,8 @@ void osExit(int status);
 int osread(int fd, void *buf, unsigned int len);
 int oswrite(int fd, void *buf, unsigned int len);
 int osclose(int fd);
+void ossleep(int sec);
+int osgetpid();
 int osopen(const char *path, int flags, int mode);
 int ossocket(int domain, int type, int protocol);
 void registerSocket(int fd);
@@ -129,5 +131,11 @@ int osClockTickToMs(int cl)
   int clockMS = CLOCK_TICK/1000;
   return cl * clockMS;
 }
+
+#ifdef _MSC_VER
+#define _hdopen(file,flags) _open_osfhandle(file,flags)
+#define _os_handle(fd) _get_osfhandle(fd)
+#define SIGUSR1 SIGINT
+#endif
 
 #endif

@@ -21,7 +21,11 @@
 #ifdef __BORLANDC__
 #define ozcdecl __export __cdecl
 #else
+#ifdef __MSC_VER
+#define ozcdecl __cdecl
+#else
 #define ozcdecl
+#endif
 #endif
 #endif
 

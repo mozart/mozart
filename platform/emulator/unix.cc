@@ -56,9 +56,9 @@ extern int h_errno;
 #include <bstring.h>
 #endif
 
-
+#ifndef _MSC_VER
 extern "C" char *inet_ntoa(struct in_addr in);
-
+#endif
 
 #define max_vs_length 4096*4
 #define vs_buff(VAR) char VAR[max_vs_length + 256];
@@ -461,7 +461,7 @@ inline OZ_Return buffer_vs(OZ_Term vs, char *write_buff, int *len,
 // unix IO
 // -------------------------------------------------
 
-
+#ifndef _MSC_VER
 OZ_C_ioproc_begin(unix_fileDesc,2)
 {
   OZ_declareAtomArg( 0, OzFileDesc);
@@ -512,6 +512,7 @@ OZ_C_proc_begin(unix_getDir,2)
   return OZ_unify(out, dirValue);
 }
 OZ_C_proc_end
+#endif
 
 
 OZ_C_proc_begin(unix_stat,2)
@@ -525,12 +526,16 @@ OZ_C_proc_begin(unix_stat,2)
   if (stat(filename, &buf) < 0)
     RETURN_UNIX_ERROR(out);
 
+#ifndef _MSC_VER
   if      (S_ISREG(buf.st_mode))  fileType = "reg";
   else if (S_ISDIR(buf.st_mode))  fileType = "dir";
   else if (S_ISCHR(buf.st_mode))  fileType = "chr";
   else if (S_ISBLK(buf.st_mode))  fileType = "blk";
   else if (S_ISFIFO(buf.st_mode)) fileType = "fifo";
-  else fileType = "unknown";
+  else
+#else
+    fileType = "unknown";
+#endif
 
   fileSize = buf.st_size;
 
@@ -656,6 +661,7 @@ OZ_C_ioproc_begin(unix_open,4)
 #ifdef OS2_I486
     return OZ_typeError(2,"enum openMode");
 #else
+#ifndef _MSC_VER
     if (OZ_unifyAtom(hd,"S_IRUSR") == PROCEED) { mode |= S_IRUSR; }
     else if (OZ_unifyAtom(hd,"S_IWUSR") == PROCEED) { mode |= S_IWUSR; }
     else if (OZ_unifyAtom(hd,"S_IXUSR") == PROCEED) { mode |= S_IXUSR; }
@@ -665,9 +671,9 @@ OZ_C_ioproc_begin(unix_open,4)
     else if (OZ_unifyAtom(hd,"S_IROTH") == PROCEED) { mode |= S_IROTH; }
     else if (OZ_unifyAtom(hd,"S_IWOTH") == PROCEED) { mode |= S_IWOTH; }
     else if (OZ_unifyAtom(hd,"S_IXOTH") == PROCEED) { mode |= S_IXOTH; }
-    else {
+    else
+#endif
       return OZ_typeError(2,"enum openMode");
-    }
 #endif
     OzMode = tl;
   }
@@ -1803,6 +1809,10 @@ NotAvail("Unix.receiveFromUnix", 7, unix_receiveFromUnix);
 NotAvail("Unix.wait",            2, unix_wait);
 NotAvail("Unix.getServByName",   3, unix_getServByName);
 NotAvail("Unix.uName",           1, unix_uName);
+#ifdef _MSC_VER
+NotAvail("Unix.getDir",          2, unix_getDir);
+NotAvail("Unix.fileDesc",        2, unix_fileDesc);
+#endif
 #endif
 
 OZ_BIspec spec[] = {

@@ -19,7 +19,7 @@
 #include "genvar.hh"
 #include "fdprofil.hh"
 
-#include <strstream.h>
+#include "ozstrstream.h"
 
 #ifdef OUTLINE
 #define inline

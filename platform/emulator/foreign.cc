@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdarg.h>
-#include <strstream.h>
+#include "ozstrstream.h"
 
 #include "oz.h"
 

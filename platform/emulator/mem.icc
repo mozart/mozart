@@ -61,12 +61,6 @@ void freeListDispose(void * addr, size_t chunk_size)
 
   DebugCode(memset((char *)addr,0x5A,chunk_size));
 
-#ifdef DEBUG_MEM
-  // clear mem, so every reference leads to strange errors
-  // and turn off free list memory, do not reuse the memory
-  memset((char *)addr,0x5A,chunk_size);
-#endif
-
   Assert(chunk_size > 0);
   if (chunk_size < freeListMaxSize) {
 #ifdef DEBUG_MEM
