@@ -211,6 +211,8 @@ OZ_C_proc_end
 
 OZ_CFun FSetMatchPropagator::header = fsp_match;
 
+#define MATCH_NOLOOP
+
 OZ_Return FSetMatchPropagator::propagate(void)
 {
   _OZ_DEBUGPRINT(endl << "in " << *this);
@@ -218,10 +220,9 @@ OZ_Return FSetMatchPropagator::propagate(void)
   OZ_FSetVar s(_s);
   DECL_DYN_ARRAY(OZ_FDIntVar, vd, _vd_size);
   PropagatorController_S_VD P(s, _vd_size, vd);
-  int old_size, new_size, i;
-  FSetTouched st;
   int max_fd = OZ_getFDInf();
   int min_fd = OZ_getFDSup();
+  int i;
 
   for (i = _vd_size; i--; ) {
     vd[i].read(_vd[i]);
@@ -238,50 +239,43 @@ OZ_Return FSetMatchPropagator::propagate(void)
     _last_min = s->getLubSet().getMinElem() - 1;
     _last_max = s->getLubSet().getMaxElem() + 1;
 
-    // (1) card of s is _vd_size
+    // (1) 
+    //
     FailOnInvalid(s->putCard(_vd_size, _vd_size));
+    _OZ_DEBUGPRINT("(1) " << *this);
   }
 
-  _OZ_DEBUGPRINT("(1) " << *this);
+#ifndef  MATCH_NOLOOP 
+  int old_size, new_size;
+  FSetTouched st;
 
   for (old_size = 0, i = _k; i <= _l; i += 1)
     old_size += vd[i]->getSize();
+#endif
 
 loop:
   _OZ_DEBUGPRINT("_k=" << _k << " _l=" << _l << 
 		 " _last_min=" << _last_min << " _last_max=" << _last_max <<
 		 " min_fd=" << min_fd << " max_fd=" << max_fd);
 
+#ifndef MATCH_NOLOOP
   st = s;
+#endif
 
   {
     // (2)
-    // 
     FailOnEmpty(*vd[_k] >= _last_min + 1);
     for (i = _k; i < _l; i += 1) {
       FailOnEmpty(*vd[i + 1] >= vd[i]->getMinElem() + 1);
     }
-    _OZ_DEBUGPRINT("(2a) " << *this);
     FailOnEmpty(*vd[_l] <= _last_max - 1);
     for (i = _l; i > _k; i -= 1) {
       FailOnEmpty(*vd[i - 1] <= vd[i]->getMaxElem() - 1);
     }
-    _OZ_DEBUGPRINT("(2b) " << *this);
+    _OZ_DEBUGPRINT("(2) " << *this);
   }
   {
     // (3)
-    OZ_FSetValue notinset = s->getNotInSet();
-    OZ_FiniteDomain notin(fd_empty);
-    FSetIterator it(&notinset, min_fd - 1);
-    for (i = it.getNextLarger(); i > -1 && i <= max_fd; 
-	 i = it.getNextLarger())
-      notin += i;
-
-    for (i = _k; i <= _l; i += 1)
-      FailOnEmpty(*vd[i] -= notin);
-    _OZ_DEBUGPRINT("(3) " << *this << "removed " << notin << "]");
-  }
-  {
     _OZ_DEBUGPRINT("_k=" << _k << " _l=" << _l);
 
     if (_k == 0) { // TMUELLER
@@ -291,7 +285,7 @@ loop:
       for (i = vd[_k - 1]->getMaxElem() + 1; i < vd[_k]->getMinElem(); i += 1)
 	FailOnInvalid(*s -= i);
     }
-    _OZ_DEBUGPRINT("(3a) " << *this);
+
     if (_l == _vd_size - 1) { // TMUELLER
       for (i = OZ_getFSetSup(); i > vd[_l]->getMaxElem(); i -= 1)
 	FailOnInvalid(*s -= i);
@@ -300,20 +294,20 @@ loop:
 	FailOnInvalid(*s -= i);
     }
 
-      _OZ_DEBUGPRINT("(3b) " << *this);
+    _OZ_DEBUGPRINT("(3) " << *this);
   }
   
   {
-    // (6)
+    // (4)
     for (i = _k; i <= _l; i += 1)
       if (*vd[i] == fd_singl)
 	FailOnInvalid(*s += vd[i]->getMinElem());
 
-    _OZ_DEBUGPRINT("loop (6) " << *this);
+    _OZ_DEBUGPRINT("(4) " << *this);
   }
 
   {
-    // (4)
+    // (5)
     OZ_FSetValue glb_s = s->getGlbSet(), lub_s = s->getLubSet();
     FSetIterator glb_it(&glb_s, _last_min), lub_it(&lub_s, _last_min);
 
@@ -324,10 +318,10 @@ loop:
       FailOnEmpty(*vd[_k] &= min_glb); 
       _last_min = min_lub;
     
-      _OZ_DEBUGPRINT("(4) " << *this);
+      _OZ_DEBUGPRINT("(5) " << *this);
     }
 
-    // (5)
+    // (6)
     if (_k != _l) {
       lub_it.init(_last_max);
       glb_it.init(_last_max);
@@ -339,9 +333,11 @@ loop:
 	_last_max = max_lub;
       }
 
-      _OZ_DEBUGPRINT("(5) " << *this);
+      _OZ_DEBUGPRINT("(6) " << *this);
     }
   }
+  
+#ifndef MATCH_NOLOOP
   for (new_size = 0, i = _k; i <= _l; i += 1)
     new_size += vd[i]->getSize();
 
@@ -350,6 +346,7 @@ loop:
     old_size = new_size;
     goto loop;
   }
+#endif
 
   _OZ_DEBUGPRINT("out " << *this);
 
