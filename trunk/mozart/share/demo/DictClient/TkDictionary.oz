@@ -68,9 +68,10 @@ define
    fun {FormatDBs DBs DatabaseNames}
       {FoldR DBs
        fun {$ DB In}
-	  DatabaseNames.DB#case In of unit then ""
-			   else ', '#In
-			   end
+	  {CondSelect DatabaseNames DB DB}#
+	  case In of unit then ""
+	  else ', '#In
+	  end
        end unit}
    end
 
@@ -358,7 +359,6 @@ define
 				      height: ListHeight
 				      borderwidth: 1)}
 	 self.DatabaseIndices = {NewDictionary}
-	 TkDictionary, SetDatabases(DEFAULT_DATABASES)
 	 DatabasesScrollbar = {New Tk.scrollbar
 			       tkInit(parent: DatabasesListFrame
 				      borderwidth: ScrollBorder
@@ -383,7 +383,6 @@ define
 				       height: ListHeight
 				       borderwidth: 1)}
 	 self.StrategyIndices = {NewDictionary}
-	 TkDictionary, SetStrategies(DEFAULT_STRATEGIES)
 	 StrategiesScrollbar = {New Tk.scrollbar
 				tkInit(parent: StrategiesListFrame
 				       borderwidth: ScrollBorder
@@ -492,6 +491,8 @@ define
 				end) _}
       end
       meth Connect(NetPort Server Port)
+	 TkDictionary, SetDatabases(DEFAULT_DATABASES)
+	 TkDictionary, SetStrategies(DEFAULT_STRATEGIES)
 	 TkDictionary, Log('Connect to '#Server#' on port '#Port)
 	 {Send NetPort connect(Server Port)}
       end
