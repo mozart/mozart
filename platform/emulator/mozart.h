@@ -183,12 +183,14 @@ _FUNDECL(OZ_Term ,OZ_false,(void));
 _FUNDECL(OZ_Term ,OZ_true,(void));
 _FUNDECL(OZ_Term ,OZ_unit,(void));
 _FUNDECL(OZ_Term ,OZ_int,(int));
+_FUNDECL(OZ_Term ,OZ_long,(long));
 _FUNDECL(OZ_Term ,OZ_unsignedInt,(unsigned int));
 _FUNDECL(OZ_Term ,OZ_unsignedLong,(unsigned long));
 _FUNDECL(int     ,OZ_getLowPrio,(void));
 _FUNDECL(int     ,OZ_getMediumPrio,(void));
 _FUNDECL(int     ,OZ_getHighPrio,(void));
 _FUNDECL(int     ,OZ_intToC,(OZ_Term));
+_FUNDECL(long    ,OZ_intToCL,(OZ_Term));
 _FUNDECL(unsigned long,OZ_intToCulong,(OZ_Term));
 _FUNDECL(int     ,OZ_boolToC,(OZ_Term));
 _FUNDECL(OZ_Term ,OZ_CStringToInt,(char *str));
@@ -428,6 +430,7 @@ OZ_Return (ozcdecl Name)(OZ_Term * _OZ_LOC[]) {	 \
 
 #define OZ_RETURN(V)        return ((OZ_result(V)),PROCEED)
 #define OZ_RETURN_INT(I)    OZ_RETURN(OZ_int(I))
+#define OZ_RETURN_LONG(I)   OZ_RETURN(OZ_long(I))
 #define OZ_RETURN_ATOM(S)   OZ_RETURN(OZ_atom(S))
 #define OZ_RETURN_STRING(S) OZ_RETURN(OZ_string(S))
 
@@ -527,6 +530,9 @@ OZ_setType(ARG,VAR,int,"Bool",OZ_isBool,OZ_boolToC)
 
 #define OZ_declareInt(ARG,VAR)			\
 OZ_declareType(ARG,VAR,int,"Int",OZ_isInt,OZ_intToC)
+
+#define OZ_declareLong(ARG,VAR)			\
+OZ_declareType(ARG,VAR,long,"Int",OZ_isInt,OZ_intToCL)
 
 #define OZ_setInt(ARG,VAR)			\
 OZ_setType(ARG,VAR,int,"Int",OZ_isInt,OZ_intToC)
