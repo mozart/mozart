@@ -358,6 +358,12 @@ enum ThreadReturn {
   T_ERROR		// a fatal error occured
 };
 
+
+// see ozthread.cc
+Bool oz_isThread(TaggedRef term);
+Thread *oz_ThreadToC(TaggedRef term);
+OZ_Term oz_thread(Thread *tt);
+
 // see am.cc
 void handlerUSR1();
 void handlerINT();
@@ -465,6 +471,12 @@ inline char *ozstrdup(const char *s)
   strcpy(ret,s);
   return ret;
 }
+
+inline
+int oz_char2uint(char c) {
+  return (int) (unsigned char) c;
+}
+
 
 template <class T>
 class EnlargeableArray {

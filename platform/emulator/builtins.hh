@@ -214,16 +214,21 @@ TT VAR;						\
 #define oz_declareIntArg(ARG,VAR) oz_declareTypeArg(ARG,VAR,int,Int)
 #define oz_declareFloatArg(ARG,VAR) oz_declareTypeArg(ARG,VAR,double,Float)
 #define oz_declareAtomArg(ARG,VAR) oz_declareTypeArg(ARG,VAR,const char*,Atom)
-#define oz_declareThreadArg(ARG,VAR) \
- oz_declareTypeArg(ARG,VAR,Thread*,Thread)
 #define oz_declareDictionaryArg(ARG,VAR) \
  oz_declareTypeArg(ARG,VAR,OzDictionary*,Dictionary)
 
 #define oz_declareIntIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,int,Int)
 #define oz_declareFloatIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,double,Float)
 #define oz_declareAtomIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,const char*,Atom)
-#define oz_declareThreadIN(ARG,VAR) \
- oz_declareTypeIN(ARG,VAR,Thread*,Thread)
+
+#define oz_declareThreadIN(ARG,VAR)				\
+ oz_declareTypeIN(ARG,VAR,Thread*,Thread);
+
+#define oz_declareThread(ARG,VAR)				\
+ oz_declareTypeIN(ARG,VAR,Thread*,Thread);			\
+ if (!(VAR) || (VAR)->isDeadThread())				\
+   return oz_raise(E_ERROR,E_KERNEL,"deadThread",1,OZ_in(ARG));
+
 #define oz_declareDictionaryIN(ARG,VAR) \
  oz_declareTypeIN(ARG,VAR,OzDictionary*,Dictionary)
 #define oz_declareSRecordIN(ARG,VAR) \
@@ -357,9 +362,9 @@ char *VAR;					\
  * C <-> Oz conversions
  * -----------------------------------------------------------------------*/
 
+// mm2
 #define oz_IntToC(v) OZ_intToC(v)
 #define oz_AtomToC(v) OZ_atomToC(v)
-#define oz_ThreadToC(v) tagged2Thread(v)
 #define oz_DictionaryToC(v) tagged2Dictionary(v)
 #define oz_SRecordToC(v) tagged2SRecord(v)
 #define oz_STupleToC(v) tagged2SRecord(v)

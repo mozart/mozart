@@ -35,7 +35,6 @@ int OZ_getUniqueId(void)
   return oz_newUniqueId();
 }
 
-
 void Extension::printStreamV(ostream &out,int depth)
 {
   out << "extension";

@@ -46,80 +46,6 @@
  * Value.type/status
  *=================================================================== */
 
-char *oz_valueType(OZ_Term term)
-{
-  Assert(!oz_isRef(term));
-
-  switch (tagTypeOf(term)) {
-  case UVAR:
-  case SVAR:
-  case CVAR:
-    return "variable";
-  case SMALLINT:
-    return "int";
-  case OZFLOAT:    
-    return "float";
-  case LITERAL:
-    return tagged2Literal(term)->isAtom() ? "atom" : "name";
-  case LTUPLE:
-    return "cons";
-  case SRECORD:
-    if (tagged2SRecord(term)->isTuple()) {
-      SRecord *sr=tagged2SRecord(term);
-      if (oz_eq(sr->getLabel(),AtomPair) && sr->getWidth()>1) {
-	return "pair";
-      } else {
-	return "tuple";
-      }
-    } else {
-      return "record";
-    }
-  case FSETVALUE:
-    return "fset";
-  case OZCONST:
-    switch (tagged2Const(term)->getType()) {
-    case Co_BigInt:
-      return "int";
-    case Co_Foreign_Pointer:
-      return "foreignPointer";
-    case Co_Thread:
-      return "thread";
-    case Co_Abstraction:
-    case Co_Builtin:
-      return "procedure";
-    case Co_Cell:
-      return "cell";
-    case Co_Space:
-      return "space";
-    case Co_Object:
-      return "object";
-    case Co_Port:
-      return "port";
-    case Co_Chunk:
-      return "chunk";
-    case Co_HeapChunk:
-      return "heapChunk";
-    case Co_BitArray:
-      return "bitArray";
-    case Co_Array:
-      return "array";
-    case Co_Dictionary:
-      return "dictionary";
-    case Co_Lock:
-      return "lock";
-    case Co_Class:
-      return "class";
-    default:
-      break;
-    }
-  default:
-    break;
-  }
-  Assert(0);
-  return "other";
-}
-
-
 /*
  * declare M=
  * local
@@ -145,6 +71,8 @@ char *oz_valueType(OZ_Term term)
  *          cons <=> {IsTuple X} and {Label X}='|' and {Width X}=2
  */
 
+OZ_Term oz_valueType(OZ_Term term);
+
 OZ_BI_define(BIstatusNew,1,1)
 {
   oz_declareIN(0,term);
@@ -153,7 +81,7 @@ OZ_BI_define(BIstatusNew,1,1)
 
   switch (tag) {
   case UVAR: 
-  case SVAR: 
+    // FUT
     OZ_RETURN_ATOM("var_free");
   case CVAR:
     switch (tagged2CVar(term)->getType()) {
@@ -174,11 +102,13 @@ OZ_BI_define(BIstatusNew,1,1)
       }
     }
   default:
-    char *t=oz_valueType(term);
-    static char buf[1000];
-    strcpy(buf,"det_");
-    strcpy(buf+4,t);
-    OZ_RETURN(oz_atom(buf));
+    {
+      OZ_Term t=oz_valueType(term);
+      static char buf[1000];
+      strcpy(buf,"det_");
+      strcpy(buf+4,toC(t));
+      OZ_RETURN(oz_atom(buf));
+    }
   }
   return PROCEED;
 } OZ_BI_end
@@ -297,7 +227,6 @@ OZ_BI_define(BIprocedureEnvironment,1,1)
  *  PN      = print name
  *  SL      = length of susp list
  *  KIND    = uvar
- *          | svar
  *          | future(SUBKIND)
  *          | generic
  *  SUBKIND = byNeed(requested)
@@ -322,11 +251,8 @@ OZ_Term oz_inspect(OZ_Term t)
       OZ_Term kind;
       int sl = 0;
       if (isCVar(t)) {
-	kind = tagged2CVar(t)->inspectV();
-	sl = tagged2CVar(t)->getSuspListLengthV();
-      } else if (isSVar(t)) {
-	kind = OZ_atom("svar");
-	sl = tagged2SVar(t)->getSuspList()->length();
+	kind = oz_atom("cvar"); // tagged2CVar(t)->inspectV();
+	sl = 0; // tagged2CVar(t)->getSuspListLengthV();
       } else {
 	Assert(isUVar(t));
 	kind = OZ_atom("uvar");
@@ -356,7 +282,12 @@ OZ_BI_define(BIinspect, 1, 1)
   OZ_RETURN(oz_inspect(t));
 } OZ_BI_end
 
+OZ_BI_proto(BIHeapChunk_new);
+OZ_BI_proto(BIHeapChunk_is);
+OZ_BI_proto(BIHeapChunk_peek);
+OZ_BI_proto(BIHeapChunk_poke);
 
+static
 OZ_C_proc_interface oz_interface[] = {
   {"stop",0,0,BIstop},
   {"status",1,1,BIstatusNew},
@@ -368,5 +299,18 @@ OZ_C_proc_interface oz_interface[] = {
   {"inspect",1,1,BIinspect},
   {"livenessX",1,1,BIlivenessX},
   {"procedureEnvironment",1,1,BIprocedureEnvironment},
+
+  {"HeapChunk.new",1,1,BIHeapChunk_new},
+  {"HeapChunk.is",1,1,BIHeapChunk_is},
+  {"HeapChunk.peek",2,1,BIHeapChunk_peek},
+  {"HeapChunk.poke",3,0,BIHeapChunk_poke},
+
   {0,0,0,0}
 };
+
+extern "C" OZ_C_proc_interface *oz_init_module();
+
+OZ_C_proc_interface *oz_init_module()
+{
+  return oz_interface;
+}

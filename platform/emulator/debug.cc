@@ -62,7 +62,7 @@ TaggedRef OzDebug::toRecord(const char *label, Thread *thread, int frameId) {
   int iline = smallIntValue(getNumberArg(PC+2));
   pairlist =
     oz_cons(OZ_pairAI("time",CodeArea::findTimeStamp(PC)),
-	 oz_cons(OZ_pairA("thr",makeTaggedConst(thread)),
+	 oz_cons(OZ_pairA("thr",oz_thread(thread)),
 	      oz_cons(OZ_pairA("file",getTaggedArg(PC+1)),
 		   oz_cons(OZ_pairAI("line",iline < 0? -iline: iline),
 			oz_cons(OZ_pairA("column",getTaggedArg(PC+3)),
@@ -84,25 +84,25 @@ TaggedRef OzDebug::getFrameVariables() {
 
 void debugStreamBreakpoint(Thread *thread) {
   TaggedRef pairlist =
-    oz_cons(OZ_pairA("thr",makeTaggedConst(thread)),oz_nil());
+    oz_cons(OZ_pairA("thr",oz_thread(thread)),oz_nil());
   am.debugStreamMessage(OZ_recordInit(OZ_atom("breakpoint"), pairlist));
 }
 
 void debugStreamBlocked(Thread *thread) {
   TaggedRef pairlist =
-    oz_cons(OZ_pairA("thr",makeTaggedConst(thread)),oz_nil());
+    oz_cons(OZ_pairA("thr",oz_thread(thread)),oz_nil());
   am.debugStreamMessage(OZ_recordInit(OZ_atom("blocked"), pairlist));
 }
 
 void debugStreamReady(Thread *thread) {
   TaggedRef pairlist =
-    oz_cons(OZ_pairA("thr",makeTaggedConst(thread)),oz_nil());
+    oz_cons(OZ_pairA("thr",oz_thread(thread)),oz_nil());
   am.debugStreamMessage(OZ_recordInit(OZ_atom("ready"), pairlist));
 }
 
 void debugStreamTerm(Thread *thread) {
   TaggedRef pairlist =
-    oz_cons(OZ_pairA("thr",makeTaggedConst(thread)),oz_nil());
+    oz_cons(OZ_pairA("thr",oz_thread(thread)),oz_nil());
   am.debugStreamMessage(OZ_recordInit(OZ_atom("term"), pairlist));
 }
 
@@ -110,7 +110,7 @@ void debugStreamException(Thread *thread, TaggedRef exc) {
   oz_currentThread()->setStop(OK);
 
   TaggedRef pairlist =
-    oz_cons(OZ_pairA("thr",makeTaggedConst(thread)),
+    oz_cons(OZ_pairA("thr",oz_thread(thread)),
 	 oz_cons(OZ_pairA("exc",exc),oz_nil()));
   am.debugStreamMessage(OZ_recordInit(OZ_atom("exception"), pairlist));
 }
@@ -128,7 +128,7 @@ void debugStreamExit(OzDebug *dbg, int frameId) {
 
 void debugStreamUpdate(Thread *thread) {
   TaggedRef pairlist =
-    oz_cons(OZ_pairA("thr",makeTaggedConst(thread)),oz_nil());
+    oz_cons(OZ_pairA("thr",oz_thread(thread)),oz_nil());
   am.debugStreamMessage(OZ_recordInit(OZ_atom("update"), pairlist));
 }
 

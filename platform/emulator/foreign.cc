@@ -289,9 +289,6 @@ TaggedRef oz_valueType(OZ_Term term)
     case Co_Foreign_Pointer:
       ret = "foreignPointer";
       break;
-    case Co_Thread:
-      ret = "thread";
-      break;
     case Co_Abstraction:
     case Co_Builtin:
       ret = "procedure";
@@ -310,9 +307,6 @@ TaggedRef oz_valueType(OZ_Term term)
       break;
     case Co_Chunk:
       ret = "chunk";
-      break;
-    case Co_HeapChunk:
-      ret = "heapChunk";
       break;
     case Co_Array:
       ret = "array";
@@ -813,9 +807,6 @@ void const2buffer(ostream &out, ConstTerm *c)
   case Co_BigInt:
     bigInt2buffer(out,(BigInt *)c);
     break;
-  case Co_Thread:
-    out << "<Thread #" << (((Thread*) c)->getID() & THREAD_ID_MASK) << ">" ;
-    break; 
   case Co_Abstraction:
   case Co_Builtin:
     out << "<P/" << c->getArity();
@@ -2087,45 +2078,4 @@ OZ_Return OZ_raiseA(char *name, int was, int shouldBe)
 		  OZ_atom(name),OZ_int(was),OZ_int(shouldBe));
 }
 
-// heap chunks
-inline
-Bool oz_isHeapChunk(TaggedRef term)
-{
-  term = oz_deref(term);
-  return oz_isConst(term)
-    ? tagged2Const(term)->getType() == Co_HeapChunk
-    : FALSE;
-}
-
-int OZ_isHeapChunk(OZ_Term t)
-{
-  return oz_isHeapChunk(oz_deref(t));
-}
-
-OZ_Term OZ_makeHeapChunk(int s)
-{
-  HeapChunk * hc = new HeapChunk(s);
-  return makeTaggedConst(hc);
-}
-
-#define NotHeapChunkWarning(T, F, R)                                        \
-if (! OZ_isHeapChunk(T)) {                                                  \
-  OZ_warning("Heap chunk expected in %s. Got 0x%x. Result undetermined.\n", \
-             #F, T);                                                        \
-  return R;                                                                 \
-}
-
-int OZ_getHeapChunkSize(TaggedRef t)
-{
-  NotHeapChunkWarning(t, OZ_getHeapChunkSize, 0);
-  
-  return ((HeapChunk *) tagged2Const(oz_deref(t)))->getChunkSize();
-}
-
-void * OZ_getHeapChunkData(TaggedRef t)
-{
-  NotHeapChunkWarning(t, OZ_getHeapChunk, NULL);
-  
-  return ((HeapChunk *) tagged2Const(oz_deref(t)))->getChunkData();
-}
 
