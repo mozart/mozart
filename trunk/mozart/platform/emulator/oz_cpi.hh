@@ -265,9 +265,13 @@ private:
   unsigned _calls, _samples;
 
 public:
-  OZ_CFunHeader(OZ_CFun header = NULL) 
-    : _calls(0), _samples(0), _header(header)
-  {
+  OZ_CFunHeader(OZ_CFun header);
+  
+  /*
+  OZ_CFunHeader &operator = (const OZ_CFun header) {
+    _calls = 0;
+    _samples = 0;
+    _header = header;
     static int firstCall = 1;
     if (firstCall) {
       firstCall = 0;
@@ -275,7 +279,9 @@ public:
     }
     _next = _all_headers;
     _all_headers = this;
+    return *this;
   }
+  */
   OZ_CFun getHeaderFunc(void) { return _header; }
   void incSamples()       { _samples++; }
   void incCalls()         { _calls++; }

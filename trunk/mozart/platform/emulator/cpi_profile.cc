@@ -25,3 +25,17 @@ void OZ_CFunHeader::profileReset()
     aux = aux->getNext();
   }
 }
+
+
+OZ_CFunHeader::OZ_CFunHeader(OZ_CFun header) 
+  : _calls(0), _samples(0), _header(header)
+{
+  printf("."); fflush(stdout);
+  static int firstCall = 1;
+  if (firstCall) {
+    firstCall = 0;
+    _all_headers = 0;
+  }
+  _next = _all_headers;
+  _all_headers = this;
+}
