@@ -3746,7 +3746,7 @@ OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg) {
 /**********************************************************************/
 /*   SECTION 24:: Port protocol                                       */
 /**********************************************************************/
-int PortSendTreash = 1500;
+int PortSendTreash = 15000;
 int PortWaitTimeSlice = 100;
 int PortWaitTimeK = 1;
 
