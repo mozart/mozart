@@ -2,8 +2,134 @@
 #define __CREDITHANDLER_HH
 
 #include "dsite.hh"
-
+#include "table.hh"
 class DSite;
+
+
+/*
+  The distributed gc algorithm has been changed from 
+  secondary weight to fractional weight. The old algorithm is 
+  stored for future evaluation. 
+  
+
+ */
+
+
+#ifndef SEC_CREDIT_HANDLER
+
+typedef struct { 
+  int            enumerator;
+  int            denominator;
+} Credit;
+
+void marshalCredit(MarshalerBuffer *buf,Credit c);
+// Since special difs are used to owner a special marshal exists.
+// This also marshals the oti needed for DIF_OWNER and DIF_OWNER_SEC
+void marshalCreditToOwner(MarshalerBuffer *buf,Credit c,int oti);
+#ifndef USE_FAST_UNMARSHALER
+Credit unmarshalCreditRobust(MarshalerBuffer *buf,int *error);
+Credit unmarshalCreditToOwnerRobust(MarshalerBuffer *buf,
+				    MarshalTag mt, int &oti,
+				    int *error);
+#else
+Credit unmarshalCredit(MarshalerBuffer *buf);
+Credit unmarshalCreditToOwner(MarshalerBuffer *buf,
+			      MarshalTag mt, int &oti);
+#endif
+
+class EnumDenumPair;
+
+#define MAXENUMERATOR INT_MAX >> 1 
+
+/*
+  The alpha parameter defines the spreading behavior. 
+  A larger ALPHA results in handeling out small portions
+  of weight, wheras a large ALPHA results in handeling out of
+  large portions. 
+  
+  1 < ALPHA < INF
+
+ */ 
+#define ALPHA  10000      
+
+
+
+class CreditHandler {
+  friend class OB_Entry;
+public:
+  EnumDenumPair *frac;
+  
+  // To be used by the Owner/BorrowEntry
+  Bool isPersistent();
+  void makePersistent();
+  Bool isExtended();
+
+  EnumDenumPair *findPair(int k);
+  Bool insertPair(int e, int k);
+  EnumDenumPair *findLargest();
+  
+};
+
+
+  
+class OwnerCreditHandler : public CreditHandler {
+  friend class OwnerEntry;
+
+protected:
+  int oti;
+
+  // To be used by the OwnerEntry at gc.
+  Bool hasFullCredit(){ return NO;}
+  void setUp(int indx);
+
+public:
+  void addCredit(Credit c);
+   
+
+  void print();
+  OZ_Term extract_info();
+  
+  Credit getCreditBig();
+  Credit getCreditSmall();
+  
+};
+  
+
+class BorrowCreditHandler : public CreditHandler {
+  friend class BorrowEntry;
+  friend class BorrowTable;
+protected:
+  NetAddress netaddr; // Must somehow be able to identify whose credit it is.
+                      // To save memory this was taken out of BorrowEntry.
+
+  // To be used by the BorrowEntry
+  void setUp(Credit c,DSite* s,int i);
+  // Used by the GateMechanism. See perdio.cc
+  void setUpPersistent(DSite* s,int i);  
+  // When a reference is localy removed it must 
+  // hand back its weight
+  void giveBackAllCredit();
+  // Garbage collection
+  void copyHandler(BorrowCreditHandler *from);
+  // The netaddress of the borrow is stored in the credithandler
+  NetAddress* getNetAddress();
+
+  //  The credithandler can have dependencies that makes it
+  //  a temporary root for GC. These functins are used to see
+  //  if the credit-handler is a root. 
+  Bool maybeFreeCreditHandler();
+  Bool canBeFreed();
+public:
+  void addCredit(Credit c);
+  void print();
+  void extract_info(OZ_Term &a, OZ_Term &b);
+  Credit getCreditBig();
+  Credit getCreditSmall();
+  
+};
+
+#else //SEC_CREDIT_HANDLER
+
 class OwnerCreditExtension;
 class BorrowCreditExtension;
 
@@ -154,5 +280,6 @@ private:
   void giveBackCredit(int c);
   void moreCredit();
 };
+#endif //SEC_CREDIT_HANDLER
 
 #endif

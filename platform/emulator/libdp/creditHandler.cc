@@ -2,6 +2,346 @@
 #include "creditHandler.hh"
 #include "dpMarshaler.hh"
 
+
+#ifndef SEC_CREDIT_HANDLER
+class EnumDenumPair
+{
+public:
+
+  EnumDenumPair(int e, int d, EnumDenumPair *n)
+  {
+    enumerator = e;
+    denominator = d;
+    next = n;
+  }
+  
+  int enumerator, denominator;
+  EnumDenumPair *next;
+};
+
+typedef int int_Credit;
+
+int GiveSize(int enumerator){
+  if (enumerator < ALPHA) 
+    return 1;
+  return (enumerator / ALPHA);
+}
+
+
+// Marshaling ---------------------------------------------------------
+void marshalCredit(MarshalerBuffer *buf,Credit c) {
+  PD((CREDIT_NEW,"marshalCredit %d/%d",c.enumerator,c.denominator));
+  Assert(c.enumerator>=0);
+  Assert(c.denominator>=0);
+  buf->put(DIF_PRIMARY);
+  marshalNumber(buf, c.enumerator);
+  marshalNumber(buf, c.denominator);
+}
+
+// These difs assume on one credit and enclose the oti which makes
+// is a full reference to the entity at the receiving owner.
+void marshalCreditToOwner(MarshalerBuffer *buf,Credit c,int oti) {
+  buf->put(DIF_OWNER);
+  marshalNumber(buf, oti);
+  marshalNumber(buf, c.enumerator);
+  marshalNumber(buf, c.denominator);
+}
+
+#ifndef USE_FAST_UNMARSHALER
+
+static Credit mkECredit(Credit c)
+{
+  Assert(0);
+  c.enumerator = (int) 0;
+  c.denominator = (int) 0;
+  return (c);
+}
+
+Credit unmarshalCreditRobust(MarshalerBuffer *buf, int *error)
+{
+  Credit c;
+  MarshalTag mt = (MarshalTag) buf->get();
+  Assert(mt == DIF_PRIMARY);
+  c.enumerator = unmarshalNumberRobust(buf, error);
+  if (*error) return (mkECredit(c));
+  c.denominator = unmarshalNumberRobust(buf, error);
+  if (*error) return (mkECredit(c));
+  return c;
+}
+
+Credit unmarshalCreditToOwnerRobust(MarshalerBuffer *buf,
+				    MarshalTag mt, int &oti,
+				    int *error)
+{
+  Credit c;
+  Assert(mt==DIF_OWNER);
+  oti = unmarshalNumberRobust(buf, error);
+  if (*error) return (mkECredit(c));
+  c.enumerator = unmarshalNumberRobust(buf, error);
+  if (*error) return (mkECredit(c));
+  c.denominator = unmarshalNumberRobust(buf, error);
+  if (*error) return (mkECredit(c));
+  return (c);
+  
+} 
+
+Bool CreditHandler::isExtended()
+{
+  return NO;
+}
+
+
+
+#else
+Credit unmarshalCredit(MarshalerBuffer *buf) {
+  Credit c;
+  MarshalTag mt = (MarshalTag) buf->get();
+  Assert(mt == DIF_PRIMARY);
+  c.enumerator = unmarshalNumberRobust(buf, error);
+  c.denominator = unmarshalNumberRobust(buf, error);
+  return c;
+}
+
+Credit unmarshalCreditToOwner(MarshalerBuffer *buf,MarshalTag mt,
+			      int &oti) {
+  Credit c;
+  Assert(mt==DIF_OWNER);
+  oti = unmarshalNumberRobust(buf, error);
+  if (*error) return (mkECredit(c));
+  c.enumerator = unmarshalNumberRobust(buf, error);
+  if (*error) return (mkECredit(c));
+  c.denominator = unmarshalNumberRobust(buf, error);
+  if (*error) return (mkECredit(c));
+  return (c);
+}
+#endif
+
+void OwnerCreditHandler::addCredit(Credit c)
+{
+  if(!isPersistent())
+    if(insertPair(c.enumerator, c.denominator)){
+      OT->getOwner(oti)->localize(oti);
+    }
+}
+
+
+Credit OwnerCreditHandler::getCreditBig(){
+    Credit c;
+    if (isPersistent()){
+      c.denominator=0;
+      c.enumerator=0;
+    }
+    else{
+      EnumDenumPair *edp =findLargest();
+      c.denominator=edp->denominator;
+      c.enumerator=GiveSize(edp->enumerator);
+      edp->enumerator = edp->enumerator - c.enumerator;
+    }
+    return c;
+  }
+
+Credit OwnerCreditHandler::getCreditSmall(){
+  Credit c;
+    if (isPersistent()){
+      c.denominator=0;
+      c.enumerator=0;
+    }
+    else
+      {
+	EnumDenumPair *edp =findLargest();
+	c.denominator=edp->denominator;
+	c.enumerator=1;
+	edp->enumerator = edp->enumerator - 1;
+      }
+    return c; 
+  }
+
+
+Credit BorrowCreditHandler::getCreditBig(){
+    Credit c;
+    if (isPersistent()){
+      c.denominator=0;
+      c.enumerator=0;
+    }
+    else{
+      EnumDenumPair *edp =findLargest();
+      c.denominator=edp->denominator;
+      c.enumerator=GiveSize(edp->enumerator);
+      edp->enumerator = edp->enumerator - c.enumerator;
+    }
+    return c;
+  }
+
+Credit BorrowCreditHandler::getCreditSmall(){
+  Credit c;
+    if (isPersistent()){
+      c.denominator=0;
+      c.enumerator=0;
+    }
+    else
+      {
+	EnumDenumPair *edp =findLargest();
+	c.denominator=edp->denominator;
+	c.enumerator=1;
+	edp->enumerator = edp->enumerator - 1;
+      }
+    return c; 
+  }
+  
+void CreditHandler::makePersistent(){ 
+  while(frac!=NULL){
+    EnumDenumPair *tmp = frac->next;
+    delete frac;
+    frac = tmp;
+  }
+}
+
+Bool CreditHandler::isPersistent(){ return frac ==NULL;}
+
+void OwnerCreditHandler::setUp(int indx){
+  oti = indx;
+  frac = new EnumDenumPair(MAXENUMERATOR,1,NULL);
+}
+
+
+void BorrowCreditHandler::setUp(Credit c,DSite* s,int i){
+    frac = NULL;
+    netaddr.set(s,i);
+    // If the pair contains a value the entity is not persistent.
+    if(c.enumerator != 0)
+      frac = new EnumDenumPair(c.enumerator,c.denominator,NULL);
+  }
+  // Used by the GateMechanism. See perdio.cc
+  void BorrowCreditHandler::setUpPersistent(DSite* s,int i){
+    Credit c;
+    c.enumerator = 0; 
+    c.denominator = 0;
+    setUp(c,s,i);
+  }
+  
+  void BorrowCreditHandler::giveBackAllCredit() {
+    NetAddress *na = getNetAddress();
+    DSite* site = na->site;
+    int index = na->index;
+    while(frac != NULL){
+      Credit c;
+      EnumDenumPair *tmp;
+      c.enumerator = frac->enumerator; 
+      c.denominator = frac->denominator; 
+      sendCreditBack(site, index, c);
+      tmp = frac;
+      frac = frac->next;
+      delete tmp;
+    }
+  }
+  void BorrowCreditHandler::copyHandler(BorrowCreditHandler *from){
+    netaddr.set(from->netaddr.site,from->netaddr.index); 
+    frac=from->frac;
+  }
+NetAddress* BorrowCreditHandler::getNetAddress() {return &netaddr;}
+Bool BorrowCreditHandler::maybeFreeCreditHandler(){return TRUE;}
+Bool BorrowCreditHandler::canBeFreed() {return TRUE;}
+
+void BorrowCreditHandler::addCredit(Credit c)
+{
+  (void) insertPair(c.enumerator, c.denominator);
+}
+
+void OwnerCreditHandler::print() {printf("not implemented yet");}
+OZ_Term  OwnerCreditHandler::extract_info(){ 
+  EnumDenumPair *tmp = frac;
+  OZ_Term primCred;
+  if (tmp == NULL) 
+     primCred = oz_atom("persistent");
+  else
+    {
+      primCred = oz_nil();  
+      while(tmp!=NULL){
+	primCred = oz_cons(oz_pairII(tmp->enumerator, tmp->denominator),primCred);
+	tmp = tmp->next;
+      }
+    }
+  return primCred;
+}
+
+void BorrowCreditHandler::print() {printf("not implemented yet");}
+void BorrowCreditHandler::extract_info(OZ_Term &primCred,OZ_Term &secCred){
+  EnumDenumPair *tmp = frac;
+  if (tmp == NULL) 
+    primCred = oz_atom("persistent");
+  else
+    {
+      primCred = oz_nil();  
+      while(tmp!=NULL){
+	primCred = oz_cons(oz_pairII(tmp->enumerator, tmp->denominator),primCred);
+	tmp = tmp->next;
+      }
+    }
+  secCred = oz_nil();
+}
+
+
+
+
+
+EnumDenumPair *CreditHandler::findPair(int k){
+    EnumDenumPair *tmp = frac;
+    while(tmp!=NULL && tmp->denominator != k){
+      tmp = tmp->next;
+    }
+    return tmp;
+  };
+  
+  Bool CreditHandler::insertPair(int e, int k){
+    if (k == 0) return TRUE;
+    //    printf("InsertingPair %d/%d\n",e,k);
+    EnumDenumPair **tmp = &frac;
+    while((*tmp)!=NULL && (*tmp)->denominator < k){
+      tmp = &((*tmp)->next);
+    }
+    // printf("FoundPair %d/%d\n",(*tmp)->enumerator,(*tmp)->denominator);
+    if ((*tmp) == NULL || (*tmp)->denominator > k){
+      //printf("Creatingpair\n");
+      *tmp = new EnumDenumPair(e,k,*tmp);
+      return FALSE;
+    }
+    if (e + (*tmp)->enumerator == MAXENUMERATOR) {
+      //printf("Add, filling, overflow\n");
+      EnumDenumPair *ttmp = (*tmp)->next;
+      delete (*tmp);
+      tmp = &ttmp;
+      return insertPair(1,k-1);
+    }
+    if (e + (*tmp)->enumerator > MAXENUMERATOR) {
+      //printf("Add,  overflow\n");
+      (*tmp)->enumerator = e + (*tmp)->enumerator - MAXENUMERATOR;
+      return insertPair(1,k-1);
+    }
+
+    (*tmp)->enumerator = e + (*tmp)->enumerator;
+    //printf("Adding %d/%d\n",(*tmp)->enumerator,(*tmp)->denominator);
+    return FALSE;
+  }
+  
+  EnumDenumPair *CreditHandler::findLargest(){
+    EnumDenumPair **tmp = &frac;
+    while((*tmp)->enumerator <= 1 && (*tmp)->next != NULL){
+      tmp = &((*tmp)->next);
+    }
+    
+    if ((*tmp)->enumerator  > 1) return *tmp;
+    if ((*tmp)->next == NULL){
+      EnumDenumPair *ttmp = *tmp;
+      *tmp = new EnumDenumPair(MAXENUMERATOR,(*tmp)->denominator + 1,NULL);
+      delete ttmp;
+      return *tmp;
+    }
+  }
+
+
+#else //SEC_CREDIT_HANDLER
+
+
 /* -------------------------------------------------------------------- */
 
 #define PERSISTENT_CRED            (0-1)
@@ -1261,4 +1601,4 @@ void BorrowCreditHandler::moreCredit(){
 }
 
 
-  
+#endif //SEC_CREDIT_HANDLER  

@@ -72,7 +72,15 @@ void ExportedProxyVar::gCollectRecurseV()
 {
   DebugCode(PD((GC, "ExportedProxyVar b:%d", bti)););
   ms->makeGCMarkSite();
+#ifdef SEC_CREDIT_HANDLER
+  /*
+    ERIK, this an fix for the sec-credit algorithm, 
+    where credit could contain dsite refs. Not applicable
+    to all distributed gc algorithms. 
+
+   */
   if (credit.owner) credit.owner->makeGCMarkSite();
+#endif
 }
 
 //
