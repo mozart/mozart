@@ -82,7 +82,7 @@ fi
 # where is Emacs?
 if [ \( "$cmd" = "oz" -o "$cmd" = "ozemacs" \) -a "${OZEMACS-0}" = 0 ]; then
 
-  CHECKEMACS=${OZHOME}/ozemacs/$OZPLATFORM/bin/emacs
+  CHECKEMACS=${OZHOME}/ozemacs/platform/$OZPLATFORM/bin/emacs
   if [ -f $CHECKEMACS ]; then
 
     EHOME=$OZHOME/ozemacs
