@@ -341,9 +341,11 @@ in
       end
 
       meth kill(T I Select<=true)
-         {Dbg.trace T false}
-         {Dbg.step T false}
-         {Thread.terminate T}
+         try
+            {Dbg.trace T false}
+            {Dbg.step T false}
+            {Thread.terminate T}
+         catch error(kernel(deadThread ...) ...) then skip end
          case Select then
             Gui,status('Thread #' # I # ' has been terminated')
          else skip end
