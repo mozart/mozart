@@ -258,10 +258,7 @@ public:
     AM *e = &am;
 
     for (ThreadList *aux = allthreads; aux; aux=aux->next) {
-      out = 
-	OZ_cons(makeTaggedConst(new 
-				OzThread(e->currentBoard,aux->elem,
-					 aux->elem->dbgGetTaskStack(NOCODE))),
+      out = OZ_cons(makeTaggedConst(new OzThread(e->currentBoard,aux->elem)),
 		    out);
     }
     return out;
@@ -1513,6 +1510,8 @@ void AM::gc(int msgLevel)
 
   gcTagged(biExceptionHandler,biExceptionHandler);
   gcTagged(defaultExceptionHandler,defaultExceptionHandler);
+
+  gcTagged(threadStreamTail,threadStreamTail);
 
   GCPROCMSG("ioNodes");
   for(int i = 0; i < osOpenMax(); i++) {
