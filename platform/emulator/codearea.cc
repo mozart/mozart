@@ -512,6 +512,8 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       DISPATCH();
 
     case INLINEFUN2:
+    case INLINEREL3:
+    case INLINEEQEQ:
       fprintf (ofile,
                "(%s,X[%d],X[%d],X[%d],%d)\n",
                getBIName(PC+1),
@@ -553,16 +555,6 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
                  toC(literal),
                  regToInt(getRegArg(PC+2)));
       }
-      DISPATCH();
-
-    case INLINEEQEQ:
-      fprintf (ofile,
-               "(%s,X[%d],X[%d],X[%d],%d)\n",
-               getBIName(PC+1),
-               regToInt(getRegArg(PC+2)),
-               regToInt(getRegArg(PC+3)),
-               regToInt(getRegArg(PC+4)),
-               getPosIntArg(PC+5));
       DISPATCH();
 
     case INLINEFUN3:
@@ -843,6 +835,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case CREATEOR:
     case CREATEENUMOR:
     case CREATECOND:
+    case CREATECHOICE:
           /* ***type 8:    OP Label Int*/
       {
         ProgramCounter lbl = getLabelArg(PC+1);
