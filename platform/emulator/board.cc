@@ -98,7 +98,7 @@ void telleq(Board * bb, const TaggedRef a, const TaggedRef b) {
 
 
 Board::Board(Board * p)
-  : localPropagatorQueue(0), flags(0), suspCount(0), bag(0),
+  : localPropagatorQueue(0), suspCount(0), bag(0),
     threads(0), suspList(0), nonMonoSuspList(0)
 {
   Assert(p==NULL || !p->isCommitted());
@@ -320,9 +320,9 @@ inline
 int Board::commit(int left, int right) {
   ozstat.incSolveAlt();
 
-  Assert(bag && bag->getDist()->isAlive());
+  Assert(getDistBag() && getDistBag()->getDist()->isAlive());
 
-  return bag->getDist()->commit(this,left,right);
+  return getDistBag()->getDist()->commit(this,left,right);
 
 }
 

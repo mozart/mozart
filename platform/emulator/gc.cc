@@ -528,6 +528,21 @@ Abstraction *gcAbstraction(Abstraction *a) {
  *
  */
 
+#ifdef DEBUG_CHECK
+
+inline
+int NEEDSCOPYING(Board * bb) {
+ Assert(isInGc ? !bb->isMarkedGlobal() : 1);
+ return !bb->isMarkedGlobal();
+}
+
+#else
+
+#define NEEDSCOPYING(bb) (!(bb)->isMarkedGlobal())
+
+#endif
+
+
 inline
 Bool Board::gcIsMarked(void) {
   return IsMarkedPointer(suspList,1);
@@ -608,8 +623,7 @@ Name *Name::gcName() {
     gn = getGName1();
   }
 
-  if (isInGc && isOnHeap() ||
-      !isInGc && !(GETBOARD(this))->isMarkedGlobal()) {
+  if (isInGc && isOnHeap() || !isInGc && !getBoardInternal()->isMarkedGlobal()) {
 
     Name *aux = (Name*) gcReallocStatic(this,sizeof(Name));
 
@@ -662,7 +676,7 @@ Thread *Thread::gcThreadInline() {
   // nothing can be copied (IN_TC) until stability;
 
   // first class threads: must only copy thread when local to solve!!!
-  if (!isInGc && (GETBOARD(this))->isMarkedGlobal())
+  if (!NEEDSCOPYING(getBoardInternal()))
     return this;
 
   Assert(isInGc || !isRunnable());
@@ -670,7 +684,7 @@ Thread *Thread::gcThreadInline() {
   // Note that runnable threads can be also counted
   // somewhere, and, therefore,
   // might not just dissappear!
-  if (isSuspended() && !GETBOARD(this)->gcIsAlive())
+  if (isSuspended() && !getBoardInternal()->gcIsAlive())
     return (Thread *) NULL;
 
   Thread * newThread = (Thread *) gcReallocStatic(this, sizeof(Thread));
@@ -1250,7 +1264,7 @@ TaggedRef gcExtension(TaggedRef term)
 
   if (bb) {
     Assert(bb->gcIsAlive());
-    if (!isInGc && bb->isMarkedGlobal())
+    if (!NEEDSCOPYING(bb))
       return term;
   }
 
@@ -1385,7 +1399,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
         {
           Board * bb = tagged2VarHome(aux);
 
-          if (!isInGc && bb->isMarkedGlobal()) {
+          if (!NEEDSCOPYING(bb)) {
             to = makeTaggedRef(aux_ptr);
             return;
           }
@@ -1406,8 +1420,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
           if (cv->gcIsMarked()) {
             Assert(tagTypeOf(*(cv->gcGetFwd())) == CVAR);
             to = makeTaggedRef(cv->gcGetFwd());
-          } else if (isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
-            Assert(isInGc || !(GETBOARD(cv))->isMarkedGlobal());
+          } else if (NEEDSCOPYING(cv->getBoardInternal())) {
             OzVariable *new_cv=cv->gcVar();
 
             Assert(new_cv);
@@ -1483,7 +1496,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
 
       Assert(bb);
 
-      if (isInGc || !bb->isMarkedGlobal()) {
+      if (NEEDSCOPYING(bb)) {
         Assert(isInGc || !bb->isMarkedGlobal());
         bb = bb->gcBoard();
         Assert(bb);
@@ -1497,14 +1510,13 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
     return;
 
   case CVAR: // direct cvar
-    //mm2: maybe this is dead code???
     {
       OzVariable * cv = tagged2CVar(aux);
 
       if (cv->gcIsMarked()) {
         Assert(tagTypeOf(*(cv->gcGetFwd())) == CVAR);
         to = makeTaggedRef(cv->gcGetFwd());
-      } else if (isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
+      } else if (NEEDSCOPYING(cv->getBoardInternal())) {
         to = makeTaggedCVar(cv->gcVar());
         cv->gcMark(isInGc, &to);
       } else {
@@ -2144,11 +2156,11 @@ void ConstTerm::gcConstRecurse()
   }
 }
 
-#define CheckLocal(CONST)                            \
-{                                                    \
-   Board *bb=GETBOARD(CONST);                        \
-   if (!bb->gcIsAlive()) return NULL;                \
-   if (!isInGc && bb->isMarkedGlobal()) return this; \
+#define CheckLocal(CONST) \
+{                                         \
+   Board *bb=(CONST)->getBoardInternal(); \
+   Assert(bb->gcIsAlive());               \
+   if (!NEEDSCOPYING(bb)) return this;    \
 }
 
 
@@ -2464,7 +2476,7 @@ void Board::gcRecurse() {
   OZ_collectHeapTerm(result,result);
 
   suspList         = suspList->gc();
-  bag              = bag->gc();
+  setDistBag(getDistBag()->gc());
   nonMonoSuspList  = nonMonoSuspList->gc();
 
 #ifdef CS_PROFILE

@@ -70,18 +70,18 @@ void Board::clearResult() {
 
 inline
 Distributor * Board::getDistributor(void) {
-  bag = bag->clean();
+  setDistBag(getDistBag()->clean());
 
-  if (!bag)
+  if (!getDistBag())
     return (Distributor *) 0;
 
   // Find unary distributor, if any
-  for (DistBag * db = bag; db; db=db->getNext()) {
+  for (DistBag * db = getDistBag(); db; db=db->getNext()) {
     if (db->getDist()->getAlternatives() == 1)
       return db->getDist();
   }
 
-  return bag->getDist();
+  return getDistBag()->getDist();
 }
 
 
