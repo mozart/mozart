@@ -43,6 +43,29 @@ char *getEmulator(char *ozhome)
 }
 
 
+#ifdef OZENGINEW
+
+#define bufsz 1000
+
+unsigned __stdcall readerThread(void *arg)
+{
+  HANDLE hd = (HANDLE)arg;
+  unsigned int ret;
+  char buf[bufsz];
+  while(1) {
+    if (ReadFile(hd,buf,bufsz-1,&ret,0)==FALSE)
+      return 0;
+    buf[ret]=0;
+    //MessageBeep(MB_ICONINFORMATION);
+    MessageBox(NULL, buf, "Mozart Emulator says:",
+	       MB_ICONINFORMATION | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
+    Sleep(2000);
+  }
+  return 1;
+}
+#endif
+
+
 #ifdef OZENGINE
 int main(int argc, char **argv)
 #else
@@ -103,14 +126,38 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
   STARTUPINFO si;
   ZeroMemory(&si,sizeof(si));
   si.cb = sizeof(si);
+  si.dwFlags = STARTF_FORCEOFFFEEDBACK;
+
+  SECURITY_ATTRIBUTES sa;
+  sa.nLength = sizeof(sa);
+  sa.lpSecurityDescriptor = NULL;
+  sa.bInheritHandle = TRUE;
+
+#ifdef OZENGINEW
+  HANDLE rh,wh;
+  if (!CreatePipe(&rh,&wh,&sa,0)) {
+    OzPanic(1,"CreatePipe failed");
+  }
+  si.dwFlags |= STARTF_USESTDHANDLES;
+  si.hStdOutput = wh;
+  si.hStdError  = wh;
+#endif
 
   PROCESS_INFORMATION pinf;
-  BOOL ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,
+  BOOL ret = CreateProcess(NULL,buffer,&sa,NULL,TRUE,
 			   console,NULL,NULL,&si,&pinf);
+
   if (ret!=TRUE) {
     OzPanic(1,"Cannot run '%s' Oz.\nError = %d."
 	      "Did you run setup?",buffer,errno);
   }
+
+
+#ifdef OZENGINEW
+  unsigned thrid;
+  CreateThread(0,10000,&readerThread,rh,0,&thrid);
+#endif
+
   WaitForSingleObject(pinf.hProcess,INFINITE);
 
 #ifdef OZENGINE
