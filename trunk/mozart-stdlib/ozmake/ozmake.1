@@ -2,7 +2,7 @@
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
 .\" other parameters are allowed: see man(7), man(1)
-.TH OZMAKE 1 "July 30, 2004"
+.TH OZMAKE 1 "August 9, 2004"
 .\" Please adjust this date whenever revising the manpage.
 .\"
 .\" Some roff macros, for reference:
@@ -63,7 +63,6 @@ In the following, we write meta variables between angle brackets, e.g. \fI<PREFI
 
 .SS
 General Options
-
 .TP
 .SM
 -v  --verbose  
@@ -104,7 +103,6 @@ What you should remember here, is that \fB-vn\fR is your friend. Add
 
 .SS
 Directories and URLs
-
 .TP
 .SM
 --prefix=\fI<PREFIX>\fP  
@@ -194,7 +192,6 @@ directory in which are placed sub-directories for the user's contributions: a di
 url corresponding to the MOGULDIR directory
 .SS
 Files
-
 .TP
 .SM
 -m \fI<FILE>\fP  --makefile=\fI<FILE>\fP  
@@ -222,7 +219,6 @@ will simply check that the package to be installed really has this VERSION.
 base path of installed packages database. The database is saved in both pickled and textual format respectively in files DB.ozf and DB.txt
 .SS
 Help
-
 \fBozmake --help\fR
 .br 
 .TP
@@ -232,7 +228,6 @@ Help
 print this information message
 .SS
 Build
-
 \fBozmake [--build]\fR
 .br 
 .RS
@@ -305,7 +300,6 @@ tell the C++ linker to additionally search DIR for libraries
 tell the C++ linker to additionally search (or not, if using  \fB--nosyslibrarydirs\fR )the Mozart-specific library directories located in the global installation directory and in the user's private ~/.oz area.
 .SS
 Install
-
 \fBozmake --install\fR
 .br 
 .RS
@@ -424,7 +418,6 @@ whether to remove files left over from a previous installation of this package
 the convention on Windows is that executables have a .exe,while on Unix they have no extension. The  \fB--exe\fR  option allows you to control the conventions used by ozmake when installing executables.  \fB--exe=default\fR use the platform's convention \fB--exe=yes\fR use a .exe extension \fB--exe=no\fR use no extension \fB--exe=both\fR install all executables with .exe extension and without \fB--exe=multi\fR install executable functors for both Unix and Windows. The Unix versions are installed without extension, and the Windows versions are installed with .exe extension
 .SS
 Uninstall
-
 \fBozmake --uninstall\fR
 .br 
 .RS
@@ -444,7 +437,6 @@ uninstall package named by mogul id  \fBPKG\fR
 uninstall a package
 .SS
 Clean
-
 \fBozmake --clean\fR
 .br 
 \fBozmake --veryclean\fR
@@ -455,7 +447,6 @@ remove files as specified by the makefile's clean and veryclean features.  \fB--
 
 .SS
 Create
-
 \fBozmake --create [--package=\fI<FILE>\fR]\fR
 .br 
 .RS
@@ -469,7 +460,6 @@ create a package and save it in FILE.the files needed for the package are automa
 control which target types are included in the package 
 .SS
 Publish
-
 \fBozmake --publish\fR
 .br 
 .RS
@@ -478,7 +468,6 @@ automatically takes care of all the steps necessary for creating/updating a pack
 
 .SS
 Extract
-
 \fBozmake --extract --package=\fI<PKG>\fR\fR
 .br 
 .RS
@@ -487,7 +476,6 @@ extract the files from file or URL PKG.if PKG is a mogul id, then the package is
 
 .SS
 List
-
 \fBozmake --list\fR
 .br 
 .RS
@@ -509,7 +497,6 @@ list info for the installed package identified by mogul id MOGUL
 assume a line with of  \fBN\fR  characters
 .SS
 Config
-
 \fBozmake --config=put \fI<OPTIONS>\fR\fR
 .br 
 .RS
@@ -535,7 +522,6 @@ the argument to \fB--config\fR can be abbreviated to any non-ambiguous prefix
 
 .SS
 Mogul
-
 .P
 If you choose to contribute packages to the MOGUL archive,
 \fBozmake --mogul=\fI<ACTION>\fR\fR simplifies your task. It makes it easy for you to maintain a database of your contributions and to export them so that the MOGUL librarian may automatically find them. In fact, the simplest way is to use
@@ -720,7 +706,6 @@ targets are documentation files.
 
 .SS
 Extensions
-
 .P
 \fBozmake\fP knows how to build targets by looking at the target's extension:
 
@@ -763,7 +748,6 @@ It is imperative that you respect the conventional use of extensions described h
 
 .SS
 Rules
-
 .P
 \fBozmake\fP has built-in rules for building files. Occasionally, you may want to override the default rule for one or more targets. This is done with feature \fBrule\fP which contains a record mapping target to rule:
 
@@ -845,7 +829,6 @@ or to create a non-prelinked executable:
 
 .SS
 Dependencies
-
 .P
 \fBozmake\fP automatically determines whether targets needed to be rebuilt, e.g. because they are missing or if some source file needed to create them has been modified. The rules are used to determine dependencies between files. Sometimes this is insufficient e.g. because you use tool \fBozl\fP (dependencies on imports), or \fB\insert\fP in an Oz file, or #include in a C++ file. In this case you can specify additional dependencies using feature \fBdepends\fP which is a record mapping targets to list of dependencies:
 
@@ -863,7 +846,6 @@ or
 
 .SS
 Cleaning
-
 .P
 During development, it is often convenient to be able to easily remove all junk and compiled files to obtain again a clean project directory. This is supported by \fBozmake --clean\fR and
 \fBozmake --veryclean\fR;the latter also implies the former. Files to be removed are specified by
@@ -877,10 +859,8 @@ BUILDDIR matching one such pattern is removed. There are built-in patterns, but 
 
 .SS
 Package Related Features
-
 .B
 uri
-
 .P
 feature \fBuri\fP indicates the URI where to install lib targets. For example:
 
@@ -893,13 +873,11 @@ states that all \fBlib\fP targets (e.g. \fIFoo.ozf\fR)will be installed under th
 
 .B
 mogul
-
 .P
 feature \fBmogul\fP is the mogul id uniquely identifying this package. It is used to identify the package in the database of installed packages, to create/publish the package, and to install its documentation files.
 
 .B
 author
-
 .P
 feature \fBauthor\fP is a virtual string or list of virtual string resp. identifying the author or authors of the package. It is recommended to identify authors by their mogul id, however is is also possible to simply give their names. For example, the recommended way is:
 
@@ -912,7 +890,6 @@ but the following is also possible:
 
 .B
 released
-
 .P
 feature \fBreleased\fP is a virtual string specifying the date and time of release in the following format:
 
@@ -924,25 +901,21 @@ time is optional. An appropriate release date using the current date and time is
 
 .B
 blurb
-
 .P
 feature \fBblurb\fP contains a very short piece of text describing the package. This text should be just one line and is intended to be used as a title when the package is published in the mogul archive.
 
 .B
 info_text
-
 .P
 feature \fBinfo_text\fP contains a plain text description of the package. This is intended to be used as an abstract on the presentation page for the package in the mogul archive. It should be brief and informative, but should not attempt to document the package.
 
 .B
 info_html
-
 .P
 feature \fBinfo_html\fP is similar to \fBinfo_text\fP but contains HTML rather than plain text.
 
 .B
 src
-
 .P
 feature \fBsrc\fP indicates which targets should be considered source, i.e. in particular non-buildable. All targets mentioned in
 \fBsrc\fP should be mentioned in \fBbin\fP, \fBlib\fP,or
@@ -962,33 +935,28 @@ is a makefile for a package that distribute the pre-compiled
 
 .B
 subdirs
-
 .P
 feature \fBsubdirs\fP is a list of bare filenames representing subdirectories of the project. By default, when necessary,
 \fBozmake\fP will recurse into these subdirectories. It is expected that each subdirectory should provide its own makefile. The mogul id is automatically inherited to subdirectories and the uri is automatically extended by appending the name of the subdirectory: thus sub-makefiles can be simpler since they don't need to be concerned with package-level features.
 
 .B
 requires
-
 .P
 feature \fBrequires\fP is a list of module URIs or package MOGUL ids. These represent the \fIexternal\fP dependencies of the package. They are not yet used, but eventually \fBozmake\fP will be able to use them to automate the recursive installation of other packages required by the one you are interested in.
 
 .B
 categories
-
 .P
 feature \fBcategories\fP is a list of MOGUL categories to help categorize this package in the MOGUL archive.
 
 .B
 version
-
 .P
 feature \fBversion\fP is used to provide a version string. This is a string that consist of integers separated by single dots, e.g.
 \fB"2"\fP or \fB"3.1.7"\fP..
 
 .B
 provides
-
 .P
 feature \fBprovides\fP is used to override the default information about what the package provides, normally automatically computed from the \fBbin\fP and \fBlib\fP targets: it should be a list which contains a subset of these targets. The
 \fBprovides\fP feature of a makefile does not override or otherwise affect its sub-makefiles: each makefile should separately override if it so desires. To state that a makefile does not officially provide any functors or executable application, you would add:
