@@ -44,6 +44,7 @@ my $ACTION_DOC;
 my $ACTION_WIN;
 my $ACTION_TAR;
 my $ACTION_MAC;
+my $ACTION_DEB;
 my $JUSTPRINT;
 my $VERBOSE;
 my $ACTION_HELP;
@@ -64,6 +65,7 @@ my $result = GetOptions
      'windows+'        => \$ACTION_WIN,
      'tar+'            => \$ACTION_TAR,
      'macosx'          => \$ACTION_MAC,
+     'debian'	       => \$ACTION_DEB,
      'just-print|n+'   => \$JUSTPRINT,
      'verbose|v+'      => \$VERBOSE,
      'help|h+'         => \$ACTION_HELP,
@@ -107,6 +109,9 @@ ACTIONS
 	--mac PKGFILES-and-READMES...
 		install MacOS X packages
 
+	--debian FILES...
+		install debian packages
+
 EOF
     exit 0;
 }
@@ -121,6 +126,7 @@ EOF
     $action++ if $ACTION_WIN;
     $action++ if $ACTION_TAR;
     $action++ if $ACTION_MAC;
+    $action++ if $ACTION_DEB;
     die "exactly 1 action must be specified" unless $action == 1;
 }
 
@@ -158,6 +164,7 @@ sub action_create {
     &do_mkdir("$RELDIR/windows");
     &do_mkdir("$RELDIR/print");
     &do_mkdir("$RELDIR/macosx");
+    &do_mkdir("$RELDIR/debian");
 }
 
 {
@@ -337,3 +344,27 @@ sub action_macosx {
 }
 
 &action_macosx if $ACTION_MAC;
+
+sub action_debian {
+    my $debdir = "$RELDIR/debian";
+    foreach $file (@ARGV) {
+	my $name = &nondirname($file);
+	if ($name =~ /^mozart-contrib_(\d+\.\d+\.\d+)\.\d{8}-\d+_(.*)\.deb$/ ||
+	    $name =~ /^mozart-doc-html_(\d+\.\d+\.\d+)\.\d{8}-\d+_all\.deb$/ ||
+	    $name =~ /^mozart_(\d+\.\d+\.\d+)\.\d{8}-\d+_(.*)\.deb$/ ||
+	    $name =~ /^mozart_(\d+\.\d+\.\d+)\.\d{8}\.orig.tar.gz$/ ||
+	    $name =~ /^mozart_(\d+\.\d+\.\d+)\.\d{8}-\d+\.diff\.gz$/ ||
+	    $name =~ /^mozart_(\d+\.\d+\.\d+)\.\d{8}-\d+\.dsc$/ ||
+	    $name =~ /^mozart_(\d+\.\d+\.\d+)\.\d{8}-\d+_(.*)\.changes$/ ||
+	    $name eq "Release" ||
+	    $name eq "Packages.gz")
+	{
+	    die "wrong release number on $name" unless !$1 || $1 eq $RELEASE_NUMBER;
+	    &do_system("cp -f $file $debdir/$name");
+	} else {
+	    die "unrecognized debian package $name";
+	}
+    }
+}
+
+&action_debian if $ACTION_DEB;
