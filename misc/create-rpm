@@ -121,9 +121,9 @@ cd tmp-doc
 gzip -dc \$RPM_SOURCE_DIR/mozart-${VERSION}-doc.tar.gz | tar xf -
 mv mozart/doc ..
 cd ..
-chown -R root doc
-chgrp -R root doc
-chmod -R a+rX,g-w,o-w doc
+chown -R root .
+chgrp -R root .
+chmod -R a+rX,g-w,o-w .
 rm -rf tmp-doc
 %setup -c -D -T -a 2
 
