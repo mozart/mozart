@@ -36,6 +36,14 @@ install:: $(OZCAR) $(LIBFILES) bitmaps
 bitmaps: $(LOCALBITMAPFILES)
 	$(INSTALL) -m 444 $(LOCALBITMAPFILES) $(OZLIB)/bitmaps
 
+tags::
+	etags --language=none \
+	--regex='/[ \t]*proc\>[^{\n]*{!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
+	--regex='/[ \t]*fun\>[^{\n]*{!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
+	--regex='/[ \t]*class[ \t]+!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
+	--regex='/[ \t]*meth\([ \t]+\|[ \t]*![ \t]*\)\([A-Za-z0-9][A-Za-z0-9_]*\|`.+`|'\''.+'\''\)/\2/' \
+	$(LOCALFILES)
+
 $(OZCAR):
 	$(INSTALL) -m 775 -d $@
 

@@ -45,31 +45,30 @@ ApplPrefixText         = 'Application:'
 ApplFilePrefixText     = 'File:'
 
 InvalidThreadID        = 'Invalid Thread ID in step message'
-NoFileInfo             = 'step message without line number information, ' #
-                         'continuing thread #'
+NoFileInfo             = ('step message without line number information, ' #
+			  'continuing thread #')
 NoFileBlockInfo        = ' blocks without line number information'
 EarlyThreadDeath       = 'won\'t add thread #'
 EarlyTermThread        = 'Early terminating thread'
 KnownThread            = 'Got known thread'
 NewThread              = 'Got new thread'
-NextOnLeave            = '\'next\' while leaving procedure - ' #
-                         'substituting by \'step\''
+NextOnLeave            = ('\'next\' while leaving procedure - ' #
+			  'substituting by \'step\'')
 
 UnknownSuspThread      = 'Unknown suspending thread'
 UnknownWokenThread     = 'Unknown woken thread'
 UnknownMessage         = 'Unknown message on stream'
 
-WaitForThread          = 'waiting for thread to be added ' #
-                         'to dictionary of debugged threads...'
+WaitForThread          = ('waiting for thread to be added ' #
+			  'to dictionary of debugged threads...')
 
 ErrorExcText           = 'Exception: '
 UserExcText            = 'Exception: '
 NoStackText            = ' / no stack available'
 
 FirstSelectThread      = 'You must select a thread first!'
-IgnoreNoFileStep       = 'Ignoring new thread as there\'s' #
-                         ' no line information available. ' #
-                         ' Hint: save your Emacs buffer!'
+IgnoreNoFileStep       = ('Ignoring new thread as there\'s' #
+			  ' no file information available.')
 
 DoneMessage            = ' done'
 
@@ -85,12 +84,6 @@ OzcarMessagePrefix     = fun {$}
 			    'Ozcar[' # {Thread.id {Thread.this}} # ']: '
 			 end
 OzcarErrorPrefix       = 'Ozcar ERROR: '
-
-BraceLeft              = '{'
-BraceRight             = '}'
-
-BracketLeft            = '['
-BracketRight           = ']'
 
 DotEnd                 = '.end'
 
@@ -121,7 +114,6 @@ RecordType             = '<record>'
 ChunkType              = '<chunk>'
 UnknownType            = '<???>'
 UnboundType            = '_'
-UnAllocatedType        = {NewName}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -294,7 +286,7 @@ case UseColors then
 
    ButtonForeground        = grey40
    CheckButtonSelectColor  = grey70
-   
+
    StepButtonColor         = SelectedBackground
    NextButtonColor         = SelectedBackground
    ContButtonColor         = RunnableThreadColor
@@ -305,7 +297,7 @@ case UseColors then
    %% thread forest window
    RunnableThreadColor     = '#00a500'
    RunningThreadColor      = '#f0c000'
-   
+
    BlockedThreadColor      = '#e07070'
    DeadThreadColor         = '#b0b0b0'
 
@@ -329,7 +321,7 @@ else
 
    ButtonForeground        = black
    CheckButtonSelectColor  = black
-   
+
    StepButtonColor         = black
    NextButtonColor         = black
    ContButtonColor         = black
@@ -348,7 +340,7 @@ else
    RunnableThreadText      = nil
    BlockedThreadText       = '(b)'
    DeadThreadText          = '(t)'
-   
+
    %% application trace window
    ProcColor               = black
    BuiltinColor            = black
@@ -364,12 +356,11 @@ ConfigVerbose              = false  %% debug messages in Emulator buffer?
 
 ConfigStepSystemProcedures = false  %% step on all system procedures (`...`)?
 
-ConfigStepRecordBuiltin         = false  %% step on builtin 'record'  ?
-ConfigStepDotBuiltin            = false  %% step on builtin '.'       ?
-ConfigStepWidthBuiltin          = false  %% step on builtin 'width'   ?
-ConfigStepNewNameBuiltin        = false  %% step on builtin 'NewName' ?
-ConfigStepSetSelfBuiltin        = false  %% step on builtin 'setSelf' ?
-ConfigStepWaitForArbiterBuiltin = false  %% step on builtin 'waitForArbiter'?
+ConfigStepRecordBuiltin    = false  %% step on builtin 'record'  ?
+ConfigStepDotBuiltin       = false  %% step on builtin '.'       ?
+ConfigStepWidthBuiltin     = false  %% step on builtin 'width'   ?
+ConfigStepNewNameBuiltin   = false  %% step on builtin 'NewName' ?
+ConfigStepSetSelfBuiltin   = false  %% step on builtin 'setSelf' ?
 
 ConfigEnvSystemVariables   = true   %% filter system variables in Env Window?
 ConfigEnvProcedures        = false  %% filter procedures in Env Window?
@@ -380,28 +371,27 @@ ConfigSubThreads           = true   %% dito
 Config =
 {New
  class
-    
+
     attr
        verbose :                   ConfigVerbose
-    
+
        stepSystemProcedures :      ConfigStepSystemProcedures
        stepRecordBuiltin :         ConfigStepRecordBuiltin
        stepDotBuiltin :            ConfigStepDotBuiltin
        stepWidthBuiltin :          ConfigStepWidthBuiltin
        stepNewNameBuiltin :        ConfigStepNewNameBuiltin
        stepSetSelfBuiltin :        ConfigStepSetSelfBuiltin
-       stepWaitForArbiterBuiltin : ConfigStepWaitForArbiterBuiltin
-    
+
        envSystemVariables :        ConfigEnvSystemVariables
        envProcedures :             ConfigEnvProcedures
-       
+
        emacsThreads :              {New Tk.variable tkInit(ConfigEmacsThreads)}
        subThreads :                {New Tk.variable tkInit(ConfigSubThreads)}
-       
+
     meth init
        skip
     end
-    
+
     meth toggle(What)
        What <- {Not @What}
     end
@@ -415,7 +405,7 @@ Config =
     in
        case Value == 0 then false else true end
     end
-    
+
  end init}
 
 fun {Cget What}
