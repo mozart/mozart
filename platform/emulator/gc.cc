@@ -1306,7 +1306,7 @@ TaskStack *TaskStack::gc()
       break;
 
     case C_CFUNC_CONT:
-      newStack->gcQueue(pop());                // BIFun
+      newStack->gcQueue(pop());                // OZ_CFun
       newStack->gcQueue(((Suspension*) pop())->gcSuspension());	
       newStack->gcQueue(gcRefsArray((RefsArray) pop()));
       break;

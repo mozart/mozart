@@ -63,11 +63,11 @@
 
 enum ThreadFlags
 {
-  T_Normal =    1<<0,
-  T_SuspCont =  1<<1,
-  T_SuspCCont = 1<<2,
-  T_Nervous =   1<<3,
-  T_Solve =     1<<4
+  T_Normal =    0x01,
+  T_SuspCont =  0x02,
+  T_SuspCCont = 0x04,
+  T_Nervous =   0x08,
+  T_Solve =     0x10
 };
 
 static int T_No_State = ~(T_Normal | T_SuspCont | T_SuspCCont | T_Nervous);
@@ -404,7 +404,7 @@ void Thread::pushTask(Board *bb,ProgramCounter pc,
   u.taskStack->pushCont(bb,pc,y,g,x,i);
 }
 
-void Thread::pushTask (Board *bb, BIFun f, RefsArray x, int i)
+void Thread::pushTask (Board *bb, OZ_CFun f, RefsArray x, int i)
 {
   Assert(isNormal());
   bb->addSuspension ();

@@ -44,18 +44,6 @@ int OZ_isVar(OZ_Term term)
   return (isAnyVar(tag) == OK) ? 1 : 0;
 }
 
-int OZ_isNotCVar(OZ_Term term)
-{
-  DEREF(term,_1,tag);
-  return (isNotCVar(tag) == OK) ? 1 : 0;
-}
-
-int OZ_isCVar(OZ_Term term)
-{
-  DEREF(term,_1,tag);
-  return (isCVar(tag) == OK) ? 1 : 0;
-}
-
 int OZ_isTuple(OZ_Term term)
 {
   DEREF(term,_1,tag);
@@ -234,14 +222,7 @@ OZ_Bool OZ_unify(OZ_Term t1, OZ_Term t2)
   return PROCEED;
 }
 
-OZ_Term OZ_newVariable(char *name)
-{
-  SVariable *cvar = new SVariable(am.currentBoard,
-				  OZ_stringToTerm(name));
-  return makeTaggedRef(newTaggedSVar(cvar));
-}
-
-OZ_Term OZ_newVar()
+OZ_Term OZ_newVariable()
 {
   return makeTaggedRef(newTaggedUVar(am.currentBoard));
 }
@@ -436,37 +417,44 @@ OZ_Term OZ_cons(OZ_Term head,OZ_Term tail)
 }
 
 
-int addBuiltin(char *name, int arity, OZ_CFun fun)
+int OZ_addBuiltin(char *name, int arity, OZ_CFun fun)
 {
-  return BIreplace(name,arity,fun) == NULL ? 0 : 1;
+  return BIadd(name,arity,fun,OK) == NULL ? 0 : 1;
 }
 
+// obsolete
+int addBuiltin(char *name, int arity, OZ_CFun fun)
+{
+  return BIadd(name,arity,fun,OK) == NULL ? 0 : 1;
+}
 
 
 /* Suspending builtins */
 
 
-Suspension *OZ_makeSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
+OZ_Suspension OZ_makeSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
 				 OZ_Term *args,int arity)
 {
   am.currentBoard->addSuspension();
-  return new Suspension(new CFuncContinuation(am.currentBoard,
-					      am.currentThread->getPriority(),
-					      fun, args, arity));
+  return (OZ_Suspension)
+    new Suspension(new CFuncContinuation(am.currentBoard,
+					 am.currentThread->getPriority(),
+					 fun, args, arity));
 }
 
-Suspension *OZ_makeHeadSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
+OZ_Suspension OZ_makeHeadSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
 				     OZ_Term *args,int arity)
 {
-  return new Suspension(new CFuncContinuation(am.currentBoard,
-					      am.currentThread->getPriority(),
-					      fun, args, arity));
+  return (OZ_Suspension)
+    new Suspension(new CFuncContinuation(am.currentBoard,
+					 am.currentThread->getPriority(),
+					 fun, args, arity));
 }
 
-void OZ_addSuspension(OZ_Term *var, Suspension *s)
+void OZ_addSuspension(OZ_Term *var, OZ_Suspension susp)
 {
   SVariable *svar = taggedBecomesSuspVar(var);
-
+  Suspension *s = (Suspension *) susp;
   if (am.setExtSuspension (svar->getHome (), s) == OK) {
     s->setExtSusp ();
   }
@@ -475,16 +463,16 @@ void OZ_addSuspension(OZ_Term *var, Suspension *s)
 }
 
 
-OZ_Bool OZ_onToplevel()
+int OZ_onToplevel()
 {
-  return am.isToplevel() == OK ? PROCEED : FAILED;
+  return am.isToplevel();
 }
 
 
 // mm2: obsolete
-OZ_Bool onToplevel()
+int onToplevel()
 {
-  return am.isToplevel() == OK ? PROCEED : FAILED;
+  return am.isToplevel();
 }
 
 
