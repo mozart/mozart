@@ -437,6 +437,7 @@ new-parser:
 
 
 PARSEROBJS = parser.lo scanner.lo parsertable.lo
+scanner.lo: parser.hh
 Parser.so-$(PLATFORM): $(PARSEROBJS)
         $(DYNLD) -o $@ $(PARSEROBJS)
 
