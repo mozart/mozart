@@ -854,6 +854,14 @@ inline int getWidth(SRecordArity a)
 
 #undef Body
 
+inline
+OZ_Term sraGetArityList(SRecordArity arity)
+{
+  return (sraIsTuple(arity))
+    ? makeTupleArityList(getTupleWidth(arity))
+    : getRecordArity(arity)->getList();
+}
+
 class SRecord {
 private:
   TaggedRef label;
@@ -962,7 +970,7 @@ public:
   void setLabel(TaggedRef newLabel) { label = newLabel; }
   
   TaggedRef getArityList() {
-    return isTuple() ? makeTupleArityList(getWidth()) : getArity()->getList();
+    return sraGetArityList(getSRecordArity());
   }
   
   Arity* getArity () {
@@ -1091,17 +1099,14 @@ private:
 public:
   USEHEAPMEMORY;
 
-  Bool hasFastBatch;    /* for optimized batches */
-
   ObjectClass(OzDictionary *fm, Literal *pn, OzDictionary *sm, 
-	      Abstraction *snd, Bool hfb, SRecord *uf,
+	      Abstraction *snd, SRecord *uf,
 	      OzDictionary *dm)
   {
     fastMethods    = fm;
     printName      = pn;
     slowMethods    = sm;
     send           = snd;
-    hasFastBatch   = hfb;
     unfreeFeatures = uf;
     defaultMethods = dm;
     ozclass        = AtomNil;
@@ -1183,8 +1188,6 @@ public:
   inline void release();
 
   ObjectClass *getClass() { return (ObjectClass*) ToPointer(aclass); }
-
-  Bool getFastBatch()     { return getClass()->hasFastBatch; }
 
   char *getPrintName()          { return getClass()->getPrintName(); }
   OzDictionary *getMethods()    { return getClass()->getfastMethods(); }
