@@ -5467,47 +5467,6 @@ OZ_C_proc_begin(BInop,VarArity)
 OZ_C_proc_end 
 
 // ------------------------------------------------------------------------
-// load precompiled file
-// ------------------------------------------------------------------------
-
-OZ_C_proc_begin(BIloadFile,1)
-{
-  TaggedRef term0 = OZ_getCArg(0);
-  DEREF(term0,_0,tag0);
-  
-  if (!isAtom(term0)) {
-    TypeErrorT(0,"Atom");
-  }
-
-  char *file = tagged2Literal(term0)->getPrintName();
-  
-  CompStream *fd = CompStream::csopen(file);
-
-  if (fd == NULL) {
-    OZ_warning("call: loadFile: cannot open file '%s'",file);
-    return am.raise(E_ERROR,E_KERNEL,"loadFile",1,term0);
-  }
-  
-  if (ozconf.showFastLoad) {
-    printf("Fast loading file '%s'\n",file);
-  }
-  
-  // begin critical region
-  osBlockSignals();
-  
-  am.loadQuery(fd);
-  
-  fd->csclose();
-
-  osUnblockSignals();
-  // end critical region
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-
-// ------------------------------------------------------------------------
 // --- Apply
 // ------------------------------------------------------------------------
 
@@ -6895,7 +6854,6 @@ BIspec allSpec[] = {
   {"==Rel",   2,BIeq,     0},
   {"\\=Rel",  2,BIneq,    0},
 
-  {"loadFile",       1, BIloadFile,		0},
   {"linkObjectFiles",2, BIlinkObjectFiles,	0},
   {"unlinkObjectFile",1,BIunlinkObjectFile,	0},
 
