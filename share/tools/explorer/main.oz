@@ -61,15 +61,7 @@ in
          MyManager: unit
 
       meth init
-	 self.Options = {Record.map DefOptions fun {$ O}
-						  D = {Dictionary.new}
-					       in
-						  {Record.forAllInd O
-						   proc {$ F V}
-						      {Dictionary.put D F V}
-						   end}
-						  D
-					       end}
+	 self.Options = {Record.map DefOptions Record.toDictionary}
       end
       
       meth Init()
