@@ -32,7 +32,7 @@ local
 	 [] N|Nr then
 	    case N.kind
 	    of succeeded then N
-	    [] choice then
+	    [] choose then
 	       case {N NextSolBelow($)} of !False then {FindNextSolBelow Nr}
 	       elseof Sol then Sol
 	       end
@@ -46,7 +46,7 @@ local
 	 [] N|Nr then
 	    case N.kind
 	    of succeeded then N
-	    [] choice then
+	    [] choose then
 	       case {N PrevSolBelow($)} of !False then {FindPrevSolBelow Nr}
 	       elseof Sol then Sol
 	       end
@@ -58,7 +58,7 @@ local
       fun {FindBackBelow Ns}
 	 case Ns of nil then False
 	 [] N|Nr then
-	    case N.kind\=choice then {FindBackBelow Nr}
+	    case N.kind\=choose then {FindBackBelow Nr}
 	    elsecase {N BackBelow($)} of !False then {FindBackBelow Nr}
 	    elseof B then B
 	    end
@@ -67,7 +67,7 @@ local
       
    in
       
-      class ChoiceNode
+      class ChooseNode
       
 	 meth !NextSolBelow($)
 	    @isSolBelow andthen
@@ -93,7 +93,7 @@ local
 	 meth nextSol($)
 	    case @isSolBelow then
 	       case @isHidden then self
-	       else <<ChoiceNode NextSolBelow($)>>
+	       else <<ChooseNode NextSolBelow($)>>
 	       end
 	    else
 	       case self.mom of !False then False
@@ -231,7 +231,7 @@ local
    
 in
 
-   MoveNodes = classes(choice:    ChoiceNode
+   MoveNodes = classes(choose:    ChooseNode
 		       succeeded: SucceededNode
 		       failed:    FailedOrBlockedNode
 		       blocked:   FailedOrBlockedNode)

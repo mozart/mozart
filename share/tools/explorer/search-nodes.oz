@@ -23,7 +23,7 @@ local
       
    in
 
-      class Choice
+      class Choose
 	 attr
 	    isSolBelow:      False
 	    toDo:            nil
@@ -139,7 +139,7 @@ local
    
 in
    
-   SearchNodes = classes(choice:    Choice
+   SearchNodes = classes(choose:    Choose
 			 succeeded: Succeeded
 			 failed:    Failed
 			 blocked:   Blocked)

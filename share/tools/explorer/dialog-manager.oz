@@ -29,7 +29,7 @@ local
 	 Title = {New Tk.label tkInit(parent:     self
 				      font:       AboutFont
 				      text:       TitleName
-				      foreground: ChoiceTermColor)}
+				      foreground: ChooseTermColor)}
 
 	 Author = {New Tk.label tkInit(parent: self
 				       text: ('by Christian Schulte\n' #
