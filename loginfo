@@ -19,7 +19,7 @@
 # in addition to the first matching regex or DEFAULT.
 #
 ALL		/CVS/CVSROOT/log.pl -m ps.cvs@news.ps.uni-sb.de %s
-stockhausen			mail -s "I have changed %s" rossberg
+stockhausen			mail -s "CVS %s" rossberg
 mozart/platform/emulator	mail -s "I have changed %s" scheidhr,tmueller,perbrand,erik,nilsf,popow
 mozart/share/test		mail -s "I have changed %s" tmueller,popow
 mozart/share/core		mail -s "I have changed %s" tmueller,nilsf,popow
