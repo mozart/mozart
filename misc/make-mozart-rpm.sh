@@ -27,6 +27,28 @@
 
 # must be run as root;
 
+#
+COPYLIBS="--no-lib-copies"
+
+#
+# check whether copying of the 'libgcc_s' and 'libstdc++' libraries
+# is dislabled;
+while [ 1 ]; do
+    case $1 in
+        --no-lib-copies)
+        COPYLIBS="--no-lib-copies"
+        shift 1
+        continue
+        ;;
+        --lib-copies)
+        COPYLIBS="--lib-copies"
+        shift 1
+        continue
+        ;;
+    esac
+    break
+done
+
 #PLAT=$1
 #PREFIX=$2
 PLAT=`ozplatform`
@@ -76,8 +98,5 @@ export with_gmp with_zlib with_gdbm with_regex
 #
 set -x
 
-# when building the binaries linked statically against libraries, as
-# we do here, --lib-copies tells the 'create-rpm' script to include
-# the copies of libgcc_s.so and libstdc++.so as well
-echo executing "$use_src/misc/create-rpm --lib-copies $build $build-stdlib $dst"
-$use_src/misc/create-rpm --lib-copies $build $build-stdlib $dst
+echo executing "$use_src/misc/create-rpm $COPYLIBS $build $build-stdlib $dst"
+$use_src/misc/create-rpm $COPYLIBS $build $build-stdlib $dst
