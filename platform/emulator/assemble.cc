@@ -87,18 +87,21 @@ OZ_BI_define(BInewCodeBlock,1,1)
   oz_declareIntIN(0,size);
 
   CodeArea *code = new CodeArea(size);
-  OZ_RETURN_INT(ToInt32(code));
+  OZ_RETURN(OZ_makeForeignPointer(code));
 } OZ_BI_end
 
 
-#define declareCodeBlock(num,name)			\
-   oz_declareIntIN(num,__aux);				\
-   CodeArea *name = (CodeArea*) ToPointer(__aux);
+#define OZ_declareCodeBlockIN(num,name)			\
+  CodeArea *name;					\
+  {							\
+    OZ_declareForeignPointerIN(num,__aux);		\
+    name = (CodeArea *) __aux;				\
+  }
 
 
 OZ_BI_define(BImakeProc,2,1)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,globals);
   globals = oz_deref(globals);
 
@@ -124,7 +127,7 @@ OZ_BI_define(BImakeProc,2,1)
 
 OZ_BI_define(BIaddDebugInfo,3,0)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,file); file = oz_deref(file);
   oz_declareIntIN(2,line);
   code->writeDebugInfo(file,line);
@@ -137,7 +140,7 @@ static Opcode lastOpcode=OZERROR;
 #endif
 OZ_BI_define(BIstoreOpcode,2,0)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareIntIN(1,i);
   Assert(i>=0 && i<(int)OZERROR);
   code->writeOpcode((Opcode)i);
@@ -148,7 +151,7 @@ OZ_BI_define(BIstoreOpcode,2,0)
 
 OZ_BI_define(BIstoreNumber,2,0)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,arg);
   arg = oz_deref(arg);
   Assert(OZ_isNumber(arg));
@@ -159,7 +162,7 @@ OZ_BI_define(BIstoreNumber,2,0)
 
 OZ_BI_define(BIstoreLiteral,2,0)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,arg);
   arg = oz_deref(arg);
   Assert(OZ_isLiteral(arg));
@@ -170,7 +173,7 @@ OZ_BI_define(BIstoreLiteral,2,0)
 
 OZ_BI_define(BIstoreFeature,2,0)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,arg);
   arg = oz_deref(arg);
   Assert(OZ_isFeature(arg));
@@ -181,9 +184,11 @@ OZ_BI_define(BIstoreFeature,2,0)
 
 OZ_BI_define(BIstoreConstant,2,0)
 {
-  declareCodeBlock(0,code);
-  oz_declareNonvarIN(1,arg);
-  arg = oz_deref(arg);
+  OZ_declareCodeBlockIN(0,code);
+  oz_declareIN(1,arg);
+  if (!OZ_isVariable(arg)) {
+    arg = oz_deref(arg);
+  }
   code->writeTagged(arg);
   return PROCEED;
 } OZ_BI_end
@@ -191,7 +196,7 @@ OZ_BI_define(BIstoreConstant,2,0)
 
 OZ_BI_define(BIstoreBuiltinname,2,0)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,builtin);
   builtin = oz_deref(builtin);
   Assert(oz_isBuiltin(builtin));
@@ -202,7 +207,7 @@ OZ_BI_define(BIstoreBuiltinname,2,0)
 
 OZ_BI_define(BIstoreRegisterIndex,2,0)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareIntIN(1,i);
   Assert(i >= 0);
   code->writeReg(i);
@@ -212,7 +217,7 @@ OZ_BI_define(BIstoreRegisterIndex,2,0)
 
 OZ_BI_define(BIstoreInt,2,0)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareIntIN(1,i);
   code->writeInt(i);
   return PROCEED;
@@ -221,7 +226,7 @@ OZ_BI_define(BIstoreInt,2,0)
 
 OZ_BI_define(BIstoreLabel,2,0)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareIntIN(1,label);
   code->writeLabel(label);
   return PROCEED;
@@ -230,7 +235,7 @@ OZ_BI_define(BIstoreLabel,2,0)
 
 OZ_BI_define(BIstorePredicateRef,2,0)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,p);
   if (OZ_isUnit(p)) {
     Assert(lastOpcode==DEFINITION || lastOpcode==DEFINITIONCOPY);
@@ -244,17 +249,9 @@ OZ_BI_define(BIstorePredicateRef,2,0)
 } OZ_BI_end
 
 
-OZ_BI_define(BIpredIdFlags,0,2)
-{
-  OZ_out(0) = oz_int(PR_COPYONCE);
-  OZ_out(1) = oz_int(PR_NATIVE);
-  return PROCEED;  
-} OZ_BI_end
-
-
 OZ_BI_define(BIstorePredId,6,0)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,name);
   oz_declareNonvarIN(2,arity);
   oz_declareNonvarIN(3,pos);
@@ -269,26 +266,29 @@ OZ_BI_define(BIstorePredId,6,0)
 
 OZ_BI_define(BInewHashTable,3,1)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareIntIN(1,size);
   oz_declareIntIN(2,elseLabel);
 
   IHashTable *ht = new IHashTable(size,code->computeLabel(elseLabel));
 
   code->writeAddress(ht);
-  OZ_RETURN_INT(ToInt32(ht));
+  OZ_RETURN(OZ_makeForeignPointer(ht));
 } OZ_BI_end
 
 
-#define declareHTable(num,name)				\
-   oz_declareIntIN(num,__aux1);				\
-   IHashTable *name = (IHashTable*) ToPointer(__aux1);
+#define OZ_declareHashTableIN(num,name)			\
+  IHashTable *name;					\
+  {							\
+    OZ_declareForeignPointerIN(num,__aux);		\
+    name = (IHashTable *) __aux;			\
+  }
 
 
 OZ_BI_define(BIstoreHTScalar,4,0)
 {
-  declareCodeBlock(0,code);
-  declareHTable(1,ht);
+  OZ_declareCodeBlockIN(0,code);
+  OZ_declareHashTableIN(1,ht);
   oz_declareNonvarIN(2,value);
   oz_declareIntIN(3,label);
 
@@ -306,8 +306,8 @@ OZ_BI_define(BIstoreHTScalar,4,0)
 
 OZ_BI_define(BIstoreHTRecord,5,0)
 {
-  declareCodeBlock(0,code);
-  declareHTable(1,ht);
+  OZ_declareCodeBlockIN(0,code);
+  OZ_declareHashTableIN(1,ht);
   oz_declareNonvarIN(2,reclabel);
   oz_declareNonvarIN(3,arity);
   oz_declareIntIN(4,label);
@@ -327,7 +327,7 @@ OZ_BI_define(BIstoreHTRecord,5,0)
 
 OZ_BI_define(BIstoreRecordArity,2,0)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,arity);
   code->writeSRecordArity(getArity(arity));
   return PROCEED;
@@ -336,7 +336,7 @@ OZ_BI_define(BIstoreRecordArity,2,0)
 
 OZ_BI_define(BIstoreGenCallInfo,6,0)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareIntIN(1,regindex);
   oz_declareNonvarIN(2,isMethod);
   oz_declareNonvarIN(3,name); name = oz_deref(name);
@@ -353,7 +353,7 @@ OZ_BI_define(BIstoreGenCallInfo,6,0)
 
 OZ_BI_define(BIstoreApplMethInfo,3,0)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,name); name = oz_deref(name);
   oz_declareNonvarIN(2,arity);
 
@@ -365,7 +365,7 @@ OZ_BI_define(BIstoreApplMethInfo,3,0)
 
 OZ_BI_define(BIstoreGRegRef,2,0)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,globals);
   globals = oz_deref(globals);
   int numGlobals = OZ_length(globals);
@@ -399,7 +399,7 @@ OZ_BI_define(BIstoreGRegRef,2,0)
 
 OZ_BI_define(BIstoreLocation,2,0)
 {
-  declareCodeBlock(0,code);
+  OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,locs);
   locs=oz_deref(locs);
   OZ_Term inLocs = oz_deref(oz_left(locs));
@@ -432,8 +432,7 @@ OZ_BI_define(BIstoreLocation,2,0)
 
 OZ_BI_define(BIstoreCache,2,0)
 {
-  declareCodeBlock(0,code);
-  oz_declareNonvarIN(1,ignored);
+  OZ_declareCodeBlockIN(0,code);
   code->writeCache();
   return PROCEED;
 } OZ_BI_end
