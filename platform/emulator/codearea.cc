@@ -228,17 +228,18 @@ void CodeArea::printDef(ProgramCounter PC)
 
   const char *name = OZ_atomToC(predName);
   if (*name && column != makeTaggedNULL())
-    message("\tprocedure '%s' in file \"%s\", line %d, column %d, PC=%ld\n",
-	    name,OZ_atomToC(file),OZ_intToC(line),OZ_intToC(column),(int)PC);
+    message("\tprocedure '%s' in file \"%s\", line %d, column %d, PC=%p\n",
+	    name,OZ_atomToC(file),OZ_intToC(line),OZ_intToC(column),
+	    definitionPC);
   else if (*name)
-    message("\tprocedure '%s' in file \"%s\", line %d, PC=%ld\n",
-	    name,OZ_atomToC(file),OZ_intToC(line),(int)PC);
+    message("\tprocedure '%s' in file \"%s\", line %d, PC=%p\n",
+	    name,OZ_atomToC(file),OZ_intToC(line),definitionPC);
   else if (column != makeTaggedNULL())
-    message("\tprocedure in file \"%s\", line %d, column %d, PC=%ld\n",
-	    OZ_atomToC(file),OZ_intToC(line),OZ_intToC(column),(int)PC);
+    message("\tprocedure in file \"%s\", line %d, column %d, PC=%p\n",
+	    OZ_atomToC(file),OZ_intToC(line),OZ_intToC(column),definitionPC);
   else
-    message("\tprocedure in file \"%s\", line %d, PC=%ld\n",
-	    OZ_atomToC(file),OZ_intToC(line),(int)PC);
+    message("\tprocedure in file \"%s\", line %d, PC=%p\n",
+	    OZ_atomToC(file),OZ_intToC(line),definitionPC);
 }
 
 TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
