@@ -331,7 +331,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
       }
     }
     goto proceed;
-  } else if (isFSetValueTag(vtag)) {
+  } else if (oz_isFSetValue(v)) {
     //
     // tell a finite set constraint to a finite set value
     //

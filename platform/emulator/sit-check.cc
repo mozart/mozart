@@ -324,9 +324,9 @@ void checkSituatedBlock(OZ_Term * tb, int sz) {
 
     case TAG_UNUSED_UVAR:
     case TAG_UNUSED_SVAR:
+    case TAG_UNUSED_FSETVALUE:
     case TAG_GCMARK:
     case TAG_SMALLINT:
-    case TAG_FSETVALUE:
     case TAG_FLOAT:
       continue;
 

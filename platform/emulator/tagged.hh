@@ -56,7 +56,7 @@ enum TypeOfTerm {
   TAG_GCMARK    = 13,   // 1101    --> !!! oz_isVariable(TAG_GCMARK) = 1 !!!
 
   TAG_LTUPLE    =  2,   // 0010
-  TAG_FSETVALUE = 14,   // 1110
+  TAG_UNUSED_FSETVALUE = 14,   // 1110
   TAG_SRECORD   =  3,   // 0011
 
   TAG_LITERAL   = 15,   // 1111
@@ -248,9 +248,6 @@ inline Bool isVarTag(TypeOfTerm tag) {
 inline Bool isLTupleTag(TypeOfTerm tag) {
   return _isLTuple(tag);
 }
-inline Bool isFSetValueTag(TypeOfTerm tag) {
-  return tag==TAG_FSETVALUE;
-}
 inline Bool isLiteralTag(TypeOfTerm tag) {
   return tag==TAG_LITERAL;
 }
@@ -278,7 +275,6 @@ inline Bool isGcMarkTag(TypeOfTerm tag) {
 #define isVariableTag(tag)  _isVariable(tag)
 #define isVarTag(tag)      ((tag) == TAG_VAR)
 #define isLTupleTag(tag)    _isLTuple(tag)
-#define isFSetValueTag(tag) ((tag)==TAG_FSETVALUE)
 #define isLiteralTag(tag)   ((tag)==TAG_LITERAL)
 #define isSRecordTag(tag)   ((tag)==TAG_SRECORD)
 #define isFloatTag(tag)     ((tag)==TAG_FLOAT)
@@ -308,9 +304,6 @@ inline Bool oz_isVar(TaggedRef term) {
 inline Bool oz_isLTuple(TaggedRef term) {
   GCDEBUG(term); return _isLTuple(term);
 }
-inline Bool oz_isFSetValue(TaggedRef term) {
-  GCDEBUG(term); return _hasTag(term,TAG_FSETVALUE);
-}
 inline Bool oz_isLiteral(TaggedRef term) {
   GCDEBUG(term); return _hasTag(term,TAG_LITERAL);
 }
@@ -338,7 +331,6 @@ inline Bool oz_isGcMark(TaggedRef term) {
 #define oz_isVariable(term)    _isVariable(term)
 #define oz_isVar(term)         _hasTag(term,TAG_VAR)
 #define oz_isLTuple(term)      _isLTuple(term)
-#define oz_isFSetValue(term)   _hasTag(term,TAG_FSETVALUE)
 #define oz_isLiteral(term)     _hasTag(term,TAG_LITERAL)
 #define oz_isSRecord(term)     _hasTag(term,TAG_SRECORD)
 #define oz_isFloat(term)       _hasTag(term,TAG_FLOAT)
@@ -371,10 +363,6 @@ inline Bool oz_isGcMark(TaggedRef term) {
 inline OzVariable * tagged2Var(TaggedRef ref) {
   GCDEBUG(ref); CHECK_TAG(TAG_VAR);
   return (OzVariable *) tagValueOf2(TAG_VAR,ref);
-}
-inline OZ_FSetValue * tagged2FSetValue(TaggedRef ref) {
-  GCDEBUG(ref); CHECK_TAG(TAG_FSETVALUE);
-  return (OZ_FSetValue *) tagValueOf2(TAG_FSETVALUE,ref);
 }
 inline SRecord * tagged2SRecord(TaggedRef ref) {
   GCDEBUG(ref); CHECK_TAG(TAG_SRECORD);
@@ -432,8 +420,6 @@ inline TaggedRef tagged2NonVariable(TaggedRef *term) {
 
 #define tagged2Var(ref) \
   ((OzVariable *) tagValueOf2(TAG_VAR,((TaggedRef) (ref))))
-#define tagged2FSetValue(ref) \
-  ((OZ_FSetValue *) tagValueOf2(TAG_FSETVALUE,((TaggedRef) (ref))))
 #define tagged2SRecord(ref) \
   ((SRecord *) tagValueOf2(TAG_SRECORD,((TaggedRef) (ref))))
 #define tagged2LTuple(ref) \
@@ -483,9 +469,6 @@ inline TaggedRef tagged2NonVariable(TaggedRef *term) {
 inline TaggedRef makeTaggedVar(OzVariable *s) {
   CHECK_POINTER_N(s); return makeTaggedRef2p(TAG_VAR, s);
 }
-inline TaggedRef makeTaggedFSetValue(OZ_FSetValue * s) {
-  CHECK_POINTER_N(s); return makeTaggedRef2p(TAG_FSETVALUE, s);
-}
 inline TaggedRef makeTaggedLTuple(LTuple *s) {
   CHECK_POINTER_N(s); return makeTaggedRef2p(TAG_LTUPLE,s);
 }
@@ -520,7 +503,6 @@ inline TaggedRef makeTaggedMiscp(void * s) {
 #else
 
 #define makeTaggedVar(s)       makeTaggedRef2p(TAG_VAR,      s)
-#define makeTaggedFSetValue(s) makeTaggedRef2p(TAG_FSETVALUE, s)
 #define makeTaggedLTuple(s)    makeTaggedRef2p(TAG_LTUPLE,    s)
 #define makeTaggedSRecord(s)   makeTaggedRef2p(TAG_SRECORD,   s)
 #define makeTaggedLiteral(s)   makeTaggedRef2p(TAG_LITERAL,   s)

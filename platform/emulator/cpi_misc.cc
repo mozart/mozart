@@ -109,7 +109,7 @@ void OZ_hfreeChars(char * is, int n)
   if (n) OZDISPOSESAFE(char, n, is);
 }
 
-#define FDTAG               TAG_CONST
+#define FDTAG               TAG_GCMARK
 #define MAKETAGGEDINDEX(I)  makeTaggedRef2i(FDTAG,(int32) (I<<2))
 #define GETINDEX(T)         (ToInt32(tagValueOfVerbatim(T))>>2);
 
@@ -131,7 +131,7 @@ int * OZ_findEqualVars(int sz, OZ_Term * ts)
   for (i = 0; i < sz; i += 1) {
     OZ_Term t = ts[i];
     DEREF(t, tptr, ttag);
-    if (isSmallIntTag(ttag) || isLiteralTag(ttag) || isFSetValueTag(ttag)) {
+    if (isSmallIntTag(ttag) || isLiteralTag(ttag) || oz_isFSetValue(t)) {
       is[i] = -1;
     } else {
       if (ttag == FDTAG) {

@@ -261,6 +261,18 @@ void GenTraverser::doit()
           processBigInt(t, ct);
           break;
 
+        case Co_FSetValue:
+          if (!processFSETValue(t)) {
+            ensureFree(1);
+            putSync();          // will appear after the list;
+            if (keepRunning) {
+              t = tagged2FSetValue(t)->getKnownInList();
+              goto bypass;
+            } else
+              put(tagged2FSetValue(t)->getKnownInList());
+          }
+          break;
+
         case Co_Dictionary:
           if (!processDictionary(t, ct)) {
             OzDictionary *d = (OzDictionary *) ct;
@@ -383,18 +395,6 @@ void GenTraverser::doit()
         }
         break;
       }
-
-    case TAG_FSETVALUE:
-      if (!processFSETValue(t)) {
-        ensureFree(1);
-        putSync();              // will appear after the list;
-        if (keepRunning) {
-          t = tagged2FSetValue(t)->getKnownInList();
-          goto bypass;
-        } else
-          put(tagged2FSetValue(t)->getKnownInList());
-      }
-      break;
 
     case TAG_VAR:
       {
