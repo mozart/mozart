@@ -170,13 +170,10 @@ OZ_Extension* Celloid::gcV() { return new Celloid(content); }
 The second part involves recursively copying the content of the
 celloid.  This is implemented in a different virtual function:
 <code display>
-void Celloid::gcRecurseV() {
-  OZ_collectHeapTerm(content,content);
-}
+void Celloid::gcRecurseV() { OZ_collect(content); }
 </code>
-The procedure <code/OZ_collectHeapTerm(OZ_Term&amp;,OZ_Term&amp;)/
-performs the gc copy of its 1st argument into its 2nd argument.  Here
-they are identical (this is the usual case).</p>
+The procedure <code/OZ_collect(OZ_Term&amp;)/
+performs the gc copy and update of its argument.</p>
     <p>You may wonder: why not perform the recursive copy of the
 content in <code/gcV()/ itself.  Under no circumstances should you do
 this!  It would break essential invariants in the garbage collector.
