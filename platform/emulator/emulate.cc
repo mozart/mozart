@@ -2457,6 +2457,8 @@ LBLdispatcher:
        }
        
        if (foundHdl) {
+	 // At least, the stack display is inconsistent!
+	 debugStreamUpdate(CTT);
 	 X[0] = e->exception.value;
 	 goto LBLpopTaskNoPreempt;
        }
