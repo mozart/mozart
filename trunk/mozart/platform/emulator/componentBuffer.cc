@@ -86,12 +86,15 @@ class ByteStream: public MsgBuffer {
 
 public:  
 
-  virtual void visit(OZ_Term val)
+  virtual Bool visit(OZ_Term val)
   {
     OZ_Term t = val;
     DEREF(t,_1,_2);
-    if (isResource(t))
+    if (isResource(t)) {
       resources = oz_cons(val,resources); 
+      return NO;
+    }
+    return OK;
   }
   virtual OZ_Term getResources()    { return resources; }
 
@@ -310,14 +313,17 @@ public:
 
   OZ_Term getVars() { return vars; }
 
-  virtual void visit(OZ_Term val)
+  virtual Bool visit(OZ_Term val)
   {
     OZ_Term t = val;
     DEREF(t,tPtr,_2);
-    if (isResource(t))
+    if (isResource(t)) {
       resources = oz_cons(val,resources); 
+      return NO;
+    }
     if (oz_isVariable(t))
       vars = oz_cons(val,vars); 
+    return OK;
   }
   virtual OZ_Term getResources()    { return resources; }
 };
