@@ -106,10 +106,10 @@ in
       meth SetCursor(CurNode IsVisible <= false)
 	 %% Might only be invoked if root is not false
 	 MenuManager,normal(explorer([postscript reset]))
-	 case {@root isFinished($)} then
+	 if {@root isFinished($)} then
 	    StatusManager,finish
-	 else skip end
-	 case CurNode.kind==failed orelse CurNode.kind==blocked then
+	 end
+	 if CurNode.kind==failed orelse CurNode.kind==blocked then
 	    %% Can only happen if there is a single failed or blocked node
 	    MenuManager,disable([move([top cur]) nodes(stat)])
 	 else
@@ -119,14 +119,14 @@ in
 	    %% Move: Previous Solution, Next Solution
 	    MenuManager,state({CurNode leftMost($)}\=CurNode move(leftMost))
 	    MenuManager,state({CurNode rightMost($)}\=CurNode move(rightMost))
-	    case {@root hasSolutions($)} then
+	    if {@root hasSolutions($)} then
 	       MenuManager,state({CurNode nextSol($)}\=false move(nextSol))
 	       MenuManager,state({CurNode prevSol($)}\=false move(prevSol))
 	    else
 	       MenuManager,disable(move([prevSol nextSol]))
 	    end
 	    %% Search
-	    case StatusManager,hasBlocked($) then
+	    if StatusManager,hasBlocked($) then
 	       MenuManager,disable(search([next all step]))
 	    else
 	       MenuManager,state({CurNode isNextPossible($)}
@@ -135,7 +135,7 @@ in
 	    end
 	    %% Nodes
 	    MenuManager,state({CurNode isHidable($)} hide(toggle))
-	    case {CurNode isHidden($)} then
+	    if {CurNode isHidden($)} then
 	       MenuManager,normal(hide([all butfailed]))
 	       MenuManager,disable([nodes([info cmp selCmp deselCmp])
 				    hide(failed)])
@@ -180,16 +180,14 @@ in
 	    end
 	    ToplevelManager,refreshNumbers
 	 end
-	 case {Dictionary.get self.options.drawing scale} then
+	 if {Dictionary.get self.options.drawing scale} then
 	    ToplevelManager,scaleToFit
-	 else skip
 	 end
       end
 
       meth LayoutAfterSearch
-	 case {Dictionary.get self.options.drawing hide} then
+	 if {Dictionary.get self.options.drawing hide} then
 	    {@curNode hideFailed}
-	 else skip
 	 end
 	 Manager,Layout
       end
@@ -263,12 +261,11 @@ in
       end
 
       meth StopSearch(Sol Cursor <= false)
-	 case @root==nil then skip else
-	    TryCursor = case Cursor==false then
-			   case Sol==false then @curNode
+	 if @root==nil then skip else
+	    TryCursor = if Cursor==false then
+			   if Sol==false then @curNode
 			   else
-			      case @IsBAB then PrevSol <- Sol
-			      else skip
+			      if @IsBAB then PrevSol <- Sol
 			      end
 			      Sol
 			   end
@@ -312,11 +309,10 @@ in
 				 {Dictionary.get O search}
 				 {Dictionary.get O information} $)}
       in
-	 case Sol\=false andthen StatusManager,getBreakStatus($)==none then
-	    case @IsBAB then PrevSol <- Sol
-	    else skip
+	 if Sol\=false andthen StatusManager,getBreakStatus($)==none then
+	    if @IsBAB then PrevSol <- Sol
 	    end
-	    case NoSol==1 then
+	    if NoSol==1 then
 	       StatusManager,stop
 	       Manager,hideCursor
 	       Manager,LayoutAfterSearch
@@ -361,7 +357,7 @@ in
 		       elseof CurNode then CurNode
 		       end
 	 in
-	    case StatNode==false then skip else
+	    if StatNode\=false then
 	       Number  = Manager,getNumber(StatNode $)
 	       Handler = {self.statAction get($)}.3
 	       Stat    = {StatNode stat($)}
@@ -406,7 +402,7 @@ in
 	 lock
 	    Node = ToplevelManager,findByXY(X Y $)
 	 in
-	    case {Node isHidden($)} then skip else
+	    if {Node isHidden($)} then skip else
 	       Manager,nodesInfo(Node)
 	    end
 	 end
@@ -414,7 +410,7 @@ in
       
       meth nodesInfo(Node <= false)
 	 lock
-	    RealNode = case Node==false then @curNode else Node end
+	    RealNode = if Node==false then @curNode else Node end
 	 in
 	    case RealNode of false then skip elseof CurNode then
 	       MenuManager,busy
@@ -424,13 +420,15 @@ in
 	       Number  = Manager,getNumber(RealNode $)
 	       Info    = {RealNode findSpace($)}
 	    in
-	       case Info==false then
+	       if Info==false then
 		  DialogManager,error('Recomputation of information failed.')
-	       elsecase {Procedure.arity Handler}
-	       of 2 then thread {Handler Number {Cast Info}} end
-	       [] 3 then CloseAction in
-		  ToClose <- CloseAction|@ToClose
-		  thread {Handler Number {Cast Info} ?CloseAction} end
+	       else
+		  case {Procedure.arity Handler}
+		  of 2 then thread {Handler Number {Cast Info}} end
+		  [] 3 then CloseAction in
+		     ToClose <- CloseAction|@ToClose
+		     thread {Handler Number {Cast Info} ?CloseAction} end
+		  end
 	       end
 	       Manager,SetCursor(CurNode)
 	       Manager,Idle
@@ -463,7 +461,7 @@ in
 	    CmpNode = @cmpNode
 	    CurNode = @curNode
 	 in
-	    case CurNode==CmpNode then skip else
+	    if CurNode\=CmpNode then
 	       MenuManager,busy
 	       CurNumber = ToplevelManager,getNumber(CurNode $)
 	       CmpNumber = ToplevelManager,getNumber(CmpNode $)
@@ -473,18 +471,20 @@ in
 	       CurInfo   = {CurNode findSpace($)}
 	       CmpInfo   = {CmpNode findSpace($)}
 	    in
-	       case CmpInfo==false orelse CurInfo==false then
+	       if CmpInfo==false orelse CurInfo==false then
 		  DialogManager,error('Recomputation of information failed.')
-	       elsecase {Procedure.arity Handler}
-	       of 4 then
-		  thread
-		     {Handler CmpNumber {Cast CmpInfo} CurNumber {Cast CurInfo}}
-		  end
-	       [] 5 then CloseAction in
-		  ToClose <- CloseAction|@ToClose
-		  thread
-		     {Handler CmpNumber {Cast CmpInfo} CurNumber {Cast CurInfo}
-		      ?CloseAction}
+	       else
+		  case {Procedure.arity Handler}
+		  of 4 then
+		     thread
+			{Handler CmpNumber {Cast CmpInfo} CurNumber {Cast CurInfo}}
+		     end
+		  [] 5 then CloseAction in
+		     ToClose <- CloseAction|@ToClose
+		     thread
+			{Handler CmpNumber {Cast CmpInfo} CurNumber {Cast CurInfo}
+			 ?CloseAction}
+		     end
 		  end
 	       end
 	       Manager,SetCursor(CurNode)
@@ -495,10 +495,10 @@ in
 
       meth wake(Node KillId)
 	 lock
-	    case {self.status getKill(_ $)}==KillId then
+	    if {self.status getKill(_ $)}==KillId then
 	       Mom = Node.mom
 	    in
-	       case Mom.sentinel then
+	       if Mom.sentinel then
 		  Manager,reset
 	       else
 		  {Mom  removeLast(Manager,GetPrevSol($))}
@@ -507,16 +507,14 @@ in
 		  curNode <- Mom
 		  Manager,step
 	       end
-	    else skip
 	    end
 	 end
       end
 
       meth updateAfterOption
 	 lock
-	    case {Dictionary.get self.options.drawing scale} then
+	    if {Dictionary.get self.options.drawing scale} then
 	       ToplevelManager,scaleToFit
-	    else skip
 	    end
 	 end
       end
@@ -527,9 +525,8 @@ in
 	    DialogManager,guiOptions(What)
 	    Manager,updateAfterOption
 	    Manager,Idle
-	    case @curNode\=false then
+	    if @curNode\=false then
 	       Manager,SetCursor(@curNode false)
-	    else skip
 	    end
 	 end
       end
@@ -542,9 +539,8 @@ in
 	    DialogManager,postscript
 	    ToplevelManager,unhideNumbers
 	    Manager,Idle
-	    case @curNode\=false then
+	    if @curNode\=false then
 	       Manager,SetCursor(@curNode false)
-	    else skip
 	    end
 	 end
       end

@@ -34,7 +34,7 @@ local
 
    local
       fun {GetRightBorder D Es X}
-	 case D>0 then
+	 if D>0 then
 	    case Es of nil then false
 	    [] E|Er then {GetRightBorder D-1 Er E.2+X}
 	    end
@@ -46,13 +46,13 @@ local
 	 meth FindKids(Ks Depth CurX FindX $)
 	    K|Kr = Ks
 	 in
-	    case Kr==nil then
-	       case K.kind of choose then
+	    if Kr==nil then
+	       if K.kind==choose then
 		  {K findByX(Depth-1 CurX FindX $)}
 	       else K
 	       end
-	    elsecase {K isInSubtree(CurX Depth-1 FindX $)} then
-	       case K.kind of choose then
+	    elseif {K isInSubtree(CurX Depth-1 FindX $)} then
+	       if K.kind==choose then
 		  {K findByX(Depth-1 CurX FindX $)}
 	       else K
 	       end
@@ -61,8 +61,8 @@ local
 	 end
    
 	 meth findByX(Depth MomX FindX $)
-	    case Depth>0 then
-	       case @isHidden then self
+	    if Depth>0 then
+	       if @isHidden then self
 	       else Choose,FindKids(@kids Depth MomX+@offset FindX $)
 	       end
 	    else self

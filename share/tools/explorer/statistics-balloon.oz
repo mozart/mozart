@@ -44,7 +44,7 @@ local
 					font:   BoldStatusFont
 					bg:     PopupBgColor
 					text:   Stat.f)} |
-		   case Stat.b>0 then
+		   if Stat.b>0 then
 		      [{New Images.blocked init(parent: BackFrame
 						bg:     PopupBgColor)}
 		       {New Tk.label tkInit(parent: BackFrame
@@ -98,7 +98,7 @@ local
 		       end}
 	 in
 	    {WaitOr NT {Alarm PopUpDelay}}
-	    case {IsDet NT} then skip else
+	    if {IsFree NT} then
 	       W={MakeBalloon PX+10 PY+10
 		  {M getStatisticsByXY(X Y $)}}
 	    in
