@@ -1332,7 +1332,6 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
 }
 
 void dpExitImpl() {
-  (*virtualSitesExit)();
   dpExitWithTimer(ozconf.closetime);
 }
 
