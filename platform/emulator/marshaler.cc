@@ -202,8 +202,7 @@ char *unmarshalString(MsgBuffer *bs)
 /* a version of unmarshalString that is more stable against garbage input */
 char *unmarshalVersionString(MsgBuffer *bs)
 {
-  unsigned int i = unmarshalNumber(bs);
-  if (i>=1000) return NULL; // i is likely to be garbage
+  unsigned int i = bs->get();
   return getString(bs,i);
 }
 
