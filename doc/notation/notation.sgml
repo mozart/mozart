@@ -840,7 +840,7 @@
         <Para class=apropos><Title/Import Specification/
           The import specification names values (usually modules) to be made
           available to the body.  They represent formal arguments to the
-          body abstraction.  The aditional <<at>> clause allows to specify
+          body abstraction.  The additional <<at>> clause allows to specify
           where the actual argument is to come from.  This must be an atom
           (interpreted as a relative URL) so that a functor creating the
           referenced module may be located at compile time.
