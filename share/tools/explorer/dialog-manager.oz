@@ -16,127 +16,19 @@ local
 
    fun {Id X} X end
    
-   class DialogClass
-      feat toplevel
-      from Tk.frame
-      meth init(master:  Master
-		title:   Title
-		buttons: Buttons
-		focus:   Focus  <= 0
-		grab:    Grab   <= True
-		return:  Return <= 0)
-	 MasterX = {Tk.string.toInt {Tk.return winfo(rootx Master)}}
-	 MasterY = {Tk.string.toInt {Tk.return winfo(rooty Master)}}
-	 self.toplevel =
-	 Toplevel = {New Tk.toplevel [tkInit
-				      tkWM(withdraw)
-				      tkWM(transient Master)
-				      tkWM(title Title)]}
 
-	 Top    = {New Tk.frame tkInit(parent:             Toplevel
-				       bd:                 Border
-				       relief:             raised
-				       highlightthickness: 0)}
-
-	 <<Tk.frame tkInit(parent:             Top
-			   bd:                 BigBorder
-			   highlightthickness: 0)>>
-
-	 Bottom = {New Tk.frame tkInit(parent:             Toplevel
-				       bd:                 Border
-				       relief:             raised
-				       highlightthickness: 0)}
-	 ReturnButton
-	 ReturnAction
-	 FocusButton
-
-	 TkButtons = {List.mapInd Buttons
-		      fun {$ Ind Text#Action}
-			 ButtonAction = case Action
-					of close(Do) then
-					   proc {$}
-					      {Do} {Toplevel close}
-					   end
-					[] close then
-					   proc {$}
-					      {Toplevel close}
-					   end
-					[] release(Do) then
-					   proc {$}
-					      {Tk.send grab(release Toplevel)}
-					      {Do}
-					   end
-					else Action
-					end
-			 Parent = case Ind==Return then
-				     ReturnAction = ButtonAction
-				     ReturnButton = Button
-				     {New Tk.frame
-				      tkInit(parent: Bottom
-					     relief: sunken
-					     bd:     Border)}
-				  else Bottom
-				  end
-			 Button = {New Tk.button tkInit(parent: Parent
-							relief: raised
-							bd:     Border
-							text:   Text
-							action: ButtonAction)}
-		      in
-			 case Ind==Focus then FocusButton=Button
-			 else true
-			 end
-			 case Ind==Return then Parent else Button end 
-		      end}
-      in
-	 {Tk.batch [wm(resizable Toplevel 0 0)
-		    pack(self o(side:top fill:both))
-		    pack(Top o(side:top fill:both))]}
-	 case Return>0 then
-	    {Tk.send pack(ReturnButton)}
-	 else true end
-	 {Tk.batch [pack(b(TkButtons) 
-			 o(padx:BigPad pady:BigPad side:left expand:1))
-		    wm(geometry Toplevel '+'#MasterX#'+'#MasterY + 30)
-		    wm(deiconify Toplevel)
-		    pack(Bottom o(side:bottom fill:both))]}
-	 case Return>0 then
-	    {Toplevel tkBind(event:  '<Return>'
-			     action: ReturnAction)}
-	 else true end
-	 case Focus>0 then {Tk.send focus(FocusButton)} else true end
-	 case Grab then {Tk.send grab(set Toplevel)} else true end 
-      end
-
-      meth withdraw
-	 {Tk.send wm(withdraw self.toplevel)}
-      end
-
-      meth release
-	 {Tk.send grab(release self.toplevel)}
-      end
-
-      meth deiconify
-	 {Tk.send wm(deiconify self.toplevel)}
-      end
-
-      meth close
-	 {self.toplevel close}
-      end
-   end
-
-
-   class AboutDialog from DialogClass
+   class AboutDialog
+      from TkTools.dialog
 
       meth init(master:Master)
-	 <<DialogClass init(master:  Master
-			    title:   TitleName#': About'
-			    buttons: ['Okay'#close]
-			    focus:   1
-			    return:  1)>>
-	 Title = {New Tk.label tkInit(parent:self
-				      font:   AboutFont
-				      text:  TitleName
+	 <<TkTools.dialog tkInit(master:  Master
+				 title:   TitleName#': About'
+				 buttons: ['Okay'#close]
+				 focus:   1
+				 default: 1)>>
+	 Title = {New Tk.label tkInit(parent:     self
+				      font:       AboutFont
+				      text:       TitleName
 				      foreground: ChoiceTermColor)}
 
 	 Author = {New Tk.label tkInit(parent: self
@@ -150,277 +42,13 @@ local
    end
 
 
-   class ErrorDialog from DialogClass
-
-      meth init(master:Master message:M)
-	 <<DialogClass init(master:  Master
-			    title:   TitleName#': Error Message'
-			    buttons: ['Okay'#close]
-			    focus:   1
-			    return:  1)>>
-	 Bitmap = {New Tk.label tkInit(parent: self
-				       bitmap: error)}
-	 Message = {New Tk.message tkInit(parent: self
-					  aspect: ErrorAspect
-					  text:   M)}   
-      in
-	 {Tk.send pack(Bitmap Message
-		       o(side:left expand:1 padx:BigPad pady:BigPad))}
-      end
-
-   end
-
-
-   local
-
-      Width         = 35
-
-      local
-	 fun {StringLess Is Js}
-	    case Is of nil then True
-	    [] I|Ir then
-	       case Js of nil then False
-	       [] J|Jr then I<J orelse I==J andthen {StringLess Ir Jr}
-	       end
-	    end
-	 end
-	 
-	 proc {FilterAndSplit Fs P ?Ds ?Rs}
-	    case Fs of nil then Ds=nil Rs=nil
-	    [] F|Fr then
-	       case F
-	       of &.|_ then {FilterAndSplit Fr P ?Ds ?Rs}
-	       else
-		  case {Unix.stat P#'/'#F}
-		  of error(_ _ _) then {FilterAndSplit Fr P ?Ds ?Rs}
-		  elseof Stat then
-		     case Stat.type
-		     of dir then Ds = F#'/'|{FilterAndSplit Fr P $ ?Rs}
-		     [] reg then Rs = F|{FilterAndSplit Fr P ?Ds $}
-		     elseof error(_ V _) then {Show V} 
-		     else {FilterAndSplit Fr P ?Ds ?Rs}
-		     end
-		  end
-	       end
-	    end
-	 end
-	 
-      in
-	 
-	 fun {GetFiles P}
-	    Ds Rs
-	    UGD={Unix.getDir P}
-	 in
-	    case {Label UGD}==error then UGD
-	    else
-	       {FilterAndSplit {Sort {Unix.getDir P} StringLess} P ?Ds ?Rs}
-	       "../" | {Append Ds Rs}
-	    end
-	 end
-	 
-      end
-      
-      
-      fun {StripLast Is Js}
-	 case Is of nil then Js
-	 [] I|Ir then
-	    case I==&/ then Is else {StripLast Ir Js} end
-	 end
-      end
-      
-      
-      fun {MakePath P}
-	 S={VirtualString.toString P}
-      in
-	 case {Reverse S}
-	 of &/|_ then S
-	 elseof RS then {Reverse &/|RS}
-	 end
-      end
-      
-      
-      class Selector from DialogClass
-	 feat
-	    Files
-	    Path
-	    Name
-	 attr
-	    CurPath:  nil
-	    Selected: False
-   
-	 meth init(title:Title master:Master)
-	    <<DialogClass init(title:   Title
-			       master:  Master
-			       buttons: ['Okay'  #release(proc {$}
-							     {self Okay}
-							  end)
-					 'Cancel'#release(proc {$}
-							     {self Cancel}
-							  end)]
-			       return:  1)>>
-
-	    Directory = {New Tk.label tkInit(parent: self
-					     bd:     2
-					     relief: ridge
-					     width:  Width + 2
-					     text:   '')}
-
-	    Box = {New Tk.frame tkInit(parent:self)}
-
-	    Listbox = {New Tk.listbox [tkInit(parent:          Box
-					      exportselection: 0
-					      selectmode:      single
-					      width:           Width)
-				       tkBind(event:  '<1>'
-					      action: proc {$}
-							 {self SingleClick}
-						      end)
-				       tkBind(event:  '<Double-1>'
-					      action: proc {$}
-							 {self [release DoubleClick]}
-						      end)]}
-
-	    Scroller = {New Tk.scrollbar tkInit(parent: Box
-						width:  ScrollerWidth)}
-
-	    {Tk.addYScrollbar Listbox Scroller}
-
-	    FileName = {New Tk.entry tkInit(parent: self back:EntryColor)}
-	 in
-	    {Tk.batch [pack(Directory o(side:top fill:x expand:0))
-		       pack(Scroller  o(side:right fill:y))
-		       pack(Listbox)
-		       pack(Box o(padx:BigPad))
-		       pack(FileName
-			    o(side:bottom fill:x pady:BigPad padx:BigPad))
-		       focus(FileName)]}
-	    self.Path  = Directory
-	    self.Files = Listbox
-	    self.Name  = FileName
-	    <<DialogClass tkBind(event:  '<Return>'
-				 action: proc {$}
-					    {self [release Okay]}
-					 end)>>
-	 end
-
-	 meth Display(P)
-	    GF = {GetFiles P}
-	 in
-	    case GF of error(N M _) then
-	       {New ErrorDialog init(master:self message:M#' ('#N#')') _}
-	    else
-	       CurPath <- P
-	       {self.Path tk(configure o(text:P))}
-	       {self.Files [tk(delete 0 'end') tk(insert 0 b(GF))]}
-	       {self.Name tk(delete 0 'end')}
-	    end
-	 end
-
-	 meth DoubleClick
-	    F  = {self.Files tkReturn(get({self.Files
-					   tkReturn(curselection $)}) $)}
-	 in
-	    case {List.last F}==&/ then
-	       <<Selector Display(case F=="../" then
-				     RCP = {Reverse @CurPath}.2
-				  in
-				     {Reverse {StripLast RCP RCP}}
-				  else {Append @CurPath F}
-				  end)>>
-	    else
-	       @Selected = @CurPath # F
-	       Selected <- _
-	    end
-	 end
-	 
-	 meth SingleClick
-	    F  = {self.Files tkReturn(get({self.Files
-					   tkReturn(curselection $)}) $)}
-	 in
-	    case {List.last F}==&/ then true else
-	       {self.Name [tk(delete 0 'end') tk(insert 0 F)]}
-	    end	 
-	 end
-	 
-	 meth Okay
-	    @Selected = case {self.Name tkReturn(get $)}
-			of "" then False
-			elseof N then @CurPath#N
-			end
-	    Selected <- _
-	 end
-
-	 meth Cancel
-	    @Selected = False
-	    Selected <- _
-	 end
-      
-	 meth select(P ?F)
-	    Selected <- F
-	    <<Selector Display(P)>>
-	 end
-	 
-	 meth close
-	    @Selected = close
-	    <<DialogClass close>>
-	 end
-      
-      end    
-
-      NoPath = {NewName}
-   
-   in
-
-      class Fileselector from UrObject
-	 attr
-	    Path:          nil
-	    MySelector:    False
-	 feat
-	    Title Master
-	 meth init(path:P <= NoPath title:T <= 'Select File'
-		   master:M)
-	    Path <- {MakePath case P==NoPath then {Unix.getCWD}
-			      else P
-			      end}
-	    self.Title  = T
-	    self.Master = M
-	 end
-	 
-	 meth select(path:P<=NoPath file:?F)
-	    TakePath = {MakePath case P==NoPath then @Path else P end}
-	 in
-	    Path <- TakePath
-	    case @MySelector==False then
-	       MySelector <- {New Selector init(title:  self.Title
-						master: self.Master)}
-	    else
-	       {@MySelector deiconify}
-	    end
-	    F = case {@MySelector select(TakePath $)}   
-		of !False then {@MySelector withdraw} False
-		[] close then MySelector <- False False
-		[] GP#FN then Path <- GP {@MySelector withdraw} GP#FN
-		end
-	 end
-
-	 meth close
-	    case @MySelector of !False then true elseof Sel then
-	       {Sel close}
-	    end
-	    <<UrObject close>>
-	 end
-
-      end
-
-   end
-
-
    local
       RadioWidth = 12
       LabelWidth = 12      
    in
 
-      class PostscriptDialog from DialogClass
+      class PostscriptDialog
+	 from TkTools.dialog
 
 	 meth init(master:Master previous:Prev options:?Options)
 	    proc {Continue}
@@ -437,13 +65,13 @@ local
 	       end
 	    end
 
-	    <<DialogClass init(master:  Master
-			       title:   TitleName#': Postscript Options'
-			       buttons: ['Okay'#Continue
-					 'Cancel'#close(proc {$}
-							   Options=Prev
-							end)]
-			       return:  1)>>
+	    <<TkTools.dialog tkInit(master:  Master
+				    title:   TitleName#': Postscript Options'
+				    buttons: ['Okay'#Continue
+					      'Cancel'#close(proc {$}
+								Options=Prev
+							     end)]
+				    default:  1)>>
 	    Color  = {New Tk.frame tkInit(parent: self
 					  relief: ridge
 					  bd:     Border)}
@@ -515,15 +143,16 @@ local
    local
       TextWidth = 20
    in
-      class LayoutDialog from DialogClass
+      class LayoutDialog
+	 from TkTools.dialog
 
 	 meth init(master:   Master
 		   previous: Previous
 		   options:  ?Options)
-	    <<DialogClass
-	      init(master:  Master
+	    <<TkTools.dialog
+	      tkInit(master:  Master
 		   title:   TitleName#': Drawing Options'
-		   return:  1
+		   default: 1
 		   buttons: ['Okay'#
 			     close(proc {$}
 				      Options =
@@ -649,14 +278,13 @@ local
    in
 
       class SearchDialog
-	 from DialogClass
+	 from TkTools.dialog
 
 	 meth init(master:Master previous:Prev options:?Options)
-	    <<DialogClass
-	    init(master:  Master
+	    <<TkTools.dialog
+	    tkInit(master:  Master
 		 title:   TitleName#': Search Options'
-		 focus:   1
-		 return:  1
+		 default: 1
 		 buttons: ['Okay'#
 			   proc {$}
 			      GetDist GetCustomDist
@@ -754,14 +382,13 @@ local
       end
 
       class InfoDialog
-	 from DialogClass
+	 from TkTools.dialog
 	 
 	 meth init(master:Master previous:?Prev options:?Options)
-	    <<DialogClass
-	      init(master:  Master
+	    <<TkTools.dialog
+	      tkInit(master:  Master
 		   title:   TitleName#': Information Options'
-		   focus:   1
-		   return:  1
+		   default: 1
 		   buttons: ['Okay'#
 			     proc {$}
 				GetDist GetCustomDist
@@ -815,7 +442,7 @@ local
       feat
 	 FS
       meth init
-	 self.FS = {New Fileselector init(master: self.toplevel
+	 self.FS = {New TkTools.file init(master: self.toplevel
 					  title:  TitleName#': Select Postscript File')}
       end
       
@@ -975,8 +602,10 @@ in
       end
 
       meth error(M)
-	 <<DialogManager Lock({New ErrorDialog init(master:  self.toplevel
-						    message: M)})>> 
+	 <<DialogManager Lock({New TkTools.error
+			       tkInit(master:  self.toplevel
+				      text:    M
+				      title:   TitleName#': Error Message')})>> 
       end
 
    end
