@@ -107,4 +107,23 @@ inline int isPointer(void *p) { return (((intlong)p) & mallocBase) != 0;}
 #define HEAPCURINTOREGISTER 1
 #endif
 
+#ifdef THREADED
+
+#if defined(AS_HAS_MULTIPLE_ALIGN) || defined(AS_HAS_POWER_ALIGN)
+
+#define INLINEOPCODEMAP
+#define OPCODEALIGN 4
+
+#ifdef AS_HAS_MULTIPLE_ALIGN
+#define OPCODEALIGNINSTR ".align 16"
+#endif
+
+#ifdef AS_HAS_POWER_ALIGN
+#define OPCODEALIGNINSTR ".align 4"
+#endif
+
+#endif
+#endif
+
+
 #endif

@@ -51,7 +51,9 @@ CodeArea *CodeArea::allBlocks = NULL;
 
 #ifdef THREADED
 void **CodeArea::globalInstrTable = 0;
+#ifndef INLINEOPCODEMAP
 HashTable *CodeArea::opcodeTable = 0;
+#endif
 #endif
 
 
@@ -1138,10 +1140,12 @@ void CodeArea::init(void **instrTable)
 {
 #ifdef THREADED
   globalInstrTable = instrTable;
+#ifndef INLINEOPCODEMAP
   opcodeTable = new HashTable(HT_INTKEY,(int) (OZERROR*1.5));
   for (int i=0; i<=OZERROR; i++) {
     opcodeTable->htAdd(ToInt32(globalInstrTable[i]),ToPointer(i));
   }
+#endif
 #endif
   CodeArea *code = new CodeArea(20);
   C_XCONT_Ptr        = code->getStart();

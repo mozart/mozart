@@ -115,6 +115,12 @@
 /* do we have setpgid? */
 #undef HAVE_SETPGID
 
+/* does .align n align to 1<<n */
+#undef AS_HAS_POWER_ALIGN
+
+/* does .align n align to n */
+#undef AS_HAS_MULTIPLE_ALIGN
+
 
 /* Define if dlopen needs a leading underscore. */
 #undef DLOPEN_UNDERSCORE

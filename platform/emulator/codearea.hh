@@ -242,7 +242,9 @@ public:
 
 #ifdef THREADED
   static void **globalInstrTable;
+#ifndef INLINEOPCODEMAP
   static HashTable *opcodeTable;
+#endif
 #endif
 
 
@@ -255,9 +257,13 @@ public:
   }
   static Opcode adressToOpcode(AdressOpcode adr) {
 #ifdef THREADED
+#ifdef INLINEOPCODEMAP
+    return Opcode (*((int32 *) (((char *) adr) - (1<<OPCODEALIGN))));
+#else
     void * ret = opcodeTable->htFind(adr);
     Assert(ret != htEmpty);
     return (Opcode) ToInt32(ret);
+#endif
 #else
     return adr;
 #endif

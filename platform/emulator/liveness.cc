@@ -528,10 +528,14 @@ outerLoop2:
 
           IHashTable *table = (IHashTable *) getAdressArg(PC+2);
           PUSH(table->elseLabel);
-          if (table->listLabel) PUSH(table->listLabel);
-          if (table->literalTable) DOTABLE(table->literalTable);
-          if (table->functorTable) DOTABLE(table->functorTable);
-          if (table->numberTable) DOTABLE(table->numberTable);
+          if (table->listLabel!=table->elseLabel)
+            PUSH(table->listLabel);
+          if (table->literalTable)
+            DOTABLE(table->literalTable);
+          if (table->functorTable)
+            DOTABLE(table->functorTable);
+          if (table->numberTable)
+            DOTABLE(table->numberTable);
           BREAK;
         }
 
