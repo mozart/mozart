@@ -91,8 +91,8 @@ const int fd_bv_max_high = 2 * FD_NOI + 1;
 const int fd_bv_max_elem = 32 * fd_bv_max_high - 1;
 const int fd_bv_conv_max_high = (fd_bv_max_elem) / 2 + 2;
 
-int fd_bv_left_conv[fd_bv_conv_max_high];
-int fd_bv_right_conv[fd_bv_conv_max_high];
+extern int fd_bv_left_conv[fd_bv_conv_max_high];
+extern int fd_bv_right_conv[fd_bv_conv_max_high];
 
 // Invariants: size < max_elem - min_elem + 1 otherwise reduce to FiniteDomain
 class FDBitVector {
@@ -137,8 +137,8 @@ typedef FDBitVector BitArray;
 
 typedef int * intptr;
 
-intptr fd_iv_left_sort[MAXFDBIARGS];
-intptr fd_iv_right_sort[MAXFDBIARGS];
+extern intptr fd_iv_left_sort[MAXFDBIARGS];
+extern intptr fd_iv_right_sort[MAXFDBIARGS];
 
 class FiniteDomain {
 private:

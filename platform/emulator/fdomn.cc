@@ -971,7 +971,9 @@ FDBitVector * FiniteDomain::provideBitVector(void)
 }
 
 static
-int intcompare(int ** i, int ** j) {return(**i - **j);}
+// int intcompare(int ** i, int ** j) {return(**i - **j);}
+int intcompare(void * ii, void  * jj) {int **i = (int **) ii;
+        int **j = (int **) jj; return(**i - **j);}
 
 int FiniteDomain::simplify(int list_len,
                                 int * list_left, int * list_right)
