@@ -1,0 +1,94 @@
+#  Authors:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Contributors:
+#    optional, Contributor's name (Contributor's email address)
+# 
+#  Copyright:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     $MOZARTURL$
+# 
+#  See the file "LICENSE" or
+#     $LICENSEURL$
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
+
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+FDINCS		= -I.. -I$(srcdir)/..
+CFLAGS		= $(COPT) $(DEFS) $(INCS) $(FDINCS) $(CWARN) $(CUSR)
+CXXFLAGS	= $(CFLAGS)
+DEPEND		= @DEPEND@ $(DEFS) $(INCS) $(FDINCS)
+
+TARGETS	= libfd.a libsched.a
+
+FDLIBSRCS = arith.cc fdaux.cc bool.cc \
+	    card.cc cd.cc count.cc \
+	    rel.cc disjoint.cc std.cc \
+	    sum.cc sumequal.cc \
+	    distance.cc misc.cc streamProps.cc \
+	    sumd.cc sumabs.cc complalldist.cc
+
+FDLIBOBJS = $(FDLIBSRCS:.cc=.o)
+
+SCHEDLIBSRCS = scheduling.cc schedulingDist.cc \
+	       schedulingDistAux.cc taskintervals.cc 
+
+SCHEDLIBOBJS = $(SCHEDLIBSRCS:.cc=.o)
+
+all: $(TARGETS)
+
+fdlib.so: $(FDLIBOBJS)
+	$(DYNLD) -o $@ $(FDLIBOBJS)
+
+schedlib.so: $(SCHEDLIBOBJS)
+	$(DYNLD) -o $@ $(SCHEDLIBOBJS)
+
+libfd.a: $(FDLIBOBJS)
+	$(AR) -rc $@ $(FDLIBOBJS)
+	$(RANLIB) $@
+
+libsched.a: $(SCHEDLIBOBJS)
+	$(AR) -rc $@ $(SCHEDLIBOBJS)
+	$(RANLIB) $@
+
+install-bin:
+	$(INSTALL_BIN) $(TARGETS) $(bindir)
+
+depend: $(FDLIBSRCS) $(SCHEDLIBSRCS) $(FSETLIBSRCS) 
+	$(DEPEND) $(FDLIBSRCS) $(SCHEDLIBSRCS) $(FSETLIBSRCS) \
+		>> Makefile
+
+tags:
+	etags --regex='/OZ_C[^(]+([ 	]*\([^ 	,)]+\)/\1/' -l c++ \
+	*c *h */*c */*h
+
+clean:
+	$(RM) *.o *~  *.bak *.obj
+
+realclean: clean
+	$(RM) *.a *.so
+
+veryclean: realclean
+
+.SUFFIXES: .cc .m4cc .hh .m4hh .s .E .sed
+
+.cc.o:
+	$(CXX) $(CXXFLAGS) -c -o /tmp/$$$$.o $< && $(MV) /tmp/$$$$.o $@
+
+.cc.s:
+	$(CXX) $(CXXFLAGS) -S -o $@ $<
+
+.cc.E:
+	$(CXX) $(CXXFLAGS) -E -o $@ $<
+
+
