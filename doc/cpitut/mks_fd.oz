@@ -5,7 +5,8 @@ fun {KnapsackFD Problem}
 in
    proc {$ Sol}
       sol(maxprofit: MaxProfit = {FD.decl}
-	  products:  Products  = {FD.list NumProducts 0#FD.sup}) = Sol
+	  products: Products = {FD.list NumProducts 0#FD.sup})
+      = Sol
    in
       MaxProfit = {FD.sumC Problem.profit Products '=:'}
 

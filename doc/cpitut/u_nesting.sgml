@@ -262,10 +262,10 @@ member function of class <<ExtendedExpect>> inheriting from
 variable is constrained to an integer, uses
 
 <p>
-<<  
+<<<  
 OZ_Expect::expectIntVar(OZ_Term t, 
-                        OZ_FDPropState ps)
->>
+                        OZ_FDPropState ps);
+>>>
 
 <p>
 provided by the &cpi . The second argument <<ps>> determines the event
