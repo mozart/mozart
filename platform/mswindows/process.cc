@@ -31,12 +31,12 @@ static DWORD WINAPI readerThread(void *arg)
   HANDLE hRead = (HANDLE) arg;
   DWORD ret;
   char buffer[1024];
-  while(1) {
+  while (TRUE) {
     if (ReadFile(hRead,buffer,sizeof(buffer) - 1,&ret,0) == FALSE)
       break;
     buffer[ret] = 0;
     MessageBox(NULL,buffer,"Mozart Output",
-               MB_ICONINFORMATION | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
+               MB_ICONINFORMATION | MB_SETFOREGROUND);
   }
   return 0;
 }
@@ -64,27 +64,24 @@ int createProcess(char *cmdline)
     si.hStdError  = hWrite;
   }
 
-  // Why make the pi.hProcess handle inheritable?
-  SECURITY_ATTRIBUTES sa;
-  ZeroMemory(&sa,sizeof(sa));
-  sa.nLength = sizeof(sa);
-  sa.lpSecurityDescriptor = NULL;
-  sa.bInheritHandle = TRUE;
   PROCESS_INFORMATION pi;
-  DWORD ret = CreateProcess(NULL,cmdline,&sa,NULL,TRUE,
+  DWORD ret = CreateProcess(NULL,cmdline,NULL,NULL,TRUE,
                             DETACHED_PROCESS | CREATE_SUSPENDED,
                             NULL,NULL,&si,&pi);
 
   if (ret == FALSE) {
     panic(true,"Cannot run '%s'.\n",cmdline);
   }
-  CloseHandle(pi.hThread);
 
   DWORD thrid;
-  CreateThread(0,10000,&readerThread,hRead,0,&thrid);
+  HANDLE hThread = CreateThread(0,10000,&readerThread,hRead,0,&thrid);
   ResumeThread(pi.hThread);
+  CloseHandle(pi.hThread);
 
   WaitForSingleObject(pi.hProcess,INFINITE);
+  // Wait for readerThread to have displayed all output:
+  CloseHandle(hWrite);   // (allows readerThread to exit)
+  WaitForSingleObject(hThread,INFINITE);
 
   DWORD code;
   ret = GetExitCodeProcess(pi.hProcess,&code);
