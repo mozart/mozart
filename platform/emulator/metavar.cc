@@ -50,8 +50,8 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
     TaggedRef result, trail = v;
 
     *vptr = makeTaggedRef(tptr);
-    mur_t ret_value = tag->unify_meta_meta(TaggedRef(vptr), getData(),
-                                           TaggedRef(tptr), term->getData(),
+    mur_t ret_value = tag->unify_meta_meta(makeTaggedRef(vptr), getData(),
+                                           makeTaggedRef(tptr), term->getData(),
                                            term->getTag(), &result);
     *vptr = trail;
 
@@ -179,7 +179,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 
     // bind temporarily to catch cycles
     if (vptr && tptr) *vptr = makeTaggedRef(tptr);
-    mur_t ret_value = tag->unify_meta_det(TaggedRef(vptr), getData(),
+    mur_t ret_value = tag->unify_meta_det(makeTaggedRef(vptr), getData(),
                                           t, OZ_typeOf(t),
                                           &result);
     if (vptr && tptr) *vptr = trail;
