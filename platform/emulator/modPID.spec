@@ -14,16 +14,6 @@ $cmode='dyn';
                              BI  => BIReceivedPID,
                              native => true},
 
-    'close'             => { in  => [],
-                             out => [],
-                             BI  => BIClosePID,
-                             native => true},
-
-    'send'              => { in  => ['+virtualString','+int','+int','+int','+int','value'],
-                             out => [],
-                             BI  => BISendPID,
-                             native => true},
-
     'toPort'    => { in  => ['+virtualString','+int','+int','+int'],
                              out => ['+port'],
                              BI  => BITicket2Port,

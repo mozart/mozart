@@ -1303,108 +1303,6 @@ $cmode='stat';
 
 
 
-
-
-
-    ##* Browser Support
-
-    'getsBoundB'        => { in  => ['value','value'],
-                             out => [],
-                             BI  => BIgetsBoundB,
-                             native => false},
-
-    'addr'              => { in  => ['value'],
-                             out => ['+int'],
-                             BI  => BIaddr,
-                             native => false},
-
-    'recordCIsVarB'     => { in  => ['value'],
-                             out => ['+bool'],
-                             BI  => BIisRecordCVarB,
-                             native => false},
-
-    'deepFeed'          => { in  => ['+cell','value'],
-                             out => [],
-                             BI  => BIdeepFeed,
-                             native => false},
-
-    'chunkWidth'        => { in  => ['+chunk'],
-                             out => ['+int'],
-                             BI  => BIchunkWidth,
-                             native => false},
-
-    'getTermSize'       => { in  => ['value','+int','+int'],
-                             out => ['+int'],
-                             BI  => BIgetTermSize,
-                             native => false},
-
-
-    'chunkArity'        => { in  => ['+chunk'],
-                             out => ['+[feature]'],
-                             BI  => BIchunkArity,
-                             native => true},
-
-
-
-
-    #* Dynamic Linking
-
-    'dlOpen'            => { in  => ['+virtualString'],
-                             out => ['+foreignPointer'],
-                             BI  => BIdlOpen,
-                             native => true},
-
-    'dlClose'           => { in  => ['+foreignPointer'],
-                             out => [],
-                             BI  => BIdlClose,
-                             native => true},
-
-    'findFunction'      => { in  => ['+virtualString','+int',
-                                     '+foreignPointer'],
-                             out => [],
-                             BI  => BIfindFunction,
-                             native => true},
-
-    'dlLoad'            => { in  => ['+virtualString'],
-                             out => ['+foreignPointer#record'],
-                             BI  => BIdlLoad,
-                             native => true},
-
-
-    #* Fault
-
-    'installHW'         => { in  => ['value','value','value'],
-                             out => [],
-                             BI  => BIhwInstall,
-                             native => true},
-
-    'deInstallHW'       =>  { in  => ['value','value','value'],
-                             out => [],
-                             BI  => BIhwDeInstall,
-                             native => true},
-
-    'setNetBufferSize'  =>  { in  => ['+value'],
-                             out => [],
-                             BI  => BIsetNetBufferSize,
-                             native => true},
-
-    'getNetBufferSize'  =>  { in  => [],
-                             out => ['value'],
-                             BI  => BIgetNetBufferSize,
-                             native => true},
-
-    'getEntityCond'     =>  { in  => ['value'],
-                             out => ['value'],
-                             BI  => BIgetEntityCond,
-                             native => true},
-
-    'tempSimulate'      => { in  => ['+int'],
-                             out => ['+int'],
-                             BI  => BIcloseCon,
-                             module=>'perdio',
-                             native => true},
-
-
     #* Distribution
 
     'export'            => { in  => ['value'],
@@ -1412,160 +1310,15 @@ $cmode='stat';
                              BI  => BIexport,
                              module=>components,
                              native => false},
-
-
-    #* Virtual Sites
-
-    'VirtualSite.newMailbox' => { in     => [],
-                                  out    => ['+string'],
-                                  BI     => BIVSnewMailbox,
-                                  module => vs,
-                                  native => true},
-
-    'VirtualSite.initServer' => { in     => ['+string'],
-                                  out    => [],
-                                  BI     => BIVSinitServer,
-                                  module => vs,
-                                  native => true},
-
-    'VirtualSite.removeMailbox' => { in     => ['+string'],
-                                  out    => [],
-                                  BI     => BIVSremoveMailbox,
-                                  module => vs,
-                                  native => true},
-
-    ###* Debugger Internal
-
-    'Thread.unleash'    => { in  => ['+thread','+int'],
-                             out => [],
-                             BI  => BIthreadUnleash,
-                             native => false},
-
-    'Debug.getStream'   => { in  => [],
-                             out => ['value'],
-                             BI  => BIgetDebugStream,
-                             native => true},
-
-    'Debug.setStepFlag' => { in  => ['+thread','+bool'],
-                             out => [],
-                             BI  => BIsetStepFlag,
-                             native => true},
-
-    'Debug.setTraceFlag'=> { in  => ['+thread','+bool'],
-                             out => [],
-                             BI  => BIsetTraceFlag,
-                             native => true},
-
-    'Debug.checkStopped'=> { in  => ['+thread'],
-                             out => ['+bool'],
-                             BI  => BIcheckStopped,
-                             native => true},
-
-    'Debug.print'       => { in  => ['value','+int'],
-                             out => [],
-                             BI  => BIdebugPrint,
-                             ifdef=>'DEBUG_PRINT',
-                             native => true},
-
-    'Debug.printLong'   => { in  => ['value','+int'],
-                             out => [],
-                             BI  => BIdebugPrintLong,
-                             ifdef=>'DEBUG_PRINT',
-                             native => true},
-
-    'Debug.prepareDumpThreads'  => { in  => [],
-                                     out => [],
-                                     BI  => BIprepareDumpThreads,
-                                     native => true},
-
-    'Debug.dumpThreads' => { in  => [],
-                             out => [],
-                             BI  => BIdumpThreads,
-                             native => true},
-
-    'Debug.listThreads' => { in  => [],
-                             out => ['+[thread]'],
-                             BI  => BIlistThreads,
-                             native => true},
-
-    'Debug.breakpointAt'=> { in  => ['+atom','+int','+bool'],
-                             out => ['+bool'],
-                             BI  => BIbreakpointAt,
-                             native => true},
-
-    'Debug.breakpoint'  => { in  => [],
-                             out => [],
-                             BI  => BIbreakpoint,
-                             native => true},
-
-    'Debug.displayDef'  => { in  => ['+int','+int'],
-                             out => [],
-                             BI  => BIdisplayDef,
-                             native => true},
-
-    'Debug.displayCode' => { in  => ['+int','+int'],
-                             out => [],
-                             BI  => BIdisplayCode,
-                             native => true},
-
-    'Debug.procedureCode'=> { in  => ['+procedure'],
-                              out => ['+int'],
-                              BI  => BIprocedureCode,
-                              native => true},
-
-    'Debug.procedureCoord'=> { in  => ['+procedure'],
-                               out => ['+record'],
-                               BI  => BIprocedureCoord,
-                               native => true},
-
-
-    #* Unclassified
-
-    ##* Ozma
-
-    'ozma_readProc'     => { in     => ['+virtualString'],
-                             out    => ['+value'],
-                             BI     => ozma_readProc,
-                             ifdef  => MODULES_LINK_STATIC,
-                             native => true},
-
-
-
-    ###
-    ### Misc stuff
-    ###
-
-    'PerdioVar.is'      => { in  => ['value'],
-                             out => ['+bool'],
-                             BI  =>   PerdioVar_is,
-                             module=> 'perdiovar',
-                             native => false},
-
-    'probe'             => { in  => ['value'],
-                             out => [],
-                             BI  => BIprobe,
-                             native => true},
-
-    'crash'             => { in  => [],
-                             out => [],
-                             BI  => BIcrash,
-                             doesNotReturn=>1,
-                             native => true},
-
-
-
-
-
+    # all these are needed within emulator
     'controlVarHandler' => { in  => ['+value'],
                              out => [],
                              BI  => BIcontrolVarHandler,
                              native => true},
 
-    'dvset'             => { in  => ['+int','+int'],
+    'probe'             => { in  => ['value'],
                              out => [],
-                             BI  => BIdvset,
-                             ifdef=>DEBUG_PERDIO,
-                             module=>'perdio',
+                             BI  => BIprobe,
                              native => true},
 
     'startTmp'          => { in  => ['+int','+int'],
@@ -1574,145 +1327,27 @@ $cmode='stat';
                              module=>'perdio',
                              native => true},
 
-    'siteStatistics'    => { in  => [],
-                             out => ['+[value]'],
-                             BI  => BIsiteStatistics,
-                             module=>'perdio',
-                             native => true},
-
-    'printBorrowTable'  => { in  => [],
-                             out => [],
-                             BI  => BIprintBorrowTable,
-                             module=>'perdio',
-                             native => true},
-
-    'printOwnerTable'   => { in  => [],
-                             out => [],
-                             BI  => BIprintOwnerTable,
-                             module=>'perdio',
-                             native => true},
-
-
     'portWait'         =>  { in  => ['+port','+int'],
                              out => [],
                              BI  => BIportWait,
                              module=>'perdio',
                              native => true},
 
-
-    'perdioStatistics'  => { in  => [],
-                             out => ['+record'],
-                             BI  => BIperdioStatistics,
-                             module=>'perdio' ,
-                             native => true},
-
-
      'atRedo'           => { in  => ['+feature', 'value'],
                              out => [],
                              bi  => BIatRedo,
                              native => true},
 
-    'slowNet'           => { in  => ['+int', '+int'],
-                             out => [],
-                             bi  => BIslowNet,
+
+
+
+    ##* Ozma
+
+    'ozma_readProc'     => { in     => ['+virtualString'],
+                             out    => ['+value'],
+                             BI     => ozma_readProc,
+                             ifdef  => MODULES_LINK_STATIC,
                              native => true},
-
-    'Debug.inspect'     => { in  => ['value'],
-                             out => ['+value'],
-                             BI  => BIinspect,
-                             native => true},
-
-
-    'Debug.livenessX'   => { in  => ['+int'],
-                             out => ['+int'],
-                             BI  => BIlivenessX,
-                             native => true},
-
-    'procedureEnvironment'=> { in  => ['+procedure'],
-                               out => ['+tuple'],
-                               BI  => BIprocedureEnvironment,
-                               native => true},
-
-    'statisticsPrint'   => { in  => ['+virtualString'],
-                             out => [],
-                             BI  => BIstatisticsPrint,
-                             native => true},
-
-    'statisticsPrintProcs'=> { in  => [],
-                               out => [],
-                               BI  => BIstatisticsPrintProcs,
-                               native => true},
-
-    'instructionsPrint' => { in  => [],
-                             out => [],
-                             BI  => BIinstructionsPrint,
-                             ifdef=>'PROFILE_INSTR',
-                             native => true},
-
-    'instructionsPrintCollapsable' => { in  => [],
-                             out => [],
-                             BI  => BIinstructionsPrintCollapsable,
-                             ifdef=>'PROFILE_INSTR',
-                             native => true},
-
-    'instructionsPrintReset' => { in  => [],
-                             out => [],
-                             BI  => BIinstructionsPrintReset,
-                             ifdef=>'PROFILE_INSTR',
-                             native => true},
-
-    'biPrint'           => { in  => [],
-                             out => [],
-                             BI  => BIbiPrint,
-                             ifdef=>'PROFILE_BI',
-                             native => true},
-
-    'halt'              => { in  => [],
-                             out => [],
-                             BI  => BIhalt,
-                             ifdef=>'DEBUG_TRACE',
-                             native => true},
-
-    ###
-    ### Christian's private stuff
-    ###
-
-    'GetCloneDiff'      => { in  => ['+space'],
-                             out => ['+value'],
-                             BI  => BIgetCloneDiff,
-                             ifdef=>'CS_PROFILE',
-                             native => true},
-
-
-    ###
-    ### Ralf's private stuff
-    ###
-
-    'funReturn'         => { in  => ['value'],
-                             out => [],
-                             doesNotReturn => 1,
-                             BI  => BIfunReturn,
-                             native => false},
-
-    'getReturn'         => { in  => [],
-                             out => ['value'],
-                             BI  => BIgetReturn,
-                             native => false},
-
-
-    ###
-    ### Tobias's private stuff
-    ###
-
-    'getConstraints'    => { in  => ['+value','+[value]'],
-                             out => [],
-                             bi  => BIgetConstraints,
-                             native => true},
-
-    ###
-    ### Michael's private stuff
-    ###
-
 
 
 );
