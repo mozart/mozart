@@ -96,7 +96,7 @@ local
                                                       text:   'Update Time')}
             TimeLabel = {New Tk.label tkInit(parent: TimeOuter.inner
                                              text:   'Update Every: ')}
-            TimeScale = {New DiscreteScale init(parent: TimeOuter.inner
+            TimeScale = {New TkTools.scale init(parent: TimeOuter.inner
                                                 width:  ScaleWidth
                                                 values: UpdateTimes
                                                 initpos: {FindPos UpdateTimes
@@ -137,7 +137,7 @@ local
                                                        text:   'History Range')}
             RangeLabel = {New Tk.label tkInit(parent: RangeOuter.inner
                                              text:   'Range Covers: ')}
-            RangeScale = {New DiscreteScale init(parent:  RangeOuter.inner
+            RangeScale = {New TkTools.scale init(parent:  RangeOuter.inner
                                                  width:   ScaleWidth
                                                  values:  HistoryRanges
                                                  initpos: {FindPos
