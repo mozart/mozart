@@ -13,14 +13,7 @@
 #pragma implementation "taskstk.hh"
 #endif
 
-#include "tagged.hh"
-#include "stack.hh"
-
-#include "cont.hh"
-#include "taskstk.hh"
-
-// #include "debug.hh"
-// #include "codearea.hh"
+#include "am.hh"
 
 
 void TaskStack::resize(int newsize)
