@@ -1317,9 +1317,11 @@ LBLkillThread:
       DebugCode (e->currentThread = (Thread *) 0x6b6f7374);
       switch (e->checkEntailment(cont,aa)) {
       case CE_FAIL:
+	DebugCode (e->currentThread = (Thread *) NULL);
 	if (nb) e->decSolveThreads(nb);
 	HF_NOMSG;
       case CE_SOLVE_CONT:
+	DebugCode (e->currentThread = (Thread *) NULL);
 	{
 	  Assert(aa->isWait());
 	  Thread *tt = e->createThread(aa->getPriority(),
@@ -1330,6 +1332,7 @@ LBLkillThread:
 	  goto LBLstart;
 	}
       case CE_CONT:
+	DebugCode (e->currentThread = (Thread *) NULL);
 	{
 	  Thread *tt=0;
 	  if (aa->isAsk()) {
@@ -1349,6 +1352,7 @@ LBLkillThread:
 	  goto LBLstart;
 	}
       case CE_NOTHING:
+	DebugCode (e->currentThread = (Thread *) NULL);
 	// deref nb, because maybe committed ??
 	if (nb) e->decSolveThreads(nb->getBoardFast());
 	goto LBLstart;
@@ -2059,10 +2063,10 @@ LBLkillThread:
 	  /* {Obj Msg} --> {Obj Msg Methods Self} */
 	  Object *o = (Object*) predicate;
 	  if (o->getIsClass()) {
-	    HF_WARN(message("classes cannot be applied "),);
+	    HF_WARN(message("classes cannot be applied\n"),);
 	  }
 	  if (predArity != 1) {
-	    HF_WARN(message("Object application: expect one argument, got: %d",predArity),);
+	    HF_WARN(message("Object application: expect one argument, got: %d\n",predArity),);
 	  }
 	  def = o->getAbstraction();
 	  X[predArity++] = o->getSlowMethods();
