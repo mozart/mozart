@@ -32,13 +32,14 @@ const int fd_iv_max_high = FD_NOI;
 const int fd_iv_max_elem = OzMaxInt - 1;
 const int fd_full_size = fd_iv_max_elem + 1;
 
+
+struct i_arr_type {int left; int right;};
+
 // Invariants: high == 1 reduce to FiniteDomain
 class FDIntervals {
 friend class FiniteDomain;
 private:
   int high;
-  struct i_arr_type {int left; int right;};
-
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD)
   Bool isConsistent(void) const;
   struct _i_arr_type {

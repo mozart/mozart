@@ -48,7 +48,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
     GenMetaVariable * term = (GenMetaVariable *) tagged2CVar(t);
     TaggedRef result, trail = v;
 
-    *vptr = TaggedRef(tptr);
+    *vptr = makeTaggedRef(tptr);
     mur_t ret_value = tag->unify_meta_meta(getData(),
                                            term->getData(), term->getTag(),
                                            &result);
@@ -74,10 +74,10 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
           doBind(vptr, result);
         } else {
           term->setData(result);
-          propagate(v, suspList, TaggedRef(tptr), pc_cv_unif);
-          term->propagate(t, term->suspList, TaggedRef(vptr), pc_cv_unif);
+          propagate(v, suspList, makeTaggedRef(tptr), pc_cv_unif);
+          term->propagate(t, term->suspList, makeTaggedRef(vptr), pc_cv_unif);
           relinkSuspListTo(term);
-          doBind(vptr, TaggedRef(tptr));
+          doBind(vptr, makeTaggedRef(tptr));
         }
       } else { // bind t to v
         if (ret_value & meta_determined) {
@@ -87,10 +87,10 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
           doBind(tptr, result);
         } else {
           setData(result);
-          propagate(v, suspList, TaggedRef(tptr), pc_cv_unif);
-          term->propagate(t, term->suspList, TaggedRef(vptr), pc_cv_unif);
+          propagate(v, suspList, makeTaggedRef(tptr), pc_cv_unif);
+          term->propagate(t, term->suspList, makeTaggedRef(vptr), pc_cv_unif);
           term->relinkSuspListTo(this);
-          doBind(tptr, TaggedRef(vptr));
+          doBind(tptr, makeTaggedRef(vptr));
         }
       }
       break;
@@ -105,17 +105,17 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
           doBindAndTrail(t, tptr, result);
         } else {
           setData(result);
-          propagate(v, suspList, TaggedRef(tptr), pc_cv_unif);
-          term->propagate(t, term->suspList, TaggedRef(vptr), pc_cv_unif);
+          propagate(v, suspList, makeTaggedRef(tptr), pc_cv_unif);
+          term->propagate(t, term->suspList, makeTaggedRef(vptr), pc_cv_unif);
           term->addSuspension(new Suspension(am.currentBoard));
-          doBindAndTrailAndIP(t, tptr, TaggedRef(vptr), this, term, prop);
+          doBindAndTrailAndIP(t, tptr, makeTaggedRef(vptr), this, term, prop);
         }
       } else {
-        propagate(v, suspList, TaggedRef(tptr), pc_cv_unif);
-        term->propagate(t, term->suspList, TaggedRef(vptr), pc_cv_unif);
+        propagate(v, suspList, makeTaggedRef(tptr), pc_cv_unif);
+        term->propagate(t, term->suspList, makeTaggedRef(vptr), pc_cv_unif);
 
         relinkSuspListTo(term, TRUE);
-        doBind(vptr, TaggedRef(tptr));
+        doBind(vptr, makeTaggedRef(tptr));
       }
       break;
 
@@ -129,17 +129,17 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
           doBindAndTrail(v, vptr, result);
         } else {
           term->setData(result);
-          propagate(v, suspList, TaggedRef(tptr), pc_cv_unif);
-          term->propagate(t, term->suspList, TaggedRef(vptr), pc_cv_unif);
+          propagate(v, suspList, makeTaggedRef(tptr), pc_cv_unif);
+          term->propagate(t, term->suspList, makeTaggedRef(vptr), pc_cv_unif);
           addSuspension(new Suspension(am.currentBoard));
-          doBindAndTrailAndIP(v, vptr, TaggedRef(tptr), term, this, prop);
+          doBindAndTrailAndIP(v, vptr, makeTaggedRef(tptr), term, this, prop);
         }
       } else {
-        propagate(v, suspList, TaggedRef(tptr), pc_cv_unif);
-        term->propagate(t, term->suspList, TaggedRef(vptr), pc_cv_unif);
+        propagate(v, suspList, makeTaggedRef(tptr), pc_cv_unif);
+        term->propagate(t, term->suspList, makeTaggedRef(vptr), pc_cv_unif);
 
         term->relinkSuspListTo(this, TRUE);
-        doBind(tptr, TaggedRef(vptr));
+        doBind(tptr, makeTaggedRef(vptr));
       }
       break;
 
@@ -155,12 +155,12 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
         GenMetaVariable * meta_var = new GenMetaVariable(tag, result);
         TaggedRef * var_val = newTaggedCVar(meta_var);
         if (prop) {
-          propagate(v, suspList, TaggedRef(var_val), pc_cv_unif);
-          term->propagate(t, term->suspList, TaggedRef(var_val),
+          propagate(v, suspList, makeTaggedRef(var_val), pc_cv_unif);
+          term->propagate(t, term->suspList, makeTaggedRef(var_val),
                           pc_cv_unif);
         }
-        doBindAndTrailAndIP(v, vptr, TaggedRef(var_val), meta_var, this, prop);
-        doBindAndTrailAndIP(t, tptr, TaggedRef(var_val), meta_var, term, prop);
+        doBindAndTrailAndIP(v, vptr, makeTaggedRef(var_val), meta_var, this, prop);
+        doBindAndTrailAndIP(t, tptr, makeTaggedRef(var_val), meta_var, term, prop);
       }
       if (prop) {
         Suspension * susp = new Suspension(am.currentBoard);
@@ -176,7 +176,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
   } else {
     TaggedRef result, trail = v;
 
-    *vptr = TaggedRef(tptr);
+    *vptr = makeTaggedRef(tptr);
     mur_t ret_value = tag->unify_meta_det(getData(),
                                           t, OZ_typeOf(t),
                                           &result);
@@ -238,7 +238,7 @@ OZ_MetaType OZ_introMetaVar(OZ_UnifyMetaDet unify_md,
 
 OZ_Term OZ_makeMetaVar(OZ_MetaType t, OZ_Term d)
 {
-  return TaggedRef(newTaggedCVar(new GenMetaVariable((MetaTag *) t, d)));
+  return makeTaggedRef(newTaggedCVar(new GenMetaVariable((MetaTag *) t, d)));
 }
 
 
@@ -383,7 +383,7 @@ OZ_C_proc_begin(BImetaGetDataAsAtom, 2)
     return OZ_unify(makeTaggedAtom(((GenMetaVariable *) tagged2CVar(var))->toString()),
                     OZ_getCArg(1));
   } else if (isNotCVar(vartag)) {
-    OZ_addSuspension(TaggedRef(varptr),
+    OZ_addSuspension(makeTaggedRef(varptr),
                      OZ_makeSuspension(OZ_self, OZ_args, OZ_arity));
     return PROCEED;
   } else {
@@ -405,7 +405,7 @@ OZ_C_proc_begin(BImetaGetStrength, 2)
     return OZ_unify(((GenMetaVariable *) tagged2CVar(var))->getData(),
                     OZ_getCArg(1));
   } else if (isNotCVar(vartag)) {
-    OZ_addSuspension(TaggedRef(varptr),
+    OZ_addSuspension(makeTaggedRef(varptr),
                      OZ_makeSuspension(OZ_self, OZ_args, OZ_arity));
     return PROCEED;
   } else {
@@ -428,7 +428,7 @@ OZ_C_proc_begin(BImetaGetNameAsAtom, 2)
       OZ_unify(makeTaggedAtom(((GenMetaVariable*)tagged2CVar(var))->getName()),
                OZ_getCArg(1));
   } else if (isNotCVar(vartag)) {
-    OZ_addSuspension(TaggedRef(varptr),
+    OZ_addSuspension(makeTaggedRef(varptr),
                      OZ_makeSuspension(OZ_self, OZ_args, OZ_arity));
     return PROCEED;
   } else {
@@ -450,7 +450,7 @@ OZ_C_proc_begin(BImetaWatchVar, 2)
     if (((GenMetaVariable*)tagged2CVar(v))->isStrongerThan(deref(OZ_args[1])))
       return PROCEED;
 
-    OZ_addSuspension(TaggedRef(vptr),
+    OZ_addSuspension(makeTaggedRef(vptr),
                      OZ_makeSuspension(OZ_self, OZ_args, OZ_arity));
     return PROCEED;
   } else {
