@@ -424,9 +424,9 @@ typedef StackEntry BTFrame;
   BTFrame *frame = getTop();
 
 #define GetBTTaskType(frame, type)			\
-  BuilderTaskType type = (BuilderTaskType) *(frame-1);
+  BuilderTaskType type = (BuilderTaskType) ToInt32(*(frame-1));
 #define GetBTTaskTypeNoDecl(frame, type)		\
-  type = (BuilderTaskType) *(frame-1);
+  type = (BuilderTaskType) ToInt32(*(frame-1));
 
 #define GetBTTaskArg1(frame, ATYPE, arg)		\
   ATYPE arg = (ATYPE) ToInt32(*(frame-2));
@@ -452,7 +452,7 @@ typedef StackEntry BTFrame;
 
 // Special: lookup the type of the next frame...
 #define GetNextTaskType(frame, type)			\
-  BuilderTaskType type = (BuilderTaskType) *(frame - bsFrameSize - 1);
+  BuilderTaskType type = (BuilderTaskType) ToInt32(*(frame - bsFrameSize - 1));
 #define GetNextTaskArg1(frame, ATYPE, arg)		\
   ATYPE arg = (ATYPE) ToInt32(*(frame - bsFrameSize - 2));
 #define GetNextTaskPtr1(frame, PTYPE, ptr)		\
@@ -491,7 +491,7 @@ typedef StackEntry BTFrame;
   setTop(frame = frame + bsFrameSize);
 #define PutBTTask2Args(frame,type,arg1,arg2)		\
   *(frame) = ToPointer(arg2);				\
-  *(frame+1) = ToPointer(arg1);				\
+  *(frame+1) = arg1;				\
   *(frame+2) = ToPointer(type);				\
   setTop(frame = frame + bsFrameSize);
 #define PutBTTaskPtrArg(frame,type,ptr,arg)		\
