@@ -32,6 +32,27 @@ import
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 define
+   fun {CorrespondingItems CurrItems CurrTable NewItems}
+      {List.foldLTail {FS.reflect.lowerBoundList CurrItems}
+       fun {$ L R}
+          {System.show foldLTail#[l#L r#R]}
+          case R
+          of A|B|T then
+             {FS.union L
+              {FoldL B|T
+               fun {$ L R}
+                  {System.show foldL#[l#L r#R]}
+                  {FS.union {FS.intersect
+                             CurrTable.R.NewItems
+                             CurrTable.A.NewItems}
+                   L}
+               end
+               {FS.value.make nil}}}
+          else
+             L
+          end
+       end {FS.value.make nil}}
+   end
 
    proc {Loop VarTable PropTable Hist DaVin Stream Result}
       case Stream.1
@@ -64,12 +85,14 @@ define
       elseof cn  then
          LocationProp  = PropTable.(C.1).location
       in
-         {Emacs.condSend.interface
-          bar(file:   {VirtualString.toAtom LocationProp.path#"/"
-                       #LocationProp.file}
-              line:   LocationProp.line
-              column: LocationProp.column
-              state:  runnable)}
+         if LocationProp \= unit then
+            {Emacs.condSend.interface
+             bar(file:   {VirtualString.toAtom LocationProp.path#"/"
+                          #LocationProp.file}
+                 line:   LocationProp.line
+                 column: LocationProp.column
+                 state:  runnable)}
+         else skip end
 
          NextArgsType = unit
          Skip         = yes
@@ -135,10 +158,9 @@ define
          NextAction = ConstrGraph.make
       in
          Skip         = display
-         NextArgs     = {FoldR {FS.reflect.lowerBoundList CurrVars}
-                         fun {$ L R}
-                            {FS.union VarTable.L.propagators R}
-                         end {FS.value.make nil}}
+         NextArgs     = {CorrespondingItems CurrVars VarTable propagators}
+
+         {System.show corrcg#NextArgs}
          {Hist add_action(NextAction NextArgs)}
          NextAction
       elseof corrvg then
@@ -146,10 +168,8 @@ define
          NextAction = ParamGraph.make
       in
          Skip         = display
-         NextArgs     = {FoldR {FS.reflect.lowerBoundList CurrProps}
-                         fun {$ L R}
-                            {FS.union PropTable.L.parameters R}
-                         end {FS.value.make nil}}
+         NextArgs     = {CorrespondingItems CurrProps PropTable parameters}
+
          {Hist add_action(NextAction NextArgs)}
          NextAction
       elseof addconcg then
@@ -203,9 +223,17 @@ define
       Hist  = {New History.historyClass init}
       reflect_space(varsTable:  VarTable
                     propTable:  PropTable
-                    failedProp: FailPropId) = {ReflectSpace Root}
+                    failedProp: FailPropId)
 
+\ifdef IGNORE_REFERENCE
+      = Root
+\else
+      = {ReflectSpace Root}
+\endif
       SolVars = {FS.value.make
+\ifdef IGNORE_REFERENCE
+                 {Arity VarTable}
+\else
                  {Map {VectorToList Root}
                   fun {$ E}
                      {Record.foldL VarTable
@@ -214,7 +242,9 @@ define
                             if {VarEq Ref E} then Id else unit end
                          else L end
                       end unit}
-                  end}}
+                  end}
+\endif
+                }
    in
       {Hist set_sol_vars(SolVars)}
 

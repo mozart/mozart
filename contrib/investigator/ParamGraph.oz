@@ -28,8 +28,19 @@ define
 
             #"m(["
             #{Hist insert_menu($)}
-            #"menu_entry(\"cg<all>\",\"Constraint graph of all constraints\")"
-            #",menu_entry(\"cg<"
+            #{FoldL SharedProps
+              fun {$ L R}
+                 Location = (PropTable.R).location
+              in
+                 L#"menu_entry(\"scg<"#R#">\",\"Propagator graph of "
+                 #(PropTable.R).name
+                 #if Location == unit then ""
+                  else " ("#Location.file#":"#Location.line#")"
+                  end
+                 #"\"),"
+              end ""}
+
+            #"menu_entry(\"cg<"
 
             #SharedProps.1
             #{FoldL SharedProps.2 fun {$ L R} if R == nil then L
@@ -37,18 +48,8 @@ define
                                               end
                                   end ""}
 
-            #">\",\"Constraint graph of constraints imposed onto these two variables\")"
-            #{FoldL SharedProps
-              fun {$ L R}
-                 Location = (PropTable.R).location
-              in
-                 L#",menu_entry(\"scg<"#R#">\",\"Constraint graph of "
-                 #(PropTable.R).name
-                 #if Location == unit then ""
-                  else " ("#Location.file#":"#Location.line#")"
-                  end
-                 #"\")"
-              end ""}
+            #">\",\"Propagator graph of propagators imposed onto these two variables\")"
+            #",menu_entry(\"cg<all>\",\"Propagator graph of all propagators\")"
 
             #"])], r(\"vn<"#T.1.id#">\")))"
             #if T.2 == nil then "" else ","end
@@ -72,13 +73,17 @@ define
       #"m(["
       #{Hist insert_menu($)}
       #{Hist insert_menu_mark_param(H.id VarStr $)}
-      #"menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
-      #",menu_entry(\"vg<solvar>\",\"Variable graph of solution variables\")"
-      #",menu_entry(\"corrcg\",\"Corresponding constraint graph\")"
-      #",menu_entry(\"addconvg<"#H.id#">\",\"Add variables #"
-      #{FS.card H.connected_vars}#" connected to "
+
+      #"menu_entry(\"addconvg<"#H.id#">\",\"Add #"
+      #{FS.card H.connected_vars}#" variable nodes connected to "
       #VarStr#"\")"
+
+      #",blank"
       #",menu_entry(\"svg<"#H.id#">\",\"Single variable graph of "#VarStr#"\")"
+      #",menu_entry(\"vg<solvar>\",\"Variable graph only of root variables\")"
+      #",menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
+      #",blank"
+      #",menu_entry(\"corrcg\",\"Corresponding propagator graph\")"
       #"])],["
       #{MakeEdges Hist PropTable H
         {FoldR {FS.reflect.lowerBoundList {FS.diff H.connected_vars Ignore}}

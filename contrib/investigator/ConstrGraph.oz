@@ -36,19 +36,19 @@ define
             #"a(\"EDGECOLOR\",\""#Config.edgeColour#"\"),"
             #"m(["
             #{Hist insert_menu($)}
-            #"menu_entry(\"vg<all>\",\"Variables graph of all variables\")"
-            #",menu_entry(\"vg<"
+            #{FoldL SharedVars
+              fun {$ L R}
+                 L#"menu_entry(\"svg<"#R#">\",\"Single variable graph of "
+                 #VarTable.R.name#"\"),"
+              end ""}
+            #"menu_entry(\"vg<"
             #SharedVars.1
             #{FoldL SharedVars.2 fun {$ L R} if R == nil then L
                                           else L#'|'#R
                                           end
                                  end ""}
-            #">\",\"Variables graph of all variables shared by these two constraints\")"
-            #{FoldL SharedVars
-              fun {$ L R}
-                 L#",menu_entry(\"svg<"#R#">\",\"Single variable graph of "
-                 #VarTable.R.name#"\")"
-              end ""}
+            #">\",\"Variables graph of all variables shared by these two propagators\")"
+            #",menu_entry(\"vg<all>\",\"Variables graph of all variables\")"
             #"])], r(\"cn<"
             #T.1.id#">\")))"
             #if T.2 == nil then "" else ","end
@@ -78,17 +78,24 @@ define
       #"m(["
       #{Hist insert_menu($)}
       #{Hist insert_menu_mark_prop(H.id H.name#" ("#Location#")" $)}
-      #"menu_entry(\"cg<all>\",\"Constraint graph all constraints\")"
-      #",menu_entry(\"corrvg\",\"Corresponding variable graph\")"
-      #",menu_entry(\"addconcg<"#H.id#">\",\"Add constraints #"
-      #{FS.card H.connected_props}#" connected to "
+
+      #"menu_entry(\"addconcg<"#H.id#">\",\"Add #"
+      #{FS.card H.connected_props}#" propagator nodes connected to "
       #H.name#" ("#Location#")\")"
-      #",menu_entry(\"scg<"#H.id#">\",\"Single constraint graph of "
+      #",blank"
+
+      #",menu_entry(\"scg<"#H.id#">\",\"Single propagator graph of "
       #H.name
       #if H.location == unit then ""
        else " ("#H.location.file#":"#H.location.line#")"
        end
-      #"\")])"
+      #"\")"
+
+      #",menu_entry(\"cg<all>\",\"Propagator graph all propagators\")"
+
+      #",blank"
+      #",menu_entry(\"corrvg\",\"Corresponding variable graph\")"
+      #"])"
       #"],["
       #{MakeEdges Hist VarTable H
         {FoldR {FS.reflect.lowerBoundList {FS.diff H.connected_props Ignore}}
