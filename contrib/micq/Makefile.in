@@ -45,9 +45,6 @@ client: startclient.oz client.ozf
 
 BMETH = $(BUILDTOP)/contrib/micq/methods.ozf
 
-$(BMETH): $(SRCDIR)/methods.ozf
-        cp $< $@
-
 server.ozf: server.oz $(BMETH) database.ozf mobility.ozf newaccountgui.ozf \
         log.ozf  sysadm.ozf
         $(COMPILE) -c $< -o $@
