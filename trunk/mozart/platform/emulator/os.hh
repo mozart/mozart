@@ -69,6 +69,7 @@ extern "C" {
 
 unsigned int osSystemTime(); // return current systemtime in milliseconds
 unsigned int osUserTime();   // return current usertime in milliseconds
+unsigned int osTotalTime(); // return total system time in milliseconds
 void osInitSignals();        // initialize signal handler
 void osSetAlarmTimer(int t, Bool interval=OK);
 void osBlockSignals(Bool check=NO); // check: check if no other signals are blocked
