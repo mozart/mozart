@@ -48,7 +48,7 @@
 -->
     <meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
     <meta name="proglang.mode" arg1="fundamental" arg2="fundamental-mode">
-    <title/Making Releases/
+    <title/The Secret Sucky Guide To Making Releases/
     <author.Extern to="author.db" key="Denys.Duchier">
     <Abstract>
     This document explains how to create releases for various platforms.
@@ -232,6 +232,75 @@ make bin</code>
 </list>
 
       </section>
+    </chapter>
+
+    <chapter proglang=sh>
+      <title/Check-List For Release Managers/
+      <p>This chapter is intended for release managers of the Mozart
+      consortium.  Below is the very abbreviated list of steps to
+      follow for creating a new release:
+      <list>
+        <item>bump up the version in file
+        <file>OZVERSION</file></item>
+        <item>update version specific changes in
+        <file>doc/changes/main.sgml</file></item>
+        <item>cut a new tag in the CVS.  For example, if you wish
+        to cut a tag for version 1.2.3 on the current release branch.
+        You should check it out, cd to the directory of the checked
+        out version and issue the following command:
+        <code display/cvs tag -r mozart-1-2-3/</item>
+        <item>then you should configure, build and install the
+        release.  In particular, you should configure with option
+        <code/--with-documents=all/.</item>
+        <item>As stated above, you should then <code/make/ followed by
+        <code/make install/.</item>
+        <item>Now you need to make the postscript and pdf
+        documentation.  cd to the build doc directory and invoke
+        <code/make ps/ followed by <code/make pdf/.  Finally do
+        <code/make installps/.</item>
+        <item>cd back to the top build directory and now invoke
+        <code/make src doc bin/ in order to create all the necessary
+        tar files.  Note that you also need to create a <file/README/
+        file which describes the important points about linking:  This
+        can be done by using <code>ldd</code> on
+        <file>platform/emulator/emulator.exe</file> and on
+        <file>platform/wish/tk.exe</file>.  Note that depending on
+        whether you used <code>--enable-static-linking</code> or not,
+        you should rename the tar and README files accordingly so that
+        they can be distinguished.  My own preference is to add
+        <code/-dynfull/ when dynamic linking is used and
+        <code/-dynless/ when <code/--enable-static-linking/ (and
+        possibly <code/--enable-modules-static/ - I normally specify
+        both of them when I am interested in a more statically linked
+        distribution) was used instead.
+        For example, here are the names of the tar and README files
+        for release 1.2.3 for the dynamically linked version of the
+        mozart release for freebsd on the intel architecture:
+        <list>
+          <item><file>README.freebsdelf-i486-dynfull</file></item>
+          <item><file>mozart-1.2.3.20011121-freebsdelf-i486-dynfull-contrib.tar.gz</file></item>
+          <item><file>mozart-1.2.3.20011121-freebsdelf-i486-dynfull.tar.gz</file></item>
+        </list>
+        </item>
+        <item>now become root and invoke
+        <code>$SOURCE/misc/create-rpm $PWD $PWD</code>.  This creates
+        the source and binary rpms.</item>
+        <item>Now you need to create and populate the ftp directory
+        for the release.  For this, you need to be logged into the
+        consortium's ftp machine.  Currently this is <code/grizzly/ in
+        Saarbrücken.
+          <list>
+            <entry><code>$SOURCE/misc/mkftp --release=$VERSION --create</code></entry>
+            <item>this creates the directory structure for the
+            release.  Use option <code/-n/ to see what <code/mkftp/
+            would do without actually doing it.</item>
+            <entry><code>$SOURCE/misc/mkftp --release=$VERSION --tar *.tar.gz README.*</code></entry>
+            <item>this will install the tar and README files appropriately.</item>
+            <entry><code>$SOURCE/misc/mkftp --release=$VERSION --rpm=redhat *.rpm</code></entry>
+            <item>install the source and binary RPMs.</item>
+          </list>
+        </item>
+      </list>
     </chapter>
 </book>
 <!--
