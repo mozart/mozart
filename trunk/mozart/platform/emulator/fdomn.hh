@@ -159,7 +159,8 @@ protected:
 public:
   USEHEAPMEMORY;
 
-  FiniteDomain(BitArray* ba = NULL) : bitArray(setRange(ba)) {};
+  void FiniteDomainInit(BitArray* ba = NULL) { bitArray = setRange(ba); };
+  FiniteDomain(BitArray* ba = NULL) { FiniteDomainInit(ba);};
   FiniteDomain(const FiniteDomain &fd);
 
   const FiniteDomain &operator =(const FiniteDomain &fd) {
