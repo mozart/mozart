@@ -685,7 +685,11 @@ int fastlength(OZ_Term l)
 
 /* must not match GCTAG (ie <> 13 (1101) !!!! */
 enum TypeOfConst {
+#ifdef FOREIGN_POINTER
+  Co_Foreign_Pointer,
+#else
   Co_UNUSED1,
+#endif
   Co_UNUSED2,
   Co_Thread,
   Co_Abstraction,
@@ -927,6 +931,24 @@ public:
 
   HeapChunk * gc(void);
 };
+
+#ifdef FOREIGN_POINTER
+/*===================================================================
+ * ForeignPointer
+ *=================================================================== */
+
+class ForeignPointer: public ConstTerm {
+private:
+  void* ptr;
+public:
+  ForeignPointer():ConstTerm(Co_Foreign_Pointer),ptr(0){}
+  ForeignPointer(void*p):ConstTerm(Co_Foreign_Pointer),ptr(p){}
+  void*getPointer(){ return ptr; }
+  OZPRINT;
+  OZPRINTLONG;
+  ForeignPointer* gc(void);
+};
+#endif
 
 /*===================================================================
  * SRecord: incl. Arity, ArityTable
