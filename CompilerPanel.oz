@@ -24,7 +24,6 @@ import
    Application.save
    System.{valueToVirtualString show}
    Error.{formatLine msg}
-   Foreign.pointer
    FS.value
    Open.file
    Pickle.{load save}
