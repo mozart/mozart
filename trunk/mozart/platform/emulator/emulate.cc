@@ -261,13 +261,6 @@ TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
        }								      \
      }
 
-// -----------------------------------------------------------------------
-// THREADED CODE
-
-/* display code during execution */
-//#define DISPLAY_CODE CodeArea::display(PC);
-#define DISPLAY_CODE ;
-
 // load a continuation into the machine registers PC,Y,G,X
 #define LOADCONT(cont) \
   { \
@@ -279,13 +272,20 @@ TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
       tmpCont->getX(X); \
   }
 
+// -----------------------------------------------------------------------
+// THREADED CODE
+
+#ifndef THREADED
+#define THREADED 0
+#endif
+
 #if defined(RECINSTRFETCH) && THREADED > 0
  Error: RECINSTRFETCH requires THREADED == 0;
 #endif
 
 #define INCFPC(N) PC += N
 
-#if defined THREADED && THREADED > 0
+#if THREADED > 0
 
 #if THREADED == 2
 #   define DODISPATCH goto* (void *)help;
@@ -301,18 +301,11 @@ TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
 #endif
 
 // let gcc fill in the delay slot of the "jmp" instruction:
-#   define DISPATCH(INC) { \
-       int help=*(PC+INC);\
-       INCFPC(INC); \
-       DISPLAY_CODE;\
-       DODISPATCH; }
+#   define DISPATCH(INC) { int help=*(PC+INC); INCFPC(INC); DODISPATCH; }
 
 #else // THREADED == 0
 
-#   define DISPATCH(INC) \
-         INCFPC(INC);\
-         DISPLAY_CODE;\
-         goto LBLdispatcher
+#   define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
 
 #if defined(__GNUC__) && defined(WANT_INSTRPROFILE)
 #   define INSTRUCTION(INSTR)   case INSTR: asm(" " #INSTR ":");
@@ -372,16 +365,13 @@ void engine() {
 // *** Global Variables
 // ------------------------------------------------------------------------
 
-  register ProgramCounter PC Into(i0) = 0;
-
+  register ProgramCounter PC   Into(i0) = 0;
   register TaggedRef *sPointer Into(i1) = NULL;
-
-  register AMModus mode Into(i2);
-
-  register AM *e Into(i3) = &am;
-  register RefsArray X Into(i4) = e->xRegs;
-  register RefsArray Y Into(i5) = NULL;
-  register RefsArray G Into(l0) = NULL;
+  register AMModus mode        Into(i2);
+  register AM *e               Into(i3) = &am;
+  register RefsArray X         Into(i4) = e->xRegs;
+  register RefsArray Y         Into(i5) = NULL;
+  register RefsArray G         Into(l0) = NULL;
 
   int XSize = 0;
 
@@ -391,7 +381,7 @@ void engine() {
   AWActor *CAA = NULL;
   Board *tmpBB = NULL;
 
-#define CBB (e->currentBoard)
+# define CBB (e->currentBoard)
 
   RefsArray HelpReg1 = NULL, HelpReg2 = NULL;
   OZ_CFun biFun = NULL;
@@ -403,19 +393,14 @@ void engine() {
   int predArity;
   ProgramCounter contAdr;
 
-#if defined THREADED && THREADED > 0
-
+#if THREADED > 0
 #  include "instrTable.hh"
-
 #if THREADED == 2
   CodeArea::globalInstrTable = instrTable;
 #endif
-
 #else
-
   Opcode op = (Opcode) -1;
-
-#endif // THREADED
+#endif
 
   switch (setjmp(IO::engineEnvironment)) {
 
@@ -734,7 +719,7 @@ void engine() {
 
   JUMP( PC );
 
-#if !defined THREADED || THREADED == 0
+#if THREADED == 0
 
  LBLdispatcher:
 
@@ -752,11 +737,9 @@ void engine() {
   CodeArea::recordInstr(PC);
 #endif
 
-  DebugTrace( if (!trace("emulate",CBB,CAA,PC,Y,G))
-	      {
+  DebugTrace( if (!trace("emulate",CBB,CAA,PC,Y,G)) {
 		goto LBLfailure;
-	      }
-	      );
+	      });
 
   switch (op) {
 
@@ -863,7 +846,6 @@ void engine() {
 	  }
 
 	  TaggedRef saveX0 = X[0];
-
 	  X[0] = A;
 
 	  OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, 1);
@@ -878,8 +860,7 @@ void engine() {
 	  SHALLOWFAIL;
 	  HANDLE_FAILURE(PC+3,
 			 message("INLINEREL = {`%s` %s}",
-				 entry->getPrintName(),
-				 tagged2String(A)));
+				 entry->getPrintName(),tagged2String(A)));
 	}
       }
     }
@@ -927,8 +908,7 @@ void engine() {
 	  HANDLE_FAILURE(PC+4,
 			 message("INLINEREL = {`%s` %s %s}",
 				 entry->getPrintName(),
-				 tagged2String(A),
-				 tagged2String(B)));
+				 tagged2String(A),tagged2String(B)));
 	}
       }
     }
@@ -982,8 +962,7 @@ void engine() {
 	  HANDLE_FAILURE(PC+4,
 			 Out = makeTaggedRef(newTaggedUVar(CBB));
 			 message("INLINEFUN = {`%s` %s}",
-				 entry->getPrintName(),
-				 tagged2String(A)));
+				 entry->getPrintName(),tagged2String(A)));
 	}
       }
     }
@@ -1148,10 +1127,8 @@ void engine() {
 	      new Suspension(new SuspContinuation(CBB,
 						  GET_CURRENT_PRIORITY(),
 						  PC, Y, G, X, argsToSave));
-	    SVariable *cvar = taggedBecomesSuspVar(APtr);
 	    CBB->incSuspCount();
-
-	    cvar->addSuspension(susp);
+	    taggedBecomesSuspVar(APtr)->addSuspension(susp);
 	  }
 	  goto LBLreduce;
 	}
@@ -1184,19 +1161,15 @@ void engine() {
 	    new Suspension(new SuspContinuation(CBB,
 						GET_CURRENT_PRIORITY(),
 						PC,Y,G,X,argsToSave));
-	  SVariable *acvar;
-	  SVariable *bcvar;
 	  CBB->incSuspCount();
 
 	  Assert(isAnyVar(ATag) || isAnyVar(BTag));
 
 	  if (isAnyVar(ATag)) {
-	    acvar = taggedBecomesSuspVar(APtr);
-	    acvar->addSuspension(susp);
+	    taggedBecomesSuspVar(APtr)->addSuspension(susp);
 	  }
 	  if (isAnyVar(BTag)) {
-	    bcvar = taggedBecomesSuspVar(BPtr);
-	    bcvar->addSuspension(susp);
+	    taggedBecomesSuspVar(BPtr)->addSuspension(susp);
 	  }
 	  goto LBLreduce;
 	}
@@ -1277,24 +1250,6 @@ void engine() {
   }
 
 
-  INSTRUCTION(SWITCHONTERMY)
-    ONREG1(SwitchOnTerm,Y);
-
-  INSTRUCTION(SWITCHONTERMG)
-    ONREG1(SwitchOnTerm,G);
-
-  INSTRUCTION(SWITCHONTERMX)
-    ONREG1(SwitchOnTerm,X);
-
-    SwitchOnTerm:
-    {
-      Reg reg = getRegArg(PC+1);
-      IHashTable *table = (IHashTable *) (PC+2);
-
-      DoSwitchOnTerm(RegAccess(HelpReg1,reg),table);
-    }
-
-
 // ------------------------------------------------------------------------
 // *** Misc stuff: seldom used --> put at the end
 // ------------------------------------------------------------------------
@@ -1310,23 +1265,21 @@ void engine() {
 
    Definition:
     {
-      Reg reg = getRegArg(PC+1);
-      ProgramCounter next = getLabelArg(PC+2);
-      PrTabEntry *pred = getPredArg(PC+3);
+      Reg reg                     = getRegArg(PC+1);
+      ProgramCounter next         = getLabelArg(PC+2);
+      PrTabEntry *pred            = getPredArg(PC+3);
       AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
 
       AssRegArray &list = pred->gRegs;
       int size = list.getSize();
       RefsArray gRegs = (size == 0) ? NULL : allocateRefsArray(size);
-
+      
       Abstraction *p = new Abstraction(pred,gRegs);
-      if (!e->fastUnify(RegAccess(HelpReg1,reg),makeTaggedSRecord(p))) {
+      TaggedRef term = RegAccess(HelpReg1,reg);
+      if (!e->fastUnify(term,makeTaggedSRecord(p))) {
 	HANDLE_FAILURE(next,
 		       message("definition %s/%d = %s",
-			       p->getPrintName(),
-			       p->getArity(),
-			       tagged2String(RegAccess(HelpReg1,reg)))
-		       );
+			       p->getPrintName(),p->getArity(),tagged2String(term)););
       }
 
       if (predEntry) {
@@ -1346,7 +1299,7 @@ void engine() {
 	  break;
 	}
       }
-      JUMP( next ); // change PC after reading all arguments
+      JUMP( next );
     }
 
 // -------------------------------------------------------------------------
@@ -1374,13 +1327,12 @@ void engine() {
 
     if (isAnyVar(tag)) {
       INCFPC(3);
-      SVariable *cvar = taggedBecomesSuspVar(termPtr);
       Suspension *susp =
 	new Suspension(new SuspContinuation(CBB,
 					    GET_CURRENT_PRIORITY(),
 					    PC, Y, G, X, argsToSave));
-      cvar->addSuspension (susp);
       CBB->incSuspCount();
+      taggedBecomesSuspVar(termPtr)->addSuspension (susp);
       goto LBLreduce; // mm2 ???
     } else {
       DISPATCH(3);
@@ -1483,29 +1435,11 @@ void engine() {
     ProgramCounter contadr = isExecute ? 0 : getLabelArg(PC+4);
     Abstraction *def;
 
-#ifndef RS
     DEREF(object,objectPtr,objectTag);
     if (!isSRecord(objectTag) ||
 	NULL == (def = getApplyMethod(object,label,arity-3+3,X[0]))) {
       goto bombApply;
     }
-#else
-    DEREF(object,_1,objectTag);
-    if (!isSRecord(objectTag)) {
-      if (isAnyVar(objectTag)) {
-        if (isExecute) { DISPATCH(4); } else { DISPATCH(5); }
-      }
-
-      warning("apply method: no abstraction or builtin: %s",tagged2String(object
-));
-      HANDLE_FAILURE(contadr,;);
-    }
-
-    def = getApplyMethod(object,label,arity-3+3,X[0]);
-    if (def == NULL) {
-      goto bombApply;
-    }
-#endif
     
     CallDoChecks(def,isExecute,contadr,arity);
     Y = NULL; // allocateL(0);
@@ -1654,8 +1588,7 @@ void engine() {
 	    case FAILED:
 	      HANDLE_FAILURE(contAdr,
 			     message("call: builtin %s/%d failed",
-				     bi->getPrintName(),
-				     bi->getArity());
+				     bi->getPrintName(),bi->getArity());
 			     for (int i = 0; i < predArity; i++)
 			     { message("\nArg %d: %s",i+1,tagged2String(X[i])); }
 			     );
@@ -2330,7 +2263,7 @@ void engine() {
 	}
 
 /* rule: if fi --> false */
-	HANDLE_FAILURE(0,message("reducing 'if fi' to 'false'"));
+	HANDLE_FAILURE(NULL,message("reducing 'if fi' to 'false'"));
       }
     } else if (aa->isWait ()) {
       if ((CastWaitActor (aa))->hasNext () == OK) {
@@ -2340,7 +2273,7 @@ void engine() {
 /* rule: or ro (bottom commit) */
       if ((CastWaitActor (aa))->hasNoChilds()) {
 	aa->setCommitted();
-	HANDLE_FAILURE(0,
+	HANDLE_FAILURE(NULL,
 		       message("bottom commit");
 		       CBB->removeSuspension();
 		       goto LBLreduce;
@@ -2353,7 +2286,7 @@ void engine() {
 	if (waitBoard->isWaiting()) {
 	  waitBoard->setCommitted(CBB); // do this first !!!
 	  if (!e->installScript(waitBoard->getScriptRef())) {
-	    HANDLE_FAILURE(0,
+	    HANDLE_FAILURE(NULL,
 			   message("unit commit failed");
 			   CBB->removeSuspension();
 			   goto LBLreduce;

@@ -14,9 +14,6 @@
 #pragma interface
 #endif
 
-#include "types.hh"
-
-#include "term.hh"
 #include "records.hh"
 #include "hashTable.hh"
 
@@ -183,7 +180,7 @@ OZ_C_proc_end
 
 BuiltinTabEntry *BIinit();
 BuiltinTabEntry *BIadd(char *name,int arity,OZ_CFun fun,
-		       Bool replace = NO, InlineFunOrRel infun=NULL);
+		       Bool replace = NO, InlineFunOrRel infun=(InlineFunOrRel) NULL);
 BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t,
 			      Bool replace = NO);
 
@@ -209,8 +206,8 @@ public:
     : arity(arty),fun(fn), inlineFun(infun), type(t) {
       printname = makeTaggedAtom(s);
     }
-  BuiltinTabEntry (char *s,int arty,BIType t, InlineFunOrRel infun=NULL)
-    : arity(arty),fun(NULL), inlineFun(infun), type(t)
+  BuiltinTabEntry (char *s,int arty,BIType t, InlineFunOrRel infun=(InlineFunOrRel)NULL)
+    : arity(arty),fun((OZ_CFun)NULL), inlineFun(infun), type(t)
   {
     printname = makeTaggedAtom(s);
     Assert(isXAtom(printname));

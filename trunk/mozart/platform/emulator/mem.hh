@@ -15,6 +15,7 @@
 #endif
 
 
+#include <stdlib.h>
 #include <memory.h>
 #include <stdio.h>
 
@@ -58,9 +59,9 @@ register char *heapTop asm("g6");      // pointer to next free memory block
 extern char *heapTop;         // pointer to next free memory block 
 #endif
 
+extern char *heapEnd;
 extern int   heapTotalSize;   // # bytes allocated
 extern char *heapStart;       // pointer start of free memory
-extern char *heapEnd;
 
 inline char *heapGetStart(void) {return heapStart;}
 inline int heapGetMaxSize(void) {return heapMaxSize;}
