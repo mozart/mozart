@@ -74,19 +74,11 @@ GenBoolVariable * tagged2GenBoolVar(TaggedRef term)
 }
 
 inline
-void addSuspBoolVar(TaggedRef v, SuspList * el)
-{
-  GenBoolVariable * bv = tagged2GenBoolVar(v);
-
-  bv->suspList = addSuspToList(bv->suspList, el, bv->home);
-}
-
-inline
 void addSuspBoolVar(TaggedRef v, Thread * el)
 {
   GenBoolVariable * bv = tagged2GenBoolVar(v);
 
-  bv->suspList = addSuspToList(bv->suspList, el, bv->home);
+  AddSuspToList(bv->suspList, el, bv->home);
 }
 
 #endif /* __FDBVAR_ICC__ */

@@ -31,7 +31,6 @@
 class GenBoolVariable : public GenCVariable {
   
   friend class GenCVariable;
-  friend inline void addSuspBoolVar(TaggedRef, SuspList *);
   friend inline void addSuspBoolVar(TaggedRef, Thread *);
   
 private:
@@ -72,7 +71,6 @@ public:
 inline Bool isGenBoolVar(TaggedRef term);
 inline Bool isGenBoolVar(TaggedRef term, TypeOfTerm tag);
 inline GenBoolVariable * tagged2GenBoolVar(TaggedRef term);
-inline void addSuspBoolVar(TaggedRef, SuspList *);
 inline void addSuspBoolVar(TaggedRef, Thread *);
 
 

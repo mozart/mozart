@@ -175,18 +175,16 @@ void GenCVariable::installPropagators(GenCVariable * glob_var, Bool prop)
   }
 }
 
+
 inline
-void GenCVariable::addDetSusp (Thread *thr) 
+void GenCVariable::addDetSusp(Thread *thr, TaggedRef *tptr) 
 { 
   switch (getType()){
   case FDVariable:
-    ((GenFDVariable *)this)->addDetSusp (thr);
-    return;
-  case OFSVariable:
-    ((GenOFSVariable *)this)->addDetSusp (thr);
+    ((GenFDVariable *)this)->addDetSusp(thr);
     return;
   default:
-    addSuspension (thr);
+    addSuspAnyVar(tptr,thr);
     return;
   }
 }
@@ -208,6 +206,7 @@ void GenCVariable::dispose(void)
     break;
   }
 }
+
 
 #endif //__genvar_icc__
 

@@ -309,7 +309,6 @@ void resizeDynamicTable(DynamicTable *&dt)
 class GenOFSVariable: public GenCVariable {
 
     friend class GenCVariable;
-    friend inline void addSuspOFSVar(TaggedRef, SuspList *);
     friend inline void addSuspOFSVar(TaggedRef, Thread *);
 
 private:
@@ -381,7 +380,6 @@ public:
     // Return a sorted list of all features currently in the OFS
     TaggedRef getArityList();
 
-    void addDetSusp(Thread *susp);
     Bool unifyOFS(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, Bool);
 
     // Return the feature value if feature exists, return NULL if it doesn't exist
@@ -477,19 +475,10 @@ GenOFSVariable *tagged2GenOFSVar(TaggedRef term);
 void inplace_quicksort(TaggedRef* first, TaggedRef* last);
 
 inline
-void addSuspOFSVar(TaggedRef v, SuspList * el)
-{
-  GenOFSVariable * ofs = tagged2GenOFSVar(v);
-
-  ofs->suspList = addSuspToList(ofs->suspList, el, ofs->home);
-}
-
-inline
 void addSuspOFSVar(TaggedRef v, Thread * el)
 {
   GenOFSVariable * ofs = tagged2GenOFSVar(v);
-
-  ofs->suspList = addSuspToList(ofs->suspList, el, ofs->home);
+  AddSuspToList(ofs->suspList, el, ofs->home);
 }
 
 

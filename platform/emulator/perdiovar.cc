@@ -96,7 +96,6 @@ Bool PerdioVar::valid(TaggedRef *varPtr, TaggedRef v)
   return TRUE;
 }
 
-
 //-----------------------------------------------------------------------------
 // Implementation of interface functions
 
