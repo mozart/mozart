@@ -126,7 +126,7 @@ void ProxyManagerVar::gcSetIndex(int i)
 
 /* --- ProxyVar --- */
 
-OZ_Return ProxyVar::addSuspV(TaggedRef *, Suspension susp, int unstable)
+OZ_Return ProxyVar::addSuspV(TaggedRef *, Suspendable * susp, int unstable)
 {
   if(!errorIgnore()){
     if(failurePreemption(AtomWait)) return BI_REPLACEBICALL;}
@@ -278,7 +278,7 @@ void ProxyVar::acknowledge(TaggedRef *vPtr, BorrowEntry *be)
 
 /* --- ManagerVar --- */
 
-OZ_Return ManagerVar::addSuspV(TaggedRef *vPtr, Suspension susp, int unstable)
+OZ_Return ManagerVar::addSuspV(TaggedRef *vPtr, Suspendable * susp, int unstable)
 {
   if(!errorIgnore()){
     if(failurePreemption(AtomWait)) return BI_REPLACEBICALL;}

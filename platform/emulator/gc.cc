@@ -663,113 +663,68 @@ Object *Object::gcObject() {
   return gcObjectInline();
 }
 
-/*
- *  Preserve runnable threads which home board is dead, because 
- * solve counters have to be updated (while, of course, discard 
- * non-runnable ones);
- *  If threads is dead, returns (Thread *) NULL;
- */
-
-Thread *Thread::gcThread() {
-  if (!this)
-    return (Thread *) NULL;
-
-  if (isGcMarked())
-    return (Thread *) gcGetFwd();
-
-  if (isDead()) 
-    return (Thread *) NULL;
-
-  
-  if (isSuspended() && !getBoardInternal()->gcIsAlive())
-    return (Thread *) NULL;
-  
-  //  Some invariants:
-  // nothing can be copied (IN_TC) until stability;
-
-  // first class threads: must only copy thread when local to solve!!!
-  if (!NEEDSCOPYING(getBoardInternal()))
-    return this;
-
-  Assert(isInGc || !isRunnable());
-
-  // Note that runnable threads can be also counted 
-  // somewhere, and, therefore, 
-  // might not just dissappear!
-  Thread * newThread = (Thread *) gcReallocStatic(this, sizeof(Thread));
-
-  gcStack.push(newThread, PTR_THREAD);
-
-  storeFwdField(this, newThread);
-
-  return newThread;
-}
-
-//-----------------------------------------------------------------------------
-// gc routines of `Propagator'
-
-inline 
-Propagator * Propagator::gcPropagator(void) {
-  if (isGcMarked())
-    return (Propagator *) gcGetFwd();
-
-  if (isDead())
-    return NULL;
-
-  Board * bb = getBoardInternal();
-
-  Assert(bb);
-  
-  if (bb->gcIsAlive()) {
-    Assert(isInGc || (!isRunnable()));
-    
-    Assert(!bb->derefBoard()->hasMarkOne());
-
-    Propagator * newPropagator 
-      = (Propagator *) heapMalloc(sizeof(Propagator));
-    
-    gcStack.push(newPropagator, PTR_PROPAGATOR);
-    
-    newPropagator->setBoardInternal(bb);
-    newPropagator->_p    = _p;
-    newPropagator->flags = flags;
-
-    if (!isInGc)
-      cpTrail.save((int32 *) &board);
-
-    gcMark(newPropagator);
-    
-    return newPropagator;
-  } 
-  return NULL;
-}
-
-Propagator * Propagator::gcPropagatorOutlined(void) {
-  return gcPropagator();
-}
 
 inline 
 void Propagator::gcRecurse(void) {
-
   setBoardInternal(getBoardInternal()->gcBoard());
 
   Assert(getBoardInternal());
 
   _p = _p->gc();
-
-  Assert(_p);
-
+  
   _p->updateHeapRefs(isInGc);
-
 }
 
 inline 
-Suspension Suspension::gcSuspension(int thread) {
-  if (thread && _isThread()) {
-    return _getThread()->gcThread();
+Suspendable * Suspendable::gcSuspendable(void) {
+  Assert(this);
+
+  if (isGcMarked())
+    return gcGetFwd();
+
+  if (isDead())
+    return (Suspendable *) NULL;
+
+  Suspendable * to;
+  
+  if (!getBoardInternal()->gcIsAlive()) {
+
+    if (!isRunnable())
+      return (Suspendable *) NULL;
+
+    if (!isThread())
+      return (Suspendable *) NULL;
+    
+    to = (Suspendable *) gcReallocStatic(this, sizeof(Thread));
+    to->setVeryDead();
+    
+    gcStack.push(to, PTR_THREAD);
+
   } else {
-    return _getPropagator()->gcPropagator();
+    Assert(isInGc || !isRunnable());
+
+    if (isThread()) {
+      to = (Suspendable *) gcReallocStatic(this, sizeof(Thread));
+
+      gcStack.push(to, PTR_THREAD);
+    } else {
+      to = (Suspendable *) gcReallocStatic(this, sizeof(Propagator));
+      
+      gcStack.push(to, PTR_PROPAGATOR);
+    }
   }
+  
+  storeFwdField(this, to);
+  
+  return to;
+}
+
+Propagator * Propagator::gcPropagator(void) {
+  return SuspToPropagator(gcSuspendable());
+}
+
+Thread * Thread::gcThread(void) {
+  return this ? SuspToThread(gcSuspendable()) : this;
 }
 
 /*
@@ -781,14 +736,13 @@ Suspension Suspension::gcSuspension(int thread) {
  */
 
 inline
-SuspList * SuspList::gc(int thread) {
+SuspList * SuspList::gc(void) {
   SuspList * ret = NULL;
 
   for (SuspList * help = this; help != NULL; help = help->getNext()) {
-    Suspension susp = help->getSuspension().gcSuspension(thread);
-    if (! susp.isNull()) {
-      ret = new SuspList(susp, ret);
-    }
+    Suspendable * to = help->getSuspendable()->gcSuspendable();
+    if (to)
+      ret = new SuspList(to, ret);
   }
 
   return (ret);
@@ -812,7 +766,7 @@ void OzFDVariable::gc(void) {
   ((OZ_FiniteDomainImpl *) &finiteDomain)->gc();
   
   for (int i = fd_prop_any; i--; )
-    fdSuspList[i] = fdSuspList[i]->gc(NO);
+    fdSuspList[i] = fdSuspList[i]->gc();
 }
 
 inline
@@ -823,7 +777,7 @@ void OzFSVariable::gc(void) {
 #endif
 
   for (int i = fs_prop_any; i--; )
-    fsSuspList[i] = fsSuspList[i]->gc(NO);
+    fsSuspList[i] = fsSuspList[i]->gc();
 }
 
 inline
@@ -835,7 +789,7 @@ void OzCtVariable::gc(void) {
     heapMalloc(sizeof(SuspList *) * noOfSuspLists);
   // collect
   for (int i = noOfSuspLists; i--; )
-    _susp_lists[i] = _susp_lists[i]->gc(OK);
+    _susp_lists[i] = _susp_lists[i]->gc();
 
 }
 
@@ -895,7 +849,7 @@ OzVariable * OzVariable::gcVar(void) {
 
  nopush:
 
-  to->suspList = to->suspList->gc(OK);
+  to->suspList = to->suspList->gc();
   to->setHome(to->getHome1()->gcBoard());
   
   return to;
@@ -1081,21 +1035,6 @@ SRecord *SRecord::gcSRecord() {
   gcStack.push(this, PTR_SRECORD);
 
   return ret;
-}
-
-// mm2
-Thread *Thread::gcDead() {
-  Assert(isDead());
-
-  Thread *newThread = (Thread *) gcReallocStatic(this,sizeof(Thread));
-
-  GCDBG_INTOSPACE(am.rootBoard());
-  newThread->setBoardInternal(am.rootBoard());
-
-  storeFwdField(this, newThread);
-  setAbstr(0);
-
-  return (newThread);
 }
 
 
@@ -1923,7 +1862,6 @@ LocalPropagatorQueue * LocalPropagatorQueue::gc() {
   Assert(isInGc);
   Assert(!isEmpty());
   LocalPropagatorQueue * q = new LocalPropagatorQueue();
-  q->lpq_thr = lpq_thr->gcThread();
   LocalPropagatorQueueIterator iter(this);
   Propagator*ptr;
   while ((ptr=iter.getNext())) q->enqueue(ptr->gcPropagator());
@@ -1941,9 +1879,6 @@ LocalPropagatorQueue * LocalPropagatorQueue::gc() {
   Assert(!isEmpty());
 
   LocalPropagatorQueue * new_lpq = new LocalPropagatorQueue (suggestNewSize());
-
-  // gc local thread queue thread
-  new_lpq->lpq_thr = lpq_thr->gcThread();
 
   // gc and copy entries
   for ( ; !isEmpty(); new_lpq->enqueue(dequeue()->gcPropagator()));
@@ -2444,18 +2379,15 @@ Board* Board::gcGetNotificationBoard() {
 inline
 void Thread::gcRecurse() {
 
-  if (getBoardInternal()->gcIsAlive()) {
+  if (isVeryDead()) {
 
-    setBoardInternal(getBoardInternal()->gcBoard());    
-
-    taskStack = taskStack->gc();
-
-  } else {
     // The following assertion holds because suspended threads
     // which home board is dead are filtered out during 
     // 'Thread::gcThread ()';
     Assert(isRunnable());
-      
+    
+    unsetVeryDead();
+
     Board *notificationBoard=getBoardInternal()->gcGetNotificationBoard();
 
     setBoardInternal(notificationBoard->gcBoard());
@@ -2465,7 +2397,10 @@ void Thread::gcRecurse() {
     
     pushCall(BI_skip,0,0);
 
-  } 
+  } else {
+    setBoardInternal(getBoardInternal()->gcBoard());    
+    taskStack = taskStack->gc();
+  }
   
 }
 
@@ -2510,7 +2445,7 @@ void Board::gcRecurse() {
   
   OZ_collectHeapTerm(status,status);
 
-  suspList         = suspList->gc(OK);
+  suspList         = suspList->gc();
   setDistBag(getDistBag()->gc());
   nonMonoSuspList  = nonMonoSuspList->gc();
 

@@ -103,7 +103,7 @@ void OzFSVariable::relinkSuspListTo(OzFSVariable * lv, Bool reset_local)
 }
 
 inline
-void addSuspFSetVar(OZ_Term v, Suspension susp, OZ_FSetPropState list_index)
+void addSuspFSetVar(OZ_Term v, Suspendable * susp, OZ_FSetPropState list_index)
 {
   OzFSVariable * fsv = tagged2GenFSetVar(v);
 

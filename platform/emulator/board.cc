@@ -33,6 +33,7 @@
 
 #include "board.hh"
 #include "thr_int.hh"
+#include "prop_int.hh"
 #include "space.hh"
 #include "builtins.hh"
 #include "value.hh"
@@ -42,8 +43,6 @@
 #include "board.icc"
 #endif
 
-// from prop_int.cc
-void oz_pushToLPQ(Board *bb, Propagator * prop);
 
 Equation *ScriptAllocate(int size)
 {
@@ -209,7 +208,7 @@ void Board::scheduleNonMono(void) {
        p = p->getNext()) {
     Propagator * prop = p->getPropagator();
 
-    oz_pushToLPQ(GETBOARD(prop),prop);
+    oz_pushToLPQ(prop);
   }
   
   setNonMono(NULL);
@@ -286,19 +285,16 @@ TaggedRef Board::genBlocked(TaggedRef arg) {
  *
  */
 
-void oz_checkExtSuspension(Suspension susp, Board * varHome) {
+void Board::checkExtSuspension(Suspendable * susp) {
 
-  varHome=varHome->derefBoard();
+  Board * varHome = derefBoard();
 
   Board * bb = oz_currentBoard();
 
   Bool wasFound = NO;
     
-  Assert(!varHome->isCommitted());
-
   while (bb != varHome) {
-    Assert (!oz_isRootBoard(bb));
-    Assert (!bb->isCommitted() && !bb->isFailed());
+    Assert(!bb->isRoot() && !bb->isCommitted() && !bb->isFailed());
     
     bb->addSuspension(susp);
     wasFound = OK;
@@ -307,7 +303,7 @@ void oz_checkExtSuspension(Suspension susp, Board * varHome) {
   }
   
   if (wasFound) 
-    susp.setExternal();
+    susp->setExternal();
   
 }
 
@@ -356,7 +352,7 @@ Bool extParameters(TaggedRef list, Board * solve_board) {
 }
 
 
-void Board::clearSuspList(Suspension killSusp) {
+void Board::clearSuspList(Suspendable * killSusp) {
   Assert(!isRoot());
   
   SuspList * fsl = getSuspList();
@@ -364,17 +360,17 @@ void Board::clearSuspList(Suspension killSusp) {
 
   while (fsl) {
     // Traverse suspension list and copy all valid suspensions
-    Suspension susp = fsl->getSuspension();
+    Suspendable * susp = fsl->getSuspendable();
 
     fsl = fsl->dispose();
 
-    if (susp.isDead() ||
+    if (susp->isDead() ||
 	killSusp == susp ||
-	(susp.isRunnable() && !susp.isPropagator())) {
+	(susp->isRunnable() && !susp->isPropagator())) {
       continue;
     }
 
-    Board * bb = GETBOARDOBJ(susp);
+    Board * bb = GETBOARD(susp);
 
     Bool isAlive = OK;
     
@@ -393,28 +389,24 @@ void Board::clearSuspList(Suspension killSusp) {
       bb = bb->getParent();
     }
 
-    if (susp.isPropagator()) {
-      Propagator * prop = susp.getPropagator();
+    if (susp->isPropagator()) {
       
       if (isAlive) {
-
 	// if propagator suspends on external variable then keep its
 	// thread in the list to avoid stability
-	if (extParameters(prop->getPropagator()->getParameters(), this)) {
+	if (extParameters(SuspToPropagator(susp)->getPropagator()->getParameters(), this)) {
 	  tsl = new SuspList(susp, tsl);
 	} 
 
       }
 
     } else {
-      Assert(susp.isThread());
+      Assert(susp->isThread());
       
-      Thread * thr = susp.getThread();
-
       if (isAlive) {
 	tsl = new SuspList(susp, tsl);
       } else {
-	oz_disposeThread(thr);
+	oz_disposeThread(SuspToThread(susp));
       }
       
     }

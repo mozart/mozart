@@ -263,7 +263,7 @@ class OZ_FSetValue;
 
 class SuspList;
 class OrderedSuspList;
-class Suspension;
+class Suspendable;
 class Propagator;
 class OZ_Propagator;
 
@@ -373,8 +373,6 @@ void handlerPIPE(int);
 void handlerCHLD(int);
 void handlerALRM(int);
 void handlerUSR2(int);
-
-void oz_checkExtSuspension(Suspension susp, Board *varHome);
 
 OZ_Return oz_unify(OZ_Term t1, OZ_Term t2);
 

@@ -102,7 +102,7 @@ Bool isGcMarkedNamer(Propagator * p)
 }
 void GcIndexNamer(Propagator * &p) 
 {
-  p = p->gcPropagatorOutlined();
+  p = p->gcPropagator();
 }
 
 Propagator *  getGcForward(Propagator * p) 

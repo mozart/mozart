@@ -101,7 +101,7 @@ void sendRequest(MessageType mt,BorrowEntry *be)
   SendTo(na->site,bs,mt,na->site,na->index);
 }
 
-OZ_Return ObjectVar::addSuspV(TaggedRef * v, Suspension susp, int unstable)
+OZ_Return ObjectVar::addSuspV(TaggedRef * v, Suspendable * susp, int unstable)
 {
   if(!errorIgnore()){
     if(failurePreemption()) return BI_REPLACEBICALL;}

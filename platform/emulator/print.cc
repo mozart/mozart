@@ -95,7 +95,6 @@
 #include "var_ct.hh"
 #include "var_of.hh"
 #include "var_ext.hh"
-#include "lps.hh"
 
 class Indent {
 public:
@@ -125,12 +124,7 @@ inline Indent indent(int i) {
 // returns OK if associated suspension is alive
 inline Bool isEffectiveSusp(SuspList* sl)
 {
-  Suspension susp = sl->getSuspension();
-  if (susp.isDead())
-    return NO;
-  if (!GETBOARDOBJ(susp))
-    return NO;
-  return OK;
+  return sl->getSuspendable()->isDead() ? NO : OK;
 }
 
 // returns OK if sl contains at least one alive suspension element
@@ -696,7 +690,7 @@ void SuspList::printLongStream(ostream &stream, int depth, int offset)
   for (SuspList* sl = this; sl != NULL; sl = sl->getNext()) {
     if (isEffectiveSusp(sl)) {
       stream << indent(offset);
-      sl->getSuspension().printStream(stream);
+      sl->getSuspendable()->printStream(stream);
       stream << endl;
     }
   } // for
@@ -1074,23 +1068,22 @@ void Propagator::printLongStream(ostream &stream, int depth, int)
   printStream(stream, depth);
 }
 
-void Suspension::printStream(ostream &stream, int depth)
+void Suspendable::printStream(ostream &stream, int depth)
 {
   if (isThread()) {
-    getThread()->printStream(stream, depth);
+    SuspToThread(this)->printStream(stream, depth);
   } else {
-    Assert(isPropagator());
-    getPropagator()->printStream(stream, depth);
+    SuspToPropagator(this)->printStream(stream, depth);
   }    
 }
 
-void Suspension::printLongStream(ostream &stream, int depth, int offset)
+void Suspendable::printLongStream(ostream &stream, int depth, int offset)
 {
   if (isThread()) {
-    getThread()->printLongStream(stream, depth, offset);
+    SuspToThread(this)->printLongStream(stream, depth, offset);
   } else {
     Assert(isPropagator());
-    getPropagator()->printLongStream(stream, depth, offset);
+    SuspToPropagator(this)->printLongStream(stream, depth, offset);
   }    
 }
 
@@ -1377,22 +1370,6 @@ void Board::printTree()
 }
 
 #endif
-
-void LocalPropagationQueue::printStream(ostream &stream, int depth)
-{
-  int psize = size, phead = head;
-
-  for (; psize; psize --) {
-    stream << "lpqueue[" << phead << "]="
-	 << "@" << queue[phead].prop << endl;
-
-    stream << "(" << endl;
-    queue[phead].prop->printStream(stream,depth);
-    stream << ")" << endl;
-
-    phead = (phead + 1) & (maxsize - 1);
-  }
-}
 
 void OrderedSuspList::printStream(ostream &stream, int depth)
 {
