@@ -24,7 +24,7 @@ define
 	 REC = packed(
 		  info : {self makefile_to_record($)}
 		  data : for F in Needed collect:Collect do
-			    FKey = {Path.toAtom {Path.maybeAddPlatform F}}
+			    FKey = {Path.toAtom {self maybeAddPlatform(F $)}}
 			    FNam = {self make_src(F $)}
 			 in
 			    {self trace('grabbing '#FKey#' from '#FNam)}

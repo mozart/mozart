@@ -2,6 +2,7 @@ functor
 export
    'class' : Makefile
 import
+   Property
    Path at 'Path.ozf'
    Utils at 'Utils.ozf'
 prepare
@@ -14,7 +15,7 @@ prepare
 
    VALID_MAKEFILE_FEATURES = [bin lib doc src depends rules uri mogul author released clean veryclean
 			      blurb info_text info_html subdirs submakefiles requires categories version
-			      contact tar provides]
+			      contact tar provides platform]
 
 define
 
@@ -214,6 +215,15 @@ define
 	       {self set_categories(R.categories)}
 	    else
 	       raise ozmake(makefile:badcategories(R.categories)) end
+	    end
+	 end
+
+	 %% process platform feature
+	 if {HasFeature R platform} then
+	    if {IsVirtualString R.platform} then
+	       {self set_platform(R.platform)}
+	    else
+	       raise ozmake(makefile:badplatform(R.platform)) end
 	    end
 	 end
 
@@ -657,6 +667,9 @@ define
 	 Contact   = {self get_contact($)}
 	 Tar       = {self get_tar_targets($)}
 	 Provides  = {self get_provides_targets($)}
+	 Platform  = if {self get_binary($)} then
+			{Property.get 'platform.name'}
+		     else unit end
       in
 	 MAK.bin     := {self get_bin_targets($)}
 	 MAK.lib     := {self get_lib_targets($)}
@@ -692,6 +705,7 @@ define
 	 if Categories\=nil then MAK.categories:= Categories end
 	 if Version  \=unit then MAK.version   := Version   end
 	 if Contact  \=unit then MAK.contact   := Contact   end
+	 if Platform \=unit then MAK.platform  := Platform  end
 	 MAK.released:= {Utils.dateCurrentToAtom}
 	 %% grab also all the recursive makefiles
 	 MAK.subdirs := {self get_subdirs($)}
