@@ -56,6 +56,8 @@
 <!ENTITY ellipsis PI "ellipsis">
 <!ENTITY ie PI "ie">
 <!ENTITY eg PI "eg">
+<!ENTITY le "<">
+<!ENTITY gt ">">
 <!entity amp "&">
 <!entity etc PI "ellipsis">
 
@@ -141,7 +143,8 @@
       <title/Appendices/
       &app;
     </part>
-
+  <back>
+    <Bib.Extern id="modules.98" to="apptut.bib" key="modules.98"> 
 </book>
 <!--
 Local Variables:
