@@ -26,7 +26,6 @@ functor
 
 import
    Tk
-   Module
    Error
    QTkDevel
    QTkImage(newImage:           NewImage
@@ -56,7 +55,6 @@ import
    QTkToolbar
    QTkFrame
    PrintCanvas
-   System(show:Show)
    
 export
 
@@ -79,14 +77,14 @@ export
 
 prepare
    NoArgs={NewName}
-   CharToUpper = Char.toUpper
-   fun{Majus Str}
-      case {VirtualString.toString Str}
-      of C|Cs then {CharToUpper C}|Cs
-      [] X then X
-      end
-   end
-   VsToString=VirtualString.toString
+%   CharToUpper = Char.toUpper
+%   fun{Majus Str}
+%      case {VirtualString.toString Str}
+%      of C|Cs then {CharToUpper C}|Cs
+%      [] X then X
+%      end
+%   end
+%   VsToString=VirtualString.toString
    
 define
 

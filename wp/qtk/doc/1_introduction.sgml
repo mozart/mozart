@@ -5,8 +5,8 @@
 <P> 
 The <<QTk>> module implements a description-based abstraction to help programmers efficiently build graphical user interfaces. Windows are built in a declarative way, expressing the widgets that compose the window along with their geometry. Widgets can be dynamically controlled by handles. Miscellaneous facilities are also provided to facilitate the development of an application's GUI. The <<QTk>> module is dedicated to <EM>Oz 3</EM>. It can be loaded by:
 <list>
-<item> From the OPI: <<declare QTk={Module.link ["x-oz://system/wp/QTk.ozf"]}>>
-<item> In a functor, in the <<import>> part: <<import QTk at 'x-oz://system/wp/QTk.oz'>>
+<item> From the OPI: <<declare [QTk]={Module.link ["x-oz://system/wp/QTk.ozf"]}>>
+<item> In a functor, in the <<import>> part: <<import QTk at 'x-oz://system/wp/QTk.ozf'>>
 </list>
 
 </P>
@@ -18,9 +18,9 @@ The documentation is split in the following chapters:
 <LIST>
 <ITEM> <ptr to="chapter.prototyper"> The Prototyper application
 <ITEM> <ptr to="chapter.example"> Tutorial example: a notepad application
-<ITEM> <ptr to="chapter.basics"> QTk basics
-<ITEM> <ptr to="chapter.advanced"> QTk advanced topics
-<ITEM> <ptr to="chapter.stddialog"> QTk standard dialog boxes
+<ITEM> <ptr to="chapter.basics"> Basics
+<ITEM> <ptr to="chapter.advanced"> Advanced topics
+<ITEM> <ptr to="chapter.stddialog"> Standard dialog boxes
 <ITEM> <ptr to="chapter.widgets"> Widget reference
 <ITEM> <ptr to="chapter.misc"> Miscellaneous
 </LIST>

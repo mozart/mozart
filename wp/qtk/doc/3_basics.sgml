@@ -1,5 +1,5 @@
 <CHAPTER ID="chapter.basics">
-  <TITLE>QTk basics</TITLE>
+  <TITLE>Basics</TITLE>
 <p>
 The tutorial example shows the building of a simple application and how its GUI is expressed in QTk. This chapter details all the information needed to start working with QTk. The geometry management and the different principles of QTk are described.
 
