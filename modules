@@ -28,7 +28,7 @@
 # Convenient aliases
 world		-a .
 
-# CVSROOT support;
+# CVSROOT support
 CVSROOT		CVSROOT
 modules		CVSROOT modules
 loginfo		CVSROOT loginfo
