@@ -1945,6 +1945,20 @@ void ConstTerm::gcConstRecurse()
       break;
     }
 
+  case Co_Array:
+    {
+      OzArray *a = (OzArray*) this;
+      TaggedRef *oldargs = a->getArgs();
+      TaggedRef *newargs = (TaggedRef*) gcRealloc(oldargs,
+                                                  sizeof(TaggedRef)*a->getWidth());
+      for (int i=0; i < a->getWidth(); i++) {
+        gcTagged(oldargs[i],newargs[i]);
+      }
+
+      a->setPtr(newargs);
+      break;
+    }
+
   case Co_Builtin:
     {
       Builtin *bi = (Builtin *) this;
@@ -1972,7 +1986,7 @@ ConstTerm *ConstTerm::gcConstTerm()
   CHECKCOLLECTED(*getGCField(), ConstTerm *);
 
   size_t sz;
-  switch (typeOf()) {
+  switch (getType()) {
   case Co_Board:     return ((Board *) this)->gcBoard();
   case Co_Actor:     return ((Actor *) this)->gcActor();
   case Co_HeapChunk: return ((HeapChunk *) this)->gc();
@@ -2008,6 +2022,10 @@ ConstTerm *ConstTerm::gcConstTerm()
     CheckLocal((SChunk *) this);
     sz = sizeof(SChunk);
     COUNT(chunk);
+    break;
+
+  case Co_Array:
+    sz = sizeof(OzArray);
     break;
 
   case Co_Builtin:

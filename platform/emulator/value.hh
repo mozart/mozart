@@ -21,7 +21,6 @@
 extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomSucceeded, AtomAlt, AtomMerged, AtomFailed,
        AtomEntailed, AtomSuspended, AtomBlocked,
-       AtomClosed,
        NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl, AtomUnknown;
 
 /*===================================================================
@@ -410,6 +409,7 @@ protected:
   TaggedRef *getRef() { return &args[0]; }
   TaggedRef *getRefHead() { return &args[0]; }
   TaggedRef *getRefTail() { return &args[1]; }
+  void initArgs(TaggedRef val) { args[0]=val; args[1]=val;}
 
   OZPRINT;
   OZPRINTLONG;
@@ -493,11 +493,17 @@ enum TypeOfConst {
   Co_HeapChunk,
 
   Co_Abstraction,
-  Co_Object,
   Co_Builtin,
   Co_Cell,
   Co_Space,
-  Co_Chunk
+
+  /* chunks must stay together and the first one
+   * must be Co_Object
+   * otherwise you'll have to change the "isChunk" test
+   */
+  Co_Object,
+  Co_Chunk,
+  Co_Array
 };
 
 
@@ -518,7 +524,7 @@ public:
   void setTagged(TypeOfConst t, void *p) { ctu.tagged = makeTaggedRef((TypeOfTerm)t,p); }
   ConstTerm(TypeOfConst t)     { setTagged(t,NULL); }
   TypeOfConst getType() { return (TypeOfConst) tagTypeOf(ctu.tagged); }
-  TypeOfConst typeOf()  { return getType(); }
+  //  TypeOfConst typeOf()  { return getType(); }
   char *getPrintName();
   void *getPtr()        { return tagValueOf(ctu.tagged); }
   void setPtr(void *p)  { setTagged(getType(),p); }
@@ -529,6 +535,9 @@ public:
   Bool unify(TaggedRef, Bool) { return NO; }
   Bool install(TaggedRef t) { return unify(t,OK); };
   Bool deinstall(TaggedRef) { return OK; };
+
+  /* optimized isChunk test */
+  Bool isChunk() { return (int) getType() >= (int) Co_Object; }
 };
 
 
@@ -1184,8 +1193,82 @@ SChunk *tagged2SChunk(TaggedRef term)
 inline
 Bool isChunk(TaggedRef t)
 {
-  return isSChunk(t) || isObject(t);
+  return isConst(t) && tagged2Const(t)->isChunk();
 }
+
+/*===================================================================
+ * Arrays
+ *=================================================================== */
+
+class OzArray: public ConstTerm {
+  friend void ConstTerm::gcConstRecurse(void);
+private:
+  int offset, width;
+
+  TaggedRef *getArgs() { return (TaggedRef*) getPtr(); }
+
+public:
+  OzArray(int low, int high, TaggedRef initvalue) : ConstTerm(Co_Array)
+  {
+    Assert(high>low);
+    Assert(isRef(initvalue) || !isAnyVar(initvalue));
+
+    offset = low;
+    width = high-low+1;
+    TaggedRef *args = (TaggedRef*) int32Malloc(sizeof(TaggedRef)*width);
+    for(int i=0; i<width; i++) {
+      args[i] = initvalue;
+    }
+    setPtr(args);
+  }
+
+  int getLow()      { return offset; }
+  int getHigh()     { return getWidth() + offset - 1; }
+  int getWidth()    { return width; }
+
+  OZ_Return getArg(int n, TaggedRef &out)
+  {
+    n -= offset;
+    if (n>=getWidth() || n<0)
+      return FAILED;
+
+    out = getArgs()[n];
+    Assert(isRef(out) || !isAnyVar(out));
+
+    return PROCEED;
+  }
+
+  OZ_Return setArg(int n,TaggedRef val)
+  {
+    Assert(isRef(val) || !isAnyVar(val));
+
+    n -= offset;
+    if (n>=getWidth() || n<0)
+      return FAILED;
+
+    getArgs()[n] = val;
+    return PROCEED;
+  }
+
+  OZPRINT;
+  OZPRINTLONG;
+
+};
+
+
+inline
+Bool isArray(TaggedRef term)
+{
+  return isConst(term) && tagged2Const(term)->getType() == Co_Array;
+}
+
+inline
+OzArray *tagged2Array(TaggedRef term)
+{
+  Assert(isArray(term));
+  return (OzArray *) tagged2Const(term);
+}
+
 
 /*===================================================================
  * Abstraction (incl. PrTabEntry, AssRegArray, AssReg)
