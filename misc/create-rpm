@@ -1,7 +1,7 @@
 #!/bin/sh -x
 #
 #  Authors:
-#    Christian Schulte <schulte@dfki.de>
+#    Christian Schulte <schulte@ps.uni-sb.de>
 # 
 #  Copyright:
 #    Christian Schulte, 1998
@@ -96,7 +96,7 @@ Copyright: More liberal than GPL (see LICENSE)
 Vendor: DFKI GmbH
 Url: http://mozart.ps.uni-sb.de/
 Group: Development/Languages
-Packager: Christian Schulte <schulte@dfki.de>
+Packager: Christian Schulte <schulte@ps.uni-sb.de>
 
 Source0: mozart-${VERSION}.tar.gz
 Source1: mozart-doc-${VERSION}.tar.gz

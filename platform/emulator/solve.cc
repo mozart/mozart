@@ -1,7 +1,7 @@
 /*
  *  Authors:
  *    Kostja Popow (popow@ps.uni-sb.de)
- *    Christian Schulte (schulte@dfki.de)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  * 
  *  Contributors:
  *    Michael Mehl (mehl@dfki.de)
