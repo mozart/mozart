@@ -139,9 +139,17 @@ define
 		     end
 		  [] nil then S   % do not worry about missing closing brace
 		  end
-	       else
+	       [] C|Rest2 then
 		  case {CondSelect CommandsMap {String.toAtom Command} unit}
-		  of unit then {CopyBraceLevel Rest 1}
+		  of unit then
+		     case Rest2 of nil then
+			try {TranslateAccent C Rest1}
+			catch error then   %--** error: unrecognized accent
+			   {CopyBraceLevel Rest 1}
+			end
+		     else
+			{CopyBraceLevel Rest 1}
+		     end
 		  elseof NewC then NewC|{CopyBraceLevel Rest1 1}
 		  end
 	       end
