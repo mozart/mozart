@@ -37,6 +37,7 @@ enum EmulatorPropertyIndex {
   PROP_TIME_SYSTEM,
   PROP_TIME_TOTAL,
   PROP_TIME_USER,
+  PROP_TIME_IDLE,
   PROP_TIME_DETAILED,
   PROP_TIME,
   // GC
@@ -216,10 +217,11 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_TIME_SYSTEM,osSystemTime());
     CASE_INT(PROP_TIME_TOTAL,osTotalTime());
     CASE_INT(PROP_TIME_USER,osUserTime());
+    CASE_INT(PROP_TIME_IDLE,(int) ozstat.timeIdle);
     CASE_BOOL(PROP_TIME_DETAILED,ozconf.timeDetailed);
     CASE_REC(PROP_TIME,"time",
-	     (9,AtomCopy,AtomGC,AtomLoad,AtomPropagate,AtomRun,
-	      AtomSystem,AtomTotal,AtomUser,AtomDetailed),
+	     (10,AtomCopy,AtomGC,AtomLoad,AtomPropagate,AtomRun,
+	      AtomSystem,AtomTotal,AtomUser,AtomDetailed,AtomIdle),
 	     unsigned int timeNow = osUserTime();
 	     unsigned int copy = 0;
 	     unsigned int gc   = 0;
@@ -241,6 +243,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	     SET_INT(AtomSystem,osSystemTime());
 	     SET_INT(AtomTotal,osTotalTime());
 	     SET_INT(AtomUser,timeNow);
+	     SET_INT(AtomIdle,(int) ozstat.timeIdle);
 	     SET_BOOL(AtomDetailed,ozconf.timeDetailed););
     // GC
     CASE_INT(PROP_GC_MIN,ozconf.heapMinSize*KB);
@@ -784,6 +787,7 @@ void initVirtualProperties()
   VirtualProperty::add("time.system",PROP_TIME_SYSTEM);
   VirtualProperty::add("time.total",PROP_TIME_TOTAL);
   VirtualProperty::add("time.user",PROP_TIME_USER);
+  VirtualProperty::add("time.idle",PROP_TIME_IDLE);
   VirtualProperty::add("time.detailed",PROP_TIME_DETAILED);
   VirtualProperty::add("time",PROP_TIME);
   // GC
@@ -862,3 +866,5 @@ void initVirtualProperties()
   VirtualProperty::add("internal.applet",PROP_INTERNAL_APPLET);
   VirtualProperty::add("internal",PROP_INTERNAL);
 }
+
+
