@@ -2869,7 +2869,9 @@ LBLdispatcher:
       DEREF(taggedPredicate,predPtr,predTag);
       if (!isProcedure(taggedPredicate) && !isObject(taggedPredicate)) {
 	if (isAnyVar(predTag)) {
-	  SUSP_PC(predPtr,0,PC);
+	  CTS->pushCallNoCopy(makeTaggedRef(predPtr),G);
+	  addSusp(predPtr,CTT);
+	  goto LBLsuspendThread;
 	}
 	RAISE_APPLY(taggedPredicate,OZ_toList(predArity,G));
       }
