@@ -367,6 +367,8 @@ Bool member(TaggedRef elem,TaggedRef list)
   return NO;
 }
 
+
+
 /*
  * destructive reverse of a list
  */
@@ -384,6 +386,26 @@ TaggedRef reverseC(TaggedRef l)
   Assert(isNil(l));
   return out;
 }
+
+// make a copy of list and return its length
+TaggedRef duplist(TaggedRef list, int &len)
+{
+  len = 0;
+  TaggedRef ret = nil();
+  TaggedRef *aux = &ret;
+
+  while(isCons(list)) {
+    len++;
+    *aux = cons(head(list),*aux);
+    aux = tagged2LTuple(*aux)->getRefTail();
+    list = tail(list);
+  }
+  return ret;
+}
+
+
+
+
 
 void ObjectClass::globalize() {
   if (!hasGName()) {
@@ -705,7 +727,6 @@ Bool isSorted(TaggedRef list)
   return OK;
   
 }
-
 
 // sort list using quicksort and duplicants
 TaggedRef sortlist(TaggedRef list,int len)
