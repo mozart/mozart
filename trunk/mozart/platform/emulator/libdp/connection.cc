@@ -33,6 +33,8 @@ TransController *getTransController(DSite *site) {
   switch(transportType) {
   case TRANS_TCP:
     return tcptransController;
+  default:
+    return NULL;
   }
 }
 
@@ -77,6 +79,8 @@ Bool initAccept() {
   switch(transportType) {
   case TRANS_TCP:
     return tcpInitAccept();
+  default:
+    return FALSE;
   }
 }
 
