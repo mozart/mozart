@@ -554,6 +554,10 @@ local
 	 'get maximal number of errors'
       [] setMaxNumberOfErrors(N) then
 	 'set maximal number of errors to '#N
+      [] getGumpDirectory(_) then
+	 'get Gump directory'
+      [] setGumpDirectory(_) then
+	 'set Gump directory'
       [] getBaseURL(_) then
 	 'get base URL for computed functors'
       [] setBaseURL(X) then
@@ -714,6 +718,7 @@ in
 			{self.HasMaxErrorsEnabled tkSet(true)}
 			{self.MaxNumberOfErrors tkSet(N)}
 		     end
+		  [] gumpDirectory(_) then skip   %--**
 		  [] env(Env) then
 		     CachedEnv <- Env
 		     CompilerPanel, RedisplayEnv()
