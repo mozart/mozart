@@ -425,26 +425,6 @@ OZ_Bool genericHead_cdIntersect(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self
 //-----------------------------------------------------------------------------
 
 inline
-TaggedRef deref(TaggedRef &tr, TaggedRef * &ptr, TypeOfTerm &tag)
-{
-  ptr = NULL;
-  while(IsRef(tr)) {
-    ptr = tagged2Ref(tr);
-    tr = *ptr;
-  }
-  tag = tagTypeOf(tr);
-  return tr;
-}
-
-inline
-TaggedRef deref(TaggedRef tr)
-{
-  while (isRef(tr))
-    tr = *tagged2Ref(tr);
-  return tr;
-}
-
-inline
 Bool isPosSmallInt(TaggedRef val)
 {
   if (isSmallInt(val))
@@ -747,12 +727,16 @@ private:
   static Bool * bifdbm_is_local;
 
 // backup data slots
-  int backup_curr_num_of_vars;
-
-  Bool backup_vars_left;
-  Bool backup_glob_vars_touched;
-  Bool backup_only_local_vars;
-  Suspension * backup_FDcurrentTaskSusp;
+  int backup_curr_num_of_vars1;
+  Bool backup_vars_left1;
+  Bool backup_glob_vars_touched1;
+  Bool backup_only_local_vars1;
+  Suspension * backup_FDcurrentTaskSusp1;
+  int backup_curr_num_of_vars2;
+  Bool backup_vars_left2;
+  Bool backup_glob_vars_touched2;
+  Bool backup_only_local_vars2;
+  Suspension * backup_FDcurrentTaskSusp2;
 
 // private methods
   Bool isTouched(int i) {

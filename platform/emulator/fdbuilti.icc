@@ -235,46 +235,58 @@ void BIfdBodyManager::addAnySuspToTouchedGlobalVars(void) {
 inline
 void BIfdBodyManager::backup(void)
 {
-  backup_curr_num_of_vars = curr_num_of_vars;
-  backup_vars_left = vars_left;
-  backup_glob_vars_touched = glob_vars_touched;
-  backup_only_local_vars = only_local_vars;
-  backup_FDcurrentTaskSusp = FDcurrentTaskSusp;
+  backup_curr_num_of_vars2 = backup_curr_num_of_vars1;
+  backup_vars_left2 = backup_vars_left1;
+  backup_glob_vars_touched2 = backup_glob_vars_touched1;
+  backup_only_local_vars2 = backup_only_local_vars1;
+  backup_FDcurrentTaskSusp2 = backup_FDcurrentTaskSusp1;
 
-  bifdbm_var += backup_curr_num_of_vars;
-  bifdbm_varptr += backup_curr_num_of_vars;
-  bifdbm_vartag += backup_curr_num_of_vars;
-  bifdbm_dom += backup_curr_num_of_vars;
-  bifdbm_domain += backup_curr_num_of_vars;
-  bifdbm_init_dom_size += backup_curr_num_of_vars;
-  cache_from += backup_curr_num_of_vars;
-  cache_to += backup_curr_num_of_vars;
-  index_offset += backup_curr_num_of_vars;
-  index_size += backup_curr_num_of_vars;
-  bifdbm_is_local += backup_curr_num_of_vars;
+  backup_curr_num_of_vars1 = curr_num_of_vars;
+  backup_vars_left1 = vars_left;
+  backup_glob_vars_touched1 = glob_vars_touched;
+  backup_only_local_vars1 = only_local_vars;
+  backup_FDcurrentTaskSusp1 = FDcurrentTaskSusp;
+
+  bifdbm_var += backup_curr_num_of_vars1;
+  bifdbm_varptr += backup_curr_num_of_vars1;
+  bifdbm_vartag += backup_curr_num_of_vars1;
+  bifdbm_dom += backup_curr_num_of_vars1;
+  bifdbm_domain += backup_curr_num_of_vars1;
+  bifdbm_init_dom_size += backup_curr_num_of_vars1;
+  cache_from += backup_curr_num_of_vars1;
+  cache_to += backup_curr_num_of_vars1;
+  index_offset += backup_curr_num_of_vars1;
+  index_size += backup_curr_num_of_vars1;
+  bifdbm_is_local += backup_curr_num_of_vars1;
 }
 
 
 inline
 void BIfdBodyManager::restore(void)
 {
-  curr_num_of_vars = backup_curr_num_of_vars;
-  vars_left = backup_vars_left;
-  glob_vars_touched = backup_glob_vars_touched;
-  only_local_vars = backup_only_local_vars;
-  FDcurrentTaskSusp = backup_FDcurrentTaskSusp;
+  bifdbm_var -= backup_curr_num_of_vars1;
+  bifdbm_varptr -= backup_curr_num_of_vars1;
+  bifdbm_vartag -= backup_curr_num_of_vars1;
+  bifdbm_dom -= backup_curr_num_of_vars1;
+  bifdbm_domain -= backup_curr_num_of_vars1;
+  bifdbm_init_dom_size -= backup_curr_num_of_vars1;
+  cache_from -= backup_curr_num_of_vars1;
+  cache_to -= backup_curr_num_of_vars1;
+  index_offset -= backup_curr_num_of_vars1;
+  index_size -= backup_curr_num_of_vars1;
+  bifdbm_is_local -= backup_curr_num_of_vars1;
 
-  bifdbm_var -= backup_curr_num_of_vars;
-  bifdbm_varptr -= backup_curr_num_of_vars;
-  bifdbm_vartag -= backup_curr_num_of_vars;
-  bifdbm_dom -= backup_curr_num_of_vars;
-  bifdbm_domain -= backup_curr_num_of_vars;
-  bifdbm_init_dom_size -= backup_curr_num_of_vars;
-  cache_from -= backup_curr_num_of_vars;
-  cache_to -= backup_curr_num_of_vars;
-  index_offset -= backup_curr_num_of_vars;
-  index_size -= backup_curr_num_of_vars;
-  bifdbm_is_local -= backup_curr_num_of_vars;
+  curr_num_of_vars = backup_curr_num_of_vars1;
+  vars_left = backup_vars_left1;
+  glob_vars_touched = backup_glob_vars_touched1;
+  only_local_vars = backup_only_local_vars1;
+  FDcurrentTaskSusp = backup_FDcurrentTaskSusp1;
+
+  backup_curr_num_of_vars1 = backup_curr_num_of_vars2;
+  backup_vars_left1 = backup_vars_left2;
+  backup_glob_vars_touched1 = backup_glob_vars_touched2;
+  backup_only_local_vars1 = backup_only_local_vars2;
+  backup_FDcurrentTaskSusp1 = backup_FDcurrentTaskSusp2;
 }
 
 //-----------------------------------------------------------------------------

@@ -255,13 +255,31 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
   for (c = clauses; c--; ) {
     if (x[idx_b(c)] == 0)
       continue;
+
+    Assert(x[idx_b(c)] != 0);
+
+#ifndef TM_LP
+    localPropStore.setUseIt();
+#endif
+
     for (v = variables; v--; ) {
       x.propagateIfTouched(idx_vp(c, v));
     }
+
+#ifndef TM_LP
+    localPropStore.unsetUseIt();
+#endif
+
     x.backup();
-    if (!localPropStore.do_propagation())
+
+    if (!localPropStore.do_propagation()) {
+      x.restore();
       x[idx_b(c)] &= 0;
-    x.restore();
+    } else {
+      x.restore();
+    }
+    Assert(localPropStore.isEmpty());
+
   }
 
   localPropStore.restore();
@@ -343,6 +361,8 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
       x[idx_v(v)] &= u;
     }
   }
+
+  DebugCode(for (c = clauses; c--; ) Assert(x[idx_b(c)] != 1);;)
 
   return x.releaseReify(idx_b(0), idx_b(clauses - 1),
                         idx_v(0), idx_v(variables-1));

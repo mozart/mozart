@@ -390,7 +390,8 @@ Bool hookCheckNeeded(AM *e)
       LOCAL_PROPAGATION(currentTaskSusp = tmp;)                               \
       break;                                                                  \
     }                                                                         \
-  }
+  }                                                                           \
+  CBB->unsetNervous();
 
 
 
@@ -899,6 +900,7 @@ void engine() {
         switch (biFun(XSize, X)) {
         case FAILED:
           killPropagatedCurrentTaskSusp();
+          LOCAL_PROPAGATION(localPropStore.reset());
         localhack0:
           HF_FAIL(applFailure(biFun), printArgs(X,XSize));
         case PROCEED:
@@ -1057,6 +1059,7 @@ void engine() {
         // no break here
       case FAILED:
         killPropagatedCurrentTaskSusp();
+        LOCAL_PROPAGATION(localPropStore.reset());
       localhack1:
         HF_FAIL(applFailure(fun), printArgs(X,arity));
       case PROCEED:
@@ -1593,6 +1596,7 @@ void engine() {
               goto LBLcall;
             case FAILED:
               LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
+              LOCAL_PROPAGATION(localPropStore.reset());
             localHack0:
               HF_FAIL(applFailure(bi), printArgs(X,predArity));
             case PROCEED:

@@ -124,6 +124,10 @@ static void printBanner()
   warning("Sleep disabled.");
 #endif
 
+#ifndef TM_LP
+  warning("Local propagation turned off.");
+#endif
+
 #ifdef DEBUG_CHECK
   printf("Compile Flags:"
          " DEBUG_CHECK"
@@ -760,7 +764,7 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
                 DEREF(tail,tailPtr,tailTag);
                 switch (tailTag) {
                 case LITERAL:
-                    Assert(tl==AtomNil);
+                    Assert(tail==AtomNil);
                     break;
                 case UVAR:
                     doBind(tailPtr, AtomNil);

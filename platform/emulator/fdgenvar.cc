@@ -28,7 +28,6 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
                             TaggedRef *tPtr, TaggedRef term,
                             Bool prop, Bool disp)
 {
-  TypeOfTerm vTag = tagTypeOf(var);
   TypeOfTerm tTag = tagTypeOf(term);
 
   switch (tTag){
@@ -59,7 +58,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
       if (tagged2CVar(term)->getType() != FDVariable) return FALSE;
 
 // compute intersection of domains ...
-      GenFDVariable* termVar = tagged2GenFDVar(term);
+      GenFDVariable * termVar = tagged2GenFDVar(term);
       FiniteDomain &termDom = termVar->finiteDomain;
       LocalFD intsct;
 
