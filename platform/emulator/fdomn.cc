@@ -891,22 +891,28 @@ int FiniteDomain::initList(int list_len,
 }
 
 static
-// int intcompare(int ** i, int ** j) {return(**i - **j);}
+int intcompare(int ** i, int ** j) {return(**i - **j);}
+/*
 int intcompare(const void * ii, const void  * jj) {
   int **i = (int **) ii;
   int **j = (int **) jj;
   return(**i - **j);
 }
+*/
 
 int FiniteDomain::simplify(int list_len, int * list_left, int * list_right)
 {
-  for (int i = list_len; i--; ) {
+  // producing list of sorted pointers in terms of this list
+  int i;
+  for (i = list_len; i--; ) {
     fd_iv_left_sort[i] = list_left + i;
-    fd_iv_right_sort[i] = list_right + i;
   }
   qsort(fd_iv_left_sort, list_len, sizeof(int **), intcompare);
-  qsort(fd_iv_right_sort, list_len, sizeof(int **), intcompare);
+  for (i = 0; i < list_len; i++) {
+    fd_iv_right_sort[i] = list_right + (fd_iv_left_sort[i]-list_left);
+  }
 
+  // finding adjacent and overlapping intervals
   int len, p;
   for (len = 0, p = 0; p < list_len; len += 1) {
     if (p > len) {
@@ -917,6 +923,16 @@ int FiniteDomain::simplify(int list_len, int * list_left, int * list_right)
       if (*fd_iv_right_sort[p] > *fd_iv_right_sort[len])
         *fd_iv_right_sort[len] = *fd_iv_right_sort[p];
   }
+
+  // writing sorted and collapsed intervals back to list_{left,right}
+  static int aux[MAXFDBIARGS];
+
+  for (i = 0; i < len; i++) aux[i] = *fd_iv_left_sort[i];
+  for (i = 0; i < len; i++) list_left[i] = aux[i];
+
+  for (i = 0; i < len; i++) aux[i] = *fd_iv_right_sort[i];
+  for (i = 0; i < len; i++) list_right[i] = aux[i];
+
   return len;
 }
 
