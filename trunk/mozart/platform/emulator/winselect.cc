@@ -67,11 +67,13 @@ IOChannel *lookupChannel(int fd)
   return aux;
 }
 
-int fileTimeToMS(FILETIME *ft)
+unsigned long fileTimeToMS(FILETIME *ft)
 {
   //  return (ft->dwLowDateTime/10000) + ((ft->dwHighDateTime/10000)<<32)
   //  return (ft->dwLowDateTime/10000) + ((ft->dwHighDateTime/16*625)<<32)
-  return (ft->dwLowDateTime/10000) + ((ft->dwHighDateTime<<28)/625);
+  // prototypes under gnu-win32 are wrong:
+  return (((unsigned long)ft->dwLowDateTime)/10000) + 
+         ((((unsigned long)ft->dwHighDateTime)<<28)/625);
 }
 
 
