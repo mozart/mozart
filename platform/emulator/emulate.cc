@@ -103,6 +103,20 @@ if (predArity != arityExp && VarArity != arityExp) {			\
   goto LBLraise;							\
 }
 
+
+
+
+#ifdef DEBUG_CHECK
+#define IMPOSSIBLE(INSTR) error("%s: impossible instruction",INSTR)
+#else
+#define IMPOSSIBLE(INSTR) 
+#endif
+
+
+
+
+
+
 // TOPLEVEL END
 // -----------------------------------------------------------------------
 
@@ -213,7 +227,7 @@ void genCallInfo(GenCallInfoClass *gci, int arity, TaggedRef pred,
   
   Assert(!isRef(pred));
 
-  Abstraction *abstr;
+  Abstraction *abstr = NULL;
   if (gci->isMethAppl) {
     if (!isObject(pred) ||
 	NULL == (abstr = getApplyMethod((Object *) tagged2Const(pred),
@@ -338,7 +352,7 @@ Bool AM::hookCheckNeeded()
 
 #define INCFPC(N) PC += N
 
-// #define WANT_INSTRPROFILE
+#define WANT_INSTRPROFILE
 #if defined(WANT_INSTRPROFILE)
 #define asmLbl(INSTR) asm(" " #INSTR ":");
 #else
@@ -376,7 +390,7 @@ Bool AM::hookCheckNeeded()
 #define JUMP(absAdr) PC = absAdr; DISPATCH(0)
 
 #define ONREG(Label,R)      HelpReg = (R); goto Label
-#define ONREG2(Label,R1,R2) HelpReg = (R1); HelpReg2 = (R2); goto Label
+#define ONREG2(Label,R1,R2) HelpReg1 = (R1); HelpReg2 = (R2); goto Label
 
 
 #ifdef FASTREGACCESS
@@ -931,7 +945,8 @@ void engine()
 # define CBB (e->currentBoard)
 # define CPP (e->currentThread->getPriority())
 
-  RefsArray HelpReg = NULL, HelpReg2 = NULL;
+  RefsArray HelpReg1 = NULL, HelpReg2 = NULL;
+  #define HelpReg sPointer  /* more efficient */
 
   /* shallow choice pointer */
   ByteCode *shallowCP = NULL;
@@ -2459,8 +2474,8 @@ LBLsuspendThread:
 	     X[predArity++] = makeTaggedConst(predicate);
 	   } else {
 	     def = (Abstraction *) predicate;
+	     CheckArity(def->getArity(), makeTaggedConst(predicate));
 	   }
-	   CheckArity(def->getArity(), makeTaggedConst(predicate));
 	   if (!isTailCall) { CallPushCont(PC); }
 	   CallDoChecks(def,def->getGRegs(),def->getArity());
 	   Y = NULL; // allocateL(0);
@@ -3093,6 +3108,7 @@ LBLsuspendThread:
   Case(TEST4)
 
   Case(INLINEDOT)
+  Case(INLINEUPARROW)
 
   Case(ENDOFFILE)
   Case(ENDDEFINITION)
