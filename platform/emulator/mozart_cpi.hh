@@ -1110,10 +1110,10 @@ public:
     return expectIntVar(t, fd_prop_bounds); 
   }
   OZ_expect_t expectVectorIntVarMinMax(OZ_Term t) {
-    return expectVector(t, &expectIntVarMinMax);
+    return expectVector(t, &OZ_Expect::expectIntVarMinMax);
   }
   OZ_expect_t expectVectorInt(OZ_Term t) {
-    return expectVector(t, &expectInt);
+    return expectVector(t, &OZ_Expect::expectInt);
   }
   int expectBoolVar(OZ_Term v, OZ_Return &r) 
     __E(expectBoolVar, OZ_EM_FDBOOL)

@@ -30,7 +30,7 @@
 #include "rel_filter.hh"
 
 template  <class SERVICE, class FDVAR>
-SERVICE &FilterTasksOverlap<class SERVICE,class FDVAR>::filter(SERVICE & s,
+SERVICE &FilterTasksOverlap<SERVICE, FDVAR>::filter(SERVICE & s,
 							       FDVAR &x,
 							       int xd,
 							       FDVAR &y,
