@@ -166,6 +166,9 @@ AC_DEFUN(OZ_INIT, [
         AR=${target}-ar
         STRIP=${target}-strip
         WINDRES=${target}-windres
+        AS=${target}-as
+        DLLTOOL=${target}-dlltool
+        DLLWRAP=${target}-dllwrap
         OZTOOL="sh $BUILDTOP/platform/emulator/${target}-oztool"
         enable_contrib_psql=no
         enable_contrib_gdbm=yes
