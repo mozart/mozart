@@ -178,6 +178,7 @@ OZ_expect_t OZ_Expect::expectGenCtVar(OZ_Term t,
     addSuspend(def, w, tptr);
     return expectSuspend(1, 0);
   } else if (oz_isNonKinded(t)) {
+    addSuspend(def, w, tptr);
     return expectExceptional();
   }
 
@@ -211,6 +212,7 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
       //mm2: use tagged2Ref
       return expectDomDescr(makeTaggedRef(&(*tagged2SRecord(descr))[0]), 3);
     } else if (oz_isVariable(descr)) {
+      addSuspend(descr_ptr);
       return expectExceptional();
     }
     level = 3;
@@ -255,6 +257,7 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
     addSuspend(descr_ptr);
     return expectSuspend(1, 0);
   } else if (oz_isVariable(descr)) {
+    addSuspend(descr_ptr);
     return expectExceptional();
   }
   return expectFail();
@@ -273,6 +276,7 @@ OZ_expect_t OZ_Expect::expectIntVar(OZ_Term t, OZ_FDPropState ps)
     addSuspend(ps, tptr);
     return expectSuspend(1, 0);
   } else if (oz_isNonKinded(t)) {
+    addSuspend(ps, tptr);
     return expectExceptional();
   }
   return expectFail();
@@ -290,6 +294,7 @@ OZ_expect_t OZ_Expect::expectInt(OZ_Term t)
     addSuspend(fd_prop_singl, tptr);
     return expectSuspend(1, 0);
   } else if (oz_isNonKinded(t)) {
+    addSuspend(fd_prop_singl, tptr);
     return expectExceptional();
   }
   return expectFail();
@@ -307,6 +312,7 @@ OZ_expect_t OZ_Expect::expectFloat(OZ_Term t)
     addSuspend(tptr);
     return expectSuspend(1, 0);
   } else if (oz_isNonKinded(t)) {
+    addSuspend(tptr);
     return expectExceptional();
   }
   return expectFail();
@@ -367,6 +373,7 @@ OZ_expect_t OZ_Expect::_expectFSetDescr(OZ_Term descr, int level)
     addSuspend(descr_ptr);
     return expectSuspend(1, 0);
   } else if (oz_isNonKinded(descr)) {
+    addSuspend(descr_ptr);
     return expectExceptional();
   }
   return expectFail();
@@ -385,6 +392,7 @@ OZ_expect_t OZ_Expect::expectFSetVar(OZ_Term t, OZ_FSetPropState ps)
     addSuspend(ps, tptr);
     return expectSuspend(1, 0);
   } else if (oz_isNonKinded(t)) {
+    addSuspend(ps, tptr);
     return expectExceptional();
   }
   return expectFail();
@@ -402,6 +410,7 @@ OZ_expect_t OZ_Expect::expectFSetValue(OZ_Term t)
     addSuspend(fs_prop_val, tptr);
     return expectSuspend(1, 0);
   } else if (oz_isNonKinded(t)) {
+    addSuspend(fs_prop_val, tptr);
     return expectExceptional();
   }
   return expectFail();
@@ -417,6 +426,7 @@ OZ_expect_t OZ_Expect::expectVar(OZ_Term t)
     addSpawn(fd_prop_any, tptr);
     return expectProceed(1, 1);
   } else if (oz_isNonKinded(t)) {
+    addSuspend(tptr);
     return expectExceptional();
   }
   return expectFail();
@@ -435,6 +445,7 @@ OZ_expect_t OZ_Expect::expectRecordVar(OZ_Term t)
     addSuspend(tptr);
     return expectSuspend(1, 0);
   } else if (oz_isNonKinded(t)) {
+    addSuspend(tptr);
     return expectExceptional();
   }
   return expectFail();
@@ -452,6 +463,7 @@ OZ_expect_t OZ_Expect::expectLiteral(OZ_Term t)
     addSuspend(tptr);
     return expectSuspend(1, 0);
   } else if (oz_isNonKinded(t)) {
+    addSuspend(tptr);
     return expectExceptional();
   }
   return expectFail();
@@ -501,6 +513,7 @@ OZ_expect_t OZ_Expect::expectProperRecord(OZ_Term t,
     addSuspend(tptr);
     return expectSuspend(1, 0);
   } else if (oz_isNonKinded(t)) {
+    addSuspend(tptr);
     return expectExceptional();
   }
   return expectFail();
@@ -528,6 +541,7 @@ OZ_expect_t OZ_Expect::expectProperRecord(OZ_Term t, OZ_Term * ar)
     addSuspend(tptr);
     return expectSuspend(1, 0);
   } else if (oz_isNonKinded(t)) {
+    addSuspend(tptr);
     return expectExceptional();
   }
   return expectFail();
@@ -562,6 +576,7 @@ OZ_expect_t OZ_Expect::expectProperTuple(OZ_Term t,
     addSuspend(tptr);
     return expectSuspend(1, 0);
   } else if (oz_isNonKinded(t)) {
+    addSuspend(tptr);
     return expectExceptional();
   }
   return expectFail();
@@ -599,12 +614,14 @@ OZ_expect_t OZ_Expect::expectList(OZ_Term t,
       addSuspend(tptr);
       return expectSuspend(len+1, acc);
     } else if (oz_isNonKinded(t)) {
+      addSuspend(tptr);
       return expectExceptional();
     }
   } else if (oz_isFree(t) || oz_isKinded(t)) {
     addSuspend(tptr);
     return expectSuspend(1, 0);
   } else if (oz_isNonKinded(t)) {
+    addSuspend(tptr);
     return expectExceptional();
   }
   return expectFail();
@@ -658,6 +675,7 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
       addSuspend(tptr);
       return expectSuspend(len+1, acc);
     } else if (oz_isNonKinded(t)) {
+      addSuspend(tptr);
       return expectExceptional();
     }
 
@@ -665,6 +683,7 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
     addSuspend(tptr);
     return expectSuspend(1, 0);
   } else if (oz_isNonKinded(t)) {
+    addSuspend(tptr);
     return expectExceptional();
   }
   return expectFail();
@@ -694,12 +713,14 @@ OZ_expect_t OZ_Expect::expectStream(OZ_Term st)
       addSpawn(fd_prop_any, stptr);
       return expectProceed(len, len);
     } else if (oz_isNonKinded(st)) {
+      addSuspend(stptr);
       return expectExceptional();
     }
   } else if (oz_isFree(st) || oz_isKinded(st)) {
     addSpawn(fd_prop_any, stptr);
     return expectProceed(1, 1);
   } else if (oz_isNonKinded(st)) {
+    addSuspend(stptr);
     return expectExceptional();
   }
 

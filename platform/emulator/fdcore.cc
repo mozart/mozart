@@ -314,6 +314,9 @@ OZ_C_proc_begin(BIfdTellConstraint, 2)
   ExpectedTypes(OZ_EM_FD "," OZ_EM_FDDESCR);
 
   ExpectOnly pe;
+  EXPECT_BLOCK(pe, 1, expectDomDescr);
+
+  /*
   OZ_expect_t r = pe.expectDomDescr(OZ_getCArg(1));
   if (pe.isFailing(r)) {
     TypeError(1, "The syntax of a " OZ_EM_FDDESCR " is:\n"
@@ -321,12 +324,12 @@ OZ_C_proc_begin(BIfdTellConstraint, 2)
               "simpl_descr ::= range_descr | [range_descr+]\n"
               "range_descr ::= integer | integer#integer\n"
               "integer     ::= {" _OZ_EM_FDINF ",...," _OZ_EM_FDSUP "}");
-  } else if (pe.isSuspending(r)) {
+  } else if (pe.isSuspending(r) || pe.isExceptional(r)) {
     for (OZ_Term * v = pe.getSuspVar(); v != NULL; v = pe.getSuspVar())
       am.addSuspendVarList(v);
     return SUSPEND;
   }
-
+  */
   OZ_FiniteDomain aux(OZ_getCArg(1));
 
   return tellBasicConstraint(OZ_getCArg(0), &aux);

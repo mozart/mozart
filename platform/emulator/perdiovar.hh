@@ -82,9 +82,6 @@ public:
   PendBinding *gcPendBinding();
 };
 
-#define PV_EXPORTED 0x1 /* non-exported futures look like PerdioVars,
-                           but can be bound to non-exportables */
-
 class PerdioVar: public GenCVariable {
 public:
   PerdioVar(Board *bb) : GenCVariable(PerdioVariable,bb) {}
@@ -153,9 +150,6 @@ public:
     ptr   = o;
     flags = 0;
   }
-
-  int isExported()    { return (flags&PV_EXPORTED); }
-  void markExported() { flags |= PV_EXPORTED; }
 
   void setClass(ObjectClass *cl) {
     Assert(isObjectClassAvail());

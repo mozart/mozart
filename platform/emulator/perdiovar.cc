@@ -45,7 +45,6 @@
 
 
 // from perdio.cc
-int compareNetAddress(OldPerdioVar *lVar,OldPerdioVar *rVar);
 void sendHelpX(MessageType mt,BorrowEntry *be);
 void marshalToOwner(int bi,MsgBuffer *bs);
 void marshalBorrowHead(MarshalTag tag, int bi,MsgBuffer *bs);
@@ -85,8 +84,10 @@ void OldPerdioVar::addSuspV(TaggedRef * v, Suspension susp, int unstable)
   }
 }
 
+static inline
 void gcBorrowNow(int i) { BT->getBorrow(i)->gcPO(); }
 
+static
 void gcPendBindingList(PendBinding **last){
   PendBinding *bl = *last;
   PendBinding *newBL;
@@ -126,6 +127,7 @@ void OldPerdioVar::gcRecurseV(void)
     u.aclass = u.aclass->gcClass();}
 }
 
+// extern
 OldPerdioVar *var2PerdioVar(TaggedRef *tPtr)
 {
   if (isPerdioVar(*tPtr) ) {
@@ -142,7 +144,6 @@ OldPerdioVar *var2PerdioVar(TaggedRef *tPtr)
   oe->mkVar(makeTaggedRef(tPtr));
 
   OldPerdioVar *ret = new OldPerdioVar(oz_currentBoard());
-  ret->markExported();
   ret->setIndex(i);
 
   if (isCVar(*tPtr))
@@ -151,6 +152,7 @@ OldPerdioVar *var2PerdioVar(TaggedRef *tPtr)
   return ret;
 }
 
+// extern
 void marshalVar(OldPerdioVar *pvar,MsgBuffer *bs)
 {
   Site *sd=bs->getSite();
@@ -181,6 +183,7 @@ if (var->isProxy()) {                                                   \
   OTI=var->getIndex();                                                  \
 }
 
+static
 int compareNetAddress(OldPerdioVar *lVar,OldPerdioVar *rVar)
 {
   GET_ADDR(lVar,lSD,lOTI);
@@ -190,6 +193,7 @@ int compareNetAddress(OldPerdioVar *lVar,OldPerdioVar *rVar)
   return lOTI<rOTI ? -1 : 1;
 }
 
+static
 void sendRegister(BorrowEntry *be) {
   Assert(creditSiteOut == NULL);
   be->getOneMsgCredit();
@@ -198,6 +202,7 @@ void sendRegister(BorrowEntry *be) {
   marshal_M_REGISTER(bs,na->index,mySite);
   SendTo(na->site,bs,M_REGISTER,na->site,na->index);}
 
+// extern
 OZ_Term unmarshalVar(MsgBuffer* bs){
   OB_Entry *ob;
   int bi;
@@ -218,6 +223,7 @@ OZ_Term unmarshalVar(MsgBuffer* bs){
 #define UNIFY_ERRORMSG \
    "Unification of distributed variable with term containing resources"
 
+static
 OZ_Return sendSurrender(BorrowEntry *be,OZ_Term val){
   be->getOneMsgCredit();
   NetAddress *na = be->getNetAddress();
@@ -228,6 +234,7 @@ OZ_Return sendSurrender(BorrowEntry *be,OZ_Term val){
   return PROCEED;
 }
 
+// extern
 OZ_Return sendRedirect(Site* sd,int OTI,TaggedRef val){
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(sd);
   OT->getOwner(OTI)->getOneCreditOwner();
@@ -237,6 +244,7 @@ OZ_Return sendRedirect(Site* sd,int OTI,TaggedRef val){
   return PROCEED;
 }
 
+static
 void sendAcknowledge(Site* sd,int OTI){
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(sd);
   OT->getOwner(OTI)->getOneCreditOwner();
@@ -270,38 +278,40 @@ void OldPerdioVar::redirect(OZ_Term val) {
 }
 
 static
-OZ_Return sendRedirect(OldPerdioVar *pv,OZ_Term val, Site* ackSite, int OTI)
+OZ_Return sendRedirectToProxies(OldPerdioVar *pv,OZ_Term val,
+                                Site* ackSite, int OTI)
 {
   ProxyList *pl = pv->getProxies();
-  OZ_Return ret = PROCEED;
   OwnerEntry *oe = OT->getOwner(OTI);
-  if (pl==NULL && pv->isExported()) {
+  if (!pl) {
     MsgBuffer *bs=msgBufferManager->getMsgBuffer(NULL);
     marshal_M_REDIRECT(bs,mySite,OTI,val);
     CheckNogoods(val,bs,UNIFY_ERRORMSG,);
+  } else {
+      do {
+          Site* sd = pl->sd;
+          if (sd==ackSite) {
+              sendAcknowledge(sd,OTI);
+          } else {
+              OZ_Return ret = sendRedirect(sd,OTI,val);
+              if (ret != PROCEED) return ret;
+          }
+          ProxyList *tmp = pl->next;
+          pl->dispose();
+          pl = tmp;
+      } while (pl);
   }
-  while (pl) {
-    Site* sd = pl->sd;
-    if (sd==ackSite) {
-      sendAcknowledge(sd,OTI);
-    } else {
-      ret = sendRedirect(sd,OTI,val);
-      if (ret != PROCEED)
-        break;
-    }
-    ProxyList *tmp = pl->next;
-    pl->dispose();
-    pl = tmp;
-  }
-  return ret;
+  return PROCEED;
 }
 
+// local bind request
+static
 OZ_Return bindPerdioVar(OldPerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
 {
   PD((PD_VAR,"bindPerdioVar by thread: %x",oz_currentThread()));
   if (pv->isManager()) {
     PD((PD_VAR,"bind manager o:%d v:%s",pv->getIndex(),toC(v)));
-    OZ_Return aux = sendRedirect(pv,v,mySite,pv->getIndex());
+    OZ_Return aux = sendRedirectToProxies(pv,v,mySite,pv->getIndex());
     if (aux == PROCEED) {
       OT->getOwner(pv->getIndex())->mkRef();
       pv->primBind(lPtr,v);
@@ -412,6 +422,7 @@ OZ_Return OldPerdioVar::unifyV(TaggedRef *lPtr, TaggedRef r, ByteCode *scp)
 
 // ----------------------------------------------------------------------
 
+// extern
 TaggedRef newObjectProxy(Object *o, GName *gnobj,
                          GName *gnclass, TaggedRef clas)
 {
@@ -448,7 +459,7 @@ void OldPerdioVar::managerBindV(TaggedRef *vPtr, TaggedRef val,
   if (oe->hasFullCredit()) {
     PD((WEIRD,"SURRENDER: full credit"));
   }
-  sendRedirect(this,val,rsite,OTI);
+  sendRedirectToProxies(this,val,rsite,OTI);
 }
 
 void OldPerdioVar::proxyAckV(TaggedRef *vPtr, BorrowEntry *be)
@@ -461,7 +472,7 @@ void OldPerdioVar::proxyAckV(TaggedRef *vPtr, BorrowEntry *be)
 
 void OldPerdioVar::marshalV(MsgBuffer *bs)
 {
-  if((isProxy()) || isManager()) {
+  if ((isProxy()) || isManager()) {
     marshalVar(this,bs);
   } else {
     marshalObjVar(this,bs);
