@@ -11,11 +11,6 @@
 ac_help=
 ac_default_prefix=/usr/local
 # Any additions from configure.in:
-ac_default_prefix=/usr/local/oz
-ac_help="$ac_help
---with-inc-dir=d1,...,dn	add these dirs to CPPFLAGS"
-ac_help="$ac_help
---with-lib-dir=d1,...,dn	add these dirs to LDFLAGS"
 ac_help="$ac_help
 --enable-contrib-gdbm
 	whether to build the gdbm contribution (default: yes)"
@@ -568,7 +563,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:572: checking for $ac_word" >&5
+echo "configure:567: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_RM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -597,476 +592,14 @@ test -n "$RM" && break
 done
 
 
-
-  
-  
-  srcdir=`cd $srcdir && pwd`
-  SRCDIR="$srcdir"
-  
-
-  
-  echo $ac_n "checking for SRCTOP""... $ac_c" 1>&6
-echo "configure:610: checking for SRCTOP" >&5
-if eval "test \"`echo '$''{'oz_cv_path_SRCTOP'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  
-    
-  oz_tmp_dir=$srcdir
-  oz_tmp_ok=
-  for oz_tmp1 in OZVERSION; do
-    for oz_tmp2 in $oz_tmp_dir \
-		   $oz_tmp_dir/.. \
-		   $oz_tmp_dir/../.. \
-		   $oz_tmp_dir/../../.. \
-		   $oz_tmp_dir/../../../.. \
-		   $oz_tmp_dir/../../../../..; do
-      if test -r "$oz_tmp2/$oz_tmp1"; then
-        oz_cv_path_SRCTOP=`cd $oz_tmp2 && pwd`
-        oz_tmp_ok=yes
-        break
-      fi
-    done
-    test -n "$oz_tmp_ok" && break
-  done
-    if test -z "$oz_cv_path_SRCTOP"; then
-      { echo "configure: error: cannot find SRCTOP" 1>&2; exit 1; }
-    fi
-fi
-
-echo "$ac_t""$oz_cv_path_SRCTOP" 1>&6
-  SRCTOP=$oz_cv_path_SRCTOP
-  
-  
-  echo $ac_n "checking for BUILDTOP""... $ac_c" 1>&6
-echo "configure:643: checking for BUILDTOP" >&5
-if eval "test \"`echo '$''{'oz_cv_path_BUILDTOP'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  
-    
-  oz_tmp_dir=.
-  oz_tmp_ok=
-  for oz_tmp1 in contrib config.cache; do
-    for oz_tmp2 in $oz_tmp_dir \
-		   $oz_tmp_dir/.. \
-		   $oz_tmp_dir/../.. \
-		   $oz_tmp_dir/../../.. \
-		   $oz_tmp_dir/../../../.. \
-		   $oz_tmp_dir/../../../../..; do
-      if test -r "$oz_tmp2/$oz_tmp1"; then
-        oz_cv_path_BUILDTOP=`cd $oz_tmp2 && pwd`
-        oz_tmp_ok=yes
-        break
-      fi
-    done
-    test -n "$oz_tmp_ok" && break
-  done
-    if test -z "$oz_cv_path_BUILDTOP"; then
-      { echo "configure: error: cannot find BUILDTOP" 1>&2; exit 1; }
-    fi
-fi
-
-echo "$ac_t""$oz_cv_path_BUILDTOP" 1>&6
-  BUILDTOP=$oz_cv_path_BUILDTOP
-  
-  ac_aux_dir=
-for ac_dir in $SRCTOP $srcdir/$SRCTOP; do
-  if test -f $ac_dir/install-sh; then
-    ac_aux_dir=$ac_dir
-    ac_install_sh="$ac_aux_dir/install-sh -c"
-    break
-  elif test -f $ac_dir/install.sh; then
-    ac_aux_dir=$ac_dir
-    ac_install_sh="$ac_aux_dir/install.sh -c"
-    break
-  fi
-done
-if test -z "$ac_aux_dir"; then
-  { echo "configure: error: can not find install-sh or install.sh in $SRCTOP $srcdir/$SRCTOP" 1>&2; exit 1; }
-fi
-ac_config_guess=$ac_aux_dir/config.guess
-ac_config_sub=$ac_aux_dir/config.sub
-ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
-
-  
-  if test -z "$oz_cv_MAKE"; then
-    for ac_prog in gmake make
-do
-# Extract the first word of "$ac_prog", so it can be a program name with args.
-set dummy $ac_prog; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:700: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_prog_MAKE'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  if test -n "$MAKE"; then
-  ac_cv_prog_MAKE="$MAKE" # Let the user override the test.
-else
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_prog_MAKE="$ac_prog"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-fi
-fi
-MAKE="$ac_cv_prog_MAKE"
-if test -n "$MAKE"; then
-  echo "$ac_t""$MAKE" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-test -n "$MAKE" && break
-done
-test -n "$MAKE" || MAKE="NONE"
-
-    if test "$MAKE" = NONE; then
-      oz_tmp_ok=no
-    else
-      
-  if oz_tmp=`$MAKE -n --version 2>/dev/null` && \
-     oz_tmp=`expr "$oz_tmp" : GNU`; then
-    GNU_MAKE=yes
-  else
-    GNU_MAKE=no
-  fi
-      if test "$GNU_MAKE" = no; then
-        oz_tmp_ok=no
-        echo "configure: warning: $MAKE is not GNU make" 1>&2
-      else
-        oz_tmp_ok=yes
-      fi
-    fi
-    if test "$oz_tmp_ok" = yes; then
-      oz_cv_MAKE=$MAKE
-    else
-      { echo "configure: error: 
-GNU make is needed to build the system.
-It can be retrieved from:
-
-	ftp://ftp.gnu.org/pub/gnu/
-
-The latest version at this time is 3.77 and is available
-packaged as the following archive:
-
-	make-3.77.tar.gz
-
-You may find a mirror archive closer to you by consulting:
-
-	http://www.gnu.org/order/ftp.html
-" 1>&2; exit 1; }
-    fi
-  else
-    
-  echo $ac_n "checking for GNU make""... $ac_c" 1>&6
-echo "configure:768: checking for GNU make" >&5
-  MAKE=$oz_cv_MAKE
-  echo "$ac_t""(cached) $MAKE" 1>&6
-  fi
-  
-  echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:774: checking whether ${MAKE-make} sets \${MAKE}" >&5
-set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
-if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  cat > conftestmake <<\EOF
-all:
-	@echo 'ac_maketemp="${MAKE}"'
-EOF
-# GNU make sometimes prints "make[1]: Entering...", which would confuse us.
-eval `${MAKE-make} -f conftestmake 2>/dev/null | grep temp=`
-if test -n "$ac_maketemp"; then
-  eval ac_cv_prog_make_${ac_make}_set=yes
-else
-  eval ac_cv_prog_make_${ac_make}_set=no
-fi
-rm -f conftestmake
-fi
-if eval "test \"`echo '$ac_cv_prog_make_'${ac_make}_set`\" = yes"; then
-  echo "$ac_t""yes" 1>&6
-  SET_MAKE=
-else
-  echo "$ac_t""no" 1>&6
-  SET_MAKE="MAKE=${MAKE-make}"
-fi
-
-  
-  if test "${INSTALL+set}" = set; then
-    echo $ac_n "checking whether to unset broken INSTALL""... $ac_c" 1>&6
-echo "configure:803: checking whether to unset broken INSTALL" >&5
-if eval "test \"`echo '$''{'oz_cv_unset_INSTALL'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  
-        echo >conftest.$$
-        if $INSTALL -c -m 644 conftest.$$ /tmp >/dev/null 2>&1; then
-          rm -f /tmp/conftest.$$ 2>/dev/null
-          oz_cv_unset_INSTALL=no
-        else
-          oz_cv_unset_INSTALL=yes
-        fi
-        rm -f conftest.$$ 2>/dev/null
-fi
-
-echo "$ac_t""$oz_cv_unset_INSTALL" 1>&6
-    test "$oz_cv_unset_INSTALL" = yes && unset INSTALL
-  fi
-  # Find a good install program.  We prefer a C program (faster),
-# so one script is as good as another.  But avoid the broken or
-# incompatible versions:
-# SysV /etc/install, /usr/sbin/install
-# SunOS /usr/etc/install
-# IRIX /sbin/install
-# AIX /bin/install
-# AFS /usr/afsws/bin/install, which mishandles nonexistent args
-# SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
-# ./install, which can be erroneously created by make from ./install.sh.
-echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:832: checking for a BSD compatible install" >&5
-if test -z "$INSTALL"; then
-if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-    IFS="${IFS= 	}"; ac_save_IFS="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH; do
-    # Account for people who put trailing slashes in PATH elements.
-    case "$ac_dir/" in
-    /|./|.//|/etc/*|/usr/sbin/*|/usr/etc/*|/sbin/*|/usr/afsws/bin/*|/usr/ucb/*) ;;
-    *)
-      # OSF1 and SCO ODT 3.0 have their own names for install.
-      for ac_prog in ginstall installbsd scoinst install; do
-        if test -f $ac_dir/$ac_prog; then
-	  if test $ac_prog = install &&
-            grep dspmsg $ac_dir/$ac_prog >/dev/null 2>&1; then
-	    # AIX install.  It has an incompatible calling convention.
-	    # OSF/1 installbsd also uses dspmsg, but is usable.
-	    :
-	  else
-	    ac_cv_path_install="$ac_dir/$ac_prog -c"
-	    break 2
-	  fi
-	fi
-      done
-      ;;
-    esac
-  done
-  IFS="$ac_save_IFS"
-
-fi
-  if test "${ac_cv_path_install+set}" = set; then
-    INSTALL="$ac_cv_path_install"
-  else
-    # As a last resort, use the slow shell script.  We don't cache a
-    # path for INSTALL within a source directory, because that will
-    # break other packages using the cache if that directory is
-    # removed, or if the path is relative.
-    INSTALL="$ac_install_sh"
-  fi
-fi
-echo "$ac_t""$INSTALL" 1>&6
-
-# Use test -z because SunOS4 sh mishandles braces in ${var-val}.
-# It thinks the first close brace ends the variable substitution.
-test -z "$INSTALL_PROGRAM" && INSTALL_PROGRAM='${INSTALL}'
-
-test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
-
-  
-    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
-    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
-    # Extract the first word of "mkinstalldirs", so it can be a program name with args.
-set dummy mkinstalldirs; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:892: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$INSTALL_DIR" in
-  /*)
-  ac_cv_path_INSTALL_DIR="$INSTALL_DIR" # Let the user override the test with a path.
-  ;;
-  *)
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_INSTALL_DIR="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  ;;
-esac
-fi
-INSTALL_DIR="$ac_cv_path_INSTALL_DIR"
-if test -n "$INSTALL_DIR"; then
-  echo "$ac_t""$INSTALL_DIR" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-    INSTALL_DIR=`echo $INSTALL_DIR | sed -e "s|//|/|g"`
-    if test ! -n "$INSTALL_DIR"
-    then
-	INSTALL_DIR=undefined
-	
-    fi
-    
-  HOMEURL="http://www.mozart-oz.org/home"
-  HOMECACHE="http/www.mozart-oz.org/home"
-  
-  
-  
-  echo $ac_n "checking for --with-inc-dir""... $ac_c" 1>&6
-echo "configure:933: checking for --with-inc-dir" >&5
-  # Check whether --with-inc-dir or --without-inc-dir was given.
-if test "${with_inc_dir+set}" = set; then
-  withval="$with_inc_dir"
-  oz_cv_with_inc_dirs=$with_inc_dir
-else
-  : ${oz_cv_with_inc_dirs=$oz_with_inc_dir}
-fi
-
-  echo "$ac_t""$with_inc_dir" 1>&6
-  oz_tmp_IFS="$IFS"
-  IFS=","
-  # reverse the list of dirs
-  oz_tmp_dirs=""
-  for oz_tmp in $oz_cv_with_inc_dirs DONE; do
-    if test "$oz_tmp" != DONE; then
-      oz_tmp_dirs="$oz_tmp${oz_tmp_dirs:+ }$oz_tmp_dirs"
-    fi
-  done
-  # add them to CPPFLAGS and oz_inc_path
-  IFS=$oz_tmp_IFS
-  : ${oz_inc_path="/usr/local/include"}
-  for oz_tmp1 in $oz_tmp_dirs DONE; do
-    if test "$oz_tmp1" != DONE; then
-      
-  if test "-I$oz_tmp1" != yes && test "-I$oz_tmp1" != no; then
-    oz_tmp_ok=yes
-    for oz_tmp in $CPPFLAGS NONE; do
-      if test "$oz_tmp" = "-I$oz_tmp1"; then
-        oz_tmp_ok=no
-        break
-      fi
-    done
-    test "$oz_tmp_ok" = yes && CPPFLAGS="$CPPFLAGS${CPPFLAGS:+ }-I$oz_tmp1"
-  fi
-
-      oz_inc_path="$oz_tmp1${oz_inc_path:+ }$oz_inc_path"
-    fi
-  done
-
-  
-  echo $ac_n "checking for --with-lib-dir""... $ac_c" 1>&6
-echo "configure:975: checking for --with-lib-dir" >&5
-  # Check whether --with-lib-dir or --without-lib-dir was given.
-if test "${with_lib_dir+set}" = set; then
-  withval="$with_lib_dir"
-  oz_cv_with_lib_dirs=$with_lib_dir
-else
-  : ${oz_cv_with_lib_dirs=$oz_with_lib_dir}
-fi
-
-  echo "$ac_t""$with_lib_dir" 1>&6
-  oz_tmp_IFS="$IFS"
-  IFS=","
-  # reverse the list of dirs
-  oz_tmp_dirs=""
-  for oz_tmp in $oz_cv_with_lib_dirs DONE; do
-    if test "$oz_tmp" != DONE; then
-      oz_tmp_dirs="$oz_tmp${oz_tmp_dirs:+ }$oz_tmp_dirs"
-    fi
-  done
-  # add them to LDFLAGS and oz_lib_path
-  IFS=$oz_tmp_IFS
-  : ${oz_lib_path="/usr/local/lib"}
-  for oz_tmp1 in $oz_tmp_dirs DONE; do
-    if test "$oz_tmp1" != DONE; then
-      
-  if test "-L$oz_tmp1" != yes && test "-L$oz_tmp1" != no; then
-    oz_tmp_ok=yes
-    for oz_tmp in $LDFLAGS NONE; do
-      if test "$oz_tmp" = "-L$oz_tmp1"; then
-        oz_tmp_ok=no
-        break
-      fi
-    done
-    test "$oz_tmp_ok" = yes && LDFLAGS="-L$oz_tmp1${LDFLAGS:+ }$LDFLAGS"
-  fi
-
-      oz_lib_path="$oz_tmp1${oz_lib_path:+ }$oz_lib_path"
-    fi
-  done
-
-  
-  
-  
-    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
-    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
-    # Extract the first word of "oztool", so it can be a program name with args.
-set dummy oztool; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1028: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$OZTOOL" in
-  /*)
-  ac_cv_path_OZTOOL="$OZTOOL" # Let the user override the test with a path.
-  ;;
-  *)
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_OZTOOL="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  ;;
-esac
-fi
-OZTOOL="$ac_cv_path_OZTOOL"
-if test -n "$OZTOOL"; then
-  echo "$ac_t""$OZTOOL" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-    OZTOOL=`echo $OZTOOL | sed -e "s|//|/|g"`
-    if test ! -n "$OZTOOL"
-    then
-	OZTOOL=undefined
-	OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh"
-    fi
-    
-
+OZ_INIT
 
 CONTRIBDIRS="tk ap"
 
 
 
 echo $ac_n "checking for --enable-contrib-gdbm""... $ac_c" 1>&6
-echo "configure:1070: checking for --enable-contrib-gdbm" >&5
+echo "configure:603: checking for --enable-contrib-gdbm" >&5
 # Check whether --enable-contrib-gdbm or --disable-contrib-gdbm was given.
 if test "${enable_contrib_gdbm+set}" = set; then
   enableval="$enable_contrib_gdbm"
@@ -1083,7 +616,7 @@ echo "$ac_t""$oz_cv_enable_contrib_gdbm" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-regex""... $ac_c" 1>&6
-echo "configure:1087: checking for --enable-contrib-regex" >&5
+echo "configure:620: checking for --enable-contrib-regex" >&5
 # Check whether --enable-contrib-regex or --disable-contrib-regex was given.
 if test "${enable_contrib_regex+set}" = set; then
   enableval="$enable_contrib_regex"
@@ -1100,7 +633,7 @@ echo "$ac_t""$oz_cv_enable_contrib_regex" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-doc""... $ac_c" 1>&6
-echo "configure:1104: checking for --enable-contrib-doc" >&5
+echo "configure:637: checking for --enable-contrib-doc" >&5
 # Check whether --enable-contrib-doc or --disable-contrib-doc was given.
 if test "${enable_contrib_doc+set}" = set; then
   enableval="$enable_contrib_doc"
@@ -1117,7 +650,7 @@ echo "$ac_t""$oz_cv_enable_contrib_doc" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-os""... $ac_c" 1>&6
-echo "configure:1121: checking for --enable-contrib-os" >&5
+echo "configure:654: checking for --enable-contrib-os" >&5
 # Check whether --enable-contrib-os or --disable-contrib-os was given.
 if test "${enable_contrib_os+set}" = set; then
   enableval="$enable_contrib_os"
@@ -1134,7 +667,7 @@ echo "$ac_t""$oz_cv_enable_contrib_os" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-text""... $ac_c" 1>&6
-echo "configure:1138: checking for --enable-contrib-text" >&5
+echo "configure:671: checking for --enable-contrib-text" >&5
 # Check whether --enable-contrib-text or --disable-contrib-text was given.
 if test "${enable_contrib_text+set}" = set; then
   enableval="$enable_contrib_text"
@@ -1151,7 +684,7 @@ echo "$ac_t""$oz_cv_enable_contrib_text" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-dpanel""... $ac_c" 1>&6
-echo "configure:1155: checking for --enable-contrib-dpanel" >&5
+echo "configure:688: checking for --enable-contrib-dpanel" >&5
 # Check whether --enable-contrib-dpanel or --disable-contrib-dpanel was given.
 if test "${enable_contrib_dpanel+set}" = set; then
   enableval="$enable_contrib_dpanel"
@@ -1168,7 +701,7 @@ echo "$ac_t""$oz_cv_enable_contrib_dpanel" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-micq""... $ac_c" 1>&6
-echo "configure:1172: checking for --enable-contrib-micq" >&5
+echo "configure:705: checking for --enable-contrib-micq" >&5
 # Check whether --enable-contrib-micq or --disable-contrib-micq was given.
 if test "${enable_contrib_micq+set}" = set; then
   enableval="$enable_contrib_micq"
@@ -1185,18 +718,37 @@ echo "$ac_t""$oz_cv_enable_contrib_micq" 1>&6
   fi
 
 
+ac_aux_dir=
+for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
+  if test -f $ac_dir/install-sh; then
+    ac_aux_dir=$ac_dir
+    ac_install_sh="$ac_aux_dir/install-sh -c"
+    break
+  elif test -f $ac_dir/install.sh; then
+    ac_aux_dir=$ac_dir
+    ac_install_sh="$ac_aux_dir/install.sh -c"
+    break
+  fi
+done
+if test -z "$ac_aux_dir"; then
+  { echo "configure: error: can not find install-sh or install.sh in $srcdir $srcdir/.. $srcdir/../.." 1>&2; exit 1; }
+fi
+ac_config_guess=$ac_aux_dir/config.guess
+ac_config_sub=$ac_aux_dir/config.sub
+ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
+
 subdirs="$CONTRIBDIRS"
 
 
 echo $ac_n "checking for --enable-contrib-lp""... $ac_c" 1>&6
-echo "configure:1193: checking for --enable-contrib-lp" >&5
+echo "configure:745: checking for --enable-contrib-lp" >&5
 # Check whether --enable-contrib-lp or --disable-contrib-lp was given.
 if test "${enable_contrib_lp+set}" = set; then
   enableval="$enable_contrib_lp"
   oz_cv_enable_contrib_lp=$enableval
 else
   : ${oz_cv_enable_contrib_lp:=$oz_enable_contrib_lp}
-   : ${oz_cv_enable_contrib_lp:=yes}
+   : ${oz_cv_enable_contrib_lp:=no}
 fi
 
 echo "$ac_t""$oz_cv_enable_contrib_lp" 1>&6
@@ -1206,14 +758,14 @@ echo "$ac_t""$oz_cv_enable_contrib_lp" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-ri""... $ac_c" 1>&6
-echo "configure:1210: checking for --enable-contrib-ri" >&5
+echo "configure:762: checking for --enable-contrib-ri" >&5
 # Check whether --enable-contrib-ri or --disable-contrib-ri was given.
 if test "${enable_contrib_ri+set}" = set; then
   enableval="$enable_contrib_ri"
   oz_cv_enable_contrib_ri=$enableval
 else
   : ${oz_cv_enable_contrib_ri:=$oz_enable_contrib_ri}
-   : ${oz_cv_enable_contrib_ri:=yes}
+   : ${oz_cv_enable_contrib_ri:=no}
 fi
 
 echo "$ac_t""$oz_cv_enable_contrib_ri" 1>&6
@@ -1223,14 +775,14 @@ echo "$ac_t""$oz_cv_enable_contrib_ri" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-davinci""... $ac_c" 1>&6
-echo "configure:1227: checking for --enable-contrib-davinci" >&5
+echo "configure:779: checking for --enable-contrib-davinci" >&5
 # Check whether --enable-contrib-davinci or --disable-contrib-davinci was given.
 if test "${enable_contrib_davinci+set}" = set; then
   enableval="$enable_contrib_davinci"
   oz_cv_enable_contrib_davinci=$enableval
 else
   : ${oz_cv_enable_contrib_davinci:=$oz_enable_contrib_davinci}
-   : ${oz_cv_enable_contrib_davinci:=yes}
+   : ${oz_cv_enable_contrib_davinci:=no}
 fi
 
 echo "$ac_t""$oz_cv_enable_contrib_davinci" 1>&6
@@ -1240,14 +792,14 @@ echo "$ac_t""$oz_cv_enable_contrib_davinci" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-reflect""... $ac_c" 1>&6
-echo "configure:1244: checking for --enable-contrib-reflect" >&5
+echo "configure:796: checking for --enable-contrib-reflect" >&5
 # Check whether --enable-contrib-reflect or --disable-contrib-reflect was given.
 if test "${enable_contrib_reflect+set}" = set; then
   enableval="$enable_contrib_reflect"
   oz_cv_enable_contrib_reflect=$enableval
 else
   : ${oz_cv_enable_contrib_reflect:=$oz_enable_contrib_reflect}
-   : ${oz_cv_enable_contrib_reflect:=yes}
+   : ${oz_cv_enable_contrib_reflect:=no}
 fi
 
 echo "$ac_t""$oz_cv_enable_contrib_reflect" 1>&6
@@ -1257,14 +809,14 @@ echo "$ac_t""$oz_cv_enable_contrib_reflect" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-investigator""... $ac_c" 1>&6
-echo "configure:1261: checking for --enable-contrib-investigator" >&5
+echo "configure:813: checking for --enable-contrib-investigator" >&5
 # Check whether --enable-contrib-investigator or --disable-contrib-investigator was given.
 if test "${enable_contrib_investigator+set}" = set; then
   enableval="$enable_contrib_investigator"
   oz_cv_enable_contrib_investigator=$enableval
 else
   : ${oz_cv_enable_contrib_investigator:=$oz_enable_contrib_investigator}
-   : ${oz_cv_enable_contrib_investigator:=yes}
+   : ${oz_cv_enable_contrib_investigator:=no}
 fi
 
 echo "$ac_t""$oz_cv_enable_contrib_investigator" 1>&6
@@ -1274,7 +826,7 @@ echo "$ac_t""$oz_cv_enable_contrib_investigator" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-psql""... $ac_c" 1>&6
-echo "configure:1278: checking for --enable-contrib-psql" >&5
+echo "configure:830: checking for --enable-contrib-psql" >&5
 # Check whether --enable-contrib-psql or --disable-contrib-psql was given.
 if test "${enable_contrib_psql+set}" = set; then
   enableval="$enable_contrib_psql"
@@ -1402,7 +954,6 @@ do
 done
 
 ac_given_srcdir=$srcdir
-ac_given_INSTALL="$INSTALL"
 
 trap 'rm -fr `echo "Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
@@ -1435,17 +986,6 @@ s%@oldincludedir@%$oldincludedir%g
 s%@infodir@%$infodir%g
 s%@mandir@%$mandir%g
 s%@RM@%$RM%g
-s%@SRCDIR@%$SRCDIR%g
-s%@SRCTOP@%$SRCTOP%g
-s%@BUILDTOP@%$BUILDTOP%g
-s%@MAKE@%$MAKE%g
-s%@SET_MAKE@%$SET_MAKE%g
-s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
-s%@INSTALL_DATA@%$INSTALL_DATA%g
-s%@INSTALL_DIR@%$INSTALL_DIR%g
-s%@HOMEURL@%$HOMEURL%g
-s%@HOMECACHE@%$HOMECACHE%g
-s%@OZTOOL@%$OZTOOL%g
 s%@CONTRIBDIRS@%$CONTRIBDIRS%g
 s%@subdirs@%$subdirs%g
 
@@ -1524,10 +1064,6 @@ for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
     top_srcdir="$ac_dots$ac_given_srcdir" ;;
   esac
 
-  case "$ac_given_INSTALL" in
-  [/$]*) INSTALL="$ac_given_INSTALL" ;;
-  *) INSTALL="$ac_dots$ac_given_INSTALL" ;;
-  esac
 
   echo creating "$ac_file"
   rm -f "$ac_file"
@@ -1543,7 +1079,6 @@ for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
 s%@configure_input@%$configure_input%g
 s%@srcdir@%$srcdir%g
 s%@top_srcdir@%$top_srcdir%g
-s%@INSTALL@%$INSTALL%g
 " $ac_file_inputs | (eval "$ac_sed_cmds") > $ac_file
 fi; done
 rm -f conftest.s*
@@ -1639,10 +1174,6 @@ if test "$no_recursion" != yes; then
       *) # Relative path.
         ac_sub_cache_file="$ac_dots$cache_file" ;;
       esac
-  case "$ac_given_INSTALL" in
-        [/$]*) INSTALL="$ac_given_INSTALL" ;;
-        *) INSTALL="$ac_dots$ac_given_INSTALL" ;;
-        esac
 
       echo "running ${CONFIG_SHELL-/bin/sh} $ac_sub_configure $ac_sub_configure_args --cache-file=$ac_sub_cache_file --srcdir=$ac_sub_srcdir"
       # The eval makes quoting arguments work.
