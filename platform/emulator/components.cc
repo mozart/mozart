@@ -374,9 +374,9 @@ ByteSource::getTerm(OZ_Term out)
   stream->beforeInterpret(0);
   stream->unmarshalBegin();	
 
-  char *versiongot = ozstrdup("unknown");
+  char *versiongot = 0;
   OZ_Term val;
-  
+
   if(stream->skipHeader() && unmarshal_SPEC(stream,versiongot,val)){
     stream->afterInterpret();    
     bufferManager->freeByteStream(stream);
@@ -384,12 +384,17 @@ ByteSource::getTerm(OZ_Term out)
     return oz_unify(val,out);}    
       
   bufferManager->dumpByteStream(stream);
-  OZ_Term vergot = oz_atom(versiongot);
-  delete versiongot;
-  return oz_raise(E_ERROR,OZ_atom("perdio"),"load",3,
-		  oz_atom("versionMismatch"),
-		  oz_atom(PERDIOVERSION),
-		  vergot);
+  if (versiongot) {
+    OZ_Term vergot = oz_atom(versiongot);
+    delete versiongot;
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",3,
+		    oz_atom("versionMismatch"),
+		    oz_atom(PERDIOVERSION),
+		    vergot);
+  } else {
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",1,
+		    oz_atom("notComponent"));
+  }
 }
 
 
@@ -528,22 +533,19 @@ public:
   }
 };
 
+#define ACTION_STRING(act)	\
+((act==URL_LOCALIZE)?"localize":\
+ (act==URL_OPEN    )?"open":	\
+ (act==URL_LOAD    )?"load":	\
+ "<unknown action>")
 
 void doRaise(Thread *th, char *msg, const char *url,URLAction act)
 {
-  threadRaise(th,
-	      OZ_mkTuple(E_ERROR,
-			 1,
-			 OZ_mkTupleC("url",
-				     3,
-				     oz_atom((act==URL_LOCALIZE)?"localize":
-					     (act==URL_OPEN    )?"open"    :
-					     (act==URL_LOAD    )?"load"    :
-					     "<unknown action>"),
-				     oz_atom(msg),
-				     oz_atom(url))));
+  threadRaise(th,OZ_makeException(E_SYSTEM,oz_atom("url"),
+				  ACTION_STRING(act),2,
+				  oz_atom(msg),
+				  oz_atom(url)),1);
 }
-
 
 int pipeHandler(int, PipeInfo *pi)
 {
@@ -568,7 +570,9 @@ int pipeHandler(int, PipeInfo *pi)
 
   switch (pi->action) {
   case URL_LOCALIZE:
-    pushUnify(th,pi->out,oz_atom(pi->file));
+    // this is only called when the file is remote, therefore
+    // a local copy will be made into the file
+    pushUnify(th,pi->out,OZ_mkTupleC("new",1,oz_atom(pi->file)));
     break;
   case URL_OPEN:
     {
@@ -591,9 +595,10 @@ int pipeHandler(int, PipeInfo *pi)
       OZ_Term other = oz_newVariable();
       OZ_Return aux = loadFD(fd,other);
       if (aux==RAISE) {
-	threadRaise(th,am.getExceptionValue());
+	threadRaise(th,am.getExceptionValue(),1);
 	goto exit;
       }
+      Assert(aux==PROCEED);
       unlink(pi->file);
       pushUnify(th,pi->out,other);
       break;
@@ -811,17 +816,20 @@ bomb:
 }
 
 // URL_get is a primitive that performs an action on a url.
-// It always returns PROCEED.  If an error occurs, a raise is
-// pushed on the thread and will happen next, after this
-// primitive has returned (successfully!!!).  I think the
-// advantage of doing it this way is that you can ignore the
-// return value when you are calling this not as a builtin.
+// the action maybe URL_LOCALIZE, URL_OPEN, or URL_LOAD.
+// In the case or URL_LOCALIZE, the return value is either:
+//	old(PATH)
+//		if PATH is the pathname of the original
+//		local file
+//	new(PATH)
+//		if PATH is the pathname of a new local copy
+//		of the remote file
 
 #include <ctype.h>
+#include <unistd.h>
 
-OZ_Return URL_get(const char*url,OZ_Term out,Thread *th,URLAction act)
+OZ_Return URL_get(const char*url,OZ_Term out,URLAction act)
 {
-  if (act==URL_LOCALIZE) goto url_remote; // to force a copy
   if (strncmp(url,"file:/",6)==0) { url+=5; goto url_local; }
   {
     const char*s=url;
@@ -829,43 +837,44 @@ OZ_Return URL_get(const char*url,OZ_Term out,Thread *th,URLAction act)
     if (*s==':') goto url_remote;
   }
 url_local:
-  {
-    int fd = osopen(url,O_RDONLY,0);
-    if (fd < 0) {
-      doRaise(th,OZ_unixError(errno),url,act);
-      return PROCEED;
+  switch (act) {
+  case URL_LOCALIZE:
+    {
+      if (access(url,F_OK)<0) goto kaboom;
+      return OZ_unify(out,OZ_mkTupleC("old",1,oz_atom(url)));
     }
-    switch (act) {
-    case URL_OPEN:
-      {
-	pushUnify(th,out,OZ_int(fd));
-	return PROCEED;
-      }
-    case URL_LOAD:
-      {
-	OZ_Term   val    = oz_newVariable();
-	OZ_Return status = loadFD(fd,val);
-	if (status==RAISE)
-	  threadRaise(th,am.getExceptionValue());
-	else
-	  pushUnify(th,out,val);
-	return PROCEED;
-      }
-    default:
-      Assert(0);
-      return FAILED;
+  case URL_OPEN:
+    {
+      int fd = osopen(url,O_RDONLY,0);
+      if (fd<0) goto kaboom;
+      return OZ_unify(out,OZ_int(fd));
     }
+  case URL_LOAD:
+    {
+      int fd = osopen(url,O_RDONLY,0);
+      if (fd<0) goto kaboom;
+      OZ_Term   val    = oz_newVariable();
+      OZ_Return status = loadFD(fd,val);
+      return (status==PROCEED)?OZ_unify(out,val):status;
+    }
+  default:
+    Assert(0);
+    return FAILED;
   }
 url_remote:
-  getURL(url,out,act,th);
+  getURL(url,out,act,am.currentThread());
   return BI_PREEMPT;
+kaboom:
+  return oz_raise(E_SYSTEM,oz_atom("url"),ACTION_STRING(act),2,
+		  oz_atom(OZ_unixError(errno)),
+		  oz_atom(url));
 }
 
 OZ_C_proc_begin(BIurl_localize,2)
 {
   OZ_declareVirtualStringArg(0,url);
   OZ_declareArg(1,out);
-  return URL_get(url,out,am.currentThread(),URL_LOCALIZE);
+  return URL_get(url,out,URL_LOCALIZE);
 }
 OZ_C_proc_end
 
@@ -873,7 +882,7 @@ OZ_C_proc_begin(BIurl_open,2)
 {
   OZ_declareVirtualStringArg(0,url);
   OZ_declareArg(1,out);
-  return URL_get(url,out,am.currentThread(),URL_OPEN);
+  return URL_get(url,out,URL_OPEN);
 }
 OZ_C_proc_end
 
@@ -881,7 +890,7 @@ OZ_C_proc_begin(BIurl_load,2)
 {
   OZ_declareVirtualStringArg(0,url);
   OZ_declareArg(1,out);
-  return URL_get(url,out,am.currentThread(),URL_LOAD);
+  return URL_get(url,out,URL_LOAD);
 }
 OZ_C_proc_end
 
@@ -894,7 +903,6 @@ OZ_C_proc_begin(BIload,2)
   return loadURL(url,out,am.currentThread());
 }
 OZ_C_proc_end
-
 
 OZ_C_proc_begin(BIWget,2)
 {
