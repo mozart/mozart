@@ -29,7 +29,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #define NEW_NAMER
-//#define NEW_NAMER_DEBUG
+// #define NEW_NAMER_DEBUG
 #ifdef NEW_NAMER
 #define NAME_PROPAGATORS
 #endif
