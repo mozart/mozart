@@ -34,8 +34,13 @@ OZ_Return NotEqOffPropagator::propagate(void)
 {
   int &c = reg_c;
 
+  if (mayBeEqualVars() && OZ_isEqualVars(reg_x, reg_y)) {
+    return (0 == c) ? FAILED : PROCEED;
+  }
+
   OZ_FDIntVar x(reg_x), y(reg_y);
   PropagatorController_V_V P(x, y);
+  
 
   if (*x == fd_singl) {
     FailOnEmpty(*y -= (x->getSingleElem() - c));
@@ -44,6 +49,11 @@ OZ_Return NotEqOffPropagator::propagate(void)
   
   if (*y == fd_singl) {
     FailOnEmpty(*x -= (y->getSingleElem() + c));
+    return P.vanish();
+  }
+
+  if ((x->getMaxElem() < y->getMinElem() + c) || 
+      (y->getMaxElem() < x->getMinElem() - c)) {
     return P.vanish();
   }
 
