@@ -26,6 +26,8 @@
 */
 
 
+#include <signal.h>
+
 #include "../include/config.h"
 
 #include "dldwrapper.h"
@@ -34,11 +36,11 @@
 #include "am.hh"
 #include "bignum.hh"
 #include "builtins.hh"
-#include "tracer.hh"
 #include "genvar.hh"
 #include "misc.hh"
 #include "records.hh"
 #include "thread.hh"
+#include "tracer.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -145,7 +147,7 @@ void AM::init(int argc,char **argv)
       runningUnderEmacs = 1;
       break;
     case 'd':
-      debugger.mode = DEBUG_ALL;
+      tracerOn();
       break;
     case 's':
       port = atoi(optarg);
@@ -245,6 +247,9 @@ void AM::init(int argc,char **argv)
   xRegs       = allocateStaticRefsArray(NumberOfXRegisters);
   globalStore = allocateStaticRefsArray(NumberOfYRegisters);
 
+  Board::Init();
+  Thread::Init();
+
   currentTaskSusp = NULL;
   currentTaskStack = NULL;
 
@@ -262,9 +267,7 @@ void AM::init(int argc,char **argv)
 
   initAtoms();
   
-#ifndef DEBUG_DET
   initSignal();
-#endif
 
   initIO();
 
@@ -507,7 +510,7 @@ Bool AM::isBetween(Board *to, Board *varHome)
 {
   for (Board *tmp = to->getBoardDeref();
        tmp != Board::GetCurrent();
-       tmp = tmp->getParentBoardDeref()) {
+       tmp = tmp->getParentBoard()->getBoardDeref()) {
     if (tmp == varHome) {
       return NO;
     }
@@ -530,10 +533,10 @@ SuspList* AM::checkSuspensionList(SVariable* var, TaggedRef taggedvar,
   
   while (suspList) {
     Suspension* susp = suspList->getElem();
-    Board* n = susp->getNode();
+    Board* n = susp->getNode()->getBoardDeref();
 
     // suspension points to an already reduced branch of the computation tree
-    if (n->isDead()) {
+    if (!n) {
       susp->markDead();
       suspList = suspList->dispose();
       continue;
@@ -579,7 +582,7 @@ void AM::awakeNode(Board *node)
 {
   node = node->getBoardDeref();
 
-  if (node->isDead())
+  if (!node)
     return;
 
   node->removeSuspension();
@@ -649,52 +652,50 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
 }
 
 
-Bool AM::installPath(Board *to,Bool &isDead)
+/*
+  install every board from the Board::Current to 'n'
+  and move cursor to 'n'
+
+  algm
+    find common parent board of 'to' and 'Board::Current'
+    deinstall until common parent (go upward)
+    install (go downward)
+  pre:
+     'to' ist not deref'd
+     'to' may be committed, failed or discarded
+   ret:
+     INST_OK         installation successful
+     INST_FAILED     installation of board failed
+     INST_REJECTED   'to' is failed or discarded board
+     */
+InstType AM::installPath(Board *to)
 {
-  DebugCheck(to->isCommitted(),
-	     error("AM::installPath: board already committed");
-	     return NO;);
+  to = to->getBoardDeref();
+  if (!to) {
+    return INST_REJECTED;
+  }
 
   if (to->isInstalled()) {
     deinstallPath(to);
-    return OK;
-  }
-
-  if (to->isDead()) {
-    isDead = OK;
-    return NO;
+    return INST_OK;
   }
 
   DebugCheck(to == Board::GetRoot(),
 	     error("AM::installPath: root node reached");
-	     return NO;);
+	     );
   
-  Board *cl = to->getParentBoardDeref();
-
-  if (!installPath(cl,isDead)) {
-    return NO;
+  InstType ret = installPath(to->getParentBoard());
+  if (ret != INST_OK) {
+    return ret;
   }
 
-  Board::SetCurrent (to);
-  if (installOne() == NO) {
-    return NO;
+  Board::SetCurrent(to);
+  if (!installOne()) {
+    return INST_FAILED;
   }
-  DebugCheck(Board::GetCurrent()->isCommitted(),
-	     error ("install Board that is already committed"));
-  return OK;
+  return INST_OK;
 }
 
-// install every board from the Board::Current to 'n'
-//  and move cursor to 'n'
-// returns: if installation failed    NO
-//          if 'n' is installed       OK
-//          if 'n' is dead            NO
-//
-
-// Algm
-// * find common parent board of 'to' and 'Board::Current'
-// * deinstall until common parent (go upward)
-// * install (go downward)
 
 // a script is written when deinstalling a local board
 // no script need be written, when failure occurs
@@ -784,7 +785,7 @@ inline void AM::deinstallOne(Bool writeScript)
 {
   reduceTrailFrame(writeScript);
   Board::GetCurrent()->unsetInstalled();
-  Board::SetCurrent(Board::GetCurrent()->getParentBoardDeref());
+  Board::SetCurrent(Board::GetCurrent()->getParentBoard()->getBoardDeref());
 }
 
 inline void AM::deinstallPath(Board *top)
@@ -917,7 +918,7 @@ inline Bool AM::isInScope (Board *above, Board* node) {
   while (node != Board::GetRoot()) {
     if (node == above)
       return (OK);
-    node = node->getParentBoardDeref();
+    node = node->getParentBoard()->getBoardDeref();
   }
   return (NO);
 }
@@ -1023,6 +1024,11 @@ inline void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef a)
   } else {
     genericBind(varPtr,var,NULL,a);
   }
+}
+
+void AM::undoTrailing(int n) {
+  while(n--)
+    trail.popRef();
 }
 
 #ifdef OUTLINE

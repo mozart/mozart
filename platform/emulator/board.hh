@@ -23,9 +23,14 @@ private:
   static Board *Root;
   static Board *Current;
 public:
+  static void Init();
+  static void Print();
   static Board *GetCurrent();
   static Board *GetRoot();
   static void SetCurrent(Board *c, Bool checkNotGC=OK);
+  static void NewCurrentAsk(Actor *a);
+  static void NewCurrentWait(Actor *a);
+  static void GC();
 
 private:
   int flags;
@@ -36,32 +41,32 @@ private:
     Board *board;
   };
   ConsList script;
-public:
   Board(Actor *a,int type);
+public:
   ~Board();
 
   USEHEAPMEMORY;
-  void gc();
-  Bool isPathMark();
-  Bool setPathMark();
-  Bool unsetPathMark();
-  Board *getParentDebug();
+  Board *gc();
+  void gcRecurse(void);
   OZPRINT;
   OZPRINTLONG;
 
   void addSuspension();
   Actor *getActor();
   Continuation *getBodyPtr();
-  Board *getParentBoardDeref();
+  Board *getParentBoard();
   ConsList &getScriptRef();
+  Board *getBoard();
   Board *getBoardDeref();
   int getSuspCount(void);
   Bool hasSuspension();
   Bool isAsk();
   Bool isCommitted();
-  Bool isDead();
+  Bool isDiscarded();
+  Bool isFailed();
   Bool isInstalled();
   Bool isNervous();
+  Bool isPathMark();
   Bool isWaitTop();
   Bool isWait();
   Bool isRoot();
@@ -69,29 +74,16 @@ public:
   void removeSuspension();
   void setBody(ProgramCounter p,RefsArray y,
 		       RefsArray g,RefsArray x,int i);
+  void setFailed();
   void setInstalled();
   void setNervous();
+  void setPathMark();
   void setScript(int i,TaggedRef *v,TaggedRef r);
-  void setBoard(Board *s);
+  void setCommitted(Board *s);
   void setWaitTop();
   void unsetInstalled();
   void unsetNervous();
-};
-
-
-class AskBoard: public Board {
-public:
-  AskBoard(Actor *a);
-};
-
-class WaitBoard: public Board {
-public:
-  WaitBoard(Actor *a);
-};
-
-class RootBoard: public Board {
-public:
-  RootBoard();
+  void unsetPathMark();
 };
 
 #ifndef OUTLINE

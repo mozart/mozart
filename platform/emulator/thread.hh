@@ -18,15 +18,6 @@
 
 #include "types.hh"
 
-enum T_Flag
-{
-  T_Normal	= 0,
-  T_Warm	= 1<<0,
-  T_Nervous	= 1<<1,
-  T_RootTask	= 1<<2,
-  T_Freezed	= 1<<9,
-};
-
 class Thread : public ConstTerm
 {
 friend void engine();
@@ -34,27 +25,32 @@ private:
   static Thread *Head;
   static Thread *Tail;
   static Thread *Current;
-
-public:
+  static Thread *Root;
   static int TimeSlice;
   static int UserPriority;
   static int SystemPriority;
+
+public:
+  static void Init();
+  static void GC();
+  static void Print();
   static Bool CheckSwitch();
-  static Thread *GetCurrentDBG();
-  static Thread *GetHeadDBG();
-  static Thread *GetTailDBG();
+  static Thread *GetCurrent();
+  static Thread *GetHead();
+  static Thread *GetRoot();
+  static int GetSystemPriority();
+  static Thread *GetTail();
+  static int GetTimeSlice();
+  static int GetUserPriority();
   static Bool QueueIsEmpty();
   static void Start();
-  static void GC();
   static void MakeTaskStack();
   static void ScheduleCurrent();
-  static Thread *GetCurrent();
   static void FinishCurrent();
   static int GetCurrentPriority();
-  static TaskStack *GetCurrentTaskStack();
   static void NewCurrent(int prio);
   static void Schedule(Suspension *s);
-  static void ScheduleRoot(Continuation *c);
+  static void ScheduleRoot(ProgramCounter PC,RefsArray y);
   static void Schedule(Board *n);
 private:
   static Thread *UnlinkHead();
@@ -66,26 +62,27 @@ private:
   union {
     TaskStack *taskStack;
     Suspension *suspension;
-    Continuation *continuation;
     Board *board;
   };
   int priority;
 public:
   USEFREELISTMEMORY;
   Thread *gc();
+  void gcRecurse(void);
   OZPRINT;
   OZPRINTLONG;
 
-  void activate();
   int getPriority();
-  TaskStack *getTaskStack();
-  State getValue(TaggedRef feature,TaggedRef out); // see ../builtins/debug.C
-  void setPriority(int i);
-  State setValue(TaggedRef feature,TaggedRef value);
+  Bool isNormal();
+  Bool isWarm();
+  Bool isNervous();
   void schedule();
+
+  Board *popBoard();
+  Suspension *popSuspension();
+  
 private:
   Thread(int p);
-  Bool isFreezed();
   Bool isScheduled();
   void insertFromTail();
   void insertFromHead();
