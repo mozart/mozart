@@ -1681,6 +1681,10 @@ static char *checkAccess(char *file) {
 }
 
 static char *scExpndFileName(char *fileName, char *curfile) {
+  for (int i = 0; fileName[i] != '\0'; i++)
+    if (fileName[i] == '\\')
+      fileName[i] = '/';
+
   // full pathname given?
   if (fileName[0] == '/' ||
 #ifdef WINDOWS
