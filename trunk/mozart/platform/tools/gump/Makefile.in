@@ -7,18 +7,18 @@
 VPATH		= @srcdir@
 BUILDTOP	= @BUILDTOP@
 PREFIX		= @prefix@
-PLATFORM	= @platform@
+PLATFORM	= $(shell $(OZTOOL) platform)
 SRCDIR		= @srcdir@
 SRCTOP		= @SRCTOP@
 SUBDIRS		= ozflex ozbison
 
 RM		= @RM@ -f
 LNS             = @LN_S@
-DYNLD		= @DYNLD@
-CXX		= @CXX@
+OZTOOL		= @OZTOOL@
+DYNLD		= $(OZTOOL) ld
+CXX		= $(OZTOOL) c++
 CPPFLAGS	= -I$(SRCDIR) -I. -I$(SRCTOP)/platform/emulator @CPPFLAGS@
-CDYNOPT		= @CDYNOPT@
-CXXFLAGS	= @CXXFLAGS@ $(CFLAGS) $(CDYNOPT)
+CXXFLAGS	= @CXXFLAGS@ $(CFLAGS)
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@ -lc
 
