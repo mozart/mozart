@@ -53,6 +53,7 @@ INSTALL_BIN=    $(INSTALL) -m 555
 INSTALL_FILE=   $(INSTALL) -m 444
 
 LDFLAGS=           @LDFLAGS@ $(CUSR)
+EMULDFLAGS=        @EMULDFLAGS@
 
 DEFS=           @DEFS@
 OZ_WARN=        @oz_warn@
