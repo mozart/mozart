@@ -1169,6 +1169,18 @@ AC_DEFUN(OZ_ENABLE, [
     ])
 
 dnl ------------------------------------------------------------------
+dnl OZ_GTK_ENABLED
+dnl     check for --enable-gtk
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_GTK_ENABLED,
+  [OZ_ENABLE(gtk,[enable gtk support],no,
+    GTK_ENABLED=yes,
+    GTK_ENABLED=no)
+   AC_MSG_RESULT($GTK_ENABLED)
+   AC_SUBST(GTK_ENABLED)])
+
+dnl ------------------------------------------------------------------
 dnl OZ_DENYS_EVENTS
 dnl     check for --enable-denys-events
 dnl sets DENYS_EVENTS accordingly
