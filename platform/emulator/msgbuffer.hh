@@ -64,6 +64,7 @@ public:
 
   virtual char* siteStringrep()=0;
   virtual Site* getSite()=0;                    // overrided for network/vsite comm
+  virtual Bool isPersistentBuffer()=0;
   virtual void unmarshalReset()                 {} // only for network receovery
 
   void addRes(OZ_Term t)    { resources = cons(t,resources); }

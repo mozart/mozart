@@ -185,8 +185,8 @@ public:
   Bool isHandler(){ return kind&HANDLER;}
   Bool isContinueHandler(){Assert(isHandler());return kind & RETRY;} 
   void setContinueHandler(){Assert(isHandler()); kind = kind | RETRY;} 
-  Bool isPersistent(){return kind & PERSISTENT;}
-  void setPersistent(){kind = kind | PERSISTENT;}
+  Bool xxisPersistent(){return kind & PERSISTENT;}
+  void xxsetPersistent(){kind = kind | PERSISTENT;}
   
 
   void setNext(Watcher* w){next=w;}
@@ -985,13 +985,10 @@ public:
 
   void setBoard(Board *b);
   void globalizeTert();
-  void localize();
 
   void gcProxy();
   void gcManager();
   void gcTertiary();
-  void gcTertiaryInfo();
-  void gcBorrowMark();
 
   Bool installHandler(EntityCond,TaggedRef,Thread*,Bool,Bool);
   Bool deinstallHandler(Thread*,TaggedRef);
@@ -2285,7 +2282,6 @@ public:
   Bool isOwnCurrent();
   void init();
   Site* getCurrent();
-  void localize();
   void gcCellManager();
   void tokenLost();
   PendThread* getPending(){return sec->pending;}
@@ -2694,7 +2690,6 @@ public:
   void setChain(Chain *ch) { chain = ch; }
   PendThread* getPending(){return sec->pending;}
 
-  void localize();
   void gcLockManager();
   void tokenLost();
   void setOwnCurrent();

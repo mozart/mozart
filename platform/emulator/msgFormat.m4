@@ -62,6 +62,7 @@ message(M_SEND_OBJECT,Site,Index,Object)
 message(M_SEND_OBJECTANDCLASS,Site,Index,ObjectAndClass)
 
 message(M_FILE,String,Term) 
+message(M_EXPORT,Term) 
 message(M_REGISTER_VS,Site)
 message(M_INIT_VS,Term)
 message(M_UNASK_ERROR,Index,Site,Index2)
