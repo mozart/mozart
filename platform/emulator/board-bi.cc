@@ -27,10 +27,6 @@
  *
  */
 
-#if defined(INTERFACE)
-#pragma implementation "board.hh"
-#endif
-
 #include "board.hh"
 #include "thr_int.hh"
 #include "prop_int.hh"
@@ -39,11 +35,6 @@
 #include "value.hh"
 #include "var_base.hh"
 #include "os.hh"
-
-#ifdef OUTLINE
-#include "board.icc"
-#endif
-
 
 /*
  * Misc stuff
