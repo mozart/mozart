@@ -169,12 +169,20 @@ public:
 		       ProgramCounter to=NOCODE);
 
 private:
-  static int livenessXInternal(ProgramCounter from, TaggedRef *X,int n, int*xUsage);
+  // Returns the length of live X registers (max live + 1)
+  static int livenessXInternal(ProgramCounter from, int xMax, int *xUsage);
+  static void livenessGYInternal(ProgramCounter from, int yMax, int *yUsage, 
+                                                      int gMax, int *gUsage, 
+				                      int *yLiveLength, int *gLiveLength);
 public:
   static int livenessX(ProgramCounter from, TaggedRef *, int);
   static int livenessX(ProgramCounter from, RefsArray * ra) {
     return livenessX(from,ra->getArgsRef(),ra->getLen());
   }
+
+  static void livenessGY(ProgramCounter from, Frame *aFrame, 
+                         int yMax, RefsArray *Y,
+                         int gMax, int *gUsage);
 
   static ProgramCounter definitionStart(ProgramCounter from);
   static ProgramCounter definitionEnd(ProgramCounter from);

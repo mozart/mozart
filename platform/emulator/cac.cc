@@ -9,6 +9,7 @@
  *  Contributors:
  *    Denys Duchier (duchier@ps.uni-sb.de)
  *    Per Brand (perbrand@sics.se)
+ *    Kevin Glynn (glynn@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -55,9 +56,27 @@
 #include "weakdict.hh"
 #include "mozart_cpi.hh"
 
+#ifdef DEBUG_LIVECALC
+// Whenever liveness zeroes the contents of a register we actually
+// place a fresh int (maintained by deadMarker) there. This gives some 
+// debugging info when tracking down buggy liveness code ...
+static int deadMarker = 300000;
+   #define VOID_GREG(to,i) to->initG(i,makeTaggedSmallInt(deadMarker++))
+#else
+   #define VOID_GREG(to,i) to->initG(i,makeTaggedNULL())
+#endif
+
 #ifdef OUTLINE
 #define inline
 #endif
+
+
+/* We allocate a static usage block for G usage vectors.  This
+** saves a lot of malloc/free and a lot of time for some benchmarks
+*/
+#define StaticGUsageVectorSize 100
+
+static int gUsageVector[StaticGUsageVectorSize];
 
 /*
  * Do some bad style renaming
@@ -377,6 +396,123 @@ RefsArray * RefsArray::_cac(void) {
 
 #endif
 
+
+#ifdef G_COLLECT
+/*
+ * Abstraction
+ * Argument vector describes liveness of G registers. If 
+ * it is NULL then all registers are live.
+ */
+Abstraction * Abstraction::gCollect(int gUsageLen, int * gUsage) {
+
+  Assert(this);
+  if (cacIsMarked())
+    return (Abstraction *) cacGetFwd();
+
+  Abstraction *to;
+  TaggedRef *gReg;
+  int gFinished = 1;
+
+  if (cacIsCopied()) {
+    // Repeat customer, update and gc any newly live fields in the copy.
+    to = cacGetCopy();
+    gReg = to->getGRef();
+    if (!gUsage) {
+      // All previously dead registers are live
+      for (int i=to->pred->getGSize(); i--;) {
+ 	// Only gc if this slot was previously void
+	// to avoid nasty cycles.
+#ifdef DEBUG_LIVECALC
+ 	if ( oz_isSmallInt(to->getG(i)) ) 
+#else
+	if ( to->getG(i)==makeTaggedNULL() ) 
+#endif
+	{
+	  to->initG(i,getG(i));
+	  oz_cacTerm(gReg[i], gReg[i]);
+	}
+      }
+    }
+    else {
+      for (int i=to->pred->getGSize(); i--;) {
+#ifdef DEBUG_LIVECALC
+        if ( oz_isSmallInt(to->getG(i)) ) 
+#else
+	if ( to->getG(i)==makeTaggedNULL() ) 
+#endif
+	{ // Was dead
+	  if (gUsage[i]) {
+	    // Live. Only gc if this slot was previously void
+	    // to avoid nasty cycles.
+	    to->initG(i,getG(i));
+	    oz_cacTerm(gReg[i], gReg[i]);
+	  }
+	  else
+	    gFinished = 0;
+	}
+      }
+    }
+    if (gFinished) {
+      // Can skip this abstraction in future
+      STOREFWDFIELD(this, to);
+    }
+    return to;
+  }
+  // First time seen
+  to = (Abstraction *) oz_hrealloc(this, getAllocSize());
+  cacCopy(to);
+
+  gReg = to->getGRef();
+  int gSize= to->pred->getGSize();
+
+  // Void dead registers
+  if (gUsage) {
+    // *IMPORTANT*: must zero all dead regs before we do *any* gc
+    for (int i=gSize; i--; ) {
+      if (!(gUsage[i])) {
+#ifdef DEBUG_LIVECALC
+	printf("Abstraction <%s> G[%d] => %d\n", to->getPrintName(), i, deadMarker);
+#endif
+	VOID_GREG(to,i);
+        // Must still consider other paths to this abstraction
+	gFinished = 0;
+      }
+    }
+  }
+
+  if (gFinished) {
+    // Can skip this abstraction in future
+    STOREFWDFIELD(this, to);
+  }
+
+  if (to->hasGName())
+    gCollectGName(to->getGName1());
+  else
+    to->setBoard(to->getSubBoardInternal()->gCollectBoard());
+
+  // We must be careful to only collect the non-voided entries.
+  // Originally I fell through to the OZ_cacBlock call but that 
+  // caused a (hard to track down) bug whereby a register which is currently
+  // void could already have a collected entry in it by the time we get to it
+  // If gc'ing one of the registers causes this closure to be gc'd again the
+  // code in the cacIsCopied() branch ensures it doesn't touch 
+  // any of the registers we are gc'ing here.
+  if (!gFinished) {
+    for (int i=gSize; i--; ) {
+      if (gUsage[i]) {
+	oz_cacTerm(gReg[i], gReg[i]);
+      }
+    }
+  }
+  else // All registers still live.
+    OZ_cacBlock(gReg,gReg,gSize);
+
+  //cause the rest of the closure to be gc'd.
+  cacStack.push(to, PTR_CONSTTERM);
+  return to;
+}
+
+#endif /* G_COLLECT */
 
 /*
  * Boards:
@@ -1211,8 +1347,10 @@ void ConstTerm::_cacConstRecurse(void) {
       if (gn) 
 	gCollectGName(gn);
 #endif
-      OZ_cacBlock(a->getGRef(),a->getGRef(),
-		  a->getPred()->getGSize());
+#ifdef S_CLONE
+            OZ_cacBlock(a->getGRef(),a->getGRef(),
+      		  a->getPred()->getGSize());
+#endif
       break;
     }
     
@@ -1380,14 +1518,15 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
   case Co_Builtin:
     return this;
 
+  case Co_Abstraction: {
+    Abstraction * ret = ((Abstraction *) this)->gCollect();
+    return ret;
+  }
+
     /*
      * ConstTermWithHome
      *
      */
-
-  case Co_Abstraction: 
-    sz = ((Abstraction *) this)->getAllocSize();
-    goto const_withhome;
 
   case Co_Chunk:
     sz = sizeof(SChunk);
@@ -1659,7 +1798,7 @@ TaskStack * TaskStack::_cac(void) {
       oz_cacTerm(ct, ct);
       *CAP = tagged2Const(ct);
     } else if (PC == C_SET_SELF_Ptr) {
-      ConstTerm *ct = (ConstTerm *) *CAP;;
+      ConstTerm *ct = (ConstTerm *) *CAP;
       if (ct) {
 	TaggedRef ctt = makeTaggedConst(ct);
 	oz_cacTerm(ctt, ctt);
@@ -1681,10 +1820,52 @@ TaskStack * TaskStack::_cac(void) {
       oz_cacTerm(*((TaggedRef *) Y), *((TaggedRef *) Y));
       *CAP = ((RefsArray *) *CAP)->_cac();
     } else { // usual continuation
-      *Y   = (*Y)->_cac();
+#ifdef G_COLLECT
+      // Void dead G and Y registers if possible
+      int gLen = ((Abstraction *) *CAP)->cacGetPred()->getGSize();
+      int *gUsage = gUsageVector;
+      if (gLen > StaticGUsageVectorSize) {
+        // Static block not big enough 
+        gUsage = new int[gLen];
+      }
+      // Initialise G registers to not used
+      for (int i=gLen; i--;) gUsage[i]=0;
+
+      // If this frame is below a catch or lock frame then we will
+      // have already dealt with it in its real parent. We detect this
+      // by seeing if the Y registers have already been collected.
+      // Note we must still collect the Y and CAP refs so that they get 
+      // updated to the new copy.
+      if (!((*Y) && (*Y)->cacIsMarked())) {
+	
+	int yLen = (*Y)?(*Y)->getLen():0;
+        // If either Y or G registers are in scope then check their liveness
+        if (gLen || yLen) {
+#ifdef DEBUG_LIVECALC
+	  printf("\nG-Collect pid(%d) abstr(0x%x) -> 0x%x\n", (int) getpid(), *CAP, PC);
+	  //	  CodeArea::display(PC,50,stderr,NOCODE);
+	  //printf("\n");
+	  //ProgramCounter start=CodeArea::printDef(PC,stderr);
+	  //if (start != NOCODE) CodeArea::display(start,150,stderr,NOCODE);
+#endif
+          // Void Y registers, get liveness info for G registers
+          CodeArea::livenessGY((ProgramCounter) PC, newtop, 
+                               yLen, (*Y), 
+                               gLen, gUsage);
+
+	}
+      }
+      *CAP = ((Abstraction *) *CAP)->_cac(gLen, gUsage);
+      if (gLen > StaticGUsageVectorSize) {
+        delete [] gUsage;
+      }
+#else
+      // Clone
       TaggedRef ct = makeTaggedConst((ConstTerm *) *CAP);
       oz_cacTerm(ct, ct);
       *CAP = tagged2Const(ct);
+#endif
+      *Y   = (*Y)->_cac();
     }
   }
 }
