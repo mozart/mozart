@@ -310,7 +310,7 @@ AC_DEFUN(OZ_CXX_CHOOSE,[
     OZ_ARG_WITH_CXX
     AC_PROG_CXX
     if test "${GXX}" = yes; then
-      if oz_tmp=`$CXX --version 2>/dev/null`; then
+      if oz_tmp=`$CXX -dumpversion 2>/dev/null` || oz_tmp=`$CXX --version 2>/dev/null`; then
         if expr "$oz_tmp" : egcs >/dev/null; then
 dnl I don't know what the appropriate version number is for egcs
           AC_MSG_WARN([dont know how to check egcs version, assuming ok])
@@ -435,7 +435,7 @@ AC_DEFUN(OZ_CC_CHOOSE,[
     : ${CFLAGS="-O"}
     AC_PROG_CC
     if test "$GCC" = yes; then
-      if oz_tmp=`$CC --version 2>/dev/null`; then
+      if oz_tmp=`$CC -dumpversion 2>/dev/null` || oz_tmp=`$CC --version 2>/dev/null`; then
         if expr "$oz_tmp" : egcs >/dev/null; then
 dnl I don't know what the appropriate version number is for egcs
           AC_MSG_WARN([dont know how to check egcs version, assuming ok])

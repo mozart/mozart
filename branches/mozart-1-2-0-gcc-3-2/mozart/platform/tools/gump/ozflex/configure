@@ -1439,7 +1439,7 @@ else
 fi
 
     if test "$GCC" = yes; then
-      if oz_tmp=`$CC --version 2>/dev/null`; then
+      if oz_tmp=`$CC -dumpversion 2>/dev/null` || oz_tmp=`$CC --version 2>/dev/null`; then
         if expr "$oz_tmp" : egcs >/dev/null; then
           echo "configure: warning: dont know how to check egcs version, assuming ok" 1>&2
 	else
