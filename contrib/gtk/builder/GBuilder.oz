@@ -161,7 +161,7 @@ define
    ConfigureChildren = {NewName}
    Get = {NewName}
 
-   fun {MakeAction X}
+   fun {MakeCallback X}
       case X of Port#Message andthen {IsPort Port} then
 	 proc {$ _} {Send Port Message} end
       [] Object#Message andthen {IsObject Object} then
@@ -248,10 +248,10 @@ define
 	 end
       end
       meth !ConfigureSignals(Signals ClassName)
-	 for Signal in {Dictionary.keys Signals} do Proc in
-	    Proc = {MakeAction Signals.Signal}
+	 for Signal in {Dictionary.keys Signals} do Callback in
+	    Callback = {MakeCallback Signals.Signal}
 	    case {GetFeature ClassName Signal} of signal(SignalName) then
-	       {self signalConnect(SignalName Proc _)}
+	       {self signalConnect(SignalName Callback _)}
 	    end
 	 end
       end
@@ -394,17 +394,17 @@ define
    fun {KeyPress KeySpec}
       KeySpec2 = {Map KeySpec
 		  fun {$ Mods#String#X}
-		     Mods#{ByteString.make String}#{MakeAction X}
+		     Mods#{ByteString.make String}#{MakeCallback X}
 		  end}
    in
       proc {$ Xs=['GDK_KEY_PRESS'(string: S state: X ...)]}
 	 Mods = {GBuilderTypes.toOz modifierType X}
       in
 	 {Some KeySpec2
-	  fun {$ ExpectedMods#ExpectedString#Action}
+	  fun {$ ExpectedMods#ExpectedString#Callback}
 	     if S == ExpectedString andthen
 		{All ExpectedMods fun {$ Mod} {Member Mod Mods} end}
-	     then {Action Xs} true else false
+	     then {Callback Xs} true else false
 	     end
 	  end _}
       end
