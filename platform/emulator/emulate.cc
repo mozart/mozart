@@ -640,6 +640,7 @@ TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
  */
 enum CE_RET {
   CE_CONT,
+  CE_SOLVE_CONT,
   CE_NOTHING,
   CE_FAIL
 };
@@ -733,14 +734,6 @@ loop:
  
 	// wake up propagators to be woken up on stablity
 	if (solveAA->stable_wake()) {
-
-	  solveAA->incThreads();
-	  Assert(currentThread);
-#ifdef NEWCOUNTER
-	  solveBB->incSuspCount();
-#endif
-	  pushCFun(solveBB, &AM::SolveActorWaker);
-
 	  LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
 			    return CE_FAIL;);
 	}
@@ -784,23 +777,13 @@ loop:
 
 	    solveBB->incSuspCount(waitBoard->getSuspCount()-1);
 
-	    // Make the actor unstable by incremneting the thread counter
-	    solveAA->incThreads();
-#ifdef NEWCOUNTER
-	    solveBB->incSuspCount();
-#endif
-	    
-	    // put ~'solve actor';
-	    Assert(currentThread);
-	    pushCFun(solveBB, &AM::SolveActorWaker);    // no args;
-	    
 	    if (waitBoard->isWaitTop()) {
 	      goto loop;
 	    }
 
 	    prio=solveAA->getPriority();
 	    contAfter=waitBoard->getBodyPtr();
-	    return CE_CONT;
+	    return CE_SOLVE_CONT;
 	  }
 
 	  if (solveAA->isGuided()) {
@@ -855,12 +838,9 @@ loop:
 		// Make the actor unstable by incremneting the thread counter
 		solveAA->incThreads();
 #ifdef NEWCOUNTER
+		warning("mm2: inc sup why here?");
 		solveBB->incSuspCount();
 #endif
-		
-		// put ~'solve actor';
-		Assert(currentThread);
-		pushCFun(solveBB, &AM::SolveActorWaker);    // no args;
 		
 		if (waitBoard->isWaitTop()) {
 		  goto loop;
@@ -868,7 +848,7 @@ loop:
 
 		prio=solveAA->getPriority();
 		contAfter=waitBoard->getBodyPtr();
-		return CE_CONT;
+		return CE_SOLVE_CONT;
 		
 	      } else {
 		solveAA->pushWaitActor(wa);
@@ -1318,6 +1298,15 @@ void engine() {
 	  switch (e->checkEntailment(cont,prio)) {
 	  case CE_FAIL:
 	    HF_NOMSG;
+	  case CE_SOLVE_CONT:
+	    Assert(CBB->isSolve());
+	    // Make the actor unstable by incrementing the thread counter
+	    SolveActor::Cast(CBB->getActor())->incThreads();
+#ifdef NEWCOUNTER
+	    CBB->incSuspCount();
+#endif
+	    e->pushCFun(CBB, &AM::SolveActorWaker);    // no args;
+	    // fall through
 	  case CE_CONT:
 	    LOADCONT(cont);
 	    goto LBLemulateHook;
@@ -1370,27 +1359,31 @@ void engine() {
       Thread *tmpThread = e->currentThread;
       if (tmpThread) {  /* may happen if catching SIGSEGV and SIGBUS */
 #ifdef NEWCOUNTER
-	Board *nb=0;
-	if (tmpThread->hasNotificationBoard()) {
-	  nb = tmpThread->notificationBoard->getBoardFast();;
-	  Assert(nb==tmpThread->getBoardFast());
-	}
 	e->currentThread=(Thread *) NULL;
 	Board *bb=tmpThread->getBoardFast();
-	if (bb->isSolve()) {
-	  Assert(!bb->isReflected());
-	  SolveActor *sa = SolveActor::Cast(bb->getActor());
-	  sa->decThreads();
-	  nb=sa->getBoardFast();
-	}
-	if (bb->isFailed()) {
-	  if (nb) e->decSolveThreads(nb);
-	  goto LBLstart;
-	}
-	if (!tmpThread->isDead()) {
+	if (!tmpThread->isDead() && !bb->isFailed()) {
 	  bb->decSuspCount();
 	}
+	Board *nb=0;
+	Board *orgNB=0;
+	/* replace this test by
+	 *  INSTALL(bb)
+	 *  if (e->currentSolveBoard)
+	 */
+	if (tmpThread->hasNotificationBoard()) {
+	  nb = tmpThread->notificationBoard->getBoardFast();
+	  Assert(!nb->isReflected());
+	  Assert(nb==bb);
+	  if (bb->isSolve()) {
+	    SolveActor *sa
+	      = SolveActor::Cast(bb->getActor());
+	    sa->decThreads();
+	    orgNB=nb;
+	    nb=sa->getBoardFast();
+	  }
+	}
 	e->disposeThread(tmpThread);
+	tmpThread=0;
       loop:
 	if (CBB != bb) {
 	  switch (e->installPath(bb)) {
@@ -1402,6 +1395,7 @@ void engine() {
 	    break;
 	  }
 	}
+	Assert(!bb->isFailed());
 
 	if (CBB->isRoot()) {
 	  goto LBLstart;
@@ -1413,23 +1407,39 @@ void engine() {
 	case CE_FAIL:
 	  if (nb) e->decSolveThreads(nb);
 	  HF_NOMSG;
-	case CE_CONT:
-	  LOADCONT(cont);
+	case CE_SOLVE_CONT:
 	  e->currentThread = e->newThread(prio,CBB);
+	  Assert(CBB->isSolve());
+	  // Make the actor unstable by incrementing the thread counter
+	  SolveActor::Cast(CBB->getActor())->incThreads();
+#ifdef NEWCOUNTER
 	  CBB->incSuspCount();
-	  if (CBB->isSolve()) {
-	    SolveActor *sa = SolveActor::Cast(CBB->getActor());
-	    sa->incThreads();
+#endif
+	  e->pushCFun(CBB, &AM::SolveActorWaker);    // no args;
+	  goto LBLcontWithNewThread;
+	case CE_CONT:
+	  e->currentThread = e->newThread(prio,CBB);
+	  {
+	  LBLcontWithNewThread:
+	    LOADCONT(cont);
+	    CBB->incSuspCount();
+	    /* optimization for:
+	     *  if (nb) e->decSolveThreads(nb);
+	     *  e->incSolveThreads(CBB);
+	     */
+	    if (orgNB==CBB) {
+	      SolveActor *sa = SolveActor::Cast(CBB->getActor());
+	      sa->incThreads();
+	    }
+	    if (e->currentSolveBoard) {
+	      e->currentThread->setNotificationBoard(CBB);
+	    }
+	    e->restartThread();
+	    goto LBLemulateHook;
 	  }
-	  if (e->currentSolveBoard) {
-	    e->currentThread->setNotificationBoard(CBB);
-	  }
-	  e->restartThread();
-	  goto LBLemulateHook;
 	case CE_NOTHING:
-	  if (nb) {
-	    e->decSolveThreads(nb->getBoardFast()); // nb is maybe committed
-	  }
+	  // deref nb, because maybe committed ??
+	  if (nb) e->decSolveThreads(nb->getBoardFast());
 	  goto LBLstart;
 	}
 #else
@@ -2631,6 +2641,15 @@ void engine() {
 	switch (e->checkEntailment(cont,prio)) {
 	case CE_FAIL:
 	  HF_NOMSG;
+	case CE_SOLVE_CONT:
+	  Assert(CBB->isSolve());
+	  // Make the actor unstable by incrementing the thread counter
+	  SolveActor::Cast(CBB->getActor())->incThreads();
+#ifdef NEWCOUNTER
+	  CBB->incSuspCount();
+#endif
+	  e->pushCFun(CBB, &AM::SolveActorWaker);    // no args;
+	  // fall through
 	case CE_CONT:
 	  LOADCONT(cont);
 	  goto LBLemulateHook;
@@ -2663,6 +2682,15 @@ void engine() {
 	switch (e->checkEntailment(cont,prio)) {
 	case CE_FAIL:
 	  HF_NOMSG;
+	case CE_SOLVE_CONT:
+	  Assert(CBB->isSolve());
+	  // Make the actor unstable by incrementing the thread counter
+	  SolveActor::Cast(CBB->getActor())->incThreads();
+#ifdef NEWCOUNTER
+	  CBB->incSuspCount();
+#endif
+	  e->pushCFun(CBB, &AM::SolveActorWaker);    // no args;
+	  // fall through
 	case CE_CONT:
 	  LOADCONT(cont);
 	  goto LBLemulateHook;
@@ -2913,6 +2941,12 @@ LBLcheckEntailment:
     switch (e->checkEntailment(cont,prio)) {
     case CE_FAIL:
       HF_NOMSG;
+    case CE_SOLVE_CONT:
+      Assert(CBB->isSolve());
+      // Make the actor unstable by incrementing the thread counter
+      SolveActor::Cast(CBB->getActor())->incThreads();
+      e->pushCFun(CBB, &AM::SolveActorWaker);    // no args;
+      // fall through
     case CE_CONT:
       LOADCONT(cont);
       goto LBLemulateHook;
@@ -3020,6 +3054,13 @@ LBLcheckEntailment:
 	    switch (e->checkEntailment(cont,prio)) {
 	    case CE_FAIL:
 	      HF_NOMSG;
+	    case CE_SOLVE_CONT:
+	      Assert(CBB->isSolve());
+	      // Make the actor unstable by incrementing the thread counter
+	      SolveActor::Cast(CBB->getActor())->incThreads();
+	      CBB->incSuspCount();
+	      e->pushCFun(CBB, &AM::SolveActorWaker);    // no args;
+	      // fall through
 	    case CE_CONT:
 	      LOADCONT(cont);
 	      goto LBLemulateHook;
