@@ -74,14 +74,18 @@
       be filtered out.  This is achieved by using a combination of
       <Span class=index/<<Filter>>/ and <<Char.isAlpha>><Index class=module
       /Char<And>isAlpha/.  Feeding:
-      <<<{Browse {String.toAtom {Filter S Char.isAlpha}}}>>>
+<chunk class=anoymous><title/{Filter S}/
+{Browse {String.toAtom {Filter S Char.isAlpha}}}
+</chunk>
       will show the cleaned information in the browser window.
     <P>
       Instead of creating an atom from the cleaned string, the browser offers
       functionality to display strings directly in a convenient form.  The
       functionality can be selected in the <Span class=menu/Representation,
       Type/ option, see also <Ptr.extern to="ozdoc:tools" key="chapter.browser">.  For Example,
-      <<<{Browse {Filter S Char.isAlpha}}>>>
+<chunk class=anoymous><title/{Browse S}/
+{Browse {Filter S Char.isAlpha}}
+</chunk>
       displays in the browser window the character sequence <<"ClEaN">>.
     <P>
       Remember that character codes for letters are syntactically supported.
@@ -111,7 +115,9 @@
       >toString/, and changing of signs, by <<VirtualString.changeSign>><Index
       class=module/VirtualString<And>changeSign/.  The latter procedure is
       quite important, because
-      <<<{Browse 12#(2#fast#4#"U")#~3.1415}>>>
+<chunk class=anonymous><title/-/
+{Browse 12#(2#fast#4#"U")#~3.1415}
+</chunk>
       reveals that the usual unary minus sign (&ie;, <<->>) is used rather
       than the &Oz; operator&nbsp;<<~>>.
     <P>
@@ -120,11 +126,47 @@
       arguments two virtual strings, and substitutes every occurrence of the
       <<->>&nbsp;character as a unary minus sign in numbers of the first
       argument by the second argument.  For example,
-      <<<{VirtualString.changeSign 12#(2#fast#4#"U")#~3.1415 '~'}>>>
+<chunk class=anonymous><title/-~/
+{VirtualString.changeSign 12#(2#fast#4#"U")#~3.1415 '~'}
+</chunk>
       returns the virtual string with the &Oz;-style unary minus sign.
     <P>
       Note that in order to display virtual strings in readable form in the
       &Oz; Browser, you have to configure the <Span class=menu/Representation,
       Type/ option, see also <Ptr.extern to="ozdoc:tools" key="chapter.browser">.  In the following we
       assume that the Browser is configured for displaying virtual strings.
+
+<![ %EXTRA; [
+<section><title/NONE/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Data Structures
+%%%
+
+%%
+%% Strings
+%%
+
+declare
+S="C@l!3E4aN#61!"
+
+<chunk.ref/{Filter S}/
+
+<chunk.ref/{Browse S}/
+
+
+%%
+%% Virtual Strings
+%%
+
+<chunk.ref/-/
+
+{Browse <chunk.ref/-~/}
+
+
+
+</chunk>
+]]>
+
 </Chapter>

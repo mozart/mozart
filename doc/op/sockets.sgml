@@ -501,4 +501,20 @@ the entire information from the socket until it is closed (the
 finger service closes the connection automatically after sending its
 information).
 </section>
+
+
+<![ %EXTRA; [
+<section><title/NONE/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Sockets
+%%%
+
+
+
+</chunk>
+]]>
+
+
 </chapter>
