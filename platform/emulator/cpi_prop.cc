@@ -212,9 +212,9 @@ OZ_Boolean OZ_Propagator::addImpose(OZ_FDPropState ps, OZ_Term v)
   return TRUE;
 }
 
-void OZ_Propagator::impose(OZ_Propagator * p, int prio)
+void OZ_Propagator::impose(OZ_Propagator * p)
 {
-  Propagator * prop = oz_newPropagator(prio, p);
+  Propagator * prop = oz_newPropagator(p);
   ozstat.propagatorsCreated.incf();
 
   oz_sleepPropagator(prop);

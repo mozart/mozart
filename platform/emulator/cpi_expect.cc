@@ -754,8 +754,7 @@ OZ_Return OZ_Expect::fail(void)
 
 Propagator * imposed_propagator;
 
-OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
-                            OZ_PropagatorFlags flags)
+OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 {
   OZ_Boolean is_monotonic = p->isMonotonic();
 
@@ -792,7 +791,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     }
   }
 
-  Propagator * prop = imposed_propagator = oz_newPropagator(prio, p);
+  Propagator * prop = imposed_propagator = oz_newPropagator(p);
 
   ozstat.propagatorsCreated.incf();
 
@@ -877,16 +876,6 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
 
   if (all_local)
     prop->markLocalPropagator();
-
-  switch (flags) {
-  case OFS_flag:
-    prop->markOFSPropagator();
-    break;
-  case NULL_flag:
-    break;
-  default:
-    OZ_warning("Unrecognized flag found when spawning propagator");
-  }
 
   staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
 
