@@ -120,7 +120,7 @@ double static_double_b[MAXFDBIARGS];
 int static_index_offset[MAXFDBIARGS];
 int static_index_size[MAXFDBIARGS];
 
-OZ_FiniteDomain __CDVoidFiniteDomain(fd_full);
+OZ_FiniteDomain __CDVoidFiniteDomain;
 
 //-----------------------------------------------------------------------------
 // Member functions
@@ -971,7 +971,7 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
 	    // convert void variable to heap variable
 	    GenFDVariable * fv = new GenFDVariable(*bifdbm_dom[idx_vp(c, fs)]);
 	    bifdbm_varptr[idx_vp(c, fs)] = newTaggedCVar(fv);
-	    l_var = makeTaggedRef(bifdbm_varptr[idx_vp(c, v)]);
+	    l_var = makeTaggedRef(bifdbm_varptr[idx_vp(c, fs)]);
 	    bifdbm_vartag[idx_vp(c, fs)] = pm_fd;
 	    // update arguments
 	    SRecord &vp_c = *tagged2SRecord(deref(vp[c]));
