@@ -3,7 +3,7 @@
   <p>The <code/regex/ module implements an interface to the POSIX
 regex library and builds some higher level facilities on top of it.
 The module may be imported as follows:
-<code display>import Regex @ 'x-oz://contrib/regex'</code>
+<code display>import Regex at 'x-oz://contrib/regex'</code>
 <list>
       <entry><code/Regex.is/
       <synopsis><code/{Regex.is ?+{X} ??{B}}/
