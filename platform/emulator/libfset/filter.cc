@@ -24,6 +24,7 @@
  *
  */
 
+#include "standard.hh"
 #include "filter.hh"
 
 OZ_Service &OZ_Service::replace_propagator(OZ_Propagator * prop,
