@@ -586,7 +586,7 @@ OZ_C_proc_end
 OZ_C_ioproc_begin(unix_read,5)
 { 
   OZ_declareIntArg("read",0,fd);
-  OZ_declareIntArg("read",1,max);
+  OZ_declareIntArg("read",1,maxx);
   OZ_declareArg(2, outHead);
   OZ_declareArg(3, outTail);
   OZ_declareArg(4, outN);
@@ -594,9 +594,9 @@ OZ_C_ioproc_begin(unix_read,5)
 
   CHECK_READ(fd,outN);
 
-  char *buf = (char *) malloc(max+1);
+  char *buf = (char *) malloc(maxx+1);
 
-  WRAPCALL(read(fd, buf, max), ret, outN);
+  WRAPCALL(read(fd, buf, maxx), ret, outN);
 
 
   OZ_Term head = openbuff2list(ret, buf, outTail);
@@ -1216,7 +1216,7 @@ OZ_C_proc_end
 OZ_C_ioproc_begin(unix_receiveFromInet,8)
 { 
   OZ_declareIntArg("receiveFromInet",0,sock);
-  OZ_declareIntArg("receiveFromInet",1,max);
+  OZ_declareIntArg("receiveFromInet",1,maxx);
   OZ_declareArg(2, OzFlags);
   OZ_declareArg(3, head);
   OZ_declareArg(4, tail);
@@ -1232,12 +1232,12 @@ OZ_C_ioproc_begin(unix_receiveFromInet,8)
 
   CHECK_READ(sock,outN);
 
-  char *buf = (char *) malloc(max+1);
+  char *buf = (char *) malloc(maxx+1);
 
   struct sockaddr_in from;
   int fromlen = sizeof from;
   
-  WRAPCALL(recvfrom(sock, buf, max, flags,
+  WRAPCALL(recvfrom(sock, buf, maxx, flags,
 		    (struct sockaddr*)&from, &fromlen),ret,outN);
 
   struct hostent *gethost = gethostbyaddr((char *) &from.sin_addr,
@@ -1260,7 +1260,7 @@ OZ_C_proc_end
 OZ_C_ioproc_begin(unix_receiveFromUnix,7)
 { 
   OZ_declareIntArg("receiveFromUnix",0,sock);
-  OZ_declareIntArg("receiveFromUnix",1,max);
+  OZ_declareIntArg("receiveFromUnix",1,maxx);
   OZ_declareArg(2, OzFlags);
   OZ_declareArg(3, head);
   OZ_declareArg(4, tail);
@@ -1275,12 +1275,12 @@ OZ_C_ioproc_begin(unix_receiveFromUnix,7)
 
   CHECK_READ(sock,outN); 
 
-  char *buf = (char *) malloc(max+1);
+  char *buf = (char *) malloc(maxx+1);
 
   struct sockaddr_un from;
   int fromlen = sizeof from;
 
-  WRAPCALL(recvfrom(sock, buf, max, flags,
+  WRAPCALL(recvfrom(sock, buf, maxx, flags,
 		    (struct sockaddr*)&from, &fromlen),ret,outN);
     
   OZ_Term localhead = openbuff2list(ret, buf, tail);
@@ -1633,13 +1633,13 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(unix_randLimits, 2)
 {
-  OZ_Term min = OZ_getCArg(0);
-  OZ_Term max = OZ_getCArg(1);
+  OZ_Term minn = OZ_getCArg(0);
+  OZ_Term maxx = OZ_getCArg(1);
 
-  if (OZ_unifyInt(min,0) == FAILED) {
+  if (OZ_unifyInt(minn,0) == FAILED) {
     return FAILED;
   }
-  return OZ_unifyInt(max,RAND_MAX);
+  return OZ_unifyInt(maxx,RAND_MAX);
 }
 OZ_C_proc_end
 
