@@ -20,6 +20,7 @@
 #include "fdomn.hh"
 #include "fdhook.hh"
 
+
 //-----------------------------------------------------------------------------
 //                           class GenFDVariable
 //-----------------------------------------------------------------------------
@@ -36,9 +37,6 @@ private:
 public:
   GenFDVariable(FiniteDomain &fd, TaggedRef pn = AtomVoid)
   : GenCVariable(FDVariable, pn) {
-#ifdef PROFILE_FD
-    FiniteDomain::varsCreated++;
-#endif
     finiteDomain = fd;
     fdSuspList[det] = fdSuspList[bounds] = NULL;
     fdSuspList[size] = fdSuspList[eqvar] = NULL;

@@ -316,11 +316,6 @@ public:
   static FDState leftDom;
   static FDState rightDom;
 
-#ifdef PROFILE_FD
-  static unsigned constrCalled;
-  static unsigned unifyCalled;
-  static unsigned varsCreated;
-#endif //PROFILE_FD
 }; // FiniteDomain
 
 
