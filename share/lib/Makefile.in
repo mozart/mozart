@@ -347,7 +347,7 @@ $(OZLIB)/boot-%: boot-%
 CLEANFILES = \
 	compiler-Version.oz \
 	$(COMPILERSRCEXTRA) \
-	CpSupport.ozf \
+	CpSupport.ozf ParWorkerTmp.ozf ParLoggingTmp.ozf ParSearchTmp.ozf \
 	$(FUNCTORS) $(FUNFUNCTORS) $(PARSEARCHFUNCTORS) \
 	$(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc
 
