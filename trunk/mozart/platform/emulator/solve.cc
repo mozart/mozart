@@ -167,7 +167,7 @@ void SolveActor::clearSuspList(Thread *killThr) {
 
 #ifdef DEBUG_PROP_STABILTY_TEST
       cout << "SolveActor::clearSuspList : Found propagator." << endl 
-	   << *thr->getPropagator() << endl
+	   << thr->getPropagator()->toString() << endl
 	   << "\tbb = " << bb << endl << flush;
 #endif
 
