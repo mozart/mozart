@@ -530,13 +530,16 @@ With ARG, set it instead."
   "Start the profiler.
 With ARG, stop it instead."
   (interactive "P")
-  (oz-send-string (if arg "{Profiler off}" "{Profiler on}")))
+  (oz-send-string
+   (if arg
+       "\\switch +threadedqueries\n{Profiler off}"
+     "\\switch +threadedqueries\n{Profiler on}")))
 
 (defun oz-profiler-stop (arg)
   "Stop the profiler.
 With ARG, start it instead."
   (interactive "P")
-  (oz-send-string (if arg "{Profiler on}" "{Profiler off}")))
+  (oz-profiler-start (not arg)))
 
 
 ;;------------------------------------------------------------
