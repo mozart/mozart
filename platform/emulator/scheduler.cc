@@ -189,6 +189,8 @@ LBLrunThread:
       goto LBLpreemption;
     case T_SUSPEND:
       goto LBLsuspend;
+    case T_SUSPEND_ACTOR:
+      goto LBLsuspendActor;
     case T_RAISE:
       goto LBLraise;
     case T_TERMINATE:
@@ -407,11 +409,24 @@ LBLdiscardThread:
    *  - CBB must be alive;
    *
    */
-LBLsuspend:
-  {
-    DebugTrace(ozd_trace("suspend runnable thread"));
+LBLsuspendActor:
+  if (e->debugmode() && CTT->getTrace()) {
+    debugStreamBlocked(CTT);
+  }
+  goto LBLsuspend1;
 
-    Assert(CTT);
+LBLsuspend:
+  if (e->debugmode() && CTT->getTrace()) {
+    debugStreamBlocked(CTT);
+  } else if (CTT->getNoBlock()) {
+    (void) oz_raise(E_ERROR,E_KERNEL,"block",1,makeTaggedConst(CTT));
+    e->exception.pc = NOCODE;
+    goto LBLraise;
+  }
+  // fall through
+
+LBLsuspend1:
+  {
     CTT->unmarkRunnable();
 
     Assert(CBB);
@@ -425,15 +440,7 @@ LBLsuspend:
     // the case of blocking the root thread;
     Assert(GETBOARD(CTT)==CBB);
 
-    if (e->debugmode() && CTT->getTrace()) {
-      debugStreamBlocked(CTT);
-    } else if (CTT->getNoBlock()) {
-      // ### mm2: && CAA == NULL) {
-      (void) oz_raise(E_ERROR,E_KERNEL,"block",1,makeTaggedConst(CTT));
-      CTT->markRunnable();
-      e->exception.pc = NOCODE;
-      goto LBLraise;
-    }
+    DebugTrace(ozd_trace("suspend runnable thread"));
 
     e->unsetCurrentThread();
 

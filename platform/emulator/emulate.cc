@@ -2030,7 +2030,7 @@ LBLdispatcher:
 	}
 
 	// suspend wait actor
-	return T_SUSPEND;
+	return T_SUSPEND_ACTOR;
       }
 
       Assert(CAA->isAsk());
@@ -2051,7 +2051,7 @@ LBLdispatcher:
 	  goto LBLemulate;
 	}
 
-	return T_SUSPEND;
+	return T_SUSPEND_ACTOR;
       }
     }
 
