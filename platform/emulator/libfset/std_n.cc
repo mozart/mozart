@@ -84,7 +84,7 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
 	)
       {
 	is[j] = -2;
-	FailOnInvalid(*vs[j] <= fs_empty);
+	FailOnInvalid(*vs[j] <<= OZ_FSetConstraint(fs_empty));
       }
   }
 
