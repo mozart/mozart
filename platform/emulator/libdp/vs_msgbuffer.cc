@@ -24,8 +24,9 @@
 #include "am.hh"
 #include "os.hh"
 
-#include "virtual.hh"
 #include "vs_msgbuffer.hh"
+#include "virtual.hh"
+#include "vs_comm.hh"
 
 #include <sys/stat.h>
 
