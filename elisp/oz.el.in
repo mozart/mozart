@@ -2353,9 +2353,7 @@ The ARG is interpreted just as with \\[recenter]."
 	(setq start (match-beginning 0))
 	(setq string (concat (substring string 0 start)
 			     (substring string (match-end 0))))
-	(save-excursion
-	  (set-buffer (process-buffer proc))
-	  (oz-bar file line column state)))))
+	(oz-bar file line column state))))
   (oz-filter proc string))
 
 (defun oz-filter (proc string)
