@@ -49,16 +49,14 @@ local
    end
 
    PrintNames =
-   {FoldL FuncDefaults.dirs
-    fun {$ PNs Dir}
-       {FoldL FuncDefaults.Dir
-	fun {$ PNs A} Ns in
-	   Ns = {GetPrintNames
-		 {Pickle.load MozartUrl#Dir#'/'#A#FunExt}.'export'}
-	   case Ns == nil then PNs
-	   else A#Ns|PNs
-	   end
-	end PNs}
+   {FoldL {Append FuncDefaults.lib FuncDefaults.tools}
+    fun {$ PNs A}
+       Ns = {GetPrintNames
+	     {Pickle.load MozartUrl#A#FunExt}.'export'}
+    in
+       case Ns == nil then PNs
+       else A#Ns|PNs
+       end
     end nil}
 
    proc {LazyAdapt M1 Fs ?M2}
