@@ -85,6 +85,18 @@ void Script::dealloc()
 }
 
 
+inline
+void telleq(Board * bb, const TaggedRef a, const TaggedRef b) {
+  RefsArray args = allocateRefsArray(2, NO);
+  args[0] = a;
+  args[1] = b;
+
+  Thread * t = oz_newThreadInject(bb);
+  t->pushCall(BI_Unify,args,2);
+}
+
+
+
 Board::Board(Board * p) 
   : localPropagatorQueue(0), flags(0), suspCount(0), bag(0),
     threads(0), suspList(0), nonMonoSuspList(0)
@@ -731,6 +743,63 @@ void Board::addToDistBag(Distributor * d) {
   setDistBag(getDistBag()->add(d));
 }
   
+class BaseDistributor : public Distributor {
+protected:
+  int offset, num;
+  TaggedRef var;
+
+public:
+
+  BaseDistributor::BaseDistributor(Board * bb, const int n) {
+    offset = 0; 
+    num    = n;
+    var    = oz_newVar(bb);
+  }
+  
+  TaggedRef getVar(void) {
+    return var;
+  }
+
+  virtual int isAlive(void) {
+    return num > 0;
+  }
+
+  virtual int getAlternatives(void) {
+    return num;
+  }
+
+  virtual int BaseDistributor::commit(Board * bb, int l, int r) {
+    if (l > num+1) {
+      num = 0;
+    } else {
+      offset += l-1;
+      num     = min(num,min(r,num+1)-l+1);
+      
+      if (num == 1) {
+	num = 0;
+	
+	telleq(bb,var,makeTaggedSmallInt(offset + 1));
+	return 1;
+      }
+    }
+    return num;
+  }
+  
+  virtual void dispose(void) {
+    freeListDispose(this, sizeof(BaseDistributor));
+  }
+  
+  virtual Distributor * BaseDistributor::gc(void) {
+    BaseDistributor * t = 
+      (BaseDistributor *) oz_hrealloc(this,sizeof(BaseDistributor));
+
+    OZ_collectHeapTerm(var, t->var);
+
+    return (Distributor *) t;
+  }
+
+};
+
 
 
 OZ_BI_define(BIregisterSpace, 1, 1) {
