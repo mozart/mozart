@@ -1731,7 +1731,7 @@ OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
   return ((OZ_Thread) thr);
 }
 
-void OZ_makeRunableThread(OZ_CFun fun, OZ_Term *args,int arity)
+void OZ_makeRunnableThread(OZ_CFun fun, OZ_Term *args,int arity)
 {
   Thread *tt = am.mkRunnableThread(ozconf.defaultPriority, am.currentBoard,0);
   tt->pushCFunCont (fun, args, arity, OK);
