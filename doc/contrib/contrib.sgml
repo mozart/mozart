@@ -1,7 +1,9 @@
 <!doctype book system "ozdoc.dtd" [
 <!entity regex system "regex.sgml">
 <!entity gdbm system "gdbm.sgml">
+<!entity compat system "compat.sgml">
 <!entity EG PI "PI:EG">
+<!ENTITY nbsp PI "nbsp">
 <!ENTITY % proglang.values.local "|sh|makefile">
 
 ]>
@@ -10,10 +12,13 @@
     <meta name="html.split" value="chapter.gdbm">
     <meta name="html.split" value="chapter.gdbm.install">
     <meta name="html.split" value="chapter.gdbm.interface">
+    <meta name="html.split" value="chapter.compat">
     <title/Contributed Libraries/
     <author.extern to="author.db" key="Denys.Duchier">
+    <author.extern to="author.db" key="Leif.Kornstaedt">
     &regex;
     &gdbm;
+    &compat;
 </book>
 <!--
 Local Variables:
