@@ -177,3 +177,63 @@ end
 {TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml' namespaces:false makeNode:min)} %% 160 ms
 {TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml' fast:true makeNode:min)} %% 140 ms
 {TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml' fast:true namespaces:false makeNode:max)} %% 100, 120 ms
+
+%%====================================================================
+
+declare [NS FASTSAX]={Link ['NameSpaces.ozf' 'FastSAX.ozf']}
+proc {TRY Init}
+   T1={Property.get 'time.total'}
+   {FASTSAX.new Init _}
+   T2={Property.get 'time.total'}
+in
+   {Show T2-T1}
+end
+
+{TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml')} %% 150 ms
+{TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml' namespaces:false)} %% 130 ms
+{TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml' fast:true)} %% 110 ms
+{TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml' fast:true namespaces:false)} %% 80 ms
+
+{Inspect {FASTSAX.new o(url:'/home/denys/src/ozstuff/xml/apptut.xml')}.root}
+{Inspect {FASTSAX.new o(url:'/home/denys/src/ozstuff/xml/apptut.xml' fast:true namespaces:false)}.root}
+
+{Inspect foo}
+{Inspect {FASTSAX.new o(url:'/home/denys/Mozart/ozlib/OzMake2/ozmake.xml')}.root}
+
+declare
+PM = {NS.newPrefixMap}
+local
+   PACKAGE = {PM.intern unit package}.key
+   HEAD    = {PM.intern unit head   }.key
+   AUTHOR  = {PM.intern unit author }.key
+   SECTION = {PM.intern unit section}.key
+   DLIST   = {PM.intern unit dlist  }.key
+   ITEM    = {PM.intern unit item   }.key
+   ALIGN   = {PM.intern unit align  }.key
+   ROW     = {PM.intern unit row    }.key
+in
+   STRIP =
+   o(PACKAGE : true
+     HEAD    : true
+     AUTHOR  : true
+     SECTION : true
+     DLIST   : true
+     ITEM    : true
+     ALIGN   : true
+     ROW     : true)
+end
+
+declare
+fun {NoParent X}
+   Y = {Record.subtract X parent}
+in
+   case {Label Y}
+   of root then root({Map Y.1 NoParent})
+   [] element then
+      {AdjoinAt Y children {Map Y.children NoParent}}
+   else Y end
+end
+
+{Inspect {NoParent {FASTSAX.new o(url:'/home/denys/Mozart/ozlib/OzMake2/ozmake.xml' prefixmap:PM stripspaces:STRIP)}.root}}
+
+{Show {ByteString.make "a b c"}}
