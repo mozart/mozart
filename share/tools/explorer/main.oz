@@ -286,7 +286,9 @@ in
       meth close
 	 lock
 	    case @MyManager of unit then skip
-	    elseof M then {M close}
+	    elseof M then
+	       MyManager <- unit
+	       {M closeByMain}
 	    end
 	 end
       end
