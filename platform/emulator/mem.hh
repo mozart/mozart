@@ -258,6 +258,8 @@ void printChunkChain(void *);
 void scanFreeList(void);
 #endif
 
+void freeListRefill(FreeListMem ** freeListEntry);
+
 #ifndef OUTLINE
 #include "mem.icc"
 #else
