@@ -23,7 +23,7 @@ TK_LIB_SPEC     = @TK_LIB_SPEC@
 TK_XINCLUDES    = @TK_XINCLUDES@
 TK_INCLUDES     = @TK_INCLUDES@
 
-CFLAGS          = @CFLAGS@
+CFLAGS          = @CFLAGS@ @PERMISSIVEOPT@
 LDFLAGS         = @LDFLAGS@
 LN_S            = @LN_S@
 
