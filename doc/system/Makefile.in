@@ -4,11 +4,21 @@ SRCDIR          = @srcdir@
 WHAT = system
 MAIN = main.sgml
 
-SGMLSRCS = \
-        main.sgml application.sgml constraints.sgml \
-        distributed.sgml open.sgml system.sgml \
-        window.sgml tk.sgml
+SGMLSRCS0 = \
+    # Application programming \
+    application module \
+    # Constraint programming \
+    search fd schedule fs \
+    # Distributed programming \
+    connection remote fault url resolve \
+    # Open programming \
+    os open \
+    # System programming \
+    pickle property error errorregistry finalize system \
+    # Window programming \
+    tk tktools
 
+SGMLSRCS = $(SGMLSRCS0:%=%.sgml)
 
 HTMLEXTRAFILES =
 

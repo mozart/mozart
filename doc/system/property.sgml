@@ -25,6 +25,7 @@
   -
   -->
 
-  <Chapter id="Chapter.System">
-    <Title/Miscelleanous System Support: <<System>>/
+
+  <Chapter id="Chapter.Property">
+    <Title/Emulator Properties: <<Property>>/
   </Chapter>

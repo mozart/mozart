@@ -25,6 +25,16 @@
   -
   -->
 
-  <Chapter id="Chapter.System">
-    <Title/Miscelleanous System Support: <<System>>/
+  <Chapter id="Chapter.Resolve">
+    <Title/Resolving URLs: <<Resolve>>/
   </Chapter>
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "part.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
