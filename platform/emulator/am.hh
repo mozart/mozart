@@ -192,6 +192,7 @@ public:
   void setCurrent(Board *c, Bool checkNotGC=OK);
   InstType installPath(Board *to); // ###
   Bool installScript(Script &script);
+  Bool installScriptOutline(Script &script);
   Bool install(Board *bb);
   void deinstallPath(Board *top);
   void deinstallCurrent();
@@ -248,6 +249,7 @@ public:
   Bool isLocalSVar(SVariable *var);
   Bool isLocalCVar(TaggedRef var);
   Bool isLocalVariable(TaggedRef var,TaggedRef *varPtr);
+  Bool isMoreLocal(TaggedRef var1, TaggedRef var2);
 
   void pushCall(TaggedRef def, int arity, RefsArray args);
   void pushDebug(TaggedRef def, int arity, RefsArray args);
