@@ -56,6 +56,8 @@ class ThreadQueueIterator
   : public LinkedQueueIterator<Thread,THREAD_QUEUE_SIZE>
 {
 public:
+  ThreadQueueIterator()
+    : LinkedQueueIterator<Thread,THREAD_QUEUE_SIZE>( ){}
   ThreadQueueIterator(ThreadQueue*q)
     : LinkedQueueIterator<Thread,THREAD_QUEUE_SIZE>(q){}
   ThreadQueueIterator(ThreadQueue&q)
@@ -93,6 +95,8 @@ class LocalPropagatorQueueIterator
   : public LinkedQueueIterator<Propagator,PROPAGATOR_QUEUE_SIZE>
 {
 public:
+  LocalPropagatorQueueIterator()
+    : LinkedQueueIterator<Propagator,PROPAGATOR_QUEUE_SIZE>( ){}
   LocalPropagatorQueueIterator(LocalPropagatorQueue*q)
     : LinkedQueueIterator<Propagator,PROPAGATOR_QUEUE_SIZE>(q){}
   LocalPropagatorQueueIterator(LocalPropagatorQueue&q)
