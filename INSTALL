@@ -6,6 +6,8 @@ CHECKLIST
 
 - make a new src
 
+- check the Oz-menu/print ???
+
 mkdir /usr/share/gs/soft/oz-xxx
 cd $!
 cvs get -l Oz
