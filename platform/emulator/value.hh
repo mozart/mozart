@@ -52,6 +52,8 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomDebugLockC, AtomDebugLockF, AtomDebugNameC, AtomDebugNameF,
        AtomException, AtomUnify,
 
+       AtomExport,
+
        NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,
        NameOoFastMeth,NameOoDefaults,NameOoRequiredArg,NameOoDefaultVar,
        NameOoPrintName,NameOoLocking,NameOoFallback,NameOoId,

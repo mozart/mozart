@@ -1504,7 +1504,7 @@ OZ_BI_define(BIwif_getNames,0,3) {
 
 #ifndef MODULES_LINK_STATIC
 
-OZ_C_proc_interface oz_interface[] = {
+const OZ_C_proc_interface mod_int_Wif[] = {
 #include "modWif.tbl"
  {0,0,0,0}
 };

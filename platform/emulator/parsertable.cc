@@ -35,7 +35,7 @@
 
 #include "modParser.dcl"
 
-OZ_C_proc_interface oz_interface[] = {
+OZ_C_proc_interface mod_int_Parser[] = {
 #include "modParser.tbl"
  {0,0,0,0}
 };

@@ -79,7 +79,7 @@ CXXSRCS= \
         dictionary.cc stack.cc susplist.cc \
         cpbag.cc tagged.cc value.cc \
         cont.cc ozconfig.cc trail.cc \
-        foreign.cc \
+        foreign.cc boot-manager.cc \
         ofgenvar.cc genhashtbl.cc \
         ozostream.cc runtime.cc unix.cc \
         perdio.cc \
