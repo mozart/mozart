@@ -431,7 +431,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 
     case SHALLOWTEST1:
       fprintf (ofile,
-	       "(%s,X[%d],%0x%x,0x%x,%d)\n",
+	       "(%s,X[%d],0x%x,%d)\n",
 	       getBIName(PC+1),
 	       regToInt(getRegArg(PC+2)),
 	       getLabelArg(PC+3),
@@ -458,7 +458,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 
     case SHALLOWTEST2:
       fprintf (ofile,
-	       "(%s,X[%d],X[%d],%0x%x,0x%x,%d)\n",
+	       "(%s,X[%d],X[%d],0x%x,%d)\n",
 	       getBIName(PC+1),
 	       regToInt(getRegArg(PC+2)),
 	       regToInt(getRegArg(PC+3)),
