@@ -64,7 +64,7 @@ const int tagSize = 4;
 const int tagMask   = 0xF;
 
 
-#ifdef ULTRIX_MIPS
+#if defined(ULTRIX_MIPS) || defined(IRIX5_MIPS)
 const int mallocBase = 0x10000000;
 #else
 #ifdef HPUX_700

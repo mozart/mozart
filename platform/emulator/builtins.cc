@@ -101,7 +101,7 @@ OZ_C_proc_end
 
 
 #ifndef OZDYNLINKING
-extern void initUnix();
+extern void MyinitUnix();
 extern void initWMBuiltins();
 #endif
 
@@ -125,8 +125,10 @@ BuiltinTabEntry *BIinit()
   BIinitObjects();
 
 #ifndef OZDYNLINKING
-  initUnix();
+  MyinitUnix();
+#ifdef WANT_OLD_IV
   initWMBuiltins();
+#endif
 #endif
 
   return(init);

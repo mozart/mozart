@@ -207,7 +207,7 @@ public:
 BuiltinTab &getBuiltinTab();
 
 
-class BuiltinTabEntry : public OrderedData {
+class BuiltinTabEntry {
   friend class Debugger;
 public:
   BuiltinTabEntry (Atom *name,int arty,BIFun fn,
@@ -236,21 +236,21 @@ public:
     DebugCheck(!isXAtom(printname),error("BuiltinTabEntry:: no atom"));
   }
 
-  virtual ~BuiltinTabEntry () {}
-  virtual Bool operator== (OrderedData &data)
+  ~BuiltinTabEntry () {}
+  Bool operator== (BuiltinTabEntry &data)
   {
     error("mm2");
     return (((printname == ((BuiltinTabEntry &) data).printname) &&
              (arity == ((BuiltinTabEntry &) data).arity)) ? OK : NO);
   }
-  virtual Bool operator< (OrderedData &data)
+  Bool operator< (BuiltinTabEntry &data)
   {
     return (((*tagged2Atom(printname)
               < *tagged2Atom(((BuiltinTabEntry &) data).printname)) ||
              ((printname == ((BuiltinTabEntry &) data).printname) &&
               (arity < ((BuiltinTabEntry &) data).arity))) ? OK : NO);
   }
-  virtual Bool operator> (OrderedData &data)
+  Bool operator> (BuiltinTabEntry &data)
   {
     return (((*tagged2Atom(printname)
               > *tagged2Atom(((BuiltinTabEntry &) data).printname)) ||
