@@ -23,7 +23,7 @@ implemented in <file/foo.cc/ using:
 invoke it through <code/oztool/.  Again, the advantages are that it
 calls the right linker, with the right options.  Normally, you would
 create a DLL from <file/foo.o/ as follows:
-<code display/oztool ld foo.o -o foo.so/
+<code display/oztool ld -o foo.so foo.o/
       <entry/<code/oztool platform//
       <item>The default <ref.extern to="ozdoc:system" key="chapter.resolve"
 /Resolution/ mechanism locates architecture specific DLLs as follows:
@@ -39,7 +39,7 @@ In this respect, <code/oztool/ helps you write portable Makefiles: to
 create a DLL from file <file/foo.cc/ you would normally invoke:
 <code display>
 oztool c++ -c foo.cc
-oztool ld foo.o -o foo.so-`oztool platform`
+oztool ld -o foo.so-`oztool platform` foo.o
 </code>
 </list>
 </chapter>
