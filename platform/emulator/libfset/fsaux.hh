@@ -26,15 +26,32 @@
 
 #ifdef OZ_DEBUG
 #define OZ_DEBUGCODE(C) C
-#define _OZ_DEBUGPRINT(C) (*cpi_cout) << C << endl << flush 
+extern "C" void oz_fsetdebugprint(char *format ...);
+#define _OZ_DEBUGPRINT(C) oz_fsetdebugprint C
 #define OZ_DEBUGPRINT(C) /*_OZ_DEBUGPRINT(C) */
-#define OZ_ASSERT(C)						\
-  if (! (C)) {							\
-    cerr << "OZ_ASSERT " << #C << " failed (" __FILE__ << ':'   \
-	 << __LINE__ << ")." << endl << flush;	                \
+#define OZ_ASSERT(C)					\
+  if (! (C)) {						\
+    fprintf(stderr,"OZ_ASSERT %s failed (%s:%d).\n",	\
+	    #C,__FILE__, __LINE__);			\
+    fflush(stderr);					\
   }
 #define _OZ_DEBUGRETURNPRINT(X) __debugReturnPrint(X)
 #define OZ_DEBUGRETURNPRINT(X) X /* _OZ_DEBUGRETURNPRINT(X) */
+inline
+OZ_Return __debugReturnPrint(OZ_Return r) 
+{
+  char *aux;
+  switch (r) {
+  case OZ_FAILED:   aux = "FAILED";   break;
+  case OZ_ENTAILED: aux = "ENTAILED"; break;
+  case OZ_SLEEP:    aux = "SLEEP";    break;
+  default:
+    oz_fsetdebugprint("returning: ??? (%d)",r);
+    return r;
+  }
+  oz_fsetdebugprint("returning: %s",aux);
+  return r;
+}
 #else
 #define OZ_DEBUGCODE(C)
 #define _OZ_DEBUGPRINT(C)
@@ -44,27 +61,11 @@
 #define _OZ_DEBUGRETURNPRINT(X) X
 #endif
 
-inline
-OZ_Return __debugReturnPrint(OZ_Return r) 
-{
-  *cpi_cout << "returning: ";
-  switch (r) {
-  case OZ_FAILED: 
-    *cpi_cout << "FAILED";
-    break;
-  case OZ_ENTAILED:
-    *cpi_cout << "ENTAILED";
-    break;
-  case OZ_SLEEP:
-    *cpi_cout <<"SLEEP";
-    break;
-  default:
-    *cpi_cout << "??? (" << r << ")";
-    break;
-  }
-  *cpi_cout << endl << flush;
-  return r;
-}
+#define _OZ_DEBUGPRINTTHIS(string) 		\
+   _OZ_DEBUGPRINT(("%s%s",string,this->toString()))
+
+#define OZ_DEBUGPRINTTHIS(string) _OZ_DEBUGPRINTTHIS(string) 
+
 //-----------------------------------------------------------------------------
 
 #define FailOnEmpty(X) if((X) == 0) goto failure;

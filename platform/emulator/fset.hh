@@ -16,7 +16,7 @@
 #pragma interface
 #endif
 
-#include <iostream.h>
+#include "ozostream.hh"
 
 #include "oz_cpi.hh"
 #include "types.hh"

@@ -142,7 +142,7 @@ OZ_C_proc_end
 
 OZ_Return LinNotEqPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
 
   int &c = reg_c, &sz = reg_sz, * a = reg_a;
 
@@ -206,7 +206,7 @@ OZ_Return LinNotEqPropagator::propagate(void)
 
 OZ_Return LinLessEqPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
 
   int &c = reg_c, &sz = reg_sz, * a = reg_a;
   
@@ -245,12 +245,12 @@ OZ_Return LinLessEqPropagator::propagate(void)
       entailment_test += NUMBERCAST(a[i]) * x[i]->getMinElem();
     }
   
-  OZ_DEBUGPRINT("out " << *this);
+  OZ_DEBUGPRINTTHIS("out ");
   
   return entailment_test <= 0 ? P.vanish() : P.leave();
   
 failure:
-  OZ_DEBUGPRINT("fail " << endl);
+  OZ_DEBUGPRINT(("fail \n"));
 
   return P.fail();
 }
@@ -259,7 +259,7 @@ failure:
 
 OZ_Return NonLinEqPropagatorP::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
   
   int &c = reg_c, &sz = reg_sz, * a = reg_a, * smd_sz = reg_smd_sz;
 
@@ -298,7 +298,7 @@ OZ_Return NonLinEqPropagatorP::propagate(void)
     }
   } 
   
-  OZ_DEBUGPRINT("out " << *this);
+  OZ_DEBUGPRINTTHIS("out ");
 
   {
     DECL_DYN_ARRAY(int, single_var, sz);
@@ -309,7 +309,7 @@ OZ_Return NonLinEqPropagatorP::propagate(void)
   }
 failure:
 
-  OZ_DEBUGPRINT("fail");
+  OZ_DEBUGPRINT(("fail"));
 
   return P.fail();
 }
@@ -318,7 +318,7 @@ failure:
 
 OZ_Return NonLinLessEqPropagatorP::propagate(void)
 {
-  OZ_DEBUGPRINT("in: " << *this);
+  OZ_DEBUGPRINTTHIS("in: ");
 
   int &c = reg_c, &sz = reg_sz, * a = reg_a, * smd_sz = reg_smd_sz;
 
@@ -361,7 +361,7 @@ OZ_Return NonLinLessEqPropagatorP::propagate(void)
     sum += a[i] * prod;
   }
   
-  OZ_DEBUGPRINT("out: " << *this);
+  OZ_DEBUGPRINTTHIS("out: ");
 
   if (sum <= 0) {
     return P.vanish();
@@ -374,7 +374,7 @@ OZ_Return NonLinLessEqPropagatorP::propagate(void)
   }
 
 failure:
-  OZ_DEBUGPRINT("fail");
+  OZ_DEBUGPRINT(("fail"));
 
   return P.fail();
 }

@@ -15,22 +15,25 @@
 
 #ifdef CPI_FILE_PRINT
 
-ofstream * init_cpi_cout(char * n) {
-  static ofstream _cpi_cout(n, ios::out);
+FILE *cpi_fileout = NULL;
 
+ostream * init_cpi_cout(char * n) {
   cerr << endl << "CPI debug output goes to '" << n << "'." 
        << endl << flush;
 
-  if (! _cpi_cout )
+  cpi_fileout = fopen(n,"w");
+  if (cpi_fileout==NULL )
     cerr << endl << "Cannot open '" << n << "' for output." 
 	 << endl << flush;
 
-  return &_cpi_cout;
+  return new ozostream(cpi_fileout);
 }
 
-ofstream * cpi_cout = init_cpi_cout("/tmp/cpi_debug.out");
+ostream *cpi_cout = init_cpi_cout("/tmp/cpi_debug.out");
 
 #else
+
+FILE *cpi_fileout = stdout;
 
 ostream * cpi_cout = &cout;
 

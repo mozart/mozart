@@ -22,12 +22,6 @@
 //#define DEBUG_FSET
 #ifdef DEBUG_FSET
 
-#ifdef CPI_FILE_PRINT
-#include <fstream.h>
-extern ofstream * cpi_cout;
-#else
-extern ostream * cpi_cout;
-#endif
 
 #define _DEBUG_FSETIR(CODE) (*cpi_cout) << CODE << flush;
 #define DEBUG_FSETIR(CODE) _DEBUG_FSETIR(CODE) 
@@ -868,11 +862,6 @@ FSetValue OZ_FSetImpl::getNotInSet(void) const
 #define CASTREF * (FSetValue *) &
 #define CASTTHIS (CASTPTR this)
 
-ostream &OZ_FSetValue::print(ostream &s) const
-{
-  CASTTHIS->print(s);
-  return s;
-}
 
 OZ_FSetValue::OZ_FSetValue(const OZ_FSetConstraint &s) 
 {
@@ -938,12 +927,6 @@ OZ_FSetConstraint::OZ_FSetConstraint(const OZ_FSetValue &s)
 OZ_FSetConstraint::OZ_FSetConstraint(OZ_FSetState s) 
 {
   CASTTHIS->init(s);
-}
-
-ostream &OZ_FSetConstraint::print(ostream &s) const
-{
-  CASTTHIS->print(s);
-  return s;
 }
 
 void OZ_FSetConstraint::init(void) 
@@ -1081,3 +1064,19 @@ OZ_FSetValue OZ_FSetConstraint::getNotInSet(void) const
   return CASTTHIS->getNotInSet();
 }
 
+
+char *OZ_FSetValue::toString() const
+{
+  static ozstrstream str;
+  str.reset();
+  CASTTHIS->print(str);
+  return str.str();
+}
+
+char *OZ_FSetConstraint::toString() const
+{
+  static ozstrstream str;
+  str.reset();
+  CASTTHIS->print(str);
+  return str.str();
+}

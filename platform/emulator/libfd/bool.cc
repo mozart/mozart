@@ -32,7 +32,7 @@ OZ_C_proc_end
 
 OZ_Return ConjunctionPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in: " << *this);
+  OZ_DEBUGPRINTTHIS("in: ");
 
   OZ_FDIntVar x(reg_x), y(reg_y), z(reg_z);
   PropagatorController_V_V_V P(x, y, z);
@@ -44,10 +44,10 @@ OZ_Return ConjunctionPropagator::propagate(void)
   if (*x == fd_singl) 
     if (x->getSingleElem() == 0) {
       FailOnEmpty(*z &= 0);
-      OZ_DEBUGPRINT("out: x=0 " << *this);
+      OZ_DEBUGPRINTTHIS("out: x=0 ");
       return P.vanish();
     } else { 
-      OZ_DEBUGPRINT("out: x=1 " << *this);
+      OZ_DEBUGPRINTTHIS("out: x=1 ");
       P.vanish();
       return replaceBy(reg_y, reg_z);
     }
@@ -55,10 +55,10 @@ OZ_Return ConjunctionPropagator::propagate(void)
   if (*y == fd_singl) 
     if (y->getSingleElem() == 0) {
       FailOnEmpty(*z &= 0);
-      OZ_DEBUGPRINT("out: y=0 " << *this);
+      OZ_DEBUGPRINTTHIS("out: y=0 ");
       return P.vanish();
     } else {
-      OZ_DEBUGPRINT("out: y=1 " << *this);
+      OZ_DEBUGPRINTTHIS("out: y=1 ");
       P.vanish();
       return replaceBy(reg_x, reg_z);
     }
@@ -66,21 +66,21 @@ OZ_Return ConjunctionPropagator::propagate(void)
   if (*z == fd_singl && z->getSingleElem() == 1) {
     FailOnEmpty(*x &= 1);
     FailOnEmpty(*y &= 1);
-    OZ_DEBUGPRINT("out: z=1 " << *this);
+    OZ_DEBUGPRINTTHIS("out: z=1 ");
     return P.vanish();
   } 
     
   if (OZ_isEqualVars(reg_x, reg_y)) {
-    OZ_DEBUGPRINT("out: x=y " << *this);
+    OZ_DEBUGPRINTTHIS("out: x=y ");
     P.vanish();
     return replaceBy(reg_x, reg_z);
   }
 
-  OZ_DEBUGPRINT("out: " << *this);
+  OZ_DEBUGPRINTTHIS("out: ");
   return P.leave();
 
 failure: 
-  OZ_DEBUGPRINT("fail");
+  OZ_DEBUGPRINT(("fail"));
   return P.fail(); 
 }
 
