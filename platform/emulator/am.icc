@@ -258,7 +258,8 @@ void updateExtSuspension(Board *varHome, Suspension *susp)
 
 inline
 void AM::checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
-			     SVariable * rightVar, Bool calledByUnify)
+			     SVariable * rightVar,
+			     PropCaller calledByUnify)
 {
   SVariable * var = tagged2SuspVar(taggedvar);
   var->setSuspList(checkSuspensionList(var, taggedvar, var->getSuspList(),
