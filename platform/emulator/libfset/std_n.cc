@@ -64,7 +64,7 @@ OZ_BI_end
 
 OZ_Return FSetDisjointNPropagator::propagate(void)
 {
-  OZ_DEBUGPRINTTHIS("in ");
+  _OZ_DEBUGPRINTTHIS("in ");
 
   DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
   DECL_DYN_ARRAY(FSetTouchedGlb, vst, _vs_size);
@@ -76,10 +76,11 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
     vst[i] = vs[i];
   }
 
-  if (hasEqualVars()) {
-    goto failure;
-  }
-  {
+  OZ_Boolean doagain;
+
+  do {
+    doagain = OZ_FALSE;
+
     OZ_FSetValue u = _u;
 
     for (i = _vs_size; i--; ) {
@@ -92,26 +93,20 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
     }
 
     if (u.getCard() > 0) {
-      OZ_Boolean doagain;
+      for (i = _vs_size; i--; ) {
+        OZ_FSetValue vsi_glb(vs[i]->getGlbSet());
 
-      do {
-        doagain = OZ_FALSE;
+        FailOnInvalid(*vs[i] != (u - vsi_glb));
 
-        for (i = _vs_size; i--; ) {
-          OZ_FSetValue vsi_glb(vs[i]->getGlbSet());
-
-          FailOnInvalid(*vs[i] != (u - vsi_glb));
-
-          if (vst[i] <= vs[i]) {
-            doagain = OZ_TRUE;
-            vst[i] = vs[i];
-            u |= vsi_glb;
-          }
+        if (vst[i] <= vs[i]) {
+          doagain = OZ_TRUE;
+          vst[i] = vs[i];
+          u |= vs[i]->getGlbSet();
         }
-
-      } while (doagain);
+      } // for
     }
-  }
+  } while (doagain);
+
   {
     int j = 0;
 
@@ -126,12 +121,13 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
     }
     _vs_size = j;
 
-    OZ_DEBUGPRINTTHIS("out ");
-    return P.leave();
   }
 
+  _OZ_DEBUGPRINTTHIS("out ");
+  return P.leave();
+
  failure:
-  OZ_DEBUGPRINTTHIS("failed");
+  _OZ_DEBUGPRINTTHIS("failed");
   return P.fail();
 }
 
