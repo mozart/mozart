@@ -1,3 +1,28 @@
+@SET_MAKE@
+BUILDTOP        = @BUILDTOP@
+SRCTOP          = @SRCTOP@
+SRCDIR          = @srcdir@
+VPATH           = @srcdir@
+PREFIX          = @prefix@
+PLATFORM        = @PLATFORM@
+LIB_DIR         = $(PREFIX)/contrib
+HOMEURL         = @HOMEURL@
+
+OZC             = @OZC@
+COMPILE         = $(OZC) -c
+OZTOOL          = @OZTOOL@
+CPPFLAGS        = -I$(SRCTOP)/platform/emulator \
+                  -I$(BUILDTOP)/platform/emulator \
+                  -I$(PREFIX)/include @CPPFLAGS@
+CXXFLAGS        = @CXXFLAGS@
+LDFLAGS         = @LDFLAGS@
+LIBS            = @LIBS@
+
+INSTALL         = @INSTALL@
+INSTALL_DIR     = @INSTALL_DIR@
+INSTALL_LIB     = $(INSTALL) -m 444
+
+
 USECPLEX =
 #USECPLEX = 1
 
@@ -6,16 +31,14 @@ PLATFORM = $(shell ozplatform)
 OPTIMIZE = -O3
 #OPTIMIZE = -g3 -DDEBUG_CHECK
 
-LIBS     = -lc -lm -llpk
+LIBS     = -lc -lm -llpk-$(PLATFORM)
 TARGETLIBPATH  = $(HOME)/.oz/cache/http/www.ps.uni-sb.de/~tmueller/mozart
 
 CFLAGS  = -I/usr/local/oz/include
-
-CFLAGS   += -ILpsolve
-
+CFLAGS   += -I$(VPATH)/Lpsolve
 CFLAGS   += -Wall -Wno-unused -Wno-reorder -Wno-uninitialized
 
-LDFLAGS  = -LLpsolve
+LDFLAGS  = -L$(VPATH)
 
 
 ifdef USECPLEX
@@ -25,17 +48,12 @@ LDFLAGS  += -L/linux/CPLEX
 LIBS     += -lcplex
 endif
 
-CFLAGS   += -I$(HOME)/mozart/platform/emulator
-CFLAGS   += -I$(HOME)/mozart.build/platform/emulator
-
 CXX     = oztool c++
 
 DEPEND   = $(CXX) $(CFLAGS) -MM
 
+#LD = ozdynld
 LD = oztool ld
-
-OZC     = ozc
-OZL     = ozl
 
 
 CPPSRCS  =      aux.cc \
@@ -47,7 +65,6 @@ CPPSRCS  =      aux.cc \
 ifeq ($(PLATFORM), linux-i486)
 CSRCS    = fpgetset.c sigfpe.c
 CFLAGS   += -DLINUX_IEEE
-
 endif
 
 TARGZ    = ri.tar.gz
@@ -61,8 +78,14 @@ OZGSRCS  =
 
 OZFCTS  = $(OZSRCS:.oz=.ozf) $(OZGSRCS:.ozg=.ozf)
 
+TARGETS         = $(OZFCTS) ri.so-$(PLATFORM)
+LIB_TARGETS     = $(TARGETS:%=$(LIB_DIR)/%)
 
-all: ri.so-$(PLATFORM) $(OZFCTS)
+.PHONY: all install clean veryclean distclean bootstrap depend
+
+all:            $(TARGETS)
+install:        $(LIB_DIR) $(LIB_TARGETS)
+
 
 #
 # Oz part
@@ -78,22 +101,32 @@ all: ri.so-$(PLATFORM) $(OZFCTS)
 # C part
 #
 
-ri.so-$(PLATFORM): $(OBJS) Lpsolve/liblpk.a
-        $(LD) -o $(TARGETLIBPATH)/$@ $^ $(LDFLAGS) $(LIBS)
+ri.so-$(PLATFORM): $(OBJS)
+        $(LD) -o $@ $(OBJS) $(LDFLAGS) $(LIBS)
 
-Lpsolve/liblpk.a:
-        (cd Lpsolve; make)
+#
+# installation part
+#
+
+$(LIB_DIR)/%.ozf: %.ozf
+        $(INSTALL_LIB) $< $@
+
+$(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
+        $(INSTALL_LIB) $< $@
+
+#
+# maintenance part
+#
+
 clean:
         -rm *.ozf
         -rm *.o
-        -rm *.so-$(PLATFORM)
+        -rm ri.so-$(PLATFORM)
         -rm *.s
         -rm *~
-        -rm $(TARGZ)
 
 veryclean: clean
         -rm Makefile.deps
-        (cd Lpsolve; make clean)
 
 %.o: %.cc
         $(CXX) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
@@ -101,11 +134,7 @@ veryclean: clean
 %.o: %.c
         $(CXX) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
 
-
 depend:
         $(DEPEND) $(CSRCS) $(CPPSRCS) > Makefile.deps
-
-tar: veryclean
-        tar czvf $(TARGZ) --exclude $(TARGZ) .
 
 -include Makefile.deps
