@@ -476,10 +476,13 @@ PRINT(Object)
   CHECKDEPTH;
   stream << "<O:" << getPrintName()
          << ", ";
-  getFreeRecord()->print(stream,depth,offset);
+  if (getFreeRecord())
+    getFreeRecord()->print(stream,depth+1,offset);
+  else
+    stream << "nofreefeatures";
   stream << ", State: ";
   if (getState())
-    getState()->print(stream,depth,offset);
+    getState()->print(stream,depth+1,offset);
   stream << ">";
 }
 
@@ -715,6 +718,7 @@ PRINTLONG(HeapChunk)
 PRINT(ObjectClass)
 {
   CHECKDEPTH;
+  depth++;
   stream << indent(offset) << "class(fastMethods: ";
   fastMethods->print(stream,depth,offset);
   stream << ", printName: ";
@@ -732,6 +736,7 @@ PRINT(ObjectClass)
 PRINTLONG(ObjectClass)
 {
   CHECKDEPTHLONG;
+  depth++;
   stream << indent(offset) << "class(fastMethods: ";
   fastMethods->printLong(stream,depth,offset);
   stream << ", printName: ";
