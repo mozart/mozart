@@ -261,6 +261,7 @@ public:
   int initBool(void);
 
   int getSize(void) const {return size;}
+  int getWidth(void) const {return max_elem - min_elem;}
   int minElem(void) const {return min_elem;}
   int maxElem(void) const {return max_elem;}
   int singl(void) const;
