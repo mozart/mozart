@@ -463,8 +463,6 @@ in
       end
 
       meth DoSwitch(I PrintStack)
-	 F L N A B Time
-      in
 	 case I == 1 then skip else
 	    Stack = {Dget self.ThreadDic I}
 	    T     = {Stack getThread($)}
@@ -473,14 +471,21 @@ in
 	 in
 	    currentThread <- T
 	    currentStack  <- Stack
-
+	    
 	    case PrintStack then
 	       case S == terminated then
 		  SourceManager,removeBar
 		  Gui,printStack(id:I frames:nil depth:0)
 	       else
+		  F L Exc = {Stack getException($)}
+	       in
 		  {ForAll [print getPos(file:F line:L)] Stack}
-		  SourceManager,bar(file:F line:L state:S)
+		  case Exc == nil then
+		     SourceManager,bar(file:F line:L state:S)
+		  else
+		     SourceManager,bar(file:F line:L state:blocked)
+		     Gui,doStatus(Exc clear BlockedThreadColor)
+		  end
 	       end
 	    else skip end
 	 end
