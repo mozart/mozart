@@ -264,9 +264,6 @@ void AM::init(int argc,char **argv)
     osWatchFD(compStream->csfileno(),SEL_READ);
   }
 
-  siteFD = siteInit();
-  osWatchFD(siteFD,SEL_READ);
-
   osInitSignals();
   osSetAlarmTimer(CLOCK_TICK/1000);
 
@@ -1014,6 +1011,11 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
  * MISC
  * -------------------------------------------------------------------------*/
 
+int AM::awakeIO(int fd, TaggedRef var) {
+  am.awakeIOVar(var);
+  return 1;
+}
+
 void AM::awakeIOVar(TaggedRef var)
 {
   Assert(isToplevel());
@@ -1076,6 +1078,18 @@ void AM::pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
   pushTaskInline(pc,y,g,x,i);
 }
 
+void AM::select(int fd, int mode, IOHandler fun, TaggedRef val)
+{
+  if (!isToplevel()) {
+    warning("select only on toplevel");
+    return;
+  }
+  ioNodes[fd].readwritepair[mode]=val;
+  ioNodes[fd].handler[mode]=fun;
+  osWatchFD(fd,mode);
+  return;
+}
+
 
 int AM::select(int fd, int mode,TaggedRef l,TaggedRef r)
 {
@@ -1085,6 +1099,7 @@ int AM::select(int fd, int mode,TaggedRef l,TaggedRef r)
   }
   if (osTestSelect(fd,mode)==1) return OZ_unify(l,r);
   ioNodes[fd].readwritepair[mode]=cons(l,r);
+  ioNodes[fd].handler[mode]=awakeIO;
   osWatchFD(fd,mode);
   return OK;
 }
@@ -1097,6 +1112,7 @@ void AM::acceptSelect(int fd,TaggedRef l,TaggedRef r)
   }
 
   ioNodes[fd].readwritepair[SEL_READ]=cons(l,r);
+  ioNodes[fd].handler[SEL_READ]=awakeIO;
   osWatchAccept(fd);
 }
 
@@ -1106,6 +1122,8 @@ void AM::deSelect(int fd)
   osClrWatchedFD(fd,SEL_WRITE);
   ioNodes[fd].readwritepair[SEL_READ]  = makeTaggedNULL();
   ioNodes[fd].readwritepair[SEL_WRITE] = makeTaggedNULL();
+  ioNodes[fd].handler[SEL_READ]  = 0;
+  ioNodes[fd].handler[SEL_WRITE]  = 0;
 }
 
 // called if IOReady (signals are blocked)
@@ -1123,19 +1141,17 @@ void AM::handleIO()
     numbOfFDs--;
   }
 
-  if (osNextSelect(siteFD,SEL_READ)) {
-    siteReceive();
-    numbOfFDs--;
-  }
-
   // find the nodes to awake
   for (int index = 0; numbOfFDs > 0; index++) {
     for(int mode=SEL_READ; mode <= SEL_WRITE; mode++) {
       if (osNextSelect(index, mode) ) {
 	numbOfFDs--;
-	awakeIOVar(ioNodes[index].readwritepair[mode]);
-	ioNodes[index].readwritepair[mode] = makeTaggedNULL();
-	osClrWatchedFD(index,mode);
+	if ((*ioNodes[index].handler)(index,
+				      ioNodes[index].readwritepair[mode])) {
+	  ioNodes[index].readwritepair[mode] = makeTaggedNULL();
+	  ioNodes[index].handler[mode] = 0;
+	  osClrWatchedFD(index,mode);
+	}
       }
     }
   }
