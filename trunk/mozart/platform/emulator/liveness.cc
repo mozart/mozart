@@ -242,6 +242,7 @@ outerLoop2:
       switch (op) {
       case FASTCALL:
       case FASTTAILCALL:
+      case CALLPROCEDUREREF:
       case GENFASTCALL:
 	{
 	  AbstractionEntry *ae = (AbstractionEntry *) getAdressArg(PC+1);
@@ -253,6 +254,8 @@ outerLoop2:
 	  }
 	  BREAK;
 	}
+      case CALLGLOBAL:
+      case CALLCONSTANT:
       case MARSHALLEDFASTCALL:
 	{
 	  int i  = getPosIntArg(PC+2)>>1;
@@ -293,12 +296,6 @@ outerLoop2:
 
       case INLINEASSIGN:
 	ISREAD(GETREGARG(PC+2));
-	break;
-
-      case INLINEUPARROW:
-	ISREAD(GETREGARG(PC+1));
-	ISREAD(GETREGARG(PC+2));
-	ISWRITE(GETREGARG(PC+3)); // must be last?
 	break;
 
       case TESTLE:
@@ -368,9 +365,7 @@ outerLoop2:
 	ISREAD_TO(getPosIntArg(PC+2));
 	BREAK;
 
-      case THREAD:
-	CONTINUE(getLabelArg(PC+1));
-
+      case CALLMETHOD:
       case GENCALL:
 	{
 	  GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC+1);
@@ -410,6 +405,7 @@ outerLoop2:
 	ISWRITE(GETREGARG(PC+1));
 	break;
       case SETSELF:
+      case SETSELFG:
 	ISREAD(GETREGARG(PC+1));
 	break;
       case GETRETURNX:

@@ -29,9 +29,6 @@
 #endif
 
 #include "base.hh"
-
-#ifdef NEWMARSHALER
-
 #include "gentraverser.hh"
 #include "pickle.hh"
 
@@ -753,4 +750,3 @@ repeat:
   SetBTFrame(frame);
 }
 
-#endif

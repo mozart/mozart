@@ -3,14 +3,13 @@ config.h version.cc text2pickle.exe
 Makefile Makefile.rules Makefile.vars Makefile.deps
 conf.h OZCONF.h
 oztool.sh
-scancode.cc instrtab.hh  opcodes.hh optostr.hh
+instrtab.hh  opcodes.hh optostr.hh
 opcodes.cc
 copycode.cc
 ozlib.lnk
 mozart.c
 initffuns.cc
 components.cc
-marshalcode.cc
 marshaler.hh
 marshalMsg.cc
 atoms.hh atoms.cc

@@ -38,6 +38,7 @@
 #pragma interface
 #endif
 
+class SendRecvCounter;
 extern SendRecvCounter mess_counter[];
 
 class ObjectFields{
@@ -89,10 +90,6 @@ undefine(`message')
 define(message,`void unmarshal_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
 include(EMUDIR/msgFormat.m4)
 
-undefine(`message')
-define(message,`void unmarshalUnsent_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
-include(EMUDIR/msgFormat.m4)
-
 void marshalDSite(DSite *, MsgBuffer *);
 void marshalVarObject(Object *o, MsgBuffer *bs, GName *gnclass);
 void marshalFullObjectAndClass(Object *o, MsgBuffer* bs);
@@ -115,14 +112,6 @@ inline Credit unmarshalCredit(MsgBuffer *bs){
   PD((UNMARSHAL,"credit c:%d",c));
   PD((CREDIT,"unmarshal:credit c:%d",c));
   return c;}
-
-void unmarshalUnsentTerm(MsgBuffer *);
-void unmarshalUnsentSRecord(MsgBuffer *);
-int unmarshalUnsentNumber(MsgBuffer *bs);
-void unmarshalUnsentString(MsgBuffer *bs);
-void unmarshalUnsentSRecord(MsgBuffer *);
-void unmarshalUnsentObject(MsgBuffer *bs);
-void unmarshalUnsentObjectAndClass(MsgBuffer *bs);
 
 // var.cc
 OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi);
