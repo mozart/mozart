@@ -394,7 +394,7 @@ void int2buffer(TaggedRef i) {
 inline
 void float2buffer(TaggedRef f) {
   int len;
-  sprintf(tcl_buffer,"%e%n",floatValue(f),&len);
+  sprintf(tcl_buffer,"%g%n",floatValue(f),&len);
   tcl_buffer += len;
   if (tcl_buffer>tcl_buffer_end) 
     resize_tcl_buffer();
