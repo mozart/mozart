@@ -853,43 +853,12 @@ LBLdispatcher:
    * Currently unused
    */
   Case(GETRETURNX)
-    //    {
-    //  XPC(1) = GetFunReturn();
-    //  DISPATCH(2);
-    //}
   Case(GETRETURNY)
-    //{
-    //  YPC(1) = GetFunReturn();
-    //  DISPATCH(2);
-    // }
   Case(GETRETURNG)
-    //{
-    //  GPC(1) = GetFunReturn();
-    //  DISPATCH(2);
-    // }
-
   Case(FUNRETURNX)
-    //{
-    //  SetFunReturn(XPC(1));
-    //  if (Y)
-    //  deallocateY();
-    // goto LBLpopTaskNoPreempt;
-    //}
   Case(FUNRETURNY)
-    //{
-    //  SetFunReturn(YPC(1));
-    //  if (Y)
-    //  deallocateY();
-    //  goto LBLpopTaskNoPreempt;
-    //}
   Case(FUNRETURNG)
-    //{
-    //  SetFunReturn(GPC(1));
-    //  if (Y)
-    //deallocateY();
-    //goto LBLpopTaskNoPreempt;
-    //}
-
+    OZ_error("Impossible.");
 
   Case(CREATEVARIABLEX)
     {
