@@ -220,13 +220,13 @@ $builtins = {
                      bi  => BIuminus,
                      ibi => BIuminusInline},
 
-    '+1'        => { in  => ['+number'],
-                     out => ['+number'],
+    '+1'        => { in  => ['+int'],
+                     out => ['+int'],
                      bi  => BIadd1,
                      ibi => BIadd1Inline},
 
-    '-1'        => { in  => ['+number'],
-                     out => ['+number'],
+    '-1'        => { in  => ['+int'],
+                     out => ['+int'],
                      bi  => BIsub1,
                      ibi => BIsub1Inline},
 
@@ -285,8 +285,8 @@ $builtins = {
                      bi  => BIfloor,
                      ibi => BIinlineFloor},
 
-    'Abs'       => { in  => ['+float'],
-                     out => ['+float'],
+    'Abs'       => { in  => ['+number'],
+                     out => ['+number'],
                      bi  => BIabs,
                      ibi => BIabsInline},
 
@@ -870,7 +870,7 @@ $builtins = {
                              ibi => orInline},
 
     'Type.ofValue'      => { in  => ['+value'],
-                             out => ['+bool'],
+                             out => ['+atom'],
                              bi  => BItermType,
                              ibi => BItermTypeInline},
 
@@ -894,10 +894,10 @@ $builtins = {
                              BI  => BIsetProcInfo},
 
     'getProcNames'      => { in  => ['+procedure'],
-                             out => ['value'],
+                             out => ['+[name]'],
                              BI  => BIgetProcNames},
 
-    'setProcNames'      => { in  => ['+procedure','value'],
+    'setProcNames'      => { in  => ['+procedure','+[name]'],
                              out => [],
                              BI  => BIsetProcNames},
 
@@ -992,7 +992,7 @@ $builtins = {
                              BI  => BInewChunk},
 
     'chunkArity'        => { in  => ['+chunk'],
-                             out => ['+int'],
+                             out => ['+[feature]'],
                              BI  => BIchunkArity},
 
     'chunkWidth'        => { in  => ['+chunk'],
@@ -1069,7 +1069,7 @@ $builtins = {
                              out => [],
                              BI  => BIshutdown},
 
-    'Alarm'             => { in  => ['+int','value'],
+    'Alarm'             => { in  => ['+int','unit'],
                              out => [],
                              BI  => BIalarm},
 
@@ -1184,10 +1184,10 @@ $builtins = {
                              BI  => BIdumpThreads},
 
     'Debug.listThreads' => { in  => [],
-                             out => ['value'],
+                             out => ['+[thread]'],
                              BI  => BIlistThreads},
 
-    'Debug.breakpointAt'=> { in  => ['value','+int','value'],
+    'Debug.breakpointAt'=> { in  => ['+atom','+int','+bool'],
                              out => ['+bool'],
                              BI  => BIbreakpointAt},
 
@@ -1236,7 +1236,7 @@ $builtins = {
                              BI  => BIsetThreadID},
 
     'Thread.parentId'   => { in  => ['+thread'],
-                             out => ['int'],
+                             out => ['+int'],
                              BI  => BIparentThreadID},
 
     'Thread.this'       => { in  => [],
@@ -1288,15 +1288,15 @@ $builtins = {
                                  BI  => BIthreadGetRaiseOnBlock},
 
     'Thread.taskStack'  => { in  => ['+thread','+int','+bool'],
-                             out => ['+value'],
+                             out => ['+[record]'],
                              BI  => BIthreadTaskStack},
 
     'Thread.frameVariables'=> { in  => ['+thread','+int'],
-                                out => ['+value'],
+                                out => ['+record'],
                                 BI  => BIthreadFrameVariables},
 
     'Thread.location'   => { in  => ['+thread'],
-                             out => ['+value'],
+                             out => ['+[atom]'],
                              BI  => BIthreadLocation},
 
     # printing primitives for debugging
@@ -1410,8 +1410,8 @@ $builtins = {
                              bi  => BIgetClass,
                              ibi => getClassInline},
 
-    'ooGetLock'         => { in  => ['value'],
-                             out => [],
+    'ooGetLock'         => { in  => [],
+                             out => ['+lock'],
                              bi  => BIooGetLock,
                              ibi => ooGetLockInline},
 
@@ -1527,8 +1527,8 @@ $builtins = {
                              out => ['+bool'],
                              BI  => BIisUniqueName},
 
-    'generateAbstractionTableID'=> { in  => ['+value'],
-                                     out => ['+bool'],
+    'generateAbstractionTableID'=> { in  => ['+bool'],
+                                     out => ['+foreignPointer'],
                                      BI  => BIgenerateAbstractionTableID},
 
     'concatenateAtomAndInt'     => { in  => ['+atom','+int'],
@@ -1536,42 +1536,42 @@ $builtins = {
                                      BI  => BIconcatenateAtomAndInt},
 
     'RegSet.new'        => { in  => ['+int','+int'],
-                             out => ['+value'],
+                             out => ['+chunk'],
                              BI  => BIregSet_new},
 
-    'RegSet.copy'       => { in  => ['+value'],
-                             out => ['+value'],
+    'RegSet.copy'       => { in  => ['+chunk'],
+                             out => ['+chunk'],
                              BI  => BIregSet_copy},
 
-    'RegSet.adjoin'     => { in  => ['+value','+int'],
+    'RegSet.adjoin'     => { in  => ['+chunk','+int'],
                              out => [],
                              BI  => BIregSet_adjoin},
 
-    'RegSet.remove'     => { in  => ['+value','+int'],
+    'RegSet.remove'     => { in  => ['+chunk','+int'],
                              out => [],
                              BI  => BIregSet_remove,},
 
-    'RegSet.member'     => { in  => ['+int','+value'],
+    'RegSet.member'     => { in  => ['+int','+chunk'],
                              out => ['+bool'],
                              BI  => BIregSet_member},
 
-    'RegSet.union'      => { in  => ['+value','+value'],
+    'RegSet.union'      => { in  => ['+chunk','+chunk'],
                              out => [],
                              BI  => BIregSet_union},
 
-    'RegSet.intersect'  => { in  => ['+value','+value'],
+    'RegSet.intersect'  => { in  => ['+chunk','+chunk'],
                              out => [],
                              BI  => BIregSet_intersect},
 
-    'RegSet.subtract'   => { in  => ['+value','+value'],
+    'RegSet.subtract'   => { in  => ['+chunk','+chunk'],
                              out => [],
                              BI  => BIregSet_subtract},
 
-    'RegSet.toList'     => { in  => ['+value'],
+    'RegSet.toList'     => { in  => ['+chunk'],
                              out => ['+[int]'],
                              BI  => BIregSet_toList},
 
-    'RegSet.complementToList'   => { in  => ['+value'],
+    'RegSet.complementToList'   => { in  => ['+chunk'],
                                      out => ['+[int]'],
                                      BI  => BIregSet_complementToList},
 
@@ -1585,8 +1585,8 @@ $builtins = {
                                       out => ['+value'],
                                       bi  => ozparser_parseVirtualString},
 
-    'ozparser_fileExists'       => { in  => ['+virtualString','bool'],
-                                     out => [],
+    'ozparser_fileExists'       => { in  => ['+virtualString'],
+                                     out => ['+bool'],
                                      bi  => ozparser_fileExists},
 
     'copyCode'          => { in  => ['+abstraction','+dictionary'],
@@ -1632,8 +1632,8 @@ $builtins = {
                              out => ['+int'],
                              BI  => BInewCodeBlock},
 
-    'makeProc'          => { in  => ['+int','+value'],
-                             out => ['+abstraction'],
+    'makeProc'          => { in  => ['+int','+[value]'],
+                             out => ['+procedure/0'],
                              BI  => BImakeProc},
 
     'addDebugInfo'      => { in  => ['+int','+atom','+int'],
@@ -1684,7 +1684,7 @@ $builtins = {
                              out => [],
                              BI  => BIstorePredicateRef},
 
-    'storePredId'       => { in  => ['+int','+value','+value','+value',
+    'storePredId'       => { in  => ['+int','+atom','+value','+atom',
                                      '+int','+bool'],
                              out => [],
                              BI  => BIstorePredId},
@@ -1701,7 +1701,7 @@ $builtins = {
                              out => [],
                              BI  => BIstoreHTScalar},
 
-    'storeHTRecord'     => { in  => ['+int','+int','+value','+value','+int'],
+    'storeHTRecord'     => { in  => ['+int','+int','+literal','+value','+int'],
                              out => [],
                              BI  => BIstoreHTRecord},
 
@@ -1709,16 +1709,16 @@ $builtins = {
                              out => [],
                              BI  => BIstoreRecordArity},
 
-    'storeGenCallInfo'  => { in  => ['+int','+int','+value','+value',
-                                     '+value','+value'],
+    'storeGenCallInfo'  => { in  => ['+int','+int','+bool','+literal',
+                                     '+bool','+value'],
                              out => [],
                              BI  => BIstoreGenCallInfo},
 
-    'storeApplMethInfo' => { in  => ['+int','+value','+value'],
+    'storeApplMethInfo' => { in  => ['+int','+literal','+value'],
                              out => [],
                              BI  => BIstoreApplMethInfo},
 
-    'storeGRegRef'      => { in  => ['+int','+value'],
+    'storeGRegRef'      => { in  => ['+int','+[tuple]'],
                              out => [],
                              BI  => BIstoreGRegRef},
 
@@ -2376,7 +2376,7 @@ $builtins = {
     #-----------------------------------------------------------------
 
     'OS.getDir'         => { in  => ['+virtualString'],
-                             out => ['+value'],
+                             out => ['+[string]'],
                              BI  => unix_getDir,
                              module=>'os'},
 
