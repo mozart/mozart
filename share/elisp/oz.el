@@ -20,7 +20,8 @@
 ;;         f:
 ;;            5 +
 ;;         7
-;;   The 7 should be underneath the 5.
+;;   The 7 should be underneath the 5.  You can circumvent this problem
+;;   by using parentheses around the expression.
 
 (require 'comint)
 (require 'compile)
@@ -233,7 +234,7 @@ Used for popping up the corresponding buffer.")
 All strings matching this regular expression are removed.")
 
 (defconst oz-bar-pattern
-  "\'oz-bar \\([^ ]*\\) \\([^ ]*\\) \\([^ ]*\\)\'"
+  "\'oz-bar \\([^ ]*\\) \\([0-9]+\\) \\([0-9]+\\) \\([^ ]*\\)\'"
   "Regex for reading messages from the Oz debugger or profiler.")
 
 (defconst oz-show-temp-pattern
@@ -648,17 +649,13 @@ start the old Oz Compiler unless TOGGLE-NEW-COMPILER is non-nil.
 Handle input and output via the buffers whose names are found in
 variables `oz-compiler-buffer' and `oz-emulator-buffer'."
   (interactive "P")
-  (oz-check-running
-   t (if toggle-new-compiler (not oz-use-new-compiler) oz-use-new-compiler))
+  (save-excursion
+    (oz-check-running
+     t (if toggle-new-compiler (not oz-use-new-compiler) oz-use-new-compiler)))
   (or (equal mode-name "Oz")
       (equal mode-name "Oz-Gump")
       (equal mode-name "Oz-Machine")
-      (oz-new-buffer))
-  (if (and oz-emulator-hook
-	   (or oz-using-new-compiler
-	       (not oz-gdb-autostart)))
-      (oz-show-buffer (get-buffer oz-emulator-buffer))
-    (oz-show-buffer (get-buffer oz-compiler-buffer))))
+      (oz-new-buffer)))
 
 (defun oz-halt (force)
   "Halt Oz Compiler and Emulator.
@@ -775,7 +772,14 @@ If FORCE is non-nil, kill the processes immediately."
 	  (bury-buffer oz-emulator-buffer))
 
 	(oz-set-title oz-frame-title)
-	(message "Oz started."))))
+	(message "Oz started.")))
+
+  (if start-flag
+      (if (and oz-emulator-hook
+	       (or oz-using-new-compiler
+		   (not oz-gdb-autostart)))
+	  (oz-show-buffer (get-buffer oz-emulator-buffer))
+	(oz-show-buffer (get-buffer oz-compiler-buffer)))))
 
 
 ;;------------------------------------------------------------
@@ -979,7 +983,8 @@ feed that many preceding paragraphs as well as the current paragraph."
 
 (defun oz-send-string (string)
   "Feed STRING to the Oz Compiler, restarting it if it died."
-  (oz-check-running nil oz-use-new-compiler)
+  (save-excursion
+    (oz-check-running nil oz-use-new-compiler))
   (let ((proc (get-buffer-process (if oz-using-new-compiler
 				      oz-emulator-buffer
 				    oz-compiler-buffer))))
@@ -1314,7 +1319,7 @@ and the following line."
   (interactive)
   (delete-horizontal-space) ; Removes trailing whitespace
   (open-line 1)
-  (cond (oz-auto-indent (oz-indent-line)))
+  (cond (oz-auto-indent (oz-indent-line t)))
   (forward-line 1)
   (cond (oz-auto-indent (oz-indent-line))))
 
@@ -1906,6 +1911,14 @@ and is used for fontification.")
   "[^\t\n]\\(\t+\\)"
   "Regular expression matching TAB characters in the middle of a line.")
 
+(defconst oz-space-matcher-4
+  "^\\(        \\)+"
+  "Regular expression matching \"expanded\" TAB characters at BOL.")
+
+(defconst oz-space-matcher-5
+  "\t\\(\\(        \\)+\\)"
+  "Regular expression matching \"expanded\" TAB characters after TABs.")
+
 (defconst oz-font-lock-keywords-1
   (list (cons oz-char-matcher 'font-lock-string-face)
 	oz-keywords-matcher-1
@@ -1935,6 +1948,9 @@ and is used for fontification.")
 		     (list oz-space-matcher-2
 			   '(1 oz-space-face))
 		     (list oz-space-matcher-3
+			   '(1 oz-space-face))
+		     (cons oz-space-matcher-4 'oz-space-face)
+		     (list oz-space-matcher-5
 			   '(1 oz-space-face))))
 	  oz-font-lock-keywords-2)
   "Gaudy level highlighting for Oz mode.")
@@ -2239,9 +2255,9 @@ splitting, the outputs are passed to the common oz-filter."
 	    (while (re-search-forward oz-bar-pattern nil t)
 	      (let ((file  (match-string 1))
 		    (line  (string-to-number (match-string 2)))
-		    (state (match-string 3)))
+		    (state (match-string 4)))
 		(replace-match "" nil t)
-		(if (string-equal file "undef")
+		(if (string-equal file "nofile")
 		    (cond (oz-bar-overlay
 			   (cond (oz-gnu-emacs
 				  (delete-overlay oz-bar-overlay))
@@ -2266,7 +2282,6 @@ splitting, the outputs are passed to the common oz-filter."
 	      (lambda (window)
 		(if (eq (window-buffer window) buffer)
 		    (cond (errs-found
-			   ;; (set-window-point window errs-found)
 			   (set-window-point window errs-found)
 			   (set-window-start window errs-found))
 			  ((>= (window-point window) start-of-output)
@@ -2302,6 +2317,7 @@ splitting, the outputs are passed to the common oz-filter."
 	   (if (not oz-compiler-buffer-map)
 	       (setq oz-compiler-buffer-map (copy-keymap oz-mode-map)))
 	   (oz-set-mouse-error-key oz-compiler-buffer-map)
+	   (define-key oz-compiler-buffer-map "\C-c\C-c" 'oz-goto-next-error)
 	   (use-local-map oz-compiler-buffer-map)
 	   (setq mode-name "Oz-Output")
 	   (setq major-mode 'oz-mode))
@@ -2558,7 +2574,7 @@ of the procedure Browse."
 ;; visits the next error message following point (no matter whether
 ;; that came from the latest compilation or not).
 
-;; In the compiler and emulator buffers, button mouse-2 invokes
+;; In the compiler and emulator buffers, button shift mouse-2 invokes
 ;; oz-mouse-goto-error as well:
 (defun oz-set-mouse-error-key (map)
   (cond (oz-gnu-emacs
