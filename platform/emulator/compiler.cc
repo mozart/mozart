@@ -241,13 +241,11 @@ OZ_BI_define(BIstoreConstant,2,0)
 OZ_BI_define(BIstoreBuiltinname,2,0)
 {
   OZ_declareCodeBlockIN(0,code);
-  oz_declareNonvarIN(1,builtin);
-  if (!oz_isBuiltin(builtin)) {
-    return OZ_typeError(1,"UnsitedBuiltin");
-  }
-  Builtin *bi = tagged2Builtin(builtin);
-  if (bi->isNative()) {
-    return OZ_typeError(1,"UnsitedBuiltin");
+  OZ_declareVirtualStringIN(1,name);
+  Builtin *bi = string2Builtin(name);
+  if (!bi) {
+    return oz_raise(E_ERROR,OZ_atom("assembler"),
+                    "builtinUndefined",1,OZ_in(1));
   }
   code->writeBuiltin(bi);
   return PROCEED;
