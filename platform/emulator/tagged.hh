@@ -25,6 +25,7 @@
 #include <stdio.h>
 
 
+#include "machine.hh"
 #include "error.hh"
 #include "types.hh"
 #include "mem.hh"
@@ -67,33 +68,13 @@ extern char * TypeOfTermString[];
 // --- TaggedRef: CLASS / BASIC ACCESS FUNCTIONS
 
 
-typedef unsigned int TaggedRef;
-typedef TaggedRef * TaggedRefPtr;
+typedef TaggedRef *TaggedRefPtr;
 
 const int tagSize = 4;
 const int tagMask   = 0xF;
 
-
-#if defined(ULTRIX_MIPS) || defined(IRIX5_MIPS)
-const int mallocBase = 0x10000000;
-#else
-#ifdef AIX3_RS6000
-const int mallocBase = 0x20000000;
-#else
-#ifdef HPUX_700
-const int mallocBase = 0x40000000;
-#else
-#ifdef OSF1_ALPHA
-const long int mallocBase = 0x140000000;
-#else
-const int mallocBase = 0;
-#endif
-#endif
-#endif
-#endif
-
 /* we loose 4 bits for tags */
-const long int maxPointer = ((unsigned long int)~0 >> tagSize)|mallocBase;
+#define maxPointer TaggedToPointer((TaggedRef)~0 >> tagSize)
 
 
 // ------------------------------------------------------
@@ -112,17 +93,28 @@ extern int gcing;
 #endif
 
 
+inline void* TaggedToPointer(TaggedRef t)
+{
+  return (void*) (mallocBase|t);
+};
+
 inline
 void *tagValueOf(TaggedRef ref) 
 { 
   GCDEBUG(ref);
-  return (void*)((ref >> tagSize) | mallocBase);
+  return TaggedToPointer(ref >> tagSize);
+}
+
+inline
+TaggedRef makeTaggedRef(TypeOfTerm tag, int32 i)
+{
+  return (i << tagSize) | tag;
 }
 
 inline
 TaggedRef makeTaggedRef(TypeOfTerm tag, void *ptr)
 {
-  return ((int)ptr << tagSize) | tag;
+  return makeTaggedRef(tag,ToInt32(ptr));
 }
 
 inline
@@ -218,10 +210,10 @@ Bool isCVar(TaggedRef term) {
  * for inline function version
  */
 
-#define _isAnyVar(val)  (((unsigned int) val&2)==0)       /* mask = 0010 */
-#define _isNotCVar(val) (((unsigned int) val&6)==0)       /* mask = 0110 */
-#define _isUVar(val)    (((unsigned int) val&14)==0)      /* mask = 1110 */
-#define _isLTuple(val)  (((unsigned int) val&13)==0)      /* mask = 1101 */
+#define _isAnyVar(val)  (((TaggedRef) val&2)==0)       /* mask = 0010 */
+#define _isNotCVar(val) (((TaggedRef) val&6)==0)       /* mask = 0110 */
+#define _isUVar(val)    (((TaggedRef) val&14)==0)      /* mask = 1110 */
+#define _isLTuple(val)  (((TaggedRef) val&13)==0)      /* mask = 1101 */
 
 #ifdef DEBUG_CHECK
 
@@ -413,7 +405,7 @@ Bool isConst(TaggedRef term) {
 inline
 TaggedRef makeTaggedNULL()
 {
-  return makeTaggedRef((TypeOfTerm)0,NULL);
+  return makeTaggedRef((TypeOfTerm)0,(void*)NULL);
 }
 #else
 #define makeTaggedNULL() ((TaggedRef) 0)
@@ -426,9 +418,9 @@ TaggedRef makeTaggedMisc(void *s)
 }
 
 inline
-TaggedRef makeTaggedMisc(int s)
+TaggedRef makeTaggedMisc(int32 s)
 {
-  return makeTaggedMisc((void *) s);
+  return makeTaggedRef((TypeOfTerm)0,s);
 }
 
 inline
@@ -437,7 +429,7 @@ TaggedRef makeTaggedRef(TaggedRef *s)
   CHECK_POINTER(s);
   DebugGC(gcing == 0 && !MemChunks::list->inChunkChain ((void *)s),
 	  error ("making TaggedRef pointing to 'from' space"));
-  return (TaggedRef)s;
+  return (TaggedRef) ToInt32(s);
 }
 
 inline
@@ -504,7 +496,7 @@ TaggedRef makeTaggedLiteral(Literal *s)
 }
 
 inline
-TaggedRef makeTaggedSmallInt(unsigned int s)
+TaggedRef makeTaggedSmallInt(int32 s)
 {
   return makeTaggedRef(SMALLINT,(void*)s);
 }
@@ -597,7 +589,7 @@ TaggedRef *tagged2Ref(TaggedRef ref)
   GCDEBUG(ref);
 // cannot use CHECKTAG(REF); because only last two bits must be zero
   Assert((ref & 3) == 0);
-  return (TaggedRef *) ref;
+  return (TaggedRef *) ToPointer(ref);
 }
 
 /* does not deref home pointer! */
@@ -647,14 +639,6 @@ Float *tagged2Float(TaggedRef ref)
   GCDEBUG(ref);
   CHECKTAG(FLOAT);
   return (Float *) tagValueOf(FLOAT,ref);
-}
-
-inline
-unsigned int tagged2SmallInt(TaggedRef ref)
-{
-  GCDEBUG(ref);
-  CHECKTAG(SMALLINT);
-  return (unsigned int) tagValueOf(SMALLINT,ref);
 }
 
 inline
