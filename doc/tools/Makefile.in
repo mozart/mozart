@@ -23,8 +23,9 @@ HTMLEXTRAFILES0 = \
         note-gui-r1 note-gui-r2 \
         explain arrow-r post search draw
 HTMLEXTRAFILES = \
-        $(HTMLEXTRAFILES0:%=$(SRCDIR)/pictures/%.gif) \
-        $(SRCDIR)/../utilities/danger.gif
+        $(HTMLEXTRAFILES0:%=$(SRCDIR)/pictures/%.gif)
+HTMLEXTRASUPPORTFILES = \
+        danger.gif
 
 OZDOCHTMLFLAGS = --autoindex
 

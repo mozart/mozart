@@ -16,7 +16,7 @@ INSTALL_BIN     = $(INSTALL) -m 555
 INSTALL_DIR     = @INSTALL_DIR@
 
 HTMLSUPPORTFILES0 = \
-        ozdoc.css page.gif
+        ozdoc.css page.gif $(HTMLEXTRASUPPORTFILES)
 HTMLSUPPORTFILES = \
         $(addprefix $(SRCTOP)/doc/utilities/,$(HTMLSUPPORTFILES0))
 
