@@ -41,13 +41,6 @@ enum BoardFlags {
 class Board : public ConstTerm {
 friend void engine();
 public:
-  static void Init();
-  static void SetCurrent(Board *c, Bool checkNotGC=OK);
-  static void NewCurrentAsk(Actor *a);
-  static void NewCurrentWait(Actor *a);
-  static void NewCurrentSolve (Actor *a);
-  static Board *NewRoot();
-  static Actor *FailCurrent();
   static void Print();
 private:
   int flags;
@@ -58,8 +51,8 @@ private:
     Board *board;
   } u;
   ConsList script;
-  Board(Actor *a,int type);
 public:
+  Board(Actor *a,int type);
   ~Board();
 
   USEHEAPMEMORY;

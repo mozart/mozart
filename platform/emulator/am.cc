@@ -208,7 +208,13 @@ void AM::init(int argc,char **argv)
   statusReg   = (StatusBit)0;
   xRegs       = allocateStaticRefsArray(NumberOfXRegisters);
 
-  Board::Init();
+  rootBoard = new Board(NULL,Bo_Root);
+  rootBoard->setInstalled();
+  currentBoard = NULL;
+  setCurrent(rootBoard,OK);
+  currentSolveBoard = (Board *) NULL; 
+  wasSolveSet = NO; 
+
   Thread::Init();
 
   // builtins
@@ -476,7 +482,7 @@ Bool AM::checkExtSuspension (Suspension *susp)
       DebugCheck ((sb->isSolve () == NO),
 		  error ("no solve board is found in AM::checkExtSuspension"));
 
-      SolveActor *sa = CastSolveActor (sb->getActor ());
+      SolveActor *sa = SolveActor::Cast (sb->getActor ());
       if (sa->isStable () == OK && sa->isSolveDet () == NO) {
 	Thread::ScheduleSolve (sb);
 	// Note:
@@ -506,7 +512,7 @@ void AM::incSolveThreads (Board *bb)
     if (bb->isSolve () == OK) {
       DebugCheck ((bb->isReflected () == OK),
 		  error ("reflected board is found in AM::incSolveThreads ()"));
-      SolveActor *sa = CastSolveActor (bb->getActor ());
+      SolveActor *sa = SolveActor::Cast (bb->getActor ());
       DebugCheck ((sa->getBoard () == (Board *) NULL),
 		  error ("solve actor in abstraction (AM::incSolveThreads ())"));
       sa->incThreads ();
@@ -525,7 +531,7 @@ void AM::decSolveThreads (Board *bb)
     if (bb->isSolve () == OK) {
       DebugCheck ((bb->isReflected () == OK),
 		  error ("reflected board is found in AM::decSolveThreads ()"));
-      SolveActor *sa = CastSolveActor (bb->getActor ());
+      SolveActor *sa = SolveActor::Cast (bb->getActor ());
       sa->decThreads ();
       if (sa->isStable () == OK && sa->isSolveDet () == NO) {
 	Thread::ScheduleSolve (bb);
@@ -710,7 +716,7 @@ InstType AM::installPath(Board *to)
     return ret;
   }
 
-  Board::SetCurrent(to);
+  setCurrent(to);
   to->setInstalled();
 
   trail.pushMark();
@@ -834,6 +840,36 @@ void AM::pushTaskOutline(Board *n,ProgramCounter pc,
   pushTask(n, pc, y, g, x, i);
 }
 
+#ifdef DEBUG_CHECK
+static Board *oldBoard = (Board *) NULL;
+static Board *oldSolveBoard = (Board *) NULL; 
+#endif
+
+void AM::setCurrent(Board *c, Bool checkNotGC)
+{
+  Assert(c!=NULL);
+  DebugCheck ((c->isCommitted () == OK),
+	      error ("committed board in AM::setCurrent ()"));
+  DebugCheck(checkNotGC && oldBoard != currentBoard,
+	     error("someone has changed 'currentBoard'"));
+  currentBoard = c;
+  currentUVarPrototype = makeTaggedUVar(c);
+  DebugCheckT(oldBoard=c);
+
+  if (c->isSolve () == OK) {
+    DebugCheck ((checkNotGC && oldSolveBoard != currentSolveBoard),
+		error ("somebody has changed 'currentSolveBoard'"));
+    currentSolveBoard = c;
+    wasSolveSet = OK; 
+    DebugCheckT (oldSolveBoard = c); 
+  } else if (wasSolveSet == OK) {
+    DebugCheck ((checkNotGC && oldSolveBoard != currentSolveBoard),
+		error ("somebody has changed 'currentSolveBoard'"));
+    currentSolveBoard = c->getSolveBoard ();
+    wasSolveSet = NO;
+    DebugCheckT (oldSolveBoard = currentSolveBoard); 
+  }
+}
 
 #ifdef OUTLINE
 #define inline
