@@ -22,14 +22,6 @@ fun {NewPanel Tk TkTools}
 
 \ifdef SAVE
 in
-   panel('PanelClass': PanelClass
-	 'Panel':      Panel)
+\insert 'Panel.env'
 end
-
-panel('PanelClass': PanelClass
-      'Panel':      Panel)
-= {NewPanel Tk TkTools}
 \endif
-
-
-
