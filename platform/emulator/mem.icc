@@ -68,6 +68,13 @@ void * freeListMalloc(size_t size) {
 
 void freeListChop(void * addr, size_t size);
 
+#ifdef CS_PROFILE
+
+inline
+void freeListDispose(void * addr, size_t size) {}
+
+#else
+
 inline
 void freeListDispose(void * addr, size_t size) {
   Assert((size & 3) == 0);
@@ -96,6 +103,8 @@ void freeListDispose(void * addr, size_t size) {
     freeListChop(addr, size);
   }
 }
+
+#endif
 
 // return used kilo bytes on the heap
 inline
