@@ -20,16 +20,19 @@ private:
   OZ_UnifyMetaDet     unify_meta_det;
   OZ_UnifyMetaMeta    unify_meta_meta;
   OZ_PrintMeta        print_meta_data;
+  OZ_IsUnique         unique_meta_data;
   char *              name;
 public:
   MetaTag(OZ_UnifyMetaDet unify_md,
 	  OZ_UnifyMetaMeta unify_mm,
 	  OZ_PrintMeta print,
+	  OZ_IsUnique unique,
 	  char * n)
   {
     unify_meta_det = unify_md;
     unify_meta_meta = unify_mm;
     print_meta_data = print;
+    unique_meta_data = unique;
     name = n;
   }
 };
@@ -46,6 +49,7 @@ public:
   GenMetaVariable(MetaTag * t, TaggedRef tr);
 
   MetaTag * getTag(void) { return tag; }
+  void putTag(MetaTag * t) { tag = t; }
 
   TaggedRef getData(void) { return data; }
   void setData(TaggedRef d) { data = d; }
@@ -65,6 +69,12 @@ public:
   }
 
   Bool isStrongerThan(TaggedRef data);
+
+  Bool isUnique(void) {return tag->unique_meta_data(data);}
+
+  mur_t check(OZ_MetaType t, TaggedRef d) {
+    return tag->unify_meta_meta(getData(), d, t, NULL);
+  }
 };
 
 

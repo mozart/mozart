@@ -176,11 +176,12 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
   } else {
     TaggedRef result, trail = v;
 
-    *vptr = makeTaggedRef(tptr);
+    // bind temporarily to catch cycles
+    if (vptr && tptr) *vptr = makeTaggedRef(tptr);
     mur_t ret_value = tag->unify_meta_det(getData(),
 					  t, OZ_typeOf(t),
 					  &result);
-    *vptr = trail;
+    if (vptr && tptr) *vptr = trail;
     
 #ifdef DEBUG_META
     DebugCode(printf("meta-det 0x%x\n", ret_value));
@@ -230,10 +231,11 @@ Bool GenMetaVariable::isStrongerThan(TaggedRef d)
 OZ_MetaType OZ_introMetaVar(OZ_UnifyMetaDet unify_md,
 			    OZ_UnifyMetaMeta unify_mm,
 			    OZ_PrintMeta print_m,
+			    OZ_IsUnique unique_m,
 			    char * name_m)
 {
   return OZ_MetaType(::new MetaTag(unify_md, unify_mm,
-				   print_m, strdup(name_m)));
+				   print_m, unique_m, strdup(name_m)));
 }
 
 OZ_Term OZ_makeMetaVar(OZ_MetaType t, OZ_Term d)
@@ -241,22 +243,36 @@ OZ_Term OZ_makeMetaVar(OZ_MetaType t, OZ_Term d)
   return makeTaggedRef(newTaggedCVar(new GenMetaVariable((MetaTag *) t, d)));
 }
 
-
-void OZ_constrainMetaVar(int d, OZ_Term v, OZ_Term c)
+OZ_Bool OZ_constrainMetaVar(OZ_Term v, OZ_MetaType t, OZ_Term d)
 {
   TaggedRef v_deref = deref(v);
   
-  if (d) {
-    if (OZ_unify(c, v) == FAILED)
-      warning("Found inconsistency when constraining meta variable.");    
-  } else if (am.isLocalCVar(v_deref)) {
-    ((GenMetaVariable *) tagged2CVar(v_deref))->constrainVar(v_deref, c);
-  } else {
-    if (OZ_unify(OZ_makeMetaVar(OZ_getMetaVarType(v_deref), c), v) == FAILED)
-      warning("Found inconsistency when constraining meta variable.");
-  }  
-}
+  if (!isAnyVar(v_deref) ||
+      (OZ_isMetaVar(v_deref) &&
+       ((GenMetaVariable *) tagged2CVar(v_deref))->check(t, d)
+       == meta_unconstrained)) {
+    return PROCEED;
+  }
 
+  return OZ_unify(v, OZ_makeMetaVar(t, d));
+}  
+
+OZ_Bool OZ_suspendMetaProp(OZ_CFun OZ_self, OZ_Term * OZ_args, int OZ_arity)
+{
+  OZ_Suspension susp = OZ_makeSuspension(OZ_self, OZ_args, OZ_arity);
+  Bool suspNotAdded = TRUE;
+  
+  for (int i = OZ_arity; i--; )
+    if (!OZ_isUnique(OZ_getCArg(i))) {
+      OZ_addSuspension(OZ_args[i], susp);
+      suspNotAdded = FALSE;
+    }
+
+  if (suspNotAdded)
+    OZ_warning("No suspension added in OZ_suspendMetaProp.");
+  
+  return PROCEED;
+}
 
 OZ_MetaType OZ_getMetaVarType(OZ_Term v)
 {
@@ -265,13 +281,33 @@ OZ_MetaType OZ_getMetaVarType(OZ_Term v)
     return ((GenMetaVariable *) tagged2CVar(v))->getTag();
   return NULL;
 }
-     
+
+void OZ_putMetaVarType(OZ_Term v, OZ_MetaType t)
+{
+  v = deref(v);
+  if (isCVar(v) && tagged2CVar(v)->getType() == MetaVariable)
+    ((GenMetaVariable *) tagged2CVar(v))->putTag((MetaTag *)t);
+}
+
 OZ_Term OZ_getMetaVarData(OZ_Term v)
 {
   v = deref(v);
   if (isCVar(v) && tagged2CVar(v)->getType() == MetaVariable)
     return ((GenMetaVariable *) tagged2CVar(v))->getData();
   return NULL;
+}
+
+int OZ_isUnique(OZ_Term v)
+{
+  v = deref(v);
+
+  if (!isAnyVar(v)) {
+    return TRUE;
+  } else if (OZ_isMetaVar(v)) {
+    return ((GenMetaVariable *) tagged2CVar(deref(v)))->isUnique();
+  } else {
+    return FALSE;
+  }
 }
 
 
