@@ -89,8 +89,8 @@ Board::Board(Board * p)
 #endif
 }
 
-TaggedRef Board::genBlocked(TaggedRef arg) {
-  SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
+TaggedRef Board::genSuspended(TaggedRef arg) {
+  SRecord *stuple = SRecord::newSRecord(AtomSuspended, 1);
   stuple->setArg(0, arg);
   return makeTaggedSRecord(stuple);
 }
@@ -409,10 +409,10 @@ void Board::checkStability(void) {
     am.setCurrent(pb, pb->getOptVar());
 
     if (n == 0) {
-      // No runnable threads: blocked
+      // No runnable threads: suspended
       TaggedRef newVar = oz_newFuture(pb);
 
-      bindStatus(genBlocked(newVar));
+      bindStatus(genSuspended(newVar));
       setStatus(newVar);
       pb->decRunnableThreads();
     }

@@ -225,7 +225,7 @@ OZ_BI_define(BIaskVerboseSpace, 1, 1) {
     return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
 
   if (s->isBlocked() && !s->isStable()) {
-    SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
+    SRecord *stuple = SRecord::newSRecord(AtomSuspended, 1);
     stuple->setArg(0, s->getStatus());
 
     OZ_RETURN(makeTaggedSRecord(stuple));

@@ -352,13 +352,13 @@ public:
   }
   void bindStatus(TaggedRef t);
 
-  void clearStatus();
+  void clearStatus(void);
   void patchAltStatus(int i);
 
   TaggedRef genSucceeded(Bool);
   TaggedRef genAlt(int);
-  TaggedRef genFailed();
-  TaggedRef genBlocked(TaggedRef arg);
+  TaggedRef genFailed(void);
+  TaggedRef genSuspended(TaggedRef);
 
   //
   // Root variable
