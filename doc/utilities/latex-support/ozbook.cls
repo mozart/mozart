@@ -320,9 +320,9 @@
       \begin{tabular*}{\fullwidth}%
         {@{}l@{\extracolsep\fill}r@{\extracolsep{0pt}}@{}}%
 %       {%
-        {\titlefonttwo Describing the Programming Language Oz \ozversion}\\[2mm]
-        {\titlefonttwo Implemented by DFKI Oz \dfkiozversion}\\[2mm]
-        {\titlefonttwo Released on \dfkiozreleasedate}\\[1cm]
+        {\titlefonttwo Describing the Programming Language Oz \@ozversion}\\[2mm]
+        {\titlefonttwo Implemented by DFKI Oz \@dfkiozversion}\\[2mm]
+        {\titlefonttwo Released on \@dfkiozreleasedate}\\[1cm]
         Programming Systems Lab\\
         German Research Center for Artificial Intelligence (DFKI)\\
         Stuhlsatzenhausweg 3, D-66123 Saarbr\"ucken, Germany &
@@ -362,8 +362,8 @@
   from \[\texttt{ftp.ps.uni-sb.de/pub/oz}\]
 
   This document describes the programming language
-  Oz \ozversion\ implemented by
-  DFKI Oz \dfkiozversion\ released on \dfkiozreleasedate.
+  Oz \@ozversion\ implemented by
+  DFKI Oz \@dfkiozversion\ released on \@dfkiozreleasedate.
 
   For specific questions and bug reports, you may mail to
   \texttt{oz@dfki.uni-sb.de}.  To join the Oz users mailing list,
@@ -427,9 +427,12 @@
 \newcommand{\@ozversion}{%
   \@ozwarning{Missing \string\ozversion}??OZ VERSION??}
 \newcommand{\ozversion}{\renewcommand{\@ozversion}}
-\newcommand{\@ozreleasedate}{%
-  \@ozwarning{Missing \string\ozreleasedate}??OZ RELEASE DATE??}
-\newcommand{\ozreleasedate}{\renewcommand{\@ozreleasedate}}
+\newcommand{\@dfkiozversion}{%
+  \@ozwarning{Missing \string\ozversion}??DFKI OZ VERSION??}
+\newcommand{\dfkiozversion}{\renewcommand{\@dfkiozversion}}
+\newcommand{\@dfkiozreleasedate}{%
+  \@ozwarning{Missing \string\dfkiozreleasedate}??OZ RELEASE DATE??}
+\newcommand{\dfkiozreleasedate}{\renewcommand{\@dfkiozreleasedate}}
 \renewcommand{\@author}{%
   \@ozauthor\@ozaddress}
 \newcommand{\@ozauthor}{%
