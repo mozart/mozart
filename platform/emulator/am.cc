@@ -821,7 +821,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
     DEREF(term,zzz,tag);
     // special case if second arg is a variable !!!!
     SVariable * tvar = (termPtr && isNotCVar(tag)) ?
-      (taggedBecomesSuspVar(termPtr)) : NULL;
+      (taggedBecomesSuspVar(termPtr)) : (SVariable*) NULL;
     // variables are passed as references
     checkSuspensionList(var, tvar ? makeTaggedRef(termPtr) : term,
                         pc_std_unif);
@@ -980,7 +980,7 @@ void AM::reduceTrailOnSuspend()
 
   bb->newScript(numbOfCons);
 
-  susp = (numbOfCons > 0) ? new Suspension(bb) : NULL;
+  susp = (numbOfCons > 0) ? new Suspension(bb) : (Suspension*) NULL;
 
   for (int index = 0; index < numbOfCons; index++) {
     TaggedRef *refPtr;

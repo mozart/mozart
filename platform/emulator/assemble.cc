@@ -78,7 +78,7 @@ OZ_C_proc_begin(BIscheduleCode,3)
   OZ_Term greglist = OZ_getCArg(1);
 
   int size = OZ_length(greglist);
-  RefsArray gregs = (size == 0) ? NULL : allocateRefsArray(size);
+  RefsArray gregs = (size == 0) ? (RefsArray) NULL : allocateRefsArray(size);
 
   int i = 0;
   while(!OZ_isNil(greglist)) {

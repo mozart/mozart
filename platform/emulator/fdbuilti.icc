@@ -193,7 +193,8 @@ int BIfdBodyManager::initCache(void) {
   int num_of_slots = int(ceil(float(curr_num_of_vars)/float(cache_slot_size)));
   cache_from[0] = 0;
 
-  for (int i = 0; i < num_of_slots; i += 1) {
+  int i;
+  for (i = 0; i < num_of_slots; i += 1) {
     cache_from[i + 1] = cache_to[i] = cache_slot_size + cache_from[i];
     Assert(cache_from[i] < curr_num_of_vars);
   }

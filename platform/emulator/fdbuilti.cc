@@ -86,7 +86,8 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
   long prod = 1;
   Suspension * susp;
 
-  for (int j = ts, fds_found = 0; j-- && (fds_found < 2); ) {
+  int j, fds_found;
+  for (j = ts, fds_found = 0; j-- && (fds_found < 2); ) {
     var = makeTaggedRef(&xtc[j]);
     deref(var, varptr, vartag);
 
@@ -255,7 +256,8 @@ int BIfdHeadManager::simplifyHead(int ts, STuple &a, STuple &x)
   }
 
   // 2nd pass: undo marks and compress vector
-  for (int from = 0, to = 0; from < ts; from += 1) {
+  int from, to;
+  for (from = 0, to = 0; from < ts; from += 1) {
     TaggedRef var_from = bifdhm_var[from];
 
     if (var_from == 0) continue;
@@ -619,7 +621,8 @@ int BIfdBodyManager::simplifyBody(int ts, STuple &a, STuple &x,
   }
 
   // 2nd pass: undo marks and compress vector
-  for (int from = 0, to = 0; from < ts; from += 1) {
+  int from, to;
+  for (from = 0, to = 0; from < ts; from += 1) {
     TaggedRef var_from = bifdbm_var[from];
 
     if (var_from == 0) continue;
@@ -660,7 +663,8 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
                                           STuple &vp)
 {
   // 1st pass: mark first occ of a var
-  for (int v = 0; v < variables; v++) {
+  int v;
+  for (v = 0; v < variables; v++) {
     Assert(isCVar(bifdbm_vartag[idx_v(v)]) ||
            isSmallInt(bifdbm_vartag[idx_v(v)]));
     if (isAnyVar(bifdbm_var[idx_v(v)]))
@@ -727,7 +731,8 @@ Bool BIfdBodyManager::_unifiedVars(void)
   Bool ret = FALSE;
 
   // 1st pass: mark occ of var and break if you find already touched var
-  for (int i = 0; i < curr_num_of_vars; i += 1)
+  int i;
+  for (i = 0; i < curr_num_of_vars; i += 1)
     if (isAnyVar(bifdbm_var[i]))
       if (isTaggedIndex(*bifdbm_varptr[i])) {
         ret = TRUE;

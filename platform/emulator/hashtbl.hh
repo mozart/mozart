@@ -40,7 +40,7 @@ class HashNode;
 
 typedef enum hashType {INTTYPE = 0, CHARTYPE = 1};
 
-typedef union {char *fstr; unsigned intlong fint; } HtKey;
+typedef union {char *fstr; intlong fint; } HtKey;
 
 class HashNode {
   public:
@@ -51,8 +51,8 @@ class HashNode {
     setEmpty();
   };
 
-  Bool isEmpty()  { return (key.fint == (unsigned intlong) htEmpty); }
-  void setEmpty() { key.fint = (unsigned intlong) htEmpty; }
+  Bool isEmpty()  { return (key.fint == (intlong) htEmpty); }
+  void setEmpty() { key.fint = (intlong) htEmpty; }
 };
 
 class HashTable {
@@ -62,9 +62,9 @@ protected:
   int tableSize;
   hashType type;
   HashNode * table;
-  int hashFunc(int);
+  int hashFunc(intlong);
   int hashFunc(char *);
-  int findIndex(int);
+  int findIndex(intlong);
   int findIndex(char *);
   int lengthList(int i);
   void resize();
@@ -75,8 +75,8 @@ public:
 
   // return NO iff already in there and replace = NO
   Bool aadd(void *, char *, Bool replace = NO);
-  Bool aadd(void *, int , Bool replace = NO);
-  void *ffind(int);
+  Bool aadd(void *, intlong, Bool replace = NO);
+  void *ffind(intlong);
   void *ffind(char *);
   void print();
   void printStatistic();

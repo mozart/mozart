@@ -24,7 +24,7 @@ public:
   OzDebug(SRecord *p, int arity, TaggedRef *a)
   {
     pred = p;
-    args = arity==0 ? NULL : copyRefsArray(a,arity);
+    args = arity==0 ? (RefsArray) NULL : copyRefsArray(a,arity);
     goalNum = goalCounter++;
   }
 

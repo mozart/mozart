@@ -1339,7 +1339,7 @@ void engine() {
 
       AssRegArray &list = predd->gRegs;
       int size = list.getSize();
-      RefsArray gRegs = (size == 0) ? NULL : allocateRefsArray(size);
+      RefsArray gRegs = (size == 0) ? (RefsArray) NULL : allocateRefsArray(size);
 
       Abstraction *p = new Abstraction (predd, gRegs, new Name(e->currentBoard));
       if (predEntry) {

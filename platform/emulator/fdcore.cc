@@ -268,7 +268,8 @@ OZ_C_proc_begin(BIfdPutList, 3)
   int * left_arr = static_int_a, * right_arr = static_int_b;
   int min_arr = fd_iv_max_elem, max_arr = 0;
 
-  for (int len_arr = 0; isLTuple(list) && len_arr < MAXFDBIARGS;) {
+  int len_arr;
+  for (len_arr = 0; isLTuple(list) && len_arr < MAXFDBIARGS;) {
     TaggedRef val = tagged2LTuple(list)->getHead();
 
     DEREF(val, valptr, valtag);

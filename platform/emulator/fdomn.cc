@@ -28,7 +28,8 @@
 
 Bool FDIntervals::isConsistent(void) const {
   if (high < 0) return FALSE;
-  for (int i = 0; i < high; i++) {
+  int i;
+  for (i = 0; i < high; i++) {
     if (i_arr[i].left > i_arr[i].right) return FALSE;
     if ((i + 1 < high) && (i_arr[i].right >= i_arr[i + 1].left)) return FALSE;
   }
@@ -138,7 +139,8 @@ Bool FDIntervals::next(int i, int &n) const
     return FALSE;
   }
 
-  for (int j = 0;
+  int j;
+  for (j = 0;
        j < high - 1 &&
        !(i_arr[j].right < i && i < i_arr[j + 1].left);
        j += 1);
@@ -182,7 +184,8 @@ TaggedRef FDIntervals::getAsList(void) const
 inline
 int FDIntervals::findPossibleIndexOf(int i) const
 {
-  for (int lo = 0, hi = high - 1; lo < hi; ) {
+  int lo, hi;
+  for (lo = 0, hi = high - 1; lo < hi; ) {
     int mid = (lo + hi + 1) / 2;
     if (i < i_arr[mid].left)
       hi = mid - 1;
@@ -265,7 +268,8 @@ FDIntervals * FDIntervals::operator -= (const int take_out)
       i_arr[index + 1].left = take_out + 1;
     } else {
       FDIntervals * new_iv = new(new_max_high) FDIntervals(new_max_high);
-      for (int i = 0; i <= index; i += 1)
+      int i;
+      for (i = 0; i <= index; i += 1)
         new_iv->i_arr[i] = i_arr[i];
       new_iv->i_arr[index].right = take_out - 1;
       for (i = index; i < high; i += 1)
@@ -313,7 +317,8 @@ FDIntervals * FDIntervals::operator += (const int put_in)
       i_arr[index].left = i_arr[index].right = put_in;
     } else {
       FDIntervals * new_iv = new(high) FDIntervals(high);
-      for (int i = 0; i < index; i += 1)
+      int i;
+      for (i = 0; i < index; i += 1)
         new_iv->i_arr[i] = i_arr[i];
       for (i = high - 1; index < i; i -= 1)
         new_iv->i_arr[i] = i_arr[i - 1];
@@ -374,7 +379,8 @@ FDIntervals * FDIntervals::complement(int a_high, int * x_left, int * x_right)
 
 int FDIntervals::union_iv(const FDIntervals &x, const FDIntervals &y)
 {
-  for (int x_c = 0, y_c = 0, z_c = 0, r; x_c < x.high && y_c < y.high; ) {
+  int x_c, y_c, z_c, r;
+  for (x_c = 0, y_c = 0, z_c = 0, r; x_c < x.high && y_c < y.high; ) {
 
     if (x.i_arr[x_c].left < y.i_arr[y_c].left) {
       i_arr[z_c].left = x.i_arr[x_c].left;
@@ -423,7 +429,8 @@ int FDIntervals::union_iv(const FDIntervals &x, const FDIntervals &y)
 
 int FDIntervals::intersect_iv(FDIntervals &z, const FDIntervals &y)
 {
-  for (int x_c = 0, y_c = 0, z_c = 0; x_c < high && y_c < y.high; )
+  int x_c, y_c, z_c;
+  for (x_c = 0, y_c = 0, z_c = 0; x_c < high && y_c < y.high; )
     if (i_arr[x_c].left > y.i_arr[y_c].left) {
       if (y.i_arr[y_c].right < i_arr[x_c].left) { // no overlapping
         y_c += 1;
@@ -452,7 +459,8 @@ int FDIntervals::intersect_iv(FDIntervals &z, const FDIntervals &y)
 
 int FDIntervals::subtract_iv(FDIntervals &z, const FDIntervals &y)
 {
-  for (int x_c = 0, y_c = 0, z_c = 0; x_c < high && y_c < y.high; ) {
+  int x_c, y_c, z_c;
+  for (x_c = 0, y_c = 0, z_c = 0; x_c < high && y_c < y.high; ) {
     for (; y_c < y.high && y.i_arr[y_c].right < i_arr[x_c].left; y_c += 1);
     if (y_c >= y.high) break;
 
@@ -548,7 +556,8 @@ void FDBitVector::initList(int list_len,
 
 int FDBitVector::findSize(void)
 {
-  for (int s = 0, i = fd_bv_max_high; i--; ) {
+  int s, i;
+  for (s = 0, i = fd_bv_max_high; i--; ) {
     s += numOfBitsInByte[unsigned(b_arr[i]) & 0xffff];
     s += numOfBitsInByte[unsigned(b_arr[i]) >> 16];
   }
@@ -558,7 +567,8 @@ int FDBitVector::findSize(void)
 
 int FDBitVector::findMinElem(void)
 {
-  for (int v = 0, i = 0; i < fd_bv_max_high; v += 32, i += 1)
+  int v, i;
+  for (v = 0, i = 0; i < fd_bv_max_high; v += 32, i += 1)
     if (b_arr[i] != 0)
       break;
 
@@ -585,7 +595,8 @@ int FDBitVector::findMinElem(void)
 
 int FDBitVector::findMaxElem(void)
 {
-  for (int v = fd_bv_max_elem, i = fd_bv_max_high - 1; i >= 0; v -= 32, i--)
+  int v, i;
+  for (v = fd_bv_max_elem, i = fd_bv_max_high - 1; i >= 0; v -= 32, i--)
     if (b_arr[i] != 0)
       break;
 
@@ -617,7 +628,8 @@ void FDBitVector::setFromTo(int from, int to)
   int low_word = div32(from), low_bit = mod32(from);
   int up_word = div32(to), up_bit = mod32(to);
 
-  for (int i = 0; i < low_word; i++)
+  int i;
+  for (i = 0; i < low_word; i++)
     b_arr[i] = 0;
   for (i = up_word + 1; i < fd_bv_max_high; i++)
     b_arr[i] = 0;
@@ -733,7 +745,8 @@ int FDBitVector::operator >= (const int geq)
 
 int FDBitVector::mkRaw(int * list_left, int * list_right) const
 {
-  for (int i = 0, r = 1, l, len = 0; i < fd_bv_max_elem + 2; i += 1)
+  int i, r, l, len;
+  for (i = 0, r = 1, len = 0; i < fd_bv_max_elem + 2; i += 1)
     if (contains(i)) {
       if (r) l = i;
       r = 0;
@@ -894,7 +907,8 @@ int FiniteDomain::simplify(int list_len, int * list_left, int * list_right)
   qsort(fd_iv_left_sort, list_len, sizeof(int **), intcompare);
   qsort(fd_iv_right_sort, list_len, sizeof(int **), intcompare);
 
-  for (int len = 0, p = 0; p < list_len; len += 1) {
+  int len, p;
+  for (len = 0, p = 0; p < list_len; len += 1) {
     if (p > len) {
       *fd_iv_left_sort[len] = *fd_iv_left_sort[p];
       *fd_iv_right_sort[len] = *fd_iv_right_sort[p];
