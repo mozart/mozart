@@ -21,6 +21,7 @@ import
    Resolve(localize)
    InteractiveListDataView(dataView:ListDataView)
    InteractiveTreeDataView(dataView:TreeDataView)
+   InteractiveCategoryDataView(dataView:CatDataView)
    InteractiveFullInfoView(infoView:InfoView)
    InteractiveNiceInfoView(infoView:NiceInfoView)
    
@@ -42,6 +43,7 @@ define
 	 fileTbButton
 	 treeTbButton
 	 listTbButton
+	 catTbButton
 	 niceTbButton
 	 allTbButton
       attr
@@ -110,6 +112,8 @@ define
 			      )
 		       command(text:'Packages as list'
 			       action:self#displayDataAs(ListDataView))
+		       command(text:'Packages sorted by categories'
+			       action:self#displayDataAs(CatDataView))
 		       separator
 		       command(text:'Formatted package information'
 			       action:self#displayInfoAs(NiceInfoView))
@@ -171,6 +175,11 @@ define
 				      group:dataview
 				      handle:self.listTbButton
 				      action:self#displayDataAs(ListDataView))
+			tbradiobutton(text:'cat'
+				      tooltips:'Display packages according to their categories'
+				      group:dataview
+				      handle:self.catTbButton
+				      action:self#displayDataAs(CatDataView))
 			tdspace
 			tbradiobutton(%text:'Nice'
 				      image:{GetImage 'formated_icon'}
@@ -273,10 +282,10 @@ define
       end
 
       meth displayDataAs(Class)
-	 if Class==ListDataView then
-	    {self.listTbButton set(true)}
-	 else
-	    {self.treeTbButton set(true)}
+	 case Class
+	 of !ListDataView then {self.listTbButton set(true)}
+	 [] !TreeDataView then {self.treeTbButton set(true)}
+	 [] !CatDataView then {self.catTbButton set(true)}
 	 end
 	 Desc
 	 Info={@data get($)}
