@@ -30,8 +30,8 @@ import
    ErrorRegistry.put
    Finalize.register
 export
-   'GumpScanner': GumpScanner
    'class':       GumpScanner
+
 body
    \insert gump/GumpScannerClass
 end
