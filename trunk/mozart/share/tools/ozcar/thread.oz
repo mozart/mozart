@@ -279,7 +279,7 @@ in
       
       meth step(file:F line:L thr:T id:I name:N args:A
 		builtin:IsBuiltin time:Time)
-	 case F == '' orelse F == noDebugInfo then
+	 case F == '' orelse F == 'nofile' orelse F == 'noDebugInfo' then
 	    {OzcarMessage NoFileInfo # I}
 	    SourceManager,scrollbar(file:'' line:undef color:undef what:both)
 	    {Thread.resume @currentThread}
