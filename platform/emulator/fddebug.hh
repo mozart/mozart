@@ -32,16 +32,11 @@ extern ostream * cpi_cout;
 
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD_CONSTRREP)
 
-extern "C" {
-void error( const char *format ...);
-}
-
-
 #  define DEBUG_FD_IR(COND, CODE) if (COND || 1) { *cpi_cout << CODE << flush;}
 
 
 #  define AssertFD(C) \
-if (!(C)) error("FD assertion '%s' failed at %s:%d.", #C, __FILE__, __LINE__); 
+if (!(C)) OZ_error("FD assertion '%s' failed at %s:%d.", #C, __FILE__, __LINE__); 
 
 #  define DebugCodeFD(C) C
 
