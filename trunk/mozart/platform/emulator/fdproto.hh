@@ -273,4 +273,8 @@ OZ_C_proc_proto(fdp_distinct)
 OZ_C_proc_proto(fdp_distinctOffset)
 OZ_C_proc_proto(fdp_disjoint)
 OZ_C_proc_proto(fdp_disjointC)
+OZ_C_proc_proto(fdp_distanceEq)
+OZ_C_proc_proto(fdp_distanceLeq)
+OZ_C_proc_proto(fdp_distanceGeq)
+OZ_C_proc_proto(fdp_distanceNeq)
 #endif
