@@ -1301,11 +1301,6 @@ OZ_BI_define(BIperdioStatistics,0,1)
   OZ_RETURN(OZ_recordInit(oz_atom("perdioStatistics"),ar));
 } OZ_BI_end
 
-BIspec marshalerSpec[]= {
-  {"perdioStatistics",  0, 1, BIperdioStatistics, 0},
-  {0,0,0,0}
-};
-
 /* *********************************************************************/
 /*   SECTION 16: initialization                                       */
 /* *********************************************************************/
@@ -1313,7 +1308,7 @@ BIspec marshalerSpec[]= {
 void initMarshaler(){
   refTable = new RefTable();
   refTrail = new RefTrail();
-  BIaddSpec(marshalerSpec);}
+}
 
 
 static

@@ -41,7 +41,8 @@ CREATEDOTHERS = \
         instrtab.hh opcodes.hh optostr.hh marshaler.hh\
         marshalcode.cc marshalMsg.cc register.hh oz.c \
         config.h builtins.tbl builtins.dcl \
-        fdbuilti.tbl fdbuilti.dcl
+        fdbuilti.tbl fdbuilti.dcl \
+        fsbuilti.tbl fsbuilti.dcl
 
 CREATEDSRCS = \
         scancode.cc copycode.cc opcodes.cc\
@@ -171,6 +172,7 @@ parser.hh: parser.yy
 
 builtins.o: builtins.tbl builtins.dcl
 fdbuilti.o: fdbuilti.tbl fdbuilti.dcl
+fsetcore.o: fsbuilti.tbl fsbuilti.dcl
 builtins.tbl: bidecl.perl
         perl $(SRCDIR)/bidecl.perl -ctable -exclude fd > $@
 builtins.dcl: bidecl.perl
@@ -179,6 +181,10 @@ fdbuilti.tbl: bidecl.perl
         perl $(SRCDIR)/bidecl.perl -ctable -include fd > $@
 fdbuilti.dcl: bidecl.perl
         perl $(SRCDIR)/bidecl.perl -cdecl -include fd > $@
+fsbuilti.tbl: bidecl.perl
+        perl $(SRCDIR)/bidecl.perl -ctable -include fset > $@
+fsbuilti.dcl: bidecl.perl
+        perl $(SRCDIR)/bidecl.perl -cdecl -include fset > $@
 
 # this special rule ensures that warnings issued in bison.simple
 # are not treated as errors:

@@ -2722,6 +2722,12 @@ $builtins = {
                              BI  => BIprintOwnerTable,
                              module=>'perdio'},
 
+    'perdioStatistics'  => { in  => [],
+                             out => ['+record'],
+                             BI  => BIperdioStatistics,
+                             module=>'perdio' },
+
+
     #-----------------------------------------------------------------
     # LAZY
     #-----------------------------------------------------------------
@@ -2803,6 +2809,275 @@ $builtins = {
                              out => ['value'],
                              BI  => BIurl_load,
                              module=>components},
+
+    #-----------------------------------------------------------------
+    # FSET
+    #-----------------------------------------------------------------
+
+    'fsValueToString'   => { in  => ['+fset'],
+                             out => ['+string'],
+                             BI  => BIfsValueToString,
+                             module=>fset },
+
+    'fsIsVarB'          => { in  => ['value'],
+                             out => ['+bool'],
+                             BI  => BIfsIsVarB,
+                             module=>fset },
+
+    'fsIsValueB'        => { in  => ['+value','bool'],
+                             out => [],
+                             bi  => BIfsIsValueB,
+                             module=>fset },
+
+    'fsSetValue'        => { in  => ['+value','fset'],
+                             out => [],
+                             bi  => BIfsSetValue,
+                             module=>fset },
+
+    'fsSet'             => { in  => ['+value','+value','fset'],
+                             out => [],
+                             bi  => BIfsSet,
+                             module=>fset },
+
+    'fsSup'             => { in  => [],
+                             out => ['+int'],
+                             BI  => BIfsSup,
+                             module=>fset },
+
+    'fsGetKnownIn'      => { in  => ['fset','value'],
+                             out => [],
+                             bi  => BIfsGetKnownIn,
+                             module=>fset },
+
+    'fsGetKnownNotIn'   => { in  => ['fset','value'],
+                             out => [],
+                             bi  => BIfsGetKnownNotIn,
+                             module=>fset },
+
+    'fsGetUnknown'      => { in  => ['fset','value'],
+                             out => [],
+                             bi  => BIfsGetUnknown,
+                             module=>fset },
+
+    'fsGetGlb'          => { in  => ['fset','value'],
+                             out => [],
+                             bi  => BIfsGetKnownIn,
+                             module=>fset },
+
+    'fsGetLub'          => { in  => ['fset','value'],
+                             out => [],
+                             bi  => BIfsGetLub,
+                             module=>fset },
+
+    'fsGetCard'         => { in  => ['fset','int'],
+                             out => [],
+                             bi  => BIfsGetCard,
+                             module=>fset },
+
+    'fsCardRange'       => { in  => ['int','int','fset'],
+                             out => [],
+                             bi  => BIfsCardRange,
+                             module=>fset },
+
+    'fsGetNumOfKnownIn' => { in  => ['fset','int'],
+                             out => [],
+                             bi  => BIfsGetNumOfKnownIn,
+                             module=>fset },
+
+    'fsGetNumOfKnownNotIn'=> { in  => ['fset','int'],
+                             out => [],
+                             bi  => BIfsGetNumOfKnownNotIn,
+                             module=>fset },
+
+    'fsGetNumOfUnknown' => { in  => ['fset','int'],
+                             out => [],
+                             bi  => BIfsGetNumOfUnknown,
+                             module=>fset },
+
+    'mkFSetVar'         => { in  => ['+int','+int','value','value'],
+                             out => ['fset'],
+                             BI  => BImkFSetVar,
+                             module=>fset },
+
+    'fsClone'           => { in  => ['fset','fset'],
+                             out => [],
+                             bi  => BIfsClone,
+                             module=>fset },
+
+    'fsp_init'          => { in  => [],
+                             out => ['+atom'],
+                             BI  => fsp_init,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS},
+
+    'fsp_isIn'          => { in  => ['int','fset','bool'],
+                             out => [],
+                             bi  => fsp_isIn,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_isInR'         => { in  => ['int','fset','int'],
+                             out => [],
+                             bi  => fsp_isInR,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_include'       => { in  => ['int','fset'],
+                             out => [],
+                             bi  => fsp_include,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_exclude'       => { in  => ['int','fset'],
+                             out => [],
+                             bi  => fsp_exclude,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_match'         => { in  => ['fset','+value'],
+                             out => [],
+                             bi  => fsp_match,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_seq'           => { in  => ['+value'],
+                             out => [],
+                             bi  => fsp_seq,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_minN'          => { in  => ['fset','+value'],
+                             out => [],
+                             bi  => fsp_minN,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_maxN'          => { in  => ['fset','+value'],
+                             out => [],
+                             bi  => fsp_maxN,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_card'          => { in  => ['fset','int'],
+                             out => [],
+                             bi  => fsp_card,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_union'         => { in  => ['fset','fset','fset'],
+                             out => [],
+                             bi  => fsp_union,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_intersection'  => { in  => ['fset','fset','fset'],
+                             out => [],
+                             bi  => fsp_intersection,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_subsume'       => { in  => ['fset','fset'],
+                             out => [],
+                             bi  => fsp_subsume,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_disjoint'      => { in  => ['fset','fset'],
+                             out => [],
+                             bi  => fsp_disjoint,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_distinct'      => { in  => ['fset','fset'],
+                             out => [],
+                             bi  => fsp_distinct,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_monitorIn'     => { in  => ['fset','value'],
+                             out => [],
+                             bi  => fsp_monitorIn,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_min'           => { in  => ['fset','int'],
+                             out => [],
+                             bi  => fsp_min,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_max'           => { in  => ['fset','int'],
+                             out => [],
+                             bi  => fsp_max,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_convex'        => { in  => ['fset'],
+                             out => [],
+                             bi  => fsp_convex,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_diff'          => { in  => ['fset','fset','fset'],
+                             out => [],
+                             bi  => fsp_diff,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_includeR'      => { in  => ['int','fset','int'],
+                             out => [],
+                             bi  => fsp_includeR,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_bounds'        => { in  => ['+fset','fset','int','int','int'],
+                             out => [],
+                             bi  => fsp_bounds,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_boundsN'       => { in  => ['+value','+value','+value',
+                                     '+value','+value'],
+                             out => [],
+                             bi  => fsp_boundsN,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_disjointN'     => { in  => ['+value'],
+                             out => [],
+                             bi  => fsp_disjointN,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_unionN'        => { in  => ['+value','fset'],
+                             out => [],
+                             bi  => fsp_unionN,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_partition'     => { in  => ['+value','fset'],
+                             out => [],
+                             bi  => fsp_partition,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_partitionReified'=> { in  => ['+value','fset','+value'],
+                             out => [],
+                             bi  => fsp_partitionReified,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_partitionProbing'=> { in  => ['+value','fset','+value'],
+                             out => [],
+                             bi  => fsp_partitionProbing,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
+
+    'fsp_partitionReified1'=> { in  => ['+value','fset','+value','int'],
+                             out => [],
+                             bi  => fsp_partitionReified1,
+                             module=>fset,
+                             ifndef=>FOREIGNFDPROPS },
 
 };
 
