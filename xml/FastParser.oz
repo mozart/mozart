@@ -7,9 +7,23 @@ import
    NameSpaces at 'NameSpaces.ozf'
 prepare
    MakeBS = ByteString.make
+   BIVS2S = VirtualString.toString
+   fun {VS2S S}
+      %% for efficiency since the common case is that there
+      %% is an isolated text node and it already contains
+      %% a string
+      case S of _#_ then {BIVS2S S} else S end
+   end
+   CharIsSpace = Char.isSpace
+   fun {AllSpaces S}
+      case S of nil then true
+      [] H|T then {CharIsSpace H} andthen {AllSpaces T}
+      end
+   end
    
    fun {NewParser GET Params NS}
       IgnoreComments = {CondSelect Params ignoreComments true}
+      StripSpaces = {CondSelect Params stripSpaces unit}
       fun {ParseSeq MAP TAG}
 	 {ParseSeqTok {GET} MAP TAG}
       end
@@ -56,12 +70,23 @@ prepare
 	 of text(S2 _) then
 	    {ParseSeqText S#S2 Coord MAP TAG}
 	 [] T then
-	    text({MakeBS S} Coord)|{ParseSeqTok T MAP TAG}
+	    if {CondSelect StripSpaces TAG.key false} then
+	       SS={VS2S S}
+	    in
+	       if {AllSpaces SS} then {ParseSeqTok T MAP TAG}
+	       else text({MakeBS SS} Coord)|{ParseSeqTok T MAP TAG} end
+	    else
+	       text({MakeBS S} Coord)|{ParseSeqTok T MAP TAG}
+	    end
 	 end
       end
    in
       document(
-	 children : {ParseSeq {NS.newPrefixMap} unit})
+	 children : {ParseSeq if {HasFeature Params prefixMap}
+			      then Params.prefixMap
+			      else {NS.newPrefixMap}
+			      end
+		     unit})
    end
 define
    fun {NewFromString S Params}
