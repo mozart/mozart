@@ -643,6 +643,7 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
   case C_CLOSE_REJECT:
     if(state==CLOSING_HARD || state==CLOSING_WEAK) {
       remoteRef=TRUE;
+      timers->clearTimer(closetimer);
       state=WORKING;
       if(queues.hasQueued())
 	transObj->deliver();
