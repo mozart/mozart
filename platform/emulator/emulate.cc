@@ -1554,9 +1554,12 @@ LBLdispatcher:
   
   if (!oz_isLock(aux)) {
     /* arghhhhhhhhhh! fucking exceptions (RS) */
-    (void) oz_raise(E_ERROR,E_KERNEL,"type",5,NameUnit,NameUnit,OZ_atom("Lock"),
-    OZ_int(1),
-    OZ_string(""));
+    (void) oz_raise(E_ERROR,E_KERNEL,"type",5,
+		    NameUnit,
+		    NameUnit,
+		    OZ_atom("Lock"),
+		    OZ_int(1),
+		    OZ_string(""));
     RAISE_TYPE1("lock",cons(aux,nil()));
     RAISE_THREAD;
   }
@@ -1766,7 +1769,13 @@ LBLdispatcher:
 
     DEREF(cls,clsPtr,clsTag);
     if (!oz_isClass(cls)) {
-      goto bombApply;
+      oz_raise(E_ERROR,E_KERNEL,"type",5,
+	       oz_atom(","),
+	       cons(origCls,cons(makeMessage(arity,ami->methName,X),nil())),
+	       oz_atom("class"),
+	       oz_int(1),
+	       oz_atom(""));
+      RAISE_THREAD;
     }
     def = getApplyMethod(tagged2ObjectClass(cls),ami,arity,X);
     if (def==NULL) {
