@@ -25,7 +25,7 @@
              to 1 if perror wanted;
 	     to 0 otherwise
 	     */
-#define URLC_DEBUG 2
+#define URLC_DEBUG 1
 
 /* ## define to 1 if you can use the resolver library for local 
                      domain name in ftp client 
