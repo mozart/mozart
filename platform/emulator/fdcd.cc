@@ -83,7 +83,7 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
 
   const int variables = v.getSize();
 
-  // constrain Vpij to {0..fd_iv_max_elem} if Vpij is an uvar
+  // constrain Vpij to {fd_inf..fd_sup} if Vpij is an uvar
   for (i = clauses; i--; ) {
     DEREF(vp[i], vp_i_ptr, vp_i_tag);
     if (! isSTuple(vp_i_tag)) TypeError(3, "2-dim-array expected");
@@ -650,9 +650,9 @@ OZ_C_proc_begin(BIfdCDSched_body, 4)
   LocalFD la, lb, lc, ld, l1, l2;
 
   la.init(0, yu - xd);
-  lb.init(yl + yd, fd_iv_max_elem);
+  lb.init(yl + yd, fd_sup);
   lc.init(0, xu - yd);
-  ld.init(xl + xd, fd_iv_max_elem);
+  ld.init(xl + xd, fd_sup);
 
   l1 = (la | lb);
   l2 = (lc | ld);
@@ -735,9 +735,9 @@ OZ_C_proc_begin(BIfdCDSchedControl_body, 5)
   LocalFD la, lb, lc, ld, l1, l2;
 
   la.init(0, yu - xd);
-  lb.init(yl + yd, fd_iv_max_elem);
+  lb.init(yl + yd, fd_sup);
   lc.init(0, xu - yd);
-  ld.init(xl + xd, fd_iv_max_elem);
+  ld.init(xl + xd, fd_sup);
 
   l1 = (la | lb);
   l2 = (lc | ld);
