@@ -962,7 +962,13 @@ AC_CACHE_CHECK([whether the times/sysconf(_SC_CLK_TCK) bug is present],
 #include <unistd.h>
 #include <sys/times.h>
 #include <sys/time.h>
-extern double trunc(double);
+#include <math.h> 
+ 
+int myTrunc(double r) 
+{ 
+  int n = floor(r); 
+  return ((r-((double)n)) > 0.5)?n+1:n; 
+} 
 
 int main()
 {
@@ -990,7 +996,7 @@ int main()
 
   ratio = ((double)elapsed2) / ((double)elapsed1);
   if (ratio < 1.0) fix=0;
-  else fix = (int) trunc(ratio);
+  else fix = (int) myTrunc(ratio);
   printf("%d\n",fix);
   return 0;
 }
