@@ -250,11 +250,11 @@
         be used to generate auxiliary file names during parser generation.
         <Grammar.Rule>?={parser specification}
           <Grammar.Alt type=def><<parser>> ?={variable}</Grammar.Alt>
-          <Grammar.Alt>{ ?={class descriptor} }</Grammar.Alt>
-          <Grammar.Alt>{ ?={method} }</Grammar.Alt>
-          <Grammar.Alt>[ ?={token clause} ]</Grammar.Alt>
-          <Grammar.Alt>{ ?={parser descriptor} }+</Grammar.Alt>
-          <Grammar.Alt><<end>></Grammar.Alt>
+          <Grammar.Alt type=space>{ ?={class descriptor} }</Grammar.Alt>
+          <Grammar.Alt type=space>{ ?={method} }</Grammar.Alt>
+          <Grammar.Alt type=space>[ ?={token clause} ]</Grammar.Alt>
+          <Grammar.Alt type=space>{ ?={parser descriptor} }+</Grammar.Alt>
+          <Grammar.Alt type=space><<end>></Grammar.Alt>
       <SubSubSection>
         <Title/Token Declarations/
         <P>
@@ -350,7 +350,8 @@
             <Grammar.Rule>?={syn seq}
               <Grammar.Alt type=def
                 >[ { ?={variable} }+ <<in>> ]</Grammar.Alt>
-              <Grammar.Alt>{ ?={syn factor} } [ ?={syn action} ]</Grammar.Alt>
+              <Grammar.Alt type=space
+                >{ ?={syn factor} } [ ?={syn action} ]</Grammar.Alt>
               <Grammar.Alt type=or><<skip>> [ ?={syn action} ]</Grammar.Alt>
             <Grammar.Rule>?={syn action}
               <Grammar.Alt type=def
@@ -437,8 +438,9 @@
             instantiated.  These must be denoted by variables.
             <Grammar.Rule>?={prod clause}
               <Grammar.Alt type=def><<prod>> ?={prod head}</Grammar.Alt>
-              <Grammar.Alt>[ ?={local rules} <<in>> ] ?={syn alt}</Grammar.Alt>
-              <Grammar.Alt><<end>></Grammar.Alt>
+              <Grammar.Alt type=space
+                >[ ?={local rules} <<in>> ] ?={syn alt}</Grammar.Alt>
+              <Grammar.Alt type=space><<end>></Grammar.Alt>
             <Grammar.Rule>?={local rules}
               <Grammar.Alt type=def
                 >?={syn clause} { ?={syn clause} }</Grammar.Alt>
