@@ -244,7 +244,7 @@ Arity *oz_makeArity(OZ_Term list)
 #define oz_suspendOn(vin) {			\
   OZ_Term v=vin;				\
   DEREF(v,vPtr,___1);				\
-  Assert(oz_isVariable(v));				\
+  Assert(oz_isVariable(v));			\
   am.addSuspendVarList(vPtr);			\
   return SUSPEND;				\
 }
