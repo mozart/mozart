@@ -434,6 +434,17 @@ negated implication)./
    feat f:2 g
 end>>>
 
+        <Entry><<getAttr>>
+          <Index class=tails/<<Class>><And><<getAttr>>/
+        <Synopsis>
+          <<{Class.getAttr ?+{K} ?+{LI} ??{X}}>>
+        <Item>
+          Returns the initival value ?_{X} for attribute ?_{LI} as defined by the class ?_{K}.
+        <p>
+          For example, the statement
+<<<{Class.getAttr class attr a:4 end a}>>>
+          returns <<4>>.
+
 
       </List>
 
