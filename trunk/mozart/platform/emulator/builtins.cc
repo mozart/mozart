@@ -316,7 +316,7 @@ OZ_BI_define(BIhasLabel, 1, 1)
 OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot)
 {
   DEREF(fea, _1,feaTag);
-LBLagain:
+
   DEREF(term, _2, termTag);
 
   if (isVariableTag(feaTag)) {
@@ -521,7 +521,6 @@ OZ_Return widthInline(TaggedRef term, TaggedRef &out)
     out = makeTaggedSmallInt(2);
     return PROCEED;
   case SRECORD:
-  record:
     out = makeTaggedSmallInt(tagged2SRecord(term)->getWidth());
     return PROCEED;
   case LITERAL:
