@@ -44,7 +44,7 @@ OZ_Term reflect_propagator(Suspension susp)
   } else if (b->isWaitTop()) {
     space = atom_waittop;
   }
-  
+
   OZ_Term arity_def[] = {
     {OZ_pair2(atom_type, atom_prop)},
     {OZ_pair2(atom_params, p->getParameters())},

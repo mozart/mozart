@@ -9,6 +9,7 @@ export
    PropName
    PropLocation
    PropIsFailed
+   SpaceReflect
    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import
@@ -26,5 +27,6 @@ define
    PropName     = ReflectExport.propagatorName
    PropLocation = ReflectExport.propagatorCoordinates
    PropIsFailed = ReflectExport.propagatorIsFailed
-
+   SpaceReflect = ReflectExport.spaceReflect
+   
 end
