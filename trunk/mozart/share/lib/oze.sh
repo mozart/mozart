@@ -5,6 +5,12 @@
 : ${OZPLATFORM=`$SRCDIR/../bin/ozplatform`}
 : ${OZPREFIX=/usr/local/oz}
 
+if test "x$OZMAKE_COPYALWAYS" = xyes
+then
+    OZCOPYALWAYS=yes
+    export OZCOPYALWAYS
+fi
+
 if test -z "$OZEMULATOR"
 then
     for d in \
@@ -20,7 +26,10 @@ then
     done
 fi
 
-echo "Using OZEMULATOR: $OZEMULATOR"
+if test "x$OZMAKE_VERBOSE" = xyes
+then
+    echo "Using OZEMULATOR: $OZEMULATOR"
+fi
 
 url=$1
 shift
