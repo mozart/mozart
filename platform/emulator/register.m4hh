@@ -271,6 +271,8 @@ Case(SETVOID):
 
                  if (isAnyVar(term)) {
                    STuple *stuple = STuple::newSTuple(label,arity);
+                   sPointer = stuple->getRef();
+                   SetWriteMode;
 
                    if (isCVar(term)) {
                      if (tagged2CVar(term)->unifyOutline(termPtr, term, NULL,
@@ -283,8 +285,6 @@ Case(SETVOID):
                      e->bindToNonvar(termPtr,term,makeTaggedSTuple(stuple),
                                      NOFLATGUARD());
 
-                     sPointer = stuple->getRef();
-                     SetWriteMode;
                      DISPATCH(4);
                    }
                  }
@@ -489,6 +489,7 @@ Case(SETVOID):
                      if (tagged2CVar(term)->unifyOutline(termPtr, term, NULL,
                                                          makeTaggedLTuple(ltuple),
                                                          NOFLATGUARD())) {
+                       Xreg(reg3) = makeTaggedRef(ltuple->getRef()+1);
                        DISPATCH(4);
                      }
                    } else {
@@ -525,6 +526,8 @@ Case(SETVOID):
 
                  if(isAnyVar(term)) {
                    LTuple *ltuple = new LTuple();
+                   sPointer = ltuple->getRef();
+                   SetWriteMode;
                    if (isCVar(term) == OK) {
                      if(tagged2CVar(term)->unifyOutline(termPtr, term, NULL,
                                                         makeTaggedLTuple(ltuple),
@@ -535,8 +538,6 @@ Case(SETVOID):
                    } else {
                      e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple),
                                      NOFLATGUARD());
-                     sPointer = ltuple->getRef();
-                     SetWriteMode;
                      DISPATCH(2);
                    }
                  }
