@@ -276,9 +276,9 @@ on <<OZ_CtWakeUp>>.
 
 <Item> Expects <<t>> to be a literal.
 
-<Entry class="member function"><<expectLiteral>>
-<Index class=proglang><<OZ_expect>><And><<expectLiteral>></Index>
-<Synopsis> <<OZ_expect_t expectLiteral(OZ_Term t, OZ_Term * ls);>>
+<Entry class="member function"><<expectLiteralOutOf>>
+<Index class=proglang><<OZ_expect>><And><<expectLiteralOutOf>></Index>
+<Synopsis> <<OZ_expect_t expectLiteralOutOf(OZ_Term t, OZ_Term * ls);>>
 
 <Item> Expects <<t>> to be a literal contained in <<ls>> where <<ls>>
 points to an array of literals terminated with <<(OZ_Term) NULL>>.
