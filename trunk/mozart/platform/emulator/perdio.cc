@@ -374,7 +374,7 @@ protected:
     Tertiary *tert;
   } u;
 public:
-  ProtocolObject()            { DebugCode(type=(PO_TYPE)4711; u.ref=0x5a5a5a5a;)}
+  ProtocolObject()            { DebugCode(type=(PO_TYPE)4711; u.ref=0x5b5b5b5b;)}
   Bool isTertiary()           { return type==PO_Tert; }
   Bool isRef()                { return type==PO_Ref; }
   Bool isVar()                { return type==PO_Var; }
@@ -3724,11 +3724,9 @@ loop:
       gotRef(bs,*ret);
 
       RefsArray globals = unmarshallClosure(bs);
-      ProgramCounter PC = unmarshallCode(bs);
+      ProgramCounter PC = unmarshallCode(bs,pp==NULL);
       if (pp) {
 	pp->import(globals,PC);
-      } else {
-	// TODO free the code again
       }
       return;
     }
@@ -4177,7 +4175,9 @@ void domarshallTerm(Site * sd,OZ_Term t, ByteStream *bs)
 void domarshallTerm(TaggedRef url,OZ_Term t, ByteStream *bs)
 {
   currentURL=url;
-  domarshallTerm((Site*)0,t,bs);
+  Assert(refTrail->isEmpty());
+  marshallTerm((Site*)0,t,bs);
+  refTrail->unwind();
 }
 
 inline void reliableSendFail(Site * sd, ByteStream *bs,Bool p,int i){
