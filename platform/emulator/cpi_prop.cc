@@ -203,6 +203,19 @@ OZ_Boolean OZ_Propagator::addImpose(OZ_FDPropState ps, OZ_Term v)
   return TRUE;
 }
 
+OZ_Boolean OZ_Propagator::addImpose(OZ_CtWakeUp e,
+                                    OZ_CtDefinition * d,
+                                    OZ_Term v)
+{
+  DEREF(v, vptr, vtag);
+  if (!isVariableTag(vtag))
+    return FALSE;
+  Assert(vptr);
+
+  staticAddSpawnProp(d, e, vptr);
+  return TRUE;
+}
+
 int OZ_Propagator::impose(OZ_Propagator * p)
 {
   Propagator * prop = oz_newPropagator(p);

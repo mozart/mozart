@@ -73,7 +73,7 @@ OZ_Return LessEqOffPropagator::propagate(void)
   int &c = reg_c;
   OZ_FDIntVar x(reg_x), y(reg_y);
   PropagatorController_V_V P(x, y);
-  OZ_Service s(this, &P);
+  OZ_Service<OZ_Propagator> s(this, &P);
   //
   return filter_lessEqOffset(s, x, y, c)();
 }

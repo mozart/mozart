@@ -161,11 +161,11 @@ OZ_BI_end
 //#include "filter.hh"
 
 //-----------------------------------------------------------------------------
-
-OZ_Service &filter_intersection(OZ_Service & s,
-                                OZ_FSetVar &x,
-                                OZ_FSetVar &y,
-                                OZ_FSetVar &z)
+template <class SERVICE>
+SERVICE &filter_intersection(SERVICE & s,
+                             OZ_FSetVar &x,
+                             OZ_FSetVar &y,
+                             OZ_FSetVar &z)
 {
   FSetTouched xt, yt, zt;
   //
@@ -220,7 +220,7 @@ OZ_Return FSetIntersectionPropagator::propagate(void)
   //
   OZ_FSetVar x(_x), y(_y), z(_z);
   PropagatorController_S_S_S P(x, y, z);
-  OZ_Service s(this, &P);
+  OZ_Service<OZ_Propagator> s(this, &P);
   //
   return filter_intersection(s, x, y, z)();
 }

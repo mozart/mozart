@@ -26,9 +26,11 @@
 
 #include "mozart_cpi.hh"
 
-OZ_Service &OZ_Service::replace_propagator(OZ_Propagator * prop,
+/*
+template <class PROPAGATOR>
+OZ_Service<PROPAGATOR> &OZ_Service<PROPAGATOR>::replace_propagator(OZ_Propagator * prop,
                                            int vars_drop = 0,
-                                           /* (OZ_CPIVar *) */ ...)
+                                           ...)
 {
   DSP(("request replace\n"));
   if (!_closed) {
@@ -48,3 +50,4 @@ OZ_Service &OZ_Service::replace_propagator(OZ_Propagator * prop,
   _closed = 1;
   return *this;
 }
+*/
