@@ -41,14 +41,6 @@ AC_INIT(base.hh)
 
 OZ_INIT
 
-dnl hack: support that the emulator is configured in a subdir
-if test "$srcdir" = ".."
-then
-    BUILDTOP=`cd ../../.. && pwd`
-else
-    BUILDTOP=`cd ../.. && pwd`
-fi
-AC_SUBST(BUILDTOP)
 
 AC_LANG_CPLUSPLUS
 
@@ -157,8 +149,7 @@ AC_ARG_WITH(sunpro,
 	fi,
 	AC_MSG_RESULT(no))
 
-AC_PROG_CXX
-AC_PROG_CXXCPP
+OZ_CXX_CHOOSE
 
 AC_PROG_LEX
 AC_PROG_YACC
