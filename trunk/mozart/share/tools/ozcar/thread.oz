@@ -70,9 +70,10 @@ in
 	       ({Cget stepSetSelfBuiltin} orelse Name \= 'setSelf')
 	       andthen
 	       ({Cget stepSystemProcedures} orelse
-		Name == ''       orelse
-		Name == '`,`'    orelse
-		Name == '`send`' orelse
+		Name == ''         orelse
+		Name == '`,`'      orelse
+		Name == '`send`'   orelse
+		Name == '`ooSend`' orelse
 		{Atom.toString Name}.1 \= 96)
 	    in
 	       case Ok then
