@@ -25,9 +25,7 @@ const int ALLSEQMODE=3;
 class Thread : public ConstTerm
 {
 friend void engine();
-public:
-  Thread *next;
-  Thread *prev;
+friend class ThreadsPool;
 private:
   int priority;
   Board *home;
