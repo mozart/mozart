@@ -25,12 +25,12 @@
 
 #include "base.hh"
 #include "dpBase.hh"
-#include "perdio.hh"
-
-#ifdef VIRTUALSITES
 
 #include "builtins.hh"
 
+#ifdef VIRTUALSITES
+
+#include "perdio.hh"
 #include "msgbuffer.hh"
 #include "vs_mailbox.hh"
 #include "vs_msgbuffer.hh"
@@ -619,7 +619,7 @@ OZ_BI_define(BIVSnewMailbox,0,1)
 {
   //
   // Zeroth, init perdio if it isn't;
-  perdioInitLocal();
+  initDP();
 
   //
   // First, link the interface:
@@ -730,7 +730,7 @@ OZ_BI_define(BIVSinitServer,1,0)
   DSite *ms;
 
   //
-  perdioInitLocal();
+  initDP();
 
   //
   // First, link the interface:
@@ -866,6 +866,9 @@ OZ_BI_define(BIVSinitServer,1,0)
 OZ_BI_define(BIVSremoveMailbox,1,0)
 {
   //
+  initDP();
+
+  //
   OZ_declareVirtualStringIN(0, mbKeyChars);
   Assert(sizeof(key_t) <= sizeof(int));
   key_t mbKey;
@@ -880,4 +883,43 @@ OZ_BI_define(BIVSremoveMailbox,1,0)
   return (PROCEED);
 } OZ_BI_end
 
+#else // VIRTUALSITES
+
+//
+// Builtins for virtual sites - only two of them are needed:
+// (I) Creating a new mailbox (at the master site):
+OZ_BI_define(BIVSnewMailbox,0,1)
+{
+  return oz_raise(E_ERROR, E_SYSTEM,
+		  "VSnewMailbox: virtual sites not configured", 0);
+} OZ_BI_end
+
+//
+// (II) Initializing a virtual site given its mailbox (which contains
+// also the parent's id);
+OZ_BI_define(BIVSinitServer,1,0)
+{
+  return oz_raise(E_ERROR, E_SYSTEM,
+		  "VSinitServer: virtual sites not configured", 0);
+} OZ_BI_end
+
+//
+//
+OZ_BI_define(BIVSremoveMailbox,1,0)
+{
+  return oz_raise(E_ERROR, E_SYSTEM,
+		  "VSremoveMailbox: virtual sites not configured", 0);
+} OZ_BI_end
+
 #endif // VIRTUALSITES
+
+
+/*
+ * The builtin table
+ */
+
+#ifndef MODULES_LINK_STATIC
+
+#include "modVirtualSite-if.cc"
+
+#endif

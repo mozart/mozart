@@ -1647,7 +1647,7 @@ LBLdispatcher:
     if(((LockFrameEmul *)t)->lockB(oz_currentThread())){goto got_lock;}
     goto no_lock;}
   case Te_Proxy:{
-    lockLockProxy(t, th);
+    (*lockLockProxy)(t, th);
     goto no_lock;}
   case Te_Manager:{
     if(((LockManagerEmul *)t)->hasLock(th)) {goto has_lock;}

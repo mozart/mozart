@@ -111,11 +111,13 @@ public:
 
 extern DebugVector *DV;
 extern void resize_hash();
+// cannot include perdio.hh;
+Bool isPerdioInitializedImpl();
 
 inline
 void _PD(int i,char *format,...)
 {
-  if (isPerdioInitialized() && DV->on(i)) {
+  if (isPerdioInitializedImpl() && DV->on(i)) {
     printf("%s: ",debugTypeStr[i]);
     va_list ap;
     va_start(ap,format);
@@ -139,6 +141,6 @@ void networkTimer(int);
 
 #endif
 
-
-
-
+//
+void maybeDebugBufferGetImpl(BYTE b);
+void maybeDebugBufferPutImpl(BYTE b);

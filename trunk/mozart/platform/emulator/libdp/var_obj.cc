@@ -42,7 +42,7 @@ void ObjectVar::marshal(MsgBuffer *bs)
   if (!done) {
     GName *classgn =  isObjectClassAvail()
       ? globalizeConst(getClass(),bs) : getGNameClass();
-    marshalObject(getObject(),bs,classgn);
+    marshalObjectImpl(getObject(),bs,classgn);
   }
 }
 
