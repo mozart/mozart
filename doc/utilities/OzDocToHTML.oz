@@ -1205,42 +1205,29 @@ define
 	    %--** explorer.sgml Specials
 	    %-----------------------------------------------------------
 	    [] 'note.gui' then
-	       if {HasFeature M mouse} then
-		  Img = img(src:   'note-gui-'#M.mouse#'.gif'
-			    align: middle
-			    alt:   case M.mouse
-				   of l1 then 'Left mouse click'
-				   [] l2 then 'Left mouse double-click'
-				   [] r1 then 'Right mouse click'
-				   [] r2 then 'Right mouse double-click'
-				   [] m1 then 'Middle mouse click'
-				   [] m2 then 'Middle mouse double-click'
-				   end)
-	       in
-		  BLOCK(table('class':     [margin]
-			      COMMON:      @Common
-			      border:      0
-			      cellspacing: 0
-			      cellpadding: 2
-			      tr(td(OzDocToHTML,Batch(M 1 $))
-				 td(Img))))
-	       else
-		  EMPTY
-	       end
-	    [] 'menu' then
+	       BLOCK(table('class':     [margin]
+			   COMMON:      @Common
+			   border:      0
+			   cellspacing: 0
+			   cellpadding: 2
+			   tr(td(OzDocToHTML,Batch(M 1 $))
+			      if {HasFeature M icon} then
+				 td(img(src: M.icon align: top
+					alt: {CondSelect M info ''}))
+			      else EMPTY
+			      end)))
+	    [] 'menu' then Menu Mouse in
 	       Menu  = table(bgcolor:     '#cccccc'
 			     width:       130
 			     border:      1
 			     cellpadding: 3
 			     cellspacing: 0
-			     local
-				L=td(align: left
-				     OzDocToHTML,Batch(M 1 $))
-			     in
+			     local L in
+				L = td(align: left
+				       OzDocToHTML,Batch(M 1 $))
 				if {HasFeature M key} then
 				   tr({AdjoinAt L width '85%'}
-				      td(align:right
-					 PCDATA(M.key)))
+				      td(align: right PCDATA(M.key)))
 				else
 				   tr(L)
 				end
@@ -1258,10 +1245,7 @@ define
 				     end)
 		       else EMPTY
 		       end
-	    in
-	       BLOCK(table(COMMON:@Common
-			   tr(td(Menu)
-			      td(Mouse))))
+	       BLOCK(table(COMMON: @Common tr(td(Menu) td(Mouse))))
 	    %-----------------------------------------------------------
 	    %--** ozdoc.sgml Specials
 	    %-----------------------------------------------------------
