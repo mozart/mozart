@@ -301,7 +301,7 @@ inline TaggedRef makeRangeTuple(int from, int to){
 } // makeRangeTupel
 
 
-#ifndef OUTLINE
+#if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdomn.icc"
 #endif
 

@@ -360,7 +360,7 @@ OZ_Bool fdDomainConstrain(TaggedRef &var, TaggedRef* &varPtr,
 } // fdDomainConstrain
 
 
-#ifdef OUTLINE
+#if defined(OUTLINE) || defined(FDOUTLINE)
 #define inline
 #include "fdgenvar.icc"
 #undef inline
