@@ -1,0 +1,13 @@
+# $Id$
+
+VPATH  = @srcdir@
+SRCDIR = @srcdir@
+
+WHAT = ozcar
+MAIN = ozcar.sgml
+SGMLSRCS = \
+	ozcar.bib
+HTMLEXTRAFILES =
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common
