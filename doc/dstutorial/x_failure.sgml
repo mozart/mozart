@@ -339,12 +339,6 @@ operation cannot be retried.
 The <<objectFetch>> operation exists because object-records
 are copied lazily: the first time the object is used, the
 object-record is fetched over the network, which might fail.
-<ITEM> For any probed entity: <<probe>>.
-The operation <<{Probe Entity}>> can be done on all
-entities and will block forever until a distribution fault
-causes an exception to be raised or a handler to be called.
-A temporary limitation of the current release is that
-the <<Probe>> operation is not available to users.
 </LIST>
 
 </LIST>
