@@ -123,10 +123,7 @@ WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
   ZeroMemory(&si,sizeof(si));
   si.cb = sizeof(si);
   PROCESS_INFORMATION pi;
-  BOOL ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,
-			   0,NULL,NULL,&si,&pi);
-
-  if (ret == FALSE) {
+  if (!CreateProcess(NULL,buffer,NULL,NULL,TRUE,0,NULL,NULL,&si,&pi)) {
     panic(true,"Cannot run '%s'.\n",buffer);
   }
 
