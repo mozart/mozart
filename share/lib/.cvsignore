@@ -5,5 +5,6 @@ compiler-Opcodes.oz
 compiler-Builtins.oz
 tyc
 *.ozc
+*.ozf
 ozbatch ozserver
 stage1 stage2 stage2b stage3 stage3b
