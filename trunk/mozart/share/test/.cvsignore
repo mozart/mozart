@@ -1,6 +1,6 @@
 oztest
 make-test
 Makefile
-*.ozc
+*.ozf
 *~
 dirs
