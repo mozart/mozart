@@ -325,6 +325,9 @@ start:
 					    termPtr2, term2, tag2);
   } 
 
+  LOCAL_PROPAGATION(if (localPropStore.isEnabled)
+		    return localPropStore.do_propagation());
+
   bindToNonvar(termPtr1, term1, term2);
   return ret;
 
@@ -341,11 +344,15 @@ start:
     } else {
       bind(termPtr1, term1, termPtr2);
     }
+    LOCAL_PROPAGATION(if (localPropStore.isEnabled)
+		      return localPropStore.do_propagation());    
     return ret;
   }
   
   if (isNotCVar(tag2)) {
     bind(termPtr2, term2, termPtr1);
+    LOCAL_PROPAGATION(if (localPropStore.isEnabled)
+		      return localPropStore.do_propagation());
     return ret;
   }
 
@@ -653,6 +660,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
     // variables are passed as references
     checkSuspensionList(var, svar ? makeTaggedRef(termPtr) : term,
 			svar, svar != NULL);
+
 #ifdef DEBUG_CHECK
     Board *hb = (tagged2SuspVar(var)->getHome ())->getBoardDeref ();
     if (hb->isReflected () == OK)
