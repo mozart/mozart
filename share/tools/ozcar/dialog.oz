@@ -103,7 +103,6 @@ local
 	       Verbose = {TkVerbose tkReturnInt($)} > 0
 	    in
 	       {Config set(verbose Verbose)}
-	       {Emacs.condSend.interface setTrace(Verbose)}
 	    end
 
 	    {Config set(stepDotBuiltin {TkStepDotBuiltin tkReturnInt($)} > 0)}
