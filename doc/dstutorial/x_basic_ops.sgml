@@ -508,7 +508,7 @@ We give this solution later in the tutorial.
 an external reference:
 <<<
 declare F M
-F=functor define X={Fact 30} end
+F=functor define {Fact 30 X} end
 
 M={R apply(url:'./' F $)}
 {Browse X}
