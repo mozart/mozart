@@ -620,7 +620,12 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-feed-region (start end)
   "Feeds the region."
   (interactive "r")
-  (oz-send-string (buffer-substring start end))
+  (oz-send-string (concat "\\line "
+			  (+ 1 (count-lines (point-min) start))
+			  " "
+			  (buffer-file-name)
+			  "\n"
+			  (buffer-substring start end)))
   (setq oz-last-fed-region-start (copy-marker start))
   (oz-zmacs-stuff))
 
