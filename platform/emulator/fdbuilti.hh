@@ -472,8 +472,10 @@ private:
   static int curr_num_of_items;
 
   int simplifyHead(int ts, STuple &a, STuple &x);
+
+  int global_vars;
 public:
-  BIfdHeadManager(int s) {
+  BIfdHeadManager(int s) : global_vars(0) {
     DebugCheck(s < 0 || s > MAXFDBIARGS, error("too many items."));
     curr_num_of_items = s;
   }
@@ -483,9 +485,8 @@ public:
   
   Bool expectFDish(int i, TaggedRef v, int &s);
   Bool expectInt(int i, TaggedRef v, int &s);
-  Bool expectNonLin(int i, STuple &at, STuple &xt,
-		    TaggedRef tagged_xtc, int &s,
-		    OZ_CFun func, RefsArray xregs, int arity);
+  Bool expectNonLin(int i, STuple &at, STuple &xt, TaggedRef tagged_xtc,
+		    int &s, OZ_CFun func, RefsArray xregs, int arity);
   
   void addResSusp(int i, Suspension * susp, FDPropState target);
   void addForIntSusp(int i, Suspension * susp);
@@ -495,6 +496,7 @@ public:
   void addResSusps(Suspension * susp, FDPropState target) {
     for (int i = curr_num_of_items; i--; )
       addResSusp(i, susp, target);
+    if (global_vars == 0) FDcurrentTaskSusp->markLocalSusp();
   }
   void addForIntSusps(Suspension * susp) {
     for (int i = curr_num_of_items; i--; )
@@ -587,14 +589,20 @@ private:
   }
 
   void process(void);
+  void processLocal(void);
   void processNonRes(void);
 
+  void _introduce(int i, TaggedRef v);
+  void introduceLocal(int i, TaggedRef v);
+  
   int simplifyBody(int ts, STuple &a, STuple &x,
 		   Bool sign_bits[], float coeffs[]);
+  Bool only_local_vars;
 public:
   BIfdBodyManager(int s) {
     DebugCheck(s < 0 || s > MAXFDBIARGS, error("too many variables."));
     curr_num_of_vars = s;
+    only_local_vars = FDcurrentTaskSusp->isLocalSusp();
   }
 
   static
@@ -619,26 +627,34 @@ public:
     cerr.flush();
   }
 
-  void introduce(int i, TaggedRef v);
+  void introduce(int i, TaggedRef v) {
+    return only_local_vars ? introduceLocal(i, v) : _introduce(i, v);
+  }
   
   OZ_Bool entailment(void) {
-    process();
+    if (only_local_vars) {
+      processLocal();
+    } else {
+      process();
+      if (glob_vars_touched) dismissCurrentTaskSusp();
+    }
     
-    if (glob_vars_touched)
-      dismissCurrentTaskSusp();
-
     curr_num_of_vars = 0;
 
     return PROCEED;
   }
 
   OZ_Bool release(void) {
-    process();
-    
-    if (vars_left)
-      reviveCurrentTaskSusp();
-    else if (glob_vars_touched)
-      dismissCurrentTaskSusp();
+    if (only_local_vars) {
+      processLocal();
+      if (vars_left) reviveCurrentTaskSusp();
+    } else {
+      process();
+      if (vars_left)
+	reviveCurrentTaskSusp();
+      else if (glob_vars_touched)
+	dismissCurrentTaskSusp(); 
+   }
 
     curr_num_of_vars = 0;
 
