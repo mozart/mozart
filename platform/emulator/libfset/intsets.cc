@@ -216,6 +216,15 @@ OZ_Return FSetsConvexPropagator::propagate(void)
 	int next_larger = s->getNotInNextLargerElem(max_in);
 	if (next_larger>=0) FailOnInvalid(s->le(next_larger));
       }
+
+      // the largest element is at most getCardMax away from the
+      // smallest known element
+      FailOnInvalid(s->le(min_in+s->getCardMax()-1));
+      // similarly for the smallest element
+      {
+	int k = max_in-s->getCardMax()+1;
+	if (k>0) { FailOnInvalid(s->ge(k)); }
+      }
     }
     
     OZ_DEBUGPRINT(("d"));
