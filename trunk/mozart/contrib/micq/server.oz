@@ -82,7 +82,7 @@ define
       fun{F X} if X<10 then "0"#X else X end end
    in
       date(year:if D.year<50 then 2000 else 1900 end + D.year 
-	   date:{F D.mDay}#"/"#({F D.mon}+1)
+	   date:{F D.mDay}#"/"#({F D.mon+1})
 	   time:{F D.hour}#":"#{F D.min})
    end
 
