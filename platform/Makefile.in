@@ -1,4 +1,5 @@
 @SET_MAKE@
+PREFIX=@prefix@
 SUBDIRS = @PLATFORMDIRS@
 
 .PHONY: all bootstrap install clean veryclean distclean depend check
