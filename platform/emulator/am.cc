@@ -119,7 +119,6 @@ void AM::init(int argc,char **argv)
   ozconf.init();
   osInit();
 
-  suspCallHandler=makeTaggedNULL();
   suspendVarList=makeTaggedNULL();
   aVarUnifyHandler=makeTaggedNULL();
   aVarBindHandler=makeTaggedNULL();
