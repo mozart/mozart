@@ -82,6 +82,7 @@ enum MessageType {
   M_SENDSTATUS,
 
   M_REQUESTED,
+  M_DEREGISTER,
   M_LAST
 };
 

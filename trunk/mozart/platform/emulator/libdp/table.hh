@@ -148,6 +148,7 @@ public:
   Bool isFree()               { return type==PO_Free; }
   void setFree()              { type = PO_Free; }
   void unsetFree()            { DebugCode(type=(PO_TYPE)4712); }
+  Bool initialized()          { DebugCode(return type!=(PO_TYPE)4712);return TRUE;}
 
   void mkTertiary(Tertiary *t,unsigned short f){ 
     type = PO_Tert; u.tert=t; flags=f; }

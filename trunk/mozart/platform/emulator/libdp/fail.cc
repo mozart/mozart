@@ -1218,13 +1218,13 @@ void maybeUnask(Tertiary* t){
 
 void EntityInfo::dealWithWatchers(TaggedRef tr,EntityCond ec){
   Watcher **base=getWatcherBase();
-  if(base!=NULL)
+  if(base!=NULL) {
     while((*base)!=NULL){
       if((ec & (*base)->watchcond) && !(*base)->isInjector()){
 	(*base)->invokeWatcher(tr,ec);
-	base= &((*base)->next);}
+	*base= (*base)->next;}
       else
-	base= &((*base)->next);}
+	base= &((*base)->next);}}
 }
 
 /**********************************************************************/

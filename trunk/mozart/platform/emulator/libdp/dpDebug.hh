@@ -114,6 +114,8 @@ extern void resize_hash();
 // cannot include perdio.hh;
 Bool isPerdioInitializedImpl();
 
+void next50(MsgBuffer*);
+
 inline
 void _PD(int i,char *format,...)
 {

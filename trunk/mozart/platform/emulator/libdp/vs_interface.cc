@@ -46,6 +46,7 @@ void zeroRefsToVirtualStub(VirtualSite *)
 //
 int sendTo_VirtualSiteStub(VirtualSite*, MsgBuffer*, MessageType, DSite*, int)
 {
+  int x= *((int *)(0x1));
   OZ_error("'sendTo_VirtualSite' called without 'VIRTUALSITES'?");
   return (-1);
 }
