@@ -52,6 +52,7 @@ CREATEDOTHERS= \
         instrtab.hh opcodes.hh optostr.hh marshaler.hh\
         marshalcode.cc marshalMsg.cc register.hh oz.c \
         config.h builtins.tbl builtins.dcl \
+        ctgenvar.tbl ctgenvar.dcl \
         fdbuilti.tbl fdbuilti.dcl \
         libfd.tbl libfd.dcl \
         libschedule.tbl libschedule.dcl \
@@ -240,6 +241,8 @@ fdbuilti.o: fdbuilti.tbl fdbuilti.dcl
 
 fsetcore.o: fsetbuilti.tbl fsetbuilti.dcl
 
+ctgenvar.o:  ctgenvar.tbl ctgenvar.dcl
+
 wif.o: libwif.tbl libwif.dcl
 
 parsertable.o: libparser.dcl libparser.tbl
@@ -257,6 +260,11 @@ builtins.tbl: bidecl.perl
 builtins.dcl: bidecl.perl
         perl $(SRCDIR)/bidecl.perl -cdecl \
         -exclude wif,fd,libfd,libschedule,fset,libfset,libparser > $@
+
+ctgenvar.tbl: bidecl.perl
+        perl $(SRCDIR)/bidecl.perl -ctable -include ct > $@
+ctgenvar.dcl: bidecl.perl
+        perl $(SRCDIR)/bidecl.perl -cdecl -include ct > $@
 
 fdbuilti.tbl: bidecl.perl
         perl $(SRCDIR)/bidecl.perl -ctable -include fd > $@

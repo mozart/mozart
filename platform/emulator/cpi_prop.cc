@@ -52,6 +52,10 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
     DEREF(h, hptr, htag);
     switch (htag) {
 
+    case OZFLOAT:
+      o << floatValue(h);
+      break;
+
     case LITERAL:
       o << tagged2Literal(h)->getPrintName();
       break;
@@ -109,7 +113,7 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
           o << ((GenFSetVariable *) cv)->getSet().toString();
         } else if (cv->getType() == CtVariable) {
         ct_lbl:
-          o << ((GenCtVariable *) cv)->getConstraint()->toString();
+          o << ((GenCtVariable *) cv)->getConstraint()->toString(0);
         } else {
           goto problem;
         }

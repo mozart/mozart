@@ -7001,7 +7001,7 @@ BIspec allSpec[] = {
 
 extern void BIinitFD(void);
 extern void BIinitFSet(void);
-extern void BIinitMeta(void);
+extern void BIinitCtVar(void);
 extern void BIinitPerdioVar(void);
 extern void BIinitUnix();
 extern void BIinitAssembler();
@@ -7025,7 +7025,7 @@ Builtin *BIinit()
 
   BIinitFD();
   BIinitFSet();
-  // BIinitMeta();
+  BIinitCtVar();
 
   // BIinitPerdioVar();
   BIinitUnix();

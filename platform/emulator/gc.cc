@@ -893,7 +893,7 @@ Thread *Thread::gcThreadInline() {
   if (!isInGc && (GETBOARD(this))->isMarkedGlobal())
     return this;
 
-  //Assert(isInGc || !isRunnable()); // TMUELLER
+  Assert(isInGc || !isRunnable());
 
 #ifdef DEBUG_THREADCOUNT
   if (!(isInGc || !isRunnable())) {
@@ -1108,6 +1108,38 @@ void GenFSetVariable::gc(GenFSetVariable * frm) {
 }
 
 
+GenCVariable * GenCtVariable::gcV(void)
+{
+  GenCtVariable * to = new GenCtVariable(* (GenCtVariable*) this);
+
+  // common stuff
+  to->u        = u;
+  to->suspList = suspList;
+  to->home     = home;
+
+  // stuff specific to `GenCtVariable's
+  to->_constraint = _constraint;
+  to->_definition = _definition;
+
+  // gc suspension lists
+  int noOfSuspLists = getNoOfSuspLists();
+  // copy
+  to->_susp_lists = (SuspList **)
+    heapMalloc(sizeof(SuspList *) * noOfSuspLists);
+  // collect
+  for (int i = noOfSuspLists; i--; )
+   to->_susp_lists[i] = _susp_lists[i]->gc();
+
+  return to;
+}
+
+
+void GenCtVariable::gcRecurseV(void)
+{
+  // constraint (must go in `gcRecurseV' since it may contain recursion
+  _constraint = _constraint->copy();
+}
+
 
 GenCVariable * GenCVariable::gc(void) {
   INFROMSPACE(this);
@@ -1150,9 +1182,11 @@ GenCVariable * GenCVariable::gc(void) {
   case OFSVariable:
     to = new GenOFSVariable(*(GenOFSVariable*) this);
     break;
+
   case MetaVariable:
     to = new GenMetaVariable(*(GenMetaVariable*) this);
     break;
+
   case PerdioVariable:
     if (((PerdioVar*)this)->isFuture()) {
       to = new Future(*(Future*) this);
@@ -1160,6 +1194,7 @@ GenCVariable * GenCVariable::gc(void) {
       to = new PerdioVar(*(PerdioVar*) this);
     }
     break;
+
   default:
     to = gcV();
     break;

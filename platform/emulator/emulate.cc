@@ -2401,15 +2401,27 @@ LBLdispatcher:
            } else if (r == PROCEED) {
              e->closeDonePropagator(prop);
            } else if (r == FAILED) {
-             e->closeDonePropagator(prop);
 
              if (ozconf.timeDetailed)
                ozstat.timeForPropagation.incf(osUserTime()-starttime);
 
-             CTS->pushLPQ(sb); // RS: is this needed ???
-             // failure of propagator is never catched !
-             Assert(prop->isDeadPropagator() || !prop->isRunnable());
-             goto LBLfailure; // top-level failure not possible
+             // check for top-level and if not, prepare raising of an
+             // exception (`hf_raise_failure()')
+             if (e->hf_raise_failure()) {
+               e->closeDonePropagator(prop);
+               goto LBLfailure;
+             }
+
+             if (ozconf.errorDebug)
+               e->exception.info = OZ_mkTupleC("apply",2,
+                                               OZ_atom(builtinTab.getName((void *)(prop->getPropagator()->getHeader()->getHeaderFunc()))),
+                                               prop->getPropagator()->getParameters());
+
+             e->closeDonePropagator(prop);
+
+             sb->resetLocalPropagatorQueue();
+
+             RAISE_THREAD;
            } else {
              Assert(r == SCHEDULED);
              e->scheduledPropagator(prop);

@@ -1381,6 +1381,69 @@ $builtins = {
                              module=>'metavar',
                              native => true},
 
+    ###* GenCtVar
+
+    'isCtVarB'          => { in  => ['value'],
+                             out => ['+bool'],
+                             BI  => BIIsGenCtVarB,
+                             module =>  ct,
+                             native => true},
+
+    'getCtVarConstraintAsAtom' => { in  => ['value','atom'],
+                             out => [],
+                             BI  => BIGetCtVarConstraintAsAtom,
+                             module => ct,
+                             native => true},
+
+    'getCtVarNameAsAtom'   => { in  => ['value','atom'],
+                             out => [],
+                             BI  => BIGetCtVarNameAsAtom,
+                             module =>  ct,
+                             native => true},
+
+    #* Real intervals (don't panic just temporary; TMUELLER)
+
+    'ri_plus'           => { in  => ['value','value','value'],
+                             out => [],
+                             bi  => ri_plus,
+                             module => ct,
+                             native => true},
+
+    'ri_times'          => { in  => ['value','value','value'],
+                             out => [],
+                             bi  => ri_times,
+                             module => ct,
+                             native => true},
+
+    'ri_greater'                => { in  => ['value','value'],
+                             out => [],
+                             bi  => ri_greater,
+                             module => ct,
+                             native => true},
+    'ri_lessEq'         => { in  => ['value','value'],
+                             out => [],
+                             bi  => ri_lessEq,
+                             module => ct,
+                             native => true},
+
+    'ri_mkVar'          => { in  => ['float','float','value'],
+                             out => [],
+                             bi  => ri_mkVar,
+                             module => ct,
+                             native => true},
+
+    'ri_getBounds'      => { in  => ['value','float','float'],
+                             out => [],
+                             bi  => ri_getBounds,
+                             module => ct,
+                             native => true},
+
+    'ri_setPrecision'   => { in  => ['float'],
+                             out => [],
+                             bi  => ri_setPrecision,
+                             module => ct,
+                             native => true},
+
     #* System Stuff
 
     ##* Virtual Properties
