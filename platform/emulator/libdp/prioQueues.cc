@@ -302,9 +302,6 @@ int PrioQueues::msgAcked(int num,Bool resend,Bool calcrtt) {
   while(cur!=NULL) {
     prev=cur;
     cur=cur->next;
-    // kost@ : it's here 'cause there is neither a proper destructor for
-    // MsgContainer"s nor a flag saying "that's an outgoing message":
-    prev->deleteSnapshot();
     msgContainerManager->deleteMsgContainer(prev);
   }
   return ret;
@@ -344,7 +341,6 @@ MsgContainer *PrioQueues::getRec(int num) {
 //      recList=tmp->next;
 //        else
 //      prev->next=tmp->next;
-//        tmp->deleteSnapshot();
 //        msgContainerManager->deleteMsgContainer(tmp);
 //        return;
 //      }
@@ -389,7 +385,6 @@ void PrioQueues::clear5() {
     tmp=list;
     list=list->next;
     // Assume for now that prio5 msgs are never in unackedList
-    tmp->deleteSnapshot();
     msgContainerManager->deleteMsgContainer(tmp);
   }
   // Take care of unacked prio5 msgs.
@@ -404,7 +399,6 @@ void PrioQueues::clearAll() {
     while(msgC!=NULL) {
       noMsgs--;
       qs[i-1].first=msgC->next;
-      msgC->deleteSnapshot();
       msgContainerManager->deleteMsgContainer(msgC,COMM_FAULT_PERM_NOT_SENT);
       msgC=qs[i-1].first;
     }
@@ -413,7 +407,6 @@ void PrioQueues::clearAll() {
   msgC=unackedList;
   while(msgC!=NULL) {
     unackedList=msgC->next;
-    msgC->deleteSnapshot();
     msgContainerManager->deleteMsgContainer(msgC,COMM_FAULT_PERM_MAYBE_SENT);
     msgC=unackedList;
   }

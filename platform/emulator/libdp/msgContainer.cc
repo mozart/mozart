@@ -157,6 +157,7 @@ void MsgContainerManager::deleteMsgContainer(MsgContainer* msgC) {
     msgC->transController->returnMarshaler((DPMarshaler *) msgC->cont);
   else if(msgC->checkFlag(MSG_HAS_UNMARSHALCONT) && msgC->cont!=0)
     msgC->transController->returnUnmarshaler((Builder *) msgC->cont);
+  msgC->deleteSnapshot();
 
   FreeListEntry *f;
   --wc;

@@ -866,9 +866,6 @@ void ComObj::msgSent(MsgContainer *msgC)
     Assert(msgC->getMsgNum() != -1);
     queues.insertUnacked(msgC);
   } else {
-    // kost@ : it's here 'cause there is neither proper destructor for
-    // MsgContainer"s nor a flag saying "that's an outgoing message":
-    msgC->deleteSnapshot();
     msgContainerManager->deleteMsgContainer(msgC);
   }
 }
