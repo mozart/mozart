@@ -12,7 +12,6 @@ local
 			       title:   'About'
 			       bg:      DefaultBackground
 			       buttons: ['Ok'#tkClose]
-			       %focus:   1
 			       pack:    false
 			       default: 1)
 	 T = {New Tk.label tkInit(parent: self
@@ -179,10 +178,8 @@ local
 	 self.Result = ResultEntry
 
 	 %% how to close the dialog
-	 {ExprEntry tkBind(event: '<Escape>'
-			   action: Close)}
-	 {ExprEntry tkBind(event: '<Control-x>'
-			   action: Close)}
+	 {self.toplevel tkBind(event: '<Escape>'
+			       action: Close)}
 	 %% resetting (kill eval/exec thread)
 	 {ExprEntry tkBind(event: '<Control-r>'
 			   action: Kill)}
@@ -201,6 +198,127 @@ local
 
    end
 
+   class SettingsDialog from TkTools.dialog
+      prop
+	 final
+      meth init(master:Master)
+	 TkVerbose            = {New Tk.variable tkInit({Cget verbose})}
+	 TkStepDotBuiltin     = {New Tk.variable tkInit({Cget stepDotBuiltin})}
+	 TkStepNewNameBuiltin = {New Tk.variable
+				 tkInit({Cget stepNewNameBuiltin})}
+	 TkEnvSystemVariables = {New Tk.variable
+				  tkInit({Cget envSystemVariables})}
+
+	 proc {Apply}
+	    local
+	       Verbose = {TkVerbose tkReturnInt($)} > 0
+	    in
+	       {Config set(verbose Verbose)}
+	       {Emacs  setVerbose(Verbose)}
+	    end
+
+	    {Config set(stepDotBuiltin {TkStepDotBuiltin tkReturnInt($)} > 0)}
+	    {Config set(stepNewNameBuiltin
+			{TkStepNewNameBuiltin tkReturnInt($)} > 0)}
+	    {Config set(envSystemVariables
+			{TkEnvSystemVariables tkReturnInt($)} > 0)}
+
+	    {Config set(printWidth {WidthEntry tkGet($)})}
+	    {Config set(printDepth {DepthEntry tkGet($)})}
+
+	    {Ozcar PrivateSend(rebuildCurrentStack)}
+	 end
+
+	 proc {ApplyAndExit}
+	    {Apply}
+	    {self tkClose}
+	 end
+
+	 TkTools.dialog,tkInit(master:  Master
+			       root:    pointer
+			       title:   'Settings'
+			       buttons: ['Ok'    # ApplyAndExit
+					 'Apply' # Apply
+					 'Abort' # tkClose]
+			       pack:    false)
+	 Title = {New Tk.label tkInit(parent: self
+				      fg:     SelectedBackground
+				      font:   HelpTitleFont
+				      text:   'Ozcar Settings')}
+	 WidthDepthFrame = {New TkTools.textframe
+			    tkInit(parent:  self
+				   'class': 'NumberEntry'
+				   text:    'Value Printing')}
+	 DummyFrame = {New Tk.frame tkInit(parent:WidthDepthFrame.inner)}
+	 WidthLabel = {New Tk.label tkInit(parent: DummyFrame
+					   text:   'Width:')}
+	 WidthEntry = {New TkTools.numberentry
+		       tkInit(parent: DummyFrame
+			      min:    1
+			      max:    20
+			      val:    {Cget printWidth}
+			      width:  3)}
+	 DepthLabel = {New Tk.label tkInit(parent: DummyFrame
+					   text:   'Depth:')}
+	 DepthEntry = {New TkTools.numberentry
+		       tkInit(parent: DummyFrame
+			      min:    0
+			      max:    5
+			      val:    {Cget printDepth}
+			      width:  3)}
+	 StepFrame = {New TkTools.textframe
+			tkInit(parent:  self
+			       text:    'Stepping')}
+	 StepDot   = {New Tk.checkbutton
+		      tkInit(parent:   StepFrame.inner
+			     text:     'Step on Builtin `.\''
+			     variable: TkStepDotBuiltin)}
+	 StepNewName = {New Tk.checkbutton
+			tkInit(parent:   StepFrame.inner
+			       text:     'Step on Builtin `NewName\''
+			       variable: TkStepNewNameBuiltin)}
+	 FilterFrame = {New TkTools.textframe
+			tkInit(parent:  self
+			       text:    'Filtering')}
+	 SystemVButton = {New Tk.checkbutton
+			  tkInit(parent:   FilterFrame.inner
+				 text:     'Show System Variables'
+				 variable: TkEnvSystemVariables)}
+	 OtherFrame = {New TkTools.textframe
+		       tkInit(parent:  self
+			      text:    'Esoteric Options')}
+	 DDButton = {New Tk.checkbutton
+		     tkInit(parent:   OtherFrame.inner
+			    text:     'Debug Debugger'
+			    variable: TkVerbose)}
+
+      in
+
+	 %% how to close the dialog
+	 {self.toplevel tkBind(event:'<Escape>' action:ApplyAndExit)}
+
+	 {Tk.batch [grid(Title row:1 column:1 columnspan:2 sticky:we pady:2)
+		    grid(WidthDepthFrame row:2 column:1
+			 sticky:nswe padx:2 pady:2)
+		    grid(StepFrame       row:2 column:2
+			 sticky:nswe padx:2 pady:2)
+		    grid(FilterFrame     row:3 column:1
+			 sticky:nswe padx:2 pady:2)
+		    grid(OtherFrame      row:3 column:2
+			 sticky:nswe padx:2 pady:2)
+		    pack(DummyFrame side:left anchor:w padx:1 pady:2)
+		    grid(WidthLabel      row:1 column:1 sticky:w)
+		    grid(WidthEntry      row:1 column:2 sticky:w)
+		    grid(DepthLabel      row:2 column:1 sticky:w)
+		    grid(DepthEntry      row:2 column:2 sticky:w)
+		    pack(StepDot StepNewName side:top anchor:w pady:1)
+		    pack(SystemVButton anchor:w)
+		    pack(DDButton anchor:w)
+		   ]}
+	 SettingsDialog,tkPack
+      end
+   end
+
 in
 
    class Dialog
@@ -211,6 +329,10 @@ in
 
       meth eval
 	 {Wait {New EvalDialog init(master:self.toplevel)}.tkClosed}
+      end
+
+      meth settings
+	 {Wait {New SettingsDialog init(master:self.toplevel)}.tkClosed}
       end
 
    end

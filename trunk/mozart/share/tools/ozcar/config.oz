@@ -104,10 +104,9 @@ ThreadTreeOffset       = 4
 
 StackTextWidth         = 0
 EnvTextWidth           = 24
-EnvVarWidth            = 14
-
-PadXButton             = 5
-PadYButton             = 3
+EnvVarWidth            = fun {$}
+			    case {Cget envPrintTypes} then 14 else 2 end
+			 end
 
 ScrollbarWidth         = 10
 
@@ -314,6 +313,15 @@ ConfigSubThreads           = true   %% dito
 ConfigUpdateEnv            = true   %% update env windows after each step?
 ConfigUseEmacsBar          = {Not {System.get standalone}} % use Emacs?
 
+PrintWidth
+PrintDepth
+local
+   P = {System.get print}
+in
+   PrintWidth = P.width
+   PrintDepth = P.depth
+end
+
 Config =
 {New
  class
@@ -333,6 +341,9 @@ Config =
        updateEnv :             ConfigUpdateEnv
        useEmacsBar :           ConfigUseEmacsBar
 
+       printWidth:             PrintWidth
+       printDepth:             PrintDepth
+
     meth init
        skip
     end
@@ -341,19 +352,15 @@ Config =
        What <- {Not @What}
        {OzcarMessage 'Config: setting `' # What #
 	'\' to value `' # {V2VS @What} # '\''}
-       case What == verbose then
-	  {Emacs setVerbose(@What)}
-       elsecase What == envSystemVariables then
-	  {Ozcar PrivateSend(rebuildCurrentStack)}
-       elsecase What == updateEnv andthen @What == true then
+       case What == updateEnv andthen @What == true then
 	  {Ozcar PrivateSend(What)}
        else skip end
     end
 
     meth set(What Value)
+       What <- Value
        {OzcarMessage 'Config: setting `' # What #
 	'\' to value `' # {V2VS Value} # '\''}
-       What <- Value
        case What == envPrintTypes then
 	  {Ozcar PrivateSend(rebuildCurrentStack)}
        else skip end
