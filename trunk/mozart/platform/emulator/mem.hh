@@ -229,7 +229,13 @@ Bool reallyHeapNever(void *ptr1, void *ptr2)
 // free list management
 #define freeListMaxSize 64+4
 
-extern void * FreeList[freeListMaxSize];
+class FreeListMem {
+public:
+    int32 next;
+};
+
+extern FreeListMem* FreeList[freeListMaxSize];
+
 extern size_t nextChopSize;
 
 unsigned int getMemoryInFreeList();
