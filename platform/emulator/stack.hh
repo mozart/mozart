@@ -122,5 +122,44 @@ public:
   int getUsed()     { return (tos-array); }
 };
 
+class FastStack {
+private:
+  StackEntry * first, * start, * tos, * end;
+  void resize(void);
+public:
+  void init(void);
+  void exit(void);
+  FastStack(void);
+  ~FastStack(void) {}
+  int isEmpty(void) {
+    return start==tos;
+  }
+  void push1(StackEntry e1) {
+    StackEntry * t = tos;
+    *(t+0) = e1;
+    t += 1;
+    tos = t;
+    if (t > end) resize();
+  }
+  void push2(StackEntry e1, StackEntry e2) {
+    StackEntry * t = tos;
+    *(t+0) = e1;
+    *(t+1) = e2;
+    t += 2;
+    tos = t;
+    if (t > end) resize();
+  }
+  void pop1(StackEntry &e1) {
+    StackEntry * t = tos-1;
+    tos = t;
+    e1 = *(t);
+  }
+  void pop2(StackEntry &e1, StackEntry &e2) {
+    StackEntry * t = tos-2;
+    tos = t;
+    e2 = *(t+1);
+    e1 = *(t+0);
+  }
+};
 
 #endif //__STACK_H__

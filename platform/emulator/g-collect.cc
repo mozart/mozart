@@ -369,6 +369,9 @@ void AM::doGCollect(void) {
 
 void AM::gCollect(int msgLevel) {
 
+  varFix.init();
+  cacStack.init();
+
   (*gCollectFrameToProxy)();
 
 #ifdef DEBUG_CHECK
@@ -461,5 +464,8 @@ void AM::gCollect(int msgLevel) {
 #ifdef DEBUG_CHECK
   isCollecting = NO;
 #endif
+
+  varFix.exit();
+  cacStack.exit();
 
 } // AM::gc

@@ -67,3 +67,34 @@ void Stack::resize(int incSize)
 
   ensureFree(incSize);
 }
+
+#define FST_FIRST_SIZE 2048
+#define FST_MARGIN     4
+
+FastStack::FastStack(void) {
+  first = (StackEntry *) malloc(FST_FIRST_SIZE * sizeof(StackEntry));
+}
+
+void FastStack::init(void) {
+  start = first;
+  tos   = first;
+  end   = first + (FST_FIRST_SIZE - FST_MARGIN);
+}
+
+void FastStack::exit(void) {
+  if (start != first)
+    free(start);
+}
+
+void FastStack::resize(void) {
+  int s  = (end - start) + FST_MARGIN;
+  int u  = tos - start;
+  int ns = (s * 3) >> 1;
+  StackEntry * nst = (StackEntry *) malloc(ns * sizeof(StackEntry));
+  memcpy(nst, start, u*sizeof(StackEntry));
+  if (start != first)
+    free(start);
+  start = nst;
+  tos   = nst + u;
+  end   = nst + (ns - FST_MARGIN);
+}
