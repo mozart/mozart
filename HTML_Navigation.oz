@@ -24,13 +24,14 @@ define
    end
    fun{GetNavBar1}
       {Manager trace('Creating navigationbar')}
-      InfoUrl = {Manager getTop($)}#"/info"
+      TopUrl = {Manager getTop($)}
+      InfoUrl = TopUrl#"/info"
       Cats   = {Manager get_categories($)}
       Pkgs   = {Manager get_packages($)}
    in
       %% Some default links followed by the categories
       separator|
-      index#a(href:InfoUrl#"/index.html" "Index")|
+      index#a(href:TopUrl#"/index.html" "Index")|
       packages#a(href:InfoUrl#"/packages.html" "All Packages")|
       category#a(href:InfoUrl#"/category/index.html" "All Categories")|
       authors#a(href:InfoUrl#"/byauthor.html" "By Author")|
