@@ -51,10 +51,13 @@ local
       end
 
       meth off
-	 {Dbg.off}
-	 {Tk.send wm(withdraw self.toplevel)}
-	 {EnqueueCompilerQuery setSwitch(debuginfo false)}
-	 {SendEmacs removeBar}
+	 case {Cget closeAction} of unit then
+	    {Dbg.off}
+	    {Tk.send wm(withdraw self.toplevel)}
+	    {EnqueueCompilerQuery setSwitch(debuginfo false)}
+	    {SendEmacs removeBar}
+	 elseof P then {P}
+	 end
       end
 
       meth conf(...)=M
