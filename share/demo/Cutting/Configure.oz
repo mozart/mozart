@@ -23,10 +23,9 @@
 functor
 
 export
-   normal: Helv
-   bold:   HelvBold
-
+   fonts:  Fonts
    colors: Colors
+   delays: Delays
    
 prepare
 
@@ -36,11 +35,14 @@ prepare
       FontMatch         = '-*-*-*-*-*-*'
       
       FontSize          = 120
-   in
+
       [HelvBold Helv] =
       {Map [HelvBoldFamily    # FontSize  # FontMatch
 	    HelvFamily        # FontSize  # FontMatch]
        VirtualString.toAtom}
+   in
+      Fonts = fonts(normal: Helv
+		    bold:   HelvBold)
    end
 
    Colors = colors(glass:   steelblue1
