@@ -37,6 +37,8 @@
 #include "builtins.hh"
 #include "os.hh"
 #include "value.hh"
+#include "base.hh"
+
 
 #ifndef WINDOWS
 #include <sys/errno.h>
@@ -371,6 +373,33 @@ OZ_BI_define(BIcreateLogFile,1,0)
     return OZ_ENTAILED;
   }
 }OZ_BI_end
+
+
+OZ_BI_define(BIsetDGC,2,1)
+{
+  OZ_declareTerm(0,entity);
+  OZ_declareAtom(1,algorithm);
+  // Currently only suport persistitaion for ports and cells
+  if(OZ_isPort(entity) || OZ_isCell(entity))
+    {
+      Tertiary *tert = (Tertiary*) tagged2Const(entity);
+      if (tert->isLocal()){
+	globalizeTert(tert);
+      }
+      
+      if (tert->isManager()){
+	ownerTable->getOwner(tert->getIndex())->makePersistent();
+	OZ_RETURN(oz_atom("persistent"));
+      }
+      OZ_RETURN(oz_atom("only_applicable_to_managers"));
+    }
+  OZ_RETURN(oz_atom("onlyapplicable_to_ports_and_cells"));
+}OZ_BI_end  
+
+OZ_BI_define(BIgetDGC,1,1)
+{
+  OZ_RETURN(oz_atom("fwrc"));
+}OZ_BI_end  
 
 #ifndef MODULES_LINK_STATIC
 
