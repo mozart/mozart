@@ -1344,10 +1344,7 @@ void Thread::gcRecurse () {
   switch (getThrType ()) {
   case S_RTHREAD:
     item.threadBody = item.threadBody->gcRTBody ();
-
     setSelf(getSelf()->gcObject());
-    getAbstr()->gcPrTabEntry();
-
     break;
 
   case S_WAKEUP:
@@ -1780,6 +1777,7 @@ void AM::gc(int msgLevel)
   OZ_collectHeapTerm(opiCompiler,opiCompiler);
   OZ_collectHeapTerm(debugStreamTail,debugStreamTail);
 
+  PrTabEntry::gcPrTabEntries();
   extRefs = extRefs->gc();
 
   PROFILE_CODE1(FDProfiles.gc());
@@ -1986,12 +1984,15 @@ void ArityTable::gc() {
   }
 }
 
-void PrTabEntry::gcPrTabEntry()
+void PrTabEntry::gcPrTabEntries()
 {
-  if (this == NULL) return;
-
-  // mm2: this does not work: it may be called many times ...
-  OZ_collectHeapTerm(info,info);
+  PrTabEntry *aux = allPrTabEntries;
+  while(aux) {
+    OZ_collectHeapTerm(aux->info,aux->info);
+    OZ_collectHeapTerm(aux->file,aux->file);
+    OZ_collectHeapTerm(aux->printname,aux->printname);
+    aux = aux->next;
+  }
 }
 
 void AbstractionEntry::gcAbstractionEntries()
@@ -2139,7 +2140,6 @@ void ConstTerm::gcConstRecurse()
     {
       Abstraction *a = (Abstraction *) this;
       a->gcConstTermWithHome();
-      a->getPred()->gcPrTabEntry();
       break;
     }
 
@@ -2630,7 +2630,7 @@ void TaskStack::gc(TaskStack *newstack) {
     } else if (PC == C_SET_SELF_Ptr) {
       Y = (RefsArray) ((Object*)Y)->gcConstTerm();
     } else if (PC == C_SET_ABSTR_Ptr) {
-      ((PrTabEntry *)Y)->gcPrTabEntry();
+      ;
     } else if (PC == C_DEBUG_CONT_Ptr) {
       Y = (RefsArray) ((OzDebug *) Y)->gcOzDebug();
     } else if (PC == C_CALL_CONT_Ptr) {

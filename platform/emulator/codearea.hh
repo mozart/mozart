@@ -89,7 +89,8 @@ class CodeArea {
   friend inline void printNameTab();
 
   static Bool getNextDebugInfoArgs(ProgramCounter from,
-                                   TaggedRef &pos, TaggedRef &comment);
+                                   TaggedRef &file, int &line, int &colum,
+                                   TaggedRef &comment);
 
 protected:
   ByteCode *codeBlock;    /* a block of abstract machine code */
@@ -129,8 +130,8 @@ public:
   static TaggedRef dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
                              int frameId, RefsArray Y, Abstraction *G);
   static TaggedRef getFrameVariables(ProgramCounter, RefsArray, Abstraction *);
-  static void getDefinitionArgs(ProgramCounter PC, Reg &reg,
-                                int &next, TaggedRef &pos,
+  static void getDefinitionArgs(ProgramCounter PC, Reg &reg, int &next,
+                                TaggedRef &file, int &line, int &colum,
                                 TaggedRef &predName);
 
   /* with one argument it means that we need the code till the "query"  */
@@ -204,6 +205,12 @@ public:
   {
     ProgramCounter ret = writeWord(t,ptr);
     gcStaticProtect((TaggedRef *)ptr);
+    return ret;
+  }
+
+  static ProgramCounter writeTaggedNoProtect(TaggedRef t, ProgramCounter ptr)
+  {
+    ProgramCounter ret = writeWord(t,ptr);
     return ret;
   }
 

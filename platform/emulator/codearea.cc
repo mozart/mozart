@@ -178,19 +178,17 @@ ProgramCounter CodeArea::printDef(ProgramCounter PC,FILE *out)
   }
 
   Reg reg;
-  int next;
-  TaggedRef pos, comment, predName;
-  getDefinitionArgs(definitionPC,reg,next,pos,predName);
-  getNextDebugInfoArgs(PC,pos,comment);
+  int next, line,colum;
+  TaggedRef comment, predName, file;
+  getDefinitionArgs(definitionPC,reg,next,file,line,colum,predName);
+  getNextDebugInfoArgs(PC,file,line,colum,comment);
 
   const char *name = OZ_atomToC(predName);
   fprintf(out,"***\tprocedure");
   if (*name) fprintf(out," '%s'",name);
   fprintf(out," f: \"%s\" l: %d c: %d",
-          OZ_atomToC(OZ_getArg(pos,0)),
-          OZ_intToC(OZ_getArg(pos,1)),
-          OZ_intToC(OZ_getArg(pos,2))
-          );
+          OZ_atomToC(file),
+          line,colum);
   fprintf(out," PC: %p\n",definitionPC);
   fflush(out);
   return definitionPC;
@@ -200,28 +198,24 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
                               int frameId, RefsArray Y, Abstraction *CAP)
 {
   Reg reg;
-  int next;
-  TaggedRef pos, comment, predName;
+  int next, line, colum;
+  TaggedRef comment, predName, file;
   // file & line might be overwritten some lines later ...
-  getDefinitionArgs(definitionPC,reg,next,pos,predName);
+  getDefinitionArgs(definitionPC,reg,next,file,line,colum,predName);
 
   // if we are lucky there's some debuginfo and we can determine
   // the exact position inside the procedure application
   //--** problem: these are the coordinates of the corresponding exit
   //     instruction
-  getNextDebugInfoArgs(PC,pos,comment);
+  getNextDebugInfoArgs(PC,file,line,colum,comment);
 
   TaggedRef pairlist = nil();
-  OZ_Term file=OZ_getArg(pos,0);
-  OZ_Term line=OZ_getArg(pos,1);
-  OZ_Term column=OZ_getArg(pos,2);
-  int iline = OZ_intToC(line);
   pairlist =
     cons(OZ_pairAI("time",findTimeStamp(PC)),
          cons(OZ_pairA("data",makeTaggedConst(CAP)),
               cons(OZ_pairA("file",file),
-                   cons(OZ_pairAI("line",iline < 0? -iline: iline),
-                        cons(OZ_pairA("column",column),
+                   cons(OZ_pairAI("line",line < 0? -line: line),
+                        cons(OZ_pairA("column",OZ_int(colum)),
                              cons(OZ_pairAI("PC",(int)PC),
                                   cons(OZ_pairA("kind",OZ_atom("call")),
                                        cons(OZ_pairA("origin",
@@ -289,7 +283,8 @@ ProgramCounter CodeArea::definitionStart(ProgramCounter from)
 
 
 Bool CodeArea::getNextDebugInfoArgs(ProgramCounter PC,
-                                    TaggedRef &pos, TaggedRef &comment)
+                                    TaggedRef &file, int &line, int &colum,
+                                    TaggedRef &comment)
 {
   ProgramCounter end = definitionEnd(PC);
   if (end == NOCODE)
@@ -300,8 +295,9 @@ Bool CodeArea::getNextDebugInfoArgs(ProgramCounter PC,
     switch (op) {
     case DEBUGENTRY:
     case DEBUGEXIT:
-      pos=OZ_mkTupleC("pos",3,getTaggedArg(PC+1),getTaggedArg(PC+2),
-                      getTaggedArg(PC+3));
+      file    = getTaggedArg(PC+1);
+      line    = OZ_intToC(getTaggedArg(PC+2));
+      colum   = OZ_intToC(getTaggedArg(PC+3));
       comment = getTaggedArg(PC+4);
       return OK;
     case DEFINITION:
@@ -375,16 +371,24 @@ ProgramCounter computeLabelArg(ProgramCounter pc, ProgramCounter arg)
 
 void CodeArea::getDefinitionArgs(ProgramCounter PC,
                                  Reg &reg, int &next,
-                                 TaggedRef &pos, TaggedRef &predName)
+                                 TaggedRef &file, int &line, int &colum,
+                                 TaggedRef &predName)
 {
   Assert(getOpcode(PC) == DEFINITION || getOpcode(PC) == DEFINITIONCOPY);
   PrTabEntry *pred = getPredArg(PC+3);
 
   reg      = regToInt(getRegArg(PC+1));
   next     = getLabelArg(PC+2);
-  pos      = pred != NULL? pred->getPos()
-    : OZ_mkTupleC("pos",OZ_atom("nofile"),OZ_int(0),OZ_int(0));
-  predName = OZ_atom(pred != NULL? pred->getPrintName() : "");
+  if (pred!=NULL) {
+    file     = pred->getFile();
+    line     = pred->getLine();
+    colum    = pred->getColumn();
+    predName = OZ_atom(pred->getPrintName());
+  } else {
+    file     = OZ_atom("nofile");
+    line     = colum = 0;
+    predName = OZ_atom("");
+  }
 }
 
 static
@@ -821,18 +825,16 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
         defCount++;
 
         Reg reg;
-        int next;
-        TaggedRef pos, predName;
-        getDefinitionArgs(PC,reg,next,pos,predName);
+        int next,line,colum;
+        TaggedRef file, predName;
+        getDefinitionArgs(PC,reg,next,file,line,colum,predName);
         PrTabEntry *predd = getPredArg(PC+3);
         AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
         AssRegArray *list = (AssRegArray*) getAdressArg(PC+5);
         fprintf(ofile,"(x(%d) %d pid(%s",reg,next,toC(predName));
         fprintf(ofile," %d",predd->getArity());
         fprintf(ofile," pos(%s %d %d)",
-                OZ_atomToC(OZ_getArg(pos,0)),
-                OZ_intToC(OZ_getArg(pos,1)),
-                OZ_intToC(OZ_getArg(pos,2)));
+                OZ_atomToC(file),line,colum);
         fprintf(ofile," [");
         fprintf(ofile,"%s",predd->isCopyOnce()?" once":"");
         fprintf(ofile,"%s",predd->isNative()?" native":"");

@@ -103,9 +103,8 @@ OZ_BI_define(BImakeProc,2,1)
 
   int numGlobals = OZ_length(globals);
   const int maxX=-1; // should never suspend
-  const OZ_Term pos = OZ_mkTupleC("pos",3,nil(),OZ_int(0),OZ_int(0));
   PrTabEntry *pte = new PrTabEntry(OZ_atom("toplevelAbstraction"),
-                                   mkTupleWidth(0), pos, nil() ,maxX);
+                                   mkTupleWidth(0), nil(),0,0, nil() ,maxX);
   pte->setGSize(numGlobals);
   pte->PC = code->getStart();
 
@@ -260,6 +259,7 @@ OZ_BI_define(BIstorePredId,6,0)
   oz_declareNonvarIN(3,pos);
   oz_declareNonvarIN(4,flags);
   oz_declareIntIN(5,maxX);
+
   PrTabEntry *pte = new PrTabEntry(name,getArity(arity),pos,flags,maxX);
   code->writeAddress(pte);
   return PROCEED;
