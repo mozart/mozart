@@ -165,7 +165,7 @@ LIB_TARGETS = $(CINSTALL) $(OZINSTALL) $(WRPINSTALL) $(NATINSTALL) \
 EXAMPLES_FILES = \
 	CList.oz CTree.oz CanvasEvents.oz CanvasMove.oz CanvasScramble.oz \
 	FileSelection.oz HelloArgs.oz HelloCanvas.oz HelloGTK.oz \
-	HelloText.oz List.oz GBuilderExamples.oz
+	HelloImage.oz HelloText.oz List.oz GBuilderExamples.oz
 EXAMPLES_TARGETS = $(EXAMPLES_FILES:%=$(EXAMPLES_DIR)/%)
 
 #---------------------------------------------------------------------
