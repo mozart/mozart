@@ -91,6 +91,10 @@ prepare
 	 error(kind : TITLE
 	       msg  : 'file not found'
 	       items: [hint(l:'File' m:F)])
+      [] ozmake(build:circularity(T)) then
+	 error(kind : TITLE_BUILD
+	       msg  : 'detected a build circularity'
+	       items: [hint(l:'Target' m:T)])
       [] ozmake(build:outdated(T)) then
 	 error(kind : TITLE_BUILD
 	       msg  : 'target still outdated'
