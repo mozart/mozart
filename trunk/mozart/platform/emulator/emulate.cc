@@ -1136,8 +1136,6 @@ void engine()
   DebugTrace (trace("new thread"));
   //  now, we have *globally* am.currentThread;
 
-  e->restartThread();
-
   //
   //  No dead threads here;
   // (while, of course, their *tasks* may be dead already;)
@@ -1215,7 +1213,7 @@ void engine()
     case SLEEP: 
       e->currentThread->suspendPropagator ();
       if (e->currentSolveBoard != (Board *) NULL) {
-	e->decSolveThreads (CBB);
+	e->decSolveThreads (e->currentSolveBoard);
 	//  but it's still "in solve";
       }
       e->currentThread = (Thread *) NULL;
@@ -1284,6 +1282,9 @@ void engine()
     //  I.e. it's not a propagator - then just convert it 
     // to a full-fledged thread (with a task stack);
     e->currentThread->makeRunning ();
+
+    //
+    e->restartThread();
 
     DebugCheckT (e->currentThread->setBoard ((Board *) NULL));
   }
@@ -1601,12 +1602,18 @@ LBLkillThread:
 	//  It might not be reduced already;
 	Assert (!(CBB->isReflected ()));
 
+	//
 	sa = SolveActor::Cast (CBB->getActor ());
-	(void) sa->decThreads ();
-
 	//  'nb' points to some board above the current one,
 	// so, 'decSolveThreads' will start there!
 	nb = sa->getBoardFast ();
+
+	//
+	//  kost@ : optimize the most probable case!
+	if (sa->decThreads () != 0) {
+	  e->decSolveThreads (nb);
+	  goto LBLstart;
+	}
       } else {
 	nb = CBB;
       }
@@ -1820,12 +1827,18 @@ LBLsuspendThread:
 	//  It might not be reduced already;
 	Assert (!(CBB->isReflected ()));
 
+	//
 	sa = SolveActor::Cast (CBB->getActor ());
-	(void) sa->decThreads ();
-
 	//  'nb' points to some board above the current one,
 	// so, 'decSolveThreads' will start there!
 	nb = sa->getBoardFast ();
+
+	//
+	//  kost@ : optimize the most probable case!
+	if (sa->decThreads () != 0) {
+	  e->decSolveThreads (nb);
+	  goto LBLstart;
+	}
       } else {
 	nb = CBB;
       }
