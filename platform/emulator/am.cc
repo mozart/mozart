@@ -609,7 +609,6 @@ SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
   while (suspList) {
     Suspension * susp = suspList->getElem();
 
-    // suspension has already been marked 'dead' 
     if (susp->isDead()) {
       suspList = suspList->dispose();
       continue;
