@@ -40,7 +40,7 @@ define
       "l(\"e<"#{IdCounter next($)}
       #">\",e(\"\", [a(\"_DIR\",\"none\"), a(\"EDGECOLOR\",\""
       #Config.edgeColour
-      #"\")],l(\"cn<"#PropId
+      #"\")],l(\"cn<"#PropId#'|'#{IdCounter next($)} %PropId
       #">\",n(\"\",["
       #"a(\"OBJECT\",\""#Name#"\\n"#Location#"\"),"
       #"a(\"COLOR\",\""#{Hist get_prop_node_failed(P.reference $)}#"\"),"

@@ -253,5 +253,13 @@ declare X = {FD.decl} Y = {FD.decl}
 %X <: Y
 {InvestigateConstraints X}
 
+declare L [B1 B2 T1 T2] = L
+L ::: 0#10
+B1 =: (T1 + 2 =<: T2) % implemented by FD.reified.sumC
+B2 =: (T2 + 3 =<: T1) % implemented by FD.reified.sumC
+B1 + B2 =: 1          % implemented by FD.sumC
 
+{InvestigateConstraints L}
+
+{Browse L}
 */
