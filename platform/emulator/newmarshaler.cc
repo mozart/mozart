@@ -126,19 +126,28 @@ GName *unmarshalGNameRobust(TaggedRef *ret, MsgBuffer *bs, int *error)
 //
 int32* NMMemoryManager::freelist[NMMM_SIZE];
 
-unsigned int RobustMarshaler_Max_Shift;
-unsigned int RobustMarshaler_Max_Hi_Byte;
-//
-// Stuff needed for to check that no overflow is done in unmarshalNumber()
-void initRobustMarshaler()
-{
-  unsigned int intsize = sizeof(int);
-  unsigned int shft = intsize*7;
-  while(shft <= (intsize*8)-7) shft += 7;
-  RobustMarshaler_Max_Shift = shft;
-  RobustMarshaler_Max_Hi_Byte =
-    (int) pow(2, (intsize*8)-RobustMarshaler_Max_Shift);
-}
+/*
+ * The followinf is to compute values for:
+ * unsigned int RobustMarshaler_Max_Shift;
+ * unsigned int RobustMarshaler_Max_Hi_Byte;
+ *
+ * void initRobustMarshaler() {
+ *     unsigned int intsize = sizeof(int);
+ *     unsigned int shft = intsize*7;
+ *     while(shft <= (intsize*8)-7) shft += 7;
+ *     RobustMarshaler_Max_Shift = shft;
+ *     RobustMarshaler_Max_Hi_Byte =
+ *       (int) pow(2, (intsize*8)-RobustMarshaler_Max_Shift);
+ * }
+ *
+ * Values for intsize = 4:
+ *   RobustMarshaler_Max_Shift   = 28
+ *   RobustMarshaler_Max_Hi_Byte = 16
+ * Values for intsize = 8:
+ *   RobustMarshaler_Max_Shift   = 63
+ *   RobustMarshaler_Max_Hi_Byte = 2
+ *
+ */
 
 //
 // init stuff - must be called;
@@ -148,7 +157,6 @@ void initNewMarshaler()
   NMMemoryManager::init();
   isInitialized = OK;
   Assert(DIF_LAST == 46);  /* new dif(s) added? */
-  initRobustMarshaler();
 }
 
 //
