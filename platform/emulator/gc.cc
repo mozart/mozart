@@ -16,6 +16,7 @@
 
 #include "../include/config.h"
 
+#include "gc.hh"
 #include "builtins.hh"
 #include "actor.hh"
 #include "am.hh"
@@ -24,7 +25,6 @@
 #include "dllist.hh"
 #include "fdgenvar.hh"
 #include "io.hh"
-#include "gc.hh"
 #include "misc.hh"
 #include "objects.hh"
 #include "stack.hh"

@@ -43,7 +43,7 @@ protected:
 public:
 
   Stack(int sz = 10000);
-  ~Stack() { deallocate(array,size*sizeof(StackEntry)); }
+  virtual ~Stack() { deallocate(array,size*sizeof(StackEntry)); }
 
   Bool empty(void) { return (tos <= array) ? OK : NO; }
 

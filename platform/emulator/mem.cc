@@ -13,8 +13,6 @@
 
 #include <sys/types.h>
 
-#include "types.hh"
-
 #include "mem.hh"
 #include "tagged.hh"
 
@@ -43,8 +41,8 @@ int   heapTotalSize;
 char *heapTop;
 #endif
 
-char *heapStart;
 char *heapEnd;
+char *heapStart;
 
 int initMemoryManagement(void)
 {

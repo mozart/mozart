@@ -11,6 +11,7 @@
 #pragma implementation "stack.hh"
 #endif
 
+#include <malloc.h>
 #include "stack.hh"
 
 void Stack::resize(int newSize)
