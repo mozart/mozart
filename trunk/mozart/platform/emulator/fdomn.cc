@@ -1004,6 +1004,22 @@ Bool FiniteDomain::isConsistent(void) const {
     return get_iv()->findSize() == size;
 }
  
+inline
+Bool FiniteDomain::contains(int i) const
+{
+  if (size == 0) {
+    return FALSE;
+  } else {
+    descr_type type = getType();
+    if (type == fd_descr)
+      return (min_elem <= i && i <= max_elem);
+    else if (type == bv_descr)
+      return get_bv()->contains(i);
+    else
+      return get_iv()->contains(i);
+  }
+}
+
 // public methods -------------------------------------------------------------
 
 inline
@@ -1069,20 +1085,9 @@ unsigned FiniteDomain::getDescrSize() {
   }
 }
 
-inline
-Bool FiniteDomain::contains(int i) const
+Bool FiniteDomain::isIn(int i) const
 {
-  if (size == 0) {
-    return FALSE;
-  } else {
-    descr_type type = getType();
-    if (type == fd_descr)
-      return (min_elem <= i && i <= max_elem);
-    else if (type == bv_descr)
-      return get_bv()->contains(i);
-    else
-      return get_iv()->contains(i);
-  }
+  return contains(i);
 }
 
 inline
