@@ -169,6 +169,7 @@ define
           '--stylesheet=<URL>  What style sheet to use for generated pages.\n'#
           '--(no)latexmath     Generate GIF files from LaTeX math.\n'#
           '--(no)split         Split the document into several nodes.\n'#
+          '--(no)abstract      Generate an abstract.html auxiliary file.\n'#
           '\n'#
           'Parametrization\n'#
           '--ozdoc-home=<DIR>  ozdoc installation directory.\n'#
