@@ -5425,9 +5425,11 @@ void Site::communicationProblem(MessageType mt,Site*
   Site *s1,*s2;
   TaggedRef tr;
   CommCase flag;
-  
+
+  if (storeSite) {
   PD((SITE,"CommProb type:%d site:%s\n storeSite: %s \n indx:%d faultCode:%d",
       mt,this->stringrep(),storeSite->stringrep(), storeIndex, fc));
+  }
   switch(mt){
     
   case M_PORT_SEND:{
@@ -5576,7 +5578,7 @@ void Site::communicationProblem(MessageType mt,Site*
       NOT_IMPLEMENTED;}
 
     case M_SEND_GATE:{
-      NOT_IMPLEMENTED;}
+      return;}
 
     default:{
       warning("communication problem - impossible");
