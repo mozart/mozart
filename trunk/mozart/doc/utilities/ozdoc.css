@@ -15,11 +15,12 @@ DIV.maxi {
 }
 
 BODY, P, H1, H2, H3, H4, TH, TD, A {
-  font-family: verdana,arial,helvetica,sans-serif;
+  font-family: tahoma,arial,helvetica,sans-serif;
 }
 
 PRE, CODE, KBD, SPAN.key, SPAN.buffer {
-  font-family: andale,courier,monospace;
+  font-family: "lucida console",courier,monospace;
+  font-size: 100%;
 }
 
 P {
@@ -67,7 +68,7 @@ SPAN.builtin      { color: #DA70D6; }
 
 DIV.footnote {
   text-indent: 1em;
-  font-family: sans-serif;
+  font-family: tahoma,arial,helvetica,sans-serif;
   font-size: 10pt;
 }
 
