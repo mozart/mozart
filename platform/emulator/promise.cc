@@ -63,13 +63,6 @@ OZ_Return Future::unifyFuture(TaggedRef* vPtr)
   return SUSPEND;
 }
 
-void Future::addSuspFuture(TaggedRef *vPtr, Thread*th,int unstable)
-{
-  request();
-
-  addSuspSVar(th,unstable);
-}
-
 OZ_BI_define(BIPromiseNew,0,1)
 {
   if (!am.onToplevel()) {

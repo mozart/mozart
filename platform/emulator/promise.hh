@@ -62,7 +62,6 @@ public:
   void gcFuture();
   OZ_Return unifyFuture(TaggedRef*);
   Bool valid(TaggedRef /* val */) { return TRUE; } // mm2
-  void addSuspFuture(TaggedRef*,Thread*,int);
   Bool isKinded() { return false; } // mm2
   void dispose(void) { freeListDispose(this, sizeof(Future)); }
   void request();
