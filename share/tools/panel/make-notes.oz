@@ -113,7 +113,7 @@ local
 			 orient:             horizontal
 			 action:             self # noop
 			 width:              8
-			 showvalue:          True)
+			 showvalue:          true)
 	         ,tk(set S)
 	         ,tkAction(action:A args:[int])
 	 Saved <- S
@@ -132,7 +132,7 @@ local
    class Checkbutton
       from Tk.checkbutton
       feat Var Action
-      attr Saved:False
+      attr Saved:false
       meth init(parent:P text:T action:A state:S)
 	 V = {New Tk.variable tkInit(S)}
       in
@@ -348,7 +348,7 @@ local
 	  {MakeSide F.right 0 Right FR
 	   pack(Left   side:left  anchor:nw) |
 	   pack(Right  side:right anchor:se) |
-	   case {CondSelect F pack True} then
+	   case {CondSelect F pack true} then
 	      pack(Border fill:x side:top padx:3) | {MakeFrames Fr P R TclT}
 	   else {MakeFrames Fr P R TclT}
 	   end}}

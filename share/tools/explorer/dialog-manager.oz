@@ -15,7 +15,7 @@ local
 			       title:   TitleName#': About'
 			       buttons: ['Okay'#close]
 			       focus:   1
-			       pack:    False
+			       pack:    false
 			       default: 1)
 	 Title = {New Tk.label tkInit(parent:     self
 				      font:       AboutFont
@@ -41,7 +41,7 @@ local
 	 proc {Okay}
 	    SizeString={SizeEntry tkReturn(get $)}
 	 in
-	    case {CheckSize SizeString} of !False then skip
+	    case {CheckSize SizeString} of false then skip
 	    elseof Size then
 	       {Dictionary.put O size        SizeString}
 	       {Dictionary.put O width       Size.width}
@@ -55,7 +55,7 @@ local
 	 TkTools.dialog,tkInit(master:  M
 			       title:   TitleName#': Postscript'
 			       buttons: ['Okay'#Okay 'Cancel'#close]
-			       pack:    False
+			       pack:    false
 			       default: 1)
 	 Color     = {New TkTools.textframe tkInit(parent: self
 						   text:   'Color Mode')}
@@ -86,11 +86,11 @@ local
 						    text:     'Black & white')}
 			 side:left pady:Pad)
 		    pack({New Tk.radiobutton tkInit(parent:   Orient.inner
-						    value:    False
+						    value:    false
 						    variable: OrientVar
 						    text:     'Portrait')}
 			 {New Tk.radiobutton tkInit(parent:   Orient.inner
-						    value:    True
+						    value:    true
 						    variable: OrientVar
 						    text:     'Landscape')}
 			 side:left pady:Pad)
@@ -113,7 +113,7 @@ local
 	 proc {Okay}
 	    case {Tk.string.toInt {Filter {Update tkReturn(get $)}
 				   Char.isDigit}}
-	    of !False then skip elseof I then
+	    of false then skip elseof I then
 	       {Dictionary.put O hide   {IsHide tkReturnInt($)}==1}
 	       {Dictionary.put O scale  {IsScale tkReturnInt($)}==1}
 	       {Dictionary.put O update I}
@@ -124,7 +124,7 @@ local
 	 TkTools.dialog,tkInit(master:  M
 			       title:   TitleName#': Drawing'
 			       default: 1
-			       pack:    False
+			       pack:    false
 			       buttons: ['Okay'#Okay 'Cancel'#close])
 
 	 Drawing  = {New TkTools.textframe tkInit(parent:self
@@ -206,7 +206,7 @@ local
 	    TkTools.dialog,tkInit(master:  M
 				  title:   TitleName#': Search Options'
 				  default: 1
-				  pack:    False
+				  pack:    false
 				  buttons: ['Okay'#Okay 'Cancel'#close])
 	    Recomp = {New TkTools.textframe tkInit(parent: self
 						   text:   'Recomputation')}
@@ -251,15 +251,15 @@ local
 		       pack({New Tk.button tkInit(parent: Right
 						  text:   'Normal'
 						  action: Enter #
-						          (none # 5 # True))}
+						          (none # 5 # true))}
 			    {New Tk.button tkInit(parent: Right
 						  text:   'Large'
 						  action: Enter #
-						          (5 # 25 # True))}
+						          (5 # 25 # true))}
 			    {New Tk.button tkInit(parent: Right
 						  text:   'Huge'
 						  action: Enter #
-						          (25 # full # True))}
+						          (25 # full # true))}
 			    fill:x)
 
 		       pack(Left side:left anchor:n)
@@ -306,7 +306,7 @@ in
       end
 
       meth postscript
-	 case {self.fileSelector select(file:$)} of !False then skip
+	 case {self.fileSelector select(file:$)} of false then skip
 	 elseof Filename then O=self.options.postscript in
 	    {self.canvas postscript(colormode: {Dictionary.get O color}
 				    rotate:    {Dictionary.get O orientation}

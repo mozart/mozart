@@ -26,7 +26,7 @@ local
    %% Unhide all kids
    %%
    fun {IsUnhidableKids Ks}
-      case Ks of nil then False
+      case Ks of nil then false
       [] K|Kr then {K isUnhidable($)} orelse {IsUnhidableKids Kr}
       end
    end
@@ -41,13 +41,13 @@ local
    %% Hide all failed kids
    %%
    fun {IsFailedHidableKids Ks}
-      case Ks of nil then False
+      case Ks of nil then false
       [] K|Kr then {K isFailedHidable($)} orelse {IsFailedHidableKids Kr}
       end
    end
 
    fun {HideFailedKids Ks}
-      case Ks of nil then False
+      case Ks of nil then false
       [] K|Kr then IsDirtyKid={K HideFailed($)} in
 	 {HideFailedKids Kr} orelse IsDirtyKid
       end
@@ -57,7 +57,7 @@ local
    %% Hide all but the failed kids
    %%
    fun {IsButFailedUnhidableKids Ks}
-      case Ks of nil then False
+      case Ks of nil then false
       [] K|Kr then
 	 {K isButFailedUnhidable($)} orelse {IsButFailedUnhidableKids Kr}
       end
@@ -92,14 +92,14 @@ local
 
    class Inner
       attr
-	 isHidden: False
+	 isHidden: false
 
       %% Mark the path from a node to the root as dirty, such that the layout
       %% can be updated lateron. If an already dirty node is found, the
       %% invariant holds that the entire path to the root node is dirty
       meth dirtyUp
 	 case @isDirty then skip else
-	    isDirty <- True
+	    isDirty <- true
 	    {self.mom dirtyUp}
 	 end
       end
@@ -108,24 +108,24 @@ local
       %% Toggle unhidden/unhidden nodes
       %%
       meth isHidable($)
-	 True
+	 true
       end
       
       meth hide
 	 TkNodes.choose,deleteTree
 	 Inner,dirtyUp
-	 isDrawn  <- False
+	 isDrawn  <- false
 	 case @isHidden then
-	    isHidden <- False
+	    isHidden <- false
 	 else
-	    isHidden <- True
+	    isHidden <- true
 	    {HideKids @kids}
 	 end
       end
 
       meth !Hide
-	 isDirty  <- True
-	 isDrawn  <- False
+	 isDirty  <- true
+	 isDrawn  <- false
 	 shape    <- nil
 	 %% The invariant guarantees that we do not have to take care
 	 %% of still hidden subtrees
@@ -145,10 +145,10 @@ local
       end
 
       meth !UnhideTree
-	 isDirty  <- True
+	 isDirty  <- true
 	 case @isHidden then
-	    isHidden <- False
-	    isDrawn  <- False
+	    isHidden <- false
+	    isDrawn  <- false
 	    TkNodes.choose,deleteTree
 	 else skip
 	 end
@@ -159,10 +159,10 @@ local
       %% Hide failed subtree
       %%
       meth isFailedHidable($)
-	 case @isHidden then False
+	 case @isHidden then false
 	 elsecase @choices>0 orelse @isSolBelow then
 	    {IsFailedHidableKids @kids}
-	 else True
+	 else true
 	 end
       end
 
@@ -173,18 +173,18 @@ local
       end
 
       meth !HideFailed($)
-	 case @isHidden then False
+	 case @isHidden then false
 	 elsecase @choices>0 orelse @isSolBelow then
-	    case {HideFailedKids @kids} then isDirty <- True  True
-	    else False
+	    case {HideFailedKids @kids} then isDirty <- true  true
+	    else false
 	    end
 	 else
-	    isHidden <- True
-	    isDrawn  <- False
-	    isDirty  <- True
+	    isHidden <- true
+	    isDrawn  <- false
+	    isDirty  <- true
 	    TkNodes.choose,deleteTree
 	    {HideKids @kids}
-	    True
+	    true
 	 end
       end
 
@@ -208,21 +208,21 @@ local
 	    %% Since we know (from the testing routines above) that there is
 	    %% indeed something to unhide we do not have to analyse this node
 	    %% further!
-	    isDrawn <- False
+	    isDrawn <- false
 	    TkNodes.choose,deleteTree
 	    Inner,UnhideButFailedBelowHidden
 	 else
-	    isDirty <- True
+	    isDirty <- true
 	    {UnhideButFailedKids @kids}
 	 end
       end
 
       meth !UnhideButFailedBelowHidden
-	 isDirty <- True
+	 isDirty <- true
 	 case @choices>0 orelse @isSolBelow then
-	    isHidden <- False
+	    isHidden <- false
 	    {UnhideButFailedBelowHiddenKids @kids}
-	 else isHidden <- True
+	 else isHidden <- true
 	 end
       end
 
@@ -233,7 +233,7 @@ local
 	 case @isDirty then
 	    case @isHidden then skip else
 	       case @isDrawn then {HideUndrawn @kids}
-	       else isHidden <- True Inner,Hide
+	       else isHidden <- true Inner,Hide
 	       end
 	    end
 	 else skip
@@ -251,23 +251,23 @@ local
    end
 
    class Leaf
-      meth isHidable($)            False end
+      meth isHidable($)            false end
       meth hide                    skip  end
       meth !Hide                   skip  end
 
-      meth isUnhidable($)          False end
+      meth isUnhidable($)          false end
       meth unhide                  skip  end
       meth !UnhideTree             skip  end
 
-      meth isFailedHidable($)      False end
+      meth isFailedHidable($)      false end
       meth hideFailed              skip  end
-      meth !HideFailed($)          False end
+      meth !HideFailed($)          false end
 
-      meth isButFailedUnhidable($)     False end
+      meth isButFailedUnhidable($)     false end
       meth !UnhideButFailed            skip  end
       meth !UnhideButFailedBelowHidden skip  end
       
-      meth isHidden($)             False end %% JUNK JUNK
+      meth isHidden($)             false end %% JUNK JUNK
       meth getOverHidden(Cursor $) {self.mom getOverHidden(Cursor $)} end
 
       meth hideUndrawn             skip  end

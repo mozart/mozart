@@ -24,10 +24,10 @@ local
    end
    
    class NumberNode
-      attr number: False
+      attr number: false
 
       meth getNumber(Scale Font TakeNumber ?N)
-	 case @number==False then
+	 case @number==false then
 	    Canvas  = self.canvas
 	    Numbers = Canvas.numbers
 	    Actions = Canvas.actions
@@ -36,7 +36,7 @@ local
 	    N = TakeNumber
 	    number <- TakeNumber
 	    self,getCenterAbove(X Y Above)
-	    case Font==False then skip else
+	    case Font==false then skip else
 	       {Canvas tk(crea text
 			  Scale * {IntToFloat X}
 			  Scale * {IntToFloat case self,isHidden($) then
@@ -72,14 +72,14 @@ local
       end
 
       meth clearNumber
-	 number <- False
+	 number <- false
       end
    end
 
    
    class TkNode
       attr
-	 isDrawn: False
+	 isDrawn: false
       feat
 	 suffix
 
@@ -210,8 +210,8 @@ local
 				      end
 			     width:   NodeBorderWidth
 			     outline: LineColor)}
-		  case @number of !False then skip elseof N then
-		     case Font==False then skip else
+		  case @number of false then skip elseof N then
+		     case Font==false then skip else
 			{Canvas tk(crea text
 				   ScaledMyX
 				   ScaledMyY +
@@ -235,8 +235,8 @@ local
 				  width: NodeBorderWidth)
 			     end
 			     tags: q(Node Tree Actions))}
-		  case @number of !False then skip elseof N then
-		     case Font==False then skip else
+		  case @number of false then skip elseof N then
+		     case Font==false then skip else
 			{Canvas tk(crea text ScaledMyX ScaledMyY
 				   font: Font
 				   text: N
@@ -247,11 +247,11 @@ local
 				      Scale Font)
 	       end
 	       {Canvas tk(addtag MomTree withtag Tree)}
-	       isDrawn <- True
-	       isDirty <- False
+	       isDrawn <- true
+	       isDirty <- false
 	    else
 	       case @kids\=nil then
-		  isHidden <- True
+		  isHidden <- true
 		  ChooseNode,purge
 	       end
 	       {Break broken(self)}
@@ -329,7 +329,7 @@ local
 		       width:   NodeBorderWidth
 		       outline: LineColor
 		       tags:    q(Node Tree MomTree))}
-	    isDrawn <- True
+	    isDrawn <- true
 	 end
 	 
 	 meth moveNode(MomX MyX MyByX MyY Scale)
@@ -386,7 +386,7 @@ local
 		       width:   NodeBorderWidth
 		       outline: LineColor
 		       tags:    q(Node Tree MomTree))}
-	    isDrawn <- True
+	    isDrawn <- true
 	 end
 	 
 	 meth moveNode(MomX MyX MyByX MyY Scale)
@@ -439,8 +439,8 @@ local
 			  width:   Width
 			  outline: LineColor
 			  tags:    q(Node Tree MomTree Actions))}
-	       case @number of !False then skip elseof N then
-		  case Font==False then skip else
+	       case @number of false then skip elseof N then
+		  case Font==false then skip else
 		     {Canvas tk(crea text ScaledMyX ScaledMyY
 				font: Font
 				text: N
@@ -448,7 +448,7 @@ local
 					Canvas.numbers))}
 		  end
 	       end
-	       isDrawn <- True
+	       isDrawn <- true
 	    end
 
 	    meth moveNode(MomX MyX MyByX MyY Scale)

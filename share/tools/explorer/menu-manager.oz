@@ -287,15 +287,15 @@ in
 			    ]
 		      feature: hide)]
 	  nil}
-	 {Menu.explorer.menu tk(conf tearoff:False)}
-	 {Menu.options.menu  tk(conf tearoff:False)}
-	 {Menu.move.menu     tk(conf tearoff:False)}
-	 {Menu.search.menu   tk(conf tearoff:False)}
-	 {Menu.nodes.menu    tk(conf tearoff:False)}
-	 {Menu.nodes.statAction.menu tk(conf tearoff:False)}
-	 {Menu.nodes.infoAction.menu tk(conf tearoff:False)}
-	 {Menu.nodes.cmpAction.menu  tk(conf tearoff:False)}
-	 {Menu.hide.menu     tk(conf tearoff:False)}
+	 {Menu.explorer.menu tk(conf tearoff:false)}
+	 {Menu.options.menu  tk(conf tearoff:false)}
+	 {Menu.move.menu     tk(conf tearoff:false)}
+	 {Menu.search.menu   tk(conf tearoff:false)}
+	 {Menu.nodes.menu    tk(conf tearoff:false)}
+	 {Menu.nodes.statAction.menu tk(conf tearoff:false)}
+	 {Menu.nodes.infoAction.menu tk(conf tearoff:false)}
+	 {Menu.nodes.cmpAction.menu  tk(conf tearoff:false)}
+	 {Menu.hide.menu     tk(conf tearoff:false)}
 	 self.infoAction = {New Actions init(menu:Menu.nodes.infoAction.menu)}
 	 self.cmpAction  = {New Actions init(menu:Menu.nodes.cmpAction.menu)}
 	 self.statAction = {New Actions init(menu:Menu.nodes.statAction.menu)}

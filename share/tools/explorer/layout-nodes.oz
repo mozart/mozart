@@ -248,7 +248,7 @@ local
       in
 	 case @isDirty then
 	    case @isDrawn then
-	       isDirty <- False
+	       isDirty <- false
 	       offset  <- NewOffset
 	       self,moveNode(MomX MyX MyByX MyY Scale)
 	       case @isHidden then skip else

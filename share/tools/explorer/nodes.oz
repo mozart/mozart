@@ -102,13 +102,13 @@ local
 	 meth init(Mom Depth S AllocateCopy)
 	    self.mom = Mom
 	    copy <- case
-		       case self.order==False then AllocateCopy
+		       case self.order==false then AllocateCopy
 		       else persistent
 		       end
 		    of transient  then transient(S)
 		    [] flushable  then flushable(S)
 		    [] persistent then persistent(S)
-		    else False
+		    else false
 		    end
 	    TkNodes.entailed,init
 	    {self.status addSolution(Depth)}
@@ -119,13 +119,13 @@ local
 	 meth init(Mom Depth S AllocateCopy)
 	    self.mom = Mom
 	    copy <- case
-		       case self.order==False then AllocateCopy
+		       case self.order==false then AllocateCopy
 		       else persistent
 		       end		       
 		    of transient  then transient(S)
 		    [] flushable  then flushable(S)
 		    [] persistent then persistent(S)
-		    else False
+		    else false
 		    end
 	    TkNodes.suspended,init
 	    {self.status addSolution(Depth)}
@@ -146,14 +146,14 @@ local
 	 TkNodes.choose
       feat
 	 kind: choose
-	 mom               % The mom of this node (False if topmost node)
+	 mom               % The mom of this node (false if topmost node)
       attr
-	 isDirty:    True  % No layout computed
+	 isDirty:    true  % No layout computed
 	 kids:       nil   % The list of nodes below
 	 toDo:       nil   % What is to be done (nil if nothing)
-	 isSolBelow: False % Is there a solution below
+	 isSolBelow: false % Is there a solution below
 	 choices:    1     % unfinished choices below?
-	 copy:       False
+	 copy:       false
       
       meth init(Mom Depth PrevSol AllocateCopy S MaxAlt)
 	 self.mom  = Mom
@@ -161,7 +161,7 @@ local
 		 of transient  then transient({Space.clone S})
 		 [] flushable  then flushable({Space.clone S})
 		 [] persistent then persistent({Space.clone S})
-		 else False
+		 else false
 		 end
 	 toDo <- PrevSol # S # 1 # MaxAlt
 	 TkNodes.choose,init
@@ -209,7 +209,7 @@ in
       [] succeeded(SA) then
 	 {New Classes.SA init(Sentinel 1 S persistent)}
       [] alternatives(MaxAlt) then
-	 {New Classes.choose  init(Sentinel 1 False persistent S MaxAlt)}
+	 {New Classes.choose  init(Sentinel 1 false persistent S MaxAlt)}
       [] blocked(Ctrl) then
 	 {New Classes.blocked init(Sentinel 1 Ctrl)}
       end
