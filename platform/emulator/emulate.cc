@@ -840,7 +840,7 @@ int engine(Bool init)
   int auxInt;
   char *auxString;
 
-#ifdef THREADEDx
+#ifdef THREADED
   if (init) {
 #include "instrtab.hh"
     CodeArea::init(instrTable);
