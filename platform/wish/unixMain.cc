@@ -59,6 +59,12 @@
 #endif
 #endif
 
+if TK_MAJOR_VERSION >= 8 && TK_MINOR_VERSION >= 4
+#define CONST_CAST(X,Y) const_cast<X>(Y)
+#else
+#define CONST_CAST(X,Y) (Y)
+#endif
+
 /*
  * Global variables used by the main program:
  */
@@ -141,7 +147,7 @@ main(int argc, char **argv)
      * Parse command-line arguments.
      */
 
-    if (Tk_ParseArgv(interp, (Tk_Window) NULL, &argc, argv, argTable, 0)
+    if (Tk_ParseArgv(interp, (Tk_Window) NULL, &argc, CONST_CAST(const char**,argv), argTable, 0)
 	    != TCL_OK) {
 	fprintf(stdout, "w %s\n.\n", interp->result);
 	fflush(stdout); /* added mm */
@@ -285,7 +291,7 @@ main(int argc, char **argv)
     exit(1);
 
 error:
-    msg = Tcl_GetVar(interp, "errorInfo", TCL_GLOBAL_ONLY);
+    msg = Tcl_GetVar(interp, CONST_CAST(const char*,"errorInfo"), TCL_GLOBAL_ONLY);
     if (msg == NULL) {
 	msg = interp->result;
     }
@@ -407,7 +413,7 @@ static void
 Prompt(Tcl_Interp *interp, int partial)
 {
     char *promptCmd = Tcl_GetVar(interp,
-	(char *) (partial ? "tcl_prompt2" : "tcl_prompt1"), TCL_GLOBAL_ONLY);
+	CONST_CAST(const char *,partial ? "tcl_prompt2" : "tcl_prompt1"), TCL_GLOBAL_ONLY);
     if (promptCmd == NULL) {
 	defaultPrompt:
 	if (!partial) {
