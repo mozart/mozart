@@ -145,9 +145,12 @@ define
 	 end
       end
    in
-      fun {FormatTOC TOC}
-	 case TOC of Entry|_ then N#_#_#_ = Entry in
-	    {FormatTOCLevel TOC N [nil]}
+      fun {FormatTOC TOC Depth}
+	 case TOC of Entry|_ then N#_#_#_ = Entry NewTOC in
+	    NewTOC = case Depth of ~1 then TOC
+		     else {Filter TOC fun {$ M#_#_#_} M < N + Depth end}
+		     end
+	    {FormatTOCLevel NewTOC N [nil]}
 	 [] nil then SEQ(nil)
 	 end
       end
@@ -272,7 +275,7 @@ define
 	 Abstract: unit
 	 StyleSheet: unit
 	 % main matter:
-	 TOC: unit TOCMode: unit
+	 TOC: unit TOCMode: unit WholeTOC: unit
 	 Part: unit Chapter: unit Section: unit SubSection: unit
 	 Appendix: unit
 	 Labels: unit ToGenerate: unit
@@ -515,9 +518,25 @@ define
 	       BibNode <- _
 	       MyIndexer <- {New Indexer.'class' init()}
 	       IdxNode <- _
+	       TOC <- nil
+	       TOCMode <- false
 	       HTML = [OzDocToHTML, Process(M.1=front(...) $)
 		       if {HasFeature M 3} then
 			  OzDocToHTML, Process(M.3=back(...) $)
+		       else EMPTY
+		       end
+		       if @Split
+			  andthen {Dictionary.member @Meta 'html.split.toc'}
+		       then Title Label X HTML1 HTML in
+			  Title = PCDATA('Table of Contents')
+			  OzDocToHTML, PrepareTOCNode(?X ?HTML1)
+			  ToGenerate <- Label|@ToGenerate
+			  TOC <- {Append @TOC [2#Label#@CurrentNode#Title]}
+			  Threading <- sect(@CurrentNode Label)|@Threading
+			  WholeTOC <- _
+			  HTML = SEQ([HTML1
+				      h1(a(name: Label Title)) @WholeTOC])
+			  OzDocToHTML, FinishNode(Title X HTML $)
 		       else EMPTY
 		       end
 		       TopTOC
@@ -560,8 +579,11 @@ define
 			   end
 	       OzDocToHTML, MakeNode(@TopTitle SEQ(HTML))
 	       TopTOC = if @SomeSplit then EMPTY
-			else SEQ([hr() {FormatTOC @TOC} hr()])
+			else SEQ([hr() {FormatTOC @TOC ~1} hr()])
 			end
+	       if {IsFree @WholeTOC} then
+		  @WholeTOC = SEQ([hr() {FormatTOC @TOC ~1} hr()])
+	       end
 	       {@MyLaTeXToGIF
 		process({Dictionary.condGet @Meta 'latex.package' nil}
 			@Reporter)}
@@ -664,8 +686,6 @@ define
 	    %-----------------------------------------------------------
 	    [] 'body' then
 	       BodyCommon <- @Common
-	       TOC <- nil
-	       TOCMode <- false
 	       Part <- 0
 	       Chapter <- 0
 	       Appendix <- false
@@ -1464,6 +1484,15 @@ define
 	 [] nil then unit
 	 end
       end
+      meth PrepareTOCNode(?X ?HTML)
+	 SomeSplit <- true
+	 X = @CurrentNode#@TOC#@TOCMode
+	 Threading <- down(@CurrentNode)|@Threading
+	 CurrentNode <- 'toc.html'
+	 TOC <- nil
+	 HTML = EMPTY
+	 TOCMode <- false
+      end
       meth PrepareBibNode(?X ?HTML)
 	 if @Split andthen {Dictionary.member @Meta 'html.split.bib'} then
 	    SomeSplit <- true
@@ -1498,12 +1527,15 @@ define
       end
       meth FinishNode(Title X HTML $)
 	 case X of unit then HTML
-	 [] C#T#M then Res in
+	 [] C#T#M then Depth Res in
 	    OzDocToHTML, MakeNode(Title HTML)
 	    Threading <- up|@Threading
 	    CurrentNode <- C
-	    Res = if M then {FormatTOC @TOC}
-		  else SEQ([hr() {FormatTOC @TOC}])
+	    Depth = if C == 'index.html' andthen {IsFree @WholeTOC} then 1
+		    else ~1
+		    end
+	    Res = if M then {FormatTOC @TOC Depth}
+		  else SEQ([hr() {FormatTOC @TOC Depth}])
 		  end
 	    TOC <- {Append T @TOC}
 	    TOCMode <- true
