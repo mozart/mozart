@@ -283,6 +283,9 @@ class Script;
 
 class Trail;
 
+class Promise;
+
+
 // source level debugger
 enum OzDebugDoit {DBG_STEP, DBG_NOSTEP, DBG_EXIT};
 class OzDebug;

@@ -142,7 +142,7 @@ void marshalPredId(PrTabEntry *p,MsgBuffer *bs)
   marshalRecordArity(p->getMethodArity(),bs);
   marshalTerm(p->getFileName(),bs);
   marshalNumber(p->getLine(),bs);
-  marshalNumber(p->copyOnce,bs);
+  marshalNumber(p->getFlags(),bs);
   PD((MARSHAL,"pred id end"));
 }
 
@@ -473,9 +473,9 @@ ProgramCounter unmarshalPredId(ProgramCounter PC,ProgramCounter lastPC,
   SRecordArity arity = unmarshalRecordArity(bs);
   OZ_Term file       = unmarshalTerm(bs);
   int line           = unmarshalNumber(bs);
-  int copyOnce       = bs->unmarshallingOld ? NO : unmarshalNumber(bs);
+  int flags          = bs->unmarshallingOld ? NO : unmarshalNumber(bs);
 
-  PrTabEntry *pred = PC ? new PrTabEntry(name,arity,file,line,copyOnce) : 0;
+  PrTabEntry *pred = PC ? new PrTabEntry(name,arity,file,line,flags) : 0;
   return writeAddress(pred,PC);
 }
 

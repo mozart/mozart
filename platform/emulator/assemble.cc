@@ -253,6 +253,14 @@ OZ_BI_define(BIstorePredicateRef,2,0)
 } OZ_BI_end
 
 
+OZ_BI_define(BIpredIdFlags,0,2)
+{
+  OZ_out(0) = oz_int(PR_COPYONCE);
+  OZ_out(1) = oz_int(PR_NATIVE);
+  return PROCEED;
+} OZ_BI_end
+
+
 OZ_BI_define(BIstorePredId,6,0)
 {
   NEW_declareCodeBlock(0,code);
@@ -260,8 +268,8 @@ OZ_BI_define(BIstorePredId,6,0)
   OZ_declareNonvarIN(2,arity);
   OZ_declareNonvarIN(3,file); file = oz_deref(file);
   OZ_declareIntIN(4,line);
-  OZ_declareNonvarIN(5,copyOnce);
-  PrTabEntry *pte = new PrTabEntry(name,getArity(arity),file,line,OZ_isTrue(copyOnce));
+  OZ_declareIntIN(5,flags);
+  PrTabEntry *pte = new PrTabEntry(name,getArity(arity),file,line,flags);
   code->writeAddress(pte);
   return PROCEED;
 } OZ_BI_end

@@ -1649,7 +1649,7 @@ LBLdispatcher:
 
       predd->numClosures++;
 
-      if (predd->numClosures > 1 && predd->copyOnce) {
+      if (predd->numClosures > 1 && predd->isCopyOnce()) {
         (void) oz_raise(E_ERROR,E_SYSTEM,"onceOnlyFunctor",0);
         RAISE_THREAD;
       }
@@ -1658,7 +1658,7 @@ LBLdispatcher:
         TaggedRef list = oz_deref(Xreg(reg));
         ProgramCounter preddPC = predd->PC;
 #ifndef DISABLE_DEFINITIONCOPY
-        Bool copyOnce = predd->copyOnce;
+        Bool copyOnce = predd->isCopyOnce();
         predd = new PrTabEntry(predd->getName(), predd->getMethodArity(),
                                predd->getFileName(), predd->getLine(), NO);
         predd->PC = copyCode(preddPC,list,copyOnce==NO);

@@ -38,6 +38,18 @@
 #include "mem.hh"
 #include "thread.hh"
 
+class Promise {
+  TaggedRef future;
+
+public:
+  USEHEAPMEMORY;
+
+  Promise(TaggedRef f): future(f) {}
+
+  TaggedRef getFuture() { return future; }
+  Promise *gcPromise();
+};
+
 class Future: public GenCVariable {
   TaggedRef requested;
 
