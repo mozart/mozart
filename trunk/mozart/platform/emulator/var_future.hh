@@ -49,7 +49,7 @@ public:
   }
   void gCollectRecurse(void);
   void sCloneRecurse(void);
-  OZ_Return addSusp(TaggedRef*, Suspendable *, int);
+  OZ_Return addSusp(TaggedRef*, Suspendable *);
   void dispose(void) {
     disposeS();
     DebugCode(function=0);

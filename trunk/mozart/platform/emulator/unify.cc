@@ -68,7 +68,7 @@ void oz_bindUVar(TaggedRef *varPtr, TaggedRef term)
   Assert(isUVar(*varPtr));
   if (!oz_isLocalUVar(varPtr)) {
     Assert(am.inEqEq() || checkHome(varPtr));
-    am.trail.pushBind(varPtr);
+    trail.pushBind(varPtr);
   }
   doBind(varPtr,term);
 }
@@ -87,7 +87,7 @@ void oz_bindGlobalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
   Assert(!oz_isLocalVar(ov));
   Assert(am.inEqEq() || checkHome(varPtr));
   oz_checkSuspensionList(ov, pc_std_unif);
-  am.trail.pushBind(varPtr);
+  trail.pushBind(varPtr);
   doBind(varPtr,term);
 }
 

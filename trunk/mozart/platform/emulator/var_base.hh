@@ -48,13 +48,12 @@
 
 #endif
 
-#include "am.hh"
-
 #include "tagged.hh"
 #include "susplist.hh"
 #include "board.hh"
 #include "value.hh"
 #include "pointer-marks.hh"
+#include "am.hh"
 
 //#define DEBUG_TELLCONSTRAINTS
 
@@ -244,9 +243,9 @@ public:
     return r;
   }
 
-  void addSuspSVar(Suspendable * susp, int markExternal = TRUE) {
+  void addSuspSVar(Suspendable * susp) {
     suspList = new SuspList(susp, suspList);
-    if (markExternal && !oz_onToplevel())
+    if (!oz_onToplevel())
       getBoardInternal()->checkExtSuspension(susp);
   }
 
@@ -293,7 +292,7 @@ Bool oz_var_valid(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_unify(OzVariable*,TaggedRef*,TaggedRef*);
 OZ_Return oz_var_bind(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_forceBind(OzVariable*,TaggedRef*,TaggedRef);
-OZ_Return oz_var_addSusp(TaggedRef*, Suspendable *, int = TRUE);
+OZ_Return oz_var_addSusp(TaggedRef*, Suspendable *);
 void oz_var_dispose(OzVariable*);
 void oz_var_printStream(ostream&, const char*, OzVariable*, int = 10);
 int oz_var_getSuspListLength(OzVariable*);

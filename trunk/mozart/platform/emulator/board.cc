@@ -39,6 +39,7 @@
 #include "var_base.hh"
 #include "var_future.hh"
 #include "os.hh"
+#include "trail.hh"
 
 #ifdef OUTLINE
 #include "board.icc"
@@ -373,7 +374,7 @@ void Board::checkStability(void) {
   }
     
   if (isStable()) {
-    Assert(am.trail.isEmptyChunk());
+    Assert(trail.isEmptyChunk());
 
     // check for nonmonotonic propagators
     scheduleNonMono();
@@ -393,7 +394,7 @@ void Board::checkStability(void) {
 	goto exit;
       } else {
 	// don't decrement counter of parent board!
-	am.trail.popMark();
+	trail.popMark();
 	am.setCurrent(pb);
       
 	bindStatus(genAlt(n));
@@ -404,7 +405,7 @@ void Board::checkStability(void) {
     }
     
     // succeeded
-    am.trail.popMark();
+    trail.popMark();
     am.setCurrent(pb);
     
     bindStatus(genSucceeded(getSuspCount() == 0));
@@ -415,7 +416,7 @@ void Board::checkStability(void) {
   {
     int t = getThreads();
 
-    setScript(am.trail.unwind(this));
+    setScript(trail.unwind(this));
     am.setCurrent(pb);
   
     if (t == 0) {
@@ -444,7 +445,7 @@ void Board::fail(void) {
       
   setFailed();
       
-  am.trail.unwindFailed();
+  trail.unwindFailed();
       
   am.setCurrent(pb);
       
@@ -535,7 +536,7 @@ Bool Board::installDown(Board * frm) {
     return NO;
 
   am.setCurrent(this);
-  am.trail.pushMark();
+  trail.pushMark();
 
   OZ_Return ret = installScript(NO);
 
@@ -594,7 +595,7 @@ Bool Board::install(void) {
     while (s != ancestor) {
       Assert(s->hasMarkOne());
       s->unsetMarkOne();
-      s->setScript(am.trail.unwind(s));
+      s->setScript(trail.unwind(s));
       s=s->getParent();
       am.setCurrent(s);
     }

@@ -127,12 +127,11 @@ OZ_Return Future::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   return bind(vPtr,makeTaggedRef(tPtr));
 }
 
-OZ_Return Future::addSusp(TaggedRef *tPtr, Suspendable * susp, int unstable)
-{
+OZ_Return Future::addSusp(TaggedRef *tPtr, Suspendable * susp) {
   if (kick(tPtr)) {
     return PROCEED;
   }
-  addSuspSVar(susp, unstable);
+  addSuspSVar(susp);
   return SUSPEND;
 }
 
@@ -199,7 +198,7 @@ OZ_BI_define(BIwaitQuiet,1,0)
   oz_declareDerefIN(0,fut);
   if (oz_isVariable(fut)) {
     if (oz_isFuture(fut)) {
-      oz_getVar(futPtr)->addSuspSVar(oz_currentThread(),TRUE);
+      oz_getVar(futPtr)->addSuspSVar(oz_currentThread());
       return SUSPEND;
     }
     oz_suspendOnPtr(futPtr);

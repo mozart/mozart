@@ -37,6 +37,7 @@
 #include "am.hh"
 #include "var_base.hh"
 #include "board.hh"
+#include "trail.hh"
 
 /* -----------------------------------------------------------------------
  * Locality test for variables
@@ -141,7 +142,7 @@ void doBind(TaggedRef *p, TaggedRef t)
   doBind(vp,t)
 
 #define DoBindAndTrail(vp,t) {			\
-  am.trail.pushBind(vp);			\
+  trail.pushBind(vp);			        \
   DoBind(vp,t);					\
 }
 
