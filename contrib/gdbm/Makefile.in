@@ -5,6 +5,7 @@ SRCDIR		= @srcdir@
 VPATH		= @srcdir@
 PREFIX		= @prefix@
 PLATFORM	= @PLATFORM@
+PLATFORMDIR     = $(PREFIX)/platform/$(PLATFORM)
 LIB_DIR		= $(PREFIX)/contrib
 HOMEURL         = @HOMEURL@
 NEWCACHEDIR	= $(PREFIX)/cache/x-oz/contrib
@@ -19,6 +20,8 @@ CXXFLAGS	= @CXXFLAGS@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
 
+WINDLLDIR	= @WINDLLDIR@
+
 INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
 INSTALL_LIB	= $(INSTALL) -m 444
@@ -31,7 +34,10 @@ NEW_TARGETS	= $(TARGETS:%=$(NEWCACHEDIR)/%)
 .PHONY: all install clean veryclean distclean bootstrap depend
 
 all:		$(TARGETS)
-install:	$(NEWCACHEDIR) $(NEW_TARGETS)
+install:	$(NEWCACHEDIR) $(NEW_TARGETS) @INSTALLWINDLLS@
+
+installwindlls: $(PLATFORMDIR)
+	$(INSTALL) $(WINDLLDIR)/gdbm.dll $(PLATFORMDIR)
 
 $(LIB_DIR) $(NEWCACHEDIR):
 	$(INSTALL_DIR) $@

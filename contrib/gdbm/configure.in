@@ -125,6 +125,30 @@ dnl         echo 'if gdbm is not installed on your system you can obtain'
 dnl         echo 'it from http://www.gnu.org/']]]
 dnl         AC_MSG_ERROR([[[[[gdbm library not found]]]]])))))
 
+dnl *****************************************************************
+dnl platform
+dnl this is needed for gdbm.dll 
+dnl *****************************************************************
+
+OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
+
+: ${platform=`$PLATFORMSCRIPT`}
+AC_SUBST(platform)
+
+case "$platform" in
+   win32-i486)
+	INSTALLWINDLLS=installwindlls
+	: ${WINDLLDIR=$windlldir}
+   ;;
+    
+   *)
+	INSTALLWINDLLS=""
+   ;;    
+esac
+
+AC_SUBST(WINDLLDIR)
+AC_SUBST(INSTALLWINDLLS)
+
 AC_OUTPUT(Makefile)
 
 errprint(ifdef([OZ_INIT],
