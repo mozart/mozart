@@ -205,7 +205,7 @@ static Board* toCopyBoard;
  * copy from from-space to to-space
  ****************************************************************************/
 inline
-void fastmemcpy(int *to, int *frm, int sz)
+void fastmemcpy(int32 *to, int32 *frm, int sz)
 {
 #ifdef VERBOSE
   fprintf(verbOut,"(gc) \tcopy %d bytes from 0x%p to 0x%p\n",sz,frm,to);
@@ -238,7 +238,7 @@ void *gcRealloc(void *ptr, size_t sz)
   void *ret = heapMalloc(sz);
   DebugCheck(sz%sizeof(int) != 0,
              error("gcRealloc: can only handle word sized blocks"););
-  fastmemcpy((int*)ret,(int*)ptr,sz);
+  fastmemcpy((int32*)ret,(int32*)ptr,sz);
   return ret;
 }
 
