@@ -57,14 +57,14 @@ OZ_Return IsInPropagator::propagate(void)
   OZ_FSetVar v(_v);
 
   if (v->isIn(_i)) {
-    if (OZ_unify(_b, OZ_true()) == OZ_FAILED) 
+    if (OZ_unify(_b, OZ_true()) == OZ_FAILED) // mm_u
       goto failure;
     v.leave();
     OZ_DEBUGPRINTTHIS("entailed: ");
     return OZ_ENTAILED;
   }
   if (v->isNotIn(_i)) {
-    if (OZ_unify(_b, OZ_false())  == OZ_FAILED) 
+    if (OZ_unify(_b, OZ_false())  == OZ_FAILED) // mm_u
       goto failure;
     v.leave();
     OZ_DEBUGPRINTTHIS("entailed: ");
