@@ -38,9 +38,13 @@
  * appropriate handbook chapter: system/system.raw.
  */
 
+#ifdef OLD_COMPILER
+
 #define COMPILER_TIMEOUT	180 /* seconds */
 
 #define IO_BUF_SIZE		10000
+
+#endif
 
 #define PRINT_DEPTH		2
 #define PRINT_WIDTH		10
@@ -54,6 +58,29 @@
 #define TIME_SLICE		50  /* ms */
 #define CLOCK_TICK	        TIME_SLICE*(1000/5)	/* usec */
 
+#define NAMETRUE "true"
+#define NAMEFALSE "false"
+#define NAMEGROUPVOID "NameGroupVoid"
+#define TRUEFALSEID 0
+
+
+/* how to prefix errors/warnings, etc. for emacs */
+
+#define MSG_ERROR 17
+#define MSG_WARN 18
+#define MSG_STATUS 19
+
+/* how to prefix atoms/names */
+#define ATOM_PREFIX 0
+#define NAME_PREFIX 1
+#define INTEGER_PREFIX 2
+
+/* how to prefix arities for tuples and records  */
+#define TUPLEWIDTH_PREFIX 0
+#define RECORDARITY_PREFIX 1
+
+/* how to mark EOF for scanner */
+#define OZEOF 4
 
 #define HI_PRIORITY             2
 #define MID_PRIORITY            1

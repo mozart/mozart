@@ -192,14 +192,40 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
   Case(UNIFYGG) ONREG2(Unify,G,G);
   {
   Unify: asmLbl(UNIFY);
-      TaggedRef A = RegAccess(HelpReg1,getRegArg(PC+1));
-      TaggedRef B = RegAccess(HelpReg2,getRegArg(PC+2));
-      if ( !fastUnify(A,B,NOFLATGUARD) ) { // mm_u
+      const TaggedRef A = RegAccess(HelpReg1,getRegArg(PC+1));
+      const TaggedRef B = RegAccess(HelpReg2,getRegArg(PC+2));
+      const int ret = fastUnify(A,B,NOFLATGUARD); // mm_u
+      if (ret == PROCEED) {
+	DISPATCH(3);
+      }
+      if (ret == FAILED) {
 	SHALLOWFAIL;
-	/* NOTE: macro must be in *one* line */
 	HF_EQ(A,B);
       }
-      DISPATCH(3);
+      DebugCheckT(printf("UNIFY: ret=%d\n",ret));
+      if (shallowCP) {
+	if (e->trail.isEmptyChunk()) {
+	  e->trail.popMark();
+	} else {
+	  e->reduceTrailOnFail();
+	}
+	PC=shallowCP;
+	shallowCP=0;
+	e->shallowHeapTop  = NULL;
+      }
+      switch (ret) {
+      case BI_REPLACEBICALL:
+	argsToSave=CodeArea::livenessX(PC,X);
+	goto LBLreplaceBICall;
+      case SUSPEND:
+	argsToSave=CodeArea::livenessX(PC,X);
+	PushContX(PC,Y,G,X,argsToSave);
+	SUSPENDONVARLIST;
+      case RAISE:
+	RAISE_THREAD;
+      default:
+	Assert(0);
+      }
   }
   
   
@@ -308,9 +334,10 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 	// fill w/unb. var.
 	srecord->initArgs();
 	TaggedRef srecordRef=makeTaggedSRecord(srecord);
-	if(tagged2CVar(term)->unifyOutline(termPtr, term, // mm_u
-					   &srecordRef, srecordRef,
-					   NOFLATGUARD)) {
+	// mm_u
+	if (tagged2CVar(term)->unifyOutline(termPtr, term,
+					    &srecordRef, srecordRef,
+					    NOFLATGUARD)) {
 	  sPointer = srecord->getRef();
 	  SetReadMode;
 	  DISPATCH(4);
@@ -404,7 +431,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
         if (isNotCVar(term) ||
 	    isCVar(term) && tagged2CVar(term)->valid(termPtr,atm)) {
 	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
-	  addSusp (termPtr, CTT);
+	  addSuspPtr(termPtr, CTT);
 
 	  /* Bug fix:
 	     declare Y Z
@@ -418,7 +445,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 	    TaggedRef lab = ((GenOFSVariable*)tagged2CVar(term))->getLabel();
 	    DEREF(lab,labPtr,labTag);
 	    if (isAnyVar(labTag)) {
-	      addSusp (labPtr, CTT);
+	      addSuspPtr(labPtr, CTT);
 	    }
 	  }
 	  return T_SUSPEND;
@@ -443,7 +470,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 
         if (isAnyVar(term)) {
 	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
-	  addSusp (termPtr, CTT);
+	  addSuspPtr(termPtr, CTT);
 	  return T_SUSPEND;
 	}
 
@@ -470,7 +497,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
         if (isNotCVar(term) ||
 	    isCVar(term) && tagged2CVar(term)->valid(termPtr,i)) {
 	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
-	  addSusp (termPtr, CTT);
+	  addSuspPtr(termPtr, CTT);
 	  return T_SUSPEND;
 	}
 
@@ -741,7 +768,7 @@ Case(GETVOID)
 		 } else {
 		   // mm_u
 		   if (fastUnify(Reg1(reg),
-				    makeTaggedRef(sPointer++),NOFLATGUARD) ) {
+				 makeTaggedRef(sPointer++),NOFLATGUARD) ) {
 		     DISPATCH(2);
 		   }
 		   SHALLOWFAIL;
