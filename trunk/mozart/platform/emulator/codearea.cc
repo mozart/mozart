@@ -48,13 +48,13 @@ void **CodeArea::globalInstrTable = NULL;
 
 Opcode CodeArea::stringToOp(char *s)
 {
-  for (int i=0; i < (Opcode) ERROR; i++) {
+  for (int i=0; i < (Opcode) OZERROR; i++) {
     if (strcmp(s,opToString[i]) == 0 ) {
       return (Opcode) i;
     }
   }
 
-  return ERROR;
+  return OZERROR;
 }
 
 void CodeArea::showAtomNames()
@@ -149,10 +149,10 @@ AdressOpcode CodeArea::opcodeToAdress(Opcode oc)
 
 Opcode CodeArea::adressToOpcode(AdressOpcode adr) 
 {
-  for(int i = 0; i < (int) ERROR; i++)
+  for(int i = 0; i < (int) OZERROR; i++)
     if (ToInt32(globalInstrTable[i]) == adr)
       return (Opcode)i;
-  return ERROR;
+  return OZERROR;
 }
 
 #else /* THREADED */
@@ -330,11 +330,11 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       isEnd = OK;
     fprintf(ofile, "0x%08x:  ", PC);
     op = adressToOpcode(getOP(PC));
-    if (op <= ERROR) {
+    if (op <= OZERROR) {
       fprintf(ofile, "%03d %s", op,opToString[(int)op]);
     }
     switch (op) {
-    case ERROR:
+    case OZERROR:
     case FAILURE:
     case SUCCEED:
     case WAIT:
