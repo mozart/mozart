@@ -65,8 +65,8 @@ public:
   virtual void processResource(OZ_Term resTerm, Tertiary *tert);
   virtual void processNoGood(OZ_Term resTerm, Bool trail);
   virtual void processUVar(OZ_Term uv, OZ_Term *uvarTerm);
-  virtual OZ_Term processCVar(OZ_Term cv, OZ_Term *cvarTerm);
-  virtual void processRepetition(OZ_Term t, int repNumber);
+  virtual void processCVar(OZ_Term cv, OZ_Term *cvarTerm);
+  virtual void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
   virtual Bool processLTuple(OZ_Term ltupleTerm);
   virtual Bool processSRecord(OZ_Term srecordTerm);
   virtual Bool processFSETValue(OZ_Term fsetvalueTerm);
@@ -116,8 +116,8 @@ public:
   virtual void processResource(OZ_Term resTerm, Tertiary *tert);
   virtual void processNoGood(OZ_Term resTerm, Bool trail);
   virtual void processUVar(OZ_Term uv, OZ_Term *uvarTerm);
-  virtual OZ_Term processCVar(OZ_Term cv, OZ_Term *cvarTerm);
-  virtual void processRepetition(OZ_Term t, int repNumber);
+  virtual void processCVar(OZ_Term cv, OZ_Term *cvarTerm);
+  virtual void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
   virtual Bool processLTuple(OZ_Term ltupleTerm);
   virtual Bool processSRecord(OZ_Term srecordTerm);
   virtual Bool processFSETValue(OZ_Term fsetvalueTerm);

@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef __DPBASEHH
-#define __DPBASEHH
+#ifndef __DPBASE_HH
+#define __DPBASE_HH
 
 #include "base.hh"
 
@@ -43,14 +43,48 @@ class TransController;
 class Watcher;
 class Twin;
 class InformElem;
-
 class BorrowEntry;
 class OwnerEntry;
 class DSite;
 class ChainElem;
 class GName;
+class ManagerVar;
 class ProxyVar;
+class ClassVar;
+class ObjectVar;
+class ExportedProxyVar;
+class GCStubVar;
+class DPMarshaler;
+class MsgTermSnapshot;
+
+//
+typedef int Credit;  
+typedef enum {
+  CT_Primary,
+  CT_Secondary
+} CreditType;
+
+//
+typedef unsigned int FaultInfo;
+
+//
+typedef enum {
+  VAR_PROXY,
+  VAR_MANAGER,
+  VAR_LAZY,
+  VAR_FREE,
+  VAR_FUTURE,    
+  VAR_KINDED,
+} VarKind;
+
+//
+typedef enum {
+  OBJECT,
+  OBJECT_AND_CLASS
+} LazyFlag ;
+typedef enum {
+  LT_OBJECT,
+  LT_CLASS
+} LazyType;
+
 #endif 
-
-
-

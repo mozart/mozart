@@ -322,8 +322,13 @@ void rememberNode(GenTraverser *gt, MarshalerBuffer *bs, OZ_Term node) {
   marshalTermDef(bs, ind);
 }
 inline 
-void rememberNode(GenTraverser *gt, MarshalerBuffer *bs, void *p) {
-  int ind = gt->rememberPtr(p);
+void rememberVarNode(GenTraverser *gt, MarshalerBuffer *bs, OZ_Term *p) {
+  int ind = gt->rememberVarLocation(p);
+  marshalTermDef(bs, ind);
+}
+inline 
+void rememberLocation(GenTraverser *gt, MarshalerBuffer *bs, void *p) {
+  int ind = gt->rememberLocation(p);
   marshalTermDef(bs, ind);
 }
 

@@ -48,12 +48,9 @@ enum OZ_Registered_Extension_Id {
 };
 
 //
-// 'MarshalerBuffer' and 'GenTraverser' come already from the pickling
-// business; 'ByteBuffer' comes from the distribution layer;
 class MarshalerBuffer;
-class ByteBuffer;
-class GenTraverser;
 
+//
 class OZ_Extension {
 private:
   void *space;
