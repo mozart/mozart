@@ -33,6 +33,7 @@ import
    Fontifier('class' noProgLang)
    Thumbnails('class')
    MathToGIF('class')
+   PostScriptToGIF('class')
    HTML(empty: EMPTY
 	seq: SEQ
 	common: COMMON
@@ -264,6 +265,7 @@ define
 	 MathDisplay: unit
 	 MyMathToGIF: unit
 	 % for Picture:
+	 MyPostScriptToGIF: unit	 
 	 PictureDisplay: unit
 	 MyThumbnails: unit
 	 % for Figure:
@@ -296,6 +298,8 @@ define
 			   {New MathToGIF.'class' init(@OutputDirectory)}
 			else unit
 			end
+	 MyPostScriptToGIF <- {New PostScriptToGIF.'class'
+			       init(@OutputDirectory)}
 	 CurrentNode <- 'index.html'
 	 NodeCounter <- 0
 	 ToWrite <- nil
@@ -385,6 +389,28 @@ define
 	    Request = nil
 	    HTML = EMPTY
 	 end
+      end
+      meth PictureExtern(Dir M To R)
+	 Display HTML 
+      in
+	 Display = case @PictureDisplay of unit then M.display
+		   elseof X then X
+		   end
+	 HTML = if {SGML.isOfClass M thumbnail} then ThumbnailName in
+		   {@MyThumbnails get(Dir To ?ThumbnailName)}
+		   a(href: To
+		     img(COMMON: @Common src: ThumbnailName alt: ''))
+		else
+		   img(COMMON: @Common src: To alt: '')
+		end
+	 R = case Display of display then Align in
+		Align = if {SGML.isOfClass M left} then left
+			elseif {SGML.isOfClass M right} then right
+			else center
+			end
+		BLOCK('div'(align: Align HTML))
+	     [] inline then HTML
+	     end	 
       end
       meth Process(M $)
 	 Tag = case {Label M} of sect0 then chapter
@@ -783,25 +809,12 @@ define
 	       {Exception.raiseError
 		ozdoc(sgmlToHTML unsupported M)} unit   %--**
 	    [] 'picture.extern' then
-	       case {CondSelect M type unit} of 'gif' then Display HTML in
-		  Display = case @PictureDisplay of unit then M.display
-			    elseof X then X
-			    end
-		  HTML = if {SGML.isOfClass M thumbnail} then ThumbnailName in
-			    {@MyThumbnails get(M.to ?ThumbnailName)}
-			    a(href: M.to
-			      img(COMMON: @Common src: ThumbnailName alt: ''))
-			 else
-			    img(COMMON: @Common src: M.to alt: '')
-			 end
-		  case Display of display then Align in
-		     Align = if {SGML.isOfClass M left} then left
-			     elseif {SGML.isOfClass M right} then right
-			     else center
-			     end
-		     BLOCK('div'(align: Align HTML))
-		  [] inline then HTML
-		  end
+	       case {CondSelect M type unit}
+	       of 'gif' then
+		  OzDocToHTML, PictureExtern("" M M.to $)
+	       [] 'ps' then To in
+		  {@MyPostScriptToGIF convertPostScript(M.to ?To)}
+		  OzDocToHTML, PictureExtern(@OutputDirectory#'/' M To $)
 	       [] unit then
 		  %--** the notation should be derived from the file name
 		  {Exception.raiseError

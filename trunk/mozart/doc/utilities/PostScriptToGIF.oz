@@ -1,9 +1,10 @@
 %%%
 %%% Author:
 %%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+%%%   Tobias Mueller <tmueller@ps.uni-sb.de>
 %%%
 %%% Copyright:
-%%%   Leif Kornstaedt, 1998
+%%%   Tobias Mueller and Leif Kornstaedt, 1998
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -23,24 +24,25 @@ functor
 import
    OS(system)
 export
-   'class': ThumbnailsClass
+   'class': PostScriptToGIFClass
 define
-   GIF2THUMBNAIL = 'gif2thumbnail'
+   PS2GIF = 'ps2gif'
 
-   class ThumbnailsClass
-      attr DirName: unit N: unit
+   class PostScriptToGIFClass
+      attr
+	 DirName: unit
+
       meth init(Dir)
 	 DirName <- Dir
-	 N <- 0
       end
-      meth get(Dir FileName ?OutFileName)
-	 N <- @N + 1
-	 OutFileName = 'thumbnail'#@N#'.gif'
+
+      meth convertPostScript(InFileName ?OutFileName)
+	 OutFileName = InFileName#'.gif'
 	 case
-	    {OS.system GIF2THUMBNAIL#' '#Dir#FileName#' '#@DirName#'/'#OutFileName}
+	    {OS.system PS2GIF#' '#InFileName#' '#@DirName#'/'#OutFileName}
 	 of 0 then skip
 	 elseof I then
-	    {Exception.raiseError ozDoc(thumbnail FileName I)}
+	    {Exception.raiseError ozDoc(psToGif I)}
 	 end
       end
    end
