@@ -385,7 +385,6 @@ public:
   //  gc methods;
   RunnableThreadBody(int sz) : taskStack(sz) { }
   RunnableThreadBody *gcRTBody();
-  void gcRecurse();
 
   void setSelf(Object *o) { Assert(u.self==NULL); u.self = o; }
   void makeRunning();
