@@ -657,7 +657,7 @@ void MemChunks::print()
 
 void *heapMallocOutline(size_t chunk_size)
 {
-  Assert((int) chunk_size <= ozconf.heapBlockSize);
+  Assert((int) chunk_size <= HEAPBLOCKSIZE);
 
   return heapMalloc(chunk_size);
 }
@@ -665,13 +665,7 @@ void *heapMallocOutline(size_t chunk_size)
 
 
 char *getMemFromOS(size_t sz) {
-  int thisBlockSz = ozconf.heapBlockSize;
-  if ((int)sz > ozconf.heapBlockSize) {
-    thisBlockSz = sz;
-    OZ_warning("Allocating very large heap block: size = %d kB",sz/KB);
-    //    OZ_warning("Memory chunk too big (size=%d)\nTry\n\tsetenv OZHEAPBLOCKSIZE <x>\nwhere <x> is greater than %d.\n",sz,ozconf.heapBlockSize);
-    //    am.exitOz(1);
-  }
+  int thisBlockSz = max(HEAPBLOCKSIZE, (int) sz);
 
   heapTotalSize      += thisBlockSz/KB;
   heapTotalSizeBytes += thisBlockSz;

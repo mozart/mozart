@@ -2813,7 +2813,7 @@ void AM::doGC() {
                       ozconf.heapMinSize));
 
   /* Try to align as much as possible to end of blocksize */
-  int block_size = ozconf.heapBlockSize / KB;
+  int block_size = HEAPBLOCKSIZE / KB;
   int block_dist = wanted % block_size;
 
   if (block_dist > 0)

@@ -144,10 +144,14 @@ void AM::init(int argc,char **argv)
 
   preparedCalls = NULL;
 
-  char *tmp;
-  if ((tmp = getenv("OZPATH"))) {
-    ozconf.ozPath = tmp;
+  char *home = getenv("OZHOME");
+
+  if (!home) {
+    fprintf(stderr, "OZHOME must be set.\n");
+    osExit(1);
   }
+
+  ozconf.ozHome = home;
 
   char *url = NULL;
   char *initFile = getenv("OZINIT");
