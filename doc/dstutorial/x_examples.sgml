@@ -155,7 +155,7 @@ when we evaluate it:
 declare F M
 F=functor export x:X define X={Fact 30} end 
 
-M={R apply(url:'./' F $)}
+M={R apply(F $)}
 
 {Browse M.x}
 >>>
@@ -182,7 +182,7 @@ an external reference:
 declare F M X in
 F=functor define {Fact 30 X} end
 
-M={R apply(url:'./' F $)}
+M={R apply(F $)}
 {Browse X}
 >>>
 
@@ -418,7 +418,7 @@ F=functor
      CS={NewStat ComputeServer init}
   end
 
-C={R apply(url:'./' F $)}.cs  % Set up the compute server
+C={R apply(F $)}.cs  % Set up the compute server
 >>>
 
 <P>The client can use the compute server as before:
