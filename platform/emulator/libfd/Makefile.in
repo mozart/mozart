@@ -42,7 +42,7 @@ SCHEDLIBSRCS = scheduling.cc schedulingDist.cc \
 
 SCHEDLIBOBJS = $(SCHEDLIBSRCS:.cc=.o)
 
-all: $(FDTARGETS)
+all:: $(FDTARGETS)
 
 fdlib.so: $(FDLIBOBJS)
 	$(DYNLD) -o $@ $(FDLIBOBJS)
@@ -56,12 +56,12 @@ libfd.a: $(FDLIBOBJS)
 libsched.a: $(SCHEDLIBOBJS)
 	$(AR) -rc $@ $(SCHEDLIBOBJS) &&	$(RANLIB) $@
 
-install: @INSTALL_PROP@
+install:: @INSTALL_PROP@
 
 install-prop:
 	$(INSTALL_BIN) $(FDTARGETS) $(bindir)
 
-depend: $(FDLIBSRCS) $(SCHEDLIBSRCS)
+depend:: $(FDLIBSRCS) $(SCHEDLIBSRCS)
 	$(DEPEND) `for f in $(FDLIBSRCS) $(SCHEDLIBSRCS) ; do echo $(FDDIR)/$$f; done` >> Makefile
 
 realclean::
