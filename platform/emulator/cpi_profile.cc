@@ -14,3 +14,14 @@
 
 
 OZ_CFunHeader * OZ_CFunHeader::_all_headers = NULL;
+
+
+void OZ_CFunHeader::profileReset()
+{
+  OZ_CFunHeader *aux = getFirst();
+  while(aux) {
+    aux->_calls   = 0;
+    aux->_samples = 0;
+    aux = aux->getNext();
+  }
+}

@@ -367,6 +367,8 @@ public:
   Bool isStableSolve(SolveActor *sa);
 
   OZ_Term dbgGetLoc(Board*);
+
+  Bool profileMode;
 };
 
 extern AM am;
