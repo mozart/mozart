@@ -1,22 +1,27 @@
-#  Authors:
-#    Denys Duchier (duchier@ps.uni-sb.de)
-# 
+#
+#  Author:
+#    Denys Duchier <duchier@ps.uni-sb.de>
+#
+#  Contributor:
+#    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+#
 #  Copyright:
 #    Denys Duchier, 1998
-# 
+#
 #  Last change:
 #    $Date$ by $Author$
 #    $Revision$
-# 
+#
 #  This file is part of Mozart, an implementation 
 #  of Oz 3:
 #     http://mozart.ps.uni-sb.de
-# 
+#
 #  See the file "LICENSE" or
 #     http://mozart.ps.uni-sb.de/LICENSE.html
 #  for information on usage and redistribution 
 #  of this file, and for a DISCLAIMER OF ALL 
 #  WARRANTIES.
+#
 
 PREFIX		= @prefix@
 VPATH		= @srcdir@
@@ -29,22 +34,32 @@ INSTALL_DIR	= @INSTALL_DIR@
 FILES		= ozdoc.dcl ozdoc.dtd ozdoc.doc catalog ozdoc.ced author.db
 LIBFILES	= $(addprefix $(DOCDIR)/,$(FILES))
 
-.PHONY: bootstrap all install clean veryclean distclean
+.PHONY: all bootstrap check install clean veryclean distclean
 
 all: ozdoc.ced
+
 bootstrap: all
+
+check:
+
 Makefile: Makefile.in config.status
 	./config.status
-clean:
-	-rm -f *~
-veryclean: clean
-distclean: veryclean
-	-rm -f Makefile catalog
-check:
+
 install: all $(DOCDIR) $(LIBFILES)
+
 $(DOCDIR):
 	$(INSTALL_DIR) $@
+
 $(LIBFILES): $(DOCDIR)/% : %
 	$(INSTALL_FILE) $< $@
+
 ozdoc.ced: ozdoc.dtd ozdoc.dcl ced.cat ced.el
 	emacs -batch -l ced.el
+clean:
+	-rm -f *~
+
+veryclean: clean
+
+distclean: veryclean
+	-rm -f Makefile catalog ced.el config.log config.status config.cache
+	-rm -f ozdoc.ced
