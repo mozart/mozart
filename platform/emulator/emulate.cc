@@ -45,7 +45,6 @@
 #include "boot-manager.hh"
 #include "dictionary.hh"
 #include "copycode.hh"
-#include "trace.hh"
 #include "os.hh"
 #include "refsarray.hh"
 
@@ -707,10 +706,6 @@ LBLdispatcher:
 #ifdef RECINSTRFETCH
   CodeArea::recordInstr(PC);
 #endif
-
-  DebugTrace( if (!ozd_trace("emulate",PC,Y,CAP)) {
-    return T_FAILURE;
-  });
 
   op = CodeArea::getOP(PC);
 
@@ -3031,8 +3026,6 @@ Case(GETVOID)
       RefsArray * args = (RefsArray *) CAP;
       Y = 0;
       CAP = 0;
-
-      DebugTrace(ozd_trace(toC(taggedPredicate)));
 
       predArity = args ? args->getLen() : 0;
 
