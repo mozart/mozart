@@ -76,6 +76,7 @@ define
 			 validate:alt(when('<create>' true)
 				      when(true false)))
 		'force'( single type:bool default:false)
+		'leave'( single type:bool default:false)
 		'update'(single type:bool default:false)
 		%%
 		%% other parameters

@@ -7,6 +7,7 @@ import
    ActionInfo(run)
    ActionCreate(run)
    ActionHelp(run)
+   ActionRemove(run)
 define
    case Args.action
    of list then % list all installed packages
@@ -20,7 +21,7 @@ define
    [] check then % check installed packages integrity and rebuilds if necessary
       skip
    [] remove then % removes a package
-      skip
+      {ActionRemove.run}
    [] help then % display some help
       {ActionHelp.run}
    [] interactive then % start the application in interactive mode
