@@ -56,9 +56,9 @@ if test $# -eq 0
 then
   cat <<EOF
 Usage:
-	oztool [-verbose] [-gnu|-watcom|-msvc] c++ SourceFile
-	oztool [-verbose] [-gnu|-watcom|-msvc] cc  SourceFile
-	oztool [-verbose] [-gnu|-watcom|-msvc] ld -o TargetLib FileList
+	oztool c++ SourceFile
+	oztool cc  SourceFile
+	oztool ld -o TargetLib FileList
 	oztool platform
 EOF
   exit 2
