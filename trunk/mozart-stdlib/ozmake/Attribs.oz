@@ -3,6 +3,8 @@ export
    'class' : Attribs
 import
    Property
+   Resolve
+   OS
    Path  at 'Path.ozf'
    Utils at 'Utils.ozf'
 define
@@ -69,6 +71,7 @@ define
 	 OzC        : unit
 	 OzL        : unit
 	 OzTool     : unit
+	 ResolverExtended : false
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -520,5 +523,29 @@ define
       meth get_includedirs($) @IncludeDirs end
       meth set_librarydirs(L) LibraryDirs<-L end
       meth get_librarydirs($) @LibraryDirs end
+
+      meth extend_resolver
+	 if @ResolverExtended then skip else
+	    ResolverExtended<-true
+	    if @Superman \= unit then
+	       {@Superman extend_resolver}
+	    else
+	       SRC={self get_srcdir($)}
+	       BLD={self get_builddir($)}
+	       SEP=[{Property.get 'path.separator'}]
+	       OZHOME={Property.get 'oz.home'}
+	    in
+	       {OS.putEnv 'OZ_SEARCH_LOAD'
+		'cache=~/.oz/cache'     #SEP#
+		'cache='#OZHOME#'/cache'#SEP#
+		'root='#SRC             #SEP#
+		'root='#BLD}
+	       {Resolve.addHandler
+		{Resolve.handler.root SRC}}
+	       {Resolve.addHandler
+		{Resolve.handler.root BLD}}
+	    end
+	 end
+      end
    end
 end
