@@ -4987,10 +4987,10 @@ OZ_C_proc_begin(BIbiPrint, 0)
     BuiltinTabEntry *abit = (BuiltinTabEntry *) hn->value;
     sum += abit->getCounter();
     if (abit->getCounter()!=0) {
-      printf("%010ud x %s\n",abit->getCounter(),abit->getPrintName());
+      printf("%010lu x %s\n",abit->getCounter(),abit->getPrintName());
     }
   }
-  printf("----------\n%010ud\n",sum);
+  printf("----------\n%010lu\n",sum);
   return PROCEED;
 }
 OZ_C_proc_end
