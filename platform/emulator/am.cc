@@ -413,11 +413,9 @@ static Stack rebindTrail(100,Stack_WithMalloc);
 inline
 void rebind(TaggedRef *refPtr, TaggedRef *ptr2)
 {
-  if (!am.isToplevel()) {
-    rebindTrail.ensureFree(2);
-    rebindTrail.push(refPtr,NO);
-    rebindTrail.push(ToPointer(*refPtr),NO);
-  }
+  rebindTrail.ensureFree(2);
+  rebindTrail.push(refPtr,NO);
+  rebindTrail.push(ToPointer(*refPtr),NO);
   doBind(refPtr,makeTaggedRef(ptr2));
 }
 
