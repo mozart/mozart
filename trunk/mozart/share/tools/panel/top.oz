@@ -264,7 +264,6 @@ in
 			       highlightthickness: 0
 			       withdraw:           true)
 	    {Tk.batch [wm(iconname   self TitleName)
-		       wm(iconbitmap self BitMap)
 		       wm(resizable self 0 0)]}
 	    EventFrame = {New Tk.frame tkInit(parent:             self
 					      highlightthickness: 0)}
