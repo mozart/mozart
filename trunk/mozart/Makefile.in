@@ -74,9 +74,9 @@ FILES=		LICENSE
 ALLFILES=	$(FILES:%=$(PREFIX)/%)
 
 COMMONFILES=	LICENSE \
-		bin include share tools cache
+		bin include share cache
 
-DEMOFILES=	demo
+DEMOFILES=	demo examples
 
 COMPRESS=	gzip -9
 
