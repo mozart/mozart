@@ -216,6 +216,8 @@ define
          % for Figure:
          Floats: unit
          FigureCounters: unit
+         % for Note:
+         FootNotes: unit
          % for Grammar:
          GrammarHead: unit
          GrammarAltType: unit
@@ -358,6 +360,7 @@ define
             %-----------------------------------------------------------
             case Tag of book then HTML in
                Floats <- nil
+               FootNotes <- nil
                FigureCounters <- {NewDictionary}
                MyBibliographyDB <- {New BibliographyDB.'class'
                                     init(@OutputDirectory)}
@@ -799,8 +802,13 @@ define
             % Note
             %-----------------------------------------------------------
             [] note then
-               {Exception.raiseError
-                ozDoc(sgmlToHTML unsupported M)} unit   %--**
+               case {CondSelect M foot unit} of unit then
+                  {Exception.raiseError
+                   ozDoc(sgmlToHTML unsupported M)} unit   %--**
+               else HTML in
+                  FootNotes <- {Append @FootNotes [M#HTML]}
+                  HTML
+               end
             %-----------------------------------------------------------
             % Index
             %-----------------------------------------------------------
@@ -1023,6 +1031,7 @@ define
                      'body'(COMMON: @BodyCommon
                             BodyContents
                             OzDocToHTML, FlushFloats($)
+                            OzDocToHTML, FlushFootNotes(1 $)
                             %--** include a next-pointer if necessary
                             hr()
                             address(case @Authors of nil then EMPTY
@@ -1073,6 +1082,26 @@ define
                     OzDocToHTML, Batch(Caption.1 1 $))
                end
                hr())
+      end
+      meth FlushFootNotes(Count $) HTML in
+         case @FootNotes of F|Fr then M#T = F OldCommon in
+            OzDocToHTML, PushCommon(M ?OldCommon)
+            OzDocToHTML, OutputFootNote(Count M T ?HTML)
+            OzDocToHTML, PopCommon(OldCommon)
+            FootNotes <- Fr
+            SEQ([if Count == 1 then hr(align: left width: '30%')
+                 else EMPTY
+                 end
+                 HTML OzDocToHTML, FlushFootNotes(Count + 1 $)])
+         [] nil then EMPTY
+         end
+      end
+      meth OutputFootNote(N M T ?HTML) Label in
+         ToGenerate <- Label|@ToGenerate
+         T = a(href: @CurrentNode#"#"#Label sup(PCDATA(N)))
+         HTML = 'div'(COMMON: @Common 'class': [footnote]
+                      SEQ([a(name: Label PCDATA(N#'. '))
+                           OzDocToHTML, Batch(M.1 1 $)]))
       end
       meth FormatAuthors($)
          case @Authors of nil then ""
