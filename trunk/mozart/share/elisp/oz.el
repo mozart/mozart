@@ -78,22 +78,24 @@
 	((string-match "\\<running\\>" s) "running")
 	((string-match "\\<halted\\>" s) "halted")
 	((string-match "\\<booting\\>" s) "booting")
-	( t s)))
+	( t "???")))
 
 
 (defun oz-set-state(state string)
-  (setq string (oz-canon-status-string string))
-  (set state 
-       (format "%-30s" 
+  (if (string= string "")
+      t
+    (setq string (oz-canon-status-string string))
+    (set state 
+	 (format "%-30s" 
 		 (substring string 0 
 			    (min 30 (length string)))))
-  (if (not lucid-emacs)
-    (mapcar '(lambda(scr)
-	       (oz-set-screen-name scr
-				   (format oz-title-format 
-					   oz-compiler-state 
-					   oz-machine-state)))
-	    (visible-screen-list))))
+    (if (not lucid-emacs)
+	(mapcar '(lambda(scr)
+		   (oz-set-screen-name scr
+				       (format oz-title-format 
+					       oz-compiler-state 
+					       oz-machine-state)))
+		(visible-screen-list)))))
 
 
 
@@ -426,11 +428,6 @@ if that value is non-nil."
 	(oz-set-state 'oz-compiler-state "booting")
         (make-comint "Oz Compiler" oz-compiler nil "-S" file)
 
-;	(if (get-buffer "*Oz Machine*")
-;	    (kill-buffer "*Oz Machine*"))
-;	(if (get-buffer "*Oz Errors*")
-;	    (kill-buffer "*Oz Errors*"))
-
 	(oz-set-state 'oz-machine-state "booting")
 	(make-comint "Oz Machine" oz-machine nil "-S" file)
 
@@ -439,13 +436,11 @@ if that value is non-nil."
 	(oz-create-buffer "*Oz Machine*")
 	(oz-create-buffer "*Oz Errors*")
 	
-;	(set-buffer (process-buffer (get-process "Oz Compiler")))
 	(set-process-filter (get-process "Oz Compiler") 'oz-compiler-filter)
 	(set-process-filter (get-process "Oz Machine")  'oz-machine-filter)
 
 	(bury-buffer "*Oz Machine*")
 	(bury-buffer "*Oz Compiler*")
-;	(oz-hide-errors)
 
 	(if lucid-emacs
 	    (setq screen-title-format
@@ -456,7 +451,8 @@ if that value is non-nil."
 (defun oz-create-buffer (buf)
   (save-excursion
     (set-buffer (get-buffer-create buf))
-    (use-local-map oz-mode-map)))
+    (use-local-map oz-mode-map)
+    (delete-region (point-min) (point-max))))
 
 (defun oz-doc ()
   (interactive)
@@ -529,9 +525,9 @@ if that value is non-nil."
 (defun oz-hide-errors()
   (interactive)
   (if (get-buffer "*Oz Errors*")
-      (progn
+      (let ((show-machine (get-buffer-window "*Oz Machine*")))
 	(delete-windows-on "*Oz Errors*")
-	(if oz-machine-visible
+	(if (and oz-machine-visible show-machine)
 	    (oz-show-buffer "*Oz Machine*")))))
 
 
@@ -573,11 +569,6 @@ if that value is non-nil."
 
 (defun halt-oz()
   (interactive)
-  (if lucid-emacs
-      (setq screen-title-format oz-old-screen-title)
-    (mapcar '(lambda(scr) (oz-set-screen-name scr oz-old-screen-title))
-	    (visible-screen-list)))
-    
   
   (if (and (get-process "Oz Compiler")
 	   (get-process "Oz Machine"))
@@ -593,7 +584,13 @@ if that value is non-nil."
       (delete-process "*Oz Compiler*"))
   (if (get-process "Oz Machine")
       (delete-process "*Oz Machine*"))
-  (message ""))
+  (message "")
+
+  (if lucid-emacs
+      (setq screen-title-format oz-old-screen-title)
+    (mapcar '(lambda(scr) (oz-set-screen-name scr oz-old-screen-title))
+	    (visible-screen-list))))
+    
 
 
 
