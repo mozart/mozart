@@ -542,6 +542,7 @@ if that value is non-nil."
        (delete-region (point-min) (point-max))
        (insert-file-contents (concat oz-pretty-file ".i"))
        (display-buffer buf t)
+       (oz-mode)
        (oz-fontify-buffer))))
 
 
