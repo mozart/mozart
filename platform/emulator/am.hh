@@ -228,6 +228,13 @@ private:
   int statusReg;
   TaskStack *cachedStack;
   Object *cachedSelf;
+
+public:
+  TaskStack * getCachedStack(void) {
+    return cachedStack;
+  }
+
+private:
   Bool _inEqEq;
   TaggedRef _currentUVarPrototype; // opt: cache
 

@@ -181,7 +181,9 @@ TaggedRef mkRecord(TaggedRef label,SRecordArity ff)
 #define deallocateY() deallocateYN(getRefsArraySize(Y))
 
 
-void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP);
+static void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP);
+static ThreadReturn debugEntry(ProgramCounter PC, RefsArray Y, Abstraction *CAP);
+static ThreadReturn debugExit(ProgramCounter PC, RefsArray Y, Abstraction *CAP);
 
 // -----------------------------------------------------------------------
 // *** ???
@@ -675,7 +677,7 @@ TaggedRef makeMessage(SRecordArity srecArity, TaggedRef label) {
 // short names
 # define CBB (oz_currentBoard())
 # define CTT (oz_currentThread())
-# define CTS (e->cachedStack)
+# define CTS (e->getCachedStack())
 
 int engine(Bool init)
 {
@@ -3004,197 +3006,17 @@ Case(GETVOID)
 
   Case(DEBUGENTRY)
     {
-      if ((e->debugmode() || CTT->isTrace()) && oz_onToplevel()) {
-        int line = smallIntValue(getNumberArg(PC+2));
-        if (line < 0) {
-          execBreakpoint(oz_currentThread());
-        }
-
-        OzDebug * dbg = new OzDebug(PC,Y,CAP);
-
-        TaggedRef kind = getTaggedArg(PC+4);
-        if (oz_eq(kind,AtomDebugCallC) ||
-            oz_eq(kind,AtomDebugCallF)) {
-          // save abstraction and arguments:
-          Bool copyArgs = NO;
-          switch (CodeArea::getOpcode(PC+5)) {
-          case CALLBI:
-            {
-              Builtin *bi = GetBI(PC+6);
-              dbg->data = makeTaggedConst(bi);
-              int iarity = bi->getInArity(), oarity = bi->getOutArity();
-              int arity = iarity + oarity;
-              OZ_Location * loc = GetLoc(PC+7);
-              dbg->arity = arity;
-              if (arity > 0) {
-                dbg->arguments =
-                  (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * arity);
-                for (int i = iarity; i--; )
-                  dbg->arguments[i] = loc->getInValue(i);
-                if (CTT->isStep())
-                  for (int i = oarity; i--; )
-                    dbg->arguments[iarity + i] = OZ_newVariable();
-                else
-                  for (int i = oarity; i--; )
-                    dbg->arguments[iarity + i] = NameVoidRegister;
-              }
-            }
-            break;
-          case CALLX:
-            dbg->data  = XPC(6);
-            dbg->arity = getPosIntArg(PC+7);
-            copyArgs = OK;
-            break;
-          case CALLY:
-            dbg->data  = YPC(6);
-            dbg->arity = getPosIntArg(PC+7);
-            copyArgs = OK;
-            break;
-          case CALLG:
-            dbg->data  = GPC(6);
-            dbg->arity = getPosIntArg(PC+7);
-            copyArgs = OK;
-            break;
-          case CALLPROCEDUREREF:
-          case FASTCALL:
-            {
-              Abstraction *abstr =
-                ((AbstractionEntry *) getAdressArg(PC+6))->getAbstr();
-              dbg->data = makeTaggedConst(abstr);
-              dbg->arity = abstr->getArity();
-              copyArgs = OK;
-            }
-            break;
-          case CALLCONSTANT:
-            dbg->data = getTaggedArg(PC+6);
-            dbg->arity = getPosIntArg(PC+7) >> 1;
-            copyArgs = OK;
-            break;
-          default:
-            break;
-          }
-          if (copyArgs && dbg->arity > 0) {
-            dbg->arguments =
-              (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * dbg->arity);
-            for (int i = dbg->arity; i--; )
-              dbg->arguments[i] = XREGS[i];
-          }
-        } else if (oz_eq(kind,AtomDebugLockC) ||
-                   oz_eq(kind,AtomDebugLockF)) {
-          // save the lock:
-          switch (CodeArea::getOpcode(PC+5)) {
-          case LOCKTHREAD:
-            dbg->setSingleArgument(XPC(7));
-            break;
-          default:
-            break;
-          }
-        } else if (oz_eq(kind,AtomDebugCondC) ||
-                   oz_eq(kind,AtomDebugCondF)) {
-          // look whether we can determine the arbiter:
-          switch (CodeArea::getOpcode(PC+5)) {
-          case TESTLITERALX:
-          case TESTNUMBERX:
-          case TESTRECORDX:
-          case TESTLISTX:
-          case TESTBOOLX:
-          case MATCHX:
-            dbg->setSingleArgument(XPC(6));
-            break;
-          case TESTLITERALY:
-          case TESTNUMBERY:
-          case TESTRECORDY:
-          case TESTLISTY:
-          case TESTBOOLY:
-          case MATCHY:
-            dbg->setSingleArgument(YPC(6));
-            break;
-          case TESTLITERALG:
-          case TESTNUMBERG:
-          case TESTRECORDG:
-          case TESTLISTG:
-          case TESTBOOLG:
-          case MATCHG:
-            dbg->setSingleArgument(GPC(6));
-            break;
-          default:
-            break;
-          }
-        } else if (oz_eq(kind,AtomDebugNameC) ||
-                   oz_eq(kind,AtomDebugNameF)) {
-          switch (CodeArea::getOpcode(PC+5)) {
-          case PUTCONSTANTX:
-          case PUTCONSTANTY:
-          case GETLITERALX:
-          case GETLITERALY:
-          case GETLITERALG:
-            dbg->setSingleArgument(getTaggedArg(PC+6));
-            break;
-          default:
-            break;
-          }
-        }
-
-        if (CTT->isStep()) {
-          CTT->pushDebug(dbg,DBG_STEP_ATOM);
-          debugStreamEntry(dbg,CTT->getTaskStackRef()->getFrameId());
-          INCFPC(5);
-          PushContX(PC);
-          return T_PREEMPT;
-        } else {
-          CTT->pushDebug(dbg,DBG_NOSTEP_ATOM);
-        }
-      } else if (e->isPropagatorLocation()) {
-        OzDebug *dbg = new OzDebug(PC,NULL,CAP);
-        CTT->pushDebug(dbg,DBG_EXIT_ATOM);
-      }
-
+      ThreadReturn ret = debugEntry(PC,Y,CAP);
+      if (ret != T_OKOK)
+        return ret;
       DISPATCH(5);
     }
 
   Case(DEBUGEXIT)
     {
-      OzDebug *dbg;
-      Atom * dothis;
-      CTT->popDebug(dbg, dothis);
-
-      if (dbg != (OzDebug *) NULL) {
-        Assert(oz_eq(getLiteralArg(dbg->PC+4),getLiteralArg(PC+4)));
-        Assert(e->isPropagatorLocation() ||
-               (dbg->Y == Y &&
-                ((Abstraction *) tagged2Const(dbg->CAP)) == CAP));
-
-        if (dothis != DBG_EXIT_ATOM
-            && (oz_eq(getLiteralArg(PC+4),AtomDebugCallC) ||
-                oz_eq(getLiteralArg(PC+4),AtomDebugCallF))
-            && CodeArea::getOpcode(dbg->PC+5) == CALLBI) {
-          Builtin *bi = GetBI(dbg->PC+6);
-          int iarity        = bi->getInArity();
-          int oarity        = bi->getOutArity();
-          OZ_Location * loc = GetLoc(dbg->PC+7);
-          if (oarity > 0)
-            if (dbg->arguments[iarity] != NameVoidRegister)
-              for (int i = oarity; i--; ) {
-                TaggedRef x = loc->getOutValue(bi,i);
-                if (OZ_unify(dbg->arguments[iarity + i], x) == FAILED)
-                  return T_FAILURE;
-              }
-            else
-              for (int i = oarity; i--; )
-                dbg->arguments[iarity + i] = loc->getInValue(i);
-        }
-
-        if (dothis == DBG_STEP_ATOM && CTT->isTrace()) {
-          dbg->PC = PC;
-          CTT->pushDebug(dbg,DBG_EXIT_ATOM);
-          debugStreamExit(dbg,CTT->getTaskStackRef()->getFrameId());
-          PushContX(PC);
-          return T_PREEMPT;
-        }
-
-        dbg->dispose();
-      }
-
+      ThreadReturn ret = debugExit(PC,Y,CAP);
+      if (ret != T_OKOK)
+        return ret;
       DISPATCH(5);
     }
 
@@ -3455,14 +3277,216 @@ Case(GETVOID)
 } // end engine
 
 
-
 #undef DISPATCH
+
+
+static
+ThreadReturn debugEntry(ProgramCounter PC, RefsArray Y, Abstraction * CAP) {
+  register AM * const e        Reg4 = &am;
+
+  if ((e->debugmode() || CTT->isTrace()) && oz_onToplevel()) {
+    int line = smallIntValue(getNumberArg(PC+2));
+    if (line < 0) {
+      execBreakpoint(oz_currentThread());
+    }
+
+    OzDebug * dbg = new OzDebug(PC,Y,CAP);
+
+    TaggedRef kind = getTaggedArg(PC+4);
+    if (oz_eq(kind,AtomDebugCallC) ||
+        oz_eq(kind,AtomDebugCallF)) {
+      // save abstraction and arguments:
+      Bool copyArgs = NO;
+      switch (CodeArea::getOpcode(PC+5)) {
+      case CALLBI:
+        {
+          Builtin *bi = GetBI(PC+6);
+          dbg->data = makeTaggedConst(bi);
+          int iarity = bi->getInArity(), oarity = bi->getOutArity();
+          int arity = iarity + oarity;
+          OZ_Location * loc = GetLoc(PC+7);
+          dbg->arity = arity;
+          if (arity > 0) {
+            dbg->arguments =
+              (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * arity);
+            for (int i = iarity; i--; )
+              dbg->arguments[i] = loc->getInValue(i);
+            if (CTT->isStep())
+              for (int i = oarity; i--; )
+                dbg->arguments[iarity + i] = OZ_newVariable();
+            else
+              for (int i = oarity; i--; )
+                dbg->arguments[iarity + i] = NameVoidRegister;
+          }
+        }
+        break;
+      case CALLX:
+        dbg->data  = XPC(6);
+        dbg->arity = getPosIntArg(PC+7);
+        copyArgs = OK;
+        break;
+      case CALLY:
+        dbg->data  = YPC(6);
+        dbg->arity = getPosIntArg(PC+7);
+        copyArgs = OK;
+        break;
+      case CALLG:
+        dbg->data  = GPC(6);
+        dbg->arity = getPosIntArg(PC+7);
+        copyArgs = OK;
+        break;
+      case CALLPROCEDUREREF:
+      case FASTCALL:
+        {
+          Abstraction *abstr =
+            ((AbstractionEntry *) getAdressArg(PC+6))->getAbstr();
+          dbg->data = makeTaggedConst(abstr);
+          dbg->arity = abstr->getArity();
+          copyArgs = OK;
+        }
+        break;
+      case CALLCONSTANT:
+        dbg->data = getTaggedArg(PC+6);
+        dbg->arity = getPosIntArg(PC+7) >> 1;
+        copyArgs = OK;
+        break;
+      default:
+        break;
+      }
+      if (copyArgs && dbg->arity > 0) {
+        dbg->arguments =
+          (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * dbg->arity);
+        for (int i = dbg->arity; i--; )
+          dbg->arguments[i] = XREGS[i];
+      }
+    } else if (oz_eq(kind,AtomDebugLockC) ||
+               oz_eq(kind,AtomDebugLockF)) {
+      // save the lock:
+      switch (CodeArea::getOpcode(PC+5)) {
+      case LOCKTHREAD:
+        dbg->setSingleArgument(XPC(7));
+        break;
+      default:
+        break;
+      }
+    } else if (oz_eq(kind,AtomDebugCondC) ||
+               oz_eq(kind,AtomDebugCondF)) {
+      // look whether we can determine the arbiter:
+      switch (CodeArea::getOpcode(PC+5)) {
+      case TESTLITERALX:
+      case TESTNUMBERX:
+      case TESTRECORDX:
+      case TESTLISTX:
+      case TESTBOOLX:
+      case MATCHX:
+        dbg->setSingleArgument(XPC(6));
+        break;
+      case TESTLITERALY:
+      case TESTNUMBERY:
+      case TESTRECORDY:
+      case TESTLISTY:
+      case TESTBOOLY:
+      case MATCHY:
+        dbg->setSingleArgument(YPC(6));
+        break;
+      case TESTLITERALG:
+      case TESTNUMBERG:
+      case TESTRECORDG:
+      case TESTLISTG:
+      case TESTBOOLG:
+      case MATCHG:
+        dbg->setSingleArgument(GPC(6));
+        break;
+      default:
+        break;
+      }
+    } else if (oz_eq(kind,AtomDebugNameC) ||
+               oz_eq(kind,AtomDebugNameF)) {
+      switch (CodeArea::getOpcode(PC+5)) {
+      case PUTCONSTANTX:
+      case PUTCONSTANTY:
+      case GETLITERALX:
+      case GETLITERALY:
+      case GETLITERALG:
+        dbg->setSingleArgument(getTaggedArg(PC+6));
+        break;
+      default:
+        break;
+      }
+    }
+
+    if (CTT->isStep()) {
+      CTT->pushDebug(dbg,DBG_STEP_ATOM);
+      debugStreamEntry(dbg,CTT->getTaskStackRef()->getFrameId());
+      INCFPC(5);
+      PushContX(PC);
+      return T_PREEMPT;
+    } else {
+      CTT->pushDebug(dbg,DBG_NOSTEP_ATOM);
+    }
+  } else if (e->isPropagatorLocation()) {
+    OzDebug *dbg = new OzDebug(PC,NULL,CAP);
+    CTT->pushDebug(dbg,DBG_EXIT_ATOM);
+  }
+  return T_OKOK;
+}
+
+
+static
+ThreadReturn debugExit(ProgramCounter PC, RefsArray Y, Abstraction * CAP) {
+  register AM * const e        Reg4 = &am;
+
+  OzDebug *dbg;
+  Atom * dothis;
+  CTT->popDebug(dbg, dothis);
+
+  if (dbg != (OzDebug *) NULL) {
+    Assert(oz_eq(getLiteralArg(dbg->PC+4),getLiteralArg(PC+4)));
+    Assert(e->isPropagatorLocation() ||
+           (dbg->Y == Y &&
+            ((Abstraction *) tagged2Const(dbg->CAP)) == CAP));
+
+    if (dothis != DBG_EXIT_ATOM
+        && (oz_eq(getLiteralArg(PC+4),AtomDebugCallC) ||
+            oz_eq(getLiteralArg(PC+4),AtomDebugCallF))
+        && CodeArea::getOpcode(dbg->PC+5) == CALLBI) {
+      Builtin *bi = GetBI(dbg->PC+6);
+      int iarity        = bi->getInArity();
+      int oarity        = bi->getOutArity();
+      OZ_Location * loc = GetLoc(dbg->PC+7);
+      if (oarity > 0)
+        if (dbg->arguments[iarity] != NameVoidRegister)
+          for (int i = oarity; i--; ) {
+            TaggedRef x = loc->getOutValue(bi,i);
+            if (OZ_unify(dbg->arguments[iarity + i], x) == FAILED)
+              return T_FAILURE;
+          }
+        else
+          for (int i = oarity; i--; )
+            dbg->arguments[iarity + i] = loc->getInValue(i);
+    }
+
+    if (dothis == DBG_STEP_ATOM && CTT->isTrace()) {
+      dbg->PC = PC;
+      CTT->pushDebug(dbg,DBG_EXIT_ATOM);
+      debugStreamExit(dbg,CTT->getTaskStackRef()->getFrameId());
+      PushContX(PC);
+      return T_PREEMPT;
+    }
+
+    dbg->dispose();
+  }
+  return T_OKOK;
+}
+
+
 
 #define DISPATCH(incPC,incArgs)                 \
    PC += incPC;                                 \
    argsToHandle += incArgs;                     \
    break;
 
+static
 void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP) {
   Assert(oz_onToplevel());
 
