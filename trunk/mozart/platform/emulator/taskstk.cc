@@ -74,7 +74,13 @@ void printDef(ProgramCounter PC)
   ProgramCounter next;
   TaggedRef file, line;
   PrTabEntry *pred;
-  CodeArea::getDefinitionArgs(CodeArea::definitionStart(PC),reg,next,file,line,pred);
+  ProgramCounter pc = CodeArea::definitionStart(PC);
+  if (pc == NOCODE) {
+    message("\tOn toplevel\n");
+    return;
+  }
+    
+  CodeArea::getDefinitionArgs(pc,reg,next,file,line,pred);
 
   message("\tIn procedure %s (File %s, line %s)\n",
 	  pred ? pred->getPrintName() : "???",
@@ -89,6 +95,7 @@ void TaskStack::printDebug(Bool verbose, int depth)
     return;
   }
 
+  message("\n");
   message("Stack dump:\n");
   message("-----------\n");
 
