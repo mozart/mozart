@@ -34,12 +34,12 @@ export
    Clean
 prepare
    % names used for constructing the output tree:
-   EMPTY    = {NewName}
-   SEQ      = {NewName}
-   BLOCK    = {NewName}
-   COMMON   = {NewName}
-   PCDATA   = {NewName}
-   VERBATIM = {NewName}
+   EMPTY    = '<EMPTY>'
+   SEQ      = '<SEQ>'
+   BLOCK    = '<BLOCK>'
+   COMMON   = '<COMMON>'
+   PCDATA   = '<PCDATA>'
+   VERBATIM = '<VERBATIM>'
 define
    fun {MakeCDATA S}
       '"'#S#'"'   %--** quotation marks etc.
