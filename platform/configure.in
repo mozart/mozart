@@ -26,8 +26,6 @@ dnl
 
 AC_INIT(emulator)
 OZ_INIT
-BUILDTOP=`cd .. && pwd`
-AC_SUBST(BUILDTOP)
 
 : ${oz_enable_wish=yes}
 AC_MSG_CHECKING(for --enable-wish)

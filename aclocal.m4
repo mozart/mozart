@@ -54,6 +54,7 @@ dnl sure bets.
 dnl ------------------------------------------------------------------
 
 AC_DEFUN(OZ_PATH_UPWARD,[
+  AC_REQUIRE([OZ_WORKING_TEST])
   oz_tmp_dir=[$2]
   oz_tmp_ok=
   for oz_tmp1 in [$3]; do
@@ -63,7 +64,7 @@ AC_DEFUN(OZ_PATH_UPWARD,[
                    $oz_tmp_dir/../../.. \
                    $oz_tmp_dir/../../../.. \
                    $oz_tmp_dir/../../../../..; do
-      if test -e "$oz_tmp2/$oz_tmp1"; then
+      if $TEST -e "$oz_tmp2/$oz_tmp1"; then
         [$1]=`cd $oz_tmp2 && pwd`
         oz_tmp_ok=yes
         break
@@ -115,6 +116,34 @@ AC_DEFUN(OZ_INIT, [
 #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 #OZ_PATH_PROG(DYNLD,          ozdynld)
 ])
+
+dnl ------------------------------------------------------------------
+dnl OZ_PROG_TEST
+dnl
+dnl finds working version of test, sets TEST
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_WORKING_TEST,[
+  AC_CACHE_CHECK([for test],oz_cv_TEST,[
+    if test -e . 2>/dev/null; then
+      oz_cv_TEST=test
+    else
+      oz_tmp_IFS="$IFS"
+      IFS="$IFS:"
+      for oz_tmp in $PATH; do
+        if $oz_tmp/test -e . 2>/dev/null; then
+          oz_tmp=`cd $oz_tmp && pwd`
+          oz_cv_TEST="$oz_tmp/test"
+          break
+        fi
+      done
+      IFS=$oz_tmp_IFS
+      if test -n "$oz_cv_TEST"; then
+        AC_MSG_ERROR([cannot locate a working test])
+      fi
+    fi])
+  TEST=$oz_cv_TEST
+  AC_SUBST(TEST)])
 
 dnl ==================================================================
 dnl VERSION CHECKING
@@ -196,14 +225,15 @@ dnl ==================================================================
 dnl CHOOSE C++ COMPILER
 dnl
 dnl choose only if the choice is not already in the cache.
-dnl note that CXXFLAGS is set to the empty string to avoid that it be
-dnl set by AC_PROG_CXX (we take care of our own defaults)
+dnl WE DONT DO THIS ANYMORE
+dnl -- note that CXXFLAGS is set to the empty string to avoid that it be
+dnl -- set by AC_PROG_CXX (we take care of our own defaults)
 dnl ==================================================================
 
 AC_DEFUN(OZ_VERSION_GXX,[2.7])
 AC_DEFUN(OZ_CXX_CHOOSE,[
   if test -z "$oz_cv_cxx__chosen"; then
-    CXXFLAGS=
+dnl    CXXFLAGS=
     OZ_ARG_WITH_CXX
     AC_PROG_CXX
     if test "${GXX}" = yes; then
@@ -365,6 +395,259 @@ You may find a mirror archive closer to you by consulting:
   AC_SUBST(CPP)])
 
 dnl ==================================================================
+dnl LOCATE UTILITIES AND CHECK VERSION NUMBERS
+dnl ==================================================================
+
+dnl ------------------------------------------------------------------
+dnl OZ_PROG_FLEX or OZ_PROG_LEX
+dnl
+dnl locate GNU flex and check its version number. sets LEX and FLEX
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_PROG_LEX,[OZ_PROG_FLEX])
+AC_DEFUN(OZ_VERSION_FLEX,[2.5.3])
+AC_DEFUN(OZ_PROG_LEX_GNU,[
+  if `$LEX -S --version 2>/dev/null >/dev/null`; then
+    GNU_LEX=yes
+  else
+    GNU_LEX=no
+  fi])
+
+AC_DEFUN(OZ_PROG_FLEX,[
+  if test -z "$oz_cv_LEX"; then
+    AC_PROG_LEX
+    OZ_PROG_LEX_GNU
+    if test "$GNU_LEX" = no; then
+      oz_tmp_ok=no
+      AC_MSG_WARN([$LEX is not GNU flex])
+    else
+      OZ_PROG_VERSION_CHECK(oz_tmp_ok,$LEX,OZ_VERSION_FLEX)
+    fi
+    if test "$oz_tmp_ok" = yes; then
+      oz_cv_LEX=$LEX
+    else
+      AC_MSG_ERROR([
+GNU flex version] OZ_VERSION_FLEX [or higher is needed to build the
+system.  It can be retrieved from:
+
+        ftp://ftp.gnu.org/pub/gnu/
+
+The latest version at this time is 2.5.4 and is available
+packaged as the following archive:
+
+        flex-2.5.4a.tar.gz
+
+You may find a mirror archive closer to you by consulting:
+
+        http://www.gnu.org/order/ftp.html
+])
+    fi
+  else
+    OZ_FROM_CACHE(LEX,[for GNU flex])
+  fi
+  FLEX=$LEX
+  AC_SUBST(LEX)
+  AC_SUBST(FLEX)])
+
+dnl ------------------------------------------------------------------
+dnl OZ_PROG_BISON or OZ_PROG_YACC
+dnl
+dnl locate GNU bison and check its version number. sets YACC and BISON
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_PROG_YACC,[OZ_PROG_BISON])
+AC_DEFUN(OZ_VERSION_BISON,[1.25])
+AC_DEFUN(OZ_PROG_YACC_GNU,[
+  if oz_tmp=`$YACC --version 2>/dev/null` && \
+     oz_tmp=`expr "$oz_tmp" : GNU`; then
+    GNU_YACC=yes;
+  else
+    GNU_YACC=no
+  fi])
+
+AC_DEFUN(OZ_PROG_BISON,[
+  if test -z "$oz_cv_YACC"; then
+    AC_PROG_YACC
+    OZ_PROG_YACC_GNU
+    if test "$GNU_YACC" = no; then
+      oz_tmp_ok=no
+      AC_MSG_WARN([$YACC is not GNU bison])
+    else
+      OZ_PROG_VERSION_CHECK(oz_tmp_ok,$YACC,OZ_VERSION_BISON)
+    fi
+    if test "$oz_tmp_ok" = yes; then
+      oz_cv_YACC=$YACC
+    else
+      AC_MSG_ERROR([
+GNU bison version] OZ_VERSION_BISON [or higher is needed to build the system.
+It can be retrieved from:
+
+        ftp://ftp.gnu.org/pub/gnu/
+
+The latest version at this time is 1.25 and is available
+packaged as the following archive:
+
+        bison-1.25.tar.gz
+
+
+You may find a mirror archive closer to you by consulting:
+
+        http://www.gnu.org/order/ftp.html
+])
+    fi
+  else
+    OZ_FROM_CACHE(YACC,[for GNU bison])
+  fi
+  BISON=$YACC
+  AC_SUBST(YACC)
+  AC_SUBST(BISON)])
+
+dnl ------------------------------------------------------------------
+dnl OZ_PROG_PERL
+dnl
+dnl locate perl and checks its version number. sets PERL
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_VERSION_PERL,[5])
+AC_DEFUN(OZ_PROG_PERL,[
+  if test -z "$oz_cv_PERL"; then
+    AC_CHECK_PROGS(PERL,perl perl5,NONE)
+    if test "$PERL" = NONE; then
+      oz_tmp_ok=no;
+    else
+      OZ_PROG_VERSION_CHECK(oz_tmp_ok,$PERL,OZ_VERSION_PERL)
+    fi
+    if test "$oz_tmp_ok" = yes; then
+      oz_cv_PERL=$PERL
+    else
+      AC_MSG_ERROR([
+Perl version] OZ_VERSION_PERL [or higher is needed to build the system.
+It can be retrieved from:
+
+        http://language.perl.com/info/software.html
+
+The latest version at this time is 5.004_04 and is available
+packaged as the following archive:
+
+        http://language.perl.com/CPAN/src/latest.tar.gz
+
+You may find further information on the Perl site:
+
+        http://www.perl.org/
+])
+    fi
+  else
+    OZ_FROM_CACHE(PERL,[for perl])
+  fi
+  AC_SUBST(PERL)])
+
+dnl ------------------------------------------------------------------
+dnl OZ_PROG_M4
+dnl
+dnl locate GNU m4. sets M4 and M4_S
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_PROG_M4_GNU,[
+  if oz_tmp=`$M4 --version 2>/dev/null` && \
+     oz_tmp=`expr "$oz_tmp" : GNU`; then
+    GNU_M4=yes
+  else
+    GNU_M4=no
+  fi])
+
+AC_DEFUN(OZ_PROG_M4,[
+  if test -z "$oz_cv_M4"; then
+    AC_CHECK_PROGS(M4,gm4 m4,NONE)
+    if test "$M4" = NONE; then
+      oz_tmp_ok=no;
+    else
+      OZ_PROG_M4_GNU
+      if test "$GNU_M4" = no; then
+        oz_tmp_ok=no
+        AC_MSG_WARN([$M4 is not GNU m4])
+      else
+        oz_tmp_ok=yes
+      fi
+      if test "$oz_tmp_ok" = yes; then
+        oz_cv_M4=$M4
+      else
+        AC_MSG_ERROR([
+GNU m4 is needed to build the system.
+It can be retrieved from:
+
+        ftp://ftp.gnu.org/pub/gnu/
+
+The latest version at this time is 1.4 and is available
+packaged as the following archive:
+
+        m4-1.4.tar.gz
+
+You may find a mirror archive closer to you by consulting:
+
+        http://www.gnu.org/order/ftp.html
+])
+      fi
+    fi
+  else
+    OZ_FROM_CACHE(M4,[for GNU m4])
+  fi
+  M4_S="-s"
+  AC_SUBST(M4)
+  AC_SUBST(M4_S)])
+
+dnl ------------------------------------------------------------------
+dnl OZ_PROG_MAKE
+dnl
+dnl locate GNU make. sets MAKE
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_PROG_MAKE_GNU,[
+  if oz_tmp=`$MAKE --version 2>/dev/null` && \
+     oz_tmp=`expr "$oz_tmp" : GNU`; then
+    GNU_MAKE=yes
+  else
+    GNU_MAKE=no
+  fi])
+
+AC_DEFUN(OZ_PROG_MAKE,[
+  if test -z "$oz_cv_MAKE"; then
+    AC_CHECK_PROGS(MAKE,gmake make,NONE)
+    if test "$MAKE" = NONE; then
+      oz_tmp_ok=no
+    else
+      OZ_PROG_MAKE_GNU
+      if test "$GNU_MAKE" = no; then
+        oz_tmp_ok=no
+        AC_MSG_WARN([$MAKE is not GNU make])
+      else
+        oz_tmp_ok=yes
+      fi
+    fi
+    if test "$oz_tmp_ok" = yes; then
+      oz_cv_MAKE=$MAKE
+    else
+      AC_MSG_ERROR([
+GNU make is needed to build the system.
+It can be retrieved from:
+
+        ftp://ftp.gnu.org/pub/gnu/
+
+The latest version at this time is 3.77 and is available
+packaged as the following archive:
+
+        make-3.77.tar.gz
+
+You may find a mirror archive closer to you by consulting:
+
+        http://www.gnu.org/order/ftp.html
+])
+    fi
+  else
+    OZ_FROM_CACHE(MAKE,[for GNU make])
+  fi
+  AC_SUBST(MAKE)])
+
+dnl ==================================================================
 dnl OLD STUFF
 dnl ==================================================================
 
@@ -473,38 +756,48 @@ AC_DEFUN(OZ_CHECK_LIB_PATH, [
         fi
         ])
 
+AC_DEFUN(OZ_ADDTO_CPPFLAGS,[
+  oz_tmp_ok=yes
+  for oz_tmp in $CPPFLAGS NONE; do
+    if test "$oz_tmp" = "[$1]"; then
+      oz_tmp_ok=no
+      break
+    fi
+  done
+  test "$oz_tmp_ok" = yes && CPPFLAGS="$CPPFLAGS${CPPFLAGS:+ }[$1]"
+])
 
-dnl derived from tools/gdbm/configurea
+
 AC_DEFUN(OZ_CHECK_HEADER_PATH, [
-        my_cppflags="$CPPFLAGS"
-        my_found=no
-        AC_MSG_CHECKING([for $1 (default)])
-        AC_TRY_CPP([#include "$1"],
-                AC_MSG_RESULT(yes)
-                my_found=yes
-                ,
-                AC_MSG_RESULT(no)
-                for p in $oz_inc_path
-                do
-                        AC_MSG_CHECKING([[for $1 in $p]])
-                        CPPFLAGS="$my_cppflags -I$p"
-                        AC_TRY_CPP([#include "$1"],
-                                AC_MSG_RESULT(yes)
-                                my_found=yes
-                                break
-                                ,
-                                AC_MSG_RESULT(no))
-                done)
-        if test $my_found = yes
-        then
-           :
-           $2
-        else
-           :
-           CPPFLAGS=$my_cppflags
-           $3
-        fi
-        ])
+  AC_CACHE_CHECK([for $1],dnl
+changequote(`,')oz_cv_header_`'patsubst($1,[^a-zA-Z0-9],_),
+changequote([,])
+    [
+      oz_tmp_cppflags="$CPPFLAGS"
+      oz_tmp_ok=no
+      AC_TRY_CPP([#include "$1"],[
+        oz_tmp_ok=yes],[
+        for oz_tmp in $oz_inc_path; do
+          CPPFLAGS="$oz_tmp_cppflags -I$p"
+          AC_TRY_CPP([#include "$1"],[
+            oz_tmp_ok="-I$p"
+            break])
+        done])
+      CPPFLAGS=$oz_tmp_cppflags
+changequote(`,')oz_cv_header_`'patsubst($1,[^a-zA-Z0-9],_)="$oz_tmp_ok"
+changequote([,])
+    ])
+changequote(`,')
+  oz_tmp_val=$oz_cv_header_`'patsubst($1,[^a-zA-Z0-9],_)
+changequote([,])
+  if test "$oz_tmp_val" != no; then
+    if test "$oz_tmp_val" != yes; then
+      OZ_ADDTO_CPPFLAGS($oz_tmp_val)
+    fi
+    $2
+  else
+    ifelse([$3],[],:,$3)
+  fi])
 
 AC_DEFUN(OZ_CONTRIB_INIT,[
     OZ_INIT

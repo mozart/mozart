@@ -523,6 +523,35 @@ fi
 
 
 
+
+  echo $ac_n "checking for test""... $ac_c" 1>&6
+echo "configure:529: checking for test" >&5
+if eval "test \"`echo '$''{'oz_cv_TEST'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+
+    if test -e . 2>/dev/null; then
+      oz_cv_TEST=test
+    else
+      oz_tmp_IFS="$IFS"
+      IFS="$IFS:"
+      for oz_tmp in $PATH; do
+        if $oz_tmp/test -e . 2>/dev/null; then
+          oz_tmp=`cd $oz_tmp && pwd`
+          oz_cv_TEST="$oz_tmp/test"
+          break
+        fi
+      done
+      IFS=$oz_tmp_IFS
+      if test -n "$oz_cv_TEST"; then
+        { echo "configure: error: cannot locate a working test" 1>&2; exit 1; }
+      fi
+    fi
+fi
+
+echo "$ac_t""$oz_cv_TEST" 1>&6
+  TEST=$oz_cv_TEST
+
 ac_aux_dir=
 for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
   if test -f $ac_dir/install-sh; then
@@ -551,10 +580,11 @@ ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
 
 
   echo $ac_n "checking for SRCTOP""... $ac_c" 1>&6
-echo "configure:555: checking for SRCTOP" >&5
+echo "configure:584: checking for SRCTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_SRCTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
+
 
 
   oz_tmp_dir=$srcdir
@@ -566,7 +596,7 @@ else
                    $oz_tmp_dir/../../.. \
                    $oz_tmp_dir/../../../.. \
                    $oz_tmp_dir/../../../../..; do
-      if test -e "$oz_tmp2/$oz_tmp1"; then
+      if $TEST -e "$oz_tmp2/$oz_tmp1"; then
         oz_cv_path_SRCTOP=`cd $oz_tmp2 && pwd`
         oz_tmp_ok=yes
         break
@@ -584,10 +614,11 @@ echo "$ac_t""$oz_cv_path_SRCTOP" 1>&6
 
 
   echo $ac_n "checking for BUILDTOP""... $ac_c" 1>&6
-echo "configure:588: checking for BUILDTOP" >&5
+echo "configure:618: checking for BUILDTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_BUILDTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
+
 
 
   oz_tmp_dir=.
@@ -599,7 +630,7 @@ else
                    $oz_tmp_dir/../../.. \
                    $oz_tmp_dir/../../../.. \
                    $oz_tmp_dir/../../../../..; do
-      if test -e "$oz_tmp2/$oz_tmp1"; then
+      if $TEST -e "$oz_tmp2/$oz_tmp1"; then
         oz_cv_path_BUILDTOP=`cd $oz_tmp2 && pwd`
         oz_tmp_ok=yes
         break
@@ -616,7 +647,7 @@ echo "$ac_t""$oz_cv_path_BUILDTOP" 1>&6
   BUILDTOP=$oz_cv_path_BUILDTOP
 
   echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:620: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:651: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -653,7 +684,7 @@ fi
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:657: checking for a BSD compatible install" >&5
+echo "configure:688: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -713,7 +744,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:717: checking for $ac_word" >&5
+echo "configure:748: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -757,7 +788,7 @@ BUILDTOP=`pwd`
 
 : ${oz_subdirs="platform share contrib doc"}
 echo $ac_n "checking for --enable-subdirs""... $ac_c" 1>&6
-echo "configure:761: checking for --enable-subdirs" >&5
+echo "configure:792: checking for --enable-subdirs" >&5
 # Check whether --enable-subdirs or --disable-subdirs was given.
 if test "${enable_subdirs+set}" = set; then
   enableval="$enable_subdirs"
@@ -930,6 +961,7 @@ s%@oldincludedir@%$oldincludedir%g
 s%@infodir@%$infodir%g
 s%@mandir@%$mandir%g
 s%@SRCDIR@%$SRCDIR%g
+s%@TEST@%$TEST%g
 s%@SRCTOP@%$SRCTOP%g
 s%@BUILDTOP@%$BUILDTOP%g
 s%@SET_MAKE@%$SET_MAKE%g
