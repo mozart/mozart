@@ -998,7 +998,7 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
           class=index/gdb/.
           <!--** reference to gdb -->
           <List>
-            <Entry class=command><Span class=index/<<oz-gdb>>/ (<Key/C-c C-g/)
+            <Entry class=command><Span class=index/<<oz-gdb>>/
             <Item>
               <!--** reference to gud-mode -->
               <Index/<<oz>> shell script/
