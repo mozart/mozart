@@ -103,9 +103,73 @@ Their only possible fault state is <<ok>>.
 
 <SUBSECTION><TITLE>Ports</TITLE>
 
+<P> A port has one owner site
+and a set of proxy sites.
+The following failure modes are possible:
+<LIST>
+<ITEM> Normal operation (<<ok>>).
+<ITEM> Owner site down (<<permBlock>>).
+<ITEM> Owner site unreachable (<<tempBlock>>).
+</LIST>
+A port has a single operation, <<Send>>,
+which can complete if the fault state is <<ok>>.
+
 <SUBSECTION><TITLE>Logic variables</TITLE>
 
+<P> A logic variable has one owner site
+and a set of proxy sites.
+The following failure modes are possible:
+<LIST>
+<ITEM> Normal operation (<<ok>>).
+<ITEM> Owner site down (<<permBlock>>).
+<ITEM> Owner site unreachable (<<tempBlock>>).
+<ITEM> Some proxy sites down (<<remoteProblem>>).
+<ITEM> Some proxy sites unreachable (<<remoteProblem>>).
+</LIST>
+<P> A logic variable has two operations,
+binding and waiting until bound.
+The bind operation can complete if the
+fault state is <<ok>> or <<remoteProblem>>.
+
+<P> The wait operation completes when another
+proxy binds the variable.
+The wait operation can complete if the
+fault state is <<ok>>.
+If the fault state is <<remoteProblem>>,
+then the wait operation may not be able
+to complete if the problem exists 
+at the proxy that should bind the variable.
+Therefore, it is important to detect the
+fault state <<remoteProblem>>.
+
+<P> A common case for variables is the client-server.
+The client sends a request containing a variable to the server.
+The server binds the variable to the answer.
+The variable exists only on the client and server sites.
+In this case, if the client detects a <<remoteProblem>>
+then it knows that the variable binding will be delayed.
+
 <SUBSECTION><TITLE>Objects and cells</TITLE>
+
+<P> Objects and cells have the same failure behavior.
+An object has one owner site and a set of proxy sites.
+At any given time instant,
+the object's state pointer is at one proxy
+or in the network.
+The following failure modes are possible:
+<LIST>
+<ITEM> Normal operation (<<ok>>).
+<ITEM> Owner site down and state pointer not present (<<permBlock>>).
+<ITEM> Owner site unreachable and state pointer not present (<<tempBlock>>).
+<ITEM> State pointer lost (owner site up) (<<permBlock>>).
+<ITEM> State pointer unreachable (owner site up) (<<tempBlock>>).
+<ITEM>
+</LIST>
+<P> Objects and cells have one primitive operation,
+namely a state update.
+For a cell this operation is called exchange.
+The exchange operation can complete if the
+fault state is <<ok>>.
 
 <SECTION><TITLE>Basic fault-tolerant operations</TITLE>
 
