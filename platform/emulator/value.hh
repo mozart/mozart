@@ -100,7 +100,7 @@ public:
   static Atom *newAtom(char *str);
   char* getPrintName() { return printName; }
   int getSize() { return getOthers(); }
-  unsigned int hash() { return ToInt32(getPrintName()); }
+  unsigned int hash() { return ToInt32(getPrintName()); } // == this!
 };
 
 
