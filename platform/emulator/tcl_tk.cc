@@ -237,15 +237,15 @@ OZ_C_proc_begin(BIisTcl, 2) {
 
 OZ_C_proc_begin(BIisTclFilter, 3) {
   TaggedRef tcl = OZ_getCArg(0);
-  State s = PROCEED;
 
   DEREF(tcl, tcl_ptr, tcl_tag);
 
   if (isAnyVar(tcl_tag)) {
     return OZ_suspendOnVar(makeTaggedRef(tcl_ptr));
   } else if (isLiteral(tcl_tag)) {
-    s = isTcl(tcl);
+    return OZ_unify(OZ_getCArg(2), NameTrue);
   } else if (isSRecord(tcl_tag)) {
+    State s = PROCEED;
     SRecord * sr = tagged2SRecord(tcl);
     TaggedRef as = deref(sr->getArityList());
     TaggedRef fs = deref(OZ_getCArg(1));
@@ -284,7 +284,6 @@ OZ_C_proc_begin(BIisTclFilter, 3) {
         as = deref(tagged2LTuple(as)->getTail());
       }
     }
-
   exit:
     switch (s) {
     case FAILED:
@@ -295,8 +294,6 @@ OZ_C_proc_begin(BIisTclFilter, 3) {
       return s;
     }
   }
-
-  return FAILED;
 } OZ_C_proc_end
 
 
@@ -719,46 +716,52 @@ OZ_C_proc_begin(BItclWriteFilter,7) {
   vs2buffer(OZ_getCArg(2));
   tcl_put(' ');
 
-  SRecord   * sr = tagged2SRecord(deref(OZ_getCArg(3)));
-  TaggedRef as   = deref(sr->getArityList());
-  TaggedRef fs   = deref(OZ_getCArg(4));
+  TaggedRef tr   = OZ_getCArg(3);
 
-  while (isLTuple(as) && isLTuple(fs)) {
-    TaggedRef a = deref(tagged2LTuple(as)->getHead());
-    TaggedRef f = deref(tagged2LTuple(fs)->getHead());
+  DEREF(tr, t_p, tr_tag);
 
-    if (tagged2Literal(a)->isAtom()) {
+  if (isSRecord(tr_tag)) {
+    SRecord   * sr = tagged2SRecord(tr);
+    TaggedRef as   = deref(sr->getArityList());
+    TaggedRef fs   = deref(OZ_getCArg(4));
 
-      switch (atomcmp(a,f)) {
-      case 0:
-        fs = deref(tagged2LTuple(fs)->getTail());
-        goto skip;
-      case 1:
-        fs = deref(tagged2LTuple(fs)->getTail());
-      case -1:
+    while (isLTuple(as) && isLTuple(fs)) {
+      TaggedRef a = deref(tagged2LTuple(as)->getHead());
+      TaggedRef f = deref(tagged2LTuple(fs)->getHead());
+
+      if (tagged2Literal(a)->isAtom()) {
+
+        switch (atomcmp(a,f)) {
+        case 0:
+          fs = deref(tagged2LTuple(fs)->getTail());
+          goto skip;
+        case 1:
+          fs = deref(tagged2LTuple(fs)->getTail());
+        case -1:
+          tcl_put('-');
+          atom2buffer(a);
+          tcl_put(' ');
+          tcl2buffer(sr->getFeature(a));
+          tcl_put(' ');
+        }
+
+      skip:
+        as = deref(tagged2LTuple(as)->getTail());
+
+      }
+    }
+
+    while (isLTuple(as)) {
+      TaggedRef a = deref(tagged2LTuple(as)->getHead());
+
+      if (tagged2Literal(a)->isAtom()) {
         tcl_put('-');
         atom2buffer(a);
-        tcl_put(' ');
-        tcl2buffer(sr->getFeature(a));
-        tcl_put(' ');
-      }
-
-    skip:
-      as = deref(tagged2LTuple(as)->getTail());
-
-    }
-  }
-
-  while (isLTuple(as)) {
-    TaggedRef a = deref(tagged2LTuple(as)->getHead());
-
-    if (tagged2Literal(a)->isAtom()) {
-      tcl_put('-');
-      atom2buffer(a);
       tcl_put(' ');
       tcl2buffer(sr->getFeature(a));
       tcl_put(' ');
       as = deref(tagged2LTuple(as)->getTail());
+      }
     }
   }
 
