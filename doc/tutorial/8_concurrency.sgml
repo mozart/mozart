@@ -223,9 +223,9 @@ by making a functor of the program as shown in <PTR TO="pingpong1">,
 and storing it in your file <<PingPong.oz>>. Thereafter use the
 command:
 <<< ozc -x PingPong.oz >>>
-<P> Now type PingPong in your shell to start the program
-<NOTE FOOT>To terminate this program in the OS shell you have to
-type CONTROL-C. We will see later how to terminate it properly</NOTE>.
+<P> Now type PingPong in your shell to start the program.<NOTE FOOT>To
+terminate this program in the OS shell you have to
+type CONTROL-C. We will see later how to terminate it properly.</NOTE>
 <P><FIGURE ID="pingpong1" CLASS="Figure">
 <CAPTION>A 'Ping Pong' program stand-alone</CAPTION>
 <<<
@@ -402,12 +402,12 @@ program. You will quickly notice that this program does not behave
 well. The reason has to do with the asynchronous message passing. If
 the producer sends messages i.e. create new elements in the stream, in
 a faster rate than the consumer can consume, increasingly more
-buffering will be needed until the system starts to break down<NOTE
+buffering will be needed until the system starts to break down.<NOTE
 FOOT>Ironically in the Mozart system, using the distributed programming
 capabilities, stream
 communication across sites works better because of designed flow
 control mechanism that suspends producers when the network buffers are
-full</NOTE>. There are a number of ways to solve this problem. One is
+full.</NOTE> There are a number of ways to solve this problem. One is
 to create a bounded buffer between producers and consumers which we
 will discuss later. Another way is to change the
 thread execution speed (by changing the thread's priority)
