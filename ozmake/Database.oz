@@ -20,56 +20,61 @@ define
 
       meth database_read()
 	 if @Mogul2Package==unit then
-	    %%
-	    %% old-style database:
-	    %%     ~/.oz/DATABASE.ozf
-	    %%     ~/.oz/DATABASE.txt
-	    %%
-	    %% new-style database:
-	    %%     ~/.oz/apps/ozmake/ozmake.db
-	    %%
-	    %% we need some AI to switch automatically from the old-style
-	    %% database to the new style.  If the new-style database is
-	    %% not found, then we look for an old-style database, convert
-	    %% it to new style, write the new one, and remove the old one.
-	    %%
-	    F1 = {self get_database($)}
-	 in
-	    if {Path.exists F1} then
-	       Database,Init({self databaselib_read(F1 $)})
-	    elseif {self get_database_given($)} then
-	       raise ozmake(database:filenotfound(F1)) end
+	    if {self get_database_ignore($)} then
+	       Mogul2Package <- {NewDictionary}
+	       File2Package  <- {NewDictionary}
 	    else
-	       F2 = {self get_database_oldstyle($)}
+	       %%
+	       %% old-style database:
+	       %%     ~/.oz/DATABASE.ozf
+	       %%     ~/.oz/DATABASE.txt
+	       %%
+	       %% new-style database:
+	       %%     ~/.oz/apps/ozmake/ozmake.db
+	       %%
+	       %% we need some AI to switch automatically from the old-style
+	       %% database to the new style.  If the new-style database is
+	       %% not found, then we look for an old-style database, convert
+	       %% it to new style, write the new one, and remove the old one.
+	       %%
+	       F1 = {self get_database($)}
 	    in
-	       if {Path.exists F2#'.ozf'} orelse {Path.exists F2#'.txt'} then
-		  {self trace('detected old-style database')}
-		  {self incr}
-		  fun {FromTxt E}
-		     Database,ByteStringify(E $)
-		  end
-		  L={self databaselib_read_oldstyle(F2 FromTxt $)}
+	       if {Path.exists F1} then
+		  Database,Init({self databaselib_read(F1 $)})
+	       elseif {self get_database_given($)} then
+		  raise ozmake(database:filenotfound(F1)) end
+	       else
+		  F2 = {self get_database_oldstyle($)}
 	       in
-		  if L\=unit then
-		     Database,Init(L)
-		     if {self get_savedb($)} then
-			{self trace('replacing by new-style database')}
-			{self database_save}
-			if {Path.exists F2#'.ozf'} then
-			   {self exec_rm(F2#'.ozf')}
-			end
-			if {Path.exists F2#'.txt'} then
-			   {self exec_rm(F2#'.txt')}
-			end
+		  if {Path.exists F2#'.ozf'} orelse {Path.exists F2#'.txt'} then
+		     {self trace('detected old-style database')}
+		     {self incr}
+		     fun {FromTxt E}
+			Database,ByteStringify(E $)
 		     end
+		     L={self databaselib_read_oldstyle(F2 FromTxt $)}
+		  in
+		     if L\=unit then
+			Database,Init(L)
+			if {self get_savedb($)} then
+			   {self trace('replacing by new-style database')}
+			   {self database_save}
+			   if {Path.exists F2#'.ozf'} then
+			      {self exec_rm(F2#'.ozf')}
+			   end
+			   if {Path.exists F2#'.txt'} then
+			      {self exec_rm(F2#'.txt')}
+			   end
+			end
+		     else
+			{self trace('oh hum... ignoring database')}
+			Database,Init(nil)
+		     end
+		     {self decr}
 		  else
-		     {self trace('oh hum... ignoring database')}
+		     {self trace('no database')}
 		     Database,Init(nil)
 		  end
-		  {self decr}
-	       else
-		  {self trace('no database')}
-		  Database,Init(nil)
 	       end
 	    end
 	 end
@@ -87,70 +92,72 @@ define
       end
 
       meth database_check_grade(?Skip)
-	 {self database_read}
-	 Grade={self get_grade($)}
-      in
-	 if Grade==any then skip else
-	    MOG = {self get_mogul($)}
-	    PKG = {CondSelect @Mogul2Package MOG unit}
+	 if {self get_database_ignore($)} then Skip=false else
+	    {self database_read}
+	    Grade={self get_grade($)}
 	 in
-	    %% is the package already installed
-	    if PKG\=unit then
-	       %% make sure we actually get dates (not unit)
-	       CurDate = {Utils.dateCurrent}
-	       CurNext = {AdjoinAt CurDate sec 1+CurDate.sec}
-	       OldReleased0 =
-	       local D={CondSelect PKG released unit} in
-		  if D\=unit then D else
-		     D={CondSelect PKG installed unit}
-		  in
-		     if D\=unit then D else CurDate end
-		  end
-	       end
-	       %% oops! OS.localTime returns time(...) with more features than
-	       %% we need.  Here is a fix to accommodate dates recorded before
-	       %% I noticed the problem.
-	       OldReleased =
-	       if {Label OldReleased0}==date then OldReleased0 else
-		  date(
-		     year : {CondSelect OldReleased0 year 0}
-		     mon  : {CondSelect OldReleased0 mon  1}
-		     mDay : {CondSelect OldReleased0 mDay 1}
-		     hour : {CondSelect OldReleased0 hour 0}
-		     min  : {CondSelect OldReleased0 min  0}
-		     sec  : {CondSelect OldReleased0 sec  0})
-	       end
-	       NewReleased =
-	       local D={self get_released($)} in
-		  if D\=unit then D else CurNext end
-	       end
-	       NewOldCmp =
-	       if NewReleased==OldReleased then eq
-	       elseif {Utils.dateLess NewReleased OldReleased} then lt
-	       else gt end
-	       OldString = {Utils.dateToUserVS OldReleased}
-	       NewString = {Utils.dateToUserVS NewReleased}
+	    if Grade==any then skip else
+	       MOG = {self get_mogul($)}
+	       PKG = {CondSelect @Mogul2Package MOG unit}
 	    in
-	       case Grade
-	       of none then
-		  raise ozmake(database:nograde(OldString NewString NewOldCmp)) end
-	       [] same then
-		  if NewOldCmp\=eq then
-		     raise ozmake(database:samegrade(OldString NewString NewOldCmp)) end
+	       %% is the package already installed
+	       if PKG\=unit then
+		  %% make sure we actually get dates (not unit)
+		  CurDate = {Utils.dateCurrent}
+		  CurNext = {AdjoinAt CurDate sec 1+CurDate.sec}
+		  OldReleased0 =
+		  local D={CondSelect PKG released unit} in
+		     if D\=unit then D else
+			D={CondSelect PKG installed unit}
+		     in
+			if D\=unit then D else CurDate end
+		     end
 		  end
-	       [] up then
-		  if NewOldCmp==lt then
-		     raise ozmake(database:upgrade(OldString NewString)) end
+		  %% oops! OS.localTime returns time(...) with more features than
+		  %% we need.  Here is a fix to accommodate dates recorded before
+		  %% I noticed the problem.
+		  OldReleased =
+		  if {Label OldReleased0}==date then OldReleased0 else
+		     date(
+			year : {CondSelect OldReleased0 year 0}
+			mon  : {CondSelect OldReleased0 mon  1}
+			mDay : {CondSelect OldReleased0 mDay 1}
+			hour : {CondSelect OldReleased0 hour 0}
+			min  : {CondSelect OldReleased0 min  0}
+			sec  : {CondSelect OldReleased0 sec  0})
 		  end
-	       [] down then
-		  if NewOldCmp==gt then
-		     raise ozmake(datebase:downgrade(OldString NewString)) end
+		  NewReleased =
+		  local D={self get_released($)} in
+		     if D\=unit then D else CurNext end
 		  end
-	       [] freshen then Skip=(NewOldCmp\=gt)
+		  NewOldCmp =
+		  if NewReleased==OldReleased then eq
+		  elseif {Utils.dateLess NewReleased OldReleased} then lt
+		  else gt end
+		  OldString = {Utils.dateToUserVS OldReleased}
+		  NewString = {Utils.dateToUserVS NewReleased}
+	       in
+		  case Grade
+		  of none then
+		     raise ozmake(database:nograde(OldString NewString NewOldCmp)) end
+		  [] same then
+		     if NewOldCmp\=eq then
+			raise ozmake(database:samegrade(OldString NewString NewOldCmp)) end
+		     end
+		  [] up then
+		     if NewOldCmp==lt then
+			raise ozmake(database:upgrade(OldString NewString)) end
+		     end
+		  [] down then
+		     if NewOldCmp==gt then
+			raise ozmake(datebase:downgrade(OldString NewString)) end
+		     end
+		  [] freshen then Skip=(NewOldCmp\=gt)
+		  end
 	       end
 	    end
+	    if {IsFree Skip} then Skip=false end
 	 end
-	 if {IsFree Skip} then Skip=false end
       end
 
       meth database_mutable_entry(MOG $)
@@ -221,14 +228,16 @@ define
       end
 
       meth database_save
-	 if {self get_savedb($)} then
-	    {self databaselib_save(
-		     {self get_database($)}
-		     {Map {Dictionary.items @Mogul2Package}
-		      fun {$ E}
-			 if {IsDictionary E}
-			 then {Dictionary.toRecord package E} else E end
-		      end})}
+	 if {self get_database_ignore($)} then skip else
+	    if {self get_savedb($)} then
+	       {self databaselib_save(
+			{self get_database($)}
+			{Map {Dictionary.items @Mogul2Package}
+			 fun {$ E}
+			    if {IsDictionary E}
+			    then {Dictionary.toRecord package E} else E end
+			 end})}
+	    end
 	 end
       end
 

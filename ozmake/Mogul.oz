@@ -156,7 +156,7 @@ define
       meth mogul_put()
 	 %% here we update the MOGUL entry for this package
 	 {self makefile_read_maybe_from_package}
-	 R  = {self makefile_to_record($)}
+	 R  = {self makefile_to_record($ relax:true)}
 	 PkgB = {self HasPackageContribs(R $)}
 	 ConB = {self HasContactContribs(R $)}
       in
@@ -213,6 +213,7 @@ define
 	 [] L    then D.categories := L end
 	 local P = {Dictionary.toRecord package D} in
 	    @DB.(R.mogul) := P
+	    {self trace('updated entry for '#R.mogul)}
 	    {self mogul_trace_package(P)}
 	 end
       end
@@ -236,6 +237,7 @@ define
 	 end
 	 local C = {Dictionary.toRecord contact D} in
 	    @DB.(R.mogul) := C
+	    {self trace('updated entry for '#R.mogul)}
 	    {self mogul_trace_contact(C)}
 	 end
       end
@@ -376,7 +378,7 @@ define
       end
 
       meth mogul_validate_action(S $)
-	 case for A in [put delete list 'export' setup] collect:C do
+	 case for A in [put delete list 'export'] collect:C do
 		 if {IsPrefix S {AtomToString A}} then {C A} end
 	      end
 	 of nil then raise ozmake(mogul:unknownaction(S)) end
@@ -448,6 +450,48 @@ define
 	    [] package then {self mogul_trace_package(E print:true)}
 	    end
 	 end
+      end
+
+      meth publish
+	 %% ozmake --publish
+	 %% is essentially equivalent to the following sequence:
+	 %%
+	 %% 1. ozmake --install --package=PKG --includedocs --excludelibs --excludebins --docdir=DOCDIR/MOG
+	 %%    where DOCDIR is given by --moguldocdir and MOG is the package's MOGUL id
+	 %%
+	 %% 2. ozmake --create --package PKG
+	 %%    where PKG's directory is given by --mogulpkgdir and PKG's
+	 %%    filename is computed from the package's MOGUL id
+	 %%
+	 %% 3. ozmake --mogul=put --package PKG
+	 %%
+	 %% 4. ozmake --mogul=export
+	 %%
+	 {self set_database_ignore(true)}
+	 {self makefile_read}
+	 %% install docs if necessary
+	 local L={self get_doc_targets($)} in
+	    if L\=nil then
+	       {self set_docdir({Path.resolve
+				 {self get_moguldocdir($)}
+				 {Utils.mogulToFilename {self get_mogul($)}}})}
+	       {self install(L)}
+	    end
+	 end
+	 %% create and install package if necessary
+	 if {self get_bin_targets($)}\=nil orelse
+	    {self get_lib_targets($)}\=nil orelse
+	    {self get_doc_targets($)}\=nil
+	 then
+	    {self set_package(
+		     {Path.resolve
+		      {self get_mogulpkgdir($)}
+		      {Utils.mogulToPackagename {self get_mogul($)}}})}
+	    {self create}
+	 end
+	 %% create all mogul entries
+	 {self mogul_put}
+	 {self mogul_export}
       end
    end
 end

@@ -552,7 +552,7 @@ define
 
       %% turn the makefile back into a record for inclusion in a package
 
-      meth makefile_to_record($)
+      meth makefile_to_record($ relax:RELAX<=false)
 	 MAK={NewDictionary}
 	 Clean     = {self get_clean($)}
 	 Veryclean = {self get_veryclean($)}
@@ -582,7 +582,9 @@ define
 	 then
 	    MAK.uri  := {self get_uri($)}
 	 end
-	 MAK.mogul   := {self get_mogul($)}
+	 MAK.mogul   := if RELAX
+			then {self get_mogul_relax($)}
+			else {self get_mogul($)} end
 	 if Clean    \=unit then MAK.clean     := Clean     end
 	 if Veryclean\=unit then MAK.veryclean := Veryclean end
 	 if Author   \=unit then MAK.author    := Author    end

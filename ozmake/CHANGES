@@ -35,6 +35,11 @@
     create all necessary MOGUL entries for download by the MOGUL librarian
 ** ozmake --config=(put|delete|list)
    the possible values were renamed to be similar to those for --mogul
+** --publishdir is no longer supported, instead we have
+   --moguldir    --mogulurl
+   --moguldbdir  --moguldburl
+   --mogulpkgdir --mogulpkgurl
+   --moguldocdir --moguldocurl
 
 * version 0.72
 ** ozmake --config=... now permits to manage predefined defaults

@@ -8,19 +8,6 @@ import
 define
    class Creator
 
-      meth publish
-	 %% publish is like create but computes the filename from the
-	 %% package's mogul id and places it in the user's publishing
-	 %% area
-	 {self makefile_read}
-	 MOG = {self get_mogul($)}
-	 FIL = {Utils.mogulToPackagename MOG}
-	 PKG = {Path.resolve {self get_publishdir($)} FIL}
-      in
-	 {self set_package(PKG)}
-	 Creator,create
-      end
-
       meth create
 	 {self makefile_read}
 	 %% the package file
