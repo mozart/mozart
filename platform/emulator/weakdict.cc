@@ -1,5 +1,7 @@
 #include "weakdict.hh"
 #include "var_future.hh"
+#include "atoms.hh"
+#include "tagged.hh"
 #include "am.hh"
 
 static WeakDictionary* gcLinkedList;
@@ -37,10 +39,12 @@ void gcWeakDictionaries()
   // now gcLinkedList==0 again
 }
 
+int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...);
+
 OZ_BI_define(weakdict_new,0,2)
 {
   if (!OZ_onToplevel())
-    return OZ_raiseErrorC("weakDictionary",1,OZ_atom("new"));
+    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("weakDictionary"));
   OZ_Term srm = oz_newFuture(oz_rootBoard());
   WeakDictionary* wd = new WeakDictionary(srm);
   OZ_out(0) = srm;
@@ -76,12 +80,18 @@ OZ_declareType(ARG,VAR,OZ_Term,"feature",OZ_isFeature,NO_COERCE)
 OZ_BI_define(weakdict_put,3,0)
 {
  if (!OZ_onToplevel())
-   return OZ_raiseErrorC("weakDictionary",2,OZ_atom("put"),OZ_atom("space"));
+    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("weakDictionary"));
  OZ_declareWeakDict(0,d);
  OZ_declareDetTerm(1,k);
- OZ_declareDetTerm(2,v);
- if (OZ_isFinalizable(v)!=1)
-   return OZ_raiseErrorC("weakDictionary",3,OZ_atom("put"),OZ_atom("space"),v);
+ OZ_declareTerm(2,v);
+ TaggedRef w = v;
+ DEREF(w,w_ptr,w_tag);
+ if (isUVar(w_tag)) {
+   // we must bind the UVAR to a CVAR (simple)
+   OZ_Return r = oz_unify(makeTaggedRef(newTaggedCVar(oz_newSimpleVar(tagged2VarHome(*w_ptr)))),
+			  v);
+   if (r!=PROCEED) return r;
+ }
  d->put(k,v);
  return PROCEED;
 }
@@ -101,10 +111,22 @@ OZ_BI_define(weakdict_get,2,1)
   OZ_declareWeakDict(0,d);
   OZ_declareFeature(1,k);
   if (!OZ_onToplevel() && !d->isLocal())
-    return OZ_raiseErrorC("weakDictionary",2,OZ_atom("get"),OZ_atom("space"));
+    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("weakDictionary"));
   OZ_Term v;
   if (!d->get(k,v))
-    return OZ_raiseErrorC("weakDictionary",3,OZ_atom("get"),OZ_atom("key"),k);
+    return oz_raise(E_SYSTEM,E_KERNEL,"weakDictionary",2,OZ_in(0),OZ_in(1));
+  OZ_RETURN(v);
+}
+OZ_BI_end
+
+OZ_BI_define(weakdict_condGet,3,1)
+{
+  OZ_declareWeakDict(0,d);
+  OZ_declareFeature(1,k);
+  if (!OZ_onToplevel() && !d->isLocal())
+    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("weakDictionary"));
+  OZ_Term v;
+  if (!d->get(k,v)) OZ_RETURN(OZ_in(2));
   OZ_RETURN(v);
 }
 OZ_BI_end
@@ -134,7 +156,7 @@ OZ_BI_define(weakdict_close,0,0)
 {
   OZ_declareWeakDict(0,d);
   if (!OZ_onToplevel() && !d->isLocal())
-    return OZ_raiseErrorC("weakDictionary",2,OZ_atom("close"),OZ_atom("space"));
+    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("weakDictionary"));
   d->close();
   return PROCEED;
 }
@@ -143,10 +165,11 @@ OZ_BI_end
 OZ_C_proc_interface * oz_init_module(void)
 {
   static OZ_C_proc_interface table[] = {
-    {"is"   ,1,1,weakdict_is   },
-    {"put"  ,2,0,weakdict_put  },
-    {"get"  ,2,1,weakdict_get  },
-    {"close",0,0,weakdict_close},
+    {"is"     ,1,1,weakdict_is     },
+    {"put"    ,2,0,weakdict_put    },
+    {"get"    ,2,1,weakdict_get    },
+    {"condGet",3,1,weakdict_condGet},
+    {"close"  ,0,0,weakdict_close  },
     {0,0,0,0}
   };
   gcLinkedList = 0;
