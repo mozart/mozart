@@ -179,7 +179,7 @@ raise an exception.
           <item>see the GDBM documentation.
           <entry/Gdbm.keys/
           <synopsis/{Gdbm.key ?+{DB} ??{KEYS}}/
-          <item>Returns the lazy list of all keys in the database.
+          <item>Returns the lazy list of all ?_{KEYS} in the database.
           <entry/Gdbm.entries/
           <synopsis/{Gdbm.entries ?+{DB} ??{ENTRIES}}/
           <item>Returns the lazy list of all pairs <code/KEY#VALUE/ in
