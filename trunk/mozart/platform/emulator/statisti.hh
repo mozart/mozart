@@ -12,6 +12,8 @@
 #ifndef __STATISTICS_H__
 #define __STATISTICS_H__
 
+#include "tagged.hh"
+
 #ifdef __GNUC__
 #pragma interface
 #endif
@@ -22,61 +24,60 @@
 #   define IncfProfCounter(C,N)
 #endif
 
+
+class StatCounter {
+public:
+  unsigned long sinceIdle;
+  unsigned long total;
+  void reset()  { sinceIdle = total = 0; }
+  StatCounter() { reset(); }
+  incf(int n=1) { total+=n; }
+  void idle()   { sinceIdle = total; }
+  unsigned int sinceidle()   { return total-sinceIdle; }
+};
+
+
 class Statistics {
 private:
-  static int Statistics_gcSoFar;
-  int gc_level;
-  unsigned gc_utime;
-  unsigned gc_usedMem;
-  unsigned gc_allocMem;
+  unsigned int gcStarttime;
+  unsigned int gcStartmem;
+
 public:
+  StatCounter gcCollected;
+  StatCounter timeForCopy;
+  StatCounter timeForLoading;
+  StatCounter timeForGC;
+  StatCounter timeUtime;
+
+  StatCounter heapUsed; /* total == memory used not including getUsedMemory() */
+                        /* sinceIdle == memory reported during last idle */
+
+  // for the solve combinator
+  StatCounter solveDistributed;
+  StatCounter solveSolved;
+  StatCounter solveFailed;
+
   Statistics();
   void print(FILE *fd);
   void printIdle(FILE *fd);
 
   void reset();
 
-  
   void initGcMsg(int level);
-  void printGcMsg(void);
+  void printGcMsg(int level);
 
-  int getGCTime() { return sumTimeForGC+timeForGC; }
-  int getCopyTime() { return sumTimeForCopy+timeForCopy; }
-  int getLoadingTime() { return sumTimeForLoading+timeForLoading; }
-  double getSumHeap() { return sumHeap+timeForGC; }
-
+  void getStatistics(TaggedRef rec, TaggedRef enu);
+  
 #ifdef PROFILE
+  /* these should alos use class StatCounter */
   int allocateCounter, deallocateCounter, procCounter,
     waitCounter, askCounter,
     localVariableCounter, protectedCounter;
 #endif
 
-  int wakeUpCont;
-  int wakeUpContOpt;
-  int wakeUpNode;
-  int wakeUpBI;
-
-private:
-  // for the solve combinator
-  int solveDistributed;
-  int solveSolved;
-  int solveFailed;
-
-public:
-
-  void incSolveDistributed(void) {solveDistributed++;}
-  void incSolveSolved(void) {solveSolved++;}
-  void incSolveFailed(void) {solveFailed++;}
-  
-  unsigned int timeForGC;
-  unsigned int timeForCopy;
-  double heapAllocated,sumHeap;
-  unsigned int timeForLoading;
-  unsigned int timeSinceLastIdle;
-
-  unsigned int sumTimeForGC;
-  unsigned int sumTimeForCopy;
-  unsigned int sumTimeForLoading;
+  void incSolveDistributed(void) { solveDistributed.incf();}
+  void incSolveSolved(void)      { solveSolved.incf(); }
+  void incSolveFailed(void)      { solveFailed.incf(); }
 };
 
 #endif
