@@ -28,7 +28,6 @@ import
    %% System Modules
    Property(get)
    OS(system)
-   RecordC(tell)
    Narrator('class')
    ErrorListener('class')
    %% Application Modules
@@ -513,12 +512,9 @@ define
 	       TOCMode <- false
 	       ChunkDefinitions <- {NewDictionary}
 	       ChunkLinks <- nil
-               M.1={RecordC.tell front}
-               M.2={RecordC.tell body}
-	       HTML = [OzDocToHTML, Process(M.1 $)
+	       HTML = [OzDocToHTML, Process(M.1=front(...) $)
 		       if {HasFeature M 3} then
-                          M.3={RecordC.tell back}
-			  OzDocToHTML, Process(M.3 $)
+			  OzDocToHTML, Process(M.3=back(...) $)
 		       else EMPTY
 		       end
 		       if @Split
@@ -539,7 +535,7 @@ define
 		       else EMPTY
 		       end
 		       TopTOC
-		       OzDocToHTML, Process(M.2 $)
+		       OzDocToHTML, Process(M.2='body'(...) $)
 		       case @Exercises of nil then EMPTY
 		       else Title WhereBefore Label X HTML1 HTML in
 			  {@Reporter startSubPhase('generating answers')}
@@ -859,8 +855,7 @@ define
 		    OzDocToHTML, Batch(M 1 $))
 	       end
 	    [] para then Title in
-	       Title = M.1
-               M.1={RecordC.tell title}
+	       Title = M.1=title(...)
 	       'div'(COMMON: @Common
 		     p(COMMON: COMMON(id: {CondSelect Title id unit}
 				      'class': {CondSelect Title 'class' nil})
@@ -1144,8 +1139,7 @@ define
 	    [] chunk then Title Label Name ChunkNav Left Right Body Anon in
 	       Anon = {SGML.isOfClass M anonymous}
 	       if Anon then skip else
-                  M.1={RecordC.tell title}
-		  OzDocToHTML, Batch(M.1 1 ?Title)
+		  OzDocToHTML, Batch(M.1=title(...) 1 ?Title)
 		  ToGenerate <- Label|@ToGenerate
 		  Name = {VirtualString.toAtom
 			  {HTML.toVirtualString {HTML.clean Title}}}
@@ -1567,8 +1561,7 @@ define
 	 HTML1 Ns Title Authors Abstract TheLabel Res
       in
 	 OzDocToHTML, FlushFloats(?HTML1)
-         M.1={RecordC.tell front}
-	 Ns = {Record.toList M.1}
+	 Ns = {Record.toList M.1=front(...)}
 	 Title = case {Filter Ns fun {$ N} {Label N} == title end} of [T] then
 		    OzDocToHTML, Batch(T 1 $)
 		 [] nil then unit
