@@ -4,3 +4,4 @@ config.status
 Makefile
 catalog
 ced.el
+ozdoc.ced
