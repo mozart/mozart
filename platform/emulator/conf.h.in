@@ -73,6 +73,9 @@
 /* profiling */
 #undef PROFILE_EMULATOR
 
+/* RS profiling */
+#undef RS_PROFILE
+
 /* conf.h.in.  Generated automatically from - by autoheader.  */
 
 /* Define if using alloca.c.  */
