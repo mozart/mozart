@@ -72,14 +72,14 @@ extern char *heapTop;         // pointer to next free memory block
 #endif
 
 extern char *heapEnd;
-extern int   heapTotalSize;   // # bytes allocated
+extern int   heapTotalSize;   // # kilo bytes allocated
 
 void getMemFromOS(size_t size);
 
-// return free used bytes on the heap
+// return free used kilo bytes on the heap
 inline unsigned int getUsedMemory() {
   return heapTotalSize - 
-    (heapEnd - heapTop);
+    (heapEnd - heapTop)/KB;
 }
 
 inline unsigned int getAllocatedMemory() {
