@@ -89,7 +89,7 @@ public:
   int add(T_WHAT k, Bool &is_reflected) {
     DEBUGPRINT(("TableClass::add -- in --"));
 
-    int i = (int) htFind((intlong) k);
+    int i = (int) htFind((void *) k);
     DEBUGPRINT(("TableClass::add -- htFind --"));
     is_reflected = ((i != (int) htEmpty) && (i >= 0));
     if (i != (int) htEmpty) {
@@ -97,7 +97,7 @@ public:
     }
     DEBUGPRINT(("TableClass::add -- after loop --"));
     id_counter -= 1;
-    htAdd((intlong) k, (void *) id_counter);
+    htAdd((void *) k, (void *) id_counter);
     DEBUGPRINT(("TableClass::add -- out --"));
     return abs(id_counter)-1;
   }
@@ -105,9 +105,9 @@ public:
   void reflected(T_WHAT k) {
     DEBUGPRINT(("TableClass::reflected -- in --"));
 
-    int i = (int) htFind((intlong) k);
+    int i = (int) htFind((void *) k);
     DEBUG_ASSERT((i != (int) htEmpty) && (i < 0));
-    htAdd((intlong) k, (void *) -i);
+    htAdd((void *) k, (void *) -i);
 
     DEBUGPRINT(("TableClass::reflected -- out --"));
   }
