@@ -31,13 +31,13 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag,
   NameOoDefaultVar,NameOoRequiredArg,
   NameUnit,
-  AtomKinded, AtomDet, AtomRecord,
+  AtomKinded, AtomDet, AtomRecord, AtomLow,
   // Atoms for System.get and System.set
   AtomActive, AtomAtoms, AtomBuiltins, AtomCellHack, AtomChosen,
   AtomCloned, AtomCode, AtomCopy, AtomCreated, AtomDebug, AtomDepth,
   AtomFeed, AtomForeign, AtomFree, AtomFreelist, AtomGC, AtomHigh,
   AtomHints, AtomIdle, AtomInt, AtomInvoked, AtomLimits, AtomLoad,
-  AtomLocation, AtomMiddle, AtomNames, AtomOn, AtomPropagate,
+  AtomLocation, AtomMedium, AtomNames, AtomOn, AtomPropagate,
   AtomPropagators, AtomRun, AtomRunnable, AtomRuns, AtomShowSuspension,
   AtomStackMaxSize, AtomStopOnToplevelFailure, AtomSystem, AtomThread,
   AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth, AtomHeap,
@@ -90,6 +90,8 @@ void initLiterals()
   AtomSize         = makeTaggedAtom("size");
   AtomConstraints  = makeTaggedAtom("constraints");
 
+  AtomLow          = makeTaggedAtom("low");
+
   // For system set and get
   AtomActive                = makeTaggedAtom("active");
   AtomAtoms                 = makeTaggedAtom("atoms");
@@ -117,7 +119,7 @@ void initLiterals()
   AtomLoad                  = makeTaggedAtom("load");
   AtomLocation              = makeTaggedAtom("location");
   // AtomMax
-  AtomMiddle                = makeTaggedAtom("middle");
+  AtomMedium                = makeTaggedAtom("medium");
   // AtomMin
   AtomNames                 = makeTaggedAtom("names");
   AtomOn                    = makeTaggedAtom("on");

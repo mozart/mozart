@@ -2683,10 +2683,21 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIthreadSetPriority,2)
 {
   OZ_declareThreadArg(0,th);
-  OZ_declareIntArg(1,prio);
+  OZ_declareNonvarArg(1,atom_prio);
+  int prio;
 
-  if (prio > OZMAX_PRIORITY || prio < OZMIN_PRIORITY) {
-    TypeErrorT(0,"Int [0 ... 2]");
+  if (!isAtom(atom_prio))
+    goto type_goof;
+
+  if (literalEq(atom_prio, AtomLow)) {
+    prio = LOW_PRIORITY;
+  } else if (literalEq(atom_prio, AtomMedium)) {
+    prio = MID_PRIORITY;
+  } else if (literalEq(atom_prio, AtomHigh)) {
+    prio = HI_PRIORITY;
+  } else {
+  type_goof:
+    TypeErrorT(0,"Atom [low medium hight]");
   }
 
   if (th->isDeadThread()) return PROCEED;
@@ -2716,8 +2727,15 @@ OZ_C_proc_begin(BIthreadGetPriority,2)
 {
   OZ_declareThreadArg(0,th);
   OZ_declareArg(1,out);
+  TaggedRef prio;
 
-  return OZ_unifyInt(out,th->getPriority());
+  switch (th->getPriority()) {
+  case LOW_PRIORITY: prio = AtomLow;    break;
+  case MID_PRIORITY: prio = AtomMedium; break;
+  case HI_PRIORITY:  prio = AtomHigh;   break;
+  default: prio = AtomHigh; Assert(0);
+  }
+  return OZ_unify(prio,out);
 }
 OZ_C_proc_end
 
@@ -5932,7 +5950,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BISystemGetPriorities,1) {
   GetRecord;
   SetIntArg(AtomHigh,   ozconf.hiMidRatio);
-  SetIntArg(AtomMiddle, ozconf.midLowRatio);
+  SetIntArg(AtomMedium, ozconf.midLowRatio);
   return PROCEED;
 }
 OZ_C_proc_end
@@ -6152,10 +6170,10 @@ OZ_C_proc_begin(BISystemSetPriorities,1) {
   LookRecord(t);
 
   DoPercentFeature(high,   t, AtomHigh);
-  DoPercentFeature(middle, t, AtomMiddle);
+  DoPercentFeature(medium, t, AtomMedium);
 
   SetIfPos(ozconf.hiMidRatio,  high,   1);
-  SetIfPos(ozconf.midLowRatio, middle, 1);
+  SetIfPos(ozconf.midLowRatio, medium, 1);
 
   return PROCEED;
 }
