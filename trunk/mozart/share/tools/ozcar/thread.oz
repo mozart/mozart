@@ -241,6 +241,7 @@ in
 	    case ThreadManager,Exists(I $) then
 	       {OzcarMessage 'exception of attached thread'}
 	       Gui,markNode(I exc)
+	       Gui,markNode(I stopped)
 	       {{Dictionary.get self.ThreadDic I} printException(X)}
 	    else
 	       Q = {Debug.getParentId T}
