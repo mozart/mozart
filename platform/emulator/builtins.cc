@@ -2154,6 +2154,197 @@ OZ_C_proc_begin(BIstringToAtom,2)
 OZ_C_proc_end
 
 // ---------------------------------------------------------------------
+// Virtual Strings
+// ---------------------------------------------------------------------
+
+
+inline
+TaggedRef vs_suspend(SRecord *vs, int i, TaggedRef arg_rest) {
+  if (i == vs->getWidth()-1) {
+    return arg_rest;
+  } else {
+    SRecord *stuple = SRecord::newSRecord(AtomPair, vs->getWidth() - i);
+    stuple->setArg(0, arg_rest);
+    i++;
+    for (int j=1 ; i < vs->getWidth() ; (j++, i++))
+      stuple->setArg(j, vs->getArg(i));
+    return makeTaggedSRecord(stuple);
+  }
+}
+
+static OZ_Return vs_check(OZ_Term vs, OZ_Term *rest) {
+  DEREF(vs, vs_ptr, vs_tag);
+
+  if (isAnyVar(vs_tag)) {
+    *rest = makeTaggedRef(vs_ptr);
+    OZ_suspendOn(*rest);
+  } else if (isInt(vs_tag)) {
+    return PROCEED;
+  } else if (isFloat(vs_tag)) {
+    return PROCEED;
+  } else if (isLiteral(vs_tag) && tagged2Literal(vs)->isAtom()) {
+    return PROCEED;
+  } else if (isCons(vs_tag)) {
+    TaggedRef cdr  = vs;
+    TaggedRef prev = vs;
+
+    while (1) {
+      DEREF(cdr, cdr_ptr, cdr_tag);
+
+      if (isNil(cdr))
+	return PROCEED;
+
+      if (isAnyVar(cdr_tag)) {
+	*rest = prev;
+	OZ_suspendOn(makeTaggedRef(cdr_ptr));
+      }
+
+      if (!isCons(cdr_tag))
+	return FAILED;
+
+      TaggedRef car = tagged2LTuple(cdr)->getHead();
+      DEREF(car, car_ptr, car_tag);
+
+      if (isAnyVar(car_tag)) {
+	*rest = cdr;
+	OZ_suspendOn(makeTaggedRef(car_ptr));
+      } else if (!isSmallInt(car_tag) ||
+		 (smallIntValue(car) < 0) ||
+		 (smallIntValue(car) > 255)) {
+	return FAILED;
+      } else {
+	prev = cdr;
+	cdr  = tagged2LTuple(cdr)->getTail();
+      }
+    };
+    
+    return FAILED;
+
+  } else if (isSTuple(vs) && 
+	     literalEq(tagged2SRecord(vs)->getLabel(),AtomPair)) {
+    for (int i=0; i < tagged2SRecord(vs)->getWidth(); i++) {
+      TaggedRef arg_rest;
+      OZ_Return status = vs_check(tagged2SRecord(vs)->getArg(i), &arg_rest);
+
+      if (status == SUSPEND) {
+	*rest = vs_suspend(tagged2SRecord(vs), i, arg_rest);
+	return SUSPEND;
+      } else if (status==FAILED) {
+	return FAILED;
+      }
+    }
+    return PROCEED;
+  } else {
+    return FAILED;
+  }
+}
+
+
+static OZ_Return vs_length(OZ_Term vs, OZ_Term *rest, int *len) {
+  DEREF(vs, vs_ptr, vs_tag);
+
+  if (isAnyVar(vs_tag)) {
+    *rest = makeTaggedRef(vs_ptr);
+    OZ_suspendOn(*rest);
+  } else if (isInt(vs_tag)) {
+    *len = *len + strlen(toC(vs));
+    return PROCEED;
+  } else if (isFloat(vs_tag)) {
+    *len = *len + strlen(toC(vs));
+    return PROCEED;
+  } else if (isLiteral(vs_tag) && tagged2Literal(vs)->isAtom()) {
+    if (literalEq(vs,AtomPair) || 
+	literalEq(vs,AtomNil)) 
+      return PROCEED;
+    *len = *len + strlen(tagged2Literal(vs)->getPrintName());
+    return PROCEED;
+  } else if (isCons(vs_tag)) {
+    TaggedRef cdr  = vs;
+    TaggedRef prev = vs;
+
+    while (1) {
+      DEREF(cdr, cdr_ptr, cdr_tag);
+
+      if (isNil(cdr))
+	return PROCEED;
+
+      if (isAnyVar(cdr_tag)) {
+	*rest = prev;
+	Assert((*len)>0);
+	*len = *len - 1;
+	OZ_suspendOn(makeTaggedRef(cdr_ptr));
+      }
+
+      if (!isCons(cdr_tag))
+	return FAILED;
+
+      TaggedRef car = tagged2LTuple(cdr)->getHead();
+      DEREF(car, car_ptr, car_tag);
+
+      if (isAnyVar(car_tag)) {
+	*rest = cdr;
+	OZ_suspendOn(makeTaggedRef(car_ptr));
+      } else if (!isSmallInt(car_tag) ||
+		 (smallIntValue(car) < 0) ||
+		 (smallIntValue(car) > 255)) {
+	return FAILED;
+      } else {
+	prev = cdr;
+	cdr  = tagged2LTuple(cdr)->getTail();
+	*len = *len + 1;
+      }
+    };
+    
+    return FAILED;
+
+  } else if (isSTuple(vs) && 
+	     literalEq(tagged2SRecord(vs)->getLabel(),AtomPair)) {
+    for (int i=0; i < tagged2SRecord(vs)->getWidth(); i++) {
+      TaggedRef arg_rest;
+      OZ_Return status = 
+	vs_length(tagged2SRecord(vs)->getArg(i), &arg_rest, len);
+
+      if (status == SUSPEND) {
+	*rest = vs_suspend(tagged2SRecord(vs), i, arg_rest);
+	return SUSPEND;
+      } else if (status==FAILED) {
+	return FAILED;
+      }
+    }
+    return PROCEED;
+  } else {
+    return FAILED;
+  }
+}
+
+
+OZ_C_proc_begin(BIvsLength,3) {
+  TaggedRef rest = makeTaggedNULL();
+  int len = smallIntValue(deref(OZ_args[1]));
+  OZ_Return status = vs_length(OZ_args[0], &rest, &len);
+  if (status == SUSPEND) {
+    OZ_args[0] = rest;
+    OZ_args[1] = makeTaggedSmallInt(len);
+    return SUSPEND;
+  } else if (status == FAILED) {
+    TypeError1("VirtualString.length", 0, "Virtual String", OZ_args[0]);
+  } else {
+    return OZ_unify(OZ_args[2], makeTaggedSmallInt(len));
+  }
+} OZ_C_proc_end
+
+OZ_C_proc_begin(BIvsIs,2) {
+  TaggedRef rest = makeTaggedNULL();
+  OZ_Return status = vs_check(OZ_args[0], &rest);
+  if (status == SUSPEND) {
+    OZ_args[0] = rest;
+    return SUSPEND;
+  }
+  return OZ_unify(OZ_args[1], (status == PROCEED) ? NameTrue : NameFalse);
+} OZ_C_proc_end
+
+
+// ---------------------------------------------------------------------
 // Chunk
 // ---------------------------------------------------------------------
 
@@ -3940,30 +4131,6 @@ OZ_C_proc_begin(BIintToString, 2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BInumStrLen, 2)
-{
-  OZ_nonvarArg(0);
-
-  OZ_Term in = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-
-  int lenn;
-  
-  if (OZ_isInt(in)) {
-    char *str = toC(in);
-    lenn = strlen(str);
-  } else if (OZ_isFloat(in)) {
-    char *s = toC(in);
-    lenn = strlen(s);
-  } else {
-    TypeError1("numStrLen",0,"Number",in);
-    return FAILED;
-  }
-  return OZ_unifyInt(out,lenn);
-}
-OZ_C_proc_end
-
-
 /* -----------------------------------
    type X
    ----------------------------------- */
@@ -4917,34 +5084,6 @@ OZ_C_proc_begin(BIatomHash, 3)
     } 
   }
   return OZ_unifyInt(ret,h % mod + 1);
-}
-OZ_C_proc_end
-
-// ---------------------------------------------------------------------------
-
-OZ_C_proc_begin(BIatomConcat,3)
-{
-  OZ_declareAtomArg(0,s0);
-  OZ_declareAtomArg(1,s1);
-  OZ_Term out = OZ_getCArg(2);
-  
-  char *str = new char[strlen(s0)+strlen(s1)+1];
-  sprintf(str,"%s%s",s0,s1);
-  
-  OZ_Return ret = OZ_unifyAtom(out,str);
-  
-  delete [] str;
-  
-  return ret;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIatomLength,2)
-{
-  OZ_declareAtomArg(0,a);
-  OZ_Term out = OZ_getCArg(1);
-  
-  return OZ_unifyInt(out,strlen(a));
 }
 OZ_C_proc_end
 
@@ -6071,6 +6210,9 @@ BIspec allSpec[] = {
 
   {"isString",2,BIisString,        0},
 
+  {"IsVirtualString",      2, BIvsIs,    0},
+  {"VirtualString.length", 3, BIvsLength, 0},
+
   {"getTrue", 1,BIgetTrue,  	   0},
   {"getFalse",1,BIgetFalse,  	   0},
   {"isBool",  1,BIisBool,          (IFOR) isBoolInline},
@@ -6209,8 +6351,6 @@ BIspec allSpec[] = {
   {"intToFloat",2,BIintToFloat,  (IFOR) BIintToFloatInline},
   {"floatToInt",2,BIfloatToInt,  (IFOR) BIfloatToIntInline},
 
-  {"numStrLen",   2, BInumStrLen,		0},
-
   {"intToString",    2, BIintToString,		0},
   {"floatToString",  2, BIfloatToString,	0},
   {"stringToInt",    2, BIstringToInt,		0},
@@ -6244,9 +6384,6 @@ BIspec allSpec[] = {
   {"atomHash",       3, BIatomHash,		0},
 
   {"matchDefault",   4, BImatchDefault,         (IFOR) matchDefaultInline},
-
-  {"atomConcat",     3, BIatomConcat,		0},
-  {"atomLength",     2, BIatomLength,		0},
 
   {"gensym",         2, BIgensym,		0},
 
