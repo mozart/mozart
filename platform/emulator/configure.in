@@ -228,8 +228,9 @@ case $platform in
         oz_enable_modules_static=yes
         ;;
     freebsdelf*)
-        TOOLLDCMD="ld -shared"
-        oz_enable_modules_static=yes
+        TOOLLDCMD="gcc -shared"
+        EMULDFLAGS="-Wl,-export-dynamic"
+        : ${oz_enable_modules_static=no}
         ;;
     freebsd*)
         TOOLLDCMD="ld -Bshareable"
