@@ -1008,9 +1008,9 @@ buffer."
     (define-key map [(meta ?n)] 'oz-next-buffer)
     (define-key map [(meta ?p)] 'oz-previous-buffer)
     ;;
-    (oz-define-prefixed-keys map '[(control ?.)])
+    (oz-define-prefixed-keys map [(control ?.)])
     ;; use aliases for the long prefix
-    (oz-define-prefixed-keys map '[(control ?c) ?.] t)
+    (oz-define-prefixed-keys map [(control ?c) ?.] t)
     map)
   "Keymap used in the Oz modes.")
 
