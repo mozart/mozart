@@ -20,8 +20,8 @@ if test "${OZTOOL_INCLUDES-NONE}" = NONE; then
   fi
 fi
 
-: ${oztool_cxx="@OZTOOL_CXX@ @CDYNOPT@ $OZTOOL_INCLUDES"}
-: ${oztool_cc="cc @CDYNOPT@ $OZTOOL_INCLUDES"}
+: ${oztool_cxx="@OZTOOL_CXX@ @OZTOOLDYNOPT@ $OZTOOL_INCLUDES"}
+: ${oztool_cc="cc @OZTOOLDYNOPT@ $OZTOOL_INCLUDES"}
 : ${oztool_ld="@TOOLLDCMD@ @LDFLAGS@"}
 : ${oztool_platform="@platform@"}
 
