@@ -79,7 +79,7 @@ public:
   VarStatus checkStatusV();
   OZ_Return addSuspV(TaggedRef *v, Suspension susp, int unstable);
   Bool validV(TaggedRef v) { return FALSE; }
-  ExtVar *gcV() { return new ObjectVar(*this); }
+  OzVariable *gcV() { return new ObjectVar(*this); }
   void gcRecurseV(void);
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:oprxy>"; }
   OZ_Return bindV(TaggedRef *vptr, TaggedRef t);

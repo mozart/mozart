@@ -905,7 +905,7 @@ public:
   OZ_expect_t expectFloat(OZ_Term);
   OZ_expect_t expectFSetValue(OZ_Term);
   OZ_expect_t expectLiteral(OZ_Term);
-  OZ_expect_t expectLiteral(OZ_Term, OZ_Term *);
+  OZ_expect_t expectLiteralOutOf(OZ_Term, OZ_Term *);
   OZ_expect_t expectVector(OZ_Term, OZ_ExpectMeth);
   OZ_expect_t expectProperRecord(OZ_Term, OZ_ExpectMeth);
   OZ_expect_t expectProperRecord(OZ_Term, OZ_Term *);

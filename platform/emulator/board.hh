@@ -113,7 +113,7 @@ private:
 #endif
 
 public:
-  NO_DEFAULT_CONSTRUCTORS(Board);
+  NO_DEFAULT_CONSTRUCTORS(Board)
   Board(Actor *a,int type);
 
   USEHEAPMEMORY;

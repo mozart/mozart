@@ -21,6 +21,11 @@
  *
  */
 
+
+#if defined(INTERFACE) && !defined(PEANUTS)
+#pragma implementation "extension.hh"
+#endif
+
 #include "base.hh"
 #include "am.hh"
 

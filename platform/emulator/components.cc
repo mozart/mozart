@@ -710,12 +710,12 @@ class PipeInfo {
 public:
   int fd;
   int pid;
-  const char *file;
+  char *file;
   char *url;
   TaggedRef controlvar, out;
   URLAction action;
 
-  PipeInfo(int f, int p, const char *tmpf, const char *u, TaggedRef o, TaggedRef var,
+  PipeInfo(int f, int p, char *tmpf, const char *u, TaggedRef o, TaggedRef var,
            URLAction act):
     fd(f), pid(p), file(tmpf), out(o), action(act)
   {

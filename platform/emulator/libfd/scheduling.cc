@@ -1121,6 +1121,7 @@ cploop:
     myqsort((int *)GET_ARRAY(forCompSet0Up), 0, ts-1,compareDescRel );
   }
 
+  {
   for (int upTask=0; upTask < ts; upTask++) {
 
     kUp = MinMax[upTask].max + dur[upTask];
@@ -1264,6 +1265,7 @@ cploop:
   endUp:
     ;
   }
+  }
 
   if (reg_flag == 1) {
     for (i=0; i<ts; i++) {
@@ -1285,6 +1287,7 @@ cploop:
     myqsort((int *) GET_ARRAY(forCompSet0Down), 0, ts-1, compareAscDue);
   }
 
+  {
   for (int downTask=0; downTask < ts; downTask++) {
 
     kUp = MinMax[downTask].max + dur[downTask];
@@ -1434,6 +1437,7 @@ cploop:
     }
   endDown:
     ;
+  }
   }
 
    if (reg_flag == 1) {

@@ -482,7 +482,7 @@ private:
   int inAr,outAr;
   int map[1];
 public:
-  NO_DEFAULT_CONSTRUCTORS(OZ_Location);
+  NO_DEFAULT_CONSTRUCTORS(OZ_Location)
   static OZ_Location *newLocation(int inArity,int outArity)
   {
     int sz = sizeof(OZ_Location)+sizeof(int)*(inArity+outArity-1);

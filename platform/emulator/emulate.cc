@@ -290,7 +290,8 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
   const int outAr = bi->getOutArity();
 
   OZ_Term savedX[outAr];
-  for (int i=outAr; i--; ) savedX[i]=X[inAr+i];
+  int i;
+  for (i=outAr; i--; ) savedX[i]=X[inAr+i];
 
   OZ_Return ret1 = bi->getFun()(X,OZ_ID_MAP);
   if (ret1!=PROCEED) {
@@ -313,7 +314,7 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
       return FAILED;
     }
   }
-  for (int i=outAr;i--;) {
+  for (i=outAr;i--;) {
     OZ_Return ret2 = fastUnify(X[inAr+i],savedX[i]);
     if (ret2!=PROCEED) {
       switch (ret2) {
@@ -364,10 +365,11 @@ void set_exception_info_call(Builtin *bi,OZ_Term *X, int *map=OZ_ID_MAP)
 static
 OZ_Term biArgs(OZ_Location *loc, OZ_Term *X) {
   OZ_Term out=oz_nil();
-  for (int i=loc->getOutArity(); i--; ) {
+  int i;
+  for (i=loc->getOutArity(); i--; ) {
     out=oz_cons(oz_newVariable(),out);
   }
-  for (int i=loc->getInArity(); i--; ) {
+  for (i=loc->getInArity(); i--; ) {
     out=oz_cons(X[loc->in(i)],out);
   }
   return out;
@@ -657,7 +659,7 @@ void pushContX(TaskStack *stk,
 #define Reg7
 #endif
 
-#ifdef MIPS
+#ifdef ARCH_MIPS
 #define Reg1 asm("$16")
 #define Reg2 asm("$17")
 #define Reg3 asm("$18")

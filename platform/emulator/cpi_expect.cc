@@ -467,7 +467,7 @@ OZ_expect_t OZ_Expect::expectLiteral(OZ_Term t)
   return expectFail();
 }
 
-OZ_expect_t OZ_Expect::expectLiteral(OZ_Term t, OZ_Term * one_of)
+OZ_expect_t OZ_Expect::expectLiteralOutOf(OZ_Term t, OZ_Term * one_of)
 {
   OZ_expect_t r = expectLiteral(t);
 

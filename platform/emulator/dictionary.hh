@@ -57,7 +57,7 @@ private:
 
   USEFREELISTMEMORY;
 
-  NO_DEFAULT_CONSTRUCTORS(Pair);
+  NO_DEFAULT_CONSTRUCTORS(Pair)
   Pair(TaggedRef t1, TaggedRef t2, Pair* list) {
      term1=t1;
      term2=t2;
@@ -73,7 +73,7 @@ private:
   Pair* list;
 
 public:
-  NO_DEFAULT_CONSTRUCTORS2(PairList);
+  NO_DEFAULT_CONSTRUCTORS2(PairList)
   PairList() { list=NULL; }
 
   USEFREELISTMEMORY;
@@ -200,7 +200,7 @@ public:
 public:
   USEFREELISTMEMORY;
   OZPRINT;
-  NO_DEFAULT_CONSTRUCTORS(DynamicTable);
+  NO_DEFAULT_CONSTRUCTORS(DynamicTable)
 
   // iteration
   int getFirst() { return -1; }
@@ -364,7 +364,7 @@ private:
   // cache dictionaries are not marshalled at all.
 
 public:
-  NO_DEFAULT_CONSTRUCTORS(OzDictionary);
+  NO_DEFAULT_CONSTRUCTORS(OzDictionary)
   void init(int sz = DictDefaultSize)
   {
     table = DynamicTable::newDynamicTable(sz);

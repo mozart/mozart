@@ -466,7 +466,8 @@ OZ_BI_define(BIstoreLocation,2,0)
   }
 
   OZ_Location *loc = OZ_Location::newLocation(inArity,outArity);
-  for (int i = 0; i < inArity; i++) {
+  int i;
+  for (i = 0; i < inArity; i++) {
     OZ_Term reg = oz_deref(oz_head(inLocs));
     if (!oz_isTuple(reg) || OZ_width(reg) != 1) {
       oz_typeError(1,"Location");
@@ -483,7 +484,7 @@ OZ_BI_define(BIstoreLocation,2,0)
     loc->in(i) = j;
     inLocs = oz_deref(oz_tail(inLocs));
   }
-  for (int i = 0; i < outArity; i++) {
+  for (i = 0; i < outArity; i++) {
     OZ_Term reg = oz_deref(oz_head(outLocs));
     if (!oz_isTuple(reg) || OZ_width(reg) != 1) {
       oz_typeError(1,"Location");

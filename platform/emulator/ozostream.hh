@@ -26,6 +26,10 @@
 #ifndef OSTREAMH
 #define OSTREAMH
 
+#ifdef INTERFACE
+#pragma interface
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 

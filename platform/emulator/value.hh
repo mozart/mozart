@@ -90,8 +90,8 @@ protected:
   int getFlags() { return (flagsAndOthers&litFlagsMask); }
 
 public:
-  OZPRINTLONG;
-  NO_DEFAULT_CONSTRUCTORS(Literal);
+  OZPRINTLONG
+  NO_DEFAULT_CONSTRUCTORS(Literal)
 
   int getOthers() { return flagsAndOthers>>sizeOfLitFlags; }
   void setOthers(int value) { flagsAndOthers = getFlags()|(value<<sizeOfLitFlags); }
@@ -113,7 +113,7 @@ class Atom: public Literal {
 private:
   const char *printName;
 public:
-  NO_DEFAULT_CONSTRUCTORS(Atom);
+  NO_DEFAULT_CONSTRUCTORS(Atom)
   static Atom *newAtom(const char *str);
   const char* getPrintName() { return printName; }
   int getSize() { return getOthers(); }
@@ -126,7 +126,7 @@ protected:
   static int NameCurrentNumber;
   int32 homeOrGName;
 public:
-  NO_DEFAULT_CONSTRUCTORS(Name);
+  NO_DEFAULT_CONSTRUCTORS(Name)
   static Name *newName(Board *b);
 
   Board *getBoardInternal() {
@@ -153,7 +153,7 @@ public:
 
 class NamedName: public Name {
 public:
-  NO_DEFAULT_CONSTRUCTORS(NamedName);
+  NO_DEFAULT_CONSTRUCTORS(NamedName)
   const char *printName;
   static NamedName *newNamedName(const char *str);
   static NamedName *newCopyableName(const char *str);
@@ -335,8 +335,8 @@ protected:
   double value;
 
 public:
-  OZPRINTLONG;
-  NO_DEFAULT_CONSTRUCTORS(Float);
+  OZPRINTLONG
+  NO_DEFAULT_CONSTRUCTORS(Float)
   static Float *newFloat(double val);
   double getValue() { return value; }
   unsigned int hash() { return (unsigned int) value; }
@@ -384,9 +384,9 @@ private:
 
 public:
   USEHEAPMEMORY32;
-  OZPRINTLONG;
+  OZPRINTLONG
 
-  NO_DEFAULT_CONSTRUCTORS2(LTuple);
+  NO_DEFAULT_CONSTRUCTORS2(LTuple)
   LTuple(void) {
     DebugCheckT(args[0]=0;args[1]=0);
     COUNT1(sizeLists,sizeof(LTuple));
@@ -537,7 +537,7 @@ private:
   int32 tag;
 public:
   USEHEAPMEMORY;
-  OZPRINTLONG;
+  OZPRINTLONG
   ConstTerm() { Assert(0); }
   ConstTerm(TypeOfConst t) { init(t); }
   void init(TypeOfConst t) { tag = t<<1; }
@@ -616,9 +616,9 @@ private:
 
 public:
   USEFREELISTMEMORY;
-  OZPRINT;
+  OZPRINT
 
-  NO_DEFAULT_CONSTRUCTORS2(BigInt);
+  NO_DEFAULT_CONSTRUCTORS2(BigInt)
 
   BigInt() : ConstTerm(Co_BigInt)
   {
@@ -827,7 +827,7 @@ public:
   TertType getTertType()       { return (TertType) tagged.getTag(); }
   void setTertType(TertType t) { tagged.set(tagged.getData(),(int) t); }
 
-  NO_DEFAULT_CONSTRUCTORS(Tertiary);
+  NO_DEFAULT_CONSTRUCTORS(Tertiary)
   Tertiary() { Assert(0); }     // keep gcc happy;
   Tertiary(Board *b, TypeOfConst s,TertType t) : ConstTerm(s) {
     setTertType(t);
@@ -871,8 +871,8 @@ class ForeignPointer: public ConstTerm {
 private:
   void* ptr;
 public:
-  OZPRINT;
-  NO_DEFAULT_CONSTRUCTORS2(ForeignPointer);
+  OZPRINT
+  NO_DEFAULT_CONSTRUCTORS2(ForeignPointer)
 
   ForeignPointer():ConstTerm(Co_Foreign_Pointer),ptr(0){}
   ForeignPointer(void*p):ConstTerm(Co_Foreign_Pointer),ptr(p){}
@@ -962,7 +962,7 @@ class KeyAndIndex {
 public:
   TaggedRef key;
   int index;
-  NO_DEFAULT_CONSTRUCTORS(KeyAndIndex);
+  NO_DEFAULT_CONSTRUCTORS(KeyAndIndex)
 };
 
 class Arity {
@@ -985,8 +985,8 @@ private:
   int hashfold(int i) { return i&hashmask; }
 
 public:
-  OZPRINT;
-  NO_DEFAULT_CONSTRUCTORS(Arity);
+  OZPRINT
+  NO_DEFAULT_CONSTRUCTORS(Arity)
 
   Bool isTuple() { return hashmask == 0; }
 
@@ -1011,7 +1011,7 @@ public:
   ArityTable ( int );
   Arity *find ( TaggedRef);
   void gc();
-  OZPRINT;
+  OZPRINT
   void printStat();
 
 private:
@@ -1089,8 +1089,8 @@ private:
 
 public:
   USEHEAPMEMORY;
-  OZPRINTLONG;
-  NO_DEFAULT_CONSTRUCTORS(SRecord);
+  OZPRINTLONG
+  NO_DEFAULT_CONSTRUCTORS(SRecord)
 
   SRecord *gcSRecord();
 
@@ -1419,8 +1419,8 @@ private:
   int flags;
 public:
   USEHEAPMEMORY;
-  OZPRINTLONG;
-  NO_DEFAULT_CONSTRUCTORS(ObjectClass);
+  OZPRINTLONG
+  NO_DEFAULT_CONSTRUCTORS(ObjectClass)
 
   ObjectClass(SRecord *feat,OzDictionary *fm,SRecord *uf,OzDictionary *dm,
               Bool lck, Bool sited, Board *b)
@@ -1517,8 +1517,8 @@ private:
   SRecord *freeFeatures;
   GName  *objectID;
 public:
-  OZPRINTLONG;
-  NO_DEFAULT_CONSTRUCTORS(Object);
+  OZPRINTLONG
+  NO_DEFAULT_CONSTRUCTORS(Object)
 
   Object(Board *bb,SRecord *s,ObjectClass *ac,SRecord *feat, OzLock *lck):
     Tertiary(bb, Co_Object,Te_Local)
@@ -1658,8 +1658,8 @@ friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef value;
 public:
-  OZPRINTLONG;
-  NO_DEFAULT_CONSTRUCTORS(SChunk);
+  OZPRINTLONG
+  NO_DEFAULT_CONSTRUCTORS(SChunk)
   SChunk(Board *b,TaggedRef v)
     : ConstTermWithHome(b,Co_Chunk), value(v)
   {
@@ -1734,8 +1734,8 @@ private:
   TaggedRef *getArgs() { return args; }
 
 public:
-  NO_DEFAULT_CONSTRUCTORS(OzArray);
-  OZPRINT;
+  NO_DEFAULT_CONSTRUCTORS(OzArray)
+  OZPRINT
 
   OzArray(Board *b, int low, int high, TaggedRef initvalue)
     : ConstTermWithHome(b,Co_Array)
@@ -1811,8 +1811,8 @@ enum KindOfReg {
 
 class AssReg {
 public:
-  OZPRINT;
-  NO_DEFAULT_CONSTRUCTORS2(AssReg);
+  OZPRINT
+  NO_DEFAULT_CONSTRUCTORS2(AssReg)
   AssReg() {}
 
   PosInt number;
@@ -1829,7 +1829,7 @@ class AssRegArray  {
   friend void restore (int fileDesc, AssRegArray *array);
   /* we restore at the address ptr number of AssRegs;           */
 public:
-  NO_DEFAULT_CONSTRUCTORS(AssRegArray);
+  NO_DEFAULT_CONSTRUCTORS(AssRegArray)
   AssRegArray (int sizeInit) : numbOfGRegs (sizeInit)
   {
     first = (sizeInit==0 ? (AssReg*) NULL : allocAssRegBlock(sizeInit));
@@ -1853,7 +1853,7 @@ public:
   TaggedRef file;
   int line;
   DbgInfo *next;
-  NO_DEFAULT_CONSTRUCTORS(DbgInfo);
+  NO_DEFAULT_CONSTRUCTORS(DbgInfo)
   DbgInfo(ProgramCounter pc, TaggedRef f, int l, DbgInfo *nxt)
     : PC(pc), file(f), line(l), next(nxt) {};
 };
@@ -1889,8 +1889,8 @@ public:
   CodeArea *codeBlock; // cache surrounding code block for code GC
 
 public:
-  OZPRINT;
-  NO_DEFAULT_CONSTRUCTORS(PrTabEntry);
+  OZPRINT
+  NO_DEFAULT_CONSTRUCTORS(PrTabEntry)
   void init(TaggedRef name, SRecordArity arityInit,
              TaggedRef fil, int lin, int colu, TaggedRef fl, int max)
   {
@@ -1986,10 +1986,9 @@ protected:
   PrTabEntry *pred;
   TaggedRef globals[1];
 public:
-  OZPRINTLONG;
-  NO_DEFAULT_CONSTRUCTORS(Abstraction);
-  static Abstraction *Abstraction::newAbstraction(PrTabEntry *prd,
-                                                  Board *bb)
+  OZPRINTLONG
+  NO_DEFAULT_CONSTRUCTORS(Abstraction)
+  static Abstraction *newAbstraction(PrTabEntry *prd,Board *bb)
   {
     Assert(prd->getGSize()>=0);
     int sz=sizeof(Abstraction)+sizeof(TaggedRef)*(prd->getGSize()-1);
@@ -2060,8 +2059,8 @@ private:
 #endif
 
 public:
-  OZPRINTLONG;
-  NO_DEFAULT_CONSTRUCTORS(Builtin);
+  OZPRINTLONG
+  NO_DEFAULT_CONSTRUCTORS(Builtin)
 
   /* use malloc to allocate memory */
   static void *operator new(size_t chunk_size)
@@ -2175,7 +2174,7 @@ private:
   TaggedRef val;
   void *dummy; // mm2
 public:
-  NO_DEFAULT_CONSTRUCTORS(CellLocal);
+  NO_DEFAULT_CONSTRUCTORS(CellLocal)
   CellLocal(Board *b,TaggedRef v) : Tertiary(b, Co_Cell,Te_Local), val(v) {}
   TaggedRef getValue() { return val; }
 
@@ -2234,7 +2233,7 @@ protected:
   CellSecEmul *sec;
   Chain *chain;
 public:
-  NO_DEFAULT_CONSTRUCTORS(CellManagerEmul);
+  NO_DEFAULT_CONSTRUCTORS(CellManagerEmul)
   CellManagerEmul() { Assert(0); }
 
   CellSecEmul* getSec(){return sec;}
@@ -2247,7 +2246,7 @@ protected:
   CellSecEmul *sec;
   void *forward;
 public:
-  NO_DEFAULT_CONSTRUCTORS2(CellFrameEmul);
+  NO_DEFAULT_CONSTRUCTORS2(CellFrameEmul)
   CellFrameEmul() { Assert(0); }
 
   unsigned int getState(){return sec->state;}
@@ -2269,7 +2268,7 @@ Bool oz_isCell(TaggedRef term)
 class Port : public Tertiary {
 friend void ConstTerm::gcConstRecurse(void);
 public:
-  NO_DEFAULT_CONSTRUCTORS(Port);
+  NO_DEFAULT_CONSTRUCTORS(Port)
   Port(Board *b, TertType tt) : Tertiary(b,Co_Port,tt){}
 };
 
@@ -2277,7 +2276,7 @@ class PortWithStream : public Port {
 friend void ConstTerm::gcConstRecurse(void);
 public:
   TaggedRef strm;
-  NO_DEFAULT_CONSTRUCTORS(PortWithStream);
+  NO_DEFAULT_CONSTRUCTORS(PortWithStream)
   TaggedRef exchangeStream(TaggedRef newStream)
   {
     TaggedRef ret = strm;
@@ -2297,7 +2296,7 @@ lst word:   Co_Port:board       Co_Port:_         Co_Port:_
 class PortLocal: public PortWithStream {
 friend void ConstTerm::gcConstRecurse(void);
 public:
-  NO_DEFAULT_CONSTRUCTORS(PortLocal);
+  NO_DEFAULT_CONSTRUCTORS(PortLocal)
   PortLocal(Board *b, TaggedRef s) : PortWithStream(b,s) {};
 };
 
@@ -2325,8 +2324,8 @@ private:
   // - 1 (the space has been merged)
   // or a valid pointer
 public:
-  OZPRINTLONG;
-  NO_DEFAULT_CONSTRUCTORS(Space);
+  OZPRINTLONG
+  NO_DEFAULT_CONSTRUCTORS(Space)
 
   Space(Board *h, Board *s) : Tertiary(h,Co_Space,Te_Local), solve(s) {};
   Space(int i, TertType t) : Tertiary(i,Co_Space,t) {}
@@ -2402,7 +2401,7 @@ void gcPendThreadEmul(PendThread**);
 
 class OzLock:public Tertiary{
 public:
-  NO_DEFAULT_CONSTRUCTORS(OzLock);
+  NO_DEFAULT_CONSTRUCTORS(OzLock)
   OzLock() { Assert(0); }
   OzLock(Board *b,TertType tt):Tertiary(b,Co_Lock,tt){}
   OzLock(int i,TertType tt):Tertiary(i,Co_Lock,tt){}
@@ -2414,7 +2413,7 @@ private:
   PendThread *pending;
   Thread *locker;
 public:
-  NO_DEFAULT_CONSTRUCTORS(LockLocal);
+  NO_DEFAULT_CONSTRUCTORS(LockLocal)
   LockLocal(Board *b) : OzLock(b,Te_Local){
     pending=NULL;
     locker = NULL;
@@ -2470,7 +2469,7 @@ protected:
   Thread *locker;
 
 public:
-  NO_DEFAULT_CONSTRUCTORS2(LockSecEmul);
+  NO_DEFAULT_CONSTRUCTORS2(LockSecEmul)
   LockSecEmul(Thread *t,PendThread *pt) { Assert(0); }
   LockSecEmul() {}              // 'LockSec()'
 
@@ -2495,7 +2494,7 @@ protected:
   LockSecEmul *sec;
   Chain *chain;
 public:
-  NO_DEFAULT_CONSTRUCTORS2(LockManagerEmul);
+  NO_DEFAULT_CONSTRUCTORS2(LockManagerEmul)
   LockManagerEmul() { Assert(0); }
 
   Bool hasLock(Thread *t) { return (sec->locker==t) ? TRUE : FALSE;}
@@ -2531,7 +2530,7 @@ protected:
   void *forward;
 
 public:
-  NO_DEFAULT_CONSTRUCTORS2(LockFrameEmul);
+  NO_DEFAULT_CONSTRUCTORS2(LockFrameEmul)
   LockFrameEmul() { Assert(0); }
 
   Bool hasLock(Thread *t){ return (t==sec->getLocker()) ? TRUE : FALSE;}

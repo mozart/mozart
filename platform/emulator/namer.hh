@@ -138,7 +138,7 @@ public:
     NEW_NAMER_DEBUG_PRINT(("adding %s\n", toStringNamer(name)));
   }
   static void cloneEntry(T_INDEX index_org, T_INDEX index_clone) {
-    T_NAME name = _getName(index_org);
+    T_NAME name = getName(index_org);
 
     if (!name)
       return;

@@ -130,7 +130,7 @@ private:
   PrTabEntry *abstr;            // for profiler
   ThreadBodyItem item;          // NULL if it's a deep 'unify' suspension;
 public:
-  NO_DEFAULT_CONSTRUCTORS(Thread);
+  NO_DEFAULT_CONSTRUCTORS(Thread)
   Thread(int flags, int prio, Board *bb, int id)
     : board(bb), id(id)
   {

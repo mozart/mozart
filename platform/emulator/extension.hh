@@ -24,6 +24,10 @@
 #ifndef __EXTENSIONHH
 #define __EXTENSIONHH
 
+#ifdef INTERFACE
+#pragma interface
+#endif
+
 #include <stdlib.h>
 
 /*===================================================================

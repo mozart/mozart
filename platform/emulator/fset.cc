@@ -397,9 +397,10 @@ void FSetValue::toNormal(void)
   Assert(_normal == false);
 
   // reset bv
-  for (int i = fset_high; i--; )
-    _in[i] = 0;
-
+  {
+    for (int i = fset_high; i--; )
+      _in[i] = 0;
+  }
   // set bv
   for (int i = _IN.getMinElem();
        ((i != -1) && (i < 32 * fset_high));
@@ -1498,8 +1499,10 @@ void FSetConstraint::toNormal(void)
   Assert(_normal == false);
 
   // reset:
-  for (int i = fset_high; i--; )
-    _in[i] = _not_in[i] = 0;
+  {
+    for (int i = fset_high; i--; )
+      _in[i] = _not_in[i] = 0;
+  }
 
   for (int i = 0; i < 32 * fset_high; i++) {
     if (_IN.isIn(i)) setBit(_in, i);

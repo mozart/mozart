@@ -24,6 +24,11 @@
  *
  */
 
+
+#if defined(INTERFACE) && !defined(PEANUTS)
+#pragma implementation "ozostream.hh"
+#endif
+
 #include <errno.h>
 #include <unistd.h>
 
