@@ -165,7 +165,7 @@ outerLoop2:
 	if (PC >= next->pc) {
 	  if (PC <= next->pcEnd) {
 	    delete current;
-	    goto outerLoop;
+	    goto outerLoop2;
 	  } else {
 	    prev = &next->next;
 	    next = *prev;
