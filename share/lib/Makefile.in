@@ -11,6 +11,7 @@ BITMAPDIR       = $(OZLIB)/bitmaps
 SHELL           = @SH@
 RM              = @RM@ -f
 MV              = @MV@
+LN              = @LN@ -s
 MKDIR           = @MKDIR@
 RMDIR           = @RMDIR@
 ECHO            = @ECHO@
@@ -22,6 +23,7 @@ INSTALLFILE     = $(INSTALL) -m 444
 INSTALLPRG      = $(INSTALL) -m 555
 INSTALLSRC      = @INSTALLSRC@
 INSTALLDIR      = $(INSTALL) -m 775 -d
+MKINSTALLDIRS   = @MKINSTALLDIRS@
 
 PERL            = perl
 ENV2TYPE        = $(PERL) @ENV2TYPE@
@@ -204,7 +206,7 @@ OZCARBITMAPS1 = \
         step.xbm stop.xbm term.xbm unleash.xbm
 OZCARBITMAPS = $(OZCARBITMAPS1:%=$(OZCARBITMAPDIR)/%)
 
-.PHONY: all install install-main install-ozma install-bitmaps install-src
+.PHONY: all install install-main install-ozma install-bitmaps install-src install-cache
 .PHONY: clean realclean veryclean tags
 
 all: Makefile env $(TYPS) $(TYCS) $(COMPONENTS) ozbatch ozserver
@@ -244,7 +246,18 @@ StandardSubModules.ozc: AP/StandardSubModules.oz
 
 tycs: $(TYCS)
 
-install: install-main install-bitmaps
+install: install-main install-bitmaps install-cache
+
+install-cache: \
+        $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome
+
+$(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome: \
+        $(PREFIX)/cache/http/www.ps.uni-sb.de
+        (cd $(PREFIX)/cache/http/www.ps.uni-sb.de; \
+         $(LN) ../../.. ozhome)
+
+$(PREFIX)/cache/http/www.ps.uni-sb.de:
+        $(MKINSTALLDIRS) $(PREFIX)/cache/http/www.ps.uni-sb.de
 
 install-main: all \
         $(OZLIB) $(OZLIBDIRS) $(LIBFILES) $(LIBCOMPONENTS) \
