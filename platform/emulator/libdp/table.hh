@@ -40,8 +40,10 @@
 #include "dpDebug.hh"
 #include "genhashtbl.hh"
 #include "perdio.hh"
-#include "creditHandler.hh"
-#include "protocolCredit.hh"
+#include "referenceConsistency.hh"
+
+class HomeReference;
+class RemoteReference;
 
 #ifdef DEBUG_CHECK
 Bool withinBorrowTable(int i);
@@ -301,37 +303,40 @@ public:
 
 class OwnerEntry: public OB_Entry {
 friend class OwnerTable;
-private:
-  OwnerCreditHandler ocreditHandler;
-
 public:
-  void setUp(int index);
+  HomeReference homeRef;
+
+  void setUp(int index, int algs);
 
   void localize(int index);
 
-  inline Credit getCreditBig() {
+  inline RRinstance *getCreditBig() {
     Assert(!isFree());
-    return ocreditHandler.getCreditBig();
+    return homeRef.getBigReference();
   }
 
-  inline Credit getCreditSmall() {
+  inline RRinstance *getCreditSmall() {
     Assert(!isFree());
-    return ocreditHandler.getCreditSmall();
+    return homeRef.getSmallReference();
   }
 
-  inline void addCredit(Credit c) {
+  inline void mergeReference(RRinstance *r) {
     Assert(!isFree());
-    ocreditHandler.addCredit(c);
+    if(homeRef.mergeReference(r)){
+      localize(homeRef.oti);
+    }
   }
+
+  void updateReference(DSite *rsite);
 
   Bool isPersistent(){
     Assert(!isFree());
-    return ocreditHandler.isPersistent();}
+    return homeRef.isPersistent();}
 
   void makePersistent(){
     Assert(!isFree());
     Assert(!isPersistent());
-    ocreditHandler.makePersistent();
+    homeRef.makePersistent();
     Assert(isPersistent());
   }
 };
@@ -395,7 +400,11 @@ public:
 
   void resize();
 
-  int newOwner(OwnerEntry *&);
+  int newOwner(OwnerEntry *&, int);
+  int newOwner(OwnerEntry *&oe){
+    int algs = (ozconf.dpUseTimeLease?GC_ALG_TL:0)|(ozconf.dpUseFracWRC?GC_ALG_WRC:0);
+    return newOwner(oe,algs);
+  }
 
   void freeOwnerEntry(int);
   void localizing(){localized = (localized + 1) % 100000;}
@@ -411,14 +420,14 @@ extern OwnerTable *ownerTable;
 /* **********************************************************************  */
 
 class BorrowEntry: public OB_Entry {
-friend class BorrowTable;
-friend class BorrowCreditHandler;
+  friend class BorrowTable;
+  friend class RemoteReference;
 
 protected:
   Bool canBeFreed();
 
 public:
-  BorrowCreditHandler bcreditHandler;
+  RemoteReference remoteRef;
 
 
   void print_entry(int);
@@ -426,58 +435,47 @@ public:
 
   Bool isPersistent(){
     Assert(!isFree());
-    return bcreditHandler.isPersistent();}
-
+    return remoteRef.isPersistent();}
+  /*
   void makePersistent(){
     Assert(!isFree());
     Assert(!isPersistent());
-    bcreditHandler.makePersistent();
+    remoteRef.makePersistent();
     Assert(isPersistent());
   }
-
+  */
   void gcBorrowRoot(int);
   void gcBorrowUnusedFrame(Tertiary*);
 
   void copyBorrow(BorrowEntry* from,int i);
 
-  void initBorrowPersistent(DSite* s,int i){
-    Assert(isFree());
-    unsetFree();
-    setFlags(0);
-    bcreditHandler.setUpPersistent(s,i);
-    return;
-  }
+  void initBorrowPersistent(DSite* s,int i);
 
-  void initBorrow(Credit c,DSite* s,int i){
-    Assert(isFree());
-    unsetFree();
-    setFlags(0);
-    bcreditHandler.setUp(c,s,i);
-    return;
-  }
+  void initBorrow(RRinstance *r,DSite* s,int i);
+
 
   inline NetAddress* getNetAddress() {
     Assert(!isFree());
-    return &(bcreditHandler.netaddr);
+    return &(remoteRef.netaddr);
   }
 
-  DSite *getSite(){return bcreditHandler.netaddr.site;}
+  DSite *getSite(){return remoteRef.netaddr.site;}
 
-  int getOTI(){return bcreditHandler.netaddr.index;}
+  int getOTI(){return remoteRef.netaddr.index;}
 
-  inline Credit getCreditBig() {
+  inline RRinstance *getBigReference() {
     Assert(!isFree());
-    return bcreditHandler.getCreditBig();
+    return remoteRef.getBigReference();
   }
 
-  inline Credit getCreditSmall() {
+  inline RRinstance *getSmallReference() {
     Assert(!isFree());
-    return bcreditHandler.getCreditSmall();
+    return remoteRef.getSmallReference();
   }
 
-  inline void addCredit(Credit c) {
+  inline void mergeReference(RRinstance *r) {
     Assert(!isFree());
-    bcreditHandler.addCredit(c);
+    remoteRef.mergeReference(r);
   }
 
   void freeBorrowEntry();
@@ -546,7 +544,7 @@ public:
 
   void resize();
 
-  int newBorrow(Credit,DSite*,int);
+  int newBorrow(RRinstance *,DSite*,int);
   int newBorrowPersistent(DSite*,int);
 
   Bool maybeFreeBorrowEntry(int);

@@ -96,9 +96,9 @@ BorrowTable *borrowTable;
 // from var.cc
 void oz_dpvar_localize(TaggedRef *);
 
-void OwnerEntry::setUp(int index){
+void OwnerEntry::setUp(int index, int algs){
   setFlags(0);
-  ocreditHandler.setUp(index);
+  homeRef.setUp(index, algs);
 }
 
 void OwnerEntry::localize(int index)
@@ -112,7 +112,18 @@ void OwnerEntry::localize(int index)
        !localizeTertiary(getTertiary()))
       return;
   }
+  homeRef.removeReference();
   OT->freeOwnerEntry(index);
+}
+
+void OwnerEntry::updateReference(DSite* site){
+  if (isVar() || isTertiary()){
+    MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
+    msgC->put_M_BORROW_REF(getValue());
+    send(msgC,-1);
+  }
+  else
+    printf("Warning: Updating bound variable!\n");
 }
 
 void OwnerTable::init(int beg,int end){
@@ -196,7 +207,7 @@ void OwnerTable::resize(){
   PD((TABLE2,"TABLE:resize owner complete"));
   return;}
 
-int OwnerTable::newOwner(OwnerEntry *&oe){
+int OwnerTable::newOwner(OwnerEntry *&oe, int algs){
   Assert(perdioInitialized);
   if(nextfree == END_FREE) resize();
   int index = nextfree;
@@ -205,7 +216,7 @@ int OwnerTable::newOwner(OwnerEntry *&oe){
   PD((TABLE,"owner insert: o:%d",index));
   no_used++;
   int odi = nxtId++;
-  oe->setUp(odi);
+  oe->setUp(odi, algs);
   hshtbl->add(odi,index);
   return odi;}
 
@@ -216,7 +227,6 @@ void OwnerTable::freeOwnerEntry(int odi)
   array[i].setFree();
   array[i].u.nextfree=nextfree;
   nextfree=i;
-
   no_used--;
   PD((TABLE,"owner delete o:%d",i));
   localizing();
@@ -233,11 +243,11 @@ OZ_Term OwnerTable::extract_info(){
     OwnerEntry *oe = OT->getOtiEntry(ctr);
     if(oe->isFree()){continue;}
     Assert(oe!=NULL);
-    credit=oe->ocreditHandler.extract_info();
+    credit=oe->homeRef.extract_info();
     list=
       oz_cons(OZ_recordInit(oz_atom("oe"),
         oz_cons(oz_pairAI("index", ctr),
-                oz_cons(oz_pairAI("odi",oe->ocreditHandler.oti),
+                oz_cons(oz_pairAI("odi",oe->homeRef.oti),
                 oz_cons(oz_pairAA("type", toC(PO_getValue(oe))),
         oz_cons(oz_pairA("dist_gc", credit),
                 oz_nil()))))), list);
@@ -262,7 +272,6 @@ void OwnerTable::print(){
     if(!(array[i].isFree())){
       OwnerEntry *oe=getOtiEntry(i);
       printf("<%d>\t", i);
-      oe->ocreditHandler.print();
       printf("\t%s\n",toC(PO_getValue(oe)));
     }
   }
@@ -271,8 +280,8 @@ void OwnerTable::print(){
 
 void BorrowEntry::print_entry(int nr) {
   printf("<%d>\t %d\t", nr,
-         bcreditHandler.netaddr.index);
-  bcreditHandler.print();
+         remoteRef.netaddr.index);
+  //bcreditHandler.print();
   printf("\t\t%s\n",toC(PO_getValue(this)));
 }
 
@@ -297,15 +306,15 @@ OZ_Term BorrowEntry::extract_info(int index) {
   OZ_Term primCred, secCred;
   OZ_Term na=
     OZ_recordInit(oz_atom("netAddress"),
-      oz_cons(oz_pairA("site", oz_atom(bcreditHandler.netaddr.site->stringrep_notype())),
-      oz_cons(oz_pairAI("index",(int)bcreditHandler.netaddr.index), oz_nil())));
+                  oz_cons(oz_pairA("site", oz_atom(remoteRef.netaddr.site->stringrep_notype())),
+                          oz_cons(oz_pairAI("index",(int)remoteRef.netaddr.index), oz_nil())));
 
   return OZ_recordInit(oz_atom("be"),
-     oz_cons(oz_pairAI("index", index),
-     oz_cons(oz_pairAA("type", toC(PO_getValue(this))),
-     oz_cons(oz_pairA("na", na),
-      oz_cons(oz_pairA("dist_gc",  bcreditHandler.extract_info()),
-             oz_nil())))));
+                        oz_cons(oz_pairAI("index", index),
+                                oz_cons(oz_pairAA("type", toC(PO_getValue(this))),
+                                        oz_cons(oz_pairA("na", na),
+           oz_cons(oz_pairA("dist_gc",remoteRef.extract_info()),
+                                                        oz_nil())))));
 }
 
 
@@ -325,15 +334,27 @@ void BorrowEntry::copyBorrow(BorrowEntry* from,int i){
     Assert(from->isRef());
     mkRef(from->getRef(),from->getFlags());
   }
-  bcreditHandler.copyHandler(&(from->bcreditHandler));
+  remoteRef.copyReference(&(from->remoteRef));
+}
+
+void BorrowEntry::initBorrowPersistent(DSite* s,int i){
+  initBorrow(NULL, s, i);
+}
+
+void BorrowEntry::initBorrow(RRinstance *r,DSite* s,int i){
+  Assert(isFree());
+  unsetFree();
+  setFlags(0);
+  remoteRef.setUp(r,s,i);
+  return;
 }
 
 void BorrowEntry::freeBorrowEntry(){
-  Assert(!bcreditHandler.isExtended());
+  Assert(remoteRef.canBeReclaimed());
   if(isVar() && typeOfBorrowVar(this)==VAR_PROXY){
     GET_VAR(this,Proxy)->nowGarbage(this);}
   if(!isPersistent())
-    bcreditHandler.giveBackAllCredit();}
+    remoteRef.dropReference();}
 
 void BorrowEntry::gcBorrowRoot(int i) {
   if (isVar()) {
@@ -345,18 +366,17 @@ void BorrowEntry::gcBorrowRoot(int i) {
       gcPO();
       return;
     }
-    if(!bcreditHandler.canBeFreed()) {
+    if(!remoteRef.canBeReclaimed()) {
       gcPO();
     }
     return;}
   if(isRef()){
-    Assert(bcreditHandler.isExtended());
     gcPO();
     return;}
   Assert(isTertiary());
   // AN: Copy also if this is a secondary credit master, i.e. check with
   // credithandler.
-  if(getTertiary()->cacIsMarked() || !bcreditHandler.canBeFreed() ||
+  if(getTertiary()->cacIsMarked() || !remoteRef.canBeReclaimed() ||
      isTertiaryPending(getTertiary())){
     gcPO();
   }
@@ -480,7 +500,7 @@ int BorrowTable::newBorrowPersistent(DSite * sd,int off) {
   return index;
 }
 
-int BorrowTable::newBorrow(Credit c,DSite * sd,int off){
+int BorrowTable::newBorrow(RRinstance *c,DSite * sd,int off){
   if(nextfree == END_FREE) resize();
   int index=nextfree;
   nextfree= array[index].u.nextfree;
@@ -496,7 +516,7 @@ int BorrowTable::newBorrow(Credit c,DSite * sd,int off){
 
 Bool BorrowTable::maybeFreeBorrowEntry(int index){
   BorrowEntry *b = &(array[index]);
-  if(!b->bcreditHandler.maybeFreeCreditHandler()) {
+  if(!b->remoteRef.canBeReclaimed()) {
     if(b->isVar()){
       b->changeToRef();
     }
@@ -621,7 +641,6 @@ void BorrowTable::gcFrameToProxy(){
   int i;
   for(i=0;i<size;i++) {
     BorrowEntry *b=getBorrow(i);
-    Assert(!b->isRef() || b->bcreditHandler.isExtended());
     if((b->isTertiary())){
       Tertiary *t=b->getTertiary();
       if(t->isFrame()) {
