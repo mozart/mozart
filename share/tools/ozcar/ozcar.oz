@@ -14,6 +14,10 @@ Ozcar =
 	   SourceManager,init
 	end
 
+	meth reinit
+	   ThreadManager,reinit
+	end
+
 	meth off
 	   {Dbg.off}
 	   {Tk.send wm(withdraw self.toplevel)}
