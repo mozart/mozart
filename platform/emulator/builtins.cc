@@ -669,7 +669,7 @@ OZ_C_proc_begin(BIsystemTellSize,3)
       {
         GenOFSVariable *ofsvar=tagged2GenOFSVar(label);
         if (ofsvar->getWidth()>0) return FAILED; 
-       oz_suspendOn (makeTaggedRef(labelPtr));
+	oz_suspendOn (makeTaggedRef(labelPtr));
       }
     case FDVariable:
     case BoolVariable:
