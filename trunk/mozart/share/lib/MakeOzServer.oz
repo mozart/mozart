@@ -27,16 +27,20 @@
        
     Syslet
 
-    Module.{link}
+    Module
  body
     Syslet.spec = single(ticket(type:atom))
     try
        RunRet # CtrlRet = {Connection.take Syslet.args.ticket}
        RunStr CtrlStr
+
+\ifdef NEWMODULE
+      ModMan = {New Module.manager init}
+\endif
     in
        {Port.send RunRet  {Port.new RunStr}}
        {Port.send CtrlRet {Port.new CtrlStr}}
-   
+
        %% The server for running procedures and functors
        thread
 	  {ForAll RunStr
@@ -45,7 +49,11 @@
 		  try
 		     X = case {Procedure.is What} then {What}
 			 elsecase {Functor.is What} then
+\ifdef NEWMODULE
+			    {ModMan apply(url:'' What $)}
+\else
 			    {Module.link '' What}
+\endif
 			 end
 		  in
 		     {Port.send RunRet okay(X)}
