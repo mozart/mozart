@@ -559,6 +559,7 @@ OzVariable * OzVariable::_cacVarInline(void) {
     break;
   case OZ_VAR_EXT:
     to = ((ExtVar *) this)->_cacV();
+    GCDBG_INTOSPACE(to);
     cacStack.push(to, PTR_VAR);
     break;
   case OZ_VAR_FUTURE:
@@ -683,8 +684,11 @@ LTuple * LTuple::_cac(void) {
 }
 
 inline
-SRecord *SRecord::_cacSRecord(void) {
+SRecord *SRecord::_cacSRecord(void)
+{
   Assert(this);
+
+  GCDBG_INFROMSPACE(this);
 
   if (cacIsMarked())
     return cacGetFwd();
@@ -1137,11 +1141,13 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
   case Co_Extension: {
     OZ_Extension * ex = (OZ_Extension *) this;
     Assert(ex);
+    GCDBG_INFROMSPACE(ex);
 
     Board * bb = (Board *) ex->__getSpaceInternal();
 
     OZ_Extension * ret = ex->gCollectV();
     Assert(((ConstTerm *) ret)->getType() == Co_Extension);
+    GCDBG_INTOSPACE(ret);
 
     if (bb) {
       Assert(bb->cacIsAlive());      
