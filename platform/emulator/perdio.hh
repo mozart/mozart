@@ -89,14 +89,16 @@ enum MessageType {
   M_SEND_OBJECT,        //
   M_SEND_OBJECTANDCLASS,//
 
-  M_REGISTER_VS,
+  M_SITE_ALIVE,
   M_FILE,
   M_EXPORT,
   M_INIT_VS,
   M_UNASK_ERROR,
 
   M_SEND_GATE,
-  M_LAST
+  M_LAST,
+
+  M_SITE_IS_ALIVE
 };
 
 extern char *mess_names[];

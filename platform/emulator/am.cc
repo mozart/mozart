@@ -404,6 +404,11 @@ void AM::init(int argc,char **argv)
     tt->pushCall(BI_load,oz_atom(initFile),proc);
   }
 
+  //
+  sleepQueue = (OzSleep *) 0;
+  emulatorClock = 0;
+  taskMinInterval = 0;
+
   profileMode = NO;
 }
 
@@ -1602,7 +1607,7 @@ void AM::handleIO()
 }
 
 //
-Bool NeverDo_CheckProc(void *va)
+Bool NeverDo_CheckProc(double, void*)
 {
   return (NO);
 }
@@ -1626,7 +1631,7 @@ void AM::handleTasks()
     // Apply 'checkProc' from a task with the corresponding argument;
     if (tn->isReady()) {
       tn->dropReady();
-      ready = ready && (tn->getProcessProc())(tn->getArg());
+      ready = ready && (tn->getProcessProc())(emulatorClock, tn->getArg());
     }
   }
 
@@ -1659,8 +1664,11 @@ void AM::suspendEngine()
 
   osBlockSignals(OK);
 
+  //
   // kost@ : Alarm timer will be reset later (and we don't need to
-  // disturb 'select' when we know how long to wait in it);
+  // disturb 'select' when we know how long to wait in it).
+  // Note also that the 'SIGALRM'-based scheme for aborting indefinite
+  // waiting does not work: the singal can arrive before 'select()'...
   osSetAlarmTimer(0);
 
   while (1) {
@@ -1691,18 +1699,20 @@ void AM::suspendEngine()
 
     unsigned long idle_start = osTotalTime();
 
-#if defined(SLOWNET)
-    osBlockSelect(CLOCK_TICK/1000);
-#else
-    osBlockSelect(nextUser());
-#endif
+    //
+    unsigned int sleepTime = waitTime();
+
+    //
+    osBlockSelect(sleepTime);
+    // here 'sleepTime' contains #msecs really spent in waiting;
+
     //
     setSFlag(IOReady);
 
     // 
     // kost@ : we have to simulate an effect of the alarm (since no
     // explicit alarm signal is sent while in 'osBlockSelect()');
-    handlerALRM();
+    handleAlarm(sleepTime);
 
     ozstat.timeIdle += (osTotalTime() - idle_start);
 
@@ -1796,7 +1806,7 @@ void AM::checkTasks()
 
     //
     // Apply 'checkProc' from a task with the corresponding argument;
-    if ((*(tn->getCheckProc()))(tn->getArg())) {
+    if ((*(tn->getCheckProc()))(emulatorClock, tn->getArg())) {
       tn->setReady();
       tasks = TRUE;
     }
@@ -1980,10 +1990,11 @@ void handlerFPE()
   OZ_warning("signal: floating point exception");
 }
 
-// signal handler
+//
+// Signal handler;
 void handlerALRM()
 {
-  am.handleAlarm();
+  am.handleAlarm(CLOCK_TICK/1000);
 }
 
 //
@@ -1997,8 +2008,10 @@ void handlerUSR2()
  * Alarm handling
  * -------------------------------------------------------------------------*/
 
-void AM::handleAlarm()
+void AM::handleAlarm(unsigned int ms)
 {
+  emulatorClock =+ ms;
+
   if (ozstat.currPropagator) {
     ozstat.currPropagator->incSamples();
   } else if (ozstat.currAbstr) {
@@ -2083,6 +2096,27 @@ int AM::nextUser()
   return (sleepQueue==NULL) ? 0 : max(1,sleepQueue->time - osTotalTime());
 }
 
+//
+// Yields time for blocking in 'select()';
+unsigned int AM::waitTime()
+{
+  unsigned int sleepTime;
+
+  //
+  // kost@ : --> EK: this should be replaced by 'setMinimalTaskInterval()';
+#if defined(SLOWNET)
+  sleepTime = CLOCK_TICK/1000;
+#else
+  if (taskMinInterval)
+    sleepTime = min(nextUser(), taskMinInterval);
+  else 
+    sleepTime = nextUser();
+  // don't sleep less than 'CLOCK_TICK/1000' ms;
+  sleepTime = max(sleepTime, CLOCK_TICK/1000);
+#endif
+
+  return (sleepTime);
+}
 
 Bool AM::checkUser()
 {
