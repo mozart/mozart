@@ -843,6 +843,7 @@ int PASCAL FAR WSAAsyncSelect(SOCKET s, HWND hWnd, u_int wMsg,
 
 int PASCAL FAR WSARecvEx (SOCKET s, char FAR * buf, int len, int FAR *flags);
 
+#ifndef GNUWIN32
 typedef struct _TRANSMIT_FILE_BUFFERS {
     PVOID Head;
     DWORD HeadLength;
@@ -850,7 +851,6 @@ typedef struct _TRANSMIT_FILE_BUFFERS {
     DWORD TailLength;
 } TRANSMIT_FILE_BUFFERS, *PTRANSMIT_FILE_BUFFERS, *LPTRANSMIT_FILE_BUFFERS;
 
-#ifndef GNUWIN32
 BOOL
 PASCAL FAR
 TransmitFile (
