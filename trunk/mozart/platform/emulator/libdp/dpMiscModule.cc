@@ -155,6 +155,7 @@ OZ_BI_define(BIinitIPConnection,1,1)
   OZ_Term ipf = oz_atom("ip");
   OZ_Term portf = oz_atom("port");
   OZ_Term fwf = oz_atom("firewall");
+  OZ_Term trf = oz_atom("transport");
   int ip,port;
   Bool fw;
 
@@ -188,6 +189,13 @@ OZ_BI_define(BIinitIPConnection,1,1)
       fw = OZ_boolToC(t);
       setFirewallStatus(fw);
     }
+    index = srec->getIndex(trf);
+    if (index>=0) { 
+      OZ_Term t = srec->getArg(index);
+      if(!oz_isAtom(t))
+	oz_typeError(-1,"Atom");
+      setTransport(t);
+    }
   } else {
     oz_typeError(0,"Record");
   }
@@ -200,7 +208,9 @@ OZ_BI_define(BIinitIPConnection,1,1)
 				  oz_pairA("ip",OZ_string(osinet_ntoa((char *) pip)))
 				  , 
 				  oz_cons(oz_pairAI("port",getIPPort()),
-					  oz_cons(oz_pairA("firewall",oz_bool(getFireWallStatus())), oz_nil()
+					  oz_cons(oz_pairA("firewall",oz_bool(getFireWallStatus())), 
+						  oz_cons(oz_pairA("transport",getTransport()),
+							  oz_nil())
 						  )
 					  )
 				  )
