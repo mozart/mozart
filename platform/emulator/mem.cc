@@ -233,7 +233,7 @@ SbrkMemory *SbrkMemory::freeList = NULL;
 static void fakeMalloc(int sz)
 {
   void *p = malloc(sz);
-  malloc(sizeof(long)); /* ensures that following free does not hand back mem to OS */
+  sbrk(sizeof(long)); /* ensures that following free does not hand back mem to OS */
   free(p);
 }
 
@@ -271,10 +271,10 @@ void *ozMalloc(int chunk_size)
     
     SbrkMemory *newMem = (SbrkMemory *) ret_val;
     newMem->oldBrk = old;
-    newMem->newBrk = sbrk(0);
+    newMem->newBrk = lastBrk;
     newMem->size   = chunk_size;
     newMem->next   = NULL;
-    
+
     return (newMem + 1);
   }
 }
@@ -444,8 +444,8 @@ void getMemFromOS(size_t sz) {
   
   MemChunks::list = new MemChunks(heapEnd,MemChunks::list,thisBlockSz);
   
-  DebugCheck(heapTotalSize > thisBlockSz/KB,
-	     message("Increasing heap memory to %d kilo bytes\n",heapTotalSize));
+  //  DebugCheck(heapTotalSize > thisBlockSz/KB,
+  //message("Increasing heap memory to %d kilo bytes\n",heapTotalSize));
 }
 
 
