@@ -623,7 +623,9 @@ the GDB commands `cd DIR' and `directory'."
   (oz-send-string (concat "\\line "
 			  (+ 1 (count-lines (point-min) start))
 			  " "
-			  (buffer-file-name)
+			  (if (buffer-file-name)
+			    (buffer-file-name)
+			    "nofile")
 			  "\n"
 			  (buffer-substring start end)))
   (setq oz-last-fed-region-start (copy-marker start))
