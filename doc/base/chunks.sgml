@@ -249,82 +249,82 @@
         <entry/<span class=index/<code/IsBitArray//
 <index class=tails/<code/BitArray/<and><code/is///
         <synopsis/<code/{BitArray.is ?+{X} ??{B}}//
-        <item/test whether ?_{X} is a bit array./
+        <item/tests whether ?_{X} is a bit array./
 
-        <entry/<span class=index/<code/new//
+        <entry/<code/new/
 <index class=tails/<code/BitArray/<and><code/new///
-        <synopsis/<code/{BitArray.new ?+{LowI} ?+{HiI} ??{BitArray}}//
+        <synopsis/<code/{BitArray.new ?+{LowI} ?+{HighI} ??{BitArray}}//
         <item/creates an new ?_{BitArray} with lower bound ?_{LowI}
-and upper bound ?_{HiI}, and all bits initially cleared.  This
-interface is identical to that of general Oz arrays/
+and upper bound ?_{HighI}, and all bits initially cleared.  This
+interface is identical to that of general Oz arrays./
 
-        <entry/<span class=index/<code/set//
+        <entry/<code/set/
 <index class=tails/<code/BitArray/<and><code/set///
         <synopsis/<code/{BitArray.set ?+{BitArray} ?+{I}}//
-        <item/sets bit ?_{I} of ?_{BitArray}./
+        <item/sets bit&nbsp;?_{I} of ?_{BitArray}./
 
-        <entry/<span class=index/<code/clear//
+        <entry/<code/clear/
 <index class=tails/<code/BitArray/<and><code/clear///
         <synopsis/<code/{BitArray.clear ?+{BitArray} ?+{I}}//
-        <item/clears bit ?_{I} of ?_{BitArray}./
+        <item/clears bit&nbsp;?_{I} of ?_{BitArray}./
 
-        <entry/<span class=index/<code/test//
+        <entry/<code/test/
 <index class=tails/<code/BitArray/<and><code/test///
         <synopsis/<code/{BitArray.test ?+{BitArray} ?+{I} ??{B}}//
-        <item/returns <code/true/ iff bit ?_{I} of ?_{BitArray} is
+        <item/tests whether bit&nbsp;?_{I} of ?_{BitArray} is
 set./
 
-        <entry/<span class=index/<code/low//
+        <entry/<code/low/
 <index class=tails/<code/BitArray/<and><code/low///
         <synopsis/<code/{BitArray.low ?+{BitArray} ??{LowI}}//
         <item/returns the lower bound ?_{LowI} of ?_{BitArray}./
 
-        <entry/<span class=index/<code/high//
+        <entry/<code/high/
 <index class=tails/<code/BitArray/<and><code/high///
-        <synopsis/<code/{BitArray.high ?+{BitArray} ??{HiI}}//
-        <item/returns the upper bound ?_{HiI} of ?_{BitArray}./
+        <synopsis/<code/{BitArray.high ?+{BitArray} ??{HighI}}//
+        <item/returns the upper bound ?_{HighI} of ?_{BitArray}./
 
-        <entry/<span class=index/<code/clone//
+        <entry/<code/clone/
 <index class=tails/<code/BitArray/<and><code/clone///
         <synopsis/<code/{BitArray.clone ?+{BitArray1} ??{BitArray2}}//
-        <item/returns a new bit array that is a copy of its 1st
+        <item/returns a new bit array that is a copy of its first
 argument./
 
-        <entry/<span class=index/<code/disj//
+        <entry/<code/disj/
 <index class=tails/<code/BitArray/<and><code/disj///
         <synopsis/<code/{BitArray.disj ?+{BitArray1} ?+{BitArray2}}//
-        <item/side-effect its 1st argument with the bitwise <q/or/ of
+        <item/side-effects its first argument with the bitwise <q/or/ of
 the two arguments./
 
-        <entry/<span class=index/<code/conj//
+        <entry/<code/conj/
 <index class=tails/<code/BitArray/<and><code/conj///
         <synopsis/<code/{BitArray.conj ?+{BitArray1} ?+{BitArray2}}//
-        <item/side-effect its 1st argument with the bitwise <q/and/ of
+        <item/side-effects its first argument with the bitwise <q/and/ of
 the two arguments./
 
-        <entry/<span class=index/<code/nimpl//
+        <entry/<code/nimpl/
 <index class=tails/<code/BitArray/<and><code/nimpl///
         <synopsis/<code/{BitArray.nimpl ?+{BitArray1} ?+{BitArray2}}//
-        <item/side-effect its 1st argument with the bitwise <q/and/ of
-the the 1st argument and the negation of the 2nd argument (&ie;
+        <item/side-effects its first argument with the bitwise <q/and/ of
+the the first argument and the negation of the second argument (&ie;,
 negated implication)./
 
-        <entry/<span class=index/<code/disjoint//
+        <entry/<code/disjoint/
 <index class=tails/<code/BitArray/<and><code/disjoint///
         <synopsis/<code/{BitArray.disjoint ?+{BitArray1} ?+{BitArray2} ??{B}}//
-        <item/returns true iff the bit arrays have no set bits in common./
+        <item/tests whether the bit arrays have no set bits in common./
 
-        <entry/<span class=index/<code/card//
+        <entry/<code/card/
 <index class=tails/<code/BitArray/<and><code/card///
         <synopsis/<code/{BitArray.card ?+{BitArray} ??{I}}//
         <item/returns the number of set bits./
 
-        <entry/<span class=index/<code/toList//
+        <entry/<code/toList/
 <index class=tails/<code/BitArray/<and><code/toList///
         <synopsis/<code/{BitArray.toList ?+{BitArray} ??{L}}//
         <item/returns the list of indices for all set bits in ?_{BitArray}./
 
-        <entry/<span class=index/<code/complementToList//
+        <entry/<code/complementToList/
 <index class=tails/<code/BitArray/<and><code/complementToList///
         <synopsis/<code/{BitArray.complementToList ?+{BitArray} ??{L}}//
         <item/returns the list of indices for all cleared bits in
