@@ -14,7 +14,7 @@ DOCIFY          = $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
 DOCDIR          = $(PREFIX)/doc/$(WHAT)
 PRINTDOCDIR     = $(PREFIX)/print/$(WHATCLASS)
 
-PRINTLINK       = http://www.mozart-oz.org/download/print.cgi
+PRINTLINK       = http://www.mozart-oz.org/download/view.cgi?action=print
 
 INSTALL         = @INSTALL@
 INSTALL_FILE    = $(INSTALL) -m 444
