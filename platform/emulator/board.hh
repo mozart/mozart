@@ -75,12 +75,6 @@ private:
 };
 
 
-enum BoardFlags {
-  Bo_Installed	= 0x0001, // is installed
-  Bo_GlobalMark	= 0x0002, // is marked as global for cloning
-};
-
-
 class Board {
 friend int engine(Bool init);
 public:
@@ -128,24 +122,6 @@ public:
     return getParentInternal()->derefBoard();
   }
   
-  //
-  // Flags
-  //
-private:
-  int flags;
-
-  void setGlobalMark() { flags |= Bo_GlobalMark; }
-
-  void unsetGlobalMark() { flags &= ~Bo_GlobalMark; }
-
-public:
-  Bool isInstalled()    { return flags & Bo_Installed;  }
-  void setInstalled()    {  flags |= Bo_Installed;  }
-  Bool isMarkedGlobal() { return flags & Bo_GlobalMark; }
-
-  void unsetInstalled()  { flags &= ~Bo_Installed;  }
-
-
   //
   // Garbage collection and copying
   //
@@ -279,19 +255,45 @@ public:
   // distributors
   //
 private:
-  DistBag   *bag;
+  void * bag;
+
+  //
+  // Installation and global marks
+  //
+public:
+  int isInstalled(void) {
+    return IsMarkedPointer(bag,1);
+  }
+  void setInstalled(void) {  
+    bag = MarkPointer(bag,1);
+  }
+  void unsetInstalled() { 
+    bag = UnMarkPointer(bag,1);
+  }
+  int isMarkedGlobal(void) {
+    return IsMarkedPointer(bag,2);
+  }
+  void setGlobalMark(void) {  
+    bag = MarkPointer(bag,2);
+  }
+  void unsetGlobalMark() { 
+    bag = UnMarkPointer(bag,2);
+  }
 
 public:
   DistBag * getDistBag(void) {
-    return bag;
+    Assert(!isMarkedGlobal());
+    return (DistBag *) UnMarkPointer(bag,3);
   }
   void setDistBag(DistBag * db) {
-    bag = db;
+    Assert(!isMarkedGlobal());
+    bag = MarkPointer(db,IsMarkedPointer(bag,3));
   }
   void addToDistBag(Distributor * d);
   void cleanDistributors(void);
   Distributor * getDistributor(void);
   
+
   //
   // Operations
   //
