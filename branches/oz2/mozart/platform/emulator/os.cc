@@ -355,7 +355,7 @@ extern "C" void __builtin_delete (void *ptr)
 
 #ifdef GNUWIN32
 
-const int wrappedHDStart = 30; /* !!!!!!!!!!!!! */
+const int wrappedHDStart = 1000; /* hope that's enough (RS) */
 
 class WrappedHandle {
 public:
@@ -409,11 +409,12 @@ WrappedHandle *WrappedHandle::allHandles = NULL;
 
 int rawread(int fd, void *buf, int sz)
 {
+  if (isSocket(fd))
+    return recv(fd,((char*)buf),sz,0);
+
   if (fd < wrappedHDStart)
     return read(fd,buf,sz);
 
-  if (isSocket(fd))
-    return recv(fd,((char*)buf),sz,0);
 
   HANDLE hd = WrappedHandle::find(fd)->hd;
   Assert(hd!=0);
@@ -427,11 +428,11 @@ int rawread(int fd, void *buf, int sz)
 
 int rawwrite(int fd, void *buf, int sz)
 {
-  if (fd < wrappedHDStart)
-    return write(fd,buf,sz);
-
   if (isSocket(fd))
     return send(fd, (char *)buf, sz, 0);
+
+  if (fd < wrappedHDStart)
+    return write(fd,buf,sz);
 
   HANDLE hd = WrappedHandle::find(fd)->hd;
   Assert(hd!=0);
