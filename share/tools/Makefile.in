@@ -127,7 +127,7 @@ bootstrap: boot-all
 	$(COMPILE) $< -o $@
 
 opi: MakeOPI.oz
-	$(EXEC) -l Application,Component $<
+	$(EXEC) -l Application,Pickle $<
 
 
 

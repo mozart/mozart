@@ -30,7 +30,7 @@ local
 	       'Search' 'FD' 'Schedule' 'FS'
 	       'System' 'Error' 'Debug' 'Finalize' 'Foreign'
 	       'Connection' 'Remote'
-	       'OS' 'Open' 'Component'
+	       'OS' 'Open' 'Pickle'
 	       'Tk' 'TkTools'
 	       'Compiler'
 	       'Misc']

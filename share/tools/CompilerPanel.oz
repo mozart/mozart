@@ -24,7 +24,7 @@ functor $
 import
    System.{get
 	   valueToVirtualString
-	   Show = 'Show'}
+	   show}
 
    Error.{formatLine
 	  msg}
@@ -36,8 +36,8 @@ import
 
    Open.{file}
 
-   Component.{Load = load
-	      save}
+   Pickle.{load
+	   save}
 
    Tk
 
@@ -45,7 +45,7 @@ import
 
    Compiler.{genericInterface}
 
-   Browser.{Browse = 'Browse'}
+   Browser.{browse}
 
    Emacs.{condSend}
 
