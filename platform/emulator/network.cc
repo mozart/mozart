@@ -712,6 +712,9 @@ public:
   void setAckStartNr(int nr);
   int resendAckQueue(Message *m);
   
+  int readRecMsgCtr();
+  void receivedNewAck(int);
+
   int sendTo(NetMsgBuffer*,MessageType,Site*, int);
   void zeroReferences();
   void nonZeroReferences();
@@ -737,7 +740,7 @@ public:
   int getTmpMsgNum(){
     return tmpMsgNum++;}
 
-  Bool receivedNewMsg(int, int);
+  Bool receivedNewMsg(int);
   int getRecMsgCtr();
   void clearRecMsgCtr(){
     recMsgCtr = 0;}
@@ -900,7 +903,7 @@ public:
     maxSizeAck = max;
     recSizeAck = 0;}
   
-  Bool informSiteAck(int, int, int);
+  Bool informSiteAck(int, int);
 
   void init(RemoteSite *s){
     next = prev = NULL;
@@ -2608,10 +2611,7 @@ int tcpRead(int fd,BYTE *buf,int size,Bool &readAll)
       PD((WEIRD,"read interrupted"));
       no_tries--;
       continue;}
-    if(errno==EWOULDBLOCK){
-      Assert(0);
-      return 0;}
-    if(errno==EAGAIN){
+    if(errno==EAGAIN || errno==EWOULDBLOCK){
       PD((WEIRD,"read EAGAIN"));
       no_tries--;
       continue;}
@@ -2706,7 +2706,13 @@ static int tcpReadHandler(int fd,void *r0)
     rem=m->getRemainder();
     type=m->getType();
     PD((TCP,"readHandler incomplete r:%x rem:%d",r,rem));
-    pos=bs->beginRead(len);}
+    pos=bs->beginRead(len);
+    if (rem >= 0){ 
+      msgNr = r->remoteSite->readRecMsgCtr() + 1;
+      // ATTENTION
+      totLen = rem;
+    }
+  }
   else{
     m=NULL;
     //EK
@@ -2752,6 +2758,7 @@ start:
     if(rem<0){
       if(rem+ret>=0){
 	type=getHeader(bs,len,msgNr,ansNr);
+	r->remoteSite->receivedNewAck(ansNr);
 	totLen = len;
 	PD((READ,"Header done no:%d av:%d rem:%d tcp:%d",ret,len,rem,tcpHeaderSize));
 	rem=len-ret-tcpHeaderSize-rem;}
@@ -2778,7 +2785,7 @@ start:
     PD((CONTENTS,"interpret rem:%d len:%d",
 		 rem,bs->interLen()));
     // EK this might be done in a nicer way...
-    ip=interpret(bs,type,r->informSiteAck(msgNr,ansNr,totLen));
+    ip=interpret(bs,type,r->informSiteAck(msgNr,totLen));
     if(ip==IP_CLOSE){
       Assert(rem==0);
       if(m!=NULL){
@@ -2972,9 +2979,9 @@ static int acceptHandler(int fd,void *unused)
 /**********************************
  *  class Site
  **********************************/
-Bool ReadConnection::informSiteAck(int m, int a, int s){
+Bool ReadConnection::informSiteAck(int m, int s){
   
-  if(!isClosing() && remoteSite->receivedNewMsg(m,a)){
+  if(!isClosing() && remoteSite->receivedNewMsg(m)){
     receivedNewSize(s);
     return true;}
   return false;}
@@ -3088,8 +3095,7 @@ void RemoteSite::setWriteConnection(WriteConnection *r){
   writeConnection=r; 
   r->setSite(this);}
 
-Bool RemoteSite::receivedNewMsg(int Nr, int a){
-  PD((ACK_QUEUE,"Ack received: %d",a));
+Bool RemoteSite::receivedNewMsg(int Nr){
   PD((ACK_QUEUE,"MsgnumReceived new:%d old:%d",Nr,recMsgCtr));
   
   if (Nr  == recMsgCtr + 1 || (Nr == 1 && recMsgCtr > Nr)){
@@ -3099,16 +3105,20 @@ Bool RemoteSite::receivedNewMsg(int Nr, int a){
     PD((ACK_QUEUE,"Message nr %d too large, old %d", Nr, recMsgCtr));
     readConnection->resend();
     return false;}
+  return true;}
+
+void RemoteSite::receivedNewAck(int a){
   if(writeConnection!= NULL) {
     PD((ACK_QUEUE,"Ack received: %d waiting for: %d",
 	a,writeConnection->getMsgCtr()));
-    writeConnection->ackReceived(a);}
-  return true;}
+    writeConnection->ackReceived(a);}}
 
 int RemoteSite::getRecMsgCtr(){
   PD((REMOTE,"MsgnumGet %d",recMsgCtr));
   if(readConnection != NULL)
     readConnection->messageSent();
+  return recMsgCtr;}
+int RemoteSite::readRecMsgCtr(){
   return recMsgCtr;}
 
 void RemoteSite::setAckStartNr(int nr){
@@ -3418,7 +3428,7 @@ void initNetwork(){
   time_t timestamp=time(0);
   mySiteInfo.tcpFD=tcpFD;
   mySiteInfo.maxNrAck = 100;
-  mySiteInfo.maxSizeAck = 100;
+  mySiteInfo.maxSizeAck = 10000;
   Assert(mySite==NULL);
   mySite=initMySite(ip,p,timestamp);
   Assert(mySite!=NULL);  
