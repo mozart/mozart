@@ -1551,14 +1551,12 @@ LBLdispatcher:
       RecOrCell state = self->getState();
       SRecord *rec;
       if (stateIsCell(state)) {
-        int emC;
-        rec = getState(state,NO,fea,XPC(2),emC);
+        rec = getState(state,NO,fea,XPC(2));
         if (rec==NULL) {
           /*
           argsToSave = MaxToSave(2,3);
           PC += 6;
           goto LBLreplaceBICall;*/
-          Assert(emC==BI_PREEMPT);
           int argsToSave = CodeArea::livenessX(PC,X);
           PushContX(PC+6,Y,G,X,argsToSave);
           return T_SUSPEND;
@@ -1591,8 +1589,7 @@ LBLdispatcher:
       SRecord *rec;
 
       if (stateIsCell(state)) {
-        int emC;
-        rec = getState(state,OK,fea,XPC(2),emC);
+        rec = getState(state,OK,fea,XPC(2));
         /*
         if (rec==NULL) {
 
@@ -1600,7 +1597,6 @@ LBLdispatcher:
         PC += 6;
           goto LBLreplaceBICall;*/
         if(rec==NULL){
-            Assert(emC==BI_PREEMPT);
             int argsToSave = CodeArea::livenessX(PC,X);
             PushContX(PC+6,Y,G,X,argsToSave);
             return T_SUSPEND;}

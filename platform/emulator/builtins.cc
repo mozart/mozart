@@ -333,7 +333,7 @@ NEW_DECLAREBOOLFUN1(BIisFree,isFreeInline,isFreeRelInline)
 OZ_Return isKindedRelInline(TaggedRef term) {
   DEREF(term, _1, tag);
   if (isCVar(tag)) {
-    bool kinded = true;
+    Bool kinded = OK;
     switch (tagged2CVar(term)->getType()) {
     case LazyVariable: kinded=tagged2LazyVar(term)->isKinded(); break;
     default: break;
@@ -4551,7 +4551,7 @@ OZ_BI_define(BIlockLock,1,0)
   }
 
   Tertiary *t=tagged2Tert(lock);
-  if(t->getTertType()==Te_Local){
+  if(t->isLocal()){
     LockLocal *ll=(LockLocal*)t;
     if (!am.onToplevel()) {
       if (!am.isCurrentBoard(GETBOARD(ll))) {
@@ -4618,13 +4618,6 @@ OZ_BI_define(BInewCell,1,1)
 } OZ_BI_end
 
 
-inline
-OZ_Return checkSuspend()
-{
-  return am.currentThread()->getPStop() ? BI_PREEMPT : PROCEED;
-}
-
-
 OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef oldVal, TaggedRef newVal)
 {
   NONVAR(c,rec);
@@ -4632,8 +4625,8 @@ OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef oldVal, TaggedRef newVal)
   if (!isCell(rec)) {oz_typeError(0,"Cell");}
 
   Tertiary *tert = tagged2Tert(rec);
-  if(tert->getTertType()!=Te_Local){
-    if(tert->getTertType()!=Te_Proxy){
+  if(!tert->isLocal()){
+    if(!tert->isProxy()){
       CellSec* sec;
       if(tert->getTertType()==Te_Frame){
         sec=((CellFrame*)tert)->getSec();}
@@ -4643,8 +4636,7 @@ OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef oldVal, TaggedRef newVal)
         TaggedRef old=sec->getContents();
         sec->setContents(newVal);
         return oz_unify(old,oldVal);}}
-    cellDoExchange(tert,oldVal,newVal,am.currentThread());
-    return checkSuspend();
+    return cellDoExchange(tert,oldVal,newVal,am.currentThread());
   }
 
   CellLocal *cell=(CellLocal*)tert;
@@ -4677,10 +4669,10 @@ OZ_Return BIaccessCellInline(TaggedRef c, TaggedRef &out)
     oz_typeError(0,"Cell");
   }
   Tertiary *tert=tagged2Tert(rec);
-  if(tert->getTertType()!=Te_Local){
+  if(!tert->isLocal()){
     TaggedRef out = oz_newVariable(); /* ATTENTION - clumsy */
-    cellDoAccess(tert,out);
-    return checkSuspend();}
+    return cellDoAccess(tert,out);
+  }
   CellLocal *cell = (CellLocal*)tert;
   out = cell->getValue();
   return PROCEED;
@@ -4697,10 +4689,9 @@ OZ_Return BIassignCellInline(TaggedRef c, TaggedRef in)
   }
 
   Tertiary *tert = tagged2Tert(rec);
-  if(tert->getTertType()!=Te_Local){
+  if(!tert->isLocal()){
     TaggedRef oldIgnored = oz_newVariable();
-    cellDoExchange(tert,oldIgnored,in,am.currentThread());
-    return checkSuspend();
+    return cellDoExchange(tert,oldIgnored,in,am.currentThread());
   }
 
   CellLocal *cell=(CellLocal*)tert;
@@ -4892,7 +4883,7 @@ OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
   switch(entity->getType()){
   case Co_Object:{
     Object *o = (Object *)entity;
-    if(entity->getTertType()==Te_Local)
+    if(entity->isLocal())
       return oz_raise(E_ERROR,E_SYSTEM,"handlers on Local Objects not implemented",0);;
     cell = getCell(o->getState());
     lock = o->getLock();
@@ -4906,7 +4897,7 @@ OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
       return PROCEED;}
     break;}
   case Co_Port:
-    if(entity->getTertType()!=Te_Proxy) return PROCEED;
+    if(!entity->isProxy()) return PROCEED;
   case Co_Lock:
   case Co_Cell:{
     if(entity->installHandler(ec,proc,th,Continue,Persistent))
@@ -4998,7 +4989,7 @@ OZ_Return WatcherInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
   case Co_Object:{
     Object *o = (Object *)entity;
     Tertiary *lock, *cell;
-    if(entity->getTertType()==Te_Local)
+    if(entity->isLocal())
       return oz_raise(E_ERROR,E_SYSTEM,"handlers on Local Objects not implemented",0);;
     cell = getCell(o->getState());
     lock = o->getLock();
@@ -5009,7 +5000,7 @@ OZ_Return WatcherInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
       lock->installWatcher(ec,proc,Persistent);}
     break;}
   case Co_Port:
-    if(entity->getTertType()!=Te_Proxy) break;
+    if(!entity->isProxy()) break;
   case Co_Cell:
   case Co_Lock:{
     entity->installWatcher(ec,proc,Persistent);
@@ -5889,27 +5880,25 @@ OZ_C_proc_proto(BIatWithState);
 OZ_C_proc_proto(BIassignWithState);
 
 inline
-SRecord *getStateInline(RecOrCell state, Bool isAssign, Bool newVar,OZ_Term fea, OZ_Term &val, int &EmCode)
+SRecord *getStateInline(RecOrCell state, Bool isAssign, Bool newVar,
+                        OZ_Term fea, OZ_Term &val, int &EmCode)
 {
   if (!stateIsCell(state)) {
     return getRecord(state);}
 
-  TaggedRef old;
   Tertiary *t=getCell(state);          // shortcut
   if(t->isLocal()) { // can happen if globalized object becomes localized again
-    message("localized object found\n");
     return tagged2SRecord(deref(((CellLocal*)t)->getValue()));
   }
 
-  if(t->getTertType()!=Te_Proxy){
+  if(!t->isProxy()){
     CellSec* sec;
     if(t->getTertType()==Te_Frame){
       sec=((CellFrame*)t)->getSec();}
     else{
       sec=((CellManager*)t)->getSec();}
     if(sec->getState()==Cell_Lock_Valid){
-      old=sec->getContents();
-      old=deref(old);
+      TaggedRef old=deref(sec->getContents());
       if (!isAnyVar(old))
         return tagged2SRecord(old);}}
 
@@ -5918,22 +5907,25 @@ SRecord *getStateInline(RecOrCell state, Bool isAssign, Bool newVar,OZ_Term fea,
   if (isAnyVar(fea)) {
     EmCode = SUSPEND;
     return NULL;}
-  if (am.onToplevel())
-    if(isAssign)
-      cellAssignExchange(t,fea,val,am.currentThread());
-    else{
+
+  if (am.onToplevel()) {
+    if(isAssign) {
+      EmCode = cellAssignExchange(t,fea,val,am.currentThread());
+    } else {
       if(newVar) val = oz_newVariable();
-      cellAtExchange(t,fea,val,am.currentThread());}
-  else
-    if(!isAssign){
-      val = oz_newVariable();
-  cellAtAccess(t,fea,val);}
-  EmCode = checkSuspend();
+      EmCode = cellAtExchange(t,fea,val,am.currentThread());
+    }
+  } else {
+    if(!isAssign) val = oz_newVariable();
+    EmCode = cellAtAccess(t,fea,val);
+  }
+
   return NULL;
 }
 
-SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea,OZ_Term &val, int &EmCode)
+SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea,OZ_Term &val)
 {
+  int EmCode;
   return getStateInline(state,isAssign,TRUE,fea,val,EmCode);
 }
 

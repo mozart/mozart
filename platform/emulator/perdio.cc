@@ -2251,16 +2251,19 @@ inline void pendThreadRemoveFirst(PendThread **pt){
   *pt=tmp->next;
   tmp->dispose();}
 
-inline void pendThreadAddToEnd(PendThread **pt,Thread *t, TaggedRef o, TaggedRef n, ExKind e){
+inline OZ_Return pendThreadAddToEnd(PendThread **pt,Thread *t, TaggedRef o,
+                               TaggedRef n, ExKind e){
+  OZ_Return ret = PROCEED;
   if(isRealThread(t)){
     oz_suspendOnNet(t);
+    ret = BI_PREEMPT;
     PD((THREAD_D,"stop thread addToEnd %x",t));}
   while(*pt!=NULL){pt= &((*pt)->next);}
   *pt=new PendThread(t,NULL, o, n, e);
-  return;}
+  return ret;}
 
-inline void pendThreadAddToEnd(PendThread **pt,Thread *t){
-  pendThreadAddToEnd(pt,t,0,0,NOEX);}
+inline OZ_Return pendThreadAddToEnd(PendThread **pt,Thread *t){
+  return pendThreadAddToEnd(pt,t,0,0,NOEX);}
 
 inline void pendThreadAddToNonFirst(PendThread **pt,Thread *t){
   if(isRealThread(t)){
@@ -4176,7 +4179,7 @@ void cellReceiveDump(CellManager *cm,Site *fromS){
     PD((WEIRD,"CELL dump not needed"));
     return;}
   TaggedRef tr=oz_newVariable();
-  cellDoExchange((Tertiary *)cm,tr,tr,DummyThread);
+  (void) cellDoExchange((Tertiary *)cm,tr,tr,DummyThread);
   return;}
 
 void cellReceiveForward(BorrowEntry *be,Site *toS,Site* mS,int mI){
@@ -4324,64 +4327,72 @@ inline void genInvokeHandlerLockOrCell(Tertiary* t,Thread* th){
   insertDangelingEvent(t);
 }
 
-void CellSec::exchange(Tertiary* c,TaggedRef old,TaggedRef nw,Thread* th,ExKind exKind){
+OZ_Return CellSec::exchange(Tertiary* c,TaggedRef old,TaggedRef nw,Thread* th,ExKind exKind){
+  OZ_Return ret = PROCEED;
   switch(state){
   case Cell_Lock_Valid:{
     PD((CELL,"CELL: exchange on valid"));
     exchangeVal(old,nw,th,exKind);
-    return;}
+    return ret;}
   case Cell_Lock_Requested|Cell_Lock_Next:
   case Cell_Lock_Requested:{
     PD((CELL,"CELL: exchange on requested"));
-    pendThreadAddToEnd(&pending,th,old,nw,exKind);
-    if(c->errorIgnore()) return;
+    ret = pendThreadAddToEnd(&pending,th,old,nw,exKind);
+    if(c->errorIgnore()) return ret;
     break;}
   case Cell_Lock_Invalid:{
     PD((CELL,"CELL: exchange on invalid"));
     state=Cell_Lock_Requested;
     Assert(isRealThread(th) || th==DummyThread);
-    pendThreadAddToEnd(&pending,th,old,nw,exKind);
+    ret = pendThreadAddToEnd(&pending,th,old,nw,exKind);
     int index=c->getIndex();
     if(c->getTertType()==Te_Frame){
       BorrowEntry* be=BT->getBorrow(index);
       be->getOneMsgCredit();
       cellLockSendGet(be);
-      if(c->errorIgnore()) return;
+      if(c->errorIgnore()) return ret;
       break;}
     Assert(c->getTertType()==Te_Manager);
     Site *toS=((CellManager*)c)->getChain()->setCurrent(mySite,c);
     sendPrepOwner(index);
     cellLockSendForward(toS,mySite,index);
-    if(c->errorIgnore()) return;
+    if(c->errorIgnore()) return ret;
     break;}
-  default: Assert(0);}
+  default: Assert(0);
+  }
   if(maybeInvokeHandler(c,th)){ // ERROR-HOOK
     genInvokeHandlerLockOrCell(c,th);}
+
+  return ret;
 }
 
-void cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th, ExKind e){
+static
+OZ_Return cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th, ExKind e)
+{
   PD((SPECIAL,"exchange old:%d new:%s type:%d",toC(old),toC(nw),e));
   if(c->getTertType()==Te_Proxy){
     convertCellProxyToFrame(c);}
-  PD((CELL,"CELL: exchange on %s-%d",getNASiteFromTertiary(c)->stringrep(),getNAIndexFromTertiary(c)));
-  getCellSecFromTert(c)->exchange(c,old,nw,th,e);}
+  PD((CELL,"CELL: exchange on %s-%d",getNASiteFromTertiary(c)->stringrep(),
+      getNAIndexFromTertiary(c)));
+  return getCellSecFromTert(c)->exchange(c,old,nw,th,e);
+}
 
-void cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th){
-   cellDoExchange(c,old,nw,th, EXCHANGE);}
+OZ_Return cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th){
+   return cellDoExchange(c,old,nw,th, EXCHANGE);}
 
-void cellAssignExchange(Tertiary *c,TaggedRef fea,TaggedRef val,Thread* th){
-   cellDoExchange(c,fea,val,th, ASSIGN);}
+OZ_Return cellAssignExchange(Tertiary *c,TaggedRef fea,TaggedRef val,Thread* th){
+   return cellDoExchange(c,fea,val,th, ASSIGN);}
 
-void cellAtExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th){
-  cellDoExchange(c,old,nw,th, AT);}
+OZ_Return cellAtExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th){
+  return cellDoExchange(c,old,nw,th, AT);}
 
-void CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
+OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
   switch(state){
   case Cell_Lock_Valid:{
     PD((CELL,"CELL: access on valid"));
     Assert(fea == 0);
     pushUnify(am.currentThread(),val,contents);
-    return;}
+    return PROCEED;}
   case Cell_Lock_Requested|Cell_Lock_Next:
   case Cell_Lock_Requested:{
     PD((CELL,"CELL: access on requested"));
@@ -4393,39 +4404,42 @@ void CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
 
   int index=c->getIndex();
   Thread* th=am.currentThread();
-  Bool ask;
-  if(pendBinding!=NULL) ask=NO;
-  else ask=OK;
+  Bool ask = (pendBinding==NULL);
   if(fea)
     pendBinding=new PendThread(th,pendBinding,val,fea,DEEPAT);
   else
     pendBinding=new PendThread(th,pendBinding,val,fea,ACCESS);
   oz_suspendOnNet(th);
-  if(!ask) return;
+  if(!ask) return BI_PREEMPT;
   if(c->getTertType()==Te_Frame){
     BorrowEntry *be=BT->getBorrow(index);
     be->getOneMsgCredit();
     cellSendRead(be,mySite);
-    return;}
+    return BI_PREEMPT;}
   sendPrepOwner(index);
   cellSendRemoteRead(((CellManager*)c)->getChain()->getCurrent(),mySite,index,mySite);
-  if(c->errorIgnore()) return;
-  if(maybeInvokeHandler(c,th)){// ERROR-HOOK
-    genInvokeHandlerLockOrCell(c,th);
-  }}
+  if(!c->errorIgnore()) {
+    if(maybeInvokeHandler(c,th)){// ERROR-HOOK
+      genInvokeHandlerLockOrCell(c,th);
+    }
+  }
+  return BI_PREEMPT;
+}
 
-void cellDoAccess(Tertiary *c,TaggedRef val,TaggedRef fea){
-  if(c->getTertType()==Te_Proxy){
+static
+OZ_Return cellDoAccess(Tertiary *c,TaggedRef val,TaggedRef fea){
+  if(c->isProxy()){
     convertCellProxyToFrame(c);}
-  getCellSecFromTert(c)->access(c,val,fea);}
+  return getCellSecFromTert(c)->access(c,val,fea);}
 
-void cellAtAccess(Tertiary *c, TaggedRef fea, TaggedRef val){
-  cellDoAccess(c,val,fea);}
-void cellDoAccess(Tertiary *c, TaggedRef val){
+OZ_Return cellAtAccess(Tertiary *c, TaggedRef fea, TaggedRef val){
+  return cellDoAccess(c,val,fea);}
+
+OZ_Return cellDoAccess(Tertiary *c, TaggedRef val){
   if(am.onToplevel() && c->handlerExists(am.currentThread()))
-    cellDoExchange(c,val,val,am.currentThread());
+    return cellDoExchange(c,val,val,am.currentThread());
   else
-    cellDoAccess(c,val,0);}
+    return cellDoAccess(c,val,0);}
 
 
 /**********************************************************************/

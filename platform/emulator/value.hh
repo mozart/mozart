@@ -1652,7 +1652,7 @@ public:
   Object *gcObject();
 };
 
-SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val, int &eC);
+SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val);
 
 inline
 Bool isObject(ConstTerm *t)
@@ -2240,8 +2240,8 @@ public:
   PendThread** getPendBase(){return &pending;}
 
   void gcCellSec();
-  void exchange(Tertiary*,TaggedRef,TaggedRef,Thread*,ExKind);
-  void access(Tertiary*,TaggedRef,TaggedRef);
+  OZ_Return exchange(Tertiary*,TaggedRef,TaggedRef,Thread*,ExKind);
+  OZ_Return access(Tertiary*,TaggedRef,TaggedRef);
   void exchangeVal(TaggedRef,TaggedRef,Thread*,ExKind);
   Bool cellRecovery(TaggedRef);
   Bool secReceiveRemoteRead(Site*,Site*,int);
