@@ -1,6 +1,18 @@
-fun {$ IMPORT}
+functor $ prop once
+
+import
+
+   FD
+
+   Search.{SearchOne  = 'SearchOne'
+	   SearchAll  = 'SearchAll'
+	   SearchBest = 'SearchBest'}
+
+   System.{Show = show}
    
-   \insert '../lib/import.oz'
+export
+   Return
+body
    
    I = 10
    B = {FD.int 0#1}
@@ -15,7 +27,7 @@ fun {$ IMPORT}
       L(equal(T 1) keys: [fd])
    end
    
-in
+   Return=
    fd([watlasm([
 		
 		{MiscTest 1
