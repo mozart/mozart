@@ -81,7 +81,7 @@ void enrichTypeException(TaggedRef value,const char *fun, OZ_Term args)
   OZ_putArg(e,2,args);
 }
 
-inline
+static
 TaggedRef formatError(TaggedRef info, TaggedRef val, TaggedRef traceBack) {
   OZ_Term d = OZ_record(AtomD,oz_mklist(AtomInfo,AtomStack));
   OZ_putSubtree(d, AtomStack, traceBack);
@@ -307,7 +307,7 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
     case BI_REPLACEBICALL:
       break;
     default:
-      OZ_error("oz_bi_wrapper: return not handled: %d",ret1);
+      OZ_error("Builtin: Unknown return value.\nDoes your builtin return a meaningful value?\nThis value is definitely unknown: %d",ret1);
       return FAILED;
     }
   }
@@ -1927,7 +1927,7 @@ Case(GETVOID)
       case SLEEP:
       case FAILED:
       default:
-        OZ_error("unexpected return value in TESTBI: %d",ret);
+        Assert(0);
       }
     }
 
@@ -2765,8 +2765,6 @@ Case(GETVOID)
      default: break;
      }
      Assert(0);
-     OZ_error("impossible");
-
 
    LBLMagicRet:
      {
@@ -2943,7 +2941,6 @@ Case(GETVOID)
 
   Case(OZERROR)
     {
-      OZ_error("Emulate: OZERROR instruction executed");
       return T_ERROR;
     }
 
@@ -3254,14 +3251,14 @@ Case(GETVOID)
 
   Case(GLOBALVARNAME)
     {
-      OZ_error("under threaded code this must be different from LOCALVARNAME,");
-      OZ_error("otherwise CodeArea::adressToOpcode will not work.");
+      // Trick: just do something weird
+      DISPATCH(4711);
     }
 
   Case(LOCALVARNAME)
     {
-      OZ_error("under threaded code this must be different from GLOBALVARNAME,");
-      OZ_error("otherwise CodeArea::adressToOpcode will not work.");
+      // Trick: just do something weird, but something different
+      goto LBLcall;
     }
 
   Case(PROFILEPROC)
@@ -3283,27 +3280,23 @@ Case(GETVOID)
 
   Case(TASKCATCH)
     {
-      OZ_error("impossible");
-      /* remove unused continuation for handler */
-      CTS->discardFrame(NOCODE);
+      Assert(0);
       DISPATCH(1);
     }
 
   Case(ENDOFFILE)
     {
-      OZ_error("Emulate: ENDOFFILE instruction executed");
       return T_ERROR;
     }
 
   Case(ENDDEFINITION)
     {
-      OZ_error("Emulate: ENDDEFINITION instruction executed");
       return T_ERROR;
     }
 
 #ifndef THREADED
   default:
-    OZ_error("emulate instruction: default should never happen");
+    Assert(0);
      break;
    } /* switch*/
 #endif
@@ -3578,7 +3571,7 @@ void buildRecord(ProgramCounter PC, RefsArray X, RefsArray Y,Abstraction *CAP)
     default:
       displayCode(PC,1);
       displayDef(PC,1);
-      OZ_error("buildRecord: unhandled opcode: %d\n",op);
+      Assert(0);
       goto exit;
     }
   }

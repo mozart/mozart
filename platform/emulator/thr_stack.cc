@@ -330,7 +330,7 @@ Bool TaskStack::findCatch(Thread *thr,
         if (((LockManagerEmul*)lck)->hasLock(thr))
           ((LockManagerEmul*)lck)->unlock(thr);
         break;
-      case Te_Proxy: OZ_error("lock proxy unlocking\n");break;}
+      case Te_Proxy: OZD_error("lock proxy unlocking\n");break;}
     } else if (PC==C_SET_SELF_Ptr) {
       foundSelf = (Object*) G;
     } else if (PC==C_SET_ABSTR_Ptr) {

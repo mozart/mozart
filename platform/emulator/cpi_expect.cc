@@ -899,7 +899,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
       return PROCEED;
     default:
-      DebugCode(OZ_error("Unexpected return value."));
+      DebugCode(OZ_error("Unexpected return value from propagator."));
       return PROCEED;
     }
   }

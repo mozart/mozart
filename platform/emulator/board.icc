@@ -367,7 +367,7 @@ Bool Board::cacIsAlive() {
   do {
     int t = s->getTag();
 
-    if (t & (BoTag_MarkOne | BoTag_MarkOne))
+    if (t & (BoTag_MarkOne | BoTag_MarkTwo))
       return OK;
 
     if (t == BoTag_Root) {

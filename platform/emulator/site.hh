@@ -70,10 +70,10 @@ public:
 #ifdef DEBUG_CHECK
   // never create these...
   void* operator new(size_t) {
-    OZ_error("BaseSite is created???"); return (void *) 1;
+    OZD_error("BaseSite is created???"); return (void *) 1;
   }
   void* operator new(size_t, void *) {
-    OZ_error("BaseSite is created???"); return (void *) 1;
+    OZD_error("BaseSite is created???"); return (void *) 1;
   }
 #endif
   //

@@ -1567,7 +1567,7 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
 
         len_arr ++;
       } else {
-        OZ_error("Unexpected case when creating finite domain.");
+        OZD_error("Unexpected case when creating finite domain.");
       }
       left_arr.request(len_arr);
       right_arr.request(len_arr);
@@ -1576,7 +1576,7 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
     } // for
     return initList(len_arr, left_arr, right_arr, min_arr, max_arr);
   }
-  OZ_error("Unexpected term in finite description list.");
+  OZD_error("Unexpected term in finite description list.");
   return -1;
 }
 
@@ -2276,7 +2276,7 @@ OZ_FiniteDomain::OZ_FiniteDomain(OZ_FDState state)
     CASTTHIS->initBool();
     break;
   default:
-    OZ_error("Unexpected OZ_FDState.");
+    OZD_error("Unexpected OZ_FDState.");
     break;
   }
 }
@@ -2560,7 +2560,7 @@ void OZ_FiniteDomainImpl::print(ostream &ofile, int idnt) const
     get_iv()->print(ofile, idnt);
     break;
   default:
-    OZ_error("unexpected case");
+    OZD_error("unexpected case");
   }
 }
 

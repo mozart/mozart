@@ -556,7 +556,7 @@ TaggedRef insert(TaggedRef a, TaggedRef list) {
       }
       break;
     default:
-      OZ_error("insert");
+      OZD_error("insert");
       return 0;
     }
   }

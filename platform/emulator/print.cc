@@ -1291,7 +1291,7 @@ void OZ_FiniteDomainImpl::printLong(ostream &stream, int idnt) const
     get_iv()->printLong(stream, idnt);
     break;
   default:
-    OZ_error("unexpected case");
+    OZD_error("unexpected case");
   }
 }
 

@@ -776,16 +776,16 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
       }
 
     case DIF_REF_DEBUG:
-      { OZ_error("not implemented!"); }
+      { OZD_error("not implemented!"); }
 
     case DIF_ARRAY:
-      { OZ_error("not implemented!"); }
+      { OZD_error("not implemented!"); }
 
     case DIF_EOF:
       return (b->finish());
 
     default:
-      OZ_error("unmarshal: unexpected tag: %d\n",tag);
+      DebugCode(OZ_error("unmarshal: unexpected tag: %d\n",tag);)
       Assert(0);
       b->buildValue(oz_nil());
     }
