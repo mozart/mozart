@@ -26,8 +26,9 @@
 #include "msgContainer.hh"
 #include "am.hh"
 
-#define Q_PRIO_VAL_4 2
-#define Q_PRIO_VAL_3 2
+#define Q_PRIO_VAL_4 10
+#define Q_PRIO_VAL_3 10
+#define Q_PRIO_VAL_2 100
 
 //  inline void u_enqueue(MsgContainer *,Queue &);
 //  inline Bool u_isEmpty(Queue &);
@@ -234,31 +235,35 @@ MsgContainer *PrioQueues::getNext(Bool working) {
 	prio_val_4--;
 	break;
       }
-      else if(prio_val_3>0) {
+      else {
 	prio_val_4=Q_PRIO_VAL_4;
-	if(!u_isEmpty(qs[3-1])) {
+	if(prio_val_3>0 && !u_isEmpty(qs[3-1])) {
 	  ret=u_removeFirst(qs[3-1]);
 	  curq=&qs[3-1];
 	  prio_val_3--;
 	  break;
 	}
-      }
-      else {
-	prio_val_3=Q_PRIO_VAL_3;
-	if(!u_isEmpty(qs[2-1])) {
-	  curq=&qs[2-1];
-	  ret=u_removeFirst(qs[2-1]);
-	  break;
+	else {
+	  prio_val_3=Q_PRIO_VAL_3;
+	  if(!u_isEmpty(qs[2-1])) {
+	    curq=&qs[2-1];
+	    ret=u_removeFirst(qs[2-1]);
+	    break;
+	  }
+	  else {
+	    prio_val_2=Q_PRIO_VAL_2;
+	    if(!u_isEmpty(qs[1-1])) {
+	      curq=&qs[1-1];
+	      ret=u_removeFirst(qs[1-1]);
+	      break;
+	    }
+	  }
 	}
       }
-    } while(!u_isEmpty(qs[4-1]) || !u_isEmpty(qs[3-1]));
-
-    if (ret==NULL) {
-      ret=u_removeFirst(qs[1-1]);
-      curq=&qs[1-1];
-    }
+    } while(!u_isEmpty(qs[4-1]) || !u_isEmpty(qs[3-1]) || !u_isEmpty(qs[2-1]));
   }
-  curm=ret;
+  DebugCode(curm=ret);
+  Assert(ret!=NULL || hasQueued()==FALSE || !working);
   if (ret!=NULL) noMsgs--;
   return ret;
 }
