@@ -24,9 +24,14 @@
 
 functor
 import
-   SGML(parse namePI getSubtree isOfClass)
+   %% System Modules
+   System(printError)
    OS(system localTime)
    Open(file)
+   Narrator('class')
+   ErrorListener('class')
+   %% Application Modules
+   SGML(parse namePI getSubtree isOfClass)
    AuthorDB('class')
    BibliographyDB('class')
    Indexer('class')
@@ -47,6 +52,10 @@ export
 define
    DOCTYPE_PUBLIC = '"-//W3C//DTD HTML 4.0 Transitional//EN"'
 
+   ParseError = 'sgml parse error'
+   OzDocError = 'ozdoc to html error'
+   OzDocWarning = 'ozdoc to html warning'
+
    %%
    %% Note: order is important in the following list!
    %%
@@ -58,6 +67,31 @@ define
                    macro#'macro'
                    variable#'variable' useroption#'user option'
                    command#'command' face#'face']
+
+   proc {OutputParseErrors S Reporter} Line Lines in
+      {List.takeDropWhile S fun {$ C} C \= &\n end ?Line ?Lines}
+      try R1 FileName R2 LineNumber R3 ColumnNumber R4 Msg in
+         Line = &n|&s|&g|&m|&l|&s|&:|R1
+         {List.takeDropWhile R1 fun {$ C} C \= &: end ?FileName &:|?R2}
+         {List.takeDropWhile R2 fun {$ C} C \= &: end ?LineNumber &:|?R3}
+         {List.takeDropWhile R3 fun {$ C} C \= &: end ?ColumnNumber &:|?R4}
+         Msg = case R4 of &E|&:|& |R then R
+               elseof & |R then R
+               end
+         {Reporter error(coord: pos({String.toAtom FileName}
+                                    {String.toInt LineNumber}
+                                    {String.toInt ColumnNumber})
+                         kind: ParseError
+                         msg: Msg)}
+      catch _ then
+         {Reporter error(kind: ParseError msg: Line)}
+      end
+      case Lines of [&\n] then skip
+      elseof &\n|Rest then {OutputParseErrors Rest Reporter}
+      elseof nil then skip
+      elseof X then {OutputParseErrors X Reporter}
+      end
+   end
 
    fun {CollapseSpaces S DropSpace}
       case S of C|Cr then
@@ -234,8 +268,9 @@ define
       {F close()}
    end
 
-   class OzDocToHTML
+   class OzDocToHTML from Narrator.'class'
       attr
+         Reporter: unit
          % fontification:
          FontifyMode: unit
          MyFontifier: unit
@@ -287,42 +322,69 @@ define
          IdxNode: unit
          IndexSortAs: unit
          AutoIndex: unit
-      meth init(Mode SGML Args)
-         FontifyMode <- Mode
-         StyleSheet <- {Property.get 'ozdoc.stylesheet'}
-         MyFontifier <- {New Fontifier.'class' init()}
-         OutputDirectory <- Args.'out'
-         {OS.system "mkdir -p "#@OutputDirectory _}   %--** OS.mkDir
-         MyThumbnails <- {New Thumbnails.'class' init(@OutputDirectory)}
-         MyMathToGIF <- if Args.'latexmath' then
-                           {New MathToGIF.'class' init(@OutputDirectory)}
-                        else unit
-                        end
-         MyPostScriptToGIF <- {New PostScriptToGIF.'class'
-                               init(@OutputDirectory)}
-         CurrentNode <- 'index.html'
-         NodeCounter <- 0
-         ToWrite <- nil
-         Split <- Args.'split'
-         SomeSplit <- false
-         Threading <- nil
-         ProgLang <- Fontifier.noProgLang
-         Labels <- {NewDictionary}
-         ToGenerate <- nil
-         AutoIndex <- Args.'autoindex'
-         OzDocToHTML, Process(SGML unit)
-         OzDocToHTML, GenerateLabels()
-         {DoThreading {Reverse @Threading} unit 'index.html' nil}
-         {ForAll {Dictionary.items @Labels}
-          proc {$ N#T}
-             if {IsFree N} then N#T = 'file:///dev/null'#PCDATA('???') end
-          end}
-         {ForAll @ToWrite
-          proc {$ Node#File}
-             {WriteFile
-              '<!DOCTYPE html PUBLIC '#DOCTYPE_PUBLIC#'>\n'#
-              {HTML.toVirtualString Node} File}
-          end}
+      meth init()
+         Reporter <- Narrator.'class', init($)
+         {@Reporter setLogPhases(true)}
+      end
+      meth translate(Mode Args) SGMLNode in
+         {@Reporter startBatch()}
+         {@Reporter startPhase('parsing SGML input')}
+         try
+            SGMLNode = {SGML.parse Args.'in'}
+         catch errors(S) then
+            {OutputParseErrors S @Reporter}
+         end
+         if {@Reporter hasSeenError($)} then skip
+         else
+            FontifyMode <- Mode
+            StyleSheet <- {Property.get 'ozdoc.stylesheet'}
+            MyFontifier <- {New Fontifier.'class' init()}
+            OutputDirectory <- Args.'out'
+            {OS.system "mkdir -p "#@OutputDirectory _}   %--** OS.mkDir
+            MyThumbnails <- {New Thumbnails.'class' init(@OutputDirectory)}
+            MyMathToGIF <- if Args.'latexmath' then
+                              {New MathToGIF.'class' init(@OutputDirectory)}
+                           else unit
+                           end
+            MyPostScriptToGIF <- {New PostScriptToGIF.'class'
+                                  init(@OutputDirectory)}
+            CurrentNode <- 'index.html'
+            NodeCounter <- 0
+            ToWrite <- nil
+            Split <- Args.'split'
+            SomeSplit <- false
+            Threading <- nil
+            ProgLang <- Fontifier.noProgLang
+            Labels <- {NewDictionary}
+            ToGenerate <- nil
+            AutoIndex <- Args.'autoindex'
+            {@Reporter startPhase('translating to HTML')}
+            OzDocToHTML, Process(SGMLNode unit)
+         end
+         if {@Reporter hasSeenError($)} then skip
+         else
+            {@Reporter startSubPhase('adding navigation panels')}
+            {DoThreading {Reverse @Threading} unit 'index.html' nil}
+            {@Reporter startSubPhase('generating cross-reference labels')}
+            OzDocToHTML, GenerateLabels()
+            {ForAll {Dictionary.items @Labels}
+             proc {$ N#T}
+                if {IsFree N} then N#T = 'file:///dev/null'#PCDATA('???') end
+             end}
+            {@Reporter startSubPhase('writing output files')}
+            {ForAll @ToWrite
+             proc {$ Node#File}
+                {WriteFile
+                 '<!DOCTYPE html PUBLIC '#DOCTYPE_PUBLIC#'>\n'#
+                 {HTML.toVirtualString Node} File}
+             end}
+         end
+         if {@Reporter hasSeenError($)} then
+            {@Reporter endBatch(rejected)}
+         else
+            {@Reporter endBatch(accepted)}
+         end
+         {@Reporter tell(done())}
       end
       meth PushCommon(M OldCommon) ID Class in
          OldCommon = @ProgLang#@Common
@@ -390,9 +452,7 @@ define
             HTML = EMPTY
          end
       end
-      meth PictureExtern(Dir M To R)
-         Display HTML
-      in
+      meth PictureExtern(Dir M To R) Display HTML in
          Display = case @PictureDisplay of unit then M.display
                    elseof X then X
                    end
@@ -456,8 +516,10 @@ define
             [] 'PI:EG' then
                VERBATIM('e.&nbsp;g.')
             else
-               {Exception.raiseError
-                ozDoc(sgmlToHTML unsupportedProcessingInstruction M.1)} unit
+               {@Reporter error(kind: OzDocError
+                                msg: 'unsupported processing instruction'
+                                items: [hint(l: 'Found' m: M.1)])}
+               unit
             end
          else
             %-----------------------------------------------------------
@@ -481,6 +543,7 @@ define
                        OzDocToHTML, Process(M.2='body'(...) $)
                        case {@MyBibliographyDB process($)} of unit then EMPTY
                        elseof VS then Title Label X HTML1 HTML in
+                          {@Reporter startSubPhase('generating bibliography')}
                           Title = PCDATA('Bibliography')
                           OzDocToHTML, PrepareBibNode(?X ?HTML1)
                           ToGenerate <- Label|@ToGenerate
@@ -493,6 +556,7 @@ define
                           OzDocToHTML, FinishNode(Title X HTML $)
                        end
                        IndexHTML]
+               {@Reporter startSubPhase('fontifying code')}
                {@MyFontifier process(case @FontifyMode
                                      of color then 'html-color'
                                      [] mono then 'html-mono'
@@ -500,6 +564,7 @@ define
                                      end)}
                IndexHTML = if {@MyIndexer empty($)} then EMPTY
                            else Title Label X HTML1 HTML in
+                              {@Reporter startSubPhase('generating index')}
                               Title = PCDATA('Index')
                               OzDocToHTML, PrepareIdxNode(?X ?HTML1)
                               ToGenerate <- Label|@ToGenerate
@@ -552,18 +617,23 @@ define
             [] meta then
                if {HasFeature M value} then
                   if {HasFeature M arg1} orelse {HasFeature M arg2} then
-                     {Exception.raiseError ozDoc(sgmlToHTML illegalMeta M)}
+                     {@Reporter error(kind: OzDocError
+                                      msg: 'illegal meta information'
+                                      items: [hint(l: 'Node' m: oz(M))])}
+                  else
+                     {Dictionary.put @Meta M.name
+                      {Append {Dictionary.condGet @Meta M.name nil}
+                       [{String.toAtom M.value}]}}
                   end
-                  {Dictionary.put @Meta M.name
-                   {Append {Dictionary.condGet @Meta M.name nil}
-                    [{String.toAtom M.value}]}}
                else
                   if {HasFeature M arg1} andthen {HasFeature M arg2} then
                      {Dictionary.put @Meta M.name
                       {Append {Dictionary.condGet @Meta M.name nil}
                        [{String.toAtom M.arg1}#{String.toAtom M.arg2}]}}
                   else
-                     {Exception.raiseError ozDoc(sgmlToHTML illegalMeta M)}
+                     {@Reporter error(kind: OzDocError
+                                      msg: 'illegal meta information'
+                                      items: [hint(l: 'Node' m: oz(M))])}
                   end
                end
                EMPTY
@@ -713,8 +783,9 @@ define
             [] list then
                %--** display attribute
                if {HasFeature M continues} then
-                  {Exception.raiseError
-                   ozDoc(sgmlToHTML notImplemented M continues)}   %--**
+                  {@Reporter warn(kind: OzDocWarning
+                                  msg: 'attribute `continues\' not implemented'
+                                  items: [hint(l: 'Node' m: oz(M))])}
                end
                if {Label M.1} == entry then X HTML in
                   X = @InDescription
@@ -735,8 +806,10 @@ define
                            start: {CondSelect M n unit}
                            HTML))
                elseif {HasFeature M n} then
-                  {Exception.raiseError
-                   ozDoc(sgmlToHTML illegalAttributes M)} unit
+                  {@Reporter error(kind: OzDocError
+                                   msg: ('illegal attribute `n\' in '#
+                                         'non-enumerated list'))}
+                  unit
                else X HTML in
                   X = @InDescription
                   InDescription <- false
@@ -786,8 +859,10 @@ define
                [] 'HTML' then
                   HTML = VERBATIM(M.1)
                else
-                  {Exception.raiseError
-                   ozDoc(sgmlToHTML unsupportedMathNotation M)}   %--**
+                  {@Reporter error(kind: OzDocError
+                                   msg: 'unsupported math notation'   %--**
+                                   items: [hint(l: 'Notation' m: M.type)])}
+                  HTML = unit
                end
                case Display of display then
                   BLOCK(blockquote(COMMON: @Common p(HTML)))
@@ -795,8 +870,10 @@ define
                   span(COMMON: @Common HTML)
                end
             [] 'math.extern' then
-               {Exception.raiseError
-                ozDoc(sgmlToHTML unsupported M)} unit   %--**
+               {@Reporter error(kind: OzDocError
+                                msg: 'unsupported element'   %--**
+                                items: [hint(l: 'Node' m: oz(M))])}
+               unit
             [] 'math.choice' then HTML in
                MathDisplay <- M.display
                OzDocToHTML, Process(M.1 ?HTML)   %--** make better choice
@@ -806,8 +883,9 @@ define
             % Picture Element
             %-----------------------------------------------------------
             [] picture then
-               {Exception.raiseError
-                ozdoc(sgmlToHTML unsupported M)} unit   %--**
+               {@Reporter error(kind: OzDocError
+                                msg: 'unsupported element'   %--**
+                                items: [hint(l: 'Node' m: oz(M))])}
             [] 'picture.extern' then
                case {CondSelect M type unit}
                of 'gif' then
@@ -817,11 +895,15 @@ define
                   OzDocToHTML, PictureExtern(@OutputDirectory#'/' M To $)
                [] unit then
                   %--** the notation should be derived from the file name
-                  {Exception.raiseError
-                   ozDoc(sgmlToHTML unspecifiedPictureNotation M)} unit
-               else
-                  {Exception.raiseError
-                   ozDoc(sgmlToHTML unsupportedPictureNotation M)} unit   %--**
+                  {@Reporter error(kind: OzDocError
+                                   msg: 'unspecified picture notation'
+                                   items: [hint(l: 'Node' m: oz(M))])}
+                  unit
+               elseof N then
+                  {@Reporter error(kind: OzDocError
+                                   msg: 'unsupported picture notation'   %--**
+                                   items: [hint(l: 'Notation' m: N)])}
+                  unit
                end
             [] 'picture.choice' then HTML in
                PictureDisplay <- M.display
@@ -889,8 +971,10 @@ define
                a(COMMON: @Common href: Node#"#"#M.to HTML)
             [] 'ptr.extern' then
                %--** use an icon as content
-               {Exception.raiseError
-                ozDoc(sgmlToHTML unsupported M)} unit   %--**
+               {@Reporter error(kind: OzDocError
+                                msg: 'unsupported element'   %--**
+                                items: [hint(l: 'Node' m: oz(M))])}
+               unit
             %-----------------------------------------------------------
             % Phrasal Elements
             %-----------------------------------------------------------
@@ -953,7 +1037,9 @@ define
                   BLOCK(OzDocToHTML, OutputFigure(M $))
                end
             [] caption then
-               {Exception.raiseError ozDoc(sgmlToHTML internalError M)} unit
+               {@Reporter error(kind: OzDocError
+                                msg: 'internal error - caption unexpected')}
+               unit
             %-----------------------------------------------------------
             % Note
             %-----------------------------------------------------------
@@ -975,9 +1061,6 @@ define
                OzDocToHTML, BatchSub(M 1 ?Ands)
                OzDocToHTML, Index(M Ands $)
             [] and then SortAs Item in
-               if {HasFeature M see} then
-                  {Exception.raiseError ozDoc(sgmlToHTML unsupportedSee M)}
-               end
                SortAs = case {CondSelect M 'sort.as' unit}
                         of unit then @IndexSortAs
                         elseof X then X
@@ -988,8 +1071,10 @@ define
                else SortAs#Item
                end
             [] see then
-               {Exception.raiseError
-                ozDoc(sgmlToHTML unsupported M)} unit   %--**
+               {@Reporter error(kind: OzDocError
+                                msg: 'unsupported element'   %--**
+                                items: [hint(l: 'Node' m: oz(M))])}
+               unit
             %-----------------------------------------------------------
             % BNF Markup
             %-----------------------------------------------------------
@@ -1077,8 +1162,10 @@ define
             [] attrib then
                code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
             else
-               {Exception.raiseError
-                ozDoc(sgmlToHTML unsupported M)} unit   %--**
+               {@Reporter error(kind: OzDocError
+                                msg: 'unknown element'   %--**
+                                items: [hint(l: 'Node' m: oz(M))])}
+               unit
             end
          end = Res
          OzDocToHTML, PopCommon(OldCommon)
@@ -1100,7 +1187,9 @@ define
          Res = a(name: TheLabel NodeTitle)
          if {SGML.isOfClass M unnumbered} then
             if Title == unit then
-               {Exception.raiseError ozDoc(sgmlToHTML emptySectionTitle M)}
+               {@Reporter error(kind: OzDocError
+                                msg: 'empty unnumbered section title'
+                                items: [hint(l: 'Node' m: oz(M))])}
             end
             NodeTitle = Title
             if {HasFeature M id} then
@@ -1388,7 +1477,26 @@ define
       end
    end
 
-   proc {Translate Mode Args}
-      {New OzDocToHTML init(Mode {SGML.parse Args.'in'} Args) _}
+   class MyListener from ErrorListener.'class'
+      attr Sync: unit
+      meth init(O X)
+         Sync <- X
+         ErrorListener.'class', init(O ServeOne true)
+      end
+      meth ServeOne(M)
+         case M of done() then @Sync = unit
+         else skip
+         end
+      end
+   end
+
+   proc {Translate Mode Args} O L Sync in
+      O = {New OzDocToHTML init()}
+      L = {New MyListener init(O Sync)}
+      {O translate(Mode Args)}
+      {Wait Sync}
+      if {L hasErrors($)} then
+         raise error end
+      end
    end
 end

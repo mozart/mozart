@@ -24,7 +24,6 @@
 functor
 import
    Property(get)
-   System(printError)
    Parser at 'x-oz://contrib/doc/sgml/Parser'
 export
    Parse
@@ -42,8 +41,7 @@ define
       case Errors of nil then {Transform Res.docElem}
       else
          {List.is Errors _}   % request lazily computed list
-         {System.printError Errors}
-         raise error end
+         raise errors(Errors) end
       end
    end
    fun {GetSubtree M L ?Mr}
