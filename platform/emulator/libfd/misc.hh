@@ -74,7 +74,52 @@ public:
   virtual OZ_Return propagate(void);
 };
 
+//-----------------------------------------------------------------------------
 
+class TestGenSum : public Propagator_VD {
+private:
+  static OZ_CFunHeader header;
+  OZ_Term _v;
+
+  OZ_FiniteDomain * _aux;
+
+  void _init_aux(void) {
+    for (int i = reg_l_sz; i--; )
+      _aux[i].initFull();
+    if(reg_l_sz)
+      _aux[0] &= 0;
+  }
+public:
+  TestGenSum(OZ_Term vd, OZ_Term v) : Propagator_VD(vd), _v(v)
+  {
+    _aux = (OZ_FiniteDomain *)
+      OZ_hallocChars(reg_l_sz * sizeof(OZ_FiniteDomain));
+    _init_aux();
+  }
+
+  virtual size_t sizeOf(void) { return sizeof(TestGenSum); }
+  virtual OZ_CFunHeader * getHeader(void) const { return &header; }
+
+  virtual OZ_Return propagate(void);
+
+  virtual void updateHeapRefs(OZ_Boolean dup) {
+    Propagator_VD::updateHeapRefs(dup);
+
+    OZ_FiniteDomain * new_aux = (OZ_FiniteDomain *)
+      OZ_hallocChars(reg_l_sz * sizeof(OZ_FiniteDomain));
+
+    OZ_updateHeapTerm(_v);
+
+    for (int i = reg_l_sz; i--; )
+      new_aux[i] = _aux[i];
+
+    _aux = new_aux;
+  }
+  virtual OZ_Term getParameters(void) const {
+    TERMVECTOR2LIST(reg_l, reg_l_sz, vd);
+    RETURN_LIST2(vd, _v);
+  }
+};
 
 
 #endif // __MISC_HH__

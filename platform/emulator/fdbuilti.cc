@@ -1222,6 +1222,7 @@ BIspec fdSpec[] = {
   {"spawnLess", 2, fdtest_spawnLess},
   {"dplus", 3, fdtest_plus},
   {"sumac", 3, fdtest_sumac},
+  {"testgensum", 2, fdtest_gensum},
 #ifdef ALLDIFF
   {"alldiff_complete", 1, fdtest_alldiff},
 #endif

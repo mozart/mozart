@@ -611,4 +611,164 @@ failure:
 #endif
 
 //-----------------------------------------------------------------------------
+
+OZ_C_proc_begin(fdtest_gensum, 2)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD);
+
+  PropagatorExpect pe;
+
+  OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
+  OZ_EXPECT(pe, 1, expectIntVarMinMax);
+
+  return pe.impose(new TestGenSum(OZ_args[0], OZ_args[1]));
+}
+OZ_C_proc_end
+
+OZ_CFunHeader TestGenSum::header = fdtest_gensum;
+
+OZ_Boolean add3(OZ_FiniteDomain &x,
+                OZ_FiniteDomain &y,
+                OZ_FiniteDomain &z,
+                OZ_Boolean &doagain)
+{
+  int txl = z.getMinElem() - y.getMaxElem();
+  int txu = z.getMaxElem() - y.getMinElem();
+  int tyl = z.getMinElem() - x.getMaxElem();
+  int tyu = z.getMaxElem() - x.getMinElem();
+  int tzl = x.getMinElem() + y.getMinElem();
+  int tzu = x.getMaxElem() + y.getMaxElem();
+
+  OZ_Boolean repeat;
+
+  do {
+    repeat = OZ_FALSE;
+
+    if (x.getMinElem() < txl) {
+      FailOnEmpty(x >= txl);
+      tyu = z.getMaxElem() - x.getMinElem();
+      tzl = x.getMinElem() + y.getMinElem();
+      repeat = OZ_TRUE;
+    }
+
+    if (x.getMaxElem() > txu) {
+      FailOnEmpty(x <= txu);
+      tyl = z.getMinElem() - x.getMaxElem();
+      tzu = x.getMaxElem() + y.getMaxElem();
+      repeat = OZ_TRUE;
+    }
+
+    if (y.getMinElem() < tyl) {
+      FailOnEmpty(y >= tyl);
+      txu = z.getMaxElem() - y.getMinElem();
+      tzl = x.getMinElem() + y.getMinElem();
+      repeat = OZ_TRUE;
+    }
+
+    if (y.getMaxElem() > tyu) {
+      FailOnEmpty(y <= tyu);
+      txl = z.getMinElem() - y.getMaxElem();
+      tzu = x.getMaxElem() + y.getMaxElem();
+      repeat = OZ_TRUE;
+    }
+
+    if (z.getMinElem() < tzl) {
+      FailOnEmpty(z >= tzl);
+      txl = z.getMinElem() - y.getMaxElem();
+      tyl = z.getMinElem() - x.getMaxElem();
+      repeat = OZ_TRUE;
+    }
+
+    if (z.getMaxElem() > tzu) {
+      FailOnEmpty(z <= tzu);
+      txu = z.getMaxElem() - y.getMinElem();
+      tyu = z.getMaxElem() - x.getMinElem();
+      repeat = OZ_TRUE;
+    }
+
+    doagain |= repeat;
+  } while (repeat);
+
+  return OZ_TRUE;
+
+failure:
+  return OZ_FALSE;
+} // OZ_Boolean add3()
+
+OZ_Return TestGenSum::propagate(void)
+{
+  OZ_DEBUGPRINTTHIS("in ");
+
+  int &vd_size = reg_l_sz;
+  DECL_DYN_ARRAY(OZ_FDIntVar, vd, vd_size);
+  OZ_FDIntVar d(_v);
+  OZ_FiniteDomain * aux = _aux;
+  PropagatorController_VV_V P(vd_size, vd, d);
+  int i;
+
+  for (i = vd_size; i--; )
+    vd[i].read(reg_l[i]);
+
+  OZ_Boolean doagain;
+
+  if (vd_size == 0) {
+    OZ_DEBUGPRINTTHIS("vd_size == 0");
+    FailOnEmpty(*d &= aux[0]);
+    return P.vanish();
+  } else if (vd_size == 1) {
+    OZ_DEBUGPRINTTHIS("vd_size == 1");
+    do {
+      doagain = OZ_FALSE;
+
+      if (!add3(aux[0], *vd[0], *d, doagain))
+        goto failure;
+
+    } while (doagain);
+
+    return P.leave();
+  }
+
+  do {
+    doagain = OZ_FALSE;
+
+
+    for (i = 0; i < vd_size - 1; i += 1)
+      if (!add3(aux[i], *vd[i], aux[i+1], doagain))
+        goto failure;
+
+    if (!add3(*vd[vd_size-1], aux[vd_size-1], *d, doagain))
+      goto failure;
+
+  } while (doagain);
+
+  {
+    OZ_Return r = P.leave();
+
+    if (r == OZ_SLEEP) {
+
+      int j = 0;
+      for (i = 0; i < vd_size; i += 1) {
+        if (*vd[i] == 0)
+          continue;
+
+        if (i != j) {
+          reg_l[j] = reg_l[i];
+          _aux[j] = _aux[i];
+        }
+        j += 1;
+      }
+      vd_size = j;
+    }
+
+    OZ_DEBUGPRINTTHIS("out ");
+    return r;
+  }
+
+
+failure:
+  OZ_DEBUGPRINTTHIS("failed");
+  return P.fail();
+}
+
+//-----------------------------------------------------------------------------
 // eof

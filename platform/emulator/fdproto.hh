@@ -119,6 +119,7 @@ OZ_C_proc_proto(fdtest_spawnLess)
 OZ_C_proc_proto(fdtest_plus)
 OZ_C_proc_proto(fdtest_sumac)
 OZ_C_proc_proto(fdtest_alldiff)
+OZ_C_proc_proto(fdtest_gensum)
 
 //*****************************************************************************
 //  Finite Sets

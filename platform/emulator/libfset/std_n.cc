@@ -137,6 +137,10 @@ OZ_Boolean union3(OZ_FSetConstraint &x,
                   OZ_FSetConstraint &z,
                   OZ_Boolean &touched)
 {
+  OZ_DEBUGPRINT(("union3: in x=%s ", x.toString()));
+  OZ_DEBUGPRINT(("y=%s ", y.toString()));
+  OZ_DEBUGPRINT(("z=%s\n", z.toString()));
+
   FSetTouched xt, yt, zt;
 
   xt = x;  yt = y;  zt = z;
@@ -158,17 +162,23 @@ OZ_Boolean union3(OZ_FSetConstraint &x,
 
   touched |= (xt <= x || yt <= y || zt <= z);
 
+  OZ_DEBUGPRINT(("out: x=%s ", x.toString()));
+  OZ_DEBUGPRINT(("y=%s ", y.toString()));
+  OZ_DEBUGPRINT(("z=%s\n", z.toString()));
+
   return OZ_TRUE;
 
 failure:
+
+  OZ_DEBUGPRINT(("failed: x=%s ", x.toString()));
+  OZ_DEBUGPRINT(("y=%s ", y.toString()));
+  OZ_DEBUGPRINT(("z=%s\n", z.toString()));
+
   return OZ_FALSE;
 }
 
-#define LINEAR
-
 OZ_Return FSetUnionNPropagator::propagate(void)
 {
-#ifdef LINEAR
   OZ_DEBUGPRINTTHIS("in ");
 
   DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
@@ -185,33 +195,25 @@ OZ_Return FSetUnionNPropagator::propagate(void)
 
   if (_vs_size == 0) {
     OZ_DEBUGPRINTTHIS("_vs_size == 0");
-    FailOnInvalid(*s <<= _u);
+    FailOnInvalid(*s <<= OZ_FSetConstraint(fs_empty));
     return P.vanish();
   } else if (_vs_size == 1) {
     OZ_DEBUGPRINTTHIS("_vs_size == 1");
-    do {
-      doagain = OZ_FALSE;
 
-      if (!union3(_u, *vs[0], *s, doagain))
-        goto failure;
-
-    } while (doagain);
+    FailOnInvalid(*s <= *vs[0]); // equality
+    FailOnInvalid(*s >= *vs[0]);
 
     return P.leave();
   }
 
-
   do {
     doagain = OZ_FALSE;
 
-    if (!union3(_u, *vs[0], aux[0], doagain))
-      goto failure;
-
-    for (i = 0; i < _aux_size-1; i += 1)
-      if (!union3(aux[i], *vs[i+1], aux[i+1], doagain))
+    for (i = 0; i < _vs_size-1; i += 1)
+      if (!union3(aux[i], *vs[i], aux[i+1], doagain))
         goto failure;
 
-    if (!union3(*vs[_vs_size-1], aux[_aux_size-1], *s, doagain))
+    if (!union3(*vs[_vs_size-1], aux[_vs_size-1], *s, doagain))
       goto failure;
 
   } while (doagain);
@@ -223,123 +225,26 @@ OZ_Return FSetUnionNPropagator::propagate(void)
 
       int j = 0;
       for (i = 0; i < _vs_size; i += 1) {
-        if (vs[i]->isEmpty() && i != _vs_size) {
-          _u = _u | *vs[i];
+        if (vs[i]->isEmpty())
           continue;
-        }
-        _vs[j] = _vs[i];
-        _aux[j] = _aux[i];
 
+        if (i != j) {
+          _vs[j] = _vs[i];
+          _aux[j] = _aux[i];
+        }
         j += 1;
       }
-      if (_vs_size != j) {
-        _vs_size = j;
-        _aux_size = max(0,_vs_size - 1);
-      }
-    }
 
-    OZ_DEBUGPRINTTHIS("out ");
-    return r;
-  }
-
-failure:
-  OZ_DEBUGPRINTTHIS("failed");
-  return P.fail();
-
-#else /* LINEAR ----------------------------------------------------------- */
-
-  OZ_DEBUGPRINTTHIS("in ");
-
-  //printf("."); fflush(stdout);
-
-  DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
-  DECL_DYN_ARRAY(FSetTouched, vst, _vs_size);
-  OZ_FSetVar s(_s);
-  FSetTouched st(s);
-  PropagatorController_VS_S P(_vs_size, vs, s);
-  int i;
-
-  for (i = _vs_size; i--; ) {
-    vs[i].read(_vs[i]);
-    vst[i] = vs[i];
-  }
-
-  OZ_Boolean doagain;
-  do {
-    doagain = OZ_FALSE;
-
-    OZ_FSetConstraint u = _u | unionN(vs, _vs_size, -1);
-
-    FailOnInvalid(*s <<= u);
-    //FailOnInvalid(*s <<= unionN(vs, _vs_size, -1));
-
-    if (st <= s) {
-      doagain = OZ_TRUE;
-      st = s;
-    }
-
-    for (i = _vs_size; i--; ) {
-
-      OZ_DEBUGPRINTTHIS("in loop ");
-
-      FailOnInvalid(*vs[i] <= *s);
-
-      OZ_FSetConstraint a = (unionN(vs, _vs_size, i) | _u);
-      OZ_FSetConstraint b = (u - *vs[i]);
-
-
-      if (((*s-a).getGlbSet()-(*s-b).getGlbSet()).getCard() > 0) {
-        printf("%s\n\n", this->toString());
-        printf("unionN=%s ",  unionN(vs, _vs_size, i).toString());
-        printf("_u=%s ", _u.toString());
-        printf("a=%s\n", a.toString());
-        printf("sa=%s\n\n", (*s-a).toString());
-
-        printf("u=%s ", u.toString());
-        printf("vs[i]=%s", vs[i]->toString());
-        printf("b=%s\n", b.toString());
-        printf("sb=%s\n\n", (*s-b).toString());
-        printf("a-b=%s\n", (a.getGlbSet()-b.getGlbSet()).toString());
-        printf("sa-sb=%s\n\n", ((*s-a).getGlbSet()-(*s-b).getGlbSet()).toString());
-        printf("-------------------------------------------------------------\n");
-        fflush(stdout);
-      }
-
-      //FailOnInvalid(*vs[i] >= (*s - a));
-      FailOnInvalid(*vs[i] >= (*s - b));
-
-      if (vst[i] <= vs[i]) {
-        doagain = OZ_TRUE;
-        vst[i] = vs[i];
-      }
-    }
-
-  } while (doagain);
-
-  {
-    OZ_Return r = P.leave();
-
-    if (r == OZ_SLEEP) {
-
-      int j = 0;
-      for (i = 0; i < _vs_size; i += 1) {
-        if (vs[i]->isValue()) {
-          _u = _u | *vs[i];
-          continue;
-        }
-        _vs[j] = _vs[i];
-        j += 1;
-      }
       _vs_size = j;
     }
 
     OZ_DEBUGPRINTTHIS("out ");
     return r;
   }
+
 failure:
   OZ_DEBUGPRINTTHIS("failed");
   return P.fail();
-#endif /* LINEAR */
 }
 
 //-----------------------------------------------------------------------------
@@ -362,7 +267,7 @@ OZ_CFunHeader FSetPartitionPropagator::header = fsp_partition;
 
 OZ_Return FSetPartitionPropagator::propagate(void)
 {
-  _OZ_DEBUGPRINTTHIS("in ");
+  OZ_DEBUGPRINTTHIS("in ");
 
   DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
   OZ_FSetVar s(_s);
@@ -378,17 +283,13 @@ OZ_Return FSetPartitionPropagator::propagate(void)
 
   if (_vs_size == 0) {
     OZ_DEBUGPRINTTHIS("_vs_size == 0");
-    FailOnInvalid(*s <<= _u);
+    FailOnInvalid(*s <<= OZ_FSetConstraint(fs_empty));
     return P.vanish();
   } else if (_vs_size == 1) {
     OZ_DEBUGPRINTTHIS("_vs_size == 1");
-    do {
-      doagain = OZ_FALSE;
 
-      if (!union3(_u, *vs[0], *s, doagain))
-        goto failure;
-
-    } while (doagain);
+    FailOnInvalid(*s <= *vs[0]); // equality
+    FailOnInvalid(*s >= *vs[0]);
 
     return P.leave();
   }
@@ -423,14 +324,11 @@ OZ_Return FSetPartitionPropagator::propagate(void)
           }
         }
 
-      if (!union3(_u, *vs[0], aux[0], doagain))
-        goto failure;
-
-      for (i = 0; i < _aux_size-1; i += 1)
-        if (!union3(aux[i], *vs[i+1], aux[i+1], doagain))
+      for (i = 0; i < _vs_size - 1; i += 1)
+        if (!union3(aux[i], *vs[i], aux[i+1], doagain))
           goto failure;
 
-      if (!union3(*vs[_vs_size-1], aux[_aux_size-1], *s, doagain))
+      if (!union3(*vs[_vs_size-1], aux[_vs_size-1], *s, doagain))
         goto failure;
 
     } while (doagain);
@@ -442,26 +340,23 @@ OZ_Return FSetPartitionPropagator::propagate(void)
 
       int j = 0;
       for (i = 0; i < _vs_size; i += 1) {
-        if (vs[i]->isEmpty() && i != _vs_size) {
+        if (vs[i]->isEmpty())
           continue;
+        if (i != j) {
+          _vs[j] = _vs[i];
+          _aux[j] = _aux[i];
         }
-        _vs[j] = _vs[i];
-        _aux[j] = _aux[i];
-
         j += 1;
       }
-      if (_vs_size != j) {
-        _vs_size = j;
-        _aux_size = max(0,_vs_size - 1);
-      }
+      _vs_size = j;
     }
 
-    _OZ_DEBUGPRINTTHIS("out ");
+    OZ_DEBUGPRINTTHIS("out ");
     return r;
   }
 
 failure:
-  _OZ_DEBUGPRINTTHIS("failed");
+  OZ_DEBUGPRINTTHIS("failed");
   return P.fail();
 
 }

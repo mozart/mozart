@@ -40,19 +40,20 @@ class FSetUnionNPropagator : public Propagator_VS_S {
 protected:
   static OZ_CFunHeader header;
 
-  OZ_FSetConstraint * _aux, _u;
-  int _aux_size;
+  OZ_FSetConstraint * _aux;
 
-  void _init_aux(void) { for (int i = _aux_size; i--; ) _aux[i].init(); }
+  void _init_aux(void) {
+    for (int i = _vs_size; i--; ) _aux[i].init();
+    if (_vs_size)
+      _aux[0].init(fs_empty);
+  }
 
 public:
   FSetUnionNPropagator(OZ_Term vs, OZ_Term s) : Propagator_VS_S(vs, s)
   {
-    _aux_size = _vs_size - 1;
     _aux = (OZ_FSetConstraint *)
-      OZ_hallocChars(_aux_size * sizeof(OZ_FSetConstraint));
+      OZ_hallocChars(_vs_size * sizeof(OZ_FSetConstraint));
     _init_aux();
-    _u.init(fs_empty);
   }
 
   virtual OZ_Return propagate(void);
@@ -67,9 +68,9 @@ public:
     Propagator_VS_S::updateHeapRefs(dup);
 
     OZ_FSetConstraint * new_aux = (OZ_FSetConstraint *)
-      OZ_hallocChars(_aux_size * sizeof(OZ_FSetConstraint));
+      OZ_hallocChars(_vs_size * sizeof(OZ_FSetConstraint));
 
-    for (int i = _aux_size; i--; )
+    for (int i = _vs_size; i--; )
       new_aux[i] = _aux[i];
 
     _aux = new_aux;
