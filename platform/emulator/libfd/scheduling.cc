@@ -109,6 +109,7 @@ struct StartDurTerms {
 };
 
 
+
 /*
 This quicksort procedure is necessary
 because the provided quicksort is different
@@ -237,6 +238,48 @@ public:
   int min, max;
 };
 
+static int reifiedPropagation(Min_max * MinMaxStruct, int * dur, int ts,
+                              OZ_FDIntVar * x) {
+  int i,j;
+  int flag=0;
+  for (i=0; i<ts; i++)
+    for (j=i+1; j<ts; j++) {
+      int xui = MinMaxStruct[i].max, di = dur[i], xlj = MinMaxStruct[j].min;
+      if (xui + di <= xlj) continue;
+      int xuj = MinMaxStruct[j].max, dj = dur[j], xli = MinMaxStruct[i].min;
+      if (xuj + dj <= xli) continue;
+      if (xli + di > xuj) {
+        int val1 = xui - dj;
+        if (xuj > val1) {
+          flag = 1;
+          if ((*x[j] <= val1) == 0) return -1;
+          MinMaxStruct[j].max = x[j]->getMaxElem();
+        }
+        int val2 = xlj + dj;
+        if (xli < val2) {
+          flag = 1;
+          if ((*x[i] >= val2) == 0) return -1;
+          MinMaxStruct[i].min = x[i]->getMinElem();
+        }
+      }
+      if (xlj + dj > xui) {
+        int val1 = xuj - di;
+        if (xui > val1) {
+          flag = 1;
+          if ((*x[i] <= val1) == 0) return -1;
+          MinMaxStruct[i].max = x[i]->getMaxElem();
+        }
+        int val2 = xli + di;
+        if (xlj < val2) {
+          flag = 1;
+          if ((*x[j] >= val2) == 0) return -1;
+          MinMaxStruct[j].min = x[j]->getMinElem();
+        }
+      }
+    }
+  return flag;
+}
+
 struct Set {
   int cSi, dSi, mSi, sUp, sLow, extSize, val;
   int min,max;
@@ -266,7 +309,6 @@ OZ_Return CPIteratePropagator::propagate(void)
 
   int upFlag = 0;
   int downFlag = 0;
-  int disjFlag = 0;
 
 
   int kUp;
@@ -302,39 +344,12 @@ OZ_Return CPIteratePropagator::propagate(void)
   // memory is automatically disposed when propagator is left
 
   //////////
-  // do the reified stuff for task pairs.
+  // do reified propagation for all task pairs
   //////////
-  for (i=0; i<ts; i++)
-    for (j=i+1; j<ts; j++) {
-      int xui = MinMax[i].max, di = dur[i], xlj = MinMax[j].min;
-      if (xui + di <= xlj) continue;
-      int xuj = MinMax[j].max, dj = dur[j], xli = MinMax[i].min;
-      if (xuj + dj <= xli) continue;
-      if (xli + di > xuj) {
-        int val1 = xui - dj;
-        if (xuj > val1) {
-          FailOnEmpty(*x[j] <= val1);
-          MinMax[j].max = x[j]->getMaxElem();
-        }
-        int val2 = xlj + dj;
-        if (xli < val2) {
-          FailOnEmpty(*x[i] >= val2);
-          MinMax[i].min = x[i]->getMinElem();
-        }
-      }
-      if (xlj + dj > xui) {
-        int val1 = xuj - di;
-        if (xui > val1) {
-          FailOnEmpty(*x[i] <= val1);
-          MinMax[i].max = x[i]->getMaxElem();
-        }
-        int val2 = xli + di;
-        if (xlj < val2) {
-          FailOnEmpty(*x[j] >= val2);
-          MinMax[j].min = x[j]->getMinElem();
-        }
-      }
-    }
+
+  if (reifiedPropagation((Min_max *)GET_ARRAY(MinMax), dur, ts,
+                         (OZ_FDIntVar *)GET_ARRAY(x)) == -1)
+    goto failure;
 
 cploop:
 
@@ -379,6 +394,9 @@ cploop:
         set0[set0Size++] = l;
       }
       else {
+        /* if l ist not included compute its overlap with the
+           current task interval and use it for failure detection
+           */
         int overlapTmp = intMin(intMax(0,xlMin+dl-kDown),
                                 intMin(intMax(0,kUp-xlMaxDL+dl),
                                        intMin(dl,kUp-kDown)));
@@ -420,8 +438,7 @@ cploop:
     for (l=0; l<compSet0Size; l++) {
       int realL = compSet0[l];
       if (MinMax[realL].max+dur[realL] <= kUp) {
-        int setSizeBefore = setSize;
-        struct Set *bset = &Sets[setSizeBefore];
+        struct Set *bset = &Sets[setSize];
         setSize++;
         int dSi = bset->dSi + dur[realL];
         int minL = MinMax[realL].min;
@@ -461,7 +478,7 @@ cploop:
         if ( (s->sUp - s->sLow >= s->dSi + durL) &&
              (minL+durL <= s->max) &&
              (s->min <= maxL) )
-             {
+          {
           // case 4: l may be inside
           if (s->sUp - minL >= s->dSi + durL) {
             // case 5: L may be first
@@ -564,6 +581,7 @@ cploop:
              set0[set0Size++] = l;
            }
            else {
+             // compute overlap for failure reasoning
              int overlapTmp = intMin(intMax(0,xlMin+dl-kDown),
                                      intMin(intMax(0,kUp-xlMaxDL+dl),
                                             intMin(dl,kUp-kDown)));
@@ -608,8 +626,7 @@ cploop:
       for (l=0; l<compSet0Size; l++) {
         int realL = compSet0[l];
         if (MinMax[realL].min >= kDown) {
-          int setSizeBefore = setSize;
-          struct Set *bset = &Sets[setSizeBefore];
+          struct Set *bset = &Sets[setSize];
           int durL = dur[realL];
           setSize++;
           int dSi = bset->dSi + durL;
@@ -650,7 +667,7 @@ cploop:
         if ( (s->sUp - s->sLow >= s->dSi + durL) &&
              (minL+durL <= s->max) &&
              (s->min <= maxL) )
-             {
+          {
           // case 4: l may be inside
             if (maxL + durL - s->sLow >= s->dSi + durL) {
             // case 5: L may be last
@@ -723,44 +740,13 @@ cploop:
 reifiedloop:
 
    //////////
-   // do the reification in a loop
+   // do reified propagation for all task pairs
    //////////
-   for (i=0; i<ts; i++)
-     for (j=i+1; j<ts; j++) {
-       int xui = MinMax[i].max, di = dur[i], xlj = MinMax[j].min;
-       if (xui + di <= xlj) continue;
-       int xuj = MinMax[j].max, dj = dur[j], xli = MinMax[i].min;
-       if (xuj + dj <= xli) continue;
-       if (xli + di > xuj) {
-         if (xuj > xui - dj) {
-           disjFlag = 1;
-           FailOnEmpty(*x[j] <= xui - dj);
-           MinMax[j].max = x[j]->getMaxElem();
-         }
-         if (xli < xlj + dj) {
-           disjFlag = 1;
-           FailOnEmpty(*x[i] >= xlj + dj);
-           MinMax[i].min = x[i]->getMinElem();
-         }
-       }
-       if (xlj + dj > xui) {
-         if (xui > xuj - di) {
-           disjFlag = 1;
-           FailOnEmpty(*x[i] <= xuj - di);
-           MinMax[i].max = x[i]->getMaxElem();
-         }
-         if (xlj < xli + di) {
-           disjFlag = 1;
-           FailOnEmpty(*x[j] >= xli + di);
-           MinMax[j].min = x[j]->getMinElem();
-         }
-       }
-     }
-
-  if (disjFlag == 1) {
-    disjFlag = 0;
-    goto reifiedloop;
-  }
+   switch (reifiedPropagation((Min_max *)GET_ARRAY(MinMax), dur, ts,
+                              (OZ_FDIntVar *)GET_ARRAY(x))) {
+   case -1: goto failure;
+   case  1: goto reifiedloop;
+   }
 
 
   return P.leave();
@@ -856,47 +842,14 @@ OZ_Return DisjunctivePropagator::propagate(void)
   }
 
 
-  int disjFlag = 0;
 
 reifiedloop:
-
-   for (i=0; i<ts; i++)
-     for (j=i+1; j<ts; j++) {
-       int xui = MinMax[i].max, di = dur[i], xlj = MinMax[j].min;
-       if (xui + di <= xlj) continue;
-       int xuj = MinMax[j].max, dj = dur[j], xli = MinMax[i].min;
-       if (xuj + dj <= xli) continue;
-       if (xli + di > xuj) {
-         if (xuj > xui - dj) {
-           disjFlag = 1;
-           FailOnEmpty(*x[j] <= xui - dj);
-           MinMax[j].max = x[j]->getMaxElem();
-         }
-         if (xli < xlj + dj) {
-           disjFlag = 1;
-           FailOnEmpty(*x[i] >= xlj + dj);
-           MinMax[i].min = x[i]->getMinElem();
-         }
-       }
-       if (xlj + dj > xui) {
-         if (xui > xuj - di) {
-           disjFlag = 1;
-           FailOnEmpty(*x[i] <= xuj - di);
-           MinMax[i].max = x[i]->getMaxElem();
-         }
-         if (xlj < xli + di) {
-           disjFlag = 1;
-           FailOnEmpty(*x[j] >= xli + di);
-           MinMax[j].min = x[j]->getMinElem();
-         }
-       }
-     }
-
-  if (disjFlag == 1) {
-    disjFlag = 0;
-    goto reifiedloop;
-  }
-
+   // do the reified propagation
+   switch (reifiedPropagation((Min_max *)GET_ARRAY(MinMax), dur, ts,
+                              (OZ_FDIntVar *)GET_ARRAY(x))) {
+   case -1: goto failure;
+   case  1: goto reifiedloop;
+   }
 
   return P.leave();
 
@@ -1047,9 +1000,13 @@ struct Set2 {
 OZ_Return CPIteratePropagatorCap::propagate(void)
 {
 
-  //////////
-  // Cumulative constraint: lean version of edge-finding
-  // and some interval stuff
+  /*
+    Cumulative constraint.
+    if reg_flag == 0: no edge-finding takes place; only very limited
+      failure reasoning and histrogram propagation
+    if reg_flag == 1: edge-finding takes place
+    */
+
   //////////
   int &ts      = reg_sz;
   int * dur    = reg_offset;
@@ -1110,7 +1067,7 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
 
   if (reg_flag == 1) {
     //////////
-    // do the reified stuff for task pairs.
+    // do reified propagation for all task pairs if they exceed capacity
     //////////
     for (i=0; i<ts; i++)
       for (j=i+1; j<ts; j++) {
@@ -1182,6 +1139,7 @@ cploop:
         set0[set0Size++] = l;
       }
       else {
+        // overlaps for failure reasoning only
         int overlapTmp = intMin(intMax(0,xlMin+dl-kDown),
                                 intMin(intMax(0,kUp-xlMaxDL+dl),
                                        intMin(dl,kUp-kDown)));
@@ -1232,8 +1190,7 @@ cploop:
     for (l=0; l<compSet0Size; l++) {
       int realL = compSet0[l];
       if (MinMax[realL].max+dur[realL] <= kUp) {
-        int setSizeBefore = setSize;
-        struct Set2 *bset = &Sets[setSizeBefore];
+        struct Set2 *bset = &Sets[setSize];
         setSize++;
         int dSi = bset->dSi + dur[realL]*use[realL];
         int minL = MinMax[realL].min;
@@ -1534,7 +1491,7 @@ reifiedloop:
 capLoop:
 
   //////////
-  // do the capacity checking
+  // do the capacity checking; ie, histogram propagation
   //////////
   {
     int interval_nb = 0;
@@ -1643,10 +1600,6 @@ capLoop:
     // exclude from the tasks the intervals, which indicate that
     // the task connot be scheduled here because of no sufficient place.
     //////////
-    // do not use reg_flag anymore, it is not worth it.
-    // the commented region does contain code which avoids the
-    // production of holes in domains
-
 
     // perhaps some tests before generalizing domains could improve
     for (i=0; i<ts; i++) {

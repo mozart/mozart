@@ -232,6 +232,12 @@ OZ_CFunHeader TaskIntervalsProof::spawner = sched_taskIntervalsProof;
 
 OZ_Return TaskIntervalsProof::propagate(void)
 {
+  /*
+    one propagator for two distribution strategies.
+    reg_flag == 0: proof of optimality
+    reg_flag == 1: find good solutions
+   */
+
   OZ_DEBUGPRINTTHIS("in ");
 
   OZ_Stream st(stream);
@@ -295,7 +301,9 @@ OZ_Return TaskIntervalsProof::propagate(void)
       taskints[i][j].ext = ::new int[reg_max_nb_tasks];
 
 
-
+  // this data structure is used to store information for
+  // the redundant propagators which are added during search
+  // for the most promising candidates to distribute with
   constraints = initConstraints;
   int * constraintsExtension = NULL;
 
@@ -337,6 +345,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
           const char * old_label = OZ_atomToC(OZ_label(old_out));
           // fill in order
           if (!strcmp("#", old_label)) {
+            // enter the ordering decision made in Oz
             int res   = OZ_intToC( OZ_getArg(old_out, 0));
             int left  = OZ_intToC( OZ_getArg(old_out, 1));
             int right = OZ_intToC( OZ_getArg(old_out, 2));
@@ -405,6 +414,10 @@ OZ_Return TaskIntervalsProof::propagate(void)
               }
             }
 
+          ///////////
+          // Compute the best interval and redundant propagators
+          //////////
+
           struct Set *loc_best_set = NULL;
           int loc_best_nc    = 0;
           int loc_best_slack = 0;
@@ -414,7 +427,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
           int loc_resource_slack = OZ_getFDSup();
           for (left=0; left < reg_nb_tasks[i]; left++)
             for (right=0; right < reg_nb_tasks[i]; right++) {
-
+              // check data structure for storing redundant propagators
               if (constraintsSize + reg_max_nb_tasks*4
                   > constraintLimit) {
                 int newLimit = constraintsSize + reg_max_nb_tasks*4;
@@ -563,7 +576,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
       }
 
 
-        // all done?
+        // are all resources serialized?
         if (best_cost == OZ_getFDSup()) {
           if (OZ_unify(new_out, OZ_int(-1)) == FAILED)
             goto failure;
@@ -591,7 +604,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
           }
 
 
-          // Impose the constraints
+          // Remember the imposed redundant propagators
           for (i = 0; i < constraintsSize / 4; i++){
             int cur = i * 4;
             int resource           = constraints[cur+1];
@@ -608,7 +621,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
           }
 
 
-
+          // Compute the most promising pair of tasks
           //    Assert( (count_firsts > 0) && (count_lasts > 0) );
           int test;
           if (reg_flag == 0) test = (count_firsts < count_lasts);
