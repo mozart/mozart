@@ -25,7 +25,7 @@ include ../Makefile.vars
 
 VPATH		= @srcdir@
 FDDIR		= @srcdir@
-INCS		= -I. -I$(SRCDIR)/.. -I..
+INCS		= -I. -I$(FDDIR)/.. -I..
 
 FDTARGETS	= @FDTARGETS@
 
