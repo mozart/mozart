@@ -47,3 +47,7 @@
 from Ralfs TODO.perdio
 - use hashing for BorrowerTable
 - eliminate NetAddress if object is local
+
+from Denys:
+- extend ByteSource with an `error origin' method to allow
+  for more informative error exceptions
