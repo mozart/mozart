@@ -141,6 +141,11 @@
 ### module => M, indicates that the builtin belongs to module M.  This
 ### permits selective inclusion or exclusion through command line options
 ### -include or -exclude.
+###
+### native => true|false|dontknow specifies whether the builtin
+### is non-exportable. "dontknow" only used until all are
+### classified (behaves as "false")
+
 
 $builtins = {
     'builtin'   => { in  => ['+virtualString','+int'],
