@@ -15,10 +15,12 @@ class Gui from Menu Dialog
       EnvText
 
    meth init
-      %% create the main window
-      self.toplevel = {New Tk.toplevel tkInit(title:TitleName)}
+      %% create the main window, but delay showing it
+      %% until everything has been packed inside
+      self.toplevel = {New Tk.toplevel tkInit(title:TitleName withdraw:true)}
       {Tk.batch [wm(iconname   self.toplevel IconName)
-		 wm(iconbitmap self.toplevel BitMap)]}
+		 wm(iconbitmap self.toplevel BitMap)
+		 wm(geometry   self.toplevel ToplevelGeometry)]}
 
       Menu,init
       Dialog,init
@@ -37,11 +39,11 @@ class Gui from Menu Dialog
 	       fun {$ B}
 		  {New Tk.button tkInit(parent: self.ButtonFrame
 					text:   B
-					action: self # send(B))}
+					action: self # action(B))}
 	       end}
       in
-	 {Tk.batch [pack(b(Bs) side:left padx:2)
-		    pack(self.StatusLabel side:right fill:x)]}
+	 {Tk.batch [pack(b(Bs) side:right padx:2)
+		    pack(self.StatusLabel side:left fill:x)]}
       end
 
       %% create the thread tree object...
@@ -65,87 +67,54 @@ class Gui from Menu Dialog
 		 grid(self.StackText  row:2 column:1 sticky:nswe)
 		 grid(self.EnvText    row:2 column:2 sticky:nswe)
 		 grid(rowconfigure    self.toplevel 2 weight:1)
-		 grid(columnconfigure self.toplevel 0 weight:3)
+		 grid(columnconfigure self.toplevel 0 weight:2)
 		 grid(columnconfigure self.toplevel 1 weight:1)
-		 grid(columnconfigure self.toplevel 2 weight:1)]}
+		 grid(columnconfigure self.toplevel 2 weight:1)
+		 wm(deiconify         self.toplevel)
+		]}
+   end
+
+   meth stackText($)
+      self.StackText
    end
    
-   meth send(Action)
-      {self Action(@currentThread)}
-   end
-   
-   meth switch(T I)
-      %TS = {Dbg.taskstack T}
-      %% todo: adapt highlighted lines in SourceWindows
-   %in
-      currentThread <- T
-      Gui,printStatus("Current Thread:  #" # I #
-			   "  (" # {Thread.state T} # ")")
+   meth selectNode(T)
       {self.ThreadTree select(T)}
    end
-
-   meth stepThread(file:F line:L thr:T name:N args:A)
-      {self highlight(file:F line:L)}  % ignore T for now -- sometime later we
-                                       % might have different colors for
-                                       % different threads
-      {self.StackText title('Stack of  #' # {Thread.id T})}
-      local
-	 W    = self.StackText
-         Args = {FormatArgs A}
-	 File = {Str.rchr {Atom.toString F} &/}.2
-      in
-         {ForAll [tk(conf state:normal)
-		  tk(insert 'end' '{' # N)
-		  tk(conf state:disabled)] W}
-	  
-	  {ForAll Args
-	   proc {$ A}
-	      T = {TagCounter get($)}
-	      Ac = {New Tk.action
-		    tkInit(parent:W
-			   action:proc{$}
-				     S = A.3
-				  in
-				     {Browse S}
-				  end)}
-	   in
-	      {ForAll [tk(conf state:normal)
-		       tk(insert 'end' ' ')
-		       tk(insert 'end' A.2 T)
-		       tk(conf state:disabled)
-		       tk(tag bind T '<1>' Ac)
-		       tk(tag conf T font:BoldFont)] W}
-	   end}
-	   
-	  {ForAll [tk(conf state:normal)
-		   tk(insert 'end' '}\n') 
-		   tk(conf state:disabled)
-		   tk(yview 'end')] W}
-      end
-   end
-
-   meth newThread(T I)
-      {ForAll [add(T I) display] self.ThreadTree}
-      {self switch(T I)}
+   
+   meth addNode(T I)
+      {self.ThreadTree add(T I)}
    end
    
-   meth removeThread(T P I)
+   meth removeNode(T)
       {self.ThreadTree remove(T)}
-      case @currentThread == T then
-	 {self switch(P I)}
-      else
-	 {self.ThreadTree display}
-      end
+   end
+
+   meth displayTree
+      {self.ThreadTree display}
    end
    
-   meth printStatus(S)
+   meth status(S)
       {self.StatusLabel tk(conf text:S)}
    end
-   
-   meth stackThread(T)
-      S = {Filter {Dbg.taskstack T} fun {$ E} E \= toplevel end}
-   in
-      {Browse S}
+
+   meth stackTitle(S)
+      {self.StackText title(S)}
    end
 
+   meth action(A)
+      case {Label A}
+      of step then
+	 {Thread.resume @currentThread}
+      elseof cont then
+	 {Dbg.stepmode @currentThread false}
+	 {Thread.resume @currentThread}
+      elseof stack then
+	 S = {Filter {Dbg.taskstack @currentThread 1}
+	      fun {$ E} E \= toplevel end}
+      in
+	 {Browse S}
+      end
+   end
+   
 end

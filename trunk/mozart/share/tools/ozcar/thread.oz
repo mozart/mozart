@@ -7,7 +7,7 @@ local
       case S
       of H|T then
 	 {Show 'readloop:'}{Show H}
-	 {Ozcar read(H)}
+	 {Ozcar message(H)}
 	 {ReadLoop T}
       end
    end
@@ -31,35 +31,20 @@ in
 	 end
       end
       
-      meth list($)
-	 @Threads
-      end
-       
-      meth add(T I)
-	 Threads <- T | @Threads
-	 {Ozcar newThread(T I)}
-      end
-      
-      meth remove(T)
-	 Threads <- {List.filter @Threads fun {$ X} X\=T end}
-      end
-      
-      meth exists(T $)
-	 {List.member T @Threads}
-      end
-      
-      meth read(M)
+      meth message(M)
 	 case {Label M}
 	 of step then
-	    T    = M.thr.1
-	    File = M.file
-	    Line = M.line
+	    T         = M.thr.1
+	    File      = M.file
+	    Line      = M.line
+	    IsBuiltin = M.builtin
 	    Name = case {Value.hasFeature M name} then M.name else nil end
 	    Args = case {Value.hasFeature M args} then M.args else nil end
 	 in
 	    case {Thread.is T} then
-	       {Ozcar stepThread(file:File line:Line thr:T
-				 name:Name args:Args)}
+	       ThreadManager,step(file:File line:Line thr:T
+				  name:Name args:Args
+				  builtin:IsBuiltin)
 	    else
 	       {Message "Invalid Thread ID in step message of stream"}
 	    end
@@ -77,17 +62,18 @@ in
 		  {Thread.state T} == terminated then
 		  {Message "...hm, but it has died already?!"}
 	       else
-		  {Ozcar add(T I)}
+		  ThreadManager,add(T I)
 	       end
 	    end
 	    
 	 elseof term then
 	    T = M.thr.1
+	    P = M.par.1
+	    I = M.par.2  %% id of parent thread
 	    E = {Ozcar exists(T $)}
 	 in
 	    case E then
-	       {Ozcar remove(T)}
-	       {Ozcar removeThread(T M.par.1 M.par.2)}
+	       ThreadManager,remove(T P I)
 	    else
 	       skip
 	    end
@@ -95,17 +81,73 @@ in
 	 else skip end
       end
 
-      meth step(T)
-	 {Thread.resume T}
+      meth add(T I)
+	 Threads <- T | @Threads
+	 Gui,addNode(T I)
+	 ThreadManager,switch(T I)
+	 Gui,displayTree
       end
       
-      meth cont(T)
-	 {Dbg.stepmode T off}
-	 {Thread.resume T}
+      meth remove(T P I)  %% I = <id of parent thread>
+	 Threads <- {List.filter @Threads fun {$ X} X\=T end}
+	 case @currentThread == T then
+	    ThreadManager,switch(P I)
+	 else skip end
+	 Gui,removeNode(T)
+	 Gui,displayTree
       end
       
-      meth stack(T)
-	 {Ozcar stackThread(T)}
+      meth exists(T $)
+	 {List.member T @Threads}
+      end
+
+      meth step(file:F line:L thr:T name:N args:A builtin:IsBuiltin)
+	 SourceManager,scrollbar(file:F line:L color:ScrollbarDefaultColor)
+	 Gui,stackTitle('Stack of  #' # {Thread.id T})
+	 local
+	    W    = Gui,stackText($)
+	    Args = {FormatArgs A}
+	    File = {Str.rchr {Atom.toString F} &/}.2
+	 in
+	    {ForAll [tk(conf state:normal)
+		     tk(insert 'end' '{' # N)
+		     tk(conf state:disabled)] W}
+	     
+	     {ForAll Args
+	      proc {$ A}
+		 T = {TagCounter get($)}
+		 Ac = {New Tk.action
+		       tkInit(parent:{W w($)}
+			      action:proc{$}
+					S = A.3
+				     in
+					{Browse S}
+				     end)}
+	      in
+		 {ForAll [tk(conf state:normal)
+			  tk(insert 'end' ' ')
+			  tk(insert 'end' A.2 T)
+			  tk(conf state:disabled)
+			  tk(tag bind T '<1>' Ac)
+			  tk(tag conf T font:BoldFont)] W}
+	      end}
+	     
+	     {ForAll [tk(conf state:normal)
+		      tk(insert 'end' '}\n') 
+	      tk(conf state:disabled)
+	      tk(yview 'end')] W}
+	 end
+      end
+      
+      meth switch(T I)
+         %TS = {Dbg.taskstack T}
+	 %% todo: adapt highlighted lines in SourceWindows
+      %in
+	 currentThread <- T
+	 Gui,status("Current Thread:  #" # I #
+		    "  (" # {Thread.state T} # ")")
+	 Gui,selectNode(T)
+	 Gui,displayTree
       end
       
       meth close
