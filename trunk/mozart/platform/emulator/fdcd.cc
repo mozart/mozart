@@ -1054,11 +1054,11 @@ Bool do_cd_propagation (LocalPropagationStore &lps) {
       error ("propagate_locally: 'SUSPEND' is returned?\n");
       
     case SLEEP:
-      oz_suspendPropagator(prop);
+      oz_sleepPropagator(prop);
       break;
       
       case SCHEDULED:
-	oz_scheduledPropagator(prop);
+	oz_preemptedPropagator(prop);
 	break;
 	
     case PROCEED:
