@@ -1,0 +1,198 @@
+-*-outline-*-
+
+* in progress
+  fixed uninstall problem when trying to remove twice the same file (don't
+  record it twice in the first place - be more permissive anyway).  Additionally
+  remove directories that have become empty.
+
+  added support for automatically installing missing packages identified by
+  their MOGUL id in the makefile.oz "requires" feature. option --norequires
+  may be used to turn off this behaviour
+
+  added option --binary to create a purely binary package (i.e. nothing needs
+  to be compiled at installation time).  This is primarily intended for Windows
+  users who typically do not have cygwin and thus cannot install packages that
+  provide native functors.
+
+* version 0.88
+  protect against build circularities. added ExpandInCWD functionality -
+  used it to make e.g. src and build dir absolute so that when added to
+  a resolver they function properly even if a temporary chDir is performed.
+
+* version 0.87
+  use compressedFile support instead of Oz pickles if support is available.
+
+* version 0.86
+  complete rework of the computation of dependencies. e.g. to take
+  into account the run-time dependencies of build-time dependencies.
+  fixed bug in package creation with circular imports.
+
+* version 0.85
+  for autodepend to work as expected, the build rule for ozl needs to
+  consider all the recursive dependencies.
+
+* version 0.84
+  fixed a bug introduced by 0.83.  The explicit "depends" in the makefile.oz
+  were being ignored.
+
+* version 0.83
+** ozmake will now automatically compute build-time and install-time
+   dependencies, but sofar only for Oz sources.  This can be
+   controlled by --(no)autodepend, which is true by default.
+
+* version 0.82
+** honor new OZ_DOTOZ introduced in Mozart 1.2.4
+
+* version 0.81.4
+** forgot to enter changes
+** gumpdir support still unusable in 1.2.3. turned off
+** --publish: don't try to install docs when there is none
+   otherwise publishing contact complains about missing mogul id
+** don't try to chdir in dry-run mode (the dir may be missing)
+
+* version 0.79
+** fixed "fast" compiler invocation to also pass debug switch
+
+* version 0.78
+** automatically remove spurious trailing slashes on MOGUL IDs.
+** `provides' in submakefiles are now really not forgotten
+
+* version 0.77
+** --fast is now `really' the default
+** Renamed Makefile.oz to Makefiler.oz to avoid clash with makefile.oz on case
+   insensitive systems
+** fixed bug in --install version checking
+
+* version 0.76
+** ozmake --publish will now publish the package both under the bare filename
+   derived from the mogul id and from the same augmented with the
+   version number if any.
+** ozmake --install will compare both version and date to determine if the
+   package to be installed is newer than the installed
+   version. version is more significant than date.
+** --packageversion=VERSION is now respected by --extract and --install.
+   when --extract downloads from the MOGUL archive, it will look for
+   the given version of the package.  --install will signal an error
+   if the package to be installed doesn't have the given version.
+** --fast is now the default.  --slow gets back the old behaviour, just in
+   case someone discovers a problem.
+** version and requires now are actually put in the database
+
+* version 0.75
+** ozmake --create will now automatically pick a package filename if none
+   is given: it will be formed using the mogul id and the version number
+   if any.
+** ozmake --mogul=export now checks that there is no section entry that
+   has the same mogul id as a package or contact.
+** more checks are applied to the `author' feature to make sure that
+   they don't contain a stupid mistake
+** order is now preserved in `requires'
+** ozmake --extract -p MOG will now properly download the package denoted
+   by mogul id MOG from the MOGUL archive (if it was published using
+   ozmake --publish, i.e. follows the right naming convention).
+** ozmake --fast will invoke the compiler module directly without spawning
+   a new process each time.  This is easily 2 to 3 times faster.
+
+* version 0.74
+** `requires' field now properly saved in mogul.db and is properly exported
+** pkg files are now compressed and much smaller
+** makefiles now support the `provides' feature to override the default
+   computed from the bin and lib features.  Note that the `provides' feature
+   of a makefile does not also override its submakefiles; each one should
+   supply its own `provides' if desired.  `provides:nil' is a simple way of
+   indicating that the makefile provides no public functors or executables.
+
+* version 0.73
+** makefiles now support the 'contact' feature to specify MOGUL contact
+   information:
+
+       makefile(
+         ...
+         contact :
+           o(
+              mogul : 'mogul:/duchier/denys'
+              name  : 'Denys Duchier'
+              email : 'duchier@ps.uni-sb.de'
+              www   : 'http://www.ps.uni-sb.de/~duchier/'))
+
+   the value on the contact feature can also be a list of records as shown
+   above.  A makefile with contact info need not also actually provide anything
+   else (like modules): instead, it can be used to automatically generate MOGUL
+   entries (see below).
+** ozmake --mogul=... now permits to manage the MOGUL entries associated with
+   packages you provide.
+*** ozmake --mogul=put
+    ozmake --mogul=put -p PKG
+    update the user's database of own MOGUL contributions with current or
+    given package
+*** ozmake --mogul=delete
+*** ozmake --mogul=delete -p PKG
+*** ozmake --mogul=delete MOG1 ... MOGn
+    delete some entries from the user's database of own MOGUL contributions
+*** ozmake --mogul=list
+*** ozmake --mogul=list MOG1 ... MOGn
+    list all or the specified entries from the user's database of own MOGUL
+    contributions
+*** ozmake --mogul=export
+    create all necessary MOGUL entries for download by the MOGUL librarian
+** ozmake --config=(put|delete|list)
+   the possible values were renamed to be similar to those for --mogul
+** --publishdir is no longer supported, instead we have
+   --moguldir    --mogulurl
+   --moguldbdir  --moguldburl
+   --mogulpkgdir --mogulpkgurl
+   --moguldocdir --moguldocurl
+** makefiles support the `tar' feature which should be a file extension
+   or list of such taken from ['tgz' 'tar.gz' 'tar.Z'].  This is to
+   support older contributions which cannot easily be converted to
+   ozmake but which are nonetheless distributed in the form of
+   tarballs.  You can write a makefile.oz for them and use this
+   makefile only to generate the corresponding mogul entry:
+      ozmake --mogul=put
+   then export your updated mogul database explicitly
+      ozmake --mogul=export
+
+* version 0.72
+** ozmake --config=... now permits to manage predefined defaults
+   defaults can always be explicitly overriden on the command line
+   ozmake --config=set --FEAT1=VAL1 --FEAT2=VAL2 ...
+     saves the given defaults for those features (ignoring features
+     for which defaults cannot be set)
+   ozmake --config=unset FEAT1 FEAT2 ...
+     removes defaults for these features
+   ozmake --config=list
+     lists the current defaults
+** option --exe controls the name and platform of installed executables
+   the convention on Windows is that executables have an .exe extension
+   while on Unix there is normally no extension.
+   --exe=default only installs executables using the platform's convention
+   --exe=yes only installs executables with .exe extension
+   --exe=no only installs executables without extension
+   --exe=both installs both
+   --exe=multi installs both, but the .exe one is linked for Windows
+   while the no extension one is linked for Unix
+** additional features supported in makefile.oz
+   requires   : [ ... ] for dependencies on other packages
+   categories : [ ... ] for MOGUL classification
+   version    : ... a version number e.g. "2" or "3.2.7"
+** --freshen upgrades only if necessary, and does not report an
+   error if it is not necessary to upgrade
+** ozmake --extract will exceptionally write a makefile.oz if none
+   was included in the package.  This is for compatibility with
+   packages created with earlier versions of ozmake.
+
+* version 0.71
+** ozmake --extract: default directory changed from current directory
+   to subdirectory with name derived from the package mogul id
+** makefiles are now textually included in packages
+   the preprocessed makefile is now called MAKEPKG.oz and is
+   only used when installing from a package file when not explitly
+   disabled by the user with --nousemakepkg
+
+* version 0.7n
+** start recording changes between versions
+** OZLOAD properly passed to sub ozc processes
+** fixed date handling: unfortunately, this is an incompatible change
+   all recorded package dates prior to this fix, where incorrect
+
+* previous history not recorded

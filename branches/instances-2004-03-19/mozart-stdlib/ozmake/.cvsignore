@@ -1,0 +1,6 @@
+*.ozf
+*~
+ozmake
+Makefile
+*.tar
+*.tgz
