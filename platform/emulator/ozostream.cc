@@ -77,7 +77,7 @@ ozostream &ozostream::operator << (long i)
 ozostream &ozostream::operator << (double d)    
 {
   char buf[100];
-  sprintf(buf,"%f",d);
+  sprintf(buf,"%g",d);
   return *this << buf;
 }
 
