@@ -546,21 +546,32 @@ the GDB commands `cd DIR' and `directory'."
       (oz-feed-file file))
     (switch-to-buffer cur)))
 
+
+(defvar feed-tmpfile   (oz-make-temp-name "/tmp/ozbuffer") "")
+
 (defun oz-feed-region (start end)
   "Consults the region."
    (interactive "r")
+   
    (if (< 100 (- end start))
        (progn (message "oz-feed-region is buggy !!!")(sleep-for 1)))
    (oz-hide-errors)
-   (let ((contents (buffer-substring start end)))
-    (oz-send-string (concat contents "\n"))))
+;   (let ((contents (buffer-substring start end)))
+;     (oz-send-string (concat contents "\n"))
+;     )
+   
+   (write-region start end feed-tmpfile)
+   (oz-feed-file feed-tmpfile)
+   )
 
 (defun oz-feed-line ()
   "Consults one line."
    (interactive)
    (save-excursion
-     (let ((line (oz-line-pos)))
-       (oz-feed-region (car line) (cdr line)))))
+     (let* ((line (oz-line-pos))
+	    (contents (buffer-substring (car line) (cdr line))))
+       (oz-send-string (concat contents "\n"))
+       )))
 
 (defun oz-send-string(string)
   (oz-check-running)
@@ -1015,7 +1026,7 @@ the GDB commands `cd DIR' and `directory'."
   "")
 
 (defvar oz-error-chars
-  (concat oz-warn-string "\\|" oz-error-string)
+  (concat oz-error-string)
   "")
 
 
