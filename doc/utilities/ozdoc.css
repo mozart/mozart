@@ -7,7 +7,7 @@ BODY {
   position: absolute;
   left: 10px;
   width: 130px;
-  color:white;
+  color: white;
 }
 
 DIV.maxi {
@@ -32,6 +32,11 @@ H1, H2, H3, H4, .synopsis P, P.margin, TH {
 
 H1.title, H2.authors {
   text-align: center;
+}
+
+H3.authors {
+  text-align: right;
+  color: #000000;
 }
 
 H1     { color: #9B0000; }
