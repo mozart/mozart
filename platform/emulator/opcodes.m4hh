@@ -35,7 +35,7 @@ include(`../include/instrDefs.m4')
 
 
 
-ERROR  /* this should always be the last one */
+OZERROR  /* this should always be the last one */
 } Opcode;
 
 
