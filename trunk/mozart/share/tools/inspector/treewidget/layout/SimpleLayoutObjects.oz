@@ -52,14 +52,6 @@ in
 	 LengthStr = PrintStr
       end
    end
-   class WordSMLLayoutObject from SimpleLayoutObject
-      meth createRep(PrintStr LengthStr)
-	 Value = @value
-      in
-	 PrintStr  = {Word.toInt Value} %% More to be determined
-	 LengthStr = PrintStr
-      end
-   end
    
    class FloatLayoutObject from SimpleLayoutObject
       meth createRep(PrintStr LengthStr)
@@ -74,12 +66,6 @@ in
       end
    end
 
-   class AtomSMLLayoutObject from SimpleLayoutObject
-      meth createRep(PrintStr LengthStr)
-	 {Helper.convertSML @value PrintStr LengthStr}
-      end
-   end
-
    class NameLayoutObject from SimpleLayoutObject
       meth createRep(PrintStr LengthStr)
 	 Value = @value
@@ -88,20 +74,6 @@ in
 		     of false then type <- bool   'false'
 		     [] true  then type <- bool   'true'
 		     [] unit  then type <- 'unit' 'unit'
-		     else '<N:'#{System.printName Value}#'>'
-		     end
-	 LengthStr = PrintStr
-      end
-   end
-
-   class NameSMLLayoutObject from SimpleLayoutObject
-      meth createRep(PrintStr LengthStr)
-	 Value = @value
-      in
-	 PrintStr  = case Value
-		     of false then type <- bool   'false'
-		     [] true  then type <- bool   'true'
-		     [] unit  then type <- 'unit' '()'
 		     else '<N:'#{System.printName Value}#'>'
 		     end
 	 LengthStr = PrintStr
@@ -119,7 +91,7 @@ in
 	 true
       end
    end
-
+   
    local
       class SimpleGrLayoutObject from SimpleLayoutObject
 	 meth layout
@@ -173,11 +145,10 @@ in
 
    class ByteStringLayoutObject from SimpleLayoutObject
       meth createRep(PrintStr LengthStr)
-	 LengthStr = {ByteString.toString @value}
-	 PrintStr  = {Helper.quoteString LengthStr}
+	 {Helper.convert @value PrintStr LengthStr}
       end
    end
-   
+
    class GenericLayoutObject from SimpleLayoutObject
       meth createRep(PrintStr LengthStr)
 	 Type = {Value.status @value}.1
