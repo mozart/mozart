@@ -63,6 +63,14 @@ void dpmInit()
   dpmExtInit();
 }
 
+
+// The count of marshaled diffs should be done for the distributed
+// messages and not for other marshaled structures.
+// Erik
+inline void marshalDIFcounted(MarshalerBuffer *bs, MarshalTag tag) {
+  dif_counter[tag].send();
+  marshalDIF(bs,tag);
+}
 //
 void DPMarshaler::processSmallInt(OZ_Term siTerm)
 {
@@ -74,7 +82,7 @@ void DPMarshaler::processSmallInt(OZ_Term siTerm)
   if (bs->availableSpace() >= 2*DIFMaxSize + MNumberMaxSize) {
     marshalSmallInt(bs, siTerm);
   } else {
-    marshalDIF(bs, DIF_SUSPEND);
+    marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(siTerm);
   }
 }
@@ -88,7 +96,8 @@ void DPMarshaler::processFloat(OZ_Term floatTerm)
   if (bs->availableSpace() >= 2*DIFMaxSize + MFloatMaxSize) {
     marshalFloat(bs, floatTerm);
   } else {
-    marshalDIF(bs, DIF_SUSPEND);
+    dif_counter[DIF_SUSPEND].send();
+    marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(floatTerm);
   }
 }
@@ -131,7 +140,8 @@ static void dpMarshalLitCont(GenTraverser *gt, GTAbstractEntity *arg)
   Assert(bs->availableSpace() > 2*DIFMaxSize + MNumberMaxSize);
 
   //
-  marshalDIF(bs, DIF_LIT_CONT);
+  dif_counter[DIF_LIT_CONT].send();
+  marshalDIFcounted(bs, DIF_LIT_CONT);
   dpMarshalString(bs, gt, (DPMarshalerLitSusp *) arg);
 }
 
@@ -164,7 +174,8 @@ void DPMarshaler::processLiteral(OZ_Term litTerm)
     }
 
     //
-    marshalDIF(bs, litTag);
+    dif_counter[litTag].send();
+    marshalDIFcounted(bs, litTag);
     const char *name = lit->getPrintName();
     marshalTermDef(bs, litTermInd);
     marshalNumber(bs, nameSize);
@@ -175,7 +186,7 @@ void DPMarshaler::processLiteral(OZ_Term litTerm)
     DPMarshalerLitSusp *desc = new DPMarshalerLitSusp(litTerm, nameSize);
     dpMarshalString(bs, this, desc);
   } else {
-    marshalDIF(bs, DIF_SUSPEND);
+    marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(litTerm);
   }
 }
@@ -190,7 +201,7 @@ void DPMarshaler::processBigInt(OZ_Term biTerm, ConstTerm *biConst)
   if (bs->availableSpace() >= 2*DIFMaxSize + MNumberMaxSize + strlen(crep)) {
     marshalBigInt(bs, biTerm, biConst);
   } else {
-    marshalDIF(bs, DIF_SUSPEND);
+    marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(biTerm);
   }
 }
@@ -204,7 +215,7 @@ void DPMarshaler::processNoGood(OZ_Term resTerm, Bool trail)
   if (bs->availableSpace() >= DIFMaxSize + MDistSPPMaxSize) {
     marshalSPP(bs, resTerm, trail);
   } else {
-    marshalDIF(bs, DIF_SUSPEND);
+    marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(resTerm);
   }
 }
@@ -227,13 +238,13 @@ void DPMarshaler::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
   } else {
     if (bs->availableSpace() >=
         2*DIFMaxSize + MNumberMaxSize + strlen(pn)) {
-      marshalDIF(bs, DIF_BUILTIN);
+      marshalDIFcounted(bs, DIF_BUILTIN);
       rememberNode(this, bs, biTerm);
       marshalString(bs, pn);
       return;
     }
   }
-  marshalDIF(bs, DIF_SUSPEND);
+  marshalDIFcounted(bs, DIF_SUSPEND);
   suspend(biTerm);
 }
 
@@ -246,14 +257,14 @@ void DPMarshaler::processExtension(OZ_Term t)
   //
   if (bs->availableSpace() >=
       2*DIFMaxSize + MNumberMaxSize + dpMinNeededSpaceExt(oe)) {
-    marshalDIF(bs, DIF_EXTENSION);
+    marshalDIFcounted(bs, DIF_EXTENSION);
     marshalNumber(bs, oe->getIdV());
     //
     if (!dpMarshalExt(bs, this, t, oe)) {
       processNoGood(t, NO);     // not remembered!
     }
   } else {
-    marshalDIF(bs, DIF_SUSPEND);
+    marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(t);
   }
 }
@@ -312,7 +323,7 @@ Bool DPMarshaler::marshalObjectStub(OZ_Term term, ConstTerm *objConst)
       return (TRUE);
     }
   }
-  marshalDIF(bs, DIF_SUSPEND);
+  marshalDIFcounted(bs, DIF_SUSPEND);
   suspend(term);
   return (TRUE);
 }
@@ -328,13 +339,13 @@ Bool DPMarshaler::marshalFullObject(OZ_Term term, ConstTerm *objConst)
 
   //
   if (bs->availableSpace() >= 2*DIFMaxSize) {
-    marshalDIF(bs, DIF_OBJECT);
+    marshalDIFcounted(bs, DIF_OBJECT);
     rememberNode(this, bs, term);
     marshalGName(bs, o->getGName1());
     doToplevel = FALSE;
   } else {
 //      printf("suspend %d\n",osgetpid());
-    marshalDIF(bs, DIF_SUSPEND);
+    marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(term);
     // 'doToplevel' is NOT reset here, since 'processObject' will be
     // re-applied when the marshaler is woken up!
@@ -351,7 +362,7 @@ Bool DPMarshaler::marshalFullObject(OZ_Term term, ConstTerm *objConst)
       marshalTertiary(bs, tert, tag);                   \
       rememberNode(this, bs, term);                     \
     } else {                                            \
-      marshalDIF(bs, DIF_SUSPEND);                      \
+      marshalDIFcounted(bs, DIF_SUSPEND);                       \
       suspend(term);                                    \
     }
 
@@ -403,7 +414,7 @@ void DPMarshaler::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
       rememberVarNode(this, bs, cvarTerm);
     }
   } else {
-    marshalDIF(bs, DIF_SUSPEND);
+    marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(makeTaggedRef(cvarTerm));
   }
 }
@@ -416,11 +427,11 @@ void DPMarshaler::processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber)
 
   //
   if (bs->availableSpace() >= 2*DIFMaxSize + MNumberMaxSize) {
-    marshalDIF(bs, DIF_REF);
+    marshalDIFcounted(bs, DIF_REF);
     marshalTermRef(bs, repNumber);
   } else {
     Assert(t);                  // we should not get here without 't'!
-    marshalDIF(bs, DIF_SUSPEND);
+    marshalDIFcounted(bs, DIF_SUSPEND);
     if (oz_isVariable(t))
       suspend(makeTaggedRef(tPtr));
     else
@@ -435,11 +446,11 @@ Bool DPMarshaler::processLTuple(OZ_Term ltupleTerm)
 
   //
   if (bs->availableSpace() >= 2*DIFMaxSize + MNumberMaxSize) {
-    marshalDIF(bs, DIF_LIST);
+    marshalDIFcounted(bs, DIF_LIST);
     rememberNode(this, bs, ltupleTerm);
     return (NO);
   } else {
-    marshalDIF(bs, DIF_SUSPEND);
+    marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(ltupleTerm);
     // Observe: suspended nodes are obviously leaves!
     // And they must be also: otherwise the traverser will continue
@@ -460,17 +471,17 @@ Bool DPMarshaler::processSRecord(OZ_Term srecordTerm)
 
     //
     if (rec->isTuple()) {
-      marshalDIF(bs, DIF_TUPLE);
+      marshalDIFcounted(bs, DIF_TUPLE);
       rememberNode(this, bs, srecordTerm);
       marshalNumber(bs, rec->getTupleWidth());
     } else {
-      marshalDIF(bs, DIF_RECORD);
+      marshalDIFcounted(bs, DIF_RECORD);
       rememberNode(this, bs, srecordTerm);
     }
 
     return (NO);
   } else {
-    marshalDIF(bs, DIF_SUSPEND);
+    marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(srecordTerm);
     return (OK);
   }
@@ -488,13 +499,13 @@ Bool DPMarshaler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
     Assert(gname);
 
     //
-    marshalDIF(bs,DIF_CHUNK);
+    marshalDIFcounted(bs,DIF_CHUNK);
     rememberNode(this, bs, chunkTerm);
     marshalGName(bs, gname);
 
     return (NO);
   } else {
-    marshalDIF(bs, DIF_SUSPEND);
+    marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(chunkTerm);
     return (OK);
   }
@@ -507,10 +518,10 @@ Bool DPMarshaler::processFSETValue(OZ_Term fsetvalueTerm)
 
   //
   if (bs->availableSpace() >= 2*DIFMaxSize) {
-    marshalDIF(bs, DIF_FSETVALUE);
+    marshalDIFcounted(bs, DIF_FSETVALUE);
     return (NO);
   } else {
-    marshalDIF(bs, DIF_SUSPEND);
+    marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(fsetvalueTerm);
     return (OK);
   }
@@ -530,13 +541,13 @@ Bool DPMarshaler::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
       rememberNode(this, bs, dictTerm);
       return (OK);
     } else {
-      marshalDIF(bs,DIF_DICT);
+      marshalDIFcounted(bs,DIF_DICT);
       rememberNode(this, bs, dictTerm);
       marshalNumber(bs, d->getSize());
       return (NO);
     }
   } else {
-    marshalDIF(bs, DIF_SUSPEND);
+    marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(dictTerm);
     return (OK);
   }
@@ -574,7 +585,7 @@ Bool DPMarshaler::processClass(OZ_Term classTerm, ConstTerm *classConst)
     if (bs->availableSpace() >= 2*DIFMaxSize + 2*MNumberMaxSize +
         MGNameMaxSize) {
       //
-      marshalDIF(bs, DIF_CLASS);
+      marshalDIFcounted(bs, DIF_CLASS);
       GName *gn = globalizeConst(cl, bs);
       Assert(gn);
       rememberNode(this, bs, classTerm);
@@ -583,7 +594,7 @@ Bool DPMarshaler::processClass(OZ_Term classTerm, ConstTerm *classConst)
       return (NO);
     }
   }
-  marshalDIF(bs, DIF_SUSPEND);
+  marshalDIFcounted(bs, DIF_SUSPEND);
   suspend(classTerm);
   return (OK);
 }
@@ -611,7 +622,7 @@ Bool DPMarshaler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
       Assert(gname);
 
       //
-      marshalDIF(bs, DIF_PROC);
+      marshalDIFcounted(bs, DIF_PROC);
       rememberNode(this, bs, absTerm);
 
       //
@@ -647,7 +658,7 @@ Bool DPMarshaler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
   }
 
   //
-  marshalDIF(bs, DIF_SUSPEND);
+  marshalDIFcounted(bs, DIF_SUSPEND);
   suspend(absTerm);
   return (OK);
 }
@@ -659,9 +670,9 @@ void DPMarshaler::processSync()
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
   if (bs->availableSpace() >= 2*DIFMaxSize) {
-    marshalDIF(bs, DIF_SYNC);
+    marshalDIFcounted(bs, DIF_SYNC);
   } else {
-    marshalDIF(bs, DIF_SUSPEND);
+    marshalDIFcounted(bs, DIF_SUSPEND);
     suspendSync();
   }
 }
@@ -891,6 +902,7 @@ void marshalOwnHead(MarshalerBuffer *bs, int tag, int i)
 {
   PD((MARSHAL_CT,"OwnHead"));
   bs->put(tag);
+  dif_counter[tag].send();
   myDSite->marshalDSite(bs);
   marshalNumber(bs, i);
 
@@ -908,6 +920,7 @@ void marshalOwnHeadSaved(MarshalerBuffer *bs, int tag, int oti, Credit c)
 {
   PD((MARSHAL_CT,"OwnHead"));
   bs->put(tag);
+  dif_counter[tag].send();
   myDSite->marshalDSite(bs);
   marshalNumber(bs, oti);
   marshalCredit(bs,c);
