@@ -1305,12 +1305,14 @@ urlc::http_get_header(char* buf, int* brem, int& n, int sockfd)
         do {
             if('\n' == buf[0]) { // end of headers by empty line
                 n--;
-                memmove(buf, buf+1, n); // expensive, by now
+                for (i = 0; i < n; i++)
+                  buf[i] = buf[i+1];
                 return(URLC_OK);
             }
             if(('\r' == buf[0]) && ('\n' == buf[1])) {
                 n -= 2;
-                memmove(buf, buf+2, n);
+                for (i = 0; i < n; i++)
+                  buf[i] = buf[i+2];
                 return (URLC_OK);
             }
             for(i = 0; (URLC_BUFLEN > i) && (i < n) &&
@@ -1330,7 +1332,8 @@ urlc::http_get_header(char* buf, int* brem, int& n, int sockfd)
             p = buf+i;
             if(URLC_REDIRECT == http_header_interp(buf, linenr))
                 return (URLC_REDIRECT);
-            memmove(buf, p, n);
+            for (i = 0; i < n; i++)
+              buf[i] = p[i];
             p = buf+n;
             *brem = URLC_BUFLEN-n;
             linenr++;
