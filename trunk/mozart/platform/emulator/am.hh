@@ -166,8 +166,9 @@ public:
 
   Suspension* currentTaskSusp;
   void reviveCurrentTaskSusp(void);
-  void killCurrentTaskSusp(void);
-
+  void killPropagatedCurrentTaskSusp(void);
+  void dismissCurrentTaskSusp(void);
+  
   /* we cache the look of a UVar to speed up
    * creation of and tests on variables
    */
