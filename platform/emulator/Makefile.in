@@ -294,3 +294,7 @@ lib-%:
         OZEMULATOR=`pwd`/oz.emulator.bin && export OZEMULATOR; \
         cd $(SRCDIR)/../lib/$(LIBSUBDIR) && \
         $(MAKE) `echo "$@"|sed "s/lib-//g"`
+
+check:  oz.emulator.bin
+        $(MAKE) test
+        $(MAKE) lib-check

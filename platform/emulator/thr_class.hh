@@ -118,12 +118,12 @@ union ThreadBodyItem {
 //                    `-------------------------------'
 //
 // memory layout
-// <self> | <Secondary Tags>      from class ConstTerm
+// <Secondary Tags>               from class ConstTerm
 // <board|index> | <Tertiary Tag> from class Tertiary
 // <prio> | <flags>
-// <id>
+// <id>    (debugger)
+// <abstr> (profiler)
 // <stack>
-// <stopCount>
 
 class Thread : public Tertiary {
   friend int engine(Bool);
@@ -132,15 +132,15 @@ class Thread : public Tertiary {
 private:
   //  Sparc, for instance, has a ldsb/stb instructions -
   // so, this is exactly as efficient as just two integers;
+  Object *self;
   struct {
     int pri:    sizeof(char) * 8;
     int flags:  (sizeof(int) - sizeof(char)) * sizeof(char) * 8;
   } state;
 
   unsigned int id;              // unique identity for debugging
-  ThreadBodyItem item;          // NULL if it's a deep 'unify' suspension;
   PrTabEntry *abstr;            // for profiler
-
+  ThreadBodyItem item;          // NULL if it's a deep 'unify' suspension;
 public:
   NO_DEFAULT_CONSTRUCTORS(Thread);
 
@@ -225,8 +225,8 @@ public:
   void setAbstr(PrTabEntry *a) { abstr = a; }
   PrTabEntry *getAbstr()       { return abstr; }
 
-  void setSelf(Object *o) { setPtr(o); }
-  Object *getSelf()       { return (Object *) getPtr(); }
+  void setSelf(Object *o) { self = o; }
+  Object *getSelf()       { return self; }
 
   int getPriority() {
     Assert(state.pri >= OZMIN_PRIORITY && state.pri <= OZMAX_PRIORITY);

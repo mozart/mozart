@@ -2818,7 +2818,7 @@ void CellManager::initOnGlobalize(int index,Chain* ch,CellSec *secX){
   Watcher *w = getWatchersIfExist();
   setTertType(Te_Manager);
   setIndex(index);
-  setPtr(ch);
+  setChain(ch);
   sec=secX;
   while(w!=NULL){
     if(managerPart(w->getWatchCond()) != ENTITY_NORMAL){
@@ -2829,7 +2829,7 @@ void LockManager::initOnGlobalize(int index,Chain* ch,LockSec *secX){
   Watcher *w = getWatchersIfExist();
   setTertType(Te_Manager);
   setIndex(index);
-  setPtr(ch);
+  setChain(ch);
   sec=secX;
   while(w!=NULL){
     if(managerPart(w->getWatchCond()) != ENTITY_NORMAL){
