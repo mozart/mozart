@@ -43,6 +43,7 @@ EOF
    'char'                     => 'OZ_declareInt',
    'unsigned char'            => 'OZ_declareInt',
    'int'                      => 'OZ_declareInt',
+   'unsigned int'             => 'OZ_declareInt',
    'double'                   => 'OZ_declareFloat',
    'float'                    => 'OZ_declareFloat',
 
