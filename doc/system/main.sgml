@@ -79,7 +79,7 @@
 <!ENTITY chapter.fault       SYSTEM "fault.sgml">
 <!ENTITY chapter.remote      SYSTEM "remote.sgml">
 <!ENTITY chapter.resolve     SYSTEM "resolve.sgml">
-<!ENTITY chapter.url         SYSTEM "url.sgml">
+<!ENTITY chapter.urlurl      SYSTEM "url.sgml">
 
 
 <!-- Open programming -->
@@ -206,7 +206,7 @@
     <Meta name="html.split"       value="chapter.connection">
     <Meta name="html.split"       value="chapter.remote">
     <Meta name="html.split"       value="chapter.fault">
-    <Meta name="html.split"       value="chapter.url">
+    <Meta name="html.split"       value="chapter.urlurl">
     <Meta name="html.split"       value="chapter.resolve">
 
     <!-- Open programming -->
@@ -313,7 +313,7 @@
     <Title/Distributed Programming/
     &chapter.connection;
     &chapter.remote;
-    &chapter.url;
+    &chapter.urlurl;
     &chapter.resolve;
     &chapter.fault;
   </Part>
