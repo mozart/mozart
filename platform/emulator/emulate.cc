@@ -254,10 +254,10 @@ TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
  * in case we have call(x-N) and we have to switch process or do GC
  * we have to save as cont address Pred->getPC() and NOT PC
  */
-#define CallDoChecks(Pred,IsEx,ContAdr,Arity)                                 \
+#define CallDoChecks(Pred,gRegs,IsEx,ContAdr,Arity)                           \
                                                                               \
      if (! IsEx) {e->pushTask(CBB,ContAdr,Y,G);}                              \
-     G = Pred->getGRegs();                                                    \
+     G = gRegs;                                                               \
                                                                               \
      if (hookCheckNeeded(e)) {                                                \
        switch (emulateHookOutline(e,Pred,Arity,X)) {                          \
@@ -771,19 +771,17 @@ void engine() {
   INSTRUCTION(FASTCALL)
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
-      Abstraction *abstr = entry->getPred();
       INCFPC(2);
 
-      Assert(abstr != NULL);
-
-      CallDoChecks(abstr,NO,PC,abstr->getArity());
+      CallDoChecks(entry->getAbstr(),entry->getGRegs(),NO,PC,
+                   entry->getAbstr()->getArity());
 
       // set pc
       IHashTable *table = entry->indexTable;
       if (table) {
         DoSwitchOnTerm(X[0],table);
       } else {
-        JUMP(abstr->getPC());
+        JUMP(entry->getPC());
       }
     }
 
@@ -791,18 +789,16 @@ void engine() {
   INSTRUCTION(FASTEXECUTE)
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
-      Abstraction *abstr = entry->getPred();
 
-      Assert(abstr != NULL);
-
-      CallDoChecks(abstr,OK,PC,abstr->getArity());
+      CallDoChecks(entry->getAbstr(),entry->getGRegs(),OK,PC,
+                   entry->getAbstr()->getArity());
 
       // set pc
       IHashTable *table = entry->indexTable;
       if (table) {
         DoSwitchOnTerm(X[0],table);
       } else {
-        JUMP(abstr->getPC());
+        JUMP(entry->getPC());
       }
     }
 
@@ -1407,7 +1403,7 @@ void engine() {
       goto bombSend;
     }
 
-    CallDoChecks(def,isExecute,PC,arity+3);
+    CallDoChecks(def,def->getGRegs(),isExecute,PC,arity+3);
     Y = NULL; // allocateL(0);
 
     JUMP(def->getPC());
@@ -1458,7 +1454,7 @@ void engine() {
       goto bombApply;
     }
 
-    CallDoChecks(def,isExecute,PC,arity);
+    CallDoChecks(def,def->getGRegs(),isExecute,PC,arity);
     Y = NULL; // allocateL(0);
 
     JUMP(def->getPC());
@@ -1550,7 +1546,7 @@ void engine() {
         Abstraction *def = (Abstraction *) predicate;
 
         CheckArity(def->getArity(), predArity, def, PC);
-        CallDoChecks(def,isExecute,PC,def->getArity());
+        CallDoChecks(def,def->getGRegs(),isExecute,PC,def->getArity());
         Y = NULL; // allocateL(0);
 
         JUMP(def->getPC());

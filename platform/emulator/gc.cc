@@ -1388,7 +1388,8 @@ void AbstractionTable::gc()
   while(aux != NULL)
     {
       // there may be NULL entries in the table during gc
-      aux->pred = (Abstraction *) aux->pred->gcSRecord();
+      aux->abstr = (Abstraction *) aux->abstr->gcSRecord();
+      aux->g     = gcRefsArray(aux->g);
       aux->left->gc();
       aux = aux->right;    // tail recursion optimization
     }
