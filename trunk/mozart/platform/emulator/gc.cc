@@ -86,15 +86,7 @@ int     cs_copy_size  = 0;
  * Forward reference
  */
 
-static void OZ_collectHeapBlock(TaggedRef *, TaggedRef *, int);
 static void gcCode(ProgramCounter PC);
-
-/*
- *               Debug
- *
- */
-
-
 
 /*
  * CHECKSPACE -- check if object is really copied from heap
@@ -104,6 +96,8 @@ static void gcCode(ProgramCounter PC);
  *    INTOSPACE      - assert in to-space
  * NOTE: this works only for chunk
  */
+
+#ifdef DEBUG_GC
 
 static MemChunks *fromSpace;
 
@@ -130,17 +124,20 @@ void exitCheckSpace() {
 	   MemChunks::list->print();)
 }
 
-#ifdef DEBUG_GC
 
-#define INFROMSPACE(P)  Assert(inFromSpace(P))
-#define NOTINTOSPACE(P) Assert(notInToSpace(P))
-#define INTOSPACE(P)    Assert(inToSpace(P))
+#define GCDBG_INFROMSPACE(P)  Assert(inFromSpace(P))
+#define GCDBG_NOTINTOSPACE(P) Assert(notInToSpace(P))
+#define GCDBG_INTOSPACE(P)    Assert(inToSpace(P))
+#define GCDBG_INITSPACE       initCheckSpace()
+#define GCDBG_EXITSPACE       exitCheckSpace()
 
 #else
 
-#define INFROMSPACE(P)
-#define NOTINTOSPACE(P)
-#define INTOSPACE(P)
+#define GCDBG_INFROMSPACE(P)
+#define GCDBG_NOTINTOSPACE(P)
+#define GCDBG_INTOSPACE(P)
+#define GCDBG_INITSPACE
+#define GCDBG_EXITSPACE
 
 #endif
 
@@ -350,7 +347,7 @@ void storeFwdMode(Bool isInGc, int32* fromPtr, void *newValue,
   if (!isInGc)
     cpTrail.save(fromPtr);
 
-  Assert(inFromSpace(fromPtr));
+  GCDBG_INFROMSPACE(fromPtr);
 
   *fromPtr = domark ? GCMARK(newValue) : ToInt32(newValue);
 }
@@ -605,7 +602,7 @@ RefsArray gcRefsArray(RefsArray r) {
   if (r == NULL)
     return r;
 
-  NOTINTOSPACE(r);
+  GCDBG_NOTINTOSPACE(r);
 
   if (refsArrayIsMarked(r)) {
     return refsArrayUnmark(r);
@@ -658,7 +655,7 @@ Board * Board::gcGetFwd(void) {
 }
 
 Board * Board::gcBoard() {
-  INFROMSPACE(this);
+  GCDBG_INFROMSPACE(this);
 
   if (!this) return 0;
 
@@ -673,8 +670,6 @@ Board * Board::gcBoard() {
     return 0;
 
   Assert(isInGc || bb->isInTree()); 
-
-  Assert(!isInGc || !inToSpace(bb));
 
   Board *ret = (Board *) gcReallocStatic(bb, sizeof(Board));
 
@@ -1000,7 +995,7 @@ void OzCtVariable::gcRecurse(void)
 
 
 OzVariable * OzVariable::gcVar(void) {
-  INFROMSPACE(this);
+  GCDBG_INFROMSPACE(this);
 
   Assert(!gcIsMarked())
     
@@ -1221,7 +1216,7 @@ inline
 LTuple * LTuple::gc() {
   // Does basically nothing, the real stuff is in gcRecurse
 
-  Assert(inFromSpace(this));
+  GCDBG_INFROMSPACE(this);
 
   if (GCISMARKED(args[0]))
     return (LTuple *) GCUNMARK(args[0]);
@@ -1266,11 +1261,8 @@ Thread *Thread::gcDeadThread() {
 
   Thread *newThread = (Thread *) gcReallocStatic(this,sizeof(Thread));
 
-  Assert(inToSpace(am.rootBoardGC()));
+  GCDBG_INTOSPACE(am.rootBoardGC());
   newThread->setBoardInternal(am.rootBoardGC());
-  // newThread->state.flags=T_dead;
-  // newThread->item.threadBody=NULL;
-  // Assert(newThread->item.threadBody==NULL);
 
   storeFwdField(this, newThread);
   setSelf(0);
@@ -1445,7 +1437,7 @@ void gc_finalize()
 
 inline
 void gcTagged(TaggedRef & frm, TaggedRef & to, 
-	      Bool isInGc, Bool hasDirectVars, Bool allVarsAreLocal) {
+	      Bool hasDirectVars, Bool allVarsAreLocal) {
   Assert(!isInGc || !fromSpace->inChunkChain(&to));
   
   TaggedRef aux = frm;
@@ -1662,38 +1654,18 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 }
 
 // extern
-void OZ_collect(OZ_Term *to)
-{
+void OZ_collect(OZ_Term *to) {
   OZ_collectHeapTerm(*to,*to);
 }
 
-
 void OZ_collectHeapTerm(TaggedRef & frm, TaggedRef & to) {
-  gcTagged(frm, to, isInGc, OK, NO);
+  gcTagged(frm, to, OK, NO);
 }
 
 void OZ_collectHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
   for (int i=sz; i--; )
-    gcTagged(frm[i], to[i], isInGc, OK, NO);
+    gcTagged(frm[i], to[i], OK, NO);
 }
-
-/*
- * The following routine are for the CPI
- *
- * USE THEM ONLY IF YOU FULLY UNDERSTAND THAT THEY ONLY WORK FOR 
- * LOCAL VARIABLES!
- *
- */
-
-void OZ_collectLocalHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
-  for (int i=sz; i--; )
-    gcTagged(frm[i], to[i], isInGc, OK, OK);
-}
-
-void OZ_updateLocalHeapTerm(TaggedRef & to) {
-  gcTagged(to, to, isInGc, NO, OK);
-}
-
 
 //*****************************************************************************
 //                               AM::gc            
@@ -1716,7 +1688,7 @@ void AM::gc(int msgLevel) {
 
   oz_varCleanup();  /* drop bound variables */
 
-  initCheckSpace();
+  GCDBG_INITSPACE;
 
   initMemoryManagement();
 
@@ -1770,7 +1742,7 @@ void AM::gc(int msgLevel) {
   (*gcPerdioFinal)();
   Assert(gcStack.isEmpty());
 
-  exitCheckSpace();
+  GCDBG_EXITSPACE;
 
   CodeArea::gcCollectCodeBlocks();
   AbstractionEntry::freeUnusedEntries();
@@ -2326,7 +2298,6 @@ ConstTerm *ConstTerm::gcConstTerm() {
       }
 #else
       Assert(isInGc || bb->isInTree()); 
-      Assert(!isInGc || !inToSpace(bb));
 #endif
 
       ret = (ConstTerm *) gcReallocStatic(this,sizeof(Space));
