@@ -156,8 +156,8 @@ in
 	    case E then
 	       Stack = {Dget self.ThreadDic I}
 	    in
-	       Gui,status('Thread #' # I # ' has reached a breakpoint' #
-			  ' or woke up another thread')
+	       Gui,status('Thread #' # I # ' has reached a breakpoint') % #
+			  %' or woke up another thread')
 	       {OzcarMessage KnownThread # {ID I}}
 	       {Stack rebuild(true)}
 	    else
