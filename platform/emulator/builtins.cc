@@ -2613,45 +2613,92 @@ OZ_C_proc_begin(BIchunkArity,2)
   OZ_Term ch =  OZ_getCArg(0);
   OZ_Term out = OZ_getCArg(1);
 
-  if (OZ_isVariable(ch)) OZ_suspendOn(ch);
-  ch=deref(ch);
-  if (!isChunk(ch)) TypeErrorT(0,"Chunk");
+  DEREF(ch, chPtr, chTag);
 
-  switch (tagged2Const(ch)->getType()) {
-  case Co_Object:
-    return OZ_unify(out,tagged2Object(ch)->getArityList());
-  case Co_Chunk:
-    return OZ_unify(out,tagged2SChunk(ch)->getArityList());
-  case Co_Dictionary:
-  case Co_Array:
+  switch(chTag) {
+  case UVAR:
+  case SVAR:
+  case CVAR:
+    OZ_suspendOn(makeTaggedRef(chPtr));
+
+  case OZCONST:
+    if (!isChunk(ch)) TypeErrorT(0,"Chunk");
+    //
+    switch (tagged2Const(ch)->getType()) {
+    case Co_Object:
+      return OZ_unify(out,tagged2Object(ch)->getArityList());
+    case Co_Chunk:
+      return OZ_unify(out,tagged2SChunk(ch)->getArityList());
+    default:
+      // no features
+      return OZ_unify(out,nil());
+    }
+
   default:
-    // no features
-    return OZ_unify(out,nil());
+    TypeErrorT(0,"Chunk");
   }
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIchunkWidth,2)
+OZ_C_proc_begin(BIchunkWidth, 2)
 {
   OZ_Term ch =  OZ_getCArg(0);
   OZ_Term out = OZ_getCArg(1);
 
-  if (OZ_isVariable(ch)) OZ_suspendOn(ch);
-  ch=deref(ch);
-  if (!isChunk(ch)) TypeErrorT(0,"Chunk");
+  DEREF(ch, chPtr, chTag);
 
-  switch (tagged2Const(ch)->getType()) {
-  case Co_Object:
-    return
-      OZ_unify(out, makeTaggedSmallInt (tagged2Object(ch)->getWidth ()));
-  case Co_Chunk:
-    return
-      OZ_unify(out, makeTaggedSmallInt (tagged2SChunk(ch)->getWidth ()));
-  case Co_Dictionary:
-  case Co_Array:
+  switch(chTag) {
+  case UVAR:
+  case SVAR:
+  case CVAR:
+    OZ_suspendOn(makeTaggedRef(chPtr));
+
+  case OZCONST:
+    if (!isChunk(ch)) TypeErrorT(0,"Chunk");
+    //
+    switch (tagged2Const(ch)->getType()) {
+    case Co_Object:
+      return
+        OZ_unify(out, makeTaggedSmallInt (tagged2Object(ch)->getWidth ()));
+    case Co_Chunk:
+      return
+        OZ_unify(out, makeTaggedSmallInt (tagged2SChunk(ch)->getWidth ()));
+    default:
+      // no features
+      return OZ_unify(out,makeTaggedSmallInt (0));
+    }
+
   default:
-    // no features
-    return OZ_unify(out,makeTaggedSmallInt (0));
+    TypeErrorT(0,"Chunk");
+  }
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIrecordWidth, 2)
+{
+  OZ_Term arg = OZ_getCArg(0);
+  OZ_Term out = OZ_getCArg(1);
+
+  DEREF(arg, argPtr, argTag);
+
+  switch (argTag) {
+  case CVAR:
+    switch (tagged2CVar(arg)->getType ()) {
+    case OFSVariable:
+      {
+        GenOFSVariable *ofsVar = tagged2GenOFSVar(arg);
+        return (OZ_unify (out, OZ_int(ofsVar->getWidth ())));
+      }
+
+    default:
+      TypeErrorT(0, "Record");
+    }
+
+  case SRECORD:
+    return (OZ_unify (out, OZ_int(tagged2SRecord(arg)->getWidth ())));
+
+  default:
+    TypeErrorT(0, "Record");
   }
 }
 OZ_C_proc_end
@@ -7150,6 +7197,7 @@ BIspec allSpec2[] = {
   {"NewChunk",        2,BInewChunk,     0},
   {"chunkArity",      2,BIchunkArity,   0},
   {"chunkWidth",      2,BIchunkWidth,   0},
+  {"recordWidth",     2,BIrecordWidth,  0},
 
   {"NewName",         1,BInewName,      0},
 

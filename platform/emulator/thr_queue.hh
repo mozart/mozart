@@ -82,6 +82,18 @@ private:
   // needed when merging spaces to unpack threads in local thread queue
   Thread * ltq_thr;
 public:
+//   USEFREELISTMEMORY;
+  USEHEAPMEMORY;                // should be? (kost@)
+
+  void allocate (int initsize) {
+    maxsize = initsize;
+    head = size = 0;
+    tail = initsize - 1;
+    // in the Oz heap;
+    queue =
+      (Thread **) heapMalloc ((size_t) (sizeof(Thread *) * initsize));
+  }
+
   LocalThreadQueue(Thread * lthr, Thread * thr)
     : ltq_thr(lthr), ThreadQueueImpl()
   {
@@ -91,7 +103,23 @@ public:
   LocalThreadQueue(int sz) : ThreadQueueImpl(){
     allocate(0x20);
   }
+  ~LocalThreadQueue() { error("never destroy LTQ"); }
+
   LocalThreadQueue * gc(void);
+//   void dispose () {
+//     freeListDispose (this, sizeof(LocalThreadQueue));
+//   }
+
+  void resize();
+
+  // because of resize;
+  void enqueue (Thread * th) {
+    if (size == maxsize) resize ();
+    tail = (tail + 1) & (maxsize - 1);
+    queue[tail] = th;
+    size++;
+  }
+
   Thread * getLTQThread(void) { return ltq_thr; }
 };
 
