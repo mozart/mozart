@@ -283,7 +283,7 @@ object-oriented programming.  A class is created &eg; as follows:
 declare
 class Foo
    attr val
-   meth init(V) val<-V end
+   meth init(V) val:=V end
    meth show {Show foo(val: @val)} end
 end
 </code>

@@ -127,7 +127,7 @@ else
    {Object.assign self E1 E2}   %% E1 <- E2 (Object.assign is internal)
 end>>>
         <Item>
-          <<':='>> updates dictionaries, arrays, cells, and attributes. Note, <<Obj.assign>>
+          <<':='>> updates dictionaries, arrays, cells, and attributes. Note, <<Object.assign>>
           is a dummy routine and not actually visible to the library user.
 
         <Entry><Span class=index/<<@E>>/
@@ -146,7 +146,7 @@ else
 end>>>
         <Item>
           <<'@'>> returns the current value stored in dictionaries, arrays, cells, and attributes.
-          Note, <<Obj.access>> is a dummy routine and not actually visible to the library user.
+          Note, <<Object.access>> is a dummy routine and not actually visible to the library user.
 
         <Entry><Span class=index/<<X = E1 := E2>>/
           <Index/<<':='>>/

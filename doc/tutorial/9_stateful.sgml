@@ -227,10 +227,10 @@ a cell. The <PTR TO="cellOp"> shows the operations on a cell.
   <TD><<{NewCell X ?C}>></TD>
   <TD>Creates a cell C with content X</TD>
 </TR><TR>
-  <TD><<{Access +C X}>></TD>
+  <TD><<X=@C>></TD>
   <TD>Returns the content of C in X</TD>
 </TR><TR>
-  <TD><<{Assign +C Y}>></TD>
+  <TD><<C:=Y>></TD>
   <TD>Modifies the content of C to Y</TD>
 </TR><TR>
   <TD><<{IsCell +C}>></TD>
@@ -248,11 +248,11 @@ Do you know why?
 
 <<<
 local I O X in
-   I = {NewCell a} {Browse {Access I}}
-   {Assign I b}    {Browse {Access I}}
-   {Assign I X}    {Browse {Access I}}
+   I = {NewCell a} {Browse @I}
+   {Assign I b}    {Browse @I}
+   {Assign I X}    {Browse @I}
    X = 5*5
-   {Exchange I O thread O+1 end} {Browse {Access I}}
+   {Exchange I O thread O+1 end} {Browse @I}
 end
 >>>
 
@@ -270,7 +270,7 @@ J = {NewCell 0}
       {Exchange J O N}
       N = O+I
    end}
-{Browse {Access J}}
+{Browse @J}
 >>>
 
 <P>Ports described in <ptr to=section.stateful.port> can be

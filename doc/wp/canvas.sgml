@@ -285,7 +285,7 @@ Colors={New class $ from BaseObject
                            in
                         Cs)
                meth get(?C)
-                  Cr in C|Cr = (cs <- Cr)
+                  Cr in C|Cr = (cs := Cr)
                end
             end noop}
 {O tkBind(event:  '<3>'

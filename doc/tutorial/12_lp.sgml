@@ -708,7 +708,7 @@ end
 class DataBase from BaseObject
    attr d
    meth init
-      d <- {NewDictionary}
+      d := {NewDictionary}
    end
    meth dic($) @d end
    meth tell(I)

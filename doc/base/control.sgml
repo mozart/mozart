@@ -342,9 +342,9 @@ end>>>
 <<<local
    class Counter from Time.repeat
       attr a: 0
-      meth inc()      a &lt;- @a + 1 end
+      meth inc()      a := @a + 1 end
       meth get(?A)    A = @a      end
-      meth finalRep() a &lt;- 0      end
+      meth finalRep() a := 0      end
    end
    C = {New Counter setRepAll(action: inc number: 1000)}
 in

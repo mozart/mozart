@@ -268,9 +268,9 @@ a simple class <<Counter>> that implements a counter.
 declare
 class Counter
    attr i
-   meth init i<-0 end
+   meth init i:=0 end
    meth get(X) X=@i end
-   meth inc i<-@i+1 end
+   meth inc i:=@i+1 end
 end
 >>>
 
@@ -751,7 +751,7 @@ in
       meth init(S)
          lock
             self.selfStatic=S
-            clientList<-nil
+            clientList:=nil
          end
       end
       <chunk.ref/Server's getMakeClient method/
@@ -868,7 +868,7 @@ meth register(Client UserID)
 CL in
    lock
       CL=@clientList
-      clientList <- c(ref:Client id:UserID)|@clientList
+      clientList := c(ref:Client id:UserID)|@clientList
    end
    {ConcurrentForAll CL
       proc {$ Element} {Element.ref put(registered(UserID))} end}
@@ -877,7 +877,7 @@ end
 meth unregister(Client UserID)
 CL in
    lock
-      clientList <-
+      clientList :=
          {List.filter @clientList
             fun {$ Element} Element.ref\=Client end}
       CL=@clientList
