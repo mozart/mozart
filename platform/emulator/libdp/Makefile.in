@@ -33,7 +33,7 @@ REALDPSRCS = dpBuiltins.cc dpMarshaler.cc port.cc virtual.cc    \
             dpDebug.cc network.cc protocolState.cc vs_comm.cc dsite.cc  \
             perdio.cc state.cc vs_interface.cc fail.cc                  \
             protocolCredit.cc table.cc vs_mailbox.cc protocolFail.cc    \
-            var.cc vs_msgbuffer.cc msgType.cc chain.cc
+            var.cc vs_msgbuffer.cc msgType.cc chain.cc dpResource.cc
 
 
 CREATEDDPFILES = marshalMsg.cc dpMarshaler.hh
