@@ -1,0 +1,12 @@
+# $Id$
+
+VPATH  = @srcdir@
+SRCDIR = @srcdir@
+
+WHAT = bugs
+MAIN = bugs.sgml
+SGMLSRCS = bugs.bib
+HTMLEXTRASUPPORTFILES = danger.gif
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common
