@@ -262,31 +262,18 @@ private:
   OZ_CFunHeader * _next;
   static OZ_CFunHeader * _all_headers;
   OZ_CFun _header;
-  unsigned _calls, _samples;
+  unsigned _calls, _samples, _heap;
 
 public:
   OZ_CFunHeader(OZ_CFun header);
   
-  /*
-  OZ_CFunHeader &operator = (const OZ_CFun header) {
-    _calls = 0;
-    _samples = 0;
-    _header = header;
-    static int firstCall = 1;
-    if (firstCall) {
-      firstCall = 0;
-      _all_headers = 0;
-    }
-    _next = _all_headers;
-    _all_headers = this;
-    return *this;
-  }
-  */
   OZ_CFun getHeaderFunc(void) { return _header; }
-  void incSamples()       { _samples++; }
-  void incCalls()         { _calls++; }
-  unsigned getSamples()   { return _samples; }
-  unsigned getCalls()     { return _calls; }
+  void incSamples()           { _samples++; }
+  void incCalls()             { _calls++; }
+  unsigned getSamples()       { return _samples; }
+  unsigned getCalls()         { return _calls; }
+  void incHeap(unsigned inc)  { _heap += inc; }
+  unsigned getHeap()          { return _heap; }
 
   static OZ_CFunHeader *getFirst() { return _all_headers; }
   OZ_CFunHeader *getNext()         { return _next; }
