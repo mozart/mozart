@@ -79,13 +79,12 @@ public:
   }
 };
 
+Bool isGenFDVar(TaggedRef term);
+Bool isGenFDVar(TaggedRef term, TypeOfTerm tag);
+GenFDVariable * tagged2GenFDVar(TaggedRef term);
 
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdgenvar.icc"
-#else
-Bool isGenFDVar(TaggedRef term);
-Bool isGenFDVar(TaggedRef term, TypeOfTerm tag);
-GenFDVariable *tagged2GenFDVar(TaggedRef term);
 #endif
 
 #endif
