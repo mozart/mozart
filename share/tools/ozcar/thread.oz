@@ -281,17 +281,12 @@ in
 	    SourceManager,scrollbar(file:'' line:undef color:undef what:both)
 	    case Mode == kill then
 	       currentThread <- undef
-	       %Gui,status(0)
-	    else
-	       skip
-	       %Gui,status(I terminated)
-	    end
+	    else skip end
 	    Gui,printStack(id:I frames:nil depth:0)
 	 else skip end
 	 case {Dkeys self.ThreadDic} == nil then
 	    {OzcarMessage 'no more threads to debug.'}
 	    currentThread <- undef
-	    %Gui,status(0)
 	    Gui,selectNode(0)
 	    Gui,displayTree
 	 else skip end
@@ -354,7 +349,6 @@ in
 	 Gui,markNode(I blocked)
 	 case T == @currentThread andthen
 	    {self.tkRunChildren tkReturnInt($)} == 0 then
-	    %Gui,status(I blocked)
 	    case {UnknownFile F} then
 	       {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
@@ -374,17 +368,13 @@ in
       meth switch(I)
 	 F L N A B Time
       in
-	 case I == 1 then
-	    skip
-	    %Gui,status(0)
-	 else
+	 case I == 1 then skip else
 	    Stack = {Dget self.ThreadDic I}
 	    T     = {Stack getThread($)}
 	    S     = {Thread.state T}
 	 in
 	    currentThread <- T
 	    
-	    %Gui,status(I S)
 	    Gui,selectNode(I)
 	    Gui,displayTree
 	    
