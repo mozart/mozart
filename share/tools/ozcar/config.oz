@@ -134,25 +134,22 @@ ScrollbarWidth         = 10
 %% Fonts
 %%
 
-DefaultFont # BoldFont # ButtonFont # TitleFont # HelpTitleFont # HelpFont =
+DefaultFont # BoldFont =
 if Platform == WindowsPlatform then
    {New Tk.font tkInit(family:courier size:10)} #
-   {New Tk.font tkInit(family:courier weight:bold size:10)} #
-   {New Tk.font tkInit(family:helvetica size:8)} #
-   {New Tk.font tkInit(family:helvetica size:8 weight:bold)} #
-   {New Tk.font tkInit(family:helvetica size:14 weight:bold)} #
-   {New Tk.font tkInit(family:helvetica size:10)}
+   {New Tk.font tkInit(family:courier weight:bold size:10)}
 else
-   '7x13' # '7x13bold' #
-   {New Tk.font tkInit(family:helvetica size:10)} #
-   {New Tk.font tkInit(family:helvetica size:10 weight:bold)} #
-   {New Tk.font tkInit(family:helvetica size:18 weight:bold)} #
-   {New Tk.font tkInit(family:helvetica size:12)}
+   '7x13' # '7x13bold'
 end
 
-ThreadTreeFont         = DefaultFont
-ThreadTreeBoldFont     = BoldFont
-StatusFont             = TitleFont
+ButtonFont    = {New Tk.font tkInit(family:helvetica size:8)}
+TitleFont     = {New Tk.font tkInit(family:helvetica size:8 weight:bold)}
+HelpTitleFont = {New Tk.font tkInit(family:helvetica size:14 weight:bold)}
+HelpFont      = {New Tk.font tkInit(family:helvetica size:10)}
+
+ThreadTreeFont     = DefaultFont
+ThreadTreeBoldFont = BoldFont
+StatusFont         = TitleFont
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Files
