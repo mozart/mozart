@@ -36,5 +36,10 @@
                             out => [],
                             BI  => BIraiseError,
                             doesNotReturn => 1},
+
+     'fail'            => { in  => [],
+                            out => [],
+                            BI  => BIfail,
+                            doesNotReturn => 1},
      );
 1;;
