@@ -10,7 +10,7 @@ distclean::
         $(MAKE) realclean SUBDIRS=
 
 clean::
-        $(RM) *.o *~  *.bak *.obj
+        $(RM) *.o *~  *.bak *.obj *.so *.a
 
 veryclean: realclean
 

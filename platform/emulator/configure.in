@@ -120,7 +120,6 @@ if test "${enable_wincross}" = yes; then
         oz_gmp_inc_dir=$oz_wincross_gmp_inc_dir
         oz_malloc_obj=
         oz_warn_error=
-        oz_enable_ozma=no
         AC_DEFINE(GNUWIN32)
         AC_DEFINE(WINDOWS)
     else
@@ -481,11 +480,12 @@ AC_SUBST(COPT)
 OZ_ENABLE_YES(ozma,[     include Oz assembler],
         AC_MSG_RESULT(static (-DOZMA))
         AC_DEFINE(OZMA)
-        TARGETS="libozma.a $TARGETS"
+        OZMALIB="libozma.a"
         LIBS="-L. -lozma $LIBS",
         AC_MSG_RESULT(dynamic)
         TARGETS="$TARGETS ozma.so"
         )
+AC_SUBST(OZMALIB)
 
 OZ_ENABLE_YES(threaded,[ threaded code emulator],
         AC_MSG_RESULT(yes (-DTHREADED))
