@@ -291,13 +291,13 @@ void dealWithContinue(Tertiary* t,PendThread* pd){
 
 Bool entityProblemPerWatcher(Tertiary*t, Watcher* w,Bool &hit){
   EntityCond ec=getEntityCond(t) & w->watchcond;
-  if(isInjectorCondition(ec)){
+  if(w->isInjector()){
     PendThread* pd=threadTrigger(t,w);
     if(pd==NULL) return FALSE;
     hit=TRUE;
     if(ec==ENTITY_NORMAL) return FALSE;
     if(w->isRetry() && !w->isFired()) dealWithContinue(t,pd);
-    w->invokeInjector(makeTaggedTert(t),ec,pd->controlvar);
+    w->invokeInjector(makeTaggedTert(t),ec,pd->controlvar,pd->thread);
     pd->thread=NULL;
     if(w->isPersistent()) return FALSE;
     watcherRemoved(w,t);
@@ -363,10 +363,11 @@ void Watcher::varInvokeInjector(TaggedRef t,EntityCond ec){
   am.prepareCall(proc, t,listifyWatcherCond(ec));
 }
 
-void Watcher::invokeInjector(TaggedRef t,EntityCond ec,TaggedRef controlvar){
+void Watcher::invokeInjector(TaggedRef t,EntityCond ec,TaggedRef controlvar,Thread *th){
   Assert(isInjector());
   Assert(!isFired());
-  ControlVarApply(controlvar,proc,oz_list(t,listifyWatcherCond(ec)));
+  th->pushCall(proc, t,listifyWatcherCond(ec));
+  ControlVarResume(controlvar);
 }
 
 /**********************************************************************/
@@ -1232,11 +1233,7 @@ DSite* gBTI(int i){
 OZ_BI_define(BIseifHandler,2,0){
   oz_declareIN(0,entity);
   oz_declareIN(1,what);
-  //  printf("Seif at:%s ent:%s\n",
-  //myDSite->stringrep(), toC(what));
-  //if(tagged2Const(what)->getType() == Co_Port)
-  //printf("from: %s\n", gBTI(((Tertiary*)tagged2Const(what))->getIndex())->stringrep());
-  return oz_raise(E_ERROR,E_SYSTEM,"seifHandler",2,entity,what);
+  return oz_raise(E_ERROR,E_DISTRIBUTION,"default",2,entity,what);
 }OZ_BI_end
 
 

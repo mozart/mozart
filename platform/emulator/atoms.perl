@@ -171,7 +171,8 @@
           ( E_OBJECT,           "object"),
           ( E_TK,               "tk"),
           ( E_OS,               "os"),
-          ( E_SYSTEM,           "system")
+          ( E_SYSTEM,           "system"),
+          ( E_DISTRIBUTION,     "distribution"),
           );
 
 
