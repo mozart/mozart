@@ -434,10 +434,10 @@ in
 	 Gui,nextThread %% select next living thread
       end
 
-      meth forget(T I)
+      meth detach(T I)
 	 lock
 	    {Dbg.trace T false}      %% thread is not traced anymore
-	    {Dbg.step T false}   %% no step mode, run as you like!
+	    {Dbg.step T false}       %% no step mode, run as you like!
 	    {Thread.resume T}        %% run, run to freedom!! :-)
 	    Gui,doStatus('Thread #' # I # ' is not traced anymore')
 	    ThreadManager,remove(T I kill)
