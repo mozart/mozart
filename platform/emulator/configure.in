@@ -120,6 +120,7 @@ if test "${enable_wincross}" = yes; then
 	oz_gmp_inc_dir=$oz_wincross_gmp_inc_dir
 	oz_malloc_obj=
 	oz_warn_error=
+	oz_enable_ozma=no
 	AC_DEFINE(GNUWIN32)
 	AC_DEFINE(WINDOWS)
     else
