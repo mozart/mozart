@@ -39,7 +39,6 @@ void debugStreamReady(Thread*);
 inline
 Thread * _newThread(int prio, Board *bb) {
   Thread *th = new Thread(0,prio,bb,oz_newId());
-  th->setBody(am.threadsPool.allocateBody());
   bb->incSuspCount();
   return th;
 }
@@ -95,7 +94,7 @@ void oz_disposeThread(Thread *tt) {
   if (am.debugmode() && tt->getTrace())
     debugStreamTerm(tt);
   
-  am.threadsPool.freeThreadBody(tt);
+  tt->disposeStack();
 }
 
 void oz_wakeupThread(Thread *tt) {

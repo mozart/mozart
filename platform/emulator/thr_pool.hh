@@ -44,9 +44,6 @@ private:
   int hi;
   int mid;
 
-protected:
-  RunnableThreadBody *threadBodyFreeList;
-
 public:
   ThreadsPool() {};
   ~ThreadsPool() {};
@@ -114,30 +111,6 @@ public:
     
     return (Thread *) NULL;
   }
-
-  //
-  //  An allocator for thread's bodies;
-  RunnableThreadBody* allocateBody()
-  {
-    RunnableThreadBody *body = threadBodyFreeList;
-    if (body) {
-      threadBodyFreeList = threadBodyFreeList->next;
-    } else {
-      body = new RunnableThreadBody(ozconf.stackMinSize);
-    }
-    
-    body->taskStack.init();
-
-    return body;
-  }
-
-  void freeThreadBody(Thread *tt) {
-    RunnableThreadBody *it = tt->getBody();
-    it->next = threadBodyFreeList;
-    threadBodyFreeList = it;
-    tt->freeThreadBodyInternal();
-  }
-
 
   // in print.cc; 
   void printThreads ();
