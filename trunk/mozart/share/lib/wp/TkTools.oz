@@ -54,7 +54,7 @@ fun {NewTkTools Tk}
 	 end
       end
    end
-   
+
    Border     = 1
    BigBorder  = 2
    BigPad     = 4
@@ -247,7 +247,7 @@ fun {NewTkTools Tk}
 
    local
       BarRelief = raised
-      AccSpace  = '    '
+      AccSpace  = '  '
       AccCtrl   = 'C-'
       AccAlt    = 'A-'
       AccMeta   = 'M-'
