@@ -133,7 +133,7 @@ Board* Board::getSolveBoard ()
 
 Bool Board::underReflected()
 {
-  Board *tmp = this ? getSolveBoard() : NULL;
+  Board *tmp = this ? getSolveBoard() : 0;
   return tmp && tmp->isReflected();
 }
 
