@@ -236,8 +236,6 @@ private:
 
   TaggedRef defaultExceptionHdl;
 
-  TaggedRef opiCompiler;
-
   unsigned int lastThreadID;
 
   Bool installingScript;  // ask TM
@@ -268,8 +266,6 @@ public:
     return shallowHeapTop && scp || shallowHeapTop==0 && scp==0;
   }
 #endif
-  TaggedRef getOpiCompiler()       { return opiCompiler; }
-  void setOpiCompiler(TaggedRef o) { opiCompiler = o; }
 
   TaggedRef getX(int i) { return xRegs[i]; }
   TaggedRef getDefaultExceptionHdl() { return defaultExceptionHdl; }
