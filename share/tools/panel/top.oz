@@ -683,7 +683,7 @@ in
 
       meth shutdown
 	 {self.menu.panel.shutdown tk(entryconf state:disabled)}
-	 case DialogClass, shutdown($) then {System.exit}
+	 case DialogClass, shutdown($) then {System.exit 0}
 	 else skip
 	 end
 	 {self.menu.panel.shutdown tk(entryconf state:normal)}
