@@ -229,15 +229,15 @@ define
 					 flags: [read])}
 	       VS = {ReadBib File @Keys}
 	       {File close()}
-	       {OS.unlink @AuxFileName#'.bbl'}
-	       {OS.unlink @AuxFileName#'.blg'}
+	       try {OS.unlink @AuxFileName#'.bbl'} catch _ then skip end
+	       try {OS.unlink @AuxFileName#'.blg'} catch _ then skip end
 	    elseof I then
 	       {Reporter error(kind: 'bibliography database'
 			       msg: 'bibtex failed'
 			       items: [hint(l: 'Exit code' m: I)])}
 	       VS = ""
 	    end
-	    {OS.unlink @AuxFileName#'.aux'}
+	    try {OS.unlink @AuxFileName#'.aux'} catch _ then skip end
 	    {ForAll {Dictionary.entries @Keys}
 	     proc {$ Key#Text}
 		if {IsFree Text} then   % compensate for unknown entries
