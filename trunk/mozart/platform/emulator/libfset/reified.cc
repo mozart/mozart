@@ -41,7 +41,9 @@ OZ_C_proc_begin(fsp_equalR, 3)
 
   OZ_EXPECT(pe, 0, expectFSetVarBounds);
   OZ_EXPECT(pe, 1, expectFSetVarBounds);
-  OZ_EXPECT(pe, 2, expectBoolVar);
+  
+  int dummy;
+  OZ_EXPECT_SUSPEND(pe, 2, expectBoolVar, dummy);
   
   return pe.impose(new EqualRPropagator(OZ_args[1],
 					OZ_args[0],
@@ -116,7 +118,9 @@ OZ_C_proc_begin(fsp_includeR, 3)
 
   OZ_EXPECT(pe, 0, expectIntVarAny);
   OZ_EXPECT(pe, 1, expectFSetVarBounds);
-  OZ_EXPECT(pe, 2, expectBoolVar);
+
+  int dummy;
+  OZ_EXPECT_SUSPEND(pe, 2, expectBoolVar, dummy);
   
   return pe.impose(new IncludeRPropagator(OZ_args[1],
 					  OZ_args[0],
@@ -195,7 +199,9 @@ OZ_C_proc_begin(fsp_isInR, 3)
 
   OZ_EXPECT(pe, 0, expectInt);
   OZ_EXPECT(pe, 1, expectFSetVarAny);
-  OZ_EXPECT(pe, 2, expectBoolVar);
+  
+  int dummy;
+  OZ_EXPECT_SUSPEND(pe, 2, expectBoolVar, dummy);
   
   return pe.impose(new IsInRPropagator(OZ_args[1],
 				       OZ_args[0],

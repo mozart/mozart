@@ -33,7 +33,8 @@
 
 #define FSETDESCR_SYNTAX						\
 "The syntax of a " OZ_EM_FSETDESCR " is:\n"				\
-"   set_descr   ::= nil | [range_descr+]\n"				\
+"   set_descr   ::= simpl_descr | compl(simpl_descr)\n"			\
+"   simpl_descr ::= range_descr | nil | [range_descr+]\n"		\
 "   range_descr ::= integer | integer#integer\n"			\
 "   integer     ::= {" _OZ_EM_FSETINF ",...," _OZ_EM_FSETSUP "}"
 
