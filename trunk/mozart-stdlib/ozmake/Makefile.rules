@@ -7,7 +7,8 @@ OZMAKE_FILES = \
 	Builder.ozf Makefile.ozf Manager.ozf Installer.ozf Database.ozf \
 	Cleaner.ozf Creator.ozf Extractor.ozf Lister.ozf Help.ozf \
 	Uninstaller.ozf Errors.ozf Windows.ozf MakeGUI.ozf Fixes.ozf \
-	DatabaseLib.ozf Config.ozf Mogul.ozf Pickler.ozf
+	DatabaseLib.ozf Config.ozf Mogul.ozf Pickler.ozf \
+	ExecutorFast.ozf
 
 ozmake: ozmake.ozf
 	$(OZL) $(OZLFLAGS) -x $< -o $@

@@ -16,13 +16,13 @@ SYNOPSIS
    ozmake --help
    ozmake [--build] [TARGETS...]
    ozmake --install [TARGETS...]
-   ozmake --install --package=PKG
+   ozmake --install [--package=PKG]
    ozmake --uninstall [--package=PKG]
    ozmake --clean
    ozmake --veryclean
-   ozmake --create --package=FILE
+   ozmake --create [--package=FILE]
    ozmake --publish
-   ozmake --extract --package=PKG
+   ozmake --extract [--package=PKG]
    ozmake --list [--package=MOGUL]
    ozmake --config=(put|delete|list) ...
    ozmake --mogul=(put|delete|list|export) ...
@@ -314,9 +314,12 @@ OPTIONS
 
   Create
 
-   ozmake --create --package=<FILE>
+   ozmake --create [--package=<FILE>]
           create  a  package  and save it in <FILE>. the files needed for
-          the package are automatically computed from the makefile.
+          the  package  are  automatically computed from the makefile. If
+          --package=<FILE>  is  not supplied, a default is computed using
+          the  mogul  id  (and  possibly  version  number)  found  in the
+          makefile.
 
    --include(bins|libs|docs), --exclude(bins|libs|docs)
           control which target types are included in the package
