@@ -182,6 +182,11 @@ Bool oz_installPath(Board * to) {
 
   // Step 4: Install from "ancestor" to "to"
 
-  return installOnly(ancestor, to) == ancestor;
+  Board::setInstalling(OK);
 
+  Bool ret = installOnly(ancestor, to) == ancestor;
+
+  Board::setInstalling(NO);
+
+  return ret;
 }
