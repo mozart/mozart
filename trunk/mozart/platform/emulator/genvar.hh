@@ -24,6 +24,7 @@
 #endif
 
 #include "term.hh"
+#include "unify.hh"
 
 //-----------------------------------------------------------------------------
 //                       Generic Constrained Variable
