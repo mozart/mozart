@@ -109,6 +109,8 @@ private:
 
   //
 public:
+  void* operator new(size_t,void*p) { return p; }
+  void* operator new(size_t n) { return new char[n]; }
   ByteBuffer() {}
 
   void init(int size,BYTE *buf);

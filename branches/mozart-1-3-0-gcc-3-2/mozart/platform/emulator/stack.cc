@@ -98,4 +98,3 @@ void FastStack::resize(void) {
   tos   = nst + u;
   end   = nst + (ns - FST_MARGIN);
 }
-

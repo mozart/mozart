@@ -269,6 +269,7 @@ public:
 
 //-----------------------------------------------------------------------------
 
+#if 0
 class PartitionReified1Propagator : public PartitionReifiedPropagator {
   friend INIT_FUNC(fsp_init);
 protected:
@@ -312,6 +313,7 @@ public:
     return _nm.getOrder();
   }
 };
+#endif
 
 
 #endif /* __REIFIED_HH__ */

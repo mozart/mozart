@@ -43,8 +43,20 @@ typedef enum {
   OZ_EVAR_LAST
 } ExtVarType;
 
+#define NEEDS_PADDING 1
+#if NEEDS_PADDING
+class OZ_ExtVarPadding {
+private:
+  unsigned int _tag;
+};
+#endif
+
 //
-class ExtVar : public OzVariable {
+class ExtVar :
+#if NEEDS_PADDING
+  public OZ_ExtVarPadding,
+#endif
+  public OzVariable {
 public:
   ExtVar(Board *bb) : OzVariable(OZ_VAR_EXT,bb) {}
   virtual ExtVarType    getIdV() = 0;

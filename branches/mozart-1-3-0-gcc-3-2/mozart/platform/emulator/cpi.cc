@@ -26,6 +26,7 @@
 
 #if defined(INTERFACE)
 #pragma implementation "cpi.hh"
+#pragma implementation "mozart_cpi.hh"
 #endif
 
 #include "conf.h"

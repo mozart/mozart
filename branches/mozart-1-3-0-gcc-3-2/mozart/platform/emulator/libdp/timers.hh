@@ -83,6 +83,9 @@ protected:
   void init() {
     next=NULL;
   }
+public:
+  void* operator new(size_t,void*p) { return p; }
+  void* operator new(size_t n) { return new char[n]; }
 };
 
 extern Timers *timers;

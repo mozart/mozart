@@ -489,7 +489,9 @@ public:
   //
   virtual ExtVarType    getIdV(void) { return (OZ_EVAR_MGRVARPATCH); }
   //
-  virtual OzValuePatch* gCollectV() {
+  // make it OzVariable* rather than OzValuePatch* to avoid
+  // the covariant return problem
+  virtual OzVariable* gCollectV() {
     return (new MgrVarPatch(*this));
   }
   virtual void gCollectRecurseV() {
@@ -531,7 +533,7 @@ public:
   //
   virtual ExtVarType    getIdV(void) { return (OZ_EVAR_MVARPATCH); }
   //
-  virtual OzValuePatch* gCollectV() {
+  virtual OzVariable* gCollectV() {
     return (new MVarPatch(*this));
   }
   virtual void gCollectRecurseV() {
@@ -562,7 +564,7 @@ public:
   //
   virtual ExtVarType    getIdV(void) { return (OZ_EVAR_PXYVARPATCH); }
   //
-  virtual OzValuePatch* gCollectV() {
+  virtual OzVariable* gCollectV() {
     return (new PxyVarPatch(*this));
   }
   virtual void gCollectRecurseV() {
