@@ -1024,7 +1024,6 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "try"                          { return T_try; }
 "try"/\(                       { return T_try; }
 "unit"                         { return T_unit; }
-"loop"                         { return T_loop; }
 "for"                          { return T_for; }
 "do"                           { return T_do; }
 
