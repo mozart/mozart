@@ -23,12 +23,12 @@ provided functionality allows to directly manipulate the domain
 functions <<ask()>>, <<read()>>, or <<readEncap()>>.
 
 
-<Entry class="overloaded constructor"><<OZ_FDIntVar>>
+<Entry class="constructor"><<OZ_FDIntVar>>
 <Index class=proglang><<OZ_FDIntVar>></Index>
 <Synopsis> <<OZ_FDIntVar(OZ_Term v);>>
 
 <Item>
-This constructor creates an instance of the class <<OZ_FDIntVar>> and
+This constructor creates an instance of class <<OZ_FDIntVar>> and
 initialises it using <<read()>>.
 
 </List>
@@ -46,9 +46,9 @@ initialises it using <<read()>>.
 <Synopsis> <<static void * operator new(size_t);>>
 
 <Item> This operator allocates memory for a single instance of class
-<<OZ_FDIntVar>>. This operator must only be used inside the member
-function <<propagate()>> of the class <<OZ_Propagator>>. The allocated
-memory is automatically reclaimed when <<propagate()>> is left.
+<<OZ_FDIntVar>>. This operator must only be used inside the function
+<<propagate()>> of class <<OZ_Propagator>>. The allocated memory is
+automatically reclaimed when <<propagate()>> is left.
 
 
 <Entry class="static operator member function"><<new[]>>
@@ -56,9 +56,9 @@ memory is automatically reclaimed when <<propagate()>> is left.
 <Synopsis> <<static void * operator new[](size_t);>>
 
 <Item> This operator allocates memory for an array of instances of
-<<OZ_FDIntVar>>. This operator must only be used inside the member
-function <<propagate()>> of the class <<OZ_Propagator>>. The allocated
-memory is automatically reclaimed when <<propagate()>> is left.
+<<OZ_FDIntVar>>. This operator must only be used inside the function
+<<propagate()>> of class <<OZ_Propagator>>. The allocated memory is
+automatically reclaimed when <<propagate()>> is left.
 
 
 <Entry class="static operator member function"><<delete>>

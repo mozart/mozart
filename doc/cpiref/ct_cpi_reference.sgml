@@ -12,8 +12,8 @@
 <Synopsis><<virtual int getKind(void) = 0;>> 
 
 <Item> Returns an integer identifying a constraint system. The integer
-value has to be unique for each constraint system. Unique identifiers
-can be obtained by calling <<int OZ_getUniqueId(void)>>.
+value has to be unique for each constraint system.  Call <<int
+OZ_getUniqueId(void)>> to obtain a unique identifier.
 
 <Entry class="purevirtual member function"><<getNoOfWakeUpLists>>
 <Index class=proglang><<OZ_CtDefinition>><And><<getNoOfWakeUpLists>></Index>
