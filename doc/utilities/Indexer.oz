@@ -236,26 +236,26 @@ define
          @Entries == nil
       end
       meth process(DBName Prefix DocumentTitle ?IndexHTML)
-         thread DB Es in
-            DB = case DBName of unit then unit
-                 else
-                    try
-                       {Gdbm.new write(DBName)}
-                    catch _ then
-                       {Gdbm.new create(DBName)}
-                    end
-                 end
-            Es = DocumentTitle#{Map @Entries
-                                fun {$ Ands#_#GlobalLink#Classes}
-                                   Ands#GlobalLink#Classes
-                                end}
-            try
-               {Gdbm.put DB Prefix Es}
-            catch error(dp(generic _ _ 'Resources'#Rs|_) ...) then
-               {ForAll Rs Wait}
-               {Gdbm.put DB Prefix Es}
+         thread
+            case DBName of unit then skip
+            else DB Es in
+               try
+                  {Gdbm.new write(DBName)}
+               catch _ then
+                  {Gdbm.new create(DBName)}
+               end
+               Es = DocumentTitle#{Map @Entries
+                                   fun {$ Ands#_#GlobalLink#Classes}
+                                      Ands#GlobalLink#Classes
+                                   end}
+               try
+                  {Gdbm.put DB Prefix Es}
+               catch error(dp(generic _ _ 'Resources'#Rs|_) ...) then
+                  {ForAll Rs Wait}
+                  {Gdbm.put DB Prefix Es}
+               end
+               {Gdbm.close DB}
             end
-            {Gdbm.close DB}
             IndexHTML = {MakeIndex
                          {Map @Entries fun {$ Ands#HTML#_#_} Ands#HTML end}}
          end
