@@ -305,6 +305,7 @@ Bool BIfdBodyManager::vars_left;
 Bool BIfdBodyManager::glob_vars_touched;
 int * BIfdBodyManager::index_offset;
 int * BIfdBodyManager::index_size;
+Bool BIfdBodyManager::only_local_vars;
 
 void BIfdBodyManager::initStaticData(void) {
   bifdbm_var = static_var;
@@ -567,6 +568,7 @@ Bool BIfdBodyManager::introduce(TaggedRef v)
     return FALSE;
   }
 
+  saveDomainOnTopLevel();
   return TRUE;
 } // BIfdBodyManager::introduce
 

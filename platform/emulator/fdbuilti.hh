@@ -90,7 +90,8 @@ if (FORCE_ALL || COND) { \
 //-----------------------------------------------------------------------------
 // Macros
 
-#define FailOnEmpty(X) {if((X) == 0) return FAILED;}
+#define FailOnEmpty(X) \
+{if((X) == 0) {BIfdBodyManager::restoreDomainOnToplevel(); return FAILED;}}
 
 #define SimplifyOnUnify(EQ01, EQ02, EQ12) \
   if (isUnifyCurrentTaskSusp()) { \
@@ -648,10 +649,16 @@ private:
 
   void _introduce(int i, TaggedRef v);
   void introduceLocal(int i, TaggedRef v);
-
+  void saveDomainOnTopLevel(void) {
+    if (am.currentBoard->isRoot()) {
+      for (int i = curr_num_of_vars; i--; )
+        if (bifdbm_vartag[i] == CVAR)
+          bifdbm_domain[i] = tagged2GenFDVar(bifdbm_var[i])->getDom();
+    }
+  }
   int simplifyBody(int ts, STuple &a, STuple &x,
                    Bool sign_bits[], float coeffs[]);
-  Bool only_local_vars;
+  static Bool only_local_vars;
 
   enum {cache_slot_size = 4};
 public:
@@ -708,6 +715,9 @@ public:
     } else {
       _introduce(i, v);
     }
+    // if current board is the top-level then save domains for
+    // restoration on failure
+    saveDomainOnTopLevel();
   }
 
   void introduce(int i, int j, TaggedRef v) {
@@ -718,6 +728,7 @@ public:
     } else {
       _introduce(index, v);
     }
+    saveDomainOnTopLevel();
   }
 
   OZ_Bool entailment(void) {
@@ -810,6 +821,14 @@ public:
   Bool introduce(TaggedRef v);
 
   FiniteDomain &operator *(void) {return *bifdbm_dom[0];}
+
+  static void restoreDomainOnToplevel(void) {
+    if (am.currentBoard->isRoot()) {
+      for (int i = curr_num_of_vars; i--; )
+        if (bifdbm_vartag[i] == CVAR)
+          tagged2GenFDVar(bifdbm_var[i])->getDom() = bifdbm_domain[i];
+    }
+  }
 }; // BIfdBodyManager
 
 
