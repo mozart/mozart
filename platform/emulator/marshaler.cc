@@ -632,17 +632,17 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       return;
     }
 
-#define HandleTert(string,tag)                          \
-    CheckD0Compatibility;                               \
+#define HandleTert(string,tag,check)                    \
+    if (check) { CheckD0Compatibility; }                \
     PD((MARSHAL,string));                               \
     bs->addRes(makeTaggedConst(t));                     \
     if (marshalTertiary((Tertiary *) t,tag,bs)) return; \
     trailCycle(t->getCycleRef(),bs);                    \
     return;
 
-  case Co_Lock: HandleTert("lock",DIF_LOCK);
-  case Co_Cell: HandleTert("cell",DIF_CELL);
-  case Co_Port: HandleTert("port",DIF_PORT);
+  case Co_Lock: HandleTert("lock",DIF_LOCK,OK);
+  case Co_Cell: HandleTert("cell",DIF_CELL,OK);
+  case Co_Port: HandleTert("port",DIF_PORT,NO);
 
 #undef HandleTert
 
