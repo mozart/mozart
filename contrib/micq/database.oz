@@ -533,7 +533,7 @@ define
 	 end
       end
 	    
-      meth setOnline( id:ID online: O)
+      meth setOnline( id:ID online: O client: _<=nil)
 	 if {self  isOnline( id: ID online: $ )} == false then
 	    raise notLoggedIn( ID ) end 
 	 else
