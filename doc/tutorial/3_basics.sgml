@@ -55,7 +55,7 @@
 
 <!-- Use the same figure as in base..
   <SECTION><TITLE>Primary Oz Types</TITLE>
-  <P><FIGURE FLOAT ID="TypeHier" CLASS="MAXI">  <!-- CLASS=MAXI -->
+  <P><FIGURE FLOAT ID="TypeHier" CLASS="MAXI">
     <CAPTION>Oz Type Hierarchy</CAPTION>
     <P><PICTURE.EXTERN LATEX TO="primary-types.tex">
   </FIGURE>
