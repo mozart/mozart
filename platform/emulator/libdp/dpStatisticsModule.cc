@@ -183,9 +183,9 @@ const struct {
   { DIF_EXTENSION_DEF,   "extension_def"},
   { DIF_RESOURCE_DEF,    "resource_def"},
   { DIF_RESOURCE,        "resource"},
-  { DIF_FUTURE_DEF,      "future_def"},
+  { DIF_READONLY_DEF,    "readonly_def"},
   { DIF_VAR_AUTO_DEF,    "automatically_registered_var_def"},
-  { DIF_FUTURE_AUTO_DEF, "automatically_registered_future_def"},
+  { DIF_READONLY_AUTO_DEF, "automatically_registered_readonly_def"},
   { DIF_EOF,             "eof"},
   { DIF_CODEAREA,        "code_area_segment"},
   { DIF_VAR_OBJECT_DEF,  "var_object_exported_def"},
@@ -219,9 +219,9 @@ const struct {
   { DIF_COPYABLENAME,    "copyablename"},
   { DIF_OWNER,           "owner"},
   { DIF_VAR,             "var"},
-  { DIF_FUTURE,          "future"},
+  { DIF_READONLY,        "readonly"},
   { DIF_VAR_AUTO,        "automatically_registered_var"},
-  { DIF_FUTURE_AUTO,     "automatically_registered_future"},
+  { DIF_READONLY_AUTO,   "automatically_registered_readonly"},
   { DIF_VAR_OBJECT,      "var_object_exported"},
   { DIF_LAST,            "last"}
 };

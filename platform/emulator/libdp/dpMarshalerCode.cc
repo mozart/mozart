@@ -609,7 +609,7 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
       if (index) marshalTermDef(bs, index);
 
       //
-    } else if (oz_isFree(v) || oz_isFuture(v)) {
+    } else if (oz_isFree(v) || oz_isReadOnly(v)) {
       Assert(perdioInitialized);
 
       //

@@ -228,7 +228,7 @@ OZ_BI_define(BIisFuture, 1,1)
   if (!oz_isVarOrRef(var))
     OZ_RETURN(oz_false());
 
-  CheckStatus(var,EVAR_STATUS_FUTURE,AtomFuture);
+  CheckStatus(var,EVAR_STATUS_READONLY,AtomFuture);
 } OZ_BI_end
 
 OZ_BI_define(BIisDet,1,1)
@@ -1591,7 +1591,7 @@ OZ_Term oz_status(OZ_Term term)
     switch (status) {
     case EVAR_STATUS_FREE: 
       return AtomFree;
-    case EVAR_STATUS_FUTURE:
+    case EVAR_STATUS_READONLY:
       return AtomFuture;
     case EVAR_STATUS_FAILED:
       return AtomFailed;
@@ -3122,7 +3122,7 @@ OZ_DECLAREBI_USEINLINEFUN1(BIsub1,BIsub1Inline)
 // Ports
 // ---------------------------------------------------------------------
 
-// use VARS or FUTURES for ports
+// use VARS or READONLYS for ports
 // #define VAR_PORT
 
 #ifdef VAR_PORT
@@ -3149,11 +3149,11 @@ void doPortSend(PortWithStream *port,TaggedRef val)
 
 OZ_BI_define(BInewPort,1,1)
 {
-  OZ_Term fut = oz_newReadOnly(oz_currentBoard());
-  OZ_Term port = oz_newPort(fut);
+  OZ_Term strm = oz_newReadOnly(oz_currentBoard());
+  OZ_Term port = oz_newPort(strm);
   
   OZ_out(0)= port;
-  return oz_unify(OZ_in(0),fut);
+  return oz_unify(OZ_in(0),strm);
 } OZ_BI_end
 
 #define FAST_DOPORTSEND
@@ -3170,7 +3170,7 @@ void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
     // I believe this branch is only for sending to a port
     // in a super-ordinated space.  oz_sendPort has already
     // performed the check of situatedness.  We cannot perform
-    // oz_bindFuture right here: it must be done in the port's
+    // oz_bindReadOnly right here: it must be done in the port's
     // home space (this is required for properly waking up
     // suspensions, etc...).  In order to preserve order on
     // the stream, we must perform the exchange immediately.
