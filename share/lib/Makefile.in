@@ -29,10 +29,12 @@ COMPRESSFLAGS   = -z $(COMPRESSLEVEL)
 DENYS_EVENTS    = @DENYS_EVENTS@
 ifeq ($(DENYS_EVENTS),yes)
 DENYS_FLAGS     = -DDENYS_EVENTS
-DENYS_SRCS      = EventSIGCHLD EventSIGUSR2 Timer
+DENYS_SPSRCS    = EventSIGCHLD Timer
+DENYS_DPSRCS    = VirtualSite
 else
 DENYS_FLAGS     =
-DENYS_SRCS      =
+DENYS_SPSRCS    =
+DENYS_DPSRCS    =
 endif
 
 OZCFLAGS        = $(COMPRESSFLAGS) $(DENYS_FLAGS)
@@ -61,12 +63,12 @@ export OZ_LOAD = root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=$(HOMEURL)/share/=$(
 export OZMAKE_COPYALWAYS        = no
 export OZMAKE_VERBOSE           = no
 
-SPSRC   = Error ErrorFormatters Finalize $(DENYS_SRCS)
+SPSRC   = Error ErrorFormatters Finalize $(DENYS_SPSRCS)
 OPSRC   = Open
 APSRC   = Application
 CPSRC1  = Search FD FS
 CPSRC2  = Schedule ParSearch ParWorker ParLogging
-DPSRC   = Connection Remote RemoteServer Fault URL
+DPSRC   = Connection Remote RemoteServer Fault URL $(DENYS_DPSRCS)
 WPSRC   = Tk TkTools
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
 
