@@ -1169,7 +1169,7 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
     const2buffer(out,tagged2Const(term));
     break;
   case PROMISE:
-    out << "<promise>";
+    out << "<Promise>";
     break;
   case LITERAL:
     {
