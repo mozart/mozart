@@ -221,8 +221,9 @@ public:
 typedef int * intptr;
 
 #define FDOMNINITSIZE 1000
-extern intptr fd_iv_left_sort[FDOMNINITSIZE];
-extern intptr fd_iv_right_sort[FDOMNINITSIZE];
+extern intptr fd_iv_ptr_sort[FDOMNINITSIZE];
+extern int fd_iv_left_sort[FDOMNINITSIZE];
+extern int fd_iv_right_sort[FDOMNINITSIZE];
 
 class OZ_FiniteDomainImpl : public OZ_FiniteDomain {
 protected:
