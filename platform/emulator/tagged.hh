@@ -43,7 +43,7 @@ enum TypeOfTerm {
   SVAR             =  9,   // 1001
   CVAR             =  5,   // 0101
   
-  UNUSEDVARIABLE   =  13,  // 1101
+  GCTAG            =  13,  // 1101
 	    
   LTUPLE           =  2,   // 0010
   STUPLE           =  6,   // 0110
@@ -88,8 +88,8 @@ const int mallocBase = 0;
 #endif
 #endif
 
-// we loose 5 bits, 1 for GC, 4 for tags
-const int maxPointer = ((unsigned int)~0 >> (tagSize+1))|mallocBase;
+/* we loose 4 bits for tags */
+const int maxPointer = ((unsigned int)~0 >> tagSize)|mallocBase;
 
 
 // ------------------------------------------------------
@@ -97,15 +97,23 @@ const int maxPointer = ((unsigned int)~0 >> (tagSize+1))|mallocBase;
 
 extern int gcing;
 
-inline
-void GCDEBUG(TaggedRef X)
-{
-#ifdef DEBUG_GC
-  if ( gcing && ((int)X & GCTAG) )   // ugly, but I've found no other way  
-    error("GcTag unexpectedly found.");
-#endif
-}
+#define _tagTypeOf(ref) ((TypeOfTerm)(ref&tagMask))
 
+#ifdef DEBUG_GC  
+#define GCDEBUG(X)                            \
+  if ( gcing && (_tagTypeOf(X)==GCTAG ) )     \
+    error("GcTag unexpectedly found.");
+#else
+#define GCDEBUG(X)
+#endif
+
+
+inline
+void *tagValueOf(TaggedRef ref) 
+{ 
+  GCDEBUG(ref);
+  return (void*)((ref >> tagSize) | mallocBase);
+}
 
 inline
 TaggedRef makeTaggedRef(TypeOfTerm tag, void *ptr)
@@ -117,14 +125,7 @@ inline
 TypeOfTerm tagTypeOf(TaggedRef ref) 
 { 
   GCDEBUG(ref);
-  return (TypeOfTerm)(ref&tagMask); 
-}
-
-inline
-void *tagValueOf(TaggedRef ref) 
-{ 
-  GCDEBUG(ref);
-  return (void*)((ref >> tagSize) | mallocBase);
+  return _tagTypeOf(ref);
 }
 
 
