@@ -45,6 +45,7 @@ Arity *SolveContArity                = NULL;
 
 TaggedRef solvedAtom;
 TaggedRef enumedAtom;
+TaggedRef choiceAtom;
 TaggedRef lastAtom;
 TaggedRef moreAtom;
 TaggedRef entailedAtom;
@@ -63,6 +64,7 @@ void SolveActor::Init()
 
   solvedAtom     = makeTaggedAtom (SEARCH_SOLVED);
   enumedAtom     = makeTaggedAtom (SEARCH_ENUMED);
+  choiceAtom     = makeTaggedAtom (SEARCH_CHOICE);
   lastAtom       = makeTaggedAtom (SEARCH_LAST);
   moreAtom       = makeTaggedAtom (SEARCH_MORE);
   entailedAtom   = makeTaggedAtom (SEARCH_ENTAILED);
@@ -180,6 +182,23 @@ TaggedRef SolveActor::genEnumedFail ()
   return (makeTaggedSTuple (stuple));
 }
 
+TaggedRef SolveActor::genChoice (int noOfClauses)
+{
+  STuple *stuple = STuple::newSTuple (choiceAtom, 2);
+  RefsArray contGRegs;
+
+  // left side: 
+  contGRegs = allocateRefsArray (1);
+  contGRegs[0] = makeTaggedConst (solveBoard);
+  stuple->setArg (0, makeTaggedConst
+		  (new OneCallBuiltin (solveContBITabEntry, contGRegs,
+				       SolveContArity, lastAtom)));
+
+  stuple->setArg (1, makeTaggedSmallInt(noOfClauses));
+
+  return (makeTaggedSTuple (stuple));
+}
+
 TaggedRef SolveActor::genFailed ()
 {
   return (failedAtom);
@@ -239,8 +258,8 @@ Bool SolveActor::checkExtSuspList ()
 
 // Note that there is one thread ALREADY AT THE CREATION TIME!
 
-SolveActor::SolveActor (Board *bb, int prio, TaggedRef resTR)
- : Actor (Ac_Solve, bb, prio), result (resTR), 
+SolveActor::SolveActor (Board *bb, int prio, TaggedRef resTR, TaggedRef guiTR)
+ : Actor (Ac_Solve, bb, prio), result (resTR), guidance (guiTR), 
    boardToInstall(NULL), suspList (NULL), threads (1)
 {
   solveBoard = NULL;
@@ -258,6 +277,7 @@ SolveActor::~SolveActor()
   orActors.clear (); 
   solveVar = (TaggedRef) NULL;
   result = (TaggedRef) NULL;
+  guidance = (TaggedRef) NULL;
   boardToInstall = (Board *) NULL;
   suspList = (SuspList *) NULL;
   threads = 0; 
