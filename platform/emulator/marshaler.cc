@@ -147,7 +147,6 @@ char *dif_names[DIF_LAST] = {
   "virtual",
   "perm",
   "copyablename",
-  "bitarray",
   "passive"
 };
 
