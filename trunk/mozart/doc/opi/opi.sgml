@@ -33,6 +33,8 @@
     <Meta name="html.split.bib" value="">
     <Meta name="html.split.index" value="">
 
+    <Meta name="link.bib" arg1="ozdoc:compiler" arg2="mozart-compiler">
+
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
     <Title/The Oz Programming Interface/
@@ -203,7 +205,7 @@
 	      <Entry class=command><Span class=index/<<oz-gump-mode>>/
 	      <Item>
 		This is the major mode for editing Oz code with embedded
-		Gump specifications&nbsp;<Ptr to="mozart-gump">.  Loading
+		Gump specifications&nbsp;<Ptr to="Mozart-Gump">.  Loading
 		a file with extension <File/.ozg/ automatically puts a
 		buffer in Oz-Gump mode.  You can tell a buffer is in
 		Oz-Gump mode by the string <Samp/Oz-Gump/ in its mode line.
@@ -799,8 +801,9 @@
 	<Para class=apropos><Title/Compiler Interface/
 	  When Mozart is started from the &OPI;, an instance of the Mozart
 	  compiler is created that listens for queries from the interactive
-	  development environment.  This interaction is handled via a compiler
-	  interface called <<Emacs.interface>>&nbsp;<Ptr to="mozart-compiler">.
+	  development environment.  This interaction is handled via a
+	  compiler interface called <<Emacs.interface>> (see <Ptr.Extern
+	  to="ozdoc:compiler" key="section.api.interfaces">).
 	  <!--** be more verbose about the Emacs.interface -->
 	<Para class=apropos><Title/System Properties/
 	  It is possible to test whether Mozart is currently running under
@@ -1161,8 +1164,8 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
 	    Express the regular expression by a string.
 	</List>
   <Back>
-    <Bib.Extern id="mozart-base" to="mozart.bib" key="Mozart-Base">
-    <Bib.Extern id="mozart-compiler" to="mozart.bib" key="Mozart-Compiler">
-    <Bib.Extern id="mozart-gump" to="mozart.bib" key="Mozart-Gump">
+    <Bib.Extern id="Mozart-Base" to="mozart.bib" key="Mozart-Base">
+    <Bib.Extern id="Mozart-Compiler" to="mozart.bib" key="Mozart-Compiler">
+    <Bib.Extern id="Mozart-Gump" to="mozart.bib" key="Mozart-Gump">
     <Bib.Extern id="stallman91" to="opi.bib" key="stallman91">
 </Book>
