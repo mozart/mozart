@@ -18,7 +18,8 @@ local
        Name == '`,`'      orelse
        Name == '`send`'   orelse
        Name == '`ooSend`' orelse
-       Name \= '' andthen {Atom.toString Name}.1 \= &`)
+       Name == ''         orelse
+       {Atom.toString Name}.1 \= &`)
    end
 
    proc {OzcarReadEvalLoop S}
