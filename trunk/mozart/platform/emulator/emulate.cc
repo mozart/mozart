@@ -1,6 +1,8 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Kostja Popow (popow@ps.uni-sb.de)
+ *    Michael Mehl (mehl@dfki.de)
+ *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -23,14 +25,8 @@
  *  WARRANTIES.
  *
  */
-/* This may look like C code, but it is really -*- C++ -*-
 
-  Hydra Project, DFKI Saarbruecken,
-  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
-  Author: popow,mehl,scheidhr
-  The main engine
-  ------------------------------------------------------------------------
-*/
+// The main engine
 
 #include <stdarg.h>
 
@@ -457,14 +453,14 @@ void pushContX(TaskStack *stk,
 #define GetBI(PC) ((BuiltinTabEntry*) getAdressArg(PC))
 
 #if defined(LINUX_I486) || defined(GNUWIN32) || defined(SOLARIS_I486) || defined(FREEBSD_I486)
-#define I486
+#define OZ_I486
 #endif
 
 /* define REGOPT if you want the into register optimization for GCC */
-#if defined(REGOPT) &&__GNUC__ >= 2 && (defined(I486) || defined(MIPS) || defined(OSF1_ALPHA) || defined(SPARC)) && !defined(DEBUG_CHECK)
+#if defined(REGOPT) &&__GNUC__ >= 2 && (defined(OZ_I486) || defined(MIPS) || defined(OSF1_ALPHA) || defined(SPARC)) && !defined(DEBUG_CHECK)
 #define Into(Reg) asm(#Reg)
 
-#ifdef I486
+#ifdef OZ_I486
 #define Reg1 asm("%esi")
 #define Reg2
 #define Reg3

@@ -1,6 +1,6 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Per Brand (perbrand@sics.se)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -23,15 +23,6 @@
  *  WARRANTIES.
  *
  */
-/*
-  Perdio Project, 
-  DFKI Saarbruecken,
-  Stuhlsatzenhausweg 3, D-W-6600 Saarbruecken 11, Phone (+49) 681 302-5261
-  SICS,
-  Box 1263, S-16428 Sweden,Phone (+46) 8 7521500
-  Author: brand
-  ------------------------------------------------------------------------
-*/
 
 #ifndef __GENHASHTABLEH
 #define __GENHASHTABLEH

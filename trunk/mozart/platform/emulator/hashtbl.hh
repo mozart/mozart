@@ -1,6 +1,7 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -23,16 +24,6 @@
  *  WARRANTIES.
  *
  */
-/*
-  Hydra Project, DFKI Saarbruecken,
-  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5261
-  Author: tmueller
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
-
-  ------------------------------------------------------------------------
-*/
 
 #ifndef __HASHTABLEH
 #define __HASHTABLEH

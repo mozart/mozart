@@ -1,6 +1,7 @@
-/*
+/* -*- C++ -*-
  *  Authors:
- *    Author's name (Author's email address)
+ *    Per Brand (perbrand@sics.se)
+ *    Erik Klintskog (erik@sics.se)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -23,6 +24,7 @@
  *  WARRANTIES.
  *
  */
+
 define(message,`
 	void marshal_$1(MsgBuffer * buf,arg($2,$3)arg($3,$4) arg($4,$5) arg($5,$6) arg($6 $7)) {
 	PD((MARSHAL_BE,"marshal begin %s  kind:%s","$1",buf->siteStringrep()));

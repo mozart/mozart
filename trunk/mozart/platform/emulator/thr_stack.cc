@@ -1,9 +1,10 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Michael Mehl (mehl@dfki.de)
+ *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Benjamin Lorenz (lorenz@ps.uni-sb.de)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -23,16 +24,6 @@
  *  WARRANTIES.
  *
  */
-/*
-  Hydra Project, DFKI Saarbruecken,
-  Stuhlsatzenhausweg 3, D-W-6600 Saarbruecken 11, Phone (+49) 681 302-5312
-  Author: scheidhr
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
-
-  ------------------------------------------------------------------------
-*/
 
 #if defined(INTERFACE) && !defined(PEANUTS)
 #pragma implementation "taskstk.hh"

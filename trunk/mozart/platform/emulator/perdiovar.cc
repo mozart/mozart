@@ -1,12 +1,12 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Michael Mehl (mehl@dfki.de)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Michael Mehl (1997)
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -23,16 +23,6 @@
  *  WARRANTIES.
  *
  */
-/*
-  Hydra Project, DFKI Saarbruecken,
-  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
-  Author: mehl
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
-
-  ------------------------------------------------------------------------
-*/
 
 #if defined(INTERFACE) && !defined(PEANUTS)
 #pragma implementation "perdiovar.hh"

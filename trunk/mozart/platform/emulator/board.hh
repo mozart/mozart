@@ -1,6 +1,7 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Kostja Popow (popow@ps.uni-sb.de)
+ *    Michael Mehl (mehl@dfki.de)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)

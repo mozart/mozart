@@ -1,6 +1,9 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
+ *    Benjamin Lorenz (lorenz@ps.uni-sb.de)
+ *    Michael Mehl (mehl@dfki.de)
+ *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -22,12 +25,6 @@
  *  of this file, and for a DISCLAIMER OF ALL 
  *  WARRANTIES.
  *
- */
-/*
- * Hydra Project, DFKI Saarbruecken,
- * Stuhlsatzenhausweg 3, W-66123 Saarbruecken, Phone (+49) 681 302-5312
- * $Id$
- * Author: scheidhr & mehl & lorenz & kornstae
  */
 
 /*
