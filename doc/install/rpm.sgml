@@ -50,7 +50,7 @@
     <p>
       You first have to download the packages you want from
       <ref.extern
-      to="http://www.mozart-oz.org/download/"><file>http://www.mozart-oz.org/download/</file></ref.extern>. 
+      to="http://www.mozart-oz.org/download/view.cgi?action=rpm"><file>http://www.mozart-oz.org/download/view.cgi?action=rpm</file></ref.extern>. 
 
     <p>
       In order to install a rpm package you have to become
