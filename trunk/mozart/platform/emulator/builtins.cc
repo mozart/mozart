@@ -6871,7 +6871,9 @@ OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
   OZ_declareNonvarArg(0,hdl);
   if (!OZ_isProcedure(hdl)) TypeErrorT(0,"Procedure");
 
-  am.defaultExceptionHandler = deref(hdl);
+  hdl = deref(hdl);
+  if (tagged2Const(hdl)->getArity() != 1) return OZ_raiseC("???",0);
+  am.defaultExceptionHandler = hdl;
   return PROCEED;
 }
 OZ_C_proc_end
@@ -6911,168 +6913,177 @@ void printX(char *what, OZ_Term vs)
 /*
  * the builtin exception handler
  */
-OZ_C_proc_begin(BIbiExceptionHandler,3)
+OZ_C_proc_begin(BIbiExceptionHandler,1)
 {
-  OZ_Term val=OZ_getCArg(0);
-  OZ_Term list=OZ_getCArg(1);
-  OZ_Term traceBack=OZ_getCArg(2);
+  OZ_Term arg=OZ_getCArg(0);
+  if (!OZ_isTuple(arg)) {
+    if (ozconf.errorVerbosity > 0) {
+      errorHeader();
+      message("EXCEPTION: %s\n",toC(arg));
+      errorTrailer();
+    }
+  } else {
+    OZ_Term val=OZ_getArg(arg,0);
+    OZ_Term list=OZ_getArg(arg,1);
+    OZ_Term traceBack=OZ_getArg(arg,2);
 
-  if (ozconf.errorVerbosity > 0) {
-    errorHeader();
-    if (OZ_isVariable(val) || !OZ_isRecord(val)) {
-      message("EXCEPTION: %s\n",toC(val));
-    } else {
-      OZ_Term lab=OZ_label(val);
-      if (literalEq(lab,OZ_atom("noElse"))) {
-	message("ERROR: Conditional without else failed\n");
-	if (ozconf.errorVerbosity > 1) {
-	  switch (OZ_width(val)) {
-	  case 2:
-	    message("Store: %s\n",toC(OZ_getArg(val,1)));
-	    // fall through
-	  case 1:
-	    message("Line: %s\n",toC(OZ_getArg(val,0)));
-	    break;
-	  default:
+    if (ozconf.errorVerbosity > 0) {
+      errorHeader();
+      if (OZ_isVariable(val) || !OZ_isRecord(val)) {
+	message("EXCEPTION: %s\n",toC(val));
+      } else {
+	OZ_Term lab=OZ_label(val);
+	if (literalEq(lab,OZ_atom("noElse"))) {
+	  message("ERROR: Conditional without else failed\n");
+	  if (ozconf.errorVerbosity > 1) {
+	    switch (OZ_width(val)) {
+	    case 2:
+	      message("Store: %s\n",toC(OZ_getArg(val,1)));
+	      // fall through
+	    case 1:
+	      message("Line: %s\n",toC(OZ_getArg(val,0)));
+	      break;
+	    default:
 	    message("Ups: %s\n",toC(val));
 	    break;
-	  }
-	}
-      } else if (literalEq(lab,OZ_atom("toplevelBlocked"))) {
-	message("The toplevel is blocked\n");
-      } else if (literalEq(lab,OZ_atom("apply"))) {
-	message("ERROR: Illtyped application\n");
-	if (OZ_width(val) != 2) {
-	  message("Ups: %s\n",toC(val));
-	} else {
-	  printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
-	}
-	if (ozconf.errorVerbosity > 1) {
-	  message("Hint:           ^^^ must be procedure or object\n");
-	}
-      } else if (literalEq(lab,OZ_atom("arity"))) {
-	message("ERROR: Illtyped application\n");
-	if (OZ_width(val) != 2) {
-	  message("Ups: %s\n",toC(val));
-	} else {
-	  printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
-	}
-	if (ozconf.errorVerbosity > 1) {
-	  message("Hint: number of arguments mismatch\n");
-	}
-      } else if (literalEq(lab,OZ_atom("tell"))) {
-	message("ERROR: Failure\n");
-	if (OZ_width(val) != 2) {
-	  message("Ups: %s\n",toC(val));
-	} else {
-	  message("In Expression: %s",toC(OZ_getArg(val,0)));
-	  printf(" = %s\n",toC(OZ_getArg(val,1)));
-	  if (ozconf.errorVerbosity > 1) {
-	    message("Tell:  %s\n",toC(OZ_getArg(val,1)));
-	    message("Store: %s\n",toC(OZ_getArg(val,0)));
-	  }
-	}
-      } else if (literalEq(lab,OZ_atom("eq"))) {
-	message("ERROR: Failure\n");
-	if (OZ_width(val) != 2) {
-	  message("Ups: %s\n",toC(val));
-	} else {
-	  message("In Expression: %s",toC(OZ_getArg(val,0)));
-	  printf(" = %s\n",toC(OZ_getArg(val,1)));
-	}
-      } else if (literalEq(lab,OZ_atom("fail"))) {
-	message("ERROR: Failure\n");
-	if (OZ_width(val) != 2) {
-	  message("Ups: %s\n",toC(val));
-	} else {
-	  printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
-	}
-      } else if (literalEq(lab,OZ_atom("failDis"))) {
-	message("ERROR: Failure\n");
-	message("Disjunction failed\n");
-	if (OZ_width(val) != 0) {
-	  message("Ups: %s\n",toC(val));
-	}
-      } else if (literalEq(lab,OZ_atom("failCond"))) {
-	message("ERROR: Failure\n");
-	message("Conditional failed\n");
-	if (OZ_width(val) != 0) {
-	  message("Ups: %s\n",toC(val));
-	}
-      } else if (literalEq(lab,OZ_atom("failure"))) {
-	message("ERROR: Failure\n");
-	message("Excecuting 'false'\n");
-	if (OZ_width(val) != 0) {
-	  message("Ups: %s\n",toC(val));
-	}
-      } else if (literalEq(lab,OZ_atom("."))) {
-	message("ERROR: Illtype application\n");
-	if (OZ_width(val) != 2) {
-	  message("Ups: %s\n",toC(val));
-	} else {
-	  message("In Expression: %s.",toC(OZ_getArg(val,0)));
-	  printf("%s\n",toC(OZ_getArg(val,1)));
-	}
-	if (ozconf.errorVerbosity > 1) {
-	  message("Hint: feature %s is not in %s ",toC(OZ_getArg(val,1)),
-		  OZ_isChunk(OZ_getArg(val,0))?"chunk":"record");
-	  printf("%s\n",toC(OZ_getArg(val,0)));
-	}
-      } else if (literalEq(lab,OZ_atom("type"))) {
-	message("ERROR: Illtyped application\n");
-	if (OZ_width(val) != 5) {
-	  message("Ups: %s\n",toC(val));
-	} else {
-	  printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
-	  if (ozconf.errorVerbosity > 1) {
-	    printX("Expected type: ",OZ_getArg(val,2));
-	    OZ_Term pos = OZ_getArg(val,3);
-	    if (!OZ_eq(pos,OZ_int(0))) {
-	      printX("Argument number: ",pos);
 	    }
-	    printX("Hint: ",OZ_getArg(val,4));
 	  }
-	}
-      } else if (literalEq(lab,OZ_atom("user"))) {
-	message("USER EXCEPTION\n");
-	if (OZ_width(val) != 1) {
-	  message("Ups: %s\n",toC(val));
-	} else {
+	} else if (literalEq(lab,OZ_atom("toplevelBlocked"))) {
+	  message("The toplevel is blocked\n");
+	} else if (literalEq(lab,OZ_atom("apply"))) {
+	  message("ERROR: Illtyped application\n");
+	  if (OZ_width(val) != 2) {
+	    message("Ups: %s\n",toC(val));
+	  } else {
+	    printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
+	  }
 	  if (ozconf.errorVerbosity > 1) {
-	    message("Value: %s\n",toC(OZ_getArg(val,0)));
+	    message("Hint:           ^^^ must be procedure or object\n");
 	  }
-	}
-      } else {
-	message("EXCEPTION: %s\n",toC(OZ_label(val)));
-	if (ozconf.errorVerbosity > 1) {
-	  for (int i=0; i < OZ_width(val); i++) {
-	    printX("Hint: ",OZ_getArg(val,i));
+	} else if (literalEq(lab,OZ_atom("arity"))) {
+	  message("ERROR: Illtyped application\n");
+	  if (OZ_width(val) != 2) {
+	    message("Ups: %s\n",toC(val));
+	  } else {
+	    printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
 	  }
-	}
-      }
-    }
-    if (ozconf.errorVerbosity > 1) {
-      message("\n");
-      message("Stack dump:\n");
-      message("\n");
-      while (OZ_isCons(traceBack)) {
-	OZ_Term tt=OZ_head(traceBack);
-	OZ_Term lab = OZ_label(tt);
-	if (OZ_eq(lab,OZ_atom("proc"))) {
-	  message(" In procedure %s",toC(OZ_getArg(tt,0)));
-	  printf(" (File %s",toC(OZ_getArg(tt,1)));
-	  printf(", Line %s",toC(OZ_getArg(tt,2)));
-	  printf(", PC = %s)\n",toC(OZ_getArg(tt,3)));
+	  if (ozconf.errorVerbosity > 1) {
+	    message("Hint: number of arguments mismatch\n");
+	  }
+	} else if (literalEq(lab,OZ_atom("tell"))) {
+	  message("ERROR: Failure\n");
+	  if (OZ_width(val) != 2) {
+	    message("Ups: %s\n",toC(val));
+	  } else {
+	    message("In Expression: %s",toC(OZ_getArg(val,0)));
+	    printf(" = %s\n",toC(OZ_getArg(val,1)));
+	    if (ozconf.errorVerbosity > 1) {
+	      message("Tell:  %s\n",toC(OZ_getArg(val,1)));
+	      message("Store: %s\n",toC(OZ_getArg(val,0)));
+	    }
+	  }
+	} else if (literalEq(lab,OZ_atom("eq"))) {
+	  message("ERROR: Failure\n");
+	  if (OZ_width(val) != 2) {
+	    message("Ups: %s\n",toC(val));
+	  } else {
+	    message("In Expression: %s",toC(OZ_getArg(val,0)));
+	    printf(" = %s\n",toC(OZ_getArg(val,1)));
+	  }
+	} else if (literalEq(lab,OZ_atom("fail"))) {
+	  message("ERROR: Failure\n");
+	  if (OZ_width(val) != 2) {
+	    message("Ups: %s\n",toC(val));
+	  } else {
+	    printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
+	  }
+	} else if (literalEq(lab,OZ_atom("failDis"))) {
+	  message("ERROR: Failure\n");
+	  message("Disjunction failed\n");
+	  if (OZ_width(val) != 0) {
+	    message("Ups: %s\n",toC(val));
+	  }
+	} else if (literalEq(lab,OZ_atom("failCond"))) {
+	  message("ERROR: Failure\n");
+	  message("Conditional failed\n");
+	  if (OZ_width(val) != 0) {
+	    message("Ups: %s\n",toC(val));
+	  }
+	} else if (literalEq(lab,OZ_atom("failure"))) {
+	  message("ERROR: Failure\n");
+	  message("Excecuting 'false'\n");
+	  if (OZ_width(val) != 0) {
+	    message("Ups: %s\n",toC(val));
+	  }
+	} else if (literalEq(lab,OZ_atom("."))) {
+	  message("ERROR: Illtype application\n");
+	  if (OZ_width(val) != 2) {
+	    message("Ups: %s\n",toC(val));
+	  } else {
+	    message("In Expression: %s.",toC(OZ_getArg(val,0)));
+	    printf("%s\n",toC(OZ_getArg(val,1)));
+	  }
+	  if (ozconf.errorVerbosity > 1) {
+	    message("Hint: feature %s is not in %s ",toC(OZ_getArg(val,1)),
+		    OZ_isChunk(OZ_getArg(val,0))?"chunk":"record");
+	    printf("%s\n",toC(OZ_getArg(val,0)));
+	  }
+	} else if (literalEq(lab,OZ_atom("type"))) {
+	  message("ERROR: Illtyped application\n");
+	  if (OZ_width(val) != 5) {
+	    message("Ups: %s\n",toC(val));
+	  } else {
+	    printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
+	    if (ozconf.errorVerbosity > 1) {
+	      printX("Expected type: ",OZ_getArg(val,2));
+	      OZ_Term pos = OZ_getArg(val,3);
+	      if (!OZ_eq(pos,OZ_int(0))) {
+		printX("Argument number: ",pos);
+	      }
+	      printX("Hint: ",OZ_getArg(val,4));
+	    }
+	  }
+	} else if (literalEq(lab,OZ_atom("user"))) {
+	  message("USER EXCEPTION\n");
+	  if (OZ_width(val) != 1) {
+	    message("Ups: %s\n",toC(val));
+	  } else {
+	    if (ozconf.errorVerbosity > 1) {
+	      message("Value: %s\n",toC(OZ_getArg(val,0)));
+	    }
+	  }
 	} else {
-	  message(" %s\n",toC(tt));
+	  message("EXCEPTION: %s\n",toC(OZ_label(val)));
+	  if (ozconf.errorVerbosity > 1) {
+	    for (int i=0; i < OZ_width(val); i++) {
+	      printX("Hint: ",OZ_getArg(val,i));
+	    }
+	  }
 	}
-	traceBack=OZ_tail(traceBack);
       }
+      if (ozconf.errorVerbosity > 1) {
+	message("\n");
+	message("Stack dump:\n");
+	message("\n");
+	while (OZ_isCons(traceBack)) {
+	  OZ_Term tt=OZ_head(traceBack);
+	  OZ_Term lab = OZ_label(tt);
+	  if (OZ_eq(lab,OZ_atom("proc"))) {
+	    message(" In procedure %s",toC(OZ_getArg(tt,0)));
+	    printf(" (File %s",toC(OZ_getArg(tt,1)));
+	    printf(", Line %s",toC(OZ_getArg(tt,2)));
+	    printf(", PC = %s)\n",toC(OZ_getArg(tt,3)));
+	  } else {
+	    message(" %s\n",toC(tt));
+	  }
+	  traceBack=OZ_tail(traceBack);
+	}
+      }
+      errorTrailer();
     }
-    errorTrailer();
   }
 
-  // mm2: if (!am.isToplevel()) return FAILED;
+  if (!am.isToplevel()) return FAILED;
   return PROCEED;
 }
 OZ_C_proc_end
@@ -7446,7 +7457,7 @@ BIspec allSpec2[] = {
   {"Space.choose",        2, BIchooseSpace,     0},
   {"Space.inject",        2, BIinjectSpace,     0},
 
-  {"biExceptionHandler",         3, BIbiExceptionHandler,         0},
+  {"biExceptionHandler",         1, BIbiExceptionHandler,         0},
   {"setDefaultExceptionHandler", 1, BIsetDefaultExceptionHandler, 0},
   {0,0,0,0}
 };

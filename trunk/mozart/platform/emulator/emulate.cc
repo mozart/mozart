@@ -2790,16 +2790,8 @@ LBLsuspendThread:
 	 pred = e->defaultExceptionHandler;
        }
 
-       /* mm2: exception is already in X[0],
-	*   TODO: should somehow be reflected !!! */
-
-       int arity = tagged2Const(pred)->getArity();
-       if (arity !=1) {
+       if (tagged2Const(pred)->getArity() !=1) {
 	 pred = e->defaultExceptionHandler;
-	 arity = tagged2Const(pred)->getArity();
-	 if (arity != 1) {
-	   pred = e->biExceptionHandler;
-	 }
        }
 	   
        RefsArray argsArray = allocateRefsArray(1,NO);
