@@ -34,7 +34,7 @@ inline
 static int getMid(TaggedRef var) {
   if (isGenFDVar(var)) {
     OZ_FiniteDomain &dom = tagged2GenFDVar(var)->getDom();
-    return dom.next((dom.minElem() + dom.maxElem()) / 2);
+    return dom.midElem();
   } else {
     return 0;
   }

@@ -106,9 +106,7 @@ OZ_C_proc_begin(BIfdMid, 2)
     return OZ_unify(var, OZ_getCArg(1));   
   } else if (isGenFDVar(var,vartag)) {
     OZ_FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
-    return OZ_unify(OZ_int(fdomain.next((fdomain.minElem() + 
-					 fdomain.maxElem()) / 2)), 
-		    OZ_getCArg(1));   
+    return OZ_unify(OZ_int(fdomain.midElem()), OZ_getCArg(1));   
   } else if (isGenBoolVar(var,vartag)) {
     return OZ_unify(OZ_int(0), OZ_getCArg(1));   
   } else if (isNotCVar(vartag)) {

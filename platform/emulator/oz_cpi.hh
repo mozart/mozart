@@ -90,7 +90,7 @@ public:
   int initBool(void);
 
   OZ_Boolean isIn(int i) const;
-  int next(int i) const; 
+  int midElem(void) const; 
   int nextSmallerElem(int v) const;
   int nextLargerElem(int v) const;
 
