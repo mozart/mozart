@@ -1283,25 +1283,11 @@ OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
   TaggedRef A = Ain, B = Bin;
   DEREF(A,aPtr); DEREF(B,bPtr);
 
-  if (oz_isSmallInt(A) || oz_isLiteral(A))
+  if (oz_isToken(A) && oz_isToken(B))
     return oz_eq(A,B) ? PROCEED : FAILED;
 
   if (A == B && !oz_isVar(A))
     return PROCEED;
-
-  if (oz_isExtension(A))
-    return tagged2Extension(A)->eqV(B);
-
-  if (oz_isConst(A) && oz_isConst(B)) {
-    switch (tagged2Const(A)->getType()) {
-    case Co_Float:
-      return floatEq(A,B)  ? PROCEED : FAILED;
-    case Co_BigInt:
-      return bigIntEq(A,B) ? PROCEED : FAILED;
-    default:
-      return FAILED;
-    }
-  }
 
   return oz_eqeq(Ain,Bin);
 }
