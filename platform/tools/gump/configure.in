@@ -7,7 +7,6 @@ AC_PROG_LN_S
 AC_CHECK_PROGS(RM, rm)
 OZ_PATH_PROG(DYNLD, ozdynld)
 OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-OZ_PATH_PROG(MKINSTALLDIRS, mkinstalldirs)
 : ${platform=`$PLATFORMSCRIPT`}
 AC_SUBST(platform)
 if test "${GXX}" = yes; then
