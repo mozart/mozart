@@ -297,7 +297,6 @@ OZ_Return ManagerVar::addSuspV(TaggedRef *vPtr, Suspension susp, int unstable)
 void ManagerVar::gcRecurseV(void)
 {
   origVar=origVar->gcVar();
-  origVar->gcVarRecurse();
   OT->getOwner(getIndex())->gcPO();
   PD((GC,"ManagerVar o:%d",getIndex()));
   ProxyList **last=&proxies;
