@@ -6975,24 +6975,6 @@ OZ_C_proc_begin(BIgetBuiltinName,2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIgetAbstractionTableID,2)
-{
-  oz_declareNonvarArg(0,val);
-  oz_declareArg(1,res);
-  if (!isAbstraction(val))
-    oz_typeError(0,"Procedure (no builtin)");
-  Abstraction *abstr = tagged2Abstraction(val);
-
-  HashNode *n = CodeArea::abstractionTab.getFirst();
-  while (n != NULL) {
-    if (((AbstractionEntry *) n->value)->getAbstr() == abstr)
-      return oz_unify(res,oz_int(n->key.fint));
-    n = CodeArea::abstractionTab.getNext(n);
-  }
-  return oz_unify(res,oz_int(0));
-}
-OZ_C_proc_end
-
 OZ_C_proc_begin(BInameVariable,2)
 {
   oz_declareArg(0,var);
@@ -7024,6 +7006,21 @@ OZ_C_proc_begin(BIgenerateAbstractionTableID,1)
   // reserved for code compiled by the old compiler:
   id += 2;
   return oz_unify(res,oz_int(id));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIconcatenateAtomAndInt,3)
+{
+  // {ConcatenateAtomAndInts S I ?Res} computes:
+  //    Res = {String.toAtom {Append {Atom.toString S} {Int.toString I}}}
+  oz_declareAtomArg(0,s);
+  oz_declareIntArg(1,i);
+  oz_declareArg(2,res);
+  char *news = new char[strlen(s) + 12];
+  sprintf(news,"%s%d",s,i);
+  OZ_Term newa = oz_atom(news);
+  delete[] news;
+  return oz_unify(res,newa);
 }
 OZ_C_proc_end
 
@@ -7079,6 +7076,20 @@ OZ_C_proc_begin(BIregSet_adjoin,2)
   if (data[0] <= element && element <= data[1]) {
     int relative = element - data[0];
     data[relative / BITS_PER_INT + 2] |= 1 << (relative % BITS_PER_INT);
+    return PROCEED;
+  } else
+    return OZ_raiseErrorC("regSet",4,oz_atom("elementOutOfBounds"),
+                          oz_int(element),oz_int(data[0]),oz_int(data[1]));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIregSet_remove,2)
+{
+  oz_declareHeapChunkArg(0,size,data);
+  oz_declareIntArg(1,element);
+  if (data[0] <= element && element <= data[1]) {
+    int relative = element - data[0];
+    data[relative / BITS_PER_INT + 2] &= ~(1 << (relative % BITS_PER_INT));
     return PROCEED;
   } else
     return OZ_raiseErrorC("regSet",4,oz_atom("elementOutOfBounds"),
@@ -7159,6 +7170,25 @@ OZ_C_proc_begin(BIregSet_toList,2)
     word = data[i];
     for (j = BITS_PER_INT - 1; j >= 0; j--)
       if (word & (1 << j))
+        list = OZ_cons(OZ_int(offset + j),list);
+    offset -= BITS_PER_INT;
+  }
+  return oz_unify(res,list);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIregSet_complementToList,2)
+{
+  oz_declareHeapChunkArg(0,size,data);
+  oz_declareArg(1,res);
+
+  OZ_Term list = AtomNil;
+  int i, j, word;
+  int offset = ((data[1] - data[0]) / BITS_PER_INT) * BITS_PER_INT + data[0];
+  for (i = size / sizeof(int) - 1; i >= 2; i--) {
+    word = data[i];
+    for (j = BITS_PER_INT - 1; j >= 0; j--)
+      if (!(word & (1 << j)))
         list = OZ_cons(OZ_int(offset + j),list);
     offset -= BITS_PER_INT;
   }
@@ -7551,18 +7581,20 @@ BIspec allSpec[] = {
   // builtins for the new compiler's environment handling:
   {"isBuiltin",                  2, BIisBuiltin,                  0},
   {"getBuiltinName",             2, BIgetBuiltinName,             0},
-  {"getAbstractionTableID",      2, BIgetAbstractionTableID,      0},
   {"nameVariable",               2, BInameVariable,               0},
   {"newNamedName",               2, BInewNamedName,               0},
   {"generateAbstractionTableID", 1, BIgenerateAbstractionTableID, 0},
+  {"concatenateAtomAndInt",      3, BIconcatenateAtomAndInt,      0},
   {"RegSet.new",                 3, BIregSet_new,                 0},
   {"RegSet.copy",                2, BIregSet_copy,                0},
   {"RegSet.adjoin",              2, BIregSet_adjoin,              0},
+  {"RegSet.remove",              2, BIregSet_remove,              0},
   {"RegSet.member",              3, BIregSet_member,              0},
   {"RegSet.union",               2, BIregSet_union,               0},
   {"RegSet.intersect",           2, BIregSet_intersect,           0},
   {"RegSet.subtract",            2, BIregSet_subtract,            0},
   {"RegSet.toList",              2, BIregSet_toList,              0},
+  {"RegSet.complementToList",    2, BIregSet_complementToList,    0},
 
   {0,0,0,0}
 };
