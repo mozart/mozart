@@ -40,7 +40,7 @@ class WidthPropagator : public OZ_Propagator {
 private:
   static OZ_PropagatorProfile profile;
 protected:
-  OZ_Term rawrec, rawwid;
+  OZ_Term rawrec, rawwid;  // Never change this order!
 public:
   WidthPropagator(OZ_Term r, OZ_Term w)
     : rawrec(r), rawwid(w) {}
@@ -58,7 +58,7 @@ class MonitorArityPropagator : public OZ_Propagator {
 private:
   static OZ_PropagatorProfile profile;
 protected:
-  OZ_Term X, K, L, FH, FT;
+  OZ_Term X, K, L, FH, FT; // Never change this order!
 public:
   MonitorArityPropagator(OZ_Term X1, OZ_Term K1, OZ_Term L1,
                          OZ_Term FH1, OZ_Term FT1)
