@@ -64,14 +64,14 @@ given by four modules:
 <LIST>
 <ITEM> The module
 <index id=idx.connection/<<Connection>>/
-<index id=idx.moduleconnection/module<and><<Connection>>/
+<index id=idx.moduleconnection/module<and>system<and><<Connection>>/
 <ref.extern to="ozdoc:system"
 key="chapter.connection"/<<Connection>>/
 provides the basic mechanism (known as <EM>tickets</EM>)
 for active applications to connect with each other.
 <ITEM> The module
 <index id=idx.remote/<<Remote>>/
-<index id=idx.moduleremote/module<and><<Remote>>/
+<index id=idx.moduleremote/module<and>system<and><<Remote>>/
 <ref.extern to="ozdoc:system"
 key="chapter.remote"/<<Remote>>/
 allows an active application to create
@@ -79,14 +79,14 @@ a new site (local or remote operating system process) and connect with it.
 The site may be on the same machine or a remote machine.
 <ITEM> The module
 <index id=idx.pickle/<<Pickle>>/
-<index id=idx.modulepickle/module<and><<Pickle>>/
+<index id=idx.modulepickle/module<and>system<and><<Pickle>>/
 <ref.extern to="ozdoc:system"
 key="chapter.pickle"/<<Pickle>>/ allows an application
 to store and retrieve
 arbitrary stateless data from files and URLs.
 <ITEM> The module
 <index id=idx.fault/<<Fault>>/
-<index id=idx.modulefault/module<and><<Fault>>/
+<index id=idx.modulefault/module<and>system<and><<Fault>>/
 <ref.extern to="ozdoc:system"
 key="chapter.fault"/<<Fault>>/ gives the basic primitives
 for fault detection and handling.
