@@ -63,8 +63,8 @@ IgnoreNoFileStep       = 'Ignoring new thread as there\'s' # /* end */
                          ' no line information available. ' #
                          ' Hint: save your Emacs buffer!'
 
-ForgetMessage          = 'Thread #' /* end */
-ForgetMessage2         = ' has been removed from the tree'
+ForgetMessage          = 'Thread #'
+ForgetMessage2         = ' is not traced anymore'
 TerminateMessage       = 'Thread #'
 TerminateMessage2      = ' has been terminated'
 
