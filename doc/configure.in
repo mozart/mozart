@@ -144,7 +144,11 @@ AC_ARG_WITH(ozhome,
 : ${oz_real_ozhome=no}
 AC_MSG_RESULT($oz_real_ozhome)
 if test "${oz_real_ozhome}" = no; then
-    REAL_OZHOME="$prefix"
+    if test "${prefix}" = NONE; then
+	REAL_OZHOME="$ac_default_prefix"
+    else
+	REAL_OZHOME="$prefix"
+    fi
 else
     REAL_OZHOME="$oz_real_ozhome"
 fi
