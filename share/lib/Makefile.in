@@ -151,7 +151,8 @@ COMPILERSRC1 = \
         FormatStrings.oz Builtins.oz CoreLanguage.oz Annotate.oz \
         StaticAnalysis.oz POTypes.oz CodeGen.oz CodeStore.oz \
         CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
-        UnnestFD.oz Assembler.oz GenericInterface.oz QuietInterface.oz
+        UnnestFD.oz Assembler.oz GenericInterface.oz QuietInterface.oz \
+        Abstractions.oz Errors.oz
 
 COMPILERSRCEXTRA = compiler-Builtins.oz compiler-Opcodes.oz compiler-Env.oz
 
