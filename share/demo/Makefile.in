@@ -28,6 +28,7 @@ HOMEURL         = @HOMEURL@
 
 PREFIX          = @prefix@
 OZDEMO          = $(PREFIX)/doc/demo/applets
+SYSTEM          = $(PREFIX)/doc/system
 
 SHELL           = /bin/sh
 LN_S            = @LN_S@
@@ -68,25 +69,30 @@ DEMOAPPLETS = \
 DIRS = \
         JobShop Cutting Transport DictClient LMF Chat College Flowers
 
-all: dirs $(APPLETS)
+all: dirs $(APPLETS) MT10.ozf
 
 #
 # Applet installation
 #
 
-install:: $(OZDEMO) $(DEMOAPPLETS)
+install:: $(OZDEMO) $(DEMOAPPLETS) \
+        $(SYSTEM) $(SYSTEM)/MT10.ozf $(SYSTEM)/MT10.oz
 
-$(OZDEMO):
+$(OZDEMO) $(SYSTEM):
         $(INSTALL_DIR) $@
 
 $(OZDEMO)/%.oza: %.oza
         $(INSTALL_FILE) $< $@
 
+$(SYSTEM)/%: %
+        $(INSTALL_FILE) $< $@
 
 #
 # Applet compilation
 #
 
+MT10.ozf: MT10.oz
+        $(COMPILE) -z 9 $< -o $@
 # Chat Application
 Chat/%.ozf: Chat/%.oz
         $(COMPILE) $< -o $@
