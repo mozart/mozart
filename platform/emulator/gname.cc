@@ -161,22 +161,23 @@ GName *Name::globalize()
     homeOrGName = ToInt32(newGName(makeTaggedLiteral(this),GNT_NAME));
     setFlag(Lit_hasGName);
   }
-  return getGName();
+  return getGName1();
 }
 
 GName *Abstraction::globalize(){
   if (!hasGName()) {
     setGName(newGName(makeTaggedConst(this),GNT_PROC));}
-  return getGName();
+  return getGName1();
 }
 
 GName *SChunk::globalize() {
   if (!hasGName()) {
     setGName(newGName(makeTaggedConst(this),GNT_CHUNK));}
-  return getGName();
+  return getGName1();
 }
 
-void ObjectClass::globalize() {
+GName *ObjectClass::globalize() {
   if (!hasGName()) {
     setGName(newGName(makeTaggedConst(this),GNT_CLASS));}
+  return getGName1();
 }
