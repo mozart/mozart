@@ -126,12 +126,3 @@ Bool TaskStack::findCatch(TaggedRef *out, Bool verbose)
   if (out) *out = reverseC(*out);
   return FALSE;
 }
-
-
-void TaskStack::saveAbstr()
-{
-  ProfileCode(
-              pushAbstr(ozstat.currAbstr);
-              ozstat.currAbstr = NULL;
-        )
-}
