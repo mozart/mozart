@@ -141,6 +141,29 @@ else
 fi
 
 dnl *****************************************************************
+dnl OS2
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for --enable-os2)
+AC_ARG_ENABLE(os2,
+  [--enable-os2  OS2 compilation (default=no)])
+if test "${enable_os2}" = yes; then
+    AC_MSG_RESULT(yes (-DOS2))
+    CXX=gcc
+    LD=$CXX
+    platform="os2-i486"
+    PROGRAMNAME="ozemulator.exe"
+    with_pgcc=no
+    with_sunpro=no
+    oz_check_gmp=no
+    oz_malloc_obj=
+    oz_warn_error=
+    AC_DEFINE(OS2)
+else
+    AC_MSG_RESULT(no)
+fi
+
+dnl *****************************************************************
 dnl Checks for programs.
 dnl *****************************************************************
 
@@ -413,48 +436,51 @@ dnl *****************************************************************
 dnl *** GMP
 dnl *****************************************************************
 
-AC_MSG_CHECKING(for --with-gmp)
-AC_ARG_WITH(gmp,
-    [--with-gmp=<dir>
-        search gmp library and header in <dir> (default: NONE)])
-
-if test -n "${with_gmp}"
+: ${oz_check_gmp=yes}
+if test "${oz_check_gmp}" = yes
 then
-    oz_gmp_lib_dir=$with_gmp
-    oz_gmp_inc_dir=$with_gmp
+    AC_MSG_CHECKING(for --with-gmp)
+    AC_ARG_WITH(gmp,
+	[--with-gmp=<dir>
+	    search gmp library and header in <dir> (default: NONE)])
+	    
+    if test -n "${with_gmp}"
+    then
+	oz_gmp_lib_dir=$with_gmp
+	oz_gmp_inc_dir=$with_gmp
+    fi
+    
+    AC_ARG_WITH(gmp_lib,
+	[--with-gmp-lib=<dir>
+	    search gmp library in <dir> (default: /usr/local/lib)])
+	    
+    if test -n "${with_gmp_lib}"
+    then
+	oz_gmp_lib_dir=$with_gmp_lib
+    fi
+    
+    AC_ARG_WITH(gmp_include,
+	[--with-gmp-include=<dir>
+	    search gmp header in <dir> (default: /usr/local/include)])
+	    
+    if test -n "${with_gmp_include}"
+    then
+	oz_gmp_inc_dir=$with_gmp_include
+    fi
+    
+    : ${oz_gmp_lib_dir=/usr/local/lib}
+    : ${oz_gmp_inc_dir=/usr/local/include}
+    
+    AC_MSG_RESULT(trying \"-L$oz_gmp_lib_dir -I$oz_gmp_inc_dir\")
+    
+    CPPFLAGS="-I$oz_gmp_inc_dir $CPPFLAGS"
+    AC_CHECK_HEADER(gmp.h,,
+	    AC_MSG_ERROR(required GNU MP include file not found))
+	    
+    LDFLAGS="-L$oz_gmp_lib_dir $LDFLAGS"
+    AC_CHECK_LIB(gmp, mpz_init, ,
+	    AC_MSG_ERROR(required GNU MP lib not found))
 fi
-
-AC_ARG_WITH(gmp_lib,
-    [--with-gmp-lib=<dir>
-        search gmp library in <dir> (default: /usr/local/lib)])
-
-if test -n "${with_gmp_lib}"
-then
-    oz_gmp_lib_dir=$with_gmp_lib
-fi
-
-AC_ARG_WITH(gmp_include,
-    [--with-gmp-include=<dir>
-        search gmp header in <dir> (default: /usr/local/include)])
-
-if test -n "${with_gmp_include}"
-then
-    oz_gmp_inc_dir=$with_gmp_include
-fi
-
-: ${oz_gmp_lib_dir=/usr/local/lib}
-: ${oz_gmp_inc_dir=/usr/local/include}
-
-AC_MSG_RESULT(trying \"-L$oz_gmp_lib_dir -I$oz_gmp_inc_dir\")
-
-CPPFLAGS="-I$oz_gmp_inc_dir $CPPFLAGS"
-AC_CHECK_HEADER(gmp.h,,
-	AC_MSG_ERROR(required GNU MP include file not found))
-
-LDFLAGS="-L$oz_gmp_lib_dir $LDFLAGS"
-AC_CHECK_LIB(gmp, mpz_init, ,
-	AC_MSG_ERROR(required GNU MP lib not found))
-
 
 dnl *****************************************************************
 dnl ccmalloc
