@@ -1104,32 +1104,14 @@ void Thread::gcRecurse ()
     // also the GC'ing of propagators);
     Board *notificationBoard=getBoardInternal()->gcGetNotificationBoard();
     setBoardInternal(notificationBoard->gcBoard());
-    if (hasStack()) {
 
-      //
-      //  ... it means that the thread is actually dead:
-      //  it should happen only if this thread was local
-      //  to some (deep) guard, and that guard was killed or cancelled;
+    getBoardInternal()->incSuspCount ();
 
-      getBoardInternal()->incSuspCount();
-
-      //
-      //  This assertion should hold for 'ask' actors, and does not
-      // hold for 'wait' actors!!!
-      // Assert (newHome);
-      //  ... actually, the same:
-      // Assert (isEmpty ());
-    } else {
-      //
-
-      getBoardInternal()->incSuspCount ();
-
-      //
-      //  Convert the thread to a 'wakeup' type, and just throw away
-      // the body;
-      setWakeUpTypeGC ();
-      item.threadBody = (RunnableThreadBody *) NULL;
-    }
+    //
+    //  Convert the thread to a 'wakeup' type, and just throw away
+    // the body;
+    setWakeUpTypeGC ();
+    item.threadBody = (RunnableThreadBody *) NULL;
   } else {
     setBoardInternal(newBoard);
   }
@@ -2394,7 +2376,7 @@ void SolveActor::gcRecurse () {
     board = board->gcBoard();
     Assert(board);
   }
-  solveBoard = solveBoard->gcBoard();
+  Board *solveBoard = solveBoard->gcBoard();
   Assert(solveBoard);
 
   if (opMode == IN_GC || !isGround())
