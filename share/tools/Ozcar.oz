@@ -33,6 +33,7 @@ prepare
 			    {URL.make 'images/ozcar/'}}}
 import
    Space
+   RecordC
    Browser(browse)
    Debug at 'x-oz://boot/Debug'
    Emacs(getOPI condSend)

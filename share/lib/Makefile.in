@@ -66,7 +66,7 @@ export OZMAKE_VERBOSE		= no
 SPSRC   = Error ErrorFormatters Finalize $(DENYS_SPSRCS)
 OPSRC   = Open
 APSRC   = Application
-CPSRC1  = Search FD FS Combinators Space
+CPSRC1  = Search FD FS Combinators RecordC
 CPSRC2  = Schedule ParSearch ParWorker ParLogging
 DPSRC   = Connection Remote RemoteServer Fault URL $(DENYS_DPSRCS)
 WPSRC   = Tk TkTools
@@ -440,14 +440,8 @@ boot-init: $(BOOTINITTXTFROM)
 	$(T2P) < $< > $@ \
 	|| (rm -f $@; exit 1)
 
-# OZMAKE_COPYALWAYS=yes causes the emulator to always copy functors
-# regardless of whether they have `prop once' or not.  This is required
-# for the archiver when it must package functors for modules that are
-# currently linked in the system: else the bytecode of these functors
-# may have been side-effected and may contains stateful stuff
-
 boot-ozc.linked: ozc ozl Compiler.ozf $(SUPPSRC:%=%.ozf)
-	OZMAKE_COPYALWAYS=yes OZINIT=Init.ozf OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:= $(SRCDIR)/oze.sh ozl --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
+	OZINIT=Init.ozf OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:= $(SRCDIR)/oze.sh ozl --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/Space,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
 
 boot-init.linked: Init.ozf
 	cp $< $@

@@ -298,7 +298,7 @@ public:
   // Operations
   //
   int commit(int, int);
-  void inject(TaggedRef);
+  void inject(TaggedRef, int arity = 1);
   OZ_Return merge(Board *, Bool);
 
   //
