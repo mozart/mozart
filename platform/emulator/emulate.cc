@@ -564,6 +564,13 @@ void pushContX(TaskStack *stk,
   INCFPC(INC);                                  \
   goto* (void*) (aux|textBase);                 \
 }
+#elif defined(_MSC_VER)
+#define DISPATCH(INC) {                         \
+   PC += INC;                                   \
+   int aux = *PC;                               \
+   __asm jmp aux                                \
+}
+
 #else
 #define DISPATCH(INC) {                         \
   INCFPC(INC);                                  \
@@ -573,7 +580,7 @@ void pushContX(TaskStack *stk,
 
 #else /* THREADED */
 
-#define Case(INSTR)   case INSTR :  asmLbl(INSTR);
+#define Case(INSTR)   case INSTR :  INSTR##LBL : asmLbl(INSTR);
 #define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
 
 #endif
@@ -833,9 +840,9 @@ int engine(Bool init)
   int auxInt;
   char *auxString;
 
-#ifdef THREADED
-# include "instrtab.hh"
+#ifdef THREADEDx
   if (init) {
+#include "instrtab.hh"
     CodeArea::init(instrTable);
     return 0;
   }
