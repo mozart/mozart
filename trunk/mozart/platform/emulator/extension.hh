@@ -79,39 +79,23 @@ _FUNTYPEDECL(OZ_Term,
 //
 class MarshalerBuffer;
 
-#ifdef _MSC_VER
-#define NEEDS_PADDING 1
-#else
-#define NEEDS_PADDING @NEEDS_PADDING@
-#endif
-
-#if NEEDS_PADDING
-class OZ_ContainerPadding {
-private:
-  unsigned int _pad;
-};
-#endif
-
 // kost@: Extensions bodies are allocated using the
 //        'oz_heapMalloc(..)' (through '_OZ_new_OZ_Extension(..)').
 //        Descending data (arrays, etc.) are supposed to be allocated
 //        the same way (no explicit/implicit malloc"s!!);
-class OZ_Extension :
-#if NEEDS_PADDING
-  public OZ_ContainerPadding,
-#endif
-  public OZ_Container
+
+class OZ_Extension
 {
 private:
   void *space;
 public:
-  OZ_Extension(void) { 
-    OZ_Container::initAsExtension();
+  OZ_Extension(void) {
+    reinterpret_cast<OZ_Container*>(((void**)((void*)this))-1)->initAsExtension();
     space = _OZ_currentBoard();
     
   }
   OZ_Extension(void *sp) : space(sp) {
-    OZ_Container::initAsExtension();
+    reinterpret_cast<OZ_Container*>(((void**)((void*)this))-1)->initAsExtension();
   }
   
   void *  __getSpaceInternal(void)      { return space; }

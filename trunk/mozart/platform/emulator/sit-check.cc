@@ -182,17 +182,25 @@ void ScStack::check(void) {
     pop1(tp);  
     TaggedRef x = (TaggedRef) tp;
 
+    // due to sharing, it is possible for the same term to be pushed
+    // twice onto the ScStack.  Therefore, whenever we pop an item
+    // from the ScStack, we must check whether it is already marked.
+    
     if (oz_isLTuple(x)) {
       LTuple * lt = tagged2LTuple(x);
-      checkSituatedBlock(lt->getRef(), 2);      
-      MARKFIELD(lt);
+      if (!lt->cacIsMarked()) {
+	checkSituatedBlock(lt->getRef(), 2);      
+	MARKFIELD(lt);
+      }
     } else {
       Assert(oz_isSRecord(x));
       SRecord * sr = tagged2SRecord(x);
-      TaggedRef * r = sr->getRef();
-      int n = sr->getWidth();
-      MARKFIELD(sr);
-      checkSituatedBlock(r, n);      
+      if (!sr->cacIsMarked()) {
+	TaggedRef * r = sr->getRef();
+	int n = sr->getWidth();
+	MARKFIELD(sr);
+	checkSituatedBlock(r, n);
+      }
     }
     
   }
@@ -234,7 +242,7 @@ int ConstTerm::checkSituatedness(void) {
 
   switch (getType()) {
   case Co_Extension: {
-    OZ_Extension * ex = (OZ_Extension *) (OZ_Container*) this;
+    OZ_Extension * ex = const2Extension(this);
     Assert(ex);
     Board * bb = (Board *) (ex->__getSpaceInternal());
     if (!bb || ISGOOD(bb))

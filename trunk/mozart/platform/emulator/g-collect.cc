@@ -1168,5 +1168,3 @@ void AM::gCollect(int msgLevel)
   //  malloc_stats();
   DebugCode(uFillNode = 0;);
 } // AM::gc
-
-

@@ -1534,7 +1534,7 @@ public:  //
     int do_leave = 1;
     //
     for (int i = 0; i < _nb_actions; i += 1) {
-      _actions_t::_action_params_t &a = _actions[i]._action_params;
+      typename _actions_t::_action_params_t &a = _actions[i]._action_params;
       //
       if (r == OZ_FAILED) {
 	break;
