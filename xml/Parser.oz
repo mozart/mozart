@@ -2,7 +2,9 @@ functor
 export
    NewFromString
    NewFromURL
+   NewFromURLOld
 import
+   OldTokenizer at 'Tokenizer.ozf'
    Tokenizer at 'FastTokenizer.ozf'
    NameSpaces at 'NameSpaces.ozf'
 prepare
@@ -33,7 +35,7 @@ prepare
 	    if TAG==unit then nil
 	    else raise xml(parser(expectedEtagEOF(TAG))) end end
 	 [] doctype(_) then {ParseSeq MAP TAG}
-	 [] pi(_ _) then T|{ParseSeq MAP TAG}
+	 [] pi(_ _ _) then T|{ParseSeq MAP TAG}
 	 [] comment(_ _) then
 	    if IgnoreComments
 	    then {ParseSeq MAP TAG}
@@ -94,5 +96,8 @@ define
    end
    fun {NewFromURL S Params}
       {NewParser {Tokenizer.newFromURL S}.get Params NameSpaces}
+   end
+   fun {NewFromURLOld S Params}
+      {NewParser {OldTokenizer.newLazyFromURL S}.get Params NameSpaces}
    end
 end
