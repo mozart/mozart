@@ -238,7 +238,7 @@ void xy_setParserExpect() {
 %right    ','
 %left     '~'
 %left     '.' '^' DOTINT
-%left     '@' DEREF
+%left     '@' DEREFF
 
 %type <t>  file
 %type <t>  queries
@@ -490,7 +490,7 @@ phrase2		: phrase2 add coord phrase2 %prec ADD
 				  consList($1,consList($4,nilAtom)),$3); }
 		| '@' coord phrase2
 		  { $$ = newCTerm("fAt",$3,$2); }
-		| DEREF coord phrase2
+		| DEREFF coord phrase2
 		  { $$ = newCTerm("fOpApply",newCTerm("!!"),
 				  consList($3,nilAtom),$2); }
 		| '(' inSequence ')'
@@ -1512,14 +1512,18 @@ static OZ_Term parse() {
   return OZ_pair2(yyoutput, xy_errorMessages);
 }
 
+extern Bool oz_isDictionary(TaggedRef term);
+
 OZ_BI_define(parser_parseFile, 2, 1)
 {
   // {ParseFile FileName OptRec ?(AST#ReporterMessages)}
   OZ_declareVirtualStringIN(0, file);
   OZ_declareNonvarIN(1, optRec);
   if (!OZ_isRecord(optRec))
-    return OZ_typeError(1, "Record");
+    return OZ_typeError(1, "ParseOptions");
   OZ_Term defines = init_options(optRec);
+  if (!oz_isDictionary(defines))
+    return OZ_typeError(0, "ParseOptions");
   if (!xy_init_from_file(file, defines))
     OZ_RETURN(OZ_pair2(OZ_atom("fileNotFound"), OZ_nil()));
   else
@@ -1533,8 +1537,10 @@ OZ_BI_define(parser_parseVirtualString, 2, 1)
   OZ_declareVirtualStringIN(0, str);
   OZ_declareNonvarIN(1, optRec);
   if (!OZ_isRecord(optRec))
-    return OZ_typeError(1, "Record");
+    return OZ_typeError(1, "ParseOptions");
   OZ_Term defines = init_options(optRec);
+  if (!oz_isDictionary(defines))
+    return OZ_typeError(0, "ParseOptions");
   xy_init_from_string(str, defines);
   OZ_RETURN(parse());
 }
