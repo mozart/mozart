@@ -258,7 +258,6 @@ void Statistics::initCount() {
   refsArrayLen=0;
   continuation=0;
   suspCFun=0;
-  suspCont=0;
   sTuple=0;
   sTupleLen=0;
   lTuple=0;
@@ -338,7 +337,6 @@ void Statistics::printCount() {
 
   printf("continuation    %d (%dB)\n",continuation,sizeof(Continuation));
   printf("suspCFun        %d (%dB)\n",suspCFun,sizeof(CFuncContinuation));
-  printf("suspCont        %d (%dB)\n",suspCont,sizeof(SuspContinuation));
   printf("suspension      %d (%dB)\n",suspension,sizeof(Suspension));
   printf("suspList        %d (%dB)\n",suspList,sizeof(SuspList));
 

@@ -48,7 +48,7 @@ private:
   TaggedRef result;
   TaggedRef guidance;
   SuspList *suspList;
-  SuspList * stable_sl;
+  SuspList *stable_sl;
   int threads;
 public:
   SolveActor (Board *bb, int prio,
@@ -66,7 +66,7 @@ public:
   int getThreads() { return threads; }
   void decThreads () { incThreads(-1); }
   void setUnStable() { threads=-1; }
-  void addSuspension (Suspension *susp); 
+  void addSuspension (Thread *thr); 
   void addSuspension (SuspList *l);
   Bool areNoExtSuspensions();
 
@@ -84,9 +84,8 @@ public:
   WaitActor *getDisWaitActor ();
 
   Bool stable_wake(void);
-  void add_stable_susp(Suspension *);
-
-  void setBoard(Board *bb) { board = bb; }
+  void add_stable_susp (Thread *thr);
+  void setBoard (Board *bb) { board = bb; }
 
   TaggedRef genSolved();
   TaggedRef genStuck();

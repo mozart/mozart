@@ -299,7 +299,7 @@ public:
     // Return a sorted list of all features currently in the OFS
     TaggedRef getArityList();
 
-    void addDetSusp(Suspension *susp);
+    void addDetSusp(Thread *susp);
     Bool unifyOFS(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, Bool);
 
     // Return the feature value if feature exists, return NULL if it doesn't exist

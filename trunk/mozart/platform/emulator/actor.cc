@@ -18,8 +18,6 @@
 #include "tagged.hh"
 
 #include "constter.hh"
-#include "suspensi.hh"
-
 #include "actor.hh"
 #include "board.hh"
 

@@ -177,17 +177,17 @@ void GenCVariable::installPropagators(GenCVariable * glob_var, Bool prop)
 }
 
 inline
-void GenCVariable::addDetSusp(Suspension *susp) 
+void GenCVariable::addDetSusp (Thread *thr) 
 { 
   switch (getType()){
   case FDVariable:
-    ((GenFDVariable *)this)->addDetSusp(susp);
+    ((GenFDVariable *)this)->addDetSusp (thr);
     return;
   case OFSVariable:
-    ((GenOFSVariable *)this)->addDetSusp(susp);
+    ((GenOFSVariable *)this)->addDetSusp (thr);
     return;
   default:
-    addSuspension(susp);
+    addSuspension (thr);
     return;
   }
 }

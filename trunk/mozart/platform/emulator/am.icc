@@ -194,14 +194,6 @@ Bool AM::isLocalVariable(TaggedRef var)
   return isLocalCVar(var);
 }
 
-inline 
-void updateExtSuspension(Board *varHome, Suspension *susp)
-{
-  if (am.currentSolveBoard) {
-    am.setExtSuspension (varHome, susp);
-  }
-}
-
 inline
 void AM::checkSuspensionList(TaggedRef taggedvar, PropCaller calledBy)
 {
@@ -232,13 +224,7 @@ void AM::pushTask(ProgramCounter pc,
 inline
 void AM::pushCFun(OZ_CFun f, RefsArray x, int i)
 {
-  currentThread->pushCFunCont(f, (Suspension *) NULL, x, i, OK);
-}
- 
-inline
-void AM::pushNervous()
-{
-  currentThread->pushNervous();
+  currentThread->pushCFunCont(f, x, i, OK);
 }
 
 inline

@@ -333,9 +333,9 @@ enum TypeOfPtr {
   PTR_BOARD,
   PTR_ACTOR,
   PTR_THREAD,
+  PTR_RTBODY,			// RunnableThreadBody;
   PTR_CONT,
   PTR_CFUNCONT,
-  PTR_SUSPCONT,
   PTR_DYNTAB,
   PTR_CONSTTERM
 };
@@ -594,16 +594,16 @@ void unsetPathMarks(Board *bb)
  * Check if an entry of a suspension list is local to the copyBoard.
  */
 inline
-Bool isInTree(Board *b)
+Bool isInTree (Board *b)
 {
-  Assert(opMode == IN_TC);
-  Assert(b);
+  Assert (opMode == IN_TC);
+  Assert (b);
  loop:
-  Assert(!b->isCommitted());
-  if (b == fromCopyBoard) return OK;
-  if (!isLocalBoard(b)) return NO;
-  b = b->getParentAndTest();
-  if (!b) return NO;
+  Assert (!b->isCommitted());
+  if (b == fromCopyBoard) return (OK);
+  if (!isLocalBoard(b)) return (NO);
+  b = b->getParentAndTest ();
+  if (!b) return (NO);
   goto loop;
 }
 
@@ -647,8 +647,16 @@ void Literal::gcRecurse ()
   GCMETHMSG("Literal::gcRecurse");
   DebugGC((isDynName() == NO),
 	  error ("non-dynamic name is found in gcRecurse"));
+  DebugCode (Board *savedHome = home;);
   home = home->gcBoard();
-  Assert(home);
+
+  // Assert(home);
+  //  kost@ (14.1.96):
+  //  Actually, this might happen: the problem is that not every (deep)
+  // clause has it's own 'Y' register set. Therefore, a guard 
+  // may create a local variable, bind it to something, fail itself
+  // and leave the variable visible outside!
+  DebugCode (if (!home) home = (Board *) 0xfeeffeef;);
 }
 
 
@@ -780,6 +788,49 @@ RefsArray gcRefsArray(RefsArray r)
   return aux;
 }
 
+/*
+ *  Thread items methods;
+ *
+ */
+//
+//  RunnableThreadBody;
+inline
+void RunnableThreadBody::gcRecurse ()
+{
+  GCMETHMSG ("RunnableThreadBody::gcRecurse");
+
+  // 
+  //  kost@: TODO?
+  //  There is a problem: 'TaskStack.gc ()' doesn't really copy 
+  // the stack, but saves only the reference to the newly allocated
+  // region. Therefore, the original stack is needed during gcRecurse 
+  // (sic! - already the hack!), and, in turn, it's cells cannot be 
+  // used for GCmarking. So, .gcRecurse is performed immediately 
+  // after .gc;
+  // taskStack.gcRecurse ();
+  error ("We don't need 'RunnableThreadBody::gcRecurse ()'"); 
+}
+
+RunnableThreadBody *RunnableThreadBody::gcRTBody ()
+{
+  GCMETHMSG ("RunnableThreadBody::gcRTBody");
+
+  CHECKCOLLECTED (ToInt32 ((int *) &taskStack), RunnableThreadBody *);
+
+  RunnableThreadBody *ret = 
+    (RunnableThreadBody *) gcRealloc (this, sizeof (*this));
+  GCNEWADDRMSG (ret);
+  taskStack.gc (&ret->taskStack);
+  //  see above ('RunnableThreadBody::gcRecurse ()');
+  ret->taskStack.gcRecurse ();
+
+  //  ... also see above;
+  // ptrStack.push (ret, PTR_RTBODY);
+  storeForward ((int *) &taskStack, ret);
+
+  return (ret);
+}
+
 OZ_Propagator * OZ_Propagator::gc(void)
 {
   board = ((Board *) board)->gcBoard();
@@ -794,92 +845,66 @@ OZ_Term OZ_gcTerm(OZ_Term i)
   return o;
 }
 
-void CFuncContinuation::gcRecurse(void)
+//
+//  CFuncContinuation;
+inline
+void CFuncContinuation::gcRecurse ()
 {
-  GCMETHMSG("CFuncContinuation::gcRecurse");
+  GCMETHMSG ("CFuncContinuation::gcRecurse");
+
   DebugCheck (isFreedRefsArray (xRegs),
 	      error ("freed refs array in CFunContinuation::gcRecurse ()"));
+
   xRegs = gcRefsArray(xRegs);
-  board = board->gcBoard();
-  Assert(board);
 }
 
-/* mm2: have to check for discarded node */
-inline
-CFuncContinuation *CFuncContinuation::gcCont(void)
+CFuncContinuation *CFuncContinuation::gcCFuncCont ()
 {
-  GCMETHMSG("CFuncContinuation::gcCont");
-  CHECKCOLLECTED(ToInt32(cFunc), CFuncContinuation *);
+  GCMETHMSG ("CFuncContinuation::gcCont");
+  CHECKCOLLECTED (ToInt32 (cFunc), CFuncContinuation *);
 
   COUNT(suspCFun);
-  CFuncContinuation *ret = (CFuncContinuation*) gcRealloc(this,sizeof(*this));
-  GCNEWADDRMSG(ret);
-  ptrStack.push(ret, PTR_CFUNCONT);
-  storeForward(&cFunc, ret);
-  
+  CFuncContinuation *ret = 
+    (CFuncContinuation*) gcRealloc (this, sizeof (*this));
+  GCNEWADDRMSG (ret);
+  ptrStack.push (ret, PTR_CFUNCONT);
+  storeForward (&cFunc, ret);
+
   FDPROFILE_GC(cp_size_cfunccont, sizeof(*this));
 
-  return ret;
+  return (ret);
+}
+
+//
+//  ... Continuation;
+inline
+void Continuation::gcRecurse (){
+  GCMETHMSG ("Continuation::gcRecurse");
+
+  Assert (!isFreedRefsArray (yRegs));
+  yRegs = gcRefsArray (yRegs);
+  Assert (!isFreedRefsArray (gRegs));
+  gRegs = gcRefsArray (gRegs);
+  Assert (!isFreedRefsArray (xRegs));
+  xRegs = gcRefsArray (xRegs);
 }
 
 Continuation *Continuation::gc()
 {
-  GCMETHMSG("Continuation::gc");
-  CHECKCOLLECTED(ToInt32(pc), Continuation *);
+  GCMETHMSG ("Continuation::gc");
+  CHECKCOLLECTED (ToInt32 (pc), Continuation *);
 
   COUNT(continuation);
-  Continuation *ret = (Continuation *) gcRealloc(this,sizeof(Continuation));
-  GCNEWADDRMSG(ret);
-  ptrStack.push(ret, PTR_CONT);
-  storeForward(&pc, ret);
-  
+  Continuation *ret =
+    (Continuation *) gcRealloc (this, sizeof (*this));
+  GCNEWADDRMSG (ret);
+  ptrStack.push (ret, PTR_CONT);
+  storeForward (&pc, ret);
+
   FDPROFILE_GC(cp_size_cont, sizeof(Continuation));
 
-  return ret;
+  return (ret);
 }
-
-inline
-void Continuation::gcRecurse(){
-  GCMETHMSG("Continuation::gcRecurse");
-  Assert(!isFreedRefsArray (yRegs));
-  yRegs = gcRefsArray(yRegs);
-  Assert(!isFreedRefsArray (gRegs));
-  gRegs = gcRefsArray(gRegs);
-  Assert(!isFreedRefsArray (xRegs));
-  xRegs = gcRefsArray(xRegs);
-}
-
-inline
-SuspContinuation *SuspContinuation::gcCont()
-{
-  GCMETHMSG("SuspContinuation::gcCont");
-
-  // a special continuation for solve: FAILURE
-  if (pc != NOCODE) {
-    CHECKCOLLECTED(ToInt32(pc), SuspContinuation *)
-  }
-
-  COUNT(suspCont);
-  SuspContinuation *ret = (SuspContinuation*) gcRealloc(this, sizeof(*this));
-  GCNEWADDRMSG(ret);
-  ptrStack.push(ret, PTR_SUSPCONT);
-  
-  FDPROFILE_GC(cp_size_suspcont, sizeof(*this));
-
-  Assert(opMode != IN_TC || isInTree(board->getBoardFast()));
-
-  storeForward(&pc, ret);
-  return ret;
-}
-
-inline
-void SuspContinuation::gcRecurse(){
-  GCMETHMSG("SuspContinuation::gcRecurse");
-  board = board->gcBoard();
-  Assert(board);
-  Continuation::gcRecurse();
-}
-
 
 /* collect STuple, LTuple, SRecord */
 
@@ -960,61 +985,139 @@ SRecord *SRecord::gcSRecord()
   return ret;
 }
 
-/* return NULL if contains pointer to discarded node */
-inline
-Suspension *Suspension::gcSuspension()
+/*
+ *  Preserve runnable threads which home board is dead, because 
+ * solve counters have to be updated (while, of course, discard 
+ * non-runnable ones);
+ *  If threads is dead, returns (Thread *) NULL;
+ */
+inline 
+Thread *Thread::gcThread ()
 {
-  GCMETHMSG("Suspension::gcSuspension");
-  if (this == 0) return 0;
+  GCMETHMSG ("Thread::gcThread");
 
-  CHECKCOLLECTED(ToInt32(item.cont), Suspension*);
-  
-  if (isDead()) return 0;
+  if (this == (Thread *) NULL) return ((Thread *) NULL);
+  CHECKCOLLECTED (ToInt32 (item.threadBody), Thread*);
 
-  Board *bb=getBoardFast();
-  if (!bb->gcIsAlive()) {
-    // DebugCheckT(warning("gcSuspension [0x%x]: dead\n",flag)); // mm2
-    return 0;
+  if (isDeadThread ()) return ((Thread *) NULL);
+
+  //  Some invariants:
+  // nothing can be copied (IN_TC) until stability;
+  Assert (opMode == IN_GC || !(isRunnable ()));
+
+  // 
+  //  Note that runnable threads can be also counted 
+  // in solve actors (for stabilittty check), and, therefore, 
+  // might not just dissappear!
+  if (isSuspended () && !((getBoardFast ())->gcIsAlive ())) {
+    return ((Thread *) NULL);
   }
 
-  COUNT(suspension);
-  Suspension *newSusp = (Suspension *) gcRealloc(this, sizeof(*this));
-  GCNEWADDRMSG(newSusp);
+  COUNT(thread);
+  Thread *newThread = (Thread *) gcRealloc (this, sizeof (*this));
+  GCNEWADDRMSG (newThread);
+  if (isRunnable () || hasStack ()) {
+    ThreadList::add (newThread);
+  }
+  ptrStack.push (newThread, PTR_THREAD);
 
   FDPROFILE_GC(cp_size_susp, sizeof(*this));
 
-  if (flag & S_thread) {
-    newSusp->item.thread = item.thread->gcThread();
-  } else {
-    switch (flag & (S_cont|S_cfun|S_ppgt)){
-    case S_null:
-      newSusp->item.board = item.board->gcBoard();
-      Assert(newSusp->item.board);
-      break;
-    case S_cont:
-      newSusp->item.cont = item.cont->gcCont();
-      Assert(newSusp->item.cont);
-      break;
-    case S_cont|S_cfun:
-      newSusp->item.ccont = item.ccont->gcCont();
-      Assert(newSusp->item.ccont);
-      break;
-    case S_ppgt:
-      newSusp->item.propagator = item.propagator->gcPropagator();
-      Assert(newSusp->item.propagator);
-      break;
-    default:
-      Assert(0);
-    }
-  }
-  
-  storeForward(&item.cont, newSusp);
-  return newSusp;
+  storeForward (&item.threadBody, newThread);
+  return (newThread);
 }
 
+void Thread::gcRecurse ()
+{
+  GCMETHMSG("Thread::gcRecurse");
 
-/* we reverse the order of the list,
- * but this should be no problem
+  Board *newBoard = board->gcBoard ();
+  if (!newBoard) {
+    // 
+    //  The following assertion holds because suspended threads
+    // which home board is dead are filtered out during 
+    // 'Thread::gcThread ()';
+    Assert (isRunnable ());
+
+    // 
+    //  Actually, there are two cases: for runnable threads with 
+    // a taskstack, and without it (note that the last case covers 
+    // also the GC'ing of propagators);
+    if (hasStack ()) {
+      // 
+      //  ... it means that the thread is actually dead:
+      //  it should happen only if this thread thread was local 
+      // to some (deep) guard, and that guard was killed or cancelled;
+      newBoard=board->gcGetNotificationBoard();
+      Bool newHome=NO;
+
+      while (board != newBoard) {
+	if (!(discardLocalTasks ())) {
+	  newHome=OK;
+	  board = newBoard;
+	  break;
+	}	
+	board=board->getParentFast();
+      }
+
+      board=board->gcBoard();
+      if (newHome) {
+	board->incSuspCount();
+      }
+
+      //
+      //  This assertion should hold for 'ask' actors, and does not
+      // hold for 'wait' actors!!!
+      // Assert (newHome);
+      //  ... actually, the same:
+      // Assert (isEmpty ());
+    } else {
+      //
+      board = (board->gcGetNotificationBoard ())->gcBoard ();
+      board->incSuspCount ();
+
+      //
+      //  Convert the thread to a 'wakeup' type, and just throw away
+      // the body;
+      setWakeUpTypeGC ();
+      item.threadBody = (RunnableThreadBody *) NULL;
+    }
+  } else {
+    board=newBoard;
+  }
+
+  //
+  switch (getThrType ()) {
+  case S_RTHREAD:
+    item.threadBody = item.threadBody->gcRTBody ();
+    break; 
+
+  case S_WAKEUP: 
+    //  should not contain any reference;
+    Assert (item.threadBody == (RunnableThreadBody *) NULL);
+    break;
+
+  case S_PR_THR: 
+  case S_CFUN:
+    item.ccont = item.ccont->gcCFuncCont ();
+    break;
+
+  case S_NEW_PR_THR:
+    item.propagator = item.propagator->gcPropagator ();
+    Assert (item.propagator);
+    break;
+
+  default:
+    error ("Unknown type of a runnable thread?\n");
+  }
+}
+
+/*
+ *  We reverse the order of the list, but this should be no problem.
+ *
+ * kost@ : ... in any case, this is complaint with the 
+ * 'The Definition of Kernel Oz';
+ *
  */
 inline
 SuspList * SuspList::gc()
@@ -1024,7 +1127,7 @@ SuspList * SuspList::gc()
   SuspList *ret = NULL;
 
   for(SuspList* help = this; help != NULL; help = help->next) {
-    Suspension *aux = help->getSusp()->gcSuspension();
+    Thread *aux = (help->getElem ())->gcThread ();
     if (!aux) {
       continue;
     }
@@ -1393,10 +1496,8 @@ void AM::gc(int msgLevel)
   ThreadsPool::doGC ();
   Assert(rootThread);
 
-  Assert(!FDcurrentTaskSusp);
-
 #ifdef DEBUG_STABLE
-  board_constraints = board_constraints->gc(NO);
+  board_constraints = board_constraints->gc ();
 #endif
   
   suspendVarList=makeTaggedNULL(); /* no valid data */
@@ -1621,7 +1722,7 @@ void ThreadsPool::doGC ()
 
   currentThread = currentThread->gcThread ();
   rootThread = rootThread->gcThread ();
-  threadsFreeList = NULL;
+  threadBodyFreeList = (ThreadBodyFreeListEl *) NULL;
 
   thq = currentQueue;
   pri = currentPriority;
@@ -1652,7 +1753,8 @@ void ThreadQueue::doGC ()
 
 void TaskStack::gc(TaskStack *newstack)
 {
-  /* allocate new stack and save reference for 
+  /* 
+   *  Allocate new stack and save reference for 
    * TaskStack::gcRecurse on the new stack
    */
   COUNT(taskStack);
@@ -1663,7 +1765,7 @@ void TaskStack::gc(TaskStack *newstack)
 
 void TaskStack::gcRecurse()
 {
-  GCMETHMSG("TaskStack::gc");
+  GCMETHMSG("TaskStack::gcRecurse");
   TaskStack *oldstack = (TaskStack *) pop();
 
   gcInit();
@@ -1676,7 +1778,6 @@ void TaskStack::gcRecurse()
 
     switch (cFlag){
 
-    case C_NERVOUS:   COUNT(cNervous); break;
     case C_SOLVE:     COUNT(cSolve);   break;
     case C_LOCAL:     COUNT(cLocal);   break;
     case C_JOB:       COUNT(cJob);     break;
@@ -1715,7 +1816,6 @@ void TaskStack::gcRecurse()
     case C_CFUNC_CONT:
       COUNT(cCFuncCont);
       gcQueue(oldstack->pop());                // OZ_CFun
-      gcQueue(((Suspension*) oldstack->pop())->gcSuspension());	
       gcQueue(gcRefsArray((RefsArray) oldstack->pop()));
       break;
 
@@ -1793,12 +1893,11 @@ void Chunk::gcRecurse()
 }
 
 
-void ConstTerm::gcConstRecurse()
+void ConstTerm::gcRecurse()
 {
   Assert(isConstChunk(this));
   ((Chunk *) this)->gcRecurse();
 }
-
 
 #define CheckLocal(chunk) 					\
 {								\
@@ -1806,7 +1905,6 @@ void ConstTerm::gcConstRecurse()
    if (!bb->gcIsAlive()) return NULL;				\
    if (opMode == IN_TC && !isLocalBoard(bb)) return this;	\
 }
-
 
 ConstTerm *ConstTerm::gcConstTerm()
 {
@@ -1817,7 +1915,6 @@ ConstTerm *ConstTerm::gcConstTerm()
   switch (typeOf()) {
   case Co_Board:     return ((Board *) this)->gcBoard();
   case Co_Actor:     return ((Actor *) this)->gcActor();
-  case Co_Thread:    return ((Thread *) this)->gcThread();
   case Co_Class:     return ((ObjectClass *) this)->gcClass();
   case Co_HeapChunk: return ((HeapChunk *) this)->gc();
     
@@ -1876,7 +1973,6 @@ ConstTerm *ConstTerm::gcConstTerm()
   }
 }
 
-
 HeapChunk * HeapChunk::gc(void)
 {
   GCMETHMSG("HeapChunk::gc");
@@ -1892,58 +1988,9 @@ HeapChunk * HeapChunk::gc(void)
 }
 
 /*
- * NOTE: discarded threads must survive gc, because the solve counter
- *       has to be updated.
- * NOTE: if threads may be discarded,
- *       then check for prev, next and threadsHead, threadsTail
- */
-Thread *Thread::gcThread()
-{
-  GCMETHMSG("Thread::gc");
-  if (this==0) return 0;
-  CHECKCOLLECTED(*getGCField(), Thread *);
-
-  COUNT(thread);
-  size_t sz = sizeof(Thread);
-  Thread *ret = (Thread *) gcRealloc(this,sz);
-  ThreadList::add(ret);
-  TaskStack::gc((TaskStack *)ret);
-  GCNEWADDRMSG(ret);
-  ptrStack.push(ret,PTR_THREAD);
-  storeForward(getGCField(), ret);
-  return ret;
-}
-
-void Thread::gcThreadRecurse()
-{
-  GCMETHMSG("Thread::gcRecurse");
-
-  TaskStack::gcRecurse();
-  Board *newBoard = board->gcBoard();
-  if (!newBoard) {
-    newBoard=board->gcGetNotificationBoard();
-    Bool newHome=NO;
-    while (board != newBoard) {
-      if (!discardLocalTasks()) {
-	newHome=OK;
-	board = newBoard;
-	break;
-      }	
-      board=board->getParentFast();
-    }
-    board=board->gcBoard();
-    if (newHome) {
-      board->incSuspCount();
-    }
-  } else {
-    board=newBoard;
-  }
-}
-
-/*
  * notification board == home board of thread
  * Although this may be discarded/failed, the solve actor must be announced.
- * Therefor this procedures searches for another living board.
+ * Therefore this procedures searches for another living board.
  */
 Board* Board::gcGetNotificationBoard()
 {
@@ -1981,15 +2028,20 @@ Board* Board::gcGetNotificationBoard()
 
 Bool Board::gcIsAlive()
 {
-  Board *bb=this;
+  Board *bb = this;
+  Actor *aa;
+
  loop:
-  Assert(!bb->isCommitted());
-  if (bb->isFailed()) return NO;
-  if (bb->isRoot() || GCISMARKED(*(bb->getGCField()))) return OK;
-  Actor *aa=bb->getActor();
-  if (aa->isCommitted()) return NO;
-  if (GCISMARKED(*(aa->getGCField()))) return OK;
-  bb=aa->getBoardFast();
+  // must be applied to a result of 'getBoardFast ()';
+  Assert (!(bb->isCommitted ()));
+
+  if (bb->isFailed ()) return (NO);
+  if (bb->isRoot () || GCISMARKED (*(bb->getGCField ()))) return (OK);
+  
+  aa=bb->getActor();
+  if (aa->isCommitted ()) return (NO);
+  if (GCISMARKED (*(aa->getGCField ()))) return (OK);
+  bb = aa->getBoardFast ();
   goto loop;
 }
 
@@ -2242,18 +2294,18 @@ void performCopying(void)
     switch(ptrType) {
       
     case PTR_LTUPLE:    ((LTuple *) ptr)->gcRecurse();           break;
-    case PTR_STUPLE:    ((STuple *) ptr)->gcRecurse();           break;
     case PTR_SRECORD:   ((SRecord *) ptr)->gcRecurse();          break;
-    case PTR_DYNTAB:    ((DynamicTable *) ptr)->gcRecurse();     break;
+    case PTR_STUPLE:    ((STuple *) ptr)->gcRecurse();           break;
     case PTR_NAME:      ((Literal *) ptr)->gcRecurse ();         break;
-    case PTR_CONT:      ((Continuation*) ptr)->gcRecurse();      break;
-    case PTR_SUSPCONT:  ((SuspContinuation*) ptr)->gcRecurse();  break;
-    case PTR_CFUNCONT:  ((CFuncContinuation*) ptr)->gcRecurse(); break;
-    case PTR_ACTOR:     ((Actor *) ptr)->gcRecurse();            break;
-    case PTR_THREAD:    ((Thread *) ptr)->gcThreadRecurse();     break;
     case PTR_BOARD:     ((Board *) ptr)->gcRecurse();            break;
-    case PTR_CONSTTERM: ((ConstTerm *) ptr)->gcConstRecurse();   break;
-       
+    case PTR_ACTOR:     ((Actor *) ptr)->gcRecurse();            break;
+    case PTR_THREAD:    ((Thread *) ptr)->gcRecurse();           break;
+    case PTR_RTBODY:
+      ((RunnableThreadBody *) ptr)->gcRecurse();                 break;
+    case PTR_CONT:      ((Continuation*) ptr)->gcRecurse();      break;
+    case PTR_CFUNCONT:  ((CFuncContinuation*) ptr)->gcRecurse(); break;
+    case PTR_DYNTAB:    ((DynamicTable *) ptr)->gcRecurse();     break;
+    case PTR_CONSTTERM: ((ConstTerm *) ptr)->gcRecurse();        break;
     default:
       Assert(NO);
     }
@@ -2322,6 +2374,4 @@ OzDebug *OzDebug::gcOzDebug()
   args = gcRefsArray(args);
   return this;
 }
-
-
 
