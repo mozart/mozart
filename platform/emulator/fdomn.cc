@@ -874,7 +874,7 @@ int FiniteDomain::initList(int list_len,
 
 static
 // int intcompare(int ** i, int ** j) {return(**i - **j);}
-int intcompare(void * ii, void  * jj) {
+int intcompare(const void * ii, const void  * jj) {
   int **i = (int **) ii;
   int **j = (int **) jj;
   return(**i - **j);
