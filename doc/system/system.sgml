@@ -159,6 +159,14 @@
         Returns the number of suspensions on ?_{X}, that is the number
         of threads and propagators that suspend on ?_{X}.
 
+      <entry><<onToplevel>>
+        <index class=tails/<<System>><And><<onToplevel>>/
+      <synopsis>
+        <<{System.onToplevel ??{B}}>>
+      <item>
+        Returns <<true>> iff the current thread is executing in the
+        top level space and not within a deep space.
+
     </list>
 
   </Chapter>
