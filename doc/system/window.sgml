@@ -28,9 +28,7 @@
 <Part id="Part.Window">
   <Title/Window Programming/
 
-  <Chapter id="Chapter.Tk">
-    <Title/The Tk Interface: <<Tk>>/
-  </Chapter>
+  &chapter.tk;
 
   <Chapter id="Chapter.TkTools">
     <Title/Graphical Tools: <<TkTools>>/
