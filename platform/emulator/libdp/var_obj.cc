@@ -39,14 +39,14 @@
 
 
 
-void ObjectVar::marshal(MsgBuffer *bs)
+void ObjectVar::marshal(MsgBuffer *bs, GenTraverser *gt)
 {
   PD((MARSHAL,"var objectproxy"));
   int done=checkCycleOutLine(getObject(),bs);
   if (!done) {
     GName *classgn =  isObjectClassAvail()
       ? globalizeConst(getClass(),bs) : getGNameClass();
-    marshalObjectImpl(getObject(),bs,classgn);
+    marshalObjectImpl(getObject(),bs,classgn,gt);
   }
 }
 

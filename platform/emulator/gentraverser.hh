@@ -243,6 +243,12 @@ public:
     unwind();
   }
 
+  void rememberNode(OZ_Term node, MsgBuffer *bs)
+    {
+      int ind = remember(node);
+      marshalTermDef(ind, bs);
+    }
+
   // For efficiency reasons 'GenTraverser' has its own 'doit' - not
   // the one from 'NodeProcessor'. Because of that, 'resume()' is 
   // overloaded as well (but with the same meaning);
@@ -404,6 +410,8 @@ enum BuilderTaskType {
   //
   BT_fsetvalue,
   BT_fsetvalueMemo,
+  BT_fsetvalueFinalMemo,
+  BT_fsetvalueFinal,
   // 
   BT_chunk,
   BT_chunkMemo,
@@ -831,7 +839,8 @@ public:
     Assert(gname);
     GetBTFrame(frame);
     EnsureBTSpace(frame, 1);
-    PutBTFrameArg(frame,n)
+    PutBTFrameArg(frame,n);
+    SetBTFrame(frame);
     putTask(BT_classMemo, gname, flags);
   }
   void knownClass(OZ_Term classTerm) {

@@ -117,8 +117,6 @@ void GenTraverser::doit()
       case Co_Dictionary:
 	if (!processDictionary(t, ct)) {
 	  OzDictionary *d = (OzDictionary *) ct;
-	  int size = d->getSize();
-
 	  // kost@ : what the hell is going on here???
 	  int i = d->getFirst();
 	  i = d->getNext(i);
@@ -192,8 +190,7 @@ void GenTraverser::doit()
 
     case FSETVALUE:
       if (!processFSETValue(t)) {
-	OZ_FSetValue* fsetval = tagged2FSetValue(t);
-	t = fsetval->getKnownInList();
+	t = tagged2FSetValue(t)->getKnownInList();
 	goto bypass;
       }
       break;
@@ -444,6 +441,18 @@ repeat:
 
   case BT_fsetvalue:
     {
+      ReplaceTask2ndArg(frame, BT_fsetvalueFinal, value);
+      break;
+    }
+
+  case BT_fsetvalueMemo:
+    {
+      ReplaceTask2ndArg(frame, BT_fsetvalueFinalMemo, value);
+      break;
+    }
+
+  case BT_fsetvalueFinal:
+    {
       OZ_Term ret;
       DiscardBTFrame(frame);
       makeFSetValue(value, &ret);
@@ -452,13 +461,13 @@ repeat:
       goto repeat;
     }
 
-  case BT_fsetvalueMemo:
+  case BT_fsetvalueFinalMemo:
     {
       GetBTTaskArg1(frame, int, memoIndex);
       DiscardBTFrame(frame);
-      OZ_Term *ret;
-      makeFSetValue(value, ret);
-      value = *ret;
+      OZ_Term ret;
+      makeFSetValue(value, &ret);
+      value = ret;
       set(value, memoIndex);
       GetBTTaskTypeNoDecl(frame, type);
       goto repeat;
