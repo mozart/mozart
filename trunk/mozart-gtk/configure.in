@@ -203,7 +203,24 @@ else
 fi
 
 if test "$HAVE_CANVAS" = no; then
-  AC_MSG_ERROR([gtk-canvas is required for mozart-gtk])
+  AC_MSG_CHECKING([for libart.h])
+  OZ_CHECK_HEADER_PATH(libart.h,
+    ERR_HAVE_LIBART=yes,
+    ERR_HAVE_LIBART=no)
+  AC_MSG_RESULT($ERR_HAVE_LIBART)
+  if test "$ERR_HAVE_LIBART" = no; then
+    AC_MSG_ERROR([
+You do not seem to have include file libart.h.  This means that the GNOME
+development support files are probably not installed on your system.  If
+your distribution is RPM-based, the GNOME development support files should
+be available in a RPM named something like gnome-libs-devel.  Install these
+support files, then try building mozart-gtk again.
+])
+  fi
+  AC_MSG_ERROR([
+You do not seem to have gtk-canvas installed.  Please download it from
+the Mozart site and install it first, then try building mozart-gtk again.
+])
 fi
 
 AC_SUBST(CANVASDIR)

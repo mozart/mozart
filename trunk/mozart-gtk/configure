@@ -3651,7 +3651,103 @@ rm -f conftest*
 fi
 
 if test "$HAVE_CANVAS" = no; then
-  { echo "configure: error: gtk-canvas is required for mozart-gtk" 1>&2; exit 1; }
+  echo $ac_n "checking for libart.h""... $ac_c" 1>&6
+echo "configure:3656: checking for libart.h" >&5
+  
+  echo $ac_n "checking for libart.h""... $ac_c" 1>&6
+echo "configure:3659: checking for libart.h" >&5
+if eval "test \"`echo '$''{'oz_cv_header_libart_h'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  
+    
+      oz_tmp_cppflags="$CPPFLAGS"
+      oz_tmp_ok=no
+      for oz_tmp in $oz_inc_path; do
+	CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
+	cat > conftest.$ac_ext <<EOF
+#line 3670 "configure"
+#include "confdefs.h"
+#include "libart.h"
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:3675: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+if test -z "$ac_err"; then
+  rm -rf conftest*
+  
+        oz_tmp_ok="-I$oz_tmp"
+        break
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+fi
+rm -f conftest*
+      done
+      CPPFLAGS=$oz_tmp_cppflags
+      if test "$oz_tmp_ok" = no; then
+	cat > conftest.$ac_ext <<EOF
+#line 3692 "configure"
+#include "confdefs.h"
+#include "libart.h"
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:3697: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+if test -z "$ac_err"; then
+  rm -rf conftest*
+  
+          oz_tmp_ok=yes
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+fi
+rm -f conftest*
+      fi
+oz_cv_header_libart_h="$oz_tmp_ok"
+
+    
+fi
+
+echo "$ac_t""$oz_cv_header_libart_h" 1>&6
+
+  oz_tmp_val=$oz_cv_header_libart_h
+
+  if test "$oz_tmp_val" != no; then
+    if test "$oz_tmp_val" != yes; then
+      
+  if test "$oz_tmp_val" != yes && test "$oz_tmp_val" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $CPPFLAGS NONE; do
+      if test "$oz_tmp" = "$oz_tmp_val"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && CPPFLAGS="$CPPFLAGS${CPPFLAGS:+ }$oz_tmp_val"
+  fi
+
+    fi
+    ERR_HAVE_LIBART=yes
+  else
+    ERR_HAVE_LIBART=no
+  fi
+  echo "$ac_t""$ERR_HAVE_LIBART" 1>&6
+  if test "$ERR_HAVE_LIBART" = no; then
+    { echo "configure: error: 
+You do not seem to have include file libart.h.  This means that the GNOME
+development support files are probably not installed on your system.  If
+your distribution is RPM-based, the GNOME development support files should
+be available in a RPM named something like gnome-libs-devel.  Install these
+support files, then try building mozart-gtk again.
+" 1>&2; exit 1; }
+  fi
+  { echo "configure: error: 
+You do not seem to have gtk-canvas installed.  Please download it from
+the Mozart site and install it first, then try building mozart-gtk again.
+" 1>&2; exit 1; }
 fi
 
 
