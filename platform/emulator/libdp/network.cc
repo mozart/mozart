@@ -1944,7 +1944,10 @@ Bool TcpCache::openMyClosedConnection(unsigned long time){
       w->expireTime = time + CLOSE_EXPIRETIME;
     if(w->expireTime < time ){
       remove(w);
-      w->clearMyInitiative();
+      if(w->isHisInitiative())
+	w->clearHisInitiative();
+      else
+	w->clearMyInitiative();
       w->setTmpDwn();
       add(w);
       w->remoteSite->site->probeFault(PROBE_TEMP);}
@@ -3118,10 +3121,7 @@ retry:
   
   tries--;
   if(tries<=0){goto  ipOpenNoAnswer;}
-  if(ossockerrno() == ECONNREFUSED) {
-    //fprintf(stderr,"ECONREF letsTryLater %s %s\n",r->remoteSite->site->stringrep(),myDSite->stringrep());
-    goto  ipOpenNoAnswer;}
-  if(ossockerrno() == EADDRNOTAVAIL){
+  if((ossockerrno() == EADDRNOTAVAIL) || (ossockerrno() == ECONNREFUSED)){
     //fprintf(stderr,"cannot open - interpreted as perm:%d %d \n",EADDRNOTAVAIL,ossockerrno());
     r->connectionLost(); 
     return IP_PERM_BLOCK;}
