@@ -739,9 +739,7 @@ Name *Name::gcName() {
 
 inline
 Literal *Literal::gc() {
-  Assert(needsCollection(this));
-
-  Assert(isName());
+  if (isAtom()) return this;
   return ((Name*) this)->gcName();
 }
 
@@ -1575,16 +1573,8 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
     return;
 
   case LITERAL: DO_LITERAL:
-    {
-      Literal * l = tagged2Literal(aux);
-
-      if (needsCollection(l)) {
-        to = makeTaggedLiteral(l->gc());
-      } else {
-        to = aux;
-      }
+      to = makeTaggedLiteral(tagged2Literal(aux)->gc());
       return;
-    }
 
   case EXT: DO_EXT:
     to = gcExtension(aux);
