@@ -286,10 +286,10 @@ libs: $(CORE_TARGETS)
 first: $(CREATEDFILES)
 
 @PROGRAMNAME@: $(PRGDEP)
-	$(LD) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
+	$(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
 
 text2pickle: $(TEXT2PICKLEOBJS)
-	$(LD) $(LDFLAGS) $(LDOPT) -o $@ $(TEXT2PICKLEOBJS)
+	$(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(TEXT2PICKLEOBJS)
 
 install:: install-bin install-inc $(MODULEINSTALL)
 

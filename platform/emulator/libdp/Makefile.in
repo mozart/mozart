@@ -66,7 +66,7 @@ all:
 pidModule.o: ../modPID-if.cc
 
 ../PID.so: pidModule.o
-	$(DYNLD) -o $@ pidModule.o $(LIBS)
+	$(DYNLD) $(LDFLAGS) -o $@ pidModule.o $(LIBS)
 
 ../libPID.a: pidModule.o
 	$(AR) -rc $@ pidModule.o && $(RANLIB) $@
@@ -75,7 +75,7 @@ pidModule.o: ../modPID-if.cc
 faultModule.o: ../modFault-if.cc
 
 ../Fault.so: faultModule.o 
-	$(DYNLD) -o $@ faultModule.o $(LIBS)
+	$(DYNLD) $(LDFLAGS) -o $@ faultModule.o $(LIBS)
 
 ../libFault.a: faultModule.o
 	$(AR) -rc $@ faultModule.o && $(RANLIB) $@
@@ -84,14 +84,14 @@ faultModule.o: ../modFault-if.cc
 dpMiscModule.o: ../modDPMisc-if.cc
 
 ../DPMisc.so: dpMiscModule.o 
-	$(DYNLD) -o $@ dpMiscModule.o $(LIBS)
+	$(DYNLD) $(LDFLAGS) -o $@ dpMiscModule.o $(LIBS)
 
 ../libDPMisc.a: dpMiscModule.o
 	$(AR) -rc $@ dpMiscModule.o && $(RANLIB) $@
 
 #
 ../VirtualSite.so: $(VSOBJS)
-	$(DYNLD) -o $@ $(VSOBJS) $(LIBS)
+	$(DYNLD) $(LDFLAGS) -o $@ $(VSOBJS) $(LIBS)
 
 ../libVirtualSite.a: $(VSOBJS)
 	$(AR) -rc $@ $(VSOBJS) && $(RANLIB) $@
