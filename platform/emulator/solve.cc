@@ -97,7 +97,7 @@ WaitActor* SolveActor::getDisWaitActor ()
 TaggedRef SolveActor::genSolved()
 {
   RefsArray contGRegs = allocateRefsArray(1);
-  STuple *stuple = STuple::newSTuple(solvedAtom, 2);
+  SRecord *stuple = SRecord::newSRecord(solvedAtom, 2);
 
   Assert(solveBoard->isSolve());
   contGRegs[0] = makeTaggedConst(solveBoard);
@@ -105,25 +105,25 @@ TaggedRef SolveActor::genSolved()
 		 (new SolvedBuiltin(solvedBITabEntry, contGRegs)));
   stuple->setArg(1, entailedAtom);
 
-  return makeTaggedSTuple(stuple);
+  return makeTaggedSRecord(stuple);
 }
 
 TaggedRef SolveActor::genStuck()
 {
   RefsArray contGRegs = allocateRefsArray(1);
-  STuple *stuple = STuple::newSTuple(solvedAtom, 2);
+  SRecord *stuple = SRecord::newSRecord(solvedAtom, 2);
 
   Assert(solveBoard->isSolve());
   contGRegs[0] = makeTaggedConst(solveBoard);
   stuple->setArg(0, makeTaggedConst
 		 (new SolvedBuiltin(solvedBITabEntry, contGRegs)));
   stuple->setArg(1, stableAtom);
-  return makeTaggedSTuple(stuple);
+  return makeTaggedSRecord(stuple);
 }
 
 TaggedRef SolveActor::genChoice(int noOfClauses)
 {
-  STuple *stuple = STuple::newSTuple(choiceAtom, 2);
+  SRecord *stuple = SRecord::newSRecord(choiceAtom, 2);
   RefsArray contGRegs;
 
   contGRegs    = allocateRefsArray(1);
@@ -133,7 +133,7 @@ TaggedRef SolveActor::genChoice(int noOfClauses)
 		 (new OneCallBuiltin(solveContBITabEntry, contGRegs)));
   stuple->setArg(1, makeTaggedSmallInt(noOfClauses));
 
-  return makeTaggedSTuple(stuple);
+  return makeTaggedSRecord(stuple);
 }
 
 TaggedRef SolveActor::genFailed ()
@@ -143,9 +143,9 @@ TaggedRef SolveActor::genFailed ()
 
 TaggedRef SolveActor::genUnstable (TaggedRef arg)
 {
-  STuple *stuple = STuple::newSTuple(unstableAtom, 1);
+  SRecord *stuple = SRecord::newSRecord(unstableAtom, 1);
   stuple->setArg(0, arg);
-  return makeTaggedSTuple (stuple);
+  return makeTaggedSRecord (stuple);
 }
 
 // private members; 
