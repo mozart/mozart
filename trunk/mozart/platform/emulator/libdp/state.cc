@@ -132,7 +132,7 @@ void convertLockProxyToFrame(Tertiary *t){
 /**********************************************************************/
 
 TaggedRef CellSec::unpendCell(PendThread* pt,TaggedRef val){
-  val = oz_deref(val);  
+  val = oz_safeDeref(val);  
   if(pt==NULL) return val;
   switch(pt->exKind){
   case ACCESS:{
@@ -181,7 +181,7 @@ TaggedRef CellSec::unpendCell(PendThread* pt,TaggedRef val){
 
 
 OZ_Return CellSec::exchangeVal(TaggedRef old, TaggedRef nw, ExKind exKind){
-  contents = oz_deref(contents);
+  contents = oz_safeDeref(contents);
   switch (exKind){
   case ASSIGN:{
     if (!tagged2SRecord(contents)->replaceFeature(old,nw)) {
