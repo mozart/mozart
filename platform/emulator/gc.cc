@@ -496,7 +496,7 @@ void Atom::gcRecurse ()
 inline
 Float *Float::gc()
 {
-  Float *ret =  new Float(value);
+  Float *ret =  newFloat(value);
   return ret;
 }
 

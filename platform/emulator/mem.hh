@@ -106,6 +106,21 @@ void *heapMalloc(size_t chunk_size)
 } // heapMalloc
 
 
+/* allocate memory from heap aligned to OZ_Float boundary */
+inline void *floatMalloc()
+{
+ loop:
+  while((int) heapTop % sizeof(OZ_Float)) {
+    heapTop++;
+  }
+  void *ret=heapMalloc(sizeof(OZ_Float));
+  /* we may have allocated a new block, so check again */
+  if ((int) ret % sizeof(OZ_Float)) {
+    goto loop;
+  }
+  return ret;
+}
+  
 // free list management
 const int freeListMaxSize = 500;
 
