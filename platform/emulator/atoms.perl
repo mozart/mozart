@@ -99,6 +99,8 @@
 	  ( AtomPath,        "path"),
 	  ( AtomLine,        "line"),
 	  ( AtomColumn,      "column"),
+	  ( AtomInvoc,       "invoc"),
+	  ( AtomPropInvoc,   "propInvoc"),
 	  ( AtomRun,         "run"),
 	  ( AtomRunnable,    "runnable"),
 	  ( AtomShowSuspension, "showSuspension"),
