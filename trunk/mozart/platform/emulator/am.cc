@@ -300,8 +300,10 @@ void AM::init(int argc,char **argv)
 
   emptySuspendVarList(); // must be after initLiterals
 
+#ifndef DENYS_EVENTS
   //
   taskNodes = new TaskNode[MAXTASKS];
+#endif
 
   //
   osInitSignals();
@@ -388,6 +390,7 @@ void AM::exitOz(int status)
  * MISC
  * -------------------------------------------------------------------------*/
 
+#ifndef DENYS_EVENTS
 // mm2: missing ifdef VIRTUAL_SITE?
 
 //
@@ -422,6 +425,7 @@ void AM::handleTasks()
   if (!ready)
     setSFlag(TasksReady);
 }
+#endif
 
 // a variable that is set to 0 or to a pointer to a procedure
 // to check the status of children processes (see contrib/os/process.cc)
@@ -598,10 +602,12 @@ void AM::checkStatus(Bool block)
     unsetSFlag(SigPending);
   }
 
+#ifndef DENYS_EVENTS
   // kost@: first check signals, then handle tasks! Otherwise
   // e.g. 'usr2' can be disregarded;
   if (isSetSFlag(TasksReady))
     handleTasks();
+#endif
 
   if (isSetSFlag(ChildReady)) {
     unsetSFlag(ChildReady);
@@ -616,6 +622,7 @@ void AM::checkStatus(Bool block)
     osUnblockSignals();
 }
 
+#ifndef DENYS_EVENTS
 //
 // mm2: VIRTUAL_SITES?
 // kost@ : not only (also managing tcp/ip connections' cache and
@@ -711,6 +718,7 @@ void AM::checkTasks()
   if (tasks)
     setSFlag(TasksReady);
 }
+#endif
 
 /* -------------------------------------------------------------------------
  * Signals
@@ -815,16 +823,20 @@ void AM::handleAlarm(int ms)
 
   oz_io_check();
 
+#ifndef DENYS_EVENTS
   // tasks are actually checked twice - here and in the 'USR2'
   // handler; but these are very light-weight checks;
   checkTasks();
+#endif
 }
 
+#ifndef DENYS_EVENTS
 //
 void AM::handleUSR2()
 {
   checkTasks();
 }
+#endif
 
 /* handleUserAlarm:
     if UserAlarm-SFLAG is set this method is called
@@ -836,6 +848,7 @@ void AM::handleUser()
   wakeUser();
 }
 
+#ifndef DENYS_EVENTS
 class OzSleep {
 public:
   OzSleep *next;
@@ -869,6 +882,7 @@ void AM::insertUser(int ms, TaggedRef node)
 exit:
   osUnblockSignals();
 }
+#endif
 
 #ifdef DENYS_EVENTS
 void OZ_setTimer(int i)
@@ -880,11 +894,7 @@ void OZ_setTimer(int i)
 int AM::nextUser()
 {
 #ifdef DENYS_EVENTS
-  int sleepTime = 0;
-  if (sleepQueue!=NULL) sleepTime = sleepQueue->time;
-  if (requestedTimer!=0 && (sleepTime==0 || requestedTimer<sleepTime))
-    sleepTime = requestedTimer;
-  return (sleepTime==0) ? 0 : max(1,sleepTime-osTotalTime());
+  return (requestedTimer==0) ? 0 : max(1,requestedTimer-osTotalTime());
 #else
   return (sleepQueue==NULL) ? 0 : max(1,sleepQueue->time - osTotalTime());
 #endif
@@ -910,9 +920,7 @@ unsigned int AM::waitTime()
 Bool AM::checkUser()
 {
 #ifdef DENYS_EVENTS
-  unsigned int now = osTotalTime();
-  return ((requestedTimer!=0 && requestedTimer<=now) ||
-	  (sleepQueue!=NULL && sleepQueue->time <= now));
+  return (requestedTimer!=0 && requestedTimer<=osTotalTime());
 #else
   return (sleepQueue!=NULL && sleepQueue->time <= osTotalTime());
 #endif
@@ -920,19 +928,20 @@ Bool AM::checkUser()
 
 void AM::wakeUser()
 {
-  unsigned int now = osTotalTime();
 #ifdef DENYS_EVENTS
-  if (requestedTimer!=0 && requestedTimer<=now) {
+  if (requestedTimer!=0 && requestedTimer<=osTotalTime()) {
     requestedTimer=0;
     OZ_eventPush(oz_atom("timer"));
   }
-#endif
+#else
+  unsigned int now = osTotalTime();
   while (sleepQueue && sleepQueue->time<=now) {
     oz_io_awakeVar(sleepQueue->node);
     OzSleep *aux = sleepQueue->next;
     delete sleepQueue;
     sleepQueue = aux;
   }
+#endif
 }
 
 

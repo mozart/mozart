@@ -380,8 +380,10 @@ int VirtualSite::sendTo(VSMsgBufferOwned *mb, MessageType mt,
       if (isEmpty()) {
 	Bool wasEmptySQ = sq->isEmpty();
 	sq->enqueue(this);
+#ifndef DENYS_EVENTS
 	if (wasEmptySQ)
 	  am.setMinimalTaskInterval((void *) sq, SITEQUEUE_INTERVAL);
+#endif
       }
       enqueue(m);
 

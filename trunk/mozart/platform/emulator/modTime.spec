@@ -30,10 +30,6 @@
 			     out => [],
 			     BI  => BIalarm},
 
-     'delay'		=> { in  => ['!+int'],
-			     out => [],
-			     BI  => BIdelay},
-
      'time'		=> { in  => [],
 			     out => ['+int'],
 			     BI  => BItimeTime},

@@ -46,7 +46,7 @@ TaggedRef
 
   _NameTrue, _NameFalse,
 
-  BI_Unify,BI_send,BI_Delay,
+  BI_Unify,BI_send,
   BI_load, BI_fail, BI_skip, BI_url_load, BI_obtain_native,
 
   BI_dot,
