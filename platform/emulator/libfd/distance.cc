@@ -64,7 +64,7 @@ OZ_C_proc_end
 
 OZ_Return DistancePropagatorGeq::propagate(void) 
 {
-  OZ_DEBUGPRINT("in: " << *this);
+  OZ_DEBUGPRINTTHIS("in: ");
 
   int &xd = reg_c;
 
@@ -121,12 +121,12 @@ OZ_Return DistancePropagatorGeq::propagate(void)
   }
     
   
-  OZ_DEBUGPRINT("out: " << *this);
+  OZ_DEBUGPRINTTHIS("out: ");
 
   return P.leave();
 
 failure:
-  OZ_DEBUGPRINT("fail" << *this);
+  OZ_DEBUGPRINTTHIS("fail");
   return P.fail();
 }
 
@@ -134,7 +134,7 @@ failure:
 
 OZ_Return DistancePropagatorLeq::propagate(void) 
 {
-  OZ_DEBUGPRINT("in: " << *this);
+  OZ_DEBUGPRINTTHIS("in: ");
 
   int &xd = reg_c;
 
@@ -196,12 +196,12 @@ loop:
     goto loop;
   }
 
-  OZ_DEBUGPRINT("out: " << *this);
+  OZ_DEBUGPRINTTHIS("out: ");
 
   return P.leave();
 
 failure:
-  OZ_DEBUGPRINT("fail");
+  OZ_DEBUGPRINT(("fail"));
   return P.fail();
 }
 
@@ -389,12 +389,12 @@ finish:
   FailOnEmpty(*y &= l2);
   FailOnEmpty(*z &= l3);
 
-  OZ_DEBUGPRINT("out: " << *this);
+  OZ_DEBUGPRINTTHIS("out: ");
 
   return P.leave();
 
 failure:
-  OZ_DEBUGPRINT("fail");
+  OZ_DEBUGPRINT(("fail"));
   return P.fail();
 }
 
@@ -402,7 +402,7 @@ failure:
 
 OZ_Return DistancePropagatorNeq::propagate(void) 
 {
-  OZ_DEBUGPRINT("in: " << *this);
+  OZ_DEBUGPRINTTHIS("in: ");
 
   int &xd = reg_c;
 
@@ -441,12 +441,12 @@ OZ_Return DistancePropagatorNeq::propagate(void)
   }
 
   
-  OZ_DEBUGPRINT("out: " << *this);
+  OZ_DEBUGPRINTTHIS("out: ");
 
   return P.leave();
 
 failure:
-  OZ_DEBUGPRINT("fail" << *this);
+  OZ_DEBUGPRINTTHIS("fail");
   return P.fail();
 }
 

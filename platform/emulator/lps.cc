@@ -19,7 +19,6 @@
 #include "genvar.hh"
 #include "fdprofil.hh"
 
-#include "ozstrstream.h"
 
 #ifdef OUTLINE
 #define inline
@@ -119,7 +118,7 @@ Bool LocalPropagationStore::propagate_locally () {
 	errorHeader();
 
 	ostrstream buf; 
-	buf << * thr->getPropagator() << '\0';
+	buf << thr->getPropagator()->toString() << '\0';
 	char *str = buf.str();
 	message("Propagator %s failed\n", str);
 	delete str;

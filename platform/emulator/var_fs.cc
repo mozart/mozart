@@ -32,12 +32,6 @@ void GenFSetVariable::dispose(void) {
 //#define DEBUG_TELLCONSTRAINTS 
 #endif
 
-#ifdef CPI_FILE_PRINT
-#include <fstream.h>
-extern ofstream * cpi_cout;
-#else
-extern ostream * cpi_cout;
-#endif
 
 Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var, 
 				TaggedRef * tptr, TaggedRef term,

@@ -201,7 +201,7 @@ OZ_CFun FirstsLasts::spawner = sched_firstsLasts;
 
 OZ_Return FirstsLasts::propagate(void) 
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
 
   OZ_Stream st(stream);
 

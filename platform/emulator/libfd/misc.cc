@@ -144,7 +144,7 @@ OZ_Return SumACProp::propagate(void)
 
    /****************************************/
 
-   cout << *x[dpos] << ' ' <<*d << endl << flush;
+   cout << x[dpos]->toString() << ' ' << d->toString() << endl << flush;
    *(x[dpos])&=*d; 
 
    /****************************************/
@@ -188,7 +188,7 @@ OZ_Return SumACProp::propagate(void)
    cout<<"summin="<<summin<<" summax="<<summax<<endl;
    cout<<summin<<"<=d<="<<summax<<endl;
    cout<<"d_"<<(klausel ? "neg=" : "pos=")
-       <<(klausel ? d_aux_neg : d_aux_pos)<<endl;
+       <<(klausel ? d_aux_neg : d_aux_pos).toString()<<endl;
  #endif
 
    changed|=!(dummy==(klausel ? d_aux_neg.getSize() : d_aux_pos.getSize())); 
@@ -242,7 +242,7 @@ OZ_Return SumACProp::propagate(void)
           <<int(floor(bound2))<<endl;
      cout<<'a'<<j<<'='<<a[j]
          <<" x"<<j<<(klausel ? "_neg=" : "_pos=")
-         <<(klausel ? x_aux_neg[j] : x_aux_pos[j])<<endl;  
+         <<(klausel ? x_aux_neg[j] : x_aux_pos[j]).toString()<<endl;  
  #endif
 
     }
@@ -334,7 +334,7 @@ OZ_Return SpawnLess::propagate(void)
 
 OZ_Return Less::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
   
   if (mayBeEqualVars() && OZ_isEqualVars(_x, _y)) 
     return PROCEED;
@@ -348,12 +348,12 @@ OZ_Return Less::propagate(void)
   if (x->getMaxElem() < y->getMinElem()) return P.vanish();
   if (x->getMinElem() > y->getMaxElem()) goto failure;
 
-  OZ_DEBUGPRINT("out " << *this);
+  OZ_DEBUGPRINTTHIS("out ");
   
   return P.leave();
 
 failure:
-  OZ_DEBUGPRINT("fail");
+  OZ_DEBUGPRINT(("fail"));
   
   return P.fail();
 }
@@ -375,7 +375,7 @@ OZ_CFun Counter::spawner = fdtest_counter;
 
 OZ_Return Counter::propagate(void) 
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
 
   OZ_Stream stream(s);
   
@@ -467,7 +467,7 @@ OZ_CFun FirstFail::spawner = fdtest_firstFail;
 
 OZ_Return FirstFail::propagate(void) 
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
 
   OZ_Stream st(stream);
 
