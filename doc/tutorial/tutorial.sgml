@@ -62,7 +62,7 @@
 
 <BOOK PROGLANG=OZ>
   <FRONT>
-    <!-- Splitting the document into different HTML nodes
+    <!-- Splitting the document into different HTML nodes -->
     <Meta name="html.split" value="chapter.api">
     <Meta name="html.split" value="chapter.introduction">
     <Meta name="html.split" value="chapter.basics">
@@ -111,7 +111,7 @@
     <Meta name="html.split" value="section.objectscc.active">
     <Meta name="html.split" value="chapter.lp">
     <Meta name="html.split.bib" value="">
--->
+
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
 
