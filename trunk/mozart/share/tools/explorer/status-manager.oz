@@ -42,8 +42,8 @@ local
       feat
 	 Time
 	 Bab
-	 Choice
-	 ChoiceImage
+	 Choose
+	 ChooseImage
 	 Depth
 	 Solution
 	 Failure
@@ -69,8 +69,8 @@ local
 					  font:   BoldStatusFont)}
 
 	 NodeFrame      = {New Tk.frame tkInit(parent: self)}
-	 ChoiceIm       = {New Images.choice init(parent: NodeFrame)}
-	 ChoiceNumber   = {New Tk.label tkInit(parent: NodeFrame
+	 ChooseIm       = {New Images.choose init(parent: NodeFrame)}
+	 ChooseNumber   = {New Tk.label tkInit(parent: NodeFrame
 					       font:   BoldStatusFont
 					       text:   '0')}
 	 SolImage       = {New Images.succeeded init(parent: NodeFrame)}
@@ -96,7 +96,7 @@ local
       in
 	 {Tk.batch [pack(TimeLabel  TimeField o(side:left))
 		    pack(DepthLabel DepthField o(side:left))
-		    pack(ChoiceIm ChoiceNumber
+		    pack(ChooseIm ChooseNumber
 			 SolImage SolNumber
 			 FailedImage FailedNumber o(side:left))
 		    pack(BabField TimeFrame NodeFrame DepthFrame
@@ -104,8 +104,8 @@ local
 	 self.Time          = TimeField
 	 self.Bab           = BabField
 	 self.Depth         = DepthField
-	 self.Choice        = ChoiceNumber
-	 self.ChoiceImage   = ChoiceIm
+	 self.Choose        = ChooseNumber
+	 self.ChooseImage   = ChooseIm
 	 self.Solution      = SolNumber
 	 self.Failure       = FailedNumber
 	 self.Blocked       = BlockedNumber
@@ -133,7 +133,7 @@ local
 	 <<Status update>>
 	 <<Status start>>
 	 <<Status setBAB(False)>>
-	 {self.ChoiceImage clear}
+	 {self.ChooseImage clear}
       end
 
       meth hasBlocked($)
@@ -190,7 +190,7 @@ local
       end
       
       meth finish
-	 {self.ChoiceImage finish}
+	 {self.ChooseImage finish}
       end
       
       meth update
@@ -210,7 +210,7 @@ local
 	    end
 	 else true end
 	 {self.Depth    tk(conf(text:GetDepth))}
-	 {self.Choice   tk(conf(text:GetNodes -
+	 {self.Choose   tk(conf(text:GetNodes -
 				(GetSolutions+GetFailures+GetBlocked)))}
 	 {self.Solution tk(conf(text:GetSolutions))}
 	 {self.Failure  tk(conf(text:GetFailures))}
@@ -253,7 +253,7 @@ local
 	 else true end
       end
 
-      meth addChoice(Depth)
+      meth addChoose(Depth)
 	 IncNodes = @CurNodes + 1
       in
 	 CurNodes <- IncNodes

@@ -113,20 +113,20 @@ ShadeWidth          = case Tk.isColor then 4 else 5 end * IntScaleBase
 ShadeScale          = case Tk.isColor then 1.05 else 1.10 end
 
 %% Set up some colors
-ChoiceColor          #
-ChoiceTermColor      #
+ChooseColor          #
+ChooseTermColor      #
 EntailedColor        #
-SuspendedColor          #
+SuspendedColor       #
 FailedColor          #
-BlockedColor        #
+BlockedColor         #
 PartialFailedColor   #
 LineColor            #
 BackColor            #
 EntryColor           #
 DepthColor           #
 CursorColor          = case Tk.isColor then
-			  'LightSlateBlue' # % ChoiceColor
-			  'DarkSlateBlue'  # % ChoiceTermColor
+			  'LightSlateBlue' # % ChooseColor
+			  'DarkSlateBlue'  # % ChooseTermColor
 			  'MediumSeaGreen' # % EntailedColor
 			  'DarkSeaGreen'   # % SuspendedColor
 			  'firebrick2'     # % FailedColor
@@ -138,8 +138,8 @@ CursorColor          = case Tk.isColor then
 			  wheat            # % DepthColor
 			  gray60             % CursorColor
 		       else
-			  white # % ChoiceColor
-			  white # % ChoiceTermColor
+			  white # % ChooseColor
+			  white # % ChooseTermColor
 			  white # % EntailedColor
 			  white # % SuspendedColor
 			  white # % FailedColor

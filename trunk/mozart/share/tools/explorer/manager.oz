@@ -156,11 +156,11 @@ in
 	       <<MenuManager normal(nodes(info))>>
 	       <<MenuManager state(@cmpNode==False nodes(selCmp))>>
 	       <<MenuManager state(@cmpNode\=False nodes([deselCmp cmp]))>>
-	       <<MenuManager state(CurNode.kind==choice hide(toggle))>>
+	       <<MenuManager state(CurNode.kind==choose hide(toggle))>>
 	       <<MenuManager state({CurNode isUnhidable($)} hide(all))>>
 	       <<MenuManager state({CurNode isFailedHidable($)}
 				   hide(failed))>>
-	       <<MenuManager state(CurNode.kind==choice orelse
+	       <<MenuManager state(CurNode.kind==choose orelse
 				   CurNode.kind==succeeded
 				   nodes(stat))>>
 	    end

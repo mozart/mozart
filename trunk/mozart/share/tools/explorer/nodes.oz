@@ -79,19 +79,19 @@ local
       meth close true end
    end
 
-   class ChoiceNode
+   class ChooseNode
       from
 	 BasicNodes.inner
 	 HideNodes.inner
-	 MoveNodes.choice
-	 TkNodes.choice
-	 SearchNodes.choice
-	 StatNodes.choice
+	 MoveNodes.choose
+	 TkNodes.choose
+	 SearchNodes.choose
+	 StatNodes.choose
 	 LayoutNodes.inner
-	 ActionNodes.choice
+	 ActionNodes.choose
       
       feat
-	 kind: choice
+	 kind: choose
       meth close true end
    end
 
@@ -106,7 +106,7 @@ in
       Canvas         = Manager.canvas
       Status         = Manager.status
       StrategyNodes  = case IsBAB then BABNodes else DfNodes end
-      ChoiceFeatures = case IsBAB then
+      ChooseFeatures = case IsBAB then
 			       class $
 				  feat
 				     classes:  Classes
@@ -276,13 +276,13 @@ in
 		 end
 	      end
 	   end
-	choice:
+	choose:
 	   case IsBAB then
 	      class $
 		 from
-		    ChoiceNode
-		    StrategyNodes.choice
-		    ChoiceFeatures
+		    ChooseNode
+		    StrategyNodes.choose
+		    ChooseFeatures
 		 meth init(Mom Depth PrevSol AllocateCopy S Info)
 		    alternatives(MaxAlt) = !Info
 		 in
@@ -295,19 +295,19 @@ in
 			    else False
 			    end
 		    toDo <- PrevSol#S#1#MaxAlt
-		    <<TkNodes.choice init>>
-		    {Status addChoice(Depth)}
+		    <<TkNodes.choose init>>
+		    {Status addChoose(Depth)}
 		 end
 		 meth close
-		    <<TkNodes.choice close>>
+		    <<TkNodes.choose close>>
 		 end
 	      end
 	   else
 	      class $
 		 from
-		    ChoiceNode
-		    StrategyNodes.choice
-		    ChoiceFeatures
+		    ChooseNode
+		    StrategyNodes.choose
+		    ChooseFeatures
 		 meth init(Mom Depth AllocateCopy S Info)
 		    alternatives(MaxAlt) = !Info
 		 in
@@ -320,11 +320,11 @@ in
 			    else False
 			    end
 		    toDo     <- S#1#MaxAlt
-		    <<TkNodes.choice init>>
-		    {Status addChoice(Depth)}
+		    <<TkNodes.choose init>>
+		    {Status addChoose(Depth)}
 		 end
 		 meth close
-		    <<TkNodes.choice close>>
+		    <<TkNodes.choose close>>
 		 end
 	      end
 	   end
@@ -336,7 +336,7 @@ in
 
    fun {MakeRoot Query IsBAB Classes}
       create FakedRoot
-	 from Classes.choice
+	 from Classes.choose
       end
       S = {Space.newDebug Query}
       A = {Space.ask S}
@@ -363,7 +363,7 @@ in
 	    end
 	 end
       [] alternatives(_) then
-	 {New Classes.choice [case IsBAB then 
+	 {New Classes.choose [case IsBAB then 
 				 init(False 1 False persistent S A)
 			      else
 				 init(False 1 persistent S A)

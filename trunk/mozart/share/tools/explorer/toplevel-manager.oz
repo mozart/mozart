@@ -386,7 +386,7 @@ in
 	 {Connection tk(delete)}
 	 {CurNode getCenter(?X ?Y)}
 	 {Canvas tk(crea {Shapes.(case
-				     CurNode.kind==choice andthen
+				     CurNode.kind==choose andthen
 				     {CurNode isHidden($)} then hidden
 				  else CurNode.kind end)
 			  {IntToFloat (X + ShadeWidth)} * Scale

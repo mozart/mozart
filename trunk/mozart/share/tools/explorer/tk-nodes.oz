@@ -105,15 +105,15 @@ local
    local
       TkMoveOpt     = v({String.toAtom
 			 {VirtualString.toString
-			  '-fill '#ChoiceTermColor#
+			  '-fill '#ChooseTermColor#
 			  ' -width '#TermNodeBorderWidth}})
       TkCreaTermOpt = v({String.toAtom
 			 {VirtualString.toString
-			  '-fill '#ChoiceTermColor#
+			  '-fill '#ChooseTermColor#
 			  ' -width '#TermNodeBorderWidth}})
       TkCreaOpt     = v({String.toAtom
 			 {VirtualString.toString
-			  '-fill '#ChoiceColor#
+			  '-fill '#ChooseColor#
 			  ' -width '#NodeBorderWidth}})
 
       proc {Purge Ks}
@@ -123,7 +123,7 @@ local
       end
      
    in
-      class ChoiceNode
+      class ChooseNode
 	 from TkNode NumberNode
 	 	 
 	 meth moveNode(MomX MyX MyByX MyY Scale)
@@ -252,7 +252,7 @@ local
 					     Canvas.numbers)))}
 		     end
 		  end
-		  <<ChoiceNode DrawKids(@kids Break Tree MyX MyY+VerSpaceI
+		  <<ChooseNode DrawKids(@kids Break Tree MyX MyY+VerSpaceI
 					Scale Font)>>
 	       end
 	       {Canvas tk(addtag MomTree withtag Tree)}
@@ -261,7 +261,7 @@ local
 	    else
 	       case @kids\=nil then
 		  isHidden <- True
-		  <<ChoiceNode purge>>
+		  <<ChooseNode purge>>
 	       end
 	       {Break broken(self)}
 	    end
@@ -547,7 +547,7 @@ local
    
 in
 
-   TkNodes=c(choice:    ChoiceNode
+   TkNodes=c(choose:    ChooseNode
 	     failed:    FailedNode
 	     blocked:   BlockedNode
 	     suspended: SuspendedNode

@@ -21,7 +21,7 @@ local
    fun {IsFailedHidable Ns}
       case Ns of nil then False
       [] N|Nr then
-	 (N.kind==choice andthen {N isFailedHidable($)})
+	 (N.kind==choose andthen {N isFailedHidable($)})
 	 orelse {IsFailedHidable Nr}
       end
    end
@@ -29,7 +29,7 @@ local
    fun {IsUnhidable Ns}
       case Ns of nil then False
       [] N|Nr then
-	 (N.kind==choice andthen {N isUnhidable($)})
+	 (N.kind==choose andthen {N isUnhidable($)})
 	 orelse {IsUnhidable Nr}
       end
    end
@@ -84,7 +84,7 @@ local
       meth UnhideTreeKids(Ks $)
 	 case Ks of nil then False
 	 [] K|Kr then
-	    case K.kind==choice andthen {K UnhideTree($)} then
+	    case K.kind==choose andthen {K UnhideTree($)} then
 	       isDirty  <- True
 	       <<Inner UnhideTreeKids(Kr _)>>
 	       True
@@ -116,7 +116,7 @@ local
       meth HideFailedKids(Ks $)
 	case Ks of nil then False
 	[] K|Kr then
-	   case K.kind==choice andthen {K HideFailed($)} then
+	   case K.kind==choose andthen {K HideFailed($)} then
 	      isDirty <- True
 	      <<Inner HideFailedKids(Kr _)>>
 	      True

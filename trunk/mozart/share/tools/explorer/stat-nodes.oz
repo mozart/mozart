@@ -18,8 +18,8 @@ local
 	    MDT={Max D+1 MDI} DNT=DNI SNT=SNI FNT=FNI+1 UNT=UNI  failed
 	 [] blocked then
 	    MDT={Max D+1 MDI} DNT=DNI SNT=SNI FNT=FNI UNT=UNI+1  blocked
-	 [] choice then
-	    choice({GetStat {N getKids($)} D+1 MDI ?MDT
+	 [] choose then
+	    choose({GetStat {N getKids($)} D+1 MDI ?MDT
 		    DNI+1 ?DNT SNI ?SNT FNI ?FNT UNI ?UNT})
 	 end
 	 |{GetStat Nr D MDT ?MDO DNT ?DNO SNT ?SNO FNT ?FNO UNT ?UNO}
@@ -32,16 +32,16 @@ local
       
 in
 
-   StatNodes = c(choice:
+   StatNodes = c(choose:
 		    class $
 		       meth stat($)
 			  D DN SN FN UN
 		       in
-			  stat(shape:     choice({GetStat @kids 1 1 ?D 1
+			  stat(shape:     choose({GetStat @kids 1 1 ?D 1
 						  ?DN 0 ?SN 0 ?FN 0 ?UN})
 			       start:     {GetDepth self.mom 1}
 			       depth:     D
-			       choice:    DN
+			       choose:    DN
 			       succeeded: SN
 			       failed:    FN
 			       blocked:   UN)
@@ -53,7 +53,7 @@ in
 			  stat(shape:     failed
 			       start:     {GetDepth self.mom 1}
 			       depth:     1
-			       choice:    0
+			       choose:    0
 			       succeeded: 0
 			       failed:    1
 			       blocked:   0)
@@ -65,7 +65,7 @@ in
 			  stat(shape:     succeeded
 			       start:     {GetDepth self.mom 1}
 			       depth:     1
-			       choice:    0
+			       choose:    0
 			       succeeded: 1
 			       failed:    0
 			       blocked:   0)
@@ -77,7 +77,7 @@ in
 			  stat(shape:     blocked
 			       start:     {GetDepth self.mom 1}
 			       depth:     1
-			       choice:    0
+			       choose:    0
 			       succeeded: 0
 			       failed:    0
 			       blocked:   1)
