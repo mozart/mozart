@@ -24,8 +24,8 @@
 %% the DICT protocol.
 %%
 %% Not implemented yet:
-%% -- UTF-8
-%% -- Authentication
+%% -- interpretation of the server banner
+%% -- authentication
 %% -- OPTION MIME
 %%
 
@@ -38,12 +38,12 @@ export
    defaultServer: DEFAULT_SERVER
    defaultPort: DEFAULT_PORT
 prepare
-   %% Default server host to connect to
+   %% Name of default server to connect to
    DEFAULT_SERVER = 'dict.org'
    %% Default port to connect to
    DEFAULT_PORT = 2628
 
-   %% String send by the client to identify itself
+   %% String sent by the client to identify itself
    CLIENT_TEXT = 'Mozart client, http://mozart.ps.uni-sb.de/'
 
    fun {DropCR S}
@@ -59,6 +59,97 @@ prepare
       {List.dropWhile S
        fun {$ C} C == &  orelse C == &\t end}
    end
+
+   %%
+   %% Converting between UTF-8 and UCS-4 [RFC2044]
+   %%
+   %% UCS-4 range (hex.)    UTF-8 octet sequence (binary)
+   %% 0000 0000-0000 007F   0xxxxxxx
+   %% 0000 0080-0000 07FF   110xxxxx 10xxxxxx
+   %% 0000 0800-0000 FFFF   1110xxxx 10xxxxxx 10xxxxxx
+   %% 0001 0000-001F FFFF   11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+   %% 0020 0000-03FF FFFF   111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
+   %% 0400 0000-7FFF FFFF   1111110x 10xxxxxx ... 10xxxxxx
+   %%
+
+   local
+      SixBits = 0b1000000
+
+      fun {CharToSeq C Acc}
+	 case C of 0 then Acc
+	 else
+	    {CharToSeq (C div SixBits) (C mod SixBits)|Acc}
+	 end
+      end
+
+      fun {AppendSeq Seq N Rest}
+	 case Seq of I|Ir then
+	    (I + N)|{AppendSeq Ir 0b10000000 Rest}
+	 else
+	    Rest
+	 end
+      end
+   in
+      fun {UCS4toUTF8 S}
+	 case S of C|Cr then
+	    if     C =< 0x0000007F then
+	       C|{UCS4toUTF8 Cr}
+	    elseif C =< 0x000007FF then
+	       {AppendSeq {CharToSeq C nil} 0b11000000 {UCS4toUTF8 Cr}}
+	    elseif C =< 0x0000FFFF then
+	       {AppendSeq {CharToSeq C nil} 0b11100000 {UCS4toUTF8 Cr}}
+	    elseif C =< 0x001FFFFF then
+	       {AppendSeq {CharToSeq C nil} 0b11110000 {UCS4toUTF8 Cr}}
+	    elseif C =< 0x03FFFFFF then
+	       {AppendSeq {CharToSeq C nil} 0b11111000 {UCS4toUTF8 Cr}}
+	    elseif C =< 0x7FFFFFFF then
+	       {AppendSeq {CharToSeq C nil} 0b11111100 {UCS4toUTF8 Cr}}
+	    else
+	       {Exception.raiseError netdict(nonUCS4character C)} unit
+	    end
+	 [] nil then nil
+	 end
+      end
+   end
+
+   local
+      SixBits = 0b1000000
+
+      fun {SeqToChar N Seq Acc ?Rest}
+	 case N of 0 then
+	    Rest = Seq
+	    Acc
+	 elsecase Seq of I|Ir then
+	    if I < 0b1000000 orelse I >= 0b11000000 then
+	       {Exception.raiseError netdict(nonUTF8element I)}
+	    end
+	    {SeqToChar N - 1 Ir Acc * SixBits + (I - 0b10000000) ?Rest}
+	 [] nil then
+	    {Exception.raiseError netdict(tooShortUTF8character)} unit
+	 end
+      end
+   in
+      fun {UTF8toUCS4 Seq}
+	 case Seq of I|Ir then
+	    if     I >= 0b11111100 then Rest in
+	       {SeqToChar 5 Ir I - 0b11111100 ?Rest}|{UTF8toUCS4 Rest}
+	    elseif I >= 0b11111000 then Rest in
+	       {SeqToChar 4 Ir I - 0b11111000 ?Rest}|{UTF8toUCS4 Rest}
+	    elseif I >= 0b11110000 then Rest in
+	       {SeqToChar 3 Ir I - 0b11110000 ?Rest}|{UTF8toUCS4 Rest}
+	    elseif I >= 0b11100000 then Rest in
+	       {SeqToChar 2 Ir I - 0b11100000 ?Rest}|{UTF8toUCS4 Rest}
+	    elseif I >= 0b11000000 then Rest in
+	       {SeqToChar 1 Ir I - 0b11000000 ?Rest}|{UTF8toUCS4 Rest}
+	    elseif I >= 0b10000000 then
+	       {Exception.raiseError netdict(nonUTF8character Seq)} unit
+	    else
+	       I|{UTF8toUCS4 Ir}
+	    end
+	 [] nil then nil
+	 end
+      end
+   end
 define
    %%
    %% Extended Socket Class for Protocol Basics
@@ -70,7 +161,7 @@ define
       meth getS($)
 	 %% Override `Open.socket,getS' to discard the final return character.
 	 case Open.text, getS($) of false then false
-	 elseof S then {DropCR S}
+	 elseof S then {DropCR {UTF8toUCS4 S}}
 	 end
       end
       meth getTextLine($)
@@ -118,12 +209,13 @@ define
 	    {Exception.raiseError netdict(unexpectedResponse Ns unit S)}
 	 end
       end
-      meth writeLine(S)
+      meth writeLine(S) V in
 	 %% Write a command S to the server.
 	 %% Append the required return/linefeed character sequence.
 	 %% Raise an exception if the connection has been closed.
+	 V = {UCS4toUTF8 {VirtualString.toString S#'\r\n'}}
 	 try
-	    TextSocket, write(vs: S#'\r\n')
+	    TextSocket, write(vs: V)
 	 catch system(os(os 4: Text ...) ...) then
 	    {self.crash}
 	    {Exception.raiseError netdict(serverClosed Text)}
@@ -249,6 +341,12 @@ define
 	       {Socket close()}
 	       {Raise E}
 	    end
+	 end
+      end
+      meth getBanner($)
+	 %% Return the banner sent by the server upon connection.
+	 case @socket of unit then ""
+	 else @serverBanner
 	 end
       end
       meth close()
