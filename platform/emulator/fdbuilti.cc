@@ -421,7 +421,7 @@ void BIfdBodyManager::processNonRes(void)
                                                   TaggedRef(bifdbm_varptr[0]));
 
         if (susp == NULL) susp = new Suspension(am.currentBoard);
-        addSuspFDVar(bifdbm_var[0], new SuspList(susp, NULL), fd_size);
+        addSuspFDVar(bifdbm_var[0], new SuspList(susp, NULL));
 
         doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
                        newSmallInt(bifdbm_dom[0]->singl()));
@@ -431,7 +431,7 @@ void BIfdBodyManager::processNonRes(void)
                                                 TaggedRef(bifdbm_varptr[0]));
       if (! bifdbm_is_local[0]) {
         if (susp == NULL) susp = new Suspension(am.currentBoard);
-        addSuspFDVar(bifdbm_var[0], new SuspList(susp, NULL), fd_size);
+        addSuspFDVar(bifdbm_var[0], new SuspList(susp, NULL));
 
         GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[0]);
         TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
@@ -616,8 +616,9 @@ Bool BIfdBodyManager::_unifiedVars(void)
 void BIinitFD()
 {
 // fdcore.C
-  BIadd("fdIsVar", 1, BIisFdVar);
+  BIadd("fdIs", 1, BIfdIs, FALSE, (InlineFunOrRel) BIfdIsInline);
   BIadd("fdIs", 1, BIfdIs);
+  BIadd("fdIsVar", 1, BIisFdVar);
   BIadd("fdGetLimits", 2, BIgetFDLimits);
   BIadd("fdGetMin", 2, BIfdMin);
   BIadd("fdGetMax", 2, BIfdMax);

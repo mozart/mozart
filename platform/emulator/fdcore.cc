@@ -31,19 +31,15 @@ OZ_C_proc_begin(BIgetFDLimits,2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIfdIs, 1)
-{
-  OZ_getCArgDeref(0, var, varptr, vartag);
+State BIfdIsInline(TaggedRef fd) {
+  DEREF(fd, fdptr, fdtag);
 
-  if(isPosSmallInt(var) || isGenFDVar(var, vartag)) {
-    return PROCEED;
-  } else if (isNotCVar(vartag)) {
-    return addNonResSuspForCon(var, varptr, vartag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
-  }
-  return FAILED;
+  if (isNotCVar(fdtag)) return SUSPEND;
+
+  return (isPosSmallInt(fd) || isGenFDVar(fd, fdtag)) ? PROCEED : FAILED;
 }
-OZ_C_proc_end
+
+DECLAREBI_USEINLINEREL1(BIfdIs, BIfdIsInline);
 
 OZ_C_proc_begin(BIfdMin, 2)
 {
