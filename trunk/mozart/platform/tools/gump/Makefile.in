@@ -7,9 +7,10 @@
 VPATH		= @srcdir@
 BUILDTOP	= @BUILDTOP@
 PREFIX		= @prefix@
-PLATFORM	= $(shell $(OZTOOL) platform)
+PLATFORM	= @PLATFORM@
 SRCDIR		= @srcdir@
 SRCTOP		= @SRCTOP@
+BUILDTOP	= @BUILDTOP@
 SUBDIRS		= ozflex ozbison
 
 RM		= @RM@ -f
@@ -40,7 +41,8 @@ INCFILES = \
 
 all: Makefile subdirs GumpScanner.so
 
-bootstrap: all
+include $(SRCTOP)/share/Makefile.boot
+bootstrap: cboot-all
 
 subdirs:
 	dirs="$(SUBDIRS)"; \
