@@ -52,6 +52,7 @@ fun {IsSpecialFrameName Name}
    [] 'exception handler' then true
    [] 'conditional' then true
    [] 'exception' then true
+   [] 'statement' then true
    [] 'unknown' then true
    else false
    end
