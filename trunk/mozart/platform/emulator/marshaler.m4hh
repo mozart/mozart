@@ -77,7 +77,7 @@ define(mxzArg,`ifelse($1,Index,int,
             `ifelse($2,`',`',`,')')
 
 
-include(OZSRCDIR/msgFormat.m4)
+include(EMUDIR/msgFormat.m4)
 
 undefine(`mxzArg')
 define(mxzArg,`ifelse($1,Index,int &,
@@ -95,11 +95,11 @@ define(mxzArg,`ifelse($1,Index,int &,
 
 undefine(`message')
 define(message,`void unmarshal_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
-include(OZSRCDIR/msgFormat.m4)
+include(EMUDIR/msgFormat.m4)
 
 undefine(`message')
 define(message,`void unmarshalUnsent_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
-include(OZSRCDIR/msgFormat.m4)
+include(EMUDIR/msgFormat.m4)
 
 
 
