@@ -10,7 +10,7 @@ DOCDIR		= $(PREFIX)/doc
 
 HTMLFILES = \
 	index overview \
-        getstarted tutorials reference
+        getstarted tutorials reference contrib
 
 FILES = $(HTMLFILES:%=%.html) \
 	ozdoc.css page.gif
