@@ -2185,6 +2185,20 @@ OZ_C_proc_begin(BInewCell,2)
 }
 OZ_C_proc_end
 
+#define CheckFuckingBoard(Object);								\
+  if (am.currentBoard != Object->getBoardFast()) {						\
+    if (am.currentBoard->isWait()) {								\
+      warning("nonlocal access in computation space of disjunction not impl.");			\
+    } else {											\
+      warning("nonlocal access in computation space of %s",					\
+	      am.currentBoard->isSolve() ? "solve" : "conditional");				\
+    }												\
+    message("Built-in exchangeCell: message sending to a non locally declared object?\n");	\
+    am.currentBoard->incSuspCount();								\
+    return PROCEED;										\
+  }
+
+
 OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef inState, TaggedRef &outState)
 {
   NONVAR(c,rec,_1);
@@ -2195,17 +2209,7 @@ OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef inState, TaggedRef &outSta
   }
   Cell *cell = tagged2Cell(rec);
 
-  if (am.currentBoard != cell->getBoardFast()) {
-    if (am.currentBoard->isWait()) {
-      warning("Built-in exchangeCell: in local computation space of disjunction not impl.");
-    } else {
-      warning("Built-in exchangeCell: in local computation space of %s",
-	      am.currentBoard->isSolve() ? "solve" : "conditional");
-    }
-    message("Built-in exchangeCell: message sending to a non locally declared object?\n");
-    am.currentBoard->incSuspCount();
-    return PROCEED;
-  }
+  CheckFuckingBoard(cell);
 
   TaggedRef old = cell->exchangeValue(outState);
   return OZ_unify(old,inState);
@@ -2934,11 +2938,7 @@ OZ_C_proc_begin(BIarrayNew,4)
   int ilow  = smallIntValue(low);
   int ihigh = smallIntValue(high);
 
-  if (ilow>ihigh) {
-    TypeErrorM("Low bound must be less than high bound");
-  }
-  
-  return OZ_unify(makeTaggedConst(new OzArray(ilow,ihigh,initvalue)),out);
+  return OZ_unify(makeTaggedConst(new OzArray(am.currentBoard,ilow,ihigh,initvalue)),out);
 }
 OZ_C_proc_end
 
@@ -2988,7 +2988,9 @@ OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
     TypeErrorT(1,"smallInteger");
   }
 
-  return tagged2Array(array)->getArg(smallIntValue(index),out);
+  OzArray *ar = tagged2Array(array);
+  CheckFuckingBoard(ar);
+  return ar->getArg(smallIntValue(index),out);
 }
 DECLAREBI_USEINLINEFUN2(BIarrayGet,arrayGetInline)
 
@@ -3005,7 +3007,9 @@ OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
     TypeErrorT(1,"smallInteger");
   }
 
-  return tagged2Array(array)->setArg(smallIntValue(index),value);
+  OzArray *ar = tagged2Array(array);
+  CheckFuckingBoard(ar);
+  return ar->setArg(smallIntValue(index),value);
 }
 
 DECLAREBI_USEINLINEREL3(BIarrayPut,arrayPutInline)
@@ -3019,7 +3023,7 @@ OZ_C_proc_begin(BIdictionaryNew,1)
 {
   OZ_Term out       = OZ_getCArg(0);
 
-  return OZ_unify(makeTaggedConst(new OzDictionary()),out);
+  return OZ_unify(makeTaggedConst(new OzDictionary(am.currentBoard)),out);
 }
 OZ_C_proc_end
 
@@ -3034,6 +3038,7 @@ OZ_C_proc_begin(BIdictionaryKeys,2)
     TypeErrorT(0,"Dictionary");
   }
 
+  CheckFuckingBoard(tagged2Dictionary(dict));
   return OZ_unify(tagged2Dictionary(dict)->keys(),out);
 }
 OZ_C_proc_end
@@ -3053,7 +3058,8 @@ DECLAREBI_USEINLINEFUN1(BIisDictionary,isDictionaryInline)
   NONVAR(k,key, _2);						\
   if (!isDictionary(dictaux)) { TypeErrorT(0,"Dictionary"); }	\
   if (!isFeature(key))        { TypeErrorT(1,"feature"); }	\
-  OzDictionary *dict = tagged2Dictionary(dictaux);
+  OzDictionary *dict = tagged2Dictionary(dictaux);		\
+  CheckFuckingBoard(dict);
 
 
 OZ_Return dictionaryMemberInline(TaggedRef d, TaggedRef k, TaggedRef &out)
