@@ -223,25 +223,22 @@ where <<I>> is in {<<state>>, <<owner>>}.
 <ITEM> <<OP>> indicates which attempted operation caused the exception.
 The possible values of <<OP>> are currently:
 <LIST>
-<ITEM> For logic variables: <<tell(X T)>>, <<ask>>, or <<isDet>>,
-where <<X>> is the variable and <<T>> is what it is attempted
-to bind with.
+<ITEM> For logic variables: <<bind(T)>>, <<wait>>, and <<isDet>>,
+where <<T>> is what the variable was attempted to be bound with.
 <ITEM> For cells: 
-<<exchange(Old New)>>, 
-<<assign(New)>>, 
-<<access(Old)>>, or
-<<accessDeep(Old)>>,
+<<cellExchange(Old New)>>, 
+<<cellAssign(New)>>, and
+<<cellAccess(Old)>>,
 where <<Old>> is the cell content before the attempted operation
 and <<New>> is the cell content after the attempted operation.
 <ITEM> For locks: <<lock>>.
 <ITEM> For ports: <<send(Msg)>>,
 where <<Msg>> is the message attempted to be sent to the port.
 <ITEM> For objects: 
-<<attrExchange(Attr Old New)>>,
-<<attrAssign(Attr New)>>,
-<<attrAccess(Attr Old)>>, or
-<<attrAccessDeep(Attr Old)>>,
-where <<Attr>> is the name of the attribute,
+<<objectExchange(Attr Old New)>>,
+<<objectAssign(Attr New)>>, and
+<<objectAccess(Attr Old)>>,
+where <<Attr>> is the name of the object attribute,
 <<Old>> is the attribute value before the attempted operation,
 and <<New>> is the attribute value after the attempted operation.
 </LIST>
