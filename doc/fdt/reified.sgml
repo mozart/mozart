@@ -214,7 +214,7 @@ proc {Disj X Y Z}
 end
 proc {Impl X Y Z}
    X::0#1  Y::0#1
-   (X=:0) + (Y>:0) = Z
+   (Y-X>=:0) = Z
 end
 >>>
 </Answer>
