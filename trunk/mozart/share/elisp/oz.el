@@ -85,6 +85,9 @@ starts the machine under gdb")
   "*If non-nil means every input to the compiler is echoed in the 
 Compiler buffer")
 
+(defvar oz-want-font-lock t
+  "*If t means taht font-lock mode is switched on")
+
 (defvar oz-temp-counter 0
   "gensym counter")
 
@@ -380,13 +383,7 @@ Compiler buffer")
   (make-local-variable 'comment-start)
   (setq comment-start "%")
   (make-local-variable 'comment-start-skip)
-  (setq comment-start-skip "%+ *")
-;  (make-local-variable 'after-change-function)
-;  (setq after-change-function 'oz-after-change-function)
-;  (make-local-variable 'comment-column)
-;  (setq comment-column 48)
-;  (make-local-variable 'comment-indent-hook)
-;  (setq comment-indent-hook 'oz-comment-indent)
+  (setq comment-start-skip "/\\*+ *\\|% *")
 )
 
 (defun oz-mode-commands (map)
@@ -425,7 +422,6 @@ Compiler buffer")
   (define-key map "\C-cm"       'oz-set-machine)
   (define-key map "\C-co"       'oz-other)
   (define-key map "\C-cd"       'oz-gdb)
-
   )
 
 (oz-mode-commands oz-mode-map)
@@ -446,16 +442,8 @@ if that value is non-nil."
    (set-buffer-menubar (append current-menubar oz-menubar)))
 
   ; font lock stuff
-  (make-local-variable 'comment-start)
-  (make-local-variable 'comment-end)
-  (setq comment-start "%")
-  (setq comment-start "/* ")
-; (setq comment-end "")
-  (setq comment-end " */")
-  (make-local-variable 'comment-start-skip)
-  (setq comment-start-skip "/\\*+ *\\|% *")
-
-  (setq font-lock-keywords (list oz-keywords))
+  (if oz-want-font-lock
+      (setq font-lock-keywords (list oz-keywords)))
 
   (font-lock-mode t)
   (font-lock-fontify-buffer)
