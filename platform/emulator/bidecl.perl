@@ -217,10 +217,10 @@ sub argspec {
 
     while ($again) {
         # is the argument register side effected?
-        if    ($spec =~ /^\!/) { $spec=$'; $mod=1; }
+        if    ($spec =~ /^\!/) { $spec=$'; $mod=1; }#'
         # what is the determinacy condition on the argument?
-        elsif ($spec =~ /^\+/) { $spec=$'; $det='det'; }
-        elsif ($spec =~ /^\*/) { $spec=$'; $det='detOrKinded'; }
+        elsif ($spec =~ /^\+/) { $spec=$'; $det='det'; }#'
+        elsif ($spec =~ /^\*/) { $spec=$'; $det='detOrKinded'; }#'
         else { $again=0; }
     }
 
