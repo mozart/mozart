@@ -122,7 +122,7 @@
       keyword).  For the moment, the only recognized flags are <<instantiate>>
       (the body's code is copied upon application), <<lazy>> (the body has
       by-need semantics), <<dynamic>> (disable static-call optimization of
-      this procedure), and <<native>> (cannot be pickled).  Other atoms are
+      this procedure), and <<sited>> (cannot be pickled).  Other atoms are
       silently ignored.
       <Grammar.Rule>?={proc flag}
         <Grammar.Alt/?={atom}/
