@@ -102,6 +102,9 @@ starts the emulator under gdb")
 (defvar oz-temp-counter 0
   "gensym counter")
 
+(defvar oz-popup-on-error t
+  "*popup compiler/emulator buffer if error occured")
+
 ;;------------------------------------------------------------
 ;; Screen title
 ;;------------------------------------------------------------
@@ -1023,7 +1026,7 @@ if that value is non-nil."
 	      old-point
 	      moving
 	      index
-	      (errs-found (string-match oz-error-string string)))
+	      (errs-found (and oz-popup-on-error (string-match oz-error-string string))))
 	  
 	  (if errs-found
 	      (if oz-gnu19
