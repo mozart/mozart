@@ -41,42 +41,6 @@
                              bi  => BIslowNet},
 
     ###
-    ### Debug
-    ###
-
-    'displayDef'        => { in  => ['+int','+int'],
-                             out => [],
-                             BI  => BIdisplayDef},
-
-    'displayCode'       => { in  => ['+int','+int'],
-                             out => [],
-                             BI  => BIdisplayCode},
-
-    'procedureCode'=> { in  => ['+procedure'],
-                              out => ['+int'],
-                              BI  => BIprocedureCode},
-
-    'print'     => { in  => ['value','+int'],
-                             out => [],
-                             BI  => BIdebugPrint},
-
-    'printLong' => { in  => ['value','+int'],
-                             out => [],
-                             BI  => BIdebugPrintLong},
-
-    'Debug.inspect'     => { in  => ['value'],
-                             out => ['+value'],
-                             BI  => BIinspect},
-
-    'Debug.livenessX'   => { in  => ['+int'],
-                             out => ['+int'],
-                             BI  => BIlivenessX},
-
-    'procedureEnvironment'=> { in  => ['+procedure'],
-                               out => ['+tuple'],
-                               BI  => BIprocedureEnvironment},
-
-    ###
     ### Statistics
     ###
 

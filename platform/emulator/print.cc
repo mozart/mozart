@@ -846,8 +846,6 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
     break;
   case Co_Foreign_Pointer:
     ((ForeignPointer*)this)->printLongStream(stream,depth,offset); break;
-  case Co_Extended:
-    ((ExtendedConst*)this)->printLongStream(stream,depth,offset); break;
   default:            Assert(NO);
   }
 }
@@ -920,8 +918,6 @@ void ConstTerm::printStream(ostream &stream, int depth)
     break;
   case Co_Foreign_Pointer:
     ((ForeignPointer*)this)->printStream(stream,depth); break;
-  case Co_Extended:
-    ((ExtendedConst*)this)->printStream(stream,depth); break;
   default:             Assert(NO);
   }
 }
@@ -946,15 +942,6 @@ void BitArray::printStream(ostream &stream, int depth)
 void ForeignPointer::printStream(ostream &stream, int depth)
 {
   stream << "foreign pointer: " << getPointer() << " at " << this << '.';
-}
-
-void ExtendedConst::printStream(ostream &stream, int depth)
-{
-  switch (getXType()) {
-  default:
-    stream << "extended const at " << this << ".";
-    break;
-  }
 }
 
 void ObjectClass::printLongStream(ostream &stream, int depth, int offset)

@@ -40,38 +40,27 @@
 // exported functions
 
 inline
-void
-oz_checkExtSuspension(Suspension susp);
-void
-oz_checkExtSuspension(Suspension susp, Board * home);
-void
-oz_checkExtSuspensionOutlined(Suspension susp);
-void
-oz_removeExtThreadOutlined(Thread *tt);
-Thread *
-oz_mkLPQ(Board *bb, int prio);
-Propagator *
-oz_mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
-void
-oz_pushToLPQ(Board *bb, Propagator * prop);
-void
-oz_solve_scheduleNonMonoSuspList(SolveActor *sa);
+void oz_checkExtSuspension(Suspension susp);
+void oz_checkExtSuspension(Suspension susp, Board * home);
+void oz_checkExtSuspensionOutlined(Suspension susp);
+void oz_removeExtThreadOutlined(Thread *tt);
+Thread * oz_mkLPQ(Board *bb, int prio);
+Propagator * oz_mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
+void oz_pushToLPQ(Board *bb, Propagator * prop);
+void oz_solve_scheduleNonMonoSuspList(SolveActor *sa);
 
 /* -------------------------------------------------------------------------
  * Suspension lists
  * ------------------------------------------------------------------------- */
 
-void
-oz_wakeupAll(SVariable *sv);
+void oz_wakeupAll(SVariable *sv);
 
-SuspList *
-oz_checkAnySuspensionList(SuspList *suspList,Board *home,
+SuspList * oz_checkAnySuspensionList(SuspList *suspList,Board *home,
                           PropCaller calledBy);
 
 // mm2: maybe #define this???
 inline
-void
-oz_checkSuspensionList(SVariable *var,
+void oz_checkSuspensionList(SVariable *var,
                        PropCaller calledBy=pc_propagator)
 {
   var->setSuspList(oz_checkAnySuspensionList(var->getSuspList(),
@@ -84,7 +73,7 @@ oz_checkSuspensionList(SVariable *var,
 
 static
 inline
-Thread *_newThread(int prio, Board *bb) {
+Thread * _newThread(int prio, Board *bb) {
   Thread *th = new Thread(S_RTHREAD | T_runnable,prio,bb,am.newId());
   th->setBody(am.threadsPool.allocateBody());
   bb->incSuspCount();
@@ -93,7 +82,7 @@ Thread *_newThread(int prio, Board *bb) {
 }
 
 inline
-Thread *oz_newThread(int prio=DEFAULT_PRIORITY)
+Thread * oz_newThread(int prio=DEFAULT_PRIORITY)
 {
   Board *bb=oz_currentBoard();
   Thread *tt = _newThread(prio,bb);
@@ -111,7 +100,7 @@ Thread *oz_newThread(int prio=DEFAULT_PRIORITY)
 
 
 inline
-Thread *oz_newThreadToplevel(int prio=DEFAULT_PRIORITY)
+Thread * oz_newThreadToplevel(int prio=DEFAULT_PRIORITY)
 {
   Board *bb=oz_rootBoard();
   Thread *tt = _newThread(prio,bb);
@@ -121,7 +110,7 @@ Thread *oz_newThreadToplevel(int prio=DEFAULT_PRIORITY)
 }
 
 inline
-Thread *oz_newThreadInject(int prio,Board *bb)
+Thread * oz_newThreadInject(int prio,Board *bb)
 {
   Thread *tt = _newThread(prio,bb);
 
@@ -135,7 +124,7 @@ Thread *oz_newThreadInject(int prio,Board *bb)
 
 
 inline
-Thread *oz_newThreadSuspended(int prio=DEFAULT_PRIORITY)
+Thread * oz_newThreadSuspended(int prio=DEFAULT_PRIORITY)
 {
   Board *bb = oz_currentBoard();
   Thread *th = new Thread(S_RTHREAD,prio,bb,am.newId());
@@ -148,7 +137,7 @@ Thread *oz_newThreadSuspended(int prio=DEFAULT_PRIORITY)
 }
 
 inline
-Thread *oz_newThreadPropagate(Board *bb)
+Thread * oz_newThreadPropagate(Board *bb)
 {
   Thread *th = new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb,am.newId());
   bb->incSuspCount();

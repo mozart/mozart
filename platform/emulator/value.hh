@@ -617,7 +617,7 @@ const int Co_Mask = (1<<Co_Bits)-1;
 enum TypeOfConst {
   Co_BigInt,
   Co_Foreign_Pointer,
-  Co_Extended,
+  Co_Unused2,
   Co_Thread,
   Co_Abstraction,
   Co_Builtin,
@@ -1199,41 +1199,6 @@ public:
   ForeignPointer(void*p):ConstTerm(Co_Foreign_Pointer),ptr(p){}
   void*getPointer(){ return ptr; }
   ForeignPointer* gc(void);
-};
-
-/*===================================================================
- * Extended Const
- *
- * to create a new constant:
- * (1) add a new tag to TypeOfExtendedConst below
- * (2) add a class derived from ConstTerm
- * (3) add a clause in ExtendedConst.gc() (see gc.cc)
- *     if your constant is not situated, then it should probably
- *     check isInGc and return itself if it is false (i.e. no duplication
- *     when cloning)
- * (4) add a clause in ExtendedConst::printStream(...) (see print.cc)
- * (5) add a clause in finalizable() (see builtins.cc)
- *=================================================================== */
-
-enum TypeOfExtendedConst {
-};
-
-class ExtendedConst: public ConstTerm {
-protected:
-  void * allocate(int size) {
-    return (void*) alignedMalloc(size,sizeof(double));
-  }
-public:
-  OZPRINT;
-  NO_DEFAULT_CONSTRUCTORS2(ExtendedConst);
-  ExtendedConst():ConstTerm(Co_Extended){}
-  ExtendedConst(TypeOfExtendedConst t):ConstTerm(Co_Extended) {
-    setVal(t);
-  }
-  TypeOfExtendedConst getXType() {
-    return (TypeOfExtendedConst) getVal();
-  }
-  ExtendedConst* gc(void);
 };
 
 /*===================================================================

@@ -1,12 +1,9 @@
 /*
  *  Authors:
- *    Leif Kornstaedt <kornstae@ps.uni-sb.de>
- *    Benjamin Lorenz <lorenz@ps.uni-sb.de>
  *    Michael Mehl <mehl@dfki.de>
- *    Ralf Scheidhauer <Ralf.Scheidhauer@ps.uni-sb.de>
  *
  *  Copyright:
- *    Benjamin Lorenz <lorenz@ps.uni-sb.de>
+ *    Michael Mehl (1998)
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -273,27 +270,5 @@ Bool ozd_trace(char *info, ProgramCounter PC,RefsArray Y,Abstraction *CAP)
     }
   }
 }
-
-#ifdef MISC_BUILTINS
-
-// mm2: I need this builtin for debugging!
-OZ_BI_define(BIhalt, 0,0)
-{
-  mode=OK;
-  return PROCEED;
-} OZ_BI_end
-
-#endif
-
-#ifdef MISC_BUILTINS
-
-OZ_BI_define(BIlivenessX, 1,1)
-{
-  OZ_declareIntIN(0,pc);
-
-  OZ_RETURN_INT(CodeArea::livenessX((ProgramCounter)ToPointer(pc),0,0));
-} OZ_BI_end
-
-#endif
 
 #endif

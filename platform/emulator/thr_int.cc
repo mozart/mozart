@@ -27,7 +27,9 @@
 
 #include "threadInterface.hh"
 
-// WAKEUP
+/* -------------------------------------------------------------------------
+ * Suspension lists
+ * ------------------------------------------------------------------------- */
 
 inline
 static
@@ -285,8 +287,8 @@ void oz_wakeupAll(SVariable *sv)
   }
 }
 
-SuspList *oz_checkAnySuspensionList(SuspList *suspList,Board *home,
-                                    PropCaller calledBy)
+SuspList * oz_checkAnySuspensionList(SuspList *suspList,Board *home,
+                                     PropCaller calledBy)
 {
   if (am.inShallowGuard())
     return suspList;
@@ -343,10 +345,14 @@ SuspList *oz_checkAnySuspensionList(SuspList *suspList,Board *home,
   return retSuspList;
 }
 
+/* -------------------------------------------------------------------------
+ * TODO
+ * ------------------------------------------------------------------------- */
+
 //  Make a runnable thread with a single task stack entry <local thread queue>
-Thread *oz_mkLPQ(Board *bb, int prio)
+Thread * oz_mkLPQ(Board *bb, int prio)
 {
-  Thread * th = new Thread(S_RTHREAD | T_runnable | T_lpq, prio, bb, am.newId());
+  Thread * th = new Thread(S_RTHREAD|T_runnable|T_lpq, prio, bb, am.newId());
   th->setBody(am.threadsPool.allocateBody());
   bb->incSuspCount();
   oz_checkDebug(th,bb);
@@ -377,8 +383,7 @@ Thread *oz_mkLPQ(Board *bb, int prio)
 }
 
 
-
-SuspList *oz_installPropagators(SuspList * local_list, SuspList * glob_list,
+SuspList * oz_installPropagators(SuspList * local_list, SuspList * glob_list,
                                  Board * glob_home)
 {
   Assert((local_list && glob_list && (local_list != glob_list)) ||
@@ -657,7 +662,9 @@ void oz_checkExtSuspensionOutlined(Suspension susp)
   }
 }
 
-Bool oz_solve_checkExtSuspList (SolveActor *sa) {
-  oz_solve_clearSuspList(sa,(Thread *) NULL);           // Kostja: Christian's; (no spaces!);
+Bool oz_solve_checkExtSuspList (SolveActor *sa)
+{
+  // Kostja: Christian's; (no spaces!);
+  oz_solve_clearSuspList(sa,(Thread *) NULL);
   return (sa->getSuspList() == NULL);
 }

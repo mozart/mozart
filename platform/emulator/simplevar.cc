@@ -30,8 +30,9 @@
 
 #include "simplevar.hh"
 
-OZ_Return SimpleVar::unifyV(TaggedRef* vPtr, TaggedRef t, ByteCode* scp) {
-  TaggedRef v=*vPtr;
+OZ_Return SimpleVar::unifyV(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
+{
+  TaggedRef v = *vPtr;
   Assert(!oz_isRef(t)||oz_isVariable(*tagged2Ref(t)));
   if (oz_isRef(t)) {
     TaggedRef *tPtr=tagged2Ref(t);
@@ -44,9 +45,9 @@ OZ_Return SimpleVar::unifyV(TaggedRef* vPtr, TaggedRef t, ByteCode* scp) {
             heapNewer(tPtr,vPtr))
 #endif
         ) {
-      t=    makeTaggedRef(vPtr);
-      v=    *tPtr;
-      vPtr= tPtr;
+      t =    makeTaggedRef(vPtr);
+      v =    *tPtr;
+      vPtr = tPtr;
     }
     oz_bind(vPtr, v, t);
   } else {
@@ -56,10 +57,8 @@ OZ_Return SimpleVar::unifyV(TaggedRef* vPtr, TaggedRef t, ByteCode* scp) {
 }
 
 #ifdef SIMPLEVAR
-void addSuspUVar(TaggedRef *vPtr, Suspension susp, int unstable = TRUE)
+SVariable *oz_newSVar(Board *bb)
 {
-  GenCVariable *cv = new SimpleVar(tagged2VarHome(*vPtr));
-  *vPtr = makeTaggedCVar(cv);
-  cv->addSuspSVar(susp, unstable);
+  return new SimpleVar(bb);
 }
 #endif

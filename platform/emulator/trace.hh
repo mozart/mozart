@@ -1,9 +1,9 @@
 /*
  *  Authors:
- *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
- *    Benjamin Lorenz (lorenz@ps.uni-sb.de)
- *    Michael Mehl (mehl@dfki.de)
- *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ *    Michael Mehl <mehl@dfki.de>
+ *
+ *  Copyright:
+ *    Michael Mehl (1998)
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
