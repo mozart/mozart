@@ -44,7 +44,8 @@ UL.toc {
 
 SPAN.key          { color: #669933; }
 CODE              { color: #663366; }
-PRE CODE          { color: #000000; }
+.code CODE        { color: #000000; }
+.synopsis CODE    { color: #000000; }
 
 SPAN.comment      { color: #B22222; }
 SPAN.keyword      { color: #A020F0; }
