@@ -137,7 +137,8 @@
 
 <!--==================== FRONT AND BACK MATTER ====================-->
 
-<!ELEMENT front  O O (title & author* & meta* & abstract?)>
+<!ENTITY % author.class "author|author.extern">
+<!ELEMENT front  O O (title & (%author.class;)* & meta* & abstract?)>
 <!ELEMENT title  - O (%p.chars.mix;)*   -- should be more restricted -- >
 <!ATTLIST title
         %common.attr;
@@ -145,6 +146,11 @@
 <!ELEMENT author - O (#PCDATA)*         -- one author -->
 <!ATTLIST author
         %common.attr;
+>
+<!ELEMENT author.extern - O EMPTY>
+<!ATTLIST author.extern
+        %common.attr;
+        %extern.attr;
 >
 <!ELEMENT meta   - O EMPTY              -- generic meta information -->
 <!ATTLIST meta
