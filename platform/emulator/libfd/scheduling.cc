@@ -222,8 +222,7 @@ OZ_C_proc_begin(sched_cpIterate, 3)
       pe.expectIntVarMinMax(OZ_subtree(starts, task));
     }
 
-    OZ_Return r = pe.impose(new CPIteratePropagator(tasks, starts, durs),
-                            OZ_getLowPrio());
+    OZ_Return r = pe.impose(new CPIteratePropagator(tasks, starts, durs));
 
     if (r == FAILED) return FAILED;
   }
@@ -344,22 +343,6 @@ cploop:
   //////////
 
 
-  /*
-  // it's not worth it
-  // Cut a hole into tasks if it must be scheduled in the following interval
-  for (i=0; i<ts; i++)
-    if (x[i]->getMaxElem() < x[i]->getMinElem() + dur[i]) {
-      OZ_FiniteDomain lb;
-      lb.initRange(x[i]->getMinElem()+dur[i], mysup);
-      for (j=0; j<ts; j++)
-        if (i != j) {
-          OZ_FiniteDomain la, l1;
-          la.initRange(0, x[i]->getMaxElem()- dur[j]);
-          l1 = (la | lb);
-          FailOnEmpty(*x[j] &= l1);
-        }
-    }
-    */
 
   //////////
   // sort by descending release date; ie. min(s1) > min(s2) > min(s3) etc.
@@ -460,36 +443,6 @@ cploop:
         }
       }
     }
-
-
-    //////////
-    // edgepushUp
-    //////////
-         /*
-    for (int t1=setSize; t1>=0; t1--) {
-      for (int t2=0; t2<ts; t2++) {
-        struct Set *s = &Sets[t1];
-        if (MinMax[t2].min > s->sLow) {
-          int tx;
-          if (MinMax[t2].max+dur[t2] <= kUp) {
-            tx = MinMax[t2].min;
-          }
-          else {
-            tx = MinMax[t2].min+dur[t2];
-          }
-          if ((tx > kUp - s->dSi) && (MinMax[t2].min < s->mSi)) {
-            upFlag = 1;
-//          FailOnEmpty(*x[t2] >= s->mSi);
-//          MinMax[t2].min = x[t2]->getMinElem();
-            constraints[constraintsSize] = t2;
-            constraints[constraintsSize+1] = 1;
-            constraints[constraintsSize+2] = s->mSi;
-            constraintsSize +=3;
-          }
-        }
-      }
-    }
-    */
 
 
     //////////
@@ -681,37 +634,6 @@ cploop:
       }
     }
 
-    /*
-    //////////
-    // edgepushDown
-    //////////
-    for (int t1=setSize; t1>=0; t1--) {
-      for (int t2=0; t2<ts; t2++) {
-        struct Set *s = &Sets[t1];
-        int durT2 = dur[t2];
-        int t2Max = MinMax[t2].max;
-        if (t2Max+durT2 < s->sUp) {
-          int tx;
-          if (MinMax[t2].min >= kDown) {
-            tx = t2Max+durT2;
-          }
-          else {
-            tx = t2Max;
-          }
-          if ((tx < kDown + s->dSi) && (t2Max+durT2 > s->mSi)) {
-            downFlag = 1;
-//          FailOnEmpty(*x[t2] <= s->mSi-durT2);
-//          MinMax[t2].max = x[t2]->getMaxElem();
-            constraints[constraintsSize] = t2;
-            constraints[constraintsSize+1] = 0;
-            constraints[constraintsSize+2] = s->mSi-durT2;
-            constraintsSize +=3;
-          }
-        }
-      }
-    }
-    */
-
     //////////
     // DO the edge finding
     //////////
@@ -882,8 +804,7 @@ OZ_C_proc_begin(sched_disjunctive, 3)
       pe.expectIntVarMinMax(OZ_subtree(starts, task));
     }
 
-    OZ_Return r = pe.impose(new DisjunctivePropagator(tasks, starts, durs),
-                            OZ_getLowPrio());
+    OZ_Return r = pe.impose(new DisjunctivePropagator(tasks, starts, durs));
 
     if (r == FAILED) return FAILED;
   }
@@ -1105,8 +1026,7 @@ OZ_C_proc_begin(sched_cpIterateCap, 6)
 
     OZ_Return r = pe.impose(new CPIteratePropagatorCap(tasks, starts, durs,
                                                        use, capacity,
-                                                       OZ_intToC(OZ_args[5])),
-                            OZ_getLowPrio());
+                                                       OZ_intToC(OZ_args[5])));
 
     if (r == FAILED) return FAILED;
   }
@@ -1226,67 +1146,6 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
         }
       }
   }
-
-/* it is not worth the effort
-// energy from Baptistes thesis
-for (i=0; i<ts; i++) {
-  for (j=0; j<ts; j++) {
-    int ra = x[i]->getMinElem();
-    int sum1 = 0;
-    int val = x[j]->getMinElem();
-    for (int k = 0; k<ts; k++) {
-      if (i != k)
-        sum1 = sum1 + EnergyFunct(ra, val, dur[k], use[k],
-                                  x[k]->getMinElem(),
-                                  x[k]->getMaxElem() + dur[k]);
-    }
-    int sum2 = sum1 + use[i] * min(dur[i], val - ra);
-    if ( capacity*(val - ra) < sum2) {
-      int up = (int) ceil( (double) sum1 / (double) capacity);
-      if (ra + up > x[i]->getMinElem()) {
-        FailOnEmpty(*x[i] >= ra + up);
-      }
-    }
-
-    sum1 = 0;
-    val = x[j]->getMaxElem() + dur[j];
-    for (int k = 0; k<ts; k++) {
-      if (i != k)
-        sum1 = sum1 + EnergyFunct(ra, val, dur[k], use[k],
-                                  x[k]->getMinElem(),
-                                  x[k]->getMaxElem() + dur[k]);
-    }
-    sum2 = sum1 + use[i] * min(dur[i], val - ra);
-    if ( capacity*(val - ra) < sum2) {
-      int up = (int) ceil( (double) sum1 / (double) capacity);
-      if (ra + up > x[i]->getMinElem()) {
-        FailOnEmpty(*x[i] >= ra + up);
-      }
-    }
-  }
-
-  for (j=0; j<ts; j++) {
-    if (i != j) {
-      int leftBound = x[i]->getMinElem();
-      int rightBound = x[j]->getMaxElem()+dur[j];
-      if (rightBound >= leftBound) {
-        // test for failure; not sufficient space
-        int sum = 0;
-        for (int k = 0; k<ts; k++) {
-          int energy = EnergyFunct(leftBound, rightBound, dur[k], use[k],
-                                   x[k]->getMinElem(),
-                                   x[k]->getMaxElem() + dur[k]);
-          sum = sum + energy;
-        }
-        if (sum > capacity * (rightBound - leftBound))
-          goto failure;
-
-        }
-    }
-  }
-}
-
-*/
 
 
 cploop:
@@ -1432,7 +1291,6 @@ cploop:
               if (minL < val) {
                 upFlag = 1;
                 FailOnEmpty(*x[l] >= val);
-//              MinMax[l].min = x[l]->getMinElem();
               }
               lCount++;
             }
@@ -1574,8 +1432,6 @@ cploop:
       int useL = use[l];
       int sizeAll = s->dSi + durL*useL;
 
-//      cout << "setCount: " << setCount << "\n";
-//      cout << "lCount: " << lCount << "\n";
 
       if (minL < s->sLow) {
         if ( (s->sUp - s->sLow)*capacity >= sizeAll) {
@@ -1606,7 +1462,6 @@ cploop:
                 if (right < 0)
                   goto failure;
                 FailOnEmpty(*x[l] <= right);
-//              MinMax[l].max = x[l]->getMaxElem();
               }
               lCount++;
             }
@@ -1717,12 +1572,6 @@ capLoop:
     // test whether the capacity is sufficient for all tasks
     if (sum > capacity * (max_right - min_left))
       goto failure;
-    /*
-    Intervals[interval_nb].left = min_left;
-    Intervals[interval_nb].right = max_right;
-    Intervals[interval_nb].use = 0;
-    interval_nb++;
-    */
 
 
     //////////
@@ -1855,64 +1704,6 @@ capLoop:
     }
 
 
-    /*
-    OZ_FiniteDomain la, lb;
-    for (i=0; i<ts; i++) {
-      int lst = MinMax[i].max;
-      int ect = MinMax[i].min + dur[i];
-      int use_i = use[i];
-      int dur_i = dur[i];
-      lb.initFull();
-      for (j=0; j<exclusion_nb; j++) {
-        Interval Exclusion = ExclusionIntervals[j];
-        int span = Exclusion.right - Exclusion.left;
-        if (Exclusion.use + span * use_i > span * capacity) {
-          int left = Exclusion.left;
-          int right = Exclusion.right;
-          if (lst < ect) {
-            if ( (lst <= left) && (right <= ect) ) continue;
-            else {
-              if (Exclusion.use + use_i > capacity) {
-                la.initRange(left-dur_i+1,right-1);
-                FailOnEmpty(lb -= la);
-
-                // new
-                // for capacity > 1 we must count the used resource.
-                // But this is too expensive.
-                if ((left - last < dur_i) && (capacity == 1)) {
-                  la.initRange(last,right-1);
-                  FailOnEmpty(lb -= la);
-                }
-                last = right;
-
-              }
-            }
-          }
-          else {
-            if (Exclusion.use + span * use_i > span * capacity) {
-              la.initRange(left-dur_i+1,right-1);
-              FailOnEmpty(lb -= la);
-
-              // new
-              // for capacity > 1 we must count the used resource.
-              // But this is too expensive.
-              if ((left - last < dur_i) && (capacity == 1)) {
-                la.initRange(last,right-1);
-                FailOnEmpty(lb -= la);
-              }
-              last = right;
-
-            }
-          }
-        }
-      }
-      FailOnEmpty(lb >= x[i]->getMinElem());
-      FailOnEmpty(lb <= x[i]->getMaxElem());
-      FailOnEmpty(*x[i] >= lb.getMinElem());
-      FailOnEmpty(*x[i] <= lb.getMaxElem());
-    }
-    */
-
     //////////
     // update the min/max values
     //////////
@@ -2029,8 +1820,7 @@ OZ_C_proc_begin(sched_cpIterateCapUp, 5)
     }
 
     OZ_Return r = pe.impose(new CPIteratePropagatorCapUp(tasks, starts, durs,
-                                                         use, capacity),
-                            OZ_getLowPrio());
+                                                         use, capacity));
 
     if (r == FAILED) return FAILED;
   }
@@ -2135,7 +1925,6 @@ capLoop:
       for (i=low_counter; i<interval_nb; i++) {
         int leftInt = Intervals[i].left;
         int rightInt = Intervals[i].right;
-        // really for this???
         if (leftInt > right_val) break;
         if ( (leftInt <= left_val) && (right_val <= rightInt) ) {
           cum = cum + (right_val - left_val) * Intervals[i].use;
