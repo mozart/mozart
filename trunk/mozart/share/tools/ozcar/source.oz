@@ -72,8 +72,8 @@ in
       meth lookup(file:F window:?W)
 	 {ForAll @Windows
 	  proc{$ X}
-	     case {X current(file:$ line:_)} == F then
-		W = X    % there is only one matching object... (hope so :-))
+	     case {X.1 current(file:$ line:_)} == F then
+		W = X.1   % there is only one matching object... (hope so :-))
 	     else skip end
 	  end}
       end
@@ -84,11 +84,19 @@ in
 	 case {IsDet W} then
 	    {W highlight(line:L color:C)}
 	 else
-	    NewW = {New SourceWindow init(parent:{New Tk.toplevel tkInit})}
+	    T = {New Tk.toplevel tkInit(title:'Oz Source')}
+	    NewW = {New SourceWindow init(parent:T)}
 	 in
-	    Windows <- NewW | @Windows
+	    Windows <- NewW # T | @Windows
 	    {ForAll [load(file:F) highlight(line:L color:C)] NewW}
 	 end
+      end
+
+      meth close
+	 {ForAll @Windows
+	  proc {$ W}
+	     {W.2 tkClose}
+	  end}
       end
    end
 end
