@@ -19,7 +19,7 @@ local
    local
       fun {LastDebug F}
 	 case {Label F.1} == debug then
-	    case {Label F.2.1} == debug then
+	    case F.2 \= nil andthen {Label F.2.1} == debug then
 	       {LastDebug F.2}
 	    else
 	       F
@@ -30,7 +30,8 @@ local
       end
       proc {DoStackForAllInd Xs I P}
 	 case Xs
-	 of _|nil   then skip
+	 of nil     then skip
+	 [] _|nil   then skip
 	 [] _|_|nil then skip
 	 [] X|D|A|B then
 	    Y|Z|T = {LastDebug D|A|B}
