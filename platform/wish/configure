@@ -595,54 +595,6 @@ fi
 
 
 
-  echo $ac_n "checking for test""... $ac_c" 1>&6
-echo "configure:600: checking for test" >&5
-if eval "test \"`echo '$''{'oz_cv_TEST'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-
-    if test -e . 2>/dev/null; then
-      oz_cv_TEST=test
-    else
-      oz_tmp_IFS="$IFS"
-      IFS="$IFS:"
-      for oz_tmp in $PATH; do
-        if $oz_tmp/test -e . 2>/dev/null; then
-          oz_tmp=`cd $oz_tmp && pwd`
-          oz_cv_TEST="$oz_tmp/test"
-          break
-        fi
-      done
-      IFS=$oz_tmp_IFS
-      if test -n "$oz_cv_TEST"; then
-        { echo "configure: error: cannot locate a working test" 1>&2; exit 1; }
-      fi
-    fi
-fi
-
-echo "$ac_t""$oz_cv_TEST" 1>&6
-  TEST=$oz_cv_TEST
-
-ac_aux_dir=
-for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
-  if test -f $ac_dir/install-sh; then
-    ac_aux_dir=$ac_dir
-    ac_install_sh="$ac_aux_dir/install-sh -c"
-    break
-  elif test -f $ac_dir/install.sh; then
-    ac_aux_dir=$ac_dir
-    ac_install_sh="$ac_aux_dir/install.sh -c"
-    break
-  fi
-done
-if test -z "$ac_aux_dir"; then
-  { echo "configure: error: can not find install-sh or install.sh in $srcdir $srcdir/.. $srcdir/../.." 1>&2; exit 1; }
-fi
-ac_config_guess=$ac_aux_dir/config.guess
-ac_config_sub=$ac_aux_dir/config.sub
-ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
-
-
 
 
   srcdir=`cd $srcdir && pwd`
@@ -651,11 +603,10 @@ ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
 
 
   echo $ac_n "checking for SRCTOP""... $ac_c" 1>&6
-echo "configure:655: checking for SRCTOP" >&5
+echo "configure:607: checking for SRCTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_SRCTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-
 
 
   oz_tmp_dir=$srcdir
@@ -667,7 +618,7 @@ else
                    $oz_tmp_dir/../../.. \
                    $oz_tmp_dir/../../../.. \
                    $oz_tmp_dir/../../../../..; do
-      if $TEST -e "$oz_tmp2/$oz_tmp1"; then
+      if test -r "$oz_tmp2/$oz_tmp1"; then
         oz_cv_path_SRCTOP=`cd $oz_tmp2 && pwd`
         oz_tmp_ok=yes
         break
@@ -685,11 +636,10 @@ echo "$ac_t""$oz_cv_path_SRCTOP" 1>&6
 
 
   echo $ac_n "checking for BUILDTOP""... $ac_c" 1>&6
-echo "configure:689: checking for BUILDTOP" >&5
+echo "configure:640: checking for BUILDTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_BUILDTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-
 
 
   oz_tmp_dir=.
@@ -701,7 +651,7 @@ else
                    $oz_tmp_dir/../../.. \
                    $oz_tmp_dir/../../../.. \
                    $oz_tmp_dir/../../../../..; do
-      if $TEST -e "$oz_tmp2/$oz_tmp1"; then
+      if test -r "$oz_tmp2/$oz_tmp1"; then
         oz_cv_path_BUILDTOP=`cd $oz_tmp2 && pwd`
         oz_tmp_ok=yes
         break
@@ -717,8 +667,27 @@ fi
 echo "$ac_t""$oz_cv_path_BUILDTOP" 1>&6
   BUILDTOP=$oz_cv_path_BUILDTOP
 
+  ac_aux_dir=
+for ac_dir in $SRCTOP $srcdir/$SRCTOP; do
+  if test -f $ac_dir/install-sh; then
+    ac_aux_dir=$ac_dir
+    ac_install_sh="$ac_aux_dir/install-sh -c"
+    break
+  elif test -f $ac_dir/install.sh; then
+    ac_aux_dir=$ac_dir
+    ac_install_sh="$ac_aux_dir/install.sh -c"
+    break
+  fi
+done
+if test -z "$ac_aux_dir"; then
+  { echo "configure: error: can not find install-sh or install.sh in $SRCTOP $srcdir/$SRCTOP" 1>&2; exit 1; }
+fi
+ac_config_guess=$ac_aux_dir/config.guess
+ac_config_sub=$ac_aux_dir/config.sub
+ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
+
   echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:722: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:691: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -744,6 +713,27 @@ else
   SET_MAKE="MAKE=${MAKE-make}"
 fi
 
+
+  if test "${INSTALL+set}" = set; then
+    echo $ac_n "checking whether to unset broken INSTALL""... $ac_c" 1>&6
+echo "configure:720: checking whether to unset broken INSTALL" >&5
+if eval "test \"`echo '$''{'oz_cv_unset_INSTALL'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+
+        echo >conftest.$$
+        if $INSTALL -c -m 644 conftest.$$ /tmp >/dev/null 2>&1; then
+          rm -f /tmp/conftest.$$ 2>/dev/null
+          oz_cv_unset_INSTALL=no
+        else
+          oz_cv_unset_INSTALL=yes
+        fi
+        rm -f conftest.$$ 2>/dev/null
+fi
+
+echo "$ac_t""$oz_cv_unset_INSTALL" 1>&6
+    test "$oz_cv_unset_INSTALL" = yes && unset INSTALL
+  fi
   # Find a good install program.  We prefer a C program (faster),
 # so one script is as good as another.  But avoid the broken or
 # incompatible versions:
@@ -755,7 +745,7 @@ fi
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:759: checking for a BSD compatible install" >&5
+echo "configure:749: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -815,7 +805,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:819: checking for $ac_word" >&5
+echo "configure:809: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -856,11 +846,10 @@ fi
 
 
   if test -z "$oz_cv_cc__chosen"; then
-    CFLAGS=
     # Extract the first word of "gcc", so it can be a program name with args.
 set dummy gcc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:864: checking for $ac_word" >&5
+echo "configure:853: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_CC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -889,7 +878,7 @@ if test -z "$CC"; then
   # Extract the first word of "cc", so it can be a program name with args.
 set dummy cc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:893: checking for $ac_word" >&5
+echo "configure:882: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_CC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -937,7 +926,7 @@ fi
 fi
 
 echo $ac_n "checking whether the C compiler ($CC $CFLAGS $LDFLAGS) works""... $ac_c" 1>&6
-echo "configure:941: checking whether the C compiler ($CC $CFLAGS $LDFLAGS) works" >&5
+echo "configure:930: checking whether the C compiler ($CC $CFLAGS $LDFLAGS) works" >&5
 
 ac_ext=c
 # CFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
@@ -947,11 +936,11 @@ ac_link='${CC-cc} -o conftest $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 
 cross_compiling=$ac_cv_prog_cc_cross
 
 cat > conftest.$ac_ext <<EOF
-#line 951 "configure"
+#line 940 "configure"
 #include "confdefs.h"
 main(){return(0);}
 EOF
-if { (eval echo configure:955: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:944: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   ac_cv_prog_cc_works=yes
   # If we can't run a trivial program, we are probably using a cross compiler.
   if (./conftest; exit) 2>/dev/null; then
@@ -971,12 +960,12 @@ if test $ac_cv_prog_cc_works = no; then
   { echo "configure: error: installation or configuration problem: C compiler cannot create executables." 1>&2; exit 1; }
 fi
 echo $ac_n "checking whether the C compiler ($CC $CFLAGS $LDFLAGS) is a cross-compiler""... $ac_c" 1>&6
-echo "configure:975: checking whether the C compiler ($CC $CFLAGS $LDFLAGS) is a cross-compiler" >&5
+echo "configure:964: checking whether the C compiler ($CC $CFLAGS $LDFLAGS) is a cross-compiler" >&5
 echo "$ac_t""$ac_cv_prog_cc_cross" 1>&6
 cross_compiling=$ac_cv_prog_cc_cross
 
 echo $ac_n "checking whether we are using GNU C""... $ac_c" 1>&6
-echo "configure:980: checking whether we are using GNU C" >&5
+echo "configure:969: checking whether we are using GNU C" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_gcc'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -985,7 +974,7 @@ else
   yes;
 #endif
 EOF
-if { ac_try='${CC-cc} -E conftest.c'; { (eval echo configure:989: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }; } | egrep yes >/dev/null 2>&1; then
+if { ac_try='${CC-cc} -E conftest.c'; { (eval echo configure:978: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }; } | egrep yes >/dev/null 2>&1; then
   ac_cv_prog_gcc=yes
 else
   ac_cv_prog_gcc=no
@@ -1000,7 +989,7 @@ if test $ac_cv_prog_gcc = yes; then
   ac_save_CFLAGS="$CFLAGS"
   CFLAGS=
   echo $ac_n "checking whether ${CC-cc} accepts -g""... $ac_c" 1>&6
-echo "configure:1004: checking whether ${CC-cc} accepts -g" >&5
+echo "configure:993: checking whether ${CC-cc} accepts -g" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_cc_g'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1035,7 +1024,7 @@ fi
         elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]\+\)'`; then
 
           echo $ac_n "checking $CC version is at least 2.7""... $ac_c" 1>&6
-echo "configure:1039: checking $CC version is at least 2.7" >&5
+echo "configure:1028: checking $CC version is at least 2.7" >&5
 
   oz_tmp_got="$oz_tmp"
   oz_tmp_want="2.7"
@@ -1083,7 +1072,7 @@ You may find a mirror archive closer to you by consulting:
       fi
     fi
     echo $ac_n "checking how to run the C preprocessor""... $ac_c" 1>&6
-echo "configure:1087: checking how to run the C preprocessor" >&5
+echo "configure:1076: checking how to run the C preprocessor" >&5
 # On Suns, sometimes $CPP names a directory.
 if test -n "$CPP" && test -d "$CPP"; then
   CPP=
@@ -1098,13 +1087,13 @@ else
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp.
   cat > conftest.$ac_ext <<EOF
-#line 1102 "configure"
+#line 1091 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1108: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1097: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   :
@@ -1115,13 +1104,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -E -traditional-cpp"
   cat > conftest.$ac_ext <<EOF
-#line 1119 "configure"
+#line 1108 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1125: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1114: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   :
@@ -1146,29 +1135,37 @@ echo "$ac_t""$CPP" 1>&6
     oz_cv_CC=$CC
     oz_cv_CPP=$CPP
     oz_cv_GCC=$GCC
+    oz_cv_CFLAGS=$CFLAGS
     oz_cv_cc__chosen=yes
   else
 
-  echo $ac_n "Looking up in cache for C compiler""... $ac_c" 1>&6
-echo "configure:1154: Looking up in cache for C compiler" >&5
+  echo $ac_n "checking for C compiler""... $ac_c" 1>&6
+echo "configure:1144: checking for C compiler" >&5
   CC=$oz_cv_CC
-  echo "$ac_t""$CC" 1>&6
+  echo "$ac_t""(cached) $CC" 1>&6
 
-  echo $ac_n "Looking up in cache whether we are using GNU C""... $ac_c" 1>&6
-echo "configure:1159: Looking up in cache whether we are using GNU C" >&5
+  echo $ac_n "checking whether we are using GNU C""... $ac_c" 1>&6
+echo "configure:1149: checking whether we are using GNU C" >&5
   GCC=$oz_cv_GCC
-  echo "$ac_t""$GCC" 1>&6
+  echo "$ac_t""(cached) $GCC" 1>&6
 
-  echo $ac_n "Looking up in cache for C preprocessor""... $ac_c" 1>&6
-echo "configure:1164: Looking up in cache for C preprocessor" >&5
+  echo $ac_n "checking for C preprocessor""... $ac_c" 1>&6
+echo "configure:1154: checking for C preprocessor" >&5
   CPP=$oz_cv_CPP
-  echo "$ac_t""$CPP" 1>&6
+  echo "$ac_t""(cached) $CPP" 1>&6
+    if test "${CFLAGS+set}" != set ; then
+
+  echo $ac_n "checking for default CFLAGS""... $ac_c" 1>&6
+echo "configure:1160: checking for default CFLAGS" >&5
+  CFLAGS=$oz_cv_CFLAGS
+  echo "$ac_t""(cached) $CFLAGS" 1>&6
+    fi
   fi
 
 
 
 echo $ac_n "checking whether ln -s works""... $ac_c" 1>&6
-echo "configure:1172: checking whether ln -s works" >&5
+echo "configure:1169: checking whether ln -s works" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_LN_S'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1200,7 +1197,7 @@ fi
     # Extract the first word of "ozplatform", so it can be a program name with args.
 set dummy ozplatform; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1204: checking for $ac_word" >&5
+echo "configure:1201: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_PLATFORMSCRIPT'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1250,7 +1247,7 @@ EOF
 
 # intl is required when linking statically
 echo $ac_n "checking for dgettext in -lintl""... $ac_c" 1>&6
-echo "configure:1254: checking for dgettext in -lintl" >&5
+echo "configure:1251: checking for dgettext in -lintl" >&5
 ac_lib_var=`echo intl'_'dgettext | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1258,7 +1255,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lintl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1262 "configure"
+#line 1259 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -1269,7 +1266,7 @@ int main() {
 dgettext()
 ; return 0; }
 EOF
-if { (eval echo configure:1273: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1270: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -1297,7 +1294,7 @@ else
 fi
 
 echo $ac_n "checking for gethostbyaddr in -lnsl""... $ac_c" 1>&6
-echo "configure:1301: checking for gethostbyaddr in -lnsl" >&5
+echo "configure:1298: checking for gethostbyaddr in -lnsl" >&5
 ac_lib_var=`echo nsl'_'gethostbyaddr | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1305,7 +1302,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lnsl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1309 "configure"
+#line 1306 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -1316,7 +1313,7 @@ int main() {
 gethostbyaddr()
 ; return 0; }
 EOF
-if { (eval echo configure:1320: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1317: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -1344,7 +1341,7 @@ else
 fi
 
 echo $ac_n "checking for socket in -lsocket""... $ac_c" 1>&6
-echo "configure:1348: checking for socket in -lsocket" >&5
+echo "configure:1345: checking for socket in -lsocket" >&5
 ac_lib_var=`echo socket'_'socket | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1352,7 +1349,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lsocket  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1356 "configure"
+#line 1353 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -1363,7 +1360,7 @@ int main() {
 socket()
 ; return 0; }
 EOF
-if { (eval echo configure:1367: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1364: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -1391,7 +1388,7 @@ else
 fi
 
 echo $ac_n "checking for fabs in -lm""... $ac_c" 1>&6
-echo "configure:1395: checking for fabs in -lm" >&5
+echo "configure:1392: checking for fabs in -lm" >&5
 ac_lib_var=`echo m'_'fabs | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1399,7 +1396,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lm  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1403 "configure"
+#line 1400 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -1410,7 +1407,7 @@ int main() {
 fabs()
 ; return 0; }
 EOF
-if { (eval echo configure:1414: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1411: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -1438,7 +1435,7 @@ else
 fi
 
 echo $ac_n "checking for dlopen in -ldl""... $ac_c" 1>&6
-echo "configure:1442: checking for dlopen in -ldl" >&5
+echo "configure:1439: checking for dlopen in -ldl" >&5
 ac_lib_var=`echo dl'_'dlopen | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1446,7 +1443,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ldl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1450 "configure"
+#line 1447 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -1457,7 +1454,7 @@ int main() {
 dlopen()
 ; return 0; }
 EOF
-if { (eval echo configure:1461: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1458: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -1494,7 +1491,7 @@ fi
 
 
 echo $ac_n "checking whether to link libraries statically""... $ac_c" 1>&6
-echo "configure:1498: checking whether to link libraries statically" >&5
+echo "configure:1495: checking whether to link libraries statically" >&5
 
 if test "${enable_link_static}" = yes; then
     echo "$ac_t""yes" 1>&6
@@ -1554,7 +1551,7 @@ if test "${enable_wincross}" != yes
 then
 
   echo $ac_n "checking for X11/Xlib.h""... $ac_c" 1>&6
-echo "configure:1558: checking for X11/Xlib.h" >&5
+echo "configure:1555: checking for X11/Xlib.h" >&5
 if eval "test \"`echo '$''{'oz_cv_header_X11_Xlib_h'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1563,12 +1560,12 @@ else
       oz_tmp_cppflags="$CPPFLAGS"
       oz_tmp_ok=no
       cat > conftest.$ac_ext <<EOF
-#line 1567 "configure"
+#line 1564 "configure"
 #include "confdefs.h"
 #include "X11/Xlib.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1572: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1569: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1583,12 +1580,12 @@ else
         for oz_tmp in $oz_inc_path; do
           CPPFLAGS="$oz_tmp_cppflags -I$p"
           cat > conftest.$ac_ext <<EOF
-#line 1587 "configure"
+#line 1584 "configure"
 #include "confdefs.h"
 #include "X11/Xlib.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1592: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1589: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1617,14 +1614,16 @@ echo "$ac_t""$oz_cv_header_X11_Xlib_h" 1>&6
   if test "$oz_tmp_val" != no; then
     if test "$oz_tmp_val" != yes; then
 
-  oz_tmp_ok=yes
-  for oz_tmp in $CPPFLAGS NONE; do
-    if test "$oz_tmp" = "$oz_tmp_val"; then
-      oz_tmp_ok=no
-      break
-    fi
-  done
-  test "$oz_tmp_ok" = yes && CPPFLAGS="$CPPFLAGS${CPPFLAGS:+ }$oz_tmp_val"
+  if test "$oz_tmp_val" != yes && test "$oz_tmp_val" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $CPPFLAGS NONE; do
+      if test "$oz_tmp" = "$oz_tmp_val"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && CPPFLAGS="$CPPFLAGS${CPPFLAGS:+ }$oz_tmp_val"
+  fi
 
     fi
 
@@ -1633,16 +1632,38 @@ echo "$ac_t""$oz_cv_header_X11_Xlib_h" 1>&6
   fi
 
 
-        oz_check_lib_path=no
-        oz_saved_LDFLAGS=$LDFLAGS
-        oz_v=`echo X11_XOpenDisplay | sed -e 's/[^a-zA-Z0-9_]/_/g'`
-        echo $ac_n "checking for XOpenDisplay in -lX11 (default)""... $ac_c" 1>&6
-echo "configure:1641: checking for XOpenDisplay in -lX11 (default)" >&5
+  if test -n "$oz_cv_lib_path_ldflags_X11_XOpenDisplay"; then
+    echo $ac_n "checking for library X11""... $ac_c" 1>&6
+echo "configure:1638: checking for library X11" >&5
+    oz_add_ldflags=$oz_cv_lib_path_ldflags_X11_XOpenDisplay
+    oz_add_libs=$oz_cv_lib_path_libs_X11_XOpenDisplay
+    if test "$oz_add_ldflags" = no; then
+      oz_tmp=no
+    else
+     if test -n "$oz_add_ldflags" && test "$oz_add_ldflags" != yes; then
+       oz_tmp="$oz_add_ldflags (LDFLAGS)"
+     else
+       oz_tmp=
+     fi
+     if test -n "$oz_add_libs" && \
+        test "$oz_add_libs" != yes && \
+        test "$oz_add_libs" != no; then
+       oz_tmp="$oz_tmp${oz_tmp:+ }$oz_add_libs (LIBS)"
+     fi
+    fi
+    echo "$ac_t""(cached) $oz_tmp" 1>&6
+  else
+    oz_tmp_ldflags=$LDFLAGS
+    oz_tmp_libs=$LIBS
+    oz_add_ldflags=no
+    oz_add_libs=no
+    echo $ac_n "checking for XOpenDisplay in -lX11 (default)""... $ac_c" 1>&6
+echo "configure:1662: checking for XOpenDisplay in -lX11 (default)" >&5
 
-        oz_saved_LIBS=$LIBS
+  oz_saved_LIBS=$LIBS
 
         cat > conftest.$ac_ext <<EOF
-#line 1646 "configure"
+#line 1667 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -1653,39 +1674,18 @@ int main() {
 XOpenDisplay()
 ; return 0; }
 EOF
-if { (eval echo configure:1657: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1678: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
+       oz_add_ldflags=yes
+
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -lX11 -Xlinker -Bdynamic $LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 1670 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char XOpenDisplay();
-
-int main() {
-XOpenDisplay()
-; return 0; }
-EOF
-if { (eval echo configure:1681: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-lX11 $oz_saved_LIBS"
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -lX11 -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
 
         cat > conftest.$ac_ext <<EOF
 #line 1692 "configure"
@@ -1702,70 +1702,70 @@ EOF
 if { (eval echo configure:1703: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
-                for p in $oz_lib_path
-                do
-                        LDFLAGS="-L$p $oz_saved_LDFLAGS"
-                        echo $ac_n "checking for XOpenDisplay in -L$p -lX11""... $ac_c" 1>&6
-echo "configure:1717: checking for XOpenDisplay in -L$p -lX11" >&5
-
-        oz_saved_LIBS=$LIBS
-
-        cat > conftest.$ac_ext <<EOF
-#line 1722 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char XOpenDisplay();
-
-int main() {
-XOpenDisplay()
-; return 0; }
-EOF
-if { (eval echo configure:1733: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -lX11 -Xlinker -Bdynamic $LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 1748 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char XOpenDisplay();
-
-int main() {
-XOpenDisplay()
-; return 0; }
-EOF
-if { (eval echo configure:1759: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS="-lX11 $oz_saved_LIBS"
+         oz_add_libs="-lX11"
+
+        cat > conftest.$ac_ext <<EOF
+#line 1716 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char XOpenDisplay();
+
+int main() {
+XOpenDisplay()
+; return 0; }
+EOF
+if { (eval echo configure:1727: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+       oz_add_ldflags=yes
+
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for XOpenDisplay in -L$p -lX11""... $ac_c" 1>&6
+echo "configure:1742: checking for XOpenDisplay in -L$p -lX11" >&5
+
+  oz_saved_LIBS=$LIBS
+
+        cat > conftest.$ac_ext <<EOF
+#line 1747 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char XOpenDisplay();
+
+int main() {
+XOpenDisplay()
+; return 0; }
+EOF
+if { (eval echo configure:1758: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -lX11 -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
 
         cat > conftest.$ac_ext <<EOF
 #line 1772 "configure"
@@ -1782,146 +1782,17 @@ EOF
 if { (eval echo configure:1783: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
-
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-lX11 $oz_saved_LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 1805 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char XOpenDisplay();
-
-int main() {
-XOpenDisplay()
-; return 0; }
-EOF
-if { (eval echo configure:1816: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-
-fi
-rm -f conftest*
-                fi
-fi
-rm -f conftest*
-
-                done
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-lX11 $oz_saved_LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 1845 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char XOpenDisplay();
-
-int main() {
-XOpenDisplay()
-; return 0; }
-EOF
-if { (eval echo configure:1856: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-                for p in $oz_lib_path
-                do
-                        LDFLAGS="-L$p $oz_saved_LDFLAGS"
-                        echo $ac_n "checking for XOpenDisplay in -L$p -lX11""... $ac_c" 1>&6
-echo "configure:1870: checking for XOpenDisplay in -L$p -lX11" >&5
-
-        oz_saved_LIBS=$LIBS
-
-        cat > conftest.$ac_ext <<EOF
-#line 1875 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char XOpenDisplay();
-
-int main() {
-XOpenDisplay()
-; return 0; }
-EOF
-if { (eval echo configure:1886: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -lX11 -Xlinker -Bdynamic $LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 1901 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char XOpenDisplay();
-
-int main() {
-XOpenDisplay()
-; return 0; }
-EOF
-if { (eval echo configure:1912: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS="-lX11 $oz_saved_LIBS"
+         oz_add_libs="-lX11"
 
         cat > conftest.$ac_ext <<EOF
-#line 1925 "configure"
+#line 1796 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -1932,29 +1803,28 @@ int main() {
 XOpenDisplay()
 ; return 0; }
 EOF
-if { (eval echo configure:1936: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1807: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
-
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
 fi
 rm -f conftest*
-
 fi
 rm -f conftest*
-                else
-                        LIBS="-lX11 $oz_saved_LIBS"
+    else
+      LIBS="-lX11 $oz_saved_LIBS"
+      oz_add_libs="-lX11"
 
         cat > conftest.$ac_ext <<EOF
-#line 1958 "configure"
+#line 1828 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -1965,41 +1835,205 @@ int main() {
 XOpenDisplay()
 ; return 0; }
 EOF
-if { (eval echo configure:1969: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1839: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+       done
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-lX11 $oz_saved_LIBS"
+      oz_add_libs="-lX11"
+
+        cat > conftest.$ac_ext <<EOF
+#line 1866 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char XOpenDisplay();
+
+int main() {
+XOpenDisplay()
+; return 0; }
+EOF
+if { (eval echo configure:1877: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for XOpenDisplay in -L$p -lX11""... $ac_c" 1>&6
+echo "configure:1892: checking for XOpenDisplay in -L$p -lX11" >&5
 
+  oz_saved_LIBS=$LIBS
+
+        cat > conftest.$ac_ext <<EOF
+#line 1897 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char XOpenDisplay();
+
+int main() {
+XOpenDisplay()
+; return 0; }
+EOF
+if { (eval echo configure:1908: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -lX11 -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
+
+        cat > conftest.$ac_ext <<EOF
+#line 1922 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char XOpenDisplay();
+
+int main() {
+XOpenDisplay()
+; return 0; }
+EOF
+if { (eval echo configure:1933: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS="-lX11 $oz_saved_LIBS"
+         oz_add_libs="-lX11"
+
+        cat > conftest.$ac_ext <<EOF
+#line 1946 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char XOpenDisplay();
+
+int main() {
+XOpenDisplay()
+; return 0; }
+EOF
+if { (eval echo configure:1957: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
 fi
 rm -f conftest*
-                fi
 fi
 rm -f conftest*
+    else
+      LIBS="-lX11 $oz_saved_LIBS"
+      oz_add_libs="-lX11"
 
-                done
+        cat > conftest.$ac_ext <<EOF
+#line 1978 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char XOpenDisplay();
+
+int main() {
+XOpenDisplay()
+; return 0; }
+EOF
+if { (eval echo configure:1989: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
 fi
 rm -f conftest*
-                fi
+    fi
 fi
 rm -f conftest*
+       done
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+    LDFLAGS=$oz_tmp_ldflags
+    LIBS=$oz_tmp_libs
+    oz_cv_lib_path_ldflags_X11_XOpenDisplay=$oz_add_ldflags
+    oz_cv_lib_path_libs_X11_XOpenDisplay=$oz_add_libs
+  fi
+  if test "$oz_add_ldflags" = no; then
+    { echo "configure: error: required lib X11 not found" 1>&2; exit 1; }
+  else
 
-        if test $oz_check_lib_path = yes
-        then
-                :
+  if test "$oz_add_ldflags" != yes && test "$oz_add_ldflags" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $LDFLAGS NONE; do
+      if test "$oz_tmp" = "$oz_add_ldflags"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && LDFLAGS="$oz_add_ldflags${LDFLAGS:+ }$LDFLAGS"
+  fi
 
-        else
-                LDFLAGS=$oz_saved_LDFLAGS
-                { echo "configure: error: required lib X11 not found" 1>&2; exit 1; }
-        fi
 
+  if test -n "$oz_add_libs" && test "$oz_add_libs" != yes && test "$oz_add_libs" != no; then
+    LIBS="$oz_add_libs${LIBS:+ }$LIBS"
+  fi
+
+  fi
 fi
 
 
@@ -2062,7 +2096,7 @@ oz_lib_path="$oz_tcl_lib_dir $oz_lib_path"
 
 
   echo $ac_n "checking for tcl.h""... $ac_c" 1>&6
-echo "configure:2066: checking for tcl.h" >&5
+echo "configure:2100: checking for tcl.h" >&5
 if eval "test \"`echo '$''{'oz_cv_header_tcl_h'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2071,12 +2105,12 @@ else
       oz_tmp_cppflags="$CPPFLAGS"
       oz_tmp_ok=no
       cat > conftest.$ac_ext <<EOF
-#line 2075 "configure"
+#line 2109 "configure"
 #include "confdefs.h"
 #include "tcl.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2080: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2114: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2091,12 +2125,12 @@ else
         for oz_tmp in $oz_inc_path; do
           CPPFLAGS="$oz_tmp_cppflags -I$p"
           cat > conftest.$ac_ext <<EOF
-#line 2095 "configure"
+#line 2129 "configure"
 #include "confdefs.h"
 #include "tcl.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2100: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2134: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2125,14 +2159,16 @@ echo "$ac_t""$oz_cv_header_tcl_h" 1>&6
   if test "$oz_tmp_val" != no; then
     if test "$oz_tmp_val" != yes; then
 
-  oz_tmp_ok=yes
-  for oz_tmp in $CPPFLAGS NONE; do
-    if test "$oz_tmp" = "$oz_tmp_val"; then
-      oz_tmp_ok=no
-      break
-    fi
-  done
-  test "$oz_tmp_ok" = yes && CPPFLAGS="$CPPFLAGS${CPPFLAGS:+ }$oz_tmp_val"
+  if test "$oz_tmp_val" != yes && test "$oz_tmp_val" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $CPPFLAGS NONE; do
+      if test "$oz_tmp" = "$oz_tmp_val"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && CPPFLAGS="$CPPFLAGS${CPPFLAGS:+ }$oz_tmp_val"
+  fi
 
     fi
 
@@ -2141,16 +2177,38 @@ echo "$ac_t""$oz_cv_header_tcl_h" 1>&6
   fi
 
 
-        oz_check_lib_path=no
-        oz_saved_LDFLAGS=$LDFLAGS
-        oz_v=`echo tcl8.0_Tcl_Init | sed -e 's/[^a-zA-Z0-9_]/_/g'`
-        echo $ac_n "checking for Tcl_Init in -ltcl8.0 (default)""... $ac_c" 1>&6
-echo "configure:2149: checking for Tcl_Init in -ltcl8.0 (default)" >&5
+  if test -n "$oz_cv_lib_path_ldflags_tcl8_0_Tcl_Init"; then
+    echo $ac_n "checking for library tcl8.0""... $ac_c" 1>&6
+echo "configure:2183: checking for library tcl8.0" >&5
+    oz_add_ldflags=$oz_cv_lib_path_ldflags_tcl8_0_Tcl_Init
+    oz_add_libs=$oz_cv_lib_path_libs_tcl8_0_Tcl_Init
+    if test "$oz_add_ldflags" = no; then
+      oz_tmp=no
+    else
+     if test -n "$oz_add_ldflags" && test "$oz_add_ldflags" != yes; then
+       oz_tmp="$oz_add_ldflags (LDFLAGS)"
+     else
+       oz_tmp=
+     fi
+     if test -n "$oz_add_libs" && \
+        test "$oz_add_libs" != yes && \
+        test "$oz_add_libs" != no; then
+       oz_tmp="$oz_tmp${oz_tmp:+ }$oz_add_libs (LIBS)"
+     fi
+    fi
+    echo "$ac_t""(cached) $oz_tmp" 1>&6
+  else
+    oz_tmp_ldflags=$LDFLAGS
+    oz_tmp_libs=$LIBS
+    oz_add_ldflags=no
+    oz_add_libs=no
+    echo $ac_n "checking for Tcl_Init in -ltcl8.0 (default)""... $ac_c" 1>&6
+echo "configure:2207: checking for Tcl_Init in -ltcl8.0 (default)" >&5
 
-        oz_saved_LIBS=$LIBS
+  oz_saved_LIBS=$LIBS
 
         cat > conftest.$ac_ext <<EOF
-#line 2154 "configure"
+#line 2212 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2161,98 +2219,21 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2165: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2223: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltcl8.0 -Xlinker -Bdynamic $LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 2178 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tcl_Init();
-
-int main() {
-Tcl_Init()
-; return 0; }
-EOF
-if { (eval echo configure:2189: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-ltcl8.0 $oz_saved_LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 2200 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tcl_Init();
-
-int main() {
-Tcl_Init()
-; return 0; }
-EOF
-if { (eval echo configure:2211: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
-                for p in $oz_lib_path
-                do
-                        LDFLAGS="-L$p $oz_saved_LDFLAGS"
-                        echo $ac_n "checking for Tcl_Init in -L$p -ltcl8.0""... $ac_c" 1>&6
-echo "configure:2225: checking for Tcl_Init in -L$p -ltcl8.0" >&5
-
-        oz_saved_LIBS=$LIBS
-
-        cat > conftest.$ac_ext <<EOF
-#line 2230 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tcl_Init();
-
-int main() {
-Tcl_Init()
-; return 0; }
-EOF
-if { (eval echo configure:2241: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltcl8.0 -Xlinker -Bdynamic $LIBS"
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltcl8.0 -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
 
         cat > conftest.$ac_ext <<EOF
-#line 2256 "configure"
+#line 2237 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2263,20 +2244,20 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2267: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2248: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS="-ltcl8.0 $oz_saved_LIBS"
+         oz_add_libs="-ltcl8.0"
 
         cat > conftest.$ac_ext <<EOF
-#line 2280 "configure"
+#line 2261 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2287,29 +2268,27 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2291: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2272: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for Tcl_Init in -L$p -ltcl8.0""... $ac_c" 1>&6
+echo "configure:2287: checking for Tcl_Init in -L$p -ltcl8.0" >&5
 
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-ltcl8.0 $oz_saved_LIBS"
+  oz_saved_LIBS=$LIBS
 
         cat > conftest.$ac_ext <<EOF
-#line 2313 "configure"
+#line 2292 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2320,36 +2299,21 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2324: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2303: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-
-fi
-rm -f conftest*
-                fi
-fi
-rm -f conftest*
-
-                done
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-ltcl8.0 $oz_saved_LIBS"
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltcl8.0 -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
 
         cat > conftest.$ac_ext <<EOF
-#line 2353 "configure"
+#line 2317 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2360,76 +2324,20 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2364: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2328: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-                for p in $oz_lib_path
-                do
-                        LDFLAGS="-L$p $oz_saved_LDFLAGS"
-                        echo $ac_n "checking for Tcl_Init in -L$p -ltcl8.0""... $ac_c" 1>&6
-echo "configure:2378: checking for Tcl_Init in -L$p -ltcl8.0" >&5
-
-        oz_saved_LIBS=$LIBS
-
-        cat > conftest.$ac_ext <<EOF
-#line 2383 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tcl_Init();
-
-int main() {
-Tcl_Init()
-; return 0; }
-EOF
-if { (eval echo configure:2394: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltcl8.0 -Xlinker -Bdynamic $LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 2409 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tcl_Init();
-
-int main() {
-Tcl_Init()
-; return 0; }
-EOF
-if { (eval echo configure:2420: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS="-ltcl8.0 $oz_saved_LIBS"
+         oz_add_libs="-ltcl8.0"
 
         cat > conftest.$ac_ext <<EOF
-#line 2433 "configure"
+#line 2341 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2440,29 +2348,97 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2444: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2352: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-ltcl8.0 $oz_saved_LIBS"
+      oz_add_libs="-ltcl8.0"
+
+        cat > conftest.$ac_ext <<EOF
+#line 2373 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tcl_Init();
+
+int main() {
+Tcl_Init()
+; return 0; }
+EOF
+if { (eval echo configure:2384: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+       done
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-ltcl8.0 $oz_saved_LIBS"
+      oz_add_libs="-ltcl8.0"
+
+        cat > conftest.$ac_ext <<EOF
+#line 2411 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tcl_Init();
+
+int main() {
+Tcl_Init()
+; return 0; }
+EOF
+if { (eval echo configure:2422: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for Tcl_Init in -L$p -ltcl8.0""... $ac_c" 1>&6
+echo "configure:2437: checking for Tcl_Init in -L$p -ltcl8.0" >&5
 
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-ltcl8.0 $oz_saved_LIBS"
+  oz_saved_LIBS=$LIBS
 
         cat > conftest.$ac_ext <<EOF
-#line 2466 "configure"
+#line 2442 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2473,49 +2449,77 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2477: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2453: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltcl8.0 -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
 
+        cat > conftest.$ac_ext <<EOF
+#line 2467 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tcl_Init();
+
+int main() {
+Tcl_Init()
+; return 0; }
+EOF
+if { (eval echo configure:2478: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS="-ltcl8.0 $oz_saved_LIBS"
+         oz_add_libs="-ltcl8.0"
+
+        cat > conftest.$ac_ext <<EOF
+#line 2491 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tcl_Init();
+
+int main() {
+Tcl_Init()
+; return 0; }
+EOF
+if { (eval echo configure:2502: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
 fi
 rm -f conftest*
-                fi
 fi
 rm -f conftest*
-
-                done
-fi
-rm -f conftest*
-                fi
-fi
-rm -f conftest*
-
-        if test $oz_check_lib_path = yes
-        then
-                :
-
-        else
-                LDFLAGS=$oz_saved_LDFLAGS
-
-        oz_check_lib_path=no
-        oz_saved_LDFLAGS=$LDFLAGS
-        oz_v=`echo tcl_Tcl_Init | sed -e 's/^a-zA-Z0-9_/_/g'`
-        echo $ac_n "checking for Tcl_Init in -ltcl (default)""... $ac_c" 1>&6
-echo "configure:2514: checking for Tcl_Init in -ltcl (default)" >&5
-
-        oz_saved_LIBS=$LIBS
+    else
+      LIBS="-ltcl8.0 $oz_saved_LIBS"
+      oz_add_libs="-ltcl8.0"
 
         cat > conftest.$ac_ext <<EOF
-#line 2519 "configure"
+#line 2523 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2526,69 +2530,65 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2530: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2534: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltcl -Xlinker -Bdynamic $LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 2543 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tcl_Init();
-
-int main() {
-Tcl_Init()
-; return 0; }
-EOF
-if { (eval echo configure:2554: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-ltcl $oz_saved_LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 2565 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tcl_Init();
-
-int main() {
-Tcl_Init()
-; return 0; }
-EOF
-if { (eval echo configure:2576: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
-                for p in $oz_lib_path
-                do
-                        LDFLAGS="-L$p $oz_saved_LDFLAGS"
-                        echo $ac_n "checking for Tcl_Init in -L$p -ltcl""... $ac_c" 1>&6
-echo "configure:2590: checking for Tcl_Init in -L$p -ltcl" >&5
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+       done
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+    LDFLAGS=$oz_tmp_ldflags
+    LIBS=$oz_tmp_libs
+    oz_cv_lib_path_ldflags_tcl8_0_Tcl_Init=$oz_add_ldflags
+    oz_cv_lib_path_libs_tcl8_0_Tcl_Init=$oz_add_libs
+  fi
+  if test "$oz_add_ldflags" = no; then
 
-        oz_saved_LIBS=$LIBS
+  if test -n "$oz_cv_lib_path_ldflags_tcl_Tcl_Init"; then
+    echo $ac_n "checking for library tcl""... $ac_c" 1>&6
+echo "configure:2566: checking for library tcl" >&5
+    oz_add_ldflags=$oz_cv_lib_path_ldflags_tcl_Tcl_Init
+    oz_add_libs=$oz_cv_lib_path_libs_tcl_Tcl_Init
+    if test "$oz_add_ldflags" = no; then
+      oz_tmp=no
+    else
+     if test -n "$oz_add_ldflags" && test "$oz_add_ldflags" != yes; then
+       oz_tmp="$oz_add_ldflags (LDFLAGS)"
+     else
+       oz_tmp=
+     fi
+     if test -n "$oz_add_libs" && \
+        test "$oz_add_libs" != yes && \
+        test "$oz_add_libs" != no; then
+       oz_tmp="$oz_tmp${oz_tmp:+ }$oz_add_libs (LIBS)"
+     fi
+    fi
+    echo "$ac_t""(cached) $oz_tmp" 1>&6
+  else
+    oz_tmp_ldflags=$LDFLAGS
+    oz_tmp_libs=$LIBS
+    oz_add_ldflags=no
+    oz_add_libs=no
+    echo $ac_n "checking for Tcl_Init in -ltcl (default)""... $ac_c" 1>&6
+echo "configure:2590: checking for Tcl_Init in -ltcl (default)" >&5
+
+  oz_saved_LIBS=$LIBS
 
         cat > conftest.$ac_ext <<EOF
 #line 2595 "configure"
@@ -2605,19 +2605,18 @@ EOF
 if { (eval echo configure:2606: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltcl -Xlinker -Bdynamic $LIBS"
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltcl -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
 
         cat > conftest.$ac_ext <<EOF
-#line 2621 "configure"
+#line 2620 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2628,20 +2627,20 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2632: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2631: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS="-ltcl $oz_saved_LIBS"
+         oz_add_libs="-ltcl"
 
         cat > conftest.$ac_ext <<EOF
-#line 2645 "configure"
+#line 2644 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2652,29 +2651,27 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2656: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2655: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for Tcl_Init in -L$p -ltcl""... $ac_c" 1>&6
+echo "configure:2670: checking for Tcl_Init in -L$p -ltcl" >&5
 
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-ltcl $oz_saved_LIBS"
+  oz_saved_LIBS=$LIBS
 
         cat > conftest.$ac_ext <<EOF
-#line 2678 "configure"
+#line 2675 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2685,36 +2682,21 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2689: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2686: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-
-fi
-rm -f conftest*
-                fi
-fi
-rm -f conftest*
-
-                done
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-ltcl $oz_saved_LIBS"
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltcl -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
 
         cat > conftest.$ac_ext <<EOF
-#line 2718 "configure"
+#line 2700 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2725,76 +2707,20 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2729: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2711: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-                for p in $oz_lib_path
-                do
-                        LDFLAGS="-L$p $oz_saved_LDFLAGS"
-                        echo $ac_n "checking for Tcl_Init in -L$p -ltcl""... $ac_c" 1>&6
-echo "configure:2743: checking for Tcl_Init in -L$p -ltcl" >&5
-
-        oz_saved_LIBS=$LIBS
-
-        cat > conftest.$ac_ext <<EOF
-#line 2748 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tcl_Init();
-
-int main() {
-Tcl_Init()
-; return 0; }
-EOF
-if { (eval echo configure:2759: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltcl -Xlinker -Bdynamic $LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 2774 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tcl_Init();
-
-int main() {
-Tcl_Init()
-; return 0; }
-EOF
-if { (eval echo configure:2785: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS="-ltcl $oz_saved_LIBS"
+         oz_add_libs="-ltcl"
 
         cat > conftest.$ac_ext <<EOF
-#line 2798 "configure"
+#line 2724 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2805,29 +2731,97 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2809: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2735: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-ltcl $oz_saved_LIBS"
+      oz_add_libs="-ltcl"
+
+        cat > conftest.$ac_ext <<EOF
+#line 2756 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tcl_Init();
+
+int main() {
+Tcl_Init()
+; return 0; }
+EOF
+if { (eval echo configure:2767: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+       done
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-ltcl $oz_saved_LIBS"
+      oz_add_libs="-ltcl"
+
+        cat > conftest.$ac_ext <<EOF
+#line 2794 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tcl_Init();
+
+int main() {
+Tcl_Init()
+; return 0; }
+EOF
+if { (eval echo configure:2805: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for Tcl_Init in -L$p -ltcl""... $ac_c" 1>&6
+echo "configure:2820: checking for Tcl_Init in -L$p -ltcl" >&5
 
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-ltcl $oz_saved_LIBS"
+  oz_saved_LIBS=$LIBS
 
         cat > conftest.$ac_ext <<EOF
-#line 2831 "configure"
+#line 2825 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2838,49 +2832,77 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2842: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2836: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltcl -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
 
+        cat > conftest.$ac_ext <<EOF
+#line 2850 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tcl_Init();
+
+int main() {
+Tcl_Init()
+; return 0; }
+EOF
+if { (eval echo configure:2861: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS="-ltcl $oz_saved_LIBS"
+         oz_add_libs="-ltcl"
+
+        cat > conftest.$ac_ext <<EOF
+#line 2874 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tcl_Init();
+
+int main() {
+Tcl_Init()
+; return 0; }
+EOF
+if { (eval echo configure:2885: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
 fi
 rm -f conftest*
-                fi
 fi
 rm -f conftest*
-
-                done
-fi
-rm -f conftest*
-                fi
-fi
-rm -f conftest*
-
-        if test $oz_check_lib_path = yes
-        then
-                :
-
-        else
-                LDFLAGS=$oz_saved_LDFLAGS
-
-        oz_check_lib_path=no
-        oz_saved_LDFLAGS=$LDFLAGS
-        oz_v=`echo tcl80_Tcl_Init | sed -e 's/^a-zA-Z0-9_/_/g'`
-        echo $ac_n "checking for Tcl_Init in -ltcl80 (default)""... $ac_c" 1>&6
-echo "configure:2879: checking for Tcl_Init in -ltcl80 (default)" >&5
-
-        oz_saved_LIBS=$LIBS
+    else
+      LIBS="-ltcl $oz_saved_LIBS"
+      oz_add_libs="-ltcl"
 
         cat > conftest.$ac_ext <<EOF
-#line 2884 "configure"
+#line 2906 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2891,20 +2913,68 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2895: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2917: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltcl80 -Xlinker -Bdynamic $LIBS"
+  LIBS=$oz_saved_LIBS
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+       done
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+    LDFLAGS=$oz_tmp_ldflags
+    LIBS=$oz_tmp_libs
+    oz_cv_lib_path_ldflags_tcl_Tcl_Init=$oz_add_ldflags
+    oz_cv_lib_path_libs_tcl_Tcl_Init=$oz_add_libs
+  fi
+  if test "$oz_add_ldflags" = no; then
+
+  if test -n "$oz_cv_lib_path_ldflags_tcl80_Tcl_Init"; then
+    echo $ac_n "checking for library tcl80""... $ac_c" 1>&6
+echo "configure:2949: checking for library tcl80" >&5
+    oz_add_ldflags=$oz_cv_lib_path_ldflags_tcl80_Tcl_Init
+    oz_add_libs=$oz_cv_lib_path_libs_tcl80_Tcl_Init
+    if test "$oz_add_ldflags" = no; then
+      oz_tmp=no
+    else
+     if test -n "$oz_add_ldflags" && test "$oz_add_ldflags" != yes; then
+       oz_tmp="$oz_add_ldflags (LDFLAGS)"
+     else
+       oz_tmp=
+     fi
+     if test -n "$oz_add_libs" && \
+        test "$oz_add_libs" != yes && \
+        test "$oz_add_libs" != no; then
+       oz_tmp="$oz_tmp${oz_tmp:+ }$oz_add_libs (LIBS)"
+     fi
+    fi
+    echo "$ac_t""(cached) $oz_tmp" 1>&6
+  else
+    oz_tmp_ldflags=$LDFLAGS
+    oz_tmp_libs=$LIBS
+    oz_add_ldflags=no
+    oz_add_libs=no
+    echo $ac_n "checking for Tcl_Init in -ltcl80 (default)""... $ac_c" 1>&6
+echo "configure:2973: checking for Tcl_Init in -ltcl80 (default)" >&5
+
+  oz_saved_LIBS=$LIBS
 
         cat > conftest.$ac_ext <<EOF
-#line 2908 "configure"
+#line 2978 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2915,18 +2985,45 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2919: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2989: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
+       oz_add_ldflags=yes
+
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltcl80 -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
+
+        cat > conftest.$ac_ext <<EOF
+#line 3003 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tcl_Init();
+
+int main() {
+Tcl_Init()
+; return 0; }
+EOF
+if { (eval echo configure:3014: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+       oz_add_ldflags=yes
+
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS="-ltcl80 $oz_saved_LIBS"
+         oz_add_libs="-ltcl80"
 
         cat > conftest.$ac_ext <<EOF
-#line 2930 "configure"
+#line 3027 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2937,109 +3034,27 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:2941: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:3038: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
-                for p in $oz_lib_path
-                do
-                        LDFLAGS="-L$p $oz_saved_LDFLAGS"
-                        echo $ac_n "checking for Tcl_Init in -L$p -ltcl80""... $ac_c" 1>&6
-echo "configure:2955: checking for Tcl_Init in -L$p -ltcl80" >&5
-
-        oz_saved_LIBS=$LIBS
-
-        cat > conftest.$ac_ext <<EOF
-#line 2960 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tcl_Init();
-
-int main() {
-Tcl_Init()
-; return 0; }
-EOF
-if { (eval echo configure:2971: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltcl80 -Xlinker -Bdynamic $LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 2986 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tcl_Init();
-
-int main() {
-Tcl_Init()
-; return 0; }
-EOF
-if { (eval echo configure:2997: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-ltcl80 $oz_saved_LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 3010 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tcl_Init();
-
-int main() {
-Tcl_Init()
-; return 0; }
-EOF
-if { (eval echo configure:3021: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for Tcl_Init in -L$p -ltcl80""... $ac_c" 1>&6
+echo "configure:3053: checking for Tcl_Init in -L$p -ltcl80" >&5
 
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-ltcl80 $oz_saved_LIBS"
+  oz_saved_LIBS=$LIBS
 
         cat > conftest.$ac_ext <<EOF
-#line 3043 "configure"
+#line 3058 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3050,33 +3065,18 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:3054: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:3069: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-
-fi
-rm -f conftest*
-                fi
-fi
-rm -f conftest*
-
-                done
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-ltcl80 $oz_saved_LIBS"
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltcl80 -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
 
         cat > conftest.$ac_ext <<EOF
 #line 3083 "configure"
@@ -3093,23 +3093,17 @@ EOF
 if { (eval echo configure:3094: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-                for p in $oz_lib_path
-                do
-                        LDFLAGS="-L$p $oz_saved_LDFLAGS"
-                        echo $ac_n "checking for Tcl_Init in -L$p -ltcl80""... $ac_c" 1>&6
-echo "configure:3108: checking for Tcl_Init in -L$p -ltcl80" >&5
-
-        oz_saved_LIBS=$LIBS
+  LIBS="-ltcl80 $oz_saved_LIBS"
+         oz_add_libs="-ltcl80"
 
         cat > conftest.$ac_ext <<EOF
-#line 3113 "configure"
+#line 3107 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3120,19 +3114,25 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:3124: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:3118: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltcl80 -Xlinker -Bdynamic $LIBS"
+  LIBS=$oz_saved_LIBS
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-ltcl80 $oz_saved_LIBS"
+      oz_add_libs="-ltcl80"
 
         cat > conftest.$ac_ext <<EOF
 #line 3139 "configure"
@@ -3149,17 +3149,111 @@ EOF
 if { (eval echo configure:3150: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+       done
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-ltcl80 $oz_saved_LIBS"
+      oz_add_libs="-ltcl80"
 
+        cat > conftest.$ac_ext <<EOF
+#line 3177 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tcl_Init();
+
+int main() {
+Tcl_Init()
+; return 0; }
+EOF
+if { (eval echo configure:3188: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+       oz_add_ldflags=yes
+
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for Tcl_Init in -L$p -ltcl80""... $ac_c" 1>&6
+echo "configure:3203: checking for Tcl_Init in -L$p -ltcl80" >&5
+
+  oz_saved_LIBS=$LIBS
+
+        cat > conftest.$ac_ext <<EOF
+#line 3208 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tcl_Init();
+
+int main() {
+Tcl_Init()
+; return 0; }
+EOF
+if { (eval echo configure:3219: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltcl80 -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
+
+        cat > conftest.$ac_ext <<EOF
+#line 3233 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tcl_Init();
+
+int main() {
+Tcl_Init()
+; return 0; }
+EOF
+if { (eval echo configure:3244: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS="-ltcl80 $oz_saved_LIBS"
+         oz_add_libs="-ltcl80"
 
         cat > conftest.$ac_ext <<EOF
-#line 3163 "configure"
+#line 3257 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3170,29 +3264,28 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:3174: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:3268: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
-
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
 fi
 rm -f conftest*
-
 fi
 rm -f conftest*
-                else
-                        LIBS="-ltcl80 $oz_saved_LIBS"
+    else
+      LIBS="-ltcl80 $oz_saved_LIBS"
+      oz_add_libs="-ltcl80"
 
         cat > conftest.$ac_ext <<EOF
-#line 3196 "configure"
+#line 3289 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3203,45 +3296,93 @@ int main() {
 Tcl_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:3207: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:3300: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
 fi
 rm -f conftest*
-                fi
+    fi
 fi
 rm -f conftest*
-
-                done
+       done
 fi
 rm -f conftest*
-                fi
+    fi
 fi
 rm -f conftest*
+    LDFLAGS=$oz_tmp_ldflags
+    LIBS=$oz_tmp_libs
+    oz_cv_lib_path_ldflags_tcl80_Tcl_Init=$oz_add_ldflags
+    oz_cv_lib_path_libs_tcl80_Tcl_Init=$oz_add_libs
+  fi
+  if test "$oz_add_ldflags" = no; then
+    { echo "configure: error: required lib "-ltcl80/tcl" not found" 1>&2; exit 1; }
+  else
 
-        if test $oz_check_lib_path = yes
-        then
-                :
+  if test "$oz_add_ldflags" != yes && test "$oz_add_ldflags" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $LDFLAGS NONE; do
+      if test "$oz_tmp" = "$oz_add_ldflags"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && LDFLAGS="$oz_add_ldflags${LDFLAGS:+ }$LDFLAGS"
+  fi
 
-        else
-                LDFLAGS=$oz_saved_LDFLAGS
-                { echo "configure: error: required lib "-ltcl80/tcl" not found" 1>&2; exit 1; }
-        fi
 
-        fi
+  if test -n "$oz_add_libs" && test "$oz_add_libs" != yes && test "$oz_add_libs" != no; then
+    LIBS="$oz_add_libs${LIBS:+ }$LIBS"
+  fi
 
-        fi
+  fi
+  else
 
+  if test "$oz_add_ldflags" != yes && test "$oz_add_ldflags" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $LDFLAGS NONE; do
+      if test "$oz_tmp" = "$oz_add_ldflags"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && LDFLAGS="$oz_add_ldflags${LDFLAGS:+ }$LDFLAGS"
+  fi
+
+
+  if test -n "$oz_add_libs" && test "$oz_add_libs" != yes && test "$oz_add_libs" != no; then
+    LIBS="$oz_add_libs${LIBS:+ }$LIBS"
+  fi
+
+  fi
+  else
+
+  if test "$oz_add_ldflags" != yes && test "$oz_add_ldflags" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $LDFLAGS NONE; do
+      if test "$oz_tmp" = "$oz_add_ldflags"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && LDFLAGS="$oz_add_ldflags${LDFLAGS:+ }$LDFLAGS"
+  fi
+
+
+  if test -n "$oz_add_libs" && test "$oz_add_libs" != yes && test "$oz_add_libs" != no; then
+    LIBS="$oz_add_libs${LIBS:+ }$LIBS"
+  fi
+
+  fi
 
 
 
@@ -3303,7 +3444,7 @@ oz_lib_path="$oz_tk_lib_dir $oz_inc_path"
 
 
   echo $ac_n "checking for tk.h""... $ac_c" 1>&6
-echo "configure:3307: checking for tk.h" >&5
+echo "configure:3448: checking for tk.h" >&5
 if eval "test \"`echo '$''{'oz_cv_header_tk_h'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3312,12 +3453,12 @@ else
       oz_tmp_cppflags="$CPPFLAGS"
       oz_tmp_ok=no
       cat > conftest.$ac_ext <<EOF
-#line 3316 "configure"
+#line 3457 "configure"
 #include "confdefs.h"
 #include "tk.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:3321: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:3462: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -3332,12 +3473,12 @@ else
         for oz_tmp in $oz_inc_path; do
           CPPFLAGS="$oz_tmp_cppflags -I$p"
           cat > conftest.$ac_ext <<EOF
-#line 3336 "configure"
+#line 3477 "configure"
 #include "confdefs.h"
 #include "tk.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:3341: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:3482: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -3366,14 +3507,16 @@ echo "$ac_t""$oz_cv_header_tk_h" 1>&6
   if test "$oz_tmp_val" != no; then
     if test "$oz_tmp_val" != yes; then
 
-  oz_tmp_ok=yes
-  for oz_tmp in $CPPFLAGS NONE; do
-    if test "$oz_tmp" = "$oz_tmp_val"; then
-      oz_tmp_ok=no
-      break
-    fi
-  done
-  test "$oz_tmp_ok" = yes && CPPFLAGS="$CPPFLAGS${CPPFLAGS:+ }$oz_tmp_val"
+  if test "$oz_tmp_val" != yes && test "$oz_tmp_val" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $CPPFLAGS NONE; do
+      if test "$oz_tmp" = "$oz_tmp_val"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && CPPFLAGS="$CPPFLAGS${CPPFLAGS:+ }$oz_tmp_val"
+  fi
 
     fi
 
@@ -3382,16 +3525,38 @@ echo "$ac_t""$oz_cv_header_tk_h" 1>&6
   fi
 
 
-        oz_check_lib_path=no
-        oz_saved_LDFLAGS=$LDFLAGS
-        oz_v=`echo tk8.0_Tk_Init | sed -e 's/[^a-zA-Z0-9_]/_/g'`
-        echo $ac_n "checking for Tk_Init in -ltk8.0 (default)""... $ac_c" 1>&6
-echo "configure:3390: checking for Tk_Init in -ltk8.0 (default)" >&5
+  if test -n "$oz_cv_lib_path_ldflags_tk8_0_Tk_Init"; then
+    echo $ac_n "checking for library tk8.0""... $ac_c" 1>&6
+echo "configure:3531: checking for library tk8.0" >&5
+    oz_add_ldflags=$oz_cv_lib_path_ldflags_tk8_0_Tk_Init
+    oz_add_libs=$oz_cv_lib_path_libs_tk8_0_Tk_Init
+    if test "$oz_add_ldflags" = no; then
+      oz_tmp=no
+    else
+     if test -n "$oz_add_ldflags" && test "$oz_add_ldflags" != yes; then
+       oz_tmp="$oz_add_ldflags (LDFLAGS)"
+     else
+       oz_tmp=
+     fi
+     if test -n "$oz_add_libs" && \
+        test "$oz_add_libs" != yes && \
+        test "$oz_add_libs" != no; then
+       oz_tmp="$oz_tmp${oz_tmp:+ }$oz_add_libs (LIBS)"
+     fi
+    fi
+    echo "$ac_t""(cached) $oz_tmp" 1>&6
+  else
+    oz_tmp_ldflags=$LDFLAGS
+    oz_tmp_libs=$LIBS
+    oz_add_ldflags=no
+    oz_add_libs=no
+    echo $ac_n "checking for Tk_Init in -ltk8.0 (default)""... $ac_c" 1>&6
+echo "configure:3555: checking for Tk_Init in -ltk8.0 (default)" >&5
 
-        oz_saved_LIBS=$LIBS
+  oz_saved_LIBS=$LIBS
 
         cat > conftest.$ac_ext <<EOF
-#line 3395 "configure"
+#line 3560 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3402,98 +3567,21 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:3406: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:3571: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltk8.0 -Xlinker -Bdynamic $LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 3419 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tk_Init();
-
-int main() {
-Tk_Init()
-; return 0; }
-EOF
-if { (eval echo configure:3430: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-ltk8.0 $oz_saved_LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 3441 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tk_Init();
-
-int main() {
-Tk_Init()
-; return 0; }
-EOF
-if { (eval echo configure:3452: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
-                for p in $oz_lib_path
-                do
-                        LDFLAGS="-L$p $oz_saved_LDFLAGS"
-                        echo $ac_n "checking for Tk_Init in -L$p -ltk8.0""... $ac_c" 1>&6
-echo "configure:3466: checking for Tk_Init in -L$p -ltk8.0" >&5
-
-        oz_saved_LIBS=$LIBS
-
-        cat > conftest.$ac_ext <<EOF
-#line 3471 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tk_Init();
-
-int main() {
-Tk_Init()
-; return 0; }
-EOF
-if { (eval echo configure:3482: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltk8.0 -Xlinker -Bdynamic $LIBS"
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltk8.0 -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
 
         cat > conftest.$ac_ext <<EOF
-#line 3497 "configure"
+#line 3585 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3504,20 +3592,20 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:3508: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:3596: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS="-ltk8.0 $oz_saved_LIBS"
+         oz_add_libs="-ltk8.0"
 
         cat > conftest.$ac_ext <<EOF
-#line 3521 "configure"
+#line 3609 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3528,29 +3616,27 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:3532: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:3620: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for Tk_Init in -L$p -ltk8.0""... $ac_c" 1>&6
+echo "configure:3635: checking for Tk_Init in -L$p -ltk8.0" >&5
 
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-ltk8.0 $oz_saved_LIBS"
+  oz_saved_LIBS=$LIBS
 
         cat > conftest.$ac_ext <<EOF
-#line 3554 "configure"
+#line 3640 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3561,36 +3647,21 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:3565: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:3651: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-
-fi
-rm -f conftest*
-                fi
-fi
-rm -f conftest*
-
-                done
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-ltk8.0 $oz_saved_LIBS"
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltk8.0 -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
 
         cat > conftest.$ac_ext <<EOF
-#line 3594 "configure"
+#line 3665 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3601,76 +3672,20 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:3605: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:3676: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-                for p in $oz_lib_path
-                do
-                        LDFLAGS="-L$p $oz_saved_LDFLAGS"
-                        echo $ac_n "checking for Tk_Init in -L$p -ltk8.0""... $ac_c" 1>&6
-echo "configure:3619: checking for Tk_Init in -L$p -ltk8.0" >&5
-
-        oz_saved_LIBS=$LIBS
-
-        cat > conftest.$ac_ext <<EOF
-#line 3624 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tk_Init();
-
-int main() {
-Tk_Init()
-; return 0; }
-EOF
-if { (eval echo configure:3635: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltk8.0 -Xlinker -Bdynamic $LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 3650 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tk_Init();
-
-int main() {
-Tk_Init()
-; return 0; }
-EOF
-if { (eval echo configure:3661: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS="-ltk8.0 $oz_saved_LIBS"
+         oz_add_libs="-ltk8.0"
 
         cat > conftest.$ac_ext <<EOF
-#line 3674 "configure"
+#line 3689 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3681,29 +3696,97 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:3685: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:3700: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-ltk8.0 $oz_saved_LIBS"
+      oz_add_libs="-ltk8.0"
+
+        cat > conftest.$ac_ext <<EOF
+#line 3721 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tk_Init();
+
+int main() {
+Tk_Init()
+; return 0; }
+EOF
+if { (eval echo configure:3732: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+       done
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-ltk8.0 $oz_saved_LIBS"
+      oz_add_libs="-ltk8.0"
+
+        cat > conftest.$ac_ext <<EOF
+#line 3759 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tk_Init();
+
+int main() {
+Tk_Init()
+; return 0; }
+EOF
+if { (eval echo configure:3770: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for Tk_Init in -L$p -ltk8.0""... $ac_c" 1>&6
+echo "configure:3785: checking for Tk_Init in -L$p -ltk8.0" >&5
 
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-ltk8.0 $oz_saved_LIBS"
+  oz_saved_LIBS=$LIBS
 
         cat > conftest.$ac_ext <<EOF
-#line 3707 "configure"
+#line 3790 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3714,49 +3797,77 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:3718: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:3801: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltk8.0 -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
 
+        cat > conftest.$ac_ext <<EOF
+#line 3815 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tk_Init();
+
+int main() {
+Tk_Init()
+; return 0; }
+EOF
+if { (eval echo configure:3826: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS="-ltk8.0 $oz_saved_LIBS"
+         oz_add_libs="-ltk8.0"
+
+        cat > conftest.$ac_ext <<EOF
+#line 3839 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tk_Init();
+
+int main() {
+Tk_Init()
+; return 0; }
+EOF
+if { (eval echo configure:3850: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
 fi
 rm -f conftest*
-                fi
 fi
 rm -f conftest*
-
-                done
-fi
-rm -f conftest*
-                fi
-fi
-rm -f conftest*
-
-        if test $oz_check_lib_path = yes
-        then
-                :
-
-        else
-                LDFLAGS=$oz_saved_LDFLAGS
-
-        oz_check_lib_path=no
-        oz_saved_LDFLAGS=$LDFLAGS
-        oz_v=`echo tk_Tk_Init | sed -e 's/^a-zA-Z0-9_/_/g'`
-        echo $ac_n "checking for Tk_Init in -ltk (default)""... $ac_c" 1>&6
-echo "configure:3755: checking for Tk_Init in -ltk (default)" >&5
-
-        oz_saved_LIBS=$LIBS
+    else
+      LIBS="-ltk8.0 $oz_saved_LIBS"
+      oz_add_libs="-ltk8.0"
 
         cat > conftest.$ac_ext <<EOF
-#line 3760 "configure"
+#line 3871 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3767,72 +3878,68 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:3771: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:3882: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltk -Xlinker -Bdynamic $LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 3784 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tk_Init();
-
-int main() {
-Tk_Init()
-; return 0; }
-EOF
-if { (eval echo configure:3795: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-ltk $oz_saved_LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 3806 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tk_Init();
-
-int main() {
-Tk_Init()
-; return 0; }
-EOF
-if { (eval echo configure:3817: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
-                for p in $oz_lib_path
-                do
-                        LDFLAGS="-L$p $oz_saved_LDFLAGS"
-                        echo $ac_n "checking for Tk_Init in -L$p -ltk""... $ac_c" 1>&6
-echo "configure:3831: checking for Tk_Init in -L$p -ltk" >&5
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+       done
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+    LDFLAGS=$oz_tmp_ldflags
+    LIBS=$oz_tmp_libs
+    oz_cv_lib_path_ldflags_tk8_0_Tk_Init=$oz_add_ldflags
+    oz_cv_lib_path_libs_tk8_0_Tk_Init=$oz_add_libs
+  fi
+  if test "$oz_add_ldflags" = no; then
 
-        oz_saved_LIBS=$LIBS
+  if test -n "$oz_cv_lib_path_ldflags_tk_Tk_Init"; then
+    echo $ac_n "checking for library tk""... $ac_c" 1>&6
+echo "configure:3914: checking for library tk" >&5
+    oz_add_ldflags=$oz_cv_lib_path_ldflags_tk_Tk_Init
+    oz_add_libs=$oz_cv_lib_path_libs_tk_Tk_Init
+    if test "$oz_add_ldflags" = no; then
+      oz_tmp=no
+    else
+     if test -n "$oz_add_ldflags" && test "$oz_add_ldflags" != yes; then
+       oz_tmp="$oz_add_ldflags (LDFLAGS)"
+     else
+       oz_tmp=
+     fi
+     if test -n "$oz_add_libs" && \
+        test "$oz_add_libs" != yes && \
+        test "$oz_add_libs" != no; then
+       oz_tmp="$oz_tmp${oz_tmp:+ }$oz_add_libs (LIBS)"
+     fi
+    fi
+    echo "$ac_t""(cached) $oz_tmp" 1>&6
+  else
+    oz_tmp_ldflags=$LDFLAGS
+    oz_tmp_libs=$LIBS
+    oz_add_ldflags=no
+    oz_add_libs=no
+    echo $ac_n "checking for Tk_Init in -ltk (default)""... $ac_c" 1>&6
+echo "configure:3938: checking for Tk_Init in -ltk (default)" >&5
+
+  oz_saved_LIBS=$LIBS
 
         cat > conftest.$ac_ext <<EOF
-#line 3836 "configure"
+#line 3943 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3843,22 +3950,21 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:3847: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:3954: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltk -Xlinker -Bdynamic $LIBS"
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltk -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
 
         cat > conftest.$ac_ext <<EOF
-#line 3862 "configure"
+#line 3968 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3869,173 +3975,20 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:3873: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:3979: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-ltk $oz_saved_LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 3886 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tk_Init();
-
-int main() {
-Tk_Init()
-; return 0; }
-EOF
-if { (eval echo configure:3897: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
-
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-ltk $oz_saved_LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 3919 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tk_Init();
-
-int main() {
-Tk_Init()
-; return 0; }
-EOF
-if { (eval echo configure:3930: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-
-fi
-rm -f conftest*
-                fi
-fi
-rm -f conftest*
-
-                done
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-ltk $oz_saved_LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 3959 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tk_Init();
-
-int main() {
-Tk_Init()
-; return 0; }
-EOF
-if { (eval echo configure:3970: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-                for p in $oz_lib_path
-                do
-                        LDFLAGS="-L$p $oz_saved_LDFLAGS"
-                        echo $ac_n "checking for Tk_Init in -L$p -ltk""... $ac_c" 1>&6
-echo "configure:3984: checking for Tk_Init in -L$p -ltk" >&5
-
-        oz_saved_LIBS=$LIBS
-
-        cat > conftest.$ac_ext <<EOF
-#line 3989 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tk_Init();
-
-int main() {
-Tk_Init()
-; return 0; }
-EOF
-if { (eval echo configure:4000: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltk -Xlinker -Bdynamic $LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 4015 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tk_Init();
-
-int main() {
-Tk_Init()
-; return 0; }
-EOF
-if { (eval echo configure:4026: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS="-ltk $oz_saved_LIBS"
+         oz_add_libs="-ltk"
 
         cat > conftest.$ac_ext <<EOF
-#line 4039 "configure"
+#line 3992 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -4046,26 +3999,73 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:4050: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:4003: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for Tk_Init in -L$p -ltk""... $ac_c" 1>&6
+echo "configure:4018: checking for Tk_Init in -L$p -ltk" >&5
 
-fi
-rm -f conftest*
+  oz_saved_LIBS=$LIBS
 
-fi
-rm -f conftest*
-                else
-                        LIBS="-ltk $oz_saved_LIBS"
+        cat > conftest.$ac_ext <<EOF
+#line 4023 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tk_Init();
+
+int main() {
+Tk_Init()
+; return 0; }
+EOF
+if { (eval echo configure:4034: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltk -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
+
+        cat > conftest.$ac_ext <<EOF
+#line 4048 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tk_Init();
+
+int main() {
+Tk_Init()
+; return 0; }
+EOF
+if { (eval echo configure:4059: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS="-ltk $oz_saved_LIBS"
+         oz_add_libs="-ltk"
 
         cat > conftest.$ac_ext <<EOF
 #line 4072 "configure"
@@ -4082,46 +4082,94 @@ EOF
 if { (eval echo configure:4083: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-ltk $oz_saved_LIBS"
+      oz_add_libs="-ltk"
+
+        cat > conftest.$ac_ext <<EOF
+#line 4104 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tk_Init();
+
+int main() {
+Tk_Init()
+; return 0; }
+EOF
+if { (eval echo configure:4115: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+       done
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-ltk $oz_saved_LIBS"
+      oz_add_libs="-ltk"
+
+        cat > conftest.$ac_ext <<EOF
+#line 4142 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tk_Init();
+
+int main() {
+Tk_Init()
+; return 0; }
+EOF
+if { (eval echo configure:4153: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for Tk_Init in -L$p -ltk""... $ac_c" 1>&6
+echo "configure:4168: checking for Tk_Init in -L$p -ltk" >&5
 
-fi
-rm -f conftest*
-                fi
-fi
-rm -f conftest*
-
-                done
-fi
-rm -f conftest*
-                fi
-fi
-rm -f conftest*
-
-        if test $oz_check_lib_path = yes
-        then
-                :
-
-        else
-                LDFLAGS=$oz_saved_LDFLAGS
-
-        oz_check_lib_path=no
-        oz_saved_LDFLAGS=$LDFLAGS
-        oz_v=`echo tk80_Tk_Init | sed -e 's/^a-zA-Z0-9_/_/g'`
-        echo $ac_n "checking for Tk_Init in -ltk80 (default)""... $ac_c" 1>&6
-echo "configure:4120: checking for Tk_Init in -ltk80 (default)" >&5
-
-        oz_saved_LIBS=$LIBS
+  oz_saved_LIBS=$LIBS
 
         cat > conftest.$ac_ext <<EOF
-#line 4125 "configure"
+#line 4173 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -4132,20 +4180,21 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:4136: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:4184: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltk80 -Xlinker -Bdynamic $LIBS"
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltk -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
 
         cat > conftest.$ac_ext <<EOF
-#line 4149 "configure"
+#line 4198 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -4156,18 +4205,20 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:4160: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:4209: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  LIBS="-ltk80 $oz_saved_LIBS"
+  LIBS="-ltk $oz_saved_LIBS"
+         oz_add_libs="-ltk"
 
         cat > conftest.$ac_ext <<EOF
-#line 4171 "configure"
+#line 4222 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -4178,26 +4229,28 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:4182: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:4233: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
-                for p in $oz_lib_path
-                do
-                        LDFLAGS="-L$p $oz_saved_LDFLAGS"
-                        echo $ac_n "checking for Tk_Init in -L$p -ltk80""... $ac_c" 1>&6
-echo "configure:4196: checking for Tk_Init in -L$p -ltk80" >&5
-
-        oz_saved_LIBS=$LIBS
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-ltk $oz_saved_LIBS"
+      oz_add_libs="-ltk"
 
         cat > conftest.$ac_ext <<EOF
-#line 4201 "configure"
+#line 4254 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -4208,79 +4261,68 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:4212: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:4265: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltk80 -Xlinker -Bdynamic $LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 4227 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tk_Init();
-
-int main() {
-Tk_Init()
-; return 0; }
-EOF
-if { (eval echo configure:4238: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-ltk80 $oz_saved_LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 4251 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tk_Init();
-
-int main() {
-Tk_Init()
-; return 0; }
-EOF
-if { (eval echo configure:4262: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
+            oz_add_ldflags="-L$p"
+            break
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
-
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
 fi
 rm -f conftest*
-
+    fi
 fi
 rm -f conftest*
-                else
-                        LIBS="-ltk80 $oz_saved_LIBS"
+       done
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+    LDFLAGS=$oz_tmp_ldflags
+    LIBS=$oz_tmp_libs
+    oz_cv_lib_path_ldflags_tk_Tk_Init=$oz_add_ldflags
+    oz_cv_lib_path_libs_tk_Tk_Init=$oz_add_libs
+  fi
+  if test "$oz_add_ldflags" = no; then
+
+  if test -n "$oz_cv_lib_path_ldflags_tk80_Tk_Init"; then
+    echo $ac_n "checking for library tk80""... $ac_c" 1>&6
+echo "configure:4297: checking for library tk80" >&5
+    oz_add_ldflags=$oz_cv_lib_path_ldflags_tk80_Tk_Init
+    oz_add_libs=$oz_cv_lib_path_libs_tk80_Tk_Init
+    if test "$oz_add_ldflags" = no; then
+      oz_tmp=no
+    else
+     if test -n "$oz_add_ldflags" && test "$oz_add_ldflags" != yes; then
+       oz_tmp="$oz_add_ldflags (LDFLAGS)"
+     else
+       oz_tmp=
+     fi
+     if test -n "$oz_add_libs" && \
+        test "$oz_add_libs" != yes && \
+        test "$oz_add_libs" != no; then
+       oz_tmp="$oz_tmp${oz_tmp:+ }$oz_add_libs (LIBS)"
+     fi
+    fi
+    echo "$ac_t""(cached) $oz_tmp" 1>&6
+  else
+    oz_tmp_ldflags=$LDFLAGS
+    oz_tmp_libs=$LIBS
+    oz_add_ldflags=no
+    oz_add_libs=no
+    echo $ac_n "checking for Tk_Init in -ltk80 (default)""... $ac_c" 1>&6
+echo "configure:4321: checking for Tk_Init in -ltk80 (default)" >&5
+
+  oz_saved_LIBS=$LIBS
 
         cat > conftest.$ac_ext <<EOF
-#line 4284 "configure"
+#line 4326 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -4291,36 +4333,21 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:4295: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:4337: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-
-fi
-rm -f conftest*
-                fi
-fi
-rm -f conftest*
-
-                done
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-ltk80 $oz_saved_LIBS"
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltk80 -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
 
         cat > conftest.$ac_ext <<EOF
-#line 4324 "configure"
+#line 4351 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -4331,76 +4358,20 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:4335: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:4362: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                oz_check_lib_path=yes
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
-                for p in $oz_lib_path
-                do
-                        LDFLAGS="-L$p $oz_saved_LDFLAGS"
-                        echo $ac_n "checking for Tk_Init in -L$p -ltk80""... $ac_c" 1>&6
-echo "configure:4349: checking for Tk_Init in -L$p -ltk80" >&5
-
-        oz_saved_LIBS=$LIBS
-
-        cat > conftest.$ac_ext <<EOF
-#line 4354 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tk_Init();
-
-int main() {
-Tk_Init()
-; return 0; }
-EOF
-if { (eval echo configure:4365: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
-
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  if test "${enable_link_static}" = yes
-                then
-                        LIBS="-Xlinker -Bstatic -ltk80 -Xlinker -Bdynamic $LIBS"
-
-        cat > conftest.$ac_ext <<EOF
-#line 4380 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char Tk_Init();
-
-int main() {
-Tk_Init()
-; return 0; }
-EOF
-if { (eval echo configure:4391: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS="-ltk80 $oz_saved_LIBS"
+         oz_add_libs="-ltk80"
 
         cat > conftest.$ac_ext <<EOF
-#line 4404 "configure"
+#line 4375 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -4411,29 +4382,27 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:4415: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:4386: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                        echo "$ac_t""no" 1>&6
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for Tk_Init in -L$p -ltk80""... $ac_c" 1>&6
+echo "configure:4401: checking for Tk_Init in -L$p -ltk80" >&5
 
-fi
-rm -f conftest*
-
-fi
-rm -f conftest*
-                else
-                        LIBS="-ltk80 $oz_saved_LIBS"
+  oz_saved_LIBS=$LIBS
 
         cat > conftest.$ac_ext <<EOF
-#line 4437 "configure"
+#line 4406 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -4444,45 +4413,324 @@ int main() {
 Tk_Init()
 ; return 0; }
 EOF
-if { (eval echo configure:4448: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:4417: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
-                                oz_check_lib_path=yes
-                                break
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltk80 -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
+
+        cat > conftest.$ac_ext <<EOF
+#line 4431 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tk_Init();
+
+int main() {
+Tk_Init()
+; return 0; }
+EOF
+if { (eval echo configure:4442: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS="-ltk80 $oz_saved_LIBS"
+         oz_add_libs="-ltk80"
+
+        cat > conftest.$ac_ext <<EOF
+#line 4455 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tk_Init();
+
+int main() {
+Tk_Init()
+; return 0; }
+EOF
+if { (eval echo configure:4466: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-ltk80 $oz_saved_LIBS"
+      oz_add_libs="-ltk80"
+
+        cat > conftest.$ac_ext <<EOF
+#line 4487 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tk_Init();
+
+int main() {
+Tk_Init()
+; return 0; }
+EOF
+if { (eval echo configure:4498: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+       done
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-ltk80 $oz_saved_LIBS"
+      oz_add_libs="-ltk80"
+
+        cat > conftest.$ac_ext <<EOF
+#line 4525 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tk_Init();
+
+int main() {
+Tk_Init()
+; return 0; }
+EOF
+if { (eval echo configure:4536: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+       oz_add_ldflags=yes
 
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   LIBS=$oz_saved_LIBS
-                                echo "$ac_t""no" 1>&6
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for Tk_Init in -L$p -ltk80""... $ac_c" 1>&6
+echo "configure:4551: checking for Tk_Init in -L$p -ltk80" >&5
 
+  oz_saved_LIBS=$LIBS
+
+        cat > conftest.$ac_ext <<EOF
+#line 4556 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tk_Init();
+
+int main() {
+Tk_Init()
+; return 0; }
+EOF
+if { (eval echo configure:4567: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -ltk80 -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
+
+        cat > conftest.$ac_ext <<EOF
+#line 4581 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tk_Init();
+
+int main() {
+Tk_Init()
+; return 0; }
+EOF
+if { (eval echo configure:4592: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS="-ltk80 $oz_saved_LIBS"
+         oz_add_libs="-ltk80"
+
+        cat > conftest.$ac_ext <<EOF
+#line 4605 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tk_Init();
+
+int main() {
+Tk_Init()
+; return 0; }
+EOF
+if { (eval echo configure:4616: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
 fi
 rm -f conftest*
-                fi
 fi
 rm -f conftest*
+    else
+      LIBS="-ltk80 $oz_saved_LIBS"
+      oz_add_libs="-ltk80"
 
-                done
+        cat > conftest.$ac_ext <<EOF
+#line 4637 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char Tk_Init();
+
+int main() {
+Tk_Init()
+; return 0; }
+EOF
+if { (eval echo configure:4648: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
 fi
 rm -f conftest*
-                fi
+    fi
 fi
 rm -f conftest*
+       done
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+    LDFLAGS=$oz_tmp_ldflags
+    LIBS=$oz_tmp_libs
+    oz_cv_lib_path_ldflags_tk80_Tk_Init=$oz_add_ldflags
+    oz_cv_lib_path_libs_tk80_Tk_Init=$oz_add_libs
+  fi
+  if test "$oz_add_ldflags" = no; then
+    { echo "configure: error: required lib "-ltk80/tk" not found" 1>&2; exit 1; }
+  else
 
-        if test $oz_check_lib_path = yes
-        then
-                :
+  if test "$oz_add_ldflags" != yes && test "$oz_add_ldflags" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $LDFLAGS NONE; do
+      if test "$oz_tmp" = "$oz_add_ldflags"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && LDFLAGS="$oz_add_ldflags${LDFLAGS:+ }$LDFLAGS"
+  fi
 
-        else
-                LDFLAGS=$oz_saved_LDFLAGS
-                { echo "configure: error: required lib "-ltk80/tk" not found" 1>&2; exit 1; }
-        fi
 
-        fi
+  if test -n "$oz_add_libs" && test "$oz_add_libs" != yes && test "$oz_add_libs" != no; then
+    LIBS="$oz_add_libs${LIBS:+ }$LIBS"
+  fi
 
-        fi
+  fi
+  else
 
+  if test "$oz_add_ldflags" != yes && test "$oz_add_ldflags" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $LDFLAGS NONE; do
+      if test "$oz_tmp" = "$oz_add_ldflags"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && LDFLAGS="$oz_add_ldflags${LDFLAGS:+ }$LDFLAGS"
+  fi
+
+
+  if test -n "$oz_add_libs" && test "$oz_add_libs" != yes && test "$oz_add_libs" != no; then
+    LIBS="$oz_add_libs${LIBS:+ }$LIBS"
+  fi
+
+  fi
+  else
+
+  if test "$oz_add_ldflags" != yes && test "$oz_add_ldflags" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $LDFLAGS NONE; do
+      if test "$oz_tmp" = "$oz_add_ldflags"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && LDFLAGS="$oz_add_ldflags${LDFLAGS:+ }$LDFLAGS"
+  fi
+
+
+  if test -n "$oz_add_libs" && test "$oz_add_libs" != yes && test "$oz_add_libs" != no; then
+    LIBS="$oz_add_libs${LIBS:+ }$LIBS"
+  fi
+
+  fi
 
 
 
@@ -4495,7 +4743,7 @@ fi
 
 
 echo $ac_n "checking whether to copy tcl libraries""... $ac_c" 1>&6
-echo "configure:4499: checking whether to copy tcl libraries" >&5
+echo "configure:4747: checking whether to copy tcl libraries" >&5
 
 if test "${enable_copy_tcl_libs}" = yes; then
    echo "$ac_t""yes" 1>&6
@@ -4656,7 +4904,6 @@ s%@OZWISH@%$OZWISH%g
 s%@SRCS@%$SRCS%g
 s%@EXTRALDFLAGS@%$EXTRALDFLAGS%g
 s%@SRCDIR@%$SRCDIR%g
-s%@TEST@%$TEST%g
 s%@SRCTOP@%$SRCTOP%g
 s%@BUILDTOP@%$BUILDTOP%g
 s%@SET_MAKE@%$SET_MAKE%g

@@ -36,27 +36,54 @@ AC_INIT(gdbm)
 AC_CHECK_PROGS(RM, rm)
 
 OZ_INIT
-AC_PROG_MAKE_SET
-BUILDTOP=`cd .. && pwd`
-AC_SUBST(BUILDTOP)
 
-AC_MSG_CHECKING(for --enable-contrib)
-AC_ARG_ENABLE(contrib,
-    [--enable-contrib=c1,c2,...
-        add these contributions to the configuration (default: doc)])
+CONTRIBDIRS=
 
-if test -z "${enable_contrib}"; then
-    : ${oz_enable_contrib=doc}
-else
-    case "${enable_contrib}" in
-    no)         oz_enable_contrib=;;
-    yes)        oz_enable_contrib=gdbm,regex,doc,os;;
-    *)          oz_enable_contrib=${enable_contrib};;
-    esac
-fi
-AC_MSG_RESULT($oz_enable_contrib)
+AC_DEFUN(OZ_ADDTO_CONTRIBDIRS,[
+  if test "$oz_cv_enable_contrib_$1" = yes; then
+    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }$1"
+  fi])
 
-CONTRIBDIRS=`echo $oz_enable_contrib | sed 's/,/ /g'`
+AC_MSG_CHECKING([for --enable-contrib-gdbm])
+AC_ARG_ENABLE(contrib-gdbm,
+  [--enable-contrib-gdbm
+        whether to build the gdbm contribution (default: yes)],
+  [oz_cv_enable_contrib_gdbm=$enableval],
+  [: ${oz_cv_enable_contrib_gdbm:=$oz_enable_contrib_gdbm}
+   : ${oz_cv_enable_contrib_gdbm:=yes}])
+AC_MSG_RESULT($oz_cv_enable_contrib_gdbm)
+OZ_ADDTO_CONTRIBDIRS(gdbm)
+
+AC_MSG_CHECKING([for --enable-contrib-regex])
+AC_ARG_ENABLE(contrib-regex,
+  [--enable-contrib-regex
+        whether to build the regex contribution (default: yes)],
+  [oz_cv_enable_contrib_regex=$enableval],
+  [: ${oz_cv_enable_contrib_regex:=$oz_enable_contrib_regex}
+   : ${oz_cv_enable_contrib_regex:=yes}])
+AC_MSG_RESULT($oz_cv_enable_contrib_regex)
+OZ_ADDTO_CONTRIBDIRS(regex)
+
+AC_MSG_CHECKING([for --enable-contrib-doc])
+AC_ARG_ENABLE(contrib-doc,
+  [--enable-contrib-doc
+        whether to build the doc contribution (default: yes)],
+  [oz_cv_enable_contrib_doc=$enableval],
+  [: ${oz_cv_enable_contrib_doc:=$oz_enable_contrib_doc}
+   : ${oz_cv_enable_contrib_doc:=yes}])
+AC_MSG_RESULT($oz_cv_enable_contrib_doc)
+OZ_ADDTO_CONTRIBDIRS(doc)
+
+AC_MSG_CHECKING([for --enable-contrib-os])
+AC_ARG_ENABLE(contrib-os,
+  [--enable-contrib-os
+        whether to build the os contribution (default: yes)],
+  [oz_cv_enable_contrib_os=$enableval],
+  [: ${oz_cv_enable_contrib_os:=$oz_enable_contrib_os}
+   : ${oz_cv_enable_contrib_os:=yes}])
+AC_MSG_RESULT($oz_cv_enable_contrib_os)
+OZ_ADDTO_CONTRIBDIRS(os)
+
 AC_SUBST(CONTRIBDIRS)
 AC_CONFIG_SUBDIRS($CONTRIBDIRS)
 

@@ -614,6 +614,7 @@ AC_CONFIG_HEADER(conf.h)
 AC_OUTPUT(Makefile.vars Makefile Makefile.rules libfd/Makefile libfset/Makefile OZCONF.h:OZCONF.in)
 
 errprint(ifdef([OZ_INIT],
- [],
+ [autoconf succeeded
+],
  [autoconf failed: use 'autoconf -l ../..' to include ../../aclocal.m4.
 ]))

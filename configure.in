@@ -35,9 +35,6 @@ AC_INIT(OZVERSION)
 
 OZ_INIT
 
-BUILDTOP=`pwd`
-AC_SUBST(BUILDTOP)
-
 : ${oz_subdirs="platform share contrib doc"}
 AC_MSG_CHECKING(for --enable-subdirs)
 AC_ARG_ENABLE(subdirs,
