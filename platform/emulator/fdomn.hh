@@ -33,19 +33,8 @@
 
 #include "oz_cpi.hh"
 
-//-----------------------------------------------------------------------------
-#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
-#  define AssertFD(C) \
-if (!(C)) error("FD assertion '%s' failed at %s:%d.", #C, __FILE__, __LINE__);
+#include "fddebug.hh"
 
-#  define DebugCodeFD(C) C
-
-#else
-
-#  define AssertFD(C)
-#  define DebugCodeFD(C)
-
-#endif
 //-----------------------------------------------------------------------------
 
 const int fd_inf = 0;
