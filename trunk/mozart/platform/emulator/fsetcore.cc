@@ -307,6 +307,7 @@ BIspec fdSpec[] = {
   {"fsp_isIn",         3, fsp_isIn},
   {"fsp_include",      2, fsp_include},
   {"fsp_exclude",      2, fsp_exclude},
+  {"fsp_match",        2, fsp_match},
   {"fsp_card",         2, fsp_card},
   {"fsp_union",        3, fsp_union},
   {"fsp_intersection", 3, fsp_intersection},
