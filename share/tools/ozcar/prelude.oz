@@ -53,7 +53,13 @@ fun {StripPath File}
    case File == '' then
       '???'
    else
-      {Str.rchr {Atom.toString File} &/}.2
+      S = {Str.rchr {Atom.toString File} &/}
+   in
+      case {List.length S} > 1 then
+	 S.2
+      else
+	 '???'
+      end
    end
 end
 
@@ -68,6 +74,7 @@ end
 fun {ArgType X}
    case {IsDet X} then
       case     {IsArray X}      then ArrayType
+      elsecase {IsThread X}     then ThreadType
       elsecase {IsAtom X}       then case X
 				     of 'nil'         then NilAtom
 				     [] '|'           then ConsAtom
