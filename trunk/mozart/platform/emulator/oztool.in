@@ -1,9 +1,9 @@
 #! /bin/sh
 #
-# oztool c++ ...	invokes the right c++ compiler with the right options
-# oztool cc  ...	same for the c compiler
-# oztool ld  ...	creates DLLs
-# oztool platform	echoes the oz platform
+# oztool c++ ...        invokes the right c++ compiler with the right options
+# oztool cc  ...        same for the c compiler
+# oztool ld  ...        creates DLLs
+# oztool platform       echoes the oz platform
 
 : ${oztool_cxx="@OZTOOL_CXX@"}
 : ${oztool_cc="cc"}
@@ -15,7 +15,10 @@ shift
 case "$cmd" in
   c++) cmd=$oztool_cxx;;
   cc ) cmd=$oztool_cc;;
-  ld ) cmd=$oztool_ld;;
+  ld ) case $oztool_platform in
+	 netbsd*) cmd="ld -Bshareable";;
+	       *) cmd=$oztool_ld
+       esac;;
   platform )
     echo "$oztool_platform"
     exit 0;;
