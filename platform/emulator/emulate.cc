@@ -85,7 +85,10 @@ void failureUnify(AM *e, char *msgShort, TaggedRef arg1, TaggedRef arg2,
 
 void failureNomsg(AM *e) { HF_BODY(,); }
 
-#define HF_NOMSG   failureNomsg(e)
+#define HF_NOMSG   							      \
+   if (!e->isToplevel()) { goto LBLfailure; }				      \
+   failureNomsg(e);							      \
+   goto LBLkillThread;
 
 
 
