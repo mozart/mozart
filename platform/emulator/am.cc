@@ -296,6 +296,18 @@ void AM::exitOz(int status)
 }
 
 
+inline
+int AM::setUserAlarmTimer(int ticks)
+{
+  if (ticks<0) {
+    error("gotcha");
+  }
+  int ret=userCounter;
+  userCounter=ticks;
+
+  return ret;
+}
+
 void AM::suspendEngine()
 {
   deinstallPath(rootBoard);
@@ -1401,19 +1413,6 @@ void AM::handleAlarm()
 
   checkIO();
 }
-
-inline
-int AM::setUserAlarmTimer(int ticks)
-{
-  if (ticks<0) {
-    error("gotcha");
-  }
-  int ret=userCounter;
-  userCounter=ticks;
-
-  return ret;
-}
-
 
 /* handleUserAlarm:
     if UserAlarm-SFLAG is set this method is called

@@ -280,22 +280,22 @@ OZ_Term OZ_termType(OZ_Term term)
 
 int OZ_getMinPrio(void) 
 {
-  return OZMIN_PRIORITY;
+  return MIN_PRIORITY;
 }
 
 int OZ_getDefaultPrio(void) 
 {
-  return OZDEFAULT_PRIORITY;
+  return DEFAULT_PRIORITY;
 }
 
 int OZ_getPropagatorPrio(void) 
 {
-  return OZPROPAGATOR_PRIORITY;
+  return PROPAGATOR_PRIORITY;
 }
 
 int OZ_getMaxPrio(void) 
 {
-  return OZMAX_PRIORITY;
+  return MAX_PRIORITY;
 }
 
 int OZ_smallIntMin(void) 
@@ -523,6 +523,7 @@ void float2buffer(ostream &out, OZ_Term term)
     switch (c) {
     case 'e':
       if (!hasDot) out << '.' << '0';
+      hasDot = OK;
       out << c;
       break;
     case '.':
@@ -541,6 +542,7 @@ void float2buffer(ostream &out, OZ_Term term)
       break;
     }
   }
+  if (!hasDot) out << '.' << '0';
   delete str;
 }
 

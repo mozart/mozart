@@ -289,7 +289,7 @@ public:
 
   void handleAlarm();
   void handleUser();
-  int setUserAlarmTimer(int ms);
+  inline int setUserAlarmTimer(int ms);
 
   OzSleep *sleepQueue;
   void insertUser(int t,TaggedRef node);
