@@ -27,11 +27,22 @@ SRC_TRANSPORT = \
 	Dialogs.oz Germany.oz Main.oz Plan.oz \
 	Randomizer.oz Widgets.oz
 
+SRC_COLLEGE = \
+	Graphics.oz \
+	Latex.oz \
+	Common.oz \
+	KathHochWS9596.ozt \
+	Main.oz \
+	Controller.oz \
+	KathHochWS9596Sol.ozt \
+	Scheduler.oz
+
 SUBDIRS = \
-	Cutting JobShop Transport
+	Cutting JobShop Transport College
 
 SRCFILES = \
 	$(ALL_SRC) \
+	$(addprefix College/,$(SRC_COLLEGE)) \
 	$(addprefix Cutting/,$(SRC_CUTTING)) \
 	$(addprefix Transport/,$(SRC_TRANSPORT)) \
 	$(addprefix JobShop/,$(SRC_JOBSHOP))
@@ -50,6 +61,10 @@ $(WHAT)-html/index.html: $(SRCFILES)
 
 Cutting/%.oz: $(SRCTOP)/share/demo/Cutting/%.oz
 	$(PERL) $(SRCDIR)/offwithhishead $< > $@
+College/%.oz: $(SRCTOP)/share/demo/College/%.oz
+	$(PERL) $(SRCDIR)/offwithhishead $< > $@
+College/%.ozt: $(SRCTOP)/share/demo/College/%.ozt
+	$(PERL) $(SRCDIR)/offwithhishead $< > $@
 JobShop/%.oz: $(SRCTOP)/share/demo/JobShop/%.oz
 	$(PERL) $(SRCDIR)/offwithhishead $< > $@
 Transport/%.oz: $(SRCTOP)/share/demo/Transport/%.oz
@@ -64,6 +79,10 @@ install:: $(SUBDIRS:%=$(DOCDIR)/%) $(SRCFILES:%=$(DOCDIR)/%)
 
 $(DOCDIR)/Cutting/%.oz: $(SRCTOP)/share/demo/Cutting/%.oz
 	$(INSTALL_FILE) $< $@
+$(DOCDIR)/College/%.oz: $(SRCTOP)/share/demo/College/%.oz
+	$(INSTALL_FILE) $< $@
+$(DOCDIR)/College/%.ozt: $(SRCTOP)/share/demo/College/%.ozt
+	$(INSTALL_FILE) $< $@
 $(DOCDIR)/JobShop/%.oz: $(SRCTOP)/share/demo/JobShop/%.oz
 	$(INSTALL_FILE) $< $@
 $(DOCDIR)/Transport/%.oz: $(SRCTOP)/share/demo/Transport/%.oz
@@ -75,3 +94,4 @@ $(DOCDIR)/%:
 
 clean::
 	-rm -rf Cutting
+	-rm -rf College
