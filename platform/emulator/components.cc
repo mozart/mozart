@@ -208,7 +208,7 @@ OZ_Return raiseGeneric(char *id, char *msg, OZ_Term arg)
 static void saveTerm(ByteStream* buf, TaggedRef t, Bool cloneCells)
 {
   buf->marshalBegin();
-  char *version  =  PERDIOVERSION;
+  char *version  =  MARSHALERVERSION;
   marshalString(buf, version);
   pickleTerm(buf, t, cloneCells);
   buf->marshalEnd();
@@ -453,7 +453,6 @@ OZ_BI_define(BIsaveWithCells,4,0)
 } OZ_BI_end
 
 
-#ifdef PICKLE2TEXTHACK
 OZ_Return loadFD(int fd, OZ_Term out, const char *compname);
 Bool pickle2text()
 {
@@ -473,7 +472,6 @@ Bool pickle2text()
   return OK;
 }
 
-#endif
 
 // ===================================================================
 // class ByteSource
@@ -498,7 +496,7 @@ Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
   if (sscanf(vers,"%d#%d",&major,&minor) != 2) {
     return NO;
   }
-  if (major != PERDIOMAJOR || minor != PERDIOMINOR)
+  if (major != MARSHALERMAJOR || minor != MARSHALERMINOR)
     return NO;
 
   buf->setVersion(major,minor);
@@ -518,15 +516,15 @@ Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
 
 
 //
-// Map perdio version into mozart version. 
-// The table must be sorted on perdio numbers. It does not need to be
+// Map a marshaler version into a mozart version. 
+// The table must be sorted on marshaler numbers. It does not need to be
 // complete but then it is not complete :-)
 typedef struct {
   int major, minor;
   char ozversion[16];
-} pv2ovTabType;
+} mv2ovTabType;
 //
-static pv2ovTabType pv2ovTab[] = {
+static mv2ovTabType mv2ovTab[] = {
   { 1, 5, "1.0.1" },
   { 2, 0, "1.1.0" },
   { 3, 0, "1.1.0" }
@@ -534,7 +532,7 @@ static pv2ovTabType pv2ovTab[] = {
 
 // returns a string to be used as "oz version %s";
 // returned string must be deallocated;
-char *pv2ov(char *pvs)
+char *mv2ov(char *pvs)
 {
   int major, minor, num, i;
   char *buf = (char *) malloc(128);
@@ -548,19 +546,19 @@ char *pv2ov(char *pvs)
   pvn = (int) (major << 16) | minor;
 
   //
-  num = sizeof(pv2ovTab)/sizeof(pv2ovTabType);
+  num = sizeof(mv2ovTab)/sizeof(mv2ovTabType);
   Assert(num);
   for (i = 0; ; i++) {
-    int tpvn = (int) (pv2ovTab[i].major << 16) | pv2ovTab[i].minor;
+    int tpvn = (int) (mv2ovTab[i].major << 16) | mv2ovTab[i].minor;
 
     if (pvn == tpvn)
-      sprintf(buf, "%s", pv2ovTab[i].ozversion);
+      sprintf(buf, "%s", mv2ovTab[i].ozversion);
     else if (pvn < tpvn)
-      sprintf(buf, "earlier than %s(%d#%d)", pv2ovTab[i].ozversion,
-	      pv2ovTab[i].major, pv2ovTab[i].minor);
+      sprintf(buf, "earlier than %s(%d#%d)", mv2ovTab[i].ozversion,
+	      mv2ovTab[i].major, mv2ovTab[i].minor);
     else if (i == num-1)
-      sprintf(buf, "later than %s(%d#%d)", pv2ovTab[i].ozversion,
-	      pv2ovTab[i].major, pv2ovTab[i].minor);
+      sprintf(buf, "later than %s(%d#%d)", mv2ovTab[i].ozversion,
+	      mv2ovTab[i].major, mv2ovTab[i].minor);
     else
       continue;
     break;
@@ -594,7 +592,7 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
   bufferManager->dumpByteStream(stream);
   if (versiongot) {
     OZ_Term vergot = oz_atom(versiongot);
-    char *vs = pv2ov(versiongot);
+    char *vs = mv2ov(versiongot);
     OZ_Term ozvergot = oz_atom(vs);
     char s1[80];
     sprintf(s1, "Pickle version %s correspnds Oz version", versiongot);
@@ -603,7 +601,7 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
     return raiseGeneric("load:versionmismatch",
 			"Version mismatch during loading of pickle",
 			oz_mklist(OZ_pairA("File",oz_atom(compname)),
-				  OZ_pairA("Expected",oz_atom(PERDIOVERSION)),
+				  OZ_pairA("Expected",oz_atom(MARSHALERVERSION)),
 				  OZ_pairA("Got",vergot),
 				  OZ_pairA(s1,ozvergot)));
   } else {

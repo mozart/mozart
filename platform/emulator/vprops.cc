@@ -25,9 +25,6 @@
  *
  */
 
-
-
-
 // EMULATOR PROPERTIES
 //
 // We define here a single interface to all emulator properties.  This
@@ -45,7 +42,6 @@
 #include "codearea.hh"
 #include "OZCONF.h"
 #include "builtins.hh"
-#include "marshalerBase.hh"
 
 #include <stdarg.h>
 
@@ -143,6 +139,8 @@ enum EmulatorPropertyIndex {
   PROP_OZ_DATE,
   // DISTRIBUTION
   PROP_DISTRIBUTION_VIRTUALSITES,
+  // Marshaler
+  PROP_MARSHALER_VERSION,
   // INTERNAL
   PROP_INTERNAL_DEBUG,
   PROP_INTERNAL_PROPLOCATION,
@@ -438,6 +436,9 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 #else
   CASE_BOOL(PROP_DISTRIBUTION_VIRTUALSITES,NO);
 #endif
+  // Marshaler
+  case PROP_MARSHALER_VERSION: return OZ_pair2(oz_int(MARSHALERMAJOR),
+					       oz_int(MARSHALERMINOR));
   // INTERNAL
   CASE_BOOL(PROP_INTERNAL_DEBUG,am.debugmode());
   CASE_BOOL(PROP_INTERNAL_PROPLOCATION,am.isPropagatorLocation());
@@ -1058,6 +1059,8 @@ static const struct prop_entry prop_entries[] = {
   // Distribution
   {"distribution.virtualsites",
 		       PROP_DISTRIBUTION_VIRTUALSITES},
+  // Marshaler
+  {"marshaler.version", PROP_MARSHALER_VERSION},
   // INTERNAL
   {"internal",PROP_INTERNAL},
   {"internal.debug",PROP_INTERNAL_DEBUG},

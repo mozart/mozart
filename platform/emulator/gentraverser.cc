@@ -66,22 +66,24 @@ void GTIndexTable::gCollectGTIT()
   //
   for (i = 0; i < asize; i++) {
     OZ_Term t = ta[i].term;
-    // Either it's an (immediate) non-variable, or it's a reference to
-    // a variable (the distribution layer prepares GC by installing a
-    // special pseudo-snapshot of a value before gc step begins).
-    // Observe that variables are NOT stored directly in hash nodes!
+    // 't' is either an (immediate) non-variable, a reference to a
+    // variable, or a pseudo-variable used for keeping of references
+    // to non-relocatable objects. Observe that no GC tags can be
+    // there;
     // 
-    if (!oz_isMark(t)) {
+    Assert(!oz_isMark(t));
 #ifdef DEBUG_CHECK
-      Bool isVar;
-      if (oz_isRef(t)) {
-	isVar = OK;
-	Assert(oz_isVar(*tagged2Ref(t)));
-      } else {
-	isVar = NO;
-	Assert(!oz_isVar(t));
-      }
+    Bool isVar;
+    if (oz_isRef(t)) {
+      isVar = OK;
+      Assert(oz_isVar(*tagged2Ref(t)));
+    } else {
+      isVar = NO;
+    }
 #endif
+
+    // 
+    if (!oz_isVar(t)) {
       oz_gCollectTerm(t, t);
 
       //
@@ -90,10 +92,7 @@ void GTIndexTable::gCollectGTIT()
       if (oz_isVar(t))
 	t = makeTaggedRef(tp);
       // ... otherwise just leave it dereferenced;
-#ifdef DEBUG_CHECK
-      Assert((isVar && oz_isRef(t) && !oz_isRef(*tagged2Ref(t))) ||
-	     (!isVar && !oz_isRef(t)));
-#endif
+      Assert((isVar && oz_isRef(t)) || (!isVar && !oz_isRef(t)));
     }
 
     //
@@ -120,6 +119,7 @@ void GenTraverser::gCollect()
     OZ_Term tc = t;
     DEREF(tc, tPtr);
 
+    //
     if (oz_isMark(tc)) {
       switch (tc) {
       case taggedBATask:
@@ -142,7 +142,7 @@ void GenTraverser::gCollect()
     } else {
       // do not GC the dereferenced copy - do the original slot;
       oz_gCollectTerm(t, t);
-    }      
+    }
   }
 }
 
