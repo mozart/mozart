@@ -83,3 +83,10 @@ GenericSet = {`Builtin`
 %%
 ChunkArity = {`Builtin` 'chunkArity' noHandler}
 
+
+%%
+AddrOf = {`Builtin` 'addr' noHandler}
+
+%%
+OnToplevel = {`Builtin` 'onToplevel' noHandler}
+
