@@ -70,7 +70,7 @@ local
       M2 = {MakeRecord 'export' Fs}
       {Record.forAll M2
        fun {$}
-	  {Lazy.new FwdRequest}
+	  {ByNeed FwdRequest}
        end}
       thread
 	 {Wait Request}
