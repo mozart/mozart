@@ -72,7 +72,7 @@ public:
   void installPropagators(OzCtVariable *);
 
   int getNoOfSuspLists(void) {
-    return _definition->getNoOfWakeUpLists();
+    return _definition->getNoEvents();
   }
 
   SuspList * getSuspList(int i) {
@@ -117,7 +117,7 @@ public:
   OZ_Return unify(OZ_Term *, OZ_Term *);
 
   OZ_Return valid(OZ_Term val) {
-    return _constraint->unify(val);
+    return _constraint->isInDomain(val);
   }
 
   void gCollect(Board *);
