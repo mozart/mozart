@@ -2555,16 +2555,15 @@ LBLdispatcher:
        Bool foundHdl = CTT->findCatch();
        /* topmost entry points to handler now */
 
-       static TaggedRef debugstack = nil();
-
        if (e->exception.debug) {
-         OZ_Term traceBack = CTT->reflect(lastTop,CTT->getTop(),PC);
+
+         OZ_Term traceBack;
+         if (e->debugmode())
+           traceBack = CTT->getTaskStackRef()->dbgGetTaskStack(PC,100,lastTop);
+         else
+           traceBack = CTT->reflect(lastTop,CTT->getTop(),PC);
          OZ_Term loc = e->dbgGetLoc(CBB);
          e->formatError(traceBack,loc);
-
-         if (e->debugmode())
-           debugstack =
-             CTT->getTaskStackRef()->dbgGetTaskStack(PC,100,lastTop);
        }
 
        if (foundHdl) {
@@ -2579,7 +2578,7 @@ LBLdispatcher:
 
        if (e->debugmode()) {
          execBreakpoint(CTT,NO);
-         debugStreamRaise(CTT,e->exception.value,debugstack);
+         debugStreamRaise(CTT,e->exception.value);
          goto LBLpreemption;
        }
        // else

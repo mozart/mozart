@@ -193,7 +193,7 @@ void debugStreamExit(TaggedRef frameId) {
   gotoBoard(bb);
 }
 
-void debugStreamRaise(Thread *tt, TaggedRef exc, TaggedRef stack) {
+void debugStreamRaise(Thread *tt, TaggedRef exc) {
   Board *bb = gotoRootBoard();
 
   TaggedRef tail    = am.threadStreamTail;
@@ -206,8 +206,7 @@ void debugStreamRaise(Thread *tt, TaggedRef exc, TaggedRef stack) {
                   OZ_mkTupleC("#",2,makeTaggedConst(tt),
                               OZ_int(tt->getID()))),
          cons(OZ_pairA("exc", exc),
-              cons(OZ_pairA("stack", stack),
-                   nil())));
+              nil()));
 
   TaggedRef entry = OZ_recordInit(OZ_atom("exception"), pairlist);
   OZ_unify(tail, OZ_cons(entry, newTail));
