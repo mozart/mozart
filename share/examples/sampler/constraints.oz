@@ -38,7 +38,7 @@ end
 
 {Browse {SearchAll Problem}}
      
-{Explorer script(Problem)}
+{Explorer.object script(Problem)}
 
 
 
@@ -66,7 +66,7 @@ in
    {FD.distribute ff Sol}
 end
 
-{Explorer script(Money)}
+{Explorer.object script(Money)}
 
 
 
@@ -165,7 +165,7 @@ proc {MaxSat O N}
    O.total <: N.total
 end
 
-{Explorer script(PhotoNaive MaxSat)}
+{Explorer.object script(PhotoNaive MaxSat)}
 
 
 
@@ -184,7 +184,7 @@ end
 %%%
 \feed sampler/constraints/draw-photo.oz
 
-{Explorer add(information DrawPhoto)}
+{Explorer.object add(information DrawPhoto)}
 
 
 
@@ -262,7 +262,7 @@ end
 \feed sampler/constraints/scheduling-compiler.oz
 
 
-{Explorer script({Compile Bridge}
+{Explorer.object script({Compile Bridge}
 		 proc {$ O N}
 		    O.pe >: N.pe
 		 end)}
@@ -270,7 +270,7 @@ end
 %% Use Gantt chart to visualize
 \feed sampler/constraints/gantt.oz
 
-{Explorer add(information DrawGantt)}
+{Explorer.object add(information DrawGantt)}
 
 
 
