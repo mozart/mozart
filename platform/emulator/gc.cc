@@ -686,10 +686,7 @@ Board * Board::gcBoard() {
 
   Assert(isInGc || bb->isInTree()); 
 
-  const int sz = sizeof(Board);
-  Board *ret = (sz>MaxStaticSize) ? (Board *) OZ_hrealloc(bb, sz)
-                                  : (Board *) gcReallocStatic(bb, sz);
-
+  Board *ret = (Board *) OZ_hrealloc(bb, sizeof(Board));
 
   gcStack.push(ret,PTR_BOARD);
 
