@@ -23,10 +23,10 @@ functor $
 import
    Application
    System(show)
-   GOZCoreComponent('GOZCore' : GOZCore) at 'x-oz://system/GOZCore.ozf'
-   GDK     at 'x-oz://system/GDK.ozf'
-   GTK     at 'x-oz://system/GTK.ozf'
-   Canvas  at 'x-oz://system/GTKCANVAS.ozf'
+   GOZCoreComponent('GOZCore' : GOZCore) at 'x-oz://system/gtk/GOZCore.ozf'
+   GDK     at 'x-oz://system/gtk/GDK.ozf'
+   GTK     at 'x-oz://system/gtk/GTK.ozf'
+   Canvas  at 'x-oz://system/gtk/GTKCANVAS.ozf'
 define
    {Wait GOZCore}
 
