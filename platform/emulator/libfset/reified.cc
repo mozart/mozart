@@ -539,8 +539,7 @@ OZ_Return PartitionReifiedPropagator::propagate(void)
 
   OZ_DEBUGPRINTTHIS("out ");
   {
-    OZ_Return r = P.leave();
-    return r;
+    return P.leave();
   }
 failure:
   OZ_DEBUGPRINTTHIS("failed");
