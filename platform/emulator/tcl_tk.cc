@@ -55,7 +55,7 @@ OZ_Return raise_toplevel(void) {
 }
 
 #define CHECK_TOPLEVEL     \
-if (!am.isToplevel())      \
+if (!am.onToplevel())      \
   return raise_toplevel();
 
 

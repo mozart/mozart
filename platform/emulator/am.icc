@@ -20,7 +20,7 @@ void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var,
 		      TaggedRef a, ByteCode *scp) 
 {
   // most probable case first: local UVar
-  // if (isUVar(var) && currentBoard == tagged2VarHome(var)) {
+  // if (isUVar(var) && isCurrentBoard(tagged2VarHome(var))) {
   // more efficient:
   if (currentUVarPrototypeEq(var) && scp==0) {
     doBind(varPtr,a);
@@ -72,8 +72,8 @@ inline
 void AM::deinstallCurrent()
 {
   reduceTrailOnSuspend();
-  currentBoard->unsetInstalled();
-  setCurrent(currentBoard->getParent());
+  currentBoard()->unsetInstalled();
+  setCurrent(currentBoard()->getParent());
 }
 
 inline
@@ -81,9 +81,8 @@ void AM::deinstallPath(Board *top)
 {
   Assert(!top->isCommitted() && !top->isFailed());
   
-  while (currentBoard != top) {
+  while (!isCurrentBoard(top)) {
     deinstallCurrent();
-    Assert(currentBoard != rootBoard || top == rootBoard);
   }
 }
 
@@ -104,18 +103,12 @@ Bool AM::isLocalUVar(TaggedRef var,TaggedRef *varPtr)
 inline
 Bool AM::isLocalSVar(SVariable *var) {
   ShallowCheckLocal(var);
-  return (var->getHome1()==currentBoard) || isLocalSVarOutline(var);
+  return (isCurrentBoard(var->getHome1())) || isLocalSVarOutline(var);
 }
 
 inline
-Bool AM::isLocalSVar(TaggedRef var)
-{
-  return isLocalSVar(tagged2SVar(var));
-}
-
-inline
-Bool AM::isLocalCVar(TaggedRef var) {
-  return isLocalSVar(taggedCVar2SVar(var));
+Bool AM::isLocalSVar(TaggedRef var) {
+  return isLocalSVar(tagged2SVarPlus(var));
 }
 
 inline
@@ -124,15 +117,13 @@ Bool AM::isLocalVariable(TaggedRef var,TaggedRef *varPtr)
   CHECK_ISVAR(var);
 
   if (isUVar(var)) return isLocalUVar(var,varPtr);
-  if (isSVar(var)) return isLocalSVar(var);
-
-  return isLocalCVar(var);
+  return isLocalSVar(var);
 }
 
 inline
 void AM::checkSuspensionList(TaggedRef taggedvar, PropCaller calledBy)
 {
-  SVariable * var = tagged2SuspVar(taggedvar);
+  SVariable *var = tagged2SVarPlus(taggedvar);
   var->setSuspList(checkSuspensionList(var, var->getSuspList(),
 				       calledBy));
 }
@@ -209,8 +200,8 @@ inline
 Thread *AM::mkRunnableThreadOPT(int prio, Board *bb)
 {
   Thread *th = newThreadInternal(prio,bb);
-  Assert(bb==currentBoard || bb->getParent() == currentBoard);
-  if (currentSolveBoard) {
+  Assert(isCurrentBoard(bb) || isCurrentBoard(bb->getParent()));
+  if (isBelowSolveBoard()) {
     int inSolve=incSolveThreads(bb);
     Assert(inSolve);
     th->setInSolve();
@@ -268,17 +259,17 @@ void AM::suspThreadToRunnable(Thread *tt)
 
   tt->markRunnable();
 
-  Assert(currentBoard==GETBOARD(tt) || tt->isExtThread() ||
-	 (currentBoard==GETBOARD(tt)->getParent()
+  Assert(isCurrentBoard(GETBOARD(tt)) || tt->isExtThread() ||
+	 (isCurrentBoard(GETBOARD(tt)->getParent())
 	  && !GETBOARD(tt)->isSolve()));
 
   if (debugmode() && tt->getTrace()) {
-    //Thread *t; if ((t = am.currentThread) && t->isTraced())
+    //Thread *t; if ((t = am.currentThread()) && t->isTraced())
     //  execBreakpoint(t);
     debugStreamReady(tt);
   }
   
-  if (currentSolveBoard || tt->isExtThread()) {
+  if (isBelowSolveBoard() || tt->isExtThread()) {
     Assert(isInSolveDebug(GETBOARD(tt)));
     incSolveThreads(GETBOARD(tt));
     tt->setInSolve();
@@ -295,7 +286,7 @@ void AM::wakeupToRunnable(Thread *tt)
   Assert(tt->isSuspended());
   tt->markRunnable();
 
-  if (currentSolveBoard != (Board *) NULL || tt->isExtThread()) {
+  if (isBelowSolveBoard() || tt->isExtThread()) {
     Assert (isInSolveDebug (GETBOARD(tt)));
     incSolveThreads(GETBOARD(tt));
     tt->setInSolve();
@@ -307,7 +298,7 @@ void AM::wakeupToRunnable(Thread *tt)
 inline 
 void AM::updateSolveBoardPropagatorToRunnable(Thread *tt)
 {
-  if (currentSolveBoard != (Board *) NULL || tt->isExtThread()) {
+  if (isBelowSolveBoard() || tt->isExtThread()) {
     Assert(isInSolveDebug(GETBOARD(tt)));
     incSolveThreads(GETBOARD(tt));
     tt->setInSolve();
@@ -330,10 +321,10 @@ void AM::scheduledPropagator(Thread *tt)
   Assert(tt);
   Assert(!tt->isDeadThread());
   Assert(tt->isPropagator());
-  Assert(currentBoard == GETBOARD(tt));
+  Assert(isCurrentBoard(GETBOARD(tt)));
 
   tt->unmarkRunnable();
-  wakeUpPropagator(tt,currentBoard, pc_propagator);
+  wakeUpPropagator(tt,currentBoard(), pc_propagator);
 }
 
 
@@ -345,7 +336,7 @@ void AM::suspendPropagator(Thread *tt)
   Assert(tt);
   Assert(!tt->isDeadThread());
   Assert(tt->isPropagator());
-  Assert(currentBoard == GETBOARD(tt));
+  Assert(isCurrentBoard(GETBOARD(tt)));
 
   tt->unmarkRunnable();
   tt->unmarkUnifyThread();
@@ -384,9 +375,9 @@ Bool AM::wakeUpPropagator(Thread *tt, Board *home, PropCaller calledBy)
   Assert(tt->isSuspended());
   Assert(tt->getThrType() == S_PR_THR);
 
-  Board *cb_cache = currentBoard;
+  Board *cb_cache = currentBoard();
   
-  if (tt->isNonMonotonicPropagatorThread() && currentSolveBoard) {
+  if (tt->isNonMonotonicPropagatorThread() && isBelowSolveBoard()) {
 #ifdef DEBUG_NONMONOTONIC
     OZ_CFunHeader * header = tt->getPropagator()->getHeader();
     OZ_CFun headerfunc = header->getHeaderFunc();
@@ -399,7 +390,7 @@ Bool AM::wakeUpPropagator(Thread *tt, Board *home, PropCaller calledBy)
     Assert(!tt->getPropagator()->isMonotonic());
 
     WAKEUP_PROPAGATOR(tt->markRunnable();
-		      SolveActor::Cast(currentSolveBoard->getActor())->addToNonMonoSuspList(tt));
+		      SolveActor::Cast(_currentSolveBoard->getActor())->addToNonMonoSuspList(tt));
   }
   
 #ifndef NO_LTQ
@@ -485,7 +476,7 @@ void AM::closeDonePropagator(Thread *tt)
   Assert(tt);
   Assert(!tt->isDeadThread());
   Assert(tt->isPropagator());
-  Assert(currentBoard == GETBOARD(tt));
+  Assert(isCurrentBoard(GETBOARD(tt)));
 
   // constructive disjunction ???
   // kost@: i don't know what's going on here - just keep it as it was;
@@ -498,7 +489,7 @@ void AM::closeDonePropagator(Thread *tt)
   //
   //  Actually, the current board can be alive or not - 
   // so, in the last case it's redundant;
-  currentBoard->decSuspCount();
+  currentBoard()->decSuspCount();
 
   //
   //  ... again to the 'SolveActor::checkExtSuspList':
@@ -517,7 +508,7 @@ inline
 void AM::closeDonePropagatorThreadCD(Thread *tt)
 {
   tt->markRunnable();
-  currentBoard->decSuspCount();
+  currentBoard()->decSuspCount();
   tt->markDeadThread();
   checkExtThread(tt);
 }
@@ -527,7 +518,7 @@ void AM::closeDonePropagatorCD(Thread *tt)
 {
   tt->markRunnable();
   disposeRunnableThread(tt);
-  currentBoard->decSuspCount ();
+  currentBoard()->decSuspCount ();
   tt->markDeadThread();
   checkExtThread(tt);
 }
@@ -615,7 +606,7 @@ inline
 void AM::saveSelf()
 {
   if (cachedSelf != 0) {
-    currentThread->setSelf(cachedSelf);
+    currentThread()->setSelf(cachedSelf);
     cachedSelf = 0;
   }
 }

@@ -84,7 +84,7 @@ int OZ_FDIntVar::read(OZ_Term v)
   } else {
     Assert(isCVar(vtag));
 
-    if (am.currentThread->isLocalThread()) {
+    if (am.currentThread()->isLocalThread()) {
     // local variable per definition
 
       setState(loc_e);
@@ -114,7 +114,7 @@ int OZ_FDIntVar::read(OZ_Term v)
 	
 	setSort(int_e);
 	
-	if (am.currentBoard->isRoot())
+	if (am.onToplevel())
 	  dom = ((GenFDVariable *) cvar)->getDom();
 	domPtr = &((GenFDVariable *) cvar)->getDom();
 	initial_size = domPtr->getSize();
@@ -127,7 +127,7 @@ int OZ_FDIntVar::read(OZ_Term v)
       // don't know before hand if local or global
       
       GenCVariable * cvar = tagged2CVar(v);
-      setState(am.isLocalCVar(v) ? loc_e : glob_e);
+      setState(am.isLocalSVar(v) ? loc_e : glob_e);
       
       if (cvar->testReifiedFlag()) {
       // may already be a reified var; then the type is incorrect
@@ -151,7 +151,7 @@ int OZ_FDIntVar::read(OZ_Term v)
       } else {
       global_fd:
 	
-	if (isState(glob_e) || am.currentBoard->isRoot())
+	if (isState(glob_e) || am.onToplevel())
 	  dom = ((GenFDVariable *) cvar)->getDom();
 	domPtr = &((GenFDVariable *) cvar)->getDom();
 	initial_size = domPtr->getSize();
@@ -292,7 +292,7 @@ void OZ_FDIntVar::fail(void)
   // dont't change the order of the calls (side effects!)
   if (testResetStoreFlag(var) && isState(glob_e) && isSort(int_e)) {
     *domPtr = dom;
-  } else if (am.currentBoard->isRoot()) {
+  } else if (am.onToplevel()) {
     *domPtr = dom;
   }
 }

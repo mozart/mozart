@@ -140,14 +140,14 @@ char *OZ_Propagator::toString() const
 
 OZ_Boolean OZ_Propagator::mayBeEqualVars(void)
 {
-  return am.currentThread->isUnifyThread();
+  return am.currentThread()->isUnifyThread();
 }
 
 
 OZ_Return OZ_Propagator::replaceBy(OZ_Propagator * p)
 {
-  am.currentThread->setPropagator(p);
-  return am.runPropagator(am.currentThread); 
+  am.currentThread()->setPropagator(p);
+  return am.runPropagator(am.currentThread());
 }
 
 OZ_Return OZ_Propagator::replaceBy(OZ_Term a, OZ_Term b)
@@ -169,7 +169,7 @@ OZ_Boolean OZ_Propagator::imposeOn(OZ_Term t)
 {
   DEREF(t, tptr, ttag);
   if (isAnyVar(ttag)) {
-    addSuspAnyVar(tptr, am.currentThread);
+    addSuspAnyVar(tptr, am.currentThread());
     return OZ_TRUE;
   } 
   return OZ_FALSE;
@@ -188,7 +188,7 @@ OZ_Boolean OZ_Propagator::addImpose(OZ_FDPropState ps, OZ_Term v)
 
 void OZ_Propagator::impose(OZ_Propagator * p, int prio) 
 {
-  Thread * thr = am.mkPropagator(am.currentBoard, prio, p);
+  Thread * thr = am.mkPropagator(am.currentBoard(), prio, p);
   ozstat.propagatorsCreated.incf();
 
   am.suspendPropagator(thr);
@@ -217,13 +217,13 @@ void OZ_Propagator::impose(OZ_Propagator * p, int prio)
 
     if (isGenFDVar(v, vtag)) {
       addSuspFDVar(v, thr, staticSpawnVars[i].state.fd);
-      all_local &= am.isLocalCVar(v);
+      all_local &= am.isLocalSVar(v);
     } else if (isGenOFSVar(v, vtag)) {
       addSuspOFSVar(v, thr);
-      all_local &= am.isLocalCVar(v);
+      all_local &= am.isLocalSVar(v);
     } else if (isGenBoolVar(v, vtag)) {
       addSuspBoolVar(v, thr);  
-      all_local &= am.isLocalCVar(v);
+      all_local &= am.isLocalSVar(v);
     } else if (isSVar(vtag)) {
       addSuspSVar(v, thr);
       all_local &= am.isLocalSVar(v);

@@ -97,9 +97,7 @@ Bool extParameters(OZ_Term list, Board * solve_board)
 
       Assert(!isUVar(htag));
 
-      Board  * home = GETBOARD(isSVar(htag) 
-				? tagged2SVar(h) 
-			       : taggedCVar2SVar(h));
+      Board  * home = GETBOARD(tagged2SVarPlus(h)); 
       Board * tmp = solve_board;
 
       // from solve board go up to root; if you step over home 
@@ -113,7 +111,7 @@ Bool extParameters(OZ_Term list, Board * solve_board)
 	  found = TRUE;
 	  break;
 	}
-      } while (!tmp->isRoot());
+      } while (!tmp->_isRoot());
       
     } else if (OZ_isCons(h)) {
       found = extParameters(h, solve_board);

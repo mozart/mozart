@@ -299,7 +299,7 @@ void GenFDVariable::becomesBoolVarAndPropagate(TaggedRef * trPtr)
 {
   if (isGenBoolVar(*trPtr)) return;
 
-  Assert(this == tagged2SuspVar(*trPtr));
+  Assert(this == tagged2SVarPlus(*trPtr));
 
   propagate(*trPtr, fd_prop_bounds);
   becomesBool();
@@ -377,7 +377,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       goto proceed;
 
     if (dom == fd_singl) {
-      if (am.isLocalCVar(v)) {
+      if (am.isLocalSVar(v)) {
 	fdvar->getDom() = dom;
 	fdvar->becomesSmallIntAndPropagate(vptr);
       } else {
@@ -386,7 +386,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 	am.doBindAndTrail(v, vptr, OZ_int(singl));
       }
     } else if (dom == fd_bool) {
-      if (am.isLocalCVar(v)) {
+      if (am.isLocalSVar(v)) {
 	fdvar->becomesBoolVarAndPropagate(vptr);
       } else {
 	fdvar->propagate(v, fd_prop_bounds);
@@ -398,7 +398,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       }
     } else {
       fdvar->propagate(v, fd_prop_bounds);
-      if (am.isLocalCVar(v)) {
+      if (am.isLocalSVar(v)) {
 	fdvar->getDom() = dom;
       } else {
 	GenFDVariable * locfdvar = new GenFDVariable(dom);
@@ -419,7 +419,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     if (dom == -1) goto proceed;
 
     GenBoolVariable * boolvar = tagged2GenBoolVar(v);
-    if (am.isLocalCVar(v)) {
+    if (am.isLocalSVar(v)) {
       boolvar->becomesSmallIntAndPropagate(vptr, dom);
     } else {
       boolvar->propagate(v);
