@@ -14,6 +14,13 @@ import
    String(capitalize:Capitalize) at 'x-ozlib://duchier/lib/String.ozf'
 define
 
+   PackageIcon={QTk.newImage photo(file:"package_small.gif")}
+   InstalledPackageIcon={QTk.newImage photo(file:"installed_package_small.gif")}
+   InstallablePackageIcon={QTk.newImage photo(file:"installable_package_small.gif")}
+   FolderIcon={QTk.newImage photo(file:"folder_small.gif")}
+   FolderOpenIcon={QTk.newImage photo(file:"folder_open_small.gif")}
+   Background=c(240 250 242)
+
    ArchiveManager
    OzpmInfo
 
@@ -58,7 +65,7 @@ define
 	 self.parent=Parent
 	 self.setTitle=ST
 	 Desc=listbox(glue:nswe
-		      bg:white
+		      bg:Background
 		      tdscrollbar:true
 		      action:self#select
 		      handle:self.handle)
@@ -111,7 +118,7 @@ define
 	 self.setTitle=ST
 	 rootNode<-nil
 	 Desc=canvas(glue:nswe
-		     bg:white
+		     bg:Background
 		     tdscrollbar:true
 		     lrscrollbar:true
 		     handle:self.handle)
@@ -141,7 +148,9 @@ define
 	 else
 	    rootNode<-{New TreeNode init(canvas:self.handle
 					 font:"Times 12"
-					 height:16
+					 height:18
+					 icon:FolderIcon
+					 eicon:FolderOpenIcon
 					 label:"mogul")}
 	    dictNode<-{NewDictionary}
 	    {Dictionary.put @dictNode 'mogul:/' @rootNode}
@@ -151,16 +160,22 @@ define
 		   if {List.last {VirtualString.toString X}}\=&/ then
 		      X#"/" else X end}
 	       end
-	       proc{CreateNode I X}
+	       proc{CreateNode I X Icon}
 		  Parent={GetParent X}
 		  ParentNode={Dictionary.condGet @dictNode Parent
 			      {ByNeed fun{$}
-					 {CreateNode 0 Parent}
+					 {CreateNode 0 Parent FolderIcon}
 					 {Dictionary.get @dictNode Parent}
 				      end}
 			     }
 		  {Wait ParentNode}
 		  Node={New TreeNode init(parent:ParentNode
+					  icon:Icon
+					  eicon:if I\=0 then
+						   nil
+						else
+						   FolderOpenIcon
+						end
 					  label:{GetLabel X})}
 	       in
 		  {Dictionary.put @dictNode {ToKey X} Node}
@@ -176,7 +191,11 @@ define
 		  X in @info.info
 		  I in 1 ; I+1
 	       do
-		  {CreateNode I X.id}
+		  {CreateNode I X.id
+		   case {self.parent state(X $)}
+		   of installed then InstalledPackageIcon
+		   [] installable then InstallablePackageIcon
+		   else PackageIcon end}
 	       end
 	    end
 	    {@rootNode draw(x:2 y:2 height:_)}
@@ -205,7 +224,7 @@ define
 				outline:black
 				stipple:gray50
 				tags:self.selTag)}
-	    {self.selTag lower}
+	    {self.selTag 'raise'}
 	 end
 	 {self.parent displayInfo(D)}
       end
@@ -224,7 +243,7 @@ define
 	 self.parent=Parent
 	 self.setTitle=ST
 	 Desc=listbox(glue:nswe
-		      bg:white
+		      bg:Background
 		      tdscrollbar:true
 		      lrscrollbar:true
 		      handle:self.handle)
@@ -301,23 +320,28 @@ define
    %%
    %%
    TitleLook={QTk.newLook}
-   {TitleLook.set label(bg:white font:{QTk.newFont font(family:'Times' size:16)})}
+   {TitleLook.set label(bg:red
+			glue:we
+			fg:white
+			font:{QTk.newFont font(family:'Times'
+					       weight:bold
+					       size:16)})}
    AuthorLook={QTk.newLook}
-   {AuthorLook.set label(bg:white
+   {AuthorLook.set label(bg:Background
 			 font:{QTk.newFont font(family:'Times'
 						slant:italic
 						size:12)})}
 
    DescLook={QTk.newLook}
-   {DescLook.set text(bg:white
+   {DescLook.set text(bg:Background
 		      font:{QTk.newFont font(family:'Times'
 					     size:12)})}
 					      
    
    WhiteLook={QTk.newLook}
-   {WhiteLook.set label(bg:white)}
-   {WhiteLook.set td(bg:white)}
-   {WhiteLook.set lr(bg:white)}
+   {WhiteLook.set label(bg:Background)}
+   {WhiteLook.set td(bg:Background)}
+   {WhiteLook.set lr(bg:Background)}
    
    class NiceInfoView
       feat
@@ -330,7 +354,7 @@ define
 	 self.parent=Parent
 	 self.setTitle=ST
 	 Desc=td(glue:nswe
-		 bg:white
+		 bg:Background
 		 look:WhiteLook
 %		 tdscrollbar:true
 		 td(glue:nswe
@@ -352,7 +376,7 @@ define
 		       label(glue:nw
 			     feature:desc)
 		       placeholder(feature:place
-				   bg:white
+				   bg:Background
 				   padx:5 pady:5
 				   glue:nswe))
 		))
@@ -409,7 +433,7 @@ define
 		  {self.handle.blurb.place
 		   set(text(glue:nswe
 			    look:DescLook
-			    bg:white
+			    bg:Background
 			    handle:Handle
 			    wrap:word
 			    tdscrollbar:true
@@ -658,6 +682,23 @@ define
 	 end
       end
 
+      meth state(Pkg $)
+	 case {Label Pkg}
+	 of ipackage then installed
+	 [] package then
+	    if {Global.localDB member(Pkg.id $)} then installed
+	    elseif {HasFeature Pkg url_pkg} andthen
+	       {List.some Pkg.url_pkg fun{$ URL}
+					 {IsExtension "pkg" URL}
+				      end}
+	    then
+	       installable
+	    else
+	       normal
+	    end
+	 end
+      end
+      
       meth displayInfo(Info)
 	 {ForAll [installButton desinstallButton]
 	  proc{$ B} {self.B set(state:disabled)} end}
@@ -665,14 +706,9 @@ define
 	    curpkg<-unit
 	 else
 	    curpkg<-Info.info
-	    case {Label @curpkg}
-	    of ipackage then {self.desinstallButton set(state:normal)}
-	    [] package then
-	       if {HasFeature @curpkg url_pkg} andthen
-		  {List.some @curpkg.url_pkg fun{$ URL} {IsExtension "pkg" URL} end}
-	       then
-		  {self.installButton set(state:normal)}
-	       end
+	    case {self state(@curpkg $)}
+	    of installed then {self.desinstallButton set(state:normal)}
+	    [] installable then {self.installButton set(state:normal)}
 	    else skip end
 	 end
 	 {@info display({Record.adjoinAt Info info
