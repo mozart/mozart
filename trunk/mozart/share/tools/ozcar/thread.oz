@@ -182,7 +182,7 @@ in
 	    SourceManager,scrollbar(file:F line:L
 				    color:ScrollbarBlockedColor what:appl)
 	    SourceManager,scrollbar(file:'' line:undef color:undef what:stack)
-	    Gui,printAppl(id:I name:N args:A builtin:B)
+	    Gui,printAppl(id:I name:N args:A builtin:B file:F line:L)
 	    Gui,printStack(id:I stack:{Dbg.taskstack T 25})
 	    Gui,status(I blocked)
 	 else skip end
@@ -214,7 +214,7 @@ in
 	 Threads <- {List.filter @Threads fun {$ X} X\=T end}
 	 ThreadManager,setThrPos(id:I name:undef)
 	 SourceManager,scrollbar(file:'' line:undef color:undef what:both)
-	 Gui,printAppl(id:I name:undef args:undef builtin:false)
+	 Gui,printAppl(id:I name:undef args:undef)
 	 Gui,printStack(id:I stack:nil)
 	 case Mode == kill then
 	    currentThread <- undef
@@ -271,7 +271,7 @@ in
 	 else
 	    SourceManager,scrollbar(file:F line:L
 				    color:ScrollbarApplColor what:appl)
-	    Gui,printAppl(id:I name:N args:A builtin:IsBuiltin)
+	    Gui,printAppl(id:I name:N args:A builtin:IsBuiltin file:F line:L)
 	    Gui,printStack(id:I stack:{Dbg.taskstack T 25}
 			   top:IsBuiltin)
 	 end
@@ -291,8 +291,8 @@ in
 	    currentThread <- T
 	    
 	    Gui,status(I S)
-	    Gui,printAppl(id:I name:N args:A builtin:B)
-	    Gui,printStack(id:I stack:{Dbg.taskstack T 25})
+	    Gui,printAppl(id:I name:N args:A builtin:B file:F line:L)
+	    Gui,printStack(id:I stack:{Dbg.taskstack T 25} top:B)
 	    
 	    Gui,selectNode(I)
 	    Gui,displayTree

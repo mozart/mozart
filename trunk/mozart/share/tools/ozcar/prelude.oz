@@ -68,24 +68,23 @@ fun {ArgType X}
 				     of 'nil'         then "'nil'"
 				     [] '|'           then "'|'"
 				     [] '#'           then "'#'"
-				     [] 'unallocated' then 'unallocated'
+				     [] 'unallocated' then 'unalloc'
 				     else                  '\'' # X # '\''
 				     end
       elsecase {IsBool X}       then case X of true then 'true' else 'false'
 				     end
       elsecase {IsCell X}       then '<cell>'
       elsecase {IsClass X}      then '<class>'
-      elsecase {IsDictionary X} then '<dictionary>'
+      elsecase {IsDictionary X} then '<dict>'
       elsecase {IsFloat X}      then '<float>'
       elsecase {IsInt X}        then X
       elsecase {IsList X}       then '<list>'
       elsecase {IsUnit  X}      then 'unit'
-      elsecase {IsLiteral X}    then '<literal>'
-      elsecase {IsLock X}       then '<lock>'
       elsecase {IsName X}       then '<name>'
+      elsecase {IsLock X}       then '<lock>'
       elsecase {IsObject X}     then '<object>'
       elsecase {IsPort X}       then '<port>'
-      elsecase {IsProcedure X}  then '<procedure>'
+      elsecase {IsProcedure X}  then '<proc>'
       elsecase {IsTuple X}      then '<tuple>'
       elsecase {IsRecord X}     then '<record>'
       elsecase {IsChunk X}      then '<chunk>'
