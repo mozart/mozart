@@ -1061,36 +1061,31 @@ int featureEq(TaggedRef a,TaggedRef b) {
 inline
 int featureCmp(TaggedRef a, TaggedRef b) {
   Assert(oz_isFeature(a) && oz_isFeature(b));
-  TypeOfTerm tagA = tagTypeOf(a);
-  TypeOfTerm tagB = tagTypeOf(b);
-  if (tagA != tagB) {
-    if (oz_isSmallInt(a)) {
-      if (oz_isLiteral(b))
-	return -1;
-      
-      Assert(oz_isConst(b));
-      return -tagged2BigInt(b)->cmp(tagged2SmallInt(a));
-    }
-    if (oz_isConst(a)) {
-      if (oz_isSmallInt(b)) 
-	return tagged2BigInt(a)->cmp(tagged2SmallInt(b));
-      Assert(oz_isLiteral(b));
+
+  if (oz_isSmallInt(a)) {
+    if (oz_isSmallInt(b))
+      return smallIntCmp(a,b);
+    if (oz_isLiteral(b))
       return -1;
-    }
-    Assert(oz_isLiteral(a));
-    return 1;
+    Assert(oz_isConst(b));
+    return -tagged2BigInt(b)->cmp(tagged2SmallInt(a));
   }
-  switch (tagA) {
-  case TAG_LITERAL:
+  
+  if (oz_isConst(a)) {
+    if (oz_isSmallInt(b)) 
+      return tagged2BigInt(a)->cmp(tagged2SmallInt(b));
+    if (oz_isConst(b))
+      return tagged2BigInt(a)->cmp(tagged2BigInt(b));
+    Assert(oz_isLiteral(b));
+    return -1;
+  }
+  
+  Assert(oz_isLiteral(a));
+
+  if (oz_isLiteral(b)) 
     return atomcmp(tagged2Literal(a),tagged2Literal(b));
-  case TAG_SMALLINT:
-    return smallIntCmp(a,b);
-  case TAG_CONST:
-    return tagged2BigInt(a)->cmp(tagged2BigInt(b));
-  default:
-    Assert(0);
-    return 0;
-  }
+  
+  return 1;
 }
 
 
