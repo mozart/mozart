@@ -601,6 +601,11 @@ define
 					end} end}
 	 
       end
+
+      meth getNoOfUsers( online: O total: T )
+	 O = {List.length {self getAllOnline( entries: $)}}
+	 T = {List.length {self.membersDB entries($)}}
+      end
       
       meth loadAll( dir: PATH)
 	 lock
