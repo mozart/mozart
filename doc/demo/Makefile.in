@@ -7,7 +7,7 @@ MAIN = main.sgml
 PERL = perl
 
 SGMLSRCS = \
-        board.sgml bounce.sgml corpus.sgml flights.sgml \
+        board.sgml bounce.sgml \
         jobshop.sgml lift.sgml main.sgml queens.sgml \
         transportation.sgml trucks.sgml enable.sgml cutting.sgml \
         college.sgml flowers.sgml dict-client.sgml chat.sgml
