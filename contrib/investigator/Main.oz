@@ -192,10 +192,6 @@ define
       {System.show 'Constructing Graph'}
 \endif
 
-      %
-      % testing marking of failed propagator
-      {Hist mark_failed_prop(1)}
-
       Result = {ConstrGraph.make VarTable PropTable Hist AllConstrs}
 %      Result = {ParamGraph.make VarTable PropTable Hist AllVars}
 \ifdef DEBUG

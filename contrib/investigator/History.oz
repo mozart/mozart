@@ -10,6 +10,7 @@ import
           unMarkedParamNodeAttr:  UnMarkedParamNodeAttr
          )
 
+   Aux(propIsFailed: PropIsFailed)
 export
 
    HistoryClass
@@ -79,8 +80,8 @@ define
          failedProp <- unit
       end
 
-      meth get_prop_node_failed(I C)
-         C = if @failedProp == I then FailedPropColour
+      meth get_prop_node_failed(PRef C)
+         C = if {PropIsFailed PRef} then FailedPropColour
              else PropColour end
       end
 
