@@ -61,9 +61,9 @@
  *               Forward Declarations
  ****************************************************************************/
 
-static void processUpdateStack(void);
+void processUpdateStack(void);
 void performCopying(void);
-TaggedRef gcVariable(TaggedRef);
+TaggedRef gcDirectVar(TaggedRef);
 
 
 /****************************************************************************
@@ -371,19 +371,6 @@ inline Bool isDirectVar(TaggedRef t)
 {
   return (!isRef(t) && isAnyVar(t));
 }
-
-inline
-Board *gcGetVarHome(TaggedRef var)
-{
-  if (isUVar(var)) {
-    return tagged2VarHome(var)->derefBoard();
-  } 
-  if (isSVar(var)) {
-    return GETBOARD(tagged2SVar(var));
-  }
-  Assert(isCVar(var));
-  return GETBOARD(tagged2CVar(var));
-}  
 
 
 /****************************************************************************
@@ -1140,14 +1127,7 @@ LTuple * LTuple::gc() {
     p  = &(c->args[1]);
     
     // Process list element
-    if (isDirectVar(h) && 
-	((opMode == IN_GC) || isLocalBoard(gcGetVarHome(h)))) {
-      setVarCopied;
-      // Not storeForward, its done anyway!
-      c->args[0] = gcVariable(h);
-    } else {
-      c->args[0] = h;
-    }
+    c->args[0] = isDirectVar(h) ? gcDirectVar(h) : h;
 
     // Store forward
     storeForward(&(l->args[0]), &(c->args[0]));
@@ -1156,14 +1136,9 @@ LTuple * LTuple::gc() {
 
     // Process list tail
     if (isDirectVar(t)) {
-      Assert(!GCISMARKED(t));
-      if ((opMode == IN_GC) || isLocalBoard(gcGetVarHome(t))) {
-	setVarCopied;
-	storeForward(&(l->args[1]), &(c->args[1]));
-	c->args[1] = gcVariable(t);
-      } else {
-	c->args[1] = t;
-      }
+      storeForward(&(l->args[1]), &(c->args[1]));
+      c->args[1] = gcDirectVar(t);
+      
       LTuple * ret = tagged2LTuple(start);
 
       ptrStack.pushInt(n);
@@ -1222,19 +1197,13 @@ SRecord *SRecord::gcSRecord()
   for (int i = getWidth(); i--; ) {
     TaggedRef from = a[i];
 
-    if (isDirectVar(from) && (isInGc || isLocalBoard(gcGetVarHome(from)))) {
-
-      Assert(!GCISMARKED(from));
-
-      setVarCopied;
-	
+    if (isDirectVar(from)) {
       storeForward((int *) a + i, c + i);
-	
-      c[i] = gcVariable(from);
+      c[i] = gcDirectVar(from);
     } else {
       c[i] = from;
     }
-
+    
   }
 
   ptrStack.push(ret,PTR_SRECORD);
@@ -1532,132 +1501,146 @@ void GenOFSVariable::gc(void)
 }
 
 inline
-void GenCVariable::gc(void)
-{
-  switch (getType()){
-  case FDVariable:
-    ((GenFDVariable*)this)->gc();
-    FDPROFILE_GC(cp_size_fdvar, sizeof(GenFDVariable));
+GenCVariable * GenCVariable::gc(void) {
+  INFROMSPACE(this);
+    
+  SuspList * sl = suspList;
 
+  if (GCISMARKED(ToInt32(sl)))
+    return (GenCVariable *) GCUNMARK(ToInt32(sl));
+    
+  Board * bb = home->derefBoard();
+
+  if (opMode == IN_TC && !isLocalBoard(bb))
+    return this;
+  
+  setVarCopied;
+
+  bb = bb->gcBoard();
+    
+  if (!bb) 
+    return 0;
+    
+  GenCVariable * to = (GenCVariable *) gcReallocDynamic(this, getSize());
+    
+  storeForward(&suspList, to);
+   
+  to->suspList = sl->gc();
+    
+  switch (to->getType()){
+  case FDVariable:
+    ((GenFDVariable *) to)->gc();
+    FDPROFILE_GC(cp_size_fdvar, sizeof(GenFDVariable));
     break;
   case OFSVariable:
-    ((GenOFSVariable*)this)->gc();
+    ((GenOFSVariable *) to)->gc();
     FDPROFILE_GC(cp_size_ofsvar, sizeof(GenOFSVariable));
     break;
   case MetaVariable:
-    ((GenMetaVariable*)this)->gc();
+    ((GenMetaVariable *) to)->gc();
     FDPROFILE_GC(cp_size_metavar, sizeof(GenMetaVariable));
     break;
   case BoolVariable:
     FDPROFILE_GC(cp_size_boolvar, sizeof(GenBoolVariable));
     break;
   case AVAR:
-    ((AVar *) this)->gcAVar();
+    ((AVar *) to)->gcAVar();
     break;
   case PerdioVariable:
-    ((PerdioVar *) this)->gcPerdioVar();
+    ((PerdioVar *) to)->gcPerdioVar();
     break;
   case FSetVariable:
-    ((GenFSetVariable *) this)->gc();
+    ((GenFSetVariable *) to)->gc();
     break;
   case LazyVariable:
-    ((GenLazyVariable*) this)->gc();
+    ((GenLazyVariable*) to)->gc();
     break;
   default:
     Assert(0);
   }
-}
 
+  Assert(opMode != IN_GC || to->home != bb);
+    
+  to->home = bb;
+
+  return to;
+}
+  
+
+inline
+SVariable * SVariable::gc() {
+  SuspList * sl = suspList;
+
+  if (GCISMARKED(ToInt32(sl)))
+    return (SVariable *) GCUNMARK(ToInt32(sl));
+
+  Board * bb = home->derefBoard();
+
+  if (opMode == IN_TC && !isLocalBoard(bb))
+    return this;
+  
+  setVarCopied;
+
+  bb = bb->gcBoard();
+    
+  if (!bb) 
+    return 0;
+  
+  SVariable * to = (SVariable *) gcReallocStatic(this, sizeof(SVariable));
+  
+  to->suspList = suspList->gc();
+
+  storeForward(&suspList, to);
+  
+  Assert(opMode != IN_GC || to->home != bb);
+
+  to->home = bb;
+    
+  return to;
+}
 
 /*
  * This procedure collects the entry points into heap provided by variables, 
  * without copying the tagged reference of the variable itself.
  * NOTE: there is maybe junk in X/Y registers, so home node may be dead
  */
-TaggedRef gcVariable(TaggedRef var)
-{
-  GCPROCMSG("gcVariable");
+inline
+TaggedRef gcUVar(TaggedRef var) {
+  GCPROCMSG("gcUVar");
+  
+  Assert(isUVar(var));
+
+  Board *bb = tagged2VarHome(var)->derefBoard();
+
+  if (opMode == IN_TC && !isLocalBoard(bb))
+    return var;
+    
+  bb = bb->gcBoard();
+
+  if (!bb) 
+    return makeTaggedNULL();
+    
+  setVarCopied;
+
+  INTOSPACE(bb);
+  
+  return makeTaggedUVar(bb);
+}
+
+
+TaggedRef gcDirectVar(TaggedRef var) {
+  GCPROCMSG("gcDirectVar");
   GCOLDADDRMSG(var);
 
-  if (isCVar(var)) {
-
-    GenCVariable *gv = tagged2CVar(var);
-
-    INFROMSPACE(gv);
-    
-    if (GCISMARKED(ToInt32(gv->suspList))) {
-      GCNEWADDRMSG(makeTaggedCVar((GenCVariable*)GCUNMARK(ToInt32(gv->suspList))));
-      return makeTaggedCVar((GenCVariable*)GCUNMARK(ToInt32(gv->suspList)));
-    }
-    
-    Board *bb = gv->home->gcBoard();
-    
-    if (!bb) 
-      return makeTaggedNULL();
-    
-    int gv_size = gv->getSize();
-    
-    COUNT(cvar);
-    
-    GenCVariable *new_gv = (GenCVariable*) gcReallocDynamic(gv, gv_size);
-    
-    storeForward(&gv->suspList, new_gv);
-    
-    new_gv->suspList = new_gv->suspList->gc();
-    
-    new_gv->gc();
-    
-    Assert(opMode != IN_GC || new_gv->home != bb);
-    
-    new_gv->home = bb;
-    GCNEWADDRMSG(makeTaggedCVar(new_gv));
-    return makeTaggedCVar(new_gv);
-  }
+  if (isCVar(var))
+    return makeTaggedCVar(tagged2CVar(var)->gc());
   
-  if (isUVar(var)) {
-    Board *bb = tagged2VarHome(var);
-    bb = bb->gcBoard();
-
-    if (!bb) 
-      return makeTaggedNULL();
-
-    INTOSPACE(bb);
-    TaggedRef ret= makeTaggedUVar(bb);
-    COUNT(uvar);
-    GCNEWADDRMSG(ret);
-    return ret;
-  }
+  if (isUVar(var))
+    return gcUVar(var);
 
   Assert(isSVar(var));
 
-  SVariable *cv = tagged2SVar(var);
-  INFROMSPACE(cv);
-  
-  if (GCISMARKED(ToInt32(cv->suspList))) {
-    GCNEWADDRMSG(makeTaggedSVar((SVariable*)GCUNMARK(ToInt32(cv->suspList))));
-    return makeTaggedSVar((SVariable*)GCUNMARK(ToInt32(cv->suspList)));
-  }
-  
-  Board *bb = cv->home;
-  bb=bb->gcBoard();
-  
-  if (!bb) 
-    return makeTaggedNULL();
-  
-  SVariable *new_cv = (SVariable*)gcReallocStatic(cv,sizeof(SVariable));
-  COUNT(svar);
-  
-  FDPROFILE_GC(cp_size_svar, sizeof(SVariable));
-  
-  storeForward(&cv->suspList, new_cv);
-  
-  new_cv->suspList = new_cv->suspList->gc();
-  
-  Assert(opMode != IN_GC || new_cv->home != bb);
-  
-  new_cv->home = bb;
-  GCNEWADDRMSG(makeTaggedSVar(new_cv));
-  return makeTaggedSVar(new_cv);
+  return makeTaggedSVar(tagged2SVar(var)->gc());
 
 }
 
@@ -1811,19 +1794,37 @@ update:
     break;
 
   case SVAR:
-  case UVAR:
-  case CVAR:
-    // put address of ref cell to be updated onto update stack    
-    Assert(aux_ptr);
+    (void) tagged2SVar(aux)->gc();
+    updateStack.push(&to);
+    to = makeTaggedRefToFromSpace(aux_ptr);
+    break;
     
-    if (opMode!=IN_TC || isLocalBoard(gcGetVarHome(aux))) {
+  case CVAR:
+    (void) tagged2CVar(aux)->gc();
+    updateStack.push(&to);
+    to = makeTaggedRefToFromSpace(aux_ptr);
+    break;
+    
+  case UVAR: 
+    {
+      // put address of ref cell to be updated onto update stack    
+      Assert(aux_ptr);
+      
+      Board * bb = tagged2VarHome(aux)->derefBoard();
+      
+      if (opMode == IN_TC && !isLocalBoard(bb))
+	return;
+      
+      bb = bb->gcBoard();
       
       setVarCopied;
+      
       updateStack.push(&to);
-      gcVariable(aux);
+      
       to = makeTaggedRefToFromSpace(aux_ptr);
+
+      break;    
     }
-    break;    
   }
 }
 
@@ -1961,54 +1962,76 @@ void AM::gc(int msgLevel)
  *   Process updateStack -
  *
  */
-void processUpdateStack(void)
-{
+void processUpdateStack(void) {
   updateStack.lock();
 
-  while (!updateStack.isEmpty())
-    {
-      TaggedRef *tt = updateStack.pop();
-      TaggedRef auxTerm     = *tt;
-      TaggedRef *auxTermPtr = NULL;
+  while (!updateStack.isEmpty()) {
+    TaggedRef * tt      = updateStack.pop();
+    TaggedRef   aux     = * tt;
+    TaggedRef * aux_ptr;
+    
+    Assert(isRef(aux));
+    
+    do {
+      Assert(aux);
+      aux_ptr = tagged2Ref(aux);
+      aux     = *aux_ptr;
+    } while(IsRef(aux));
+    
+    switch (tagTypeOf(aux)) {
 
-      while(IsRef(auxTerm)) {
-	Assert(auxTerm);
-	auxTermPtr = tagged2Ref(auxTerm);
-	auxTerm = *auxTermPtr;
-      }
-
-      if (GCISMARKED(auxTerm)) {
-	*tt = makeTaggedRef((TaggedRef*)GCUNMARK(auxTerm));
-	continue;
-      }
-
-      TaggedRef newVar = gcVariable(auxTerm);
-
-      if (newVar == makeTaggedNULL()) {
-	*tt         = newVar;
-	*auxTermPtr = newVar;
-      } else {
-	Assert(tagTypeOf(newVar) == tagTypeOf(auxTerm));
-	switch(tagTypeOf(newVar)){
-	case UVAR:
-	  *tt = makeTaggedRef(newTaggedUVar(tagged2VarHome(newVar)));
-	  COUNT(uvar);
-	  break;
-	case SVAR:
-	  *tt = makeTaggedRef(newTaggedSVar(tagged2SVar(newVar)));
-	  COUNT(svar);
-	  break;
-	case CVAR:
-	  *tt = makeTaggedRef(newTaggedCVar(tagged2CVar(newVar)));
-	  COUNT(cvar);
-	  break;
-	default:
-	  Assert(NO);
+    case UVAR:
+      {
+	TaggedRef nv = gcUVar(aux);
+	  
+	if (nv == makeTaggedNULL()) {
+	  *tt      = nv;
+	  *aux_ptr = nv;
+	} else {
+	  *tt = makeTaggedRef(newTaggedUVar(tagged2VarHome(nv)));
 	}
-	INFROMSPACE(auxTermPtr);
-	storeForward((int *) auxTermPtr,ToPointer(*tt));
+	
+	COUNT(uvar);
       }
-    } // while
+    break;
+
+    case SVAR:
+      { 
+	SVariable *sv = tagged2SVar(aux);
+	INFROMSPACE(sv);
+  
+	Assert(GCISMARKED(ToInt32(sv->suspList)));
+	  
+	*tt = makeTaggedRef(newTaggedSVar((SVariable *) 
+					  GCUNMARK(ToInt32(sv->suspList))));
+      }
+      
+    COUNT(svar);
+    break;
+	
+    case CVAR:
+      {
+	GenCVariable *cv = tagged2CVar(aux);
+	
+	Assert(GCISMARKED(ToInt32(cv->suspList)));
+	
+	*tt = makeTaggedRef(newTaggedCVar((GenCVariable *) 
+					  GCUNMARK(ToInt32(cv->suspList))));
+      }
+    
+    COUNT(cvar);
+    break;
+    
+    case GCTAG:
+      *tt = makeTaggedRef((TaggedRef *) GCUNMARK(aux));
+      break;
+    
+    default:
+      Assert(NO);
+    }
+    INFROMSPACE(aux_ptr);
+    storeForward((int *) aux_ptr,ToPointer(*tt));
+  } // while
 
   Assert(updateStack.isEmpty());
   updateStack.unlock();
