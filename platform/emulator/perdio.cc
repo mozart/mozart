@@ -2180,15 +2180,13 @@ void PerdioVar::addSuspPerdioVar(TaggedRef *v,Thread *el, int unstable){
     sendHelpX(mt,be);
     return;}
 
-  Assert(isObjectURL());
-  TaggedRef cl=deref(getClass());
-  if (isPerdioVar(cl)) {
-    Assert(0);
-  } else {
+  if (isObject()) {
+    TaggedRef cl=deref(getClass());
     Assert(isClass(cl));
     BorrowEntry *be=BT->getBorrow(getObject()->getIndex());
-    sendHelpX(M_GET_OBJECT,be);}
-  return;
+    sendHelpX(M_GET_OBJECT,be);
+    return;
+  }
 }
 
 Site* getSiteFromTertiary(Tertiary* t){
@@ -2542,10 +2540,10 @@ void PerdioVar::gcPerdioVar(void)
     }
     *last = 0;
   } else {
-    Assert(isObjectURL() || isObjectGName());
+    Assert(isObject() || isObjectGName());
     gcBorrowNow(getObject()->getIndex());
     ptr = getObject()->gcObject();
-    if (isObjectURL()) {
+    if (isObject()) {
       gcTagged(u.aclass,u.aclass);
     }
   }
@@ -3292,7 +3290,7 @@ void Site::msgReceived(MsgBuffer* bs)
         error("M_SEND_OBJECT - don't understand");}
       fillInObject(&of,o);
       TaggedRef cl;
-      if (pv->isObjectURL()) {cl=pv->getClass();}
+      if (pv->isObject()) {cl=pv->getClass();}
       else {cl=findGName(pv->getGNameClass());}
       o->setClass(tagged2ObjectClass(deref(cl)));
 
@@ -3776,7 +3774,7 @@ void bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
     pv->primBind(lPtr,v);
     OT->getOwner(pv->getIndex())->mkRef();
     sendRedirect(pv->getProxies(),v,mySite,pv->getIndex());
-  } else if (pv->isObjectURL() || pv->isObjectGName()) {
+  } else if (pv->isObject() || pv->isObjectGName()) {
     PD((PD_VAR,"bind object u:%s",toC(makeTaggedConst(pv->getObject()))));
     pv->primBind(lPtr,v);
   } else {

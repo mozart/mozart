@@ -1262,7 +1262,7 @@ void marshalVariable(PerdioVar *pvar, MsgBuffer *bs)
     marshalVar(pvar,bs);
     return;}
 
-  if (pvar->isObjectURL()) {
+  if (pvar->isObject()) {
     PD((MARSHAL,"var objectproxy"));
     if (checkCycle(*(pvar->getObject()->getRef()),bs))
       return;

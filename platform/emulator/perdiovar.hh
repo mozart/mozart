@@ -38,7 +38,7 @@
 enum PV_TYPES {
   PV_MANAGER,
   PV_PROXY,
-  PV_OBJECTURL,   // class available maybe only as URL
+  PV_OBJECT,      // class available
   PV_OBJECTGNAME  // only the class's gname known
 };
 
@@ -102,12 +102,12 @@ public:
   }
 
   PerdioVar(Object *o) : GenCVariable(PerdioVariable) {
-    setpvType(PV_OBJECTURL);
+    setpvType(PV_OBJECT);
     ptr = o;
   }
 
   void setClass(TaggedRef cl) {
-    Assert(isObjectURL());
+    Assert(isObject() && isClass(deref(cl)));
     u.aclass=cl;
   }
 
@@ -120,7 +120,7 @@ public:
 
   Bool isManager()   { return getpvType()==PV_MANAGER; }
   Bool isProxy()     { return getpvType()==PV_PROXY; }
-  Bool isObjectURL() { return getpvType()==PV_OBJECTURL; }
+  Bool isObject()    { return getpvType()==PV_OBJECT; }
   Bool isObjectGName() { return getpvType()==PV_OBJECTGNAME; }
 
   int getIndex() { return ToInt32(ptr); }
@@ -128,7 +128,7 @@ public:
   GName *getGName() { return 0; }
   GName *getGNameClass() { Assert(isObjectGName()); return u.gnameClass; }
   void setIndex(int i) {
-    Assert(!isObjectURL() && !isObjectGName());
+    Assert(!isObject() && !isObjectGName());
     ptr = ToPointer(i);
   }
 
@@ -136,8 +136,8 @@ public:
 
   size_t getSize(void) { return sizeof(PerdioVar); }
 
-  Object *getObject() { Assert(isObjectURL() || isObjectGName()); return (Object*)ptr; }
-  TaggedRef getClass() { Assert(isObjectURL()); return u.aclass; }
+  Object *getObject() { Assert(isObject() || isObjectGName()); return (Object*)ptr; }
+  TaggedRef getClass() { Assert(isObject()); return u.aclass; }
 
   void registerSite(Site* sd) {
     Assert(isManager());
