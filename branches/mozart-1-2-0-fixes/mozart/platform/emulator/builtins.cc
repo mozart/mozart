@@ -717,7 +717,7 @@ OZ_BI_define(BIwidth,1,1) {
   oz_typeError(0,"Record");
 } OZ_BI_end
 
-
+static inline
 OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
   DEREF(fea,  _1);
   DEREF(term, _2);
