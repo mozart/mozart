@@ -930,7 +930,7 @@ EOF
    ;;
 
    *)
-	{ echo "configure: error: "cannot cross-compile for target $target"" 1>&2; exit 1; }
+	{ echo "configure: error: "can only cross-compile for target 'i386-mingw32' not for '$target'"" 1>&2; exit 1; }
     ;;
 esac
 
