@@ -1071,11 +1071,6 @@ void cvar2buffer(ostream &out, const char *s, GenCVariable *cv, int depth)
       out << type << ">";
       break;
     }
-  case AVAR:
-    {
-      out << s;
-      break;
-    }
   case LazyVariable:
     {
       out << s;

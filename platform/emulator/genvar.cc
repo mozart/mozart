@@ -44,7 +44,6 @@ void GenCVariable::propagate(TaggedRef var, SuspList * &sl,
   sl = am.checkSuspensionList(tagged2SVarPlus(var), sl, unifyVars);
 }
 
-
 Bool GenCVariable::unifyOutline(TaggedRef *tptr1, TaggedRef term1,
 				TaggedRef *tptr2, TaggedRef term2,
 				ByteCode *scp)

@@ -322,7 +322,7 @@ NamedName *NamedName::newNamedName(const char *pn)
 
 void Name::import(GName *name)
 {
-  Assert(am.isRootBoard(GETBOARD(this)));
+  Assert(oz_isRootBoard(GETBOARD(this)));
   homeOrGName = ToInt32(name);
   setFlag(Lit_hasGName);
 }
@@ -368,7 +368,7 @@ void Tertiary::setBoard(Board *b)
   if (getTertType() == Te_Local) {
     setPointer(b);
   } else {
-    Assert(b==NULL || am.isRootBoard(b));
+    Assert(b==NULL || oz_isRootBoard(b));
   }
 }
 
@@ -1500,3 +1500,5 @@ TaggedRef oz_unsignedLong(unsigned long i)
 {
   return (new BigInt(i))->shrink();
 }
+
+Board *oz_rootBoardOutline() { return oz_rootBoard(); }

@@ -250,15 +250,6 @@ static char* h_strerror(const int err) {
 #endif
 
 
-// return suspension upon
-#define RETURN_SUSPEND(OUT,LEN,VAR,REST)       \
-{ OZ_Term susp_tuple = OZ_tupleC("suspend",3); \
-  OZ_putArg(susp_tuple,0,LEN);                 \
-  OZ_putArg(susp_tuple,1,VAR);                 \
-  OZ_putArg(susp_tuple,2,REST);                \
-  return OZ_unify(OUT,susp_tuple);             \
-}
-
 #define NEW_RETURN_SUSPEND(LEN,VAR,REST)       \
 { OZ_Term susp_tuple = OZ_tupleC("suspend",3); \
   OZ_putArg(susp_tuple,0,LEN);                 \
@@ -693,25 +684,25 @@ OZ_BI_iodefine(unix_open,3,1)
 
     if (OZ_isVariable(hd)) return SUSPEND;
 
-    if (OZ_unifyAtom(hd,"O_RDONLY") == PROCEED) {
+    if (OZ_eqAtom(hd,"O_RDONLY") == PROCEED) {
       flags |= O_RDONLY;
-    } else if (OZ_unifyAtom(hd,"O_WRONLY"  ) == PROCEED) {
+    } else if (OZ_eqAtom(hd,"O_WRONLY"  ) == PROCEED) {
       flags |= O_WRONLY;
-    } else if (OZ_unifyAtom(hd,"O_RDWR"    ) == PROCEED) {
+    } else if (OZ_eqAtom(hd,"O_RDWR"    ) == PROCEED) {
       flags |= O_RDWR;
-    } else if (OZ_unifyAtom(hd,"O_APPEND"  ) == PROCEED) {
+    } else if (OZ_eqAtom(hd,"O_APPEND"  ) == PROCEED) {
       flags |= O_APPEND;
-    } else if (OZ_unifyAtom(hd,"O_CREAT"   ) == PROCEED) {
+    } else if (OZ_eqAtom(hd,"O_CREAT"   ) == PROCEED) {
       flags |= O_CREAT;
-    } else if (OZ_unifyAtom(hd,"O_EXCL"    ) == PROCEED) {
+    } else if (OZ_eqAtom(hd,"O_EXCL"    ) == PROCEED) {
       flags |= O_EXCL;
-    } else if (OZ_unifyAtom(hd,"O_TRUNC"   ) == PROCEED) {
+    } else if (OZ_eqAtom(hd,"O_TRUNC"   ) == PROCEED) {
       flags |= O_TRUNC;
-    } else if (OZ_unifyAtom(hd,"O_NOCTTY"  ) == PROCEED) {
+    } else if (OZ_eqAtom(hd,"O_NOCTTY"  ) == PROCEED) {
       flags |= O_NOCTTY;
-    } else if (OZ_unifyAtom(hd,"O_NONBLOCK") == PROCEED) {
+    } else if (OZ_eqAtom(hd,"O_NONBLOCK") == PROCEED) {
       flags |= O_NONBLOCK;
-    } else if (OZ_unifyAtom(hd,"O_SYNC"    ) == PROCEED) {
+    } else if (OZ_eqAtom(hd,"O_SYNC"    ) == PROCEED) {
       flags |= O_SYNC;
     } else {
       return OZ_typeError(1,"enum openFlags");
@@ -737,15 +728,15 @@ OZ_BI_iodefine(unix_open,3,1)
     return OZ_typeError(2,"enum openMode");
 #else
 #ifndef _MSC_VER
-    if (OZ_unifyAtom(hd,"S_IRUSR") == PROCEED) { mode |= S_IRUSR; }
-    else if (OZ_unifyAtom(hd,"S_IWUSR") == PROCEED) { mode |= S_IWUSR; }
-    else if (OZ_unifyAtom(hd,"S_IXUSR") == PROCEED) { mode |= S_IXUSR; }
-    else if (OZ_unifyAtom(hd,"S_IRGRP") == PROCEED) { mode |= S_IRGRP; }
-    else if (OZ_unifyAtom(hd,"S_IWGRP") == PROCEED) { mode |= S_IWGRP; }
-    else if (OZ_unifyAtom(hd,"S_IXGRP") == PROCEED) { mode |= S_IXGRP; }
-    else if (OZ_unifyAtom(hd,"S_IROTH") == PROCEED) { mode |= S_IROTH; }
-    else if (OZ_unifyAtom(hd,"S_IWOTH") == PROCEED) { mode |= S_IWOTH; }
-    else if (OZ_unifyAtom(hd,"S_IXOTH") == PROCEED) { mode |= S_IXOTH; }
+    if (OZ_eqAtom(hd,"S_IRUSR") == PROCEED) { mode |= S_IRUSR; }
+    else if (OZ_eqAtom(hd,"S_IWUSR") == PROCEED) { mode |= S_IWUSR; }
+    else if (OZ_eqAtom(hd,"S_IXUSR") == PROCEED) { mode |= S_IXUSR; }
+    else if (OZ_eqAtom(hd,"S_IRGRP") == PROCEED) { mode |= S_IRGRP; }
+    else if (OZ_eqAtom(hd,"S_IWGRP") == PROCEED) { mode |= S_IWGRP; }
+    else if (OZ_eqAtom(hd,"S_IXGRP") == PROCEED) { mode |= S_IXGRP; }
+    else if (OZ_eqAtom(hd,"S_IROTH") == PROCEED) { mode |= S_IROTH; }
+    else if (OZ_eqAtom(hd,"S_IWOTH") == PROCEED) { mode |= S_IWOTH; }
+    else if (OZ_eqAtom(hd,"S_IXOTH") == PROCEED) { mode |= S_IXOTH; }
     else
 #endif
       return OZ_typeError(2,"enum openMode");
@@ -794,8 +785,8 @@ OZ_BI_iodefine(unix_read,5,0)
 
   free(buf);
   
-  return ((OZ_unify(outHead, hd) == PROCEED)&&
-          (OZ_unifyInt(outN,ret) == PROCEED)) ? PROCEED : FAILED;
+  return ((oz_unify(outHead, hd) == PROCEED)&& // mm_u
+          (oz_unify(outN,oz_int(ret)) == PROCEED)) ? PROCEED : FAILED;
 } OZ_BI_ioend
 
 
@@ -1104,9 +1095,9 @@ static OZ_Return get_send_recv_flags(OZ_Term OzFlags, int * flags)
     if (OZ_isVariable(hd))
       return SUSPEND;
 
-    if (OZ_unifyAtom(hd,"MSG_OOB") == PROCEED) {
+    if (OZ_eqAtom(hd,"MSG_OOB") == PROCEED) {
       *flags |= MSG_OOB;
-    } else if (OZ_unifyAtom(hd,"MSG_PEEK") == PROCEED) {
+    } else if (OZ_eqAtom(hd,"MSG_PEEK") == PROCEED) {
       *flags |= MSG_PEEK;
     } else {
       return OZ_typeError(-1,"enum(MSG_OOB MSG_PEEK)");
@@ -1292,7 +1283,7 @@ OZ_BI_iodefine(unix_receiveFromInet,5,3)
 
   free(buf);
 
-  if (OZ_unify(localhead, hd) != PROCEED) return FAILED;
+  if (oz_unify(localhead, hd) != PROCEED) return FAILED; // mm_u
   OZ_out(0) = OZ_string(CHARCAST (gethost ?
 				  gethost->h_name :
 				  inet_ntoa(from.sin_addr)));

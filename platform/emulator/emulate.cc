@@ -80,7 +80,7 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
     }
   }
   for (int i=outAr;i--;) {
-    OZ_Return ret2 = oz_unify(X[inAr+i],savedX[i]);
+    OZ_Return ret2 = oz_unify(X[inAr+i],savedX[i]); // mm_u
     if (ret2!=PROCEED) return ret2;
   }
   return ret1;
@@ -90,7 +90,7 @@ static
 OZ_Term biArgs(OZ_Location *loc, OZ_Term *X) {
   OZ_Term out=nil();
   for (int i=loc->getOutArity(); i--; ) {
-    out=oz_cons(OZ_newVariable(),out);
+    out=oz_cons(oz_newVariable(),out);
   }
   for (int i=loc->getInArity(); i--; ) {
     out=oz_cons(X[loc->in(i)],out);
@@ -140,7 +140,7 @@ void enrichTypeException(TaggedRef value,const char *fun, OZ_Term args)
   RAISE_THREAD;
 
 #define RAISE_TYPE1_FUN(fun,args) \
-  RAISE_TYPE1(fun, appendI(args,cons(OZ_newVariable(),nil())));
+  RAISE_TYPE1(fun, appendI(args,cons(oz_newVariable(),nil())));
 
 #define RAISE_TYPE_NEW(bi,loc) \
   RAISE_TYPE1(bi->getPrintName(), biArgs(loc,X));
@@ -272,6 +272,51 @@ TaggedRef fastnewTaggedUVar(AM *e)
   return makeTaggedRef(ret);
 }
 
+
+/* specially optimized unify: test two most probable cases first:
+ *
+ *     1. bind a variable
+ *     2. test two non-variables
+ *     3. but don't forget to check identical variables
+ */
+// mm_u: should return OZ_Return
+inline
+OZ_Return fastUnify(OZ_Term A, OZ_Term B, ByteCode *scp=0)
+{
+  Assert(PROCEED);
+  Assert(!FAILED);
+  if (scp) goto fallback;
+
+  {
+    OZ_Term term1 = A;
+    DEREF0(term1,term1Ptr,_1);
+  
+    OZ_Term term2 = B;
+    DEREF0(term2,term2Ptr,_2);
+
+    if (!isAnyVar(term2)) {
+      if (am.currentUVarPrototypeEq(term1)) {
+	COUNT(varNonvarUnify);
+	doBind(term1Ptr,term2);
+	goto exit;
+      }
+      if (term1==term2) {
+	goto exit;
+      }
+    } else if (!isAnyVar(term1) && am.currentUVarPrototypeEq(term2)) {
+      COUNT(varNonvarUnify);
+      doBind(term2Ptr,term1);
+      goto exit;
+    }
+  }
+
+fallback:
+  return oz_unify(A,B,scp);
+
+ exit:
+  COUNT(totalUnify);
+  return PROCEED;
+}
 
 // -----------------------------------------------------------------------
 // *** genCallInfo: self modifying code!
@@ -747,10 +792,9 @@ void AM::checkStability()
       setCurrent(currentBoard()->getParent());
       // don't decrement counter of parent board!
 
-      if (!fastUnifyOutline(solveAA->getResult(), 
-			    solveAA->genSolved(), 0)) {
-	Assert(0);
-      }
+      int ret = oz_unify(solveAA->getResult(),  // mm_u
+			 solveAA->genSolved());
+      Assert(ret);
       return;
     }
 
@@ -770,10 +814,9 @@ void AM::checkStability()
 
       // don't decrement counter of parent board!
 
-      if ( !fastUnifyOutline(solveAA->getResult(), 
-			     solveAA->genStuck(), 0) ) {
-	Assert(0);
-      }
+      int ret = oz_unify(solveAA->getResult(),  // mm_u
+			 solveAA->genStuck());
+      Assert(ret);
       return;
     }
 
@@ -797,11 +840,9 @@ void AM::checkStability()
 
     // don't decrement counter of parent board!
 
-    if (!fastUnifyOutline(solveAA->getResult(),
-			  solveAA->genChoice(wa->getChildCount()),
-			  0)) {
-      Assert(0);
-    }
+    int ret = oz_unify(solveAA->getResult(), // mm_u
+		       solveAA->genChoice(wa->getChildCount()));
+    Assert(ret);
     return;
   }
 
@@ -815,11 +856,9 @@ void AM::checkStability()
 
     solveAA->setResult(newVar);
 
-    if ( !fastUnifyOutline(result,
-			   solveAA->genUnstable(newVar),
-			   0)) {
-      Assert(0);
-    }
+    int ret = oz_unify(result, // mm_u
+		       solveAA->genUnstable(newVar));
+    Assert(ret);
     return;
   } 
 
@@ -1457,7 +1496,7 @@ LBLdispatcher:
       if (res==FAILED) {
 	SHALLOWFAIL;
 	HF_APPLY(OZ_atom(GetBI(PC+1)->getPrintName()),
-		 cons(XPC(2),cons(XPC(3),cons(OZ_newVariable(), nil()))));
+		 cons(XPC(2),cons(XPC(3),cons(oz_newVariable(), nil()))));
       }
 
       switch(res) {

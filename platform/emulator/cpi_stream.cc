@@ -64,7 +64,7 @@ OZ_Term OZ_Stream::get(void)
 OZ_Term OZ_Stream::put(OZ_Term stream, OZ_Term elem)
 {
   OZ_Term tail = OZ_newVariable();
-  OZ_Term ret = (OZ_unify(stream, OZ_cons(elem, tail)) == PROCEED) ? tail : 0;
+  OZ_Term ret = (OZ_unify(stream, OZ_cons(elem, tail)) == PROCEED) ? tail : 0; // mm_u
   setFlags();
   return ret;
 }

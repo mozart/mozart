@@ -167,12 +167,12 @@ OZ_Return OZ_Propagator::replaceBy(OZ_Propagator * p)
 
 OZ_Return OZ_Propagator::replaceBy(OZ_Term a, OZ_Term b)
 {
-  return OZ_unify(a, b);
+  return OZ_unify(a, b); // mm_u
 }
 
 OZ_Return OZ_Propagator::replaceByInt(OZ_Term v, int i)
 {  
-  return OZ_unify(v, newSmallInt(i));
+  return OZ_unify(v, newSmallInt(i)); // mm_u
 }
 
 OZ_Return OZ_Propagator::postpone(void)

@@ -55,7 +55,7 @@ VariableNamer *VariableNamer::allnames = NULL;
 const char *VariableNamer::getName(TaggedRef v)
 {
   for (VariableNamer *i = allnames; i!=NULL; i = i->next) {
-    if (OZ_isVariable(i->var) && termEq(i->var,v)) {
+    if (OZ_isVariable(i->var) && oz_eq(i->var,v)) {
       return i->name;
     }
   }
