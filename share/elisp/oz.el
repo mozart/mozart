@@ -545,7 +545,7 @@ If FORCE is non-nil, kill the processes immediately."
   (if (and (get-buffer-process oz-compiler-buffer)
 	   (or oz-win32 (get-buffer-process oz-emulator-buffer))
 	   (null force))
-      (let* ((i (* 2 oz-halt-timeout))
+      (let ((i (* 2 oz-halt-timeout))
 	     (cproc (get-buffer-process oz-compiler-buffer))
 	     (eproc (if oz-win32
 			cproc
@@ -1632,12 +1632,12 @@ The rest of the output is then passed through the oz-filter."
   (if (get-buffer-window buffer)
       t
     (save-excursion
-      (let* ((win (or (get-buffer-window oz-emulator-buffer)
-		      (get-buffer-window oz-compiler-buffer)
-		      (split-window (get-largest-window)
-				    (/ (* (window-height (get-largest-window))
-					  (- 100 oz-other-buffer-percent))
-				       100)))))
+      (let ((win (or (get-buffer-window oz-emulator-buffer)
+		     (get-buffer-window oz-compiler-buffer)
+		     (split-window (get-largest-window)
+				   (/ (* (window-height (get-largest-window))
+					 (- 100 oz-other-buffer-percent))
+				      100)))))
 	(set-window-buffer win buffer)
 	(set-buffer buffer)
 	(set-window-point win (point-max))
