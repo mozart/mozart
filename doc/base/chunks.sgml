@@ -493,19 +493,55 @@ end>>>
 	<Entry><<new>>
 	  <Index class=tails/<<Functor>><And><<new>>/
 	<Synopsis>
-	  <<{Functor.new ?+{T1} ?+{T2} ?+{P} ??{B}}>>
+	  <<{Functor.new ?={import spec} ?={export spec} ?+{P} ??{Functor}}>>
 	<Item>
-	  returns a new functor with imports as described by&nbsp;?_{T1},
-	  exports as described by&nbsp;?_{T2} and body as performed
-	  by&nbsp;?_{P}.
-	  <!--** be a bit more verbose -->
-
-	<Entry><<getFeatures>>
-	  <Index class=tails/<<Functor>><And><<getFeatures>>/
-	<Synopsis>
-	  <<{Functor.getFeatures ?+{Functor} ??{LIs}}>>
-	<Item>
-	  returns a list of the features exported by <<?_{Functor}>>.
+	  returns a new functor with imports as described by the
+	  ?={import spec}, exports as described by the ?={export spec},
+	  and body as performed by&nbsp;?_{P}.
+	<P>
+	  The ?={import spec} is a record mapping the name of each
+	  imported module to a record giving information about it:
+	  <Grammar.Rule class=compact>?={import spec}
+	    <Grammar.Alt
+	      /<<'import'(?={module name}: ?={import info} &ellipsis;>>/
+	    <Grammar.Alt type=space
+	      /<<         ?={module name}: ?={import info})>>/
+	  <Grammar.Rule>?={module name}
+	    <Grammar.Alt/?={atom}/
+	<P>
+	  The optional <<from>> field gives the value of this import's
+	  <<at>> clause, if given:
+	  <Grammar.Rule>?={import info}
+	    <Grammar.Alt
+	      /<<info(type: ?={type} >>[<<from: ?={atom}>>]<<)>>/
+	<P>
+	  The <<type>> field is the expected type of the module.
+	  This can be any of the atoms returned by <<Value.type>>,
+	  plus some more implementation-specific ones, or a record
+	  with label <<record>>:
+	<P>
+	  <Grammar.Rule class=compact>?={type}
+	    <Grammar.Alt
+	      /<<int>> | <<atom>> | &ellipsis;<Grammar.Note/see above//
+	    <Grammar.Alt
+/<<record(?={feature}: ?={type} &ellipsis; ?={feature}: ?={type})>>/
+	    <Grammar.Alt
+	      /<<nil>><Grammar.Note/no information known/
+	<P>
+	  The ?={export spec} is a record mapping each feature of the
+	  module resulting from applications of this functor to the
+	  type of the corresponding value:
+	  <Grammar.Rule>?={export spec}
+	    <Grammar.Alt
+/<<'export'(?={feature}: ?={type} &ellipsis; ?={feature}: ?={type})>>/
+	<P>
+	  The body is a binary procedure <<{P ?={import} ?={export}}>>
+	  where:
+	  <Grammar.Rule>?={import}
+	    <Grammar.Alt
+/<<'IMPORT'(?={module name}: ?={value} &ellipsis; ?={module name}: ?={value})>>/
+	  <Grammar.Rule>?={export}
+	    <Grammar.Alt/?={value}/
       </List>
 </Chapter>
 
