@@ -82,6 +82,7 @@
           /<<fBoolCase(?={phrase} ?={phrase} ?={opt else} ?={coord})>>/
         <Grammar.Alt/<<fCase(?={phrase} [?={case clause}]>>/
         <Grammar.Alt space/<<      ?={opt else} ?={coord})>>/
+        <Grammar.Alt/<<fFOR([?={for decl}] ?={phrase} ?={coord})>>/
         <Grammar.Alt/<<fLockThen(?={phrase} ?={phrase} ?={coord})>>/
         <Grammar.Alt/<<fLock(?={phrase} ?={coord})>>/
         <Grammar.Alt/<<fThread(?={phrase} ?={coord})>>/
@@ -190,6 +191,16 @@
       <Grammar.Rule>?={opt else}
         <Grammar.Alt/<<fNoElse(?={coord})>>/
         <Grammar.Alt/?={phrase}/
+      <Grammar.Rule>?={for decl}
+        <Grammar.Alt/<<forFeature(?={atom literal} ?={phrase})>>/
+        <Grammar.Alt/<<forPattern(?={phrase} ?={for gen})>>/
+      <Grammar.Rule>?={for gen}
+        <Grammar.Alt/<<forGeneratorList(?={phrase})>>/
+        <Grammar.Alt/<<forGeneratorInt(?={phrase} ?={phrase} ?={opt phrase})>>/
+        <Grammar.Alt/<<forGeneratorC(?={phrase} ?={phrase} ?={opt phrase})>>/
+      <Grammar.Rule>?={opt phrase}
+        <Grammar.Alt/<<?={phrase}>>
+        <Grammar.Alt/<<unit>>/
     <Para class=apropos><Title/Coordinates/
       Each triple consisting of an ?={atom} and two ?={int}s denotes a
       file name (<<''>> if none known), a line number (starting at&nbsp;<<1>>;
