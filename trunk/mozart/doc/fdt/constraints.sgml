@@ -455,12 +455,12 @@ variable domain.
 To solve a finite domain problem <math/P/, we can always
 choose a constraint <math/C/ and solve both <math/P\cup\{C\}/
 and <math/P\cup\{\neg C\}/.  We say that we have
-<def/distributed <math/P/ with/ <math/C/.
+<def class=noindex/distributed <math/P/ with <math/C//.
 
 <p>
 We can apply the idea to spaces.  Suppose <math/S/ is a
 stable space that is neither failed nor solved.  Then
-we can choose a constraint <math/C/ and <def/distribute
+we can choose a constraint <math/C/ and <def class=noindex/distribute
 <math/S/ with <math/C//.  Distribution yields two spaces, one
 obtained by adding a propagator for <math/C/, and one
 obtained by adding a propagator for <math/\neg C/.
