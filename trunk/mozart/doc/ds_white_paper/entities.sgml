@@ -29,7 +29,7 @@ a copy of the entity already exists at the importing site. The GUId
 consists of a reference to the home site and an identifier that is
 unique at the home site.
 
-<P>When entities are transferred from one site to another four kinds
+<P>When entities are transferred from one site to another five kinds
 of replication patterns exist. The importing site is responsible for
 building a structure according to the replication pattern. The five
 patterns are described here:
@@ -132,10 +132,10 @@ Mozart.
     <TR><TD>Cell       	  <TD>Access Structure    <TD>Mobile state
     <TR><TD>Lock       	  <TD>Access Structure    <TD>Mobile state
     <TR><TD>Object     	  <TD>Lazy Replication    <TD>Mobile state
-    <TR><TD>Chunk      	  <TD>Replicated          <TD>none needed
     <TR><TD>Record     	  <TD>Replicated          <TD>none needed
     <TR><TD>Atoms      	  <TD>Replicated    <TD>none needed
     <TR><TD>List       	  <TD>Replicated    <TD>none needed
+    <TR><TD>Chunk      	  <TD>Replicated Unique   <TD>none needed
     <TR><TD>Name       	  <TD>Replicated Unique         <TD>none needed
     <TR><TD>Class      	  <TD>Replicated Unique   <TD>none needed
     <TR><TD>Functor    	  <TD>Replicated Unique         <TD>none needed
