@@ -266,13 +266,21 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *argu
     time_t feedtime = CodeArea::findTimeStamp(PC);
     dinfo = cons(OZ_int(frameId),cons(OZ_int(feedtime),dinfo));
 
-    if (currentThread->stepMode() || def->getPred()->getSpyFlag()) {
-      debugStreamCall(PC, def->getPrintName(), def->getArity(),
-		      arguments, 0, frameId);
-      dbg = new OzDebug(DBG_STEP,dinfo);
-      currentThread->pushDebug(dbg);
-      return TRUE;
-    } 
+    if (currentThread->stepMode() /* || def->getPred()->getSpyFlag() */) {
+      ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
+      if (debugPC != NOCODE) {
+	debugStreamCall(debugPC, def->getPrintName(), def->getArity(),
+			arguments, 0, frameId);
+	dbg = new OzDebug(DBG_STEP,dinfo);
+	currentThread->pushDebug(dbg);
+	return TRUE;
+      }
+      else {
+	dbg = new OzDebug(DBG_NOOP,dinfo);
+	currentThread->pushDebug(dbg);
+	return FALSE;
+      }
+    }
     else {
       dbg = new OzDebug(DBG_NEXT,dinfo);
       currentThread->pushDebug(dbg);
@@ -2422,18 +2430,21 @@ LBLdispatcher:
 	   
        if (e->debugmode() && e->currentThread->stepMode()) {
 	 char *name = builtinTab.getName((void *) bi->getFun());
-	 debugStreamCall(PC, name, predArity, X, 1, 0);
+	 ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
 
-	 if (!isTailCall) e->pushTask(PC,Y,G);
-	 
-	 time_t feedtime = CodeArea::findTimeStamp(PC);
-	 OZ_Term dinfo = cons(OZ_int(0),cons(OZ_int(feedtime),nil()));
-	 OzDebug *dbg  = new OzDebug(DBG_STEP,dinfo);
-	 
-	 e->currentThread->pushDebug(dbg);
-	 e->pushCFun(bi->getFun(),X,predArity);     
-
-	 goto LBLpreemption;
+	 if (debugPC != NOCODE) {
+	   debugStreamCall(debugPC, name, predArity, X, 1, 0);
+	   
+	   if (!isTailCall) e->pushTask(PC,Y,G);
+	   
+	   time_t feedtime = CodeArea::findTimeStamp(PC);
+	   OZ_Term dinfo = cons(OZ_int(0),cons(OZ_int(feedtime),nil()));
+	   OzDebug *dbg  = new OzDebug(DBG_STEP,dinfo);
+	   e->currentThread->pushDebug(dbg);
+	   
+	   e->pushCFun(bi->getFun(),X,predArity);     
+	   goto LBLpreemption;
+	 }
        }
 
        biFun=bi->getFun();
