@@ -1540,7 +1540,6 @@ public:
   OzLock *getLock() { return lock; }
   void setLock(OzLock *l) { lock=l; }
 
-  OzDictionary *getMethods()    { return getClass()->getfastMethods(); }
   const char *getPrintName()    { return getClass()->getPrintName(); }
   RecOrCell getState()          { return state; }
   void setState(SRecord *s)     { Assert(s!=0); state=makeRecCell(s); }

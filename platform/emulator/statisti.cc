@@ -40,7 +40,6 @@
 
 Statistics ozstat;
 
-static
 void printTime(FILE *fd,char *s,unsigned int t)
 {
   fprintf(fd,s);
@@ -66,7 +65,6 @@ void printPercent(FILE *fd,char *s,unsigned int t,unsigned int total)
 int workaroundForBugInGCC1 = KB;
 int workaroundForBugInGCC2 = MB;
 
-static
 void printMem(FILE *fd,char *s,double m)
 {
   fprintf(fd,s);
