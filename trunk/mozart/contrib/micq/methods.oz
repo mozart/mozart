@@ -48,6 +48,7 @@ local
    S_removeApplication={NewName}
    S_getHistory={NewName}
    S_clearHistory={NewName}
+   S_getUserInfo={NewName}
 in
    functor 
    export
@@ -76,6 +77,7 @@ in
       removeApplication:S_removeApplication
       getHistory:S_getHistory
       clearHistory:S_clearHistory
+      getUserInfo:S_getUserInfo
    define
       skip
    end
