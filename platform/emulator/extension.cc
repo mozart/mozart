@@ -86,7 +86,7 @@ unsigned int OZ_getUniqueId(void)
 
 
 void* _OZ_new_OZ_Extension(size_t n) {
- return doubleMalloc(n);
+ return oz_heapMalloc(n);
 }
 
 

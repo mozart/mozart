@@ -37,7 +37,7 @@
 inline
 void OzBoolVariable::dispose(void) {
   disposeS();
-  freeListDispose(this, sizeof(OzBoolVariable));
+  oz_freeListDispose(this, sizeof(OzBoolVariable));
 }
 
 

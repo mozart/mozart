@@ -94,7 +94,7 @@ public:
   void sCloneRecurseV(void) { Assert(0); }
   void disposeV(void) { // PER-LOOK when is this used
     disposeS();
-    freeListDispose(this,sizeof(ProxyVar));
+    oz_freeListDispose(this,sizeof(ProxyVar));
   }
 
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:pxy>"; }
@@ -153,7 +153,7 @@ public:
   ProxyList *dispose() 
   {
     ProxyList *n=next;
-    freeListDispose(this,sizeof(ProxyList));
+    oz_freeListDispose(this,sizeof(ProxyList));
     return n;
   }
   ProxyList *gcProxyList();
@@ -203,7 +203,7 @@ public:
       oz_var_dispose(getOrigVar());
       DebugCode(origVar=makeTaggedNULL());
     }
-    freeListDispose(this,sizeof(ManagerVar));
+    oz_freeListDispose(this,sizeof(ManagerVar));
   }
 
   void registerSite(DSite* sd) {

@@ -63,10 +63,8 @@ OZ_Boolean OZ_isPosSmallInt(OZ_Term val)
 }
 
 // tmueller: (S * sizeof(T)) % 8 == 0
-#define OZMALLOC(T, S) (T *) freeListMalloc(S * sizeof(T))
-#define OZDISPOSE(T, S, P) freeListDispose(P, S * sizeof(T))
-#define OZMALLOCSAFE(T, S) (T *) freeListMallocSafe(S * sizeof(T))
-#define OZDISPOSESAFE(T, S, P) freeListDisposeSafe(P, S * sizeof(T))
+#define OZMALLOC(T, S) (T *) oz_freeListMalloc(S * sizeof(T))
+#define OZDISPOSE(T, S, P) oz_freeListDisposeUnsafe(P, S * sizeof(T))
 
 OZ_Term * OZ_hallocOzTerms(int n)
 {
@@ -90,14 +88,14 @@ void OZ_hfreeCInts(int * is, int n)
 
 char * OZ_hallocChars(int n)
 {
-  return n == 0 ? (char *) NULL : OZMALLOCSAFE(char, n);
+  return n == 0 ? (char *) NULL : OZMALLOC(char, n);
 }
 
 char * OZ_copyChars(int n, char * frm) {
   if (n==0)
     return (char *) NULL;
 
-  char * to = OZMALLOCSAFE(char, n);
+  char * to = OZMALLOC(char, n);
 
   memcpy(to, frm, n);
 
@@ -106,7 +104,7 @@ char * OZ_copyChars(int n, char * frm) {
 
 void OZ_hfreeChars(char * is, int n)
 {
-  if (n) OZDISPOSESAFE(char, n, is);
+  if (n) OZDISPOSE(char, n, is);
 }
 
 #define FDTAG               TAG_GCMARK
@@ -289,7 +287,7 @@ int * OZ_getCIntVector(OZ_Term t, int * v)
 
 void * OZ_FSetValue::operator new(size_t s)
 {
-  return freeListMalloc(s);
+  return oz_freeListMalloc(s);
 }
 
 void OZ_FSetValue::operator delete(void * p, size_t s)
@@ -300,7 +298,7 @@ void OZ_FSetValue::operator delete(void * p, size_t s)
 #ifdef __GNUC__
 void * OZ_FSetValue::operator new[](size_t s)
 {
-  return freeListMalloc(s);
+  return oz_freeListMalloc(s);
 }
 
 void OZ_FSetValue::operator delete[](void * p, size_t s)
@@ -312,7 +310,7 @@ void OZ_FSetValue::operator delete[](void * p, size_t s)
 
 void * OZ_FSetConstraint::operator new(size_t s)
 {
-  return freeListMalloc(s);
+  return oz_freeListMalloc(s);
 }
 
 void OZ_FSetConstraint::operator delete(void * p, size_t s)
@@ -323,7 +321,7 @@ void OZ_FSetConstraint::operator delete(void * p, size_t s)
 #ifdef __GNUC__
 void * OZ_FSetConstraint::operator new[](size_t s)
 {
-  return freeListMalloc(s);
+  return oz_freeListMalloc(s);
 }
 
 void OZ_FSetConstraint::operator delete[](void * p, size_t s)
@@ -334,7 +332,7 @@ void OZ_FSetConstraint::operator delete[](void * p, size_t s)
 
 void * OZ_FiniteDomain::operator new(size_t s)
 {
-  return freeListMalloc(s);
+  return oz_freeListMalloc(s);
 }
 
 void OZ_FiniteDomain::operator delete(void * p, size_t s)
@@ -345,7 +343,7 @@ void OZ_FiniteDomain::operator delete(void * p, size_t s)
 #ifdef __GNUC__
 void * OZ_FiniteDomain::operator new[](size_t s)
 {
-  return freeListMalloc(s);
+  return oz_freeListMalloc(s);
 }
 
 void OZ_FiniteDomain::operator delete[](void * p, size_t s)

@@ -166,18 +166,18 @@ TaggedRef mkRecord(TaggedRef label,SRecordArity ff)
 }
 
 #define allocateY(n) \
-{                                      \
-  int _sz = (n+1) * sizeof(TaggedRef); \
-  Y = (RefsArray) freeListMalloc(_sz); \
-  Y += 1;                              \
-  initRefsArray(Y,n,OK);               \
+{                                         \
+  int _sz = (n+1) * sizeof(TaggedRef);    \
+  Y = (RefsArray) oz_freeListMalloc(_sz); \
+  Y += 1;                                 \
+  initRefsArray(Y,n,OK);                  \
 }
 
 #define deallocateYN(sz) \
-{                                                   \
-  Assert(getRefsArraySize(Y)==sz);                  \
-  freeListDispose(Y-1,(sz+1) * sizeof(TaggedRef));  \
-  Y=NULL;                                           \
+{                                                      \
+  Assert(getRefsArraySize(Y)==sz);                     \
+  oz_freeListDispose(Y-1,(sz+1) * sizeof(TaggedRef));  \
+  Y=NULL;                                              \
 }
 
 #define deallocateY() deallocateYN(getRefsArraySize(Y))
@@ -3425,7 +3425,7 @@ ThreadReturn debugEntry(ProgramCounter PC, RefsArray Y, Abstraction * CAP) {
 	  dbg->arity = arity;
 	  if (arity > 0) {
 	    dbg->arguments =
-	      (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * arity);
+	      (TaggedRef *) oz_freeListMalloc(sizeof(TaggedRef) * arity);
 	    for (int i = iarity; i--; )
 	      dbg->arguments[i] = loc->getInValue(i);
 	    if (CTT->isStep())
@@ -3472,7 +3472,7 @@ ThreadReturn debugEntry(ProgramCounter PC, RefsArray Y, Abstraction * CAP) {
       }
       if (copyArgs && dbg->arity > 0) {
 	dbg->arguments =
-	  (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * dbg->arity);
+	  (TaggedRef *) oz_freeListMalloc(sizeof(TaggedRef) * dbg->arity);
 	for (int i = dbg->arity; i--; )
 	  dbg->arguments[i] = XREGS[i];
       }
@@ -3619,7 +3619,7 @@ void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP) {
   if (maxX > 0)
     memcpy(XREGS_SAVE, XREGS, maxX);
   if (maxY > 0)
-    savedY = memcpy(freeListMalloc(maxY), Y, maxY);
+    savedY = memcpy(oz_freeListMalloc(maxY), Y, maxY);
   
   Bool firstCall = OK;
 
@@ -3761,7 +3761,7 @@ void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP) {
     memcpy(XREGS, XREGS_SAVE, maxX);
   }
   if (maxY > 0) {
-    memcpy(Y, savedY, maxY); freeListDispose(savedY, maxY);
+    memcpy(Y, savedY, maxY); oz_freeListDispose(savedY, maxY);
   }
 }
 

@@ -58,7 +58,7 @@ dt_index ceilPwrTwo(dt_index s)
 DynamicTable* DynamicTable::newDynamicTable(dt_index s) {
     s = nextPowerOf2(s);
     size_t memSize = DTBlockSize(s);
-    DynamicTable* ret = (DynamicTable *) freeListMalloc(memSize);
+    DynamicTable* ret = (DynamicTable *) oz_freeListMalloc(memSize);
     Assert(ret!=NULL);
     ret->init(s);
     return ret;
@@ -93,7 +93,7 @@ DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize) {
   if (size==newSize) {
     // Optimize case where copy has same size as original:
     size_t memSize = DTBlockSize(size);
-    ret = (DynamicTable *) freeListMalloc(memSize);
+    ret = (DynamicTable *) oz_freeListMalloc(memSize);
     ret->numelem=numelem;
     ret->size=size;
     memcpy(ret->table, table, size * sizeof(table[0]));

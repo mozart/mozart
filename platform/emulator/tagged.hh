@@ -528,20 +528,20 @@ inline TaggedRef makeTaggedMiscp(void * s) {
  */
 
 inline TaggedRef * newTaggedRef(TaggedRef *t) {
-  TaggedRef *ref = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
+  TaggedRef *ref = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
   *ref = makeTaggedRef(t);
   return ref;
 }
 
 inline TaggedRef * newTaggedOptVar(TaggedRef proto) {
   Assert(proto != taggedInvalidVar);
-  TaggedRef *ref = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
+  TaggedRef *ref = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
   *ref = proto;
   return (ref);
 }
 
 inline TaggedRef * newTaggedVar(OzVariable * c) {
-  TaggedRef *ref = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
+  TaggedRef *ref = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
   *ref = makeTaggedVar(c);
   return ref;
 }
@@ -670,7 +670,7 @@ inline
 RefsArray allocateRefsArray(int n, Bool init=OK)
 {
   Assert(n > 0);
-  RefsArray a = ((RefsArray) freeListMalloc((n+1) * sizeof(TaggedRef)));
+  RefsArray a = ((RefsArray) oz_freeListMalloc((n+1) * sizeof(TaggedRef)));
   a += 1;
   initRefsArray(a,n,init);
   return a;  
@@ -682,7 +682,7 @@ void disposeRefsArray(RefsArray a)
   if (a) {
     int sz = getRefsArraySize(a);
     a -= 1;
-    freeListDispose(a, (sz+1) * sizeof(TaggedRef));
+    oz_freeListDispose(a, (sz+1) * sizeof(TaggedRef));
   }
 }
 
