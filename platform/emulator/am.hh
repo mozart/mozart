@@ -56,8 +56,7 @@ typedef enum {
   ThreadSwitch  = 1 << 2, // choose a new process
   IOReady       = 1 << 3, // IO handler has signaled IO ready
   UserAlarm     = 1 << 4, // Alarm handler has signaled User Alarm
-  StartGC       = 1 << 5, // need a GC
-  DebugMode     = 1 << 6
+  StartGC       = 1 << 5 // need a GC
 } StatusBit;
 
 /* -----------------------------------------------------------------------
@@ -119,6 +118,7 @@ private:
 
   // source level debugger
   TaggedRef debugStreamTail;
+  Bool debugMode;
 
   int statusReg;
   Trail trail;
@@ -279,9 +279,10 @@ public:
   }
 
   Bool isSetSFlag(StatusBit flag) { return ( statusReg & flag ) ? OK : NO; }
-  int isSetSFlag()                { return statusReg && (statusReg & ~DebugMode); }
+  int isSetSFlag()                { return statusReg; }
 
-  Bool debugmode() { return isSetSFlag(DebugMode); }
+  Bool debugmode()          { return debugMode; }
+  void setdebugmode(Bool x) { debugMode = x; }
   void checkDebug(Thread *tt, Board *bb) {
     if (debugmode() && bb==_rootBoard) checkDebugOutline(tt);
   }
