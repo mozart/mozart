@@ -34,7 +34,7 @@
 
 #include "actor.hh"
 
-#include "thread.hh"
+#include "thr_class.hh"
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
 #define GETBOARDOBJ(v) ((v).getBoardInternal()->derefBoard())

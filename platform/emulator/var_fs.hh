@@ -34,7 +34,6 @@
 
 #include "genvar.hh"
 #include "fset.hh"
-#include "fdhook.hh"
 #include "oz_cpi.hh"
 
 class GenFSetVariable: public GenCVariable {

@@ -36,12 +36,13 @@
 
 #include "os.hh"
 #include "board.hh"
-#include "threadInterface.hh"
+#include "thr_int.hh"
 #include "allgenvar.hh"
 #include "codearea.hh"
 #include "fdomn.hh"
 #include "extension.hh"
 #include "trace.hh"
+#include "space.hh"
 
 AM am;
 
