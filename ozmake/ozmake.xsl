@@ -4,7 +4,7 @@
 
 <xsl:output method="html"/>
 <xsl:strip-space elements="
-    package head author abstract section dlist item
+    package head author section dlist item
     align row
 "/>
 
@@ -27,8 +27,8 @@ H2 {	color		: #FF9933; }
 H4 {	color		: slateblue; }
 H3 {	color		: #881155; }
 H5 {	color		: darkslateblue; }
-CODE, SPAN.CMD, PRE.OZDISPLAY {	color		: #663366; }
-CODE,TT,PRE,SPAN.CMD,SPAN.FILE,PRE.OZDISPLAY {
+CODE, SPAN.CMD, PRE.OZDISPLAY, PRE.CODEDISPLAY {	color		: #663366; }
+CODE,TT,PRE,SPAN.CMD,SPAN.FILE,PRE.OZDISPLAY, PRE.CODEDISPLAY {
 	font-family	: "lucida console",courier,monospace;
 }
 SPAN.FILE {
@@ -42,7 +42,7 @@ CODE.DISPLAY {
 	margin-top	: 1em;
 	margin-bottom	: 1em;
 }
-PRE.OZDISPLAY {
+PRE.OZDISPLAY,PRE.CODEDISPLAY {
 	margin-left : 2cm;
 }
 SPAN.CMD {
@@ -371,6 +371,18 @@ TABLE.ALIGN {
   </PRE>
 </xsl:template>
 
+<xsl:template match="code.display">
+  <PRE CLASS="CODEDISPLAY">
+    <xsl:apply-templates/>
+  </PRE>
+</xsl:template>
+
+<xsl:template match="code">
+  <CODE>
+    <xsl:apply-templates/>
+  </CODE>
+</xsl:template>
+
 <xsl:template match="em">
   <EM>
     <xsl:apply-templates/>
@@ -381,6 +393,14 @@ TABLE.ALIGN {
    <P CLASS="CENTER">
      <xsl:apply-templates/>
    </P>
+</xsl:template>
+
+<xsl:template match="image.center">
+  <P CLASS="CENTER">
+    <IMG SRC="{@src}">
+      <xsl:apply-templates/>
+    </IMG>
+  </P>
 </xsl:template>
 
 <!-- catch all elements that are not explicitly matched -->
