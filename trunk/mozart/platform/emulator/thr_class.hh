@@ -348,19 +348,6 @@ public:
     return (state.flags & T_unif);
   }
 
-  void markLocalThread () {
-    Assert ((isPropagator ()) && !(isDeadThread ()));
-    state.flags = state.flags | T_loca;
-  }
-  void unmarkLocalThread () {
-    Assert ((isPropagator ()) && !(isDeadThread ()));
-    state.flags = state.flags & ~T_loca;
-  }
-  Bool isLocalThread () {
-    Assert ((isPropagator ()) && !(isDeadThread ()));
-    return (state.flags & T_loca);
-  }
-
   void setOFSThread () {
     Assert ((isPropagator ()) && !(isDeadThread ()));
     state.flags = state.flags | T_ofs;
@@ -370,19 +357,29 @@ public:
     return (state.flags & T_ofs);
   }
 
+  // the following six member functions operate on dead threads too
+  void markLocalThread () {
+    if (isDeadThread()) return;
+    state.flags = state.flags | T_loca;
+  }
+  void unmarkLocalThread () {
+    state.flags = state.flags & ~T_loca;
+  }
+  Bool isLocalThread () {
+    return (state.flags & T_loca);
+  }
+
   void markTagged () { 
-    Assert ((isPropagator ()) && !(isDeadThread ()));
+    if (isDeadThread ()) return;
     state.flags = state.flags | T_tag;
   }
   void unmarkTagged () { 
-    Assert ((isPropagator ()) && !(isDeadThread ()));
     state.flags = state.flags & ~T_tag;
   }
   Bool isTagged () { 
-    Assert ((isPropagator ()) && !(isDeadThread ()));
     return (state.flags & T_tag);
   }
-
+  // -----
   //  stack;
   Bool hasStack () { 
     Assert (!(isDeadThread ()));

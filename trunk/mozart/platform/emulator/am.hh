@@ -200,10 +200,15 @@ public:
 
   void print();
 
+private:
+  Bool installingScript;
+
+public:
   void setCurrent(Board *c, Bool checkNotGC=OK);
   InstType installPath(Board *to); // ###
   Bool installScript(Script &script);
   Bool installScriptOutline(Script &script);
+  Bool isInstallingScript(void) {return installingScript;}
   Bool install(Board *bb);
   void deinstallPath(Board *top);
   void deinstallCurrent();
