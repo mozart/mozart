@@ -1495,203 +1495,208 @@ void BIfdBodyManager::printTerm(int i) {
 //-----------------------------------------------------------------------------
 // Introduce FD Built-ins to the Emulator
 
-void BIinitFD(void)
-{
+static
+BIspec biSpec[] = {
 // fdprofil.cc
-  BIadd("fdReset", 0, BIfdReset);
-  BIadd("fdDiscard", 0, BIfdDiscard);
-  BIadd("fdGetNext", 1, BIfdGetNext);
-  BIadd("fdPrint", 0, BIfdPrint);
-  BIadd("fdTotalAverage", 0, BIfdTotalAverage);
+  {"fdReset", 0, BIfdReset},
+  {"fdDiscard", 0, BIfdDiscard},
+  {"fdGetNext", 1, BIfdGetNext},
+  {"fdPrint", 0, BIfdPrint},
+  {"fdTotalAverage", 0, BIfdTotalAverage},
 
 // fdcore.cc
-  BIadd("fdIs", 1, BIfdIs);
-  BIadd("fdIsVar", 1, BIisFdVar);
-  BIadd("fdGetLimits", 2, BIgetFDLimits);
-  BIadd("fdGetMin", 2, BIfdMin);
-  BIadd("fdGetMax", 2, BIfdMax);
-  BIadd("fdGetDom", 2, BIfdGetAsList);
-  BIadd("fdGetCard", 2, BIfdGetCardinality);
-  BIadd("fdNextTo", 3, BIfdNextTo);
+  {"fdIs", 1, BIfdIs},
+  {"fdIsVar", 1, BIisFdVar},
+  {"fdGetLimits", 2, BIgetFDLimits},
+  {"fdGetMin", 2, BIfdMin},
+  {"fdGetMax", 2, BIfdMax},
+  {"fdGetDom", 2, BIfdGetAsList},
+  {"fdGetCard", 2, BIfdGetCardinality},
+  {"fdNextTo", 3, BIfdNextTo},
 
-  BIadd("fdPutLe", 2, BIfdPutLe);
-  BIadd("fdPutGe", 2, BIfdPutGe);
-  BIadd("fdPutList", 3, BIfdPutList);
-  BIadd("fdPutInterval", 3, BIfdPutInterval);
-  BIadd("fdPutNot", 2, BIfdPutNot);
+  {"fdPutLe", 2, BIfdPutLe},
+  {"fdPutGe", 2, BIfdPutGe},
+  {"fdPutList", 3, BIfdPutList},
+  {"fdPutInterval", 3, BIfdPutInterval},
+  {"fdPutNot", 2, BIfdPutNot},
   
 // fdrel.cc
-  BIadd("fdMinimum", 3, BIfdMinimum);
-  BIadd("fdMinimum_body", 3, BIfdMinimum_body);
-  BIadd("fdMaximum", 3, BIfdMaximum);
-  BIadd("fdMaximum_body", 3, BIfdMaximum_body);
-  BIadd("fdUnion", 3, BIfdUnion);
-  BIadd("fdUnion_body", 3, BIfdUnion_body);
-  BIadd("fdIntersection", 3, BIfdIntersection);
-  BIadd("fdIntersection_body", 3, BIfdIntersection_body);
-  BIadd("fdSubsume_body", 3, BIfdSubsume_body);
-  BIadd("fdLessEqOff", 3, BIfdLessEqOff);
-  BIadd("fdLessEqOff_body", 3, BIfdLessEqOff_body);
-  BIadd("fdNotEqEnt", 2, BIfdNotEqEnt);
-  BIadd("fdNotEqEnt_body", 2, BIfdNotEqEnt_body);
-  BIadd("fdNotEq", 2, BIfdNotEq);
-  BIadd("fdNotEq_body", 2, BIfdNotEq_body);
-  BIadd("fdNotEqOffEnt", 3, BIfdNotEqOffEnt);
-  BIadd("fdNotEqOffEnt_body", 3, BIfdNotEqOffEnt_body);
-  BIadd("fdNotEqOff", 3, BIfdNotEqOff);
-  BIadd("fdNotEqOff_body", 3, BIfdNotEqOff_body);
-  BIadd("fdAllDifferent", 1, BIfdAllDifferent);
-  BIadd("fdAllDifferent_body", 1, BIfdAllDifferent_body);
-  BIadd("fdDistinctOffset", 2, BIfdDistinctOffset);
-  BIadd("fdDistinctOffset_body", 2, BIfdDistinctOffset_body);
+  {"fdMinimum", 3, BIfdMinimum},
+  {"fdMinimum_body", 3, BIfdMinimum_body},
+  {"fdMaximum", 3, BIfdMaximum},
+  {"fdMaximum_body", 3, BIfdMaximum_body},
+  {"fdUnion", 3, BIfdUnion},
+  {"fdUnion_body", 3, BIfdUnion_body},
+  {"fdIntersection", 3, BIfdIntersection},
+  {"fdIntersection_body", 3, BIfdIntersection_body},
+  {"fdSubsume_body", 3, BIfdSubsume_body},
+  {"fdLessEqOff", 3, BIfdLessEqOff},
+  {"fdLessEqOff_body", 3, BIfdLessEqOff_body},
+  {"fdNotEqEnt", 2, BIfdNotEqEnt},
+  {"fdNotEqEnt_body", 2, BIfdNotEqEnt_body},
+  {"fdNotEq", 2, BIfdNotEq},
+  {"fdNotEq_body", 2, BIfdNotEq_body},
+  {"fdNotEqOffEnt", 3, BIfdNotEqOffEnt},
+  {"fdNotEqOffEnt_body", 3, BIfdNotEqOffEnt_body},
+  {"fdNotEqOff", 3, BIfdNotEqOff},
+  {"fdNotEqOff_body", 3, BIfdNotEqOff_body},
+  {"fdAllDifferent", 1, BIfdAllDifferent},
+  {"fdAllDifferent_body", 1, BIfdAllDifferent_body},
+  {"fdDistinctOffset", 2, BIfdDistinctOffset},
+  {"fdDistinctOffset_body", 2, BIfdDistinctOffset_body},
   
 // fdbool.cc
-  BIadd("fdAnd", 3, BIfdAnd);
-  BIadd("fdAnd_body", 3, BIfdAnd_body);
-  BIadd("fdOr", 3, BIfdOr);
-  BIadd("fdOr_body", 3, BIfdOr_body);
-  BIadd("fdNot", 2, BIfdNot);
-  BIadd("fdNot_body", 2, BIfdNot_body);
-  BIadd("fdXor", 3, BIfdXor);
-  BIadd("fdXor_body", 3, BIfdXor_body);
-  BIadd("fdEquiv", 3, BIfdEquiv);
-  BIadd("fdEquiv_body", 3, BIfdEquiv_body);
-  BIadd("fdImpl", 3, BIfdImpl);
-  BIadd("fdImpl_body", 3, BIfdImpl_body);
+  {"fdAnd", 3, BIfdAnd},
+  {"fdAnd_body", 3, BIfdAnd_body},
+  {"fdOr", 3, BIfdOr},
+  {"fdOr_body", 3, BIfdOr_body},
+  {"fdNot", 2, BIfdNot},
+  {"fdNot_body", 2, BIfdNot_body},
+  {"fdXor", 3, BIfdXor},
+  {"fdXor_body", 3, BIfdXor_body},
+  {"fdEquiv", 3, BIfdEquiv},
+  {"fdEquiv_body", 3, BIfdEquiv_body},
+  {"fdImpl", 3, BIfdImpl},
+  {"fdImpl_body", 3, BIfdImpl_body},
   
 // fdarith.cc
-  BIadd("fdPlus", 3, BIfdPlus);
-  BIadd("fdPlus_body", 3, BIfdPlus_body);
-  BIadd("fdTwice_body", 2, BIfdTwice_body);
-  BIadd("fdMinus", 3, BIfdMinus);
-  BIadd("fdMinus_body", 3, BIfdMinus_body);
-  BIadd("fdMult", 3, BIfdMult);
-  BIadd("fdMult_body", 3, BIfdMult_body);
-  BIadd("fdSquare_body", 2, BIfdSquare_body);
-  BIadd("fdDiv", 3, BIfdDiv);
-  BIadd("fdDiv_body", 3, BIfdDiv_body);
-  BIadd("fdDivInterval", 3, BIfdDivInterval);
-  BIadd("fdDivInterval_body", 3, BIfdDivInterval_body);
-  BIadd("fdMod", 3, BIfdMod);
-  BIadd("fdMod_body", 3, BIfdMod_body);
-  BIadd("fdModInterval", 3, BIfdModInterval);
-  BIadd("fdModInterval_body", 3, BIfdModInterval_body);
-  BIadd("fdPlus_rel", 3, BIfdPlus_rel);
-  BIadd("fdMult_rel", 3, BIfdMult_rel);
+  {"fdPlus", 3, BIfdPlus},
+  {"fdPlus_body", 3, BIfdPlus_body},
+  {"fdTwice_body", 2, BIfdTwice_body},
+  {"fdMinus", 3, BIfdMinus},
+  {"fdMinus_body", 3, BIfdMinus_body},
+  {"fdMult", 3, BIfdMult},
+  {"fdMult_body", 3, BIfdMult_body},
+  {"fdSquare_body", 2, BIfdSquare_body},
+  {"fdDiv", 3, BIfdDiv},
+  {"fdDiv_body", 3, BIfdDiv_body},
+  {"fdDivInterval", 3, BIfdDivInterval},
+  {"fdDivInterval_body", 3, BIfdDivInterval_body},
+  {"fdMod", 3, BIfdMod},
+  {"fdMod_body", 3, BIfdMod_body},
+  {"fdModInterval", 3, BIfdModInterval},
+  {"fdModInterval_body", 3, BIfdModInterval_body},
+  {"fdPlus_rel", 3, BIfdPlus_rel},
+  {"fdMult_rel", 3, BIfdMult_rel},
   
 // fdgeneric.cc
-  BIadd("fdGenLinEq", 3, BIfdGenLinEq);
-  BIadd("fdGenLinEq_body", 3, BIfdGenLinEq_body);
-  BIadd("fdGenNonLinEq", 3, BIfdGenNonLinEq);
-  BIadd("fdGenNonLinEq1", 3, BIfdGenNonLinEq1);
-  BIadd("fdGenNonLinEq_body", 3, BIfdGenNonLinEq_body);
-  BIadd("fdGenLinNotEq", 3, BIfdGenLinNotEq);
-  BIadd("fdGenLinNotEq_body", 3, BIfdGenLinNotEq_body);
-  BIadd("fdGenNonLinNotEq", 3, BIfdGenNonLinNotEq);
-  BIadd("fdGenNonLinNotEq_body", 3, BIfdGenNonLinNotEq_body);
-  BIadd("fdGenLinLessEq", 3, BIfdGenLinLessEq);
-  BIadd("fdGenLinLessEq_body", 3, BIfdGenLinLessEq_body);
-  BIadd("fdGenNonLinLessEq", 3, BIfdGenNonLinLessEq);
-  BIadd("fdGenNonLinLessEq1", 3, BIfdGenNonLinLessEq1);
-  BIadd("fdGenNonLinLessEq_body", 3, BIfdGenNonLinLessEq_body);
+  {"fdGenLinEq", 3, BIfdGenLinEq},
+  {"fdGenLinEq_body", 3, BIfdGenLinEq_body},
+  {"fdGenNonLinEq", 3, BIfdGenNonLinEq},
+  {"fdGenNonLinEq1", 3, BIfdGenNonLinEq1},
+  {"fdGenNonLinEq_body", 3, BIfdGenNonLinEq_body},
+  {"fdGenLinNotEq", 3, BIfdGenLinNotEq},
+  {"fdGenLinNotEq_body", 3, BIfdGenLinNotEq_body},
+  {"fdGenNonLinNotEq", 3, BIfdGenNonLinNotEq},
+  {"fdGenNonLinNotEq_body", 3, BIfdGenNonLinNotEq_body},
+  {"fdGenLinLessEq", 3, BIfdGenLinLessEq},
+  {"fdGenLinLessEq_body", 3, BIfdGenLinLessEq_body},
+  {"fdGenNonLinLessEq", 3, BIfdGenNonLinLessEq},
+  {"fdGenNonLinLessEq1", 3, BIfdGenNonLinLessEq1},
+  {"fdGenNonLinLessEq_body", 3, BIfdGenNonLinLessEq_body},
   
 // fdcount.cc
-  BIadd("fdElement", 3, BIfdElement);
-  BIadd("fdElement_body", 3, BIfdElement_body);
-  BIadd("fdAtMost", 3, BIfdAtMost);
-  BIadd("fdAtMost_body", 3, BIfdAtMost_body);
-  BIadd("fdAtLeast", 3, BIfdAtLeast);
-  BIadd("fdAtLeast_body", 3, BIfdAtLeast_body);
-  BIadd("fdCount", 3, BIfdCount);
-  BIadd("fdCount_body", 3, BIfdCount_body);
+  {"fdElement", 3, BIfdElement},
+  {"fdElement_body", 3, BIfdElement_body},
+  {"fdAtMost", 3, BIfdAtMost},
+  {"fdAtMost_body", 3, BIfdAtMost_body},
+  {"fdAtLeast", 3, BIfdAtLeast},
+  {"fdAtLeast_body", 3, BIfdAtLeast_body},
+  {"fdCount", 3, BIfdCount},
+  {"fdCount_body", 3, BIfdCount_body},
 
 // fdcard.cc
-  BIadd("fdCardBIBin", 2, BIfdCardBIBin); 
-  BIadd("fdCardBIBin_body", 2, BIfdCardBIBin_body);
-  BIadd("fdCardNestableBI", 4, BIfdCardNestableBI); 
-  BIadd("fdCardNestableBI_body", 4, BIfdCardNestableBI_body);
-  BIadd("fdCardNestableBIBin", 3, BIfdCardNestableBIBin); 
-  BIadd("fdCardNestableBIBin_body", 3, BIfdCardNestableBIBin_body);
-  BIadd("fdInB", 3, BIfdInB); 
-  BIadd("fdInB_body", 3, BIfdInB_body);
-  BIadd("fdNotInB", 3, BIfdNotInB); 
-  BIadd("fdNotInB_body", 3, BIfdNotInB_body);
-  BIadd("fdGenLinEqB", 4, BIfdGenLinEqB);
-  BIadd("fdGenNonLinEqB", 4, BIfdGenNonLinEqB); 
-  BIadd("fdGenLinEqB_body", 4, BIfdGenLinEqB_body);
-  BIadd("fdGenLinNotEqB", 4, BIfdGenLinNotEqB); 
-  BIadd("fdGenNonLinNotEqB", 4, BIfdGenNonLinNotEqB); 
-  BIadd("fdGenLinNotEqB_body", 4, BIfdGenLinNotEqB_body);
-  BIadd("fdGenLinLessEqB", 4, BIfdGenLinLessEqB);
-  BIadd("fdGenLinLessEqB_body", 4, BIfdGenLinLessEqB_body);
-  BIadd("fdGenNonLinLessEqB", 4, BIfdGenNonLinLessEqB); 
+  {"fdCardBIBin", 2, BIfdCardBIBin},
+  {"fdCardBIBin_body", 2, BIfdCardBIBin_body},
+  {"fdCardNestableBI", 4, BIfdCardNestableBI},
+  {"fdCardNestableBI_body", 4, BIfdCardNestableBI_body},
+  {"fdCardNestableBIBin", 3, BIfdCardNestableBIBin},
+  {"fdCardNestableBIBin_body", 3, BIfdCardNestableBIBin_body},
+  {"fdInB", 3, BIfdInB},
+  {"fdInB_body", 3, BIfdInB_body},
+  {"fdNotInB", 3, BIfdNotInB},
+  {"fdNotInB_body", 3, BIfdNotInB_body},
+  {"fdGenLinEqB", 4, BIfdGenLinEqB},
+  {"fdGenNonLinEqB", 4, BIfdGenNonLinEqB},
+  {"fdGenLinEqB_body", 4, BIfdGenLinEqB_body},
+  {"fdGenLinNotEqB", 4, BIfdGenLinNotEqB},
+  {"fdGenNonLinNotEqB", 4, BIfdGenNonLinNotEqB},
+  {"fdGenLinNotEqB_body", 4, BIfdGenLinNotEqB_body},
+  {"fdGenLinLessEqB", 4, BIfdGenLinLessEqB},
+  {"fdGenLinLessEqB_body", 4, BIfdGenLinLessEqB_body},
+  {"fdGenNonLinLessEqB", 4, BIfdGenNonLinLessEqB},
 
 // fdcd.cc
-  BIadd("fdConstrDisjSetUp", 4, BIfdConstrDisjSetUp);
-  BIadd("fdConstrDisj", 3, BIfdConstrDisj);
-  BIadd("fdConstrDisj_body", 3, BIfdConstrDisj_body);
+  {"fdConstrDisjSetUp", 4, BIfdConstrDisjSetUp},
+  {"fdConstrDisj", 3, BIfdConstrDisj},
+  {"fdConstrDisj_body", 3, BIfdConstrDisj_body},
   
-  BIadd("fdGenLinEqCD", 4, BIfdGenLinEqCD);
-  BIadd("fdGenLinEqCD_body", 4, BIfdGenLinEqCD_body);
-  BIadd("fdGenNonLinEqCD", 4, BIfdGenNonLinEqCD);
-  BIadd("fdGenLinNotEqCD", 4, BIfdGenLinNotEqCD);
-  BIadd("fdGenLinNotEqCD_body", 4, BIfdGenLinNotEqCD_body);
-  BIadd("fdGenNonLinNotEqCD", 4, BIfdGenNonLinNotEqCD);
-  BIadd("fdGenLinLessEqCD", 4, BIfdGenLinLessEqCD);
-  BIadd("fdGenLinLessEqCD_body", 4, BIfdGenLinLessEqCD_body);
-  BIadd("fdGenNonLinLessEqCD", 4, BIfdGenNonLinLessEqCD);
+  {"fdGenLinEqCD", 4, BIfdGenLinEqCD},
+  {"fdGenLinEqCD_body", 4, BIfdGenLinEqCD_body},
+  {"fdGenNonLinEqCD", 4, BIfdGenNonLinEqCD},
+  {"fdGenLinNotEqCD", 4, BIfdGenLinNotEqCD},
+  {"fdGenLinNotEqCD_body", 4, BIfdGenLinNotEqCD_body},
+  {"fdGenNonLinNotEqCD", 4, BIfdGenNonLinNotEqCD},
+  {"fdGenLinLessEqCD", 4, BIfdGenLinLessEqCD},
+  {"fdGenLinLessEqCD_body", 4, BIfdGenLinLessEqCD_body},
+  {"fdGenNonLinLessEqCD", 4, BIfdGenNonLinLessEqCD},
+  {"fdPlusCD", 4, BIfdPlusCD_rel},
+  {"fdPlusCD_body", 4, BIfdPlusCD_rel_body},
+  {"fdMultCD", 4, BIfdMultCD_rel},
+  {"fdMultCD_body", 4, BIfdMultCD_rel_body},
 
-  BIadd("fdPlusCD", 4, BIfdPlusCD_rel);
-  BIadd("fdPlusCD_body", 4, BIfdPlusCD_rel_body);
-  BIadd("fdMultCD", 4, BIfdMultCD_rel);
-  BIadd("fdMultCD_body", 4, BIfdMultCD_rel_body);
+  {"fdLessEqOffCD", 4, BIfdLessEqOffCD},
+  {"fdLessEqOffCD_body", 4, BIfdLessEqOffCD_body},
+  {"fdNotEqCD", 3, BIfdNotEqCD},
+  {"fdNotEqCD_body", 3, BIfdNotEqCD_body},
+  {"fdNotEqOffCD", 4, BIfdNotEqOffCD},
+  {"fdNotEqOffCD_body", 4, BIfdNotEqOffCD_body},
 
-  BIadd("fdLessEqOffCD", 4, BIfdLessEqOffCD);
-  BIadd("fdLessEqOffCD_body", 4, BIfdLessEqOffCD_body);
-  BIadd("fdNotEqCD", 3, BIfdNotEqCD);
-  BIadd("fdNotEqCD_body", 3, BIfdNotEqCD_body);
-  BIadd("fdNotEqOffCD", 4, BIfdNotEqOffCD);
-  BIadd("fdNotEqOffCD_body", 4, BIfdNotEqOffCD_body);
-
-  BIadd("fdPutLeCD", 3, BIfdPutLeCD);
-  BIadd("fdPutGeCD", 3, BIfdPutGeCD);
-  BIadd("fdPutListCD", 4, BIfdPutListCD);
-  BIadd("fdPutIntervalCD", 4, BIfdPutIntervalCD);
-  BIadd("fdPutNotCD", 3, BIfdPutNotCD);
+  {"fdPutLeCD", 3, BIfdPutLeCD},
+  {"fdPutGeCD", 3, BIfdPutGeCD},
+  {"fdPutListCD", 4, BIfdPutListCD},
+  {"fdPutIntervalCD", 4, BIfdPutIntervalCD},
+  {"fdPutNotCD", 3, BIfdPutNotCD},
 
 // fdwatch.cc
-  BIadd("fdWatchDom1", 2, BIfdWatchDom1);
-  BIadd("fdWatchDom2", 4, BIfdWatchDom2);
-  BIadd("fdWatchDom3", 6, BIfdWatchDom3);
+  {"fdWatchDom1", 2, BIfdWatchDom1},
+  {"fdWatchDom2", 4, BIfdWatchDom2},
+  {"fdWatchDom3", 6, BIfdWatchDom3},
 
-  BIadd("fdWatchBounds1", 3, BIfdWatchBounds1);
-  BIadd("fdWatchBounds2", 6, BIfdWatchBounds2);
-  BIadd("fdWatchBounds3", 9, BIfdWatchBounds3);
+  {"fdWatchBounds1", 3, BIfdWatchBounds1},
+  {"fdWatchBounds2", 6, BIfdWatchBounds2},
+  {"fdWatchBounds3", 9, BIfdWatchBounds3},
 
 // fdmisc.cc
-  BIadd("fdCardSched", 4, BIfdCardSched);
-  BIadd("fdCardSched_body", 4, BIfdCardSched_body);
-  BIadd("fdCardSchedControl", 5, BIfdCardSchedControl);
-  BIadd("fdCardSchedControl_body", 5, BIfdCardSchedControl_body);
-  BIadd("fdCDSched", 4, BIfdCDSched);
-  BIadd("fdCDSched_body", 4, BIfdCDSched_body);
-  BIadd("fdCDSchedControl", 5, BIfdCDSchedControl);
-  BIadd("fdCDSchedControl_body", 5, BIfdCDSchedControl_body);
-  BIadd("fdNoOverlap", 6, BIfdNoOverlap);
-  BIadd("fdNoOverlap_body", 6, BIfdNoOverlap_body);
-  BIadd("fdGenLinEqKillB", 4, BIfdGenLinEqKillB); 
-  BIadd("fdGenLinEqKillB_body", 4, BIfdGenLinEqKillB_body);
-  BIadd("fdGenLinLessEqKillB", 4, BIfdGenLinLessEqKillB); 
-  BIadd("fdGenLinLessEqKillB_body", 4, BIfdGenLinLessEqKillB_body);
-  BIadd("fdCardBIKill", 4, BIfdCardBIKill); 
-  BIadd("fdCardBIKill_body", 4, BIfdCardBIKill_body);
-  BIadd("fdInKillB", 3, BIfdInKillB); 
-  BIadd("fdInKillB_body", 3, BIfdInKillB_body);
-  BIadd("fdNotInKillB", 3, BIfdNotInKillB); 
-  BIadd("fdNotInKillB_body", 3, BIfdNotInKillB_body);
-  BIadd("fdCopyDomain", 2, BIfdCopyDomain);
-  BIadd("fdDivDomCons", 3, BIfdDivIntervalCons);
-  BIadd("getCopyStat", 1, BIgetCopyStat);
+  {"fdCardSched", 4, BIfdCardSched},
+  {"fdCardSched_body", 4, BIfdCardSched_body},
+  {"fdCardSchedControl", 5, BIfdCardSchedControl},
+  {"fdCardSchedControl_body", 5, BIfdCardSchedControl_body},
+  {"fdCDSched", 4, BIfdCDSched},
+  {"fdCDSched_body", 4, BIfdCDSched_body},
+  {"fdCDSchedControl", 5, BIfdCDSchedControl},
+  {"fdCDSchedControl_body", 5, BIfdCDSchedControl_body},
+  {"fdNoOverlap", 6, BIfdNoOverlap},
+  {"fdNoOverlap_body", 6, BIfdNoOverlap_body},
+  {"fdGenLinEqKillB", 4, BIfdGenLinEqKillB},
+  {"fdGenLinEqKillB_body", 4, BIfdGenLinEqKillB_body},
+  {"fdGenLinLessEqKillB", 4, BIfdGenLinLessEqKillB},
+  {"fdGenLinLessEqKillB_body", 4, BIfdGenLinLessEqKillB_body},
+  {"fdCardBIKill", 4, BIfdCardBIKill},
+  {"fdCardBIKill_body", 4, BIfdCardBIKill_body},
+  {"fdInKillB", 3, BIfdInKillB},
+  {"fdInKillB_body", 3, BIfdInKillB_body},
+  {"fdNotInKillB", 3, BIfdNotInKillB},
+  {"fdNotInKillB_body", 3, BIfdNotInKillB_body},
+  {"fdCopyDomain", 2, BIfdCopyDomain},
+  {"fdDivDomCons", 3, BIfdDivIntervalCons},
+  {"getCopyStat", 1, BIgetCopyStat},
+  {0,0,0,0,0}
+};
+
+void BIinitFD(void)
+{
+  BIaddSpec(biSpec);
 }
 
 
