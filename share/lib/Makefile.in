@@ -384,6 +384,14 @@ boot-all:
 		OZ_LIB=. \
 		OZ_LOAD=root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:=
 
+boot--%:
+	$(MAKE) $* \
+		OZC=$(SRCDIR)/boot-ozc.sh \
+		OZENGINE=$(SRCDIR)/oze.sh \
+		OZINIT=Init.ozf \
+		OZ_LIB=. \
+		OZ_LOAD=root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:=
+
 check:
 
 #---------------------------------------------------------------------
