@@ -104,7 +104,7 @@ end
 <P>In order to compile this servlet,
 you have to do:
 <code display proglang=sh>
-ozc --execpath=$OZHOME -x small.oz -o small.cgi
+ozc --execpath=$OZHOME/bin -x small.oz -o small.cgi
 </code>
 <P>The <<execpath>> argument is needed because the
 servlet needs an absolute path.
