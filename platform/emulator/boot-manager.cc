@@ -452,6 +452,7 @@ OZ_BI_define(BIObtainGetInternal,1,1) {
  retry_mod:
   module = tagged2Dictionary(dictionary_of_modules)->getArg(oz_atom(name));
   if (module)
+    OZ_RETURN(module);
   // Check whether it is a base module
   {
     ModuleEntry * E = find_module(base_module_table, name);
