@@ -4,7 +4,11 @@ import
 export
    Open
    OpenNetInfo
+   Client
+   Server
 define
    Open=Main.open
    OpenNetInfo=Main.openNetInfo
+   Client=Main.client
+   Server=Main.server
 end
