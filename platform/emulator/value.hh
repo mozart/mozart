@@ -617,7 +617,6 @@ const int Co_Mask = (1<<Co_Bits)-1;
 enum TypeOfConst {
   Co_BigInt,
   Co_Foreign_Pointer,
-  Co_Unused2,
   Co_Thread,
   Co_Abstraction,
   Co_Builtin,
@@ -632,13 +631,11 @@ enum TypeOfConst {
   Co_Port,
   Co_Chunk,
   Co_HeapChunk,
-  Co_BitArray,
   Co_Array,
   Co_Dictionary,
   Co_Lock,
   Co_Class,
-  Co_SituatedExtension,
-  Co_ConstExtension
+  Co_Extension
 };
 
 #define Co_ChunkStart Co_Object
@@ -658,7 +655,7 @@ private:
 public:
   USEHEAPMEMORY;
   OZPRINTLONG;
-  ~ConstTerm() {} // needed for ConstExtension class
+  ~ConstTerm() {} // needed for Extension class
   ConstTerm(TypeOfConst t) { init(t); }
   void init(TypeOfConst t) { tag = t<<1; }
   Bool gcIsMarked(void)        { return tag&1; }
@@ -702,7 +699,6 @@ protected:
     boardOrGName.setType(CWH_Board);
   }
 public:
-  ~ConstTermWithHome() {} // needed for SituatedExtension class
   ConstTermWithHome(Board *bb, TypeOfConst tt) : ConstTerm(tt) { setBoard(bb);}
 
   void init(Board *bb, TypeOfConst tt) { ConstTerm::init(tt); setBoard(bb); }
