@@ -57,7 +57,7 @@ STANDARDSRC1 = \
 	Array.oz Dictionary.oz Exception.oz Lazy.oz
 STANDARDSRC = $(STANDARDSRC1:%=$(SRCDIR)/Standard/%) $(SRCDIR)/Standard.oz
 
-INITSRC1 = URL.oz
+INITSRC1 = URL.oz Prop.oz
 INITSRC = $(INITSRC1:%=$(SRCDIR)/Init/%) $(SRCDIR)/Init.oz
 
 SPSRC1 = System.oz Debug.oz Foreign.oz Error.oz Finalize.oz
