@@ -1519,7 +1519,7 @@ void AM::pushTaskOutline(ProgramCounter pc,
  *   -2 [fail]
  */
 
-int isList(OZ_Term l, Bool suspend=NO, Bool checkChar=NO)
+int isList(OZ_Term l, Bool suspend, Bool checkChar)
 {
   int len = 0;
   while (1) {
