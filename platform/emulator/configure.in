@@ -105,6 +105,7 @@ AC_ARG_WITH(sunpro,
 	AC_MSG_RESULT(no))
 
 OZ_CXX_CHOOSE
+OZ_CC_CHOOSE
 AC_LANG_CPLUSPLUS
 OZ_PROG_FLEX
 OZ_PROG_BISON
@@ -307,7 +308,7 @@ case $platform in
     ;;
     *rhapsody | *darwin)
 	AC_DEFINE(RHAPSODY)
-	TOOLLDCMD="ld -dynamic -bundle -undefined suppress"
+	TOOLLDCMD="$CC -dynamic -bundle -undefined suppress"
 	oz_enable_modules_static=yes
     ;;
     *)
@@ -1455,7 +1456,7 @@ dnl ------------------------------------------------------------------
 
 OZTOOL_CXX="$CXX${CXXAVOID:+ }$CXXAVOID"
 AC_SUBST(OZTOOL_CXX)
-OZ_CC_CHOOSE
+dnl OZ_CC_CHOOSE
 AC_LANG_SAVE
 AC_LANG_C
 OZ_CC_FIRST_OPTION($PICOPTIONSCC,OZTOOLDYNOPTCC)
