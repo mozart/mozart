@@ -28,16 +28,33 @@ export
 define
    FilePrefix = ["#include <mozart.h>"
 		 "#include <gtk/gtk.h>"
-		 "#include <GOZData.h>\n"
+		 "#include <GOZData.h>"
+		 "#include <stdio.h>\n"
 		 "extern OZ_Term createGdkEvent(GdkEvent *event);\n"
 		 "OZ_Term makeArgTerm(GtkArg *arg) {"
 		 "  GtkType type = arg->type;\n"
 		 "  if (type == GTK_TYPE_INT) {"
 		 "    return GOZ_ARG_int(arg->d.int_data);"
-		 "  } else if (type == GTK_TYPE_DOUBLE) {"
+		 "  } else if (type == GTK_TYPE_UINT) {"
+		 "    return GOZ_ARG_int(arg->d.uint_data);"
+		 "  } else if (type == GTK_TYPE_LONG) {"
+		 "    return GOZ_ARG_int(arg->d.long_data);"
+		 "  } else if (type == GTK_TYPE_ULONG) {"
+		 "    return GOZ_ARG_int(arg->d.ulong_data);"
+		 "  } else if (type == GTK_TYPE_CHAR) {"
+		 "    return GOZ_ARG_int(arg->d.char_data);"
+		 "  } else if (type == GTK_TYPE_UCHAR) {"
+		 "    return GOZ_ARG_int(arg->d.uchar_data);"
+		 "  } else if (type == GTK_TYPE_FLOAT) {"
 		 "    return GOZ_ARG_double(arg->d.float_data);"
+		 "  } else if (type == GTK_TYPE_DOUBLE) {"
+		 "    return GOZ_ARG_double(arg->d.double_data);"
 		 "  } else if (type == GTK_TYPE_BOOL) {"
 		 "    return GOZ_ARG_int(arg->d.bool_data);"
+ 		 "  } else if (type == GTK_TYPE_ENUM) {"
+		 "    return GOZ_ARG_int(arg->d.int_data);"
+ 		 "  } else if (type == GTK_TYPE_FLAGS) {"
+		 "    return GOZ_ARG_int(arg->d.int_data);"
 		 "  } else if (type == GTK_TYPE_STRING) {"
 		 "    return GOZ_ARG_string(arg->d.string_data);"
 		 "  } else if (type == GTK_TYPE_POINTER) {"
@@ -131,6 +148,7 @@ define
 	    GtkConstants, writeConstants(Cr)
 	 [] nil  then
 	    TextFile, putS({ToS "  }"})
+	    TextFile, putS({ToS "  fprintf(stderr, \"makeArgTerm: selecting default fallback on type '%d'\n\", arg->type);"})
 	    TextFile, putS("  return GOZ_ARG_object(arg->d.object_data);")
 	 end
       end
