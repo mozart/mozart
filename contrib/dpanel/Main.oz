@@ -9,6 +9,20 @@ import
 export
    open:Start
 define
+   %%
+   %%TODO:
+   %%
+   %% Activity of entities does not work. An entity was
+   %% said to be active when its credit count changed from
+   %% one sample to another. This relied on implist message
+   %% credit that has been removed from the system.
+   %%
+   %% To get proper values a sample should be taken before
+   %% dpPane starts to get rid of accumulated information.
+   %%
+   
+   
+
    MainLock = {NewLock}
    Running={NewCell false}
    RunSync = {NewCell unit}
