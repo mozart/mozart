@@ -2372,12 +2372,14 @@ void Tertiary::globalizeTert()
     {
       Object *o = (Object*) this;
       RecOrCell state = o->getState();
-      Assert(!stateIsCell(state));
-      SRecord *r = getRecord(state);
-      Assert(r!=NULL);
-      Tertiary *cell = tagged2Tert(OZ_newCell(makeTaggedSRecord(r)));
-      cell->globalizeTert();
-      o->setState(cell);
+      if (!stateIsCell(state)) {
+        SRecord *r = getRecord(state);
+        Assert(r!=NULL);
+        Tertiary *cell = tagged2Tert(OZ_newCell(makeTaggedSRecord(r)));
+        cell->globalizeTert();
+        o->setState(cell);
+      }
+      break;
     }
 
 
