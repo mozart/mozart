@@ -322,11 +322,10 @@ static char *checkAccess(char *file) {
 static char *scExpndFileName(char *fileName, char *curfile) {
   // full pathname given?
   if (fileName[0] == '/' ||
-      !strncmp(fileName, "./", 2) ||
 #ifdef WINDOWS
       fileName[1] == ':' ||   // good old DOS filename like E:...
 #endif
-      !strncmp(fileName, "../", 3))
+      !strncmp(fileName, "./", 2))
     return checkAccess(fileName);
 
   // expand "~"
@@ -358,21 +357,24 @@ static char *scExpndFileName(char *fileName, char *curfile) {
     return ret;
   }
 
-  int i = strlen(curfile);              // search in "current" directory
-  while (i != 0 && curfile[i] != '/')   // i. e., the dir part of curfile
-    i--;
-  if (i != 0) {
-    i++;
-    char *help = new char[i + strlen(fileName) + 1];
-    strncpy(help, curfile, i);
-    strcpy(&help[i], fileName);
-    char *ret = checkAccess(help);
-    delete[] help;
+  // search in "current" directory
+  if (curfile != NULL) {
+    int i = strlen(curfile);
+    while (i != 0 && curfile[i - 1] != '/')   // i. e., the dir part of curfile
+      i--;
+    if (i != 0) {
+      char *help = new char[i + strlen(fileName) + 1];
+      strncpy(help, curfile, i);
+      strcpy(&help[i], fileName);
+      char *ret = checkAccess(help);
+      delete[] help;
 
-    if (ret != NULL)
-      return ret;
+      if (ret != NULL)
+        return ret;
+    }
   }
 
+  // search in OZPATH
   char *path = getenv("OZPATH");
   if (path == NULL)
     path = ".";
@@ -398,6 +400,8 @@ static char *scExpndFileName(char *fileName, char *curfile) {
       return NULL;
     path = &path[i + 1];
   }
+
+  return NULL;
 }
 
 
@@ -1106,12 +1110,18 @@ static void xy_init() {
 }
 
 int xy_init_from_file(char *file) {
-  xyin = fopen(file, "r");
+  char *fullname = scExpndFileName(file, NULL);
+  if (fullname == NULL)
+    return 0;
+  xyin = fopen(fullname, "r");
   if (xyin == NULL)
     return 0;
   xy_create_buffer(xyin, YY_BUF_SIZE);
   xy_init();
   xylino = 0;   // this is incremented when the first line is read
+  strncpy(xyFileName,fullname,99);
+  xyFileNameAtom = OZ_atom(xyFileName);
+  delete[] fullname;
   return 1;
 }
 
@@ -1120,6 +1130,8 @@ void xy_init_from_string(char *str) {
   xylastline = YY_CURRENT_BUFFER->yy_ch_buf;
   xy_init();
   xylino = 1;
+  strcpy(xyFileName,"/");
+  xyFileNameAtom = OZ_atom(xyFileName);
 }
 
 void xy_exit() {

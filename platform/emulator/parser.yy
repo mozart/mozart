@@ -65,7 +65,8 @@ OZ_C_proc_begin(ozparser_parseFile, 2)
   OZ_declareVirtualStringArg(0, str);
   xy_errorMessages = OZ_nil();
   CTerm res = parseFile(str);
-  printf("%s",OZ_virtualStringToC(xy_errorMessages));
+  if (xy_errorMessages != OZ_nil())
+    printf("%s%c",OZ_virtualStringToC(xy_errorMessages),MSG_ERROR);
   return OZ_unify(OZ_getCArg(1), res);
 }
 OZ_C_proc_end
@@ -75,7 +76,8 @@ OZ_C_proc_begin(ozparser_parseVirtualString, 2)
   OZ_declareVirtualStringArg(0, str);
   xy_errorMessages = OZ_nil();
   CTerm res = parseVirtualString(str);
-  printf("%s",OZ_virtualStringToC(xy_errorMessages));
+  if (xy_errorMessages != OZ_nil())
+    printf("%s%c",OZ_virtualStringToC(xy_errorMessages),MSG_ERROR);
   return OZ_unify(OZ_getCArg(1), res);
 }
 OZ_C_proc_end
@@ -1376,14 +1378,11 @@ void xyreportError(char *kind, char *msg, char *file, int line, int offset) {
   if (strcmp(kind,"warning"))
     yynerrs++;
 
-  char s[256];
-  sprintf(s,"\n%c",MSG_ERROR);
-
   append("\n%************ ");
   append(kind);
   append(" **********\n%**\n%**     ");
   append(msg);
-  append(s);
+  append("\n");
 
   if (line < 0)
     return;
@@ -1412,6 +1411,7 @@ void xyreportError(char *kind, char *msg, char *file, int line, int offset) {
   }
 
   append(":\n%**\n%**     ");
+  char s[256];
   int col = 0, curoff = 0, n = -1;
   do {                          /* print the line (including '\n') */
     if (curoff == offset)
@@ -1480,16 +1480,12 @@ static CTerm parse() {
 static CTerm parseFile(char *file) {
   if (!xy_init_from_file(file))
     return newCTerm("fileNotFound");
-  strncpy(xyFileName,file,99);
-  xyFileNameAtom = OZ_atom(xyFileName);
   CTerm res = parse();
   fclose(xyin);
   return res;
 }
 
 static CTerm parseVirtualString(char *str) {
-  strcpy(xyFileName,"/");
-  xyFileNameAtom = OZ_atom(xyFileName);
   xy_init_from_string(str);
   return parse();
 }
