@@ -144,7 +144,6 @@ define
 		  Sock = {New TextSocket server(port: ?Port)}
 	       end
 	       {Wait Port}
-	       {Wait Sock}
 	       Socket <- Sock
 	       {Print '\'oz-socket '#case Host of unit then ""
 				     else '"'#Host#'" '
