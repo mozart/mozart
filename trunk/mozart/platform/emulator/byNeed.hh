@@ -38,11 +38,12 @@
 class ByNeedVariable: public GenCVariable {
 private:
   OZ_Term function;
+
+  OZ_Term getFunction() { return function; }
+  void kick(TaggedRef *);
 public:
   ByNeedVariable(); // mm2: fake compiler
   ByNeedVariable(OZ_Term fun) : GenCVariable(OZ_VAR_BYNEED),function(fun){}
-  OZ_Term getFunction() { return function; }
-  void kick(TaggedRef *);
 
   virtual OZ_Return unifyV(TaggedRef* vPtr,TaggedRef t,ByteCode* scp);
   virtual OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef /* val */) {
@@ -65,19 +66,5 @@ public:
   }
   virtual OZ_Term inspectV();
 };
-
-
-inline
-Bool isByNeedVariable(TaggedRef term)
-{
-  GCDEBUG(term);
-  return isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_BYNEED);
-}
-
-inline
-ByNeedVariable *tagged2ByNeedVariable(TaggedRef t) {
-  Assert(isByNeedVariable(t));
-  return (ByNeedVariable *) tagged2CVar(t);
-}
 
 #endif /* __BYNEED__HH__ */
