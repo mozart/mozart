@@ -180,9 +180,7 @@ void Propagator_VI_VD_I::simplify(void)
     } else if (i != is[i]) {  // multiply apprearing var in reg_x 
       reg_a[is[i]] += reg_a[i];
       reg_x[i] = 0;
-    } /* else if (reg_a[i] == 0) {
-      reg_x[i] = 0;
-    } */
+    } 
   }
   int from = 0, to = 0;
   for (; from < reg_sz; from += 1) {
