@@ -446,7 +446,6 @@ void rebind(TaggedRef *refPtr, TaggedRef term2)
 
 OZ_Return oz_unify(TaggedRef t1, TaggedRef t2, ByteCode *scp)
 {
-  Assert(am.checkShallow(scp));
   unifyStack.pushMark();
   CHECK_NONVAR(t1); CHECK_NONVAR(t2);
 

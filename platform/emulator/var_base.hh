@@ -221,7 +221,6 @@ public:
     Assert(this->getType() == glob_var->getType() ||
            (this->getType() == OZ_VAR_BOOL &&
             glob_var->getType() == OZ_VAR_FD));
-    // Assert(am.inShallowGuard() || am.isLocalSVar(this) && ! am.isLocalSVar(glob_var));
     suspList = oz_installPropagators(suspList,
                                      glob_var->getSuspList(),
                                      GETBOARD(glob_var));
