@@ -22,6 +22,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl,
   AtomMin, AtomMax, AtomMid,
   AtomNaive, AtomSize, AtomNbSusps,
+  AtomDebugCall, AtomDebugCond, AtomDebugHandler, AtomDebugLock,
 
   NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,
   NameOoFastMeth,NameOoDefaults,NameOoRequiredArg,NameOoDefaultVar,
@@ -81,6 +82,11 @@ void initLiterals()
   AtomBlocked      = makeTaggedAtom("blocked");
   AtomMerged       = makeTaggedAtom("merged");
   AtomFailed       = makeTaggedAtom("failed");
+
+  AtomDebugCall    = makeTaggedAtom("call");
+  AtomDebugCond    = makeTaggedAtom("cond");
+  AtomDebugHandler = makeTaggedAtom("handler");
+  AtomDebugLock    = makeTaggedAtom("lock");
 
   NameUnit         = getUniqueName("unit");
 

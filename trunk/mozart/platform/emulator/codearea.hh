@@ -94,7 +94,11 @@ class CodeArea {
   friend inline void printAtomTab();
   friend inline void printNameTab();
 
- protected:
+  static Bool getNextDebugInfoArgs(ProgramCounter from,
+				   TaggedRef &file, TaggedRef &line, 
+				   TaggedRef &column, TaggedRef &comment);
+
+protected:
   ByteCode *codeBlock;    /* a block of abstract machine code */
   int size;               /* size of this block */
   CodeArea *nextBlock;
@@ -129,21 +133,19 @@ public:
   CodeArea(int sz);
 
   static void printDef(ProgramCounter PC);
-  static TaggedRef dbgGetDef(ProgramCounter PC);
-  static TaggedRef varNames(ProgramCounter PC, RefsArray G, RefsArray Y);
-  static TaggedRef argumentList(RefsArray X, int arity);
-  static void getDefinitionArgs(ProgramCounter PC,
-				Reg &reg, ProgramCounter &next, TaggedRef &file,
-				int &line, PrTabEntry *&pred);
+  static TaggedRef dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
+			     int frameId = -1);
+  static TaggedRef getFrameVariables(ProgramCounter, RefsArray, RefsArray);
+  static void getDefinitionArgs(ProgramCounter PC, Reg &reg,
+				ProgramCounter &next, TaggedRef &file,
+				TaggedRef &line, TaggedRef &column,
+				TaggedRef &predName);
 
-  static void getDebugInfoArgs(ProgramCounter PC, TaggedRef &file, int &line, 
-			       int &column, TaggedRef &comment);
   /* with one argument it means that we need the code till the "query"  */
   static void display (ProgramCounter from, int size = 1, FILE* = stderr);
 
   static ProgramCounter definitionStart(ProgramCounter from);
   static ProgramCounter definitionEnd(ProgramCounter from);
-  static ProgramCounter nextDebugInfo(ProgramCounter from);
 
   /* load statements from "codeFile" until "ENDOFFILE", acknowledge if ok*/
   static Bool load(CompStream *fd, ProgramCounter &newPC);
@@ -427,8 +429,10 @@ public:
 
 #ifdef FASTREGACCESS
 inline Reg regToInt(Reg N) { return (N / sizeof(TaggedRef)); }
+inline Reg intToReg(Reg N) { return N * sizeof(TaggedRef); }
 #else
 inline Reg regToInt(Reg N) { return N; }
+inline Reg intToReg(Reg N) { return N; }
 #endif
 
 

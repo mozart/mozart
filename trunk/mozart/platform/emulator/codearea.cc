@@ -194,100 +194,85 @@ const char *getBIName(ProgramCounter PC)
 
 void CodeArea::printDef(ProgramCounter PC)
 {
-  TaggedRef file, comment;
-  int line, column;
-  ProgramCounter pc;
-
-#ifdef DEBUG
-  pc = nextDebugInfo(PC);
-  if (pc != NOCODE) {
-    getDebugInfoArgs(pc,file,line,column,comment);
-    message("\tnext debug info: in file \"%s\", line %d, column %d, comment: %s, PC=%ld)\n",
-	    OZ_atomToC(file),line,column,toC(comment),PC);
-    return;  
-  }
-#endif
-
-  pc = definitionStart(PC);
-  if (pc == NOCODE || pc == NOCODE_GLOBALVARNAME) {
-    message("\tSpecial task or on toplevel (PC=%s)\n",opToString[(int)getOpcode(PC)]);
+  ProgramCounter definitionPC = definitionStart(PC);
+  if (definitionPC == NOCODE) {
+    message("\tspecial task or on toplevel (PC=%s)\n",
+	    opToString[(int)getOpcode(PC)]);
     return;
   }
-    
+
   Reg reg;
   ProgramCounter next;
-  PrTabEntry *pred;
-  
-  getDefinitionArgs(pc,reg,next,file,line,pred);
+  TaggedRef file, line, column, comment, predName;
+  getDefinitionArgs(definitionPC,reg,next,file,line,column,predName);
+  getNextDebugInfoArgs(PC,file,line,column,comment);
 
-  const char *predName;
-  if (!pred)
-    predName = "???";
-  else if (*pred->getPrintName())
-    predName = pred->getPrintName();
-  else
-    predName = 0;
-
-  if (predName)
+  const char *name = OZ_atomToC(predName);
+  if (*name && column != makeTaggedNULL())
+    message("\tprocedure '%s' in file \"%s\", line %d, column %d, PC=%ld\n",
+	    name,OZ_atomToC(file),OZ_intToC(line),OZ_intToC(column),(int)PC);
+  else if (*name)
     message("\tprocedure '%s' in file \"%s\", line %d, PC=%ld\n",
-	    predName,OZ_atomToC(file),line,PC);
+	    name,OZ_atomToC(file),OZ_intToC(line),(int)PC);
+  else if (column != makeTaggedNULL())
+    message("\tprocedure in file \"%s\", line %d, column %d, PC=%ld\n",
+	    OZ_atomToC(file),OZ_intToC(line),OZ_intToC(column),(int)PC);
   else
     message("\tprocedure in file \"%s\", line %d, PC=%ld\n",
-	    predName,OZ_atomToC(file),line,PC);
+	    OZ_atomToC(file),OZ_intToC(line),(int)PC);
 }
 
-TaggedRef CodeArea::dbgGetDef(ProgramCounter PC)
+TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
+			      int frameId)
 {
-  ProgramCounter pc = definitionStart(PC);
-
-  if (pc == NOCODE)
-    return OZ_atom("toplevel");
-  if (pc == NOCODE_GLOBALVARNAME) 
-    return nil();
-
   Reg reg;
   ProgramCounter next;
-  PrTabEntry *pred;
-  
-  TaggedRef file;
-  int line;
-  // file & line might be overwritten some lines later...
-  getDefinitionArgs(pc,reg,next,file,line,pred);
+  TaggedRef file, line, column, comment, predName;
+  // file & line might be overwritten some lines later ...
+  getDefinitionArgs(definitionPC,reg,next,file,line,column,predName);
 
   // if we are lucky there's some debuginfo and we can determine
   // the exact position inside the procedure application
-  TaggedRef _dbgComment; int _dbgColumn;
-  ProgramCounter dbgPC = CodeArea::nextDebugInfo(PC);
-  if (dbgPC != NOCODE)
-    CodeArea::getDebugInfoArgs(dbgPC,file,line,_dbgColumn,_dbgComment);
-    
-  TaggedRef pairlist = 
-    OZ_cons(OZ_pairA("PC", OZ_int((int)PC)),
-	    OZ_cons(OZ_pairA("name", OZ_atom(pred ? 
-					     pred->getPrintName() : "???")),
-		    OZ_cons(OZ_pairA("file", file),
-			    OZ_cons(OZ_pairA("line", OZ_int(line)),
-				    OZ_nil()))));
+  //--** problem: these are the coordinates of the corresponding exit
+  //     instruction
+  getNextDebugInfoArgs(PC,file,line,column,comment);
 
-  return OZ_recordInit(OZ_atom("proc"), pairlist);
+  TaggedRef pairlist = nil();
+  if (column != makeTaggedNULL()) {
+    pairlist = cons(OZ_pairA("column",column),pairlist);
+  }
+  int iline = smallIntValue(line);
+  pairlist =
+    cons(OZ_pairAI("time",findTimeStamp(PC)),
+	 cons(OZ_pairA("name",predName),
+	      cons(OZ_pairA("file",file),
+		   cons(OZ_pairAI("line",iline < 0? -iline: iline),
+			cons(OZ_pairAI("PC",(int)PC),
+			     cons(OZ_pairA("kind",AtomDebugCall),
+				  cons(OZ_pairA("origin",OZ_atom("dbgGetDef")),
+				       pairlist)))))));
+  if (frameId != -1)
+    pairlist = cons(OZ_pairAI("frameID",frameId),pairlist);
+
+  return OZ_recordInit(OZ_atom("entry"), pairlist);
 }
 
-TaggedRef CodeArea::varNames(ProgramCounter PC, RefsArray G, RefsArray Y)
-{
+TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
+				      RefsArray Y, RefsArray G) {
   TaggedRef locals = nil();
   TaggedRef globals = nil();
 
   ProgramCounter aux = definitionEnd(PC);
 
-  if (aux != NOCODE && aux != NOCODE_GLOBALVARNAME) {
+  if (aux != NOCODE) {
     aux += sizeOf(getOpcode(aux));
   
     for (int i=0; getOpcode(aux) == LOCALVARNAME; i++) {
       if (Y) {
 	TaggedRef aux1 = getLiteralArg(aux+1);
-	locals = cons(OZ_mkTupleC("#", 2,	aux1, 
-				  Y[i] ? Y[i] : OZ_atom("unallocated")), 
-		      locals);
+	if (!literalEq(aux1, AtomEmpty) && Y[i] != makeTaggedNULL()) {
+	  locals = cons(OZ_mkTupleC("#", 2, aux1, Y[i]), locals);
+	}
       }
       aux += sizeOf(getOpcode(aux));
     }
@@ -295,7 +280,9 @@ TaggedRef CodeArea::varNames(ProgramCounter PC, RefsArray G, RefsArray Y)
     if (G) {
       for (int i=0; getOpcode(aux) == GLOBALVARNAME; i++) {
 	TaggedRef aux1 = getLiteralArg(aux+1);
-	globals = cons(OZ_mkTupleC("#", 2, aux1, G[i]), globals);
+	if (!literalEq(aux1, AtomEmpty)) {
+	  globals = cons(OZ_mkTupleC("#", 2, aux1, G[i]), globals);
+	}
 	aux += sizeOf(getOpcode(aux));
       }
     }
@@ -310,86 +297,77 @@ TaggedRef CodeArea::varNames(ProgramCounter PC, RefsArray G, RefsArray Y)
   return ret;
 }
 
-TaggedRef CodeArea::argumentList(RefsArray X, int arity)
-{
-  TaggedRef ret;
-  ret = nil();
-  for(--arity; arity>=0; arity--)
-    ret = cons(X[arity], ret);
-  return ret;
-}
-
 ProgramCounter CodeArea::definitionStart(ProgramCounter from)
 {
   ProgramCounter ret = definitionEnd(from);
-  return (ret == NOCODE || 
-	  ret == NOCODE_GLOBALVARNAME) ? ret : getLabelArg(ret+1);
+  if (ret == NOCODE)
+    return ret;
+  else
+    return getLabelArg(ret+1);
 }
 
 
-ProgramCounter CodeArea::nextDebugInfo(ProgramCounter from)
+Bool CodeArea::getNextDebugInfoArgs(ProgramCounter PC,
+				    TaggedRef &file, TaggedRef &line,
+				    TaggedRef &column, TaggedRef &comment)
 {
-  ProgramCounter end = definitionEnd(from);
-  if (end==NOCODE || end==NOCODE_GLOBALVARNAME) 
-    return NOCODE;
-  
-  ProgramCounter PC = from;
+  ProgramCounter end = definitionEnd(PC);
+  if (end == NOCODE)
+    return NO;
 
-  while (1) {
-    if (PC>=end)
-      return NOCODE;
+  while (PC < end) {
     Opcode op = getOpcode(PC);
     switch (op) {
-    case OZERROR: return NOCODE;
-    case ENDOFFILE: return NOCODE;
+    case DEBUGENTRY:
+    case DEBUGEXIT:
+      file    = getTaggedArg(PC+1);
+      line    = getTaggedArg(PC+2);
+      column  = getTaggedArg(PC+3);
+      comment = getTaggedArg(PC+4);
+      return OK;
     case DEFINITION:
-      PC = definitionEnd(PC+sizeOf(op));
-      continue;
-    case DEBUGENTRY: return PC;
-    case DEBUGEXIT: return PC;
-    default: DISPATCH();
+      PC = getLabelArg(PC+2);
+      break;
+    case ENDOFFILE:
+    case OZERROR:
+      return NO;
+    default:
+      DISPATCH();
     }
   }
-  return NOCODE;
+  return NO;
 }
 
 
 /* find the end of the definition where from points into */
-ProgramCounter CodeArea::definitionEnd(ProgramCounter from)
+ProgramCounter CodeArea::definitionEnd(ProgramCounter PC)
 {
-  if (from==NULL) {
-    return NOCODE;
-  }
-  ProgramCounter PC = from;
-
   while (1) {
     Opcode op = getOpcode(PC);
     switch (op) {
+    case DEFINITION:
+      PC = getLabelArg(PC+2);
+      break;
+    case ENDDEFINITION:
+      return PC;
     case CREATENAMEDVARIABLEX:
     case CREATENAMEDVARIABLEY:
     case CREATENAMEDVARIABLEG:
-    case OZERROR:
+    case TASKXCONT:
+    case TASKCFUNCONT:
+    case TASKDEBUGCONT:
+    case TASKCALLCONT:
+    case TASKLOCK:
+    case TASKSETSELF:
+    case TASKLTQ:
+    case TASKCATCH:
+    case TASKEMPTYSTACK:
+    case TASKPROFILECALL:
+    case TASKACTOR:
     case ENDOFFILE:
+    case OZERROR:
+    case GLOBALVARNAME:   // last instr in CodeArea::init
       return NOCODE;
-      
-    case GLOBALVARNAME:    // last instr in CodeArea::init
-      return NOCODE_GLOBALVARNAME;
-
-    case DEFINITION:
-      {
-	Reg reg;
-	ProgramCounter next;
-	TaggedRef file;
-	int line;
-	PrTabEntry *pred;
-	getDefinitionArgs(PC,reg,next,file,line,pred);
-	PC=next;
-	continue;
-      }
-      
-    case ENDDEFINITION:
-      return PC;
-
     default:
       DISPATCH();
     }
@@ -410,26 +388,19 @@ void displayDef(ProgramCounter from, int ssize)
 
 
 void CodeArea::getDefinitionArgs(ProgramCounter PC,
-				 Reg &reg, ProgramCounter &next, TaggedRef &file,
-				 int &line, PrTabEntry *& pred)
+				 Reg &reg, ProgramCounter &next,
+				 TaggedRef &file, TaggedRef &line,
+				 TaggedRef &column, TaggedRef &predName)
 {
   Assert(getOpcode(PC) == DEFINITION);
-  reg  = regToInt(getRegArg(PC+1));
-  next = getLabelArg(PC+2);
-  pred = getPredArg(PC+3);
-  file = pred ? pred->getFileName() : nil();
-  line = pred ? pred->getLine() : 0;
-}
+  PrTabEntry *pred = getPredArg(PC+3);
 
-void CodeArea::getDebugInfoArgs(ProgramCounter PC,
-				TaggedRef &file, int &line, int &column,
-				TaggedRef &comment)
-{
-  Assert(getOpcode(PC) == DEBUGENTRY || getOpcode(PC) == DEBUGEXIT);
-  file    = getLiteralArg(PC+1);
-  line    = smallIntValue(getNumberArg(PC+2));
-  column  = smallIntValue(getNumberArg(PC+3));
-  comment = getLiteralArg(PC+4);
+  reg      = regToInt(getRegArg(PC+1));
+  next     = getLabelArg(PC+2);
+  file     = pred != NULL? pred->getFileName() : OZ_atom("nofile");
+  line     = OZ_int(pred != NULL? pred->getLine() : 0);
+  column   = makeTaggedNULL();
+  predName = OZ_atom(pred != NULL? pred->getPrintName() : "");
 }
 
 
@@ -503,11 +474,11 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case DEBUGENTRY:
     case DEBUGEXIT:
       {
-	TaggedRef filename, comment;
-	int line, column;
-	getDebugInfoArgs(PC, filename, line, column, comment);
-	fprintf(ofile, "(%s %d %d", toC(filename), line, column);
-	fprintf(ofile, " %s %d)\n", toC(comment), getPosIntArg(PC+5));
+	fprintf(ofile, "(%s ", toC(getTaggedArg(PC+1)));
+	fprintf(ofile, "%s ", toC(getTaggedArg(PC+2)));
+	fprintf(ofile, "%s ", toC(getTaggedArg(PC+3)));
+	fprintf(ofile, "%s %d)\n", toC(getTaggedArg(PC+4)),
+		getPosIntArg(PC+5));
 	DISPATCH();
       }
 
@@ -849,15 +820,12 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       {
 	Reg reg;
 	ProgramCounter next;
-	TaggedRef file;
-	int line;
-	PrTabEntry *pred;
-	getDefinitionArgs(PC,reg,next,file,line,pred);
+	TaggedRef file, line, column, predName;
+	getDefinitionArgs(PC,reg,next,file,line,column,predName);
 	AssRegArray *list = (AssRegArray*) getAdressArg(PC+5);
-
-	fprintf(ofile, "(x(%d) %p pid(%s _ %s %d) _ [",reg,next,
-		pred? pred->getPrintName(): "(NULL)",
-		toC(file), line);
+	fprintf(ofile,"(x(%d) %p pid(%s ",reg,next,toC(predName));
+	fprintf(ofile,"_ %s ",toC(file));
+	fprintf(ofile,"%s) _ [",toC(line));
 	
 	for (int k = 0; k < list->getSize(); k++) {
 	  switch ((*list)[k].kind) {
@@ -1027,4 +995,3 @@ void CodeArea::init(void **instrTable)
   /* mark end with GLOBALVARNAME, so definitionEnd works properly */
   (void) writeOpcode(GLOBALVARNAME,aux);
 }
-
