@@ -259,17 +259,18 @@ OZ_C_proc_begin(BIisTclFilter, 3) {
         switch (atomcmp(a,f)) {
         case 0:
           fs = deref(tagged2LTuple(fs)->getTail());
-          goto skip;
+          as = deref(tagged2LTuple(as)->getTail());
+          break;
         case 1:
           fs = deref(tagged2LTuple(fs)->getTail());
+          break;
         case -1:
           s = isTcl(sr->getFeature(a));
           if (s!=PROCEED)
             goto exit;
+          as = deref(tagged2LTuple(as)->getTail());
+          break;
         }
-
-      skip:
-        as = deref(tagged2LTuple(as)->getTail());
 
       }
     }
