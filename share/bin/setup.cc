@@ -44,7 +44,7 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   GetModuleFileName(NULL, buffer, sizeof(buffer));
   char *ozhome = getOzHome(buffer);
 
-  sprintf(buffer,"%s/platform/%s/ozemulator.exe",ozhome,ozplatform);
+  sprintf(buffer,"%s/platform/%s/emulator.exe",ozhome,ozplatform);
   if (access(buffer,X_OK)) {
     OzPanic(1,"Oz installation incorrect.\n"
 	      "Cannot find '%s'!",buffer);
