@@ -1,0 +1,54 @@
+/*
+ *  Authors:
+ *    Tobias Mueller  (tmueller@ps.uni-sb.de)
+ *
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ *
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ *
+ *  This file is part of Mozart, an implementation
+ *  of Oz 3:
+ *     $MOZARTURL$
+ *
+ *  See the file "LICENSE" or
+ *     $LICENSEURL$
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
+ *  WARRANTIES.
+ *
+ */
+
+// Solver
+
+#ifndef __BOARD_ICC_
+#define __BOARD_ICC_
+
+#if !defined(OUTLINE) && defined(INTERFACE)
+#pragma interface
+#endif
+
+inline
+void Board::resetLocalPropagatorQueue(void) {
+  if (!localPropagatorQueue)
+    return;
+
+#ifdef DEBUG_THREADCOUNT
+  //  existingLTQs -= 1;
+  //  printf("-LTQ=%p\n", localPropagatorQueue); fflush(stdout);
+
+  //  printf("-");fflush(stdout);
+  if (am.isBelowSolveBoard()) {
+;    //printf("!");fflush(stdout);
+  }
+#endif
+
+  localPropagatorQueue->getLPQThread()->getTaskStackRef()->makeEmpty();
+  Assert(localPropagatorQueue);
+  localPropagatorQueue->dispose ();
+  localPropagatorQueue = NULL;
+}
+
+#endif  // __BOARD_ICC_
