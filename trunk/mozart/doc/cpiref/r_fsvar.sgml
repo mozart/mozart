@@ -150,7 +150,7 @@ to="ozdoc:cpitut" key="u_advanced.reified">.
 <Item> This member function has to be applied to each object of type
 <<OZ_FSetVar>> when leaving the function <<propagate()>> of class
 <<OZ_Propagator>> and <em/no/ inconsistency was detected (except it
-was initialised with <<ask()>>). If the set constraint does not denote
+was initialised with <<ask()>>). If the set constraint denotes
 a set value this member function returns <<OZ_FALSE>> and else it
 returns <<OZ_TRUE>>.
 
