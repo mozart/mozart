@@ -369,12 +369,12 @@ public:
     if (ToInt32(cla) != key) {
       Bool defaultsUsed;
       Abstraction *ret = obj->getMethod(meth,arity,X,defaultsUsed);
+      if (ret && ret->isProxy())
+        return NULL;
       if (!defaultsUsed) {
         key   = ToInt32(cla);
         value = ToInt32(ret);
       }
-      if (ret && ret->isProxy())
-        return NULL;
       return ret;
     }
     return (Abstraction*) ToPointer(value);
