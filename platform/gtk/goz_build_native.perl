@@ -191,6 +191,7 @@ sub gen_prelude {
     print $C_WARNING;
 
     # include headers
+    print "#include <string.h>\n";
     print "#include <mozart.h>\n";
     print "#include <goz_support.h>\n";
     foreach my $header (@includes) {

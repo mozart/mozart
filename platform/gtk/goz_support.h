@@ -26,6 +26,7 @@
 
 #include <gtk/gtk.h>
 #include <mozart.h>
+#include <string.h>
 
 /* This is for dummy variable identifiers used for casts */
 #define GOZ_(name) name ## _
