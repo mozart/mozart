@@ -332,14 +332,14 @@ if that value is non-nil."
     (switch-to-buffer cur)))
 
 (defun oz-feed-region (start end)
-  "Consults the region"
+  "Consults the region."
    (interactive "r")
    (oz-hide-errors)
    (let ((contents (buffer-substring start end)))
     (oz-send-string (concat contents "\n"))))
 
 (defun oz-feed-line ()
-  "Consults the region"
+  "Consults one line."
    (interactive)
    (save-excursion
      (let (beg end)
@@ -526,15 +526,15 @@ if that value is non-nil."
 (defconst oz-begin-pattern
       (oz-make-keywords-for-match 
 	         '("local" "class" "meth" "create" "or" "if" "pred" "proc"
-		   "global" "handle" "exists" "case" "begin" "process" "not"
-		   "trigger" "seq")))
+		   "handle" "exists" "case" "begin" "process" "not"
+		   "seq")))
 
 (defconst oz-end-pattern
       (oz-make-keywords-for-match '("end" "fi" "ro")))
 
 (defconst oz-middle-pattern 
       (concat (oz-make-keywords-for-match
-	       '("in" "then" "else" "by" "of" "wait"))
+	       '("in" "then" "else" "elseif" "by" "of" "wait"))
 	      "\\|" "\\[\\]"))
 
 (defconst oz-key-pattern
@@ -833,12 +833,12 @@ if that value is non-nil."
     (oz-make-keywords-for-match
      '(
        "pred" "proc" "true" "false" "local" "begin" "end"
-       "in" "not" "process" "det" "if" "then" "else" 
+       "in" "not" "process" "det" "if" "then" "else" "elseif" 
        "fi" "or" "ro" "meth" "create" "class" "from" "with" 
-       "handle" "by" "exists" "on" "case" "of" "trigger"
-       "seq" "wait"
+       "handle" "by" "exists" "on" "case" "of"
+       "seq" "wait" "as" "div" "mod" "self"
        ))
-    "\\|\\.\\|\\[\\]\\|#\\|!\\|\\^\\|:"
+    "\\|\\.\\|\\[\\]\\|#\\|!\\|\\^\\|:\\|\\@"
     ))
 
 
