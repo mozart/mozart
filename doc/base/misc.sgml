@@ -49,6 +49,27 @@ set./
 ?_{BitString}./
       </list></p>
   </section>
+  <section id="section.misc.foreign.pointers">
+    <title/Foreign Pointers/
+    <p>Module <span class=index/<<ForeignPointer>>/ provides an
+    interface to encapsulated <em/raw/ pointers to foreign data.  This
+    is useful for implementors of foreign libraries: any C pointer can
+    be encapsulated as a ForeignPointer and passed around as an Oz
+    value.  However, you should consider subclassing the <code
+    proglang/Oz_Extension/ class instead, to encapsulate your C++ data
+    structures into new Oz (abstract) datatypes.
+    <list>
+    <entry/<span class=index/<code/IsForeignPointer//
+<index class=tails/<code/ForeignPointer/<and><code/is///
+    <synopsis/<code/{ForeignPointer.is ?+{X} ??{B}}//
+    <item/tests whether ?_{X} is a foreign pointer/
+    <entry/<span class=index/<code/toInt/
+<index class=tails/<code/ForeignPointer/<and><code/toInt////
+    <synopsis/<code/{ForeignPointer.toInt ?+{X} ??{I}}//
+    <item/converts a foreign pointer to an integer.  Two foreign
+    pointers convert to the same integer iff they point to the same
+    location./
+</list></p></section>
 </chapter>
 
 <!--
