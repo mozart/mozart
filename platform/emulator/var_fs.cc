@@ -365,6 +365,21 @@ void OzFSVariable::propagate(OZ_FSetPropState state,
     OzVariable::propagate(suspList, prop_eq);
 }
 
+/*
+ * Trailing support
+ *
+ */
+
+OzVariable * OzFSVariable::copyForTrail(void) {
+  return new OzFSVariable(_fset, oz_currentBoard());
+}
+
+void OzFSVariable::restoreFromCopy(OzFSVariable * c) {
+  OZ_FSetConstraint tmp = _fset;
+  _fset = c->_fset;
+  c->_fset = tmp;
+  tmp.disposeExtension();
+}
 
 #if defined(OUTLINE)
 #define inline

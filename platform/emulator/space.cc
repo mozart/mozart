@@ -155,7 +155,7 @@ void oz_reduceTrailOnSuspend() {
 
 void oz_reduceTrailOnFail(void) {
 
-  while(!am.trail.isEmptyChunk()) {
+  do {
 
     switch (am.trail.getTeType()) {
     case Te_Bind: {
@@ -171,19 +171,22 @@ void oz_reduceTrailOnFail(void) {
     case Te_Cast:
       am.trail.popCast();
       break;
+    case Te_Mark:
+      am.trail.popMark();
+      return;
     default:
+      Assert(0);
       break;
     }
     
-  }
+  } while (1);
   
-  am.trail.popMark();
 }
 
 void oz_reduceTrailOnEqEq(void) {
   am.emptySuspendVarList();
 
-  while(!am.trail.isEmptyChunk()) {
+  do {
 
     switch (am.trail.getTeType()) {
     case Te_Bind: {
@@ -209,13 +212,16 @@ void oz_reduceTrailOnEqEq(void) {
     case Te_Cast:
       am.trail.popCast();
       break;
+    case Te_Mark:
+      am.trail.popMark();
+      return;
     default:
+      Assert(0);
       break;
     }
     
-  }
+  } while (1);
 
-  am.trail.popMark();
 }
 
 

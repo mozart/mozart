@@ -439,6 +439,25 @@ OZ_BI_define(BIGetCtVarNameAsAtom, 1, 1)
 OZ_BI_end
 
 
+/*
+ * Trailing support
+ *
+ */
+
+OzVariable * OzCtVariable::copyForTrail(void) {
+  return new OzCtVariable(getConstraint(), 
+			  getDefinition(),
+			  oz_currentBoard());
+}
+
+void OzCtVariable::restoreFromCopy(OzCtVariable * c) {
+  OZ_Ct * cc           = c->getConstraint();
+  OZ_CtDefinition * cd = c->getDefinition();
+  c->_definition = _definition;
+  c->_constraint = _constraint;
+  _definition = cd;
+  _constraint = cc;
+}
 
 #ifdef OUTLINE 
 #define inline

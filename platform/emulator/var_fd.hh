@@ -70,6 +70,10 @@ public:
   // methods relevant for term copying (gc and solve)
   void gc(void); 
   inline void dispose(void);
+
+  // methods for trailing
+  OzVariable * copyForTrail(void);
+  void restoreFromCopy(OzFDVariable *);
   
   void becomesSmallIntAndPropagate(TaggedRef * trPtr);
   void becomesBoolVarAndPropagate(TaggedRef * trPtr);
