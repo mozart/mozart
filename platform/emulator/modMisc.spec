@@ -4,18 +4,28 @@ $cmode='dyn';
 (
 
     ###
-    ### Misc stuff
+    ### Connection
     ###
+
+    'close'		=> { in  => [],
+			     out => [],
+			     BI  => BIClosePID,
+			     native => true},
+
+    'send'		=> { in  => ['+virtualString','+int','+int','+int','+int','value'],
+			     out => [],
+			     BI  => BISendPID,
+			     native => true},
+
+    ###
+    ### Perdio
+    ###
+
 
     'PerdioVar.is'	=> { in  => ['value'],
 			     out => ['+bool'],
 			     BI  =>   PerdioVar_is,
 			     module=> 'perdiovar',
-			     native => true},
-
-    'probe'		=> { in  => ['value'],
-			     out => [],
-			     BI  => BIprobe,
 			     native => true},
 
     'crash'		=> { in  => [],
@@ -24,25 +34,10 @@ $cmode='dyn';
 			     doesNotReturn=>1,
 			     native => true},
 
-
-
-
-
-    'controlVarHandler'	=> { in  => ['+value'],
-			     out => [],
-			     BI  => BIcontrolVarHandler,
-			     native => true},
-
     'dvset'		=> { in  => ['+int','+int'],
 			     out => [],
 			     BI  => BIdvset,
 			     ifdef=>DEBUG_PERDIO,
-			     module=>'perdio',
-			     native => true},
-
-    'startTmp'		=> { in  => ['+int','+int'],
-			     out => [],
-			     BI  => BIstartTmp,
 			     module=>'perdio',
 			     native => true},
 
@@ -79,16 +74,15 @@ $cmode='dyn';
 			     native => true},
 
 
-     'atRedo'		=> { in  => ['+feature', 'value'],
-			     out => [],
-			     bi  => BIatRedo,
-			     native => true},
-    
     'slowNet'           => { in  => ['+int', '+int'],
 			     out => [],
 			     bi  => BIslowNet,
 			     native => true},
-    
+
+    ###
+    ### Debug
+    ###
+        
     'Debug.inspect'     => { in  => ['value'],
                              out => ['+value'],
 			     BI  => BIinspect,
@@ -105,6 +99,10 @@ $cmode='dyn';
 			       BI  => BIprocedureEnvironment,
 			       native => true},
 
+    ###
+    ### Statistics
+    ###
+        
     'statisticsPrint'	=> { in  => ['+virtualString'],
 			     out => [],
 			     BI  => BIstatisticsPrint,
