@@ -936,21 +936,25 @@ define
                      else EMPTY
                      end
                      OzDocToHTML, Batch(M 1 $))
-            [] exercise then N Number See in
+            [] exercise then N Number See HTML HTML2 in
                N = {Dictionary.condGet @FigureCounters exercise 0} + 1
                {Dictionary.put @FigureCounters exercise N}
                Number = if @Appendix then {Alpha @Chapter}
                         else @Chapter
                         end#'.'#N
-               case {CondSelect M id unit} of unit then
-                  {@Reporter error(kind: OzDocError
-                                   msg: 'exercise must have an ID')}
-                  See = EMPTY
-               elseof ID then
-                  Exercises <- ID#Number#See|@Exercises
-               end
+               HTML = VERBATIM('Exercise&nbsp;'#Number)
+               HTML2 = case {CondSelect M id unit} of unit then
+                          {@Reporter error(kind: OzDocError
+                                           msg: 'exercise must have an ID')}
+                          See = EMPTY
+                          HTML
+                       elseof Id then
+                          Exercises <- Id#Number#See|@Exercises
+                          OzDocToHTML, ID(Id @CurrentNode HTML)
+                          a(name: Id HTML)
+                       end
                'div'(COMMON: @Common 'class': [exercise]
-                     p(b(VERBATIM('Exercise&nbsp;'#Number)) See)
+                     p(b(HTML) See)
                      blockquote(OzDocToHTML, Batch(M 1 $)))
             [] answer then
                {Dictionary.put @Answers M.to M}
