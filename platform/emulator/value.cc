@@ -321,7 +321,7 @@ const char *ConstTerm::getPrintName()
   case Co_Class:
     return ((ObjectClass *) this)->getPrintName();
   case Co_Builtin:
-    return ((BuiltinTabEntry *)this)->getPrintName();
+    return ((Builtin *)this)->getPrintName();
   default:
     return "UnknownConst";
   }
@@ -332,7 +332,7 @@ int ConstTerm::getArity()
   switch (getType()) {
   case Co_Abstraction: return ((Abstraction *) this)->getArity();
   case Co_Object:      return 1;
-  case Co_Builtin:     return ((BuiltinTabEntry *)this)->getArity();
+  case Co_Builtin:     return ((Builtin *)this)->getArity();
   default:             return -1;
   }
 }

@@ -206,7 +206,7 @@ void AbstractionEntry::setPred(Abstraction *ab)
 
 const char *getBIName(ProgramCounter PC)
 {
-  BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC);
+  Builtin* entry = (Builtin*) getAdressArg(PC);
   return entry->getPrintName();
 }
 

@@ -696,7 +696,7 @@ void ObjectClass::printStream(ostream &stream, int depth)
   stream << "C:" << getPrintName();
 }
 
-void BuiltinTabEntry::printStream(ostream &stream, int depth)
+void Builtin::printStream(ostream &stream, int depth)
 {
   stream << "B:"
 	 << getPrintName() << "/" << getArity();
@@ -842,7 +842,7 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
     ((Thread *) this)->printLongStream(stream,depth,offset);
     break;
   case Co_Builtin:
-    ((BuiltinTabEntry *) this)->printLongStream(stream,depth,offset);
+    ((Builtin *) this)->printLongStream(stream,depth,offset);
     break;
   case Co_Foreign_Pointer:
     ((ForeignPointer*)this)->printLongStream(stream,depth,offset); break;
@@ -910,7 +910,7 @@ void ConstTerm::printStream(ostream &stream, int depth)
     break;
   case Co_Thread:      ((Thread *) this)->printStream(stream,depth);
     break;
-  case Co_Builtin:     ((BuiltinTabEntry *) this)->printStream(stream,depth);
+  case Co_Builtin:     ((Builtin *) this)->printStream(stream,depth);
     break;
   case Co_Foreign_Pointer:
     ((ForeignPointer*)this)->printStream(stream,depth); break;
@@ -1295,7 +1295,7 @@ void PrTabEntry::printStream(ostream &stream, int depth) {
 	 << ">";
 }
 
-void BuiltinTabEntry::printLongStream(ostream &stream, int depth, int offset)
+void Builtin::printLongStream(ostream &stream, int depth, int offset)
 {
   printStream(stream,depth);
   stream << endl;
