@@ -29,5 +29,5 @@
 			    auto-mode-alist))
 
 
-(load "oz")
+(load "oz.elc")
 (run-oz)
