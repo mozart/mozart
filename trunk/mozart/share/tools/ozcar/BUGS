@@ -9,3 +9,7 @@ stattfindet.
 Fri Dec 13 17:12:09 MET 1996
 thread E end unmittelbar nach {Debug.breakpoint} wird von Ozcar
 nicht erkannt (kein stepping moeglich)
+
+Tue Dec 17 18:38:36 MET 1996
+Klick auf Stack Frame bei Prelude Funktionen fuehrt zum Versuch, ein nicht
+zu findendes File zu laden
