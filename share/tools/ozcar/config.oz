@@ -97,6 +97,7 @@ SpaceType              = '<space>'
 FSValueType            = '<FS val>'
 FSVarType              = '<FS var>'
 FDVarType              = '<FD var>'
+ForeignPointerType     = '<foreign>'
 UnknownType            = '<???>'
 UnboundType            = '_'
 
