@@ -66,14 +66,15 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
 
   if (HConversation = DdeConnect (idDde, ProgMan, ProgMan, NULL))
     {
+      DdeCommand ( "[DeleteGroup (DFKI Oz)]", HConversation);
       DdeCommand ( "[CreateGroup (DFKI Oz)]", HConversation);
       DdeCommand ("[ReplaceItem (DFKI Oz)]", HConversation);
       sprintf(buffer, "[AddItem (%s\\platform\\%s\\tcldoc\\tcl76.hlp, Tcl_Tk Manual)]", ozhome,ozplatform);
       DdeCommand(buffer, HConversation);
       sprintf(buffer, "[AddItem (%s\\oz.exe, DFKI Oz)]", ozhome);
       DdeCommand(buffer, HConversation);
-      sprintf(buffer, "[AddItem (%s\\ozdemo.exe, Oz Demo)]", ozhome);
-      DdeCommand(buffer, HConversation);
+      //      sprintf(buffer, "[AddItem (%s\\ozdemo.exe, Oz Demo)]", ozhome);
+      //      DdeCommand(buffer, HConversation);
       sprintf(buffer, "[AddItem (%s\\setup.exe, Oz Setup)]", ozhome);
       DdeCommand(buffer, HConversation);
 
