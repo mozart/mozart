@@ -173,7 +173,7 @@ in
       meth remove(T I Mode)
 	 Threads <- {List.filter @Threads fun {$ X} X\=T end}
 	 ThreadManager,setThrPos(id:I name:undef)
-	 SourceManager,scrollbar(file:'' line:undef color:undef)
+	 SourceManager,scrollbar(file:'' line:undef color:undef what:both)
 	 Gui,printAppl(name:undef args:undef builtin:false)
 	 Gui,printStack(id:0 stack:nil)
 	 case Mode == kill then
@@ -228,10 +228,12 @@ in
 	    {OzcarMessage NoFileInfo # I}
 	    {Dbg.stepmode @currentThread false}
 	    {Thread.resume @currentThread}
-	    SourceManager,scrollbar(file:'' line:undef color:undef)
+	    SourceManager,scrollbar(file:'' line:undef color:undef what:both)
 	    ThreadManager,remove(T I kill)
 	 else
-	    SourceManager,scrollbar(file:F line:L color:ScrollbarDefaultColor)
+	    SourceManager,scrollbar(file:F line:L
+				    color:ScrollbarApplColor what:appl)
+	    SourceManager,scrollbar(file:'' line:undef color:undef what:stack)
 	    ThreadManager,setThrPos(id:I file:F line:L
 				    name:N args:A builtin:IsBuiltin)
 	    Gui,printAppl(name:N args:A builtin:IsBuiltin)
@@ -256,7 +258,10 @@ in
 	    Gui,selectNode(I)
 	    Gui,displayTree
 	    
-	    SourceManager,scrollbar(file:F line:L color:ScrollbarDefaultColor)
+	    SourceManager,scrollbar(file:F line:L
+				    color:ScrollbarApplColor what:appl)
+	    SourceManager,scrollbar(file:undef line:undef
+				    color:undef what:stack)
 	 end
       end
       

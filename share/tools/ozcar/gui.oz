@@ -45,7 +45,7 @@ class Gui from Menu Dialog
       self.StatusLabel = {New Tk.label tkInit(parent:self.ButtonFrame
 					      text:StatusInitText)}
       local
-	 Bs = {Map [step next finish cont forget /* stack */]
+	 Bs = {Map [step next finish cont forget stack]
 	       fun {$ B}
 		  {New Tk.button tkInit(parent: self.ButtonFrame
 					text:   B
@@ -149,6 +149,12 @@ class Gui from Menu Dialog
       
       {E tk(conf state:disabled)}
    end
+
+   meth frameClick(nr:I frame:F)
+      Gui,printEnv(frame:I globals:F.'G')
+      SourceManager,scrollbar(file:F.file line:F.line
+			      color:ScrollbarStackColor what:stack)
+   end
    
    meth printStack(id:ThrID stack:Stack)
       W = self.StackText
@@ -167,6 +173,8 @@ class Gui from Menu Dialog
       else
 	 {self.StackText title(AltStackTitle # ThrID)}
 	 Gui,printEnv(frame:1 globals:S.1.'G')
+	 %SourceManager,scrollbar(file:S.1.file line:S.1.line
+		%		 color:ScrollbarStackColor what:stack)
 
 	 {ForAll [tk(conf state:normal)
 		  tk(delete '0.0' 'end')] W}
@@ -175,7 +183,7 @@ class Gui from Menu Dialog
 	     T = {TagCounter get($)}
 	     Ac = {New Tk.action
 		   tkInit(parent: W
-			  action: Ozcar # printEnv(frame:I globals:F.'G'))}
+			  action: Ozcar # frameClick(nr:I frame:F))}
 	  in
      	     {ForAll [tk(insert 'end' I # ' ' # case F.name == ''
 						then '$' else F.name
@@ -200,7 +208,9 @@ class Gui from Menu Dialog
       in
 	 {ForAll [tk(conf state:normal)
 		  tk(delete '0.0' 'end')
-		  tk(insert 'end' Type # ' {' # N)] W}
+		  tk(insert 'end' Type # ' {' # case N == ''
+						then '$' else N
+						end)] W}
 	  
 	  {ForAll Args
 	   proc {$ A}
@@ -261,12 +271,12 @@ class Gui from Menu Dialog
    
    meth action(A)
       T = @currentThread
+      I = {Thread.id T}
    in
       case T \= undef then
 	 case {Label A}
 	    
 	 of step then
-	    {Dbg.stepmode T true}
 	    {Thread.resume T}
 	    
 	 elseof next then
@@ -274,6 +284,7 @@ class Gui from Menu Dialog
 	 in
 	    case B then
 	       {OzcarMessage '\'next\' on builtin - substituting by \'step\''}
+	       skip
 	    else
 	       {Dbg.stepmode T false}
 	    end
@@ -285,7 +296,6 @@ class Gui from Menu Dialog
 	    
 	 elseof cont then
 	    /*
-	    {Dbg.trace T false}
 	    {Dbg.stepmode T false}
 	    {Thread.resume T}
 	    */
@@ -293,10 +303,12 @@ class Gui from Menu Dialog
 	    skip
 	    
 	 elseof forget then
-	    {Browse 'not yet implemented'}
-	    skip
+	    {Dbg.trace T false}      %% thread is not traced anymore
+	    {Dbg.stepmode T false}   %% no step mode, run as you like!
+	    {Thread.resume T}        %% run, run to freedom!! :-)
+	    ThreadManager,remove(T I kill)
 	    
-	 elseof stack then
+	 elseof stack then  %% will go away, someday...
 	    {Browse {Dbg.taskstack T 25}}
 	 end
 	 
