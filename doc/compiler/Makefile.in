@@ -10,4 +10,4 @@ SGMLSRCS = \
         EvalExpression.oz VirtualStringToValue.oz
 HTMLEXTRAFILES =
 
-include $(SRCDIR)/../Makefile.common
+include ../Makefile.common

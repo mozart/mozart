@@ -10,4 +10,4 @@ SGMLSRCS = \
 HTMLEXTRAFILES = \
         gump.gif
 
-include $(SRCDIR)/../Makefile.common
+include ../Makefile.common
