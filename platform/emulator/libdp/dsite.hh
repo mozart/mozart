@@ -389,7 +389,7 @@ public:
     Assert(getType() & VIRTUAL_SITE);
     Assert(!(getType() & REMOTE_SITE));
     disconnect();    
-    u.readCtr = 0;
+    u.vsite = (VirtualSite *) 0;
   }
 
   //
@@ -462,41 +462,18 @@ public:
       return (*monitorQueue_VirtualSite)(getVirtualSite(),size,noMsgs,storePtr);}
     return MONITOR_PERM;}
 
-  ProbeReturn installProbe(ProbeType pt, int frequency){
-    if(connect()){
-      if(getType() & REMOTE_SITE){
-	return installProbe_RemoteSite(getRemoteSite(),pt,frequency);}
-      Assert(getType() & VIRTUAL_SITE);
-      return (*installProbe_VirtualSite)(getVirtualSite(), 
-					 PROBE_TYPE_ALL, frequency);
-    }
-      
-    return PROBE_PERM;}
-
-  ProbeReturn installProbe(ProbeType pt){// ERIK-LOOK
-    return installProbe(pt,PROBE_INTERVAL);}
-
-  ProbeReturn deinstallProbe(ProbeType pt){
-    unsigned short t=getType();
-    if(t & CONNECTED){
-      if(t & REMOTE_SITE){
-	return deinstallProbe_RemoteSite(getRemoteSite(),pt);}	
-      Assert(t & VIRTUAL_SITE);
-      return (*deinstallProbe_VirtualSite)(getVirtualSite(),
-					   PROBE_TYPE_ALL);
-    }
-    return PROBE_NONEXISTENT;}
-
-  ProbeReturn probeStatus(ProbeType &pt,int &frequency,void* &storePtr){
-    unsigned short t=getType();
-    if(t & CONNECTED){
-      if(t & REMOTE_SITE){
-	return probeStatus_RemoteSite(getRemoteSite(),pt,frequency,storePtr);}	
-      Assert(t & VIRTUAL_SITE);
-      return (*probeStatus_VirtualSite)(getVirtualSite(), pt,
-					frequency, storePtr);
-    }
-    return PROBE_NONEXISTENT;}
+  ProbeReturn installProbe(ProbeType pt, int frequency) {
+    return (PROBE_INSTALLED);
+  }
+  ProbeReturn installProbe(ProbeType pt) { // ERIK-LOOK
+    return installProbe(pt,PROBE_INTERVAL);
+  }
+  ProbeReturn deinstallProbe(ProbeType pt) {
+    return (PROBE_DEINSTALLED);
+  }
+  ProbeReturn probeStatus(ProbeType &pt, int &frequency, void* &storePtr) {
+    return (PROBE_NONEXISTENT);
+  }
     
   GiveUpReturn giveUp(GiveUpInput flag){ // PERM case 1 user initiated 
     unsigned short t=getType();
