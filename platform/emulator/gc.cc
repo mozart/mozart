@@ -1580,9 +1580,6 @@ void AM::gc(int msgLevel)
   gcTagged(sendHdl,sendHdl);
   gcTagged(newHdl,newHdl);
 
-  extern OZ_Term loadHook;
-  gcTagged(loadHook,loadHook);
-
   gcTagged(defaultExceptionHandler,defaultExceptionHandler);
   gcTagged(threadStreamTail,threadStreamTail);
 

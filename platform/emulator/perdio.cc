@@ -121,7 +121,6 @@ DebtRec* debtRec;
 static TaggedRef currentURL;
 BorrowTable *borrowTable;
 OwnerTable *ownerTable;
-OZ_Term loadHook;
 static FatInt *idCounter;
 
 class MarshallInfo {
@@ -6036,36 +6035,9 @@ bomb:
   if (fd >= 0) {
     return loadFD(fd,out);
   }
-  if (!loadHook) {
-    return oz_raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
-                    oz_atom("loadHook"));
-  }
 
-  Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, am.currentBoard);
-  RefsArray args = allocateRefsArray(2,NO);
-  args[0]=currentURL; //oz_atom(url);
-  args[1]=out;
-  tt->pushCall(loadHook, args, 2);
-  am.scheduleThread (tt);
   return PROCEED;
 }
-
-OZ_C_proc_begin(BIsetLoadHook,1)
-{
-  oz_declareNonvarArg(0,pred);
-  if (!isAbstraction(pred) || tagged2Const(pred)->getArity()!=2) {
-    oz_typeError(0,"Procedure/2 (no builtin)");
-  }
-
-  if (0&&loadHook) { // mm2
-    return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
-                    oz_atom("setLoadHook"));
-  }
-
-  loadHook = pred;
-  return PROCEED;
-}
-OZ_C_proc_end
 
 OZ_C_proc_begin(BIload,2)
 {
@@ -6077,25 +6049,6 @@ OZ_C_proc_begin(BIload,2)
   return loadURL(url,out);
 }
 OZ_C_proc_end
-
-OZ_C_proc_begin(BIloadFile,3)
-{
-  OZ_declareVirtualStringArg(0,filename);
-  char *fn=ozstrdup(filename);
-
-  OZ_declareVirtualStringArg(1,url);
-  currentURL=oz_atom(url);
-
-  OZ_declareArg(2,out);
-
-  INIT_IP(0);
-
-  int ret=loadFile(fn,out);
-  delete fn;
-  return ret;
-}
-OZ_C_proc_end
-
 
 OZ_C_proc_begin(BIperdioStatistics,1)
 {
@@ -6179,8 +6132,6 @@ BIspec perdioSpec[] = {
 
   {"smartSave",   6, BIsmartSave, 0},
   {"load",        2, BIload, 0},
-  {"loadFile",    3, BIloadFile, 0},
-  {"setLoadHook", 1, BIsetLoadHook, 0},
   {"newGate",      2, BInewGate, 0},
 
   {"perdioStatistics",  1, BIperdioStatistics, 0},
@@ -6225,7 +6176,6 @@ void BIinitPerdio()
   Assert(sizeof(LockManager)==sizeof(LockFrame));
   Assert(sizeof(PortManager)==sizeof(PortLocal));
 
-  loadHook=0;
 }
 
 
