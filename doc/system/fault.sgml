@@ -153,6 +153,9 @@ The handler <<{HandlerProc Entity AFStates OP}>> is called
 if a fault is detected when an operation is attempted on the entity.
 A limitation of the current release is that handlers
 cannot be installed at the <<global>> level.
+Another limitation of the current release is that
+handlers installed on variables always retry
+the operation after they return.
 
 <entry/<code/{Fault.deInstall Entity Level ??{B}}//
 <item>Deinstall a handler for fault detection on a given
@@ -192,10 +195,12 @@ is undefined.
 <item>If an exception is raised or a handler is invoked
 for an object, then the attempted object operation cannot
 be retried.
-<item>Handlers cannot be installed at the <<global>> level,
+<item>A handler cannot be installed at the <<global>> level,
 i.e., the call <<{Fault.install _ global _ _}>> is undefined.
 If an attempt is made to install a <<global>> handler,
 then a <<notImplemented>> exception is given.
+<item>A handler installed on a variable will retry
+the operation after it returns.
 </list>
 
 
