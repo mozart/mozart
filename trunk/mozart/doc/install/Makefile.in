@@ -3,7 +3,8 @@ SRCDIR		= @srcdir@
 VPATH		= @srcdir@
 
 WHAT	= install
-MAIN	= main.sgml configure.sgml src-get.sgml src-make.sgml bin.sgml
-SGMLSRCS =
+MAIN	= main.sgml
+SGMLSRCS =  configure.sgml src-get.sgml src-make.sgml \
+	rpm.sgml bin.sgml
 
 include ../Makefile.common
