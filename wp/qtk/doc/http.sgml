@@ -110,7 +110,7 @@
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
 
-    <TITLE>QTk - Graphic User Interface Design for Oz</TITLE>
+    <TITLE>QTk - Graphical User Interface Design for Oz</TITLE>
     <Author>Donatien Grolaux</Author>
     <!--Author.Extern to="author.db" key="Donatien.Grolaux"-->
    
