@@ -98,8 +98,7 @@ void SiteHashTable::cleanup(){
   ghn=getFirst(i);
   while(ghn!=NULL){
     GenCast(ghn->getBaseKey(),GenHashBaseKey*,s,Site*);
-
-    if(!(s->hasGCFlag())){
+    if((!(s->hasGCFlag())) && s!=mySite){
       s->freeSite();
       deleteFirst(ghn);
       ghn=getByIndex(i);
@@ -109,7 +108,7 @@ void SiteHashTable::cleanup(){
     ghn1=ghn->getNext();
     while(ghn1!=NULL){
       GenCast(ghn1->getBaseKey(),GenHashBaseKey*,s,Site*);
-      if(s->hasGCFlag()){
+      if((s->hasGCFlag()) || (s==mySite)){
 	s->resetGCFlag();}
       else{
 	s->freeSite();
