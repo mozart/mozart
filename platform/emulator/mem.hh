@@ -332,7 +332,6 @@ public:
       large = f;
     } else {
       FL_Small * f  = (FL_Small *) p;
-      Assert(f);
       f->setNext(small[FL_SizeToIndex(s)]);
       small[FL_SizeToIndex(s)] = f;
     }
