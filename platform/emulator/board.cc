@@ -72,68 +72,6 @@
     Bo_Discarded
     */    
 
-void Board::Init()
-{
-  am.rootBoard = new Board(NULL,Bo_Root);
-  am.rootBoard->setInstalled();
-  am.currentBoard = NULL;
-  SetCurrent(am.rootBoard,OK);
-  am.currentSolveBoard = (Board *) NULL; 
-  am.wasSolveSet = NO; 
-}
-
-void Board::NewCurrentAsk(Actor *a)
-{
-  Board *bb=new Board(a,Bo_Ask);
-  bb->setInstalled();
-  SetCurrent(bb,OK);
-}
-
-void Board::NewCurrentWait(Actor *a)
-{
-  Board *b=new Board(a,Bo_Wait);
-  b->setInstalled();
-  SetCurrent(b,OK);
-}
-
-void Board::NewCurrentSolve (Actor *a)
-{
-  Board *b = new Board (a, Bo_Solve);
-  b->setInstalled ();
-  SetCurrent (b, OK);
-}
-
-#ifdef DEBUG_CHECK
-static Board *oldBoard = (Board *) NULL;
-static Board *oldSolveBoard = (Board *) NULL; 
-#endif
-
-void Board::SetCurrent(Board *c, Bool checkNotGC)
-{
-  Assert(c!=NULL);
-  DebugCheck ((c->isCommitted () == OK),
-	      error ("committed board in Board::SetCurrent ()"));
-  DebugCheck(checkNotGC && oldBoard != am.currentBoard,
-	     error("someone has changed 'currentBoard'"));
-  am.currentBoard = c;
-  am.currentUVarPrototype = makeTaggedUVar(c);
-  DebugCheckT(oldBoard=c);
-
-  if (c->isSolve () == OK) {
-    DebugCheck ((checkNotGC && oldSolveBoard != am.currentSolveBoard),
-		error ("somebody has changed 'am.currentSolveBoard'"));
-    am.currentSolveBoard = c;
-    am.wasSolveSet = OK; 
-    DebugCheckT (oldSolveBoard = c); 
-  } else if (am.wasSolveSet == OK) {
-    DebugCheck ((checkNotGC && oldSolveBoard != am.currentSolveBoard),
-		error ("somebody has changed 'am.currentSolveBoard'"));
-    am.currentSolveBoard = c->getSolveBoard ();
-    am.wasSolveSet = NO;
-    DebugCheckT (oldSolveBoard = am.currentSolveBoard); 
-  }
-}
-
 Board* Board::getSolveBoard ()
 {
   Board *b = this;
@@ -155,7 +93,7 @@ Board::Board(Actor *a,int typ)
   Assert (typ==Bo_Root || typ==Bo_Ask || typ==Bo_Wait || typ==Bo_Solve);
   flags=typ;
   if (a != (Actor *) NULL && a->isAskWait () == OK) {
-    (CastAWActor (a))->addChild(this);
+    (AWActor::Cast (a))->addChild(this);
   }
   suspCount=0;
   u.actor=a;
@@ -163,20 +101,6 @@ Board::Board(Actor *a,int typ)
 
 Board::~Board() {
   error("mm2: not yet impl");
-}
-
-Actor *Board::FailCurrent()
-{
-  Board *bb = am.currentBoard;
-  Assert(bb->isInstalled() != NULL);
-  Actor *ret=bb->getActor();
-  if (ret->isAskWait () == OK) 
-    (CastAWActor (ret))->failChild(bb);
-  bb->flags |= Bo_Failed;
-  am.reduceTrailOnFail();
-  bb->unsetInstalled();
-  SetCurrent(ret->getBoard()->getBoardDeref());
-  return ret;
 }
 
 // -------------------------------------------------------------------------
