@@ -59,7 +59,7 @@ public:
       fsSuspList[i] = NULL;
   }
 
-  void gc(void); 
+  void gc(GenFSetVariable *); 
   void dispose(void);
   
   Bool unifyFSet(OZ_Term *, OZ_Term, OZ_Term *, OZ_Term,

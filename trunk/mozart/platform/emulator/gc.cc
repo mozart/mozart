@@ -383,7 +383,7 @@ enum TypeOfPtr {
   PTR_BOARD,
   PTR_ACTOR,
   PTR_THREAD,
-  PTR_DYNTAB,
+  PTR_CVAR,
   PTR_CONSTTERM
 };
 
@@ -1027,8 +1027,7 @@ void GenFDVariable::gc(GenFDVariable * frm) {
   finiteDomain = frm->finiteDomain;
   ((OZ_FiniteDomainImpl *) &finiteDomain)->gc();
   
-  int i;
-  for (i = fd_prop_any; i--; )
+  for (int i = fd_prop_any; i--; )
     fdSuspList[i] = frm->fdSuspList[i]->gc();
 }
 
@@ -1038,93 +1037,13 @@ void GenBoolVariable::gc(GenBoolVariable * frm) {
 }
 
 inline
-void GenFSetVariable::gc() {
-  int i;
-  for (i = fs_prop_any; i--; )
-    fsSuspList[i] = fsSuspList[i]->gc();
+void GenFSetVariable::gc(GenFSetVariable * frm) {
+  _fset = frm->_fset;
+
+  for (int i = fs_prop_any; i--; )
+    fsSuspList[i] = frm->fsSuspList[i]->gc();
 }
 
-inline
-FSetValue * FSetValue::gc(void) 
-{
-  return (FSetValue *) OZ_hrealloc(this, sizeof(FSetValue));
-}
-
-inline
-void GenLazyVariable::gc(void) {
-  if (function!=0) {
-    OZ_collectHeapTerm(function,function);
-    OZ_collectHeapTerm(result,result);
-  }
-}
-
-inline
-void GenMetaVariable::gc(void) {
-  OZ_collectHeapTerm(data,data);
-}
-
-inline
-void AVar::gc(void) { 
-  OZ_collectHeapTerm(value,value);
-}
-
-inline
-DynamicTable* DynamicTable::gc(void) {
-  Assert(isPwrTwo(size));
-
-  // Copy the table:
-
-  size_t len = (size-1)*sizeof(HashElement) + sizeof(DynamicTable);
-
-  DynamicTable* ret = (DynamicTable*) heapMalloc(len);
-  
-  ret->numelem = numelem;
-  ret->size    = size;
-
-  // Leave a mark where gcRecurse finds the already allocated heap mem
-  numelem = (dt_index) ToInt32(ret);
-
-  // Take care of all TaggedRefs in the table:
-  gcStack.push(this, PTR_DYNTAB);
-  // (no storeFwd needed since only one place points to the dynamictable)
-
-  return ret;
-}
-
-inline
-void DynamicTable::gcRecurse() {
-  DynamicTable * to = (DynamicTable *) ToPointer(numelem);
-
-  OZ_collectHeapBlock((TaggedRef *) table, (TaggedRef *) to->table, size * 2);
-
-}
-
-void GenOFSVariable::gc(void) {
-  OZ_collectHeapTerm(label,label);
-  // Update the pointer in the copied block:
-  dynamictable=dynamictable->gc();
-}
-
-inline
-Bool GenCVariable::gcIsMarked(void) {
-  return IsMarkedPointer(suspList);
-}
-
-inline
-void ** GenCVariable::gcGetMarkField(void) {
-  Assert(!gcIsMarked());
-  return (void **) &suspList;
-}
-
-inline
-void GenCVariable::gcMark(GenCVariable * fwd) {
-  suspList = (SuspList *) MarkPointer(fwd);
-}
-
-inline
-GenCVariable * GenCVariable::gcGetFwd(void) {
-  return (GenCVariable *) UnMarkPointer(suspList);
-}
 
 
 void GenCVariable::gc(void) {
@@ -1161,6 +1080,15 @@ void GenCVariable::gc(void) {
     to->home     = bb;
     return;
 
+  case FSetVariable:
+    to = (GenCVariable *) heapMalloc(sizeof(GenFSetVariable));
+    to->u = this->u;
+    storeFwdField(this, to);
+    ((GenFSetVariable *) to)->gc((GenFSetVariable *) this);
+    to->suspList = sl;
+    to->home     = bb;
+    return;
+
   case OFSVariable:
     sz = sizeof(GenOFSVariable);  break;
   case MetaVariable:
@@ -1169,8 +1097,6 @@ void GenCVariable::gc(void) {
     sz = sizeof(AVar);            break;
   case PerdioVariable:
     sz = sizeof(PerdioVar);       break;
-  case FSetVariable:
-    sz = sizeof(GenFSetVariable); break;
   case LazyVariable:
     sz = sizeof(GenLazyVariable); break;
   default:
@@ -1182,28 +1108,74 @@ void GenCVariable::gc(void) {
   to = (GenCVariable *) OZ_hrealloc(this, sz);
   storeFwdField(this, to);
 
+  Assert(!isInGc || this->home != bb);
+    
+  gcStack.push(to, PTR_CVAR);
+
+  to->suspList = sl;
+  to->home     = bb;
+    
+}
+
+
+inline
+void GenLazyVariable::gcRecurse(void) {
+  if (function!=0) {
+    OZ_collectHeapTerm(function,function);
+    OZ_collectHeapTerm(result,result);
+  }
+}
+
+inline
+void GenMetaVariable::gcRecurse(void) {
+  OZ_collectHeapTerm(data,data);
+}
+
+inline
+void AVar::gcRecurse(void) { 
+  OZ_collectHeapTerm(value,value);
+}
+
+inline
+DynamicTable * DynamicTable::gc(void) {
+  Assert(isPwrTwo(size));
+
+  // Copy the table:
+  DynamicTable * to = (DynamicTable *) heapMalloc((size-1)*sizeof(HashElement)
+						  + sizeof(DynamicTable));
+  to->numelem = numelem;
+  to->size    = size;
+
+  OZ_collectHeapBlock((TaggedRef *) table, (TaggedRef *) to->table, size * 2);
+
+  return to;
+}
+
+
+void GenOFSVariable::gcRecurse(void) {
+  OZ_collectHeapTerm(label,label);
+  // Update the pointer in the copied block:
+  dynamictable=dynamictable->gc();
+}
+
+
+void GenCVariable::gcRecurse(void) {
+  
   switch (getType()) {
   case OFSVariable:
-    ((GenOFSVariable *) to)->gc(); break;
+    ((GenOFSVariable *) this)->gcRecurse(); break;
   case MetaVariable:
-    ((GenMetaVariable *) to)->gc(); break;
+    ((GenMetaVariable *) this)->gcRecurse(); break;
   case AVAR:
-    ((AVar *) to)->gc(); break;
+    ((AVar *) this)->gcRecurse(); break;
   case PerdioVariable:
-    ((PerdioVar *) to)->gc(); break;
-  case FSetVariable:
-    ((GenFSetVariable *) to)->gc(); break;
+    ((PerdioVar *) this)->gcRecurse(); break;
   case LazyVariable:
-    ((GenLazyVariable*) to)->gc(); break;
+    ((GenLazyVariable*) this)->gcRecurse(); break;
   default:
     Assert(0);
   }
 
-  Assert(!isInGc || this->home != bb);
-    
-  to->suspList = sl;
-  to->home     = bb;
-    
 }
 
 
@@ -1212,11 +1184,20 @@ void GenCVariable::gc(void) {
  * WARNING: the value field of floats has no bit left for a gc mark
  *   --> copy every float !! so that X=Y=1.0 --> X=1.0, Y=1.0
  */
+
 inline
 Float *Float::gc() {
   Assert(isInGc);
 
   return newFloat(value);
+}
+
+
+inline
+FSetValue * FSetValue::gc(void) {
+  Assert(isInGc);
+
+  return (FSetValue *) OZ_hrealloc(this, sizeof(FSetValue));
 }
 
 
@@ -1727,7 +1708,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 	}
       }
       
-      to = makeTaggedCVar(cv->gcGetFwd());
+      to = makeTaggedCVar((GenCVariable *) cv->gcGetFwd());
       storeFwdMode(isInGc, (int32 *)&frm, &to);
     }
     return;
@@ -1915,7 +1896,7 @@ void VarFix::fix(void) {
       to_ptr = newTaggedSVar(tagged2SVar(aux)->gcGetFwd());
       break;
     case CVAR:
-      to_ptr = newTaggedCVar(tagged2CVar(aux)->gcGetFwd());
+      to_ptr = newTaggedCVar((GenCVariable *) tagged2CVar(aux)->gcGetFwd());
       break;
     case GCTAG:
       to_ptr = (TaggedRef *) GCUNMARK(aux);
@@ -2908,8 +2889,8 @@ void GcStack::recurse(void) {
       ((Thread *) ptr)->gcRecurse();           
       break;
       
-    case PTR_DYNTAB:    
-      ((DynamicTable *) ptr)->gcRecurse();     
+    case PTR_CVAR:    
+      ((GenCVariable *) ptr)->gcRecurse();     
       break;
 
     case PTR_CONSTTERM: 

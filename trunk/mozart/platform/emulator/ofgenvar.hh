@@ -95,7 +95,7 @@ public:
     }
 
     // Methods relevant for term copying (gc and solve)
-    void gc(void);
+    void gcRecurse(void);
 
     TaggedRef getLabel(void) {
 	return label;
