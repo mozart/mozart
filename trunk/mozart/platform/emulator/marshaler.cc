@@ -603,7 +603,7 @@ loop:
     if (!bs->visit(makeTaggedRef(tPtr))) 
       break;
     if((*triggerVariable)(tPtr)){
-      marshalTerm(t,bs);
+      marshalTerm(makeTaggedRef(tPtr),bs);
       return;}
     if((*marshalVariable)(tPtr, bs, NULL)) 
       break;
