@@ -3,8 +3,6 @@
 
 <!-- Extension to the DTD -->
 <!entity % proglang.values.local "|sh">
-<!ENTITY % p.mix.local "|Em">
-<!ELEMENT Em - - (#PCDATA)>
 <!ENTITY emdash PI "emdash">
 <!ENTITY endash PI "endash">
 <!entity ie PI "ie">
