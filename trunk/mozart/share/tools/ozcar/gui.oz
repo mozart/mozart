@@ -570,6 +570,11 @@ in
 		      A # ' has no effect')
       end
 
+      meth TerminatedStatus(T A)
+	 Gui,doStatus('Thread #' # {Thread.id T} # ' is dead,' #
+		      A # ' has no effect')
+      end
+
       meth action(A)
 	 lock
 	    {OzcarMessage 'action:' # A}
@@ -591,13 +596,18 @@ in
 	    in
 	       case T == undef then
 		  Gui,doStatus(FirstSelectThread)
-	       elsecase {Thread.state T} == blocked then
-		  Gui,BlockedStatus(T A)
 	       else
-		  % step never needs more time, does it?
-		  %Gui,markNode({Thread.id T} running)
-		  %SourceManager,configureBar(running)
-		  {Thread.resume @currentThread}
+		  S = {Thread.state T}
+	       in
+		  case S
+		  of blocked    then Gui,BlockedStatus(T A)
+		  [] terminated then Gui,TerminatedStatus(T A)
+		  else
+		     % step never needs more time, does it?
+		     %Gui,markNode({Thread.id T} running)
+		     %SourceManager,configureBar(running)
+		     {Thread.resume @currentThread}
+		  end
 	       end
 	       
 	    [] ' next' then
@@ -605,30 +615,35 @@ in
 	    in
 	       case T == undef then
 		  Gui,doStatus(FirstSelectThread)
-	       elsecase {Thread.state T} == blocked then
-		  Gui,BlockedStatus(T A)
 	       else
-		  I         = {Thread.id T}
-		  ThreadDic = ThreadManager,getThreadDic($)
-		  Stack     = try
-				 {Dget ThreadDic I}
-			      catch
-				 system(kernel(dict ...) ...) then nil
-			      end
-		  TopFrame Dir
+		  S = {Thread.state T}
 	       in
-		  case Stack == nil then skip else
-		     TopFrame  = {Stack getTop($)}
-		     Dir       = case TopFrame == nil
-				 then enter else TopFrame.dir end
-		     case Dir == leave then
-			{OzcarMessage NextOnLeave}
-		     else
-			{Dbg.stepmode T false}
+		  case S
+		  of blocked    then Gui,BlockedStatus(T A)
+		  [] terminated then Gui,TerminatedStatus(T A)
+		  else
+		     I         = {Thread.id T}
+		     ThreadDic = ThreadManager,getThreadDic($)
+		     Stack     = try
+				    {Dget ThreadDic I}
+				 catch
+				    system(kernel(dict ...) ...) then nil
+				 end
+		     TopFrame Dir
+		  in
+		     case Stack == nil then skip else
+			TopFrame  = {Stack getTop($)}
+			Dir       = case TopFrame == nil
+				    then enter else TopFrame.dir end
+			case Dir == leave then
+			   {OzcarMessage NextOnLeave}
+			else
+			   {Dbg.stepmode T false}
+			end
+			Gui,markNode(I running)
+			SourceManager,configureBar(running)
+			{Thread.resume T}
 		     end
-		     Gui,markNode(I running)
-		     SourceManager,configureBar(running)
-		     {Thread.resume T}
 		  end
 	       end
 	       
@@ -641,15 +656,20 @@ in
 	    in
 	       case T == undef then
 		  Gui,doStatus(FirstSelectThread)
-	       elsecase {Thread.state T} == blocked then
-		  Gui,BlockedStatus(T A)
 	       else
-		  {Dbg.stepmode T false}
-		  {Dbg.contflag T true}
+		  S = {Thread.state T}
+	       in
+		  case S
+		  of blocked    then Gui,BlockedStatus(T A)
+		  [] terminated then Gui,TerminatedStatus(T A)
+		  else
+		     {Dbg.stepmode T false}
+		     {Dbg.contflag T true}
 		  
-		  Gui,markNode({Thread.id T} running)
-		  SourceManager,configureBar(running)
-		  {Thread.resume T}
+		     Gui,markNode({Thread.id T} running)
+		     SourceManager,configureBar(running)
+		     {Thread.resume T}
+		  end
 	       end
 	       
 	    [] ' forget' then
