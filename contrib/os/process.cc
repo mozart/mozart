@@ -1,23 +1,23 @@
-#include "oz_api.h"
-#include "extension.hh"
+#include "mozart.h"
 #include "base.hh"
+#include "value.hh"
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <signal.h>
 
-class Process : public Extension {
+class Process : public OZ_Extension {
 public:
   int pid;
   OZ_Term status;
-  Process(pid_t i,OZ_Term s):Extension(),pid(i),status(s){}
+  Process(pid_t i,OZ_Term s):OZ_Extension(),pid(i),status(s){}
   Process(Process&);
   // Extension
   static  int id;
   virtual int        getIdV() { return id; }
   virtual OZ_Term    typeV()  { return OZ_atom("process"); }
-  virtual void       printStreamV(ostream &out,int depth = 10);
-  virtual Extension* gcV();
+  virtual OZ_Term    printV(int depth = 10);
+  virtual OZ_Extension* gcV();
   virtual void gcRecurseV();
 };
 
@@ -27,8 +27,8 @@ int Process::id;
 
 inline Bool oz_isProcess(OZ_Term t)
 {
-  return oz_isExtension(t) &&
-    oz_tagged2Extension(t)->getIdV()==Process::id;
+  return OZ_isExtension(t) &&
+    OZ_getExtension(t)->getIdV()==Process::id;
 }
 
 Bool OZ_isProcess(OZ_Term t)
@@ -37,20 +37,23 @@ Bool OZ_isProcess(OZ_Term t)
 inline Process* tagged2Process(OZ_Term t)
 {
   Assert(oz_isProcess(t));
-  return (Process*) oz_tagged2Extension(t);
+  return (Process*) OZ_getExtension(t);
 }
 
 Process* OZ_toProcess(OZ_Term t)
 { return tagged2Process(oz_deref(t)); }
 
-void Process::printStreamV(ostream &out,int depth = 10)
+OZ_Term Process::printV(int depth = 10)
 {
-  out << "<process " << ((pid<0)?-pid:pid);
-  if (OZ_isVariable(status)) out << " running>";
-  else out << " exit(" << OZ_intToC(status) << ")>";
+  return OZ_pair2(OZ_atom("<process "),
+		  OZ_pair2(OZ_int((pid<0)?-pid:pid),
+			   OZ_isVariable(status) ?
+			   OZ_atom(" running>") :
+			   OZ_pair2(OZ_atom(" exit("),
+				    OZ_pair2(status,OZ_atom(")>")))));
 }
 
-Extension* Process::gcV()
+OZ_Extension* Process::gcV()
 {
   return new Process(pid,status);
 }
@@ -174,7 +177,7 @@ OZ_BI_define(process_make,3,1)
   // register process
   //
   PDEBUG(cerr << "REGISTERING CHILD: " << p->pid << endl;)
-  OZ_Term proc = oz_makeTaggedExtension(p);
+  OZ_Term proc = OZ_extension(p);
   all_processes = OZ_cons(proc,all_processes);
   OZ_RETURN(proc);
 } OZ_BI_end
