@@ -9,11 +9,12 @@ define
    {Wait DPB}
 
    proc{SiteFnC Y X Z}
-      NS = if ({Y.4 member(X.siteString $)}) then Y.1
+      NS = if ({Y.4 member(X.siteid $)}) then Y.1
            else X|Y.1 end
       NR = Y.2 + 1
       AS = if (X.sent >0) orelse (X.received > 0) then
               X|Y.3 else  Y.3 end
+/*
       SI = case {TOS X.type} of
               connected then {AdjoinAt Y.5 remote (Y.5).remote+1 $}
            elseof unconnected then
@@ -21,10 +22,12 @@ define
            elseof dead then {AdjoinAt Y.5 dead (Y.5).dead+1 $}
            else raise unknown(site_spec({TOS X.type})) end
            end
+*/
    in
-      Z = r(NS NR AS Y.4 SI)
+      Z = r(NS NR AS Y.4 _)
    end
 
+/*
    local
       REMOTE_SITE           = 1
 %      VIRTUAL_SITE          = 2
@@ -46,6 +49,7 @@ define
          end
       end
    end
+*/
 
    class Site
       feat string
@@ -60,12 +64,13 @@ define
          gen
          sent
          received
+         lastRTT
          deltaSent
          deltaReceived
          graphKey
 
       meth init(S G SD)
-         self.key = S.siteString
+         self.key = S.siteid
          self.string = S
          self.GUI = G
          self.sd = SD
@@ -76,6 +81,7 @@ define
          gen <- 0
          sent <- 0
          received <- 0
+         lastRTT <- {IntToFloat ~1}
          deltaSent <- 0
          deltaReceived <- 0
       end
@@ -108,6 +114,8 @@ define
       meth sent(G) sent <- @sent + G deltaSent <- G end
       meth getReceived($) @deltaReceived end
       meth received(G) received <- @received + G deltaReceived <- G end
+      meth setLastRTT(RTT) lastRTT<-{IntToFloat RTT} end
+      meth getLastRTT($) @lastRTT end
       meth setGraphKey(K) graphKey<-K end
       meth getGraphKey($) @graphKey end
    end
@@ -132,9 +140,9 @@ define
 
       meth newSite(S AS)
          SS={New Site init(S self.GUI self)}in
-         {Dictionary.put self.Sites S.siteString SS}
+         {Dictionary.put self.Sites S.siteid SS}
          NrOfSites <- @NrOfSites + 1
-         AS = site(key:S.siteString text:S.siteString)
+         AS = site(key:S.siteid text:S.ip#":"#S.port)
       end
 
       meth removeSite(S AS)
@@ -184,14 +192,19 @@ define
       end
       meth setGui(G)
          self.GUI = G
+/*
          {self.GUI.snumber addGraph(key:dead        col:red    stp:'' val:0.0)}
          {self.GUI.snumber addGraph(key:unconnected col:black  stp:'' val:0.0)}
          {self.GUI.snumber addGraph(key:remote      col:yellow stp:'' val:0.0)}
+*/
       end
 
       meth Update(active:AS types:T nr:NS)
-         SI  =  SiteInfo,Fetch($)
-         DS
+         SI  =  SiteInfo,Fetch($) % Sitestatistics
+         DS % Sites to be deleted
+         % r(stats_for_new_sites nof_elements_in_sitestatistics
+         %   stats_for_sending/receiving_sites sitedictionary
+         %   nof_dead/connected/unconnected)
          r(CS !NS !AS self.sd !T) =
           {FoldL SI SiteFnC r(nil 0 nil self.sd r(remote:0 unconnected:0 dead:0)) $}
       in
@@ -202,24 +215,25 @@ define
          in
             DS = {Filter OS fun{$ Z}
                                {All SI fun{$ X}
-                                          X.siteString \= Z
+                                          X.siteid \= Z
                                        end}
                             end}
          end
          {self.GUI.ssites deleteSite(DS)}
-         {self.GUI.ssites addSite({Map CS proc{$ X Y} {self.sd newSite(X Y)} end})}
+         {self.GUI.ssites addSite({Map CS proc{$ X Y}
+                                             {self.sd newSite(X Y)} end})}
 
          {Map DS proc{$ X Y} {self.sd removeSite(X Y)} end _}
       end
 
       meth display
-         AS T
+         AS
       in
          lock
             Generation<-(@Generation + 1) mod 100
-            SiteInfo,Update(active:AS types:T nr:_)
+            SiteInfo,Update(active:AS types:_ nr:_)
             SiteInfo,activeSites(AS)
-            SiteInfo,countingSites(T)
+%           SiteInfo,countingSites(T)
          end
       end
 
@@ -232,16 +246,17 @@ define
           proc{$ S}
              if  {Some @ActiveSites
                   fun{$ X}
-                     if  X.key == S.siteString then
+                     if  X.key == S.siteid then
                         {X setGen(G)}
                         {X sent(S.sent)}
                         {X received(S.received)}
+                        {X setLastRTT(S.lastRTT)}
                         true
                      else false end
                   end}
              then  skip
              else
-                Si = {self.sd getSite(S.siteString $)}
+                Si = {self.sd getSite(S.siteid $)}
                 Id  = {NewName}
                 Col= {Si getCol(who:act $)}
              in
@@ -249,30 +264,47 @@ define
                 {Si setGen(G)}
                 {Si sent(S.sent)}
                 {Si received(S.received)}
+                {Si setLastRTT(S.lastRTT)}
                 {Si setGraphKey(Id)}
                 {self.GUI.sactivity addGraph(key:Id col:Col stp:'' val:0.0)}
+                {self.GUI.srtt addGraph(key:Id col:Col stp:'' val:0.0)}
              end
           end}
-         {self.GUI.sactivity display({FoldL @ActiveSites
-                                      proc{$ X SS Y}
-                                         if {SS getGen($)} == GG then
-                                            ActiveSites <- {List.subtract
-                                                            @ActiveSites SS}
-                                            {SS retCol(who:act)}
-                                            {self.GUI.sactivity
-                                             rmGraph(key:{SS getGraphKey($)})}
-                                            Y = X
-                                         elseif  {SS getGen($)} == G then
-                                            Y={IntToFloat
-                                               {SS getSent($)}+
-                                     {SS getReceived($)}}#{SS getGraphKey($)}|X
-                                         else
-                                            Y=0.0#{SS getGraphKey($)} |X
-                                         end
-                                      end
-                                      nil})}
+         local TL ListRTT in
+            TL={FoldL @ActiveSites
+                proc{$ X SS Y}
+                   if {SS getGen($)} == GG then
+                      ActiveSites <- {List.subtract
+                                      @ActiveSites SS}
+                      {SS retCol(who:act)}
+                      {self.GUI.sactivity
+                       rmGraph(key:{SS getGraphKey($)})}
+                      Y = X
+                   elseif  {SS getGen($)} == G then
+                      Y={IntToFloat
+                         {SS getSent($)}+
+                         {SS getReceived($)}}#{SS getGraphKey($)}|X
+                   else
+                      Y=0.0#{SS getGraphKey($)} |X
+                   end
+                end
+                nil}
+            {self.GUI.sactivity display(TL)}
+            ListRTT={FoldR @ActiveSites fun{$ S Ls}
+                                           LastRTT={S getLastRTT($)}
+                                        in
+                                           if LastRTT>=0.0 then
+                                              LastRTT#{S getGraphKey($)}|Ls
+                                           else
+                                              Ls
+                                           end
+                                        end
+                     nil}
+            {self.GUI.srtt display(ListRTT)}
+         end
       end
 
+/*
       meth countingSites(SI)
          {self.GUI.snumber display({FoldL [dead unconnected remote]
                                     proc{$ X Y Z}
@@ -282,5 +314,6 @@ define
                                     end
                                     r(0 SI nil)}.3)}
       end
+*/
    end
 end

@@ -70,31 +70,46 @@ OZ_BI_define(BIsiteStatistics,0,1)
   DSite* found;
   GenHashNode *node = getPrimaryNode(NULL, indx);
   OZ_Term sitelist = oz_nil();
-  int sent, received;
+  int sent, received, lastrtt;
   Bool primary = TRUE;
   while(node!=NULL){
     GenCast(node->getBaseKey(),GenHashBaseKey*,found,DSite*);
     if(found->remoteComm() && found->isConnected()){
-      received = getNORM_ComObj(found->getComObj());
-      sent     = getNOSM_ComObj(found->getComObj());}
+      ComObj *c=found->getComObj();
+      received = getNORM_ComObj(c);
+      sent     = getNOSM_ComObj(c);
+      lastrtt  = getLastRTT_ComObj(c);
+    }
     else{
       received = 0;
-      sent = 0;}
+      sent = 0;
+      lastrtt = -1;
+    }
     TimeStamp *ts = found->getTimeStamp();
+    ip_address a=found->getAddress();
+    char ip[100];
+    sprintf(ip,"%d.%d.%d.%d",
+            (a/(256*256*256))%256,
+            (a/(256*256))%256,
+            (a/256)%256,
+            a%256);
     sitelist=
       oz_cons(OZ_recordInit(oz_atom("site"),
-      oz_cons(oz_pairA("siteString", oz_atom(found->stringrep_notype())),
+      oz_cons(oz_pairA("siteid", oz_atom(found->stringrep_notype())),
       oz_cons(oz_pairAI("port",(int)found->getPort()),
-      oz_cons(oz_pairAI("timeint",(int)ts->start),
-      oz_cons(oz_pairA("timestr",oz_atom(ctime(&ts->start))),
-      oz_cons(oz_pairAI("ipint",(unsigned int)found->getAddress()),
-      oz_cons(oz_pairAI("hval",(int)found),
+      oz_cons(oz_pairAI("timestamp",(int)ts->start),
+//        oz_cons(oz_pairA("timestr",oz_atom(ctime(&ts->start))),
+//        oz_cons(oz_pairAI("ipint",(unsigned int)found->getAddress()),
+//        oz_cons(oz_pairAI("hval",(int)found),
+      oz_cons(oz_pairAA("ip",ip),
       oz_cons(oz_pairAI("sent",sent),
       oz_cons(oz_pairAI("received",received),
+      oz_cons(oz_pairAI("lastRTT",lastrtt),
       oz_cons(oz_pairA("table", oz_atom(primary?"p":"s")),
-      oz_cons(oz_pairAI("strange",ts->pid),
-      oz_cons(oz_pairAI("type",(int)found->getTypeStatistics()),
-              oz_nil())))))))))))),sitelist);
+      oz_cons(oz_pairAI("pid",ts->pid),
+      oz_cons(oz_pairA("state",found->getStateStatistics()),
+//        oz_cons(oz_pairAI("type",(int)found->getTypeStatistics()),
+              oz_nil()))))))))))),sitelist);
     if(primary){
       node = getPrimaryNode(node,indx);
       if(node!=NULL) {

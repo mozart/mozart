@@ -52,7 +52,7 @@ void doConnect(ComObj *comObj) {
   // Requestor=requestor(id:SiteId req:comObj)
   OZ_Term Requestor=OZ_recordInit(oz_atom("requestor"),
                                   oz_cons(oz_pairAA("id",
-                                                    site->stringrep()),
+                                                    site->stringrep_notype()),
                                           oz_cons(oz_pairAI("req",(int) comObj),
                                                   oz_nil())));
   OZ_Term LocalOzState=OZ_recordInit(oz_atom("localstate"),
@@ -109,7 +109,7 @@ inline OZ_Return parseRequestor(OZ_Term requestor,
         DSite *site=comObj->getSite();
         if(site==NULL) // this comObj has been reused for accept
           return OZ_FAILED;
-        else if(strcmp(site->stringrep(),siteid)!=0) // reused for other site
+        else if(strcmp(site->stringrep_notype(),siteid)!=0) // reused for other site
           return OZ_FAILED;
         // The right one! Go ahead
       }
@@ -278,7 +278,7 @@ void comObjDone(ComObj *comObj) {
   // Requestor=requestor(id:SiteId req:comObj)
   OZ_Term Requestor=OZ_recordInit(oz_atom("requestor"),
                                   oz_cons(oz_pairAA("id",
-                                                    comObj->getSite()->stringrep()),
+                                                    comObj->getSite()->stringrep_notype()),
                                           oz_cons(oz_pairAI("req",(int) comObj),
                                                   oz_nil())));
   OZ_Term command=OZ_recordInit(oz_atom("abort"),

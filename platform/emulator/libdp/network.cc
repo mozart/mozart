@@ -135,6 +135,10 @@ int getNORM_ComObj(ComObj* comObj) {
   return comObj->getNORM();
 }
 
+int getLastRTT_ComObj(ComObj* comObj) {
+  return comObj->getLastRTT();
+}
+
 int getComControllerInfo(int &size){
   size = sizeof(ComObj);
   return comController->getCTR();

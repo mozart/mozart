@@ -3,7 +3,6 @@ import
    Browser(browse)
    DPPane(getTablesInfo) at 'x-oz://boot/DPPane'
    DPB at 'x-oz://boot/DPB'
-   System
 export
    ownerTable:OwnerTable
    borrowTable:BorrowTable

@@ -277,6 +277,22 @@ DSite* unmarshalDSiteRobust(MarshalerBuffer *buf, int *error)
 /*   SECTION :: BaseSite object methods                               */
 /**********************************************************************/
 
+OZ_Term DSite::getStateStatistics() {
+  if(isConnected()) {
+    // We have a comObj, the question is, is that physically connected,
+    // i.e. does it have a transObj. Responses may be connected or passive
+    return comObj->getStateStatistics();
+  }
+  else if(isPerm()) {
+    return oz_atom("perm");
+  }
+  else if(this==myDSite) {
+    return oz_atom("mine");
+  }
+  else
+    return oz_atom("passive");
+}
+
 char *DSite::stringrep()
 {
   static char buf[100];
