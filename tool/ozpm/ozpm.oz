@@ -20,6 +20,7 @@ import
    Resolve
    Message(parse:Parse slurp:Slurp)
    InteractiveManager
+   
 define
 
    PlatformWindows={Property.get 'platform.os'}==win32   
@@ -423,7 +424,7 @@ define
       {ForAll Help Print}
       {Application.exit 0}
    [] interactive then % start the application in interactive mode
-      {New InteractiveManager.'class' init(OzpmInfo) _}
+      {New InteractiveManager.'class' init(OzpmInfo ArchiveManager) _}
    end
 
 end
