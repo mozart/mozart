@@ -646,62 +646,6 @@ TaggedRef insertlist(TaggedRef ins, TaggedRef old)
   return old;
 }
 
-/*
- * Precondition: lista and listb are strictly increasing lists of features.
- * Return the merge of the two, without duplicates.
- * everything is deref'd
- */
-
-
-
-static
-TaggedRef merge(TaggedRef lista, TaggedRef listb)
-{
-  TaggedRef ret;
-  TaggedRef *out = &ret;
-
- loop:
-  if ( isNil(lista) ) {
-    *out = listb;
-    return ret;
-  }
-
-  if ( isNil(listb) ) {
-    *out = lista;
-    return ret;
-  }
-
-  Assert(isCons(lista) && isCons(listb));
-
-  TaggedRef a = head(lista);
-  TaggedRef b = head(listb);
-  TaggedRef newHead;
-
-  switch (featureCmp(a,b)) {
-
-  case 0:
-    newHead = a;
-    lista = tail(lista);
-    listb = tail(listb);
-    break;
-  case -1:
-    newHead = a;
-    lista = tail(lista);
-    break;
-  case 1:
-  default:
-    newHead = b;
-    listb = tail(listb);
-    break;
-  }
-
-  LTuple *lt = new LTuple(newHead,makeTaggedNULL());
-  *out = makeTaggedLTuple(lt);
-  out = lt->getRefTail();
-  goto loop;
-}
-
-
 inline
 void swap(TaggedRef** a, TaggedRef** b)
 {
@@ -991,68 +935,79 @@ Arity *ArityTable::find( TaggedRef list)
 /*                      Class Record                          */
 /************************************************************************/
 
+
 /*
- *      Construct a SRecord from SRecord old, and adjoin
- *      the pair (feature.value). This is the functionality of
- *      adjoinAt(old,feature,value) where old is a proper SRecord
- *      and feature is not contained in old.
+ * Precondition: lista and listb are strictly increasing lists of features.
+ * Return the merge of the two, without duplicates.
+ * everything is deref'd
  */
 
-TaggedRef SRecord::adjoinAt(TaggedRef feature, TaggedRef value)
+static
+TaggedRef merge(TaggedRef lista, TaggedRef listb)
 {
-  if (getIndex(feature) != -1) {
-    SRecord *newrec = newSRecord(this);
-    newrec->setFeature(feature,value);
-    return makeTaggedSRecord(newrec);
-  } else {
-    TaggedRef oldArityList = getArityList();
-    TaggedRef newArityList = insert(feature,oldArityList);
-    Arity *arity = aritytable.find(newArityList);
-    SRecord *newrec = newSRecord(getLabel(),arity);
+  TaggedRef ret;
+  TaggedRef *out = &ret;
 
-    CHECK_DEREF(oldArityList);
-    while (isCons(oldArityList)) {
-      TaggedRef a = head(oldArityList);
-      CHECK_DEREF(a);
-      newrec->setFeature(a,getFeature(a));
-      oldArityList = tail(oldArityList);
-      CHECK_DEREF(oldArityList);
-    }
-    Assert(isNil(oldArityList));
-    newrec->setFeature(feature,value);
-    return newrec->normalize();
+ loop:
+  if (isNil(lista)) {
+    *out = listb;
+    return ret;
   }
+
+  if (isNil(listb)) {
+    *out = lista;
+    return ret;
+  }
+
+  Assert(isCons(lista) && isCons(listb));
+
+  TaggedRef a = head(lista);
+  TaggedRef b = head(listb);
+  TaggedRef newHead;
+
+  switch (featureCmp(a,b)) {
+
+  case 0:
+    newHead = a;
+    lista = tail(lista);
+    listb = tail(listb);
+    break;
+  case -1:
+    newHead = a;
+    lista = tail(lista);
+    break;
+  case 1:
+  default:
+    newHead = b;
+    listb = tail(listb);
+    break;
+  }
+
+  LTuple *lt = new LTuple(newHead,makeTaggedNULL());
+  *out = makeTaggedLTuple(lt);
+  out = lt->getRefTail();
+  goto loop;
 }
 
-TaggedRef SRecord::adjoin(SRecord* hrecord)
+TaggedRef oz_adjoin(SRecord *lrec, SRecord* hrecord)
 {
-  TaggedRef list1 = this->getArityList();
+  TaggedRef list1 = lrec->getArityList();
   TaggedRef list2 = hrecord->getArityList();
-
-  // optimize case that left record is literal
-  if (isNil(list1)) {
-  overwrite:
-    return makeTaggedSRecord(newSRecord(hrecord));
-  }
-
-  // optimize case that right record is literal
-  if (isNil(list2)) {
-    return makeTaggedSRecord(this->replaceLabel(hrecord->getLabel()));
-  }
 
   // adjoin arities
   TaggedRef newArityList = merge(list1,list2);
   Arity *newArity = aritytable.find(newArityList);
 
-  SRecord *newrec = newSRecord(hrecord->getLabel(),newArity);
+  SRecord *newrec = SRecord::newSRecord(hrecord->getLabel(),newArity);
 
   // optimize case that right record completely overwrites left side.
   if (hrecord->isTuple()) {
     if (newArity->isTuple() && hrecord->getWidth() == newArity->getWidth()) {
-      goto overwrite;
+    overwrite:
+      return SRecord::newSRecord(hrecord)->normalize();
     }
   } else if (newArity == hrecord->getRecordArity()) {
-    goto overwrite;
+    return makeTaggedSRecord(SRecord::newSRecord(hrecord));
   }
 
   // copy left record to new record
@@ -1061,7 +1016,7 @@ TaggedRef SRecord::adjoin(SRecord* hrecord)
   while (isCons(ar)) {
     TaggedRef a = head(ar);
     CHECK_DEREF(a);
-    newrec->setFeature(a,getFeature(a));
+    newrec->setFeature(a,lrec->getFeature(a));
     ar = tail(ar);
     CHECK_DEREF(ar);
   }
@@ -1079,24 +1034,57 @@ TaggedRef SRecord::adjoin(SRecord* hrecord)
 }
 
 /*
+ *      Construct a SRecord from SRecord old, and adjoin
+ *      the pair (feature.value). This is the functionality of
+ *      adjoinAt(old,feature,value) where old is a proper SRecord
+ *      and feature is not contained in old.
+ */
+
+TaggedRef oz_adjoinAt(SRecord *rec, TaggedRef feature, TaggedRef value)
+{
+  if (rec->getIndex(feature) != -1) {
+    SRecord *newrec = SRecord::newSRecord(rec);
+    newrec->setFeature(feature,value);
+    return newrec->normalize();
+  } else {
+    TaggedRef oldArityList = rec->getArityList();
+    TaggedRef newArityList = insert(feature,oldArityList);
+    Arity *arity = aritytable.find(newArityList);
+    SRecord *newrec = SRecord::newSRecord(rec->getLabel(),arity);
+
+    CHECK_DEREF(oldArityList);
+    while (isCons(oldArityList)) {
+      TaggedRef a = head(oldArityList);
+      CHECK_DEREF(a);
+      newrec->setFeature(a,rec->getFeature(a));
+      oldArityList = tail(oldArityList);
+      CHECK_DEREF(oldArityList);
+    }
+    Assert(isNil(oldArityList));
+    newrec->setFeature(feature,value);
+    return newrec->normalize();
+  }
+}
+
+/*
  * This is the functionality of adjoinlist(old,proplist). We assume
  * that arityList is the list of the keys in proplist. arityList
  * is computed by the builtin in order to ease error handling.
  */
-TaggedRef SRecord::adjoinList(TaggedRef arityList,TaggedRef proplist)
+TaggedRef oz_adjoinList(SRecord *lrec,TaggedRef arityList,TaggedRef proplist)
 {
-  TaggedRef newArityList = insertlist(arityList,getArityList());
+  TaggedRef newArityList = insertlist(arityList,lrec->getArityList());
   Arity *newArity = aritytable.find(newArityList);
 
-  SRecord *newrec = SRecord::newSRecord(getLabel(),newArity);
+  SRecord *newrec = SRecord::newSRecord(lrec->getLabel(),newArity);
   Assert(length(newArityList) == newrec->getWidth());
 
-  TaggedRef ar = getArityList();
+  TaggedRef ar = lrec->getArityList();
   CHECK_DEREF(ar);
   while (isCons(ar)) {
     TaggedRef a = head(ar);
     CHECK_DEREF(a);
-    newrec->setFeature(a,getFeature(a));
+    newrec->setFeature(a,lrec->getFeature(a));
     ar = tail(ar);
     CHECK_DEREF(ar);
   }
@@ -1163,7 +1151,7 @@ TaggedRef SRecord::replaceFeature(TaggedRef feature,TaggedRef value)
 
   TaggedRef oldVal = args[i];
   if (!isRef(oldVal) && isAnyVar(oldVal)) {
-    return adjoinAt(feature,value);
+    return oz_adjoinAt(this,feature,value);
   }
   setArg(i,value);
   return makeTaggedSRecord(this);

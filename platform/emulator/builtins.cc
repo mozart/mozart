@@ -3171,6 +3171,7 @@ OZ_C_proc_begin(BIcharType,2) {
  * Records
  ******************************************************************** */
 
+
 OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
 {
   DEREF(t0,_0,tag0);
@@ -3181,6 +3182,7 @@ OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
     switch (tag1) {
     case SRECORD:
     case LITERAL:
+    case LTUPLE:
       out = t1;
       return PROCEED;
     case UVAR:
@@ -3204,14 +3206,15 @@ OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
       switch (tag1) {
       case LITERAL:
         {
-          SRecord *newrec = rec->replaceLabel(t1);
+          SRecord *newrec = SRecord::newSRecord(rec);
+          newrec->setLabelForAdjoinOpt(t1);
           out = newrec->normalize();
           return PROCEED;
         }
       case SRECORD:
       case LTUPLE:
         {
-          out = rec->adjoin(makeRecord(t1));
+          out = oz_adjoin(rec,makeRecord(t1));
           return PROCEED;
         }
       case UVAR:
@@ -3279,7 +3282,8 @@ OZ_C_proc_begin(BIadjoinAt,4)
   switch (tag0) {
   case LITERAL:
     if (isFeature(fea)) {
-      SRecord *newrec = SRecord::newSRecord(rec,aritytable.find(cons(fea,nil())));
+      SRecord *newrec
+        = SRecord::newSRecord(rec,aritytable.find(cons(fea,nil())));
       newrec->setArg(0,value);
       return oz_unify(out, makeTaggedSRecord(newrec));
     }
@@ -3297,14 +3301,13 @@ OZ_C_proc_begin(BIadjoinAt,4)
   case LTUPLE:
   case SRECORD:
     {
-      SRecord *rec1 = makeRecord(rec);
       if (isAnyVar(tag1)) {
         oz_suspendOnPtr(feaPtr);
       }
       if (!isFeature(tag1)) {
         oz_typeError(1,"Feature");
       }
-      return oz_unify(out,rec1->adjoinAt(fea,value));
+      return oz_unify(out,oz_adjoinAt(makeRecord(rec),fea,value));
     }
 
   case UVAR:
@@ -3448,8 +3451,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
   case SRECORD:
   case LTUPLE:
     if (recordFlag) {
-      SRecord *rec1 = makeRecord(t0);
-      out = rec1->adjoinList(arity,list);
+      out = oz_adjoinList(makeRecord(t0),arity,list);
       return PROCEED;
     }
     goto typeError0;
