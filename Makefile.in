@@ -80,7 +80,7 @@ DEMOFILES=      demo
 
 COMPRESS=       gzip -9
 
-WINCACHEDIR=    oz/cache/http/www.ps.uni-sb.de/PREFIX/lib
+WINCACHEDIR=    oz/cache/http/www.ps.uni-sb.de/ozhome
 
 # sub directories for recursive makes
 SUBDIRS=        platform share contrib
@@ -181,14 +181,19 @@ oz-win::
         rm -rf oz oz3 oz-`$(OZVERSION)`
         ( cd $(PREFIX)/..; \
           $(TAR) cf - oz/?*.exe oz/demo oz/include oz/lib \
+                   oz/tools \
                    oz/LICENSE \
+                   oz/bin/opi \
                    oz/platform/win32-i486/?*.exe \
                    oz/platform/win32-i486/?*.dll \
                    oz/platform/win32-i486/tcldoc \
          ) | $(TAR) xf -
         rm -f oz/demo/rundemo oz/lib/ozbatch.ozm
-        $(INSTALL_DIR) $(WINCACHEDIR)
-        mv oz/lib/?*.ozc $(WINCACHEDIR)
-        mv $(WINCACHEDIR)/Init.ozc oz/lib
+        $(INSTALL_DIR) $(WINCACHEDIR)/lib
+        $(INSTALL_DIR) $(WINCACHEDIR)/tools
+        $(INSTALL_DIR) $(WINCACHEDIR)/bin
+        mv oz/lib/images oz/lib/?*.ozf $(WINCACHEDIR)/lib
+        mv oz/tools/images oz/tools/?*.ozf $(WINCACHEDIR)/tools
+        mv oz/bin/opi $(WINCACHEDIR)/bin
         (cd oz/lib/wish; rm -rf tk tcl; mv tcl8.0 tcl; mv tk8.0 tk)
         mv oz oz3
