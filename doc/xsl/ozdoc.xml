@@ -440,6 +440,9 @@
   <xsl:when test="starts-with($to,'ozdoc')">
    <xsl:text>\textsl{</xsl:text>
    <xsl:choose>
+    <xsl:when test="$to='ozdoc:loop'">
+      <xsl:text>Loop Support</xsl:text>
+    </xsl:when>
     <xsl:when test="$to='ozdoc:system'">
      <xsl:text>The System Modules</xsl:text>
     </xsl:when>
