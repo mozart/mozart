@@ -108,16 +108,8 @@ void fdp_init(void)
   LinNotEqAbsPropagator::profile =       "fdp_sumAC";
   isumEqProp::profile =                  "fdp_dsum";
   isumNEqProp::profile =                 "fdp_dsum";
-  isumLeqProp::profile =                 "fdp_dsum";
-  isumLtProp::profile =                  "fdp_dsum";
-  isumGeqProp::profile =                 "fdp_dsum";
-  isumGtProp::profile =                  "fdp_dsum";
   isumcEqProp::profile =                 "fdp_dsumC";
   isumcNEqProp::profile =                "fdp_dsumC";
-  isumcLeqProp::profile =                "fdp_dsumC";
-  isumcLtProp::profile =                 "fdp_dsumC";
-  isumcGeqProp::profile =                "fdp_dsumC";
-  isumcGtProp::profile =                 "fdp_dsumC";
 
   CompleteAllDistProp::init_memory_management = 1;
 }
