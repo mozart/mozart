@@ -3284,6 +3284,8 @@ OZ_C_proc_begin(BImarshall,2)
   OZ_declareArg(0,in);
   OZ_declareArg(1,out);
 
+  INIT_IP(0);
+
   ByteStream *bs = bufferManager->getByteStream();
   bs->marshalBegin();
 
@@ -3320,6 +3322,8 @@ OZ_C_proc_begin(BIunmarshall,2)
 {
   OZ_declareArg(0,in);
   OZ_declareArg(1,out);
+
+  INIT_IP(0);
 
   OZ_Term var;
   if (!OZ_isString(in,&var)) {
