@@ -67,7 +67,7 @@ define
 			   relief:relief
 			   takefocus:boolean
 			   text:vs
-			   underline:natural
+			   underline:integer
 			   width:natural
 			   height:natural
 			   wraplength:pixel
@@ -79,8 +79,7 @@ define
 		    unget:{Record.adjoin GlobalUngetType
 			   r(init:unit
 			     bitmap:unit
-			     image:unit
-			     font:unit)}
+			     image:unit)}
 		   )
    
       from Tk.label QTkClass
@@ -171,8 +170,7 @@ define
 		    unset:{Record.adjoin GlobalUnsetType
 			   r(init:unit)}
 		    unget:{Record.adjoin GlobalUngetType
-			   r(init:unit
-			     font:unit)}
+			   r(init:unit)}
 		   )
    
       from Tk.message QTkClass

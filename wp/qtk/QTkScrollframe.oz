@@ -82,7 +82,6 @@ define
 		    unget:{Record.adjoin GlobalUngetType
 			   r(1:unit
 			     bitmap:unit
-			     font:unit
 			     lrscrollbar:unit
 			     tdscrollbar:unit)})
 	 Child
@@ -99,11 +98,11 @@ define
 	    Tk.canvas,{TkInit {Subtracts A [tdscrollbar lrscrollbar]}}
 	    %% B contains the structure of
 	    %% creates the children
-	    self.Child={self.toplevel.Builder MapLabelToObject({Record.subtract
-								{Record.subtract
-								 {Record.adjoinAt B.1 parent self}
-								 handle}
-								feature} $)}
+	    self.Child={self.parent.Builder MapLabelToObject({Record.subtract
+							      {Record.subtract
+							       {Record.adjoinAt B.1 parent self}
+							       handle}
+							      feature} $)}
 	    if {HasFeature B.1 feature} then
 	       self.((B.1).feature)=self.Child
 	    end

@@ -26,6 +26,7 @@ functor
 
 import
    Tk
+   Module
    Error
    QTkDevel
    QTkImage(newImage:           NewImage
@@ -48,17 +49,22 @@ import
    QTkDropdownlistbox
    QTkNumberentry
    QTkPlaceholder
+   QTkMigratable
    QTkGrid
    QTkPanel
    QTkRubberframe
    QTkScrollframe
    QTkToolbar
    QTkFrame
+   QTkFont(newFont:NewFont)
    PrintCanvas
+   System(show:Show)
+   Browser(browse:Browse)
    
 export
 
    build:DialogBuilder
+   buildMigratable:BuildMigratable
    dialogbox:DialogBox
    Bell
    Clipboard
@@ -77,14 +83,14 @@ export
 
 prepare
    NoArgs={NewName}
-%   CharToUpper = Char.toUpper
-%   fun{Majus Str}
-%      case {VirtualString.toString Str}
-%      of C|Cs then {CharToUpper C}|Cs
-%      [] X then X
-%      end
-%   end
-%   VsToString=VirtualString.toString
+   CharToUpper = Char.toUpper
+   fun{Majus Str}
+      case {VirtualString.toString Str}
+      of C|Cs then {CharToUpper C}|Cs
+      [] X then X
+      end
+   end
+   VsToString=VirtualString.toString
    
 define
 
@@ -108,6 +114,8 @@ define
    Init                 = QTkDevel.init
    QTkDesc              = QTkDevel.qTkDesc
    WInfo                = QTkDevel.wInfo
+   GetSignature         = QTkDevel.getSignature
+   FlattenLabel         = QTkDevel.flattenLabel
 
 %    %% create a module manager with Tk and QTkDevel
 %    %% so that these don't get reloaded and relinked
@@ -136,8 +144,6 @@ define
 
    
    \insert QTkClipboard.oz
-   \insert QTkFont.oz
-   
    \insert QTkDialogbox.oz
 
    fun{GetTopLevelClass BuilderObj}
@@ -195,6 +201,7 @@ define
 			     iconwindow:no
 			     maxsize:no
 			     minsize:no
+			     useport:no
 			     overrideredirect:boolean
 			     resizable:no
 			     transient:no)
@@ -218,7 +225,7 @@ define
 	       if {Label M}\=td andthen {Label M}\=lr then
 		  {Exception.raiseError qtk(custom "Bad toplevel widget" {Label M} M)}
 	       end
-	       Out
+	       OutP
 	       proc{Listen L}
 		  case L of X|Xs then
 		     case X
@@ -246,11 +253,18 @@ define
 				     if I>2 then I-2#J else nil end
 				  end}
 				 fun{$ R} R\=nil end}}
+			   proc{DoIt}
+			      try
+				 {X.1 Rec}
+			      catch E then
+				 {Error.printException E}
+			      end
+			   end
 			in
-			   try
-			      {X.1 Rec}
-			   catch E then
-			      {Error.printException E}
+			   if {HasFeature M useport} then
+			      {Port.send M.useport DoIt}
+			   else
+			      {DoIt}
 			   end
 			else skip end % waiting for the destroy instruction => skip pending commands
 			{Listen Xs}
@@ -259,12 +273,16 @@ define
 	       end
 	       A B
 	       Title={CondSelect M title "Oz/QTk Window"}
+	       Out
 	    in
 	       self.toplevel=self
 	       self.Radiobuttons={NewDictionary}
 	       self.RadiobuttonsNotify={NewDictionary}
 	       Destroyer<-nil
 	       self.port={NewPort Out}
+	       thread
+		  {Listen Out}
+	       end
 	       QTkClass,{Record.adjoin {Record.filterInd M
 					fun{$ I _}
 					   {Int.is I}==false
@@ -278,9 +296,6 @@ define
 	       {self {Record.adjoin B WM(title:Title
 					 iconname:{CondSelect M iconname Title})}}
 	       QTkFrame.frame,Init({Subtracts {Record.adjoinAt M parent self} [action return]})
-	       thread
-		  {Listen Out}
-	       end
 	    end
 	 end
       
@@ -605,8 +620,8 @@ define
 	    lock
 	       {Tk.send wm(deiconify self)}
 	    end
-	 end 
-      
+	 end
+
       % internal methods for the good behaviour of buttons and radiobuttons
 
 	 meth Execute
@@ -677,6 +692,10 @@ define
 	       {{New QTkAction init(parent:self action:Act)} action(Ret)}
 	    end
 	 end
+
+	 meth wInfo(What $)
+	    {WInfo What}
+	 end
       
       end
    end
@@ -704,6 +723,7 @@ define
 	       QTkListbox
 	       QTkText
 	       QTkPlaceholder
+	       QTkMigratable
 	       QTkGrid
 	       QTkRubberframe
 	       QTkScrollframe
@@ -714,15 +734,17 @@ define
        end}
       {ForAll [QTkDropdownlistbox
  	       QTkNumberentry]
-        proc{$ V}
+       proc{$ V}
  	  {ForAll V.register proc{$ W} {Builder.setAlias W.widgetType W.widget} end}
 	end}
       Builder
    end
 
    DefaultBuilder={GetBuilder}
+
    DialogBuilder=DefaultBuilder.build
-   
+   BuildMigratable=DefaultBuilder.buildMigratable
+
    {Tk.send tk_setPalette(grey)} % to force all qtk users to have the same default palette
-   
+
 end

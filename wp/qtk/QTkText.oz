@@ -35,6 +35,8 @@ import
 	    subtracts:          Subtracts
 	    returnTk:           ReturnTk
 	    mapLabelToObject:   MapLabelToObject
+	    builder:            Builder
+	    newResource:        NewResource
 	    qTkClass:           QTkClass
 	    qTkAction:          QTkAction
 	    globalInitType:     GlobalInitType
@@ -90,6 +92,204 @@ define
       end
    end
 
+   class TextImage
+      feat
+	 widgetType:textimage
+	 typeInfo:r(all:r(align:[top center bottom baseline]
+			  1:no
+			  image:image
+			  padx:pixel
+			  pady:pixel)
+		    uninit:r
+		    unset:r(image:unit
+			    1:unit)
+		    unget:r(image:unit
+			    1:unit))
+      from QTkClass
+      meth init(...)=M
+	 lock
+	    self.parent=M.parent
+	    self.toplevel=self.parent.toplevel
+	    {Assert self.widgetType self.typeInfo M}
+	    {TExecTk self.parent image(create M.1
+				       d({Subtracts M [1 parent]}))}
+	 end
+      end
+      meth set(...)=M
+	 lock
+	    {Assert self.widgetType self.typeInfo M}
+	    {TExecTk self.parent image(configure self d(M))}
+	 end
+      end
+      meth get(...)=M
+	 lock
+	    {Assert self.widgetType self.typeInfo M}
+	    {Record.forAllInd M
+	     proc{$ I V}
+		{TReturnTk self.parent image(cget self "-"#I V) self.typeInfo.all.I}
+	     end}
+	 end
+      end
+   end
+
+   class TextMark
+      from QTkClass Tk.textMark
+      feat widgetType:textmark
+	 Mark
+      meth init(...)=M
+	 lock
+	    self.parent=M.parent
+	    self.toplevel=self.parent.toplevel
+	    self.Mark=case M.type
+		      of 1 then {New Tk.textMark tkInit(parent:self.parent)}
+		      else M.type
+		      end
+	 end
+      end
+      meth gravity(D)
+	 lock
+	    {TExecTk self.parent mark(gravity self.Mark D)}
+	 end
+      end
+      meth set(Index)
+	 lock
+	    {TExecTk self.parent mark(set self.Mark Index)}
+	 end
+      end
+      meth unset
+	 lock
+	    {TExecTk self.parent mark(unset self.Mark)}
+	 end
+      end
+   end
+
+   class TextTag
+      from Tk.textTag QTkClass
+      feat widgetType:texttag
+	 typeInfo:r(all:r(parent:no
+			  background:color
+			  bgstipple:bitmap
+			  borderwidth:pixel
+			  fgstipple:bitmap
+			  font:font
+			  foreground:color
+			  justify:[left right center]
+			  lmargin1:pixel
+			  lmargin2:pixel
+			  offset:pixel
+			  overstrike:boolean
+			  relief:relief
+			  rmargin:pixel
+			  spacing1:pixel
+			  spacing2:pixel
+			  spacing3:pixel
+			  tabs:no
+			  underline:boolean
+			  wrap:[none char word])
+		    uninit:r
+		    unset:r(parent:unit)
+		    unget:r(parent:unit
+			    bgstipple:unit
+			    fgstipple:unit
+			    tabs:unit))
+	 first last
+	 		  
+      meth !Init(...)=M
+	 lock
+	    self.parent=M.parent
+	    self.toplevel=self.parent.toplevel
+	    {Assert self.widgetType self.typeInfo M}
+	    Tk.textTag,{Record.adjoin M tkInit}
+	    self.first=self#".first"
+	    self.last=self#".last"
+	 end
+      end
+      meth TAdd(M $)
+	 {List.toRecord
+	  tag
+	  1#{Label M}|2#self|{List.map
+			     {Record.toListInd M}
+			     fun{$ R}
+				case R of I#V then if {IsInt I} then I+2#V else I#V end end
+			     end}}
+      end
+      meth RExecTk(M)
+	 {TExecTk self.parent {self TAdd(M $)}}
+      end
+      meth RReturnTk(M Type)
+	 {TReturnTk self.parent {self TAdd(M $)} Type}
+      end	    
+      meth set(...)=M
+	 lock
+	    {Assert self.widgetType self.typeInfo M}
+	    {self RExecTk({Record.adjoin M configure})}
+	 end
+      end
+      meth get(...)=M
+	 lock
+	    {Assert self.widgetType self.typeInfo M}
+	    {Record.forAllInd M
+	     proc{$ I V}
+		{self RReturnTk(cget("-"#I V) self.typeInfo.all.I)}
+	     end}
+	 end
+      end
+      meth add(...)=M
+	 lock
+	    {self RExecTk(M)}
+	 end
+      end
+      meth bind(action:A<=proc{$} skip end event:E args:G<=nil)
+	 lock
+	    Command={New Tk.action tkInit(parent:self
+					  action:{{New QTkAction init(parent:self action:A)} action($)}
+					  args:G)}
+	 in
+	    {self RExecTk(bind(E Command))}
+	 end
+      end
+      meth delete=M
+	 lock
+	    {self RExecTk(M)}
+	 end
+      end
+      meth lower=M
+	 lock
+	    {self RExecTk(M)}
+	 end
+      end
+      meth Range(M)
+	 lock
+	    Last={LastInt M}
+	    Ret=M.Last
+	    Temp
+	 in
+	    {self RReturnTk({Record.adjoinAt M Last Temp} list)}
+	    Ret={List.map Temp ToCoord}
+	 end
+      end
+      meth nextrange(...)=M
+	 {self Range(M)}
+      end
+      meth prevrange(...)=M
+	 {self Range(M)}
+      end
+      meth 'raise'=M
+	 lock
+	    {self RExecTk(M)}
+	 end
+      end
+      meth ranges(...)=M
+	 {self Range(M)}
+      end
+      meth remove(...)=M
+	 lock
+	    {self RExecTk(M)}
+	 end
+      end
+   end
+
+	    
    class QTkText
 
       feat
@@ -145,8 +345,7 @@ define
 			   r(lrscrollbar:unit
 			     tdscrollbar:unit
 			     scrollwidth:unit
-			     init:unit
-			     font:unit)}
+			     init:unit)}
 		   )
 
       attr Windows:nil
@@ -245,50 +444,13 @@ define
 
       meth newImage(...)=M
 	 lock
-	    Self=self
 	    Last={LastInt M}
 	    Img=M.Last
-	    class TextImage
-	       feat
-		  widgetType:textimage
-		  typeInfo:r(all:r(align:[top center bottom baseline]
-				   1:no
-				   image:image
-				   padx:pixel
-				   pady:pixel)
-			     uninit:r
-			     unset:r(image:unit
-				     1:unit)
-			     unget:r(image:unit
-				    1:unit))
-	       from QTkClass
-	       meth init(...)=M
-		  lock
-		     self.parent=Self
-		     self.toplevel=Self.toplevel
-		     {Assert self.widgetType self.typeInfo M}
-		     {TExecTk Self image(create M.1
-					 d({Subtracts M [1]}))}
-		  end
-	       end
-	       meth set(...)=M
-		  lock
-		     {Assert self.widgetType self.typeInfo M}
-		     {TExecTk Self image(configure self d(M))}
-		  end
-	       end
-	       meth get(...)=M
-		  lock
-		     {Assert self.widgetType self.typeInfo M}
-		     {Record.forAllInd M
-		      proc{$ I V}
-			 {TReturnTk Self image(cget self "-"#I V) self.typeInfo.all.I}
-		      end}
-		  end
-	       end
-	    end
 	 in
-	    Img={New TextImage {Record.adjoin {Record.subtract M Last} init}}
+%	    Img={New TextImage {Record.adjoin {Record.subtract M Last} init}}
+	    Img={self.Builder NewResource(self
+					  ti
+					  {Record.adjoin {Record.subtract M Last} init(parent:self)} $)}
 	 end
       end
 
@@ -306,42 +468,13 @@ define
       
       meth newMark(Mark<=NoArgs insert:I<=NoArgs current:C<=NoArgs)=M
 	 lock
-	    Self=self
-	    class TextMark
-	       from QTkClass Tk.textMark
-	       feat widgetType:textmark
-		  Mark
-	       meth init(...)=M
-		  lock
-		     self.parent=Self
-		     self.toplevel=Self.toplevel
-		     self.Mark=case M.type
-			       of 1 then {New Tk.textMark tkInit(parent:self.parent)}
-			       else M.type
-			       end
-		  end
-	       end
-	       meth gravity(D)
-		  lock
-		     {TExecTk Self mark(gravity self.Mark D)}
-		  end
-	       end
-	       meth set(Index)
-		  lock
-		     {TExecTk Self mark(set self.Mark Index)}
-		  end
-	       end
-	       meth unset
-		  lock
-		     {TExecTk Self mark(unset self.Mark)}
-		  end
-	       end
-	    end
-	 in
 	    {Record.forAllInd M
 	     proc{$ I V}
 		if {IsFree V} then
-		   V={New TextMark init(parent:self type:I)}
+%		   V={New TextMark init(parent:self type:I)}
+		   {self.Builder NewResource(self
+					     tm
+					     init(parent:self type:I) V)}
 		end
 	     end}
 	 end
@@ -367,135 +500,10 @@ define
 
       meth newTag(Tag)
 	 lock
-	    Self=self
-	    fun{TAdd M}
-	       {List.toRecord
-		tag
-		1#{Label M}|2#Tag|{List.map
-			     {Record.toListInd M}
-			     fun{$ R}
-				case R of I#V then if {IsInt I} then I+2#V else I#V end end
-			     end}}
-	    end
-	    proc{RExecTk M}
-	       {TExecTk Self {TAdd M}}
-	    end
-	    proc{RReturnTk M Type}
-	       {TReturnTk Self {TAdd M} Type}
-	    end	    
-	    class TextTag
-	       from Tk.textTag QTkClass
-	       feat widgetType:texttag
-		  typeInfo:r(all:r(parent:no
-				   background:color
-				   bgstipple:bitmap
-				   borderwidth:pixel
-				   fgstipple:bitmap
-				   font:font
-				   foreground:color
-				   justify:[left right center]
-				   lmargin1:pixel
-				   lmargin2:pixel
-				   offset:pixel
-				   overstrike:boolean
-				   relief:relief
-				   rmargin:pixel
-				   spacing1:pixel
-				   spacing2:pixel
-				   spacing3:pixel
-				   tabs:no
-				   underline:boolean
-				   wrap:[none char word])
-			     uninit:r
-			     unset:r(parent:unit)
-			     unget:r(parent:unit
-				     font:unit
-				     bgstipple:unit
-				     fgstipple:unit
-				     tabs:unit))
-		  first last
-	 		  
-	       meth !Init(...)=M
-		  lock
-		     self.parent=Self
-		     self.toplevel=Self.toplevel
-		     {Assert self.widgetType self.typeInfo M}
-		     Tk.textTag,{Record.adjoin M tkInit}
-		     self.first=self#".first"
-		     self.last=self#".last"
-		  end
-	       end
-	       meth set(...)=M
-		  lock
-		     {Assert self.widgetType self.typeInfo M}
-		     {RExecTk {Record.adjoin M configure}}
-		  end
-	       end
-	       meth get(...)=M
-		  lock
-		     {Assert self.widgetType self.typeInfo M}
-		     {Record.forAllInd M
-		      proc{$ I V}
-			 {RReturnTk cget("-"#I V) self.typeInfo.all.I}
-		      end}
-		  end
-	       end
-	       meth add(...)=M
-		  lock
-		     {RExecTk M}
-		  end
-	       end
-	       meth bind(action:A<=proc{$} skip end event:E args:G<=nil)
-		  lock
-		     Command={New Tk.action tkInit(parent:self
-						   action:{{New QTkAction init(parent:self action:A)} action($)}
-						   args:G)}
-		  in
-		     {RExecTk bind(E Command)}
-		  end
-	       end
-	       meth delete=M
-		  lock
-		     {RExecTk M}
-		  end
-	       end
-	       meth lower=M
-		  lock
-		     {RExecTk M}
-		  end
-	       end
-	       meth Range(M)
-		  lock
-		     Last={LastInt M}
-		     Ret=M.Last
-		     Temp
-		  in
-		     {RReturnTk {Record.adjoinAt M Last Temp} list}
-		     Ret={List.map Temp ToCoord}
-		  end
-	       end
-	       meth nextrange(...)=M
-		  {self Range(M)}
-	       end
-	       meth prevrange(...)=M
-		  {self Range(M)}
-	       end
-	       meth 'raise'=M
-		  lock
-		     {RExecTk M}
-		  end
-	       end
-	       meth ranges(...)=M
-		  {self Range(M)}
-	       end
-	       meth remove(...)=M
-		  lock
-		     {RExecTk M}
-		  end
-	       end
-	    end
-	 in
-	    Tag={New TextTag Init(parent:self)}
+%	    Tag={New TextTag Init(parent:self)}
+	    Tag={self.Builder NewResource(self
+					  tt
+					  Init(parent:self) $)}
 	 end
       end
 
@@ -574,6 +582,10 @@ define
 
    Register=[r(widgetType:WidgetType
 	       feature:Feature
-	       widget:QTkText)]
+	       widget:QTkText
+	       resource:[ti#TextImage
+			 tm#TextMark
+			 tt#TextTag]
+	      )]
 
 end

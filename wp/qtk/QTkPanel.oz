@@ -120,12 +120,12 @@ define
 	    Children<-nil
 	    TitleFont<-{CondSelect A font courier}
 	    TitleHeight<-{Tk.returnInt font(metrics @TitleFont "-linespace")}
-	    self.Place={self.toplevel.Builder MapLabelToObject(placeholder(parent:self
-									   relief:raised
-									   bg:{self get(bg:$)}
-									   Feature:Features
-									   borderwidth:2)
-							       $)}
+	    self.Place={self.parent.Builder MapLabelToObject(placeholder(parent:self
+									 relief:raised
+									 bg:{self get(bg:$)}
+									 Feature:Features
+									 borderwidth:2)
+							     $)}
 	    {ForAll Features
 	     proc{$ F#V} self.F=V end}
 	    self.Dummy={New Tk.canvas tkInit(parent:self

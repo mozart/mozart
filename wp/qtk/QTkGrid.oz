@@ -30,6 +30,7 @@ import
    QTkDevel(tkInit:             TkInit
 	    init:               Init
 	    mapLabelToObject:   MapLabelToObject
+	    grid:               Grid
 	    builder:            Builder
 	    execTk:             ExecTk
 	    returnTk:           ReturnTk
@@ -76,8 +77,7 @@ define
 			     container:unit
 			     visual:unit)}
 		    unget:{Record.adjoin GlobalUngetType
-			   r(bitmap:unit
-			     font:unit)})
+			   r(bitmap:unit)})
       attr Children Pack
 	 
       meth !Init(...)=M
@@ -117,46 +117,47 @@ define
       end
 
       meth rowconfigure(N minsize:_<=NoArgs weight:_<=NoArgs pad:_<=NoArgs)=M
-	 {ExecTk grid {Record.adjoin
-		       {Record.filterInd M fun{$ I V} (I\=1) andthen (V\=NoArgs) end}
-		       rowconfigure(self N)}}
+	 {self.parent.Builder {Record.adjoin
+			       {Record.filterInd M fun{$ I V} (I\=1) andthen (V\=NoArgs) end}
+			       Grid(rowconfigure self N)}}
       end
 
       meth columnconfigure(N minsize:_<=NoArgs weight:_<=NoArgs pad:_<=NoArgs)=M
-	 {ExecTk grid {Record.adjoin
-		       {Record.filterInd M fun{$ I V} (I\=1) andthen (V\=NoArgs) end}
-		       columnconfigure(self N)}}
+	 {self.parent.Builder {Record.adjoin
+			       {Record.filterInd M fun{$ I V} (I\=1) andthen (V\=NoArgs) end}
+			       Grid(columnconfigure self N)}}
       end
 
       meth configure(...)=M
-	 {ExecTk grid {Record.mapInd M
-		       fun{$ I V}
-			  if {Int.is I} then
-			     NC
-			  in
-			     if {Object.is V} andthen {HasFeature V parent} then
-				if {List.member V @Children} then
-				   NC=V
-				end
-			     else
-				NC={self.toplevel.Builder
-				    MapLabelToObject({Record.adjoinAt V parent self} $)}
-				Children<-NC|@Children
+	 A B C
+      in
+	 {Record.partitionInd M
+	  fun{$ I _} {Int.is I} end A B}
+	 C={List.toTuple Grid
+	    configure|{List.map {Record.toList A}
+		       fun{$ V}
+			  NC
+		       in
+			  if {Object.is V} andthen {HasFeature V parent} then
+			     if {List.member V @Children} then
+				NC=V
 			     end
-			     if {IsFree NC} then {Exception.raiseError qtk(badParameter V self.widgetType M)} end
-			     NC
 			  else
-			     V
+			     NC={self.parent.Builder
+				 MapLabelToObject({Record.adjoinAt V parent self} $)}
+			     Children<-NC|@Children
 			  end
+			  if {IsFree NC} then {Exception.raiseError qtk(badParameter V self.widgetType M)} end
+			  NC
 		       end}}
+	 {self.parent.Builder {Record.adjoin B C}}
       end
-
       meth forget(...)=M
 	 {Record.forAllInd M
 	  proc{$ I V}
 	     if {Not {Int.is I}} then {Exception.raiseError qtk(badParameter I self.widgetType M)} end
 	     if {Not {List.member V @Children}} then {Exception.raiseError qtk(badParameter V self.widgetType M)} end
-	     {ExecTk grid forget(V)}
+	     {self.parent.Builder Grid(forget V)}
 	     Children<-{List.subtract @Children V}
 	     {V destroy}
 	  end}
@@ -167,7 +168,7 @@ define
       end
 
       meth propagate(B)
-	 {ExecTk grid propagate(self B)}
+	 {self.parent.Builder grid(propagate self B)}
       end
 
       meth remove(...)=M
@@ -175,7 +176,7 @@ define
 	  proc{$ I V}
 	     if {Not {Int.is I}} then {Exception.raiseError qtk(badParameter I self.widgetType M)} end
 	     if {Not {List.member V @Children}} then {Exception.raiseError qtk(badParameter V self.widgetType M)} end
-	     {ExecTk grid remove(V)}
+	     {self.parent.Builder Grid(remove V)}
 	  end}
       end
 

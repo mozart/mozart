@@ -94,7 +94,6 @@ define
 			     scrollwidth:unit)}
 		    unget:{Record.adjoin GlobalUngetType
 			   r(init:unit
-			     font:unit
 			     lrscrollbar:unit
 			     scrollwidth:unit
 			     selectionfrom:unit
