@@ -61,10 +61,11 @@ for active applications to connect with each other.
 <ITEM> The module <ref.extern to="ozdoc:system"
 key="chapter.remote"/<<Remote>>/
 allows an active application to create
-a new site on another host machine and connect with it.
+a new site (OS process) and connect with it.
+The site may be on the same machine or a remote machine.
 <ITEM> The module <ref.extern to="ozdoc:system"
-key="chapter.pickle"/<<Pickle>>/ gives the basic primitives
-for storing and retrieving
+key="chapter.pickle"/<<Pickle>>/ allows an application
+to store and retrieve
 arbitrary stateless data from files and URLs.
 <ITEM> The module <ref.extern to="ozdoc:system"
 key="chapter.fault"/<<Fault>>/ gives the basic primitives
@@ -83,7 +84,7 @@ offering a ticket and taking a ticket.
 <P>The fourth module, <ref.extern to="ozdoc:system"
 key="chapter.fault"/<<Fault>>/, is the base on which
 fault-tolerant abstractions are built.
-The current module provides complete fault detection ability
+The current module provides complete fault-detection ability
 for both site and network failures
 and has hooks that allow to build efficient fault-tolerant
 abstractions within the Oz language.
@@ -104,7 +105,7 @@ and they are also listed together at the end of the tutorial.
 <P>We say two or more applications are <EM>connected</EM>
 if they share a reference to a language entity that allows
 them to exchange information.
-For example, let's say that Application 1 and Application 2
+For example, let Application 1 and Application 2
 reference the same object.
 Then either application can call the object.
 All low-level data transfer between the two applications
