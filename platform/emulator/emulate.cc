@@ -259,18 +259,6 @@ ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
 #define inline
 #endif
 
-inline
-Bool Board::isFailureInBody ()
-{
-  Assert(isWaiting());
-  if (isWaitTop()) {
-    return (NO);
-  }
-  Opcode op = CodeArea::adressToOpcode(CodeArea::getOP(body.getPC()));
-  return (op == FAILURE);
-}
-
-
 // -----------------------------------------------------------------------
 // genCallInfo: self modifying code!
 
@@ -795,12 +783,12 @@ loop:
     return CE_NOTHING;
   }
 
-  if (currentBoard->isWait ()) {
+  if (currentBoard->isWait()) {
 // WAITTTOP
     if (currentBoard->isWaitTop()) {
 
 // WAITTOP: top commit
-      if ( entailment() ) {
+      if (entailment()) {
         trail.popMark();
 
         Board *tmpBB = currentBoard;
@@ -825,7 +813,7 @@ loop:
     // WAIT: no rule
   }
 
-  if (currentBoard->isSolve ()) {
+  if (currentBoard->isSolve()) {
     // try to reduce a solve board;
     SolveActor *solveAA = SolveActor::Cast(currentBoard->getActor());
     Board      *solveBB = currentBoard;
@@ -882,18 +870,8 @@ loop:
 
         } else {
           // to enumerate;
-          DebugCheck ((wa->hasOneChild() == OK),
-                      error ("wait actor for enumeration with single clause?"));
-          DebugCheck (((WaitActor::Cast (wa))->hasNext() == OK),
-                      error ("wait actor for distribution has a continuation"));
-          DebugCheck ((solveBB->hasSuspension() == NO),
-                      error ("solve board by the enumertaion without suspensions?"));
 
-          if (wa->getChildCount()==2 &&
-              wa->getChildRefAt(1)->isFailureInBody()==OK) {
-
-            wa->getChildRefAt(1)->setFailed();
-
+          if (wa->getChildCount()==1 && wa->isChoice()) {
             Board *waitBoard = wa->getChildRef();
 
             waitBoard->setCommitted(solveBB);
@@ -3065,26 +3043,40 @@ LBLsuspendThread:
 
   Case(CREATEOR)
     {
-      ProgramCounter elsePC = getLabelArg (PC+1);
-      int argsToSave = getPosIntArg (PC+2);
-      CAA = new WaitActor(CBB,CPP,
-                          NOCODE,Y,G,X,argsToSave);
+      ProgramCounter elsePC = getLabelArg(PC+1);
+      int argsToSave = getPosIntArg(PC+2);
+
+      CAA = new WaitActor(CBB, CPP, NOCODE, Y, G, X, argsToSave, NO);
       DISPATCH(3);
     }
 
   Case(CREATEENUMOR)
     {
-      ProgramCounter elsePC = getLabelArg (PC+1);
-      int argsToSave = getPosIntArg (PC+2);
+      ProgramCounter elsePC = getLabelArg(PC+1);
+      int argsToSave = getPosIntArg(PC+2);
 
-      CAA = new WaitActor(CBB,CPP,
-                          NOCODE, Y, G, X, argsToSave);
+      CAA = new WaitActor(CBB, CPP, NOCODE, Y, G, X, argsToSave, NO);
       if (e->currentSolveBoard != (Board *) NULL) {
-        SolveActor *sa= SolveActor::Cast (e->currentSolveBoard->getActor ());
-        sa->pushWaitActor (WaitActor::Cast (CAA));
+        SolveActor *sa = SolveActor::Cast(e->currentSolveBoard->getActor());
+        sa->pushWaitActor(WaitActor::Cast(CAA));
       }
       DISPATCH(3);
     }
+
+  /*
+  Case(CREATECHOICE)
+    {
+      ProgramCounter elsePC = getLabelArg (PC+1);
+      int argsToSave = getPosIntArg (PC+2);
+
+      CAA = new WaitActor(CBB, CPP, NOCODE, Y, G, X, argsToSave, OK);
+      if (e->currentSolveBoard != (Board *) NULL) {
+        SolveActor *sa = SolveActor::Cast(e->currentSolveBoard->getActor());
+        sa->pushWaitActor(WaitActor::Cast(CAA));
+      }
+      DISPATCH(3);
+    }
+    */
 
   Case(WAITCLAUSE)
     {
