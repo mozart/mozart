@@ -146,45 +146,39 @@ void debugStreamTerm(Thread *tt) {
 void debugStreamCall(ProgramCounter PC, char *name, int arity,
                      TaggedRef *arguments, bool builtin) {
 
-  Board *bb = gotoRootBoard();
-
-  TaggedRef tail    = am.threadStreamTail;
-  TaggedRef newTail = OZ_newVariable();
-
   ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
 
-  TaggedRef file, comment;
-  int line, abspos;
+  if (debugPC != NOCODE) {
+    Board *bb = gotoRootBoard();
 
-  am.currentThread->stop();
+    TaggedRef tail    = am.threadStreamTail;
+    TaggedRef newTail = OZ_newVariable();
 
-  if (debugPC == NOCODE) {
-    file    = OZ_atom("noDebugInfo");
-    comment = OZ_atom("");
-    line    = 1;
-    abspos  = 1;
-  }
-  else
+    TaggedRef file, comment;
+    int line, abspos;
+
+    am.currentThread->stop();
+
     CodeArea::getDebugInfoArgs(debugPC,file,line,abspos,comment);
+    TaggedRef arglist = CodeArea::argumentList(arguments, arity);
 
-  TaggedRef arglist = CodeArea::argumentList(arguments, arity);
+    TaggedRef pairlist =
+      cons(OZ_pairA("thr",
+                    OZ_mkTupleC("#",2,makeTaggedConst(am.currentThread),
+                                OZ_int(am.currentThread->getID()))),
+           cons(OZ_pairA("file", file),
+                cons(OZ_pairAI("line", line),
+                     cons(OZ_pairAA("name", name),
+                          cons(OZ_pairA("args", arglist),
+                               cons(OZ_pairA("builtin",
+                                             builtin ? OZ_true() : OZ_false()),
+                                    OZ_nil()))))));
 
-  TaggedRef pairlist =
-    cons(OZ_pairA("thr",
-                  OZ_mkTupleC("#",2,makeTaggedConst(am.currentThread),
-                              OZ_int(am.currentThread->getID()))),
-         cons(OZ_pairA("file", file),
-              cons(OZ_pairAI("line", line),
-                   cons(OZ_pairAA("name", name),
-                        cons(OZ_pairA("args", arglist),
-                             cons(OZ_pairA("builtin",
-                                           builtin ? OZ_true() : OZ_false()),
-                                  OZ_nil()))))));
-
-  TaggedRef entry = OZ_recordInit(OZ_atom("step"), pairlist);
-  OZ_unify(tail, OZ_cons(entry, newTail));
-  am.threadStreamTail = newTail;
-  gotoBoard(bb);
+    TaggedRef entry = OZ_recordInit(OZ_atom("step"), pairlist);
+    OZ_unify(tail, OZ_cons(entry, newTail));
+    am.threadStreamTail = newTail;
+    gotoBoard(bb);
+  }
 }
 
 // ------------------ explore a thread's taskstack ---------------------------

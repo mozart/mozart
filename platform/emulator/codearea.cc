@@ -245,17 +245,7 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, RefsArray G, RefsArray Y)
   if (pc == NOCODE_GLOBALVARNAME)
     return nil();
 
-  TaggedRef globals, locals;
-
-  if (G)
-    globals = globalVars(PC,G);
-  else
-    globals = OZ_atom("unknown");
-
-  if (Y)
-    locals = localVars(PC,Y);
-  else
-    locals = OZ_atom("unknown");
+  TaggedRef vars = varNames(PC,G,Y);
 
   Reg reg;
   ProgramCounter next;
@@ -293,39 +283,47 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, RefsArray G, RefsArray Y)
   }
 
   TaggedRef pairlist =
-    OZ_cons(OZ_pairA("G", globals),
-            OZ_cons(OZ_pairA("Y", locals),
-                    OZ_cons(OZ_pairA("PC", OZ_int((int) PC)),
+    OZ_cons(OZ_pairA("vars", vars),
+            OZ_cons(OZ_pairA("PC", OZ_int((int) PC)),
     OZ_cons(OZ_pairA("name", OZ_atom(pred ? pred->getPrintName() : "???")),
             OZ_cons(OZ_pairA("file", file),
                     OZ_cons(OZ_pairA("line", OZ_int(line)),
-                            OZ_nil()))))));
+                            OZ_nil())))));
 
   return OZ_recordInit(OZ_atom("proc"), pairlist);
 }
 
-TaggedRef CodeArea::globalVars(ProgramCounter PC, RefsArray G)
+TaggedRef CodeArea::varNames(ProgramCounter PC, RefsArray G, RefsArray Y)
 {
-  TaggedRef ret;
   ProgramCounter aux = definitionEnd(PC);
   aux += sizeOf(getOpcode(aux));
 
-  ret = nil();
-  for (int i=0; getOpcode(aux) == GLOBALVARNAME; i++) {
-    TaggedRef aux1 = getLiteralArg(aux+1);
-    ret = cons(OZ_mkTupleC("#", 2, aux1, G[i]), ret);
+  TaggedRef locals = nil();
+  for (int i=0; getOpcode(aux) == LOCALVARNAME; i++) {
+    if (Y) {
+      TaggedRef aux1 = getLiteralArg(aux+1);
+      locals = cons(OZ_mkTupleC("#", 2, aux1,
+                                Y[i] ? Y[i] : OZ_atom("unallocated")),
+                    locals);
+    }
     aux += sizeOf(getOpcode(aux));
   }
-  return reverseC(ret);
-}
 
-TaggedRef CodeArea::localVars(ProgramCounter PC, RefsArray Y)
-{
-  TaggedRef ret;
-  ret = nil();
-  for(int i=getRefsArraySize(Y)-1; i>=0; i--)
-    if (Y[i])
-      ret = cons(OZ_mkTupleC("#", 2, OZ_atom("???"), Y[i]), ret);
+  TaggedRef globals = nil();
+  if (G) {
+    for (int i=0; getOpcode(aux) == GLOBALVARNAME; i++) {
+      TaggedRef aux1 = getLiteralArg(aux+1);
+      globals = cons(OZ_mkTupleC("#", 2, aux1, G[i]), globals);
+      aux += sizeOf(getOpcode(aux));
+    }
+  }
+
+  TaggedRef pairlist =
+    cons(OZ_pairA("Y", locals),
+         cons(OZ_pairA("G", globals),
+              nil()));
+
+  TaggedRef ret = OZ_recordInit(OZ_atom("v"), pairlist);
   return ret;
 }
 
