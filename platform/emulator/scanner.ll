@@ -1074,6 +1074,7 @@ static void xy_init() {
   hashTable->insert(SCANNERVersion);   // exact version number
   hashTable->insert(SCANNERMinorVersion);   // minor version number
   hashTable->insert(SCANNERMajorVersion);   // general Oz release
+  hashTable->insert("NEWCOMPILER");
 
   conditional_p = 0;
   conditional_basep = 0;
