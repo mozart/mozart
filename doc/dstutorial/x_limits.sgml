@@ -31,7 +31,8 @@ does not support virtual sites efficiently
 (see also <ptr.extern to="ozdoc:system" key="chapter.remote">).
 This is due to a system-wide limit
 on the number of shared memory pages.
-The default is six shared pages per process and 100 system-wide.
+For Solaris,
+the default is six shared pages per process and 100 system-wide.
 Changing this limit requires rebooting the machine.
 Since at least two pages are needed for efficient communication,
 the default value results in poor
