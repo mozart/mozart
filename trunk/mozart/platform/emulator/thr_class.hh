@@ -148,7 +148,7 @@ private:
     int flags:  (sizeof(int) - sizeof(char)) * sizeof(char) * 8;
   } state;
 
-  unsigned long id;
+  unsigned int id;
   ThreadBodyItem item;		// NULL if it's a deep 'unify' suspension;
 
 #ifdef PERDIO
@@ -203,7 +203,7 @@ public:
   void setBody(RunnableThreadBody *rb) { item.threadBody=rb; }
   void setInitialPropagator(OZ_Propagator *pro) { item.propagator=pro; }
 
-  unsigned long getID() { return id; }
+  unsigned int getID() { return id; }
 
   void setSelf(Object *o) { setPtr(o); }
   Object *getSelf() { return (Object *) getPtr(); }
