@@ -134,8 +134,7 @@ in
 	 %% the buttons
 	 local
 	    %% Tk has some problems printing centered text :-(
-	    Bs = {Map [' step' ' next' /* ' finish' */ ' cont' ' forget'
-		       ' stack' ]
+	    Bs = {Map [' step' ' next' ' cont' ' forget' ' term' ' stack' ]
 		  fun {$ B}
 		     {New Tk.button tkInit(parent: self.ButtonFrame
 					   text:   B
@@ -527,7 +526,10 @@ in
 	    
 	    elseof ' forget' then
 	       ThreadManager,forget(T I)
-	    
+
+	    elseof ' term' then
+	       ThreadManager,kill(T I)
+	       
 	    elseof ' stack' then  %% will go away, someday...
 	       {Browse {Dbg.taskstack T MaxStackBrowseSize}}
 	    end
