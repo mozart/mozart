@@ -41,30 +41,33 @@ void AM::rebind(TaggedRef *refPtr, TaggedRef newRef)
 inline
 Bool AM::fastUnify(TaggedRef A, TaggedRef B, Bool prop)
 {
-
-  if (prop == NO) return unify(A,B,NO);
+  if (prop == NO) goto bomb;
   
-  TaggedRef proto = currentUVarPrototype;
-  TaggedRef term1 = A;
-  TaggedRef term2 = B;
-
-  DEREF(term1,term1Ptr,_1);
-
-  if (proto == term1) {
+  {
+    TaggedRef proto = currentUVarPrototype;
+    TaggedRef term1 = A;
+    TaggedRef term2 = B;
+    
+    DEREF(term1,term1Ptr,_1);
+    
+    if (proto == term1) {
+      DEREF(term2,_2,_3);
+      if (!isAnyVar(term2)) {
+	doBind(term1Ptr,term2);
+	goto exit;	
+      }
+    } 
     DEREF(term2,term2Ptr,_2);
-    if (term2 != proto || term1Ptr != term2Ptr) {
-      doBind(term1Ptr,isAnyVar(term2) ? makeTaggedRef(term2Ptr) : term2);
-    }
-    return OK;
-  } else {
-    DEREF(term2,term2Ptr,_2);
-    if (proto == term2) {
-      doBind(term2Ptr,isAnyVar(term1) ? makeTaggedRef(term1Ptr) : term1);
-      return OK;
+    if (proto == term2 && !isAnyVar(term1)) {
+      doBind(term2Ptr,term1);
+      goto exit;
     }
   }
+ bomb:
+  return unify(A,B,prop);
 
-  return unify(A,B);
+ exit:
+  return OK;
 }
 
 inline
@@ -124,16 +127,6 @@ Bool AM::installScript(Script &script)
   return ret;
 }
 
-inline
-TaskStack *AM::ensureTaskStack()
-{
-  TaskStack *ret = currentTaskStack;
-  if (ret==NULL) {
-    ret = currentTaskStack = currentThread->makeTaskStack();
-  }
-  return ret;
-}
-
 
 inline
 void AM::pushTask(Board *n,ProgramCounter pc,
@@ -141,14 +134,14 @@ void AM::pushTask(Board *n,ProgramCounter pc,
 			 RefsArray x,int i)
 {
   n->incSuspCount();
-  ensureTaskStack()->pushCont(n,pc,y,g,x,i);
+  currentThread->taskStack.pushCont(n,pc,y,g,x,i);
 }
 
 inline
 void AM::pushCFun(Board *n, OZ_CFun f, RefsArray x, int i)
 {
   n->incSuspCount();
-  ensureTaskStack()->pushCont (n, f, (Suspension *) NULL, x, i);
+  currentThread->taskStack.pushCFunCont(n, f, (Suspension *) NULL, x, i);
 }
 
 inline
