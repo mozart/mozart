@@ -1,0 +1,13 @@
+#ifndef __genvar_icc__
+#define __genvar_icc__
+
+
+//#include "fdgenvar.hh"
+
+class GenFDVariable;
+
+inline void GenCVariable::relinkSuspList(GenCVariable* leftVar){
+  leftVar->concSuspList(unlinkSuspension());
+}
+
+#endif //__genvar_icc__

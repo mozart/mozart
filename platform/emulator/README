@@ -1,0 +1,29 @@
+README for Oz AM
+
+This is the Oz machine.
+
+REQUIREMENTS
+
+  GNU m4 1.0.3
+  GNU gcc 2.5.6
+  GNU dld
+  GNU gmp
+
+FILES
+   Oz/
+        ozmkmf
+        Imake.tmpl
+        Imakefile
+        include/
+        AM/
+
+BUILD
+
+edit Oz/Imake.tmpl: OZHOME
+edit Oz/AM/Imakefile: EXTRALIB, EXTRAOBJS, M4
+
+change to directory Oz
+
+% ozmkmf
+% make Makefiles SUBDIRS="include AM"
+% make all SUBDIRS="include AM"

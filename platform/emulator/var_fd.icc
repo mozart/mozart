@@ -1,0 +1,69 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __fdgenvar_icc__
+#define __fdgenvar_icc__
+
+
+inline void GenFDVariable::propagate(TaggedRef var, FDState state,
+                                     TaggedRef term)
+{
+#ifdef DEBUG_FD
+  if ((int)this != var >> 4)
+    error("this and var should be the same variable.");
+#endif
+
+  switch (state) {
+  case det:
+    GenCVariable::propagate(var, fdSuspList[det], term);
+  case bounds:
+    GenCVariable::propagate(var, fdSuspList[bounds], term);
+  case size:
+    GenCVariable::propagate(var, fdSuspList[size], term);
+  case any:
+    GenCVariable::propagate(var, term);
+    break;
+  default:
+    error("Unexpected case in GenFDVariable::propagate.");
+  }
+  if (GenCVariable::unifyGenCVariables == OK)
+    GenCVariable::propagate(var, fdSuspList[eqvar], term);
+}
+
+
+inline void GenFDVariable::propagate(TaggedRef var, FDState state,
+                                     TaggedRef* tPtr) {
+  propagate(var, state, makeTaggedRef(tPtr));
+}
+
+
+inline void GenFDVariable::relinkSuspList(GenFDVariable* leftVar)
+{
+  GenCVariable::relinkSuspList(leftVar); // any
+  for (int i = 0; i < any; i++)
+  leftVar->fdSuspList[i] =
+    ::concSuspList(leftVar->fdSuspList[i], fdSuspList[i]);
+}
+
+inline void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef* trPtr)
+{
+#ifdef DEBUG_FD
+  if (! (finiteDomain == singleton))
+    error("Singleton expected.");
+#endif
+
+  TaggedRef si = newSmallInt(finiteDomain.getSingleton());
+  propagate(*trPtr, det, si);
+  *trPtr = si;
+}
+
+
+#endif

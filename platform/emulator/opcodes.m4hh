@@ -1,0 +1,45 @@
+#ifndef __OPCODESH
+#define __OPCODESH
+typedef enum {
+
+define(`OPCODE',0) dnl
+define(instruction,
+        `ifelse(eval(numOfRegs($2)+numOfRegs($3)+numOfRegs($4)),1,oneReg($1),
+                eval(numOfRegs($2)+numOfRegs($3)+numOfRegs($4)),2,twoRegs($1),
+                TOUPPER($1) = `OPCODE,') dnl
+         define(`OPCODE',eval(OPCODE+1)) dnl
+')
+
+define(oneReg,
+        `TOUPPER($1)X = `OPCODE,'
+         TOUPPER($1)Y = `eval(OPCODE + 1),'
+         TOUPPER($1)G = `eval(OPCODE + 2),'
+         `define(`OPCODE',eval(OPCODE + 2)) dnl'
+')
+
+define(twoRegs,
+        `TOUPPER($1)XX = `OPCODE,'
+         TOUPPER($1)XY = `eval(OPCODE + 1),'
+         TOUPPER($1)XG = `eval(OPCODE + 2),'
+         TOUPPER($1)YX = `eval(OPCODE + 3),'
+         TOUPPER($1)YY = `eval(OPCODE + 4),'
+         TOUPPER($1)YG = `eval(OPCODE + 5),'
+         TOUPPER($1)GX = `eval(OPCODE + 6),'
+         TOUPPER($1)GY = `eval(OPCODE + 7),'
+         TOUPPER($1)GG = `eval(OPCODE + 8),'
+         `define(`OPCODE',eval(OPCODE+8)) dnl'
+')
+
+define(numOfRegs,
+        `ifelse($1,Register,1,0)')
+
+
+
+
+include(`../include/instrDefs.m4')
+
+
+
+ERROR  /* this should always be the last one */
+} Opcode;
+#endif
