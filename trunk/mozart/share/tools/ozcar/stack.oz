@@ -3,31 +3,10 @@
 
 local
    
-   fun {B2F Nr B}
-      frame(nr      : Nr
-	    id      : 0
-	    file    : ''
-	    line    : 0
-	    time    : 0
-	    name    : B.name
-	    args    : B.args
-	    builtin : true)
-   end
-
-   fun {P2F Nr P D}
-      frame(nr      : Nr
-	    id      : 0
-	    file    : P.file
-	    line    : P.line
-	    time    : 0
-	    name    : P.name
-	    args    : D.1.2
-	    builtin : false)
-   end
-
-   fun {S2F Nr Id File Line Time Name Args Builtin}
+   fun {S2F Nr Id Dir File Line Time Name Args Builtin}
       frame(nr      : Nr
 	    id      : Id
+	    dir     : Dir
 	    file    : File
 	    line    : Line
 	    time    : Time
@@ -47,22 +26,22 @@ local
 	 end
       end
       proc {DoStackForAllInd Xs I P}
-	 case Xs of nil then skip
-	 [] X|Y|Z then
-	    case X == toplevel then skip else
-	       {P I X Y}
-	       {DoStackForAllInd {Correct Z} I+1 P}
+	 case Xs
+	 of _|nil   then skip
+	 [] X|Y|Z|T then
+	    case {Label Z} == builtin then
+	       {P I {S2F I 0 enter X.file X.line Y.1.2.1 Z.name Z.args true}}
+	    else
+	       {P I {S2F I Y.1.1 enter X.file X.line
+		     Y.1.2.1 Z.name Y.1.2.2 false}}
 	    end
+	    {DoStackForAllInd Z|T I+1 P}
+	 else {OzcarError 'strange stack?!'}
 	 end
       end
    in
       proc {StackForAllInd Xs P}
-	 case {Label Xs.1} == builtin then
-	    {P 1 Xs.1 nil}
-	    {DoStackForAllInd Xs.2 2 P}
-	 else
-	    {DoStackForAllInd Xs 1 P}
-	 end
+	 {DoStackForAllInd Xs.2 1 P}
       end
    end
    
@@ -80,42 +59,97 @@ in
 
       attr
 	 Size           % current size of stack
+	 SP             % StackPointer (SP==Size+1 or SP==Size)
+	 Rebuild        % should we re-calculate the stack
+                        % when the next 'step' message arrives?
       
       meth init(thr:Thr id:ID)
 	 self.T = Thr
 	 self.I = ID
 	 self.D = {Dictionary.new}
-	 Size <- 0
+	 Size    <- 0
+	 SP      <- 1
+	 Rebuild <- false
       end
 
-      meth step(name:N args:A builtin:B file:F line:L time:T frame:FrameId)
-	 OldSize = @Size
-	 Frame   = {S2F OldSize+1 FrameId F L T N A B}
-      in
-	 {Dput self.D OldSize Frame}
-	 {Ozcar printStackFrame(frame:Frame direction:enter)}
-	 Size <- OldSize + 1
-      end
-
-      meth exit(FrameId)
-	 Key   = @Size - 1
-	 Frame = {Dget self.D Key}
-      in
-	 {Ozcar printStackFrame(frame:Frame direction:leave)}
-	 Size <- Key
+      meth rebuild(Flag)
+	 Rebuild <- Flag
       end
       
-      meth clear
-	 %% clear stack widget
-	 skip
-	 %% clear env widgets
-	 skip
+      meth print
+	 Frames = {Ditems self.D}
+	 Depth  = @Size
+      in
+	 {Ozcar printStack(id:self.I frames:Frames depth:Depth)}
       end
 
+      meth printTop
+	 case @Rebuild then
+	    StackManager,ReCalculate
+	 else
+	    S = @Size
+	 in
+	    case S == 0 then skip else
+	       TopFrame = {Dget self.D S}
+	    in
+	       {Ozcar printStackFrame(frame:TopFrame delete:true)}
+	    end
+	 end
+      end
+      
+      meth step(name:N args:A builtin:B file:F line:L time:T frame:FrameId)
+	 Frame = {S2F @SP FrameId enter F L T N A B}
+      in
+	 {Dput self.D @SP Frame}
+	 SP   <- @SP + 1
+	 Size <- @SP - 1
+      end
+      
+      meth exit(FrameId)
+	 S = @Size
+      in
+	 local
+	    Key   = case S == @SP then {Dremove self.D S} S-1 else S end
+	    Frame
+	    NewFrame
+	 in
+	    SP   <- @SP - 1
+	    Size <- Key
+	    case Key > 0 then
+	       Frame    = {Dget self.D Key}
+	       NewFrame = {Record.adjoinAt Frame dir leave}
+	       {Dput self.D Key NewFrame}
+	    else
+	       {Thread.resume self.T}
+	    end
+	 end
+      end
+      
       %% local helpers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       meth GetStack($)
-	 {Dbg.taskstack self.T MaxStackSize}
+	 {Reverse {Dbg.taskstack self.T MaxStackSize}}
+      end
+      
+      meth RemoveAllFrames
+	 Frames = {Dkeys self.D}
+      in
+	 {ForAll Frames proc {$ Frame} {Dremove self.D Frame} end}
+      end
+      
+      meth ReCalculate
+	 CurrentStack = StackManager,GetStack($)
+      in
+	 {OzcarMessage 're-calculating stack of thread #' # self.I}
+	 StackManager,rebuild(false)
+	 StackManager,RemoveAllFrames
+	 {StackForAllInd CurrentStack
+	  proc {$ Key Frame}
+	     {Dput self.D Key Frame}
+	  end}
+	 Size <- {Length {Dkeys self.D}}
+	 SP   <- @Size + 1
+	 StackManager,print
       end
       
       %% access methods %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -125,8 +159,17 @@ in
       end
 
       meth getPos(file:?F line:?L)
-	 F = undef
-	 L = 0
+	 S = @Size
+      in
+	 case S == 0 then
+	    F = undef
+	    L = 0
+	 else
+	    TopFrame = {Dget self.D S}
+	 in
+	    F = TopFrame.file
+	    L = TopFrame.line
+	 end
       end
 	 
    end
