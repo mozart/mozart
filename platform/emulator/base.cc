@@ -53,7 +53,7 @@ void prefixWarning()
 
 extern char *AMVersion, *AMDate, *ozplatform;
 
-void OZ_error(const char *format, ...)
+void OZ_error(OZ_CONST char *format, ...)
 {
   va_list ap;
 
@@ -93,7 +93,7 @@ void OZ_error(const char *format, ...)
   oskill(0,ozconf.dumpCore?SIGQUIT:SIGUSR1);
 }
 
-void OZ_warning(const char *format, ...)
+void OZ_warning(OZ_CONST char *format, ...)
 {
   va_list ap;
 

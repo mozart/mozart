@@ -75,7 +75,7 @@ TaggedRef OzDebug::toRecord(const char *label, Thread *thread, int frameId) {
                                                      getTaggedArg(PC+4)),
                                             pairlist))))))));
 
-  return OZ_recordInit(OZ_atom(label), pairlist);
+  return OZ_recordInit(OZ_atom((OZ_CONST char*)label), pairlist);
 }
 
 TaggedRef OzDebug::getFrameVariables() {

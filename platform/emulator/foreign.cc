@@ -1148,15 +1148,15 @@ int OZ_termGetSize(OZ_Term term, int depth, int width)
  * Atoms
  */
 
-const char *OZ_atomToC(OZ_Term term)
+OZ_CONST char *OZ_atomToC(OZ_Term term)
 {
   term = oz_deref(term);
 
   Literal *a = tagged2Literal(term);
-  return a->getPrintName();
+  return (OZ_CONST char *)a->getPrintName();
 }
 
-OZ_Term OZ_atom(const char *s)
+OZ_Term OZ_atom(OZ_CONST char *s)
 {
   return oz_atom(s);
 }
@@ -1172,7 +1172,7 @@ int OZ_boolToC(OZ_Term term)
  * -----------------------------------------------------------------*/
 
 /* convert a C string (char*) to an Oz string */
-OZ_Term OZ_string(const char *s)
+OZ_Term OZ_string(OZ_CONST char *s)
 {
   return oz_string(s);
 }
