@@ -1,12 +1,9 @@
 %%%
-%%% Authors:
-%%%   Author's name (Author's email address)
-%%%
-%%% Contributors:
-%%%   optional, Contributor's name (Contributor's email address)
+%%% Author:
+%%%   Benjamin Lorenz <lorenz@ps.uni-sb.de>
 %%%
 %%% Copyright:
-%%%   Organization or Person (Year(s))
+%%%   Benjamin Lorenz, 1997
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -21,9 +18,6 @@
 %%% for information on usage and redistribution
 %%% of this file, and for a DISCLAIMER OF ALL
 %%% WARRANTIES.
-%%%
-%%% $Id$
-%%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
 \insert prof-string
 \insert prof-tk
@@ -70,4 +64,3 @@ fun {StripPath File}
       end
    end
 end
-
