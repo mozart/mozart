@@ -152,7 +152,8 @@ in
 	    case E then
 	       Stack = {Dget self.ThreadDic I}
 	    in
-	       Gui,status('Thread #' # I # ' has reached a breakpoint')
+	       Gui,status('Thread #' # I # ' has reached a breakpoint' #
+			  ' or woke up another thread')
 	       {OzcarMessage KnownThread # {ID I}}
 	       {Stack rebuild(true)}
 	    else
@@ -331,8 +332,7 @@ in
 	    case ThreadManager,EmptyTree($) then
 	       currentThread <- undef
 	       currentStack  <- undef
-	       SourceManager,scrollbar(file:'' line:undef
-				       color:undef what:both)
+	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
 	       Gui,selectNode(0)
 	       Gui,clearStack
 	       case Select then
@@ -353,6 +353,7 @@ in
 	       end
 	    else
 	       Gui,status('Thread #' # I # ' died')
+	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
 	       Gui,printStack(id:I frames:nil depth:0)
 	    end
 	 else skip end
