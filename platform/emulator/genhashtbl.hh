@@ -164,7 +164,7 @@ public:
   int getUsed(){return counter;}
   GenHashTable(int);
   void htAdd(int,GenHashBaseKey*,GenHashEntry*);
-  void htSub(int,GenHashNode*);
+  Bool htSub(int,GenHashNode*);
   GenHashNode* htFindFirst(int);
   GenHashNode* getFirst(int&);
   GenHashNode* getNext(GenHashNode*,int&);
