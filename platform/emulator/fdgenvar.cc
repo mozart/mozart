@@ -14,7 +14,8 @@
 #pragma implementation "fdgenvar.hh"
 #endif
 
-#include "genvar.hh"
+#include "codearea.hh"
+#include "fdgenvar.hh"
 #include "bignum.hh"
 #include "fdprofil.hh"
 

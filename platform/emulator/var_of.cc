@@ -3,10 +3,7 @@
 #pragma implementation "ofgenvar.hh"
 #endif
 
-#include "tagged.hh"
-#include "term.hh"
-#include "genvar.hh"
-#include "misc.hh"
+#include "ofgenvar.hh"
 
 //-------------------------------------------------------------------------
 //                               for class DynamicTable
