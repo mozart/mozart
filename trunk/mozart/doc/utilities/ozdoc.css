@@ -34,10 +34,9 @@ H1.title, H2.authors {
   text-align: center;
 }
 
-H1 { color: #9B0000; }
-H2 { color: #FF9933; }
-H3 { color: #888888; }
-H4 { color: #881155; }
+H1     { color: #9B0000; }
+H2     { color: #FF9933; }
+H3, H4 { color: #881155; }
 
 UL.toc {
   list-style: none;
