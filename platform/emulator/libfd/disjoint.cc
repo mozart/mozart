@@ -257,7 +257,7 @@ public:
 template <class T, class M>
 class PushArray : public EnlargeableArray<T,M> {
 protected:
-  const int _margin = 10;
+  static const int _margin = 10;
   int _high;
 public:
   PushArray(int s = _margin)
@@ -373,7 +373,7 @@ private:
 
   int _read, _write, _size, _maxsize;
 
-  const int _init_maxsize = 0x10; // must be power of 2
+  static const int _init_maxsize = 0x10; // must be power of 2
 
   IntPropResizeableArray _queue;
 
