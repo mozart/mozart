@@ -2,6 +2,9 @@
 %%% Author:
 %%%   Tobias Mueller <tmueller@ps.uni-sb.de>
 %%%
+%%% Contributor:
+%%%   Leif Kornstaedt
+%%%
 %%% Copyright:
 %%%   Tobias Mueller, 1998
 %%%
