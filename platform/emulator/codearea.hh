@@ -308,7 +308,9 @@ public:
   void writeAddress(void *ptr)           { CheckWPtr; wPtr=writeWord(ptr,wPtr); }
   void writeReg(int i)                   { CheckWPtr; wPtr=writeRegIndex(i,wPtr); }
   void writeLabel(int lbl)         { CheckWPtr; wPtr=writeLabel(lbl,codeBlock,wPtr,OK); }
-
+  void writeDebugInfo(TaggedRef file, int line) {
+    CheckWPtr; allDbgInfos = new DbgInfo(wPtr,file,line,allDbgInfos);
+  }
 };
 
 

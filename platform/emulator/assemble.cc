@@ -73,6 +73,16 @@ OZ_C_proc_begin(BImakeProc,3)
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(BIaddDebugInfo,3)
+{
+  declareCodeBlock(0,code);
+  OZ_declareNonvarArg(1,file); file = deref(file);
+  OZ_declareIntArg(2,line);
+  code->writeDebugInfo(file,line);
+  return PROCEED;
+}
+OZ_C_proc_end
+
 
 OZ_C_proc_begin(BIstoreInt,2)
 {
@@ -108,10 +118,11 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIstoreTagged,2)
 {
   declareCodeBlock(0,code);
-  OZ_declareNonvarArg(1,atomOrInt);
-  atomOrInt = deref(atomOrInt);
-  Assert(OZ_isLiteral(atomOrInt) || OZ_isInt(atomOrInt));
-  code->writeTagged(atomOrInt);
+  OZ_declareNonvarArg(1,literalOrNumber);
+  literalOrNumber = deref(literalOrNumber);
+  Assert(OZ_isLiteral(literalOrNumber)
+         || OZ_isInt(literalOrNumber) || OZ_isFloat(literalOrNumber));
+  code->writeTagged(literalOrNumber);
   return PROCEED;
 }
 OZ_C_proc_end
@@ -353,6 +364,7 @@ BIspec biSpec[] = {
   {"opInfo",           2, BIopInfo,           0},
   {"newCodeBlock",     2, BInewCodeBlock,     0},
   {"makeProc",         3, BImakeProc,         0},
+  {"addDebugInfo",     3, BIaddDebugInfo,     0},
   {"storeOp",          2, BIstoreOp,          0},
   {"storeInt",         2, BIstoreInt,         0},
   {"storeReg",         2, BIstoreReg,         0},
