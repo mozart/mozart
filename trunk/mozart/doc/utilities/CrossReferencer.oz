@@ -22,7 +22,7 @@
 functor
 import
    Gdbm at 'x-oz://contrib/gdbm'
-   HTML(seq: SEQ verbatim: VERBATIM)
+   HTML(seq: SEQ verbatim: VERBATIM pcdata: PCDATA)
 export
    'class': CrossReferencerClass
 define
