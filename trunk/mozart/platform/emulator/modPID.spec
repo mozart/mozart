@@ -30,8 +30,8 @@
 	             out => ['+record'],
 		     BI  => BIGetPID},
 
-    'received'	=> { in  => ['value'],
-		     out => [],
+    'received'	=> { in  => [],
+		     out => ['value'],
 		     BI  => BIReceivedPID},
 
     'toPort'	=> { in  => ['+virtualString','+int','+int','+int'],
