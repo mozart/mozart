@@ -52,7 +52,7 @@ void SVariable::wakeupAll()
   while (suspList) {
     Thread *tt = suspList->getElem();
 
-    if (!tt->isDeadThread()) {
+    if (!tt->isDeadThread() && !tt->isRunnable()) {
       am.wakeupAny(tt,GETBOARD(this));
     }
     suspList = suspList->dispose();
