@@ -82,7 +82,7 @@ OZ_Return MonitorPropagator::propagate(OZ_Boolean is_inprop)
   // now the other way around: 
   // check if stream is closed, i.e., _fsetvar_ becomes determined
   if (stream.isClosed()) {
-    static max_card = OZ_getFSetSup() + OZ_getFSetInf()+ 1;
+    static int max_card = OZ_getFSetSup() + OZ_getFSetInf()+ 1;
     // fsetvar has to become a value
     int known_in = (is_inprop 
 		    ? fsetvar->getKnownIn() 

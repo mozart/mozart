@@ -285,7 +285,7 @@ unsigned hash(char *s)
 
 
 class LabelTable {
-  const int tableSize = 1024*3;  /* fixed size, cannot grow :-( */
+  static const int tableSize = 1024*3;  /* fixed size, cannot grow :-( */
   Label *table[tableSize];
 
 public:
@@ -360,7 +360,7 @@ int TermTag::tagCounter = 0;
 
 
 class TermTagTable {
-  const int tableSize = 1024;  /* fixed size, cannot grow :-( */
+  static const int tableSize = 1024;  /* fixed size, cannot grow :-( */
   TermTag *table[tableSize];
 public:
   TermTagTable() 

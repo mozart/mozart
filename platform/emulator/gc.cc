@@ -1060,7 +1060,8 @@ GenCVariable * GenCVariable::gcG(void) {
   case PerdioVariable:  to = new PerdioVar(*(PerdioVar*) this); break;
   case CtVariable:      to = ((GenCtVariable*)this)->gc(); break;
   case OZ_VAR_EXTENTED: to = ((ExtentedVar *)this)->gcV(); break;
-  default: error("not impl");
+  default: 
+    Assert(0);
   }
 
   // The generic part
@@ -1119,7 +1120,8 @@ void GenCVariable::gcRecurseG(void) {
   case FSetVariable:    Assert(0); break;
   case CtVariable:      ((GenCtVariable*)this)->gcRecurse(); break;
   case OZ_VAR_EXTENTED: ((ExtentedVar *)this)->gcRecurseV(); break;
-  default: error("not impl");
+  default: 
+    Assert(0);
   }
 
 }
@@ -1422,7 +1424,7 @@ void gc_finalize()
 	finalize_list = oz_cons(pair,finalize_list);
       break;
     default	:
-      error("unexpected tag type in gc_finalize: %d",tagTypeOf(obj));
+      Assert(0);
     }
   }
   // gc both these list normally.
@@ -2806,9 +2808,6 @@ CpBag * CpBag::gc(void) {
 //*****************************************************************************
 //                           collectGarbage
 //*****************************************************************************
-
-#define ERROR(Fun, Msg)                                                       \
-        error("%s in %s at %s:%d", Msg, Fun, __FILE__, __LINE__);
 
 inline
 void SRecord::gcRecurse() {
