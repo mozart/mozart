@@ -23,6 +23,7 @@ in
 
       attr
 	 currentThread : undef
+	 currentStack  : undef
 	 SkippedProcs  : nil
 	 SkippedThread : nil
 	 Breakpoint    : false
@@ -333,14 +334,10 @@ in
 	    SourceManager,scrollbar(file:'' line:undef color:undef what:both)
 	    case Mode == kill then
 	       currentThread <- undef
+	       currentStack  <- undef
+	       Gui,selectNode(0)
 	    else skip end
 	    Gui,printStack(id:I frames:nil depth:0)
-	 else skip end
-	 case {Dkeys self.ThreadDic} == nil then
-	    {OzcarMessage 'no more threads to debug.'}
-	    currentThread <- undef
-	    Gui,selectNode(0)
-	    Gui,displayTree
 	 else skip end
       end
 
@@ -420,6 +417,7 @@ in
 	    S     = {Thread.state T}
 	 in
 	    currentThread <- T
+	    currentStack  <- Stack
 	    
 	    Gui,selectNode(I)
 	    Gui,displayTree
