@@ -79,6 +79,12 @@ public:
   Bool cellRecovery(TaggedRef);
   TaggedRef unpendCell(PendThread*,TaggedRef);
   void dummyExchange(CellManager*);
+
+  // site shutdown;
+  void markDumpAsk() {
+    Assert(!(state & Cell_Lock_Dump_Asked));
+    state |= Cell_Lock_Dump_Asked;
+  }
 };
 
 class CellProxy : public Tertiary {
@@ -189,8 +195,18 @@ public:
     Assert(state==Cell_Lock_Invalid);
     state=Cell_Lock_Requested;}
 
-  // failure
+  // failure;
   Bool lockRecovery();
+
+  // site shutdown;
+  void markDumpAsk() {
+    Assert(!(state & Cell_Lock_Dump_Asked));
+    state |= Cell_Lock_Dump_Asked;
+  }
+  void markInvalid() {
+    Assert(!(state & Cell_Lock_Invalid));
+    state = Cell_Lock_Invalid;
+  }
 };
 
 class LockFrame : public LockFrameEmul {

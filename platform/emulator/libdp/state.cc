@@ -267,7 +267,9 @@ OZ_Return CellSec::exchange(Tertiary* c,TaggedRef old,TaggedRef nw,ExKind exKind
     PD((CELL,"CELL: exchange on valid"));
     return exchangeVal(old,nw,exKind);
   }
+  case Cell_Lock_Requested|Cell_Lock_Next|Cell_Lock_Dump_Asked:
   case Cell_Lock_Requested|Cell_Lock_Next:
+  case Cell_Lock_Requested|Cell_Lock_Dump_Asked:
   case Cell_Lock_Requested:{
     PD((CELL,"CELL: exchange on requested"));
     pendThreadAddToEnd(&pending,old,nw,exKind);
@@ -304,7 +306,9 @@ OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
     PD((CELL,"CELL: access on valid"));
     Assert(fea == 0);
     return oz_unify(val,contents);}
+  case Cell_Lock_Requested|Cell_Lock_Next|Cell_Lock_Dump_Asked:
   case Cell_Lock_Requested|Cell_Lock_Next:
+  case Cell_Lock_Requested|Cell_Lock_Dump_Asked:
   case Cell_Lock_Requested:{
     PD((CELL,"CELL: access on requested"));
     pendThreadAddToEnd(&pending,val,fea,fea ? DEEPAT : ACCESS);
@@ -511,6 +515,7 @@ void LockSec::lockComplex(Thread *th,Tertiary* t){
   Assert(th==oz_currentThread());
   Assert(t->getBoardInternal()==oz_rootBoard());
   switch(state){
+  case Cell_Lock_Valid|Cell_Lock_Next|Cell_Lock_Dump_Asked:
   case Cell_Lock_Valid|Cell_Lock_Next:
   case Cell_Lock_Valid:{
     Assert(getLocker()!=th);  
@@ -518,7 +523,9 @@ void LockSec::lockComplex(Thread *th,Tertiary* t){
     pendThreadAddToEnd(getPendBase());
     if(errorIgnore(t)) return; 
     break;}
-  case Cell_Lock_Next|Cell_Lock_Requested:
+  case Cell_Lock_Requested|Cell_Lock_Next|Cell_Lock_Dump_Asked:
+  case Cell_Lock_Requested|Cell_Lock_Next:
+  case Cell_Lock_Requested|Cell_Lock_Dump_Asked:
   case Cell_Lock_Requested:{
     pendThreadAddToEnd(getPendBase());
     if(errorIgnore(t)) return;
@@ -634,8 +641,10 @@ void gcDistLockRecurseImpl(Tertiary *t)
 void CellSec::gcCellSec(){
   gCollectPendThread(&pending);
   switch(state){
-  case Cell_Lock_Next|Cell_Lock_Requested:{
+  case Cell_Lock_Requested|Cell_Lock_Next|Cell_Lock_Dump_Asked:
+  case Cell_Lock_Requested|Cell_Lock_Next:{
     next->makeGCMarkSite();}
+  case Cell_Lock_Requested|Cell_Lock_Dump_Asked:
   case Cell_Lock_Requested:{
     return;}
   case Cell_Lock_Next:{
@@ -701,7 +710,9 @@ void cellLock_Perm(int state,Tertiary* t){
   case Cell_Lock_Invalid:{
     if(addEntityCond(t,PERM_FAIL)) break;
     return;}
+  case Cell_Lock_Requested|Cell_Lock_Next|Cell_Lock_Dump_Asked:
   case Cell_Lock_Requested|Cell_Lock_Next:
+  case Cell_Lock_Requested|Cell_Lock_Dump_Asked:
   case Cell_Lock_Requested:{
     if(addEntityCond(t,PERM_FAIL)) break;
     return;}
@@ -720,7 +731,9 @@ void cellLock_Temp(int state,Tertiary* t){
   case Cell_Lock_Invalid:{
     if(addEntityCond(t,TEMP_FAIL)) break;
     return;} 
+  case Cell_Lock_Requested|Cell_Lock_Next|Cell_Lock_Dump_Asked:
   case Cell_Lock_Requested|Cell_Lock_Next:
+  case Cell_Lock_Requested|Cell_Lock_Dump_Asked:
   case Cell_Lock_Requested:{
     if(addEntityCond(t,TEMP_FAIL)) break;    
     return;}
@@ -738,12 +751,14 @@ void cellLock_OK(int state,Tertiary* t){
   case Cell_Lock_Invalid:{ 
     subEntityCond(t,TEMP_FAIL);
     return;} 
+  case Cell_Lock_Requested|Cell_Lock_Next|Cell_Lock_Dump_Asked:
   case Cell_Lock_Requested|Cell_Lock_Next:
+  case Cell_Lock_Requested|Cell_Lock_Dump_Asked:
   case Cell_Lock_Requested:{
     subEntityCond(t,TEMP_FAIL);
     return;} 
   case Cell_Lock_Valid|Cell_Lock_Next:
- case Cell_Lock_Valid:{
+  case Cell_Lock_Valid:{
     subEntityCond(t,TEMP_ALL);
     return;}
   default: {
