@@ -94,6 +94,18 @@ public:
   
   void popCast(void);
 
+
+  /*
+   * Unwinding
+   *
+   */
+
+  void unwind(void);
+
+  void unwindFailed(void);
+
+  void unwindEqEq(void);
+
 };
 
 #endif
