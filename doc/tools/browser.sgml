@@ -1,8 +1,10 @@
 <chapter id="chapter.browser">
 <title/The &Oz; Browser/
+
 <p>
 The &Oz; Browser is a concurrent output tool for displaying possibly
 partial information about the values of variables.
+
 <p>
 The Browser is written in &Oz; itself<note/However, it uses a
 number of private features of the &Oz; implementation, which are not
@@ -10,12 +12,14 @@ described in this manual or somewhere else, but required to achieve the
 special Browser functionality, like browsing in local computation
 spaces./ and constitutes a nontrivial example of concurrent programming
 in &Oz;. Its source code is shipped with the &Oz; distribution.
+
 <p>
 Browser has a graphical user interface which is built using the &Oz;
-Tcl/Tk interface <!--**  <ptr to=tk> -->. Hopefully, it is mainly <Q/self-explaining/
+Tk interface (see <ptr.extern to="ozdoc:wp">). Hopefully, it is mainly <Q/self-explaining/
 and its use is quite straightforward.
+
 <p>
-<figure class="maxi Figure" id=fig.browser.prime>
+<figure id=fig.browser.prime>
 <caption/The &Oz; Browser./
 <picture.extern to="pictures/browser.eps" type=ps>
 </figure>
@@ -25,26 +29,30 @@ viewing tool. A Browser widget can be placed in any window and
 used for browsing of an application's output.
 
 <section id=sec.usingTheBrowser><title/Using the Browser/
+
 <p>
 In this section the functionality of the Browser is presented.
 Simultaneously, notions required for reading of the following sections
 are explained.
 
 <subsection><title/Invoking the Browser/
+
 <p>
 <index/Browse/
 The Browser can be invoked by the predefined unary procedure
 <<Browse>>. For example,
 <<<
-  {Browse X}
+{Browse X}
 >>>
 creates a browser window and shows the current constraint on the
-variable << X >>.
+variable <<X>>.
+
 <p>
 <index class=menu/Browser<and>Close/
 <index class=module/close/
 A browser window can be closed via the <span class=menu/Close/ entry of the
 <span class=menu/Browser/ menu, or by the <kbd/C-x/ keyboard accelerator.
+
 <p>
 Normally the <<Browse>> procedure is used in the top-level computation
 space. Browsing from local computation spaces is not
@@ -56,28 +64,33 @@ the Browser functionality, which are considered in the
 </subsection>
 
 <subsection><title/The User Interface/
+
 <p>
 <index class=module/break/
 A Browser window (<ptr to=fig.browser.prime >) consists of a text
 widget in which browsed information is shown, a menubar and scrollbars.
 The red button on the right side of the menubar, called the <em/break/
 button, is used to stop browsing as soon as possible.
+
 <p>
 Menu entries can be active or passive, depending on the Browser
 state. On the right side of menu entries their keyboard accelerators are
 specified, if any. Using an accelerator of a (currently) passive entry
 has no effect.
+
 <p>
 The view of the text widget can be adjusted by the scrollbars. The
 number of lines in the text widget depends on information that is
 browsed, and is limited only by the Tk implementation. Lines in text
 widget are never wrapped, and its width is determined automatically by
 the Tk library.
+
 <p>
 <index/terms<and>layout/
 The Browser automatically changes the layout of information shown
 in its text widget whenever the window size is changed by the user, or
 user changes the currently used font.
+
 <p>
 <index/X11 selection/
 The usual 'cut-and-paste' mechanism can be used with the Browser if you
@@ -89,6 +102,7 @@ modes.
 </subsection>
 
 <subsection><title/'BrowserClass', 'Browser', and 'Browse'/
+
 <p>
 <index/BrowserClass/
 <index/Browser/
@@ -239,9 +253,7 @@ different origins./. A (sub)term can be <def/primitive/ or
 <def/compound/, similarly to the &Oz; values.
 <p>
 Numbers and records are shown as one would expect. Procedures, cells,
-chunks, spaces and threads are shown by their <def/print names/, which
-are obtained by the component <<getPrintName>>  of the module <<System>>
-(see the <!--**  <ptr to=chapter.system> --> of this manual). Finite domains have a
+chunks, spaces and threads are shown by their <def/print names/. Finite domains have a
 special representation: for instance, if an FD variable is constrained to
 the domain {1,2,3,7,8,9}, then it is shown as <<_{ 1..3 7..9 }>>.
 Partially known records are represented as records, but with additional
@@ -268,8 +280,8 @@ the string <<(?)>> is added to the representation.
 
 <index class=menu/Options<and>Representation<and>Strings/
 <index class=menu/Options<and>Representation<and>Virtual Strings/
-<entry>Strings, Virtual Strins
-<item> <!--** <ptr to=notation> <ptr to=open> --> are shown
+<entry>Strings, Virtual Strings
+<item> are shown
 in readable form, &ie; by enclosed in quotes ASCII strings, if the
 corresponding <<Strings>> or <<Virtual strings>> option, repectively, is
 set.
@@ -478,8 +490,8 @@ is <<a(1|2|3|(R1=b(c)) R1)>>.
 The only operation defined on reference names is <def/dereferencing/.
 Its effect is scrolling to a term tagged with the reference name, and
 selecting it. The <<Deref>> command can be invoked from the <<Selection>>
-menu or by the keyboard accelerator, similarly to <<Expand>>, <<Shrink>>
-&etc; commands.
+menu or by the keyboard accelerator, similarly to <<Expand>> and <<Shrink>>
+ commands.
 </subsection>
 
 <subsection id=sec.browser.actions><title/Actions/
@@ -616,11 +628,11 @@ understanding how the Browser works in that case.
 <p>
 The point here is that the Browser operates in the top-level computation
 space, whereas a constraint describing a value of a given variable can
-contain variables, names, procedures &etc; that belong to the local
+contain variables, names, procedures and so on that belong to the local
 computation space. These variables cannot occur in constraints in the
 top-level one; therefore, each constraint browsed in a local computation
 space is converted to a constraint which <em/does not contain/ any
-variables, names &etc; this transformation, called here <em/reflection/,
+variables, names and so on this transformation, called here <em/reflection/,
 takes place in the local computation space, where <<Browse>>  call was
 issued. After that the reflected constraint is passed to the top-level
 computation space by a special builtin, and actually browsed.
@@ -887,9 +899,10 @@ The window produced that way is shown on
 <ptr to=fig.browser.oz-em-browser >. Such a browser is called an
 <def/embedded/ Browser, compared to a <def/stand-alone/ Browser using its own
 toplevel widget.
-<figure class="maxi Figure" id=fig.browser.oz-em-browser>
+<figure id=fig.browser.oz-em-browser>
 <caption/An Embedded Application Browser/
 <picture.extern to="pictures/emb_browser.eps" type=ps>
+</figure>
 
 <index class=module/createWindow/
 <index class=module/browse/
