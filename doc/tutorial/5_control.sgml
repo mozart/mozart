@@ -612,7 +612,9 @@ end
 iterator defined in the <<List>> module. <<ForAll/2>> applies a unary
 procedure on all the elements of a list, in the order defined by the
 list. Think what happens if the list is produced incrementally by
-another concurrent thread?
+another concurrent thread? In this case the consumer thread will synchronize
+on the availability of data on the list. The list behaves as a stream of
+elements and we automatically get stream communication between threads.
 
 
 <<<
@@ -641,17 +643,26 @@ user-defined exceptions.
 <P>Here is a simple example:
 
 <<<
-proc {Eval E ?R}
+proc {Eval E}
   case E
-  of      plus(X Y) then {Browse X+Y}
-  elseof times(X Y) then {Browse X*Y}
+  of   plus(X Y) then {Browse X+Y}
+  []   times(X Y) then {Browse X*Y}
   else raise illFormedExpression(E) end
   end
 end
 >>>
 
-<P>The basic exception handling statement is called a try-statement, and has the following form:
-<!-- DENYS: we really should be using elseof instead -->
+<P>The basic exception handling statement is called a try-statement.
+Its simplest form is:
+<<<
+try ?{S1} catch X then ?{S2} end
+>>>
+<P>Execution of this statement is equivalent to executing ?{S1} if
+?{S1} does not raise an exception. If ?{S1} raises an exception
+?{E}, {X} gets bound to ?{E} and the statement ?{S2} is executed.
+The variable ?{X} is visible in the scope of ?{S2}.
+
+<P> A more convenient try statement has the following form:
 <<<
 try ?{S} catch
    ?{Pattern_1} then ?{S1}
@@ -660,14 +671,25 @@ try ?{S} catch
 [] ?{Pattern_n} then ?{Sn}
 end
 >>>
+This is equivalent to:
+<<<
+try ?{S} catch X then
+   case X
+   of ?{Pattern_1} then ?{S1}
+   [] ?{Pattern_2} then ?{S2}
+      ...
+   [] ?{Pattern_n} then ?{Sn}
+   else raise X end end
+end
+>>>
 
-<P>Execution of this statement is equivalent to executing ?{S} if
-?{S} does not raise an exception. If ?{S} raises exception
-?{E} and ?{E} matches one of the patterns ?{Pattern_i},
-control is passed to the corresponding statement ?{S_i}. If
-?{E} does not match any pattern the exception is propagated
-outside the try-statement until eventually caught by the system, which
-catches all escaping exceptions.
+<P>Put into words, the Execution of this statement is equivalent to
+executing ?{S} if ?{S} does not raise an exception. If ?{S} raises
+exception ?{E} and ?{E} matches one of the patterns ?{Pattern_i},
+control is passed to the corresponding statement ?{S_i}. If ?{E} does
+not match any pattern the exception is propagated outside the
+try-statement until eventually caught by the system, which catches all
+escaping exceptions.
 
 <<<
 try
@@ -700,8 +722,7 @@ upon normal or exceptional exit.
 <<<
 try
   {Process F}
-catch
-  illFormedExpression(X) then {Browse '** '#X#' **'}
+catch X then {Browse '** '#X#' **'}
 finally {CloseFile F} end
 >>>
 
@@ -714,20 +735,23 @@ labels: <<failure>>, <<error>>, and <<system>>.
  <ITEM><<failure>>: indicates the attempt to perform an inconsistent
  equality operation on the store of Oz, recall <EM>SECTION ???</EM>.
 
- <ITEM><<error>>: indicates a runtime error which should not occur.
+ <ITEM><<error>>: indicates a runtime error which should not occur such
+as applying a nonprocedure to some argument or adding an integer to an
+atom, etc.
 
- <ITEM><<system>>: indicates a runtime condition, i.e., an unforeseeable
- situation like a closed file or window.
+ <ITEM><<system>>: indicates a runtime condition because of the environment ofthe Mozart operating system process, i.e., an unforeseeable  situation like a closed file or window; or failing to open a connection between two Mozart processes.
 
 </LIST>
 
 
-<P>The exact format of Oz system-exceptions is in an experimental
+<P>The exact format of Mozart system-exceptions is in an experimental
 state and therefore the user is advised to rely only on the label, as
 in the following example:
 
 <<<
-try 1=2
+proc {One X} X=1 end
+proc {Two X} X=2 end
+try {One}={Two}
 catch
    failure(...) then {Show caughtFailure}
 end
@@ -735,6 +759,10 @@ end
 
 <P>Here the pattern <<failure(...)>> catches any record whose label is
 <<failure>>. When an exception is raised but not handled, an error
-message is printed in the emulator window (standard output).
+message is printed in the emulator window (standard error), and
+the current thread terminates. In stand-alone applications the default
+behavior is that a message is printed on standard error and the whole
+application terminates. It is possible to change this bahavior to something
+else that is more desirable for particular applications.
 
 </CHAPTER>
