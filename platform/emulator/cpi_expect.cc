@@ -147,7 +147,7 @@ void OZ_Expect::addSuspend(OZ_GenDefinition * def,
   if (collect) {
     staticSuspendVars[staticSuspendVarsNumber].var = v;
     staticSuspendVars[staticSuspendVarsNumber].expected_type = CtVariable;
-    staticSuspendVars[staticSuspendVarsNumber++].state.ct.def = def;
+    staticSuspendVars[staticSuspendVarsNumber].state.ct.def = def;
     staticSuspendVars[staticSuspendVarsNumber++].state.ct.w = w;
     
     staticSuspendVars.request(staticSuspendVarsNumber);
@@ -604,15 +604,16 @@ OZ_expect_t OZ_Expect::expectStream(OZ_Term st)
 OZ_Return OZ_Expect::suspend(OZ_Thread th)
 {
   Assert(staticSuspendVarsNumber > 0);
-#ifdef FDBISTUCK
-  for (int i = staticSuspendVarsNumber; i--; )
-    am.addSuspendVarList(staticSuspendVars[i].var);
-  return SUSPEND;
-#else
-  for (int i = staticSuspendVarsNumber; i--; )
-    OZ_addThread (makeTaggedRef(staticSuspendVars[i].var), th);
-  return PROCEED;
-#endif
+
+  if (th == NULL) {
+    for (int i = staticSuspendVarsNumber; i--; )
+      am.addSuspendVarList(staticSuspendVars[i].var);
+    return SUSPEND;
+  } else {
+    for (int i = staticSuspendVarsNumber; i--; )
+      OZ_addThread (makeTaggedRef(staticSuspendVars[i].var), th);
+    return PROCEED;
+  }
 }
 
 OZ_Return OZ_Expect::fail(void)
@@ -640,7 +641,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     DEREF(v, vptr, vtag);
     TypeOfGenCVariable type = staticSuspendVars[i].expected_type;
 
-    Assert(type == FDVariable || type == FSetVariable);
+    Assert(type == FDVariable || type == FSetVariable || type == CtVariable);
  
     if (isNotCVar(vtag)) {
 

@@ -87,7 +87,7 @@ Bool GenCVariable::valid(TaggedRef *ptr,TaggedRef val)
   case BoolVariable: return ((GenBoolVariable*)this)->valid(val);
   case FSetVariable: return ((GenFSetVariable*)this)->valid(val);
   case PerdioVariable: return ((PerdioVar *)this)->valid(ptr,val);
-  case CtVariable: return FALSE;
+
   default: return validV(ptr,val);
   }
 }
