@@ -1863,36 +1863,33 @@ LBLagain:
     }
   }
 
+  if (!isFeature(feaTag)) goto typeError1;
+
   switch (termTag) {
   case LTUPLE:
     {
       if (!isSmallInt(fea)) {
-        if (!dot && isBigInt(fea)) return FAILED;
-        if (dot) goto raise;
-        goto typeError1;
+        if (dot) goto raise; else return FAILED;
       }
       int i2 = smallIntValue(fea);
 
-      switch (i2) {
-      case 1:
+      if (i2 == 1) {
         if (out) *out = tagged2LTuple(term)->getHead();
         return PROCEED;
-      case 2:
+      }
+      if (i2 == 2) {
         if (out) *out = tagged2LTuple(term)->getTail();
         return PROCEED;
       }
-      if (dot) goto raise;
-      return FAILED;
+
+      if (dot) goto raise; else return FAILED;
     }
 
   case SRECORD:
     {
-      if ( ! isFeature(feaTag) ) goto typeError1;
-
       TaggedRef t = tagged2SRecord(term)->getFeature(fea);
       if (t == makeTaggedNULL()) {
-        if (dot) goto raise;
-        return FAILED;
+        if (dot) goto raise; else return FAILED;
       }
       if (out) *out = t;
       return PROCEED;
@@ -1907,22 +1904,22 @@ LBLagain:
 
   case CVAR:
     {
-      if (tagged2CVar(term)->getType() != OFSVariable) goto typeError0;
-      if (!isFeature(feaTag)) goto typeError1;
-      GenOFSVariable *ofs=(GenOFSVariable *)tagged2CVar(term);
-      TaggedRef t = ofs->getFeatureValue(fea);
-      if (t == makeTaggedNULL()) return SUSPEND;
-      if (out) *out = t;
-      return PROCEED;
+      if (tagged2CVar(term)->getType() == OFSVariable) {
+        GenOFSVariable *ofs=(GenOFSVariable *)tagged2CVar(term);
+        TaggedRef t = ofs->getFeatureValue(fea);
+        if (t == makeTaggedNULL()) return SUSPEND;
+        if (out) *out = t;
+        return PROCEED;
+      }
+      // mm2?
+      goto typeError0;
     }
 
   case LITERAL:
-    if (dot) goto raise;
-    return FAILED;
+    if (dot) goto raise; else return FAILED;
 
   default:
     if (isChunk(term)) {
-      if (! isFeature(feaTag)) { goto typeError1; }
       TaggedRef t;
       switch (tagged2Const(term)->getType()) {
       case Co_Chunk:
@@ -1939,12 +1936,12 @@ LBLagain:
         break;
       }
       if (t == makeTaggedNULL()) {
-        if (dot) goto raise;
-        return FAILED;
+        if (dot) goto raise; else return FAILED;
       }
       if (out) *out = t;
       return PROCEED;
     }
+
     /* special case for cells (mm 17.3.95) */
     if (ozconf.cellHack && isCell(term)) {
       Cell *cell= tagged2Cell(term);
