@@ -1878,6 +1878,7 @@ void PrTabEntry::gcPrTabEntry()
   if (this == NULL) return;
 
   gcTagged(info,info);
+  gcTagged(names,names);
 }
 
 void AbstractionEntry::gcAbstractionEntries()

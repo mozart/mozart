@@ -117,7 +117,7 @@ AbstractionTable CodeArea::abstractionTab(4000);
 
 AbstractionEntry *AbstractionTable::add(Abstraction *abstr)
 {
-  AbstractionEntry *ret = new AbstractionEntry();
+  AbstractionEntry *ret = new AbstractionEntry(NO);
   ret->setPred(abstr);
   return ret;
 }
@@ -133,7 +133,7 @@ AbstractionEntry *AbstractionTable::add(int id)
     return found;
   }
   
-  found = new AbstractionEntry();
+  found = new AbstractionEntry(NO);
   if (CodeArea::abstractionTab.htAdd(id,found)) {
     return found;
   }
