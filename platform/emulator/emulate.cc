@@ -1948,10 +1948,9 @@ LBLdispatcher:
   Case(LOCKTHREAD)
     {
       ProgramCounter lbl = getLabelArg(PC+1);
-      int reg      = regToInt(getRegArg(PC+2));
-      int toSave   = getPosIntArg(PC+3);
+      TaggedRef aux      = XPC(2);
+      int toSave         = getPosIntArg(PC+3);
 
-      TaggedRef aux = X[reg];
       DEREF(aux,auxPtr,_1);
       if (isAnyVar(aux)) {
 	SUSP_PC(auxPtr,toSave,PC);
@@ -2210,9 +2209,19 @@ LBLdispatcher:
        TaggedRef taggedPredicate = RegAccess(HelpReg,getRegArg(PC+1));
        predArity = getPosIntArg(PC+2);
 
-       DEREF(taggedPredicate,predPtr,predTag);
+       DEREF(taggedPredicate,predPtr,_1);
+
+       if (isAbstraction(taggedPredicate)) {
+         Abstraction *def = tagged2Abstraction(taggedPredicate);
+	 PrTabEntry *pte = def->getPred();
+         CheckArity(pte->getArity(), taggedPredicate);
+         if (!isTailCall) { CallPushCont(PC); }
+         CallDoChecks(def,def->getGRegs());
+         JUMP(pte->getPC());
+       }
+
        if (!isProcedure(taggedPredicate) && !isObject(taggedPredicate)) {
-	 if (isAnyVar(predTag)) {
+	 if (isAnyVar(taggedPredicate)) {
 	   /* compiler ensures: if pred is in X[n], then n == arity+1,
 	    * so we save one additional argument */
 	   Assert(HelpReg!=X || predArity==regToInt(getRegArg(PC+1)));
