@@ -114,7 +114,10 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
   OzVariable * right_cvar = tagged2CVar(right_var);
 
   // this assertion is not valid anymore
-  Assert(right_cvar->getType() != OZ_VAR_BOOL);
+  if (right_cvar->getType() == OZ_VAR_BOOL) {
+    DEBUG_CONSTRAIN_CVAR(("branch to OzBoolVariable::unify\n"));
+    return ((OzBoolVariable *)right_cvar)->unify(right_varptr, left_varptr);
+  }
 
   if (right_cvar->getType() != OZ_VAR_FD) {
     goto failed;
