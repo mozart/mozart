@@ -1,4 +1,4 @@
-#!/bin/sh
+!/bin/sh
 # Oz startup script.
 
 
@@ -20,20 +20,10 @@
 howcalled=$0
 cmd=`basename $howcalled`
 
-# keep quiet on emacs and standalone systems
-case "$cmd" in
-   ozdo|ozengine|ozapplet) doecho=true ;;
-   *)                 doecho=echo ;;
-esac
-
-
 if test -z "${OZHOME}"
 then
   dir=`dirname $howcalled`
   OZHOME=`(cd $dir; cd ..; /bin/pwd)`
-  $doecho "Setting Oz installation directory to: $OZHOME" >&2
-else
-  $doecho "Using Oz directory: $OZHOME" >&2
 fi
 export OZHOME
 
@@ -47,8 +37,6 @@ export OZPLATFORM
 if test -z "${OZEMULATOR}"
 then
     OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
-else
-    $doecho "Using $OZEMULATOR" >&2
 fi
 
 
@@ -100,8 +88,6 @@ then
 
 case "$cmd" in
 
-   ozdo)    exec "$@" ;;
-
    oz)
         echo "Using emacs '${OZEMACS}'"
         # store cmd line args starting from "-a" in $OZARGV
@@ -135,17 +121,6 @@ case "$cmd" in
         url=$1
         shift
         exec $OZEMULATOR -u $url -a "$@"
-   ;;
-
-   ozapplet)  # compute server
-        if test $# -lt 1
-        then
-            echo "usage: ozapplet <url> <args>" 1>&2;
-            exit 1;
-        fi
-        url=$1
-        shift
-        exec $OZEMULATOR -browser -u $url -a "$@"
    ;;
 
    *)
