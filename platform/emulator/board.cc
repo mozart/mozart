@@ -142,7 +142,18 @@ Board::Board(Actor *a,int typ)
   }
   suspCount=1;
   u.actor=a;
+#ifdef DEBUG_THREADS
+  allThreads=0;
+#endif
 }
+
+#ifdef DEBUG_THREADS
+#include "thrqueue.hh"
+void Board::updateAllThreads(Board *bb)
+{
+  bb->allThreads = bb->allThreads->commit(this->allThreads);
+}
+#endif
 
 Board::~Board() {
   error("Board::~Board");
