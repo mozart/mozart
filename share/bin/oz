@@ -63,9 +63,9 @@ fi
 
 
 # setting line editor
-ILE=$OZHOME/platform/${OZPLATFORM}/ile
-if [ ! -f $ILE -o $TERM = emacs ]; then
-   ILE=""  # running under emacs
+: ${OZILE=xxx}
+if [ ! -f $OZILE -o $TERM = emacs ]; then
+   OZILE=""  # running under emacs
 fi
 
 
@@ -112,7 +112,7 @@ case "$cmd" in
         else
           exec xterm -name "OzCompiler" \
                -T "Oz Compiler Input Window" \
-               -e $ILE $OZCOMPILER `echo $* |  sed -e 's/-/+/g'`
+               -e $OZILE $OZCOMPILER `echo $* |  sed -e 's/-/+/g'`
         fi
    ;;
 
@@ -135,7 +135,7 @@ case "$cmd" in
 
    oz-)
         setOZC "$@"
-        exec $ILE $OZCOMPILER "$@"
+        exec $OZILE $OZCOMPILER "$@"
    ;;
 
    ozc)
