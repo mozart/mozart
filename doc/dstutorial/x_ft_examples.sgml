@@ -409,7 +409,7 @@ that no exceptions are raised on <<R>>.
 This can be changed by using <<Fault.defaultEnable>> at
 startup time for each site.
 
-<SUBSUBSECTION id="guards"><TITLE>Guard definition</TITLE>
+<SUBSUBSECTION id="guards"><TITLE>Definition of <<Guard>></TITLE>
 
 <P>Guards allow to replace a statement <<S1>>
 by another statement <<S2>> if there is a fault.
@@ -445,7 +445,7 @@ in
 end
 >>>
 
-<SUBSUBSECTION id="local.watcher"><TITLE>Local watcher definition</TITLE>
+<SUBSUBSECTION id="local.watcher"><TITLE>Definition of <<LocalWatcher>></TITLE>
 
 <P>A <em>local watcher</em> is a watcher that is installed
 only during the execution of a statement.
