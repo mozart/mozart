@@ -2554,7 +2554,7 @@ DistBag * DistBag::gc(void) {
   DistBag *  old  = this;
   
   while (old) {
-    DistBag * one = new DistBag(old->dist->gc(),old->isUnary);
+    DistBag * one = new DistBag(old->dist->gc());
     *cur = one;
     cur  = &(one->next);
     old  = old->next;
