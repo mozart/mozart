@@ -84,7 +84,7 @@ number.
 <Entry> <<rand>>
 <Index class=module/OS<and>rand/
 <Synopsis>
-<<<{OS.rand ??{I}}>>>
+<<{OS.rand ??{I}}>>
 <Item>
 Returns a randomly generated integer.
 <p>
@@ -95,7 +95,7 @@ See <file /rand(3)/.
 <Index class=module/OS<and>srand/
 
 <Synopsis>
-<<< {OS.srand ?+{I}} >>>
+<<{OS.srand ?+{I}}>>
 <Item>
 Sets the seed for the random number generator used by <<OS.rand>>. If
 ?_{I} is <<0>>, the seed will be generated from the current time.
@@ -104,9 +104,7 @@ See <file /srand(3)/.
 
 
 <Entry> <<randLimits>> <Synopsis>
-<<<
-{OS.randLimits ??{MinI} ??{MaxI}}
->>>
+<<{OS.randLimits ??{MinI} ??{MaxI}}>>
 <item>
 <Index class=module/OS<and>randLimits/
 Binds ?_{MinI} and ?_{MaxI} to the smallest and greatest possible
@@ -121,9 +119,7 @@ See <file /rand(3)/.
 <p>
 <list>
 <Entry> <<tmpnam>> <Synopsis>
-<<<
-{OS.tmpnam ??{FileNameS}}
->>>
+<<{OS.tmpnam ??{FileNameS}}>>
 <item>
 <Index class=module/OS<and>tmpnam/
 Returns a freshly created full pathname.
@@ -132,9 +128,7 @@ See <file /tmpnam(2)/.
 
 
 <Entry> <<unlink>> <Synopsis>
-<<<
-{OS.unlink ?+{PathV}}
->>>
+<<{OS.unlink ?+{PathV}}>>
 <Index class=module/OS<and>unlink/
 <item>
 Removes the file with name ?_{PathV}.
@@ -149,9 +143,7 @@ See <file /link(2)/.
 <p>
 <list>
 <Entry> <<getDir>> <Synopsis>
-<<<
-{OS.getDir ?+{PathV} ??{FileNameSs}}
->>>
+<<{OS.getDir ?+{PathV} ??{FileNameSs}}>>
 <Index class=module/OS<and>getDir/
 <item>
 Returns a list of strings giving the files in
@@ -161,9 +153,7 @@ See <file /opendir(3)/ and <file /readdir(3)/.
 
 
 <Entry> <<getCWD>> <Synopsis>
-<<<
-{OS.getCWD ??{FileNameS}}
->>>
+<<{OS.getCWD ??{FileNameS}}>>
 <Index class=module/OS<and>getCWD/
 <item>
 Returns in ?_{FileNameS} the path of the current working directory.
@@ -172,9 +162,7 @@ See <file /getcwd(3)/.
 
 
 <Entry> <<stat>> <Synopsis>
-<<<
-{OS.stat ?+{PathV} ??{StatR}}
->>>
+<<{OS.stat ?+{PathV} ??{StatR}}>>
 <Index class=module/OS<and>stat/
 <item>
 Returns a record describing the status of the file ?_{PathV}.
@@ -195,9 +183,7 @@ See <file /stat(2)/.
 <p>
 <list>
 <Entry> <<getServByName>> <Synopsis>
-<<<
-{OS.getServByName ?+{NameV} ?+{ProtoV} ??{PortIB}}
->>>
+<<{OS.getServByName ?+{NameV} ?+{ProtoV} ??{PortIB}}>>
 <Index class=module/OS<and>getServByName/
 <item>
 Returns the port number ?_{PortI} of a service ?_{NameV} reachable in
@@ -216,9 +202,7 @@ See <file /getservbyname(3)/.
 
 
 <Entry> <<getHostByName>> <Synopsis>
-<<<
-{OS.getHostByName ?+{NameV} ??{HostentR}}
->>>
+<<{OS.getHostByName ?+{NameV} ??{HostentR}}>>
 <Index class=module/OS<and>getHostByName/
 <item>
 Returns name information for the host ?_{NameV}.
@@ -241,9 +225,7 @@ See <file /gethostbyname(3)/.
 <p>
 <list>
 <Entry> <<time>> <Synopsis>
-<<<
-{OS.time ??{TimeI}}
->>>
+<<{OS.time ??{TimeI}}>>
 <Index class=module/OS<and>time/
 <item>
 Returns the time since 00:00:00 GMT,  Jan.  1,  1970 in seconds.
@@ -251,8 +233,10 @@ Returns the time since 00:00:00 GMT,  Jan.  1,  1970 in seconds.
 See <file /time(3)/.
 
 
-<Entry> <<gmTime>> <Synopsis> ?{OS.gmTime ??{GmTimeR}}
-<Entry> <<localTime>> <Synopsis> ?{OS.localTime ??{LocalTimeR}}
+<Entry> <<gmTime>> <Synopsis>
+<<{OS.gmTime ??{GmTimeR}}>>
+<Entry> <<localTime>> <Synopsis>
+<<{OS.localTime ??{LocalTimeR}}>>
 <Index class=module/OS<and>gmTime/
 
 <Index class=module/OS<and>localTime/
@@ -286,9 +270,7 @@ See <file /gmtime(3)/, <file /localtime(3)/, and <file /time(3)/.
 <p>
 <list>
 <Entry> <<getEnv>> <Synopsis>
-<<<
-{OS.getEnv ?+{NameV} ??{ValueSB}}
->>>
+<<{OS.getEnv ?+{NameV} ??{ValueSB}}>>
 <Index class=module/OS<and>getEnv/
 <item>
 Returns the value of the environment variable
@@ -310,9 +292,7 @@ See <file /getenv(3)/.
 
 
 <Entry> <<putEnv>> <Synopsis>
-<<<
-{OS.putEnv ?+{NameV} ?+{ValueV}}
->>>
+<<{OS.putEnv ?+{NameV} ?+{ValueV}}>>
 <Index class=module/OS<and>putEnv/
 <item>
 Sets the value of the environment variable ?_{NameV} to ?_{ValueV}.
@@ -326,9 +306,7 @@ See <file /putenv(3)/.
 <p>
 <list>
 <Entry> <<uName>> <Synopsis>
-<<<
-{OS.uName ??{UtsnameR}}
->>>
+<<{OS.uName ??{UtsnameR}}>>
 <Index class=module/OS<and>uName/
 <item>
 Returns system information.
@@ -347,9 +325,7 @@ fields are strings:
 See <file /uname(2)/.
 
 <Entry> <<system>> <Synopsis>
-<<<
-{OS.system ?+{CmdV} ??{StatusI}}
->>>
+<<{OS.system ?+{CmdV} ??{StatusI}}>>
 <Index class=module/OS<and>system/
 <item>
 Starts a new operating system shell in which the OS command ?_{CmdV}
@@ -368,9 +344,7 @@ See <file /system(3)/.
 <p>
 <list>
 <Entry> <<open>> <Synopsis>
-<<<
-{OS.open ?+{FileNameV} ?+{FlagsAs} ?+{ModeAs} ??{DescI}}
->>>
+<<{OS.open ?+{FileNameV} ?+{FlagsAs} ?+{ModeAs} ??{DescI}}>>
 <Index class=module/OS<and>open/
 <item>
 Opens a file for reading and/or writing.
@@ -395,9 +369,7 @@ In the same manner ?_{ModeAs} must be a list with elements drawn from:
 See <file /open(2)/ and <file /chmod(2)/.
 
 <Entry> <<fileDesc>> <Synopsis>
-<<<
-{OS.fileDesc ?+{FileDescA} ??{FileDescIB}}
->>>
+<<{OS.fileDesc ?+{FileDescA} ??{FileDescIB}}>>
 <Index class=module/OS<and>fileDesc/
 <item>
 Maps the atoms
@@ -412,9 +384,7 @@ descriptor. Note that these descriptors will be duplicated.
 See <file /open(2)/ and <file /dup(2)/.
 
 <Entry> <<read>> <Synopsis>
-<<<
-{OS.read ?+{DescI} ?+{MaxI} ??{ListS} ?_{TailX} ??{ReadI}}
->>>
+<<{OS.read ?+{DescI} ?+{MaxI} ??{ListS} ?_{TailX} ??{ReadI}}>>
 <Index class=module/OS<and>read/
 <item>
 Reads data from a file or socket.  Yields a list of characters in
@@ -426,9 +396,7 @@ Implements the <file /read(2)/ system call.
 
 
 <Entry> <<write>> <Synopsis>
-<<<
-{OS.write ?+{DescI} ?+{V} ??{StatusTI}}
->>>
+<<{OS.write ?+{DescI} ?+{V} ??{StatusTI}}>>
 <Index class=module/OS<and>write/
 <item>
 Writes the virtual string ?_{V} to a file or a socket by using the
@@ -446,9 +414,7 @@ undetermined variable, and the last to the not yet written part of ?_{V}.
 Otherwise ?_{StatusTI} is bound to the number of characters written.
 
 <Entry> <<lSeek>> <Synopsis>
-<<<
-{OS.lSeek ?+{DescI} ?+{WhenceA} ?+{OffsetI} ??{WhereI}}
->>>
+<<{OS.lSeek ?+{DescI} ?+{WhenceA} ?+{OffsetI} ??{WhereI}}>>
 <Index class=module/OS<and>lSeek/
 <item>
 Positions the seek pointer of a file.
@@ -457,9 +423,7 @@ the <file /lseek(2)/ function. ?_{WhenceA} must be one of the atoms
 <<'SEEK_SET'>>, <<'SEEK_CUR'>>, and <<'SEEK_END'>>.
 
 <Entry> <<close>> <Synopsis>
-<<<
-{OS.close ?+{DescI}}
->>>
+<<{OS.close ?+{DescI}}>>
 <Index class=module/OS<and>close/
 <item>
 Closes a file or socket by using the <file /close(2)/ function.
@@ -510,9 +474,7 @@ Before actually closing a file descriptor, the following procedure
 needs to be called.
 
 <Entry> <<deSelect>> <Synopsis>
-<<<
-{OS.deSelect ?+{DescI}}
->>>
+<<{OS.deSelect ?+{DescI}}>>
 <Index class=module/OS<and>deSelect/
 <item>
 Discards all threads depending on the file descriptor ?_{DescI}.
@@ -525,7 +487,7 @@ Discards all threads depending on the file descriptor ?_{DescI}.
 <list>
 <Entry> <<socket>>
 <Synopsis>
-<<< {OS.socket ?+{DomainA} ?+{TypeA} ?+{ProtoV} ??{DescI}} >>>
+<<{OS.socket ?+{DomainA} ?+{TypeA} ?+{ProtoV} ??{DescI}}>>
 <Index class=module/OS<and>socket/
 <Item>
 Creates a socket. Is implemented by the function
@@ -539,9 +501,7 @@ appropriate protocol is chosen automatically, otherwise it must denote
 a valid protocol name like <<"tcp">> or <<"udp">>.
 
 <Entry> <<bind>> <Synopsis>
-<<<
-{OS.bind ?+{SockI} ?+{PortI}}
->>>
+<<{OS.bind ?+{SockI} ?+{PortI}}>>
 <Index class=module/OS<and>bind/
 <item>
 Binds a socket to its global name.
@@ -549,9 +509,7 @@ Binds a socket to its global name.
 See <file /bind(2)/.
 
 <Entry> <<listen>> <Synopsis>
-<<<
-{OS.listen ?+{SockI} ?+{BackLogI}}
->>>
+<<{OS.listen ?+{SockI} ?+{BackLogI}}>>
 <Index class=module/OS<and>listen/
 <item>
 Indicates that a socket is willing to receive connections.
@@ -559,9 +517,7 @@ Indicates that a socket is willing to receive connections.
 See <file /listen(2)/.
 
 <Entry> <<accept>> <Synopsis>
-<<<
-{OS.accept ?+{SockI} ??{HostS} ??{PortI} ??{DescI}}
->>>
+<<{OS.accept ?+{SockI} ??{HostS} ??{PortI} ??{DescI}}>>
 <Index class=module/OS<and>accept/
 <item>
 Accepts a connect request on a socket.
@@ -574,9 +530,7 @@ thread until a connect attempt on this socket is made.
 See <file /accept(2)/ and <file /gethostbyaddr(3)/.
 
 <Entry> <<connect>> <Synopsis>
-<<<
-{OS.connect ?+{SockI} ?+{HostV} ?+{PortI}}
->>>
+<<{OS.connect ?+{SockI} ?+{HostV} ?+{PortI}}>>
 <Index class=module/OS<and>connect/
 <item>
 Connects to a socket.
@@ -584,9 +538,7 @@ Connects to a socket.
 See <file /connect(2)/ and <file /gethostbyaddr(3)/.
 
 <Entry> <<shutDown>> <Synopsis>
-<<<
-{OS.shutDown ?+{SockI} ?+{HowI}}
->>>
+<<{OS.shutDown ?+{SockI} ?+{HowI}}>>
 <Index class=module/OS<and>shutDown/
 <item>
 Signals that a socket is not longer interested in sending or receiving
@@ -595,9 +547,7 @@ data.
 See <file /shutdown(2)/.
 
 <Entry> <<getSockName>> <Synopsis>
-<<<
-{OS.getSockName ?+{SockI} ??{PortI}}
->>>
+<<{OS.getSockName ?+{SockI} ??{PortI}}>>
 <Index class=module/OS<and>getSockName/
 <item>
 Gets the name of a socket.
@@ -637,9 +587,7 @@ See <file /recvfrom(2)/ and <file /gethostbyaddr(3)/.
 <p>
 <list>
 <Entry> <<kill>> <Synopsis>
-<<<
-{OS.kill ?+{PidI} ?+{SigA} ??{StatusI}}
->>>
+<<{OS.kill ?+{PidI} ?+{SigA} ??{StatusI}}>>
 <Index class=module/OS<and>kill/
 <item>
 Implements the <file /kill(2)/ function. ?_{PidI} is the process
@@ -649,9 +597,7 @@ the following signals are supported on all platforms: <<'SIGTERM'>>,
 <<'SIGINT'>>.
 
 <Entry> <<pipe>> <Synopsis>
-<<<
-{OS.pipe ?+{CmdV} ?+{ArgsVs} ??{PidI} ??{StatusT}}
->>>
+<<{OS.pipe ?+{CmdV} ?+{ArgsVs} ??{PidI} ??{StatusT}}>>
 <Index class=module/OS<and>pipe/
 <item>
 Forks a OS process which executes the command ?_{CmdV} with arguments
@@ -668,17 +614,13 @@ See <file /socketpair(2)/, <file /fork(2)/, <file /execvp(2)/, and
 
 
 <Entry> <<wait>> <Synopsis>
-<<<
-{OS.wait ??{PidI} ??{StatI}}
->>>
+<<{OS.wait ??{PidI} ??{StatI}}>>
 <Index class=module/OS<and>wait/
 <item>
 Implements the <file /wait(2)/ function.
 
 <Entry> <<getPID>> <Synopsis>
-<<<
-{OS.getPID ??{PidI}}
->>>
+<<{OS.getPID ??{PidI}}>>
 <Index class=module/OS<and>getPID/
 <item>
 Returns the current process identifier as integer. See <file/getpid(2)/.
