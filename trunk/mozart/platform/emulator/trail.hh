@@ -28,6 +28,10 @@
 #ifndef __TRAILH
 #define __TRAILH
 
+#ifdef __GNUC__
+#pragma interface
+#endif
+
 #include "types.hh"
 #include "gc.hh"
 #include "term.hh"
