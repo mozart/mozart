@@ -11,6 +11,7 @@ OZTOOL		= @VAR_OZTOOL@
 PLATFORM	= $(shell $(OZTOOL) platform)
 NOTDIRSRCDIR	= $(notdir $(SRCDIR))
 BUILDDATE       = $(shell date '+%Y%m%d')
+VERSION         = $(shell $(OZTOOL) version)
 
 ifeq ($(PLATFORM),win32-i486)
 OZEMULATOR	= $(shell $(CYGPATH) $(PREFIX)/platform/win32-i486/emulator.dll)
@@ -53,27 +54,27 @@ distclean: clean
 COMPRESS=	gzip -9
 TAR=		tar
 PACKDIR=	/tmp/pack
-INSTALL_DIR=	@INSTALL@
+INSTALL_DIR=	@INSTALL@ -d
 
 src: $(PACKDIR)
 	echo "[" $(NOTDIRSRCDIR) "]"
 	test -n "$(NOTDIRSRCDIR)" || { echo "bad"; exit 1; }
 	 ## Create empty temp directory
-	-rm -rf $(PACKDIR)/mozart-$(BUILDDATE)-std
-	mkdir $(PACKDIR)/mozart-$(BUILDDATE)-std
+	-rm -rf $(PACKDIR)/mozart-$(VERSION).$(BUILDDATE)-std
+	mkdir $(PACKDIR)/mozart-$(VERSION).$(BUILDDATE)-std
 	 ## Move source files to temp directory
-	cd $(PACKDIR)/mozart-$(BUILDDATE)-std && \
+	cd $(PACKDIR)/mozart-$(VERSION).$(BUILDDATE)-std && \
 	  ((cd $(SRCDIR) && $(TAR) -cf - .) | tar -xf -)
 	 ## Remove CVS cruft
 	cd $(PACKDIR) && \
-	(tbr=`find $(PACKDIR)/mozart-$(BUILDDATE)-std -name CVS -type d 2>/dev/null` ; \
+	(tbr=`find $(PACKDIR)/mozart-$(VERSION).$(BUILDDATE)-std -name CVS -type d 2>/dev/null` ; \
 	 rm -rf $$tbr ; \
-	 find $(PACKDIR)/mozart-$(BUILDDATE)-std -name '.cvsignore' -type f -exec rm -f '{}' ';' ;) \
+	 find $(PACKDIR)/mozart-$(VERSION).$(BUILDDATE)-std -name '.cvsignore' -type f -exec rm -f '{}' ';' ;) \
 	 ## tar up and compress
-	(cd $(PACKDIR) && $(TAR) -cf - mozart-$(BUILDDATE)-std) | \
-	$(COMPRESS) > mozart-$(BUILDDATE)-std.tar.gz
+	(cd $(PACKDIR) && $(TAR) -cf - mozart-$(VERSION).$(BUILDDATE)-std) | \
+	$(COMPRESS) > mozart-$(VERSION).$(BUILDDATE)-std.tar.gz
 	 ## remove temp directory
-	rm -rf $(PACKDIR)/mozart-$(BUILDDATE)-std
+	rm -rf $(PACKDIR)/mozart-$(VERSION).$(BUILDDATE)-std
 
 $(PACKDIR):
 	INSTALL_DIR_CHMOD=777; export INSTALL_DIR_CHMOD && $(INSTALL_DIR) $@
