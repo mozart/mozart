@@ -574,7 +574,7 @@ the GDB commands `cd DIR' and `directory'."
        "true" "false"
        "div" "mod" "andthen" "orelse"
        "not" "thread" "task" "in"
-       "dis"
+       "condis"
        ))
     "\\|\\.\\|\\[\\]\\|#\\|!\\|:\\|\\@"
     ))
@@ -590,7 +590,7 @@ the GDB commands `cd DIR' and `directory'."
 		   "if" "or" "OR" "case"
 		   "class" "create" "meth" "extern"
 		   "not" "thread" "task"
-		   "dis"
+		   "condis"
 		   )))
 
 (defconst oz-left-pattern "[[({]")
