@@ -1332,6 +1332,9 @@ OZ_C_ioproc_begin(unix_receiveFromUnix,7)
 OZ_C_proc_end
 
 
+const int maxArgv = 100;
+static char* argv[maxArgv];
+
 
 OZ_C_ioproc_begin(unix_pipe,4)
 {
@@ -1359,8 +1362,10 @@ OZ_C_ioproc_begin(unix_pipe,4)
 
   argl=args;
 
-  char* argv[argno+2];
-
+  if (argno+2 >= maxArgv) {
+    OZ_warning("pipe: can only handle up to %d arguments, got: %d",maxArgv,argno+2);
+    return FAILED;
+  }
   argv[0] = s;
   argv[argno+1] = 0;
 
