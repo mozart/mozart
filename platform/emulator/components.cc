@@ -247,6 +247,7 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header, Bool textmode)
   saveTerm(bs,in);
 
   OZ_Return ret=onlyFutures(bs->getResources());
+
   if (ret != PROCEED) {
     bufferManager->dumpByteStream(bs);
     return ret;
@@ -374,7 +375,7 @@ OZ_Return
 saveDatum(OZ_Term in,OZ_Datum& dat)
 {
   ByteSinkDatum sink;
-  OZ_Return result = sink.putTerm(in,"UNKNOWN FILENAME","",NO);
+  OZ_Return result = sink.putTerm(in,"UNKNOWN FILENAME",0,NO);
   if (result==PROCEED) {
     dat=sink.dat;
   } else {
@@ -1034,7 +1035,7 @@ OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
 }
 
 OZ_BI_define(BIpicklePack, 1, 1) {
-  OZ_declareDetTerm(0,term);
+  OZ_declareTerm(0,term);
   OZ_Datum d;
   OZ_Return r = OZ_valueToDatum(term, &d);
 
