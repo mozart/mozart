@@ -80,7 +80,7 @@ local
 		compilerSourceWrap:
 		   return#'Wrap'#none)
    in
-      Options = {New Tk.optionsManager init(Resources)}
+      Options = {New Tk.optionsManager tkInit(Resources)}
    end
 
    local
