@@ -636,11 +636,10 @@ loop:
    *   local newer -> local older
    */
   COUNT(varVarUnify);
-  if (isNotCVar(tag1)) {
-    if (isNotCVar(tag2) &&
+  if (isUVar(tag1)) {
+    if (isUVar(tag2) &&
         isMoreLocal(term2,term1) &&
         (!am.isLocalVariable(term1,termPtr1) ||
-         (isUVar(term2) && !isUVar(term1)) ||
          heapNewer(termPtr2,termPtr1))) {
       oz_bind(termPtr2, term2, makeTaggedRef(termPtr1));
     } else {
@@ -649,7 +648,24 @@ loop:
     goto next;
   }
 
-  if (isNotCVar(tag2)) {
+  if (isUVar(tag2)) {
+    oz_bind(termPtr2, term2, makeTaggedRef(termPtr1));
+    goto next;
+  }
+
+  if (isSVar(tag1)) {
+    if (isSVar(tag2) &&
+        isMoreLocal(term2,term1) &&
+        (!am.isLocalVariable(term1,termPtr1) ||
+         heapNewer(termPtr2,termPtr1))) {
+      oz_bind(termPtr2, term2, makeTaggedRef(termPtr1));
+    } else {
+      oz_bind(termPtr1, term1, makeTaggedRef(termPtr2));
+    }
+    goto next;
+  }
+
+  if (isSVar(tag2)) {
     oz_bind(termPtr2, term2, makeTaggedRef(termPtr1));
     goto next;
   }
