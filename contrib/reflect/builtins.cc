@@ -84,7 +84,7 @@ OZ_BI_define(BIIsActivePropagator, 1, 1)
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
   }
 
-  OZ_Extension * se1 = oz_tagged2Extension(v1);
+  OZ_Extension * se1 = tagged2Extension(v1);
   if (PropagatorReference::getId() != se1->getIdV()) {
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
   }
@@ -103,7 +103,7 @@ OZ_BI_define(BIDeactivatePropagator, 1, 0)
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
   }
 
-  OZ_Extension * se1 = oz_tagged2Extension(v1);
+  OZ_Extension * se1 = tagged2Extension(v1);
 
   if (PropagatorReference::getId() != se1->getIdV()) {
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
@@ -126,7 +126,7 @@ OZ_BI_define(BIActivatePropagator, 1, 0)
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
   }
 
-  OZ_Extension * se1 = oz_tagged2Extension(v1);
+  OZ_Extension * se1 = tagged2Extension(v1);
 
   if (PropagatorReference::getId() != se1->getIdV()) {
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
@@ -152,7 +152,7 @@ OZ_BI_define(BIIsPropagator, 1, 1)
     OZ_RETURN(oz_false());
   }
 
-  OZ_Extension * se1 = oz_tagged2Extension(v1);
+  OZ_Extension * se1 = tagged2Extension(v1);
   if (PropagatorReference::getId() != se1->getIdV()) {
     OZ_RETURN(oz_false());
   }
@@ -172,7 +172,7 @@ OZ_BI_define(BIIsDiscardedPropagator, 1, 1)
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
   }
 
-  OZ_Extension * se1 = oz_tagged2Extension(v1);
+  OZ_Extension * se1 = tagged2Extension(v1);
 
   if (PropagatorReference::getId() != se1->getIdV()) {
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
@@ -197,7 +197,7 @@ OZ_BI_define(BIDiscardPropagator, 1, 0)
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
   }
 
-  OZ_Extension * se1 = oz_tagged2Extension(v1);
+  OZ_Extension * se1 = tagged2Extension(v1);
 
   if (PropagatorReference::getId() != se1->getIdV()) {
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
@@ -222,7 +222,7 @@ OZ_BI_define(BIPropagatorEq, 2, 1)
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
   }
 
-  OZ_Extension * se1 = oz_tagged2Extension(v1);
+  OZ_Extension * se1 = tagged2Extension(v1);
   if (PropagatorReference::getId() != se1->getIdV()) {
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
   }
@@ -233,7 +233,7 @@ OZ_BI_define(BIPropagatorEq, 2, 1)
     return OZ_raiseErrorC(EXCEPTION, 1, EXPECT_PROPGATORREF, v2);
   }
 
-  OZ_Extension * se2 = oz_tagged2Extension(v2);
+  OZ_Extension * se2 = tagged2Extension(v2);
   if (PropagatorReference::getId() != se2->getIdV()) {
     return OZ_raiseErrorC(EXCEPTION, 1, EXPECT_PROPGATORREF, v2);
   }
@@ -256,7 +256,7 @@ OZ_BI_define(BIReflectPropagator, 1, 1)
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
   }
 
-  OZ_Extension * se1 = oz_tagged2Extension(v1);
+  OZ_Extension * se1 = tagged2Extension(v1);
 
   if (PropagatorReference::getId() != se1->getIdV()) {
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
@@ -286,7 +286,7 @@ OZ_BI_define(BIReflectPropagatorName, 1, 1)
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
   }
 
-  OZ_Extension * se1 = oz_tagged2Extension(v1);
+  OZ_Extension * se1 = tagged2Extension(v1);
 
   if (PropagatorReference::getId() != se1->getIdV()) {
     OZ_RETURN(oz_false());
@@ -317,7 +317,7 @@ OZ_BI_define(BIIsPropagatorFailed, 1, 1)
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
   }
 
-  OZ_Extension * se1 = oz_tagged2Extension(v1);
+  OZ_Extension * se1 = tagged2Extension(v1);
 
   if (PropagatorReference::getId() != se1->getIdV()) {
     OZ_RETURN(oz_false());
@@ -347,7 +347,7 @@ OZ_BI_define(BIReflectPropagatorCoordinates, 1, 1)
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
   }
 
-  OZ_Extension * se1 = oz_tagged2Extension(v1);
+  OZ_Extension * se1 = tagged2Extension(v1);
 
   if (PropagatorReference::getId() != se1->getIdV()) {
     OZ_RETURN(oz_false());

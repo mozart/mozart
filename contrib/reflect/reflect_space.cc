@@ -37,7 +37,7 @@ void _reflect_space_params(ReflectStack &rec_stack,
 
   DEREF(params, paramsptr, paramstag);
   
-  if (isUVar(paramstag) || isCVar(paramstag)) {
+  if (isUVarTag(paramstag) || isCVarTag(paramstag)) {
 
     Bool is_reflected;
     int id = vtable.add(paramsptr, is_reflected);
@@ -211,7 +211,7 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
 
     OZ_Term susp_arity_def[] = {
       {OZ_pair2(atom_any, 
-		(isCVar(vartag) ? 
+		(isCVarTag(vartag) ? 
 		 reflect_space_susplist(rec_stack, ptable, 
 					tagged2CVar(var)->getSuspList()) 
 		 : OZ_nil()))},      
@@ -222,7 +222,7 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
 
     term_susplist = OZ_recordInit(atom_susplists, susp_arity);
 
-  } else if (isGenFDVar(var,vartag)) {
+  } else if (isGenFDVar(var)) {
     DEBUGPRINT(("reflect_space_variable (a)"));
 
     Bool is_reflected;
@@ -261,7 +261,7 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
     term_susplist = OZ_recordInit(atom_susplists, susp_arity);
     DEBUGPRINT(("reflect_space_variable (f)"));
 
-  } else if (isGenBoolVar(var,vartag)) {
+  } else if (isGenBoolVar(var)) {
     DEBUGPRINT(("reflect_space_variable (bool)"));
 
     Bool is_reflected;
@@ -286,7 +286,7 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
 
     term_susplist = OZ_recordInit(atom_susplists, susp_arity);
 
-  } else if (isGenFSetVar(var,vartag)) {
+  } else if (isGenFSetVar(var)) {
     DEBUGPRINT(("reflect_space_variable (fs)"));
 
     Bool is_reflected;
@@ -323,7 +323,7 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
 
     term_susplist = OZ_recordInit(atom_susplists, susp_arity);
 
-  } else if (isGenCtVar(var, vartag)) {
+  } else if (isGenCtVar(var)) {
     DEBUGPRINT(("reflect_space_variable (ct)"));
 
     Bool is_reflected;
