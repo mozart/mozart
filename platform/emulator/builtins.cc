@@ -827,6 +827,17 @@ LBLagain:
 	break;
       case Co_Class:
 	t = tagged2ObjectClass(term)->classGetFeature(fea);
+	if (!t) {
+	  TaggedRef cfs; 
+	  cfs = oz_deref(tagged2ObjectClass(term)->classGetFeature(NameOoUnFreeFeat));
+	  if (oz_isSRecord(cfs)) {
+	    t = tagged2SRecord(cfs)->getFeature(fea);
+	    TaggedRef dt = oz_deref(t);
+
+	    if (oz_isName(dt) && oz_eq(dt,NameOoFreeFlag))
+	      t = makeTaggedNULL();
+	  }
+	}
 	break;
       case Co_Array:
       case Co_Dictionary:
