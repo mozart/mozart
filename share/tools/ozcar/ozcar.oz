@@ -20,14 +20,10 @@ local
       meth on
 	 {Tk.batch [update(idletasks)
 		    wm(deiconify self.toplevel)]}
-	 case {UsingNewCompiler} then
-	    case {CgetTk emacsThreads} then
-	       {Compile '\\switch +debuginfo'}
-	    else
-	       {Compile '\\switch +debuginfovarnames +debuginfocontrol'}
-	    end
-	 else
+	 case {CgetTk emacsThreads} then
 	    {Compile '\\switch +debuginfo'}
+	 else
+	    {Compile '\\switch +debuginfovarnames +debuginfocontrol'}
 	 end
 	 {Dbg.on}
 	 case @currentThread == unit then
