@@ -182,7 +182,7 @@ in
    thread {Pong 50} end
 end
 >>>
-
+</FIGURE>
 
 <P>The program shown in <PTR TO="pingpong"> starts two threads, one
 displays <<ping>> periodically after 500 milliseconds, and the other
