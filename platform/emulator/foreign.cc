@@ -819,8 +819,7 @@ OZ_Term OZ_record(OZ_Term label, OZ_Term arity)
 {
   Arity *newArity = mkArity(arity);
   if (!newArity) return nil();
-  RefsArray newArgs = allocateRefsArray(newArity->getSize());
-  return makeTaggedSRecord(new SRecord(newArity,label,newArgs));
+  return makeTaggedSRecord(new SRecord(newArity,label,OK,makeTaggedNULL()));
 }
 
 /* take a label and a property list and construct a record */
