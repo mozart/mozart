@@ -3,6 +3,7 @@
   xmlns:xsl="http://www.w3.org/XSL/Transform/1.0"
   xmlns:tex="http://www.jclark.com/xt/java/TeX"
   xmlns:id="http://www.jclark.com/xt/java/ID"
+  xmlns:msg="http://www.jclark.com/xt/java/Msg"
   xmlns="java:com.jclark.xsl.sax.NXMLOutputHandler"
   result-ns=""
 >
@@ -10,7 +11,7 @@
 <xsl:strip-space elements="BOOK FRONT BACK BODY PART CHAPTER SECTION SUBSECTION SUBSUBSECTION APPENDIX LIST ENTRY SYNOPSIS MATH.CHOICE PICTURE.CHOICE CHUNK FIGURE INDEX SEE GRAMMAR.RULE GRAMMAR TABLE TR"/>
 
 <xsl:template name="makeID">
-<xsl:if test="@ID and id:put((string(@ID)),.)"/>
+<xsl:if test="id:put((string(@ID)),.)"/>
 <xsl:for-each select="*">
   <xsl:call-template name="makeID"/>
 </xsl:for-each>
@@ -25,6 +26,8 @@
 <nxml>
 <data>
 <xsl:text>\documentclass{book}
+\lefthyphenmin=2
+\righthyphenmin=2
 </xsl:text>
 <xsl:for-each select="FRONT/META[@NAME='LATEX.PACKAGE']">
 \usepackage{<xsl:value-of select="@VALUE"/>}
@@ -40,7 +43,8 @@
   {\end{list}}
 \newenvironment{CHUNK}[1]
   {\begin{list}{}{\leftmargin=1cm}\item[\mbox{$\langle$#1$\rangle\equiv$}]%
-\mbox{}\hfill\mbox\break\ignorespaces\begin{alltt}}
+\topsep=0pt\parskip=0pt\partopsep=0pt\parsep=0pt\itemsep=0pt%
+\hfill\hbox{}\begin{alltt}}
   {\end{alltt}\end{list}}
 \newcommand{\GRAMMARNOTE}[1]{\textsl{\% #1}}
 \title{</xsl:text>
@@ -50,6 +54,7 @@
 <xsl:apply-templates select="FRONT/AUTHOR.EXTERN"/>
 <xsl:text>}
 \begin{document}
+\maketitle
 </xsl:text>
 <xsl:apply-templates select="BODY"/>
 <xsl:text>\end{document}
@@ -63,7 +68,7 @@
 
 <xsl:template match="AUTHOR.EXTERN">
 <xsl:if test="not(position()=1)"><xsl:text>, </xsl:text></xsl:if>
-<xsl:value-of select="@KEY"/>
+<xsl:value-of select="translate((string(@KEY)),'.',' ')"/>
 </xsl:template>
 
 <xsl:template name="seccmd">
@@ -278,7 +283,7 @@
 </xsl:choose>
 </xsl:template>
 
-<xsl:template match="CODE/text()">
+<xsl:template match="CODE/text()|CHUNK.SILENT/text()">
 <xsl:value-of select="tex:quote((string(.)))"/>
 </xsl:template>
 
@@ -322,9 +327,9 @@
 
 <xsl:template match="REF.EXTERN">
 <xsl:apply-templates/>
-<xsl:text>\footnote{\texttt{</xsl:text>
-<xsl:value-of select="@TO"/>
-<xsl:text>}}</xsl:text>
+<xsl:text>\footnote{</xsl:text>
+<xsl:call-template name="ref" select="."/>
+<xsl:text>}</xsl:text>
 </xsl:template>
 
 <!-- no DTD therefore no IDs and keys are not yet implemented -->
@@ -372,20 +377,49 @@
 <xsl:text>}</xsl:text>
 </xsl:template>
 
-<xsl:template match="PTR.EXTERN[starts-with(@TO,'ozdoc:')]">
-<xsl:text>\textsl{</xsl:text>
-<xsl:choose>
-  <xsl:when test="@TO='ozdoc:system'">The System Modules</xsl:when>
-  <xsl:when test="@TO='ozdoc:apptut'">The Application Programming Tutorial</xsl:when>
-  <xsl:when test="@TO='ozdoc:opi'">The Oz Programming Interface</xsl:when>
-  <xsl:when test="@TO='ozdoc:fdt'">Finite Domain Constraint Programming</xsl:when>
+<xsl:template match="PTR.EXTERN">
+ <xsl:call-template name="ref" select="."/>
+</xsl:template>
+
+<xsl:template name="ref">
+ <xsl:variable name="to">
+  <xsl:value-of select="@TO"/>
+ </xsl:variable>
+ <xsl:choose>
+  <xsl:when test="starts-with($to,'ozdoc')">
+   <xsl:text>\textsl{</xsl:text>
+   <xsl:choose>
+    <xsl:when test="$to='ozdoc:system'">
+     <xsl:text>The System Modules</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:apptut'">
+     <xsl:text>The Application Programming Tutorial</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:opi'">
+     <xsl:text>The Oz Programming Interface</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:fdt'">
+     <xsl:text>Finite Domain Constraint Programming</xsl:text>
+    </xsl:when>
+    <xsl:otherwise>
+     <xsl:text>!!!UNKNOWN REF!!!</xsl:text>
+     <xsl:value-of select="@TO"/>
+     <xsl:text>!!!</xsl:text>
+    </xsl:otherwise>
+   </xsl:choose>
+   <xsl:if test="@KEY">
+    <xsl:text> (</xsl:text>
+    <xsl:value-of select="@KEY"/>
+    <xsl:text>)</xsl:text>
+   </xsl:if>
+   <xsl:text>}</xsl:text>
+  </xsl:when>
   <xsl:otherwise>
-    <xsl:text>!!!UNKNOWN PTR.EXTERN!!!</xsl:text>
-    <xsl:value-of select="@TO"/>
-    <xsl:text>!!!</xsl:text>
+   <xsl:text>\texttt{</xsl:text>
+   <xsl:value-of select="$to"/>
+   <xsl:text>}</xsl:text>
   </xsl:otherwise>
-</xsl:choose>
-<xsl:text>}</xsl:text>
+ </xsl:choose>
 </xsl:template>
 
 <xsl:template match="TABLE">
