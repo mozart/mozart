@@ -6,6 +6,7 @@ local
    class AboutDialog from TkTools.dialog
       meth init(master:Master)
          TkTools.dialog,tkInit(master:  Master
+			       root:    pointer
                                title:   IconName#': About'
                                buttons: ['Ok'#tkClose]
                                focus:   1
