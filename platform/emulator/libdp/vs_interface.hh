@@ -38,11 +38,6 @@
 extern VirtualSite* (*createVirtualSite)(DSite* s);
 
 //
-extern void (*marshalVirtualInfo)(VirtualInfo *vi, MsgBuffer *mb);
-extern VirtualInfo* (*unmarshalVirtualInfo)(MsgBuffer *mb); 
-extern void (*unmarshalUselessVirtualInfo)(MsgBuffer *mb);
-
-//
 extern void (*zeroRefsToVirtual)(VirtualSite *vs);
 
 //
@@ -82,9 +77,6 @@ extern GiveUpReturn (*giveUp_VirtualSite)(VirtualSite* vs);
 
 //
 extern void (*discoveryPerm_VirtualSite)(VirtualSite *vs);
-
-//
-extern void (*dumpVirtualInfo)(VirtualInfo* vi);
 
 //
 extern MsgBuffer* (*getVirtualMsgBuffer)(DSite* site);
