@@ -1540,6 +1540,7 @@ OZ_BI_define(unix_exec,2,1){
   buf[0] = '\0';
   for (k=0 ; k<argno; k++) {
     strcat(buf,argv[k]);
+    strcat(buf," ");
   }
 
   SECURITY_ATTRIBUTES sa;
@@ -1676,20 +1677,21 @@ OZ_BI_iodefine(unix_system,1,1)
   OZ_RETURN_INT(ret);
 } OZ_BI_ioend
 
-#if !defined(WINDOWS) || defined(__CYGWIN32__)
 OZ_BI_iodefine(unix_wait,0,2)
 {
   // OZ_out(0) == rpid
   // OZ_out(1) == rstat
 
+#if !defined(WINDOWS) || defined(__CYGWIN32__)
   int status;
   int pid = waitpid(-1, &status, WNOHANG | WUNTRACED);
 
   OZ_out(0) = OZ_int(pid);
   OZ_out(1) = OZ_int(status);
+#endif
+
   return PROCEED;
 } OZ_BI_ioend
-#endif
 
 
 OZ_BI_iodefine(unix_getServByName, 2,1)
@@ -1892,15 +1894,13 @@ retry:
 } OZ_BI_end
 #endif
 
+
 #ifdef __MINGW32__
-#define NotAvail(Name,InArity,OutArity,Fun)             \
-OZ_BI_define(Fun,InArity,OutArity)                      \
-{                                                       \
-  return oz_raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,  \
-                   OZ_atom(Name));                      \
+
+OZ_BI_define(unix_getpwnam,1,1)
+{
+  return oz_raise(E_SYSTEM,E_SYSTEM,
+                  "limitExternal",1,OZ_atom("OS.getpwnam"));
 } OZ_BI_end
 
-
-NotAvail("OS.wait",            0,2, unix_wait);
-NotAvail("OS.getpwnam",        1,1, unix_getpwnam);
 #endif
