@@ -1,5 +1,10 @@
 -*-outline-*-
 
+* version 0.77
+** --fast is now `really' the default
+** Renamed Makefile.oz to Makefiler.oz to avoid clash with makefile.oz on case
+   insensitive systems
+
 * version 0.76
 ** ozmake --publish will now publish the package both under the bare filename
    derived from the mogul id and from the same augmented with the
