@@ -45,7 +45,6 @@ void oz_removeExtThread(Thread *tt);
 
 
 
-static
 inline
 Thread * _newThread(int prio, Board *bb) {
   Thread *th = new Thread(S_RTHREAD,prio,bb,oz_newId());
