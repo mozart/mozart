@@ -4,6 +4,7 @@
 
 @SET_MAKE@
 
+BUILDTOP	= @BUILDTOP@
 PREFIX		= @prefix@
 SRCDIR		= @srcdir@
 TOPDIR		= @TOPDIR@
