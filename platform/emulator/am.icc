@@ -223,13 +223,13 @@ inline
 void AM::pushTask(Board *n,ProgramCounter pc,
                   RefsArray y,RefsArray g,RefsArray x,int i)
 {
-  currentThread->pushCont(n,pc,y,g,x,i);
+  currentThread->pushCont(n,pc,y,g,x,i,OK);
 }
 
 inline
 void AM::pushCFun(Board *n, OZ_CFun f, RefsArray x, int i)
 {
-  currentThread->pushCFunCont(n, f, (Suspension *) NULL, x, i);
+  currentThread->pushCFunCont(n, f, (Suspension *) NULL, x, i, OK);
 }
 
 inline

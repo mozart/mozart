@@ -143,7 +143,7 @@ public:
   }
 
   void pushCFunCont(Board *n, OZ_CFun f, Suspension* s,
-                    RefsArray  x=NULL, int i=0, Bool copy=OK)
+                    RefsArray  x, int i, Bool copy)
   {
     DebugCheckT(nodeCheckY(n));
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
@@ -160,7 +160,7 @@ public:
 
 
   void pushCont(Board *n,ProgramCounter pc,
-                RefsArray y,RefsArray g=NULL,RefsArray x=NULL,int i=0, Bool copy=OK)
+                RefsArray y,RefsArray g,RefsArray x,int i, Bool copy)
   {
     Assert(!isFreedRefsArray(y));
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
