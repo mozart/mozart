@@ -39,8 +39,6 @@ require
 	     cloneList:      CloneList
 
 	     formatOrigin:   FormatOrigin)
-
-   at '../CpSupport.ozf'
    
    
 prepare

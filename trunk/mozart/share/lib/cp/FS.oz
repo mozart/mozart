@@ -31,9 +31,6 @@ functor
 require
    CpSupport(vectorToList:   VectorToList
 	     expand:         ExpandList)
-
-   at '../CpSupport.ozf'
-   
    
 prepare
 
