@@ -3,9 +3,13 @@
  *    Ralf Scheidhauer <Ralf.Scheidhauer@ps.uni-sb.de>
  *    Leif Kornstaedt <kornstae@ps.uni-sb.de>
  *
+ *  Contributor:
+ *    Christian Schulte <schulte@ps.uni-sb.de>
+ *
  *  Copyright:
  *    Ralf Scheidhauer, 1997
  *    Leif Kornstaedt, 1997-1998
+ *    Christian Schulte, 2000
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -124,6 +128,10 @@ static const char * comp_instr[] = {
   "testBI", NULL,
   "testLT", NULL,
   "testLE", NULL,
+  "deconsCall", "deconsCallX",
+  "tailDeconsCall", "tailDeconsCallX",
+  "consCall", "consCallX",
+  "tailConsCall", "tailConsCallX",
   NULL, NULL,
 };
 
@@ -220,6 +228,44 @@ static const char * comp_instr[] = {
 #define CI_TESTBI    (CI_INLINEDOT+1)
 #define CI_TESTLT    (CI_TESTBI+1)
 #define CI_TESTLE    (CI_TESTLT+1)
+#define CI_DECONSCALL    (CI_TESTLE+1)
+#define CI_TAILDECONSCALL    (CI_DECONSCALL+1)
+#define CI_CONSCALL    (CI_TAILDECONSCALL+1)
+#define CI_TAILCONSCALL   (CI_CONSCALL+1)
+
+
+#define CI_TYPE_OTHER 0
+#define CI_TYPE_XREG  1
+#define CI_TYPE_YREG  2
+#define CI_TYPE_GREG  3
+
+#define CI_MAX_ARG_LEN 16
+
+static TaggedRef ci_ia_to_in;
+static TaggedRef ci_type_xatom;
+static TaggedRef ci_type_yatom;
+static TaggedRef ci_type_gatom;
+
+void compiler_init(void) {
+  // Compute mapping from instruction atom to instruction number
+  const char ** c = comp_instr;
+  int in = 0;
+  TaggedRef ais = oz_nil();
+  while (*c) {
+    ais = oz_cons(oz_pair2(oz_atomNoDup(*c++),makeTaggedSmallInt(in++)),
+                  ais);
+    c++;
+  }
+  ci_ia_to_in = OZ_recordInit(oz_atomNoDup("ci_ia_to_in"),ais);
+  OZ_protect(&ci_ia_to_in);
+  ci_type_xatom = oz_atomNoDup("x");
+  OZ_protect(&ci_type_xatom);
+  ci_type_yatom = oz_atomNoDup("y");
+  OZ_protect(&ci_type_yatom);
+  ci_type_gatom = oz_atomNoDup("g");
+  OZ_protect(&ci_type_gatom);
+}
+
 
 static
 SRecordArity getArity(TaggedRef arity)
@@ -283,438 +329,9 @@ OZ_BI_define(BIgetInstructionSizes,0,1) {
 } OZ_BI_end
 
 
-OZ_BI_define(BIallocateCodeBlock,2,2)
-{
-  oz_declareIntIN(0,size);
-  oz_declareNonvarIN(1,globals);
+#define CI_BOMB() goto bomb;
 
-  if (size < 0) {
-    return oz_raise(E_ERROR,AtomAssembler,
-                    "illegalCodeBlockSize",1,OZ_in(0));
-  }
-  int numGlobals = OZ_length(globals);
-  if (numGlobals == -1) {
-    oz_typeError(1,"List");
-  }
-
-  CodeArea *code = new CodeArea(size);
-  const int maxX=1; // uses only X[0] in tailCall(x(0) 0)
-  PrTabEntry *pte = new PrTabEntry(OZ_atom("toplevelAbstraction"),
-                                   mkTupleWidth(0), AtomEmpty, 0, -1, oz_nil(),
-                                   maxX);
-  pte->setGSize(numGlobals);
-  pte->PC = code->getStart();
-
-  Assert(oz_onToplevel());
-  Abstraction *p = Abstraction::newAbstraction(pte,oz_currentBoard());
-
-  globals = oz_deref(globals);
-  for (int i = 0; i < numGlobals; i++) {
-    p->initG(i,oz_head(globals));
-    globals = oz_deref(oz_tail(globals));
-  }
-
-  OZ_out(0) = OZ_makeForeignPointer(code);
-  OZ_out(1) = makeTaggedConst(p);
-  return PROCEED;
-} OZ_BI_end
-
-
-#define OZ_declareCodeBlockIN(num,name)                 \
-  CodeArea *name;                                       \
-  {                                                     \
-    OZ_declareForeignPointer(num,__aux);                \
-    name = (CodeArea *) __aux;                          \
-  }
-
-
-OZ_BI_define(BIaddDebugInfo,3,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareNonvarIN(1,file);
-  if (!oz_isAtom(file)) {
-    oz_typeError(1,"Atom");
-  }
-  oz_declareIntIN(2,line);
-  code->writeDebugInfo(file,line);
-  return PROCEED;
-} OZ_BI_end
-
-
-#ifdef DEBUG_CHECK
-static Opcode lastOpcode=OZERROR;
-#endif
-
-OZ_BI_define(BIstoreOpcode,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareIntIN(1,i);
-  if (i < 0 || i >= (int) OZERROR) {
-    return oz_raise(E_ERROR,AtomAssembler,
-                    "unknownInstruction",1,OZ_in(1));
-  }
-  code->writeOpcode((Opcode) i);
-  DebugCheckT(lastOpcode = (Opcode) i);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreNumber,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareNonvarIN(1,arg);
-  if (!oz_isNumber(arg)) {
-    oz_typeError(1,"Int");
-  }
-  code->writeTagged(arg);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreLiteral,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareNonvarIN(1,arg);
-  if (!oz_isLiteral(arg)) {
-    oz_typeError(1,"Literal");
-  }
-  code->writeTagged(arg);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreFeature,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareNonvarIN(1,arg);
-  if (!oz_isFeature(arg)) {
-    oz_typeError(1,"Feature");
-  }
-  code->writeTagged(arg);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreConstant,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareIN(1,arg);
-  if (!OZ_isVariable(arg)) {
-    arg = oz_deref(arg);
-  }
-  code->writeTagged(arg);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreBuiltinname,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  OZ_declareVirtualString(1,name);
-  Builtin *bi = string2CBuiltin(name);
-  if (!bi) {
-    return oz_raise(E_ERROR,AtomAssembler,
-                    "builtinUndefined",1,OZ_in(1));
-  }
-  code->writeBuiltin(bi);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreXRegisterIndex,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareIntIN(1,i);
-  if (i < 0) {
-    return oz_raise(E_ERROR,AtomAssembler,
-                    "registerIndexOutOfRange",1,OZ_in(1));
-  }
-  code->writeXReg(i);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreYRegisterIndex,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareIntIN(1,i);
-  if (i < 0) {
-    return oz_raise(E_ERROR,AtomAssembler,
-                    "registerIndexOutOfRange",1,OZ_in(1));
-  }
-  code->writeYReg(i);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreGRegisterIndex,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareIntIN(1,i);
-  if (i < 0) {
-    return oz_raise(E_ERROR,AtomAssembler,
-                    "registerIndexOutOfRange",1,OZ_in(1));
-  }
-  code->writeGReg(i);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreInt,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareIntIN(1,i);
-  code->writeInt(i);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreLabel,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareIntIN(1,label);
-  code->writeLabel(label);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreProcedureRef,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareNonvarIN(1,p);
-  if (OZ_isUnit(p)) {
-    Assert(lastOpcode==DEFINITION || lastOpcode==DEFINITIONCOPY);
-    code->writeAddress(NULL);
-  } else {
-    OZ_declareForeignPointer(1,predId);
-    Assert(predId);
-    code->writeAbstractionEntry((AbstractionEntry *) predId);
-  }
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstorePredId,6,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareNonvarIN(1,name);
-  if (!oz_isAtom(name)) {
-    oz_typeError(1,"Atom");
-  }
-  OZ_declareRecordArityIN(2,arity);
-  oz_declareNonvarIN(3,pos);
-  if (!(OZ_isUnit(pos) || oz_isTuple(pos) && OZ_width(pos) == 3)) {
-    oz_typeError(3,"Coordinates");
-  }
-  oz_declareNonvarIN(4,flags);
-  OZ_Term ret = oz_checkList(flags);
-  if (oz_isFalse(ret)) oz_typeError(4,"List");
-  if (oz_isRef(ret)) oz_suspendOn(ret);
-
-  oz_declareIntIN(5,maxX);
-
-  PrTabEntry *pte;
-  if (OZ_isUnit(pos)) {
-    pte = new PrTabEntry(name,arity,AtomEmpty,0,-1,flags,maxX);
-  } else {
-    pte = new PrTabEntry(name,arity,pos,flags,maxX);
-  }
-  code->writeAddress(pte);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BInewHashTable,4,0) {
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareIntIN(1,elbl);
-  oz_declareIntIN(2,size);
-
-  IHashTable * ht = IHashTable::allocate(size,code->computeLabel(elbl));
-
-  TaggedRef tes = oz_deref(OZ_in(3));
-
-  while (oz_isCons(tes)) {
-    LTuple * es = tagged2LTuple(tes);
-    SRecord * e = tagged2SRecord(oz_deref(es->getHead()));
-
-    TaggedRef e1 = oz_deref(e->getArg(0));
-    TaggedRef e2 = oz_deref(e->getArg(1));
-
-    if (oz_eq(e->getLabel(),AtomRecord)) {
-      TaggedRef e3 = oz_deref(e->getArg(2));
-      Assert(oz_isLiteral(e1));
-      SRecordArity ari = getArity(e2);
-      int lbl = code->computeLabel(tagged2SmallInt(e3));
-      if (oz_eq(e1,AtomCons) && sraIsTuple(ari) &&
-          getTupleWidth(ari) == 2) {
-        ht->addLTuple(lbl);
-      } else {
-        ht->addRecord(e1,ari,lbl);
-      }
-    } else {
-      Assert(oz_eq(e->getLabel(),OZ_atom("scalar")));
-      int lbl = code->computeLabel(tagged2SmallInt(e2));
-      ht->addScalar(e1,lbl);
-    }
-    tes = oz_deref(es->getTail());
-  }
-
-  Assert(oz_isNil(tes));
-
-  code->writeAddress(ht);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreRecordArity,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  OZ_declareRecordArityIN(1,arity);
-  code->writeSRecordArity(arity);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreCallMethodInfo,5,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareIntIN(1,regindex);
-  oz_declareNonvarIN(2,name);
-  if (!oz_isLiteral(name)) {
-    oz_typeError(2,"Literal");
-  }
-  oz_declareBoolIN(3,isTail);
-  OZ_declareRecordArityIN(4,arity);
-
-  CallMethodInfo *cmi = new CallMethodInfo(regindex,name,isTail,arity);
-  code->writeAddress(cmi);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreGRegRef,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareNonvarIN(1,globals);
-  int numGlobals = OZ_length(globals);
-  if (numGlobals == -1) {
-    oz_typeError(1,"RegisterList");
-  }
-
-  AssRegArray *gregs = AssRegArray::allocate(numGlobals);
-  globals = oz_deref(globals);
-  for (int i = 0; i < numGlobals; i++) {
-    OZ_Term reg = oz_deref(oz_head(globals));
-    globals = oz_deref(oz_tail(globals));
-    if (!oz_isTuple(reg) || OZ_width(reg) != 1) {
-      oz_typeError(1,"RegisterList");
-    }
-
-    SRecord *rec = tagged2SRecord(reg);
-    const char *label = rec->getLabelLiteral()->getPrintName();
-    PosInt regType;
-    if (!strcmp(label,"x")) {
-      regType = K_XReg;
-    } else if (!strcmp(label,"y")) {
-      regType = K_YReg;
-    } else if (!strcmp(label,"g")) {
-      regType = K_GReg;
-    } else {
-      oz_typeError(1,"RegisterList");
-    }
-    OZ_Term index = oz_deref(rec->getArg(0));
-    if (!oz_isSmallInt(index)) {
-      oz_typeError(1,"RegisterList");
-    }
-    (*gregs)[i].set(tagged2SmallInt(index),regType);
-  }
-
-  code->writeAddress(gregs);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreLocation,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareNonvarIN(1,locs);
-  if (!oz_isPair2(locs)) {
-    oz_typeError(1,"Location");
-  }
-  OZ_Term inLocs = oz_deref(oz_left(locs));
-  OZ_Term outLocs = oz_deref(oz_right(locs));
-  const int inArity = OZ_length(inLocs);
-  const int outArity = OZ_length(outLocs);
-  if (inArity == -1 || outArity == -1) {
-    oz_typeError(1,"Location");
-  }
-
-  OZ_Location::initLocation();
-
-  int i;
-  for (i = 0; i < inArity; i++) {
-    OZ_Term reg = oz_deref(oz_head(inLocs));
-    if (!oz_isTuple(reg) || OZ_width(reg) != 1) {
-      oz_typeError(1,"Location");
-    }
-    TaggedRef index = oz_deref(oz_arg(reg,0));
-    if (!oz_isSmallInt(index)) {
-      oz_typeError(1,"Location");
-    }
-    int j = tagged2SmallInt(index);
-    if (j < 0 || j >= NumberOfXRegisters) {
-      return oz_raise(E_ERROR,AtomAssembler,
-                      "registerIndexOutOfRange",1,OZ_in(1));
-    }
-    OZ_Location::set(i,j);
-    inLocs = oz_deref(oz_tail(inLocs));
-  }
-  for (i = 0; i < outArity; i++) {
-    OZ_Term reg = oz_deref(oz_head(outLocs));
-    if (!oz_isTuple(reg) || OZ_width(reg) != 1) {
-      oz_typeError(1,"Location");
-    }
-    TaggedRef index = oz_deref(oz_arg(reg,0));
-    if (!oz_isSmallInt(index)) {
-      oz_typeError(1,"Location");
-    }
-    int j = tagged2SmallInt(index);
-    if (j < 0 || j >= NumberOfXRegisters) {
-      return oz_raise(E_ERROR,AtomAssembler,
-                      "registerIndexOutOfRange",1,OZ_in(1));
-    }
-    OZ_Location::set(inArity+i,j);
-    outLocs = oz_deref(oz_tail(outLocs));
-  }
-
-  code->writeAddress(OZ_Location::getLocation(inArity+outArity));
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreCache,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  code->writeCache();
-  return PROCEED;
-} OZ_BI_end
-
-
-
-#define CI_TYPE_OTHER 0
-#define CI_TYPE_XREG  1
-#define CI_TYPE_YREG  2
-#define CI_TYPE_GREG  3
-
-#define CI_MAX_ARG_LEN 16
-
-static TaggedRef ci_ia_to_in   = taggedVoidValue;
-static TaggedRef ci_type_xatom;
-static TaggedRef ci_type_yatom;
-static TaggedRef ci_type_gatom;
-
-#define CIS_OPCODE(op) \
-  code->writeOpcode(op);
+#define CIS_OPCODE(op) code->writeOpcode(op);
 
 
 #define CIS_XREG(ii) \
@@ -750,12 +367,21 @@ static TaggedRef ci_type_gatom;
   Assert(t_instr_type[ii] == CI_TYPE_OTHER); \
   code->writeInt(tagged2SmallInt(t_instr_args[ii]));
 
+static int ci_getlbl(OzDictionary * lbldict, TaggedRef t_lbl) {
+  TaggedRef t_ilbl;
+  if (lbldict->getArg(t_lbl,t_ilbl) == FAILED)
+    return -1;
+  t_ilbl = oz_deref(t_ilbl);
+  if (!oz_isInt(t_ilbl))
+    return -1;
+  return oz_intToC(t_ilbl);
+}
 
 #define CIS_LBL(ii) \
-  Assert(t_instr_type[ii] == CI_TYPE_OTHER);                         \
-  { TaggedRef _lbl;                                                  \
-    if (lbldict->getArg(t_instr_args[ii],_lbl) == FAILED) goto bomb; \
-    code->writeLabel(tagged2SmallInt(_lbl)); }
+  Assert(t_instr_type[ii] == CI_TYPE_OTHER);         \
+  { int _lbl = ci_getlbl(lbldict,t_instr_args[ii]);  \
+    if (_lbl == -1) CI_BOMB();                       \
+    code->writeLabel(_lbl); }
 
 
 #define CIS_CACHE(ii) \
@@ -823,39 +449,36 @@ static OZ_Location * ci_store_location(TaggedRef locs) {
 #define CIS_LOC(ii) \
   Assert(t_instr_type[ii] == CI_TYPE_OTHER);                  \
   { OZ_Location * _loc = ci_store_location(t_instr_args[ii]); \
-    if (!_loc) goto bomb;                                     \
+    if (!_loc) CI_BOMB();                                     \
     code->writeAddress(_loc); }
 
 
 static PrTabEntry * ci_store_predid(TaggedRef t_predid) {
-  //  proc {StorePredId CodeBlock pid(Name Arity Pos Flags NLiveRegs)}
-  //    {BIStorePredId CodeBlock {System.printName Name} Arity Pos Flags NLiveRegs}
-  //  end
   if (!oz_isSTuple(t_predid) ||
       (tagged2SRecord(t_predid)->getWidth() != 5))
     return (PrTabEntry *) NULL;
 
   SRecord * predid = tagged2SRecord(t_predid);
 
-  TaggedRef t_name  = oz_getPrintName(oz_deref(predid->getArg(1)));
+  TaggedRef t_name  = oz_getPrintName(oz_deref(predid->getArg(0)));
 
-  TaggedRef t_arity = oz_deref(predid->getArg(2));
+  TaggedRef t_arity = oz_deref(predid->getArg(1));
 
   SRecordArity arity = getArity(t_arity);
   if (arity == (SRecordArity) -1)
     return (PrTabEntry *) NULL;
 
 
-  TaggedRef t_pos   = oz_deref(predid->getArg(3));
+  TaggedRef t_pos   = oz_deref(predid->getArg(2));
   if (!(OZ_isUnit(t_pos) || oz_isTuple(t_pos) && OZ_width(t_pos) == 3))
     return (PrTabEntry *) NULL;
 
-  TaggedRef t_flags = oz_deref(predid->getArg(4));
+  TaggedRef t_flags = oz_deref(predid->getArg(3));
   OZ_Term ret = oz_checkList(t_flags);
   if (oz_isFalse(ret) || oz_isRef(ret))
     return (PrTabEntry *) NULL;
 
-  TaggedRef t_maxx  = oz_deref(predid->getArg(5));
+  TaggedRef t_maxx  = oz_deref(predid->getArg(4));
   if (!oz_isInt(t_maxx))
     return (PrTabEntry *) NULL;
 
@@ -869,7 +492,7 @@ static PrTabEntry * ci_store_predid(TaggedRef t_predid) {
 #define CIS_PREDID(ii) \
   Assert(t_instr_type[ii] == CI_TYPE_OTHER);               \
   { PrTabEntry * _pte = ci_store_predid(t_instr_args[ii]); \
-    if (!_pte) goto bomb;                                  \
+    if (!_pte) CI_BOMB();                                  \
     code->writeAddress(_pte); }
 
 
@@ -883,10 +506,8 @@ static AbstractionEntry * ci_store_procref(TaggedRef p) {
 
 
 #define CIS_PROCREF(ii) \
-  Assert(t_instr_type[ii] == CI_TYPE_OTHER);                     \
-  { AbstractionEntry * _ae = ci_store_procref(t_instr_args[ii]); \
-    if (!_ae) goto bomb;                                         \
-    code->writeAbstractionEntry(_ae); }
+  Assert(t_instr_type[ii] == CI_TYPE_OTHER);                       \
+  code->writeAbstractionEntry(ci_store_procref(t_instr_args[ii]));
 
 
 static AssRegArray * ci_store_gregref(TaggedRef globals) {
@@ -930,14 +551,14 @@ static AssRegArray * ci_store_gregref(TaggedRef globals) {
 #define CIS_GREGREF(ii) \
   Assert(t_instr_type[ii] == CI_TYPE_OTHER);                  \
   { AssRegArray * _grgs = ci_store_gregref(t_instr_args[ii]); \
-    if (!_grgs) goto bomb;                                    \
+    if (!_grgs) CI_BOMB();                                    \
     code->writeAddress(_grgs); }
 
 
 #define CIS_RECAR(ii) \
   Assert(t_instr_type[ii] == CI_TYPE_OTHER);       \
   { SRecordArity _ar = getArity(t_instr_args[ii]); \
-    if (_ar == (SRecordArity) -1) goto bomb;       \
+    if (_ar == (SRecordArity) -1) CI_BOMB();       \
     code->writeSRecordArity(_ar); }
 
 
@@ -952,17 +573,17 @@ static CallMethodInfo * ci_store_cmi(TaggedRef t_cmi) {
 
   SRecord * cmi = tagged2SRecord(t_cmi);
 
-  TaggedRef t_gri     = oz_deref(cmi->getArg(1));
-  TaggedRef t_name    = oz_deref(cmi->getArg(2));
-  TaggedRef t_is_tail = oz_deref(cmi->getArg(3));
-  TaggedRef t_arity   = oz_deref(cmi->getArg(4));
+  TaggedRef t_gri     = oz_deref(cmi->getArg(0));
+  TaggedRef t_name    = oz_deref(cmi->getArg(1));
+  TaggedRef t_is_tail = oz_deref(cmi->getArg(2));
+  TaggedRef t_arity   = oz_deref(cmi->getArg(3));
 
   if (!oz_isSTuple(t_gri) ||
       (tagged2SRecord(t_gri)->getWidth() != 1) ||
       !oz_eq(tagged2SRecord(t_gri)->getLabel(),ci_type_gatom))
     return (CallMethodInfo *) NULL;
 
-  TaggedRef t_ri = oz_deref(tagged2SRecord(t_gri)->getArg(1));
+  TaggedRef t_ri = oz_deref(tagged2SRecord(t_gri)->getArg(0));
 
   if (!oz_isSmallInt(t_ri))
     return (CallMethodInfo *) NULL;
@@ -988,1259 +609,850 @@ static CallMethodInfo * ci_store_cmi(TaggedRef t_cmi) {
 #define CIS_CMI(ii) \
   Assert(t_instr_type[ii] == CI_TYPE_OTHER);                \
   { CallMethodInfo * _cmi = ci_store_cmi(t_instr_args[ii]); \
-    if (!_cmi) goto bomb;                                   \
+    if (!_cmi) CI_BOMB();                                   \
     code->writeAddress(_cmi); }
 
 
 #define CIS_BINAME(ii) \
   Assert(t_instr_type[ii] == CI_TYPE_OTHER);                   \
-  if (!OZ_isVirtualString(t_instr_args[ii],NULL)) goto bomb;   \
+  if (!OZ_isVirtualString(t_instr_args[ii],NULL)) CI_BOMB();   \
   { Builtin * bi = string2CBuiltin(oz_vs2c(t_instr_args[ii])); \
-    if (!bi) goto bomb;                                        \
+    if (!bi) CI_BOMB();                                        \
     code->writeBuiltin(bi); }
 
 
+static IHashTable * ci_store_hsh(TaggedRef t_ht,
+                                 OzDictionary * lbldict,
+                                 CodeArea * code) {
 
-#define CIS_HSH(ii)
+  if (!oz_isSTuple(t_ht) || (tagged2SRecord(t_ht)->getWidth() != 2))
+    return (IHashTable *) NULL;
+
+  TaggedRef t_elbl = oz_deref(tagged2SRecord(t_ht)->getArg(0));
+  TaggedRef t_tes  = oz_deref(tagged2SRecord(t_ht)->getArg(1));
+
+  int size = OZ_length(t_tes);
+  if (size == -1)
+    return (IHashTable *) NULL;
+
+  int elbl = ci_getlbl(lbldict,t_elbl);
+  if (elbl == -1)
+    return (IHashTable *) NULL;
+
+  IHashTable * ht = IHashTable::allocate(size, code->computeLabel(elbl));
+
+  while (oz_isCons(t_tes)) {
+    LTuple * es = tagged2LTuple(t_tes);
+    SRecord * e = tagged2SRecord(oz_deref(es->getHead()));
+
+    TaggedRef e1 = oz_deref(e->getArg(0));
+    TaggedRef e2 = oz_deref(e->getArg(1));
+
+    if (oz_eq(e->getLabel(),AtomOnRecord)) {
+      TaggedRef e3 = oz_deref(e->getArg(2));
+      Assert(oz_isLiteral(e1));
+      SRecordArity ari = getArity(e2);
+      int u_lbl = ci_getlbl(lbldict,e3);
+      if (u_lbl == -1)
+        return (IHashTable *) NULL;
+      int r_lbl = code->computeLabel(u_lbl);
+      if (oz_eq(e1,AtomCons) && sraIsTuple(ari) &&
+          getTupleWidth(ari) == 2) {
+        ht->addLTuple(r_lbl);
+      } else {
+        ht->addRecord(e1,ari,r_lbl);
+      }
+    } else {
+      Assert(oz_eq(e->getLabel(),OZ_atom("onScalar")));
+      int u_lbl = ci_getlbl(lbldict,e2);
+      if (u_lbl == -1)
+        return (IHashTable *) NULL;
+      int r_lbl = code->computeLabel(u_lbl);
+      ht->addScalar(e1,r_lbl);
+    }
+    t_tes = oz_deref(es->getTail());
+  }
+
+  Assert(oz_isNil(t_tes));
+
+  return ht;
+}
+
+
+#define CIS_HSH(ii) \
+  Assert(t_instr_type[ii] == CI_TYPE_OTHER);                          \
+  { IHashTable * _ht = ci_store_hsh(t_instr_args[ii], lbldict, code); \
+    if (!_ht) CI_BOMB();                                              \
+    code->writeAddress(_ht); }
 
 
 #define CIS_DBGI(ii1,ii2) \
   Assert(t_instr_type[ii1] == CI_TYPE_OTHER);                \
   Assert(t_instr_type[ii2] == CI_TYPE_OTHER);                \
-  if (!oz_isAtom(t_instr_args[ii1])) goto bomb;              \
+  if (!oz_isAtom(t_instr_args[ii1])) CI_BOMB();              \
   code->writeDebugInfo(t_instr_args[ii1],t_instr_args[ii2]);
 
 
 
 
-OZ_BI_define(BIstoreInstr,3,0) {
+OZ_BI_define(BIstoreInstructions,4,1) {
+  oz_declareIntIN(0,size);
+  oz_declareNonvarIN(1,globals);
+  oz_declareNonvarIN(2,t_instrs);
+  oz_declareNonvarIN(3,t_lbldict);
 
-  // Compute mapping from instruction atom to instruction number
-  if (ci_ia_to_in == taggedVoidValue) {
-    const char ** c = comp_instr;
-    int in = 0;
-    TaggedRef ais = oz_nil();
-    while (*c) {
-      ais = oz_cons(oz_pair2(oz_atomNoDup(*c++),makeTaggedSmallInt(in++)),
-                  ais);
-      c++;
-    }
-    ci_ia_to_in = OZ_recordInit(oz_atomNoDup("ci_ia_to_in"),ais);
-    OZ_protect(&ci_ia_to_in);
-    Assert(ci_ia_to_in != taggedVoidValue);
-    ci_type_xatom = oz_atomNoDup("x");
-    OZ_protect(&ci_type_xatom);
-    ci_type_yatom = oz_atomNoDup("y");
-    OZ_protect(&ci_type_yatom);
-    ci_type_gatom = oz_atomNoDup("g");
-    OZ_protect(&ci_type_gatom);
-  }
+  if (size < 0)
+    CI_BOMB();
 
-  // Parse instruction specification...
-  oz_declareNonvarIN(0,t_instr);
-  OZ_declareCodeBlockIN(1,code);
-  oz_declareNonvarIN(0,t_lbldict);
+  int numGlobals;
+  numGlobals = OZ_length(globals);
 
-  TaggedRef t_instr_label;
-  TaggedRef t_instr_num;
-  OzDictionary * lbldict;
-
-  TaggedRef t_instr_args[CI_MAX_ARG_LEN];
-  int       t_instr_type[CI_MAX_ARG_LEN];
-
-  if (oz_isAtom(t_instr)) {
-    t_instr_label = t_instr;
-  } else if (oz_isSTuple(t_instr)) {
-    t_instr_label = tagged2SRecord(t_instr)->getLabel();
-    for (int i = tagged2SRecord(t_instr)->getWidth(); i--; ) {
-      t_instr_args[i] = oz_deref(tagged2SRecord(t_instr)->getArg(i+1));
-      t_instr_type[i] = CI_TYPE_OTHER;
-      if (oz_isTuple(t_instr_args[i])) {
-        TaggedRef t_type_label = tagged2SRecord(t_instr_args[i])->getLabel();
-        if (tagged2SRecord(t_instr_args[i])->getWidth() != 1)
-          goto bomb;
-        t_instr_args[i] = tagged2SRecord(t_instr_args[i])->getArg(1);
-        if (oz_eq(t_type_label,ci_type_xatom))
-          t_instr_type[i] = CI_TYPE_XREG;
-        if (oz_eq(t_type_label,ci_type_xatom))
-          t_instr_type[i] = CI_TYPE_YREG;
-        if (oz_eq(t_type_label,ci_type_xatom))
-          t_instr_type[i] = CI_TYPE_GREG;
-      }
-    }
-  } else {
-    goto bomb;
-  }
-
-  // Map instruction atom to number...
-  t_instr_num = tagged2SRecord(ci_ia_to_in)->getArg(t_instr_label);
-
-  if (!t_instr_num)
-    goto bomb;
+  if (numGlobals == -1)
+    CI_BOMB();
 
   if (!oz_isDictionary(t_lbldict))
-    goto bomb;
+    CI_BOMB();
 
+  OzDictionary * lbldict;
   lbldict = tagged2Dictionary(t_lbldict);
 
-  // proc {StoreInstr Instr CodeBlock LabelDict}
+  CodeArea * code;
+  code = new CodeArea(size);
 
-  switch (tagged2SmallInt(t_instr_num)) {
-  case CI_SKIP:
-    CIS_OPCODE(SKIP);
-    break;
-  case CI_DEFINITION:
-    CIS_OPCODE(DEFINITION);
-    CIS_XREG(0);
-    CIS_LBL(1);
-    CIS_PREDID(2);
-    CIS_PROCREF(3);
-    CIS_GREGREF(4);
-    break;
-    //   [] 'definition'(X1 X2 X3 X4 X5) then
-    //      {StoreOpcode CodeBlock Opcodes.'definition'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreLabel CodeBlock X2 LabelDict}
-    //      {StorePredId CodeBlock X3}
-    //      {StoreProcedureRef CodeBlock X4}
-    //      {StoreGRegRef CodeBlock X5}
-  case CI_DEFINITIONCOPY:
-    CIS_OPCODE(DEFINITIONCOPY);
-    CIS_XREG(0);
-    CIS_LBL(1);
-    CIS_PREDID(2);
-    CIS_PROCREF(3);
-    CIS_GREGREF(4);
-    break;
-    //   [] 'definitionCopy'(X1 X2 X3 X4 X5) then
-    //      {StoreOpcode CodeBlock Opcodes.'definitionCopy'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreLabel CodeBlock X2 LabelDict}
-    //      {StorePredId CodeBlock X3}
-    //      {StoreProcedureRef CodeBlock X4}
-    //      {StoreGRegRef CodeBlock X5}
-  case CI_ENDDEFINITION:
-    CIS_OPCODE(ENDDEFINITION);
-    CIS_LBL(0);
-    //   [] 'endDefinition'(X1) then
-    //      {StoreOpcode CodeBlock Opcodes.'endDefinition'}
-    //      {StoreLabel CodeBlock X1 LabelDict}
-  case CI_MOVE:
-    if (IS_CI_XREG(0) && IS_CI_XREG(1)) {
-      CIS_OPCODE(MOVEXX); CIS_XREG(0); CIS_XREG(1);
-      break;
-      //   [] 'move'(X1=x(_) X2=x(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'moveXX'}
-      //      {StoreXRegisterIndex CodeBlock X1}
-      //      {StoreXRegisterIndex CodeBlock X2}
+  Abstraction * topl;
+  {
+    PrTabEntry * pte = new PrTabEntry(oz_atomNoDup("toplevelAbstraction"),
+                                      mkTupleWidth(0), AtomEmpty, 0, -1,
+                                      oz_nil(), 1);
+    pte->setGSize(numGlobals);
+    pte->PC = code->getStart();
+
+    Assert(oz_onToplevel());
+    topl = Abstraction::newAbstraction(pte,oz_currentBoard());
+
+    globals = oz_deref(globals);
+    for (int i = 0; i < numGlobals; i++) {
+      topl->initG(i,oz_head(globals));
+      globals = oz_deref(oz_tail(globals));
     }
-    if (IS_CI_XREG(0) && IS_CI_YREG(1)) {
-      CIS_OPCODE(MOVEXY); CIS_XREG(0); CIS_YREG(1);
-      break;
-      //   [] 'move'(X1=x(_) X2=y(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'moveXY'}
-      //      {StoreXRegisterIndex CodeBlock X1}
-      //      {StoreYRegisterIndex CodeBlock X2}
-    }
-    if (IS_CI_YREG(0) && IS_CI_XREG(1)) {
-      CIS_OPCODE(MOVEYX); CIS_YREG(0); CIS_XREG(1);
-      break;
-      //   [] 'move'(X1=y(_) X2=x(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'moveYX'}
-      //      {StoreYRegisterIndex CodeBlock X1}
-      //      {StoreXRegisterIndex CodeBlock X2}
-    }
-    if (IS_CI_YREG(0) && IS_CI_YREG(1)) {
-      CIS_OPCODE(MOVEYY); CIS_YREG(0); CIS_YREG(1);
-      break;
-      //   [] 'move'(X1=y(_) X2=y(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'moveYY'}
-      //      {StoreYRegisterIndex CodeBlock X1}
-      //      {StoreYRegisterIndex CodeBlock X2}
-    }
-    if (IS_CI_GREG(0) && IS_CI_XREG(1)) {
-      CIS_OPCODE(MOVEGX); CIS_GREG(0); CIS_XREG(1);
-      break;
-      //   [] 'move'(X1=g(_) X2=x(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'moveGX'}
-      //      {StoreGRegisterIndex CodeBlock X1}
-      //      {StoreXRegisterIndex CodeBlock X2}
-    }
-    if (IS_CI_GREG(0) && IS_CI_YREG(1)) {
-      CIS_OPCODE(MOVEGY); CIS_GREG(0); CIS_YREG(1);
-      break;
-      //   [] 'move'(X1=g(_) X2=y(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'moveGY'}
-      //      {StoreGRegisterIndex CodeBlock X1}
-      //      {StoreYRegisterIndex CodeBlock X2}
-    }
-    goto bomb;
-  case CI_MOVEMOVE:
-    if (IS_CI_XREG(0) && IS_CI_YREG(1) && IS_CI_XREG(2) && IS_CI_YREG(3)) {
-      CIS_OPCODE(MOVEMOVEXYXY);
-      CIS_XREG(0); CIS_YREG(1); CIS_XREG(2); CIS_YREG(3);
-      break;
-      //   [] 'moveMove'(X1=x(_) X2=y(_) X3=x(_) X4=y(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'moveMoveXYXY'}
-      //      {StoreXRegisterIndex CodeBlock X1}
-      //      {StoreYRegisterIndex CodeBlock X2}
-      //      {StoreXRegisterIndex CodeBlock X3}
-      //      {StoreYRegisterIndex CodeBlock X4}
-    }
-    if (IS_CI_YREG(0) && IS_CI_XREG(1) && IS_CI_YREG(2) && IS_CI_XREG(3)) {
-      CIS_OPCODE(MOVEMOVEYXYX);
-      CIS_YREG(0); CIS_XREG(1); CIS_YREG(2); CIS_XREG(3);
-      break;
-      //   [] 'moveMove'(X1=y(_) X2=x(_) X3=y(_) X4=x(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'moveMoveYXYX'}
-      //      {StoreYRegisterIndex CodeBlock X1}
-      //      {StoreXRegisterIndex CodeBlock X2}
-      //      {StoreYRegisterIndex CodeBlock X3}
-      //      {StoreXRegisterIndex CodeBlock X4}
-    }
-    if (IS_CI_XREG(0) && IS_CI_YREG(1) && IS_CI_YREG(2) && IS_CI_XREG(3)) {
-      CIS_OPCODE(MOVEMOVEXYYX);
-      CIS_XREG(0); CIS_YREG(1); CIS_YREG(2); CIS_XREG(3);
-      break;
-      //   [] 'moveMove'(X1=x(_) X2=y(_) X3=y(_) X4=x(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'moveMoveXYYX'}
-      //      {StoreXRegisterIndex CodeBlock X1}
-      //      {StoreYRegisterIndex CodeBlock X2}
-      //      {StoreYRegisterIndex CodeBlock X3}
-      //      {StoreXRegisterIndex CodeBlock X4}
-    }
-    if (IS_CI_YREG(0) && IS_CI_XREG(1) && IS_CI_XREG(2) && IS_CI_YREG(3)) {
-      CIS_OPCODE(MOVEMOVEYXXY);
-      CIS_YREG(0); CIS_XREG(1); CIS_XREG(2); CIS_YREG(3);
-      break;
-      //   [] 'moveMove'(X1=y(_) X2=x(_) X3=x(_) X4=y(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'moveMoveYXXY'}
-      //      {StoreYRegisterIndex CodeBlock X1}
-      //      {StoreXRegisterIndex CodeBlock X2}
-      //      {StoreXRegisterIndex CodeBlock X3}
-      //      {StoreYRegisterIndex CodeBlock X4}
-    }
-    goto bomb;
-  case CI_CREATEVARIABLE:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(CREATEVARIABLEX); CIS_XREG(0);
-      break;
-      //   [] 'createVariable'(X1=x(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'createVariableX'}
-      //      {StoreXRegisterIndex CodeBlock X1}
-    }
-    if (IS_CI_YREG(0)) {
-      CIS_OPCODE(CREATEVARIABLEY); CIS_YREG(0);
-      break;
-      //   [] 'createVariable'(X1=y(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'createVariableY'}
-      //      {StoreYRegisterIndex CodeBlock X1}
-    }
-    goto bomb;
-  case CI_CREATEVARIABLEMOVE:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(CREATEVARIABLEMOVEX); CIS_XREG(0); CIS_XREG(1);
-      break;
-      //   [] 'createVariableMove'(X1=x(_) X2) then
-      //      {StoreOpcode CodeBlock Opcodes.'createVariableMoveX'}
-      //      {StoreXRegisterIndex CodeBlock X1}
-      //      {StoreXRegisterIndex CodeBlock X2}
-    }
-    if (IS_CI_YREG(0)) {
-      CIS_OPCODE(CREATEVARIABLEMOVEY); CIS_XREG(0); CIS_YREG(1);
-      break;
-      //   [] 'createVariableMove'(X1=y(_) X2) then
-      //      {StoreOpcode CodeBlock Opcodes.'createVariableMoveY'}
-      //      {StoreYRegisterIndex CodeBlock X1}
-      //      {StoreXRegisterIndex CodeBlock X2}
-    }
-    goto bomb;
-  case CI_UNIFY:
-    if (IS_CI_XREG(1)) {
-      CIS_OPCODE(UNIFYXX); CIS_XREG(0); CIS_XREG(1);
-      break;
-      //   [] 'unify'(X1 X2=x(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'unifyXX'}
-      //      {StoreXRegisterIndex CodeBlock X1}
-      //      {StoreXRegisterIndex CodeBlock X2}
-    }
-    if (IS_CI_YREG(1)) {
-      CIS_OPCODE(UNIFYXY); CIS_XREG(0); CIS_YREG(1);
-      break;
-      //   [] 'unify'(X1 X2=y(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'unifyXY'}
-      //      {StoreXRegisterIndex CodeBlock X1}
-      //      {StoreYRegisterIndex CodeBlock X2}
-    }
-    if (IS_CI_GREG(1)) {
-      CIS_OPCODE(UNIFYXG); CIS_XREG(0); CIS_GREG(1);
-      break;
-      //   [] 'unify'(X1 X2=g(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'unifyXG'}
-      //      {StoreXRegisterIndex CodeBlock X1}
-      //      {StoreGRegisterIndex CodeBlock X2}
-    }
-    goto bomb;
-  case CI_PUTRECORD:
-    if (IS_CI_XREG(2)) {
-      CIS_OPCODE(PUTRECORDX); CIS_LIT(0); CIS_RECAR(1); CIS_XREG(2);
-      break;
-    }
-    //   [] 'putRecord'(X1 X2 X3=x(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'putRecordX'}
-    //      {StoreLiteral CodeBlock X1}
-    //      {StoreRecordArity CodeBlock X2}
-    //      {StoreXRegisterIndex CodeBlock X3}
-    if (IS_CI_YREG(2)) {
-      CIS_OPCODE(PUTRECORDY); CIS_LIT(0); CIS_RECAR(1); CIS_YREG(2);
-      break;
-    }
-    //   [] 'putRecord'(X1 X2 X3=y(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'putRecordY'}
-    //      {StoreLiteral CodeBlock X1}
-    //      {StoreRecordArity CodeBlock X2}
-    //      {StoreYRegisterIndex CodeBlock X3}
-    goto bomb;
-  case CI_PUTLIST:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(PUTRECORDX); CIS_XREG(0);
-      break;
-    }
-    //   [] 'putList'(X1=x(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'putListX'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    if (IS_CI_YREG(0)) {
-      CIS_OPCODE(PUTRECORDX); CIS_YREG(0);
-      break;
-    }
-    //   [] 'putList'(X1=y(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'putListY'}
-    //      {StoreYRegisterIndex CodeBlock X1}
-    goto bomb;
-  case CI_PUTCONSTANT:
-    if (IS_CI_XREG(1)) {
-      CIS_OPCODE(PUTCONSTANTX); CIS_CONST(0); CIS_XREG(1);
-      break;
-    }
-    //   [] 'putConstant'(X1 X2=x(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'putConstantX'}
-    //      {StoreConstant CodeBlock X1}
-    //      {StoreXRegisterIndex CodeBlock X2}
-    if (IS_CI_YREG(1)) {
-      CIS_OPCODE(PUTCONSTANTY); CIS_CONST(0); CIS_YREG(1);
-      break;
-    }
-    //   [] 'putConstant'(X1 X2=y(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'putConstantY'}
-    //      {StoreConstant CodeBlock X1}
-    //      {StoreYRegisterIndex CodeBlock X2}
-    goto bomb;
-  case CI_SETVARIABLE:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(SETVARIABLEX); CIS_XREG(0);
-      break;
-    }
-    //   [] 'setVariable'(X1=x(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'setVariableX'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    if (IS_CI_YREG(0)) {
-      CIS_OPCODE(SETVARIABLEX); CIS_YREG(0);
-      break;
-    }
-    //   [] 'setVariable'(X1=y(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'setVariableY'}
-    //      {StoreYRegisterIndex CodeBlock X1}
-    goto bomb;
-  case CI_SETVALUE:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(SETVALUEX); CIS_XREG(0);
-      break;
-    }
-    //   [] 'setValue'(X1=x(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'setValueX'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    if (IS_CI_YREG(0)) {
-      CIS_OPCODE(SETVALUEY); CIS_YREG(0);
-      break;
-    }
-    //   [] 'setValue'(X1=y(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'setValueY'}
-    //      {StoreYRegisterIndex CodeBlock X1}
-    if (IS_CI_GREG(0)) {
-      CIS_OPCODE(SETVALUEG); CIS_GREG(0);
-      break;
-    }
-    //   [] 'setValue'(X1=g(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'setValueG'}
-    //      {StoreGRegisterIndex CodeBlock X1}
-    goto bomb;
-  case CI_SETCONSTANT:
-    CIS_OPCODE(SETCONSTANT); CIS_CONST(0);
-    break;
-    //   [] 'setConstant'(X1) then
-    //      {StoreOpcode CodeBlock Opcodes.'setConstant'}
-    //      {StoreConstant CodeBlock X1}
-  case CI_SETPROCEDUREREF:
-    CIS_OPCODE(SETPROCEDUREREF); CIS_PROCREF(0);
-    break;
-    //   [] 'setProcedureRef'(X1) then
-    //      {StoreOpcode CodeBlock Opcodes.'setProcedureRef'}
-    //      {StoreProcedureRef CodeBlock X1}
-  case CI_SETVOID:
-    CIS_OPCODE(SETVOID); CIS_INT(0);
-    break;
-    //   [] 'setVoid'(X1) then
-    //      {StoreOpcode CodeBlock Opcodes.'setVoid'}
-    //      {StoreInt CodeBlock X1}
-  case CI_GETRECORD:
-    if (IS_CI_XREG(2)) {
-      CIS_OPCODE(GETRECORDX); CIS_LIT(0); CIS_RECAR(1); CIS_XREG(2);
-      break;
-    }
-    //   [] 'getRecord'(X1 X2 X3=x(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'getRecordX'}
-    //      {StoreLiteral CodeBlock X1}
-    //      {StoreRecordArity CodeBlock X2}
-    //      {StoreXRegisterIndex CodeBlock X3}
-    if (IS_CI_YREG(2)) {
-      CIS_OPCODE(GETRECORDY); CIS_LIT(0); CIS_RECAR(1); CIS_YREG(2);
-      break;
-    }
-    //   [] 'getRecord'(X1 X2 X3=y(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'getRecordY'}
-    //      {StoreLiteral CodeBlock X1}
-    //      {StoreRecordArity CodeBlock X2}
-    //      {StoreYRegisterIndex CodeBlock X3}
-    if (IS_CI_GREG(2)) {
-      CIS_OPCODE(GETRECORDG); CIS_LIT(0); CIS_RECAR(1); CIS_GREG(2);
-      break;
-    }
-    //   [] 'getRecord'(X1 X2 X3=g(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'getRecordG'}
-    //      {StoreLiteral CodeBlock X1}
-    //      {StoreRecordArity CodeBlock X2}
-    //      {StoreGRegisterIndex CodeBlock X3}
-    goto bomb;
-  case CI_GETLIST:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(GETLISTX); CIS_XREG(0);
-      break;
-    }
-    //   [] 'getList'(X1=x(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'getListX'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    if (IS_CI_YREG(0)) {
-      CIS_OPCODE(GETLISTY); CIS_YREG(0);
-      break;
-    }
-    //   [] 'getList'(X1=y(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'getListY'}
-    //      {StoreYRegisterIndex CodeBlock X1}
-    if (IS_CI_GREG(0)) {
-      CIS_OPCODE(GETLISTG); CIS_GREG(0);
-      break;
-    }
-    //   [] 'getList'(X1=g(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'getListG'}
-    //      {StoreGRegisterIndex CodeBlock X1}
-    goto bomb;
-  case CI_GETLISTVALVAR:
-    CIS_OPCODE(GETLISTVALVARX); CIS_XREG(0); CIS_XREG(1); CIS_XREG(2);
-    break;
-    //   [] 'getListValVar'(X1 X2 X3) then
-    //      {StoreOpcode CodeBlock Opcodes.'getListValVarX'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreXRegisterIndex CodeBlock X2}
-    //      {StoreXRegisterIndex CodeBlock X3}
-  case CI_UNIFYVARIABLE:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(UNIFYVARIABLEX); CIS_XREG(0);
-      break;
-    }
-    //   [] 'unifyVariable'(X1=x(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'unifyVariableX'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    if (IS_CI_YREG(0)) {
-      CIS_OPCODE(UNIFYVARIABLEY); CIS_YREG(0);
-      break;
-    }
-    //   [] 'unifyVariable'(X1=y(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'unifyVariableY'}
-    //      {StoreYRegisterIndex CodeBlock X1}
-    goto bomb;
-  case CI_UNIFYVALUE:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(UNIFYVALUEX); CIS_XREG(0);
-      break;
-    }
-    //   [] 'unifyValue'(X1=x(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'unifyValueX'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    if (IS_CI_YREG(0)) {
-      CIS_OPCODE(UNIFYVALUEY); CIS_YREG(0);
-      break;
-    }
-    //   [] 'unifyValue'(X1=y(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'unifyValueY'}
-    //      {StoreYRegisterIndex CodeBlock X1}
-    if (IS_CI_GREG(0)) {
-      CIS_OPCODE(UNIFYVALUEG); CIS_GREG(0);
-      break;
-    }
-    //   [] 'unifyValue'(X1=g(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'unifyValueG'}
-    //      {StoreGRegisterIndex CodeBlock X1}
-    goto bomb;
-  case CI_UNIFYVALVAR:
-    if (IS_CI_XREG(0)) {
-      if (IS_CI_XREG(1)) {
-        CIS_OPCODE(UNIFYVALVARXX); CIS_XREG(0); CIS_XREG(1);
-        break;
-      }
-      //   [] 'unifyValVar'(X1=x(_) X2=x(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'unifyValVarXX'}
-      //      {StoreXRegisterIndex CodeBlock X1}
-      //      {StoreXRegisterIndex CodeBlock X2}
-      if (IS_CI_YREG(1)) {
-        CIS_OPCODE(UNIFYVALVARXY); CIS_XREG(0); CIS_YREG(1);
-        break;
-      }
-      //   [] 'unifyValVar'(X1=x(_) X2=y(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'unifyValVarXY'}
-      //      {StoreXRegisterIndex CodeBlock X1}
-      //      {StoreYRegisterIndex CodeBlock X2}
-    }
-    if (IS_CI_YREG(0)) {
-      if (IS_CI_XREG(1)) {
-        CIS_OPCODE(UNIFYVALVARYX); CIS_YREG(0); CIS_XREG(1);
-        break;
-      }
-      //   [] 'unifyValVar'(X1=y(_) X2=x(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'unifyValVarYX'}
-      //      {StoreYRegisterIndex CodeBlock X1}
-      //      {StoreXRegisterIndex CodeBlock X2}
-      if (IS_CI_YREG(1)) {
-        CIS_OPCODE(UNIFYVALVARYX); CIS_YREG(0); CIS_YREG(1);
-        break;
-      }
-      //   [] 'unifyValVar'(X1=y(_) X2=y(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'unifyValVarYY'}
-      //      {StoreYRegisterIndex CodeBlock X1}
-      //      {StoreYRegisterIndex CodeBlock X2}
-    }
-    if (IS_CI_GREG(0)) {
-      if (IS_CI_XREG(1)) {
-        CIS_OPCODE(UNIFYVALVARGX); CIS_GREG(0); CIS_XREG(1);
-        break;
-      }
-      //   [] 'unifyValVar'(X1=g(_) X2=x(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'unifyValVarGX'}
-      //      {StoreGRegisterIndex CodeBlock X1}
-      //      {StoreXRegisterIndex CodeBlock X2}
-      if (IS_CI_YREG(1)) {
-        CIS_OPCODE(UNIFYVALVARGY); CIS_GREG(0); CIS_YREG(1);
-        break;
-      }
-      //   [] 'unifyValVar'(X1=g(_) X2=y(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'unifyValVarGY'}
-      //      {StoreGRegisterIndex CodeBlock X1}
-      //      {StoreYRegisterIndex CodeBlock X2}
-    }
-    goto bomb;
-  case CI_UNIFYNUMBER:
-    CIS_OPCODE(UNIFYNUMBER); CIS_NUM(0);
-    break;
-    //   [] 'unifyNumber'(X1) then
-    //      {StoreOpcode CodeBlock Opcodes.'unifyNumber'}
-    //      {StoreNumber CodeBlock X1}
-  case CI_UNIFYLITERAL:
-    CIS_OPCODE(UNIFYLITERAL); CIS_LIT(0);
-    break;
-    //   [] 'unifyLiteral'(X1) then
-    //      {StoreOpcode CodeBlock Opcodes.'unifyLiteral'}
-    //      {StoreLiteral CodeBlock X1}
-  case CI_UNIFYVOID:
-    CIS_OPCODE(UNIFYVOID); CIS_INT(0);
-    break;
-    //   [] 'unifyVoid'(X1) then
-    //      {StoreOpcode CodeBlock Opcodes.'unifyVoid'}
-    //      {StoreInt CodeBlock X1}
-  case CI_GETLITERAL:
-    if (IS_CI_XREG(1)) {
-      CIS_OPCODE(GETLITERALX); CIS_LIT(0); CIS_XREG(1);
-      break;
-    }
-    //   [] 'getLiteral'(X1 X2=x(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'getLiteralX'}
-    //      {StoreLiteral CodeBlock X1}
-    //      {StoreXRegisterIndex CodeBlock X2}
-    if (IS_CI_YREG(1)) {
-      CIS_OPCODE(GETLITERALY); CIS_LIT(0); CIS_YREG(1);
-      break;
-    }
-    //   [] 'getLiteral'(X1 X2=y(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'getLiteralY'}
-    //      {StoreLiteral CodeBlock X1}
-    //      {StoreYRegisterIndex CodeBlock X2}
-    if (IS_CI_GREG(1)) {
-      CIS_OPCODE(GETLITERALG); CIS_LIT(0); CIS_GREG(1);
-      break;
-    }
-    //   [] 'getLiteral'(X1 X2=g(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'getLiteralG'}
-    //      {StoreLiteral CodeBlock X1}
-    //      {StoreGRegisterIndex CodeBlock X2}
-    goto bomb;
-  case CI_GETNUMBER:
-    if (IS_CI_XREG(1)) {
-      CIS_OPCODE(GETNUMBERX); CIS_NUM(0); CIS_XREG(1);
-      break;
-    }
-    //   [] 'getNumber'(X1 X2=x(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'getNumberX'}
-    //      {StoreNumber CodeBlock X1}
-    //      {StoreXRegisterIndex CodeBlock X2}
-    if (IS_CI_YREG(1)) {
-      CIS_OPCODE(GETNUMBERY); CIS_NUM(0); CIS_YREG(1);
-      break;
-    }
-    //   [] 'getNumber'(X1 X2=y(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'getNumberY'}
-    //      {StoreNumber CodeBlock X1}
-    //      {StoreYRegisterIndex CodeBlock X2}
-    if (IS_CI_GREG(1)) {
-      CIS_OPCODE(GETNUMBERG); CIS_NUM(0); CIS_GREG(1);
-      break;
-    }
-    //   [] 'getNumber'(X1 X2=g(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'getNumberG'}
-    //      {StoreNumber CodeBlock X1}
-    //      {StoreGRegisterIndex CodeBlock X2}
-    goto bomb;
-  case CI_ALLOCATEL:
-    CIS_OPCODE(ALLOCATEL); CIS_INT(0);
-      break;
-      //   [] 'allocateL'(X1) then
-      //      {StoreOpcode CodeBlock Opcodes.'allocateL'}
-      //      {StoreInt CodeBlock X1}
-  case CI_ALLOCATEL1:
-    CIS_OPCODE(ALLOCATEL1);
-    break;
-  case CI_ALLOCATEL2:
-    CIS_OPCODE(ALLOCATEL2);
-    break;
-  case CI_ALLOCATEL3:
-    CIS_OPCODE(ALLOCATEL3);
-    break;
-  case CI_ALLOCATEL4:
-    CIS_OPCODE(ALLOCATEL4);
-    break;
-  case CI_ALLOCATEL5:
-    CIS_OPCODE(ALLOCATEL5);
-    break;
-  case CI_ALLOCATEL6:
-    CIS_OPCODE(ALLOCATEL6);
-    break;
-  case CI_ALLOCATEL7:
-    CIS_OPCODE(ALLOCATEL7);
-    break;
-  case CI_ALLOCATEL8:
-    CIS_OPCODE(ALLOCATEL8);
-    break;
-  case CI_ALLOCATEL9:
-    CIS_OPCODE(ALLOCATEL9);
-    break;
-  case CI_ALLOCATEL10:
-    CIS_OPCODE(ALLOCATEL10);
-    break;
-  case CI_DEALLOCATEL:
-    CIS_OPCODE(DEALLOCATEL);
-    break;
-  case CI_DEALLOCATEL1:
-    CIS_OPCODE(DEALLOCATEL1);
-    break;
-  case CI_DEALLOCATEL2:
-    CIS_OPCODE(DEALLOCATEL2);
-    break;
-  case CI_DEALLOCATEL3:
-    CIS_OPCODE(DEALLOCATEL3);
-    break;
-  case CI_DEALLOCATEL4:
-    CIS_OPCODE(DEALLOCATEL4);
-    break;
-  case CI_DEALLOCATEL5:
-    CIS_OPCODE(DEALLOCATEL5);
-    break;
-  case CI_DEALLOCATEL6:
-    CIS_OPCODE(DEALLOCATEL6);
-    break;
-  case CI_DEALLOCATEL7:
-    CIS_OPCODE(DEALLOCATEL7);
-    break;
-  case CI_DEALLOCATEL8:
-    CIS_OPCODE(DEALLOCATEL8);
-    break;
-  case CI_DEALLOCATEL9:
-    CIS_OPCODE(DEALLOCATEL9);
-    break;
-  case CI_DEALLOCATEL10:
-    CIS_OPCODE(DEALLOCATEL10);
-    break;
-  case CI_CALLMETHOD:
-    CIS_OPCODE(CALLMETHOD); CIS_CMI(0); CIS_INT(1);
-    break;
-    //   [] 'callMethod'(X1 X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'callMethod'}
-    //      {StoreCallMethodInfo CodeBlock X1}
-    //      {StoreInt CodeBlock X2}
-  case CI_CALLGLOBAL:
-    CIS_OPCODE(CALLGLOBAL); CIS_GREG(0); CIS_INT(1);
-    break;
-    //   [] 'callGlobal'(X1 X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'callGlobal'}
-    //      {StoreGRegisterIndex CodeBlock X1}
-    //      {StoreInt CodeBlock X2}
-  case CI_CALL:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(CALLX); CIS_XREG(0); CIS_INT(1);
-      break;
-    }
-    //   [] 'call'(X1=x(_) X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'callX'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreInt CodeBlock X2}
-    if (IS_CI_YREG(0)) {
-      CIS_OPCODE(CALLY); CIS_YREG(0); CIS_INT(1);
-      break;
-    }
-    //   [] 'call'(X1=y(_) X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'callY'}
-    //      {StoreYRegisterIndex CodeBlock X1}
-    //      {StoreInt CodeBlock X2}
-    if (IS_CI_GREG(0)) {
-      CIS_OPCODE(CALLG); CIS_GREG(0); CIS_INT(1);
-      break;
-    }
-    //   [] 'call'(X1=g(_) X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'callG'}
-    //      {StoreGRegisterIndex CodeBlock X1}
-    //      {StoreInt CodeBlock X2}
-    goto bomb;
-  case CI_TAILCALL:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(TAILCALLX); CIS_XREG(0); CIS_INT(1);
-      break;
-    }
-    //   [] 'tailCall'(X1=x(_) X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'tailCallX'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreInt CodeBlock X2}
-    if (IS_CI_GREG(0)) {
-      CIS_OPCODE(TAILCALLG); CIS_GREG(0); CIS_INT(1);
-      break;
-    }
-    //   [] 'tailCall'(X1=g(_) X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'tailCallG'}
-    //      {StoreGRegisterIndex CodeBlock X1}
-    //      {StoreInt CodeBlock X2}
-    goto bomb;
-  case CI_CALLCONSTANT:
-    CIS_OPCODE(CALLCONSTANT); CIS_CONST(0); CIS_INT(1);
-    break;
-    //   [] 'callConstant'(X1 X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'callConstant'}
-    //      {StoreConstant CodeBlock X1}
-    //      {StoreInt CodeBlock X2}
-  case CI_CALLPROCEDUREREF:
-    CIS_OPCODE(CALLPROCEDUREREF); CIS_PROCREF(0); CIS_INT(1);
-    break;
-    //   [] 'callProcedureRef'(X1 X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'callProcedureRef'}
-    //      {StoreProcedureRef CodeBlock X1}
-    //      {StoreInt CodeBlock X2}
-  case CI_SENDMSG:
-    if (IS_CI_XREG(1)) {
-      CIS_OPCODE(SENDMSGX);
-      CIS_LIT(0); CIS_XREG(1); CIS_RECAR(2); CIS_CACHE(3);
-      break;
-    }
-    //   [] 'sendMsg'(X1 X2=x(_) X3 X4) then
-    //      {StoreOpcode CodeBlock Opcodes.'sendMsgX'}
-    //      {StoreLiteral CodeBlock X1}
-    //      {StoreXRegisterIndex CodeBlock X2}
-    //      {StoreRecordArity CodeBlock X3}
-    //      {StoreCache CodeBlock X4}
-    if (IS_CI_YREG(1)) {
-      CIS_OPCODE(SENDMSGY);
-      CIS_LIT(0); CIS_YREG(1); CIS_RECAR(2); CIS_CACHE(3);
-      break;
-    }
-    //   [] 'sendMsg'(X1 X2=y(_) X3 X4) then
-    //      {StoreOpcode CodeBlock Opcodes.'sendMsgY'}
-    //      {StoreLiteral CodeBlock X1}
-    //      {StoreYRegisterIndex CodeBlock X2}
-    //      {StoreRecordArity CodeBlock X3}
-    //      {StoreCache CodeBlock X4}
-    if (IS_CI_GREG(1)) {
-      CIS_OPCODE(SENDMSGG);
-      CIS_LIT(0); CIS_GREG(1); CIS_RECAR(2); CIS_CACHE(3);
-      break;
-    }
-    //   [] 'sendMsg'(X1 X2=g(_) X3 X4) then
-    //      {StoreOpcode CodeBlock Opcodes.'sendMsgG'}
-    //      {StoreLiteral CodeBlock X1}
-    //      {StoreGRegisterIndex CodeBlock X2}
-    //      {StoreRecordArity CodeBlock X3}
-    //      {StoreCache CodeBlock X4}
-    goto bomb;
-  case CI_TAILSENDMSG:
-    if (IS_CI_XREG(1)) {
-      CIS_OPCODE(TAILSENDMSGX);
-      CIS_LIT(0); CIS_XREG(1); CIS_RECAR(2); CIS_CACHE(3);
-      break;
-    }
-    //   [] 'tailSendMsg'(X1 X2=x(_) X3 X4) then
-    //      {StoreOpcode CodeBlock Opcodes.'tailSendMsgX'}
-    //      {StoreLiteral CodeBlock X1}
-    //      {StoreXRegisterIndex CodeBlock X2}
-    //      {StoreRecordArity CodeBlock X3}
-    //      {StoreCache CodeBlock X4}
-    if (IS_CI_YREG(1)) {
-      CIS_OPCODE(TAILSENDMSGY);
-      CIS_LIT(0); CIS_YREG(1); CIS_RECAR(2); CIS_CACHE(3);
-      break;
-    }
-    //   [] 'tailSendMsg'(X1 X2=y(_) X3 X4) then
-    //      {StoreOpcode CodeBlock Opcodes.'tailSendMsgY'}
-    //      {StoreLiteral CodeBlock X1}
-    //      {StoreYRegisterIndex CodeBlock X2}
-    //      {StoreRecordArity CodeBlock X3}
-    //      {StoreCache CodeBlock X4}
-    if (IS_CI_GREG(1)) {
-      CIS_OPCODE(TAILSENDMSGG);
-      CIS_LIT(0); CIS_GREG(1); CIS_RECAR(2); CIS_CACHE(3);
-      break;
-    }
-    //   [] 'tailSendMsg'(X1 X2=g(_) X3 X4) then
-    //      {StoreOpcode CodeBlock Opcodes.'tailSendMsgG'}
-    //      {StoreLiteral CodeBlock X1}
-    //      {StoreGRegisterIndex CodeBlock X2}
-    //      {StoreRecordArity CodeBlock X3}
-    //      {StoreCache CodeBlock X4}
-  case CI_GETSELF:
-    CIS_OPCODE(GETSELF); CIS_XREG(0);
-    break;
-    //   [] 'getSelf'(X1) then
-    //      {StoreOpcode CodeBlock Opcodes.'getSelf'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-  case CI_SETSELF:
-    CIS_OPCODE(SETSELFG); CIS_GREG(0);
-    break;
-    //   [] 'setSelf'(X1) then
-    //      {StoreOpcode CodeBlock Opcodes.'setSelfG'}
-    //      {StoreGRegisterIndex CodeBlock X1}
-  case CI_LOCKTHREAD:
-    CIS_OPCODE(LOCKTHREAD); CIS_LBL(0); CIS_XREG(1);
-    break;
-    //   [] 'lockThread'(X1 X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'lockThread'}
-    //      {StoreLabel CodeBlock X1 LabelDict}
-    //      {StoreXRegisterIndex CodeBlock X2}
-  case CI_INLINEAT:
-    CIS_OPCODE(INLINEAT); CIS_FEAT(0); CIS_XREG(1); CIS_CACHE(2);
-    break;
-    //   [] 'inlineAt'(X1 X2 X3) then
-    //      {StoreOpcode CodeBlock Opcodes.'inlineAt'}
-    //      {StoreFeature CodeBlock X1}
-    //      {StoreXRegisterIndex CodeBlock X2}
-    //      {StoreCache CodeBlock X3}
-  case CI_INLINEASSIGN:
-    CIS_OPCODE(INLINEASSIGN); CIS_FEAT(0); CIS_XREG(1); CIS_CACHE(2);
-    break;
-    //   [] 'inlineAssign'(X1 X2 X3) then
-    //      {StoreOpcode CodeBlock Opcodes.'inlineAssign'}
-    //      {StoreFeature CodeBlock X1}
-    //      {StoreXRegisterIndex CodeBlock X2}
-    //      {StoreCache CodeBlock X3}
-  case CI_BRANCH:
-    CIS_OPCODE(BRANCH); CIS_LBL(0);
-    break;
-    //   [] 'branch'(X1) then
-    //      {StoreOpcode CodeBlock Opcodes.'branch'}
-    //      {StoreLabel CodeBlock X1 LabelDict}
-  case CI_EXHANDLER:
-    CIS_OPCODE(EXHANDLER); CIS_LBL(0);
-    break;
-    //   [] 'exHandler'(X1) then
-    //      {StoreOpcode CodeBlock Opcodes.'exHandler'}
-    //      {StoreLabel CodeBlock X1 LabelDict}
-  case CI_POPEX:
-    CIS_OPCODE(POPEX);
-    break;
-    //   [] 'popEx' then
-    //      {StoreOpcode CodeBlock Opcodes.'popEx'}
-  case CI_RETURN:
-    CIS_OPCODE(RETURN);
-    break;
-    //   [] 'return' then
-    //      {StoreOpcode CodeBlock Opcodes.'return'}
-  case CI_TESTLITERAL:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(TESTLITERALX); CIS_XREG(0); CIS_LIT(1); CIS_LBL(2);
-      break;
-    }
-    //   [] 'testLiteral'(X1=x(_) X2 X3) then
-    //      {StoreOpcode CodeBlock Opcodes.'testLiteralX'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreLiteral CodeBlock X2}
-    //      {StoreLabel CodeBlock X3 LabelDict}
-    if (IS_CI_YREG(0)) {
-      CIS_OPCODE(TESTLITERALY); CIS_YREG(0); CIS_LIT(1); CIS_LBL(2);
-      break;
-    }
-    //   [] 'testLiteral'(X1=y(_) X2 X3) then
-    //      {StoreOpcode CodeBlock Opcodes.'testLiteralY'}
-    //      {StoreYRegisterIndex CodeBlock X1}
-    //      {StoreLiteral CodeBlock X2}
-    //      {StoreLabel CodeBlock X3 LabelDict}
-    if (IS_CI_GREG(0)) {
-      CIS_OPCODE(TESTLITERALG); CIS_GREG(0); CIS_LIT(1); CIS_LBL(2);
-      break;
-    }
-    //   [] 'testLiteral'(X1=g(_) X2 X3) then
-    //      {StoreOpcode CodeBlock Opcodes.'testLiteralG'}
-    //      {StoreGRegisterIndex CodeBlock X1}
-    //      {StoreLiteral CodeBlock X2}
-    //      {StoreLabel CodeBlock X3 LabelDict}
-    goto bomb;
-  case CI_TESTNUMBER:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(TESTNUMBERX); CIS_XREG(0); CIS_NUM(1); CIS_LBL(2);
-      break;
-    }
-    //   [] 'testNumber'(X1=x(_) X2 X3) then
-    //      {StoreOpcode CodeBlock Opcodes.'testNumberX'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreNumber CodeBlock X2}
-    //      {StoreLabel CodeBlock X3 LabelDict}
-    if (IS_CI_YREG(0)) {
-      CIS_OPCODE(TESTNUMBERY); CIS_YREG(0); CIS_NUM(1); CIS_LBL(2);
-      break;
-    }
-    //   [] 'testNumber'(X1=y(_) X2 X3) then
-    //      {StoreOpcode CodeBlock Opcodes.'testNumberY'}
-    //      {StoreYRegisterIndex CodeBlock X1}
-    //      {StoreNumber CodeBlock X2}
-    //      {StoreLabel CodeBlock X3 LabelDict}
-    if (IS_CI_GREG(0)) {
-      CIS_OPCODE(TESTNUMBERG); CIS_GREG(0); CIS_NUM(1); CIS_LBL(2);
-      break;
-    }
-    //   [] 'testNumber'(X1=g(_) X2 X3) then
-    //      {StoreOpcode CodeBlock Opcodes.'testNumberG'}
-    //      {StoreGRegisterIndex CodeBlock X1}
-    //      {StoreNumber CodeBlock X2}
-    //      {StoreLabel CodeBlock X3 LabelDict}
-    goto bomb;
-  case CI_TESTRECORD:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(TESTRECORDX);
-      CIS_XREG(0); CIS_LIT(1); CIS_RECAR(2); CIS_LBL(3);
-      break;
-    }
-    //   [] 'testRecord'(X1=x(_) X2 X3 X4) then
-    //      {StoreOpcode CodeBlock Opcodes.'testRecordX'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreLiteral CodeBlock X2}
-    //      {StoreRecordArity CodeBlock X3}
-    //      {StoreLabel CodeBlock X4 LabelDict}
-    if (IS_CI_YREG(0)) {
-      CIS_OPCODE(TESTRECORDY);
-      CIS_YREG(0); CIS_LIT(1); CIS_RECAR(2); CIS_LBL(3);
-      break;
-    }
-    //   [] 'testRecord'(X1=y(_) X2 X3 X4) then
-    //      {StoreOpcode CodeBlock Opcodes.'testRecordY'}
-    //      {StoreYRegisterIndex CodeBlock X1}
-    //      {StoreLiteral CodeBlock X2}
-    //      {StoreRecordArity CodeBlock X3}
-    //      {StoreLabel CodeBlock X4 LabelDict}
-    if (IS_CI_GREG(0)) {
-      CIS_OPCODE(TESTRECORDG);
-      CIS_GREG(0); CIS_LIT(1); CIS_RECAR(2); CIS_LBL(3);
-      break;
-    }
-    //   [] 'testRecord'(X1=g(_) X2 X3 X4) then
-    //      {StoreOpcode CodeBlock Opcodes.'testRecordG'}
-    //      {StoreGRegisterIndex CodeBlock X1}
-    //      {StoreLiteral CodeBlock X2}
-    //      {StoreRecordArity CodeBlock X3}
-    //      {StoreLabel CodeBlock X4 LabelDict}
-    goto bomb;
-  case CI_TESTLIST:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(TESTLISTX); CIS_XREG(0); CIS_LBL(1);
-      break;
-    }
-    //   [] 'testList'(X1=x(_) X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'testListX'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreLabel CodeBlock X2 LabelDict}
-    if (IS_CI_YREG(0)) {
-      CIS_OPCODE(TESTLISTY); CIS_YREG(0); CIS_LBL(1);
-      break;
-    }
-    //   [] 'testList'(X1=y(_) X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'testListY'}
-    //      {StoreYRegisterIndex CodeBlock X1}
-    //      {StoreLabel CodeBlock X2 LabelDict}
-    if (IS_CI_GREG(0)) {
-      CIS_OPCODE(TESTLISTG); CIS_GREG(0); CIS_LBL(1);
-      break;
-    }
-    //   [] 'testList'(X1=g(_) X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'testListG'}
-    //      {StoreGRegisterIndex CodeBlock X1}
-    //      {StoreLabel CodeBlock X2 LabelDict}
-  case CI_TESTBOOL:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(TESTBOOLX); CIS_XREG(0); CIS_LBL(1); CIS_LBL(2);
-      break;
-    }
-    //   [] 'testBool'(X1=x(_) X2 X3) then
-    //      {StoreOpcode CodeBlock Opcodes.'testBoolX'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreLabel CodeBlock X2 LabelDict}
-    //      {StoreLabel CodeBlock X3 LabelDict}
-    if (IS_CI_YREG(0)) {
-      CIS_OPCODE(TESTBOOLY); CIS_YREG(0); CIS_LBL(1); CIS_LBL(2);
-      break;
-    }
-    //   [] 'testBool'(X1=y(_) X2 X3) then
-    //      {StoreOpcode CodeBlock Opcodes.'testBoolY'}
-    //      {StoreYRegisterIndex CodeBlock X1}
-    //      {StoreLabel CodeBlock X2 LabelDict}
-    //      {StoreLabel CodeBlock X3 LabelDict}
-    if (IS_CI_GREG(0)) {
-      CIS_OPCODE(TESTBOOLG); CIS_GREG(0); CIS_LBL(1); CIS_LBL(2);
-      break;
-    }
-    //   [] 'testBool'(X1=g(_) X2 X3) then
-    //      {StoreOpcode CodeBlock Opcodes.'testBoolG'}
-    //      {StoreGRegisterIndex CodeBlock X1}
-    //      {StoreLabel CodeBlock X2 LabelDict}
-    //      {StoreLabel CodeBlock X3 LabelDict}
-    goto bomb;
-  case CI_MATCH:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(MATCHX); CIS_XREG(0); CIS_HSH(1);
-      break;
-    }
-    //   [] 'match'(X1=x(_) X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'matchX'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreHashTableRef CodeBlock X2 LabelDict}
-    if (IS_CI_YREG(0)) {
-      CIS_OPCODE(MATCHY); CIS_YREG(0); CIS_HSH(1);
-      break;
-    }
-    //   [] 'match'(X1=y(_) X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'matchY'}
-    //      {StoreYRegisterIndex CodeBlock X1}
-    //      {StoreHashTableRef CodeBlock X2 LabelDict}
-    if (IS_CI_GREG(0)) {
-      CIS_OPCODE(MATCHG); CIS_GREG(0); CIS_HSH(1);
-      break;
-    }
-    //   [] 'match'(X1=g(_) X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'matchG'}
-    //      {StoreGRegisterIndex CodeBlock X1}
-    //      {StoreHashTableRef CodeBlock X2 LabelDict}
-    goto bomb;
-  case CI_GETVARIABLE:
-    if (IS_CI_XREG(0)) {
-      CIS_OPCODE(GETVARIABLEX); CIS_XREG(0);
-      break;
-    }
-    //   [] 'getVariable'(X1=x(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'getVariableX'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    if (IS_CI_YREG(0)) {
-      CIS_OPCODE(GETVARIABLEY); CIS_YREG(0);
-      break;
-    }
-    //   [] 'getVariable'(X1=y(_)) then
-    //      {StoreOpcode CodeBlock Opcodes.'getVariableY'}
-    //      {StoreYRegisterIndex CodeBlock X1}
-    goto bomb;
-  case CI_GETVARVAR:
-    if (IS_CI_XREG(0)) {
-      if (IS_CI_XREG(1)) {
-        CIS_OPCODE(GETVARVARXX); CIS_XREG(0); CIS_XREG(1);
-        break;
-      }
-      //   [] 'getVarVar'(X1=x(_) X2=x(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'getVarVarXX'}
-      //      {StoreXRegisterIndex CodeBlock X1}
-      //      {StoreXRegisterIndex CodeBlock X2}
-      if (IS_CI_YREG(1)) {
-        CIS_OPCODE(GETVARVARXY); CIS_XREG(0); CIS_YREG(1);
-        break;
-      }
-      //   [] 'getVarVar'(X1=x(_) X2=y(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'getVarVarXY'}
-      //      {StoreXRegisterIndex CodeBlock X1}
-      //      {StoreYRegisterIndex CodeBlock X2}
-    }
-    if (IS_CI_YREG(0)) {
-      if (IS_CI_XREG(1)) {
-        CIS_OPCODE(GETVARVARYX); CIS_YREG(0); CIS_XREG(1);
-        break;
-      }
-      //   [] 'getVarVar'(X1=y(_) X2=x(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'getVarVarYX'}
-      //      {StoreYRegisterIndex CodeBlock X1}
-      //      {StoreXRegisterIndex CodeBlock X2}
-      if (IS_CI_YREG(1)) {
-        CIS_OPCODE(GETVARVARYY); CIS_YREG(0); CIS_YREG(1);
-        break;
-      }
-      //   [] 'getVarVar'(X1=y(_) X2=y(_)) then
-      //      {StoreOpcode CodeBlock Opcodes.'getVarVarYY'}
-      //      {StoreYRegisterIndex CodeBlock X1}
-      //      {StoreYRegisterIndex CodeBlock X2}
-    }
-    goto bomb;
-  case CI_GETVOID:
-    CIS_OPCODE(GETVOID); CIS_INT(0);
-    break;
-    //   [] 'getVoid'(X1) then
-    //      {StoreOpcode CodeBlock Opcodes.'getVoid'}
-    //      {StoreInt CodeBlock X1}
-  case CI_DEBUGENTRY:
-    CIS_DBGI(0,1);
-    CIS_OPCODE(DEBUGENTRY);
-    CIS_LIT(0); CIS_NUM(1); CIS_NUM(2); CIS_LIT(3);
-    break;
-    //   [] debugEntry(X1 X2 X3 X4) then
-    //      {AddDebugInfo CodeBlock X1 X2}
-    //      {StoreOpcode CodeBlock Opcodes.'debugEntry'}
-    //      {StoreLiteral CodeBlock X1}
-    //      {StoreNumber CodeBlock X2}
-    //      {StoreNumber CodeBlock X3}
-    //      {StoreLiteral CodeBlock X4}
-  case CI_DEBUGEXIT:
-    CIS_OPCODE(DEBUGEXIT);
-    CIS_LIT(0); CIS_NUM(1); CIS_NUM(2); CIS_LIT(3);
-    break;
-    //   [] 'debugExit'(X1 X2 X3 X4) then
-    //      {StoreOpcode CodeBlock Opcodes.'debugExit'}
-    //      {StoreLiteral CodeBlock X1}
-    //      {StoreNumber CodeBlock X2}
-    //      {StoreNumber CodeBlock X3}
-    //      {StoreLiteral CodeBlock X4}
-  case CI_GLOBALVARNAME:
-    CIS_OPCODE(GLOBALVARNAME); CIS_CONST(0);
-    break;
-    //   [] 'globalVarname'(X1) then
-    //      {StoreOpcode CodeBlock Opcodes.'globalVarname'}
-    //      {StoreConstant CodeBlock X1}
-  case CI_LOCALVARNAME:
-    CIS_OPCODE(LOCALVARNAME); CIS_CONST(0);
-    break;
-    //   [] 'localVarname'(X1) then
-    //      {StoreOpcode CodeBlock Opcodes.'localVarname'}
-    //      {StoreConstant CodeBlock X1}
-  case CI_CLEAR:
-    CIS_OPCODE(CLEARY); CIS_YREG(0);
-    break;
-    //   [] 'clear'(X1) then
-    //      {StoreOpcode CodeBlock Opcodes.'clearY'}
-    //      {StoreYRegisterIndex CodeBlock X1}
-  case CI_PROFILEPROC:
-    CIS_OPCODE(PROFILEPROC);
-    break;
-    //   [] 'profileProc' then
-    //      {StoreOpcode CodeBlock Opcodes.'profileProc'}
-  case CI_CALLBI:
-    CIS_OPCODE(CALLBI); CIS_BINAME(0); CIS_LOC(1);
-    break;
-    //   [] 'callBI'(X1 X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'callBI'}
-    //      {StoreBuiltinname CodeBlock X1}
-    //      {StoreLocation CodeBlock X2}
-  case CI_INLINEPLUS1:
-    CIS_OPCODE(INLINEPLUS1); CIS_XREG(0); CIS_XREG(1);
-    break;
-    //   [] 'inlinePlus1'(X1 X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'inlinePlus1'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreXRegisterIndex CodeBlock X2}
-  case CI_INLINEMINUS1:
-    CIS_OPCODE(INLINEMINUS1); CIS_XREG(0); CIS_XREG(1);
-    break;
-    //   [] 'inlineMinus1'(X1 X2) then
-    //      {StoreOpcode CodeBlock Opcodes.'inlineMinus1'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreXRegisterIndex CodeBlock X2}
-  case CI_INLINEPLUS:
-    CIS_OPCODE(INLINEPLUS); CIS_XREG(0); CIS_XREG(1); CIS_XREG(2);
-    break;
-    //   [] 'inlinePlus'(X1 X2 X3) then
-    //      {StoreOpcode CodeBlock Opcodes.'inlinePlus'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreXRegisterIndex CodeBlock X2}
-    //      {StoreXRegisterIndex CodeBlock X3}
-  case CI_INLINEMINUS:
-    CIS_OPCODE(INLINEMINUS); CIS_XREG(0); CIS_XREG(1); CIS_XREG(2);
-    break;
-    //   [] 'inlineMinus'(X1 X2 X3) then
-    //      {StoreOpcode CodeBlock Opcodes.'inlineMinus'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreXRegisterIndex CodeBlock X2}
-    //      {StoreXRegisterIndex CodeBlock X3}
-  case CI_INLINEDOT:
-    CIS_OPCODE(INLINEDOT); CIS_XREG(0); CIS_FEAT(1); CIS_XREG(2); CIS_CACHE(4);
-    break;
-    //   [] 'inlineDot'(X1 X2 X3 X4) then
-    //      {StoreOpcode CodeBlock Opcodes.'inlineDot'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreFeature CodeBlock X2}
-    //      {StoreXRegisterIndex CodeBlock X3}
-    //      {StoreCache CodeBlock X4}
-  case CI_TESTBI:
-    CIS_OPCODE(TESTBI); CIS_BINAME(0); CIS_LOC(1); CIS_LBL(2);
-    break;
-    //   [] 'testBI'(X1 X2 X3) then
-    //      {StoreOpcode CodeBlock Opcodes.'testBI'}
-    //      {StoreBuiltinname CodeBlock X1}
-    //      {StoreLocation CodeBlock X2}
-    //      {StoreLabel CodeBlock X3 LabelDict}
-  case CI_TESTLT:
-    CIS_OPCODE(TESTLT); CIS_XREG(0); CIS_XREG(1); CIS_XREG(2); CIS_LBL(3);
-    break;
-    //   [] 'testLT'(X1 X2 X3 X4) then
-    //      {StoreOpcode CodeBlock Opcodes.'testLT'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreXRegisterIndex CodeBlock X2}
-    //      {StoreXRegisterIndex CodeBlock X3}
-    //      {StoreLabel CodeBlock X4 LabelDict}
-  case CI_TESTLE:
-    CIS_OPCODE(TESTLE); CIS_XREG(0); CIS_XREG(1); CIS_XREG(2); CIS_LBL(3);
-    break;
-    //   [] 'testLE'(X1 X2 X3 X4) then
-    //      {StoreOpcode CodeBlock Opcodes.'testLE'}
-    //      {StoreXRegisterIndex CodeBlock X1}
-    //      {StoreXRegisterIndex CodeBlock X2}
-    //      {StoreXRegisterIndex CodeBlock X3}
-    //      {StoreLabel CodeBlock X4 LabelDict}
-  default:
-    goto bomb;
   }
 
-  return PROCEED;
+  TaggedRef t_instr;
+
+  while (oz_isCons(t_instrs)) {
+    t_instr = oz_deref(oz_head(t_instrs));
+    TaggedRef t_instr_label;
+    TaggedRef t_instr_num;
+
+    TaggedRef t_instr_args[CI_MAX_ARG_LEN];
+    int       t_instr_type[CI_MAX_ARG_LEN];
+
+    if (oz_isAtom(t_instr)) {
+      t_instr_label = t_instr;
+    } else if (oz_isSTuple(t_instr)) {
+      t_instr_label = tagged2SRecord(t_instr)->getLabel();
+      for (int i = tagged2SRecord(t_instr)->getWidth(); i--; ) {
+        t_instr_args[i] = oz_deref(tagged2SRecord(t_instr)->getArg(i));
+        t_instr_type[i] = CI_TYPE_OTHER;
+        if (oz_isSTuple(t_instr_args[i]) &&
+            (tagged2SRecord(t_instr_args[i])->getWidth() == 1)) {
+          TaggedRef t_type_label = tagged2SRecord(t_instr_args[i])->getLabel();
+          if (oz_eq(t_type_label,ci_type_xatom))
+            t_instr_type[i] = CI_TYPE_XREG;
+          if (oz_eq(t_type_label,ci_type_yatom))
+            t_instr_type[i] = CI_TYPE_YREG;
+          if (oz_eq(t_type_label,ci_type_gatom))
+            t_instr_type[i] = CI_TYPE_GREG;
+          if (t_instr_type[i] != CI_TYPE_OTHER)
+            t_instr_args[i] = oz_deref(tagged2SRecord(t_instr_args[i])->getArg(0));
+        }
+      }
+    } else {
+      CI_BOMB();
+    }
+
+    // Map instruction atom to number...
+    t_instr_num = tagged2SRecord(ci_ia_to_in)->getFeature(t_instr_label);
+    if (!t_instr_num)
+      CI_BOMB();
+
+    switch (tagged2SmallInt(t_instr_num)) {
+    case CI_SKIP:
+      CIS_OPCODE(SKIP);
+      break;
+    case CI_DEFINITION:
+      CIS_OPCODE(DEFINITION);
+      CIS_XREG(0); CIS_LBL(1); CIS_PREDID(2); CIS_PROCREF(3); CIS_GREGREF(4);
+      break;
+    case CI_DEFINITIONCOPY:
+      CIS_OPCODE(DEFINITIONCOPY);
+      CIS_XREG(0); CIS_LBL(1); CIS_PREDID(2); CIS_PROCREF(3); CIS_GREGREF(4);
+      break;
+    case CI_ENDDEFINITION:
+      CIS_OPCODE(ENDDEFINITION); CIS_LBL(0);
+      break;
+    case CI_MOVE:
+      if (IS_CI_XREG(0) && IS_CI_XREG(1)) {
+        CIS_OPCODE(MOVEXX); CIS_XREG(0); CIS_XREG(1);
+        break;
+      }
+      if (IS_CI_XREG(0) && IS_CI_YREG(1)) {
+        CIS_OPCODE(MOVEXY); CIS_XREG(0); CIS_YREG(1);
+        break;
+      }
+      if (IS_CI_YREG(0) && IS_CI_XREG(1)) {
+        CIS_OPCODE(MOVEYX); CIS_YREG(0); CIS_XREG(1);
+        break;
+      }
+      if (IS_CI_YREG(0) && IS_CI_YREG(1)) {
+        CIS_OPCODE(MOVEYY); CIS_YREG(0); CIS_YREG(1);
+        break;
+      }
+      if (IS_CI_GREG(0) && IS_CI_XREG(1)) {
+        CIS_OPCODE(MOVEGX); CIS_GREG(0); CIS_XREG(1);
+        break;
+      }
+      if (IS_CI_GREG(0) && IS_CI_YREG(1)) {
+        CIS_OPCODE(MOVEGY); CIS_GREG(0); CIS_YREG(1);
+        break;
+      }
+      CI_BOMB();
+    case CI_MOVEMOVE:
+      if (IS_CI_XREG(0) && IS_CI_YREG(1) && IS_CI_XREG(2) && IS_CI_YREG(3)) {
+        CIS_OPCODE(MOVEMOVEXYXY);
+        CIS_XREG(0); CIS_YREG(1); CIS_XREG(2); CIS_YREG(3);
+        break;
+      }
+      if (IS_CI_YREG(0) && IS_CI_XREG(1) && IS_CI_YREG(2) && IS_CI_XREG(3)) {
+        CIS_OPCODE(MOVEMOVEYXYX);
+        CIS_YREG(0); CIS_XREG(1); CIS_YREG(2); CIS_XREG(3);
+        break;
+      }
+      if (IS_CI_XREG(0) && IS_CI_YREG(1) && IS_CI_YREG(2) && IS_CI_XREG(3)) {
+        CIS_OPCODE(MOVEMOVEXYYX);
+        CIS_XREG(0); CIS_YREG(1); CIS_YREG(2); CIS_XREG(3);
+        break;
+      }
+      if (IS_CI_YREG(0) && IS_CI_XREG(1) && IS_CI_XREG(2) && IS_CI_YREG(3)) {
+        CIS_OPCODE(MOVEMOVEYXXY);
+        CIS_YREG(0); CIS_XREG(1); CIS_XREG(2); CIS_YREG(3);
+        break;
+      }
+      CI_BOMB();
+    case CI_CREATEVARIABLE:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(CREATEVARIABLEX); CIS_XREG(0);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(CREATEVARIABLEY); CIS_YREG(0);
+        break;
+      }
+      CI_BOMB();
+    case CI_CREATEVARIABLEMOVE:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(CREATEVARIABLEMOVEX); CIS_XREG(0); CIS_XREG(1);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(CREATEVARIABLEMOVEY); CIS_YREG(0); CIS_XREG(1);
+        break;
+      }
+      CI_BOMB();
+    case CI_UNIFY:
+      if (IS_CI_XREG(1)) {
+        CIS_OPCODE(UNIFYXX); CIS_XREG(0); CIS_XREG(1);
+        break;
+      }
+      if (IS_CI_YREG(1)) {
+        CIS_OPCODE(UNIFYXY); CIS_XREG(0); CIS_YREG(1);
+        break;
+      }
+      if (IS_CI_GREG(1)) {
+        CIS_OPCODE(UNIFYXG); CIS_XREG(0); CIS_GREG(1);
+        break;
+      }
+      CI_BOMB();
+    case CI_PUTRECORD:
+      if (IS_CI_XREG(2)) {
+        CIS_OPCODE(PUTRECORDX); CIS_LIT(0); CIS_RECAR(1); CIS_XREG(2);
+        break;
+      }
+      if (IS_CI_YREG(2)) {
+        CIS_OPCODE(PUTRECORDY); CIS_LIT(0); CIS_RECAR(1); CIS_YREG(2);
+        break;
+      }
+      CI_BOMB();
+    case CI_PUTLIST:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(PUTLISTX); CIS_XREG(0);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(PUTLISTY); CIS_YREG(0);
+        break;
+      }
+      CI_BOMB();
+    case CI_PUTCONSTANT:
+      if (IS_CI_XREG(1)) {
+        CIS_OPCODE(PUTCONSTANTX); CIS_CONST(0); CIS_XREG(1);
+        break;
+      }
+      if (IS_CI_YREG(1)) {
+        CIS_OPCODE(PUTCONSTANTY); CIS_CONST(0); CIS_YREG(1);
+        break;
+      }
+      CI_BOMB();
+    case CI_SETVARIABLE:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(SETVARIABLEX); CIS_XREG(0);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(SETVARIABLEY); CIS_YREG(0);
+        break;
+      }
+      CI_BOMB();
+    case CI_SETVALUE:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(SETVALUEX); CIS_XREG(0);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(SETVALUEY); CIS_YREG(0);
+        break;
+      }
+      if (IS_CI_GREG(0)) {
+        CIS_OPCODE(SETVALUEG); CIS_GREG(0);
+        break;
+      }
+      CI_BOMB();
+    case CI_SETCONSTANT:
+      CIS_OPCODE(SETCONSTANT); CIS_CONST(0);
+      break;
+    case CI_SETPROCEDUREREF:
+      CIS_OPCODE(SETPROCEDUREREF); CIS_PROCREF(0);
+      break;
+    case CI_SETVOID:
+      CIS_OPCODE(SETVOID); CIS_INT(0);
+      break;
+    case CI_GETRECORD:
+      if (IS_CI_XREG(2)) {
+        CIS_OPCODE(GETRECORDX); CIS_LIT(0); CIS_RECAR(1); CIS_XREG(2);
+        break;
+      }
+      if (IS_CI_YREG(2)) {
+        CIS_OPCODE(GETRECORDY); CIS_LIT(0); CIS_RECAR(1); CIS_YREG(2);
+        break;
+      }
+      if (IS_CI_GREG(2)) {
+        CIS_OPCODE(GETRECORDG); CIS_LIT(0); CIS_RECAR(1); CIS_GREG(2);
+        break;
+      }
+      CI_BOMB();
+    case CI_GETLIST:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(GETLISTX); CIS_XREG(0);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(GETLISTY); CIS_YREG(0);
+        break;
+      }
+      if (IS_CI_GREG(0)) {
+        CIS_OPCODE(GETLISTG); CIS_GREG(0);
+        break;
+      }
+      CI_BOMB();
+    case CI_GETLISTVALVAR:
+      CIS_OPCODE(GETLISTVALVARX); CIS_XREG(0); CIS_XREG(1); CIS_XREG(2);
+      break;
+    case CI_UNIFYVARIABLE:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(UNIFYVARIABLEX); CIS_XREG(0);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(UNIFYVARIABLEY); CIS_YREG(0);
+        break;
+      }
+      CI_BOMB();
+    case CI_UNIFYVALUE:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(UNIFYVALUEX); CIS_XREG(0);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(UNIFYVALUEY); CIS_YREG(0);
+        break;
+      }
+      if (IS_CI_GREG(0)) {
+        CIS_OPCODE(UNIFYVALUEG); CIS_GREG(0);
+        break;
+      }
+      CI_BOMB();
+    case CI_UNIFYVALVAR:
+      if (IS_CI_XREG(0)) {
+        if (IS_CI_XREG(1)) {
+          CIS_OPCODE(UNIFYVALVARXX); CIS_XREG(0); CIS_XREG(1);
+          break;
+        }
+        if (IS_CI_YREG(1)) {
+          CIS_OPCODE(UNIFYVALVARXY); CIS_XREG(0); CIS_YREG(1);
+          break;
+        }
+      }
+      if (IS_CI_YREG(0)) {
+        if (IS_CI_XREG(1)) {
+          CIS_OPCODE(UNIFYVALVARYX); CIS_YREG(0); CIS_XREG(1);
+          break;
+        }
+        if (IS_CI_YREG(1)) {
+          CIS_OPCODE(UNIFYVALVARYY); CIS_YREG(0); CIS_YREG(1);
+          break;
+        }
+      }
+      if (IS_CI_GREG(0)) {
+        if (IS_CI_XREG(1)) {
+          CIS_OPCODE(UNIFYVALVARGX); CIS_GREG(0); CIS_XREG(1);
+          break;
+        }
+        if (IS_CI_YREG(1)) {
+          CIS_OPCODE(UNIFYVALVARGY); CIS_GREG(0); CIS_YREG(1);
+          break;
+        }
+      }
+      CI_BOMB();
+    case CI_UNIFYNUMBER:
+      CIS_OPCODE(UNIFYNUMBER); CIS_NUM(0);
+      break;
+    case CI_UNIFYLITERAL:
+      CIS_OPCODE(UNIFYLITERAL); CIS_LIT(0);
+      break;
+    case CI_UNIFYVOID:
+      CIS_OPCODE(UNIFYVOID); CIS_INT(0);
+      break;
+    case CI_GETLITERAL:
+      if (IS_CI_XREG(1)) {
+        CIS_OPCODE(GETLITERALX); CIS_LIT(0); CIS_XREG(1);
+        break;
+      }
+      if (IS_CI_YREG(1)) {
+        CIS_OPCODE(GETLITERALY); CIS_LIT(0); CIS_YREG(1);
+        break;
+      }
+      if (IS_CI_GREG(1)) {
+        CIS_OPCODE(GETLITERALG); CIS_LIT(0); CIS_GREG(1);
+        break;
+      }
+      CI_BOMB();
+    case CI_GETNUMBER:
+      if (IS_CI_XREG(1)) {
+        CIS_OPCODE(GETNUMBERX); CIS_NUM(0); CIS_XREG(1);
+        break;
+      }
+      if (IS_CI_YREG(1)) {
+        CIS_OPCODE(GETNUMBERY); CIS_NUM(0); CIS_YREG(1);
+        break;
+      }
+      if (IS_CI_GREG(1)) {
+        CIS_OPCODE(GETNUMBERG); CIS_NUM(0); CIS_GREG(1);
+        break;
+      }
+      CI_BOMB();
+    case CI_ALLOCATEL:
+      CIS_OPCODE(ALLOCATEL); CIS_INT(0);
+      break;
+    case CI_ALLOCATEL1:
+      CIS_OPCODE(ALLOCATEL1);
+      break;
+    case CI_ALLOCATEL2:
+      CIS_OPCODE(ALLOCATEL2);
+      break;
+    case CI_ALLOCATEL3:
+      CIS_OPCODE(ALLOCATEL3);
+      break;
+    case CI_ALLOCATEL4:
+      CIS_OPCODE(ALLOCATEL4);
+      break;
+    case CI_ALLOCATEL5:
+      CIS_OPCODE(ALLOCATEL5);
+      break;
+    case CI_ALLOCATEL6:
+      CIS_OPCODE(ALLOCATEL6);
+      break;
+    case CI_ALLOCATEL7:
+      CIS_OPCODE(ALLOCATEL7);
+      break;
+    case CI_ALLOCATEL8:
+      CIS_OPCODE(ALLOCATEL8);
+      break;
+    case CI_ALLOCATEL9:
+      CIS_OPCODE(ALLOCATEL9);
+      break;
+    case CI_ALLOCATEL10:
+      CIS_OPCODE(ALLOCATEL10);
+      break;
+    case CI_DEALLOCATEL:
+      CIS_OPCODE(DEALLOCATEL);
+      break;
+    case CI_DEALLOCATEL1:
+      CIS_OPCODE(DEALLOCATEL1);
+      break;
+    case CI_DEALLOCATEL2:
+      CIS_OPCODE(DEALLOCATEL2);
+      break;
+    case CI_DEALLOCATEL3:
+      CIS_OPCODE(DEALLOCATEL3);
+      break;
+    case CI_DEALLOCATEL4:
+      CIS_OPCODE(DEALLOCATEL4);
+      break;
+    case CI_DEALLOCATEL5:
+      CIS_OPCODE(DEALLOCATEL5);
+      break;
+    case CI_DEALLOCATEL6:
+      CIS_OPCODE(DEALLOCATEL6);
+      break;
+    case CI_DEALLOCATEL7:
+      CIS_OPCODE(DEALLOCATEL7);
+      break;
+    case CI_DEALLOCATEL8:
+      CIS_OPCODE(DEALLOCATEL8);
+      break;
+    case CI_DEALLOCATEL9:
+      CIS_OPCODE(DEALLOCATEL9);
+      break;
+    case CI_DEALLOCATEL10:
+      CIS_OPCODE(DEALLOCATEL10);
+      break;
+    case CI_CALLMETHOD:
+      CIS_OPCODE(CALLMETHOD); CIS_CMI(0); CIS_INT(1);
+      break;
+    case CI_CALLGLOBAL:
+      CIS_OPCODE(CALLGLOBAL); CIS_GREG(0); CIS_INT(1);
+      break;
+    case CI_CALL:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(CALLX); CIS_XREG(0); CIS_INT(1);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(CALLY); CIS_YREG(0); CIS_INT(1);
+        break;
+      }
+      if (IS_CI_GREG(0)) {
+        CIS_OPCODE(CALLG); CIS_GREG(0); CIS_INT(1);
+        break;
+      }
+      CI_BOMB();
+    case CI_TAILCALL:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(TAILCALLX); CIS_XREG(0); CIS_INT(1);
+        break;
+      }
+      if (IS_CI_GREG(0)) {
+        CIS_OPCODE(TAILCALLG); CIS_GREG(0); CIS_INT(1);
+        break;
+      }
+      CI_BOMB();
+    case CI_CALLCONSTANT:
+      CIS_OPCODE(CALLCONSTANT); CIS_CONST(0); CIS_INT(1);
+      break;
+    case CI_CALLPROCEDUREREF:
+      CIS_OPCODE(CALLPROCEDUREREF); CIS_PROCREF(0); CIS_INT(1);
+      break;
+    case CI_SENDMSG:
+      if (IS_CI_XREG(1)) {
+        CIS_OPCODE(SENDMSGX);
+        CIS_LIT(0); CIS_XREG(1); CIS_RECAR(2); CIS_CACHE(3);
+        break;
+      }
+      if (IS_CI_YREG(1)) {
+        CIS_OPCODE(SENDMSGY);
+        CIS_LIT(0); CIS_YREG(1); CIS_RECAR(2); CIS_CACHE(3);
+        break;
+      }
+      if (IS_CI_GREG(1)) {
+        CIS_OPCODE(SENDMSGG);
+        CIS_LIT(0); CIS_GREG(1); CIS_RECAR(2); CIS_CACHE(3);
+        break;
+      }
+      CI_BOMB();
+    case CI_TAILSENDMSG:
+      if (IS_CI_XREG(1)) {
+        CIS_OPCODE(TAILSENDMSGX);
+        CIS_LIT(0); CIS_XREG(1); CIS_RECAR(2); CIS_CACHE(3);
+        break;
+      }
+      if (IS_CI_YREG(1)) {
+        CIS_OPCODE(TAILSENDMSGY);
+        CIS_LIT(0); CIS_YREG(1); CIS_RECAR(2); CIS_CACHE(3);
+        break;
+      }
+      if (IS_CI_GREG(1)) {
+        CIS_OPCODE(TAILSENDMSGG);
+        CIS_LIT(0); CIS_GREG(1); CIS_RECAR(2); CIS_CACHE(3);
+        break;
+      }
+    case CI_GETSELF:
+      CIS_OPCODE(GETSELF); CIS_XREG(0);
+      break;
+    case CI_SETSELF:
+      CIS_OPCODE(SETSELFG); CIS_GREG(0);
+      break;
+    case CI_LOCKTHREAD:
+      CIS_OPCODE(LOCKTHREAD); CIS_LBL(0); CIS_XREG(1);
+      break;
+    case CI_INLINEAT:
+      CIS_OPCODE(INLINEAT); CIS_FEAT(0); CIS_XREG(1); CIS_CACHE(2);
+      break;
+    case CI_INLINEASSIGN:
+      CIS_OPCODE(INLINEASSIGN); CIS_FEAT(0); CIS_XREG(1); CIS_CACHE(2);
+      break;
+    case CI_BRANCH:
+      CIS_OPCODE(BRANCH); CIS_LBL(0);
+      break;
+    case CI_EXHANDLER:
+      CIS_OPCODE(EXHANDLER); CIS_LBL(0);
+      break;
+    case CI_POPEX:
+      CIS_OPCODE(POPEX);
+      break;
+    case CI_RETURN:
+      CIS_OPCODE(RETURN);
+      break;
+    case CI_TESTLITERAL:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(TESTLITERALX); CIS_XREG(0); CIS_LIT(1); CIS_LBL(2);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(TESTLITERALY); CIS_YREG(0); CIS_LIT(1); CIS_LBL(2);
+        break;
+      }
+      if (IS_CI_GREG(0)) {
+        CIS_OPCODE(TESTLITERALG); CIS_GREG(0); CIS_LIT(1); CIS_LBL(2);
+        break;
+      }
+      CI_BOMB();
+    case CI_TESTNUMBER:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(TESTNUMBERX); CIS_XREG(0); CIS_NUM(1); CIS_LBL(2);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(TESTNUMBERY); CIS_YREG(0); CIS_NUM(1); CIS_LBL(2);
+        break;
+      }
+      if (IS_CI_GREG(0)) {
+        CIS_OPCODE(TESTNUMBERG); CIS_GREG(0); CIS_NUM(1); CIS_LBL(2);
+        break;
+      }
+      CI_BOMB();
+    case CI_TESTRECORD:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(TESTRECORDX);
+        CIS_XREG(0); CIS_LIT(1); CIS_RECAR(2); CIS_LBL(3);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(TESTRECORDY);
+        CIS_YREG(0); CIS_LIT(1); CIS_RECAR(2); CIS_LBL(3);
+        break;
+      }
+      if (IS_CI_GREG(0)) {
+        CIS_OPCODE(TESTRECORDG);
+        CIS_GREG(0); CIS_LIT(1); CIS_RECAR(2); CIS_LBL(3);
+        break;
+      }
+      CI_BOMB();
+    case CI_TESTLIST:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(TESTLISTX); CIS_XREG(0); CIS_LBL(1);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(TESTLISTY); CIS_YREG(0); CIS_LBL(1);
+        break;
+      }
+      if (IS_CI_GREG(0)) {
+        CIS_OPCODE(TESTLISTG); CIS_GREG(0); CIS_LBL(1);
+        break;
+      }
+      CI_BOMB();
+    case CI_TESTBOOL:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(TESTBOOLX); CIS_XREG(0); CIS_LBL(1); CIS_LBL(2);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(TESTBOOLY); CIS_YREG(0); CIS_LBL(1); CIS_LBL(2);
+        break;
+      }
+      if (IS_CI_GREG(0)) {
+        CIS_OPCODE(TESTBOOLG); CIS_GREG(0); CIS_LBL(1); CIS_LBL(2);
+        break;
+      }
+      CI_BOMB();
+    case CI_MATCH:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(MATCHX); CIS_XREG(0); CIS_HSH(1);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(MATCHY); CIS_YREG(0); CIS_HSH(1);
+        break;
+      }
+      if (IS_CI_GREG(0)) {
+        CIS_OPCODE(MATCHG); CIS_GREG(0); CIS_HSH(1);
+        break;
+      }
+      CI_BOMB();
+    case CI_GETVARIABLE:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(GETVARIABLEX); CIS_XREG(0);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(GETVARIABLEY); CIS_YREG(0);
+        break;
+      }
+      CI_BOMB();
+    case CI_GETVARVAR:
+      if (IS_CI_XREG(0)) {
+        if (IS_CI_XREG(1)) {
+          CIS_OPCODE(GETVARVARXX); CIS_XREG(0); CIS_XREG(1);
+          break;
+        }
+        if (IS_CI_YREG(1)) {
+          CIS_OPCODE(GETVARVARXY); CIS_XREG(0); CIS_YREG(1);
+          break;
+        }
+      }
+      if (IS_CI_YREG(0)) {
+        if (IS_CI_XREG(1)) {
+          CIS_OPCODE(GETVARVARYX); CIS_YREG(0); CIS_XREG(1);
+          break;
+        }
+        if (IS_CI_YREG(1)) {
+          CIS_OPCODE(GETVARVARYY); CIS_YREG(0); CIS_YREG(1);
+          break;
+        }
+      }
+      CI_BOMB();
+    case CI_GETVOID:
+      CIS_OPCODE(GETVOID); CIS_INT(0);
+      break;
+    case CI_DEBUGENTRY:
+      CIS_DBGI(0,1);
+      CIS_OPCODE(DEBUGENTRY);
+      CIS_LIT(0); CIS_NUM(1); CIS_NUM(2); CIS_LIT(3);
+      break;
+    case CI_DEBUGEXIT:
+      CIS_OPCODE(DEBUGEXIT);
+      CIS_LIT(0); CIS_NUM(1); CIS_NUM(2); CIS_LIT(3);
+      break;
+    case CI_GLOBALVARNAME:
+      CIS_OPCODE(GLOBALVARNAME); CIS_CONST(0);
+      break;
+    case CI_LOCALVARNAME:
+      CIS_OPCODE(LOCALVARNAME); CIS_CONST(0);
+      break;
+    case CI_CLEAR:
+      CIS_OPCODE(CLEARY); CIS_YREG(0);
+      break;
+    case CI_PROFILEPROC:
+      CIS_OPCODE(PROFILEPROC);
+      break;
+    case CI_CALLBI:
+      CIS_OPCODE(CALLBI); CIS_BINAME(0); CIS_LOC(1);
+      break;
+    case CI_INLINEPLUS1:
+      CIS_OPCODE(INLINEPLUS1); CIS_XREG(0); CIS_XREG(1);
+      break;
+    case CI_INLINEMINUS1:
+      CIS_OPCODE(INLINEMINUS1); CIS_XREG(0); CIS_XREG(1);
+      break;
+    case CI_INLINEPLUS:
+      CIS_OPCODE(INLINEPLUS); CIS_XREG(0); CIS_XREG(1); CIS_XREG(2);
+      break;
+    case CI_INLINEMINUS:
+      CIS_OPCODE(INLINEMINUS); CIS_XREG(0); CIS_XREG(1); CIS_XREG(2);
+      break;
+    case CI_INLINEDOT:
+      CIS_OPCODE(INLINEDOT);
+      CIS_XREG(0); CIS_FEAT(1); CIS_XREG(2); CIS_CACHE(4);
+      break;
+    case CI_TESTBI:
+      CIS_OPCODE(TESTBI); CIS_BINAME(0); CIS_LOC(1); CIS_LBL(2);
+      break;
+    case CI_TESTLT:
+      CIS_OPCODE(TESTLT); CIS_XREG(0); CIS_XREG(1); CIS_XREG(2); CIS_LBL(3);
+      break;
+    case CI_TESTLE:
+      CIS_OPCODE(TESTLE); CIS_XREG(0); CIS_XREG(1); CIS_XREG(2); CIS_LBL(3);
+      break;
+    case CI_DECONSCALL:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(DECONSCALLX); CIS_XREG(0);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(DECONSCALLY); CIS_YREG(0);
+        break;
+      }
+      if (IS_CI_GREG(0)) {
+        CIS_OPCODE(DECONSCALLG); CIS_GREG(0);
+        break;
+      }
+      CI_BOMB();
+    case CI_TAILDECONSCALL:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(TAILDECONSCALLX); CIS_XREG(0);
+        break;
+      }
+      if (IS_CI_GREG(0)) {
+        CIS_OPCODE(TAILDECONSCALLG); CIS_GREG(0);
+        break;
+      }
+      CI_BOMB();
+    case CI_CONSCALL:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(CONSCALLX); CIS_XREG(0); CIS_INT(1);
+        break;
+      }
+      if (IS_CI_YREG(0)) {
+        CIS_OPCODE(CONSCALLY); CIS_YREG(0); CIS_INT(1);
+        break;
+      }
+      if (IS_CI_GREG(0)) {
+        CIS_OPCODE(CONSCALLG); CIS_GREG(0); CIS_INT(1);
+        break;
+      }
+      CI_BOMB();
+    case CI_TAILCONSCALL:
+      if (IS_CI_XREG(0)) {
+        CIS_OPCODE(TAILCONSCALLX); CIS_XREG(0); CIS_INT(1);
+        break;
+      }
+      if (IS_CI_GREG(0)) {
+        CIS_OPCODE(TAILCONSCALLG); CIS_GREG(0); CIS_INT(1);
+        break;
+      }
+      CI_BOMB();
+    default:
+      CI_BOMB();
+    }
+
+    t_instrs = oz_deref(oz_tail(t_instrs));
+
+  }
+
+  OZ_RETURN(makeTaggedConst(topl));
 
  bomb:
+  OZ_error("Failed to assemble: %s\n", toC(t_instr));
   return FAILED;
 } OZ_BI_end
 

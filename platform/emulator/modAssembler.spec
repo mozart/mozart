@@ -22,6 +22,8 @@
 
 # -*-perl-*-
 
+$module_init_fun_name = "disassembler_init";
+
 %builtins_all =
     (
      'disassemble'      => { in  => ['+procedure'],

@@ -24,6 +24,8 @@
 ### WARRANTIES.
 ###
 
+$module_init_fun_name = "compiler_init";
+
 %builtins_all =
 (
     ##* Compiler Support
@@ -86,100 +88,8 @@
                                      out => ['+record'],
                                      BI  => BIgetInstructionSizes},
 
-    'storeInstr'                => { in  => ['+record','+foreignPointer','+dictionary'],
-                                     out => [],
-                                     BI  => BIstoreInstr},
-
-    'allocateCodeBlock'         => { in  => ['+int','+[value]'],
-                                     out => ['+foreignPointer','+procedure/0'],
-                                     BI  => BIallocateCodeBlock},
-
-    'getOpcode'                 => { in  => ['+atom'],
-                                     out => ['+int'],
-                                     BI  => BIgetOpcode},
-
-    'addDebugInfo'              => { in  => ['+foreignPointer','+atom','+int'],
-                                     out => [],
-                                     BI  => BIaddDebugInfo},
-
-    'storeOpcode'               => { in  => ['+foreignPointer','+int'],
-                                     out => [],
-                                     BI  => BIstoreOpcode},
-
-    'storeNumber'               => { in  => ['+foreignPointer','+number'],
-                                     out => [],
-                                     BI  => BIstoreNumber},
-
-    'storeLiteral'              => { in  => ['+foreignPointer','+literal'],
-                                     out => [],
-                                     BI  => BIstoreLiteral},
-
-    'storeFeature'              => { in  => ['+foreignPointer','+feature'],
-                                     out => [],
-                                     BI  => BIstoreFeature},
-
-    'storeConstant'             => { in  => ['+foreignPointer','value'],
-                                     out => [],
-                                     BI  => BIstoreConstant},
-
-    'storeBuiltinname'          => { in  => ['+foreignPointer',
-                                             '+virtualString'],
-                                     out => [],
-                                     BI  => BIstoreBuiltinname},
-
-    'storeXRegisterIndex'       => { in  => ['+foreignPointer','+int'],
-                                     out => [],
-                                     BI  => BIstoreXRegisterIndex},
-
-    'storeYRegisterIndex'       => { in  => ['+foreignPointer','+int'],
-                                     out => [],
-                                     BI  => BIstoreYRegisterIndex},
-
-    'storeGRegisterIndex'       => { in  => ['+foreignPointer','+int'],
-                                     out => [],
-                                     BI  => BIstoreGRegisterIndex},
-
-    'storeInt'                  => { in  => ['+foreignPointer','+int'],
-                                     out => [],
-                                     BI  => BIstoreInt},
-
-    'storeLabel'                => { in  => ['+foreignPointer','+int'],
-                                     out => [],
-                                     BI  => BIstoreLabel},
-
-    'storeProcedureRef'         => { in  => ['+foreignPointer','+value'],
-                                     out => [],
-                                     BI  => BIstoreProcedureRef},
-
-    'storePredId'               => { in  => ['+foreignPointer','+atom',
-                                             '+value','+record',
-                                             '+value','+int'],
-                                     out => [],
-                                     BI  => BIstorePredId},
-
-    'newHashTable'              => { in  => ['+foreignPointer','+int','+int','+value'],
-                                     out => [],
-                                     BI  => BInewHashTable},
-
-    'storeRecordArity'          => { in  => ['+foreignPointer','+value'],
-                                     out => [],
-                                     BI  => BIstoreRecordArity},
-
-    'storeCallMethodInfo'       => { in  => ['+foreignPointer','+int',
-                                             '+literal', '+bool','+value'],
-                                     out => [],
-                                     BI  => BIstoreCallMethodInfo},
-
-    'storeGRegRef'              => { in  => ['+foreignPointer','+[tuple]'],
-                                     out => [],
-                                     BI  => BIstoreGRegRef},
-
-    'storeLocation'             => { in  => ['+foreignPointer','+list#list'],
-                                     out => [],
-                                     BI  => BIstoreLocation},
-
-    'storeCache'                => { in  => ['+foreignPointer','value'],
-                                     out => [],
-                                     BI  => BIstoreCache},
+    'storeInstructions'         => { in  => ['+int','+[value]','+[record]','+dictionary'],
+                                     out => ['+procedure/0'],
+                                     BI  => BIstoreInstructions},
 
  );

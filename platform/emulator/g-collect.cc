@@ -264,7 +264,8 @@ void AbstractionEntry::freeUnusedEntries(void) {
 
 inline
 void AbstractionEntry::gCollectAbstractionEntry(void) {
-  if (this==NULL || isCollected()) return;
+  Assert(this);
+  if (isCollected()) return;
 
   setCollected();
   oz_gCollectTerm(abstr,abstr);
@@ -295,12 +296,12 @@ void IHashTable::gCollect(void) {
 
 #define CODEGC_CALLMETHODINFO(PCR) \
 { CallMethodInfo * cmi = (CallMethodInfo *) getAdressArg(PC+PCR); \
-  if (cmi) oz_gCollectTerm(cmi->mn, cmi->mn);                     \
+  oz_gCollectTerm(cmi->mn, cmi->mn);                              \
 }
 
 #define CODEGC_IHASHTABLE(PCR) \
 { IHashTable * iht = (IHashTable *) getAdressArg(PC+PCR); \
-  if (iht) iht->gCollect();                               \
+  iht->gCollect();                                        \
 }
 
 inline
@@ -308,13 +309,7 @@ void CodeArea::gCollectInstructions(void) {
   ProgramCounter PC = getStart();
   while (OK) {
 #ifdef THREADED
-    if (!*PC) {
-      // Can happen while codearea is under construction from compiler:
-      // Initially, the codearea is filled with zeros.
-      // The check is only necessary for threaded code, since otherwise
-      // null represents ENDOFFILE;
-      return;
-    }
+    Assert(*PC);
 #endif
     Opcode op = getOpcode(PC);
     switch (op) {
