@@ -211,16 +211,33 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
   
   // introduce Vps
   for (c = 0; c < clauses; c += 1) {  // acendingly counting ('cause of x.add)
-    STuple &vp_c = *tagged2STuple(deref(_vp[c]));
     x.add(2 + c, variables);
-    for (v = variables; v--; ) { 
-      x.introduce(idx_vp(c, v), makeTaggedRef(&vp_c[v]));
+
+    if (x[idx_b(c)] == 0) {
+      for (v = variables; v--; ) 
+	x.introduceDummy(idx_vp(c, v));
+    } else {
+      STuple &vp_c = *tagged2STuple(deref(_vp[c]));
+      for (v = variables; v--; ) 
+	x.introduce(idx_vp(c, v), makeTaggedRef(&vp_c[v]));
     }
   }
   
 // check if vars got unified and if so propagate equality to local vars
   x.propagate_unify_cd(clauses, variables, _vp);
 
+  for (c = clauses; c--; ) {
+    if (x[idx_b(c)] == 0) {
+      continue;
+    } else for (v = variables; v--; ) 
+      if (x.isNotCDVoid(idx_vp(c, v))) 
+	if ((x[idx_vp(c, v)] &= x[idx_v(v)]) == 0) {
+	  x[idx_b(c)] &= 0;  // intersection is empty --> clause failed
+	  break;
+	} 
+  }
+
+  /*
 // constrain local variables with corresponding global ones
   for (c = clauses; c--; ) {
     if (x[idx_b(c)] == 0) {
@@ -270,13 +287,21 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
 
     return x.entailmentClause(idx_b(0), idx_b(clauses - 1));
   }
-
+  */
 // propagate till you reach a fixpoint
   localPropStore.backup(0x10);
 
   for (c = clauses; c--; ) {
-    if (x[idx_b(c)] == 0)
+    if (x[idx_b(c)] == 0) {
+      x.process(idx_b(c));
+      x.backup();
+      if (!localPropStore.do_propagation()) 
+	error("local propagation must be empty");
+      x.restore();
       continue;
+    }
+
+    x.process(idx_b(c));
 
     Assert(x[idx_b(c)] != 0);
     
@@ -284,22 +309,26 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
     localPropStore.setUseIt();
 #endif
 
-    for (v = variables; v--; ) {
+    for (v = variables; v--; )
       x.propagateIfTouched(idx_vp(c, v));
-    }
 
 #ifndef TM_LP
     localPropStore.unsetUseIt();
 #endif
 
     x.backup();
+    if (!localPropStore.do_propagation()) 
+      error("local propagation must be empty");
+    x.restore();
 
+    /*
     if (!localPropStore.do_propagation()) {
       x.restore();
       x[idx_b(c)] &= 0;
     } else {
       x.restore();
     }
+    */
     Assert(localPropStore.isEmpty());
   
   }
@@ -316,9 +345,11 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
   
   // reintroduce Vps
   for (c = 0; c < clauses; c += 1) {  // acendingly counting ('cause of x.add)
-    STuple &vp_c = *tagged2STuple(deref(_vp[c]));
-    for (v = variables; v--; ) { 
-      x.reintroduce(idx_vp(c, v), makeTaggedRef(&vp_c[v]));
+    if (x[idx_b(c)] != 0) {
+      STuple &vp_c = *tagged2STuple(deref(_vp[c]));
+      for (v = variables; v--; ) { 
+	x.reintroduce(idx_vp(c, v), makeTaggedRef(&vp_c[v]));
+      }
     }
   }
 
