@@ -4,8 +4,8 @@ export
    DaVinciClass
 
 import
+   Error
    Open
-   System
    DaVinciScanner
 
 define
@@ -14,7 +14,8 @@ define
       case L
       of H|nil then {CommandValueToVS H}
       [] H1|H2|T then  {CommandValueToVS H1}#","#{CommandListToVS H2|T}
-      else {System.showInfo 'Unexpected command in CommandListToVS.'} error
+      else
+         {Exception.raiseError daVinci(unexpectedCommand L)} unit
       end
    end
 
@@ -26,7 +27,8 @@ define
       elseif {IsList C} then '['#{CommandListToVS C}#']'
       elseif {IsAtom C} then "\""#C#"\""
       elseif {IsTuple C} then {Label C}#'('#{CommandListToVS {Record.toList C}}#')'
-      else {System.showInfo 'Unexpected command in CommandValueToVS.'} error
+      else
+         {Exception.raiseError daVinci(unexpectedCommand C)} unit
       end
    end
 
@@ -89,5 +91,22 @@ define
          {@pipe write(vs: "graph(new("#VS#"))\n")}
       end
    end
+
+   {Error.registerFormatter daVinci
+    fun {$ E}
+       T = 'DaVinci error'
+    in
+       case E of daVinci(unexpectedCommand C) then
+          error(kind: T
+                msg: 'unexpected command'
+                items: [hint(l: 'Found' m: oz(C))])
+       [] daVinci(unexpectedResponse) then
+          error(kind: T
+                msg: 'unexpected response')
+       else
+          error(kind: T
+                items: [line(oz(E))])
+       end
+    end}
 
 end

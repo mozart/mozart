@@ -77,6 +77,11 @@ define
          {System.showInfo 'scanner error: unrecognized character:'#A#'.'}
          GumpScanner.'class', putToken('error' 'error')
       end
+
+      lex <\n>
+         {Exception.raiseError daVinci(unexpectedResponse)}
+      end
+
       lex <<EOF>>
          GumpScanner.'class', putToken1('EOF')
       end
