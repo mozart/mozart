@@ -180,7 +180,8 @@ Bool AM::hf_raise_failure()
 #define HF_EQ(X,Y)    HF_RAISE_FAILURE(OZ_mkTupleC("eq",2,X,Y))
 #define HF_TELL(X,Y)  HF_RAISE_FAILURE(OZ_mkTupleC("tell",2,X,Y))
 #define HF_APPLY(N,A) HF_RAISE_FAILURE(OZ_mkTupleC("apply",2,N,A))
-#define HF_BI(bi)     HF_APPLY(bi->getName(),OZ_toList(predArity,X));
+#define HF_BI(bi)     HF_APPLY(bi->getName(),OZ_toList(bi->getArity(),X));
+#define HF_BI_NEW(bi,loc)   HF_APPLY(bi->getName(),biArgs(loc,X));
 
 #define CheckArity(arityExp,proc)                                          \
 if (predArity != arityExp) {                                               \
@@ -1044,7 +1045,7 @@ LBLdispatcher:
       int res = bi->getFun()(X,loc->mapping());
       if (res == PROCEED) { DISPATCH(4); }
       switch (res) {
-      case FAILED:        HF_BI(bi);
+      case FAILED:        HF_BI_NEW(bi,loc);
       case RAISE:         RAISE_THREAD;
       case BI_TYPE_ERROR: RAISE_TYPE_NEW(bi,loc);
 
