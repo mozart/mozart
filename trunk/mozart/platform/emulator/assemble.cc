@@ -23,7 +23,7 @@ OZ_C_proc_begin(BIopInfo,2)
 
   Opcode oc = CodeArea::stringToOp(opname);
   if (oc == OZERROR) {
-    return oz_raise(E_ERROR,E_KERNEL,"spaceSuper",1,opname);
+    return oz_raise(E_ERROR,OZ_atom("assembler"),"unknownInstruction",1,opname);
   }
   return OZ_unify(ret, OZ_pair2(OZ_int(oc), OZ_int(sizeOf(oc))));
 }
@@ -193,7 +193,6 @@ OZ_C_proc_begin(BIstorePredId,5)
   OZ_declareNonvarArg(2,arity);
   OZ_declareNonvarArg(3,file); file = deref(file);
   OZ_declareIntArg(4,line);
-
   PrTabEntry *pte  = new PrTabEntry(name,getArity(arity),file,line);
   code->writeAddress(pte);
   return PROCEED;
@@ -212,7 +211,7 @@ OZ_C_proc_begin(BIstoreGenCallInfo,6)
   declareCodeBlock(0,code);
   OZ_declareIntArg(1,regindex);
   OZ_declareNonvarArg(2,isMethod);
-  OZ_declareNonvarArg(3,name);
+  OZ_declareNonvarArg(3,name); name = deref(name);
   OZ_declareNonvarArg(4,isTail);
   OZ_declareNonvarArg(5,arity);
 
@@ -227,7 +226,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIstoreApplMethInfo,3)
 {
   declareCodeBlock(0,code);
-  OZ_declareNonvarArg(1,name);
+  OZ_declareNonvarArg(1,name); name = deref(name);
   OZ_declareNonvarArg(2,arity);
 
   ApplMethInfoClass *ami = new ApplMethInfoClass(name,getArity(arity));
@@ -261,7 +260,7 @@ OZ_C_proc_begin(BIstoreGRegRef,2)
       regType = GReg;
     }
     (*gregs)[i].kind = regType;
-    (*gregs)[i].number = smallIntValue(rec->getArg(0));
+    (*gregs)[i].number = smallIntValue(deref(rec->getArg(0)));
   }
 
   Assert(isNil(globals));
