@@ -70,11 +70,11 @@ define
 	      else 'pnmscale '#Info#' | '
 	      end#
 	      'ppmquant 256 2> /dev/null | '#
-	      'ppmtogif -interlace -transparent rgbi:1/1/1 2> /dev/null > '#
-	      GifName)
+	      'ppmtogif -interlace -transparent rgbi:1/1/1 2> /dev/null | '#
+	      'cat > '#GifName)
       case {OS.system Cmd} of 0 then skip
       elseof I then
-	 {Exception.raiseError ozDoc(ppmtogif GifName GifName I)}
+	 {Exception.raiseError ozDoc(ppmtogif {VirtualString.toAtom Cmd} I)}
       end
    end
 
