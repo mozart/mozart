@@ -204,11 +204,6 @@ enum closeInitiator{
   TMP_INITIATIVE
 };
 
-#ifdef XXGNUWIN32
-#define ntohl __ntohl
-#define ntohs __ntohs
-#endif
-
 #define WKUPMYC 0
 #define WKUPTMP 1
 #define WKUPPRB 3
