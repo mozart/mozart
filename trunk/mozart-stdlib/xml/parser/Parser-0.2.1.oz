@@ -1,5 +1,4 @@
 %% -*-oz-*-
-%\define TOKENIZER
 functor
 export
    Parse
