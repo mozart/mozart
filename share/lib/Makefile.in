@@ -14,7 +14,7 @@ SHELL           = /bin/sh
 LN_S            = @LN_S@
 M4              = @M4@
 PERL            = @PERL@
-GZIP            = @GZIP@
+THEGZIP         = @THEGZIP@
 
 INSTALL         = @INSTALL@
 INSTALL_FILE    = $(INSTALL) -m 444
@@ -370,13 +370,13 @@ $(BOOTOZCTXT):
 new-boot:
         -rm -f $(BOOTINITTXT) $(BOOTOZCTXT)
         $(MAKE) $(BOOTINITTXT) $(BOOTOZCTXT)
-        $(GZIP) < $(BOOTINITTXT) > $(SRCDIR)/$(BOOTINITTXT).gz
-        $(GZIP) < $(BOOTOZCTXT) > $(SRCDIR)/$(BOOTOZCTXT).gz
+        $(THEGZIP) < $(BOOTINITTXT) > $(SRCDIR)/$(BOOTINITTXT).gz
+        $(THEGZIP) < $(BOOTOZCTXT) > $(SRCDIR)/$(BOOTOZCTXT).gz
 
 boot-unzip:
         rm -f $(BOOTINITTXT) $(BOOTOZCTXT)
-        $(GZIP) -d < $(SRCDIR)/$(BOOTINITTXT).gz > $(BOOTINITTXT)
-        $(GZIP) -d < $(SRCDIR)/$(BOOTOZCTXT).gz > $(BOOTOZCTXT)
+        $(THEGZIP) -d < $(SRCDIR)/$(BOOTINITTXT).gz > $(BOOTINITTXT)
+        $(THEGZIP) -d < $(SRCDIR)/$(BOOTOZCTXT).gz > $(BOOTOZCTXT)
 
 BOOTINITTXTFROM = $(BOOTINITTXT)
 BOOTOZCTXTFROM  = $(BOOTOZCTXT)
