@@ -90,6 +90,31 @@ public:
   void dispose(void);
 };
 
+// only SVar and their descendants can be exclusive
+inline
+void setExclusive(OZ_Term t)
+{
+  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+
+  ((SVariable *) tagValueOf(t))->setExclusive();
+}
+
+inline
+OZ_Boolean testResetExclusive(OZ_Term t)
+{
+  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+
+  return ((SVariable *) tagValueOf(t))->testResetExclusive();
+}
+
+inline
+void addSuspCVar(TaggedRef v, Thread * el)
+{
+  SVariable * sv = taggedCVar2SVar(v);
+  sv->suspList = addSuspToList(sv->suspList, el, sv->home);
+}
+
+
 #include "fdgenvar.hh"
 #include "fdbvar.hh"
 #include "ofgenvar.hh"

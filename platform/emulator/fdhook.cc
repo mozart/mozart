@@ -18,10 +18,11 @@
 
 #include "fdhook.hh"
 
+Thread *board_constraints_thr = NULL;
+
 SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * hoome)
 {
 #ifdef DEBUG_STABLE
-  static Thread *board_constraints_thr = NULL;
   if (board_constraints_thr != elem->getElem ()) {
     board_constraints_thr = elem->getElem ();
     board_constraints =
@@ -34,15 +35,43 @@ SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * hoome)
   return elem;
 }
 
-Thread* createPropagator (OZ_CFun func, int arity, RefsArray xregs)
+SuspList * addSuspToList(SuspList * list, Thread * elem, Board * hoome)
 {
-  // Assert(FDcurrentTaskSusp == NULL);
-  Assert(!(am.currentThread->isPropagator ()));
+  if (list && (list->getElem() == elem))
+    return list;
+
+  SuspList * sl_elem = new SuspList(elem, list);
+
+#ifdef DEBUG_STABLE
+  if (board_constraints_thr != elem) {
+    board_constraints_thr = elem;
+    board_constraints = new SuspList(board_constraints_thr, board_constraints);
+  }
+#endif
+
+  elem->updateExtThread(hoome->getBoardFast());
+  return sl_elem;
+}
+
+Thread * createPropagator (OZ_CFun func, int arity, RefsArray xregs)
+{
+  Assert(!(am.currentThread->isPropagator () ||
+           am.currentThread->isNewPropagator ()));
 
   Thread *thr = makeHeadThread (func, xregs, arity);
   thr->headInit();
 
   return (thr);
+}
+
+Thread * createNewPropagator (OZ_Propagator * p)
+{
+  Assert(!(am.currentThread->isNewPropagator ()));
+
+  Thread * thr = makeHeadThread (p);
+  thr->headInitNewPropagator();
+
+  return thr;
 }
 
 #ifdef DEBUG_STABLE

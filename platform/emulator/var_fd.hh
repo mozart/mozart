@@ -33,6 +33,7 @@ class GenFDVariable: public GenCVariable {
 friend class GenCVariable;
 friend class GenBoolVariable;
 friend inline void addSuspFDVar(TaggedRef, SuspList *, FDPropState);
+friend inline void addSuspFDVar(TaggedRef, Thread *, FDPropState);
 
 private:
   OZ_FiniteDomain finiteDomain;
@@ -40,16 +41,7 @@ private:
 
   void relinkSuspListToItself(Bool reset_local = FALSE);
 
-  GenBoolVariable * becomesBool(void) {
-    relinkSuspListToItself();
-    setType(BoolVariable);
-
-    finiteDomain.dispose();
-    // sizeof(GenCVariable) == sizeof(GenBoolVariable) !!!
-    freeListDispose(((char *)this) + sizeof(GenCVariable),
-                    sizeof(GenFDVariable) - sizeof(GenCVariable));
-    return (GenBoolVariable *) this;
-  }
+  GenBoolVariable * becomesBool(void);
 public:
   GenFDVariable(OZ_FiniteDomain &fd) : GenCVariable(FDVariable) {
     finiteDomain = fd;
@@ -110,6 +102,7 @@ inline Bool isGenFDVar(TaggedRef term);
 inline Bool isGenFDVar(TaggedRef term, TypeOfTerm tag);
 inline GenFDVariable * tagged2GenFDVar(TaggedRef term);
 inline void addSuspFDVar(TaggedRef, SuspList *, FDPropState = fd_any);
+inline void addSuspFDVar(TaggedRef, Thread *, FDPropState = fd_any);
 
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdgenvar.icc"

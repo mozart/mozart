@@ -29,8 +29,8 @@
 
 OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
 {
-  ExpectedTypes("Tuple of SmallInts,Tuple of FiniteDomains,"
-                "Tuple of NotCVars,Tuple of NotCVars");
+  ExpectedTypes("tuple of small int,tuple of finite domain,"
+                "tuple of tuple var,tuple of var");
 
   OZ_getCArgDeref(0, p_tuple, p_tupleptr, p_tupletag);
   OZ_getCArgDeref(1, b_tuple, b_tupleptr, b_tupletag);
@@ -108,9 +108,62 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
 }
 OZ_C_proc_end
 
+#ifdef PROPAGATOR_CD
+
+#include "../FDLib/aux.hh"
+
+class CDPropagator : public OZ_Propagator {
+protected:
+  OZ_Term b_tuple, v_tuple, vp_tuple;
+public:
+  CDPropagator(OZ_Term b, OZ_Term v, OZ_Term vp)
+    : b_tuple(b), v_tuple(v), vp_tuple(vp) {}
+
+  virtual void gcRecurse(void) {
+    OZ_gcTerm(b_tuple);
+    OZ_gcTerm(v_tuple);
+    OZ_gcTerm(vp_tuple);
+  }
+  virtual size_t sizeOf(void) { return sizeof(CDPropagator); }
+  virtual OZ_Bool run(void);
+  virtual ostream &print(ostream& o) const {
+    return o << "cd manager";
+  }
+};
+
 OZ_C_proc_begin(BIfdConstrDisj, 3)
 {
-  ExpectedTypes("Tuple of FiniteDomains,Tuple of NotCVars,Tuple of NotCVars");
+  EXPECTED_TYPE("tuple of finite domain,tuple of finite domain,"
+                "tuple of of tuple of finite domain");
+
+  OZ_getCArgDeref(0, b_tuple, b_tupleptr, b_tupletag);
+  OZ_getCArgDeref(1, v_tuple, v_tupleptr, v_tupletag);
+  OZ_getCArgDeref(2, vp_tuple, vp_tupleptr, vp_tupletag);
+
+  // Has already been reduced to sum(b) >= 1
+  if (isLiteral(v_tupletag)) return PROCEED;
+
+
+  if (! isSTuple(b_tuple) || ! isSTuple(v_tuple) ||
+      ! isSTuple(vp_tuple)) {
+    warning("Unexpected type in cd manager");
+    return FAILED;
+  }
+
+  PropagatorExpect pe;
+  EXPECT(pe, 1, expectTupleIntVarAny);
+
+  return pe.spawn(new CDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]),
+                  OZMAX_PRIORITY - 1);
+}
+OZ_C_proc_end
+
+#else // PROPAGATOR_CD
+
+OZ_C_proc_begin(BIfdConstrDisj, 3)
+{
+  ExpectedTypes("tuple of finite domain,tuple of finite domain,"
+                "tuple of of tuple of finite domain");
 
   OZ_getCArgDeref(0, b_tuple, b_tupleptr, b_tupletag);
   OZ_getCArgDeref(1, v_tuple, v_tupleptr, v_tupletag);
@@ -142,10 +195,10 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
 
   return x_items.spawnPropagatorStabil(fd_any, BIfdConstrDisj_body, 3,
                                        b_tuple, v_tuple, vp_tuple);
-  //  FDcurrentTaskSusp->markStable();
 }
 OZ_C_proc_end
 
+#endif // PROPAGATOR_CD
 
 //-----------------------------------------------------------------------------
 // BIfdConstrDisj
@@ -177,12 +230,19 @@ OZ_C_proc_end
 //   o constrain global variables with union of corresponding local vars
 //-----------------------------------------------------------------------------
 
-
+#ifdef PROPAGATOR_CD
+OZ_Bool CDPropagator::run(void)
+{
+  DEREF(b_tuple, b_tupleptr, b_tupletag);
+  DEREF(v_tuple, v_tupleptr, v_tupletag);
+  DEREF(vp_tuple, vp_tupleptr, vp_tupletag);
+#else
 OZ_C_proc_begin(BIfdConstrDisj_body, 3)
 {
   OZ_getCArgDeref(0, b_tuple, b_tupleptr, b_tupletag);
   OZ_getCArgDeref(1, v_tuple, v_tupleptr, v_tupletag);
   OZ_getCArgDeref(2, vp_tuple, vp_tupleptr, vp_tupletag);
+#endif
 
   SRecord &_b = *tagged2SRecord(b_tuple);
   SRecord &_v = *tagged2SRecord(v_tuple);
@@ -361,8 +421,9 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
   return x.releaseReify(idx_b(0), idx_b(clauses - 1),
                         idx_v(0), idx_v(variables - 1));
 }
+#ifndef PROPAGATOR_CD
 OZ_C_proc_end
-
+#endif
 
 //-----------------------------------------------------------------------------
 // Propagators

@@ -248,6 +248,13 @@ public:
     return (state.flags & T_G_new_p_thr);
   }
 
+  void headInitNewPropagator(void) {
+    state.flags = T_G_new_p_thr | T_G_prop | T_S_unif;
+#ifndef TM_LP
+    state.pri = OZMAX_PRIORITY;
+#endif
+  }
+
   void headInit (void) {
     state.flags = T_G_p_thr | T_G_prop | T_S_unif | S_CFUN;
 #ifndef TM_LP
@@ -273,33 +280,33 @@ public:
   }
 
   void markUnifyThread () {
-    Assert (isPropagator () && !(isDeadThread ()));
+    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
     state.flags = state.flags | T_S_unif;
   }
   void unmarkUnifyThread () {
-    Assert (isPropagator () && !(isDeadThread ()));
+    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
     state.flags = state.flags & ~T_S_unif;
   }
   Bool isUnifyThread () {
-    Assert (isPropagator () && !(isDeadThread ()));
+    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
     return (state.flags & T_S_unif);
   }
 
   void markLocalThread () {
-    Assert (isPropagator () && !(isDeadThread ()));
+    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
     state.flags = state.flags | T_S_loca;
   }
   void unmarkLocalThread () {
-    Assert (isPropagator () && !(isDeadThread ()));
+    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
     state.flags = state.flags & ~T_S_loca;
   }
   Bool isLocalThread () {
-    Assert (isPropagator () && !(isDeadThread ()));
+    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
     return (state.flags & T_S_loca);
   }
 
   void setOFSThread () {
-    Assert (isPropagator () && !(isDeadThread ()));
+    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
     state.flags = state.flags | T_S_ofs;
   }
   Bool isOFSThread () {
@@ -308,28 +315,28 @@ public:
   }
 
   void markTagged () {
-    Assert (isPropagator () && !(isDeadThread ()));
+    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
     state.flags = state.flags | T_S_tag;
   }
   void unmarkTagged () {
-    Assert (isPropagator () && !(isDeadThread ()));
+    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
     state.flags = state.flags & ~T_S_tag;
   }
   Bool isTagged () {
-    Assert (isPropagator () && !(isDeadThread ()));
+    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
     return (state.flags & T_S_tag);
   }
 
   void markStable () {
-    Assert (isPropagator () && !(isDeadThread ()));
+    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
     state.flags = state.flags | T_S_stable;
   }
   void unmarkStable () {
-    Assert (isPropagator () && !(isDeadThread ()));
+    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
     state.flags = state.flags & ~T_S_stable;
   }
   Bool isStable () {
-    Assert (isPropagator () && !(isDeadThread ()));
+    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
     return (state.flags & T_S_stable);
   }
 
@@ -345,6 +352,7 @@ public:
   void setHasStack () {
     Assert (isRunnable ());
     Assert (!(isPropagator ()));
+    Assert (!(isNewPropagator ()));
     state.flags = (state.flags & ~(S_CFUN)) | T_T_stack;
   }
 };
@@ -472,6 +480,7 @@ private:
   void disposeThread ();
 
   Bool wakeUpCCont (Board *home, PropCaller calledBy = pc_propagator);
+  Bool wakeUpNewPropagator (Board *home, PropCaller calledBy = pc_propagator);
   Bool wakeUpBoard (Board *home);
   Bool wakeUpThread (Board *home);
 
@@ -508,7 +517,7 @@ public:
   //  an empty suspended sequential thread (with a task stack!);
   Thread (Board *b, int prio);
   //
-  Thread (int prio, OZ_Propagator *p);
+  Thread (Board * b, int prio, OZ_Propagator *p);
 
   //  First - it inherits all the methods of 'ThreadState';
   //  Second - get/set the home board;
@@ -516,11 +525,27 @@ public:
   DebugCode (Board *getBoard () { return (board); })
   void setBoard (Board *bp) { board = bp; }
 
+  void setNewPropagator(OZ_Propagator * p) {
+    Assert(isNewPropagator());
+    delete item.propagator;
+    item.propagator = p;
+  }
+
+  OZ_Bool runNewPropagator(void) {
+    Assert(isNewPropagator());
+    return item.propagator->run();
+  }
+  OZ_Propagator * getNewPropagator(void) {
+    Assert(isNewPropagator());
+    return item.propagator;
+  }
+
   //  Third - transactions between states;
   //  These methods are specialised because the type of suspended thread
   // is known statically;
   void wakeupToRunnable ();
   void cContToRunnable ();
+  void newPropagatorToRunnable ();
   void suspThreadToRunnable ();
 
   //
@@ -645,6 +670,10 @@ public:
     item.ccont->cFunc = (OZ_CFun) NULL;
   })
 
+  DebugCode
+  (void removeNewPropagator () {
+    Assert (isNewPropagator ());
+  })
   //  For debugging only - get a reference to the 'cFunc';
   DebugCode
   (OZ_CFun getPropagator () {
@@ -657,7 +686,7 @@ public:
   //  It does not take into account 'solve threads', i.e. it must
   // be done externally - if needed;
   void suspendPropagator ();
-
+  void scheduledPropagator();
   //
   //  Terminate a propagator thread which is (still) marked as propagated
   // (was: 'killPropagatedCurrentTaskSusp' with some variations);

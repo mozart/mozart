@@ -43,7 +43,7 @@ enum TypeOfTerm {
   SVAR             =  9,   // 1001
   CVAR             =  5,   // 0101
 
-  GCTAG            =  13,  // 1101
+  GCTAG            =  13,  // 1101    --> !!! isAnyVar(GCTAG) = 1 !!!
 
   LTUPLE           =  2,   // 0010
   FREEE            = 14,   // 1110
@@ -672,19 +672,24 @@ GenCVariable *tagged2CVar(TaggedRef ref) {
 // }
 
 
-#define _DEREF(term, termPtr, tag)                                            \
-  while(IsRef(term)) {                                                        \
-    termPtr = tagged2Ref(term);                                               \
-    term = *termPtr;                                                          \
-  }                                                                           \
-  TypeOfTerm tag = tagTypeOf(term);
+#define __DEREF(term, termPtr, tag)             \
+  while(IsRef(term)) {                          \
+    termPtr = tagged2Ref(term);                 \
+    term = *termPtr;                            \
+  }                                             \
+  tag = tagTypeOf(term);
 
-#define DEREF(term, termPtr, tag)                                             \
-  register TaggedRef *termPtr = NULL;                                         \
+#define _DEREF(term, termPtr, tag)              \
+  register TypeOfTerm tag;                      \
+   __DEREF(term, termPtr, tag);
+
+
+#define DEREF(term, termPtr, tag)               \
+  register TaggedRef *termPtr = NULL;           \
   _DEREF(term,termPtr,tag);
 
-#define DEREFPTR(term, termPtr, tag)                                          \
-  register TaggedRef term = *termPtr;                                         \
+#define DEREFPTR(term, termPtr, tag)            \
+  register TaggedRef term = *termPtr;           \
   _DEREF(term,termPtr,tag);
 
 
@@ -961,6 +966,14 @@ TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2, TaggedRef t3,
   a[3] = t4;
   a[4] = t5;
   return a;
+}
+
+inline
+OZ_Term mkTuple(int from, int to){
+  OZ_Term s = OZ_tuple(OZ_CToAtom("#"), 2);
+  OZ_putArg(s, 1, OZ_CToInt(from));
+  OZ_putArg(s, 2, OZ_CToInt(to));
+  return s;
 }
 
 #endif

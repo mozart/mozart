@@ -101,14 +101,12 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
         if (ret_value & meta_det) {
           propagate(v, suspList, pc_cv_unif);
           term->propagate(t, term->suspList, pc_cv_unif);
-          term->addSuspension(new Thread (am.currentBoard));
           doBind(vptr, result);
           am.doBindAndTrail(t, tptr, result);
         } else {
           setData(result);
           propagate(v, suspList, pc_cv_unif);
           term->propagate(t, term->suspList, pc_cv_unif);
-          term->addSuspension(new Thread (am.currentBoard));
           am.doBindAndTrailAndIP(t, tptr, makeTaggedRef(vptr), this, term, prop);
         }
       } else {
@@ -125,14 +123,12 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
         if(ret_value & meta_det) {
           propagate(v, suspList, pc_cv_unif);
           term->propagate(t, term->suspList, pc_cv_unif);
-          addSuspension(new Thread (am.currentBoard));
           doBind(tptr, result);
           am.doBindAndTrail(v, vptr, result);
         } else {
           term->setData(result);
           propagate(v, suspList, pc_cv_unif);
           term->propagate(t, term->suspList, pc_cv_unif);
-          addSuspension(new Thread (am.currentBoard));
           am.doBindAndTrailAndIP(v, vptr, makeTaggedRef(tptr), term, this, prop);
         }
       } else {
@@ -162,11 +158,6 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
         am.doBindAndTrailAndIP(v, vptr, makeTaggedRef(var_val), meta_var, this, prop);
         am.doBindAndTrailAndIP(t, tptr, makeTaggedRef(var_val), meta_var, term, prop);
       }
-      if (prop) {
-        Thread *thr = new Thread (am.currentBoard);
-        term->addSuspension (thr);
-        addSuspension (thr);
-      }
       break;
 
     default:
@@ -194,7 +185,6 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
     if (prop && am.isLocalSVar(this)) {
       doBind(vptr, result);
     } else {
-      addSuspension(new Thread (am.currentBoard));
       am.doBindAndTrail(v, vptr, result);
     }
   }
@@ -309,7 +299,7 @@ int OZ_isSingleValue(OZ_Term v)
 }
 
 
-int OZ_areIdentVars(OZ_Term v1, OZ_Term v2)
+int OZ_areIdentVars(OZ_Term v1, OZ_Term v2) // replace by OZ_isEqualVars
 {
   DEREF(v1, vptr1, vtag1);
   DEREF(v2, vptr2, vtag2);

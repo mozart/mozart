@@ -17,6 +17,18 @@
 #endif
 
 inline
+GenBoolVariable * GenFDVariable::becomesBool(void) {
+  relinkSuspListToItself();
+  setType(BoolVariable);
+
+  finiteDomain.dispose();
+    // sizeof(GenCVariable) == sizeof(GenBoolVariable) !!!
+  //    freeListDispose(((char *)this) + sizeof(GenCVariable),
+  //                sizeof(GenFDVariable) - sizeof(GenCVariable));
+  return (GenBoolVariable *) this;
+}
+
+inline
 void GenFDVariable::dispose(void) {
   finiteDomain.dispose();
   fdSuspList[fd_det]->disposeList();
@@ -31,10 +43,10 @@ void GenFDVariable::propagate(TaggedRef var, FDPropState state,
 {
   if (prop_eq == pc_propagator) {
     switch (state) {
-    case fd_det:
+    case fd_det: // no break
       if (fdSuspList[fd_det])
         GenCVariable::propagate(var, fdSuspList[fd_det], prop_eq);
-    case fd_bounds:
+    case fd_bounds: // no break
       if (fdSuspList[fd_bounds])
         GenCVariable::propagate(var, fdSuspList[fd_bounds], prop_eq);
     default:
@@ -110,6 +122,29 @@ GenFDVariable * tagged2GenFDVar(TaggedRef term)
 
 inline
 void addSuspFDVar(TaggedRef v, SuspList * el, FDPropState list_index)
+{
+  GenFDVariable * fv = tagged2GenFDVar(v);
+
+  switch (list_index) {
+  case fd_det:
+    fv->fdSuspList[fd_det] = addSuspToList(fv->fdSuspList[fd_det], el,
+                                           fv->home);
+    break;
+  case fd_bounds:
+    fv->fdSuspList[fd_bounds] = addSuspToList(fv->fdSuspList[fd_bounds], el,
+                                              fv->home);
+    break;
+  case fd_any:
+    fv->suspList = addSuspToList(fv->suspList, el, fv->home);
+    break;
+  default:
+    error("list index out of range.");
+    break;
+  }
+}
+
+inline
+void addSuspFDVar(TaggedRef v, Thread * el, FDPropState list_index)
 {
   GenFDVariable * fv = tagged2GenFDVar(v);
 

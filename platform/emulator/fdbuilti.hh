@@ -16,6 +16,8 @@
 #pragma interface
 #endif
 
+#define PROPAGATOR_CD
+
 // include oz.h
 #include "fdomn.hh"
 #include "fdprofil.hh"
@@ -63,24 +65,6 @@ enum Recalc_e {lower, upper};
   } \
 }
 
-#undef PURE
-#ifdef PURE
-// temporary changes
-class Suspension;
-class SRecord {
-public:
-  int getSize(void);
-  OZ_Term &operator [] (int);
-};
-
-OZ_Term deref(OZ_Term);
-OZ_Term makeTaggedRef(OZ_Term *);
-SRecord * tagged2SRecord(OZ_Term);
-
-#define SimplifyOnUnify(EQ01, EQ02, EQ12)
-
-#else
-
 #include "fdhook.hh"
 #include "genvar.hh"
 
@@ -99,8 +83,6 @@ SRecord * tagged2SRecord(OZ_Term);
       return (EQ12); \
     } \
   }
-
-#endif
 
 //-----------------------------------------------------------------------------
 // pm_

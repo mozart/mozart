@@ -25,9 +25,13 @@ class ostream;
 class FDBitVector;
 class FDIntervals;
 
+// TMUELLER this file will beautified soon!!!
 
 enum FDPropState {fd_det = 0, fd_bounds, fd_any};
+typedef FDPropState OZ_PropState;
 enum FDState {fd_empty, fd_full, fd_bool, fd_singleton};
+typedef FDState OZ_FDState;
+
 #define MAXFDBIARGS 1000 // maximum number of arguments of fd built-ins
 #define FDMAGICNUMBER MAXFDBIARGS
 const int fd_inf = 0;
@@ -41,7 +45,7 @@ private:
   int max_elem;
   int size;
 
-  enum descr_type {bv_descr = 0, iv_descr = 1, fd_descr = 2};
+  enum descr_type {fd_descr = 0, iv_descr = 1, bv_descr = 2};
   void * descr;
 
   descr_type getTypeI(void) const;
@@ -71,7 +75,8 @@ public:
   void FiniteDomainInit(void * d);
 
   OZ_FiniteDomain(void * d);
-  OZ_FiniteDomain(void);
+  OZ_FiniteDomain(void) : descr(0) {}
+  OZ_FiniteDomain(OZ_Term);
 
   unsigned getDescrSize(void);
 
@@ -139,16 +144,52 @@ public:
   void copyExtension(void);
 };
 
+//-----------------------------------------------------------------------------
+inline
+OZ_Boolean OZ_FiniteDomain::operator == (const int v) const
+{
+  return (size == 1) && (min_elem == v);
+}
+
+inline
+OZ_Boolean OZ_FiniteDomain::operator != (const int v) const
+{
+  return (size != 1) || (min_elem != v);
+}
+
+inline
+OZ_Boolean OZ_FiniteDomain::operator == (const FDState state) const
+{
+  if (state == fd_singleton)
+    return size == 1;
+  else if (state == fd_bool)
+    return size == 2 && min_elem == 0 && max_elem == 1;
+  else // fd_empty
+    return size == 0;
+}
+
+inline
+OZ_Boolean OZ_FiniteDomain::operator != (const FDState state) const
+{
+  if (state == fd_singleton)
+    return size != 1;
+  else if (state == fd_bool)
+    return size != 2 || min_elem != 0 || max_elem != 1;
+  else // fd_empty
+    return size > 0;
+}
 
 typedef OZ_FiniteDomain * OZ_FiniteDomainPtr;
 
-class FDIterator {
+//-----------------------------------------------------------------------------
+
+class OZ_FDIterator {
 private:
   OZ_FiniteDomainPtr finiteDomain;
   int current;
   int size;
 public:
-  FDIterator(OZ_FiniteDomainPtr fd) : finiteDomain(fd) {}
+  OZ_FDIterator(OZ_FiniteDomainPtr fd) : finiteDomain(fd) {}
 
   int reset(void) {
     size = finiteDomain->getSize() - 1;
@@ -164,19 +205,6 @@ public:
     }
   }
 };
-
-inline
-OZ_Term mkTuple(int from, int to){
-  OZ_Term s = OZ_tuple(OZ_CToAtom("#"), 2);
-  OZ_putArg(s, 1, OZ_CToInt(from));
-  OZ_putArg(s, 2, OZ_CToInt(to));
-  return s;
-}
-
-
-#if !defined(OUTLINE) && !defined(FDOUTLINE)
-#include "fdomn.icc"
-#endif
 
 
 inline

@@ -66,6 +66,9 @@ public:
   StatCounter solveSolved;
   StatCounter solveFailed;
 
+  StatCounter propagatorsCreated;
+  StatCounter fdvarsCreated;
+
   Statistics();
   void print(FILE *fd);
   void printIdle(FILE *fd);

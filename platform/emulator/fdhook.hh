@@ -31,12 +31,15 @@ void printBCDebug(Board * = NULL);
 #endif
 
 SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home);
+SuspList * addSuspToList(SuspList * list, Thread * elem, Board * home);
 
 Thread * createPropagator (OZ_CFun func, int arity, RefsArray xregs);
+Thread * createNewPropagator (OZ_Propagator * p);
 
 inline
 Bool isUnifyCurrentPropagator () {
-  Assert (am.currentThread->isPropagator ());
+  Assert (am.currentThread->isPropagator () ||
+          am.currentThread->isNewPropagator ());
   return (am.currentThread->isUnifyThread ());
 }
 
@@ -49,5 +52,10 @@ Thread *makeHeadThread (OZ_Bool (*fun)(int, OZ_Term[]),
                       fun, args, arity));
 }
 
+inline
+Thread *makeHeadThread (OZ_Propagator * p)
+{
+  return new Thread (am.currentBoard, ozconf.defaultPriority, p);
+}
 
 #endif

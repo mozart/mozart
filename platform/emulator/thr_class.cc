@@ -67,8 +67,9 @@ void Thread::setExtThreadOutlined (Board *varHome)
     // we should not produce 'external' threads for propagators,
     // because stability can be achieved only when the last such
     // a propagator dissapears;
-    if (isPropagator ()) {
-      warning ("'External' propagator thread: stability check is implemented *partially*!");
+    if (isPropagator () || isNewPropagator()) {
+      warning ("'External' propagator thread: "
+               "stability check is implemented *partially*!");
     }
   }
 }

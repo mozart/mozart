@@ -1016,17 +1016,16 @@ void BIfdBodyManager::propagate_unify_cd(int cl, int vars, SRecord &st) {
 }
 
 // functions used by BIfdBodyManager::simplifyBody
-const int taggedIndex = 0x00000008; // produces GCTAG 8 + 5 = 13
-inline OZ_Term makeTaggedIndex(OZ_Term t) {return (t | taggedIndex);}
-inline OZ_Term getIndex(OZ_Term t) {return (t & ~taggedIndex);}
+// produces GCTAG 8 + 5 = 13
+const int taggedIndex = 0x00000008; // is REF, cannot happen for derefed term
+inline OZ_Term makeTaggedIndex(int i) {return ((i << 4) | taggedIndex);}
+inline int getIndex(OZ_Term t) {return (t & ~taggedIndex) >> 4;}
 inline OZ_Boolean isTaggedIndex(OZ_Term t) {return (t & taggedIndex);}
-
 inline
 int BIfdBodyManager::simplifyBody(int ts, SRecord &a, SRecord &x,
                                   OZ_Boolean sign_bits[], double coeffs[],
                                   OZ_Term ct, int &c)
 {
-  int first_int_index = -1;
   int int_sum = 0;
 
   // 1st pass: mark first occ of a var and sum up coeffs of further occs
@@ -1046,8 +1045,6 @@ int BIfdBodyManager::simplifyBody(int ts, SRecord &a, SRecord &x,
     } else {
       Assert(bifdbm_vartag[i] == pm_singl);
 
-      if (first_int_index == -1)
-        first_int_index = i;
       int_sum += (OZ_intToC(bifdbm_var[i]) * int(coeffs[i]));
       bifdbm_var[i] = 0;
     }
@@ -1330,6 +1327,8 @@ void BIfdBodyManager::processFromTo(int from, int to)
     } else {
       Assert(vartag == pm_svar && bifdbm_var_state[i] == fdbm_global);
 
+      ozstat.fdvarsCreated.incf();
+
       if (*bifdbm_dom[i] == fd_singleton) {
         OZ_Term smallInt = OZ_CToInt(bifdbm_dom[i]->singl());
         am.checkSuspensionList(bifdbm_var[i]);
@@ -1419,6 +1418,8 @@ void BIfdBodyManager::processNonRes(void)
   } else {
     Assert(bifdbm_var_state[0] == fdbm_global && vartag == pm_svar);
 
+    ozstat.fdvarsCreated.incf();
+
     if (*bifdbm_dom[0] == fd_singleton) {
       OZ_Term smallInt = OZ_CToInt(bifdbm_dom[0]->singl());
       am.checkSuspensionList(bifdbm_var[0]);
@@ -1483,6 +1484,9 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
     bifdbm_vartag[0] = vtag;
     Assert(bifdbm_init_dom_size[0] > 1 && *bifdbm_dom[0] != fd_bool);
   } else if (vtag == pm_svar) {
+
+    ozstat.fdvarsCreated.incf();
+
     bifdbm_var_state[0] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
     if (bifdbm_var_state[0] == fdbm_local) {
       GenFDVariable * fdvar = new GenFDVariable();
@@ -1502,6 +1506,9 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
       bifdbm_vartag[0] = vtag;
      }
   } else if (vtag == pm_uvar) {
+
+    ozstat.fdvarsCreated.incf();
+
     bifdbm_var_state[0] = (am.isLocalUVar(v)? fdbm_local : fdbm_global);
     if (bifdbm_var_state[0] == fdbm_local) {
       GenFDVariable * fdvar = new GenFDVariable();
@@ -1725,6 +1732,23 @@ void BIfdBodyManager::printTerm(int i) {
 }
 
 
+#ifdef DEBUG_STABLE
+
+OZ_C_proc_begin(debugStable,0)
+{
+  printBCDebug();
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(resetStable,0)
+{
+  board_constraints = NULL;
+  return PROCEED;
+}
+OZ_C_proc_end
+
+#endif
 //-----------------------------------------------------------------------------
 // Introduce FD Built-ins to the Emulator
 
@@ -1869,7 +1893,9 @@ BIspec fdSpec[] = {
 // fdcd.cc
   {"fdConstrDisjSetUp", 4, BIfdConstrDisjSetUp},
   {"fdConstrDisj", 3, BIfdConstrDisj},
+#ifndef PROPAGATOR_CD
   {"fdConstrDisj_body", 3, BIfdConstrDisj_body},
+#endif
 
   {"fdGenLinEqCD", 4, BIfdGenLinEqCD},
   {"fdGenLinEqCD_body", 4, BIfdGenLinEqCD_body},
@@ -1932,6 +1958,64 @@ BIspec fdSpec[] = {
   {"fdCopyDomain", 2, BIfdCopyDomain},
   {"fdDivDomCons", 3, BIfdDivIntervalCons},
   {"getCopyStat", 1, BIgetCopyStat},
+#ifndef FOREIGNFDPROPS
+  {"fdp_init", 0, fdp_init},
+  {"fdp_plus_rel", 3, fdp_plus_rel},
+  {"fdp_plus", 3, fdp_plus},
+  {"fdp_minus", 3, fdp_minus},
+  {"fdp_times", 3, fdp_times},
+  {"fdp_times_rel", 3, fdp_times_rel},
+  {"fdp_divD", 3, fdp_divD},
+  {"fdp_divI", 3, fdp_divI},
+  {"fdp_modD", 3, fdp_modD},
+  {"fdp_modI", 3, fdp_modI},
+  {"fdp_con", 3, fdp_con},
+  {"fdp_dis", 3, fdp_dis},
+  {"fdp_xor", 3, fdp_xor},
+  {"fdp_imp", 3, fdp_imp},
+  {"fdp_equ", 3, fdp_equ},
+  {"fdp_neg", 2, fdp_neg},
+  {"fdp_sprodEqR", 4, fdp_sprodEqR},
+  {"fdp_sprodEqNLR", 4, fdp_sprodEqNLR},
+  {"fdp_sprodLessEqR", 4, fdp_sprodLessEqR},
+  {"fdp_sprodLessEqNLR", 4, fdp_sprodLessEqNLR},
+  {"fdp_sprodNotEqR", 4, fdp_sprodNotEqR},
+  {"fdp_sprodNotEqNLR", 4, fdp_sprodNotEqNLR},
+  {"fdp_intR", 3, fdp_intR},
+  {"fdp_card", 4, fdp_card},
+  {"fdp_sprodEqCD", 4, fdp_sprodEqCD},
+  {"fdp_sprodEqNLCD", 4, fdp_sprodEqNLCD},
+  {"fdp_sprodLessEqCD", 4, fdp_sprodLessEqCD},
+  {"fdp_sprodLessEqNLCD", 4, fdp_sprodLessEqNLCD},
+  {"fdp_sprodNotEqCD", 4, fdp_sprodNotEqCD},
+  {"fdp_sprodNotEqNLCD", 4, fdp_sprodNotEqNLCD},
+  {"fdp_exactly", 3, fdp_exactly},
+  {"fdp_atLeast", 3, fdp_atLeast},
+  {"fdp_atMost", 3, fdp_atMost},
+  {"fdp_element", 3, fdp_element},
+  {"fdp_sprodEq", 3, fdp_sprodEq},
+  {"fdp_sprodEqNL", 3, fdp_sprodEqNL},
+  {"fdp_sprodNotEq", 3, fdp_sprodNotEq},
+  {"fdp_sprodNotEqNL", 3, fdp_sprodNotEqNL},
+  {"fdp_sprodLessEq", 3, fdp_sprodLessEq},
+  {"fdp_sprodLessEqNL", 3, fdp_sprodLessEqNL},
+  {"fdp_sprodEqNLP", 3, fdp_sprodEqNLP},
+  {"fdp_sprodLessEqNLP", 3, fdp_sprodLessEqNLP},
+  {"fdp_notEqOff", 3, fdp_notEqOff},
+  {"fdp_lessEqOff", 3, fdp_lessEqOff},
+  {"fdp_minimum", 3, fdp_minimum},
+  {"fdp_maximum", 3, fdp_maximum},
+  {"fdp_inter", 3, fdp_inter},
+  {"fdp_union", 3, fdp_union},
+  {"fdp_distinct", 1, fdp_distinct},
+  {"fdp_distinctOffset", 2, fdp_distinctOffset},
+  {"fdp_disjoint", 4, fdp_disjoint},
+  {"fdp_disjointC", 5, fdp_disjointC},
+#endif
+#ifdef DEBUG_STABLE
+  {"debugStable", 0, debugStable},
+  {"resetStable", 0, resetStable},
+#endif
   {0,0,0,0,0}
 };
 

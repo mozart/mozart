@@ -39,6 +39,7 @@ typedef enum {
   PROCEED,
   SUSPEND,
   SLEEP,
+  SCHEDULED,
   RAISE
 } OZ_Bool;
 
@@ -81,6 +82,8 @@ extern char *   OZ_atomToC    _PROTOTYPE((OZ_Term));
 extern char *   OZ_literalToC _PROTOTYPE((OZ_Term));
 extern OZ_Term  OZ_CToAtom    _PROTOTYPE((char *));
 
+extern int      OZ_getMinPrio    _PROTOTYPE((void));
+extern int      OZ_getMaxPrio    _PROTOTYPE((void));
 extern int      OZ_getMinInt     _PROTOTYPE((void));
 extern int      OZ_getMaxInt     _PROTOTYPE((void));
 extern OZ_Term  OZ_getNameFalse  _PROTOTYPE((void));
