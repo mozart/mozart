@@ -52,7 +52,7 @@ export OZ_LOAD = root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=$(HOMEURL)/share/=$(
 export OZMAKE_COPYALWAYS	= no
 export OZMAKE_VERBOSE		= no
 
-SPSRC   = Error ErrorRegistry Finalize
+SPSRC   = Error Finalize
 OPSRC   = Open
 APSRC   = Application
 CPSRC   = Search FD Schedule FS
