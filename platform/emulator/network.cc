@@ -388,7 +388,7 @@ protected:
   Bool within(BYTE*,ByteBuffer*);
 
 public:
-  NetMsgBuffer(){}
+  NetMsgBuffer() {}
 
   //ATTENTION Hack Remove
   void startfixerik1(){
@@ -402,8 +402,10 @@ public:
     type=BS_None;first=NULL;start=NULL;last=NULL;
     site=NULL;remotesite=NULL;stop=NULL;}
 
-  void init(Site *s){type=BS_None;first=NULL;start=NULL;last=NULL;
-  site=s;remotesite=NULL;stop=NULL;}
+  void init(Site *s) {
+    init();
+    site=s;
+  }
 
   void setSite(Site *s){
   site = s;}
