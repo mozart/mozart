@@ -1878,6 +1878,26 @@ OZ_BI_define(BIthreadTaskStack,3,1)
   OZ_RETURN(taskstack->getTaskStack(thread,doverbose,depth));
 } OZ_BI_end
 
+OZ_BI_define(BIthreadTaskStackError,2,1)
+{
+  oz_declareThreadIN(0,thread);
+  oz_declareNonvarIN(1,verbose);
+
+  if (thread->isDeadThread() || !thread->hasStack())
+    OZ_RETURN(nil());
+
+  Bool doverbose;
+  if (OZ_isTrue(verbose))
+    doverbose = OK;
+  else if (OZ_isFalse(verbose))
+    doverbose = NO;
+  else
+    oz_typeError(2,"Bool");
+
+  TaskStack *taskstack = thread->getTaskStackRef();
+  OZ_RETURN(taskstack->getTaskStack(thread,doverbose,ozconf.errorThreadDepth));
+} OZ_BI_end
+
 OZ_BI_define(BIthreadFrameVariables,2,1)
 {
   oz_declareThreadIN(0,thread);
@@ -5264,6 +5284,20 @@ OZ_BI_define(BIraiseDebug,1,0)
   oz_declareIN(0,exc);
 
   return OZ_raiseDebug(exc);
+} OZ_BI_end
+
+OZ_BI_define(BIraiseDebugCheck, 1, 1) {
+  oz_declareIN(0,exc);
+
+  exc = oz_deref(exc);
+
+  TaggedRef df;
+  
+  OZ_RETURN((ozconf.errorDebug &&
+	     oz_isSRecord(exc) &&
+	     (df = tagged2SRecord(exc)->getFeature(AtomDebug)) &&
+	     oz_isSRecord(oz_deref(df))) ? NameTrue : NameFalse);
+  
 } OZ_BI_end
 
 
