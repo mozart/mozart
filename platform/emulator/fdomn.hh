@@ -19,7 +19,6 @@
 #include "types.hh"
 #include "term.hh"
 #include "bignum.hh"
-#include "misc.hh"
 
 #ifdef OUTLINE
 #define inline

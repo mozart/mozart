@@ -43,15 +43,10 @@
 #include "actor.hh"
 #include "alarm.hh"
 #include "am.hh"
+#include "io.hh"
 #include "suspension.hh"
 #include "taskstack.hh"
 #include "thread.hh"
-
-// mm2 --> config.m4
-#define DEFAULT_TIME_SLICE 50 // msec
-#define DEFAULT_DEFAULT_PRIORITY 50
-#define DEFAULT_SYSTEM_PRIORITY 100
-
 
 // --------------------------------------------------------------------------
 
@@ -75,22 +70,22 @@ enum ThreadFlags
    static variables
      Head: pointer to the head of the thread queue
      Tail: pointer to the tail of the thread queue
-     Current: pointer to the current thread
-     Root: pointer to the root thread
-     TimeSlice: the overall time slice of a thread in msec
-     DefaultPriority: the user priority
-     SystemPriority: the system priority
+     am.currentThread: pointer to the current thread
+     am.rootThread: pointer to the root thread
+     conf.timeSlice: the overall time slice of a thread in msec
+     conf.defaultPriority: the user priority
+     conf.systemPriority: the system priority
    member data
      next: the next thread in the thread queue
      prev: the prev thread in the thread queue
      priority: the thread priority
                -MININT ... +MAXINT
 	       low     ... high priority
-     flags: see above ThreadFlags
-     taskStack: the stack of elaboration tasks
-     suspension: a suspension scheduled for execution
-     board: a board scheduled for visiting
-       Note: taskStack,suspension and board are shared
+     flags: see ThreadFlags
+     u.taskStack: the stack of elaboration tasks
+     u.suspension: a suspension scheduled for execution
+     u.board: a board scheduled for visiting
+       Note: taskStack,suspension and board are shared (union)
      */
 
 
@@ -98,69 +93,26 @@ enum ThreadFlags
 Thread *Thread::Head;
 Thread *Thread::Tail;
 
-// the currently running thread
-Thread *Thread::Current;
-
-Thread *Thread::Root;
-
-// the time slice for threads in ms
-int Thread::TimeSlice;
-
-// the user and system priorities
-int Thread::DefaultPriority;
-int Thread::SystemPriority;
-
 void Thread::Init()
 {
-  TimeSlice = DEFAULT_TIME_SLICE;
-  DefaultPriority = DEFAULT_DEFAULT_PRIORITY;
-  SystemPriority = DEFAULT_SYSTEM_PRIORITY;
-
   Head = (Thread *) NULL;
   Tail = (Thread *) NULL;
-  Current = (Thread *) NULL;
-  Root = new Thread;
-  Root->flags = T_Normal;
-  Root->priority = SystemPriority;
-  Root->u.taskStack = new TaskStack();
 }
 
-Thread *Thread::GetCurrent()
-{
-  return Current;
-}
+/* for gdb debugging: cannot access static member data */
 Thread *Thread::GetHead()
 {
   return Head;
 }
-Thread *Thread::GetRoot()
-{
-  return Root;
-}
+
+/* for gdb debugging: cannot access static member data */
 Thread *Thread::GetTail()
 {
   return Tail;
 }
-int Thread::GetDefaultPriority()
-{
-  return DefaultPriority;
-}
-int Thread::GetSystemPriority()
-{
-  return SystemPriority;
-}
-int Thread::GetTimeSlice()
-{
-  return TimeSlice;
-}
-
-// check if the thread is scheduled
-Bool Thread::isScheduled() {
-  return (prev!=NULL || next!=NULL || Head==this) ? OK : NO;
-}
 
 
-void Thread::Schedule(Suspension *s)
+void Thread::ScheduleSuspension(Suspension *s)
 {
   Thread *t=new Thread;
   t->flags = T_Warm;
@@ -170,19 +122,27 @@ void Thread::Schedule(Suspension *s)
   t->schedule();
 }
 
-// create a new thread on root
-void Thread::ScheduleRoot(ProgramCounter PC,RefsArray y)
-{
-  Board *bb=Board::GetRoot();
+
+// check if the thread is scheduled
+Bool Thread::isScheduled() {
+  return (prev!=NULL || next!=NULL || Head==this) ? OK : NO;
+}
+
+/* Thread::queueCont
+     insert a top level continuation at the bottom of the rootThread
+     NOTE: the compiler depends on the order of toplevel queries
+     */
+void Thread::queueCont(Board *bb,ProgramCounter PC,RefsArray y) {
+  DebugCheck(!isNormal() || !u.taskStack, error("Thread::queueCont"));
   bb->addSuspension();
-  Root->u.taskStack->queueCont(bb,PC,y);
-  if (Root!=Current && !Root->isScheduled()) {
-    Root->schedule();
+  u.taskStack->queueCont(bb,PC,y);
+  if (this!=am.currentThread && !this->isScheduled()) {
+    schedule();
   }
 }
 
 // create a new thread after wakeup (nervous)
-void Thread::Schedule(Board *b)
+void Thread::ScheduleWakeup(Board *b)
 {
   Thread *t = new Thread;
   t->flags = T_Nervous;
@@ -192,15 +152,18 @@ void Thread::Schedule(Board *b)
   t->schedule();
 }
 
+
+// create a thread with a taskstack
 Thread::Thread(int prio)
 : ConstTerm(Co_Thread)
 {
   init();
   flags = T_Normal;
   priority = prio;
-  u.taskStack = new TaskStack;
+  u.taskStack = new TaskStack(conf.taskStackSize);
 }
 
+// initialize the thread member data
 void Thread::init()
 {
   prev=next= (Thread *) NULL;
@@ -222,9 +185,10 @@ Bool Thread::isNervous()
   return flags == T_Nervous ? OK : NO;
 }
 
+// mm2: not yet enabled
 // free the memory of the thread (there are no references to it anymore)
 void Thread::dispose() {
-  if (this != Root) {
+  if (this != am.rootThread) { // mm2
     if (isNormal()) {
       if (u.taskStack) {
 	u.taskStack->dispose();
@@ -259,23 +223,23 @@ Thread *Thread::unlink() {
 
 int Thread::getPriority()
 {
-  DebugCheck(priority < 0,error("Thread::getPriority"));
+  DebugCheck(priority < 0 || priority > 100, error("Thread::getPriority"));
   return priority;
 }
 
 void Thread::setPriority(int prio)
 {
-  DebugCheck(prio < 0,error("Thread::setPriority"));
+  DebugCheck(prio < 0 || prio > 100, error("Thread::setPriority"));
   priority=prio;
 }
 
 // add a thread to the thread queue
 void Thread::schedule() {
-  DebugCheck(prev!=0 || next!=0,error("Thread::schedule"));
+  DebugCheck(isScheduled(),error("Thread::schedule"));
 
-  if (this != Current
-      && Current
-      && priority > Current->priority) {
+  if (this != am.currentThread
+      && am.currentThread
+      && priority > am.currentThread->getPriority()) {
     insertAfter(0);
     am.setSFlag(ThreadSwitch);
   } else {
@@ -363,47 +327,29 @@ Bool Thread::QueueIsEmpty() {
   return Head ? NO : OK;
 }
 
-// check if a thread switch is necessary
-// mm2 inline for emulate.C
-Bool Thread::CheckSwitch() {
-  Bool ret;
-  if (!am.isSetSFlag(ThreadSwitch)) {
-    ret = NO;
-  } else if (QueueIsEmpty()
-	     ||
-	     Head->priority < Current->priority) {
-    ret = NO;
-    Alarm::RestartProcess();
-  } else {
-    ret = OK;
-  }
-  return ret;
-}
 
-Thread *Thread::UnlinkHead() {
-  DebugCheck(Head==0,error("Thread::UnlinkHead"));
-  Thread *ret = Head;
-  Head=ret->next;
-  if (Head) {
-    DebugCheck(Head->prev!=ret,error("Thread::UnlinkHead"));
-    Head->prev= (Thread *) NULL;
-  } else {
-    DebugCheck(Tail!=ret,error("Thread::UnlinkHead"));
-    Tail=Head;
-  }
-  ret->prev=ret->next=(Thread *) NULL;
-  return ret;
-}
-
+/* only usage in emulate */
 void Thread::Start() {
   if (QueueIsEmpty()) {
-    am.suspendEngine();
+    IO::suspendEngine();
   }
 
-  Current=UnlinkHead();
+  DebugCheck(Head==0,error("Thread::Start"));
+  Thread *tt = Head;
+  Head=tt->next;
+  if (Head) {
+    DebugCheck(Head->prev!=tt,error("Thread::Start"));
+    Head->prev= (Thread *) NULL;
+  } else {
+    DebugCheck(Tail!=tt,error("Thread::Start"));
+    Tail=Head;
+  }
+  tt->prev=tt->next=(Thread *) NULL;
 
-  if (Current->isNormal()) {
-    am.currentTaskStack = Current->u.taskStack;
+  am.currentThread = tt;
+
+  if (tt->isNormal()) {
+    am.currentTaskStack = am.currentThread->getTaskStack();
   } else {
     am.currentTaskStack = (TaskStack *) NULL;
   }
@@ -411,14 +357,15 @@ void Thread::Start() {
   Alarm::RestartProcess();
 }
 
-void Thread::MakeTaskStack()
+TaskStack *Thread::makeTaskStack()
 {
-  DebugCheck(!Current->isNormal() || Current->u.taskStack!=NULL,
-	     error("Thread::pushTask"));
-  am.currentTaskStack = Current->u.taskStack = new TaskStack();
-
+  DebugCheck(!isNormal() || u.taskStack!=NULL,
+	     error("Thread::makeTaskStack"));
+  u.taskStack = new TaskStack(conf.taskStackSize);
+  return u.taskStack;
 }
 
+/* only in emulate during process creation */
 void Thread::pushTask(Board *bb,ProgramCounter pc,
 		      RefsArray y,RefsArray g,
 		      RefsArray x,int i)
@@ -428,21 +375,9 @@ void Thread::pushTask(Board *bb,ProgramCounter pc,
   u.taskStack->pushCont(bb,pc,y,g,x,i);
 }
 
-void Thread::ScheduleCurrent()
-{
-  Current->schedule();
-  Current=(Thread *) NULL;
-}
-
-void Thread::FinishCurrent()
-{
-  Current->dispose();
-  Current=(Thread *) NULL;
-}
-
-
-int Thread::GetCurrentPriority() {
-  return Current->priority;
+TaskStack *Thread::getTaskStack() {
+  DebugCheck(!isNormal(),error("Thread::getTaskStack"));
+  return u.taskStack;
 }
 
 Board *Thread::popBoard()
@@ -461,11 +396,4 @@ Suspension *Thread::popSuspension()
   u.suspension = (Suspension *) NULL;
   flags = T_Normal;
   return ret;
-}
-
-void Thread::NewCurrent(int prio) {
-  Current = new Thread();
-  Current->flags = T_Normal;
-  Current->priority = prio;
-  am.currentTaskStack = Current->u.taskStack = new TaskStack();
 }
