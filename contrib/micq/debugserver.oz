@@ -23,8 +23,10 @@
 %%%
 
 declare
-MM = {New Module.manager init()}
+{Connection.offer apa _}
 
+MM = {New Module.manager init()}
+ {Property.put 'messages.idle' false}
 DSettings = {MM link(url:'/home/nilsf/source/mozart/contrib/micq/defaultsettings.ozf' $)}
 Server = {MM link(url:'/home/nilsf/source/mozart/contrib/micq/server.ozf' $)}
 
