@@ -764,52 +764,54 @@ DictHashTable* DictHashTable::_cac(void)
   } else {
     // construct anew, GC"ing keys/values along;
     //
-    int oldSize, newSize;
-    DictNode* old;
-
-    //
-    oldSize = dictHTSizes[sizeIndex];
-    old = table;
+    const int tableSize = dictHTSizes[sizeIndex];
 
     // can be zero too:
-    int tableSize = (int) ((double) entries * GDT_IDEALENTRIES);
-    Assert(tableSize < oldSize);
-    sizeIndex--;
-    while (sizeIndex >= 0 && dictHTSizes[sizeIndex] >= tableSize)
-      sizeIndex--;
-    Assert(sizeIndex < 0 || dictHTSizes[sizeIndex] < tableSize);
-    sizeIndex++;
-    Assert(sizeIndex >= 0 && dictHTSizes[sizeIndex] >= tableSize);
-    // Must not oscillate:
-    Assert(dictHTSizes[sizeIndex] < oldSize);
-    // Next GC should not attempt compactification:
-    Assert(entries >= (dictHTSizes[sizeIndex] / GDT_MINFULL));
-
-    // construct the table anew (keep the 'entries' counter);
-    tableSize = dictHTSizes[sizeIndex];
-    maxEntries = (int) (GDT_MAXENTRIES * tableSize);
-    table = (DictNode *) oz_heapMalloc(tableSize * sizeof(DictNode));
-    for (int i = tableSize; i--; )
-      (void) new (&table[i]) DictNode;
+    int newTableSize = (int) ((double) entries / GDT_IDEALENTRIES);
+    int newSizeIndex = sizeIndex - 1;
+    DictNode* old = table;
 
     //
-    for (int i = oldSize; i--; old++) {
+    Assert(newTableSize < tableSize);
+    while (newSizeIndex >= 0 && dictHTSizes[newSizeIndex] >= newTableSize)
+      newSizeIndex--;
+    Assert(newSizeIndex < 0 || dictHTSizes[newSizeIndex] < newTableSize);
+    newSizeIndex++;
+    Assert(newSizeIndex >= 0 && dictHTSizes[newSizeIndex] >= newTableSize);
+    // Must not oscillate:
+    Assert(dictHTSizes[newSizeIndex] < tableSize);
+    // Next GC should not attempt compactification:
+    Assert(entries >= (dictHTSizes[newSizeIndex] / GDT_MINFULL));
+
+    // construct the table anew (keep the 'entries' counter);
+    newTableSize = dictHTSizes[newSizeIndex];
+
+    //
+    DictHashTable *dht = new DictHashTable(*this);
+    // 'entries' copied;
+    an = (DictNode *) oz_heapMalloc(newTableSize * sizeof(DictNode));
+    for (int i = newTableSize; i--; )
+      (void) new (&an[i]) DictNode;
+    dht->table = an;
+    dht->sizeIndex = newSizeIndex;
+    dht->maxEntries = (int) (GDT_MAXENTRIES * newTableSize);
+
+    //
+    for (int i = tableSize; i--; old++) {
       if (!old->isEmpty()) {
 	if (!old->isPointer()) {
-	  _cacDictEntry(old);
+	  dht->_cacDictEntry(old);
 	} else {
 	  DictNode *sptr = old->getDictNodeSPtr();
 	  DictNode *eptr = old->getDictNodeEPtr();
 	  do {
-	    _cacDictEntry(sptr++);
+	    dht->_cacDictEntry(sptr++);
 	  } while (sptr < eptr);
 	}
       }
     }
 
     //      
-    DictHashTable *dht = new DictHashTable(*this);
-    dht->table = table;
     return (dht);
   }
   Assert(0);
