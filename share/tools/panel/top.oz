@@ -88,7 +88,7 @@ local
 	    {OT.runnable    set(T.runnable)}
 	    {OP.high        set(P.high)}
 	    {OP.middle      set(P.middle)}
-	    {OR.total       set(R.user)}
+	    {OR.run         set(R.run)}
 	    {OR.gc          set(R.gc)}
 	    {OR.copy        set(R.copy)}
 	    {OR.propagation set(R.propagate)}
@@ -102,7 +102,7 @@ local
       in
 	 {OR.pie         clear}
 	 {OT.created     clear}
-	 {OR.total       clear}
+	 {OR.run         clear}
 	 {OR.gc          clear}
 	 {OR.copy        clear}
 	 {OR.propagation clear}
@@ -274,14 +274,14 @@ in
 				colors:  [RunnableColor])])
 	   frame(text:    'Priorities'
 		 height:  70
-		 left:    [scale(text:    'High relative to Middle:'
+		 left:    [scale(text:    'High / Middle:'
 				 state:   {System.get priorities}.high
 				 feature: high
 				 action:  proc {$ N}
 					     {System.set
 					      priorities(high:N)}
 					  end)
-			   scale(text: 'Middle relative to Low:'
+			   scale(text: 'Middle / Low:'
 				 state:   {System.get priorities}.middle
 				 feature: middle
 				 action:  proc {$ N}
@@ -297,7 +297,7 @@ in
 					  end)])
 	   frame(text:    'Runtime'
 		 height:  100
-		 left:    [time(text:    'Total:'
+		 left:    [time(text:    'Run:'
 				color:   TimeColors.run)
 			   time(text:    'Garbage collection:'
 				color:   TimeColors.gc
@@ -374,7 +374,7 @@ in
 				  action: proc {$}
 					     {System.set
 					      gc(max:       4 * MegaByteI
-						 min:       2 * MegaByteI
+						 min:       1 * MegaByteI
 						 free:      60
 						 tolerance: 20)}
 					     {Memory update(nosample 0)}
@@ -383,7 +383,7 @@ in
 				  action: proc {$}
 					     {System.set
 					      gc(max:       16 * MegaByteI
-						 min:       4  * MegaByteI
+						 min:       2  * MegaByteI
 						 free:      70
 						 tolerance: 15)}
 					     {Memory update(nosample 0)}
@@ -392,7 +392,7 @@ in
 				  action: proc {$}
 					     {System.set
 					      gc(max:       64 * MegaByteI
-						 min:       16 * MegaByteI
+						 min:       8 * MegaByteI
 						 free:      80
 						 tolerance: 10)}
 					     {Memory update(nosample 0)}
