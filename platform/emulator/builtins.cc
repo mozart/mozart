@@ -5409,7 +5409,8 @@ OZ_BI_define(BIfindFunction,3,0)
 } OZ_BI_end
 
 
-static TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I) {
+TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I)
+{
   OZ_Term l = nil();
 
   Builtin *bi;
@@ -6967,9 +6968,6 @@ OZ_BI_define(BIdelAllFastGroup,1,1)
 /********************************************************************
  * Table of builtins
  ******************************************************************** */
-
-OZ_C_proc_proto(BIdebugPrint);
-OZ_C_proc_proto(BIdebugPrintLong);
 
 #include "builtins.dcl"
 BIspec allSpec[] = {
