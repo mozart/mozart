@@ -71,9 +71,6 @@ nil:     Don't start emulator (use command 'run').
          This is useful when you want to use breakpoints.
 ")
 
-(defvar oz-step-mode nil
-  "*Determines the way how feeding of code is done.")
-
 (defvar oz-auto-indent t
   "*Determines whether automatic indenting is active.")
 
@@ -1037,7 +1034,7 @@ the GDB commands `cd DIR' and `directory'."
     ()
   (let ((table (make-syntax-table)))
     (modify-syntax-entry ?_ "w" table)
-    (modify-syntax-entry ?\\ "\\" table)
+    (modify-syntax-entry ?\\ "w" table)
     (modify-syntax-entry ?+ "." table)
     (modify-syntax-entry ?- "." table)
     (modify-syntax-entry ?= "." table)
@@ -1051,8 +1048,7 @@ the GDB commands `cd DIR' and `directory'."
     (modify-syntax-entry ?/ ". 14" table)
     (modify-syntax-entry ?* ". 23b" table)
     (modify-syntax-entry ?. "_" table)
-    (setq oz-mode-syntax-table table)
-    (set-syntax-table oz-mode-syntax-table)))
+    (setq oz-mode-syntax-table table)))
 
 (define-abbrev-table 'oz-mode-abbrev-table ())
 
