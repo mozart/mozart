@@ -27,9 +27,9 @@
 # TARGETS
 ##########################################################################
 
-.PHONY: install bootstrap clean veryclean distclean depend
+.PHONY: install bootstrap clean cleaner veryclean distclean depend
 
-install bootstrap clean veryclean distclean depend::
+install bootstrap clean cleaner veryclean distclean depend::
         dirs="$(SUBDIRS)"; \
         for i in $$dirs; do \
           if (cd $$i && $(MAKE) $@); \
@@ -43,6 +43,9 @@ veryclean::
 
 distclean::
         $(MAKE) veryclean SUBDIRS=
+
+cleaner::
+        $(MAKE) clean SUBDIRS=
 
 clean::
         -rm -f *.o *.lo *~  *.bak *.obj *.so *.a

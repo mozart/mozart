@@ -81,3 +81,6 @@ distclean::
 
 veryclean::
         -rm -f *.a *.so Makefile.deps
+
+cleaner::
+        -rm -f *.a *.so

@@ -205,7 +205,7 @@ ALLSRCS= $(SRCS) \
 
 .NOEXPORT: emulate.o emulator.exe
 .PHONY: all first install install-bin install-inc \
-        install-dir depend tags clean distclean veryclean
+        install-dir depend tags clean cleaner distclean veryclean
 
 all: $(TARGETS)
 
@@ -501,6 +501,11 @@ atoms.hh: atoms.perl
         $(PERL) $< -header > $@
 
 # should be after make in subdirs (see Makefiles.rules)
+
+cleaner::
+        -rm -f version.cc $(TARGETS) \
+                *.exe *.map *.imp *.sym \
+                $(CREATEDFILES)
 
 veryclean::
         -rm -f version.cc $(TARGETS) \
