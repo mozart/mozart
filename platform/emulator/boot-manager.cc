@@ -183,7 +183,6 @@ static ModuleEntry ext_module_table[] = {
   {"Application",     mod_int_Application},
   {"Finalize",        mod_int_Finalize},
   {"Distribution",    mod_int_Distribution},
-  {"WeakDictionary",  mod_int_WeakDictionary},
   {"INTERNAL",        mod_int_INTERNAL},
 #ifdef DENYS_EVENTS
   {"Event",           mod_int_Event},
@@ -239,6 +238,7 @@ static ModuleEntry base_module_table[] = {
   {"Char",              mod_int_Char},
   {"Chunk",             mod_int_Chunk},
   {"Class",             mod_int_Class},
+  {"WeakDictionary",    mod_int_WeakDictionary},
   {"Dictionary",        mod_int_Dictionary},
   {"Exception",         mod_int_Exception},
   {"Float",             mod_int_Float},
