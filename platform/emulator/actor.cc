@@ -131,8 +131,8 @@ int WaitActor::selectChildren(int l, int r) {
   if (l<=r && l>=0 && r<childCount) {
     for (int i = l; i <= r; i++)
       childs[i-l] = childs[i];
-    for (int i = r+1; i < maxx; i++)
-      childs[i] = NULL;
+    for (int j = r+1; j < maxx; j++)
+      childs[j] = NULL;
     childCount = r-l+1;
     return childCount;
   } else {
