@@ -58,15 +58,6 @@
 	  {System.printError
 	   'Mozart Engine '#OZVERSION#' of '#DATE#' playing Oz 3\n\n'}
        end
-       {System.printError
-	'---------------------------------------------\n'#
-	'MOTD\n\n'#
-	'19 Mar 1998, scheidhr@dfki.de\n'#
-	'SmartSave has been renamed to Save\n'#
-	'Save now only takes to parameters: {Save Value Filename}\n'#
-	'It now raises an exception if any resources are found.\n'#
-	'\n'#
-	'---------------------------------------------\n\n'}
        {System.property.put 'oz.standalone' false}
 
        OPICompiler = {New Compiler.compilerClass init()}
@@ -81,17 +72,29 @@
 
        % Try to load some ozrc file:
        local
-	  FileExists = {`Builtin` ozparser_fileExists 2}
-	  OZRC = {OS.getEnv 'OZRC'}
+	  HOME = {OS.getEnv 'HOME'}
        in
-	  case OZRC \= false then
-	     {OPICompiler enqueue(feedFile(OZRC))}
-	  elsecase {FileExists '~/.oz/ozrc'} then
-	     {OPICompiler enqueue(feedFile('~/.oz/ozrc'))}
-	  elsecase {FileExists '~/.ozrc'} then   % note: deprecated
-	     {OPICompiler enqueue(feedFile('~/.ozrc'))}
+	  case HOME == false then skip
 	  else
-	     skip
+	     fun {FileExists FN}
+		try
+		   F = {New Open.file init(name:FN)}
+		in
+		   {F close} true
+		catch _ then false
+		end
+	     end
+	     OZRC = {OS.getEnv 'OZRC'}
+	  in
+	     case OZRC \= false andthen {FileExists OZRC} then
+		{OPICompiler enqueue(feedFile(OZRC))}
+	     elsecase {FileExists HOME#'/.oz/ozrc'} then
+		{OPICompiler enqueue(feedFile(HOME#'/.oz/ozrc'))}
+	     elsecase {FileExists HOME#'/.ozrc'} then   % note: deprecated
+		{OPICompiler enqueue(feedFile(HOME#'/.ozrc'))}
+	     else
+		skip
+	     end
 	  end
        end
 
