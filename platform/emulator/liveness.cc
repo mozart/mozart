@@ -98,30 +98,69 @@ Segment::~Segment()
   writer = 0;
 }
 
-#ifdef LIVENESS_CACHE
-static HashTable livenesscache(HT_INTKEY,100);
-#endif
+typedef unsigned long bitVec;
+
+const int maxXSize = sizeof(bitVec)*8;
+
+class LivenessCache : public HashTable{
+public:
+  LivenessCache(): HashTable(HT_INTKEY,100) {}
+
+  int findPC(ProgramCounter from, TaggedRef *X, int maxX)
+  {
+    void *aux = htFind(ToInt32(from));
+    if (aux==htEmpty)
+      return -1;
+
+    int ret = 0;
+    bitVec bits = (bitVec) aux;
+    for (int i=0;i<maxX; i++) {
+      if ((1<<i)&bits) {
+        ret = i+1;
+      } else {
+        if (X)
+          X[i]= taggedVoidValue;
+      }
+    }
+    return ret;
+  }
+
+  void addPC(ProgramCounter from, int *xUsage, int maxX)
+  {
+    if (maxX>maxXSize)
+      return;
+
+    bitVec aux = 0;
+    for (int i=0;i<maxX; i++) {
+      if (xUsage[i]==1)
+        aux |= (1<<i);
+    }
+    htAdd(ToInt32(from),(void*) aux);
+  }
+};
+
+static LivenessCache livenesscache;
+
 
 int CodeArea::livenessX(ProgramCounter from, TaggedRef *X,int maxX)
 {
-#ifdef LIVENESS_CACHE
-  void *aux = livenesscache.htFind(ToInt32(from));
-  if (aux != htEmpty) {
-    return ToInt32(aux);
-  }
-#endif
-  int ret = livenessXInternal(from,X,maxX);
-#ifdef LIVENESS_CACHE
-  livenesscache.htAdd(ToInt32(from),ToPointer(ret));
-#endif
+  int ret = livenesscache.findPC(from,X,maxX);
+  if (ret != -1)
+    return ret;
+
+  int *xUsage = new int[maxX];
+  for (int i=0;i<maxX; i++) xUsage[i]=0;
+
+  ret = livenessXInternal(from,X,maxX,xUsage);
+  livenesscache.addPC(from,xUsage,ret);
+
+  delete [] xUsage;
   return ret;
 }
 
-int CodeArea::livenessXInternal(ProgramCounter from, TaggedRef *X,int maxX)
+int CodeArea::livenessXInternal(ProgramCounter from, TaggedRef *X,int maxX, int *xUsage)
 {
   if (maxX<=0) maxX = NumberOfXRegisters;
-  int *xUsage = new int[maxX];
-  for (int i=0;i<maxX; i++) xUsage[i]=0;
 
   Segment *todo = new Segment(from,0,0);
   Segment *seen = 0;
@@ -148,19 +187,12 @@ outerLoop2:
     // terminate if stack is empty
     if (!todo) {
       int nextI=0;
-      if (X) {
-        for (int i=0; i<maxX; i++) {
-          if (xUsage[i]==1) {
-            nextI=max(nextI,i+1);
-          } else {
+      for (int i=0; i<maxX; i++) {
+        if (xUsage[i]==1) {
+          nextI=max(nextI,i+1);
+        } else {
+          if (X)
             X[i]= taggedVoidValue;
-          }
-        }
-      } else {
-        for (int i=0; i<maxX; i++) {
-          if (xUsage[i]==1) {
-            nextI=max(nextI,i+1);
-          }
         }
       }
 
@@ -169,7 +201,6 @@ outerLoop2:
         delete seen;
         seen = n;
       }
-      delete [] xUsage;
       return nextI;
     }
 
@@ -340,20 +371,6 @@ outerLoop2:
       case SENDMSGG:
         {
           SRecordArity arity = (SRecordArity) getAdressArg(PC+3);
-          ISREAD_TO(getWidth(arity));
-          BREAK;
-        }
-      case TAILAPPLMETHX:
-      case APPLMETHX:
-        ISREAD(GETREGARG(PC+2));
-        // fall through
-      case TAILAPPLMETHY:
-      case TAILAPPLMETHG:
-      case APPLMETHY:
-      case APPLMETHG:
-        {
-          ApplMethInfoClass *ami = (ApplMethInfoClass*) getAdressArg(PC+1);
-          SRecordArity arity     = ami->arity;
           ISREAD_TO(getWidth(arity));
           BREAK;
         }
