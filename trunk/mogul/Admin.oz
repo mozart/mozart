@@ -1,7 +1,7 @@
 functor
 import
    Application(exit)
-   System(showError printError)
+   System(showError printError show)
    OS(getCWD getEnv)
    Except('raise':Raise)
    Database('class')
@@ -9,8 +9,9 @@ import
    URL(toAtom resolve toBase toString make)
    Category(updateCatPages updatePkgListPage)
    MogulID(normalizeID:NormalizeID)
+   HTML_ByAuthor(updatePage)
 export
-   Manager Trace Indent Dedent RelativeTo
+   Manager Trace Indent Dedent RelativeTo Admin
 define
    fun {RelativeTo Base Rel}
       {URL.toString {URL.resolve {URL.toBase Base} Rel}}
@@ -20,7 +21,7 @@ define
       prop final
       attr db rootID rootURL reports verbose nerrors
 	 indent wget css mogulDIR mogulURL provided
-	 categories categoriesURL packages mogulTOP
+	 categories categoriesURL packages Authors mogulTOP
       meth init
 	 db      <- unit
 	 rootID  <- {NormalizeID 'mogul' 'mogul:/'}
@@ -37,6 +38,7 @@ define
 	 categories<-unit
 	 categoriesURL<-'mogul-categories.mogul'
 	 packages<-unit
+	 Authors<-unit
 	 mogulTOP<- '/~'#{OS.getEnv 'USER'}#'/mogul'
       end
       meth indent indent<-'  '#@indent end
@@ -265,6 +267,19 @@ define
 	    end
 	 end
       end
+      meth 'update-author-list'(V)=M
+	 if V then
+	    try
+	       if @db==unit then
+		  {Raise mogul('update-author-list'(no_db_is_opened))}
+	       end
+	       {@db updateAuthorList(@rootID)}
+	    catch mogul(...)=E then
+	       Admin,addReport(M E)
+	    end
+	 end
+      end
+      %%
       meth get_packages($)
 	 %% if you call get_packages then update then
 	 %% call it again, you will get the old list prior
@@ -280,6 +295,13 @@ define
 	 end
 	 @packages
       end
+      meth get_authors($)
+	 if @Authors==unit then
+	    Authors<-{@db condGet('*author list*' nil $)}
+	 end
+	 @Authors
+      end
+      %%
       meth 'update-package-list-html'(V)=M
 	 if V then
 	    try
@@ -292,6 +314,20 @@ define
 	    end
 	 end
       end
+      %%
+      meth 'update-author-list-html'(V)=M
+	 if V then
+	    try
+	       if @db==unit then
+		  {Raise mogul('update-author-list-html'(no_db_is_opened))}
+	       end
+	       {HTML_ByAuthor.updatePage}
+	    catch mogul(...)=E then
+	       Admin,addReport(M E)
+	    end
+	 end
+      end
+      %%
       meth 'mogul-top'(V) mogulTOP<-V end
       meth getTop($) @mogulTOP end
       meth getCssLink($)

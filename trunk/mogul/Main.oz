@@ -43,6 +43,9 @@ define
 		   'update-package-list'(type:bool)
 		   'update-package-list-html'(type:bool)
 		   %%
+		   'update-author-list'(type:bool)
+		   'update-author-list-html'(type:bool)
+		   %%
 		   'mogul-top'(type:string)
 		  )}
    catch error(ap(usage Msg) ...) then

@@ -168,6 +168,42 @@ define
 	 end
       end
       %%
+      meth updateAuthorList(ID)=M
+	 try
+	    case Database,condGet(ID unit $)
+	    of unit then
+	       {Raise mogul(entry_not_found(ID))}
+	    [] E then
+	       Ls={E updateAuthorList(self nil $)}
+	       DB={NewDictionary}
+	       proc{InsertDB X} Id=X.id in
+		  for A in X.authors do
+		     Key={String.toAtom {ByteString.toString A}}
+		  in
+		     {Dictionary.put DB Key Id|{Dictionary.condGet DB Key nil}}
+		  end
+	       end
+	       {ForAll Ls InsertDB}
+	       L={Dictionary.toRecord authors DB}
+	    in
+	       Database,put('*author list*' L)
+	    end
+	 catch mogul(...)=E then
+	    {Manager addReport(M E)}
+	 end
+      end
+      meth updateAuthorListFor(ID L $)=M
+	 try
+	    case Database,condGet(ID unit $)
+	    of unit then
+	       {Raise mogul(entry_not_found(ID))} unit
+	    [] E then {E updateAuthorList(self L $)} end
+	 catch mogul(...)=E then
+	    {Manager addReport(M E)}
+	    L
+	 end
+      end
+      %%
       meth updatePkgList(ID)=M
 	 try
 	    case Database,condGet(ID unit $)
