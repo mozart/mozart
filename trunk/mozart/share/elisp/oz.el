@@ -33,7 +33,7 @@
 ;; 8.9.93 rs
 ;; random removed
 ;; call compiler directly, since it can now reliably bind the socket
-;; --------------------------------------------------------------------------
+;; -------------------------------------------------------------------
 
 
 (if (string-match "^18" emacs-version)
@@ -44,7 +44,8 @@
   "Use Lucid-Emacs functions for fontifying for example")
 
 
-;(byte-compiler-options (optimize t) (warnings (- free-vars)) (file-format emacs18))
+;(byte-compiler-options (optimize t) (warnings (- free-vars))
+;  (file-format emacs18))
 (setq debug-on-error nil)
 ;(setq debug-on-error t)
 
@@ -223,22 +224,19 @@
 
 (defun oz-mode-commands (map)
   (define-key map "\t"      'oz-indent-line)
-  (if lucid-emacs
-      (progn
-	(define-key map [(hyper b)] 'oz-indent-buffer)
-	(define-key map [(hyper return)] 'oz-indent-buffer)
-	(define-key map [(hyper r)] 'oz-indent-region)
-	(define-key map [(hyper l)] 'oz-indent-line)
-	)
-    )
   (define-key map "\M-\C-m" 'oz-feed-buffer)
   (define-key map "\M-r"    'oz-feed-region)
-  (define-key map "\M-i"    'oz-feed-file)
   (define-key map "\M-l"    'oz-feed-line)
-  (define-key map "\M-m"    'oz-toggle-machine-window)
-  (define-key map "\M-c"    'oz-toggle-compiler-window)
-  (define-key map "\M-e"    'oz-toggle-errors)
-  (define-key map "\M-z"    'oz-prettyprint))
+  (define-key map "\C-c\C-e"    'oz-toggle-errors)
+  (define-key map "\C-c\C-c"    'oz-toggle-compiler-window)
+  (define-key map "\C-c\C-m"    'oz-toggle-machine-window)
+  (define-key map "\C-c\C-n"    'oz-new-buffer)
+  (define-key map "\C-c\C-z"    'oz-prettyprint)
+  (define-key map "\C-c\C-r"    'run-oz)
+  (define-key map "\C-c\C-h"    'halt-oz)
+  (define-key map "\C-ci"    'oz-include-file)
+  (define-key map "\C-cc"    'oz-precompile-file)
+  )
 
 (oz-mode-commands oz-mode-map)
 
@@ -304,22 +302,26 @@
 	     ["Feed region"            oz-feed-region t]
 	     ["Feed line"              oz-feed-line t]
               "-----"
-	     ["Next Oz buffer"         oz-next-buffer t]
-	     ["Previous Oz buffer"     oz-previous-buffer t]
-	     ["New Oz buffer"          oz-new-buffer t]
-              "-----"
-	     ["Refresh buffer"         oz-prettyprint t]
-	     ["Region to printer"      oz-print-region t]
-	     ["Buffer to printer"      oz-print-buffer t]
-              "-----"
-	     ["Include file"           oz-feed-file t]
+	     ["Include file"           oz-include-file t]
 	     ["Compile file"           oz-precompile-file t]
               "-----"
-	     ["Show/hide compiler"     oz-toggle-compiler-window t]
-	     ["Show/hide machine"      oz-toggle-machine-window t]
-	     ["Show/hide errors"       oz-toggle-errors t]
-             ["Show Documentation ..." oz-doc t]
-	    "-----"
+	     ["New Oz buffer"          oz-new-buffer t]
+	     ["Refresh buffer"         oz-prettyprint t]
+	     ("Print"
+	      ["buffer"      oz-print-buffer t]
+	      ["region"      oz-print-region t]
+	      )
+	     ("Indent"
+	      ["line" oz-indent-line t]
+	      ["region" oz-indent-region t]
+	      ["buffer" oz-indent-buffer t]
+	      )
+	     ("Show/hide"
+	      ["errors"       oz-toggle-errors t]
+	      ["compiler"     oz-toggle-compiler-window t]
+	      ["machine"      oz-toggle-machine-window t]
+			  )
+	     "-----"
 	     ["Start Oz" run-oz t]
 	     ["Halt Oz"  halt-oz t]
 	     )
@@ -336,13 +338,14 @@
 	     '( (Feed\ buffer         . oz-feed-buffer)
 		(Feed\ region         . oz-feed-region)
 		(Feed\ line           . oz-feed-line)
-		(Next\ Oz\ buffer     . oz-next-buffer)
-		(Previous\ Oz\ buffer . oz-previous-buffer)
 		(New\ Oz\ buffer      . oz-new-buffer)
 		(Refresh\ buffer      . oz-prettyprint)
+		(Indent\ line         . oz-indent-line)
+		(Indent\ region       . oz-indent-region)
+		(Indent\ buffer       . oz-indent-buffer)
 		(Region\ to\ printer  . oz-print-region)
 		(Buffer\ to\ printer  . oz-print-buffer)
-		(Include\ file        . oz-feed-file)
+		(Include\ file        . oz-include-file)
 		(Compile\ file        . oz-precompile-file)
 		(Show/hide\ compiler  . oz-toggle-compiler-window)
 		(Show/hide\ machine   . oz-toggle-machine-window)
@@ -438,7 +441,7 @@ if that value is non-nil."
 	(cur (current-buffer)))
     (if (or (not file) (buffer-modified-p))
 	(oz-feed-region (point-min) (point-max))
-      (oz-feed-file file))
+      (oz-include-file file))
     (switch-to-buffer cur)))
 
 (defun oz-feed-region (start end)
@@ -459,7 +462,7 @@ if that value is non-nil."
        (oz-feed-region beg (point)))))
 
 
-(defun oz-feed-file(file)
+(defun oz-include-file(file)
   (interactive "FInclude file: ")
   (oz-hide-errors)
   (oz-send-string (concat "!include '" file "'\n"))) 
@@ -642,10 +645,6 @@ if that value is non-nil."
 	((looking-at "\\<in\\>")
 	 (oz-search-matching-begin t)
 	 )
-	((looking-at "\\<trigger\\>")
-	 (if (search-backward "^" 0 t)
-	     (current-column)
-	   (error "no matching ^ for trigger")))
 	((or (looking-at oz-end-pattern) (looking-at oz-middle-pattern))
 	 ;; we must indent to the same column as the matching begin
 	 (oz-search-matching-begin))
