@@ -32,7 +32,7 @@
 #include "am.hh"
 #include "board.hh"
 
-Bool oz_installScript(Script &script);
+OZ_Return oz_installScript(Script &script);
 
 Bool oz_installPath(Board *to);
 void oz_reduceTrailOnSuspend();

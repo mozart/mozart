@@ -330,7 +330,7 @@ public:
   //
   int commit(int, int);
   void inject(TaggedRef);
-  TaggedRef merge(Board *, Bool);
+  OZ_Return merge(Board *, Bool);
 
   //
   // Status variable
