@@ -196,7 +196,7 @@ SYSLETS = ozd
 
 all: Makefile $(FUNCTORS) $(SYSLETS)
 
-include $(SRCTOP)/share/Makefile.boot
+include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 

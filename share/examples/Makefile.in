@@ -128,7 +128,7 @@ Makefile: Makefile.in ../config.status
 ../config.status: ../configure
 	cd .. && ./config.status --recheck
 
-include $(SRCDIR)/../Makefile.boot
+include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap:
 	$(MAKE) boot-all
