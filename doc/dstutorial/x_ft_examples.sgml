@@ -109,7 +109,7 @@ during <<Connection.take>> and <<Pickle.load>>.
 
 <SUBSECTION><TITLE>Definition of <<SafeSend>> and <<SafeWait>></TITLE>
 
-<P>We define <<SafeSend>> and <SafeWait>> in the basic model.
+<P>We define <<SafeSend>> and <<SafeWait>> in the basic model.
 To make things easier to read, we use the two utility
 functions <<FMember>> and <<FSomeOf>>, which are defined
 just afterwards.
