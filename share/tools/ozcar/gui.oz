@@ -98,7 +98,7 @@ local
 	 else                                 UnknownType
 	 end
       elsecase {IsLazy X} then                LazyVarType
-      else                                    UnboundType
+      else                                    {System.printName X}
       end
    end
 

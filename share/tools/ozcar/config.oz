@@ -108,7 +108,6 @@ LazyVarType            = '<lazy var>'
 ForeignPointerType     = '<foreign>'
 PromiseType            = '<promise>'
 UnknownType            = '<???>'
-UnboundType            = '_'
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
