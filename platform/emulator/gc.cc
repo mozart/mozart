@@ -2011,13 +2011,14 @@ void ConstTerm::gcConstRecurse()
     case Te_Manager:
       {
         PortManager *pm= (PortManager*)this;
+        gcPortManager(pm);
         gcTagged(pm->strm,pm->strm);
         break;
       }
     case Te_Proxy:
       {
-        PortProxy *pp = (PortProxy*)this;
-        pp->markAsLive();
+        PortProxy *pp = (PortProxy*) this;
+        gcPortProxy(pp);
         break;
       }
     default:

@@ -558,9 +558,7 @@ enum TypeOfConst {
 enum TertType {
   Te_Local = 0,   // 0000
   Te_Manager = 1, // 0001
-  Te_Proxy = 2,   // 0010
-                  // 0011 - 0111 - free for future use
-  Te_Mark= 8      // 1000 as gc-bit (marking live protocoll objects)
+  Te_Proxy = 2   // 0010
 };
 
 
@@ -612,39 +610,30 @@ public:
 
 
 #define NO_ENTRY ((~0) << tagSize)
-#define NO_TYPE Te_Local
 #define MAX_INT_SIZE_WITH_TAG  (1<<(31-tagSize))
 
 typedef unsigned int u32;
 
 inline TertType basicGetTertType(u32 t) {return (TertType)(t&tagMask);}
-inline u32 basicSetTertType(u32 x,TertType t) {return ((x<<tagSize) & t);}
-inline u32 basicRemTertType(u32 x) {return ((x & (~tagMask))>>tagSize);}
-
+inline u32 basicSetTertiary(u32 x,TertType t) {return ((x<<tagSize) | t);}
+inline u32 basicGetIndex(u32 x) {return ((x & (~tagMask))>>tagSize);}
 
 class Tertiary: public ConstTerm {
   u32 ownerOrBorrow;
 public:
   Tertiary(TypeOfConst s,TertType t) : ConstTerm(s) {
-    ownerOrBorrow=basicSetTertType(u32 NO_ENTRY,NO_TYPE);}
+    ownerOrBorrow=basicSetTertiary(u32 NO_ENTRY,t);}
 
   void setTertType(TertType t) {
-    ownerOrBorrow=basicSetTertType(ownerOrBorrow,t);}
+    ownerOrBorrow=basicSetTertiary(getIndex(),t);}
 
   TertType getTertType(){return (TertType) basicGetTertType(ownerOrBorrow);}
 
   void setIndex(int i) {
     TertType oldtype = basicGetTertType(ownerOrBorrow);
-    ownerOrBorrow = basicSetTertType(((u32) i) , oldtype);
-}
+    ownerOrBorrow = basicSetTertiary(((u32) i) , oldtype);}
 
-  int getIndex() {return (int) basicRemTertType(ownerOrBorrow);}
-
-  void markAsLive() {setTertType(TertType (getTertType()|Te_Mark));}
-
-  void removeMark() {setTertType(TertType (getTertType()&(~Te_Mark)));}
-
-  Bool isMarked() {return getTertType()&Te_Mark;}
+  int getIndex() {return (int) basicGetIndex(ownerOrBorrow);}
 
   Bool checkTertiary(TypeOfConst s,TertType t){
     return (s==getType() & t==getTertType());}
@@ -654,7 +643,7 @@ public:
 
 inline
 Bool isLocal(Tertiary *t) {
-   return(Bool (!(t->getTertType() & ~Te_Mark))); }
+  return(Bool (t->getTertType() == Te_Local)); }
 
 inline
 Bool isManager(Tertiary *t) {
