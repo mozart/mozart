@@ -162,7 +162,7 @@ local
 	 end
 	 TkTools.dialog, tkInit(master: Master
 				root: pointer
-				title: 'Oz Compiler: Feed Virtual String'
+				title: 'Oz Compiler Panel: Feed Virtual String'
 				buttons: ['Ok'#DoFeed
 					  'Clear'#DoClear
 					  'Cancel'#DoClose]
@@ -216,7 +216,7 @@ local
 	 end
 	 TkTools.dialog, tkInit(master: Master
 				root: pointer
-				title: 'Oz Compiler: Environment Colors'
+				title: 'Oz Compiler Panel: Environment Colors'
 				buttons: ['Ok'#DoOk
 					  'Apply'#DoApply
 					  'Close'#tkClose()]
@@ -354,7 +354,7 @@ local
 	 end
 	 TkTools.dialog, tkInit(master: Master
 				root: pointer
-				title: 'Oz Compiler: Unpickle from URL'
+				title: 'Oz Compiler Panel: Unpickle from URL'
 				buttons: ['Ok'#DoUnpickle
 					  'Clear'#DoClear
 					  'Cancel'#tkClose()]
@@ -443,7 +443,7 @@ local
       meth SaveAs() FileName in
 	 FileName =
 	 {Tk.return tk_getSaveFile(parent: self
-				   title: 'Oz Compiler: Save Source Text'
+				   title: 'Oz Compiler Panel: Save Source Text'
 				   filetypes: q(q('All Files' '*')))}
 	 case FileName == "" then skip
 	 else File in
@@ -789,7 +789,7 @@ in
 	 end
 
 	 self.TopLevel = {New Tk.toplevel
-			  tkInit(title: 'Oz Compiler'
+			  tkInit(title: 'Oz Compiler Panel'
 				 'class': 'OzTools'
 				 delete: {MkAction exit()}
 				 highlightthickness: 0
@@ -804,13 +804,12 @@ in
 	 SwitchFont      = {Options get(compilerSwitchFont $)}
 	 NCols           = {Options get(compilerEnvCols $)}
 
-	 {Tk.batch [wm(iconname self.TopLevel 'Oz Compiler')
+	 {Tk.batch [wm(iconname self.TopLevel 'Oz Compiler Panel')
 		    wm(iconbitmap self.TopLevel
 		       '@'#{Tk.localize BitmapUrl#'compiler.xbm'})
 		    wm(iconmask self.TopLevel
 		       '@'#{Tk.localize BitmapUrl#'compilermask.xbm'})
 		    wm(resizable self.TopLevel 0 0)]}
-	 self.SystemVariables = {New Tk.variable tkInit(false)}
 	 self.NColsInEnv = {New Tk.variable tkInit(NCols)}
 	 ColumnMenu = {ForThread 7 1 ~1
 		       fun {$ In I}
@@ -845,11 +844,7 @@ in
 					    action: {MkAction exit()})])
 		  menubutton(text: 'Options'
 			     feature: options
-			     menu: [checkbutton(label: 'Show system variables'
-						variable: self.SystemVariables
-						action: {MkAction
-							 RedisplayEnv()})
-				    command(label: 'Update environment'
+			     menu: [command(label: 'Update environment display'
 					    key: ctrl(l)
 					    action: {MkAction
 						     RedisplayEnv()})
@@ -1045,13 +1040,14 @@ in
 				font: SwitchFont
 				variable: Expression
 				action: {MkAction Switch(expression)})}
-	 SystemV = {New Tk.variable tkInit(true)}
-	 SystemSw = {New Tk.checkbutton
-		     tkInit(parent: ParsingFrame
-			    text: 'Allow use of system variables'
-			    font: SwitchFont
-			    variable: SystemV
-			    action: {MkAction Switch(system)})}
+	 AllowDeprecated = {New Tk.variable tkInit(true)}
+	 AllowDeprecatedSw = {New Tk.checkbutton
+			      tkInit(parent: ParsingFrame
+				     text: 'Allow use of deprecated syntax'
+				     font: SwitchFont
+				     variable: AllowDeprecated
+				     action:
+					{MkAction Switch(allowdeprecated)})}
 	 Gump = {New Tk.variable tkInit(false)}
 	 GumpSw = {New Tk.checkbutton
 		   tkInit(parent: ParsingFrame
@@ -1253,7 +1249,8 @@ in
 			 side: left anchor: w)
 		    pack(ParsingFrame SAFrame CoreFrame
 			 padx: 24 pady: 8 anchor: w)
-		    pack(ParsingLabel ExpressionSw SystemSw GumpSw anchor: w)
+		    pack(ParsingLabel ExpressionSw AllowDeprecatedSw GumpSw
+			 anchor: w)
 		    pack(SALabel StaticAnalysisSw anchor: w)
 		    pack(CoreLabel CoreSw RealCoreSw DebugValueSw DebugTypeSw
 			 anchor: w)
@@ -1302,7 +1299,7 @@ in
 				   warnunusedformals: WarnUnusedFormals
 				   warnforward: WarnForward
 				   expression: Expression
-				   system: SystemV
+				   allowdeprecated: AllowDeprecated
 				   gump: Gump
 				   staticanalysis: StaticAnalysis
 				   core: Core
@@ -1323,10 +1320,10 @@ in
 			CompilerPassesSw ShowInsertSw EchoQueriesSw
 			ShowDeclaresSw WarnRedeclSw WarnUnusedSw
 			WarnUnusedFormalsSw WarnForwardSw ExpressionSw
-			SystemSw GumpSw StaticAnalysisSw CoreSw RealCoreSw
-			DebugValueSw DebugTypeSw CodeGenSw OutputCodeSw
-			FeedToEmulatorSw ThreadedQueriesSw ProfileSw
-			RunWithDebuggerSw DebugInfoControlSw
+			AllowDeprecatedSw GumpSw StaticAnalysisSw CoreSw
+			RealCoreSw DebugValueSw DebugTypeSw CodeGenSw
+			OutputCodeSw FeedToEmulatorSw ThreadedQueriesSw
+			ProfileSw RunWithDebuggerSw DebugInfoControlSw
 			DebugInfoVarnamesSw]
 	 self.InterruptMenuItem = Menu.compiler.interrupt
 	 CachedEnv <- env()
@@ -1342,7 +1339,7 @@ in
       meth FeedFile() FileName in
 	 FileName =
 	 {Tk.return tk_getOpenFile(parent: self.TopLevel
-				   title: 'Oz Compiler: Feed File'
+				   title: 'Oz Compiler Panel: Feed File'
 				   filetypes: q(q('Oz Source Files' q('.oz'))
 						q('All Files' '*')))}
 	 case FileName == "" then skip
@@ -1385,13 +1382,13 @@ in
       meth AboutDialog()
 	 Dialog = {New TkTools.dialog tkInit(master: self.TopLevel
 					     root: pointer
-					     title: 'Oz Compiler: About'
+					     title: 'Oz Compiler Panel: About'
 					     buttons: ['Ok'#tkClose]
 					     default: 1
 					     focus: 1
 					     pack: false)}
 	 Title = {New Tk.label tkInit(parent: Dialog
-				      text: 'Oz Compiler')}
+				      text: 'Oz Compiler Panel')}
 	 Author = {New Tk.label tkInit(parent: Dialog
 				       text: 'Programming Systems Lab\n'#
 					     'Contact: Leif Kornstaedt\n'#
@@ -1420,14 +1417,7 @@ in
 	 NCharsInCol NewEnvDisplay RemoveTags AddNewTags
       in
 	 Fraction = {self.EnvDisplay tkReturnList(yview $)}.1
-	 case {self.SystemVariables tkReturnInt($)} == 1 then
-	    PrintNames = {Arity @CachedEnv}
-	 else
-	    PrintNames = {Filter {Arity @CachedEnv}
-			  fun {$ PrintName}
-			     {Atom.toString PrintName}.1 \= &`
-			  end}
-	 end
+	 PrintNames = {Arity @CachedEnv}
 	 Count = {Length PrintNames}
 	 {self.NColsInEnv tkReturnInt(?NCols)}
 	 Rows = {Max (Count + NCols - 1) div NCols 1}
@@ -1589,7 +1579,7 @@ in
       meth DoPickleVariable(Value) FileName in
 	 FileName =
 	 {Tk.return tk_getSaveFile(parent: self.TopLevel
-				   title: 'Oz Compiler: Pickle Value'
+				   title: 'Oz Compiler Panel: Pickle Value'
 				   filetypes:
 				      q(q('Oz Pickles'
 					  q(UrlDefaults.pickle))
@@ -1637,7 +1627,7 @@ in
       meth DoCreateSyslet(Value) FileName in
 	 FileName =
 	 {Tk.return tk_getSaveFile(parent: self.TopLevel
-				   title: 'Oz Compiler: Create Syslet'
+				   title: 'Oz Compiler Panel: Create Syslet'
 				   filetypes:
 				      q(q('Oz Pickles'
 					  q(UrlDefaults.pickle))
