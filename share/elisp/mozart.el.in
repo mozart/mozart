@@ -126,11 +126,11 @@ Used as fallback if the environment variable OZHOME is not set."
 (eval-and-compile
   (eval '(defcustom oz-functor-path
 	   (or (getenv "OZ_LOAD")
-	       (concat "prefix=x-oz://system/="
+	       (concat "prefix=x-oz\\://system/="
 		       oz-build-dir "/share/lib/:"
-		       "prefix=x-oz://system/="
+		       "prefix=x-oz\\://system/="
 		       oz-build-dir "/share/tools/:"
-		       "prefix=x-oz://boot/="
+		       "prefix=x-oz\\://boot/="
 		       oz-build-dir "/platform/emulator/:"
 		       "cache=~/.oz/cache:cache=" (oz-home) "/cache"))
 	   "*Search path for the Oz functors (used by \\[oz-other])."
