@@ -221,7 +221,7 @@ void CodeArea::printDef(ProgramCounter PC)
 
   message("\tIn procedure %s (File %s, line %d, PC=%ld)\n",
           pred ? pred->getPrintName() : "???",
-          tagged2String(file,10),line,PC);
+          OZ_toC(file),line,PC);
 }
 
 ProgramCounter CodeArea::definitionStart(ProgramCounter from)
@@ -319,8 +319,7 @@ void CodeArea::getDebugInfoArgs(ProgramCounter PC,
 
 void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 {
-  ProgramCounter PC;
-  PC = from;
+  ProgramCounter PC = from;
 
   Bool isEnd = NO;
   Opcode op;

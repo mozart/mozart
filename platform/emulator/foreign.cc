@@ -427,35 +427,9 @@ OZ_Term OZ_CToAtom(char *s)
 
 char *OZ_toC(OZ_Term term)
 {
-  if (term == makeTaggedNULL()) {
-    return "*** NULL TERM ***";
-  }
-
-  DEREF(term,termPtr,tag)
-  switch(tag) {
-  case UVAR:
-  case SVAR:
-  case CVAR:
-  case STUPLE:
-  case SRECORD:
-  case LTUPLE:
-  case CONST:
-    return tagged2String(term,ozconf.printDepth);
-  case LITERAL:
-    return OZ_literalToC(term);
-  case FLOAT:
-    return OZ_floatToCString(term);
-  case BIGINT:
-  case SMALLINT:
-    return OZ_intToCString(term);
-
-  default:
-    break;
-  }
-
-  warning("OZ_toC: failed");
-  return ozstrdup("unknown term");
+  return OZ_toC1(term,ozconf.printDepth);
 }
+
 
 char *OZ_toC1(OZ_Term term, int depth)
 {
