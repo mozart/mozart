@@ -1860,4 +1860,16 @@ OZ_BIspec spec[] = {
 void BIinitUnix()
 {
   OZ_addBISpec(spec);
+
+#ifdef WINDOWS
+  WSADATA wsa_data;
+  WORD req_version = MAKEWORD(1,1);
+
+  if (WSAStartup(req_version, &wsa_data) != 0)
+    fprintf(stderr, "WSAStartup() failed\n"); /* for now */
+
+  /* for now: */
+  fprintf(stderr, "szDescription = \"%s\"", wsa_data.szDescription);
+  fprintf(stderr, "szSystemStatus = \"%s\"", wsa_data.szSystemStatus);
+#endif
 }

@@ -29,7 +29,7 @@
 // sleep
 #include <dos.h>
 
-// execlp, getpid
+// getpid
 #include <process.h>
 
 

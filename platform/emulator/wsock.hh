@@ -19,7 +19,7 @@
 #define NOMINMAX
 #define Bool WinBool
 
-#include <winsock.h>
+#include <windows.h>
 
 #undef Bool
 
