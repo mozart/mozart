@@ -766,11 +766,15 @@ OZ_CHECK_HEADER_PATH(gmp.h,
  [oz_gmp_inc_found=yes],[oz_gmp_inc_found=no])
 
 if test "$oz_gmp_inc_found" = yes; then
-  OZ_CHECK_LIB_PATH(gmp, mpz_init,
+dnl first check for GMP 3
+  OZ_CHECK_LIB_PATH(gmp, __gmpz_init,
     oz_gmp_lib_found=gmp,
-    OZ_CHECK_LIB_PATH(gmp2, mpz_init,
-    oz_gmp_lib_found=gmp2,
-    oz_gmp_lib_found=no))
+dnl if that fail, try GMP 2
+    OZ_CHECK_LIB_PATH(gmp, mpz_init,
+      oz_gmp_lib_found=gmp,
+      OZ_CHECK_LIB_PATH(gmp2, mpz_init,
+      oz_gmp_lib_found=gmp2,
+      oz_gmp_lib_found=no)))
 fi
 
 if test "$oz_gmp_lib_found" != no; then
@@ -794,13 +798,6 @@ EOF
     AC_MSG_RESULT([(cached) $oz_tmp_ok])
   fi
   oz_gmp_version_ok=$oz_tmp_ok
-fi
-
-if test "$oz_gmp_inc_found" = yes; then
-  OZ_CHECK_LIB_PATH(gmp, __gmpz_init,
-    oz_gmp_lib_found=gmp
-    oz_gmp_version_ok=yes,
-    oz_gmp_lib_found=no)
 fi
 
 if test "$oz_gmp_inc_found" = no; then
