@@ -21,25 +21,6 @@
 #include "runtime.hh"
 #include "debug.hh"
 
-void dbgMessage(char *s)
-{
-  fprintf(stderr,s);
-  fflush(stderr);
-}
-
-void dbgPrint(TaggedRef t)
-{
-  taggedPrint(t,ozconf.printDepth);
-}
-
-void execBreakpoint(Thread *t, Bool message) {
-  t->startStepMode();
-  t->deleteContFlag();
-  t->traced();
-  if (message)
-    debugStreamThread(t);
-}
-
 static Board* gotoRootBoard() {
   Board *b = am.currentBoard;
   am.currentBoard = am.rootBoard;
@@ -453,6 +434,14 @@ OZ_C_proc_begin(BIbreakpointAt, 4)
 }
 OZ_C_proc_end
 
+void execBreakpoint(Thread *t, Bool message) {
+  t->startStepMode();
+  t->deleteContFlag();
+  t->traced();
+  if (message)
+    debugStreamThread(t);
+}
+
 OZ_C_proc_begin(BIbreakpoint, 0)
 {
   if (am.debugmode())
@@ -539,7 +528,7 @@ Bool isInTable(TaggedRef def, char **table)
 }
 
 
-
+#ifdef MM_DEBUG
 /*
  * the machine level debugger starts here
  */
@@ -787,3 +776,5 @@ OZ_C_proc_begin(BIhalt, 0)
   return PROCEED;
 }
 OZ_C_proc_end
+
+#endif
