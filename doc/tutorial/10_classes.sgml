@@ -67,15 +67,15 @@ local
    MethodTable = m(browse:MyBrowse init:Init inc:Inc)
    proc {Init M S Self}
       init(Value) = M in
-      {Assign S.val Value}
+      (S.val) := Value
    end
    proc {Inc M S Self}
       X inc(Value)=M
    in 
-      {Access S.val X} {Assign S.val X+Value} 
+      X = @(S.val) (S.val) := X+Value 
    end
    proc {MyBrowse M=browse S Self}
-      {Browse {Access S.val}}
+      {Browse @(S.val)}
    end
 in
    Counter = {NewChunk c(methods:MethodTable attrs:Attrs)}
@@ -157,10 +157,10 @@ class Counter
       {Browse @val}
    end
    meth inc(Value)
-      val &lt;- @val + Value
+      val := @val + Value
    end
    meth init(Value)
-      val &lt;- Value
+      val := Value
    end
 end
 >>>
@@ -182,7 +182,7 @@ before the method-declaration part:
 <P>where the expression ?{E} evaluates to a method head, which is a
 record whose label is the method name.  An attribute ?{A} is accessed
 using the expression <<@?{A}>>. It is assigned a value using the
-statement <<?{A} &lt;- ?{E}>>.
+statement <<?{A} := ?{E}>>.
 
 <P>A class can be defined anonymously by:
 
@@ -626,17 +626,17 @@ initialized to zero before the initial message is applied. The method
 class Point from BaseObject
    attr x:0 y:0
    meth init(X Y)
-      x &lt;- X
-      y &lt;- Y             % attribute update
+      x := X
+      y := Y             % attribute update
    end
    meth location(L)
       L = l(x:@x y:@y)     % attribute access
    end
    meth moveHorizontal(X)
-      x &lt;- X
+      x := X
    end
    meth moveVertical(Y)
-      y &lt;- Y
+      y := Y
    end
    meth move(X Y)
       {self moveHorizontal(X)}
@@ -734,11 +734,11 @@ class HistoryPoint from Point
       displayHistory: DisplayHistory
    meth init(X Y)
       Point,init(X Y)  % call your super
-      history &lt;- [l(X Y)]
+      history := [l(X Y)]
    end
    meth move(X Y)
       Point,move(X Y)
-      history &lt;- l(X Y)|@history
+      history := l(X Y)|@history
    end
    meth display
       Point,display
@@ -798,8 +798,8 @@ class BoundedPoint from Point
       boundConstraint: BoundConstraint
    meth init(X Y xbounds:XB &lt;= 0#10 ybounds:YB &lt;= 0#10)
       Point,init(X Y) % call your super
-      xbounds &lt;- XB
-      ybounds &lt;- YB
+      xbounds := XB
+      ybounds := YB
    end
    meth move(X Y)
       if {self BoundConstraint(X Y $)} then

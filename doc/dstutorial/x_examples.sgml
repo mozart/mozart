@@ -549,9 +549,9 @@ proc {NewUpgradableStat Class Init ?Upg ?Srv}
    C={NewCell Obj}
 in
    Srv={MakeStat 
-          proc {$ M} {{Access C} M} end}
+          proc {$ M} {@C M} end}
    Upg={MakeStat
-          proc {$ Class2#Init2} {Assign C {New Class2 Init2}} end}
+          proc {$ Class2#Init2} C := {New Class2 Init2} end}
 end
 >>>
 <P>This definition must be executed 

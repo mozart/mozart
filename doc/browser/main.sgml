@@ -603,12 +603,12 @@ subsequent selections:
      meth click(S)
         case @state == start then
            {Show 'First...'}
-           first <- S
-           state <- continue
+           first := S
+           state := continue
         else
            {Show 'Unify!'}
            S = @first
-           state <- start
+           state := start
         end
      end
   end
