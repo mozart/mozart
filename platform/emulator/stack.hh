@@ -57,8 +57,7 @@ public:
   
   void checkConsistency()
   {
-    DebugCheck(((tos < array) || (tos > array+size)),
-	       error("Stack inconsistent"));
+    Assert((tos >= array) && (tos <= array+size));
   }
 
   void push(StackEntry value, Bool check=OK)
@@ -72,7 +71,7 @@ public:
   StackEntry pop(int n=1)
   {
     checkConsistency();
-    DebugCheck(empty() == OK, error("Cannot pop from empty stack."););
+    Assert(empty() == NO);
     tos -= n;
     return *tos;
   }
