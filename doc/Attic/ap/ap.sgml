@@ -16,6 +16,11 @@
 
 <Book proglang=oz>
   <Front>
+    <!-- Splitting the document into different HTML nodes -->
+    <Meta name="html.split" value="chapter.parsingconventions">
+    <Meta name="html.split" value="chapter.specifications">
+    <Meta name="html.split" value="chapter.accessing">
+
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
     <Title/Application Programming/
@@ -31,15 +36,22 @@
       types of applications.  It supports the automatic loading of required
       modules as well as parameter passing.
   <Body>
-    <Chapter proglang=sh id="chapter.conventions">
-      <Title/Conventions/
+    <Chapter proglang=sh id="chapter.parsingconventions">
+      <Title/Parsing Conventions/
+      <P>
+	This chapter describes how the arguments are acquired and what basic
+	syntax is used for parsing them.
       <Section>
-	<Title/Parsing of CGI arguments/
+	<Title/Parsing of CGI Arguments/
+	<P>
+	  The CGI always passes arguments as name&slash;value pairs, where
+	  the name is separated from the value by an equals sign and the
+	  individual pairs are separated by ampersands.
 	<P>
 	  Boolean options ?{option} may be given as <<?{option}=yes>> or
 	  <<?{option}=no>>.  Option names may be abbreviated, as long as
 	  they remain unambiguous.
-      <Section>
+      <Section id="section.cmdparsing">
 	<Title/Parsing of Command Lines/
 	<P>
 	  We distinguish between long option names and single character
@@ -59,7 +71,7 @@
 	  to be an option and thus is returned unchanged.  Parsing stops at
 	  a double hyphen&nbsp;<<-->> not followed by an option name; the
 	  double hyphen itself does not appear in the output.
-    <Chapter>
+    <Chapter id="chapter.specifications">
       <Title/Option Specifications/
       <P>
 	There are several ways to specify the way the arguments are parsed.
@@ -68,12 +80,12 @@
       <Section>
 	<Title/Plain/
 	<Para class=apropos><Title/Syntax Specification/
-	    The <<plain>> way of command line processing actually involves
-	    no processing at all.  In CGI scripts, not even escape characters
-	    are resolved.
-	    <Grammar.Rule>?={spec}
-	      <Grammar.Alt/<<plain>>/
-	    </Grammar.Rule>
+	  The <<plain>> way of command line processing actually involves
+	  no processing at all.  In CGI parsing, not even escaped characters
+	  are translated.
+	  <Grammar.Rule>?={spec}
+	    <Grammar.Alt/<<plain>>/
+	  </Grammar.Rule>
 	<Para class=apropos><Title/Returned Result/
 	  For CGI scripts, the result consists of a list of pairs of strings
 	  (the name&slash;value pairs), whereas for command lines, it consists
@@ -90,7 +102,7 @@
 	  </Grammar.Rule>
 	  Using the <<mode>> specification, the command line parser can either
 	  be instructed to stop at the first non-option argument it encounters
-	  (<<start>>) or it can look for options in the whole command line
+	  (<<start>>) or it can look for options on the whole command line
 	  (<<anywhere>>).  The latter is the default if no <<mode>> is given.
 	  <Grammar.Rule>?={mode}
 	    <Grammar.Alt/<<start>> | <<anywhere>>/
@@ -102,7 +114,7 @@
 	  <<alias>> is given) or it may be a <Q class=quasi/real/ option
 	  actually visible to the application.  Aliases are never returned
 	  to the application; they are always replaced by the option they
-	  are an alias for.
+	  stand for.
 	  <Grammar.Rule>?={option}
 	    <Grammar.Alt/?={option name}<<(>>[<<char:>> ?={char or chars}]
 	      [<<type: ?={type}>>]<<)>>/
@@ -112,10 +124,10 @@
 	  <Grammar.Rule>?={option name}
 	    <Grammar.Alt/?={atom}/
 	  </Grammar.Rule>
-	  As mentioned above, options may be notated using single-character
-	  short forms.  The <<char>> specification may assign one or several
-	  single-character short forms to an option.  Note that as with
-	  aliases, the long option name is returned instead of the character.
+	  As mentioned in <Ptr to="section.cmdparsing">, options may be notated
+	  using single-character short forms.  With the <<char>> specification
+	  one or several single-character short forms may be assigned to an
+	  option.
 	  <Grammar.Rule>?={char or chars}
 	    <Grammar.Alt/?={char} | <<[>>?={char}<<]>>/
 	  </Grammar.Rule>
@@ -123,11 +135,10 @@
 	  If no <<type>> is given, then the option does not take an argument.
 	  (Note that <<true>> will be used as the associated value in this
 	  case.)  Boolean options have a special status, as has already been
-	  alluded to in <Ptr to="chapter.conventions">; these also may not
-	  take an explicit argument.  The remaining type specifications,
-	  however, require an additional argument.  The <<list(?={primary
-	  type})>> annotation interprets its argument as a comma-separated
-	  list of elements of a specific type.
+	  described in <Ptr to="chapter.parsingconventions">.  The remaining
+	  type specifications, however, require an additional argument.  The
+	  <<list(?={primary type})>> annotation interprets its argument as a
+	  comma-separated list of elements of a specific type.
 	  <Grammar.Rule>?={type}
 	    <Grammar.Alt/<<bool>>/
 	    <Grammar.Alt/?={primary type}/
@@ -135,8 +146,8 @@
 	  </Grammar.Rule>
 	<P>
 	  There are four supported basic types and a <Q class=quasi/generic/
-	  type.  Integer and float arguments have to be given in Oz notation
-	  (with the exception that the unary minus sign may be notated
+	  type.  Integer and float arguments have to be given in Oz concrete
+	  syntax (with the exception that the unary minus sign may be notated
 	  as&nbsp;<<->>); minimum and maximum values may also be specified.
 	  For arguments to be returned as atoms, a set of allowed values may
 	  be specified.  Strings are returned as-is.
@@ -157,11 +168,11 @@
 	  simply state that this option name is equivalent to some other
 	  option name; the other option's argument description will be used
 	  for parsing this option as well.  The second kind of alias states
-	  that this option is equivalent to another option used with an
-	  additional supplied value (or a combination of several options).
-	  In the latter case, the value will be tranferred to the output
-	  without any additional transformations.  (It should be list however,
-	  if the <<type>> specification was <<list(?={primary type})>>.)
+	  that this option is equivalent to another option used with the
+	  supplied value (or a combination of several options).  In the
+	  latter case, the value will be transferred to the output without
+	  any additional transformations.  (It should be list however, if
+	  the <<type>> specification was <<list(?={primary type})>>.)
 	  <Grammar.Rule>?={alias}
 	    <Grammar.Alt/?={option name}/
 	    <Grammar.Alt/?={option name}<<#>>?={value}
@@ -169,7 +180,10 @@
 	  </Grammar.Rule>
 	<Para class=apropos><Title/Returned Result/
 	  The result of this processing step is a list of parsed options,
-	  interspersed with non-parsed arguments, a so-called ?={option list}:
+	  interspersed with non-parsed arguments, a so-called ?={option list}.
+	  All option names in this list are the canonical (&ie;, not aliased
+	  and unabbreviated) forms.  The list respects the order in which the
+	  arguments were given.
 	  <Grammar.Rule>?={option list}
 	    <Grammar.Alt/<<[>>?={arg or option}<<]>>/
 	  </Grammar.Rule>
@@ -177,6 +191,7 @@
 	    <Grammar.Alt/?={option name}<<#>>?={value}/
 	    <Grammar.Alt/?={string}/
 	  </Grammar.Rule>
+	<!--** Examples -->
       <Section>
 	<Title/Record/
 	<Para class=apropos><Title/Syntax Specification/
@@ -194,8 +209,8 @@
 	  more information into consideration, namely how often the
 	  option may appear and how several occurrences combine (?={occ}),
 	  and whether it is a required option (<<optional>>; the default
-	  is <<true>>) or whether it takes a default value (which it
-	  does not by default).
+	  is <<true>>) or whether it takes a default value (<<default>>),
+	  which it does not by default.
 	  <Grammar.Rule>?={option}
 	    <Grammar.Alt add/?={option name}<<(>>/
 	    <Grammar.Alt space/<<   >>[<<char: ?={char or chars}>>]/
@@ -219,24 +234,25 @@
 	  an explicit ?={occ} given in their specification are moved from
 	  the option list into this record.  Options with default values
 	  appear with these values in the option record unless they were
-	  explicitly given in the argument list.  All non-optional options
-	  also appear in this record.  All other options, interspersed
-	  with non-parsed arguments, are stored as an option list under
-	  feature&nbsp;<<1>> of this record.
+	  explicitly given in the argument list.  It is ensured that all
+	  non-optional options are present in this record.  All other options,
+	  interspersed with non-parsed arguments, are stored as an option list
+	  under feature&nbsp;<<1>> of this record.
 	  <Grammar.Rule>?={option record}
 	    <Grammar.Alt/<<optRec(1: ?={option list}>>/
 	    <Grammar.Alt/<<       ?={option name}: ?={value}>> &ellipsis;/
 	    <Grammar.Alt/<<       ?={option name}: ?={value}>>/
 	  </Grammar.Rule>
+	<!--** Examples -->
       <Section>
 	<Title/Backward Compatibility/
 	<P>
 	  For backward compatibility, two further modes of processing are
 	  supplied, although their use is discouraged.  They are in fact
 	  translated to the <<record>> method described above.
-	  <Grammar.Rule>?={Spec}
-	    <Grammar.Alt add/<<single(>>?={Option} &ellipsis; ?={Option})/
-	    <Grammar.Alt/<<multiple(>>?={Option} &ellipsis; ?={Option})/
+	  <Grammar.Rule>?={spec}
+	    <Grammar.Alt add/<<single(>>?={option} &ellipsis; ?={option})/
+	    <Grammar.Alt/<<multiple(>>?={option} &ellipsis; ?={option})/
 	  </Grammar.Rule>
 	  The specifications are enriched as follows:
 	  <List>
@@ -261,6 +277,39 @@
 	    <Item>
 	      The returned record will contain the option list under
 	      feature&nbsp;<<2>>.  Feature&nbsp;<<1>> will always contain
-	      an empty list.
+	      an empty list.  This list will only consist of unparsed
+	      arguments and will thus be empty in the case of CGI parsing.
 	  </List>
+    <Chapter id="chapter.accessing">
+      <Title/Accessing the Arguments/
+      <Section>
+	<Title/Accessing CGI Arguments/
+	<P>
+	  <List>
+	    <Entry><<getCgiArgs>>
+	    <Synopsis>
+	      <<{Application.getCgiArgs ?+{Spec} ??{R}}>>
+	    <Item>
+	      acquires the arguments (both <Samp/GET/ and <Samp/POST/ methods
+	      supported) and parses them according to ?_{Spec}.  Returns the
+	      options in&nbsp;?_{R}.
+	  </List>
+      <Section>
+	<Title/Accessing Command Line Arguments/
+	<P>
+	  <List>
+	    <Entry><<getCmdArgs>>
+	    <Synopsis>
+	      <<{Application.getCmdArgs ?+{Spec} ??{R}}>>
+	    <Item>
+	      acquires the arguments from the system property <<argv>>
+	      and parses them according to ?_{Spec}.  Returns the options
+	      in&nbsp;?_{R}.
+	  </List>
+      <Section>
+	<Title/Error Handling/
+	<P>
+	  If an error is encountered in the input, an error exception of the
+	  form <<ap(usage ?_{VS})>> is raised.  ?_{VS} describes the error
+	  in textual form.
 </Book>
