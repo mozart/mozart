@@ -1043,7 +1043,7 @@ $builtins = {
     'tellRecordSize'    => { in  => ['+literal','+int','record'],
                              out => [],
                              BI  => BIsystemTellSize,
-                             native => true},
+                             native => false},
 
     ###* Records and Chunks
 
@@ -1471,13 +1471,13 @@ $builtins = {
                              out => [],
                              BI  => BILazyNew,
                              module=>'lazy',
-                             native => true},
+                             native => false},
 
     'Lazy.is'           => { in  => ['value'],
                              out => ['+bool'],
                              BI  => BILazyIs,
                              module=>'lazy',
-                             native => true},
+                             native => false},
 
     ###* Metavar
 
@@ -1997,11 +1997,6 @@ $builtins = {
     'probe'             => { in  => ['value'],
                              out => [],
                              BI  => BIprobe,
-                             native => true},
-
-    'perdioRestop'      => { in  => ['value'],
-                             out => [],
-                             BI  => BIrestop,
                              native => true},
 
     'crash'             => { in  => [],
@@ -3342,7 +3337,7 @@ $builtins = {
                              out => ['+bool'],
                              BI  => BIfsIsVarB,
                              module=>fset ,
-                             native => true},
+                             native => false},
 
     'fsIsValueB'        => { in  => ['+value','bool'],
                              out => [],
