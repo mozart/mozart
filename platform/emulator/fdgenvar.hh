@@ -57,6 +57,15 @@ public:
 	::addVirtualConstr(fdSuspList[state], elem, clusterNode);
   }
 
+  void addVirtualConstrLocal(SuspList *elem, FDState state) {
+    if (isLocalVariable() == OK || state == any || state == eqvar)
+      addVirtualConstr(elem, state);
+    else
+      fdSuspList[size] =
+	::addVirtualConstr(fdSuspList[size], elem, clusterNode);
+      
+  }
+
   void addVirtualConstr(SuspList *elem) {
     GenCVariable::addVirtualConstr(elem);
   }
@@ -70,8 +79,8 @@ public:
 //            Some additional stuff for tagged references
 //-----------------------------------------------------------------------------
 
-inline Bool isGenFDVar(TaggedRef term);
-inline GenFDVariable* tagged2GenFDVar(TaggedRef term);
+Bool isGenFDVar(TaggedRef term);
+GenFDVariable* tagged2GenFDVar(TaggedRef term);
 
 //-----------------------------------------------------------------------------
 //                   Functions to constrain variables
