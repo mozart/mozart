@@ -24,13 +24,10 @@ import
    OS
    Application
    System(show)
-   GOZCoreComponent('GOZCore' : GOZCore) at 'x-oz://system/gtk/GOZCore.ozf'
-   GDK     at 'x-oz://system/gtk/GDK.ozf'
-   GTK     at 'x-oz://system/gtk/GTK.ozf'
-   Canvas  at 'x-oz://system/gtk/GTKCANVAS.ozf'
+   GDK    at 'x-oz://system/gtk/GDK.ozf'
+   GTK    at 'x-oz://system/gtk/GTK.ozf'
+   Canvas at 'x-oz://system/gtk/GTKCANVAS.ozf'
 define
-   {Wait GOZCore}
-
    %% Some Global Variables
    PieceSize = 50
    Font = "-adobe-helvetica-bold-r-normal--24-240-75-75-p-138-iso8859-1"
@@ -149,7 +146,7 @@ define
                                   "anchor"#GTK.aNCHOR_CENTER
                                   "fill_color_gdk"#Black] $)}
             proc {PieceEvent Event}
-               case {Label {GOZCore.getGdkEvent Event}}
+               case {Label {GDK.getEvent Event}}
                of 'GDK_ENTER_NOTIFY' then {Text set("fill_color_gdk" White)}
                [] 'GDK_LEAVE_NOTIFY' then {Text set("fill_color_gdk" Black)}
                [] 'GDK_BUTTON_PRESS' then
@@ -299,6 +296,9 @@ define
          {self signalConnect('destroy' destroyEvent _)}
       end
       meth destroyEvent(Event)
+         %% This is necessary to alloc GC
+         %% Toplevel is a container which recursively frees all its child widgets
+         {self close}
          {Application.exit 0}
       end
    end

@@ -22,7 +22,6 @@
 functor $
 import
    Word at 'x-oz://boot/Word.ozf'
-   System(show)
    Open
    Util
 export
@@ -48,7 +47,8 @@ define
                      "import"
                      "   GdkNative                             at 'GdkNative.so{native}'"
                      "   GOZCoreComponent('GOZCore' : GOZCore) at 'GOZCore.ozf'"
-                     "export"]
+                     "export"
+                     "   GetEvent"]
 
    CanvasFilePrepend = ["%%"
                         "%% This file is generated. Please do not edit."
@@ -62,27 +62,22 @@ define
                         "export"]
 
    GdkInitStub = ["define"
-                  "   {Wait GOZCore}"
-                  "   OzBase = GOZCore.ozBase"
-                  "   RGP    = GOZCore.registerPointer"
-                  "   P2O    = GOZCore.pointerToObject"
-                  "   O2P    = GOZCore.objectToPointer"
+                  "   OzBase   = GOZCore.ozBase"
+                  "   P2O      = GOZCore.pointerToObject"
+                  "   O2P      = GOZCore.objectToPointer"
+                  "   GetEvent = GOZCore.getGdkEvent"
                   "   class OzColorBase from OzBase"
                   "      meth new(R G B)"
-                  "         @object = {RGP {GOZCore.allocColor R G B}}"
+                  "         @object = {GOZCore.allocColor R G B}"
                   "      end"
                   "   end"]
 
    GtkInitStub = ["define"
-                  "   {Wait GOZCore}"
                   "   OzBase = GOZCore.ozBase"
-                  "   RGP    = GOZCore.registerPointer"
                   "   P2O    = GOZCore.pointerToObject"
                   "   O2P    = GOZCore.objectToPointer"]
 
    CanvasInitStub = ["define"
-                     "   {Wait GOZCore}"
-                     "   RGP    = GOZCore.registerPointer"
                      "   P2O    = GOZCore.pointerToObject"
                      "   O2P    = GOZCore.objectToPointer"
                      "   Widget = GTK.widget"
@@ -260,9 +255,31 @@ define
                  "load"          %% GkdFont
                  "getSystem"     %% GdkColormap
                 ]
+
+      Containers = [%% All Container
+                    "gtkContainerAdd"
+                    %% GtkBox and Childs
+                    "gtkBoxPackStart"
+                    "gtkBoxPackEnd"
+                    "gtkBoxPackStartDefaults"
+                    "gtkBoxPackEndDefaults"
+                    %% GtkPane and Childs
+                    "gtkPanedPack1"
+                    "gtkPanedPack2"
+                    %% GtkNotebook and Childs
+                    "gtkNotebookInsertPage"
+                    "gtkNotebookInsertPageMenu"
+                    "gtkNotebookPrependPage"
+                    "gtkNotebookPrependPageMenu"
+                    "gtkNotebookAppendPage"
+                    "gtkNotebookAppendPageMenu"
+                   ]
    in
       fun {IsConstructor S}
          {Member S Constrs}
+      end
+      fun {IsContainerAdd C}
+         {Member C Containers}
       end
    end
 
@@ -351,7 +368,6 @@ define
          ClassS         = {Util.toString Class}
       in
          {ClassReg add({Util.toString ClassS#"*"} {Util.cutPrefix @stdPrefix ClassS})}
-%        {System.show 'Adding Class:'#{Util.toAtom Class}}
          {Dictionary.put @classes Class
           'class'(anchestor: Parent
                   methods: Methods)}
@@ -449,6 +465,7 @@ define
          ShortName = {Util.firstLower {Util.cutPrefix {Util.firstLower Prefix} Name}}
          IsVoid    = case Args of [arg(type("void" "") _)] then true else false end
          IsNew     = {IsConstructor ShortName}
+         IsCont    = {IsContainerAdd Name}
          HasSelf   = {CheckFirstArg Prefix Args}
          IA        = if IsVoid then 0 else ({Length Args} - (if HasSelf then 1 else 0 end)) end
          OA        = case RetType
@@ -480,7 +497,9 @@ define
          end
          TextFile, putS({Util.indent 3}#ResStart#"{"#@module#"."#Name#" "#Self#CallStr#"}"#ResEnd)
          GtkClasses, handleOutArgs(CallArgs)
-         if IsNew then TextFile, putS({Util.indent 3}#"{self connectEvents}") end
+         if IsCont then TextFile, putS({Util.indent 3}#"children <- A0|@children") end
+         if IsNew then TextFile, putS({Util.indent 3}#"{self connectEvents}")
+         end
          TextFile, putS({Util.indent 2}#"end")
       end
       meth prepareArgs(InArgs I OutArgs $)
@@ -548,7 +567,7 @@ define
             then nil
             elseif {ClassReg member(TypeA $)}
             then "{P2O "#{ClassReg className(TypeA $)}#" "
-            else "{RGP "
+            else nil %% Former Pointer Registration is no longer necessary
             end
          [] _ then nil
          end
@@ -682,7 +701,6 @@ define
       meth collect(Keys)
          case Keys
          of (Parent#Key#Forbidden)|Kr then
-            {System.show 'Collecting:'#{Util.toAtom Parent}#{Util.toAtom Key}}
             GtkClasses, addClass({Util.toAtom Parent} {Util.toAtom Key} Forbidden)
             CanvasClasses, collect(Kr)
          [] nil then skip

@@ -24,8 +24,6 @@ import
    System(show)
    GTK at 'x-oz://system/system/GTK.ozf'
 define
-   {Wait GTK}
-
    %% Create Toplevel window class
    class MyToplevel from GTK.window
       meth new
@@ -36,7 +34,10 @@ define
          GTK.window, setBorderWidth(10)
       end
       meth destroyEvent(Event)
-         {System.show 'DesroyEvent occured'}
+         {System.show 'destroy Event occured'}
+         %% This is necessary to alloc GC
+         %% Toplevel is a container which recursively frees all its child widgets
+         {self close}
       end
    end
 

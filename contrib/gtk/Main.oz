@@ -34,9 +34,7 @@ define
    TreeSource = "gtkraw.c"
    PrepTree   = "gtkheader.c"
    {Prepare.'prepare' TreeSource PrepTree}
-   {System.show 'parsing...'}
    ParseTree = {Parser.parse PrepTree}
-   {System.show 'parsing...finished'}
    case ParseTree
    of 'parse error'(...) then {System.show 'parse error'} {Inspector.inspect ParseTree}
    [] ParseTree then

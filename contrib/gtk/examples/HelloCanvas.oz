@@ -22,26 +22,29 @@
 functor $
 import
    Application
-   GOZCoreComponent('GOZCore' : GOZCore) at 'x-oz://system/gtk/GOZCore.ozf'
-   GDK     at 'x-oz://system/gtk/GDK.ozf'
-   GTK     at 'x-oz://system/gtk/GTK.ozf'
-   Canvas  at 'x-oz://system/gtk/GTKCANVAS.ozf'
+   GDK    at 'x-oz://system/gtk/GDK.ozf'
+   GTK    at 'x-oz://system/gtk/GTK.ozf'
+   Canvas at 'x-oz://system/gtk/GTKCANVAS.ozf'
 define
-   {Wait GOZCore}
-
+   %% Create Toplevel window class
    class CanvasToplevel from GTK.window
+      meth new
+         GTK.window, new(GTK.wINDOW_TOPLEVEL)
+         GTK.window, setBorderWidth(10)
+         GTK.window, setTitle("Hello Canvas")
+      end
       meth connectEvents
          {self signalConnect('destroy' destroyEvent _)}
       end
       meth destroyEvent(Event)
+         %% This is necessary to allow GC
+         %% Toplevel is a container which recursively frees all its child widgets
+         {self close}
          {Application.exit 0}
       end
    end
 
-   %% Configure Toplevel window
-   Toplevel = {New CanvasToplevel new(0)}
-   {Toplevel setBorderWidth(10)}
-   {Toplevel setTitle("Hello Canvas")}
+   Toplevel = {New CanvasToplevel new}
 
    %% Set up the Colors
    %% 1. Obtain the system colormap
