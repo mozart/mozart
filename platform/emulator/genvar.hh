@@ -83,7 +83,6 @@ public:
   
   OZPRINT;
   OZPRINTLONG;
-  MPRINT;
 };
 
 #include "fdgenvar.hh"
