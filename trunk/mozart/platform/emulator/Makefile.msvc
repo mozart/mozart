@@ -1,7 +1,7 @@
 WINDIR=Y:/.root/project/ps/soft/win32-i486
 
 # at sics use
-#WINDIR=Y:/.root/home/scheidhr/build/packages/win32-i486/lib
+WINDIR=Y:/.root/home/scheidhr/build/packages/win32-i486
 
 # debugging flags
 
