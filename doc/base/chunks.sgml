@@ -385,7 +385,7 @@ negated implication)./
 	<Entry><<new>>
 	  <Index class=tails/<<Class>><And><<new>>/
 	<Synopsis>
-	  <<{Class.new ?+{ParentKs} ?+{AttrR} ?+{FeatR} ??{K}}>>
+	  <<{Class.new ?+{ParentKs} ?+{AttrR} ?+{FeatR} ?+{PropAs} ??{K}}>>
 	<Item>
 	  creates a new class by inheriting from ?_{ParentKs} with new
 	  attributes ?_{AttrR} and new features ?_{FeatR}. The fields
@@ -393,36 +393,19 @@ negated implication)./
 	  attributes. The fields with literal features define
 	  attributes with initial values, where the feature is the
 	  attribute name and the field its initial value. The
-	  semantics for ?_{FeatR} is accordingly.
+	  semantics for ?_{FeatR} is accordingly. The properties of the class 
+          to be created are defined by ?_{PropAs} (a list of atoms, valid 
+          elements are <<sited>>, <<final>>, and <<locking>>). 
         <p>
           For example, the statement
-<<<C={Class.new [D E] a(a:1 b) f(f:2 g)}>>>
+<<<C={Class.new [D E] a(a:1 b) f(f:2 g) [final]}>>>
           is equivalent to
 <<<class C from D E
+   prop final
    attr a:1 b
    feat f:2 g
 end>>>
      
-
-	<Entry><<extendFeatures>>
-	  <Index class=tails/<<Class>><And><<extendFeatures>>/
-	<Synopsis>
-	  <<{Class.extendFeatures ?+{K1} ?+{FeatR} ??{K2}}>>
-	<Item>
-	  returns a class ?_{K2} which has been created by extending
-	  ?_{K1} with the 
-	  features as defined by ?_{FeatR}, where the specification is
-	  as for <<Class.new>>. The class ?_{K1} can also be final,
-	  the created class ?_{K2} is always final.
-        <P>
-          For example, provided that the class <<D>> is not final, the
-	  statement
-<<<C={Class.extendFeatures D f(f:2 g)}>>>
-          is equivalent to
-<<<class C from D
-   prop final
-   feat f:2 g
-end>>>
 
       </List>
 
