@@ -1,6 +1,7 @@
 ;; Major mode for editing Oz, and for running Oz under Emacs
-;; Copyright (C) 1993 DFKI GmbH
-;; Author: Ralf Scheidhauer and Michael Mehl ([scheidhr|mehl]@dfki.uni-sb.de)
+;; Copyright (C) 1993-1997 DFKI GmbH and Programming Systems Lab, UdS
+;; Authors: Ralf Scheidhauer, Michael Mehl and Leif Kornstaedt
+;; ({scheidhr,mehl,kornstae}@ps.uni-sb.de)
 ;; $Id$
 
 ;; BUGS
@@ -30,11 +31,8 @@
 
 (or (member ".ozo" completion-ignored-extensions)
     (setq completion-ignored-extensions
-	  (append '(".ozo" ".ozs")
-		  completion-ignored-extensions)))
+	  (append '(".ozo" ".ozs") completion-ignored-extensions)))
 
-;; automatically switch into Oz-Mode when loading
-;; files ending in ".oz"
 (or (assoc "\\.oz$" auto-mode-alist)
     (setq auto-mode-alist
 	  (append '(("/\\.ozrc$" . oz-mode)
@@ -49,19 +47,20 @@
 ;;------------------------------------------------------------
 
 (defvar oz-gnu-emacs
-  (string-match "\\`[0-9]+\\(\\.[0-9]+\\)*\\'" emacs-version))
+  (string-match "\\`[0-9]+\\(\\.[0-9]+\\)*\\'" emacs-version)
+  "Non-nil iff we're running under GNU Emacs.")
 (defvar oz-lucid-emacs
-  (string-match "\\<XEmacs\\>\\|\\<Lucid\\>" emacs-version))
+  (string-match "\\<XEmacs\\>\\|\\<Lucid\\>" emacs-version)
+  "Non-nil iff we're running under XEmacs.")
 
 
 ;;------------------------------------------------------------
 ;; win32 Support
 ;;------------------------------------------------------------
-;; primary change: emulator is started by compiler,
-;; so its output goes into the compiler buffer
 
-(defvar oz-win32 nil)
-(setq oz-win32 (eq system-type 'windows-nt))
+(defvar oz-win32
+  (eq system-type 'windows-nt)
+  "Non-nil iff we're running under Windows.")
 
 
 ;;------------------------------------------------------------
@@ -74,14 +73,12 @@ This has the effect of not opening the *Oz Compiler* buffer and feeding
 everything into the *Oz Emulator* buffer.")
 
 (defvar oz-using-new-compiler nil
-  "If non-nil, indicates that the new Oz Compiler is currently running.")
-
-(defvar oz-other-map nil
-  "If non-nil, choose alternate key bindings.
-If nil, use default key bindings.")
+  "If non-nil, indicates that the new Oz Compiler is currently running.
+This variable should not be changed by the user.")
 
 (defvar oz-read-emulator-output nil
-  "Non-nil iff output currently comes from the emulator.")
+  "Non-nil iff output currently comes from the emulator.
+This variable should not be changed by the user.")
 
 (defvar oz-gdb-autostart t
   "*If non-nil, start emulator immediately in gdb mode.
@@ -94,24 +91,23 @@ run the emulator when you issue the command `run' to gdb.")
 (defvar oz-indent-chars 3
   "*Number of spaces Oz statements are indented wrt. containing block.")
 
-(defvar oz-mode-syntax-table nil)
-(defvar oz-mode-abbrev-table nil)
-
 (defvar oz-mode-map (make-sparse-keymap)
   "Keymap used in oz-mode buffers.")
 (defvar oz-compiler-buffer-map nil
-  "Keymap used in *Oz Compiler* buffer.")
+  "Keymap used in the *Oz Compiler* buffer.")
 (defvar oz-emulator-buffer-map nil
-  "Keymap used in *Oz Emulator* buffer.")
+  "Keymap used in the *Oz Emulator* buffer.")
 
-(defvar oz-emulator (concat (getenv "HOME") "/Oz/Emulator/oz.emulator.bin")
+(defvar oz-emulator
+  (concat (getenv "HOME") "/Oz/Emulator/oz.emulator.bin")
   "*Path to the Oz Emulator for gdb mode and for \\[oz-other].")
 
 (defvar oz-new-compiler-url
   (concat "file:" (getenv "HOME") "/Oz/tools/compiler/Compiler.ozc")
   "*URL of the new Oz Compiler for gdb mode.")
 
-(defvar oz-boot (concat (getenv "HOME") "/Oz/Compiler/backend/ozboot.ql")
+(defvar oz-boot
+  (concat (getenv "HOME") "/Oz/Compiler/backend/ozboot.ql")
   "*Path to the Oz Compiler boot file for \\[oz-other].")
 
 (defvar oz-emulator-buffer "*Oz Emulator*"
@@ -149,15 +145,20 @@ Only used as fallback if the environment variable OZHOME is not set.")
 (defvar oz-popup-on-error t
   "*If non-nil, pop up Compiler resp. Emulator buffer upon error.")
 
-(defvar oz-error-string (format "%c" 17)
+(defconst oz-error-string (char-to-string 17)
   "Regex to recognize error messages from Oz Compiler and Emulator.
 Used for popping up the corresponding buffer.")
 
 (defconst oz-remove-pattern
-  (concat oz-error-string
-	  "\\|" (char-to-string 18) "\\|" (char-to-string 19) "\\|
-"
-	  "\\|\\\\line.*% fromemacs\n")
+  (concat oz-error-string "\\|"
+	  (char-to-string 18) "\\|" (char-to-string 19) "\\|"
+	  ;; Irix outputs garbage when sending EOF:
+	  "\\^D" "\\|"
+	  ;; Under Windows, lines may be terminated by CRLF:
+	  "
+" "\\|"
+	  ;; This is a directive we inserted ourselves:
+	  "\\\\line.*% fromemacs\n")
   "Regex specifying what to remove from Compiler and Emulator output.
 All strings matching this regular expression are removed.")
 
@@ -172,30 +173,27 @@ All strings matching this regular expression are removed.")
 (defvar oz-want-font-lock t
   "*If non-nil, automatically enter font-lock-mode for oz-mode.")
 
-(defvar oz-temp-counter 0
-  "Internal counter for gensym.")
-
 (defvar oz-gump-indentation nil
   "Non-nil iff Gump syntax is to be used for indentation.")
 
 
 ;;------------------------------------------------------------
-;; Locating Errors (jd)
+;; Locating Errors
 ;;------------------------------------------------------------
 
 (defvar oz-last-fed-buffer nil
   "Buffer from which the last region was fed; used to locate errors.")
 
 (defvar oz-compiler-output-start nil
-  "Where output of last compiler run began.")
+  "Position in the Oz Compiler buffer where the last run's output began.")
 
 (defvar oz-next-error-marker nil
   "Remembers place of last error message.")
 
-(defvar oz-error-intro-pattern "\\(error\\|warning\\) \\*\\*\\*\\*\\*"
+(defconst oz-error-intro-pattern "\\(error\\|warning\\) \\*\\*\\*\\*\\*"
   "Regular expression for finding error messages.")
 
-(defvar oz-error-pattern
+(defconst oz-error-pattern
   (concat "in "
 	  "\\(file \"\\([^\"\n]+\\)\",? *\\)?"
 	  "line \\([0-9]+\\)"
@@ -206,9 +204,6 @@ All strings matching this regular expression are removed.")
 ;;------------------------------------------------------------
 ;; Setting the Frame Title
 ;;------------------------------------------------------------
-;; GNU Emacs supports frame-title as constant string
-;; Lucid Emacs supports frame-title as format string (is better ...);
-;;    see function mode-line-format
 
 (defvar oz-change-title t
   "*If non-nil, change the title of the Emacs window while Oz is running.")
@@ -222,17 +217,17 @@ All strings matching this regular expression are removed.")
 
 (defvar oz-frame-title
   (concat "Oz Programming Interface (" oz-old-frame-title ")")
-  "Format string for Emacs window title while Oz is running.")
+  "*String to be used as Emacs window title while Oz is running.")
 
 (defun oz-set-title (frame-title)
   "Set the title of the Emacs window."
   (cond ((not oz-change-title) t)
 	(oz-gnu-emacs
-	 (mapcar '(lambda (scr)
-		    (modify-frame-parameters
-		     scr
-		     (list (cons 'name frame-title))))
-		 (visible-frame-list)))
+	 (mapcar (function (lambda (scr)
+			     (modify-frame-parameters
+			      scr
+			      (list (cons 'name frame-title))))
+			   (visible-frame-list))))
 	(oz-lucid-emacs
 	 (setq frame-title-format frame-title))))
 
@@ -241,10 +236,13 @@ All strings matching this regular expression are removed.")
 ;; Utilities
 ;;------------------------------------------------------------
 
-(defun oz-make-temp-name (name)
+(defvar oz-temp-counter 0
+  "Internal counter for gensym.")
+
+(defun oz-make-temp-name (prefix)
   "gensym implementation."
   (setq oz-temp-counter (1+ oz-temp-counter))
-  (format "%s%d" (make-temp-name name) oz-temp-counter))
+  (format "%s%d" (make-temp-name prefix) oz-temp-counter))
 
 (defun oz-line-region (arg)
   "Return starting and ending positions of ARG lines surrounding point.
@@ -344,125 +342,103 @@ Positions are returned as a pair ( START . END )."
 	(oz-make-menu-gnu map (cdr list)))))
 
 (defun oz-make-menu-lucid (list)
-  (if (null list)
-      nil
-    (cons
-     (let* ((entry (car list))
-	    (name (car entry))
-	    (command (car (cdr entry)))
-	    (rest (cdr (cdr entry))))
-       (cond ((null rest)
-	      (vector name nil nil))
-	     ((null command)
-	      (cons name (oz-make-menu-lucid rest)))
-	     (t
-	      (vector name command (car rest)))))
-     (oz-make-menu-lucid (cdr list)))))
+  (if list
+      (cons
+       (let* ((entry (car list))
+	      (name (car entry))
+	      (command (car (cdr entry)))
+	      (rest (cdr (cdr entry))))
+	 (cond ((null rest)
+		(vector name nil nil))
+	       ((null command)
+		(cons name (oz-make-menu-lucid rest)))
+	       (t
+		(vector name command (car rest)))))
+       (oz-make-menu-lucid (cdr list)))))
 
 (defvar oz-menu
  '(("Oz" nil
-    ("Feed Buffer"    oz-feed-buffer t)
-    ("Feed Region"    oz-feed-region (mark t))
-    ("Feed Line"      oz-feed-line t)
-    ("Feed Paragraph" oz-feed-paragraph t)
-    ("Feed File"      oz-feed-file t)
-    ("Compile File"   oz-precompile-file (not oz-using-new-compiler))
+    ("Feed Buffer"         oz-feed-buffer t)
+    ("Feed Region"         oz-feed-region (mark t))
+    ("Feed Line"           oz-feed-line t)
+    ("Feed Paragraph"      oz-feed-paragraph t)
+    ("Feed File"           oz-feed-file t)
+    ("Precompile File"     oz-precompile-file (not oz-using-new-compiler))
     ("-----")
     ("Find" nil
      ("Documentation Demo" oz-find-docdemo-file t)
      ("Other Demo"         oz-find-demo-file t)
-     ("Modules File"       oz-find-modules-file t)
-     )
+     ("Modules File"       oz-find-modules-file t))
     ("Print" nil
-     ("Region" ps-print-region-with-faces (mark t))
-     ("Buffer" ps-print-buffer-with-faces t)
-     )
+     ("Buffer"             ps-print-buffer-with-faces t)
+     ("Region"             ps-print-region-with-faces (mark t)))
     ("Core Syntax" nil
-     ("Buffer"    oz-to-coresyntax-buffer t)
-     ("Region"    oz-to-coresyntax-region (mark t))
-     ("Line"      oz-to-coresyntax-line t)
-     ("Paragraph" oz-to-coresyntax-paragraph t)
-     )
+     ("Buffer"             oz-to-coresyntax-buffer t)
+     ("Region"             oz-to-coresyntax-region (mark t))
+     ("Line"               oz-to-coresyntax-line t)
+     ("Paragraph"          oz-to-coresyntax-paragraph t))
     ("Emulator Code" nil
-     ("Buffer"    oz-to-emulatorcode-buffer t)
-     ("Region"    oz-to-emulatorcode-region (mark t))
-     ("Line"      oz-to-emulatorcode-line t)
-     ("Paragraph" oz-to-emulatorcode-paragraph t)
-     )
+     ("Buffer"             oz-to-emulatorcode-buffer t)
+     ("Region"             oz-to-emulatorcode-region (mark t))
+     ("Line"               oz-to-emulatorcode-line t)
+     ("Paragraph"          oz-to-emulatorcode-paragraph t))
     ("Indent" nil
-     ("Line"      oz-indent-line t)
-     ("Region"    oz-indent-region (mark t))
-     ("Buffer"    oz-indent-buffer t)
-     )
+     ("Line"               oz-indent-line t)
+     ("Region"             oz-indent-region (mark t))
+     ("Buffer"             oz-indent-buffer t))
     ("Comment" nil
-     ("Comment Region"   oz-comment-region (mark t))
-     ("Uncomment Region" oz-uncomment-region (mark t))
-     )
+     ("Comment Region"     oz-comment-region (mark t))
+     ("Uncomment Region"   oz-uncomment-region (mark t)))
     ("Browse" nil
-     ("Region" oz-feed-region-browse (mark t))
-     ("Line"   oz-feed-line-browse t)
-     )
-    ("Panel"          oz-view-panel t)
-    ("Debugger"       oz-debug-start t)
-    ("Profiler"       oz-profiler-start t)
-    ("Compiler Panel" oz-compiler-panel oz-using-new-compiler)
+     ("Region"             oz-feed-region-browse (mark t))
+     ("Line"               oz-feed-line-browse t))
+    ("Panel"               oz-view-panel t)
+    ("Debugger"            oz-debug-start t)
+    ("Profiler"            oz-profiler-start t)
+    ("Compiler Panel"      oz-compiler-panel oz-using-new-compiler)
     ("-----")
-    ("Next Oz Buffer"     oz-next-buffer t)
-    ("Previous Oz Buffer" oz-previous-buffer t)
-    ("New Oz Buffer"      oz-new-buffer t)
-    ("Fontify Buffer"     oz-fontify t)
+    ("Next Oz Buffer"      oz-next-buffer t)
+    ("Previous Oz Buffer"  oz-previous-buffer t)
+    ("New Oz Buffer"       oz-new-buffer t)
+    ("Fontify Buffer"      oz-fontify-buffer t)
     ("Show/Hide" nil
-     ("Compiler" oz-toggle-compiler t)
-     ("Emulator" oz-toggle-emulator t)
-     )
+     ("Compiler"           oz-toggle-compiler t)
+     ("Emulator"           oz-toggle-emulator t))
     ("-----")
-    ("Start Oz" run-oz t)
-    ("Halt Oz"  oz-halt t)
-    ))
+    ("Start Oz"            run-oz t)
+    ("Halt Oz"             oz-halt t)))
   "Contents of the Oz menu.")
 
 (oz-make-menu oz-menu)
 
 
 ;;------------------------------------------------------------
-;; Debugger Stuff
+;; Interacting with the Oz Debugger
 ;;------------------------------------------------------------
 
-;;------------------------------------------------------------
-;; Starting and stopping the debugger
+(defun oz-debug-start (arg)
+  "Start the Oz debugger.
+With ARG, stop it instead."
+  (interactive "P")
+  (oz-send-string (if arg "{Ozcar off}" "{Ozcar on}")))
 
-(defun oz-debug-start ()
-  "Start the Oz debugger."
-  (interactive)
-  (oz-send-string "{Ozcar on}"))
+(defun oz-debug-stop (arg)
+  "Stop the Oz debugger.
+With ARG, start it instead."
+  (interactive "P")
+  (oz-send-string (if arg "{Ozcar on}" "{Ozcar off}")))
 
-(defun oz-debug-stop ()
-  "Stop the Oz debugger."
-  (interactive)
-  (oz-send-string "{Ozcar off}"))
+(defun oz-breakpoint-key-set (arg)
+  "Set breakpoint at current line.
+With ARG, delete it instead."
+  (interactive "P")
+  (oz-breakpoint (if arg " false" " true")))
 
-;;------------------------------------------------------------
-;; Setting and deleting breakpoints
-
-(defvar oz-breakpoint-error
-  "Cannot set breakpoints in unsaved buffers")
-
-(defun oz-breakpoint-key-set ()
-  "Set breakpoint at current line."
-  (interactive)
-  (oz-breakpoint-key " true"))
-
-(defun oz-breakpoint-key-delete ()
-  "Delete breakpoint at current line."
-  (interactive)
-  (oz-breakpoint-key " false"))
-
-(defun oz-breakpoint-key (flag)
-  (if (buffer-file-name)
-      (oz-send-string (concat "{Ozcar bpAt('" (buffer-file-name) "' "
-			      (count-lines 1 (1+ (point)))
-			      flag ")}"))
-    (error oz-breakpoint-error)))
+(defun oz-breakpoint-key-delete (arg)
+  "Delete breakpoint at current line.
+With ARG, set it instead."
+  (interactive "P")
+  (oz-breakpoint (if arg " true" " false")))
 
 (defun oz-breakpoint-mouse-set (event)
   "Set breakpoint at line where mouse points to."
@@ -475,37 +451,63 @@ Positions are returned as a pair ( START . END )."
   (oz-breakpoint-mouse event " false"))
 
 (defun oz-breakpoint-mouse (event flag)
-  (mouse-minibuffer-check event)
-  (save-window-excursion
-    (select-window (posn-window (event-start event)))
-    (if (buffer-file-name)
-	(oz-send-string (concat "{Ozcar bpAt('" (buffer-file-name) "' "
-				(count-lines 1
-					     (posn-point (event-start event)))
-				flag ")}"))
-      (error oz-breakpoint-error))))
+  (save-excursion
+    (set-buffer (cond (oz-gnu-emacs
+		       (window-buffer (posn-window (event-end event))))
+		      (oz-lucid-emacs
+		       (event-buffer event))))
+    (goto-char (cond (oz-gnu-emacs
+		      (posn-point (event-end event)))
+		     (oz-lucid-emacs
+		      (event-closest-point event))))
+    (oz-breakpoint flag)))
+
+(defun oz-breakpoint (flag)
+  (if (buffer-file-name)
+      (save-excursion
+	(beginning-of-line)
+	(let ((line (1+ (count-lines 1 (point)))))
+	  (oz-send-string
+	   (concat "{Ozcar bpAt('" (buffer-file-name) "' " line flag ")}"))))
+    (error "Cannot set breakpoints in unsaved buffers")))
+
 
 ;;------------------------------------------------------------
-;; Displaying the bar
+;; Interacting with the Oz Profiler
+;;------------------------------------------------------------
+
+(defun oz-profiler-start (arg)
+  "Start the profiler.
+With ARG, stop it instead."
+  (interactive "P")
+  (oz-send-string (if arg "{Profiler off}" "{Profiler on}")))
+
+(defun oz-profiler-stop (arg)
+  "Stop the profiler.
+With ARG, start it instead."
+  (interactive "P")
+  (oz-send-string (if arg "{Profiler on}" "{Profiler off}")))
+
+
+;;------------------------------------------------------------
+;; Displaying the bar common to the Debugger and Profiler
+;;------------------------------------------------------------
 
 (make-face 'bar-running)
 (make-face 'bar-runnable)
 (make-face 'bar-blocked)
 
-(defun oz-set-face (face foreground background)
+(defun oz-set-face (face background)
   (cond (oz-gnu-emacs
-	 (modify-face face foreground background nil nil nil nil))
+	 (modify-face face "white" background nil nil nil nil))
 	(oz-lucid-emacs
-	 (set-face-foreground face foreground)
+	 (set-face-foreground face "white")
 	 (set-face-background face background))))
 
-(let ((planes (if (eq window-system 'x) (x-display-planes) 1)))
-  (oz-set-face 'bar-running      "white"
-	       (if (eq planes 1) "black" "#b0b0b0"))
-  (oz-set-face 'bar-runnable     "white"
-	       (if (eq planes 1) "black" "#7070c0"))
-  (oz-set-face 'bar-blocked      "white"
-	       (if (eq planes 1) "black" "#d05050")))
+(let ((color (and (eq window-system 'x) (x-display-color-p))))
+  (oz-set-face 'bar-running  (if color "#b0b0b0" "black"))
+  (oz-set-face 'bar-runnable (if color "#7070c0" "black"))
+  (oz-set-face 'bar-blocked  (if color "#d05050" "black")))
 
 (defvar oz-bar-overlay nil)
 
@@ -522,9 +524,10 @@ Positions are returned as a pair ( START . END )."
 	(save-restriction
 	  (widen)
 	  (setq oldpos (point))
-	  (goto-line line) (setq start (point))
-	  (forward-line 1) (setq end (point))
-
+	  (goto-line line)
+	  (setq start (point))
+	  (forward-line 1)
+	  (setq end (point))
 	  (or oz-bar-overlay
 	      (setq oz-bar-overlay
 		    (cond (oz-gnu-emacs
@@ -537,16 +540,12 @@ Positions are returned as a pair ( START . END )."
 		(oz-lucid-emacs
 		 (set-extent-endpoints
 		  oz-bar-overlay start end (current-buffer))))
-
-	  (if (string-equal state "unchanged")
-	      ()
-	    (oz-bar-configure state)))
-
-	(if (or (< start (window-start)) (> start (window-end)))
-	    (progn
-	      (widen)
-	      (goto-char start))
-	  (goto-char oldpos)))
+	  (or (string-equal state "unchanged")
+	      (oz-bar-configure state)))
+	(if (and (>= start (window-start)) (<= start (window-end)))
+	    (goto-char oldpos)
+	  (widen)
+	  (goto-char start)))
       (set-window-point window start))))
 
 (defun oz-bar-configure (state)
@@ -564,21 +563,6 @@ Positions are returned as a pair ( START . END )."
 
 
 ;;------------------------------------------------------------
-;; Profiler Stuff
-;;------------------------------------------------------------
-
-(defun oz-profiler-start ()
-  "Start the profiler."
-  (interactive)
-  (oz-send-string "{Profiler on}"))
-
-(defun oz-profiler-stop ()
-  "Stop the profiler."
-  (interactive)
-  (oz-send-string "{Profiler off}"))
-
-
-;;------------------------------------------------------------
 ;; Start/Stop Oz
 ;;------------------------------------------------------------
 
@@ -589,9 +573,9 @@ variables oz-compiler-buffer and oz-emulator-buffer."
   (interactive "P")
   (oz-check-running
    t (if toggle-new-compiler (not oz-use-new-compiler) oz-use-new-compiler))
-  (if (not (or (equal mode-name "Oz")
-	       (equal mode-name "Oz-Gump")
-	       (equal mode-name "Oz-Machine")))
+  (or (equal mode-name "Oz")
+      (equal mode-name "Oz-Gump")
+      (equal mode-name "Oz-Machine")
       (oz-new-buffer))
   (oz-show-buffer (get-buffer oz-compiler-buffer)))
 
@@ -709,9 +693,8 @@ If FORCE is non-nil, kill the processes immediately."
 	  (oz-create-buffer oz-emulator-buffer 'emulator)
 	  (if (or oz-using-new-compiler (not oz-win32))
 	      (set-process-filter (get-buffer-process oz-emulator-buffer)
-				  'oz-emulator-filter)))
-
-	(bury-buffer oz-emulator-buffer)
+				  'oz-emulator-filter))
+	  (bury-buffer oz-emulator-buffer))
 
 	(oz-set-title oz-frame-title)
 	(message "Oz started."))))
@@ -822,8 +805,11 @@ the gdb commands `cd DIR' and `directory'."
 	(init-str (if oz-using-new-compiler
 		      (concat "set args -u " oz-new-compiler-url "\n")
 		    (concat "set args -S " file "\n"))))
-    (cond (oz-gnu-emacs (gdb (concat "gdb " oz-emulator)))
-	  (oz-lucid-emacs (gdb oz-emulator)))
+    (delete-windows-on oz-emulator-buffer)
+    (cond (oz-gnu-emacs
+	   (gdb (concat "gdb " oz-emulator)))
+	  (oz-lucid-emacs
+	   (gdb oz-emulator)))
     (setq oz-emulator-buffer (buffer-name (current-buffer)))
     (comint-send-string
      (get-buffer-process oz-emulator-buffer)
@@ -896,8 +882,7 @@ feed that many preceding paragraphs as well as the current paragraph."
     (save-excursion
       (set-buffer oz-compiler-buffer)
       (setq oz-compiler-output-start (point-max))
-      ;; (comint-send-eof) does not work under win32, but this does:
-      (comint-send-string proc "")
+      (process-send-eof proc)
       (setq oz-next-error-marker nil))))
 
 
@@ -1396,7 +1381,7 @@ With argument, do it that many times.  Negative ARG means backwards."
 	    (goto-char (match-end 0))
 	  (let ((pos (scan-sexps (point) 1)))
 	    (if (not pos)
-		(progn (end-of-buffer) (setq arg 0))
+		(progn (goto-char (point-max)) (setq arg 0))
 	      (goto-char pos)
 	      (if (= (char-syntax (preceding-char)) ?w)
 		  (progn
@@ -1492,35 +1477,30 @@ Negative arg -N means kill N Oz expressions after the cursor."
 ;; oz-mode
 ;;------------------------------------------------------------
 
-;; Use this for testing modifications to the syntax table:
-;;    (setq oz-mode-syntax-table nil)
-(if oz-mode-syntax-table
-    ()
-  (let ((table (make-syntax-table)))
-    (modify-syntax-entry ?_ "w" table)
-    (modify-syntax-entry ?\\ "/" table)
-    (modify-syntax-entry ?+ "." table)
-    (modify-syntax-entry ?- "." table)
-    (modify-syntax-entry ?= "." table)
-    (modify-syntax-entry ?< "." table)
-    (modify-syntax-entry ?> "." table)
-    (modify-syntax-entry ?\" "\"" table)
-    (modify-syntax-entry ?\' "\"" table)
-    (modify-syntax-entry ?\` "\"" table)
-    (modify-syntax-entry ?%  "<" table)
-    (modify-syntax-entry ?\n ">" table)
-    (modify-syntax-entry ?/ ". 14" table)
-    (modify-syntax-entry ?* ". 23b" table)
-    (modify-syntax-entry ?. "_" table)
-    (setq oz-mode-syntax-table table)))
+(defvar oz-mode-syntax-table
+  (make-syntax-table)
+  "Syntax table used in oz-mode buffers.")
 
-(define-abbrev-table 'oz-mode-abbrev-table ())
+(modify-syntax-entry ?_ "w" oz-mode-syntax-table)
+(modify-syntax-entry ?\\ "/" oz-mode-syntax-table)
+(modify-syntax-entry ?+ "." oz-mode-syntax-table)
+(modify-syntax-entry ?- "." oz-mode-syntax-table)
+(modify-syntax-entry ?= "." oz-mode-syntax-table)
+(modify-syntax-entry ?< "." oz-mode-syntax-table)
+(modify-syntax-entry ?> "." oz-mode-syntax-table)
+(modify-syntax-entry ?\" "\"" oz-mode-syntax-table)
+(modify-syntax-entry ?\' "\"" oz-mode-syntax-table)
+(modify-syntax-entry ?\` "\"" oz-mode-syntax-table)
+(modify-syntax-entry ?%  "<" oz-mode-syntax-table)
+(modify-syntax-entry ?\n ">" oz-mode-syntax-table)
+(modify-syntax-entry ?/ ". 14" oz-mode-syntax-table)
+(modify-syntax-entry ?* ". 23b" oz-mode-syntax-table)
+(modify-syntax-entry ?. "_" oz-mode-syntax-table)
 
 (defun oz-mode-variables ()
   (set-syntax-table oz-mode-syntax-table)
-  (setq local-abbrev-table oz-mode-abbrev-table)
   (set (make-local-variable 'paragraph-start)
-       (concat "^$\\|" page-delimiter))
+       "\f\\|$")
   (set (make-local-variable 'paragraph-separate)
        paragraph-start)
   (set (make-local-variable 'paragraph-ignore-fill-prefix)
@@ -1534,7 +1514,7 @@ Negative arg -N means kill N Oz expressions after the cursor."
   (set (make-local-variable 'comment-end)
        "")
   (set (make-local-variable 'comment-start-skip)
-       "/\\*+ *\\|% *")
+       "/\\*+ *\\|%+ *")
   (set (make-local-variable 'parse-sexp-ignore-comments)
        t)
   (set (make-local-variable 'words-include-escapes)
@@ -1544,73 +1524,55 @@ Negative arg -N means kill N Oz expressions after the cursor."
 
 (defun oz-mode-commands (map)
   (define-key map "\t" 'oz-indent-line)
-  (if oz-other-map
-      (progn
-	(define-key map "\C-c\C-f\C-b" 	'oz-feed-buffer)
-	(define-key map "\C-c\C-f\C-r"	'oz-feed-region)
-	(define-key map "\C-c\C-f\C-l"	'oz-feed-line)
-	(define-key map "\C-c\C-f\C-f"	'oz-feed-file)
-	(define-key map "\C-c\C-i"      'oz-feed-file)
-	(define-key map "\C-c\C-f\C-p"	'oz-feed-paragraph)
 
-	(define-key map "\C-c\C-p\C-f"	'oz-precompile-file)
+  (define-key map "\M-\C-m"      'oz-feed-buffer)
+  (define-key map "\M-r"         'oz-feed-region)
+  (define-key map "\M-l"         'oz-feed-line)
+  (define-key map "\C-c\C-p"     'oz-feed-paragraph)
+  (define-key map "\M-\C-x"      'oz-feed-paragraph)
 
-	(define-key map "\C-c\C-b\C-l"	'oz-feed-line-browse)
-	(define-key map "\C-c\C-b\C-r"  'oz-feed-region-browse))
-    (define-key map "\C-c\C-f\C-f" 'oz-feed-file)
-    (define-key map "\M-\C-m"      'oz-feed-buffer)
-    (define-key map "\M-r"         'oz-feed-region)
-    (define-key map "\M-l"         'oz-feed-line)
-    (define-key map "\C-c\C-p"     'oz-feed-paragraph)
-    (define-key map "\C-cb"        'oz-feed-line-browse)
-    (define-key map "\C-c\C-b"     'oz-feed-region-browse)
-    (define-key map "\M-n"         'oz-next-buffer)
-    (define-key map "\M-p"         'oz-previous-buffer)
+  (define-key map "\C-cb"        'oz-feed-line-browse)
+  (define-key map "\C-c\C-b"     'oz-feed-region-browse)
+  (define-key map "\M-n"         'oz-next-buffer)
+  (define-key map "\M-p"         'oz-previous-buffer)
 
-    (define-key map "\C-c\C-d\C-r" 'oz-debug-start)
-    (define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
-    (define-key map "\C-c\C-d\C-b" 'oz-breakpoint-key-set)
-    (define-key map "\C-c\C-d\C-d" 'oz-breakpoint-key-delete)
-    (cond (oz-gnu-emacs
-	   (define-key map [(meta shift mouse-1)] 'oz-breakpoint-mouse-set)
-	   (define-key map [(meta shift mouse-3)] 'oz-breakpoint-mouse-delete))
-	  (oz-lucid-emacs
-	   (define-key map [(meta shift button1)] 'oz-breakpoint-mouse-set)
-	   (define-key map [(meta shift button3)] 'oz-breakpoint-mouse-delete))
-	  )
-    (define-key map "\C-c\C-f\C-r" 'oz-profiler-start)
-    (define-key map "\C-c\C-f\C-h" 'oz-profiler-stop))
+  (define-key map "\C-c\C-d\C-r" 'oz-debug-start)
+  (define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
+  (define-key map "\C-c\C-d\C-b" 'oz-breakpoint-key-set)
+  (define-key map "\C-c\C-d\C-d" 'oz-breakpoint-key-delete)
+  (cond (oz-gnu-emacs
+	 (define-key map [(meta shift mouse-1)] 'oz-breakpoint-mouse-set)
+	 (define-key map [(meta shift mouse-3)] 'oz-breakpoint-mouse-delete))
+	(oz-lucid-emacs
+	 (define-key map [(meta shift button1)] 'oz-breakpoint-mouse-set)
+	 (define-key map [(meta shift button3)] 'oz-breakpoint-mouse-delete)))
+  (define-key map "\C-c\C-f\C-r" 'oz-profiler-start)
+  (define-key map "\C-c\C-f\C-h" 'oz-profiler-stop)
 
-  (define-key map "\M-\C-x"	'oz-feed-paragraph)
+  (define-key map "\C-c\C-c"     'oz-toggle-compiler)
+  (define-key map "\C-c\C-e"     'oz-toggle-emulator)
+  (define-key map "\C-c\C-t"     'oz-toggle-temp)
+  (define-key map "\C-c\C-n"     'oz-new-buffer)
+  (define-key map "\C-c\C-l"     'oz-fontify-buffer)
+  (define-key map "\C-c\C-r"     'run-oz)
+  (define-key map "\C-c\C-h"     'oz-halt)
+  (define-key map "\C-cc"        'oz-precompile-file)
+  (define-key map "\C-cm"        'oz-set-other)
+  (define-key map "\C-co"        'oz-other)
+  (define-key map "\C-cd"        'oz-gdb)
+  (define-key map "\r"           'oz-electric-terminate-line)
+  (define-key map "\C-cp"        'oz-view-panel)
 
-  (define-key map [(control c) (control h)] 'oz-halt)
-  (define-key map "\C-c\C-h"    'oz-halt)
-
-  (define-key map "\C-c\C-c"    'oz-toggle-compiler)
-  (define-key map "\C-c\C-e"    'oz-toggle-emulator)
-  (define-key map "\C-c\C-t"    'oz-toggle-temp)
-  (define-key map "\C-c\C-n"    'oz-new-buffer)
-  (define-key map "\C-c\C-l"    'oz-fontify)
-  (define-key map "\C-c\C-r"    'run-oz)
-  (define-key map "\C-cc"       'oz-precompile-file)
-  (define-key map "\C-cm"       'oz-set-other)
-  (define-key map "\C-co"       'oz-other)
-  (define-key map "\C-cd"       'oz-gdb)
-  (define-key map "\r"		'oz-electric-terminate-line)
-  (define-key map "\C-cp"       'oz-view-panel)
-
-  ;; by j.doerre
-  (define-key map "\M-\C-f" 'forward-oz-expr)
-  (define-key map "\M-\C-b" 'backward-oz-expr)
-  (define-key map "\M-\C-k" 'kill-oz-expr)
-  (define-key map "\M-\C-@" 'mark-oz-expr)
+  (define-key map "\M-\C-f"      'forward-oz-expr)
+  (define-key map "\M-\C-b"      'backward-oz-expr)
+  (define-key map "\M-\C-k"      'kill-oz-expr)
+  (define-key map "\M-\C-@"      'mark-oz-expr)
   (define-key map [(meta control space)] 'mark-oz-expr)
   (define-key map [(meta control backspace)] 'backward-kill-oz-expr)
   (define-key map [(meta control delete)] 'backward-kill-oz-expr)
-  (define-key map "\M-\C-t" 'transpose-oz-exprs)
+  (define-key map "\M-\C-t"      'transpose-oz-exprs)
 
-  ;; error location
-  (define-key map "\C-x`" 'oz-goto-next-error))
+  (define-key map "\C-x`"        'oz-goto-next-error))
 
 (oz-mode-commands oz-mode-map)
 
@@ -1809,7 +1771,7 @@ The first subexpression matches the keyword proper (for fontification).")
 
 (defconst oz-proc-fun-matcher
   (concat "\\<\\(proc\\|fun\\)\\>\\([^{\n]*\\){!?"
-	  "\\([A-Z][A-Za-z0-9_]*\\|`[^`\n]*`\\)")
+	  "\\([A-Z][A-Za-z0-9_.]*\\|`[^`\n]*`\\)")
   "Regular expression matching proc or fun definitions.
 The second subexpression matches the definition's identifier
 \(if it is a variable) and is used for fontification.")
@@ -2038,14 +2000,10 @@ and is used for fontification.")
 
 ;;------------------------------------------------------------
 
-(defun oz-fontify-buffer ()
-  (interactive)
-  (if window-system (font-lock-fontify-buffer)))
-
-(defun oz-fontify (&optional arg)
+(defun oz-fontify-buffer (&optional arg)
   (interactive "P")
   (recenter arg)
-  (oz-fontify-buffer))
+  (if window-system (font-lock-fontify-buffer)))
 
 
 ;;------------------------------------------------------------
@@ -2057,9 +2015,25 @@ and is used for fontification.")
 ;; characters so that the emulator output can be redirected into
 ;; its own buffer.
 ;;
-;; If you ever change the corresponding constants, also adapt
-;; Compiler/frontend/cFunctions.cc accordingly.
+;; With the new Oz compiler we have a similar situation:  The compiler
+;; is run by the emulator and the output has to be separated as above.
 
+(defun oz-compiler-filter (proc string)
+  "Filter for Oz Compiler output."
+  (if (not oz-win32)
+      (oz-filter proc string (process-buffer proc))
+    (oz-split-output proc string)))
+
+(defun oz-emulator-filter (proc string)
+  "Filter for Oz Emulator output."
+  (if (not oz-using-new-compiler)
+      (oz-filter proc string (process-buffer proc))
+    (oz-split-output proc string)))
+
+;; If you ever change these constants, also adapt the
+;; following files accordingly:
+;;    Oz/Compiler/frontend/cFunctions.cc
+;;    Oz/tools/compiler/EmacsInterface.oz
 (defvar oz-emulator-output-start (char-to-string 5)
   "Regex that matches when emulator output begins.")
 (defvar oz-emulator-output-end   (char-to-string 6)
@@ -2068,110 +2042,98 @@ and is used for fontification.")
 (defun oz-have-to-switch-outbuffer (string)
   "Return the column from which output has to go into the other buffer.
 Return nil if the whole STRING goes into the current buffer."
-  (let ((regex (if oz-read-emulator-output
-		   oz-emulator-output-end
-		 oz-emulator-output-start)))
-    (string-match regex string)))
+  (if oz-read-emulator-output
+      (string-match oz-emulator-output-end string)
+    (string-match oz-emulator-output-start string)))
 
 (defun oz-current-outbuffer ()
-  "Return the buffer into which the current output has to be redirected."
-  (if oz-read-emulator-output
-      oz-emulator-buffer
-    oz-compiler-buffer))
+  "Return the buffer into which output currently has to be redirected."
+  (get-buffer (if oz-read-emulator-output
+		  oz-emulator-buffer
+		oz-compiler-buffer)))
 
-(defun oz-compiler-filter (proc string)
-  "Filter for Oz Compiler output.
-Since under Win32 the output from both Emulator and Compiler comes from
-the same process, this filter separates the output into two buffers.
-The rest of the output is then passed through the oz-filter."
-  (if (not oz-win32)
-      (oz-filter proc string (process-buffer proc))
-    (let ((switch-col (oz-have-to-switch-outbuffer string)))
-      (if (null switch-col)
-	  (oz-filter proc string (oz-current-outbuffer))
-	(oz-filter proc (substring string 0 switch-col) (oz-current-outbuffer))
-	(setq oz-read-emulator-output (not oz-read-emulator-output))
-	(oz-compiler-filter proc (substring string (1+ switch-col)))))))
+(defun oz-split-output (proc string)
+  "Split the process output STRING into Oz Compiler and Oz Emulator output.
+With the new Oz compiler as well as under Win32 with the old compiler, the
+output from both Emulator and Compiler comes from the same process.  Both
+outputs are separated by oz-emulator-output-{start,end} sequences.  After
+splitting, the outputs are passed to the common oz-filter."
+  (let (switch-col)
+    (while (setq switch-col (oz-have-to-switch-outbuffer string))
+      (oz-filter proc (substring string 0 switch-col) (oz-current-outbuffer))
+      (setq oz-read-emulator-output (not oz-read-emulator-output))
+      (setq string (substring string (1+ switch-col))))
+    (oz-filter proc string (oz-current-outbuffer))))
 
-(defun oz-emulator-filter (proc string)
-  (if (not oz-using-new-compiler)
-      (oz-filter proc string (process-buffer proc))
-    (let ((switch-col (oz-have-to-switch-outbuffer string)))
-      (if (null switch-col)
-	  (oz-filter proc string (oz-current-outbuffer))
-	(oz-filter proc (substring string 0 switch-col) (oz-current-outbuffer))
-	(setq oz-read-emulator-output (not oz-read-emulator-output))
-	(oz-emulator-filter proc (substring string (1+ switch-col)))))))
+(defun oz-filter (proc string buffer)
+  (let (errs-found start-of-output end-of-output)
+    (set-buffer buffer)
+    (save-excursion
+      ;; insert the text:
+      (goto-char (point-max))
+      (setq start-of-output (point))
+      (insert string)
 
-;; See elisp manual: "Filter Functions"
-(defun oz-filter (proc string newbuf)
-  (let ((old-buffer (current-buffer))
-	(errs-found (and oz-popup-on-error
-			 (string-match oz-error-string string))))
-    (unwind-protect
-	(let (moving old-point index)
-	  (set-buffer newbuf)
-	  (setq moving (= (point) (process-mark proc)))
-	  (save-excursion
+      ;; look for error messages in output:
+      (goto-char start-of-output)
+      (setq errs-found (and oz-popup-on-error
+			    (search-forward-regexp oz-error-string nil t)))
 
-	    ;; Insert the text, moving the process-marker.
-	    (goto-char (process-mark proc))
+      ;; remove escape characters:
+      (goto-char start-of-output)
+      (while (search-forward-regexp oz-remove-pattern nil t)
+	(replace-match "" nil t))
 
-	    (setq old-point (point))
-	    (goto-char (point-max))
+      ;; look for oz-show-temp:
+      (goto-char start-of-output)
+      (while (search-forward-regexp oz-show-temp-pattern nil t)
+	(let ((file (match-string 1)) buf)
+	  (replace-match "" nil t)
+	  (setq buf (get-buffer oz-temp-buffer))
+	  (if (null buf)
+	      (setq buf (generate-new-buffer oz-temp-buffer)))
+	  (oz-show-buffer buf)
+	  (set-buffer buf)
+	  (erase-buffer)
+	  (insert-file-contents file)
+	  (delete-file file)
+	  (cond ((string-match "\\.ozc$" file)
+		 (oz-mode))
+		((string-match "\\.ozm$" file)
+		 (ozm-mode)))))
 
-	    ;; Irix outputs garbage when sending EOF
-	    (setq index (string-match "\\^D" string))
-	    (if index
-		(setq string (concat (substring string 0 index)
-				     (substring string (+ 4 index)))))
+      ;; look for oz-bar information:
+      (goto-char start-of-output)
+      (while (search-forward-regexp oz-bar-pattern nil t)
+	(let ((file  (match-string 1))
+	      (line  (string-to-number (match-string 2)))
+	      (state (match-string 3)))
+	  (replace-match "" nil t)
+	  (if (string-equal file "undef")
+	      (cond (oz-bar-overlay
+		     (cond (oz-gnu-emacs
+			    (delete-overlay oz-bar-overlay))
+			   (oz-lucid-emacs
+			    (delete-extent oz-bar-overlay)))
+		     (setq oz-bar-overlay nil)))
+	    (oz-bar file line state))))
 
-	    (insert-before-markers string)
-	    (set-marker (process-mark proc) (point))
+      (setq end-of-output (point-max)))
 
-	    (goto-char old-point)
+    (cond (errs-found
+	   (goto-char errs-found)
+	   (oz-show-buffer buffer))
+	  ((equal (point) start-of-output)
+	   (goto-char end-of-output)))
 
-	    ;; remove escape characters
-	    (while (search-forward-regexp oz-remove-pattern nil t)
-	      (replace-match "" nil t))
-
-	    ;; oz-show-temp?
-	    (while (search-forward-regexp oz-show-temp-pattern nil t)
-	      (let ((file (match-string 1)) buf)
-		(replace-match "" nil t)
-		(setq buf (get-buffer oz-temp-buffer))
-		(if (null buf)
-		    (setq buf (generate-new-buffer oz-temp-buffer)))
-		(oz-show-buffer buf)
-		(save-excursion
-		  (set-buffer buf)
-		  (erase-buffer)
-		  (insert-file-contents file)
-		  (delete-file file)
-		  (cond ((string-match "\\.ozc$" file)
-			 (oz-mode))
-			((string-match "\\.ozm$" file)
-			 (ozm-mode))))))
-
-	    ;; oz-bar information?
-	    (while (search-forward-regexp oz-bar-pattern nil t)
-	      (let ((file  (match-string 1))
-		    (line  (string-to-number (match-string 2)))
-		    (state (match-string 3)))
-		(replace-match "" nil t)
-		(if (string-equal file "undef")
-		    (cond (oz-bar-overlay
-			   (cond (oz-gnu-emacs
-				  (delete-overlay oz-bar-overlay))
-				 (oz-lucid-emacs
-				  (delete-extent oz-bar-overlay)))
-			   (setq oz-bar-overlay nil)))
-		  (oz-bar file line state)))))
-
-	  (if (or moving errs-found) (goto-char (process-mark proc))))
-      (set-buffer old-buffer))
-
-    (if errs-found (oz-show-buffer newbuf))))
+    (save-selected-window
+      (walk-windows
+       (function (lambda (window)
+		   (if (eq (window-buffer window) buffer)
+		       (cond (errs-found
+			      (set-window-point window errs-found))
+			     ((>= (window-point window) start-of-output)
+			      (set-window-point window end-of-output))))))))))
 
 
 ;;------------------------------------------------------------
@@ -2182,9 +2144,7 @@ The rest of the output is then passed through the oz-filter."
   "*Percentage of screen to use for Oz Compiler and Emulator windows.")
 
 (defun oz-show-buffer (buffer)
-  (if (get-buffer-window buffer)
-      t
-    (save-excursion
+  (if (not (get-buffer-window buffer))
       (let ((win (or (get-buffer-window oz-emulator-buffer)
 		     (get-buffer-window oz-compiler-buffer)
 		     (get-buffer-window oz-temp-buffer)
@@ -2195,7 +2155,7 @@ The rest of the output is then passed through the oz-filter."
 	(set-window-buffer win buffer)
 	(set-buffer buffer)
 	(set-window-point win (point-max))
-	(bury-buffer buffer)))))
+	(bury-buffer buffer))))
 
 (defun oz-create-buffer (buffer which)
   (save-excursion
@@ -2204,19 +2164,20 @@ The rest of the output is then passed through the oz-filter."
 	   ;; enter oz-mode but no highlighting; use own map, inherit
 	   ;; from oz-mode-map
 	   (kill-all-local-variables)
-	   (if (null oz-compiler-buffer-map)
+	   (if (not oz-compiler-buffer-map)
 	       (setq oz-compiler-buffer-map (copy-keymap oz-mode-map)))
+	   (oz-set-mouse-error-key oz-compiler-buffer-map)
 	   (use-local-map oz-compiler-buffer-map)
 	   (setq mode-name "Oz-Output")
 	   (setq major-mode 'oz-mode))
 	  ((eq which 'emulator)
-	   (if (null oz-emulator-buffer-map)
+	   (if (not oz-emulator-buffer-map)
 	       (setq oz-emulator-buffer-map (copy-keymap comint-mode-map)))
+	   (oz-set-mouse-error-key oz-emulator-buffer-map)
 	   (use-local-map oz-emulator-buffer-map)))
-    (oz-set-mouse-error-key)
     (if oz-lucid-emacs
-     (set-buffer-menubar (append current-menubar oz-menubar)))
-    (delete-region (point-min) (point-max))))
+	(set-buffer-menubar (append current-menubar oz-menubar)))
+    (erase-buffer)))
 
 
 (defun oz-toggle-compiler ()
@@ -2243,14 +2204,12 @@ If it is, then remove it."
 (defun oz-toggle-window (buffername)
   (let ((buffer (get-buffer buffername)))
     (if buffer
-	(let ((win (get-buffer-window buffername nil)))
+	(let ((win (get-buffer-window buffername)))
 	  (if win
 	      (save-excursion
 		(set-buffer buffer)
 		(if (= (window-point win) (point-max))
-		  (if oz-gnu-emacs
-		      (delete-windows-on buffername t)
-		    (delete-windows-on buffername))
+		    (delete-windows-on buffername)
 		  (set-window-point win (point-max))))
 	    (oz-show-buffer (get-buffer buffername)))))))
 
@@ -2301,8 +2260,6 @@ If it is, then remove it."
   (interactive "r\np")
   (comment-region start end (if (= arg 0) -1 (- arg))))
 
-(defvar oz-temp-file (oz-make-temp-name "/tmp/ozemacs"))
-
 (defun oz-to-coresyntax-buffer ()
   (interactive)
   (oz-to-coresyntax-region (point-min) (point-max)))
@@ -2338,6 +2295,8 @@ If it is, then remove it."
 (defun oz-to-emulatorcode-region (start end)
   (interactive "r")
   (oz-directive-on-region start end "\\machine" ".ozm"))
+
+(defvar oz-temp-file (oz-make-temp-name "/tmp/ozemacs"))
 
 (defun oz-directive-on-region (start end directive suffix)
   "Applies a directive to the region."
@@ -2449,7 +2408,6 @@ of the procedure Browse."
 
 ;;------------------------------------------------------------
 ;; Locating Errors
-;; Author: Jochen Doerre
 ;;------------------------------------------------------------
 ;; The compile.el stuff is used only a little bit; it cannot be made
 ;; working, if an error message does not contain file information,
@@ -2465,21 +2423,22 @@ of the procedure Browse."
 
 ;; In the compiler and emulator buffers, button mouse-2 invokes
 ;; oz-mouse-goto-error as well:
-(defun oz-set-mouse-error-key ()
-  (let ((map (current-local-map)))
-    (if map
-	(if oz-lucid-emacs
-	    (define-key map [(shift button2)] 'oz-mouse-goto-error)
-	  (define-key map [(shift mouse-2)] 'oz-mouse-goto-error)))))
+(defun oz-set-mouse-error-key (map)
+  (cond (oz-gnu-emacs
+	 (define-key map [(shift mouse-2)] 'oz-mouse-goto-error))
+	(oz-lucid-emacs
+	 (define-key map [(shift button2)] 'oz-mouse-goto-error))))
 
 (defun oz-mouse-goto-error (event)
   (interactive "e")
-  (set-buffer (if oz-lucid-emacs
-		  (event-buffer event)
-		(window-buffer (posn-window (event-end event)))))
-  (goto-char (if oz-lucid-emacs
-		 (event-closest-point event)
-	       (posn-point (event-end event))))
+  (set-buffer (cond (oz-gnu-emacs
+		     (window-buffer (posn-window (event-end event))))
+		    (oz-lucid-emacs
+		     (event-buffer event))))
+  (goto-char (cond (oz-gnu-emacs
+		    (posn-point (event-end event)))
+		   (oz-lucid-emacs
+		    (event-closest-point event))))
   (or (eq (current-buffer) (get-buffer oz-compiler-buffer))
       (eq (current-buffer) (get-buffer oz-emulator-buffer))
       (error "Neither in compiler buffer nor in emulator buffer"))
@@ -2520,10 +2479,9 @@ When in emulator buffer, visit place indicated in next callstack line."
 	(let* ((error-marker (car error-data))
 	       (file (nth 1 error-data))
 	       (lineno-string (nth 2 error-data))
-	       (lineno (car (read-from-string lineno-string)))
+	       (lineno (string-to-number lineno-string))
 	       (column-string (nth 3 error-data))
-	       (column (and column-string
-			    (car (read-from-string column-string))))
+	       (column (and column-string (string-to-number column-string)))
 	       (buf (if (string-equal file "nofile")
 			oz-last-fed-buffer
 		      (compilation-find-file error-marker file nil)))
@@ -2551,12 +2509,12 @@ When in emulator buffer, visit place indicated in next callstack line."
 		     (column-string (match-string 5)))
 		 (setq oz-next-error-marker (point-marker))
 		 (list error-marker file lineno-string column-string))
-	     (let ((win (get-buffer-window oz-compiler-buffer nil)))
+	     (let ((win (get-buffer-window oz-compiler-buffer)))
 	       (if win
 		   (set-window-point win (point-max))))
 	     nil)))
 	(t
-	 (let ((win (get-buffer-window oz-compiler-buffer nil)))
+	 (let ((win (get-buffer-window oz-compiler-buffer)))
 	   (if win
 	       (set-window-point win (point-max))))
 	 nil)))
