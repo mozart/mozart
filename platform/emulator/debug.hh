@@ -12,6 +12,22 @@
 #ifndef __DEBUGH
 #define __DEBUGH
 
+#if fertig
+enum OzDebugDoit {DBG_NEXT};
+
+class OzDebug {
+public:
+  OzDebugDoit dothis;
+  OzDebug(OzDebugDoit x)
+  {
+    ;
+  }
+
+  OzDebug *gcOzDebug();
+  void printCall();
+};
+#endif
+
 class OzDebug {
 public:
   static unsigned long goalCounter;
@@ -35,6 +51,8 @@ void exitCall(OZ_Return,OzDebug *);
 void exitBuiltin(OZ_Return, TaggedRef bi, int arity, TaggedRef *args);
 
 void debugStreamThread(Thread*);
+void debugStreamTerm(Thread*, TaggedRef);
+void debugStreamCall(ProgramCounter, char*, int, TaggedRef*);
 
 OZ_C_proc_proto(BItaskStack)
 OZ_C_proc_proto(BIlocation)

@@ -275,9 +275,11 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, RefsArray G, RefsArray Y)
 
 TaggedRef CodeArea::globalVars(ProgramCounter PC, RefsArray G)
 {
+  static TaggedRef ret;
   ProgramCounter aux = definitionEnd(PC);
   aux += sizeOf(getOpcode(aux));
-  TaggedRef ret = nil();
+
+  ret = nil();
   for (int i=0; getOpcode(aux) == GLOBALVARNAME; i++) {
     TaggedRef aux1 = getLiteralArg(aux+1);
     ret = cons(OZ_mkTupleC("#", 2, aux1, G[i]), ret);
@@ -288,9 +290,19 @@ TaggedRef CodeArea::globalVars(ProgramCounter PC, RefsArray G)
 
 TaggedRef CodeArea::localVars(ProgramCounter PC, RefsArray Y)
 {
-  TaggedRef ret = nil();
+  static TaggedRef ret;
+  ret = nil();
   for(int i=getRefsArraySize(Y)-1; i>=0; i--)
     ret = cons(Y[i], ret);
+  return ret;
+}
+
+TaggedRef CodeArea::argumentList(RefsArray X, int arity)
+{
+  static TaggedRef ret;
+  ret = nil();
+  for(--arity; arity>=0; arity--)
+    ret = cons(X[arity], ret);
   return ret;
 }
 
