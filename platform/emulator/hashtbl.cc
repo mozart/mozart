@@ -2,8 +2,6 @@
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-W-6600 Saarbruecken 11, Phone (+49) 681 302-5261
   Author: tmueller
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
   State: $State$
 
   ------------------------------------------------------------------------
@@ -30,7 +28,7 @@ inline Bool isPrime(int prime)
   if (prime%2 == 0) {
     return NO;
   }
-  for(int i=3; i<=sqrt(prime); i+=2) {
+  for(int i=3; i*i<=prime; i+=2) {
     if (prime%i == 0) {
       return NO;
     }
