@@ -3,7 +3,7 @@ SRCDIR		= @srcdir@
 VPATH		= @srcdir@
 
 HTMLEXTRAFILES = \
-	image1.gif image33.gif image57.gif image161.gif tutorial.gif opi.gif
+	image1.gif image33.gif image57.gif image161.gif tutorial.gif
 
 WHAT	= tutorial
 MAIN	= tutorial.sgml
