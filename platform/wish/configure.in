@@ -80,6 +80,17 @@ PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
 AC_DEFINE_UNQUOTED($PLATFORM)
 AC_SUBST(PLATFORM)
 
+
+dnl *****************************************************************
+dnl Try to link system libraries statically
+dnl *****************************************************************
+
+OZ_ENABLE(link-static,[ link system libraries statically],no,
+        AC_MSG_RESULT(yes)
+        ,
+        AC_MSG_RESULT(no)
+        )
+
 dnl *****************************************************************
 dnl Checks for libraries.
 dnl *****************************************************************

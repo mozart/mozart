@@ -320,6 +320,16 @@ if test "$oz_enable_modules_static" != "yes" ; then
 fi
 AC_SUBST(CDYNOPT)
 
+dnl *****************************************************************
+dnl Try to link system libraries statically
+dnl *****************************************************************
+
+OZ_ENABLE(link-static,[ link system libraries statically],no,
+        AC_MSG_RESULT(yes)
+        ,
+        AC_MSG_RESULT(no)
+        )
+
 
 dnl *****************************************************************
 dnl Checks for types.
@@ -556,7 +566,6 @@ OZ_ENABLE(modules-static,[ link modules statically],no,
         )
 AC_SUBST(STATIC_MODULES)
 AC_SUBST(DYNAMIC_MODULES)
-
 
 dnl *****************************************************************
 dnl malloc
