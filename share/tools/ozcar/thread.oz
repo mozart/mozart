@@ -439,6 +439,8 @@ in
 		Gui,doStatus('.' append)
 	     else skip end
 	  end}
+	 {Delay 1000}   %% give the user a chance to read the dots... ;)
+	 Gui,nextThread %% select next living thread
       end
 
       meth forget(T I)
