@@ -44,7 +44,7 @@
     <Abstract>
 Starting in Mozart 1.1.0, there is now convenient syntactic support
 for loops.  This document is divided in two chapters: the first one
-describes what is officially supported in Mozart 1.1.0, the second one
+describes what is officially supported in Mozart 1.1.1, the second one
 documents the experimental extensions which are not supported, and are
 subject to change or removal without notice.  However, we would
 appreciate feedback from the user community to help us shape the

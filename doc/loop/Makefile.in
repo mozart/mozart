@@ -6,7 +6,7 @@ VPATH		= @srcdir@
 #PRINTNAME=Loop
 WHAT = loop
 MAIN = main.sgml
-SGMLSRCS = loop.sgml
+SGMLSRCS = loop.sgml official.sgml extensions.sgml
 HTMLEXTRAFILES = 
 
 include ../Makefile.common
