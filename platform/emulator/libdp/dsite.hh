@@ -307,11 +307,11 @@ public:
 
   // for use by the protocol-layer
 
-  int send(MsgContainer *msgC,int priority) {
+  int send(MsgContainer *msgC) {
     if(connect()){
       Assert(getType() & REMOTE_SITE);
 
-      getComObj()->send(msgC,priority);
+      getComObj()->send(msgC);
       return ACCEPTED;
     }
     else {
