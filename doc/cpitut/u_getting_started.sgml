@@ -144,6 +144,9 @@ abstractions <<OZ_cons()>> and <<OZ_nil()>> (see <Ptr.Extern
 to="ozdoc:foreign" key="section.term_access">). The function
 <<getParameters()>> straightforwardly composes a list containing the
 references to the arguments hold in the propagator's state.
+
+The reason for the friend declaration will become clear in <Ptr
+to="u_getting_started.creating">.
 <p>
 
 <SubSubSection id="u_getting_started.propagation">
@@ -309,6 +312,9 @@ one has to define a function <<oz_init_module>>.
 
 <Code.Extern display proglang=cc to="programs/ex_a.interface.cc">
 
+The line <<AddProp::profile = "addition/3";>> assigns explixitly the
+name <<"addition/3">> to the propagator. The default name is <<"<anonymous propagator>">>.
+<P>
 Before a native functor can be loaded it be compiled according to
 <Ptr.Extern to="ozdoc:apptut"
 key="section.counter.global.compilation">. Supposing the &ccpp; code
@@ -322,11 +328,9 @@ oztool ld  -o ex_a.so-linux-i486 ex_a.o
 
 <p>
 The Oz code below loads the object file <<ex_a.so-linux-i486>> and
-makes the Oz abstractions <<FD_PROP.init>> and <<FD_PROP.add>>
-available. The first one does not take any arguments and is intended
-to initialise the new module. Therefore, it is called immediately
-after loading. The procedure <<FD_PROP.add>> takes 3 arguments and
-imposes the addition propagator implemented in the sections before.
+makes the Oz abstraction <<FD_PROP.add>> available. The procedure
+<<FD_PROP.add>> takes 3 arguments and imposes the addition propagator
+implemented in the sections before.
 
 <Code.Extern display to="programs/ex_a.1.oz" class=linenumbers>
 
