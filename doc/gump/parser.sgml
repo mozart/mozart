@@ -634,7 +634,7 @@
                       <P><<{ ?{A} // ?{B} }+>>
                       <P><<{ ?{A} // ?{B} }>>
                   <TR>
-                    <TD>Optional Repetition
+                    <TD>Optional Separated Repetition
                     <TD>
                       <P.silent><!--**--><<( ?{A} // ?{B} )*>>
                       <P><<{ ?{A} // ?{B} }*>>
