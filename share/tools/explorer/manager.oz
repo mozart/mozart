@@ -24,6 +24,8 @@ local
 
    \insert shapes-and-images.oz
 
+   \insert statistics-balloon.oz
+
    \insert menu-manager.oz
 
    \insert nodes.oz
@@ -391,6 +393,12 @@ in
          lock
             Manager,SetCursor(ToplevelManager,findByXY(X Y $) false)
             Manager,What
+         end
+      end
+
+      meth getStatisticsByXY(X Y $)
+         lock
+            {ToplevelManager,findByXY(X Y $) stat($)}
          end
       end
 
