@@ -85,18 +85,16 @@ in
 	 else
 	    T = @currentThread
 	    I = {Debug.getId T}
+	    P = try {Debug.getParentId T} catch
+		   error(kernel(deadThread ...) ...) then '?' end
 	    R = case {Dbg.checkStopped T} then 'stopped' else 'not stopped' end
 	    S = {Thread.state T}
 	    N = {Length {Dictionary.items self.ThreadDic}}
 	 in
 	    Gui,status(N # ' attached thread' #
-		       case N > 1 then
-			  's, currently selected: #'
-		       else
-			  ': #'
-		       end #
-		       I # '/' # {Debug.getParentId T} #
-		       ' (' # R # ', ' # S # ')')
+		       case N > 1 then 's, currently selected: ' else ': ' end
+		       # I # '/' # P # ' (' #
+		       case S == terminated then S else R # ', ' # S end # ')')
 	 end
       end
 
@@ -123,10 +121,10 @@ in
 	    I = {Debug.getId T}
 	 in
 	    case ThreadManager,Exists(I $) then %% already attached thread
-	       M = 'Thread #' # I # ' has reached a breakpoint'
+	       M = 'Thread ' # I # ' has reached a breakpoint'
 	       S = {Dictionary.get self.ThreadDic I}
 	    in
-	       {OzcarMessage 'breakpoint reached by attached thread #' # I}
+	       {OzcarMessage 'breakpoint reached by attached thread ' # I}
 	       Gui,status(M)
 	       {S rebuild(true)}
 	    else
@@ -225,7 +223,7 @@ in
 		  Gui,markNode(I runnable)
 		  case T == @currentThread then
 		     {SendEmacs configureBar(runnable)}
-		     %Gui,status('Thread #' # I # ' is runnable again')
+		     %Gui,status('Thread ' # I # ' is runnable again')
 		  else skip end
 	       else
 		  Gui,markNode(I running)
@@ -285,7 +283,7 @@ in
 	 Stack = {New StackManager init(thr:T id:I)}
       in
 	 {Dictionary.put self.ThreadDic I Stack}
-	 {OzcarMessage 'attaching thread #' # I # '/' # Q}
+	 {OzcarMessage 'attaching thread ' # I # '/' # Q}
 	 case Exc of exc(X) then   %% exception
 	    Gui,addNode(I Q)
 	    ThreadManager,switch(I false)
@@ -296,18 +294,18 @@ in
 	    case Q == 1 orelse       %% all compiler threads have id #1
 	       IsFirstThread then    %% there's no other attached thread
 	       ThreadManager,switch(I)
-	       Gui,status('Selecting new thread #' # I)
+	       Gui,status('Selecting new thread ' # I)
 	    else skip end
 	 end
       end
 
       meth remove(T I Mode Select<=true)
 	 Next in
-	 {OzcarMessage 'removing thread #' # I # ' with mode ' # Mode}
+	 {OzcarMessage 'removing thread ' # I # ' with mode ' # Mode}
 	 ThreadManager,removeSkippedProcs(I)
 	 case Mode == kill then
 	    Gui,killNode(I Next)
-	    {OzcarMessage 'next node is #' # Next}
+	    {OzcarMessage 'next node is ' # Next}
 	    {Dictionary.remove self.ThreadDic I}
 	    case ThreadManager,emptyForest($) then
 	       currentThread <- unit
@@ -328,11 +326,11 @@ in
 		  case Select then
 		     detachDone <- _
 		     ThreadManager,switch(Next)
-		     Gui,status(', new selected thread is #' # Next append)
+		     Gui,status(', new selected thread is ' # Next append)
 		  else skip end
 	       end
 	    else
-	       Gui,status('Thread #' # I # ' died')
+	       Gui,status('Thread ' # I # ' died')
 	       {SendEmacs removeBar}
 	       Gui,markStack(active)
 	       Gui,printStack(id:I frames:nil depth:0)
@@ -347,7 +345,7 @@ in
 	    {Thread.terminate T}
 	 catch error(kernel(deadThread ...) ...) then skip end
 	 case Select then
-	    Gui,status('Thread #' # I # ' has been terminated')
+	    Gui,status('Thread ' # I # ' has been terminated')
 	 else skip end
 	 ThreadManager,remove(T I kill Select)
       end
@@ -424,7 +422,7 @@ in
 
       meth detach(T I)
 	 {Detach T}
-	 Gui,status('Thread #' # I # ' has been detached')
+	 Gui,status('Thread ' # I # ' has been detached')
 	 ThreadManager,remove(T I kill)
       end
 
@@ -461,7 +459,7 @@ in
 	 elsecase {CheckState T} == running then
 	    Gui,status('Cannot recalculate stack while thread is running')
 	 else
-	    Gui,status('Recalculating stack of thread #' #
+	    Gui,status('Recalculating stack of thread ' #
 		       {Debug.getId T} # '...')
 	    {S rebuild(true)}
 	    {S print}
@@ -500,12 +498,12 @@ in
 	    Gui,resetLastSelectedFrame
 	    case {CheckState CurT} == running then
 	       {OzcarMessage 'setting `rebuild\' flag' #
-		' of (running) thread #' # {Debug.getId CurT}}
+		' of (running) thread ' # {Debug.getId CurT}}
 	       {CurS rebuild(true)}
 	    else skip end
 	 end
 
-	 {OzcarMessage 'switching to thread #' # I}
+	 {OzcarMessage 'switching to thread ' # I}
 	 currentThread <- T
 	 currentStack  <- Stack
 

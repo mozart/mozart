@@ -331,7 +331,7 @@ in
 	 CurrentStack = case S == noStack then StackManager,GetStack($)
 			else S end
       in
-	 {OzcarMessage 'recalculating stack of thread #' # self.I}
+	 {OzcarMessage 'recalculating stack of thread ' # self.I}
 	 {Ozcar PrivateSend(removeSkippedProcs(self.I))}
 	 StackManager,rebuild(false)
 	 StackManager,RemoveAllFrames
