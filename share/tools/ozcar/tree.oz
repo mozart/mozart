@@ -119,6 +119,7 @@ class Tree from BaseTree Tk.canvas
    end
 
    meth select(T)
+      % todo: handle error when parent ID == 1 (nothing to debug anymore)
       Selected <- {List.filter @nodes fun {$ N} {N get($)}.t == T end}.1
       Tree,display
    end
