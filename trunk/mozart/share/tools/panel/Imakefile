@@ -1,0 +1,38 @@
+OZLIB     = $(OZHOME)/lib
+BITMAPDIR = $(OZLIB)/bitmaps
+OZPANEL  = $(OZLIB)/panel
+
+
+LOCALFILES = \
+	configure.oz load.oz make-notes.oz pie.oz top.oz \
+	labelframe.oz main.oz notebook.oz 
+
+BITMAPS = \
+	panel.xbm
+
+
+BITMAPFILES = ${BITMAPS:%=$(BITMAPDIR)/%}
+LOCALBITMAPFILES = ${BITMAPS:%=../bitmaps/%}
+
+LIBFILES = ${LOCALFILES:%.oz=$(OZPANEL)/%.oz}
+
+all::	../Panel.oz
+
+../Panel.oz:: $(LOCALFILES)
+	touch ../Panel.oz
+
+clean::
+	rm -f *~ *.oz?
+
+install:: $(OZPANEL) $(LIBFILES) bitmaps
+
+
+bitmaps: $(BITMAPFILES)
+	$(INSTALL) -m 444 $(LOCALBITMAPFILES) $(OZLIB)/bitmaps
+
+$(OZPANEL):
+	$(INSTALL) -m 775 -d $@
+
+$(OZPANEL)/%.oz: %.oz
+	$(INSTALL) -m 444 '$<' '$@'
+
