@@ -100,7 +100,7 @@ int  osCheckIO();
 
 int osOpenMax();
 void osInit();
-void osExit();
+void osExit(int status);
 
 #ifdef WINDOWS
 #define oskill(pid,sig) raise(sig)
