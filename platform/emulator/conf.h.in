@@ -52,7 +52,9 @@
  */
 
 /* define if threaded code (requires GCC) */
+#ifdef __GNUC__
 #undef THREADED
+#endif
 
 /* define if optimized register access (pre-shifted) */
 #undef FASTREGACCESS
