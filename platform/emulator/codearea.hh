@@ -357,9 +357,11 @@ public:
   int lookup(SRecord *rec, TaggedRef feature)
   {
     if (key!=(uint32)rec->getSRecordArity()) {
-      value = rec->getIndex(feature);
-      if (value!=-1)
-        key   = rec->getSRecordArity();
+      int32 aux = rec->getIndex(feature);
+      if (aux==-1)
+        return aux;
+      value = aux;
+      key   = rec->getSRecordArity();
     }
     return value;
   }
