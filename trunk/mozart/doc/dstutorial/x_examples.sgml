@@ -208,8 +208,9 @@ M={R apply(F $)}
 but it's all right since we are not pickling the functor.
 In fact, it's quite possible for
 functors to have external references.
-We discuss this later when we
-talk about computed functors.
+Such functors are called <em>computed functors</em>.
+They can only be pickled if the external references
+are to stateless entities.
 
 <P>A third solution
 is for the functor itself
