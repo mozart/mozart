@@ -46,10 +46,6 @@
 extern int h_errno;
 #endif
 
-#ifdef WINDOWS
-#define xxh_errno ossockerrno()
-#endif
-
 
 #include <time.h>
 #include <sys/stat.h>
