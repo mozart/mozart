@@ -2,6 +2,9 @@ functor
 export
    Is Make 'class':Path
 
+   ToString
+   ToAtom
+   Length
    IsAbsolute
    IsRelative
    Dirname
@@ -26,6 +29,7 @@ prepare
    S2A  = String.toAtom
    IS_PATH = {NewName}
    Token = String.token
+   LLength = List.length
 
    fun {Is X} {HasFeature X IS_PATH} end
 
@@ -70,13 +74,25 @@ define
 
    class Path
       feat !IS_PATH:unit
-      attr info
-	 as_string
-	 windows : false
-	 parsed  : unit
-      meth INIT(R)
+      attr
+	 info
+
+	 %% newFromRecord(+R ?P) makes it easier to create instances of
+	 %% classes derived from Path
+	 
+      meth newFromRecord(R $)
+	 {New Path initFromRecord(R)}
+      end
+      meth initFromRecord(R)
 	 info <- R
       end
+
+      meth new(S $ windows:WIN<=IS_WINDOWS exact:Exact<=false)
+	 {New Path init(S windows:WIN exact:Exact)}
+      end
+
+      %% init(...) is the main user-oriented constructor
+      
       meth init(S windows:WIN<=IS_WINDOWS exact:Exact<=false)
 	 STR1 = {VS2S S}
 	 STR2 =
@@ -103,7 +119,7 @@ define
 	    []      L then Drive=unit NonDrive=L
 	    end
 	 else Drive=unit NonDrive=STR2 end
-	 Items = {if @windows then SplitWindows else SplitPosix end
+	 Items = {if WIN then SplitWindows else SplitPosix end
 		  NonDrive}
 	 case Items
 	 of nil|L then SlashInitial=true Items2=L
@@ -113,45 +129,46 @@ define
 	 of nil|L then SlashFinal=true Items3={Reverse L}
 	 else SlashFinal=false Items3=Items2
 	 end
-	 Path,INIT(
-		 unit(
-		    string       : STR2
-		    windows      : WIN
-		    drive        : Drive
-		    slashinitial : SlashInitial
-		    slashfinal   : SlashFinal
-		    components   : Items3
-		    ))
+	 {self initFromRecord(
+		  unit(
+		     string       : STR2
+		     windows      : WIN
+		     drive        : Drive
+		     slashinitial : SlashInitial
+		     slashfinal   : SlashFinal
+		     components   : Items3
+		     ))}
       end
       meth toString($) @info.string end
       meth toAtom($) {S2A @info.string} end
-      meth length($) {Length @info.string} end
+      meth length($) {LLength @info.string} end
       meth isAbsolute($) @info.slashinitial end
       meth isRelative($) {Not Path,isAbsolute($)} end
       meth dirname($)
 	 INFO = @info
       in
 	 if INFO.slashfinal then
-	    {New Path INIT({AdjoinAt INFO slashfinal false})}
+	    {self newFromRecord({AdjoinAt INFO slashfinal false} $)}
 	 else
 	    COM = INFO.components
+	    STR
+	    INFO2 = {Adjoin INFO
+		     unit(
+			string       : STR
+			slashinitial :
+			   if COM==nil then false else INFO.slashinitial end
+			slashfinal   : false
+			components   :
+			   if COM==nil then nil
+			   else {Reverse {Reverse COM}.2} end
+			)}
 	 in
-	    {New Path
-	     INIT_STRING(
-		{Adjoin INFO
-		 unit(
-		    string       : _
-		    slashinitial :
-		       if COM==nil then false else INFO.slashinitial end
-		    slashfinal   : false
-		    components   :
-		       if COM==nil then nil
-		       else {Reverse {Reverse COM}.2} end
-		    )})}
+	    Path,ComputeString(INFO2 STR)
+	    {self newFromRecord(INFO2 $)}
 	 end
       end
-      meth INIT_STRING(INFO)
-	 Path,INIT(INFO)
+      meth ComputeString(INFO $)
+	 INFO = @info
 	 DEV = INFO.drive
 	 INI = INFO.slashinitial
 	 FIN = INFO.slashfinal
@@ -164,7 +181,7 @@ define
 		     end nil}
 	 L4  = if FIN then L3#'/' else L3 end
       in
-	 INFO.string = {VS2S L4}
+	 {VS2S L4}
       end
       meth basenameString($)
 	 INFO = @info
@@ -179,20 +196,22 @@ define
 	 INFO = @info
       in
 	 if INFO.slashfinal then
-	    {New Path init(nil windows:INFO.windows)}
+	    {self new(nil $ window:INFO.windows)}
 	 else
-	    {New Path
-	     INIT_STRING(
-		unit(
-		   string       : _
-		   drive        : unit
-		   slashinitial : false
-		   slashfinal   : false
-		   components   :
-		      case {Reverse INFO.components}
-		      of nil then nil
-		      [] H|_ then [H] end
-		   windows      : INFO.windows))}
+	    STR
+	    INFO2 = unit(
+		       string       : STR
+		       drive        : unit
+		       slashinitial : false
+		       slashfinal   : false
+		       components   :
+			  case {Reverse INFO.components}
+			  of nil then nil
+			  [] H|_ then [H] end
+		       windows      : INFO.windows)
+	 in
+	    Path,ComputeString(INFO2 STR)
+	    {self newFromRecord(INFO2 $)}
 	 end
       end
       meth exists($)
@@ -220,16 +239,17 @@ define
 	 if {P isAbsolute($)} then P else
 	    INFO  = @info
 	    INFO2 = {P GetInfo($)}
+	    STR
+	    INFO3 = unit(
+		       string       : STR
+		       drive        : INFO.drive
+		       slashinitial : INFO.slashinitial
+		       slashfinal   : INFO2.slashfinal
+		       components   : {Append INFO.components INFO2.components}
+		       windows      : INFO.windows)
 	 in
-	    {New Path
-	     INIT_STRING(
-		unit(
-		   string       : _
-		   drive        : INFO.drive
-		   slashinitial : INFO.slashinitial
-		   slashfinal   : INFO2.slashfinal
-		   components   : {Append INFO.components INFO2.components}
-		   windows      : INFO.windows))}
+	    Path,ComputeString(INFO3 STR)
+	    {self newFromRecord(INFO3 $)}
 	 end
       end
       meth getcwd($)
@@ -244,6 +264,15 @@ define
 	 end
 	 if Path,exists($) then skip else
 	    Path,mkdir
+	 end
+      end
+      meth rmdir()
+	 R = {CondSelect OS rmDir unit}
+      in
+	 if R==unit then
+	    {Shell.executeCommand ['rmdir' @info.string]}
+	 else
+	    {R @info.string}
 	 end
       end
       meth isRoot($)
@@ -292,6 +321,10 @@ define
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+   fun {ToString   P} {{Make P} toString($)} end
+   fun {ToAtom     P} {{Make P} toAtom($)} end
+   fun {Length     P} {{Make P} length($)} end
 
    fun {IsAbsolute P} {{Make P} isAbsolute($)} end
    fun {IsRelative P} {{Make P} isRelative($)} end
