@@ -100,9 +100,6 @@ public:
   }
 };
 
-Bool isGenFDVar(TaggedRef term);
-Bool isGenFDVar(TaggedRef term, TypeOfTerm tag);
-GenFDVariable * tagged2GenFDVar(TaggedRef term);
 void addSuspFDVar(TaggedRef, SuspList *, OZ_FDPropState = fd_prop_any);
 void addSuspFDVar(TaggedRef, Thread *, OZ_FDPropState = fd_prop_any);
 OZ_Return tellBasicConstraint(OZ_Term, OZ_FiniteDomain * = NULL);
@@ -110,6 +107,9 @@ OZ_Return tellBasicConstraint(OZ_Term, OZ_FiniteDomain * = NULL);
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdgenvar.icc"
 #else
+GenFDVariable * tagged2GenFDVar(TaggedRef term);
+Bool isGenFDVar(TaggedRef term);
+Bool isGenFDVar(TaggedRef term, TypeOfTerm tag);
 #undef inline
 #endif
 

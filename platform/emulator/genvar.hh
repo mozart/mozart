@@ -32,7 +32,7 @@ enum TypeOfGenCVariable {
   FDVariable,
   OFSVariable,
   BoolVariable,
-  AVAR,
+  AVAR
 };
 
 #define GenVarCheckType(t)			\
