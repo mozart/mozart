@@ -20,8 +20,8 @@
 TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomSucceeded, AtomAlt, AtomMerged, AtomFailed,
   AtomEntailed, AtomSuspended, AtomBlocked,
-  AtomClosed,
   NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl, AtomUnknown;
+
 
 // Some often used constants
 void initLiterals()
@@ -34,9 +34,7 @@ void initLiterals()
   AtomBool  = makeTaggedAtom(NameOfBool);
   AtomSup   = makeTaggedAtom(NameOfSup);
   AtomCompl = makeTaggedAtom(NameOfCompl);
-  AtomUnknown = makeTaggedAtom(NameOfUnknown);
 
-  AtomClosed       = makeTaggedAtom("closed");
   AtomSucceeded    = makeTaggedAtom("succeeded");
   AtomAlt          = makeTaggedAtom("alternatives");
   AtomEntailed     = makeTaggedAtom("entailed");
