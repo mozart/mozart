@@ -2140,20 +2140,20 @@ if test "$GCC" = yes; then
 	    oz_for="-fpermissive"
 	    for ozm_opt in $oz_for
 	    do
-		echo $ac_n "checking cc compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:2145: checking cc compiler option $ozm_opt" >&5
+		echo $ac_n "checking c++ compiler option $ozm_opt""... $ac_c" 1>&6
+echo "configure:2145: checking c++ compiler option $ozm_opt" >&5
 		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
-		if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'+set}'`\" = set"; then
+		if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-  if test -z "`${CC} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
-			eval "oz_cv_gccopt_$ozm_ropt=yes"
+  if test -z "`${CXX} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
+			eval "oz_cv_gxxopt_$ozm_ropt=yes"
 		    else
-			eval "oz_cv_gccopt_$ozm_ropt=no"
+			eval "oz_cv_gxxopt_$ozm_ropt=no"
 		    fi
 fi
 
-		if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'}'`\" = yes"; then
+		if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'}'`\" = yes"; then
 		    ozm_out="$ozm_out $ozm_opt"
 		    echo "$ac_t""yes" 1>&6
 		else
@@ -2172,8 +2172,16 @@ if eval "test \"`echo '$''{'ac_cv_xlib_permissive'+set}'`\" = set"; then
 else
   save_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$TK_XINCLUDES $CPPFLAGS"
+  
+  ac_ext=C
+# CXXFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='${CXX-g++} -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
+ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
+cross_compiling=$ac_cv_prog_cxx_cross
+
   cat > conftest.$ac_ext <<EOF
-#line 2177 "configure"
+#line 2185 "configure"
 #include "confdefs.h"
 
 #include <X11/Xlib.h>
@@ -2184,7 +2192,7 @@ void foo() {}
 
 ; return 0; }
 EOF
-if { (eval echo configure:2188: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:2196: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   
   ac_cv_xlib_permissive=no
@@ -2198,6 +2206,13 @@ else
 
 fi
 rm -f conftest*
+  ac_ext=c
+# CFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='${CC-cc} -c $CFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
+ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
+cross_compiling=$ac_cv_prog_cc_cross
+
 CPPFLAGS="$save_CPPFLAGS"
 fi
 
@@ -2210,7 +2225,7 @@ fi
 
 
 echo $ac_n "checking for Tcl public headers""... $ac_c" 1>&6
-echo "configure:2214: checking for Tcl public headers" >&5
+echo "configure:2229: checking for Tcl public headers" >&5
 
 # Check whether --with-tclinclude or --without-tclinclude was given.
 if test "${with_tclinclude+set}" = set; then
@@ -2243,7 +2258,7 @@ fi
 
 
 echo $ac_n "checking for Tk public headers""... $ac_c" 1>&6
-echo "configure:2247: checking for Tk public headers" >&5
+echo "configure:2262: checking for Tk public headers" >&5
 
 # Check whether --with-tkinclude or --without-tkinclude was given.
 if test "${with_tkinclude+set}" = set; then
@@ -2279,7 +2294,7 @@ fi
 
 
     echo $ac_n "checking for --enable-copy-tcl-libs""... $ac_c" 1>&6
-echo "configure:2283: checking for --enable-copy-tcl-libs" >&5
+echo "configure:2298: checking for --enable-copy-tcl-libs" >&5
     # Check whether --enable-copy-tcl-libs or --disable-copy-tcl-libs was given.
 if test "${enable_copy_tcl_libs+set}" = set; then
   enableval="$enable_copy_tcl_libs"
