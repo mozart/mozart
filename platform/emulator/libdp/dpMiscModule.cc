@@ -35,7 +35,10 @@
 #include "builtins.hh"
 #include "os.hh"
 #include "space.hh"
+
+#ifdef NEWMARSHALER
 #include "newmarshaler.hh"
+#endif
 
 #ifdef VIRTUALSITES
 #define USE_VS_MSGBUFFERS

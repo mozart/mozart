@@ -787,6 +787,7 @@ Propagator * imposed_propagator;
 OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 {
   OZ_Boolean is_monotonic = p->isMonotonic();
+  OZ_Return ret = PROCEED;
 
   // do initial run with dummy thread
 
@@ -862,6 +863,20 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 
     switch (oz_runPropagator(prop)) {
     case FAILED:
+
+#ifdef NAME_PROPAGATORS
+      // this is experimental: a top-level failure with set
+      // property 'internal.propLocation',
+      if (am.isPropagatorLocation()) {
+        if (!am.hf_raise_failure()) {
+          oz_sleepPropagator(prop);
+          prop->markFailed();
+          ret = FAILED;
+          break;
+        }
+      }
+#endif
+
       oz_closeDonePropagator(prop);
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
       return FAILED;
@@ -936,7 +951,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 #endif
     oz_preemptedPropagator(prop);
   }
-  return PROCEED;
+  return ret;
 }
 
 // End of File

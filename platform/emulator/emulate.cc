@@ -2391,6 +2391,23 @@ LBLdispatcher:
              oz_closeDonePropagator(prop);
            } else if (r == FAILED) {
 
+#ifdef NAME_PROPAGATORS
+             // this is experimental: a top-level failure with set
+             // property 'internal.propLocation',
+             if (e->isPropagatorLocation()) {
+               if (!e->hf_raise_failure()) {
+                 if (ozconf.errorDebug)
+                   e->setExceptionInfo(OZ_mkTupleC("apply",2,
+                                                   OZ_atom((prop->getPropagator()->getProfile()->getPropagatorName())),
+                                                   prop->getPropagator()->getParameters()));
+                 oz_sleepPropagator(prop);
+                 prop->markFailed();
+                 oz_resetLocalPropagatorQueue(sb);
+                 RAISE_THREAD;
+               }
+             }
+#endif
+
              if (ozconf.timeDetailed)
                ozstat.timeForPropagation.incf(osUserTime()-starttime);
 
