@@ -475,6 +475,9 @@ void OZ_collectLocalHeapBlock(TaggedRef *, TaggedRef *, int);
 void OZ_updateLocalHeapTerm(TaggedRef &);
 void * OZ_hrealloc(void *, size_t);
 
+// builtins.cc
+OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val);
+
 
 /* Ultrix does not have 'strdup' */
 inline char *ozstrdup(const char *s)

@@ -1147,16 +1147,7 @@ int OZ_boolToC(OZ_Term term)
 /* convert a C string (char*) to an Oz string */
 OZ_Term OZ_string(const char *s)
 {
-  if (!s) { return oz_nil(); }
-  const char *p=s;
-  while (*p!='\0') {
-    p++;
-  }
-  OZ_Term ret = oz_nil();
-  while (p!=s) {
-    ret = oz_cons(oz_int((unsigned char)*(--p)), ret);
-  }
-  return ret;
+  return oz_string(s);
 }
 
 void string2buffer(ostream &out,OZ_Term list)
@@ -2045,13 +2036,12 @@ OZ_Term OZ_newPort(OZ_Term val)
   return oz_newPort(val);
 }
 
-extern OZ_Return sendPort(OZ_Term prt, OZ_Term val);
 void OZ_send(OZ_Term port, OZ_Term val)
 {
   port = oz_deref(port);
   if (!oz_isPort(port)) return;
 
-  (void) sendPort(port,val);
+  (void) oz_sendPort(port,val);
 }
 
 // mm2: this is not longer needed in Oz 3.0, but for compatibility with

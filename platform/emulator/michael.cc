@@ -202,7 +202,7 @@ OZ_Term oz_inspect(OZ_Term t)
 	Assert(isUVar(t));
 	kind = OZ_atom("uvar");
       }
-      const char *pn=VariableNamer::getName(makeTaggedRef(tptr));
+      const char *pn=oz_varGetName(makeTaggedRef(tptr));
       OZ_Term pl = oz_list(OZ_pairAA("printName",pn),
 			   OZ_pairAI("suspensions",sl),
 			   OZ_pairA("kind",kind),
@@ -227,15 +227,6 @@ OZ_BI_define(BIinspect, 1, 1)
   OZ_RETURN(oz_inspect(t));
 } OZ_BI_end
 
-OZ_BI_proto(BIHeapChunk_new);
-OZ_BI_proto(BIHeapChunk_is);
-OZ_BI_proto(BIHeapChunk_peek);
-OZ_BI_proto(BIHeapChunk_poke);
-
-OZ_BI_proto(BIwaitOrF);
-OZ_BI_proto(BInewPortF);
-OZ_BI_proto(BIsendPortF);
-
 static
 OZ_C_proc_interface oz_interface[] = {
   {"stop",0,0,BIstop},
@@ -250,14 +241,6 @@ OZ_C_proc_interface oz_interface[] = {
   {"livenessX",1,1,BIlivenessX},
   {"procedureEnvironment",1,1,BIprocedureEnvironment},
 
-  {"HeapChunk.new",1,1,BIHeapChunk_new},
-  {"HeapChunk.is",1,1,BIHeapChunk_is},
-  {"HeapChunk.peek",2,1,BIHeapChunk_peek},
-  {"HeapChunk.poke",3,0,BIHeapChunk_poke},
-
-  {"WaitOrF",1,1,BIwaitOrF},
-  {"NewPortF",0,2,BInewPortF},
-  {"SendPortF",2,0,BIsendPortF},
   {0,0,0,0}
 };
 
