@@ -574,6 +574,8 @@ void marshalObject(Object *o, MsgBuffer *bs, GName *gnclass)
 {
   if (marshalTertiary(o,DIF_OBJECT,bs)) return;   /* ATTENTION */
   trailCycle(o->getCycleRef(),bs);
+  Assert(o->hasGName());
+  marshalGName(o->hasGName(),bs);
   marshalGName(gnclass,bs);
 }
 
@@ -687,6 +689,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       Object *o = (Object*) t;
       ObjectClass *oc = o->getClass();
       oc->globalize();
+      o->globalize();
       bs->addRes(makeTaggedConst(t));
       marshalObject(o,bs,oc->getGName());
       return;
@@ -1153,7 +1156,6 @@ loop:
       *ret=unmarshalTertiary(bs,tag);
       gotRef(bs,*ret);
       return;}
-
   case DIF_CHUNK:
     {
       PD((UNMARSHAL,"chunk"));
@@ -1197,6 +1199,8 @@ loop:
       unmarshalClass(cl,bs);
       return;
     }
+
+
 
   case DIF_VAR:
     {

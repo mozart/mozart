@@ -27,6 +27,45 @@
 
 // abstract interface to the ip network
 
+/* ***************************************************************************
+***************************************************************************
+                       ORGANIZATION
+
+          1  Enums & Defs
+          2  Forward declaration
+          3  Global Variables
+          4  Network MsgBuffer and friends
+          5  RemoteSite
+          6  Read and Write - Connection
+          7  MySiteInfo
+          8  Managers
+          9  Small routines for RemoteSite
+          10 TcpError
+          11 TcpCache
+          12 Exported to Perdio
+          13 ????
+          14 MessageManagers
+          15 Methods
+          16 Message storing
+          17 Small Routines
+          18 ReadStuff
+          19 HandShaking Reader
+          20 HandShaking Writer
+          21 WriteHandler
+          22 Ack-stuff
+          23 Prm/Tmp Routines
+          24 Closing
+          25 RemoteSite Init
+          26 IOQueue meths
+          27 Probes
+          28 Exports to Perdio
+          29 Exported for debugging
+          30 Transfer speed control
+
+   **************************************************************************
+   **************************************************************************/
+
+
 
 #include "wsock.hh"
 #ifndef WINDOWS
@@ -57,7 +96,7 @@
 
 
 /* ************************************************************************ */
-/*  SECTION ::  Enums & Defines                                            */
+/*  SECTION 1:  Enums & Defines                                            */
 /* ************************************************************************ */
 
 #define NETWORK_ERROR(Args) {error Args;}
@@ -188,7 +227,7 @@ enum closeInitiator{
 #define WKUPPRB_TIME 180000
 
 /* ************************************************************************ */
-/*  SECTION ::  Forward declarations                                        */
+/*  SECTION 2:  Forward declarations                                        */
 /* ************************************************************************ */
 
 class Connection;
@@ -206,7 +245,7 @@ class MessageManager;
 class TcpCache;
 class TcpOpenMsgBuffer;
 class NetMsgBuffer;
-
+class TSCQueue;
 
 ipReturn tcpSend(int,Message *,Bool);
 int intifyUnique(BYTE *);
@@ -226,7 +265,7 @@ inline ipReturn readI(int,BYTE *);
 int findProbeCons(Connection*);
 
 /* ************************************************************************ */
-/*  SECTION ::  Global Variables                                            */
+/*  SECTION 3:  Global Variables                                            */
 /* ************************************************************************ */
 
 WriteConnectionManager *writeConnectionManager;
@@ -236,7 +275,7 @@ RemoteSiteManager *remoteSiteManager;
 ByteBufferManager *byteBufferManager;
 MessageManager *messageManager;
 TcpCache *tcpCache;
-
+TSCQueue *TSC;
 
 
 
@@ -255,6 +294,10 @@ protected:
   MessageType msgType;
   int storeIndx;
 
+#ifdef SLOWNET
+  int time;
+#endif
+
 public:
   Message(){}
   void init(NetMsgBuffer *b, int n,
@@ -266,7 +309,11 @@ public:
     msgNum = n;
     site = s;
     msgType = msg;
-    storeIndx = stI;}
+    storeIndx = stI;
+#ifdef SLOWNET
+    time = 0;
+#endif
+  }
   NetMsgBuffer* getMsgBuffer(){
     return bs;};
   void setType(tcpMessageType t){
@@ -286,6 +333,13 @@ public:
   void setMsgNum(int n){
     msgNum = n;}
   void resend();
+
+#ifdef SLOWNET
+  int getTime(){
+    return time;}
+  void setTime(int t){
+    time = t;}
+#endif
 
 };
 
@@ -322,8 +376,94 @@ public:
   void addfirst(Message *m);
 };
 
+/**********************************************************************/
+/*   SECTION 3b:  Transfer speed control                             */
+/**********************************************************************/
+
+#define TSC_LATENCY         200
+#define TSC_READ_A          400 * 8
+#define TSC_WRITE_A         400 * 8
+#define TSC_TOTAL_A         400 * 10
+#define READ_NO_TIME        (0-1)
+#define TSCQ_READ           1
+#define TSCQ_WRITE          2
+
+
+
+class TSCQElement{
+public:
+  int t;
+  Connection *c;
+  TSCQElement *e;
+  TSCQElement(int tt, Connection *cc, TSCQElement* ee){
+    t = tt;
+    c = cc;
+    e = ee;}
+};
+
+
+class TSCQueue{
+private:
+  int readAmount;
+  int writeAmount;
+  int time;
+  TSCQElement *ptr;
+
+public:
+  TSCQueue(){
+    readAmount     =  0;
+    writeAmount    =  0;
+    time = getCurTime();
+    ptr = NULL;
+  }
+
+  void writing(int size){
+    writeAmount += size;}
+
+  void reading(int size){
+    readAmount += size;}
+
+  Bool writeAmountFull(){
+    Bool ret =  (writeAmount > TSC_WRITE_A)  ||
+      (((readAmount>TSC_READ_A?TSC_READ_A:readAmount) +
+        writeAmount ) > TSC_TOTAL_A);
+    printf("slownet: writeAmountFull a:%d r:%d w:%d\n",ret,readAmount,writeAmount);
+    return ret;
+  }
+
+  Bool readAmountFull(){
+    Bool ret =(readAmount > TSC_READ_A)  ||
+      (((writeAmount>TSC_READ_A?TSC_READ_A:writeAmount)
+        + readAmount) > TSC_TOTAL_A);
+    printf("slownet: readAmountFull a:%d r:%d w:%d\n",ret,readAmount,writeAmount);
+    return ret;
+  }
+
+  int getCurTime() {
+    return osTotalTime();}
+  int getNewTime(){
+    return getCurTime() + TSC_LATENCY;}
+
+  void addRead(Connection *c){
+    ptr = new TSCQElement(TSCQ_READ, c, ptr);}
+  void addWrite(Connection *c){
+    TSCQElement *tmp = ptr;
+    while(tmp){
+      if(tmp->c == c) return;
+      tmp = tmp->e;}
+    ptr = new TSCQElement(TSCQ_WRITE, c, ptr);}
+
+  void incTime();
+};
+
+void incTimeSlice(){
+  TSC->incTime();
+}
+
+
+
 /* ************************************************************************ */
-/*  SECTION ::  Network MsgBuffer and friends                                       */
+/*  SECTION 4:  Network MsgBuffer and friends                                       */
 /* ************************************************************************ */
 
 class ByteBuffer{
@@ -717,7 +857,7 @@ ByteBuffer *NetMsgBuffer::getAnother(){
   return(byteBufferManager->newByteBuffer());}
 
 /* *********************************************************************/
-/*   SECTION :: RemoteSite                                          */
+/*   SECTION 5: RemoteSite                                          */
 /* *********************************************************************/
 
 
@@ -827,7 +967,7 @@ public:
 
 
 /***********************************************************************/
-/* SECTION :: Read and Write - Connection                                */
+/* SECTION 6: Read and Write - Connection                                */
 /***********************************************************************/
 
 class Connection {
@@ -911,7 +1051,11 @@ class ReadConnection:public Connection{
 protected:
   int  maxSizeAck;
   int  recSizeAck;
+#ifdef SLOWNET
+  int  time;
+#endif
 public:
+
 
   void fastfixerik2()
   {Connection();}
@@ -947,7 +1091,20 @@ public:
     maxSizeAck = 0;
     recSizeAck = 0;
     remoteSite=s;
-    current=NULL;}
+    current=NULL;
+#ifdef SLOWNET
+    time = READ_NO_TIME;
+#endif
+
+  }
+
+#ifdef SLOWNET
+  int getTime(){
+    return time;}
+  void setTime(int t){
+    time = t;}
+#endif
+
 
   Bool canbeClosed(){
     if(isClosing()) return FALSE;
@@ -1163,7 +1320,7 @@ public:
 };
 
 /************************************************************/
-/*  SECTION :: MySiteInfo                                      */
+/*  SECTION 7: MySiteInfo                                      */
 /************************************************************/
 class MySiteInfo{
 public:
@@ -1174,7 +1331,7 @@ public:
 }mySiteInfo;
 
 /************************************************************/
-/* SECTION :: Managers                                         */
+/* SECTION 8: Managers                                         */
 /************************************************************/
 
 class RemoteSiteManager: public FreeListManager{
@@ -1273,7 +1430,7 @@ public:
  };
 
 /************************************************************/
-/* SECTION :: small routines for RemoteSites                   */
+/* SECTION 9: small routines for RemoteSites                   */
 /************************************************************/
 
 void RemoteSite::zeroReferences(){
@@ -1303,7 +1460,7 @@ void RemoteSite::readConnectionRemoved(){
 
 
 /************************************************************/
-/* SECTION :: tcpError                                         */
+/* SECTION 10: tcpError                                         */
 /************************************************************/
 
 
@@ -1332,7 +1489,7 @@ return IP_TEMP_BLOCK;
 }
 
 /************************************************************/
-/* SECTION :: TcpCache                                         */
+/* SECTION 11: TcpCache                                         */
 /************************************************************/
 
 class TcpCache {
@@ -1431,8 +1588,11 @@ public:
   Bool accept;
   Bool openCon;
   Bool probes;
+  Bool shutDwn;
 
-  void closeConnections(){
+  Site *closeConnections(Bool shutdwn){
+    Site *s = NULL;
+    if(shutdwn) shutDwn = TRUE;
     PD((TCPCACHE,"ClosingConnections fakingTmp"));
     Connection *c=currentHead, *cc;
     while(c!=NULL){
@@ -1441,15 +1601,20 @@ public:
       if(!c->isClosing()){
         PD((TCPCACHE,"Closing connection %x",c));
         cc = c->next;
-        if(c->testFlag(WRITE_CON))
-          ((WriteConnection*)c)->closeConnection();
+        if(c->testFlag(WRITE_CON)){
+          if(shutdwn && !((WriteConnection*)c)->goodCloseCand()){
+            s = c->getRemoteSite()->getSite();
+            ((WriteConnection*)c)->setCanClose();}
+          else
+            ((WriteConnection*)c)->closeConnection();}
         else
           ((ReadConnection*)c)->closeConnection();}
       else{
         PD((TCPCACHE,"Not Closing connection %x",c));
         c = c->next;}
       c = cc;}
-    openCon = FALSE;}
+    openCon = FALSE;
+    return s;}
 
   void openConnections(){
     PD((TCPCACHE,"OpeningConnections %x",tmpHead));
@@ -1473,6 +1638,7 @@ public:
     max_size=MAXTCPCACHE;
     openCon = TRUE;
     probes = FALSE;
+    shutDwn = FALSE;
     PD((TCPCACHE,"max_size:%d",max_size));}
 
   void nowAccept(){
@@ -1485,6 +1651,10 @@ public:
 
   void adjust(){
     PD((TCPCACHE,"adjusting size:%d maxsize:%d",open_size,max_size));
+    if(shutDwn && !(close_size|open_size)){
+      // TcpCache empty
+      // Just close now.
+    }
     if(myHead!=NULL && open_size<max_size){
       openMyClosedConnection();
       return;}
@@ -1505,6 +1675,7 @@ public:
     if(w->isClosing()){
       addToFront(w, closeHead, closeTail);
       close_size++;
+      adjust();
       return;}
     Assert(w->isWriteCon());
     if(((WriteConnection*)w)->isMyInitiative()){
@@ -1535,6 +1706,7 @@ public:
     if(w->isClosing()){
       unlink(w, closeHead, closeTail);
       close_size--;
+      adjust();
       return;}
     if(w->isWriteCon()){
       if(((WriteConnection*)w)->isMyInitiative()){
@@ -1542,7 +1714,7 @@ public:
         return;}
       if(((WriteConnection*)w)->isTmpDwn()){
         unlink(w, tmpHead, tmpTail);
-return;}}
+        return;}}
     unlink(w, currentHead, currentTail);
     open_size--;
     adjust();}
@@ -1588,7 +1760,7 @@ return;}}
 
 
 /************************************************************/
-/* SECTION ::  Exported to Perdio                           */
+/* SECTION 12:  Exported to Perdio                           */
 /************************************************************/
 
 Bool openClosedConnection(int Type){
@@ -1609,13 +1781,13 @@ int openclose(int Type){
   int state = 0;
   if(tcpCache->openCon) state = 1;
   if(Type){
-    if(state) tcpCache->closeConnections();
+    if(state) (void) tcpCache->closeConnections(FALSE);
     else tcpCache->openConnections();}
   return state;}
 
 
 /***********************************************************/
-/* SECTION :: ?????                                           */
+/* SECTION 13: ?????                                           */
 /************************************************************/
 
 void Connection::setClosing(){
@@ -1640,7 +1812,7 @@ ipReturn WriteConnection::open(){
     tcpCache->add(this);
     return tcpOpen(remoteSite, this);}
 /**********************************************************************/
-/*   SECTION :: MessageManagers                                           */
+/*   SECTION 14: MessageManagers                                           */
 /**********************************************************************/
 
 class MessageManager: public FreeListManager {
@@ -1689,7 +1861,7 @@ public:
 
 
 /**********************************************************************/
-/*   SECTION :: Methods                                            */
+/*   SECTION 15: Methods                                            */
 /**********************************************************************/
 
 int findProbeCons(Connection *c){
@@ -1754,7 +1926,7 @@ Bool WriteConnection::checkAckQueue(){
 }
 
 /************************************************************/
-/*  SECTION :: Stornig messages till ack received           */
+/*  SECTION 16: Storing messages till ack received           */
 /************************************************************/
 
 void RemoteSite::storeSentMessage(Message* m) {
@@ -2144,6 +2316,10 @@ ipReturn tcpSend(int fd,Message *m, Bool flag)
         return tcpError();
       break;}
     PD((WRITE,"wr:%d try:%d error:%d",ret,len,errno));
+#ifdef SLOWNET
+    printf("slownet: TcpSend sending %d\n",ret);
+    TSC->writing(ret);
+#endif
     if(ret<len){
       if(ret>0){
         bs->incPosAfterWrite(ret);
@@ -2168,14 +2344,24 @@ int smallMustRead(int fd,BYTE *pos,int todo,int tries){
     if(ret==todo) return 0;
     if(ret == 0) return IP_BLOCK;
     if(ret<0){
+
+#ifdef LINUX
       // EK
-      // Handle these errors. They can occur.
-      // Inform Connection and Site.
-      if(errno!=EINTR) return IP_BLOCK;
+      // Linux returns a very strange errno when
+      // connections are unaviable.
+      // This is a hack to cover that case.
+      // The strange number is 111
+      if(ossockerrno() == 111)
+        return IP_PERM_BLOCK;
+#endif
+      if(ossockerrno() == ECONNREFUSED ||
+         ossockerrno() == EADDRNOTAVAIL)
+        return IP_PERM_BLOCK;
+      if(ossockerrno()!=EINTR) return IP_BLOCK;
       tries--;
       if(tries<0) {return IP_NO_MORE_TRIES;}
-    pos += ret;
-    todo -= ret;}}}
+      pos += ret;
+      todo -= ret;}}}
 
 #define CONNECTION_HANDLER_TRIES 50
 
@@ -2232,7 +2418,7 @@ inline ipReturn readI(int fd,BYTE *buf)
 
 
 /************************************************************/
-/* SECTION :: Div small routines                              */
+/* SECTION 17: Div small routines                              */
 /************************************************************/
 
 void uniquefyInt(BYTE *buf, int Num){
@@ -2261,7 +2447,7 @@ int intifyUnique(BYTE *buf){
   return ans;}
 
 /************************************************************/
-/* SECTION :: ReadStuff                                        */
+/* SECTION 18: ReadStuff                                        */
 /************************************************************/
 
 Bool tcpAckReader(ReadConnection *r, int ack){
@@ -2378,7 +2564,7 @@ inline Message* newReadCur(Message *m,NetMsgBuffer *bs,
 
 
 /************************************************************/
-/* SECTION :: Handshake Readin Site                            */
+/* SECTION 19: Handshake Readin Site                            */
 /************************************************************/
 
 int accHbufSize = 9 + strlen(PERDIOVERSION);
@@ -2442,16 +2628,15 @@ int tcpPreReadHandler(int fd,void *r0){
   int ackStartNr,maxNrSize,todo;
   Site *si;
   PD((TCP_CONNECTIONH,"tcpPreReadHandler invoked r:%x",r));
-  int ret=smallMustRead(fd,pos,PREREAD_NO_BYTES,PREREAD_HANDLER_TRIES);
-  if(ret!=0){
-    if(ret<0)
-      goto tcpPreFailure;
-    pos += ret;}
+  if(smallMustRead(fd,pos,PREREAD_NO_BYTES,PREREAD_HANDLER_TRIES))
+    goto tcpPreFailure;
   pos +=5;
   header =  tcpOpenMsgBuffer->readyForRead(todo);
 
-  if(header!=TCP_MYSITE && header!=TCP_MYSITE_ACK) goto tcpPreFailure;
-  if(smallMustRead(fd,pos,todo,PREREAD_HANDLER_TRIES)!=0) goto tcpPreFailure;
+  if(header!=TCP_MYSITE && header!=TCP_MYSITE_ACK)
+    goto tcpPreFailure;
+  if(smallMustRead(fd,pos,todo,PREREAD_HANDLER_TRIES))
+    goto tcpPreFailure;
 
   ackStartNr = unmarshalNumber(tcpOpenMsgBuffer);
   maxNrSize= unmarshalNumber(tcpOpenMsgBuffer);
@@ -2481,9 +2666,20 @@ tcpPreFailure:
 
 static int tcpReadHandler(int fd,void *r0)
 {
+
   PD((TCP,"tcpReadHandler Invoked"));
   ReadConnection *r = (ReadConnection*) r0;
 
+#ifdef SLOWNET
+  if(r->getTime() == READ_NO_TIME){
+    r->setTime(TSC->getNewTime());
+    printf("slownet: The read had no time\n");}
+
+  if(TSC->readAmountFull() || TSC->getCurTime() < r->getTime()){
+    printf("slownet: We got to wait, read at:%d mt%d\n",
+           TSC->getCurTime() ,r->getTime());
+    return 0;}
+#endif
 
   int ret,rem,len,msgNr,ansNr;
   int totLen;
@@ -2546,6 +2742,11 @@ start:
       r->connectionLost();}
     return 0;}
 
+#ifdef SLOWNET
+  printf("slownet: read adds %d av:%d rem:%d\n",ret,len,rem);
+  TSC->reading(ret);
+#endif
+
   PD((READ,"no:%d av:%d rem:%d",ret,len,rem));
   bs->afterRead(ret);
 
@@ -2565,6 +2766,7 @@ start:
       rem -=ret;}
 
     if(rem>0){goto maybe_redo;}
+
 
     PD((CONTENTS," Informin: %d %d %d ",msgNr,ansNr,totLen));
 
@@ -2610,11 +2812,20 @@ fin:
       // have been removed dynamicly during marshaling.
       // ATTENTION
       netMsgBufferManager->dumpNetMsgBuffer(bs);
+#ifdef SLOWNET
+      r->setTime(READ_NO_TIME);
+#endif
       return 0;}
     Assert(!r->isIncomplete());
+#ifdef SLOWNET
+    r->setTime(READ_NO_TIME);
+#endif
     messageManager->freeMessageAndMsgBuffer(m);
     return 0;}
   newReadCur(m,bs,r,type,rem);
+#ifdef SLOWNET
+  r->setTime(TSC->getCurTime());
+#endif
   return 0;
 
 close:
@@ -2649,7 +2860,7 @@ close:
 
 
 /************************************************************/
-/* SECTION :: Handshake Writing Site                           */
+/* SECTION 20: Handshake Writing Site                           */
 /************************************************************/
 
 static ipReturn tcpOpen(RemoteSite *remoteSite,WriteConnection *r)
@@ -2716,8 +2927,9 @@ int tcpConnectionHandler(int fd,void *r0){
   char msgType;
 
   PD((TCP,"tcpConnectionHandler invoked r:%x",r));
-  if(smallMustRead(fd,pos,bufSize,CONNECTION_HANDLER_TRIES))
-  goto tcpConFailure;
+  ret = smallMustRead(fd,pos,bufSize,CONNECTION_HANDLER_TRIES);
+  if(ret == IP_PERM_BLOCK) goto tcpConPermLost;
+  if(ret)goto tcpConFailure;
 
   pos = buf;
   if(*pos!=TCP_CONNECTION) goto tcpConFailure;
@@ -2735,7 +2947,9 @@ int tcpConnectionHandler(int fd,void *r0){
   pos = buf;
 
   ret=smallMustRead(fd,pos,strngLen,CONNECTION_HANDLER_TRIES);
-  if(ret!=0) goto tcpConFailure;
+  if(ret == IP_PERM_BLOCK) goto tcpConPermLost;
+  if(ret)goto tcpConFailure;
+
 
   if (strlen(PERDIOVERSION)!=strngLen ||
       strncmp(PERDIOVERSION,(char*)pos,strngLen)!=0) goto tcpConPermLost;
@@ -2794,7 +3008,7 @@ tcpConPermLost:
 
 
 /************************************************************/
-/* SECTION ::  WriteHandlers                                    */
+/* SECTION 21:  WriteHandlers                                    */
 /************************************************************/
 
 int tcpWriteHandler(int fd,void *r0){
@@ -2806,6 +3020,16 @@ int tcpWriteHandler(int fd,void *r0){
   PD((TCP,"tcpWriteHandler invoked r:%x",r));
   if(r->isIncomplete()){
     m=r->getCurQueue();
+#ifdef SLOWNET
+    if(TSC->getCurTime()<m->getTime() ||
+       TSC->writeAmountFull()){
+      printf("slownet: WriteH should wait\n");
+      ret=IP_BLOCK;
+      TSC->addWrite(r);
+      goto writeHerrorBlock;}
+#endif
+
+
     Assert(m!=NULL);
     ret=tcpSend(r->getFD(),m,TRUE);
     if(ret<0) goto writeHerrorBlock;}
@@ -2820,9 +3044,22 @@ int tcpWriteHandler(int fd,void *r0){
   while(r->isInWriteQueue()){
     PD((TCP,"taking from write queue %x",r));
     m=site->getWriteQueue();
+
+#ifdef SLOWNET
+    if(TSC->getCurTime()<m->getTime() ||
+       TSC->writeAmountFull()){
+      printf("slownet: WriteH should wait\n");
+      ret=IP_BLOCK;
+      m->getMsgBuffer()->PiggyBack(m);
+      TSC->addWrite(r);
+      goto writeHerrorBlock;}
+#endif
+
     Assert(m!=NULL);
     ret=tcpSend(r->getFD(),m,FALSE);
-    if(ret<0) goto writeHerrorBlock;}
+    if(ret<0) goto writeHerrorBlock;
+  }
+
 
   PD((TCP,"tcpWriteHandler finished r:%x",r));
 
@@ -2898,7 +3135,7 @@ close_handler_read:
 }
 
 /************************************************************/
-/* SECTION ::  Ack-stuff                                        */
+/* SECTION 22:  Ack-stuff                                        */
 /************************************************************/
 
 Bool ReadConnection::informSiteAck(int m, int s){
@@ -2990,7 +3227,7 @@ int RemoteSite::readRecMsgCtr(){
 
 
 /************************************************************/
-/* SECTION Prm/Tmp-Down routines                            */
+/* SECTION 23: Prm/Tmp-Down routines                        */
 /************************************************************/
 
 void RemoteSite::sitePrmDwn(){
@@ -3069,7 +3306,7 @@ void WriteConnection::prmDwn(){
       current = NULL;}}
 
 /************************************************************/
-/* SECTION :: closing                                       */
+/* SECTION 24: closing                                       */
 /************************************************************/
 
 void WriteConnection::setWantsToClose(){
@@ -3180,7 +3417,7 @@ void ReadConnection::close(){
 
 
 /************************************************************/
-/* SECTION :: ????                                          */
+/* SECTION 25: RemoteSite Init                              */
 /************************************************************/
 
 void RemoteSite::init(Site* s, int msgCtr){
@@ -3207,7 +3444,7 @@ void RemoteSite::setReadConnection(ReadConnection *r){
   r->setSite(this);}
 
 /************************************************************/
-/* SECTION IOQueue methods                                  */
+/* SECTION 26: IOQueue methods                              */
 /************************************************************/
 
 void IOQueue::checkQueue(){
@@ -3264,7 +3501,7 @@ void IOQueue::dequeue(Message *m){
     return;}
 
 /************************************************************/
-/* SECTION probes                                           */
+/* SECTION 27:probes                                           */
 /************************************************************/
 
 ProbeReturn RemoteSite::installProbe(ProbeType pt){
@@ -3314,6 +3551,11 @@ sendTo(NetMsgBuffer *bs, MessageType msg,
   int msgNum,ret;
   Message *m=messageManager->allocMessage(bs,NO_MSG_NUM,
 storeS,msg,storeInd);
+#ifdef SLOWNET
+  printf("slownet: settingTime\n");
+  m->setTime(TSC->getNewTime());
+#endif
+
   queueMessage(m->getMsgBuffer()->getTotLen());
   switch (siteStatus()){
   case SITE_TEMP:{
@@ -3343,6 +3585,16 @@ storeS,msg,storeInd);
     if(!writeConnection->shouldSendFromUser())
       goto ipBlockSend;
     tcpCache->touch(writeConnection);}
+
+#ifdef SLOWNET
+  // In case of slownet, all msgs are put in the writeques.
+  printf("slownet: Queue not Send\n");
+  OZ_registerWriteHandler(fd,tcpWriteHandler,(void *)this->writeConnection);
+  m->getMsgBuffer()->PiggyBack(m);
+  writeConnection->addCurQueue(m);
+  TSC->addWrite(this->writeConnection);
+  return ACCEPTED;
+#endif
 
   fd=writeConnection->getFD();
   Assert(fd>0);
@@ -3381,7 +3633,7 @@ ipBlockSend:
 }
 
 /**********************************************************************/
-/*   SECTION :: exported to the protocol layer              */
+/*   SECTION 28: exported to the protocol layer              */
 /**********************************************************************/
 
 RemoteSite* createRemoteSite(Site* site, int readCtr){
@@ -3439,6 +3691,7 @@ void initNetwork(){
   messageManager = new MessageManager();
   tcpCache = new TcpCache();
   tcpOpenMsgBuffer= new TcpOpenMsgBuffer();
+  TSC = new TSCQueue();
 
   ipReturn ret=createTcpPort(OZReadPortNumber,ip,p,tcpFD);
   if (ret<0){
@@ -3465,9 +3718,56 @@ void dumpRemoteMsgBuffer(MsgBuffer *m){
 
 
 /**********************************************************************/
-/*   SECTION :: exported for debugging                                */
+/*   SECTION 29: exported for debugging                                */
 /**********************************************************************/
+
+
 int timeCtr = 0;
 #define MY_INITIATED_CLOSE 5
 #define HIS_INITIATED_CLOSE 10
 #define PROBE 20
+
+
+/**********************************************************************/
+/*   SECTION 30: SLOWNET method, dependent of writeconnection     */
+/**********************************************************************/
+
+void TSCQueue::incTime(){
+  int t = getCurTime();
+  int dTime = (t - time);
+  int newRA = readAmount - dTime * TSC_TOTAL_A / 2000;
+  int newWA = writeAmount - dTime * TSC_TOTAL_A / 2000;
+
+  printf("slownet: incTime t:%d nt:%d dt:%d ",time,t,dTime);
+  printf("ra:%d nra:%d wa:%d nwa:%d ptr: %d \n",
+         readAmount,newRA, writeAmount, newWA, (int)ptr);
+
+ time = t;
+  if(newRA < 0) newWA += newRA;
+  if(newWA < 0) newRA += newWA;
+  if(newRA < 0) newRA = 0;
+  if(newWA < 0) newWA = 0;
+  readAmount = newRA;
+  writeAmount = newWA;
+
+
+  TSCQElement *tptr = ptr;
+  ptr = NULL;
+  while(tptr){
+    printf("whiling\n");
+    switch(tptr->t){
+    case TSCQ_READ:{
+      break;}
+    case TSCQ_WRITE:{
+      (void) tcpWriteHandler((int) ((WriteConnection *)(tptr->c))->fd,
+                           (void *) tptr->c);
+      break;}
+    default:
+      Assert(0);}
+
+    TSCQElement *tmp = tptr->e;
+
+    delete tptr;
+    tptr = tmp;
+  }
+}

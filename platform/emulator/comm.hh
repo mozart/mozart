@@ -381,7 +381,9 @@ public:
     flags |= PERM_SITE;
     return;}
 
-  void putInSecondary(){setType(getType()|SECONDARY_TABLE_SITE);}
+  void putInSecondary(){
+    Assert(!(MY_SITE & getType()));
+    setType(getType()|SECONDARY_TABLE_SITE);}
 
   Bool isInSecondary(){
     if(getType() & SECONDARY_TABLE_SITE) return OK;
@@ -392,7 +394,9 @@ public:
   Bool canBeFreed(){
     Assert(!isGCMarkedSite());
     if(flags & MY_SITE) {return NO;}
-    if(ActiveSite()){
+    unsigned short t=getType();
+    if(ActiveSite() &&
+       ((t & CONNECTED) || uRVC.readCtr!=0)){
       zeroActive();
       return NO;}
     return OK;}
@@ -420,6 +424,7 @@ public:
   void initRemote(){
     info=NULL;
     uRVC.readCtr=0;
+    Assert(!(getType() & MY_SITE));
     setType(REMOTE_SITE);}
 
   void initPerm(){
@@ -430,10 +435,12 @@ public:
   void initPassive(){
     info=NULL;
     uRVC.readCtr=0;
+    Assert(!(getType() & MY_SITE));
     setType(0);}
 
   void makeActiveRemote(){
     uRVC.readCtr=0;
+    Assert(!(getType() & MY_SITE));
     setType(REMOTE_SITE);}
 
   void makeActiveVirtual(){
@@ -621,6 +628,9 @@ public:
     return;}
 
   void msgReceived(MsgBuffer *);
+
+  Bool isMySite(){
+    return flags & MY_SITE;}
 };
 
 
@@ -632,4 +642,5 @@ Site* initMySiteVirtual(ip_address,port_t,time_t,VirtualInfo*);
  *   SECTION :: new gate support
  **********************************************************************/
 
+extern OZ_Term  GateStream;
 Site *findSite(ip_address a,int port,time_t stamp);

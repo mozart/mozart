@@ -209,9 +209,10 @@ FatInt *idCounter;
 MsgBufferManager* msgBufferManager= new MsgBufferManager();
 Site* mySite;  // known to network-layer also
 Site* creditSite;
+OZ_Term GateStream;
 
 int PortSendTreash = 100000;
-int PortWaitTimeSlice = 100;
+int PortWaitTimeSlice = 800;
 int PortWaitTimeK = 1;
 
 
@@ -376,7 +377,8 @@ enum PO_FLAGS{
   PO_BIGCREDIT=2,
   PO_MASTER=4,
   PO_SLAVE=8,
-  PO_GC_MARK=16
+  PO_GC_MARK=16,
+  PO_PERSISTENT=32
 };
 
 class ProtocolObject {
@@ -534,6 +536,7 @@ PrTabEntry *findCodeGName(GName *gn)
 /* ********************************************************************** */
 
 #define INFINITE_CREDIT            (0-1)
+#define PERSISTENT_CRED            (0-1)
 
 #ifdef DEBUG_CREDIT
 #define START_CREDIT_SIZE        (256)
@@ -646,7 +649,7 @@ public:
     return uOB.credit;}
 
   void print();
-};
+  };
 
 /* ********************************************************************** */
 /*   SECTION 8: NetAddress & NetHashTable                                 */
@@ -904,6 +907,7 @@ public:
     addCredit(c);}
 
   Bool hasFullCredit(){
+    if(isPersistent()) return NO;
     if(isExtended()) return NO;
     Credit c=getCreditOB();
     Assert(c<=START_CREDIT_SIZE);
@@ -911,6 +915,7 @@ public:
     return OK;}
 
   Credit getSendCredit() {
+
     requestCredit(OWNER_GIVE_CREDIT_SIZE);
     return OWNER_GIVE_CREDIT_SIZE;}
 
@@ -931,6 +936,14 @@ public:
     creditSite=NULL;}
 
   void removeGCMark(){ removeFlags(PO_GC_MARK); }
+
+  Bool isPersistent(){
+    return (getFlags() & PO_PERSISTENT);}
+
+  void makePersistent(){
+    Assert(!isPersistent());
+    addFlags(PO_PERSISTENT);
+    uOB.credit = PERSISTENT_CRED;}
 };
 
 
@@ -1352,6 +1365,11 @@ public:
     Assert(isFree());
     setCreditOB(c);
     unsetFree();
+    removeFlags(PO_PERSISTENT);
+    /* It seems as the flags are never reset.
+       This is a hack to avoid leak of the property
+       Persistent. EK
+       */
     netaddr.set(s,i);
     return;}
 
@@ -1382,6 +1400,8 @@ public:
     setCreditOB(cur+c);}
 
   Bool getOnePrimaryCredit(){
+    if(isPersistent())
+      return OK;
     if(isExtended()){
       PD((CREDIT,"Structure extended, no primary"));
       return NO;}
@@ -1395,6 +1415,8 @@ public:
     return OK;}
 
   Credit getSmallPrimaryCredit(){
+    if(isPersistent())
+      return PERSISTENT_CRED;
     if(isExtended()){
       return NO;}
     Credit tmp=getCreditOB();
@@ -1437,6 +1459,14 @@ public:
   void removeGCMark(){
     removeFlags(PO_GC_MARK);
     getSite()->makeGCMarkSite();}
+
+  void makePersistent(){
+    Assert(!isPersistent());
+    addFlags(PO_PERSISTENT);}
+
+  Bool isPersistent(){
+    return (getFlags() & PO_PERSISTENT);}
+
 };
 
 /* ********************** private **************************** */
@@ -1763,7 +1793,8 @@ void BorrowEntry::giveBackSecCredit(Site *s,Credit c){
 
 void BorrowEntry::freeBorrowEntry(){
   Assert(!isExtended());
-  giveBackCredit(getCreditOB());}
+  if(!isPersistent())
+    giveBackCredit(getCreditOB());}
 
 /* ********************************************************************** */
 /*   SECTION 15:: BorrowTable                                              */
@@ -2251,7 +2282,7 @@ OZ_Return pendThreadAddToEnd(PendThread **pt,Thread *t, TaggedRef o,
 {
   while(*pt!=NULL){pt= &((*pt)->next);}
 
-  if(isRealThread(t)) {
+  if(isRealThread(t) && e != REMOTEACCESS) {
     ControlVarNew(controlvar,home);
     *pt=new PendThread(t,NULL,o,n,controlvar,e);
     PD((THREAD_D,"stop thread addToEnd %x",t));
@@ -2480,8 +2511,8 @@ void gcPerdioFinal()
 {
   BT->gcBorrowTableFinal();
   OT->gcOwnerTableFinal();
-  gcSiteTable();
   GT.gcGNameTable();
+  gcSiteTable();
 }
 
 void GName::gcMarkSite(){
@@ -2758,6 +2789,11 @@ void ObjectClass::globalize() {
     setGName(newGName(makeTaggedConst(this),GNT_CLASS));}
 }
 
+void Object::globalize(){
+  if (!hasGName()) {
+    setGName(newGName(makeTaggedConst(this),GNT_OBJECT));}
+}
+
 void CellLocal::globalize(int myIndex){
   PD((CELL,"globalize cell index:%d",myIndex));
   TaggedRef val1=val;
@@ -2908,8 +2944,11 @@ PerdioVar *var2PerdioVar(TaggedRef *tPtr, Bool isFuture)
 /**********************************************************************/
 /*   SECTION 20 :: Localizing                                        */
 /**********************************************************************/
-
-
+void Object::localize()
+{
+  setTertType(Te_Local);
+  setBoard(am.currentBoard());
+}
 /**********************************************************************/
 /*   SECTION 21 :: marshaling/unmarshaling by protocol-layer          */
 /**********************************************************************/
@@ -2995,7 +3034,8 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
       cred = unmarshalCredit(bs);
       PD((UNMARSHAL,"mySite is owner"));
       OwnerEntry* oe=OT->getOwner(si);
-      oe->returnCreditOwner(cred);
+      if(cred != PERSISTENT_CRED)
+        oe->returnCreditOwner(cred);
       OZ_Term ret = oe->getValue();
       return ret;}
     Assert(mt==DIF_SECONDARY);
@@ -3012,7 +3052,9 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
       PD((UNMARSHAL,"borrow found"));
       cred = unmarshalCredit(bs);
       if(mt==DIF_PRIMARY){
-        b->addPrimaryCredit(cred);}
+        if(cred!=PERSISTENT_CRED)
+          b->addPrimaryCredit(cred);
+        else Assert(b->isPersistent());}
       else{
         Assert(mt==DIF_SECONDARY);
         Site *s=unmarshalSite(bs);
@@ -3023,6 +3065,8 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
   if(mt==DIF_PRIMARY){
     bi=borrowTable->newBorrow(cred,sd,si);
     b=borrowTable->getBorrow(bi);
+    if(cred == PERSISTENT_CRED )
+      b->makePersistent();
     PD((UNMARSHAL,"borrowed miss"));
     ob=b;
     return 0;}
@@ -3134,6 +3178,8 @@ OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
         ((LockFrame *)t)->resetDumpBit();}
       break;}
     case DIF_OBJECT:
+      TaggedRef obj;
+      (void) unmarshalGName(&obj,bs);
       TaggedRef clas;
       (void) unmarshalGName(&clas,bs);
       break;
@@ -3164,11 +3210,21 @@ OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
     break;
   case DIF_OBJECT:
     {
-      Object *o = new Object(bi);
-      PerdioVar *pvar = new PerdioVar(o);
-      val = makeTaggedRef(newTaggedCVar(pvar));
+
+      TaggedRef obj;
+      GName *gnobj = unmarshalGName(&obj,bs);
       TaggedRef clas;
       GName *gnclass = unmarshalGName(&clas,bs);
+      if(!gnobj){
+        BT->maybeFreeBorrowEntry(bi);
+        return obj;}
+
+      Object *o = new Object(bi);
+      o->setGName(gnobj);
+      PerdioVar *pvar = new PerdioVar(o);
+      val = makeTaggedRef(newTaggedCVar(pvar));
+      addGName(gnobj, val);
+
       if (gnclass) {
         pvar->setGNameClass(gnclass);
       } else {
@@ -3199,8 +3255,6 @@ OZ_Term unmarshalOwner(MsgBuffer *bs,MarshalTag mt){
   return OT->getOwner(OTI)->getValue();
 }
 
-
-
 OZ_Term unmarshalVar(MsgBuffer* bs){
   OB_Entry *ob;
   int bi;
@@ -3228,14 +3282,16 @@ inline OwnerEntry* maybeReceiveAtOwner(Site *mS,int OTI){
   if(mS==mySite){
     OwnerEntry *oe=OT->getOwner(OTI);
     Assert(!oe->isFree());
-    oe->receiveCredit(OTI);
+    if(!oe->isPersistent())
+      oe->receiveCredit(OTI);
     return oe;}
   return NULL;}
 
 inline OwnerEntry* receiveAtOwner(int OTI){
   OwnerEntry *oe=OT->getOwner(OTI);
   Assert(!oe->isFree());
-  oe->receiveCredit(OTI);
+  if(!oe->isPersistent())
+    oe->receiveCredit(OTI);
   return oe;}
 
 inline OwnerEntry* receiveAtOwnerNoCredit(int OTI){
@@ -3282,6 +3338,7 @@ void Site::msgReceived(MsgBuffer* bs)
       PD((MSG_RECEIVED,"PORTSEND: o:%d v:%s",portIndex,toC(t)));
 
       OwnerEntry *oe=receiveAtOwner(portIndex);
+      Assert(oe);
       PortManager *pm=(PortManager*)(oe->getTertiary());
       Assert(pm->checkTertiary(Co_Port,Te_Manager));
 
@@ -3326,7 +3383,8 @@ void Site::msgReceived(MsgBuffer* bs)
       OZ_Term t;
       unmarshal_M_SEND_GATE(bs,t);
       PD((MSG_RECEIVED,"SEND_GATE: v:%s",toC(t)));
-      sendGate(t);
+      //sendGate(t);
+      Assert(0);
       break;
     }
 
@@ -3435,9 +3493,11 @@ void Site::msgReceived(MsgBuffer* bs)
 
       PerdioVar *pv = be->getVar();
       Object *o = pv->getObject();
-      if(o==NULL) {
-        Assert(0);
-        error("M_SEND_OBJECT - don't understand");}
+      Assert(o);
+      GName *gnobj = o->hasGName();
+      Assert(gnobj);
+      gnobj->setValue(makeTaggedConst(o));
+
       fillInObject(&of,o);
       ObjectClass *cl;
       if (pv->isObjectClassAvail()) {cl=pv->getClass();}
@@ -3445,7 +3505,9 @@ void Site::msgReceived(MsgBuffer* bs)
       o->setClass(cl);
 
       pv->primBind(be->getPtr(),makeTaggedConst(o));
-      be->mkTertiary(o);
+      be->mkRef();
+      BT->maybeFreeBorrowEntry(o->getIndex());
+      o->localize();
       break;
     }
 
@@ -3457,11 +3519,19 @@ void Site::msgReceived(MsgBuffer* bs)
       unmarshal_M_SEND_OBJECTANDCLASS(bs,sd,si,&of);
       PD((MSG_RECEIVED,"M_SEND_OBJECTANDCLASS site:%s index:%d",sd->stringrep(),si));
       BorrowEntry *be=receiveAtBorrow(sd,si);
+
       PerdioVar *pv = be->getVar();
       Object *o = pv->getObject();
+      Assert(o);
+      GName *gnobj = o->hasGName();
+      Assert(gnobj);
+      gnobj->setValue(makeTaggedConst(o));
+
       fillInObjectAndClass(&of,o);
       pv->primBind(be->getPtr(),makeTaggedConst(o));
-      be->mkTertiary(o);
+      be->mkRef();
+      BT->maybeFreeBorrowEntry(o->getIndex());
+      o->localize();
       break;
     }
 
@@ -3582,6 +3652,7 @@ void Site::msgReceived(MsgBuffer* bs)
       int OTI;
       Site *fS,*mS;
       unmarshal_M_CELL_REMOTEREAD(bs,mS,OTI,fS);
+      PD((MSG_RECEIVED,"CELL_REMOTEREAD %s",fS->stringrep()));
       cellReceiveRemoteRead(receiveAtBorrow(mS,OTI),mS,OTI,fS);
       break;
     }
@@ -3591,6 +3662,7 @@ void Site::msgReceived(MsgBuffer* bs)
       Site*mS;
       TaggedRef val;
       unmarshal_M_CELL_READANS(bs,mS,index,val);
+      PD((MSG_RECEIVED,"CELL_READANS"));
       OwnerEntry *oe=maybeReceiveAtOwner(mS,index);
       if(oe==NULL){
         cellReceiveReadAns(receiveAtBorrow(mS,index)->getTertiary(),val);
@@ -3779,7 +3851,7 @@ Bool Tertiary::startHandlerPort(Thread* th, Tertiary* t, TaggedRef msg, EntityCo
     else{
       if(w->isHandler()){
         ret = TRUE;
-        if(!w->isContinueHandler()) {
+        if(w->isContinueHandler()) {
           Assert(th == am.currentThread());
           am.prepareCall(BI_send,makeTaggedTert(t),msg);
         }
@@ -4120,11 +4192,8 @@ Bool CellSec::secReceiveContents(TaggedRef val,Site* &toS,TaggedRef &outval){
   while(pending!=NULL){
     Thread *t=pending->thread;
     Assert(t!=MoveThread);
-    if(isRealThread(t)){
-      Assert(pending->old!=0 && pending->nw!=0);
-      (void) exchangeVal(pending->old,pending->nw,t,
-                         pending->controlvar,pending->exKind);
-    }
+    (void) exchangeVal(pending->old,pending->nw,t,
+                       pending->controlvar,pending->exKind);
     tmp=pending;
     pending=pending->next;
     tmp->dispose();}
@@ -4240,6 +4309,7 @@ void cellReceiveContentsFrame(BorrowEntry *be,TaggedRef val,Site *mS,int mI){
   cellSendContents(outval,toS,mS,mI);}
 
 void cellReceiveRemoteRead(BorrowEntry *be,Site* mS,int mI,Site* fS){
+  PD((CELL,"Receive REMOTEREAD toS:%s",fS->stringrep()));
   Tertiary* t=be->getTertiary();
   Assert(t->isFrame());
   Assert(t->getType()==Co_Cell);
@@ -4252,6 +4322,7 @@ void cellReceiveRemoteRead(BorrowEntry *be,Site* mS,int mI,Site* fS){
   cellSendRead(be,fS);}
 
 void cellReceiveRead(OwnerEntry *oe,Site* fS){
+  PD((CELL,"Recevie READ toS:%s",fS->stringrep()));
   CellManager* cm=(CellManager*) oe->getTertiary();
   Assert(cm->isManager());
   Assert(cm->getType()==Co_Cell);
@@ -4259,7 +4330,8 @@ void cellReceiveRead(OwnerEntry *oe,Site* fS){
   oe->getOneCreditOwner();
   Chain* ch=cm->getChain();
   if(ch->getCurrent()==mySite){
-    cellSendReadAns(fS,mySite,cm->getIndex(),sec->getContents());
+    PD((CELL,"Token at mgr site short circuit"));
+    sec->secReceiveRemoteRead(fS,mySite,cm->getIndex());
     return;}
   cellSendRemoteRead(ch->getCurrent(),mySite,cm->getIndex(),fS);}
 
@@ -4272,6 +4344,13 @@ void cellReceiveReadAns(Tertiary* t,TaggedRef val){
 /**********************************************************************/
 
 void cellSendReadAns(Site* toS,Site* mS,int mI,TaggedRef val){
+  if(toS == mySite) {
+    OwnerEntry *oe=maybeReceiveAtOwner(mS,mI);
+    if(mS!=mySite)
+      cellReceiveReadAns(receiveAtBorrow(mS,mI)->getTertiary(),val);
+    else
+      cellReceiveReadAns(maybeReceiveAtOwner(mS,mI)->getTertiary(),val);
+    return;}
   MsgBuffer* bs=msgBufferManager->getMsgBuffer(toS);
   marshal_M_CELL_READANS(bs,mS,mI,val);
   SendTo(toS,bs,M_CELL_READANS,mS,mI);}
@@ -4343,7 +4422,7 @@ OZ_Return CellSec::exchangeVal(TaggedRef old, TaggedRef nw, Thread *th,
   }
   case REMOTEACCESS:{
     cellSendReadAns((Site*)th,(Site*)old,(int)nw,contents);
-    goto exit;
+    return PROCEED;
   }
   default:
     Assert(0);
@@ -4458,31 +4537,40 @@ OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
   default: Assert(0);}
 
   int index=c->getIndex();
-  Thread* th=am.currentThread();
-  ControlVarNew(controlvar,c->getBoardInternal());
+
   Bool ask = (pendBinding==NULL);
-  pendBinding=new PendThread(th,pendBinding,val,fea,controlvar,fea ? DEEPAT : ACCESS);
 
   if (!ask)
     goto exit;
-  if(c->isFrame()) {
+  if(!c->isManager()) {
+    Assert(c->isFrame());
+    PD((CELL,"Sending to mgr read"));
     BorrowEntry *be=BT->getBorrow(index);
     be->getOneMsgCredit();
     cellSendRead(be,mySite);
     goto exit;
   }
+  PD((CELL,"ShortCircuit mgr sending to tokenholder"));
+  if(((CellManager*)c)->getChain()->getCurrent() == mySite){
+    return fea ? cellAtExchange(c,val,fea):
+      cellDoExchange(c,val,val);
+  }
+
   sendPrepOwner(index);
   cellSendRemoteRead(((CellManager*)c)->getChain()->getCurrent(),
                      mySite,index,mySite);
+exit:
+  Thread* th=am.currentThread();
+  ControlVarNew(controlvar,c->getBoardInternal());
+  pendBinding=new PendThread(th,pendBinding,val,fea,
+                             controlvar,fea ? DEEPAT : ACCESS);
+
   if(!c->errorIgnore()) {
     if(maybeInvokeHandler(c,th)){// ERROR-HOOK
-      genInvokeHandlerLockOrCell(c,th);
-    }
-  }
-
-exit:
+      genInvokeHandlerLockOrCell(c,th);}}
   SuspendOnControlVar;
 }
+
 
 static
 OZ_Return cellDoAccess(Tertiary *c,TaggedRef val,TaggedRef fea){
@@ -6065,7 +6153,6 @@ OZ_BI_define(BIstartTmp,2,0)
 OZ_BI_define(BIcloseCon,1,1)
 {
   OZ_declareIntIN(0,what);
-  openclose(what);
   OZ_RETURN(makeInt(openclose(what)));
 } OZ_BI_end
 
@@ -6210,6 +6297,16 @@ void BIinitPerdio()
   borrowTable = new BorrowTable(DEFAULT_BORROW_TABLE_SIZE);
   msgBufferManager= new MsgBufferManager();
   idCounter  = new FatInt();
+  GateStream = oz_newVariable();
+  OZ_protect(&GateStream);
+  {
+    Tertiary *t=(Tertiary*)new PortWithStream(oz_currentBoard(),GateStream);
+    t->globalizeTert();
+    int ind = t->getIndex();
+    Assert(ind == 0);
+    OwnerEntry* oe=OT->getOwner(ind);
+    oe->makePersistent();
+  }
 
   Assert(sizeof(BorrowCreditExtension)==sizeof(Construct_3));
   Assert(sizeof(OwnerCreditExtension)==sizeof(Construct_3));
@@ -6319,3 +6416,28 @@ int printChain(Chain* chain){
   printf("] %s\n",cp->getSite()->stringrep());
   return 8;
 }
+
+extern Bool checkMySite(){
+  return (mySite->isMySite());}
+
+
+/**********************************************************************/
+/*   SECTION 45::Exported for gates                                                */
+/**********************************************************************/
+
+OZ_Term getGatePort(Site *sd){
+  int si=0; /* Gates are allways located at possition 0 */
+  if(sd==mySite){
+    OwnerEntry* oe=OT->getOwner(si);
+    Assert(oe->isPersistent());
+    return  oe->getValue();}
+  NetAddress na = NetAddress(sd,si);
+  BorrowEntry *b = borrowTable->find(&na);
+  if (b==NULL) {
+    int bi=borrowTable->newBorrow( PERSISTENT_CRED,sd,si);
+    b=borrowTable->getBorrow(bi);
+    b->mkTertiary((new PortProxy(bi)),b->getFlags());
+    b->makePersistent();
+    return b->getValue();}
+  Assert(b->isPersistent());
+  return b->getValue();}

@@ -1770,6 +1770,7 @@ private:
   RecOrCell state;
   OzLock *lock;
   SRecord *freeFeatures;
+  GName  *objectID;
 public:
   OZPRINTLONG;
   NO_DEFAULT_CONSTRUCTORS(Object);
@@ -1780,6 +1781,7 @@ public:
     setFreeRecord(feat);
     setClass(ac);
     setState(s);
+    setGName(NULL);
     lock = lck;
   }
 
@@ -1788,6 +1790,7 @@ public:
     setFreeRecord(NULL);
     setClass(NULL);
     setState((Tertiary*)NULL);
+    setGName(NULL);
     lock = 0;
   }
 
@@ -1796,6 +1799,11 @@ public:
     Assert(!c||c->supportsLocking()>=0);
     cl1=c;
   }
+
+  GName *hasGName(){
+    return objectID;}
+  void setGName(GName *gn){
+    objectID = gn;}
 
   OzLock *getLock() { return lock; }
   void setLock(OzLock *l) { lock=l; }
@@ -1854,6 +1862,9 @@ public:
   int getWidth ();
 
   Object *gcObject();
+
+  void globalize();
+  void localize();
 };
 
 SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val);

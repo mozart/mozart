@@ -64,36 +64,37 @@ enum MessageType {
   M_REDIRECT,           // NA  DIF
   M_ACKNOWLEDGE,        // NA (implicit 1 credit)
   M_SURRENDER,          // OTI SITE DIF (implicit 1 credit)
-  M_REQUEST_FUTURE,     // OTI* SITE
 
+  M_REQUEST_FUTURE,     // OTI* SITE
   M_CELL_LOCK_GET,      // OTI* SITE
   M_CELL_LOCK_FORWARD,  // NA* INTEGER SITE
   M_CELL_LOCK_DUMP,     // OTI* SITE
   M_CELL_CONTENTS,      // NA* DIF
-  M_CELL_READ,          // OTI* DIF
 
+  M_CELL_READ,          // OTI* DIF
   M_CELL_REMOTEREAD,    // NA* DIF
   M_CELL_READANS,
   M_CELL_CANTPUT,
   M_LOCK_TOKEN,          // NA*
-  M_LOCK_CANTPUT,
 
+  M_LOCK_CANTPUT,
   M_CHAIN_ACK,
   M_CHAIN_QUESTION,
   M_CHAIN_ANSWER,
   M_ASK_ERROR,
-  M_TELL_ERROR,
 
+  M_TELL_ERROR,
   M_GET_OBJECT,         // OTI* SITE
   M_GET_OBJECTANDCLASS, // OTI* SITE
   M_SEND_OBJECT,        //
   M_SEND_OBJECTANDCLASS,//
-  M_REGISTER_VS,
 
+  M_REGISTER_VS,
   M_FILE,
   M_EXPORT,
   M_INIT_VS,
   M_UNASK_ERROR,
+
   M_SEND_GATE,
   M_LAST
 };
@@ -192,6 +193,8 @@ void gcPerdioRoots();
 void gcBorrowTableUnusedFrames();
 void gcFrameToProxy();
 void gcGName(GName*);
+
+extern Bool checkMySite();
 
 /* ************************************************************************ */
 /*  SECTION ::  provided to marshaler                                       */
@@ -355,7 +358,7 @@ int loadURL(TaggedRef url, OZ_Term out, Thread *th);
 int loadURL(const char *,OZ_Term,Thread *th);
 void sendGate(OZ_Term t);
 void initComponents();
-
+OZ_Term getGatePort(Site*);
 /* ************************************************************************ */
 /*  SECTION ::  provided to engine                                      */
 /* ************************************************************************ */

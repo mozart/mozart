@@ -1500,12 +1500,16 @@ void AM::deSelect(int fd,int mode)
   ion->handler[mode]  = 0;
 }
 
+extern void incTimeSlice();
+
 // called if IOReady (signals are blocked)
 void AM::handleIO()
 {
+#ifdef SLOWNET
+  incTimeSlice();
+#endif
   unsetSFlag(IOReady);
   int numbOfFDs = osFirstSelect();
-
 
   // find the nodes to awake
   for (int index = 0; numbOfFDs > 0; index++) {
