@@ -73,9 +73,9 @@ void Statistics::print(FILE *fd) {
   printMem(fd, ".\n    Heap in freelist is ", freeList);
   printMem(fd, ".\n    Heap used is ", occupied);
   printMem(fd, ".\n    Hashtable for atoms is ",
-	   CodeArea::atomTab.memRequired());
+	   CodeArea::atomTab.memRequired(sizeof(Literal)));
   printMem(fd, ".\n    Hashtable for names is ",
-	   CodeArea::nameTab.memRequired());
+	   CodeArea::nameTab.memRequired(sizeof(Literal)));
   printMem(fd, ".\n    Hashtable for built-ins is ",
 	   builtinTab.memRequired());
   
