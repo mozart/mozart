@@ -47,7 +47,9 @@ void DynamicTable::init(dt_index s) {
 
 // Return a copy of the current table that has size newSize and all contents
 // of the current table.  The current table's contents MUST fit in the copy!
-DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize=(dt_index)(-1L)) {
+// Normally, the copy is rehashed except when newSize==size.  If
+// optcopyflag==FALSE, then rehash also this case.
+DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize) {
     if (newSize==(dt_index)(-1L)) newSize=size;
     Assert(isPwrTwo(size));
     Assert(numelem<=fullFunc(size));
@@ -75,12 +77,14 @@ DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize=(dt_index)(-1L)) {
     return ret;
 }
 
-// Hash and rehash until: (1) the element is found, (2) a fully empty slot is found, or (3) the
-// hash table has only filled slots and non-full empty slots and does not contain the element.
-// That is, if answer is valid then returns index of slot containing the element or a correct
-// empty slot otherwise return "invalidIndex"
-// This hash routine works for completely full hash tables and hash tables in which
-// elements have been removed by making their value NULL.
+// Hash and rehash until: (1) the element is found, (2) a fully empty slot is
+// found, or (3) the hash table has only filled slots and restricted empty slots
+// and does not contain the element.  In first two cases, answer is valid and
+// routine returns index of slot containing the element or a fully empty slot.
+// Otherwise returns "invalidIndex".
+// This hash routine works for completely full hash tables and hash tables with
+// restricted empty slotes (i.e., in which elements have been removed by making
+// their value NULL).
 inline
 dt_index DynamicTable::fullhash(TaggedRef id)
 {
@@ -106,11 +110,11 @@ dt_index DynamicTable::fullhash(TaggedRef id)
 
 
 // Insert val at index id
-// Return value is valid iff 'valid'==TRUE.  Otherwise, nothing is done.
-// Return NULL if val is successfully inserted (id did not exist)
-// Return the value of the pre-existing element if id already exists
-// Test for and increase size of hash table if it becomes too full
+// If valid==FALSE then nothing has been done.
+// Otherwise, return NULL if val is successfully inserted (id did not exist)
+// or return the value of the pre-existing element if id already exists.
 // ATTENTION: insert must only be done if the table has room for a new element.
+// User should test for and increase size of hash table if it becomes too full.
 TaggedRef DynamicTable::insert(TaggedRef id, TaggedRef val, Bool *valid) {
     Assert(isPwrTwo(size));
     Assert(isFeature(id));
