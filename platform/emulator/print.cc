@@ -1561,8 +1561,7 @@ TaggedRef TaskStack::dbgFrameVariables(int frameId)
   return nil();
 }
 
-TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth,
-				     Frame *top)
+TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
 {
   Assert(this);
 
@@ -1572,7 +1571,7 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth,
     out = cons(CodeArea::dbgGetDef(pc),out);
   }
 
-  Frame *auxtos = top ? top : getTop();
+  Frame *auxtos = getTop();
 
   while (depth-- > 0) {
     GetFrame(auxtos,PC,Y,G);
@@ -1605,12 +1604,9 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth,
       continue;
     }
 
-    TaggedRef def = CodeArea::dbgGetDef(PC,G,Y);
-    if (def != nil()) {
-      if (top)
-	def = OZ_adjoinAt(def,OZ_atom("vars"),CodeArea::varNames(PC,G,Y));
+    TaggedRef def = CodeArea::dbgGetDef(PC);
+    if (def != nil())
       out = cons(def,out);
-    }
     else
       // definitionStart(PC) == NOCODE_GLOBALVARNAME
       ;
