@@ -3,7 +3,7 @@
 # start lemacs for a standalone version of Oz
 # MUST reside in <oz dist dir>/bin
 
-set -vx
+#set -vx
 
 # where Oz resides:
 
