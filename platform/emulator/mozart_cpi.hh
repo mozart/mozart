@@ -377,6 +377,10 @@ public:
   OZ_FSetValue operator += (const int);
   OZ_FSetValue operator -= (const int);
   OZ_FSetValue operator - (void) const;
+
+  // these member functions support automatically generated set
+  // propagators
+  int card(void) const { return getCard(); }
 };
 
 inline OZ_FSetValue::OZ_FSetValue(void) {}
@@ -498,15 +502,16 @@ public:
   OZ_Boolean ge(const int);
 
   // these member functions support automatically generated set
-  // propagators
-  OZ_Boolean operator <= (const int);
-  OZ_Boolean operator >= (const int);
-  OZ_Boolean operator |= (const int);
-  OZ_Boolean operator &= (const int);
-  int lbc(void) const;
-  int ubc(void) const;
-  OZ_FSetValue lb(void) const;
-  OZ_FSetValue ub(void) const;
+  // propagators: the following operators throw an execption of type
+  // 'OZ_FSetConstraint' in case a failure occurs.
+  void operator <= (const int);
+  void operator >= (const int);
+  void operator |= (const OZ_FSetValue &);
+  void operator &= (const OZ_FSetValue &);
+  int lbc(void) const { return getCardMin(); }
+  int ubc(void) const { return getCardMax(); };
+  OZ_FSetValue lb(void) const { return getGlbSet(); }
+  OZ_FSetValue ub(void) const { return getLubSet(); }
 
   char * toString(void) const;
 };
