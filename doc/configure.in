@@ -56,14 +56,14 @@ AC_ARG_WITH(documents,
 : ${oz_doc_dirs=}
 AC_MSG_RESULT($oz_doc_dirs)
 
-test "${oz_doc_dirs}" = "all" && oz_doc_dirs="apptut base compiler constraints contrib demo foreign gump op opi ozcar profiler ozdoc system tools wp fdt fst cpitut cpiref install tutorial opi_tutorial overview panel explorer browser notation dstutorial changes tcltk"
+test "${oz_doc_dirs}" = "all" && oz_doc_dirs="apptut base compiler contrib demo foreign gump op opi ozcar profiler ozdoc system tools wp fdt fst cpitut cpiref install tutorial opi_tutorial overview panel explorer browser notation dstutorial changes tcltk"
 
 SUBDIRS="utilities ${oz_doc_dirs}"
 AC_SUBST(SUBDIRS)
 
 AC_CONFIG_SUBDIRS(utilities)
 
-AC_OUTPUT(Makefile Makefile.common catalog bootcatalog ced.el ced.sgml base/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile constraints/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile opi_tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile)
+AC_OUTPUT(Makefile Makefile.common catalog bootcatalog ced.el ced.sgml base/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile opi_tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded
