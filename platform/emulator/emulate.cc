@@ -8,6 +8,17 @@
   State: $State$
 
   $Log$
+  Revision 1.348  1996/07/19 08:30:28  mehl
+  childs ->children
+  Some more constructors declared without implementation.
+   The linker should complain if these constructors are used somewhere
+  Every Ask/Wait actor knows its thread.
+   This thread contains a task for the actor.
+  Simplification of failure handling and entailment check.
+  Added the function AM::commit, which does all the necessary things to
+   commit a space.
+  Added macro CTT to emulate.cc: CTT == e->currentThread
+
   Revision 1.347  1996/07/18 16:17:25  wuertz
   improved edge-finding and prepared for new distribution
 
@@ -81,12 +92,13 @@ Abstraction *getApplyMethod(Object *obj, ApplMethInfoClass *ami,
 }
 
 inline
-Abstraction *getApplyMethodForGenCall(Object *obj, TaggedRef label, SRecordArity arity)
+Abstraction *getApplyMethodForGenCall(Object *obj, TaggedRef label,
+                                      SRecordArity arity)
 {
   Assert(isFeature(label));
   Bool defaultsUsed;
   Abstraction *ret = obj->getMethod(label,arity,am.xRegs,defaultsUsed);
-  return defaultsUsed ? (Abstraction*)NULL : ret;
+  return defaultsUsed ? (Abstraction*) 0 : ret;
 }
 
 // -----------------------------------------------------------------------
@@ -718,15 +730,7 @@ TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
  * check entailment and stability
  *  after thread is finished or top commit
  */
-enum CE_RET {
-  CE_CONT,
-  CE_NOTHING,
-  CE_FAIL,
-  CE_RAISE,
-  CE_SUSPEND
-};
-
-int AM::checkEntailment(Continuation *&contAfter, Actor *&aa)
+void AM::checkEntailment()
 {
 
 loop:
@@ -734,171 +738,114 @@ loop:
 
   currentBoard->unsetNervous();
 
-  if (currentBoard->isAsk()) {
-    if ( entailment() ) {
-      aa = currentBoard->getActor();
-      contAfter=currentBoard->getBodyPtr();
-
-      trail.popMark();
-
-      Board *tmpBB = currentBoard;
-
-      setCurrent(currentBoard->getParentFast());
-      tmpBB->unsetInstalled();
-      tmpBB->setCommitted(currentBoard);
-      currentBoard->decSuspCount();
-
-      return CE_CONT;
-    }
-    return CE_NOTHING;
-  }
-
-  if (currentBoard->isWait()) {
-// WAITTTOP
-    if (currentBoard->isWaitTop()) {
-
-// WAITTOP: top commit
-      if (entailment()) {
-        trail.popMark();
-
-        Board *tmpBB = currentBoard;
-
-        setCurrent(currentBoard->getParentFast());
-        tmpBB->unsetInstalled();
-        tmpBB->setCommitted(currentBoard);
-        currentBoard->decSuspCount();
-
-        goto loop;
-      }
-
-      Assert(!WaitActor::Cast(currentBoard->getActor())->hasOneChild());
-
-      return CE_NOTHING;
-    }
-
-    Assert(!currentBoard->isWaiting () ||
-           !WaitActor::Cast(currentBoard->getActor())->hasOneChild());
-    return CE_NOTHING;
-
-    // WAIT: no rule
-  }
-
-  if (currentBoard->isSolve()) {
-    // try to reduce a solve board;
-    SolveActor *solveAA = SolveActor::Cast(currentBoard->getActor());
-    Board      *solveBB = currentBoard;
-
-    if (isStableSolve(solveAA)) {
-      DebugCheck ((trail.isEmptyChunk() == NO),
-                  error ("non-empty trail chunk for solve board"));
-      // all possible reduction steps require this;
-
-      if (solveBB->hasSuspension() == NO) {
-        // 'solved';
-        // don't unlink the subtree from the computation tree;
-        trail.popMark();
-        currentBoard->unsetInstalled();
-        setCurrent(currentBoard->getParentFast());
-        // don't decrement counter of parent board!
-
-        if (!fastUnifyOutline(solveAA->getResult(),
-                              solveAA->genSolved(), OK)) {
-          error("solve: unify result should never fail");
-          return CE_NOTHING;
-        }
-        return CE_NOTHING;
-      } else {
-
-        WaitActor *wa = solveAA->topChoice();
-
-        if (wa == NULL) {
-          // "stuck" (stable without distributing waitActors);
-          // don't unlink the subtree from the computation tree;
-          trail.popMark();
-          currentBoard->unsetInstalled();
-          setCurrent (currentBoard->getParentFast());
-
-          // don't decrement counter of parent board!
-
-          if ( !fastUnifyOutline(solveAA->getResult(),
-                                 solveAA->genStuck(), OK) ) {
-            error("solve: unify result should never fail");
-            return CE_NOTHING;
-          }
-          return CE_NOTHING;
-
-        } else {
-          // to enumerate;
-
-          if (wa->getChildCount()==1 && wa->isChoice()) {
-            solveAA->popChoice();
-            Board *waitBoard = wa->getChildRef();
-
-            waitBoard->setCommitted(solveBB);
-            Assert(!solveBB->isCommitted());
-            solveBB->incSuspCount(waitBoard->getSuspCount()-1);
-
-            if (!installScript(waitBoard->getScriptRef())) {
-              error("solve: install script failed");
-              return CE_NOTHING;
-            }
-
-            if (waitBoard->isWaitTop()) {
-              goto loop;
-            }
-
-            DebugCode (currentThread = (Thread *) NULL);
-            Thread *tt = mkRunnableThread(wa->getPriority (),
-                                          currentBoard,
-                                          0);
-            tt->pushCont(waitBoard->getBodyPtr());
-            scheduleThread (tt);
-            wa->dispose();
-
-            return CE_NOTHING;
-          }
-
-          // give back number of clauses
-          trail.popMark();
-          currentBoard->unsetInstalled();
-          setCurrent(currentBoard->getParentFast());
-
-          // don't decrement counter of parent board!
-
-          if (!fastUnifyOutline(solveAA->getResult(),
-                                solveAA->genChoice(wa->getChildCount()),
-                                OK)) {
-            error("solve: unify result should never fail");
-            return CE_NOTHING;
-          }
-          return CE_NOTHING;
-        }
-      }
-    } else if (solveAA->getThreads() == 0) {
-      // There are some external suspensions to this solver!
-
-      deinstallCurrent();
-
-      TaggedRef newVar = makeTaggedRef(newTaggedUVar(currentBoard));
-      TaggedRef result = solveAA->getResult();
-
-      solveAA->setResult(newVar);
-
-      if ( !fastUnifyOutline(result,
-                             solveAA->genUnstable(newVar),
-                             OK)) {
-        error("solve: unify result should never fail");
-        return CE_NOTHING;
-      }
-      return CE_NOTHING;
-    }
+  // check for entailment of ASK and WAITTOP
+  if ((currentBoard->isAsk() || currentBoard->isWaitTop()) && entailment()) {
+    Board *bb = currentBoard;
     deinstallCurrent();
-    return CE_NOTHING;
+    int ret=commit(bb);
+    Assert(ret);
+    return;
   }
 
-  Assert(currentBoard->isRoot());
-  return CE_NOTHING;
+  // do solve
+  if (!currentBoard->isSolve()) return;
+
+  // try to reduce a solve board;
+  SolveActor *solveAA = SolveActor::Cast(currentBoard->getActor());
+  Board      *solveBB = currentBoard;
+
+  if (isStableSolve(solveAA)) {
+    Assert(trail.isEmptyChunk());
+    // all possible reduction steps require this;
+
+    if (!solveBB->hasSuspension()) {
+      // 'solved';
+      // don't unlink the subtree from the computation tree;
+      trail.popMark();
+      currentBoard->unsetInstalled();
+      setCurrent(currentBoard->getParentFast());
+      // don't decrement counter of parent board!
+
+      if (!fastUnifyOutline(solveAA->getResult(),
+                            solveAA->genSolved(), OK)) {
+        error("solve: unify result should never fail");
+      }
+      return;
+    }
+
+    WaitActor *wa = solveAA->topChoice();
+
+    if (wa == NULL) {
+      // "stuck" (stable without distributing waitActors);
+      // don't unlink the subtree from the computation tree;
+      trail.popMark();
+      currentBoard->unsetInstalled();
+      setCurrent (currentBoard->getParentFast());
+
+      // don't decrement counter of parent board!
+
+      if ( !fastUnifyOutline(solveAA->getResult(),
+                             solveAA->genStuck(), OK) ) {
+        error("solve: unify result should never fail");
+      }
+      return;
+    }
+
+    // to enumerate;
+
+    if (wa->getChildCount()==1) {
+      Assert(wa->isChoice());
+
+      solveAA->popChoice();
+
+      Board *waitBoard = wa->getChildRef();
+
+      int ret=commit(waitBoard);
+
+      Assert(ret);
+      DebugCode (currentThread = (Thread *) NULL);
+
+      wa->dispose();
+      return;
+    }
+
+    // give back number of clauses
+    trail.popMark();
+    currentBoard->unsetInstalled();
+    setCurrent(currentBoard->getParentFast());
+
+    // don't decrement counter of parent board!
+
+    if (!fastUnifyOutline(solveAA->getResult(),
+                          solveAA->genChoice(wa->getChildCount()),
+                          OK)) {
+      error("solve: unify result should never fail");
+    }
+    return;
+  }
+
+  if (solveAA->getThreads() == 0) {
+    // There are some external suspensions to this solver!
+
+    deinstallCurrent();
+
+    TaggedRef newVar = makeTaggedRef(newTaggedUVar(currentBoard));
+    TaggedRef result = solveAA->getResult();
+
+    solveAA->setResult(newVar);
+
+    if ( !fastUnifyOutline(result,
+                           solveAA->genUnstable(newVar),
+                           OK)) {
+      error("solve: unify result should never fail");
+    }
+    return;
+  }
+
+  deinstallCurrent();
+  return;
 }
+
 
 // aux debugging;
 #define VERBMSG(S,A1,A2)                                                   \
@@ -934,9 +881,6 @@ void engine()
   Board *tmpBB                 = NULL;              NoReg(tmpBB);
   DebugCheckT(Board *currentDebugBoard=0);
 
-# define CBB (e->currentBoard)
-# define CPP (e->currentThread->getPriority())
-
   RefsArray HelpReg1 = NULL, HelpReg2 = NULL;
   #define HelpReg sPointer  /* more efficient */
 
@@ -946,6 +890,11 @@ void engine()
   OZ_CFun biFun = NULL;     NoReg(biFun);
   ConstTerm *predicate;     NoReg(predicate);
   int predArity;            NoReg(predArity);
+
+  // short names
+# define CBB (e->currentBoard)
+# define CTT (e->currentThread)
+# define CPP (CTT->getPriority())
 
 #ifdef CATCH_SEGV
   //
@@ -981,14 +930,14 @@ void engine()
  LBLpreemption:
 
   SaveSelf(e,NULL,NO);
-  e->currentThread->setBoard (CBB);
-  e->scheduleThread(e->currentThread, e->currentThread->getPriority());
-  e->currentThread=(Thread *) NULL;
+  CTT->setBoard (CBB);
+  e->scheduleThread(CTT, CPP);
+  CTT=0;
 
  LBLerror:
  LBLstart:
 
-  Assert (e->currentThread == (Thread *) NULL);
+  Assert(CTT==0);
 
   if (e->isSetSFlag()) {
 
@@ -1017,14 +966,14 @@ void engine()
   }
 
 LBLinstallThread:
-  e->currentThread = e->getFirstThread ();
+  CTT = e->getFirstThread ();
   PC = NOCODE; // this is necessary for printing stacks (mm)
 
   DebugTrace (trace("new thread"));
 
   // Debugger
-  if (e->currentThread->stopped()) {
-    e->currentThread = (Thread *) NULL;  // byebye...
+  if (CTT->stopped()) {
+    CTT = 0;  // byebye...
     goto LBLstart;
   }
 
@@ -1036,10 +985,10 @@ LBLinstallThread:
   //  So, every runnable thread must be terminated through
   // 'LBL{discard,kill}Thread', and it should not appear
   // more than once in the threads pool;
-  Assert (!(e->currentThread->isDeadThread ()));
+  Assert (!(CTT->isDeadThread ()));
   //
   //  So, every thread in the threads pool *must* be runnable;
-  Assert (e->currentThread->isRunnable ());
+  Assert (CTT->isRunnable ());
 
   /*
    *  Lazy stack allocation;
@@ -1047,11 +996,11 @@ LBLinstallThread:
    *  Note that we cover the case for 'propagator' threads specially,
    *  since they don't differ in 'suspended' and 'runnable' states;
    */
-  if (e->currentThread->isPropagator ()) {
+  if (CTT->isPropagator ()) {
     //
     //  First, get the home board of that propagator,
     // and try to install it;
-    tmpBB = e->currentThread->getBoardFast ();
+    tmpBB = CTT->getBoardFast ();
     DebugTrace (trace ("propagator thread", tmpBB));
 
     //
@@ -1069,7 +1018,7 @@ LBLinstallThread:
         // scheduled for execution again (!), and at this place it
         // should be catched and forwarded to the
         // 'LBLdiscardThread';
-        DebugCode (e->currentThread->removePropagator ());
+        DebugCode (CTT->removePropagator ());
         goto LBLdiscardThread;
 
       case INST_FAILED:
@@ -1078,7 +1027,7 @@ LBLinstallThread:
         //  So, first go to the 'LBLfailure', and there it must be
         // scheduled once again - and then the 'INST_REJECTED' case
         // hits ...
-        DebugCode (e->currentThread->removePropagator ());
+        DebugCode (CTT->removePropagator ());
         goto LBLfailure;
       }
     }
@@ -1086,31 +1035,31 @@ LBLinstallThread:
     CBB->unsetNervous();
 
     //    unsigned int starttime = osUserTime();
-    switch (e->currentThread->runPropagator()) {
+    switch (CTT->runPropagator()) {
     case SLEEP:
-      e->currentThread->suspendPropagator ();
+      CTT->suspendPropagator ();
       if (e->currentSolveBoard != (Board *) NULL) {
         e->decSolveThreads (e->currentSolveBoard);
         //  but it's still "in solve";
       }
-      e->currentThread = (Thread *) NULL;
+      CTT = 0;
 
       //ozstat.timeForPropagation.incf(osUserTime()-starttime);
       goto LBLstart;
 
     case SCHEDULED:
-      e->currentThread->scheduledPropagator ();
+      CTT->scheduledPropagator ();
       if (e->currentSolveBoard != (Board *) NULL) {
         e->decSolveThreads (e->currentSolveBoard);
         //  but it's still "in solve";
       }
-      e->currentThread = (Thread *) NULL;
+      CTT = 0;
 
       //      ozstat.timeForPropagation.incf(osUserTime()-starttime);
       goto LBLstart;
 
     case PROCEED:
-      // Note: e->currentThread must be reset in 'LBLkillXXX';
+      // Note: CTT must be reset in 'LBLkillXXX';
 
       //ozstat.timeForPropagation.incf(osUserTime()-starttime);
       if (e->isToplevel ()) {
@@ -1123,7 +1072,7 @@ LBLinstallThread:
     case FAILED:
       //ozstat.timeForPropagation.incf(osUserTime()-starttime);
 
-      HF_PROPAGATOR(e->currentThread->getPropagator());
+      HF_PROPAGATOR(CTT->getPropagator());
 
     default:
       error ("Unexpected value returned from a propagator.");
@@ -1133,7 +1082,7 @@ LBLinstallThread:
     /*
      * install board
      */
-    Board *bb=e->currentThread->getBoardFast();
+    Board *bb=CTT->getBoardFast();
 
     if (CBB != bb) {
     LBLinstallLoop:
@@ -1142,23 +1091,21 @@ LBLinstallThread:
         break;
 
       case INST_REJECTED:
-        if (!(e->currentThread->hasStack ()) ||
-            !e->currentThread->discardLocalTasks ()) {
+        if (!CTT->hasStack()) {
           goto LBLdiscardThread;
         }
         bb=bb->getParentFast();
+        CTT->discardUpTo(bb);
+        if (CTT->isEmpty()) {
+          goto LBLdiscardThread;
+        }
         goto LBLinstallLoop;
 
       case INST_FAILED:
-        if (e->currentThread->hasStack ()) {
-          while (bb != CBB) {
-            if (!e->currentThread->discardLocalTasks ()) {
-              break;
-            }
-            bb=bb->getParentFast();
-          }
+        if (CTT->hasStack ()) {
+          CTT->discardUpTo(CBB);
         }
-        DebugCheckT (e->currentThread->setBoard ((Board *) NULL));
+        DebugCheckT (CTT->setBoard(0));
         goto LBLfailure;
       }
     }
@@ -1168,25 +1115,25 @@ LBLinstallThread:
 
     //  I.e. it's not a propagator - then just convert it
     // to a full-fledged thread (with a task stack);
-    e->currentThread->makeRunning ();
+    CTT->makeRunning ();
 
     //
     e->restartThread();
 
-    DebugCheckT (e->currentThread->setBoard ((Board *) NULL));
+    DebugCheckT (CTT->setBoard(0));
   }
 
   //  INVARIANT:
   //  current thread always has a stack, and it might not
   // be marked as dead;
-  Assert(e->currentThread->hasStack ());
+  Assert(CTT->hasStack ());
 
 // ------------------------------------------------------------------------
 // *** pop a task
 // ------------------------------------------------------------------------
 LBLpopTask:
   {
-    Assert(!e->currentThread->isSuspended());
+    Assert(!CTT->isSuspended());
     Assert(CBB==currentDebugBoard);
     asmLbl(popTask);
 
@@ -1194,7 +1141,7 @@ LBLpopTask:
 
     DebugCheckT(CAA = NULL);
 
-    TaskStack * taskstack = e->currentThread->getTaskStackRef();
+    TaskStack * taskstack = CTT->getTaskStackRef();
     TaskStackEntry * topCache = taskstack->getTop();
     TaskStackEntry topElem;
     ContFlag cFlag;
@@ -1233,10 +1180,10 @@ LBLpopTask:
         Assert(!ltq->isEmpty());
 
         unsigned int starttime = osUserTime();
-        Thread * backup_currentThread = e->currentThread;
+        Thread * backup_currentThread = CTT;
 
         while (!ltq->isEmpty() && e->isNotPreemtiveScheduling()) {
-          Thread * thr = e->currentThread = ltq->dequeue();
+          Thread * thr = CTT = ltq->dequeue();
 
           Assert(!thr->isDeadThread());
 
@@ -1248,7 +1195,7 @@ LBLpopTask:
             thr->closeDonePropagator();
           } else if (r == FAILED) {
             thr->closeDonePropagator();
-            e->currentThread = backup_currentThread;
+            CTT = backup_currentThread;
             ozstat.timeForPropagation.incf(osUserTime()-starttime);
             goto LBLfailure; // top-level failure not possible
           } else {
@@ -1257,7 +1204,7 @@ LBLpopTask:
           }
         }
 
-        e->currentThread = backup_currentThread;
+        CTT = backup_currentThread;
         ozstat.timeForPropagation.incf(osUserTime()-starttime);
 
         if (ltq->isEmpty()) {
@@ -1291,7 +1238,7 @@ LBLpopTask:
         taskstack->setTop(topCache);
         Bool hasJobs = TaskStack::getJobFlagFromEntry(topElem);
         if (!hasJobs){
-          e->currentThread->unsetHasJobs();
+          CTT->unsetHasJobs();
         }
         goto LBLpopTask;
       }
@@ -1341,11 +1288,6 @@ LBLpopTask:
         goto LBLcall;
       }
 
-    case C_LOCAL:
-      {
-        error("C_LOCAL task detected");
-      }
-
     case C_CFUNC_CONT:
       {
         //
@@ -1391,10 +1333,73 @@ LBLpopTask:
         } // switch
       }
 
-    case C_SET_CAA:
-      CAA = (AWActor *) TaskStackPop (--topCache);
-      goto next_task;
+    case C_ACTOR:
+      {
+        AWActor *aw = (AWActor *) TaskStackPop (--topCache);
+        taskstack->setTop(topCache);
 
+        Assert(!aw->isCommitted());
+
+        if (aw->hasNext()) {
+          LOADCONT(aw->getNext());
+          CAA=aw;
+          taskstack->setTop(topCache+2);
+          goto LBLemulate; // no thread switch allowed here (CAA)
+        }
+
+        if (aw->isWait()) {
+
+          WaitActor *wa = WaitActor::Cast(aw);
+          /* test bottom commit */
+          if (wa->hasNoChildren()) {
+            // mm2: WHO KNOWS WHY THIS IS NECESSARY? waa->setCommitted();
+            HF_FAIL(OZ_atom("failDis"));
+          }
+
+          /* test unit commit */
+          if (wa->hasOneChildNoChoice()) {
+            Board *waitBoard = wa->getLastChild();
+
+            if (!e->commit(waitBoard,CTT)) {
+              HF_FAIL(OZ_atom("failDis"));
+            }
+
+            wa->dispose();
+
+            goto LBLpopTask;
+          }
+
+          // suspend wait actor
+          Thread *th = e->mkSuspendedThread(CBB,wa->getPriority(),0);
+          th->pushActor(wa);
+          wa->setThread(th);
+
+          goto LBLpopTask;
+        }
+
+        Assert(aw->isAsk());
+
+        AskActor *aa = AskActor::Cast(aw);
+
+        //  should we activate the 'else' clause?
+        if (aa->isLeaf()) {
+          aa->setCommitted();
+          CBB->decSuspCount();
+
+          /* rule: if fi --> false */
+          if (aa->getElsePC() == NOCODE) {
+            HF_FAIL(OZ_atom("failure"));
+          }
+
+          LOADCONT(aa->getNext());
+          PC=aa->getElsePC();
+          goto LBLemulate;
+        }
+
+        taskstack->setTop(topCache+2);
+        e->suspendCond(aa);
+        CHECK_CURRENT_THREAD;
+      }
     case C_SET_SELF:
       e->setSelf((Object *) TaskStackPop(--topCache));
       goto next_task;
@@ -1413,13 +1418,13 @@ LBLpopTask:
    */
 LBLkillToplevelThread:
   {
-    Assert (e->currentThread);
+    Assert (CTT);
     Assert (e->isToplevel ());
     asmLbl(killToplevelThread);
 
     CBB->decSuspCount ();
 
-    if (e->currentThread == e->rootThread) {
+    if (CTT == e->rootThread) {
       //
       //  A special case: the "root" thread;
       e->rootThread->reInit (e->rootThread->getPriority (), e->rootBoard);
@@ -1430,30 +1435,30 @@ LBLkillToplevelThread:
 
       if (e->rootThread->isEmpty ()) {
         //  still empty:
-        e->currentThread = (Thread *) NULL;
+        CTT = 0;
         goto LBLstart;
       } else {
         //  ... no, we have fetched something - go ahead;
         goto LBLpreemption;
       }
-    } else if (e->currentThread->isPropagator()) {
-      e->currentThread->disposeRunnableThread ();
-      e->currentThread = (Thread *) NULL;
+    } else if (CTT->isPropagator()) {
+      CTT->disposeRunnableThread ();
+      CTT = 0;
 
       goto LBLstart;
     } else {
 
-      if (e->currentThread->traceMode()) {
+      if (CTT->traceMode()) {
 
-        TaggedRef tail = e->currentThread->getStreamTail();
+        TaggedRef tail = CTT->getStreamTail();
 
         OZ_Term debugInfo = OZ_atom("terminated");
 
         OZ_unify(tail, debugInfo);  // that's it, stream ends here!
       }
 
-      e->currentThread->disposeRunnableThread ();
-      e->currentThread = (Thread *) NULL;
+      CTT->disposeRunnableThread ();
+      CTT = (Thread *) NULL;
 
       goto LBLstart;
     }
@@ -1484,7 +1489,7 @@ LBLkillToplevelThread:
    */
 LBLkillThread:
   {
-    Thread *tmpThread = e->currentThread;
+    Thread *tmpThread = CTT;
     Board *nb = 0;
     Continuation *cont;
     Actor *aa;
@@ -1510,7 +1515,7 @@ LBLkillThread:
     Assert (e->currentSolveBoard || !(tmpThread->isInSolve ()));
     asmLbl(killThread);
 
-    e->currentThread = (Thread *) NULL;
+    CTT = (Thread *) NULL;
     tmpThread->disposeRunnableThread ();
 
     CBB->decSuspCount ();
@@ -1568,61 +1573,13 @@ LBLkillThread:
     //  Note again that 'decSolveThreads' should be done from
     // the 'nb' board which is probably modified above!
     //
-    DebugCode (e->currentThread = (Thread *) KOSTJA_MAGIC);
-    switch (e->checkEntailment (cont, aa)) {
-    case CE_CONT:
-      DebugCode (e->currentThread = (Thread *) NULL);
-      {
-        Thread *tt=0;
-
-        if (aa->isAsk()) {
-          tt = AskActor::Cast(aa)->getThread ();
-          Assert (tt);
-
-          //
-          if (tt->isSuspended ()) {
-            Assert (tt->getBoardFast () == CBB);
-            tt->suspThreadToRunnable ();
-
-            //
-            tt->pushCont (cont);
-            e->scheduleThread (tt);
-          } else {
-            //  The following assertion holds because
-            // there must be a continuation (possibly empty)
-            // after each conditional;
-            Assert (tt != e->currentThread);
-            Assert (e->isScheduled (tt));
-
-            //
-            tt->cleanUp (CBB);
-            tt->pushCont (cont);
-          }
-        } else {
-          //  any other actor;
-          tt = e->mkRunnableThread(aa->getPriority (), CBB,0);
-          tt->pushCont (cont);
-          e->scheduleThread (tt);
-        }
-
-        if (nb) e->decSolveThreads(nb->getBoardFast());
-        Assert (tt->isInSolve () || !e->currentSolveBoard);
-        Assert (!(tt->isInSolve ()) || e->currentSolveBoard);
-
-        goto LBLstart;
-      }
-
-    case CE_NOTHING:
-      DebugCode (e->currentThread = (Thread *) NULL);
-      //
-      //  deref nb, because it maybe just committed!
-      if (nb) e->decSolveThreads (nb->getBoardFast ());
-      goto LBLstart;
-
-    }
-
-    error("never here");
-    goto LBLerror;
+    DebugCode (CTT = (Thread *) KOSTJA_MAGIC);
+    e->checkEntailment();
+    DebugCode (CTT = (Thread *) NULL);
+    //
+    //  deref nb, because it maybe just committed!
+    if (nb) e->decSolveThreads (nb->getBoardFast ());
+    goto LBLstart;
   }
 
 
@@ -1643,24 +1600,12 @@ LBLkillThread:
    */
 LBLdiscardThread:
   {
-    Thread *tmpThread = e->currentThread;
+    Thread *tmpThread = CTT;
 
     Assert (tmpThread);
     Assert (!(tmpThread->isDeadThread ()));
     Assert (tmpThread->isRunnable ());
-    Assert (!tmpThread->isPropagator () ||
-            tmpThread->getPropagator () == (OZ_Propagator *) NULL);
-    Assert (tmpThread->isPropagator () ||
-            !(tmpThread->hasStack ()) ||
-            tmpThread->isEmpty ());
-    //
-    //  Note: actually, 'Board::getBoardFast ()' yields the first
-    // non-committed board upstairs (i.e. it might be failed);
-    //  This is non-complaint with the contemporary comment just
-    // above its definition (in board.icc), and THIS FACT IS USED
-    // BY INSTALLING THE BOARD IN THE EMULATOR!
-    //
-    Assert (!((tmpThread->getBoardFast ())->checkAlive ()));
+
     asmLbl(discardThread);
 
     //
@@ -1681,7 +1626,7 @@ LBLdiscardThread:
         e->decSolveThreads (tmpBB);
       }
     }
-    e->currentThread = (Thread *) NULL;
+    CTT = (Thread *) NULL;
     tmpThread->disposeRunnableThread ();
 
     goto LBLstart;
@@ -1704,7 +1649,7 @@ LBLdiscardThread:
    */
 LBLsuspendThread:
   {
-    Thread *tmpThread = e->currentThread;
+    Thread *tmpThread = CTT;
     Board *nb = 0;
     Continuation *cont;
     Actor *aa;
@@ -1723,10 +1668,10 @@ LBLsuspendThread:
     //
     //  First, set the board and self, and perform special action for
     // the case of blocking the root thread;
-    e->currentThread->setBoard (CBB);
+    CTT->setBoard (CBB);
     SaveSelf(e,NULL,NO);
 
-    e->currentThread = (Thread *) NULL;
+    CTT = (Thread *) NULL;
 
     //  No counter decrement 'cause the thread is still alive!
 
@@ -1764,21 +1709,12 @@ LBLsuspendThread:
     }
 
     //
-    DebugCode (e->currentThread = (Thread *) KOSTJA_MAGIC);
-    switch (e->checkEntailment (cont, aa)) {
-    case CE_NOTHING:
-      DebugCode (e->currentThread = (Thread *) NULL);
-      //
-      if (nb) e->decSolveThreads (nb->getBoardFast ());
-      goto LBLstart;
-
-    case CE_CONT:
-      error ("Entailment of some guard during suspending a thread???");
-      goto LBLerror;
-    }
-
-    error("never here");
-    goto LBLerror;
+    DebugCode (CTT = (Thread *) KOSTJA_MAGIC);
+    e->checkEntailment();
+    DebugCode (CTT = (Thread *) NULL);
+    //
+    if (nb) e->decSolveThreads (nb->getBoardFast ());
+    goto LBLstart;
   }
 
 //
@@ -2780,14 +2716,14 @@ LBLdispatcher:
        shallowCP = 0; // failure in shallow guard can never be handled
        TaggedRef traceBack = nil();
        TaggedRef pred = 0;
-       if (e->currentThread && !e->currentThread->isPropagator()) {
-         pred = e->currentThread->findCatch(traceBack);
+       if (CTT && !CTT->isPropagator()) {
+         pred = CTT->findCatch(traceBack);
          traceBack = reverseC(traceBack);
          if (PC != NOCODE) {
            traceBack = cons(CodeArea::dbgGetDef(PC),traceBack);
          }
        } else {
-         e->currentThread = e->mkRunnableThread(PROPAGATOR_PRIORITY, CBB, 0);
+         CTT = e->mkRunnableThread(PROPAGATOR_PRIORITY, CBB, 0);
          e->restartThread();
        }
        if (!pred || !isProcedure(pred)) {
@@ -2801,7 +2737,7 @@ LBLdispatcher:
        RefsArray argsArray = allocateRefsArray(1,NO);
        argsArray[0] = OZ_mkTuple(X[0],3,
                                  X[1],e->dbgGetSpaces(),traceBack);
-       e->currentThread->pushCall(pred,argsArray,1);
+       CTT->pushCall(pred,argsArray,1);
        goto LBLpopTask;
      }
    }
@@ -2816,40 +2752,9 @@ LBLdispatcher:
       Assert(CBB->isWait() && !CBB->isCommitted());
 
       CBB->decSuspCount();
-      {
-        TaskStackEntry topElem = e->currentThread->pop ();
-        Assert((ContFlag) (ToInt32(topElem) & 0xf) == C_LOCAL);
-      }
-      /* unit commit */
-      WaitActor *aa = WaitActor::Cast(CBB->getActor());
-      if (aa->hasOneChild()) {
-        Board *waitBoard = CBB;
-        e->reduceTrailOnUnitCommit();
-        waitBoard->unsetInstalled();
-        e->setCurrent(aa->getBoardFast());
-        DebugCheckT(currentDebugBoard=CBB);
-
-        waitBoard->setCommitted(CBB);   // by kost@ 4.10.94
-        CBB->incSuspCount(waitBoard->getSuspCount()-1);
-        if (aa->hasChoices()) {
-          if (CBB->isWait()) {
-            WaitActor::Cast(CBB->getActor())->pushChoices(aa->getCps());
-          } else if (CBB->isSolve()) {
-            SolveActor::Cast(CBB->getActor())->pushChoices(aa->getCps());
-          }
-        }
-
-        Bool ret = e->installScript(waitBoard->getScriptRef());
-        if (!ret) {
-          HF_FAIL(OZ_atom("failDis"));
-        }
-        Assert(ret!=NO);
-        DISPATCH(1);
-      }
 
       // not commitable, suspend
       CBB->setWaiting();
-      ozstat.createdThreads.incf();
       goto LBLsuspendBoard;
     }
 
@@ -2860,11 +2765,15 @@ LBLdispatcher:
 
       /* top commit */
       CBB->decSuspCount();
-      {
-        TaskStackEntry topElem = e->currentThread->pop ();
-        Assert((ContFlag) (ToInt32(topElem) & 0xf) == C_LOCAL);
-      }
+
       if ( e->entailment() ) {
+
+        {
+          TaskStackEntry topElem = CTT->pop ();
+          Assert((ContFlag) (ToInt32(topElem) & 0xf) == C_ACTOR);
+          CTT->pop();
+        }
+
         e->trail.popMark();
 
         tmpBB = CBB;
@@ -2878,39 +2787,9 @@ LBLdispatcher:
         goto LBLpopTask;
       }
 
-      /* unit commit for WAITTOP */
-      WaitActor *aa = WaitActor::Cast(CBB->getActor());
-      Board *bb = CBB;
-      if (aa->hasOneChild()) {
-        e->reduceTrailOnUnitCommit();
-        bb->unsetInstalled();
-        e->setCurrent(aa->getBoardFast());
-        DebugCheckT(currentDebugBoard=CBB);
-
-        bb->setCommitted(CBB);    // by kost@ 4.10.94
-        CBB->incSuspCount(bb->getSuspCount()-1);
-
-        if (aa->hasChoices()) {
-          if (CBB->isWait()) {
-            WaitActor::Cast(CBB->getActor())->pushChoices(aa->getCps());
-          } else if (CBB->isSolve()) {
-            SolveActor::Cast(CBB->getActor())->pushChoices(aa->getCps());
-          }
-        }
-
-        Bool ret = e->installScript(bb->getScriptRef());
-        if (!ret) {
-          HF_FAIL(OZ_atom("failDis"));
-        }
-
-        Assert(ret != NO);
-        goto LBLpopTask;
-      }
-
       /* suspend WAITTOP */
       CBB->setWaitTop();
       CBB->setWaiting();
-      ozstat.createdThreads.incf();
       goto LBLsuspendBoardWaitTop;
     }
 
@@ -2919,12 +2798,14 @@ LBLdispatcher:
       Assert(CBB->isAsk() && !CBB->isCommitted());
 
       CBB->decSuspCount();
-      {
-        TaskStackEntry topElem = e->currentThread->pop ();
-        Assert((ContFlag) (ToInt32(topElem) & 0xf) == C_LOCAL);
-      }
+
       // entailment ?
       if (e->entailment()) {
+        {
+          TaskStackEntry topElem = CTT->pop ();
+          Assert((ContFlag) (ToInt32(topElem) & 0xf) == C_ACTOR);
+          CTT->pop();
+        }
         e->trail.popMark();
         tmpBB = CBB;
         e->setCurrent(CBB->getParentFast());
@@ -2941,26 +2822,17 @@ LBLdispatcher:
 
     LBLsuspendBoardWaitTop:
       markDirtyRefsArray(Y);
-      DebugTrace(trace("suspend clause",CBB,CAA));
 
       CAA = AWActor::Cast (CBB->getActor());
 
       e->deinstallCurrent();
       DebugCheckT(currentDebugBoard=CBB);
+
+      /* optimization: check if we can continue with next clause */
       if (CAA->hasNext()) {
-
-        DebugTrace(trace("next clause",CBB,CAA));
-
         LOADCONT(CAA->getNext());
-
         goto LBLemulate; // no thread switch allowed here (CAA)
       }
-
-      if (CAA->isAsk()) {
-        e->suspendCond(AskActor::Cast(CAA));
-        CHECK_CURRENT_THREAD;
-      }
-      DebugTrace(trace("suspend actor",CBB,CAA));
 
       goto LBLpopTask;
     }
@@ -2975,10 +2847,10 @@ LBLdispatcher:
       ProgramCounter elsePC = getLabelArg(PC+1);
       int argsToSave = getPosIntArg(PC+2);
 
-      CAA = new AskActor(CBB,CPP,
+      CAA = new AskActor(CBB,CPP,CTT,
                          elsePC ? elsePC : NOCODE,
-                         NOCODE, Y, G, X, argsToSave,
-                         e->currentThread);
+                         NOCODE, Y, G, X, argsToSave);
+      CTT->pushActor(CAA);
       DISPATCH(3);
     }
 
@@ -2987,7 +2859,8 @@ LBLdispatcher:
       ProgramCounter elsePC = getLabelArg(PC+1);
       int argsToSave = getPosIntArg(PC+2);
 
-      CAA = new WaitActor(CBB, CPP, NOCODE, Y, G, X, argsToSave, NO);
+      CAA = new WaitActor(CBB, CPP, CTT, NOCODE, Y, G, X, argsToSave, NO);
+      CTT->pushActor(CAA);
 
       DISPATCH(3);
     }
@@ -2998,7 +2871,8 @@ LBLdispatcher:
       int argsToSave = getPosIntArg(PC+2);
       Board *bb = CBB;
 
-      CAA = new WaitActor(bb, CPP, NOCODE, Y, G, X, argsToSave, NO);
+      CAA = new WaitActor(bb, CPP, CTT, NOCODE, Y, G, X, argsToSave, NO);
+      CTT->pushActor(CAA);
 
       if (bb->isWait()) {
         WaitActor::Cast(bb->getActor())->pushChoice((WaitActor *) CAA);
@@ -3015,7 +2889,8 @@ LBLdispatcher:
       int argsToSave = getPosIntArg (PC+2);
       Board *bb = CBB;
 
-      CAA = new WaitActor(bb, CPP, NOCODE, Y, G, X, argsToSave, OK);
+      CAA = new WaitActor(bb, CPP, CTT, NOCODE, Y, G, X, argsToSave, OK);
+      CTT->pushActor(CAA);
 
       if (bb->isWait()) {
         WaitActor::Cast(bb->getActor())->pushChoice((WaitActor *) CAA);
@@ -3031,7 +2906,6 @@ LBLdispatcher:
       // create a node
       e->setCurrent(new Board(CAA,Bo_Wait),OK);
       DebugCheckT(currentDebugBoard=CBB);
-      e->pushLocal();
       CBB->setInstalled();
       e->trail.pushMark();
       DebugCheckT(CAA=NULL);
@@ -3043,7 +2917,6 @@ LBLdispatcher:
     {
       e->setCurrent(new Board(CAA,Bo_Ask),OK);
       DebugCheckT(currentDebugBoard=CBB);
-      e->pushLocal();
       CBB->setInstalled();
       e->trail.pushMark();
       DebugCheckT(CAA=NULL);
@@ -3068,7 +2941,7 @@ LBLdispatcher:
         prio = defPrio;
       }
 
-      Thread *tt = e->mkRunnableThread(prio, CBB,e->currentThread->getValue());
+      Thread *tt = e->mkRunnableThread(prio, CBB,CTT->getValue());
       ozstat.createdThreads.incf();
       tt->pushCont(newPC,Y,G,NULL,0);
       e->scheduleThread (tt);
@@ -3121,7 +2994,7 @@ LBLdispatcher:
       TaggedRef comment  = getLiteralArg(PC+4);
       int noArgs         = smallIntValue(getNumberArg(PC+5));
 
-      if (!e->currentThread->traceMode())
+      if (!CTT->traceMode())
         {
           DISPATCH(6);
         }
@@ -3131,7 +3004,7 @@ LBLdispatcher:
       Board *b = e->currentBoard;       // how can we avoid this ugly hack?
       e->currentBoard = e->rootBoard;
 
-      TaggedRef tail = e->currentThread->getStreamTail();
+      TaggedRef tail = CTT->getStreamTail();
 
       OZ_Term debugInfo = OZ_mkTupleC("debugInfo",
                                       3,
@@ -3143,9 +3016,9 @@ LBLdispatcher:
       OZ_Term newTail = OZ_newVariable();
       OZ_unify(tail, OZ_cons(debugInfo,newTail));
 
-      e->currentThread->setStreamTail(newTail);;
+      CTT->setStreamTail(newTail);;
 
-      if (e->currentThread->stopped()) {
+      if (CTT->stopped()) {
         am.setSFlag(ThreadSwitch); // byebye...
       }
 
@@ -3159,8 +3032,8 @@ LBLdispatcher:
       ProgramCounter contPC = getLabelArg(PC+1);
 
       markDirtyRefsArray(Y);
-      e->currentThread->pushCont(contPC,Y,G,NULL,0);
-      e->currentThread->pushJob();
+      CTT->pushCont(contPC,Y,G,NULL,0);
+      CTT->pushJob();
       DISPATCH(2);
     }
 
@@ -3227,342 +3100,93 @@ LBLdispatcher:
    *
    */
  LBLfailure:
-  Assert (!(e->isToplevel ()));
-  Assert (!e->currentThread || e->currentThread->isRunnable ());
-  {
-    AWActor *aa;
-    Continuation *cont;
-    switch (e->handleFailure(cont,aa)) {
-    case CE_CONT:
-      DebugCheckT(currentDebugBoard=e->currentBoard);
+  DebugTrace(trace("fail",CBB));
 
-      //
-      if (!e->currentThread) {
-        Thread *thr = e->mkRunnableThread(aa->getPriority (), CBB,0);
-        thr->pushCont (cont);
-        thr->pushSetCaa ((AskActor *) aa);;
-        e->scheduleThread (thr);
+  Assert(!e->isToplevel());
+  Assert(CTT);
+  Assert(CTT->isRunnable());
+  Assert(CBB->isInstalled());
 
-        //
-        goto LBLstart;
-      } else {
-        CAA=aa;
-        LOADCONT(cont);
+  Actor *aa=CBB->getActor();
+  Assert(!aa->isCommitted());
 
-        //
-        goto LBLemulate; // no thread switch allowed here (CAA)
-      }
-
-    case CE_NOTHING:
-      if (e->currentThread) {
-        DebugCheckT(currentDebugBoard=e->currentBoard);
-        goto LBLpopTask;
-      } else {
-        goto LBLstart;
-      }
-
-    case CE_FAIL:
-      Assert(!e->isToplevel());
-      goto LBLfailure;
-
-    case CE_RAISE:
-      PC=NOCODE;
-      DebugCheckT(currentDebugBoard=e->currentBoard);
-      DORAISE(e->exception);
-
-    case CE_SUSPEND:
-      Assert (e->currentThread);
-      Assert (aa->isAsk ());
-      DebugCheckT(currentDebugBoard=e->currentBoard);
-
-      //
-      e->suspendCond(AskActor::Cast(aa));
-      CHECK_CURRENT_THREAD;
-    }
-  }
-} // end engine
-
-int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
-{
-  aaout=0;
-  DebugTrace(trace("fail",currentBoard));
-  Assert(currentBoard->isInstalled());
-  Actor *aa=currentBoard->getActor();
   if (aa->isAskWait()) {
-    (AWActor::Cast(aa))->failChild(currentBoard);
+    (AWActor::Cast(aa))->failChild(CBB);
   }
-  currentBoard->setFailed();
-  reduceTrailOnFail();
-  currentBoard->unsetInstalled();
 
-  if (currentThread) {
-    //
-    if (!(currentThread->hasStack ()) ||
-        //  i.e. that's a runnable thread, yet without a task stack,
-        // which installation has failed;
-        //  Note that propagators are also covered by this case!
-        !(currentThread->discardLocalTasks ())
-        //  i.e. that's a (proper) runnable thread which doesn't have
-        // any tasks (but in the failed board) more;
-        ) {
-      Assert (!(currentThread->hasStack ()) ||
-              currentThread->isEmpty ());
-      //
-      currentThread->setBoard (currentBoard);
-      scheduleThread (currentThread);
-      currentThread = (Thread *) NULL;
-      /*
-       *  kost@ 22.12.95 bug fix:
-       *  In the case of a deep (and parallel) guard, it might happen
-       * that the thread in the actor is overwritten (by a wrong
-       * thread, which doesn't contain a continuation after the conditional
-       * itself!). So, if a thread seems to be pretty local, just
-       * schedule it again - it will be discarded later;
-       *
-       *  to mm2: Michael, i told you aboout this before!
-       */
-    }
-  }
-  //  kost@ moved from ahead - we need a pointer to the board being killed;
-  setCurrent(aa->getBoardFast());
+  Assert(!CBB->isFailed());
+  CBB->setFailed();
 
-  DebugTrace(trace("reduce actor",currentBoard,aa));
-
-  if (aa->isAsk()) {
-    AskActor *aaa = AskActor::Cast(aa);
-    Thread *tt = aaa->getThread ();
-
-    //
-    Assert (tt);
-    aaout = aaa;
-
-    //
-    //  The first case: there is(are) still clause(s) to build up;
-    if (aaa->hasNext()) {
-      //
-      if (tt != currentThread) {
-        //  ... it means actually that the currentThread was a local one,
-        // and it was handled just above, so here:
-        Assert (currentThread == (Thread *) NULL);
-        //  The following holds because the thread in the actor
-        // might be suspended only if all the clauses are built up
-        // (that is NOT the case here);
-        Assert (!(tt->isSuspended ()));
-        // ... because it's not the current one;
-        Assert (isScheduled (tt));
-
-        //
-        if (tt->isBelowFailed(currentBoard)) { // slow test
-          //  ... and this means that 'tt' is still trying to
-          // build up the same (failed) board - we discard
-          // everything in there, and continue with the next guard;
-          tt->cleanUp (currentBoard);
-
-          //
-          cont = aaa->getNext ();  // 'nextClause';
-          tt->pushCont(cont);
-          tt->pushSetCaa (aaa);
-          //  don't schedule it again;
-        }
-
-        //
-        // tt is executing another clause: don't disturb him
-        DebugCode (cont = (Continuation *) NULL);
-        return (CE_NOTHING);
-      } else {
-        //  ... it means that the 'main' thread has failed
-        // inside a guard - then just continue with the next one;
-        cont = aaa->getNext ();    // 'nextClause';
-
-        //
-        return (CE_CONT);
-      }
-    }
-
-    //
-    //  The second case: should we activate the 'else' clause?
-    if (aaa->isLeaf()) {
-      aaa->setCommitted();
-      currentBoard->decSuspCount();
-
-      cont = aaa->getNext();
-      cont->setPC(aaa->getElsePC());
-
-      /* rule: if fi --> false */
-      if (cont->getPC() == NOCODE) {
-        if (!isToplevel()) return CE_FAIL;
-        exception=OZ_atom("failure");
-        return CE_RAISE;
-      }
-
-      //
-      if (tt != currentThread) {
-        //  ... the same as above: it wasn't the 'main' thread;
-        Assert (currentThread == (Thread *) NULL);
-
-        //
-        //  The 'tt' thread can be suspended or not: the last case
-        // is possible if the 'main' thread is still building up
-        // the same (last) guard;
-        if (tt->isSuspended ()) {
-          Assert (!(isScheduled (tt)));
-          //  The following must hold because 'tt' can suspend
-          // only in the board where the actor itself is located;
-          Assert (tt->getBoardFast () == currentBoard);
-
-          //
-          tt->suspThreadToRunnable ();
-          tt->pushCont (cont);  // no 'SetCaa' is ever needed;
-
-          //
-          scheduleThread (tt);
-        } else {
-          Assert (tt->isBelowFailed (currentBoard));
-          //  ... it means that the 'main' thread is still building
-          // the same failed guard;
-          tt->cleanUp (currentBoard);
-          tt->pushCont (cont);  // no 'SetCaa' is ever needed;
-
-          //  don't schedule it again;
-        }
-
-        //
-        DebugCode (cont = (Continuation *) NULL);
-        return (CE_NOTHING);
-      } else {
-        //  ... the 'main' thread;
-        return (CE_CONT);
-      }
-    }
-
-    //
-    //  The third case: all the guards are built up,
-    // not all of them are failed, and none of them are entailed;
-    if (tt != currentThread) {
-      //  ... not the 'main' thread;
-      Assert (currentThread == (Thread *) NULL);
-      //  The assertions below are the same as for the 'leaf' case above;
-#ifdef DEBUG_CHECK
-      if (tt->isSuspended ()) {
-        Assert (!(isScheduled (tt)));
-        Assert (tt->getBoardFast () == currentBoard);
-      } else {
-        Assert (isScheduled (tt));
-        // the 'tt' thread might or might not be below the failed
-        // board - so, let clean up it lazily ...
-      }
-#endif
-
-      //
-      DebugCode (cont = (Continuation *) NULL);
-      return (CE_NOTHING);
-    } else {
-      //  ... the 'main' thread;
-      //  Note that it's cleaned up already;
-      Assert (currentThread);
-
-      //
-      DebugCode (cont = (Continuation *) NULL);
-      return (CE_SUSPEND);
-    }
-  }
+  e->reduceTrailOnFail();
+  CBB->unsetInstalled();
+  e->setCurrent(aa->getBoardFast());
+  DebugCheckT(currentDebugBoard=CBB);
 
   //
-  if (aa->isWait()) {
-    WaitActor *waa = WaitActor::Cast(aa);
-    aaout=waa;
-    if (waa->hasNext()) {
-      cont=waa->getNext();
-      return CE_CONT;
+  if (CTT->hasStack()) {
+
+    //  i.e. that's a runnable thread, with a task stack,
+    //  (no propagator)
+
+    CTT->discardUpTo(CBB);
+
+    if (!CTT->isEmpty()) {
+      /*
+       * it is a thread containing the actor
+       *  the actor task itself does the necessary things
+       */
+      goto LBLpopTask;
     }
-
-    /* rule: or ro (bottom commit) */
-    if (waa->hasNoChilds()) {
-      waa->setCommitted();
-      if (!isToplevel()) return CE_FAIL;
-      exception=OZ_atom("failDis");
-      return CE_RAISE;
-    }
-
-    /* rule: or <sigma> ro (unit commit rule) */
-    if (waa->hasOneChild()) {
-      Board *waitBoard = waa->getLastChild();
-      DebugTrace(trace("reduce actor unit commit",waitBoard,waa));
-      if (waitBoard->isWaiting()) {
-        waitBoard->setCommitted(currentBoard); // do this first !!!
-
-        // kost@: 'incSuspCount' moved from behind, because
-        // otherwise the current board can be found to be
-        // entailed - that may be not true;
-        /* add the suspension from the committed board
-           remove the suspension for the board itself */
-        currentBoard->incSuspCount(waitBoard->getSuspCount()-1);
-
-        if (waa->hasChoices()) {
-          if (currentBoard->isWait()) {
-            WaitActor::Cast(currentBoard->getActor())->pushChoices(waa->getCps());
-          } else if (currentBoard->isSolve()) {
-            SolveActor::Cast(currentBoard->getActor())->pushChoices(waa->getCps());
-          }
-        }
-
-        DebugCode (if (!currentThread)
-                   currentThread = (Thread *) KOSTJA_MAGIC;);
-
-        if (!installScript(waitBoard->getScriptRef())) {
-          DebugCode (if (currentThread == (Thread *) KOSTJA_MAGIC)
-                     currentThread = (Thread *) NULL;);
-          if (!isToplevel()) return CE_FAIL;
-          exception=OZ_atom("failDis");
-          return CE_RAISE;
-        }
-        DebugCode (if (currentThread == (Thread *) KOSTJA_MAGIC)
-                   currentThread = (Thread *) NULL;);
-
-        /* unit commit & WAITTOP */
-        if (waitBoard->isWaitTop()) {
-          if (!currentThread && currentBoard != rootBoard) {
-            // mm2: entailment check ???
-            // kost@:  Yes! This can happen;
-            Thread *thr = mkWakeupThread (currentBoard);
-            thr->wakeupToRunnable ();
-
-            //  fairness: don't go there directly, but:
-            scheduleThread (thr);
-          }
-          return CE_NOTHING;
-        }
-
-        cont=waitBoard->getBodyPtr();
-        return CE_CONT;
-      }
-    }
-    return CE_NOTHING;
   }
 
-  Assert(aa->isSolve());
+  // currentThread is a thread forked in a local space or a propagator
 
-  //  Reduce (i.e. with failure in this case) the solve actor;
-  //  The solve actor goes simply away, and the 'failed' atom is bound to
-  // the result variable;
-  aa->setCommitted();
-  SolveActor *saa=SolveActor::Cast(aa);
-  // don't decrement parent counter
 
-  if (!fastUnifyOutline(saa->getResult(),saa->genFailed(),OK)) {
-    // this should never happen?
-    error("solve: unify result should never fail");
-    return CE_NOTHING;
+  if (aa->isSolve()) {
+
+    //  Reduce (i.e. with failure in this case) the solve actor;
+    //  The solve actor goes simply away, and the 'failed' atom is bound to
+    // the result variable;
+    aa->setCommitted();
+    SolveActor *saa=SolveActor::Cast(aa);
+    // don't decrement parent counter
+
+    if (!e->fastUnifyOutline(saa->getResult(),saa->genFailed(),OK)) {
+      // this should never happen?
+      error("solve: unify result should never fail");
+    }
+
+  } else {
+
+    AWActor *aw=AWActor::Cast(aa);
+    Thread *tt = aw->getThread ();
+
+    Assert (tt);
+    Assert(tt!=CTT);
+
+    if (tt->isSuspended()) {
+
+      Assert (!(e->isScheduled (tt)));
+
+      //  The following must hold because 'tt' can suspend
+      // only in the board where the actor itself is located;
+      Assert (tt->getBoardFast () == CBB);
+
+      //
+      tt->suspThreadToRunnable ();
+
+      //
+      e->scheduleThread(tt);
+    }
   }
-  if (!currentThread && currentBoard != rootBoard) {
-    Thread *thr = mkWakeupThread (currentBoard);
-    thr->wakeupToRunnable ();
 
-    //
-    scheduleThread (thr);
-  }
-  return CE_NOTHING;
-}
+  e->decSolveThreads(CBB);
+
+  CTT->disposeRunnableThread();
+  CTT = 0;
+
+  goto LBLstart;
+} // end engine
 
 #ifdef OUTLINE
 #undef inline

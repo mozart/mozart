@@ -558,6 +558,9 @@ public:
   int32 *getGCField() { return (int32*) &ctu.tagged; }
 public:
   USEHEAPMEMORY;
+  ConstTerm();
+  ConstTerm(const ConstTerm& ct);
+
   ConstTerm *gcConstTerm(void);
   void gcConstRecurse(void);
 
@@ -586,6 +589,9 @@ class ConstTermWithHome: public ConstTerm {
 protected:
   Board *home;
 public:
+  ConstTermWithHome();
+  ~ConstTermWithHome();
+  ConstTermWithHome(ConstTermWithHome&);
   ConstTermWithHome(Board *b, TypeOfConst t) : ConstTerm(t), home(b) {}
   Board *getBoardFast();
 };
@@ -609,6 +615,9 @@ private:
     return (char *) alignedMalloc(size, sizeof(double));
   }
 public:
+  HeapChunk();
+  ~HeapChunk();
+  HeapChunk(HeapChunk&);
   HeapChunk(int size)
   : ConstTerm(Co_HeapChunk), chunk_size(size), chunk_data(allocate(size)) {
     }
@@ -1131,6 +1140,9 @@ protected:
   TaggedRef threads;  /* list of variables with threads attached to them */
   int32 deepness;     /* deepnes plus OFlag */
 public:
+  Object();
+  ~Object();
+  Object(Object&);
 
   Object(SRecord *s,ObjectClass *ac,SRecord *feat,Bool iscl):
     ConstTerm(Co_Object)
@@ -1233,6 +1245,9 @@ class DeepObject: public Object {
 private:
   Board *home;
 public:
+  DeepObject();
+  ~DeepObject();
+  DeepObject(DeepObject&);
   DeepObject(SRecord *s,ObjectClass *cl,
              SRecord *feat,Bool iscl, Board *bb):
     Object(s,cl,feat,iscl)
@@ -1266,6 +1281,9 @@ friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef value;
 public:
+  SChunk();
+  ~SChunk();
+  SChunk(SChunk&);
   SChunk(Board *b,TaggedRef v) : ConstTerm(Co_Chunk), value(v) {
     Assert(isRecord(v));
     Assert(b);
@@ -1315,6 +1333,9 @@ private:
   TaggedRef *getArgs() { return (TaggedRef*) getPtr(); }
 
 public:
+  OzArray();
+  ~OzArray();
+  OzArray(OzArray&);
   OzArray(Board *b, int low, int high, TaggedRef initvalue) : ConstTermWithHome(b,Co_Array)
   {
     Assert(isRef(initvalue) || !isAnyVar(initvalue));
@@ -1470,6 +1491,9 @@ class DistObject: public ConstTermWithHome {
 private:
   int type;
 public:
+  DistObject();
+  ~DistObject();
+  DistObject(DistObject&);
   DistObject(Board *b, TypeOfConst tc) : ConstTermWithHome(b,tc), type(0) {}
 
   void setDistFlag(int f)   { type |= f;  }
@@ -1492,6 +1516,9 @@ private:
   RefsArray gRegs;
   PrTabEntry *pred;
 public:
+  Abstraction();
+  ~Abstraction();
+  Abstraction(Abstraction&);
   Abstraction(PrTabEntry *prd, RefsArray gregs, Board *b, Bool mobile=OK)
   : DistObject(b,Co_Abstraction), gRegs(gregs), pred(prd)
   {
@@ -1628,6 +1655,9 @@ private:
   BuiltinTabEntry *fun;
   TaggedRef suspHandler; // this one is called, when it must suspend
 public:
+  Builtin();
+  ~Builtin();
+  Builtin(Builtin&);
   Builtin(BuiltinTabEntry *fn, TaggedRef handler)
     : suspHandler(handler), fun(fn), ConstTerm(Co_Builtin)
     {}
@@ -1672,6 +1702,9 @@ friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef val;
 public:
+  Cell();
+  ~Cell();
+  Cell(Cell&);
   Cell(Board *b,TaggedRef v, Bool mobile=NO) :
     DistObject(b, Co_Cell), val(v)
   {
@@ -1725,6 +1758,9 @@ private:
   // - 1 (the space has been merged)
   // or a valid pointer
 public:
+  Space();
+  ~Space();
+  Space(Space&);
   Space(Board *h, Board *s) : ConstTermWithHome(h,Co_Space), solve(s) {};
 
   OZPRINT;

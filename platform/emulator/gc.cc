@@ -1036,9 +1036,19 @@ Thread *Thread::gcThread ()
   COUNT(thread);
   Thread *newThread = (Thread *) gcRealloc (this, sizeof (*this));
   GCNEWADDRMSG (newThread);
+
+  Assert(opMode==IN_TC || opMode==IN_GC);
+#ifdef DEBUG_CHECK
+  if (opMode == IN_TC) {
+    extern int tCounter;
+    newThread->id=tCounter++;
+  }
+#endif
+
   if (isRunnable () || hasStack ()) {
     ThreadList::add (newThread);
   }
+
   gcTagged(cell,newThread->cell);
 
   ptrStack.push (newThread, PTR_THREAD);
@@ -1057,8 +1067,8 @@ Thread *Thread::gcDeadThread()
   COUNT(thread);
   Thread *newThread = (Thread *) gcRealloc (this, sizeof (*this));
   GCNEWADDRMSG (newThread);
-  gcTagged(cell,newThread->cell);
 
+  gcTagged(cell,newThread->cell);
   newThread->setBoard(am.rootBoard);
   newThread->state.flags=0;
   newThread->item.threadBody=0;
@@ -1084,25 +1094,18 @@ void Thread::gcRecurse ()
     //  Actually, there are two cases: for runnable threads with
     // a taskstack, and without it (note that the last case covers
     // also the GC'ing of propagators);
-    if (hasStack ()) {
+    Board *notificationBoard=getBoard()->gcGetNotificationBoard();
+    setBoard(notificationBoard->gcBoard());
+    if (hasStack()) {
+
       //
       //  ... it means that the thread is actually dead:
       //  it should happen only if this thread was local
       //  to some (deep) guard, and that guard was killed or cancelled;
-      newBoard=getBoard()->gcGetNotificationBoard();
-      Bool newHome=NO;
 
-      while (getBoard() != newBoard) {
-        if (!(discardLocalTasks ())) {
-          newHome=OK;
-          setBoard(newBoard);
-          break;
-        }
-        setBoard(getBoard()->getParentFast());
-      }
+      discardUpTo(notificationBoard);
 
-      setBoard(getBoard()->gcBoard());
-      if (newHome) {
+      if (isEmpty()) {
         getBoard()->incSuspCount();
       }
 
@@ -1114,7 +1117,7 @@ void Thread::gcRecurse ()
       // Assert (isEmpty ());
     } else {
       //
-      setBoard(getBoard()->gcGetNotificationBoard()->gcBoard());
+
       getBoard()->incSuspCount ();
 
       //
@@ -1861,7 +1864,11 @@ void TaskStack::gc(TaskStack *newstack)
 
     switch (cFlag){
 
-    case C_LOCAL:     COUNT(cLocal);   break;
+    case C_ACTOR:
+      COUNT(cLocal);
+      *(--newtop) = ((AWActor *) *(--oldtop))->gcActor();
+      break;
+
     case C_JOB:       COUNT(cJob);     break;
 
     case C_CONT:
@@ -1909,11 +1916,6 @@ void TaskStack::gc(TaskStack *newstack)
       COUNT(cCFuncCont);
       *(--newtop) = *(--oldtop);                // OZ_CFun
       *(--newtop) = gcRefsArray((RefsArray) *(--oldtop));
-      break;
-
-    case C_SET_CAA:
-      COUNT (cSetCaa);
-      *(--newtop) = ((Actor *) *(--oldtop))->gcActor();  // CAA
       break;
 
     case C_SET_SELF:
@@ -2308,12 +2310,19 @@ void Actor::gcRecurse()
 {
   GCMETHMSG("Actor::gcRecurse");
   if (isWait()) {
+    ((AWActor *)this)->gcRecurse();
     ((WaitActor *)this)->gcRecurse();
-  } else if (isAsk () == OK) {
+  } else if (isAsk()) {
+    ((AWActor *)this)->gcRecurse();
     ((AskActor *)this)->gcRecurse();
   } else {
     ((SolveActor *)this)->gcRecurse();
   }
+}
+
+void AWActor::gcRecurse()
+{
+  thread = thread->gcThread();
 }
 
 void WaitActor::gcRecurse()
@@ -2325,22 +2334,22 @@ void WaitActor::gcRecurse()
 
   next.gcRecurse ();
 
-  int32 num = ToInt32(childs[-1]);
+  int32 num = ToInt32(children[-1]);
   COUNT1(waitChild,num);
-  Board **newChilds=(Board **) heapMalloc((num+1)*sizeof(Board *));
+  Board **newChildren=(Board **) heapMalloc((num+1)*sizeof(Board *));
 
   FDPROFILE_GC(cp_size_waitactor, (num+1)*sizeof(Board *));
 
-  *newChilds++ = (Board *) num;
+  *newChildren++ = (Board *) num;
   for (int i=0; i < num; i++) {
-    if (childs[i]) {
-      newChilds[i] = childs[i]->gcBoard();
-      Assert(newChilds[i]);
+    if (children[i]) {
+      newChildren[i] = children[i]->gcBoard();
+      Assert(newChildren[i]);
     } else {
-      newChilds[i] = (Board *) NULL;
+      newChildren[i] = (Board *) NULL;
     }
   }
-  childs=newChilds;
+  children=newChildren;
   if (cps) {
     if (cps->isEmpty()) {
       cps = (CpStack *) 0;
@@ -2359,7 +2368,6 @@ void AskActor::gcRecurse () {
               error ("freed 'y' regs in AskActor::gcRecurse ()"));
   next.gcRecurse ();
   board = board->gcBoard ();
-  thread = thread->gcThread();
   Assert(board);
 }
 

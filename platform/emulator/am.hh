@@ -251,8 +251,9 @@ public:
   // entailment check
   Bool entailment();
   Bool isEmptyTrailChunk();
-  int checkEntailment(Continuation *&contAfter,Actor *&aa);
+  void checkEntailment();
   int handleFailure(Continuation *&cont, AWActor *&aa);
+  INLINE int commit(Board *bb, Thread *tt=0);
 
   // Unification
   Bool unify(TaggedRef ref1, TaggedRef ref2, Bool prop = OK);
@@ -283,7 +284,6 @@ public:
                       RefsArray y,RefsArray g,RefsArray x,int i);
   void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x=0,int i=0);
   void pushCFun(OZ_CFun f, RefsArray x=0, int i=0);
-  void pushLocal();
 
  private:
   void genericBind(TaggedRef *varPtr, TaggedRef var,

@@ -43,7 +43,7 @@
  *
  * class WaitActor
  *    member data
- *      childs: list of childs
+ *      children: list of children
  */
 
 /* ------------------------------------------------------------------------
@@ -52,18 +52,18 @@
 
 void WaitActor::addChildInternal(Board *bb)
 {
-  if (!childs) {
-    childs=(Board **) freeListMalloc(3*sizeof(Board *));
-    *childs++ = (Board *) 2;
-    childs[0] = bb;
-    childs[1] = NULL;
+  if (!children) {
+    children=(Board **) freeListMalloc(3*sizeof(Board *));
+    *children++ = (Board *) 2;
+    children[0] = bb;
+    children[1] = NULL;
     return;
   }
-  int32 maxx= ToInt32(childs[-1]);
+  int32 maxx= ToInt32(children[-1]);
   int i;
   for (i = 0; i < maxx; i++) {
-    if (!childs[i]) {
-      childs[i] = bb;
+    if (!children[i]) {
+      children[i] = bb;
       return;
     }
   }
@@ -71,25 +71,25 @@ void WaitActor::addChildInternal(Board *bb)
   Board **cc = (Board **) freeListMalloc((size+1)*sizeof(Board *));
   *cc++ = (Board *) ToPointer(size);
   for (i = 0; i < maxx; i++) {
-    cc[i] = childs[i];
+    cc[i] = children[i];
   }
-  freeListDispose(childs-1,(ToInt32(childs[-1])+1)*sizeof(Board *));
-  childs = cc;
-  childs[maxx] = bb;
+  freeListDispose(children-1,(ToInt32(children[-1])+1)*sizeof(Board *));
+  children = cc;
+  children[maxx] = bb;
   for (i = maxx+1; i < size; i++) {
-    childs[i] = NULL;
+    children[i] = NULL;
   }
 }
 
 void WaitActor::failChildInternal(Board *bb)
 {
-  int32 maxx = ToInt32(childs[-1]);
+  int32 maxx = ToInt32(children[-1]);
   for (int i = 0; i < maxx; i++) {
-    if (childs[i] == bb) {
+    if (children[i] == bb) {
       for (; i < maxx-1; i++) {    // the order must be preserved (for solve);
-        childs[i] = childs[i+1];
+        children[i] = children[i+1];
       }
-      childs[maxx-1] = NULL;
+      children[maxx-1] = NULL;
       return;
     }
   }
@@ -101,12 +101,12 @@ int WaitActor::selectOrFailChildren(int l, int r) {
 
     int i;
     for (i = 0; i < l; i++)
-      childs[i]->setFailed();
+      children[i]->setFailed();
     for (i = l; i <= r; i++)
-      childs[i-l] = childs[i];
+      children[i-l] = children[i];
     for (int j = r+1; j < childCount; j++) {
-      childs[j]->setFailed();
-      childs[j] = NULL;
+      children[j]->setFailed();
+      children[j] = NULL;
     }
     childCount = r-l+1;
     return childCount;

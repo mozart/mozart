@@ -650,7 +650,7 @@ PROFILE_CODE1
         continue;
       }
     } else {
-      if (thr->wakeUp (var->getBoardFast (), calledBy)) {
+      if (thr->wakeUp(var->getBoardFast(), calledBy)) {
         Assert (thr->isDeadThread () || thr->isPropagated ());
         suspList = suspList->dispose ();
         continue;

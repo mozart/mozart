@@ -39,7 +39,6 @@ int TaskStack::getSeqSize()
     if (cFlag == C_SET_SELF) {
       am.setSelf((Object*) *(tos-1));
     }
-    Assert(cFlag != C_LOCAL);
     tos = tos - frameSize(cFlag) + 1;
   }
 }
@@ -83,17 +82,16 @@ int TaskStack::frameSize(ContFlag cFlag)
 {
   switch (cFlag){
   case C_JOB:
-  case C_LOCAL:
     return 1;
   case C_CONT:
     return 3;
   case C_XCONT:
     return 4;
   case C_DEBUG_CONT:
-  case C_SET_CAA:
   case C_SET_SELF:
   case C_LTQ:
   case C_CATCH:
+  case C_ACTOR:
     return 2;
   case C_CALL_CONT:
   case C_CFUNC_CONT:
@@ -167,9 +165,10 @@ TaggedRef TaskStack::findCatch(TaggedRef &out)
         break;
       }
 
-    case C_LOCAL:
-      error("impossible");
-      return 0;
+    case C_ACTOR:
+      pop();
+      out = cons(OZ_atom("actor"),out);
+      break;
 
     case C_CFUNC_CONT:
       {
@@ -203,13 +202,6 @@ TaggedRef TaskStack::findCatch(TaggedRef &out)
       {
         TaggedRef pred = (TaggedRef) ToInt32(pop());
         return pred;
-      }
-
-    case C_SET_CAA:
-      {
-        AskActor *aa = (AskActor *) pop ();
-        out = cons(OZ_atom("setCAA"),out);
-        break;
       }
 
     case C_SET_SELF:

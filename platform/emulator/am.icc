@@ -230,12 +230,6 @@ void AM::pushCFun(OZ_CFun f, RefsArray x, int i)
   currentThread->pushCFunCont(f, x, i, OK);
 }
 
-inline
-void AM::pushLocal()
-{
-  currentThread->pushLocal();
-}
-
 /* ------------------------------------------------------------------------
  * Threads
  * ------------------------------------------------------------------------ */
@@ -368,6 +362,62 @@ Thread *AM::mkSuspendedThread(Board *bb, int prio, TaggedRef val)
   th->setBody(allocateBody());
 
   return th;
+}
+
+
+inline
+int AM::commit(Board *bb, Thread *tt=0)
+{
+  Assert(!currentBoard->isCommitted());
+  Assert(bb->getParentFast()==currentBoard);
+
+  AWActor *aw = AWActor::Cast(bb->getActor());
+
+  Assert(!tt || tt==aw->getThread());
+
+  if (!tt) {
+    tt=aw->getThread();
+    DebugCheckT(aw->setThread(0));
+    if (tt->isSuspended()) {
+      tt->suspThreadToRunnable();
+      scheduleThread(tt);
+    } else {
+      tt->cleanUp(currentBoard);
+    }
+
+    { // remove the actor task
+      TaskStackEntry topElem = tt->pop ();
+      Assert((ContFlag) (ToInt32(topElem) & 0xf) == C_ACTOR);
+      tt->pop();
+    }
+  }
+
+  if (!bb->isWaitTop()) {
+    tt->pushCont(bb->getBodyPtr());
+  }
+
+  bb->setCommitted(currentBoard);
+  currentBoard->incSuspCount(bb->getSuspCount()-1);
+
+  if (bb->isWait()) {
+    Assert(bb->isWaiting());
+
+    WaitActor *wa = WaitActor::Cast(aw);
+    if (wa->hasChoices()) {
+      if (currentBoard->isWait()) {
+        WaitActor::Cast(currentBoard->getActor())->pushChoices(wa->getCps());
+      } else if (currentBoard->isSolve()) {
+        SolveActor::Cast(currentBoard->getActor())->pushChoices(wa->getCps());
+      } else {
+        // forget the choice stack when committing to a conditional
+      }
+    }
+
+    if (!installScriptOutline(bb->getScriptRef())) {
+      return 0;
+    }
+  }
+  return 1;
 }
 
 #endif  // __AM_ICC

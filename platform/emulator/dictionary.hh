@@ -25,6 +25,9 @@ private:
   DynamicTable *table;
 
 public:
+  OzDictionary();
+  ~OzDictionary();
+  OzDictionary(OzDictionary&);
   OzDictionary(Board *b) : ConstTermWithHome(b,Co_Dictionary)
   {
     table = DynamicTable::newDynamicTable();

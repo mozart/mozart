@@ -43,9 +43,11 @@ protected:
   Board *board;
   int priority;
 public:
+  Actor();
+  Actor(Actor &);
   Actor(int typ,Board *bb,int prio);
 
-  ~Actor() {}
+  ~Actor();
 
   USEHEAPMEMORY;
   Actor *gcActor();
@@ -78,14 +80,19 @@ public:
     return ((AWActor *) a);
   }
 protected:
+  Thread *thread;
   Continuation next;
   int childCount;
 public:
-  AWActor(int type,Board *s,int prio,
+  AWActor();
+  ~AWActor();
+  AWActor(AWActor&);
+  AWActor(int type,Board *s,int prio,Thread *tt,
           ProgramCounter p=NOCODE,RefsArray y=0,RefsArray g=0,
           RefsArray x=0,int i=0);
   USEHEAPMEMORY;
 
+  void gcRecurse(void);
   void addChild(Board *n);
   void failChild(Board *n);
   Continuation *getNext() { return &next; }
@@ -94,29 +101,29 @@ public:
   Bool isLeaf() { return ((childCount == 0 && next.getPC() == NOCODE) ? OK : NO); }
   void lastClause() { next.setPC(NOCODE); }
   void nextClause(ProgramCounter pc) { next.setPC(pc); }
+  void setThread(Thread *th) { thread = th; }
+  Thread *getThread() { return thread; }
 };
 
 // ------------------------------------------------------------------------
 
 class AskActor : public AWActor {
-private:
-  Thread *thread;
 public:
   static AskActor *Cast(Actor *a)
   { DebugCheck(!a->isAsk(),error("AskActor::Cast")); return (AskActor *) a; }
 private:
   ProgramCounter elsePC;
 public:
-  AskActor(Board *s,int prio,
+  AskActor();
+  ~AskActor();
+  AskActor(AskActor&);
+  AskActor(Board *s,int prio,Thread *tt,
            ProgramCounter elsepc,
-           ProgramCounter p, RefsArray y,RefsArray g, RefsArray x, int i,
-           Thread *tt);
+           ProgramCounter p, RefsArray y,RefsArray g, RefsArray x, int i);
 
   void gcRecurse();
 
   ProgramCounter getElsePC() { return elsePC; }
-  void setThread(Thread *th) { thread = th; }
-  Thread *getThread() { return thread; }
 };
 
 // ------------------------------------------------------------------------
@@ -128,11 +135,15 @@ public:
     Assert(a->isWait()); return (WaitActor *) a;
   }
 private:
-  Board   **childs;
+  Board   **children;
   CpStack *cps;
 public:
-  WaitActor(Board *s,int prio,
-            ProgramCounter p,RefsArray y,RefsArray g,RefsArray x, int i, Bool d);
+  WaitActor();
+  ~WaitActor();
+  WaitActor(WaitActor&);
+  WaitActor(Board *s,int prio,Thread *tt,
+            ProgramCounter p,RefsArray y,RefsArray g,RefsArray x, int i,
+            Bool d);
 
   USEFREELISTMEMORY;
 
@@ -140,15 +151,15 @@ public:
 
   void addChildInternal(Board *n);
   void failChildInternal(Board *n);
-  Board *getLastChild() { Board* b=childs[0]; childs[0] = NULL; return b; }
+  Board *getLastChild() { Board* b=children[0]; children[0] = NULL; return b; }
   // returns the first created child; this child is unlinked from the actor;
-  Board *getChildRef() { return childs[0]; }
+  Board *getChildRef() { return children[0]; }
   // the same, but a child is not unlinked from the actor;
   int getChildCount() { return childCount; };
-  Bool hasOneChild() { return ((childCount == 1 &&
-                                !isChoice() &&
-                                !hasNext()) ? OK : NO); }
-  Bool hasNoChilds() { return ((childCount == 0 && !hasNext()) ? OK : NO); }
+  Bool hasOneChildNoChoice() { return ((childCount == 1 &&
+                                        !isChoice() &&
+                                        !hasNext()) ? OK : NO); }
+  Bool hasNoChildren() { return ((childCount == 0 && !hasNext()) ? OK : NO); }
   int selectOrFailChildren(int l, int r);
 
   void dispose(void);
