@@ -27,6 +27,9 @@ dnl
 AC_INIT(emulator)
 OZ_INIT
 
+# PLATFORM is defined by OZ_INIT
+: ${platform=$PLATFORM}
+
 : ${oz_enable_wish=yes}
 AC_MSG_CHECKING(for --enable-wish)
 AC_ARG_ENABLE(wish,
