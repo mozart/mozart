@@ -79,8 +79,7 @@
 (defvar oz-use-new-compiler nil
   "*If non-nil, use the new Oz Compiler.
 This has the effect of not opening the *Oz Compiler* buffer and feeding
-everything into the *Oz Emulator* buffer.
-Note: This flag is ignored under win32 for now.")
+everything into the *Oz Emulator* buffer.")
 
 (defvar oz-using-new-compiler nil
   "If non-nil, indicates that the new Oz Compiler is currently running.")
@@ -162,6 +161,10 @@ All strings matching this regular expression are removed.")
 (defconst oz-bar-pattern
   "\'oz-bar \\([^ ]*\\) \\([^ ]*\\) \\([^ ]*\\)\'"
   "Regex for reading messages from the Oz debugger or profiler.")
+
+(defconst oz-show-temp-pattern
+  "\'oz-show-temp \\([^ ]*\\)\'"
+  "Regex for reading messages from the Oz compiler.")
 
 (defvar oz-want-font-lock t
   "*If non-nil, automatically enter font-lock-mode for oz-mode.")
@@ -580,10 +583,10 @@ If FORCE is non-nil, kill the processes immediately."
 
 (defun oz-check-running (start-flag use-new-compiler)
   (let ((running t))
-    (cond (oz-win32
-	   (setq running (get-buffer-process oz-compiler-buffer)))
-	  (oz-using-new-compiler
+    (cond (oz-using-new-compiler
 	   (setq running (get-buffer-process oz-emulator-buffer)))
+	  (oz-win32
+	   (setq running (get-buffer-process oz-compiler-buffer)))
 	  ((and (get-buffer-process oz-compiler-buffer)
 		(not (get-buffer-process oz-emulator-buffer)))
 	   (setq running nil)
@@ -602,11 +605,11 @@ If FORCE is non-nil, kill the processes immediately."
 			    (oz-make-temp-name "/tmp/ozpipein"))))
 	  (if (not start-flag) (message "Oz died. Restarting ..."))
 	  (setq oz-using-new-compiler use-new-compiler)
-	  (cond (oz-win32
+	  (cond (oz-using-new-compiler
+		 t)
+		(oz-win32
 		 (make-comint "Oz Compiler"
 			      "ozcompiler" nil "+E"))
-		(oz-using-new-compiler
-		 t)
 		(t
 		 (make-comint "Oz Compiler"
 			      "oz.compiler" nil "-emacs" "-S" file)))
@@ -632,9 +635,9 @@ If FORCE is non-nil, kill the processes immediately."
 	      (funcall oz-emulator-hook file)
 	    (setq oz-emulator-buffer "*Oz Emulator*")
 
-	    (cond (oz-win32 t)
-		  (oz-using-new-compiler
+	    (cond (oz-using-new-compiler
 		   (make-comint "Oz Emulator" "oznc" nil "-E"))
+		  (oz-win32 t)
 		  (t
 		   (make-comint "Oz Emulator"
 				"oz.emulator" nil "-emacs" "-S" file)))
@@ -822,10 +825,9 @@ paragraph."
 (defun oz-send-string (string)
   "Feed STRING to the Oz Compiler, restarting it if it died."
   (oz-check-running nil oz-use-new-compiler)
-  (let ((proc (get-buffer-process
-	       (cond (oz-win32 oz-compiler-buffer)
-		     (oz-using-new-compiler oz-emulator-buffer)
-		     (t oz-compiler-buffer)))))
+  (let ((proc (get-buffer-process (if oz-using-new-compiler
+				      oz-emulator-buffer
+				    oz-compiler-buffer))))
     (comint-send-string proc string)
     (comint-send-string proc "\n")
     (save-excursion
@@ -1917,13 +1919,9 @@ Return nil if the whole STRING goes into the current buffer."
 
 (defun oz-current-outbuffer ()
   "Return the buffer into which the current output has to be redirected."
-  (if oz-using-new-compiler
-      (if oz-read-emulator-output
-	  oz-compiler-buffer
-	oz-emulator-buffer)
-    (if oz-read-emulator-output
-	oz-emulator-buffer
-      oz-compiler-buffer)))
+  (if oz-read-emulator-output
+      oz-emulator-buffer
+    oz-compiler-buffer))
 
 (defun oz-compiler-filter (proc string)
   "Filter for Oz Compiler output.
@@ -1980,6 +1978,20 @@ The rest of the output is then passed through the oz-filter."
 	    ;; remove escape characters
 	    (while (search-forward-regexp oz-remove-pattern nil t)
 	      (replace-match "" nil t))
+
+	    ;; oz-show-temp?
+	    (while (search-forward-regexp oz-show-temp-pattern nil t)
+	      (let ((file (match-string 1)) buf)
+		(replace-match "" nil t)
+		(setq buf (get-buffer oz-temp-buffer))
+		(if (null buf)
+		    (setq buf (generate-new-buffer oz-temp-buffer)))
+		(oz-show-buffer buf)
+		(save-excursion
+		  (set-buffer buf)
+		  (goto-char (point-max))
+		  (insert-file-contents file)
+		  (delete-file file))))
 
 	    ;; oz-bar information?
 	    (while (search-forward-regexp oz-bar-pattern nil t)
@@ -2142,28 +2154,30 @@ If it is, then remove it."
    (interactive "r")
    (oz-directive-on-region start end "\\machine" ".ozm" nil))
 
-(defun oz-directive-on-region (start end directive suffix mode)
+(defun oz-directive-on-region (start end directive suffix enter-oz-mode)
   "Applies a directive to the region."
-   (let ((file-1 (concat oz-temp-file ".oz"))
-	 (file-2 (concat oz-temp-file suffix)))
-     (if (file-exists-p file-2)
-	 (delete-file file-2))
-     (write-region start end file-1)
-     (message "")
-     (shell-command (concat "touch " file-2))
-     (if (get-buffer oz-temp-buffer)
-	 (progn (delete-windows-on oz-temp-buffer)
-		(kill-buffer oz-temp-buffer)))
-     (start-process "Oz Temp" oz-temp-buffer "tail" "+1f" file-2)
-     (message "")
-     (oz-send-string (concat directive " '" file-1 "'"))
-     (let ((buf (get-buffer oz-temp-buffer)))
-       (oz-show-buffer buf)
-       (if mode
-	   (save-excursion
-	     (set-buffer buf)
-	     (oz-mode)
-	     (oz-fontify-buffer))))))
+  (let ((file-1 (concat oz-temp-file ".oz"))
+	(file-2 (concat oz-temp-file suffix)))
+    (if (file-exists-p file-2)
+	(delete-file file-2))
+    (write-region start end file-1)
+    (message "")
+    (if (get-buffer oz-temp-buffer)
+	(progn (delete-windows-on oz-temp-buffer)
+	       (kill-buffer oz-temp-buffer)))
+    (if oz-using-new-compiler
+	(oz-send-string (concat directive " '" file-1 "'"))
+      (shell-command (concat "touch " file-2))
+      (start-process "Oz Temp" oz-temp-buffer "tail" "+1f" file-2)
+      (message "")
+      (oz-send-string (concat directive " '" file-1 "'"))
+      (let ((buf (get-buffer oz-temp-buffer)))
+	(oz-show-buffer buf)
+	(if enter-oz-mode
+	    (save-excursion
+	      (set-buffer buf)
+	      (oz-mode)
+	      (oz-fontify-buffer)))))))
 
 (defun oz-feed-region-browse (start end)
   "Feed the current region to the Oz Compiler.
