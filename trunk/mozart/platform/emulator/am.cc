@@ -247,7 +247,7 @@ void AM::init(int argc,char **argv)
 #endif
 
   if (!initFile) {
-    char* ini = "/lib/Init.ozc";
+    char* ini = "/lib/Init.ozp";
     int m = strlen(ozconf.ozHome);
     int n = m+strlen(ini)+1;
     char*s = new char[n];
@@ -336,8 +336,11 @@ void AM::init(int argc,char **argv)
 
 #ifndef STATIC_LIBOZMA
 
-    char * libfile = strdup(argv[0]);
-    
+    char * libname = "libozma.so";
+    char * libfile = new char[strlen(argv[0]) + strlen(libname)];
+
+    strcpy(libfile, argv[0]);
+
     char * last_slash = 0;
 
     char * c = libfile;
@@ -366,7 +369,7 @@ void AM::init(int argc,char **argv)
       osExit(1);
     }
 
-    free(libfile);
+    delete[] libfile;
 
     void* handle = OZ_getForeignPointer(out);
 
