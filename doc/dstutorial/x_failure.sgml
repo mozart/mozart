@@ -74,7 +74,8 @@ This is because a remote site crucial to the entity
 is currently unreachable due to a network problem.
 This fault state can go away.
 A limitation of the current release is that
-temporary problems are indicated very slowly.
+temporary problems are indicated only after
+a long delay time.
 <ITEM> The entity is permanently not working
 (local fault state <<permFail>>).
 This is because a site crucial to the entity
@@ -121,10 +122,10 @@ In most cases, a <<tempFail>> fault state will eventually go away.
 <P>It is possible for a <<tempFail>> state to last forever.
 For example, if a user disconnects the network connection of a laptop
 machine, then only he or she knows whether the problem is permanent.
-The application cannot know this in general.
-The decision whether to continue waiting on a temporary failure
-or whether to interrupt the wait can cut through all levels of
-abstraction to appear at the top level.
+The application cannot in general know this.
+The decision whether to continue waiting or to stop the wait
+can cut through all levels of
+abstraction to appear at the top level (i.e., the user).
 The application might then pop up a window to ask the user whether
 to continue waiting or not.
 The important thing is that the network layer does not make this decision;
