@@ -293,7 +293,7 @@ define(M4INSTRTWOREGS,``''
 				sPointer = stuple->getRef(),
 				message("getstructure %s/%d = %s",
 					OZ_toC(label),arity,
-					OZ_toC(term)),
+					OZ_toC(*termPtr)),
 				);
 	       }''
 	       );
@@ -340,7 +340,7 @@ define(M4INSTRTWOREGS,``''
 				sPointer = srecord->getRef(),
 				message("getrecord %s/%d = %s",
 					OZ_toC(label),ff,
-					OZ_toC(term)),
+					OZ_toC(*termPtr)),
 				);
 	       }''
 	       );
@@ -417,7 +417,7 @@ define(M4INSTRTWOREGS,``''
 		 HANDLE_FAILURE(PC+3,
 				message("getconstant %s = %s",
 					OZ_toC(atm),
-					OZ_toC(term)),
+					OZ_toC(*termPtr)),
 				);
 	       }''
 	       );
@@ -450,7 +450,7 @@ define(M4INSTRTWOREGS,``''
 		 HANDLE_FAILURE(PC+3,
 				message("getint %s = %s",
 					OZ_toC(i),
-					OZ_toC(term)),
+					OZ_toC(*termPtr)),
 				);
 	       }''
 	       );
@@ -498,7 +498,7 @@ define(M4INSTRTWOREGS,``''
 				 Xreg(reg1) = makeTaggedLTuple(ltuple);
 				 Xreg(reg3) = makeTaggedRef(ltuple
 							    ->getRef()+1),
-				 message("getLisValVar %s", OZ_toC(term)),
+				 message("getLisValVar %s", OZ_toC(*termPtr)),
 				 );
 	       }''
 	       );
@@ -543,7 +543,7 @@ define(M4INSTRTWOREGS,``''
 				 mode = WRITE;
 				 sPointer = ltuple->getRef(),
 				 message("getlist = %s",
-					 OZ_toC(term)),
+					 OZ_toC(*termPtr)),
 				 );
 	       }''
 	       );
