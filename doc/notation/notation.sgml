@@ -1447,7 +1447,7 @@ end
           <P>
             <Rewrite>?={expression}
               <Rewrite.From/<<[?{E1} &ellipsis; ?{En}]>>/
-              <Rewrite.To/<<?{E1}|&ellipsis;|?{En}|nil)>>/
+              <Rewrite.To/<<?{E1}|&ellipsis;|?{En}|nil>>/
             </Rewrite>
             <Rewrite>?={expression}
               <Rewrite.From/<<?{E1}|?{E2}>>/
@@ -1470,27 +1470,27 @@ end
           <P>
             <Rewrite>?={expression} ?={label} ?={feature}
               <Rewrite.From/<<unit>>/
-              <Rewrite.To/<<`unit`>>/
+              <Rewrite.To/<<`Unit.'unit'`>>/
             </Rewrite>
             <Rewrite>?={pattern}
               <Rewrite.From/<<unit>>/
-              <Rewrite.To/<<!`unit`>>/
+              <Rewrite.To/<<!`Unit.'unit'`>>/
             </Rewrite>
             <Rewrite>?={expression} ?={label} ?={feature}
               <Rewrite.From/<<true>>/
-              <Rewrite.To/<<`true`>>/
+              <Rewrite.To/<<`Bool.'true'`>>/
             </Rewrite>
             <Rewrite>?={pattern}
               <Rewrite.From/<<true>>/
-              <Rewrite.To/<<!`true`>>/
+              <Rewrite.To/<<!`Bool.'true'`>>/
             </Rewrite>
             <Rewrite>?={expression} ?={label} ?={feature}
               <Rewrite.From/<<false>>/
-              <Rewrite.To/<<`false`>>/
+              <Rewrite.To/<<`Bool.'false'`>>/
             </Rewrite>
             <Rewrite>?={pattern}
               <Rewrite.From/<<false>>/
-              <Rewrite.To/<<!`false`>>/
+              <Rewrite.To/<<!`Bool.'false'`>>/
             </Rewrite>
       <Section>
         <Title/Constraint Extensions and Combinators/
@@ -1554,7 +1554,11 @@ end>>/
             </Rewrite>
         <SubSection class=unnumbered>
           <Title/Constructive Disjunction/
-          <!--** missing: constructive disjunction -->
+          <P>
+            <!--** missing: constructive disjunction -->
+            Constructive disjunction is currently not specified.
+            See <Ptr.Extern to="ozdoc:system" key="section.fd.condis">
+            for some information about constructive disjunction.
       <Section>
         <Title/Class Extensions/
         <SubSection class=unnumbered>
@@ -1562,15 +1566,15 @@ end>>/
           <P>
             <Rewrite>?={method head} ?={method head label}
               <Rewrite.From/<<unit>>/
-              <Rewrite.To/<<!`unit`>>/
+              <Rewrite.To/<<!`Unit.'unit'`>>/
             </Rewrite>
             <Rewrite>?={method head} ?={method head label}
               <Rewrite.From/<<true>>/
-              <Rewrite.To/<<!`true`>>/
+              <Rewrite.To/<<!`Bool.'true'`>>/
             </Rewrite>
             <Rewrite>?={method head} ?={method head label}
               <Rewrite.From/<<false>>/
-              <Rewrite.To/<<!`false`>>/
+              <Rewrite.To/<<!`Bool.'false'`>>/
             </Rewrite>
         <SubSection class=unnumbered>
           <Title/Operators/
