@@ -41,8 +41,7 @@ define
    %% embeded spaces in filenames and special shell
    %% characters
    
-   QUOTE = if {Property.get 'platform.os'}=='win32'
-	   then '"' else '\'' end
+   QUOTE = if IsWindows then '"' else '\'' end
 
    fun {QuoteUsing CMD Quote}
       %% CMD is a list: we are going to quote each element of
@@ -67,34 +66,14 @@ define
    %% for execution, use the platform specific quote
 
    fun {ToProgramVS CMD} {QuoteUsing CMD QUOTE} end
-   fun {ToCommandVS CMD|ARGS}
-      QARGS={QuoteUsing ARGS QUOTE}
-   in
-      SHELL#' '#CMD#if QARGS==nil then nil else ' '#QARGS end
+   fun {ToCommandVS CMD} SHELL#{QuoteUsing CMD QUOTE} end
+
+   proc {Execute VS}
+      if {OS.system VS}\=0
+%	  if IsWindows then '"'#VS#'"' else VS end}\=0
+      then raise shell(VS) end end
    end
 
-   proc {ExecuteCommand CMD} VS={ToCommandVS CMD} in
-      if {OS.system VS}\=0 then
-	 raise shell(VS) end
-      end
-   end
-   
-   proc {ExecuteProgram CMD}
-      if IsWindows then
-	 PGM={New Open.pipe init(cmd:CMD.1 args:CMD.2)}
-      in
-	 for break:Break do
-	    S={PGM read(list:$)}
-	 in
-	    if S==nil then {Break} else
-	       {System.printError S}
-	    end
-	 end
-	 try {PGM close} catch _ then skip end
-      else VS={ToProgramVS CMD} in
-	 if {OS.system VS}\=0 then
-	    raise shell(VS) end
-	 end
-      end
-   end
+   proc {ExecuteProgram CMD} {Execute {ToProgramVS CMD}} end
+   proc {ExecuteCommand CMD} {Execute {ToCommandVS CMD}} end
 end
