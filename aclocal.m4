@@ -1,59 +1,121 @@
+dnl -*- sh -*-
+dnl
+dnl  Authors:
+dnl    Denys Duchier (duchier@ps.uni-sb.de)
+dnl    Michael Mehl (mehl@dfki.de)
+dnl
+dnl  Copyright:
+dnl    Denys Duchier (1998)
+dnl
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl
+dnl  This file is part of Mozart, an implementation
+dnl  of Oz 3:
+dnl     http://mozart.ps.uni-sb.de
+dnl
+dnl  See the file "LICENSE" or
+dnl     http://mozart.ps.uni-sb.de/LICENSE.html
+dnl  for information on usage and redistribution
+dnl  of this file, and for a DISCLAIMER OF ALL
+dnl  WARRANTIES.
+dnl
+
+dnl ==================================================================
+dnl SRCDIR, SRCTOP, BUILDTOP
+dnl ==================================================================
+
+dnl ------------------------------------------------------------------
+dnl OZ_PATH_SRCDIR
+dnl
+dnl makes sure that $srcdir is absolute and sets SRCDIR.  Obviously
+dnl this one _must_ not be cached or else recursive configure will
+dnl become very confused
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_PATH_SRCDIR,[
+  srcdir=`cd $srcdir && pwd`
+  SRCDIR="$srcdir"
+  AC_SUBST(SRCDIR)
+])
+
+dnl ------------------------------------------------------------------
+dnl OZ_PATH_UPWARD(VAR,DIR,FILES)
+dnl
+dnl looks upward from DIR for a directory that contains one of the
+dnl FILES and sets VAR to the abolute path to this directory, else
+dnl leaves VAR unchanged.  First it looks upward for the 1st file, if
+dnl it does not find it, then it tries with the next file, etc...
+dnl Thus you should list first the files that are more surely
+dnl characteristic of the directory that you are looking for, and last
+dnl those files that are strongly indicative, but not necessarily
+dnl sure bets.
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_PATH_UPWARD,[
+  oz_tmp_dir=[$2]
+  oz_tmp_ok=
+  for oz_tmp1 in [$3]; do
+    for oz_tmp2 in $oz_tmp_dir \
+                   $oz_tmp_dir/.. \
+                   $oz_tmp_dir/../.. \
+                   $oz_tmp_dir/../../.. \
+                   $oz_tmp_dir/../../../.. \
+                   $oz_tmp_dir/../../../../..; do
+      if test -e "$oz_tmp2/$oz_tmp1"; then
+        [$1]=`cd $oz_tmp2 && pwd`
+        oz_tmp_ok=yes
+        break
+      fi
+    done
+    test -n "$oz_tmp_ok" && break
+  done])
+
+dnl ------------------------------------------------------------------
+dnl OZ_PATH_SRCTOP
+dnl
+dnl sets SRCTOP by looking upward from $srcdir for a directory
+dnl containing file OZVERSION
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_PATH_SRCTOP,[
+  AC_CACHE_CHECK([for SRCTOP],oz_cv_path_SRCTOP,[
+    OZ_PATH_UPWARD(oz_cv_path_SRCTOP,$srcdir,[OZVERSION])
+    if test -z "$oz_cv_path_SRCTOP"; then
+      AC_MSG_ERROR([cannot find SRCTOP])
+    fi])
+  SRCTOP=$oz_cv_path_SRCTOP
+  AC_SUBST(SRCTOP)])
+
+dnl ------------------------------------------------------------------
+dnl OZ_PATH_BUILDTOP
+dnl
+dnl sets BUILDTOP by looking upward from the current directory
+dnl for a directory called mozart
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_PATH_BUILDTOP,[
+  AC_CACHE_CHECK([for BUILDTOP],oz_cv_path_BUILDTOP,[
+    OZ_PATH_UPWARD(oz_cv_path_BUILDTOP,.,[contrib config.cache])
+    if test -z "$oz_cv_path_BUILDTOP"; then
+      AC_MSG_ERROR([cannot find BUILDTOP])
+    fi])
+  BUILDTOP=$oz_cv_path_BUILDTOP
+  AC_SUBST(BUILDTOP)])
+
 AC_DEFUN(OZ_INIT, [
-    AC_PREFIX_DEFAULT(/usr/local/oz)
+  AC_PREFIX_DEFAULT(/usr/local/oz)
+  OZ_PATH_SRCDIR
+  OZ_PATH_SRCTOP
+  OZ_PATH_BUILDTOP
+  AC_PROG_MAKE_SET
+  AC_PROG_INSTALL
+  OZ_PATH_PROG(INSTALL_DIR,  mkinstalldirs)
+#OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
+#OZ_PATH_PROG(DYNLD,          ozdynld)
+])
 
-    srcdir=`cd $srcdir && pwd`
-
-    AC_CANONICAL_HOST
-
-    if test -z "$SRCTOP"
-    then
-        for SRCTOP in   $srcdir \
-                        $srcdir/.. \
-                        $srcdir/../.. \
-                        $srcdir/../../.. \
-                        $srcdir/../../../..; do
-          if test -r $SRCTOP/OZVERSION
-          then
-                break
-          fi
-        done
-    fi
-    if test ! -r $SRCTOP/OZVERSION
-    then
-        AC_MSG_ERROR([can't find SRCTOP])
-    fi
-    SRCTOP=`cd $SRCTOP && pwd`
-    AC_SUBST(SRCTOP)
-
-    AC_PROG_MAKE_SET
-    AC_PROG_INSTALL
-    OZ_PATH_PROG(INSTALL_DIR,  mkinstalldirs)
-    #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-    #OZ_PATH_PROG(DYNLD,          ozdynld)
-
-    if test -z "$BUILDTOP"
-    then
-        for BUILDTOP in `pwd` \
-                        `pwd`/.. \
-                        `pwd`/../.. \
-                        `pwd`/../../.. \
-                        `pwd`/../../../.. \
-                        `pwd`/../../../../..; do
-          if test -r $BUILDTOP/config.cache
-          then
-                break
-          fi
-        done
-    fi
-    if test ! -r $BUILDTOP/config.cache
-    then
-        AC_MSG_ERROR([can't find BUILDTOP])
-    fi
-    BUILDTOP=`cd $BUILDTOP && pwd`
-    AC_SUBST(BUILDTOP)
-    ])
-
-echo $P | sed -e "s/^\.:/$X:/g" | sed -e "s/:\.\$/:$X/g" | sed -e "s/:\.:/:$X:/g" | sed "s/:\.\//:$X\//g"
 
 AC_DEFUN(OZ_PATH_PROG, [
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
@@ -100,6 +162,33 @@ AC_DEFUN(OZ_CHECK_LIB, [
                                 LIBS=$oz_saved_LIBS
                                 $4)
                 fi)
+        ])
+
+AC_DEFUN(OZ_CXX_OPTIONS, [
+        ozm_out=
+        if test -n "$1"
+        then
+            echo 'void f(){}' > oz_conftest.c
+            for ozm_opt in $1
+            do
+                AC_MSG_CHECKING(compiler option $ozm_opt)
+                ozm_ropt=`echo $ozm_opt | sed -e 's/[[^a-zA-Z0-9_]]/_/g'`
+                AC_CACHE_VAL(oz_cv_gxxopt_$ozm_ropt,
+                    if test -z "`${CXX} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
+                        eval "oz_cv_gxxopt_$ozm_ropt=yes"
+                    else
+                        eval "oz_cv_gxxopt_$ozm_ropt=no"
+                    fi)
+                if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'}'`\" = yes"; then
+                    ozm_out="$ozm_out $ozm_opt"
+                    AC_MSG_RESULT(yes)
+                else
+                    AC_MSG_RESULT(no)
+                fi
+            done
+            rm -f oz_conftest*
+        fi
+        $2="$ozm_out"
         ])
 
 AC_DEFUN(OZ_CHECK_LIB_PATH, [
@@ -178,7 +267,7 @@ AC_DEFUN(OZ_CONTRIB_INIT_CXX,[
     OZ_CONTRIB_INIT
     AC_PROG_CXX
     if test "${GXX}" = yes; then
-      CXXAVOID="-fno-rtti -fno-exceptions"
+      OZ_CXX_OPTIONS(-fno-rtti -fno-exceptions,CXXAVOID)
     else
       CXXAVOID=
     fi
