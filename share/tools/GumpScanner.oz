@@ -25,13 +25,12 @@
 
 functor prop once
 import
-   Foreign.load
-   Error.{formatGeneric format dispatch}
-   ErrorRegistry.put
-   Finalize.register
+   Error(formatGeneric format dispatch)
+   ErrorRegistry(put)
+   Finalize(register)
+   LexBase at 'GumpScanner.so{native}'
 export
-   'class':       GumpScanner
-
-body
+   'class': GumpScanner
+define
    \insert gump/GumpScannerClass
 end
