@@ -824,7 +824,7 @@
           <Td/yes/
           <Td/<<Bool>>/
           <Td/Only if <<true>>, the fields <<time.copy>>, <<time.gc>>,
-          and <<time.propagate>> are updated accordingly./
+          <<time.propagate>> and <<time.run>> are updated accordingly./
         </Tr>
       </Table>
     </P>
