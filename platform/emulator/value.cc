@@ -396,10 +396,10 @@ GName *Object::globalize() {
       SRecord *r = getRecord(state);
       Assert(r!=NULL);
       Tertiary *cell = tagged2Tert(OZ_newCell(makeTaggedSRecord(r)));
-      cell->globalizeTert(); // mm2: ask ralf
+      cell->globalizeTert(); // getStateInline uses cellDoExchange --> must be globalized
       setState(cell);
-      Object *cl = getOzClass();
-      cl->globalizeTert();   // mm2: ask ralf
+      // Object *cl = getOzClass();
+      // cl->globalizeTert();   // mm2: ask ralf
     }
   }
   return getGName();
