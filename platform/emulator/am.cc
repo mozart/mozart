@@ -1115,7 +1115,7 @@ OZ_Return oz_addSuspendInArgs3(OZ_Term * _OZ_LOC[]) {
 }
 
 #ifdef __GNUC__
-#if __GNUC__>2
+#if defined(XDENYS) || __GNUC__>2
 void AM::setExceptionInfo(TaggedRef inf) {
     if (exception.info == NameUnit) {
       exception.info=oz_nil();

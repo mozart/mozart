@@ -399,7 +399,7 @@ public:
   }
   void setExceptionInfo(TaggedRef inf)
 #ifdef __GNUC__
-#if __GNUC__>2
+#if defined(XDENYS) || __GNUC__>2
     ;
 #else
   {

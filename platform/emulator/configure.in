@@ -160,6 +160,8 @@ dnl *****************************************************************
 
 : ${oz_copt_default=$CXXFLAGS}
 CXXFLAGS=
+export EMULATE_CXXFLAGS=
+AC_SUBST(EMULATE_CXXFLAGS)
 
 if test "${GXX}" = yes; then
     M4_S="-s"
@@ -239,6 +241,7 @@ if test "${GXX}" = yes; then
 	*)
 	    oz_opt="-O3 -pipe -fstrict-aliasing"
 	    oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
+	    EMULATE_CXXFLAGS=-fno-inline-functions
 	    ;;
 	esac
 	;;
