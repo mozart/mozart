@@ -737,7 +737,10 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_NAT(PROP_PERDIO_TEMPRETRYCEILING,ozconf.perdioTempRetryCeiling);
     CASE_NAT(PROP_PERDIO_TEMPRETRYFLOOR,ozconf.perdioTempRetryFloor);
     CASE_NAT(PROP_PERDIO_TEMPRETRYFACTOR,ozconf.perdioTempRetryFactor);
-    CASE_NAT(PROP_PERDIO_MAXTCPCACHE,ozconf.perdioMaxTCPCache);
+    CASE_NAT_DO(PROP_PERDIO_MAXTCPCACHE,{
+      ozconf.perdioMaxTCPCache=INT__;
+      changeMaxTCPCache();
+    });
     CASE_NAT(PROP_PERDIO_CHECKALIVEINTERVAL,ozconf.perdioCheckAliveInterval);
     CASE_NAT(PROP_PERDIO_TIMEOUT,ozconf.perdioTimeout);
     // PERDIO    
