@@ -1422,8 +1422,10 @@ void xyreportError(char *kind, char *msg, const char *file,
   int c;
   while(line > 1) {
     c = fgetc(pFile);
-    if (c == EOF)
+    if (c == EOF) {
+      append("\n%**\n");
       return;
+    }
     if (c == '\n')
       line--;
   }
