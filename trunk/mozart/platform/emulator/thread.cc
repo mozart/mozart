@@ -63,11 +63,12 @@
 
 enum ThreadFlags
 {
-  T_Normal =    0x01,
-  T_SuspCont =  0x02,
-  T_SuspCCont = 0x04,
-  T_Nervous =   0x08,
-  T_Solve =     0x10
+  T_Normal =      0x01,
+  T_SuspCont =    0x02,
+  T_SuspCCont =   0x04,
+  T_Nervous =     0x08,
+  T_Solve =       0x10,
+  T_SolveReduce = 0x20
 };
 
 static int T_No_State = ~(T_Normal | T_SuspCont | T_SuspCCont | T_Nervous);
@@ -184,6 +185,19 @@ void Thread::ScheduleWakeup(Board *b, Bool wasExtSusp)
   t->schedule();
 }
 
+// create a new thread to reduce a solve actor; 
+void Thread::ScheduleSolve (Board *b)
+{
+  DebugCheck ((b->isCommitted () == OK || b->isSolve () == NO),
+	      error ("no solve board in Thread::ScheduleSolve ()"));
+  Thread *t = new Thread;
+  t->flags = (T_Nervous|T_Solve|T_SolveReduce);
+  am.incSolveThreads (b->getParentBoard ());
+  t->priority = b->getActor()->getPriority();
+  t->u.board = b;
+  b->setNervous();
+  t->schedule();
+}
 
 // create a thread with a taskstack
 Thread::Thread(int prio)
@@ -225,6 +239,11 @@ Bool Thread::isNervous()
 Bool Thread::isSolve ()
 {
   return ((flags & T_Solve) ? OK : NO);
+}
+
+Bool Thread::isSolveReduce ()
+{
+  return ((flags & T_SolveReduce) ? OK : NO);
 }
 
 // mm2: not yet enabled
