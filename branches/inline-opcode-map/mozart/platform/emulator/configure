@@ -9857,7 +9857,7 @@ asm("LABEL" OP##N##_STRING":");
 asm("movl \$LABEL"OP##N##_STRING",%0" : "=m" (*ptr))
 #elif defined(ARCH_SPARC)
 #define LOAD_LABEL(N) \
-asm("sethi %%hi(LABEL"OP##N##_STRING"), %0\nor %0, %%lo(LABEL"OP##N##_STRING"), %0" : "=m" (*ptr))
+{ void* reg; asm("sethi %%hi(LABEL"OP##N##_STRING"), %0\nor %0, %%lo(LABEL"OP##N##_STRING"), %0" : "=r" (reg)); *ptr=reg; }
 #else
 #error platform not supported
 #endif
