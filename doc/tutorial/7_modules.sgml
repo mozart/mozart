@@ -9,7 +9,7 @@ visible outside the module and a number of interface procedures that
 provide the external services of the module.
 In Oz there is syntactic support for module specification.
 The concept used is called <EM> functor </EM>.
-A functor specifies what are the components of a module.
+A functor is an expression that specifies the components of a module.
 The Mozart system converts a functor to a module with the help of
 a module manager.
 
@@ -94,7 +94,7 @@ the statement between <<define ... end>> is executed.
 the system in the EMACS OZ menu. Click on the entry Find, and select
 Modules File.
 
-<P CLASS=WARNING>Given
+<P CLASS=TIPS>Given
 a file <<'x.oz'>> defining a functor, you may
 create the corresponding functor <<'x.ozf'>> from
 your shell by typing the command:
