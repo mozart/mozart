@@ -243,7 +243,7 @@ starts the emulator under gdb")
 	    (oz-make-menu-gnu19 newmap (reverse rest))))))
     (oz-make-menu-gnu19 map (cdr list))))
 
-(oz-make-menu
+(defvar oz-menu
  '(("Oz"
     ("Feed Buffer"            . oz-feed-buffer)
     ("Feed Region"            . oz-feed-region)
@@ -294,7 +294,12 @@ starts the emulator under gdb")
     ("Start Oz" . run-oz)
     ("Halt Oz"  . oz-halt)
     ("-----")    
-    )))
+    ))
+
+  "The contents of the Oz menu")
+
+
+(oz-make-menu oz-menu)
 
 ;;------------------------------------------------------------
 ;; Start/Stop oz
