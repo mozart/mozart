@@ -47,10 +47,8 @@ error include resources.hh before mozart.h
 #define PRINT_WIDTH             20
 #define ERROR_PRINT_DEPTH       PRINT_DEPTH
 #define ERROR_PRINT_WIDTH       PRINT_WIDTH
-#define ERROR_THREAD_DEPTH      50
-#define ERROR_LOCATION          1
+#define ERROR_THREAD_DEPTH      20
 #define ERROR_DEBUG             1
-#define ERROR_HINTS             1
 
 #define TIME_SLICE              50  /* ms */
 #define CLOCK_TICK              TIME_SLICE*(1000/5)     /* usec */
