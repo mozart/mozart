@@ -66,7 +66,7 @@ local
 	 {Rep logSubPhase('writing flex input file ...')}
 	 {WriteVSFile Flex FlexFile}
 	 {Rep logSubPhase('generating scanner tables ...')}
-	 case {OS.system PLATFORMDIR#'/tools/gump/flex -Cem '#FlexFile} \= 0
+	 case {OS.system PLATFORMDIR#'/share/gump/flex -Cem '#FlexFile} \= 0
 	 then
 	    {Rep error(kind: 'system error'
 		       msg: 'invocation of ozflex failed')}

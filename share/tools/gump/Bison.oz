@@ -38,7 +38,7 @@ in
       else
 	 lock L then
 	    case {IsFree BisonModule} then
-	       BisonModule = {Foreign.load 'www.ps.uni-sb.de/ozhome/tools/gump/ozbison.dl'}
+	       BisonModule = {Foreign.load 'www.ps.uni-sb.de/ozhome/share/gump/ozbison.dl'}
 	    else skip
 	    end
 	 end
