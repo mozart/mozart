@@ -652,7 +652,10 @@ Note that this method is only for advanced purposes.
 
 <section id=sec-text-obj><title/The Class <<Open.text>>/
 <p>
-The mixin class <<Open.text>> has the following methods.
+The mixin class <<Open.text>> has the methods listed below.  Note,
+however, that it does not automatically cause a file to be opened in
+<code/text/ mode; that must be done explicitly in the <code/init/
+method by supplying <code/text/ as one of the flags.
 <index scope=sec-text-obj/Open<AND>text/
 
 <list>
