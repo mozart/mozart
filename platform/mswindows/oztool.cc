@@ -1,11 +1,11 @@
 /*
  *  Authors:
- *    Ralf Scheidhauer <scheidhr@dfki.de>
  *    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+ *    Ralf Scheidhauer <scheidhr@dfki.de>
  *
  *  Copyright:
- *    Ralf Scheidhauer, 1999
  *    Leif Kornstaedt, 1999
+ *    Ralf Scheidhauer, 1999
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -33,22 +33,20 @@
 //
 // Summary of how oztool behaves:
 //
-// oztool -gnu c++ -c <files>
-//    g++ -I"$OZHOME/include" -c <files>
-// oztool -gnu cc -c <files>
-//    gcc -I"$OZHOME/include" -c <files>
+// oztool -gnu c++ -c <cfile> [ -o <ofile> ]
+//    g++ -I"$OZHOME/include" -c <cfile> [ -o <ofile> ]
+// oztool -gnu cc -c <cfile> [ -o <ofile> ]
+//    gcc -I"$OZHOME/include" -c <cfile> [ -o <ofile> ]
 // oztool -gnu ld -o <target> <file1> ... <filen>
 //    dlltool --def $OZHOME/include/emulator.def --output-lib <tmpfile>.a
 //    dllwrap -s -o <target> --dllname <target> <file1> ... <filen> \
 //       <tmpfile>.a -lmsvcrt
 //    rm <tmpfile>.a
 //
-// oztool -msvc c++ -c <files> -o <outfile>
-//    cl -nologo -TP -I"$OZHOME\include" -c <files>
-//    // where `-o <outfile>' within <files> is converted to `-Fo<outfile>'
-// oztool -msvc cc -c <files>
-//    cl -nologo -TC -I"$OZHOME\include" -c <files>
-//    // where `-o <outfile>' within <files> is converted to `-Fo<outfile>'
+// oztool -msvc c++ -c <cfile> [ -o <ofile> ]
+//    cl -nologo -TP -I"$OZHOME\include" -c <cfile> [ -Fo<ofile> ]
+// oztool -msvc cc -c <cfile> [ -o <ofile> ]
+//    cl -nologo -TC -I"$OZHOME\include" -c <cfile> [ -Fo<ofile> ]
 // oztool -msvc ld -o <target> <file1> ... <filen>
 //    lib /nologo /def:$OZHOME\include\emulator.def /machine:ix86 \
 //       /out:<tmpfile>.lib
@@ -56,25 +54,28 @@
 //       /nodefaultlib:libc.lib /defaultlib:msvcrt.lib
 //    rm <tmpfile>.lib <tmpfile>.exp
 //
-// oztool -watcom c++ -c <files>
-//    wpp386 -zq -bd -I"$OZHOME/include" -c <files>
-// oztool -watcom cc -c <files>
-//    wcc386 -zq -bd -I"$OZHOME/include" -c <files>
+// oztool -watcom c++ -c <cfile> [ -o <ofile> ]
+//    wpp386 -zq -bd -5s -i=$OZHOME\include <cfile> [ -fo=<ofile> ]
+// oztool -watcom cc -c <cfile> [ -o <ofile> ]
+//    wcc386 -zq -bd -5s -i=$OZHOME\include <cfile> [ -fo=<ofile> ]
 // oztool -watcom ld -o <target> <file1> ... <filen>
-//    wlink system nt_dll initinstance terminstance name <target> \
-//       file <file1>,...,<filen>
+//    wlib /q /n <tmpfile>.lib @$OZHOME\include\emulator.cmd
+//    wlink system nt_dll name <target> \
+//       file <file1>,...,<filen> library <tmpfile>.lib
+//    rm <tmpfile>.lib
 //
 
 bool console = true;
 
 void usage()
 {
-  fprintf(stderr,
-          "Usage:\n"
-          "\toztool [-verbose] [-gnu|-msvc|-watcom] c++ -c SourceFile\n"
-          "\toztool [-verbose] [-gnu|-msvc|-watcom] cc  -c SourceFile\n"
-          "\toztool [-verbose] [-gnu|-msvc|-watcom] ld  -o TargetLib FileList\n"
-          "\toztool platform\n");
+  fprintf
+    (stderr,
+     "Usage:\n"
+     "\toztool [-verbose] [-gnu|-msvc|-watcom] c++ -c <cfile> [ -o <ofile> ]\n"
+     "\toztool [-verbose] [-gnu|-msvc|-watcom] cc  -c <cfile> [ -o <ofile> ]\n"
+     "\toztool [-verbose] [-gnu|-msvc|-watcom] ld  -o <target> <files>\n"
+     "\toztool platform\n");
   exit(2);
 }
 
@@ -130,17 +131,28 @@ void doexit(int n)
   exit(n);
 }
 
+char *shorten(char *path)
+{
+  static char buffer[2048];
+  int n = GetShortPathName(path,buffer,sizeof(buffer));
+  if (n == 0 || n >= sizeof(buffer))
+    doexit(17);
+  return buffer;
+}
+
 int verbose = 0;
 
-int execute(char **argv)
+int execute(char **argv, bool dontQuote)
 {
   char buffer[4096];
   char *aux = buffer;
   while (*argv) {
-    *aux++ = '\"';
+    if (!dontQuote)
+      *aux++ = '\"';
     strcpy(aux,*argv);
     aux += strlen(*argv++);
-    *aux++ = '\"';
+    if (!dontQuote)
+      *aux++ = '\"';
     *aux++ = ' ';
   }
   *aux = '\0';
@@ -208,45 +220,60 @@ int main(int argc, char** argv)
     argv++; argc--;
   }
 
-  if ((!strcmp(argv[1],"cc") || !strcmp(argv[1],"c++")) && argc > 2) {
+  if ((!strcmp(argv[1],"cc") || !strcmp(argv[1],"c++"))
+      && (argc == 4 || argc == 6) && !strcmp(argv[2],"-c")
+      && (argc == 4 || !strcmp(argv[4],"-o"))) {
     int cxx = !strcmp(argv[1],"c++");
+    char **ccCmd;
     int r = 0;
-    char **ccCmd = new char*[argc + 5];
+    bool dontQuote = false;
     switch (sys) {
     case SYS_GNU:
+      ccCmd = new char*[argc == 4? 5: 7];
       if (cxx)
         ccCmd[r++] = "g++";
       else
         ccCmd[r++] = "gcc";
+      ccCmd[r++] = concat("-I",concat(getOzHome(true),"/include"));
+      ccCmd[r++] = "-c";
+      ccCmd[r++] = argv[3];
+      if (argc == 6) {
+        ccCmd[r++] = "-o";
+        ccCmd[r++] = argv[5];
+      }
       break;
     case SYS_MSVC:
-      ccCmd[r++] = "cl.exe";
+      ccCmd = new char*[argc == 4? 7: 8];
+      ccCmd[r++] = "cl";
       ccCmd[r++] = "-nologo";
       if (cxx)
         ccCmd[r++] = "-TP";
       else
         ccCmd[r++] = "-TC";
+      ccCmd[r++] = concat("-I",concat(getOzHome(false),"\\include"));
+      ccCmd[r++] = "-c";
+      ccCmd[r++] = argv[3];
+      if (argc == 6)
+        ccCmd[r++] = concat("-Fo",argv[5]);
       break;
     case SYS_WATCOM:
+      ccCmd = new char*[argc == 4? 7: 8];
       if (cxx)
         ccCmd[r++] = "wpp386";
       else
         ccCmd[r++] = "wcc386";
       ccCmd[r++] = "-zq";
       ccCmd[r++] = "-bd";
+      ccCmd[r++] = "-5s";
+      ccCmd[r++] = concat("-i=",concat(shorten(getOzHome(false)),"\\include"));
+      ccCmd[r++] = argv[3];
+      if (argc == 6)
+        ccCmd[r++] = concat("-fo=",argv[5]);
+      dontQuote = true;
       break;
     }
-    ccCmd[r++] = concat("-I",concat(getOzHome(false),"\\include"));
-    ccCmd[r++] = "-DWINDOWS";
-    for (int i = 2; i < argc; i++) {
-      if (sys == SYS_MSVC && !strcmp(argv[i],"-o")) {
-        ccCmd[r++] = concat("-Fo",argv[++i]);
-      } else {
-        ccCmd[r++] = argv[i];
-      }
-    }
     ccCmd[r] = NULL;
-    r = execute(ccCmd);
+    r = execute(ccCmd,dontQuote);
     doexit(r);
   } else if (!strcmp(argv[1],"ld") && argc >= 4 && !strcmp(argv[2],"-o")) {
     if (argc == 4) {
@@ -256,15 +283,15 @@ int main(int argc, char** argv)
     switch (sys) {
     case SYS_GNU:
       {
-        char *tmpfile = concat(ostmpnam(),".a");
+        char *tmpfile_a = concat(ostmpnam(),".a");
         char **dlltoolCmd = new char*[6];
         dlltoolCmd[0] = "dlltool";
         dlltoolCmd[1] = "--def";
         dlltoolCmd[2] = concat(getOzHome(true),"/include/emulator.def");
         dlltoolCmd[3] = "--output-lib";
-        dlltoolCmd[4] = tmpfile;
+        dlltoolCmd[4] = tmpfile_a;
         dlltoolCmd[5] = NULL;
-        int r = execute(dlltoolCmd);
+        int r = execute(dlltoolCmd,false);
         if (!r) {
           char **dllwrapCmd = new char*[argc+4];
           dllwrapCmd[r++] = "dllwrap";
@@ -273,75 +300,74 @@ int main(int argc, char** argv)
           dllwrapCmd[r++] = target;
           for (int i = 4; i < argc; i++)
             dllwrapCmd[r++] = argv[i];
-          dllwrapCmd[r++] = tmpfile;
+          dllwrapCmd[r++] = tmpfile_a;
           dllwrapCmd[r++] = "-lmsvcrt";
           dllwrapCmd[r] = NULL;
-          r = execute(dllwrapCmd);
+          r = execute(dllwrapCmd,false);
         }
-        unlink(tmpfile);
+        unlink(tmpfile_a);
         doexit(r);
       }
     case SYS_MSVC:
       {
-        char *tmpfile1 = toUnix(ostmpnam());
-        char *tmpfile1lib = concat(tmpfile1,".lib");
-        char *tmpfile1exp = concat(tmpfile1,".exp");
+        char *tmpfile = toUnix(ostmpnam());
+        char *tmpfile_lib = concat(tmpfile,".lib");
+        char *tmpfile_exp = concat(tmpfile,".exp");
         char **libCmd = new char *[6];
-        libCmd[0] = "lib.exe";
+        libCmd[0] = "lib";
         libCmd[1] = "/nologo";
         libCmd[2] =
           concat("/def:",concat(getOzHome(false),"\\include\\emulator.def"));
         libCmd[3] = "/machine:ix86";
-        libCmd[4] = concat("/out:",tmpfile1lib);
+        libCmd[4] = concat("/out:",tmpfile_lib);
         libCmd[5] = NULL;
-        int r = execute(libCmd);
+        int r = execute(libCmd,false);
         if (!r) {
           char **linkCmd = new char *[argc + 3];
           r = 0;
-          linkCmd[r++] = "link.exe";
+          linkCmd[r++] = "link";
           linkCmd[r++] = "/nologo";
           linkCmd[r++] = "/dll";
           linkCmd[r++] = concat("/out:",target);
           for (int i = 4; i < argc; i++)
             linkCmd[r++] = argv[i];
-          linkCmd[r++] = tmpfile1lib;
+          linkCmd[r++] = tmpfile_lib;
           linkCmd[r++] = "/nodefaultlib:libc.lib";
           linkCmd[r++] = "/defaultlib:msvcrt.lib";
           linkCmd[r] = NULL;
-          r = execute(linkCmd);
+          r = execute(linkCmd,false);
         }
-        unlink(tmpfile1lib);
-        unlink(tmpfile1exp);
+        unlink(tmpfile_lib);
+        unlink(tmpfile_exp);
         doexit(r);
       }
     case SYS_WATCOM:
       {
-        char *tempfile=concat(ostmpnam(),".obj");
-        char **wuergs = new char*[7];
-        wuergs[0]="wcc386";
-        wuergs[1]="-zq";
-        wuergs[2]="-bd";
-        wuergs[3]="-I.";//oz_include();
-        wuergs[4]="mozart.c";//get_mozart_c();
-        wuergs[5]=concat("-fo=",tempfile);
-        wuergs[6]=NULL;
-        int r = execute(wuergs);
+        char *tmpfile_lib = concat(ostmpnam(),".lib");
+        char **wlibCmd = new char*[6];
+        wlibCmd[0] = "wlib";
+        wlibCmd[1] = "/q";
+        wlibCmd[2] = "/n";
+        wlibCmd[3] = tmpfile_lib;
+        wlibCmd[4] = concat("@",concat(shorten(getOzHome(false)),
+                                       "\\include\\emulator.cmd"));
+        wlibCmd[5] = NULL;
+        int r = execute(wlibCmd,true);
         if (!r) {
-          char **links = new char*[10];
-          char *libname = argv[3];
-          links[0]="wlink";
-          links[1]="system";
-          links[2]="nt_dll";
-          links[3]="initinstance";
-          links[4]="terminstance";
-          links[5]="name";
-          links[6]=libname;
-          links[7]="file";
-          links[8]=concat(tempfile,concat(",",commaList(argv,4,argc)));
-          links[9]=NULL;
-          r=execute(links);
+          char **wlinkCmd = new char*[10];
+          wlinkCmd[0] = "wlink";
+          wlinkCmd[1] = "system";
+          wlinkCmd[2] = "nt_dll";
+          wlinkCmd[3] = "name";
+          wlinkCmd[4] = target;
+          wlinkCmd[5] = "file";
+          wlinkCmd[6] = commaList(argv,4,argc);
+          wlinkCmd[7] = "library";
+          wlinkCmd[8] = tmpfile_lib;
+          wlinkCmd[9] = NULL;
+          r = execute(wlinkCmd,true);
         }
-        unlink(tempfile);
+        unlink(tmpfile_lib);
         doexit(r);
       }
     }
