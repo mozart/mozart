@@ -38,7 +38,7 @@ http://www.cs.washington.edu/homes/voelker/ntemacs.html</Ref.Extern>
 <item> Afterwards you install Mozart. (If you upgrade to
 a newer version of Mozart you only have to perform the second step).
 <p>
-Get the <Ref.Extern to="http://mozart.ps.uni-sb.de/download/winarchive.shtml">self-extracting executable</Ref.Extern>,
+Get the self-extracting executable from the<Ref.Extern to="http://mozart.ps.uni-sb.de/download/winarchive.shtml">download page</Ref.Extern>,
 execute it, and follow the instructions.
 </list>
 
@@ -49,13 +49,14 @@ execute it, and follow the instructions.
 <chapter id=chapter.unix>
     <title/Unix/
 <p>
-To install Oz on Unix you only have to read <ptr to=sec.installunix>
-and optionally <ptr to=sec.emacsunix> if you have not yet installed
-Emacs.
+To install a binary Mozart release on a Unix system you only have to
+read <ptr to=sec.installunix> and optionally <ptr to=sec.emacsunix> if
+you have not yet installed Emacs but want to devlop Oz applications
+yourself.
 
     <section id=sec.installunix><title/Installing a Binary Mozart Release/
 <p>
-A binary Mozart release can be installed in any directory. There are
+A binary Mozart release can be installed into any directory. There are
 no paths compiled into the binaries. The system configures itself on
 startup. In the following we explain the installation of Mozart into
 the directory
@@ -67,26 +68,46 @@ different directory.
 <p>
 
 <list ENUM>
-<item>Download the binary tarballs from <Ref.Extern to="http://mozart.ps.uni-sb.de/download/">http://mozart.ps.uni-sb.de/download</Ref.Extern> for your particular platform.
-<p>
+<item>Download the binary tarballs for your particular platform from
+<Ref.Extern
+to="http://mozart.ps.uni-sb.de/download/">http://mozart.ps.uni-sb.de/download</Ref.Extern>.
 <item>Unpack the tarballs by executing
 <code display>
 % cd /usr/local
-% gunzip -cd mozart-?{version}-?{platform}.tar.gz         | tar -xvf
-% gunzip -cd mozart-?{version}-?{platform}-contrib.tar.gz | tar -xvf
-% gunzip -cd mozart-?{version}-?{platform}-doc.tar.gz     | tar -xvf
+% gzip -cd mozart-?{version}-?{platform}.tar.gz         | tar -xvf
+% gzip -cd mozart-?{version}-?{platform}-contrib.tar.gz | tar -xvf
+% gzip -cd mozart-?{version}-?{platform}-doc.tar.gz     | tar -xvf
 </code>
 Replace ?{version} and ?{platform} appropriately.
 Depending on which packages you selected during download you may skip
 one or more of the last three commands.
+<item>[Optional] Extend your PATH environment variable:
+<code display>
+% setenv PATH ${PATH}:/usr/local/mozart/bin
+</code>
+<item>[Optional] Some people do not want to change each users PATH
+variable, but prefer drawing links from a common bin directory to the
+Mozart bin directory. In this case however you have to edit
+<code display>
+/usr/local/mozart/bin/oz
+</code>
+slightly at the beginning: simply uncomment and adapt the line
+<code display>
+#OZHOME=/usr/local/mozart
+</code>
+appropriately. Then you can draw links like this:
+<code display>
+% cd /usr/local/bin
+% ln -s /usr/local/mozart/bin/* .
+</code>
 </list>
     </section>
 
     <section id=sec.emacsunix><title/Getting a UNIX version of Emacs/
 <p>
-    Oz needs a version of Emacs that supports the X Window System
-environment. You can either use GNU Emacs version 19.28 or higher
-which is available from <p>
+The Oz programming environment (OPI) ist based on the Emacs
+editor. You can either use GNU Emacs version 19.28 or higher which is
+available from <p>
 
 <Ref.Extern to="http://www.gnu.org/software/emacs/emacs.html">
 http://www.gnu.org/software/emacs/emacs.html</Ref.Extern>
@@ -100,7 +121,7 @@ from <p>
 
 For the unexperienced user we recommend using XEmacs, since it is
 distributed in binary form and its ease of installation. When Oz comes
-uo, it tries to invoke Emacs via the command <code/emacs/. If your
+up, it tries to invoke Emacs via the command <code/emacs/. If your
 version of Emacs has to be invoked with a different command name, say
 <code/emacs20/, you can achieve this by setting the environment
 variable <code/OZEMACS/ as in
