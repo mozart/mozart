@@ -353,15 +353,6 @@ public:
 };
 
 //
-inline Bool isLowEndian() {
-  DoubleConv dc;
-  dc.u.i[0] = 1;
-  return dc.u.c[0] == 1;
-}
-//
-static const Bool lowendian = isLowEndian();
-
-//
 // Basic data structures;
 // Primitive:
 void marshalSmallInt(MarshalerBuffer *bs, OZ_Term siTerm);

@@ -186,13 +186,13 @@ char *getString(MarshalerBuffer *bs, unsigned int i)
 double unmarshalFloat(MarshalerBuffer *bs)
 {
   static DoubleConv dc;
-  if (lowendian) {
+#if defined(ARCH_LITTLE_ENDIAN) && !defined(ARCH_BIG_WORDIAN)
     dc.u.i[0] = unmarshalNumber(bs);
     dc.u.i[1] = unmarshalNumber(bs);
-  } else {
+#else
     dc.u.i[1] = unmarshalNumber(bs);
     dc.u.i[0] = unmarshalNumber(bs);
-  }
+#endif
   return dc.u.d;
 }
 
@@ -282,17 +282,17 @@ char *getStringRobust(MarshalerBuffer *bs, unsigned int i, int *error)
 double unmarshalFloatRobust(MarshalerBuffer *bs, int *overflow)
 {
   static DoubleConv dc;
-  if (lowendian) {
+#if defined(ARCH_LITTLE_ENDIAN) && !defined(ARCH_BIG_WORDIAN)
     dc.u.i[0] = unmarshalNumberRobust(bs, overflow);
     if(*overflow) return 0.0;
     dc.u.i[1] = unmarshalNumberRobust(bs, overflow);
     if(*overflow) return 0.0;
-  } else {
+#else
     dc.u.i[1] = unmarshalNumberRobust(bs, overflow);
     if(*overflow) return 0.0;
     dc.u.i[0] = unmarshalNumberRobust(bs, overflow);
     if(*overflow) return 0.0;
-  }
+#endif
   return dc.u.d;
 }
 

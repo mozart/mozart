@@ -43,13 +43,13 @@ void marshalFloat(MARSHALERBUFFER *bs, double d)
 {
   static DoubleConv dc;
   dc.u.d = d;
-  if (lowendian) {
+#if defined(ARCH_LITTLE_ENDIAN) && !defined(ARCH_BIG_WORDIAN)
     marshalNumber(bs, dc.u.i[0]);
     marshalNumber(bs, dc.u.i[1]);
-  } else {		       
+#else
     marshalNumber(bs, dc.u.i[1]);
     marshalNumber(bs, dc.u.i[0]);
-  }
+#endif
 }
 
 //

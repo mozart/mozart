@@ -970,6 +970,65 @@ OZ_CHECK_DLOPEN_UNDERSCORE
 # AC_CHECK_SIZEOF(int)
 # AC_C_BIGENDIAN
 
+AC_CACHE_CHECK([for little-endianness],
+  oz_cv_little_endian,
+  [AC_TRY_RUN([
+class DoubleConv {
+public:
+  union {
+    unsigned char c[sizeof(double)];
+    int i[sizeof(double)/sizeof(int)];
+    double d;
+  } u;
+};
+int main() {
+  DoubleConv dc;
+  dc.u.i[0]=1;
+  return (dc.u.c[0]==1)?0:-1;
+}
+],
+oz_cv_little_endian=yes,
+oz_cv_little_endian=no,
+AC_MSG_ERROR([cannot determine endianness when cross-compiling]))])
+
+if test "$oz_cv_little_endian" = yes; then
+  AC_DEFINE(ARCH_LITTLE_ENDIAN)
+fi
+
+if test "$oz_cv_little_endian" = yes; then
+AC_CACHE_CHECK([for big-wordianness],
+  oz_cv_big_wordian,
+  [AC_TRY_RUN([
+class DoubleConv {
+public:
+  union {
+    unsigned char c[sizeof(double)];
+    int i[sizeof(double)/sizeof(int)];
+    double d;
+  } u;
+};
+int main() {
+  DoubleConv dc;
+  dc.u.d = 123e-57;
+  return (dc.u.i[0]==152689723);
+}
+],oz_cv_big_wordian=yes,
+  oz_cv_big_wordian=no,
+  AC_MSG_ERROR([cannot determine wordianness when cross-compiling]))])
+
+if test "$oz_cv_big_wordian" = yes; then
+  AC_DEFINE(ARCH_BIG_WORDIAN)
+  ## sanity check
+  case "$platform" in
+  linux-arm);;
+  *)
+    AC_MSG_ERROR([the combination little-endian/big-wordian is only expected on the ARM architecture.])
+    ;;
+  esac
+fi
+fi
+
+
 # check malloc base
 
 dnl ****************************************************************
