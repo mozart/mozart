@@ -339,7 +339,7 @@ in
 	 case RemoveEmacsBar then
 	    {self.BarCanvas tk(conf scrollregion: q(7 3 7 3))}
 	    case {Cget emacs} then
-	       {Emacs removeBar}
+	       {Emacs.condSend.interface removeBar}
 	    else skip end
 	 else skip end
 	 local
@@ -401,7 +401,8 @@ in
 			 ' Heap: ' # {FormatSize S.heap})
 		       o(T conf state:disabled)]}
 	    case {Cget emacs} then
-	       {Emacs bar(file:S.file line:S.line column:unit state:runnable)}
+	       {Emacs.condSend.interface
+		bar(file:S.file line:S.line column:unit state:runnable)}
 	    else skip end
 	 end
       end
@@ -459,7 +460,7 @@ in
       meth toggleEmacs
 	 case {Cget emacs} then
 	    Gui,doStatus('Not using Emacs Bar')
-	    {Emacs removeBar}
+	    {Emacs.condSend.interface removeBar}
 	 else
 	    Gui,doStatus('Using Emacs Bar')
 	 end

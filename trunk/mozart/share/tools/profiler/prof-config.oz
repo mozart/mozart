@@ -152,7 +152,7 @@ end
 %% the config object to read/write changeable options
 %% first, some initial values... (read from a config file someday?)
 
-ConfigEmacs     = {Not {System.get standalone}} % should we use Emacs?
+ConfigEmacs     = {Emacs.getOPI} \= false % should we use Emacs?
 ConfigUpdate    = UpdateTimes.1.1  % Automatic update interval
 ConfigThreshold = t(calls:2 closures:2 samples:2 heap:256)
 
