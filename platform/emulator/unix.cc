@@ -3,11 +3,9 @@
  *    Michael Mehl (mehl@dfki.de)
  *    Christian Schulte (schulte@dfki.de)
  *
- *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
- *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Michael Mehl, 1997
+ *    Christian Schulte, 1997
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -1000,67 +998,6 @@ OZ_C_ioproc_begin(unix_bindInet,2)
 OZ_C_proc_end
 
 
-
-#ifndef OS2_I486
-#ifndef WINDOWS
-OZ_C_ioproc_begin(unix_bindUnix,2)
-{
-  OZ_declareIntArg(0,s);
-  OZ_declareVsArg(1,path);
-
-  struct sockaddr_un addr;
-
-  memset((char *)&addr, 0, sizeof (addr));
-  addr.sun_family = AF_UNIX;
-  strcpy(addr.sun_path, path);
-
-  WRAPCALL(bind(s, (struct sockaddr *)&addr, sizeof(struct
-                                                    sockaddr_un)),ret);
-  return PROCEED;
-}
-OZ_C_proc_end
-
-
-OZ_C_ioproc_begin(unix_connectUnix, 2)
-{
-  OZ_declareIntArg(0,s);
-  OZ_declareVsArg(1,path);
-
-  struct sockaddr_un addr;
-
-  memset((char *)&addr, 0, sizeof (addr));
-  addr.sun_family = AF_UNIX;
-  strcpy(addr.sun_path, path);
-
-  int ret = osconnect(s,(struct sockaddr *) &addr,sizeof(struct sockaddr_un));
-  if(ret<0) {
-    Assert(errno != EINTR);
-    RETURN_UNIX_ERROR;
-  }
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-
-OZ_C_ioproc_begin(unix_acceptUnix,3)
-{
-  OZ_declareIntArg(0, sock);
-  OZ_declareArg(1, path);
-  OZ_declareArg(2, out);
-
-  struct sockaddr_un from;
-  int fromlen = sizeof from;
-
-  WRAPCALL(osaccept(sock,(struct sockaddr *)&from, &fromlen), fd);
-
-  return (OZ_unify(path, OZ_string(from.sun_path)) == PROCEED
-    && OZ_unifyInt(out, fd) == PROCEED) ? PROCEED: FAILED;
-}
-OZ_C_proc_end
-
-#endif  /* WINDOWS */
-
 OZ_C_ioproc_begin(unix_getSockName,2)
 {
   OZ_declareIntArg(0,s);
@@ -1294,62 +1231,6 @@ OZ_C_ioproc_begin(unix_sendToInet, 6)
 }
 OZ_C_proc_end
 
-#ifndef WINDOWS
-OZ_C_ioproc_begin(unix_sendToUnix, 5)
-{
-  OZ_declareIntArg(0, sock);
-  DeclareNonvarArg(1, vs);
-  DeclareAtomListArg(2, OzFlags);
-  OZ_declareVsArg(3, path);
-  OZ_declareArg(4, out);
-
-  int flags;
-  OZ_Return flagBool;
-
-  if (!((flagBool = get_send_recv_flags(OzFlags,&flags)) == PROCEED))
-      return flagBool;
-
-  CHECK_WRITE(sock);
-
- {
-   struct sockaddr_un addr;
-   addr.sun_family = AF_UNIX;
-   strcpy(addr.sun_path, path);
-
-   int len;
-   OZ_Return status;
-   OZ_Term rest, susp;
-   vs_buff(write_buff);
-
-   status = buffer_vs(vs, write_buff, &len, &rest, &susp);
-
-   if (status != PROCEED && status != SUSPEND)
-     return status;
-
-   WRAPCALL(sendto(sock, write_buff, len, flags,
-                   (struct sockaddr *) &addr, sizeof(addr)), ret);
-
-   if (len==ret && status != SUSPEND) {
-     return OZ_unifyInt(out, len);
-   }
-
-   if (status != SUSPEND) {
-     susp = nil();
-     rest = susp;
-   }
-
-   if (len > ret) {
-     OZ_Term rest_all = OZ_pair2(buff2list(len - ret, write_buff + ret), rest);
-
-     RETURN_SUSPEND(out,OZ_int(ret),susp,rest_all);
-   } else {
-     RETURN_SUSPEND(out,OZ_int(ret),susp,rest);
-   }
- }
-}
-OZ_C_proc_end
-#endif  /* WINDOWS */
-
 
 OZ_C_ioproc_begin(unix_shutDown, 2)
 {
@@ -1407,47 +1288,6 @@ OZ_C_ioproc_begin(unix_receiveFromInet,8)
 
 }
 OZ_C_proc_end
-
-#ifndef WINDOWS
-OZ_C_ioproc_begin(unix_receiveFromUnix,7)
-{
-  OZ_declareIntArg(0,sock);
-  OZ_declareIntArg(1,maxx);
-  DeclareAtomListArg(2, OzFlags);
-  OZ_declareArg(3, hd);
-  OZ_declareArg(4, tl);
-  OZ_declareArg(5, path);
-  OZ_declareArg(6, outN);
-
-  int flags;
-  OZ_Return flagBool;
-
-  if (!((flagBool = get_send_recv_flags(OzFlags,&flags)) == PROCEED))
-      return flagBool;
-
-  CHECK_READ(sock);
-
-  char *buf = (char *) malloc(maxx+1);
-
-  struct sockaddr_un from;
-  int fromlen = sizeof from;
-
-  WRAPCALL(recvfrom(sock, buf, maxx, flags,
-                    (struct sockaddr*)&from, &fromlen),ret);
-
-  OZ_Term localhead = openbuff2list(ret, buf, tl);
-
-  free(buf);
-
-  return (OZ_unify(localhead, hd) == PROCEED
-          && OZ_unify(path, OZ_string(from.sun_path)) == PROCEED
-          && OZ_unifyInt(outN, ret) == PROCEED) ? PROCEED : FAILED;
-
-}
-OZ_C_proc_end
-
-#endif   /* WINDOWS */
-#endif   /* OS2 */
 
 
 const int maxArgv = 100;
@@ -1917,11 +1757,6 @@ OZ_C_ioproc_begin(Fun,Arity)                            \
 OZ_C_proc_end
 
 
-NotAvail("Unix.bind",        2, unix_bindUnix);
-NotAvail("Unix.sendTo",      5, unix_sendToUnix);
-NotAvail("Unix.connect",     2, unix_connectUnix);
-NotAvail("Unix.accept",      3, unix_acceptUnix);
-NotAvail("Unix.receiveFrom", 7, unix_receiveFromUnix);
 #ifndef GNUWIN32
 NotAvail("OS.getServByName",   3, unix_getServByName);
 NotAvail("OS.wait",            2, unix_wait);
@@ -1975,11 +1810,6 @@ OZ_BIspec spec[] = {
   {"OS.wait",            2, unix_wait},
   {"OS.getServByName",   3, unix_getServByName},
   {"OS.uName",           1, unix_uName},
-  {"Unix.bind",          2, unix_bindUnix},
-  {"Unix.sendTo",        5, unix_sendToUnix},
-  {"Unix.connect",       2, unix_connectUnix},
-  {"Unix.accept",        3, unix_acceptUnix},
-  {"Unix.receiveFrom",   7, unix_receiveFromUnix},
   {0,0,0}
 };
 
