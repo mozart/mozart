@@ -1,5 +1,7 @@
 BUILDTOP        = @BUILDTOP@
 prefix          = @prefix@
+SRCDIR          = @srcdir@
+VPATH           = @srcdir@
 PLATFORM        = @PLATFORM@
 PACKAGE         = @PACKAGE@
 PROTOCOL        = @PROTOCOL@
@@ -13,7 +15,7 @@ MKINSTALLDIRS   = @MKINSTALLDIRS@
 
 CXX             = @CXX@
 CXXFLAGS        = @CXXFLAGS@
-CPPBASE         = -I../../platform/emulator -I$(prefix)/include
+CPPBASE         = -I$(SRCDIR)/../../platform/emulator -I$(prefix)/include
 CPPFLAGS        = @CPPFLAGS@ $(CPPBASE)
 LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@ -lc
@@ -72,6 +74,6 @@ clean veryclean:
 distclean: clean
         -$(RM) config.* Makefile posix.oz
 
-include ../../share/Makefile.boot
+include $(SRCDIR)/../../share/Makefile.boot
 
 bootstrap: boot-all
