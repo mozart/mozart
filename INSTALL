@@ -16,28 +16,26 @@ INSTALLATION INSTRUCTIONS FOR THE MOZART SYSTEM
 
 * Fast installation
 
-Recommendations:
- - OZHOME should not be set in your environment
- - your PATH should not include a directory in which Oz executables
-   or scripts may be found
-
     mkdir <builddir>
     cd <builddir>
     $srcdir/configure
     make
     make install
 
-optionally the targets
+* Recommendations
 
-    make platform
-    make platform-install
-
-allow to build and install only the platform depended binaries.
+ - OZHOME should not be set in your environment
+ - your PATH should not include a directory in which Oz executables
+   or scripts may be found
 
 * configuration parameters
 
   --prefix=<dir>  (default: /usr/local/oz)
      where to install the system ($PREFIX)
+  --enable-subdirs=<dirs> (default: "platform share contrib doc")
+     which parts should be configured and builtin, e.g.
+     --enable-subdirs=platform configures and builds only the platform
+     dependent parts.
   --disable-wish
      in case you have already installed the wish component of Oz
      and prefer to leave it alone (perhaps because you don't have
