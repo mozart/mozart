@@ -65,7 +65,7 @@ in
       end
 
       meth GetStack($)
-	 {Dbg.taskstack self.T 40}
+	 {Dbg.taskstack self.T MaxStackSize}
       end
       
       meth Reset
@@ -89,15 +89,26 @@ in
 	    end
 	 end
       end
+
+      %% only print changed frames of stack
+      meth update
+	 CurrentStack = StackManager,GetStack($)
+      in
+	 skip
+      end
       
       %% completely re-print the stack
       meth print
 	 StackManager,Reset
 	 local
 	    S = @Size
+	    Ack
 	 in
 	    case S > 0 then
-	       {Ozcar printStack(id:self.I size:S stack:self.D)}
+	       thread
+		  {Ozcar printStack(id:self.I size:S stack:self.D ack:Ack)}
+	       end
+	       thread {Ozcar stackStatus(S Ack)} end
 	    else
 	       StackManager,clear
 	    end
