@@ -322,6 +322,20 @@ All strings matching this regular expression are removed.")
   "\'oz-bar \\([^ ]*\\) \\([0-9]+\\) \\([0-9]+\\) \\([^ ]*\\)\'"
   "Regex for reading messages from the Oz debugger or profiler.")
 
+(defconst oz-number-pattern
+  (concat "~?\\(0[Xx][0-9A-Fa-f]+\\|0[bB][01]+\\|"
+	  "[0-9]+\\(\\.[0-9]*\\([eE]~?[0-9]+\\)?\\)?\\)")
+  "Regular expression matching an Oz number; used by oz-bar.")
+(defconst oz-token-pattern
+  (concat oz-atom-pattern "\\|" oz-string-pattern "\\|"
+	  oz-variable-pattern "\\|" oz-char-pattern "\\|"
+	  oz-number-pattern "\\|"
+	  "[A-Za-z][A-Za-z0-9_]*\\|"
+	  "\\[\\]\\|\\.\\.\\.\\|<-\\|:=\\|!!\\|=<\\|>=\\|\\\\=\\|"
+	  ":::?\\|==\\|[<>]:\\|=<:\\|>=:\\|=:\\|"
+	  "[+<>*/{}()|#:=.^@$!~_,]\\|\\[\\|\\]\\|\\-")
+  "Matches a single Oz token; used by oz-bar.")
+
 (defvar oz-gump-indentation nil
   "Non-nil iff Gump syntax is to be used for indentation.")
 
@@ -1227,20 +1241,6 @@ Point is left at the first character of the keyword."
   (concat oz-string-pattern "\\|" oz-atom-pattern "\\|"
 	  oz-variable-pattern "\\|" oz-char-pattern "\\|"
 	  oz-comment-pattern))
-
-(defconst oz-number-pattern
-  (concat "~?\\(0[Xx][0-9A-Fa-f]+\\|0[bB][01]+\\|"
-	  "[0-9]+\\(\\.[0-9]*\\([eE]~?[0-9]+\\)?\\)?\\)")
-  "Regular expression matching an Oz number.")
-(defconst oz-token-pattern
-  (concat oz-atom-pattern "\\|" oz-string-pattern "\\|"
-	  oz-variable-pattern "\\|" oz-char-pattern "\\|"
-	  oz-number-pattern "\\|"
-	  "[A-Za-z][A-Za-z0-9_]*\\|"
-	  "\\[\\]\\|\\.\\.\\.\\|<-\\|:=\\|!!\\|=<\\|>=\\|\\\\=\\|"
-	  ":::?\\|==\\|[<>]:\\|=<:\\|>=:\\|=:\\|"
-	  "[+<>*/{}()|#:=.^@$!~_,]\\|\\[\\|\\]\\|\\-")
-  "Matches a single Oz token; used by oz-bar.")
 
 (defconst oz-directive-pattern
   "\\\\[a-zA-Z]+")
