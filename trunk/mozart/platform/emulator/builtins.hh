@@ -199,20 +199,6 @@ void BIinitDatatypes();
 void BIinitFeatures();
 void BIinitFD(void);
 
-// -----------------------------------------------------------------------
-// tables
-
-class BuiltinTab : public HashTable {
-public:
-  BuiltinTab(int size) : HashTable(size) {};
-  ~BuiltinTab() {};
-};
-
-
-
-// access to builtin table:
-BuiltinTab &getBuiltinTab();
-
 
 class BuiltinTabEntry {
   friend class Debugger;
@@ -346,6 +332,25 @@ public:
     return ((int) fun)^((int) suspHandler)^((int) gRegs);
   }
 };
+
+
+// -----------------------------------------------------------------------
+// tables
+
+class BuiltinTab : public HashTable {
+public:
+  BuiltinTab(int size) : HashTable(size) {};
+  ~BuiltinTab() {};
+  unsigned memRequired(void) {
+     return HashTable::memRequired(sizeof(BuiltinTabEntry));
+   }
+};
+
+
+
+// access to builtin table:
+BuiltinTab &getBuiltinTab();
+
 
 class OneCallBuiltin: public Builtin {
 private:
