@@ -194,8 +194,8 @@ in
 		  case {HasFeature OM color} then
 		     case OM.color
 		     of full      then {Dictionary.put O color color} true
-		     [] grayscale then {Dictionary.put O color grey} true
-		     [] bw        then {Dictionary.put O color mono} true
+		     [] grayscale then {Dictionary.put O color gray}  true
+		     [] bw        then {Dictionary.put O color mono}  true
 		     else false
 		     end
 		  else true end

@@ -77,7 +77,7 @@ local
 						    variable: ColorVar
 						    text:     'Full Color')}
 			 {New Tk.radiobutton tkInit(parent:   Color.inner
-						    value:    grey
+						    value:    gray
 						    variable: ColorVar
 						    text:     'Grayscale')}
 			 {New Tk.radiobutton tkInit(parent:   Color.inner
