@@ -335,7 +335,7 @@ public:
   inline RefsArray &getGRegs() { return(gRegs); }
 };
 
-/*
+
 char * OZ_normFloat(char *);
 char * OZ_stringToC(OZ_Term);
 char * OZ_normInt(char *);
@@ -347,5 +347,5 @@ char * OZ_floatToCString(OZ_Term);
 char * OZ_intToCString(OZ_Term);
 char * OZ_parseInt(char *);
 char * OZ_parseFloat(char *);
-*/
+
 #endif
