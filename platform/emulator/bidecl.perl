@@ -1875,12 +1875,12 @@ $builtins = {
 			     doesNotReturn=>1,
 			     native => true},
 
-    'installHW'	        => { in  => ['+value','+value','value'],
+    'installHW'	        => { in  => ['value','value','value'],
 			     out => [],
 			     BI  => BIhwInstall,
 			     native => true},
 
-    'deInstallHW'	=>  { in  => ['+value','+value','value'],
+    'deInstallHW'	=>  { in  => ['value','value','value'],
 			     out => [],
 			     BI  => BIhwDeInstall,
 			     native => true},
@@ -2009,6 +2009,12 @@ $builtins = {
     'PID.send'		=> { in  => ['+virtualString','+int','+int','value'],
 			     out => [],
 			     BI  => BISendPID,
+			     module=>components,
+			     native => false},
+
+    'PID.toPort'	=> { in  => ['+virtualString','+int','+int'],
+			     out => ['+port'],
+			     BI  => BITicket2Port,
 			     module=>components,
 			     native => false},
 
@@ -2626,6 +2632,7 @@ $builtins = {
 			     ifdef =>DEBUG_STABLE,
 			     module => fd,
 			     native => true},
+
 
     'resetStable'	=> { in  => [],
 			     out => [],

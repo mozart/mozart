@@ -1732,7 +1732,8 @@ void AM::gc(int msgLevel)
 #ifdef VERBOSE
   verbReopen ();
 #endif
-
+  Assert(checkMySite());
+  
   gcFrameToProxy();
 
   isCollecting = OK;
@@ -1814,6 +1815,9 @@ void AM::gc(int msgLevel)
   ozstat.printGcMsg(msgLevel);
   
   isCollecting = NO;
+  
+  Assert(checkMySite());
+  
 } // AM::gc
 
 
@@ -2110,8 +2114,7 @@ void ConstTerm::gcConstRecurse()
       o->setFreeRecord(o->getFreeRecord()->gcSRecord());
       RecOrCell state = o->getState();
       if (stateIsCell(state)) {
-	if (o->isLocal()) {
-	  Assert(getCell(state)->isLocal());
+	if (o->isLocal() && getCell(state)->isLocal()) {
 	  TaggedRef newstate = ((CellLocal*) getCell(state))->getValue();
 	  message("GC: localizing object\n");
 	  o->setState(tagged2SRecord(oz_deref(newstate))->gcSRecord());
@@ -2367,6 +2370,7 @@ ConstTerm *ConstTerm::gcConstTerm() {
       Object *o = (Object *) this;
       CheckLocal(o);
       ret = (ConstTerm *) gcReallocStatic(this,sizeof(Object));
+      gn = o->hasGName();
       break;
     }
   case Co_Class: 
