@@ -1547,6 +1547,8 @@ void OZ_putSubtree(OZ_Term term, OZ_Term feature, OZ_Term value)
   }
 }
 
+// mm2: OZ_adjoinAt(...)
+
 OZ_Term OZ_subtree(OZ_Term term, OZ_Term fea)
 {
   DEREF(term,termPtr,termTag);
@@ -1737,15 +1739,21 @@ void OZ_addBISpec(OZ_BIspec *spec)
 
 OZ_Return OZ_raise(OZ_Term exc)
 {
-  am.exception=exc;
+  if (OZ_isVariable(exc)) {
+    return am.raise(E_ERROR,E_KERNEL,"instantiation",5,
+		    OZ_atom("raise"),cons(exc,nil()),
+		    OZ_atom("det"),OZ_int(1),OZ_string(""));
+  }
+  am.exception.value=exc;
+  am.exception.info=NameUnit;
+  am.exception.debug=FALSE;
   return RAISE;
 }
 
 OZ_Return OZ_raiseC(char *label,int arity,...)
 {
   if (arity == 0) {
-    am.exception = OZ_atom(label);
-    return RAISE;
+    return OZ_raise(OZ_atom(label));
   }
 
   va_list ap;
@@ -1757,8 +1765,7 @@ OZ_Return OZ_raiseC(char *label,int arity,...)
   }
 
   va_end(ap);
-  am.exception=tt;
-  return RAISE;
+  return OZ_raise(tt);
 }
 
 /* -----------------------------------------------------------------
