@@ -766,24 +766,9 @@ PRINT(Thread)
     << "Thread @" << this
     << " [ prio: " << priority
     << ", ";
-  if (isNormal()) {
-    if (u.taskStack) {
-      stream << " Normal (#"
-             << u.taskStack->getUsed()-1
-             << ")";
-    } else {
-      stream << " Normal (uninit)";
-    }
-  }
-  if (isSuspCont()) {
-    stream << " SuspCont";
-  }
-  if (isSuspCCont()) {
-    stream << " SuspCCont";
-  }
-  if (isNervous()) {
-    stream << " Nervous";
-  }
+  stream << " Normal (#"
+         << taskStack.getUsed()-1
+         << ")";
   stream << " ]";
 }
 
@@ -1260,7 +1245,7 @@ void printSuspension(ProgramCounter pc)
   printWhere(cout,pc);
   cout << endl;
   if (am.conf.showSuspension > 1) {
-    am.currentTaskStack->print(cout);
+    am.currentThread->taskStack.print(cout);
   }
 }
 

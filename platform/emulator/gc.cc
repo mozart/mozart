@@ -228,7 +228,8 @@ void fastmemcpy(int32 *to, int32 *frm, int sz)
     }
   }
 #ifdef WIPEOUTFROM
-  if (opMode == IN_GC) memset(frm,sz,0xff);
+  error("WIPEOUTFROM is crap, it never really worked");
+  if (opMode == IN_GC) memset(frm,0xff,sz);
 #endif
 }
 
@@ -1495,7 +1496,7 @@ void AM::gc(int msgLevel)
 
   MemChunks *oldChain = MemChunks::list;
 
-//  VariableNamer::cleanup();  /* drop bound variables */
+  VariableNamer::cleanup();  /* drop bound variables */
 
   INITCHECKSPACE;
   initMemoryManagement();
@@ -1526,12 +1527,6 @@ void AM::gc(int msgLevel)
 
   GCREF(currentThread);
   GCREF(rootThread);
-
-  if (currentThread && currentThread->isNormal()) {
-    am.currentTaskStack = currentThread->getTaskStack();
-  } else {
-    am.currentTaskStack = (TaskStack *) NULL;
-  }
 
   if (FDcurrentTaskSusp != (Suspension *) NULL) {
     warning("FDcurrentTaskSusp must be NULL!");
@@ -1761,31 +1756,40 @@ void CodeArea::gc()
 }
 
 
-TaskStack *TaskStack::gc()
+void TaskStack::gc(TaskStack *newstack)
+{
+  /* allocate new stack and save reference for
+   * TaskStack::gcRecurse on the new stack
+   */
+  newstack->allocate(getMaxSize(),heapMalloc);
+  newstack->push(this);
+}
+
+void TaskStack::gcRecurse()
 {
   GCMETHMSG("TaskStack::gc");
-  TaskStack *newStack = new TaskStack(size);
+  TaskStack *oldstack = (TaskStack *) pop();
 
-  newStack->gcInit();
+  gcInit();
 
-  while (!isEmpty()) {
+  while (!oldstack->isEmpty()) {
 
-    TaggedBoard tb = (TaggedBoard) pop();
+    TaggedBoard tb = (TaggedBoard) oldstack->pop();
     ContFlag cFlag = getContFlag(tb);
     Board *newBB = getBoard(tb, cFlag)->gcBoard();
 
     if (newBB == NULL) {
       switch (cFlag){
       case C_NERVOUS:    continue;
-      case C_XCONT:      pop(4); continue;
-      case C_CONT:       pop(3); continue;
-      case C_DEBUG_CONT: pop(1); continue;
-      case C_CFUNC_CONT: pop(3); continue;
-      case C_CALL_CONT:  pop(2); continue;
+      case C_XCONT:      oldstack->pop(4); continue;
+      case C_CONT:       oldstack->pop(3); continue;
+      case C_DEBUG_CONT: oldstack->pop(1); continue;
+      case C_CFUNC_CONT: oldstack->pop(3); continue;
+      case C_CALL_CONT:  oldstack->pop(2); continue;
       }
     }
 
-    newStack->gcQueue((TaskStackEntry) setContFlag(newBB,cFlag));
+    gcQueue((TaskStackEntry) setContFlag(newBB,cFlag));
 
     switch (cFlag){
 
@@ -1793,31 +1797,31 @@ TaskStack *TaskStack::gc()
       break;
 
     case C_CONT:
-      newStack->gcQueue(pop());                           // PC
-      newStack->gcQueue(gcRefsArray((RefsArray) pop()));  // Y
-      newStack->gcQueue(gcRefsArray((RefsArray) pop()));  // G
+      gcQueue(oldstack->pop());                           // PC
+      gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // Y
+      gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // G
       break;
 
     case C_XCONT:
-      newStack->gcQueue(pop());                           // PC
-      newStack->gcQueue(gcRefsArray((RefsArray) pop()));  // Y
-      newStack->gcQueue(gcRefsArray((RefsArray) pop()));  // G
-      newStack->gcQueue(gcRefsArray((RefsArray) pop()));  // X
+      gcQueue(oldstack->pop());                           // PC
+      gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // Y
+      gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // G
+      gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // X
       break;
 
     case C_DEBUG_CONT:
-      newStack->gcQueue(((OzDebug *) pop())->gcOzDebug());
+      gcQueue(((OzDebug *) oldstack->pop())->gcOzDebug());
       break;
 
     case C_CALL_CONT:
-      newStack->gcQueue(((SRecord *) pop())->gcSRecord());
-      newStack->gcQueue(gcRefsArray((RefsArray) pop()));
+      gcQueue(((SRecord *) oldstack->pop())->gcSRecord());
+      gcQueue(gcRefsArray((RefsArray) oldstack->pop()));
       break;
 
     case C_CFUNC_CONT:
-      newStack->gcQueue(pop());                // OZ_CFun
-      newStack->gcQueue(((Suspension*) pop())->gcSuspension());
-      newStack->gcQueue(gcRefsArray((RefsArray) pop()));
+      gcQueue(oldstack->pop());                // OZ_CFun
+      gcQueue(((Suspension*) oldstack->pop())->gcSuspension());
+      gcQueue(gcRefsArray((RefsArray) oldstack->pop()));
       break;
 
     default:
@@ -1826,16 +1830,15 @@ TaskStack *TaskStack::gc()
     }
   } // while not task stack is empty
 
-  newStack->gcEnd();
+  gcEnd();
 
-  return newStack;
 } // TaskStack::gc
 
 
 
-//*****************************************************************************
+//*********************************************************************
 //                           NODEs
-//*****************************************************************************
+//*********************************************************************
 
 ConstTerm *ConstTerm::gcConstTerm()
 {
@@ -1868,6 +1871,7 @@ ConstTerm *ConstTerm::gcConstTerm()
 
 void Thread::GC()
 {
+  FreeList = NULL;
   GCREF(Head);
   GCREF(Tail);
 }
@@ -1878,6 +1882,7 @@ Thread *Thread::gc()
   CHECKCOLLECTED(*getGCField(), Thread *);
   size_t sz = sizeof(Thread);
   Thread *ret = (Thread *) gcRealloc(this,sz);
+  taskStack.gc(&ret->taskStack);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_THREAD);
   storeForward(getGCField(), ret);
@@ -1892,29 +1897,7 @@ void Thread::gcRecurse()
   GCREF(prev);
 
   DebugGC ((opMode == IN_TC), error ("thread is gc'ed in 'copy' mode?"));
-  if (resSusp != NULL)
-   resSusp = resSusp->gcSuspension(NO);
-  if (isNormal()) {
-    GCREF(u.taskStack);
-  } else if (isSuspCont()) {
-    u.suspCont=u.suspCont->gcCont();
-    // suspension may be dead
-    if (!u.suspCont) {
-      error("mm2: never be here");
-      flags=0; // == T_Normal
-    }
-  } else if (isSuspCCont()) {
-    u.suspCCont=u.suspCCont->gcCont();
-    // suspension may be dead
-    if (!u.suspCCont) {
-      error("mm2: never be here");
-      flags=0; // == T_Normal
-    }
-  } else if (isNervous()) {
-    u.board=u.board->gcBoard();
-  } else {
-    error("Thread::gcRecurse");
-  }
+  taskStack.gcRecurse();
   DebugGCT(Board *sob = notificationBoard);
   notificationBoard = (notificationBoard->gcGetNotificationBoard ())->gcBoard ();
   DebugGC((sob != (Board *) NULL && notificationBoard == (Board *) NULL),
@@ -1930,6 +1913,7 @@ Board* Board::gcGetNotificationBoard ()
   Board *nb = this;
   Actor *auxActor;
   while (OK) {
+//    if (GCISMARKED(*getGCField())) warning("gcGetNotificationBoard");
     if (GCISMARKED(*getGCField()) || bb->isRoot())
       return (nb);
     if (bb->isDiscarded() || bb->isFailed()) {
