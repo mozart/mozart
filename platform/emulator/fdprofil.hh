@@ -132,7 +132,7 @@ public:
   ProfileHost(void) : head(NULL), tail(NULL), curr(NULL) { add(); }
   void inc_item(ProfileDataIndex i, int by = 1) { tail->inc_item(i, by); }
 
-  reset(void) { curr = head; }
+  void reset(void) { curr = head; }
   ProfileList * next(void) {
     if (curr == tail)
       return NULL;
