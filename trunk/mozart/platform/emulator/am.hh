@@ -90,7 +90,7 @@ public:
 
   // debugger
   TaggedRef threadStreamTail;     
-  Bool suspendDebug, runChildren;
+  Bool addEmacsThreads, addSubThreads;
 
 private:
   int statusReg;
