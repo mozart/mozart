@@ -1,0 +1,62 @@
+<chapter id=chapter.misc>
+  <title/Miscellaneous/
+  <section>
+    <title/Bit Strings/
+    <p>Module <span class=index/<<BitString>>/ provides an interface
+to a fast and economical representation for immutable bit sequences.
+<list>
+        <entry/<span class=index/<code/IsBitString//
+<index class=tails/<code/BitString/<and><code/is///
+        <synopsis/<code/{BitString.is ?+{X} ??{B}}//
+        <item/tests whether ?_{X} is a bit string/
+        <entry/<span class=index/<code/make//
+<index class=tails/<code/BitString/<and><code/make///
+        <synopsis/<code/{BitString.make ?+{I} ?+{L} ??{BitString}}//
+        <item/creates a bit string of width ?_{I} with precisely these
+bits on that are specified in ?_{L}, a list of indices/
+        <entry/<span class=index/<code/conj//
+<index class=tails/<code/BitString/<and><code/conj///
+        <synopsis/<code/{BitString.conj ?+{BitString1} ?+{BitString2} ??{BitString3}}//
+        <item/returns the bitwise <q/and/ of its 1st and 2nd
+arguments, which must be of indentical widths./
+        <entry/<span class=index/<code/disj//
+<index class=tails/<code/BitString/<and><code/disj///
+        <synopsis/<code/{BitString.disj ?+{BitString1} ?+{BitString2} ??{BitString3}}//
+        <item/returns the bitwise <q/or/ of its 1st and 2nd
+arguments, which must be of indentical widths./
+        <entry/<span class=index/<code/nega//
+<index class=tails/<code/BitString/<and><code/nega///
+        <synopsis/<code/{BitString.nega ?+{BitString1} ??{BitString2}}//
+        <item/returns the bitwise negation of its 1st argument/
+        <entry/<span class=index/<code/get//
+<index class=tails/<code/BitString/<and><code/get///
+        <synopsis/<code/{BitString.get ?+{BitString} ?+{I} ??{B}}//
+        <item/returns <code/true/ iff bit ?_{I} of ?_{BitString} is
+on./
+        <entry/<span class=index/<code/put//
+<index class=tails/<code/BitString/<and><code/put///
+        <synopsis/<code/{BitString.put ?+{BitString1} ?+{I} ?+{B} ??{BitString2}}//
+        <item/returns a new bit string which is identical to
+?_{BitString1} except that bit ?_{I} is on iff ?_{B} is true./
+        <entry/<span class=index/<code/width//
+<index class=tails/<code/BitString/<and><code/width///
+        <synopsis/<code/{BitString.width ?+{BitString} ??{I}}//
+        <item/returns the width of the ?_{BitString}./
+        <entry/<span class=index/<code/toList//
+<index class=tails/<code/BitString/<and><code/toList///
+        <synopsis/<code/{BitString.toList ?+{BitString} ??{L}}//
+        <item/returns the list of indices of all on bits in
+?_{BitString}./
+      </list></p>
+  </section>
+</chapter>
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
