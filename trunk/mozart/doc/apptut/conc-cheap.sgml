@@ -40,25 +40,48 @@ mount a clay tablet device, and engage in the more rewarding exercise
 of installing Windows from sumerian backup.</p>
   <p>The program is invoked with:
 <code display proglang=sh/death --threads ?{N} --times ?{M}/
-and creates ?{N} threads. All threads process the same stream of
-messages.  Normally we would let the preemptive scheduler take care of
+and creates ?{N} threads. Each thread does nothing but <em/yield/
+immediately. Normally we would let the preemptive scheduler take care of
 interrupting a thread to switch to a new one, but here, in order to
-exercise the worst case, as soon as a thread has processed a message,
+exercise the worst case, as soon as a thread is allowed to run,
 it explicitly <em/yields/.  Thus the program does little else but
-switch between threads.  ?{M} messages are eventually put on the
-stream: when a thread sees the last message it terminates.  When all
-threads have terminated, the program also terminates.</p>
+switch between threads. Each thread yields ?{M} times and then
+terminates.   When all threads have terminated, the program also
+terminates.</p>
   <p>I just tried the following:
 <code display proglang=sh/death --threads 10000 --times 10/
-In other words, 10000 threads are created and must process 10
-messages.  This results in 100000 thread switches.  It takes 5.5s on
+In other words, 10000 threads are created and must each yield 10
+times.  This results in 100000 thread switches.  It takes 3s on
 this little steam-driven laptop.  I have run the same program on a
 real computer at the lab but using:
 <code display proglang=sh/death --threads 100000 --times 10/
-It takes 14s.  There are 100000 threads at all time runnable, and they
+It takes 7.5s.  There are 100000 threads at all time runnable, and they
 must perform 1000000 thread switches.  Try creating 100000 threads in
 Java&etc; really, go ahead, I insist! I promise not to laugh!</p>
-<p><code.extern display to="death.oz"></p>
+  <p>Just so you don't have to take my word for it, I coded the same
+program in Java and tried:
+<code display proglang=sh/java Death 1000 10/
+This takes 2:40mn!</p>
+  <p>What was the point of this exercise?  It was not prove that Oz is
+better than Java; in this respect the test above was deliberately
+unfair: Java was never intended to support designs with massive
+concurrency&etc; and <em/that/ is the point.  Oz was from the start
+designed as a platform for concurrent computation.  That concurrency
+is so cheap and efficient makes entirely new designs possible that
+would not be realistic or even conceivable in other languages.
+Whenever you need to perform an operation asynchronously you simply
+spawn a new thread.  You can design your application as a collection
+of concurrent objects or agents, etc&etc;</p>
+  <section class=unnumbered>
+    <title/Death by Concurrency in Oz/
+<p>Here is the code of the Oz application used in the benchmark above:
+<code.extern display to="death.oz"></p>
+  </section>
+  <section class=unnumbered>
+    <title/Death by Concurrency in Java/
+    <p>Here is a very similar program, in Java:
+<code.extern display to="Death.java" proglang=java></p>
+  </section>
 </chapter>
 
 <!--

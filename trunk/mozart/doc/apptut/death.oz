@@ -1,28 +1,20 @@
 functor
 import Application
 define
+   proc {Yield} {Thread.preempt {Thread.this}} end
+   proc {Run N}
+      {Yield}
+      if N>1 then {Run N-1} end
+   end
    Args = {Application.getCmdArgs
 	   record(threads(single type:int optional:false)
 		  times(  single type:int optional:false))}
-   proc {Yield}
-      {Thread.preempt {Thread.this}}
-   end
-   proc {ProcessMessage Msg}
-      if Msg==1 then raise done end else {Yield} end
-   end
-   proc {CreateThreads N AllDone}
+   proc {Main N AllDone}
       if N==0 then AllDone=unit else RestDone in
-	 thread
-	    try {ForAll Messages ProcessMessage}
-	    catch done then AllDone=RestDone end
-	 end
-	 {CreateThreads N-1 RestDone}
+	 thread {Run Args.times} AllDone=RestDone end
+	 {Main N-1 RestDone}
       end
    end
-   Messages Mailbox={Port.new Messages}
-   AllDone = {CreateThreads Args.threads}
-   {ForAll {List.number Args.times 1 ~1}
-    proc {$ I} {Port.send Mailbox I} {Yield} end}
-   {Wait AllDone}
+   {Wait {Main Args.threads}}
    {Application.exit 0}
 end
