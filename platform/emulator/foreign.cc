@@ -1075,6 +1075,18 @@ void cvar2buffer(ostream &out, char *s, GenCVariable *cv, int depth)
       out << s;
       break;
     }
+  case LazyVariable:
+    {
+      out << s;
+      OZ_Term f = ((GenLazyVariable*)cv)->getFunction();
+      if (f==0) out << "<lazy>";
+      else {
+        out << "<lazy: ";
+        value2buffer(out,f,depth-1);
+        out << ">";
+      }
+      break;
+    }
   default:
     OZ_warning("OZ_toC: Unknown variable type\n");
     break;
