@@ -188,16 +188,13 @@ local
 	    {WriteVSFile Flex FlexFile}
 	    {Rep startSubPhase('generating scanner tables')}
 	    case {InvokeFlex FlexFile Rep} of 0 then
-	       LIBC = if {Property.get 'platform.os'} == win32 then ''
-		      else ' -lc'
-		      end
 	       PLATFORM = {GetTargetPlatform Rep}
 	       Cmd1 = ({OZTOOL}#' c++ '#{OZTOOLINC}#
 		       ' -c '#{MakeFileName T ".C"}#
 		       ' -o '#{MakeFileName T ".o"})
 	       Cmd2 = ({OZTOOL}#' ld '#
 		       ' -o '#{MakeFileName T ".so"}#'-'#PLATFORM#' '#
-		       {MakeFileName T ".o"}#LIBC)
+		       {MakeFileName T ".o"})
 	       Exit1 Exit2
 	    in
 	       {Rep startSubPhase('compiling scanner')}
