@@ -26,7 +26,31 @@ local
    in
       PLATFORM = X#'-'#Y
       PLATFORMDIR = OZHOME#'/platform/'#PLATFORM
-      INCLUDEDIR = OZHOME#'/include'
+      %% include dirs for testing in bootstrap mode:
+      %%	mozart/platform/emulator mozart/platform/tools/gump
+      %% {OZTOOL} returns a vs naming the oztool executable
+      fun {OZTOOL}
+	 case {Property.condGet 'oz.exe.oztool' unit} of unit
+	 then case {OS.getEnv 'OZTOOL'} of false then oztool
+	      elseof X then X end
+	 elseof X then X end
+      end
+      %% {OZTOOLINC} returns a vs consisting of -Idir elements
+      fun {OZTOOLINC}
+	 case {Property.condGet 'oz.inc.oztool' unit} of unit
+	 then case {OS.getEnv 'OZTOOL_INCLUDES'} of false
+	      then '-I'#OZHOME#'/include'
+	      elseof X then X end
+	 elseof X then X end
+      end
+      %% {OZFLEX} returns a vs naming the flex.exe executable
+      fun {OZFLEX}
+	 case {Property.condGet 'oz.exe.flex' unit} of unit
+	 then case {OS.getEnv 'OZFLEX'} of false
+	      then PLATFORMDIR#'/flex.exe'
+	      elseof X then X end
+	 elseof X then X end
+      end
    end
 
    %--------------------------------------------------------------------
