@@ -947,6 +947,9 @@ int OZ_addBuiltin(char *name, int arity, OZ_CFun fun)
  * -----------------------------------------------------------------*/
 
 OZ_Suspension OZ_makeThreadSuspension() {
+#ifndef NEWCOUNTER
+  am.currentBoard->incSuspCount();
+#endif
   return (OZ_Suspension) new Suspension(am.currentThread);
 }
 
