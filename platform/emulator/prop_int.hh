@@ -43,8 +43,6 @@
 Thread * oz_mkLPQ(Board *bb, int prio);
 Propagator * oz_mkPropagator(Board *bb, OZ_Propagator *pro);
 void oz_pushToLPQ(Propagator * prop);
-Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy);
-
 
 inline
 Propagator * oz_newPropagator(OZ_Propagator * p)
@@ -167,7 +165,7 @@ void oz_preemptedPropagator(Propagator * prop)
   Assert(oz_isCurrentBoard(GETBOARD(prop)));
 
   prop->unsetRunnable();
-  oz_wakeup_Propagator(prop, oz_currentBoard(), pc_propagator);
+  (void) ((Suspendable *) prop)->wakeup(oz_currentBoard(), pc_propagator);
 }
 
 //

@@ -29,6 +29,7 @@
 #include "prop_int.hh"
 #include "os.hh"
 #include "value.hh"
+#include "suspendable.hh"
 
 inline
 void oz_resetLocalPropagatorQueue(Board * bb) {
@@ -40,59 +41,6 @@ void oz_resetLocalPropagatorQueue(Board * bb) {
   lpq->dispose();
   bb->setLocalPropagatorQueue(NULL);
 }
-
-#define WAKEUP_PROPAGATOR(CALL_WAKEUP_FUN)      \
-{                                               \
-  Board * pb = prop->getBoardInternal();        \
-  switch (oz_isBetween(pb, home)) {             \
-  case B_BETWEEN:                               \
-                                                \
-    if (calledBy)                               \
-      prop->setUnify();                         \
-                                                \
-    CALL_WAKEUP_FUN;                            \
-    return FALSE;                               \
-                                                \
-  case B_NOT_BETWEEN:                           \
-    return FALSE;                               \
-                                                \
-  case B_DEAD:                                  \
-    prop->setDead();                            \
-    if (prop->isExternal())                     \
-      pb->derefBoard()->checkSolveThreads();    \
-    prop->dispose();                            \
-    return TRUE;                                \
-                                                \
-  default:                                      \
-    Assert(0);                                  \
-    return FALSE;                               \
-  }                                             \
-}
-
-Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy)
-{
-  Assert(prop->getBoardInternal() && prop->getPropagator());
-
-  if (prop->isNMO() && !oz_onToplevel()) {
-#ifdef DEBUG_NONMONOTONIC
-    OZ_PropagatorProfile * profile = prop->getPropagator()->getProfile();
-    char * pn = profile->getPropagatorName();
-    printf("wakeup_Propagator: nonmono prop <%s %d>\n",
-           pn,
-           prop->getPropagator()->getOrder());
-    fflush(stdout);
-#endif
-
-    Assert(!prop->getPropagator()->isMonotonic());
-
-    WAKEUP_PROPAGATOR(prop->setRunnable();
-                      am.currentBoard()->addToNonMono(prop));
-  }
-
-  WAKEUP_PROPAGATOR(prop->setRunnable();
-                    oz_pushToLPQ(prop));
-}
-
 
 SuspList * oz_installPropagators(SuspList * local_list, SuspList * glob_list,
                                  Board * glob_home)
