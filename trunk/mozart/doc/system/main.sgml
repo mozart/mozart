@@ -27,19 +27,35 @@
 
 <!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
 
+<!-- Extension to the DTD -->
+<!ENTITY % p.mix.local "|Em">
+<!ELEMENT Em - - (#PCDATA)>
+<!ENTITY % proglang.values.local "|sh">
+
+<!-- Abbreviations -->
+<!ENTITY amp "&">
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY eg PI "eg">
+<!ENTITY etc PI "etc">
+
+
+
+
+
 <!ENTITY chapter.application SYSTEM "application.sgml">
 <!ENTITY chapter.constraints SYSTEM "constraints.sgml">
 <!ENTITY chapter.distributed SYSTEM "distributed.sgml">
 <!ENTITY chapter.open        SYSTEM "open.sgml">
 <!ENTITY chapter.system      SYSTEM "system.sgml">
 <!ENTITY chapter.window      SYSTEM "window.sgml">
-
-
-<!ENTITY nbsp PI "nbsp">
-<!ENTITY ellipsis PI "ellipsis">
-<!ENTITY ie PI "ie">
-<!ENTITY eg PI "eg">
 ]>
+
 <BOOK>
 <Title/System Modules/
     <!-- Splitting the document into different HTML nodes -->
