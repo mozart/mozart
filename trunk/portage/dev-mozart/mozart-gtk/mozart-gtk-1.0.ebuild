@@ -5,6 +5,7 @@ KEYWORDS="x86 ppc sparc hppa"
 DEPEND="
   =x11-libs/gtk+-1.2*
   dev-lang/mozart-base
+  dev-lang/mozart-gtk-canvas
 "
 S="${WORKDIR}/mozart-gtk-1.0"
 
