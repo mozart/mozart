@@ -184,8 +184,8 @@ Mozart is the result of 3 years of research and development in open
 distributed computing, involving an international collaboration
 between the German Research Center for Artificial Intelligence (DFKI),
 the University of the Saarland in Germany, the Swedish
-Institute for Computer Science (SICS), and the University of Louvain
-la neuve in Belgium.
+Institute for Computer Science (SICS), and the Universite catholique
+de Louvain (at Louvain-la-Neuve) in Belgium.
 <p>
 The Mozart system is an ideal platform for open distributed computing:
 it makes the network completely transparent. The illusion of a common
@@ -223,7 +223,7 @@ Tcl/Tk.</p>
       </section>
 
       <section>
-          <title/Can modules mutually import each others?/
+          <title/Can modules mutually import each other?/
         <p>Yes, there is no problem.  Modules are loaded by need and
 concurrently.</p>
       </section>
@@ -272,7 +272,7 @@ other programming languages which lock you into a single programming
 paradigm, Oz unifies into one simple and coherent framework the
 functional, object-oriented, and logic flavors of programming. This is
 possible due to the very general and powerful underlying paradigm of
-concurrent constraints programming.</p>
+concurrent constraint programming.</p>
       </section>
 
       <section proglang=oz>
