@@ -108,6 +108,7 @@ public:
 
 #ifdef DEBUG_CHECK
   Bool dontPropagate;
+  // is used by consistency checking of a copy of a search tree;
 #endif
 public:
   AM() {};

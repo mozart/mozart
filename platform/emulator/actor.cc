@@ -211,7 +211,7 @@ TaggedRef SolveActor::genSolved ()
   STuple *stuple = STuple::newSTuple (solvedAtom, 1);
 
   // statistic
-  // am.stat.solveSolved++;
+  am.stat.solveSolved++;
 
   contGRegs[0] = makeTaggedConst (solveBoard);
   status[0] = entailedAtom;
@@ -242,7 +242,7 @@ TaggedRef SolveActor::genEnumed (Board *newSolveBB)
   RefsArray contGRegs;
 
   // statistics
-  // am.stat.solveDistributed++;
+  am.stat.solveDistributed++;
 
   // left side:
   status = allocateRefsArray (1);
@@ -272,7 +272,7 @@ TaggedRef SolveActor::genEnumed (Board *newSolveBB)
 TaggedRef SolveActor::genFailed ()
 {
   // for statistic purposes
-  // am.stat.solveFailed++;
+  am.stat.solveFailed++;
   return (failedAtom);
 }
 
@@ -377,13 +377,6 @@ Bool SolveActor::isStable ()
 {
   if (threads != 0)
     return (NO);
-//   if (am.currentBoard == solveBoard) {
-//     if (am.trail.isEmptyChunk() == NO)
-//       return (NO);
-//   } else {
-//     if ((solveBoard->getScriptRef ()).getSize () != 0)
-//       return (NO);
-//   }
   return (areNoExtSuspensions ());
 }
 

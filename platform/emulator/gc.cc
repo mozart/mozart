@@ -44,6 +44,7 @@
 static void processUpdateStack (void);
 void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm);
 void performCopying(void);
+Bool isInTree(Board *b);
 
 //*****************************************************************************
 //               Macros and Inlines
@@ -59,6 +60,8 @@ void performCopying(void);
 #define CHECKSPACE  // check if object is really copied from heap (1 chunk)
 // #define INITFROM    // initialise copied object
 // #define VERBOSE     // inform user about current state of gc
+// Note: in VERBOSE modus big external file (gc-debug.txt) is produced.
+// It contains very detailed debug (trace) information;
 
 // the debug macros themselves
 #ifndef DEBUG_GC
@@ -110,20 +113,18 @@ void performCopying(void);
    static FILE *debugFile = fopen ("./gc-debug.txt", "w");
 #  define PUTCHAR(C) putc(C, debugFile)
 #  define GCMETHMSG(S)                                                        \
-    fprintf(debugFile,"[%d] %s this: 0x%p %s:%d\n",                           \
-            (ptrStack.getUsed ()),                        \
-            S,this,__FILE__,__LINE__);                                        \
+    fprintf(debugFile,"[%d] %s this: 0x%p :%d\n",                             \
+            (ptrStack.getUsed ()), S,this,__LINE__);                          \
     fflush(debugFile);
 #  define GCNEWADDRMSG(A)                                                     \
-    fprintf(debugFile,"--> 0x%p %s:%d\n",(void *)A,__FILE__,__LINE__);        \
+    fprintf(debugFile,"--> 0x%p :%d\n",(void *)A,__LINE__);                   \
     fflush(debugFile);
 #  define GCOLDADDRMSG(A)                                                     \
-    fprintf(debugFile,"--> 0x%p %s:%d\n",(void *)A,__FILE__,__LINE__);        \
+    fprintf(debugFile,"<-- 0x%p :%d\n",(void *)A,__LINE__);                   \
     fflush(debugFile);
 #  define GCPROCMSG(S)                                                        \
-    fprintf(debugFile,"[%d] %s %s:%d\n",                                      \
-            (ptrStack.getUsed ()),                        \
-            S,__FILE__,__LINE__);                                             \
+    fprintf(debugFile,"[%d] %s :%d\n",                                        \
+            (ptrStack.getUsed ()),S,__LINE__);                                \
     fflush(debugFile);
 # define MOVEMSG(F,T,S)                                                       \
      fprintf(debugFile,"\t%d bytes moved from 0x%p to 0x%p\n",S,F,T);         \
@@ -456,32 +457,32 @@ void ConsList::gc()
     Equation *aux = (Equation*)gcRealloc(first,size);
     GCNEWADDRMSG(aux);
     for(int i = 0; i < numbOfCons; i++){
-// #ifdef DEBUG_CHECK
-//       TaggedRef auxTerm = first[i].getLeft ();
-//       TaggedRef *auxTermPtr;
-//       if (IsRef(auxTerm)) {
-//      do {
-//        if (auxTerm == makeTaggedNULL ())
-//          error ("NULL in script");
-//        if (GCISMARKED(auxTerm)) {
-//          auxTerm = GCUNMARK(auxTerm);
-//          continue;
-//        }
-//        if (isRef (auxTerm)) {
-//          auxTermPtr = tagged2Ref (auxTerm);
-//          auxTerm = *auxTermPtr;
-//          continue;
-//        }
-//        if (isAnyVar (auxTerm))
-//          break;   // ok;
-//        error ("non-variable is found at left side in consList");
-//      } while (1);
-//       }
-// #endif
+#ifdef DEBUG_CHECK
+      //  This is the very useful consistency check.
+      //  'Equations' with non-variable at the left side are figured out;
+      TaggedRef auxTerm = first[i].getLeft ();
+      TaggedRef *auxTermPtr;
+      if (opMode == IN_TC && IsRef(auxTerm)) {
+        do {
+          if (auxTerm == makeTaggedNULL ())
+            error ("NULL in script");
+          if (GCISMARKED(auxTerm)) {
+            auxTerm = GCUNMARK(auxTerm);
+            continue;
+          }
+          if (isRef (auxTerm)) {
+            auxTermPtr = tagged2Ref (auxTerm);
+            auxTerm = *auxTermPtr;
+            continue;
+          }
+          if (isAnyVar (auxTerm))
+            break;   // ok;
+          error ("non-variable is found at left side in consList");
+        } while (1);
+      }
+#endif
       gcTagged(*first[i].getLeftRef(),  *aux[i].getLeftRef());
       gcTagged(*first[i].getRightRef(), *aux[i].getRightRef());
-//       DebugCheck (((aux[i].getLeft ()) & 0x3),
-//                error ("non-ref at left side in consList"));
     }
 
     first = aux;
@@ -504,7 +505,7 @@ SuspContinuation *SuspContinuation::gcCont()
   GCNEWADDRMSG(ret);
   ptrStack.push(ret, PTR_SUSPCONT);
 
-  DebugGC(opMode == IN_TC && !isLocalBoard(node),
+  DebugGC(opMode == IN_TC && (!isLocalBoard(node) || !isInTree(node)),
           error ("non-local board in TC mode is being copied"));
 
   setHeapCell((int *)&pc, GCMARK(ret));
@@ -700,7 +701,9 @@ Bool isInTree (Board *b)
 {
   while (b != (Board *)NULL) {
     DebugCheck ((b->isCommitted () == OK),
-                error ("committed board in 'isInTree ()'"));
+                error ("committed board in 'isInTree (Board *)'"));
+    DebugCheck ((b == am.rootBoard),
+                error ("isInTree (Board *): root Board is reached"));
     if (b == fromCopyBoard)
       return OK;
     b = b->getParentBoard();
@@ -710,25 +713,43 @@ Bool isInTree (Board *b)
   return NO;
 }
 
+inline
+Bool isInTree (Actor *a)
+{
+  DebugCheck((a->isCommitted () == OK),
+             error ("committed actor in isInTree(Actor *)"));
+  Board *b = a->getBoard ()->gcGetBoardDeref ();
+  Board *rb = am.rootBoard;
+  DebugCheck ((b == rb), error ("isInTree(Actor *): under root Board"));
+  while (b != (Board *) NULL && b != rb) {
+    if (b == fromCopyBoard)
+      return (OK);
+    b = b->getParentBoard ();
+    if (b != (Board *) NULL)
+      b = b->gcGetBoardDeref ();
+  }
+  return (NO);
+}
 
 /* return NULL if contains pointer to discarded node */
 inline
 Suspension *Suspension::gcSuspension(Bool tcFlag)
 {
   GCMETHMSG("Suspension::gcSuspension");
-  if (!this || isDead()) return NULL;
+  if (this == NULL)
+    return ((Suspension *) NULL);
 
   CHECKCOLLECTED(flag, Suspension*);
 
   Board *el = getNode()->gcGetBoardDeref();
 
-  if (!el) {
-    return NULL;
+  if (isDead () || el == (Board *) NULL) {
+    return ((Suspension *) NULL);
   }
 
   // mm2: el may be a GCMARK'ed board
   if (tcFlag == OK && isInTree(el) == NO) {
-    return NULL;
+    return ((Suspension *) NULL);
   }
 
   Suspension *newSusp = (Suspension *) gcRealloc(this, sizeof(*this));
@@ -792,6 +813,7 @@ SuspList *SuspList::gc(Bool tcFlag)
 TaggedRef gcVariable(TaggedRef var)
 {
   GCPROCMSG("gcVariable");
+  GCOLDADDRMSG(var);
   TypeOfTerm varTag = tagTypeOf(var);
 
   switch(varTag){
@@ -802,6 +824,7 @@ TaggedRef gcVariable(TaggedRef var)
       INFROMSPACE(home);
       home = home->gcBoard();
       TOSPACE (home);
+      GCNEWADDRMSG((home ? makeTaggedUVar(home) : makeTaggedNULL()));
       return home ? makeTaggedUVar(home) : makeTaggedNULL();
     }
 
@@ -809,11 +832,14 @@ TaggedRef gcVariable(TaggedRef var)
     {
       SVariable *cv = tagged2SVar(var);
       INFROMSPACE(cv);
-      if (GCISMARKED(*(int*)cv))
+      if (GCISMARKED(*(int*)cv)) {
+        GCNEWADDRMSG(makeTaggedSVar((SVariable*)GCUNMARK(*(int*)cv)));
         return makeTaggedSVar((SVariable*)GCUNMARK(*(int*)cv));
+      }
 
       Board *newBoard = cv->home->gcBoard();
       if (!newBoard) {
+        GCNEWADDRMSG(makeTaggedNULL());
         return makeTaggedNULL();
       }
 
@@ -833,6 +859,7 @@ TaggedRef gcVariable(TaggedRef var)
               error ("home node of variable is not copied"));
 
       new_cv->home = newBoard;
+      GCNEWADDRMSG(makeTaggedSVar(new_cv));
       return makeTaggedSVar(new_cv);
     }
   case CVAR:
@@ -840,11 +867,14 @@ TaggedRef gcVariable(TaggedRef var)
       GenCVariable *gv = tagged2CVar(var);
 
       INFROMSPACE(gv);
-      if (GCISMARKED(*(int*)gv))
+      if (GCISMARKED(*(int*)gv)) {
+        GCNEWADDRMSG(makeTaggedCVar((GenCVariable*)GCUNMARK(*(int*)gv)));
         return makeTaggedCVar((GenCVariable*)GCUNMARK(*(int*)gv));
+      }
 
       Board *newBoard = gv->home->gcBoard();
       if (!newBoard) {
+        GCNEWADDRMSG(makeTaggedNULL());
         return makeTaggedNULL();
       }
 
@@ -864,6 +894,7 @@ TaggedRef gcVariable(TaggedRef var)
               error ("home node of variable is not copied"));
 
       new_gv->home = newBoard;
+      GCNEWADDRMSG(makeTaggedCVar(new_gv));
       return makeTaggedCVar(new_gv);
     }
   default:
@@ -1017,9 +1048,18 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
     // put address of ref cell to be updated onto update stack
     if (updateVar(auxTerm)) {
       updateStack.push(&toTerm);
+#ifdef DEBUG_GC
+      TaggedRef aux = toTerm;
+      while (IsRef (aux) == OK) {
+        if (GCISMARKED(aux) == OK)
+          break;
+        aux = *(tagged2Ref (aux));
+      }
+#endif
       DebugGCT(updateStackCount++);
       gcVariable(auxTerm);
       toTerm = (TaggedRef) auxTermPtr;
+      DebugGC((auxTermPtr == NULL), error ("auxTermPtr == NULL"));
     } else {
       toTerm = fromTerm;
     }
@@ -1176,6 +1216,9 @@ void processUpdateStack(void)
       TaggedRef *auxTermPtr = NULL;
 
       while(IsRef(auxTerm)) {
+        if (auxTerm == (TaggedRef) NULL)
+          // kost@: Reachable variables can be quantified in dead boards too;
+          goto loop;
         if (GCISMARKED(auxTerm)) {
           *Term = makeTaggedRef((TaggedRef*)GCUNMARK(auxTerm));
           goto loop;
@@ -1504,7 +1547,14 @@ Board *Board::gcBoard()
 Board *Board::gcBoard1()
 {
   CHECKCOLLECTED(suspCount, Board *);
-  DebugGC ((isLocalBoard (this) == NO), error ("non-local board is copied!"));
+  DebugGC (opMode == IN_TC && !isLocalBoard (this),
+            error ("non-local board is copied!"));
+  // Kludge: because of allocation of 'y' registers a non-'isInTree' board
+  //         could be reached.
+  if (opMode == IN_TC && isInTree (this) == NO) {
+    setHeapCell ((int *) &suspCount, GCMARK(this));
+    return (this);
+  }
   size_t size;
   size = sizeof(Board);
   Board *ret = (Board *) gcRealloc(this,size);
@@ -1610,6 +1660,8 @@ inline
 DLLStackEntry SolveActor::StackEntryGC (DLLStackEntry entry)
 {
   if (((Actor *) entry)->isCommitted () == OK) {
+    return ((DLLStackEntry) NULL);
+  } else if (opMode == IN_TC && isInTree((Actor *) entry) == NO) {
     return ((DLLStackEntry) NULL);
   } else {
     return ((DLLStackEntry) ((Actor *) entry)->gc ());
