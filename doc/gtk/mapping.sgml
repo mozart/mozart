@@ -72,6 +72,7 @@
   <Para class=apropos><Title/GtkButton Translation/
     Consider the relevant c code for the GtkButton object
     which is derived from GtkBin (a container type):
+<Span proglang=c>
 <<<
 struct _GtkButton {
   GtkBin bin;
@@ -90,6 +91,7 @@ void gtk_button_leave (GtkButton *button);
 void gtk_button_set_relief (GtkButton *button, GtkReliefStyle newstyle);
 GtkReliefStyle gtk_button_get_relief (GtkButton *button);
 >>>
+</Span>
 This is mapped to the following oz code
 <<<class ButtonFields
    meth buttonGetFieldBin($) &ellipsis end
