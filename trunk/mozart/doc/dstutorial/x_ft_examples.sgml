@@ -250,6 +250,72 @@ The guard-based technique is the shortest and simplest to understand.
 The exception-based technique is similar to what one would
 do in standard languages such as Java.
 
+<P>But first, let's see how simple it is to create a remote
+stationary object.
+
+<SUBSECTION><TITLE>Using fault-tolerant stationary objects</TITLE>
+
+<P>We show how to use <<Remote>> and <<NewSafeStat>> to create
+a remote stationary object.
+First, we need a class--let's define
+a simple class <<Counter>> that implements a counter.
+<<<
+declare
+class Counter
+   attr i
+   meth init i<-0 end
+   meth get(X) X=@i end
+   meth inc i<-@i+1 end
+end
+>>>
+
+<P>Then we define a functor that creates
+an instance of <<Counter>> with <<NewSafeStat>>.
+Note that the object is not created yet,
+but only when the functor is applied.
+
+<<<.
+declare
+F=functor
+  export statObj:StatObj
+  define
+     {Fault.defaultEnable nil _}
+     StatObj={NewSafeStat Counter init}
+  end
+>>>
+
+<P>Now let's create a remote site and make an instance
+of <<Counter>> called <<StatObj>>.
+The class <<Remote.manager>> gives several ways
+to create a remote site; this example uses option <<fork:sh>>,
+which just creates another process on the same machine.
+The process is accessible through the module manager <<MM>>, which
+allows to install functors ("<<apply>>") on the remote site.
+
+<<<
+declare
+MM={New Remote.manager init(fork:sh)}
+StatObj={MM apply(F $)}.statObj
+>>>
+
+<P>Finally, let's call the object.
+We've put the object calls inside a <<try>> just
+to demonstrate the fault-tolerance.
+The simplest way to see it work is to kill
+the remote process and to call the object again.
+It also works if the remote process if killed
+during an object call, of course.
+
+<<<
+try
+   {StatObj inc}
+   {StatObj inc}
+   {Show {StatObj get($)}}
+catch X then
+   {Show X}
+end
+>>>
+
 <SUBSECTION id="guard.based"><TITLE>Guard-based stationary objects</TITLE>
 
 <P>The simplest way to implement fault-tolerant stationary objects
