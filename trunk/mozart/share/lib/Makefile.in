@@ -47,8 +47,6 @@ OZ_NOLOAD =
 export OZ_LIB = $(OZLIB)
 export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZ_LIB)/:$(OZ_NOLOAD)
 
-OZVERSION	= $(TOPDIR)/OZVERSION
-
 OZLIBDIRS1 = \
 	Standard Init SP OP AP CP WP DP \
 	compiler panel browser explorer ozcar profiler gump gump/examples
@@ -384,9 +382,8 @@ $(COMPILER_FUN): NewCompiler.oz SP.env compiler/Common.env \
 	$(OZBATCH) $(OZFLAGS) --include=compiler/FunMake.oz \
 	-c NewCompiler.oz -o Compiler.ozc
 
-compiler-Version.oz: $(COMPILERSRCNOVER) $(OZVERSION) compiler/Opcodes.m4oz
-	($(ECHO) 'OZVERSION = '\'`$(OZVERSION)`\'; \
-	$(ECHO) 'DATE = '\'`date '+%h %d 19%y (%T)'`\') > $@
+compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
+	$(ECHO) 'DATE = '\'`date '+%h %d 19%y (%T)'`\' > $@
 
 compiler-Builtins.oz: $(TOPDIR)/Emulator/bidecl.perl
 	$(PERL) $< -oztable -style 2 > $@
