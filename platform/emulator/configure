@@ -4664,7 +4664,7 @@ fi
 	OZTOOLDYNOPT="$ozm_out"
 	
 if test "$oz_enable_modules_static" != "yes" ; then 
-    CDYNOPT=OZTOOLDYNOPT
+    CDYNOPT=$OZTOOLDYNOPT
 fi
 
 
