@@ -235,6 +235,8 @@ public:
       endMB=first->tail();}
     pos=NULL;}
 
+  Bool atEnd() { return posMB==0; }
+
   BYTE getNext(){
     Assert(type==BS_Unmarshal);
     Assert(posMB!=NULL);
@@ -438,8 +440,8 @@ Bool ByteStream::skipHeader()
   Assert(PERDIOMAGICSTART < ' ');
 
   while(1) {
+    if (atEnd()) return NO;
     BYTE ret = get();
-    if (ret<=0) return NO;
     if (ret==PERDIOMAGICSTART)
       return OK;
   }
