@@ -376,7 +376,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
   case Co_Builtin:
     {
       Builtin *bi= (Builtin *)t;
-      if (bi->isNative())
+      if (bi->isSited())
 	goto bomb;
 
       marshalDIF(bs,DIF_BUILTIN);
@@ -398,7 +398,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
   case Co_Class:
     {
       ObjectClass *cl = (ObjectClass*) t;
-      if (cl->isNative())
+      if (cl->isSited())
 	goto bomb;
 
       globalizeConst(cl,bs);
@@ -408,7 +408,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
   case Co_Abstraction:
     {
       Abstraction *pp=(Abstraction *) t;
-      if (pp->getPred()->isNative())
+      if (pp->getPred()->isSited())
 	goto bomb;
 
       GName *gname = globalizeConst(pp,bs);
@@ -435,7 +435,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     {
       CheckD0Compatibility;
       Object *o = (Object*) t;
-      if(o->getClass()->isNative()) 
+      if(o->getClass()->isSited()) 
 	goto bomb;
       if (!bs->globalize()) return;
       (*marshalObject)(t, bs);
@@ -993,7 +993,7 @@ loop:
 	return;
       }
 
-      if (found->isNative()) {
+      if (found->isSited()) {
 	OZ_warning("Unpickling sited builtin: '%s'", name);
       }
 

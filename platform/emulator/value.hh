@@ -1407,7 +1407,7 @@ OZ_Term oz_checkList(OZ_Term l, OzCheckList check=OZ_CHECK_ANY)
 /* Internal representation of Oz classes */
 
 #define CLASS_LOCKING 0x1
-#define CLASS_NATIVE  0x2
+#define CLASS_SITED   0x2
 
 class ObjectClass: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
@@ -1423,7 +1423,7 @@ public:
   NO_DEFAULT_CONSTRUCTORS(ObjectClass);
 
   ObjectClass(SRecord *feat,OzDictionary *fm,SRecord *uf,OzDictionary *dm,
-	      Bool lck, Bool native, Board *b)
+	      Bool lck, Bool sited, Board *b)
     : ConstTermWithHome(b,Co_Class)
   {
     features       = feat;
@@ -1431,12 +1431,12 @@ public:
     unfreeFeatures = uf;
     defaultMethods = dm;
     flags          = 0;
-    if (lck)    flags |= CLASS_LOCKING;
-    if (native) flags |= CLASS_NATIVE;
+    if (lck)   flags |= CLASS_LOCKING;
+    if (sited) flags |= CLASS_SITED;
   }
 
   int supportsLocking() { return flags&CLASS_LOCKING; }
-  int isNative()        { return flags&CLASS_NATIVE; }
+  int isSited()         { return flags&CLASS_SITED; }
 
   OzDictionary *getDefMethods()  { return defaultMethods; }
   OzDictionary *getfastMethods() { return fastMethods; }
@@ -1860,7 +1860,7 @@ extern DbgInfo *allDbgInfos;
 // ---------------------------------------------
 
 
-#define PR_NATIVE   0x1
+#define PR_SITED   0x1
 
 class PrTabEntry {
 private:
@@ -1902,7 +1902,7 @@ public:
     fl = oz_deref(fl);
     while (oz_isCons(fl)) {
       OZ_Term ff=oz_deref(oz_head(fl));
-      if (oz_eq(ff,OZ_atom("native"))) { flags |= PR_NATIVE; }
+      if (oz_eq(ff,OZ_atom("sited"))) { flags |= PR_SITED; }
       fl = oz_deref(oz_tail(fl));
     }
     Assert(oz_isNil(fl));
@@ -1955,11 +1955,11 @@ public:
   void setInfo(TaggedRef t) { info = t; }
   TaggedRef getInfo()       { return info; }
 
-  int isNative()   { return flags&PR_NATIVE; }
+  int isSited()    { return flags&PR_SITED; }
   int getFlags()   { return flags; }
   OZ_Term getFlagsList() {
     OZ_Term ret = oz_nil();
-    if (isNative()) ret = oz_cons(OZ_atom("native"),ret);
+    if (isSited()) ret = oz_cons(OZ_atom("sited"),ret);
     return ret;
   }
 
@@ -2051,7 +2051,7 @@ private:
   short inArity;
   short outArity;
   OZ_CFun fun;
-  Bool native;
+  Bool sited;
 #ifdef PROFILE_BI
   unsigned long counter;
 #endif
@@ -2065,7 +2065,7 @@ public:
   { return ::new char[chunk_size]; }
   
   Builtin(const char *s,int inArity,int outArity, OZ_CFun fn, Bool nat)
-  : inArity(inArity),outArity(outArity),fun(fn), native(nat),
+  : inArity(inArity),outArity(outArity),fun(fn), sited(nat),
     ConstTerm(Co_Builtin)
   {
     printname = oz_atom(s);
@@ -2082,7 +2082,7 @@ public:
     return tagged2Literal(printname)->getPrintName();
   }
   TaggedRef getName() { return printname; }
-  Bool isNative()     { return native; }
+  Bool isSited()      { return sited; }
 
 #ifdef PROFILE_BI
   void incCounter() { counter++; }

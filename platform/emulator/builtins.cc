@@ -4229,7 +4229,7 @@ OZ_BI_define(BImakeClass,6,1)
   OZ_Term ufeatures  = OZ_in(2); { DEREF(ufeatures,_1,_2); }
   OZ_Term defmethods = OZ_in(3); { DEREF(defmethods,_1,_2); }
   OZ_Term locking    = OZ_in(4); { DEREF(locking,_1,_2); }
-  OZ_Term native     = OZ_in(5); { DEREF(native,_1,_2); }
+  OZ_Term sited      = OZ_in(5); { DEREF(sited,_1,_2); }
 
   if (!oz_isDictionary(fastmeth))   { oz_typeError(0,"dictionary"); }
   if (!oz_isRecord(features))       { oz_typeError(1,"record"); }
@@ -4243,7 +4243,7 @@ OZ_BI_define(BImakeClass,6,1)
 				    uf,
 				    tagged2Dictionary(defmethods),
 				    oz_isTrue(locking),
-				    oz_isTrue(native),
+				    oz_isTrue(sited),
 				    oz_currentBoard());
 
   OZ_RETURN(makeTaggedConst(cl));
@@ -4426,6 +4426,35 @@ OZ_Return ooGetLockInline(TaggedRef val)
 }
 OZ_DECLAREBI_USEINLINEREL1(BIooGetLock,ooGetLockInline)
 
+
+OZ_BI_define(BIclassIs,1,1)  {
+  oz_declareNonvarIN(0,cl);
+  cl = oz_deref(cl);
+
+  OZ_RETURN(oz_isClass(cl) ? oz_true() : oz_false());
+} OZ_BI_end
+
+OZ_BI_define(BIclassIsSited,1,1)  {
+  oz_declareNonvarIN(0,cl);
+  cl = oz_deref(cl);
+
+  if (!oz_isClass(cl)) {
+    oz_typeError(0,"Class");
+  }
+
+  OZ_RETURN(tagged2ObjectClass(cl)->isSited() ? oz_true() : oz_false());
+} OZ_BI_end
+
+OZ_BI_define(BIclassIsLocking,1,1)  {
+  oz_declareNonvarIN(0,cl);
+  cl = oz_deref(cl);
+
+  if (!oz_isClass(cl)) {
+    oz_typeError(0,"Class");
+  }
+
+  OZ_RETURN(tagged2ObjectClass(cl)->supportsLocking() ? oz_true():oz_false());
+} OZ_BI_end
 
 #ifdef MISC_BUILTINS
 
