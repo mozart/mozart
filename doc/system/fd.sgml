@@ -149,7 +149,7 @@ In Mozart <<FD.sup>> is 134 217 726.
 {FD.is ?*{D} ??{B}}
 >>>
 <item>
-tests whether ?*{D} is an integer between 0 and <<FD.sup>>.
+tests whether ?_{D} is an integer between 0 and <<FD.sup>>.
 </list>
 </section>
 
@@ -165,7 +165,7 @@ tests whether ?*{D} is an integer between 0 and <<FD.sup>>.
 {FD.int ?+{Spec} ??{D}}
 >>>
 <item>
-tells the constraint store that ??{D} is an integer in ?+{Spec}.
+tells the constraint store that ?_{D} is an integer in ?_{Spec}.
 
 <entry>
 <index class=module/FD<and>dom/
@@ -176,8 +176,8 @@ tells the constraint store that ??{D} is an integer in ?+{Spec}.
 {FD.dom ?+{Spec} ??{Dv}}
 >>>
 <item>
-tells the constraint store that ??{Dv} is a vector of integers in
-?+{Spec}. Waits until ??{Dv} is constrained to a vector.
+tells the constraint store that ?_{Dv} is a vector of integers in
+?_{Spec}. Waits until ?_{Dv} is constrained to a vector.
 
 <entry>
 <index class=module/FD<and>list/
@@ -188,7 +188,7 @@ tells the constraint store that ??{Dv} is a vector of integers in
 >>>
 <item>
 tells the constraint store that
-??{Ds} is a list of integers in ?+{Spec} of length ?+{I}.
+?_{Ds} is a list of integers in ?_{Spec} of length ?_{I}.
 
 <entry>
 <index class=module/FD<and>tuple/
@@ -199,8 +199,8 @@ tells the constraint store that
 >>>
 <item>
 tells the constraint store that
-??{Dt} is a tuple of integers in ?+{Spec} of width ?+{I}
-and label ?+{L}.
+?_{Dt} is a tuple of integers in ?_{Spec} of width ?_{I}
+and label ?_{L}.
 
 <entry id="FD.record">
 <index class=module/FD<and>record/
@@ -211,9 +211,9 @@ and label ?+{L}.
 >>>
 <item>
 tells the constraint store that
-??{Dr} is a record of integers in ?+{Spec} with features
-?+{Ls} and
-label ?+{L}.
+?_{Dr} is a record of integers in ?_{Spec} with features
+?_{Ls} and
+label ?_{L}.
 
 <entry>
 <index class=module/FD<and>decl/
@@ -223,7 +223,7 @@ label ?+{L}.
 {FD.decl ??{D}}
 >>>
 <item>
-Abbreviates <<{FD.int 0#FD.sup D}>>.
+Abbreviates <<{FD.int 0#FD.sup ?_{D}}>>.
 </list>
 </section>
 
@@ -238,7 +238,7 @@ Abbreviates <<{FD.int 0#FD.sup D}>>.
 {FD.reflect.min ?*{D1} ??{D2}}
 >>>
 <item>
-returns the current lower bound of ?*{D1}.
+returns the current lower bound of ?_{D1}.
 
 <entry>
 <index class=module/FD<and>reflect!max/
@@ -248,7 +248,7 @@ returns the current lower bound of ?*{D1}.
 {FD.reflect.max ?*{D1} ??{D2}}
 >>>
 <item>
-returns the current upper bound of ?*{D1}.
+returns the current upper bound of ?_{D1}.
 
 <entry>
 <index class=module/FD<and>reflect!mid/
@@ -260,7 +260,7 @@ returns the current upper bound of ?*{D1}.
 <item>
 returns the integer which is closest to the
 middle of the current domain (the arithmetical means of the lower and upper
-bound of ?*{D1}). In case of ties, the smaller
+bound of ?_{D1}). In case of ties, the smaller
 element is selected.
 
 <entry>
@@ -271,8 +271,8 @@ element is selected.
 {FD.reflect.nextLarger ?*{D1} ?+{D2} ??{D3}}
 >>>
 <item>
-returns the smallest integer in the domain of ?*{D1} which is larger than
-?+{D2}.
+returns the smallest integer in the domain of ?_{D1} which is larger than
+?_{D2}.
 
 <entry>
 <index class=module/FD<and>reflect!nextSmaller/
@@ -282,8 +282,8 @@ returns the smallest integer in the domain of ?*{D1} which is larger than
 {FD.reflect.nextSmaller ?*{D1} ?+{D2} ??{D3}}
 >>>
 <item>
-returns the largest integer in the domain of ?*{D1} which is smaller than
-?+{D2}.
+returns the largest integer in the domain of ?_{D1} which is smaller than
+?_{D2}.
 
 <entry>
 <index class=module/FD<and>reflect!size/
@@ -293,7 +293,7 @@ returns the largest integer in the domain of ?*{D1} which is smaller than
 {FD.reflect.size ?*{D1} ??{D2}}
 >>>
 <item>
-returns the size of the current domain of ?*{D1}.
+returns the size of the current domain of ?_{D1}.
 
 <entry>
 <index class=module/FD<and>reflect!domList/
@@ -303,7 +303,7 @@ returns the size of the current domain of ?*{D1}.
 {FD.reflect.domList ?*{D} ??{Ds}}
 >>>
 <item>
-returns the current domain of ?*{D} as an ordered list of integers.
+returns the current domain of ?_{D} as an ordered list of integers.
 
 <entry>
 <index class=module/FD<and>reflect!dom/
@@ -313,7 +313,7 @@ returns the current domain of ?*{D} as an ordered list of integers.
 {FD.reflect.dom ?*{D} ??{Spec}}
 >>>
 <item>
-returns the current domain of  ?*{D} as a domain specification.
+returns the current domain of  ?_{D} as a domain specification.
 
 <entry>
 <index class=module/FD<and>reflect!nbSusps/
@@ -323,7 +323,7 @@ returns the current domain of  ?*{D} as a domain specification.
 {FD.reflect.nbSusps ?*{D} ??{I}}
 >>>
 <item>
-returns the current number of suspensions  on ?*{D}.
+returns the current number of suspensions  on ?_{D}.
 </list>
 </section>
 
@@ -362,8 +362,8 @@ store.
 {FD.watch.size ?*{D1} ?+{D2} ??{B}}
 >>>
 <item>
-Returns <<true>> when the size of the domain of ?*{D1} becomes smaller
-than ?+{D2}.
+Returns <<true>> when the size of the domain of ?_{D1} becomes smaller
+than ?_{D2}.
 </list>
 </section>
 
@@ -420,12 +420,12 @@ propagator does interval propagation.
 {FD.sumC ?+{Iv} ?*{Dv} ?+{A} ?*{D}}
 >>>
 <item>
-creates a propagator for the scalar product of the vectors ?+{Iv} and
-?*{Dv}:
+creates a propagator for the scalar product of the vectors ?_{Iv} and
+?_{Dv}:
 <p><math/{\tt I}_1*{\tt D}_1+\ldots+{\tt I}_n*{\tt D}_n+(-1)*{\tt D}\;\sim_{{\tt A}}\;0
 </math><p>
 
-Let <math/{\tt D}_{n+1}/ be ?+{D} and <math/{\tt I}_{n+1}/ be <math/-1/. Then, the operational
+Let <math/{\tt D}_{n+1}/ be ?_{D} and <math/{\tt I}_{n+1}/ be <math/-1/. Then, the operational
 semantics is defined as follows. For each product
 <math/{\tt I}_k*{\tt D}_k/, an isolation (projection) is computed:
 <p>
@@ -526,7 +526,7 @@ is discarded from the domain of <math/{\tt D}_k/.
 </list>
 <p>
 Additional propagation is achieved through the realization of
-coreferences, &ie; equality between variables.  If the store ?+{S}
+coreferences, &ie; equality between variables.  If the store ?_{S}
 entails (without loss of generality) <math/{\tt D}_1 = {\tt D}_2/, the generic
 propagator evolves into:
 <p><math>
@@ -547,7 +547,7 @@ creates a propagator for
 {\tt I}_1*{\tt D}_{11}*\ldots*{\tt D}_{1m_1}+\ldots+{\tt I}_n*{\tt D}_{n1}*\ldots*{\tt D}_{nm_n}+
 (-1)*{\tt D}\;\sim_{{\tt A}}\;0</math><p>
 
-Let <math/{\tt D}_{(n+1)1}/ be ?+{D}, <math/{\tt I}_{n+1}/ be -1, and <math/m_{n+1}/
+Let <math/{\tt D}_{(n+1)1}/ be ?_{D}, <math/{\tt I}_{n+1}/ be -1, and <math/m_{n+1}/
 be 1.
 Then, the  operational semantics is defined as follows. For  <math/k, 1
 \leq k \leq n+1/, an isolation (projection) is computed:
@@ -677,19 +677,19 @@ domain integers).
 >>>
 <item>
 creates a propagator for the absolute value of the scalar product of the
-vectors ?{Iv} and ?{Dv}:
+vectors ?_{Iv} and ?_{Dv}:
 <p><math>|{\tt Iv} * {\tt Dv}| = |{\tt I}_1*{\tt D}_1 + \ldots +
 {\tt I}_n*{\tt D}_n|\;\sim_{{\tt A}}\;{\tt D}</math><p>
 
 The operational semantics is as follows.
-If ?{A} is <<'<:'>>, <<'=<:'>> or <<'\=:'>>, the following definition
+If ?_{A} is <<'<:'>>, <<'=<:'>> or <<'\=:'>>, the following definition
 holds.
 
 <p><math> {\tt Iv} * {\tt Dv} \sim_{{\tt A}} D \;\wedge\; (-{\tt Iv})*{\tt Dv}
 \sim_{{\tt A}} D
 </math><p>
 
-If ?{A} is <<'&gt;:'>>, <<'&gt;=:'>> or <<'=:'>>, the following definition
+If ?_{A} is <<'&gt;:'>>, <<'&gt;=:'>> or <<'=:'>>, the following definition
 holds.
 
 <p><math>{\tt Iv} * {\tt Dv} \sim_{{\tt A}} D \;\vee\; (-{\tt Iv})*{\tt Dv}
@@ -725,7 +725,7 @@ constraints <<X::Spec>>, where <<Spec>> may also contain holes.
 {FD.distinct ?*{Dv}}
 >>>
 <item>
-All elements in ?{Dv} are pairwise distinct. If one element becomes
+All elements in ?_{Dv} are pairwise distinct. If one element becomes
 determined, the remaining elements are constrained to be different from
 it. If two variables become equal, the propagator fails,
  &eg; <<{FD.distinct [A A B]}>> will
@@ -764,10 +764,10 @@ or Dv1.?_{i} + IV1.?_{i} =<: Dv1.?_{j}
 end
 >>>
 This propagator may be used to express that a number of rectangles must
-not overlap in the two-dimensional space. In this case ?{Dv1} and
-?{Dv2} may denote
+not overlap in the two-dimensional space. In this case ?_{Dv1} and
+?_{Dv2} may denote
 the x-coordinates and y-coordinates of the lower left corner of the
-rectangles, respectively. ?{Iv1} and ?{Iv2} may denote the widths
+rectangles, respectively. ?_{Iv1} and ?_{Iv2} may denote the widths
 and heights of
 the rectangles, respectively.
 
@@ -778,16 +778,16 @@ the rectangles, respectively.
 <entry><<exactly>><index class=module/FD<and>exactly/
 <synopsis><<{FD.exactly ?*{D} ?*{Dv} ?+{I}}>>
 <item>
-At most, at least, exactly ?{D} elements of ?{Dv} are equal to
-?{I}.
+At most, at least, exactly ?_{D} elements of ?_{Dv} are equal to
+?_{I}.
 The operational semantics is defined as follows. Let <<VFoldL>> be either
-<<FoldL>> or <<Record.foldL>> depending on the type of ?{Dv} and
+<<FoldL>> or <<Record.foldL>> depending on the type of ?_{Dv} and
 <<<
 S = {VFoldL Dv fun{$ In D1} {FD.plus In D1=:I} end 0}
 >>>
 The propagator <<FD.atMost>>, <<FD.atLeast>> and <<FD.exactly>> are defined
  by
-?{D}<<>=:S>>, ?{D}<<=<:S>> and ?{D}<<=:S>>, respectively.
+?_{D}<<>=:S>>, ?_{D}<<=<:S>> and ?_{D}<<=:S>>, respectively.
 
 <entry>
 <index class=module/FD<and>element/
@@ -797,26 +797,26 @@ The propagator <<FD.atMost>>, <<FD.atLeast>> and <<FD.exactly>> are defined
 {FD.element ?*{D1} ?+{Iv} ?*{D2}}
 >>>
 <item>
-The ?{D1}-th element of ?{Iv} is ?{D2}.
+The ?_{D1}-th element of ?_{Iv} is ?_{D2}.
 <p>
 It propagates as
 follows. For each integer ?{i} in
-the domain of ?{D1}, the ?{i}-th element of ?{Iv} is in the domain of
-?{D2}; and no other values. For each value ?{j} in the domain of ?{D2}, all
+the domain of ?_{D1}, the ?{i}-th element of ?_{Iv} is in the domain of
+?_{D2}; and no other values. For each value ?{j} in the domain of ?_{D2}, all
 positions
-where ?{j} occurs in ?{Is} are in the domain of ?{D1}; and no
+where ?{j} occurs in ?_{Is} are in the domain of ?_{D1}; and no
 other values. For example,
 <<<
 {FD.int [1 3] X} {FD.element X [5 6 7 8] Y}
 >>>
  will constrain <<Y>>
 to <math/\{5,7\}/.
-?{D1} is constrained to be greater than 0.
+?_{D1} is constrained to be greater than 0.
 </list></section>
 
 <section id="section.fd.bool"><title>0/1 Propagators</title>
 <p>
-Using the mapping from ?{0} and ?{1} to the truth values <def/false/ and
+Using the mapping from <<0>> and <<1>> to the truth values <def/false/ and
 <def/true/, respectively,  logical connectives between finite
 domain integers are defined.
 If at most  one argument is a free variable, it will be
@@ -838,16 +838,16 @@ exploiting as much information as possible (including coreferences).
 {FD.conj ?@{D1} ?@{D2} ?@{D3}}
 >>>
 <item>
-?{D3} is the conjunction of ?{D1} and ?{D2}.
+?_{D3} is the conjunction of ?_{D1} and ?_{D2}.
 The operational semantics can be described by the following code
 <<<
 [D1 D2 D3] ::: 0#1
-if D1 = 0 then D3 = 0
-[] D1 = 1 then D2 = D3
-[] D2 = 0 then D3 = 0
-[] D2 = 1 then D1 = D3
-[] D3 = 1 then D1 = 1   D2 = 1
-[] D1 = D2 then D1 = D3
+cond D1=0  then D3=0
+[]   D1=1  then D2=D3
+[]   D2=0  then D3=0
+[]   D2=1  then D1=D3
+[]   D3=1  then D1=1 D2=1
+[]   D1=D2 then D1=D3
 end
 >>>
 
@@ -859,7 +859,7 @@ end
 {FD.disj ?@{D1} ?@{D2} ?@{D3}}
 >>>
 <item>
-?{D3} is the disjunction of ?{D1} and ?{D2}.
+?_{D3} is the disjunction of ?_{D1} and ?_{D2}.
 
 <entry>
 <index class=module/FD<and>exor/
@@ -869,7 +869,7 @@ end
 {FD.exor ?@{D1} ?@{D2} ?@{D3}}
 >>>
 <item>
-?{D3} is the exclusive disjunction of ?{D1} and ?{D2}.
+?_{D3} is the exclusive disjunction of ?_{D1} and ?_{D2}.
 
 <entry>
 <index class=module/FD<and>nega/
@@ -879,7 +879,7 @@ end
 {FD.nega ?@{D1} ?@{D2}}
 >>>
 <item>
-?{D2} is the negation of ?{D1}.
+?_{D2} is the negation of ?_{D1}.
 
 <entry>
 <index class=module/FD<and>impl/
@@ -889,7 +889,7 @@ end
 {FD.impl ?@{D1} ?@{D2} ?@{D3}}
 >>>
 <item>
-?{D3} is the implication of ?{D2} by ?{D1}
+?_{D3} is the implication of ?_{D2} by ?_{D1}
 (<Q/<math/{\tt D1}\rightarrow{\tt D2}//).
 
 <entry>
@@ -900,8 +900,8 @@ end
 {FD.equi ?@{D1} ?@{D2} ?@{D3}}
 >>>
 <item>
-?{D3} is the equivalence of ?{D1} by ?{D2}
-(<Q/<math/{\tt D1}\leftrightarrow?{\tt D2}//).
+?_{D3} is the equivalence of ?_{D1} by ?_{D2}
+(<Q/<math/{\tt D1}\leftrightarrow{\tt D2}//).
 </list></section>
 
 <section id="section.fd.reified"><title/Reified Constraints/
@@ -950,7 +950,7 @@ relation symbol ?{A}, the symbol of the negated relation occurs in
 {FD.reified.int ?+{Spec} ?*{D1} ?_{D2}}
 >>>
 <item>
-reifies <<{FD.int Spec D1}>> into ?{D2}.
+reifies <<{FD.int Spec D1}>> into ?_{D2}.
 
 <entry>
 <index class=module/FD<and>reified!dom/
@@ -960,7 +960,7 @@ reifies <<{FD.int Spec D1}>> into ?{D2}.
 {FD.reified.dom ?+{Spec} ?_{Dv} ?_{D}}
 >>>
 <item>
-reifies <<{FD.dom Spec Dv}>> into ?{D}.
+reifies <<{FD.dom Spec Dv}>> into ?_{D}.
 
 <entry>
 <index class=module/FD<and>reified!sum/
@@ -970,7 +970,7 @@ reifies <<{FD.dom Spec Dv}>> into ?{D}.
 {FD.reified.sum ?*{Dv} ?+{A} ?*{D1} ?_{D2}}
 >>>
 <item>
-reifies <<{FD.sum Dv A D1}>> into ?{D2}.
+reifies <<{FD.sum Dv A D1}>> into ?_{D2}.
 
 <entry>
 <index class=module/FD<and>reified!sumC/
@@ -980,7 +980,7 @@ reifies <<{FD.sum Dv A D1}>> into ?{D2}.
 {FD.reified.sumC ?+{Iv} ?*{Dv} ?+{A} ?*{D1} ?_{D2}}
 >>>
 <item>
-reifies <<{FD.sumC Iv Dv A D1}>> into ?{D2}.
+reifies <<{FD.sumC Iv Dv A D1}>> into ?_{D2}.
 
 <entry>
 <index class=module/FD<and>reified!sumCN/
@@ -990,7 +990,7 @@ reifies <<{FD.sumC Iv Dv A D1}>> into ?{D2}.
 {FD.reified.sumCN ?+{Iv} ?*{Dvv} ?+{A} ?*{D1} ?_{D2}}
 >>>
 <item>
-reifies <<{FD.sumCN Iv Dvv A D1}>> into ?{D2}.
+reifies <<{FD.sumCN Iv Dvv A D1}>> into ?_{D2}.
 
 <entry>
 <index class=module/FD<and>reified!sumAC/
@@ -1000,7 +1000,7 @@ reifies <<{FD.sumCN Iv Dvv A D1}>> into ?{D2}.
 {FD.reified.sumAC ?+{Iv} ?*{Dv} ?+{A} ?*{D1} ?_{D2}}
 >>>
 <item>
-reifies <<{FD.sumAC Iv Dv A D1}>> into ?{D2}.
+reifies <<{FD.sumAC Iv Dv A D1}>> into ?_{D2}.
 
 <entry>
 <index class=module/FD<and>reified!sumACN/
@@ -1010,7 +1010,7 @@ reifies <<{FD.sumAC Iv Dv A D1}>> into ?{D2}.
 {FD.reified.sumACN ?+{Iv} ?*{Dvv} ?+{A} ?*{D1} ?_{D2}}
 >>>
 <item>
-reifies <<{FD.sumACN Iv Dvv A D1}>> into ?{D2}.
+reifies <<{FD.sumACN Iv Dvv A D1}>> into ?_{D2}.
 
 <entry>
 <index class=module/FD<and>min/
@@ -1020,7 +1020,7 @@ reifies <<{FD.sumACN Iv Dvv A D1}>> into ?{D2}.
 {FD.reified.distance ?*{D1} ?*{D2} ?+{A} ?*{D3} ?_{D4}}
 >>>
 <item>
-reifies <<{FD.distance D1 D2 A D3}>> into ?{D4}.
+reifies <<{FD.distance D1 D2 A D3}>> into ?_{D4}.
 
 <entry>
 <index class=module/FD<and>reified!card/
@@ -1065,8 +1065,8 @@ end
 {FD.plus ?@{D1} ?@{D2} ?@{D3}}
 >>>
 <item>
-?{D3} is the sum of ?{D1} and ?{D2}.
-The propagator constrains its arguments as ?{D1}<<+>>?{D2}<<=:>>?{D3}.
+?_{D3} is the sum of ?_{D1} and ?_{D2}.
+The propagator constrains its arguments as ?_{D1}<<+>>?_{D2}<<=:>>?_{D3}.
 
 <entry>
 <index class=module/FD<and>plusD/
@@ -1076,8 +1076,8 @@ The propagator constrains its arguments as ?{D1}<<+>>?{D2}<<=:>>?{D3}.
 {FD.plusD ?@{D1} ?@{D2} ?@{D3}}
 >>>
 <item>
-?{D3} is the sum of ?{D1} and ?{D2}.
-The propagator constrains its arguments as ?{D1}<<+>>?{D2}<<=:>>?{D3}.
+?_{D3} is the sum of ?_{D1} and ?_{D2}.
+The propagator constrains its arguments as ?_{D1}<<+>>?_{D2}<<=:>>?_{D3}.
 <P>
 Does domain propagation, which can be very expensive.
 
@@ -1089,8 +1089,8 @@ Does domain propagation, which can be very expensive.
 {FD.minus ?@{D1} ?@{D2} ?@{D3}}
 >>>
 <item>
-?{D3} is the difference between ?{D1} and ?{D2}.
-The propagator constrains its arguments as ?{D1}<<->>?{D2}<<=:>>?{D3}.
+?_{D3} is the difference between ?_{D1} and ?_{D2}.
+The propagator constrains its arguments as ?_{D1}<<->>?_{D2}<<=:>>?_{D3}.
 
 <entry>
 <index class=module/FD<and>minusD/
@@ -1100,8 +1100,8 @@ The propagator constrains its arguments as ?{D1}<<->>?{D2}<<=:>>?{D3}.
 {FD.minusD ?@{D1} ?@{D2} ?@{D3}}
 >>>
 <item>
-?{D3} is the difference between ?{D1} and ?{D2}.
-The propagator constrains its arguments as ?{D1}<<->>?{D2}<<=:>>?{D3}.
+?_{D3} is the difference between ?_{D1} and ?_{D2}.
+The propagator constrains its arguments as ?_{D1}<<->>?_{D2}<<=:>>?_{D3}.
 <P>
 Does domain propagation, which can be very expensive.
 
@@ -1113,7 +1113,7 @@ Does domain propagation, which can be very expensive.
 {FD.times ?@{D1} ?@{D2} ?@{D3}}
 >>>
 <item>
-?{D3} is the product of ?{D1} and ?{D2}.
+?_{D3} is the product of ?_{D1} and ?_{D2}.
 Coreferences are exploited. If the store entails <<D1 = D3>>,
 the propagator ceases to exist and the constraint <<D2=1>> is
 imposed. If the store entails <<D2 = D3>>, the propagator ceases to
@@ -1135,7 +1135,7 @@ For notation see&nbsp;<ptr to="section.fd.arithmetic">.
 {FD.timesD ?@{D1} ?@{D2} ?@{D3}}
 >>>
 <item>
-?{D3} is the product of ?{D1} and ?{D2}.
+?_{D3} is the product of ?_{D1} and ?_{D2}.
 <P>
 Does domain propagation, which can be very expensive.
 
@@ -1148,7 +1148,7 @@ Does domain propagation, which can be very expensive.
 {FD.power ?@{D1} ?+{I} ?@{D2}}
 >>>
 <item>
-?@{D2} is the result of ?{D1} raised to the power of ?{I}, &ie;
+?@{D2} is the result of ?_{D1} raised to the power of ?_{I}, &ie;
 <math/{\tt D1}^{{\tt I}} = {\tt D2}/.
 The propagator constrains the variables <<D1>> and <<D2>> as follows.
 <p><math>
@@ -1167,7 +1167,7 @@ For notation see &nbsp;<ptr to="section.fd.arithmetic">.
 {FD.divI ?@{D1} ?+{I} ?@{D2}}
 >>>
 <item>
-?{D2} is the result of the integer division of <<D1>> by <<I>>.
+?_{D2} is the result of the integer division of <<D1>> by <<I>>.
 <p>
 A domain bound is discarded from the domain of one variable, if there is
 no value between the lower and upper bound of the domain of the other
@@ -1182,13 +1182,13 @@ Additionally, if <math/{\tt D1}={\tt D2}/, the propagator is replaced by <<I=1>>
 {FD.modI ?@{D1} ?+{I} ?@{D2}}
 >>>
 <item>
-?{D2} is the result of <<D1>> modulus <<I>>.
+?_{D2} is the result of <<D1>> modulus <<I>>.
 <p>
 A domain bound is discarded from the domain of one variable, if there is
 no value between the lower and upper bound of the domain of the other
 variable, such that the constraint holds.
 Additionally, if <math/{\tt D1}={\tt D2}/, the propagator is replaced by
-<<D1&lt;:I>>. If the current upper bound of ?{D1} is less than ?{I},
+<<D1&lt;:I>>. If the current upper bound of ?_{D1} is less than ?_{I},
 the propagator is replaced by <<D1=D2>>.
 
 <entry>
@@ -1199,7 +1199,7 @@ the propagator is replaced by <<D1=D2>>.
 {FD.divD ?@{D1} ?+{I} ?@{D2}}
 >>>
 <item>
-?{D2} is the result of the integer division of <<D1>> by <<I>>.
+?_{D2} is the result of the integer division of <<D1>> by <<I>>.
 <p>
 Does domain propagation, which can be very expensive.
 
@@ -1211,7 +1211,7 @@ Does domain propagation, which can be very expensive.
 {FD.modD ?@{D1} ?+{I} ?@{D2}}
 >>>
 <item>
-?{D2} is the result of <<D1>> modulus <<I>>.
+?_{D2} is the result of <<D1>> modulus <<I>>.
 <p>
 Does domain propagation, which can be very expensive.
 
@@ -1223,7 +1223,7 @@ Does domain propagation, which can be very expensive.
 {FD.max ?@{D1} ?@{D2} ?@{D3}}
 >>>
 <item>
-?{D3} is the maximum of ?{D1} and ?{D2}.
+?_{D3} is the maximum of ?_{D1} and ?_{D2}.
 <p>
 Its operational semantics  is defined through
 <<<
@@ -1244,7 +1244,7 @@ end
 {FD.min ?@{D1} ?@{D2} ?@{D3}}
 >>>
 <item>
-?{D3} is the minimum of ?{D1} and ?{D2}.
+?_{D3} is the minimum of ?_{D1} and ?_{D2}.
 Its operational semantics is defined through
 <<<
 D3=&lt;:D1   D3=&lt;:D2
@@ -1283,7 +1283,7 @@ more efficient.
 {FD.less ?*{D1} ?*{D2}}
 >>>
 <item>
-Equivalent to ?{D1}<<&lt;:>>?{D2}.
+Equivalent to ?_{D1}<<&lt;:>>?_{D2}.
 
 <entry>
 <index class=module/FD<and>lesseq/
@@ -1293,7 +1293,7 @@ Equivalent to ?{D1}<<&lt;:>>?{D2}.
 {FD.lesseq ?*{D1} ?*{D2}}
 >>>
 <item>
-Equivalent to ?{D1} <<=&lt;:>> ?{D2}.
+Equivalent to ?_{D1} <<=&lt;:>> ?_{D2}.
 
 <entry>
 <index class=module/FD<and>greater/
@@ -1303,7 +1303,7 @@ Equivalent to ?{D1} <<=&lt;:>> ?{D2}.
 {FD.greater ?*{D1} ?*{D2}}
 >>>
 <item>
-Equivalent to ?{D1}<<&gt;:>>?{D2}.
+Equivalent to ?_{D1}<<&gt;:>>?_{D2}.
 
 <entry>
 <index class=module/FD<and>greatereq/
@@ -1313,7 +1313,7 @@ Equivalent to ?{D1}<<&gt;:>>?{D2}.
 {FD.greatereq ?*{D1} ?*{D2}}
 >>>
 <item>
-Equivalent to ?{D1}<<&gt;=:>>?{D2}.
+Equivalent to ?_{D1}<<&gt;=:>>?_{D2}.
 
 <entry>
 <index class=module/FD<and>disjoint/
@@ -1389,30 +1389,30 @@ The order of <<Dv>> is preserved.
 {FD.distribute ?+{Dist} ?+{Xv}}
 >>>
 <item>
-The vector ?{Xv} is distributed according to the specification
-?{Dist}.
- ?{Dist} may be either
+The vector ?_{Xv} is distributed according to the specification
+?_{Dist}.
+ ?_{Dist} may be either
 the atom <<naive>>, <<ff>> (for first-fail), <<split>> or a record with label <<generic>>:
 
 <list>
 <item> <<naive>>:
-?{Xv} must be a vector of finite domain integers.
-Considers only non-determined elements of ?{Xv}. Chooses the leftmost
-variable <<X>> in ?{Xv}.
+?_{Xv} must be a vector of finite domain integers.
+Considers only non-determined elements of ?_{Xv}. Chooses the leftmost
+variable <<X>> in ?_{Xv}.
 Creates a choice point for <<X=L>> and <<X\=:L>>, where <<L>> is the lower
 bound of the domain of <<X>>.
 
 <item> <<ff>>:
-?{Xv} must be a vector of finite domain integers.
-Considers only non-determined elements of ?{Xv}. Chooses the leftmost
-variable <<X>> in ?{Xv}, whose domain size is minimal.
+?_{Xv} must be a vector of finite domain integers.
+Considers only non-determined elements of ?_{Xv}. Chooses the leftmost
+variable <<X>> in ?_{Xv}, whose domain size is minimal.
 Creates a choice point for <<X=L>> and <<X\=:L>>, where <<L>> is the lower
 bound of the domain of <<X>>.
 
 <item> <<split>>:
-?{Xv} must be a vector of finite domain integers.
-Considers only non-determined elements of ?{Xv}. Chooses the leftmost
-variable <<X>> in ?{Xv}, whose domain size is minimal.
+?_{Xv} must be a vector of finite domain integers.
+Considers only non-determined elements of ?_{Xv}. Chooses the leftmost
+variable <<X>> in ?_{Xv}, whose domain size is minimal.
 Creates a choice point for <<X=<:M>> and <<X>:M>>, where <<M>> is the
 middle of the domain of <<X>> (see <<FD.reflect.mid>>).
 
@@ -1423,20 +1423,20 @@ generic(order:  ?+{Order}  <= size
         select: ?+{Select} <= id
         value:  ?+{Value}  <= min)
 >>>
-Considers only those elements in ?{Xv}, for which ?{Filter} is
-true. Chooses the leftmost element, which is minimal with respect to ?{Order}
+Considers only those elements in ?_{Xv}, for which ?_{Filter} is
+true. Chooses the leftmost element, which is minimal with respect to ?_{Order}
 and selects the
-corresponding variable <<D>> by ?{Select}. Creates a choice point for
+corresponding variable <<D>> by ?_{Select}. Creates a choice point for
 <<D::Spec>> and <<D::compl(Spec)>>, where <<Spec>> is selected by
 <<Value>>.
 <p>
 The values under the respective features must be as follows:
 <p>
 <list>
-<item> ?{Order}:
+<item> ?_{Order}:
 <list>
         <item> Binary boolean function <<P>>: Selects the leftmost element
-                         in ?{Xv} which is minimal with respect  to
+                         in ?_{Xv} which is minimal with respect  to
                          the order relation <<P>>.
         <item> <<naive>>: Selects the leftmost variable.
         <item> <<size>>: Selects the leftmost variable, whose domain is
@@ -1450,23 +1450,23 @@ The values under the respective features must be as follows:
 several variables suspend on the maximal number of constraints,
 the leftmost variable whose domain is minimal is selected.
 </list>
-<item> ?{Filter}:
+<item> ?_{Filter}:
 <list>
         <item> Unary boolean function <<P>>: Considers only the elements
-        <<X>> in ?{Xv}, for which <<{P X}>> yields <<true>>.
+        <<X>> in ?_{Xv}, for which <<{P X}>> yields <<true>>.
         <item> <<undet>>: Considers only undetermined variables.
 </list>
-<item> ?{Select}:
+<item> ?_{Select}:
 <list>
         <item> Unary function <<P>>: Selects the variable to enumerate
-        from the selected element by ?{Order} and ?{Filter}.
+        from the selected element by ?_{Order} and ?_{Filter}.
         <item> <<id>>: The variable to enumerate is the selected element.
 </list>
-<item> ?{Value}:
+<item> ?_{Value}:
 <list>
         <item> Ternary procedure <<P>>: Selects a value from the domain of
         the selected variable. The first argument is the domain of the
-        selected variable. The second argument is the vector ?{Xv}
+        selected variable. The second argument is the vector ?_{Xv}
         converted to a list and the third argument is a procedure used
         as continuation.
         <item> <<min>>: Selects the lower bound of the domain.
@@ -1481,8 +1481,8 @@ the leftmost variable whose domain is minimal is selected.
         following the middle to the upper bound  of the domain (see <<mid>>).
 </list>
 </list>
-Note, that in case ?{Det} is <<det>> or in case ?{Order} is <<size>>,
-<<lower>>, <<upper>>, or <<nbSusps>>, the elements of ?{Xv} must be
+Note, that in case ?_{Det} is <<det>> or in case ?_{Order} is <<size>>,
+<<lower>>, <<upper>>, or <<nbSusps>>, the elements of ?_{Xv} must be
 finite domain integers.
 <p>
 For example, <<{FD.distribute ff Dv}>> can be expressed as
@@ -1521,9 +1521,9 @@ generic(value: proc{$ D Ds Cont}
 {FD.choose ?+{Dist} ?+{Xv} ??{X} ??{Spec}}
 >>>
 <item>
-Chooses the element ?{X} in ?{Xv} according to the description
-?{Dist}. A specification ?{Spec} for the element ?{X} is returned
-according  to the description ?{Dist}. The parameter ?{Dist} is
+Chooses the element ?_{X} in ?_{Xv} according to the description
+?_{Dist}. A specification ?_{Spec} for the element ?_{X} is returned
+according  to the description ?_{Dist}. The parameter ?_{Dist} is
 defined in the same way as for <<FD.distribute>> except for the value
 selection. If the feature <<value>> is used for generic distribution, the
 field must be constrained to a unary function <<P>> which selects a value
