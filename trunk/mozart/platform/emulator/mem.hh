@@ -5,6 +5,7 @@
  *  Contributors:
  *    Michael Mehl (mehl@dfki.de)
  *    Konstantin Popov (kost@sics.se)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
