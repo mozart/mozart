@@ -2142,7 +2142,8 @@ fi
 if test -n "${with_tcl}"
 then
     oz_tcl_search="$with_tcl $oz_tcl_search"
-    echo kost: $oz_tcl_search
+elif test -n "${oz_tk_aqua}"; then
+    oz_tcl_search="${oz_tk_aqua}/Tcl.framework/Resources $oz_tcl_search"
 fi
 
 TCL_LIB_DIR=""
@@ -2169,7 +2170,7 @@ echo "$ac_t""$TCL_LIB_DIR/tclConfig.sh" 1>&6
 
 
 echo $ac_n "checking for tkConfig.sh""... $ac_c" 1>&6
-echo "configure:2173: checking for tkConfig.sh" >&5
+echo "configure:2174: checking for tkConfig.sh" >&5
 # Check whether --with-tk or --without-tk was given.
 if test "${with_tk+set}" = set; then
   withval="$with_tk"
@@ -2180,6 +2181,8 @@ fi
 if test -n "${with_tk}"
 then
     oz_tk_search="$with_tk $oz_tk_search"
+elif test -n "${oz_tk_aqua}"; then
+    oz_tk_search="${oz_tk_aqua}/Tk.framework/Resources $oz_tk_search"
 fi
 
 TK_LIB_DIR=""
@@ -2215,7 +2218,7 @@ if test "$GCC" = yes; then
 	    for ozm_opt in $oz_for
 	    do
 		echo $ac_n "checking c++ compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:2219: checking c++ compiler option $ozm_opt" >&5
+echo "configure:2222: checking c++ compiler option $ozm_opt" >&5
 		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 		if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2240,7 +2243,7 @@ fi
 	
 if test -n "$PERMISSIVEOPT"; then
 echo $ac_n "checking whether we need -fpermissive for Xlib.h""... $ac_c" 1>&6
-echo "configure:2244: checking whether we need -fpermissive for Xlib.h" >&5
+echo "configure:2247: checking whether we need -fpermissive for Xlib.h" >&5
 if eval "test \"`echo '$''{'ac_cv_xlib_permissive'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2255,7 +2258,7 @@ ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftes
 cross_compiling=$ac_cv_prog_cxx_cross
 
   cat > conftest.$ac_ext <<EOF
-#line 2259 "configure"
+#line 2262 "configure"
 #include "confdefs.h"
 
 #include <X11/Xlib.h>
@@ -2266,7 +2269,7 @@ void foo() {}
 
 ; return 0; }
 EOF
-if { (eval echo configure:2270: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:2273: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   
   ac_cv_xlib_permissive=no
@@ -2299,7 +2302,7 @@ fi
 
 
 echo $ac_n "checking for Tcl public headers""... $ac_c" 1>&6
-echo "configure:2303: checking for Tcl public headers" >&5
+echo "configure:2306: checking for Tcl public headers" >&5
 
 # Check whether --with-tclinclude or --without-tclinclude was given.
 if test "${with_tclinclude+set}" = set; then
@@ -2313,6 +2316,10 @@ if test x"${with_tclinclude}" != x ; then
       TCL_INCLUDES=${with_tclinclude}
     else
       { echo "configure: error: ${with_tclinclude} directory does not contain Tcl public header file tcl.h" 1>&2; exit 1; }
+    fi
+elif test -n "${oz_tk_aqua}"; then
+    if test -f "${oz_tk_aqua}/Tcl.framework/Headers/tcl.h"; then
+	TCL_INCLUDES="${oz_tk_aqua}/Tcl.framework/Headers"
     fi
 else
     for i in $TCL_PREFIX/include $TCL_PREFIX/include/tcl$TCL_VERSION ; do
@@ -2332,7 +2339,7 @@ fi
 
 
 echo $ac_n "checking for Tk public headers""... $ac_c" 1>&6
-echo "configure:2336: checking for Tk public headers" >&5
+echo "configure:2343: checking for Tk public headers" >&5
 
 # Check whether --with-tkinclude or --without-tkinclude was given.
 if test "${with_tkinclude+set}" = set; then
@@ -2346,6 +2353,10 @@ if test x"${with_tkinclude}" != x ; then
       TK_INCLUDES=${with_tkinclude}
     else
       { echo "configure: error: ${with_tkinclude} directory does not contain Tk public header file tk.h" 1>&2; exit 1; }
+    fi
+elif test -n "${oz_tk_aqua}"; then
+    if test -f "${oz_tk_aqua}/Tk.framework/Headers/tk.h"; then
+	TK_INCLUDES="${oz_tk_aqua}/Tk.framework/Headers"
     fi
 else
     for i in $TK_PREFIX/include $TK_PREFIX/include/tcl$TK_VERSION ; do
@@ -2368,7 +2379,7 @@ fi
 
 
     echo $ac_n "checking for --enable-copy-tcl-libs""... $ac_c" 1>&6
-echo "configure:2372: checking for --enable-copy-tcl-libs" >&5
+echo "configure:2383: checking for --enable-copy-tcl-libs" >&5
     # Check whether --enable-copy-tcl-libs or --disable-copy-tcl-libs was given.
 if test "${enable_copy_tcl_libs+set}" = set; then
   enableval="$enable_copy_tcl_libs"
