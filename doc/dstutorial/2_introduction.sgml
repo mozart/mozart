@@ -1,11 +1,13 @@
 <CHAPTER ID="chapter.introduction">
   <TITLE>Introduction</TITLE>
 
-<P>Distributed and fault-tolerant programming
-has become a popular subject, fueled by the
-development of the Internet, which provides
+<P>Fueled by the explosive development
+of the Internet,
+distributed programming is becoming more and more popular.
+The Internet provides
 a global infrastructure for distributed applications.
-Platforms such as Java and CORBA have become widely-used.
+Platforms such as Java and CORBA that take advantage
+of this infrastructure have become widely-used.
 On first glance, one might think that distributed
 programming has become a solved problem.
 But this is far from the case.
