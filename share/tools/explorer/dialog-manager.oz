@@ -279,12 +279,10 @@ local
 in
 
    class DialogManager
-      feat fileSelector
+      attr CurPath: nil
 
       meth init
-	 self.fileSelector =
-	 {New TkTools.file init(master: self.toplevel
-				title:  TitleName#': Select Postscript File')}
+	 CurPath <- {Unix.getCWD}
       end
 
       meth guiOptions(What)
@@ -298,13 +296,25 @@ in
       end
 
       meth postscript
-	 case {self.fileSelector select(file:$)} of false then skip
-	 elseof Filename then O=self.options.postscript in
+	 case {Tk.return
+	       tk_getSaveFile(filetypes:  q(q('Postscript Files' q('.ps'))
+					    q('All Files'        '*'))
+			      initialdir: @CurPath
+			      parent:     self.toplevel
+			      title:      TitleName#': Export Postscript')}
+	 of nil then skip
+	 elseof Filename then
+	    O    = self.options.postscript 
+	    Path = {Reverse {List.dropWhile {Reverse Filename}
+			     fun {$ C} C\=&/ end}}
+	 in
+	    CurPath <- Path
 	    {self.canvas postscript(colormode: {Dictionary.get O color}
 				    rotate:    {Dictionary.get O orientation}
 				    file:      Filename
 				    height:    {Dictionary.get O height}
 				    width:     {Dictionary.get O width})}
+	    
 	 end
       end
 
@@ -319,10 +329,6 @@ in
 		       title:   TitleName#': Error Message')}.tkClosed}
       end
 
-      meth close
-	 {self.fileSelector close}
-      end
-      
    end
 end
 
