@@ -107,7 +107,6 @@ private:
     OZ_FiniteDomain   * patchDomain;
     OZ_FSetConstraint * patchFSet;
     OZ_Ct             * patchCt;
-
     OZ_FDIntVar * cpi_fd_var;
     OZ_FSetVar  * cpi_fs_var;
     OZ_CtVar    * cpi_ct_var;
@@ -300,8 +299,11 @@ public:
     resetReifiedFlag();
   }
 
+  void * getRaw(void) {
+    return (void *)(u.var_type & ~u_mask);
+  }
   void * getRawAndUntag(void) {
-    void * raw = u.cpi_raw;
+    void * raw = getRaw();
     untagParam();
     return raw;
   }
