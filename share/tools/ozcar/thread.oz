@@ -324,6 +324,7 @@ in
 	    else skip end
 	 else
 	    Gui,markNode(I dead)
+	    Gui,markNode(I stopped)
 	 end
 	 case T == @currentThread then
 	    case Mode == kill then
@@ -454,6 +455,7 @@ in
 
       meth blocked(thr:T id:I)
 	 Gui,markNode(I blocked)
+	 Gui,markNode(I running)
 %        case {CondSelect {@currentStack getTop($)} dir entry} of exit then
 %           ThreadManager,rebuildCurrentStack
 %        else skip end
