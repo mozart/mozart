@@ -36,9 +36,9 @@ ExactlyPropagator::~ExactlyPropagator(void)
   OZ_hfreeCInts(reg_oldDomSizes, reg_l_sz);
 }
 
-
 OZ_Return ExactlyPropagator::propagate(void)
 { 
+
   if (reg_l_sz == 0) return replaceByInt(reg_n, 0);
 
   int &v = reg_v, &l_sz = reg_l_sz;
@@ -60,13 +60,18 @@ OZ_Return ExactlyPropagator::propagate(void)
     }
   }
 
+
   reg_tn += tn; 
   reg_tnn += tnn;
   tn = reg_tn;
   tnn = reg_tnn;
 
+
   if (*n_var == fd_singl) {
     int n = n_var->getSingleElem();
+    if ( (oldSize - tnn < n) || (tn > n) ) {
+      goto failure;
+    } 
     if (tn == n) {
       for (i = l_sz; i--; ) 
 	if (*l[i] != fd_singl)
@@ -77,10 +82,12 @@ OZ_Return ExactlyPropagator::propagate(void)
 	if (l[i]->isIn(v))
 	  FailOnEmpty(*l[i] &= v);
       return P.vanish();
-    } else if ( (oldSize - tnn < n) || (tn > n) ) {
-      goto failure;
     }   
   } else {
+    if ( (oldSize - tnn < n_var->getMinElem()) || 
+	 (tn > n_var->getMaxElem()) ) {
+      goto failure;
+    }   
     if (tn == n_var->getMaxElem()) {
       for (i = l_sz; i--; ) 
 	if (*l[i] != fd_singl)
@@ -93,10 +100,7 @@ OZ_Return ExactlyPropagator::propagate(void)
 	  FailOnEmpty(*l[i] &= v);
       FailOnEmpty(*n_var &= oldSize - tnn);
       return P.vanish();
-    } else if ( (oldSize - tnn < n_var->getMinElem()) || (tn > n_var->getMaxElem()) ) {
-      goto failure;
-    }   
-
+    }
     FailOnEmpty(*n_var <= oldSize - tnn);
     FailOnEmpty(*n_var >= tn);
   }
@@ -116,11 +120,16 @@ OZ_Return ExactlyPropagator::propagate(void)
   
   l_sz = to;
 
+  // if n_var occurs in reg_l we must consider the case that
+  // the list becomes empty but n_var is still a FD.
+  if (l_sz == 0) {
+    FailOnEmpty(*n_var &= n_var->getMinElem());
+  }
+
 
   return P.leave();
 
 failure:
-
    
   return P.fail();
 }
@@ -217,6 +226,11 @@ OZ_Return AtLeastPropagator::propagate(void)
   }
   
   l_sz = to;
+
+  if (l_sz == 0) {
+    FailOnEmpty(*n_var &= n_var->getMinElem());
+  }
+
   return P.leave();
 
 failure:
@@ -315,6 +329,10 @@ OZ_Return AtMostPropagator::propagate(void)
   }
   
   l_sz = to;
+
+  if (l_sz == 0) {
+    return P.vanish();
+  }
 
   return P.leave();
 
