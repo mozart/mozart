@@ -157,6 +157,8 @@ void exitCheckSpace() {
 #define ST1(i) to[i]=f1;
 #define ST2(i) to[i]=f2;
 
+#define MaxStaticSize 56
+
 inline
 void * gcReallocStatic(void * p, size_t sz) {
   // Use for blocks where size is known statically at compile time
@@ -231,7 +233,7 @@ void * gcReallocStatic(void * p, size_t sz) {
     { LD0(0)  ST0(0)  break; }
 #ifdef DEBUG_CHECK
   default:
-    if (sz > 56)
+    if (sz > MaxStaticSize)
       { Assert(0); };
 #endif
   }
@@ -684,7 +686,10 @@ Board * Board::gcBoard() {
 
   Assert(isInGc || bb->isInTree());
 
-  Board *ret = (Board *) gcReallocStatic(bb, sizeof(Board));
+  const int sz = sizeof(Board);
+  Board *ret = (sz>MaxStaticSize) ? (Board *) OZ_hrealloc(bb, sz)
+                                  : (Board *) gcReallocStatic(bb, sz);
+
 
   gcStack.push(ret,PTR_BOARD);
 
@@ -2932,13 +2937,14 @@ void CodeGCList::collectGClist()
     for (int i=aux->nextFree; i--; ) {
       switch(aux->block[i].tag) {
       case C_TAGGED:
-        OZ_collectHeapTerm(*aux->block[i].u.tagged,*aux->block[i].u.tagged);
+        OZ_collectHeapTerm(*(TaggedRef*)aux->block[i].pc,
+                           *(TaggedRef*)aux->block[i].pc);
         break;
       case C_ABSTRENTRY:
-        (*(aux->block[i].u.entry))->gcAbstractionEntry();
+        ((AbstractionEntry*)*(aux->block[i].pc))->gcAbstractionEntry();
         break;
       case C_INLINECACHE:
-        aux->block[i].u.cache->invalidate();
+        ((InlineCache*)aux->block[i].pc)->invalidate();
         break;
       case C_FREE:
         break;
