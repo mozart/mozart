@@ -84,8 +84,9 @@
 		     out => [],
 		     BI  => BIdictionaryMarkSafe},
 
-     'markCache'=> { in  => ['+dictionary'],
-		     out => [],
-		     BI  => BIdictionaryMarkCache},
+     'toRecord' => { in  => ['+literal','+dictionary'],
+		     out => ['+record'],
+		     BI  => BIdictionaryToRecord},
+
      );;
 1;;
