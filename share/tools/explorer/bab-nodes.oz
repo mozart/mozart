@@ -159,7 +159,7 @@ local
 				  end
 		  NextCopy      = CurCopy
 	       else
-		  SkipCopy = case {self.solve {Procedure.clone CurCopy}
+		  SkipCopy = case {Solve {Procedure.clone CurCopy}
 				   {Reverse 
 				    case NextAlt==MaxAlt then NextAlt
 				    else NextAlt#MaxAlt
@@ -184,7 +184,7 @@ local
 		  NextCopy = CurCopy
 	       end
 	    end
-	    Information = {self.solve CopyToUse {Reverse UseNs}}
+	    Information = {Solve CopyToUse {Reverse UseNs}}
 	    <<CreateNode(PrevSol CurDepth+1 Information AllocateCopy ?NewNode)>> 
 	    isDirty <- True
 	    <<addKid(NewNode)>>
