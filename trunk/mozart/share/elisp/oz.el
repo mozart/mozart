@@ -1923,7 +1923,8 @@ The first subexpression matches the keyword proper (for fontification).")
 (defconst oz-proc-fun-matcher
   (concat "\\<\\(proc\\|fun\\)\\>\\([^{\n]*\\){!?"
 	  "\\([A-Z\300-\326\330-\336]"
-	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_.]*\\|`[^`\n]*`\\)")
+	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_.]*\\|\\$"
+	  "\\|`[^`\n]*`\\)")
   "Regular expression matching proc or fun definitions.
 The second subexpression matches optional flags, the third subexpression
 matches the definition's identifier (if it is a variable) and is used for
@@ -2274,36 +2275,37 @@ After splitting, the outputs are passed to the common oz-filter."
 	    ;; look for oz-show-temp:
 	    (goto-char start-of-output)
 	    (while (re-search-forward oz-show-temp-pattern nil t)
-	      (let ((file (oz-match-string 1)) buf)
-		(replace-match "" nil t)
-		(setq buf (get-buffer oz-temp-buffer))
-		(if (null buf)
-		    (setq buf (generate-new-buffer oz-temp-buffer)))
-		(oz-show-buffer buf)
-		(set-buffer buf)
-		(erase-buffer)
-		(insert-file-contents file)
-		(delete-file file)
-		(cond ((string-match "\\.ozc$" file)
-		       (oz-mode))
-		      ((string-match "\\.ozm$" file)
-		       (ozm-mode)))))
+	      (save-excursion
+		(let ((filename (oz-match-string 1)) buf)
+		  (replace-match "" nil t)
+		  (setq buf (get-buffer oz-temp-buffer))
+		  (if (null buf)
+		      (setq buf (generate-new-buffer oz-temp-buffer)))
+		  (oz-show-buffer buf)
+		  (set-buffer buf)
+		  (insert-file-contents filename t nil nil t)
+		  (delete-file filename)
+		  (cond ((string-match "\\.ozc$" filename)
+			 (oz-mode))
+			((string-match "\\.ozm$" filename)
+			 (ozm-mode))))))
 
 	    ;; look for oz-bar information:
 	    (goto-char start-of-output)
 	    (while (re-search-forward oz-bar-pattern nil t)
-	      (let ((file  (oz-match-string 1))
-		    (line  (string-to-number (oz-match-string 2)))
-		    (state (oz-match-string 4)))
-		(replace-match "" nil t)
-		(if (string-equal file "nofile")
-		    (cond (oz-bar-overlay
-			   (cond (oz-gnu-emacs
-				  (delete-overlay oz-bar-overlay))
-				 (oz-lucid-emacs
-				  (delete-extent oz-bar-overlay)))
-			   (setq oz-bar-overlay nil)))
-		  (oz-bar file line state))))
+	      (save-excursion
+		(let ((file  (oz-match-string 1))
+		      (line  (string-to-number (oz-match-string 2)))
+		      (state (oz-match-string 4)))
+		  (replace-match "" nil t)
+		  (if (string-equal file "nofile")
+		      (cond (oz-bar-overlay
+			     (cond (oz-gnu-emacs
+				    (delete-overlay oz-bar-overlay))
+				   (oz-lucid-emacs
+				    (delete-extent oz-bar-overlay)))
+			     (setq oz-bar-overlay nil)))
+		    (oz-bar file line state)))))
 
 	    (setq end-of-output (point-max)))
 
