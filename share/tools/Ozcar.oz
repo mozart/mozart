@@ -5,15 +5,17 @@ declare
    NewOzcar
 in
 
-proc
+fun
 \ifdef NEWCOMPILER
    instantiate
 \endif
-   {NewOzcar
-      Standard
-      Compile Error Tk TkTools Browse ?Ozcar}
-\insert 'Standard.env'
-   = Standard
+   {NewOzcar IMPORT}
+   \insert 'Standard.env'
+      = IMPORT.'Standard'
+   \insert 'WP.env'
+      = IMPORT.'WP'
+   \insert 'Browser.env'
+      = IMPORT.'Browser'
 
    \insert 'ozcar/config'
    \insert 'ozcar/prelude'
@@ -29,10 +31,9 @@ proc
    \insert 'ozcar/help'
    \insert 'ozcar/gui'
 
-in
-
    \insert 'ozcar/ozcar'
-
+in
+   \insert 'Ozcar.env'
 end
 
 

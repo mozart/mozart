@@ -11,9 +11,11 @@ fun
 \ifdef NEWCOMPILER
    instantiate
 \endif
-   {NewPanel Standard Tk TkTools}
-\insert 'Standard.env'
-   = Standard
+   {NewPanel IMPORT}
+   \insert 'Standard.env'
+       = IMPORT.'Standard'
+   \insert 'WP.env'
+       = IMPORT.'WP'
 in
    local
       \insert 'panel/main.oz'
