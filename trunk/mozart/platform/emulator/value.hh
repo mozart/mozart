@@ -139,6 +139,7 @@ public:
 
   Bool isOnHeap() { return (getFlags()&Lit_isNamedName)==0; }
   Bool hasGName() { return (getFlags()&Lit_hasGName); }
+  Bool gcIsMarked();
 
   Name *gcName();
   void gcRecurse();
