@@ -41,7 +41,11 @@ subprocess.
     <p>Let us begin with the traditional <em/Hello World/ example.  In
 the <code/Oz/ buffer, type the following:
 <code display/{Show 'Hello World'}/
-In order to execute this fragment, we position the point on the line
+This example illustrates the unconventional syntax of procedure
+invocation in Oz:  it is indicated by curly braces.  Here, procedure
+<code/Show/ is invoked with, as single argument, the atom
+<code/'Hello World'/.</p>
+<p>In order to execute this fragment, we position the point on the line
 we just typed and select <em/Feed Line/ from the Oz menu in the
 menubar.  We now see:
 <picture.choice display>
