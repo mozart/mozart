@@ -37,9 +37,6 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 
       doBindAndTrail(var, vPtr, term, varIsLocal);
 
-      LOCAL_PROPAGATION(if (localPropStore.isEnabled)
-                      return localPropStore.do_propagation());
-
       return TRUE;
     }
   case CVAR:
@@ -167,8 +164,6 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
         error("unexpected case in unifyFD");
         break;
       } // switch
-      LOCAL_PROPAGATION(if (localPropStore.isEnabled)
-                        return localPropStore.do_propagation());
       return TRUE;
     }
   default:
