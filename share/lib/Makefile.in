@@ -53,15 +53,15 @@ RUNFUNCTORS = \
         $(SPSRC:%=%.ozf) \
         $(OPSRC:%=%.ozf) \
         $(APSRC:%=%.ozf) \
-        $(CPSRC:%=%.ozf)
+        $(CPSRC:%=%.ozf) \
+        Init.ozf
 
 FUNCTORS = \
         $(RUNFUNCTORS) \
         $(DPSRC:%=%.ozf) \
         $(WPSRC:%=%.ozf) \
         $(MISCSRC:%=%.ozf) \
-        Compiler.ozf  \
-        Init.ozf
+        Compiler.ozf
 
 SYSLETS = ozc ozserver ozvsserver
 
