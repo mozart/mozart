@@ -6369,6 +6369,7 @@ OZ_C_proc_begin(BImakeClass,9)
 			   am.currentBoard);
   TaggedRef ret   = makeTaggedConst(reto);
   cl->setOzClass(ret);
+  reto->setClass();
   return OZ_unify(out,ret);
 }
 OZ_C_proc_end
