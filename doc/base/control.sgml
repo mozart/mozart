@@ -310,6 +310,80 @@ end>>>
             </List>
         </List>
 
+  <Section id="section.control.exceptions">
+    <Title/Exceptions/
+    <P>
+      The module <<Exception>> provides procedures to construct exceptions
+      and raise them.
+    <Para class=apropos><Title/Special Exceptions/
+      <Index/error exception/
+      <Index/system exception/
+      <Index/exception/
+      Any value may be raised as exception, although commonly only records
+      are used.  Some of these serve special purposes:  <Def class=noindex
+      /error exceptions/ are records with label <<error>>.  These are raised
+      when a programming error occurs; it is not recommended to catch these.
+      <Def class=noindex/System exceptions/ are records with label <<system>>.
+      These are raised when an unforeseeable runtime condition occurs; a file
+      operations library might raise system exceptions when a file cannot be
+      opened.  It is recommended to always handle such exceptions.  <Def
+      class=noindex/Failure exceptions/ are records with label <<failure>>;
+      these are raised when a tell operation fails.
+    <Para class=apropos><Title/Dispatch Fields/
+      Both error and system exceptions have a <Def/dispatch field/.  This is
+      the subtree at feature&nbsp;<<1>> of the exception record.  This is
+      usually a record further describing the exact condition that occurred.
+    <Para class=apropos><Title/Debug Information/
+      If an exception is a record and has a feature <<debug>>, then
+      the implementation may replace the corresponding subtree by
+      implementation-dependent debugging information.  This is to be
+      printed out in the case of uncaught exceptions.
+    <P>
+      All procedures in the Base Environment only ever raise special-purpose
+      exceptions as described above.
+      <List>
+        <Entry><<error>>
+          <Index/<<Exception>><And><<error>>/
+        <Synopsis>
+          <<{Exception.error ?_{X} ??{Y}}>>
+        <Item>
+          returns an error exception record with dispatch field&nbsp;?_{X}.
+
+        <Entry><<system>>
+          <Index/<<Exception>><And><<system>>/
+        <Synopsis>
+          <<{Exception.system ?_{X} ??{Y}}>>
+        <Item>
+          returns a system exception record with dispatch field&nbsp;?_{X}.
+
+        <Entry><<failure>>
+          <Index/<<Exception>><And><<failure>>/
+        <Synopsis>
+          <<{Exception.failure ?_{X} ??{Y}}>>
+        <Item>
+          returns a failure exception.  The value&nbsp;?_{X} may give a hint
+          on why failure occurred; implementations may store this inside
+          the constructed exception's <<debug>> field.
+
+        <Entry><Span class=index/<<Raise>>/
+          <Index/<<Exception>><And><<'raise'>>/
+        <Synopsis>
+          <<{Exception.'raise' ?_{X}}>>
+        <Item>
+          raises ?_{X} as an exception.
+
+        <Entry><<raiseError>>
+          <Index/<<Exception>><And><<raiseError>>/
+        <Synopsis>
+          <<{Exception.raiseError ?_{X}}>>
+        <Item>
+          wraps ?_{X} into an error exception and raises this.
+          This procedure can be defined as follows:
+<<<proc {Exception.raiseError X}
+   {Exception.'raise' {Exception.error X}}
+end>>>
+      </List>
+
   <Section id="section.control.threads">
     <Title/Threads/
     <P>
