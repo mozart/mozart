@@ -30,8 +30,12 @@ fun {Compile Spec PlaceAll}
    %% Specification is as follows:
    %%  Spec.x, Spec.y: size of the target plate
    %%  Spec.squares.D=N: N squares of size D
-   
+
+   %% Number of all squares
    N  = {Record.foldL Spec.squares Number.'+' 0}
+   %% The number of all squares of size greater than 1
+   M  = N - {CondSelect Spec.squares 1 0}
+   %% Dimension of X and Y
    DX = Spec.x
    DY = Spec.y
 
@@ -63,8 +67,14 @@ fun {Compile Spec PlaceAll}
 		    if Sq2.placed==1 then
 		       X2=Sq2.x Y2=Sq2.y D2=Sq2.d
 		    in
-		       (X1 + D1 =<: X2) +  (X2 + D2 =<: X1) +
-		       (Y1 + D1 =<: Y2) +  (Y2 + D2 =<: Y1) >: 0
+		       if D1==D2 then
+			  %% Simplified due to symmetry relations:
+			  %% Sq2 is either below or to the right of Sq1
+			  (X2 + D2 =<: X1) + (Y2 + D2 =<: Y1) >: 0
+		       else
+			  (X1 + D1 =<: X2) +  (X2 + D2 =<: X1) +
+			  (Y1 + D1 =<: Y2) +  (Y2 + D2 =<: Y1) >: 0
+		       end
 		    end
 		 end}
 	     end
@@ -102,6 +112,7 @@ fun {Compile Spec PlaceAll}
 	   fun {$ I XYr}
 	      Sqs.I.x|Sqs.I.y|XYr
 	   end nil}}
+	 Info.cut = 0
 	 nil
       else
 	 DimXY = Info.XY
@@ -117,6 +128,7 @@ fun {Compile Spec PlaceAll}
 	 DimL={FD.decl}
 	 DimR={FD.decl}
       in
+	 Cut=Info.cut
 	 DimD    =: DimYX.2 - DimYX.1
 	 %% SQS1 and SQS2 are are partition of the squares
 	 {BinaryPartition SQS1 SQS2 SQS}
@@ -139,44 +151,25 @@ fun {Compile Spec PlaceAll}
 	 {FD.sumC DDs IsLs '=<:' DimL} 
 	 DimR =: DimD * DimXY.2 - DimD * Cut
 	 {FD.sumC DDs IsRs '=<:' DimR} 
-	 %% Find the cut
-%	 {FD.distribute generic(value:mid) [{FS.card SQS1}]}
 	 %% Distribute squares to be either right or left
 	 {FD.distribute generic(value:max) {Mix IsLs IsRs}}
-%	 {FD.distribute generic(value:mid) [Cut]}
 	 %% Continue recursively
-	 %% Place the guys to the left
-%	 {FD.distribute splitMin
-%	  {FoldR {List.zip CurSqs IsLs fun {$ I IsL} I#IsL end}
-%	   fun {$ I#IsL XYs}
-%	      if IsL==1 then Sqs.I.XY|XYs
-%	      else XYs
-%	      end
-%	   end nil}}
-	 info(xy:YX XY:DimXY.1#Cut YX:DimYX sqs:SQS1)#
-	 info(xy:YX XY:Cut#DimXY.2 YX:DimYX sqs:SQS2)
-	 %% Place the guys to the right
-%	 {FD.distribute splitMin
-%	  {FoldR {List.zip CurSqs IsRs fun {$ I IsR} I#IsR end}
-%	   fun {$ I#IsR XYs}
-%	      if IsR==1 then Sqs.I.XY|XYs
-%	      else XYs
-%	      end
-%	   end nil}}
+	 info(xy:YX cut:_ XY:DimXY.1#Cut YX:DimYX sqs:SQS1)#
+	 info(xy:YX cut:_ XY:Cut#DimXY.2 YX:DimYX sqs:SQS2)
       end
    end
 
    fun {DriveCuts Infos Sqs}
       if Infos==nil then nil else
-	 Infos|{DriveCuts {FoldL Infos
-			   fun {$ Is I}
-			      NI={MakeCuts I Sqs}
-			   in
-			      case NI
-			      of nil then Is
-			      [] I1#I2 then I1|I2|Is
-			      end
-			   end nil} Sqs}
+	 {Map Infos fun {$ I} I.cut end}|{DriveCuts {FoldL Infos
+						     fun {$ Is I}
+							NI={MakeCuts I Sqs}
+						     in
+							case NI
+							of nil then Is
+							[] I1#I2 then I1|I2|Is
+							end
+						     end nil} Sqs}
       end
    end
    
@@ -200,15 +193,21 @@ fun {Compile Spec PlaceAll}
       %%  1. Find a position for the cut, starting from the middle
       %%  2. Distribute all squares either to the left or right side
       %%     of the cut
+      %%  3. Only consider squares with size graeter than 1
       Cuts={DriveCuts
-	    [info(xy:x x:0#DX y:0#DY sqs:{FS.value.make [1#N]})] Sqs}
+	    [info(xy:x cut:_ x:0#DX y:0#DY sqs:{FS.value.make [1#M]})] Sqs}
+      {For M+1 N 1 proc {$ I}
+		      {FD.distribute naive [Sqs.I.x Sqs.I.y]}
+		   end}
+%      {FD.distribute naive
+%       {FoldL Cuts
+%	fun {$ XYs Infos}
+%	   {FoldL Infos fun {$ XYs Info}
+%			   Info.x.1|Info.x.2|Info.y.1|Info.y.2|XYs
+%			end XYs}
+%	end nil}}
       {FD.distribute naive
-       {FoldL Cuts
-	fun {$ XYs Infos}
-	   {FoldL Infos fun {$ XYs Info}
-			   Info.x.1|Info.x.2|Info.y.1|Info.y.2|XYs
-			end XYs}
-	end nil}}
+       {FoldL Cuts Append nil}}
    end
 
    
@@ -243,9 +242,8 @@ in
 		      Sq1=Sqs.I Sq2=Sqs.(I+1)
 		   in
 		      if Sq1.d==Sq2.d then
-%			 Sq1.x =<: Sq2.x
-%			 (Sq1.x \=: Sq2.x) + (Sq1.y <: Sq2.y) >=: 1
-			 Sq1.x*DY + Sq1.y <: Sq2.x*DY + Sq2.y
+			 %% This is respected by the no overlap
+			 Sq1.x*DY + Sq1.y + Sq1.d=<: Sq2.x*DY + Sq2.y
 		      end
 		   end}
 
@@ -285,8 +283,8 @@ declare
 %Spec = spec(x:5 y:5 squares:s(3:1 2:2))
 %Spec = spec(x:7 y:9 squares:s(2:4 5:1 1:1 3:1))
 %Spec = spec(x:8 y:8 squares:s(4:4))
-Spec = spec(x:16 y:14 squares:s(5:2 4:3 3:3 2:5 1:4))
-%Spec = spec(x:12 y:9 squares:d(4:2 3:2 2:5 1:3))
+%Spec = spec(x:14 y:14 squares:s(5:2 4:4 3:3 2:5 1:35))
+Spec = spec(x:9 y:9 squares:d(4:2 3:2 2:5 1:3))
 %2*16+3*4+
 {ExploreOne {Compile
 	     Spec
@@ -328,7 +326,7 @@ in
 	  Y=SY*DY
        in
 	  {C tk(create rectangle X+2 Y+2 X+Sq.d*DX-2 Y+Sq.d*DY-2
-		fill:    blue
+		fill:    c(60 179 113)
 		width:   1
 		outline: black)}
 	  {C tk(create text X+Sq.d*HX Y+Sq.d*HY
