@@ -143,10 +143,10 @@ public:
     elsePC = elsepc;
   }
 
-  void addAskChild(Board *bb) {
+  void addAskChild() {
     addChild();
   }
-  void failAskChild(Board *n) {
+  void failAskChild() {
     failChild();
   }
 

@@ -245,7 +245,7 @@ void HashTable::print()
   } else {
     for(int i = 0; i < tableSize; i++) {
       if (!table[i].isEmpty()) {
-	printf("table[%d] = <%d,0x%x>\n", i, table[i].key.fint, table[i].value);
+	printf("table[%d] = <%ld,0x%x>\n", i, table[i].key.fint, table[i].value);
       }
     }
   }

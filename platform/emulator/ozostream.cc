@@ -19,7 +19,7 @@ ozostream &ozostream::operator << (char *s)
 ozostream &ozostream::operator << (void *p)
 {
   Assert(fd);
-  fprintf(fd,"0x%x",p); 
+  fprintf(fd,"0x%lx",p);
   return *this;
 }
 
@@ -27,14 +27,14 @@ ozostream &ozostream::operator << (void *p)
 ozostream &ozostream::operator << (char c)  
 {
   Assert(fd);
-  fprintf(fd,"%c",c); 
+  fprintf(fd,"%c",c);
   return *this;
 }
 
 ozostream &ozostream::operator << (long i)    
 {
   Assert(fd); 
-  fprintf(fd,"%d",i); 
+  fprintf(fd,"%ld",i);
   return *this;
 }
 
@@ -66,7 +66,7 @@ ozostream &ozstrstream::operator << (char *s)
 ozostream &ozstrstream::operator << (void *p)  
 { 
   char buf[100];
-  sprintf(buf,"0x%x",p);
+  sprintf(buf,"0x%lx",p);
   (*this) << buf;
   return *this;
 }
@@ -74,7 +74,7 @@ ozostream &ozstrstream::operator << (void *p)
 ozostream &ozstrstream::operator << (long i)
 {
   char buf[100];
-  sprintf(buf,"%d",i);
+  sprintf(buf,"%ld",i);
   (*this) << buf;
   return *this;
 }
