@@ -391,7 +391,13 @@ start:
    */
   if (isNotCVar(tag1)) {
     if ( isNotCVar(tag2) && isLocalVariable(term2) &&
-	 (!isLocalVariable(term1) || heapNewer(termPtr2,termPtr1))) {
+	 /*
+	  * prefer also binding of UVars: otherwise if we bind SVar to UVar
+	  * suspensions attached to SVar will be woken, which is redundant! 
+	  */
+	 (!isLocalVariable(term1) ||
+	  (isUVar(term2) && !isUVar(term1)) ||
+	   heapNewer(termPtr2,termPtr1))) {
       bind(termPtr2, term2, termPtr1, prop); /* prefer binding of newer to older variables */
     } else {
       bind(termPtr1, term1, termPtr2, prop);
@@ -708,7 +714,7 @@ Bool AM::hasOFSSuspension(SuspList *suspList)
 void AM::addFeatOFSSuspensionList(TaggedRef var,
                                   SuspList* suspList,
 				  TaggedRef flist,
-				  Bool determined)
+				  Bool determ)
 {
     while (suspList) {
         Suspension *susp=suspList->getElem();
@@ -726,45 +732,45 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
 
         if (susp->isOFSSusp()) {
             CFuncContinuation *cont=susp->getCCont();
-            RefsArray xRegs=cont->getX();
+            RefsArray xregs=cont->getX();
 
 	    // Only add features if var and fvar are the same:
-	    TaggedRef fvar=xRegs[0];
+	    TaggedRef fvar=xregs[0];
 	    DEREF(fvar,_1,_2);
 	    if (var!=fvar) {
                 suspList=suspList->getNext();
                 continue;
 	    }
 	    // Only add features if the 'kill' variable is undetermined:
-	    TaggedRef kill=xRegs[1];
-	    DEREF(kill,_,killTag);
+	    TaggedRef killl=xregs[1];
+	    DEREF(killl,_,killTag);
 	    if (!isAnyVar(killTag)) {
                 suspList=suspList->getNext();
                 continue;
 	    }
 
-            // Add the feature or list to the diff. list in xRegs[3] and xRegs[4]:
+            // Add the feature or list to the diff. list in xregs[3] and xregs[4]:
             if (flist) {
                 if (isLiteral(flist))
-                    xRegs[3]=cons(flist,xRegs[3]);
+                    xregs[3]=cons(flist,xregs[3]);
                 else {
                     // flist must be a list
                     Assert(isLTuple(flist));
                     TaggedRef tmplist=flist;
                     while (tmplist!=AtomNil) {
-                        xRegs[3]=cons(head(tmplist),xRegs[3]);
+                        xregs[3]=cons(head(tmplist),xregs[3]);
                         tmplist=tail(tmplist);
                     }
                 }
             }
-            if (determined) {
+            if (determ) {
                 // FS is det.: tail of list must be bound to nil: (always succeeds)
 		// Do *not* use unification to do this binding!
-                TaggedRef tail=xRegs[4];
-		DEREF(tail,tailPtr,tailTag);
+                TaggedRef tl=xregs[4];
+		DEREF(tl,tailPtr,tailTag);
 		switch (tailTag) {
 		case LITERAL:
-		    Assert(tail==AtomNil);
+		    Assert(tl==AtomNil);
 		    break;
 		case UVAR:
 		    doBind(tailPtr, AtomNil);
