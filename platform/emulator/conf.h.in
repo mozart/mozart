@@ -39,6 +39,8 @@
 #undef I486
 #undef SPARC
 
+#undef SUNPRO
+
 /*
  * emulator optimization
  */
