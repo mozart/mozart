@@ -86,7 +86,7 @@ declarations in your document's <CODE>DOCTYPE</CODE>:</P>
   <DD>a class implementing the decision rules for stripping whitespace
 </DL>
 
-<H2>Space Manager</H2>
+<H3>Space Manager</H3>
 
 <P>A <code>SpaceManager</code> can answer the question: <i>"should
 isolated text nodes consisting of only whitespace characters be
@@ -131,9 +131,23 @@ raised when the question is asked.</p>
 <code>askStripSpace</code> and <code>askPreserveSpace</code>, no
 wildcard can be used, of course.</p>
 
-<H2>Parser</H2>
+<H3>Parser</H3>
+
+A <code>Parser</code> object can be used to parse XML documents and
+obtain their Oz representation.  The <code>Parser</code> class can be subclassed
+to provide problem-specific methods for constructing the document representation.
+Of course, reasonable default implementations are provided.
 
 <dl>
+<dt><code>init</code>
+<dd>initialization method used when creating a instance:
+<code>ParserInstance = {New Parser init}</code><p>
+<dt><code>parseVS(+VS ?Doc)</code>
+<dt><code>parseFile(+Filename ?Doc)</code>
+<dt><code>parseURL(+URL ?Doc)</code>
+<dd>methods for parsing a XML document provided resp. as a virtual string,
+in a file, and at a URL.  Returns the constructed document representation
+as second argument.<p>
 <dt><code>@keepComments</code>
 <dt><code>setKeepComments(+Bool)</code>
 <dd>attribute and method for setting it.  It controls whether comment
@@ -189,21 +203,30 @@ the list of accumulated attributes and possibly namespace
 declarations. <code>Children</code> is the, as yet uninstantiated,
 list of accumulated children of this element.<p>
 <dt><code>append(X)</code>
-<dd>contribute the item <code>X</item> to the contents list being
+<dd>contribute the item <code>X</code> to the contents list being
 accumulated for the current element.<p>
 <dt><code>onEndElement(Tag)
 <dd>invoked on an end tag<p>
 <dt><code>onAttribute(Tag Value)</code>
-<dd>invoked for each attribute of ab element.  It is its
+<dd>invoked for each attribute of an element.  It is its
 responsability to construct a representation of the attribute and to
 contribute it to the list of attributes currently being accumulated
 (by invoking the <code>attributeAppend(_)</code> method).  Of course,
-attributes can be ignored by <em>not</em> contributing them.
+attributes can be ignored by <em>not</em> contributing them.  The default definition is:
+<pre class="DISPLAY">
+meth onAttribute(Tag Value)
+   {self attributeAppend(
+            attribute(
+               uri   : Tag.uri
+               name  : Tag.name
+               value : Value))}
+end
+</pre>
 <p><code>Tag</code> is a record describing the attribute's name and
 has features <code>qname</code>, <code>prefix</code>,
 <code>name</code>, <code>uri</code>, <code>coord</code>, with the same
-interpretation as for elements.  Note that attribute without an
-explicit are always considered to be in <em>no</em> namespace, and not
+interpretation as for elements.  Note that attributes without an
+explicit namespace prefix are always considered to be in <em>no</em> namespace, and not
 in the default namespace (if any).
 <p>It should be noted that the attributes of an element are processed
 before its <code>onStartElement</code> is called.  The reason for this
@@ -212,12 +235,13 @@ attempting to interpret the tag.<p>
 <dt><code>onNamespaceDeclaration(Prefix URI Coord)</code>
 <dd>some attributes are really namespace declarations.  This is
 identified by their <code>xmlns</code> prefix (using any possibly
-mixed capitalization as desired)
-<p><code>Prefix</code> and <code>URI</code> are both atoms,
+mixed capitalization as desired).
+<code>Prefix</code> and <code>URI</code> are both atoms,
 <code>Coords</code> is a debug coordinates record.
-<p>The default implementation, checks
+The default implementation is similar to <code>onAttribute</code>'s but
+additionally checks
 <code>@keepNamespaceDeclarations</code> and contributes only if it is
-<code>true</code><p>
+<code>true</code>.<p>
 <dt><code>onProcessingInstruction(Name Data Coord)</code>
 <dd><code>Name</code> is an atom, <code>Data</code> is a string,
 <code>Coord</code> is a debug coordinates record<p>
@@ -230,6 +254,40 @@ mixed capitalization as desired)
 nodes are automatically discarded if <code>@keepComments</code> is
 <code>false</code>
 </dl>
+
+<H2>Example</H2>
+
+Here is an example that subclasses the <code>Parser</code>.  Each instance
+of <code>MyParser</code> is given a <code>SpaceManager</code> that ignores
+all isolated whitespace nodes.  Namespaces are ignored (this is for a trivial
+application where we assume that namespaces are not used).  Each element
+is converted into a record whose label is the element's local name, and
+whose two features are: <code>alist</code>, a record
+whose features are the attributes, and <code>children</code>, a list of
+the children elements.
+<pre class="DISPLAY">
+class MyParser from Parser
+   meth init
+      M = {New SpaceManager init}
+   in
+      {M stripSpace('*' '*')}
+      Parser,init
+      {self setSpaceManager(M)}
+   end
+   meth onAttribute(Tag Value)
+      {self attributeAppend(Tag.name#Value)}
+   end
+   meth onStartElement(Tag Alist Children)
+      Name = Tag.name
+   in
+      {self append(
+               Name(
+                  alist    : {List.toRecord alist Alist}
+                  children : Children))}
+   end
+end
+</pre>
+
 <HR>
 <ADDRESS>
 <A HREF="http://www.loria.fr/~duchier/">Denys Duchier</A>
