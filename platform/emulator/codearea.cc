@@ -255,6 +255,9 @@ ProgramCounter CodeArea::nextDebugInfo(ProgramCounter from)
 /* find the end of the definition where from points into */
 ProgramCounter CodeArea::definitionEnd(ProgramCounter from)
 {
+  if (from==NULL) {
+    return NOCODE;
+  }
   ProgramCounter PC = from;
 
   while (1) {
