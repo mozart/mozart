@@ -48,6 +48,7 @@ CPSRC   = Search FD Schedule FS
 DPSRC   = Connection Remote VirtualSite Fault URL
 WPSRC   = Tk TkTools
 MISCSRC = Misc
+SUPPSRC = Type
 
 RUNFUNCTORS = \
         $(SPSRC:%=%.ozf) \
@@ -60,6 +61,7 @@ FUNCTORS = \
         $(RUNFUNCTORS) \
         $(DPSRC:%=%.ozf) \
         $(WPSRC:%=%.ozf) \
+        $(SUPPSRC:%=%.ozf) \
         $(MISCSRC:%=%.ozf) \
         Compiler.ozf
 
@@ -100,7 +102,7 @@ STANDARDSRC1 = \
         Int.oz Float.oz Number.oz Bool.oz List.oz Chunk.oz \
         Literal.oz Value.oz Cell.oz Lock.oz Char.oz String.oz \
         VirtualString.oz Object.oz Class.oz Loop.oz Port.oz \
-        Time.oz Thread.oz Type.oz Space.oz Array.oz Dictionary.oz \
+        Time.oz Thread.oz Space.oz Array.oz Dictionary.oz \
         Exception.oz Functor.oz BitArray.oz
 STANDARDSRC = $(STANDARDSRC1:%=standard/%) Standard.oz
 
@@ -130,6 +132,8 @@ $(FUNCTORS): Standard.ozf
 %.ozf: %.oz Standard.ozf
         $(COMPILE) $< -o $@
 %.ozf: compiler/%.oz Standard.ozf
+        $(COMPILE) $< -o $@
+%.ozf: support/%.oz Standard.ozf
         $(COMPILE) $< -o $@
 
 # op dependencies
