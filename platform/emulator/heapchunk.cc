@@ -34,14 +34,12 @@ private:
     return (char *) memcpy(allocate(chunk_size), chunk_data, chunk_size);
   }
   char * allocate(int size) {
-    COUNT1(sizeHeapChunks,size);
     return (char *) alignedMalloc(size, sizeof(double));
   }
 public:
   HeapChunk(int size)
     : OZ_Extension(), chunk_size(size), chunk_data(allocate(size))
   {
-    COUNT1(sizeHeapChunks,sizeof(HeapChunk));
   }
 
   virtual

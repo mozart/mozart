@@ -152,6 +152,24 @@ public:
   void import(GName *);
 };
 
+inline
+Bool needsNoCollection(TaggedRef t) {
+  Assert(t != makeTaggedNULL());
+
+  TypeOfTerm tag = tagTypeOf(t);
+
+  if (isSmallIntTag(tag))
+    return OK;
+
+  if (!isLiteralTag(tag))
+    return NO;
+
+  if (tagged2Literal(t)->isAtom())
+    return OK;
+
+  return !((Name *) tagged2Literal(t))->isOnHeap();
+}
+
 
 /* This one managed via malloc */
 
@@ -398,10 +416,8 @@ public:
   NO_DEFAULT_CONSTRUCTORS2(LTuple)
   LTuple(void) {
     DebugCheckT(args[0]=0;args[1]=0);
-    COUNT1(sizeLists,sizeof(LTuple));
   }
   LTuple(TaggedRef head, TaggedRef tail) {
-    COUNT1(sizeLists,sizeof(LTuple));
     args[0] = head; args[1] = tail;
   }
 
@@ -1148,7 +1164,6 @@ public:
     CHECK_LITERAL(lab);
     Assert(width > 0);
     int memSize = sizeof(SRecord) + sizeof(TaggedRef) * (width - 1);
-    COUNT1(sizeRecords,memSize);
     SRecord *ret = (SRecord *) int32Malloc(memSize);
     ret->label = lab;
     ret->recordArity = arity;
@@ -2009,7 +2024,6 @@ public:
   {
     Assert(prd->getGSize()>=0);
     int sz=sizeof(Abstraction)+sizeof(TaggedRef)*(prd->getGSize()-1);
-    COUNT1(sizeClosures,sz);
     Abstraction *ab = (Abstraction *) heapMalloc(sz);
     ab->ConstTermWithHome::init(bb,Co_Abstraction);
     ab->pred=prd;

@@ -32,7 +32,6 @@
 /****************************************************************************
  ****************************************************************************/
 
-#include "gc.hh"
 #include "board.hh"
 #include "var_base.hh"
 #include "fdomn.hh"
@@ -70,7 +69,10 @@
  *
  */
 
+#ifdef DEBUG_CHECK
 Bool isCollecting = NO;
+#endif
+
 static Bool isInGc;
 
 #ifdef CS_PROFILE
@@ -372,25 +374,6 @@ public:
     return aux;
   }
 };
-
-
-inline
-Bool needsCollection(Literal *l)
-{
-  if (l->isAtom()) return NO;
-  Name *nm = (Name*) l;
-  return nm->isOnHeap();
-}
-
-
-Bool needsNoCollection(TaggedRef t)
-{
-  Assert(t != makeTaggedNULL());
-
-  TypeOfTerm tag = tagTypeOf(t);
-  return isSmallIntTag(tag) ||
-         isLiteralTag(tag) && !needsCollection(tagged2Literal(t));
-}
 
 
 Bool oz_protect(TaggedRef *ref)
@@ -1452,7 +1435,10 @@ void AM::gc(int msgLevel) {
 
   (*gcFrameToProxy)();
 
+#ifdef DEBUG_CHECK
   isCollecting = OK;
+#endif
+
   isInGc       = OK;
 
   ozstat.initGcMsg(msgLevel);
@@ -1535,7 +1521,10 @@ void AM::gc(int msgLevel) {
 
   ozstat.printGcMsg(msgLevel);
 
+#ifdef DEBUG_CHECK
   isCollecting = NO;
+#endif
+
 } // AM::gc
 
 
@@ -1625,7 +1614,10 @@ Board * Board::clone(void) {
   across_chunks = NO;
 #endif
 
+#ifdef DEBUG_CHECK
   isCollecting = OK;
+#endif
+
   isInGc       = NO;
 
   unsigned int starttime = 0;
@@ -1691,7 +1683,9 @@ redo:
   if (ozconf.timeDetailed)
     ozstat.timeForCopy.incf(osUserTime()-starttime);
 
+#ifdef DEBUG_CHECK
   isCollecting = NO;
+#endif
 
   return copy;
 }

@@ -43,7 +43,6 @@ private:
   }
   int *allocate(int size) {
     size_t n = size * sizeof(int);
-    COUNT1(sizeBitArrays,n);
     return (int *) alignedMalloc(n, sizeof(double));
   }
 public:
@@ -75,7 +74,6 @@ public:
     array = allocate(size);
     for (int i = 0; i < size; i++)
       array[i] = 0;
-    COUNT1(sizeBitArrays, sizeof(BitArray));
   }
   BitArray(const BitArray *b): OZ_Extension() {
     lowerBound = b->lowerBound;
@@ -83,7 +81,6 @@ public:
     int size = getSize();
     array = allocate(size);
     memcpy(array, b->array, size * sizeof(array[0]));
-    COUNT1(sizeBitArrays, sizeof(BitArray));
   }
   Bool checkBounds(int i) {
     return lowerBound <= i && i <= upperBound;

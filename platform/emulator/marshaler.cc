@@ -35,7 +35,6 @@
 #include "indexing.hh"
 #include "gname.hh"
 #include "var_base.hh"
-#include "gc.hh"
 #include "dictionary.hh"
 #include "urlc.hh"
 #include "msgbuffer.hh"

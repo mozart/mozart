@@ -256,7 +256,6 @@ error include resources.hh before mozart.h
 
 // #define DISABLE_INSTRPROFILE
 #define DEBUG_DET
-// #define HEAP_PROFILE
 // #define PROFILE_INSTR
 // #define PROFILE_BI
 // #define CS_PROFILE
@@ -264,7 +263,6 @@ error include resources.hh before mozart.h
 #endif
 
 #ifdef RS_PROFILE
-#define HEAP_PROFILE
 #define OUTLINE
 #define PROFILE_INSTR
 #endif

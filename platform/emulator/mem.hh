@@ -169,7 +169,6 @@ char *getMemFromOS(size_t size);
 /* return "chunk_size" aligned to "align" */
 inline void *alignedMalloc(size_t chunk_size, int align)
 {
-  ProfileCode(ozstat.heapAlloced(chunk_size);)
   Assert(ToInt32(heapTop)%sizeof(int32) == 0);
 
   heapTop -= chunk_size;
@@ -192,7 +191,7 @@ retry:
   return heapTop;
 }
 
-#if !defined(DEBUG_CHECK) && !defined(HEAP_PROFILE)
+#if !defined(DEBUG_CHECK)
 #define int32Malloc(s)                          \
  (((long)heapEnd > (long)(heapTop - (s)))       \
  ? (int32 *) getMemFromOS(s)                    \

@@ -3064,7 +3064,6 @@ OZ_BI_define(BIstatisticsReset, 0,0)
 OZ_BI_define(BIstatisticsPrint, 1,0)
 {
   oz_declareVirtualStringIN(0,file);
-  ProfileCode(ozstat.printCount(file));
   return PROCEED;
 } OZ_BI_end
 
@@ -3678,12 +3677,9 @@ inline int sizeOf(SRecord *sr)
 
 Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla, Board *b)
 {
-  COUNT1(sizeObjects,sizeof(Object)+sizeOf(feat)+sizeOf(st));
-  COUNT1(sizeRecords,-sizeOf(feat)-sizeOf(st));
   OzLock *lck=NULL;
   if (cla->supportsLocking()) {
     lck = new LockLocal(oz_currentBoard());
-    COUNT1(sizeObjects,sizeof(LockLocal));
   }
   return new Object(b,st,cla,feat,lck);
 }

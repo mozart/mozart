@@ -165,11 +165,7 @@ TaggedRef mkRecord(TaggedRef label,SRecordArity ff)
 inline
 RefsArray allocateY(int n)
 {
-  COUNT(numEnvAllocs);
-
   int sz = (n+1) * sizeof(TaggedRef);
-  COUNT1(sizeEnvs,sz);
-  CountMax(maxEnvSize,sz);
   RefsArray a = (RefsArray) freeListMalloc(sz);
   a += 1;
   initRefsArray(a,n,OK);
@@ -240,7 +236,6 @@ void bindOPT(OZ_Term *varPtr, OZ_Term term)
   if (!am.currentUVarPrototypeEq(*varPtr) && !oz_isLocalUVar(varPtr)) {
     DoBindAndTrail(varPtr,term);
   } else {
-    COUNT(varOptUnify);
     doBind(varPtr,term);
   }
 }
@@ -274,7 +269,6 @@ OZ_Return fastUnify(OZ_Term A, OZ_Term B) {
   return oz_unify(A,B);
 
  exit:
-  COUNT(varOptUnify);
   return PROCEED;
 }
 
@@ -977,8 +971,6 @@ LBLdispatcher:
     }
   Case(CREATEVARIABLEY)
     {
-      ProfileCode(if (CAP) CAP->getPred()->szVars += sizeof(TaggedRef));
-      ProfileCode(COUNT1(sizeStackVars,sizeof(TaggedRef)));
       Yreg(getRegArg(PC+1)) = oz_newVariableOPT();
       DISPATCH(2);
     }
@@ -990,8 +982,6 @@ LBLdispatcher:
     }
   Case(CREATEVARIABLEMOVEY)
     {
-      ProfileCode(if (CAP) CAP->getPred()->szVars += sizeof(TaggedRef));
-      ProfileCode(COUNT1(sizeStackVars,sizeof(TaggedRef)));
       Yreg(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = oz_newVariableOPT();
       DISPATCH(3);
     }
@@ -1875,7 +1865,6 @@ Case(GETVOID)
     {
       AbstractionEntry *entry = (AbstractionEntry *)getAdressArg(PC+1);
 
-      COUNT(fastcalls);
       CallDoChecks(entry->getAbstr());
 
       IHashTable *table = entry->indexTable;
@@ -1889,7 +1878,6 @@ Case(GETVOID)
 
   Case(CALLBI)
     {
-      COUNT(optbicalls);
       Builtin* bi = GetBI(PC+1);
       OZ_Location* loc = GetLoc(PC+2);
 
@@ -1931,7 +1919,6 @@ Case(GETVOID)
 
   Case(TESTBI)
     {
-      COUNT(optbicalls);
       Builtin* bi = GetBI(PC+1);
       OZ_Location* loc = GetLoc(PC+2);
 
@@ -1980,8 +1967,6 @@ Case(GETVOID)
 
   Case(INLINEMINUS)
     {
-      COUNT(inlinecalls);
-
       TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
 
       if (isSmallIntTag(tagA)) {
@@ -2011,8 +1996,6 @@ Case(GETVOID)
 
   Case(INLINEPLUS)
     {
-      COUNT(inlinecalls);
-
       TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
 
       if ( isSmallIntTag(tagA)) {
@@ -2042,8 +2025,6 @@ Case(GETVOID)
 
   Case(INLINEMINUS1)
     {
-      COUNT(inlinecalls);
-
       TaggedRef A = XPC(1);
 
     retryINLINEMINUS1:
@@ -2074,8 +2055,6 @@ Case(GETVOID)
 
   Case(INLINEPLUS1)
     {
-      COUNT(inlinecalls);
-
       TaggedRef A = XPC(1);
 
     retryINLINEPLUS1:
@@ -2125,7 +2104,6 @@ Case(GETVOID)
 
   Case(INLINEDOT)
     {
-      COUNT(inlinedots);
       TaggedRef rec = XPC(1);
       DEREF(rec,_1,_2);
       if (oz_isSRecord(rec)) {
@@ -2271,8 +2249,6 @@ Case(GETVOID)
 
   Case(TESTLT)
     {
-      COUNT(inlinecalls);
-
       TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
 
       if (isSmallIntTag(tagA)) {
@@ -2326,8 +2302,6 @@ Case(GETVOID)
 
   Case(TESTLE)
     {
-      COUNT(inlinecalls);
-
       TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
       TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
 
@@ -2552,9 +2526,6 @@ Case(GETVOID)
 
       Abstraction *p = Abstraction::newAbstraction(predd, CBB);
 
-      COUNT(numClosures);
-      COUNT1(sizeGs,size);
-
       if (predEntry) {
         predEntry->setPred(p);
       }
@@ -2604,7 +2575,6 @@ Case(GETVOID)
       if (!isTailCall) PushCont(PC+6);
       ChangeSelf(obj);
       CallDoChecks(def);
-      COUNT(sendmsg);
       JUMPABSOLUTE(def->getPC());
     }
 
@@ -2670,7 +2640,6 @@ Case(GETVOID)
 // -----------------------------------------------------------------------
 
   LBLcall:
-     COUNT(nonoptcalls);
      Builtin *bi;
 
 // -----------------------------------------------------------------------
@@ -2692,7 +2661,6 @@ Case(GETVOID)
 // --- Call: Object
 // -----------------------------------------------------------------------
        if (typ==Co_Object) {
-         COUNT(nonoptsendmsg);
          CheckArity(1, makeTaggedConst(predicate));
          Object *o = (Object*) predicate;
          Assert(o->getClass()->getFallbackApply());
@@ -2712,7 +2680,6 @@ Case(GETVOID)
 // --- Call: Builtin
 // -----------------------------------------------------------------------
        Assert(typ==Co_Builtin);
-       COUNT(nonoptbicalls);
 
        bi = (Builtin *) predicate;
 

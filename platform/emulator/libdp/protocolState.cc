@@ -26,7 +26,6 @@
  */
 
 #include "base.hh"
-#include "gc.hh"
 #include "protocolState.hh"
 #include "perdio.hh"
 #include "table.hh"

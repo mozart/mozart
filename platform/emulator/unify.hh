@@ -131,8 +131,6 @@ void oz_checkLocalSuspensionList(SuspList ** suspList,
 inline
 void doBind(TaggedRef *p, TaggedRef t)
 {
-  ProfileCode(if (oz_isVariable(oz_deref(t)))
-              {COUNT(varVarUnify);} else {COUNT(varNonvarUnify)});
   CHECK_NONVAR(t);
   Assert(p!=_derefPtr(t));
   *p = t;

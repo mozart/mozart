@@ -281,9 +281,6 @@ public:
       return;
     makeGCMark();
 
-#ifdef DEBUG_GC
-    Assert(isTertiary() && !inToSpace(u.tert) && inToSpace(newval));
-#endif
     u.tert = newval;
   }
 

@@ -36,7 +36,6 @@
 
 #include "base.hh"
 #include "mem.hh"
-#include "gc.hh"
 #include "atoms.hh"
 
 // ---------------------------------------------------------------------------
@@ -112,6 +111,9 @@ enum TypeOfTerm {
 // Debug macros for debugging outside of gc
 
 #ifdef DEBUG_GC
+
+extern Bool isCollecting;
+
 #define GCDEBUG(X)                                      \
   if (!isCollecting && (_tagTypeOf(X)==GCTAG ) )        \
    OZ_error("GcTag unexpectedly found.");
@@ -680,13 +682,10 @@ Tertiary *tagged2Tert(TaggedRef ref)
 
 
 #define __DEREF(term, termPtr, tag)                     \
-  ProfileCode(ozstat.lenDeref=0);                       \
-  while(oz_isRef(term)) {                                       \
-    COUNT(lenDeref);                                    \
+  while(oz_isRef(term)) {                               \
     termPtr = tagged2Ref(term);                         \
     term = *termPtr;                                    \
   }                                                     \
-  ProfileCode(ozstat.derefChain(ozstat.lenDeref));      \
   tag = tagTypeOf(term);
 
 #define _DEREF(term, termPtr, tag)              \
