@@ -33,7 +33,7 @@ SRCDIR= @srcdir@
 include Makefile.vars
 
 MODULE_NAMES =                                                  \
-        DPB PID Fault DPMisc VirtualSite Wif Schedule FDP FSP Parser    \
+        DPB PID Fault DPMisc VirtualSite Tk Schedule FDP FSP Parser     \
         CompilerSupport Browser Debug
 
 STATIC_MODULES=         @STATIC_MODULES@
@@ -68,7 +68,7 @@ BIMODSPECS = \
         BitString ByteString
 
 MODSPECS= \
-        FDP FSP Schedule Wif Parser OS Property Pickle \
+        FDP FSP Schedule Tk Parser OS Property Pickle \
         PID URL FDB FSB System Finalize CTB \
         CompilerSupport Profile \
         Debug Fault Browser Misc DPMisc Distribution \
@@ -155,18 +155,18 @@ COREOBJS=   $(SRCS:%.cc=%.o)
 
 OBJS=   $(COREOBJS) $(OTHERSRCS:%.cc=%.o)
 
-WIFSRCS=        wif.cc
+TKSRCS= tk.cc
 COMPILERSUPPORTSRCS=    compiler.cc
 BROWSERSRCS=    browser.cc
 DEBUGSRCS=      debugBI.cc
 
-WIFOBJS=        $(WIFSRCS:%.cc=%.lo)
+TKOBJS= $(TKSRCS:%.cc=%.lo)
 COMPILERSUPPORTOBJS=    $(COMPILERSUPPORTSRCS:%.cc=%.lo)
 BROWSEROBJS=    $(BROWSERSRCS:%.cc=%.lo)
 DEBUGOBJS=      $(DEBUGSRCS:%.cc=%.lo)
 
 ALLSRCS= $(SRCS) \
-        $(WIFSRCS) $(COMPILERSUPPORTSRCS) $(BROWSERSRCS) \
+        $(TKSRCS) $(COMPILERSUPPORTSRCS) $(BROWSERSRCS) \
         $(DEBUGSRCS) $(TEXT2PICKLESRCS)
 
 ############################################################################
@@ -211,11 +211,11 @@ libFDP.a FDP.so libSchedule.a Schedule.so:
 libFSP.a FSP.so:
         cd libfset; $(MAKE) ../$@
 
-Wif.so: $(WIFOBJS)
-        $(DYNLD) -o $@ $(WIFOBJS)
+Tk.so: $(TKOBJS)
+        $(DYNLD) -o $@ $(TKOBJS)
 
-libWif.a: $(WIFOBJS)
-        $(AR) -rc $@ $(WIFOBJS) && $(RANLIB) $@
+libTk.a: $(TKOBJS)
+        $(AR) -rc $@ $(TKOBJS) && $(RANLIB) $@
 
 CompilerSupport.so: $(COMPILERSUPPORTOBJS)
         $(DYNLD) -o $@ $(COMPILERSUPPORTOBJS)
@@ -350,7 +350,7 @@ Parser.so: $(PARSEROBJS)
 libParser.a: $(PARSEROBJS)
         $(AR) -rc $@ $(PARSEROBJS) && $(RANLIB) $@
 
-wif.o: modWif-if.cc
+tk.o: modTk-if.cc
 
 parsertable.o: modParser-if.cc
 

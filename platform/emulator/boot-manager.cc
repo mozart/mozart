@@ -102,7 +102,7 @@ TaggedRef dictionary_of_modules;
 
 #ifdef MODULES_LINK_STATIC
 
-#include "modWif-if.cc"
+#include "modTk-if.cc"
 #include "modFDP-if.cc"
 #include "modSchedule-if.cc"
 #include "modParser-if.cc"
@@ -188,7 +188,7 @@ static ModuleEntry ext_module_table[] = {
   {"CompilerSupport", mod_int_CompilerSupport},
   {"Parser",          mod_int_Parser},
   {"Browser",         mod_int_Browser},
-  {"Wif",             mod_int_Wif},
+  {"Tk",              mod_int_Tk},
   {"Schedule",        mod_int_Schedule},
   {"Debug",           mod_int_Debug},
   {"DPB",             mod_int_DPB},

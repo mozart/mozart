@@ -24,37 +24,37 @@
 
 %builtins_all =
 (
-    ##* WIF (Wish InterFace)
+    ##* Tk
 
     'init'              => { in     => ['value','value','value'],
                              out    => [],
                              BI     => BIwif_init},
 
-    'write'             => { in     => ['!value'],
+    'send'              => { in     => ['!value'],
                              out    => [],
                              BI     => BIwif_write},
 
-    'writeReturn'       => { in     => ['!value','value','value'],
+    'return'            => { in     => ['!value','value','value'],
                              out    => [],
                              BI     => BIwif_writeReturn},
 
-    'writeReturnMess'=> { in     => ['!value','value','value','value'],
+    'returnMess'        => { in     => ['!value','value','value','value'],
                              out    => [],
                              BI     => BIwif_writeReturnMess},
 
-    'writeBatch'        => { in     => ['!value'],
+    'batch'             => { in     => ['!value'],
                              out    => [],
                              BI     => BIwif_writeBatch},
 
-    'writeTuple'        => { in     => ['!value','value'],
+    'sendTuple' => { in     => ['!value','value'],
                              out    => [],
                              BI     => BIwif_writeTuple},
 
-    'writeTagTuple'     => { in     => ['!value','value','value'],
+    'sendTagTuple'      => { in     => ['!value','value','value'],
                              out    => [],
                              BI     => BIwif_writeTagTuple},
 
-    'writeFilter'       => { in     => ['!value','value','value',
+    'sendFilter'        => { in     => ['!value','value','value',
                                         'value','value'],
                              out    => [],
                              BI     => BIwif_writeFilter},
@@ -83,16 +83,16 @@
                              out    => ['value'],
                              BI     => BIwif_genImageName},
 
-    'getNames'  => { in     => [],
+    'getNames'          => { in     => [],
                              out    => ['value','value','value'],
                              BI     => BIwif_getNames},
 
 
-    'addFastGroup'      => { in  => ['+value','value'],
+    'addGroup'          => { in  => ['+value','value'],
                              out => ['value'],
                              BI  => BIaddFastGroup},
 
-    'delFastGroup'      => { in  => ['value'],
+    'delGroup'          => { in  => ['value'],
                              out => [],
                              BI  => BIdelFastGroup},
 

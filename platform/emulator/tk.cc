@@ -1570,6 +1570,6 @@ OZ_BI_define(BIdelFastGroup,1,0)
 
 #ifndef MODULES_LINK_STATIC
 
-#include "modWif-if.cc"
+#include "modTk-if.cc"
 
 #endif
