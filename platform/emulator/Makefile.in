@@ -21,6 +21,8 @@
 #  of this file, and for a DISCLAIMER OF ALL
 #  WARRANTIES.
 
+# !!! THIS MAKEFILE REQUIRES GNU MAKE !!!!
+
 include Makefile.vars
 
 FDTARGETS       = @FDTARGETS@
@@ -114,12 +116,12 @@ first: $(CREATEDFILES) $(SRCS)
 @PROGRAMNAME@: first $(OBJS) $(FDTARGETS) $(FSETTARGETS)
         $(LD) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
 
-@tmphack_programname@: first $(OBJS) $(FDTARGETS) $(FSETTARGETS)
+@oz_tmphack_programname@: first $(OBJS) $(FDTARGETS) $(FSETTARGETS)
         tmp=/tmp/ozemu$$$$; \
         trap "$(RM) $$tmp; exit 1" 1 2 15; \
          $(LD) $(LDFLAGS) $(LDOPT) -o $$tmp $(OBJS) $(LIBS) && \
          echo 'moving ...' && \
-         rcp $$tmp @tmphack_host@:`pwd`/$@ && \
+         rcp $$tmp @oz_tmphack_host@:`pwd`/$@ && \
          $(RM) $$tmp
 
 install:: install-dir install-bin install-inc
