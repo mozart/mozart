@@ -25,7 +25,7 @@ Makefile: Makefile.in config.status
 	./config.status
 
 gump-html: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
-	$(OZDOC) $(OZDOCFLAGS) --in=gump.sgml --out=$@ --type=html-color
+	$(OZDOC) $(OZDOCFLAGS) --in=gump.sgml --out=$@ --type=html-stylesheets
 	cp -p $(GIFSRCS) $@
 
 gump-tex: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
