@@ -110,12 +110,12 @@ local
 	    {OzcarMessage 'Reloading file ' # self.filename}
 	    SourceWindow,Load(file:self.filename)
 	 else skip end
-	 case What == appl then
-	    LastApplColor <- C
-	 else skip end
-	 case L == @CurrentLine.What then
+	 case L == @CurrentLine.What andthen C == @LastApplColor then
 	    {OzcarMessage 'no need to highlight line ' # L # ' again.'}
 	 else
+	    case What == appl then
+	       LastApplColor <- C
+	    else skip end
 	    case @CurrentLine.What \= undef then
 	       Other         = case What == appl then stack else appl end
 	       NewColors     =
