@@ -1735,25 +1735,38 @@ void discardBorrowHeadSaved(DSite *ms, int oti,
     sendRRinstanceBack(ms,oti,credit);
   }
 }
-
+#ifdef USE_FAST_UNMARSHALER
+unmarshalBorrow(MarshalerBuffer *bs,
+		      OB_Entry *&ob, int &bi, BYTE &ec)
+#else
 OZ_Term
 unmarshalBorrowRobust(MarshalerBuffer *bs,
 		      OB_Entry *&ob, int &bi, BYTE &ec,int *error)
+#endif
 {
   PD((UNMARSHAL,"Borrow"));
+#ifdef USE_FAST_UNMARSHALER
+  DSite *sd = unmarshalDSite(bs);
+  int si = unmarshalNumber(bs);
+#else
   DSite *sd = unmarshalDSiteRobust(bs, error);
   if (*error) return ((OZ_Term) 0);	// carry on the error;
   int si = unmarshalNumberRobust(bs, error);
   if (*error) return ((OZ_Term) 0);
+#endif
   PD((UNMARSHAL,"borrow o:%d",si));
-
+  
   if(sd==myDSite){ Assert(0);}
   
   NetAddress na = NetAddress(sd,si); 
   BorrowEntry *b = borrowTable->find(&na);
   
   ec = bs->get();
+#ifdef USE_FAST_UNMARSHALER
+  RRinstance* cred = unmarshalCredit(bs);    
+#else
   RRinstance* cred = unmarshalCreditRobust(bs, error);    
+#endif
   if (*error)  return ((OZ_Term) 0);
 
   if (b!=NULL) {
@@ -1772,7 +1785,6 @@ unmarshalBorrowRobust(MarshalerBuffer *bs,
   ob=b;
   return 0;
 }
-
 
 /**********************************************************************/
 /*   lazy objects                                                     */
@@ -1882,14 +1894,24 @@ char *tagToComment(MarshalTag tag)
     return "";
 }}
 
+#ifdef USE_FAST_UNMARSHALER
+OZ_Term
+unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
+#else
 OZ_Term
 unmarshalTertiaryRobust(MarshalerBuffer *bs, MarshalTag tag, int *error)
+#endif
 {
   OB_Entry* ob;
   int bi;
   BYTE ec; 
+
+#ifdef USE_FAST_UNMARSHALER
+  OZ_Term val = unmarshalBorrow(bs, ob, bi, ec);
+#else
   OZ_Term val = unmarshalBorrowRobust(bs, ob, bi, ec, error);
   if (*error)   return ((OZ_Term) 0);
+#endif
 
   if(val){
     PD((UNMARSHAL,"%s hit b:%d",tagToComment(tag),bi));
@@ -1906,12 +1928,15 @@ unmarshalTertiaryRobust(MarshalerBuffer *bs, MarshalTag tag, int *error)
     case DIF_VAR_OBJECT:
       TaggedRef obj;
       TaggedRef clas;
+#ifdef USE_FAST_UNMARSHALER
+      (void) unmarshalGName(&obj, bs);
+      (void) unmarshalGName(&clas, bs);
+#else
       (void) unmarshalGNameRobust(&obj, bs, error);
-      if (*error)
-	return ((OZ_Term) 0);
+      if (*error)return ((OZ_Term) 0);
       (void) unmarshalGNameRobust(&clas, bs, error);
-      if (*error)
-	return ((OZ_Term) 0);
+      if (*error)return ((OZ_Term) 0);
+#endif
       break;
     default:         
       Assert(0);
@@ -1960,10 +1985,15 @@ unmarshalTertiaryRobust(MarshalerBuffer *bs, MarshalTag tag, int *error)
       OZ_Term obj;
       OZ_Term clas;
       OZ_Term val;
+#ifdef USE_FAST_UNMARSHALER
+      GName *gnobj = unmarshalGNameRobust(&obj, bs);
+      GName *gnclass = unmarshalGNameRobust(&clas, bs);
+#else
       GName *gnobj = unmarshalGNameRobust(&obj, bs, error);
       if (*error)return ((OZ_Term) 0);
       GName *gnclass = unmarshalGNameRobust(&clas, bs, error);
       if (*error)return ((OZ_Term) 0);
+#endif
       if(!gnobj) {	
 //  	printf("Had Object %d:%d flags:%d\n",
 //  	       ((BorrowEntry *)ob)->getNetAddress()->index,
@@ -2013,31 +2043,38 @@ unmarshalTertiaryRobust(MarshalerBuffer *bs, MarshalTag tag, int *error)
     }
   else
     {
-    switch(((BorrowEntry*)ob)->getSite()->siteStatus()){
-    case SITE_OK:{
-      break;}
-    case SITE_PERM:{
-      deferProxyTertProbeFault(tert,PROBE_PERM);
-      break;}
-    case SITE_TEMP:{
-      deferProxyTertProbeFault(tert,PROBE_TEMP);
-      break;}
-    default:
-      Assert(0);
-    } 
+      switch(((BorrowEntry*)ob)->getSite()->siteStatus()){
+      case SITE_OK:{
+	break;}
+      case SITE_PERM:{
+	deferProxyTertProbeFault(tert,PROBE_PERM);
+	break;}
+      case SITE_TEMP:{
+	deferProxyTertProbeFault(tert,PROBE_TEMP);
+	break;}
+      default:
+	Assert(0);
+      } 
     }
   return val;
 }
 
-
+#ifdef USE_FAST_UNMARSHALER
 OZ_Term 
+unmarshalOwner(MarshalerBuffer *bs, MarshalTag mt)
+#else
+  OZ_Term 
 unmarshalOwnerRobust(MarshalerBuffer *bs, MarshalTag mt, int *error)
-
+#endif
 {
   int OTI;
   OZ_Term oz;
+#ifdef USE_FAST_UNMARSHALER
+  RRinstance  *c = unmarshalCreditToOwner(bs, mt, OTI);
+#else
   RRinstance  *c = unmarshalCreditToOwnerRobust(bs, mt, OTI, error);
   if (*error) return ((OZ_Term) 0);
+#endif
   PD((UNMARSHAL,"OWNER o:%d",OTI));
   OwnerEntry* oe=ownerTable->odi2entry(OTI);
   if (oe){
