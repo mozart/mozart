@@ -120,7 +120,7 @@ void OwnerCreditHandler::addCredit(Credit c)
 {
   if(!isPersistent())
     if(insertPair(c.enumerator, c.denominator)){
-      OT->getOwner(oti)->localize(oti);
+      OT->getEntry(oti)->localize(oti);
     }
 }
 
@@ -925,7 +925,7 @@ void OwnerCreditHandler::addCredit(Credit back){
     return;}
   addCreditOB(back.credit);
   if (hasFullCredit())
-    ownerTable->getOwner(oti)->localize(oti);
+    ownerTable->getEntry(oti)->localize(oti);
   return;}
 
 Bool OwnerCreditHandler::hasFullCredit(){ 

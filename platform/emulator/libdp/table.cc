@@ -202,16 +202,21 @@ int OwnerTable::newOwner(OwnerEntry *&oe){
   int index = nextfree;
   nextfree = array[index].u.nextfree;
   oe = (OwnerEntry *)&(array[index]);
-  oe->setUp(index);
   PD((TABLE,"owner insert: o:%d",index));
   no_used++;
-  return index;}
+  int odi = nxtId++; 
+  oe->setUp(odi);
+  hshtbl->add(odi,index);
+  return odi;}
 
-void OwnerTable::freeOwnerEntry(int i)
+void OwnerTable::freeOwnerEntry(int odi)
 {
+  int i =  hshtbl->find(odi);
+  hshtbl->remove(odi);
   array[i].setFree();
   array[i].u.nextfree=nextfree;
   nextfree=i;
+
   no_used--;
   PD((TABLE,"owner delete o:%d",i));
   localizing();
@@ -225,16 +230,17 @@ OZ_Term OwnerTable::extract_info(){
   OZ_Term credit;
   
   for(int ctr = 0; ctr<size;ctr++){
-    OwnerEntry *oe = OT->getEntry(ctr);
-    if(oe==NULL){continue;}
+    OwnerEntry *oe = OT->getOtiEntry(ctr);
+    if(oe->isFree()){continue;}
     Assert(oe!=NULL);
     credit=oe->ocreditHandler.extract_info();
     list=
       oz_cons(OZ_recordInit(oz_atom("oe"),
 	oz_cons(oz_pairAI("index", ctr),
-	oz_cons(oz_pairAA("type", toC(PO_getValue(oe))),
+		oz_cons(oz_pairAI("odi",oe->ocreditHandler.oti),
+		oz_cons(oz_pairAA("type", toC(PO_getValue(oe))),
 	oz_cons(oz_pairA("dist_gc", credit), 
-		oz_nil())))), list);
+		oz_nil()))))), list);
   }
   return OZ_recordInit(oz_atom("ot"),
            oz_cons(oz_pairAI("size", size),
@@ -254,7 +260,7 @@ void OwnerTable::print(){
   int i;
   for(i=0;i<size;i++){
     if(!(array[i].isFree())){
-      OwnerEntry *oe=getOwner(i);
+      OwnerEntry *oe=getOtiEntry(i);
       printf("<%d>\t", i);
       oe->ocreditHandler.print();
       printf("\t%s\n",toC(PO_getValue(oe)));
@@ -548,7 +554,7 @@ void OwnerTable::gcOwnerTableRoots()
 {
   PD((GC,"owner gc"));
   for(int i=0;i<size;i++) {
-    OwnerEntry* o = getOwner(i); 
+    OwnerEntry* o = getOtiEntry(i); 
     if(!o->isFree()) {
       PD((GC,"OT o:%d",i));
       o->gcPO();
@@ -561,7 +567,7 @@ void OwnerTable::gcOwnerTableFinal()
 {
   PD((GC,"owner gc"));
   for(int i=0;i<size;i++) {
-    OwnerEntry* o = getOwner(i);
+    OwnerEntry* o = getOtiEntry(i);
     if(!o->isFree()) {
       o->removeGCMark();
       if (o->isVar()){
@@ -801,14 +807,14 @@ void BorrowTable::dumpProxies()
 int OwnerTable::notGCMarked() {
   OwnerEntry *be;
   for(int i=0;i<size;i++){
-    be = getOwner(i);
+    be = getOtiEntry(i);
     if(!be->isFree()) {
       if(be->isGCMarked())
 	return FALSE;
       if(be->isTertiary()) {
 	if(be->getTertiary()->cacIsMarked())
 	  return FALSE;
-	Assert(be->getTertiary()->getIndex() == i);
+	Assert(hshtbl->find(be->getTertiary()->getIndex()) == i);
       }
     }
   }
