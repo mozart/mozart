@@ -308,6 +308,7 @@ void oz_bindUVar(TaggedRef *varPtr, TaggedRef term)
  */
 void oz_bindGlobalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
 {
+  Assert(tagged2CVar(*varPtr)==ov);
   Assert(!oz_isLocalVar(ov));
   Assert(am.inShallowGuard() || checkHome(varPtr));
   oz_checkSuspensionList(ov, pc_std_unif);
@@ -317,6 +318,7 @@ void oz_bindGlobalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
 
 void oz_bindLocalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
 {
+  Assert(tagged2CVar(*varPtr)==ov);
   Assert(oz_isLocalVar(ov));
   Assert(!am.inShallowGuard());
   oz_checkSuspensionList(ov, pc_std_unif);
@@ -350,6 +352,8 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
       Assert(ov->isEmptySuspList());
     }
     oz_var_dispose(ov);
+  } else {
+    Assert(isUVar(var));
   }
   doBind(varPtr,term);
 }
