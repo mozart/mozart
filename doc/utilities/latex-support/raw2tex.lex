@@ -2,22 +2,25 @@
 /* Copyright (c) by Denys Duchier, April 1996, Universitaet des Saarlandes */
 #include <stdio.h>
 #include <string.h>
-#define warning(msg) fprintf(stderr,"Warning at line %d: %s\n",yylineno)
+int start=0;
+#define warning(msg) fprintf(stderr,"Warning at line %d (%d): %s\n",yylineno,start,msg)
 #define error(msg) { \
-  fprintf(stderr,"Error at line %d: %s\n",yylineno); \
+  fprintf(stderr,"Error at line %d (%d): %s\n",yylineno,start,msg); \
   exit(-1) ; }
 int space=0;
 #define SPACE space++
-#define TAB   space += ++space % 8
+#define TAB   {int n = 8 - (++space % 8); space += n; }
 #define RESET space=0
 #define FLUSH {if (space>0) printf("\\OzSpace{%d}",space); RESET; }
 #define PUSH yy_push_state
 #define POP  yy_pop_state()
 int level=0;
-int after_skip;
 #define INCR level++
 #define DECR if (--level<=0) POP
-#define OZCHAR { FLUSH; printf("\\OzChar\\%c",yytext[0]); }
+#define OZCHAR {                           \
+  FLUSH;                                   \
+  if (yytext[0]=='\\') printf("\\OzBsl "); \
+  else printf("\\OzChar\\%c",yytext[0]); }
 #define OZKEYWORD { FLUSH; printf("\\OzKeyword{%s}",yytext); }
 #define FLUSHECHO {FLUSH;ECHO;}
 #define ENDPOP    {printf("}");POP;}
@@ -31,6 +34,7 @@ int after_skip;
 #define STARTFWD { FLUSH; printf("\\OzFwd{"); PUSH(QUOTED); }
 #define STARTBWD { FLUSH; printf("\\OzBwd{"); PUSH(QUOTED); }
 #define STARTSTRING { FLUSH; printf("\\OzString{"); PUSH(STRING); }
+#define START start=yylineno
 void banner() {
   printf("%s","%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
   printf("%s","%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
@@ -42,10 +46,18 @@ void banner() {
   printf("%s","%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
   printf("%s","%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 }
+#define OZECHAR {                            \
+  printf("\\OzBsl");                         \
+  if (yytext[1]=='\\') printf("\\OzBsl ");   \
+  else if (index("{}$&#^_%~'`\"",yytext[1])) \
+    printf("\\OzChar\\%c",yytext[1]);        \
+  else                                       \
+    putchar(yytext[1]); }
 %}
 IDENT		[a-zA-Z0-9_]+
 KEYWORD		(proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|elseif|of|elseof|elsecase|end|"class"|create|meth|"extern"|from|with|attr|feat|self|true|false|touch|div|mod|andthen|orelse|thread|job|conc|in|condis|not)
 %option stack
+%option main
 %option yylineno
 %x TEX DISPLAY QUOTED STRING COMMENT EOLCOMMENT INLINE INDEX ENTRY SEE SKIP
 %%
@@ -53,10 +65,12 @@ KEYWORD		(proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|elseif|of
 
 <TEX>"\\begin{ozdisplay""*"?"}"([ \t]*\n)*	{
   printf("\\begin{oz2texdisplay}");
-  RESET; BEGIN(DISPLAY); }
-<TEX>"\\?"		{ printf("\\OzInline{"); RESET; PUSH(INLINE); }
-<TEX>"\\ozindex{"	{ printf("\\index{");    RESET; PUSH(INDEX);  }
-<TEX>%.*$		ECHO;
+  RESET; START; BEGIN(DISPLAY); }
+<TEX>"\\?"		{
+  printf("\\OzInline{"); RESET; START; PUSH(INLINE); }
+<TEX>"\\ozindex{"	{
+  printf("\\index{");    RESET; START; PUSH(INDEX);  }
+<TEX>%.*\n		ECHO;
 <TEX>"\\".		ECHO;
 <TEX>.			ECHO;
 <TEX>\n			ECHO;
@@ -71,7 +85,7 @@ KEYWORD		(proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|elseif|of
 <DISPLAY>"%"	{ FLUSH; printf("\\OzEolComment{"); PUSH(EOLCOMMENT); }
 <DISPLAY>" "	SPACE;
 <DISPLAY>\t	TAB;
-<DISPLAY>\n	{ RESET; printf("\\OzEol "); }
+<DISPLAY>\n	{ RESET; printf("\\OzEol\n"); }
 <DISPLAY>[\\{}$&#^_%~]	OZCHAR;
 <DISPLAY>{KEYWORD}		OZKEYWORD;
 <DISPLAY>{IDENT}		FLUSHECHO;
@@ -80,7 +94,8 @@ KEYWORD		(proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|elseif|of
 <DISPLAY>\"	STARTSTRING;
 <DISPLAY>.	FLUSHECHO;
 
-<QUOTED>[\\{}$&#^_%~]	OZCHAR;
+<QUOTED>\\.		OZECHAR;
+<QUOTED>[{}$&#^_%~]	OZCHAR;
 <QUOTED>[\'\`]		{ FLUSH; printf("}"); POP; }
 <QUOTED>" "		SPACE;
 <QUOTED>\t		TAB;
@@ -88,16 +103,11 @@ KEYWORD		(proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|elseif|of
 <QUOTED>\n		{
   SPACE; warning("newline in quoted symbol (ignored)"); }
 
-<STRING>\\.	{
-  printf("\\OzChar\\\\");
-  if (index("\\{}$&#^_%~'`\"",yytext[1]))
-    printf("\\OzChar\\%c",yytext[1]);
-  else
-    putchar(yytext[1]); }
+<STRING>\\.	OZECHAR;
 <STRING>\"	FLUSHPOP;
 <STRING>" "	SPACE;
 <STRING>\t	TAB;
-<STRING>\n	{ FLUSH; printf("\\OzEol "); }
+<STRING>\n	{ FLUSH; printf("\\OzEol\n"); }
 <STRING>[{}$&#^_%~\'\`]	OZCHAR;
 <STRING>.	FLUSHECHO;
 
@@ -105,7 +115,7 @@ KEYWORD		(proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|elseif|of
 <COMMENT>[\\{}$&#^_%~]	OZCHAR;
 <COMMENT>" "	SPACE;
 <COMMENT>\t	TAB;
-<COMMENT>\n	{ RESET; printf("\\OzEol "); }
+<COMMENT>\n	{ RESET; printf("\\OzEol\n"); }
 <COMMENT>.	FLUSHECHO;
 
 <EOLCOMMENT>\n	ENDPOP;
@@ -168,7 +178,7 @@ KEYWORD		(proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|elseif|of
 <SEE>\"		STARTSTRING;
 <SEE>.		FLUSHECHO;
 
-<SKIP>%.*$	ECHO;
+<SKIP>%.*\n	ECHO;
 <SKIP>\\.	ECHO;
 <SKIP>"{"	ECHO;INCR;
 <SKIP>"}"	ECHO;DECR;
