@@ -47,9 +47,7 @@ define
       Server={Connection.take Ticket}
    
       thread
-	 T1={New Tk.toplevel tkInit(title:"System Administrator" delete:proc{$}
-									   {Stop}
-									end)}
+	 T1={New Tk.toplevel tkInit(title:"System Administrator" delete:Stop)}
 	 T={New Tk.frame tkInit(parent:T1)}
 	 proc{Separator Name F}
 	    L fun{NS} {New Tk.frame tkInit(parent:F bd:1 relief:sunken height:2 width:10)} end
@@ -80,13 +78,13 @@ define
 	 UR=4
 	 B1={New Tk.button tkInit(parent:T text:"Add User"
 				  action:proc{$}
-					    {AddUser user(id:''
-							  passwd:''
-							  userlevel:'user'
-							  organization:''
-							  email:''
-							  firstname:''
-							  lastname:'')}
+					    {AddUser user(id:""
+							  passwd:""
+							  userlevel:user
+							  organization:""
+							  email:""
+							  firstname:""
+							  lastname:"")}
 					 end)}
 	 B2={New Tk.button tkInit(parent:T text:"Edit User"
 				  action:proc{$} {EditUser} end)}
@@ -213,6 +211,7 @@ define
 	 {E tkBind(event:'<Return>' action:proc{$} GO=unit end)}
 	 if N==1 then {Tk.send focus(E)} else skip end
       end
+      F1 L1 R1 R2
    in
       V1={NewEntry "Login:" Args.id}
       V2={NewEntry "Password:" Args.passwd}
@@ -220,7 +219,20 @@ define
       V4={NewEntry "Lastname:" {CondSelect Args lastname ""}}
       V5={NewEntry "Organization:" {CondSelect Args organization ""}}
       V6={NewEntry "Email:" {CondSelect Args email ""}}
-      V7={NewEntry "Userlevel:" {CondSelect Args userlevel "user"}}
+
+      %% User level
+      V7={New Tk.variable tkInit({CondSelect Args userlevel user})}
+      L1={New Tk.label tkInit(parent:T text:"User-level:")}
+      F1={New Tk.frame tkInit(parent:T relief:sunken bd:2)}
+      R1={New Tk.radiobutton tkInit(parent:F1 text:"User" value:user variable:V7)}
+      R2={New Tk.radiobutton tkInit(parent:F1 text:"Superuser" value:sysadm variable:V7)}
+      {Tk.batch [grid(L1 row:10 column:0 sticky:e)
+		 grid(F1 row:10 column:1 sticky:we)
+		 grid(R1 row:0 column:0 sticky:we)
+		 grid(R2 row:0 column:1 sticky:we)
+		]}
+      
+      %V7={NewEntry "Userlevel:" {CondSelect Args userlevel user}}
       
       {Wait GO}
       {Start2}
@@ -287,12 +299,12 @@ define
       GO
       proc{Start2}
 	    A=S_updateUser(id: Info.id
-			 passwd:{V2 tkReturnAtom($)}
-			 firstname:{V3 tkReturnString($)}
-			 lastname:{V4 tkReturnString($)}
-			 organization:{V5 tkReturnString($)}
-			 email:{V6 tkReturnString($)}
-			 userlevel:{V7 tkReturnAtom($)})
+			   passwd:{V2 tkReturnAtom($)}
+			   firstname:{V3 tkReturnString($)}
+			   lastname:{V4 tkReturnString($)}
+			   organization:{V5 tkReturnString($)}
+			   email:{V6 tkReturnString($)}
+			   userlevel:{V7 tkReturnAtom($)})
       in
 	 {Wait A.passwd} {Wait A.firstname} {Wait A.firstname} {Wait A.organization}
 	 {Wait A.email} {Wait A.userlevel}
@@ -311,6 +323,7 @@ define
 	 {E tkBind(event:'<Return>' action:proc{$} GO=unit end)}
 	 if N==1 then {Tk.send focus(E)} else skip end
       end
+      F1 L1 R1 R2
    in
       try
 	 Info = {Server S_getInfo( id: Id info: $ )}
@@ -320,7 +333,18 @@ define
 	 V4={NewEntry "Lastname:" {CondSelect Info lastname ""}}
 	 V5={NewEntry "Organization:" {CondSelect Info organization ""}}
 	 V6={NewEntry "Email:" {CondSelect Info email ""}}
-	 V7={NewEntry "Userlevel:"{CondSelect Info userlevel "user"}}
+
+	 %% User level
+	 V7={New Tk.variable tkInit({CondSelect Info userlevel user})}
+	 L1={New Tk.label tkInit(parent:T text:"User-level:")}
+	 F1={New Tk.frame tkInit(parent:T relief:sunken bd:2)}
+	 R1={New Tk.radiobutton tkInit(parent:F1 text:"User" value:user variable:V7)}
+	 R2={New Tk.radiobutton tkInit(parent:F1 text:"Superuser" value:sysadm variable:V7)}
+	 {Tk.batch [grid(L1 row:10 column:0 sticky:e)
+		    grid(F1 row:10 column:1 sticky:we)
+		    grid(R1 row:0 column:0 sticky:we)
+		    grid(R2 row:0 column:1 sticky:we)
+		   ]}
 	 {Wait GO}
 	 {Start2}
       catch _ then {T tkClose} end
