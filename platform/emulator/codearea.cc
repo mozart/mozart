@@ -682,24 +682,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 	DISPATCH();
       }
 
-    case APPLMETHX:
-    case APPLMETHY:
-    case APPLMETHG:
-    case TAILAPPLMETHX:
-    case TAILAPPLMETHY:
-    case TAILAPPLMETHG:
-      {
-	ApplMethInfoClass *ami = (ApplMethInfoClass*) getAdressArg(PC+1);
-	fprintf(ofile, "(ami(%s ", toC(ami->methName));
-	SRecordArity sra = (SRecordArity) ami->arity;
-	if (sraIsTuple(sra))
-	  fprintf(ofile, "%d", getTupleWidth(sra));
-	else
-	  fprintf(ofile, "%s", toC(sraGetArityList(sra)));
-	fprintf(ofile, ") %d)\n", regToInt(getRegArg(PC+2)));
-	DISPATCH();
-      }
-
     case SENDMSGX:
     case SENDMSGY:
     case SENDMSGG:

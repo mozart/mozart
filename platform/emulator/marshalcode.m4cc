@@ -75,7 +75,6 @@ define(opAction,
         $1,HashTableRef,marshalHashTableRef(instrstart-start,(IHashTable *)getAdressArg(PC++),bs);,
         $1,RecordArity,marshalRecordArity((SRecordArity) getAdressArg(PC++),bs);,
         $1,GenCallInfo,marshalGenCallInfo((GenCallInfoClass*)getAdressArg(PC++),bs);,
-        $1,ApplMethInfo,marshalApplMethInfo((ApplMethInfoClass*)getAdressArg(PC++),bs);,
         $1,GRegRef,marshalGRegRef((AssRegArray*)getAdressArg(PC++),bs);,
         $1,Location,marshalLocation((OZ_Location*)getAdressArg(PC++),bs);,
         $1,Cache,PC += CacheSize;)]])
@@ -187,13 +186,6 @@ ProgramCounter unmarshalPredicateRef(ProgramCounter PC,MsgBuffer *bs, CodeArea *
 
 
 void marshalHashTableRef(int start, IHashTable *table,MsgBuffer *bs);
-
-
-void marshalApplMethInfo(ApplMethInfoClass *ami,MsgBuffer *bs)
-{
-  marshalTerm(ami->methName,bs);
-  marshalRecordArity(ami->arity,bs);
-}
 
 
 
@@ -335,7 +327,6 @@ define(opAction,
         $1,HashTableRef,PC=unmarshalHashTableRef(PC,lastPC-start,bs);,
         $1,RecordArity,PC=unmarshalRecordArity(PC,bs);,
         $1,GenCallInfo,PC=unmarshalGenCallInfo(PC,bs);,
-        $1,ApplMethInfo,PC=unmarshalApplMethInfo(PC,bs,code);,
         $1,GRegRef,PC=unmarshalGRegRef(PC,bs);,
         $1,Location,PC=unmarshalLocation(PC,bs);,
         $1,Cache,PC=unmarshalCache(PC,code);)]])
@@ -505,17 +496,6 @@ ProgramCounter unmarshalHashTableRef(ProgramCounter PC, int start, MsgBuffer *bs
 
   return PC ? CodeArea::writeIHashTable(table, PC) : 0;
 }
-
-
-ProgramCounter unmarshalApplMethInfo(ProgramCounter PC,MsgBuffer *bs, CodeArea *code) 
-{
-  TaggedRef methname = unmarshalTerm(bs);
-  SRecordArity arity = unmarshalRecordArity(bs);
-  ApplMethInfoClass *ami = PC ? new ApplMethInfoClass(methname,arity,code) : 0;
-  return writeAddress(ami,PC);
-}
-
-
 
 
 ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
