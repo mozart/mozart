@@ -4,7 +4,7 @@
 
 sub encode {
     my $txt = shift;
-    $txt =~ s/([<>&ü])/&encodeChar($1)/ge;
+    $txt =~ s/([<>&üö])/&encodeChar($1)/ge;
     return $txt;
 }
 
@@ -14,6 +14,7 @@ sub encodeChar {
     elsif ($c eq '>') { '&gt;';  }
     elsif ($c eq '&') { '&amp;'; }
     elsif ($c eq 'ü') { '&#252;';}
+    elsif ($c eq 'ö') { '&#246;';}
     else { die "bad encodeChar($c)"; }
 }
 
