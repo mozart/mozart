@@ -61,5 +61,5 @@ DEPEND		= @DEPEND@ $(CPPFLAGS)
 PREFIX		= @prefix@
 PLATFORM	= @platform@
 PLATFORMDIR	= $(PREFIX)/platform
-BINDIR		= $(PLATFORMDIR)/$(platform)
+BINDIR		= $(PLATFORMDIR)/$(PLATFORM)
 INCDIR		= $(PREFIX)/include
