@@ -259,7 +259,17 @@ current buffer's file name."
 	   :type 'string
 	   :group 'oz)))
 (put 'oz-compile-command 'variable-interactive
-     "sShell command to do a compilation: ")
+     "sShell command to do an Oz compilation: ")
+
+(eval-and-compile
+  (eval '(defcustom oz-application-command "%s"
+	   "Default shell command to do execute an Oz application.
+This may contain at most one occurrence of `%s', which is replaced by the
+current buffer's file name, minus the `.oz' or `.ozg' extension."
+	   :type 'string
+	   :group 'oz)))
+(put 'oz-application-command 'variable-interactive
+     "sShell command to invoke an Oz application: ")
 
 ;;}}}
 ;;{{{ win32 Support
@@ -678,6 +688,7 @@ the variable `oz-pedantic-spaces' is non-nil."
     ("Panel"               oz-open-panel t)
     ("Compiler Panel"      oz-open-compiler-panel t)
     ("Debugger"            oz-debugger t)
+    ("Debug Application"   oz-debug-application (not (oz-is-running)))
     ("Profiler"            oz-profiler t)
     ("-----")
     ("Next Oz Buffer"      oz-next-buffer t)
@@ -755,7 +766,7 @@ With ARG, stop it instead."
 Handle input and output via the Oz Emulator buffer."
   (interactive)
   (save-excursion
-    (oz-check-running t))
+    (oz-start-if-not-running))
   (oz-create-oz-buffer))
 
 (defun oz-create-oz-buffer ()
@@ -795,27 +806,16 @@ If FORCE is non-nil, kill it immediately."
 (defun oz-is-running ()
   (get-buffer-process oz-emulator-buffer))
 
-(defun oz-check-running (start-flag)
+(defun oz-start-if-not-running ()
   (if (not (oz-is-running))
-      (let ((filter 'oz-filter))
-	(if (not start-flag) (message "Oz died.  Restarting ..."))
-
-	(if oz-emulator-hook
-	    (progn
-	      (funcall oz-emulator-hook)
-	      (setq filter
-		    (process-filter (get-buffer-process oz-emulator-buffer))))
-	  (setq oz-emulator-buffer "*Oz Emulator*")
-	  (if (get-buffer oz-emulator-buffer)
-	      (kill-buffer oz-emulator-buffer))
-	  (make-comint "Oz Emulator" "ozengine" nil oz-root-functor))
-
-	(let ((proc (get-buffer-process oz-emulator-buffer)))
-	  (setq oz-emulator-filter-hook filter)
-	  (set-process-filter proc 'oz-emulator-filter))
-	(oz-show-buffer (get-buffer oz-emulator-buffer))
-	(bury-buffer oz-emulator-buffer)
-
+      (progn
+	(cond (oz-emulator-hook
+	       (funcall oz-emulator-hook)
+	       (oz-prepare-emulator-buffer
+		(process-filter (get-buffer-process oz-emulator-buffer)) t))
+	      (t
+	       (oz-make-comint "ozengine" oz-root-functor)
+	       (oz-prepare-emulator-buffer 'oz-filter t)))
 	(oz-set-title oz-frame-title)
 	(message "Oz started."))))
 
@@ -823,18 +823,28 @@ If FORCE is non-nil, kill it immediately."
   (let (host port)
     (cond ((>= (length command-line-args-left) 1)
 	   (setq host oz-default-host
-		 port (string-to-number (car command-line-args-left)))
-	   (setq command-line-args-left (cdr command-line-args-left))))
-    (setq oz-emulator-buffer "*Oz Emulator*")
-    (if (get-buffer oz-emulator-buffer)
-	(kill-buffer oz-emulator-buffer))
-    (make-comint "Oz Emulator" (cons host port) nil nil)
-    (setq oz-emulator-filter-hook 'oz-filter)
-    (let ((proc (get-buffer-process oz-emulator-buffer)))
-      (process-kill-without-query proc)
-      (set-process-filter proc 'oz-emulator-filter))
-    (bury-buffer oz-emulator-buffer)
-    (oz-create-oz-buffer)))
+		 port (string-to-number (car command-line-args-left))
+		 command-line-args-left (cdr command-line-args-left)))
+	  (t
+	   (error "Missing port argument to oz-attach")))
+    (oz-make-comint (cons host port))
+    (oz-prepare-emulator-buffer 'oz-filter nil)
+    (process-kill-without-query (get-buffer-process oz-emulator-buffer))))
+
+(defun oz-make-comint (program &rest switches)
+  (if (get-buffer oz-emulator-buffer)
+      (progn
+	(delete-windows-on oz-emulator-buffer)
+	(kill-buffer oz-emulator-buffer)))
+  (apply 'make-comint "Oz Emulator" program nil switches))
+
+(defun oz-prepare-emulator-buffer (filter show)
+  (let ((proc (get-buffer-process oz-emulator-buffer)))
+    (setq oz-emulator-filter-hook filter)
+    (set-process-filter proc 'oz-emulator-filter))
+  (if show
+      (oz-show-buffer (get-buffer oz-emulator-buffer)))
+  (bury-buffer oz-emulator-buffer))
 
 (defun oz-socket (host port)
   (let ((bs oz-compiler-buffers) (newbs nil))
@@ -1020,7 +1030,7 @@ feed that many preceding paragraphs as well as the current paragraph."
 If SYSTEM is non-nil, it is a command for the system and is to be
 compiled using a default set of switches."
   (interactive "sString to feed: \nP")
-  (oz-check-running t)
+  (oz-start-if-not-running)
   (if (not (get-buffer-process oz-compiler-buffer))
       (setq oz-buffered-send-string
 	    (nconc oz-buffered-send-string (list (cons string system))))
@@ -2901,7 +2911,7 @@ feed that many preceding paragraphs as well as the current paragraph."
 
 (defun oz-compile-file (command)
   (interactive (list (if (buffer-file-name)
-			 (read-from-minibuffer "Oz Compilation command: "
+			 (read-from-minibuffer "Oz compilation command: "
 					       oz-compile-command nil nil
 					       '(oz-compile-history . 1))
 		       (error "Buffer has no file name"))))
@@ -2912,6 +2922,29 @@ feed that many preceding paragraphs as well as the current paragraph."
 	     (y-or-n-p (format "Save buffer %s first? " (buffer-name))))
 	(save-buffer))
     (compile-internal real-command "No more errors")))
+
+(defvar oz-application-history nil
+  "History of commands used in oz-debug-application.")
+
+(defvar oz-application-name-pattern "\\`\\(.*\\)\\.ozg?\\'"
+  "Regular expression matching a file name with an `.oz' or `.ozg' extension.
+The first subexpression matches the file name without the extension.")
+
+(defun oz-debug-application (command)
+  (interactive (list (if (oz-is-running)
+			 (error "Only one Oz may be running")
+		       (read-from-minibuffer "Oz application invocation: "
+					     oz-application-command nil nil
+					     '(oz-application-history . 1)))))
+  (setq oz-application-command command)
+  (let* ((file (buffer-file-name))
+	 (app (if file
+		  (if (string-match oz-application-name-pattern file)
+		      (oz-match-string 1 file))))
+	 (real-command (concat "ozd -E --opi -- "
+			       (format oz-application-command (or app "")))))
+    (oz-make-comint "/bin/sh" "-c" real-command)
+    (oz-prepare-emulator-buffer 'oz-filter t)))
 
 
 (provide 'oz)
