@@ -2347,8 +2347,8 @@ class Builtin: public ConstTerm {
 friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef printname; //must be atom
-  int inArity;
-  int outArity;
+  short inArity;
+  short outArity;
   OZ_CFun fun;
   Bool native;
 #ifdef PROFILE_BI
