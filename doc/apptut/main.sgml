@@ -116,7 +116,7 @@
         <Picture.Extern to="apptut.gif" type=gif>
       </Picture.Choice>
     <Abstract>
-    This document is an introduction in application programming
+    This document is an introduction to application programming
     with Oz and Mozart.
     </Abstract>
 
