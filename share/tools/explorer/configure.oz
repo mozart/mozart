@@ -14,10 +14,16 @@ IsColor          = ({Tk.depth} > 1)
 DefLayoutOptions = o(hide:   !False
 		     update: 10)
 
-DefSearchOptions = o(dist: 1)
+DefSearchOptions = o(dist:        1
+		     customDist:  5
+		     depth:       ~1
+		     customDepth: 250
+		     nodes:       ~1
+		     customNodes: 5000)
 
-DefInfoOptions   = o(dist: 5
-		     keep: !True)
+DefInfoOptions   = o(dist:       5
+		     customDist: 5
+		     keep:       !True)
 
 FactorsToCm      =cTo(i: 2.54
 		      c: 1.00
@@ -30,25 +36,18 @@ DefPostscriptOptions = o(width:  6.5 * FactorsToCm.i
 			 color:  case IsColor then color else mono end
 			 orient: 0)
 
-DefDepthNumbers     = n(set: [10 50 100 250 ~1]
-			inc: [5 25 50 100 250]
-			def: ~1)
-DefNodesNumbers     = n(set: [500 1000 5000 10000 ~1]
-			inc: [250 1000 2500 5000]
-			def: 5000)
-
 DefRecomputeMax   = 100
 
 
-ErrorAspect   = 250
+ErrorAspect     = 250
 StatusUpdateCnt = 50
 
 TitleName    = 'Oz Explorer'
 BitMapDir    = System.ozHome # '/lib/bitmaps/'
 BitMap       = '@' # BitMapDir # 'explorer.xbm'
 
-MinSizeX     = 580   CanvasWidth  = 500.0
-MinSizeY     = 380   CanvasHeight = 240.0 
+MinSizeX     = 500   CanvasWidth  = 500.0
+MinSizeY     = 300   CanvasHeight = 240.0 
 
 
 %% Configuration of the scale bar
@@ -74,11 +73,13 @@ ScrollerWidth   = 12
 ScaleWidth      = 12
 
 %% Some parameters used in packing the canvas
-Border       = 2
-BigBorder    = 4
-Pad          = 2
-BigPad       = 4
-HugePad      = 8
+Border          = 2
+BigBorder       = 4
+Pad             = 2
+BigPad          = 4
+HugePad         = 8
+LargeEntryWidth = 20
+SmallEntryWidth = 6
 
 %% Distance between nodes
 HorSpace         = 35.0

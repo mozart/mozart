@@ -124,13 +124,7 @@ in
 					      {self.status halt}
 					   end
 				   normal: False
-				   key:    'h'))
-		      separator
-		      depth(number(label:    'Maximal Depth'
-				   numbers:  DefDepthNumbers))
-		      nodes(number(label:    'Maximal Nodes'
-				   numbers:  DefNodesNumbers))
-		     ])
+				   key:    'h'))])
 	nodes(label:'Nodes'
 	      menu:
 		 [chooseInfo(cascade(label:'Information Action'
