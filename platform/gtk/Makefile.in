@@ -20,39 +20,28 @@ OZTOOL          = @OZTOOL@
 PERL            = @PERL@
 
 SHAREDIR        = $(PREFIX)/share
-SHAREFILES      = $(SHAREDIR)/GTK.so-$(PLATFORM)
-PLATFORMFILES   = $(PLATFORMDIR)/GTK.so-$(PLATFORM)
-GOZWRIGHT       = $(PERL) $(VPATH)/gozwright.pl
-GOZCONST        = $(PERL) $(VPATH)/genconstants.pl
+
+### files to install
+SHAREFILES      = $(SHAREDIR)/GTK.so-$(PLATFORM) \
+                  $(SHAREDIR)/GDK.so-$(PLATFORM)
+PLATFORMFILES   = $(PLATFORMDIR)/GTK.so-$(PLATFORM) \
+                  $(PLATFORMDIR)/GDK.so-$(PLATFORM)
+### end of files to install
 
 ALL_INCLUDES    = -I$(VPATH)/../emulator
 
-GTK_HEADER_PREFIX = @GTK_HDRS@
-GDK_HEADER_PREFIX = @GDK_HDRS@
+BUILD           = $(PERL) $(VPATH)/goz_build_native.perl
 
-GDK_HEADERS     = $(GDK_HEADER_PREFIX)/gdk.h             \
-                  $(GDK_HEADER_PREFIX)/gdkcursors.h      \
-                  $(GDK_HEADER_PREFIX)/gdki18n.h         \
-                  $(GDK_HEADER_PREFIX)/gdkkeysyms.h      \
-                  $(GDK_HEADER_PREFIX)/gdkrgb.h          \
-                  $(GDK_HEADER_PREFIX)/gdktypes.h
+GTK_SPECS       = $(VPATH)/specs/gtk/*.spec
+GDK_SPECS       = $(VPATH)/specs/gdk/*.spec
 
-GTK_HEADERS     = $(GTK_HEADER_PREFIX)/gtk.h             \
-                  $(GTK_HEADER_PREFIX)/gtk[a-h]*.h       \
-                  $(GTK_HEADER_PREFIX)/gtkimage.h        \
-                  $(GTK_HEADER_PREFIX)/gtkinputdialog.h  \
-                  $(GTK_HEADER_PREFIX)/gtkitem.h         \
-                  $(GTK_HEADER_PREFIX)/gtkitemfactory.h  \
-                  $(GTK_HEADER_PREFIX)/gtk[j-z]*.h
-
-ALL_HEADERS     = $(GDK_HEADERS) $(GTK_HEADERS)
-
-OBJECTS         = goz.o gozinterface.o gozsupport.o
+GTK_OBJECTS     = goz_gtk_interface.o goz_gtk_wrappers.o
+GDK_OBJECTS = goz_gdk_interface.o goz_gdk_wrappers.o
+OBJECTS         = goz_support.o $(GDK_OBJECTS) $(GTK_OBJECTS)
 
 .SUFFIXES: .cc .o .c .h $(SUFFIXES)
 
-
-all: GTK.so-$(PLATFORM)
+all: GTK.so-$(PLATFORM) GDK.so-$(PLATFORM)
 
 bootstrap: all
 
@@ -60,23 +49,36 @@ bootstrap: all
 $(OBJECTS): %.o: %.c
         $(OZTOOL) $(CXX) $(CFLAGS) -c $(ALL_INCLUDES) $< -o $@
 
-goz.c: $(ALL_HEADERS)
-        $(GOZWRIGHT) --c-wrappers $^ > $@
+### GTK
 
-constantsdeclarations.oz:
-        $(GOZCONST)
+goz_gtk_wrappers.c: $(GTK_SPECS)
+        $(BUILD) --c-wrappers $^ > $@
 
-constantsdefinitions.oz:
-        $(GOZCONST)
+goz_gtk_interface.c: goz_gtk_wrappers.c goz_support.c
+        $(BUILD) --interface $^ > $@
 
-gozinterface.c: goz.c gozsupport.c
-        $(GOZWRIGHT) --interface $^ > $@
+GTK.so-$(PLATFORM): $(GTK_OBJECTS) goz_support.o
+        $(OZTOOL) ld $(LDFLAGS) $(GTK_OBJECTS) goz_support.o -o $@
 
-GTK.so-$(PLATFORM): $(OBJECTS)
-        $(OZTOOL) ld $(LDFLAGS) $(OBJECTS) -o $@
+### end of GTK
+
+### GDK
+
+goz_gdk_wrappers.c: $(GDK_SPECS)
+         $(BUILD) --c-wrappers $^ > $@
+
+goz_gdk_interface.c: goz_gdk_wrappers.c goz_support.c
+        $(BUILD) --interface $^ > $@
+
+GDK.so-$(PLATFORM): $(GDK_OBJECTS) goz_support.o
+        $(OZTOOL) ld $(LDFLAGS) $(GDK_OBJECTS) goz_support.o -o $@
+
+### end of GDK
 
 clean:
-        -rm -f gozinterface.c goz.c *.o *~ core
+        -rm -f goz_gtk_interface.c goz_gdk_interface.c  \
+                goz_gtk_wrappers.c goz_gdk_wrappers.c   \
+                *.o *~ core
 
 veryclean: clean
         -rm -f *.so-*
@@ -87,6 +89,7 @@ distclean: veryclean
 install: $(PLATFORMDIR) $(PLATFORMFILES) \
          $(SHAREDIR) $(SHAREFILES) $(PROVIDETCLLIBS)
 
+### GTK install
 
 $(PLATFORMDIR)/GTK.so-$(PLATFORM): GTK.so-$(PLATFORM)
         $(INSTALL_BIN) GTK.so-$(PLATFORM) $(PLATFORMDIR)/GTK.so
@@ -95,6 +98,16 @@ $(SHAREDIR)/GTK.so-$(PLATFORM): $(PLATFORMDIR)/GTK.so
         $(RM) $(SHAREDIR)/GTK.so-$(PLATFORM)
         (cd $(SHAREDIR) && \
          $(LN_S) ../platform/$(PLATFORM)/GTK.so GTK.so-$(PLATFORM))
+
+### GDK install
+
+$(PLATFORMDIR)/GDK.so-$(PLATFORM): GDK.so-$(PLATFORM)
+        $(INSTALL_BIN) GDK.so-$(PLATFORM) $(PLATFORMDIR)/GDK.so
+
+$(SHAREDIR)/GDK.so-$(PLATFORM): $(PLATFORMDIR)/GDK.so
+        $(RM) $(SHAREDIR)/GDK.so-$(PLATFORM)
+        (cd $(SHAREDIR) && \
+         $(LN_S) ../platform/$(PLATFORM)/GDK.so GDK.so-$(PLATFORM))
 
 Makefile: Makefile.in
         ./config.status
