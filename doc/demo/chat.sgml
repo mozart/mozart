@@ -29,7 +29,7 @@
       <item/<ref.extern to="applets/ChatServer.oza"/Start Server//
       <item/<ref.extern to="applets/ChatClient.oza"/Start Client//
       <Item>
-	<Ref.extern to="ozdoc:install" key="applets"/How to enable Applets/
+	<Ref.extern to="ozdoc:install" key="appendix.applets"/How to enable Applets/
     </list></p>
   <section class=unnumbered>
     <title/Starting a Chat Server/
