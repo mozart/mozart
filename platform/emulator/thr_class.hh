@@ -42,6 +42,7 @@ public:
   static void ScheduleSuspCont(SuspContinuation *c, Bool wasExtSusp);
   static void ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp);
   static void ScheduleWakeup(Board *n, Bool wasExtSusp);
+  static void ScheduleSolve (Board *b); 
 
 private:
   Thread *next;
@@ -71,6 +72,7 @@ public:
   Bool isSuspCont();
   Bool isSuspCCont();
   Bool isSolve ();
+  Bool isSolveReduce ();
   TaskStack *makeTaskStack();
   Board *popBoard();
   SuspContinuation *popSuspCont();
