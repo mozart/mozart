@@ -4,6 +4,9 @@
 <!ENTITY % p.mix.local "|Em">
 <!ELEMENT Em - - (#PCDATA)>
 <!ENTITY % proglang.values.local "|lambda">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
 
 <!-- Include Files -->
 <!ENTITY intro SYSTEM "intro.sgml">
@@ -51,6 +54,10 @@
     <Meta name=status value="revised">
     <Title/Gump&emdash;A Front-End Generator for Oz/
     <Author.Extern to="author.db" key="Leif.Kornstaedt">
+    <Comic>
+      <Picture.Choice>
+	<Picture.Extern to="gump.gif" type=gif>
+      </Picture.Choice>
     <Abstract>
       <P.silent><!--**-->
 	This manual describes &Gump;, the front-end generator for &Oz;.
