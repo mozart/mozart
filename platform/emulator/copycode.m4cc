@@ -189,13 +189,17 @@ void handleRecordArity(ProgramCounter PC, HashTable *ht)
 
 static
 void handleHashTable(ProgramCounter PC, HashTable * ht) {
-  IHashTable * table    = ((IHashTable *) getAdressArg(PC))->clone();
-  for (int i = table->getSize(); i--; )
-    if (table->entries[i].val && oz_isLiteral(table->entries[i].val)) {
-      table->entries[i].val = checkTagged(table->entries[i].val,ht);
-      table->entries[i].sra = checkSRA(table->entries[i].sra,ht);
-    }
-  CodeArea::writeIHashTable(table, PC);
+  IHashTable * ot = (IHashTable *) getAdressArg(PC);
+  IHashTable * nt = ot->clone();
+  for (int i = nt->getSize(); i--; )
+    if (ot->entries[i].val)
+      if (oz_isLiteral(ot->entries[i].val))
+        nt->addRecord(checkTagged(ot->entries[i].val,ht),
+                      checkSRA(ot->entries[i].sra,ht),
+                      ot->entries[i].lbl);
+      else
+        nt->addScalar(ot->entries[i].val,ot->entries[i].lbl);
+  CodeArea::writeIHashTable(nt, PC);
 }
 
 

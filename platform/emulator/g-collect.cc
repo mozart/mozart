@@ -144,16 +144,6 @@ Bool oz_protect(TaggedRef *ref) {
   return OK;
 }
 
-/* protect a ref, that will never change its initial value
- *  --> no need to remember it, if it's a small int or atom
- */
-Bool oz_staticProtect(TaggedRef *ref) {
-  if (needsNoCollection(*ref))
-    return OK;
-
-  return oz_protect(ref);
-}
-
 Bool oz_unprotect(TaggedRef *ref) {
   ExtRefNode *aux = extRefs->find(ref);
 
@@ -294,7 +284,7 @@ void IHashTable::gCollect(void) {
 
 #define CODEGC_TAGGED(PCR) \
 { TaggedRef * tr = (TaggedRef *) (PC+PCR); \
-  oz_gCollectTerm(*tr,*tr);                \
+  OZ_gCollectBlock(tr,tr,1);               \
 }
 
 #define CODEGC_RECORDARITY(PCR) {};

@@ -454,7 +454,6 @@ void oz_io_awakeVar(TaggedRef var);
 
 
 
-Bool oz_staticProtect(TaggedRef *);
 Bool oz_protect(TaggedRef *);
 Bool oz_unprotect(TaggedRef *);
 
