@@ -636,6 +636,15 @@ OZ_BI_iodefine(unix_uName,0,1)
 #endif
 
 
+OZ_BI_iodefine(unix_chDir,1,0)
+{
+  OZ_declareVsIN(0,dir);
+  if (chdir(dir)) {
+    RETURN_UNIX_ERROR;
+  } else
+    return PROCEED;
+} OZ_BI_ioend
+
 OZ_BI_iodefine(unix_getCWD,0,1)
 {
   const int SIZE=256;
