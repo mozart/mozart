@@ -2017,6 +2017,7 @@ OZ_BI_define(BIhasFeatureB,2,1)
   switch (r) {
   case PROCEED: OZ_RETURN(NameTrue);
   case FAILED : OZ_RETURN(NameFalse);
+  case SUSPEND: oz_suspendOn2(OZ_in(0),OZ_in(1));
   default     : return r;
   }
 } OZ_BI_end
