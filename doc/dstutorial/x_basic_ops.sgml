@@ -293,6 +293,12 @@ threads, dictionaries, arrays, and spaces are sited,
 even though they are in base modules.
 Many of these entities will become
 unsited in future releases.
+Some commonly-used base modules are
+<<Number>>, <<Int>>, and <<Float>> (operations on numbers),
+<<Record>> and <<List>> (operations on records and lists),
+and
+<<Procedure>>, <<Port>>, <<Cell>>, and <<Lock>>
+(operations on common entities).
 
 <P> All system modules are sited.
 The reason is that
@@ -306,7 +312,7 @@ We call <EM>resource</EM> any module
 that is either a system module
 or that imports directly or
 indirectly from a system module.
-Some of the commonly-used system modules are
+Some commonly-used system modules are
 <<Tk>> and <<Browser>> (access to system graphics),
 <<Connection>> and <<Remote>> (access to site-specific distributed operations),
 <<Application>> and <<Module>> (access to application management),
