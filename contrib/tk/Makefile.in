@@ -19,3 +19,23 @@ $(LIB_DIR):
 	$(INSTALL_DIR) $@
 $(LIB_DIR)/%.ozf: %.ozf
 	$(INSTALL_LIB) $< $@
+
+clean veryclean:
+	-rm *~ *.ozf
+
+distclean: veryclean
+	-rm Makefile config.*
+
+include $(SRCTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
