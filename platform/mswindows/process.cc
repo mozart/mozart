@@ -47,6 +47,7 @@ int createProcess(char *cmdline)
   ZeroMemory(&si,sizeof(si));
   si.cb = sizeof(si);
 
+  //--** Fix this
   HANDLE hRead,hWrite;
   {
     SECURITY_ATTRIBUTES sa;

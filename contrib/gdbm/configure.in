@@ -135,20 +135,6 @@ OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 : ${platform=`$PLATFORMSCRIPT`}
 AC_SUBST(platform)
 
-case "$platform" in
-   win32-i486)
-	INSTALLWINDLLS=installwindlls
-	: ${WINDLLDIR=$windlldir}
-   ;;
-    
-   *)
-	INSTALLWINDLLS=""
-   ;;    
-esac
-
-AC_SUBST(WINDLLDIR)
-AC_SUBST(INSTALLWINDLLS)
-
 AC_OUTPUT(Makefile)
 
 errprint(ifdef([OZ_INIT],

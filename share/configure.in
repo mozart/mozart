@@ -58,6 +58,8 @@ win32*)
     OZEXECFILE="--execfile=\"$oztmp\""
     EMULATOR_EXE=emulator.dll
     BOOTOZTOOL='$(shell $(CYG_PATH) "$(BUILDTOP)/platform/mswindows/oztool.exe")'
+    WINOZTOOLCXXFLAGS='$(BOOTOZTOOLINC)'
+    WINOZTOOLLDFLAGS='-inc $(BUILDTOP)/platform/emulator'
     EXE_EXT='.exe'
     ;;
 *)
@@ -69,6 +71,8 @@ esac
 AC_SUBST(OZEXECFILE)
 AC_SUBST(EMULATOR_EXE)
 AC_SUBST(BOOTOZTOOL)
+AC_SUBST(WINOZTOOLCXXFLAGS)
+AC_SUBST(WINOZTOOLLDFLAGS)
 AC_SUBST(EXE_EXT)
 
 dnl *****************************************************************
