@@ -316,6 +316,8 @@ starts the emulator under gdb")
     ("-----")
     ("Find"
      ("Documentation Demo"      . oz-find-docdemo-file)
+     ("Stand-alone Demo"        . oz-find-standdemo-file)
+     ("Example Demo"            . oz-find-exdemo-file)
      ("Other Demo"              . oz-find-demo-file)
      ("Modules File"            . oz-find-modules-file)
      )
@@ -1559,16 +1561,8 @@ OZ compiler, emulator and error window")
   (interactive "FFeed file: ")
   (oz-send-string (concat "\\feed '" file "'"))) 
 
-;;(defun oz-insert-file (file)
-;;  "Insert an file into the Oz Compiler"
-;;  (if oz-step-mode
-;;      (oz-send-string (concat 
-;;            "local T = {Thread.this} thread {Ozcar add(T)} end "
-;;            "{Thread.suspend T} in \n\\insert '" file "'\nend"))
-;;    (oz-send-string (concat "\\threadedfeed '" file "'"))))
-
 (defun oz-insert-file (file)
-  "Insert an file into the Oz Compiler"
+  "insert an file into the Oz Compiler"
   (if oz-step-mode
       (progn (write-region 1 1 "/tmp/ozdebugmagic")
 	     (oz-send-string (concat "\\threadedfeed '" file "'")))
@@ -1579,22 +1573,6 @@ OZ compiler, emulator and error window")
   (interactive "FPrecompile file: ")
   (oz-send-string (concat "\\precompile '" file "'"))) 
 
-(defun oz-find-dvi-file ()
-  "preview a file from  Oz doc directory"
-  (interactive)
-  (let ((name (read-file-name
-	       "Preview File: "
-	       oz-doc-dir
-	       nil t)))
-    (if (file-exists-p name)
-	(start-process "OZ Doc" "*Preview*" oz-preview name)
-      (error "file %s doesn't exist" name))))
-
-(defun oz-find-docu-file ()
-  "find a text in the doc directory"
-  (interactive)
-  (oz-find-file "Find doc file: " "doc/"))
-
 (defun oz-find-demo-file ()
   "find a Oz file in the demo directory"
   (interactive)
@@ -1604,6 +1582,16 @@ OZ compiler, emulator and error window")
   "find a Oz file in the demo/documentation directory"
   (interactive)
   (oz-find-file "Find demo file: " "demo/documentation/"))
+
+(defun oz-find-exdemo-file ()
+  "find a Oz file in the demo/examples directory"
+  (interactive)
+  (oz-find-file "Find demo file: " "demo/example/"))
+
+(defun oz-find-standdemo-file ()
+  "find a Oz file in the demo/stand-alone directory"
+  (interactive)
+  (oz-find-file "Find demo file: " "demo/stand-alone/"))
 
 (defun oz-find-modules-file ()
   "find a Oz file in the lib directory"
