@@ -305,7 +305,7 @@ case $platform in
 	then LD=gcc # otherwise it allways uses -lm which has reference to _errno
 	fi
     ;;
-    *rhapsody)
+    *rhapsody | *darwin)
 	AC_DEFINE(RHAPSODY)
 	TOOLLDCMD="ld"
 	oz_enable_modules_static=yes

@@ -2664,7 +2664,7 @@ EOF
 	then LD=gcc # otherwise it allways uses -lm which has reference to _errno
 	fi
     ;;
-    *rhapsody)
+    *rhapsody | *darwin)
 	cat >> confdefs.h <<\EOF
 #define RHAPSODY 1
 EOF
@@ -2933,7 +2933,7 @@ else
 #line 2934 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 #include <ctype.h>
 #define ISLOWER(c) ('a' <= (c) && (c) <= 'z')
@@ -3904,7 +3904,7 @@ else
 #line 3905 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 #include <malloc.h>
@@ -4088,7 +4088,7 @@ else
 #line 4089 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 #include <sys/types.h>
@@ -4269,7 +4269,7 @@ else
 #line 4270 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 #include <unistd.h>
@@ -7858,7 +7858,7 @@ else
 #line 7859 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 #include <sys/types.h>
@@ -8061,7 +8061,7 @@ else
 #line 8062 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 #ifdef __GNUC__
@@ -8143,7 +8143,7 @@ else
 #line 8144 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 #ifdef __GNUC__
@@ -8225,7 +8225,7 @@ else
 #line 8226 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 class Tag {
@@ -8266,7 +8266,7 @@ else
 #line 8267 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 class Tag {
@@ -8317,7 +8317,7 @@ else
 #line 8318 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 class Tag {
