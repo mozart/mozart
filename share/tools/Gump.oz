@@ -25,7 +25,7 @@
 
 functor
 import
-   Open(file)
+   Open(file pipe text)
    OS(system)
    Property(get)
    Debug at 'x-oz://boot/Debug'
