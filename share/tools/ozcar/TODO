@@ -13,9 +13,6 @@ bei "rest-debugs" auf dem stack diese entfernen! ("cont")
  ...ausserdem auch ohne breakpoints Probleme bei blocking!
 C-c C-d C-h mit 'start threads' laesst thread zurueck
 
-Mon Mar 17 16:46:54 MET 1997
-stack fenster muss nach oben scrollen bei stack > 12...
-
 Fri Mar 21 16:46:59 MET 1997
 Verzoegerte Anzeige des Environments mit bekannter Technik (siehe
 Klasse Tree) erst nach 2 Sekunden Ruhe (kein step/next click)
