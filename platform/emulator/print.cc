@@ -601,7 +601,7 @@ PRINT(Suspension)
   } else {
     stream << "board ";
   }
-  getBoardFast()->print(stream, 0);
+  getBoardFast()->print(stream, DEC(depth));
 }
 
 
@@ -639,7 +639,7 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
 	     << endl
 	     << indent(offset)
 	     << "HomeNode: ";
-      tagged2VarHome(ref)->getBoardFast()->print(stream,0);
+      tagged2VarHome(ref)->getBoardFast()->print(stream,DEC(depth));
       stream << endl;
     }
     break;
@@ -804,16 +804,16 @@ void AM::print()
 {
   cout << "class AM" << endl
        << "  currentBoard: ";
-  currentBoard->print(cout,0,0);
+  currentBoard->print(cout,~1,0);
   cout << endl
        << "  rootBoard:    ";
-  rootBoard->print(cout,0,0);
+  rootBoard->print(cout,~1,0);
   cout << endl
        << "  currentThread: ";
-  currentThread->print(cout,0,0);
+  currentThread->print(cout,~1,0);
   cout << endl
        << "  rootThread:    ";
-  rootThread->print(cout,0,0);
+  rootThread->print(cout,~1,0);
   cout << endl;
 }
 
@@ -872,10 +872,10 @@ void AM::printBoards()
 {
   cout << "class Board" << endl
        << "  currentBoard: ";
-  currentBoard->print(cout,0,0);
+  currentBoard->print(cout,-1,0);
   cout << endl
        << "  rootBoard:    ";
-  rootBoard->print(cout,0,0);
+  rootBoard->print(cout,-1,0);
   cout << endl;
 }
 
@@ -980,10 +980,10 @@ void ThreadsPool::printThreads()
 
   cout << "Threads" << endl
        << "  running: ";
-  currentThread->print(cout,0,0);
+  currentThread->print(cout,-1,0);
   cout << endl
        << "  toplevel:    ";
-  rootThread->print(cout,0,0);
+  rootThread->print(cout,-1,0);
   cout << endl
        << "  runnable:" << endl;
   
@@ -996,7 +996,7 @@ void ThreadsPool::printThreads()
 
     while (size) {
       th = thq->dequeue ();
-      th->print (cout,0,4);
+      th->print (cout,-1,4);
       if (th == currentThread)
 	cout << " RUNNING ";
       if (th == rootThread)
@@ -1013,7 +1013,7 @@ void ThreadsPool::printThreads()
       thq = (ThreadQueue *) NULL;
     }
   }
-}    
+}
     
 PRINT(Thread)
 {
@@ -1064,11 +1064,11 @@ void SVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v)
 	 << endl
 	 << indent(offset)
 	 << "SuspList:\n"; 
-  suspList->print(stream, 0, offset+3);
+  suspList->print(stream, DEC(depth), offset+3);
   
   stream << indent(offset)
 	 << "HomeNode: ";
-  home->getBoardFast()->print(stream,0);
+  home->getBoardFast()->print(stream,DEC(depth));
   stream << endl;
 }
 
