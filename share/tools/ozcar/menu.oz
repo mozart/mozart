@@ -15,10 +15,6 @@ local
    TkEnvSystemVariables  = {New Tk.variable tkInit(ConfigEnvSystemVariables)}
    TkEnvProcedures       = {New Tk.variable tkInit(ConfigEnvProcedures)}
 
-   TkScrollbar           = {New Tk.variable
-			    tkInit(case ConfigScrollbar == emacsScrollbar
-				   then false else true end)}
-   
    C  = command
    MB = menubutton
    CB = checkbutton
@@ -49,21 +45,35 @@ in
 	      feature: ozcar)
 	   MB(text: 'Thread'
 	      menu:
-		 [C(label:  'Step'
+		 [C(label:  'Previous'
+		    action: self # previousThread
+		    key:    'Left'
+		    event:  '<Left>')
+		  C(label:  'Next'
+		    action: self # nextThread
+		    key:    'Right'
+		    event:  '<Right>')
+		  separator
+		  C(label:  'Step'
 		    action: self # action(' step')
-		    key:    s)
+		    event:  s
+		    key:    '  s')
 		  C(label:  'Next'
 		    action: self # action(' next')
-		    key:    n)
+		    event:  n
+		    key:    '  n')
 		  C(label:  'Continue'
 		    action: self # action(' cont')
-		    key:    c)
+		    event:  c
+		    key:    '  c')
 		  C(label:  'Forget'
 		    action: self # action(' forget')
-		    key:    f)
+		    event:  f
+		    key:    '  f')
 		  C(label:  'Terminate'
 		    action: self # action(' term')
-		    key:    t)]
+		    event:  t
+		    key:    '  t')]
 	      feature: thr)
 	   MB(text: 'Stack'
 	      menu:
@@ -85,10 +95,7 @@ in
 	      feature: stack)
 	   MB(text: 'Options'
 	      menu:
-		 [CB(label:    'Use Oz Source Window'
-		     variable: TkScrollbar
-		     action:   Config # toggleScrollbar)
-		  CB(label:    'Step on All System Procedures'
+		 [CB(label:    'Step on All System Procedures'
 		     variable: TkStepSystemProcedures
 		     action:   Config # toggle(stepSystemProcedures)
 		     feature:  stepSystemProcedures)

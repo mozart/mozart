@@ -47,6 +47,8 @@ in
 	 SkippedProcs  : nil
 	 SkippedThread : nil
 	 Breakpoint    : false
+
+	 SwitchSync    : _
       
       meth init
 	 self.Stream    = {Dbg.stream}
@@ -300,19 +302,17 @@ in
 	 else
 	    Gui,addNode(I Q)
 	    case Q == 0 orelse Q == 1 then 
-	       ThreadManager,switch(I)       %% does Gui,displayTree
+	       ThreadManager,switch(I)
 	       case Q == 1 then
 		  Gui,status('Got new query, selecting thread #' # I)
 	       else
 		  Gui,status('Breakpoint reached by thread #' # I #
 				', which has been added and selected')
 	       end
-	    else
-	       Gui,displayTree
-	    end
+	    else skip end
 	 end
       end
-
+      
       meth remove(T I Mode)
 	 {OzcarMessage 'removing thread #' # I # ' with mode ' # Mode}
 	 ThreadManager,removeSkippedProcs(I)
@@ -413,6 +413,20 @@ in
       end
       
       meth switch(I)
+	 New in
+	 SwitchSync <- New = unit
+
+	 Gui,selectNode(I)
+	 
+	 thread
+	    {WaitOr New {Alarm TimeoutToSwitch}}
+	    case {IsDet New} then skip else
+	       ThreadManager,DoSwitch(I)
+	    end
+	 end
+      end
+
+      meth DoSwitch(I)
 	 F L N A B Time
       in
 	 case I == 1 then skip else
@@ -422,9 +436,6 @@ in
 	 in
 	    currentThread <- T
 	    currentStack  <- Stack
-	    
-	    Gui,selectNode(I)
-	    Gui,displayTree
 	    
 	    case S == terminated then
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:appl)

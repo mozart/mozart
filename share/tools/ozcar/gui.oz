@@ -366,6 +366,14 @@ in
 	    end
 	 end
       end
+
+      meth previousThread
+	 {self.ThreadTree selectPrevious}
+      end
+      
+      meth nextThread
+	 {self.ThreadTree selectNext}
+      end
       
       meth neighbourStackFrame(Delta)
 	 Stack = @currentStack
@@ -413,7 +421,7 @@ in
 	  tkInit(parent: W
 		 action: Ozcar # frameClick(frame:Frame))}
 	 LineEnd    = FrameNr # DotEnd
-	 UpToDate   = SourceManager,isUpToDate(Frame.time $)
+	 UpToDate   = true %SourceManager,isUpToDate(Frame.time $)
       in
 	 
 	 {OzcarMessage '  printing frame #' # FrameNr}
