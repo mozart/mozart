@@ -3169,22 +3169,6 @@ OZ_BI_define(BIassignCell,2,0)
   return exchangeCell(cell,newVal,oldIgnored);
 } OZ_BI_end
 
-// mm2: should be function with switched args old-new!
-OZ_BI_define(BIexchangeCell,3,0)
-{
-  oz_declareNonvarIN(0,cell);
-  if (!oz_isCell(cell)) { oz_typeError(0,"Cell"); }
-  oz_declareIN(1,oldVal);
-  oz_declareIN(2,newVal);
-  // SaveDeref(newVal);
-  OZ_Term old;
-  int ret = exchangeCell(cell,newVal,old);
-  int ret2 = oz_unify(old,oldVal);
-  // mm2: hack!
-  if (ret != PROCEED) return ret;
-  return ret2;
-} OZ_BI_end
-
 
 OZ_BI_define(BIexchangeCellFun,2,1)
 {

@@ -173,7 +173,7 @@ void entityProblem(Tertiary *t) {
         Assert(cThread!=oz_currentThread());
         if(t->getType()==Co_Cell){
           switch(pd->exKind){
-          case EXCHANGE:{cThread->pushCall(BI_exchangeCell,makeTaggedTert(t), pd->old, pd->nw); break;}
+          case EXCHANGE:{cThread->pushCall(BI_exchangeCell,makeTaggedTert(t), pd->nw, pd->old); break;}
           case ASSIGN:{cThread->pushCall(BI_assign,pd->old,pd->nw); break;}
           case AT:{cThread->pushCall(BI_atRedo,pd->old,pd->nw); break;}
           default: Assert(0);}}

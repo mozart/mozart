@@ -515,7 +515,7 @@ void initBuiltins() {
 
   // General stuff
   BI_send         = getBuiltin_oz("Port.send"           );
-  BI_exchangeCell = getBuiltin_oz("Cell.exchange"       );
+  BI_exchangeCell = getBuiltin_oz("Cell.exchangeFun"    );
   BI_assign       = getBuiltin_oz("Object.'<-'"         );
   BI_lockLock     = getBuiltin_oz("Lock.lock"           );
   BI_Delay        = getBuiltin_oz("Time.delay"          );
