@@ -150,11 +150,11 @@ static const int tcpConfirmSize=tcpHeaderSize+netIntSize;
 
 enum tcpMessageType {
   TCP_CLOSE_REQUEST_FROM_WRITER = 0,
-  TCP_CLOSE_REQUEST_FROM_READER,
-  TCP_CLOSE_ACK_FROM_READER,
-  TCP_MSG_ACK_FROM_READER,
-  TCP_RESEND_MESSAGES,
-  TCP_NO_CONNECTION, // from READER
+  TCP_CLOSE_REQUEST_FROM_READER,  // Received by tcpCloseHadnler
+  TCP_CLOSE_ACK_FROM_READER,      // Received by tcpCloseHadnler
+  TCP_MSG_ACK_FROM_READER,        // Received by tcpCloseHadnler
+  TCP_RESEND_MESSAGES,            // Received by tcpCloseHadnler
+  TCP_NO_CONNECTION,              // Received by tcpCloseHadnler
   TCP_CONNECTION,    // from READER
   TCP_PACKET,        // from WRITER
   TCP_MYSITE,        // from WRITER
@@ -184,7 +184,8 @@ enum ConnectionFlags{
   PROBE             = 0x8000,    // WriteCon in probe list
   HIS_MY_TMP        = 0x10000,   // WriteCon in closed by initiative and Tmp
   HANDOVER_OPENING  = 0x20000,   // WriteCon is used for opening a readconnection
-  HANDED_OVER       = 0x40000   // The WriteCon was not opened by us. Be carefull when closing.
+  HANDED_OVER       = 0x40000,   // The WriteCon was not opened by us. Be carefull when closing.
+  OPEN_REQUEST      = 0x80000    // The reader discovered a firewall, reopen.
 };
 
 enum ByteStreamType {
@@ -953,6 +954,7 @@ public:
   DSite* site;
   Bool   hasBeenConnected;
   Bool   handedOver;
+  Bool   outsideFireWall;
 protected:
   void init(DSite*, int);
 public:
@@ -1370,18 +1372,19 @@ public:
 
   void opened(){
     Assert(isOpening());
-    PD((TCP_INTERFACE,"opened site:%s",remoteSite->site->stringrep()));
     expireTime = 0;
     tmpCounter = 1;
     tmpCounterLimit = 1;
     clearOpening();
     remoteSite->setSiteStatus(SITE_OK);
     remoteSite->incTmpSessionNr();
-    if(!testFlag(HANDED_OVER))remoteSite->hasBeenConnected = TRUE;
+    if(testFlag(OPEN_REQUEST)) clearFlag(OPEN_REQUEST);
+    if(!testFlag(HANDED_OVER)) remoteSite->hasBeenConnected = TRUE;
     if(isProbingOK()){
       remoteSite->site->probeFault(PROBE_OK);
       clearProbingOK();}}
 
+  void askPeerToOpenConnection();
 
 };
 
@@ -1857,19 +1860,6 @@ public:
   Bool canAddWrite(){return open_size < max_size;}
 
   void add(Connection *w) {
-    /*    printf("add r:%d \n cur: %d %d \n close: %d %d \n my: %d %d \n tmp: %d %d \n probe: %d %d\n",(int)w,
-           (int) currentHead,
-           (int)currentTail     ,
-           (int)closeHead,
-           (int)closeTail,
-           (int)myHead,
-           (int)myTail,
-           (int)tmpHead,
-           (int)tmpTail,
-           (int)probeHead,
-           (int)probeTail
-           );
-    */
     WriteConnection *ww;
     if(w->isOpening()){
       addToFront(w, currentHead, currentTail);
@@ -1877,7 +1867,6 @@ public:
       adjust();
       return;}
     if(w->isClosing()){
-      //printf("New Closing %d write:%d\n",w->getFD(), w->isWriteCon());
       addToFront(w, closeHead, closeTail);
       close_size++;
       adjust();
@@ -1895,9 +1884,6 @@ public:
     if(ww->isProbing()){
       newProbe();
       addToFront(w, probeHead, probeTail);
-      /*printf("Adding %d to probe %d %d\n",(int)ww,(int)probeHead,
-             (int)probeTail);
-      */
       return;}
     OZ_warning("Unknown type of connection");
     Assert(0);}
@@ -2137,7 +2123,8 @@ ipReturn WriteConnection::open(){
   setOpening();
   // When behind a firewall we tell the connection
   // to open two connections.
-  if(ipIsbehindFW){
+  if(ipIsbehindFW || remoteSite->outsideFireWall){
+    printf("Do a handover open\n");
     setFlag(HANDOVER_OPENING);}
   tcpCache->add(this);
   ret = tcpOpen(remoteSite, this);
@@ -2918,6 +2905,8 @@ void tcpPresentPassiveSite(int newFD){
   PD((TCP_CONNECTIONH,"acceptHandler success r:%x",r));
   OZ_registerReadHandler(newFD,tcpPreReadHandler,(void *)r);}
 
+Bool qqqVar = FALSE;
+
 static int acceptHandler(int fd,void *unused)
 {
   struct sockaddr_in from;
@@ -2926,7 +2915,7 @@ static int acceptHandler(int fd,void *unused)
 
   if (newFD < 0) {return 0;}
 
-  if (!tcpCache->Accept()|| !tcpCache->CanOpen()){
+  if (qqqVar || !tcpCache->Accept()|| !tcpCache->CanOpen()){
     osclose(newFD);
     return 0;}
   tcpPresentPassiveSite(newFD);
@@ -2976,11 +2965,13 @@ int tcpPreReadHandler(int fd,void *r0){
       if(w->isMyInitiative())w->clearMyInitiative();
       if(w->isHisInitiative())w->clearHisInitiative();
       if(w->isTmpDwn())w->clearTmpDwn();
-      rs->setWriteConnection(w);
+      w->setFD(fd);
       w->setOpening();
       w->setFlag(HANDED_OVER);
       tcpCache->add(w);
+      printf("A read is transfered into a write\n");
       OZ_registerReadHandler(fd,tcpConnectionHandler,(void *)w);
+      return 0;
     }
     if(w ==  NULL){
       rs->handedOver = TRUE;
@@ -3299,10 +3290,6 @@ retry:
   tries--;
   if(tries<=0){goto  ipOpenNoAnswer;}
   if((ossockerrno() == EADDRNOTAVAIL) || (ossockerrno() == ECONNREFUSED)){
-    //fprintf(stderr,"cannot open - interpreted as perm:%d %d \n",EADDRNOTAVAIL,ossockerrno());
-#ifdef PERDIOLOGLOW
-    printf("!!!of%d\n",remoteSite->site->getTimeStamp()->pid);
-#endif
     r->connectionLost();
     return IP_PERM_BLOCK;}
   addr.sin_port = htons(aport);
@@ -3315,10 +3302,12 @@ retry:
   tcpCache->remove(r);
   r->clearOpening();
   if(fd >= 0) osclose(fd);
+  r->askPeerToOpenConnection();
   r->setHisInitiative();
   tcpCache->add(r);
   return IP_OK;
 }
+
 
 
 int tcpConnectionHandler(int fd,void *r0){
@@ -3329,7 +3318,8 @@ int tcpConnectionHandler(int fd,void *r0){
   time_t timestamp;
   char msgType;
   pos = buf1;
-
+  if(fd!=r->getFD()) {
+    return 1;}
   ret = smallMustRead(fd,pos,bufSize,CONNECTION_HANDLER_TRIES);
   if(ret == IP_PERM_BLOCK) goto tcpConPermLost;
   if(ret == IP_CLOSE) {goto tcpConClosed;}
@@ -3377,7 +3367,6 @@ int tcpConnectionHandler(int fd,void *r0){
   // Depending on if we need to open a write for the other site
   // different procedures will be choosen.
 
-  PD((TCP,"Sending My Site Message..%s",myDSite->stringrep()));
   if(r->testFlag(HANDOVER_OPENING)){
     msgType = TCP_MYSITE_HANDOVER;
   }
@@ -3442,6 +3431,7 @@ int tcpConnectionHandler(int fd,void *r0){
   osclose(fd);
   delete buf1;
   if(buf2)delete buf2;
+  r->askPeerToOpenConnection();
   r->close(HIS_INITIATIVE);
   return 1;
 
@@ -3562,41 +3552,50 @@ static int tcpCloseHandler(int fd,void *r0){
   WriteConnection *r=(WriteConnection *)r0;
   BYTE msg;
   ipReturn ret;
-  PD((TCP,"tcpCloseHandler invoked r:%x",r));
   ret=readI(fd,&msg);
-  PD((TCP,"tcpCloseHandler read b:%d r:%d e:%d",msg, ret,ossockerrno()));
-close_handler_read:
+ close_handler_read:
   if(ret!=IP_OK){ // crashed Connection site
-    PD((ERROR_DET,"crashed Connection site %s error:%d",r->remoteSite->site->stringrep(), ossockerrno()));
     if(ret==IP_EOF || tcpError("tcpCloseHandler")!=IP_TEMP_BLOCK)
       r->connectionLost();
     else
       r->connectionBlocked();
     return 0;}
-  if(msg==TCP_MSG_ACK_FROM_READER){
+  switch(msg){
+  case TCP_NO_CONNECTION:{
+    if(!r->testFlag(OPEN_REQUEST) && !r->isClosing() && !r->isWantsToClose() &&
+       tcpCache->Accept()){
+      r->remoteSite->outsideFireWall=TRUE;
+      r->setFlag(OPEN_REQUEST);
+      r->closeConnection();}
+    return 0;
+  }
+  case TCP_MSG_ACK_FROM_READER:{
     PD((TCP,"Incomming Ack"));
     r->incommingAck();
     ret=readI(fd,&msg);
     if(ret!=IP_BLOCK)
       goto close_handler_read;
     return 0;}
-  if(msg==TCP_CLOSE_REQUEST_FROM_READER){
+  case TCP_CLOSE_REQUEST_FROM_READER:{
     PD((TCP,"ClsoeReq from reader"));
     if(!r->isClosing())
       r->setClosing();
     r->remoteSite->siteTmpDwn(HIS_INITIATIVE);
     return 0;}
-  if(msg==TCP_CLOSE_ACK_FROM_READER){
+  case TCP_CLOSE_ACK_FROM_READER:{
     PD((TCP,"CloseAck form reader"));
     r->close(MY_INITIATIVE);
     return 0;}
-  if(msg==TCP_RESEND_MESSAGES){
+  case TCP_RESEND_MESSAGES:{
     PD((TCP,"Resend from reader"));
-    r->informSiteResendAckQueue();}
+    r->informSiteResendAckQueue();
+    return 0;}
+  default:{
   if(r->addByteToInt(msg)){
     ret=readI(fd,&msg);
     if(ret!=IP_BLOCK)
       goto close_handler_read;}
+  }}
   PD((TCP,"Close Handler done..."));
   return 0;
 }
@@ -3631,6 +3630,14 @@ int RemoteSite::resendAckQueue(Message  *ptr){
     m->resend();
     writeQueue.addfirst(m);}
   return nr;}
+
+void WriteConnection::askPeerToOpenConnection(){
+  ReadConnection *r = remoteSite->getReadConnection();
+  if(!remoteSite->hasBeenConnected && r!=NULL && !r->isClosing() && r->getFD()!=LOST){
+    BYTE msg = TCP_NO_CONNECTION;
+    writeI(r->getFD(),&msg);
+  }
+}
 
 Bool ReadConnection::resend(){
   PD((TCP_INTERFACE,"Resend messages"));
@@ -3799,11 +3806,6 @@ void WriteConnection::clearWantsToClose(){
   Assert(!testFlag(CLOSING));}
 
 void WriteConnection::closeConnection(){
-  PD((TCP_INTERFACE,"tcpCloseWriter r:%x site: %s",this,remoteSite->site->stringrep()));
-#ifdef PERDIOLOGLOW
-  printf("!!!cw%d\n",remoteSite->site->getTimeStamp()->pid);
-#endif
-
   int fd=getFD();
   Assert(fd!=LOST);
   if(isWantsToClose())
@@ -3855,7 +3857,7 @@ void WriteConnection::close(closeInitiator type){
     remoteSite->site->probeFault(PROBE_TEMP);
     setProbingOK();}
   if(type!=TMP_INITIATIVE) sentMsgCtr=0;
-  if(sentMsg!=NULL || isWritePending()) {
+  if(sentMsg!=NULL || isWritePending() || testFlag(OPEN_REQUEST)) {
     //printf("Storing connection %d\n",(int)this);
     switch(type){
     case MY_INITIATIVE:
@@ -3941,6 +3943,7 @@ void RemoteSite::init(DSite* s, int msgCtr){
     nrOfRecMsgs = 0;
     hasBeenConnected = FALSE;
     handedOver = FALSE;
+    outsideFireWall= FALSE;
 }
 
 void RemoteSite::setWriteConnection(WriteConnection *r){
