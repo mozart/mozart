@@ -121,8 +121,9 @@ public:
 
 
 class OZ_NonMonotonic {
-private:
+public:
   typedef unsigned order_t;
+private:
   order_t _order; 
   static order_t _next_order;
 public:
