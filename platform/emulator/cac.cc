@@ -259,6 +259,15 @@ void exitCheckSpace() {
   int32 * _f = (int32 *) (f);                                                \
   int32 * _t = (int32 *) CAC_MALLOC(_n);                                     \
   switch (_n) {                                                              \
+  case 48:                                                                   \
+    _t[0]=_f[0];_t[1]=_f[1];_t[2]=_f[2];_t[3]=_f[3];_t[4]=_f[4];_t[5]=_f[5]; \
+    _t[6]=_f[6];_t[7]=_f[7];_t[8]=_f[8];_t[9]=_f[9];_t[10]=_f[10];           \
+    _t[11]=_f[11];                                                           \
+    break;                                                                   \
+  case 36:                                                                   \
+    _t[0]=_f[0];_t[1]=_f[1];_t[2]=_f[2];_t[3]=_f[3];_t[4]=_f[4];_t[5]=_f[5]; \
+    _t[6]=_f[6];_t[7]=_f[7];_t[8]=_f[8];                                     \
+    break;                                                                   \
   case 24:                                                                   \
     _t[0]=_f[0];_t[1]=_f[1];_t[2]=_f[2];_t[3]=_f[3];_t[4]=_f[4];_t[5]=_f[5]; \
     break;                                                                   \
@@ -278,7 +287,7 @@ void exitCheckSpace() {
     _t[0]=_f[0];                                                             \
     break;                                                                   \
   default:                                                                   \
-    memcpy(_t, _f, _n);                                                      \
+    memcpy(_t,_f,_n);                                                        \
   }                                                                          \
   t = (Type *) _t;                                                           \
 }
@@ -2075,8 +2084,3 @@ OZ_Term * OZ_cacAllocBlock(int n, OZ_Term * frm) {
 
   return to;
 }
-
-
-
-
-

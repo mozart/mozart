@@ -1044,6 +1044,7 @@ void AM::doGCollect(void) {
 
 void AM::gCollect(int msgLevel)
 {
+  
   gCollectWeakDictionariesInit();
   vf.init();
   cacStack.init();
@@ -1164,5 +1165,3 @@ void AM::gCollect(int msgLevel)
   //  malloc_stats();
   DebugCode(uFillNode = 0;)
 } // AM::gc
-
-

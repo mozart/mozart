@@ -129,6 +129,7 @@ static void initDPCore();
 
 void initDP()
 {
+  //cerr << "sizeof(PortProxy) = " << sizeof(PortProxy) << endl;
   //
   if (perdioInitialized)
     return;
@@ -699,7 +700,7 @@ void msgReceived(MsgContainer* msgC)
 	  OZ_Term cvt = ov->getClassProxy();
 	  DEREF(cvt, cvtp);
 	  Assert(cvtp);
-	  ClassVar *cv = (ClassVar *) tagged2Var(cvt);
+	  ClassVar *cv = (ClassVar *) oz_getExtVar(cvt);
 	  Assert(extVar2Var(cv)->getType() == OZ_VAR_EXT);
 	  Assert(cv->getIdV() == OZ_EVAR_LAZY);
 	  Assert(cv->getLazyType() == LT_CLASS);

@@ -375,7 +375,8 @@ local
 	  memory(single type: string default: "")
 	  threads(rightmost type: int(min: 1) default: 1)
 	  repeat(rightmost type: int(min: 1) default: 1)
-	  delay(rightmost type: int(min: 0) default: 0))
+	  delay(rightmost type: int(min: 0) default: 0)
+	 )
 
 in
    functor
