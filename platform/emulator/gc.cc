@@ -1629,7 +1629,7 @@ Board * Board::clone(void) {
 #ifdef CS_PROFILE
 redo:
   if (across_redid)
-    OZ_error("Redoing cloning across chunk boundaries. Fuck!\n");
+    OZ_error("Redoing cloning across chunk boundaries. Giving up!\n");
 
   if (across_chunks)
     across_redid = OK;
@@ -1663,7 +1663,6 @@ redo:
 
 #ifdef CS_PROFILE
   if (across_chunks) {
-    printf("Allocation across heap chunks. Redoing.\n");
     goto redo;
   }
 
