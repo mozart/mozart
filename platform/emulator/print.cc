@@ -1426,10 +1426,6 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
       message("\tLOCAL\n");
       break;
 
-    case C_SOLVE:
-      message("\tSOLVE\n");
-      break;
-
     case C_CFUNC_CONT:
       {
 	OZ_CFun biFun    = (OZ_CFun) pop();
@@ -1464,6 +1460,13 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 	message("\tC_CALL_CONT: Pred=0x%x\n", s);
 	printX(stdout,X);
 	if (!verbose) break;
+	break;
+      }
+
+    case C_SET_CAA:
+      { 
+	AskActor *aa = (AskActor *) pop ();
+	message("\tC_SET_CAA: AA=0x%x\n", aa);
 	break;
       }
 

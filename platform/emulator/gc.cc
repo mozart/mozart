@@ -1778,7 +1778,6 @@ void TaskStack::gcRecurse()
 
     switch (cFlag){
 
-    case C_SOLVE:     COUNT(cSolve);   break;
     case C_LOCAL:     COUNT(cLocal);   break;
     case C_JOB:       COUNT(cJob);     break;
 
@@ -1827,6 +1826,11 @@ void TaskStack::gcRecurse()
       COUNT(cCFuncCont);
       gcQueue(oldstack->pop());                // OZ_CFun
       gcQueue(gcRefsArray((RefsArray) oldstack->pop()));
+      break;
+
+    case C_SET_CAA:
+      COUNT (cSetCaa);
+      gcQueue (((Actor *) oldstack->pop ())->gcActor ());  // CAA
       break;
 
     default:
