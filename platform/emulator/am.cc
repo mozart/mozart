@@ -886,6 +886,8 @@ void AM::suspendEngine()
   osUnblockSignals();
 }
 
+void (*oz_child_handle)() = 0;
+
 void AM::checkStatus()
 {
   if (isSetSFlag(StartGC)) {
@@ -908,6 +910,13 @@ void AM::checkStatus()
     oz_deinstallPath(oz_rootBoard());
     osBlockSignals();
     handleTasks();
+    osUnblockSignals();
+  }
+  if (isSetSFlag(ChildReady)) {
+    oz_deinstallPath(oz_rootBoard());
+    osBlockSignals();
+    unsetSFlag(ChildReady);
+    if (oz_child_handle!=0) (*oz_child_handle)();
     osUnblockSignals();
   }
 }
@@ -1041,6 +1050,7 @@ void handlerPIPE()
 void handlerCHLD()
 {
   DebugCheckT(message("a child process' state changed ****\n"));
+  am.setSFlag(ChildReady);
 }
 
 void handlerFPE()
