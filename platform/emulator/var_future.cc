@@ -103,7 +103,7 @@ Bool Future::kick(TaggedRef *ptr)
   return FALSE;
 }
 
-OZ_Return Future::bind(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
+OZ_Return Future::bind(TaggedRef *vPtr, TaggedRef t)
 {
   if (kick(vPtr)) {
     // redo unification, because vPtr is bound
@@ -119,15 +119,15 @@ OZ_Return Future::bind(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
   }
 }
 
-OZ_Return Future::forceBind(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
+OZ_Return Future::forceBind(TaggedRef *vPtr, TaggedRef t)
 {
   oz_bindVar(this,vPtr,t);
   return PROCEED;
 }
 
-OZ_Return Future::unify(TaggedRef *vPtr, TaggedRef *tPtr, ByteCode*scp)
+OZ_Return Future::unify(TaggedRef *vPtr, TaggedRef *tPtr)
 {
-  return bind(vPtr,makeTaggedRef(tPtr),scp);
+  return bind(vPtr,makeTaggedRef(tPtr));
 }
 
 OZ_Return Future::addSusp(TaggedRef *tPtr, Suspension susp, int unstable)

@@ -52,58 +52,48 @@ define(CaseOneReg,``''
        ``undefine(``Reg1'')''
       )
 
-define(CaseOneRegGImpossible,``''
-       Case($1X)
-       ``define(``Reg1'',Xreg(``$''1))''{$2}
-
-       Case($1Y)
-       ``define(``Reg1'',Yreg(``$''1))''{$2}
-
-       Case($1G)
-       IMPOSSIBLE("$1G");
-
-       ``undefine(``Reg1'')''
-      )
-
-
-define(CaseTwoRegs,``''
-       Case($1XX)
-       ``define(``Reg1'',Xreg(``$''1))'' ``define(``Reg2'',Xreg(``$''1))''{$2}
-       Case($1XY)
-       ``define(``Reg1'',Xreg(``$''1))'' ``define(``Reg2'',Yreg(``$''1))''{$2}
-       Case($1XG)
-       ``define(``Reg1'',Xreg(``$''1))'' ``define(``Reg2'',Greg(``$''1))''{$2}
-
-       Case($1YX)
-       ``define(``Reg1'',Yreg(``$''1))'' ``define(``Reg2'',Xreg(``$''1))''{$2}
-       Case($1YY)
-       ``define(``Reg1'',Yreg(``$''1))'' ``define(``Reg2'',Yreg(``$''1))''{$2}
-       Case($1YG)
-       ``define(``Reg1'',Yreg(``$''1))'' ``define(``Reg2'',Greg(``$''1))''{$2}
-
-       Case($1GX)
-       ``define(``Reg1'',Greg(``$''1))'' ``define(``Reg2'',Xreg(``$''1))''{$2}
-       Case($1GY)
-       ``define(``Reg1'',Greg(``$''1))'' ``define(``Reg2'',Yreg(``$''1))''{$2}
-       Case($1GG)
-       ``define(``Reg1'',Greg(``$''1))'' ``define(``Reg2'',Greg(``$''1))''{$2}
-
-       ``undefine(``Reg1'')''
-       ``undefine(``Reg2'')''
-      )
-
 
 
 // -------------------------------------------------------------------------
 // CLASS: TERM: MOVE/UNIFY/CREATEVAR/...
 // -------------------------------------------------------------------------
 
-  CaseTwoRegs( MOVE,
-                ``
-                  Reg2(getRegArg(PC+2)) = Reg1(getRegArg(PC+1));
-                  DISPATCH(3);
-                ''
-                )
+  Case(MOVEXX)
+    {
+      Xreg(getRegArg(PC+2)) = Xreg(getRegArg(PC+1));
+      DISPATCH(3);
+    }
+  Case(MOVEXY)
+    {
+      Yreg(getRegArg(PC+2)) = Xreg(getRegArg(PC+1));
+      DISPATCH(3);
+    }
+
+  Case(MOVEYX)
+    {
+      Xreg(getRegArg(PC+2)) = Yreg(getRegArg(PC+1));
+      DISPATCH(3);
+    }
+  Case(MOVEYY)
+    {
+      Yreg(getRegArg(PC+2)) = Yreg(getRegArg(PC+1));
+      DISPATCH(3);
+    }
+
+  Case(MOVEGX)
+    {
+      Xreg(getRegArg(PC+2)) = Greg(getRegArg(PC+1));
+      DISPATCH(3);
+    }
+  Case(MOVEGY)
+    {
+      Yreg(getRegArg(PC+2)) = Greg(getRegArg(PC+1));
+      DISPATCH(3);
+    }
+
+  Case(MOVEGG) IMPOSSIBLE("MOVEGG");
+  Case(MOVEXG) IMPOSSIBLE("MOVEXG");
+  Case(MOVEYG) IMPOSSIBLE("MOVEYG");
 
 
   // move X[i] --> Y[j], X[k] --> Y[l]
@@ -256,16 +246,24 @@ Case(CREATEVARIABLEMOVEY)
   Case(PUTCONSTANTG)
      IMPOSSIBLE("PUTCONSTANTG");
 
-  CaseOneRegGImpossible( PUTLIST,
-               ``{
-                 LTuple *term = new LTuple();
-                 Reg1(getRegArg(PC+1)) = makeTaggedLTuple(term);
-                 sPointer = term->getRef();
+  Case(PUTLISTX)
+   {
+     LTuple *term = new LTuple();
+     Xreg(getRegArg(PC+1)) = makeTaggedLTuple(term);
+     sPointer = term->getRef();
+     DISPATCH(2);
+   }
 
-               }''
-               DISPATCH(2);
-               )
+  Case(PUTLISTY)
+   {
+     LTuple *term = new LTuple();
+     Yreg(getRegArg(PC+1)) = makeTaggedLTuple(term);
+     sPointer = term->getRef();
+     DISPATCH(2);
+   }
 
+  Case(PUTLISTG)
+     IMPOSSIBLE("PUTLISTG");
 
   CaseOneReg( SETVARIABLE,
                ``{
@@ -339,7 +337,7 @@ Case(CREATEVARIABLEMOVEY)
         srecord->initArgs();
         record=makeTaggedSRecord(srecord);
       }
-      tmpRet = oz_var_bindINLINE(tagged2CVar(term),termPtr,record,NULL);
+      tmpRet = oz_var_bindINLINE(tagged2CVar(term),termPtr,record);
 
       if (tmpRet==PROCEED) {
         sPointer = tagged2SRecord(oz_deref(record))->getRef();
@@ -518,8 +516,7 @@ Case(CREATEVARIABLEMOVEY)
                  }
 
                  if (isCVar(term)) {
-                   tmpRet = oz_var_bindINLINE(tagged2CVar(term),termPtr,atm,
-                                              NULL);
+                   tmpRet = oz_var_bindINLINE(tagged2CVar(term),termPtr,atm);
                    if (tmpRet==PROCEED) { DISPATCH(3); }
                    if (tmpRet!=FAILED)  { goto LBLunifySpecial; }
                    // fall through to fail
@@ -546,8 +543,7 @@ Case(CREATEVARIABLEMOVEY)
                  }
 
                  if (isCVar(term)) {
-                   tmpRet=oz_var_bindINLINE(tagged2CVar(term),termPtr,i,
-                                            NULL);
+                   tmpRet=oz_var_bindINLINE(tagged2CVar(term),termPtr,i);
                    if (tmpRet==PROCEED) { DISPATCH(3); }
                    if (tmpRet!=FAILED)  { goto LBLunifySpecial; }
                    // fall through to fail
@@ -593,8 +589,7 @@ Case(CREATEVARIABLEMOVEY)
                    ltuple->setHead(Reg1(getRegArg(PC+2)));
                    ltuple->setTail(e->currentUVarPrototype());
                    tmpRet=oz_var_bindINLINE(tagged2CVar(term),termPtr,
-                                            makeTaggedLTuple(ltuple),
-                                            NULL);
+                                            makeTaggedLTuple(ltuple));
                    if (tmpRet==PROCEED) {
                      Xreg(getRegArg(PC+3)) = makeTaggedRef(ltuple->getRef()+1);
                      DISPATCH(4);
@@ -641,7 +636,7 @@ Case(CREATEVARIABLEMOVEY)
                      record = makeTaggedLTuple(ltuple);
                    }
                    tmpRet=oz_var_bindINLINE(tagged2CVar(term),termPtr,
-                                            record,NULL);
+                                            record);
                    if (tmpRet==PROCEED) {
                      SetReadMode;
                      DISPATCH(2);
@@ -671,14 +666,42 @@ Case(CREATEVARIABLEMOVEY)
                )
 
 
-  CaseTwoRegs( GETVARVAR,
-               ``{
-                 Reg1(getRegArg(PC+1)) = tagged2NonVariable(sPointer);
-                 Reg2(getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
-                 sPointer += 2;
-                 DISPATCH(3);
-               }''
-               )
+  Case(GETVARVARXX)
+    {
+      Xreg(getRegArg(PC+1)) = tagged2NonVariable(sPointer);
+      Xreg(getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
+      sPointer += 2;
+      DISPATCH(3);
+    }
+  Case(GETVARVARXY)
+    {
+      Xreg(getRegArg(PC+1)) = tagged2NonVariable(sPointer);
+      Yreg(getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
+      sPointer += 2;
+      DISPATCH(3);
+    }
+  Case(GETVARVARYX)
+    {
+      Yreg(getRegArg(PC+1)) = tagged2NonVariable(sPointer);
+      Xreg(getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
+      sPointer += 2;
+      DISPATCH(3);
+    }
+  Case(GETVARVARYY)
+    {
+      Yreg(getRegArg(PC+1)) = tagged2NonVariable(sPointer);
+      Yreg(getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
+      sPointer += 2;
+      DISPATCH(3);
+    }
+
+  Case(GETVARVARGX) IMPOSSIBLE("GETVARVARGX");
+  Case(GETVARVARGY) IMPOSSIBLE("GETVARVARGX");
+  Case(GETVARVARGG) IMPOSSIBLE("GETVARVARGG");
+  Case(GETVARVARXG) IMPOSSIBLE("GETVARVARXG");
+  Case(GETVARVARYG) IMPOSSIBLE("GETVARVARYG");
+
+
 
 
   /* a unify void in read case mode */
@@ -795,7 +818,7 @@ Case(UNIFYLITERAL)
        }
 
        if (isCVar(term)) {
-         tmpRet=oz_var_bindINLINE(tagged2CVar(term),termPtr,atm,NULL);
+         tmpRet=oz_var_bindINLINE(tagged2CVar(term),termPtr,atm);
          if (tmpRet==PROCEED) { DISPATCH(2); }
          if (tmpRet!=FAILED)  { PC = lastGetRecord; goto LBLunifySpecial; }
          term = *termPtr;  // Note: 'term' may be disposed
@@ -829,7 +852,7 @@ Case(UNIFYLITERAL)
       }
 
       if (isCVar(term)) {
-        tmpRet=oz_var_bindINLINE(tagged2CVar(term),termPtr,i,NULL);
+        tmpRet=oz_var_bindINLINE(tagged2CVar(term),termPtr,i);
         if (tmpRet==PROCEED) { DISPATCH(2); }
         if (tmpRet!=FAILED)  { PC = lastGetRecord; goto LBLunifySpecial; }
         term = *termPtr;  // Note: 'term' may be disposed
