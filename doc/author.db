@@ -83,3 +83,21 @@ lastname:       Würtz
 firstname:      Jörg
 www:            http://www.ps.uni-sb.de/~wuertz/
 email:          wuertz@de.ibm.com
+
+key:            Andreas.Sundstroem
+lastname:       Sundström
+firstname:      Andreas
+www:            http://www.sics.se/~andreas
+email:          andreas@sics.se
+
+key:            Seif.Haridi
+lastname:       Haridi
+firstname:      Seif
+www:            http://www.sics.se/~seif
+email:          seif@sics.se
+
+key:            Nils.Franzen
+lastname:       Franzen
+firstname:      Nils
+www:            http://www.sics.se/~nilsf
+email:          nilsf@sics.se
