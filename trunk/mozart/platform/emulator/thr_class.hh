@@ -352,8 +352,8 @@ private:
     Object *self;              /* the self object pointer     */
     RunnableThreadBody *next;  /* for linking in the freelist */
   } u;
-  TaggedRef streamVar;     // holds a stream of debug messages
-                           // when thread is being debugged
+  TaggedRef streamTail;    // the debug stream's tail
+
 public:
   USEHEAPMEMORY;
   // 
@@ -370,8 +370,8 @@ public:
   void setSelf(Object *o) { Assert(u.self==NULL); u.self = o; }
   void makeRunning();
 
-  TaggedRef getStreamVar()         { return streamVar; }
-  void setStreamVar(TaggedRef v)   { streamVar = v; }
+  TaggedRef getStreamTail()        { return streamTail; }
+  void setStreamTail(TaggedRef v)  { streamTail = v; }
 
   void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
   {
@@ -476,8 +476,8 @@ public:
   void setBoard (Board *bp) { board = bp; }
   void setSelf(Object *o);
 
-  TaggedRef getStreamVar();
-  void setStreamVar(TaggedRef v);
+  TaggedRef getStreamTail();
+  void setStreamTail(TaggedRef v);
 
   OZ_Propagator * swapPropagator(OZ_Propagator * p) {
     OZ_Propagator * r = item.propagator;

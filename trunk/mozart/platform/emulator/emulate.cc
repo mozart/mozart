@@ -1054,6 +1054,15 @@ void engine()
   }
 
   e->currentThread = e->getFirstThread ();
+
+#if 0
+  // Debugger
+  if (e->currentThread->stopped()) {
+    e->currentThread = (Thread *) NULL;  // byebye...
+    goto LBLstart;
+  }
+#endif
+
   DebugTrace (trace("new thread"));
   //  now, we have *globally* am.currentThread;
 
@@ -1462,15 +1471,10 @@ LBLkillToplevelThread:
       goto LBLstart;
     } else {
 
-#if 0
-      // Tell the debugger about termination of current thread
       if (e->currentThread->traceMode()) {
-	Board *b = e->currentBoard;
-	e->currentBoard = e->rootBoard;
-
-	TaggedRef var = e->currentThread->getStreamVar();
-	OZ_Term newVar = OZ_newVariable();
-
+	
+	TaggedRef tail = e->currentThread->getStreamTail();
+	
 	OZ_Term debugInfo = OZ_mkTupleC("debugInfo",
 					3,
 					OZ_atom("nofile"),
@@ -1478,14 +1482,8 @@ LBLkillToplevelThread:
 					OZ_atom("finished")
 					);
 
-	e->currentThread->setStreamVar(OZ_cons(var,newVar));
-	
-	OZ_unify(newVar,debugInfo);
-	e->currentBoard = b;
+	OZ_unify(tail, debugInfo);  // that's it, stream ends here!
       }
-
-      //DebugCheckT(printf("thread finished\n"));
-#endif
 
       e->currentThread->disposeRunnableThread ();
       e->currentThread = (Thread *) NULL;
@@ -3132,27 +3130,28 @@ LBLsuspendThread:
       tt->pushCont(newPC,Y,G,NULL,0);
       e->scheduleThread (tt);
 
-#if 0
       if (e->currentThread->traceMode()) {
 
-	Board *b = e->currentBoard;
-	e->currentBoard = e->rootBoard;
-	
-	TaggedRef var = e->currentThread->getStreamVar();
+	TaggedRef tail   = e->currentThread->getStreamTail();
 
-	OZ_Term varForNewThread = OZ_newVariable();
-	tt->setStreamVar(varForNewThread);
+	OZ_Term streamForNewThread = OZ_newVariable();
+	tt->setStreamTail(streamForNewThread);
 	tt->startTraceMode(); // parent is being traced, so we are, too!
 
-	OZ_Term newVar = OZ_newVariable();
-	e->currentThread->setStreamVar(OZ_cons(var,newVar));
-	
-	OZ_Term debugInfo = OZ_mkTupleC("newThread", 1, varForNewThread);
-	OZ_unify(newVar, debugInfo);
-	e->currentBoard = b;
+	OZ_Term debugInfo = 
+	  OZ_mkTupleC("newThread", 2, 
+		      makeTaggedConst(new 
+				      OzThread(e->currentBoard,
+					       tt,
+					       tt->dbgGetTaskStack(NOCODE))),
+		      streamForNewThread);
+
+	OZ_Term newTail = OZ_newVariable();
+	OZ_unify(tail, OZ_cons(debugInfo,newTail));
+
+        e->currentThread->setStreamTail(newTail);;
       }
-#endif
- 
+
       JUMP(contPC);
     }
 
@@ -3183,29 +3182,31 @@ LBLsuspendThread:
       int noArgs         = smallIntValue(getNumberArg(PC+5));
 
       if (!e->currentThread->traceMode())
-	DISPATCH(6);
-
+	{
+	  DISPATCH(6);
+	}
+      
       // else
 
-      Board *b = e->currentBoard;
-      e->currentBoard = e->rootBoard;
-      
-      TaggedRef var = e->currentThread->getStreamVar();
-      
-      OZ_Term newVar = OZ_newVariable();
-      e->currentThread->setStreamVar(OZ_cons(var,newVar));
-      
-      OZ_Term debugInfo = OZ_mkTupleC("debugInfo",
-				     3,
-				     filename,
-				     makeInt(line),
-				     comment
-				     );
+      TaggedRef tail = e->currentThread->getStreamTail();
 
-      OZ_unify(newVar,debugInfo);
+      OZ_Term debugInfo = OZ_mkTupleC("debugInfo",
+				      3,
+				      filename,
+				      makeInt(line),
+				      comment
+				      );
       
-      e->currentBoard = b;
-      //SUSP_PC(waitFor,noArgs,PC+6);
+      OZ_Term newTail = OZ_newVariable();
+      OZ_unify(tail, OZ_cons(debugInfo,newTail));
+
+      e->currentThread->setStreamTail(newTail);;
+  
+      if (e->currentThread->stopped()) {  // here's some work...
+        //OZ_warning("continuing stopped thread");
+      }
+
+      DISPATCH(6);
     }
   
   Case(JOB)

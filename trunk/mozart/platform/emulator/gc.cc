@@ -874,7 +874,7 @@ RunnableThreadBody *RunnableThreadBody::gcRTBody ()
   taskStack.gc(&ret->taskStack);
 
   ret->u.self = ret->u.self->gcObject();
-  gcTagged(ret->streamVar,ret->streamVar);
+  gcTagged(ret->streamTail,ret->streamTail);
 
   return (ret);
 }
@@ -2090,7 +2090,7 @@ ConstTerm *ConstTerm::gcConstTerm()
     break;
 
   case Co_Thread:
-    CheckLocal((Cell *) this);
+    //CheckLocal((OzThread *) this);
     sz = sizeof(OzThread);
     break;
 
