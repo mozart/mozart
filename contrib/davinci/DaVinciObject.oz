@@ -1,3 +1,24 @@
+%%%
+%%% Author:
+%%%   Tobias Mueller <tmueller@ps.uni-sb.de>
+%%%
+%%% Copyright:
+%%%   Tobias Mueller, 1998
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation of Oz 3:
+%%%   http://mozart.ps.uni-sb.de
+%%%
+%%% See the file "LICENSE" or
+%%%   http://mozart.ps.uni-sb.de/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
 functor
 
 export
@@ -66,8 +87,12 @@ define
       end
 
       meth listen_in_pipe
-         local Tail Msg = DaVinciClass,read_pipe($)
-         in
+         local Tail Msg in
+            try
+               Msg = DaVinciClass,read_pipe($)
+            catch E=error(daVinci(...) ...) then
+               Msg = E
+            end
             @in_stream_tail = Msg | Tail
             in_stream_tail <- Tail
 
@@ -108,6 +133,12 @@ define
                 msg: Msg
                 items: [hint(l: 'Output' m: VS)
                         hint(l: 'Column' m: Col)])
+       [] daVinci(programError Msg) then
+          error(kind: T
+                msg: Msg)
+       [] daVinci(parseError Msg) then
+          error(kind: T
+                msg: Msg)
        else
           error(kind: T
                 items: [line(oz(E))])
