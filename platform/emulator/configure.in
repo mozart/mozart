@@ -560,8 +560,24 @@ win32*)
 // Check whether setting an malloc threshold can be called at all,
 // and that it does really work:
 // - large pages become allocated outside bss
-// - they are reasonably adjacent (modulo MALLOC_OVERHEAD)
+//   - criterium: none of the large pages gets trapped between 
+//     small ones
+// We DID check whether large pages are reasonably adjacent (modulo
+// MALLOC_OVERHEAD). The rationale: there should be no strange gaps
+// between pages that could lead to fragmentation. We did exactly as
+// described until Marc-Antoine Parent pointed out that on Mac OS X
+// 10.3 (Panther) pages are not that arranged like that, but rather,
+// when allocating .5mb large pages, there is 1.5mb gap. Peculiar but
+// probably not illegal (as long as the system can eventually use the
+// gaps too), got to admit. Now, the test is modified so that:
+// - the size of a gap between large pages must be such that the gap
+//   can accommodate a number of large pages (usually none), and the
+//   remainder must be smaller than MALLOC_OVERHEAD.
 // - freed chunks are really returned to OS
+// Note also that we allow (i.e. do not disallow) large pages to be
+// allocated on different sides of bss: it's peculiar but why not?
+// Also we do not check whether the pages overlap.. it's not about
+// whether malloc is broken or not.
 
 #define L_BLOCKSIZE	(512 * 1024)
 #define S_BLOCKSIZE	(512)
@@ -596,35 +612,36 @@ main()
   if (s1 == 0 || l1 == 0 || s2 == 0 || l2 == 0)
     return (-1);
 
-  if (s2 > s1) {
-    if (l1 > s1 && l1 < s2)
-      return (-2);
-    if (l1 < s1 && (char *) l1 + L_BLOCKSIZE > s1)
-      return (-3);
-    if (l2 > s1 && l2 < s2)
-      return (-4);
-    if (l2 < s1 && (char *) l2 + L_BLOCKSIZE > s1)
-      return (-5);
-  } else {
-    if (l1 > s2 && l1 < s1)
-      return (-6);
-    if (l1 < s2 && (char *) l1 + L_BLOCKSIZE > s2)
-      return (-7);
-    if (l2 > s2 && l2 < s1)
-      return (-8);
-    if (l2 < s2 && (char *) l2 + L_BLOCKSIZE > s2)
-      return (-9);
+  // conceivably possible..
+  if (s1 > s2) { 
+    void *tmp = s1;
+    s1 = s2; 
+    s2 = tmp;
+  }
+  if (l1 > l2) {
+    void *tmp = l1;
+    l1 = l2;
+    l2 = tmp;
   }
 
-  if (l2 > l1) {
-    if ((char *) l2 > ((char *) l1) + L_BLOCKSIZE + MALLOC_OVERHEAD)
-      return (-10);
-  } else {
-    // conceivably possible..
-    if ((char *) l1 > ((char *) l2) + L_BLOCKSIZE + MALLOC_OVERHEAD)
-      return (-11);
-  }
+  // Now there are 6 cases, of which in 3 the small pages "trap" one
+  // or both large pages between them.
+  if (s1 < l1 && l1 < s2)
+    return (-2);
+  if (s1 < l2 && l2 < s2)
+    return (-3);		// the third case is cover by both;
 
+  // Now, adjacency of large pages:
+  // Also covers the case as in Mac OS X:
+  //   (int&) l2 = ((int) l2) + 3*L_BLOCKSIZE;
+  // But barks if e.g.:
+  //   (int&) l2 = ((int) l2) + 3*L_BLOCKSIZE + MALLOC_OVERHEAD;
+  if ((((int) l2 - (int) l1) % L_BLOCKSIZE) > MALLOC_OVERHEAD) {
+    return (-4);
+  }
+  return (0);
+
+  // freeing up memory..
   if (setjmp(env) != 0)
     return (0);
   (void) signal(SIGSEGV, sh);
