@@ -94,6 +94,8 @@ public:
   int nextSmallerElem(int v, int upper) const;
   int nextLargerElem(int v, int upper) const;
   int midElem(int i) const;
+  int upperBound(int v) const;
+  int lowerBound(int v) const;
   OZ_Term getAsList(void) const;
   FDIntervals * copy(void);
   int operator <= (const int);
@@ -178,9 +180,11 @@ public:
   int findMaxElem(void);
   void findHigh(int);
   void initList(int list_len, int * list_left, int * list_right);
-  int nextSmallerElem(int v, int upper) const;
-  int nextLargerElem(int v, int upper) const;
+  int nextSmallerElem(int v, int min_elem) const;
+  int nextLargerElem(int v, int max_elem) const;
   int midElem(int i) const;
+  int lowerBound(int v, int min_elem) const;
+  int upperBound(int v, int max_elem) const;
   OZ_Term getAsList(void) const;
   FDBitVector * copy(void);
   int operator <= (const int);
@@ -263,6 +267,8 @@ public:
   int midElem(void) const;
   int nextSmallerElem(int v) const;
   int nextLargerElem(int v) const;
+  int lowerBound(int v) const;
+  int upperBound(int v) const;
   int intersectWithBool(void);
   int constrainBool(void);
 

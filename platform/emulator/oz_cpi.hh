@@ -79,6 +79,8 @@ public:
   int getMidElem(void) const;
   int getNextSmallerEl(int v) const;
   int getNextLargerEl(int v) const;
+  int getLowerIntervalBd(int v) const;
+  int getUpperIntervalBd(int v) const;
   int getSize(void) const { return size; }
   int getMinElem(void) const { return min_elem; }
   int getMaxElem(void) const { return max_elem; }
