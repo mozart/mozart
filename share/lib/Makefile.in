@@ -1,4 +1,5 @@
 BUILDTOP	= @BUILDTOP@
+BUILDDIR        = $(BUILDTOP)/share/lib
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 
@@ -46,7 +47,8 @@ export OZLIB
 export OZPATH = .:$(SRCDIR)
 export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
-export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/share/=$(OZ_LIB)/
+export OZ_LOAD = root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=http\://www.ps.uni-sb.de/ozhome/share/=$(OZ_LIB)/
+
 export OZMAKE_COPYALWAYS	= no
 export OZMAKE_VERBOSE		= no
 
@@ -351,7 +353,7 @@ boot-all:
 		OZENGINE=$(SRCDIR)/oze.sh \
 		OZINIT=Init.ozf \
 		OZ_LIB=. \
-		OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(URL)/share/=./:=
+		OZ_LOAD=root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=/=/:prefix=./=./:prefix=$(URL)/share/=./:=
 
 STAGE1=./stage1
 STAGE2=./stage2
