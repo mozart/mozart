@@ -835,13 +835,14 @@ define
                   SEQ([HTML1 HTML])
                else HTML
                end
-            [] def then HTML in
-               HTML = em(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+            [] def then HTML1 HTML in
+               OzDocToHTML, Batch(M 1 ?HTML1)
+               HTML = em(COMMON: @Common HTML1)
                if @AutoIndex andthen {Not {SGML.isOfClass M noindex}} then
-                  HTML1
+                  HTML2
                in
-                  OzDocToHTML, Index(M [HTML] ?HTML1)
-                  SEQ([HTML1 HTML])
+                  OzDocToHTML, Index(M [HTML1] ?HTML2)
+                  SEQ([HTML2 HTML])
                else HTML
                end
             %-----------------------------------------------------------
@@ -1192,6 +1193,7 @@ define
                            OzDocToHTML, Batch(M.1 1 $)]))
       end
       meth Index(M Ands0 $) Ands L in
+         %--** remove any id attributes
          Ands = {Map Ands0
                  fun {$ X}
                     case X of _#_ then X
