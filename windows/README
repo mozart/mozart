@@ -1,0 +1,10 @@
+In order to install MozartGTK for Windows, you need to perform the following
+steps:
+
+1. Extract the GTK header files contained in wingtk-1.3.tgz to <dir>.
+2. Put gtk-config and imlib-config into your path
+   (after having adapted the pathes to your setup).
+3. Create a build directory <build>
+4. cd <build>
+5. <MozartGTK-Sources/configure --with-gtk-canvas-dir=<dir>/build
+6. make all install
