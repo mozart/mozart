@@ -513,7 +513,6 @@ private:
   static int * index_size;
   
   static Bool vars_left;
-  static Bool glob_vars_touched;
   static Bool only_local_vars;
   static fdbm_var_state * bifdbm_var_state;
 
@@ -521,7 +520,6 @@ private:
   int backup_count;
   int backup_curr_num_of_vars1;
   Bool backup_vars_left1;
-  Bool backup_glob_vars_touched1;
   Bool backup_only_local_vars1;
   Suspension * backup_FDcurrentTaskSusp1;
   
@@ -700,20 +698,9 @@ public:
       processLocal();
     } else {
       process();
-#ifndef NEW_SUSP_SCHEME
-      if (glob_vars_touched) dismissCurrentTaskSusp();
-#endif
     }
     return EntailFD;
   }
-
-#ifndef NEW_SUSP_SCHEME
-  Bool addAnySuspToTouchedGlobalVars(void);
-  OZ_Bool entailmentAndSuspOnAny(void);
-#else 
-  OZ_Bool entailmentAndSuspOnAny(void) {return entailment(); }
-
-#endif
 
   OZ_Bool entailmentClause(int from_b, int to_b,
 			   int from, int to,
@@ -734,10 +721,6 @@ public:
       processFromTo(from, to+1);
       if (vars_left)
 	reviveCurrentTaskSusp();
-#ifndef NEW_SUSP_SCHEME
-      else if (glob_vars_touched)
-	dismissCurrentTaskSusp(); 
-#endif
     }
 
     return vars_left ? SuspendFD : EntailFD;

@@ -62,31 +62,6 @@ void killPropagatedCurrentTaskSusp() {
   FDcurrentTaskSusp = NULL;
 }
 
-#ifndef NEW_SUSP_SCHEME
-
-/*
- * make propagator into surviving board suspension
- */
-void dismissCurrentTaskSusp(void) {
-  Assert(FDcurrentTaskSusp != NULL);
-  Assert(FDcurrentTaskSusp->isResistant());
-  Assert(!FDcurrentTaskSusp->isDead());
-  Assert(am.currentBoard==FDcurrentTaskSusp->getBoardFast());
-  FDcurrentTaskSusp->cContToBoard(am.currentBoard);
-  FDcurrentTaskSusp = NULL;
-}
-
-void activateCurrentTaskSusp(void) {
-  DebugCheck(!FDcurrentTaskSusp->isResistant(),
-	     error("Cannot activate non-resistant suspension."));
-  DebugCheck(FDcurrentTaskSusp->isDead(),
-	     error("Suspension is dead."));
-  
-  FDcurrentTaskSusp->unmarkPropagated();
-  FDcurrentTaskSusp->unmarkResistantSusp();
-  FDcurrentTaskSusp = NULL;
-}
-#endif
 
 SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * hoome)
 {
