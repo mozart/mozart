@@ -50,7 +50,8 @@ typedef enum {
   IOReady	= 1 << 3, // IO handler has signaled IO ready
   UserAlarm	= 1 << 4, // Alarm handler has signaled User Alarm
   StartGC	= 1 << 5, // need a GC
-  TasksReady    = 1 << 6
+  TasksReady    = 1 << 6,
+  ChildReady	= 1 << 7  // SIGCHLD raised
 } StatusBit;
 
 /* -----------------------------------------------------------------------
