@@ -36,7 +36,7 @@
 #include "base.hh"
 
 #include "gentraverser.hh"
-int gopa;
+extern int gopa;
 //
 class Marshaler : public GenTraverser {
 public:

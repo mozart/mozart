@@ -37,7 +37,9 @@
 #include "space.hh"
 #include "newmarshaler.hh"
 
+#ifdef VIRTUALSITES
 #define USE_VS_MSGBUFFERS
+#endif
 
 // 
 #ifdef USE_VS_MSGBUFFERS
