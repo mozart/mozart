@@ -1,15 +1,9 @@
 %%%
 %%% Authors:
-%%%   Gert Smolka (smolka@dfki.de)
-%%%   Joerg Wuertz (wuertz@dfki.de)
-%%%
-%%% Modified:
-%%%   Christian Schulte (schulte@dfki.de)
+%%%   Christian Schulte <schulte@dfki.de>
 %%%
 %%% Copyright:
-%%%   Gert Smolka, 1997
-%%%   Joerg Wuertz, 1997
-%%%   Christian Schulte, 1997, 1998
+%%%   Christian Schulte, 1998
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -26,6 +20,12 @@
 %%% WARRANTIES.
 %%%
 
+%%%
+%%% The compiler is taken from the document:
+%%%   Christian Schulte, Gert Smolka, Finite Domain Constraint
+%%%   Programming in Oz. A Tutorial.
+%%%
+
 functor
 
 import
@@ -33,88 +33,60 @@ import
    Schedule
 
 export
-   Dumb Smart
+   Compile
    
 define
 
-   fun {MakeCompiler IsDumb}
+   local
+      fun {GetDur TaskSpec}
+	 {List.toRecord dur {Map TaskSpec fun {$ T}
+					     {Label T}#T.dur
+					  end}}
+      end
       
-      fun {$ TaskSpecs}
-	 MaxTime =
-	 {FoldL TaskSpecs fun {$ In _#D#_#_} D+In end 0}
-	 
-	 Tasks =
-	 {Map TaskSpecs fun {$ T#_#_#_} T end}
-	 
-	 Dur =    % task --> duration 
-	 {MakeRecord dur Tasks}
-	 {ForAll TaskSpecs proc {$ T#D#_#_} Dur.T = D end}
-	 
-	 Resources =
-	 {FoldL TaskSpecs
-	  fun {$ In _#_#_#Resource}
-	     if Resource==noResource orelse {Member Resource In} then In
-	     else Resource|In
-	     end
-	  end nil}
-	 
-	 ExclusiveTasks =  % list of lists of exclusive tasks
-	 {FoldR Resources
-	  fun {$ Resource Xs}
-	     {FoldR TaskSpecs
-	      fun {$ Task#_#_#ThisResource In}
-		 if Resource==ThisResource then Task|In else In end
-	      end
-	      nil} | Xs
-	  end
-	  nil}
-	 
+      fun {GetStart TaskSpec}
+	 MaxTime = {FoldL TaskSpec fun {$ Time T} 
+				      Time+T.dur
+				   end 0}
+	 Tasks   = {Map TaskSpec Label}
       in
-	 
+	 {FD.record start Tasks 0#MaxTime}
+      end
+      
+      fun {GetTasksOnResource TaskSpec}
+	 D={Dictionary.new}
+      in
+	 {ForAll TaskSpec 
+	  proc {$ T}
+	     if {HasFeature T res} then R=T.res in
+		{Dictionary.put D R {Label T}|{Dictionary.condGet D R nil}}
+	     end
+	  end}
+	 {Dictionary.toRecord tor D}
+      end
+      
+   in
+
+      fun {Compile TaskSpec}
+	 Dur         = {GetDur TaskSpec}
+	 TasksOnRes  = {GetTasksOnResource TaskSpec}
+      in
 	 proc {$ Start}
-	    Start =       % task --> start time
-	    {FD.record start Tasks 0#MaxTime}
-	    
-	    %% impose precedences
-	    
-	    {ForAll TaskSpecs
-	     proc {$ Task#_#Preds#_}
-		{ForAll Preds
-		 proc {$ Pred}
-		    Start.Pred + Dur.Pred =<: Start.Task
+	    Start = {GetStart TaskSpec}
+	    {ForAll TaskSpec
+	     proc {$ T}
+		{ForAll {CondSelect T pre nil}
+		 proc {$ P}
+		    Start.P + Dur.P =<: Start.{Label T}
 		 end}
 	     end}
-	    
-	    %% impose resource constraints
-	    
-	    {Schedule.serialized ExclusiveTasks Start Dur}
-	    
-	    %% distribute exclusion choices
-	    
-	    if IsDumb then
-	       {Schedule.lastsDist ExclusiveTasks Start Dur}
-	    else
-	       {Schedule.firstsLastsDist ExclusiveTasks Start Dur}
-	    end
-
-	    %% fix all start points to minimum after distribution
-	    {Record.forAll Start proc {$ S}
-				    S={FD.reflect.min S}
+	    {Schedule.serialized      TasksOnRes Start Dur}
+	    {Schedule.firstsLastsDist TasksOnRes Start Dur}
+	    choice skip end
+	    {Record.forAll Start proc {$ S} 
+				    S={FD.reflect.min S} 
 				 end}
-	    
 	 end
-	 
-      end
-
+      end 
    end
-
-   Dumb  = {MakeCompiler true}
-
-   Smart = {MakeCompiler false}
-   
 end
-
-
-
-
-
