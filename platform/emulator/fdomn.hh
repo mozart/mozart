@@ -183,12 +183,12 @@ public:
   void init(int from, int to);
   void init(LeGeFull_e type, int n = -1);
 
-  void fullDomain(void) {
+  void setFull(void) {
     bitArray = setRange(NULL);
     lower = fdMinR;
     upper = fdMaxR;
   }
-  void singletonDomain(int n) {
+  void setSingleton(int n) {
     if (n > fdMaxR || n < fdMinR){
       setEmpty();
       return;
