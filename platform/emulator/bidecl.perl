@@ -1027,6 +1027,11 @@ $builtins = {
 			     out => ['+bool'],
 			     BI  => BIisForeignPointer },
 
+    'ForeignPointerToInt'=> { in  => ['+foreignPointer'],
+			      out => ['+int'],
+			      BI  => BIForeignPointerToInt},
+
+
     'dlOpen'		=> { in  => ['+virtualString'],
 			     out => ['+foreignPointer'],
 			     BI  => BIdlOpen},

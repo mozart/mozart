@@ -5308,6 +5308,27 @@ OZ_BI_define(BIisForeignPointer,1,1)
   OZ_RETURN(OZ_isForeignPointer(p)? NameTrue: NameFalse);
 } OZ_BI_end
 
+// currently the ozm format has lines mentionning
+// foreign pointers with hexadecimal addresses.  these
+// are use solely for identification purposes, but unfortunately
+// vary from one computation to the next which means that
+// the ozm file is always different even if abstractly it truly
+// hasn't changed.  To fix this problem, foreign pointers
+// should be assigned integers to serve as these identification
+// labels, in the order in which they are encountered (which will
+// be the same from one execution to the next - unless something
+// major has changed).  To support this we need to keep a mapping
+// from foreign pointers to integers: we must use a dictionary.
+// however foreign pointers cannot be keys.  so we provide the
+// function below to use the integer value of its address as the
+// key instead.
+
+OZ_BI_define(BIForeignPointerToInt,1,1)
+{
+  OZ_declareForeignPointerIN(0,handle);
+  OZ_RETURN_INT((long)handle);
+} OZ_BI_end
+
 OZ_BI_define(BIdlClose,1,0)
 {
   OZ_declareForeignPointerIN(0,handle);
