@@ -12,10 +12,10 @@
 
 
 
-#include <sys/types.h>
 #ifdef WINDOWS
 #include "wsock.hh"
 #else
+#include <sys/types.h>
 #include <sys/time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
