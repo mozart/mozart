@@ -1,9 +1,11 @@
 <!--
   - Authors:
+  -   Peter Van Roy	<pvr@info.ucl.ac.be>
   -   Per Brand		<perbrand@sics.se>
   -   Denys Duchier     <duchier@ps.uni-sb.de>
   -
   - Copyright:
+  -   Peter Van Roy, 1998
   -   Per Brand, 1998
   -   Denys Duchier, 1998
   -
@@ -25,214 +27,163 @@
 <Chapter id="Chapter.Fault">
   <Title/Detecting and Handling Distribution Problems: <<Fault>>/
 
-  <p>Fault Model WARNING. At Seifs request the fault condition names
-will be changed before the release, and some other small interface
-changes.</p>
+<P>This section summarizes the operations of the <<Fault>> module
+and their argument types.  Please refer to the Distribution Tutorial for
+more information on what the operations do and how to use them.
 
-  <section>
-    <title/Introduction/
-    <p>Introduction The fault model provides functions to install and
-deinstall injectors and watchers and to access the fault condition of
-an entity.
+<section><title/Argument types/
+
+<P>We summarize the argument types for the operations
+in the <<Fault>> module.
 <list>
-	<entry/<code/{Fault.install Specification Procedure}//
-	<item>installs an injector/handler according to the
-specification, if this is possible. Return true if  the installation
-is successful, false otherwise. Raises an exception if the
-specification is of  the wrong format.
-<p>The specification is a record with one of the following labels.
-<code display/injector safeInjector siteWatcher netWatcher/
-The procedure is any two argument procedure
-	<entry/<code/{Fault.deInstall Specification Procedure}//
-	<item>deinstalls a previously installed  injector/handler
-according to the specification, if this is  possible. Return true if
-the deinstallation is successful, false otherwise. Raises an exception
-if the specification is  of the wrong format.
-<p>The specification is a record with one of the following labels.
-<code display/injector safeInjector siteWatcher netWatcher watcher/
-As the name suggests you can only  deinstall a distribution handler
-that was previously  installed. In most cases the same procedure must
-be specified .
-	<entry/<code/{Fault.getEntityCond Entity}/
-	<item>return a list of current fault condition of the entity.
-</list>
-</p>
-  </section>
+<entry/<code/Entity//
+<item>A reference to any Oz language entity
+that may be an object, cell, lock, port, or logic variable.
 
-  <section>
-    <title/Injectors/
+<entry/<code/Level//
+<item>One of <<global>>, <<site>>, or <<'thread'(T)>>,
+where <<T>> is a thread reference or the atom <<this>>.
 
-    <p>Injectors The injector specification record has the following
-fields:
+<entry/<code/FStates//
+<item>A set of fault states, i.e., a list that can contain
+at most one of each of
+the elements <<tempFail>>, <<permFail>>,
+<<remoteProblem(tempSome)>>,
+<<remoteProblem(permSome)>>,
+<<remoteProblem(tempAll)>>, and
+<<remoteProblem(permAll)>>.
+
+<entry/<code/OP//
+<item>A record that indicates which attempted operation caused
+the exception or handler invocation.
+The value of <<OP>> is one of:
 <list>
-	<entry/<code/'cond'//
-	<item> A list of fault conditions
-	<entry/<code/entityType//
-	<item>the atom <code/single/ or <code/all/
-	<entry/<code/entity//
-	<item>an arbitrary Oz-term
-	<entry/<code/'thread'//
-	<item>the atom <code/'this'/ or <code/all/ or a first-class
-thread
-	<entry/<code/retry//
-	<item>the atom <code/retry/ or <code/'skip'/
+<item><<bind(T)>>, <<wait>>, <<isDet>> (for logic variables).
+<item><<cellExchange(Old New)>>, <<cellAssign(New)>>,
+<<cellAccess(Old)>> (for cells).
+<item><<lock>> (for locks).
+<item><<send(Msg)>> (for ports).
+<item><<objectExchange(Attr Old New)>>,
+<<objectAssign(Attr New)>>,
+<<objectAccess(Attr Old)>>,
+<<objectFetch>> (for objects).
+A limitation of the current release is that an attempted
+operation on an object cannot be retried.
 </list>
-The <code/retry/ field may be omitted (the default is
-<code/retry:'skip'/). The entity field may be omitted if the
-<code/entityType/ is <code/all/.
-<p>
-The legal fault conditions are restricted to <code/permBlocked/ and
-<code/tempBlocked/.
-<p>If the <code/entityType/ is <code/single/ then the injector is
-entity-specific. If the <code/'thread'/ field is not <code/all/ then
-injector is thread-specific. Currently, injectors can be in order of
-generality:
+
+<entry/<code/HandlerProc//
+<item>A handler, i.e., a three-argument procedure
+that is called as <<{HandlerProc Entity FStates OP}>>,
+where <<FStates>> is a set of currently active fault states.
+A handler replaces an attempted operation on an entity.
+
+<entry/<code/WatcherProc//
+<item>A watcher, i.e., a two-argument procedure
+that is called in its own thread
+as <<{WatcherProc Entity FStates}>>,
+where <<FStates>> is a set of currently active fault states.
+A watcher is invoked as soon as the site detects a fault.
+
+</list>
+
+<section><title/Fault information/
+
+<P>When there is a distribution problem,
+then three items of information are made available:
 <list>
-	<item>entity and thread-specific  (<code/entityType:single/,
-<code/'thread':{'this',?={first-class thread}}/
-	<item>entity-specific and thread-unspecific (<code/entityType:single/,
-<code/'thread':all/)
-	<item>entity-unspecific and
-thread-unspecific. (<code/entityType:all/, <code/'thread':all/)
+<item><<Entity>>: the entity whose operation does not succeed.
+<item><<FStates>>: the fault states that are currently active.
+This is a subset of the states that are being observed.
+<item><<OP>>: the operation that is attempted but does not succeed.
 </list>
-The model is that when a thread attempts an operation on a distributed
-entity that is in a distribution fault state then if there is an
-applicable and triggered injector on that entity the handler
-procedure will be invoked in that thread. The injector is applicable
-if:
+<P>The system can be configured (see below) so that this information
+appears in one or more of the following three ways:
 <list>
-	<item>the entity matches (if the injector is entity-specific)
-	<item>the thread matches (if the injector is thread-specific)
-	<item>there is no more specific injector applicable
+<item>In an exception with format
+<<system(dp(entity:Entity conditions:FStates op:OP) ...)>>.
+<item>As arguments to a handler call, <<{HandlerProc Entity FStates OP}>>.
+<item>As arguments to a watcher call, <<{WatcherProc Entity FStates}>>.
 </list>
-The injector is triggered if the entity currently is subject to one of
-the specified fault conditions. Upon completion of the
-handler-procedure the original operation that could not be performed
-is either repeated or skipped depending on the value of the
-<code/retry/ field.
-<p>
-You can only install one entity and thread-unspecific injector per
-site. You can only install one entity-specific and thread-unspecific
-injector per entity. And finally, you can only install one
-entity-specific and thread-specific injector per entity and
-thread. &ie; there is at most one applicable injector for each
-attempted operation.
-<p>
-Currently there is a default entity-unspecific and thread-unspecific
-injector installed on start-up. This injector raises an exception.
-<p>
-The injectors as described here are sited, i.e. do not work on other
-sites if exported.
+<P>A limitation of the current release is that if the problem
+was detected during an object operation, then the <<Entity>>
+argument is undefined.
 
-<p>You may install injectors on entities before they are
-distributed, or after. You do not have to know the instantiation state
-to install injectors. You may install injectors on variables, if the
-variable is later bound the injector is carried over.  You may install
-injectors on stateless entities as well , this has no effect, as it is
-assumed that you meant to install on a variable that was bound before
-you were able to install the injector.
-<p>
-The operations that can cause injector invocation are
-<em/exchange/, <em/access/, <em/update/ of cells, or object
-attributes, <em/locking/ a lock, <em/binding/ a variable, <em/sending/
-to a port.
-<p>
-The system guarantees that if you attempt the above operations you
-will either eventually complete the operation or get the corresponding
-injector invoked.
-</p>
-  </section>
+<section><title/Operations/
 
-  <section>
-    <title/Safe Injectors/
-    <p>
-The safe-injector specification record has almost the same fields as
-ordinary injectors. The difference is that the <code/entityType/ is not
-needed, in that this type of injector is always entity-specific (as if
-you had specified <code/single/). Also this type of injector is always
-thread-specific as well (so you may not use the value <code/all/ in the
-<code/'thread'/ field.
-<p>
-Safe injectors are thus always entity-specific and
-thread-specific. The  big difference is that safe injectors are
-unsited and can be freely exported, and shared between sites. This is
-important for encapsulation of  failure-handling. Note that you are
-ensured that imported code cannot change your more general injectors,
-in particular such code cannot change default entity-unspecific and
-thread-unspecific injectors of your site.
-</p>
-  </section>
+<P>The <<Fault>> module contains the following operations.
+All operations return a boolean flag <<B>> that is <<true>>
+iff the operation succeeds.
+All <<enable>> and <<install>
+operations succeed if nothing was enabled or installed
+at that level.
+All <<disable>> and <<deInstall>
+operations succeed if nothing was disabled or deinstalled
+at that level.
+At system startup, it is as if <<{Fault.defaultEnable
+[tempFail permFail] _}>> was executed successfully.
 
-  <section>
-    <title/Watchers/
-    <p>A watcher specification (specification record label
-<code/siteWatcher/, <code/netWatcher/ or <code/watcher/) has the
-fields:
 <list>
-	<entry/<code/'cond'//
-	<item>A list of fault conditions
-	<entry/<code/entity//
-	<item>an arbitrary Oz-term
+<entry/<code/{Fault.defaultEnable FStates ?B}//
+<item>Enable default fault detection at the <<global>> level
+for all entities created after this call.
+
+<entry/<code/{Fault.defaultDisable ?B}//
+<item>Disable default fault detection for all entities
+created after this call.
+
+<entry/<code/{Fault.enable Entity Level FStates ?B}//
+<item>Enable fault detection on a given entity
+at a given level for a given set of fault states.
+An exception is raised if a fault is detected
+when an operation is attempted on the entity.
+
+<entry/<code/{Fault.disable Entity Level ?B}//
+<item>Disable fault detection on a given entity
+at a given level.
+
+<entry/<code/{Fault.install Entity Level FStates HandlerProc ?B}//
+<item>Install a handler for fault detection on a given entity
+at a given level for a given set of fault states.
+The handler <<{HandlerProc Entity AFStates OP}>> is called
+if a fault is detected when an operation is attempted on the entity.
+A limitation of the current release is that handlers
+cannot be installed at the <<global>> level.
+
+<entry/<code/{Fault.deInstall Entity Level ?B}//
+<item>Deinstall a handler for fault detection on a given
+entity at a given level.
+
+<entry/<code/{Fault.installWatcher Entity FStates WatcherProc}//
+<item>Install a watcher for fault detection on a given entity
+for a given set of fault states.
+More than one watcher can be installed on an entity.
+Therefore this call always succeeds.
+The watcher <<{WatcherProc Entity AFStates}>> is called
+in its own thread as soon as the site detects a fault.
+
+<entry/<code/{Fault.deInstallWatcher Entity WatcherProc}//
+<item>Deinstall the given watcher on a given entity.
+This call always succeeds.
+
 </list>
-If the entity has one of the fault conditions listed in the list the
-handler procedure is invoked in its own thread. You may install any
-number of watchers on the same entity.
-<p>
-The allowed fault conditions are:
+
+<section><title/Limitations of the current release/
+
+<P>The current release has the following limitations which
+will be removed in future releases:
 <list>
-	<entry/<code/permBlocked//
-	<item><code/siteWatcher/s only
-	<entry/<code/tempBlocked//
-	<item><code/siteWatcher/s only
-	<entry/<code/permWillBlock//
-	<item><code/siteWatcher/s only
-	<entry/<code/tempWillBlock//
-	<item><code/siteWatcher/s only
-	<entry/<code/permSome//
-	<item><code/netWatcher/s only
-	<entry/<code/tempSome//
-	<item><code/netWatcher/s only
-	<entry/<code/permAll//
-	<item><code/netWatcher/s only
-	<entry/<code/tempAll//
-	<item><code/netWatcher/s only
+<item>If an exception is raised or a handler or watcher
+is invoked for an object, then the argument <<Entity>>
+is undefined.
+<item>If an exception is raised or a handler is invoked
+for an object, then the attempted object operation cannot
+be retried.
+<item>Handlers cannot be installed at the <<global>> level,
+i.e., the call <<{Fault.install _ global _ _}>> is undefined.
+If an attempt is made to install a <<global>> handler,
+then a <<notImplemented>> exception is given.
 </list>
-<para><title/SiteWatchers/
-SiteWatchers provide you with information when one of the operations
-mentioned earlier cannot be performed due to
-distribution faults. The <code/blocked/ fault conditions occur when some
-thread is trying to perform an operation on the faulty entity, while
-the <code/willBlock/ conditions occur when the entity is faulty even when
-no thread is attempting operations on it (i.e. provides information
-eagerly).
-<para><title/NetWatchers/
-NetWatchers provide you with information as to the problems
-experienced by other sites. The <code/some/ conditions indicate that at
-least one other site is experiencing problems (e.g. has crashed, or is
-disconnected). The <code/all/ conditions provide the information that all
-other sites are experiencing problems. The <code/all/ conditions only apply
-to cells and  object state.
-<p>
-Observe that netWatchers cannot provide complete information, there
-may be problems that you will never know about.
-<p>
-Watchers are unsited and may be freely exported, and shared.
-</p>
-  </section>
 
-  <section>
-    <title/Deinstallation/
-
-    <p>Deinstallation is basically the reverse of installation for all
-the distribution handlers (injectors and watchers).
-<p>
-Currently you must supply the installed handler procedure in order to
-be able to  deinstall, except in the special case of the system
-default entity-unspecific and thread-unspecific injector, where
-the procedure is not checked. This will probably be changed.
-</p>
-  </section>
-</Chapter>
 
 <!--
 Local Variables:
