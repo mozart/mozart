@@ -268,7 +268,8 @@ BIMODSPECS = \
 	Dictionary Exception Float ForeignPointer Int List Literal \
 	Lock Name Number Object Port Procedure Record \
 	String Thread Time Tuple Unit Value VirtualString \
-	BitString ByteString InterFault WeakDictionary $(SITE_PROPERTY_SRCS)
+	BitString ByteString Word InterFault \
+	WeakDictionary $(SITE_PROPERTY_SRCS)
 
 EMUSRCDIR=$(SRCDIR)/../../platform/emulator
 BIDECL=$(EMUSRCDIR)/bidecl.perl
