@@ -1560,15 +1560,17 @@ LBLkillToplevelThread:
 
       // Tell the debugger about termination of current thread
       TaggedRef dbgVar = e->currentThread->getDebugVar();
-      OZ_Term dbgTuple = OZ_mkTupleC("debugInfo",
-				     5,
-				     OZ_atom("nofile"),
-				     OZ_int(0),
-				     OZ_atom("finished"),
-				     OZ_atom(""),
-				     OZ_atom("")
-				     );
-      OZ_unify(dbgVar,dbgTuple);
+      if (OZ_isVariable(dbgVar)) {
+	OZ_Term dbgTuple = OZ_mkTupleC("debugInfo",
+				       5,
+				       OZ_atom("nofile"),
+				       OZ_int(0),
+				       OZ_atom("finished"),
+				       OZ_atom(""),
+				       OZ_atom("")
+				       );
+	OZ_unify(dbgVar,dbgTuple);
+      }
 
       DebugCheckT(printf("toplevel thread finished\n"));
 
@@ -3295,7 +3297,7 @@ LBLsuspendThread:
       int noArgs         = smallIntValue(getNumberArg(PC+5));
 
       TaggedRef dbgVar = e->currentThread->getDebugVar();
-      if (! OZ_isVariable(dbgVar)) {
+      if (! OZ_isVariable(dbgVar)) {  // don't debug me, pleeease!
 	DISPATCH(6);
       }
 
