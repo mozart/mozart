@@ -98,8 +98,14 @@
     <Meta name="html.split"       value="section.widgets-2.file">
     <Meta name="html.split"       value="section.widgets-2.help">
 
-    <Meta name="html.split"       value="chapter.tools">
     <Meta name="html.split"       value="chapter.canvas">
+    <Meta name="html.split"       value="section.canvas.widgets">
+    <Meta name="html.split"       value="section.canvas.barchart">
+    <Meta name="html.split"       value="section.canvas.region">
+    <Meta name="html.split"       value="section.canvas.tags">
+    <Meta name="html.split"       value="section.canvas.animated">
+
+    <Meta name="html.split"       value="chapter.tools">
     <Meta name="html.split"       value="chapter.text">
     <Meta name="html.split"       value="appendix.data">
 
