@@ -937,27 +937,27 @@ OZ_C_proc_begin(BIgenImageName,1) {
 
 static
 BIspec tclTkSpec[] = {
-  {"getTclName",       1, BIgetTclName,       NO, 0},
-  {"isTcl",            2, BIisTcl,            NO, 0},
-  {"isTclFilter",      3, BIisTclFilter,      NO, 0},
-  {"tclWrite",         3, BItclWrite,         NO, 0},
-  {"tclWriteBatch",    3, BItclWriteBatch,    NO, 0},
-  {"tclWriteTuple",    4, BItclWriteTuple,    NO, 0},
-  {"tclWriteTagTuple", 5, BItclWriteTagTuple, NO, 0},
-  {"tclWriteFilter",   7, BItclWriteFilter,   NO, 0},
-  {"tclWriteCont",     3, BItclWriteCont,     NO, 0},
+  {"getTclName",       1, BIgetTclName,        0},
+  {"isTcl",            2, BIisTcl,             0},
+  {"isTclFilter",      3, BIisTclFilter,       0},
+  {"tclWrite",         3, BItclWrite,          0},
+  {"tclWriteBatch",    3, BItclWriteBatch,     0},
+  {"tclWriteTuple",    4, BItclWriteTuple,     0},
+  {"tclWriteTagTuple", 5, BItclWriteTagTuple,  0},
+  {"tclWriteFilter",   7, BItclWriteFilter,    0},
+  {"tclWriteCont",     3, BItclWriteCont,      0},
 
-  {"addFastGroup", 3, BIaddFastGroup,	NO, 0},
-  {"delFastGroup", 1, BIdelFastGroup,	NO, 0},
-  {"getFastGroup", 2, BIgetFastGroup,	NO, 0},
+  {"addFastGroup", 3, BIaddFastGroup,	 0},
+  {"delFastGroup", 1, BIdelFastGroup,	 0},
+  {"getFastGroup", 2, BIgetFastGroup,	 0},
 
-  {"genTopName",    1, BIgenTopName,	NO, 0},
-  {"genWidgetName", 2, BIgenWidgetName,	NO, 0},
-  {"genTagName",    1, BIgenTagName,	NO, 0},
-  {"genVarName",    1, BIgenVarName,	NO, 0},
-  {"genImageName",  1, BIgenImageName,	NO, 0},
+  {"genTopName",    1, BIgenTopName,	 0},
+  {"genWidgetName", 2, BIgenWidgetName,	 0},
+  {"genTagName",    1, BIgenTagName,	 0},
+  {"genVarName",    1, BIgenVarName,	 0},
+  {"genImageName",  1, BIgenImageName,	 0},
 
-  {0,0,0,0,0}
+  {0,0,0,0}
 };
 
 

@@ -504,7 +504,7 @@ BIspec metaSpec[] = {
   {"metaGetDataAsAtom", 2, BImetaGetDataAsAtom},
   {"metaGetNameAsAtom", 2, BImetaGetNameAsAtom},
   {"metaGetStrength", 2, BImetaGetStrength},
-  {0,0,0,0,0}
+  {0,0,0,0}
 };
 
 
