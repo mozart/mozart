@@ -23,6 +23,7 @@
 #include "board.hh"
 #include "stack.hh"
 #include "taskstk.hh"
+#include "am.hh"
 #include "thread.hh"
 #include "susplist.hh"
 
