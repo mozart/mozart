@@ -2384,17 +2384,15 @@ inline
 void LTuple::_cacRecurse() {
   LTuple * frm = this;
   LTuple * to  = (LTuple *) GCUNMARK(frm->args[0]);
-
-  // Restore original!
-  frm->args[0] = to->args[0];
-
   TaggedRef aux = oz_deref(to->args[0]);
 
-  // Case : L=L|_
+  //
   if (!oz_isLTuple(aux) || tagged2LTuple(aux) != this) {
+    frm->args[0] = to->args[0];
     oz_cacTerm(frm->args[0], to->args[0]);
-
     _cacStoreFwd((int32 *)frm->args, to->args);
+  } else {
+    to->args[0] = makeTaggedLTuple((LTuple *) to);
   }
 
   while (1) {
