@@ -2734,7 +2734,7 @@ OZ_C_proc_begin(BIthreadTerminate,1)
     return BI_TERMINATE;
   }
 
-  if (isLocal) th->getBoard()->setFailed();
+  if (isLocal) th->getBoardFast()->setFailed();
   if (!th->isRunnable()) {
     am.scheduleThread(th);
   }
@@ -4458,8 +4458,8 @@ DECLAREBI_USEINLINEFUN1(BIsub1,BIsub1Inline)
 
 OZ_C_proc_begin(BInewPort,2)
 {
-  OZ_Term val = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
+  OZ_declareArg(0,val);
+  OZ_declareArg(1,out);
 
   OZ_Term ret = OZ_newPort(val);
   return OZ_unify(out,ret);
@@ -4468,10 +4468,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIsendPort,2)
 {
-  OZ_Term prt1 = OZ_getCArg(0);
-  OZ_Term msg = OZ_getCArg(1);
-
-  NONVAR(prt1,prt,_1);
+  OZ_declareNonvarArg(0,prt);
+  OZ_declareArg(1,msg);
 
   if (!isPort(prt)) {
     TypeErrorT(0,"Port");
