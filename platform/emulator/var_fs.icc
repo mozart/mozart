@@ -26,16 +26,6 @@ GenFSetVariable * tagged2GenFSetVar(OZ_Term term)
 }
 
 inline
-OZ_FSetConstraint * unpatchReified(OZ_Term t)
-{
-  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t) && isGenFSetVar(t));
-  GenFSetVariable * fsv = tagged2GenFSetVar(t);
-
-  fsv->unpatchReified();
-  return fsv->getReifiedPatch();
-}
-
-inline
 void GenFSetVariable::propagate(OZ_Term var, OZ_FSetPropState state,
                                 PropCaller prop_eq)
 {
@@ -87,6 +77,17 @@ Bool isGenFSetVar(TaggedRef term, TypeOfTerm tag)
   Assert(tag == tagTypeOf(term));
   return isCVar(tag) && (tagged2CVar(term)->getType() == FSetVariable);
 }
+
+inline
+OZ_FSetConstraint * unpatchReified(OZ_Term t)
+{
+  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t) && isGenFSetVar(t));
+  GenFSetVariable * fsv = tagged2GenFSetVar(t);
+
+  fsv->unpatchReified();
+  return fsv->getReifiedPatch();
+}
+
 
 inline
 void GenFSetVariable::becomesFSetValueAndPropagate(TaggedRef * trPtr)
