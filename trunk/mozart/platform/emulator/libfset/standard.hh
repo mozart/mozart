@@ -18,83 +18,83 @@
 
 class FSetIntersectionPropagator : public Propagator_S_S_S {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   FSetIntersectionPropagator(OZ_Term x, OZ_Term y, OZ_Term z)
     : Propagator_S_S_S(x, y, z) {}
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFun getHeaderFunc(void) const {
-    return spawner;
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &spawner;
   }
 };
 
 class FSetUnionPropagator : public Propagator_S_S_S {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   FSetUnionPropagator(OZ_Term x, OZ_Term y, OZ_Term z)
     : Propagator_S_S_S(x, y, z) {}
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFun getHeaderFunc(void) const {
-    return spawner;
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &spawner;
   }
 };
 
 class FSetSubsumePropagator : public Propagator_S_S {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   FSetSubsumePropagator(OZ_Term x, OZ_Term y)
     : Propagator_S_S(x, y) {}
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFun getHeaderFunc(void) const {
-    return spawner;
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &spawner;
   }
 };
 
 class FSetDisjointPropagator : public Propagator_S_S {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   FSetDisjointPropagator(OZ_Term x, OZ_Term y)
     : Propagator_S_S(x, y) {}
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFun getHeaderFunc(void) const {
-    return spawner;
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &spawner;
   }
 };
 
 class FSetDistinctPropagator : public Propagator_S_S {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   FSetDistinctPropagator(OZ_Term x, OZ_Term y)
     : Propagator_S_S(x, y) {}
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFun getHeaderFunc(void) const {
-    return spawner;
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &spawner;
   }
 };
 
 class FSetDiffPropagator : public Propagator_S_S_S {
 private:
-  static OZ_CFun header;
+  static OZ_CFunHeader header;
 public:
   FSetDiffPropagator(OZ_Term x,OZ_Term y,OZ_Term z)
     : Propagator_S_S_S(x,y,z) {}
   virtual OZ_Return propagate(void);
-  virtual OZ_CFun getHeaderFunc(void) const {
-    return header;
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &header;
   }
 };
 

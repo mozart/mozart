@@ -17,12 +17,12 @@
 
 class LinEqAbsPropagator : public Propagator_VI_VD_D {
 private:
-  static OZ_CFun header;
+  static OZ_CFunHeader header;
 public:
   LinEqAbsPropagator(OZ_Term a, OZ_Term x, OZ_Term d)
     : Propagator_VI_VD_D(a, x, d) {}
   virtual OZ_Return propagate(void);
-  virtual OZ_CFun getHeaderFunc(void) const {return header;}
+  virtual OZ_CFunHeader * getHeader(void) const {return &header;}
   virtual OZ_Term getParameters(void) const {
     return Propagator_VI_VD_D::getParameters(SUM_OP_EQ);
   }
@@ -30,12 +30,12 @@ public:
 
 class LinLessEqAbsPropagator : public Propagator_VI_VD_D {
 private:
-  static OZ_CFun header;
+  static OZ_CFunHeader header;
 public:
   LinLessEqAbsPropagator(OZ_Term a, OZ_Term x, OZ_Term d)
     : Propagator_VI_VD_D(a, x, d) {}
   virtual OZ_Return propagate(void);
-  virtual OZ_CFun getHeaderFunc(void) const {return header;}
+  virtual OZ_CFunHeader * getHeader(void) const {return &header;}
   virtual OZ_Term getParameters(void) const { 
     return Propagator_VI_VD_D::getParameters(SUM_OP_LEQ);
   }
@@ -43,12 +43,12 @@ public:
 
 class LinGreaterEqAbsPropagator : public Propagator_VI_VD_D {
 private:
-  static OZ_CFun header;
+  static OZ_CFunHeader header;
 public:
   LinGreaterEqAbsPropagator(OZ_Term a, OZ_Term x, OZ_Term d)
     : Propagator_VI_VD_D(a, x, d) {}
   virtual OZ_Return propagate(void);
-  virtual OZ_CFun getHeaderFunc(void) const {return header;}
+  virtual OZ_CFunHeader * getHeader(void) const {return &header;}
   virtual OZ_Term getParameters(void) const { 
     return Propagator_VI_VD_D::getParameters(SUM_OP_EQ);
   }
@@ -56,12 +56,12 @@ public:
 
 class LinNotEqAbsPropagator : public Propagator_VI_VD_D {
 private:
-  static OZ_CFun header;
+  static OZ_CFunHeader header;
 public:
   LinNotEqAbsPropagator(OZ_Term a, OZ_Term x, OZ_Term d)
     : Propagator_VI_VD_D(a, x, d) {}
   virtual OZ_Return propagate(void);
-  virtual OZ_CFun getHeaderFunc(void) const {return header;}
+  virtual OZ_CFunHeader * getHeader(void) const {return &header;}
   virtual OZ_Term getParameters(void) const { 
     return Propagator_VI_VD_D::getParameters(SUM_OP_NEQ);
   }

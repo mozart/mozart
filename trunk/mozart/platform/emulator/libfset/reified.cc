@@ -27,7 +27,7 @@ OZ_C_proc_begin(fsp_includeR, 3)
 } 
 OZ_C_proc_end
 
-OZ_CFun IncludeRPropagator::header = fsp_includeR;
+OZ_CFunHeader IncludeRPropagator::header = fsp_includeR;
 
 //*****************************************************************************
 
@@ -104,7 +104,7 @@ OZ_C_proc_begin(fsp_isInR, 3)
 } 
 OZ_C_proc_end
 
-OZ_CFun IsInRPropagator::spawner = fsp_isInR;
+OZ_CFunHeader IsInRPropagator::spawner = fsp_isInR;
 
 OZ_Return IsInRPropagator::propagate(void)
 {
@@ -176,7 +176,7 @@ OZ_C_proc_begin(fsp_bounds, 5)
 } 
 OZ_C_proc_end
 
-OZ_CFun BoundsPropagator::header = fsp_bounds;
+OZ_CFunHeader BoundsPropagator::header = fsp_bounds;
 
 OZ_Return BoundsPropagator::propagate(void)
 {

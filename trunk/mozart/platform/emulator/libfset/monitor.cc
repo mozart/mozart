@@ -24,7 +24,7 @@ OZ_C_proc_begin(fsp_monitorIn, 2)
 }
 OZ_C_proc_end
 
-OZ_CFun MonitorInPropagator::header = fsp_monitorIn;
+OZ_CFunHeader MonitorInPropagator::header = fsp_monitorIn;
 
 OZ_Return MonitorInPropagator::propagate(void)
 {

@@ -28,7 +28,7 @@ class ExtendedExpect : public OZ_Expect
 class SumACProp : public OZ_Propagator
 {
  private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
   int c,size;
   OZ_Term *_a,*_x,_d;
  public:
@@ -68,7 +68,7 @@ class SumACProp : public OZ_Propagator
      }
     return OZ_cons(_a_list, OZ_cons(_x_list, OZ_cons(_d, OZ_nil())));
    }
-  virtual OZ_CFun getHeaderFunc(void) const {return spawner;}
+  virtual OZ_CFunHeader * getHeader(void) const {return &spawner;}
   friend int simplify(int*,int*,OZ_Term*,OZ_Term,int*);
 };
 
@@ -287,13 +287,7 @@ OZ_C_proc_begin(fdtest_sumac, 3)
 }
 OZ_C_proc_end
 
-OZ_CFun SumACProp::spawner = fdtest_sumac;
-
-
-
-
-
-
+OZ_CFunHeader SumACProp::spawner = fdtest_sumac;
 
 //-----------------------------------------------------------------------------
 
@@ -310,7 +304,7 @@ OZ_C_proc_begin(fdtest_spawnLess, 2)
 }
 OZ_C_proc_end
 
-OZ_CFun SpawnLess::spawner = fdtest_spawnLess;
+OZ_CFunHeader SpawnLess::spawner = fdtest_spawnLess;
 
 OZ_Return SpawnLess::propagate(void) 
 {
@@ -369,7 +363,7 @@ OZ_C_proc_begin(fdtest_counter, 2)
 }
 OZ_C_proc_end
 
-OZ_CFun Counter::spawner = fdtest_counter;
+OZ_CFunHeader Counter::spawner = fdtest_counter;
 
 OZ_Return Counter::propagate(void) 
 {
@@ -461,7 +455,7 @@ void FirstFail::updateHeapRefs(OZ_Boolean)
   reg_fds = new_reg_fds;
 }
 
-OZ_CFun FirstFail::spawner = fdtest_firstFail;
+OZ_CFunHeader FirstFail::spawner = fdtest_firstFail;
 
 OZ_Return FirstFail::propagate(void) 
 {
@@ -540,7 +534,7 @@ failure:
 
 class DPlusPropagator : public OZ_Propagator {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
   OZ_Term _x, _y, _z;
 public:
   DPlusPropagator(OZ_Term a, OZ_Term b, OZ_Term c) 
@@ -556,7 +550,7 @@ public:
   virtual OZ_Term getParameters(void) const {
     return OZ_cons(_x, OZ_cons(_y, OZ_cons(_z, OZ_nil())));
   }
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 
@@ -576,7 +570,7 @@ OZ_C_proc_begin(fdtest_plus, 3)
 }
 OZ_C_proc_end
 
-OZ_CFun DPlusPropagator::spawner = fdtest_plus;
+OZ_CFunHeader DPlusPropagator::spawner = fdtest_plus;
 
 OZ_Return DPlusPropagator::propagate(void)
 {

@@ -16,15 +16,15 @@
 
 class IsInPropagator : public Propagator_S_I_D {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   IsInPropagator(OZ_Term v, OZ_Term i, OZ_Term b)
     : Propagator_S_I_D(v, i, b) { }
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFun getHeaderFunc(void) const {
-    return spawner;
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &spawner;
   }
 };
 

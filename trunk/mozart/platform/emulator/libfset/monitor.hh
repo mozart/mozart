@@ -38,7 +38,7 @@ class MonitorInPropagator : public OZ_Propagator {
 private:
   BitVector _in_sofar;
   OZ_Term _fsetvar, _stream;
-  static OZ_CFun header;
+  static OZ_CFunHeader header;
 public:
   MonitorInPropagator(OZ_Term fsetvar, OZ_Term stream) 
     : _fsetvar(fsetvar) , _stream(stream) { }
@@ -51,7 +51,7 @@ public:
   virtual OZ_Term getParameters(void) const { 
     return OZ_cons(_fsetvar, OZ_cons(_stream, OZ_nil()));
   }
-  virtual OZ_CFun getHeaderFunc(void) const { return header; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &header; }
 };
 
 #endif /* __MONITOR_HH__ */

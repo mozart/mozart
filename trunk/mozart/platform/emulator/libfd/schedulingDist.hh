@@ -49,7 +49,7 @@ private:
 
   OZ_Term stream;
 
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   TaskIntervalsProof(OZ_Term, OZ_Term, OZ_Term, OZ_Term, int);
   ~TaskIntervalsProof(void);
@@ -57,7 +57,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean);
   virtual OZ_Return propagate(void); 
   virtual OZ_Term getParameters(void) const { RETURN_LIST1(stream); }
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 //////////
@@ -89,14 +89,14 @@ private:
 
   OZ_Term stream;
 
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   FirstsLasts(OZ_Term, OZ_Term, OZ_Term, OZ_Term, int);
   virtual size_t sizeOf(void) { return sizeof(FirstsLasts); }
   virtual void updateHeapRefs(OZ_Boolean);
   virtual OZ_Return propagate(void); 
   virtual OZ_Term getParameters(void) const { RETURN_LIST1(stream); }
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 

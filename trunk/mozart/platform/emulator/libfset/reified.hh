@@ -17,15 +17,15 @@
 
 class IncludeRPropagator : public Propagator_S_D_D {
 private:
-  static OZ_CFun header;
+  static OZ_CFunHeader header;
 public:
   IncludeRPropagator(OZ_Term s, OZ_Term d, OZ_Term r)
     : Propagator_S_D_D(s, d, r) {}
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFun getHeaderFunc(void) const {
-    return header;
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &header;
   }
 };
 
@@ -33,15 +33,15 @@ public:
 
 class IsInRPropagator : public Propagator_S_I_D {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   IsInRPropagator(OZ_Term v, OZ_Term i, OZ_Term b)
     : Propagator_S_I_D(v, i, b) { }
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFun getHeaderFunc(void) const {
-    return spawner;
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &spawner;
   }
 };
 
@@ -50,7 +50,7 @@ public:
 
 class BoundsPropagator : public OZ_Propagator {
 private:
-  static OZ_CFun header;
+  static OZ_CFunHeader header;
 
   int _s_ub_card, _d_ub, _s_ub;
   OZ_Term _s, _d, _r;
@@ -61,8 +61,8 @@ public:
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFun getHeaderFunc(void) const {
-    return header;
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &header;
   }
   virtual size_t sizeOf(void) {
     return sizeof(BoundsPropagator);
