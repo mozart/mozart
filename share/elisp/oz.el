@@ -301,7 +301,7 @@ starts the emulator under gdb")
      )
     ("Comment"
      ("Comment Region"   . oz-comment-region)
-     ("Uncomment Region" . oz-un-commment-region)
+     ("Uncomment Region" . oz-un-comment-region)
      )
     ("Browse" 
      ("Region" . oz-feed-region-browse)
