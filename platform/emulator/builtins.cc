@@ -1670,6 +1670,9 @@ OZ_C_proc_begin(BImergeSpace, 2) {
   
   TaggedRef result = space->getSolveActor()->getResult();
 
+  if (result == makeTaggedNULL())
+    return FAILED;
+
   if (OZ_isVariable(result) && OZ_unify(result, AtomMerged) == FAILED)
     return FAILED;
 
@@ -2686,6 +2689,8 @@ OZ_C_proc_begin(BIthreadSetPriority,2)
   OZ_declareNonvarArg(1,atom_prio);
   int prio;
 
+  atom_prio = deref(atom_prio);
+
   if (!isAtom(atom_prio)) 
     goto type_goof;
     
@@ -2697,7 +2702,7 @@ OZ_C_proc_begin(BIthreadSetPriority,2)
     prio = HI_PRIORITY;
   } else {
   type_goof:
-    TypeErrorT(0,"Atom [low medium hight]");
+    TypeErrorT(0,"Atom [low medium high]");
   }
 
   if (th->isDeadThread()) return PROCEED;
