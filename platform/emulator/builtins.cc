@@ -4,6 +4,7 @@
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
+ *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -7131,12 +7132,10 @@ OZ_C_proc_begin(BIgetOPICompiler,1)
   OZ_declareArg(0,ret);
   OZ_Term obj = am.getOpiCompiler();
 
-  if (obj==makeTaggedNULL()) {
-    return oz_raise(E_ERROR,E_SYSTEM,"opiCompilerNotInstalled",1,
-                    oz_atom("getOPICompiler"));
-  }
-
-  return OZ_unify(ret,obj);
+  if (obj==makeTaggedNULL())
+    return OZ_unify(ret,NameFalse);
+  else
+    return OZ_unify(ret,obj);
 }
 OZ_C_proc_end
 
