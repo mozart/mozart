@@ -110,7 +110,7 @@ SolveActor::SolveActor(Board *bb)
 
 #ifdef CS_PROFILE
 TaggedRef SolveActor::getCloneDiff(void) {
-  TaggedRef l = nil();
+  TaggedRef l = oz_nil();
   
   if (copy_start && orig_start && (copy_size>0)) {
     int n = 0;
