@@ -313,13 +313,6 @@ void AM::init(int argc,char **argv)
 
   Thread *tt = oz_newRunnableThread();
 
-  //  if (denys) {
-  //    initFile = assemblyCodeFile = 0;
-  //    TaggedRef proc = oz_newVariable();
-  //    tt->pushCall(proc);
-  //    tt->pushCall(BI_load,oz_atom(url),proc);
-  //  }
-
   if (assemblyCodeFile) {
 
     OZ_CFun f = 0;
@@ -379,18 +372,29 @@ void AM::init(int argc,char **argv)
     TaggedRef functor   = oz_newVariable();
     TaggedRef procedure = oz_newVariable();
     TaggedRef export    = oz_newVariable();
+
+    // Construct import for functor:
+    extern TaggedRef AtomExport;      // value.cc
+    extern TaggedRef AtomManager;     // value.cc
+    extern TaggedRef AtomBoot;        // value.cc
+    extern TaggedRef BI_boot_manager; // value.cc builtins.cc
+
+    TaggedRef boot_module =
+      OZ_recordInit(AtomExport,
+                    oz_cons(oz_pair2(AtomManager,BI_boot_manager),oz_nil()));
+    TaggedRef boot_import =
+      OZ_recordInit(AtomExport,
+                    oz_cons(oz_pair2(AtomBoot,   boot_module),oz_nil()));
+
     extern TaggedRef AtomApply; // value.cc
     extern TaggedRef BI_dot;    // value.cc builtins.cc
+
     // Task3: execute functor's code
-    // argument should probably be import(builtin:BUILTIN)
-    // where BUILTIN would be a record of builtins
-    // but for the time being we simply used an empty record
-    // which is being ignored anyway -- we use AtomApply
-    // because it make no difference what it is.
-    // note that the export should be empty (but we dont care)
-    tt->pushCall(procedure,AtomApply,export);
+    tt->pushCall(procedure,boot_import,export);
+
     // Task2: lookup functor's code
     tt->pushCall(BI_dot,functor,AtomApply,procedure);
+
     // Task1: load functor
     tt->pushCall(BI_load,oz_atom(initFile),functor);
   }

@@ -5721,6 +5721,8 @@ Builtin *BIinit()
 
   BI_load     = makeTaggedConst(new Builtin("load",     2, 0, BIload,     OK));
   BI_url_load = makeTaggedConst(new Builtin("URL.load", 1, 1, BIurl_load, OK));
+  BI_boot_manager =
+    makeTaggedConst(new Builtin("BootManager", 1, 1, BIBootManager, OK));
 
 
   bi_raise = builtinTab.find("raise");
