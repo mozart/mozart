@@ -132,16 +132,19 @@ Site *mySite;
 Site* unmarshalSite(MsgBuffer *buf)
 {
   Site tryS;
-  Site *s;
 
   //
-  MarshalTag tag = (MarshalTag) buf->get();
-  Assert(tag == DIF_PASSIVE || tag == DIF_SITE_PERM);
-  tryS.unmarshalBaseSite(buf);
+  int major, minor;
+  buf->getVersion(&major,&minor);
+  if (minor==0) {
+    MarshalTag tag = (MarshalTag) buf->get();
+    Assert(tag == DIF_PASSIVE || tag == DIF_SITE_PERM);
+  }
+  tryS.unmarshalBaseSiteGName(buf);
 
   //
   int hvalue = tryS.hash();
-  s = siteTable->find(&tryS, hvalue);
+  Site *s = siteTable->find(&tryS, hvalue);
   if (!s) {
     s = new Site(&tryS);
     siteTable->insert(s, hvalue);
