@@ -231,6 +231,26 @@ void PrTabEntry::gCollectPrTabEntries(void) {
 }
 
 inline
+void PrTabEntry::gCollectDispose(void) {
+  // Must be called before gCollectCodeBlocks!
+  PrTabEntry * pte = allPrTabEntries;
+  allPrTabEntries = NULL;
+
+  while (pte) {
+    PrTabEntry * n = pte->next;
+
+    if (pte->getPC() == NOCODE || pte->getCodeBlock()->isReferenced()) {
+      pte->next = allPrTabEntries;
+      allPrTabEntries = pte;
+    } else {
+      delete pte;
+    }
+
+    pte = n;
+  }
+}
+
+inline
 void AbstractionEntry::freeUnusedEntries() {
   AbstractionEntry *aux = allEntries;
   allEntries = NULL;
@@ -289,7 +309,6 @@ void CodeArea::gCollectCodeBlock(void) {
     gclist->collectGClist();
   }
 }
-
 
 inline
 void CodeArea::gCollectCodeAreaStart(void) {
@@ -451,6 +470,8 @@ void AM::gCollect(int msgLevel) {
 
   GCDBG_EXITSPACE;
 
+  if (!codeGCgeneration)
+    PrTabEntry::gCollectDispose();
   CodeArea::gCollectCollectCodeBlocks();
   AbstractionEntry::freeUnusedEntries();
 
