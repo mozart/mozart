@@ -40,6 +40,8 @@ OZL		= @OZL@
 EMACS		= emacs
 OZENGINE	= @OZENGINE@
 
+CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
+
 FUNCTORS = \
 	SGML.ozf AuthorDB.ozf BibliographyDB.ozf Indexer.ozf Fontifier.ozf \
 	CrossReferencer.ozf Thumbnails.ozf LaTeXToGIF.ozf PostScriptToGIF.ozf \
@@ -61,7 +63,8 @@ depend:
 bootquick: boot-all
 boot-quick: boot-all
 
-include $(SRCTOP)/share/Makefile.boot
+# make it possible to configuree and build just the doc
+-include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 
@@ -69,15 +72,10 @@ Makefile: Makefile.in config.status
 	./config.status
 
 ozdoc: $(FUNCTORS)
-	$(OZL) -z 9 -x Main.ozf -o $@
+	$(OZL) -z 9 -x $(OZEXECFILE) Main.ozf -o $@
 
 %.ozf: %.oz
-	$(OZC) $(OZCFLAGS) -c $< -o $@
-
-%.elc: %.el
-	-rm -f $@
-	$(EMACS) -q -batch -f batch-byte-compile $<
-	if [ $<c != $@ ]; then mv $<c $@; fi
+	$(OZC) $(OZCFLAGS) -c $(shell $(CYGPATH) "$<") -o $@
 
 install: $(BINDIR) $(BINFILES)
 install: $(DOCDIR) $(DOCBINFILES) $(DOCFILES)

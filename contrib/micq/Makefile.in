@@ -4,13 +4,14 @@ SRCTOP		= @SRCTOP@
 PREFIX		= @prefix@
 SRCDIR          = @srcdir@
 VPATH           = @srcdir@
-OZENGINE	= @ozengine@
+OZENGINE	= @OZE@
 PLATFORM	= @PLATFORM@
 HOMEURL		= @HOMEURL@
 LIB_DIR		= $(PREFIX)/contrib/micq
 DEMO_DIR	= $(PREFIX)/doc/demo/applets
 OZC		= @OZC@ 
-COMPILE	        = $(OZC) -b $(BUILDTOP)/contrib/micq/
+CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
+COMPILE	        = $(OZC) -b $(shell $(CYGPATH) $(BUILDTOP)/contrib/micq/)
 OZL		= @OZL@
 INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
@@ -40,84 +41,71 @@ BMETH = $(BUILDTOP)/contrib/micq/methods.ozf
 SMETH = $(SRCDIR)/methods.oz
 
 
-$(GIFCONV) : Gif2Functor.oz GifToBase64.ozf
-	$(COMPILE) -x $< -o $@
+include $(BUILDTOP)/share/Makefile.boot
 
-GifToBase64.ozf : GifToBase64.oz
-	$(COMPILE) -c $< -o $@	
+$(GIFCONV): Gif2Functor.oz GifToBase64.ozf
+	$(COMPILE) -c $(shell $(CYGPATH) "$<") -o $@
 
 Logo_gif.ozf : $(ICONDIR)/logo.gif
-	$(MAKEGIF) $(ICONDIR)/logo.gif -o Logo_gif.ozf
+	$(MAKEGIF) $(shell $(CYGPATH) "$<") -o Logo_gif.ozf
 
 Letter_gif.ozf : $(ICONDIR)/letter.gif
-	$(MAKEGIF) $(ICONDIR)/letter.gif -o Letter_gif.ozf
+	$(MAKEGIF) $(shell $(CYGPATH) "$<") -o Letter_gif.ozf
 
 Away_gif.ozf : $(ICONDIR)/away_t.gif
-	$(MAKEGIF) $(ICONDIR)/away_t.gif -o Away_gif.ozf
+	$(MAKEGIF) $(shell $(CYGPATH) "$<") -o Away_gif.ozf
 
 Online_gif.ozf : $(ICONDIR)/online_t.gif
-	$(MAKEGIF) $(ICONDIR)/online_t.gif -o Online_gif.ozf
+	$(MAKEGIF) $(shell $(CYGPATH) "$<") -o Online_gif.ozf
 
 Offline_gif.ozf : $(ICONDIR)/offline_t.gif
-	$(MAKEGIF) $(ICONDIR)/offline_t.gif -o Offline_gif.ozf
+	$(MAKEGIF) $(shell $(CYGPATH) "$<") -o Offline_gif.ozf
 
 Eyes_gif.ozf : $(ICONDIR)/eyes_t.gif
-	$(MAKEGIF) $(ICONDIR)/eyes_t.gif -o Eyes_gif.ozf
+	$(MAKEGIF) $(shell $(CYGPATH) "$<") -o Eyes_gif.ozf
 
 Powered_by_oz_gif.ozf : $(ICONDIR)/powered-by-oz-100.gif
-	$(MAKEGIF) $(ICONDIR)/powered-by-oz-100.gif -o Powered_by_oz_gif.ozf
+	$(MAKEGIF) $(shell $(CYGPATH) "$<") -o Powered_by_oz_gif.ozf
 
-server.oza: micq
+SERVER_FUNCTORS = \
+	server.ozf database.ozf mobility.ozf log.ozf sysadm.ozf \
+	addapplicationgui.ozf editapplicationgui.ozf
+CLIENT_FUNCTORS = \
+	client.ozf messagedisplay.ozf manager.ozf mobility.ozf \
+	newaccountgui.ozf clientgui.ozf MozartPower.ozf FaqEdit.ozf \
+	popup.ozf draganddrop.ozf messagegui.ozf newfriendsgui.ozf \
+	editaccount.ozf addapplicationgui.ozf dialoggui.ozf \
+	configureclient.ozf editapplicationgui.ozf messagedisplay.ozf \
+	ScrollFrame.ozf BrowserControl.ozf Logo_gif.ozf Letter_gif.ozf \
+	Away_gif.ozf Online_gif.ozf Offline_gif.ozf Eyes_gif.ozf \
+	Powered_by_oz_gif.ozf
+
+micq: startserver.oz defaultsettings.ozf
+	$(COMPILE) -x $(OZEXECFILE) $(shell $(CYGPATH) "$<") -o $@
+client: startclient.oz defaultsettings.ozf
+	$(COMPILE) -x $(OZEXECFILE) $(shell $(CYGPATH) "$<") -o $@
+
+server.oza: micq $(SERVER_FUNCTORS)
 	$(OZL) -z 9 $< -o $@
-client.oza: client
+client.oza: client $(CLIENT_FUNCTORS)
 	$(OZL) -z 9 $< -o $@
-
-micq: startserver.oz server.ozf 
-	$(COMPILE) -x $< -o $@
-
-client: startclient.oz client.ozf 
-	$(COMPILE) -x $< -o $@
 
 %.ozf: %.oz
-	$(COMPILE) -c $< -o $@
+	$(COMPILE) -c $(shell $(CYGPATH) "$<") -o $@
 
-server.ozf: server.oz $(BMETH) defaultsettings.ozf database.ozf mobility.ozf newaccountgui.ozf \
-	log.ozf  sysadm.ozf
-	$(COMPILE) -c $< -o $@
+MozartPower.ozf: Powered_by_oz_gif.ozf
 
-FaqEdit.ozf : FaqEdit.oz
-	$(COMPILE) -c  $< -o $@
-
-ScrollFrame.ozf : ScrollFrame.oz
-	$(COMPILE) -c  $< -o $@
-
-MozartPower.ozf : MozartPower.oz Powered_by_oz_gif.ozf
-	$(COMPILE) -c $< -o $@
-
-addapplicationgui.ozf: addapplicationgui.oz $(BMETH)
-	$(COMPILE) -c $< -o $@
-editapplicationgui.ozf: editapplicationgui.oz $(BMETH)
-	$(COMPILE) -c $< -o $@
-editaccount.ozf: editaccount.oz $(BMETH)
-	$(COMPILE) -c $< -o $@
-newaccountgui.ozf: newaccountgui.oz $(BMETH)
-	$(COMPILE) -c $< -o $@
-newfriendsgui.ozf: newfriendsgui.oz $(BMETH)
-	$(COMPILE) -c $< -o $@
-sysadm.ozf: sysadm.oz $(BMETH) addapplicationgui.ozf editapplicationgui.ozf
-	$(COMPILE) -c $< -o $@
-client.ozf : client.oz $(BMETH) clientgui.ozf newfriendsgui.ozf \
-	defaultsettings.ozf dialoggui.ozf mobility.ozf FaqEdit.ozf 
-	$(COMPILE) -c $< -o $@
-clientgui.ozf : clientgui.oz $(BMETH) messagedisplay.ozf manager.ozf \
-	defaultsettings.ozf popup.ozf messagegui.ozf editaccount.ozf \
-	draganddrop.ozf addapplicationgui.ozf configureclient.ozf \
-	editapplicationgui.ozf ScrollFrame.ozf MozartPower.ozf
-	$(COMPILE) -c $< -o $@
-messagegui.ozf : messagegui.oz BrowserControl.ozf popup.ozf
-	$(COMPILE) -c $< -o $@
-BrowserControl.ozf : BrowserControl.oz
-	$(COMPILE) -c $< -o $@
+FaqEdit.ozf: $(BMETH)
+addapplicationgui.ozf: $(BMETH)
+client.ozf: $(BMETH)
+clientgui.ozf: $(BMETH)
+editaccount.ozf: $(BMETH)
+editapplicationgui.ozf: $(BMETH)
+faq.ozf: $(BMETH) defaultsettings.ozf
+newaccountgui.ozf: $(BMETH)
+newfriendsgui.ozf: $(BMETH)
+server.ozf: $(BMETH)
+sysadm.ozf: $(BMETH)
 
 $(BMETH): methods.ozf.orig
 	  cp $< $@
@@ -127,8 +115,6 @@ clean veryclean:
 
 distclean: veryclean
 	-rm -f Makefile config.*
-
-include $(SRCTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 

@@ -1234,6 +1234,63 @@ echo "$ac_t""$oz_cv_build_date" 1>&6
   OZBUILDDATE=$oz_cv_build_date;
   
   
+  
+  echo $ac_n "checking for OZLOADSEP""... $ac_c" 1>&6
+echo "configure:1240: checking for OZLOADSEP" >&5
+if eval "test \"`echo '$''{'oz_cv_OZLOADSEP'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  
+    case $PLATFORM in
+    win32*) oz_cv_OZLOADSEP=';'
+    ;;
+    *) oz_cv_OZLOADSEP=':'
+    ;;
+    esac
+  
+fi
+
+echo "$ac_t""$oz_cv_OZLOADSEP" 1>&6
+  OZLOADSEP="$oz_cv_OZLOADSEP";
+  
+
+  
+  echo $ac_n "checking for OZLOADWIN""... $ac_c" 1>&6
+echo "configure:1260: checking for OZLOADWIN" >&5
+if eval "test \"`echo '$''{'oz_cv_OZLOADWIN'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  
+
+  case $PLATFORM in
+    win32*)
+	oztmp=`pwd`
+	oztmp=`cygpath -a -w "$tmp"`
+	oztmp=`expr "$oztmp" : "\(.\):"`
+	if test -n "$oztmp"; then
+	  oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
+	  oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
+	  oz_cv_OZLOADWIN="%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
+	fi
+	oztmp=`cygpath -a -w "$srcdir"`
+	oztmp=`expr "$oztmp" : "\(.\):"`
+	if test -n "$oztmp"; then
+	  oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
+	  oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
+	  oz_cv_OZLOADWIN="${OZLOADWIN}%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
+	fi
+	;;
+    *) oz_cv_OZLOADWIN=
+	;;
+  esac
+
+  
+fi
+
+echo "$ac_t""$oz_cv_OZLOADWIN" 1>&6
+  OZLOADWIN="$oz_cv_OZLOADWIN"
+  
+
 
 
 CONTRIBDIRS="tk ap"
@@ -1241,7 +1298,7 @@ CONTRIBDIRS="tk ap"
 
 
 echo $ac_n "checking for --enable-contrib-gdbm""... $ac_c" 1>&6
-echo "configure:1245: checking for --enable-contrib-gdbm" >&5
+echo "configure:1302: checking for --enable-contrib-gdbm" >&5
 # Check whether --enable-contrib-gdbm or --disable-contrib-gdbm was given.
 if test "${enable_contrib_gdbm+set}" = set; then
   enableval="$enable_contrib_gdbm"
@@ -1258,7 +1315,7 @@ echo "$ac_t""$oz_cv_enable_contrib_gdbm" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-regex""... $ac_c" 1>&6
-echo "configure:1262: checking for --enable-contrib-regex" >&5
+echo "configure:1319: checking for --enable-contrib-regex" >&5
 # Check whether --enable-contrib-regex or --disable-contrib-regex was given.
 if test "${enable_contrib_regex+set}" = set; then
   enableval="$enable_contrib_regex"
@@ -1275,7 +1332,7 @@ echo "$ac_t""$oz_cv_enable_contrib_regex" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-doc""... $ac_c" 1>&6
-echo "configure:1279: checking for --enable-contrib-doc" >&5
+echo "configure:1336: checking for --enable-contrib-doc" >&5
 # Check whether --enable-contrib-doc or --disable-contrib-doc was given.
 if test "${enable_contrib_doc+set}" = set; then
   enableval="$enable_contrib_doc"
@@ -1292,7 +1349,7 @@ echo "$ac_t""$oz_cv_enable_contrib_doc" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-os""... $ac_c" 1>&6
-echo "configure:1296: checking for --enable-contrib-os" >&5
+echo "configure:1353: checking for --enable-contrib-os" >&5
 # Check whether --enable-contrib-os or --disable-contrib-os was given.
 if test "${enable_contrib_os+set}" = set; then
   enableval="$enable_contrib_os"
@@ -1309,7 +1366,7 @@ echo "$ac_t""$oz_cv_enable_contrib_os" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-micq""... $ac_c" 1>&6
-echo "configure:1313: checking for --enable-contrib-micq" >&5
+echo "configure:1370: checking for --enable-contrib-micq" >&5
 # Check whether --enable-contrib-micq or --disable-contrib-micq was given.
 if test "${enable_contrib_micq+set}" = set; then
   enableval="$enable_contrib_micq"
@@ -1330,7 +1387,7 @@ subdirs="$CONTRIBDIRS"
 
 
 echo $ac_n "checking for --enable-contrib-lp""... $ac_c" 1>&6
-echo "configure:1334: checking for --enable-contrib-lp" >&5
+echo "configure:1391: checking for --enable-contrib-lp" >&5
 # Check whether --enable-contrib-lp or --disable-contrib-lp was given.
 if test "${enable_contrib_lp+set}" = set; then
   enableval="$enable_contrib_lp"
@@ -1347,7 +1404,7 @@ echo "$ac_t""$oz_cv_enable_contrib_lp" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-ri""... $ac_c" 1>&6
-echo "configure:1351: checking for --enable-contrib-ri" >&5
+echo "configure:1408: checking for --enable-contrib-ri" >&5
 # Check whether --enable-contrib-ri or --disable-contrib-ri was given.
 if test "${enable_contrib_ri+set}" = set; then
   enableval="$enable_contrib_ri"
@@ -1364,7 +1421,7 @@ echo "$ac_t""$oz_cv_enable_contrib_ri" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-davinci""... $ac_c" 1>&6
-echo "configure:1368: checking for --enable-contrib-davinci" >&5
+echo "configure:1425: checking for --enable-contrib-davinci" >&5
 # Check whether --enable-contrib-davinci or --disable-contrib-davinci was given.
 if test "${enable_contrib_davinci+set}" = set; then
   enableval="$enable_contrib_davinci"
@@ -1381,7 +1438,7 @@ echo "$ac_t""$oz_cv_enable_contrib_davinci" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-reflect""... $ac_c" 1>&6
-echo "configure:1385: checking for --enable-contrib-reflect" >&5
+echo "configure:1442: checking for --enable-contrib-reflect" >&5
 # Check whether --enable-contrib-reflect or --disable-contrib-reflect was given.
 if test "${enable_contrib_reflect+set}" = set; then
   enableval="$enable_contrib_reflect"
@@ -1398,7 +1455,7 @@ echo "$ac_t""$oz_cv_enable_contrib_reflect" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-investigator""... $ac_c" 1>&6
-echo "configure:1402: checking for --enable-contrib-investigator" >&5
+echo "configure:1459: checking for --enable-contrib-investigator" >&5
 # Check whether --enable-contrib-investigator or --disable-contrib-investigator was given.
 if test "${enable_contrib_investigator+set}" = set; then
   enableval="$enable_contrib_investigator"
@@ -1415,7 +1472,7 @@ echo "$ac_t""$oz_cv_enable_contrib_investigator" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-fcp""... $ac_c" 1>&6
-echo "configure:1419: checking for --enable-contrib-fcp" >&5
+echo "configure:1476: checking for --enable-contrib-fcp" >&5
 # Check whether --enable-contrib-fcp or --disable-contrib-fcp was given.
 if test "${enable_contrib_fcp+set}" = set; then
   enableval="$enable_contrib_fcp"
@@ -1432,7 +1489,7 @@ echo "$ac_t""$oz_cv_enable_contrib_fcp" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-psql""... $ac_c" 1>&6
-echo "configure:1436: checking for --enable-contrib-psql" >&5
+echo "configure:1493: checking for --enable-contrib-psql" >&5
 # Check whether --enable-contrib-psql or --disable-contrib-psql was given.
 if test "${enable_contrib_psql+set}" = set; then
   enableval="$enable_contrib_psql"
@@ -1449,7 +1506,7 @@ echo "$ac_t""$oz_cv_enable_contrib_psql" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-gtk""... $ac_c" 1>&6
-echo "configure:1453: checking for --enable-contrib-gtk" >&5
+echo "configure:1510: checking for --enable-contrib-gtk" >&5
 # Check whether --enable-contrib-gtk or --disable-contrib-gtk was given.
 if test "${enable_contrib_gtk+set}" = set; then
   enableval="$enable_contrib_gtk"
@@ -1466,7 +1523,7 @@ echo "$ac_t""$oz_cv_enable_contrib_gtk" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-compat""... $ac_c" 1>&6
-echo "configure:1470: checking for --enable-contrib-compat" >&5
+echo "configure:1527: checking for --enable-contrib-compat" >&5
 # Check whether --enable-contrib-compat or --disable-contrib-compat was given.
 if test "${enable_contrib_compat+set}" = set; then
   enableval="$enable_contrib_compat"
@@ -1483,7 +1540,7 @@ echo "$ac_t""$oz_cv_enable_contrib_compat" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-directory""... $ac_c" 1>&6
-echo "configure:1487: checking for --enable-contrib-directory" >&5
+echo "configure:1544: checking for --enable-contrib-directory" >&5
 # Check whether --enable-contrib-directory or --disable-contrib-directory was given.
 if test "${enable_contrib_directory+set}" = set; then
   enableval="$enable_contrib_directory"
@@ -1667,6 +1724,8 @@ s%@OZPLATFORM@%$OZPLATFORM%g
 s%@OZTOOL@%$OZTOOL%g
 s%@OZBUILDDATE@%$OZBUILDDATE%g
 s%@PLATFORM@%$PLATFORM%g
+s%@OZLOADSEP@%$OZLOADSEP%g
+s%@OZLOADWIN@%$OZLOADWIN%g
 s%@CONTRIBDIRS@%$CONTRIBDIRS%g
 s%@subdirs@%$subdirs%g
 

@@ -43,6 +43,8 @@ OZC		= @OZC@
 OZLFLAGS        = 
 OZL		= @OZL@
 
+CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
+
 COMPILE         = $(OZC) $(OZCFLAGS) -b $(BUILDDIR)/ -c
 ZCOMPILE        = $(COMPILE) -z 9
 
@@ -54,7 +56,7 @@ FUNCTORS = \
 all: $(FUNCTORS)
 
 %.ozf: fd/graphics/%.oz
-	$(ZCOMPILE) $< -o $@ 
+	$(ZCOMPILE) $(shell $(CYGPATH) "$<") -o $@ 
 
 
 EXFUNCTORS = \
@@ -128,7 +130,7 @@ Makefile: Makefile.in ../config.status
 ../config.status: ../configure
 	cd .. && ./config.status --recheck
 
-include $(SRCDIR)/../Makefile.boot
+include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap:
 	$(MAKE) boot-all
