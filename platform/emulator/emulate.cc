@@ -52,7 +52,7 @@ int canOptimizeFailure(AM *e, Thread *tt)
   if (tt->hasCatchFlag() || e->isToplevel()) { // catch failure
     if (tt->isSuspended()) {
       tt->pushCFun(BIfail,0,0,NO);
-      tt->suspThreadToRunnable();
+      e->suspThreadToRunnable(tt);
       e->scheduleThread(tt);
     } else {
       printf("WEIRD: failure detected twice");
@@ -1044,9 +1044,9 @@ LBLstart:
 
   // Propagator
   //    unsigned int starttime = osUserTime();
-  switch (CTT->runPropagator()) {
+  switch (e->runPropagator(CTT)) {
   case SLEEP:
-    CTT->suspendPropagator ();
+    e->suspendPropagator(CTT);
     if (e->currentSolveBoard != (Board *) NULL) {
       e->decSolveThreads (e->currentSolveBoard);
       //  but it's still "in solve";
@@ -1057,7 +1057,7 @@ LBLstart:
     goto LBLstart;
 
   case SCHEDULED:
-    CTT->scheduledPropagator ();
+    e->scheduledPropagator(CTT);
     if (e->currentSolveBoard != (Board *) NULL) {
       e->decSolveThreads (e->currentSolveBoard);
       //  but it's still "in solve";
@@ -1136,7 +1136,7 @@ LBLterminateThread:
 
     CBB->decSuspCount();
 
-    CTT->disposeRunnableThread();
+    e->disposeRunnableThread(CTT);
     CTT = (Thread *) NULL;
 
     // fall through to checkEntailmentAndStability
@@ -1272,7 +1272,7 @@ LBLdiscardThread:
         e->decSolveThreads (tmpBB);
       }
     }
-    CTT->disposeRunnableThread();
+    e->disposeRunnableThread(CTT);
     CTT = (Thread *) NULL;
 
     goto LBLstart;
@@ -3021,14 +3021,14 @@ LBLdispatcher:
 
          Assert(!thr->isDeadThread());
 
-         OZ_Return r = thr->runPropagator();
+         OZ_Return r = e->runPropagator(thr);
 
          if (r == SLEEP) {
-           thr->suspendPropagator();
+           e->suspendPropagator(thr);
          } else if (r == PROCEED) {
-           thr->closeDonePropagator();
+           e->closeDonePropagator(thr);
          } else if (r == FAILED) {
-           thr->closeDonePropagator();
+           e->closeDonePropagator(thr);
            CTT = backup_currentThread;
 #ifdef PROP_TIME
            ozstat.timeForPropagation.incf(osUserTime()-starttime);
@@ -3038,7 +3038,7 @@ LBLdispatcher:
            goto LBLfailure; // top-level failure not possible
          } else {
            Assert(r == SCHEDULED);
-           thr->scheduledPropagator();
+           e->scheduledPropagator(thr);
          }
        }
 
@@ -3333,7 +3333,7 @@ LBLfailure:
           ts->pushCont(aa->getElsePC(),
                        tmpCont->getY(), tmpCont->getG());
           if (tmpCont->getX()) ts->pushX(tmpCont->getX());
-          tt->suspThreadToRunnable();
+          e->suspThreadToRunnable(tt);
           e->scheduleThread(tt);
         }
       }
@@ -3347,7 +3347,7 @@ LBLfailure:
 #endif
 
   e->decSolveThreads(CBB);
-  CTT->disposeRunnableThread();
+  e->disposeRunnableThread(CTT);
   CTT = 0;
 
   goto LBLstart;

@@ -15,6 +15,7 @@
 #endif
 
 #include "cpbag.hh"
+#include "cont.hh"
 
 // ------------------------------------------------------------------------
 //  all 'proper' actors;
@@ -29,11 +30,12 @@ enum ActorFlags {
   Ac_Ground     = 0x20  // in disjunction with Ac_Solve
 };
 
-class Actor : public ConstTerm {
+class Actor {
 public:
 protected:
   int flags;
   Board *board;
+  int gcField;    // mm2: hack: flags and board seem to be needed for copying?
 public:
   Actor(); // fake for compiler
   Actor(Actor &); // fake for compiler
@@ -41,15 +43,17 @@ public:
 
 protected:
   Actor(int typ,Board *bb)
-    : ConstTerm(Co_Actor),board(bb)
+    : board(bb)
   {
     flags = typ;
+    gcField = 0;
   }
 
 public:
   USEHEAPMEMORY;
   Actor *gcActor();
   void gcRecurse(void);
+  int32 *getGCField() { return (int32*) &gcField; }
   OZPRINT;
   OZPRINTLONG;
 

@@ -251,6 +251,13 @@ public:
   int isSetSFlag()                { return statusReg; }
 
   Bool debugmode() { return isSetSFlag(DebugMode); }
+  int newId() {
+    return ++lastThreadID % MAX_ID;
+  }
+  void checkDebug(Thread *tt) {
+    if (debugmode()) checkDebugOutline(tt);
+  }
+  void checkDebugOutline(Thread *tt);
 
   void checkStatus(); // in emulate.cc
 
@@ -279,12 +286,92 @@ public:
   Bool isNotPreemtiveScheduling(void);
 
   INLINE RunnableThreadBody* allocateBody();
+  INLINE Thread *newThreadInternal(int prio, Board *bb);
   INLINE Thread *mkRunnableThread(int prio, Board *bb);
   INLINE Thread *mkRunnableThreadOPT(int prio, Board *bb);
   Thread *mkLTQ(Board *bb, int prio, SolveActor * sa);
   Thread *mkWakeupThread(Board *bb);
   Thread *mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
   INLINE Thread *mkSuspendedThread(Board *bb, int prio);
+
+  INLINE void suspThreadToRunnable(Thread *tt);
+  INLINE void wakeupToRunnable(Thread *tt);
+  INLINE void propagatorToRunnable(Thread *tt);
+  INLINE void updateSolveBoardPropagatorToRunnable(Thread *tt);
+
+  // wake up cconts and board conts
+  INLINE Bool wakeUp(Thread *tt,Board *home, PropCaller calledBy);
+  INLINE Bool wakeUpPropagator(Thread *tt, Board *home,
+                        PropCaller calledBy = pc_propagator);
+  INLINE Bool wakeUpBoard(Thread *tt, Board *home);
+  INLINE Bool wakeUpThread(Thread *tt, Board *home);
+  INLINE OZ_Return runPropagator(Thread *tt);
+
+  //
+  //  Note: killing the suspended thread *might not* make any
+  // actor reducible OR reducibility must be tested somewhere else !!!
+  //
+  //  Invariant:
+  // There can be no threads which are suspended not in its
+  // "proper" home, i.e. not in the comp. space where it is started;
+  //
+  //  Note that this is true for wakeups, continuations etc. anyway,
+  // *and* this is also true for threads suspended in the sequential
+  // mode! The point is that whenever a thread tries to suspend in a
+  // deep guard, a new (local) thread is created which carries the
+  // rest of the guard (Hi, Michael!);
+  //
+  //  Note also that these methods don't decrement suspCounters,
+  // thread counters or whatever because their home board might
+  // not exist at all - such things should be done outside!
+  INLINE void disposeSuspendedThread(Thread *tt);
+  //
+  //  It marks the thread as dead and disposes it;
+  INLINE void disposeRunnableThread(Thread *tt);
+  //
+  INLINE void disposeThread(Thread *tt);
+
+  //  Check all the solve actors above for stabily
+  // (and, of course, wake them up if needed);
+  INLINE void checkExtThread(Thread *tt);
+  INLINE void removeExtThread(Thread *tt);
+
+  void setExtThreadOutlined(Thread *tt, Board *varHome);
+
+  //  special allocator for thread's bodies;
+  INLINE void freeThreadBody(Thread *tt);
+
+  //
+  //  it asserts that the suspended thread is 'external' (see beneath);
+  void checkExtThreadOutlined(Thread *tt);
+  void removeExtThreadOutlined(Thread *tt);
+
+  //
+  //  (re-)Suspend a propagator again; (was: 'reviveCurrentTaskSusp');
+  //  It does not take into account 'solve threads', i.e. it must
+  // be done externally - if needed;
+  INLINE void suspendPropagator(Thread *tt);
+  INLINE void scheduledPropagator(Thread *tt);
+
+  //
+  //  Terminate a propagator thread which is (still) marked as runnable
+  // (was: 'killPropagatedCurrentTaskSusp' with some variations);
+  //
+  //  This might be used only from the local propagation queue,
+  // because it doesn't check for entaiment, stability, etc.
+  // Moreover, such threads are NOT counted in solve actors
+  // and are not marked as "inSolve" EVEN in the "running" state!
+  //
+  //  Philosophy (am i right, Tobias?):
+  // When some propagator returns 'PROCEED' and still has the
+  // 'runnable' flag set, then it's done.
+  INLINE void closeDonePropagator(Thread *tt);
+
+  INLINE void closeDonePropagatorCD(Thread *tt);
+  INLINE void closeDonePropagatorThreadCD(Thread *tt);
+
+  SuspList *installPropagators(SuspList *local_list, SuspList *glob_list,
+                               Board *glob_home);
 
   TaggedRef createNamedVariable(int regIndex, TaggedRef name);
   void handleToplevelBlocking();
@@ -294,7 +381,7 @@ public:
   void gc(int msgLevel);  // ###
   void doGC();
   // coping of trees (and terms);
-  Board* copyTree (Board* node, Bool *isGround);
+  Board* copyTree(Board* node, Bool *isGround);
 
   static int awakeIO(int fd, void *var);
   void awakeIOVar(TaggedRef var);
@@ -338,9 +425,9 @@ public:
                                  SuspList * suspList, PropCaller calledBy);
   BFlag isBetween(Board * to, Board * varHome);
   Bool  isBelow(Board *below, Board *above);
-  int incSolveThreads (Board *bb);
-  void decSolveThreads (Board *bb);
-  DebugCode (Bool isInSolveDebug (Board *bb);)
+  int incSolveThreads(Board *bb);
+  void decSolveThreads(Board *bb);
+  DebugCode(Bool isInSolveDebug(Board *bb);)
 
   void restartThread();
 
@@ -374,6 +461,7 @@ public:
 
 extern AM am;
 
+#include "cpi_heap.hh"
 #include "cpbag.hh"
 
 #include "actor.hh"

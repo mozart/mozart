@@ -14,10 +14,29 @@
 #pragma interface
 #endif
 
-SuspList * addSuspToList(SuspList * list, Thread * elem, Board * home);
+#define AddSuspToList0(List,Thread,Home)                \
+{                                                       \
+  if ((List) && ((List)->getElem() == Thread)) {        \
+  } else {                                              \
+    List = new SuspList(Thread, List);                  \
+    checkExtThread(Thread,Home);                        \
+  }                                                     \
+}
 
-#define AddSuspToList(List,Thread,Home) \
-   List = addSuspToList(List,Thread,Home)
+#ifdef DEBUG_STABLE
+#define AddSuspToList(List,Thread,Home)                         \
+{                                                               \
+  AddSuspToList0(List,Thread,Home);                             \
+                                                                \
+  if (board_constraints_thr != Thread) {                        \
+    board_constraints_thr = Thread;                             \
+    board_constraints = new SuspList(board_constraints_thr,     \
+                                     board_constraints);        \
+  }                                                             \
+}
+#else
+#define AddSuspToList(List,Thread,Home) AddSuspToList0(List,Thread,Home)
+#endif
 
 
 #define STORE_FLAG 1
@@ -36,14 +55,8 @@ public:
 
   void dispose(void) {
     suspList->disposeList();
-#ifdef DEBUG_CHECK
-    suspList = (SuspList*)-1;
-#else
     freeListDispose(this,sizeof(*this));
-#endif
   }
-
-  TaggedRef DBGmakeSuspList();
 
   // get home node without deref, for faster isLocal
   Board *getHome1() { return home; }

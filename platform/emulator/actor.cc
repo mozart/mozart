@@ -12,11 +12,6 @@
 #pragma implementation "actor.hh"
 #endif
 
-#include "tagged.hh"
-#include "value.hh"
-
-#include "cont.hh"
-#include "cpbag.hh"
 #include "actor.hh"
 #include "board.hh"
 

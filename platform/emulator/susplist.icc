@@ -19,6 +19,8 @@
 #endif
 #endif
 
+#include "thread.hh"
+
 //-----------------------------------------------------------------------------
 //                           class SuspList
 
@@ -30,12 +32,12 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
       SuspList *aux;
       for (aux = this; aux->getNext(); aux = aux->getNext()) {
 #ifdef DEBUG_CHECK
-        if ((aux->getElem ())->isLocalThread ())
+        if (aux->getElem()->isLocalThread())
           {cout << '&'; cout.flush();}
 #endif
-        (aux->getElem ())->unmarkLocalThread ();
+        aux->getElem()->unmarkLocalThread();
       }
-      (aux->getElem ())->unmarkLocalThread ();
+      aux->getElem()->unmarkLocalThread();
       aux->setNext(to_list);
       to_list = this;
     }

@@ -183,13 +183,21 @@ RunnableThreadBody* AM::allocateBody()
 }
 
 
+inline
+Thread *AM::newThreadInternal(int prio, Board *bb) {
+  Thread *th = new Thread(S_RTHREAD | T_runnable,prio,bb,newId());
+  th->setBody(allocateBody());
+  bb->incSuspCount();
+  checkDebug(th);
+  return th;
+}
+
 //
 //  Make a runnable thread with a task stack;
 inline
 Thread *AM::mkRunnableThread(int prio, Board *bb)
 {
-  Thread *th = new Thread(S_RTHREAD | T_runnable,prio,bb);
-  th->setBody(allocateBody());
+  Thread *th = newThreadInternal(prio,bb);
 
   int inSolve = incSolveThreads(bb);
   if (inSolve) {
@@ -203,9 +211,7 @@ Thread *AM::mkRunnableThread(int prio, Board *bb)
 inline
 Thread *AM::mkRunnableThreadOPT(int prio, Board *bb)
 {
-  Thread *th = new Thread(S_RTHREAD | T_runnable,prio,bb);
-  th->setBody(allocateBody());
-
+  Thread *th = newThreadInternal(prio,bb);
   Assert(bb==currentBoard || bb->getParent() == currentBoard);
   if (currentSolveBoard) {
     int inSolve=incSolveThreads(bb);
@@ -227,15 +233,20 @@ Thread *AM::mkRunnableThreadOPT(int prio, Board *bb)
 inline
 Thread *AM::mkWakeupThread(Board *bb)
 {
-  return new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb);
+  Thread *tt = new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb,newId());
+  bb->incSuspCount();
+  checkDebug(tt);
+  return tt;
 }
 
 //
 inline
 Thread *AM::mkPropagator(Board *bb, int prio, OZ_Propagator *pro)
 {
-  Thread * th = new Thread(S_PR_THR, prio, bb);
+  Thread * th = new Thread(S_PR_THR, prio, bb,newId());
   th->setInitialPropagator(pro);
+  bb->incSuspCount();
+  checkDebug(th);
 
   return th;
 }
@@ -244,10 +255,345 @@ Thread *AM::mkPropagator(Board *bb, int prio, OZ_Propagator *pro)
 inline
 Thread *AM::mkSuspendedThread(Board *bb, int prio)
 {
-  Thread *th = new Thread(S_RTHREAD,prio,bb);
+  Thread *th = new Thread(S_RTHREAD,prio,bb,newId());
   th->setBody(allocateBody());
+  bb->incSuspCount();
+  checkDebug(th);
 
   return th;
+}
+
+
+inline
+void AM::suspThreadToRunnable(Thread *tt)
+{
+  Assert(tt->isSuspended());
+
+  tt->markRunnable();
+
+  Assert(currentBoard==GETBOARD(tt) || tt->isExtThread() ||
+         (currentBoard==GETBOARD(tt)->getParent()
+          && !GETBOARD(tt)->isSolve()));
+
+  if (debugmode() && tt->isTraced()) {
+    //Thread *t; if ((t = am.currentThread) && t->isTraced())
+    //  execBreakpoint(t);
+    debugStreamCont(tt);
+  }
+
+  if (currentSolveBoard || tt->isExtThread()) {
+    Assert(isInSolveDebug(GETBOARD(tt)));
+    incSolveThreads(GETBOARD(tt));
+    tt->setInSolve();
+    removeExtThread(tt);
+    tt->clearExtThread();
+  } else {
+    Assert(!isInSolveDebug(GETBOARD(tt)));
+  }
+}
+
+inline
+void AM::wakeupToRunnable(Thread *tt)
+{
+  Assert(tt->isSuspended());
+  tt->markRunnable();
+
+  if (currentSolveBoard != (Board *) NULL || tt->isExtThread()) {
+    Assert (isInSolveDebug (GETBOARD(tt)));
+    incSolveThreads(GETBOARD(tt));
+    tt->setInSolve();
+  } else {
+    Assert(!isInSolveDebug(GETBOARD(tt)));
+  }
+}
+
+inline
+void AM::updateSolveBoardPropagatorToRunnable(Thread *tt)
+{
+  if (currentSolveBoard != (Board *) NULL || tt->isExtThread()) {
+    Assert(isInSolveDebug(GETBOARD(tt)));
+    incSolveThreads(GETBOARD(tt));
+    tt->setInSolve();
+  } else {
+    Assert(!isInSolveDebug(GETBOARD(tt)));
+  }
+}
+
+inline
+void AM::propagatorToRunnable(Thread *tt)
+{
+  tt->markRunnable();
+
+  updateSolveBoardPropagatorToRunnable(tt);
+}
+
+inline
+void AM::scheduledPropagator(Thread *tt)
+{
+  Assert(tt);
+  Assert(!tt->isDeadThread());
+  Assert(tt->isPropagator());
+  Assert(currentBoard == GETBOARD(tt));
+
+  tt->unmarkRunnable();
+  wakeUpPropagator(tt,currentBoard, pc_propagator);
+}
+
+
+//
+//  (re-)Suspend the propagator again (former 'reviveCurrentTaskSusp');
+inline
+void AM::suspendPropagator(Thread *tt)
+{
+  Assert(tt);
+  Assert(!tt->isDeadThread());
+  Assert(tt->isPropagator());
+  Assert(currentBoard == GETBOARD(tt));
+
+  tt->unmarkRunnable();
+  tt->unmarkUnifyThread();
+}
+
+#define WAKEUP_PROPAGATOR(CALL_WAKEUP_FUN)      \
+{                                               \
+  Board *bb = GETBOARD(tt);                     \
+  switch (isBetween(bb, home)) {                \
+  case B_BETWEEN:                               \
+                                                \
+    if (calledBy)                               \
+      tt->markUnifyThread();                    \
+                                                \
+    CALL_WAKEUP_FUN;                            \
+    return FALSE;                               \
+                                                \
+  case B_NOT_BETWEEN:                           \
+    return FALSE;                               \
+                                                \
+  case B_DEAD:                                  \
+    tt->markDeadThread();                       \
+    checkExtThread(tt);                         \
+    tt->freePropBody();                         \
+    return TRUE;                                \
+                                                \
+  default:                                      \
+    Assert(0);                                  \
+    return FALSE;                               \
+  }                                             \
+}
+
+inline
+Bool AM::wakeUpPropagator(Thread *tt, Board *home, PropCaller calledBy)
+{
+  Assert(tt->isSuspended());
+  Assert(tt->getThrType() == S_PR_THR);
+
+  Board *cb_cache = currentBoard;
+
+  if (tt->isNonMonotonicPropagatorThread() && currentSolveBoard) {
+#ifdef DEBUG_NONMONOTONIC
+    cout << "wakeUpPropagator: found nonmonotonic propagator "
+         << *tt->getPropagator() << endl << flush;
+#endif
+
+    Assert(!tt->getPropagator()->isMonotonic());
+
+    WAKEUP_PROPAGATOR(tt->markRunnable();
+                      SolveActor::Cast(currentSolveBoard->getActor())->addToNonMonoSuspList(tt));
+  }
+
+#ifndef NO_LTQ
+  if (cb_cache->isSolve() && cb_cache == GETBOARD(tt) &&
+      tt->getPriority() == PROPAGATOR_PRIORITY) {
+    tt->markRunnable();
+
+    SolveActor::Cast(cb_cache->getActor())->pushToLTQ(tt, cb_cache);
+    if (calledBy)
+      tt->markUnifyThread();
+
+    return FALSE;
+  }
+#endif
+
+  if (localPropStore.isUseIt()) {
+    Assert(GETBOARD(tt) == cb_cache);
+    tt->markRunnable();
+    localPropStore.push(tt);
+    return FALSE;
+  }
+
+  WAKEUP_PROPAGATOR(propagatorToRunnable(tt);
+                    scheduleThreadInline(tt, tt->getPriority()));
+}
+
+
+//
+//  Dispose a thread. That's a private method!
+inline
+void AM::disposeThread(Thread *tt)
+{
+  tt->markDeadThread();
+
+  if (debugmode() && tt->isTraced())
+    debugStreamTerm(tt);
+
+  switch (tt->getThrType()) {
+  case S_RTHREAD:
+    freeThreadBody(tt);
+    break;
+
+  case S_WAKEUP:
+    break;
+
+  case S_PR_THR:
+    tt->freePropBody();
+    break;
+
+  default:
+    Assert(0);
+  }
+}
+
+//
+inline
+void AM::disposeSuspendedThread(Thread *tt)
+{
+  Assert(tt->isSuspended());
+  Assert(!GETBOARD(tt)->checkAlive());
+
+  disposeThread(tt);
+}
+
+//
+//  It marks also the thread as dead;
+inline
+void AM::disposeRunnableThread(Thread *tt)
+{
+  Assert(tt->isRunnable());
+
+  disposeThread(tt);
+}
+
+//
+//  Close up a propagator which is done;
+//  Actually, terminating a thread should be done through
+// 'LBLkillxxxx' in emulate.cc, but one cannot jump from the local
+// propagation queue there;
+inline
+void AM::closeDonePropagator(Thread *tt)
+{
+  Assert(tt);
+  Assert(!tt->isDeadThread());
+  Assert(tt->isPropagator());
+  Assert(currentBoard == GETBOARD(tt));
+
+  // constructive disjunction ???
+  // kost@: i don't know what's going on here - just keep it as it was;
+  //if (isSuspended ())
+  //return;
+  Assert(!tt->isSuspended());
+
+  disposeRunnableThread(tt);    // kost@: TODO? optimize;
+
+  //
+  //  Actually, the current board can be alive or not -
+  // so, in the last case it's redundant;
+  currentBoard->decSuspCount();
+
+  //
+  //  ... again to the 'SolveActor::checkExtSuspList':
+  // there is a limitation in the implementation that no stability
+  // can be achieved before a propagator on a global variable(s)
+  // completely disappears. Therefore, we make the check here;
+  checkExtThread(tt);
+
+  //
+  //  An ESSENTIAL invariant:
+  //  If entailment/whatever is reached somewhere, that's a bad news.
+  //  I don't know how to check this assertion right now;
+}
+
+inline
+void AM::closeDonePropagatorThreadCD(Thread *tt)
+{
+  tt->markRunnable();
+  currentBoard->decSuspCount();
+  tt->markDeadThread();
+  checkExtThread(tt);
+}
+
+inline
+void AM::closeDonePropagatorCD(Thread *tt)
+{
+  tt->markRunnable();
+  disposeRunnableThread(tt);
+  currentBoard->decSuspCount ();
+  tt->markDeadThread();
+  checkExtThread(tt);
+}
+
+//
+inline
+void AM::checkExtThread(Thread *tt)
+{
+  if (tt->wasExtThread()) {
+    checkExtThreadOutlined(tt);
+  }
+}
+
+inline
+void AM::removeExtThread(Thread *tt)
+{
+  if (tt->wasExtThread()) {
+     removeExtThreadOutlined(tt);
+  }
+}
+
+OZ_Return AM::runPropagator(Thread *tt)
+{
+  Assert(tt->isPropagator());
+  ozstat.propagatorsInvoked.incf();
+
+  CpiHeap.reset();
+
+  if (profileMode) {
+    OZ_CFunHeader *prop = tt->getPropagator()->getHeader();
+    ozstat.enterProp(prop);
+    int heapNow = getUsedMemoryBytes();
+#ifdef DEBUG_PROPAGATORS
+    OZ_CFunHeader * header = prop;
+    if (header) {
+      OZ_CFun headerfunc = header->getHeaderFunc();
+      printf("<%s", builtinTab.getName((void *) headerfunc)); fflush(stdout);
+    } else {
+      printf("<CDSuppl"); fflush(stdout);
+    }
+#endif
+    OZ_Return ret = tt->getPropagator()->propagate();
+#ifdef DEBUG_PROPAGATORS
+    printf(">\n"); fflush(stdout);
+#endif
+    int heapUsed = getUsedMemoryBytes() - heapNow;
+    prop->incHeap(heapUsed);
+    ozstat.leaveProp();
+    if (ozstat.currAbstr)
+      ozstat.currAbstr->heapUsed -= heapUsed;
+    return ret;
+  } else {
+#ifdef DEBUG_PROPAGATORS
+    OZ_CFunHeader * header = tt->getPropagator()->getHeader();
+    if (header) {
+      OZ_CFun headerfunc = header->getHeaderFunc();
+      printf("<%s", builtinTab.getName((void *) headerfunc)); fflush(stdout);
+    } else {
+      printf("<CDSuppl"); fflush(stdout);
+    }
+    OZ_Return ret = tt->getPropagator()->propagate();
+    printf(">\n"); fflush(stdout);
+    return ret;
+#else
+    return tt->getPropagator()->propagate();
+#endif
+  }
 }
 
 /* ------------------------------------------------------------------------
@@ -271,6 +617,14 @@ void AM::saveSelf()
     currentThread->setSelf(cachedSelf);
     cachedSelf = 0;
   }
+}
+
+inline
+void AM::freeThreadBody(Thread *tt) {
+  RunnableThreadBody *it = tt->getBody();
+  it->next = threadBodyFreeList;
+  threadBodyFreeList = it;
+  tt->freeThreadBodyInternal();
 }
 
 #endif  // __AM_ICC

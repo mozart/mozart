@@ -147,7 +147,7 @@ OZ_Boolean OZ_Propagator::mayBeEqualVars(void)
 OZ_Return OZ_Propagator::replaceBy(OZ_Propagator * p)
 {
   am.currentThread->setPropagator(p);
-  return am.currentThread->runPropagator();
+  return am.runPropagator(am.currentThread);
 }
 
 OZ_Return OZ_Propagator::replaceBy(OZ_Term a, OZ_Term b)
@@ -192,8 +192,8 @@ void OZ_Propagator::impose(OZ_Propagator * p, int prio)
 
   ozstat.propagatorsCreated.incf();
 
-  thr->suspendPropagator();
-  thr->propagatorToRunnable ();
+  am.suspendPropagator(thr);
+  am.propagatorToRunnable(thr);
   am.scheduleThreadInline(thr, thr->getPriority());
 
   OZ_Boolean all_local = OZ_TRUE;

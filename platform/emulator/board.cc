@@ -10,13 +10,7 @@
 #pragma implementation "board.hh"
 #endif
 
-
-#include "tagged.hh"
-#include "value.hh"
-
-#include "cont.hh"
 #include "board.hh"
-#include "actor.hh"
 
 Equation *ScriptAllocate(int size)
 {
@@ -129,21 +123,16 @@ Board* Board::getSolveBoard ()
 }
 
 Board::Board(Actor *a,int typ)
-: ConstTerm(Co_Board)
 {
   Assert(a!=NULL || typ==Bo_Root);
   Assert(a==NULL || !a->isCommitted());
   Assert (typ==Bo_Root || typ==Bo_Ask || typ==Bo_Wait || typ==Bo_Solve
           || typ==(Bo_Wait | Bo_Waiting));
-  flags=typ;
-  suspCount=0;
-  u.actor=a;
+  flags = typ;
+  suspCount = 0;
+  u.actor = a;
 }
 
-
-Board::~Board() {
-  error("Board::~Board");
-}
 
 #ifdef DEBUG_CHECK
 /*

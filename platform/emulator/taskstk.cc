@@ -13,6 +13,10 @@
 #pragma implementation "taskstk.hh"
 #endif
 
+#include "taskstk.hh"
+#include "os.hh"
+#include "value.hh"
+#include "actor.hh"
 #include "am.hh"
 
 int TaskStack::tasks()

@@ -191,7 +191,7 @@ void SolveActor::clearSuspList(Thread *killThr) {
       tmpSuspList = tmpSuspList->getNext ();
     } else {
       if (bb == 0) {
-        thr->disposeSuspendedThread ();
+        am.disposeSuspendedThread(thr);
         tmpSuspList = tmpSuspList->dispose ();
       } else {
         SuspList *helpList = tmpSuspList;
@@ -237,7 +237,7 @@ void SolveActor::scheduleNonMonoSuspList(void)
     cout << "   "; thr->printDebug();
 #endif
 
-    thr->updateSolveBoardPropagatorToRunnable();
+    am.updateSolveBoardPropagatorToRunnable(thr);
     am.scheduleThreadInline(thr, thr->getPriority());
   }
 

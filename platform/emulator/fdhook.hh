@@ -17,13 +17,6 @@
 
 #include "runtime.hh"
 
-//#define DEBUG_STABLE
-#ifdef DEBUG_STABLE
-extern SuspList * board_constraints;
-void printBC(ostream &, Board *);
-void printBCDebug(Board * = NULL);
-#endif
-
 inline
 Bool isUnifyCurrentPropagator () {
   Assert (am.currentThread->isPropagator ());
