@@ -433,9 +433,9 @@ local
 				       wi:LinkWidth) $)}
 	    {Canvas
 	     tkCreate(po(X0 Y0 X2 Y1 X4 Y0 X3 Y2 X4 Y4 X2 Y3 X0 Y4 X1 Y2
-			 fi: BlockedColor
-			 wi: NodeBorderWidth
-			 ou: LineColor))}
+			 fill: BlockedColor
+			 width: NodeBorderWidth
+			 outline: LineColor))}
 	 end
 	 
 	 meth moveNode(MomX MyX MyByX MyY Scale)
@@ -499,18 +499,18 @@ local
 					  ScaledMyY - Scale * UpperSpaceF
 					  ScaledMyX
 					  ScaledMyY - ScaledWidth
-					  wi: LinkWidth) $)}
+					  width: LinkWidth) $)}
 	       {Canvas
 		tkCreate(po(X0 Y1 X1 Y0 X2 Y1 X1 Y2 X0 Y1
-			    fi: Color
-			    wi: Width
-			    ou: LineColor
-			    ta: Actions))}
+			    fill:    Color
+			    width:   Width
+			    outline: LineColor
+			    tags:    Actions))}
 	       if Number\=0 andthen Font\=false then
 		  {Canvas tkCreate(te(ScaledMyX ScaledMyY
-				      fo: Font
-				      te: Number
-				      ta: q(Actions Canvas.numbers
+				      font: Font
+				      text: Number
+				      tags: q(Actions Canvas.numbers
 					    n#Number)))}
 	       end
 	    end
