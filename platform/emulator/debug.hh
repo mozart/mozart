@@ -12,7 +12,6 @@
 #ifndef __DEBUGH
 #define __DEBUGH
 
-
 class OzDebug {
 public:
   static unsigned long goalCounter;

@@ -701,3 +701,4 @@ Bool trace(char *s,Board *board,Actor *actor,
     }
   }
 }
+

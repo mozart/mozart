@@ -646,7 +646,7 @@ void setPathMarks(Board *bb)
 {
   Assert(!bb->isRoot());
   do {
-    bb = bb->getParentFast();
+    bb = bb->getParent();
     bb->setPathMark();
   } while (!bb->isRoot());
 }
@@ -660,7 +660,7 @@ void unsetPathMarks(Board *bb)
 {
   Assert(!bb->isRoot());
   do {
-    bb = bb->getParentFast();
+    bb = bb->getParent();
     bb->unsetPathMark();
   } while (!bb->isRoot());
 }
@@ -699,7 +699,7 @@ Literal *Literal::gc()
 {
   if (!isDynName()) return (this);
 
-  if (opMode == IN_GC || isLocalBoard(getBoardFast())) {
+  if (opMode == IN_GC || isLocalBoard(getBoard())) {
     GCMETHMSG("Literal::gc");
     CHECKCOLLECTED(ToInt32(printName), Literal *);
     COUNT(literal);
@@ -1043,7 +1043,7 @@ Thread *Thread::gcThread ()
   // nothing can be copied (IN_TC) until stability;
 
   // first class threads: must only copy thread when local to solve!!!
-  if (opMode == IN_TC && !isLocalBoard(getBoardFast())) {
+  if (opMode == IN_TC && !isLocalBoard(getBoard())) {
     return this;
   }
 
@@ -1053,7 +1053,7 @@ Thread *Thread::gcThread ()
   //  Note that runnable threads can be also counted 
   // in solve actors (for stabilittty check), and, therefore, 
   // might not just dissappear!
-  if (isSuspended () && !((getBoardFast ())->gcIsAlive ())) {
+  if (isSuspended () && !((getBoard())->gcIsAlive ())) {
     return ((Thread *) NULL);
   }
 
@@ -1399,13 +1399,13 @@ inline
 Board *gcGetVarHome(TaggedRef var)
 {
   if (isUVar(var)) {
-    return tagged2VarHome(var)->getBoardFast();
+    return tagged2VarHome(var)->derefBoard();
   } 
   if (isSVar(var)) {
-    return tagged2SVar(var)->getBoardFast();
+    return tagged2SVar(var)->getBoard();
   }
   Assert(isCVar(var));
-  return tagged2CVar(var)->getBoardFast();
+  return tagged2CVar(var)->getBoard();
 }  
 
 /*
@@ -1960,7 +1960,7 @@ void ConstTerm::gcConstRecurse()
       o->setClass(o->getClass()->gcClass());
       o->setFreeRecord(o->getFreeRecord()->gcSRecord());
       if (o->isDeep()){
-	((DeepObject*)o)->home = o->getBoardFast()->gcBoard();
+	((DeepObject*)o)->home = o->getBoard()->gcBoard();
       }
       o->setState(o->getState()->gcSRecord());
       gcTagged(o->threads,o->threads);
@@ -2064,7 +2064,7 @@ void ConstTerm::gcConstRecurse()
 
 #define CheckLocal(CONST) 					\
 {								\
-   Board *bb=(CONST)->getBoardFast();				\
+   Board *bb=(CONST)->getBoard();				\
    if (!bb->gcIsAlive()) return NULL;				\
    if (opMode == IN_TC && !isLocalBoard(bb)) return this;	\
 }
@@ -2176,7 +2176,7 @@ Board* Board::gcGetNotificationBoard()
   GCMETHMSG("Board::gcGetNotificationBoard");
   if (this == 0) return 0; // no notification board
 
-  Board *bb = this->getBoardFast();
+  Board *bb = this->derefBoard();
   Board *nb = bb;
  loop:
   if (GCISMARKED(*bb->getGCField()) || bb->isRoot())  return nb;
@@ -2186,12 +2186,12 @@ Board* Board::gcGetNotificationBoard()
     /*
      * notification board must be changed
      */
-    bb=aa->getBoardFast();
+    bb=aa->getBoard();
     nb = bb;   // probably not dead;
     goto loop;
   }
   if (GCISMARKED(*aa->getGCField())) return nb;
-  bb = aa->getBoardFast();
+  bb = aa->getBoard();
   goto loop;
 }
 
@@ -2211,7 +2211,7 @@ Bool Board::gcIsAlive()
   Actor *aa;
 
  loop:
-  // must be applied to a result of 'getBoardFast ()';
+  // must be applied to a result of 'getBoard()';
   Assert (!(bb->isCommitted ()));
 
   if (bb->isFailed ()) return (NO);
@@ -2220,7 +2220,7 @@ Bool Board::gcIsAlive()
   aa=bb->getActor();
   if (aa->isCommitted ()) return (NO);
   if (GCISMARKED (*(aa->getGCField ()))) return (OK);
-  bb = aa->getBoardFast ();
+  bb = aa->getBoard();
   goto loop;
 }
 
@@ -2231,7 +2231,7 @@ Board * Board::gcBoard()
   GCMETHMSG("Board::gcBoard");
   if (!this) return 0;
 
-  Board *bb = this->getBoardFast();
+  Board *bb = this->derefBoard();
   Assert(bb);
 
   CHECKCOLLECTED(*bb->getGCField(), Board *);
@@ -2296,11 +2296,11 @@ Actor *Actor::gcActor()
 {
   if (this==0) return 0;
 
-  Assert(board->getBoardFast()->gcIsAlive());
+  Assert(board->derefBoard()->gcIsAlive());
 
   GCMETHMSG("Actor::gc");
   CHECKCOLLECTED(*getGCField(), Actor *);
-  // by kost@; flags are needed for getBoardFast
+  // by kost@; flags are needed for getBoard
   size_t sz;
   if (isWait()) {
     COUNT(waitActor);
@@ -2418,7 +2418,7 @@ void CpStack::gc(CpStack *cps) {
     WaitActor *wa = cps->u.choice;
     Assert(wa && !wa->isCommitted());
   
-    Board *b = wa->getBoardFast();
+    Board *b = wa->getBoard();
     if (!b->gcIsAlive()) {
       u.choice = (WaitActor *) 0;
     } else {
@@ -2433,7 +2433,7 @@ void CpStack::gc(CpStack *cps) {
       WaitActor *wa = cps->u.choices[i];
       Assert(wa && !wa->isCommitted());
 
-      Board *b = wa->getBoardFast();
+      Board *b = wa->getBoard();
       if (b->gcIsAlive())
 	u.choices[top++] = (WaitActor *) wa->gcActor();
     }
@@ -2553,7 +2553,6 @@ void AM::doGC()
   unsetSFlag(StartGC);
   osUnblockSignals();
 }
-
 
 OzDebug *OzDebug::gcOzDebug()
 {
