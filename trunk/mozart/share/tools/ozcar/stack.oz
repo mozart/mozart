@@ -73,7 +73,12 @@ local
 			end
 		     elseof Name then Name
 		     end
-	    args:    case Frame.kind == 'lock' then [Frame.data]
+	    args:    case Frame.kind
+		     of 'lock' then [Frame.data]
+		     [] 'cond' then Data = {CondSelect Frame data unit} in
+			case {IsDet Data} andthen Data == unit then unit
+			else [Data]
+			end
 		     else {CondSelect Frame args unit}
 		     end
 	    frameID: {CondSelect Frame frameID unit}

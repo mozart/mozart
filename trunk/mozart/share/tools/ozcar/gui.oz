@@ -757,7 +757,7 @@ in
 		     Stack     = {Dictionary.condGet ThreadDic I nil}
 		  in
 		     case Stack == nil then skip else
-			Frame
+			Frame LSF
 		     in
 			{@currentStack getFrame(@LastSelectedFrame Frame)}
 
@@ -772,7 +772,9 @@ in
 			Gui,markNode({Thread.id T} running)
 			Gui,markStack(inactive)
 			Gui,doStatus('Unleashing thread #' # I #
-				     ' to frame ' # @LastSelectedFrame)
+				     ' to frame ' #
+				     case (LSF=@LastSelectedFrame) == 0 then 1
+				     else LSF end)
 			{Emacs configureBar(running)}
 			{Thread.resume T}
 		     end
