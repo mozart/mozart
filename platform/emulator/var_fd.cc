@@ -264,7 +264,7 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr)
       break;
     }
   default:
-    OZ_error("unexpected case in FD::unify");
+    Assert(0);
     break;
   } // switch (varIsLocal + 2 * termIsLocal) {
   return TRUE;
@@ -279,9 +279,11 @@ Bool OzFDVariable::valid(TaggedRef val)
 void OzFDVariable::relinkSuspListTo(OzBoolVariable * lv, Bool reset_local)
 {
   OzVariable::relinkSuspListTo(lv, reset_local); // any
+
   for (int i = 0; i < fd_prop_any; i += 1)
     fdSuspList[i] =
       fdSuspList[i]->appendToAndUnlink(lv->suspList, reset_local);
+
 }
 
 
@@ -457,16 +459,16 @@ void OzFDVariable::propagate(OZ_FDPropState state,
     switch (state) {
     case fd_prop_singl: // no break
       if (fdSuspList[fd_prop_singl])
-        OzVariable::propagate(fdSuspList[fd_prop_singl], prop_eq);
+        OzVariable::propagateLocal(fdSuspList[fd_prop_singl], prop_eq);
     case fd_prop_bounds: // no break
       if (fdSuspList[fd_prop_bounds])
-        OzVariable::propagate(fdSuspList[fd_prop_bounds], prop_eq);
+        OzVariable::propagateLocal(fdSuspList[fd_prop_bounds], prop_eq);
     default:
       break;
     }
   } else {
-    OzVariable::propagate(fdSuspList[fd_prop_singl], prop_eq);
-    OzVariable::propagate(fdSuspList[fd_prop_bounds], prop_eq);
+    OzVariable::propagateLocal(fdSuspList[fd_prop_singl], prop_eq);
+    OzVariable::propagateLocal(fdSuspList[fd_prop_bounds], prop_eq);
   }
   if (suspList)
     OzVariable::propagate(suspList, prop_eq);

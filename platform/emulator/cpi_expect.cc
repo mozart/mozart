@@ -917,23 +917,33 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
     if (isVariableTag(vtag)) {
       Assert(!isCVar(vtag) || (!testStoreFlag(v) && !testReifiedFlag(v)));
 
-      if (isGenFDVar(v, vtag)) {
-        addSuspFDVar(v, prop, staticSpawnVars[i].state.fd);
-        all_local &= oz_isLocalVar(tagged2CVar(v));
-      } else if (isGenFSetVar(v, vtag)) {
-        addSuspFSetVar(v, prop, staticSpawnVars[i].state.fs);
-        all_local &= oz_isLocalVar(tagged2CVar(v));
-      } else if (isGenBoolVar(v, vtag)) {
-        addSuspBoolVar(v, prop);
-        all_local &= oz_isLocalVar(tagged2CVar(v));
-      } else if (isGenCtVar(v, vtag)) {
-        addSuspCtVar(v, prop, staticSpawnVars[i].state.ct.w);
-        all_local &= oz_isLocalVar(tagged2CVar(v));
-      } else {
-        oz_var_addSusp(vptr, prop);
+        if (isGenFDVar(v, vtag)) {
+          if (oz_isLocalVar(tagged2CVar(v))) {
+            addSuspFDVar(v, prop, staticSpawnVars[i].state.fd);
+            continue;
+          }
+        } else if (isGenFSetVar(v, vtag)) {
+          if (oz_isLocalVar(tagged2CVar(v))) {
+            addSuspFSetVar(v, prop, staticSpawnVars[i].state.fs);
+            continue;
+          }
+        } else if (isGenBoolVar(v, vtag)) {
+          if (oz_isLocalVar(tagged2CVar(v))) {
+            addSuspBoolVar(v, prop);
+            continue;
+          }
+        } else if (isGenCtVar(v, vtag)) {
+          if (oz_isLocalVar(tagged2CVar(v))) {
+            addSuspCtVar(v, prop, staticSpawnVars[i].state.ct.w);
+            continue;
+          }
+        }
+
+        oz_var_addSuspINLINE(vptr, prop);
         all_local &= oz_isLocalVar(tagged2CVar(*vptr));
-      }
+
     }
+
   }
 
   // Note all SVARs and UVARs in staticSuspendVars are constrained to FDVARs.

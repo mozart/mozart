@@ -101,7 +101,7 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
 
           am.currentBoard()->addToNonMono(SuspToPropagator(this));
         } else {
-          oz_pushToLPQ(SuspToPropagator(this));
+          (void) oz_pushToLPQ(SuspToPropagator(this));
         }
         return NO;
       case B_NOT_BETWEEN:
@@ -144,6 +144,66 @@ void oz_checkAnySuspensionList(SuspList ** suspList,
     SuspList ** n = sl->getNextRef();
 
     if (sl->getSuspendable()->_wakeup(home,calledBy)) {
+      *p = *n;
+      sl->dispose();
+      sl = *p;
+    } else {
+      sl = *n;
+      p  = n;
+    }
+
+
+  }
+
+}
+
+
+static SuspQueue * lpq_cache = NULL;
+
+inline
+Bool Suspendable::_wakeupLocal(PropCaller calledBy) {
+  if (isDead())
+    return OK;
+
+  if (calledBy)
+    setUnify();
+
+  if (!isRunnable()) {
+    setRunnable();
+
+    if (isNMO() && !oz_onToplevel()) {
+      Assert(!SuspToPropagator(this)->getPropagator()->isMonotonic());
+
+      am.currentBoard()->addToNonMono(SuspToPropagator(this));
+    } else {
+      if (lpq_cache)
+        lpq_cache->enqueue(this);
+      else
+        lpq_cache = oz_pushToLPQ(SuspToPropagator(this));
+    }
+
+  }
+
+  return NO;
+
+}
+
+void oz_checkLocalSuspensionList(SuspList ** suspList,
+                                 PropCaller calledBy) {
+  if (am.inEqEq())
+    return;
+
+  lpq_cache = NULL;
+
+  SuspList ** p  = suspList;
+
+  SuspList * sl = *suspList;
+
+  while (sl) {
+
+    SuspList ** n = sl->getNextRef();
+
+    if (sl->getSuspendable()->_wakeupLocal(calledBy)) {
       *p = *n;
       sl->dispose();
       sl = *p;

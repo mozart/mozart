@@ -186,15 +186,15 @@ void * gcReallocStatic(void * p, size_t sz) {
  */
 
 enum TypeOfPtr {
-  PTR_LTUPLE    =  0,  // 0000
-  PTR_SRECORD   =  1,  // 0001
-  PTR_BOARD     =  2,  // 0010
-  PTR_CVAR      =  3,  // 0011
-  PTR_CONSTTERM =  4,  // 0100
-  PTR_EXTENSION =  5,  // 0101
-  PTR_UNUSED1   =  6,  // 0110
-  PTR_UNUSED2   =  7,  // 0111
-  PTR_SUSPLIST  =  8,  // 1000
+  PTR_LTUPLE         =  0,  // 0000
+  PTR_SRECORD        =  1,  // 0001
+  PTR_BOARD          =  2,  // 0010
+  PTR_CVAR           =  3,  // 0011
+  PTR_CONSTTERM      =  4,  // 0100
+  PTR_EXTENSION      =  5,  // 0101
+  PTR_SUSPLIST       =  6,  // 0110
+  PTR_UNUSED2        =  7,  // 0111
+  PTR_LOCAL_SUSPLIST =  8,  // 1000
   // The remaining entries are reserved:
   //  the lower three bits encode, how many suspenlists are to
   //  be collected.
@@ -210,6 +210,15 @@ public:
 
   void push(void * ptr, TypeOfPtr type) {
     Stack::push((StackEntry) makeTaggedRef2p((TypeOfTerm) type, ptr));
+  }
+
+  void pushLocalSuspList(Board * bb, SuspList ** sl, int n) {
+    Assert(n<8);
+    Stack::ensureFree(2);
+    Stack::push((StackEntry) bb, NO);
+    Stack::push((StackEntry)
+                makeTaggedRef2p((TypeOfTerm) (PTR_LOCAL_SUSPLIST | n),
+                                (void *) sl), NO);
   }
 
   void recurse(void);
@@ -677,14 +686,13 @@ Object *Object::gcObject() {
  */
 
 inline
-void gcSuspList(SuspList ** sl, int n) {
-  Assert(n <= 8);
-  gcStack.push(sl, (TypeOfPtr) (PTR_SUSPLIST | (n - 1)));
+void gcSuspList(SuspList ** sl) {
+  gcStack.push(sl, PTR_SUSPLIST);
 }
 
 inline
-void gcSuspList(SuspList ** sl) {
-  if (*sl) gcSuspList(sl,1);
+void gcLocalSuspList(Board * bb, SuspList ** sl, int n) {
+  gcStack.pushLocalSuspList(bb, sl, n);
 }
 
 inline
@@ -704,7 +712,7 @@ inline
 void OzFDVariable::gc(void) {
   ((OZ_FiniteDomainImpl *) &finiteDomain)->gc();
 
-  gcSuspList(&(fdSuspList[0]), fd_prop_any);
+  gcLocalSuspList(getBoardInternal(), &(fdSuspList[0]), fd_prop_any);
 }
 
 inline
@@ -714,7 +722,7 @@ void OzFSVariable::gc(void) {
   _fset.copyExtension();
 #endif
 
-  gcSuspList(&(fsSuspList[0]), fs_prop_any);
+  gcLocalSuspList(getBoardInternal(), &(fsSuspList[0]), fs_prop_any);
 }
 
 inline
@@ -725,7 +733,7 @@ void OzCtVariable::gc(void) {
   _susp_lists = (SuspList **)
     heapMalloc(sizeof(SuspList *) * noOfSuspLists);
   // collect
-  gcSuspList(&(_susp_lists[0]), noOfSuspLists);
+  gcLocalSuspList(getBoardInternal(), &(_susp_lists[0]), noOfSuspLists);
 
 }
 
@@ -758,19 +766,25 @@ OzVariable * OzVariable::gcVarInline(void) {
 
   OzVariable * to;
 
+  Board * bb = getBoardInternal()->gcBoard();
+
   if (t != OZ_VAR_EXT) {
 
     to = (OzVariable *) oz_hrealloc(this,varSizes[t]);
 
+    to->setHome(bb);
+    // Only after board is collected!
+    gcSuspList(&(to->suspList));
+
     switch (t){
     case OZ_VAR_FD:
       ((OzFDVariable *) to)->gc();
-      goto nopush;
+      return to;
     case OZ_VAR_FS:
       ((OzFSVariable *) to)->gc();
-      goto nopush;
+      return to;
     case OZ_VAR_BOOL:
-      goto nopush;
+      return to;
     case OZ_VAR_CT:
       ((OzCtVariable*) to)->gc();
       break;
@@ -780,14 +794,11 @@ OzVariable * OzVariable::gcVarInline(void) {
 
   } else {
     to = ((ExtVar *) this)->gcV();
+    to->setHome(bb);
+    gcSuspList(&(to->suspList));
   }
 
   gcStack.push(to, PTR_CVAR);
-
- nopush:
-
-  gcSuspList(&(to->suspList));
-  to->setHome(to->getHome1()->gcBoard());
 
   return to;
 
@@ -2280,6 +2291,41 @@ Suspendable * Suspendable::gcSuspendableInline(void) {
   return to;
 }
 
+inline
+Propagator * Propagator::gcLocalInline(Board * bb) {
+  Assert(this);
+
+  if (isGcMarked())
+    return SuspToPropagator(gcGetFwd());
+
+  Assert(isPropagator());
+
+  if (isDead())
+    return (Propagator *) NULL;
+
+  Propagator * to;
+
+  Assert(getBoardInternal()->gcIsAlive());
+  Assert(isInGc || !isRunnable());
+
+  Assert(getBoardInternal()->derefBoard()->gcIsMarked() &&
+         getBoardInternal()->derefBoard()->gcGetFwd() == bb);
+
+  to = (Propagator *) freeListMalloc(sizeof(Propagator));
+
+  to->gcRecurse(SuspToPropagator(this));
+
+  to->setBoardInternal(bb);
+
+  to->flags = flags;
+
+  storeFwdField(this, to);
+
+  Assert(to->isPropagator());
+
+  return to;
+}
+
 Suspendable * Suspendable::gcSuspendable(void) {
   return (this == NULL) ? NULL : gcSuspendableInline();
 }
@@ -2299,6 +2345,30 @@ SuspList * SuspList::gcRecurse(void) {
 
   for (SuspList * sl = this; sl; sl=sl->getNext()) {
     Suspendable * to = sl->getSuspendable()->gcSuspendableInline();
+
+    if (to) {
+      SuspList * n = new SuspList(to);
+      *p = n;
+      p  = &(n->_next);
+    }
+
+  }
+
+  *p = NULL;
+
+  return ret;
+}
+
+inline
+SuspList * SuspList::gcLocalRecurse(Board * bb) {
+  SuspList * sl = this;
+
+  SuspList * ret;
+  SuspList ** p = &ret;
+
+  for (SuspList * sl = this; sl; sl=sl->getNext()) {
+    Suspendable * to =
+      SuspToPropagator(sl->getSuspendable())->gcLocalInline(bb);
 
     if (to) {
       SuspList * n = new SuspList(to);
@@ -2460,11 +2530,12 @@ void GcStack::recurse(void) {
     void * ptr    = tagValueOf(tp);
     TypeOfPtr how = (TypeOfPtr) tagTypeOf(tp);
 
-    if (how & PTR_SUSPLIST) {
+    if (how & PTR_LOCAL_SUSPLIST) {
       SuspList ** sl = (SuspList **) ptr;
+      Board    *  bb = (Board *) pop();
 
-      for (int i = how - PTR_SUSPLIST + 1; i--; )
-        sl[i] = sl[i]->gcRecurse();
+      for (int i = how - PTR_LOCAL_SUSPLIST; i--; )
+        sl[i] = sl[i]->gcLocalRecurse(bb);
 
     } else {
 
@@ -2487,9 +2558,11 @@ void GcStack::recurse(void) {
       case PTR_EXTENSION:
         gcExtensionRecurse((OZ_Extension *)ptr);
         break;
-      case PTR_UNUSED1:
-      case PTR_UNUSED2:
       case PTR_SUSPLIST:
+        *((SuspList **) ptr) = (*(SuspList **) ptr)->gcRecurse();
+        break;
+      case PTR_UNUSED2:
+      case PTR_LOCAL_SUSPLIST:
         Assert(0);
       }
     }

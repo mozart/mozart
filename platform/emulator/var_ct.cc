@@ -353,12 +353,12 @@ void OzCtVariable::propagate(OZ_CtWakeUp descr, PropCaller caller)
     // called by propagator
     for (int i = no_of_wakup_lists; i--; )
       if (descr.isWakeUp(i) && _susp_lists[i])
-        OzVariable::propagate(_susp_lists[i], caller);
+        OzVariable::propagateLocal(_susp_lists[i], caller);
   } else {
     // called by unification
     for (int i = no_of_wakup_lists; i--; )
       if (_susp_lists[i])
-        OzVariable::propagate(_susp_lists[i], caller);
+        OzVariable::propagateLocal(_susp_lists[i], caller);
   }
   if (suspList)
     OzVariable::propagate(suspList, caller);
@@ -368,9 +368,17 @@ void OzCtVariable::relinkSuspListTo(OzCtVariable * lv, Bool reset_local)
 {
   OzVariable::relinkSuspListTo(lv, reset_local); // any
 
-  for (int i = _definition->getNoOfWakeUpLists(); i--; )
-    _susp_lists[i] =
-      _susp_lists[i]->appendToAndUnlink(lv->_susp_lists[i], reset_local);
+  // Ensure locality invariant
+
+  if (reset_local) {
+    for (int i = _definition->getNoOfWakeUpLists(); i--; )
+      _susp_lists[i] =
+        _susp_lists[i]->appendToAndUnlink(lv->suspList, reset_local);
+  } else {
+    for (int i = _definition->getNoOfWakeUpLists(); i--; )
+      _susp_lists[i] =
+        _susp_lists[i]->appendToAndUnlink(lv->_susp_lists[i], reset_local);
+  }
 }
 
 void OzCtVariable::installPropagators(OzCtVariable * glob_var)

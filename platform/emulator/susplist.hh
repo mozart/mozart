@@ -85,6 +85,7 @@ public:
   int lengthProp(void);
 
   SuspList * gcRecurse(void);
+  SuspList * gcLocalRecurse(Board *);
 
   OZPRINTLONG;
 

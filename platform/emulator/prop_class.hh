@@ -65,6 +65,7 @@ public:
   }
 
   void gcRecurse(Propagator *);
+  Propagator * gcLocalInline(Board *);
 
   OZ_NonMonotonic::order_t getOrder(void) {
     return _p->getOrder();

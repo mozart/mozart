@@ -176,7 +176,7 @@ OZ_BI_define(BI_prop_lpq, 0, 0) {
 
 } OZ_BI_end
 
-void oz_pushToLPQ(Propagator * prop) {
+SuspQueue * oz_pushToLPQ(Propagator * prop) {
 
   Board * bb = prop->getBoardInternal()->derefBoard();
 
@@ -195,5 +195,7 @@ void oz_pushToLPQ(Propagator * prop) {
   }
 
   lpq->enqueue(prop);
+
+  return lpq;
 
 }

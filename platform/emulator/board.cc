@@ -203,12 +203,17 @@ Board::Board(Board * p)
 inline
 void Board::scheduleNonMono(void) {
 
+  SuspQueue * sc = NULL;
+
   for (OrderedSuspList * p = getNonMono();
        p != NULL;
        p = p->getNext()) {
     Propagator * prop = p->getPropagator();
 
-    oz_pushToLPQ(prop);
+    if (sc)
+      sc->enqueue(prop);
+    else
+      sc = oz_pushToLPQ(prop);
   }
 
   setNonMono(NULL);
