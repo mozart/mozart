@@ -78,13 +78,13 @@ public:
       array[i] = 0;
     COUNT1(sizeBitArrays, sizeof(BitArray));
   }
-  BitArray(const BitArray &b): Extension() {
-    lowerBound = b.lowerBound;
-    upperBound = b.upperBound;
+  BitArray(const BitArray *b): Extension() {
+    lowerBound = b->lowerBound;
+    upperBound = b->upperBound;
     int size = getSize();
     array = allocate(size);
     for (int i = 0; i < size; i++)
-      array[i] = b.array[i];
+      array[i] = b->array[i];
     COUNT1(sizeBitArrays, sizeof(BitArray));
   }
   Bool checkBounds(int i) {
@@ -126,7 +126,7 @@ BitArray *tagged2BitArray(TaggedRef term)
  *=================================================================== */
 
 Extension *BitArray::gcV(void) {
-  BitArray *ret = new BitArray(*this);
+  BitArray *ret = new BitArray(this);
   return ret;
 }
 
@@ -302,7 +302,7 @@ OZ_BI_define(BIbitArray_high,1,1)
 OZ_BI_define(BIbitArray_clone,1,1)
 {
   oz_declareBitArrayIN(0,b);
-  OZ_RETURN(oz_makeTaggedExtension(new BitArray(*b)));
+  OZ_RETURN(oz_makeTaggedExtension(new BitArray(b)));
 } OZ_BI_end
 
 OZ_BI_define(BIbitArray_or,2,0)
