@@ -17,8 +17,8 @@ char *splitFirstArg(char *s)
 int main(int argc, char **argv)
 #else
 int PASCAL
-WinMain(HANDLE hInstance, HANDLE hPrevInstance,
-	LPSTR lpszCmdLine, int nCmdShow)
+WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
+	LPSTR lpszCmdLine, int /*nCmdShow*/)
 #endif
 {
   char buffer[5000];
@@ -82,7 +82,7 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   } else if (stricmp(progname,"ozengine.exe")==0) {
     char *rest = splitFirstArg(lpszCmdLine);
     char *url = lpszCmdLine;
-    sprintf(buffer,"%s/platform/%s/ozemulator -u %s -a %s",
+    sprintf(buffer,"%s/platform/%s/ozemulator -u \"%s\" -- %s",
 	    ozhome,ozplatform,url,rest);
     //    console = DETACHED_PROCESS;
   } else {
