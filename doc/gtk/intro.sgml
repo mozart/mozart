@@ -24,19 +24,17 @@
 
 <Chapter id="chapter.intro">
   <Title/Introduction/
-    <Para class=apropos><Title/GTK/
-      <!--**-->
-      What is GTK+?  Link + description, in the following just called GTK
-    <Para class=apropos><Title/GDK/
-      <!--**-->
-      What is GDK?
-    <Para class=apropos><Title/The Binding/
-      <!--**-->
-      What is provided by the binding?  Version numbers, &ellipsis;
-    <Section>
-      <Title/Example/
-        <!--**-->
-    <Section>
-      <Title/Structure of the Manual/
-        <!--**-->
+  <Para class=apropos><Title/GTK/
+    <!--**-->
+    What is GTK+?  Link + description, in the following just called GTK
+  <Para class=apropos><Title/GDK/
+    <!--**-->
+    What is GDK?
+  <Para class=apropos><Title/The Binding/
+    <!--**-->
+    What is provided by the binding?  Version numbers, &ellipsis;
+  <Section><Title/Example/
+    <!--**-->
+  <Section><Title/Structure of the Manual/
+    <!--**-->
 </Chapter>
