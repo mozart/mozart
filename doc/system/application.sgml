@@ -59,7 +59,7 @@
           <Item>
             This is the recommended way of acquiring an application's
             arguments.  It invokes either <<Application.getCmdArgs>>
-            or <<Application.getGuiArgs>> depending on whether the value
+            or <<Application.getGuiArgs>> depending on the value
             of boolean property <<'application.gui'>>.  The latter is
             set to <<true>> when the <code proglang=sh/ozengine/ is
             invoked with option <code proglang=sh/--gui/.
