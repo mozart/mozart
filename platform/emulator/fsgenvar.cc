@@ -21,7 +21,7 @@
 Bool GenFSetVariable::valid(TaggedRef val)
 {
   Assert(!isRef(val));
-  return (isFSetValue(val) && ((OZ_FSetImpl *) &_fset)->unify(*(FSetValue *)tagged2FSetValue(val)));
+  return (isFSetValue(val) && ((OZ_FSetImpl *) &_fset)->valid(*(FSetValue *)tagged2FSetValue(val)));
 }
 
 void GenFSetVariable::dispose(void) {
@@ -30,7 +30,7 @@ void GenFSetVariable::dispose(void) {
 }
 
 #ifdef DEBUG_FSET
-#define DEBUG_FSUNIFY
+//#define DEBUG_FSUNIFY
 //#define DEBUG_TELLCONSTRAINTS 
 #endif
 
@@ -50,7 +50,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
 		<< *((FSetValue *)tagged2FSetValue(term)) << " )";
 #endif
       
-      if (! ((OZ_FSetImpl *) &_fset)->unify(*(FSetValue *)tagged2FSetValue(term)))
+      if (! ((OZ_FSetImpl *) &_fset)->valid(*(FSetValue *)tagged2FSetValue(term)))
 	goto f;
       
 #ifdef DEBUG_FSUNIFY 
@@ -325,7 +325,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSet * fs)
   } else if (isFSetValue(vtag)) {
     if (!fs) goto proceed;
     
-    if (fs->unify(*(FSetValue *) tagged2FSetValue(v)))
+    if (fs->valid(*(FSetValue *) tagged2FSetValue(v)))
       goto proceed;
     goto failed;
   } 
@@ -351,4 +351,3 @@ proceed:
 #include "fsgenvar.icc"
 #undef inline
 #endif
-
