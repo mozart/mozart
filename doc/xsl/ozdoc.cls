@@ -42,6 +42,8 @@
 \RequirePackage{theorem}
 \RequirePackage{pstricks}
 \RequirePackage{xspace}
+\RequirePackage{array}
+\RequirePackage{colortbl}
 
 % mozart info
 \RequirePackage{ozdoc-info}
@@ -182,6 +184,10 @@
      \leftmargin-\mozart@leftmarginwidth
      \rightmargin\z@}\item[]}
   {\end{list}}
+
+\newenvironment{FULLWIDTHLEFT}
+  {\begin{FULLWIDTH}\begin{flushleft}}
+  {\end{flushleft}\end{FULLWIDTH}}
 
 % page style
 
@@ -1072,11 +1078,34 @@
   \usepackage{makeidx}\makeindex
   \def\mozart@printindex{\clearpage\printindex}}
 
-%% table headings
-
-\newcommand{\mozartTH}{\mozart@section@font\large}
-
 %% opi support
 
 \newcommand{\OPINAMEBUFFER}[1]{%
   {\mozart@code@font\mozart@specials@code@inline#1}}
+
+%% funky array support
+
+\providecommand{\tableHeaderBackground}{yellowgreen}
+\providecommand{\tableBackground}{lightgoldenrodyellow}
+\providecommand{\mozartTableHeader}{%
+  \mozart@section@font\large}
+
+%\definecolor{beige}{rgb}{0.96078,0.96078,0.86275}
+\definecolor{yellowgreen}{rgb}{0.60392,0.80392,0.19608}
+\definecolor{lightgoldenrodyellow}{rgb}{0.98039,0.98039,0.82353}
+%\definecolor{gold}{rgb}{1,0.84314,0}
+
+\newcolumntype{D}{>{\columncolor{\tableBackground}}}
+\newcolumntype{H}{>{\columncolor{\tableHeaderBackground}\mozartTableHeader}}
+\newcolumntype{L}{Dl}
+\newcolumntype{R}{Dr}
+\newcolumntype{C}{Dc}
+\newcolumntype{P}{Dp}
+\newcolumntype{T}{Dt}
+\newcolumntype{B}{Db}
+
+%\definecolor{tableTD}{rgb}{0.96078431,0.8741,0.70549}
+%\definecolor{tableTH}{rgb}{0.3921,0.58431,0.92941}
+%\newcolumntype{D}{>{\columncolor{tableTD}}l}
+%\newcolumntype{H}{>{\columncolor{tableTH}\mozartTH}l}
+%\newcommand{\TRBEGIN}{\rowcolor{tableTD}}
