@@ -181,7 +181,7 @@ end
           <td>GTK.freeArg</td></tr>
       <tr><td>g(u)char*[]</td>
           <td>GTK.makeStrArr</td><td>GTK.getStrArr</td>
-          <td>none</td></tr>
+          <td>GTK.freeStrArr</td></tr>
     </Table>
   </Figure>
   <P>
