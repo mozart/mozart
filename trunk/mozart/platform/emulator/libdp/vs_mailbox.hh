@@ -93,7 +93,11 @@ protected:
   // array);
   int maxSize;
   int size, head, tail;
+#ifdef DEBUG_CHECK
+  VSMailboxMsg msgs[1];		// 'gdb' crashes with '[0]';
+#else
   VSMailboxMsg msgs[0];		// ... but more in the reallity;
+#endif
 
   //
 public:

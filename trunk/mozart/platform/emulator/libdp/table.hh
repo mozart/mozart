@@ -185,9 +185,10 @@ public:
   void removeFlags(unsigned short f) {flags = flags & (~f);}
   void addFlags(unsigned short f)    {flags = flags | f;}
 
-  Tertiary *getTertiary()     { Assert(isTertiary()); return u.tert; }
-  TaggedRef getRef()          { Assert(isRef()||isVar()); return u.ref; }
-  TaggedRef *getPtr()         { Assert(isVar()); return tagged2Ref(getRef()); }
+  Tertiary *getTertiary() { Assert(isTertiary()); return u.tert; }
+  TaggedRef getRef()      { Assert(isRef()||isVar()); return u.ref; }
+  TaggedRef *getPtr()     { Assert(isVar()); return tagged2Ref(getRef()); }
+  TaggedRef *getAnyPtr()  { return tagged2Ref(getRef()); }
 
   TaggedRef getValue() {
     if (isTertiary()) 
