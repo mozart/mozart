@@ -168,6 +168,7 @@ Vendor: DFKI GmbH
 Url: http://mozart.ps.uni-sb.de/
 Group: Development/Languages
 Packager: Christian Schulte <schulte@ps.uni-sb.de>
+Icon: mozart.xpm
 
 Source0: mozart-${VERSION}-src.tar.gz
 Source1: mozart-${VERSION}-doc.tar.gz
