@@ -248,6 +248,8 @@ bombGenCall:
   return OK;
 }
 
+
+
 // -----------------------------------------------------------------------
 // *** CALL HOOK
 // -----------------------------------------------------------------------
@@ -3099,19 +3101,10 @@ if (CTT->isTraced() && CTT->stepMode()) {
 
       OZ_unprotect((TaggedRef*)(PC+1));
 
-      if (isAbstraction(pred)) {
-	Abstraction *abstr = tagged2Abstraction(pred);
-	AbstractionEntry *entry = AbstractionTable::add(abstr);
-	CodeArea::writeOpcode((tailcallAndArity&1) ? FASTTAILCALL : FASTCALL, PC);
-	CodeArea::writeAddress(entry, PC+1);
-      } else if (isBuiltin(pred)) {
-	Assert((tailcallAndArity&1)==0); // there is no tail version  for CALLBUILTIN
-	BuiltinTabEntry* entry = tagged2Builtin(pred);
-	CodeArea::writeBuiltin(entry,PC+1);
-	CodeArea::writeOpcode(CALLBUILTIN, PC);
-      } else {
+      if (!changeMarshalledFastCall(PC,pred,tailcallAndArity)) {
 	RAISE_APPLY(pred,OZ_atom("proc or builtin expected."));
       }
+
       DISPATCH(0);
     } 
       
