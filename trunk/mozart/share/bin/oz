@@ -22,7 +22,7 @@ cmd=`basename $howcalled`
 
 # keep quiet on emacs and standalone systems
 case "$cmd" in
-   ozemacs|ozsa|ozdo|ozdemo) doecho=true ;;
+   ozemacs|ozsa|ozdo|ozdemo|ozcs) doecho=true ;;
    *)                 doecho=echo ;;
 esac
 
@@ -190,6 +190,22 @@ case "$cmd" in
 	   echo "Using $OZEMULATOR"
 	fi
         exec $OZEMULATOR -E "$@"
+   ;;
+
+   ozcs)  # compute server
+    if [ $# -lt 1 ]
+    then
+	echo "usage: ozcs <url> <args>";
+	exit 1;
+    fi
+	if [ ${OZEMULATOR-xx} = xx ]; then
+	   OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
+	else
+	   echo "Using $OZEMULATOR"
+	fi
+	url=$1
+	shift
+        exec $OZEMULATOR -quiet -u $url "$@"
    ;;
 
    oz-)
