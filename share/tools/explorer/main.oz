@@ -60,8 +60,6 @@ in
 	    >>
 	    <<ExplorerClass {Reverse @Stacked}>>
 	    Stacked <- nil
-	    {Wait {@MyManager sync($)}} 
-	    MyManager <- @MyManager
 	 end
       end
 
