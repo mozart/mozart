@@ -719,21 +719,6 @@ define
         proc{$ V}
  	  {ForAll V.register proc{$ W} {Builder.setAlias W.widgetType W.widget} end}
 	end}
-      {ForAll [td lr grid]
-       proc{$ V}
-	  {Builder.setAlias {VirtualString.toAtom V#l}
-	   fun{$ M}
-	      if {HasFeature M 1} andthen {List.is M.1} andthen {Not {HasFeature M 2}} then
-		 {Record.adjoin M
-		  {List.toTuple V M.1}}
-	      else
-		 {Exception.raiseError qtk(custom "Error : bad parameter 1 or 2"
-					   "Contained widgets are specified as a list at the feature 1 of this record only."
-					   M)}
-		 V
-	      end
-	   end}
-       end}
       Builder
    end
 
