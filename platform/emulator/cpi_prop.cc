@@ -217,7 +217,7 @@ void OZ_Propagator::impose(OZ_Propagator * p, int prio)
   Propagator * prop = oz_newPropagator(prio, p);
   ozstat.propagatorsCreated.incf();
 
-  oz_suspendPropagator(prop);
+  oz_sleepPropagator(prop);
 
   prop->markRunnable();
   oz_pushToLPQ(oz_currentBoard(),prop);
