@@ -1,8 +1,32 @@
 <!--
-  Translated to SGML by:
-     Daniel Simon, dansim@ps.uni-sb.de
-     Andy Walter, anwalt@ps.uni-sb.de
--->
+  - Authors:
+  -   Michael Mehl <mehl@dfki.de>
+  -   Christian Schulte <schulte@dfki.de>
+  -
+  - Contributors:
+  -   Daniel Simon <dansim@ps.uni-sb.de>
+  -   Andy Walter <anwalt@ps.uni-sb.de>
+  -   
+  - Copyright:
+  -   Michael Mehl, 1998
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://mozart.ps.uni-sb.de
+  -
+  - See the file "LICENSE" or
+  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
 
 <Chapter id="chapter.tools">
   <Title/Tools for Tk/

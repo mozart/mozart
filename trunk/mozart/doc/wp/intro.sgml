@@ -1,8 +1,32 @@
 <!--
-  Translated to SGML by:
-     Daniel Simon, dansim@ps.uni-sb.de
-     Andy Walter, anwalt@ps.uni-sb.de
--->
+  - Authors:
+  -   Michael Mehl <mehl@dfki.de>
+  -   Christian Schulte <schulte@dfki.de>
+  -
+  - Contributors:
+  -   Daniel Simon <dansim@ps.uni-sb.de>
+  -   Andy Walter <anwalt@ps.uni-sb.de>
+  -   
+  - Copyright:
+  -   Michael Mehl, 1998
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://mozart.ps.uni-sb.de
+  -
+  - See the file "LICENSE" or
+  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
 
 <Chapter id="chapter.introduction">
   <Title/Introduction/
@@ -28,6 +52,32 @@
     <Title/The Implementation/
   <Section>
     <Title/The Examples/
+
+
   <Section>
     <Title/Further Information/
+
+    <p>
+      One particular advantage of using Tk as graphics engine for
+      Mozart is the wealth of excellent documentation for Tcl and Tk.
+
+    <p>
+      A must read (or at least see or browse) in this particular
+respect is the original <Ref to="Ousterhout.94"/book/ of John
+Osterhout. A very fascinating account on how to employ the graphical
+primitive in Tk for developing high-level graphical applications is
+<Ptr to="HarrisonMcLennan.98">.
+
+    <p>
+      The definitive entry point into the full collection of Tcl/Tk
+related resources and informations is the web page at <Ref.extern
+to="http://www.scriptics.com/"/Scriptics/, a company co-founded by John
+Ousterhout.
+
+    <p>
+      The details of all commands and widgets for Tcl and Tk can be
+found in the manpages that ship with the Tcl and Tk distributions. For
+convenience, the Mozart release includes HTML versions of <Ref.extern
+to="../tcltk/contents.htm"/them/, which carry the following <Ref.extern to="../tcltk/copyright.htm"/copyright/.
+      
 </Chapter>
