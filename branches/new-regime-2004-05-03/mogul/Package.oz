@@ -90,12 +90,6 @@ define
 	    {self get_id_as_rel_path($)}}}
 	  #'/__'#Format#'__'#Platform#'__'#Version}
       end
-      meth get_this_pkgdir($)
-	 {URL.toString
-	  {URL.resolve
-	   {URL.toBase {Manager get_pkgdir($)}}
-	   {self get_id_as_rel_path($)}}}
-      end
       %% here, we compute a new style pkg file name
       meth get_this_pkgname_uploaded($ format:FMT<=unit)
 	 Main = {Manager id_to_package_name(@id $)}
