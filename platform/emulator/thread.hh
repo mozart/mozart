@@ -57,12 +57,13 @@ private:
   Board *home;
   Board *notificationBoard; // for search capabilities;
   int compMode;
-  Thread();
+  Thread(int size=-1);
 public:
   TaskStack taskStack;
 
 public:
   static Thread *newThread(int prio,Board *home);
+  Thread *newSeqThread();
 
   USEFREELISTMEMORY;
   OZPRINT;
