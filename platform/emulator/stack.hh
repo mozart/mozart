@@ -46,7 +46,7 @@ protected:
 
 public:
 
-  Stack(int sz = 10000, void *(*allocfun)(size_t t) = malloc);
+  Stack(int sz = 1000, void *(*allocfun)(size_t t) = malloc);
 
   virtual ~Stack() { deallocate(array,size); }
 
