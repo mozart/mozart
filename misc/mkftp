@@ -290,12 +290,12 @@ sub action_windows {
     my $windir = "$RELDIR/windows";
     foreach $file (@ARGV) {
         my $name = &nondirname($file);
-        if ($name =~ /^mozart-(\d+\.\d+\.\d+)(?:rc\d+)?\.\d{8}\.exe$/) {
+        if ($name =~ /^mozart-(\d+\.\d+\.\d+)(?:rc\d+)?\.\d{8}\.(exe|msi)$/) {
             my $rnum = $1;
             die "wrong release number on exe $name" unless $rnum eq $RELEASE_NUMBER;
             &do_system("cp -f $file $windir/$name");
         } else {
-            die "unrecognized exe $name";
+            die "unrecognized exe or msi: $name";
         }
     }
 }
