@@ -1,7 +1,7 @@
 BINDIR  = $(OZHOME)/bin
 SHELL   = /bin/sh
 
-SCRIPTS = oz oz+ ozplatform ozwish ozwish4
+SCRIPTS = oz oz+ ozplatform ozwish
 LINKS   = oz- ozc ozsa ozsac oz.compiler oz.emulator ozdo \
           ozemacs ozdemo
 
