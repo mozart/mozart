@@ -16,7 +16,7 @@
 
 
 #include <stdlib.h>
-#ifndef IRIX5_MIPS
+#ifndef IRIX
 #include <memory.h>
 #endif
 #include <stdio.h>
