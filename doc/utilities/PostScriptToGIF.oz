@@ -37,11 +37,17 @@ define
    end
 
 
-   proc {PsToPpm PsName PpmName} Cmd in
-      Cmd = ('(cat '#PsName#'; echo quit) | '#
-             'gs -q -dNOPAUSE '#
-             '-dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r102 '#
-             '-sDEVICE=ppmraw -sOutputFile='#PpmName#' - 1>&2')
+   proc {PsToPpm PsName PpmName}
+      PsCat = if {Exists PsName} then
+                 'cat '#PsName
+              else
+                 'gzip -dc '#PsName#'.gz'
+              end
+      Cmd   = ('('#PsCat#'; echo quit) | '#
+               'gs -q -dNOPAUSE '#
+               '-dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r102 '#
+               '-sDEVICE=ppmraw -sOutputFile='#PpmName#' - 1>&2')
+   in
       case {OS.system Cmd} of 0 then skip
       elseof I then
          {Exception.raiseError ozDoc(gs PsName PpmName I)}
