@@ -2326,6 +2326,8 @@ LBLdispatcher:
     {
       // this should not happen -BL
       // OZ_warning("Emulate: TASKDEBUGCONT instruction executed");
+      if (e->debugmode() && CTT->getTrace())
+        debugStreamUpdate(CTT);
       ((OzDebug *) Y)->dispose();
       goto LBLpopTaskNoPreempt;
     }
