@@ -53,7 +53,7 @@
 //-----------------------------------------------------------------------------
 // OZ_FiniteDomain 
 
-enum OZ_FDState {fd_empty, fd_full, fd_bool, fd_singleton};
+enum OZ_FDState {fd_empty, fd_full, fd_bool, fd_singl};
 
 class OZ_FiniteDomain {
 friend ostream &operator << (ostream &, const OZ_FiniteDomain &);
@@ -121,7 +121,7 @@ ostream &operator << (ostream &ofile, const OZ_FiniteDomain &fd) {
 //-----------------------------------------------------------------------------
 // class OZ_Propagator
 
-enum OZ_FDPropState {fd_singl = 0, fd_bounds, fd_any};
+enum OZ_FDPropState {fd_prop_singl = 0, fd_prop_bounds, fd_prop_any};
 
 // virtual base class; never create an object from this class
 class OZ_Propagator {
@@ -185,7 +185,7 @@ public:
   OZ_expect_t expectVar(OZ_Term t);
   OZ_expect_t expectRecordVar(OZ_Term);
   OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState);
-  OZ_expect_t expectIntVarAny(OZ_Term t) { return expectIntVar(t, fd_any); }
+  OZ_expect_t expectIntVarAny(OZ_Term t) { return expectIntVar(t, fd_prop_any); }
   OZ_expect_t expectInt(OZ_Term);
   OZ_expect_t expectLiteral(OZ_Term);
   OZ_expect_t expectVector(OZ_Term, OZ_ExpectMeth);
