@@ -280,7 +280,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
-        if (prop) propagate(var, suspList, makeTaggedRef(vPtr), pc_cv_unif);
+        if (prop) propagate(var, suspList, pc_cv_unif);
 
         // Take care of linking suspensions
         if (!vLoc) {
@@ -357,7 +357,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
-        if (prop) propagate(var, suspList, makeTaggedRef(vPtr), pc_cv_unif);
+        if (prop) propagate(var, suspList, pc_cv_unif);
 
         // Take care of linking suspensions
         if (!vLoc) {
@@ -523,9 +523,8 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
         if (prop) {
-          propagate(var, suspList, makeTaggedRef(nvRefPtr), pc_cv_unif);
-          termVar->propagate(term, termVar->suspList, makeTaggedRef(nvRefPtr),
-                             pc_cv_unif);
+          propagate(var, suspList, pc_cv_unif);
+          termVar->propagate(term, termVar->suspList, pc_cv_unif);
         }
 
         // Take care of linking suspensions
