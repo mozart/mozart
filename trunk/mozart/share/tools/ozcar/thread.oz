@@ -115,7 +115,18 @@ in
 
 	 case M
 
-	 of entry(thr:T ...) then
+	 of breakpoint(thr:T) then
+	    I = {Thread.id T}
+	 in
+	    case ThreadManager,Exists(I $) then %% already attached thread
+	       M = 'Thread #' # I # ' has reached a breakpoint'
+	       S = {Dictionary.get self.ThreadDic I}
+	    in
+	       Gui,status(M)
+	       {S rebuild(true)}
+	    else skip end
+
+	 [] entry(thr:T ...) then
 	    I = {Thread.id T}
 	 in
 	    case ThreadManager,Exists(I $) then %% already attached thread

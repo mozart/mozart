@@ -908,7 +908,7 @@ in
 
 		  Gui,resetLastSelectedFrame
 		  Gui,MarkRunning(T)
-		  Gui,doStatus('Unleashing thread #' # I #
+		  Gui,status('Unleashing thread #' # I #
 			       ' to frame ' #
 			       case LSF == 0 then 1 else LSF end)
 		  {Thread.resume T}
