@@ -1,7 +1,7 @@
 <!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
 
 <!-- Extension to the DTD -->
-<!ENTITY % proglang.values.local "|lambda">
+<!ENTITY % proglang.values.local "|sh|lambda">
 
 <!-- Include Files -->
 <!ENTITY u_basic_concepts SYSTEM "u_basic_concepts.sgml">
