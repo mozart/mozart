@@ -479,7 +479,6 @@ OZ_Term VAR = OZ_in(ARG);			\
  OZ_nonvarIN(ARG);				\
  if (! OZ_isFloat(OZ_in(ARG))) {		\
    return OZ_typeError(ARG,"Float");		\
-   return FAILED;				\
  } else {					\
    VAR = OZ_floatToC(OZ_in(ARG));		\
  }
