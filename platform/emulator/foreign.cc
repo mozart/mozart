@@ -228,42 +228,47 @@ OZ_Term OZ_termType(OZ_Term term)
   term = deref(term);
 
   if (isAnyVar(term)) {
-    return AtomVariable;
+    return OZ_atom("variable");
   }
 
   if (isInt(term)) {
-    return AtomInt;
+    return OZ_atom("int");
   }
 
   if (isFloat(term)) {
-    return AtomFloat;
+    return OZ_atom("float");
   }
 
   if (isLiteral(term)) {
-    return (tagged2Literal(term)->isAtom() ? AtomAtom : AtomName);
+    return OZ_atom(tagged2Literal(term)->isAtom() ? "atom" : "name");
   }
 
   if (isTuple(term)) {
-    return AtomTuple;
+    return OZ_atom("tuple");
   }
 
   if (isProcedure(term)) {
-    return AtomProcedure;
+    return OZ_atom("procedure");
   }
 
   if (isCell(term)) {
-    return AtomCell;
+    return OZ_atom("cell");
   }
 
   if (isChunk(term)) {
-    return AtomChunk;
+    return OZ_atom("chunk");
   }
 
   if (isSRecord(term)) {
-    return AtomRecord;
+    return OZ_atom("record");
   }
 
-  return AtomUnknown;
+  if (isSpace(term)) {
+    return OZ_atom("space");
+  }
+
+  OZ_warning("OZ_termType: %s unknown type\n",toC(term));
+  return OZ_atom("unknown");
 }
 
 /* -----------------------------------------------------------------

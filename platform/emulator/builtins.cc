@@ -2292,7 +2292,7 @@ OZ_C_proc_end
 OZ_Return BItermTypeInline(TaggedRef term, TaggedRef &out)
 {
   out = OZ_termType(term);
-  if (out == AtomVariable) {
+  if (OZ_eq(out,OZ_atom("variable")) {
     return SUSPEND;
   }
   return PROCEED;
