@@ -268,10 +268,10 @@ protected:
   RefsArray gRegs;       // context;
 public:
   Builtin(Builtin *b)
-  : suspHandler(b->suspHandler), fun(b->fun), SRecord(R_BUILTIN),
+  : suspHandler(b->suspHandler), fun(b->fun), SRecord(R_BUILTIN,NULL,NULL),
     gRegs (b->gRegs) {}
   Builtin(BuiltinTabEntry *fn, TaggedRef handler, RefsArray gregs = NULL)
-  : suspHandler(handler), fun(fn), SRecord(R_BUILTIN),
+  : suspHandler(handler), fun(fn), SRecord(R_BUILTIN,NULL,NULL),
     gRegs (gregs) {}
   Builtin(BuiltinTabEntry *fn, TaggedRef handler, RefsArray gregs,
 	  Arity *arity, RefsArray features)

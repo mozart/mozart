@@ -199,7 +199,7 @@ case INSTRUCTION(CREATEVARIABLEMOVEG):
           {
             TaggedRef label = getLiteralArg(PC+1);
             Arity *ff = (Arity *) getAdressArg(PC+2);
-            SRecord *srecord = new SRecord(ff,label,-1,NO);
+            SRecord *srecord = new SRecord(ff,label,NO,makeTaggedNULL());
 		 
             RegAccess(HelpReg,getRegArg(PC+3)) = makeTaggedSRecord(srecord);
 	    sPointer = srecord->getRef();
@@ -323,8 +323,9 @@ case INSTRUCTION(SETVOID):
 	   DEREF(term,termPtr,tag);
 
 	   if (isAnyVar(term)) {
-	     SRecord *srecord = new SRecord(ff,label,am.currentUVarPrototype); // fill w/unb. var.
 	     if(isCVar(term) == OK){
+	       // fill w/unb. var.
+	       SRecord *srecord = new SRecord(ff,label,OK,am.currentUVarPrototype);
                TaggedRef srecordRef=makeTaggedSRecord(srecord);
 	       if(tagged2CVar(term)->unifyOutline(termPtr, term, 
 						  &srecordRef, srecordRef,NOFLATGUARD())) {
@@ -333,6 +334,8 @@ case INSTRUCTION(SETVOID):
 		 DISPATCH(4);
 	       }
 	     } else {
+	       // do not initialize args
+	       SRecord *srecord = new SRecord(ff,label,NO,makeTaggedNULL());
 	       e->bindToNonvar(termPtr, term,makeTaggedSRecord(srecord),NOFLATGUARD());
 		     
 	       sPointer = srecord->getRef();
