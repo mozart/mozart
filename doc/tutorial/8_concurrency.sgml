@@ -521,24 +521,24 @@ end
 </FIGURE>
 
 <SUBSECTION> <TITLE> Futures </TITLE>
-<P>There is another way to program demand-driven computation. This
+<P>There is another way to program demand-driven computations. This
 uses the notion of <EM> future </EM> and the <<ByNeed>> primitive
-operations.
+operation.
 A future is a read-only capability of a logic variable. For example
 to create a future of the variable <<X>> we perfrom the operation
-<<!!>> on create a future <<Y>>.
+<<!!>> to create a future <<Y>>.
 
 <<< Y = !!X >>>
 
-<P> A thread trying to use the value of a future, e.g. <<Y>> will suspenduntil the variable of the future, e.g. <<X>>, gets bound.
+<P> A thread trying to use the value of a future, e.g. using <<Y>>, will suspend until the variable of the future, e.g. <<X>>, gets bound.
 
 <P>One way to execute a procedure lazily, i.e. in a demand-driven manner,
-is to use the operation <<{ByNeed +P ?F>>.
-<<ByNeed>> takes a one output argument procedure <<P>>, and returns
-a future <<F>>. We a thread tries to access the value of <<F>>, the
+is to use the operation <<{ByNeed +P ?F}>>.
+<<ByNeed>> takes a one-argument procedure <<P>>, and returns
+a future <<F>>. When a thread tries to access the value of <<F>>, the
 procedure <<{P X}>> is called, and its result value <<X>> is bound to
 <<F>>. This allows us to perform demand-driven computations in a
-straightforward manner. For example:
+straightforward manner. For example by feeding
 
 <<<
 declare Y
@@ -546,14 +546,15 @@ declare Y
 {Browse Y}
 >>>
 
-<P> We will observe that <<Y>> becomes a future,
-i.e. we will see <<Y&lt;Future&gt;>> in the browser.
+<P>we will observe that <<Y>> becomes a future,
+i.e. we will see <<Y&lt;Future&gt;>> in the Browser.
 If we try to access the value of <<Y>>, it will get bound to <<1>>.
 One way to access <<Y>> is by perform the operation
-<<<
-{Wait Y}
->>>
+<<{Wait Y}>> which triggers the producing procedure.
 
+
+<P> Now we can rewrite program of <PTR TO="volvo2"> as shown in
+<PTR TO="volvo3">.
 
 <FIGURE ID="volvos3" CLASS="Figure">
 <CAPTION>Producing Volvo's using <<ByNeed>> </CAPTION>
