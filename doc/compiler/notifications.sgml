@@ -85,10 +85,7 @@
             A source text <<VS>> with title <<TitleVS>> is to be displayed;
             it's format is the one for which the file extension <<ExtVS>> is
             typically used (such as <<oz>> or <<ozm>>).
-          <Entry><<errorFound()>>
-          <Item>
-            An error has been reported.
-          <Entry><<toTop()>>
+          <Entry><<attention()>>
           <Item>
             The error output buffer should be raised with the cursor at
             the current output coordinates (an error message should follow).
