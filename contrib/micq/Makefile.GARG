@@ -63,28 +63,28 @@ sysadm.ozf: sysadm.oz addapplicationgui.ozf editapplicationgui.ozf
 	ozc -c sysadm.oz -o sysadm.ozf
 
 Logo_gif.ozf : Icons2/logo.gif
-	Gif2Functor.oza Icons2/logo.gif -o Logo_gif.ozf
+	./Gif2Functor.oza Icons2/logo.gif -o Logo_gif.ozf
 
 Letter_gif.ozf : Icons2/letter.gif
-	Gif2Functor.oza Icons2/letter.gif -o Letter_gif.ozf
+	./Gif2Functor.oza Icons2/letter.gif -o Letter_gif.ozf
 
 Away_gif.ozf : Icons2/away_t.gif
-	Gif2Functor.oza Icons2/away_t.gif -o Away_gif.ozf
+	./Gif2Functor.oza Icons2/away_t.gif -o Away_gif.ozf
 
 Online_gif.ozf : Icons2/online_t.gif
-	Gif2Functor.oza Icons2/online_t.gif -o Online_gif.ozf
+	./Gif2Functor.oza Icons2/online_t.gif -o Online_gif.ozf
 
 Offline_gif.ozf : Icons2/offline_t.gif
-	Gif2Functor.oza Icons2/offline_t.gif -o Offline_gif.ozf
+	./Gif2Functor.oza Icons2/offline_t.gif -o Offline_gif.ozf
 
 Eyes_gif.ozf : Icons2/eyes_t.gif
-	Gif2Functor.oza Icons2/eyes_t.gif -o Eyes_gif.ozf
+	./Gif2Functor.oza Icons2/eyes_t.gif -o Eyes_gif.ozf
 
 Powered_by_oz_gif.ozf : Icons2/powered-by-oz-100.gif
-	Gif2Functor.oza Icons2/powered-by-oz-100.gif -o Powered_by_oz_gif.ozf
+	./Gif2Functor.oza Icons2/powered-by-oz-100.gif -o Powered_by_oz_gif.ozf
  
 MozartPower.ozf : MozartPower.oz Powered_by_oz_gif.ozf
-	ozc -c MozartPower.oz
+	ozc -c MozartPower.oz 
 
 client : client.ozf startclient.oz newaccountgui.ozf MozartPower.ozf
 	ozc -x startclient -o client
