@@ -177,7 +177,7 @@ Bool createReader(int fd)
   ResetEvent(sr->char_consumed);
 
   unsigned thrid;
-  sr->thrd = (HANDLE) _beginthreadex(0,0,&readerThread,sr,0,&thrid);
+  sr->thrd = (HANDLE) _beginthreadex(0,10000,&readerThread,sr,0,&thrid);
   if (sr->thrd != 0) {
     maxfd = max(fd+1,maxfd);
     return OK;
@@ -346,7 +346,7 @@ int win32Select(fd_set *rfds, fd_set *wfds, int *timeout)
     wait_hnd[nh++] = si->event;
     si->timeout = wait;
     unsigned tid;
-    HANDLE ret = _beginthreadex(NULL,0,&selectThread,si,0,&tid);
+    HANDLE ret = _beginthreadex(NULL,10000,&selectThread,si,0,&tid);
     Assert(ret!=0);
   }
 #endif

@@ -541,7 +541,7 @@ TimerThread::TimerThread(int w)
   wait = w;
   die = NO;
   unsigned tid;
-  thrd = (HANDLE) _beginthreadex(NULL,0,&timerFun,this,0,&tid);
+  thrd = (HANDLE) _beginthreadex(NULL,10000,&timerFun,this,0,&tid);
   if (thrd==NULL) {
     ozpwarning("osSetAlarmTimer(start thread)");
   }
