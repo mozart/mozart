@@ -53,11 +53,13 @@ $(NEWCACHEDIR)/regex.so-$(PLATFORM): regex.so-$(PLATFORM)
 regex.ozf: regex.oz
 	$(COMPILE) -z 9 $(shell $(CYGPATH) "$<") -o $@
 
-regex.so-$(PLATFORM): regex.o
-	$(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
-
 regex.o: regex.cc
+	OZTOOL_CXX="@CXX@" \
 	$(OZTOOL) c++ $(WINOZTOOLCXXFLAGS) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
+regex.so-$(PLATFORM): regex.o
+	OZTOOL_LD="@CXX@" \
+	$(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
 
 clean veryclean:
 	-$(RM) *~ *.ozf *.o *.so-*
