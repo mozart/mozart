@@ -62,6 +62,8 @@ void printBanner()
 
 #ifdef DEBUG_DET
   warning("DEBUG_DET implies eager weaking of sleep.");
+#elif defined(WINDOWS)
+  warning("fucking windows dumps without this warning at the beginnning.");
 #endif
 
 #ifndef TM_LP
