@@ -1,0 +1,41 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@dfki.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://mozart.ps.uni-sb.de
+  -
+  - See the file "LICENSE" or
+  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<appendix id=appendix.data>
+  <title/Example Data/
+
+<p> The following appendix features some data specifications omitted
+in the chapters' text.
+
+<section id="section.data.scheduling">
+  <title/More on Widgets/
+
+<p>
+<chunk id=data.bridge><title/Color names/
+blue
+</chunk>
+
+</section>
+
+</appendix>
+
