@@ -365,7 +365,7 @@ case $platform in
 	oz_enable_modules_static=yes
 	if test "$target" = NONE
 	then # compiling for mingw32 under cygwin
-	    LD="$CC"
+	    LD="$CXX"
 	    TOOLLDCMD="`cd .. && pwd`/mswindows/oztool -inc `pwd` ld"
 	else # cross-compiling
 	    AC_DEFINE(ARCH_I486)
