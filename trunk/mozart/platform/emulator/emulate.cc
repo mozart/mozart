@@ -1932,14 +1932,6 @@ Case(GETVOID)
     }
 
 
-  //
-  // Temporary fix: seems to be broken for debugging!
-  //
-
-#undef ASM_I386_ARITH
-
-  // #define ASM_I386_ARITH
-
   Case(INLINEMINUS)
     {
       TaggedRef A = XPC(1); 
@@ -1952,23 +1944,38 @@ Case(GETVOID)
       retryINLINEMINUSB1:
 
 	if (oz_isSmallInt(B)) {
-#if defined(ASM_I386_ARITH) && defined(__GNUC__) && defined(__i386__)
-	  asm volatile("
-                       subl %1, %0
-                       jno noverflowInlineMinus
-                       "
-		       : "=r" (B)
-		       : "g" (ToInt32(B)-SMALLINT), "0" (A));
-	  B = oz_int(smallIntValue(A) - smallIntValue(oz_deref(XPC(2))));
-#else
-	  B = oz_int(smallIntValue(A) - smallIntValue(B));
-#endif
 
-#if defined(ASM_I386_ARITH) && defined(__GNUC__) && defined(__i386__)
-	  asm("noverflowInlineMinus: ");
-#endif
-	  XPC(3) = B;
+#if defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTREGACCESS)
+
+	  Assert(SMALLINT == 6);
+          asm volatile("   xorl $6,%1
+                           subl %1,%0
+                           jo   0f
+                           movl 12(%3),%1
+                           movl %0,(%2,%1)
+                           addl $16,%3
+                           jmp *(%3)
+                        0:
+                       "
+                       :  /* OUTPUT */
+                       :  /* INPUT  */
+                          "r" (A),
+                          "r" (B),
+                          "r" (&(am.xRegs[0])),
+		          "r" (PC)
+                       );
+	  XPC(3) = oz_int(smallIntValue(oz_deref(XPC(1))) -
+			  smallIntValue(oz_deref(XPC(2))));
 	  DISPATCH(4);
+
+#else
+
+	  XPC(3)=oz_int(smallIntValue(A) - smallIntValue(B));
+	  DISPATCH(4);
+
+#endif	    
+
+
 	}
 
 	if (oz_isRef(B)) {
@@ -2019,25 +2026,38 @@ Case(GETVOID)
 	TaggedRef B = XPC(2);
 
       retryINLINEPLUSB1:
-
 	if (oz_isSmallInt(B)) {
-#if defined(ASM_I386_ARITH) && defined(__GNUC__) && defined(__i386__)
-	  asm volatile("
-                       addl %1, %0
-                       jno noverflowInlinePlus
-                       "
-		       : "=r" (B)
-		       : "g" (A), "0" (ToInt32(B)-SMALLINT));
-	  B = oz_int(smallIntValue(A) + smallIntValue(oz_deref(XPC(2))));
-#else
-	  B = oz_int(smallIntValue(A) + smallIntValue(B));
-#endif
 
-#if defined(ASM_I386_ARITH) && defined(__GNUC__) && defined(__i386__)
-	  asm("noverflowInlinePlus: ");
-#endif
-	  XPC(3) = B;
+#if defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTREGACCESS)
+
+	  Assert(SMALLINT == 6);
+          asm volatile("   xorl $6,%0
+                           addl %1,%0
+                           jo   0f
+                           movl 12(%3),%1
+                           movl %0,(%2,%1)
+                           addl $16,%3
+                           jmp *(%3)
+                        0:
+                       "
+                       :  /* OUTPUT */
+                       :  /* INPUT  */
+                          "r" (A),
+                          "r" (B),
+                          "r" (&(am.xRegs[0])),
+		          "r" (PC)
+                       );
+	  XPC(3) = oz_int(smallIntValue(oz_deref(XPC(1))) + 
+			  smallIntValue(oz_deref(XPC(2))));
 	  DISPATCH(4);
+
+#else
+
+	  XPC(3)=oz_int(smallIntValue(A) + smallIntValue(B));
+	  DISPATCH(4);
+
+#endif	    
+
 	}
 
 	if (oz_isRef(B)) {
@@ -2086,10 +2106,13 @@ Case(GETVOID)
 
       if (oz_isSmallInt(A)) {
 	/* INTDEP */
-	XPC(2) = (A != TaggedOzMinInt) ? 
-	  (int) A - (1<<tagSize) :
-	  TaggedOzOverMinInt;
-	DISPATCH(3);
+	if (A != TaggedOzMinInt) {
+	  XPC(2) = (int) A - (1<<tagSize);
+	  DISPATCH(3);
+	} else {
+	  XPC(2) = TaggedOzOverMinInt;
+	  DISPATCH(3);
+	} 
       }
 
       if (oz_isRef(A)) {
@@ -2114,10 +2137,13 @@ Case(GETVOID)
 
       if (oz_isSmallInt(A)) {
 	/* INTDEP */
-	XPC(2) = (A != TaggedOzMaxInt) ? 
-	  (int) A + (1<<tagSize) :
-	  TaggedOzOverMaxInt;
-	DISPATCH(3);
+	if (A != TaggedOzMaxInt) {
+	  XPC(2) = (int) A + (1<<tagSize);
+	  DISPATCH(3);
+	} else {
+	  XPC(2) = TaggedOzOverMaxInt;
+	  DISPATCH(3);
+	} 
       }
 
       if (oz_isRef(A)) {
