@@ -153,7 +153,11 @@ Bool oz_unprotect(TaggedRef *ref) {
 
   aux->remove();
   return OK;
-} 
+}
+
+void oz_unprotectAllOnExit() {
+  extRefs = (ExtRefNode *) 0;
+}
 
 /*
  * Garbage collection needs to be aware of certain objects, e.g.,
@@ -1050,7 +1054,7 @@ void AM::gCollect(int msgLevel)
   CodeArea::gCollectCodeAreaStart();
   PrTabEntry::gCollectPrTabEntries();
   extRefs = extRefs->gCollect();
-  
+
   cacStack.gCollectRecurse();
   gCollectDeferWatchers();
   (*gCollectPerdioRoots)();
