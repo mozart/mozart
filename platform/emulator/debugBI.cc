@@ -231,13 +231,6 @@ OZ_BI_define(BIthreadFrameVariables,2,1)
 } OZ_BI_end
 
 
-OZ_BI_define(BIthreadLocation,1,1)
-{
-  oz_declareThread(0,thread);
-
-  OZ_RETURN(oz_getLocation(GETBOARD(thread)));
-} OZ_BI_end
-
 /*
  * The builtin table
  */

@@ -85,9 +85,4 @@
                               out => ['+record'],
                               BI  => BIthreadFrameVariables},
 
- 'getLocation'   => { in  => ['+thread'],
-                              out => ['+[atom]'],
-                              BI  => BIthreadLocation},
-
-
  );
