@@ -1473,23 +1473,17 @@ OZ_C_ioproc_begin(unix_pipe,4)
 
   int pid =  fork();
   switch (pid) {
-  case 0: // child
+   case 0: // child
     {
-      int i;
-      for (i = 0;
-             i < FD_SETSIZE;
-             i++)
-        {
-          if (i != sv[1]) {
-            close(i);
-          }
-        }
-      dup(sv[1]);
-      dup(sv[1]);
-      dup(sv[1]);
-      if (execvp(s,argv)  < 0) {
-        RETURN_UNIX_ERROR(rpid);
+      for (int i = 0; i < FD_SETSIZE; i++) {
+        if (i != sv[1])
+          close(i);
       }
+      dup(sv[1]);
+      dup(sv[1]);
+      dup(sv[1]);
+      if (execvp(s,argv)  < 0)
+        _exit(-1);
     }
     break;
   case -1:
@@ -1497,8 +1491,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
   default: // parent
     close(sv[1]);
 
-    int i;
-    for (i=1 ; i<argno ; i++)
+    for (int i=1 ; i<argno ; i++)
       free(argv[i]);
 
     return OZ_unifyInt(rpid,pid) == PROCEED
