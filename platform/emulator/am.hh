@@ -107,15 +107,16 @@ public:
   void awakeNode(Board *node);
 
   // entailment check
-  Bool entailment ();
+  inline Bool entailment ();
   Bool isEmptyTrailChunk ();
 
   // Unification
-  Bool unify(TaggedRef ref1, TaggedRef ref2);
-  Bool fastUnify(TaggedRef ref1, TaggedRef ref2);
-  Bool unify(TaggedRef *ref1, TaggedRef ref2);
+  inline Bool unify(TaggedRef ref1, TaggedRef ref2);
+  inline Bool fastUnify(TaggedRef ref1, TaggedRef ref2);
+  inline Bool unify(TaggedRef *ref1, TaggedRef ref2);
   Bool unify(TaggedRef *ref1, TaggedRef *ref2);
   Bool performUnify(TaggedRef *ref1, TaggedRef *ref2);
+  inline void bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef term);
 
   void rebind(TaggedRef *ref, TaggedRef ptr);
   Bool isLocalUVar(TaggedRef var);
@@ -123,11 +124,10 @@ public:
   Bool isLocalCVar(TaggedRef var);
   Bool isLocalVariable(TaggedRef var);
   Bool isInScope (Board *above, Board* node);
-  void pushTask(Board *n,ProgramCounter pc,
+  inline void pushTask(Board *n,ProgramCounter pc,
                        RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
   void genericBind(TaggedRef *varPtr, TaggedRef var,
                    TaggedRef *termPtr, TaggedRef term);
-  void bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef term);
   void bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr);
   void checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
                                   SVariable *rightVar = NULL);

@@ -773,56 +773,7 @@ void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
 
 
 
-/* specially optimized unify: test two most probable cases first:
- *
- *     1. bind a variable
- *     2. test two non-variables
- *     3. but don't forget to check identical variables
- */
 
-inline Bool AM::fastUnify(TaggedRef A, TaggedRef B)
-{
-
-  TaggedRef term1 = A;
-  TaggedRef term2 = B;
-
-  DEREF(term1,term1Ptr,_1);
-  DEREF(term2,term2Ptr,_2);
-
-  if (term1Ptr == term2Ptr && term1Ptr != NULL)
-    return OK;
-
-  TaggedRef proto = currentUVarPrototype;
-  if (proto == term1) {
-    doBind(term1Ptr,B);
-    return OK;
-  }
-
-
-  if (proto == term2) {
-    doBind(term2Ptr,A);
-    return OK;
-  }
-
-  return unify(A,B);
-}
-
-
-// unify two non derefed tagged refs
-inline Bool AM::unify(TaggedRef ref1, TaggedRef ref2)
-{
-  CHECK_NONVAR(ref1);
-  CHECK_NONVAR(ref2);
-
-  return unify(&ref1, &ref2);
-}
-
-inline Bool AM::unify(TaggedRef *ref1, TaggedRef ref2)
-{
-  CHECK_NONVAR(ref2);
-
-  return unify(ref1, &ref2);
-}
 
 
 inline Bool AM::installScript(ConsList &script)
@@ -838,17 +789,6 @@ inline Bool AM::installScript(ConsList &script)
   }
   script.dealloc();
   return ret;
-}
-
-inline void AM::pushTask(Board *n,ProgramCounter pc,
-                         RefsArray y,RefsArray g,
-                         RefsArray x,int i)
-{
-  n->addSuspension();
-  if (!currentTaskStack) {
-    currentTaskStack = am.currentThread->makeTaskStack();
-  }
-  currentTaskStack->pushCont(n,pc,y,g,x,i);
 }
 
 
@@ -912,15 +852,6 @@ inline void AM::checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
                                         term, rightVar));
 }
 
-inline Bool AM::entailment ()
-{
-  return (!AM::currentBoard->hasSuspension()
-          // First test: no subtrees;
-          && trail.isEmptyChunk()
-          // second test: is this node stable?
-          ? OK : NO);
-}
-
 inline Bool AM::isEmptyTrailChunk ()
 {
   return (trail.isEmptyChunk ());
@@ -928,23 +859,6 @@ inline Bool AM::isEmptyTrailChunk ()
 
 inline Bool AM::isToplevel() {
   return AM::currentBoard == AM::rootBoard ? OK : NO;
-}
-
-inline void AM::bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr)
-{
-  genericBind(varPtr,var,termPtr, *termPtr);
-}
-
-inline void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef a)
-{
-  // most probable case first: local UVar
-  // if (isUVar(var) && AM::currentBoard == tagged2VarHome(var)) {
-  // more efficient:
-  if (var == currentUVarPrototype) {
-    doBind(varPtr,a);
-  } else {
-    genericBind(varPtr,var,NULL,a);
-  }
 }
 
 #ifdef OUTLINE

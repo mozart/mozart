@@ -428,7 +428,19 @@ void engine() {
 // ------------------------------------------------------------------------
 // *** process switch
 // ------------------------------------------------------------------------
-  Thread::Start();
+  if (Thread::QueueIsEmpty()) {
+    IO::suspendEngine();
+  }
+
+  e->currentThread = Thread::GetFirst();
+
+  if (e->currentThread->isNormal()) {
+    e->currentTaskStack = e->currentThread->getTaskStack();
+  } else {
+    e->currentTaskStack = (TaskStack *) NULL;
+  }
+
+  Alarm::RestartProcess();
 
 
 // ------------------------------------------------------------------------
@@ -2021,6 +2033,11 @@ void engine() {
 
  LBLreduce:
   DebugTrace(trace("reduce board",CBB));
+
+  /* optimize: builtin called on toplevel mm (29.8.94) */
+  if (CBB == e->rootBoard) {
+    goto LBLfindWork;
+  }
 
   CBB->unsetNervous();
 
