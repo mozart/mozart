@@ -203,7 +203,6 @@ public:
   }
   Bool isStable(void);
   Bool isBlocked(void);
-  void checkSolveThreads(void);
   void checkStability(void);
   void checkExtSuspension(Suspendable *);
 

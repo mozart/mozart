@@ -146,29 +146,6 @@ void Board::incRunnableThreads(void) {
 Thread * oz_newThreadInject(Board * bb);
 
 inline
-void Board::checkSolveThreads(void) {
-  Assert(!isCommitted());
-
-  Board * bb = this;
-
-  while (!bb->isRoot()) {
-
-    Assert(bb->crt >= 0);
-
-    if (bb->crt > 0)
-      return;
-
-    if (bb->isStable()) {
-      oz_newThreadInject(bb);
-      return;
-    }
-
-    bb = bb->getParent();
-  }
-
-}
-
-inline
 void Board::decRunnableThreads(void) {
   Assert(!isCommitted());
 
@@ -292,7 +269,7 @@ OZ_Return Board::merge(Board *bb, Bool sibling) {
   // Merge propagators (must be after script installation, since script
   //                    installation might wake some propagators!!!!)
   (bb->lpq).merge(lpq);
-  // This might cause to serving threads for the same board!
+  // This might cause two serving threads for the same board!
 
   Assert(oz_isCurrentBoard(bb));
 
