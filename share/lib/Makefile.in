@@ -452,11 +452,13 @@ bootstrap:
 #    make check
 #  test a new emulator with
 #    make check OZEMULATOR=$(HOME)/Oz/Emulator/oz.emulator.bin
-.PHONY: stage1 stage2 stage3 check
+.PHONY: stage1 stage2 stage2b stage3 stage3b check
 
 STAGE1=./stage1
 STAGE2=./stage2
+STAGE2B=./stage2b
 STAGE3=./stage3
+STAGE3B=./stage3b
 
 stage1:
         $(MAKE) all
@@ -469,12 +471,26 @@ stage2:
         OZINIT=$(STAGE1)/lib/Init.ozc \
         OZ_NOLOAD="="
 
+stage2b:
+        $(MAKE) install-main2 PREFIX=$(STAGE2B) \
+        OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE2)/lib/:.:= \
+        OZBATCH=$(STAGE2)/bin/ozbatch \
+        OZINIT=$(STAGE2)/lib/Init.ozc \
+        OZ_NOLOAD="="
+
 stage3:
         $(MAKE) install-main2 PREFIX=$(STAGE3) \
-        OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE2)/lib/:.:= \
+        OZ_LOAD=.:= \
         OZBATCH=$(SRCDIR)/ozbatch.sh \
         OZINIT=$(STAGE2)/lib/Init.ozc \
         OZMAFILE=$(STAGE2)/lib/ozbatch.ozm \
+        OZ_NOLOAD="="
+
+stage3b:
+        $(MAKE) install-main2 PREFIX=$(STAGE3B) \
+        OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE3)/lib/:.:= \
+        OZBATCH=$(STAGE3)/bin/ozbatch \
+        OZINIT=$(STAGE3)/lib/Init.ozc \
         OZ_NOLOAD="="
 
 check:
