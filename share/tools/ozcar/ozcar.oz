@@ -25,10 +25,11 @@ Ozcar =
 	   {Compile "\\sw -optimize +debuginfo"}
 	   
 	   %% still searching for the gc bug... :-(
-	   {System.set gc(on:false)}
+	   %% found it (Tue Mar 11 1997)
+	   %{System.set gc(on:false)}
 	   
 	   {Debug.on}
-	   Gui,rawStatus(TitleName # ' initialized successfully')
+	   Gui,rawStatus(TitleName # ' initialized')
 	end
 	
 	meth exit
