@@ -28,14 +28,16 @@
 functor
 import
    OS(system tmpnam unlink)
+\ifdef VERBOSE
    System(showError)
+\endif
 export
    'class': PostScriptToGIFClass
 define
 
    proc {PsToPpm PsName PpmName}
       Cmd = ('(cat '#PsName#'; echo quit) | '#
-	     'gs -q -dNOPAUSE '#		
+	     'gs -q -dNOPAUSE '#
 	     '-dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r102 '#
 	     '-sDEVICE=ppmraw -sOutputFile='#PpmName#' - 1>&2')
 \ifdef VERBOSE
@@ -54,7 +56,8 @@ define
 	      else 'pnmscale '#Info#'  2>/dev/null | '
 	      end #
 	      'ppmquant 256 2>/dev/null | ' #
-	      'ppmtogif -interlace -transparent rgbi:1/1/1 2>/dev/null > '#GifName)
+	      'ppmtogif -interlace -transparent rgbi:1/1/1 2>/dev/null > '#
+	      GifName)
 \ifdef VERBOSE
       {System.showError Cmd}
 \endif
@@ -64,7 +67,7 @@ define
 	 {Exception.raiseError ozDoc(ppmtogif(GifName) Stat)}
       end
    end
-   
+
    class PostScriptToGIFClass
       attr
 	 DirName: unit
