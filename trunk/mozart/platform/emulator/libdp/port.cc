@@ -55,21 +55,6 @@ OZ_Return portSendInternal(Tertiary *p, TaggedRef msg){
   DSite* site     = na->site;
   int index      = na->index;
   
-// AN! What should be done about this?
-//  OZ_Term nogoods = bs->getNoGoods();
-//    if (!oz_eq(oz_nil(),nogoods)) {
-//    /*
-//      int portIndex;
-//      OZ_Term t;
-//      unmarshal_M_PORT_SEND(bs,portIndex,t);
-//      dumpRemoteMsgBuffer(bs);
-//      */
-//      return raiseGeneric("portSend:resources",
-//  			"Resources found during send to port",
-//  			oz_mklist(OZ_pairA("Resources",nogoods),
-//  				  OZ_pairA("Port",makeTaggedTert(p))));
-//    }
-
   MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
   msgC->put_M_PORT_SEND(index,msg);
 
@@ -85,9 +70,6 @@ OZ_Return portSendImpl(Tertiary *p, TaggedRef msg)
 {
   Assert(p->getTertType()==Te_Proxy);
   if(getEntityCond(p)!= ENTITY_NORMAL){
-    //    printf("PortProblem %d at: %s",getEntityCond(p),myDSite->stringrep());
-    //printf("from: %s\n",
-    //	   BT->getBorrow(p->getIndex())->getNetAddress()->site->stringrep());
     
     pendThreadAddToEnd(&(((PortProxy*)p)->pending),
 		       msg,msg,NOEX);
@@ -123,18 +105,17 @@ void gcDistPortRecurseImpl(Tertiary *p)
 }
 
 Bool  PortProxy::canSend(){
+  /*
+    This test is currently commented away. 
+    Problems where experienced when threads
+    where put to sleep because of filled queues. 
+    Erik. 
+  */
   return TRUE; 
   
   BorrowEntry* b = BT->getBorrow(this->getIndex());
    NetAddress *na = b->getNetAddress();
    DSite* site     = na->site;
-   /*
-     if(!(site->getQueueStatus() < 
-     ozconf.dpFlowBufferSize))
-	printf("ps c:%d max: %d\n",
-	site->getQueueStatus(dummy), 
-	ozconf.dpFlowBufferSize);
-   */
    return(site->getQueueStatus() < 
 	  ozconf.dpFlowBufferSize);}
 
