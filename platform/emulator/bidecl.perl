@@ -2251,19 +2251,6 @@ $builtins = {
 			     BI  => BIlivenessX,
 			     native => true},
 
-    'index2Tagged'	=> { in  => ['int'],
-			     out => ['value'],
-			     BI  => BIindex2Tagged,
-			     ifdef=>'UNUSED',
-			     native => true},
-
-    'time2localTime'	=> { in  => ['int'],
-			     out => ['value'],
-			     BI  => BItime2localTime,
-			     ifdef=>'UNUSED',
-			     native => true},
-
-
 
     ##* Compiler
     ###* OPI
