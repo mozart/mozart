@@ -1159,5 +1159,5 @@ void AM::gCollect(int msgLevel)
   cacStack.exit();
 
   //  malloc_stats();
-  DebugCode(uFillNode = 0;)
+  DebugCode(uFillNode = 0;);
 } // AM::gc
