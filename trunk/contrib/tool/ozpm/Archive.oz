@@ -4,6 +4,7 @@ export
    Make
    MakeFrom
 import
+   System(show:Show)
    ZFile at 'zfile.so{native}'
    OS(unlink)
    Open(file)

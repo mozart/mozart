@@ -12,7 +12,7 @@ import
    System(showInfo:Print show:Show)
    Pickle(load save)
 define
-   fun {Install Package Force}
+   fun {Install Package Force Leave}
       PackageResult = {Resolve.localize Package}
       A
    in
@@ -21,6 +21,8 @@ define
 	 {New Archive.'class' init(PackageFile) A}
 	 PLS={A lsla($)}
 	 PInfo Tmp={OS.tmpnam}
+	 FileList
+	 Conflicts={NewCell nil}
       in
 	 try
 	    {A extract(FILEMFTPKL Tmp)}
@@ -28,6 +30,7 @@ define
 	 finally
 	    try {OS.unlink Tmp} catch _ then skip end
 	 end
+	 FileList={NewCell PInfo.filelist}
 	 %% now we have the information and file names of the package
 	 %%
 	 %% cross checks with the informations of the local installation is done here
@@ -40,19 +43,30 @@ define
 	       for F in Entry.filelist do
 		  for E in PInfo.filelist do
 		     if E==F then
-			raise ok(nameclash(name:E loc:Entry pkg:PInfo)) end
+			if Leave then
+			   {Assign FileList {Record.subtract {Access FileList} E}} %% don't install this file
+			else
+			   {Assign Conflicts used(name:E loc:Entry pkg:PInfo)|{Access Conflicts}}
+			end
 		     end
 		  end
 	       end
+	    end
+	    if {Access Conflicts}\=nil then
+	       raise ok(nameclash({Access Conflicts})) end
 	    end
 	 end
 	 %%
 	 %% getting this far means the package can be installed
 	 %%
-	 for File in PInfo.filelist do
+	 for File in {Access FileList} do
 	    F = {DirPrefix resolve(File $)}
 	 in
 	    {F mkdirs}
+	    if {F isFile($)} then
+	       {F rmtree}
+	       {Show {F isFile($)}}
+	    end
 	    {A extract(File {F toString($)})}
 	 end
 	 %% update ozpminfo
@@ -74,13 +88,16 @@ define
    end
    %%
    proc {Run}
-      case {Install Args.'in' Args.'force'}
+      case {Install Args.'in' Args.'force' Args.'leave'}
       of success(pkg:P) then
 	 {Print "Package "#P.id#" was successfully installed"}
 	 {Application.exit 0}
-      [] nameclash(name:N loc:L pkg:P) then
-	 {Print "Unable to install package '"#P.id#"'"}
-	 {Print "The file '"#N#"' is conflicting with the installed package '"#L.id#"'"}
+      [] nameclash(L) then
+	 {Print "Unable to install package '"#L.pkg.id#"'"}
+	 {ForAll L
+	  proc{$ R} 
+	     {Print "The file '"#R.name#"' is conflicting with the installed package '"#R.loc.id#"'"}
+	  end}
 	 {Application.exit 1}
       [] alreadyinstalled(loc:L pkg:P) then
 	 if {HasFeature P version} then

@@ -3,11 +3,11 @@ export
    Run
 import
    Message(slurp:Slurp parse:Parse)
-   System(showInfo:Print)
+%   System(showInfo:Print show:Show)
    Global(fileMftPkl     : FILEMFTPKL
 	  fileMftTxt     : FILEMFTTXT
 	  filePkgDft     : FILEPKGDFT
-	  args             : Args)
+	  args           : Args)
    Pickle(save)
    Open(file)
    Archive(makeFrom)
@@ -19,16 +19,15 @@ define
       TXT = {Slurp Inf}
       O   = {Parse TXT}
       {O check_keys([id])}	% id is mandatory
-      IN  = {{{{Path.make if In=="" then "." else In end}
-	       expand($)} toBase($)} dirname($)}
-      N   = {Length {IN toString($)}}+1
+      IN  = {{{Path.make if In=="" then "." else In end}
+	      expand($)} toBase($)}
+      N   = {Length {IN toString($)}}
       Files =
       {Filter {Map {IN leaves($)}
 	       fun {$ F}
-		  {String.toAtom {List.drop {{Path.make F} toString($)} N}}
+		  {String.toAtom {List.drop {F.filename toString($)} N}}
 	       end}
        fun {$ F} F\=FILEMFTPKL andthen F\=FILEMFTTXT end}
-      {ForAll Files Print}
       Info={Record.adjoinAt
 	    {Record.map
 	     {List.toRecord package {O entries($)}}

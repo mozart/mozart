@@ -5,6 +5,7 @@ import
    QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
    Global(localDB packageMogulDB authorMogulDB)
    ActionInstall(install:Install)
+   ActionRemove(remove:Remove)
    ActionInfo(view)
    System(show:Show)
    Browser(browse:Browse)
@@ -681,51 +682,61 @@ define
 		       )}
       end
 
-      meth install
-	 Packages={List.filter @curpkg.url_pkg fun{$ URL} {IsExtension "pkg" URL} end}
+      meth install(pkg:Pkg<=@curpkg nu:Nu<=0 force:Force<=false leave:Leave<=false)
+	 Packages={List.filter Pkg.url_pkg fun{$ URL} {IsExtension "pkg" URL} end}
 	 LB
-	 Ok
 	 N={NewCell 1}
+	 Ok
       in
-	 {{QTk.build td(title:"Install a package"
-			listbox(padx:10 pady:10
-				glue:nswe
-				tdscrollbar:true
-				handle:LB
-				action:proc{$}
-					  {Assign N {LB get(firstselection:$)}}
-				       end
-				height:{Length Packages}
-				init:Packages)
-			lr(glue:swe
-			   button(text:"Ok"
-				  action:toplevel#close
-				  return:Ok)
-			   button(text:"Cancel"
-				  action:toplevel#close)))} show(modal:true)}
-	 {LB set(selection:[true])} % select the first element
-	 {Wait Ok} % wait for the window to close
+	 if Nu==0 then
+	    {{QTk.build td(title:"Install a package"
+			   listbox(padx:10 pady:10
+				   glue:nswe
+				   tdscrollbar:true
+				   handle:LB
+				   action:proc{$}
+					     {Assign N {LB get(firstselection:$)}}
+					  end
+				   height:{Length Packages}
+				   init:Packages)
+			   lr(glue:swe
+			      button(text:"Ok"
+				     action:toplevel#close
+				     return:Ok)
+			      button(text:"Cancel"
+				     action:toplevel#close)))} show(modal:true)}
+	    {LB set(selection:[true])} % select the first element
+	    {Wait Ok} % wait for the window to close
+	 else
+	    Ok=true {Assign N Nu}
+	 end
 	 if Ok andthen {Access N}>0 then
 	    ToInstall={List.nth Packages {Access N}}
 	 in
-	    case {Install ToInstall false}
+	    case {Install ToInstall Force Leave}
 	    of success(pkg:P) then
-	       {{QTk.build td(title:"Installation succeeded"
+	       {{QTk.build td(title:"Package installation"
 			      label(padx:10 pady:10
 				    text:P.id#" was successfully installed")
 			      button(glue:s
 				     text:"Close"
 				     action:toplevel#close))} show(wait:true modal:true)}
 	       {self displayInstalled}
-	    []  nameclash(name:N loc:L pkg:P) then
-	       {{QTk.build td(title:"Installation failed"
-			      label(padx:10 pady:10
-				    text:"Unable to install package '"#P.id#"'\n"#
-				    "The file '"#N#"' is conflicting with the installed package '"#L.id#"'")
-			      button(glue:s
-				     text:"Close"
-				     action:toplevel#close))} show(wait:true modal:true)}
+	    []  nameclash(L) then
+	       Return
+	    in
+	       {self conflict("Package installation"
+			      "Files are conflicting with other installed packages"
+			      "Overwrite these files"
+			      "Don't overwrite these files"
+			      L
+			      Return)}
+	       if Return\=cancel then
+		  {self install(pkg:Pkg nu:{Access N} force:Return==choice1 leave:Return==choice2)}
+	       end
 	    [] alreadyinstalled(loc:L pkg:P) then
+	       UnInstall Overwrite
+	    in
 	       {{QTk.build td(title:"Installation failed"
 			      label(padx:10 pady:10
 				    text:
@@ -739,17 +750,137 @@ define
 				    else
 				       "A package of the same id is already installed"
 				    end)
-			      button(glue:s
-				     text:"Close"
-				     action:toplevel#close))} show(wait:true modal:true)}
+			      lr(glue:swe
+				 button(text:"Uninstall first"
+					tooltips:"Properly uninstall the old package, then install this one"
+					return:UnInstall
+					action:toplevel#close)
+				 button(text:"Overwrite installation"
+					tooltips:"Install this package on top of the old one.\nUse with care..."
+					return:Overwrite
+					action:toplevel#close)
+				 button(text:"Cancel"
+					action:toplevel#close)))} show(wait:true modal:true)}
+	       if UnInstall then
+		  %% first uninstall the other package
+		  {self desinstall(pkg:Pkg)}
+		  {self install(pkg:Pkg nu:{Access N})}
+	       elseif Overwrite then
+		  %% force installation of this package
+		  {self install(pkg:Pkg nu:{Access N} force:true)}
+	       end
 	    end
 	 end
       end
 
-      meth desinstall
-	 {{QTk.build td(label(text:"Not yet implemented")
-			button(text:"Close" action:toplevel#close
-			       glue:s))} show(wait:true modal:true)}
+      meth desinstall(pkg:Pkg<=@curpkg)
+	 Confirm
+      in
+	 {{QTk.build td(title:"Package removal"
+			label(text:"Are you sure you want to completely remove package : "#Pkg.id#" ?"
+			      padx:10
+			      pady:10)
+			lr(glue:swe
+			   button(text:"Ok"
+				  action:toplevel#close
+				  return:Confirm)
+			   button(text:"Cancel"
+				  action:toplevel#close)))} show(wait:true modal:true)}
+	 if Confirm then %% starts to remove the package
+	    case {Remove Pkg.id false false}
+	    of success(pkg:P) then
+	       {{QTk.build td(title:"Package removal"
+			      label(text:"Package "#Pkg.id#" was successfully uninstalled")
+			      button(text:"Close" glue:s action:toplevel#close))}
+		show(wait:true modal:true)}
+	       {self displayInstalled}
+	    [] notFound then
+	       {{QTk.build td(label(text:"No package "#Pkg.id#" currently installed")
+			      button(text:"Close" glue:s action:toplevel#close))}
+		show(wait:true modal:true)}
+	    [] conflict(L) then
+	       Return
+	    in
+	       {self conflict("Package removal"
+			      "Files are used by other packages"
+			      "Leave these files"
+			      "Remove these files also"
+			      L
+			      Return)}
+	       if Return\=cancel then
+		  case {Remove Pkg.id Return==choice2 Return==choice1}
+		  of success(pkg:Pkg) then
+		     {{QTk.build td(title:"Package removal"
+				    label(text:"Package "#Pkg.id#" was successfully uninstalled")
+				    button(text:"Close" glue:s action:toplevel#close))}
+		      show(wait:true modal:true)}
+		     {self displayInstalled}
+		  else
+		     {{QTk.build td(title:"Package removal"
+				    label(text:"Unable to remove package, unexpected error !")
+				    button(text:"Close" glue:s action:toplevel#close))}
+		      show(wait:true modal:true)}
+		  end
+	       end
+	    end
+	 else skip end
+      end
+
+      meth conflict(Title Label Choice1 Choice2 FileList Return)
+	 Place Leave More Ok
+      in
+	 {{QTk.build td(title:Title
+			label(text:Label)
+			radiobutton(text:Choice1
+				    group:leaveOrForce
+				    glue:sw
+				    return:Leave)
+			radiobutton(text:Choice2
+				    glue:w
+				    group:leaveOrForce)
+			placeholder(handle:Place glue:nswe)
+			lr(glue:swe
+			   button(text:"More..."
+				  handle:More
+				  action:proc{$}
+					    if {More get(text:$)}=="More..." then
+					       %% place file informations
+					       fun{Loop L I}
+						  case L
+						  of X|Xs then
+						     I#label(text:{VirtualString.toString X.loc.id}
+							     glue:w)|I+1#label(text:{VirtualString.toString X.name} glue:w)|I+2#newline|{Loop Xs I+3}
+						  else nil
+						  end
+					       end
+					    in
+					       {More set(text:"Less...")}
+					       {Place set(
+							 scrollframe(glue:nswe
+								     tdscrollbar:true
+								     lrscrollbar:true
+								     {List.toRecord lr
+								      glue#nswe|
+								      1#label(text:"Package"  glue:we relief:raised borderwidth:1)|
+								      2#label(text:"Filename" glue:we relief:raised borderwidth:1)|
+								      3#newline|{Loop FileList 4}}
+								    ))}
+					    else
+					       {More set(text:"More...")}
+					       {Place set(empty)}
+					    end
+					 end)
+			   button(text:"Ok"
+				  action:toplevel#close
+				  return:Ok)
+			   button(text:"Cancel"
+				  action:toplevel#close)))} show(wait:true modal:true)}
+	 Return=if Ok then
+		   if Leave then choice1
+		   else choice2 end
+		else
+		   cancel
+		end
       end
       
    end
