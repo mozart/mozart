@@ -23,6 +23,8 @@
 #include "fdhook.hh"
 
 
+#define KOSTJA_MAGIC 0x6b6f7374
+
 // -----------------------------------------------------------------------
 // TOPLEVEL FAILURE (HF = Handle Failure)
 
@@ -1164,7 +1166,7 @@ void engine()
         Continuation *cont;
         Actor *aa;
         DebugCode (Thread *savedCT = e->currentThread);
-        DebugCode (e->currentThread = (Thread *) 0x6b6f7374);
+        DebugCode (e->currentThread = (Thread *) KOSTJA_MAGIC);
         switch (e->checkEntailment(cont,aa)) {
         case CE_FAIL:
           DebugCode (e->currentThread = savedCT);
@@ -1314,7 +1316,7 @@ LBLkillThread:
 
       Continuation *cont;
       Actor *aa;
-      DebugCode (e->currentThread = (Thread *) 0x6b6f7374);
+      DebugCode (e->currentThread = (Thread *) KOSTJA_MAGIC);
       switch (e->checkEntailment(cont,aa)) {
       case CE_FAIL:
         DebugCode (e->currentThread = (Thread *) NULL);
@@ -2914,14 +2916,14 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
         currentBoard->incSuspCount(waitBoard->getSuspCount()-1);
 
         DebugCode (if (!currentThread)
-                   currentThread = (Thread *) 0x6b6f7374;);
+                   currentThread = (Thread *) KOSTJA_MAGIC;);
 
         if (!installScript(waitBoard->getScriptRef())) {
-          DebugCode (if (currentThread == (Thread *) 0x6b6f7374)
+          DebugCode (if (currentThread == (Thread *) KOSTJA_MAGIC)
                      currentThread = (Thread *) NULL;);
           return CE_FAIL;
         }
-        DebugCode (if (currentThread == (Thread *) 0x6b6f7374)
+        DebugCode (if (currentThread == (Thread *) KOSTJA_MAGIC)
                    currentThread = (Thread *) NULL;);
 
         /* unit commit & WAITTOP */
