@@ -12,12 +12,13 @@
 #ifndef __fdgenvar_icc__
 #define __fdgenvar_icc__
 
-#if !defined(OUTLINE) && !defined(FDOUTLINE)
+#if defined(__GNUC__) && !defined(OUTLINE) && !defined(FDOUTLINE)
 #pragma interface
 #endif
 
-inline void GenFDVariable::propagate(TaggedRef var, FDState state,
-				     TaggedRef term)
+inline
+void GenFDVariable::propagate(TaggedRef var, FDState state,
+			      TaggedRef term)
 {
 #ifdef DEBUG_FD
   if ((int)this != var >> 4)
@@ -42,17 +43,19 @@ inline void GenFDVariable::propagate(TaggedRef var, FDState state,
 }
 
 
-inline void GenFDVariable::propagate(TaggedRef var, FDState state,
-				     TaggedRef* tPtr) {
+inline
+void GenFDVariable::propagate(TaggedRef var, FDState state,
+			      TaggedRef * tPtr) {
   propagate(var, state, makeTaggedRef(tPtr));
 }
 
 
-inline SuspList* concSuspList(SuspList* list_a, SuspList* list_b)
+inline
+SuspList * concSuspList(SuspList * list_a, SuspList * list_b)
 {
   if (list_a){
     if (list_b){
-      for (SuspList* aux = list_a;
+      for (SuspList * aux = list_a;
 	   aux->getNext();
 	   aux = aux->getNext()
 	   );
@@ -63,7 +66,9 @@ inline SuspList* concSuspList(SuspList* list_a, SuspList* list_b)
   return list_b;
 }
 
-inline void GenFDVariable::relinkSuspList(GenFDVariable* leftVar)
+
+inline
+void GenFDVariable::relinkSuspList(GenFDVariable * leftVar)
 {
   GenCVariable::relinkSuspList(leftVar); // any
   for (int i = 0; i < any; i++)
@@ -71,20 +76,22 @@ inline void GenFDVariable::relinkSuspList(GenFDVariable* leftVar)
     concSuspList(leftVar->fdSuspList[i], fdSuspList[i]);
 }
 
-inline void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef* trPtr)
+inline
+void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
 {
 #ifdef DEBUG_FD
   if (! (finiteDomain == singleton))
     error("Singleton expected.");
 #endif
 
-  TaggedRef si = newSmallInt(finiteDomain.getSingleton());
+  TaggedRef si = newSmallInt(finiteDomain.singl());
   propagate(*trPtr, det, si);
   *trPtr = si;
 }
 
 
-inline Bool isGenFDVar(TaggedRef term)
+inline
+Bool isGenFDVar(TaggedRef term)
 {
   GCDEBUG(term);
 #ifdef CVAR_ONLY_FDVAR
@@ -96,7 +103,9 @@ inline Bool isGenFDVar(TaggedRef term)
 #endif
 }
 
-inline GenFDVariable* tagged2GenFDVar(TaggedRef term)
+
+inline
+GenFDVariable * tagged2GenFDVar(TaggedRef term)
 {
   GCDEBUG(term);
 #ifdef DEBUG_FD

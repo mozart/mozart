@@ -12,15 +12,17 @@
 #ifndef __genvar_icc__
 #define __genvar_icc__
 
-#ifndef OUTLINE
+#if defined(__GNUC__) && !defined(OUTLINE)
 #pragma interface
 #endif
 
 
 class GenFDVariable;
 
-inline void GenCVariable::relinkSuspList(GenCVariable* leftVar){
-  SuspList *sl = getSuspList();
+inline
+void GenCVariable::relinkSuspList(GenCVariable * leftVar)
+{
+  SuspList * sl = getSuspList();
   unlinkSuspList();
   leftVar->appendSuspList(sl);
 }
