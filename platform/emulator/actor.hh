@@ -85,7 +85,7 @@ public:
   void addChildInternal(Board *n);
   void failChildInternal(Board *n);
   Board *getChild();
-  Bool isThereOneChild();
+  Bool hasOneChild();
 };
 
 WaitActor *CastWaitActor(Actor *a);

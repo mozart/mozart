@@ -1386,7 +1386,7 @@ TaskStack *TaskStack::gc()
     case C_CFUNC_CONT:
       // Continuation to continue at c codeaddress
       if (!bb->getBoardDeref()) {
-	pop(); // StateFun
+	pop(); // BIFun
 	pop(); // Suspension
 	pop(); // x regs
 	break;
@@ -1395,7 +1395,7 @@ TaskStack *TaskStack::gc()
       newBB = bb->gc();
       newStack->gcQueue(setContFlag(newBB,cFlag));
       
-      newStack->gcQueue(pop()); // StateFun
+      newStack->gcQueue(pop()); // BIFun
 
       Suspension* susp = (Suspension*) pop();
       newStack->gcQueue(susp->gc(NO));
