@@ -79,7 +79,7 @@
     <Meta name="html.split" value="control.controlabs">
     <Meta name="html.split" value="control.exception">
     <Meta name="html.split" value="control.sysexcept">
--->
+ -->
     <Meta name="html.split" value="chapter.functional">
     <Meta name="html.split" value="chapter.modules">
     <Meta name="html.split" value="chapter.concurrency">
@@ -88,15 +88,15 @@
     <Meta name="html.split" value="section.concurrency.stream">
     <Meta name="html.split" value="section.concurrency.priority">
     <Meta name="html.split" value="section.concurrency.demanddriven">
-    <Meta name="html.split" value="section.concurrency.termination">
--->
+    <Meta name="html.split" value="section.concurrency.termination"> 
+ -->
     <Meta name="html.split" value="chapter.stateful">
 <!--
     <meta name="html.split" value="section.stateful.port">
     <meta name="html.split" value="section.stateful.clientserver">
     <meta name="html.split" value="section.stateful.chunk">
     <meta name="html.split" value="section.stateful.cell">
--->    
+ -->    
     <Meta name="html.split" value="chapter.classes">
 <!--
     <Meta name="html.split" value="section.classes.classprinciples">
@@ -109,7 +109,7 @@
     <Meta name="html.split" value="section.classes.attributes">
     <Meta name="html.split" value="section.classes.private">
     <Meta name="html.split" value="section.classes.defaultargs">
--->
+ -->
     <Meta name="html.split" value="chapter.objectscc">
 <!--
     <Meta name="html.split" value="section.objectscc.lock">
@@ -118,7 +118,7 @@
     <Meta name="html.split" value="section.objectscc.fifo">
     <Meta name="html.split" value="section.objectscc.monitor">
     <Meta name="html.split" value="section.objectscc.active">
-<--
+ -->
     <Meta name="html.split" value="chapter.lp">
     <Meta name="html.split.bib" value="">
 
