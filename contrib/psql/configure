@@ -1746,6 +1746,10 @@ echo "configure:1721: checking $CXX version is at least 2.7" >&5
   oz_tmp_want="2.7"
   oz_tmp_IFS="$IFS"
   IFS="$IFS._-"
+  oz_tmp_got="$oz_tmp_got"
+  oz_tmp_want="$oz_tmp_want"
+  IFS=""
+  IFS="$oz_tmp_IFS"
   set $oz_tmp_got DONE
   oz_tmp__ok=yes
   for oz_tmp_cur in $oz_tmp_want; do
@@ -1759,7 +1763,6 @@ echo "configure:1721: checking $CXX version is at least 2.7" >&5
     fi
     shift
   done
-  IFS=$oz_tmp_IFS
   oz_tmp_ok=$oz_tmp__ok
     fi
   fi
@@ -1808,7 +1811,7 @@ You may find a mirror archive closer to you by consulting:
 	    for ozm_opt in $oz_for
 	    do
 		echo $ac_n "checking c++ compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:1812: checking c++ compiler option $ozm_opt" >&5
+echo "configure:1815: checking c++ compiler option $ozm_opt" >&5
 		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 		if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1839,7 +1842,7 @@ fi
     ;;
     esac
     echo $ac_n "checking how to run the C++ preprocessor""... $ac_c" 1>&6
-echo "configure:1843: checking how to run the C++ preprocessor" >&5
+echo "configure:1846: checking how to run the C++ preprocessor" >&5
 if test -z "$CXXCPP"; then
 if eval "test \"`echo '$''{'ac_cv_prog_CXXCPP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1852,12 +1855,12 @@ ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftes
 cross_compiling=$ac_cv_prog_cxx_cross
   CXXCPP="${CXX-g++} -E"
   cat > conftest.$ac_ext <<EOF
-#line 1856 "configure"
+#line 1859 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1861: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1864: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1889,23 +1892,23 @@ echo "$ac_t""$CXXCPP" 1>&6
   else
     
   echo $ac_n "checking for C++ compiler""... $ac_c" 1>&6
-echo "configure:1893: checking for C++ compiler" >&5
+echo "configure:1896: checking for C++ compiler" >&5
   CXX=$oz_cv_CXX
   echo "$ac_t""(cached) $CXX" 1>&6
     
   echo $ac_n "checking whether we are using GNU C++""... $ac_c" 1>&6
-echo "configure:1898: checking whether we are using GNU C++" >&5
+echo "configure:1901: checking whether we are using GNU C++" >&5
   GXX=$oz_cv_GXX
   echo "$ac_t""(cached) $GXX" 1>&6
     
   echo $ac_n "checking for C++ preprocessor""... $ac_c" 1>&6
-echo "configure:1903: checking for C++ preprocessor" >&5
+echo "configure:1906: checking for C++ preprocessor" >&5
   CXXCPP=$oz_cv_CXXCPP
   echo "$ac_t""(cached) $CXXCPP" 1>&6
     if test "${CXXFLAGS+set}" != set; then
       
   echo $ac_n "checking for default CXXFLAGS""... $ac_c" 1>&6
-echo "configure:1909: checking for default CXXFLAGS" >&5
+echo "configure:1912: checking for default CXXFLAGS" >&5
   CFLAGS=$oz_cv_CFLAGS
   echo "$ac_t""(cached) $CFLAGS" 1>&6
     fi
@@ -1923,7 +1926,7 @@ cross_compiling=$ac_cv_prog_cxx_cross
 
 
 echo $ac_n "checking for gethostbyname in -lnsl""... $ac_c" 1>&6
-echo "configure:1927: checking for gethostbyname in -lnsl" >&5
+echo "configure:1930: checking for gethostbyname in -lnsl" >&5
 ac_lib_var=`echo nsl'_'gethostbyname | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1931,7 +1934,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lnsl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1935 "configure"
+#line 1938 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -1945,7 +1948,7 @@ int main() {
 gethostbyname()
 ; return 0; }
 EOF
-if { (eval echo configure:1949: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:1952: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -1973,7 +1976,7 @@ else
 fi
 
 echo $ac_n "checking for socket in -lsocket""... $ac_c" 1>&6
-echo "configure:1977: checking for socket in -lsocket" >&5
+echo "configure:1980: checking for socket in -lsocket" >&5
 ac_lib_var=`echo socket'_'socket | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1981,7 +1984,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lsocket  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1985 "configure"
+#line 1988 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -1995,7 +1998,7 @@ int main() {
 socket()
 ; return 0; }
 EOF
-if { (eval echo configure:1999: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2002: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -2024,7 +2027,7 @@ fi
 
 
 echo $ac_n "checking for --with-psql-inc""... $ac_c" 1>&6
-echo "configure:2028: checking for --with-psql-inc" >&5
+echo "configure:2031: checking for --with-psql-inc" >&5
 # Check whether --with-psql-inc or --without-psql-inc was given.
 if test "${with_psql_inc+set}" = set; then
   withval="$with_psql_inc"
@@ -2037,7 +2040,7 @@ fi
 echo "$ac_t""$oz_cv_with_psql_inc" 1>&6
 
 echo $ac_n "checking for --with-psql-lib""... $ac_c" 1>&6
-echo "configure:2041: checking for --with-psql-lib" >&5
+echo "configure:2044: checking for --with-psql-lib" >&5
 # Check whether --with-psql-lib or --without-psql-lib was given.
 if test "${with_psql_lib+set}" = set; then
   withval="$with_psql_lib"
@@ -2050,7 +2053,7 @@ fi
 echo "$ac_t""$oz_cv_with_psql_lib" 1>&6
 
 echo $ac_n "checking for --with-psql-ldflags""... $ac_c" 1>&6
-echo "configure:2054: checking for --with-psql-ldflags" >&5
+echo "configure:2057: checking for --with-psql-ldflags" >&5
 # Check whether --with-psql-ldflags or --without-psql-ldflags was given.
 if test "${with_psql_ldflags+set}" = set; then
   withval="$with_psql_ldflags"
@@ -2079,7 +2082,7 @@ if test "$oz_cv_with_psql_inc" != NONE; then
 fi
 
   echo $ac_n "checking for libpq-fe.h""... $ac_c" 1>&6
-echo "configure:2083: checking for libpq-fe.h" >&5
+echo "configure:2086: checking for libpq-fe.h" >&5
 if eval "test \"`echo '$''{'oz_cv_header_libpq_fe_h'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2090,12 +2093,12 @@ else
       for oz_tmp in $oz_inc_path; do
 	CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
 	cat > conftest.$ac_ext <<EOF
-#line 2094 "configure"
+#line 2097 "configure"
 #include "confdefs.h"
 #include "libpq-fe.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2099: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2102: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2112,12 +2115,12 @@ rm -f conftest*
       CPPFLAGS="$oz_tmp_cppflags"
       if test "$oz_tmp_ok" = no; then
 	cat > conftest.$ac_ext <<EOF
-#line 2116 "configure"
+#line 2119 "configure"
 #include "confdefs.h"
 #include "libpq-fe.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2121: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2124: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2168,7 +2171,7 @@ fi
 
   if test -n "$oz_cv_lib_path_ldflags_pq_PQerrorMessage"; then
     echo $ac_n "checking for library pq""... $ac_c" 1>&6
-echo "configure:2172: checking for library pq" >&5
+echo "configure:2175: checking for library pq" >&5
     oz_add_ldflags=$oz_cv_lib_path_ldflags_pq_PQerrorMessage
     oz_add_libs=$oz_cv_lib_path_libs_pq_PQerrorMessage
     if test "$oz_add_ldflags" = no; then
@@ -2192,12 +2195,12 @@ echo "configure:2172: checking for library pq" >&5
     oz_add_ldflags=no
     oz_add_libs=no
     echo $ac_n "checking for PQerrorMessage in -lpq (default)""... $ac_c" 1>&6
-echo "configure:2196: checking for PQerrorMessage in -lpq (default)" >&5
+echo "configure:2199: checking for PQerrorMessage in -lpq (default)" >&5
     
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 2201 "configure"
+#line 2204 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2208,7 +2211,7 @@ int main() {
 PQerrorMessage()
 ; return 0; }
 EOF
-if { (eval echo configure:2212: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2215: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -2222,7 +2225,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 2226 "configure"
+#line 2229 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2233,7 +2236,7 @@ int main() {
 PQerrorMessage()
 ; return 0; }
 EOF
-if { (eval echo configure:2237: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2240: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -2246,7 +2249,7 @@ else
          oz_add_libs="-lpq"
          
 	cat > conftest.$ac_ext <<EOF
-#line 2250 "configure"
+#line 2253 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2257,7 +2260,7 @@ int main() {
 PQerrorMessage()
 ; return 0; }
 EOF
-if { (eval echo configure:2261: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2264: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -2272,12 +2275,12 @@ else
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
          echo $ac_n "checking for PQerrorMessage in -L$p -lpq""... $ac_c" 1>&6
-echo "configure:2276: checking for PQerrorMessage in -L$p -lpq" >&5
+echo "configure:2279: checking for PQerrorMessage in -L$p -lpq" >&5
          
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 2281 "configure"
+#line 2284 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2288,7 +2291,7 @@ int main() {
 PQerrorMessage()
 ; return 0; }
 EOF
-if { (eval echo configure:2292: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2295: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -2302,7 +2305,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 2306 "configure"
+#line 2309 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2313,7 +2316,7 @@ int main() {
 PQerrorMessage()
 ; return 0; }
 EOF
-if { (eval echo configure:2317: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2320: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -2326,7 +2329,7 @@ else
          oz_add_libs="-lpq"
          
 	cat > conftest.$ac_ext <<EOF
-#line 2330 "configure"
+#line 2333 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2337,7 +2340,7 @@ int main() {
 PQerrorMessage()
 ; return 0; }
 EOF
-if { (eval echo configure:2341: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2344: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -2358,7 +2361,7 @@ rm -f conftest*
       oz_add_libs="-lpq"
       
 	cat > conftest.$ac_ext <<EOF
-#line 2362 "configure"
+#line 2365 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2369,7 +2372,7 @@ int main() {
 PQerrorMessage()
 ; return 0; }
 EOF
-if { (eval echo configure:2373: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2376: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -2396,7 +2399,7 @@ rm -f conftest*
       oz_add_libs="-lpq"
       
 	cat > conftest.$ac_ext <<EOF
-#line 2400 "configure"
+#line 2403 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2407,7 +2410,7 @@ int main() {
 PQerrorMessage()
 ; return 0; }
 EOF
-if { (eval echo configure:2411: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2414: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -2422,12 +2425,12 @@ else
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
          echo $ac_n "checking for PQerrorMessage in -L$p -lpq""... $ac_c" 1>&6
-echo "configure:2426: checking for PQerrorMessage in -L$p -lpq" >&5
+echo "configure:2429: checking for PQerrorMessage in -L$p -lpq" >&5
          
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 2431 "configure"
+#line 2434 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2438,7 +2441,7 @@ int main() {
 PQerrorMessage()
 ; return 0; }
 EOF
-if { (eval echo configure:2442: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2445: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -2452,7 +2455,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 2456 "configure"
+#line 2459 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2463,7 +2466,7 @@ int main() {
 PQerrorMessage()
 ; return 0; }
 EOF
-if { (eval echo configure:2467: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2470: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -2476,7 +2479,7 @@ else
          oz_add_libs="-lpq"
          
 	cat > conftest.$ac_ext <<EOF
-#line 2480 "configure"
+#line 2483 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2487,7 +2490,7 @@ int main() {
 PQerrorMessage()
 ; return 0; }
 EOF
-if { (eval echo configure:2491: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2494: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -2508,7 +2511,7 @@ rm -f conftest*
       oz_add_libs="-lpq"
       
 	cat > conftest.$ac_ext <<EOF
-#line 2512 "configure"
+#line 2515 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2519,7 +2522,7 @@ int main() {
 PQerrorMessage()
 ; return 0; }
 EOF
-if { (eval echo configure:2523: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2526: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
