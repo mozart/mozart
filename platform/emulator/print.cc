@@ -1101,7 +1101,7 @@ void Abstraction::printLongStream(ostream &stream, int depth, int offset)
 void AssReg::printStream(ostream &stream, int depth)
 {
   char c;
-  switch (kind) {
+  switch (getKind()) {
   case K_XReg:
     c = 'X';
     break;
@@ -1113,7 +1113,7 @@ void AssReg::printStream(ostream &stream, int depth)
     c = 'G';
     break;
   }
-  stream << c << number;
+  stream << c << getIndex();
 }
 
 void PrTabEntry::printStream(ostream &stream, int depth) {

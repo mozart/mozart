@@ -1981,20 +1981,31 @@ OzArray *tagged2Array(TaggedRef term)
  * Abstraction (incl. PrTabEntry, AssRegArray, AssReg)
  *=================================================================== */
 
-enum KindOfReg {
-  K_XReg,
-  K_YReg,
-  K_GReg
-};
+#define K_XReg 0
+#define K_YReg 1
+#define K_GReg 2
+
+#define K_RegMask  3
+#define K_RegShift 2
 
 class AssReg {
+private:
+  PosInt info;
 public:
   OZPRINT
   NO_DEFAULT_CONSTRUCTORS2(AssReg)
   AssReg() {}
   
-  PosInt number;
-  KindOfReg kind;
+  PosInt getKind(void) {
+    return info & K_RegMask;
+  }
+  PosInt getIndex(void) {
+    return (info & ~K_RegMask) >> K_RegShift;
+  }
+  void set(PosInt index, PosInt kind) {
+    Assert(kind == K_XReg || kind == K_YReg || kind == K_GReg);
+    info = index << K_RegShift | kind;
+  }
 };
 
 inline
@@ -2004,8 +2015,6 @@ AssReg* allocAssRegBlock (int numb)
 }
 
 class AssRegArray  {
-  friend void restore (int fileDesc, AssRegArray *array);
-  /* we restore at the address ptr number of AssRegs;           */
 public:
   NO_DEFAULT_CONSTRUCTORS(AssRegArray)
   AssRegArray (int sizeInit) : numbOfGRegs (sizeInit) 
