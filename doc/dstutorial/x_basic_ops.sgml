@@ -654,30 +654,26 @@ end
 <P> The procedure <<MakeStat>> takes an object or a one-argument
 procedure and returns a one-argument procedure that
 obeys exactly the same language semantics and is stationary.
-We define <<{MakeStat PO StatP}>> as follows,
-where
+We define <<{MakeStat PO StatP}>> as follows, where
 <<PO>> is an object or a one-argument procedure
 and <<StatP>> is a one-argument procedure:
 
 <<<
 declare
 proc {MakeStat PO ?StatP}
-   S P = {NewPort S}
-   N = {NewName}
+   S P={NewPort S}
+   N={NewName}
 in
    proc {StatProc M}
    R in
       {Send P M#R}
-      case R==N then skip
-      else raise R end
-      end
+      if R==N then skip else raise R end end
    end
    thread
       {ForAll S
        proc {$ M#R}
           thread
-             try {ProcOrObj M} R=N
-             catch X then R=X end
+             try {ProcOrObj M} R=N catch X then R=X end
           end
        end}
    end
@@ -685,7 +681,12 @@ end
 >>>
 
 <P> <<StatP>> preserves exactly the same language semantics
-as <<PO>>.  That is, it raises the same exceptions
+as <<PO>>.  That is, it has the same concurrency
+behavior and it raises the same exceptions.
+The new name <<N>> is a globally-unique token.
+This ensures that
+there is no conflict with any exceptions
+raised by <<ProcOrObj>>.
 
 
 <NOTE FOOT>One-argument procedures are not exactly
@@ -872,13 +873,14 @@ class CComputeServer from ComputeServer
    end
 end
 
-Srv2={Upg CComputeServer init}
+Srv2={Upg CComputeServer#init}
 >>>
 
 <P> That's all there is to it.
-The upgraded compute server has
-a new method <<run>> with a default,
-so that it supports the original call <<run(P)>>
+The upgraded compute server overrides
+the <<run>> method with a new
+method that has a default.
+The new method supports the original call <<run(P)>>
 and adds a new call <<run(P Prio)>>, where <<Prio>>
 sets the priority of the thread doing computation <<P>>.
 
