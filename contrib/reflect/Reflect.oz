@@ -43,6 +43,9 @@ export
    IsDiscardedPropagator
    DiscardPropagator
    IdentifyParameter
+   IsActivePropagator
+   DeactivatePropagator
+   ActivatePropagator
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import
@@ -68,6 +71,9 @@ define
    DiscardPropagator     = ReflectExport.discardPropagator
    BIspaceReflect        = ReflectExport.spaceReflect
    IdentifyParameter     = ReflectExport.identifyParameter
+   IsActivePropagator    = ReflectExport.isActivePropagator
+   DeactivatePropagator  = ReflectExport.deactivatePropagator
+   ActivatePropagator    = ReflectExport.activatePropagator
 
    GetCtVarNameAsAtom       = CTB.getNameAsAtom
    GetCtVarConstraintAsAtom = CTB.getConstraintAsAtom

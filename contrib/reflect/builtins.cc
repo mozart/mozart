@@ -63,13 +63,87 @@ OZ_BI_define(BIIdentifyParameter, 1, 1)
   int * ids = OZ_findEqualVars(length, vars);
 
   for (int i = length; i--; ) {
-    id_list = OZ_cons(ids[i] < 0 ? atom_novar : OZ_int(ids[i]), id_list);
+    id_list = OZ_cons(ids[i] < 0 ? atom_nonevar : OZ_int(ids[i] + 1),
+                      id_list);
   }
 
   DEBUGPRINT(("BIIdentifyParameter out\n"));
 
   OZ_RETURN(id_list);
 } OZ_BI_end
+
+//-----------------------------------------------------------------------------
+
+OZ_BI_define(BIIsActivePropagator, 1, 1)
+{
+  DEBUGPRINT(("BIIsActivePropagator in\n"));
+
+  printf("*** Not implemented yet! ***"); fflush(stdout);
+
+  OZ_Term v1 = oz_deref(OZ_in(0));
+
+  if (!oz_isExtension(v1)) {
+    OZ_RETURN(oz_false());
+  }
+
+  OZ_Extension * se1 = oz_tagged2Extension(v1);
+  if (PropagatorReference::getId() != se1->getIdV()) {
+    OZ_RETURN(oz_false());
+  }
+
+  OZ_RETURN(oz_true());
+} OZ_BI_end
+
+OZ_BI_define(BIDeactivatePropagator, 1, 0)
+{
+  DEBUGPRINT(("BIDeactivatePropagator in\n"));
+
+  printf("*** Not implemented yet! ***"); fflush(stdout);
+
+  OZ_Term v1 = oz_deref(OZ_in(0));
+
+  if (! oz_isExtension(v1)) {
+    return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
+  }
+
+  OZ_Extension * se1 = oz_tagged2Extension(v1);
+
+  if (PropagatorReference::getId() != se1->getIdV()) {
+    return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
+  }
+
+  ((PropagatorReference *) se1)->discard();
+
+  DEBUGPRINT(("BIDeactivatePropagator out\n"));
+
+  return PROCEED;
+} OZ_BI_end
+
+OZ_BI_define(BIActivatePropagator, 1, 0)
+{
+  DEBUGPRINT(("BIDeactivatePropagator in\n"));
+
+  printf("*** Not implemented yet! ***"); fflush(stdout);
+
+  OZ_Term v1 = oz_deref(OZ_in(0));
+
+  if (! oz_isExtension(v1)) {
+    return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
+  }
+
+  OZ_Extension * se1 = oz_tagged2Extension(v1);
+
+  if (PropagatorReference::getId() != se1->getIdV()) {
+    return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
+  }
+
+  ((PropagatorReference *) se1)->discard();
+
+  DEBUGPRINT(("BIDeactivatePropagator out\n"));
+
+  return PROCEED;
+} OZ_BI_end
+
 
 //-----------------------------------------------------------------------------
 
