@@ -1821,25 +1821,19 @@ void AM::gc(int msgLevel)
   gc_finalize();
 #endif
 
-  gcBorrowTableRoots();
+  gcPerdioRoots();
   gcStack.recurse();
 
   gcBorrowTableUnusedFrames();
   gcStack.recurse();
 
-  gcGNameTable();
-  Assert(gcStack.isEmpty());
-
-
 // -----------------------------------------------------------------------
 // ** second phase: the reference update stack has to checked now
   varFix.fix();
-
   Assert(gcStack.isEmpty());
 
-  gcBorrowTableFinal();
-  gcOwnerTable();
-  gcSiteTable();
+  gcPerdioFinal();
+  Assert(gcStack.isEmpty());
 
   exitCheckSpace();
 

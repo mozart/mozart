@@ -189,6 +189,7 @@ PERDIO_DEBUG_DO(void printTables());
 
 #define OT ownerTable
 #define BT borrowTable
+#define GT theGNameTable
 #define BTOS(A) BT->getOriginSite(A)
 #define BTOI(A) BT->getOriginIndex(A)
 
@@ -422,16 +423,6 @@ public:
     TaggedRef val = *tagged2Ref(tPtr);
     return tagged2PerdioVar(val);
   }
-  void gcPO() {
-    if (isTertiary()) {
-      PD((GC,"OT tertiary found"));
-      if (!inToSpace(u.tert))
-        u.tert=(Tertiary *)(u.tert->gcConstTerm());
-    } else {
-      Assert(isRef() || isVar());
-      PD((GC,"OT var/ref"));
-      OZ_collectHeapTerm(u.ref,u.ref);}
-  }
 
   ProtocolObject &operator =(ProtocolObject &n); // not used
 
@@ -457,7 +448,7 @@ public:
   GNameTable():GenHashTable(GNAME_HASH_TABLE_DEFAULT_SIZE) {}
 
   void gcGNameTable();
-} theGNameTable;
+} GT;
 
 int GNameTable::hash(GName *gname)
 {
@@ -489,7 +480,7 @@ TaggedRef GNameTable::find(GName *name)
 
 
 inline TaggedRef findGName(GName *gn) {
-  return theGNameTable.find(gn);
+  return GT.find(gn);
 }
 
 TaggedRef findGNameOutline(GName *gn)
@@ -499,7 +490,7 @@ TaggedRef findGNameOutline(GName *gn)
 
 inline void addGName(GName *gn) {
   Assert(!findGName(gn));
-  theGNameTable.add(gn);
+  GT.add(gn);
 }
 
 void addGName(GName *gn, TaggedRef t) {
@@ -621,6 +612,21 @@ public:
 
   void makeGCMark(){addFlags(PO_GC_MARK);}
   Bool isGCMarked(){ return (getFlags() & PO_GC_MARK); }
+
+  void gcPO() {
+    if (isGCMarked())
+      return;
+    makeGCMark();
+
+    if (isTertiary()) {
+      PD((GC,"OT tertiary found"));
+      Assert(!inToSpace(u.tert));
+      u.tert=(Tertiary *)u.tert->gcConstTerm();
+    } else {
+      Assert(isRef() || isVar());
+      PD((GC,"OT var/ref"));
+      OZ_collectHeapTerm(u.ref,u.ref);}
+  }
 
   Credit getCreditOB(){
     Assert(!isExtended());
@@ -964,7 +970,8 @@ public:
     if(array[i].isFree()) return NULL;
     return &array[i];}
 
-  void gcOwnerTable();
+  void gcOwnerTableRoots();
+  void gcOwnerTableFinal();
 
   void resize();
 
@@ -2296,11 +2303,7 @@ void PerdioVar::addSuspPerdioVar(TaggedRef *v,Thread *el, int unstable){
 
 /* OBS: ---------- interface to gc.cc ----------*/
 
-void gcOwnerTable()       { ownerTable->gcOwnerTable();}
-void gcBorrowTableFinal() { borrowTable->gcBorrowTableFinal();}
 void gcBorrowTableUnusedFrames() { borrowTable->gcBorrowTableUnusedFrames();}
-void gcBorrowTableRoots() { borrowTable->gcBorrowTableRoots();}
-void gcGNameTable()       { theGNameTable.gcGNameTable();}
 void gcGName(GName* name) { if (name) name->gcGName(); }
 void gcFrameToProxy()     { borrowTable->gcFrameToProxy(); }
 
@@ -2325,8 +2328,8 @@ void Tertiary::gcManager(){
     return;
   }
   PD((GC,"relocate owner:%d old%x new %x",i,oe,this));
-  oe->mkTertiary(this,oe->getFlags());
-  oe->makeGCMark();}
+  //  oe->mkTertiary(this,oe->getFlags());
+  oe->gcPO();}
 
 void gcPendThread(PendThread **pt){
   PendThread *tmp;
@@ -2403,8 +2406,8 @@ void CellManager::gcCellManager(){
   int i=getIndex();
   PD((GC,"relocate cellManager:%d",i));
   OwnerEntry* oe=OT->getOwner(i);
-  oe->mkTertiary(this,oe->getFlags());
-  oe->makeGCMark();
+  //  oe->mkTertiary(this,oe->getFlags());
+  oe->gcPO();
   CellFrame *cf=(CellFrame*)this;
   sec->gcCellSec();}
 
@@ -2429,12 +2432,14 @@ void LockManager::gcLockManager(){
   int i=getIndex();
   PD((GC,"relocate lockManager:%d",i));
   OwnerEntry* oe=OT->getOwner(i);
-  oe->mkTertiary(this,oe->getFlags());
-  oe->makeGCMark();
+  //  oe->mkTertiary(this,oe->getFlags());
+  oe->gcPO();
   sec->gcLockSec();}
 
 void Tertiary::gcTertiary()
 {
+  Assert(0);
+
   switch (getTertType()) {
   case Te_Local:
     return;
@@ -2462,22 +2467,49 @@ void Tertiary::gcTertiary()
 
 /*--------------------*/
 
+void gcPerdioRoots()
+{
+  OT->gcOwnerTableRoots();
+  BT->gcBorrowTableRoots();
+}
+
+void gcPerdioFinal()
+{
+  BT->gcBorrowTableFinal();
+  OT->gcOwnerTableFinal();
+  gcSiteTable();
+  GT.gcGNameTable();
+}
+
 void GName::gcMarkSite(){
   site->makeGCMarkSite();}
 
-void OwnerTable::gcOwnerTable()
+
+void OwnerTable::gcOwnerTableRoots()
 {
   PD((GC,"owner gc"));
-  int i;
-  for(i=0;i<size;i++) {
-    OwnerEntry* o = ownerTable->getOwner(i);
+  for(int i=0;i<size;i++) {
+    OwnerEntry* o = getOwner(i);
+    if(!o->isFree() && !o->hasFullCredit()) {
+      PD((GC,"OT o:%d",i));
+      o->gcPO();
+    }
+  }
+  return;
+}
+
+void OwnerTable::gcOwnerTableFinal()
+{
+  PD((GC,"owner gc"));
+  for(int i=0;i<size;i++) {
+    OwnerEntry* o = getOwner(i);
     if(!o->isFree()) {
       PD((GC,"OT o:%d",i));
       if(o->hasFullCredit() && !o->isGCMarked()) {
          freeOwnerEntry(i);
       } else {
-        o->removeGCMark();
         o->gcPO();
+        o->removeGCMark();
       }
     }
   }
@@ -2491,7 +2523,6 @@ void BorrowEntry::gcBorrowRoot(int i) {
     PerdioVar *pv=getVar();
     if (pv->getSuspList() || (pv->isProxy() && pv->hasVal())) {
       PD((WEIRD,"BT1 b:%d pending unmarked var found",i));
-      makeGCMark();
       gcPO();
     }
     return;
@@ -2650,11 +2681,8 @@ void GNameTable::gcGNameTable()
   compactify();
 }
 
-void gcBorrowNow(int i){
-  BorrowEntry *be=borrowTable->getBorrow(i);
-  if (!be->isGCMarked()) { // this condition is necessary gcBorrowRoot
-    be->makeGCMark();
-    be->gcPO();}}
+void gcBorrowNow(int i) { BT->getBorrow(i)->gcPO(); }
+
 
 
 void PerdioVar::gcRecurse(void)
@@ -2666,7 +2694,7 @@ void PerdioVar::gcRecurse(void)
     return;
   }
   if (isManager()) {
-    OT->getOwner(getIndex())->makeGCMark();
+    OT->getOwner(getIndex())->gcPO();
     PD((GC,"PerdioVar o:%d",getIndex()));
     ProxyList **last=&u.proxies;
     for (ProxyList *pl = u.proxies; pl; pl = pl->next) {
