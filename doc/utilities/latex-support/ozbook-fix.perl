@@ -69,4 +69,49 @@ sub print_key {
    "$before<STRONG>$printable_key{$key}</STRONG>$after"
 }
 
+sub style_sheet {
+    local($env,$id,$style);
+    do{
+	open(STYLESHEET, ">$FILE.css");
+        if ( -f $EXTERNAL_STYLESHEET ) {
+	    open(EXT_STYLES, "<$EXTERNAL_STYLESHEET");
+	    while (<EXT_STYLES>) { print STYLESHEET $_; }
+	    close(EXT_STYLES);
+	} else {
+	print STYLESHEET "
+SMALL.XTINY		{ font-size : xx-small }
+SMALL.TINY		{ font-size : x-small  }
+SMALL.SCRIPTSIZE	{ font-size : smaller  }
+SMALL.FOOTNOTESIZE	{ font-size : small    }
+SMALL.SMALL		{  }
+BIG.LARGE		{  }
+BIG.XLARGE		{ font-size : large    }
+BIG.XXLARGE		{ font-size : x-large  }
+BIG.HUGE		{ font-size : larger   }
+BIG.XHUGE		{ font-size : xx-large }
+";
+        }
+	while (($env,$style) = each %env_style) {
+	    if ($env =~ /inline/) {
+		print STYLESHEET "SPAN.$env\t\t{ $style }\n";
+	    } elsif ($env =~ /^(preform|\w*[Vv]erbatim(star)?)$/) {
+		print STYLESHEET "PRE.$env\t\t{ $style }\n";
+	    } else {
+		print STYLESHEET "DIV.$env\t\t{ $style }\n";
+	    }
+	}
+	
+        while (($env,$style) = each %txt_style) {
+            print STYLESHEET "SPAN.$env\t\t{ $style }\n";
+        }
+
+
+	foreach $id (sort(keys  %styleID)) {
+	    print STYLESHEET "\#$id\t\t{ $styleID{$id} }\n" if ($styleID{$id});
+	}
+	close(STYLESHEET);
+    #AXR:  don't overwrite existing .css
+    }; #  unless -f $EXTERNAL_STYLESHEET; # "$FILE.css";
+}
+
 1;;
