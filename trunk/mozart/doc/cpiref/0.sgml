@@ -18,6 +18,7 @@
 <!ENTITY r_prop SYSTEM "r_prop.sgml">
 <!ENTITY r_fdint SYSTEM "r_fdint.sgml">
 <!ENTITY r_fd SYSTEM "r_fd.sgml">
+<!ENTITY r_fsvar SYSTEM "r_fsvar.sgml">
 <!ENTITY r_fs SYSTEM "r_fs.sgml">
 <!ENTITY r_fsc SYSTEM "r_fsc.sgml">
 <!ENTITY r_aux SYSTEM "r_aux.sgml">

@@ -5,6 +5,7 @@
     &r_prop
     &r_fdint
     &r_fd
+    &r_fsvar
     &r_fs
     &r_fsc
     &r_aux
