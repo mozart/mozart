@@ -37,12 +37,12 @@ AboutColor       = case Tk.isColor then
 		      mediumvioletred  # '' #
 		      mediumaquamarine # '' #
 		      color(run:  lightslateblue 
-			    prop: mediumvioletred
+			    'prop': mediumvioletred
 			    copy: mediumaquamarine
 			    gc:   mediumseagreen
 			    load: wheat) #
 		      stipple(run:  ''
-			      prop: ''
+			      'prop': ''
 			      copy: ''
 			      gc:   ''
 			      load: '') #
@@ -54,12 +54,12 @@ AboutColor       = case Tk.isColor then
 		      black # (BitMapDir # 'grid-50.xbm') #
 		      black # '' #
 		      color(run:  black
-			    prop: black
+			    'prop': black
 			    copy: black
 			    gc:   black
 			    load: black) #
 		      stipple(run:  BitMapDir # 'grid-25.xbm'
-			      prop: BitMapDir # 'grid-50.xbm'
+			      'prop': BitMapDir # 'grid-50.xbm'
 			      copy: BitMapDir # 'lines-lr.xbm'
 			      gc:   BitMapDir # 'lines-rl.xbm'
 			      load: BitMapDir # 'zig-zag.xbm') #

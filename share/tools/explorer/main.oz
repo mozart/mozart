@@ -54,7 +54,6 @@ in
       meth Init()
 	 case @MyManager\=unit then skip else
 	    MyManager <- {New Manager init(self)}
-	    ExplorerClass
 	       %% Include the standard actions
                \insert default-actions.oz
 	    ExplorerClass,DoStacked(@Stacked)
@@ -64,7 +63,10 @@ in
 
       meth DoStacked(Ms)
 	 case Ms of nil then skip
-	 [] M|Mr then ExplorerClass,DoStacked(Mr),M
+	 [] M|Mr
+	 then
+	    ExplorerClass,DoStacked(Mr)
+	    ExplorerClass,M
 	 end
       end
       
