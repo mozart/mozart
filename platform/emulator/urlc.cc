@@ -68,7 +68,12 @@
 #else
 #if 1 <= URLC_DEBUG
 #define URLC_PERROR(s) perror(s)
+#ifdef LINUX
 #define URLC_HERROR(s) herror(s)
+#else
+// mm2: this does not work, because errno is not valid
+#define URLC_HERROR(s) perror(s)
+#endif
 #else
 #define URLC_PERROR(s)
 #define URLC_HERROR(s)
