@@ -117,7 +117,7 @@ local
 in
    fun {TclToV Tcl}
       if {IsBool Tcl} then case Tcl then 0 else 1 end
-      elseif Tcl==Unit then ''
+      elseif {IsUnit Tcl} then ''
       elseif {IsVirtualString Tcl} then {Quote Tcl}
       elseif {IsTclObject Tcl} then {TclObjectToV Tcl}
       else
