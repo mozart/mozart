@@ -33,6 +33,7 @@
 #include "dpMarshaler.hh"
 
 #include "builtins.hh"
+#include "os.hh"
 
 OZ_BI_define(BIcrash,0,0)   /* only for debugging */
 {
@@ -216,6 +217,15 @@ OZ_BI_define(BIslowNet,2,0)
 #else
   printf("Slownet not installed\n");
 #endif
+  return PROCEED;
+} OZ_BI_end
+
+OZ_BI_define(BIclose,1,0)
+{
+  oz_declareIntIN(0,time);
+  printf("%d:%d\n", time, (unsigned int) time);
+  dpExitWithTimer((unsigned int) time);
+  osExit(0);
   return PROCEED;
 } OZ_BI_end
 

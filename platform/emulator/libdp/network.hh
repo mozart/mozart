@@ -78,7 +78,7 @@ int openclose(int Type);
 //
 // ShutDwn stuff
 int startNiceClose();
-int niceCloseProgres();
+int niceCloseProgress();
 
 
 #endif // __NETWORK_HH

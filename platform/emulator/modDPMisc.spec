@@ -30,6 +30,10 @@
     ###
 
 
+    'close'             => { in  => ['+int'],
+                             out => [],
+                             BI  => BIclose},
+
     'crash'             => { in  => [],
                              out => [],
                              BI  => BIcrash,

@@ -79,6 +79,9 @@ public:
   int perdioFlowBufferSize;
   int perdioFlowBufferTime;
 
+  int closetime;
+
+  int numToplevelVars;
 
   int dumpCore;
 

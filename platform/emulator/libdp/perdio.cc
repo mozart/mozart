@@ -53,6 +53,10 @@
 #include "dpMarshaler.hh"
 #include "flowControl.hh"
 #include "ozconfig.hh"
+
+#include "os.hh"
+#include "space.hh"
+
 // from builtins.cc
 void doPortSend(PortWithStream *port,TaggedRef val);
 
@@ -1266,7 +1270,53 @@ ConstTerm *gcStatefulSpecImpl(Tertiary *t)
   return (ret);
 }
 
-void dpExitImpl()
-{
+void dpExitWithTimer(unsigned int timeUntilClose) {
+  printf("tiden:%d\n", timeUntilClose);
+  printf("tiden:%d\n", ozconf.closetime);
+
+  if (!isPerdioInitialized())
+    return;
+
+  int proxiesLeft = 1;
+  unsigned int timeToSleep;
+
+  oz_deinstallPath(oz_rootBoard());
+  osSetAlarmTimer(0);
+
+  while ((int) timeUntilClose > 0 && proxiesLeft) {
+    //    printf("times left %d\n", timeUntilClose);
+    //    printf("proxies left %d\n", proxiesLeft);
+    unsigned long idle_start = osTotalTime();
+    proxiesLeft = BT->closeProxyToFree(timeUntilClose);
+    osUnblockSignals();
+    timeToSleep = 50;
+    osBlockSelect(timeToSleep);
+    osBlockSignals(NO);
+    timeUntilClose -= (osTotalTime() - idle_start);
+    oz_io_handle();
+  }
+  //  printf("times left %d\n", timeUntilClose);
+  //  printf("proxies left %d\n", proxiesLeft);
+
   (*virtualSitesExit)();
+
+  int connectionsLeft =  startNiceClose();
+  while ((int) timeUntilClose > 0 && connectionsLeft) {
+    //    printf("times left %d\n", timeUntilClose);
+    //    printf("connections left %d\n", connectionsLeft);
+    unsigned long idle_start = osTotalTime();
+    connectionsLeft = niceCloseProgress();
+    osUnblockSignals();
+    timeToSleep = 50;
+    osBlockSelect(timeToSleep);
+    osBlockSignals(NO);
+    timeUntilClose -= (osTotalTime() - idle_start);
+    oz_io_handle();
+  }
+  printf("times left %d\n", timeUntilClose);
+  printf("connections left %d\n", connectionsLeft);
+}
+
+void dpExitImpl() {
+  dpExitWithTimer(ozconf.closetime);
 }

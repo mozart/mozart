@@ -37,6 +37,8 @@
 #include "fail.hh"
 #include "protocolState.hh"
 
+#include "os.hh"
+
 int NetHashTable::hashFunc(NetAddress *na){
   unsigned char *p = (unsigned char*) na;
   int i;
@@ -1222,4 +1224,138 @@ void BorrowTable::gcBorrowTableFinal()
   }
   compactify();
   hshtbl->compactify();
+}
+
+
+
+void BorrowTable::closeFrameToProxy(unsigned int ms){
+  BorrowEntry *be;
+  unsigned long start_time = osTotalTime();
+  int j=0;
+  for(int i=0;i<size;i++){
+    be = getBorrow(i);
+    if((!be->isFree()) && (!be->isVar())){
+      Tertiary *t = be->getTertiary();
+      int type = t->getType();
+      int state;
+      if(t->isFrame()) {
+        if(type==Co_Cell)
+          state = ((CellFrame*)t)->getState();
+        else if(type==Co_Lock)
+          state = ((LockFrame*)t)->getState();
+        else
+          continue;
+
+        switch(state){
+        case Cell_Lock_Invalid:
+          if(type==Co_Lock)
+            ((CellFrame*)t)->convertToProxy();
+          else
+            ((LockFrame*)t)->convertToProxy();
+          break;
+        case Cell_Lock_Requested:
+        case Cell_Lock_Valid:
+          cellLockSendDump(be);
+          break;
+        case Cell_Lock_Requested|Cell_Lock_Next:
+          break;
+        case Cell_Lock_Valid|Cell_Lock_Next:
+          if(type==Co_Lock){
+            NetAddress *na=be->getNetAddress();
+            LockSec* sec = ((LockFrame*)t)->getLockSec();
+            DSite* toS = sec->getNext();
+            be->getOneMsgCredit();
+            lockSendToken(na->site,na->index,toS);
+          }
+          else
+            Assert(0);
+          break;
+        default:
+          Assert(0);
+        }
+      }
+    }
+    if(j>50) {
+      if(ms <= (osTotalTime() - start_time))
+        return;
+    j=0;
+    }
+    else j++;
+  }
+}
+
+int BorrowTable::closeProxyToFree(unsigned int ms){
+  BorrowEntry *be;
+  int proxies = 0;
+  int frames = 0;
+  unsigned long start_time = osTotalTime();
+  int j=0;
+  // print();
+  for(int i=0;i<size;i++){
+    be = getBorrow(i);
+    if(!be->isFree())
+      if(be->isTertiary()) {
+        Tertiary *t = be->getTertiary();
+        if(t->isProxy()) {
+          maybeFreeBorrowEntry(i);
+          proxies++;
+        }
+        if(t->isFrame()) {
+          int type = t->getType();
+          int state;
+          if(type==Co_Cell)
+            state = ((CellFrame*)t)->getState();
+          else if(type==Co_Lock)
+            state = ((LockFrame*)t)->getState();
+          else
+            continue;
+
+          switch(state){
+          case Cell_Lock_Invalid:
+            if(type==Co_Lock)
+              ((CellFrame*)t)->convertToProxy();
+            else
+              ((LockFrame*)t)->convertToProxy();
+            break;
+          case Cell_Lock_Requested:
+          case Cell_Lock_Valid:
+            cellLockSendDump(be);
+            break;
+          case Cell_Lock_Requested|Cell_Lock_Next:
+            break;
+          case Cell_Lock_Valid|Cell_Lock_Next:
+            if(type==Co_Lock){
+              NetAddress *na=be->getNetAddress();
+              LockSec* sec = ((LockFrame*)t)->getLockSec();
+              DSite* toS = sec->getNext();
+              be->getOneMsgCredit();
+              lockSendToken(na->site,na->index,toS);
+            }
+            else
+              Assert(0);
+            break;
+          default:
+            Assert(0);
+          }
+          frames++;
+        }
+      }
+      else {
+        TaggedRef term = be->getRef();
+        DEREF(term,termPtr,tag);
+        if(oz_isProxyVar(term)) {
+          if(!be->isExtended() && !be->isPersistent()&&(be->getCreditOB() > 0))
+            maybeFreeBorrowEntry(i);
+          proxies++;
+        }
+      }
+    if(j>50) {
+      if(ms <= (osTotalTime() - start_time))
+        return -1;
+      j=0;
+    }
+    else j++;
+  }
+  //  printf("%d frames and %d proxies left\n", frames, proxies);
+  return frames+proxies;
 }

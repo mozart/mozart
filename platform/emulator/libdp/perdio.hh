@@ -127,6 +127,7 @@ void gcFrameToProxyImpl();
 void gcPerdioFinalImpl();
 void gcPerdioRootsImpl();
 void dpExitImpl();
+void dpExitWithTimer(unsigned int);
 
 /* __PERDIOHH */
 #endif

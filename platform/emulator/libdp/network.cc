@@ -1057,7 +1057,9 @@ public:
     Assert(next!=NULL);
     Assert(prev!=NULL);
     next->prev=prev;
-    prev->next=next;}
+    prev->next=next;
+    next=NULL;
+    prev=NULL;}
 
   Bool isOpening(){
     return testFlag(OPENING);}
@@ -1554,11 +1556,16 @@ class TcpCache {
       r->prev=NULL;
       head=r;
       tail=r;
+      Assert(r->prev==NULL);
+      Assert(r->next==NULL);
       return;}
     r->next=head;
     r->prev=NULL;
     head->prev=r;
-    head=r;}
+    head=r;
+    Assert(r->prev==NULL);
+    Assert(r->next!=NULL);
+}
 
   void addToTail(Connection *r, Connection* &head, Connection* &tail){
     if(tail==NULL){
@@ -1568,6 +1575,7 @@ class TcpCache {
       head=r;
       tail=r;
       return;}
+    Assert(tail->next==NULL);
     r->next=NULL;
     r->prev=tail;
     tail->next=r;
@@ -1582,23 +1590,35 @@ class TcpCache {
     else{
       tail = w->prev;
       w->prev = NULL;
+      Assert(w->next==NULL);
       tail->next = NULL;}
     return w;}
 
   void unlink(Connection *r,Connection* &head, Connection* &tail){
     //    PD((TCPCACHE,"cache unlink r:%x",r));
+
     if(tail==r) {
       if(head==r){
+        Assert(r->next==NULL);
+        Assert(r->prev==NULL);
         tail=NULL;
         head=NULL;
         return;}
+      Assert(r->next==NULL);
+      Assert(r->prev!=NULL);
       tail=r->prev;
       tail->next=NULL;
+      r->prev=NULL;
       return;}
     if(head==r) {
+      Assert(r->prev==NULL);
+      Assert(r->next!=NULL);
       head=r->next;
       head->prev=NULL;
+      r->next=NULL;
       return;}
+    Assert(r->next!=NULL);
+    Assert(r->prev!=NULL);
     r->disconnect();}
 
   void decreaseConnections() {
@@ -3861,7 +3881,7 @@ int getNORM_RemoteSite(RemoteSite* site){
 
 int startNiceClose(){
   return tcpCache->shutDwnTcpCache();}
-int niceCloseProgres(){
+int niceCloseProgress(){
   return tcpCache->shutDwnTcpCacheProgres();}
 
 
