@@ -28,7 +28,8 @@
 #pragma interface
 #endif
 
-#include "value.hh"
+#include "base.hh"
+#include "oz.h"
 
 /*===================================================================
  * Extension
@@ -44,7 +45,10 @@
  */
 
 // starts with OZ_E_LAST
-unsigned int oz_newUniqueId();
+unsigned int OZ_newUniqueId();
+int OZ_isExtension(OZ_Term t);
+Extension *OZ_getExtension(OZ_Term t);
+OZ_Term OZ_extension(Extension *e);
 
 enum OZ_Registered_Extension_Id {
   OZ_E_UNDEFINED,
@@ -57,10 +61,10 @@ enum OZ_Registered_Extension_Id {
   OZ_E_LAST,
 };
 
-class Extension: public ConstTerm {
+class Extension {
 public:
   virtual ~Extension() {}
-  Extension() : ConstTerm(Co_Extension) {}
+  Extension() {}
 
   virtual int           getIdV() = 0;
   virtual Extension *   gcV() = 0;
@@ -73,26 +77,18 @@ public:
 
   virtual OZ_Term       typeV();
   virtual OZ_Term       inspectV() { return typeV(); }
+  virtual Bool          isChunkV() { return OK; }
 
-  virtual OZ_Term       getFeatureV(OZ_Term fea) { return makeTaggedNULL(); }
+  virtual OZ_Term       getFeatureV(OZ_Term fea) { return 0; }
 
   virtual OZ_Return     eqV(OZ_Term t)           { return FAILED; }
 
-  virtual int           marshalV(MsgBuffer *bs)  { return 0; }
+  virtual Bool          marshalV(MsgBuffer *bs)  { return FALSE; }
 
   virtual Board *       getBoardInternal() { return 0; }
   virtual void          setBoardInternal(Board *bb) {}
 };
 
-inline
-int oz_isExtension(OZ_Term t) {
-  return oz_isConst(t) && tagged2Const(t)->getType()==Co_Extension;
-}
-
-inline
-Extension *tagged2Extension(OZ_Term t) {
-  return (Extension *) tagged2Const(t);
-}
 
 class SituatedExtension: public Extension {
 private:
