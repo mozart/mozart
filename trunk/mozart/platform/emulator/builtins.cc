@@ -454,24 +454,6 @@ DECLAREBI_USEINLINEREL1(BIisAtom,isAtomInline)
 DECLAREBOOLFUN1(BIisAtomB,isAtomBInline,isAtomInline)
 
 
-OZ_Return isVarInline(TaggedRef term)
-{
-  DEREF(term, _1, _2);
-  return isAnyVar(term) ? PROCEED : FAILED;
-}
-
-DECLAREBI_USEINLINEREL1(BIisVar,isVarInline)
-DECLAREBOOLFUN1(BIisVarB,isVarBInline,isVarInline)
-
-OZ_Return isNonvarInline(TaggedRef term)
-{
-  DEREF(term, _1, _2);
-  return isAnyVar(term) ? FAILED : PROCEED;
-}
-
-DECLAREBI_USEINLINEREL1(BIisNonvar,isNonvarInline)
-DECLAREBOOLFUN1(BIisNonvarB,isNonvarBInline,isNonvarInline)
-
 
 
 OZ_Return isFreeRelInline(TaggedRef term) {
@@ -7240,8 +7222,6 @@ BIspec allSpec2[] = {
   {"isClassRel", 1,BIisClass,        (IFOR) BIisClassInline},
   {"isObjectRel", 1,BIisObject,      (IFOR) BIisObjectInline},
 
-  {"isVar",2,BIisVarB,           (IFOR) isVarBInline},
-  {"isNonvar",2,BIisNonvarB,     (IFOR) isNonvarBInline},
   {"IsFreeRel",   1, BIisFreeRel,   (IFOR) isFreeRelInline},
   {"IsKindedRel", 1, BIisKindedRel, (IFOR) isKindedRelInline},
   {"IsDetRel",    1, BIisDetRel,    (IFOR) isDetRelInline},
@@ -7260,8 +7240,8 @@ BIspec allSpec2[] = {
   {"And",     3,BIand,             (IFOR) andInline},
   {"Or",      3,BIor,              (IFOR) orInline},
 
-  {"Value.type",2,BItermType,       	 (IFOR) BItermTypeInline},
-  {"Value.status",2,BIstatus,       	 (IFOR) BIstatusInline},
+  {"Type.ofValue", 2, BItermType,        (IFOR) BItermTypeInline},
+  {"Value.status", 2, BIstatus,       	 (IFOR) BIstatusInline},
 
   {"ProcedureArity",2,BIprocedureArity,	 (IFOR)procedureArityInline},
   {"MakeTuple",3,BItuple,              (IFOR) tupleInline},
