@@ -365,7 +365,7 @@ emulator.dll: $(PRGDEP)
         awk '{ print "++'\''"$$1"'\''.'\''emulator.dll'\''" }' \
         > emulator.cmd && \
         $(DLLWRAP) --target i386-mingw32 \
-        --driver-name "$(CXX)" --dlltool-name $(DLLTOOL) --as $(AS) \
+        --driver-name $(CXX) --dlltool-name $(DLLTOOL) --as $(AS) \
         $(EMULDFLAGS) $(LDFLAGS) -o $@ --def emulator0.def $(OBJS) $(LIBS)
 
 text2pickle.exe: $(TEXT2PICKLEOBJS)
