@@ -92,7 +92,7 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
 
     case CVAR:
       {
-	o << getVarName(makeTaggedRef(hptr));
+	o << oz_varGetName(makeTaggedRef(hptr));
 
 	GenCVariable * cv = tagged2CVar(h);
 	

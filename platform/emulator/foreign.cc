@@ -1035,7 +1035,7 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
 	out << "<Oz_Dereferenced variable>";
 	break;
       }
-      const char *s = getVarName(makeTaggedRef(termPtr));
+      const char *s = oz_varGetName(makeTaggedRef(termPtr));
       if (isCVar(tag)) {
 	oz_cv_printStream(out, s,tagged2CVar(term),depth);
       } else {

@@ -36,9 +36,19 @@
  * Class VariableNamer: assign names to variables
  */
 
-VariableNamer *VariableNamer::allnames = NULL;
+class VariableNamer {
+public:
+  TaggedRef var;
+  const char *name;
+  VariableNamer *next;
+  VariableNamer(TaggedRef var, const char *name, VariableNamer *next)
+    : var(var), name(name), next(next) {}
+};
 
-const char *VariableNamer::getName(TaggedRef v)
+static
+VariableNamer *allnames = NULL;
+
+const char *oz_varGetName(TaggedRef v)
 {
   for (VariableNamer *i = allnames; i!=NULL; i = i->next) {
     if (OZ_isVariable(i->var) && oz_eq(i->var,v)) {
@@ -48,50 +58,32 @@ const char *VariableNamer::getName(TaggedRef v)
   return "_";
 }
 
-void VariableNamer::addName(TaggedRef v, const char *nm)
+void oz_varAddName(TaggedRef v, const char *nm)
 {
   /* check if already in there */
+  Assert(nm && *nm);
   VariableNamer *aux = allnames;
   while(aux) {
     if (strcmp(aux->name,nm)==0) {
       aux->var=v;
-#if 0
-      if (am.debugmode())
-	OZ_warning("Redeclaration of toplevel variable `%s'", nm);
-#endif
       return;
     }
     aux = aux->next;
   }
   
   /* not found so add a new one */
-  static int counter = 50;
+  static int counter = 50; // mm2: magic constant
   if (counter-- == 0) {
-    cleanup();
+    oz_varCleanup();
     counter = 50;
   }
-  VariableNamer *n = new VariableNamer();
-  n->next = allnames;
-  n->var = v;
-  n->name = nm;
+  VariableNamer *n = new VariableNamer(v,nm,allnames);
   allnames = n;
   OZ_protect(&n->var);
 }
 
-int VariableNamer::length()
-{
-  int ret = 0;
-  VariableNamer *aux = this;
-  while(aux) {
-    ret++;
-    aux = aux->next;
-  }
-  return ret;
-}
-
-
 /* remove all entries, that are not a variable */
-void VariableNamer::cleanup()
+void oz_varCleanup()
 {
   VariableNamer *aux = allnames;
   allnames = NULL;
@@ -106,12 +98,6 @@ void VariableNamer::cleanup()
       delete aux1;
     }
   }
-}
-
-const char *getVarName(TaggedRef v)
-{
-  const char *s = VariableNamer::getName(v);
-  return *s ? s : "_";
 }
 
 #ifdef DEBUG_STABLE
