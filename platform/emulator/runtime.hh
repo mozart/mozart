@@ -21,7 +21,7 @@
 // pointer equality!
 #define oz_eq(x,y) termEq((x),(y))
 
-#define oz_unify(t1,t2)      (am.fastUnify((t1),(t2),OK) ? PROCEED : FAILED)
+#define oz_unify(t1,t2)      (am.fastUnify((t1),(t2),0) ? PROCEED : FAILED)
 
 #define oz_unifyFloat(t1,f)  oz_unify((t1), oz_float(f))
 #define oz_unifyInt(t1,i)    oz_unify((t1), oz_int(i))

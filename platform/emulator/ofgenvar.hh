@@ -395,7 +395,7 @@ public:
     // Return a sorted list of all features currently in the OFS
     TaggedRef getArityList();
 
-    Bool unifyOFS(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, Bool);
+    Bool unifyOFS(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, ByteCode *);
 
     // Return the feature value if feature exists, return NULL if it doesn't exist
     TaggedRef getFeatureValue(TaggedRef feature) {

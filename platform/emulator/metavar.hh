@@ -43,7 +43,7 @@ friend class GenCVariable;
 private:
   TaggedRef data;
   MetaTag * tag;
-  Bool unifyMeta(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, Bool);
+  Bool unifyMeta(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, ByteCode *);
 
 public:
   GenMetaVariable(MetaTag * t, TaggedRef tr);

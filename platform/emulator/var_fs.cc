@@ -41,7 +41,7 @@ extern ostream * cpi_cout;
 
 Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
                                 TaggedRef * tptr, TaggedRef term,
-                                Bool prop, /* propagate */
+                                ByteCode *scp, /* propagate */
                                 Bool disp  /* dispose */)
 {
   TypeOfTerm ttag = tagTypeOf(term);
@@ -64,10 +64,10 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
       Bool isLocalVar = am.isLocalSVar(this);
       Bool isNotInstallingScript = !am.isInstallingScript();
 
-      if (prop && (isNotInstallingScript || isLocalVar))
+      if (scp==0 && (isNotInstallingScript || isLocalVar))
         propagate(var, fs_prop_val);
 
-      if (prop && isLocalVar) {
+      if (scp==0 && isLocalVar) {
         doBind(vptr, term);
         if (disp) dispose();
       } else {
@@ -97,8 +97,8 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
           (*cpi_cout) << " -> " << new_fset;
 #endif
 
-          Bool var_is_local = (prop && am.isLocalSVar(this));
-          Bool term_is_local = (prop && am.isLocalSVar(term_var));
+          Bool var_is_local = (scp==0 && am.isLocalSVar(this));
+          Bool term_is_local = (scp==0 && am.isLocalSVar(term_var));
           Bool is_not_installing_script = !am.isInstallingScript();
           Bool var_is_constrained = (is_not_installing_script ||
                                      fset->isWeakerThan(new_fset));
@@ -154,7 +154,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
                   if (is_not_installing_script) term_var->propagateUnify(term);
                   if (var_is_constrained) propagateUnify(var);
                   am.doBindAndTrailAndIP(term, tptr, makeTaggedRef(vptr),
-                                         this, term_var, prop);
+                                         this, term_var, scp);
                 }
               } else {
                 if (is_not_installing_script) term_var->propagateUnify(term);
@@ -181,7 +181,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
                   if (is_not_installing_script) propagateUnify(var);
                   if (term_is_constrained) term_var->propagateUnify(term);
                   am.doBindAndTrailAndIP(var, vptr, makeTaggedRef(tptr),
-                                         term_var, this, prop);
+                                         term_var, this, scp);
                 }
               } else {
                 if (term_is_constrained) term_var->propagateUnify(term);
@@ -197,7 +197,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
             {
               if (new_fset.isFSetValue()){
                 OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(new_fset));
-                if (prop) {
+                if (scp==0) {
                   propagateUnify(var);
                   term_var->propagateUnify(term);
                 }
@@ -206,14 +206,14 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
               } else {
                 GenCVariable *c_var = new GenFSetVariable(new_fset);
                 TaggedRef * var_val = newTaggedCVar(c_var);
-                if (prop) {
+                if (scp==0) {
                   propagateUnify(var);
                   term_var->propagateUnify(term);
                 }
                 am.doBindAndTrailAndIP(var, vptr, makeTaggedRef(var_val),
-                                       c_var, this, prop);
+                                       c_var, this, scp);
                 am.doBindAndTrailAndIP(term, tptr, makeTaggedRef(var_val),
-                                       c_var, term_var, prop);
+                                       c_var, term_var, scp);
               }
               break;
             } // FALSE + 2 * FALSE:

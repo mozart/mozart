@@ -121,6 +121,7 @@ void printBanner()
 
 
 extern void bigIntInit(); /* from value.cc */
+extern void initffuns();  /* from initffuns.cc */
 
 void AM::init(int argc,char **argv)
 {
@@ -129,6 +130,7 @@ void AM::init(int argc,char **argv)
   ProfileCode(ozstat.initCount());
   osInit();
   bigIntInit();
+  initffuns();
 
   installingScript = FALSE;
 
@@ -350,16 +352,16 @@ void AM::exitOz(int status)
  * -------------------------------------------------------------------------*/
 
 
-Bool AM::fastUnifyOutline(TaggedRef ref1, TaggedRef ref2, Bool prop)
+Bool AM::fastUnifyOutline(TaggedRef ref1, TaggedRef ref2, ByteCode *scp)
 {
-  return fastUnify(ref1, ref2, prop);
+  return fastUnify(ref1, ref2, scp);
 }
 
 // unify and manage rebindTrail
-Bool AM::unify(TaggedRef t1, TaggedRef t2, Bool prop)
+Bool AM::unify(TaggedRef t1, TaggedRef t2, ByteCode *scp)
 {
   CHECK_NONVAR(t1); CHECK_NONVAR(t2);
-  Bool result = performUnify(&t1, &t2, prop);
+  Bool result = performUnify(&t1, &t2, scp);
 
   // unwindRebindTrail
   TaggedRef *refPtr;
@@ -443,7 +445,7 @@ Bool AM::isMoreLocal(TaggedRef var1, TaggedRef var2)
 }
 
 
-Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, Bool prop)
+Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, ByteCode *scp)
 {
   int argSize;
   RefsArray args1, args2;
@@ -484,10 +486,10 @@ start:
   COUNT(varNonvarUnify);
 
   if (isCVar(tag1)) {
-    return tagged2CVar(term1)->unify(termPtr1, term1, termPtr2, term2, prop);
+    return tagged2CVar(term1)->unify(termPtr1, term1, termPtr2, term2, scp);
   }
 
-  bindToNonvar(termPtr1, term1, term2, prop);
+  bindToNonvar(termPtr1, term1, term2, scp);
   return OK;
 
 
@@ -509,20 +511,20 @@ start:
          (!isLocalVariable(term1,termPtr1) ||
           (isUVar(term2) && !isUVar(term1)) ||
            heapNewer(termPtr2,termPtr1))) {
-      genericBind(termPtr2, term2, termPtr1, *termPtr1, prop);
+      genericBind(termPtr2, term2, termPtr1, *termPtr1, scp);
     } else {
-      genericBind(termPtr1, term1, termPtr2, *termPtr2, prop);
+      genericBind(termPtr1, term1, termPtr2, *termPtr2, scp);
     }
     return OK;
   }
 
   if (isNotCVar(tag2)) {
-    genericBind(termPtr2, term2, termPtr1, *termPtr1, prop);
+    genericBind(termPtr2, term2, termPtr1, *termPtr1, scp);
     return OK;
   }
 
   Assert(isCVar(tag1) && isCVar(tag2));
-  return tagged2CVar(term1)->unify(termPtr1,term1,termPtr2,term2,prop);
+  return tagged2CVar(term1)->unify(termPtr1,term1,termPtr2,term2,scp);
 
 
 
@@ -541,7 +543,7 @@ start:
     return ((FSetValue *) tagged2FSetValue(term1))->unify(term2);
 
   case OZCONST:
-    return tagged2Const(term1)->unify(term2,prop);
+    return tagged2Const(term1)->unify(term2,scp);
 
   case LTUPLE:
     {
@@ -588,7 +590,7 @@ start:
 
   rebind(termPtr2,term1);
   for (int i = 0; i < argSize-1; i++ ) {
-    if ( !performUnify(args1+i,args2+i, prop)) {
+    if ( !performUnify(args1+i,args2+i, scp)) {
       return NO;
     }
   }
@@ -738,13 +740,13 @@ Bool checkHome(TaggedRef *vPtr) {
 //  term may be an
 void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
                      TaggedRef *termPtr, TaggedRef term,
-                     Bool prop)
+                     ByteCode *scp)
      /* bind var to term;         */
 {
   Assert(!isCVar(var) && !isRef(term));
 
   /* first step: do suspensions */
-  if (prop) {
+  if (scp==0) {
     if (isSVar(var)) {
       checkSuspensionList(var, pc_std_unif);
 
@@ -756,7 +758,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
 
   /* second step: mark binding for non-local variable in trail;     */
   /* also mark such (i.e. this) variable in suspention list;        */
-  if ( !isLocalVariable(var,varPtr) || !prop ) {
+  if ( !isLocalVariable(var,varPtr) || scp ) {
     Assert(checkHome(varPtr));
     trail.pushRef(varPtr,var);
   } else  { // isLocalVariable(var)
@@ -785,9 +787,9 @@ void AM::doBindAndTrail(TaggedRef v, TaggedRef * vp, TaggedRef t)
  */
 void AM::doBindAndTrailAndIP(TaggedRef v, TaggedRef * vp, TaggedRef t,
                              GenCVariable * lv, GenCVariable * gv,
-                             Bool prop)
+                             ByteCode *scp)
 {
-  lv->installPropagators(gv,prop);
+  lv->installPropagators(gv,scp);
   Assert(checkHome(vp));
   trail.pushRef(vp, v);
 

@@ -35,9 +35,9 @@ void GenCVariable::propagate(TaggedRef var, SuspList * &sl,
 
 Bool GenCVariable::unifyOutline(TaggedRef *tptr1, TaggedRef term1,
                                 TaggedRef *tptr2, TaggedRef term2,
-                                Bool prop)
+                                ByteCode *scp)
 {
-  return unify(tptr1,term1,tptr2,term2,prop);
+  return unify(tptr1,term1,tptr2,term2,scp);
 }
 
 

@@ -89,8 +89,8 @@ public:
   // unifies a generic variable with another generic variable
   // or a non-variable
   // invariant: left term == *this
-  Bool unify(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, Bool);
-  Bool unifyOutline(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, Bool);
+  Bool unify(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, ByteCode *);
+  Bool unifyOutline(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, ByteCode *);
 
   int getSuspListLength(void);
 
@@ -101,7 +101,7 @@ public:
   void print(ostream &stream, int depth, int offset, TaggedRef v);
   void printLong(ostream &stream, int depth, int offset, TaggedRef v);
 
-  void installPropagators(GenCVariable *, Bool prop);
+  void installPropagators(GenCVariable *, ByteCode *);
 
   void addDetSusp (Thread *thr, TaggedRef *tptr);
 

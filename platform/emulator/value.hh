@@ -652,8 +652,8 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  Bool unify(TaggedRef, Bool) { return NO; }
-  Bool install(TaggedRef t) { return unify(t,OK); };
+  Bool unify(TaggedRef, ByteCode *) { return NO; }
+  Bool install(TaggedRef t) { return unify(t,0); };
   Bool deinstall(TaggedRef) { return OK; };
 
   /* optimized isChunk test */

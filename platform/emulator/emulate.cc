@@ -144,7 +144,7 @@ if (predArity != arityExp && VarArity != arityExp) {                     \
 // -----------------------------------------------------------------------
 //
 
-#define NOFLATGUARD   (shallowCP==NULL)
+#define NOFLATGUARD   (shallowCP)
 
 #define SHALLOWFAIL   if (shallowCP) { goto LBLshallowFail; }
 
@@ -730,7 +730,7 @@ void AM::checkEntailment()
       // don't decrement counter of parent board!
 
       if (!fastUnifyOutline(solveAA->getResult(),
-                            solveAA->genSolved(), OK)) {
+                            solveAA->genSolved(), 0)) {
         Assert(0);
       }
       return;
@@ -753,7 +753,7 @@ void AM::checkEntailment()
       // don't decrement counter of parent board!
 
       if ( !fastUnifyOutline(solveAA->getResult(),
-                             solveAA->genStuck(), OK) ) {
+                             solveAA->genStuck(), 0) ) {
         Assert(0);
       }
       return;
@@ -784,7 +784,7 @@ void AM::checkEntailment()
 
     if (!fastUnifyOutline(solveAA->getResult(),
                           solveAA->genChoice(wa->getChildCount()),
-                          OK)) {
+                          0)) {
       Assert(0);
     }
     return;
@@ -802,7 +802,7 @@ void AM::checkEntailment()
 
     if ( !fastUnifyOutline(result,
                            solveAA->genUnstable(newVar),
-                           OK)) {
+                           0)) {
       Assert(0);
     }
     return;
@@ -3287,7 +3287,7 @@ LBLdispatcher:
     SolveActor *saa=SolveActor::Cast(aa);
     // don't decrement parent counter
 
-    if (!e->fastUnifyOutline(saa->getResult(),saa->genFailed(),OK)) {
+    if (!e->fastUnifyOutline(saa->getResult(),saa->genFailed(),0)) {
       // this should never happen?
       Assert(0);
     }

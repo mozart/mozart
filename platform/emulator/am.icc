@@ -28,15 +28,15 @@ void AM::rebind(TaggedRef *refPtr, TaggedRef newRef)
 
 inline
 void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var,
-                      TaggedRef a, Bool prop)
+                      TaggedRef a, ByteCode *scp)
 {
   // most probable case first: local UVar
   // if (isUVar(var) && currentBoard == tagged2VarHome(var)) {
   // more efficient:
-  if (var == currentUVarPrototype() && prop) {
+  if (var == currentUVarPrototype() && scp==0) {
     doBind(varPtr,a);
   } else {
-    genericBind(varPtr,var,NULL,a,prop);
+    genericBind(varPtr,var,NULL,a,scp);
   }
 }
 
@@ -49,7 +49,7 @@ void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var,
  */
 
 inline
-Bool AM::fastUnify(TaggedRef A, TaggedRef B, Bool prop)
+Bool AM::fastUnify(TaggedRef A, TaggedRef B, ByteCode *scp)
 {
   TaggedRef term1 = A;
   DEREF0(term1,term1Ptr,_1);
@@ -58,7 +58,7 @@ Bool AM::fastUnify(TaggedRef A, TaggedRef B, Bool prop)
   DEREF0(term2,term2Ptr,_2);
 
   if (!isAnyVar(term2)) {
-    if (currentUVarPrototype() == term1 && prop) {
+    if (currentUVarPrototype() == term1 && scp==0) {
       COUNT(varNonvarUnify);
       doBind(term1Ptr,term2);
       goto exit;
@@ -66,13 +66,13 @@ Bool AM::fastUnify(TaggedRef A, TaggedRef B, Bool prop)
     if (term1==term2) {
       goto exit;
     }
-  } else if (!isAnyVar(term1) && currentUVarPrototype()==term2 && prop) {
+  } else if (!isAnyVar(term1) && currentUVarPrototype()==term2 && scp==0) {
     COUNT(varNonvarUnify);
     doBind(term2Ptr,term1);
     goto exit;
   }
 
-  return unify(A,B,prop);
+  return unify(A,B,scp);
 
  exit:
   COUNT(totalUnify);
