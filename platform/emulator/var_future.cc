@@ -106,8 +106,13 @@ OZ_Return Future::bind(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
     return oz_unify(makeTaggedRef(vPtr),t);
   }
 
-  am.addSuspendVarList(vPtr);
-  return SUSPEND;
+  if (oz_isLocalVar(this)) {
+    am.addSuspendVarList(vPtr);
+    return SUSPEND;
+  } else {
+    oz_bindVar(this,vPtr, t);
+    return PROCEED;
+  }
 }
 
 OZ_Return Future::forceBind(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
@@ -118,13 +123,7 @@ OZ_Return Future::forceBind(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
 
 OZ_Return Future::unify(TaggedRef *vPtr, TaggedRef *tPtr, ByteCode*scp)
 {
-  if (kick(vPtr)) {
-    // redo unification, because vPtr is bound
-    return oz_unify(makeTaggedRef(vPtr),makeTaggedRef(tPtr));
-  }
-
-  am.addSuspendVarList(vPtr);
-  return SUSPEND;
+  return bind(vPtr,makeTaggedRef(tPtr),scp);
 }
 
 Bool Future::addSusp(TaggedRef *tPtr, Suspension susp, int unstable)
@@ -175,14 +174,20 @@ OZ_BI_define(BIfuture,1,1)
     OZ_Term *vPtr = tagged2Ref(v);
     if (oz_isFuture(*vPtr)) OZ_RETURN(v);
     OzVariable *ov=oz_getVar(vPtr);
-    OZ_Term f = oz_newFuture(GETBOARD(ov));
+    Board *bb=GETBOARD(ov);
+    OZ_Term f = oz_newFuture(bb);
     RefsArray args = allocateRefsArray(2, NO);
     args[0]=v;
     args[1]=f;
-    Thread *thr = oz_newThreadSuspendedInject(GETBOARD(ov));
-    thr->pushCFun(VarToFuture,args,2);
-    Bool ret = oz_var_addSusp(vPtr, thr);
-    Assert(!ret);
+    if (bb!=oz_currentBoard()) {
+      Thread *thr = oz_newThreadInject(bb);
+      thr->pushCFun(VarToFuture,args,2);
+    } else { // optimize: immediately suspend thread
+      Thread *thr = oz_newThreadSuspendedInject(bb);
+      thr->pushCFun(VarToFuture,args,2);
+      Bool ret = oz_var_addSusp(vPtr, thr);
+      Assert(!ret);
+    }
     OZ_RETURN(f);
   }
   OZ_RETURN(v);

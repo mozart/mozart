@@ -34,40 +34,21 @@
 #include "board.hh"
 #include "am.hh"
 
-// imports
-int oz_incSolveThreads(Board *bb);
-DebugCode(Bool oz_isInSolveDebug(Board *bb);)
+// debugger
 void debugStreamTerm(Thread*);
 void debugStreamReady(Thread*);
 
-// TODO
+// from space.cc
+int oz_incSolveThreads(Board *bb);
+DebugCode(Bool oz_isInSolveDebug(Board *bb);)
+void oz_removeExtThread(Thread *tt);
 
-void oz_checkExtSuspension(Suspension susp, Board * home);
-void oz_checkExtSuspensionOutlined(Suspension susp);
-void oz_removeExtThreadOutlined(Thread *tt);
 
-inline
-void oz_removeExtThread(Thread *tt)
-{
-  if (tt->wasExtThread()) {
-    oz_removeExtThreadOutlined(tt);
-  }
-}
-
-// exports
-#define CheckExtSuspension(susp)                \
-  if (((Suspension)susp).wasExtSuspension()) {  \
-    oz_checkExtSuspensionOutlined(susp);        \
-  }
-
-/* -------------------------------------------------------------------------
- * Threads
- * ------------------------------------------------------------------------- */
 
 static
 inline
 Thread * _newThread(int prio, Board *bb) {
-  Thread *th = new Thread(S_RTHREAD | T_runnable,prio,bb,oz_newId());
+  Thread *th = new Thread(S_RTHREAD,prio,bb,oz_newId());
   th->setBody(am.threadsPool.allocateBody());
   bb->incSuspCount();
   oz_checkDebug(th,bb);
@@ -79,6 +60,7 @@ Thread * oz_newThread(int prio=DEFAULT_PRIORITY)
 {
   Board *bb=oz_currentBoard();
   Thread *tt = _newThread(prio,bb);
+  tt->markRunnable();
 
   if (am.isBelowSolveBoard()) {
     int inSolve=oz_incSolveThreads(bb);
@@ -97,7 +79,7 @@ Thread * oz_newThreadToplevel(int prio=DEFAULT_PRIORITY)
 {
   Board *bb=oz_rootBoard();
   Thread *tt = _newThread(prio,bb);
-
+  tt->markRunnable();
   am.threadsPool.scheduleThread(tt);
   return tt;
 }
@@ -106,6 +88,7 @@ inline
 Thread * oz_newThreadInject(Board *bb,int prio=DEFAULT_PRIORITY)
 {
   Thread *tt = _newThread(prio,bb);
+  tt->markRunnable();
 
   int inSolve = oz_incSolveThreads(bb);
   if (inSolve) {
@@ -119,13 +102,10 @@ Thread * oz_newThreadInject(Board *bb,int prio=DEFAULT_PRIORITY)
 inline
 Thread * oz_newThreadSuspendedInject(Board *bb, int prio=DEFAULT_PRIORITY)
 {
-  Thread *th = new Thread(S_RTHREAD,prio,bb,oz_newId());
-  th->setBody(am.threadsPool.allocateBody());
-  bb->incSuspCount();
-
-  oz_checkDebug(th,bb);
-
-  return th;
+  // NOTE: never try to inject a suspended thread, all kinds of invariants
+  //  for the stability test are broken
+  Assert(bb==oz_currentBoard());
+  return _newThread(prio,bb);
 }
 
 inline
@@ -201,7 +181,9 @@ void oz_wakeupThreadOPT(Thread *tt)
     Assert(oz_isInSolveDebug(GETBOARD(tt)));
     oz_incSolveThreads(GETBOARD(tt));
     tt->setInSolve();
-    oz_removeExtThread(tt);
+    if (tt->wasExtThread()) {
+      oz_removeExtThread(tt);
+    }
     tt->clearExtThread();
   } else {
     Assert(!oz_isInSolveDebug(GETBOARD(tt)));
@@ -216,7 +198,9 @@ void oz_wakeupThread(Thread *tt)
   int inSolve = oz_incSolveThreads(GETBOARD(tt));
   if (inSolve) {
     tt->setInSolve();
-    oz_removeExtThread(tt);
+    if (tt->wasExtThread()) {
+      oz_removeExtThread(tt);
+    }
     tt->clearExtThread();
   }
 }

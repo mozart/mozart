@@ -39,6 +39,9 @@
 #include "solve.icc"
 #endif
 
+// from prop_int.cc
+void oz_pushToLPQ(Board *bb, Propagator * prop);
+
 /*
  * class SolveActor:
  *    solve actor;
@@ -165,3 +168,32 @@ void SolveActor::mergeNonMonoSuspListWith(OrderedSuspList * p)
 }
 
 //-----------------------------------------------------------------------------
+
+void oz_solve_scheduleNonMonoSuspList(SolveActor *sa)
+{
+#ifdef DEBUG_NONMONOTONIC
+  printf("------------------------------------------------------------------"
+         "\nSolveActor::scheduleNonMonoSuspList\n"); fflush(stdout);
+#endif
+
+  for (OrderedSuspList * p = sa->getNonMonoSuspList();
+       p != NULL;
+       p = p->getNext()) {
+    Propagator * prop = p->getPropagator();
+
+#ifdef DEBUG_NONMONOTONIC
+    OZ_PropagatorProfile * header = prop->getPropagator()->getProfile();
+    char * pn = header->getPropagatorName();
+    printf("<%s %d>\n", pn,
+           prop->getPropagator()->getOrder());
+#endif
+
+    oz_pushToLPQ(GETBOARD(prop),prop);
+  }
+
+  sa->setNonMonoSuspList(NULL);
+
+#ifdef DEBUG_NONMONOTONIC
+  printf("Done\n"); fflush(stdout);
+#endif
+}

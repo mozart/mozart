@@ -37,25 +37,16 @@ Bool oz_installScript(Script &script);
 
 InstType oz_installPath(Board *to);
 Bool oz_install(Board *bb);
-//inline void oz_deinstallPath(Board *top);
-//inline void oz_deinstallCurrent();
 void oz_reduceTrailOnUnitCommit();
 void oz_reduceTrailOnSuspend();
 void oz_reduceTrailOnFail();
 void oz_reduceTrailOnShallow();
 void oz_reduceTrailOnEqEq();
 
-void oz_checkStability();
 int oz_handleFailure(Continuation *&cont, AWActor *&aa);
 int oz_commit(Board *bb, Thread *tt=0);
 void oz_failBoard();
 void oz_merge(Board *bb, Board *to,int inc);
-
-//  Check all the solve actors above for stabily
-// (and, of course, wake them up if needed);
-Bool oz_solve_checkExtSuspList (SolveActor *sa);
-
-void oz_setExtSuspensionOutlined(Suspension susp, Board *varHome);
 
 Bool oz_isStableSolve(SolveActor *sa);
 
@@ -67,9 +58,15 @@ void oz_decSolveThreads(Board *bb);
 #endif
 DebugCode(Bool oz_isInSolveDebug(Board *bb);)
 
-/* -----------------------------------------------------------------------
- * inlineS
- * -----------------------------------------------------------------------*/
+void oz_removeExtThread(Thread *tt);
+
+void oz_checkExtSuspension(Suspension susp, Board * home);
+void _checkExtSuspension(Suspension susp);
+
+#define CheckExtSuspension(susp)                \
+  if (((Suspension)susp).wasExtSuspension()) {  \
+    _checkExtSuspension(susp);                  \
+  }
 
 /* -------------------------------------------------------------------------
  * TODO
