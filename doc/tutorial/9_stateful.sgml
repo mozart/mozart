@@ -106,6 +106,13 @@ Q = {NewQueueServer}
 {Q.put 3}
 >>>
 
+<P> So how this program works? <<{Q.put I0} {Q.put I1} ... {Q.put In}>>
+will incrementally add the elements <<I0 I1 ... In>> to the
+stream <<Given>>, resulting in <<I0|I1|...|In|&lt;Future1&gt;>>.
+<<{Q.get X0} {Q.put X1} ... {Q.put Xn}>> will add the elements
+<<X0 X1 ... Xn>> to the stream <<Taken>> resulting in 
+<<X0|X1|...|Xn|&lt;Future2&gt;>>. The concurrent thread <<Equate>>
+will incrementally bind <<Xi>> to <<Ii>>.
 
 <P><FIGURE ID="concurrentQueue1" CLASS="Figure">
 <CAPTION>Concurrent Queue server</CAPTION>
