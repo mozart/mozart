@@ -1547,7 +1547,7 @@ public:
     return this;
   }
 
-  ProgramCounter find(TaggedRef file, int line);
+  ProgramCounter find(char *file, int line);
 };
 
 extern DbgInfoList *allDbgInfos;
