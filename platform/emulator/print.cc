@@ -1348,7 +1348,23 @@ void BigInt::printStream(ostream &stream, int depth)
   stream << "<BigInt @" << this << ": " << toC(makeTaggedConst(this)) << ">";
 }
 
-
+#ifdef LINKED_QUEUES
+void ThreadQueue::printStream(ostream &stream, int depth)
+{
+  if (isEmpty()) {
+    stream << "Thread queue empty." << endl << flush;
+  } else {
+    stream << "Thread #" << size << endl << flush;
+    int i = 0;
+    Thread*ptr;
+    ThreadQueueIterator iter(this);
+    while ((ptr=iter.getNext())) {
+      stream << "queue[" << i++ << "]=" << flush;
+      ptr->printStream(stream,depth);
+    }
+  }
+}
+#else
 void ThreadQueueImpl::printStream(ostream &stream, int depth)
 {
   if (isEmpty()) {
@@ -1364,6 +1380,7 @@ void ThreadQueueImpl::printStream(ostream &stream, int depth)
     }
   }
 }
+#endif /* !LINKED_QUEUES */
 
 void FDIntervals::printLong(ostream &stream, int idnt) const
 {
