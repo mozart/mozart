@@ -76,7 +76,7 @@ char *debugTypeStr[LAST] = {
   "CELL_MGR",
   "PROBES",
   "NET_HANDLER",
-  "LOCK_MGR"
+  "LOCK_MGR",
   "CHAIN"        //45
 };
 
