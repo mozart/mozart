@@ -1,6 +1,6 @@
 # -*- perl -*-
 
-$cmode='stat';
+$cmode='dyn';
 
 %builtins_all =
 (
@@ -15,7 +15,7 @@ $cmode='stat';
     'BootManager' => { in     => ['+virtualString'],
                        out    => ['+record'],
                        BI     => BIBootManager,
-                       native => true},
+                       native => false},
 
 
 
@@ -642,6 +642,10 @@ $cmode='stat';
                              BI  => BInewName,
                              native => false},
 
+    'NewUniqueName'     => { in  => ['+atom'],
+                             out => ['+name'],
+                             BI  => BInewUniqueName,
+                             native => false},
 
 
     ##
@@ -1275,65 +1279,5 @@ $cmode='stat';
                               out => ['+int'],
                               BI  => BIvsLength,
                               native => false},
-
-
-
-
-    ##
-    ## Basic runtime support
-    ##
-
-    'NewUniqueName'     => { in  => ['+atom'],
-                             out => ['+name'],
-                             BI  => BInewUniqueName,
-                             native => false},
-
-    'fail'              => { in  => [],
-                             out => [],
-                             BI  => BIfail,
-                             native => false},
-
-    'nop'               => { in  => [],
-                             out => [],
-                             BI  => BInop,
-                             native => false},
-
-
-
-
-
-
-    # all these are needed within emulator
-
-    'controlVarHandler' => { in  => ['+value'],
-                             out => [],
-                             BI  => BIcontrolVarHandler,
-                             native => true},
-
-    'probe'             => { in  => ['value'],
-                             out => [],
-                             BI  => BIprobe,
-                             native => true},
-
-    'startTmp'          => { in  => ['+int','+int'],
-                             out => [],
-                             BI  => BIstartTmp,
-                             module=>'perdio',
-                             native => true},
-
-    'portWait'         =>  { in  => ['+port','+int'],
-                             out => [],
-                             BI  => BIportWait,
-                             module=>'perdio',
-                             native => true},
-
-     'atRedo'           => { in  => ['+feature', 'value'],
-                             out => [],
-                             bi  => BIatRedo,
-                             native => true},
-
-
-
-
 
 );

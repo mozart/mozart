@@ -69,9 +69,9 @@ OZ_BI_define(BIbuiltin,2,1)
   OZ_declareVirtualStringIN(0,name);
   OZ_declareIntIN(1,arity);
 
-  Builtin *found = builtinTab.find(name);
+  Builtin *found = string2Builtin(name);
 
-  if (found == htEmpty) {
+  if (!found) {
     return oz_raise(E_ERROR,E_SYSTEM,"builtinUndefined",1,
                     oz_atom(name));
   }
@@ -4212,8 +4212,12 @@ OZ_BI_define(BIinstructionsPrintReset, 0,0)
 OZ_BI_define(BIbiPrint, 0,0)
 {
   unsigned long sum = 0;
-  for (HashNode *hn = builtinTab.getFirst(); hn; hn = builtinTab.getNext(hn)) {
-    Builtin *abit = (Builtin *) hn->value;
+
+  SRecord * sr = tagged2SRecord(builtinRecord);
+
+  for (int i = sr->getWidth(); i--; ) {
+    Builtin * abit = tagged2Builtin(sr->getArg(i));
+
     sum += abit->getCounter();
     if (abit->getCounter()!=0) {
       printf("%010lu x %s\n",abit->getCounter(),abit->getPrintName());
@@ -4247,13 +4251,6 @@ OZ_BI_define(BIsetProfileMode, 1,0)
    dynamic link objects files
    ----------------------------------------------------------------- */
 
-OZ_BI_define(BIdlOpen,1,1)
-{
-  oz_declareVirtualStringIN(0,filename);
-
-  return osDlopen(filename,OZ_out(0));
-} OZ_BI_end
-
 OZ_BI_define(BIisForeignPointer,1,1)
 {
   oz_declareNonvarIN(0,p);
@@ -4281,74 +4278,6 @@ OZ_BI_define(BIForeignPointerToInt,1,1)
   OZ_RETURN_INT((long)handle);
 } OZ_BI_end
 
-OZ_BI_define(BIdlClose,1,0)
-{
-  OZ_declareForeignPointerIN(0,handle);
-
-  return osDlclose(handle);
-} OZ_BI_end
-
-/* findFunction(+fname,+farity,+handle) */
-OZ_BI_define(BIfindFunction,3,0)
-{
-  oz_declareVirtualStringIN(0,functionName);
-  oz_declareIntIN(1,functionArity);
-  OZ_declareForeignPointerIN(2,handle);
-
-  // get the function
-  OZ_CFun func;
-  if ((func = (OZ_CFun) osDlsym(handle,functionName)) == 0) {
-#ifdef WINDOWS
-    OZ_warning("error=%d\n",GetLastError());
-#endif
-    return oz_raise(E_ERROR, oz_atom("foreign"), "cannotFindFunction", 3,
-                    OZ_in(0),
-                    OZ_in(1),
-                    OZ_in(2));
-  }
-
-  BIadd(ozstrdup(functionName),functionArity,0,*func,OK); // mm2
-  return PROCEED;
-} OZ_BI_end
-
-
-TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I)
-{
-  OZ_Term l = oz_nil();
-
-  Builtin *bi;
-
-  while (I && I->name) {
-    bi = new Builtin(I->name,I->inArity,I->outArity,I->func,OK);
-
-#ifdef DEBUG_PROPAGATORS
-   builtinTab.htAdd(I->name, bi);
-#endif
-
-    l = oz_cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
-    I++;
-  }
-
-  return OZ_recordInit(AtomForeign,l);
-}
-
-
-OZ_BI_define(BIdlLoad,1,1)
-{
-  oz_declareVirtualStringIN(0,filename);
-
-  TaggedRef hdl;
-  OZ_Return res = osDlopen(filename,hdl);
-  if (res!=PROCEED) return res;
-  void* handle = OZ_getForeignPointer(hdl);
-  OZ_C_proc_interface * I;
-  I = (OZ_C_proc_interface *) osDlsym(handle,"oz_interface");
-  if (I==0)
-    return oz_raise(E_ERROR,AtomForeign, "cannotFindInterface", 1,
-                    OZ_in(0));
-
-  OZ_RETURN(oz_pair2(hdl,ozInterfaceToRecord(I)));
-} OZ_BI_end
 
 /* ------------------------------------------------------------
  * Shutdown
@@ -4453,11 +4382,6 @@ OZ_BI_define(BIunify,2,0)
 OZ_BI_define(BIfail,0,0)
 {
   return FAILED;
-} OZ_BI_end
-
-OZ_BI_define(BInop,0,0)
-{
-  return PROCEED;
 } OZ_BI_end
 
 
@@ -5585,70 +5509,8 @@ OZ_BI_define(BIinspect, 1, 1)
   OZ_RETURN(oz_inspect(t));
 } OZ_BI_end
 
-/********************************************************************
- * Table of builtins
- ******************************************************************** */
 
-#include "builtins.dcl"
-BIspec allSpec[] = {
-#include "builtins.tbl"
-  {0,0,0,0}
-};
-
-
-extern void BIinitUnix();
-extern void BIinitPerdio();
-extern void initVirtualProperties();
-
-OZ_C_proc_proto(BIurl_load);
-OZ_C_proc_proto(BIload);
-
-Builtin *BIinit()
-{
-  Builtin *bi = BIadd("builtin",2,1,BIbuiltin,OK);
-
-  if (!bi)
-    return bi;
-
-  BIaddSpec(allSpec);
-  BI_Unify=makeTaggedConst(builtinTab.find("="));
-  BI_send=makeTaggedConst(builtinTab.find("Send"));
-  BI_controlVarHandler=makeTaggedConst(builtinTab.find("controlVarHandler"));
-
-  BIinitUnix();
-
-  BIinitPerdio();
-
-  BI_probe=makeTaggedConst(builtinTab.find("probe"));
-  BI_Delay=makeTaggedConst(builtinTab.find("Delay"));
-  BI_startTmp=makeTaggedConst(builtinTab.find("startTmp"));
-  BI_portWait=makeTaggedConst(builtinTab.find("portWait"));
-
-  BI_exchangeCell = makeTaggedConst(builtinTab.find("Exchange"));
-  BI_assign   = makeTaggedConst(builtinTab.find("<-"));
-  BI_atRedo = makeTaggedConst(builtinTab.find("atRedo"));
-  BI_lockLock = makeTaggedConst(builtinTab.find("Lock"));
-  BI_fail     = makeTaggedConst(builtinTab.find("fail"));
-
-  // to execute boot functor in am.cc
-  BI_dot      =
-    makeTaggedConst(builtinTab.find("."));
-  BI_load     =
-    makeTaggedConst(new Builtin("load",     2, 0, BIload,     OK));
-  BI_url_load =
-    makeTaggedConst(new Builtin("URL.load", 1, 1, BIurl_load, OK));
-  BI_boot_manager =
-    makeTaggedConst(new Builtin("BootManager", 1, 1, BIBootManager, OK));
-
-
-  bi_raise = builtinTab.find("raise");
-  bi_raiseError = builtinTab.find("raiseError");
-  bi_raiseDebug = builtinTab.find("raiseDebug");
-
+void initObjectBuiltins(void) {
   dummyRecord = makeTaggedNULL();
   OZ_protect(&dummyRecord);
-
-  initVirtualProperties();
-
-  return bi;
 }

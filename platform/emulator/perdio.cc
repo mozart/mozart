@@ -3331,7 +3331,7 @@ void msgReceived(MsgBuffer* bs)
 
       OwnerEntry *oe=receiveAtOwner(i);
       Tertiary *tert= oe->getTertiary();
-      Builtin *found = builtinTab.find(biName);
+      Builtin *found = string2Builtin(biName);
       if (!found) {
         PD((WEIRD,"builtin %s not found",biName));
         break;

@@ -88,7 +88,6 @@ enum EmulatorPropertyIndex {
   // MEMORY
   PROP_MEMORY_ATOMS,
   PROP_MEMORY_NAMES,
-  PROP_MEMORY_BUILTINS,
   PROP_MEMORY_FREELIST,
   PROP_MEMORY_CODE,
   PROP_MEMORY_HEAP,
@@ -338,7 +337,6 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     // MEMORY
     CASE_INT(PROP_MEMORY_ATOMS,ozstat.getAtomMemory());
     CASE_INT(PROP_MEMORY_NAMES,ozstat.getNameMemory());
-    CASE_INT(PROP_MEMORY_BUILTINS,builtinTab.memRequired());
     CASE_INT(PROP_MEMORY_FREELIST,getMemoryInFreeList());
     CASE_INT(PROP_MEMORY_CODE,CodeArea::totalSize);
     CASE_INT(PROP_MEMORY_HEAP,ozstat.heapUsed.total+getUsedMemory());
@@ -347,7 +345,6 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
               AtomCode,AtomHeap),
              SET_INT(AtomAtoms,ozstat.getAtomMemory());
              SET_INT(AtomNames,ozstat.getNameMemory());
-             SET_INT(AtomBuiltins,builtinTab.memRequired());
              SET_INT(AtomFreelist,getMemoryInFreeList());
              SET_INT(AtomCode,CodeArea::totalSize);
              SET_INT(AtomHeap,ozstat.heapUsed.total+getUsedMemory()););
@@ -855,7 +852,6 @@ void initVirtualProperties()
   // MEMORY
   VirtualProperty::add("memory.atoms",PROP_MEMORY_ATOMS);
   VirtualProperty::add("memory.names",PROP_MEMORY_NAMES);
-  VirtualProperty::add("memory.builtins",PROP_MEMORY_BUILTINS);
   VirtualProperty::add("memory.freelist",PROP_MEMORY_FREELIST);
   VirtualProperty::add("memory.code",PROP_MEMORY_CODE);
   VirtualProperty::add("memory.heap",PROP_MEMORY_HEAP);

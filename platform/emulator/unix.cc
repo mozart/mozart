@@ -1767,9 +1767,9 @@ retry:
   }
 } OZ_BI_end
 
-void BIinitUnix()
-{
 #ifdef WINDOWS
+
+void initWinSockets() {
   WSADATA wsa_data;
   WORD req_version = MAKEWORD(1,1);
 
@@ -1779,5 +1779,6 @@ void BIinitUnix()
 
   //  fprintf(stderr, "szDescription = \"%s\"", wsa_data.szDescription);
   //  fprintf(stderr, "szSystemStatus = \"%s\"", wsa_data.szSystemStatus);
-#endif
 }
+
+#endif

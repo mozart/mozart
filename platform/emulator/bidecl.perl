@@ -138,12 +138,6 @@
 ### permits selective inclusion or exclusion through command line options
 ### -include or -exclude.
 ###
-### native => true|false specifies whether the builtin
-### is non-exportable.
-
-
-# this is the function that converts these descriptions to
-# an array of declarations appropriate for the emulator
 
 sub CTABLE {
     my ($key,$info);
@@ -157,40 +151,6 @@ sub CTABLE {
         my $macro;
         foreach $macro (@ifdef)  { print "#ifdef $macro\n"; }
         foreach $macro (@ifddef) { print "#ifndef $macro\n"; }
-        my $native = $info->{native};
-        if ( $native eq "true") {
-            $native = "OK";
-        } elsif ( $native eq "false") {
-            $native = "NO";
-        } else {
-            die "*** native flag for $key must be 'true' or 'false'";
-        }
-        $BI = $info->{bi} unless $BI;
-        print "{\"$key\",\t$inArity,\t$outArity,$BI,\t$native},\n";
-        foreach $macro (@ifddef) { print "#endif\n"; }
-        foreach $macro (@ifdef)  { print "#endif\n"; }
-    }
-}
-
-# this is the function that converts these descriptions to
-# an array of declarations appropriate for dynamic linking
-
-sub CDYNTABLE {
-    my ($key,$info);
-    while (($key,$info) = each %$builtins) {
-        next unless &included($info);
-        my $inArity = @{$info->{in}};
-        my $outArity = @{$info->{out}};
-        my $BI = $info->{BI};
-        my @ifdef  = split(/\,/,$info->{ifdef});
-        my @ifndef = split(/\,/,$info->{ifndef});
-        my $macro;
-        foreach $macro (@ifdef)  { print "#ifdef $macro\n"; }
-        foreach $macro (@ifddef) { print "#ifndef $macro\n"; }
-        my $native = $info->{native};
-        if ( !($native eq "true")) {
-            die "*** native flag for $key must be 'true'";
-        }
         $BI = $info->{bi} unless $BI;
         print "{\"$key\",\t$inArity,\t$outArity,$BI},\n";
         foreach $macro (@ifddef) { print "#endif\n"; }
@@ -275,10 +235,6 @@ sub OZTABLE {
         print "\t\tdoesNotReturn: true\n" if $info->{doesNotReturn};
         my $negated = $info->{negated};
         print "\t\tnegated: '$negated'\n" if $negated;
-        my $native = $info->{native};
-        if ($native eq "true") {
-            print "\t\tsited: true\n";
-        }
         print "\t)\n";
     }
 }
@@ -292,25 +248,6 @@ sub CDECL {
     }
 }
 
-
-sub checkNative {
-    my $value = shift;
-    printf "Builtins with nativeness: '$value'\n";
-    printf "**************************************\n";
-    my ($key,$info);
-    foreach $key (sort keys %$builtins) {
-        my $info = $builtins->{$key};
-        if ( $info->{native} eq $value) {
-            print "   $key\n";
-        }
-    }
-    print "\n\n";
-}
-
-sub SORTNATIVENESS {
-    &checkNative("true");
-    &checkNative("false");
-}
 
 sub STRUCTURE {
     exec "grep '#\\*' $0 | sed -e 's/[ \t]*#/  /'g";
@@ -334,9 +271,7 @@ while (@ARGV) {
     $option = shift;
     if    ($option eq '-ctable' )    { $choice='ctable';  }
     elsif ($option eq '-cdecl'  )    { $choice='cdecl';   }
-    elsif ($option eq '-cdyntable')  { $choice='cdyntable'; }
     elsif ($option eq '-oztable')    { $choice='oztable'; }
-    elsif ($option eq '-sortnativeness') { $choice='sortnativeness'; }
     elsif ($option eq '-structure')   { $choice='structure'; }
     elsif ($option eq '-include')    { push @include,split(/\,/,shift); }
     elsif ($option eq '-exclude')    { push @exclude,split(/\,/,shift); }
@@ -357,14 +292,9 @@ foreach $file (@files) {
     require $file;
     $builtins = { %builtins_all };
 
-    if ($choice eq 'ctable' )    {
-        if ($cmode eq 'dyn') { &CDYNTABLE; }
-        elsif ($cmode eq 'stat') { &CTABLE; }
-        else { die "must specify on of cmode=dyn or cmode=stat"; }
-    }
+    if ($choice eq 'ctable' )    { &CTABLE; }
     elsif ($choice eq 'cdecl'  )    { &CDECL;   }
     elsif ($choice eq 'oztable')    { &OZTABLE; }
-    elsif ($choice eq 'sortnativeness') { &SORTNATIVENESS; }
     elsif ($choice eq 'structure')   { &STRUCTURE; }
     else { die "must specify one of: -ctable -cdecl -oztable -structure -sortnativeness"; }
 }

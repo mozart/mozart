@@ -337,60 +337,20 @@ OZ_Term oz_getLocation(Board *bb);
 
 OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X);
 
-#ifdef DEBUG_CHECK
-extern int checkBIArity(OZ_CFun f);
-#endif
-
 
 /* -----------------------------------------------------------------------
  * BuiltinTab
  * -----------------------------------------------------------------------*/
 
-// specification for builtins
-struct BIspec {
-  char *name;
-  int inArity;
-  int outArity;
-  OZ_CFun fun;
-  Bool native;
-};
+extern TaggedRef builtinRecord;
 
+#define atom2Builtin(a) \
+  (tagged2Builtin(tagged2SRecord(builtinRecord)->getFeature(a)))
 
-class BuiltinTab : public HashTable {
-public:
-  BuiltinTab(int sz) : HashTable(HT_CHARKEY,sz) {};
-  unsigned memRequired(void) {
-    return HashTable::memRequired(sizeof(Builtin));
-  }
-  const char * getName(void * fp) {
-    HashNode * hn = getFirst();
-    for (; hn != NULL; hn = getNext(hn)) {
-      Builtin * abit = (Builtin *) hn->value;
-      if (abit->getFun() == (OZ_CFun) fp)
-        return hn->key.fstr;
-    }
-    return "???";
-  }
-  Builtin * getEntry(void * fp) {
-    HashNode * hn = getFirst();
-    for (; hn != NULL; hn = getNext(hn)) {
-      Builtin * abit = (Builtin *) hn->value;
-      if (abit->getFun() == (OZ_CFun) fp)
-        return abit;
-    }
-    return (Builtin *) NULL;
-  }
+#define string2Builtin(s) \
+  atom2Builtin(oz_atom(s))
 
-  Builtin *find(const char *name) {
-    return (Builtin*) htFind(name);
-  }
-};
-
-extern BuiltinTab builtinTab;
-
-Builtin *BIadd(const char *name,int inArity,int outArity, OZ_CFun fun,
-               Bool native);
-void BIaddSpec(BIspec *spec); // add specification to builtin table
+Builtin * cfunc2Builtin(void * f);
 
 
 /* -----------------------------------------------------------------------

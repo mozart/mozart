@@ -132,8 +132,10 @@ void printBanner(char*initFile)
 OZ_C_proc_proto(ozma_readProc);
 #endif
 
+extern void initBuiltins();
 extern void bigIntInit(); /* from value.cc */
 extern void initffuns();  /* from initffuns.cc */
+extern void initVirtualProperties();
 
 void AM::init(int argc,char **argv)
 {
@@ -283,9 +285,15 @@ void AM::init(int argc,char **argv)
 
   // builtins
   initLiterals();
-  if (!BIinit()) {
-    error("BIinit failed");
-  }
+
+  initBuiltins();
+
+#ifdef WINDOWS
+  extern initWinSockets();
+  initWinSockets();
+#endif
+
+  initVirtualProperties();
 
   extern void initTagged();
   initTagged();

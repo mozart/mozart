@@ -48,13 +48,13 @@ OZVERSION       = $(SRCTOP)/OZVERSION
 MODSPECS = FDP FSP Schedule Wif Parser OS Property Pickle \
         PID URL FDB FSB System Finalize CTB \
         CompilerSupport Profile \
-        Debug Fault Foreign Browser Misc Distribution
+        Debug Fault Foreign Browser Misc Distribution \
+        Builtins
 
 CREATEDOTHERS= \
         instrtab.hh opcodes.hh optostr.hh marshaler.hh\
         marshalcode.cc marshalMsg.cc register.hh oz.c \
-        config.h builtins.tbl builtins.dcl \
-        scanner.cc parser.cc \
+        config.h scanner.cc parser.cc \
         $(MODSPECS:%=mod%.dcl) \
         $(MODSPECS:%=mod%.tbl)
 
@@ -226,8 +226,6 @@ libParser.so: parser.o scanner.o parsertable.o
 
 libParser.a: parser.o scanner.o parsertable.o
         $(AR) -rc $@ parser.o scanner.o parsertable.o && $(RANLIB) $@
-
-builtins.o: builtins.tbl builtins.dcl
 
 wif.o: modWif.tbl modWif.dcl
 
