@@ -68,28 +68,10 @@ OZ_Return constraintsSuspendOnVar(OZ_CFun f, int a, OZ_Term * x,
 #undef inline
 #endif
 
-static OZ_Term atom_var     = OZ_atom("var");  
-static OZ_Term atom_any     = OZ_atom("any");  
-static OZ_Term atom_type    = OZ_atom("type");  
-static OZ_Term atom_fd      = OZ_atom("fd");  
-static OZ_Term atom_fs      = OZ_atom("fs");  
-static OZ_Term atom_bool    = OZ_atom("bool");  
-static OZ_Term atom_bounds  = OZ_atom("bounds");  
-static OZ_Term atom_val     = OZ_atom("val");  
-static OZ_Term atom_glb     = OZ_atom("glb");  
-static OZ_Term atom_lub     = OZ_atom("lub");  
-static OZ_Term atom_flat    = OZ_atom("flat actor");  
-static OZ_Term atom_local   = OZ_atom("home");  
-static OZ_Term atom_ask     = OZ_atom("ask actor");  
-static OZ_Term atom_wait    = OZ_atom("wait actor");  
-static OZ_Term atom_waittop = OZ_atom("waittop actor");  
-static OZ_Term atom_oops    = OZ_atom("oops");  
-static OZ_Term atom_prop    = OZ_atom("propagator");  
-static OZ_Term atom_params  = OZ_atom("params");  
-static OZ_Term atom_name    = OZ_atom("name");  
-static OZ_Term atom_space   = OZ_atom("space");  
-static OZ_Term atom_susp    = OZ_atom("suspension");  
-static OZ_Term atom_thread  = OZ_atom("thread");  
+static OZ_Term atom_var, atom_any, atom_type, atom_fd, atom_fs, atom_bool, 
+  atom_bounds, atom_val, atom_glb, atom_lub, atom_flat, atom_local, atom_ask, 
+  atom_wait, atom_waittop, atom_oops, atom_prop, atom_params, atom_name,
+  atom_space, atom_susp, atom_thread;
   
 #define MKARITY(Arity, ArityDef)			\
 OZ_Term Arity = OZ_nil();				\
@@ -169,6 +151,34 @@ OZ_C_proc_begin(BIgetConstraints, 2)
 #ifdef DEBUG_CHECK
   printf("in\n"); fflush(stdout);
 #endif
+
+  static first = 1;
+  if (first) {
+    first = 0;
+
+    atom_var     = OZ_atom("var");  
+    atom_any     = OZ_atom("any");  
+    atom_type    = OZ_atom("type");  
+    atom_fd      = OZ_atom("fd");  
+    atom_fs      = OZ_atom("fs");  
+    atom_bool    = OZ_atom("bool");  
+    atom_bounds  = OZ_atom("bounds");  
+    atom_val     = OZ_atom("val");  
+    atom_glb     = OZ_atom("glb");  
+    atom_lub     = OZ_atom("lub");  
+    atom_flat    = OZ_atom("flat actor");  
+    atom_local   = OZ_atom("home");  
+    atom_ask     = OZ_atom("ask actor");  
+    atom_wait    = OZ_atom("wait actor");  
+    atom_waittop = OZ_atom("waittop actor");  
+    atom_oops    = OZ_atom("oops");  
+    atom_prop    = OZ_atom("propagator");  
+    atom_params  = OZ_atom("params");  
+    atom_name    = OZ_atom("name");  
+    atom_space   = OZ_atom("space");  
+    atom_susp    = OZ_atom("suspension");  
+    atom_thread  = OZ_atom("thread");  
+  }
 
   OZ_getCArgDeref(0, var, varptr, vartag);
   
