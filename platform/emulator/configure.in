@@ -54,17 +54,16 @@ dnl *****************************************************************
 dnl topdir
 dnl *****************************************************************
 
-case $srcdir in
-    .*)
-        srcdir=`(cd $srcdir; pwd)`
-        ;;
-esac
+srcdira=`(cd $srcdir; pwd)`
+AC_SUBST(srcdira)
 
 if test "x$TOPDIR" = x
 then
-    TOPDIR=`(cd $srcdir; cd ..; pwd)`
+    TOPDIR="$srcdir/.."
 fi
+TOPDIRA=`(cd $TOPDIR; pwd)`
 AC_SUBST(TOPDIR)
+AC_SUBST(TOPDIRA)
 
 # set OZVERSION
 . $TOPDIR/VERSION
