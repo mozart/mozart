@@ -47,7 +47,7 @@ txt: HELP.txt
 #	./ozmake --publish -v -p duchier-ozmake-$(VERSION).pkg
 
 duchier-ozmake.pkg: ozmake
-	./ozmake -cvp $@
+	$(OZE) ./ozmake -cvp $@
 
 install-prebuilt:: ozmake.ozf ozmake ozmake.exe duchier-ozmake.pkg
 	$(INSTALL_FILE) ozmake.ozf $(PKGDIR)/ozmake.ozf

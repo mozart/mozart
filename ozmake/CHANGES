@@ -20,9 +20,9 @@
    --exe=multi installs both, but the .exe one is linked for Windows
    while the no extension one is linked for Unix
 ** additional features supported in makefile.oz
-   requires : [ ... ] for dependencies on other packages
-   topics   : [ ... ] for MOGUL classification
-   version  : ... a version number e.g. "2" or "3.2.7"
+   requires   : [ ... ] for dependencies on other packages
+   categories : [ ... ] for MOGUL classification
+   version    : ... a version number e.g. "2" or "3.2.7"
 ** --freshen upgrades only if necessary, and does not report an
    error if it is not necessary to upgrade
 ** ozmake --extract will exceptionally write a makefile.oz if none

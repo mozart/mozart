@@ -310,9 +310,9 @@ prepare
       [] ozmake(makefile:submakefilesnotallowed) then
 	 error(kind : TITLE_MAKEFILE
 	       msg  : 'feature `submakefiles\' not allowed in user makefile')
-      [] ozmake(makefile:badtopics(V)) then
+      [] ozmake(makefile:badcategories(V)) then
 	 error(kind : TITLE_MAKEFILE
-	       msg  : 'expected a virtual string or a list of virtual string on feature \'topics\''
+	       msg  : 'expected a virtual string or a list of virtual string on feature \'categories\''
 	       items: [hint(l:'Value' m:oz(V))])
       [] ozmake(makefile:badversion(V)) then
 	 error(kind : TITLE_MAKEFILE
