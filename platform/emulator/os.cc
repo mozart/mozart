@@ -2112,7 +2112,7 @@ static DWORD __stdcall writerThread(void *p)
       break;
     }
     got -= count;
-    totalSent += totalWritten;
+    totalWritten += count;
     if (got>0)
       goto loop;
   }
