@@ -365,10 +365,11 @@ is feeded, the Browser changes the term's respresentation to
 </list>
 
 <index class=menu/Options<and>Representation<and>Names And Procedures/
+<index class=menu/Options<and>Representation<and>Variable Status/
 <index/print names/
 An extended format of print names of variables, procedures, cell,
-chunks, spaces and threads can be requested by setting the <<Names And
-Procedures>> option.
+chunks, spaces and threads can be requested by setting the <<Variable
+Status>> and <<Names And Procedures>> options.
 </section>
 
 <section id=sec.browser.theOutputFormat/<title/The Basic Output Format/
@@ -652,10 +653,11 @@ spaces and threads are quoted. For instance, a variable <<A>> will be
 browsed as <<`A`>>, and not as <<A>>.
 
 <index class=menu/Options<and>Representation<and>Names And Procedures/
+<index class=menu/Options<and>Representation<and>Variable Status/
 <index/print names/
-<item> Print names of mentioned above objects are always generated in the
-extended format, without any respect to the current value of the option
-<<Names And Procedures>>.
+<item> Print names of mentioned above objects are always generated in
+the extended format, without any respect to the current value of the
+options <<Variable Status>> and <<Names And Procedures>>.
 
 <item> Feature constraints are converted to records, that is, their
 representation does not contain ellipses just before the closing
@@ -724,6 +726,7 @@ format is
 <index/options<and>representation<and>mode/
 <index/options<and>representation<and>detailed chunks/
 <index/options<and>representation<and>detailed names and procedures/
+<index/options<and>representation<and>detailed variable status/
 <index/options<and>representation<and>strings/
 <index/options<and>representation<and>virtual strings/
 <index/options<and>display<and>width/
@@ -740,8 +743,8 @@ There is the complete list of possible options with example values:
   option(buffer separateBufferEntries:false)
   option(representation mode:minGraph)
   option(representation detailedChunks:true)
-  option(representation
-         detailedNamesAndProcedures:false)
+  option(representation detailedNamesAndProcedures:false)
+  option(representation detailedVarStatus:false)
   option(representation strings:true)
   option(representation virtualStrings:false)
   option(display depth:100)
@@ -866,16 +869,19 @@ a graphical separator between shown terms.
 <index class=menu/Options<and>Representation<and>Minimal Graph/
 <index class=menu/Options<and>Representation<and>Chunks/
 <index class=menu/Options<and>Representation<and>Names And Procedures/
+<index class=menu/Options<and>Representation<and>Variable Status/
 <index class=menu/Options<and>Representation<and>Strings/
 <index class=menu/Options<and>Representation<and>Virtual Strings/
 <index/options<and>representation<and>mode/
 <index/options<and>representation<and>detailed chunks/
 <index/options<and>representation<and>detailed names and procedures/
+<index/options<and>representation<and>detailed variable status/
 <index/options<and>representation<and>strings/
 <index/options<and>representation<and>virtual strings/
-<item>Creates a dialog used for setting the representation mode (building
-<<Tree>>, <<Graph>> or <<Minimal Graph>>), detail level (for <<Chunks>> and
-<<Names And Procedures>>), and type (displaying <<Strings>> or <<Virtual Strings>>  as such).
+<item>Creates a dialog used for setting the representation mode
+(building <<Tree>>, <<Graph>> or <<Minimal Graph>>), detail level (for
+<<Chunks>>, <<Variable Status>> and <<Names And Procedures>>), and
+type (displaying <<Strings>> or <<Virtual Strings>> as such).
 
 <entry><menu/Display Parameters&ellipsis;/
 <index class=menu/Options<and>Display Parameters/
