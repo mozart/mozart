@@ -1410,6 +1410,8 @@ int oswrite(int fd, void *buf, unsigned int len)
 
 int ossafewrite(int fd, char *buf, unsigned int len)
 {
+  int origLen = len;
+
  loop:
   int written = oswrite(fd,buf,len);
   if (written < 0) {
@@ -1421,7 +1423,7 @@ int ossafewrite(int fd, char *buf, unsigned int len)
     len -= written;
     goto loop;
   }
-  return written;
+  return origLen;
 }
 
 int osclose(int fd)
