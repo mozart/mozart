@@ -49,4 +49,13 @@ public class Meta {
   public static boolean equal(String s1,String s2) {
     return s1.compareToIgnoreCase(s2)==0;
   }
+  static String empty = "";
+  private static Hashtable fullwidth_map = new Hashtable();
+  public static boolean fullwidthPut(String id) {
+    fullwidth_map.put(id.toUpperCase(),empty);
+    return true;
+  }
+  public static boolean fullwidthGet(String id) {
+    return fullwidth_map.containsKey(id.toUpperCase());
+  }
 }
