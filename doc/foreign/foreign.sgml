@@ -34,6 +34,17 @@
     <Meta name=latex.package value="rotate">
     <Meta name=latex.package value="pifont">
 
+    <meta name="html.split" value="chapter.intro">
+    <meta name="html.split" value="sec.foreignex">
+    <meta name="html.split" value="chapter.cpart">
+    <meta name="html.split" value="chapter.unixdll">
+    <meta name="html.split" value="chapter.windll">
+    <meta name="html.split" value="chapter.tuning">
+    <meta name="html.split" value="sec.cinterfacespec">
+    <meta name="html.split" value="chapter.extension">
+
+    <meta name="html.split.index" value="">
+
     <Title/Interfacing to C and C++/
      <Author.Extern to="author.db" key="Michael.Mehl">
      <Author.Extern to="author.db" key="Tobias.Mueller">
@@ -47,7 +58,7 @@ vice versa and supports mechanisms to handle suspension for C(++)
 functions.
     </Abstract>
   <Body proglang=cc>
-<chapter>
+<chapter id=chapter.intro>
 <title/Introduction/
 <p>
 &Oz; provides a simple yet powerful interface to dynamically link
@@ -116,7 +127,7 @@ These steps are explained in more detail below.
 <p>
 </chapter>
 
-<chapter><title/The C Part/
+<chapter id=chapter.cpart><title/The C Part/
 <p>
 <ptr to=getenvC> shows a first attempt to provide access to the
 <code /getenv/ C library function as explained above. In the following
@@ -185,17 +196,20 @@ will be explained in <ptr to=sec.foreignLink>.
 
 
 </chapter>
-<chapter><title>Compiling the C program</title>
+
+    <chapter id=chapter.unixdll>
+      <title/Creating a DLL/
+<section id=chapter.compiling><title>Compiling the C program</title>
 <p>
 TODO: need to provide special options to the C compiler
 
-</chapter>
-<chapter><title>Creating a dynamic library</title>
+</section>
+<section id=chapter.linking><title>Creating a dynamic library</title>
 <p>
 TODO: need to provide special options to the linker
 
-</chapter>
-<chapter id=sec.foreignLink><title>Linking a native module</title>
+</section>
+<section id=sec.foreignLink><title>Linking a native module</title>
 <p>
 In the last step we make the native module available by linking
 it into &Oz;. Lines 16--23 in <ptr to=getenvC> are needed to
@@ -240,9 +254,9 @@ it like this:
 </code>
 
 <p>
-
+</section>
 </chapter>
-<chapter><title>Creating object files under Windows 95/NT</title>
+<chapter id=chapter.windll><title>Creating object files under Windows 95/NT</title>
 <p>
 TODO: check this
 <p>
@@ -314,7 +328,7 @@ link /def:getenv.def /dll oz.obj getenv.obj
 </section>
 </chapter>
 
-<chapter><title/Tuning the Example/
+<chapter id=chapter.tuning><title/Tuning the Example/
 <p>
 
 <para><title/Raising Exceptions/
