@@ -4,7 +4,7 @@
 %%%   Benjamin Lorenz <lorenz@ps.uni-sb.de>
 %%%
 %%% Copyright:
-%%%   Leif Kornstaedt and Benjamin Lorenz, 1997-1998
+%%%   Leif Kornstaedt and Benjamin Lorenz, 1997-1999
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -21,10 +21,11 @@
 
 functor
 import
+   Parser(expandFileName) at 'x-oz://boot/Parser'
    Property(get condGet)
    System(printInfo)
    Error(messageToVirtualString)
-   OS(getEnv stat tmpnam)
+   OS(tmpnam)
    Open(socket text file)
    Listener('class')
 export
@@ -34,89 +35,6 @@ export
 define
    TimeoutToConfigBar = 200
    TimeoutToUpdateBar = TimeoutToConfigBar
-
-   fun {UnknownFile F}
-      F == ''
-   end
-
-   local
-      OsName      = {Property.get 'platform.os'}
-      WindowsName = 'win32'
-
-      local
-	 FieldSeparator = if OsName == WindowsName then &; else &: end
-
-	 fun {SystemPathList RawPath} H T in % RawPath must be of type string
-	    {List.takeDropWhile RawPath fun {$ C} C \= FieldSeparator end H T}
-	    if T == nil then [H]
-	    else H|{SystemPathList T.2}
-	    end
-	 end
-
-	 fun {HomePathList Home PrefixList}
-	    %% some heuristics where to find the source files
-	    {Append
-	     {Map PrefixList
-	      fun {$ P}
-		 Home # P # '/mozart/share/lib'
-	      end}
-	     {Map PrefixList
-	      fun {$ P}
-		 Home # P # '/mozart/share/tools'
-	      end}}
-	 end
-
-	 OzPathEnv = case {OS.getEnv 'OZPATH'} of false then "."
-		     elseof X then X
-		     end
-      in
-	 OzPath = case {OS.getEnv 'HOME'} of false then
-		     {SystemPathList OzPathEnv}
-		  elseof HomeEnv then
-		     {Append
-		      {HomePathList HomeEnv
-		       ['' '/Src' '/src' '/Devel' '/devel']}
-		      {SystemPathList OzPathEnv}}
-		  end
-      end
-
-      fun {DoLookupFile SearchList F OrigF}
-	 case SearchList of nil then
-	    %% must have been the name of an unsaved file or buffer in Emacs:
-	    OrigF
-	 elseof Path|SearchListRest then Try = Path # '/' # F in
-	    try
-	       case {OS.stat Try}.type of reg then Try
-	       else {DoLookupFile SearchListRest F OrigF}
-	       end
-	    catch system(...) then
-	       {DoLookupFile SearchListRest F OrigF}
-	    end
-	 end
-      end
-   in
-      fun {LookupFile F}
-	 S   = {Atom.toString F}
-	 Abs = case S                   % absolute path?
-	       of     &/|_   then true
-	       elseof _|&:|_ then OsName == WindowsName
-	       else false end
-      in
-	 if Abs then
-	    %% the file doesn't need to exist, since it may be the name of
-	    %% an unsaved buffer or file in Emacs:
-	    F
-	 else                           % ...no!
-	    %% strip "./" or "././"
-	    Suffix = case S of &.|&/|T then
-			case T of &.|&/|R then R
-			else T end
-		     else S end
-	 in
-	    {DoLookupFile OzPath Suffix F}
-	 end
-      end
-   end
 
    local
       MSG_ERROR = [17]
@@ -221,10 +139,13 @@ define
 
 	 meth bar(file:F line:L column:C state:S)
 	    BarSync <- _ = unit
-	    if {UnknownFile F} orelse L == unit then
+	    if F == '' orelse L == unit then
 	       CompilerInterfaceEmacs, removeBar()
-	    else
-	       CompilerInterfaceEmacs, MakeOzBar({LookupFile F} L C S)
+	    else NewF in
+	       NewF = case {Parser.expandFileName F} of false then F
+		      elseof X then X
+		      end
+	       CompilerInterfaceEmacs, MakeOzBar(NewF L C S)
 	    end
 	 end
 	 meth delayedBar(file:F line:L column:C state:S<=unchanged) New in
