@@ -18,6 +18,8 @@ fun
       = IMPORT.'Browser'
    \insert 'Emacs.env'
       = IMPORT.'Emacs'
+   \insert 'Compiler.env'
+      = IMPORT.'Compiler'
 
    \insert 'ozcar/config'
    \insert 'ozcar/prelude'
