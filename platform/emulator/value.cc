@@ -1362,14 +1362,50 @@ OZ_Term oz_list(OZ_Term t1, ...)
 
 Builtin * cfunc2Builtin(void * f) {
   extern TaggedRef dictionary_of_builtins;
-  OzDictionary * d = tagged2Dictionary(dictionary_of_builtins);
-  for (int i=d->getFirst(); i>=0; i=d->getNext(i)) {
-    TaggedRef v = d->getValue(i);
-    if (v && oz_isBuiltin(v)) {
-      Builtin * bi = tagged2Builtin(v);
-      if (bi->getFun() == (OZ_CFun) f) return bi;
+
+  {
+    OzDictionary * d = tagged2Dictionary(dictionary_of_builtins);
+
+    for (int i=d->getNext(d->getFirst()); i>=0; i=d->getNext(i)) {
+
+      TaggedRef v = d->getValue(i);
+      if (v && oz_isBuiltin(v)) {
+        Builtin * bi = tagged2Builtin(v);
+        if (bi->getFun() == (OZ_CFun) f) return bi;
+      }
     }
   }
+
+  extern TaggedRef dictionary_of_modules;
+
+  {
+    OzDictionary * d = tagged2Dictionary(dictionary_of_modules);
+
+    for (int i=d->getNext(d->getFirst()); i>=0; i=d->getNext(i)) {
+
+      TaggedRef v = d->getValue(i);
+
+      if (oz_isSRecord(v)) {
+
+        TaggedRef as = tagged2SRecord(v)->getArityList();
+
+        while (oz_isCons(as)) {
+          TaggedRef bt = tagged2SRecord(v)->getFeature(oz_head(as));
+
+          if (bt && oz_isBuiltin(bt) &&
+              (tagged2Builtin(bt)->getFun() == (OZ_CFun) f))
+            return tagged2Builtin(bt);
+
+          as = oz_tail(as);
+
+        }
+
+      }
+    }
+
+  }
+
+
   return tagged2Builtin(BI_unknown);
 }
 
