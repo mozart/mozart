@@ -35,13 +35,13 @@
 //-----------------------------------------------------------------------------
 OZ_C_proc_begin(fsp_equalR, 3)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FSET "," OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FSET "," OZ_EM_FDBOOL);
 
   PropagatorExpect pe;
 
   OZ_EXPECT(pe, 0, expectFSetVarBounds);
   OZ_EXPECT(pe, 1, expectFSetVarBounds);
-  OZ_EXPECT(pe, 2, expectIntVarAny);
+  OZ_EXPECT(pe, 2, expectBoolVar);
   
   return pe.impose(new EqualRPropagator(OZ_args[1],
 					OZ_args[0],
@@ -110,13 +110,13 @@ entailment:
 //-----------------------------------------------------------------------------
 OZ_C_proc_begin(fsp_includeR, 3)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FSET "," OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FSET "," OZ_EM_FDBOOL);
 
   PropagatorExpect pe;
 
   OZ_EXPECT(pe, 0, expectIntVarAny);
   OZ_EXPECT(pe, 1, expectFSetVarBounds);
-  OZ_EXPECT(pe, 2, expectIntVarAny);
+  OZ_EXPECT(pe, 2, expectBoolVar);
   
   return pe.impose(new IncludeRPropagator(OZ_args[1],
 					  OZ_args[0],
@@ -189,13 +189,13 @@ entailment:
 
 OZ_C_proc_begin(fsp_isInR, 3)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_INT "," OZ_EM_FSET "," OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_INT "," OZ_EM_FSET "," OZ_EM_FDBOOL);
 
   PropagatorExpect pe;
 
   OZ_EXPECT(pe, 0, expectInt);
   OZ_EXPECT(pe, 1, expectFSetVarAny);
-  OZ_EXPECT(pe, 2, expectIntVarAny);
+  OZ_EXPECT(pe, 2, expectBoolVar);
   
   return pe.impose(new IsInRPropagator(OZ_args[1],
 				       OZ_args[0],
@@ -255,7 +255,7 @@ failure:
 OZ_C_proc_begin(fsp_bounds, 5)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSETVAL "," OZ_EM_FSET "," OZ_EM_INT "," 
-		   OZ_EM_FD "," OZ_EM_FD);
+		   OZ_EM_FD "," OZ_EM_FDBOOL);
 
   PropagatorExpect pe;
 
@@ -264,7 +264,7 @@ OZ_C_proc_begin(fsp_bounds, 5)
   OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarBounds, dummy);
   OZ_EXPECT(pe, 2, expectInt);
   OZ_EXPECT_SUSPEND(pe, 3, expectIntVarMinMax, dummy);
-  OZ_EXPECT_SUSPEND(pe, 4, expectIntVarMinMax, dummy);
+  OZ_EXPECT_SUSPEND(pe, 4, expectBoolVar, dummy);
   
   return pe.impose(new BoundsPropagator(OZ_args[0],
 					OZ_args[1],
@@ -292,7 +292,6 @@ OZ_Return BoundsPropagator::propagate(void)
     OZ_DEBUGPRINT(("once %s %d\n", s_ub->toString(), _s_ub_card));
     FailOnInvalid(*s <= *s_ub);
     FailOnEmpty(*d <= _d_ub);
-    FailOnEmpty(r->constrainBool());
 
     _s_ub = 0; // .. because of that 
   }
@@ -333,7 +332,7 @@ OZ_C_proc_begin(fsp_boundsN, 5)
 		   OZ_EM_VECT OZ_EM_FSET "," 
 		   OZ_EM_VECT OZ_EM_INT "," 
 		   OZ_EM_VECT OZ_EM_FD "," 
-		   OZ_EM_VECT OZ_EM_FD);
+		   OZ_EM_VECT OZ_EM_FDBOOL);
 
   PropagatorExpect pe;
 
@@ -342,7 +341,7 @@ OZ_C_proc_begin(fsp_boundsN, 5)
   OZ_EXPECT_SUSPEND(pe, 1, expectVectorFSetVarBounds, dummy);
   OZ_EXPECT(pe, 2, expectVectorInt);
   OZ_EXPECT_SUSPEND(pe, 3, expectVectorIntVarMinMax, dummy);
-  OZ_EXPECT_SUSPEND(pe, 4, expectVectorIntVarMinMax, dummy);
+  OZ_EXPECT_SUSPEND(pe, 4, expectVectorBoolVar, dummy);
   
   SAMELENGTH_VECTORS(0, 1);
   SAMELENGTH_VECTORS(0, 2);
@@ -382,7 +381,6 @@ OZ_Return BoundsNPropagator::propagate(void)
       
       FailOnInvalid(*s[i] <= *s_ub_aux);
       FailOnEmpty(*d[i] <= _d_ub[i]);
-      FailOnEmpty(r[i]->constrainBool());
     }
 
     first = 0;  // .. because of that 
@@ -543,7 +541,9 @@ failure:
   return P.fail();  
 }
 
-PartitionReifiedPropagator::PartitionReifiedPropagator(OZ_Term vs, OZ_Term s, OZ_Term vd) 
+PartitionReifiedPropagator::PartitionReifiedPropagator(OZ_Term vs, 
+						       OZ_Term s, 
+						       OZ_Term vd) 
 {
   _first = 1;
   // init ground set

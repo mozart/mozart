@@ -309,25 +309,32 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdTellConstraint, 2) 
 {
-  ExpectedTypes(OZ_EM_FD "," OZ_EM_FDDESCR);
+  ExpectedTypes(OZ_EM_FDDESCR "," OZ_EM_FD);
 
   ExpectOnly pe;
-  EXPECT_BLOCK(pe, 1, expectDomDescr, 
+  EXPECT_BLOCK(pe, 0, expectDomDescr, 
 	       "The syntax of a " OZ_EM_FDDESCR " is:\n"
 	       "   dom_descr   ::= simpl_descr | compl(simpl_descr)\n"
 	       "   simpl_descr ::= range_descr | [range_descr+]\n"
 	       "   range_descr ::= integer | integer#integer\n"
 	       "   integer     ::= {" _OZ_EM_FDINF ",...," _OZ_EM_FDSUP "}");
   
-  OZ_FiniteDomain aux(OZ_getCArg(1));
+  OZ_FiniteDomain aux(OZ_getCArg(0));
 
-  return tellBasicConstraint(OZ_getCArg(0), &aux);
+  return tellBasicConstraint(OZ_getCArg(1), &aux);
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIfdboolTellConstraint, 2) 
+OZ_C_proc_begin(BIfdBoolTellConstraint, 1) 
 {
   return tellBasicBoolConstraint(OZ_getCArg(0));
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIfdDeclTellConstraint, 1) 
+{
+  return tellBasicConstraint(OZ_getCArg(0), NULL);
 }
 OZ_C_proc_end
 
