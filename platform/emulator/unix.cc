@@ -104,7 +104,7 @@ OZ_BI_define(Name,InArity,OutArity) {                                   \
   if (!OZ_onToplevel()) {                                               \
     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("io"));    \
   }
-#define OZ_BI_end }
+#define OZ_BI_ioend } OZ_BI_end
 
 #define OZ_declareVsArg(ARG,VAR)                                        \
  vs_buff(VAR); OZ_nonvarArg(ARG);                                       \
@@ -556,7 +556,7 @@ OZ_BI_iodefine(unix_fileDesc,1,1)
   }
 
   OZ_RETURN_INT(desc);
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 static OZ_Term readEntries(DIR *dp) {
@@ -585,7 +585,7 @@ OZ_BI_iodefine(unix_getDir,1,1)
     RETURN_UNIX_ERROR;
 
   OZ_RETURN(dirValue);
-} OZ_BI_end
+} OZ_BI_ioend
 #endif
 
 
@@ -614,7 +614,7 @@ OZ_BI_iodefine(unix_stat,1,1)
                  cons(OZ_pairAI("mtime",buf.st_mtime),
                     nil())));
   OZ_RETURN(OZ_recordInit(OZ_atom("stat"),pairlist));
-} OZ_BI_end
+} OZ_BI_ioend
 
 #if !defined(WINDOWS) || defined(GNUWIN32)
 OZ_BI_iodefine(unix_uName,0,1)
@@ -649,7 +649,7 @@ OZ_BI_iodefine(unix_uName,0,1)
 
   OZ_RETURN(OZ_recordInit(OZ_atom("utsname"),pairlist));
 
-} OZ_BI_end
+} OZ_BI_ioend
 #endif
 
 
@@ -673,7 +673,7 @@ OZ_BI_iodefine(unix_getCWD,0,1)
     free(bigBuf);
     size+=SIZE;
   }
-} OZ_BI_end
+} OZ_BI_ioend
 
 #if defined(WINDOWS) && !defined(GNUWIN32)
 #define O_NOCTTY   0
@@ -770,7 +770,7 @@ OZ_BI_iodefine(unix_open,3,1)
   WRAPCALL(osopen(filename, flags, mode),desc);
 
   OZ_RETURN_INT(desc);
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 
@@ -781,7 +781,7 @@ OZ_BI_iodefine(unix_close,1,0)
   WRAPCALL(osclose(fd),ret);
 
   return PROCEED;
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 OZ_BI_iodefine(unix_read,5,0)
@@ -804,7 +804,7 @@ OZ_BI_iodefine(unix_read,5,0)
 
   return ((OZ_unify(outHead, hd) == PROCEED)&&
           (OZ_unifyInt(outN,ret) == PROCEED)) ? PROCEED : FAILED;
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 
@@ -846,7 +846,7 @@ OZ_BI_iodefine(unix_write, 2,1)
       }
     }
   }
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 OZ_BI_iodefine(unix_lSeek,3,1) {
@@ -869,7 +869,7 @@ OZ_BI_iodefine(unix_lSeek,3,1) {
   WRAPCALL(lseek(fd, offset, whence),ret);
 
   OZ_RETURN_INT(ret);
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 OZ_BI_iodefine(unix_readSelect, 1,0) {
@@ -890,7 +890,7 @@ OZ_BI_iodefine(unix_readSelect, 1,0) {
   }
 
   return PROCEED;
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 OZ_BI_iodefine(unix_writeSelect,1,0) {
@@ -911,7 +911,7 @@ OZ_BI_iodefine(unix_writeSelect,1,0) {
   }
 
   return PROCEED;
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 OZ_BI_iodefine(unix_acceptSelect,1,0) {
@@ -933,7 +933,7 @@ OZ_BI_iodefine(unix_acceptSelect,1,0) {
   }
 
   return PROCEED;
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 
@@ -942,7 +942,7 @@ OZ_BI_define(unix_deSelect,1,0) {
   OZ_declareIntIN(0,fd);
   OZ_deSelect(fd);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 
@@ -997,7 +997,7 @@ OZ_BI_iodefine(unix_socket,3,1)
   WRAPCALL(ossocket(domain, type, protocol), sock);
 
   OZ_RETURN_INT(sock);
-} OZ_BI_end
+} OZ_BI_ioend
 
 OZ_BI_iodefine(unix_bindInet,2,0)
 {
@@ -1014,7 +1014,7 @@ OZ_BI_iodefine(unix_bindInet,2,0)
   WRAPCALL(bind(sock,(struct sockaddr *)&addr,sizeof(struct
                                                      sockaddr_in)),ret);
   return PROCEED;
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 OZ_BI_define(unix_getSockName,1,1)
@@ -1027,7 +1027,7 @@ OZ_BI_define(unix_getSockName,1,1)
   WRAPCALL(getsockname(s, (struct sockaddr *) &addr, &length), ret);
 
   OZ_RETURN_INT(ntohs(addr.sin_port));
-}
+} OZ_BI_end
 
 
 OZ_BI_iodefine(unix_listen,2,0)
@@ -1038,7 +1038,7 @@ OZ_BI_iodefine(unix_listen,2,0)
   WRAPCALL(listen(s,n), ret);
 
   return PROCEED;
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 OZ_BI_define(unix_connectInet,3,0)
@@ -1066,7 +1066,7 @@ OZ_BI_define(unix_connectInet,3,0)
   }
 
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_iodefine(unix_acceptInet,1,3)
 {
@@ -1093,7 +1093,7 @@ OZ_BI_iodefine(unix_acceptInet,1,3)
     OZ_out(2) = OZ_int(fd);
     return PROCEED;
   }
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 static OZ_Return get_send_recv_flags(OZ_Term OzFlags, int * flags)
@@ -1177,7 +1177,7 @@ OZ_BI_iodefine(unix_send, 3,1)
     }
 
   }
-} OZ_BI_end
+} OZ_BI_ioend
 
 OZ_BI_iodefine(unix_sendToInet, 5,1)
 {
@@ -1241,7 +1241,7 @@ OZ_BI_iodefine(unix_sendToInet, 5,1)
     }
   }
 
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 OZ_BI_iodefine(unix_shutDown, 2,0)
@@ -1252,7 +1252,7 @@ OZ_BI_iodefine(unix_shutDown, 2,0)
   WRAPCALL(shutdown(sock, how), ret);
 
   return PROCEED;
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 
@@ -1297,7 +1297,7 @@ OZ_BI_iodefine(unix_receiveFromInet,5,3)
   OZ_out(1) = OZ_int(ntohs(from.sin_port));
   OZ_out(2) = OZ_int(ret);
   return PROCEED;
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 const int maxArgv = 100;
@@ -1488,7 +1488,7 @@ OZ_BI_define(unix_pipe,2,2)
   return PROCEED;
   //return OZ_unifyInt(rpid,pid) == PROCEED
   //&& OZ_unify(rwsock,rw) == PROCEED ? PROCEED : FAILED;
-}
+} OZ_BI_end
 
 static OZ_Term mkAliasList(char **alias)
 {
@@ -1527,7 +1527,7 @@ OZ_BI_iodefine(unix_getHostByName, 1,1)
   OZ_Term pairlist= cons(t1,cons(t2,cons(t3,nil())));
 
   OZ_RETURN(OZ_recordInit(OZ_atom("hostent"),pairlist));
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 // Misc stuff
@@ -1537,7 +1537,7 @@ OZ_BI_iodefine(unix_unlink, 1,0) {
 
   WRAPCALL(unlink(path),ret);
   return PROCEED;
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 OZ_BI_iodefine(unix_system,1,1)
@@ -1547,7 +1547,7 @@ OZ_BI_iodefine(unix_system,1,1)
   int ret = osSystem(vs);
 
   OZ_RETURN_INT(ret);
-} OZ_BI_end
+} OZ_BI_ioend
 
 #if !defined(WINDOWS) || defined(GNUWIN32)
 OZ_BI_iodefine(unix_wait,0,2)
@@ -1561,7 +1561,7 @@ OZ_BI_iodefine(unix_wait,0,2)
   OZ_out(0) = OZ_int(pid);
   OZ_out(1) = OZ_int(status);
   return PROCEED;
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 OZ_BI_iodefine(unix_getServByName, 2,1)
@@ -1575,7 +1575,7 @@ OZ_BI_iodefine(unix_getServByName, 2,1)
   if (!serv) OZ_RETURN(OZ_false());
 
   OZ_RETURN_INT(ntohs(serv->s_port));
-} OZ_BI_end
+} OZ_BI_ioend
 #endif
 
 OZ_BI_iodefine(unix_tmpnam,0,1) {
@@ -1587,7 +1587,7 @@ OZ_BI_iodefine(unix_tmpnam,0,1) {
   filename = ozstrdup(filename);
 
   OZ_RETURN_STRING(filename);
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 OZ_BI_iodefine(unix_getEnv,1,1)
@@ -1600,7 +1600,7 @@ OZ_BI_iodefine(unix_getEnv,1,1)
   if (envValue == 0) OZ_RETURN(OZ_false());
 
   OZ_RETURN_STRING(envValue);
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 /* putenv is NOT POSIX !!! */
@@ -1618,7 +1618,7 @@ OZ_BI_iodefine(unix_putEnv,2,0)
   }
 
   return PROCEED;
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 OZ_Term make_time(const struct tm* tim)
@@ -1641,7 +1641,7 @@ OZ_Term make_time(const struct tm* tim)
 OZ_BI_iodefine(unix_time, 0,1)
 {
   OZ_RETURN_INT(time(0));
-} OZ_BI_end
+} OZ_BI_ioend
 
 OZ_BI_iodefine(unix_gmTime,0,1)
 {
@@ -1650,7 +1650,7 @@ OZ_BI_iodefine(unix_gmTime,0,1)
   time(&timebuf);
   OZ_RETURN(make_time(gmtime(&timebuf)));
 
-} OZ_BI_end
+} OZ_BI_ioend
 
 OZ_BI_iodefine(unix_localTime, 0,1)
 {
@@ -1659,12 +1659,12 @@ OZ_BI_iodefine(unix_localTime, 0,1)
   time(&timebuf);
   OZ_RETURN(make_time(localtime(&timebuf)));
 
-} OZ_BI_end
+} OZ_BI_ioend
 
 OZ_BI_define(unix_rand, 0,1)
 {
   OZ_RETURN_INT(rand());
-}
+} OZ_BI_end
 
 OZ_BI_define(unix_srand, 1,0)
 {
@@ -1677,7 +1677,7 @@ OZ_BI_define(unix_srand, 1,0)
   }
 
   return PROCEED;
-}
+} OZ_BI_end
 
 #ifndef RAND_MAX
 #ifdef SUNOS_SPARC
@@ -1699,7 +1699,7 @@ OZ_BI_define(unix_randLimits, 0,2)
   OZ_out(0) = OZ_int(0);
   OZ_out(1) = OZ_int(RAND_MAX);
   return PROCEED;
-}
+} OZ_BI_end
 
 #ifdef WALSER
 OZ_BI_define(unix_random, 0,1)
@@ -1710,7 +1710,7 @@ OZ_BI_define(unix_random, 0,1)
   return oz_raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("OS.random"));
   // OZ_RETURN_INT(rand())
 #endif
-}
+} OZ_BI_end
 
 
 OZ_BI_define(unix_srandom, 1,0)
@@ -1727,7 +1727,7 @@ OZ_BI_define(unix_srandom, 1,0)
 #endif
 
   return PROCEED;
-}
+} OZ_BI_end
 #endif
 
 
@@ -1738,7 +1738,7 @@ OZ_BI_iodefine(Fun,Arity)                               \
 {                                                       \
   return oz_raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,  \
                    OZ_atom(Name));                      \
-} OZ_BI_end
+} OZ_BI_ioend
 
 
 #ifndef GNUWIN32
@@ -1775,7 +1775,7 @@ OZ_BI_define(unix_getpwnam,1,1)
         oz_cons(N1,oz_cons(N2,oz_cons(N3,oz_cons(N4,oz_cons(N5,oz_nil()))))));
     OZ_RETURN(R);
   }
-}
+} OZ_BI_end
 
 OZ_BIspec spec[] = {
   {"OS.getDir",          2, unix_getDir},

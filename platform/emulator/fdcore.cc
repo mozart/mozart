@@ -33,20 +33,20 @@
 OZ_BI_define(BIisFdVar, 1,0)
 {
   return isGenFDVar(deref(OZ_in(0))) || isGenBoolVar(deref(OZ_in(0))) ? PROCEED : FAILED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIisFdVarB, 1,1)
 {
   OZ_RETURN((isGenFDVar(deref(OZ_in(0))) ||
              isGenBoolVar(deref(OZ_in(0)))) ? NameTrue : NameFalse);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIgetFDLimits, 0,2)
 {
   OZ_out(0) = OZ_int(0);
   OZ_out(1) = OZ_int(fd_sup);
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_C_proc_begin(BIfdIs, 2)
 {

@@ -1088,7 +1088,7 @@ OZ_BI_define(BIprintOwnerTable,0,0)
 {
   OT->print();
   return PROCEED;
-}
+} OZ_BI_end
 
 
 /* ********************************************************************** */
@@ -2006,7 +2006,7 @@ OZ_BI_define(BIprintBorrowTable,0,0)
 {
   BT->print();
   return PROCEED;
-}
+} OZ_BI_end
 
 
 #ifdef DEBUG_PERDIO
@@ -5641,7 +5641,7 @@ OZ_BI_define(BIdvset,2,0)
     DV->unset(what);
   }
   return PROCEED;
-}
+} OZ_BI_end
 #endif
 
 Bool openClosedConnection(int);
@@ -5657,14 +5657,14 @@ OZ_BI_define(BIstartTmp,2,0)
     PD((TCPCACHE,"StartTmp; continuing"));
     wakeUpTmp(val,time);}
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIcloseCon,1,0)
 {
   OZ_declareIntIN(0,what);
   openclose(what);
   return PROCEED;
-}
+} OZ_BI_end
 
 void wakeUpTmp(int i, int time){
   PD((TCPCACHE,"Starting DangelingThread"));
@@ -5772,7 +5772,7 @@ OZ_BI_define(BIsiteStatistics,0,1)
                    oz_cons(borrowlist,
                            oz_cons(ownerlist,oz_nil()))));
 
-}
+} OZ_BI_end
 
 
 

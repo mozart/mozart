@@ -65,7 +65,7 @@ OZ_BI_define(BIgetOpcode,1,1)
                     "unknownInstruction",1,opname);
   }
   OZ_RETURN_INT(oc);
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIgetInstructionSize,1,1)
@@ -78,7 +78,7 @@ OZ_BI_define(BIgetInstructionSize,1,1)
                     "unknownInstruction",1,opname);
   }
   OZ_RETURN_INT(sizeOf(oc));
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BInewCodeBlock,1,1)
@@ -87,7 +87,7 @@ OZ_BI_define(BInewCodeBlock,1,1)
 
   CodeArea *code = new CodeArea(size);
   OZ_RETURN_INT(ToInt32(code));
-}
+} OZ_BI_end
 
 
 #define declareCodeBlock(num,name)                      \
@@ -123,7 +123,7 @@ OZ_BI_define(BImakeProc,2,1)
   Abstraction *p = new Abstraction (pte, gRegs, am.currentBoard());
 
   OZ_RETURN(makeTaggedConst(p));
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIaddDebugInfo,3,0)
@@ -133,7 +133,7 @@ OZ_BI_define(BIaddDebugInfo,3,0)
   OZ_declareIntIN(2,line);
   code->writeDebugInfo(file,line);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreOpcode,2,0)
@@ -143,7 +143,7 @@ OZ_BI_define(BIstoreOpcode,2,0)
   Assert(i>=0 && i<(int)OZERROR);
   code->writeOpcode((Opcode)i);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreNumber,2,0)
@@ -154,7 +154,7 @@ OZ_BI_define(BIstoreNumber,2,0)
   Assert(OZ_isNumber(arg));
   code->writeTagged(arg);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreLiteral,2,0)
@@ -165,7 +165,7 @@ OZ_BI_define(BIstoreLiteral,2,0)
   Assert(OZ_isLiteral(arg));
   code->writeTagged(arg);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreFeature,2,0)
@@ -176,7 +176,7 @@ OZ_BI_define(BIstoreFeature,2,0)
   Assert(OZ_isFeature(arg));
   code->writeTagged(arg);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreConstant,2,0)
@@ -186,7 +186,7 @@ OZ_BI_define(BIstoreConstant,2,0)
   arg = deref(arg);
   code->writeTagged(arg);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreBuiltinname,2,0)
@@ -197,7 +197,7 @@ OZ_BI_define(BIstoreBuiltinname,2,0)
   Assert(isBuiltin(builtin));
   code->writeBuiltin(tagged2Builtin(builtin));
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreVariablename,2,0)
@@ -208,7 +208,7 @@ OZ_BI_define(BIstoreVariablename,2,0)
   Assert(OZ_isAtom(arg));
   code->writeTagged(arg);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreRegisterIndex,2,0)
@@ -218,7 +218,7 @@ OZ_BI_define(BIstoreRegisterIndex,2,0)
   Assert(i >= 0);
   code->writeReg(i);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreInt,2,0)
@@ -227,7 +227,7 @@ OZ_BI_define(BIstoreInt,2,0)
   OZ_declareIntIN(1,i);
   code->writeInt(i);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreLabel,2,0)
@@ -236,7 +236,7 @@ OZ_BI_define(BIstoreLabel,2,0)
   OZ_declareIntIN(1,label);
   code->writeLabel(label);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstorePredicateRef,2,0)
@@ -250,7 +250,7 @@ OZ_BI_define(BIstorePredicateRef,2,0)
     code->writeAddress((AbstractionEntry *) predId);
   }
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstorePredId,6,0)
@@ -264,7 +264,7 @@ OZ_BI_define(BIstorePredId,6,0)
   PrTabEntry *pte = new PrTabEntry(name,getArity(arity),file,line,OZ_isTrue(copyOnce));
   code->writeAddress(pte);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 
@@ -278,7 +278,7 @@ OZ_BI_define(BInewHashTable,3,1)
 
   code->writeAddress(ht);
   OZ_RETURN_INT(ToInt32(ht));
-}
+} OZ_BI_end
 
 
 #define declareHTable(num,name)                         \
@@ -298,7 +298,7 @@ OZ_BI_define(BIstoreHTVarLabel,3,0)
 
   ht->addVar(code->computeLabel(label));
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreHTScalar,4,0)
@@ -317,7 +317,7 @@ OZ_BI_define(BIstoreHTScalar,4,0)
   }
 
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreHTRecord,5,0)
@@ -338,7 +338,7 @@ OZ_BI_define(BIstoreHTRecord,5,0)
   }
 
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreRecordArity,2,0)
@@ -347,7 +347,7 @@ OZ_BI_define(BIstoreRecordArity,2,0)
   OZ_declareNonvarIN(1,arity);
   code->writeSRecordArity(getArity(arity));
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreGenCallInfo,6,0)
@@ -364,7 +364,7 @@ OZ_BI_define(BIstoreGenCallInfo,6,0)
                          getBool(isTail),getArity(arity));
   code->writeAddress(gci);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreApplMethInfo,3,0)
@@ -376,7 +376,7 @@ OZ_BI_define(BIstoreApplMethInfo,3,0)
   ApplMethInfoClass *ami = new ApplMethInfoClass(name,getArity(arity));
   code->writeAddress(ami);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreGRegRef,2,0)
@@ -410,7 +410,7 @@ OZ_BI_define(BIstoreGRegRef,2,0)
 
   code->writeAddress(gregs);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstoreCache,2,0)
@@ -419,42 +419,42 @@ OZ_BI_define(BIstoreCache,2,0)
   OZ_declareNonvarIN(1,ignored);
   code->writeCache();
   return PROCEED;
-}
+} OZ_BI_end
 
 
-static
-BIspec biSpec[] = {
-  {"getOpcode",         2, BIgetOpcode,         0},
-  {"getInstructionSize",2, BIgetInstructionSize,0},
-  {"newCodeBlock",      2, BInewCodeBlock,      0},
-  {"makeProc",          3, BImakeProc,          0},
-  {"addDebugInfo",      3, BIaddDebugInfo,      0},
-  {"storeOpcode",       2, BIstoreOpcode,       0},
-  {"storeNumber",       2, BIstoreNumber,       0},
-  {"storeLiteral",      2, BIstoreLiteral,      0},
-  {"storeFeature",      2, BIstoreFeature,      0},
-  {"storeConstant",     2, BIstoreConstant,     0},
-  {"storeBuiltinname",  2, BIstoreBuiltinname,  0},
-  {"storeVariablename", 2, BIstoreVariablename, 0},
-  {"storeRegisterIndex",2, BIstoreRegisterIndex,0},
-  {"storeInt",          2, BIstoreInt,          0},
-  {"storeLabel",        2, BIstoreLabel,        0},
-  {"storePredicateRef", 2, BIstorePredicateRef, 0},
-  {"storePredId",       6, BIstorePredId,       0},
-  {"newHashTable",      4, BInewHashTable,      0},
-  {"storeHTVarLabel",   3, BIstoreHTVarLabel,   0},
-  {"storeHTScalar",     4, BIstoreHTScalar,     0},
-  {"storeHTRecord",     5, BIstoreHTRecord,     0},
-  {"storeRecordArity",  2, BIstoreRecordArity,  0},
-  {"storeGenCallInfo",  6, BIstoreGenCallInfo,  0},
-  {"storeApplMethInfo", 3, BIstoreApplMethInfo, 0},
-  {"storeGRegRef",      2, BIstoreGRegRef,      0},
-  {"storeCache",        2, BIstoreCache,        0},
-
-  {0,0,0,0}
-};
-
-void BIinitAssembler()
-{
-  BIaddSpec(biSpec);
-}
+// static
+// BIspec biSpec[] = {
+//   {"getOpcode",         2, BIgetOpcode,         0},
+//   {"getInstructionSize",2, BIgetInstructionSize,0},
+//   {"newCodeBlock",      2, BInewCodeBlock,      0},
+//   {"makeProc",          3, BImakeProc,          0},
+//   {"addDebugInfo",      3, BIaddDebugInfo,      0},
+//   {"storeOpcode",       2, BIstoreOpcode,       0},
+//   {"storeNumber",       2, BIstoreNumber,       0},
+//   {"storeLiteral",      2, BIstoreLiteral,      0},
+//   {"storeFeature",      2, BIstoreFeature,      0},
+//   {"storeConstant",     2, BIstoreConstant,     0},
+//   {"storeBuiltinname",  2, BIstoreBuiltinname,  0},
+//   {"storeVariablename", 2, BIstoreVariablename, 0},
+//   {"storeRegisterIndex",2, BIstoreRegisterIndex,0},
+//   {"storeInt",          2, BIstoreInt,          0},
+//   {"storeLabel",        2, BIstoreLabel,        0},
+//   {"storePredicateRef", 2, BIstorePredicateRef, 0},
+//   {"storePredId",       6, BIstorePredId,       0},
+//   {"newHashTable",      4, BInewHashTable,      0},
+//   {"storeHTVarLabel",   3, BIstoreHTVarLabel,   0},
+//   {"storeHTScalar",     4, BIstoreHTScalar,     0},
+//   {"storeHTRecord",     5, BIstoreHTRecord,     0},
+//   {"storeRecordArity",  2, BIstoreRecordArity,  0},
+//   {"storeGenCallInfo",  6, BIstoreGenCallInfo,  0},
+//   {"storeApplMethInfo", 3, BIstoreApplMethInfo, 0},
+//   {"storeGRegRef",      2, BIstoreGRegRef,      0},
+//   {"storeCache",        2, BIstoreCache,        0},
+//
+//   {0,0,0,0}
+// };
+//
+// void BIinitAssembler()
+// {
+//   BIaddSpec(biSpec);
+// }

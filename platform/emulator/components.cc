@@ -324,7 +324,7 @@ OZ_BI_define(BIsmartSave,3,0)
   OZ_declareVirtualStringIN(1,filename);
 
   return saveFile(in,filename,resources);
-}
+} OZ_BI_end
 
 
 // ===================================================================
@@ -765,19 +765,19 @@ OZ_BI_define(BIurl_localize,1,1)
 {
   OZ_declareVirtualStringIN(0,url);
   return URL_get(url,OZ_out(0),URL_LOCALIZE);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIurl_open,1,1)
 {
   OZ_declareVirtualStringIN(0,url);
   return URL_get(url,OZ_out(0),URL_OPEN);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIurl_load,1,1)
 {
   OZ_declareVirtualStringIN(0,url);
   return URL_get(url,OZ_out(0),URL_LOAD);
-}
+} OZ_BI_end
 
 OZ_C_proc_begin(BIload,2)
 {
@@ -832,7 +832,7 @@ OZ_BI_define(BIGateId,0,1)
   }
   *s++ = 0;
   OZ_RETURN_ATOM(url);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIOpenGate,1,0)
 {
@@ -844,7 +844,7 @@ OZ_BI_define(BIOpenGate,1,0)
   OZ_protect(&gatePort);
 
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BICloseGate,0,0)
 {
@@ -853,7 +853,7 @@ OZ_BI_define(BICloseGate,0,0)
     gatePort = 0;
   }
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BISendGate,2,0)
 {
@@ -907,7 +907,7 @@ OZ_BI_define(BISendGate,2,0)
 
 bomb:
   return oz_raise(E_ERROR,E_SYSTEM,"sendGate",2,OZ_in(0),val);
-}
+} OZ_BI_end
 #endif
 
 #define OZ_PID
@@ -934,7 +934,7 @@ OZ_BI_define(BIGetPID,0,1)
 
   OZ_Term l = cons(host,cons(port,cons(time,nil())));
   OZ_RETURN(OZ_recordInit(OZ_atom("PID"),l));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIReceivedPID,1,0)
 {
@@ -946,7 +946,7 @@ OZ_BI_define(BIReceivedPID,1,0)
   OZ_protect(&pidPort);
 
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIClosePID,0,0)
 {
@@ -955,7 +955,7 @@ OZ_BI_define(BIClosePID,0,0)
     pidPort = 0;
   }
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BISendPID,4,0)
 {
@@ -1004,7 +1004,7 @@ OZ_BI_define(BISendPID,4,0)
   marshal_M_SEND_GATE(bs,val);
   (void) site->sendTo(bs,M_SEND_GATE,0,0);
   return PROCEED;
-}
+} OZ_BI_end
 #endif
 
 extern int sendPort(OZ_Term port, OZ_Term val);
