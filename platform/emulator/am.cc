@@ -1657,12 +1657,14 @@ void handlerMessage()
 void handlerSEGV()
 {
   CodeArea::writeInstr();
+  if (ozconf.runningUnderEmacs) printf("\021");
   message("**** segmentation violation ****\n");
 }
 
 void handlerBUS()
 {
   CodeArea::writeInstr();
+  if (ozconf.runningUnderEmacs) printf("\021");
   message("**** bus error ****\n");
 }
 
