@@ -85,6 +85,14 @@ mapping <CODE>M</CODE>, or <CODE>Default</CODE> if none
 <DT><CODE>{Mapping.entries +M ?L}</CODE>
 <DT><CODE>{Mapping.toListInd +M ?L}</CODE>
 <DD>returns a list of the entries <CODE>Key#Value</CODE> in the mapping
+<DT><CODE>{Mapping.clone +M1 ?M2}</CODE>
+<DD>returns a clone <CODE>M2</CODE> of the mapping <CODE>M1</CODE>
+<DT><CODE>{Mapping.exchange +M +Key ?Old +New}</CODE>
+<DD>atomically exchanges the value for <CODE>Key</CODE> in mapping <CODE>M</CODE>:
+sets it to <CODE>New</CODE> while returning <CODE>Old</CODE>
+<DT><CODE>{Mapping.toRecord +Label +M ?R}</CODE>
+<DD>returns a record <CODE>R</CODE> with label <CODE>Label</CODE> representing
+the entries in mapping <CODE>M</CODE>
 </DL>
 
 <HR>
