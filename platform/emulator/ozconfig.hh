@@ -69,13 +69,14 @@ public:
   int debugIP;
   int debugPerdio;
   int perdioMinimal;
-  int maxTcpCache;
-  int maxUdpPacket;
-  int tcpPacketSize;
 
   // Info needed for flowcontrol in ports
   int perdioFlowBufferSize;
   int perdioFlowBufferTime;
+
+  //
+  // For Perdio's 'Remote' and 'Connection';
+  int perdioTimeout;
 
   // global handler
   int perdioSeifHandler;

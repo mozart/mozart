@@ -1234,8 +1234,6 @@ void initDPCore()
   if(!am.registerTask((void*)flowControler, FlowControlCheck, FlowControlExecute))
     OZ_error("Unable to register FlowControl task");
 
-  ozconf.perdioFlowBufferSize  =  1000000;
-  ozconf.perdioFlowBufferTime  =  1000;
   BI_defer = makeTaggedConst(new Builtin("defer", 0, 0, BIdefer, OK));
   globalWatcher = NULL;
   DeferdEvents = NULL;
