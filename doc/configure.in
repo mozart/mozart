@@ -33,8 +33,16 @@ AC_ARG_WITH(psgml-dir,
     oz_psgml_dir=${with_psgml_dir})
 : ${oz_psgml_dir=}
 AC_MSG_RESULT($oz_psgml_dir)
-PSGML="${oz_psgml_dir}"
+if test -n "${oz_psgml_dir}"
+then
+    PSGML="${oz_psgml_dir}"
+    CED="ozdoc.ced"
+else
+    PSGML=
+    CED=
+fi
 AC_SUBST(PSGML)
+AC_SUBST(CED)
 AC_OUTPUT(Makefile catalog ced.el)
 errprint(ifdef([OZ_INIT],
  [],

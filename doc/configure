@@ -798,7 +798,15 @@ fi
 
 : ${oz_psgml_dir=}
 echo "$ac_t""$oz_psgml_dir" 1>&6
-PSGML="${oz_psgml_dir}"
+if test -n "${oz_psgml_dir}"
+then
+    PSGML="${oz_psgml_dir}"
+    CED="ozdoc.ced"
+else
+    PSGML=
+    CED=
+fi
+
 
 trap '' 1 2 15
 cat > confcache <<\EOF
@@ -954,6 +962,7 @@ s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
 s%@INSTALL_DIR@%$INSTALL_DIR%g
 s%@PSGML@%$PSGML%g
+s%@CED@%$CED%g
 
 CEOF
 EOF
