@@ -165,7 +165,13 @@ local
 				    action: Manager # nodesByXY(hide))
 			     tkBind(event:  '<Double-2>'
 				    args:   [float(x) float(y)]
-				    action: Manager # nodesByXY(hideFailed))]}
+				    action: Manager # nodesByXY(hideFailed))
+			     tkBind(event:  '<3>'
+				    args:   [float(x) float(y)]
+				    action: Manager # doByXY(step))
+			     tkBind(event:  '<Double-3>'
+				    args:   [float(x) float(y)]
+				    action: Manager # doByXY(next))]}
 
       end
 
