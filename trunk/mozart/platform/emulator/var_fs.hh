@@ -96,18 +96,6 @@ public:
 
   void installPropagators(OzFSVariable *);
 
-  OZ_FSetConstraint * getReifiedPatch(void) { 
-    return (OZ_FSetConstraint *) (u.var_type & ~u_mask);
-  }
-  void patchReified(OZ_FSetConstraint * s) { 
-    u.patchFSet =  (OZ_FSetConstraint *) ToPointer(ToInt32(s) | u_fset); 
-    setReifiedFlag();
-  }
-  void unpatchReified(void) { 
-    setType(OZ_VAR_FS); 
-    resetReifiedFlag();
-  }
-
   void printStream(ostream &out,int depth = 10) {
     out << getSet().toString();
   }
@@ -143,7 +131,6 @@ OZ_Return tellBasicConstraint(OZ_Term, OZ_FSetConstraint *);
 Bool isGenFSetVar(OZ_Term term);
 Bool isGenFSetVar(OZ_Term term, TypeOfTerm tag);
 OzFSVariable * tagged2GenFSetVar(OZ_Term term);
-OZ_FSetConstraint * unpatchReifiedFSet(OZ_Term t);
 
 #undef inline
 #endif
