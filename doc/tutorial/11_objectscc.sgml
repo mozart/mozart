@@ -375,7 +375,7 @@ class UnitBufferM
       if X == no then
 	 {@psignal wait}
 	 {self put(I)}
-      else skip end
+      end
    end
    meth get(I)
       X in
@@ -390,7 +390,7 @@ class UnitBufferM
       if X == no then
 	 {@csignal wait}
 	 {self get(I)}
-      else skip end
+      end
    end
 end
 >>>
