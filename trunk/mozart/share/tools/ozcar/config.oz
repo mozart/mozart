@@ -38,6 +38,9 @@ KnownThread            = 'Got known thread' /* end */
 NewThread              = 'Got new thread' /* end */
 NextOnLeave            = '\'next\' while leaving procedure - ' #
                          'substituting by \'step\''
+ByeBye                 = 'hm... seems as if this thread only ' # /* end end */
+                         'exists to turn me off?! *sigh*'
+
 
 UnknownSuspThread      = 'Unknown suspending thread' /* end */
 UnknownWokenThread     = 'Unknown woken thread' /* end */

@@ -213,6 +213,7 @@ in
       end
 
       meth remove(T I Mode)
+	 {OzcarMessage 'removing thread #' # I # ' with mode ' # Mode}
 	 case Mode == kill then
 	    Gui,killNode(I)
 	    {Dremove self.ThreadDic I}
@@ -255,7 +256,14 @@ in
 	    case {UnknownFile F} then
 	       {OzcarMessage NoFileInfo # I}
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
-	       {Thread.resume @currentThread}
+	       case F == '' andthen A.1 == off then
+	          % should(!) only happen when sending
+                  % Ozcar the 'off' message from within Emacs
+		  {OzcarMessage ByeBye}
+		  ThreadManager,forget(T I)
+	       else
+		  {Thread.resume T}
+	       end
 	    else Ack in
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
 	       thread
