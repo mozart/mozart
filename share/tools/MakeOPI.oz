@@ -124,7 +124,7 @@ local
 	 Env = {List.toRecord env
 		{Map LibNames
 		 fun {$ A}
-		    A#{Module.load A unit nil}
+		    A#{Module.load A unit}
 		 end}}
       in
 	 {OPICompiler enqueue(mergeEnv(Env))}
@@ -132,13 +132,13 @@ local
 
       {ForAll PrintNames
        proc {$ Key#Feats}
-	  Env={LazyAdapt {Module.load Key unit nil} Feats}
+	  Env={LazyAdapt {Module.load Key unit} Feats}
        in
 	  {OPICompiler enqueue(mergeEnv(Env))}
        end}
 
       {OPICompiler enqueue(mergeEnv(env('Module':
-					   {Module.load 'Module' unit nil})))}
+					   {Module.load 'Module' unit})))}
       
       CompilerUI = {New Emacs.interface init(OPICompiler)}
       Sock = {CompilerUI getSocket($)}
