@@ -49,6 +49,8 @@
 
 #endif
 
+#include "wsock.hh"
+
 #include "actor.cc"
 #include "am.cc"
 #include "assemble.cc"

@@ -14,6 +14,9 @@
  */
 
 
+#ifndef __WSOCK_H__
+#define __WSOCK_H__
+
 #ifdef WINDOWS
 
 #define NOMINMAX
@@ -55,6 +58,8 @@ extern "C" {
   CreateThread(security,stack_size,(void(*)(void*))(fun),args,initflag,thrdaddr);
 
 }
+
+#endif
 
 #endif
 
