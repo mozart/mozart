@@ -441,5 +441,5 @@ veryclean::
 		$(CREATEDFILES) TAGS Makefile.deps
 
 distclean::
-	-rm -f CONF.h conf.h config.cache config.log config.status \
+	-rm -f OZCONF.h conf.h config.cache config.log config.status \
 		Makefile.rules Makefile.vars Makefile
