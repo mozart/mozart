@@ -811,6 +811,9 @@ direct_abstract_declarator
 	| OBRACKET CBRACKET {
 		$$ = OZ_atom("[]");
 	}
+	| OBRACKET assignment_expr CBRACKET {
+		$$ = OZ_mkTuple(OZ_atom("[ass]"), 1, $2);
+	}
 	| direct_abstract_declarator OBRACKET CBRACKET {
 		$$ = OZ_mkTuple(OZ_atom("abs_decl[]"), 1, $1);
 	}
