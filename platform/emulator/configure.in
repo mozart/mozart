@@ -46,9 +46,10 @@ AC_CANONICAL_HOST
 
 AC_LANG_CPLUSPLUS
 
-if test "x$oz_default_prefix" != x && test -d $oz_default_prefix
+if test -n "${oz_default_prefix}" && test -d $oz_default_prefix
 then
   ac_default_prefix=$oz_default_prefix
+  # AC_DEFAULT_PREFIX($oz_default_prefix)  # does not work!
 fi
 
 dnl *****************************************************************
@@ -58,7 +59,7 @@ dnl *****************************************************************
 srcdira=`(cd $srcdir; pwd)`
 AC_SUBST(srcdira)
 
-if test "x$TOPDIR" = x
+if test "${TOPDIR+set}" != set
 then
     TOPDIR="$srcdir/.."
 fi
@@ -77,7 +78,7 @@ dnl *****************************************************************
 AC_MSG_CHECKING(for --enable-wincross)
 AC_ARG_ENABLE(wincross,
   [--enable-wincross  Windows cross compilation (default=no)])
-if test "x$enable_wincross" = xyes; then
+if test "${enable_wincross}" = yes; then
         AC_MSG_RESULT(yes (-DGNUWIN32 -DWINDOWS))
 	WINCROSS="/project/ps/soft/cygwin-cross"
 	CXX="$WINCROSS/bin/i386-cygwin32-gcc"
@@ -103,7 +104,7 @@ AC_MSG_CHECKING(for --with-pgcc)
 AC_ARG_WITH(pgcc,
     [--with-pgcc        use pgcc compiler (default: yes, if --enable-opt)])
 
-	if test "x$with_pgcc" = x
+	if test "${with_pgcc+set}" != set
 	then
 	    case $enable_opt in
 		n*|d*)
@@ -112,7 +113,7 @@ AC_ARG_WITH(pgcc,
 		*)
 		    AC_MSG_RESULT(trying)
 		    AC_CHECK_PROGS(PGXX, pg++)
-		    if test -n "$PGXX"
+		    if test -n "${PGXX}"
 		    then
 			CC=pgcc
 			CXX=$PGXX
@@ -120,10 +121,10 @@ AC_ARG_WITH(pgcc,
 		    ;;
 	    esac
 	else
-	if test "x$with_pgcc" = xyes; then
+	if test "${with_pgcc}" = yes; then
             AC_MSG_RESULT(yes)
 	    AC_CHECK_PROGS(PGXX, pg++)
-	    if test -n "$PGXX"
+	    if test -n "${PGXX}"
 	    then
 		CC=pgcc
 		CXX=$PGXX
@@ -138,12 +139,16 @@ AC_ARG_WITH(pgcc,
 AC_MSG_CHECKING(for --with-sunpro)
 AC_ARG_WITH(sunpro,
     [--with-sunpro      use sunpro compiler (default: no)])
-	if test "x$with_sunpro" = xyes; then
+	if test "${with_sunpro}" = yes; then
             AC_MSG_RESULT(yes)
 	    AC_CHECK_PROGS(SUNPRO, CC)
-	    if test -n "$SUNPRO"; then
+	    if test -n "${SUNPRO}"
+	    then
 		CC=cc
 		CXX=$SUNPRO
+		O_OPT="-fast"
+		DEPEND="$CXX -xM"
+		AC_DEFINE(SUNPRO)
 	    else
 		AC_MSG_WARN(Ingnoring --with-sunpro!)
 	    fi
@@ -172,7 +177,7 @@ AC_CHECK_PROGS(AR, gar ar, true)
 AC_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 AC_PATH_PROG(DYNLD, ozdynld, true)
 
-if test ! -n "$PLATFORMSCRIPT"
+if test -z "${PLATFORMSCRIPT}"
 then
   AC_MSG_ERROR("required ozplatform script not found")
 fi
@@ -186,16 +191,10 @@ dnl *****************************************************************
 dnl platform
 dnl *****************************************************************
 
-if test "x$platform" = x
-then
-    platform=`$PLATFORMSCRIPT`
-fi
+: ${platform=`$PLATFORMSCRIPT`}
 AC_SUBST(platform)
 
-if test "x$PROGRAMNAME" = x
-then
-    PROGRAMNAME=oz.emulator.bin
-fi
+: ${PROGRAMNAME=oz.emulator.bin}
 TARGETS="$PROGRAMNAME"
 AC_SUBST(PROGRAMNAME)
 AC_SUBST(TARGETS)
@@ -214,28 +213,35 @@ dnl *****************************************************************
 dnl Compiler and Linker options
 dnl *****************************************************************
 
-if test "$ac_test_CFLAGS" != set; then
+if test "$ac_test_CFLAGS" != set
+then
     CFLAGS=""
 fi
 
 AC_SUBST(CWARN)
 
-O_OPT="-O"
-G_OPT="-g"
-
-dnl mm2: test for SunPro
-if test "x$SUNPRO" != x; then
-    O_OPT="-fast"
-    DEPEND="$CXX -xM"
-fi
-
-if test "x$GXX" = xyes; then
-    O_OPT="-O6"
-    G_OPT="-g3 -DINTERFACE"
+if test "${GXX}" = yes; then
+    O_OPT="$O_OPT -O6"
+    G_OPT="$G_OPT -g3 -DINTERFACE"
     M4_S="$M4 -s"
     DEPEND="$CXX -MM"
     CWARN="\$(WARNINGS)"
+    if test "${platform}" = linux-i486
+    then
+      if test -n "${PGXX}"
+      then
+	CFLAGS="$CFLAGS -fno-exceptions -fno-rtti -Wno-sign-compare"
+	LIBS="$LIBS -lstdc++"
+	O_OPT="$O_OPT -frisc"
+      else
+	O_OPT="$O_OPT -m486"
+	O_OPT="$O_OPT -malign-loops=4 -malign-jumps=4 -malign-functions=4"
+      fi
+    fi
 fi
+
+: ${O_OPT="-O"}
+: ${G_OPT="-g"}
 
 case $platform in
     sunos*)
@@ -262,7 +268,7 @@ dnl *****************************************************************
 dnl Note: use $(CC) for linking, not $(CXX): 
 dnl g++ creates references to libg++ 
 LD=$CXX
-if test "x$GCC" = xyes
+if test "${GCC}" = yes
 then
   LD="$CC"
 fi
@@ -274,8 +280,6 @@ AC_CHECK_LIB(socket, main)
 AC_CHECK_LIB(m, main)
 AC_CHECK_LIB(kernel32,main)
 AC_CHECK_LIB(wsock32,main)
-AC_CHECK_LIB(gmp, mpz_init, , AC_MSG_ERROR(required GNU MP lib not found))
-
 
 # special hack for static linking under linux
 case $platform in
@@ -283,7 +287,7 @@ case $platform in
 	AC_MSG_CHECKING(for --enable-lstatic)
 	AC_ARG_ENABLE(lstatic,
 	    [--enable-lstatic   linux static linking (default=yes)])
-	if test "x$enable_lstatic" != xno; then
+	if test "${enable_lstatic}" != no; then
 		AC_MSG_RESULT(yes)
 		LIBS="-ldl -Xlinker -Bstatic $LIBS"
 	else
@@ -328,13 +332,77 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(getcwd gethostname gettimeofday putenv select socket strdup strerror strstr strtod strtol strtoul uname)
 
 dnl *****************************************************************
+dnl MISC
+dnl *****************************************************************
+
+# AC_CHECK_SIZEOF(int)
+# AC_C_BIGENDIAN
+
+dnl *****************************************************************
+dnl *** GMP
+dnl *****************************************************************
+
+GMP_LIB_DIR=/usr/local/lib
+GMP_INC_DIR=/usr/local/include
+
+AC_MSG_CHECKING(for --with-gmp)
+AC_ARG_WITH(gmp,
+    [--with-gmp=<dir>
+        search gmp library and header in <dir> (default: NONE)])
+
+if test -n "${with_gmp}"
+then
+    AC_MSG_RESULT(yes)
+    GMP_LIB_DIR=$with_gmp
+    GMP_INC_DIR=$with_gmp
+else
+    AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(for --with-gmp-lib)
+AC_ARG_WITH(gmp_lib,
+    [--with-gmp-lib=<dir>
+        search gmp library in <dir> (default: /usr/local/lib)])
+
+if test -n "${with_gmp_lib}"
+then
+    AC_MSG_RESULT(yes)
+    GMP_LIB_DIR=$with_gmp_lib
+else
+    AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(for --with-gmp-include)
+AC_ARG_WITH(gmp_include,
+    [--with-gmp-include=<dir>
+        search gmp header in <dir> (default: /usr/local/include)])
+
+if test -n "${with_gmp_include}"
+then
+    AC_MSG_RESULT(yes)
+    GMP_INC_DIR=$with_gmp_include
+else
+    AC_MSG_RESULT(no)
+fi
+
+CPPFLAGS="-I$GMP_INC_DIR $CPPFLAGS"
+AC_CHECK_HEADER(gmp.h,,
+	AC_MSG_ERROR(required GNU MP include file not found))
+
+LDFLAGS="-L$GMP_LIB_DIR $LDFLAGS"
+AC_CHECK_LIB(gmp, mpz_init, ,
+	AC_MSG_ERROR(required GNU MP lib not found))
+
+
+dnl *****************************************************************
 dnl *** Features
 dnl *****************************************************************
+
 
 AC_MSG_CHECKING(for --enable-ozma)
 AC_ARG_ENABLE(ozma,
     [--enable-ozma      add assembler (default=no)])
-	if test "x$enable_ozma" = xyes; then
+	if test "${enable_ozma}" = yes; then
 		AC_MSG_RESULT(yes (-DOZMA))
 		AC_DEFINE(OZMA)
 	else
@@ -363,7 +431,7 @@ dnl ********************************
 		AC_MSG_RESULT(profile (-DPROFILE_EMULATOR))
 		AC_DEFINE(PROFILE_EMULATOR)
 		CFLAGS="$CFLAGS -pg"
-		if test "x$GXX" = xyes; then
+		if test "${GXX}" = yes; then
 		    CFLAGS="$CFLAGS -fno-inline -fno-default-inline"
 		fi
 		LDFLAGS="$LDFLAGS -pg"
@@ -380,7 +448,7 @@ dnl ********************************
 	AC_MSG_CHECKING(for   --enable-threaded)
 	AC_ARG_ENABLE(threaded,
 	  [  --enable-threaded  threaded code emulator (default=yes)])
-	if test "x$enable_threaded" != xno; then
+	if test "${enable_threaded}" != no; then
 		AC_MSG_RESULT(yes (-DTHREADED))
 		AC_DEFINE(THREADED)
 	else
@@ -390,7 +458,7 @@ dnl ********************************
 	AC_MSG_CHECKING(for   --enable-fastreg)
 	AC_ARG_ENABLE(fastreg,
 	  [  --enable-fastreg   fast register access (default=yes)])
-	if test "x$enable_fastreg" != xno; then
+	if test "${enable_fastreg}" != no; then
 		AC_MSG_RESULT(yes (-DFASTREGACCESS))
 		AC_DEFINE(FASTREGACCESS)
 	else
@@ -399,32 +467,20 @@ dnl ********************************
 	AC_MSG_CHECKING(for   --enable-regopt)
 	AC_ARG_ENABLE(regopt,
 	  [  --enable-regopt    register optimization (default=yes)])
-	if test "x$enable_regopt" != xno; then
+	if test "${enable_regopt}" != no; then
 		AC_MSG_RESULT(yes (-DREGOPT))
 		AC_DEFINE(REGOPT)
 	else
 		AC_MSG_RESULT(no)
 	fi
 
-	if test "x$platform" = xlinux-i486
-	then
-	    if test -n "$PGXX"
-	    then
-		CFLAGS="$CFLAGS -mpentium"
-		CFLAGS="$CFLAGS -fno-exceptions -frisc -fno-rtti -Wno-sign-compare"
-		LIBS="$LIBS -lstdc++"
-	    else
-		CFLAGS="$CFLAGS -m486"
-		CFLAGS="$CFLAGS -malign-loops=4 -malign-jumps=4 -malign-functions=4"
-	    fi
-	fi
     ;;
 esac
 
 AC_MSG_CHECKING(for --enable-linkprop)
 AC_ARG_ENABLE(linkprop,
   [--enable-linkprop  link propagators statically (default=yes)])
-if test "x$enable_linkprop" != xno; then
+if test "${enable_linkprop}" != no; then
         AC_MSG_RESULT(yes (-UFOREIGNFDPROPS))
 	FDTARGETS="libfd.a libsched.a"
 	FSETTARGETS="libfset.a"
@@ -443,7 +499,7 @@ AC_SUBST(INSTALL_PROP)
 AC_MSG_CHECKING(for --enable-peanuts)
 AC_ARG_ENABLE(peanuts,
   [--enable-peanuts   use peanuts file (default=yes)])
-if test "x$enable_peanuts" != xno; then
+if test "${enable_peanuts}" != no; then
         AC_MSG_RESULT(yes)
 	PEANUTS="\$(PEANUTSFILE)"
 else
@@ -459,7 +515,7 @@ dnl *****************************************************************
 
 dnl rs: Have to use our own malloc/free: brain dead libc 5.12 returns
 dnl both pointers in which top most bits are set and not set.
-if test "x$platform" = xlinux-i486
+if test "${platform}" = linux-i486
 then
     AC_MSG_CHECKING(if local gmalloc.o found)
     if test -r $PSDIR/lib/$platform/gmalloc.o
@@ -478,12 +534,13 @@ dnl *****************************************************************
 AC_MSG_CHECKING(for --enable-tmphack)
 AC_ARG_ENABLE(tmphack,
   [--enable-tmphack   link and compile in /tmp (default=no)])
-if test "x$enable_tmphack" = xyes; then
+if test "${enable_tmphack}" = yes; then
         AC_MSG_RESULT(yes)
 	tmphack_target=".cc.o"
 	tmphack_programname="$PROGRAMNAME"
 	PROGRAMNAME="$PROGRAMNAME.local"
-	if test "x$tmphack_host" = x; then
+	if test -z "${tmphack_host}"
+	then
 	    tmphack_host=localhost
 	fi
 else
@@ -503,7 +560,7 @@ AC_MSG_CHECKING(for --enable-finalization)
 AC_ARG_ENABLE(finalization,
   [--enable-finalization
                    provide support for finalization (default=yes)])
-if test "x$enable_finalization" = xno; then
+if test "${enable_finalization}" = no; then
         AC_MSG_RESULT(no)
 	AC_DEFINE(NOFINALIZATION)
 else
@@ -518,7 +575,7 @@ AC_MSG_CHECKING(for --enable-foreign-pointer)
 AC_ARG_ENABLE(foreign-pointer,
   [--enable-foreign-pointer,
                    provide support for foreign pointers (default=yes)])
-if test "x$enable_foreign_pointer" = xno; then
+if test "${enable_foreign_pointer}" = no; then
         AC_MSG_RESULT(no)
 	AC_DEFINE(NOFOREIGN_POINTER)
 else
