@@ -21,6 +21,9 @@
 #undef inline
 #endif
 
+#include "tagged.hh"
+
+
 // Debugging Stuff ------------------------------------------------------------
 
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD)

@@ -45,8 +45,15 @@ Bool isUnifyCurrentTaskSusp(void) {
 
 SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home);
 
-Suspension * makeHeadSuspension(OZ_Bool (* fun)(int, OZ_Term[]),
-				OZ_Term * args, int arity);
+inline
+Suspension * makeHeadSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
+				OZ_Term * args, int arity)
+{
+  return new Suspension(am.currentBoard,
+			am.currentThread->getPriority(),
+			fun, args, arity);
+}
+
 
 
 #endif

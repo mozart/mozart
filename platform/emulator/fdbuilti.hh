@@ -23,6 +23,8 @@
 #include "fdhook.hh"
 #include "genvar.hh"
 #include "fdprofil.hh"
+#include "fdproto.hh"
+#include "fdheads.hh"
 
 enum Recalc_e {lower, upper};
 
@@ -136,6 +138,49 @@ if (FORCE_ALL || COND) { \
     } \
   }
 
+enum pm_term_type {pm_none, pm_singl, pm_bool, pm_fd, pm_svar, pm_uvar, 
+		   pm_tuple, pm_literal};
+
+inline
+char * pm_term_type2string(int t) {
+  switch (t) {
+  case pm_none: return "pm_none";
+  case pm_singl: return "pm_singl";
+  case pm_bool: return "pm_bool";
+  case pm_fd:  return "pm_fd";
+  case pm_svar: return "pm_svar";
+  case pm_uvar: return "pm_uvar";
+  case pm_tuple: return "pm_tuple";
+  case pm_literal: return "pm_literal";
+  default:  return "unexpected";
+  }
+}
+
+inline
+TaggedRef deref(TaggedRef &tr, TaggedRef * &ptr, pm_term_type &tag)
+{
+  TaggedRef tr1=tr;
+  DEREF(tr1,ptr1,tag1);
+  tr=tr1;
+  ptr=ptr1;
+  switch (tag1) {
+  case SMALLINT: tag = pm_singl; break;
+  case CVAR: 
+    switch (tagged2CVar(tr1)->getType()) {
+    case FDVariable: tag = pm_fd; break;
+    case BoolVariable: tag = pm_bool; break;
+    default: tag = pm_none; break;
+    }
+    break;
+  case SVAR: tag = pm_svar; break;
+  case UVAR: tag = pm_uvar; break;
+  case STUPLE: tag = pm_tuple; break;
+  case LITERAL: tag = pm_literal; break;
+  default: tag = pm_none; break;
+  }
+  return tr1;
+}
+
 //-----------------------------------------------------------------------------
 // Global Variables relenvant for FD Built-ins
 
@@ -144,7 +189,7 @@ extern int static_coeff_int[MAXFDBIARGS];
 extern Bool static_sign_bit[MAXFDBIARGS];
 extern TaggedRef static_var[MAXFDBIARGS];
 extern TaggedRefPtr static_varptr[MAXFDBIARGS];
-extern TypeOfTerm static_vartag[MAXFDBIARGS];
+extern pm_term_type static_vartag[MAXFDBIARGS];
 extern Bool static_bool_a[MAXFDBIARGS];
 extern Bool static_bool_b[MAXFDBIARGS];
 extern int static_int_a[MAXFDBIARGS];
@@ -153,291 +198,6 @@ extern double static_double_a[MAXFDBIARGS];
 extern double static_double_b[MAXFDBIARGS];
 extern int static_index_offset[MAXFDBIARGS];
 extern int static_index_size[MAXFDBIARGS];
-
-
-//-----------------------------------------------------------------------------
-//                         Prototypes of FD-built-ins
-//-----------------------------------------------------------------------------
-
-// fdprof.cc
-OZ_C_proc_proto(BIfdReset)
-OZ_C_proc_proto(BIfdDiscard)
-OZ_C_proc_proto(BIfdGetNext)
-OZ_C_proc_proto(BIfdPrint)
-OZ_C_proc_proto(BIfdTotalAverage)
-
-// fdrel.cc
-OZ_C_proc_proto(BIfdMinimum)
-OZ_C_proc_proto(BIfdMaximum)
-OZ_C_proc_proto(BIfdUnion)
-OZ_C_proc_proto(BIfdIntersection)
-OZ_C_proc_proto(BIfdLessEqOff)
-OZ_C_proc_proto(BIfdNotEqEnt)
-OZ_C_proc_proto(BIfdNotEq)
-OZ_C_proc_proto(BIfdNotEqOff)
-OZ_C_proc_proto(BIfdNotEqOffEnt)
-OZ_C_proc_proto(BIfdAllDifferent)
-OZ_C_proc_proto(BIfdDistinctOffset)
-
-// fdarith.cc
-OZ_C_proc_proto(BIfdPlus)
-OZ_C_proc_proto(BIfdMinus)
-OZ_C_proc_proto(BIfdMult)
-OZ_C_proc_proto(BIfdDiv)
-OZ_C_proc_proto(BIfdDivInterval)
-OZ_C_proc_proto(BIfdMod)
-OZ_C_proc_proto(BIfdModInterval)
-OZ_C_proc_proto(BIfdPlus_rel)
-OZ_C_proc_proto(BIfdMult_rel)
-OZ_C_proc_proto(BIfdSquare)
-OZ_C_proc_proto(BIfdTwice)
-
-// fdbool.cc
-OZ_C_proc_proto(BIfdAnd)
-OZ_C_proc_proto(BIfdOr)
-OZ_C_proc_proto(BIfdNot)
-OZ_C_proc_proto(BIfdXor)
-OZ_C_proc_proto(BIfdEquiv)
-OZ_C_proc_proto(BIfdImpl)
-
-// fdgeneric.cc
-OZ_C_proc_proto(BIfdGenLinEq)
-OZ_C_proc_proto(BIfdGenNonLinEq)
-OZ_C_proc_proto(BIfdGenNonLinEq1)
-OZ_C_proc_proto(BIfdGenLinNotEq)
-OZ_C_proc_proto(BIfdGenNonLinNotEq)
-OZ_C_proc_proto(BIfdGenLinLessEq)
-OZ_C_proc_proto(BIfdGenNonLinLessEq)
-OZ_C_proc_proto(BIfdGenNonLinLessEq1)
-
-// fdcount.cc
-OZ_C_proc_proto(BIfdElement)
-OZ_C_proc_proto(BIfdElement_body)
-OZ_C_proc_proto(BIfdAtMost)
-OZ_C_proc_proto(BIfdAtMost_body)
-OZ_C_proc_proto(BIfdAtLeast)
-OZ_C_proc_proto(BIfdAtLeast_body)
-OZ_C_proc_proto(BIfdCount)
-OZ_C_proc_proto(BIfdCount_body)
-
-// fdcard.cc
-OZ_C_proc_proto(BIfdGenLinEqB)
-OZ_C_proc_proto(BIfdGenNonLinEqB)
-OZ_C_proc_proto(BIfdGenLinNotEqB)
-OZ_C_proc_proto(BIfdGenNonLinNotEqB)
-OZ_C_proc_proto(BIfdGenLinLessEqB)
-OZ_C_proc_proto(BIfdGenNonLinLessEqB)
-OZ_C_proc_proto(BIfdInB)
-OZ_C_proc_proto(BIfdNotInB)
-OZ_C_proc_proto(BIfdCardBIBin)
-OZ_C_proc_proto(BIfdCardNestableBI)
-OZ_C_proc_proto(BIfdCardNestableBIBin)
-
-// fdcore.cc
-OZ_C_proc_proto(BIisFdVar)
-OZ_C_proc_proto(BIfdIs)
-State BIfdIsInline(TaggedRef);
-OZ_C_proc_proto(BIgetFDLimits)
-OZ_C_proc_proto(BIfdMin)
-OZ_C_proc_proto(BIfdMax)
-OZ_C_proc_proto(BIfdGetAsList)
-OZ_C_proc_proto(BIfdGetCardinality)
-OZ_C_proc_proto(BIfdNextTo)
-OZ_C_proc_proto(BIfdPutLe)
-OZ_C_proc_proto(BIfdPutGe)
-OZ_C_proc_proto(BIfdPutList)
-OZ_C_proc_proto(BIfdPutInterval)
-OZ_C_proc_proto(BIfdPutNot)
-
-// fdcd.cc
-OZ_C_proc_proto(BIfdConstrDisjSetUp)
-OZ_C_proc_proto(BIfdConstrDisj)
-OZ_C_proc_proto(BIfdConstrDisj_body)
-
-OZ_C_proc_proto(BIfdGenLinEqCD)
-OZ_C_proc_proto(BIfdGenNonLinEqCD)
-OZ_C_proc_proto(BIfdGenLinEqCD_body)
-OZ_C_proc_proto(BIfdGenLinLessEqCD)
-OZ_C_proc_proto(BIfdGenNonLinLessEqCD)
-OZ_C_proc_proto(BIfdGenLinLessEqCD_body)
-OZ_C_proc_proto(BIfdGenLinNotEqCD)
-OZ_C_proc_proto(BIfdGenNonLinNotEqCD)
-OZ_C_proc_proto(BIfdGenLinNotEqCD_body)
-
-OZ_C_proc_proto(BIfdPlusCD_rel)
-OZ_C_proc_proto(BIfdPlusCD_rel_body)
-OZ_C_proc_proto(BIfdMultCD_rel)
-OZ_C_proc_proto(BIfdMultCD_rel_body)
-
-OZ_C_proc_proto(BIfdLessEqOffCD)
-OZ_C_proc_proto(BIfdLessEqOffCD_body)
-OZ_C_proc_proto(BIfdNotEqCD)
-OZ_C_proc_proto(BIfdNotEqCD_body)
-OZ_C_proc_proto(BIfdNotEqOffCD)
-OZ_C_proc_proto(BIfdNotEqOffCD_body)
-
-OZ_C_proc_proto(BIfdPutLeCD)
-OZ_C_proc_proto(BIfdPutGeCD)
-OZ_C_proc_proto(BIfdPutListCD)
-OZ_C_proc_proto(BIfdPutIntervalCD)
-OZ_C_proc_proto(BIfdPutNotCD)
-
-// fdmisc.cc
-OZ_C_proc_proto(BIfdCardSched)
-OZ_C_proc_proto(BIfdCardSchedControl)
-OZ_C_proc_proto(BIfdCDSched)
-OZ_C_proc_proto(BIfdCDSchedControl)
-OZ_C_proc_proto(BIfdNoOverlap)
-OZ_C_proc_proto(BIfdCardBIKill)
-OZ_C_proc_proto(BIfdInKillB)
-OZ_C_proc_proto(BIfdCardBIKill)
-OZ_C_proc_proto(BIfdInKillB)
-OZ_C_proc_proto(BIfdNotInKillB)
-OZ_C_proc_proto(BIfdGenLinEqKillB)
-OZ_C_proc_proto(BIfdGenLinLessEqKillB)
-OZ_C_proc_proto(BIfdCopyDomain)
-OZ_C_proc_proto(BIfdDivIntervalCons)
-OZ_C_proc_proto(BIfdDivIntervalCons_body)
-     
-// fdwatch.cc
-OZ_C_proc_proto(BIfdWatchDom1)
-OZ_C_proc_proto(BIfdWatchDom2)
-OZ_C_proc_proto(BIfdWatchDom3)
-OZ_C_proc_proto(BIfdWatchBounds1)
-OZ_C_proc_proto(BIfdWatchBounds2)
-OZ_C_proc_proto(BIfdWatchBounds3)
-
-// body prototypes
-OZ_C_proc_proto(BIfdPlus_body)
-OZ_C_proc_proto(BIfdTwice_body)
-OZ_C_proc_proto(BIfdMinus_body)
-OZ_C_proc_proto(BIfdMult_body)
-OZ_C_proc_proto(BIfdSquare_body)
-OZ_C_proc_proto(BIfdDiv_body)
-OZ_C_proc_proto(BIfdDivInterval_body)
-OZ_C_proc_proto(BIfdMod_body)
-OZ_C_proc_proto(BIfdModInterval_body)
-OZ_C_proc_proto(BIfdAnd_body)
-OZ_C_proc_proto(BIfdOr_body)
-OZ_C_proc_proto(BIfdNot_body)
-OZ_C_proc_proto(BIfdXor_body)
-OZ_C_proc_proto(BIfdEquiv_body)
-OZ_C_proc_proto(BIfdImpl_body)
-OZ_C_proc_proto(BIfdGenLinEq_body)
-OZ_C_proc_proto(BIfdGenNonLinEq_body)
-OZ_C_proc_proto(BIfdGenLinNotEq_body)
-OZ_C_proc_proto(BIfdGenNonLinNotEq_body)
-OZ_C_proc_proto(BIfdGenLinLessEq_body)
-OZ_C_proc_proto(BIfdGenNonLinLessEq_body)
-OZ_C_proc_proto(BIfdGenLinNotEq_body)
-OZ_C_proc_proto(BIfdGenLinLessEq_body)
-OZ_C_proc_proto(BIfdLessEqOff_body)
-OZ_C_proc_proto(BIfdNotEqOffEnt_body)
-OZ_C_proc_proto(BIfdCardSched_body)
-OZ_C_proc_proto(BIfdCardSchedControl_body)
-OZ_C_proc_proto(BIfdCDSched_body)
-OZ_C_proc_proto(BIfdCDSchedControl_body)
-OZ_C_proc_proto(BIfdDisjunction)
-OZ_C_proc_proto(BIfdDisjunction_body)
-OZ_C_proc_proto(BIfdNoOverlap_body)
-OZ_C_proc_proto(BIfdAllDifferent_body)
-OZ_C_proc_proto(BIfdDistinctOffset_body)
-OZ_C_proc_proto(BIfdLessEqOff_body)
-OZ_C_proc_proto(BIfdNotEqEnt_body)
-OZ_C_proc_proto(BIfdNotEq_body)
-OZ_C_proc_proto(BIfdNotEqOffEnt_body)
-OZ_C_proc_proto(BIfdNotEqOff_body)
-OZ_C_proc_proto(BIfdMaximum_body)
-OZ_C_proc_proto(BIfdMinimum_body)
-OZ_C_proc_proto(BIfdSubsume_body)
-OZ_C_proc_proto(BIfdUnion_body)
-OZ_C_proc_proto(BIfdIntersection_body)
-OZ_C_proc_proto(BIfdGenLinEqB_body)
-OZ_C_proc_proto(BIfdGenNonLinEqB_body)
-OZ_C_proc_proto(BIfdGenLinNotEqB_body)
-OZ_C_proc_proto(BIfdGenNonLinNotEqB_body)
-OZ_C_proc_proto(BIfdGenLinLessEqB_body)
-OZ_C_proc_proto(BIfdGenLinLessEqCD_body)
-OZ_C_proc_proto(BIfdGenNonLinLessEqB_body)
-OZ_C_proc_proto(BIfdGenNonLinLessEqCD_body)
-OZ_C_proc_proto(BIfdCardBIKill_body)
-OZ_C_proc_proto(BIfdCardBIBin_body)
-OZ_C_proc_proto(BIfdInB_body)
-OZ_C_proc_proto(BIfdInKillB_body)
-OZ_C_proc_proto(BIfdNotInB_body)
-OZ_C_proc_proto(BIfdCardNestableBI_body)
-OZ_C_proc_proto(BIfdCardBIKill_body)
-OZ_C_proc_proto(BIfdCardNestableBIBin_body)
-OZ_C_proc_proto(BIfdInKillB_body)
-OZ_C_proc_proto(BIfdNotInKillB_body)
-OZ_C_proc_proto(BIfdGenLinEqKillB_body)
-OZ_C_proc_proto(BIfdGenLinLessEqKillB_body)
-
-//-----------------------------------------------------------------------------
-// Prototypes for Heads of Built-ins
-//-----------------------------------------------------------------------------
-
-OZ_Bool genericHead_a_x_c(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-			  OZ_CFun BI_body, FDPropState target_list);
-
-OZ_Bool genericHead_a_x_c_y(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-			    OZ_CFun BI_body, FDPropState target_list);
-
-OZ_Bool genericHead_a_x_c_nl(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-			     OZ_CFun BI_body, FDPropState target_list);
-OZ_Bool genericHead_a_x_c_nl1(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-			      OZ_CFun BI_body, FDPropState target_list);
-
-OZ_Bool genericHead_x_y_z(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-			  OZ_CFun BI_body, Bool nestable,
-			  FDPropState target_list  = fd_bounds);
-
-OZ_Bool genericHead_x_y_z_det_x_or_y(int OZ_arity, OZ_Term OZ_args[],
-				     OZ_CFun OZ_self, OZ_CFun BI_body);
-
-OZ_Bool genericHead_x_y_c(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-			  OZ_CFun BI_body, FDPropState target_list);
-
-OZ_Bool genericHead_x_y_c_Div(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-			  OZ_CFun BI_body, Bool nestable, FDPropState target_list);
-
-OZ_Bool genericHead_x_y(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-			OZ_CFun BI_body, FDPropState target_list,
-			Bool nestable = FALSE);
-
-
-OZ_Bool genericHead_a_x_c_b(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-			    OZ_CFun BI_body, FDPropState target_list);
-
-OZ_Bool genericHead_a_x_c_b_nl(int OZ_arity, OZ_Term OZ_args[],
-			       OZ_CFun OZ_self, OZ_CFun BI_body,
-			       FDPropState target_list);
-OZ_Bool genericHead_x_y_z_b(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-			    OZ_CFun BI_body,
-			    FDPropState target_list  = fd_bounds);
-OZ_Bool genericHead_x_y_z_det_x_or_y_b(int OZ_arity, OZ_Term OZ_args[],
-				       OZ_CFun OZ_self, OZ_CFun BI_body);
-OZ_Bool genericHead_x_y_c_b(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-			    OZ_CFun BI_body, FDPropState target_list);
-OZ_Bool genericHead_x_y_b(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-			  OZ_CFun BI_body, FDPropState target_list);
-
-
-OZ_Bool genericHead_x_c_d(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-			  OZ_CFun BI_body, FDPropState target_list);
-
-OZ_Bool genericHead_x_D_d(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-			  OZ_CFun BI_body, FDPropState target_list);
-
-OZ_Bool genericHead_x_c_d_e(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-			    OZ_CFun BI_body, FDPropState target_list);
-
-OZ_Bool genericHead_cd(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-		       OZ_CFun BI_body, FDPropState target_list);
-
-OZ_Bool genericHead_cdIntersect(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-				OZ_CFun BI_body, FDPropState target_list);
-
 
 
 //-----------------------------------------------------------------------------
@@ -599,7 +359,7 @@ class BIfdHeadManager {
 private:
   static TaggedRef * bifdhm_var;
   static TaggedRefPtr * bifdhm_varptr;
-  static TypeOfTerm * bifdhm_vartag;
+  static pm_term_type * bifdhm_vartag;
   static int * bifdhm_coeff;
   static int curr_num_of_items;
   
@@ -667,7 +427,7 @@ public:
     DebugCheck(i < 0 || i >= curr_num_of_items, error("index overflow"));
     return bifdhm_coeff[i];
   }
-  TypeOfTerm getTag(int i) {
+  pm_term_type getTag(int i) {
     DebugCheck(i < 0 || i >= curr_num_of_items, error("index overflow"));
     return bifdhm_vartag[i];
   }
@@ -689,7 +449,7 @@ public:
 	       (b < 0 || b >= curr_num_of_items),
 	       error("index overflow."));
     return (bifdhm_varptr[a] == bifdhm_varptr[b] &&
-	    isAnyVar(bifdhm_vartag[a]));
+	    isAnyVar(bifdhm_var[a]));
   }
 
   void printDebug(void) {
@@ -699,7 +459,7 @@ public:
   void printDebug(int i) {
     cerr << '[' << i << "]: var=" << (void *) bifdhm_var[i]
 	 << ", varptr=" << (void *) bifdhm_varptr[i]
-	 << ", vartag=" << (void *) bifdhm_vartag[i]
+	 << ", vartag=" << pm_term_type2string(bifdhm_vartag[i])
 	 << ", coeff=" << bifdhm_coeff[i] << endl;
     cerr.flush();
   }
@@ -736,7 +496,7 @@ private:
 // data slots in charge  
   static TaggedRef * bifdbm_var;
   static TaggedRefPtr * bifdbm_varptr;
-  static TypeOfTerm * bifdbm_vartag;
+  static pm_term_type * bifdbm_vartag;
 
   static FiniteDomainPtr * bifdbm_dom;
   static FiniteDomain * bifdbm_domain;
@@ -763,7 +523,8 @@ private:
   
 // private methods
   Bool isTouched(int i) {
-    return bifdbm_init_dom_size[i] > bifdbm_dom[i]->getSize();
+    return bifdbm_init_dom_size[i] > bifdbm_dom[i]->getSize() || 
+      bifdbm_vartag[i] == pm_svar;
   }
   
   void process(void);
@@ -779,7 +540,7 @@ private:
   void introduceLocal(int i, TaggedRef v);
   void saveDomainOnTopLevel(int i) {
     if (am.currentBoard->isRoot()) {
-      if (bifdbm_vartag[i] == CVAR)
+      if (bifdbm_vartag[i] == pm_fd)
 	bifdbm_domain[i] = tagged2GenFDVar(bifdbm_var[i])->getDom();
     }
   }
@@ -855,11 +616,11 @@ public:
 
   void printDebug(int i) {
     if (bifdbm_dom[i]) {
-      cerr << '[' << i << "]: var=" << (void *) bifdbm_var[i]
-	   << ", varptr=" << (void *) bifdbm_varptr[i]
+      cerr << '[' << i << "]: v=" << (void *) bifdbm_var[i]
+	   << ", vptr=" << (void *) bifdbm_varptr[i]
+	   << ", vtag=" << pm_term_type2string(bifdbm_vartag[i])
 	   << ", dom=" << *bifdbm_dom[i]
-	   << ", @dom=" << bifdbm_dom[i]
-	   << ", init_dom_size=" << bifdbm_init_dom_size[i]
+	   << ", ids=" << bifdbm_init_dom_size[i]
 	   << ", var_state=" << fdbm_var_stat2char(bifdbm_var_state[i]) 
 	   << endl << flush;
     } else {
@@ -980,8 +741,6 @@ public:
     return release(0, curr_num_of_vars - 1);
   }
 
-  void propagateIfTouched(int);
-
   OZ_Bool release1(void) { // used by square and twice
     process();
     return EntailFD;
@@ -1025,8 +784,6 @@ public:
     return _unifiedVars();
   }
 
-  OZ_Bool unify_cd(int var, int prime);
-
   void propagate_unify_cd(int cl, int vars, STuple &st) {
     if (isUnifyCurrentTaskSusp())
       _propagate_unify_cd(cl, vars, st);
@@ -1039,7 +796,7 @@ public:
 	       (b < 0 || b >= curr_num_of_vars),
 	       error("index overflow."));
     if (! isUnifyCurrentTaskSusp()) return FALSE;
-    return bifdbm_varptr[a] == bifdbm_varptr[b] && isAnyVar(bifdbm_vartag[a]);
+    return bifdbm_varptr[a] == bifdbm_varptr[b] && isAnyVar(bifdbm_var[a]);
   }
   
   FiniteDomainPtr * getDoms(void) {return bifdbm_dom;}
@@ -1054,7 +811,7 @@ public:
   static void restoreDomainOnToplevel(void) {
     if (am.currentBoard->isRoot()) {
       for (int i = curr_num_of_vars; i--; )
-	if (bifdbm_vartag[i] == CVAR)
+	if (bifdbm_vartag[i] == pm_fd)
 	  tagged2GenFDVar(bifdbm_var[i])->getDom() = bifdbm_domain[i];
     }
   }
@@ -1063,7 +820,7 @@ public:
 
 //-----------------------------------------------------------------------------
 
-OZ_Bool checkDomDescr(TaggedRef descr,
+OZ_Bool checkDomDescr(OZ_Term descr,
 		      OZ_CFun cfun, OZ_Term * args, int arity,
 		      int expect = 3);
 
