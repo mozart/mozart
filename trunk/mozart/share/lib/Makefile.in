@@ -412,8 +412,8 @@ boot-ozc.txt:
 	rm -f boot-ozc.ar
 
 new-boot:
-	-mv -f boot-init.txt boot-init.txt.SAVE
-	-mv -f boot-ozc.txt  boot-ozc.txt.SAVE
+	-mv -f $(SRCDIR)/boot-init.txt $(SRCDIR)/boot-init.txt.SAVE
+	-mv -f $(SRCDIR)/boot-ozc.txt  $(SRCDIR)/boot-ozc.txt.SAVE
 	$(MAKE) boot-init.txt boot-ozc.txt
 
 BOOTINITTXT	= boot-init.txt
