@@ -56,6 +56,14 @@
 		      out => ['+float'],
 		      bi  => BIasin},
 
+     'sinh'	 => { in  => ['+float'],
+		      out => ['+float'],
+		      bi  => BIsinh},
+
+     'asinh'	 => { in  => ['+float'],
+		      out => ['+float'],
+		      bi  => BIasinh},
+
      'cos'	 => { in  => ['+float'],
 		      out => ['+float'],
 		      bi  => BIcos},
@@ -64,6 +72,14 @@
 		      out => ['+float'],
 		      bi  => BIacos},
 
+     'cosh'	 => { in  => ['+float'],
+		      out => ['+float'],
+		      bi  => BIcosh},
+
+     'acosh'	 => { in  => ['+float'],
+		      out => ['+float'],
+		      bi  => BIacosh},
+
      'tan'	 => { in  => ['+float'],
 		      out => ['+float'],
 		      bi  => BItan},
@@ -71,6 +87,14 @@
      'atan'	 => { in  => ['+float'],
 		      out => ['+float'],
 		      bi  => BIatan},
+
+     'tanh'	 => { in  => ['+float'],
+		      out => ['+float'],
+		      bi  => BItanh},
+
+     'atanh'	 => { in  => ['+float'],
+		      out => ['+float'],
+		      bi  => BIatanh},
 
      'ceil'	 => { in  => ['+float'],
 		      out => ['+float'],
