@@ -2863,23 +2863,27 @@ LBLdispatcher:
 
   Case(TASKDEBUGCONT)
     {
-      OzDebug *ozdeb = (OzDebug *) Y;
-      Y = NULL;
+      OzDebug     *ozdeb = (OzDebug *) Y;
+      OzDebugDoit dothis = ozdeb->dothis;
+      TaggedRef   info   = ozdeb->info;
 
-      switch (ozdeb->dothis) {
+      Y = NULL;
+      delete ozdeb;
+
+      switch (dothis) {
       case DBG_NOOP : {
         break;
       }
       case DBG_NEXT : {
         if (CTT->stepMode()) {
-          debugStreamExit(ozdeb->info);
+          debugStreamExit(info);
           goto LBLpreemption;
         }
         break;
       }
       case DBG_STEP : {
         if (CTT->isTraced() && !CTT->contFlag() && !am.runChildren) {
-          debugStreamExit(ozdeb->info);
+          debugStreamExit(info);
           goto LBLpreemption;
         }
         break;
