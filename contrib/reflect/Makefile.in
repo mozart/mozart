@@ -31,12 +31,10 @@ LIBS            = -lc -lm
 
 CFLAGS          =  -O3
 CFLAGS          += -UDEBUG
-CFLAGS          += -I$(SRCTOP)/platform/emulator
-CFLAGS          += -I$(BUILDTOP)/platform/emulator
 
 CXX             = $(OZTOOL) c++
 LD              = $(OZTOOL) ld
-DEPEND          = $(CXX) $(CFLAGS) -MM
+DEPEND          = $(CXX) $(CPPFLAGS) $(CFLAGS) -MM
 
 OZDEPEND        = $(OZC) -c -M
 
@@ -85,7 +83,7 @@ $(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
         $(LD) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 %.o: %.cc
-        $(CXX) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
+        $(CXX) $(CPPFLAGS) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
 
 #----------------------------------------------------------------------
 # Maintenance
