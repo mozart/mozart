@@ -137,6 +137,19 @@ fi
 
 AC_SUBST(SUBDIRS)
 
+AC_MSG_CHECKING(for --with-ozhome)
+AC_ARG_WITH(ozhome,
+  [--with-ozhome=DIR  real home in case of fake root build],
+  oz_real_ozhome="$with_ozhome")
+: ${oz_real_ozhome=no}
+AC_MSG_RESULT($oz_real_ozhome)
+if test "${oz_real_ozhome}" = no; then
+    REAL_OZHOME="$prefix"
+else
+    REAL_OZHOME="$oz_real_ozhome"
+fi
+AC_SUBST(REAL_OZHOME)
+
 AC_CONFIG_SUBDIRS(utilities chm)
 
 AC_OUTPUT(Makefile Makefile.common Makefile.vars catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile inspector/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile qtk/Makefile dpanel/Makefile ds_white_paper/Makefile qtk/Makefile releasing/Makefile cygwin/Makefile)
