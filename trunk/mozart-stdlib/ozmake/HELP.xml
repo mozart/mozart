@@ -84,6 +84,16 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
 	by looking at <oz>import</oz> and <oz>require</oz> sections.
   </item>
 </optentry>
+<optentry>
+  <option>
+    <opt>--(no)requires</opt>
+  </option>
+  <default><opt>true</opt></default>
+  <item>
+        automatically fetch and install other packages that the current one
+	requires.  This option is relevant both for building and for installing.
+  </item>
+</optentry>
 </optlist>
 
 <p>What you should remember here, is that <opt>-vn</opt> is your friend.  Add

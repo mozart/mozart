@@ -6,7 +6,8 @@
   remove directories that have become empty.
 
   added support for automatically installing missing packages identified by
-  their MOGUL id in the makefile.oz "requires" feature.
+  their MOGUL id in the makefile.oz "requires" feature. option --norequires
+  may be used to turn off this behaviour
 
 * version 0.88
   protect against build circularities. added ExpandInCWD functionality -

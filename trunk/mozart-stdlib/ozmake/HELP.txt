@@ -54,6 +54,12 @@ OPTIONS
           dependencies. Currently, this is only supported for Oz sources
           by looking at import and require sections.
 
+   --(no)requires
+          default: true
+          automatically fetch and install other packages that the current
+          one requires. This option is relevant both for building and for
+          installing.
+
    What you should remember here, is that -vn is your friend. Add -vn at
    the end of any ozmake invocation, and it will tell you in great detail
    what the command would do, without actually doing it.
