@@ -277,12 +277,7 @@ files.doc:
 		-path './doc/*' -or \
 		-path './print/*' -or \
 		-path './cache/x-oz/system/gump/examples/*' -or \
-<<<<<<< Makefile.in
 		-path './cache/x-oz/doc/*' -or \
-		-path './cache/http/www.mozart-oz.org/home-'`$(OZVERSION)`'/doc/*' -or \
-=======
-		-path './cache/x-oz/doc/*' -or \
->>>>>>> 1.84.2.2
 		-path './examples/*' \
 	\) -and \! \( -path './doc/Mozart.hh?' \) ) > $@
 
