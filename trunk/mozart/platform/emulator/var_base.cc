@@ -218,3 +218,9 @@ OZ_Term _var_status(OzVariable *cv) {
   return ((ExtVar*)cv)->statusV();
 }
 
+
+VarStatus _var_check_status(OzVariable *cv) {
+  Assert(cv->getType()==OZ_VAR_EXT);
+  return ((ExtVar*)cv)->checkStatusV();
+}
+
