@@ -273,12 +273,12 @@ class Gui from Menu Dialog
    
    meth printAppl(id:I name:N args:A builtin:B<=false
 		  file:F<=undef line:L<=undef)
+      W = self.ApplText
+   in
       case N == undef orelse A == undef then
-	 {ForAll [tk(conf state:normal)
-		  tk(delete '0.0' 'end')
-		  tk(conf state:disabled)] self.ApplText}
+	 Gui,Clear(W)
+	 Gui,Disable(W)
       else
-	 W         = self.ApplText
 	 Args      = {FormatArgs A}
 	 ApplColor = case B then BuiltinColor else ProcColor end 
 	 T         = {TagCounter get($)}
@@ -306,18 +306,18 @@ class Gui from Menu Dialog
 	  end}
 	 {W tk(insert 'end' '}')}
 	 Gui,Disable(W)
-
-	 local
-	    W = self.ApplFileText
-	 in
-	    Gui,Clear(W)
-	    case F \= undef then
-	       {W tk(insert 'end' ' ' # {StripPath F} # ' ' # L)}
-	    else skip end
-	    Gui,Disable(W)
-	 end
-	 
       end
+      
+      local
+	 W = self.ApplFileText
+      in
+	 Gui,Clear(W)
+	 case F \= undef then
+	    {W tk(insert 'end' ' ' # {StripPath F} # ' ' # L)}
+	 else skip end
+	 Gui,Disable(W)
+      end
+      
    end
    
    meth selectNode(I)
