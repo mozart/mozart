@@ -16,7 +16,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
-#ifdef WINDOWS
+#if defined(WINDOWS) && !defined(GNUWIN32)
 #include <direct.h>
 #else
 #include <dirent.h>
@@ -595,7 +595,7 @@ OZ_C_proc_begin(unix_getCWD,1)
 }
 OZ_C_proc_end
 
-#ifdef WINDOWS
+#if defined(WINDOWS) && !defined(GNUWIN32)
 #define O_NOCTTY   0
 #define O_NONBLOCK 0
 #define O_SYNC     0
@@ -851,6 +851,7 @@ OZ_C_proc_end
 // -------------------------------------------------
 // sockets
 // -------------------------------------------------
+#ifndef GNUWIN32
 
 OZ_C_ioproc_begin(unix_socket,4)
 {
@@ -862,9 +863,12 @@ OZ_C_ioproc_begin(unix_socket,4)
   int domain, type, protocol;
 
   // compute domain
+#ifndef WINDOWS
   if (!strcmp(OzDomain,"PF_UNIX")) {
     domain = PF_UNIX;
-  } else if (!strcmp(OzDomain,"PF_INET")) {
+  } else 
+#endif
+  if (!strcmp(OzDomain,"PF_INET")) {
     domain = PF_INET;
   } else {
     return OZ_typeError(0,"enum(PF_UNIX PF_INET)");
@@ -1388,6 +1392,9 @@ OZ_C_proc_end
 #endif   /* OS2 */
 
 
+#endif /* GNUWIN32 */
+
+
 const int maxArgv = 100;
 static char* argv[maxArgv];
 
@@ -1460,13 +1467,16 @@ OZ_C_ioproc_begin(unix_pipe,4)
     strcat(buf,argv[k]);
   }
 
-  STARTUPINFO si;
   SECURITY_ATTRIBUTES sa;
-  ZeroMemory(&si,sizeof(si));
-  si.cb = sizeof(si);
   sa.nLength = sizeof(sa);
   sa.lpSecurityDescriptor = NULL;
   sa.bInheritHandle = TRUE;
+
+  STARTUPINFO si;
+  memset(&si,0,sizeof(si));
+  si.cb = sizeof(si);
+  si.dwFlags = STARTF_FORCEOFFFEEDBACK;
+
   PROCESS_INFORMATION pinf;
   
   HANDLE saveout = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -1474,8 +1484,8 @@ OZ_C_ioproc_begin(unix_pipe,4)
   HANDLE rh1,wh1,rh2,wh2;
   if (!CreatePipe(&rh1,&wh1,&sa,0)  ||
       !CreatePipe(&rh2,&wh2,&sa,0)  ||
-      !SetStdHandle(STD_OUTPUT_HANDLE,wh1) ||
-      !SetStdHandle(STD_INPUT_HANDLE,rh2) ||
+      !SetStdHandle((DWORD)STD_OUTPUT_HANDLE,wh1) ||
+      !SetStdHandle((DWORD)STD_INPUT_HANDLE,rh2) ||
       !CreateProcess(NULL,buf,&sa,NULL,TRUE,0,
 		     NULL,NULL,&si,&pinf)) {
     return OZ_raiseC("os",1,OZ_string("Create Process"));
@@ -1484,8 +1494,8 @@ OZ_C_ioproc_begin(unix_pipe,4)
   int pid = (int) pinf.hProcess;
   CloseHandle(wh1);
   CloseHandle(rh2);
-  SetStdHandle(STD_OUTPUT_HANDLE,saveout);
-  SetStdHandle(STD_INPUT_HANDLE,savein);
+  SetStdHandle((DWORD)STD_OUTPUT_HANDLE,saveout);
+  SetStdHandle((DWORD)STD_INPUT_HANDLE,savein);
     
   int rsock = _hdopen((int)rh1,O_RDONLY|O_BINARY);
   int wsock = _hdopen((int)wh2,O_WRONLY|O_BINARY);
@@ -1553,6 +1563,7 @@ static OZ_Term mkAliasList(char **alias)
   return ret;
 }
 
+#ifndef GNUWIN32
 static OZ_Term mkAddressList(char **lstptr)
 {
   OZ_Term ret = OZ_nil();
@@ -1583,7 +1594,7 @@ OZ_C_ioproc_begin(unix_getHostByName, 2)
   return OZ_unify(out,OZ_recordInit(OZ_atom("hostent"),pairlist));
 }
 OZ_C_proc_end
-
+#endif
 
 
 // Misc stuff
@@ -1809,10 +1820,26 @@ NotAvail("Unix.receiveFromUnix", 7, unix_receiveFromUnix);
 NotAvail("Unix.wait",            2, unix_wait);
 NotAvail("Unix.getServByName",   3, unix_getServByName);
 NotAvail("Unix.uName",           1, unix_uName);
+
 #ifdef _MSC_VER
 NotAvail("Unix.getDir",          2, unix_getDir);
 NotAvail("Unix.fileDesc",        2, unix_fileDesc);
 #endif
+
+#ifdef GNUWIN32
+NotAvail("Unix.socket",4,unix_socket);
+NotAvail("Unix.bindInet",3,unix_bindInet);
+NotAvail("Unix.listen",3,unix_listen);
+NotAvail("Unix.connectInet",4,unix_connectInet);
+NotAvail("Unix.acceptInet",4,unix_acceptInet);
+NotAvail("Unix.shutDown",3,unix_shutDown);
+NotAvail("Unix.send",4,unix_send);
+NotAvail("Unix.sendToInet",6,unix_sendToInet);
+NotAvail("Unix.receiveFromInet",8,unix_receiveFromInet);
+NotAvail("Unix.getSockName",2,unix_getSockName);
+NotAvail("Unix.getHostByName",2,unix_getHostByName);
+#endif
+
 #endif
 
 OZ_BIspec spec[] = {
@@ -1866,7 +1893,7 @@ void BIinitUnix()
 {
   OZ_addBISpec(spec);
 
-#ifdef WINDOWS
+#if defined(WINDOWS) && !defined(GNUWIN32)
   WSADATA wsa_data;
   WORD req_version = MAKEWORD(1,1);
 
