@@ -2703,6 +2703,8 @@ int tcpConnectionHandler(int fd,void *r0){
   if (strlen(PERDIOVERSION)!=strngLen ||
       strncmp(PERDIOVERSION,(char*)pos,strngLen)!=0) goto tcpConPermLost;
 
+  delete buf;
+
   PD((TCP,"Sending My Site Message..%s",mySite->stringrep()));
   if(r->isAcked()) msgType = TCP_MYSITE;
   else msgType = TCP_MYSITE_ACK;
@@ -2713,18 +2715,20 @@ int tcpConnectionHandler(int fd,void *r0){
   mySite->marshalSite(tcpOpenMsgBuffer);
   tcpOpenMsgBuffer->marshalEnd();
   tcpOpenMsgBuffer->beginWrite(msgType);
-  bufSize = tcpOpenMsgBuffer->getLen();
-  buf=tcpOpenMsgBuffer->getBuf();
-  written = 0;
 
-  while(TRUE){
-    ret=oswrite(fd,buf+written,bufSize-written);
-    written += ret;
-    if(written==bufSize) break;
-    if(ret<=0 && ret!=EINTR && ossockerrno()!=EWOULDBLOCK && ossockerrno()!=EAGAIN )
-      goto tcpConFailure;}
+  {
+    bufSize = tcpOpenMsgBuffer->getLen();
+    BYTE *otherbuf=tcpOpenMsgBuffer->getBuf();
+    written = 0;
 
-  delete buf;
+    while(TRUE){
+      ret=oswrite(fd,otherbuf+written,bufSize-written);
+      written += ret;
+      if(written==bufSize) break;
+      if(ret<=0 && ret!=EINTR && ossockerrno()!=EWOULDBLOCK && ossockerrno()!=EAGAIN )
+        goto tcpConFailure;}
+  }
+
   PD((OS,"unregister READ fd:%d",fd));
   // fcntl(fd,F_SETFL,O_NONBLOCK);
   // fcntl(fd,F_SETFL,O_NDELAY);
