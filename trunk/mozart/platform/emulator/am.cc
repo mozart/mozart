@@ -169,6 +169,7 @@ void AM::init(int argc,char **argv)
   ozconf.ozHome = home;
 
   char *url = NULL;
+  Bool traceLoad = osgetenv("OZ_TRACE_LOAD") != NULL;
   char *initFile = osgetenv("OZINIT");
   
   /* process command line arguments */
@@ -245,7 +246,7 @@ void AM::init(int argc,char **argv)
   }
 
   printBanner();
-  if (osgetenv("OZ_TRACE_LOAD"))
+  if (traceLoad)
     if (initFile)
       fprintf(stderr,"Init file: %s\n",initFile);
     else
