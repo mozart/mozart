@@ -117,13 +117,14 @@ in
 	       end
 
 	    else
-	       Data = {CondSelect M data unit}
-	       ForMe = case {Not {IsDet Data}} then false
-		       else Data == Ozcar
-		       end
+	       Data   = {CondSelect M data unit}
+	       Ignore = case {Not {IsDet Data}} then false
+			else Data == Ozcar orelse
+			   Data == {{`Builtin` 'getOPICompiler' 1}}
+			end
 	    in
-	       case ForMe then
-		  {OzcarMessage 'message for Ozcar detected.'}
+	       case Ignore then
+		  {OzcarMessage 'message for Ozcar or Compiler detected.'}
 		  case @DelayedThread \= unit then
 		     {OzcarMessage 'killing delayed thread #' #
 		      {Thread.id @DelayedThread}}

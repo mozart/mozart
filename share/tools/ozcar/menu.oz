@@ -98,7 +98,7 @@ in
 		    action: self # action(StackAction)
 		    key:    ctrl(b))
 		  separator
-		  C(label:  'Evaluate...'
+		  C(label:  'Query...'
 		    action: self # eval
 		    key:    ctrl(e))])
 	   MB(text: 'Options'
