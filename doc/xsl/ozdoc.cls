@@ -18,7 +18,7 @@
 
 \renewcommand{\encodingdefault}{T1}
 \RequirePackage{times}
-\RequirePackage{mathptm}
+%\RequirePackage{mathptm}
 
 % pass options down to book class
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{book}}
@@ -176,15 +176,15 @@
 %       an environment that spans the full width of the page
 % including the left margin
 
-\newenvironment{FULLWIDTH}
+\newenvironment{mozartFULLWIDTH}
   {\begin{list}{}{\linewidth\textwidth
      \leftmargin-\mozart@leftmarginwidth
      \rightmargin\z@}\item[]}
   {\end{list}}
 
-\newenvironment{FULLWIDTHLEFT}
-  {\begin{FULLWIDTH}\nopagebreak\begin{flushleft}\nopagebreak}
-  {\end{flushleft}\end{FULLWIDTH}}
+\newenvironment{mozartFULLWIDTHLEFT}
+  {\begin{mozartFULLWIDTH}\nopagebreak\begin{flushleft}\nopagebreak}
+  {\end{flushleft}\end{mozartFULLWIDTH}}
 
 % page style
 
@@ -239,7 +239,7 @@
   \renewcommand{\@oddfoot}{}%
   \renewcommand{\@evenfoot}{}}
 
-\newcommand{\mozComic}[1]{\renewcommand{\@comic}{\mozart@comic{#1}}}
+\newcommand{\mozartComic}[1]{\renewcommand{\@comic}{\mozart@comic{#1}}}
 \newcommand{\@comic}{}
 \let\@author\@empty
 \let\@title\@empty
@@ -364,7 +364,7 @@
   \pagestyle{empty}\thispagestyle{empty}%
   \@nameuse{mozartstyle@\@mozartstyle}%
   \begin{titlepage}%
-    \begin{FULLWIDTH}%
+    \begin{mozartFULLWIDTH}%
       \mozart@topcomic%
       \vspace*{2cm}%
       \begin{flushright}
@@ -376,7 +376,7 @@
       \noindent
       \mozart@titlepage@bottom@left\hfill\hbox{}%
       \mozart@titlepage@bottom@right
-    \end{FULLWIDTH}%
+    \end{mozartFULLWIDTH}%
   \end{titlepage}%
 \egroup}
 
@@ -406,7 +406,7 @@
 \newcommand{\mozart@license}{%
   \clearpage
   \pagestyle{empty}\thispagestyle{empty}%
-  \begin{FULLWIDTH}%
+  \begin{mozartFULLWIDTH}%
     \ifx\@abstract\long@empty\else
       \begin{center}\mozart@section@font\Large Abstract\end{center}%
       \begin{mozart@quote}\@abstract\end{mozart@quote}%
@@ -447,10 +447,10 @@
       HAVE NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
       ENHANCEMENTS, OR MODIFICATIONS.
     \end{mozart@quote}%
-  \end{FULLWIDTH}}
+  \end{mozartFULLWIDTH}}
 
 \long\def\@abstract{}
-\newcommand{\mozAbstract}[1]{%
+\newcommand{\mozartAbstract}[1]{%
   \long\def\@abstract{#1}}
 \newcommand{\long@empty}{}
 
@@ -499,8 +499,8 @@
   \def\@fs@mid{\kern2pt\hrule\kern2pt}%
   \let\@fs@iftopcapt\iftrue}
 \floatstyle{mozart}
-\newfloat{FIGURE}{htbp}{lof}[chapter]
-\floatname{FIGURE}{Figure}
+\newfloat{mozartFIGURE}{htbp}{lof}[chapter]
+\floatname{mozartFIGURE}{Figure}
 
 % \renewcommand{\floatc@ruled}[2]{
 %   \setlength{\mozart@len}{\mozart@fullwidth}%
@@ -663,7 +663,7 @@
 
 % processing instructions
 
-\newcommand{\usepi}[1]{%
+\newcommand{\mozartPI}[1]{%
   \@ifundefined{usepi@#1}{%
     \@latex@error{unknown processing instruction: #1}\@ehc}%
     {\@nameuse{usepi@#1}}}
@@ -686,13 +686,13 @@
 
 % sectioning commands
 
-\newcommand{\PART}{\part}
-\newcommand{\CHAPTER}{\chapter}
-\newcommand{\APPENDIX}{\mozart@appendix\chapter}
-\newcommand{\SECTION}{\section}
-\newcommand{\SUBSECTION}{\subsection}
-\newcommand{\SUBSUBSECTION}{\subsubsection}
-\newcommand{\PARA}{\paragraph}
+\newcommand{\mozartPART}{\part}
+\newcommand{\mozartCHAPTER}{\chapter}
+\newcommand{\mozartAPPENDIX}{\mozart@appendix\chapter}
+\newcommand{\mozartSECTION}{\section}
+\newcommand{\mozartSUBSECTION}{\subsection}
+\newcommand{\mozartSUBSUBSECTION}{\subsubsection}
+\newcommand{\mozartPARA}{\paragraph}
 
 \newcommand{\mozart@appendix}{%
   \appendix\global\let\mozart@appendix\relax}
@@ -702,7 +702,7 @@
 \newlength{\mozart@displaymargin}
 \setlength{\mozart@displaymargin}{1cm}
 
-\newenvironment{DISPLAY}
+\newenvironment{mozartDISPLAY}
   {\begin{list}{}{\leftmargin\mozart@display@use@margin}%
      \def\mozart@display@use@margin{\mozart@displaymargin}%
      \item[]\ignorespaces}
@@ -710,9 +710,9 @@
 
 \newcommand{\mozart@display@use@margin}{\mozart@displaymargin}
 
-\newenvironment{FIGURENODISPLAY}
-  {\begin{FIGURE}\def\mozart@display@use@margin{\z@}}
-  {\end{FIGURE}}
+\newenvironment{mozartFIGURENODISPLAY}
+  {\begin{mozartFIGURE}\def\mozart@display@use@margin{\z@}}
+  {\end{mozartFIGURE}}
 
 \newcommand{\mozart@code@family}{code}
 \newcommand{\mozart@code@font}{%
@@ -720,9 +720,9 @@
   \fontfamily{\mozart@code@family}%
   \fontshape{\shapedefault}\selectfont\hyphenchar\font\m@ne}
 \newcommand{\@CODEINLINE}[1]{\mozart@code@font\mozart@specials@code@inline#1\egroup}
-\DeclareRobustCommand{\CODEINLINE}{\bgroup\let\FACETEXT\INLINEFACETEXT\@CODEINLINE}
-\newcommand{\CODEEXTERN}[1]{%
-  \begin{DISPLAY}\mozart@code@font\verbatiminput{#1}\end{DISPLAY}}
+\DeclareRobustCommand{\mozartCODEINLINE}{\bgroup\let\mozartFACETEXT\mozartINLINEFACETEXT\@CODEINLINE}
+\newcommand{\mozartCODEEXTERN}[1]{%
+  \begin{mozartDISPLAY}\mozart@code@font\verbatiminput{#1}\end{mozartDISPLAY}}
 
 %% all newlines in code are encoded using \mozartNEWLINE
 %% remaining newlines are needed to keep lines
@@ -731,10 +731,10 @@
 %% but something much like it that neither uses
 %% obeyspaces nor obeylines... maybe some day.
 
-\newenvironment{CODEDISPLAY}
+\newenvironment{mozartCODEDISPLAY}
   {\let\obeylines\@empty
-   \begin{DISPLAY}\begin{alltt}\mozart@code@font\mozart@specials@code@display}
-  {\end{alltt}\end{DISPLAY}}
+   \begin{mozartDISPLAY}\begin{alltt}\mozart@code@font\mozart@specials@code@display}
+  {\end{alltt}\end{mozartDISPLAY}}
 
 \definecolor{comment}{rgb}{0.698039,0.133333,0.133333}
 \definecolor{keyword}{rgb}{0.627451,0.125490,0.941176}
@@ -745,51 +745,51 @@
 \definecolor{reference}{rgb}{0.372549,0.619608,0.627451}
 \definecolor{builtin}{rgb}{0.854902,0.439216,0.839216}
 
-\DeclareRobustCommand{\FACECOMMENT}{\textcolor{comment}}
-\DeclareRobustCommand{\FACEKEYWORD}[1]{\textbf{\color{keyword}#1}}
-\DeclareRobustCommand{\FACESTRING}{\textcolor{string}}
-\DeclareRobustCommand{\FACEVARIABLE}{\textcolor{variable}}
-\DeclareRobustCommand{\FACEFUNCTION}{\textcolor{function}}
-\DeclareRobustCommand{\FACEBUILTIN}{\textcolor{builtin}}
-\DeclareRobustCommand{\FACEREFERENCE}{\textcolor{reference}}
-\DeclareRobustCommand{\FACETYPE}{\textcolor{type}}
-\DeclareRobustCommand{\FACETEXT}[1]{#1}%strip the braces
+\DeclareRobustCommand{\mozartFACECOMMENT}{\textcolor{comment}}
+\DeclareRobustCommand{\mozartFACEKEYWORD}[1]{\textbf{\color{keyword}#1}}
+\DeclareRobustCommand{\mozartFACESTRING}{\textcolor{string}}
+\DeclareRobustCommand{\mozartFACEVARIABLE}{\textcolor{variable}}
+\DeclareRobustCommand{\mozartFACEFUNCTION}{\textcolor{function}}
+\DeclareRobustCommand{\mozartFACEBUILTIN}{\textcolor{builtin}}
+\DeclareRobustCommand{\mozartFACEREFERENCE}{\textcolor{reference}}
+\DeclareRobustCommand{\mozartFACETYPE}{\textcolor{type}}
+\DeclareRobustCommand{\mozartFACETEXT}[1]{#1}%strip the braces
 
 \definecolor{chunkborder}{rgb}{1.0,0.647,0}
 \definecolor{chunktitle}{rgb}{0.4196,0.556862745,0.1372549}
 \definecolor{chunkref}{rgb}{0.4156862745,0.352941,0.803921}
 
 \definecolor{inlinecode}{rgb}{0.4,0.2,0.4}
-\DeclareRobustCommand{\INLINEFACETEXT}{\textcolor{inlinecode}}
+\DeclareRobustCommand{\mozartINLINEFACETEXT}{\textcolor{inlinecode}}
 
 \definecolor{menucolor}{rgb}{0.8,0.8,0.8}
 
 % variables and annotations
 
-\newcommand{\MODE}[1]{\csname MODE@#1\endcsname}
+\newcommand{\mozartMODE}[1]{\csname MODE@#1\endcsname}
 \newcommand{\MODE@IN}{\ensuremath{+}}
 \newcommand{\MODE@OUT}{\ensuremath{?}}
 \newcommand{\MODE@CIN}{\ensuremath{*}}
 \newcommand{\MODE@CNIN}{\ensuremath{\$}}
-\newcommand{\METAVAR}[1]{{\normalfont\textit{#1}}}
-\newcommand{\ENVVAR}[1]{{\normalfont\texttt{#1}}}
-\newcommand{\GRAMMARVAR}[1]{{\normalfont
+\newcommand{\mozartMETAVAR}[1]{{\normalfont\textit{#1}}}
+\newcommand{\mozartENVVAR}[1]{{\normalfont\texttt{#1}}}
+\newcommand{\mozartGRAMMARVAR}[1]{{\normalfont
   \ensuremath{\langle\textsf{#1}\rangle}}}
-\newcommand{\PROGVAR}[1]{{\normalfont\texttt{#1}}}
+\newcommand{\mozartPROGVAR}[1]{{\normalfont\texttt{#1}}}
 
 % informative elements
 
-\newcommand{\FILE}{\texttt}
-\newcommand{\SAMP}{\texttt}
-\newcommand{\EM}{\emph}
-\newcommand{\KBD}{\texttt}
-\newcommand{\KEY}{\texttt}
+\newcommand{\mozartFILE}{\texttt}
+\newcommand{\mozartSAMP}{\texttt}
+\newcommand{\mozartEM}{\emph}
+\newcommand{\mozartKBD}{\texttt}
+\newcommand{\mozartKEY}{\texttt}
 
 % references
 
-\newcommand{\REFEXTTO}{\textsl}
-\newcommand{\REFEXTKEY}[1]{ (#1)}
-\newcommand{\DEFAULTREFEXT}{\texttt}
+\newcommand{\mozartREFEXTTO}{\textsl}
+\newcommand{\mozartREFEXTKEY}[1]{ (#1)}
+\newcommand{\mozartDEFAULTREFEXT}{\texttt}
 
 \let\latex@ref\ref
 \let\latex@pageref\pageref
@@ -808,8 +808,8 @@
 
 % figures
 
-\newcommand{\CAPTIONID}[1]{\caption{\label{#1}\kern0pt\relax}}
-\newenvironment{FIGTITLE}
+\newcommand{\mozartCAPTIONID}[1]{\caption{\label{#1}\kern0pt\relax}}
+\newenvironment{mozartFIGTITLE}
   {\begin{center}\large\bf}
   {\end{center}}
 
@@ -848,35 +848,35 @@
   \fi
   {\mozart@specials@other\@@PICEXT}}
 
-\newcommand{\PICEXTINLINE}[2][]{\@PICEXT{#2}{#1}}
+\newcommand{\mozartPICEXTINLINE}[2][]{\@PICEXT{#2}{#1}}
 % \PICEXT[width]{file}
-\newcommand{\PICEXT}[2][0.7\linewidth]{\@PICEXT{#2}{#1}}
+\newcommand{\mozartPICEXT}[2][0.7\linewidth]{\@PICEXT{#2}{#1}}
 
 %\newcommand{\PICEXT}[1]{{\mozart@specials@other
 %  \epsfig{file=#1,width=0.7\linewidth}}}
-\newenvironment{PICEXTDISPLAY}
+\newenvironment{mozartPICEXTDISPLAY}
   {\begin{center}\begin{minipage}{\linewidth}\begin{center}\mozart@specials@other}
   {\end{center}\end{minipage}\end{center}}
-\newcommand{\PICEXTFULL}[2][]{\@PICEXT{#2}{#1}}
+\newcommand{\mozartPICEXTFULL}[2][]{\@PICEXT{#2}{#1}}
 %\newcommand{\PICEXTFULL}[1]{{\mozart@specials@other
 %  \epsfig{file=#1,width=\linewidth}}}
-\newcommand{\NOTEGUIPIC}[1]{\@PICEXT{#1}{8mm}}
+\newcommand{\mozartNOTEGUIPIC}[1]{\@PICEXT{#1}{8mm}}
 %\newcommand{\NOTEGUIPIC}[1]{{\mozart@specials@other
 %  \epsfig{file=#1,width=8mm}}}
-\newcommand{\NOTEGUI}[2]{%
-  \paragraph[#1]{#1 \NOTEGUIPIC{#2}}}
+\newcommand{\mozartNOTEGUI}[2]{%
+  \paragraph[#1]{#1 \mozartNOTEGUIPIC{#2}}}
 %% different from \PICEXT because here we want to add a .ps
 %% extension that doesn't get stripped off
-\newcommand{\PICEXTGIF}[2][0.7\linewidth]{{\mozart@specials@other
+\newcommand{\mozartPICEXTGIF}[2][0.7\linewidth]{{\mozart@specials@other
   \epsfig{file=#2.ps,width=#1}}}
 
 % grammar stuff
 
-\newcommand{\GRAMDEF}{\ensuremath{{:}{:}{=}}}
-\newcommand{\GRAMADD}{\ensuremath{{+}{=}}}
-\newcommand{\GRAMOR}{\ensuremath{\mid}}
-\newcommand{\GRAMSPACE}{ }
-\newcommand{\GRAMMARNOTE}[1]{\textsl{\% #1}}
+\newcommand{\mozartGRAMDEF}{\ensuremath{{:}{:}{=}}}
+\newcommand{\mozartGRAMADD}{\ensuremath{{+}{=}}}
+\newcommand{\mozartGRAMOR}{\ensuremath{\mid}}
+\newcommand{\mozartGRAMSPACE}{ }
+\newcommand{\mozartGRAMMARNOTE}[1]{\textsl{\% #1}}
 
 % literate programming stuff
 % \begin{CHUNK}{TITLE}{CHUNK.ID}{CHUNK.NUM}
@@ -941,7 +941,7 @@
        \expandafter\@firstoftwo\csname r@chunk.#1.1\endcsname}%
      ~~{\chunk@ref@font\pageref{chunk.#1.1}\@alph{\mozart@temp}}}}
 
-\newenvironment{CHUNK}[3]
+\newenvironment{mozartCHUNK}[3]
   {\begin{list}{}{\leftmargin\mozart@displaymargin}%
      \mozart@chunk@init
      \item[\mbox{\mozart@chunk@label\bf$\color{chunkborder}\langle$%
@@ -957,11 +957,11 @@
      \begin{alltt}\mozart@code@font\mozart@specials@code@display}
   {\end{alltt}\end{list}}
 
-\newenvironment{CHUNKANON}[3]
-  {\begin{CODEDISPLAY}}
-  {\end{CODEDISPLAY}}
+\newenvironment{mozartCHUNKANON}[3]
+  {\begin{mozartCODEDISPLAY}}
+  {\end{mozartCODEDISPLAY}}
 
-\newcommand{\CHUNKREF}[2]{%
+\newcommand{\mozartCHUNKREF}[2]{%
   \mbox{\normalfont\bf$\color{chunkborder}\langle$%
     \textcolor{chunkref}{#1\mozart@chunk@ref@def{#2}}%
     $\color{chunkborder}\rangle$}}
@@ -973,40 +973,40 @@
 %% disappeared, but in fact it is there; it is just very small
 %% because the interword spacing in times in very small.
 
-\newenvironment{DESCRIPTION}
+\newenvironment{mozartDESCRIPTION}
   {\begin{list}{}{%
      \leftmargin\z@\rightmargin\z@
      \itemindent\z@
      \labelwidth\z@
      \let\makelabel\DESCRIPTION@label
-     \let\ENTRY@MBOX\relax\let\ITEM\@ITEM}}
+     \let\ENTRY@MBOX\relax\let\mozartITEM\@ITEM}}
   {\end{list}}
 
 \newcommand{\DESCRIPTION@label}[1]{%
   \hspace{-\mozart@leftmarginwidth}%
   \hspace{\labelsep}\bf#1\hfill}
 
-\newenvironment{SYNOPSIS}
+\newenvironment{mozartSYNOPSIS}
   {\noindent\begin{list}{}{%
      \topsep-\parskip\partopsep\z@
      \leftmargin\mozart@displaymargin}%
    \item[]\ignorespaces}
   {\end{list}\aftergroup\SYN@ITEM}
 
-\def\SYN@ITEM{\let\ITEM\@ITEM}
+\def\SYN@ITEM{\let\mozartITEM\@ITEM}
 
 \newcommand{\ENTRY@@MBOX}{%
   \mbox{}\vspace{-\parsep}\vspace{-\itemsep}}
-\newcommand{\ENTRY}[1]{\ENTRY@MBOX\item[{\let\par\relax#1}]\let\ENTRY@MBOX\ENTRY@@MBOX}
-\newcommand{\ENTRYWITHCATEGORY}[2]{%
-  \ENTRY{\llap{\CATEGORY{#1}}#2}%
+\newcommand{\mozartENTRY}[1]{\ENTRY@MBOX\item[{\let\par\relax#1}]\let\ENTRY@MBOX\ENTRY@@MBOX}
+\newcommand{\mozartENTRYWITHCATEGORY}[2]{%
+  \mozartENTRY{\llap{\mozartCATEGORY{#1}}#2}%
 }
 
 \definecolor{category}{rgb}{0.415686,0.352941,0.80392}
-\newcommand{\CATEGORY}[1]{{\normalfont\footnotesize\color{category}\textsf{#1}\quad}}
+\newcommand{\mozartCATEGORY}[1]{{\normalfont\footnotesize\color{category}\textsf{#1}\quad}}
 
 \newcommand{\ENTRYHASCODE}{%
-  \let\ITEM\ITEM@MBOX}
+  \let\mozartITEM\ITEM@MBOX}
 \newcommand{\ITEM@MBOX}{%
   \let\ENTRY@MBOX\relax\mbox{}\par\noindent}
 \newcommand{\@ITEM}{%
@@ -1018,7 +1018,7 @@
 \let\latex@item\@item
 \long\def\@item[#1]{\def\mozart@item@arg{#1}\latex@item[\mozart@item@arg]}
 
-\newcommand{\MENU}[3]{%
+\newcommand{\mozartMENU}[3]{%
   \colorbox{menucolor}{%
     \setlength{\mozart@len}{\mozart@leftmarginwidth}%
     \addtolength{\mozart@len}{1cm}%
@@ -1026,36 +1026,36 @@
       \normalfont\sffamily\small#1&#2%
     \end{tabular}}~#3}
 
-\newcommand{\MOUSE}[1]{\hbox{\lower3mm\hbox{\epsfig{file=mouse-#1.ps,width=1cm}}}}
+\newcommand{\mozartMOUSE}[1]{\hbox{\lower3mm\hbox{\epsfig{file=mouse-#1.ps,width=1cm}}}}
 
 % exercises and answers
 
 \theoremheaderfont{\sffamily\bfseries}
 \newtheorem{@EXERCISE}{Exercise}[chapter]
-\newenvironment{EXERCISE}[1]
-  {\begin{@EXERCISE}\label{#1}\let\PARA\mozart@internal@paragraph}
+\newenvironment{mozartEXERCISE}[1]
+  {\begin{@EXERCISE}\label{#1}\let\mozartPARA\mozart@internal@paragraph}
   {\end{@EXERCISE}}
 % note the `*' in \paragraph*{... \ref{...}}
 % to avoid messing up the \ref{...}.  There is probably
 % a better more general way...
-\newenvironment{ANSWER}[1]
+\newenvironment{mozartANSWER}[1]
   {\paragraph*{Answer to exercise \ref{#1}.}}
   {\par}
 
 % rewrite rules
 
-\newenvironment{REWRITE}
+\newenvironment{mozartREWRITE}
   {\begin{flushleft}\begin{tabular}{|l@{\quad\ensuremath{\rightarrow}\quad}l|}\hline}
   {\end{tabular}\end{flushleft}}
-\newcommand{\REWRITEVAR}[1]{%
-  \multicolumn{2}{|l|}{#1 \GRAMDEF}\\\hline}
-\newcommand{\REWRITEFROM}[1]{\begin{MINCODE}#1\end{MINCODE}&}
-\newcommand{\REWRITETO}[1]{\begin{MINCODE}#1\end{MINCODE}\\\hline}
-\newcommand{\REWRITECONDITION}[1]{\multicolumn{2}{|@{\qquad}p{0.7\linewidth}|}{#1}\\\hline}
+\newcommand{\mozartREWRITEVAR}[1]{%
+  \multicolumn{2}{|l|}{#1 \mozartGRAMDEF}\\\hline}
+\newcommand{\mozartREWRITEFROM}[1]{\begin{mozartMINCODE}#1\end{mozartMINCODE}&}
+\newcommand{\mozartREWRITETO}[1]{\begin{mozartMINCODE}#1\end{mozartMINCODE}\\\hline}
+\newcommand{\mozartREWRITECONDITION}[1]{\multicolumn{2}{|@{\qquad}p{0.7\linewidth}|}{#1}\\\hline}
 
-\newcommand{\EOLN}{\\\mozartEMPTY}
+\newcommand{\mozartEOLN}{\\\mozartEMPTY}
 
-\newenvironment{MINCODE}
+\newenvironment{mozartMINCODE}
   {\vtop\bgroup\mincode@line}
   {\mincode@end\egroup}
 
@@ -1071,7 +1071,7 @@
 
 % ozdoc external cross references
 
-\newcommand{\OZDOCREF}[3]{%
+\newcommand{\mozartOZDOCREF}[3]{%
   \def\mozart@temp{#3}%
   \ifx\mozart@temp\@empty
     \@latex@error{unknown cross ref: to=#1 key=#2}\@ehc
@@ -1090,7 +1090,7 @@
   \@nameuse{mozart@SECNAME@#1}%
   {\normalfont\space\textsl{#2}, \textsl{(#3)}}}
 
-\newcommand{\OZDOCREFTOP}[2]{%
+\newcommand{\mozartOZDOCREFTOP}[2]{%
   \def\mozart@temp{#2}%
   \ifx\mozart@temp\@empty
     \@latex@error{unknown cross ref: to=#1}\@ehc
@@ -1122,27 +1122,27 @@
 
 %% DTD doc support
 
-\newcommand{\DTDTAG}{\texttt}
-\newcommand{\DTDATTRIB}{\texttt}
-\newcommand{\DTDPI}{\texttt}
+\newcommand{\mozartDTDTAG}{\texttt}
+\newcommand{\mozartDTDATTRIB}{\texttt}
+\newcommand{\mozartDTDPI}{\texttt}
 
 %%
 
-\newcommand{\PAGEREF}{\protect\pageref}
-\newcommand{\REF}{\protect\ref}
+\newcommand{\mozartPAGEREF}{\protect\pageref}
+\newcommand{\mozartREF}{\protect\ref}
 
 %% indexing
 
-\newcommand{\INDEX}{\index}
+\newcommand{\mozartINDEX}{\index}
 \AtEndDocument{\mozart@printindex}
 \newcommand{\mozart@printindex}{}
-\newcommand{\DOINDEX}{%
+\newcommand{\mozartDOINDEX}{%
   \usepackage{makeidx}\makeindex
   \def\mozart@printindex{\clearpage\let\@mkboth\markboth\printindex}}
 
 %% opi support
 
-\newcommand{\OPINAMEBUFFER}[1]{%
+\newcommand{\mozartOPINAMEBUFFER}[1]{%
   {\mozart@code@font\mozart@specials@code@inline#1}}
 
 %% funky array support
