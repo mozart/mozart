@@ -39,7 +39,7 @@ protected:
   BYTE *data;
 public:
   BYTE *allocate(int bytes) {
-    return (BYTE *) alignedMalloc(bytes,sizeof(double));
+    return (BYTE *) doubleMalloc(bytes);
   }
   virtual int getSize() = 0;	// number of bytes in data array
   BYTE *cloneData() {

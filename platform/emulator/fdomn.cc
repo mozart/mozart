@@ -316,7 +316,6 @@ int FDIntervals::midElem(int i) const
 }
 
 static
-inline
 LTuple * mkListEl(LTuple * &h, LTuple * a, OZ_Term el)
 {
   if (h == NULL) {
