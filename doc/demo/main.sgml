@@ -24,7 +24,8 @@
 <!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
 
 <!-- Extension to the DTD -->
-<!ENTITY % p.mix.local "|Em">
+<!ENTITY % input.local.2 SYSTEM "demo.extra">
+<!ENTITY % p.mix.local "|Em|note.gui|menu">
 <!ELEMENT Em - - (#PCDATA)>
 <!ENTITY % proglang.values.local "|sh">
 
@@ -53,6 +54,8 @@
 <!ENTITY chapter.board          SYSTEM "board.sgml">
 <!ENTITY chapter.flights        SYSTEM "flights.sgml">
 <!ENTITY chapter.corpus         SYSTEM "corpus.sgml">
+
+<!ENTITY appendix.enable        SYSTEM "enable.sgml">
 ]>
 
 
@@ -73,6 +76,8 @@
     <Meta name="html.split"       value="chapter.board">
     <Meta name="html.split"       value="chapter.flights">
     <Meta name="html.split"       value="chapter.corpus">
+
+    <Meta name="html.split"       value="appendix.enable">
 
     <Author.Extern to="author.db" key="Denys.Duchier">
     <Author.Extern to="author.db" key="Martin.Mueller">
@@ -104,6 +109,11 @@
       &chapter.board;
       &chapter.flights;
       &chapter.corpus;
+    </Part>
+
+    <Part id="part.appendix">
+       <Title/Appendices/
+       &appendix.enable;
     </Part>
 
 </BOOK>

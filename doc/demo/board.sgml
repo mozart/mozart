@@ -24,6 +24,13 @@
 <Chapter id="chapter.board">
     <Title/Drawing Board/
 
+  <P>
+    <List>
+      <Item><Ref.Extern to="applets/Board.oza"/[Start Applet]/
+      <Item><Ref to="appendix.enable"/[How to enable Applets]/
+    </List>
+  </P>
+
     <P>
       The drawing board allows multiple, distributed users to create
       and manipulate graphics. All users have the same, consistent

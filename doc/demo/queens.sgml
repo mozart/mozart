@@ -23,4 +23,12 @@
 
 <Chapter id="chapter.queens">
     <Title/Animated Queens/
+
+  <P>
+    <List>
+      <Item><Ref.Extern to="applets/AnimatedQueens.oza"/[Start Applet]/
+      <Item><Ref to="appendix.enable"/[How to enable Applets]/
+    </List>
+  </P>
+
 </Chapter>
