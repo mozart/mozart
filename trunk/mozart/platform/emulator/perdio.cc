@@ -2196,6 +2196,7 @@ void Chain::releaseInformElem(InformElem *ie){
 void Chain::init(Site *s){
   ChainElem *e=newChainElem();
   e->init(s);
+  inform = NULL;
   first=last=e;}
 
 Site* Chain::setCurrent(Site* s, Tertiary* t){
@@ -2233,7 +2234,6 @@ inline Bool tokenLostCheckManager(Tertiary *t){
 /* ******************************************************************* */
 
 Tertiary* getOtherTertFromObj(Tertiary* o, Tertiary* lockORcell){
-  Assert(!o->isLocal());
   Assert(o->getType()==Co_Object);
   Object *object = (Object *) o;
   if(object->getLock()==NULL && object->getLock()==lockORcell)
