@@ -72,6 +72,7 @@ private:
   Bool unifyMeta(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, ByteCode *);
 
 public:
+  NO_DEFAULT_CONSTRUCTORS(GenMetaVariable);
   GenMetaVariable(MetaTag * t, TaggedRef tr);
 
   MetaTag * getTag(void) { return tag; }

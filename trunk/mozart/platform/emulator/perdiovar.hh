@@ -92,6 +92,7 @@ public:
   void setpvType(PV_TYPES t) { pvtype = t; }
   PV_TYPES getpvType()       { return pvtype; }
 
+  NO_DEFAULT_CONSTRUCTORS2(PerdioVar);
   PerdioVar() : GenCVariable(PerdioVariable) {
     u.proxies=0;
     setpvType(PV_MANAGER);
