@@ -3259,7 +3259,7 @@ loop:
         if (strcmp("",printname)==0) {
           aux = Name::newName(am.currentBoard);
         } else {
-          aux = NamedName::newNamedName(printname);
+          aux = NamedName::newNamedName(ozstrdup(printname));
         }
         aux->import(gname);
         *ret = makeTaggedLiteral(aux);
@@ -3332,19 +3332,20 @@ loop:
   case DIF_RECORD:
     {
       TaggedRef arity = unmarshallTerm(bs);
+      TaggedRef sortedarity = sortlist(arity,length(arity));
       int argno       = length(arity);
       PD((UNMARSHALL,"record no:%d",argno));
       TaggedRef label = unmarshallTerm(bs);
-      SRecord *rec    = SRecord::newSRecord(label,mkArity(arity));
+      SRecord *rec    = SRecord::newSRecord(label,mkArity(sortedarity));
       *ret = makeTaggedSRecord(rec);
       gotRef(bs,*ret);
 
-      for(int i=0; i<argno-1; i++) {
-        unmarshallTerm(bs,rec->getRef(i));
+      while(isLTuple(arity)) {
+        TaggedRef val = unmarshallTerm(bs);
+        rec->setFeature(head(arity),val);
+        arity = tail(arity);
       }
-      // tail recursion optimization
-      ret = rec->getRef(argno-1);
-      goto loop;
+      return;
     }
 
   case DIF_REF:
