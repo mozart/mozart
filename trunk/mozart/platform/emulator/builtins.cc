@@ -6813,7 +6813,10 @@ Builtin *BIinit()
   BI_probe=makeTaggedConst(builtinTab.find("probe"));
   BI_Delay=makeTaggedConst(builtinTab.find("Delay"));
   BI_startTmp=makeTaggedConst(builtinTab.find("startTmp"));
-  
+
+  BI_load=makeTaggedConst(builtinTab.find("load"));
+  BI_fail=makeTaggedConst(builtinTab.find("fail"));
+
   // BIinitLazy();
 
   dummyRecord = makeTaggedNULL();
