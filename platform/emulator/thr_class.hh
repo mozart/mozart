@@ -467,7 +467,7 @@ public:
     ozstat.propagatorsInvoked.incf();
     extern char * ctHeap, * ctHeapTop;
     ctHeap = ctHeapTop;
-    return item.propagator->run();
+    return item.propagator->propagate();
   }
   OZ_Propagator * getPropagator(void) {
     Assert(isPropagator());

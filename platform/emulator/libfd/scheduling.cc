@@ -28,12 +28,12 @@ OZ_C_proc_begin(sched_disjoint_card, 4)
   OZ_EXPECT(pe, 2, expectIntVarMinMax);
   OZ_EXPECT(pe, 3, expectInt);
 
-  return pe.spawn(new SchedCardPropagator(OZ_args[0], OZ_args[1], 
-					  OZ_args[2], OZ_args[3]));
+  return pe.impose(new SchedCardPropagator(OZ_args[0], OZ_args[1], 
+					   OZ_args[2], OZ_args[3]));
 }
 OZ_C_proc_end
 
-OZ_Return SchedCardPropagator::run(void) 
+OZ_Return SchedCardPropagator::propagate(void) 
 {
   OZ_DEBUGPRINT("in: " << *this);
 
@@ -99,8 +99,8 @@ OZ_C_proc_begin(sched_cpIterate, 2)
   OZ_EXPECT(pe, 1, expectVectorInt);
   SAMELENGTH_VECTORS(0, 1);
 
-  return pe.spawn(new CPIteratePropagator(OZ_args[0], OZ_args[1]),  
-		  OZ_getLowPrio());
+  return pe.impose(new CPIteratePropagator(OZ_args[0], OZ_args[1]),  
+		   OZ_getLowPrio());
 }
 OZ_C_proc_end
 
@@ -115,7 +115,7 @@ struct Set {
 };
 
 
-OZ_Return CPIteratePropagator::run(void)
+OZ_Return CPIteratePropagator::propagate(void)
 {
   int &ts  = reg_sz;
   int * dur = reg_offset;
@@ -776,12 +776,12 @@ OZ_C_proc_begin(sched_disjunctive, 2)
   OZ_EXPECT(pe, 1, expectVectorInt);
   SAMELENGTH_VECTORS(0, 1);
 
-  return pe.spawn(new DisjunctivePropagator(OZ_args[0], OZ_args[1]),  
-		  OZ_getLowPrio());
+  return pe.impose(new DisjunctivePropagator(OZ_args[0], OZ_args[1]),  
+		   OZ_getLowPrio());
 }
 OZ_C_proc_end
 
-OZ_Return DisjunctivePropagator::run(void)
+OZ_Return DisjunctivePropagator::propagate(void)
 {
   int &ts  = reg_sz;
   int * dur = reg_offset;
@@ -885,7 +885,9 @@ OZ_C_proc_begin(sched_cpIterateCap, 4)
   OZ_EXPECT(pe, 3, expectInt);
   SAMELENGTH_VECTORS(0, 1);
   
-  return pe.spawn(new CPIteratePropagatorCap(OZ_args[0], OZ_args[1], OZ_args[2], OZ_args[3]),  OZ_getLowPrio());
+  return pe.impose(new CPIteratePropagatorCap(OZ_args[0], OZ_args[1], 
+					      OZ_args[2], OZ_args[3]),  
+		   OZ_getLowPrio());
 }
 OZ_C_proc_end
 
@@ -895,7 +897,7 @@ struct Set2 {
 };
 
 
-OZ_Return CPIteratePropagatorCap::run(void)
+OZ_Return CPIteratePropagatorCap::propagate(void)
 {
 
   //////////
@@ -1652,11 +1654,13 @@ OZ_C_proc_begin(sched_cpIterateCapUp, 4)
   OZ_EXPECT(pe, 3, expectInt);
   SAMELENGTH_VECTORS(0, 1);
   
-  return pe.spawn(new CPIteratePropagatorCapUp(OZ_args[0], OZ_args[1], OZ_args[2], OZ_args[3]),  OZ_getLowPrio());
+  return pe.impose(new CPIteratePropagatorCapUp(OZ_args[0], OZ_args[1], 
+						OZ_args[2], OZ_args[3]),  
+		   OZ_getLowPrio());
 }
 OZ_C_proc_end
 
-OZ_Return CPIteratePropagatorCapUp::run(void)
+OZ_Return CPIteratePropagatorCapUp::propagate(void)
 {
   int &ts      = reg_sz;
   int * dur    = reg_offset;

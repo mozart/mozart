@@ -179,7 +179,8 @@ OZ_C_proc_begin(sched_taskIntervalsProof, 5)
   OZ_EXPECT(pe, 3, expectStream);
   OZ_EXPECT(pe, 4, expectInt);
 
-  return pe.spawn(new TaskIntervalsProof(OZ_args[0], OZ_args[1], OZ_args[2], OZ_args[3], OZ_intToC(OZ_args[4])));
+  return pe.impose(new TaskIntervalsProof(OZ_args[0], OZ_args[1], OZ_args[2], 
+					  OZ_args[3], OZ_intToC(OZ_args[4])));
 }
 OZ_C_proc_end
 
@@ -233,7 +234,7 @@ OZ_CFun TaskIntervalsProof::spawner = sched_taskIntervalsProof;
 // RUN METHOD
 //////////
 
-OZ_Return TaskIntervalsProof::run(void) 
+OZ_Return TaskIntervalsProof::propagate(void) 
 {
   OZ_DEBUGPRINT("in " << *this);
 
@@ -479,10 +480,11 @@ OZ_Return TaskIntervalsProof::run(void)
 						      + task];
 		      OZ_Term right_side_task = reg_fds[resource_starts[i] 
 						       + left];
-		      addSpawn(fd_prop_bounds, left_side_task);
-		      addSpawn(fd_prop_bounds, right_side_task);
-		      spawn(new LessEqOffPropagator(right_side_task, left_side_task,
-						    -all_durs[i][left]));
+		      addImpose(fd_prop_bounds, left_side_task);
+		      addImpose(fd_prop_bounds, right_side_task);
+		      impose(new LessEqOffPropagator(right_side_task, 
+						     left_side_task,
+						     -all_durs[i][left]));
 
 		    }
 		  }
@@ -514,11 +516,12 @@ OZ_Return TaskIntervalsProof::run(void)
 							+ task];
 			OZ_Term right_side_task = reg_fds[resource_starts[i] 
 							 + right];
-			addSpawn(fd_prop_bounds, left_side_task);
-			addSpawn(fd_prop_bounds, right_side_task);
+			addImpose(fd_prop_bounds, left_side_task);
+			addImpose(fd_prop_bounds, right_side_task);
 			
-			spawn(new LessEqOffPropagator(left_side_task, right_side_task,
-						      -all_durs[i][task]));
+			impose(new LessEqOffPropagator(left_side_task, 
+						       right_side_task,
+						       -all_durs[i][task]));
 
 		      }
 		    }

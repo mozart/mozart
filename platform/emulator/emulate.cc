@@ -971,8 +971,8 @@ LBLinstallThread:
 	OZ_Propagator *prop = CTT->getPropagator();
 	CTT = e->mkRunnableThread(PROPAGATOR_PRIORITY, CBB);
 	e->restartThread();
-	HF_APPLY(OZ_atom(builtinTab.getName((void *)(prop->getSpawner()))),
-		 prop->getArguments());
+	HF_APPLY(OZ_atom(builtinTab.getName((void *)(prop->getHeaderFunc()))),
+		 prop->getParameters());
       }
 
     default:

@@ -32,21 +32,21 @@ OZ_C_proc_begin(fdp_sum, 3)
     OZ_EXPECT(pe, 0, expectVectorIntVarSingl);
     OZ_EXPECT(pe, 2, expectIntVarSingl);
 
-    return pe.spawn(new SumNeqPropagator(OZ_args[0], OZ_args[2]));
+    return pe.impose(new SumNeqPropagator(OZ_args[0], OZ_args[2]));
   } else {
     OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
     OZ_EXPECT(pe, 2, expectIntVarMinMax);
 
     if (!strcmp(SUM_OP_EQ, op)) {
-      return pe.spawn(new SumEqPropagator(OZ_args[0], OZ_args[2]));
+      return pe.impose(new SumEqPropagator(OZ_args[0], OZ_args[2]));
     } else if (!strcmp(SUM_OP_LEQ, op)) {
-      return pe.spawn(new SumLeqPropagator(OZ_args[0], OZ_args[2]));
+      return pe.impose(new SumLeqPropagator(OZ_args[0], OZ_args[2]));
     } else if (!strcmp(SUM_OP_LT, op)) {
-      return pe.spawn(new SumLtPropagator(OZ_args[0], OZ_args[2]));
+      return pe.impose(new SumLtPropagator(OZ_args[0], OZ_args[2]));
     } else if (!strcmp(SUM_OP_GEQ, op)) {
-      return pe.spawn(new SumGeqPropagator(OZ_args[0], OZ_args[2]));
+      return pe.impose(new SumGeqPropagator(OZ_args[0], OZ_args[2]));
     } else if (!strcmp(SUM_OP_GT, op)) {
-      return pe.spawn(new SumGtPropagator(OZ_args[0], OZ_args[2]));
+      return pe.impose(new SumGtPropagator(OZ_args[0], OZ_args[2]));
     } 
   }
 
@@ -73,21 +73,21 @@ OZ_C_proc_begin(fdp_sumC, 4)
     OZ_EXPECT(pe, 1, expectVectorIntVarSingl);
     OZ_EXPECT(pe, 3, expectIntVarSingl);
 
-    return pe.spawn(new SumCNeqPropagator(OZ_args[0], OZ_args[1], OZ_args[3]));
+    return pe.impose(new SumCNeqPropagator(OZ_args[0], OZ_args[1], OZ_args[3]));
   } else {
     OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
     OZ_EXPECT(pe, 3, expectIntVarMinMax);
 
     if (!strcmp(SUM_OP_EQ, op)) {
-      return pe.spawn(new SumCEqPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
+      return pe.impose(new SumCEqPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
     } else if (!strcmp(SUM_OP_LEQ, op)) {
-      return pe.spawn(new SumCLeqPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
+      return pe.impose(new SumCLeqPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
     } else if (!strcmp(SUM_OP_LT, op)) {
-      return pe.spawn(new SumCLtPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
+      return pe.impose(new SumCLtPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
     } else if (!strcmp(SUM_OP_GEQ, op)) {
-      return pe.spawn(new SumCGeqPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
+      return pe.impose(new SumCGeqPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
     } else if (!strcmp(SUM_OP_GT, op)) {
-      return pe.spawn(new SumCGtPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
+      return pe.impose(new SumCGtPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
     } 
   }
 
@@ -114,23 +114,23 @@ OZ_C_proc_begin(fdp_sumCN, 4)
     OZ_EXPECT(pe, 1, expectVectorVectorIntVarSingl);
     OZ_EXPECT(pe, 3, expectIntVarSingl);
 
-    return pe.spawn(new SumCNNeqPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
+    return pe.impose(new SumCNNeqPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
   } else {
     OZ_EXPECT(pe, 1, expectVectorVectorIntVarMinMax);
     OZ_EXPECT(pe, 3, expectIntVarMinMax);
 
     if (!strcmp(SUM_OP_EQ, op)) {
-      return pe.spawn(new SumCN_EqPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
+      return pe.impose(new SumCN_EqPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
     } else if (!strcmp(SUM_OP_NEQ, op)) {
-      return pe.spawn(new SumCNNeqPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
+      return pe.impose(new SumCNNeqPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
     } else if (!strcmp(SUM_OP_LEQ, op)) {
-      return pe.spawn(new SumCNLeqPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
+      return pe.impose(new SumCNLeqPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
     } else if (!strcmp(SUM_OP_LT, op)) {
-      return pe.spawn(new SumCNLtPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
+      return pe.impose(new SumCNLtPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
     } else if (!strcmp(SUM_OP_GEQ, op)) {
-      return pe.spawn(new SumCNGeqPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
+      return pe.impose(new SumCNGeqPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
     } else if (!strcmp(SUM_OP_GT, op)) {
-      return pe.spawn(new SumCNGtPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
+      return pe.impose(new SumCNGtPropagator(OZ_args[0],OZ_args[1],OZ_args[3]));
     } 
   }
   
@@ -140,7 +140,7 @@ OZ_C_proc_end
 
 //-----------------------------------------------------------------------------
 
-OZ_Return LinNotEqPropagator::run(void)
+OZ_Return LinNotEqPropagator::propagate(void)
 {
   OZ_DEBUGPRINT("in " << *this);
 
@@ -204,7 +204,7 @@ OZ_Return LinNotEqPropagator::run(void)
 
 //-----------------------------------------------------------------------------
 
-OZ_Return LinLessEqPropagator::run(void)
+OZ_Return LinLessEqPropagator::propagate(void)
 {
   OZ_DEBUGPRINT("in " << *this);
 
@@ -257,7 +257,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_Return NonLinEqPropagatorP::run(void)
+OZ_Return NonLinEqPropagatorP::propagate(void)
 {
   OZ_DEBUGPRINT("in " << *this);
   
@@ -316,7 +316,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_Return NonLinLessEqPropagatorP::run(void)
+OZ_Return NonLinLessEqPropagatorP::propagate(void)
 {
   OZ_DEBUGPRINT("in: " << *this);
 

@@ -26,11 +26,11 @@ OZ_C_proc_begin(fdp_conj, 3)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new ConjunctionPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new ConjunctionPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return ConjunctionPropagator::run(void)
+OZ_Return ConjunctionPropagator::propagate(void)
 {
   OZ_DEBUGPRINT("in: " << *this);
 
@@ -99,11 +99,11 @@ OZ_C_proc_begin(fdp_disj, 3)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new DisjunctionPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new DisjunctionPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return DisjunctionPropagator::run(void)
+OZ_Return DisjunctionPropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y), z(reg_z);
   PropagatorController_V_V_V P(x, y, z);
@@ -162,11 +162,11 @@ OZ_C_proc_begin(fdp_exor, 3)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new XDisjunctionPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new XDisjunctionPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return XDisjunctionPropagator::run(void)
+OZ_Return XDisjunctionPropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y), z(reg_z);
   PropagatorController_V_V_V P(x, y, z);
@@ -225,11 +225,11 @@ OZ_C_proc_begin(fdp_impl, 3)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new ImplicationPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new ImplicationPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return ImplicationPropagator::run(void)
+OZ_Return ImplicationPropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y), z(reg_z);
   PropagatorController_V_V_V P(x, y, z);
@@ -288,12 +288,12 @@ OZ_C_proc_begin(fdp_equi, 3)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new EquivalencePropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new EquivalencePropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
 
-OZ_Return EquivalencePropagator::run(void)
+OZ_Return EquivalencePropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y), z(reg_z);
   PropagatorController_V_V_V P(x, y, z);
@@ -350,11 +350,11 @@ OZ_C_proc_begin(fdp_nega, 2)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new NegationPropagator(OZ_args[0], OZ_args[1]));
+  return pe.impose(new NegationPropagator(OZ_args[0], OZ_args[1]));
 }
 OZ_C_proc_end
 
-OZ_Return NegationPropagator::run(void)
+OZ_Return NegationPropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y);
   PropagatorController_V_V P(x, y);
