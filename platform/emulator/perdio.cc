@@ -744,7 +744,7 @@ PendLinkManager *pendLinkManager;
 #define DEFAULT_BORROW_TABLE_SIZE  100
 #endif
 #define NET_HASH_TABLE_DEFAULT_SIZE 100
-#define GNAME_HASH_TABLE_DEFAULT_SIZE 100
+#define GNAME_HASH_TABLE_DEFAULT_SIZE 500
 
 static double TABLE_LOW_LIMIT=0.20;
 static double TABLE_EXPAND_FACTOR=2.00;
@@ -841,7 +841,6 @@ public:
   FatInt id;
   TaggedRef url;
 
-  Bool hasURL() { return url!=0; }
   TaggedRef getURL() { return url; }
   void markURL(TaggedRef u) {
     if (u && !literalEq(u,NameUnit))
