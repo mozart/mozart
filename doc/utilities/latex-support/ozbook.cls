@@ -439,11 +439,13 @@
 
 \AtBeginDocument{\ozfrontmatter}
 \newcommand{\ozfrontmatter}{%
+\ifx\lthtmlwrite\@undefined
 \front@one\front@two\front@three\front@four\front@five
 \pagestyle{oz}%
 \thispagestyle{oz}%
 \setcounter{page}{1}%
 \setcounter{footnote}{0}%
+\fi
 }
 
 \newcommand{\@ozversion}{%
@@ -722,3 +724,16 @@ referenced is defined on this page.}
 \reversemarginpar
 \let\old@marginpar\marginpar
 \renewcommand{\marginpar}[1]{\old@marginpar{\raggedright\small\it#1}}
+
+% \hsmash{X} centers X and gives it no width
+% this is useful for very long subscripts, etc...
+
+\newcommand{\hsmash}{\relax
+  \ifmmode\expandafter\mathpalette\expandafter\mathHSMASH
+  \else\expandafter\makeHSMASH\fi}
+\newcommand{\mathHSMASH}[2]{%
+  \hbox to0pt{\hss$\m@th#1{#2}$\hss}}
+\newcommand{\makeHSMASH}[1]{%
+  \hbox to0pt{\hss\color@begingroup#1\color@endgroup\hss}}
+
+\newcommand{\HTMLNOLINEBREAK}{}
