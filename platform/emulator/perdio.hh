@@ -329,7 +329,12 @@ extern int tempTimeCtr;
 
 void SendTo(Site *toS,MsgBuffer *bs,MessageType mt,Site *sS,int sI);
 
-#define NOT_IMPLEMENTED   {warning("not implemented - perdio");Assert(0);}
+#define NOT_IMPLEMENTED                                                                 \
+  {                                                                                     \
+    warning("in file %s at line %d: not implemented - perdio",__FILE__,__LINE__);       \
+    Assert(0);                                                                          \
+  }
+
 
 OZ_Return raiseGeneric(char *msg, OZ_Term arg);
 
