@@ -961,11 +961,10 @@ compiled using a default set of switches."
       (if system
 	  (comint-send-string
 	   proc
-	   (concat "\\pushSwitches\n"
+	   (concat "\\localSwitches\n"
 		   "\\switch +threadedqueries -verbose "
 		   "-expression -runwithdebugger\n"
-		   string
-		   "\n\\popSwitches"))
+		   string))
 	(comint-send-string proc string))
       (comint-send-string proc "\n")
       (comint-send-string proc eof))))
@@ -2563,10 +2562,9 @@ If it is, then remove it."
 
 (defun oz-directive-on-region (start end switches)
   "Applies a directive to the region."
-  (oz-send-string (concat "\\pushSwitches\n"
+  (oz-send-string (concat "\\localSwitches\n"
 			  "\\switch " switches "\n"
-			  (oz-get-region start end) "\n"
-			  "\\popSwitches")))
+			  (oz-get-region start end))))
 
 (defun oz-feed-region-browse (start end)
   "Feed the current region to the Oz Compiler.
