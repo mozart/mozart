@@ -4,6 +4,7 @@
  * 
  *  Contributors:
  *    Christian Schulte (schulte@dfki.de)
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
