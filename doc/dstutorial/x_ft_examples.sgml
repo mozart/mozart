@@ -275,11 +275,12 @@ end
 <P>Then we define a functor that creates
 an instance of <<Counter>> with <<NewSafeStat>>.
 Note that the object is not created yet.
-It will be created when the functor is applied.
+It will be created later, when the functor is applied.
 
 <<<
 declare
 F=functor
+  import Fault
   export statObj:StatObj
   define
      {Fault.defaultEnable nil _}
@@ -287,12 +288,22 @@ F=functor
   end
 >>>
 
-<P>It may seem overkill to use a functor just to create
-a single object.
+<P>Do not forget the <<import Fault>> clause!
+If it's left out, the system will try to use
+the local <<Fault>> on the remote site.
+This raises an exception since <<Fault>> is sited
+(technically, it is a <em>resource</em>).
+The <<import Fault>> clause ensures that
+installing the functor uses the <<Fault>>
+of the installation site.
+
+<P>It may seem overkill to use a functor
+just to create a single object.
 But the idea of functors goes much beyond this.
-Functors have an optional <<import>> clause that specifies
-which <em>resources</em> to use on the remote site.
-This makes functors a basic building block for mobile computations.
+With <<import>>, functors can specify which
+resources to use on the remote site.
+This makes functors a basic building block for mobile computations
+(and mobile agents).
 
 <P>Now let's create a remote site and make an instance
 of <<Counter>> called <<StatObj>>.
@@ -300,8 +311,8 @@ The class <<Remote.manager>> gives several ways
 to create a remote site; this example uses the option <<fork:sh>>,
 which just creates another process on the same machine.
 The process is accessible through the module manager <<MM>>,
-which
-allows to install functors ("<<apply>>") on the remote site.
+which allows to install functors
+on the remote site (with the method "<<apply>>").
 
 <<<
 declare
