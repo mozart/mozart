@@ -220,7 +220,7 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
 	      cons(OZ_pairA("file",file),
 		   cons(OZ_pairAI("line",iline < 0? -iline: iline),
 			cons(OZ_pairAI("PC",(int)PC),
-			     cons(OZ_pairA("kind",AtomDebugCall),
+			     cons(OZ_pairA("kind",OZ_atom("call")),
 				  cons(OZ_pairA("origin",OZ_atom("dbgGetDef")),
 				       pairlist)))))));
   if (frameId != -1)
