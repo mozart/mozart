@@ -115,6 +115,7 @@ AC_DEFUN(OZ_PROG_INSTALL,[
         if $INSTALL -c -m 644 conftest.$$ /tmp >/dev/null 2>&1; then
           rm -f /tmp/conftest.$$ 2>/dev/null
           oz_cv_unset_INSTALL=no
+          oz_cv_given_INSTALL="$INSTALL"
         else
           oz_cv_unset_INSTALL=yes
         fi
@@ -122,6 +123,9 @@ AC_DEFUN(OZ_PROG_INSTALL,[
     test "$oz_cv_unset_INSTALL" = yes && unset INSTALL
   fi
   AC_PROG_INSTALL
+  if test "$INSTALL" = "$oz_cv_given_INSTALL"; then
+    ac_given_INSTALL="$oz_cv_given_INSTALL"
+  fi
   OZ_PATH_PROG(INSTALL_DIR,  mkinstalldirs)])
 
 AC_DEFUN(OZ_BUILD_DATE,[
