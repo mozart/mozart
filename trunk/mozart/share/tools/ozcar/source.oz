@@ -3,11 +3,25 @@
 
 %declare
 local
+
+   %% emacs Oz mode only writes tabs at the beginning of
+   %% each line, so this algorithm is correct...
+   fun {FixTabs L}
+      case L == nil then nil
+      else
+	 case L.1 == 9 then
+	    32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | {FixTabs L.2}
+	 else
+	    L.1 | {FixTabs L.2}
+	 end
+      end
+   end
+   
    class SourceWindow from Tk.text
       feat
 	 filename
       attr
-	 CurrentLine : undef
+	 CurrentLine : line(appl:undef stack:undef)
       
       meth init(parent:P file:F
 		width: Width <=SourceWindowTextSize.1
@@ -33,24 +47,39 @@ local
 	    skip
 	 else
 	    {ForAll [tk(conf state:normal)
-		     tk(insert 'end' Line#[10] q(L))
+		     tk(insert 'end' {PrintF L 4} # {FixTabs Line} # [10] q(L))
 		     tk(conf state:disabled)] self}
 	    {self DoLoad(F L+1)}
 	 end
       end
+
+      meth Update(What Where)
+	 CurrentLine <- {Record.adjoinAt @CurrentLine What Where}
+      end
       
-      meth highlight(line:L color:C)
-	 case @CurrentLine \= undef then
-	    {self tk(tag conf q(@CurrentLine)
-		     foreground:black
-		     background:white)}
+      meth highlight(line:L color:C what:What<=appl)
+	 case @CurrentLine.What \= undef then
+	    Other         = case What == appl then stack else appl end
+	    NewColors     = case @CurrentLine.Other == @CurrentLine.What then
+			       SourceTextInvForeground #
+			       ScrollbarColors.Other
+			    else
+			       SourceTextForeground #
+			       SourceTextBackground
+			    end
+	 in
+	    {self tk(tag conf q(@CurrentLine.What)
+		     foreground:NewColors.1
+		     background:NewColors.2)}
 	 else skip end
 	 case L \= undef then
-	    {ForAll [tk(tag conf q(L) foreground:white background:C)
+	    {ForAll [tk(tag conf q(L)
+			foreground: SourceTextInvForeground
+			background: C)
 		     tk(see L#'.0')] self}
-	    CurrentLine <- L
+	    SourceWindow,Update(What L)
 	 else
-	    CurrentLine <- undef
+	    SourceWindow,Update(What undef)
 	 end
       end
    end
@@ -61,9 +90,9 @@ in
       feat
 	 NoteBook
       attr
-	 WindowList : nil
-	 Current    : undef
-	 WithDrawn  : true
+	 WindowList    : nil
+	 CurrentWindow : window(appl:undef stack:undef)
+	 WithDrawn     : true
       
       meth init
 	 Tk.toplevel,tkInit(title:SourceWindowTitle withdraw:true)
@@ -84,19 +113,37 @@ in
              else skip end
           end}
       end
+
+      meth Update(What Which)
+	 CurrentWindow <- {Record.adjoinAt @CurrentWindow What Which}
+      end
       
-      meth scrollbar(file:F line:L color:C)
+      meth scrollbar(file:F line:L color:C what:What<=appl)
+	 %% color is redundant, should be thrown away!!!
 	 case F == undef orelse F == '' orelse F == noDebugInfo then
-	    case @Current \= undef then
-	       {@Current highlight(line:undef color:undef)}
-	    else skip end
+	    case What == both then
+	       {ForAll [appl stack]
+		proc{$ W}
+		   case @CurrentWindow.W \= undef then
+		      {@CurrentWindow.W highlight(line:undef
+						  color:undef what:W)}
+		      SourceManager,Update(W undef)
+		   else skip end
+		end}
+	    else
+	       case @CurrentWindow.What \= undef then
+		  {@CurrentWindow.What highlight(line:undef
+						 color:undef what:What)}
+		  SourceManager,Update(What undef)
+	       else skip end
+	    end
 	 else
 	    E = {self lookup(file:F entry:$)}
 	 in
 	    case {IsDet E} then
-	       {self ToTop(entry:E line:L color:C)}
+	       {self ToTop(entry:E line:L color:C what:What)}
 	    else
-	       {self NewFile(file:F line:L color:C)}
+	       {self NewFile(file:F line:L color:C what:What)}
 	    end
 	    case @WithDrawn then
 	       {Tk.send wm(deiconify self)}
@@ -105,7 +152,7 @@ in
 	 end
       end
       
-      meth NewFile(file:F line:L color:C)
+      meth NewFile(file:F line:L color:C what:What)
 	 N = {New TkTools.note tkInit(parent:self.NoteBook
 				      text: {Str.rchr {Atom.toString F} &/}.2)}
 	 W = {New SourceWindow init(parent:N file:F)}
@@ -113,17 +160,16 @@ in
 	 WindowList <- W#N | @WindowList
 	 {Tk.send pack(W expand:yes fill:both)}
 	 {self.NoteBook add(N)}
-	 {self ToTop(entry:W#N line:L color:C)}
+	 {self ToTop(entry:W#N line:L color:C what:What)}
       end
       
-      meth ToTop(entry:E line:L color:C)
-	 case @Current == E.1 then
-	    skip
-	 else
-	    Current <- E.1
-	    {self.NoteBook toTop(E.2)}
-	 end
-	 {E.1 highlight(line:L color:C)}
+      meth ToTop(entry:E line:L color:C what:What)
+	 case @CurrentWindow.What \= undef then
+	    {@CurrentWindow.What highlight(line:undef color:undef what:What)}
+	 else skip end
+	 SourceManager,Update(What E.1)
+	 {self.NoteBook toTop(E.2)}
+	 {E.1 highlight(line:L color:C what:What)}
       end
       
       meth close

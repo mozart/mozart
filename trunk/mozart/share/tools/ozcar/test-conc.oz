@@ -3,7 +3,16 @@
 
 declare
 
-\insert test-conc2
+%\insert test-conc2
+
+fun {AllGreen T}
+   Green Red
+in
+   {Scan T unit Green Red}
+   {Debug.breakpoint}
+   {WaitOr Green Red}
+   {IsDet Green}
+end
 
 proc {Scan T G1 G2 R}
    {WaitOr T R}
@@ -12,8 +21,13 @@ proc {Scan T G1 G2 R}
       of green then G1=G2
       [] red then R=unit
       [] A#B then G in
-	 thread {Scan A G1 G R} end
-	 thread {Scan B G G2 R} end
+	 thread
+	    {Scan A G1 G R}
+	    {Show gurgl}
+	 end
+	 thread
+	    {Scan B G G2 R}
+	 end
       end
    end
 end
