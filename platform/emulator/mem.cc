@@ -213,7 +213,9 @@ void *ozMalloc(int chunk_size)
 
   if (firstCall == 1) {
     firstCall = 0;
-    free(malloc(MB*2));
+    void *p = malloc(MB*3);
+    malloc(sizeof(long)); /* ensures that following free does not hand back mem to OS */
+    free(p);
   }
 
   chunk_size += sizeof(SbrkMemory);
