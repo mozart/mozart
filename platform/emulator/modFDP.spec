@@ -61,21 +61,6 @@ $module_init_fun_name = "fdp_init";
                              out => [],
                              bi  => fdp_sumCNR},
 
- 'sum_CD'               => { in  => ['+value','+atom','*int','*int'],
-                             out => [],
-                             ifdef => FDCD,
-                             bi  => fdp_sumCD},
-
- 'sumC_CD'      => { in  => ['+value','+value','+atom','*int','*int'],
-                     out => [],
-                     ifdef => FDCD,
-                     bi  => fdp_sumCCD},
-
- 'sumCN_CD'     => { in  => ['+value','+value','+atom','*int','*int'],
-                     out => [],
-                     ifdef => FDCD,
-                     bi  => fdp_sumCNCD},
-
  'plus'         => { in  => ['int','int','int'],
                              out => [],
                              bi  => fdp_plus},

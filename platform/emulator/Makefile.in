@@ -132,7 +132,7 @@ OFSRCS= var_of.cc ofbi.cc
 
 FDSRCS=\
         fdomn.cc fdcore.cc \
-        fdcd.cc var_fd.cc var_bool.cc
+        var_fd.cc var_bool.cc
 
 CPISRCS=\
         cpi.cc cpi_fd.cc cpi_prop.cc \
