@@ -23,6 +23,9 @@
 #include <sys/stat.h>
 
 //
+// #define TRACE_MAILBOXES
+
+//
 // defined in vs_msgbuffer.cc;
 key_t vsTypeToKey(int type);
 
@@ -35,6 +38,11 @@ VSMailboxManagerOwned::VSMailboxManagerOwned(key_t shmkeyIn)
     error("Virtual Sites: failed to get the shared memory page");
   if ((int) (mem = shmat(shmid, (char *) 0, 0)) < 0)
     error("Virtual Sites:: failed to attach the shared-memory page");
+#ifdef TRACE_MAILBOXES
+  fprintf(stdout, "*** mailbox obtained 0x%X (pid %d)\n",
+          shmkey, getpid());
+  fflush(stdout);
+#endif
 
   //
   // We cannot mark it for destruction right here, since then it
@@ -57,6 +65,11 @@ VSMailboxManagerImported::VSMailboxManagerImported(key_t shmkeyIn)
     error("Virtual Sites: failed to get the shared memory page");
   if ((int) (mem = shmat(shmid, (char *) 0, 0)) < 0)
     error("Virtual Sites:: failed to attach the shared-memory page");
+#ifdef TRACE_MAILBOXES
+  fprintf(stdout, "*** mailbox attached 0x%X (pid %d)\n",
+          shmkey, getpid());
+  fflush(stdout);
+#endif
 
   //
   mbox = (VSMailboxImported *) mem;
@@ -96,6 +109,11 @@ void VSMailboxManagerOwned::unmap()
   if (shmdt((char *) mem) < 0) {
     error("Virtual Sites: can't detach the shared memory.");
   }
+#ifdef TRACE_MAILBOXES
+  fprintf(stdout, "*** unmap owned mailbox 0x%X (pid %d)\n",
+          shmkey, getpid());
+  fflush(stdout);
+#endif
   DebugCode(mbox = (VSMailboxOwned *) 0);
   DebugCode(mem = (void *) 0);
   DebugCode(memSize = -1);
@@ -107,6 +125,11 @@ void VSMailboxManagerImported::unmap()
   if (shmdt((char *) mem) < 0) {
     error("Virtual Sites: can't detach the shared memory.");
   }
+#ifdef TRACE_MAILBOXES
+  fprintf(stdout, "*** unmap imported mailbox 0x%X (pid %d)\n",
+          shmkey, getpid());
+  fflush(stdout);
+#endif
   DebugCode(mbox = (VSMailboxImported *) 0);
   DebugCode(mem = (void *) 0);
   DebugCode(memSize = -1);
@@ -131,6 +154,11 @@ void VSMailboxManagerOwned::markDestroy()
     if (errno != EIDRM)
       error("Virtual Sites: cannot mark the shared memory for destroying");
   }
+#ifdef TRACE_MAILBOXES
+  fprintf(stdout, "*** mailbox removed 0x%X (pid %d)\n",
+          shmkey, getpid());
+  fflush(stdout);
+#endif
 }
 
 //
@@ -153,8 +181,15 @@ void markDestroy(key_t shmkey)
   if ((int) (shmid = shmget(shmkey, /* size */ 0, S_IRWXU)) < 0)
     return;                     // already destroyed;
   (void) shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0);
+#ifdef TRACE_MAILBOXES
+  fprintf(stdout, "*** mailbox killed 0x%X (pid %d)\n",
+          shmkey, getpid());
+  fflush(stdout);
+#endif
 }
 
+//
+#ifdef VS_NEEDS_MAILBOXREGISTER
 //
 // By now that's the same code as for the 'VSChunkPoolRegister' one;
 unsigned int VSMailboxRegister::hash(key_t key)
@@ -227,8 +262,7 @@ VSMailboxManagerImported *VSMailboxRegister::getFirst()
 }
 
 //
-VSMailboxManagerImported*
-VSMailboxRegister::getNext(VSMailboxManagerImported *prev)
+VSMailboxManagerImported* VSMailboxRegister::getNext()
 {
   VSMailboxManagerImported *mbm;
   seqGHN = GenHashTable::getNext(seqGHN, seqIndex);
@@ -240,6 +274,6 @@ VSMailboxRegister::getNext(VSMailboxManagerImported *prev)
   }
   return (mbm);
 }
-
+#endif // VS_NEEDS_MAILBOXREGISTER
 
 #endif // VIRTUALSITES

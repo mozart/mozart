@@ -41,7 +41,7 @@ Bool across_chunks;
 // ----------------------------------------------------------------
 // heap memory
 
-// allocate 1000 kilo byte chuncks of memory
+// allocate 1000 kilo byte chunks of memory
 
 MemChunks *MemChunks::list = NULL;
 
@@ -137,39 +137,73 @@ void freeListChop(void * addr, size_t size) {
 // ----------------------------------------------------------------
 // mem from os with 3 alternatives MMAP, SBRK or MALLOC
 
-#if !defined(CCMALLOC) && defined(xxHAVE_MMAP)
+//
+// kost@: i have not tested that on anything else than 2.0.*
+// Linux-i486 (2.0.7-based) and Solaris-Sparc. Linux works, Solaris
+// will work. And, don't risk otherwise...
+#if !(defined(LINUX_I486))
+#undef HAVE_MMAP
+#endif
+
+//
+#if !defined(CCMALLOC) && defined(HAVE_MMAP)
+
+#if ( !defined(MAP_ANONYMOUS) && defined(MAP_ANON) )
+#define MAP_ANONYMOUS   MAP_ANON
+#endif
 
 #include <sys/mman.h>
 #include <fcntl.h>
 
-void ozFree(char *addr, size_t sz)
+void ozFree(char *addr, size_t size)
 {
-  munmap(addr,sz);
+  munmap(addr, size);
 }
 
-void *ozMalloc(size_t sz)
+void *ozMalloc(size_t size)
 {
-  static int fd = -1;
-  static int pagesize = -1;
-  if (fd==-1) {
-    fd = open("/dev/zero",O_CREAT);
-    if (fd<0) { perror("mmap: open /dev/zero"); }
-    pagesize = sysconf(_SC_PAGESIZE);
+  // grhhh...
+  static size_t pagesize = sysconf(_SC_PAGESIZE);
+#if !defined(xxMAP_ANONYMOUS)
+  static int devZeroFD = -1;
+
+  //
+  if (devZeroFD == -1) {
+    devZeroFD = open("/dev/zero", O_RDWR);
+    if (devZeroFD < 0) { perror("mmap: open /dev/zero"); }
   }
+#endif
 
-  char *start = (char*) (((((unsigned int32)-1)>>lostPtrBits)/pagesize)*pagesize);
-  sz = (sz/pagesize)*pagesize;
-  start -=sz;
+  //
+  size = (size / pagesize) * pagesize;
+  char *nextAddr = (char *)
+    (((((unsigned int32) -1) >> lostPtrBits) / pagesize) * pagesize);
+  nextAddr -= size;
+  // kost@: TODO: here, at least for solaris-sparc version, further
+  // intelligence is needed: keep track of attached pages...
 
- loop:
-  void *ret = mmap(start,sz,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_FIXED,fd,0);
-  if (ret<0) { perror("mmap"); }
-  if (ret!=start) {
-    start -=sz;
-    goto loop;
-  }
+  //
+#if defined(MAP_ANONYMOUS)
+#if defined(LINUX_I486)
+  void *ret = mmap((char *) 0x1, size, (PROT_READ|PROT_WRITE),
+                   (MAP_PRIVATE|MAP_ANONYMOUS),
+                   -1, (off_t) 0);
+#else
+  void *ret = mmap(nextAddr, size, (PROT_READ|PROT_WRITE),
+                   (MAP_PRIVATE|MAP_ANONYMOUS|MAP_FIXED),
+                   -1, (off_t) 0);
+#endif
+#else
+  void *ret = mmap(nextAddr, size, (PROT_READ|PROT_WRITE),
+                   (MAP_PRIVATE|MAP_FIXED),
+                   devZeroFD, (off_t) 0);
+#endif
 
-  return ret;
+  //
+  if (ret < 0) { perror("mmap"); }
+
+  //
+  return (ret);
 }
 
 #elif !defined(CCMALLOC) && defined(HAVE_SBRK)

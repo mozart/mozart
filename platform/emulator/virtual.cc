@@ -40,25 +40,6 @@
 #ifdef VIRTUALSITES
 
 ///
-/// (semi?) constants;
-///
-
-//
-// The size of a mailbox in messages;
-const int vs_mailbox_size = VS_MAILBOX_SIZE / sizeof(VSMailboxMsg);
-
-//
-// The number of chunks in a message buffers pool
-// (currently that's just a constant, but that could be changed);
-const int vs_chunk_size = VS_CHUNK_SIZE;
-const int vs_chunks_num = VS_CHUNKS_NUM;
-//
-// Currently 4MB altogether;
-
-//
-const int vsRegisterHTSize = VS_REGISTER_HT_SIZE;
-
-///
 /// Static managers
 /// (in the *file* scope, and most of them - with indefinite extent);
 ///
@@ -74,21 +55,16 @@ static VSMsgBufferImported *myVSMsgBufferImported;
 static VSFreeMessagePool freeMessagePool;
 
 //
-// Imported mailboxes (used for sending messages to neighbor VS"s):
-static VSMailboxRegister mailboxRegister(vsRegisterHTSize);
+// Virtual sites we know about;
+static VSRegister vsRegister;
 
 //
 // The guy busy with probing...
-static VSProbingObject vsProbingObject(vsRegisterHTSize);
+static VSProbingObject vsProbingObject(VS_REGISTER_HT_SIZE, &vsRegister);
 
 //
 // Created mailboxes (their keys);
 static VSMailboxKeysRegister slavesRegister;
-
-//
-// Imported pools of chunks for message buffers (incoming messages are
-// read from there):
-static VSChunkPoolRegister chunkPoolRegister(vsRegisterHTSize);
 
 //
 // Free bodies of "virtual info" objects.
@@ -101,16 +77,17 @@ static FreeListDataManager<VirtualInfo> freeVirtualInfoPool(malloc);
 static VSSiteQueue vsSiteQueue;
 
 //
-// There are also two managers that are allocated explicitly:
+// There are also three managers that are allocated explicitly:
 static VSMailboxManagerOwned *myVSMailboxManager;
 static VSMsgChunkPoolManagerOwned *myVSChunksPoolManager;
+static VSMsgChunkPoolManagerImported *importedVSChunksPoolManager;
 
 //
-// By now we need four tasks (MAXTASKS):
-// (a) input between virtual sites,
+// By now we need four tasks (MAXTASKS?):
+// (a) input from neighbour virtual sites,
 // (b) pending (because of locks at the receiver site) sends,
 // (c) probing of virtual sites.
-// (d) GCing of chunk pool segments;
+// (d) GCing of (own) chunk pools;
 
 //
 //
@@ -130,11 +107,20 @@ static Bool checkMessageQueue(unsigned long clock, VSSiteQueue *sq);
 static Bool processMessageQueue(unsigned long clock, VSSiteQueue *sq);
 
 //
-// ... and for dealing with probes;
+// ... dealing with probes;
 // static TaskCheckProc checkProbes;
 static Bool checkProbes(unsigned long clock, VSProbingObject *po);
 // static TaskProcessProc processProbes;
 static Bool processProbes(unsigned long clock, VSProbingObject *po);
+
+//
+// ... GCing of chunk pools of outgoing messages;
+// static TaskCheckProc checkGCMsgChunks;
+static Bool checkGCMsgChunks(unsigned long clock,
+                             VSMsgChunkPoolManagerOwned *cpm);
+// static TaskProcessProc processGCMsgChunks;
+static Bool processGCMsgChunks(unsigned long clock,
+                               VSMsgChunkPoolManagerOwned *cpm);
 
 ///
 /// (static) interface methods for virtual sites;
@@ -143,7 +129,9 @@ static Bool processProbes(unsigned long clock, VSProbingObject *po);
 //
 VirtualSite* createVirtualSite(Site* s)
 {
-  return (new VirtualSite(s, &freeMessagePool, &vsSiteQueue));
+  VirtualSite *vs = new VirtualSite(s, &freeMessagePool, &vsSiteQueue);
+  vsRegister.registerVS(vs);
+  return (vs);
 }
 
 //
@@ -248,37 +236,15 @@ GiveUpReturn giveUp_VirtualSite(VirtualSite* vs)
 }
 
 //
-// While iterating over the 'vsSiteQueue' we need to stop somewhere:
-#define VSQueueMark     ((VirtualSite *) -1)
-
-//
-// 'discoveryPerm' means that a site is known (from a third party) to
-// be dead.
+// 'discoveryPerm' means that a site is known (e.g. by polling or from
+// a third party) to be dead.
 void discoveryPerm_VirtualSite(VirtualSite *vs)
 {
-  //
-  // If there are unsent messages, then the site is in the vsSiteQueue
-  // and must be removed out there;
-  if (vs->isNotEmpty()) {
-    vsSiteQueue.enqueue(VSQueueMark);
-
-    //
-    while (1) {
-      VirtualSite *vsq = vsSiteQueue.dequeue();
-      if (vs == VSQueueMark)
-        break;                  // ready;
-      if (vsq != vs)
-        vsSiteQueue.enqueue(vsq);
-    }
-  }
-
-  //
+  vsRegister.retractVS(vs);
+  myVSChunksPoolManager->retractRegisteredSite(vs);
   vs->drop();
   delete vs;
 }
-
-//
-#undef  VSQueueMark
 
 //
 void dumpVirtualInfo(VirtualInfo* vi)
@@ -326,7 +292,7 @@ static VSMsgHeaderOwned vsUnusedShmIdMsgHeader(VS_M_UNUSED_SHMID);
 //
 VSMsgBufferOwned* composeVSInitMsg()
 {
-  VSMsgBufferOwned *buf = getBasicVirtualMsgBuffer((Site *) -1);
+  VSMsgBufferOwned *buf = getBasicVirtualMsgBuffer((Site *) 0);
   vsInitMsgHeader.marshal(buf);
   mySite->marshalSite(buf);
   return (buf);
@@ -342,11 +308,14 @@ VSMsgBufferOwned* composeVSSiteIsAliveMsg(Site *s)
 }
 
 //
-VSMsgBufferOwned* composeVSSiteAliveMsg(Site *s)
+VSMsgBufferOwned* composeVSSiteAliveMsg(Site *s, VirtualSite *vs)
 {
   VSMsgBufferOwned *buf = getBasicVirtualMsgBuffer(s);
   vsSiteAliveMsgHeader.marshal(buf);
   mySite->marshalSite(buf);
+  // 'alive ack' message contains also a list of ipc keys - of
+  // shared memory segments of the chunk pool;
+  vs->marshalLocalResources(buf, myVSMailboxManager, myVSChunksPoolManager);
   return (buf);
 }
 
@@ -382,9 +351,12 @@ void decomposeVSSiteIsAliveMsg(VSMsgBuffer *mb, Site* &s)
 }
 
 //
-void decomposeVSSiteAliveMsg(VSMsgBuffer *mb, Site* &s)
+void decomposeVSSiteAliveMsg(VSMsgBuffer *mb, Site* &s, VirtualSite* &vs)
 {
   s = unmarshalSite(mb);
+  Assert(s->virtualComm());
+  vs = s->getVirtualSite();
+  vs->unmarshalResources(mb);
 }
 
 //
@@ -420,13 +392,21 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
     VSMsgType msgType;
 
     //
+    msgs--;
     if (mbox->dequeue(msgChunkPoolKey, chunkNumber)) {
       // got a message;
       //
-      VSMsgChunkPoolManagerImported *cpm =
-        chunkPoolRegister.import(msgChunkPoolKey);
-      myVSMsgBufferImported =
-        new (myVSMsgBufferImported) VSMsgBufferImported(cpm, chunkNumber);
+      myVSMsgBufferImported = new (myVSMsgBufferImported)
+        VSMsgBufferImported(importedVSChunksPoolManager,
+                            msgChunkPoolKey, chunkNumber);
+
+      //
+      if (myVSMsgBufferImported->isVoid()) {
+        myVSMsgBufferImported->dropVoid();
+        myVSMsgBufferImported->cleanup();
+        // next message (if any could be processed??)
+        continue;
+      }
 
       //
       msgType = getVSMsgType(myVSMsgBufferImported);
@@ -456,7 +436,7 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
             Assert(vs);
 
             //
-            VSMsgBufferOwned *bs = composeVSSiteAliveMsg(s);
+            VSMsgBufferOwned *bs = composeVSSiteAliveMsg(s, vs);
             if (sendTo_VirtualSite(vs, bs, /* messageType */ M_NONE,
                                    /* storeSite */ (Site *) 0,
                                    /* storeIndex */ 0) != ACCEPTED)
@@ -467,14 +447,20 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
         case VS_M_SITE_ALIVE:
           {
             Site *s;
-            decomposeVSSiteAliveMsg(myVSMsgBufferImported, s);
+            VirtualSite *vs;
+            decomposeVSSiteAliveMsg(myVSMsgBufferImported, s, vs);
             s->siteAlive();
             break;
           }
 
         case VS_M_UNUSED_SHMID:
-          error("not implemented yet!");
-          break;
+          {
+            Site *s;
+            key_t shmid;
+            decomposeVSUnusedShmIdMsg(myVSMsgBufferImported, s, shmid);
+            importedVSChunksPoolManager->removeSegmentManager(shmid);
+            break;
+          }
 
         default:
           error("readVSMessages: unknown 'vs' message type!");
@@ -489,19 +475,11 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
       // is locked - then let's try to read later;
       return (FALSE);
     }
-
-    //
-    msgs--;
   }
 
   //
   return (TRUE);
 }
-
-//
-// (see comments few lines below;)
-#define VSQueueMark     ((VirtualSite *) -1)
-#define VSMsgQueueMark  ((VSMessage *) -1)
 
 //
 //
@@ -517,42 +495,44 @@ static Bool processMessageQueue(unsigned long clock, void *sqi)
 {
   // unsafe by now - some magic number should be added;
   VSSiteQueue *sq = (VSSiteQueue *) sqi;
-  Assert(sq->isNotEmpty());
   Bool ready = TRUE;
+  VirtualSite *vs = sq->getFirst();
 
   //
-  // Observe that a virtual site/message can be put again into queues,
-  // so a simple loop "while 'is not empty'" would be endless. A
-  // special mark is put in the queues, and elements are picked up to
-  // that mark;
-  sq->enqueue(VSQueueMark);
-
-  //
-  while (1) {
-    VirtualSite *vs = sq->dequeue();
-    if (vs == VSQueueMark)
-      break;                    // ready;
+  Assert(vs);
+  while (vs) {
+    Bool siteReady = TRUE;
+    VSMessage *vsm = vs->getFirst();
 
     //
-    Assert(vs->isNotEmpty());
-    vs->enqueue(VSMsgQueueMark);
-    while (1) {
-      VSMessage *vsm = vs->dequeue();
-      if (vsm == VSMsgQueueMark)
-        break;                  // ready;
+    Assert(vsm);
+    while (vsm) {
+      Bool messageReady = TRUE;
 
       //
-      ready = ready && vs->tryToSendToAgain(vsm, &freeMsgBufferPool);
+      messageReady = vs->tryToSendToAgain(vsm, &freeMsgBufferPool);
+      if (messageReady)
+        vsm->retractVSMsgQueueNode();
+
+      //
+      siteReady = siteReady && messageReady;
+      //
+      vsm = vs->getNext();
     }
+
+    //
+    if (siteReady)
+      vs->retractVSSiteQueueNode();
+
+    //
+    ready = ready && siteReady;
+    //
+    vs = sq->getNext();
   }
 
   //
   return (ready);
 }
-
-//
-#undef  VSQueueMark
-#undef  VSMsgQueueMark
 
 //
 static Bool checkProbes(unsigned long clock, void *poi)
@@ -565,7 +545,23 @@ static Bool checkProbes(unsigned long clock, void *poi)
 static Bool processProbes(unsigned long clock, void *poi)
 {
   VSProbingObject *po = (VSProbingObject *) poi;
-  return (po->processProbes(clock));
+  return (po->processProbes(clock, importedVSChunksPoolManager));
+}
+
+//
+static Bool checkGCMsgChunks(unsigned long clock,
+                             VSMsgChunkPoolManagerOwned *cpm)
+{
+  return ((clock > cpm->getLastGC() + VS_SEGS_MAXPHASE_MS) ?
+          TRUE : FALSE);
+}
+
+//
+static Bool processGCMsgChunks(unsigned long clock,
+                               VSMsgChunkPoolManagerOwned *cpm)
+{
+  cpm->scavenge();
+  return (TRUE);
 }
 
 //
@@ -601,7 +597,7 @@ OZ_BI_define(BIVSnewMailbox,0,1)
     key_t myMBoxKey;
 
     //
-    mbm = new VSMailboxManagerCreated(vs_mailbox_size);
+    mbm = new VSMailboxManagerCreated(VS_MAILBOX_SIZE);
     myMBoxKey = mbm->getSHMKey();
     mbm->unmap();
     delete mbm;
@@ -609,7 +605,10 @@ OZ_BI_define(BIVSnewMailbox,0,1)
 
     myVSMailboxManager = new VSMailboxManagerOwned(myMBoxKey);
     myVSChunksPoolManager =
-      new VSMsgChunkPoolManagerOwned(vs_chunk_size, vs_chunks_num);
+      new VSMsgChunkPoolManagerOwned(VS_CHUNK_SIZE, VS_CHUNKS_NUM,
+                                     VS_REGISTER_HT_SIZE);
+    importedVSChunksPoolManager =
+      new VSMsgChunkPoolManagerImported(VS_REGISTER_HT_SIZE);
     myVSMsgBufferImported =
       (VSMsgBufferImported *) malloc(sizeof(VSMsgBufferImported));
 
@@ -625,12 +624,14 @@ OZ_BI_define(BIVSnewMailbox,0,1)
                     checkMessageQueue, processMessageQueue);
     am.registerTask((void *) &vsProbingObject,
                     checkProbes, processProbes);
+    am.registerTask((void *) myVSChunksPoolManager,
+                    checkGCMsgChunks, processGCMsgChunks);
   }
 
   //
   // The 'VSMailboxManager' always creates a proper object (or crashes
   // the system if it can't);
-  mbm = new VSMailboxManagerCreated(vs_mailbox_size);
+  mbm = new VSMailboxManagerCreated(VS_MAILBOX_SIZE);
   slavesRegister.add(mbm->getSHMKey());
 
   //
@@ -638,8 +639,8 @@ OZ_BI_define(BIVSnewMailbox,0,1)
   buf = composeVSInitMsg();
 
   //
-  if (!mbm->getMailbox()->enqueue(buf->getSHMKey(),
-                                  buf->getFirstChunk()))
+  if (!mbm->getMailbox()->enqueue(buf->getFirstChunkSHMKey(),
+                                  buf->getFirstChunkNum()))
     error("Virtual sites: unable to put the M_INIT_VS message");
   buf->passChunks();
   buf->cleanup();
@@ -673,6 +674,14 @@ OZ_BI_define(BIVSinitServer,1,0)
   Site *ms;
 
   //
+#ifdef DEBUG_CHECK
+//   fprintf(stdout, "*** Sleeping for 10 secs - hook it up (pid %d)!\n",
+//        getpid());
+//   fflush(stdout);
+//   sleep(10);                 // IMHO more than enough;
+#endif
+
+  //
   Assert(sizeof(key_t) == sizeof(int));
   if (sscanf(mbKeyChars, "%i", &mbKey) != 1)
     return oz_raise(E_ERROR,E_SYSTEM,"VSinitServer: invalid arg",0);
@@ -691,7 +700,10 @@ OZ_BI_define(BIVSinitServer,1,0)
   // We know here the id of the mailbox, so let's fetch it:
   myVSMailboxManager = new VSMailboxManagerOwned(mbKey);
   myVSChunksPoolManager =
-    new VSMsgChunkPoolManagerOwned(vs_chunk_size, vs_chunks_num);
+    new VSMsgChunkPoolManagerOwned(VS_CHUNK_SIZE, VS_CHUNKS_NUM,
+                                   VS_REGISTER_HT_SIZE);
+  importedVSChunksPoolManager =
+    new VSMsgChunkPoolManagerImported(VS_REGISTER_HT_SIZE);
 
   //
   // Now, let's process the initialization message (M_INIT_VS).
@@ -711,15 +723,23 @@ OZ_BI_define(BIVSinitServer,1,0)
   //
   myVSMsgBufferImported =
     (VSMsgBufferImported *) malloc(sizeof(VSMsgBufferImported));
-  VSMsgChunkPoolManagerImported *cpm =
-    chunkPoolRegister.import(msgChunkPoolKey);
-  myVSMsgBufferImported =
-    new (myVSMsgBufferImported) VSMsgBufferImported(cpm, chunkNumber);
+  myVSMsgBufferImported = new (myVSMsgBufferImported)
+    VSMsgBufferImported(importedVSChunksPoolManager,
+                        msgChunkPoolKey, chunkNumber);
+
+  //
+  // Check if something went wrong just from scratch:
+  if (myVSMsgBufferImported->isVoid()) {
+    myVSMsgBufferImported->dropVoid();
+    myVSMsgBufferImported->cleanup();
+    // "exit hook" should clean up everthing...
+    return oz_raise(E_ERROR,E_SYSTEM,"noInitMessage",1,
+                    oz_atom(mbKeyChars));
+  }
 
   //
   // (we must read-in the type field);
   msgType = getVSMsgType(myVSMsgBufferImported);
-  fprintf(stdout, "%d\n", (int) msgType); fflush(stdout); // '!'
   Assert(msgType == VS_M_INIT_VS);
 
   //
@@ -760,6 +780,8 @@ OZ_BI_define(BIVSinitServer,1,0)
                   checkMessageQueue, processMessageQueue);
   am.registerTask((void *) &vsProbingObject,
                   checkProbes, processProbes);
+  am.registerTask((void *) myVSChunksPoolManager,
+                  checkGCMsgChunks, processGCMsgChunks);
 
   //
   return (PROCEED);
@@ -785,35 +807,18 @@ OZ_BI_define(BIVSremoveMailbox,1,0)
 } OZ_BI_end
 
 ///
-/// An exit hook - reclaim shared memory;
+/// An exit hook - kill slaves, reclaim shared memory, etc...
 ///
 void virtualSitesExit()
 {
   //
-  am.removeTask((void *) &vsSiteQueue, checkMessageQueue);
-
-  //
-  // Kill those virtual sites we know about that are the slaves
-  // (i.e. whose mailboxes have been created here):
-  VSMailboxManagerImported *mbm;
-  mbm = mailboxRegister.getFirst();
-  while (mbm) {
-    if (slavesRegister.isInThere(mbm->getSHMKey())) {
-      VSMailboxManagerImported *mbmDel = mbm;
-      int pid = mbm->getMailbox()->getPid();
-      if (pid)
-        (void) oskill(pid, SIGTERM);
-      mbm = mailboxRegister.getNext(mbm);
-      mailboxRegister.unregister(mbmDel);
-    } else {
-      mbm = mailboxRegister.getNext(mbm);
-    }
-  }
+  // fprintf(stdout, "cleaning up VSs...\n"); fflush(stdout);
+  am.removeTask(&vsSiteQueue, checkMessageQueue);
+  am.removeTask(&vsProbingObject, checkProbes);
 
   //
   if (myVSMailboxManager) {
-    am.removeTask((void *) myVSMailboxManager->getMailbox(),
-                  checkVSMessages);
+    am.removeTask(myVSMailboxManager->getMailbox(), checkVSMessages);
     myVSMailboxManager->destroy();
     delete myVSMailboxManager;
     myVSMailboxManager = (VSMailboxManagerOwned *) 0;
@@ -821,8 +826,15 @@ void virtualSitesExit()
 
   //
   if (myVSChunksPoolManager) {
+    am.removeTask(myVSChunksPoolManager, checkGCMsgChunks);
     delete myVSChunksPoolManager;
     myVSChunksPoolManager = (VSMsgChunkPoolManagerOwned *) 0;
+  }
+
+  //
+  if (importedVSChunksPoolManager) {
+    delete importedVSChunksPoolManager;
+    importedVSChunksPoolManager = (VSMsgChunkPoolManagerImported *) 0;
   }
 
   //
@@ -830,6 +842,26 @@ void virtualSitesExit()
     free(myVSMsgBufferImported);
     myVSMsgBufferImported = (VSMsgBufferImported *) 0;
   }
+
+  //
+  // Kill those virtual sites registered locally that are slaves
+  // (i.e. whose mailboxes have been created here):
+  VirtualSite *vs = vsRegister.getFirst();
+  while (vs) {
+    if (vs->isSlave()) {
+      int pid = vs->getVSPid();
+      if (pid)
+        (void) oskill(pid, SIGTERM);
+    }
+    vs = vsRegister.getNext();
+  }
+
+  //
+  // Try to kill all the mailboxes created locally (mailboxes of
+  // slaves);
+  key_t key;
+  while ((key = slavesRegister.retrieve()))
+    markDestroy(key);
 }
 
 #else  // VIRTUALSITES

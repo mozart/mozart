@@ -75,7 +75,9 @@ public:
 //
 // kost@ : i just have no idea right now how large this number should
 // be ...
-#define MAX_MSGS_ATONCE         1024
+// Experience #1: size=1024: bouncing a record 100x100 causes the whole
+// construction to run out of memory...
+#define MAX_MSGS_ATONCE         128
 
 //
 class VSMailbox : protected LockObj {
@@ -367,8 +369,11 @@ public:
 void markDestroy(key_t shmkey);
 
 //
+// kost@ : is not used now;
+#ifdef VS_NEEDS_MAILBOXREGISTER
+//
 // The register object for imported mailboxes - similar to the
-// 'VSChunkPoolRegister' (see vs_msgbuffer.hh);
+// 'VSChunkPoolRegister' (see vs_msgbuffer.hh)
 class VSMailboxRegister : public GenHashTable {
 private:
   int seqIndex;                 // does not need to be initialized;
@@ -402,7 +407,7 @@ public:
   }
 
   //
-  void unregister(VSMailboxManagerImported *mbm) {
+  void forget(VSMailboxManagerImported *mbm) {
     key_t shmkey = mbm->getSHMKey();
     int hvalue = hash(shmkey);
     GenHashNode *ghn;
@@ -415,18 +420,23 @@ public:
 
   //
   VSMailboxManagerImported *getFirst();
-  VSMailboxManagerImported *getNext(VSMailboxManagerImported *prev);
+  VSMailboxManagerImported *getNext();
 };
+#endif // VS_NEEDS_MAILBOXREGISTER
 
 //
-// The register object for created mailboxes (their keys). Since it
-// does not need to be efficient, that's just a list...
+// The register object for created mailboxes (their keys).  The
+// register just keeps mailbox keys in a list, and in the end
+// ('::virtualSitesExit()') yields all of them back (so, that's just a
+// list...). '::virtualSitesExit()' kill those of them that are still
+// existing (because e.g. the corresponding slave VS has crashed);
 class VSMailboxKeysRegisterNode {
   friend class VSMailboxKeysRegister;
 private:
   key_t mailboxKey;
   VSMailboxKeysRegisterNode *next;
 };
+//
 class VSMailboxKeysRegister {
 private:
   VSMailboxKeysRegisterNode *first;
@@ -441,14 +451,18 @@ public:
     n->next = first;
     first = n;
   }
-  Bool isInThere(key_t mailboxKey) {
-    VSMailboxKeysRegisterNode *n = first;
-    while (n) {
-      if (n->mailboxKey == mailboxKey)
-        return (TRUE);
-      n = n->next;
+
+  //
+  key_t retrieve() {
+    if (first) {
+      VSMailboxKeysRegisterNode *n = first;
+      key_t key = n->mailboxKey;
+      first = first->next;
+      delete (n);
+      return (key);
+    } else {
+      return ((key_t) 0);
     }
-    return (FALSE);
   }
 };
 

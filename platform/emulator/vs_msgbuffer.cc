@@ -13,30 +13,31 @@
 
 #if defined(INTERFACE)
 #pragma implementation "vs_msgbuffer.hh"
+#pragma implementation "vs_aux.hh" // for the debug mode;
 #endif
 
-#include "vs_msgbuffer.hh"
+#include "am.hh"
 #include "os.hh"
+#include "vs_msgbuffer.hh"
+#include "vs_comm.hh"
 
 #ifdef VIRTUALSITES
 
 #include <sys/stat.h>
 
 //
-// ('SEM_UNDO' are not usable here, since the semaphore does not really
-// count resources;)
-
-static struct sembuf block[1] = {
-  { 0, -1, 0 }
-};
-static struct sembuf wakeup[1] = {
-  { 0, 1, 0 }
-};
+// #define TRACE_SEGMENTS
 
 //
 static unsigned int seq_num = 0;
 //
-// compose the 'semkey' :  type id, sequential number, and pid;
+// compose an "ipc key" :  type id, sequential number, and pid;
+//
+// NOTE: The naming scheme is not 100% safe: two logically distinct
+// keys can match because pid# are not sufficient to identify an entry
+// with larger extent that the process itself (the problem is similar
+// to the one in distributed Oz site naming scheme);
+//
 key_t vsTypeToKey(int type)
 {
   // type is allowed to be 4 bits;
@@ -56,25 +57,33 @@ key_t vsTypeToKey(int type)
 }
 
 //
-void VSMsgChunkPoolOwned::init(key_t shmkeyIn,
-                               int chunkSizeIn, int chunksNumIn)
+// For a given key says whether it has been produced by the (local)
+// process.
+//
+Bool isLocalKey(key_t key)
+{
+  return (((key & VS_PID_MASK) == osgetpid()) ? TRUE : FALSE);
+}
+
+//
+void VSMsgChunkPoolSegmentOwned::init(key_t shmkeyIn,
+                                      int chunkSizeIn, int chunksNumIn)
 {
   shmkey = shmkeyIn;
   chunkSize = chunkSizeIn;
   chunksNum = chunksNumIn;
-  wakeupMode = FALSE;
   Assert(sizeof(this) <= (unsigned int) chunkSizeIn);
   initReservedChunk();
-  semkey = vsTypeToKey(VS_WAKEUPSEM_KEY);
 }
 
 //
-VSMsgChunkPoolManagerOwned::VSMsgChunkPoolManagerOwned(int chunkSizeIn,
-                                                       int chunksNumIn)
+VSMsgChunkPoolSegmentManagerOwned::
+VSMsgChunkPoolSegmentManagerOwned(int chunkSizeIn, int chunksNumIn,
+                                  int regInitSize)
+  : fs(chunksNumIn), phaseNumber(0), importersRegister(regInitSize)
 {
   chunkSize = chunkSizeIn;
   chunksNum = chunksNumIn;
-  SemOptArg arg;
 
   //
   // Get&attach a shared memory page;
@@ -84,6 +93,12 @@ VSMsgChunkPoolManagerOwned::VSMsgChunkPoolManagerOwned(int chunkSizeIn,
     error("Virtual Sites: failed to allocate a shared memory page");
   if ((int) (mem = shmat(shmid, (char *) 0, 0)) < 0)
     error("Virtual Sites:: failed to attach a shared-memory page");
+  //
+#ifdef TRACE_SEGMENTS
+  fprintf(stdout, "*** segment created 0x%X (pid %d)\n",
+          shmkey, getpid());
+  fflush(stdout);
+#endif
 
   //
   // We cannot mark it for destruction right here, since then it
@@ -94,189 +109,355 @@ VSMsgChunkPoolManagerOwned::VSMsgChunkPoolManagerOwned(int chunkSizeIn,
   //
   // The first chunk is used for the "pool" object, and the rest -
   // for "VSMsgChunk" objects;
-  pool = (VSMsgChunkPoolOwned *) mem;
+  pool = (VSMsgChunkPoolSegmentOwned *) mem;
   pool->init(shmkey, chunkSizeIn, chunksNumIn);
   chunks = (VSMsgChunkOwned *) mem;
   // Chunks are initialized lazily - prior usage;
 
   //
-  // A semaphore used in the "wakeup" mode;
-  semkey = pool->getSemkey();
-  if ((semid = semget(semkey, 1, (IPC_CREAT | IPC_EXCL | S_IRWXU))) < 0)
-    error("Virtual Sites: failed to allocate a semphore");
-  arg.val = 0;
-  if (semctl(semid, 0, SETVAL, arg) < 0)
-    error("Virtual Sites: Failed to initialize the semaphore");
-
-  //
-  // A usage bitmap;
-  Assert(!(chunksNum%32));
-  mapSize = chunksNum/32;
-  map = (int32 *) malloc(mapSize*4); // in bytes;
-  for (int i = 0; i < mapSize; i++)
-    map[i] = (int32) 0xffffffff;     // everything is free originally;
-  map[0] &= ~0x1;               // ... but except the one for the pool;
+  for (int i = 1; i < chunksNum; i++)
+    fs.push(i);
 }
 
 //
-VSMsgChunkPoolManagerImported::VSMsgChunkPoolManagerImported(key_t shmkeyIn)
+void VSMsgChunkPoolSegmentManagerOwned::markDestroy()
+{
+  DebugCode(pool->checkConsistency());
+  //
+  if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) < 0) {
+    if (errno != EIDRM) {
+      error("Virtual Sites: cannot remove the shared memory");
+    }
+  }
+}
+
+//
+// Send out 'M_UNUSED_ID' messages.  This method and the destuctor
+// must be separated - otherwise we will not be able to delete all
+// segments (one is needed to send 'M_UNUSED_ID' messages);
+// Note also that *before* broadcasting the page must be deleted,
+// thus making importation of it impossible;
+void VSMsgChunkPoolSegmentManagerOwned::deleteAndBroadcast()
+{
+  //
+  DebugCode(pool->checkConsistency());
+#ifdef TRACE_SEGMENTS
+  fprintf(stdout, "*** segment destroyed 0x%X (pid %d)\n",
+          getSHMKey(), getpid());
+  fflush(stdout);
+#endif
+
+  //
+  markDestroy();
+
+  //
+  VirtualSite *vs = importersRegister.getFirst();
+  while (vs) {
+    Site *site = vs->getSite();
+    key_t key = getSHMKey();
+    VSMsgBufferOwned *mb = composeVSUnusedShmIdMsg(site, key);
+    if (sendTo_VirtualSite(vs, mb,  /* messageType */ M_NONE,
+                           /* storeSite */ (Site *) 0,
+                           /* storeIndex */ 0) != ACCEPTED) {
+      error("Unable to send 'M_UNUSED_ID' message to a virtual site!");
+    }
+    //
+    vs = importersRegister.getNext();
+  }
+}
+
+//
+VSMsgChunkPoolSegmentManagerOwned::~VSMsgChunkPoolSegmentManagerOwned()
+{
+  //
+  if (shmdt((char *) mem) < 0) {
+    error("Virtual Sites: can't detach the shared memory.");
+  }
+
+  //
+  DebugCode(chunkSize = chunksNum = 0);
+  DebugCode(shmid = 0);
+  DebugCode(shmkey = (key_t) 0);
+  DebugCode(mem = (void *) 0);
+  DebugCode(chunks = (VSMsgChunkOwned *) 0);
+  DebugCode(pool = (VSMsgChunkPoolSegmentOwned *) 0);
+}
+
+//
+int VSMsgChunkPoolSegmentManagerOwned::scavenge()
+{
+  int busy = 0;
+  DebugCode(pool->checkConsistency());
+
+  //
+  purgeMap();
+  for (int i = 1; i < chunksNum; i++) // the first one is busy anyway;
+    if (!(getChunkAddr(i)->isBusy()))
+      markFreeInMap(i);
+    else
+      busy++;
+
+  //
+  return (busy);
+}
+
+//
+VSMsgChunkPoolSegmentManagerImported::VSMsgChunkPoolSegmentManagerImported(key_t shmkeyIn)
 {
   shmkey = shmkeyIn;
   //
   // we don't know in advance how large it is - so just try to swallow
   // the page "as is";
-  if ((int) (shmid = shmget(shmkey, /* size */ 0, S_IRWXU)) < 0)
-    error("Virtual Sites: failed to get a shared memory page");
+  if ((int) (shmid = shmget(shmkey, /* size */ 0, S_IRWXU)) < 0) {
+    // A missing shared memory page means that its owner is dead;
+    // 'pool' must be set to '-1' - used by 'isVoid';
+    pool = (VSMsgChunkPoolSegmentImported *) -1;
+    chunks = (VSMsgChunkImported *) -1;
+    chunkSize = chunksNum = -1;
+    return;
+  }
   if ((int) (mem = shmat(shmid, (char *) 0, 0)) < 0)
     error("Virtual Sites:: failed to attach a shared-memory page");
+  //
+#ifdef TRACE_SEGMENTS
+  fprintf(stdout, "*** segment attached 0x%X (pid %d)\n",
+          shmkey, getpid());
+  fflush(stdout);
+#endif
 
   // locations;
-  pool = (VSMsgChunkPoolImported *) mem; // initialized by the owner;
+  pool = (VSMsgChunkPoolSegmentImported *) mem; // initialized by the owner;
   pool->init(shmkeyIn);          // actually empty;
-  chunks = ((VSMsgChunkImported *) mem);
+  chunks = (VSMsgChunkImported *) mem;
 
-  // Borrow data from the 'VSMsgChunkPool' object
+  // Borrow data from the 'VSMsgChunkPoolSegment' object
   // This information is necessary for debugging only (like checking
   // whether a chunk really belongs to the pool);
   chunkSize = pool->getChunkSize();
   chunksNum = pool->getChunksNum();
-
-  //
-  // A semaphore used in the "wakeup" mode;
-  semkey = pool->getSemkey();
-  if ((semid = semget(semkey, 1, S_IRWXU)) < 0)
-    error("Virtual Sites: failed to find the semphore");
 }
 
 //
-void VSMsgChunkPoolManagerOwned::markDestroy()
+VSMsgChunkPoolSegmentManagerImported::~VSMsgChunkPoolSegmentManagerImported()
 {
   DebugCode(pool->checkConsistency());
   //
-  if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) < 0) {
-    if (errno != EIDRM)
-      error("Virtual Sites: cannot remove the shared memory");
+#ifdef TRACE_SEGMENTS
+  fprintf(stdout, "*** segment detached 0x%X (pid %d)\n",
+          shmkey, getpid());
+  fflush(stdout);
+#endif
+
+  //
+  if (isNotVoid() && shmdt((char *) mem) < 0) {
+    error("Virtual Sites: can't detach the shared memory.");
   }
 
   //
-  SemOptArg arg;
-  arg.val = 0;                  // junk;
-  if (semctl(semid, 0, IPC_RMID, arg) < 0) {
-    if (errno != EIDRM)
-      error("Virtual Sites: cannot remove the semaphore");
+  DebugCode(chunkSize = chunksNum = 0);
+  DebugCode(shmid = 0);
+  DebugCode(shmkey = (key_t) 0);
+  DebugCode(mem = (void *) 0);
+  DebugCode(chunks = (VSMsgChunkImported *) 0);
+  DebugCode(pool = (VSMsgChunkPoolSegmentImported *) 0);
+}
+
+//
+unsigned int VSSegmentImportersRegister::hash(VirtualSite *vs)
+{
+  unsigned char *p = (unsigned char *) &vs;
+  unsigned int h = 0, g;
+
+  //
+  for(int i = 0; i < (int) sizeof(vs); i++,p++) {
+    h = (h << 4) + (*p);
+    if ((g = h & 0xf0000000)) {
+      h = h ^ (g >> 24);
+      h = h ^ g;
+    }
   }
+  return (h);
+}
+
+//
+VirtualSite* VSSegmentImportersRegister::find(VirtualSite *vs)
+{
+  unsigned int hvalue = hash(vs);
+  GenHashNode *aux = htFindFirst(hvalue);
+  while(aux) {
+    VirtualSite *auxVS;
+    GenCast(aux->getBaseKey(), GenHashBaseKey*, auxVS, VirtualSite*);
+
+    //
+    if (vs == auxVS) {
+      VirtualSite *fvs;
+      GenCast(aux->getEntry(), GenHashEntry*,
+              fvs, VirtualSite*);
+      return (fvs);
+    }
+
+    //
+    aux = htFindNext(aux, hvalue);
+  }
+
+  //
+  return ((VirtualSite *) 0);
+}
+
+//
+void VSSegmentImportersRegister::insert(VirtualSite *vs)
+{
+  GenHashBaseKey* ghn_bk;
+  GenHashEntry* ghn_e;
+  unsigned int hvalue = hash(vs);
+
+  //
+  GenCast(vs, VirtualSite*, ghn_bk, GenHashBaseKey*);
+  GenCast(vs, VirtualSite*, ghn_e, GenHashEntry*);
+  //
+  htAdd(hvalue, ghn_bk, ghn_e);
+}
+
+//
+void VSSegmentImportersRegister::retract(VirtualSite *vs)
+{
+  Assert(find(vs) == vs);
+  unsigned int hvalue = hash(vs);
+  GenHashNode *ghn = htFindFirst(hvalue);
+  while (ghn) {
+    VirtualSite *auxVS;
+    GenCast(ghn->getBaseKey(), GenHashBaseKey*, auxVS, VirtualSite*);
+
+    //
+    if (vs == auxVS) {
+      htSub(hvalue, ghn);
+      break;
+    }
+
+    //
+    ghn = htFindNext(ghn, hvalue);
+  }
+}
+
+//
+VirtualSite *VSSegmentImportersRegister::getFirst()
+{
+  VirtualSite *vs;
+  seqGHN = GenHashTable::getFirst(seqIndex);
+  if (seqGHN) {
+    GenCast(seqGHN->getEntry(), GenHashEntry*,
+            vs, VirtualSite*);
+  } else {
+    vs = (VirtualSite *) 0;
+  }
+  return (vs);
+}
+
+//
+VirtualSite* VSSegmentImportersRegister::getNext()
+{
+  VirtualSite *vs;
+  seqGHN = GenHashTable::getNext(seqGHN, seqIndex);
+  if (seqGHN) {
+    GenCast(seqGHN->getEntry(), GenHashEntry*,
+            vs, VirtualSite*);
+  } else {
+    vs = (VirtualSite *) 0;
+  }
+  return (vs);
+}
+
+//
+// Just one segment is created originally;
+VSMsgChunkPoolManagerOwned::VSMsgChunkPoolManagerOwned(int chunkSizeIn,
+                                                       int chunksNumIn,
+                                                       int sizeIn)
+  : chunkSize(chunkSizeIn), chunksNum(chunksNumIn),
+    currentSegMgrIndex(0), toBeUsedSegments(1), phaseNumber(0)
+{
+  lastGC = am.getEmulatorClock();
+  VSMsgChunkPoolSegmentManagerOwned *fsm =
+    new VSMsgChunkPoolSegmentManagerOwned(chunkSizeIn, chunksNumIn, sizeIn);
+  push(fsm);
 }
 
 //
 VSMsgChunkPoolManagerOwned::~VSMsgChunkPoolManagerOwned()
 {
-  DebugCode(pool->checkConsistency());
-  //
-  markDestroy();
-  //
-  if (shmdt((char *) mem) < 0) {
-    error("Virtual Sites: can't detach the shared memory.");
+  for (int i = 0; i < getSize(); i++) {
+    VSMsgChunkPoolSegmentManagerOwned *sm = get(i);
+    sm->deleteAndBroadcast();
   }
 
   //
-  delete map;
-  //
-  DebugCode(chunkSize = chunksNum = 0);
-  DebugCode(shmid = 0);
-  DebugCode(shmkey = (key_t) 0);
-  DebugCode(semid = 0);
-  DebugCode(semkey = (key_t) 0);
-  DebugCode(mem = (void *) 0);
-  DebugCode(chunks = (VSMsgChunkOwned *) 0);
-  DebugCode(pool = (VSMsgChunkPoolOwned *) 0);
-  DebugCode(mapSize = 0);
-  DebugCode(map = (int32 *) 0);
+  while (getSize()) {
+    VSMsgChunkPoolSegmentManagerOwned *sm = pop();
+    delete sm;
+  }
 }
 
 //
-VSMsgChunkPoolManagerImported::~VSMsgChunkPoolManagerImported()
+//
+void VSMsgChunkPoolManagerOwned::scavenge()
 {
-  DebugCode(pool->checkConsistency());
+  int chunks = 0;               // used chunks;
+  int totalSegments = getSize();
+  int usedSegments;
+  // An upper limit for the number of messages that can be sent out
+  // during scavenging;
+  int maxMessages = 0, maxSegmentsMessages;
+
   //
-  if (shmdt((char *) mem) < 0) {
-    error("Virtual Sites: can't detach the shared memory.");
+  // Reset the number *before* any "M_UNUSED_ID' could be ever
+  // composed;
+  currentSegMgrIndex = 0;
+
+  //
+  for (int i = 0; i < totalSegments; i++) {
+    VSMsgChunkPoolSegmentManagerOwned *fsm = get(i);
+    chunks = chunks + fsm->scavenge();
+    // For each segment, each registered (for it) site could get a
+    // M_UNUSED_ID message:
+    maxMessages = maxMessages + fsm->getNumOfRegisteredSites();
   }
 
   //
-  DebugCode(chunkSize = chunksNum = 0);
-  DebugCode(shmid = 0);
-  DebugCode(shmkey = (key_t) 0);
-  DebugCode(semid = 0);
-  DebugCode(semkey = (key_t) 0);
-  DebugCode(mem = (void *) 0);
-  DebugCode(chunks = (VSMsgChunkImported *) 0);
-  DebugCode(pool = (VSMsgChunkPoolImported *) 0);
-}
-
-//
-void VSMsgChunkPoolManagerOwned::scavengeMemory()
-{
-  DebugCode(pool->checkConsistency());
-  for (int i = 1; i < chunksNum; i++) // the first one is busy anyway;
-    if (!(getChunkAddr(i)->isBusy()))
-      markFreeInMap(i);
-}
-
-//
-int VSMsgChunkPoolManagerOwned::getMsgChunkOutline()
-{
-  DebugCode(pool->checkConsistency());
-  int chunkNum;
-  SemOptArg arg;
+  // (elapsed number of segments - if they'd fully packed;)
+  usedSegments = chunks/chunksNum + 1;
+  toBeUsedSegments = usedSegments * VS_MSGCHUNKS_USAGE;
 
   //
-  // First, just scavenge the memory:
-  scavengeMemory();
-  chunkNum = allocateFromMap();
-  //
-  if (chunkNum >= 0) return (chunkNum);
+  maxSegmentsMessages = maxMessages/chunksNum + 1;
+  // It should not happen that during GCing of segments (next
+  // paragraph) a segment is removed that is used for the GCing itself
+  // ('M_UNUSED_ID' messages). If there are more free segments than
+  // 'maxSegmentsMessages', it will not happen:
+  if (maxSegmentsMessages > toBeUsedSegments - usedSegments)
+    // i.e. needed segments > free segments among those that will
+    // survive GC - then set the new border;
+    toBeUsedSegments = maxSegmentsMessages + usedSegments;
 
   //
-  // If it has not helped, then wait using the semaphore;
-retry:
-  pool->startWakeupMode();
-
-  //
-  arg.val = 0;
-  if (semctl(semid, 0, SETVAL, arg) < 0)
-    error("Virtual Sites: unable to setup the semaphore");
-
-  //
-  scavengeMemory();
-  chunkNum = allocateFromMap();
-  //
-  if (chunkNum < 0) {           // still none - then block really;
-    while (semop(semid, &block[0], 1) < 0)
-      if (errno == EINTR) continue;
-      else error("Virtual Sites: unable to block on the semaphore");
-
+  // Don't try to reclaim segments that are to be used in the
+  // following allocation phase;
+  for (int i = totalSegments-1; i >= toBeUsedSegments; i--) {
     //
-    // Resumed by somebody else - let's check it again;
-    scavengeMemory();
-    chunkNum = allocateFromMap();
-    if (chunkNum < 0) goto retry; // otherwise fall through;
+    VSMsgChunkPoolSegmentManagerOwned *fsm = get(i);
+    if (fsm->getPhaseNumber() + VS_SEGS_MAXIDLE_PHASES < phaseNumber) {
+      VSMsgChunkPoolSegmentManagerOwned *sm = pop();
+
+      //
+      Assert(sm == fsm);
+      fsm->deleteAndBroadcast();
+      delete fsm;
+    } else {
+      break;
+    }
   }
 
   //
-  pool->stopWakeupMode();       // don't care about the semaphore now;
-  Assert(chunkNum != 0);        // zeroth is always busy;
-  return (chunkNum);
-}
-
-//
-void VSMsgChunkPoolManagerImported::wakeupOwner()
-{
-  DebugCode(pool->checkConsistency());
-  // Note that the "wakeup" mode can be dropped here already (though
-  // that's tested in the 'markFree' method), but we don't care!
-  while (semop(semid, &wakeup[0], 1) < 0)
-    if (errno == EINTR) continue;
-    else error("Virtual Sites: unable to wakeup a sender");
+  setLastGC(am.getEmulatorClock());
+  phaseNumber++;
 }
 
 //
@@ -298,7 +479,7 @@ unsigned int VSChunkPoolRegister::hash(key_t key)
 }
 
 //
-VSMsgChunkPoolManagerImported* VSChunkPoolRegister::find(key_t key)
+VSMsgChunkPoolSegmentManagerImported* VSChunkPoolRegister::find(key_t key)
 {
   int hvalue = hash(key);
   GenHashNode *aux = htFindFirst(hvalue);
@@ -308,20 +489,20 @@ VSMsgChunkPoolManagerImported* VSChunkPoolRegister::find(key_t key)
 
     //
     if (key == auxKey) {
-      VSMsgChunkPoolManagerImported *msgChunkPoolManager;
+      VSMsgChunkPoolSegmentManagerImported *msgChunkPoolManager;
       GenCast(aux->getEntry(), GenHashEntry*,
-              msgChunkPoolManager, VSMsgChunkPoolManagerImported*);
+              msgChunkPoolManager, VSMsgChunkPoolSegmentManagerImported*);
       return (msgChunkPoolManager);
     }
 
     //
     aux = htFindNext(aux, hvalue);
   }
-  return ((VSMsgChunkPoolManagerImported *) 0);
+  return ((VSMsgChunkPoolSegmentManagerImported *) 0);
 }
 
 //
-void VSChunkPoolRegister::add(key_t key, VSMsgChunkPoolManagerImported *pool)
+void VSChunkPoolRegister::add(key_t key, VSMsgChunkPoolSegmentManagerImported *pool)
 {
   GenHashBaseKey* ghn_bk;
   GenHashEntry* ghn_e;
@@ -329,7 +510,7 @@ void VSChunkPoolRegister::add(key_t key, VSMsgChunkPoolManagerImported *pool)
 
   //
   GenCast(key, key_t, ghn_bk, GenHashBaseKey*);
-  GenCast(pool, VSMsgChunkPoolManager*, ghn_e, GenHashEntry*);
+  GenCast(pool, VSMsgChunkPoolSegmentManager*, ghn_e, GenHashEntry*);
   htAdd(hvalue, ghn_bk, ghn_e);
 }
 
@@ -356,7 +537,7 @@ void VSChunkPoolRegister::remove(key_t key)
 //
 char* VSMsgBufferOwned::siteStringrep()
 {
-  if (site != (Site *) -1)
+  if (site)
     return (site->stringrep());
   else
     return ("(initializing a new virtual site - it is not yet known)");

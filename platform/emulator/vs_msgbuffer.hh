@@ -36,10 +36,10 @@
 
 #include "genhashtbl.hh"
 #include "msgbuffer.hh"
+#include "vs_aux.hh"
 
 #include <sys/types.h>
 #include <sys/ipc.h>
-#include <sys/sem.h>
 #include <sys/shm.h>
 #include <errno.h>
 
@@ -47,12 +47,13 @@
 // IDs of IPC keys used for different things (4 bits);
 #define VS_KEYTYPE_SIZE      4
 #define VS_MSGBUFFER_KEY     0x1
-#define VS_WAKEUPSEM_KEY     0x2
 //
 #define VS_SEQ_SIZE          12
 // altogether - 32 bits, so sizeof(key_t) >= sizeof(int32)
 #define VS_PID_SIZE          16
 #define VS_PID_MASK          0xffff
+//
+Bool isLocalKey(key_t key);
 
 //
 // Pieces of memory composing a 'VSMsgBuffer'.
@@ -62,8 +63,9 @@
 class VSMsgChunk {
 protected:
   int next;                     // next chunk if any (and -1 otherwise);
+  key_t shmKey;                 // ... of that (next) chunk;
   volatile Bool busy;           // set by owner and dropped by receiver;
-  BYTE buffer[0];               // actually more - fills up the chunk;
+  BYTE buffer[1];               // actually more - fills up the chunk;
 
   //
 public:
@@ -74,6 +76,7 @@ public:
   //
   BYTE *getDataAddr() { return (&buffer[0]); }
   int getNext() { return (next); }
+  key_t getSHMKey() { return (shmKey); }
 };
 
 //
@@ -92,6 +95,7 @@ public:
 
   //
   void setNext(int nIn) { next = nIn; }
+  void setSHMKey(key_t keyIn) { shmKey = keyIn; }
 };
 
 //
@@ -113,100 +117,71 @@ public:
 
 //
 // The pool object identifies the pool; it is located in the shared
-// memory page as a zeroth special "reserved" data chunk (since its
-// 'wakeupMode' and 'semkey' are to be shared);
+// memory page as a zeroth special "reserved" data chunk;
 //
-class VSMsgChunkPool : protected VSMsgChunkReserved {
+class VSMsgChunkPoolSegment : protected VSMsgChunkReserved {
 protected:
   int chunkSize, chunksNum;     // used by receiver sites;
-  volatile Bool wakeupMode;     // 'OK' if receiver(s) has to increment;
   key_t shmkey;                 // for consistency check;
-  key_t semkey;                 // the id of the 'wakeupMode' semaphor;
 
   //
 public:
   // These objects are unusable;
-  VSMsgChunkPool() { error("VSMsgChunkPool allocated?"); }
-  ~VSMsgChunkPool() { error("VSMsgChunkPool destroyed?"); }
+  VSMsgChunkPoolSegment() { error("VSMsgChunkPoolSegment allocated?"); }
+  ~VSMsgChunkPoolSegment() { error("VSMsgChunkPoolSegment destroyed?"); }
 
   //
 #ifdef DEBUG_CHECK
-  void checkConsistency() {
-    // check for overwriting...
-    Assert(wakeupMode == TRUE || wakeupMode == FALSE);
-  }
+  void checkConsistency() {}
 #endif
 
   //
-  key_t getSemkey()  { DebugCode(checkConsistency()); return (semkey); }
   int getChunkSize() { DebugCode(checkConsistency()); return (chunkSize); }
   int getChunksNum() { DebugCode(checkConsistency()); return (chunksNum); }
 };
 
 //
-class VSMsgChunkPoolOwned : public VSMsgChunkPool {
+class VSMsgChunkPoolSegmentOwned : public VSMsgChunkPoolSegment {
 public:
   //
-  VSMsgChunkPoolOwned() { error("VSMsgChunkPoolOwned allocated?"); }
-  ~VSMsgChunkPoolOwned() { error("VSMsgChunkPoolOwned destroyed?"); }
+  VSMsgChunkPoolSegmentOwned() {
+    error("VSMsgChunkPoolSegmentOwned allocated?");
+  }
+  ~VSMsgChunkPoolSegmentOwned() {
+    error("VSMsgChunkPoolSegmentOwned destroyed?");
+  }
 
   //
   void init(key_t shmkeyIn, int chunkSizeIn, int chunksNumIn);
-
-  //
-  void startWakeupMode() {
-    DebugCode(checkConsistency());
-    wakeupMode = TRUE;
-  }
-  void stopWakeupMode() {
-    DebugCode(checkConsistency());
-    wakeupMode = FALSE;
-  }
-  DebugCode(Bool isInWakeupMode() { return (wakeupMode); })
 };
 
 //
-class VSMsgChunkPoolImported : public VSMsgChunkPool {
+class VSMsgChunkPoolSegmentImported : public VSMsgChunkPoolSegment {
 public:
   //
-  VSMsgChunkPoolImported() { error("VSMsgChunkPoolImported allocated?"); }
-  ~VSMsgChunkPoolImported() { error("VSMsgChunkPoolImported destroyed?"); }
+  VSMsgChunkPoolSegmentImported() {
+    error("VSMsgChunkPoolSegmentImported allocated?");
+  }
+  ~VSMsgChunkPoolSegmentImported() {
+    error("VSMsgChunkPoolSegmentImported destroyed?");
+  }
 
   //
   void init(key_t shmkeyIn) {
     Assert(shmkey == shmkeyIn);
   }
-
-  //
-  Bool isInWakeupMode() { return (wakeupMode); }
 };
-
-//
-// E.g. Linux has the structure already defined (which is what i'd
-// expect), while Solaris has not;
-#if defined(SOLARIS)
-typedef union semun {
-  int val;
-  struct semid_ds *buf;
-  unsigned short *array;
-} SemOptArg;
-#else  // defined(LINUX) || defined(NETBSD)
-typedef union semun SemOptArg;
-#endif
 
 //
 // The 'Manager' class, like the mailbox's one, is visible to the
 // local Oz process only. (Actually, 'key_t' keys are replicated);
-class VSMsgChunkPoolManager {
+class VSMsgChunkPoolSegmentManager {
 protected:
   //
   int chunkSize, chunksNum;     //
   //
   key_t shmkey;                 // shared memory;
   int shmid;                    //
-  //
-  key_t semkey;                 // run-over semaphore;
-  int semid;                    //
   //
   // Pointers ('mem', 'chunks' and 'pool') are actually the same;
   // Note that the first chunk is permanently busy (reserved);
@@ -215,88 +190,124 @@ protected:
   //
 public:
   //
-  VSMsgChunkPoolManager() {
+  VSMsgChunkPoolSegmentManager() {
     DebugCode(chunkSize = chunksNum = 0);
     DebugCode(shmid = 0);
     DebugCode(shmkey = (key_t) 0);
-    DebugCode(semid = 0);
-    DebugCode(semkey = (key_t) 0);
     DebugCode(mem = (void *) 0);
   }
-  ~VSMsgChunkPoolManager() {}
+  ~VSMsgChunkPoolSegmentManager() {}
 };
 
 //
-class VSMsgChunkPoolManagerOwned : public VSMsgChunkPoolManager {
+// A register of virtual sites. This register is a part of a chunk
+// pool segment's manager; it contains VSs that supposedly got the
+// segment imported.
+//
+// The register is used whenever a segment is to be destroyed, so
+// importers have to detach it as well (otherwise it will stuck in the
+// system).
+//
+class VSSegmentImportersRegister : public GenHashTable {
+private:
+  int seqIndex;                 // does not need to be initialized;
+  GenHashNode *seqGHN;          // both needed for 'getFirst'/'getNext';
+
+  //
+private:
+  unsigned int hash(VirtualSite *vs);
+  //
+  VirtualSite* find(VirtualSite *vs);
+  void insert(VirtualSite *vs);
+  void retract(VirtualSite *vs);
+
+  //
+public:
+  VSSegmentImportersRegister(int size) : GenHashTable(size) {}
+  ~VSSegmentImportersRegister() {}
+
+  //
+  void put(VirtualSite *vs) { if (vs && !find(vs)) insert(vs); }
+  void forget(VirtualSite *vs) { if (find(vs)) retract(vs); }
+
+  //
+  int getRegisterSize() { return (getUsed()); }
+
+  //
+  VirtualSite *getFirst();
+  VirtualSite *getNext();
+};
+
+//
+class VSMsgChunkPoolSegmentManagerOwned
+  : public VSMsgChunkPoolSegmentManager
+{
 private:
   //
   VSMsgChunkOwned *chunks;
-  VSMsgChunkPoolOwned *pool;
+  VSMsgChunkPoolSegmentOwned *pool;
   //
-  int mapSize;                  // chunksNum/32;
-  int32 *map;                   // the usage bitmap - '1' if free;
+  long phaseNumber;      // to determine idle segments for GCing;
+  //
+  FixedSizeStack fs;     // free chunks;
+  //
+  // (see comment above - before 'VSSegmentImportersRegister'
+  // definition);
+  VSSegmentImportersRegister importersRegister;
 
   //
 private:
-  //
-  void markFreeInMap(int cn) {
-    DebugCode(pool->checkConsistency());
-    Assert(cn > 0 && cn < chunksNum);
-    int wordNum = cn/32;        // in an 'int32' value;
-    int bitNum = cn%32;
-    map[wordNum] |= (0x1 << bitNum);
-  }
+  // (the segment itself;)
+  void markDestroy();
 
   //
-  // find the first free page in the map;
-  int allocateFromMap() {
-    DebugCode(pool->checkConsistency());
-    for (int i = 0; i < mapSize; i++) {
-      if (map[i]) {
-        int32 seg = map[i];
-        int j = 0;
-
-        //
-        while (!(seg & 0x1)) {
-          j++;
-          seg = seg>>1;
-        }
-
-        //
-        map[i] &= ~(0x1 << j);  // got it;
-        int num = i*32 + j;
-        Assert(num != 0);       // zeroth is always busy;
-        return (num);
-      }
-    }
-    return (-1);                // none found;
-  }
-
-  //
-  // update the map by analyzing chunks themselves;
-  void scavengeMemory();
-
-  //
-  int getMsgChunkOutline();
+  // (The thing referred here as a "map" is actually a stack;)
+  void markFreeInMap(int cn) { fs.push(cn); }
+  void purgeMap() { fs.purge(); }
 
   //
 public:
   //
-  VSMsgChunkPoolManagerOwned(int chunkSizeIn, int chunksNumIn);
-  ~VSMsgChunkPoolManagerOwned();
+  VSMsgChunkPoolSegmentManagerOwned(int chunkSizeIn, int chunksNumIn,
+                                    int regInitSite);
+  ~VSMsgChunkPoolSegmentManagerOwned();
 
   //
-  void markDestroy();           // mark for destruction;
+  void deleteAndBroadcast();
 
   //
+  // 'getChunkAddr' is public since the pool manager object has to
+  // know both the chunk's number and address;
   VSMsgChunkOwned *getChunkAddr(int i) {
+    Assert(pool->getChunksNum() > i);
     Assert(sizeof(VSMsgChunk) == sizeof(VSMsgChunkOwned));
     return ((VSMsgChunkOwned *) (((char *) chunks) + i*chunkSize));
   }
-  int getChunkDataSize() {
-    Assert(sizeof(VSMsgChunk) == sizeof(VSMsgChunkOwned));
-    return (chunkSize - sizeof(VSMsgChunkOwned));
+
+  //
+  // 'getMsgChunk' should be applied only to segments that have
+  // at least one free chunk;
+  int getMsgChunk(VirtualSite *vs) {
+    DebugCode(pool->checkConsistency());
+    Assert(!fs.isEmpty());
+
+    //
+    int chunkNum = fs.pop();
+    getChunkAddr(chunkNum)->init();
+    importersRegister.put(vs);
+
+    //
+    return (chunkNum);
   }
+
+  //
+  // Reclaim chunks already freed (by importers). Returns the number
+  // of still used chunks;
+  int scavenge();
+
+  //
+  void setPhaseNumber(long pn) { phaseNumber = pn; }
+  long getPhaseNumber() { return (phaseNumber); }
 
   //
   key_t getSHMKey() {
@@ -305,61 +316,38 @@ public:
   }
 
   //
-  // 'getMsgChunk' tries first to find out an unused chunk in the map,
-  // and if it fails - it scavenges for free chunks (and updates the
-  // map correspondingly). When no more free chunks are found, it
-  // calls the "outline" version which blocks on the semaphore which
-  // must be stepped up by a VS that frees a chunk (see the first
-  // assertion in the constructor);
-  int getMsgChunk() {
-    DebugCode(pool->checkConsistency());
-    //
-    int chunkNum = allocateFromMap();
-    if (chunkNum < 0)
-      chunkNum = getMsgChunkOutline();
-    //
-    getChunkAddr(chunkNum)->init();
-    //
-    return (chunkNum);
-  }
-
-  //
-  // (sender site release - when e.g. message cannot be sent);
-  void releaseChunk(VSMsgChunkOwned *chunk) {
-    DebugCode(pool->checkConsistency());
-    chunk->markFree();
-    Assert(!pool->isInWakeupMode());
-  }
-
-  //
   // one chunk is permanently reserved;
   int getChunksNum() { return (pool->getChunksNum()-1); }
+  int getAvailChunksNum() { return (fs.getSize()); }
+
+  //
+  int getNumOfRegisteredSites() {
+    return (importersRegister.getRegisterSize());
+  }
+  void retractRegisteredSite(VirtualSite *vs) {
+    importersRegister.forget(vs);
+  }
 };
 
 //
-class VSMsgChunkPoolManagerImported : public VSMsgChunkPoolManager {
+class VSMsgChunkPoolSegmentManagerImported
+  : public VSMsgChunkPoolSegmentManager {
 private:
   VSMsgChunkImported *chunks;
-  VSMsgChunkPoolImported *pool;
-
-  //
-private:
-  //
-  void wakeupOwner();
+  VSMsgChunkPoolSegmentImported *pool;
 
   //
 public:
   //
-  VSMsgChunkPoolManagerImported(key_t shmkey);
-  ~VSMsgChunkPoolManagerImported();
+  VSMsgChunkPoolSegmentManagerImported(key_t shmkey);
+  ~VSMsgChunkPoolSegmentManagerImported();
 
   //
-  // At the receiver site the semaphore must checked as well;
-  void releaseChunk(VSMsgChunkImported *chunk) {
-    DebugCode(pool->checkConsistency());
-    chunk->markFree();
-    if (pool->isInWakeupMode())
-      wakeupOwner();
+  Bool isVoid() {
+    return (pool == (VSMsgChunkPoolSegmentImported *) -1);
+  }
+  Bool isNotVoid() {
+    return (pool != (VSMsgChunkPoolSegmentImported *) -1);
   }
 
   //
@@ -367,9 +355,165 @@ public:
     Assert(sizeof(VSMsgChunk) == sizeof(VSMsgChunkImported));
     return ((VSMsgChunkImported *) (((char *) chunks) + i*chunkSize));
   }
+
+  //
+  int getChunkSize() { return (pool->getChunkSize()); }
+};
+
+//
+class SegmentStack : private PtrStackArray {
+public:
+  //
+  int getSize() { return (PtrStackArray::getSize()); }
+  void push(VSMsgChunkPoolSegmentManagerOwned *sm) {
+    PtrStackArray::push((void*) sm); }
+  VSMsgChunkPoolSegmentManagerOwned* pop() {
+    return ((VSMsgChunkPoolSegmentManagerOwned *) PtrStackArray::pop());
+  }
+  VSMsgChunkPoolSegmentManagerOwned* get(int elem) {
+    return ((VSMsgChunkPoolSegmentManagerOwned *)
+            // do it so: (*((PtrStackArray *) this))[elem]);
+            // ... or just so:
+            (*this)[elem]);
+    // but NOT so:  ((PtrStackArray) *this)[elem]);
+    // ... then the object's destructor is called (?)
+  }
+};
+
+//
+// Real interface to the chunks pool at the owner site - it hides the
+// internal organization (segments, etc.);
+//
+// The manager allocates chunks in "allocation phases", which span
+// between scavenger runs. Within a phase, segments are used up
+// sequentially. Scavenger sets the number of segments to be used in
+// the current allocation phase, which is proportional to the number
+// of chunks still in use ('VS_MSGCHUNKS_USAGE' is the proportion
+// factor), rounded up to the next full segment. Originally (in the
+// very first phase) one segment is to be used;
+//
+// Scavenger walks through (all) segments with 'scavenge' method,
+// counts still used chunks, and finally decides how many segments to
+// be used in the next phase. Then it checks not-to-be-used segments,
+// and deletes those of them that have not been used for a while
+// (VS_SEGS_MAXIDLE_PHASES) & sends corresponding 'M_UNUSED_ID'
+// message to those sites that have got them imported;
+//
+class VSMsgChunkPoolManagerOwned : private SegmentStack {
+private:
+  int chunkSize, chunksNum; // used by receiver sites;
+  int currentSegMgrIndex;   // where allocation takes place;
+  int toBeUsedSegments;     // ... in the current allocation phase;
+  long phaseNumber;         // allocation phases are numbererd seq"ly;
+  unsigned long lastGC;     //
+
+  //
+private:
+  //
+  // Yields the segment manager that is to be used in the next
+  // 'getMsgBuffer' operation. This can include allocation of a new
+  // one, or(and) scavenging of existing ones. The segment returned
+  // contains at least one free chunk;
+  VSMsgChunkPoolSegmentManagerOwned* getSegmentManager() {
+    VSMsgChunkPoolSegmentManagerOwned *fsm;
+
+    //
+    fsm = get(currentSegMgrIndex);
+    while (fsm->getAvailChunksNum() == 0) {
+      currentSegMgrIndex++;
+      if (currentSegMgrIndex < toBeUsedSegments) {
+        if (currentSegMgrIndex >= getSize()) {
+          fsm = new VSMsgChunkPoolSegmentManagerOwned(VS_CHUNK_SIZE,
+                                                      VS_CHUNKS_NUM,
+                                                      VS_REGISTER_HT_SIZE);
+          push(fsm);
+          Assert(fsm == get(currentSegMgrIndex));
+        } else {
+          fsm = get(currentSegMgrIndex);
+        }
+      } else {
+        scavenge();             // on-demand GCing;
+
+        //
+        fsm = get(currentSegMgrIndex);
+      }
+    }
+
+    //
+    fsm->setPhaseNumber(phaseNumber);
+    return (fsm);
+  }
+
+  //
+public:
+  //
+  VSMsgChunkPoolManagerOwned(int chunkSizeIn, int chunksNumIn, int sizeIn);
+  ~VSMsgChunkPoolManagerOwned();
+
+  //
+  // Scavenging process - scavenge segments, set 'toBeUsedSegments'
+  // and GC segments to be freed;
+  void scavenge();
+
+  //
+  unsigned long getLastGC() { return (lastGC); }
+  void setLastGC(unsigned long t) { lastGC = t; }
+
+  //
+  // (for marshaling;)
+  VSMsgChunkOwned *getMsgChunk(VirtualSite *vs,
+                               key_t &shmKey, int &cn) {
+    VSMsgChunkPoolSegmentManagerOwned *fsm = getSegmentManager();
+
+    //
+    cn = fsm->getMsgChunk(vs);
+    Assert(cn > 0);
+    shmKey = fsm->getSHMKey();
+    return (fsm->getChunkAddr(cn));
+  }
+
+  //
+  // (for unmarsahaling at the sender site; rare operation;)
+  VSMsgChunkOwned *getMsgChunk(key_t shmKey, int cn) {
+    for (int i = 0; i < getSize(); i++) {
+      VSMsgChunkPoolSegmentManagerOwned *fsm = get(i);
+      if (shmKey == fsm->getSHMKey())
+        return (fsm->getChunkAddr(cn));
+    }
+    Assert(0);           // there must be a segment with 'shmKey';
+    return ((VSMsgChunkOwned *) 0);     // to make gcc happy;
+  }
+
+  //
+  // (sender site release - when e.g. the message cannot be sent);
+  // (actually, this 'releaseChunk' just calls 'markFree' of a chunk)
+  void releaseChunk(VSMsgChunkOwned *chunk) {
+    chunk->markFree();
+  }
+
+  //
   int getChunkDataSize() {
-    Assert(sizeof(VSMsgChunk) == sizeof(VSMsgChunkImported));
-    return (chunkSize - sizeof(VSMsgChunkImported));
+    Assert(sizeof(VSMsgChunk) == sizeof(VSMsgChunkOwned));
+    return (chunkSize - sizeof(VSMsgChunk));
+  }
+
+  //
+  // A list of ipc keys for a "alive ack" message is assembled using:
+  int getSegsNum() { return (getSize()); }
+  key_t getSegSHMKey(int i) {
+    Assert(i >= 0 && i < getSize());
+    VSMsgChunkPoolSegmentManagerOwned *fsm = get(i);
+    return (fsm->getSHMKey());
+  }
+
+  //
+  // Whenever a VS connection is dropped ('VirtualSite' object is
+  // destroyed), we should clean up registries in segment managers...
+  void retractRegisteredSite(VirtualSite *vs) {
+    for (int i = 0; i < getSize(); i++) {
+      VSMsgChunkPoolSegmentManagerOwned *fsm = get(i);
+      fsm->retractRegisteredSite(vs);
+    }
   }
 };
 
@@ -382,26 +526,33 @@ private:
 
   //
 private:
-  void add(key_t key, VSMsgChunkPoolManagerImported *pool);
+  void add(key_t key, VSMsgChunkPoolSegmentManagerImported *pool);
   void remove(key_t key);
 
   //
-public:
+protected:
   VSChunkPoolRegister(int size) : GenHashTable(size) {}
   ~VSChunkPoolRegister() {}
 
   //
-  VSMsgChunkPoolManagerImported* find(key_t key);
+  VSMsgChunkPoolSegmentManagerImported* find(key_t key);
 
   //
-  VSMsgChunkPoolManagerImported* import(key_t key) {
-    VSMsgChunkPoolManagerImported *aux;
+public:
+  VSMsgChunkPoolSegmentManagerImported* import(key_t key) {
+    VSMsgChunkPoolSegmentManagerImported *aux;
 
     //
     aux = find(key);
     if (!aux) {
-      aux = new VSMsgChunkPoolManagerImported(key);
-      add(key, aux);
+      aux = new VSMsgChunkPoolSegmentManagerImported(key);
+      if (aux->isVoid()) {
+        // there is no such shared memory page;
+        delete aux;
+        return ((VSMsgChunkPoolSegmentManagerImported *) 0);
+      } else {
+        add(key, aux);
+      }
     }
 
     //
@@ -415,6 +566,50 @@ public:
 };
 
 //
+// 'VSMsgChunkPoolManagerImported' basically keeps track of imported
+// chunk pool segments (that keep incoming messages).
+class VSMsgChunkPoolManagerImported : private VSChunkPoolRegister {
+public:
+  VSMsgChunkPoolManagerImported(int sizeIn)
+    : VSChunkPoolRegister(sizeIn) {}
+  // do nothing when deleting: OS will unmap everithing itself;
+  ~VSMsgChunkPoolManagerImported() {}
+
+  //
+  // Note that 'getSegmentManager()' can fail all the time - a lot
+  // of things can really happen...
+  VSMsgChunkPoolSegmentManagerImported* getSegmentManager(key_t shmKey) {
+    return (import(shmKey));
+  }
+  VSMsgChunkImported *getMsgChunk(VSMsgChunkPoolSegmentManagerImported* fsm,
+                                  int cn) {
+    return (fsm->getChunkAddr(cn));
+  }
+
+  //
+  void removeSegmentManager(key_t shmKey) {
+    VSMsgChunkPoolSegmentManagerImported* sm = find(shmKey);
+    if (sm) {
+      forget(shmKey);
+      delete sm;
+    }
+  }
+
+  //
+  // Segments with different chunk sizes can be imported, so
+  // we ask every particular segment manager about its size:
+  int getChunkDataSize(VSMsgChunkPoolSegmentManagerImported* fsm) {
+    Assert(sizeof(VSMsgChunk) == sizeof(VSMsgChunkImported));
+    return (fsm->getChunkSize() - sizeof(VSMsgChunk));
+  }
+
+  //
+  void releaseChunk(VSMsgChunkImported *chunk) {
+    chunk->markFree();
+  }
+};
+
+//
 // The message buffer used for communications between VS"s.
 //
 // Objects of this (and inherited) class(es) reside in the private
@@ -423,17 +618,29 @@ public:
 class VSMsgBuffer : public MsgBuffer {
 protected:
   //
-  int first, current;           // chunk indexes;
+  int firstChunkNum;
+  key_t firstSegSHMKey;
   // 'BYTE *posMB' and BYTE *endMB' are inherited from 'MsgBuffer';
 
   //
 public:
-  VSMsgBuffer() : first(-1) {
+  VSMsgBuffer() {
+    DebugCode(firstChunkNum = -1);
+    DebugCode(firstSegSHMKey = (key_t) -1);
     // Ralf Scheidhauer' liebe fuer 'init()' anstatt class
     // constructors, $%@#$# @#$ #@$*@#$ $#$$*@&#*$* &@ $@#^@#
     // $**#& !!!!!!!!!!!!!
     MsgBuffer::init();
-    DebugCode(current = -1);
+    // this should be in MsgBuffer's constructor (or initializer,
+    // whichever is preferred);
+    DebugCode(posMB = endMB = (BYTE *) 0);
+  }
+  VSMsgBuffer(key_t shmKey, int chunkIndex)
+    : firstChunkNum(chunkIndex), firstSegSHMKey(shmKey) {
+    // Ralf Scheidhauer' liebe fuer 'init()' anstatt class
+    // constructors, $%@#$# @#$ #@$*@#$ $#$$*@&#*$* &@ $@#^@#
+    // $**#& !!!!!!!!!!!!!
+    MsgBuffer::init();
     // this should be in MsgBuffer's constructor (or initializer,
     // whichever is preferred);
     DebugCode(posMB = endMB = (BYTE *) 0);
@@ -441,7 +648,7 @@ public:
   virtual ~VSMsgBuffer() { error("VSMsgBuffer destroyed?"); }
 
   //
-  // Various special stuff;
+  // Various special (weird) stuff;
   // SB guys changed the interface without notifying us:
   Bool isPersistentBuffer() { return (NO); }
   // ... EK???
@@ -462,6 +669,7 @@ class VSMsgBufferOwned : public VSMsgBuffer {
 private:
   //
   Site *site;                   // has to know the site when marshaling;
+  VirtualSite *vs;              // cached;
   VSMsgChunkPoolManagerOwned *cpm;
   VSMsgChunkOwned *currentAddr; // of the current chunk;
   int allocatedChunks;          // keep track of size;
@@ -471,35 +679,37 @@ private:
   //
   // Called whenever 'put' faces no space in the buffer;
   void allocateNextChunk() {
-    //
-    if (allocatedChunks >= cpm->getChunksNum())
-      error("no space for a message to a virtual site!");
+    int chunkNum;
+    key_t segSHMKey;
+    VSMsgChunkOwned *nextAddr;
 
     //
-    // 'getMsgChunk()' ultimately gets new chunks (including waiting
-    // in there if needed);
-    int next = cpm->getMsgChunk();
+    // 'getMsgChunk(VirtualSite*)' ultimately gets new chunks
+    // (including waiting in there if needed);
+    nextAddr = cpm->getMsgChunk(vs, segSHMKey, chunkNum);
     allocatedChunks++;
-    VSMsgChunkOwned *nextAddr = cpm->getChunkAddr(next);
 
     //
     posMB = nextAddr->getDataAddr();
     endMB = posMB + cpm->getChunkDataSize() - 1; // in bytes; // kost@ : TODO
 
+    //
     // link it up;
-    currentAddr->setNext(next);
-    current = next;
+    currentAddr->setNext(chunkNum);
+    currentAddr->setSHMKey(segSHMKey);
+    //
     currentAddr = nextAddr;
   }
 
   //
-  // Jump to the next buffer (when unmarshaling);
+  // Jump to the next buffer (when unmarshaling upon sending failure);
   void gotoNextChunk() {
-    current = currentAddr->getNext();
-    Assert(current >= 0);
+    int nextNum = currentAddr->getNext();
+    key_t nextKey = currentAddr->getSHMKey();
+    Assert(nextNum >= 0);
 
     //
-    currentAddr = cpm->getChunkAddr(current);
+    currentAddr = cpm->getMsgChunk(nextKey, nextNum);
 
     //
     posMB = currentAddr->getDataAddr();
@@ -534,12 +744,20 @@ public:
   // since virtual sites put (at least) a "vs" header into it;
   VSMsgBufferOwned(VSMsgChunkPoolManagerOwned *cpmIn, Site *siteIn)
     : cpm(cpmIn), site(siteIn) {
-    Assert(first < 0);
+    if (siteIn) {
+      vs = siteIn->getVirtualSite();
+      Assert(vs);
+    } else {
+      vs = (VirtualSite *) 0;
+    }
+
+    //
+    Assert(firstChunkNum < 0);
     // allocate the first chunk unconditionally
     // (there are no empty messages?)
-    current = first = cpm->getMsgChunk();
+    currentAddr = cpm->getMsgChunk(vs, firstSegSHMKey, firstChunkNum);
     allocatedChunks = 1;
-    currentAddr = cpm->getChunkAddr(current);
+
     //
     posMB = currentAddr->getDataAddr();
     endMB = posMB + cpm->getChunkDataSize() - 1; // in bytes; // kost@ : TODO
@@ -549,20 +767,24 @@ public:
   }
 
   //
-  // Mark (shared) memory chunks free - when unmarshaling unsent
+  // Mark (shared) memory chunks free - when unmarshaling an unsent
   // message back;
   void releaseChunks() {
-    Assert(first >= 0);
-    current = first;
+    Assert(firstChunkNum >= 0);
+    int currentNum = firstChunkNum;
+    key_t currentKey = firstSegSHMKey;
     do {
-      VSMsgChunkOwned *chunkAddr = cpm->getChunkAddr(current);
-      current = chunkAddr->getNext(); // this&next in this order;
+      VSMsgChunkOwned *chunkAddr =
+        cpm->getMsgChunk(currentKey, currentNum);
+      currentNum = chunkAddr->getNext();
+      currentKey = chunkAddr->getSHMKey();
       cpm->releaseChunk(chunkAddr);
-    } while (current >= 0);
-    Assert(current == -1);
+    } while (currentNum >= 0);
+    Assert(currentNum == -1);
 
     //
-    DebugCode(first = -1);
+    DebugCode(firstChunkNum = -1);
+    DebugCode(firstSegSHMKey = (key_t) -1);
     DebugCode(currentAddr = (VSMsgChunkOwned *) 0);
     DebugCode(posMB = endMB = (BYTE *) 0);
   }
@@ -570,10 +792,10 @@ public:
   //
   // ... hand them over (to a receiver);
   void passChunks() {
-    Assert(first >= 0);
+    Assert(firstChunkNum >= 0);
     //
-    DebugCode(first = -1);
-    DebugCode(current = -1);
+    DebugCode(firstChunkNum = -1);
+    DebugCode(firstSegSHMKey = (key_t) -1);
     DebugCode(currentAddr = (VSMsgChunkOwned *) 0);
     DebugCode(posMB = endMB = (BYTE *) 0);
   }
@@ -581,8 +803,8 @@ public:
   //
   // (Consistency check - must be released/passed already:)
   void cleanup() {
-    Assert(first == -1);
-    Assert(current == -1);
+    Assert(firstChunkNum == -1);
+    Assert(firstSegSHMKey == (key_t) -1);
     Assert(currentAddr == (VSMsgChunk *) 0);
     Assert(posMB == (BYTE *) 0);
     Assert(endMB == (BYTE *) 0);
@@ -597,8 +819,8 @@ public:
 
   //
   // Yields the first chunk's address - for putting it in a mailbox;
-  int getFirstChunk() { return (first); }
-  key_t getSHMKey() { return (cpm->getSHMKey()); }
+  int getFirstChunkNum() { return (firstChunkNum); }
+  key_t getFirstChunkSHMKey() { return (firstSegSHMKey); }
 
   //
   // ('siteStringrep' exists just for debugging;)
@@ -628,15 +850,20 @@ private:
 private:
   //
   void gotoNextChunk() {
-    current = currentAddr->getNext();
-    Assert(current >= 0);
+    VSMsgChunkPoolSegmentManagerImported *fsm;
+    int nextNum = currentAddr->getNext();
+    key_t nextKey = currentAddr->getSHMKey();
+    Assert(nextNum >= 0);
 
     //
-    currentAddr = cpm->getChunkAddr(current);
+    fsm = cpm->getSegmentManager(nextKey);
+    // because all the segments are feeded in already:
+    Assert(fsm);
+    currentAddr = cpm->getMsgChunk(fsm, nextNum);
 
     //
     posMB = currentAddr->getDataAddr();
-    endMB = posMB + cpm->getChunkDataSize(); // in bytes;
+    endMB = posMB + cpm->getChunkDataSize(fsm); // in bytes;
   }
 
   //
@@ -664,31 +891,96 @@ public:
   // kost@ : Note the 'imported' buffer is initialized when created
   // (imported) since virtual sites put (at least) a "vs" header into
   // it;
-  VSMsgBufferImported(VSMsgChunkPoolManagerImported *cpmIn, int chunkIndex)
-    : cpm(cpmIn) {
-    current = first = chunkIndex;
-    currentAddr = cpm->getChunkAddr(current);
-    posMB = currentAddr->getDataAddr();
-    endMB = posMB + cpm->getChunkDataSize(); // in bytes;
+  VSMsgBufferImported(VSMsgChunkPoolManagerImported *cpmIn,
+                      key_t shmKey, int chunkIndex)
+    : VSMsgBuffer(shmKey, chunkIndex), cpm(cpmIn) {
+    VSMsgChunkPoolSegmentManagerImported *fsm;
+
+    //
+    fsm = cpm->getSegmentManager(shmKey);
+    if (fsm) {
+      currentAddr = cpm->getMsgChunk(fsm, chunkIndex);
+      //
+      posMB = currentAddr->getDataAddr();
+      endMB = posMB + cpm->getChunkDataSize(fsm); // in bytes;
+
+      //
+      // pre-fetch all segments. Otherwise, unmarshaling process could
+      // break: it cannot be interrupted if some data to be read is
+      // unavailable; it requires that the whole thing can be read;
+      VSMsgChunkImported *tmpAddr = currentAddr;
+      int nextNum;
+      //
+      while ((nextNum = tmpAddr->getNext()) >= 0) {
+        key_t nextKey = tmpAddr->getSHMKey();
+        VSMsgChunkPoolSegmentManagerImported *fsm =
+          cpm->getSegmentManager(nextKey);
+
+        //
+        if (fsm) {
+          // going ahead:
+          tmpAddr = cpm->getMsgChunk(fsm, nextNum);
+        } else {
+          // ... or premature EOF - mark the whole thing as void;
+          currentAddr = (VSMsgChunkImported *) -1;
+          DebugCode(posMB = endMB = (BYTE *) -1;);
+          break;
+        }
+      }
+    } else {
+      currentAddr = (VSMsgChunkImported *) -1;
+      DebugCode(posMB = endMB = (BYTE *) -1;);
+    }
   }
   virtual ~VSMsgBufferImported() {
     error("VSMsgBufferImported destroyed?");
   }
 
   //
+  Bool isVoid() { return (currentAddr == (VSMsgChunkImported *) -1); }
+  Bool isNotVoid() { return (currentAddr != (VSMsgChunkImported *) -1); }
+
+  //
   // Mark (shared) memory chunks free (so the sender could reuse them);
   void releaseChunks() {
-    Assert(first >= 0);
-    current = first;
+    Assert(isNotVoid());
+    Assert(firstChunkNum >= 0);
+    int currentNum = firstChunkNum;
+    key_t currentKey = firstSegSHMKey;
     do {
-      VSMsgChunkImported *chunkAddr = cpm->getChunkAddr(current);
-      current = chunkAddr->getNext(); // this&next in this order;
+      VSMsgChunkPoolSegmentManagerImported *fsm;
+
+      //
+      fsm = cpm->getSegmentManager(currentKey);
+
+      //
+      if (!fsm) {
+        // (one of) the chunk is missing - i.e. its owner is gone;
+        DebugCode(currentNum = -1;);
+        break;
+      }
+
+      //
+      VSMsgChunkImported *chunkAddr = cpm->getMsgChunk(fsm, currentNum);
+      currentNum = chunkAddr->getNext();
+      currentKey = chunkAddr->getSHMKey();
+
+      //
       cpm->releaseChunk(chunkAddr);
-    } while (current >= 0);
-    Assert(current == -1);
+    } while (currentNum >= 0);
+    Assert(currentNum == -1);
 
     //
-    DebugCode(first = -1);
+    DebugCode(firstChunkNum = -1);
+    DebugCode(firstSegSHMKey = (key_t) -1);
+    DebugCode(currentAddr = (VSMsgChunkImported *) 0);
+    DebugCode(posMB = endMB = (BYTE *) 0);
+  }
+
+  //
+  void dropVoid() {
+    DebugCode(firstChunkNum = -1);
+    DebugCode(firstSegSHMKey = (key_t) -1);
     DebugCode(currentAddr = (VSMsgChunkImported *) 0);
     DebugCode(posMB = endMB = (BYTE *) 0);
   }
@@ -696,8 +988,8 @@ public:
   //
   // Consistency check - must be released already:
   void cleanup() {
-    Assert(first == -1);
-    Assert(current == -1);
+    Assert(firstChunkNum == -1);
+    Assert(firstSegSHMKey == (key_t) -1);
     Assert(currentAddr == (VSMsgChunkImported *) 0);
     Assert(posMB == (BYTE *) 0);
     Assert(endMB == (BYTE *) 0);

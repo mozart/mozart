@@ -60,13 +60,15 @@
 
 class SiteManager: public FreeListManager{
 
-  Site* newSite(){
+  //
+  Site* allocateSite() {
     Site* s;
     PD((SITE,"New Site allocated"));
-    FreeListEntry *f=getOne();
-    if(f==NULL) {s=new Site();}
-    else GenCast(f,FreeListEntry*,s,Site*);
-    return s;}
+    FreeListEntry *f = getOne();
+    if (f == NULL) s = (Site *) malloc(sizeof(class Site));
+    else GenCast(f, FreeListEntry*, s, Site*);
+    return (s);
+  }
 
   void deleteSite(Site *s){
     PD((SITE,"Site deleted %x %s",s,s->stringrep()));
@@ -83,15 +85,15 @@ public:
     Assert(!(s->getType() & MY_SITE));
     deleteSite(s);}
 
-  Site* allocSite(Site* s){
-    Site *newS=newSite();
-    newS->init(s->address,s->port,&s->timestamp);
-    PD((SITE,"allocated site:%s ",newS->stringrep()));
+  Site* newSite(Site* s){
+    Site *newS = allocateSite();
+    newS = new (newS) Site(s->address, s->port, s->timestamp);
+    PD((SITE,"allocated site:%s ", newS->stringrep()));
     return newS;}
 
-  Site* allocSite(Site* s,unsigned int type){
-    Site *newS=newSite();
-    newS->init(s->address,s->port,&s->timestamp,type);
+  Site* newSite(Site* s,unsigned int type){
+    Site *newS = allocateSite();
+    newS = new (newS) Site(s->address, s->port, s->timestamp, type);
     PD((SITE,"allocated site:%s ",newS->stringrep()));
     return newS;}
 }siteManager;
@@ -258,7 +260,7 @@ Site *unmarshalPSite(MsgBuffer *buf){
     s=secondarySiteTable->findSecondary(&tryS,hvalue);
     if(s){ PD((SITE,"unmarshalPsite I_AM_YOUNGER site found"));return s;}
     PD((SITE,"unmarshalPsite I_AM_YOUNGER site inserted"));
-    s=siteManager.allocSite(&tryS,PERM_SITE);
+    s=siteManager.newSite(&tryS,PERM_SITE);
     secondarySiteTable->insertSecondary(s,hvalue);
     return s;}
   case I_AM_OLDER:{
@@ -266,7 +268,7 @@ Site *unmarshalPSite(MsgBuffer *buf){
     primaryToSecondary(s,hvalue);
     break;}}
 
-  s=siteManager.allocSite(&tryS);
+  s=siteManager.newSite(&tryS);
   primarySiteTable->insertPrimary(s,hvalue);
   if(mt==DIF_SITE_PERM){
     PD((SITE,"initPsite DIF_SITE_PERM"));
@@ -343,7 +345,7 @@ Site* unmarshalSiteInternal(MsgBuffer *buf, Site *tryS, MarshalTag mt)
     int hvalue=tryS->hashSecondary();
     s=secondarySiteTable->findSecondary(tryS,hvalue);
     if(s){return s;}
-    s=siteManager.allocSite(tryS,PERM_SITE);
+    s=siteManager.newSite(tryS,PERM_SITE);
     secondarySiteTable->insertSecondary(s,hvalue);
     return s;}
 
@@ -356,7 +358,7 @@ Site* unmarshalSiteInternal(MsgBuffer *buf, Site *tryS, MarshalTag mt)
 
   // none
 
-  s=siteManager.allocSite(tryS);
+  s=siteManager.newSite(tryS);
   primarySiteTable->insertPrimary(s,hvalue);
 
   //
@@ -530,6 +532,7 @@ void Site::marshalSite(MsgBuffer *buf){
 // kost@ : that's a part of the boot-up procedure ('perdioInit()');
 Site* makeMySite(ip_address a, port_t p, TimeStamp &t) {
   Site *s = new Site(a,p,t);
+  s->setMySite();
   int hvalue = s->hashPrimary();
   primarySiteTable->insertPrimary(s,hvalue);
   s->initMySite();
