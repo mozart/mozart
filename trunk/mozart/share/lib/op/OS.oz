@@ -1,5 +1,5 @@
 %%%
-%%% Authors:
+%%% Author:
 %%%   Christian Schulte (schulte@dfki.de)
 %%%
 %%% Copyright:
@@ -67,16 +67,13 @@ OS = os(%% Os IO common to both files and sockets
 	getEnv:        {`Builtin` 'OS.getEnv'        2}
 	putEnv:        {`Builtin` 'OS.putEnv'        2}
 	tmpnam:        {`Builtin` 'OS.tmpnam'        1}
-	
+
 	%% Random numbers
 	rand:          {`Builtin` 'OS.rand'          1}
 	srand:         {`Builtin` 'OS.srand'         1}
 	randLimits:    {`Builtin` 'OS.randLimits'    2}
-	
+
 	%% Time inquiry
 	time:          {`Builtin` 'OS.time'          1}
 	gmTime:        {`Builtin` 'OS.gmTime'        1}
 	localTime:     {`Builtin` 'OS.localTime'     1})
-
-
-

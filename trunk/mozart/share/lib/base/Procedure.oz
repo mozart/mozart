@@ -23,8 +23,8 @@
 %%%
 
 
-declare 
-   Procedure IsProcedure ProcedureArity 
+declare
+   Procedure IsProcedure ProcedureArity
 in
 
 

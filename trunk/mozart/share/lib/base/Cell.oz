@@ -23,7 +23,7 @@
 %%%
 
 
-declare 
+declare
    Cell IsCell NewCell Exchange Assign Access
 in
 

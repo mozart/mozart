@@ -23,7 +23,7 @@
 %%%
 
 
-declare 
+declare
    Int IsInt IsNat IsOdd IsEven IntToFloat IntToString
    `div` `mod`
 in
@@ -58,5 +58,3 @@ Int = int(is:       IsInt
 	  'mod':    `mod`
 	  toFloat:  IntToFloat
 	  toString: IntToString)
-
-

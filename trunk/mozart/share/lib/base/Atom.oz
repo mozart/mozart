@@ -23,7 +23,7 @@
 %%%
 
 
-declare 
+declare
    Atom IsAtom AtomToString
 in
 
@@ -40,6 +40,3 @@ AtomToString = {`Builtin` 'AtomToString' 2}
 %%
 Atom = atom(is:       IsAtom
 	    toString: AtomToString)
-
-
-

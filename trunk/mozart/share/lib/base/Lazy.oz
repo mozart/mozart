@@ -42,7 +42,7 @@ local
    proc {LazyCall T X}
       {LazyNew 4#T X}
    end
-   
+
 in
 
    Lazy = lazy(new    :LazyNew
@@ -51,5 +51,5 @@ in
 	       load   :LazyLoad
 	       call   :LazyCall
 	      )
-   
+
 end

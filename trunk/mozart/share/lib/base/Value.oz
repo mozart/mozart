@@ -23,7 +23,7 @@
 %%%
 
 
-declare 
+declare
    Value Wait WaitOr IsFree IsKinded IsDet Min Max CondSelect HasFeature
    `.` `==` `=` `\\=` `<` `=<` `>=` `>`
    `condSelect` `hasFeature` `wait`
@@ -64,27 +64,24 @@ HasFeature = {`Builtin` 'HasFeature' 3}
 %% Module
 %%
 
-Value = value(wait:	  Wait
+Value = value(wait:       Wait
 	      waitOr:     WaitOr
-	      
-	      '=<':	  `=<`
-	      '<':	  `<`
-	      '>=':	  `>=`
-	      '>':	  `>`
-	      '==':	  `==`
-	      '=':	  `=`
-	      '\\=':	  `\\=`
-	      max:	  Max
-	      min:	  Min
-	      
-	      '.':	  `.`
-	      hasFeature: HasFeature 
+
+	      '=<':       `=<`
+	      '<':        `<`
+	      '>=':       `>=`
+	      '>':        `>`
+	      '==':       `==`
+	      '=':        `=`
+	      '\\=':      `\\=`
+	      max:        Max
+	      min:        Min
+
+	      '.':        `.`
+	      hasFeature: HasFeature
 	      condSelect: CondSelect
 
 	      isFree:     IsFree
 	      isKinded:   IsKinded
 	      isDet:      IsDet
 	      status:     {`Builtin` 'Value.status' 2})
-
-
-

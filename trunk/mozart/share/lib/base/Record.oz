@@ -23,9 +23,9 @@
 %%%
 
 
-declare 
+declare
    Record IsRecord MakeRecord Label Width Adjoin Arity AdjoinList AdjoinAt
-   IsRecordC WidthC TellRecord 
+   IsRecordC WidthC TellRecord
    `width` `adjoin` `^` `tellRecordSize` `aritySublist`
    %% `record` already declared in Forward.oz
 in
@@ -130,44 +130,44 @@ local
       case As of nil then Z
       [] A|Ar then {FoldL Ar X P {P Z X.A}}
       end
-   end 
+   end
 
    fun {FoldLT I W X P Z}
       case I<W then {FoldLT I+1 W X P {P Z X.I}}
       else {P Z X.I}
       end
-   end 
+   end
 
    fun {FoldR As X P Z}
       case As of nil then Z
       [] A|Ar then {P X.A {FoldR Ar X P Z}}
       end
-   end 
+   end
 
    fun {FoldRT I W X P Z}
       case I<W then {P X.I {FoldRT I+1 W X P Z}}
       else {P X.I Z}
       end
-   end 
-   
+   end
+
    proc {ForAll As X P}
       case As of nil then skip
       [] A|Ar then {P X.A} {ForAll Ar X P}
       end
    end
-   
+
    proc {ForAllT I W X P}
       case I=<W then {P X.I} {ForAllT I+1 W X P}
       else skip
       end
    end
-   
+
    fun {All As X P}
       case As of nil then true
       [] A|Ar then {P X.A} andthen {All Ar X P}
       end
    end
-   
+
    fun {AllT I W X P}
       case I=<W then {P X.I} andthen {AllT I+1 W X P}
       else true
@@ -179,7 +179,7 @@ local
       [] A|Ar then {P X.A} orelse {Some Ar X P}
       end
    end
-      
+
    fun {SomeT I W X P}
       I=<W andthen ({P X.I} orelse {SomeT I+1 W X P})
    end
@@ -218,7 +218,7 @@ local
 
    proc {TakeDrop As X P ?Bs ?Cs}
       case As of nil then Bs=nil Cs=nil
-      [] A|Ar then XA=X.A in 
+      [] A|Ar then XA=X.A in
 	 case {P XA} then Bs=A#XA|{TakeDrop Ar X P $ Cs}
 	 else Bs=nil Cs={MakePairs As X}
 	 end
@@ -233,7 +233,7 @@ local
       [] A|Ar then A#{P A X.A}|{MapInd Ar X P}
       end
    end
-   
+
    proc {MapIndT I W X P Y}
       case I=<W then {P I X.I Y.I} {MapIndT I+1 W X P Y}
       else skip
@@ -244,32 +244,32 @@ local
       case As of nil then Z
       [] A|Ar then {FoldLInd Ar X P {P A Z X.A}}
       end
-   end 
+   end
 
    fun {FoldLIndT I W X P Z}
       case I=<W then {FoldLIndT I+1 W X P {P I Z X.I}}
       else Z
       end
-   end 
+   end
 
    fun {FoldRInd As X P Z}
       case As of nil then Z
       [] A|Ar then {P A X.A {FoldRInd Ar X P Z}}
       end
-   end 
+   end
 
    fun {FoldRIndT I W X P Z}
       case I=<W then {P I X.I {FoldRIndT I+1 W X P Z}}
       else Z
       end
-   end 
-   
+   end
+
    proc {ForAllInd As X P}
       case As of nil then skip
       [] A|Ar then {P A X.A} {ForAllInd Ar X P}
       end
    end
-   
+
    proc {ForAllIndT I W X P}
       case I=<W then {P I X.I} {ForAllIndT I+1 W X P}
       else skip
@@ -281,7 +281,7 @@ local
       [] A|Ar then {P A X.A} andthen {AllInd Ar X P}
       end
    end
-      
+
    fun {AllIndT I W X P}
       case I=<W then {P I X.I} andthen {AllIndT I+1 W X P}
       else true
@@ -352,7 +352,7 @@ local
       case I=<W then T3.I={P T1.I T2.I} {ZipT I+1 W T1 T2 P T3}
       else skip end
    end
-   
+
    fun {ToList As R}
       case As of nil then nil
       [] A|Ar then R.A|{ToList Ar R}
@@ -378,14 +378,14 @@ local
 	 {Dictionary.put D N T.N} {TupleToDictionary N-1 T D}
       end
    end
-   
+
    proc {RecordToDictionary As R D}
       case As of nil then skip
       [] A|Ar then
 	 {Dictionary.put D A R.A} {RecordToDictionary Ar R D}
       end
    end
-   
+
 in
 
    Record = record(is:           IsRecord

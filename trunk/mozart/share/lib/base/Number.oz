@@ -23,7 +23,7 @@
 %%%
 
 
-declare 
+declare
    Number IsNumber Pow Abs
    `+` `-` `*` `~`
 in
@@ -44,7 +44,7 @@ in
 IsNumber = {`Builtin` 'IsNumber' 2}
 Abs      = {`Builtin` 'Abs'      2}
 local
-   FloatPow = {`Builtin` 'fPow' 3} 
+   FloatPow = {`Builtin` 'fPow' 3}
    fun {IntPow X N A}
       case N==0 then A
       elsecase N mod 2==0 then {IntPow X*X (N div 2) A}
@@ -71,4 +71,3 @@ Number = number(is:  IsNumber
 		'~': `~`
 		pow: Pow
 		abs: Abs)
-

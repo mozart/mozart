@@ -31,4 +31,3 @@ in
 
 `isInstanceOf`    = IsInstanceOf
 `chunkHasFeature` = `hasFeature`
-

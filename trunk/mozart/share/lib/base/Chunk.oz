@@ -23,14 +23,14 @@
 %%%
 
 
-declare 
+declare
    Chunk NewChunk IsChunk
 in
 
 
 %%
 %% Global
-%% 
+%%
 NewChunk = {`Builtin` 'NewChunk' 2}
 IsChunk  = {`Builtin` 'IsChunk'  2}
 
@@ -55,4 +55,3 @@ in
 		 hasFeature:    ChunkHasFeature
 		 selectFeature: ChunkSelectFeature)
 end
-

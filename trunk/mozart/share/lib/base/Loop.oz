@@ -22,7 +22,7 @@
 %%% WARRANTIES.
 %%%
 
-declare 
+declare
    Loop
    For
    ForThread

@@ -46,7 +46,7 @@ local
 	 {`RaiseError` object(fromFinalClass C.`ooPrintName` Op)}
       end
    end
-   
+
    fun {GetParents C}
       {AssertNonFinal C 'Class.parents'}
       C.`ooParents`
@@ -88,7 +88,7 @@ in
       end
    end
 
-   Class = 'class'(is:           IsClass		
+   Class = 'class'(is:           IsClass
 		   get:          GetClass
 		   methodNames:  MethodNames
 		   hasProperty:  HasProperty
@@ -115,4 +115,3 @@ in
 		   isInstanceOf: IsInstanceOf)
 
 end
-   
