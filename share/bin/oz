@@ -3,7 +3,7 @@
 # start lemacs for a standalone version of Oz
 # MUST reside in <oz dist dir>/bin
 
-#set -vx
+set -vx
 
 # where Oz resides:
 
@@ -28,10 +28,10 @@ export OZARCH
 #echo "OZARCH = $OZARCH"
 
 
-: ${OZCOMPILER:=$OZHOME/bin/$OZARCH/oz.compiler.bin}
+: ${OZCOMPILER=$OZHOME/bin/$OZARCH/oz.compiler.bin}
 #echo "OZCOMPILER = $OZCOMPILER"
 
-: ${OZMACHINE:=$OZHOME/bin/$OZARCH/oz.machine.bin}
+: ${OZMACHINE=$OZHOME/bin/$OZARCH/oz.machine.bin}
 #echo "OZMACHINE = $OZMACHINE"
 
 
@@ -39,12 +39,12 @@ export OZARCH
 if [ ${OZ_PI-xx} = xx ]; then
 
         # where Oz searches for files:
-        : ${OZPATH:=.}
+        : ${OZPATH=.}
         OZPATH=${OZPATH}:${OZHOME}/lib:${OZHOME}/lib/${OZARCH}:${OZHOME}/demo
         export OZPATH
 #echo "OZPATH = $OZPATH"
         # increment path
-        PATH=${PATH}:${OZHOME}/bin:${OZHOME}/bin/${OZARCH}
+        PATH=${OZHOME}/bin:${OZHOME}/bin/${OZARCH}:${PATH}
         export PATH
 #echo "PATH = $PATH"
         OZ_PI=1

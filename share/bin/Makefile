@@ -1,5 +1,5 @@
 SHELL=/bin/sh
-SCRIPTS = oz oz2lpr
+SCRIPTS = oz oz2lpr oz+
 LINKS = oz- oz.compiler oz.machine
 
 help:
