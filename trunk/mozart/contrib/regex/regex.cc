@@ -15,8 +15,11 @@
 
 #include "mozart.h"
 #include <sys/types.h>
-#include <regex.h>
 #include <string.h>
+
+extern "C" {
+#include <regex.h>
+}
 
 class REGEX: public OZ_Extension {
 public:
