@@ -11,9 +11,9 @@ define
    class TreeNode
       
       feat canvas font height vtag htag btag itag ltag tag width root parent
-	 Lock:{NewLock} del
+	 Lock:{NewLock} del bg
 
-      attr leaves box label icon expanded shown fill
+      attr leaves box label icon eicon expanded shown fill
 
       meth padX(V)
 %	 V=self.height+(self.height div 2)
@@ -27,17 +27,23 @@ define
 	 end
       end
 
-      meth unlockedInit(canvas:Canvas<=NoArgs font:Font<=NoArgs height:Height<=NoArgs
+      meth unlockedInit(canvas:Canvas<=NoArgs
+			font:Font<=NoArgs
+			height:Height<=NoArgs
 			parent:Parent<=NoArgs
-			label:Label tag:Tag<=NoArgs icon:Icon<=nil)
+			label:Label tag:Tag<=NoArgs
+			icon:Icon<=nil
+			eicon:EIcon<=nil)
 	 if Parent\=NoArgs then
 	    self.canvas=Parent.canvas
+	    self.bg=Parent.bg
 	    self.font=Parent.font
 	    self.height=Parent.height
 	    self.root=false
 	    self.parent=Parent
 	 else
 	    self.canvas=Canvas
+	    self.bg={Canvas tkReturn(cget(bg:unit) $)}
 	    self.font=Font
 	    self.height=Height
 	    self.root=true
@@ -46,6 +52,7 @@ define
 	 fill<-black
 	 label<-Label
 	 icon<-Icon
+	 eicon<-EIcon
 	 if Icon==nil then self.width=0 else
 	    self.width={Tk.returnInt image(width Icon)}
 	 end
@@ -86,7 +93,12 @@ define
 			       X+H1 Y+H2
 			       anchor:w
 			       tags:self.itag
-			       image:@icon)}
+			       image:if @expanded andthen @eicon\=nil then
+					@eicon
+				     else
+					@icon
+				     end
+			      )}
 	       {self.canvas tk(crea text
 			       X+H1+self.width+4 Y+H2
 			       anchor:w
@@ -133,6 +145,17 @@ define
 	 end
       end
 
+      meth drawIcon
+	 if @shown then
+	    {self.canvas tk(itemconfigure self.itag
+			    image:if @expanded andthen @eicon\=nil then
+				     @eicon
+				  else
+				     @icon
+				  end)}
+	 end
+      end
+      
       meth drawBox
 	 lock self.Lock then
 	    H1=self.height
@@ -148,7 +171,7 @@ define
 			       X+H4 Y+H4
 			       X+H6 Y+H6
 			       outline:black
-			       fill:white
+			       fill:self.bg
 			       tags:self.btag)}
 	       if @box==point then
 		  {self.canvas tk(crea rect
@@ -201,7 +224,10 @@ define
 	 TreeNode,hide(height:H del:true)
       end
 
-      meth configure(box:Box<=NoArgs icon:Icon<=NoArgs label:Label<=NoArgs
+      meth configure(box:Box<=NoArgs
+		     icon:Icon<=NoArgs
+		     eicon:EIcon<=NoArgs
+		     label:Label<=NoArgs
 		     fill:Fill<=NoArgs)
 	 lock self.Lock then
 	    if Box==NoArgs then skip else
@@ -211,10 +237,12 @@ define
 	       else skip end
 	    end
 	    if Icon==NoArgs then skip else
-	       if @shown then
-		  {self.canvas tk(itemconfigure self.itag image:Icon)}
-	       else skip end
 	       icon<-Icon
+	       {self drawIcon}
+	    end
+	    if EIcon==NoArgs then skip else
+	       eicon<-EIcon
+	       {self drawIcon}
 	    end
 	    if Label==NoArgs then skip else
 	       label<-Label
@@ -269,6 +297,7 @@ define
 		  end
 	       end
 	       expanded<-true
+	       {self drawIcon}
 	    end
 	 end
       end
@@ -295,6 +324,7 @@ define
 		  TreeNode,configure(box:if @leaves==nil then line else plus end)
 	       else skip end
 	       expanded<-false
+	       {self drawIcon}
 	    end
 	 end
       end
