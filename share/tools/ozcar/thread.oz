@@ -449,11 +449,7 @@ in
 	 case I == 1 then skip else
 	    Stack = {Dget self.ThreadDic I}
 	    T     = {Stack getThread($)}
-	    S     = local X = {Thread.state T} in
-		       case     {Dbg.checkStopped T} then X
-		       elsecase X == terminated      then X
-		       else                               running end
-		    end
+	    S     = {CheckState T}
 	 in
 	    currentThread <- T
 	    currentStack  <- Stack
@@ -471,9 +467,6 @@ in
 		  in
 		     {ForAll [print getPos(file:F line:L)] Stack}
 		     case Exc == nil then
-			case S == running then
-			   Gui,markStack(inactive)
-			else skip end
 			SourceManager,bar(file:F line:L state:S)
 		     else
 			SourceManager,bar(file:F line:L state:blocked)

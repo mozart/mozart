@@ -642,17 +642,16 @@ in
 		  Gui,doStatus(FirstSelectThread)
 	       else
 		  I = {Thread.id T}
-		  S = case {Dbg.checkStopped T} then
-			 {Thread.state T} else running end
+		  S = {CheckState T}
 	       in
 		  case S
 		  of running    then Gui,RunningStatus(I A)
 		  [] blocked    then Gui,BlockedStatus(T A)
 		  [] terminated then Gui,TerminatedStatus(T A)
 		  else
-		     % step never needs more time, does it?
-		     %Gui,markNode({Thread.id T} running)
-		     %SourceManager,configureBar(running)
+		     Gui,markNode({Thread.id T} running)
+		     SourceManager,configureBar(running)
+		     Gui,markStack(inactive)
 		     {Thread.resume @currentThread}
 		  end
 	       end
@@ -664,8 +663,7 @@ in
 		  Gui,doStatus(FirstSelectThread)
 	       else
 		  I = {Thread.id T}
-		  S = case {Dbg.checkStopped T} then
-			 {Thread.state T} else running end
+		  S = {CheckState T}
 	       in
 		  case S
 		  of running    then Gui,RunningStatus(I A)
@@ -708,8 +706,7 @@ in
 		  Gui,doStatus(FirstSelectThread)
 	       else
 		  I = {Thread.id T}
-		  S = case {Dbg.checkStopped T} then
-			 {Thread.state T} else running end
+		  S = {CheckState T}
 	       in
 		  case S
 		  of running    then Gui,RunningStatus(I A)
@@ -763,9 +760,9 @@ in
 		     else
 			case S == blocked then
 			   F L in
+			   {Thread.suspend T}
 			   {ForAll [rebuild(true) print
 				    getPos(file:F line:L)] Stack}
-			   {Thread.suspend T}
 			   SourceManager,bar(file:F line:L state:S)
 			else
 			   {Stack rebuild(true)}
@@ -791,8 +788,13 @@ in
 	    in
 	       case T == undef then skip else
 		  I = {Thread.id T}
+		  S = {CheckState T}
 	       in
-		  ThreadManager,kill(T I)
+		  case S
+		  of terminated then Gui,TerminatedStatus(T A)
+		  else
+		     ThreadManager,kill(T I)
+		  end
 	       end
 	       
 	    [] !StackAction then
