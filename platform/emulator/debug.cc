@@ -457,7 +457,7 @@ Bool trace(char *s,Board *board,Actor *actor,
   if (PC != NOCODE) {
     CodeArea::display(PC, 1);
   }
-  board->mprint();
+  board->printDebug();
   if (actor) {
     printf(" -- ");
     actor->print();
@@ -510,7 +510,7 @@ Bool trace(char *s,Board *board,Actor *actor,
     case 'f':
       return NO;
     case 'p':
-      board->mprintLong();
+      board->printLongDebug();
       break;
     case 's':
       mode = OK;

@@ -61,7 +61,7 @@ public:
   void gcRecurse(void);
   OZPRINT;
   OZPRINTLONG;
-  MPRINT
+
   void printTree();
 
   void incSuspCount(int n=1) { suspCount += n; }
