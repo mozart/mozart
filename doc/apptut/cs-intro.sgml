@@ -10,7 +10,7 @@ forwarding is effected by means of a port.  The forwarding procedure
 itself is made available indirectly through a ticket.  This ticket is
 placed in a file that is accessible through a URL.</p>
   <section>
-    <title/A Generic Server: <file/server.oz//
+    <title/A Generic Server <file/server.oz//
     <p>It is straightforward to write a generic server module that
 exports a ?_{Start} procedure.  The latter takes 2 arguments: ?_{Proc}
 the object or procedure implementing the service and ?_{File} the name
@@ -20,7 +20,11 @@ be applied to messages forwarded by clients.</p>
 ?_{Msg} and sends <code/request(?_{Msg} ?_{OK})/ to the server's
 port.  The server binds ?_{OK} to true or false depending on whether
 the ?_{Msg} is processed successfully or an exception is raised.
-<code.extern display to="server.oz"></p>
+<code.extern display to="server.oz">
+The server functor will be used as an import in subsequent examples and
+can be compiled as follows:
+<code display proglang=sh/ozc -c server.oz/
+</p>
 </chapter>
 <!--
 Local Variables:
