@@ -364,7 +364,7 @@ if that value is non-nil."
   (setq major-mode 'oz-mode)
   (setq mode-name "Oz")
   (oz-mode-variables)
-  (oz-default-font)
+;  (oz-default-font)
   (if lucid-emacs
       (set-menubar oz-menubar))
 ;      (set-buffer-menubar oz-menubar))
