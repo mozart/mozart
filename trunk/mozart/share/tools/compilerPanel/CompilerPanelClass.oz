@@ -1342,8 +1342,8 @@ in
 	    QueryIdsHd <- X
 	    QueryIdsTl <- X
 	 end
-	 CompilerPanel, addAction('Show'   System.show)
-	 CompilerPanel, addAction('Browse' Browser.browse)
+	 CompilerPanel, addAction('Show'    System.show)
+	 CompilerPanel, addAction('Inspect' Inspector.inspect)
       end
 
       meth FeedFile() FileName in
