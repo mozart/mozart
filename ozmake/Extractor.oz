@@ -152,15 +152,18 @@ define
 		  {{Resolve.make 'ozmake'
 		    init([Resolve.handler.default])}.localize
 		   Url}
+		  %% here we also need the same trick as described below
+		  VAL
 	       in
 		  try
-		     try {Pickle.load LOC.1}
-		     catch _ then {Pickler.fromFile LOC.1} end
+		     try local V={Pickle.load LOC.1} in VAL=V end
+		     catch _ then local V={Pickler.fromFile LOC.1} in VAL=V end end
 		  finally
 		     case LOC of new(F) then
 			try {OS.unlink F} catch _ then skip end
 		     else skip end
 		  end
+		  VAL
 	       end
 	    else
 	       %% otherwise, we read it in the usual way, except that
