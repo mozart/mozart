@@ -226,6 +226,29 @@ unsigned int osTotalTime()
 #endif
 }
 
+#if !defined(WINDOWS)
+//
+// kost@ : i've added this because of ridiculous signature for the
+// previous one (one cannot fit the time in ms in an integer (or long)
+// just per definition);
+double osTotalTimeReally()
+{
+#ifdef SUNOS_SPARC
+  struct timeval tp;
+  (void) gettimeofday(&tp, NULL);
+  return (double) ((tp.tv_sec - emulatorStartTime) * 1000 +
+                   tp.tv_usec / 1000);
+#else
+  struct tms buffer;
+  time_t t = times(&buffer) - emulatorStartTime;
+  return ((double) (((double) (t * 1000.0)) /
+                    ((double) sysconf(_SC_CLK_TCK))));
+#endif
+}
+#else
+#define osTotalTimeReally() osTotalTime()
+#endif
+
 
 
 #ifdef WINDOWS
@@ -630,9 +653,10 @@ int osGetAlarmTimer()
 
 
 /*
- * wait *timeout msecs on given fds
- * return number of fds ready and return in *timeout msecs left
- * (kost@ last one is not used now);
+ * Wait *timeout msecs on given fds. If 'ptimeout' is WAIT_NULL,
+ * return immediately.
+ * Returns number of fds ready, and writes in *timeout #msecs really
+ * spent in waiting;
  */
 static
 int osSelect(fd_set *readfds, fd_set *writefds, int *ptimeout)
@@ -644,7 +668,7 @@ int osSelect(fd_set *readfds, fd_set *writefds, int *ptimeout)
 #else
 
   struct timeval timeoutstruct, *timeoutptr;
-  int currentSystemTime;
+  double currentSystemTime;
 
   if (ptimeout == WAIT_NULL) {
     timeoutstruct.tv_sec = 0;
@@ -661,7 +685,7 @@ int osSelect(fd_set *readfds, fd_set *writefds, int *ptimeout)
     }
 
     //
-    currentSystemTime = osSystemTime();
+    currentSystemTime = osTotalTimeReally();
     // note that the alarm clock is untouched here now;
     osUnblockSignals();
   }
@@ -676,7 +700,8 @@ int osSelect(fd_set *readfds, fd_set *writefds, int *ptimeout)
   if (ptimeout != WAIT_NULL) {
     // kost@ : Note that effectively the time spent in wait
     // may be greater than specified;
-    *ptimeout = max(0, (*ptimeout) - (osSystemTime() - currentSystemTime));
+    *ptimeout = (int) (osTotalTimeReally() - currentSystemTime);
+    Assert(*ptimeout >= 0);
     osBlockSignals();
   }
 
@@ -856,12 +881,11 @@ Bool osIsWatchedFD(int fd, int mode)
  * do a select, that waits "ms".
  * if "ms" <= 0 do a blocking select
  */
-void osBlockSelect(int ms)
+void osBlockSelect(unsigned int &ms)
 {
   copyFDs[SEL_READ]  = globalFDs[SEL_READ];
   copyFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
-  int wait = ms;
-  (void) osSelect(&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],&wait);
+  (void) osSelect(&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],&ms);
 }
 
 /* osClearSocketErrors
@@ -931,7 +955,7 @@ int osFirstSelect()
   tmpFDs[SEL_READ]  = globalFDs[SEL_READ];
   tmpFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
 
-  int numbOfFDs = osSelect(&tmpFDs[SEL_READ],&tmpFDs[SEL_WRITE], WAIT_NULL);
+  int numbOfFDs = osSelect(&tmpFDs[SEL_READ],&tmpFDs[SEL_WRITE],WAIT_NULL);
 
   if (numbOfFDs < 0) {
     if (ossockerrno() == EINTR) {

@@ -112,17 +112,17 @@ static VSMsgChunkPoolManagerOwned *myVSChunksPoolManager;
 // The 'check'&'process' procedures for processing incoming messages
 // (see am.hh, class 'TaskNode'):
 // static TaskCheckProc checkVSMessages;
-static Bool checkVSMessages(void *mbox);
+static Bool checkVSMessages(double clock, void *mbox);
 // ... and the read handler itself:
 // static TaskProcessProc readVSMessages;
-static Bool readVSMessages(void *mbox);
+static Bool readVSMessages(double clock, void *mbox);
 
 //
 // ... and the pair for processing unsent messages:
 // static TaskCheckProc checkMessageQueue;
-static Bool checkMessageQueue(VSSiteQueue *sq);
+static Bool checkMessageQueue(double clock, VSSiteQueue *sq);
 // static TaskProcessProc processMessageQueue;
-static Bool processMessageQueue(VSSiteQueue *sq);
+static Bool processMessageQueue(double clock, VSSiteQueue *sq);
 
 ///
 /// (static) interface methods for virtual sites;
@@ -194,13 +194,14 @@ MonitorReturn
 monitorQueue_VirtualSite(VirtualSite *vs,
                          int size, int no_msgs, void *storePtr)
 {
-  return (NO_MONITOR_EXISTS);
+  warning("'monitorQueue_VirtualSite()' is not implemented!");
+  return (MONITOR_OK);
 }
 
 //
 MonitorReturn demonitorQueue_VirtualSite(VirtualSite* vs)
 {
-  return (NO_MONITOR_EXISTS);
+  return (MONITOR_OK);
 }
 
 //
@@ -211,6 +212,7 @@ ProbeReturn
 installProbe_VirtualSite(VirtualSite *vs,
                          ProbeType pt, int frequency, void *storePtr)
 {
+  Assert(frequency > 0);
   return (PROBE_INSTALLED);
 }
 
@@ -290,7 +292,7 @@ MsgBuffer* getVirtualMsgBuffer(Site* site)
 
 //
 //
-static Bool checkVSMessages(void *vMBox)
+static Bool checkVSMessages(double clock, void *vMBox)
 {
   // unsafe by now - some magic number should be added;
   VSMailboxOwned *mbox = (VSMailboxOwned *) vMBox;
@@ -298,7 +300,7 @@ static Bool checkVSMessages(void *vMBox)
 }
 
 //
-static Bool readVSMessages(void *vMBox)
+static Bool readVSMessages(double clock, void *vMBox)
 {
   // unsafe by now - some magic number(s) should be added;
   VSMailboxOwned *mbox = (VSMailboxOwned *) vMBox;
@@ -344,7 +346,7 @@ static Bool readVSMessages(void *vMBox)
 
 //
 //
-static Bool checkMessageQueue(void *sqi)
+static Bool checkMessageQueue(double clock, void *sqi)
 {
   // unsafe by now - some magic number should be added;
   VSSiteQueue *sq = (VSSiteQueue *) sqi;
@@ -352,7 +354,7 @@ static Bool checkMessageQueue(void *sqi)
 }
 
 //
-static Bool processMessageQueue(void *sqi)
+static Bool processMessageQueue(double clock, void *sqi)
 {
   // unsafe by now - some magic number should be added;
   VSSiteQueue *sq = (VSSiteQueue *) sqi;

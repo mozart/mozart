@@ -57,7 +57,9 @@ void VirtualSite::connect()
 VirtualSite::VirtualSite(Site *s,
                          VSFreeMessagePool *fmpIn,
                          VSSiteQueue *sqIn)
-  : site(s), status(SITE_OK), vsStatus(0), fmp(fmpIn), sq(sqIn),
+  : site(s), status(SITE_OK), vsStatus(0),
+    isAliveSent(0), aliveAck(0),
+    fmp(fmpIn), sq(sqIn),
     mboxMgr((VSMailboxManagerImported *) 0)
 {
   connect();

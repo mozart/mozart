@@ -116,7 +116,7 @@ void osWatchAccept(int fd);
 void osWatchFD(int fd, int mode);
 Bool osIsWatchedFD(int fd, int mode);
 void osClrWatchedFD(int fd, int mode);
-void osBlockSelect(int ticks);
+void osBlockSelect(unsigned int &ms);
 void osClearSocketErrors();
 int  osFirstSelect();
 Bool osNextSelect(int fd, int mode);

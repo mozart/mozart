@@ -96,11 +96,11 @@ oz_BFlag oz_isBetween(Board *to, Board *varHome);
 
 //
 // "check" says 'TRUE' if there is some pending processing;
-typedef Bool (*TaskCheckProc)(void *arg);
+typedef Bool (*TaskCheckProc)(double clock, void *arg);
 // 'process' says 'TRUE' if all the tasks are done;
-typedef Bool (*TaskProcessProc)(void *arg);
+typedef Bool (*TaskProcessProc)(double clock, void *arg);
 
-Bool NeverDo_CheckProc(void *va);
+Bool NeverDo_CheckProc(double, void*);
 
 //
 class TaskNode {
@@ -244,6 +244,14 @@ private:
 
   Bool installingScript;  // ask TM
 
+  // internal clock in 'ms';
+  double emulatorClock;
+
+  // minimal interval at which tasks are checked/handled.
+  // '0' means no minimal interval is required.
+  unsigned int taskMinInterval;
+
+  //
   OzSleep *sleepQueue;
 
   Bool profileMode;
@@ -557,11 +565,30 @@ public:
   void deSelect(int fd,int mode);
   void checkIO();
 
+  //
+  // Tasks are handled with certain minimal interval;
+  // Right now there is no way to fall back with intervals...
+  void setMinimalTaskInterval(unsigned int ms) {
+    Assert(ms);
+    Assert(ms >= (CLOCK_TICK/1000));
+    taskMinInterval = min(taskMinInterval, ms);
+  }
+  DebugCode(void dropMinimalTaskInterval() { taskMinInterval = 0; })
+
+  //
   Bool registerTask(void *arg, TaskCheckProc cIn, TaskProcessProc pIn);
   Bool removeTask(void *arg, TaskCheckProc cIn);
   void checkTasks();
 
-  void handleAlarm();
+  //
+  double getEmulatorClock() { return (emulatorClock); }
+
+  // yields time for blocking in 'select()';
+  unsigned int waitTime();
+
+  //
+  // 'ms' is time since last call in milliseconds;
+  void handleAlarm(unsigned int ms);
   // 'SIGUSR2' notifies about presence of tasks. Right now these are
   // only virtual site messages;
   void handleUSR2();
@@ -571,6 +598,7 @@ public:
   int  nextUser();
   Bool checkUser();
 
+  //
   Bool isStableSolve(SolveActor *sa);
 };
 

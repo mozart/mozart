@@ -137,6 +137,16 @@
 #define TCP_PACKET_SIZE   1*1024    /* 1k */
 
 //
+// Tasks manager;
+// Minimal frequency in ms. Rounded up to the 'CLOCK_TICK' value;
+// A minimal frequency of '0' means there is no minimal frequency;
+#define DEFAULT_MIN_FREQ  0
+
+//
+// Distributed Oz - general;
+#define PROBE_INTERVAL      1000 /* ms */
+
+//
 // Distributed Oz - virtual sites
 #define PERDIO_ID       0xa3
 #define VS_MAILBOX_SIZE (1024*1024)

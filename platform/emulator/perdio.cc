@@ -2127,11 +2127,11 @@ void freeInformElem(InformElem* e){
 
 inline void installProbe(Site *s,ProbeType pt){
   if(s==mySite) return;
-  s->installProbe(pt,0);}
+  s->installProbe(pt,PROBE_INTERVAL);}
 
 void tertiaryInstallProbe(Site *s,ProbeType pt,Tertiary *t){
   if(s==mySite) return;
-  ProbeReturn pr=s->installProbe(pt,0);
+  ProbeReturn pr=s->installProbe(pt,PROBE_INTERVAL);
   if(pr==PROBE_INSTALLED) return;
   if(t->isManager())
     t->managerProbeFault(s,pr);

@@ -352,6 +352,10 @@ private:
   Site *site;                   // backward (cross) reference;
   SiteStatus status;            // (values;)
   int vsStatus;                 // (flags;)
+  //
+  // 'isAliveSent==0' means no request was sent;
+  double isAliveSent;           // when a last 'is alive' was sent
+  double aliveAck;              // and received;
 
   //
   VSMailboxManagerImported *mboxMgr; // ... of that virtual site;
