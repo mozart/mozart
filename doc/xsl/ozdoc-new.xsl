@@ -18,7 +18,8 @@
 	MATH.CHOICE PICTURE.CHOICE
 	CHUNK FIGURE INDEX SEE
 	GRAMMAR.RULE GRAMMAR
-	TABLE TR"/>
+	TABLE TR
+	OZDOC.DB OZDOC.DOCUMENT OZDOC.BOOK OZDOC.ENTRY"/>
 
 <!-- root processing -->
 
@@ -442,70 +443,47 @@
 <template name="ref.extern">
   <variable name="to"><value-of select="@TO"/></variable>
   <choose>
-  <when test="starts-with($to,'ozdoc:')">
-    <txt:usemap>\REFEXTTO{</txt:usemap>
-    <choose>
-      <when test="$to='ozdoc:system'"
-	    >The System Modules</when>
-      <when test="$to='ozdoc:apptut'"
-	    >The Application Programming Tutorial</when>
-      <when test="$to='ozdoc:opi'"
-	    >The Oz Programming Interface</when>
-      <when test="$to='ozdoc:fdt'"
-	    >Finite Domain Constraint Programming</when>
-      <when test="$to='ozdoc:notation'"
-	    >The Oz Notation</when>
-      <when test="$to='ozdoc:base'"
-	    >The Oz Base Environment</when>
-      <when test="$to='ozdoc:browser'"
-	    >The Oz Browser</when>
-      <when test="$to='ozdoc:explorer'"
-	    >Oz Explorer - Visual Constraint Programming Support</when>
-      <when test="$to='ozdoc:panel'"
-	    >Oz Panel</when>
-      <when test="$to='ozdoc:ozcar'"
-	    >The Mozart Debugger</when>
-      <when test="$to='ozdoc:profiler'"
-	    >The Mozart Profiler</when>
-      <when test="$to='ozdoc:dstutorial'"
-	    >Distributed Programming in Mozart -
-A Tutorial Introduction</when>
-      <when test="$to='ozdoc:install'"
-	    >Installation Manual</when>
-      <when test="$to='ozdoc:tools'"
-	    >Oz Shell Utilities</when>
-      <when test="$to='ozdoc:foreign'"
-	    >Interfacing to C and C++</when>
-      <when test="$to='ozdoc:cpiref'"
-	    >The Mozart Constraint Extensions Reference</when>
-      <when test="$to='ozdoc:wp'"
-	    >Window Programming in Mozart</when>
-      <when test="$to='ozdoc:compiler'"
-	    >The Mozart Compiler</when>
-      <when test="$to='ozdoc:tutorial'"
-	    >The Tutorial of Oz</when>
-      <when test="$to='ozdoc:op'"
-	    >Open Programming in Mozart</when>
-      <when test="$to='ozdoc:cpitut'"
-	    >The Mozart Constraint Extensions Tutorial</when>
-      <otherwise>
-        <if test="msg:say('UNRECOGNIZED OZDOC REF: ') and msg:saynl(string($to))"/>
-        <txt:usemap name="text">!!!UNRECOGNIZED REF!!!<value-of select="$to"/>!!!</txt:usemap>
-      </otherwise>
-    </choose>
-    <txt:usemap>}</txt:usemap>
-    <if test="@KEY">
-      <txt:usemap> \REFEXTKEY{</txt:usemap>
-      <value-of select="@KEY"/>
+    <when test="starts-with($to,'ozdoc:')">
+      <choose>
+        <when test="@KEY">
+          <variable name="key"><value-of select="translate(string(@KEY),'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ')"/></variable>
+          <txt:usemap>\OZDOCREF{</txt:usemap>
+          <value-of select="$to"/>
+          <txt:usemap>}{</txt:usemap>
+          <value-of select="$key"/>
+          <txt:usemap>}{</txt:usemap>
+          <apply-templates select="/BOOK/OZDOC.DB/OZDOC.DOCUMENT[@NAME=$to]/OZDOC.BOOK/OZDOC.ENTRY[@KEY=$key]"/>
+          <txt:usemap>}</txt:usemap>
+        </when>
+        <otherwise>
+          <txt:usemap>\OZDOCREFTOP{</txt:usemap>
+          <value-of select="$to"/>
+          <txt:usemap>}{</txt:usemap>
+          <apply-templates
+          select="/BOOK/OZDOC.DB/OZDOC.DOCUMENT[@NAME=$to]/OZDOC.BOOK/TITLE"
+          mode="ok"/>
+          <txt:usemap>}</txt:usemap>
+        </otherwise>
+      </choose>
+    </when>
+    <otherwise>
+      <txt:usemap>\DEFAULTREFEXT{</txt:usemap>
+      <value-of select="$to"/>
       <txt:usemap>}</txt:usemap>
-    </if>
-  </when>
-  <otherwise>
-    <txt:usemap>\DEFAULTREFEXT{</txt:usemap>
-    <value-of select="$to"/>
-    <txt:usemap>}</txt:usemap>
-  </otherwise>
+    </otherwise>
   </choose>
+</template>
+
+<template match="OZDOC.DB"/>
+<template match="OZDOC.ENTRY">
+  <!-- {TYPE}{SECTITLE}{DOCTITLE} -->
+  <txt:usemap>{</txt:usemap>
+  <value-of select="@TYPE"/>
+  <txt:usemap>}{</txt:usemap>
+  <apply-templates select="TITLE[1]" mode="ok"/>
+  <txt:usemap>}{</txt:usemap>
+  <apply-templates select="../TITLE[1]" mode="ok"/>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 <template match="PTR">
