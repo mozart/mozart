@@ -1297,17 +1297,17 @@ synSeqs		: synSeq
 		  { $$ = consList($1,$3); }
 		;
 
-synSeq		: nonEmptySeq
+synSeq		: thisCoord nonEmptySeq
 		  { OZ_Term t = $1;
 		    while (terms[depth]) {
 		      t = consList(newCTerm("fSynApplication", terms[depth]->term, nilAtom), t);
 		      TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
 		    }
-		    $$ = newCTerm("fSynSequence", decls[depth], t);
+		    $$ = newCTerm("fSynSequence", decls[depth], t, $1);
 		    decls[depth] = nilAtom;
 		  }
-		| skip optSynAction
-		  { $$ = newCTerm("fSynSequence", nilAtom, $2); }
+		| skip coord optSynAction
+		  { $$ = newCTerm("fSynSequence", nilAtom, $3, $2); }
 		;
 
 optSynAction	: /* empty */
