@@ -27,7 +27,7 @@
     T = 'Gump Scanner error'
     case E of gump(fileNotFound FileName) then
        error(kind: T
-	     msg: 'Could not open file'
+	     msg: 'could not open file'
 	     items: [hint(l: 'File name' m: oz(FileName))])
     elseof gump(fatalError VS) then
        error(kind: T
