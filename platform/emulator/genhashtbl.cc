@@ -19,6 +19,7 @@
 #include <stdio.h>
 
 #include "types.hh"
+#include "error.hh"
 #include "genhashtbl.hh"
 #include "perdio_debug.hh"
 
