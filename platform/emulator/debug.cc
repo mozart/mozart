@@ -62,8 +62,10 @@ void debugStreamSuspend(ProgramCounter PC, Thread *tt,
   int line, abspos;
   time_t feedtime;
 
-  am.currentThread->startStepMode();
-  am.currentThread->deleteContFlag();
+  if (!am.runChildren) {
+    am.currentThread->startStepMode();
+    am.currentThread->deleteContFlag();
+  }
 
   if (debugPC == NOCODE) {
     file    = OZ_atom("noDebugInfo");
@@ -252,6 +254,15 @@ OZ_C_proc_begin(BIsuspendDebug,1)
   OZ_declareNonvarArg(0,in);
   in = OZ_deref(in);
   am.suspendDebug = OZ_isTrue(in) ? OK : NO;
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIrunChildren,1)
+{
+  OZ_declareNonvarArg(0,in);
+  in = OZ_deref(in);
+  am.runChildren = OZ_isTrue(in) ? OK : NO;
   return PROCEED;
 }
 OZ_C_proc_end
