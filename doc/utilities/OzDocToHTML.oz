@@ -1087,9 +1087,9 @@ define
 	       OzDocToHTML, Batch(M 2 ?HTML)
 	       GrammarAltType <- X.1
 	       GrammarHead <- X.2
-	       BLOCK(table(COMMON: @Common
-			   border: 0 cellpadding: 0 cellspacing: 0
-			   HTML))
+	       BLOCK(blockquote(table(COMMON: @Common
+				      border: 0 cellpadding: 0 cellspacing: 0
+				      HTML)))
 	    [] 'grammar.head' then
 	       span(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	    [] 'grammar.alt' then HTML1 HTML2 in
