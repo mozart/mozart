@@ -44,6 +44,8 @@ void comController_startGCComObjs();
 void comController_gcComObjs();
 void comController_finishGCComObjs();
 
+extern Bool ipIsbehindFW;
+
 //
 // Run this when starting;
 void initNetwork();
