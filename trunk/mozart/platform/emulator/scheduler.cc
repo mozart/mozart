@@ -474,7 +474,7 @@ LBLraise:
       CTT->pushCall(e->defaultExceptionHdl,e->exception.value);
     } else {
       prefixError();
-      fprintf(stderr,"Exception raise:\n   %s\n",toC(e->exception.value));
+      fprintf(stderr,"Exception raise:\n   %s\n",OZ_toC(e->exception.value,100,100));
       fflush(stderr);
     }
     goto LBLrunThread; // changed from LBLpopTaskNoPreempt; -BL 26.3.97
