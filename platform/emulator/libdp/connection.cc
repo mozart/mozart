@@ -43,11 +43,23 @@ void doConnect(ComObj *comObj) {
   getTransController(comObj->getSite())->getTransObj(comObj);
 }
 
+// The transController delivers a transObj(= a right to use a resource),
+// this should now be filled in with a working connection.
 void transObjReady(ComObj *comObj,TransObj *transObj) {
   switch(transportType) {
   case TRANS_TCP:
     tcpTransObjReady(comObj,transObj);
   }
+}
+
+// The comObj hands back a transObj that it is done with
+void handback(ComObj *comObj, TransObj *transObj) {
+  void *info=transObj->close();
+  switch(transportType) {
+  case TRANS_TCP:
+    tcpDoDisconnect(info);
+  }
+  getTransController(comObj->getSite())->transObjFreed(comObj,transObj);
 }
 
 // The comObj is informing us that it no longer needs the connection
@@ -66,13 +78,4 @@ Bool initAccept() {
   case TRANS_TCP:
     return tcpInitAccept();
   }
-}
-
-void handback(ComObj *comObj, TransObj *transObj) {
-  void *info=transObj->close();
-  switch(transportType) {
-  case TRANS_TCP:
-    tcpDoDisconnect(info);
-  }
-  getTransController(comObj->getSite())->transObjFreed(comObj,transObj);
 }
