@@ -1187,12 +1187,11 @@ void BorrowTable::closeFrameToProxy(unsigned int ms){
   int j=0;
   for(int i=0;i<size;i++){
     be = getBorrow(i);
-    if((!be->isFree()) && (!be->isVar())){
+    if((!be->isFree()) && be->isTertiary()){
       Tertiary *t = be->getTertiary();
       int type = t->getType();
       int state;
       if(t->isFrame()) {
-        printf("Frame type: %d\n",t->getType());
         if(type==Co_Cell)
           state = ((CellFrame*)t)->getState();
         else if(type==Co_Lock)
@@ -1203,23 +1202,17 @@ void BorrowTable::closeFrameToProxy(unsigned int ms){
         switch(state){
         case Cell_Lock_Invalid:
           if(type==Co_Lock){
-            printf("qLock_Invalid\n");
             ((CellFrame*)t)->convertToProxy();}
           else{
-            printf("qCell_Invalid\n");
             ((LockFrame*)t)->convertToProxy();}
           break;
         case Cell_Lock_Requested:
-          printf("qCell_Lock_Requested\n");
         case Cell_Lock_Valid:
-          printf("qCell_Lock_VALIDorRequested\n");
           cellLockSendDump(be);
           break;
         case Cell_Lock_Requested|Cell_Lock_Next:
-          printf("qCell_Lock_Requested+next\n");
           break;
         case Cell_Lock_Valid|Cell_Lock_Next:
-          printf("qCell_Lock_Valid+next\n");
           if(type==Co_Lock){
             NetAddress *na=be->getNetAddress();
             LockSec* sec = ((LockFrame*)t)->getLockSec();
@@ -1250,7 +1243,7 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
   int frames = 0;
   unsigned long start_time = osTotalTime();
   int j=0;
-  //print();
+  //  print();
   for(int i=0;i<size;i++){
     be = getBorrow(i);
     if(!be->isFree())
@@ -1261,8 +1254,6 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
           proxies++;
         }
         if(t->isFrame()) {
-          //      printf("Frame type: %d\n",t->getType());
-          /*
           int type = t->getType();
           int state;
           if(type==Co_Cell)
@@ -1281,8 +1272,6 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
             break;
           case Cell_Lock_Requested:
           case Cell_Lock_Valid:
-            cellLockSendDump(be);
-            break;
           case Cell_Lock_Requested|Cell_Lock_Next:
             break;
           case Cell_Lock_Valid|Cell_Lock_Next:
@@ -1299,7 +1288,6 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
           default:
             Assert(0);
           }
-          */
           frames++;
         }
       }
@@ -1307,8 +1295,7 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
         TaggedRef term = be->getRef();
         DEREF(term,termPtr,tag);
         if(oz_isProxyVar(term)) {
-          if(!be->isExtended() && !be->isPersistent()&&(be->getCreditOB() > 0))
-            maybeFreeBorrowEntry(i);
+          maybeFreeBorrowEntry(i);
           proxies++;
         }
       }
@@ -1321,7 +1308,7 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
   }
   //  printf("%d frames and %d proxies left\n", frames, proxies);
   //  printf("time left:%d\n", ms+start_time-osTotalTime());
-  return proxies;
+  return proxies+frames;
 }
 
 int OwnerTable::notGCMarked() {
