@@ -530,12 +530,12 @@ OZ_ENABLE_YES(linkprop,[ link propagators statically],
         AC_MSG_RESULT(yes (-UFOREIGNFDPROPS))
 	FDTARGETS="libfd.a libsched.a"
 	FSETTARGETS="libfset.a"
-	LIBS="-L./FDLib -lfd -lsched -L./FSetLib -lfset $LIBS"
+	LIBS="-L./libfd -lfd -lsched -L./libfset -lfset $LIBS"
 	,
         AC_MSG_RESULT(no (-DFOREIGNFDPROPS))
 	AC_DEFINE(FOREIGNFDPROPS)
-	FDTARGETS="fdlib.so schedlib.so"
-	FSETTARGETS="fsetlib.so"
+	FDTARGETS="libfd.so libsched.so"
+	FSETTARGETS="libfset.so"
 	INSTALL_PROP="install-prop"
 	)
 AC_SUBST(FDTARGETS)
@@ -643,9 +643,9 @@ dnl *****************************************************************
 
 AC_CONFIG_HEADER(conf.h)
 
-AC_OUTPUT(Makefile.vars Makefile Makefile.rules FDLib/Makefile FSetLib/Makefile)
+AC_OUTPUT(Makefile.vars Makefile Makefile.rules libfd/Makefile libfset/Makefile)
 
 errprint(ifdef([OZ_INIT],
  [],
- [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
+ [autoconf failed: use 'autoconf -l ../..' to include ../../aclocal.m4.
 ]))

@@ -38,7 +38,7 @@ FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 
 all: $(FSETTARGETS)
 
-fsetlib.so: $(FSETLIBOBJS)
+libfset.so: $(FSETLIBOBJS)
 	$(DYNLD) -o $@ $(FSETLIBOBJS)
 
 libfset.a: $(FSETLIBOBJS)
