@@ -105,14 +105,13 @@ static OZ_Return raise_toplevel(void) {
  */
 
 #define ENTER_TK_LOCK { \
-  TaggedRef t = tk.getLock();      \
-  DEREF(t, t_ptr);                 \
-  if (oz_isVar(t)) {               \
-    am.addSuspendVarList(t_ptr);   \
-    return SUSPEND;                \
-  } else {                         \
-    tk.setLock(oz_newVariable());  \
-  }                                \
+  TaggedRef t = tk.getLock();           \
+  DEREF(t, t_ptr);                      \
+  if (oz_isVar(t)) {                    \
+    return oz_addSuspendVarList(t_ptr); \
+  } else {                              \
+    tk.setLock(oz_newVariable());       \
+  }                                     \
 }
 
 #define LEAVE_TK_LOCK \
@@ -395,8 +394,7 @@ public:
       DEREF(h, h_ptr);
 
       if (oz_isVar(h)) {
-        am.addSuspendVarList(h_ptr);
-        return SUSPEND;
+        return oz_addSuspendVarList(h_ptr);
       }
       if (!oz_isSmallInt(h))
         return raise_type_error(list);
@@ -411,8 +409,7 @@ public:
       DEREF(t, t_ptr);
 
       if (oz_isVar(t)) {
-        am.addSuspendVarList(t_ptr);
-        return SUSPEND;
+        return oz_addSuspendVarList(t_ptr);
       }
 
       if (oz_isLTuple(t)) {
@@ -433,8 +430,7 @@ public:
       DEREF(h, h_ptr);
 
       if (oz_isVar(h)) {
-        am.addSuspendVarList(h_ptr);
-        return SUSPEND;
+        return oz_addSuspendVarList(h_ptr);
       }
       if (!oz_isSmallInt(h))
         return raise_type_error(list);
@@ -448,8 +444,7 @@ public:
       DEREF(t, t_ptr);
 
       if (oz_isVar(t)) {
-        am.addSuspendVarList(t_ptr);
-        return SUSPEND;
+        return oz_addSuspendVarList(t_ptr);
       }
 
       if (oz_isLTuple(t)) {
@@ -528,8 +523,7 @@ wait_select:
   (void) oz_io_select(tk_fd, SEL_WRITE, NameUnit, var);
   DEREF(var, var_ptr);
   if (oz_isVar(var)) {
-    am.addSuspendVarList(var_ptr);
-    return SUSPEND;
+    return oz_addSuspendVarList(var_ptr);
   } else {
     goto redo;
   }
@@ -584,8 +578,7 @@ OZ_Return TK::put_batch(TaggedRef batch, char delim) {
   DEREF(batch, batch_ptr);
 
   if (oz_isVar(batch)) {
-    am.addSuspendVarList(batch_ptr);
-    return SUSPEND;
+    return oz_addSuspendVarList(batch_ptr);
   } else if (oz_isLTuple(batch)) {
     OZ_Return batch_state = put_tcl(oz_head(batch));
 
@@ -603,8 +596,7 @@ OZ_Return TK::put_batch(TaggedRef batch, char delim) {
     DEREF(batch, batch_ptr);
 
     if (oz_isVar(batch)) {
-      am.addSuspendVarList(batch_ptr);
-      return SUSPEND;
+      return oz_addSuspendVarList(batch_ptr);
     } else if (oz_isLTuple(batch)) {
       put(delim);
       OZ_Return batch_state = put_tcl(oz_head(batch));
@@ -662,8 +654,7 @@ OZ_Return TK::put_vs(TaggedRef vs) {
   DEREF(vs, vs_ptr);
 
   if (oz_isVar(vs)) {
-    am.addSuspendVarList(vs_ptr);
-    return SUSPEND;
+    return oz_addSuspendVarList(vs_ptr);
   } else if (oz_isSmallInt(vs) || oz_isBigInt(vs)) {
     put_int(vs);
     return PROCEED;
@@ -702,8 +693,7 @@ OZ_Return TK::put_vs_quote(TaggedRef vs) {
   DEREF(vs, vs_ptr);
 
   if (oz_isVar(vs)) {
-    am.addSuspendVarList(vs_ptr);
-    return SUSPEND;
+    return oz_addSuspendVarList(vs_ptr);
   } else if (oz_isSmallInt(vs) || oz_isBigInt(vs)) {
     put_int(vs);
     return PROCEED;
@@ -742,8 +732,7 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
   DEREF(tcl, tcl_ptr);
 
   if (oz_isVar(tcl)) {
-    am.addSuspendVarList(tcl_ptr);
-    return SUSPEND;
+    return oz_addSuspendVarList(tcl_ptr);
   } else if (oz_isSmallInt(tcl) || oz_isBigInt(tcl)) {
     put_int(tcl);
     return PROCEED;
@@ -774,8 +763,7 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
       DEREF(v, v_ptr);
 
       if (oz_isVar(v)) {
-        am.addSuspendVarList(v_ptr);
-        return SUSPEND;
+        return oz_addSuspendVarList(v_ptr);
       } else if (oz_isLiteral(v) && oz_eq(v,TkNameTclClosed)) {
         return raise_closed(tcl);
       } else {
@@ -806,8 +794,7 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
         DEREF(arg, arg_ptr);
 
         if (oz_isVar(arg)) {
-          am.addSuspendVarList(arg_ptr);
-          return SUSPEND;
+          return oz_addSuspendVarList(arg_ptr);
         }
 
         return put_vs(arg);
@@ -828,8 +815,7 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
           DEREF(arg, arg_ptr);
 
           if (oz_isVar(arg)) {
-            am.addSuspendVarList(arg_ptr);
-            return SUSPEND;
+            return oz_addSuspendVarList(arg_ptr);
           }
 
           if (!oz_isSmallInt(arg))
@@ -853,8 +839,7 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
         TaggedRef rt = st->getArg(0);
         DEREF(rt, rt_ptr);
         if (oz_isVar(rt)) {
-          am.addSuspendVarList(rt_ptr);
-          return SUSPEND;
+          return oz_addSuspendVarList(rt_ptr);
         }
         return put_record_or_tuple(rt);
       } else if (oz_eq(l,TkAtomTclList)) {
@@ -1454,8 +1439,7 @@ OZ_BI_define(BItk_close,2,0) {
       DEREF(v, v_ptr);
 
       if (oz_isVar(v)) {
-        am.addSuspendVarList(v_ptr);
-        s = SUSPEND;
+        s = oz_addSuspendVarList(v_ptr);
         goto exit;
       } else if (oz_isLiteral(v) && oz_eq(v,TkNameTclClosed)) {
         LEAVE_TK_LOCK;

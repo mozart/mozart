@@ -409,18 +409,15 @@ public:
     return oz_eq(_suspendVarList,oz_nil());
   }
 
-  void addSuspendVarListInline(TaggedRef t)
-  {
-    Assert(oz_isVar(oz_deref(t)));
-    _suspendVarList=oz_cons(t,_suspendVarList);
+  OZ_Return addSuspendVarListInline(TaggedRef * t) {
+    _suspendVarList=oz_cons(makeTaggedRef(t),_suspendVarList);
+    return SUSPEND;
   }
-
-  void addSuspendVarListInline(TaggedRef *t)
-  {
-    addSuspendVarList(makeTaggedRef(t));
+  OZ_Return addSuspendVarListInline(TaggedRef t) {
+    DEREF(t,tptr);
+    Assert(oz_isVar(t));
+    return addSuspendVarListInline(tptr);
   }
-  void addSuspendVarList(TaggedRef);
-  void addSuspendVarList(TaggedRef*);
 
   OZ_Return suspendOnVarList(Thread *thr);
 
@@ -601,6 +598,13 @@ TaggedRef oz_newVariable()
 }
 
 TaggedRef oz_newVariable(Board *b);
+
+OZ_Return oz_addSuspendVarList(TaggedRef*);
+OZ_Return oz_addSuspendVarList(TaggedRef);
+OZ_Return oz_addSuspendVarList2(TaggedRef,TaggedRef);
+OZ_Return oz_addSuspendVarList3(TaggedRef,TaggedRef,TaggedRef);
+OZ_Return oz_addSuspendInArgs2(OZ_Term * _OZ_LOC[]);
+OZ_Return oz_addSuspendInArgs3(OZ_Term * _OZ_LOC[]);
 
 
 

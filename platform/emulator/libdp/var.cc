@@ -217,15 +217,14 @@ OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){
         if(failurePreemption(mkOp1("bind",r))) return BI_REPLACEBICALL;}}
     if (!binding) {
       if(isFuture()){
-        am.addSuspendVarList(lPtr);
-        return SUSPEND;}
+        return oz_addSuspendVarList(lPtr);
+      }
       BorrowEntry *be=BT->getBorrow(getIndex());
       sendSurrender(be,r);
       PD((THREAD_D,"stop thread proxy bind %x",oz_currentThread()));
       binding=r;
     }
-    am.addSuspendVarList(lPtr);
-    return SUSPEND;
+    return oz_addSuspendVarList(lPtr);
   } else {
     // in guard: bind and trail
     if(!errorIgnore()){
@@ -374,8 +373,7 @@ OZ_Return ManagerVar::bindVInternal(TaggedRef *lPtr, TaggedRef r,DSite *s)
   Bool isLocal = oz_isLocalVar(this);
   if (isLocal) {
     if(isFuture()){
-      am.addSuspendVarList(lPtr);
-      return SUSPEND;
+      return oz_addSuspendVarList(lPtr);
     }
     EntityInfo *ei=info;
     sendRedirectToProxies(r, s);

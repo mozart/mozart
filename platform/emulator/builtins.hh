@@ -69,7 +69,7 @@ OZ_BI_define(Name,2,0)                                  \
   oz_declareIN(1,arg1);                                 \
   OZ_Return state = InlineName(arg0,arg1);              \
   if (state == SUSPEND) {                               \
-    oz_suspendOn2(arg0,arg1);                           \
+    oz_suspendOnInArgs2;                                \
   } else {                                              \
     return state;                                       \
   }                                                     \
@@ -83,7 +83,7 @@ OZ_BI_define(Name,3,0)                                  \
   oz_declareIN(2,arg2);                                 \
   OZ_Return state = InlineName(arg0,arg1,arg2);         \
   if (state == SUSPEND) {                               \
-    oz_suspendOn3(arg0,arg1,arg2);                      \
+    oz_suspendOnInArgs3;                                \
   } else {                                              \
     return state;                                       \
   }                                                     \
@@ -113,7 +113,7 @@ OZ_BI_define(Name,3,1)                                  \
   OZ_Return state=InlineName(arg0,arg1,arg2,aux);       \
   OZ_result(aux);                                       \
   if (state==SUSPEND) {                                 \
-    oz_suspendOn3(arg0,arg1,arg2);                      \
+    oz_suspendOnInArgs3;                                \
   } else {                                              \
     return state;                                       \
   }                                                     \
@@ -141,7 +141,7 @@ OZ_BI_define(Name,2,1)                                  \
   OZ_Return state=InlineName(arg0,arg1,aux);            \
   OZ_result(aux);                                       \
   if (state==SUSPEND) {                                 \
-    oz_suspendOn2(arg0,arg1);                           \
+    oz_suspendOnInArgs2;                                \
   } else {                                              \
     return state;                                       \
   }                                                     \
@@ -183,13 +183,22 @@ oz_declareDerefIN(ARG,VAR);                     \
 #define oz_declareTypeIN(ARG,VAR,TT,TYPE)       \
 TT VAR;                                         \
 {                                               \
-  oz_declareNonvarIN(ARG,_VAR);         \
-  if (!oz_is ## TYPE(_VAR)) {                   \
+  register OZ_Term _VAR = OZ_in(ARG);           \
+  while (OK) {                                  \
+    if (oz_is ## TYPE(_VAR))                    \
+      break;                                    \
+    if (oz_isRef(_VAR)) {                       \
+      _VAR = * tagged2Ref(_VAR);                \
+      continue;                                 \
+    }                                           \
+    if (oz_isVar(_VAR)) {                       \
+      oz_suspendOn(OZ_in(ARG));                 \
+    }                                           \
     oz_typeError(ARG, #TYPE);                   \
-  } else {                                      \
-    VAR = oz_ ## TYPE ## ToC(_VAR);             \
   }                                             \
+  VAR = oz_ ## TYPE ## ToC(_VAR);               \
 }
+
 
 #define oz_declareIntIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,int,Int)
 #define oz_declareFloatIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,double,Float)
@@ -257,68 +266,24 @@ char *VAR;                                      \
  * suspend
  * -----------------------------------------------------------------------*/
 
-#define oz_suspendOnVar(vin) {                  \
-  am.addSuspendVarList(vin);                    \
-  return SUSPEND;                               \
-}
+#define oz_suspendOn(v)         return oz_addSuspendVarList(v)
+#define oz_suspendOn2(v1,v2)    return oz_addSuspendVarList2(v1,v2)
+#define oz_suspendOnInArgs2     return oz_addSuspendInArgs2(_OZ_LOC)
+#define oz_suspendOn3(v1,v2,v3) return oz_addSuspendVarList3(v1,v2,v3)
+#define oz_suspendOnInArgs3     return oz_addSuspendInArgs3(_OZ_LOC)
 
-#define oz_suspendOn(vin) {                     \
-  OZ_Term v=vin;                                \
-  DEREF(v,vPtr);                                \
-  Assert(oz_isVar(v));                          \
-  am.addSuspendVarList(vPtr);                   \
-  return SUSPEND;                               \
-}
-
-#define oz_suspendOnPtr(vPtr) {                 \
-  am.addSuspendVarList(vPtr);                   \
-  return SUSPEND;                               \
-}
-
-#define oz_suspendOn2(v1in,v2in) {              \
-  OZ_Term v1=v1in;                              \
-  DEREF(v1,v1Ptr);                              \
-  if (oz_isVar(v1)) {                           \
-    am.addSuspendVarList(v1Ptr);                \
-  }                                             \
-  OZ_Term v2=v2in;                              \
-  DEREF(v2,v2Ptr);                              \
-  if (oz_isVar(v2)) {                           \
-    am.addSuspendVarList(v2Ptr);                \
-  }                                             \
-  return SUSPEND;                               \
-}
-
-#define oz_suspendOn3(v1in,v2in,v3in) {         \
-  OZ_Term v1=v1in;                              \
-  DEREF(v1,v1Ptr);                              \
-  if (oz_isVar(v1)) {                           \
-    am.addSuspendVarList(v1Ptr);                \
-  }                                             \
-  OZ_Term v2=v2in;                              \
-  DEREF(v2,v2Ptr);                              \
-  if (oz_isVar(v2)) {                           \
-    am.addSuspendVarList(v2Ptr);                \
-  }                                             \
-  OZ_Term v3=v3in;                              \
-  DEREF(v3,v3Ptr);                              \
-  if (oz_isVar(v3)) {                           \
-    am.addSuspendVarList(v3Ptr);                \
-  }                                             \
-  return SUSPEND;                               \
-}
+#define oz_suspendOnPtr(vPtr)   return oz_addSuspendVarList(vPtr)
 
 /* -----------------------------------------------------------------------
  * C <-> Oz conversions
  * -----------------------------------------------------------------------*/
 
-// mm2
-#define oz_IntToC(v) OZ_intToC(v)
-#define oz_AtomToC(v) OZ_atomToC(v)
+#define oz_IntToC(v)        OZ_intToC(v)
+#define oz_AtomToC(v)       OZ_atomToC(v)
 #define oz_DictionaryToC(v) tagged2Dictionary(v)
-#define oz_SRecordToC(v) tagged2SRecord(v)
-#define oz_STupleToC(v) tagged2SRecord(v)
-#define oz_BoolToC(t)   oz_isTrue(t)
+#define oz_SRecordToC(v)    tagged2SRecord(v)
+#define oz_STupleToC(v)     tagged2SRecord(v)
+#define oz_BoolToC(t)       oz_isTrue(t)
 
 /* -----------------------------------------------------------------------
  * exceptions

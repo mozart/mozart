@@ -120,8 +120,7 @@ OZ_Return Future::bind(TaggedRef *vPtr, TaggedRef t)
   }
 
   if (oz_isLocalVar(this)) {
-    am.addSuspendVarListInline(vPtr);
-    return SUSPEND;
+    return am.addSuspendVarListInline(vPtr);
   } else {
     oz_bindVar(this,vPtr, t);
     return PROCEED;
@@ -171,7 +170,7 @@ OZ_BI_define(BIvarToFuture,2,0)
   OZ_Term v = OZ_in(0);
   v = oz_safeDeref(v);
   if (oz_isRef(v)) {
-    oz_suspendOnVar(v);
+    oz_suspendOn(v);
   }
   OZ_Term f = OZ_in(1);
   DEREF(f,fPtr);

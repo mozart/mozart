@@ -328,9 +328,9 @@ void Trail::unwindEqEq(void) {
       unBind(refPtr,value);
 
       if (oz_isVar(oldVal))
-        am.addSuspendVarList(ptrOldVal);
+        (void) oz_addSuspendVarList(ptrOldVal);
 
-      am.addSuspendVarList(refPtr);
+      (void) oz_addSuspendVarList(refPtr);
 
       break;
     }
@@ -348,7 +348,7 @@ void Trail::unwindEqEq(void) {
 
       tagged2Var(*varPtr)->unsetTrailed();
 
-      am.addSuspendVarList(varPtr);
+      (void) oz_addSuspendVarList(varPtr);
 
       break;
     }

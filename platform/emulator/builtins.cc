@@ -83,9 +83,9 @@ OZ_BI_define(BIwaitOr,2,0)
   Assert(oz_isVar(a) && oz_isVar(b));
 
   if (!tagged2Var(a)->isInSuspList(oz_currentThread()))
-    am.addSuspendVarListInline(aPtr);
+    (void) am.addSuspendVarListInline(aPtr);
   if (!tagged2Var(b)->isInSuspList(oz_currentThread()))
-    am.addSuspendVarListInline(bPtr);
+    (void) am.addSuspendVarListInline(bPtr);
   return SUSPEND;
 } OZ_BI_end
 
@@ -109,7 +109,7 @@ OZ_BI_define(BIwaitOrF,1,1)
       OZ_RETURN(OZ_head(arity));
     }
     if (!tagged2Var(v)->isInSuspList(oz_currentThread()))
-      am.addSuspendVarListInline(vPtr);
+      (void) am.addSuspendVarListInline(vPtr);
     arity=OZ_tail(arity);
   }
 
@@ -555,7 +555,7 @@ OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out) {
 OZ_BI_define(BIdot,2,1) {
   OZ_Return r = genericDot(OZ_in(0), OZ_in(1), OZ_out(0), TRUE);
   if (r == SUSPEND) {
-    oz_suspendOn2(OZ_in(0), OZ_in(1));
+    oz_suspendOnInArgs2;
   } else {
     return r;
   }
@@ -569,7 +569,7 @@ OZ_BI_define(BIhasFeature,2,1)
   switch (r) {
   case PROCEED: OZ_RETURN(oz_true());
   case FAILED : OZ_RETURN(oz_false());
-  case SUSPEND: oz_suspendOn2(OZ_in(0),OZ_in(1));
+  case SUSPEND: oz_suspendOnInArgs2;
   default     : return r;
   }
 } OZ_BI_end
@@ -589,7 +589,7 @@ OZ_BI_define(BImatchDefault,3,1) {
     OZ_out(0)=OZ_in(2);
     return PROCEED;
   case SUSPEND:
-    oz_suspendOn2(OZ_in(0),OZ_in(1));
+    oz_suspendOnInArgs2;
   default:
     return ret;
   }
@@ -1939,7 +1939,7 @@ OZ_BI_define(BItestRecordFeature,2,2)
   OZ_Return ret = genericDot(val,patFeature,out,FALSE);
   switch (ret) {
   case SUSPEND:
-    oz_suspendOn2(val,patFeature);
+    oz_suspendOnInArgs2;
   case FAILED:
     OZ_out(1) = oz_unit();
     OZ_RETURN(oz_false());
@@ -3252,7 +3252,7 @@ OZ_BI_define(BIcontrolVarHandler,1,0)
     while (oz_isCons(aux)) {
       TaggedRef car = oz_head(aux);
       if (oz_isVar(oz_deref(car))) {
-        am.addSuspendVarList(car);
+        (void) oz_addSuspendVarList(car);
         aux = oz_tail(aux);
       } else {
         am.emptySuspendVarList();

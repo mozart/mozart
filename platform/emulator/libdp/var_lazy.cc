@@ -46,12 +46,12 @@ void LazyVar::marshal(ByteBuffer *bs)
 
 // mm2: deep as future!
 // kost@ : a masterpiece comment...
+// cs: not bad either...
 OZ_Return LazyVar::bindV(TaggedRef *lPtr, TaggedRef r)
 {
   // PER-LOOK
   // kost@ : found anything?
-  am.addSuspendVarList(lPtr);
-  return SUSPEND;
+  return oz_addSuspendVarList(lPtr);
 }
 
 // mm2: deep as future!

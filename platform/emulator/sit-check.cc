@@ -161,7 +161,7 @@ OZ_Return OZ_checkSituatednessDynamic(Board * s,TaggedRef * x) {
       TaggedRef * f_ptr = tagged2Ref(h);
       Assert(oz_isVar(*f_ptr));
       Assert(tagged2Var(*f_ptr)->getType() == OZ_VAR_FUTURE);
-      am.addSuspendVarList(f_ptr);
+      (void) am.addSuspendVarListInline(f_ptr);
       f = oz_tail(f);
     } while (!oz_eq(f,AtomNil));
     return SUSPEND;

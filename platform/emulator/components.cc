@@ -223,7 +223,7 @@ OZ_Return onlyFutures(OZ_Term l) {
       am.emptySuspendVarList();
       return PROCEED;
     }
-    am.addSuspendVarList(f);
+    (void) oz_addSuspendVarList(f);
     l = oz_tail(l);
   }
   return SUSPEND;

@@ -1162,7 +1162,7 @@ public:
     int i = hashfold(hsh);
     while (1) {
       const TaggedRef key = table[i].key;
-      if (oz_eqNoCheck(key,entry))
+      if (oz_eq(key,entry))
         return table[i].index;
       if (!key)
         return -1;
@@ -1177,7 +1177,7 @@ public:
     int i = hashfold(hsh);
     while (1) {
       const TaggedRef key = table[i].key;
-      if (oz_eqNoCheck(key,entry))
+      if (oz_eq(key,entry))
         return table[i].index;
       if (!key)
         return -1;
