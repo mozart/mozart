@@ -1125,12 +1125,6 @@ Bool AM::loadQuery(CompStream *fd)
 }
 
 
-void AM::pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
-{
-  x = (i>0) ? copyRefsArray(x,i) : 0;
-  cachedStack->pushCont(pc,y,g,x);
-}
-
 void AM::select(int fd, int mode, OZ_IOHandler fun, void *val)
 {
   if (!isToplevel()) {
@@ -1635,7 +1629,7 @@ Thread *AM::mkLTQ(Board *bb, int prio, SolveActor * sa)
   incSolveThreads(bb);
   th->setInSolve();
 
-  th->pushTask(sa);
+  th->pushLTQ(sa);
 
   return th;
 }

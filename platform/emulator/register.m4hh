@@ -319,7 +319,7 @@ Case(SETVOID)
 
         if (isNotCVar(term) ||
             isCVar(term) && tagged2CVar(term)->valid(termPtr,atm)) {
-          e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
+          e->pushContX(PC,Y,G,X,getPosIntArg(PC+5));
           addSusp (termPtr, CTT);
 
           /* Bug fix:
@@ -358,7 +358,7 @@ Case(SETVOID)
         }
 
         if (isAnyVar(term)) {
-          e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
+          e->pushContX(PC,Y,G,X,getPosIntArg(PC+5));
           addSusp (termPtr, CTT);
           goto LBLsuspendThread;
         }
@@ -385,7 +385,7 @@ Case(SETVOID)
 
         if (isNotCVar(term) ||
             isCVar(term) && tagged2CVar(term)->valid(termPtr,i)) {
-          e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
+          e->pushContX(PC,Y,G,X,getPosIntArg(PC+5));
           addSusp (termPtr, CTT);
           goto LBLsuspendThread;
         }

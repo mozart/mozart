@@ -181,6 +181,7 @@ public:
   void printBoards();
 
   void pushToplevel(ProgramCounter pc);
+  void pushContX(ProgramCounter pc,RefsArray Y,RefsArray G,RefsArray X,int n);
   void checkToplevel();
   void addToplevel(ProgramCounter pc);
 
@@ -316,15 +317,6 @@ public:
   Bool isLocalCVar(TaggedRef var);
   Bool isLocalVariable(TaggedRef var,TaggedRef *varPtr);
   Bool isMoreLocal(TaggedRef var1, TaggedRef var2);
-
-  INLINE void pushCall(TaggedRef def, int arity, RefsArray args);
-
-  INLINE void pushTaskInline(ProgramCounter pc,RefsArray y,RefsArray g);
-
-  void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,
-                RefsArray x=0,int i=0);
-
-  INLINE void pushCFun(OZ_CFun f, RefsArray x=0, int i=0);
 
  private:
   void genericBind(TaggedRef *varPtr, TaggedRef var,

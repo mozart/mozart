@@ -62,7 +62,7 @@ Bool TaskStack::findCatch(TaggedRef *out, Bool verbose)
   if (out) *out = nil();
 
   while (!isEmpty()) {
-    PopFrame(tos,PC,Y,G);
+    PopFrame(this,PC,Y,G);
 
     if (PC==C_CATCH_Ptr) {
       if (out) *out = reverseC(*out);

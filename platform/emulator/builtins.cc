@@ -1634,7 +1634,7 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
   Thread *it = am.mkRunnableThread(am.currentThread->getPriority(),
                                    space->getSolveBoard(),
                                    OK);
-  it->pushCFunCont(contChooseInternal, args, 2, NO);
+  it->pushCFun(contChooseInternal, args, 2, NO);
   am.scheduleThread(it);
 
   return PROCEED;
@@ -2678,7 +2678,7 @@ void threadRaise(Thread *th,OZ_Term E) {
   RefsArray args=allocateRefsArray(1, NO);
   args[0]=E;
 
-  th->pushCFunCont (BIraise, args, 1, OK);
+  th->pushCFun(BIraise, args, 1, OK);
 
   th->cont();
 
@@ -5448,7 +5448,7 @@ OZ_C_proc_begin(BIapply,2)
     oz_typeError(0,"Procedure or Object");
   }
 
-  am.pushCall(proc,len,argsArray);
+  oz_currentThread->pushCall(proc,argsArray,len);
   deallocateY(argsArray);
   return PROCEED;
 }
@@ -6382,7 +6382,7 @@ SRecord *getStateInline(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &va
   if (!isAssign)
     val = makeTaggedRef(newTaggedUVar(am.currentBoard));
   x[2] = val;
-  oz_currentThread->pushCFunCont(isAssign?BIassignWithState:BIatWithState,x,3,NO);
+  oz_currentThread->pushCFun(isAssign?BIassignWithState:BIatWithState,x,3,NO);
 
   return NULL;
 }

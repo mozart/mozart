@@ -1,4 +1,3 @@
-
 /*
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
@@ -15,6 +14,7 @@
  * NEW_STACK is an experimental feature.
  * If defined the thread stack is represented as linked list
  * (Michael)
+ *
  * usage 'ozmkmf -DNEW_STACK'
  */
 
@@ -54,13 +54,14 @@ private:
 
 public:
   USEFREELISTMEMORY;
+  Frame() {}
   Frame(ProgramCounter pc,void *y, void *g, Frame *next)
-    : pc(pc), y(y), g(g), next(next) {}
+    : next(next), pc(pc), y(y), g(g) {}
 
-  ProgramCounter getPC() { return pc; }
-  Frame *getNext() { return next; }
-  RefsArray getY() { return (RefsArray) y; }
-  RefsArray getG() { return (RefsArray) g; }
+  ProgramCounter getPC() const { return pc; }
+  Frame *getNext() const       { return next; }
+  RefsArray getY() const       { return (RefsArray) y; }
+  RefsArray getG() const       { return (RefsArray) g; }
 
   Frame *dispose() {
     Frame *ret = getNext();
@@ -71,9 +72,9 @@ public:
     for (Frame *f=this; f; f = f->dispose()) ;
   }
 
-  int count() {
+  int count() const {
     int i=0;
-    for (Frame *f=this; f; f=f->getNext()) {
+    for (const Frame *f=this; f; f=f->getNext()) {
       i++;
     }
     return i;
@@ -102,7 +103,12 @@ public:
 
   void pushFrame(ProgramCounter pc,void *y, void *g)
   {
-    tos = new Frame(pc,y,g,tos);
+    Frame *fr = new Frame();
+    fr->next=tos;
+    tos=fr;
+    fr->pc=pc;
+    fr->y=y;
+    fr->g=g;
     // mm2 CountMax(maxStackDepth,(tos-array)*sizeof(StackEntry));
   }
 
@@ -144,7 +150,7 @@ public:
 
   Bool findCatch(TaggedRef *traceBack=0, Bool verbose=0);
 
-  void pushCFunCont(OZ_CFun f, RefsArray  x, int i, Bool copy)
+  void pushCFun(OZ_CFun f, RefsArray  x, int i, Bool copy)
   {
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
 
@@ -152,11 +158,6 @@ public:
 
     pushFrame(C_CFUNC_CONT_Ptr,(void*)f,
               i>0 ? (copy ? copyRefsArray(x, i) : x) : NULL);
-  }
-
-  void pushCont(Continuation *cont)
-  {
-    pushCont(cont->getPC(),cont->getY(),cont->getG(),cont->getX());
   }
 
   void pushCont(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x)
@@ -198,13 +199,14 @@ public:
   tos  = tos->getNext();                        \
 }
 
-#define PopFrameNoDecl(tos,pc,y,g)                      \
-{                                                       \
-  pc   = tos->getPC();                          \
-  y    = tos->getY();                                   \
-  g    = tos->getG();                                   \
-                                                        \
-  tos  = tos->dispose();                                \
+#define PopFrameNoDecl(ts,pc,y,g)               \
+{                                               \
+  TaskStack *__ts = ts;                         \
+  Frame *__top = __ts->getTop();                \
+  __ts->setTop(__top->dispose());               \
+  pc   = __top->getPC();                        \
+  y    = __top->getY();                         \
+  g    = __top->getG();                         \
 }
 
 #endif
@@ -295,7 +297,7 @@ public:
 
   Bool findCatch(TaggedRef *traceBack=0, Bool verbose=0);
 
-  void pushCFunCont(OZ_CFun f, RefsArray  x, int i, Bool copy)
+  void pushCFun(OZ_CFun f, RefsArray  x, int i, Bool copy)
   {
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
 
@@ -303,11 +305,6 @@ public:
 
     pushFrame(C_CFUNC_CONT_Ptr,(void*)f,
               i>0 ? (copy ? copyRefsArray(x, i) : x) : NULL);
-  }
-
-  void pushCont(Continuation *cont)
-  {
-    pushCont(cont->getPC(),cont->getY(),cont->getG(),cont->getX());
   }
 
   void pushCont(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x)
@@ -348,19 +345,24 @@ public:
   top -= frameSz;                               \
 }
 
-#define PopFrameNoDecl(top,pc,y,g) GetFrameNoDecl(top,pc,y,g)
+#define PopFrameNoDecl(ts,pc,y,g)               \
+{                                               \
+  TaskStack *__ts = ts;                         \
+  Frame *__top = __ts->getTop();                \
+  GetFrameNoDecl(__top,pc,y,g)                  \
+  __ts->setTop(__top);                          \
+}
 
 #endif
 
-#define PopFrame(top,pc,y,g)                    \
+#define PopFrame(ts,pc,y,g)                     \
     ProgramCounter pc;                          \
     RefsArray y,g;                              \
-    PopFrameNoDecl(top,pc,y,g)
+    PopFrameNoDecl(ts,pc,y,g)
 
 #define GetFrame(top,pc,y,g)                    \
     ProgramCounter pc;                          \
     RefsArray y,g;                              \
     GetFrameNoDecl(top,pc,y,g)
-
 
 #endif
