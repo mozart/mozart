@@ -2873,7 +2873,7 @@ void doPortSend(PortWithStream *port,TaggedRef val)
   OZ_unifyInThread(val,lt->getHead()); // might raise exception if val is non exportable
 }
 
-OZ_Return sendPort(OZ_Term prt, OZ_Term val)
+OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
 {
   Assert(oz_isPort(prt));
 
@@ -2898,7 +2898,7 @@ OZ_BI_define(BIsendPort,2,0)
     oz_typeError(0,"Port");
   }
 
-  return sendPort(prt,val);
+  return oz_sendPort(prt,val);
 } OZ_BI_end
 
 #else
@@ -2926,7 +2926,7 @@ void doPortSend(PortWithStream *port,TaggedRef val)
   OZ_unifyInThread(val,oz_head(lt)); // might raise exception if val is non exportable
 }
 
-OZ_Return sendPort(OZ_Term prt, OZ_Term val)
+OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
 {
   Assert(oz_isPort(prt));
 
@@ -2950,7 +2950,7 @@ OZ_BI_define(BIsendPort,2,0)
     oz_typeError(0,"Port");
   }
 
-  return sendPort(prt,val);
+  return oz_sendPort(prt,val);
 } OZ_BI_end
 #endif
 

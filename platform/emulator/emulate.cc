@@ -2276,6 +2276,8 @@ LBLdispatcher:
       Y = 0;
       CAP = 0;
 
+      DebugTrace(ozd_trace(toC(taggedPredicate)));
+
       predArity = args ? getRefsArraySize(args) : 0;
 
       DEREF(taggedPredicate,predPtr,predTag);
@@ -2368,6 +2370,8 @@ LBLdispatcher:
 	 predArity = 0;
        }
        disposeRefsArray(tmpX);
+
+       DebugTrace(ozd_trace(cfunc2Builtin((void *) biFun)->getPrintName()));
 
        switch (biFun(X,OZ_ID_MAP)) {
        case PROCEED:       goto LBLpopTask;
@@ -2909,4 +2913,3 @@ LBLshallowFail:
 #ifdef OUTLINE
 #undef inline
 #endif
-

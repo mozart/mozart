@@ -170,7 +170,11 @@ DEREF(VAR,VAR ## Ptr,VAR ## Tag);		\
 
 #define oz_declareDerefIN(ARG,VAR)		\
 oz_declareIN(ARG,VAR);				\
-DEREF(VAR,VAR ## Ptr,VAR ## Tag);		\
+DEREF(VAR,VAR ## Ptr,VAR ## Tag);
+
+#define oz_declareSafeDerefIN(ARG,VAR)		\
+oz_declareIN(ARG,VAR);				\
+VAR=oz_safeDeref(VAR);
 
 
 #define oz_declareNonvarArg(ARG,VAR)		\

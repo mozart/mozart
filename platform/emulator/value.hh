@@ -2555,6 +2555,21 @@ Bool oz_isExtensionPlus(TaggedRef t) {
   return FALSE;
 }
 
+inline
+OZ_Term oz_string(const char *s)
+{
+  if (!s) { return oz_nil(); }
+  const char *p=s;
+  while (*p!='\0') {
+    p++;
+  }
+  OZ_Term ret = oz_nil();
+  while (p!=s) {
+    ret = oz_cons(oz_int((unsigned char)*(--p)), ret);
+  }
+  return ret;
+}
+
 /*===================================================================
  * Service Registry
  *=================================================================== */

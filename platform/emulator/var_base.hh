@@ -308,8 +308,11 @@ OZ_Term oz_var_status(OzVariable *cv)
     return AtomFree;
   case OZ_VAR_FUTURE:
     return AtomFuture;
-  default:
+  case OZ_VAR_EXT:
     return _var_status(cv);
+  default:
+    Assert(0);
+    return AtomUnknown;
   }
 }
 

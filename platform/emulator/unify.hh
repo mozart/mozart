@@ -129,6 +129,7 @@ void oz_bindGlobalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term);
 inline
 void oz_bindVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
 {
+  Assert(tagged2CVar(*varPtr)==ov);
   if (oz_isLocalVar(ov)) {
     oz_bindLocalVar(ov,varPtr,term);
   } else {
