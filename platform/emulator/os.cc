@@ -865,6 +865,19 @@ int osgetpid()
   return getpid();
 }
 
+/* fgets may return NULL under Solaris if 
+ * interupted by the timer signal for example 
+ */
+char *osfgets(char *s, int n, FILE *stream)
+{
+  osBlockSignals();
+  char *ret = fgets(s,n,stream);
+  osUnblockSignals();
+
+  return ret;
+}
+
+
 #ifdef XXWINDOWS
 
 // execution of C++ initializers
