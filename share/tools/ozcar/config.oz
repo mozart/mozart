@@ -4,7 +4,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Strings
 %%
-Version                = '0.3 (Nov 96)'
+Version                = '0.9 (Dec 96)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -20,9 +20,6 @@ AltEnvTitle            = 'Environment of Frame  #'
 StatusInitText         = 'No current thread'
 StatusEndText          = 'See you again...'
 
-ApplPrefixText         = 'Current application: '
-ApplLabelInit          = ' none'
-					
 InvalidThreadID        = 'Invalid Thread ID in step message'
 NoFileInfo             = 'step message without line number information, ' #
                          'continuing thread #'
@@ -47,8 +44,9 @@ SourceWindowGeometry   = '501x549+620+100'  %% I really hate hardcoding this
 SourceWindowTextSize   = 80 # 50
 
 ThreadTreeWidth        = 180
-ThreadTreeStretch      = 40
-ThreadTreeOffset       = 14
+ThreadTreeStretchX     = 11
+ThreadTreeStretchY     = 13
+ThreadTreeOffset       = 4
 
 TextWidth              = 30
 
@@ -72,6 +70,7 @@ BitMap                 = '@' # BitMapDir # 'debugger.xbm'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Miscellaneous
+%%
 TextCursor             = left_ptr
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -88,10 +87,48 @@ ScrollbarStackColor    = '#7070f0'
 ScrollbarColors        = colors(appl  : ScrollbarApplColor
 				stack : ScrollbarStackColor)
 				
-RunningThreadColor     = '#90e0a0'  % some nice green
-BlockedThreadColor     = '#f09090'  %  ~    ~   red
-DeadThreadColor        = '#404040'  %  ~    ~   black
+RunningThreadColor     = '#00b000'  % some nice green
+BlockedThreadColor     = '#e07070'  %  ~    ~   red
+DeadThreadColor        = '#505050'  %  ~    ~   black
 ZombieThreadColor      = '#f000f0'  % debugging purposes...
+TrunkColor             = '#a00000'  % brown...
+/* hello emacs: end */
+ProcColor              = '#0000c0'
+BuiltinColor           = '#c00000'
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% the config object to read/write changeable options
+%% first, some initial values...
+
+
+ConfigVerbose          = false
+
+
+Config =
+{New
+ class
+    
+    attr
+       verbose : ConfigVerbose         %% debug messages in Emulator buffer?
+    
+    meth init
+       skip
+    end
+    
+    meth toggleVerbose
+       verbose <- {Not @verbose}
+    end
+    
+    meth get(What $)
+       @What
+    end
+    
+ end init}
+
+fun {Cget What}
+   {Config get(What $)}
+end
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%% End of config.oz %%%%%%%%%%%%%%%%%%%%%%

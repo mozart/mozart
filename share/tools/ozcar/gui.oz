@@ -8,16 +8,18 @@ class Gui from Menu Dialog
       menuBar
 
       ButtonFrame
-      StatusLabel
 
+      ThreadTree
+      StackText
+      EnvText
+   
       ApplFrame
       ApplPrefix
       ApplText
    
-      ThreadTree
-      StackText
-      EnvText
-
+      StatusFrame
+      StatusLabel
+   
    meth init
       %% create the main window, but delay showing it
       %% until everything has been packed inside
@@ -29,7 +31,7 @@ class Gui from Menu Dialog
       Menu,init
       Dialog,init
 
-      {ForAll [self.ButtonFrame self.ApplFrame]
+      {ForAll [self.ButtonFrame self.ApplFrame self.StatusFrame]
        proc{$ F}
 	  F = {New Tk.frame tkInit(parent:self.toplevel
 				   bd:BorderSize
@@ -38,36 +40,45 @@ class Gui from Menu Dialog
       
       {Tk.batch [grid(self.menuBar     row:0 column:0 sticky:we columnspan:3)
 		 grid(self.ButtonFrame row:1 column:0 sticky:we columnspan:3)
-		 grid(self.ApplFrame   row:2 column:0 sticky:we columnspan:3)
+		 grid(self.ApplFrame   row:4 column:0 sticky:we columnspan:3)
+		 grid(self.StatusFrame row:5 column:0 sticky:we columnspan:3)
 		]}
       
-      %% buttons and status line
-      self.StatusLabel = {New Tk.label tkInit(parent:self.ButtonFrame
-					      text:StatusInitText)}
+      %% the buttons
       local
-	 Bs = {Map [step next finish cont forget stack]
+	 Bs = {Map [step next finish continue forget stack]
 	       fun {$ B}
 		  {New Tk.button tkInit(parent: self.ButtonFrame
 					text:   B
 					action: self # action(B))}
 	       end}
       in
-	 {Tk.batch [pack(b(Bs) side:right padx:2)
-		    pack(self.StatusLabel side:left fill:x)]}
+	 {Tk.send pack(b(Bs) side:left padx:2)}
       end
-
+      
       %% application frame
-      self.ApplPrefix = {New Tk.label tkInit(parent: self.ApplFrame
-					     text:   ApplPrefixText)}
-      self.ApplText   = {New Tk.text  tkInit(parent: self.ApplFrame
-					     state:  disabled
-					     height: 1
-					     bd:     SmallBorderSize
-					     cursor: TextCursor
-					     font:   DefaultFont
-					     bg:     DefaultBackground)}
-      {Tk.batch [pack(self.ApplPrefix side:left)
-		 pack(self.ApplText side:left fill:x expand:yes)]}
+      self.ApplText   = {New Tk.text tkInit(parent: self.ApplFrame
+					    height: 3
+					    bd:     SmallBorderSize
+					    cursor: TextCursor
+					    font:   DefaultFont
+					    bg:     DefaultBackground)}
+      {Tk.send pack(self.ApplText side:left fill:x expand:yes)}
+      {ForAll [tk(insert 'end' 'Call trace begins here')
+	       tk(conf state:disabled)]	self.ApplText}
+
+      %% border line
+      local
+	 F = {New Tk.frame tkInit(parent:self.toplevel height:3
+				  relief:ridge bd:1)}
+      in
+	 {Tk.send grid(F row:3 column:0 sticky:we columnspan:3)}
+      end
+      
+      %% status line
+      self.StatusLabel  = {New Tk.label tkInit(parent:self.StatusFrame
+					       text:StatusInitText)}
+      {Tk.send pack(self.StatusLabel side:left fill:x)}
       
       %% create the thread tree object...
       self.ThreadTree = {New Tree tkInit(parent: self.toplevel
@@ -87,10 +98,10 @@ class Gui from Menu Dialog
 					      font:   DefaultFont
 					      bg:     DefaultBackground)}
        end}
-      {Tk.batch [grid(self.ThreadTree row:3 column:0 sticky:nswe)
-		 grid(self.StackText  row:3 column:1 sticky:nswe)
-		 grid(self.EnvText    row:3 column:2 sticky:nswe)
-		 grid(rowconfigure    self.toplevel 3 weight:1)
+      {Tk.batch [grid(self.ThreadTree row:2 column:0 sticky:nswe)
+		 grid(self.StackText  row:2 column:1 sticky:nswe)
+		 grid(self.EnvText    row:2 column:2 sticky:nswe)
+		 grid(rowconfigure    self.toplevel 2 weight:1)
 		 grid(columnconfigure self.toplevel 0 weight:2)
 		 grid(columnconfigure self.toplevel 1 weight:1)
 		 grid(columnconfigure self.toplevel 2 weight:1)
@@ -195,42 +206,40 @@ class Gui from Menu Dialog
       end
    end
    
-   meth printAppl(name:N args:A builtin:B)
+   meth printAppl(id:I name:N args:A builtin:B)
       case N == undef orelse A == undef then
-	 {ForAll [tk(conf state:normal)
-		  tk(delete '0.0' 'end')
-		  tk(insert 'end' ApplLabelInit)
-		  tk(conf state:disabled)] self.ApplText}
+	 skip
       else
-	 W    = self.ApplText
-	 Args = {FormatArgs A}
-	 Type = case B then ' B' else ' P' end
+	 W         = self.ApplText
+	 Args      = {FormatArgs A}
+	 ApplColor = case B then BuiltinColor else ProcColor end 
+	 T         = {TagCounter get($)}
       in
 	 {ForAll [tk(conf state:normal)
-		  tk(delete '0.0' 'end')
-		  tk(insert 'end' Type # ' {' # case N == ''
-						then '$' else N
-						end)] W}
+		  tk(insert 'end' NL # ' ' # I # ' {')
+		  tk(insert 'end' case N == '' then '$' else N end T)
+		  tk(tag conf T foreground:ApplColor)] W}
 	  
-	  {ForAll Args
-	   proc {$ A}
-	      T = {TagCounter get($)}
-	      Ac = {New Tk.action
-		    tkInit(parent:W
-			   action:proc{$}
-				     S = A.3
-				  in
-				     {Browse S}
-				  end)}
-	   in
-	      {ForAll [tk(insert 'end' ' ')
-		       tk(insert 'end' A.2 T)
-		       tk(tag bind T '<1>' Ac)
-		       tk(tag conf T font:BoldFont)] W}
-	   end}
+	 {ForAll Args
+	  proc {$ A}
+	     T = {TagCounter get($)}
+	     Ac = {New Tk.action
+		   tkInit(parent:W
+			  action:proc{$}
+				    S = A.3
+				 in
+				    {Browse S}
+				 end)}
+	  in
+	     {ForAll [tk(insert 'end' ' ')
+		      tk(insert 'end' A.2 T)
+		      tk(tag bind T '<1>' Ac)
+		      tk(tag conf T font:BoldFont)] W}
+	  end}
 	  
-	  {ForAll [tk(insert 'end' '}') 
-		   tk(conf state:disabled)] W}
+	 {ForAll [tk(insert 'end' '}')
+	          tk(yview 'end')
+	          tk(conf state:disabled)] W}
       end
    end
    
@@ -295,7 +304,7 @@ class Gui from Menu Dialog
 	    {Browse 'not yet implemented'}
 	    skip
 	    
-	 elseof cont then
+	 elseof continue then
 	    /*
 	    {Dbg.stepmode T false}
 	    {Thread.resume T}

@@ -58,9 +58,9 @@ local
 
       meth calculatePositions
 	 {WC init}
-	 {self DoCalculatePositions(1 1)}  %% toplevel queries
-	 {WC inc(_)}
-	 {self DoCalculatePositions(0 1)}  %% threads with unknown parent
+	 {self DoCalculatePositions(1 3)}  %% toplevel queries
+	 %{WC inc(_)}
+	 {self DoCalculatePositions(0 3)}  %% threads with unknown parent
       end
 
       meth Nodegroup(Q $)
@@ -78,7 +78,7 @@ local
 	 else
 	    Wold = {WC get($)}
 	 in
-	    {NG.1 setXY(X {WC get($)} 0)}
+	    {NG.1 setXY(X {WC inc($)} 1)}
 	    {self DoCalculatePositions({NG.1 get($)}.i X+1)}
 	    case NG.2 \= nil then
 	       {ForAll NG.2
@@ -163,8 +163,9 @@ in
       end
       
       meth display
-	 SF = ThreadTreeStretch
-	 OS = ThreadTreeOffset
+	 SFX = ThreadTreeStretchX
+	 SFY = ThreadTreeStretchY
+         OS  = ThreadTreeOffset
 	 Sel = @Selected
       in
 	 {self tk(delete all)}
@@ -174,23 +175,21 @@ in
 	     CT = {New Tk.canvasTag tkInit(parent:{self w($)})}
 	  in
 	     node(x:X y:Y c:C dy:DY i:I q:Q ...) = {N get($)}
-	     {ForAll [tk(crea oval X*SF-OS Y*SF-OS X*SF+OS Y*SF+OS
-			 outline:C width:3 tags:CT
-			 fill:white)
-		      tk(crea line X*SF-OS Y*SF (X-1)*SF+OS Y*SF
-			 width:3)] self}
-	     case Q > 0 then
-		{self tk(crea line (X-1)*SF+OS Y*SF (X-1)*SF+OS (Y-DY)*SF
-			 width:3)}
-	     else skip end
+             {ForAll [tk(crea line X*SFX-OS Y*SFY (X-1)*SFX-OS Y*SFY
+                         width:1 fill:TrunkColor)] self}
+             case Q > 0 then
+                {self tk(crea line (X-1)*SFX-OS Y*SFY (X-1)*SFX-OS (Y-DY)*SFY
+                         width:1 fill:TrunkColor)}
+             else skip end
+	     
 	     case N == Sel then
-		{self tk(crea text X*SF+1 Y*SF text:I tags:CT
-			 font:ThreadTreeBoldFont)}
+		{self tk(crea text X*SFX Y*SFY text:I fill:C tags:CT
+			 anchor:w font:ThreadTreeBoldFont)}
 	     else
-		{self tk(crea text X*SF+1 Y*SF text:I tags:CT
-			 font:ThreadTreeFont)}
+		{self tk(crea text X*SFX Y*SFY text:I fill:C tags:CT
+			 anchor:w font:ThreadTreeFont)}
 		{CT tkBind(event:  '<1>'
-			%action: self # select(I CT))}
+ 			   %action: self # select(I CT))}
 			   action: Ozcar # switch(I))}
 	     end
 	     {N setTag(CT)}

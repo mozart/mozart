@@ -17,20 +17,15 @@ NL = [10]  %% newline
 
 %% send a warning/error message
 
-local
-   Verbose = false
-   %Verbose = true
-in
-   proc {OzcarShow X}
-      case Verbose then
-	 {Show X}
-      else skip end
-   end
-   proc {OzcarMessage M}
-      case Verbose then
-	 {System.showInfo OzcarMessagePrefix # M}
-      else skip end
-   end
+proc {OzcarShow X}
+   case {Cget verbose} then
+      {Show X}
+   else skip end
+end
+proc {OzcarMessage M}
+   case {Cget verbose} then
+      {System.showInfo OzcarMessagePrefix # M}
+   else skip end
 end
 
 fun {VS2A X} %% virtual string to atom
@@ -39,11 +34,18 @@ end
 
 local
    fun {MakeSpace N}
-      case N == 0 then nil else 32 | {MakeSpace N-1} end
+      case N < 1 then nil else 32 | {MakeSpace N-1} end
    end
 in
    fun {PrintF S N}  %% Format S to have length N, fill up with spaces
-      S # {MakeSpace N-{VirtualString.length S}}
+                     %% break up line if S is too long
+      SpaceCount = N - {VirtualString.length S}
+   in
+      case SpaceCount < 1 then
+	 S # NL # {MakeSpace N+1}
+      else
+	 S # {MakeSpace SpaceCount}
+      end
    end
 end
 

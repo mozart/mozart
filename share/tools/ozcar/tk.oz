@@ -23,7 +23,7 @@ class TitleFrame from Tk.frame
    end
 end
 
-/* widget with a title and both vertical and horizontal scrollbar */
+/* widget with a title and scrollbar */
 local
    class ScrolledTitleWidget from TitleFrame
       feat
@@ -33,13 +33,10 @@ local
 	 self.W  = {New self.widget
 		    {Record.subtract {Record.adjoinAt M parent self} title}}
 	 local
-	    SX = {New Tk.scrollbar tkInit(parent:self orient:horizontal)}
-	    SY = {New Tk.scrollbar tkInit(parent:self)}
+	    SY     = {New Tk.scrollbar tkInit(parent:self)}
 	 in
-	    {Tk.addXScrollbar self.W SX}
 	    {Tk.addYScrollbar self.W SY}
 	    {Tk.batch [grid(self.W row:1 column:0 sticky:nswe)
-		       grid(SX     row:2 column:0 sticky:we)
 		       grid(SY     row:1 column:1 sticky:ns)]}
 	    {Tk.batch [grid(rowconfigure    self 1 weight:1)
 		       grid(columnconfigure self 0 weight:1)]}
