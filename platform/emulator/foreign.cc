@@ -873,6 +873,12 @@ Bool isNiceList(OZ_Term l, int width) {
 
 inline
 void record2buffer(ostream &out, SRecord *sr,int depth) {
+  if (depth <= 0 || ozconf.printWidth <= 0) {
+    term2Buffer(out,sr->getLabel());
+    out << "(,,,)";
+    return;
+  }
+
   if (isNiceHash(makeTaggedSRecord(sr), ozconf.printWidth)) {
     int len = sr->getWidth();
     for (int i=0; i < len; i++) {
@@ -893,51 +899,47 @@ void record2buffer(ostream &out, SRecord *sr,int depth) {
 
   term2Buffer(out,sr->getLabel());
   out << '(';
-  if (depth <= 0 || ozconf.printWidth <= 0) {
-    out << ",,,";
-  } else {
-    if (sr->isTuple()) {
-      int len = min(ozconf.printWidth, sr->getWidth());
-      term2Buffer(out,sr->getArg(0), depth-1);
-      for (int i=1; i < len; i++) {
-	out << ' ';
-	term2Buffer(out,sr->getArg(i),depth-1);
-      }
-      
-      if (sr->getWidth() > ozconf.printWidth)
-	out << " ,,,";
-    } else {
-      OZ_Term as = sr->getArityList();
-      Assert(oz_isCons(as));
-
-      int next    = 1;
-
-      while (oz_isCons(as) && next <= ozconf.printWidth &&
-	     oz_isSmallInt(oz_head(as)) && 
-	     smallIntValue(oz_head(as)) == next) {
-	term2Buffer(out, sr->getFeature(oz_head(as)), depth-1);
-	out << ' ';
-	as = oz_tail(as);
-	next++;
-      }
-      Assert(oz_isCons(as));
-
-      if (next <= ozconf.printWidth) {
-	
-	feature2buffer(out,sr,oz_head(as),depth-1);
-	next++;
-	as = oz_tail(as);
-	while (next <= ozconf.printWidth && oz_isCons(as)) {
-	  out << ' ';
-	  feature2buffer(out,sr,oz_head(as),depth-1);
-	  as = oz_tail(as);
-	  next++;
-	}
-      }
-
-      if (sr->getWidth() > ozconf.printWidth)
-	out << " ,,,";
+  if (sr->isTuple()) {
+    int len = min(ozconf.printWidth, sr->getWidth());
+    term2Buffer(out,sr->getArg(0), depth-1);
+    for (int i=1; i < len; i++) {
+      out << ' ';
+      term2Buffer(out,sr->getArg(i),depth-1);
     }
+      
+    if (sr->getWidth() > ozconf.printWidth)
+      out << " ,,,";
+  } else {
+    OZ_Term as = sr->getArityList();
+    Assert(oz_isCons(as));
+
+    int next    = 1;
+
+    while (oz_isCons(as) && next <= ozconf.printWidth &&
+	   oz_isSmallInt(oz_head(as)) && 
+	   smallIntValue(oz_head(as)) == next) {
+      term2Buffer(out, sr->getFeature(oz_head(as)), depth-1);
+      out << ' ';
+      as = oz_tail(as);
+      next++;
+    }
+    Assert(oz_isCons(as));
+
+    if (next <= ozconf.printWidth) {
+	
+      feature2buffer(out,sr,oz_head(as),depth-1);
+      next++;
+      as = oz_tail(as);
+      while (next <= ozconf.printWidth && oz_isCons(as)) {
+	out << ' ';
+	feature2buffer(out,sr,oz_head(as),depth-1);
+	as = oz_tail(as);
+	next++;
+      }
+    }
+
+    if (sr->getWidth() > ozconf.printWidth)
+      out << " ,,,";
   }
   out << ')';
 }
