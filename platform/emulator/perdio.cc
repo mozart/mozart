@@ -178,6 +178,8 @@ void sendUnAskError(Tertiary*,EntityCond);
 void sendRegister(BorrowEntry *);
 
 void printChain(Chain*);
+void insertDangelingEvent(Tertiary*);
+void insertDangelingProbe(Site*,Tertiary*,ProbeReturn);
 
 OZ_C_proc_proto(BIapply);
 
@@ -260,9 +262,10 @@ char *mess_names[M_LAST] = {
 inline void SendTo(Site *toS,MsgBuffer *bs,MessageType mt,Site *sS,int sI){
   int ret=toS->sendTo(bs,mt,sS,sI);
   if(ret==ACCEPTED) return;
-  if(ret==PERM_NOT_SENT){
-    toS->communicationProblem(mt,sS,sI,COMM_FAULT_PERM_NOT_SENT,(FaultInfo) bs);}
-  toS->communicationProblem(mt,sS,sI,COMM_FAULT_TEMP_NOT_SENT,ret);}
+  if(ret==PERM_NOT_SENT)
+    toS->communicationProblem(mt,sS,sI,COMM_FAULT_PERM_NOT_SENT,(FaultInfo) bs);
+  else
+    toS->communicationProblem(mt,sS,sI,COMM_FAULT_TEMP_NOT_SENT,ret);}
 
 inline Bool SEND_SHORT(Site* s){
   if(s->siteStatus()==PERM_SITE) {return OK;}
@@ -2072,9 +2075,19 @@ InformElem* newInformElem(){
 void freeInformElem(InformElem* e){
   genFreeListManager->putOne_3((FreeListEntry*) e);}
 
+
 inline void installProbe(Site *s,ProbeType pt){
   if(s==mySite) return;
   s->installProbe(pt,0);}
+
+void tertiaryInstallProbe(Site *s,ProbeType pt,Tertiary *t){
+  if(s==mySite) return;
+  ProbeReturn pr=s->installProbe(pt,0);
+  if(pr==PROBE_INSTALLED) return;
+  if(t->getTertType() == Te_Manager)
+    t->managerProbeFault(s,pr);
+  else
+    t->proxyProbeFault(pr);}
 
 inline void deinstallProbe(Site *s,ProbeType pt){
   if(s==mySite) return;
@@ -2140,7 +2153,7 @@ void Chain::init(Site *s){
   e->init(s);
   first=last=e;}
 
-Site* Chain::setCurrent(Site* s){
+Site* Chain::setCurrent(Site* s, Tertiary* t){
   ChainElem *e=newChainElem();
   e->init(s);
   Site *toS=last->site;
@@ -2152,9 +2165,9 @@ Site* Chain::setCurrent(Site* s){
   if(de->site==s){
     de->setFlagAndCheck(CHAIN_DUPLICATE);}
   if(hasFlag(INTERESTED_IN_TEMP)){
-    installProbe(s,PROBE_TYPE_ALL);}
+    tertiaryInstallProbe(s,PROBE_TYPE_ALL,t);}
   else{
-    installProbe(s,PROBE_TYPE_PERM);}
+    tertiaryInstallProbe(s,PROBE_TYPE_PERM,t);}
   return toS;}
 
 inline Bool tokenLostCheckProxy(Tertiary*t){ 
@@ -2339,7 +2352,8 @@ void CellSec::gcCellSec(){
     return;}
   case Cell_Lock_Valid:{
     OZ_collectHeapTerm(contents,contents);
-  default: Assert(0);}}}
+    return;}
+  default: Assert(0);}}
 
 void CellFrame::gcCellFrame(){
   Tertiary *t=(Tertiary*)this;
@@ -3657,13 +3671,6 @@ void Site::msgReceived(MsgBuffer* bs)
       receiveUnAskError(receiveAtOwner(OTI),toS,ec);
       break; 
     }
-  /*  case M_SITEDWN_DBG:
-    {
-      PD((MSG_RECEIVED,"M_SITEDWN_DBG %s",this->stringrep()));
-      receiveSiteDwnDbg();
-      break;
-    }
-    */
   default:
     error("siteReceive: unknown message %d\n",mt);
     break;
@@ -3969,7 +3976,7 @@ void cellReceiveGet(OwnerEntry* oe,CellManager* cm,Site* toS){
   Assert(cm->getType()==Co_Cell);
   Assert(cm->getTertType()==Te_Manager);
   Chain *ch=cm->getChain();
-  Site* current=ch->setCurrent(toS);
+  Site* current=ch->setCurrent(toS,cm);
   PD((CELL,"CellMgr Received get from %s",toS->stringrep()));
   //DebugCode(printChain(ch);)
   if(current==mySite){
@@ -4107,12 +4114,9 @@ inline Bool maybeInvokeHandler(Tertiary* t,Thread* th){
 
 void genInvokeHandlerLockOrCell(Tertiary* t,Thread* th){
   if(!t->handlerExists(th)) return;
-  Watcher** base=t->findWatcherBase(th,t->getEntityCond());
-  if(base==NULL) return;
-  Watcher *hit=*base;
-  hit->invokeHandler(t->getEntityCond(),t);
-  t->releaseWatcher(hit);
-  *base= hit->getNext();}
+  if(t->findWatcherBase(th,t->getEntityCond()) == NULL) return;
+  insertDangelingEvent(t);
+}
 
 void CellSec::exchange(Tertiary* c,TaggedRef old,TaggedRef nw,Thread* th){
   switch(state){
@@ -4143,9 +4147,9 @@ void CellSec::exchange(Tertiary* c,TaggedRef old,TaggedRef nw,Thread* th){
       be->getOneMsgCredit();
       cellLockSendGet(be);
       if(c->errorIgnore()) return;
-      return;}
+      break;}
     Assert(c->getTertType()==Te_Manager);
-    Site *toS=((CellManager*)c)->getChain()->setCurrent(mySite);
+    Site *toS=((CellManager*)c)->getChain()->setCurrent(mySite,c);
     sendPrepOwner(index);
     cellLockSendForward(toS,mySite,index);
     if(c->errorIgnore()) return;
@@ -4221,7 +4225,7 @@ void InformElem::init(Site*s,EntityCond c){// ATTENTION
   watchcond=c;
   foundcond=0;
   if(someTempCondition(c)){
-    s->installProbe(PROBE_TYPE_ALL,0);}}
+    tertiaryInstallProbe(s,PROBE_TYPE_ALL,0);}}
 
 /**********************************************************************/
 /*   SECTION 31c:: Chain routines working on ChainElem                */
@@ -4294,6 +4298,9 @@ Bool Chain::removeGhost(Site* s){
     ce = &((*ce)->next);}}
 
 void Chain::probeTemp(){
+  /* Attention PROBES are
+     not handled in a safe way */
+  
   ChainElem *ce=getFirstNonGhost();
   while(ce!=NULL){
     installProbe(ce->site,PROBE_TYPE_ALL);
@@ -4478,7 +4485,7 @@ void lockReceiveGet(OwnerEntry* oe,LockManager* lm,Site* toS){
   Assert(lm->getTertType()==Te_Manager);
   Chain *ch=lm->getChain();
   PD((LOCK,"LockMgr Received get from %s",toS->stringrep()));
-  Site* current=ch->setCurrent(toS);            
+  Site* current=ch->setCurrent(toS,lm);            
   //DebugCode(printChain(ch);)
   if(current==mySite){                             // shortcut
     PD((LOCK," shortcut in lockReceiveGet"));
@@ -4580,7 +4587,7 @@ void secLockGet(LockSec* sec,Tertiary* t,Thread* th){
   Assert(t->getTertType()==Te_Manager);
   OwnerEntry *oe=OT->getOwner(index);
   Chain* ch=((LockManager*) t)->getChain();
-  Site* current=ch->setCurrent(mySite);
+  Site* current=ch->setCurrent(mySite,t);
   oe->getOneCreditOwner();
   cellLockSendForward(current,mySite,index);
   return;}
@@ -4788,7 +4795,7 @@ void receiveAskError(OwnerEntry *oe,Site *toS,EntityCond ec){
     sendTellError(oe,toS,t->getIndex(),PERM_SOME,TRUE);
     return;}
   ch->newInform(toS,ec);      
-  if(someTempCondition(ec)){
+  if(someTempCondition(ec) && ch->hasFlag(INTERESTED_IN_TEMP)){
     if(!ch->hasFlag(INTERESTED_IN_OK)){
       ch->setFlagAndCheck(INTERESTED_IN_TEMP);
       ch->probeTemp();
@@ -4868,10 +4875,10 @@ void informInstallHandler(Tertiary* t,EntityCond ec){
     return;}
   sendAskError(t,managerPart(ec));
   if(someTempCondition(ec)) 
-    getSiteFromTertiaryProxy(t)->installProbe(PROBE_TYPE_ALL,0);
+    tertiaryInstallProbe(getSiteFromTertiaryProxy(t),PROBE_TYPE_ALL,t); 
   else
-    getSiteFromTertiaryProxy(t)->installProbe(PROBE_TYPE_PERM,0);}
-  
+    tertiaryInstallProbe(getSiteFromTertiaryProxy(t),PROBE_TYPE_PERM,t); }
+
 Bool Tertiary::installHandler(EntityCond wc,TaggedRef proc,Thread* th){
   if(handlerExists(th)){return FALSE;} // duplicate
   PD((NET_HANDLER,"Handler installed on tertiary %x",this));
@@ -4884,7 +4891,7 @@ Bool Tertiary::installHandler(EntityCond wc,TaggedRef proc,Thread* th){
     informInstallHandler(this,wc);
     return TRUE;}
   if(getTertType()==Te_Manager) return TRUE;
-  getSiteFromTertiaryProxy(this)->installProbe(PROBE_TYPE_PERM,0);
+  tertiaryInstallProbe(getSiteFromTertiaryProxy(this),PROBE_TYPE_PERM,this);
   return TRUE;}
 
 
@@ -4900,17 +4907,20 @@ void Tertiary::installWatcher(EntityCond wc,TaggedRef proc){
   PD((NET_HANDLER,"Watcher installed on tertiary %x",this));
   Watcher *w=new Watcher(proc,wc);
   insertWatcher(w);
-   if(getTertType() == Te_Local){
+  if(getTertType() == Te_Local) return;
+  if(w->isTriggered(getEntityCond())){
+    entityProblem();
     return;}
   if(managerPart(wc) != ENTITY_NORMAL){
     informInstallHandler(this,managerPart(wc));
     return;}
   if(this->getTertType() == Te_Manager){
     return;}
+  ProbeReturn pr;
   if(someTempCondition(wc))
-    getSiteFromTertiaryProxy(this)->installProbe(PROBE_TYPE_ALL,0);
+    tertiaryInstallProbe(getSiteFromTertiaryProxy(this),PROBE_TYPE_ALL,this);
   else 
-    getSiteFromTertiaryProxy(this)->installProbe(PROBE_TYPE_PERM,0);}
+    tertiaryInstallProbe(getSiteFromTertiaryProxy(this),PROBE_TYPE_PERM,this);}
 
 Bool Tertiary::deinstallWatcher(EntityCond wc, TaggedRef proc){
   Watcher** base=getWatcherBase();
@@ -5245,7 +5255,8 @@ void Chain::managerSeesSiteOK(Tertiary *t,Site *s){
 void cellLock_Perm(int state,Tertiary* t){
   switch(state){
   case Cell_Lock_Invalid:{
-    if(t->setEntityCondOwn(PERM_SOME|PERM_ME)) break;
+    // ATTENTION PER I added Perm_block /EK
+    if(t->setEntityCondOwn(PERM_SOME|PERM_ME|PERM_BLOCKED)) break;
     return;}
   case Cell_Lock_Requested|Cell_Lock_Next:
   case Cell_Lock_Requested:{
@@ -5360,6 +5371,18 @@ void Site::probeFault(ProbeReturn pr){
       if(tr->hasWatchers()){
 	tr->proxyProbeFault(pr);}}}
   return;}
+
+/**********************************************************************/
+/*   SECTION 39b:: ProbeHack                                       */
+/**********************************************************************/
+
+void insertDangelingEvent(Tertiary *t){
+  PD((PROBES,"Starting DangelingThread"));
+  Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, ozx_rootBoard());
+  RefsArray args = allocateRefsArray(1,NO);
+  args[0] = makeTaggedTert(t);
+  tt->pushCall(BI_probe, args, 1);
+  am.scheduleThread(tt);}
 
 /**********************************************************************/
 /*   SECTION 40:: communication problem                               */
@@ -5594,25 +5617,156 @@ OZ_C_proc_begin(BIdvset,2)
   return PROCEED;
 }
 OZ_C_proc_end
+#endif
 
-OZ_C_proc_begin(BItimer,0)
+Bool openClosedConnection(int);
+void openclose(int);
+void wakeUpTmp(int,int);
+
+OZ_C_proc_begin(BIstartTmp,2)
 {
-  networkTimer();
+  OZ_declareIntArg(0,val);
+  OZ_declareIntArg(1,time);
+  PD((TCPCACHE,"StartTmp v:%d t:%d",val,time));
+  if(openClosedConnection(val)){
+    PD((TCPCACHE,"StartTmp; continuing"));
+    wakeUpTmp(val,time);}
+  return PROCEED;
+}
+  OZ_C_proc_end
+  
+  OZ_C_proc_begin(BIcloseCon,1)
+{
+  OZ_declareIntArg(0,what);
+  openclose(what);
   return PROCEED;
 }
 OZ_C_proc_end
-#endif
+
+void wakeUpTmp(int i, int time){
+  PD((TCPCACHE,"Starting DangelingThread"));
+  Thread *tt = am.mkRunnableThread(LOW_PRIORITY, ozx_rootBoard());
+  RefsArray args1 = allocateRefsArray(1,NO);
+  args1[0] = makeTaggedSmallInt(time);
+  RefsArray args2 = allocateRefsArray(2,NO);
+  args2[0] = makeTaggedSmallInt(i);
+  args2[1] = makeTaggedSmallInt(time);
+  tt->pushCall(BI_startTmp, args2, 2);
+  tt->pushCall(BI_Delay, args1, 1);
+  am.scheduleThread(tt);}
+
+GenHashNode *getPrimaryNode(GenHashNode* node, int &i);
+GenHashNode *getSecondaryNode(GenHashNode* node, int &i);
+
+OZ_C_proc_begin(BIsiteStatistics,1)
+{
+  OZ_declareArg(0,out);
+  int indx;
+  Site* found;
+  GenHashNode *node = getPrimaryNode(NULL, indx);
+  OZ_Term sitelist = oz_nil(); 
+  OZ_Term ownerlist = oz_nil();
+  OZ_Term borrowlist = oz_nil();
+  
+  Bool primary = TRUE;
+  while(node!=NULL){
+    GenCast(node->getBaseKey(),GenHashBaseKey*,found,Site*);  
+
+    time_t ts = found->getTimeStamp();
+    sitelist=
+      oz_cons(OZ_recordInit(oz_atom("site"),
+      oz_cons(oz_pairA("siteString", oz_atom(found->stringrep())),
+      oz_cons(oz_pairAI("port",(int)found->getPort()),
+      oz_cons(oz_pairAI("timeint",(int)ts),
+      oz_cons(oz_pairA("timestr",oz_atom(ctime(&ts))),
+      oz_cons(oz_pairAI("ipint",(unsigned int)found->getAddress()),
+      oz_cons(oz_pairAI("hval",(int)found),
+	      oz_nil()))))))),sitelist);
+    if(primary){
+      node = getPrimaryNode(node,indx);
+      if(node!=NULL) {
+	printf("p:%s\n",found->stringrep());
+	continue;}
+      else primary = FALSE;}
+    printf("s:%s\n",found->stringrep());
+    node = getSecondaryNode(node,indx);}
+    
+   int limit=OT->getSize();
+   char *str;
+   for(int ctr = 0; ctr<limit;ctr++){
+     OwnerEntry *oe = OT->getEntry(ctr);
+     if(oe==NULL){continue;}
+     printf("Found something in owner\n");
+     Assert(oe!=NULL);
+     str = "unknown";
+     if(oe->isVar()){
+       str = "var";}
+    if(oe->isRef()){
+       str = "ref";}
+     if(oe->isTertiary())
+       switch (oe->getTertiary()->getType()){
+       case Co_Cell:{str = "cell";break; }
+       case Co_Lock:{str = "lock";break; }
+     case Co_Port:{str = "port";break; }
+     case Co_Object:{str = "object";break; }
+     case Co_Array:{str = "array";break; }
+     case Co_Dictionary:{str = "dictionary";
+     break; }
+     case Co_Class:{str = "class";break; }
+     default:str = "unknownTert";}
+     ownerlist=
+     oz_cons(OZ_recordInit(oz_atom("oe"),
+     oz_cons(oz_pairA("type", oz_atom(str)),
+     oz_cons(oz_pairAI("indx",ctr),oz_nil()))),ownerlist);
+ }
+ limit=BT->getSize();
+ for(int ctr1 = 0; ctr1<limit;ctr1++){
+   BorrowEntry *be = BT->getEntry(ctr1);
+   if(be==NULL){continue;}
+   Assert(be!=NULL);
+   printf("Found something in borrow\n");
+   str = "unknown";
+   if(be->isVar()){
+     str = "var";}
+   if(be->isRef()){
+     str = "ref";}
+   if(be->isTertiary())
+     switch (be->getTertiary()->getType()){
+     case Co_Cell:{str = "cell";break; }
+     case Co_Lock:{str = "lock";break; }
+     case Co_Port:{str = "port";break; }
+     case Co_Object:{str = "object";break; }
+     case Co_Array:{str = "array";break; }
+     case Co_Dictionary:{str = "dictionary";
+     break; }
+     case Co_Class:{str = "class";break; }
+     default:str = "unknownTert";}
+    borrowlist=
+     oz_cons(OZ_recordInit(oz_atom("be"),
+     oz_cons(oz_pairA("type", oz_atom(str)),
+     oz_cons(oz_pairAI("siteHVal", (int) be->getSite()),
+     oz_cons(oz_pairAI("indx",be->getOTI()),oz_nil())))),borrowlist);}
+ return OZ_unify(out,oz_cons(sitelist,
+                     oz_cons(borrowlist,
+                     oz_cons(ownerlist,oz_nil()))));
+
+}
+OZ_C_proc_end
+
+
 
 /**********************************************************************/
 /*   SECTION 42:: Initialization                                      */
 /**********************************************************************/
 
 BIspec perdioSpec[] = {
-
+ 
 #ifdef DEBUG_PERDIO
   {"dvset",    2, BIdvset, 0},
-  {"timer",    0, BItimer, 0},  
 #endif
+  {"NetCloseCon",    1, BIcloseCon, 0},
+  {"startTmp",        2, BIstartTmp, 0},
+  {"siteStatistics", 1, BIsiteStatistics, 0},
   {0,0,0,0}
 };
 
@@ -5766,8 +5920,12 @@ void printChain(Chain* chain){
     printf(" CHAIN_DUPLICATE");
   printf("] %s\n",cp->getSite()->stringrep());}
   
-void receiveSiteDwnDbg(){
-  
+void receiveSiteDwnDbg(Site *s){
+  OZ_warning("Received: Simulating network connection down %s",s->stringrep());
+
 }    
     
+void siteDbgCrash(){
+  OZ_warning("Simulating network connection down");
   
+}
