@@ -32,11 +32,10 @@ then
   dir=`dirname $howcalled`
   OZHOME=`(cd $dir; cd ..; /bin/pwd)`
   $doecho "Setting Oz installation directory to: $OZHOME"
-  export OZHOME
 else
   $doecho "Using Oz directory: $OZHOME"
-  export OZHOME
 fi
+export OZHOME
 
 # determine machine architecture and OS version
 : ${OZPLATFORM=`$OZHOME/bin/ozplatform`}
