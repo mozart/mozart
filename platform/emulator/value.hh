@@ -591,14 +591,13 @@ enum TypeOfConst {
   Co_Dictionary,    /* 12 */
   Dummy,           // GCTAG  
   Co_Lock
-  /* Co_PRec         14 - reserve for future use */
   /* Co_PPort        15 - could optimize P[port] */
 };
 
 enum TertType {
-  Te_Local = 0,   // 0000
+  Te_Local   = 0, // 0000
   Te_Manager = 1, // 0001
-  Te_Proxy = 2   // 0010
+  Te_Proxy   = 2  // 0010
 };
 
 
@@ -1544,17 +1543,19 @@ private:
   SRecordArity methodArity;
   TaggedRef fileName;
   int lineno;
+  GName *gname;
 
 public:
   ProgramCounter PC;
 
   PrTabEntry (TaggedRef name, SRecordArity arityInit,TaggedRef file, int line)
-  : printname(name), spyFlag(NO), fileName(file), lineno(line)
+  : printname(name), spyFlag(NO), fileName(file), lineno(line), gname(NULL)
   {
     Assert(isLiteral(name));
     methodArity = arityInit;
     arity =  (unsigned short) getWidth(arityInit);
     Assert((int)arity == getWidth(arityInit)); /* check for overflow */
+    PC = NOCODE;
   }
 
   OZPRINTLONG;
@@ -1569,6 +1570,12 @@ public:
   Bool getSpyFlag()   { return (Bool) spyFlag; }
   void setSpyFlag()   { spyFlag = OK; }
   void unsetSpyFlag() { spyFlag = NO; }
+
+  void gcPrTabEntry();
+
+  GName *globalize();
+  GName *getGName() { return gname; }
+  void setGName(GName *gn) { Assert(gname==NULL); gname = gn; }
 };
 
 
@@ -1585,13 +1592,7 @@ public:
   : Tertiary(b,Co_Abstraction,Te_Local), gRegs(gregs), pred(prd) 
   { }
 
-  Abstraction(TaggedRef name, int arity)
-  : Tertiary(0,Co_Abstraction,Te_Proxy)
-  {
-    pred = new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0);
-    pred->PC = NOCODE;
-    gRegs = NULL;
-  }
+  Abstraction(TaggedRef name, int arity, GName *gn);
 
   OZPRINT;
   OZPRINTLONG;
@@ -1606,6 +1607,10 @@ public:
   TaggedRef getName()    { return pred->getName(); }
 
   TaggedRef DBGgetGlobals();
+
+  GName *getGName() { return (GName*) getPtr(); }
+  void setGName(GName *gn) { setPtr(gn); }
+  GName *globalize();
 };
 
 inline
@@ -1649,7 +1654,7 @@ class ProcProxy: public Abstraction {
   TaggedRef suspVar;
 public:
   ProcProxy(ProcProxy&);
-  ProcProxy(int i, TaggedRef name, int arity):  Abstraction(name,arity)
+  ProcProxy(int i, TaggedRef name, int arity, GName *gn):  Abstraction(name,arity,gn)
   {
     suspVar = makeTaggedNULL();
     setIndex(i);
