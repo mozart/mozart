@@ -1015,8 +1015,8 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
  * MISC
  * -------------------------------------------------------------------------*/
 
-int AM::awakeIO(int fd, TaggedRef var) {
-  am.awakeIOVar(var);
+int AM::awakeIO(int fd, void *var) {
+  am.awakeIOVar((TaggedRef) var);
   return 1;
 }
 
@@ -1083,7 +1083,7 @@ void AM::pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
   cachedStack->pushCont(pc,y,g,x);
 }
 
-void AM::select(int fd, int mode, OZ_IOHandler fun, TaggedRef val)
+void AM::select(int fd, int mode, OZ_IOHandler fun, void *val)
 {
   if (!isToplevel()) {
     warning("select only on toplevel");
@@ -1095,7 +1095,7 @@ void AM::select(int fd, int mode, OZ_IOHandler fun, TaggedRef val)
 }
 
 
-void AM::acceptSelect(int fd, OZ_IOHandler fun, TaggedRef val)
+void AM::acceptSelect(int fd, OZ_IOHandler fun, void *val)
 {
   if (!isToplevel()) {
     warning("select only on toplevel");
@@ -1114,7 +1114,9 @@ int AM::select(int fd, int mode,TaggedRef l,TaggedRef r)
     return OK;
   }
   if (osTestSelect(fd,mode)==1) return OZ_unify(l,r);
-  ioNodes[fd].readwritepair[mode]=cons(l,r);
+  ioNodes[fd].readwritepair[mode]=(void *) cons(l,r);
+  gcProtect((TaggedRef *) &ioNodes[fd].readwritepair[mode]);
+
   ioNodes[fd].handler[mode]=awakeIO;
   osWatchFD(fd,mode);
   return OK;
@@ -1127,7 +1129,9 @@ void AM::acceptSelect(int fd,TaggedRef l,TaggedRef r)
     return;
   }
 
-  ioNodes[fd].readwritepair[SEL_READ]=cons(l,r);
+  ioNodes[fd].readwritepair[SEL_READ]=(void *) cons(l,r);
+  gcProtect((TaggedRef *) &ioNodes[fd].readwritepair[SEL_READ]);
+
   ioNodes[fd].handler[SEL_READ]=awakeIO;
   osWatchAccept(fd);
 }
@@ -1136,10 +1140,20 @@ void AM::deSelect(int fd)
 {
   osClrWatchedFD(fd,SEL_READ);
   osClrWatchedFD(fd,SEL_WRITE);
-  ioNodes[fd].readwritepair[SEL_READ]  = makeTaggedNULL();
-  ioNodes[fd].readwritepair[SEL_WRITE] = makeTaggedNULL();
+  ioNodes[fd].readwritepair[SEL_READ]  = 0;
+  ioNodes[fd].readwritepair[SEL_WRITE] = 0;
+  (void) gcUnprotect((TaggedRef *) &ioNodes[fd].readwritepair[SEL_READ]);
+  (void) gcUnprotect((TaggedRef *) &ioNodes[fd].readwritepair[SEL_WRITE]);
   ioNodes[fd].handler[SEL_READ]  = 0;
   ioNodes[fd].handler[SEL_WRITE]  = 0;
+}
+
+void AM::deSelect(int fd,int mode)
+{
+  osClrWatchedFD(fd,mode);
+  ioNodes[fd].readwritepair[mode]  = 0;
+  (void) gcUnprotect((TaggedRef *) &ioNodes[fd].readwritepair[mode]);
+  ioNodes[fd].handler[mode]  = 0;
 }
 
 // called if IOReady (signals are blocked)
@@ -1168,7 +1182,8 @@ void AM::handleIO()
 	Assert(ioNodes[index].handler[mode]);
 	if ((ioNodes[index].handler[mode])
 	    (index, ioNodes[index].readwritepair[mode])) {
-	  ioNodes[index].readwritepair[mode] = makeTaggedNULL();
+	  ioNodes[index].readwritepair[mode] = 0;
+	  (void) gcUnprotect((TaggedRef *)&ioNodes[index].readwritepair[mode]);
 	  ioNodes[index].handler[mode] = 0;
 	  osClrWatchedFD(index,mode);
 	}

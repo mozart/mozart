@@ -73,7 +73,7 @@ enum InstType {
 class IONode {
 public:
   OZ_IOHandler handler[2];
-  TaggedRef readwritepair[2];
+  void *readwritepair[2];
 };
 
 
@@ -280,7 +280,7 @@ public:
   // coping of trees (and terms);
   Board* copyTree (Board* node, Bool *isGround);
 
-  static int awakeIO(int fd,TaggedRef var);
+  static int awakeIO(int fd,void *var);
   void awakeIOVar(TaggedRef var);
 
   // entailment check
@@ -349,11 +349,13 @@ public:
 
   void handleIO();
   Bool loadQuery(CompStream *fd);
-  void select(int fd, int mode, OZ_IOHandler fun, TaggedRef val);
-  void acceptSelect(int fd, OZ_IOHandler fun, TaggedRef val);
+  void select(int fd, int mode, OZ_IOHandler fun, void *val);
+  void acceptSelect(int fd, OZ_IOHandler fun, void *val);
+
   int select(int fd,int mode, TaggedRef l, TaggedRef r);
   void acceptSelect(int fd, TaggedRef l, TaggedRef r);
   void deSelect(int fd);
+  void deSelect(int fd,int mode);
   void checkIO();
 
   void handleAlarm();
