@@ -18,6 +18,7 @@
 
 \renewcommand{\encodingdefault}{T1}
 \RequirePackage{times}
+\RequirePackage{mathptm}
 
 % pass options down to book class
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{book}}
