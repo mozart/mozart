@@ -1579,18 +1579,23 @@ OZ_BI_define(unix_exec,3,1){
        *   this allows to press Control-C when debugging the emulator
        */
       if (setsid() < 0) {
-        RETURN_UNIX_ERROR("setsid");
+        // kost@ : raising an exception here makes no sense - that's
+        // the child process...
+        fprintf(stderr, "setsid failed\n");
+        exit(-1);
       }
 #endif
 
       // the child process should not produce a core file -- otherwise
-      // we get a problem if all core files are just named 'core', because
-      // the emulator's core file gets overwritten immediately by wish's one...
+      // we get a problem if all core files are just named 'core',
+      // because the emulator's core file gets overwritten immediately
+      // by wish's one...
       struct rlimit rlim;
       rlim.rlim_cur = 0;
       rlim.rlim_max = 0;
       if (setrlimit(RLIMIT_CORE, &rlim) < 0) {
-        RETURN_UNIX_ERROR("setrlimit");
+        fprintf(stderr, "setrlimit failed\n");
+        exit(-1);
       }
 
 #ifdef DEBUG_CHECK
@@ -1598,32 +1603,32 @@ OZ_BI_define(unix_exec,3,1){
       // one cannot see what forked sites are trying to say us.
       // However, this makes e.g. the 'detach' functionality of remote
       // servers non-working (but who wants it in debug mode anyway?)
-      for (int i=2; i<FD_SETSIZE; i++)
+      for (int i = 3; i<FD_SETSIZE; i++)
         close(i);
 #else
       if (do_kill) {
-        for (int i=2; i<FD_SETSIZE; i++)
+        for (int i = 3; i<FD_SETSIZE; i++)
           close(i);
       } else {
-        for (int i=FD_SETSIZE; i--; )
+        for (int i = FD_SETSIZE; i--; )
           close(i);
 
         WRAPCALL("open",open("/dev/null", O_RDWR),dn);
-
-        osdup(dn);
-        osdup(dn);
+        osdup(dn);              // stdout
+        osdup(dn);              // stderr
       }
 #endif
 
-      if (execvp(s,argv)  < 0) {
-        RETURN_UNIX_ERROR("execvp");
-      }
-
-      printf("execvp failed\n");
-      exit(-1);
+      int execRet;
+      execRet = execvp(s, argv);
+      Assert(execRet < 0);
+      fprintf(stderr, "execvp failed\n");
+      exit(-101);
     }
+
   case -1:
     RETURN_UNIX_ERROR("fork");
+
   default: // parent
     break;
   }
