@@ -42,7 +42,6 @@
 #include "chain.hh"
 #include "flowControl.hh"
 
-#define USE_ALT_VAR_PROTOCOL ozconf.perdioUseAltVarProtocol
 
 Bool globalRedirectFlag=AUT_REG;
 
