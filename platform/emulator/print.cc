@@ -88,6 +88,7 @@
 #include "genvar.hh"
 #include "fdomn.hh"
 #include "dictionary.hh"
+#include "builtins.hh"
 
 class Indent {
 public:

@@ -31,7 +31,6 @@
 
 #include "runtime.hh"
 #include "gc.hh"
-#include "builtins.hh"
 #include "dictionary.hh"
 #include "find-alive-entry.hh"
 
