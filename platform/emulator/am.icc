@@ -195,7 +195,7 @@ Thread *AM::newThreadInternal(int prio, Board *bb) {
   Thread *th = new Thread(S_RTHREAD | T_runnable,prio,bb,newId());
   th->setBody(allocateBody());
   bb->incSuspCount();
-  checkDebug(th);
+  checkDebug(th,bb);
   return th;
 }
 
@@ -240,20 +240,20 @@ Thread *AM::mkRunnableThreadOPT(int prio, Board *bb)
 inline
 Thread *AM::mkWakeupThread(Board *bb)
 {
-  Thread *tt = new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb,newId());
+  Thread *th = new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb,newId());
   bb->incSuspCount();
-  checkDebug(tt);
-  return tt;
+  checkDebug(th,bb);
+  return th;
 }
 
 //
 inline
 Thread *AM::mkPropagator(Board *bb, int prio, OZ_Propagator *pro)
 {
-  Thread * th = new Thread(S_PR_THR, prio, bb,newId());
+  Thread *th = new Thread(S_PR_THR,prio,bb,newId());
   th->setInitialPropagator(pro);
   bb->incSuspCount();
-  checkDebug(th);
+  checkDebug(th,bb);
 
   return th;
 }
@@ -265,7 +265,7 @@ Thread *AM::mkSuspendedThread(Board *bb, int prio)
   Thread *th = new Thread(S_RTHREAD,prio,bb,newId());
   th->setBody(allocateBody());
   bb->incSuspCount();
-  checkDebug(th);
+  checkDebug(th,bb);
 
   return th;
 }
