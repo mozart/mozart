@@ -1,3 +1,4 @@
+#include "bytedata.hh"
 #include "mozart.h"
 #include "gdbm.h"
 #include <string.h>
@@ -8,8 +9,6 @@
 #include <sys/uio.h>
 #include <unistd.h>
 #include <fcntl.h>
-
-#include "bytedata.hh"
 
 class GDBM: public OZ_SituatedExtension {
 public:

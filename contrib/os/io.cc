@@ -1,5 +1,5 @@
-#include "mozart.h"
 #include "bytedata.hh"
+#include "mozart.h"
 #include "am.hh"
 #include "os.hh"
 #include <errno.h>
