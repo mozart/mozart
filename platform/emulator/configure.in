@@ -615,11 +615,14 @@ dnl *****************************************************************
 
 case $platform in
     linux*)
-	OZ_ENABLE_YES(lstatic,[  statically link on linux],
-		AC_MSG_RESULT(yes)
-		LIBS=`echo $LIBS | sed -e 's/[ ]-ldl//g'`
-		LIBS="-ldl -Xlinker -Bstatic $LIBS"
-		)
+	if ! test -f /lib/libc.so.6
+	then
+	    OZ_ENABLE_YES(lstatic,[  statically link on linux],
+		    AC_MSG_RESULT(yes)
+		    LIBS=`echo $LIBS | sed -e 's/[ ]-ldl//g'`
+		    LIBS="-ldl -Xlinker -Bstatic $LIBS"
+		    )
+	fi
 	;;
 esac
 
