@@ -239,8 +239,7 @@ sub OZTABLE {
         } else {
             print "\t\timods: nil\n";
         }
-        if ($#otyps == 0 && $otyps[0] eq '\'bool\''
-            && $odets[0] eq 'any(det)') {
+        if ($otyps[0] eq '\'bool\'' && $odets[0] eq 'any(det)') {
             print "\t\ttest: true\n";
         }
 
