@@ -283,7 +283,7 @@ prepare
 
       meth putEntity(Key Def)
 	 if @PrivateEntityTable==unit then
-	    PrivateEntityTable={NewDictionary}
+	    PrivateEntityTable <- {NewDictionary}
 	 end
 	 @PrivateEntityTable.Key := Def
       end
