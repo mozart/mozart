@@ -399,7 +399,7 @@ LBLsuspend:
   if (e->debugmode() && CTT->getTrace()) {
     debugStreamBlocked(CTT);
   } else if (CTT->getNoBlock()) {
-    (void) oz_raise(E_ERROR,E_KERNEL,"block",1,makeTaggedConst(CTT));
+    (void) oz_raise(E_ERROR,E_KERNEL,"block",1,oz_thread(CTT));
     e->exception.pc = NOCODE;
     goto LBLraise;
   }

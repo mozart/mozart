@@ -64,7 +64,7 @@ typedef enum {
   DIF_BUILTIN,
   DIF_DICT,
   DIF_OBJECT,
-  DIF_THREAD,
+  DIF_THREAD_UNUSED,
   DIF_SPACE,
   DIF_CHUNK,            // SITE INDEX NAME value
   DIF_PROC,             // SITE INDEX NAME ARITY globals code
@@ -106,7 +106,7 @@ const struct {MarshalTag tag; char *name;} dif_names[] = {
   { DIF_BUILTIN,      "BUILTIN"},
   { DIF_DICT,         "DICT"},
   { DIF_OBJECT,       "OBJECT"},
-  { DIF_THREAD,       "THREAD"},
+  { DIF_THREAD_UNUSED,        "THREAD"},
   { DIF_SPACE,        "SPACE"},
   { DIF_CHUNK,        "CHUNK"},
   { DIF_PROC,         "PROC"},

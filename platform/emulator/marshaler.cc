@@ -1062,7 +1062,7 @@ loop:
       return;
     }
   case DIF_PORT:
-  case DIF_THREAD:
+  case DIF_THREAD_UNUSED:
   case DIF_SPACE:
   case DIF_CELL:
   case DIF_LOCK:

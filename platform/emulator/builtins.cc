@@ -1542,7 +1542,7 @@ OZ_BI_define(BInewChunk,1,1)
 
 OZ_BI_define(BIthreadThis,0,1)
 {
-  OZ_RETURN(makeTaggedConst(oz_currentThread()));
+  OZ_RETURN(oz_thread(oz_currentThread()));
 } OZ_BI_end
 
 /*
@@ -1552,7 +1552,7 @@ OZ_BI_define(BIthreadThis,0,1)
  */
 OZ_BI_define(BIthreadSetPriority,2,0)
 {
-  oz_declareThreadIN(0,th);
+  oz_declareThread(0,th);
   oz_declareNonvarIN(1,atom_prio);
 
   int prio;
@@ -1570,12 +1570,6 @@ OZ_BI_define(BIthreadSetPriority,2,0)
   type_goof:
     oz_typeError(1,"Atom [low medium high]");
   }
-
-  if (th->isProxy()) {
-    return remoteSend(th,"Thread.setPriority",atom_prio);
-  }
-
-  if (th->isDeadThread()) return PROCEED;
 
   int oldPrio = th->getPriority();
   th->setPriority(prio);
@@ -1608,12 +1602,7 @@ OZ_Term threadGetPriority(Thread *th) {
 
 OZ_BI_define(BIthreadGetPriority,1,1)
 {
-  oz_declareThreadIN(0,th);
-
-  if (th->isProxy()) {
-    OZ_out(0) = oz_newVariable();
-    return remoteSend(th,"Thread.getPriority",OZ_out(0));
-  }
+  oz_declareThread(0,th);
 
   OZ_RETURN(threadGetPriority(th));
 } OZ_BI_end
@@ -1634,8 +1623,6 @@ OZ_C_proc_proto(BIraiseDebug);
 void threadRaise(Thread *th,OZ_Term E,int debug) {
   Assert(oz_currentThread() != th);
 
-  if (th->isDeadThread()) return;
-
   RefsArray args=allocateRefsArray(1, NO);
   args[0]=E;
 
@@ -1654,12 +1641,8 @@ void threadRaise(Thread *th,OZ_Term E,int debug) {
 
 OZ_BI_define(BIthreadRaise,2,0)
 {
-  oz_declareThreadIN(0,th);
+  oz_declareThread(0,th);
   oz_declareNonvarIN(1,E);
-
-  if (th->isProxy()) {
-    return remoteSend(th,"Thread.raise",E);
-  }
 
   if (oz_currentThread() == th) {
     return OZ_raise(E);
@@ -1675,11 +1658,7 @@ OZ_BI_define(BIthreadRaise,2,0)
  */
 OZ_BI_define(BIthreadSuspend,1,0)
 {
-  oz_declareThreadIN(0,th);
-
-  if (th->isProxy()) {
-    return remoteSend(th,"Thread.suspend",oz_nil());
-  }
+  oz_declareThread(0,th);
 
   th->setStop(OK);
   if (th == oz_currentThread()) {
@@ -1691,8 +1670,6 @@ OZ_BI_define(BIthreadSuspend,1,0)
 void threadResume(Thread *th) {
   th->setStop(NO);
 
-  if (th->isDeadThread()) return;
-
   if (th->isRunnable() && !am.threadsPool.isScheduledSlow(th)) {
     am.threadsPool.scheduleThread(th);
   }
@@ -1700,12 +1677,7 @@ void threadResume(Thread *th) {
 
 OZ_BI_define(BIthreadResume,1,0)
 {
-  oz_declareThreadIN(0,th);
-
-  if (th->isProxy()) {
-    return remoteSend(th,"Thread.resume",oz_nil());
-  }
-
+  oz_declareThread(0,th);
 
   threadResume(th);
 
@@ -1714,18 +1686,13 @@ OZ_BI_define(BIthreadResume,1,0)
 
 OZ_BI_define(BIthreadIsSuspended,1,1)
 {
-  oz_declareThreadIN(0,th);
-
-  if (th->isProxy()) {
-    OZ_out(0) = oz_newVariable();
-    return remoteSend(th,"Thread.isSuspended",OZ_out(0));
-  }
+  oz_declareThread(0,th);
 
   OZ_RETURN(th->getStop() ? NameTrue : NameFalse);
 } OZ_BI_end
 
 OZ_Term threadState(Thread *th) {
-  if (th->isDeadThread()) {
+  if (!th || th->isDeadThread()) {
     return oz_atom("terminated");
   }
   if (th->isRunnable()) {
@@ -1738,20 +1705,12 @@ OZ_BI_define(BIthreadState,1,1)
 {
   oz_declareThreadIN(0,th);
 
-  if (th->isProxy()) {
-    OZ_out(0) = oz_newVariable();
-    return remoteSend(th,"Thread.state",OZ_out(0));
-  }
-
   OZ_RETURN(threadState(th));
 } OZ_BI_end
 
 OZ_BI_define(BIthreadPreempt,1,0)
 {
-  oz_declareThreadIN(0,th);
-
-  if (th->isProxy())
-    return oz_raise(E_ERROR,E_SYSTEM,"threadPreempt Proxy not impl",0);
+  oz_declareThread(0,th);
 
   if (th == oz_currentThread()) {
     return BI_PREEMPT;
@@ -4833,8 +4792,6 @@ static int finalizable(OZ_Term& x)
       case Co_Foreign_Pointer:
         return 1;
         // Tertiary Consts
-      case Co_Thread:
-        b = ((Thread*)xp)->getBoardInternal(); break;
       case Co_Abstraction:
         b = ((Abstraction*)xp)->getBoardInternal(); break;
       case Co_Builtin:
@@ -4849,8 +4806,6 @@ static int finalizable(OZ_Term& x)
         b = ((Port*)xp)->getBoardInternal(); break;
       case Co_Chunk:
         b = ((SChunk*)xp)->getBoardInternal(); break;
-      case Co_HeapChunk:
-        return 1;
       case Co_Array:
         b = ((OzArray*)xp)->getBoardInternal(); break;
       case Co_Dictionary:

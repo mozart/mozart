@@ -2868,7 +2868,6 @@ void Tertiary::globalizeTert()
         o->setState(cell);}
       break;
     }
-  case Co_Thread:
   case Co_Space:
   case Co_Port:
     break;
@@ -3072,7 +3071,7 @@ char *tagToComment(MarshalTag tag){
   switch(tag){
   case DIF_PORT:
     return "port";
-  case DIF_THREAD:
+  case DIF_THREAD_UNUSED:
     return "thread";
   case DIF_SPACE:
     return "space";
@@ -3148,7 +3147,7 @@ OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
     PD((UNMARSHAL,"%s hit b:%d",tagToComment(tag),bi));
     switch (tag) {
     case DIF_PORT:
-    case DIF_THREAD:
+    case DIF_THREAD_UNUSED:
     case DIF_SPACE:
       break;
     case DIF_CELL:{
@@ -3180,8 +3179,8 @@ OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
   case DIF_PORT:
     tert = new PortProxy(bi);
     break;
-  case DIF_THREAD:
-    tert = new Thread(bi,Te_Proxy);
+  case DIF_THREAD_UNUSED:
+    // tert = new Thread(bi,Te_Proxy);
     break;
   case DIF_SPACE:
     tert = new Space(bi,Te_Proxy);

@@ -37,7 +37,6 @@
 #endif
 
 #include "taskstk.hh"
-#include "value.hh"
 
 //
 // (kp) On Sparc (v8), most efficient flags are (strictly) between 0x0 and
@@ -109,20 +108,19 @@ union ThreadBodyItem {
 //                    `-------------------------------'
 //
 // memory layout
-// <Secondary Tags>               from class ConstTerm
-// <board|index> | <Tertiary Tag> from class Tertiary
+// <board>
 // <prio> | <flags>
 // <id>    (debugger)
 // <abstr> (profiler)
 // <stack>
 
-class Thread : public Tertiary {
+class Thread {
   friend int engine(Bool);
   friend void scheduler();
-  friend void ConstTerm::gcConstRecurse(void);
 private:
   //  Sparc, for instance, has a ldsb/stb instructions -
   // so, this is exactly as efficient as just two integers;
+  Board *board;
   Object *self;
   struct {
     int pri:    sizeof(char) * 8;
@@ -135,8 +133,8 @@ private:
 public:
   NO_DEFAULT_CONSTRUCTORS(Thread);
 
-  Thread(int flags, int prio, Board *bb, int id1)
-    : Tertiary(bb,Co_Thread,Te_Local), id(id1)
+  Thread(int flags, int prio, Board *bb, int id)
+    : board(bb), id(id)
   {
     state.flags = flags;
     state.pri = prio;
@@ -150,19 +148,24 @@ public:
       ozstat.createdThreads.incf();
   }
 
-  Thread(int i, TertType tertType)
-    : Tertiary(0,Co_Thread,tertType)
-  {
-    setIndex(i);
-  }
-
   USEHEAPMEMORY;
   OZPRINTLONG;
+
+  Board *getBoardInternal()        { return board; }
+  void setBoardInternal(Board *bb) { board = bb; }
 
   Thread *gcThread();
   Thread *gcThreadInline();
   Thread *gcDeadThread();
   void gcRecurse();
+
+  int gcIsMarked() { return ((int)board) & 1; }
+  void gcMark(Thread * fwd) { board = (Board *)(((int)fwd)|1); }
+  Thread * gcGetFwd() {
+    Assert(gcIsMarked());
+    return (Thread *) (((int)board)&~1);
+  }
+  void ** gcGetMarkField() { return (void **)&board; };
 
   void freeThreadBodyInternal() {
     Assert(isDeadThread());
@@ -392,20 +395,6 @@ public:
 
   int getRunnableNumber();
 };
-
-inline
-Bool oz_isThread(TaggedRef term)
-{
-  return oz_isConst(term) && tagged2Const(term)->getType() == Co_Thread;
-}
-
-inline
-Thread *tagged2Thread(TaggedRef term)
-{
-  Assert(oz_isThread(term));
-  return (Thread *) tagged2Const(term);
-}
-
 
 //-----------------------------------------------------------------------------
 // class Propagator

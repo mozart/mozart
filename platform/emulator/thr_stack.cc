@@ -191,7 +191,7 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
       TaggedRef pairlist =
         oz_cons(OZ_pairA("args",args),
              oz_cons(OZ_pairA("kind",OZ_atom("call")),
-                  oz_cons(OZ_pairA("thr",makeTaggedConst(thread)),
+                  oz_cons(OZ_pairA("thr",oz_thread(thread)),
                        oz_cons(OZ_pairAI("time",CodeArea::findTimeStamp(PC)),
                             oz_cons(OZ_pairA("origin",OZ_atom("builtinFrame")),
                                  oz_nil())))));
