@@ -245,6 +245,14 @@ Bool AM::isLocalVariable(TaggedRef var)
 }
 
 inline
+void updateExtSuspension(Board *varHome, Suspension *susp)
+{
+  if (am.currentSolveBoard != (Board *) NULL) {
+    am.setExtSuspension (varHome, susp);
+  }
+}
+
+inline
 void AM::checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
                                     SVariable *rightVar)
 {

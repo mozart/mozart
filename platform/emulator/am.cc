@@ -451,14 +451,7 @@ Bool AM::isBetween(Board *to, Board *varHome)
   return OK;
 }
 
-void updateExtSuspension(Board *varHome, Suspension *susp)
-{
-  if (am.setExtSuspension (varHome, susp) == OK) {
-    susp->setExtSusp ();
-  }
-}
-
-Bool AM::setExtSuspension (Board *varHome, Suspension *susp)
+void AM::setExtSuspension (Board *varHome, Suspension *susp)
 {
   Board *bb = currentBoard;
   Bool wasFound = NO;
@@ -473,7 +466,8 @@ Bool AM::setExtSuspension (Board *varHome, Suspension *susp)
     }
     bb = (bb->getParentBoard ())->getBoardDeref ();
   }
-  return (wasFound);
+  if (wasFound == OK)
+    susp->setExtSusp ();
 }
 
 Bool AM::checkExtSuspension (Suspension *susp)

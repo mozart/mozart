@@ -377,6 +377,9 @@ Bool SolveActor::isStable ()
 {
   if (threads != 0)
     return (NO);
+  if (solveBoard == am.currentBoard && am.trail.isEmptyChunk () == NO)
+    return (NO);
+  // simply "don't worry" if in all other cases it is too weak;
   return (areNoExtSuspensions ());
 }
 

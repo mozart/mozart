@@ -436,7 +436,7 @@ Atom *Atom::gc()
   }
 
   if (opMode == IN_GC) {
-    home == home->gcBoard();
+    home = home->gcBoard();
     return this;
   }
   if (isLocalBoard(home)) {

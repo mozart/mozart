@@ -180,7 +180,7 @@ public:
                                 SuspList* suspList,
                                 TaggedRef term, SVariable* rightVar = NULL);
   Bool isBetween(Board *to, Board *varHome);
-  Bool setExtSuspension (Board *varHome, Suspension *susp);
+  void setExtSuspension (Board *varHome, Suspension *susp);
   Bool checkExtSuspension (Suspension *susp);
   void incSolveThreads (Board *bb);
   void decSolveThreads (Board *bb);
