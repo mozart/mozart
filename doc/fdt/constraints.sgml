@@ -133,11 +133,11 @@ propagation is called a <def/space/ and consists
 of a number of propagators connected to a
 constraint store:
 <picture latex>
-\begin{pspicture}(6,3)\footnotesize
-\rput(1,2.6){\rnode{ta}{\bf \large Propagator}}
-\rput(5,2.6){\rnode{tz}{\bf \large Propagator}}
+\begin{pspicture}(6,3)
+\rput(1,2.6){\rnode{ta}{Propagator}}
+\rput(5,2.6){\rnode{tz}{Propagator}}
 \rput(3,2.6){\rnode{bla}{\bf .$\;$.$\;$.}}
-\rput(3,1){\ovalnode{store}{\bf \large Constraint Store}}
+\rput(3,1){\ovalnode{store}{Constraint Store}}
 \ncline[nodesep=3pt]{<-}{store}{ta}\ncline[nodesep=3pt]{<-}{store}{tz}
 \end{pspicture}
 </picture>
@@ -154,7 +154,7 @@ Z\in13\#23.
 /
 
 <p>
-The <def/popagators/ impose nonbasic constraints,
+The <def/propagators/ impose nonbasic constraints,
 for instance, <math/X<Y/ or <math/{X^2+Y^2=Z^2}/.  A
 propagator for a constraint <math/C/ is a concurrent
 computational agent that tries to narrow the

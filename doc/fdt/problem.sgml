@@ -72,10 +72,10 @@ The procedure declares the variables needed, posts
 the constraints modeling the problem, and specifies
 the distribution strategy.
 <p>
-The argument ?{Root} stands for the solutions of
+The argument <<Root>> stands for the solutions of
 the problem to be solved.  If the solutions of a
 problem are given by more than one variable, say
-?{X}, ?{Y}, and ?{Z}, we may simply combine these
+<<X>>, <<Y>>, and <<Z>>, we may simply combine these
 variables into one record by posting a constraint
 like
 <<<Root = solution(x:X y:Y z:Z)>>>
@@ -83,7 +83,7 @@ The procedure
 <<<
 {SearchAll Script ?Solutions}
 >>>
-will run the script ?{Script} until the entire
+will run the script <<Script>> until the entire
 search tree is explored and return the list of
 the solutions found. 
 
@@ -92,7 +92,7 @@ The procedure
 <<<
 {SearchOne Script ?Solutions}
 >>>
-will run the script ?{Script} until the first
+will run the script <<Script>> until the first
 solution is found.  If a solution is found, it
 is returned as the single element of a list;
 otherwise, the empty list is returned.
