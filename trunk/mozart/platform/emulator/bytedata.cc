@@ -112,26 +112,29 @@ int BitData::card() {
 // BitString
 // -------------------------------------------------------------------
 
-int BitString::type_id;
-
-Bool BitString::equalV(OZ_Term t) {
-  return oz_isBitString(t) && equal(tagged2BitString(t));
+OZ_Term BitString::typeV() {
+  return oz_atom("bitstring");
 }
 
-Bool BitString::marshalV(MsgBuffer*bs) {
+OZ_Return BitString::eqV(OZ_Term t) {
+  return (oz_isBitString(t) && equal(tagged2BitString(t)))
+    ? PROCEED : FAILED;
+}
+
+int BitString::marshalV(MsgBuffer*bs) {
   marshalNumber(getWidth(),bs);
   int size = getSize();
   for (int i=0; i<size; i++) marshalByte(data[i],bs);
   return OK;
 }
 
-void unmarshalBitString(MsgBuffer*bs,OZ_Term*ret) {
+OZ_Term unmarshalBitString(MsgBuffer*bs) {
   int width = unmarshalNumber(bs);
   BitString*s = new BitString(width);
   int size = s->getSize();
-  for (int i=0; i<size; i++) s->getByte(i) = bs->get();
-  * ret = makeTaggedConst(s);
-  return;
+  for (int i=0; i<size; i++)
+    s->getByte(i) = unmarshalByte(bs);
+  return makeTaggedConst(s);
 }
 
 void BitString::printStreamV(ostream &out,int depth = 10) {
@@ -147,7 +150,7 @@ void BitString::printLongStreamV(ostream &out,
 }
 
 void BitString_init() {
-  BitString::type_id = registerConstExtension(unmarshalBitString);
+  oz_registerExtension(OZ_E_BITSTRING,unmarshalBitString);
 }
 
 BitString* BitString::clone() {
@@ -300,29 +303,32 @@ Bool ByteData::equal(ByteData *s) {
 // ByteString
 // -------------------------------------------------------------------
 
-int ByteString::type_id;
-
-Bool ByteString::equalV(OZ_Term t) {
-  return oz_isByteString(t) && equal(tagged2ByteString(t));
+OZ_Term ByteString::typeV() {
+  return oz_atom("bytestring");
 }
 
-Bool ByteString::marshalV(MsgBuffer*bs) {
+OZ_Return ByteString::eqV(OZ_Term t) {
+  return (oz_isByteString(t) && equal(tagged2ByteString(t)))
+    ? PROCEED : FAILED;
+}
+
+int ByteString::marshalV(MsgBuffer*bs) {
   int size = getWidth();
   marshalNumber(size,bs);
   for (int i=0; i<size; i++) marshalByte(data[i],bs);
   return OK;
 }
 
-void unmarshalByteString(MsgBuffer*bs,OZ_Term*ret) {
+OZ_Term unmarshalByteString(MsgBuffer*bs) {
   int width = unmarshalNumber(bs);
   ByteString*s = new ByteString(width);
-  for (int i=0; i<width; i++) s->getByte(i) = bs->get();
-  * ret = makeTaggedConst(s);
-  return;
+  for (int i=0; i<width; i++)
+    s->getByte(i) = unmarshalByte(bs);
+  return makeTaggedConst(s);
 }
 
 void ByteString_init() {
-  ByteString::type_id = registerConstExtension(unmarshalByteString);
+  oz_registerExtension(OZ_E_BYTESTRING,unmarshalByteString);
 }
 
 void ByteString::printStreamV(ostream &out,int depth = 10) {

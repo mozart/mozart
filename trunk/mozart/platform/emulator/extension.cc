@@ -78,7 +78,7 @@ OZ_Term oz_extension_unmarshal(int type,MsgBuffer*bs) {
   else return f(bs);
 }
 
-void oz_registerConstExtension(int type, oz_unmarshalProcType f)
+void oz_registerExtension(int type, oz_unmarshalProcType f)
 {
   if (unmarshalRoutineArraySize<type) {
     oz_unmarshalProcType *n=new oz_unmarshalProcType[type+100];
