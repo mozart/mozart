@@ -60,9 +60,8 @@ Besides of the engines described here, Mozart features the Oz
 Explorer, an interactive graphical search engine. A short description
 of its use can be found in <ptr.extern to="ozdoc:fdt"
 key="section.problem.explorer">. Reference information on the Oz
-Explorer can be found in <ptr.extern to="ozdoc:tools"
-key="chapter.explorer">, a research paper is&nbsp;<ptr
-to="Explorer.97">.
+Explorer can be found in <ptr.extern to="ozdoc:explorer">, a research
+paper is&nbsp;<ptr to="Explorer.97">.
 
 <p>
 <section id="VanillaSearch"><title/Basic Search Engines/

@@ -93,7 +93,7 @@ mode. Choose the Option menu, Representation field, and click on
 Minimal Graph.
 
 <P CLASS=WARNING>The Browser is described in <PTR.EXTERN
-to="ozdoc:tools" key="chapter.browser">.
+to="ozdoc:browser">.
 
 <P>The following example shows, what happens when variables with
 incompatible values are equated.

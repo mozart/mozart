@@ -71,7 +71,7 @@
       <p>
         The output is limited in depth and width by system parameters
         that can be configured either by the Oz Panel (see <ptr.extern
-        to="ozdoc:tools" key="chapter.panel">) or by <<Property.put>>
+        to="ozdoc:panel">) or by <<Property.put>>
         (see <ptr to="chapter.property">).
 
       <p>
