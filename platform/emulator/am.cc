@@ -322,8 +322,12 @@ Bool AM::unify(TaggedRef t1, TaggedRef t2, Bool prop)
     doBind(refPtr,value);
   }
 
+/*
+  temporarily deactivated 'cause of DECLAREBI_USEINLINEFUN2
+
   LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
                            localPropStore.isInLocalPropagation()));
+                           */
 
   return result;
 }
@@ -336,9 +340,12 @@ Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, Bool prop)
   int argSize;
   RefsArray args1, args2;
 
+/*
+  temporarily deactivated 'cause of DECLAREBI_USEINLINEFUN2
+
   LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
                            localPropStore.isInLocalPropagation()));
-
+                           */
 start:
 
   DEREFPTR(termPtr1,term1,tag1);
