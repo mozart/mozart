@@ -1,6 +1,8 @@
 AC_INIT(xml.oz)
 AC_PROG_MAKE_SET
 OZ_CONTRIB_INIT
+OZ_PATH_PROG(OZTOOL,oztool)
+OZ_PATH_PROG(OZFLEX,ozflex)
 AC_OUTPUT(Makefile)
 
 errprint(ifdef([OZ_INIT],
