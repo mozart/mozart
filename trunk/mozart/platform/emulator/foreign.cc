@@ -20,13 +20,6 @@
 #include "genvar.hh"
 #include "ofgenvar.hh"
 
-#include "StringBuffer.hh"
-
-/* TmpBuffer
-   must be sufficiently large to convert
-     smallInts and floats to strings/BigInts */
-StringBuffer TmpBuffer;
-
 /* ------------------------------------------------------------------------ *
  * tests
  * ------------------------------------------------------------------------ */
@@ -95,6 +88,12 @@ int OZ_isLiteral(OZ_Term term)
 {
   term = deref(term);
   return isLiteral(term);
+}
+
+int OZ_isFeature(OZ_Term term)
+{
+  term = deref(term);
+  return isFeature(term);
 }
 
 int OZ_isName(OZ_Term term)
@@ -271,7 +270,8 @@ OZ_Term OZ_termType(OZ_Term term)
   }
 
   OZ_warning("OZ_termType: %s unknown type\n",toC(term));
-  return OZ_atom("unknown");
+  Assert(0);
+  return 0;
 }
 
 /* -----------------------------------------------------------------
@@ -478,26 +478,32 @@ int OZ_featureCmp(OZ_Term term1, OZ_Term term2)
  */
 
 inline
-void int2buffer(OZ_Term term)
+void int2buffer(ostream &out, OZ_Term term)
 {
-  char *s = TmpBuffer.getPtr();
   if (isSmallInt(term)) {
-    TmpBuffer.put_int(smallIntValue(term));
+    int i = smallIntValue(term);
+    if (i < 0) {
+      out << '~' << -i;
+    } else {
+      out << i;
+    }
   } else {
     BigInt *bb=tagged2BigInt(term);
-    char *str = TmpBuffer.allocate(bb->stringLength());
+    char *str = new char[bb->stringLength()+1];
     bb->getString(str);
+    if (*str == '-') *str = '~';
+    out << str;
+    delete str;
   }
-  if (s[0] == '-') s[0] = '~';
 }
 
 inline
-void float2buffer(OZ_Term term)
+void float2buffer(ostream &out, OZ_Term term)
 {
   double f = floatValue(term);
-  StringBuffer tmp;
-  tmp.put_float(f);
-  char *str = tmp.string();
+  ostrstream tmp;
+  tmp << f << ends;
+  char *str = tmp.str();
 
   // normalize float
   Bool hasDot = NO;
@@ -506,74 +512,86 @@ void float2buffer(OZ_Term term)
   for (char c=*s++; c ; c=*s++) {
     switch (c) {
     case 'e':
-      if (!hasDot) TmpBuffer.put2('.','0');
-      TmpBuffer.put(c);
+      if (!hasDot) out << '.' << '0';
+      out << c;
       break;
     case '.':
-      if (!hasDigits) TmpBuffer.put('0');
+      if (!hasDigits) out << '0';
       hasDot = OK;
-      TmpBuffer.put(c);
+      out << c;
       break;
     case '-':
-      TmpBuffer.put('~');
+      out << '~';
       break;
     case '+':
       break;
     default:
       if (isdigit(c)) hasDigits=OK;
-      TmpBuffer.put(c);
+      out << c;
       break;
     }
   }
+  delete str;
 }
 
 inline
-void atomq2buffer(char *s)
+void octOut(ostream &out,unsigned char c)
 {
-  char c;
+  out << (char) (((c >> 6) & '\007') + '0')
+      << (char) (((c >> 3) & '\007') + '0')
+      << (char) (( c       & '\007') + '0');
+}
+
+
+inline
+void atomq2buffer(ostream &out, char *s)
+{
+  unsigned char c;
   while ((c = *s)) {
     if (iscntrl(c)) {
+      out << '\\';
       switch (c) {
       case '\'':
-	TmpBuffer.put2('\\','\'');
+	out << '\'';
 	break;
       case '\a':
-	TmpBuffer.put2('\\','a');
+	out << 'a';
 	break;
       case '\b':
-	TmpBuffer.put2('\\','b');
+	out << 'b';
 	break;
       case '\f':
-	TmpBuffer.put2('\\','f');
+	out << 'f';
 	break;
       case '\n':
-	TmpBuffer.put2('\\','n');
+	out << 'n';
 	break;
       case '\r':
-	TmpBuffer.put2('\\','r');
+	out << 'r';
 	break;
       case '\t':
-	TmpBuffer.put2('\\','t');
+	out << 't';
 	break;
       case '\v':
-	TmpBuffer.put2('\\','v');
+	out << 'v';
 	break;
       default:
-	TmpBuffer.put_octal(c);
+	octOut(out,c);
 	break;
       }
     } else if (c >= 127) {
-      TmpBuffer.put_octal(c);
+      out << '\\';
+      octOut(out,c);
     } else {
       switch (c) {
       case '\'':
-	TmpBuffer.put2('\\','\'');
+	out << '\\' << '\'';
 	break;
       case '\\':
-	TmpBuffer.put2('\\','\\');
+	out << '\\' << '\\';
 	break;
       default:
-	TmpBuffer.put(c);
+	out << c;
 	break;
       }
     }
@@ -585,49 +603,46 @@ void atomq2buffer(char *s)
 inline
 Bool checkAtom(char *s)
 {
-  if (!*s || !islower(*s)) {
+  unsigned char c = *s++;
+  if (!c || !islower(c)) {
     return NO;
   }
-  s++;
-  while (*s) {
-    if (!isalnum(*s) && *s != '_') {
+  c=*s++;
+  while (c) {
+    if (!isalnum(c) && c != '_') {
       return NO;
     }
-    s++;
+    c=*s++;
   }
   return OK;
 }
 
 inline
-void atom2buffer(Literal *a)
+void atom2buffer(ostream &out, Literal *a)
 {
   char *s = a->getPrintName();
   if (checkAtom(s)) {
-    TmpBuffer.put_string(s);
+    out << s;
   } else {
-    TmpBuffer.put('\'');
-    atomq2buffer(s);
-    TmpBuffer.put('\'');
+    out << '\'';
+    atomq2buffer(out,s);
+    out << '\'';
   }
 }
 
 inline
-void name2buffer(Literal *a)
+void name2buffer(ostream &out, Literal *a)
 {
   char *s = a->getPrintName();
   if (!*s) {
-    TmpBuffer.put_string("<N>");
+    out << "<N>";
   } else {
-    int len = strlen(s)+20;
-    TmpBuffer.put2('<','N');
-    TmpBuffer.put2(':',' ');
-    TmpBuffer.put_string(s);
-    TmpBuffer.put('>');
+    out << "<N: " << s << '>';
   }
 }
 
 inline
-void const2buffer(ConstTerm *c)
+void const2buffer(ostream &out, ConstTerm *c)
 {
   char *s = c->getPrintName();
 
@@ -640,39 +655,41 @@ void const2buffer(ConstTerm *c)
 	? ((Abstraction *) c)->getArity()
 	: ((Builtin *) c)->getArity();
 
-      TmpBuffer.put2('<','P');
-      TmpBuffer.put('/');
-      TmpBuffer.put_int(arity);
+      out << "<P/" << arity;
       if (*s != 0) {
-	TmpBuffer.put2(':',' ');
-	TmpBuffer.put_string(s);
+	out << ' ' << s;
       }
-      TmpBuffer.put('>');
+      out << '>';
     }
     break;
   case Co_Cell:
-    TmpBuffer.put_string("<Cell>");
+    out << "<Cell>";
     break;
   case Co_Space:
-    TmpBuffer.put_string("<Space>");
+    out << "<Space>";
     break;
   case Co_Object:
     {
       Object *o = (Object *) c;
       if (*s == '_' && *(s+1) == 0) {
-	TmpBuffer.put_string("<O>");
+	if (o->isClass()) {
+	  out << "<C>";
+	} else {
+	  out << "<O>";
+	}
       } else {
-	TmpBuffer.put2('<',o->isClass() ? 'C' : 'O');
-	TmpBuffer.put2(':',' ');
-	TmpBuffer.put_string(s);
-	TmpBuffer.put('>');
+	if (o->isClass()) {
+	  out << "<C: " << s << '>';
+	} else {
+	  out << "<O: " << s << '>';
+	}
       }
     }
     break;
   case Co_Chunk:
   case Co_Array:
   case Co_Dictionary:
-    TmpBuffer.put_string("<Chunk>");
+    out << "<Chunk>";
     break;
   default:
     Assert(0);
@@ -683,76 +700,75 @@ void const2buffer(ConstTerm *c)
 
 /* forward declaration */
 static
-void value2buffer(OZ_Term term, int depth=0);
+void value2buffer(ostream &out, OZ_Term term, int depth=0);
 
 inline
-void feature2buffer(SRecord *sr, OZ_Term fea, int depth)
+void feature2buffer(ostream &out, SRecord *sr, OZ_Term fea, int depth)
 {
-  value2buffer(fea);
-  TmpBuffer.put2(':',' ');
-  value2buffer(sr->getFeature(fea),depth);
+  value2buffer(out,fea);
+  out << ": ";
+  value2buffer(out,sr->getFeature(fea),depth);
 }
 
 inline
-void record2buffer(SRecord *sr,int depth)
+void record2buffer(ostream &out, SRecord *sr,int depth)
 {
-  value2buffer(sr->getLabel());
-  TmpBuffer.put('(');
+  value2buffer(out,sr->getLabel());
+  out << '(';
   if (depth <= 0) {
-    TmpBuffer.put_string(",,,");
+    out << ",,,";
   } else {
     if (sr->isTuple()) {
       int len=sr->getWidth();
-      value2buffer(sr->getArg(0),depth-1);
+      value2buffer(out,sr->getArg(0),depth-1);
       for (int i=1; i < len; i++) {
-	TmpBuffer.put(' ');
-	value2buffer(sr->getArg(i),depth-1);
+	out << ' ';
+	value2buffer(out,sr->getArg(i),depth-1);
       }
     } else {
       TaggedRef as = sr->getArityList();
       Assert(isCons(as));
-      feature2buffer(sr,head(as),depth-1);
+      feature2buffer(out,sr,head(as),depth-1);
       as = tail(as);
       while (isCons(as)) {
-	TmpBuffer.put(' ');
-	feature2buffer(sr,head(as),depth-1);
+	out << ' ';
+	feature2buffer(out,sr,head(as),depth-1);
 	as = tail(as);
       }
     }
   }
-  TmpBuffer.put(')');
+  out << ')';
 }
 
 static
 int listWidth = 0;
 
 inline
-void list2buffer(LTuple *list,int depth)
+void list2buffer(ostream &out, LTuple *list,int depth)
 {
   int width = listWidth;
   while (width-- > 0) {
     OZ_Term a=deref(list->getHead());
     if (isCons(a)) {
-      TmpBuffer.put('(');
-      value2buffer(list->getHead(),depth-1);
-      TmpBuffer.put(')');
+      out << '(';
+      value2buffer(out,list->getHead(),depth-1);
+      out << ')';
     } else {
-      value2buffer(list->getHead(),depth-1);
+      value2buffer(out,list->getHead(),depth-1);
     }
-    TmpBuffer.put('|');
+    out << '|';
     OZ_Term t=deref(list->getTail());
     if (!isCons(t)) {
-      value2buffer(t,depth);
+      value2buffer(out,t,depth);
       return;
     }
     list = tagged2LTuple(t);
   }
-  TmpBuffer.put_string(",,,|,,,");
+  out << ",,,|,,,";
 }
 
 
-// Non-Name Features are output in alphanumeric order (ints before atoms):
-void DynamicTable::ofs2buffer(int depth)
+ostream &DynamicTable::newprint(ostream &out, int depth)
 {
   // Count Atoms & Names in dynamictable:
   TaggedRef tmplit,tmpval;
@@ -781,70 +797,69 @@ void DynamicTable::ofs2buffer(int depth)
 
   // Output the Atoms first, in order:
   for (ai=0; ai<nAtomOrInt; ai++) {
-    value2buffer(arr[ai],0);
-    TmpBuffer.put2(':',' ');
-    value2buffer(lookup(arr[ai]),depth);
-    TmpBuffer.put(' ');
+    value2buffer(out,arr[ai],0);
+    out << ": ";
+    value2buffer(out,lookup(arr[ai]),depth);
+    out << ' ';
   }
   // Output the Names last, unordered:
   for (di=0; di<size; di++) {
     tmplit=table[di].ident;
     tmpval=table[di].value;
     if (tmpval!=makeTaggedNULL() && !(isAtom(tmplit)||isInt(tmplit))) {
-      value2buffer(tmplit,0);
-      TmpBuffer.put2(':',' ');
-      value2buffer(tmpval,depth);
-      TmpBuffer.put(' ');
+      value2buffer(out,tmplit,0);
+      out << ": ";
+      value2buffer(out,tmpval,depth);
+      out << ' ';
     }
   }
   // Deallocate array:
   delete arr;
+  return out;
 }
 
 static
-void cvar2buffer(char *s,GenCVariable *cv,int depth)
+void cvar2buffer(ostream &out, char *s,GenCVariable *cv,int depth)
 {
   switch(cv->getType()){
   case FDVariable:
     {
-      TmpBuffer.put_string(s);
-      ostrstream buf;
-      buf << ((GenFDVariable *) cv)->getDom() << '\0';
-      TmpBuffer.put_string(buf.str());
+      out << s;
+      out << ((GenFDVariable *) cv)->getDom();
       break;
     }
 
   case BoolVariable:
     {
-      TmpBuffer.put_string(s);
-      TmpBuffer.put_string("{0#1}");
+      out << s;
+      out << "{0#1}";
       break;
     }
 
   case OFSVariable:
     {
       GenOFSVariable* ofs = (GenOFSVariable *) cv;
-      value2buffer(ofs->getLabel(),0);
-      TmpBuffer.put('(');
+      value2buffer(out,ofs->getLabel(),0);
+      out << '(';
       if (depth > 0) {
-	ofs->getTable()->ofs2buffer(depth-1);
+	ofs->getTable()->newprint(out,depth-1);
       } else {
-	TmpBuffer.put_string(",,, ");
+	out << ",,, ";
 	break;
       }
-      TmpBuffer.put_string("...)");
+      out << "...)";
       break;
    }
 
   case MetaVariable:
     {
-      TmpBuffer.put_string(s);
+      out << s;
       // TmpBuffer.print_string(((GenMetaVariable *)cv)->toString(0));
       break;
     }
   case AVAR:
     {
-      TmpBuffer.put_string(s);
+      out << s;
       break;
     }
   default:
@@ -854,10 +869,10 @@ void cvar2buffer(char *s,GenCVariable *cv,int depth)
 }
 
 static
-void value2buffer(OZ_Term term, int depth)
+void value2buffer(ostream &out, OZ_Term term, int depth)
 {
   if (!term) {
-    TmpBuffer.put_string("<NULL>");
+    out << "<NULL>";
   } else {
 
     DEREF(term,termPtr,tag);
@@ -867,9 +882,9 @@ void value2buffer(OZ_Term term, int depth)
       {
 	char *s = getVarName(makeTaggedRef(termPtr));
 	if (!*s) {
-	  TmpBuffer.put('_');
+	  out << '_';
 	} else {
-	  TmpBuffer.put_string(s);
+	  out << s;
 	}
       }
       break;
@@ -879,34 +894,34 @@ void value2buffer(OZ_Term term, int depth)
 	if (!*s) {
 	  s = "_";
 	}
-	if (isCVar(tag)) { cvar2buffer(s,tagged2CVar(term),depth); }
+	if (isCVar(tag)) { cvar2buffer(out, s,tagged2CVar(term),depth); }
       }
       break;
     case SRECORD:
-      record2buffer(tagged2SRecord(term),depth);
+      record2buffer(out,tagged2SRecord(term),depth);
       break;
     case LTUPLE:
-      list2buffer(tagged2LTuple(term),depth);
+      list2buffer(out,tagged2LTuple(term),depth);
       break;
     case OZCONST:
-      const2buffer(tagged2Const(term));
+      const2buffer(out,tagged2Const(term));
       break;
     case LITERAL:
       {
 	Literal *a = tagged2Literal(term);
 	if (a->isAtom()) {
-	  atom2buffer(a);
+	  atom2buffer(out,a);
 	} else {
-	  name2buffer(a);
+	  name2buffer(out,a);
 	}
       }
       break;
     case OZFLOAT:
-      float2buffer(term);
+      float2buffer(out,term);
       break;
     case BIGINT:
     case SMALLINT:
-      int2buffer(term);
+      int2buffer(out,term);
       break;
     default:
       Assert(0);
@@ -917,12 +932,21 @@ void value2buffer(OZ_Term term, int depth)
 
 char *OZ_toC(OZ_Term term, int depth,int width)
 {
-  TmpBuffer.reset();
+  static char *tmpString = 0;
+  if (tmpString) {
+    delete tmpString;
+  }
+
+  ostrstream out;
+
   int old=listWidth;
   listWidth = width;
-  value2buffer(term,depth);
+  value2buffer(out,term,depth);
   listWidth = old;
-  return TmpBuffer.string();
+
+  out << ends;
+  tmpString = out.str();
+  return tmpString;
 }
 
 /*
@@ -968,15 +992,23 @@ OZ_Term OZ_string(char *s)
  */
 char *OZ_stringToC(OZ_Term list)
 {
-  TmpBuffer.reset();
+  static char *tmpStr = 0;
+  if (tmpStr) {
+    delete tmpStr;
+    tmpStr = 0;
+  }
+
+  ostrstream out;
 
   for (OZ_Term tmp = deref(list); isCons(tmp); tmp=deref(tail(tmp))) {
     OZ_Term hh = deref(head(tmp));
     int i = smallIntValue(hh);
     if (i < 0 || i > 255) return 0;
-    TmpBuffer.put(i);
+    out << (char) i;
   }
-  return TmpBuffer.string();
+  out << ends;
+  tmpStr = out.str();
+  return tmpStr;
 }
 
 void OZ_printString(OZ_Term t)
@@ -1039,9 +1071,7 @@ void OZ_printVirtualString(OZ_Term t)
 
 OZ_Term OZ_termToVS(OZ_Term t)
 {
-  t=deref(t);
-
-  switch (tagTypeOf(t)) {
+  switch (tagTypeOf(deref(t))) {
   case SMALLINT:
   case BIGINT:
   case OZFLOAT:
@@ -1052,12 +1082,12 @@ OZ_Term OZ_termToVS(OZ_Term t)
   case LTUPLE:
   case SRECORD:
   case OZCONST:
-    return OZ_atom(toC(t));
+    return OZ_string(toC(t));
   case LITERAL:
-    if (isAtom(t)) return t;
-    return OZ_atom(toC(t));
+    if (OZ_isAtom(t)) return t;
+    return OZ_string(toC(t));
   default:
-    return OZ_atom("OZ_termToVS: unknown Tag");
+    return 0;
   }
 }
 

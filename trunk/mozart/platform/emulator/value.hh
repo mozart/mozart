@@ -502,6 +502,7 @@ enum TypeOfConst {
   /* chunks must stay together and the first one
    * must be Co_Object
    * otherwise you'll have to change the "isChunk" test
+   * NOTE: update the builtins: subtree and chunkArity !
    */
   Co_Object,   
   Co_Chunk,
