@@ -159,13 +159,19 @@ case "$cmd" in
 	while [ $# -gt 0 ]
         do
 	   case "$1" in
-	    -a) shift
-		while [ $# -gt 0 ]; do
-		   OZARGV="$OZARGV $1"
-		   shift
-		done;;
-	    *) EMACSARGV="$EMACSARGV $1"
-	       shift;;
+	    -nc|-newcompiler)
+		 OZUSENEWCOMPILER=true; export OZUSENEWCOMPILER
+		 shift
+	    ;;
+	    -a)  shift
+		 while [ $# -gt 0 ]; do
+		    OZARGV="$OZARGV $1"
+		    shift
+		 done
+	    ;;
+	    *)   EMACSARGV="$EMACSARGV $1"
+	         shift
+	    ;;
 	   esac
 	done
 	export OZARGV
