@@ -412,7 +412,7 @@ void localizeCell(Tertiary*t){
   CellManager *cm=(CellManager *)t;
   TaggedRef tr=cm->getCellSec()->getContents();    
   // Removing the chain. Was forgeten.
-  free(cm->getChain());
+  cm->getChain()->free();
   t->setTertType(Te_Local);
   t->setBoard(am.currentBoard());
   CellLocal *cl=(CellLocal*) t;
@@ -422,7 +422,7 @@ void localizeCell(Tertiary*t){
 void localizeLock(Tertiary*t){
   LockManager *lm=(LockManager *)t;
   Thread *th=lm->getLockSec()->getLocker();
-  free(lm->getChain());
+  lm->getChain()->free();
   t->setTertType(Te_Local);
   t->setBoard(am.currentBoard());
   LockLocal *ll=(LockLocal*) t;
