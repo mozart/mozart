@@ -37,19 +37,21 @@
 % -- Tobias (tmueller@ps.uni-sb.de)
 
 declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP']}
+{Wait RI}
+{Wait LP}
 
 {Browse
  [
-
- {fun {$} X = {RI.var.bounds 1.4 1.5} Y = {RI.var.bounds 1.5 1.7} R
-  in
-     R = thread cond X = Y then 1 else 0 end end
-     X = Y
-     R
-  end}
-
- {fun {$} X= {RI.var.bounds 1.5 1.7} R
-  in
+  {LP.config get}
+  {fun {$} X = {RI.var.bounds 1.4 1.5} Y = {RI.var.bounds 1.5 1.7} R
+   in
+      R = thread cond X = Y then 1 else 0 end end
+      X = Y
+      R
+   end}
+  
+  {fun {$} X= {RI.var.bounds 1.5 1.7} R
+   in
      R = thread cond X = 1.6 then 1 else 0 end end
      X = 1.6
      R
