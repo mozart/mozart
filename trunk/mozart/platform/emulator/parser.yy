@@ -1390,7 +1390,7 @@ static void append(int i) {
   xy_errorMessages = OZ_pair2(xy_errorMessages,OZ_int(i));
 }
 
-static int isReadableFile(char *file) {
+static int isReadableFile(const char *file) {
   struct stat buf;
 
   if (access(file, F_OK) < 0 || stat(file, &buf) < 0)
