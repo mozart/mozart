@@ -409,6 +409,33 @@ void vectorToLinear(OZ_Term, int &, OZ_Term &);
 #endif
 
 
+#ifdef DEBUG_INDICES
+template <class T>
+class IndexCheckArray {
+private:
+  int _size;
+  T * _array;
+public:
+  IndexCheckArray(int s)  {
+    _size = s;
+    _array = (T *) malloc(s * sizeof(T));
+  }
+
+  inline
+  T &operator [](int i) {
+    OZ_ASSERT(0 <= i && i < _size);
+    return _array[i];
+  }
+
+  inline
+
+  inline
+  operator T*() { return _array; } // conversion operator
+};
+
+#define _DECL_DYN_ARRAY(Type,Var,Size) IndexCheckArray<Type> Var(Size)
+#else
+
 /* gcc supports dynamic sized arrays */
 #ifdef USE_GCCALLOCA
 #define _DECL_DYN_ARRAY(Type,Var,Size) Type Var[Size]
@@ -447,6 +474,7 @@ public:
 };
 
 #endif
+#endif /* DEBUG_INDICES */
 
 class VectorIterator {
 private:
@@ -464,6 +492,7 @@ public:
   int anyLeft(void) { return _counter < _size; }
   OZ_Term getNext(void) { return _counter < _size ? _vector[_counter++] : 0; }
 };
+
 
 /* cannot handle sometimes arrays of size 0 correctly */
 #define DECL_DYN_ARRAY(Type,Var,Size) \
