@@ -28,7 +28,13 @@
 //-----------------------------------------------------------------------------
 
 
-enum TypeOfGenCVariable {FDVariable, OFSVariable, MetaVariable, BoolVariable};
+enum TypeOfGenCVariable {
+  FDVariable,
+  OFSVariable,
+  MetaVariable, 
+  BoolVariable,
+  AVAR
+};
 
 class GenCVariable: public SVariable {
 
@@ -50,7 +56,7 @@ public:
   TypeOfGenCVariable getType(void){ return var_type; }
   void setType(TypeOfGenCVariable t){
     Assert(t == FDVariable || t == OFSVariable || 
-	   t == MetaVariable || t == BoolVariable );
+	   t == MetaVariable || t == BoolVariable || t==AVAR);
     var_type = t;
   }  
     
@@ -88,6 +94,7 @@ public:
 #include "fdbvar.hh"
 #include "ofgenvar.hh"
 #include "metavar.hh"
+#include "avar.hh"
 
 #ifndef OUTLINE
 #include "genvar.icc"
