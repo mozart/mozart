@@ -35,7 +35,7 @@ LINK            = $(OZL) $(OZLFLAGS) -z $(COMPRESSLEVEL)
 APPLETNAMES = \
 	JobShop Cutting AnimatedQueens \
 	Bounce Trucks Transport Lift \
-	Board DictClient
+	Board College DictClient
 
 APPLETS = \
 	$(APPLETNAMES:%=%.oza)
@@ -116,7 +116,6 @@ Transport/Country.ozf: Transport/Germany.oz
 Transport.oza: $(TRANSPORTFUN)
 	$(LINK) Transport/Main.ozf -o $@
 
-
 # Dict Client application
 DictClient/%.ozf: DictClient/%.oz
 	$(COMPILE) -b $(BUILDDIR)/DictClient/ $< -o $@
@@ -148,7 +147,7 @@ $(APPLETS): DemoUrls.ozf
 OZIMG = $(OZDEMO)/images
 
 IMGDIRS = \
-	animated-queens diagnosis lift transport trucks dict-client
+	animated-queens diagnosis lift transport trucks college dict-client
 
 OZIMGDIRS = $(IMGDIRS:%=$(OZIMG)/%)
 
@@ -174,6 +173,9 @@ TRANSPORTIMGS0 = \
 TRUCKSIMGS0 = \
 	truck-left truck-right
 
+COLLEGEIMGS0 = \
+	title
+
 DICTCLIENTIMGS0 = \
 	dict
 
@@ -183,7 +185,9 @@ OZIMAGES = \
 	$(LIFTIMGS0:%=$(OZIMG)/lift/%.xbm) \
 	$(TRANSPORTIMGS0:%=$(OZIMG)/transport/%.xbm) \
 	$(TRUCKSIMGS0:%=$(OZIMG)/trucks/%.ppm) \
+	$(COLLEGEIMGS0:%=$(OZIMG)/college/%.xbm) \
 	$(DICTCLIENTIMGS0:%=$(OZIMG)/dict-client/%.gif)
+
 
 install:: $(OZIMGDIRS) $(OZIMAGES)
 
@@ -198,6 +202,8 @@ $(OZIMG)/lift/%.xbm: images/lift/%.xbm
 $(OZIMG)/transport/%.xbm: images/transport/%.xbm
 	$(INSTALL_FILE) $< $@
 $(OZIMG)/trucks/%.ppm: images/trucks/%.ppm
+	$(INSTALL_FILE) $< $@
+$(OZIMG)/college/%.xbm: images/college/%.xbm
 	$(INSTALL_FILE) $< $@
 $(OZIMG)/dict-client/%: images/dict-client/%
 	$(INSTALL_FILE) $< $@
