@@ -2376,6 +2376,7 @@ void engine() {
 
     if (aa->isAsk()) {
       if ((CastAskActor (aa))->hasNext () == OK) {
+	CAA = CastAskActor(aa);
 	goto LBLexecuteNext;
       }
 /* check if else clause must be activated */
@@ -2396,6 +2397,7 @@ void engine() {
       }
     } else if (aa->isWait ()) {
       if ((CastWaitActor (aa))->hasNext () == OK) {
+	CAA = CastWaitActor(aa);
 	goto LBLexecuteNext;
       }
 /* rule: or <sigma> ro (unit commit rule) */
