@@ -596,7 +596,7 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
   case CLT_OK:
     stream->afterInterpret();
     bufferManager->dumpByteStream(stream);
-    delete versiongot;
+    delete [] versiongot;
     if (wantHeader) {
       OZ_Return ret = oz_unify(out, oz_pair2(OZ_string(getHeader()), val));
       // kost@ : that's how it is used;
@@ -624,7 +624,7 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
       OZ_Term ozvergot = oz_atom(vs);
       char s1[80];
       sprintf(s1, "Pickle version %s correspnds Oz version", versiongot);
-      delete versiongot;
+      delete [] versiongot;
       delete vs;
       return raiseGeneric("load:versionmismatch",
                           "Version mismatch during loading of pickle",
@@ -1057,7 +1057,7 @@ kaboom:
                   oz_atom(url)));
 
  exit:
-  delete urlDecStart;
+  delete [] urlDecStart;
   return ret;
 }
 

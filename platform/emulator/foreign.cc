@@ -622,7 +622,7 @@ void bigInt2buffer(ostream &out, BigInt *bb, const char sign)
   if ((*str == '-') && (sign != '-'))
     *str = sign;
   out << str;
-  delete str;
+  delete [] str;
 }
 
 
@@ -1143,7 +1143,7 @@ char *OZ__toC(OZ_Term term, int depth, int width,int* len)
 {
   static char *tmpString = 0;
   if (tmpString) {
-    delete tmpString;
+    delete [] tmpString;
   }
 
   ostrstream *out = new ostrstream;
@@ -1239,7 +1239,7 @@ char *OZ_stringToC(OZ_Term list,int*len)
 {
   static char *tmpString = 0;
   if (tmpString) {
-    delete tmpString;
+    delete [] tmpString;
     tmpString = 0;
   }
 
@@ -1320,7 +1320,7 @@ char *OZ_virtualStringToC(OZ_Term t,int*len)
   // tmpString is freed the next time OZ_virtualStringToC is called
   static char *tmpString = 0;
   if (tmpString) {
-    delete tmpString;
+    delete [] tmpString;
     tmpString = 0;
   }
 

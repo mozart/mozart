@@ -1358,7 +1358,7 @@ protected:
     stackEnd = array + size;
   }
   ~BuilderIndexTableStack() {
-    delete array;
+    delete [] array;
     DebugCode(size = -1;);
     DebugCode(array = tos = stackEnd = (int *) 0;);
   }
@@ -1382,7 +1382,7 @@ protected:
     stackEnd = array + size;
     for (int i = 0; i < oldsize; i++)
       array[i] = oldarray[i];
-    delete oldarray;
+    delete [] oldarray;
   }
 
   //
@@ -1407,7 +1407,7 @@ public:
     last_index = -1; // used for robust marshaler
   }
   ~BuilderIndexTable() {
-    delete array;
+    delete [] array;
     DebugCode(array = (OZ_Term *) 0;);
   }
 
@@ -1426,7 +1426,7 @@ public:
     array = new OZ_Term[size];
     for (int i = 0; i < oldsize; i++)
       array[i] = oldarray[i];
-    delete oldarray;
+    delete [] oldarray;
   }
 
   //

@@ -124,7 +124,7 @@ MEMSRCS=\
 PICKLESRCS=\
         gname.cc site.cc \
         gentraverser.cc marshalerBase.cc pickleBase.cc \
-        pickle.cc components.cc
+        pickle.cc components.cc byteBuffer.cc
 
 OFSRCS= var_of.cc
 

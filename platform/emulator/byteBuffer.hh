@@ -25,9 +25,8 @@
 #ifndef __BYTEBUFFERHH
 #define __BYTEBUFFERHH
 
+#include "base.hh"
 #include "genhashtbl.hh"
-
-#include "dpBase.hh"
 #include "mbuffer.hh"
 
 #define BYTE_MODE_MARSHALING 0

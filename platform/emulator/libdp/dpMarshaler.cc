@@ -1555,7 +1555,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
             OZ_Term value = OZ_atom(aux);
             b->buildValue(value);
             b->set(value, refTag);
-            delete aux;
+            delete [] aux;
           }
           break;
         }
