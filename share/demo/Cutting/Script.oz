@@ -117,14 +117,6 @@ define
           I+M
        end 1 _}
 
-      %% Mapping: I -> Atom(Int), needed for scheduling propagators
-      IntToAtom = {MakeTuple '#' N}
-
-      {For 1 N 1 proc {$ I}
-                    IntToAtom.I = {VirtualString.toAtom I}
-                 end}
-
-
    in
 
       proc {$ Root}
@@ -277,19 +269,7 @@ define
          end
 
          proc {Fit SqsXY Cap}
-            Tasks = IntToAtom
-            As    = {Record.foldR Tasks fun {$ A Ar} A|Ar end nil}
-            Dur   = {Record.make dur   As}
-            Start = {Record.make start As}
-            Use   = Dur
-         in
-            {For 1 N 1
-             proc {$ I}
-                A = Tasks.I
-             in
-                Dur.A=SqsSize.I Start.A=SqsXY.I
-             end}
-            {Schedule.cumulative [Tasks] Start Dur Use [Cap]}
+            {Schedule.cumulative [{Arity SqsXY}] SqsXY SqsSize SqsSize [Cap]}
          end
 
       in
