@@ -55,7 +55,7 @@ OZ_C_proc_begin(BIbuiltin,3)
   if (!isProcedure(hdl)) {
     if (!isXAtom(hdl) || !OZ_unifyString(hdl,"noHandler")) {
       warning("builtin: '%s' second arg '%s' must be a predicate or noHandler",
-              str, tagged2String(hdl)
+              str, OZ_toC(hdl)
               );
     }
     hdl = makeTaggedNULL();
