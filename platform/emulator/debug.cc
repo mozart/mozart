@@ -1,36 +1,26 @@
 /*
  *  Authors:
- *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
- *    Benjamin Lorenz (lorenz@ps.uni-sb.de)
- *    Michael Mehl (mehl@dfki.de)
- *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
- * 
- *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
- * 
+ *    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+ *    Benjamin Lorenz <lorenz@ps.uni-sb.de>
+ *    Michael Mehl <mehl@dfki.de>
+ *    Ralf Scheidhauer <Ralf.Scheidhauer@ps.uni-sb.de>
+ *
  *  Copyright:
- *    Organization or Person (Year(s))
- * 
+ *    Benjamin Lorenz <lorenz@ps.uni-sb.de>
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
- * 
- *  This file is part of Mozart, an implementation 
- *  of Oz 3:
+ *
+ *  This file is part of Mozart, an implementation of Oz 3:
  *     $MOZARTURL$
- * 
+ *
  *  See the file "LICENSE" or
  *     $LICENSEURL$
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
- *  WARRANTIES.
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  */
-
-/*
- *  famous debug support
- */
-
 
 #if defined(INTERFACE) && !defined(PEANUTS)
 #pragma implementation "debug.hh"
@@ -93,19 +83,19 @@ void debugStreamBreakpoint(Thread *thread) {
 }
 
 void debugStreamBlocked(Thread *thread) {
-  TaggedRef pairlist = 
+  TaggedRef pairlist =
     cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
   am.debugStreamMessage(OZ_recordInit(OZ_atom("blocked"), pairlist));
 }
 
 void debugStreamReady(Thread *thread) {
-  TaggedRef pairlist = 
+  TaggedRef pairlist =
     cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
   am.debugStreamMessage(OZ_recordInit(OZ_atom("ready"), pairlist));
 }
 
 void debugStreamTerm(Thread *thread) {
-  TaggedRef pairlist = 
+  TaggedRef pairlist =
     cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
   am.debugStreamMessage(OZ_recordInit(OZ_atom("term"), pairlist));
 }
@@ -202,7 +192,7 @@ OZ_BI_define(BIbreakpointAt, 3,1)
   OZ_declareIN    (2,what);
 
   DEREF(file,_1,_2);
-  
+
   DbgInfo *info = allDbgInfos;
   Bool    ok    = NO;
   char *inFile  = ozstrdup(toC(file));
@@ -453,7 +443,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
 	     "p       print current board (long)",
 	     "s       continue with full debug mode",
 	     "t       print current taskstack",
-	     "A	print class AM",
+	     "A print class AM",
 	     "D %x %d Display code",
 	     "M %x %d view Memory <from> <len>",
 	     "T       print class Thread",
