@@ -181,15 +181,15 @@ private:
   enum descr_type {bv_descr = 0, iv_descr = 1, fd_descr = 2};
   static char * descr_type_text[3];
   void * descr;
-  descr_type getType(void) const {return (descr_type)(((int) descr) & 3);}
-  void setType(descr_type t) {descr = (void *) (((int) descr & ~3) | t);}
-  void setType(descr_type t, void * p) {descr = (void *) (((int) p) | t);}
-  void setType(FDBitVector * p) {descr = (void *) (((int) p) | bv_descr);}
-  void setType(FDIntervals * p) {descr = (void *) (((int) p) | iv_descr);}
-  void set_iv(void * p) {descr = (void *) (((int) p) | iv_descr);}
-  FDIntervals * get_iv(void) const {return (FDIntervals *)(((int)descr) & ~3);}
+  descr_type getType(void) const {return (descr_type)ToPointer(ToInt32(descr) & 3);}
+  void setType(descr_type t) {descr = ToPointer((ToInt32(descr) & ~3) | t);}
+  void setType(descr_type t, void * p) {descr = ToPointer(ToInt32(p) | t);}
+  void setType(FDBitVector * p) {descr = ToPointer(ToInt32(p) | bv_descr);}
+  void setType(FDIntervals * p) {descr = ToPointer(ToInt32(p) | iv_descr);}
+  void set_iv(void * p) {descr = ToPointer(ToInt32(p) | iv_descr);}
+  FDIntervals * get_iv(void) const {return (FDIntervals *)ToPointer(ToInt32(descr) & ~3);}
   void set_bv(void * p) {descr = p;}
-  FDBitVector * get_bv(void) const {return (FDBitVector *)(((int)descr) & ~3);}
+  FDBitVector * get_bv(void) const {return (FDBitVector *)ToPointer(ToInt32(descr) & ~3);}
 
   FDBitVector * provideBitVector(void) const;
   FDIntervals * provideIntervals(int) const;
