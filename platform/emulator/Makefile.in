@@ -33,7 +33,7 @@ SRCDIR= @srcdir@
 include Makefile.vars
 
 MODULE_NAMES = libWif libFDP libSchedule libFSP libParser \
-        libozma libCompilerSupport
+        libozma libCompilerSupport libBrowser
 STATIC_MODULETARGETS  = $(MODULE_NAMES:%=%.a)
 DYNAMIC_MODULETARGETS = $(MODULE_NAMES:%=%.so)
 
@@ -143,6 +143,12 @@ libCompilerSupport.so: compiler.o
 
 libCompilerSupport.a: compiler.o
         $(AR) -rc $@ compiler.o && $(RANLIB) $@
+
+libBrowser.so: browser.o
+        $(DYNLD) -o $@ browser.o
+
+libBrowser.a: browser.o
+        $(AR) -rc $@ browser.o && $(RANLIB) $@
 
 
 win: ozlib.lnk $(CREATEDFILES)
