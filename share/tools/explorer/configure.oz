@@ -31,8 +31,10 @@ TitleName    = 'Oz Explorer'
 BitMapDir    = {System.get home} # '/lib/bitmaps/'
 BitMap       = '@' # BitMapDir # 'explorer.xbm'
 
-MinSizeX     = 500
-MinSizeY     = 300
+StartSizeX   = 500
+StartSizeY   = 300
+MinSizeX     = 360
+MinSizeY     = 260
 
 %% Configuration of the scale bar
 IntScaleBase    = 256
@@ -61,7 +63,7 @@ ScaleWidth      = 13
 Border          = 3
 Pad             = 2
 BigPad          = 4
-HugePad         = 8
+HugePad         = 6
 LargeEntryWidth = 20
 SmallEntryWidth = 6
 
@@ -94,7 +96,7 @@ SmallRectangleWidthF = {IntToFloat SmallRectangleWidthI}
 RhombeWidthI         = 10 * IntScaleBase
 RhombeWidthF         = {IntToFloat RhombeWidthI}
 
-ImageSize           = 18.0
+ImageSize           = 16.0
 ImageCenter         = ImageSize / 2.0
 ImageScale          = 0.6 / FloatScaleBase
 ImageBorder         = 1
