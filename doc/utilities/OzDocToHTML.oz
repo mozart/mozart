@@ -310,7 +310,7 @@ define
 	 if {HasFeature M I} then
 	    case M.I of S=_|_ then HTML1 Rr HTML2 in
 	       Request = simple(S HTML1)|Rr
-	       HTML = SEQ([code(HTML1) HTML2])   %--** VERBATIM?
+	       HTML = SEQ([code(HTML1) HTML2])
 	       OzDocToHTML, BatchCodeSub(M I + 1 ?Rr ?HTML2)
 	    [] nil then
 	       OzDocToHTML, BatchCodeSub(M I + 1 ?Request ?HTML)
@@ -381,7 +381,7 @@ define
 	    %-----------------------------------------------------------
 	    % Document Structure
 	    %-----------------------------------------------------------
-	    case Tag of book then HTML TopTOC in
+	    case Tag of book then HTML TopTOC IndexHTML in
 	       Floats <- nil
 	       FootNotes <- nil
 	       FigureCounters <- {NewDictionary}
@@ -409,18 +409,7 @@ define
 				      VERBATIM(VS)])   %--** VERBATIM?
 			  OzDocToHTML, FinishNode(Title X HTML $)
 		       end
-		       if {@MyIndexer empty($)} then EMPTY
-		       else Title Label X HTML1 HTML in
-			  Title = PCDATA('Index')
-			  OzDocToHTML, PrepareIdxNode(?X ?HTML1)
-			  ToGenerate <- Label|@ToGenerate
-			  TOC <- {Append @TOC [2#Label#@CurrentNode#Title]}
-			  @IdxNode = @CurrentNode
-			  HTML = SEQ([HTML1
-				      h1(a(name: Label Title))
-				      {@MyIndexer process($)}])
-			  OzDocToHTML, FinishNode(Title X HTML $)
-		       end]
+		       IndexHTML]
 	       TopTOC = if @SomeSplit then EMPTY
 			else SEQ([hr() {FormatTOC @TOC} hr()])
 			end
@@ -430,6 +419,18 @@ define
 				     [] mono then 'html-mono'
 				     [] stylesheets then 'html-stylesheets'
 				     end)}
+	       IndexHTML = if {@MyIndexer empty($)} then EMPTY
+			   else Title Label X HTML1 HTML in
+			      Title = PCDATA('Index')
+			      OzDocToHTML, PrepareIdxNode(?X ?HTML1)
+			      ToGenerate <- Label|@ToGenerate
+			      TOC <- {Append @TOC [2#Label#@CurrentNode#Title]}
+			      @IdxNode = @CurrentNode
+			      HTML = SEQ([HTML1
+					  h1(a(name: Label Title))
+					  {@MyIndexer process($)}])
+			      OzDocToHTML, FinishNode(Title X HTML $)
+			   end
 	       unit
 	    %-----------------------------------------------------------
 	    % Front and Back Matter
@@ -1237,14 +1238,7 @@ define
 		      SEQ([a(name: Label PCDATA(N#'. '))
 			   OzDocToHTML, Batch(M.1 1 $)]))
       end
-      meth Index(M Ands0 $) Ands L in
-	 %--** remove any id attributes
-	 Ands = {Map Ands0
-		 fun {$ X}
-		    case X of _#_ then X
-		    else {HTML.toVirtualString {HTML.clean X}}#X
-		    end
-		 end}
+      meth Index(M Ands $) L in
 	 case {CondSelect M id unit} of unit then
 	    ToGenerate <- L|@ToGenerate
 	 elseof X then HTML in
