@@ -81,6 +81,7 @@ TaggedRef newObjectProxy(Object *o, GName *gnobj,
 static
 void sendRequest(MessageType mt,BorrowEntry *be)
 {
+  if(be->makeRequest()) return; // only request once
   NetAddress* na=be->getNetAddress();
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
   switch (mt) {
