@@ -51,8 +51,8 @@ public:
 
   int getPriority() { return (priority); }
   int getCompMode() { return (compMode); }
-  Board *getBoardFast();
-  Board *getBoardAndTest();
+  inline Board *getBoardFast();
+  inline Board *getBoardAndTest();
   Bool isCommitted() { return flags & Ac_Committed; }
   Bool isAsk() { return ((flags & Ac_Ask) ? OK : NO); }
   Bool isWait() { return ((flags & Ac_Wait) ? OK : NO); }
