@@ -282,14 +282,13 @@ For example
     ("Find"
      ("Demo file"              . oz-find-demo-file)
      ("Library file"           . oz-find-lib-file)
-     ("Documentation (Text)"          . oz-find-docu-file)
-     ("Documentation (DVI)"           . oz-find-dvi-file)
+;     ("Documentation (Text)"          . oz-find-docu-file)
+;     ("Documentation (DVI)"           . oz-find-dvi-file)
      )
     ("Print"
-     ("buffer"      . oz-print-buffer)
      ("region"      . oz-print-region)
-     ("landscape-mode" . oz-print-landscape)
-     ("portrait-mode" . oz-print-portrait)
+     ("buffer (portrait)"	. oz-print-buffer)
+     ("buffer (landscape)"	. oz-print-buffer-landscape)
      )
     ("Core Syntax"
      ("buffer"      . oz-to-coresyntax-buffer)
@@ -310,7 +309,7 @@ For example
      ("browse" . oz-feed-region-browse)
      ("memory" . oz-feed-region-browse-memory)
      )
-    ("Panel"   . oz-feed-panel)
+;    ("Panel"   . oz-feed-panel)
     ("-----")
     ("Next Oz buffer"         . oz-next-buffer)
     ("Previous Oz buffer"     . oz-previous-buffer)
@@ -460,26 +459,24 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 (defun oz-halt()
   (interactive)
 
-  (if (and (not (get-process "Oz Compiler"))
-	   (not (get-process "Oz Machine")))
-      (error "Oz not running"))
   (message "halting Oz...")
+  (if (and (get-process "Oz Compiler")
+	   (get-process "Oz Machine"))
+      (let ((i oz-halt-timeout))
+	(oz-send-string "!halt \n")
+	(while (and (or (get-process "Oz Compiler")
+			(get-process "Oz Machine"))
+		    (> i 0))
+	  (sit-for 1)
+	  (sleep-for 1)
+	  (setq i (1- i)))))
 
-  (let ((i oz-halt-timeout))
-    (oz-send-string "!halt \n")
-    (while (and (or (get-process "Oz Compiler")
-		    (get-process "Oz Machine"))
-		(> i 0))
-      (sit-for 1)
-      (sleep-for 1)
-      (setq i (1- i)))
-
-    (if (get-process "Oz Compiler")
-	(delete-process "*Oz Compiler*"))
-    (if (get-process "Oz Machine")
-	(delete-process "*Oz Machine*"))
-    (message "")
-    (oz-reset-title)))
+  (if (get-process "Oz Compiler")
+      (delete-process "*Oz Compiler*"))
+  (if (get-process "Oz Machine")
+      (delete-process "*Oz Machine*"))
+  (message "")
+  (oz-reset-title))
 
 
 
@@ -1297,25 +1294,28 @@ OZ compiler, machine and error window")
 (defvar oz-lpr "oz2lpr -"
   "pretty printer for oz code")
 
+(defvar oz-lpr-landscape "oz2lpr -landscape -"
+  "pretty printer in landscape for oz code")
+
 (defun oz-print-buffer()
   "Print buffer."
   (interactive)
   (oz-print-region (point-min) (point-max)))
+
+(defun oz-print-buffer-landscape()
+  "Print buffer."
+  (interactive)
+  (oz-print-region-landscape (point-min) (point-max)))
 
 (defun oz-print-region(start end)
   "Print region."
   (interactive "r")
   (shell-command-on-region start end oz-lpr))
 
-(defun oz-print-landscape ()
-  "Print in landscape."
-  (interactive)
-  (setq oz-lpr "oz2lpr -landscape -"))
-
-(defun oz-print-portrait ()
-  "Print in landscape."
-  (interactive)
-  (setq oz-lpr "oz2lpr -"))
+(defun oz-print-region-landscape(start end)
+  "Print region."
+  (interactive "r")
+  (shell-command-on-region start end oz-lpr-landscape))
 
 
 (defvar oz-temp-file (oz-make-temp-name "/tmp/ozemacs") "")
