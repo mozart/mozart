@@ -77,12 +77,13 @@ JOBSHOPSRC = \
         $(JOBSHOP:%=constraints/job-shop/%.oz)
 
 %.ozf: constraints/job-shop/%.oz
-	$(COMPILE) -b constraints/job-shop/ $< -o $@
+	$(COMPILE) -b $(SRCDIR)/ $< -o $@
 
 Scheduler.ozf Tools.ozf JobShop.ozf TaskBoard.ozf: Configure.ozf
+JobShop.ozf: Examples.ozf
 
-JobShop.oza: Examples.ozf Scheduler.ozf Configure.ozf Compiler.ozf \
-	TaskBoard.ozf Tools.ozf
+JobShop.oza: JobShop.ozf Examples.ozf Scheduler.ozf Configure.ozf \
+	Compiler.ozf TaskBoard.ozf Tools.ozf
 	$(LINK) JobShop.ozf -o $@
 
 
