@@ -354,6 +354,8 @@ define
          path <- D
       end
 
+      meth storeX(id:ID data:D) {self.xDB store(id:ID data:D)} end
+      meth entriesX($) {self.xDB entries($)} end
 
       meth toRecord( record: $ )
          db( membersDB: {self.membersDB toRecord( record:$ )}
