@@ -84,6 +84,7 @@ in
 	 self.TagBase = ~1
 	 NextTag <- self.TagBase
 	 ScrolledTitleWidget,M
+	 {self tk(conf pady:2)}
       end
 
       meth newTag($)
