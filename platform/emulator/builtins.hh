@@ -52,6 +52,16 @@ public:
     }
     return "???";
   }
+  BuiltinTabEntry * getEntry(void * fp) {
+    HashNode * hn = getFirst();
+    for (; hn != NULL; hn = getNext(hn)) {
+      BuiltinTabEntry * abit = (BuiltinTabEntry *) hn->value;
+      if (abit->getInlineFun() == (IFOR) fp ||
+	  abit->getFun() == (OZ_CFun) fp)
+	return abit;
+    }
+    return (BuiltinTabEntry *) NULL;
+  }
 
   BuiltinTabEntry *find(const char *name) { return (BuiltinTabEntry*) htFind(name); }
 };

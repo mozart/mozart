@@ -1,72 +1,96 @@
 /*
   Hydra Project, DFKI Saarbruecken,
-  Stuhlsatzenhausweg 3, W-66123 Saarbruecken, Phone (+49) 681 302-5312
-  Author: scheidhr & mehl
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5633
+  Author: scheidhr & mehl & lorenz & kornstae
   Last modified: $Date$ from $Author$
   Version: $Revision$
   State: $State$
   */
+
 
 /* The Oz source and machine level debugger */
 
 #ifndef __DEBUGH
 #define __DEBUGH
 
-enum OzDebugDoit {DBG_NOOP, DBG_STEP, DBG_NEXT};
+/* The Oz source level debugger */
 
 class OzDebug {
 public:
   USEFREELISTMEMORY;
 
-  OzDebugDoit dothis;
-  TaggedRef info;
-  OzDebug(OzDebugDoit x, TaggedRef i) {
-    dothis = x;
-    info = i;
-  }
-  OzDebug *gcOzDebug();
-  OzDebug *copy()
-  {
-    return new OzDebug(dothis,info);
+  ProgramCounter PC;
+  RefsArray Y, G;
+  TaggedRef data;
+  RefsArray arguments;
+
+  OzDebug(ProgramCounter pc, RefsArray y, RefsArray g) {
+    PC        = pc;
+    Y         = y;
+    G         = g;
+    data      = makeTaggedNULL();
+    arguments = (RefsArray) NULL;
   }
 
-  void printCall();
+  OzDebug(const OzDebug &d) {
+    PC        = d.PC;
+    Y         = d.Y;
+    G         = d.G;
+    data      = d.data;
+    arguments = d.arguments == (RefsArray) NULL ?
+		      (RefsArray) NULL : copyRefsArray(d.arguments);
+  }
+
+  // providing a frameId means that the variable names of the
+  // procedure may be found by looking into the thread stack;
+  // not providin a frameId (-1) means that the variable names
+  // are directly adjoined to the record
+  TaggedRef toRecord(const char *label, Thread *thread, int frameId = -1);
+
+  TaggedRef getFrameVariables();
+
+  OzDebug *gcOzDebug();
 
   void dispose() 
   {
+    if (arguments != (RefsArray) NULL)
+      disposeRefsArray(arguments);
     freeListDispose(this,sizeof(OzDebug));
   }
 };
 
-void execBreakpoint(Thread*, Bool message=OK);
-void debugStreamSuspend(ProgramCounter, Thread*, TaggedRef, TaggedRef, Bool);
-void debugStreamCont(Thread*);
-void debugStreamThread(Thread*,Thread* parent=NULL);
+void execBreakpoint(Thread*);
+void debugStreamThread(Thread*, Thread* parent=NULL);
+void debugStreamBlocked(Thread*);
+void debugStreamReady(Thread*);
 void debugStreamTerm(Thread*);
-void debugStreamCall(ProgramCounter, const char*, int, TaggedRef*, Bool, int);
-void debugStreamExit(TaggedRef);
-void debugStreamRaise(Thread*, TaggedRef);
+void debugStreamException(Thread*, TaggedRef);
+void debugStreamEntry(OzDebug*, int);
+void debugStreamExit(OzDebug*, int);
 
 OZ_C_proc_proto(BIdebugmode)
+OZ_C_proc_proto(BIaddEmacsThreads)
+OZ_C_proc_proto(BIaddSubThreads)
+OZ_C_proc_proto(BIgetDebugStream)
+OZ_C_proc_proto(BIsetContFlag)
+OZ_C_proc_proto(BIsetStepFlag)
+OZ_C_proc_proto(BIsetTraceFlag)
 OZ_C_proc_proto(BIcheckStopped)
-OZ_C_proc_proto(BItaskStack)
-OZ_C_proc_proto(BIdebugEmacsThreads)
-OZ_C_proc_proto(BIdebugSubThreads)
-OZ_C_proc_proto(BIframeVariables)
+
 OZ_C_proc_proto(BIbreakpointAt)
 OZ_C_proc_proto(BIbreakpoint)
-OZ_C_proc_proto(BIsetContFlag)
-OZ_C_proc_proto(BIsetStepMode)
-OZ_C_proc_proto(BItraceThread)
 OZ_C_proc_proto(BIdisplayCode)
-OZ_C_proc_proto(BIlocation)
 
+
+/* The Oz machine level debugger */
+
+#ifdef DEBUG_TRACE
 Bool trace(char *s,Board *board=NULL,Actor *actor=NULL,
 	   ProgramCounter PC=NOCODE,RefsArray Y=NULL,RefsArray G=NULL);
 void tracerOn();
 void tracerOff();
 
 OZ_C_proc_proto(BIhalt)
-
+#endif
 
 #endif
