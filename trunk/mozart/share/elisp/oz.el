@@ -452,7 +452,6 @@ if that value is non-nil."
 
 
 
-(autoload 'gdb-machine "gdb" "" t)
 (defvar gdb-oz-machine "oz.machine.bin")
 
 (defun gdb-machine (tmpfile)
@@ -460,6 +459,7 @@ if that value is non-nil."
 The directory containing FILE becomes the initial working directory
 and source-file directory for GDB.  If you wish to change this, use
 the GDB commands `cd DIR' and `directory'."
+  (require 'gdb)
   (oz-set-state 'oz-machine-state "running under gdb")
   (let* ((path (expand-file-name gdb-oz-machine))
 	(file (file-name-nondirectory path)))
