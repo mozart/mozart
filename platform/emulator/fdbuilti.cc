@@ -980,6 +980,8 @@ void BIinitFD(void)
 // fdgeneric.cc
   BIadd("fdGenLinEq", 3, BIfdGenLinEq);
   BIadd("fdGenLinEq_body", 3, BIfdGenLinEq_body);
+  BIadd("fdGenLinEqJoerg", 3, BIfdGenLinEqJoerg);
+  BIadd("fdGenLinEqJoerg_body", 3, BIfdGenLinEqJoerg_body);
   BIadd("fdGenNonLinEq", 3, BIfdGenNonLinEq);
   BIadd("fdGenNonLinEq1", 3, BIfdGenNonLinEq1);
   BIadd("fdGenNonLinEq_body", 3, BIfdGenNonLinEq_body);
@@ -1071,6 +1073,8 @@ void BIinitFD(void)
   BIadd("fdCardSched_body", 4, BIfdCardSched_body);
   BIadd("fdCDSched", 4, BIfdCDSched);
   BIadd("fdCDSched_body", 4, BIfdCDSched_body);
+  BIadd("fdCDSchedControl", 5, BIfdCDSchedControl);
+  BIadd("fdCDSchedControl_body", 5, BIfdCDSchedControl_body);
   BIadd("fdNoOverlap", 6, BIfdNoOverlap);
   BIadd("fdNoOverlap_body", 6, BIfdNoOverlap_body);
   BIadd("fdGenLinEqKillB", 4, BIfdGenLinEqKillB);
