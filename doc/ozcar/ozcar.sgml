@@ -2,12 +2,14 @@
 <!-- $Id$ -->
 
 <!-- Extension to the DTD -->
-<!ENTITY % p.mix.local "|Em">
+<!ENTITY % input.local.2 SYSTEM "ozcar.extra">
+<!ENTITY % p.mix.local "|Em|note.gui|menu">
 <!ELEMENT Em - - (#PCDATA)>
-<!ENTITY emdash PI "emdash">
-<!ENTITY endash PI "endash">
 <!-- Abbreviations -->
 <!-- Processing Instructions -->
+<!ENTITY emdash   PI "emdash">
+<!ENTITY endash   PI "endash">
+<!ENTITY ellipsis PI "ellipsis">
 
 ]>
 
@@ -506,23 +508,21 @@ end
           <subsection>
           <title/Ozcar/
           <p>
-          <figure class="picture">
-          <caption/The Ozcar menu/
-            <p><picture.extern gif to="menu-ozcar.gif">
-          </figure>
-          <p>
-          <Para class=apropos><Title/About.../
-          Pops up an info box containing author and compilation information
-          <p>
-          <Para class=apropos><Title/Destroy/
-          Closes the internal Ozcar object. Use this menu entry only
-          if Ozcar hangs, as all information about currently attached
-          threads gets lost.
-          <p>
-          <Para class=apropos><Title/Suspend/
-          Closes the main window, sets the mozart emulator to non debug mode,
-          and causes the compiler to generate non debug code. Information
-          about currently attached threads is preserved.
+          <list>
+            <entry><menu/About&ellipsis;/
+            <Item>
+            Pops up an info box containing author and compilation information
+            <entry><menu/Destroy/
+            <Item>
+            Closes the internal Ozcar object. Use this menu entry only
+            if Ozcar hangs, as all information about currently attached
+            threads gets lost.
+            <entry><menu key="C-x"/Suspend/
+            <Item>
+            Closes the main window, sets the mozart emulator to non debug mode,
+            and causes the compiler to generate non debug code. Information
+            about currently attached threads is preserved.
+          </list>
           <subsection>
           <title/Action/
           <p>
