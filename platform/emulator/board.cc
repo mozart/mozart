@@ -360,82 +360,53 @@ void Board::clearSuspList(Suspendable * killSusp) {
  */
 
 void Board::checkStability(void) {
-  Assert(!isRoot());
-
-  Assert(!isFailed() && !isCommitted());
-
+  Assert(!isRoot() && !isFailed() && !isCommitted());
   Assert(this == oz_currentBoard());
 
   Board * pb = getParent();
+  Distributor * d;
 
-  if (decThreads() != 0) {
-    pb->decSolveThreads();
-    return;
-  }
-    
-  if (isStable()) {
-    Assert(trail.isEmptyChunk());
+  if (decThreads() == 0 && isStable()) {
 
-    // check for nonmonotonic propagators
-    scheduleNonMono();
-    if (!isStable())
-      goto exit;
-    
-    // Check whether there are registered distributors
-    Distributor * d = getDistributor();
-    
-    if (d) {
-      
+    if (getNonMono()) {
+      scheduleNonMono();
+    } else if (d = getDistributor()) {
       int n = d->getAlternatives();
       
       if (n == 1) {
-	// Is the distributor unary?
 	d->commit(this,1,1);
-	goto exit;
       } else {
-	// don't decrement counter of parent board!
 	trail.popMark();
 	am.setCurrent(pb);
-      
 	bindStatus(genAlt(n));
-
-	goto exit;
       }
       
+    } else {
+      // succeeded
+      trail.popMark();
+      am.setCurrent(pb);
+      
+      bindStatus(genSucceeded(getSuspCount() == 0));
     }
-    
-    // succeeded
-    trail.popMark();
-    am.setCurrent(pb);
-    
-    bindStatus(genSucceeded(getSuspCount() == 0));
 
-    goto exit;
-  }
-
-  {
+  } else {
     int t = getThreads();
-
+    
     setScript(trail.unwind(this));
     am.setCurrent(pb);
   
     if (t == 0) {
-      // There are some external suspensions: blocked
-
+      // No runnable threads: blocked
       TaggedRef newVar = oz_newFuture(pb);
       
       bindStatus(genBlocked(newVar));
-      
       setStatus(newVar);
-
     }
-
+    
   }
-
-
- exit:
   
   pb->decSolveThreads();
+  
 } 
 
 void Board::fail(void) {

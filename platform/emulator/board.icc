@@ -95,13 +95,10 @@ void Board::patchAltStatus(int i) {
 
 inline
 void Board::scheduleNonMono(void) {
-  for (OrderedSuspList * p = getNonMono();
-       p != NULL;
-       p = p->getNext())
+  for (OrderedSuspList * p = getNonMono(); p != NULL; p = p->getNext())
     addToLPQ(p->getPropagator());
-
+  
   setNonMono(NULL);
-
 }
 
 
