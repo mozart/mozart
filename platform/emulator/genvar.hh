@@ -30,8 +30,6 @@
 //-----------------------------------------------------------------------------
 
 
-#define CVAR_ONLY_FDVAR
-
 enum TypeOfGenCVariable {
   FDVariable
 };
