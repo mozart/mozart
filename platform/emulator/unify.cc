@@ -389,6 +389,11 @@ exit:
   Assert(unifyStack.isMark());
   unifyStack.pop(); // pop mark
 
+  
+  // Temporary bindings must be restored if unify is
+  // used for equality tests. Erik. 
+  Bool cond = ((result!=PROCEED) || am.inEqEq());
+
   while (!rebindTrail.isEmpty ()) {
     PopRebindTrail(value,refPtr);
     // kost@ : no need to restore temporary bindings if terms were
@@ -396,7 +401,7 @@ exit:
     //         restored: that compactifies store and speeds up
     //         subsequent unifications! 
     //         The credit for this optimization goes to Per (Brand).
-    if (result != PROCEED)
+    if (cond)
       doBind(refPtr, value);
   }
 
