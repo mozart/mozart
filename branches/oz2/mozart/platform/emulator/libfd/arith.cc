@@ -599,6 +599,7 @@ OZ_Return ModIPropagator::propagate(void)
 {
   OZ_DEBUGPRINTTHIS("in: ");
 
+
   if (mayBeEqualVars() && OZ_isEqualVars(reg_x, reg_z))
     return replaceBy(new LessEqOffPropagator(reg_x, OZ_int(reg_y), -1));
 
@@ -607,11 +608,13 @@ OZ_Return ModIPropagator::propagate(void)
   int &y = reg_y;
   OZ_Boolean touched;
 
-  int xl = x->getMinElem(), xu = x->getMaxElem();
-  int zl = z->getMinElem(), zu = z->getMaxElem();
-  
+  int xl,xu,zl,zu;
+
   FailOnEmpty(*z <= y - 1);
   
+  xl = x->getMinElem(), xu = x->getMaxElem();
+  zl = z->getMinElem(), zu = z->getMaxElem();
+
   if (xu < y) {
     P.vanish();
     return replaceBy(reg_x, reg_z);
@@ -628,7 +631,7 @@ OZ_Return ModIPropagator::propagate(void)
 
   do{
     touched = OZ_FALSE;
-    
+
     int xl_y = xl % y;
     if ((xl_y < zl) || (zu < xl_y)) {
       FailOnEmpty(*x >= xl+1);
@@ -657,6 +660,7 @@ OZ_Return ModIPropagator::propagate(void)
       }
     }
   } while (touched);
+
 
   return P.leave();
   
