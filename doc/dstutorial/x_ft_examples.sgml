@@ -410,13 +410,14 @@ startup time for each site.
 
 <SUBSUBSECTION id="guards"><TITLE>Guard definition</TITLE>
 
-<P>The procedure <<Guard>> is defined in terms of watchers.
-It first disables all exception raising on <<E>>.
-Then it installs a watcher on <<E>> that
-waits for a fault in <<FS>>.
-If a fault occurs, then <<S1>> is interrupted
-with an exception <<N>>
-that causes <<S2>> to be executed.
+<P>The procedure <<{Guard E FS S1 S2}>>
+first disables all exception raising on <<E>>.
+Then it executes <<S1>>
+with a local watcher <<W>> (see <ptr to="local.watcher">).
+If the watcher is invoked during <<S1>>,
+then <<S1>> is interrupted
+and the exception <<N>> is raised.
+This causes <<S2>> to be executed.
 The unforgeable and unique name <<N>>
 occurs nowhere else in the system.
 
@@ -424,24 +425,52 @@ occurs nowhere else in the system.
 declare
 proc {Guard E FS S1 S2}
    N={NewName}
-   proc {W E FS} raise N end end
+   T={Thread.this}
+   proc {W E FS} {Thread.injectException T N} end
 in
-   {Fault.enable E 'thread'(this) nil _}
-   {Fault.installWatcher E FS W _}
+   {Fault.enable E 'thread'(T) nil _}
    try
-      {S1}
+      {LocalWatcher E FS W S1}
    catch X then
       if X==N then
          {S2}
       else
-         {Fault.deInstallWatcher E W _}
          raise X end
       end
    end
-   {Fault.deInstallWatcher E W _}
 end
 >>>
 
+<SUBSUBSECTION id="local.watcher"><TITLE>Local watcher definition</TITLE>
+
+<P>A <em>local watcher</em> is a watcher that is installed
+only during the execution of a statement.
+When the statement finishes or raises an exception,
+then the watcher is removed.
+The procedure <<LocalWatcher>> defines a local watcher
+according to the following specification:
+
+<LIST>
+<ITEM><<{LocalWatcher E FS W S}>>
+watches entity <<E>> for fault states <<FS>>
+with watcher <<W>> during the execution of <<S>>.
+That is, it installs the watcher,
+then executes <<S>>, and then removes
+the watcher when execution leaves <<S>>.
+</LIST>
+
+<<<
+declare
+proc {LocalWatcher E FS W S}
+   {Fault.installWatcher E FS W _}
+   try
+      {S}
+   finally
+      {Fault.deInstallWatcher E W _}
+   end
+end
+>>>
+   
 <SUBSECTION id="exception.based"><TITLE>Exception-based fault tolerance</TITLE>
 
 <P>We show how to implement <<NewSafeStat>>
