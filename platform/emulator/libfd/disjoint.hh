@@ -55,5 +55,20 @@ public:
   virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
+//-----------------------------------------------------------------------------
+
+class TasksOverlapPropagator : public Propagator_D_I_D_I_D {
+  friend INIT_FUNC(fdp_init);
+private:
+  static OZ_PropagatorProfile profile;
+public:
+  TasksOverlapPropagator(OZ_Term x, OZ_Term xd, OZ_Term y, OZ_Term yd, 
+			 OZ_Term o)
+    : Propagator_D_I_D_I_D(x, xd, y, yd, o) {}
+  
+  virtual OZ_Return propagate(void);
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
+};
+
 
 #endif // __DISJOINT_HH__
