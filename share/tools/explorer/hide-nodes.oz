@@ -243,6 +243,10 @@ local
 	 end
       end
 
+      meth getOverHidden(Cursor $)
+	 {self.mom getOverHidden(case @isHidden then self else Cursor end $)}
+      end
+	    
       meth isHidden($)
 	 @isHidden
       end
@@ -267,12 +271,14 @@ local
       meth !UnhideButFailedBelowHidden true  end
       
       meth isHidden($)             False end %% JUNK JUNK
+      meth getOverHidden(Cursor $) {self.mom getOverHidden(Cursor $)} end
 
       meth hideUndrawn             true  end
    end
 
    class Sentinel
       meth dirtyUp true end
+      meth getOverHidden(Cursor $) Cursor end
    end
    
 in
