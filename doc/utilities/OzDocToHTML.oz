@@ -186,6 +186,7 @@ define
 	 GrammarAltType: unit
 	 % for List:
 	 InDescription: unit
+	 OLTypes: (X='1'|'a'|'i'|'A'|'I'|X in X)
 	 % back matter:
 	 MyBibliographyDB: unit
       meth init(B SGML Dir)
@@ -515,16 +516,17 @@ define
 		  OzDocToHTML, Batch(M 1)
 		  InDescription <- X
 		  Out <- @Out#'</DL><P'#@Align#'>\n'
-	       elseif {HasFeature M enum} then X in
-		  %--** should the type be predefined so that HTML and
-		  %--** LaTeX and HTML versions match? (type="[1aAiI]")
-		  Out <- @Out#('</P><OL'#
+	       elseif {HasFeature M enum} then X Y in
+		  Out <- @Out#('</P><OL type='#@OLTypes.1#
 			       case {CondSelect M n unit} of unit then ""
 			       elseof I then ' start='#I
 			       end#'>\n')
 		  X = @InDescription
 		  InDescription <- false
+		  Y = @OLTypes
+		  OLTypes <- Y.2
 		  OzDocToHTML, Batch(M 1)
+		  OLTypes <- Y
 		  InDescription <- X
 		  Out <- @Out#'</OL><P'#@Align#'>\n'
 	       elseif {HasFeature M n} then
