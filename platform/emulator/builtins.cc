@@ -4744,6 +4744,8 @@ static int finalizable(OZ_Term& x)
         b = ((Tertiary*)xp)->getBoardInternal(); break;
       case Co_Class:
         b = ((ObjectClass*)xp)->getBoardInternal(); break;
+      case Co_Resource:
+        return 2; break;
       }
       return oz_isRootBoard(b)?1:2;
     }

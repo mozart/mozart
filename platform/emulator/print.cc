@@ -680,6 +680,7 @@ void ArityTable::printStream(ostream &stream, int depth)
 }
 
 
+
 // ---------------------------------------------------
 
 void SuspList::printStream(ostream &stream, int depth) {

@@ -165,6 +165,7 @@
           ( AtomDictionary,     "dictionary" ),
           ( AtomLock,           "lock" ),
           ( AtomClass,          "class" ),
+          ( AtomResource,       "resource" ),
 
           ( E_ERROR,            "error"),
           ( E_KERNEL,           "kernel"),
