@@ -328,8 +328,6 @@ public:
   PendThread *next;
   Thread *thread;
   PendThread(Thread *th,PendThread *pt):thread(th),next(pt){}
-  PendThread(Thread *th):thread(th),next(NULL){}
-  PendThread(){thread=NULL;}
   USEFREELISTMEMORY;
   void dispose(){freeListDispose(this,sizeof(PendThread));}
 };

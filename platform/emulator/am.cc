@@ -719,14 +719,6 @@ PROFILE_CODE1
 }
 
 
-int isBelow(Board *bb,Board *varHome) {
-  while (bb != varHome) {
-    if (bb->isRoot ()) return NO;
-    bb=bb->getParent();
-  }
-  return OK;
-}
-
 Board *varHome(TaggedRef val) {
   if (isUVar(val)) {
     return tagged2VarHome(val);
@@ -741,7 +733,7 @@ Bool checkHome(TaggedRef *vPtr) {
   TaggedRef val = deref(*vPtr);
 
   return !isAnyVar(val) ||
-    isBelow(am.currentBoard,varHome(val));
+    am.isBelow(am.currentBoard,varHome(val));
 }
 
 
@@ -764,7 +756,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
   /* second step: mark binding for non-local variable in trail;     */
   /* also mark such (i.e. this) variable in suspention list;        */
   if ( !isLocalVariable(var,varPtr)) {
-    Assert(checkHome(varPtr));
+    Assert(shallowHeapTop || checkHome(varPtr));
     trail.pushRef(varPtr,var);
   } else  { // isLocalVariable(var)
     if (isSVar(var)) {
@@ -778,7 +770,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
 
 void AM::doBindAndTrail(TaggedRef v, TaggedRef * vp, TaggedRef t)
 {
-  Assert(checkHome(vp));
+  Assert(shallowHeapTop || checkHome(vp));
   trail.pushRef(vp, v);
 
   CHECK_NONVAR(t);
@@ -794,7 +786,7 @@ void AM::doBindAndTrailAndIP(TaggedRef v, TaggedRef * vp, TaggedRef t,
                              GenCVariable * lv, GenCVariable * gv)
 {
   lv->installPropagators(gv);
-  Assert(checkHome(vp));
+  Assert(shallowHeapTop || checkHome(vp));
   trail.pushRef(vp, v);
 
   CHECK_NONVAR(t);

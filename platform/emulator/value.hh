@@ -2141,7 +2141,7 @@ public:
 
   Thread * getLocker(){return (Thread*) getPtr();}
   void setLocker(Thread *t){setPtr(t);}
-  Bool hasLock(Thread *t){if(t==getLocker()) return TRUE;return FALSE;}
+  Bool hasLock(Thread *t){return (t==getLocker()) ? TRUE : FALSE;}
 
   void unlockComplex();
   void unlock(){
