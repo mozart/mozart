@@ -121,6 +121,7 @@ static TaggedRef dictionary_of_modules;
 #include "modPID-if.cc"
 #include "modFault-if.cc"
 #include "modDPMisc-if.cc"
+#include "modDPStatistics-if.cc"
 #include "modVirtualSite-if.cc"
 #include "modSystem-if.cc"
 #include "modProfile-if.cc"
@@ -210,6 +211,7 @@ static ModuleEntry ext_module_table[] = {
   {"PID",             mod_int_PID},
   {"Fault",           mod_int_Fault},
   {"DPMisc",          mod_int_DPMisc},
+  {"DPStatistics",    mod_int_DPStatistics},
   {"VirtualSite",     mod_int_VirtualSite},
   {"Compat",          mod_int_Compat},
   {"Win32",           mod_int_Win32},

@@ -496,8 +496,9 @@ Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
   if (sscanf(vers,"%d#%d",&major,&minor) != 2) {
     return NO;
   }
-  if (major != MARSHALERMAJOR || minor != MARSHALERMINOR)
+  if (major != MARSHALERMAJOR || minor != MARSHALERMINOR) {
     return NO;
+  }
 
   buf->setVersion(major,minor);
 
@@ -527,7 +528,8 @@ typedef struct {
 static mv2ovTabType mv2ovTab[] = {
   { 1, 5, "1.0.1" },
   { 2, 0, "1.1.0" },
-  { 3, 0, "1.1.0" }
+  { 3, 0, "1.1.0" },
+  { 3, 1, "1.2.0" }
 };
 
 // returns a string to be used as "oz version %s";

@@ -42,6 +42,7 @@
 
 #include "machine.hh"
 #include "config.h"
+
 #include "ozostream.hh"
 
 #include <string.h>
@@ -57,14 +58,14 @@
 //
 #define MAX_DP_STRING		4
 // MARSHALERMAJOR "#" MARSHALERMINOR:
-#define MARSHALERVERSION	"3#0"
+#define MARSHALERVERSION	"3#1"
 #define MARSHALERMAJOR		3
-#define MARSHALERMINOR		0
+#define MARSHALERMINOR		1
 
 //
-#define PERDIOVERSION     "3#0" /* PERDIOMAJOR "#" PERDIOMINOR */
+#define PERDIOVERSION     "3#1" /* PERDIOMAJOR "#" PERDIOMINOR */
 #define PERDIOMAJOR          3
-#define PERDIOMINOR          0
+#define PERDIOMINOR          1
 
 
 const unsigned int KB = 1024;
@@ -124,7 +125,6 @@ const Bool FALSE = 0;
 #define BI_PREEMPT       1024
 #define BI_REPLACEBICALL 1025
 #define BI_TYPE_ERROR    1026
-
 
 typedef unsigned char BYTE;
 

@@ -192,3 +192,13 @@ char *delChar(char *s,char c) {
 }
 
 Atom * DBG_STEP_ATOM, * DBG_NOSTEP_ATOM, * DBG_EXIT_ATOM;
+
+#if defined(DEBUG_CHECK)
+extern "C" {
+void *__real_malloc(size_t sz)
+{
+  return ((void *) 0);
+}
+};
+#endif // DEBUG_CHECK
+

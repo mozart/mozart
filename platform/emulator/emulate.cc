@@ -2603,22 +2603,21 @@ Case(GETVOID)
       AssRegArray *list           = (AssRegArray*) getAdressArg(PC+5);
       int size = list->getSize();
 
-      if (predd->getPC()==NOCODE) {
-        predd->PC = PC+sizeOf(DEFINITION);
-	predd->setGSize(size);
-      }
+      Assert(size == predd->getGSize());
+      Assert(predd->getPC() != NOCODE);
       
       if (am.profileMode())
 	predd->getProfile()->numClosures++;
       
       if (isTailCall) { // was DEFINITIONCOPY?
 	TaggedRef list = oz_deref(XPC(1));
-	ProgramCounter preddPC = predd->PC;
+	ProgramCounter preddPC = predd->getPC();
+	PrTabEntry *origPredd = predd;
 	predd = new PrTabEntry(predd->getName(), predd->getMethodArity(),
 			       predd->getFile(), predd->getLine(), predd->getColumn(),
 			       oz_nil(), // mm2: inherit sited?
 			       predd->getMaxX());
-	predd->PC = copyCode(preddPC,list);
+	predd->setPC(copyCode(origPredd, predd, preddPC, list));
 	predd->setGSize(size);
       }
 

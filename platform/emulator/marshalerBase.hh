@@ -464,7 +464,7 @@ GName* unmarshalGNameRobust(TaggedRef*,MarshalerBuffer*,int*);
 // Memory management for arguments of marshaler's
 // 'BinaryAreaProcessor' and builder's 'OzValueProcessor'.
 //
-#define NMMM_SIZE	12
+#define NMMM_SIZE	16
 //
 class NMMemoryManager {
   static int32* freelist[NMMM_SIZE];

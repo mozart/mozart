@@ -488,12 +488,12 @@ static PrTabEntry * ci_store_predid(TaggedRef t_predid) {
 	  new PrTabEntry(t_name,arity,t_pos,t_flags,maxx));
 }
 
-#define CIS_PREDID(ii) \
-  Assert(t_instr_type[ii] == CI_TYPE_OTHER);               \
-  { PrTabEntry * _pte = ci_store_predid(t_instr_args[ii]); \
-    if (!_pte) CI_BOMB();                                  \
-    code->writeAddress(_pte); }
-
+#define CIS_PREDID(ii,pte,defCode)			\
+  Assert(t_instr_type[ii] == CI_TYPE_OTHER);		\
+  pte = ci_store_predid(t_instr_args[ii]);		\
+  if (!pte) CI_BOMB();					\
+  pte->setPC(defCode);					\
+  code->writeAddress(pte);
 
 static AbstractionEntry * ci_store_procref(TaggedRef p) {
   if (OZ_isUnit(p)) {
@@ -509,10 +509,16 @@ static AbstractionEntry * ci_store_procref(TaggedRef p) {
   code->writeAbstractionEntry(ci_store_procref(t_instr_args[ii]));
 
 
-static AssRegArray * ci_store_gregref(TaggedRef globals) {
+// kost@ : 'pe' is the PrTabEntry for the 'DEFINITION' we are
+//         currently filling up;
+static
+AssRegArray * ci_store_gregref(TaggedRef globals, PrTabEntry *pe)
+{
   int numGlobals = OZ_length(globals);
   if (numGlobals == -1)
     return (AssRegArray *) NULL;
+
+  pe->setGSize(numGlobals);
 
   AssRegArray * gregs = AssRegArray::allocate(numGlobals);
 
@@ -547,10 +553,10 @@ static AssRegArray * ci_store_gregref(TaggedRef globals) {
 }
 
 
-#define CIS_GREGREF(ii) \
-  Assert(t_instr_type[ii] == CI_TYPE_OTHER);                  \
-  { AssRegArray * _grgs = ci_store_gregref(t_instr_args[ii]); \
-    if (!_grgs) CI_BOMB();                                    \
+#define CIS_GREGREF(ii,pe)						\
+  Assert(t_instr_type[ii] == CI_TYPE_OTHER);				\
+  { AssRegArray * _grgs = ci_store_gregref(t_instr_args[ii], pe);	\
+    if (!_grgs) CI_BOMB();						\
     code->writeAddress(_grgs); }
 
 
@@ -724,7 +730,7 @@ OZ_BI_define(BIstoreInstructions,4,1) {
 				      mkTupleWidth(0), AtomEmpty, 0, -1, 
 				      oz_nil(), 1);
     pte->setGSize(numGlobals);
-    pte->PC = code->getStart();
+    pte->setPC(code->getStart());
 
     Assert(oz_onToplevel());
     topl = Abstraction::newAbstraction(pte,oz_currentBoard());
@@ -779,14 +785,37 @@ OZ_BI_define(BIstoreInstructions,4,1) {
     case CI_SKIP:
       CIS_OPCODE(SKIP);
       break;
+
     case CI_DEFINITION:
-      CIS_OPCODE(DEFINITION);
-      CIS_XREG(0); CIS_LBL(1); CIS_PREDID(2); CIS_PROCREF(3); CIS_GREGREF(4);
+      {
+	// kost@ : since we load the code straight into the runtime
+	//         system, we can write PC"s into it;
+	PrTabEntry *pte;
+	ProgramCounter defCode =
+	  code->getWritePtr() + sizeOf(DEFINITION);
+	CIS_OPCODE(DEFINITION);
+	CIS_XREG(0);
+	CIS_LBL(1);
+	CIS_PREDID(2, pte, defCode);
+	CIS_PROCREF(3);
+	CIS_GREGREF(4, pte);
+      }
       break;
+
     case CI_DEFINITIONCOPY:
-      CIS_OPCODE(DEFINITIONCOPY);
-      CIS_XREG(0); CIS_LBL(1); CIS_PREDID(2); CIS_PROCREF(3); CIS_GREGREF(4);
+      {
+	PrTabEntry *pte;
+	ProgramCounter defCode =
+	  code->getWritePtr() + sizeOf(DEFINITIONCOPY);
+	CIS_OPCODE(DEFINITIONCOPY);
+	CIS_XREG(0);
+	CIS_LBL(1);
+	CIS_PREDID(2, pte, defCode);
+	CIS_PROCREF(3);
+	CIS_GREGREF(4, pte);
+      }
       break;
+
     case CI_ENDDEFINITION:
       CIS_OPCODE(ENDDEFINITION); CIS_LBL(0);
       break;
