@@ -168,24 +168,6 @@ Bool AM::entailment ()
           ? OK : NO);
 }
 
-// unify two non derefed tagged refs
-inline
-Bool AM::unify(TaggedRef ref1, TaggedRef ref2)
-{
-  CHECK_NONVAR(ref1);
-  CHECK_NONVAR(ref2);
-
-  return unify(&ref1, &ref2);
-}
-
-inline
-Bool AM::unify(TaggedRef *ref1, TaggedRef ref2)
-{
-  CHECK_NONVAR(ref2);
-
-  return unify(ref1, &ref2);
-}
-
 inline
 void AM::bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr)
 {
