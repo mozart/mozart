@@ -88,6 +88,8 @@ setup.cc oz.cc ozengine.cc: version.h
 oz.exe: oz.o
         $(CXX) $(INCS) -s -o $@ $< -mwindows
 
+ozenginew.o ozengine.exe: oz.cc
+
 ozenginew.exe: ozenginew.o
         $(CXX) $(INCS) -s -o $@ $< -mwindows
 
