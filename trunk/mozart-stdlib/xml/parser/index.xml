@@ -126,7 +126,7 @@
 </code.display>
 <p>Now let's parse it, with no frills:</p>
 <oz.display>
-declare P={Link ['x-ozlib://duchier/xml/Parser.ozf']}
+declare [P]={Link ['x-ozlib://duchier/xml/Parser.ozf']}
 {Inspect {P.noParent {P.parse init(file:'example.xml')}}}
 </oz.display>
     <image.center src="fig1.gif"/>
