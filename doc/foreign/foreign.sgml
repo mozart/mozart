@@ -737,6 +737,7 @@ functions are provided:
 <entry><<OZ_isVariable>>
 <entry><<OZ_isBitString>>
 <entry><<OZ_isByteString>>
+<entry><<OZ_isFSetValue>>
 
 <index class=module/OZ_isAtom/
 <index class=module/OZ_isBool/
@@ -768,6 +769,7 @@ functions are provided:
 <index class=module/OZ_isVariable/
 <index class=module/OZ_isBitString/
 <index class=module/OZ_isByteString/
+<index class=module/OZ_isFSetValue/
 
 <synopsis>
 All these functions have the same signature. For
