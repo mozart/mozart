@@ -263,6 +263,15 @@ void exitCheckSpace() {
   int32 * _f = (int32 *) (f);                                                \
   int32 * _t = (int32 *) CAC_MALLOC(_n);                                     \
   switch (_n) {                                                              \
+  case 48:                                                                   \
+    _t[0]=_f[0];_t[1]=_f[1];_t[2]=_f[2];_t[3]=_f[3];_t[4]=_f[4];_t[5]=_f[5]; \
+    _t[6]=_f[6];_t[7]=_f[7];_t[8]=_f[8];_t[9]=_f[9];_t[10]=_f[10];           \
+    _t[11]=_f[11];                                                           \
+    break;                                                                   \
+  case 36:                                                                   \
+    _t[0]=_f[0];_t[1]=_f[1];_t[2]=_f[2];_t[3]=_f[3];_t[4]=_f[4];_t[5]=_f[5]; \
+    _t[6]=_f[6];_t[7]=_f[7];_t[8]=_f[8];                                     \
+    break;                                                                   \
   case 24:                                                                   \
     _t[0]=_f[0];_t[1]=_f[1];_t[2]=_f[2];_t[3]=_f[3];_t[4]=_f[4];_t[5]=_f[5]; \
     break;                                                                   \
@@ -734,7 +743,8 @@ OzVariable * OzVariable::_cacVarInline(void) {
     cacReallocStatic(OzVariable,this,to,sizeof(SimpleVar));
     break;
   case OZ_VAR_EXT:
-    to = ((ExtVar *) this)->_cacV();
+    to = extVar2Var(var2ExtVar(this)->_cacV());
+    memcpy(to,this,sizeof(OzVariable));
     GCDBG_INTOSPACE(to);
     cacStack.push(to, PTR_VAR);
     break;
@@ -797,7 +807,7 @@ void OzVariable::_cacVarRecurse(void) {
     ((OzCtVariable*) this)->_cacRecurse(); 
     break;
   case OZ_VAR_EXT:     
-    ((ExtVar *)      this)->_cacRecurseV(); 
+    var2ExtVar(this)->_cacRecurseV(); 
     break;
   default: 
     Assert(0);
@@ -1315,14 +1325,14 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
      */
 
   case Co_Extension: {
-    OZ_Extension * ex = (OZ_Extension *) (OZ_Container *) this;
+    OZ_Extension * ex = const2Extension(this);
     Assert(ex);
     GCDBG_INFROMSPACE(ex);
 
     Board * bb = (Board *) ex->__getSpaceInternal();
 
     OZ_Extension * ret = ex->gCollectV();
-    Assert(((ConstTerm *) (OZ_Container*) ret)->getType() == Co_Extension);
+    Assert(extension2Const(ret)->getType() == Co_Extension);
     GCDBG_INTOSPACE(ret);
 
     if (bb) {
@@ -1330,9 +1340,10 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
       ret->__setSpaceInternal(bb->gCollectBoard());
     }
 
-    cacStack.push((OZ_Container *) ret,PTR_EXTENSION);
-    STOREFWDFIELD(this, (OZ_Container *) ret);
-    return (ConstTerm *) (OZ_Container *) ret;
+    ConstTerm* cret = extension2Const(ret);
+    cacStack.push(cret,PTR_EXTENSION);
+    STOREFWDFIELD(this,(OZ_Container*)cret);
+    return cret;
   }
 
   case Co_Float: {
@@ -1473,7 +1484,7 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
 
   case Co_Extension: {
     // This is in fact situated
-    OZ_Extension * ex = (OZ_Extension *) (OZ_Container *) this;
+    OZ_Extension * ex = const2Extension(this);
     Assert(ex);
     Board * bb = (Board *) ex->__getSpaceInternal();
 
@@ -1488,10 +1499,11 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
     if (bb) {
       ret->__setSpaceInternal(bb->sCloneBoard());
     }
-  
-    cacStack.push((OZ_Container *) ret,PTR_EXTENSION);
-    STOREFWDFIELD(this, (OZ_Container *) ret);
-    return (ConstTerm *) (OZ_Container *) ret;
+
+    ConstTerm* cret = extension2Const(ret);
+    cacStack.push(cret,PTR_EXTENSION);
+    STOREFWDFIELD(this, (OZ_Container *) cret);
+    return cret;
   }
 
   case Co_Float:
@@ -2011,7 +2023,7 @@ void CacStack::_cacRecurse(void) {
       UTG_PTR(tp,PTR_CONSTTERM,ConstTerm *)->_cacConstRecurse();   
       break;
     case PTR_EXTENSION: 
-      ((OZ_Extension*)(UTG_PTR(tp,PTR_EXTENSION,OZ_Container *)))->_cacRecurseV();   
+      const2Extension(UTG_PTR(tp,PTR_EXTENSION,ConstTerm *))->_cacRecurseV();   
       break;
     case PTR_SUSPLIST0:
     case PTR_SUSPLIST1:

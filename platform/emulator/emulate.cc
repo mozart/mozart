@@ -29,6 +29,11 @@
  *
  */
 
+#define NAMEVOLATILE volatile
+//#define NAMEVOLATILE
+//#define HEAPCURVOLATILE volatile
+//#define HEAPENDVOLATILE volatile
+
 // The main engine
 
 #include <stdarg.h>
@@ -119,6 +124,7 @@ TaggedRef formatError(TaggedRef info, TaggedRef val, TaggedRef traceBack) {
  * Handle Failure macros (HF)
  */
 
+#if !OUTLINE_HF_RAISE_FAILURE
 Bool AM::hf_raise_failure()
 {
   if (!oz_onToplevel() && !oz_currentThread()->isCatch())
@@ -129,6 +135,7 @@ Bool AM::hf_raise_failure()
   exception.debug = ozconf.errorDebug;
   return NO;
 }
+#endif
 
 // This macro is optimized such that the term T is only created
 // when needed, so don't pass it as argument to functions.
