@@ -116,15 +116,13 @@ Bool LocalPropagationStore::propagate_locally () {
     switch (ret_val) {
     case FAILED:
       if (am.currentBoard->isRoot ()) {
-        if (ozconf.errorVerbosity > 0) {
-          errorHeader();
+        errorHeader();
 
-          ostrstream buf;
-          buf << * thr->getPropagator() << '\0';
-          char *str = buf.str();
-          message("Propagator %s failed\n", str);
-          delete str;
-        }
+        ostrstream buf;
+        buf << * thr->getPropagator() << '\0';
+        char *str = buf.str();
+        message("Propagator %s failed\n", str);
+        delete str;
       }
       am.currentThread->closeDonePropagator ();
       am.currentThread = savedCurrentThread;
