@@ -234,8 +234,8 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 	      if (intsct == fd_singl){
 		TaggedRef int_val = OZ_int(intsct.getSingleElem());
 		if (scp==0) {
-		  propagateUnify(var);
-		  termVar->propagateUnify(term);
+		  if (varIsConstrained) propagateUnify(var);
+		  if (termIsConstrained) termVar->propagateUnify(term);
 		}
 		am.doBindAndTrail(var, vPtr, int_val);
 		am.doBindAndTrail(term, tPtr, int_val);
@@ -247,8 +247,8 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 		  c_var = new GenFDVariable(intsct);
 		TaggedRef * var_val = newTaggedCVar(c_var);
 		if (scp==0) {
-		  propagateUnify(var);
-		  termVar->propagateUnify(term);
+		  if (varIsConstrained) propagateUnify(var);
+		  if (termIsConstrained) termVar->propagateUnify(term);
 		}
 		if (intsct == fd_bool) {
 		  am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(var_val),
