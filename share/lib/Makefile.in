@@ -30,8 +30,6 @@ ENV2TYPE        = $(PERL) @ENV2TYPE@
 
 OZFLAGS         =
 OZBATCH         = @OZBATCH@
-RALFBATCH       = . ./env && @OZBATCH@
-
 
 COMPILE         = $(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz -c
 EXEC            = $(OZBATCH) $(OZFLAGS)
@@ -154,14 +152,17 @@ GUMPEXAMPLES = \
         Examples.oz Lambda.in LambdaParser.ozg LambdaScanner.ozg \
         OzParser.ozg OzScanner.ozg
 
-ENVS1 = \
+ENVS = \
         SP.env OP.env AP.env CP.env WP.env DP.env \
         Compiler.env CompilerPanel.env Panel.env Browser.env Explorer.env \
         Emacs.env Ozcar.env Profiler.env Gump.env GumpScanner.env \
         GumpParser.env Misc.env
-ENVS = $(ENVS1:%=%) Base.env Standard.env
-TYPS = $(ENVS1:%.env=%.typ)
+TYPS = $(ENVS:%.env=%.typ)
 TYCS = $(TYPS:%.typ=tyc/%.tyc)
+
+# This ensures that the $(TYCS) are not removed after, e.g., `make stage2',
+# so that we can `make install' directly afterwards.
+.PRECIOUS: $(TYCS)
 
 ALLSRCS = \
         $(STANDARDSRC) $(INITSRC) \
@@ -169,11 +170,10 @@ ALLSRCS = \
         $(COMPILERSRC) $(COMPILERPANELSRC) $(PANELSRC) $(BROWSERSRC) \
         $(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC) \
         $(GUMPSRC) $(GUMPSCANNERSRC) $(GUMPPARSERSRC) \
-        $(ENVS1:%=$(OZLIB)/%) \
+        $(ENVS:%=$(OZLIB)/%) \
 
-DUMPINTRO1 = DumpIntro.oz Base.env Standard.env
-DUMPINTRO = $(DUMPINTRO1:%=%) Base.ozc Standard.ozc
-STANDARD =  Base.ozc Standard.ozc Base.env Standard.env
+STANDARD = Base.ozc Standard.ozc Base.env Standard.env
+DUMPINTRO = DumpIntro.oz $(STANDARD)
 
 LIBFILES = \
         $(GUMPEXAMPLES:%=$(OZLIB)/gump/examples/%) \
@@ -181,7 +181,6 @@ LIBFILES = \
         $(TYCS:tyc/%=$(OZLIB)/%)
 
 COMPONENTS = \
-        Base.ozc Standard.ozc \
         Init.ozc OPI.ozc SP.ozc OP.ozc AP.ozc CP.ozc WP.ozc DP.ozc \
         Compiler.ozc CompilerPanel.ozc Panel.ozc Browser.ozc \
         Explorer.ozc Emacs.ozc Ozcar.ozc Profiler.ozc Gump.ozc \
@@ -189,9 +188,10 @@ COMPONENTS = \
         StandardModules.ozc StandardSubModules.ozc
 
 LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
-LIBOZM = $(OZLIB)/ozbatch.ozm
+STAGEEXTRAFILES = $(OZLIB)/Base.ozc $(OZLIB)/Standard.ozc $(OZLIB)/ozbatch.ozm
 
-BINFILES = $(OZBIN)/ozbatch $(OZBIN)/ozserver
+SYSLETS = ozbatch ozserver
+BINFILES = $(SYSLETS:%=$(OZBIN)/%)
 
 BITMAPS1 = \
         mini-dec.xbm mini-inc.xbm \
@@ -206,10 +206,11 @@ OZCARBITMAPS1 = \
         step.xbm stop.xbm term.xbm unleash.xbm
 OZCARBITMAPS = $(OZCARBITMAPS1:%=$(OZCARBITMAPDIR)/%)
 
-.PHONY: all install install-main install-ozma install-bitmaps install-src install-cache
+.PHONY: all install install-stage install-main install-bitmaps
+.PHONY: install-src install-cache
 .PHONY: clean realclean veryclean tags
 
-all: Makefile env $(TYPS) $(TYCS) $(COMPONENTS) ozbatch ozserver
+all: Makefile $(COMPONENTS) $(SYSLETS)
 
 ozbatch.ozm: MakeAssembly.oz \
         $(STANDARDSRC) Base.env Standard.env \
@@ -248,25 +249,24 @@ tycs: $(TYCS)
 
 install: install-main install-bitmaps install-cache
 
-install-cache: \
-        $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome
-
-$(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome: \
-        $(PREFIX)/cache/http/www.ps.uni-sb.de
-        (cd $(PREFIX)/cache/http/www.ps.uni-sb.de; \
-         $(LN) ../../.. ozhome)
-
-$(PREFIX)/cache/http/www.ps.uni-sb.de:
-        $(MKINSTALLDIRS) $(PREFIX)/cache/http/www.ps.uni-sb.de
+install-stage: install-main $(STAGEEXTRAFILES)
 
 install-main: all \
         $(OZLIB) $(OZLIB)/gump/examples $(LIBFILES) $(LIBCOMPONENTS) \
         $(OZBIN) $(BINFILES)
 
-install-ozma: $(LIBOZM)
-
 install-bitmaps: \
         $(BITMAPDIR) $(BITMAPS) $(OZCARBITMAPDIR) $(OZCARBITMAPS)
+
+install-cache: \
+        $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome
+
+$(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome: \
+        $(PREFIX)/cache/http/www.ps.uni-sb.de
+        cd $(PREFIX)/cache/http/www.ps.uni-sb.de && $(LN) ../../.. ozhome
+
+$(PREFIX)/cache/http/www.ps.uni-sb.de:
+        $(MKINSTALLDIRS) $(PREFIX)/cache/http/www.ps.uni-sb.de
 
 install-src: $(OZLIB) $(OZLIBDIRS) $(ALLSRCS:%=$(OZLIB)/%)
 
@@ -275,7 +275,7 @@ clean:
         $(RM) compiler-Version.oz compiler-Builtins.oz compiler-Opcodes.oz
         $(RM) ozcar-version.oz
         $(RM) -r $(TYPS) tyc
-        $(RM) $(COMPONENTS) Fun*.ozc
+        $(RM) Base.ozc Standard.ozc $(COMPONENTS) Fun*.ozc
         $(RM) ozbatch ozserver
 
 realclean: clean
@@ -287,7 +287,6 @@ veryclean: realclean
 distclean: veryclean
         $(RM) confdefs.h config.cache config.status config.log
         $(RM) Makefile
-        $(RM) env
 
 $(OZLIB) $(OZLIBDIRS) $(BITMAPDIR) $(OZCARBITMAPDIR) $(OZBIN):
         $(INSTALLDIR) $@
@@ -326,7 +325,7 @@ $(OZBIN)/ozserver: ozserver
         $(ENV2TYPE) $< > $@
 
 tyc/%.tyc: %.typ $(DUMPINTRO) Init.ozc
-        @$(MKDIR) tyc 2>/dev/null || $(TRUE)
+        @$(MKDIR) tyc 2> /dev/null || $(TRUE)
         $(COMPILE) $< -o $@
 
 %.ozc: %.oz
@@ -437,9 +436,6 @@ GumpParser.ozc: $(DUMPINTRO) $(GUMPPARSERSRC) SP.env GumpParser.env
 Makefile: Makefile.in config.status
         ./config.status
 
-env: env.in config.status
-        ./config.status
-
 config.status: configure
         ./config.status --recheck
 
@@ -453,12 +449,14 @@ tags:
 
 #
 # testing components locally
-#    make check
-#  test a new emulator with
+#    make check   or   make thorough-check
+# test a new emulator with
 #    make check OZEMULATOR=$(HOME)/Oz/Emulator/oz.emulator.bin
-.PHONY: bootstrap stage1 stage2 stage2b stage3 stage3b check
+#
 
-# use OZMA to create components
+.PHONY: bootstrap stage1 stage2 stage2b stage3 stage3b check thorough-check
+
+# use Ozma to create the components
 bootstrap:
         $(MAKE) all \
                 OZBATCH=$(SRCDIR)/ozbatch.sh \
@@ -472,35 +470,36 @@ STAGE2B=./stage2b
 STAGE3=./stage3
 STAGE3B=./stage3b
 
-# stage1: create the first compiler from the installed one
+# stage1: create the initial components using the installed ones
 stage1:
-        $(MAKE) all
         $(MAKE) install-main PREFIX=$(STAGE1)
 
-# stage2: create the 2nd compiler from the stage1 compiler
+# stage2: recreate the components and Ozma file using the stage1 components
 stage2:
-        $(MAKE) $(TYPS) $(TYCS) install-main install-ozma PREFIX=$(STAGE2) \
-        OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE1)/lib/:.:compiler:=\
+        $(MAKE) install-stage PREFIX=$(STAGE2) \
+        OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE1)/lib/:.:=\
         OZBATCH=$(STAGE1)/bin/ozbatch \
         OZINIT=$(STAGE1)/lib/Init.ozc
 
+# stage2b: recreate the components and Ozma file using the stage2 components
 stage2b:
-        $(MAKE) $(TYPS) $(TYCS) install-main install-ozma PREFIX=$(STAGE2B) \
-        OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE2)/lib/:.:compiler:=\
+        $(MAKE) install-stage PREFIX=$(STAGE2B) \
+        OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE2)/lib/:.:=\
         OZBATCH=$(STAGE2)/bin/ozbatch \
         OZINIT=$(STAGE2)/lib/Init.ozc
 
-# stage2: create the 3nd compiler from the stage2 compiler
+# stage3: recreate the components and Ozma file using the stage2 Ozma file
 stage3:
-        $(MAKE) $(TYPS) $(TYCS) install-main install-ozma PREFIX=$(STAGE3) \
-        OZ_LOAD=all=.:all=tyc:all=compiler:= \
+        $(MAKE) install-stage PREFIX=$(STAGE3) \
+        OZ_LOAD=all=.:all=tyc:= \
         OZBATCH=$(SRCDIR)/ozbatch.sh \
         OZINIT=$(STAGE2)/lib/Init.ozc \
         OZMAFILE=$(STAGE2)/lib/ozbatch.ozm
 
+# stage3b: recreate the components and Ozma file using the stage3 components
 stage3b:
-        $(MAKE) $(TYPS) $(TYCS) install-main install-ozma PREFIX=$(STAGE3B) \
-        OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE3)/lib/:.:compiler:=\
+        $(MAKE) install-stage PREFIX=$(STAGE3B) \
+        OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE3)/lib/:.:=\
         OZBATCH=$(STAGE3)/bin/ozbatch \
         OZINIT=$(STAGE3)/lib/Init.ozc
 
@@ -509,6 +508,12 @@ check:
         $(MAKE) clean stage2
         $(MAKE) clean stage3
 
+thorough-check:
+        $(MAKE) clean bootstrap stage1
+        $(MAKE) clean stage2
+        $(MAKE) clean stage2b
+        $(MAKE) clean stage3
+        $(MAKE) clean stage3b
 
 # haeh?
 .PHONY: denys install-denys denys2
