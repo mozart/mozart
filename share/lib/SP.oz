@@ -34,14 +34,11 @@ fun instantiate {$ IMPORT}
 
    \insert 'sp/Error.oz'
 
-\ifndef NOFINALIZATION
    \insert 'sp/Finalize.oz'
-\endif
 
    Error   = {NewError}
 in
-   
-   \insert 'SP.env'
-   
-end
 
+   \insert 'SP.env'
+
+end

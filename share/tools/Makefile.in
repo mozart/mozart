@@ -1,0 +1,247 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+TOPDIR		= @TOPDIR@
+
+PREFIX		= @prefix@
+
+OZBIN		= $(PREFIX)/bin
+OZTOOLS		= $(PREFIX)/tools
+IMAGESDIR	= $(OZTOOLS)/images
+
+SHELL		= @SH@
+RM		= @RM@ -f
+MKDIR		= @MKDIR@
+ECHO		= @ECHO@
+TRUE		= @TRUE@
+
+INSTALL		= @INSTALL@
+INSTALLFILE	= $(INSTALL) -m 444
+INSTALLPRG	= $(INSTALL) -m 555
+INSTALLSRC	= @INSTALLSRC@
+MKINSTALLDIRS	= @MKINSTALLDIRS@
+INSTALLDIR	= $(MKINSTALLDIRS)
+
+PERL		= @PERL@
+ENV2TYPE	= $(PERL) $(SRCDIR)/../lib/env2type
+
+OZFLAGS		=
+OZBATCH		= @OZBATCH@
+
+COMPILE		= $(OZBATCH) $(OZFLAGS) -c
+EXEC		= $(OZBATCH) $(OZFLAGS)
+
+COMPILERPANELSRC1 = \
+	CompilerPanelClass.oz
+COMPILERPANELSRC = $(COMPILERPANELSRC1:%=compilerPanel/%) CompilerPanel.oz
+
+PANELSRC1 = \
+	configure.oz load.oz make-notes.oz runtime-bar.oz top.oz \
+	main.oz dialogs.oz
+PANELSRC = $(PANELSRC1:%=panel/%) Panel.oz
+
+BROWSERSRC1 = \
+	XResources.oz browserObject.oz browserTerm.oz \
+	bufsAndStreams.oz constants.oz controlObject.oz core.oz \
+	errors.oz managerObject.oz reflect.oz repManager.oz \
+	store.oz tcl-interface.oz termObject.oz \
+	termsStore.oz undefs.oz windowManager.oz
+BROWSERSRC = $(BROWSERSRC1:%=browser/%) Browser.oz
+
+EXPLORERSRC1 = \
+	main.oz misc.oz action-nodes.oz hide-nodes.oz \
+	layout-nodes.oz manager.oz \
+	menu-manager.oz move-nodes.oz tk-nodes.oz \
+	configure.oz nodes.oz toplevel-manager.oz \
+	default-actions.oz search-nodes.oz stat-nodes.oz \
+	dialog-manager.oz shapes-and-images.oz status-manager.oz
+EXPLORERSRC = $(EXPLORERSRC1:%=explorer/%) Explorer.oz
+
+EMACSSRC = Emacs.oz
+
+OZCARSRC1 = \
+	prelude.oz string.oz tk.oz config.oz help.oz tree.oz thread.oz \
+	stack.oz source.oz menu.oz dialog.oz gui.oz ozcar.oz
+OZCARSRCNOVER = $(OZCARSRC1:%=ozcar/%) Ozcar.oz
+OZCARSRC = $(OZCARSRCNOVER) ozcar-version.oz
+
+OZCARIMAGESDIR = $(IMAGESDIR)/ozcar
+OZCARIMAGES1 = \
+	ozcar.xbm children.xbm detach.xbm line.xbm next.xbm queries.xbm \
+	step.xbm stop.xbm term.xbm unleash.xbm
+OZCARIMAGES = $(OZCARIMAGES1:%=$(OZCARIMAGESDIR)/%)
+
+PROFILERSRC1 = \
+	prof-gui.oz prof-prelude.oz prof-tk.oz \
+	prof-config.oz prof-help.oz profiler.oz \
+	prof-dialog.oz prof-menu.oz prof-string.oz
+PROFILERSRC = $(PROFILERSRC1:%=profiler/%) Profiler.oz
+
+GUMPSRC1 = Bison.oz Main.oz Output.oz ParserGenerator.oz ScannerGenerator.oz
+GUMPSRC = $(GUMPSRC1:%=gump/%) Gump.oz
+
+GUMPSCANNERSRC1 = GumpScannerClass.oz
+GUMPSCANNERSRC = $(GUMPSCANNERSRC1:%=gump/%) GumpScanner.oz
+
+GUMPPARSERSRC1 = GumpParserClass.oz
+GUMPPARSERSRC = $(GUMPPARSERSRC1:%=gump/%) GumpParser.oz
+
+GUMPEXAMPLES = \
+	Examples.oz Lambda.in LambdaParser.ozg LambdaScanner.ozg \
+	OzParser.ozg OzScanner.ozg
+
+ENVS = \
+	CompilerPanel.env Panel.env Browser.env Explorer.env Emacs.env \
+	Ozcar.env Profiler.env Gump.env GumpScanner.env GumpParser.env
+TYPS = $(ENVS:%.env=tyc/%.typ)
+TYCS = $(TYPS:%.typ=%.tyc)
+
+ALLSRCS = \
+	$(COMPILERPANELSRC) $(PANELSRC) $(BROWSERSRC) \
+	$(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC) \
+	$(GUMPSRC) $(GUMPSCANNERSRC) $(GUMPPARSERSRC)
+
+TOOLSDIRS1 = gump gump/examples
+TOOLSDIRS = $(TOOLSDIRS1:%=$(OZTOOLS)/%)
+
+TOOLSFILES = \
+	$(GUMPEXAMPLES:%=$(OZTOOLS)/gump/examples/%) \
+	$(OZTOOLS)/gump/ProductionTemplates.oz \
+	$(ENVS:%=$(OZTOOLS)/%) \
+	$(TYCS:tyc/%=$(OZTOOLS)/%)
+
+COMPONENTS = \
+	CompilerPanel.ozc Panel.ozc Browser.ozc Explorer.ozc Emacs.ozc \
+	Ozcar.ozc Profiler.ozc Gump.ozc GumpScanner.ozc GumpParser.ozc
+
+TOOLSCOMPONENTS = $(COMPONENTS:%=$(OZTOOLS)/%)
+
+SYSLETS = opi
+BINFILES = $(SYSLETS:%=$(OZBIN)/%)
+
+IMAGES1 = \
+	compiler.xbm compilermask.xbm \
+	lines-lr.xbm lines-rl.xbm grid-25.xbm grid-50.xbm \
+	browserMIcon.xbm browserIcon.xbm stop.xbm
+IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
+
+.PHONY: all
+
+all: Makefile $(COMPONENTS) $(SYSLETS)
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck
+
+#---------------------------------------------------------------------
+# Components
+#---------------------------------------------------------------------
+
+tyc/%.typ: %.env
+	@$(MKDIR) tyc 2> /dev/null || $(TRUE)
+	$(ENV2TYPE) $< > $@
+
+tyc/%.tyc: tyc/%.typ
+	$(COMPILE) $< -o $@
+
+%.ozc: %.oz
+	$(COMPILE) $< -o $@
+
+CompilerPanel.ozc: $(COMPILERPANELSRC) Browser.env CompilerPanel.env
+
+Panel.ozc: $(PANELSRC) Panel.env
+
+Browser.ozc: $(BROWSERSRC) Browser.env
+
+Explorer.ozc: $(EXPLORERSRC) Browser.env Explorer.env
+
+Emacs.ozc: $(EMACSSRC) Emacs.env
+
+Ozcar.ozc: $(OZCARSRC) Browser.env Emacs.env Ozcar.env
+
+ozcar-version.oz: $(OZCARSRCNOVER)
+	$(ECHO) \'`date '+%b %d'`\' > $@
+
+Profiler.ozc: $(PROFILERSRC) Browser.env Emacs.env Profiler.env
+
+Gump.ozc: $(GUMPSRC) ../lib/compiler/TupleSyntax.oz ../lib/compiler/Misc.oz \
+	../lib/compiler/FormatStrings.oz Gump.env
+
+GumpScanner.ozc: $(GUMPSCANNERSRC) GumpScanner.env
+
+GumpParser.ozc: $(GUMPPARSERSRC) GumpParser.env
+
+opi: MakeOPI.oz
+	$(EXEC) $<
+
+#---------------------------------------------------------------------
+# Installation
+#---------------------------------------------------------------------
+
+.PHONY: install install-main install-images
+
+install: install-main install-images
+
+install-main: all \
+	$(OZTOOLS) $(TOOLSDIRS) $(TOOLSFILES) $(TOOLSCOMPONENTS) \
+	$(OZBIN) $(BINFILES)
+
+install-images: \
+	$(IMAGESDIR) $(IMAGES) $(OZCARIMAGESDIR) $(OZCARIMAGES)
+
+$(OZBIN) $(OZTOOLS) $(TOOLSDIRS) $(IMAGESDIR) $(OZCARIMAGESDIR):
+	$(INSTALLDIR) $@
+
+$(OZTOOLS)/%.oz: %.oz
+	$(INSTALLSRC) $< $@
+
+$(OZTOOLS)/%.ozc: %.ozc
+	$(INSTALLFILE) $< $@
+
+$(OZTOOLS)/gump/examples/%: gump/examples/%
+	$(INSTALLSRC) $< $@
+
+$(IMAGESDIR)/%: images/%
+	$(INSTALLFILE) $< $@
+
+$(OZCARIMAGESDIR)/%: ozcar/images/%
+	$(INSTALLFILE) $< $@
+
+$(OZTOOLS)/%.env: %.env
+	$(INSTALLSRC) $< $@
+
+$(OZTOOLS)/%.tyc: tyc/%.tyc
+	$(INSTALLFILE) $< $@
+
+$(OZBIN)/%: %
+	$(INSTALLPRG) $< $@
+
+#---------------------------------------------------------------------
+# Cleaning up
+#---------------------------------------------------------------------
+
+.PHONY: clean realclean veryclean distclean tags
+
+clean:
+	$(RM) *~ *.bak
+	$(RM) ozcar-version.oz
+	$(RM) -r tyc
+	$(RM) $(COMPONENTS)
+	$(RM) opi
+
+realclean: clean
+
+veryclean: realclean
+	$(RM) TAGS
+
+distclean: veryclean
+	$(RM) Makefile
+
+tags:
+	etags --language=none \
+	--regex='/[ \t]*proc\>[^{\n]*{!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
+	--regex='/[ \t]*fun\>[^{\n]*{!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
+	--regex='/[ \t]*class[ \t]+!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
+	--regex='/[ \t]*meth\([ \t]+\|[ \t]*![ \t]*\)\([A-Za-z0-9][A-Za-z0-9_]*\|`.+`|'\''.+'\''\)/\2/' \
+	$(ALLSRCS)
