@@ -303,10 +303,10 @@ system.  It can be retrieved from:
 
         ftp://ftp.gnu.org/pub/gnu/
 
-The latest version at this time is 2.8.1 and is available
+The latest version at this time is 2.95.2 and is available
 packaged as the following archive:
 
-        gcc-2.8.1.tar.gz
+        gcc-2.95.2.tar.gz
 
 You may find a mirror archive closer to you by consulting:
 
@@ -553,10 +553,10 @@ It can be retrieved from:
 
         ftp://ftp.gnu.org/pub/gnu/
 
-The latest version at this time is 1.25 and is available
+The latest version at this time is 1.28 and is available
 packaged as the following archive:
 
-        bison-1.25.tar.gz
+        bison-1.28.tar.gz
 
 
 You may find a mirror archive closer to you by consulting:
@@ -585,7 +585,10 @@ AC_DEFUN(OZ_PROG_PERL,[
     if test "$PERL" = NONE; then
       oz_tmp_ok=no;
     else
-      OZ_PROG_VERSION_CHECK(oz_tmp_ok,$PERL,OZ_VERSION_PERL,[$PERL -v])
+changequote(<,>)
+      oz_tmp_version=`$PERL -e 'print "[$]";' | sed 's|^.||'`
+changequote([,])
+      OZ_CHECK_VERSION(oz_tmp_ok,$oz_tmp_version,OZ_VERSION_PERL)
     fi
     if test "$oz_tmp_ok" = yes; then
       oz_cv_PERL=$PERL
@@ -600,7 +603,7 @@ It can be retrieved from:
 
         http://language.perl.com/info/software.html
 
-The latest version at this time is 5.004_04 and is available
+The latest version at this time is 5.006 and is available
 packaged as the following archive:
 
         http://language.perl.com/CPAN/src/latest.tar.gz

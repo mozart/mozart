@@ -1743,10 +1743,10 @@ system.  It can be retrieved from:
 
         ftp://ftp.gnu.org/pub/gnu/
 
-The latest version at this time is 2.8.1 and is available
+The latest version at this time is 2.95.2 and is available
 packaged as the following archive:
 
-        gcc-2.8.1.tar.gz
+        gcc-2.95.2.tar.gz
 
 You may find a mirror archive closer to you by consulting:
 
