@@ -1769,58 +1769,6 @@ You may find a mirror archive closer to you by consulting:
 fi
 
 
-    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
-    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
-    # Extract the first word of "daVinci", so it can be a program name with args.
-set dummy daVinci; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1783: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_DAVINCI'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$DAVINCI" in
-  /*)
-  ac_cv_path_DAVINCI="$DAVINCI" # Let the user override the test with a path.
-  ;;
-  *)
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_DAVINCI="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  ;;
-esac
-fi
-DAVINCI="$ac_cv_path_DAVINCI"
-if test -n "$DAVINCI"; then
-  echo "$ac_t""$DAVINCI" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-    DAVINCI=`echo $DAVINCI | sed -e "s|//|/|g"`
-    if test ! -n "$DAVINCI"
-    then
-	DAVINCI=undefined
-	{ echo "configure: error: 
-  
-  Configure is not able to find the program \"daVinci\". 
-  Either it is not in the search path or it is not installed.
-  To obtain a copy check http://www.tzi.de/~davinci/.
-
-" 1>&2; exit 1; }
-    fi
-    
-
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure
@@ -1980,7 +1928,6 @@ s%@OZL@%$OZL%g
 s%@OZPLATFORM@%$OZPLATFORM%g
 s%@PLATFORM@%$PLATFORM%g
 s%@CXXCPP@%$CXXCPP%g
-s%@DAVINCI@%$DAVINCI%g
 
 CEOF
 EOF
