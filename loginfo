@@ -5,5 +5,5 @@ Oz/include	mail -s "I have changed %s" scheidhr,tmueller,popow,henz
 Oz/lib		mail -s "I have changed %s" henz,wuertz,popow
 Oz/elisp	mail -s "I have changed %s" scheidhr
 Oz		/usr/share/gs/etc/cvs2news %s
-Misc		mail -s "I have changed %s" mehl
+Misc		mail -s "I have changed %s" mehl scheidhr schulte
 Oz		mail -s "I have changed %s" mehl
