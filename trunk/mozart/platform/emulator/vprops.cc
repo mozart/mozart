@@ -414,7 +414,7 @@ else oz_typeError(1,"Bool");
 // Check that the value is a non-negative small integer
 
 #define CHECK_NAT				\
-if (!isSmallInt(val_tag) ||			\
+if (!isSmallIntTag(val_tag) ||			\
     (INT__=smallIntValue(val))<0)		\
   oz_typeError(1,"Int>=0");
 
@@ -426,7 +426,7 @@ if (!isSmallInt(val_tag) ||			\
 // Check that the value is an integer in [1..100], i.e. a percentage
 
 #define CHECK_PERCENT				\
-if (!isSmallInt(val_tag) ||			\
+if (!isSmallIntTag(val_tag) ||			\
     (INT__=smallIntValue(val))<1 ||		\
     (INT__>100))				\
   oz_typeError(1,"Int[1..100]");
@@ -439,7 +439,7 @@ if (!isSmallInt(val_tag) ||			\
 // Check that the value is a record, if so untag it into REC__
 
 #define CHECK_REC				\
-if (!isSRecord(val_tag))			\
+if (!isSRecordTag(val_tag))			\
 {oz_typeError(1,"SRecord")}			\
 else REC__=tagged2SRecord(val);
 
@@ -466,8 +466,8 @@ return oz_raise(E_ERROR,E_KERNEL,"putProperty",2,F,oz_atom(T));
 INT__ = REC__->getFeature(F);			\
 if (INT__) {					\
   DEREF(INT__,PTR__,TAG__);			\
-  if (isAnyVar(TAG__)) oz_suspendOnPtr(PTR__);	\
-  if (!isSmallInt(TAG__)) BAD_FEAT(F,"Int");	\
+  if (oz_isVariable(TAG__)) oz_suspendOnPtr(PTR__);	\
+  if (!isSmallIntTag(TAG__)) BAD_FEAT(F,"Int");	\
   INT__=smallIntValue(INT__);			\
   DO;						\
 }
@@ -480,8 +480,8 @@ if (INT__) {					\
 INT__ = REC__->getFeature(F);			\
 if(INT__) {					\
   DEREF(INT__,PTR__,TAG__);			\
-  if (isAnyVar(TAG__)) oz_suspendOnPtr(PTR__);	\
-  if (!isLiteral(TAG__)) BAD_FEAT(F,"Bool");	\
+  if (oz_isVariable(TAG__)) oz_suspendOnPtr(PTR__);	\
+  if (!isLiteralTag(TAG__)) BAD_FEAT(F,"Bool");	\
   if      (literalEq(INT__,NameTrue )) INT__=1;	\
   else if (literalEq(INT__,NameFalse)) INT__=0;	\
   else BAD_FEAT(F,"Bool");			\
@@ -676,7 +676,7 @@ OZ_Return GetProperty(TaggedRef k,TaggedRef& val)
 {
   TaggedRef key = k;
   DEREF(key,key_ptr,key_tag);
-  if (isAnyVar(key_tag)) oz_suspendOnPtr(key_ptr);
+  if (oz_isVariable(key_tag)) oz_suspendOnPtr(key_ptr);
   if (!oz_isAtom(key)) oz_typeError(0,"Atom");
   OzDictionary* dict;
   TaggedRef entry;
@@ -707,7 +707,7 @@ OZ_Return PutProperty(TaggedRef k,TaggedRef v)
   if (!am.onToplevel()) return PROP__NOT__GLOBAL;
   TaggedRef key = k;
   DEREF(key,key_ptr,key_tag);
-  if (isAnyVar(key_tag)) oz_suspendOnPtr(key_ptr);
+  if (oz_isVariable(key_tag)) oz_suspendOnPtr(key_ptr);
   if (!oz_isAtom(key)) oz_typeError(0,"Atom");
   OzDictionary* dict;
   TaggedRef entry;

@@ -383,7 +383,7 @@ ProgramCounter unmarshalTagged(ProgramCounter PC, MsgBuffer *bs)
 ProgramCounter unmarshalBuiltin(ProgramCounter PC, MsgBuffer *bs)
 {
   TaggedRef name = unmarshalTerm(bs);
-  Assert(isAtom(name));
+  Assert(oz_isAtom(name));
 
   if (PC==NULL) return 0;
 

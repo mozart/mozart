@@ -42,8 +42,8 @@ void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
 {
   setSuspList(am.checkSuspensionList(this, getSuspList(), pc_std_unif));
 
-  TaggedRef vv=deref(v);
-  if (isAnyVar(vv)) {
+  TaggedRef vv=oz_deref(v);
+  if (oz_isVariable(vv)) {
     Assert(isPerdioVar(vv));
     PerdioVar *pv=tagged2PerdioVar(vv);
     if (pv==this) return;
@@ -108,7 +108,7 @@ OZ_Return PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *
 
 
   // PVAR := non PVAR
-  Assert(!isAnyVar(rVal));
+  Assert(!oz_isVariable(rVal));
 
   if (!valid(lPtr,rVal)) return FAILED;
 
@@ -125,7 +125,7 @@ OZ_Return PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *
 
 Bool PerdioVar::valid(TaggedRef *varPtr, TaggedRef v)
 {
-  Assert(!isRef(v) && !isAnyVar(v));
+  Assert(!oz_isRef(v) && !oz_isVariable(v));
 
   return (isObject()) ? FALSE : TRUE;
 }
@@ -135,5 +135,5 @@ Bool PerdioVar::valid(TaggedRef *varPtr, TaggedRef v)
 
 OZ_BI_define(PerdioVar_is, 1,1)
 {
-  OZ_RETURN(isPerdioVar(deref(OZ_in(0)))?NameTrue:NameFalse);
+  OZ_RETURN(isPerdioVar(oz_deref(OZ_in(0)))?NameTrue:NameFalse);
 } OZ_BI_end

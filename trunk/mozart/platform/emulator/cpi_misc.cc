@@ -138,13 +138,13 @@ int * OZ_findEqualVars(int sz, OZ_Term * ts)
   for (i = 0; i < sz; i += 1) {
     OZ_Term t = ts[i];
     DEREF(t, tptr, ttag);
-    if (isSmallInt(ttag) || isLiteral(ttag)) {
+    if (isSmallIntTag(ttag) || isLiteralTag(ttag)) {
       is[i] = -1;
     } else {
       if (ttag == FDTAG) {
 	is[i] = GETINDEX(*tptr);
       } else {
-	Assert(isAnyVar(ttag));
+	Assert(isVariableTag(ttag));
 	_ts_ptr[i] = tptr;
 	_ts[i] = t;
 	is[i] = i;
@@ -178,7 +178,7 @@ int * OZ_findSingletons(int sz, OZ_Term * ts)
   for (i = 0; i < sz; i += 1) {
     OZ_Term t = ts[i];
     DEREF(t, tptr, ttag);
-    if (isSmallInt(ttag) || isLiteral(ttag)) {
+    if (isSmallIntTag(ttag) || isLiteralTag(ttag)) { // mm2
       sgl[i] = smallIntValue(t);
     } else {
       sgl[i] = -1;
@@ -192,7 +192,7 @@ OZ_Boolean OZ_isEqualVars(OZ_Term v1, OZ_Term v2)
 {
   DEREF(v1, vptr1, vtag1);
   DEREF(v2, vptr2, vtag2);
-  return isAnyVar(vtag1) && (vptr1 == vptr2);
+  return isVariableTag(vtag1) && (vptr1 == vptr2);
 }
 
 OZ_Return OZ_typeError(char * __typeString, 

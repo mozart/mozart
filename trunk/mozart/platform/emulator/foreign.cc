@@ -50,116 +50,116 @@ void term2Buffer(ostream &out, OZ_Term term, int depth=0);
 
 OZ_Term OZ_deref(OZ_Term term)
 {
-  return deref(term);
+  return oz_deref(term);
 }
 
 int OZ_isAtom(OZ_Term term)
 {
-  term = deref(term);
-  return isAtom(term);
+  term = oz_deref(term);
+  return oz_isAtom(term);
 }
 
 int OZ_isCell(OZ_Term term)
 {
-  term = deref(term);
-  return isCell(term);
+  term = oz_deref(term);
+  return oz_isCell(term);
 }
 
 int OZ_isPort(OZ_Term term)
 {
-  term = deref(term);
-  return isPort(term);
+  term = oz_deref(term);
+  return oz_isPort(term);
 }
 
 int OZ_isChunk(OZ_Term term)
 {
-  term = deref(term);
-  return isChunk(term);
+  term = oz_deref(term);
+  return oz_isChunk(term);
 }
 
 int OZ_isCons(OZ_Term term)
 {
-  term = deref(term);
-  return isCons(term);
+  term = oz_deref(term);
+  return oz_isCons(term);
 }
 
 int OZ_isFloat(OZ_Term term)
 {
-  term = deref(term);
-  return isFloat(term);
+  term = oz_deref(term);
+  return oz_isFloat(term);
 }
 
 int OZ_isInt(OZ_Term term)
 {
-  term = deref(term);
-  return isInt(term);
+  term = oz_deref(term);
+  return oz_isInt(term);
 }
 
 int OZ_isNumber(OZ_Term term)
 {
-  term = deref(term);
-  return isNumber(term);
+  term = oz_deref(term);
+  return oz_isNumber(term);
 }
 
 int OZ_isSmallInt(OZ_Term term)
 {
-  term = deref(term);
-  return isSmallInt(term);
+  term = oz_deref(term);
+  return oz_isSmallInt(term);
 }
 
 int OZ_isBigInt(OZ_Term term)
 {
-  term = deref(term);
-  return isBigInt(term);
+  term = oz_deref(term);
+  return oz_isBigInt(term);
 }
 
 int OZ_isProcedure(OZ_Term term)
 {
-  term = deref(term);
-  return isProcedure(term);
+  term = oz_deref(term);
+  return oz_isProcedure(term);
 }
 
 
 int OZ_isLiteral(OZ_Term term)
 {
-  term = deref(term);
-  return isLiteral(term);
+  term = oz_deref(term);
+  return oz_isLiteral(term);
 }
 
 int OZ_isFeature(OZ_Term term)
 {
-  term = deref(term);
-  return isFeature(term);
+  term = oz_deref(term);
+  return oz_isFeature(term);
 }
 
 int OZ_isName(OZ_Term term)
 {
-  term = deref(term);
-  return isAtom(term);
+  term = oz_deref(term);
+  return oz_isName(term);
 }
 
 int OZ_isNil(OZ_Term term)
 {
-  term = deref(term);
-  return isNil(term);
+  term = oz_deref(term);
+  return oz_isNil(term);
 }
 
 int OZ_isObject(OZ_Term term)
 {
-  term = deref(term);
-  return isObject(term);
+  term = oz_deref(term);
+  return oz_isObject(term);
 }
 
 int OZ_isThread(OZ_Term t)
 {
-  t = deref(t);
-  return isThread(t);
+  t = oz_deref(t);
+  return oz_isThread(t);
 }
 
 int OZ_isString(OZ_Term term,OZ_Term *var)
 {
   OZ_Term ret = oz_isList(term,1);
-  if (isRef(ret)) {
+  if (oz_isRef(ret)) {
     if (var) *var = ret;
     return 0;
   }
@@ -170,7 +170,7 @@ int OZ_isString(OZ_Term term,OZ_Term *var)
 int OZ_isProperString(OZ_Term term,OZ_Term *var)
 {
   OZ_Term ret = oz_isList(term,2);
-  if (isRef(ret)) {
+  if (oz_isRef(ret)) {
     if (var) *var = ret;
     return 0;
   }
@@ -181,7 +181,7 @@ int OZ_isProperString(OZ_Term term,OZ_Term *var)
 int OZ_isList(OZ_Term term,OZ_Term *var)
 {
   OZ_Term ret = oz_isList(term);
-  if (isRef(ret)) {
+  if (oz_isRef(ret)) {
     if (var) *var = ret;
     return 0;
   }
@@ -191,108 +191,108 @@ int OZ_isList(OZ_Term term,OZ_Term *var)
 
 int OZ_isTrue(OZ_Term term)
 {
-  term = deref(term);
+  term = oz_deref(term);
   return literalEq(term,NameTrue);
 }
 
 int OZ_isFalse(OZ_Term term)
 {
-  term = deref(term);
+  term = oz_deref(term);
   return literalEq(term,NameFalse);
 }
 
 int OZ_isUnit(OZ_Term term)
 {
-  term = deref(term);
+  term = oz_deref(term);
   return literalEq(term,NameUnit);
 }
 
 
 int OZ_isPair(OZ_Term term)
 {
-  term = deref(term);
+  term = oz_deref(term);
   return oz_isPair(term);
 }
 
 int OZ_isPair2(OZ_Term term)
 {
-  term = deref(term);
+  term = oz_deref(term);
   return oz_isPair2(term);
 }
 
 int OZ_isRecord(OZ_Term term)
 {
-  term = deref(term);
-  return isRecord(term);
+  term = oz_deref(term);
+  return oz_isRecord(term);
 }
 
 int OZ_isTuple(OZ_Term term)
 {
-  term = deref(term);
-  return isTuple(term);
+  term = oz_deref(term);
+  return oz_isTuple(term);
 }
 
 int OZ_isValue(OZ_Term term)
 {
-  term = deref(term);
-  return !isAnyVar(term);
+  term = oz_deref(term);
+  return !oz_isVariable(term);
 }
 
 int OZ_isVariable(OZ_Term term)
 {
-  term = deref(term);
+  term = oz_deref(term);
   return oz_isVariable(term);
 }
 
 OZ_Term OZ_termType(OZ_Term term)
 {
-  term = deref(term);
+  term = oz_deref(term);
 
-  if (isThread(term)) {
+  if (oz_isThread(term)) {
     return oz_atom("thread");
   }
   
-  if (isAnyVar(term)) {
+  if (oz_isVariable(term)) {
     return oz_atom("variable");
   }
 
-  if (isInt(term)) {
+  if (oz_isInt(term)) {
     return oz_atom("int");
   }
     
-  if (isFloat(term)) {
+  if (oz_isFloat(term)) {
     return oz_atom("float");
   }
     
-  if (isLiteral(term)) {
+  if (oz_isLiteral(term)) {
     return oz_atom(tagged2Literal(term)->isAtom() ? "atom" : "name");
   }
 
-  if (isTuple(term)) {
+  if (oz_isTuple(term)) {
     return oz_atom("tuple");
   }
     
-  if (isProcedure(term)) {
+  if (oz_isProcedure(term)) {
     return oz_atom("procedure");
   }
     
-  if (isCell(term)) {
+  if (oz_isCell(term)) {
     return oz_atom("cell");
   }
 
-  if (isChunk(term)) {
+  if (oz_isChunk(term)) {
     return oz_atom("chunk");
   }
     
-  if (isSRecord(term)) {
+  if (oz_isSRecord(term)) {
     return oz_atom("record");
   }
 
-  if (isSpace(term)) {
+  if (oz_isSpace(term)) {
     return oz_atom("space");
   }
 
-  if (isFSetValue(term)) {
+  if (oz_isFSetValue(term)) {
     return oz_atom("fset");
   }
 
@@ -366,8 +366,8 @@ OZ_Term OZ_int(int i)
  */
 int OZ_intToC(OZ_Term term)
 {
-  term = deref(term);
-  if (isSmallInt(term)) {
+  term = oz_deref(term);
+  if (oz_isSmallInt(term)) {
     return smallIntValue(term);
   }
 
@@ -482,7 +482,7 @@ OZ_Term OZ_float(double i)
 
 double OZ_floatToC(OZ_Term term)
 {
-  term = deref(term);
+  term = oz_deref(term);
   return floatValue(term);
 }
 
@@ -523,8 +523,8 @@ OZ_Term OZ_CStringToNumber(char *s)
 
 int OZ_featureCmp(OZ_Term term1, OZ_Term term2)
 {
-  term1 = deref(term1);
-  term2 = deref(term2);
+  term1 = oz_deref(term1);
+  term2 = oz_deref(term2);
   return featureCmp(term1,term2);
 }
 
@@ -532,25 +532,27 @@ int OZ_featureCmp(OZ_Term term1, OZ_Term term2)
 /*
  * PRINTING
  */
-
-void int2buffer(ostream &out, OZ_Term term)
+static
+void smallInt2buffer(ostream &out, OZ_Term term)
 {
-  if (isSmallInt(term)) {
-    int i = smallIntValue(term);
-    if (i < 0) {
-      out << '~' << -i;
-    } else {
-      out << i;
-    }
+  int i = smallIntValue(term);
+  if (i < 0) {
+    out << '~' << -i;
   } else {
-    BigInt *bb=tagged2BigInt(term);
-    char *str = new char[bb->stringLength()+1];
-    bb->getString(str);
-    if (*str == '-') *str = '~';
-    out << str;
-    delete str;
+    out << i;
   }
 }
+
+static
+void bigInt2buffer(ostream &out, BigInt *bb)
+{
+  char *str = new char[bb->stringLength()+1];
+  bb->getString(str);
+  if (*str == '-') *str = '~';
+  out << str;
+  delete str;
+}
+
 
 inline
 char *strAndDelete(ostrstream *out)
@@ -771,6 +773,9 @@ void const2buffer(ostream &out, ConstTerm *c)
   const char *s = c->getPrintName();
 
   switch (c->getType()) {
+  case Co_BigInt:
+    bigInt2buffer(out,(BigInt *)c);
+    break;
   case Co_Thread:
     out << "<Thread #" << (((Thread*) c)->getID() & THREAD_ID_MASK) << ">" ;
     break; 
@@ -804,11 +809,7 @@ void const2buffer(ostream &out, ConstTerm *c)
     break;
 
   default:
-    if (c->isChunk()) {
-      out << "<Chunk>";
-    } else {
-      out << "<UNKNOWN>";
-    }
+    out << "<Chunk>";
     break;
   }
 }
@@ -826,7 +827,7 @@ inline
 Bool isNiceHash(OZ_Term t, int width) {
   if (width <= 0) return NO;
 
-  if (!isSTuple(t) || !literalEq(tagged2SRecord(t)->getLabel(),AtomPair)) 
+  if (!oz_isSTuple(t) || !literalEq(tagged2SRecord(t)->getLabel(),AtomPair)) 
     return NO;
 
   int w = tagged2SRecord(t)->getWidth();
@@ -838,11 +839,11 @@ inline
 Bool isNiceList(OZ_Term l, int width) {
   if (width <= 0) return NO;
 
-  while (isCons(l) && width--> 0) {
-    l = deref(tail(l));
+  while (oz_isCons(l) && width--> 0) {
+    l = oz_deref(tail(l));
   }
   
-  if (isNil(l)) return OK;
+  if (oz_isNil(l)) return OK;
 
   return NO;
 }
@@ -852,9 +853,9 @@ void record2buffer(ostream &out, SRecord *sr,int depth) {
   if (isNiceHash(makeTaggedSRecord(sr), ozconf.printWidth)) {
     int len = sr->getWidth();
     for (int i=0; i < len; i++) {
-      OZ_Term arg = deref(sr->getArg(i));
+      OZ_Term arg = oz_deref(sr->getArg(i));
       if (isNiceHash(arg,ozconf.printWidth) ||
-	  (isCons(arg) && !isNiceList(arg,ozconf.printWidth))) {
+	  (oz_isCons(arg) && !isNiceList(arg,ozconf.printWidth))) {
 	out << '(';
 	term2Buffer(out, sr->getArg(i), depth-1);
 	out << ')';
@@ -884,26 +885,26 @@ void record2buffer(ostream &out, SRecord *sr,int depth) {
 	out << " ,,,";
     } else {
       OZ_Term as = sr->getArityList();
-      Assert(isCons(as));
+      Assert(oz_isCons(as));
 
       int next    = 1;
 
-      while (isCons(as) && next <= ozconf.printWidth &&
-	     isSmallInt(head(as)) && 
+      while (oz_isCons(as) && next <= ozconf.printWidth &&
+	     oz_isSmallInt(head(as)) && 
 	     smallIntValue(head(as)) == next) {
 	term2Buffer(out, sr->getFeature(head(as)), depth-1);
 	out << ' ';
 	as = tail(as);
 	next++;
       }
-      Assert(isCons(as));
+      Assert(oz_isCons(as));
 
       if (next <= ozconf.printWidth) {
 	
 	feature2buffer(out,sr,head(as),depth-1);
 	next++;
 	as = tail(as);
-	while (next <= ozconf.printWidth && isCons(as)) {
+	while (next <= ozconf.printWidth && oz_isCons(as)) {
 	  out << ' ';
 	  feature2buffer(out,sr,head(as),depth-1);
 	  as = tail(as);
@@ -927,10 +928,10 @@ void list2buffer(ostream &out, LTuple *list,int depth) {
     if (isNiceList(makeTaggedLTuple(list),width)) {
       out << '[';
       OZ_Term l = makeTaggedLTuple(list);
-      while (isCons(l)) {
+      while (oz_isCons(l)) {
 	term2Buffer(out, head(l), depth-1);
-	l = deref(tail(l));
-	if (isCons(l)) {
+	l = oz_deref(tail(l));
+	if (oz_isCons(l)) {
 	  out << ' ';
 	}
       }
@@ -939,15 +940,15 @@ void list2buffer(ostream &out, LTuple *list,int depth) {
     }
 
     while (width-- > 0) { 
-      OZ_Term a=deref(list->getHead());
-      if (isCons(a) && !isNiceList(a,ozconf.printWidth)) {
+      OZ_Term a=oz_deref(list->getHead());
+      if (oz_isCons(a) && !isNiceList(a,ozconf.printWidth)) {
 	out << '('; term2Buffer(out,list->getHead(),depth-1); out << ')';
       } else {
 	term2Buffer(out,list->getHead(),depth-1);
       }
       out << '|';
-      OZ_Term t=deref(list->getTail());
-      if (!isCons(t)) {
+      OZ_Term t=oz_deref(list->getTail());
+      if (!oz_isCons(t)) {
 	term2Buffer(out,list->getTail(),depth);
 	return;
       }
@@ -971,7 +972,7 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
     tmpval=table[di].value;
     if (tmpval) { 
       CHECK_DEREF(tmplit);
-      if (isAtom(tmplit)||isInt(tmplit)) nAtomOrInt++; else nName++;
+      if (oz_isAtom(tmplit)||oz_isInt(tmplit)) nAtomOrInt++; else nName++;
     }
   }
   // Allocate array on heap, put Atoms in array:
@@ -979,7 +980,7 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
   for (ai=0,di=0; di<size; di++) {
     tmplit=table[di].ident;
     tmpval=table[di].value;
-    if (tmpval!=makeTaggedNULL() && (isAtom(tmplit)||isInt(tmplit)))
+    if (tmpval!=makeTaggedNULL() && (oz_isAtom(tmplit)||oz_isInt(tmplit)))
       arr[ai++]=tmplit;
   }
   // Sort the Atoms according to printName:
@@ -996,7 +997,7 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
   for (di=0; di<size; di++) {
     tmplit=table[di].ident;
     tmpval=table[di].value;
-    if (tmpval!=makeTaggedNULL() && !(isAtom(tmplit)||isInt(tmplit))) {
+    if (tmpval!=makeTaggedNULL() && !(oz_isAtom(tmplit)||oz_isInt(tmplit))) {
       term2Buffer(out,tmplit,0);
       out << ':';
       term2Buffer(out,tmpval,depth);
@@ -1140,7 +1141,7 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
   case CVAR:
     {
       if (!termPtr) {
-	out << "<Dereferenced variable>";
+	out << "<Oz_Dereferenced variable>";
 	break;
       }
       const char *s = getVarName(makeTaggedRef(termPtr));
@@ -1176,9 +1177,8 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
   case OZFLOAT:
     float2buffer(out,term);
     break;
-  case BIGINT:
   case SMALLINT:
-    int2buffer(out,term);
+    smallInt2buffer(out,term);
     break;
   default:
     out << "<Unknown Tag: " << tag << ">";
@@ -1226,7 +1226,7 @@ int OZ_termGetSize(OZ_Term term, int depth, int width)
 
 const char *OZ_atomToC(OZ_Term term)
 {
-  term = deref(term);
+  term = oz_deref(term);
 
   Literal *a = tagged2Literal(term);
   return a->getPrintName();
@@ -1258,10 +1258,10 @@ OZ_Term OZ_string(const char *s)
 
 void string2buffer(ostream &out,OZ_Term list)
 {
-  OZ_Term tmp = deref(list);
-  for (; isCons(tmp); tmp=deref(tail(tmp))) {
-    OZ_Term hh = deref(head(tmp));
-    if (!isSmallInt(hh)) {
+  OZ_Term tmp = oz_deref(list);
+  for (; oz_isCons(tmp); tmp=oz_deref(tail(tmp))) {
+    OZ_Term hh = oz_deref(head(tmp));
+    if (!oz_isSmallInt(hh)) {
       message("no small int %s",toC(hh));
       printf(" in string %s\n",toC(list));
       return;
@@ -1274,7 +1274,7 @@ void string2buffer(ostream &out,OZ_Term list)
     }
     out << (char) i;
   }
-  if (!isNil(tmp)) {
+  if (!oz_isNil(tmp)) {
     message("no string %s\n",toC(list));
   }
 }
@@ -1318,8 +1318,8 @@ void OZ_printAtom(OZ_Term t)
 
 void OZ_printInt(OZ_Term t)
 {
-  t=deref(t);
-  if (isSmallInt(t)) {
+  t=oz_deref(t);
+  if (oz_isSmallInt(t)) {
     printf("%d",smallIntValue(t));
   } else {
     char *s=toC(t);
@@ -1344,21 +1344,25 @@ void vsatom2buffer(ostream &out, OZ_Term term)
 
 void virtualString2buffer(ostream &out,OZ_Term term)
 {
-  OZ_Term t=deref(term);
-  if (isCons(t)) {
+  OZ_Term t=oz_deref(term);
+  if (oz_isCons(t)) {
     string2buffer(out,t);
     return;
   }
-  if (isAtom(t)) {
-    if (isNil(t) || oz_isPair(t)) return;
+  if (oz_isAtom(t)) {
+    if (oz_isNil(t) || oz_isPair(t)) return;
     vsatom2buffer(out,t);
     return;
   }
-  if (isInt(t)) {
-    int2buffer(out,t);
+  if (oz_isSmallInt(t)) {
+    smallInt2buffer(out,t);
     return;
   }
-  if (isFloat(t)) {
+  if (oz_isBigInt(t)) {
+    bigInt2buffer(out,tagged2BigInt(t));
+    return;
+  }
+  if (oz_isFloat(t)) {
     float2buffer(out,t);
     return;
   }
@@ -1398,24 +1402,22 @@ char *OZ_virtualStringToC(OZ_Term t)
 
 void OZ_printVirtualString(OZ_Term term)
 {
-  OZ_Term t=deref(term);
-  if (isCons(t)) {
+  OZ_Term t=oz_deref(term);
+  if (oz_isCons(t)) {
     OZ_printString(t);
-  } else if (isAtom(t)) {
-    if (isNil(t) || oz_isPair(t)) {
+  } else if (oz_isAtom(t)) {
+    if (oz_isNil(t) || oz_isPair(t)) {
       return;
     }
     OZ_printAtom(t);
-  } else if (isInt(t)) {
-    if (isSmallInt(t)) {
+  } else if (oz_isSmallInt(t)) {
       printf("%d",smallIntValue(t));
-    } else {
-      char *s=toC(t);
-      if (s[0] == '~') 
-	s[0] = '-';
-      printf("%s",s);
-    }
-  } else if (isFloat(t)) {
+  } else if (oz_isBigInt(t)) {
+    char *s=toC(t);
+    if (s[0] == '~') 
+      s[0] = '-';
+    printf("%s",s);
+  } else if (oz_isFloat(t)) {
     char *s=toC(t);
     char *p=s;
     while (*p) {
@@ -1439,9 +1441,8 @@ void OZ_printVirtualString(OZ_Term term)
 
 OZ_Term OZ_toVirtualString(OZ_Term t,int depth, int width)
 {
-  switch (tagTypeOf(deref(t))) {
+  switch (tagTypeOf(oz_deref(t))) {
   case SMALLINT:
-  case BIGINT:
   case OZFLOAT:
     return t;
   case UVAR:
@@ -1450,6 +1451,7 @@ OZ_Term OZ_toVirtualString(OZ_Term t,int depth, int width)
   case LTUPLE:
   case SRECORD:
   case OZCONST:
+    if (oz_isBigInt(t)) return t;
     return OZ_string(OZ_toC(t,depth,width));
   case LITERAL:
     if (OZ_isAtom(t)) return t;
@@ -1499,8 +1501,8 @@ int OZ_width(OZ_Term term)
 
 OZ_Term OZ_tuple(OZ_Term label, int width) 
 {
-  label = deref(label);
-  if (!isLiteral(label)) {
+  label = oz_deref(label);
+  if (!oz_isLiteral(label)) {
     OZ_warning("OZ_tuple: label is no literal");
     return 0;
   }
@@ -1550,8 +1552,8 @@ OZ_Term OZ_mkTuple(OZ_Term label,int arity,...)
 
 void OZ_putArg(OZ_Term term, int pos, OZ_Term newTerm)
 {
-  term=deref(term);
-  if (isLTuple(term)) {
+  term=oz_deref(term);
+  if (oz_isLTuple(term)) {
     switch (pos) {
     case 0:
       tagged2LTuple(term)->setHead(newTerm);
@@ -1561,7 +1563,7 @@ void OZ_putArg(OZ_Term term, int pos, OZ_Term newTerm)
       return;
     }
   }
-  if (!isSTuple(term)) {
+  if (!oz_isSTuple(term)) {
     OZ_warning("OZ_putArg: no record");
     return;
   }
@@ -1570,8 +1572,8 @@ void OZ_putArg(OZ_Term term, int pos, OZ_Term newTerm)
 
 OZ_Term OZ_getArg(OZ_Term term, int pos)
 {
-  term=deref(term);
-  if (isLTuple(term)) {
+  term=oz_deref(term);
+  if (oz_isLTuple(term)) {
     switch (pos) {
     case 0:
       return tagged2LTuple(term)->getHead();
@@ -1579,7 +1581,7 @@ OZ_Term OZ_getArg(OZ_Term term, int pos)
       return tagged2LTuple(term)->getTail();
     }
   }
-  if (!isSRecord(term)) {
+  if (!oz_isSRecord(term)) {
     OZ_warning("OZ_getArg: no record");
     return 0;
   }
@@ -1602,8 +1604,8 @@ OZ_Term OZ_cons(OZ_Term hd,OZ_Term tl)
 
 OZ_Term OZ_head(OZ_Term term)
 {
-  term=deref(term);
-  if (!isLTuple(term)) {
+  term=oz_deref(term);
+  if (!oz_isLTuple(term)) {
     OZ_warning("OZ_head: no cons");
     return 0;
   }
@@ -1612,8 +1614,8 @@ OZ_Term OZ_head(OZ_Term term)
 
 OZ_Term OZ_tail(OZ_Term term)
 {
-  term=deref(term);
-  if (!isLTuple(term)) {
+  term=oz_deref(term);
+  if (!oz_isLTuple(term)) {
     OZ_warning("OZ_tail: no cons");
     return 0;
   }
@@ -1626,7 +1628,7 @@ OZ_Term OZ_tail(OZ_Term term)
 int OZ_length(OZ_Term l)
 {
   OZ_Term ret=oz_isList(l);
-  if (!isSmallInt(ret)) return -1;
+  if (!oz_isSmallInt(ret)) return -1;
   return smallIntValue(ret);
 }
 
@@ -1684,8 +1686,8 @@ OZ_Term OZ_recordInit(OZ_Term label, OZ_Term propList)
 
 void OZ_putSubtree(OZ_Term term, OZ_Term feature, OZ_Term value)
 {
-  term=deref(term);
-  if (isCons(term)) {
+  term=oz_deref(term);
+  if (oz_isCons(term)) {
     int i2 = smallIntValue(feature);
 
     switch (i2) {
@@ -1699,7 +1701,7 @@ void OZ_putSubtree(OZ_Term term, OZ_Term feature, OZ_Term value)
     OZ_warning("OZ_putSubtree: invalid feature");
     return;
   }
-  if (!isSRecord(term)) {
+  if (!oz_isSRecord(term)) {
     OZ_warning("OZ_putSubtree: invalid record");
     return;
   }
@@ -1711,11 +1713,11 @@ void OZ_putSubtree(OZ_Term term, OZ_Term feature, OZ_Term value)
 
 OZ_Term OZ_adjoinAt(OZ_Term rec, OZ_Term fea, OZ_Term val)
 {
-  rec = deref(rec);
-  fea = deref(fea);
-  if (!isFeature(fea) || !isRecord(rec)) return 0;
+  rec = oz_deref(rec);
+  fea = oz_deref(fea);
+  if (!oz_isFeature(fea) || !oz_isRecord(rec)) return 0;
 
-  if (isLiteral(rec)) {
+  if (oz_isLiteral(rec)) {
     SRecord *srec = SRecord::newSRecord(rec,aritytable.find(cons(fea,nil())));
     srec->setArg(0,val);
     return makeTaggedSRecord(srec);
@@ -1727,12 +1729,12 @@ OZ_Term OZ_adjoinAt(OZ_Term rec, OZ_Term fea, OZ_Term val)
 OZ_Term OZ_subtree(OZ_Term term, OZ_Term fea)
 {
   DEREF(term,termPtr,termTag);
-  fea=deref(fea);
+  fea=oz_deref(fea);
 
   switch (termTag) {
   case LTUPLE:
     {
-      if (!isSmallInt(fea)) return 0;
+      if (!oz_isSmallInt(fea)) return 0;
 
       int i2 = smallIntValue(fea);
 
@@ -1866,30 +1868,30 @@ int OZ_unprotect(OZ_Term *t)
 
 
 inline
-int isVirtualString(OZ_Term vs, OZ_Term *var)
+int oz_isVirtualString(OZ_Term vs, OZ_Term *var)
 {
-  if (isRef(vs)) {
+  if (oz_isRef(vs)) {
     DEREF(vs,vsPtr,vsTag);
-    if (isAnyVar(vsTag))  {
+    if (isVariableTag(vsTag))  {
       if (var) *var = makeTaggedRef(vsPtr);
       return 0;
     }
   }
 
-  if (isInt(vs) || isFloat(vs) || isAtom(vs))  return 1;
+  if (oz_isInt(vs) || oz_isFloat(vs) || oz_isAtom(vs))  return 1;
 
   if (oz_isPair(vs)) {
     SRecord *sr = tagged2SRecord(vs);
     int len = sr->getWidth();
     for (int i=0; i < len; i++) {
-      if (!isVirtualString(sr->getArg(i),var)) return 0;
+      if (!oz_isVirtualString(sr->getArg(i),var)) return 0;
     }
     return 1;
   }
 
-  if (isCons(vs)) {
+  if (oz_isCons(vs)) {
     OZ_Term ret = oz_isList(vs,2);
-    if (isRef(ret)) {
+    if (oz_isRef(ret)) {
       if (var) *var = ret;
       return 0;
     }
@@ -1904,7 +1906,7 @@ int OZ_isVirtualString(OZ_Term vs, OZ_Term *var)
 {
   if (var) *var = 0;
 
-  return isVirtualString(vs,var);
+  return oz_isVirtualString(vs,var);
 }
 
 
@@ -2101,7 +2103,7 @@ void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)
 void OZ_addThread(OZ_Term var, OZ_Thread thr)
 {
   DEREF(var, varPtr, varTag);
-  if (!isAnyVar(varTag)) {
+  if (!isVariableTag(varTag)) {
     OZ_warning("OZ_addThread(%s): var arg expected",
 	       toC(var));
     return;
@@ -2136,8 +2138,8 @@ OZ_Term OZ_newCell(OZ_Term val)
 
 OZ_Term OZ_newChunk(OZ_Term val)
 {
-  val=deref(val);
-  if (!isRecord(val)) return 0;
+  val=oz_deref(val);
+  if (!oz_isRecord(val)) return 0;
   return oz_newChunk(val);
 }
 
@@ -2179,8 +2181,8 @@ OZ_Term OZ_newPort(OZ_Term val)
 extern OZ_Return sendPort(OZ_Term prt, OZ_Term val);
 void OZ_send(OZ_Term port, OZ_Term val)
 {
-  port = deref(port);
-  if (!isPort(port)) return;
+  port = oz_deref(port);
+  if (!oz_isPort(port)) return;
 
   (void) sendPort(port,val);
 }

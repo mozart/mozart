@@ -214,7 +214,7 @@ ByteSink::putTerm(OZ_Term in, char *filename)
   bufferManager->freeByteStream(bs);
 
   //  return oz_unify(resources,bs->resources);
-  if (!isNil(bs->resources)) {
+  if (!oz_isNil(bs->resources)) {
     return oz_raise(E_ERROR,OZ_atom("dp"),"save",3,
 		    oz_atom("resources"),
 		    oz_atom(filename),
@@ -870,11 +870,11 @@ OZ_BI_define(BISendPID,4,0)
   oz_declareIN(3,val);
 
   time_t time;
-  if (isSmallInt(timeV)) {
+  if (oz_isSmallInt(timeV)) {
     int i = oz_IntToC(timeV);
     if (i <= 0) goto bomb;
     time = (time_t) i;
-  } else if (isBigInt(timeV)) {
+  } else if (oz_isBigInt(timeV)) {
     unsigned long i = tagged2BigInt(timeV)->getUnsignedLong();
     if (i==0 && i == OzMaxUnsignedLong) goto bomb;
     time = (time_t) i;

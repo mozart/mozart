@@ -516,6 +516,12 @@ void marshalObject(Object *o, MsgBuffer *bs, GName *gnclass)
 void marshalConst(ConstTerm *t, MsgBuffer *bs)
 {
   switch (t->getType()) {
+  case Co_BigInt:
+    PD((MARSHAL,"bigint"));
+    marshalDIF(bs,DIF_BIGINT);
+    marshalString(toC(makeTaggedConst(t)),bs);
+    break;
+
   case Co_Dictionary:
     {
       PD((MARSHAL,"dictionary"));
@@ -663,12 +669,6 @@ loop:
     marshalFloat(tagged2Float(t)->getValue(),bs);
     break;
 
-  case BIGINT:
-    PD((MARSHAL,"bigint"));
-    marshalDIF(bs,DIF_BIGINT);
-    marshalString(toC(t),bs);
-    break;
-
   case LITERAL:
     {
       PD((MARSHAL,"literal"));
@@ -709,7 +709,7 @@ loop:
       PD((MARSHAL,"list"));
 
       TaggedRef *args = l->getCycleRef();
-      if (!isRef(*args) && isAnyVar(*args)) {
+      if (!oz_isRef(*args) && oz_isVariable(*args)) {
 	PerdioVar *pvar = var2PerdioVar(args);
 	trailCycle(args,bs,8);
 	marshalVariable(pvar,bs);
@@ -826,7 +826,7 @@ void unmarshalObject(ObjectFields *o, MsgBuffer *bs){
 void fillInObject(ObjectFields *of, Object *o){
   o->setFreeRecord(of->feat);
   o->setState(tagged2Tert(of->state));
-  o->setLock(isNil(of->lock) ? (LockProxy*)NULL : (LockProxy*)tagged2Tert(of->lock));}
+  o->setLock(oz_isNil(of->lock) ? (LockProxy*)NULL : (LockProxy*)tagged2Tert(of->lock));}
 
 void unmarshalUnsentObject(MsgBuffer *bs){
   unmarshalUnsentSRecord(bs);
@@ -852,11 +852,11 @@ void unmarshalClass(ObjectClass *cl, MsgBuffer *bs)
   if (cl==NULL)  return;
 
   TaggedRef ff = feat->getFeature(NameOoUnFreeFeat);
-  Bool locking = literalEq(NameTrue,deref(feat->getFeature(NameOoLocking)));
+  Bool locking = literalEq(NameTrue,oz_deref(feat->getFeature(NameOoLocking)));
     
   cl->import(feat,
 	     tagged2Dictionary(feat->getFeature(NameOoFastMeth)),
-	     isSRecord(ff) ? tagged2SRecord(ff) : (SRecord*)NULL,
+	     oz_isSRecord(ff) ? tagged2SRecord(ff) : (SRecord*)NULL,
 	     tagged2Dictionary(feat->getFeature(NameOoDefaults)),
 	     locking);
 }
@@ -888,7 +888,7 @@ ObjectClass *newClass(GName *gname) {
 
 SRecord *unmarshalSRecord(MsgBuffer *bs){
   TaggedRef t = unmarshalTerm(bs);
-  return isNil(t) ? (SRecord*)NULL : tagged2SRecord(t);
+  return oz_isNil(t) ? (SRecord*)NULL : tagged2SRecord(t);
 }
 
 void unmarshalUnsentSRecord(MsgBuffer *bs){
@@ -1026,7 +1026,7 @@ loop:
       *ret = makeTaggedSRecord(rec);
       gotRef(bs,*ret);
 
-      while(isLTuple(arity)) {
+      while(oz_isCons(arity)) {
 	TaggedRef val = unmarshalTerm(bs);
 	rec->setFeature(head(arity),val);
 	arity = tail(arity);
@@ -1075,7 +1075,7 @@ loop:
 	addGName(gname,*ret);
       } else {
 	// mm2: share the follwing code DIF_CHUNK, DIF_CLASS, DIF_PROC!
-	Assert(isSChunk(deref(*ret)));
+	Assert(oz_isSChunk(oz_deref(*ret)));
 	sc = 0;
       }
       gotRef(bs,*ret);
@@ -1096,7 +1096,7 @@ loop:
 	*ret = makeTaggedConst(cl);
 	addGName(gname,*ret);
       } else {
-	Assert(isClass(deref(*ret)));
+	Assert(oz_isClass(oz_deref(*ret)));
 	cl = 0;
       }
       gotRef(bs,*ret);
@@ -1127,7 +1127,7 @@ loop:
 	pp->setGName(gname);
 	addGName(gname,*ret);
       } else {
-	Assert(isAbstraction(deref(*ret)));
+	Assert(oz_isAbstraction(oz_deref(*ret)));
 	pp=0;
       }
 

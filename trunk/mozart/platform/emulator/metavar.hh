@@ -106,7 +106,7 @@ public:
 
 
 inline
-Bool isHeapChunk(TaggedRef term);
+Bool oz_isHeapChunk(TaggedRef term);
 
 inline
 Bool isGenMetaVar(TaggedRef term);

@@ -155,7 +155,7 @@ public:
 inline
 void setStoreFlag(OZ_Term t) 
 {
-  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
 
   ((SVariable *) tagValueOf(t))->setStoreFlag();
 }
@@ -163,7 +163,7 @@ void setStoreFlag(OZ_Term t)
 inline
 void setReifiedFlag(OZ_Term t) 
 {
-  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
 
   ((SVariable *) tagValueOf(t))->setReifiedFlag();
 }
@@ -171,7 +171,7 @@ void setReifiedFlag(OZ_Term t)
 inline
 OZ_Boolean testReifiedFlag(OZ_Term t) 
 {
-  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
 
   return ((SVariable *) tagValueOf(t))->testReifiedFlag();
 }
@@ -185,7 +185,7 @@ void patchReified(OZ_FiniteDomain * fd, OZ_Term t, Bool isBool)
 inline
 OZ_Boolean testBoolPatched(OZ_Term t) 
 {
-  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
 
   return ((GenCVariable *) tagValueOf(t))->isBoolPatched();
 }
@@ -193,7 +193,7 @@ OZ_Boolean testBoolPatched(OZ_Term t)
 inline
 OZ_Boolean testResetStoreFlag(OZ_Term t) 
 {
-  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
 
   return ((SVariable *) tagValueOf(t))->testResetStoreFlag();
 }
@@ -201,7 +201,7 @@ OZ_Boolean testResetStoreFlag(OZ_Term t)
 inline
 OZ_Boolean testStoreFlag(OZ_Term t) 
 {
-  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
 
   return ((SVariable *) tagValueOf(t))->testStoreFlag();
 }
@@ -209,7 +209,7 @@ OZ_Boolean testStoreFlag(OZ_Term t)
 inline
 OZ_Boolean testResetReifiedFlag(OZ_Term t) 
 {
-  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
 
   return ((SVariable *) tagValueOf(t))->testResetReifiedFlag();
 }
@@ -217,7 +217,7 @@ OZ_Boolean testResetReifiedFlag(OZ_Term t)
 inline
 OZ_FiniteDomain * unpatchReified(OZ_Term t, Bool isBool) 
 {
-  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
   GenCVariable * v = ((GenCVariable *) tagValueOf(t));
   
   v->unpatchReified(isBool);

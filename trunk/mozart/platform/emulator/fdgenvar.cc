@@ -292,8 +292,8 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 
 Bool GenFDVariable::valid(TaggedRef val)
 {
-  Assert(!isRef(val));
-  return (isSmallInt(val) && finiteDomain.isIn(OZ_intToC(val)));
+  Assert(!oz_isRef(val));
+  return (oz_isSmallInt(val) && finiteDomain.isIn(OZ_intToC(val)));
 }
 
 void GenFDVariable::relinkSuspListTo(GenBoolVariable * lv, Bool reset_local)
@@ -444,7 +444,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     }
     goto proceed;
 // tell finite domain constraint to integer, i.e. check for compatibility
-  } else if (isSmallInt(vtag)) {
+  } else if (isSmallIntTag(vtag)) {
     if (! fd) goto proceed;
     
     if (fd->isIn(smallIntValue(v)))

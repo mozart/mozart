@@ -200,7 +200,7 @@ public:
 
   static ProgramCounter writeLiteral(TaggedRef literal, ProgramCounter ptr)
   {
-    Assert(isLiteral(literal));
+    Assert(oz_isLiteral(literal));
     return writeWord(literal,ptr);    
   }
 
@@ -213,7 +213,7 @@ public:
 
   static ProgramCounter writeInt(TaggedRef i, ProgramCounter ptr)
   {
-    Assert(isNumber(i));
+    Assert(oz_isNumber(i));
     return writeWord(i,ptr);    
   }
 
