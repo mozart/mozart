@@ -29,7 +29,7 @@ local
    in
       class Choose
 	 meth FindKids(Ks Depth CurX FindX $)
-	    !Ks=K|Kr
+	    K|Kr = !Ks
 	 in
 	    case Kr==nil then
 	       case K.kind of choose then
