@@ -69,6 +69,18 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
   return ret1;
 }
 
+static
+OZ_Term biArgs(OZ_Location *loc, OZ_Term *X) {
+  OZ_Term out=nil();
+  for (int i=loc->getOutArity(); i--; ) {
+    out=oz_cons(OZ_newVariable(),out);
+  }
+  for (int i=loc->getInArity(); i--; ) {
+    out=oz_cons(X[loc->in(i)],out);
+  }
+  return out;
+}
+
 // -----------------------------------------------------------------------
 // Object stuff
 // -----------------------------------------------------------------------
@@ -110,11 +122,14 @@ void enrichTypeException(TaggedRef value,const char *fun, OZ_Term args)
   enrichTypeException(e->exception.value,fun,args);     \
   RAISE_THREAD;
 
-#define RAISE_TYPE1_FUN(fun,args)                               \
-  RAISE_TYPE1(fun,                                              \
-              appendI(args,cons(OZ_newVariable(),nil())));
+#define RAISE_TYPE1_FUN(fun,args) \
+  RAISE_TYPE1(fun, appendI(args,cons(OZ_newVariable(),nil())));
 
-#define RAISE_TYPE(bi) RAISE_TYPE1(bi->getPrintName(), OZ_toList(predArity,X));
+#define RAISE_TYPE_NEW(bi,loc) \
+  RAISE_TYPE1(bi->getPrintName(), biArgs(loc,X));
+
+#define RAISE_TYPE(bi) \
+  RAISE_TYPE1(bi->getPrintName(), OZ_toList(bi->getArity(),X));
 
 /*
  * Handle Failure macros (HF)
@@ -1015,7 +1030,7 @@ LBLdispatcher:
       case PROCEED:       DISPATCH(4);
       case FAILED:        HF_BI(bi);
       case RAISE:         RAISE_THREAD;
-      case BI_TYPE_ERROR: RAISE_TYPE(bi);
+      case BI_TYPE_ERROR: RAISE_TYPE_NEW(bi,loc);
 
       case SUSPEND:
         PushContX(PC,Y,G,X,getPosIntArg(PC+3));
@@ -1060,7 +1075,7 @@ LBLdispatcher:
 
       switch (ret) {
       case RAISE:         RAISE_THREAD;
-      case BI_TYPE_ERROR: RAISE_TYPE(bi);
+      case BI_TYPE_ERROR: RAISE_TYPE_NEW(bi,loc);
 
       case SUSPEND:
         PushContX(PC,Y,G,X,getPosIntArg(PC+4));
