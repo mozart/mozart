@@ -653,6 +653,7 @@ TaggedRef makeMessage(SRecordArity srecArity, TaggedRef label, TaggedRef *X)
 
 TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
 {
+  Assert(isLiteral(name));
   int size = getRefsArraySize(toplevelVars);
   if (LessIndex(size,regIndex)) {
     int newSize = int(size*1.5);
@@ -662,7 +663,7 @@ TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
   }
   SVariable *svar = new SVariable(currentBoard);
   TaggedRef ret = makeTaggedRef(newTaggedSVar(svar));
-  VariableNamer::addName(ret,name);
+  VariableNamer::addName(ret,tagged2Literal(name)->getPrintName());
   return ret;
 }
 
@@ -1032,16 +1033,17 @@ void engine()
       e->doGC();
     }
 
-    osBlockSignals();
 
     if (e->isSetSFlag(UserAlarm)) {
+      osBlockSignals();
       e->handleUser();
+      osUnblockSignals();
     }
     if (e->isSetSFlag(IOReady)) {
+      osBlockSignals();
       e->handleIO();
+      osUnblockSignals();
     }
-
-    osUnblockSignals();
   }
 
   /* process switch */
@@ -2059,6 +2061,46 @@ LBLsuspendThread:
 	RAISE_BI(OZ_mkTupleC("proc",3,
 			 OZ_atom(entry->getPrintName()),
 			 XPC(2),XPC(3)));
+
+      case SLEEP:
+      default:
+	Assert(0);
+      }
+    }
+
+  Case(INLINEREL3)
+    {
+      BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
+      InlineRel3 rel         = (InlineRel3)entry->getInlineFun();
+
+      switch(rel(XPC(2),XPC(3),XPC(4))) {
+      case PROCEED:
+	DISPATCH(6);
+
+      case SUSPEND:
+	{
+	  if (shallowCP) {
+	    e->emptySuspendVarList();
+	    e->trail.pushIfVar(XPC(2));
+	    e->trail.pushIfVar(XPC(3));
+	    e->trail.pushIfVar(XPC(4));
+	    DISPATCH(6);
+	  }
+
+	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
+	  e->suspendInline(3,XPC(2),XPC(3),XPC(4));
+	  CHECK_CURRENT_THREAD;
+	}
+      case FAILED:
+	SHALLOWFAIL;
+	HF_FAIL(OZ_mkTupleC("proc",4,
+			OZ_atom(entry->getPrintName()),
+			XPC(2),XPC(3),XPC(4)));
+
+      case RAISE:
+	RAISE_BI(OZ_mkTupleC("proc",4,
+			 OZ_atom(entry->getPrintName()),
+			 XPC(2),XPC(3),XPC(4)));
 
       case SLEEP:
       default:
@@ -3232,7 +3274,6 @@ LBLsuspendThread:
   Case(ENDOFFILE)
   Case(ENDDEFINITION)
 
-  Case(INLINEREL3)
 
 #ifndef THREADED
   default:
