@@ -1941,17 +1941,17 @@ OZ_DECLAREBI_USEINLINEFUN1(BIstatus,BIstatusInline)
 // ---------------------------------------------------------------------
 
 inline
-OZ_Return AM::eqeq(TaggedRef Ain,TaggedRef Bin)
+OZ_Return oz_eqeq(TaggedRef Ain,TaggedRef Bin)
 {
   // simulate a shallow guard
-  trail.pushMark();
-  shallowHeapTop = heapTop;
+  am.trail.pushMark();
+  am.setShallowHeapTop(heapTop);
   OZ_Return ret = oz_unify(Ain,Bin,(ByteCode*)1);
-  shallowHeapTop = NULL;
+  am.setShallowHeapTop(NULL);
 
   if (ret == PROCEED) {
-    if (trail.isEmptyChunk()) {
-      trail.popMark();
+    if (am.trail.isEmptyChunk()) {
+      am.trail.popMark();
       return PROCEED;
     }
 
@@ -1988,7 +1988,7 @@ OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
   }
 
  dontknow:
-  return am.eqeq(Ain,Bin);
+  return oz_eqeq(Ain,Bin);
 }
 
 

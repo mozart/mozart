@@ -1848,7 +1848,7 @@ void AM::gc(int msgLevel)
   Assert(trail.isEmpty());
   Assert(cachedSelf==0);
   Assert(ozstat.currAbstr==NULL);
-  Assert(shallowHeapTop==0);
+  Assert(_shallowHeapTop==0);
   Assert(_rootBoard);
 
   _rootBoard = _rootBoard->gcBoard();   // must go first!

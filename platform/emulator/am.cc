@@ -267,7 +267,7 @@ void AM::init(int argc,char **argv)
   _currentBoard = NULL;
   cachedStack  = NULL;
   cachedSelf   = NULL;
-  shallowHeapTop = NULL;
+  setShallowHeapTop(NULL);
   setCurrent(_rootBoard,OK);
   _currentSolveBoard = (Board *) NULL;
   wasSolveSet = NO;
@@ -1096,7 +1096,7 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
 // mm2: why not inline?
 void AM::doBindAndTrail(TaggedRef * vp, TaggedRef t)
 {
-  Assert(shallowHeapTop || checkHome(vp));
+  Assert(inShallowGuard() || checkHome(vp));
   trail.pushRef(vp, *vp);
 
 
