@@ -82,7 +82,7 @@ COMPRESS=       gzip -9
 WINCACHEDIR=    oz/cache/http/www.ps.uni-sb.de/ozhome
 
 # sub directories for recursive makes
-SUBDIRS=        platform share contrib doc
+SUBDIRS=        platform share contrib
 
 # list of directories to create during install
 DIRS=
