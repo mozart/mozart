@@ -175,6 +175,7 @@ Bool reallyHeapNever(void *ptr1, void *ptr2)
     aux = aux->getNext();
   }
   Assert(0);
+  return NO;
 }
 
 
