@@ -60,7 +60,14 @@
 <!ENTITY cc.class "<span class=ignore>class </span>">
 ]>
 <book proglang=oz>
+
     <meta name="html.split" value="part.getting.started">
+
+    <meta name="html.split" value="chapter.hello">
+    <meta name="html.split" value="chapter.development">
+    <meta name="html.split" value="chapter.deployment">
+
+
     <meta name="html.split" value="part.foreign.extensions">
     <meta name="html.split" value="chapter.counter.global">
     <meta name="html.split" value="chapter.counter.object">
@@ -74,8 +81,13 @@
     <meta name="html.split" value="part.distributed.applications">
     <meta name="html.split" value="part.concurrency">
     <meta name="html.split" value="chapter.concurrency.cheap">
-    <meta name="html.split" value="chapter.concurrency.patterns">
+
+    <meta name="html.split.toc"   value="">
+    <meta name="html.split.bib"   value="">
+    <meta name="html.split.index" value="">
+
     <meta name=proglang arg1="java" arg2="java-mode">
+
     <title/Application Programming/
     <author.Extern to="author.db" key="Denys.Duchier">
     <author.Extern to="author.db" key="Leif.Kornstaedt">
