@@ -1,0 +1,26 @@
+
+<pickle> ::=  S:<string>         % header (any sequence of characters)
+              S:<string>               % version number
+              <pair>*
+
+
+<pair> ::=  S:<string>
+            I:<digit>+                  % integer
+            D:<termtag>
+            O:<opcode>
+            L:<string>                  % refence to label
+            l:<string>                  % definition of instruction label
+            B:<digit>+                  % decimal code of a single byte
+            C:                          % start of code block
+            c:                          % end of code block
+            T:<string>                  % reference to term
+            t:<string>                  % definition of term label
+            #:<char>* <newline>         % comment
+
+
+
+<opcode> ::=    moveXX | ...            % see opcodes.hh
+
+<termtag> ::=   ATOM | SMALLINT | ...   % see pickle.hh
+
+<string> ::=    to be defined by Leif
