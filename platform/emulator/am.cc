@@ -1664,7 +1664,7 @@ void AM::resumeThread(Thread *th) {
     th->cont();
 
     if (!th->isDeadThread() && !am.isScheduled(th)) {
-      if (!th->isRunnable()) th->markRunnable();
+      th->suspThreadToRunnable();
       am.scheduleThread(th);
     }
   }
