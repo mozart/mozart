@@ -165,8 +165,9 @@ oz-win::
                    oz/platform/win32-i486/wish \
          ) | $(TAR) xf -
 	$(INSTALL_DIR) $(WINCACHEDIR)/share
-	$(INSTALL_DIR) $(WINCACHEDIR)/bin
+	$(INSTALL_DIR) $(WINCACHEDIR)/doc/demo
 	mv oz/share/images oz/share/?*.ozf $(WINCACHEDIR)/share
+	mv oz/doc/demo/applets $(WINCACHEDIR)/doc/demo
 	mv $(WINCACHEDIR)/share/Init.ozf oz/share
 	for i in ozc ozd ozl; do \
 	  cat oz/platform/winbin/ozwrapper.exe $(PREFIX)/bin/$$i > oz/platform/winbin/$$i.exe;\
