@@ -268,7 +268,7 @@ protected:
   //
 public:
   NodeProcessor() {
-    keepRunning = OK;		// done originally;
+    keepRunning = NO;
     DebugCode(opaque = (Opaque *) -1);
   }
   ~NodeProcessor() {}
@@ -280,6 +280,7 @@ public:
   // start with it next time;
   void suspend(OZ_Term t) {
     Assert(keepRunning);
+    DebugCode(opaque = (Opaque *) -1);
     keepRunning = NO;
     put(t);
   }
@@ -312,9 +313,9 @@ public:
 
 //
 // Keep OZ_Term"s already seen;
-class GTIndexTable : private HashTableFastReset {
+class GTIndexTable : private AddressHashTableFastReset {
 public:
-  GTIndexTable() : HashTableFastReset(2000) {
+  GTIndexTable() : AddressHashTableFastReset(2000) {
     Assert(sizeof(OZ_Term) == sizeof(intlong));
   }
 
@@ -461,6 +462,7 @@ private:
   // 'reset()' returns the traverser to the original state;
   void reset() {
     CrazyDebug(debugNODES = 0;);
+    DebugCode(opaque = (Opaque *) -1);
     keepRunning = NO;
     clear();
     unwindGTIT();
@@ -486,6 +488,7 @@ protected:
   // special treatment: no value is available to suspend on!
   void suspendSync() {
     Assert(keepRunning);
+    DebugCode(opaque = (Opaque *) -1);
     keepRunning = NO;
     putInt(taggedSyncTask);
   }
@@ -506,6 +509,7 @@ public:
   // to continue with:
   void suspend(OZ_Term t) {
     Assert(keepRunning);
+    DebugCode(opaque = (Opaque *) -1);
     keepRunning = NO;
     put(t);
   }
@@ -516,6 +520,7 @@ public:
   // with), but we still have to suspend:
   void suspendBA() {
     Assert(keepRunning);
+    DebugCode(opaque = (Opaque *) -1);
     keepRunning = NO;
   }
 
@@ -528,6 +533,8 @@ public:
     putPtr((void *) proc);
     putPtr(arg);
     putInt(taggedContTask);
+    Assert(keepRunning);
+    DebugCode(opaque = (Opaque *) -1);
     keepRunning = NO;
   }
 
@@ -535,7 +542,9 @@ public:
   // For efficiency reasons 'GenTraverser' has its own 'doit' - not
   // the one from 'NodeProcessor'. Because of that, 'resume()' is 
   // overloaded as well (but with the same meaning);
-  void resume() {
+  void resume(Opaque *o) {
+    Assert(opaque == (Opaque *) -1); // otherwise that's recursive;
+    opaque = o;
     keepRunning = OK;
     doit();
   }	// see 'suspend()';
@@ -562,9 +571,9 @@ public:
     Assert(opaque == (Opaque *) -1); // otherwise that's recursive;
     Assert(o != (Opaque *) -1);	     // not allowed (limitation);
     opaque = o;
+    keepRunning = OK;
   }
   void traverse() {
-    keepRunning = OK;
     doit();
     // CrazyDebug(fprintf(stdout, " --- %d nodes.\n", debugNODES););
     // CrazyDebug(fflush(stdout););

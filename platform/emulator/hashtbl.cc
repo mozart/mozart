@@ -35,9 +35,9 @@
 
 #include "hashtbl.hh"
 
-const int STEP=5;         
-const double MAXFULL=0.75; // The max. load of HashTable
+const double SHT_MAXLOAD = 0.75;
 
+#define MIN_PRIME	7
 
 inline Bool isPrime(int prime)
 {
@@ -53,10 +53,11 @@ inline Bool isPrime(int prime)
   return OK;  
 }
 
+// kost@ : good enough for our purposes..
 int nextPrime(int prime)
 {
-  if (prime <= STEP) {
-    prime = STEP+2;
+  if (prime < MIN_PRIME) {
+    prime = MIN_PRIME;
   }
   if (prime%2 == 0) {
     prime++;
@@ -68,41 +69,12 @@ int nextPrime(int prime)
   return prime;
 }
 
-
-
-void HashTable::mkEmpty()
+//
+inline 
+unsigned int StringHashTable::hashFunc(const char *s)
 {
-  counter = 0;
-  percent = (int) (MAXFULL * tableSize);
-  for(int i=0; i<tableSize; i++) {
-    table[i].setEmpty();
-  }
-}
-
-HashTable::HashTable(HtKeyType typ, int s)
-{
-  type = typ;
-  tableSize = nextPrime(s);
-  table = new HashNode[tableSize];
-  mkEmpty();
-}
-
-HashTable::~HashTable() 
-{
-  /* dispose hash table itself */
-  delete [] table;
-}
-
-
-
-// M e t h o d s
-
-inline int HashTable::hashFunc(intlong i) {
-  return ((unsigned) i) % tableSize;
-}
-
-inline int HashTable::hashFunc(const char *s) {
-// 'hashfunc' is taken from 'Aho,Sethi,Ullman: Compilers ...', page 436
+  // 'hashfunc' is taken from 'Aho,Sethi,Ullman: Compilers ...',
+  // page 436
   const char *p = s;
   unsigned h = 0, g;
   for(; *p; p++) {
@@ -112,176 +84,204 @@ inline int HashTable::hashFunc(const char *s) {
       h = h ^ g;
     }
   }
-  return h % tableSize;
+  return (h % tableSize);
 }
 
-unsigned HashTable::memRequired(int valSize)
+//
+SHT_HashNode* StringHashTable::getFirst()
 {
-  unsigned mem = tableSize * sizeof(HashNode);
-  for(int i = 0; i < tableSize; i++){
-    HashNode *lnp = &table[i];
-    if (! lnp->isEmpty()) {
-      mem += valSize;
-      if (type == HT_CHARKEY) {
-	mem += strlen(lnp->key.fstr);
-      }
+  SHT_HashNode *f = table;
+  for (; f < table+tableSize; f++)
+    if (!f->isEmpty())
+      return (f);
+  return ((SHT_HashNode *) 0);
+}
+
+SHT_HashNode* StringHashTable::getNext(SHT_HashNode *hn)
+{
+  Assert(hn);
+  SHT_HashNode *n = hn->getNext();
+  if (n) {
+    return (n);
+  } else {
+    unsigned int key = hashFunc(hn->getKey().fstr);
+    hn = &table[key];
+    for (hn++; hn < table+tableSize; hn++) {
+      if (!hn->isEmpty())
+	return (hn);
+    }
+    return ((SHT_HashNode *) 0);
+  }
+}
+
+//
+StringHashTable::StringHashTable(int s)
+{
+  tableSize = nextPrime(s);
+  table = new SHT_HashNode[tableSize];
+  mkEmpty();
+}
+
+StringHashTable::~StringHashTable() 
+{
+  for (int i = 0; i < tableSize; i++) {
+    if (! table[i].isEmpty()) {
+      SHT_HashNode* hn = &table[i];
+      int num = 1;
+      do {
+	SHT_HashNode* sn = hn;
+	hn = hn->getNext();
+	if (num > 1) 
+	  delete sn;
+	num++;
+      } while (hn);
     }
   }
-  return mem;
+  delete [] table;
 }
 
+//
+void StringHashTable::mkEmpty()
+{
+  counter = 0;
+  percent = (int) (SHT_MAXLOAD * tableSize);
+  for(int i = 0; i < tableSize; i++)
+    table[i].setEmpty();
+}
 
-void HashTable::resize()
+static inline
+SHT_HashNode* checkKey(SHT_HashNode *hn, const char *s)
+{
+  Assert(!(hn->isEmpty()));
+  while (strcmp((hn->getKey()).fstr, s) != 0) {
+    hn = hn->getNext();
+    if (!hn)
+      return ((SHT_HashNode* ) 0);
+  }
+  return (hn);
+}
+
+//
+void StringHashTable::resize()
 {
   int oldSize = tableSize;
-  tableSize = nextPrime(tableSize*2);
-  counter = 0;
-  percent = (int) (MAXFULL * tableSize);
-  HashNode* neu = new HashNode[tableSize];
-  HashNode* old = table;    
-  table = neu;
+  SHT_HashNode* old = table;    
   int i;
-  for (i=0; i<tableSize; i++) 
-    neu[i].setEmpty();
-  if (type == HT_INTKEY) {
-    for (i=0; i<oldSize; i++) {
-      if (! old[i].isEmpty()) 
-	htAdd(old[i].key.fint,old[i].value);
-    }
-  } else {
-    for (i=0;i<oldSize;i++) {
-      if (! old[i].isEmpty()) {
-	htAdd(old[i].key.fstr,old[i].value);
-      }
+
+  //
+  tableSize = nextPrime(tableSize*2);
+  table = new SHT_HashNode[tableSize];
+  counter = 0;
+  percent = (int) (SHT_MAXLOAD * tableSize);
+
+  //
+  for (i = 0; i < tableSize; i++) 
+    table[i].setEmpty();
+  //
+  for (i = 0; i < oldSize; i++) {
+    if (! old[i].isEmpty()) {
+      SHT_HashNode* hn = &old[i];
+      int num = 1;
+      do {
+	htAdd((hn->getKey()).fstr, hn->getValue());
+	SHT_HashNode* sn = hn;
+	hn = hn->getNext();
+	if (num > 1) 
+	  delete sn;
+	num++;
+      } while (hn);
     }
   }
+
+  //
   delete [] old;
 }
 
-
-inline int incKey(int key, int s)
+//
+void StringHashTable::htAdd(const char *k, void *val)
 {
-  key += STEP;
-  if (key >= s) {
-    key -= s;
-  }
-  return key;
-}
-
-
-inline int HashTable::findIndex(const char *s)
-{
-  int key = hashFunc(s);
-  while (! table[key].isEmpty() && (strcmp(table[key].key.fstr,s)!=0)) {
-    key = incKey(key,tableSize);
-  }
-  return key;
-}
-
-inline int HashTable::findIndex(intlong i)
-{
-  int key = hashFunc(i);
-  while (! table[key].isEmpty() && table[key].key.fint != i) {
-    key = incKey(key,tableSize);
-  }
-  return key;
-}
-
-
-void HashTable::htAdd(const char *k, void *val)
-{
-  Assert(val!=htEmpty);
+  Assert(val != htEmpty);
 
   if (counter > percent)
     resize();
   
-  int key = findIndex(k);
-  if (table[key].isEmpty()) {
+  unsigned int key = hashFunc(k);
+  SHT_HashNode* rhn = &table[key];
+  if (rhn->isEmpty()) {
+    rhn->setKey(k);
+    rhn->setValue(val);
+    rhn->setNext((SHT_HashNode *) 0);
     counter++;
+  } else {
+    SHT_HashNode* fhn;
+    if ((fhn = checkKey(rhn, k)) == (SHT_HashNode *) 0) {
+      fhn = new SHT_HashNode(k, val, rhn->getNext());
+      rhn->setNext(fhn);
+      counter++;
+    } else {
+      fhn->setValue(val);
+    }
   }
-  
-  table[key].key.fstr = k;
-  table[key].value = val;
 }
 
-void HashTable::htAdd(intlong k, void *val)
+void* StringHashTable::htFind(const char *s)
 {
-  Assert(val!=htEmpty);
-
-  if (counter > percent)
-    resize();
-  
-  int key = findIndex(k);
-  if (table[key].isEmpty()) {     // already in there
-    counter++;
+  SHT_HashNode *rhn = &table[hashFunc(s)];
+  SHT_HashNode *fhn;
+  if (rhn->isEmpty() ||
+      (fhn = checkKey(rhn, s)) == (SHT_HashNode *) 0) {
+    return (htEmpty);
+  } else {
+    return (fhn->getValue());
   }
-  
-  table[key].key.fint  = k;
-  table[key].value = val;
 }
 
-
-void *HashTable::htFind(const char *s)
-{
-  int key = findIndex(s);
-  return (table[key].isEmpty())
-    ? htEmpty : table[key].value;
-}
-
-void *HashTable::htFind(intlong i)
-{
-  int key = findIndex(i);
-  return (table[key].isEmpty())
-    ? htEmpty : table[key].value;
-}
 
 #ifdef DEBUG_CHECK
-
-int HashTable::lengthList(int i)
+//
+int StringHashTable::lengthList(int i)
 {
-  int key;
-  if (type == HT_CHARKEY) 
-    key = hashFunc(table[i].key.fstr);
-  else 
-    key = hashFunc(table[i].key.fint);
-  int ret = 1;
-  while(key != i) {
-    ret++;
-    key = incKey(key,tableSize);
+  SHT_HashNode* hn = &table[i];
+  if (hn->isEmpty())
+    return (0);
+
+  int len = 0;
+  while (hn) {
+    len++;
+    hn = hn->getNext();
   }
-  return ret;
+  return (len);
 }
 
-void HashTable::print()
+void StringHashTable::print()
 {
-  if (type == HT_CHARKEY) {
-    for(int i = 0; i < tableSize; i++) {
-      if (! table[i].isEmpty()) {
-	printf("table[%d] = <%s,0x%p>\n", i, table[i].key.fstr, table[i].value);
-      }
-    }
-  } else {
-    for(int i = 0; i < tableSize; i++) {
-      if (!table[i].isEmpty()) {
-	printf("table[%d] = <%ld,0x%p>\n", i, table[i].key.fint, table[i].value);
-      }
+  for(int i = 0; i < tableSize; i++) {
+    if (! table[i].isEmpty()) {
+      SHT_HashNode* hn = &table[i];
+      do {
+	printf("table[%d] = <%s,0x%p>\n",
+	       i, (hn->getKey()).fstr, (hn->getValue()));
+	hn = hn->getNext();
+      } while (hn);
     }
   }
   printStatistic();
 }
 
-void HashTable::printStatistic()
+void StringHashTable::printStatistic()
 {
-  int maxx = 0, sum = 0, collpl = 0, coll = 0;
-  for(int i = 0; i < tableSize; i++) {
+  int maxx = 0, collpl = 0, coll = 0;
+  DebugCode(int sum = 0;);
+  for (int i = 0; i < tableSize; i++) {
     if (table[i].isEmpty())
       continue;
     int l = lengthList(i);
     maxx = maxx > l ? maxx : l;
-    sum += l;
+    DebugCode(sum += l;);
     coll  += l > 1 ? l - 1 : 0;
     collpl += l > 1 ? 1 : 0;
   }
+  Assert(sum == counter);
   printf("\nHashtable-Statistics:\n");
   printf("\tmaximum bucket length     : %d\n", maxx);
   printf("\tnumber of collision places: %d\n", collpl);
@@ -293,41 +293,265 @@ void HashTable::printStatistic()
 #endif
 
 //
+unsigned StringHashTable::memRequired(int valSize)
+{
+  unsigned mem = tableSize * sizeof(SHT_HashNode);
+  for (int i = 0; i < tableSize; i++) {
+    if (! table[i].isEmpty()) {
+      SHT_HashNode* hn = &table[i];
+      int num = 1;
+      do {
+	mem += valSize;
+	mem += strlen((hn->getKey()).fstr);
+	if (num > 1)
+	  mem += sizeof(SHT_HashNode);
+	hn = hn->getNext();
+	num++;
+      } while (hn);
+    }
+  }
+  return (mem);
+}
+
+
+//
+const double AHT_MAXLOAD = 0.5;
+
+//
+void AddressHashTable::mkEmpty()
+{
+  counter = 0;
+  percent = (int) (AHT_MAXLOAD * tableSize);
+  for (int i = 0; i < tableSize; i++)
+    table[i].setEmpty();
+  DebugCode(nsearch = 0;);
+  DebugCode(tries = 0;);
+  DebugCode(maxtries = 0;);
+}
+
+//
+AddressHashTable::AddressHashTable(int s)
+{
+  incStepMod = nextPrime(s);
+  tableSize = nextPrime(incStepMod+1);
+  table = new AHT_HashNode[tableSize];
+  mkEmpty();
+}
+
+AddressHashTable::~AddressHashTable() 
+{
+  /* dispose hash table itself */
+  delete [] table;
+}
+
+//
+// kost@ : use now double hashing with the home-grown addition:
+//         multiply the value we're hashing on with a prime number.
+//         Without this modification we gain 2 orders of magnitude of
+//         improvement over the "linear probing", and with it we get 3
+//         orders (based on dp_huge).
+//
+inline
+unsigned int AddressHashTable::primeHashFunc(intlong i)
+{
+  return ((((unsigned) i) * 397) % tableSize);
+}
+inline
+unsigned int AddressHashTable::incHashFunc(intlong i)
+{
+  return (1 + ((((unsigned) i) * 617) % incStepMod));
+}
+
+inline
+unsigned int AddressHashTable::getStepN(unsigned int pkey,
+					unsigned int ikey, int i)
+{
+  return ((pkey + i*ikey) % tableSize);
+}
+
+//
+unsigned AddressHashTable::memRequired(int valSize)
+{
+  unsigned mem = tableSize * sizeof(AHT_HashNode);
+  mem += valSize * counter;
+  return (mem);
+}
+
+//
+void AddressHashTable::resize()
+{
+  int oldSize = tableSize;
+  incStepMod = nextPrime(tableSize*2);
+  tableSize = nextPrime(incStepMod+1);
+  counter = 0;
+  percent = (int) (AHT_MAXLOAD * tableSize);
+  AHT_HashNode* neu = new AHT_HashNode[tableSize];
+  AHT_HashNode* old = table;    
+  table = neu;
+  int i;
+  for (i = 0; i < tableSize; i++) 
+    neu[i].setEmpty();
+  for (i = 0; i < oldSize; i++) {
+    if (! old[i].isEmpty()) 
+      htAdd((old[i].getKey()).fint, old[i].getValue());
+  }
+  delete [] old;
+}
+
+//
+inline
+unsigned int AddressHashTable::findIndex(intlong i)
+{
+  unsigned int pkey = primeHashFunc(i);
+  unsigned int ikey = incHashFunc(i);
+  unsigned int key = pkey;
+  int step = 1;
+  //
+  while (! table[key].isEmpty() && (table[key].getKey()).fint != i)
+    key = getStepN(pkey, ikey, step++);
+  DebugCode(nsearch++;);
+  DebugCode(tries += step);
+  DebugCode(if (step > maxtries) { maxtries = step; });
+  return (key);
+}
+
+//
+void AddressHashTable::htAdd(intlong k, void *val)
+{
+  Assert(val != htEmpty);
+
+  if (counter > percent)
+    resize();
+
+  unsigned int key = findIndex(k);
+  if (table[key].isEmpty())
+    counter++;
+  table[key].setKey(k);
+  table[key].setValue(val);
+}
+
+void *AddressHashTable::htFind(intlong i)
+{
+  unsigned int key = findIndex(i);
+  return ((table[key].isEmpty())
+	  ? htEmpty : table[key].getValue());
+}
+
+#ifdef DEBUG_CHECK
+
+void AddressHashTable::print()
+{
+  for(int i = 0; i < tableSize; i++) {
+    if (!table[i].isEmpty())
+      printf("table[%d] = <%ld,0x%p>\n",
+	     i, (table[i].getKey()).fint, table[i].getValue());
+  }
+  printStatistic();
+}
+
+void AddressHashTable::printStatistic()
+{
+  int misspl = 0;
+  DebugCode(int sum = 0;);
+
+  //
+  for (int i = 0; i < tableSize; i++) {
+    if (!table[i].isEmpty()) {
+      unsigned int pkey = primeHashFunc((table[i].getKey()).fint);
+      sum++;
+      if (pkey != i)
+	// that is, an alien entry took place here;
+	misspl++;
+    }
+  }
+  Assert(sum == counter);
+
+  //
+  printf("\nHashtable-Statistics:\n");
+  printf("\tnumber of misplaced entries: %d\n", misspl);
+  printf("\tnumber of searches:          %d\n", nsearch);
+  printf("\tmaximal search tries:        %d\n", maxtries);
+  printf("\taverage search tries:        %.3f\n", (double) tries/nsearch);
+  printf("\t%d table entries have been used for %d literals (%d%%)\n", 
+	 tableSize, counter, counter*100/tableSize);
+}
+
+#endif
+
+
+//
+const double AHTFR_MAXLOAD = 0.5;
 // above this do usual sequential reset;
 const double DUMMYRESET = 0.33;
 
+// print statistics if on average there are more than tries per search:
+#define DEBUG_THRESHOLD		2
+
 //
 //
-void HashTableFastReset::mkTable()
+void AddressHashTableFastReset::mkTable()
 {
   counter = 0;
-  percent = (int) (MAXFULL * tableSize);
-  prev = (HashNodeLinked *) 0;
-  table = new HashNodeLinked[tableSize];
+  percent = (int) (AHTFR_MAXLOAD * tableSize);
+  prev = (AHT_HashNodeLinked *) 0;
+  table = new AHT_HashNodeLinked[tableSize];
+  DebugCode(nsearch = 0;);
+  DebugCode(tries = 0;);
+  DebugCode(maxtries = 0;);
+  mkEmpty(TRUE);
 }
 
-HashTableFastReset::HashTableFastReset(int sz)
+//
+AddressHashTableFastReset::AddressHashTableFastReset(int sz)
 {
-  tableSize = nextPrime(sz);
+  incStepMod = nextPrime(sz);
+  tableSize = nextPrime(incStepMod+1);
   mkTable();
 }
 
-HashTableFastReset::~HashTableFastReset() 
+AddressHashTableFastReset::~AddressHashTableFastReset() 
 {
   delete [] table;
-  DebugCode(prev = (HashNodeLinked *) -1);
+  DebugCode(prev = (AHT_HashNodeLinked *) -1);
 }
 
-inline int HashTableFastReset::findIndex(intlong i)
+//
+inline
+unsigned int AddressHashTableFastReset::primeHashFunc(intlong i)
 {
-  int key = hashFunc(i);
-  while (! table[key].isEmpty() && table[key].key.fint != i) {
-    key = incKey(key,tableSize);
-  }
-  return key;
+  return ((((unsigned) i) * 397) % tableSize);
+}
+inline
+unsigned int AddressHashTableFastReset::incHashFunc(intlong i)
+{
+  return (1 + ((((unsigned) i) * 617) % incStepMod));
 }
 
-void HashTableFastReset::htAdd(intlong k, void *val)
+inline
+unsigned int AddressHashTableFastReset::getStepN(unsigned int pkey,
+						 unsigned int ikey, int i)
+{
+  return ((pkey + i*ikey) % tableSize);
+}
+
+//
+inline
+unsigned int AddressHashTableFastReset::findIndex(intlong i)
+{
+  unsigned int pkey = primeHashFunc(i);
+  unsigned int ikey = incHashFunc(i);
+  unsigned int key = pkey;
+  int step = 1;
+  //
+  while (! table[key].isEmpty() && (table[key].getKey()).fint != i)
+    key = getStepN(pkey, ikey, step++);
+  DebugCode(nsearch++;);
+  DebugCode(tries += step);
+  DebugCode(if (step > maxtries) { maxtries = step; });
+  return (key);
+}
+
+void AddressHashTableFastReset::htAdd(intlong k, void *val)
 {
   Assert(val != htEmpty);
 
@@ -335,100 +559,110 @@ void HashTableFastReset::htAdd(intlong k, void *val)
   if (counter > percent) resize();
 
   //
-  int key = findIndex(k);
+  unsigned int key = findIndex(k);
   if (table[key].isEmpty()) { // may be already in there;
-    table[key].key.fint  = k;
-    table[key].value = val;
-    table[key].prev = prev;
+    table[key].setKey(k);
+    table[key].setValue(val);
+    table[key].setPrev(prev);
 
     //
     prev = &table[key];
     counter++;
+  } else {
+    Assert(table[key].getValue() == val);
   }
 }
 
-void HashTableFastReset::mkEmpty()
+//
+void AddressHashTableFastReset::mkEmpty(Bool force)
 {
-  if (counter > (int) (DUMMYRESET * tableSize)) {
-    for(int i = 0; i < tableSize; i++) {
+  DebugCode(printStatistics(DEBUG_THRESHOLD));
+  if (force || counter > (int) (DUMMYRESET * tableSize)) {
+    for (int i = 0; i < tableSize; i++) {
       table[i].setEmpty();
     }
-    prev = (HashNodeLinked *) 0;
+    prev = (AHT_HashNodeLinked *) 0;
   } else {
     while (prev) {
-      HashNodeLinked *node = prev;
-      prev = prev->prev;
+      AHT_HashNodeLinked *node = prev;
+      prev = prev->getPrev();
       node->setEmpty();
     }
   }
   counter = 0;
+  DebugCode(nsearch = 0;);
+  DebugCode(tries = 0;);
+  DebugCode(maxtries = 0;);
 }
 
-void *HashTableFastReset::htFind(intlong i)
+//
+void* AddressHashTableFastReset::htFind(intlong i)
 {
-  int key = findIndex(i);
-  return (table[key].isEmpty())
-    ? htEmpty : table[key].value;
+  unsigned int key = findIndex(i);
+  return ((table[key].isEmpty())
+	  ? htEmpty : table[key].getValue());
 }
 
-void HashTableFastReset::resize()
+//
+void AddressHashTableFastReset::resize()
 {
   int oldSize = tableSize;
-  HashNodeLinked* old = table;    
+  AHT_HashNodeLinked* old = table;    
 
-  tableSize = nextPrime(tableSize*2);
+  incStepMod = nextPrime(tableSize*2);
+  tableSize = nextPrime(incStepMod+1);
   mkTable();
 
   //
   for (int i = 0; i < oldSize; i++) {
     if (! old[i].isEmpty()) 
-      htAdd(old[i].key.fint, old[i].value);
+      htAdd((old[i].getKey()).fint, old[i].getValue());
   }
 
   //
   delete [] old;
 }
 
+//
 #ifdef DEBUG_CHECK
-void HashTableFastReset::print()
+void AddressHashTableFastReset::print()
 {
   for(int i = 0; i < tableSize; i++) {
     if (!table[i].isEmpty()) {
       printf("table[%d] = <%ld,0x%p>\n", i,
-	     table[i].key.fint, table[i].value);
+	     (table[i].getKey()).fint, table[i].getValue());
     }
   }
   printStatistics();
 }
 
-void HashTableFastReset::printStatistics()
+void AddressHashTableFastReset::printStatistics(int th)
 {
-  int maxx = 0, sum = 0, collpl = 0, coll = 0;
+  int misspl = 0;
+  DebugCode(int sum = 0;);
+
+  //
   for(int i = 0; i < tableSize; i++) {
-    if (table[i].isEmpty())
-      continue;
-    int l = lengthList(i);
-    maxx = maxx > l ? maxx : l;
-    sum += l;
-    coll  += l > 1 ? l - 1 : 0;
-    collpl += l > 1 ? 1 : 0;
+    if (!table[i].isEmpty()) {
+      unsigned int pkey = primeHashFunc((table[i].getKey()).fint);
+      sum++;
+      if (pkey != i)
+	// that is, an alien entry took place here;
+	misspl++;
+    }
   }
-  printf("\nHashtable-Statistics:\n");
-  printf("\tmaximum bucket length     : %d\n", maxx);
-  printf("\tnumber of collision places: %d\n", collpl);
-  printf("\tnumber of collisions      : %d\n", coll);
-  printf("\t%d table entries have been used for %d literals (%d%%)\n", 
-	 tableSize, counter, counter*100/tableSize);
+  Assert(sum == counter);
+
+  //
+  if (nsearch > 0 && (int) tries/nsearch > th) {
+    printf("\nHashtable-Statistics:\n");
+    printf("\tnumber of misplaced entries: %d\n", misspl);
+    printf("\tnumber of searches:          %d\n", nsearch);
+    printf("\tmaximal search tries:        %d\n", maxtries);
+    printf("\taverage search tries:        %.3f\n", (double) tries/nsearch);
+    printf("\t%d table entries have been used for %d literals (%d%%)\n", 
+	   tableSize, counter, counter*100/tableSize);
+  }
 }
 
-int HashTableFastReset::lengthList(int i)
-{
-  int key = hashFunc(table[i].key.fint);
-  int ret = 1;
-  while (key != i) {
-    ret++;
-    key = incKey(key, tableSize);
-  }
-  return (ret);
-}
 #endif
