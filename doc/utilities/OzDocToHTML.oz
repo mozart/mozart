@@ -444,7 +444,7 @@ define
 	       EMPTY
 	    [] author then
 	       Authors <- {Append @Authors
-			   [author(name: OzDocToHTML, Process(M $))]}
+			   [author(name: OzDocToHTML, Batch(M 1 $))]}
 	       EMPTY
 	    [] 'author.extern' then
 	       Authors <- {Append @Authors
