@@ -16,14 +16,13 @@ local
       
       meth init(Manager Menu Canvas Status ?PackMe)
 	 Tk.toplevel,tkInit(title:              TitleName
+			    delete:
+			       proc {$}
+				  {self.manager.status kill}
+				  {self.manager close}
+			       end
 			    withdraw:           true
 			    highlightthickness: 0)
-	 {Tk.send wm(protocol self 'WM_DELETE_WINDOW'
-		     {New Tk.action tkInit(parent: self
-					   action: proc {$}
-						      {self.manager.status kill}
-						      {self.manager close}
-						   end)})}
 
 	 ScrX  = {New Tk.scrollbar tkInit(parent: self
 					  relief: sunken
