@@ -3,26 +3,13 @@
 <!-- Extension to the DTD -->
 <!ENTITY % proglang.values.local "|sh|fundamental">
 
-<!ENTITY % input.local.2 SYSTEM "tools.extra">
-<!ENTITY % p.mix.local "|Em|note.gui|menu">
+<!ENTITY % p.mix.local "|Em">
 <!ELEMENT Em - - (#PCDATA)>
 <!ENTITY % author.class "author|author.extern|comic">
 <!ENTITY % picture.element "picture|picture.extern|picture.choice">
 <!ELEMENT comic - O (%picture.element;)>
 
 <!-- Include Files -->
-<!ENTITY browser SYSTEM "browser.sgml">
-<!ENTITY panel   SYSTEM "panel.sgml">
-
-<!ENTITY explorer.actions   SYSTEM "e-actions.sgml">
-<!ENTITY explorer.interface SYSTEM "e-interface.sgml">
-<!ENTITY explorer.invoke    SYSTEM "e-invoke.sgml">
-<!ENTITY explorer.menu      SYSTEM "e-menu.sgml">
-<!ENTITY explorer.object    SYSTEM "e-object.sgml">
-<!ENTITY explorer.status    SYSTEM "e-status.sgml">
-<!ENTITY explorer.summary   SYSTEM "e-summary.sgml">
-<!ENTITY explorer.tree      SYSTEM "e-tree.sgml">
-
 <!ENTITY linker             SYSTEM "linker.sgml">
 <!ENTITY compiler	    SYSTEM "compiler.sgml">
 <!ENTITY debugger	    SYSTEM "debugger.sgml">
@@ -53,32 +40,6 @@
     <meta name="proglang.mode" arg1="fundamental" arg2="fundamental-mode">
     <!-- Splitting the document into different HTML nodes -->
 
-    <Meta name="html.split"       value="chapter.explorer">
-    <Meta name="html.split"       value="section.explorer.summary">
-    <Meta name="html.split"       value="section.explorer.interface">
-    <Meta name="html.split"       value="section.explorer.status">
-    <Meta name="html.split"       value="section.explorer.invoke">
-    <Meta name="html.split"       value="section.explorer.tree">
-    <Meta name="html.split"       value="section.explorer.menu">
-    <Meta name="html.split"       value="section.explorer.actions">
-    <Meta name="html.split"       value="section.explorer.object">
-
-
-    <Meta name="html.split"       value="chapter.browser">
-    <meta name="html.split"	  value="sec.usingthebrowser">
-    <meta name="html.split"	  value="sec.browser.browsercommandsandoptions">
-    <meta name="html.split"	  value="sec.browser.applicationbrowsers">
-    <meta name="html.split"	  value="sec.browser.browsedinformation">
-
-    <Meta name="html.split"       value="chapter.panel">
-    <Meta name="html.split"       value="section.panel.usage">
-    <Meta name="html.split"       value="section.panel.usage.threads">
-    <Meta name="html.split"       value="section.panel.usage.memory">
-    <Meta name="html.split"       value="section.panel.usage.problem">
-    <Meta name="html.split"       value="section.panel.usage.opi">
-    <Meta name="html.split"       value="section.panel.menu">
-    <Meta name="html.split"       value="section.panel.object">
-
     <Meta name="html.split"       value="chapter.compiler">
     <Meta name="html.split"       value="section.compiler.modes">
     <Meta name="html.split"       value="section.compiler.options">
@@ -102,52 +63,17 @@
     <Meta name=status value=revised>
     <Title/Tools/
     <Author.Extern to="author.db" key="Denys.Duchier">
-    <Author.Extern to="author.db" key="Konstantin.Popov">
     <Author.Extern to="author.db" key="Christian.Schulte">
     <Abstract>
       <P.silent><!--**-->
     </Abstract>
   <Body>
   
-  <Part id="Part.Graphical">
-    <Title/Graphical Tools/
-
-    &browser;
-
-    &panel;
-
-    <Chapter id="Chapter.Explorer">
-      <Title/Oz Explorer&emdash; Visual Constraint Programming Support/
-
-      <P>
-      The Oz Explorer is a graphical and interactive tool to
-      visualize and analyze search trees.  A research paper on the
-      Oz Explorer is&nbsp;<Ptr to="Schulte97">. 
-      </P>
-
-      &explorer.summary;
-      &explorer.invoke;
-      &explorer.interface;
-      &explorer.tree; 
-      &explorer.status;
-      &explorer.menu;
-      &explorer.actions;
-      &explorer.object;
-
-    </Chapter>
-
-  </Part>
-
-  <Part id="Part.Cmd">
-    <Title/Commandline Tools/
-
       &compiler;
       &linker;
       &debugger;
       &profiler;
 
-  </Part>
 
   <Back>
-    <Bib.Extern id="Schulte97" to="tools.bib" key="Schulte97">
 </Book>
