@@ -115,6 +115,10 @@ define
 	 {@pipe write(vs: VS#"\n")}
       end
 
+      meth sendVS(VS)
+	 {@pipe write(vs: VS#"\n")}
+      end
+
       meth graph(VS)
 	 {@pipe write(vs: "graph(new("#VS#"))\n")}
       end
