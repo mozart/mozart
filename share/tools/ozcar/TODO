@@ -52,3 +52,9 @@ Leif special: nicht gerade special
 Sun Jan  4 15:29:19 MET 1998
 Verteiltes Debuggen:
   Die Fileinformation muss den Hostnamen beinhalten
+
+Mon Jan 12 20:50:44 MET 1998
+Verteiltes Debuggen + lokales Debuggen der liboz:
+  Beim Einladen von Code in den Emulator muss der Filename
+  aus der Debuginfo kanonisiert werden, damit BIbreakpointAt
+  funktionieren kann.
