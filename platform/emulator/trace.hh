@@ -36,7 +36,7 @@
 #ifdef DEBUG_TRACE
 #include "base.hh"
 
-Bool ozd_trace(char *s,
+Bool ozd_trace(const char *s,
                ProgramCounter PC=NOCODE,RefsArray Y=NULL,Abstraction *G=NULL);
 void ozd_tracerOn();
 void ozd_tracerOff();

@@ -112,10 +112,10 @@ void sendRequested(BorrowEntry *be){
 
 Bool ProxyVar::addSuspV(TaggedRef *, Suspension susp, int unstable)
 {
-  if (!suspList) {
-    BorrowEntry *be=BT->getBorrow(getIndex());
-    sendRequested(be);
-  }
+  // mm2: always send requested, maybe this should be done only once!
+  BorrowEntry *be=BT->getBorrow(getIndex());
+  sendRequested(be);
+
   addSuspSVar(susp, unstable);
   return FALSE;
 }
@@ -304,7 +304,8 @@ void ManagerVar::surrender(TaggedRef *vPtr, TaggedRef val)
   OZ_Return ret = bindV(vPtr,val);
   if (ret == SUSPEND) {
     Assert(origVar->getType()==OZ_VAR_FUTURE);
-    ((Future *)origVar)->kick(vPtr);
+    Bool ret=((Future *)origVar)->kick(vPtr);
+    Assert(!ret);
     am.emptySuspendVarList();
     return;
   }
@@ -314,7 +315,7 @@ void ManagerVar::surrender(TaggedRef *vPtr, TaggedRef val)
 void ManagerVar::requested(TaggedRef *vPtr)
 {
   if (origVar->getType()==OZ_VAR_FUTURE) {
-    ((Future *)origVar)->kick(vPtr);
+    int ret = ((Future *)origVar)->kick(vPtr);
   }
 }
 

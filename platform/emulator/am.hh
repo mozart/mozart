@@ -503,6 +503,30 @@ extern AM am;
  * Abbreviations
  * -----------------------------------------------------------------------*/
 
+#ifdef DEBUG_CHECK
+inline Board *oz_rootBoard() { return am.rootBoard(); }
+inline Board *oz_currentBoard() { return am.currentBoard(); }
+inline Bool oz_isRootBoard(Board *bb) { return oz_rootBoard() == bb; }
+inline Bool oz_isCurrentBoard(Board *bb) { return oz_currentBoard() == bb; }
+inline Bool oz_onToplevel() { return oz_currentBoard() == oz_rootBoard(); }
+inline Thread *oz_currentThread() { return am.threadsPool.currentThread(); }
+inline OZ_Term oz_newName()
+{
+  return makeTaggedLiteral(Name::newName(oz_currentBoard()));
+}
+inline OZ_Term oz_newPort(OZ_Term val)
+{
+  return makeTaggedConst(new PortWithStream(oz_currentBoard(), val));
+}
+inline OZ_Term oz_newCell(OZ_Term val)
+{
+  return makeTaggedConst(new CellLocal(oz_currentBoard(),val));
+}
+inline
+OZ_Term oz_newVariable() { return oz_newVar(oz_currentBoard()); }
+
+#else
+
 #define oz_rootBoard()        (am.rootBoard())
 #define oz_currentBoard()     (am.currentBoard())
 #define oz_isRootBoard(bb)    (oz_rootBoard()    == (bb))
@@ -513,9 +537,9 @@ extern AM am;
 #define oz_newName() makeTaggedLiteral(Name::newName(oz_currentBoard()))
 #define oz_newPort(val) \
   makeTaggedConst(new PortWithStream(oz_currentBoard(), (val)))
-#define oz_sendPort(p,v) sendPort(p,v)
 #define oz_newCell(val) makeTaggedConst(new CellLocal(oz_currentBoard(),(val)))
-#define oz_string(s)    OZ_string(s)
+#define oz_newVariable()         oz_newVar(oz_currentBoard())
+#endif
 
 
 inline
@@ -525,9 +549,6 @@ TaggedRef oz_newVariableOPT()
   *ret = am.currentUVarPrototype();
   return makeTaggedRef(ret);
 }
-
-#define oz_newVariable()         oz_newVar(oz_currentBoard())
-
 
 /* -----------------------------------------------------------------------
  * Debugger

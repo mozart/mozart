@@ -100,7 +100,7 @@ LBLstart:
   am.threadsPool.setCurrentThread(am.threadsPool.getFirstThread());
   Assert(CTT);
 
-  DebugTrace(ozd_trace("runnable thread->running"));
+  DebugTrace(ozd_trace("run thread"));
 
   // source level debugger & Thread.suspend
   if (CTT->getStop()) {
@@ -158,8 +158,6 @@ LBLrunThread:
 
     int ret=engine(NO);
 
-    DebugTrace(ozd_trace("emulation finished"));
-
     CTT->setAbstr(ozstat.currAbstr);
     ozstat.leaveCall(NULL);
     e->saveSelf();
@@ -189,6 +187,7 @@ LBLrunThread:
    * preemption
    * ----------------------------------------------------------------------- */
 LBLpreemption:
+  DebugTrace(ozd_trace("thread preempted"));
   Assert(GETBOARD(CTT)==CBB);
   /*  Assert(CTT->isRunnable()|| (CTT->isStopped())); ATTENTION */
   am.threadsPool.scheduleThreadInline(CTT, CTT->getPriority());
@@ -214,7 +213,7 @@ LBLerror:
    */
 LBLterminate:
   {
-    DebugTrace(ozd_trace("kill thread"));
+    DebugTrace(ozd_trace("thread terminated"));
     Assert(CTT);
     Assert(!CTT->isDeadThread());
     Assert(CTT->isRunnable());
@@ -300,8 +299,6 @@ LBLcheckEntailmentAndStability:
     // the 'nb' board which is probably modified above!
     //
     DebugCode(am.threadsPool.unsetCurrentThread());
-
-    DebugTrace(ozd_trace("check entailment"));
 
 #ifdef DEBUG_NONMONOTONIC
     cout << "checkEntailment" << endl << flush;
@@ -395,12 +392,14 @@ LBLdiscardThread:
    *
    */
 LBLsuspendActor:
+  DebugTrace(ozd_trace("thread suspend on actor"));
   if (e->debugmode() && CTT->getTrace()) {
     debugStreamBlocked(CTT);
   }
   goto LBLsuspend1;
 
 LBLsuspend:
+  DebugTrace(ozd_trace("thread suspended"));
   if (e->debugmode() && CTT->getTrace()) {
     debugStreamBlocked(CTT);
   } else if (CTT->getNoBlock()) {
@@ -424,8 +423,6 @@ LBLsuspend1:
     //  First, set the board and self, and perform special action for
     // the case of blocking the root thread;
     Assert(GETBOARD(CTT)==CBB);
-
-    DebugTrace(ozd_trace("suspend runnable thread"));
 
     am.threadsPool.unsetCurrentThread();
 
@@ -456,7 +453,7 @@ LBLsuspend1:
    */
 LBLfailure:
    {
-     DebugTrace(ozd_trace("fail"));
+     DebugTrace(ozd_trace("thread failed"));
 
      Assert(CTT);
      Assert(CTT->isRunnable());
@@ -549,9 +546,8 @@ LBLfailure:
 
 LBLraise:
   {
-    DebugTrace(ozd_trace("raise"));
-    DebugCheck(ozconf.stopOnToplevelFailure,
-               DebugTrace(ozd_tracerOn();ozd_trace("raise")));
+    DebugCode(if (ozconf.stopOnToplevelFailure) {DebugTrace(ozd_tracerOn());});
+    DebugTrace(ozd_trace("exception raised"));
 
     Assert(CTT);
 

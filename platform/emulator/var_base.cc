@@ -214,5 +214,6 @@ int oz_var_getSuspListLength(OzVariable *cv)
 }
 
 OZ_Term _var_status(OzVariable *cv) {
-  return (cv->getType()==OZ_VAR_EXT) ? ((ExtVar*)cv)->statusV() : AtomUnknown;
+  Assert(cv->getType()==OZ_VAR_EXT);
+  return ((ExtVar*)cv)->statusV();
 }
