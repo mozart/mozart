@@ -50,18 +50,6 @@ import
         toVirtualString clean)
 export
    Translate
-prepare
-   %%
-   %% Note: order is important in the following list!
-   %%
-   EntryClasses = [private#'private' protected#'protected' public#'public'
-                   datatype#'data type' enumtype#'enum type'
-                   static#'static' virtual#'virtual' purevirtual#'pure virtual'
-                   constructor#'constructor' destructor#'destructor'
-                   operator#'operator' member#'member' function#'function'
-                   macro#'macro'
-                   variable#'variable' useroption#'user option'
-                   command#'command' face#'face']
 define
    DOCTYPE_PUBLIC = '"-//W3C//DTD HTML 4.0 Transitional//EN"'
 
@@ -960,8 +948,8 @@ define
             [] entry then HTML1 ClassName HTML2 in
                OzDocToHTML, Batch(M.1 1 ?HTML1)
                ClassName = {FoldLTail
-                            {FoldR {Dictionary.condGet @Meta 'entry.category'
-                                    EntryClasses}
+                            {FoldR
+                             {Dictionary.condGet @Meta 'entry.category' nil}
                              fun {$ Cat In} C T in
                                 C#T = case Cat of _#_ then Cat
                                       else Cat#Cat
