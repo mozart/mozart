@@ -32,6 +32,7 @@
 
 #include "newmarshaler.hh"
 
+int gopa;
 //
 #define RememberNode(node,bs)                   \
   int ind = remember(node);                     \
