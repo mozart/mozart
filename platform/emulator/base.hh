@@ -327,6 +327,10 @@ class GName;
 
 class IONode;
 
+// this class can be used to fake the type system,e.g. to define a second
+//  constructor without arguments
+class DummyClass {};
+
 void checkGC();
 
 // see version.sed
@@ -400,6 +404,14 @@ void initLiterals();
 // see codearea.cc
 void displayCode(ProgramCounter from, int ssize);
 void displayDef(ProgramCounter from, int ssize);
+
+
+
+// see am.cc
+SuspList *oz_installPropagators(SuspList *local_list, SuspList *glob_list,
+                                Board *glob_home);
+
+
 
 /* Ultrix does not have 'strdup' */
 inline char *ozstrdup(const char *s)

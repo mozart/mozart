@@ -47,6 +47,7 @@ private:
   SuspList * fsSuspList[fs_prop_any];
 
 public:
+  GenFSetVariable(DummyClass *) : GenCVariable(FSetVariable,(DummyClass*)0) {}
   GenFSetVariable(void) : GenCVariable(FSetVariable) {
     _fset.init();
     for (int i = fs_prop_any; i--; )

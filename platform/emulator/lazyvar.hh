@@ -39,7 +39,7 @@ private:
   OZ_Term function;
   OZ_Term result;
 public:
-  GenLazyVariable() : GenCVariable(LazyVariable) {}
+  GenLazyVariable(); // mm2: fake compiler
   GenLazyVariable(OZ_Term fun,OZ_Term res)
     : GenCVariable(LazyVariable),function(fun),result(res){}
   OZ_Term getFunction() { return function; }

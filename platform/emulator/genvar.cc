@@ -56,60 +56,6 @@ void addSuspCVarOutline(TaggedRef *v, Suspension susp, int unstable)
   addSuspCVar(v, susp, unstable);
 }
 
-
-#ifdef GENVAR_VIRTUAL_DEFAULTS
-// virtual function defaults
-
-GenCVariable* GenCVariable::gcV()
-{
-  return 0;
-}
-
-void GenCVariable::gcRecurseV()
-{
-}
-
-OZ_Return GenCVariable::unifyV(TaggedRef *, TaggedRef, ByteCode *) {
-  return oz_raise(E_ERROR,E_KERNEL,"cvar",1,oz_atom("unifyImpl"));
-}
-
-OZ_Return GenCVariable::validV(TaggedRef *, TaggedRef) {
-  return oz_raise(E_ERROR,E_KERNEL,"cvar",1, oz_atom("validImpl"));
-}
-
-OZ_Return GenCVariable::hasFeatureV(TaggedRef, TaggedRef *) {
-  return oz_raise(E_ERROR,E_KERNEL,"cvar",1,oz_atom("hasFeatureImpl"));
-}
-
-void GenCVariable::addSuspV(Suspension susp, TaggedRef *vPtr,
-                            int unstable)
-{
-  AddSuspToList(suspList, susp, unstable ? home : 0);
-}
-
-void GenCVariable::disposeV()
-{
-}
-
-int GenCVariable::isKindedV()
-{
-  return OK;
-}
-
-void GenCVariable::printV()
-{
-}
-
-void GenCVariable::printLongV()
-{
-}
-
-int GenCVariable::getSuspListLengthV()
-{
-  return getSuspList()->length()-1;
-}
-#endif
-
 #ifdef OUTLINE
 #define inline
 #include "genvar.icc"

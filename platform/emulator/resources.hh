@@ -180,12 +180,12 @@
 //#define DEBUG_META
 //#define DEBUG_STACK
 //#define DEBUG_STABLE
-#define DEBUG_THREADS
-#define DEBUG_FSET
+//#define DEBUG_THREADS
+//#define DEBUG_FSET
 //#define DEBUG_NONMONOTONIC
 //#define DEBUG_LTQ
 //#define DEBUG_INDICES
-#define DEBUG_THREADCOUNT
+//#define DEBUG_THREADCOUNT
 //#define DEBUG_PROPAGATORS
 //#define ALLDIFF
 

@@ -60,7 +60,7 @@ void GenBoolVariable::installPropagators(GenFDVariable * glob_var,
                                          Board * glob_home)
 {
   for (int i = 0; i < fd_prop_any; i += 1)
-    suspList= am.installPropagators(suspList,
+    suspList= oz_installPropagators(suspList,
                                     glob_var->fdSuspList[i],
                                     glob_home);
 }

@@ -492,7 +492,7 @@ Bool isMoreLocal(TaggedRef var1, TaggedRef var2)
 */
 
 
-/* return -1 (v1=<v2), +1 (v1>=v2), 0 (dont care) */
+/* return <0, if (v1<v2), >0 if (v1>v2), =0 (dont care) */
 
 int isFuture(GenCVariable *t, TypeOfGenCVariable tag)
 {
@@ -506,11 +506,7 @@ int cmpCVar(GenCVariable *v1, GenCVariable *v2)
   TypeOfGenCVariable t2 = v2->getType();
   if (isFuture(v1,t1))    return  1;
   if (isFuture(v2,t2))    return -1;
-  if (t1==LazyVariable)   return  1;
-  if (t2==LazyVariable)   return -1;
-  if (t1==PerdioVariable) return  1;
-  if (t2==PerdioVariable) return -1;
-  return 0;
+  return t1-t2;
 }
 
 
@@ -620,7 +616,7 @@ loop:
 
   Assert(isCVar(tag1) && isCVar(tag2));
   /* prefered binding of perdio vars */
-  if (cmpCVar(tagged2CVar(term2),tagged2CVar(term1))==1) {
+  if (cmpCVar(tagged2CVar(term2),tagged2CVar(term1))>0) {
     Swap(term1,term2,TaggedRef);
     Swap(termPtr1,termPtr2,TaggedRef*);
   }
@@ -2177,7 +2173,7 @@ void AM::removeExtThreadOutlined(Thread *tt)
 }
 
 
-SuspList *AM::installPropagators(SuspList * local_list, SuspList * glob_list,
+SuspList *oz_installPropagators(SuspList * local_list, SuspList * glob_list,
                                  Board * glob_home)
 {
   Assert((local_list && glob_list && (local_list != glob_list)) ||

@@ -53,10 +53,23 @@ private:
   OZ_FiniteDomain * store_patch;
 
 public:
-  GenBoolVariable(void) : GenCVariable(BoolVariable) {
+  GenBoolVariable(DummyClass *)
+    : GenCVariable(BoolVariable,(DummyClass*)0)
+  {
+  }
+  GenBoolVariable(void) : GenCVariable(BoolVariable)
+  {
     ozstat.fdvarsCreated.incf();
   }
+  GenBoolVariable(SuspList *sl) : GenCVariable(BoolVariable,(DummyClass*)0)
+  {
+    suspList=sl;
+  }
 
+  USEFREELISTMEMORY;
+  static void *operator new(size_t chunk_size, GenFDVariable *fdv) {
+    return fdv;
+  }
   // methods relevant for term copying (gc and solve)
   void gc(GenBoolVariable *);
   inline void dispose(void);
