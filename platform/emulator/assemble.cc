@@ -132,12 +132,16 @@ OZ_BI_define(BIaddDebugInfo,3,0)
 } OZ_BI_end
 
 
+#ifdef DEBUG_CHECK
+static Opcode lastOpcode=OZERROR;
+#endif
 OZ_BI_define(BIstoreOpcode,2,0)
 {
   declareCodeBlock(0,code);
   oz_declareIntIN(1,i);
   Assert(i>=0 && i<(int)OZERROR);
   code->writeOpcode((Opcode)i);
+  DebugCheckT(lastOpcode=(Opcode)i);
   return PROCEED;
 } OZ_BI_end
 
@@ -228,10 +232,12 @@ OZ_BI_define(BIstorePredicateRef,2,0)
 {
   declareCodeBlock(0,code);
   oz_declareNonvarIN(1,p);
-  if (OZ_isUnit(p))
+  if (OZ_isUnit(p)) {
+    Assert(lastOpcode==DEFINITION || lastOpcode==DEFINITIONCOPY);
     code->writeAddress(NULL);
-  else {
+  } else {
     OZ_declareForeignPointerIN(1,predId);
+    Assert(predId);
     code->writeAddress((AbstractionEntry *) predId);
   }
   return PROCEED;
