@@ -745,11 +745,11 @@ local
 in
    class ChannelServer
       prop locking
-      feat SelfStatic
+      feat selfStatic
       attr clientList
       meth init(S)
          lock
-            self.SelfStatic=S
+            self.selfStatic=S
             clientList<-nil
          end
       end
@@ -808,7 +808,7 @@ meth getMakeNewClient(MakeNewClient)
    proc {MakeNewClient UserMessageHandler UserID StaticClientObj}
       StaticClientObj={NewStat  
          ChannelClient 
-         init(self.SelfStatic StaticClientObj
+         init(self.selfStatic StaticClientObj
               UserID UserMessageHandler)}
    end
 end
@@ -906,11 +906,11 @@ and server crashes:
 proc {UserMessageHandler Msg}
    {Show {VirtualString.toString
       case Msg
-      of permClient(UserID)    then UserID#' has crashed'
-      [] message(From Content) then From#' : '#Content
-      [] permServer            then 'Server has crashed'
+      of message(From Content) then From#' : '#Content
       [] registered(UserID)    then UserID#' joined us'
       [] unregistered(UserID)  then UserID#' left us'
+      [] permClient(UserID)    then UserID#' has crashed'
+      [] permServer            then 'Server has crashed'
       end}}
 end
 >>>
