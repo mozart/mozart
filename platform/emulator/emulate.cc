@@ -635,7 +635,15 @@ void engine() {
 
   LBLTaskEmpty:
     if (e->currentThread->isSolve () == OK) {
-      e->decSolveThreads (boardForNotification);
+      if (e->currentThread->isSolveReduce () == OK) {
+        if (boardForNotification->isCommitted () == NO) {
+          e->decSolveThreads (boardForNotification->getParentBoard ());
+        } else {
+          e->decSolveThreads (boardForNotification->getBoard ());
+        }
+      } else {
+        e->decSolveThreads (boardForNotification);
+      }
     }
     e->currentThread->dispose();
     e->currentThread=(Thread *) NULL;
@@ -2219,9 +2227,14 @@ void engine() {
           }
         } else {
           // to enumerate;
+          DebugCheck ((solveBB->hasSuspension () == NO),
+                      error ("solve board by the enumertaion without suspensions?"));
           Board *waitBoard = wa->getChild ();
           wa->decChilds ();
           WaitActor *nwa = new WaitActor (wa);
+          solveBB->removeSuspension ();   // since WaitActor::WaitActor add one;
+          DebugCheck ((solveBB->hasSuspension () == NO),
+                      error ("solve board by the enumertaion without suspensions?"));
           waitBoard->setActor (nwa);
           nwa->addChildInternal (waitBoard);
           wa->unsetBoard ();  // may not copy the actor and rest of boards too;
@@ -2246,6 +2259,10 @@ void engine() {
             // distributed again ... Moreover, it must be considered first.
           }
           // ... and now there are two proper branches of search problem;
+          DebugCheck ((solveBB->hasSuspension () == NO),
+                      error ("solve board by the enumertaion without suspensions?"));
+          DebugCheck ((newSolveBB->hasSuspension () == NO),
+                      error ("solve board by the enumertaion without suspensions?"));
 
           if ( !e->fastUnify (solveAA->getResult (),
                               solveAA->genEnumed (newSolveBB) )) {

@@ -83,11 +83,14 @@ void WaitActor::addChildInternal(Board *bb)
   int size = 2*max;
   Board **cc = (Board **) freeListMalloc((size+1)*sizeof(Board *));
   *cc++ = (Board *) size;
+  for (i = 0; i < max; i++) {
+    cc[i] = childs[i];
+  }
   freeListDispose(childs-1,(((int) childs[-1])+1)*sizeof(Board *));
   childs = cc;
   childs[max] = bb;
-  for (int j = max+1; j < size; j++) {
-    childs[j] = NULL;
+  for (i = max+1; i < size; i++) {
+    childs[i] = NULL;
   }
 }
 
@@ -96,7 +99,10 @@ void WaitActor::failChildInternal(Board *bb)
   int max=(int) childs[-1];
   for (int i = 0; i < max; i++) {
     if (childs[i] == bb) {
-      childs[i] = NULL;
+      for (; i < max-1; i++) {    // the order must be preserved (for solve);
+        childs[i] = childs[i+1];
+      }
+      childs[max-1] = NULL;
       return;
     }
   }
@@ -109,7 +115,10 @@ Board *WaitActor::getChild()
   for (int i = 0; i < max; i++) {
     if (childs[i]) {
       Board *wb = childs[i];
-      childs[i] = (Board *) NULL;
+      for (; i < max-1; i++) {    // the order must be preserved (for solve);
+        childs[i] = childs[i+1];
+      }
+      childs[max-1] = NULL;
       return (wb);
     }
   }

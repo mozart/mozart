@@ -474,7 +474,7 @@ Bool AM::checkExtSuspension (Suspension *susp)
 
       SolveActor *sa = CastSolveActor (sb->getActor ());
       if (sa->areNoExtSuspensions () == OK) {
-        Thread::ScheduleWakeup (sb, NO);
+        Thread::ScheduleSolve (sb);
         // Note:
         //  The observation is that some actors which have imposed instability
         // could be discarded by reduction of other such actors. It means,
@@ -491,30 +491,46 @@ Bool AM::checkExtSuspension (Suspension *susp)
 
 void AM::incSolveThreads (Board *bb)
 {
-  bb = bb->getBoardDeref ();
+  // get the next "cluster";
+  // no getBoardDeref () !!!
+  while (bb != (Board *) NULL && bb->isCommitted () == OK)
+    bb = bb->getBoard ();
   while (bb != (Board *) NULL && bb != rootBoard) {
     if (bb->isSolve () == OK) {
-      CastSolveActor (bb->getActor ())->incThreads ();
+      SolveActor *sa = CastSolveActor (bb->getActor ());
+      DebugCheck ((sa->getBoard () == (Board *) NULL),
+                  error ("solve actor in abstraction (AM::incSolveThreads ())"));
+      sa->incThreads ();
     }
-    bb = (bb->getParentBoard ())->getBoardDeref ();
+    DebugCheck ((bb->isCommitted () == OK),
+                error ("committed board in loop in AM::decSolveThreads ()"));
+    bb = bb->getParentBoard ();
+    while (bb != (Board *) NULL && bb->isCommitted () == OK)
+      bb = bb->getBoard ();
   }
 }
 
 void AM::decSolveThreads (Board *bb)
 {
-  while (bb->isCommitted () == OK)
+  // get the next "cluster";
+  // no getBoardDeref () !!!
+  while (bb != (Board *) NULL && bb->isCommitted () == OK)
     bb = bb->getBoard ();
   while (bb != (Board *) NULL && bb != rootBoard) {
     if (bb->isSolve () == OK) {
       SolveActor *sa = CastSolveActor (bb->getActor ());
-      sa->decThreads ();
-      if (sa->isStable () == OK) {
-        Thread::ScheduleWakeup (bb, NO);
+      if (sa->getBoard () != (Board *) NULL) {     // i.e. no abstraction;
+        sa->decThreads ();
+        if (sa->isStable () == OK) {
+          Thread::ScheduleSolve (bb);
+        }
       }
     }
-    while (bb->isCommitted () == OK)
-      bb = bb->getBoard ();           // no getBoardDeref () !!!
+    DebugCheck ((bb->isCommitted () == OK),
+                error ("committed board in loop in AM::decSolveThreads ()"));
     bb = bb->getParentBoard ();
+    while (bb != (Board *) NULL && bb->isCommitted () == OK)
+      bb = bb->getBoard ();
   }
 }
 
