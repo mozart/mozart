@@ -26,7 +26,7 @@ declare
 MM = {New Module.manager init()}
 
 DSettings = {MM link(url:'/home/nilsf/source/mozart/contrib/micq/defaultsettings.ozf' $)}
-Client = {MM link(url:'/home/nilsf/source/mozart/contrib/micq/client.ozf' $)}
+Client = {MM link(url:'/home/simon/ozdevel/mozart/contrib/micq/client.ozf' $)}
 
 DefaultHome=case {OS.getEnv 'HOME'} of false then "" elseof X then X#"/" end
 DefaultLogin=case {OS.getEnv 'USER'} of false then "" elseof X then X end
@@ -96,5 +96,8 @@ catch X then
       raise E end
    end
 end
+
+
+
 
 
