@@ -228,7 +228,7 @@ void genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
       return;
     }
   } else {
-    if(!isAbstraction(pred) || tagged2Abstraction(pred)->isProxy()) 
+    if(!isAbstraction(pred)) 
       goto bombGenCall;
 
     abstr = tagged2Abstraction(pred);
@@ -1705,7 +1705,7 @@ LBLdispatcher:
 
   Case(INLINEUPARROW)
     {
-      switch(uparrowInline(XPC(1),XPC(2),XPC(3))) {
+      switch(uparrowInlineBlocking(XPC(1),XPC(2),XPC(3))) {
       case PROCEED:
 	DISPATCH(5);
 
@@ -2267,12 +2267,6 @@ LBLdispatcher:
 	   def = (Abstraction *) predicate;
 	   CheckArity(def->getArity(), makeTaggedConst(def));
 	   if (!isTailCall) { CallPushCont(PC); }
-	 }
-	 if (def->isProxy()) {
-	   CTS->pushCall(makeTaggedConst(def),X,def->getArity());
-	   TaggedRef var = ((ProcProxy*)def)->getSuspvar();
-	   addSusp(var,CTT);
-	   goto LBLsuspendThread;
 	 }
        
 	 CallDoChecks(def,def->getGRegs(),def->getArity());
@@ -2905,20 +2899,7 @@ LBLdispatcher:
   
   Case(MARSHALLEDFASTCALL)
     {
-      TaggedRef pred = getTaggedArg(PC+1);
-      Bool tailcall  = getPosIntArg(PC+2);
-
-      Abstraction *abstr = tagged2Abstraction(pred);
-      if (abstr->isProxy()) {
-	TaggedRef var = ((ProcProxy*)abstr)->getSuspvar();
-	SUSP_PC(var,abstr->getArity(),PC);
-      }
-
-      OZ_unprotect((TaggedRef*)(PC+1));
-      AbstractionEntry *entry = AbstractionTable::add(abstr);
-      CodeArea::writeOpcode(tailcall ? FASTTAILCALL : FASTCALL, PC);
-      CodeArea::writeAddress(entry, PC+1);
-      DISPATCH(0);
+      Assert(0);
     } 
       
   Case(GENCALL) 

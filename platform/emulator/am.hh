@@ -401,8 +401,6 @@ extern AM am;
 #include "os.hh"
 #include "verbose.hh"
 
-#include "perdio.hh"
-
 #ifndef OUTLINE
 #include "am.icc"
 #endif

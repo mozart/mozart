@@ -137,9 +137,6 @@ Bool IHashTable::disentailed(GenCVariable *cvar, TaggedRef *ptr)
   case AVAR:
     return ((GenCVariable *)this)->valid(ptr,OZ_int(4711));
 
-  case PerdioVariable:
-    return ((GenCVariable *)this)->valid(ptr,OZ_int(4711));
-
   default:    
     return NO;
   }

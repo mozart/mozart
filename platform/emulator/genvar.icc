@@ -64,11 +64,6 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
     if (! ((AVar *)this)->unifyAVar(tptr1, tptr2==0?&term2:tptr2, prop))
       return FALSE;
     break;
-  case PerdioVariable:
-    if (! ((PerdioVar *)this)->unifyPerdioVar(tptr1, tptr2==0?&term2:tptr2,
-					      prop))
-      return FALSE;
-    break;
   default:
     Assert(0);
     return FALSE;
@@ -113,7 +108,6 @@ size_t GenCVariable::getSize(void)
   case FSetVariable: return ((GenFSetVariable*)this)->getSize();
 #endif
   case AVAR:         return ((AVar *)this)->getSize();
-  case PerdioVariable: return ((PerdioVar *)this)->getSize();
   default:           Assert(0);
   }
   return 0;
@@ -133,7 +127,6 @@ Bool GenCVariable::valid(TaggedRef *ptr,TaggedRef val)
   case FSetVariable: return ((GenFSetVariable*)this)->valid(val);
 #endif
   case AVAR:         return ((AVar *)this)->valid(val);
-  case PerdioVariable: return ((PerdioVar *)this)->valid(ptr,val);
   default: Assert(0); break;
   }  
   return FALSE;
@@ -166,7 +159,6 @@ void GenCVariable::installPropagators(GenCVariable * glob_var, Bool prop)
     case MetaVariable: 
 #endif
     case AVAR:
-    case PerdioVariable:
 #ifdef FSETVAR
     case FSetVariable:
 #endif
