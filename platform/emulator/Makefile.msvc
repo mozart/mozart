@@ -30,7 +30,7 @@ SRCS= \
         print.cc base.cc ozconfig.cc \
         foreign.cc dpInterface.cc boot-manager.cc \
         builtins.cc vprops.cc debug.cc interFault.cc\
-        tk.cc compiler.cc browser.cc debugBI.cc\
+        tk.cc compiler.cc compat.cc browser.cc debugBI.cc\
         parser.cc winscanner.cc\
         libdp/chain.cc           libdp/marshalMsg.cc      libdp/table.cc\
         libdp/dpDebug.cc         libdp/msgType.cc         libdp/var.cc\

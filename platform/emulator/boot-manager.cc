@@ -108,6 +108,7 @@ static TaggedRef dictionary_of_modules;
 #include "modFDP-if.cc"
 #include "modCTB-if.cc"
 #include "modRecordC-if.cc"
+#include "modCompat-if.cc"
 #include "modSchedule-if.cc"
 #include "modParser-if.cc"
 #include "modFSB-if.cc"
@@ -209,6 +210,7 @@ static ModuleEntry ext_module_table[] = {
   {"Fault",           mod_int_Fault},
   {"DPMisc",          mod_int_DPMisc},
   {"VirtualSite",     mod_int_VirtualSite},
+  {"Compat",          mod_int_Compat},
 #endif
 
 #ifdef MISC_BUILTINS
