@@ -2,6 +2,7 @@
  *  Authors:
  *    Per Brand (perbrand@sics.se)
  *    Erik Klintskog (erik@sics.se)
+ *    Konstantin Popov <kost@sics.se>
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -225,8 +226,10 @@ OZ_BI_define(BIgetBroadcastAddresses,0,1)
   // how many interfaces can be there??! :-))
   bsize = sizeof(struct ifreq) * 16;
   buff = (char *) malloc(bsize);
-  if (buff < 0)
+  if (buff < 0) {
+    close(desc);
     RETURN_UNIX_ERROR("virtual memory exhausted!");
+  }
 
   //
   ifc.ifc_len = bsize;
@@ -270,7 +273,11 @@ OZ_BI_define(BIgetBroadcastAddresses,0,1)
 #else
   // last resort - just give '-1' away;
   struct in_addr ia;
+#if defined(WINDOWS)
   ia.s_addr = (u_long) -1;
+#else
+  ia.s_addr = (in_addr_t) -1;
+#endif
   lba = oz_cons(OZ_string(inet_ntoa(ia)), lba);
 #endif
 
