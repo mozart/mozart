@@ -1,3 +1,4 @@
+
                                     ozmake
 
    [1]Denys Duchier
@@ -118,7 +119,7 @@ OPTIONS
           directory into which to extract a package
 
    --archive=<ARCHIVE>
-          default: http://ww.mozart-oz.org/mogul/pkg
+          default: http://www.mozart-oz.org/mogul/pkg
           URL of mogul archive from which packages can be downloaded
 
    --moguldir=<MOGULDIR>
@@ -138,7 +139,7 @@ OPTIONS
    -p <PKG>, --package=<PKG>
           file or URL of package. when creating a package, it should be a
           local filename. when extracting or installing, it can also be a
-          URL or a mogul id; it the latter case, the package is
+          URL or a mogul id; in the latter case, the package is
           automatically downloaded from the mogul archive
 
    -V <VERSION>, --packageversion=<VERSION>
@@ -809,5 +810,5 @@ CONTACTS
 References
 
    1. http://www.ps.uni-sb.de/~duchier/
-   2. file://localhost/home/denys/src/Mozart/devel/stdlib/ozmake/CHANGES
+   2. file://localhost/home/keving/MOZART/kosher/mozart-stdlib/ozmake/CHANGES
    3. http://www.ps.uni-sb.de/~duchier/
