@@ -110,6 +110,13 @@ arities (for example, with <<Record.filter>>).
 Tuples do not have entries in the arity table, so
 they are not subject to this restriction.
 
+<section class=unnumbered><title/Cloning/
+
+<p>
+Arities of records are not cloned. This is typically correct.
+Only if the arity contains names that are local to a subordinated
+space this is incorrect.
+
 <section class=unnumbered><title/Procedures/
 
 <p>
