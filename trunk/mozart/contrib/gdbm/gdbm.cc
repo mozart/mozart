@@ -1,4 +1,3 @@
-#include "bytedata.hh"
 #include "mozart.h"
 #include "gdbm.h"
 #include <string.h>
@@ -6,7 +5,6 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/uio.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -18,11 +16,10 @@ public:
   //
   // Situated Extension 
   //
-  friend Bool oz_isGdbm(OZ_Term);
+  friend int oz_isGdbm(OZ_Term);
   static int id;
   virtual int getIdV() { return id; }
   virtual OZ_Term typeV() { return OZ_atom("gdbm"); }
-  virtual void printStreamV(ostream &out,int depth = 10);
   virtual OZ_Extension* gcV();
   //
   void release();
@@ -35,7 +32,7 @@ public:
 
 int GDBM::id;
 
-inline Bool oz_isGdbm(OZ_Term t)
+inline int oz_isGdbm(OZ_Term t)
 {
   t = OZ_deref(t);
   return OZ_isExtension(t) &&
@@ -46,13 +43,6 @@ inline GDBM* tagged2Gdbm(OZ_Term t)
 {
   Assert(oz_isGdbm(t));
   return (GDBM*) OZ_getExtension(OZ_deref(t));
-}
-
-void GDBM::printStreamV(ostream &out,int depth = 10)
-{
-  out << "<gdbm ";
-  if (db==0) cout << "[closed] ";
-  out << '"' << filename << "\">";
 }
 
 OZ_Extension* GDBM::gcV()
@@ -99,11 +89,11 @@ OZ_BI_define(cgdbm_open,4,1)
   OZ_declareVS(       0,name,len);
 
   int zflags = 0;
-  if (flags->get(0)) zflags  = GDBM_READER;
-  if (flags->get(1)) zflags  = GDBM_WRITER;
-  if (flags->get(2)) zflags  = GDBM_WRCREAT;
-  if (flags->get(3)) zflags  = GDBM_NEWDB;
-  if (flags->get(4)) zflags |= GDBM_FAST;
+  if (OZ_BitStringGet(flags,0)) zflags  = GDBM_READER;
+  if (OZ_BitStringGet(flags,1)) zflags  = GDBM_WRITER;
+  if (OZ_BitStringGet(flags,2)) zflags  = GDBM_WRCREAT;
+  if (OZ_BitStringGet(flags,3)) zflags  = GDBM_NEWDB;
+  if (OZ_BitStringGet(flags,4)) zflags |= GDBM_FAST;
 
   GDBM_FILE file;
   file = gdbm_open(name,block,zflags,mode,NULL);
