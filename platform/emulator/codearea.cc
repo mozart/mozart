@@ -618,10 +618,10 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case TESTLESS:
       fprintf (ofile,
 	       "(x(%d) x(%d) %p %d)\n",
+	       regToInt(getRegArg(PC+1)),
 	       regToInt(getRegArg(PC+2)),
-	       regToInt(getRegArg(PC+3)),
-	       computeLabelArg(PC,PC+4),
-	       getPosIntArg(PC+5));
+	       computeLabelArg(PC,PC+3),
+	       getPosIntArg(PC+4));
       DISPATCH();
 
     case INLINEREL1:
@@ -646,9 +646,9 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case INLINEMINUS1:
       fprintf (ofile,
 	       "(x(%d) x(%d) %d)\n",
+	       regToInt(getRegArg(PC+1)),
 	       regToInt(getRegArg(PC+2)),
-	       regToInt(getRegArg(PC+3)),
-	       getPosIntArg(PC+4));
+	       getPosIntArg(PC+3));
       DISPATCH();
 
     case INLINEFUN2:
