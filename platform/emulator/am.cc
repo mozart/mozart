@@ -633,6 +633,7 @@ void AM::checkStatus(Bool block)
 void AM::setMinimalTaskInterval(void *arg, unsigned int ms)
 {
   unsigned int accMinTime = 0;
+  DebugCode(Bool taskExists = FALSE;)
 
   //
   for (int i = 0; i < MAXTASKS; i++) {
@@ -640,10 +641,11 @@ void AM::setMinimalTaskInterval(void *arg, unsigned int ms)
 
     //
     if (!tn->isFree()) {
-      if (tn->getArg() == arg)
+      if (tn->getArg() == arg){
         // for all tasks with 'arg', if there are multiple;
         tn->setMinimalTaskInterval(ms);
-
+        DebugCode(taskExists = TRUE;)
+      }
       //
       unsigned int tnMinTime = tn->getMinimalTaskInterval();
       if (tnMinTime) {
@@ -654,7 +656,7 @@ void AM::setMinimalTaskInterval(void *arg, unsigned int ms)
       }
     }
   }
-
+  Assert(taskExists!=FALSE);
   //
   taskMinInterval = accMinTime;
 }

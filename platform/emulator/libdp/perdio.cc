@@ -934,8 +934,11 @@ void msgReceived(MsgBuffer* bs)
   case M_SEND_PING:
     {
       // the information received is not of any interest.
-      int unused1, unused2;
-      unmarshal_M_SEND_PING(bs,unused1,unused2);
+      int unused;
+      DSite* fromS;
+      unmarshal_M_SEND_PING(bs,fromS,unused);
+      printf("pingReceived from %s \n",fromS->stringrep());
+      break;
     }
   default:
     OZ_error("siteReceive: unknown message %d\n",mt);
@@ -1119,7 +1122,7 @@ void initDPCore()
 
 void sendPing(DSite* s){
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(s);
-  marshal_M_SEND_PING(bs,42,42);
+  marshal_M_SEND_PING(bs,myDSite,42);
   SendTo(s,bs,M_SEND_PING,myDSite,0);
 }
 

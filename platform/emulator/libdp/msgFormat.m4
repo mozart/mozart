@@ -67,4 +67,4 @@ message(M_UNASK_ERROR,Index,Site,Index2)
 message(M_SEND_GATE,Term)
 
 message(M_REQUESTED,Index)
-message(M_SEND_PING,Index,Index2)
+message(M_SEND_PING,Site,Index)

@@ -54,6 +54,10 @@ void SendTo(DSite *toS,MsgBuffer *bs,MessageType mt,DSite *sS,int sI);
 // another story).
 void msgReceived(MsgBuffer *);
 
+// Used by networklayer to do pinging.
+void sendPing(DSite*);
+
+
 //
 OZ_Term getGatePort(DSite*);
 
