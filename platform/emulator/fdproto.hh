@@ -141,6 +141,7 @@ OZ_C_proc_proto(BIfdGenLinLessEqKillB)
 OZ_C_proc_proto(BIfdCopyDomain)
 OZ_C_proc_proto(BIfdDivIntervalCons)
 OZ_C_proc_proto(BIfdDivIntervalCons_body)
+OZ_C_proc_proto(BIgetCopyStat)
 
 // fdwatch.cc
 OZ_C_proc_proto(BIfdWatchDom1)
