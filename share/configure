@@ -1191,7 +1191,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "lib/Makefile tools/Makefile demo/Makefile test/Makefile \
+trap 'rm -fr `echo "lib/Makefile lib/Makefile-lilo tools/Makefile demo/Makefile test/Makefile \
     examples/Makefile elisp/Makefile elisp/oz.el bin/Makefile Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -1284,7 +1284,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"lib/Makefile tools/Makefile demo/Makefile test/Makefile \
+CONFIG_FILES=\${CONFIG_FILES-"lib/Makefile lib/Makefile-lilo tools/Makefile demo/Makefile test/Makefile \
     examples/Makefile elisp/Makefile elisp/oz.el bin/Makefile Makefile"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF

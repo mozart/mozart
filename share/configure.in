@@ -78,7 +78,7 @@ dnl *****************************************************************
 dnl FINALIZE
 dnl *****************************************************************
 
-AC_OUTPUT(lib/Makefile tools/Makefile demo/Makefile test/Makefile \
+AC_OUTPUT(lib/Makefile lib/Makefile-lilo tools/Makefile demo/Makefile test/Makefile \
     examples/Makefile elisp/Makefile elisp/oz.el bin/Makefile Makefile)
 
 
