@@ -1613,7 +1613,7 @@ The rest of the output is then passed through the oz-filter."
 		(replace-match "" nil t)
 		(if (string-equal file "undef")
 		    (if oz-bar-overlay
-			(overlay-put oz-bar-overlay 'face 'default))
+			(delete-overlay oz-bar-overlay))
 		  (oz-bar file line state)))))
 
 	  (if (or moving errs-found) (goto-char (process-mark proc))))
