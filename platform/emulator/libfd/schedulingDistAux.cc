@@ -447,7 +447,6 @@ OZ_Return FirstsLasts::propagate(void)
 	      }
 	    }
 
-	    
 	    if (how_many == 1) goto imposeOne; 
 	    else if ((reg_flag == 0) && (number_of_lasts < number_of_firsts))
 	      goto imposeLasts;

@@ -142,7 +142,7 @@ OZ_Return CPIteratePropagator::propagate(void)
   int mSi;
 
   constraints = initConstraints;
-  int * constraintsExtension = NULL;
+  int * constraintsExtension;
 
   int constraintLimit = INITIALSIZE;
 
@@ -872,7 +872,6 @@ int ozcdecl CompareIntervals(const void *In1, const void *In2)
 int ozcdecl CompareBounds(const void *Int1, const void *Int2) {
   return *(int*)Int1 - *(int*)Int2;
 }
-
 OZ_C_proc_begin(sched_cpIterateCap, 4)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT ","  OZ_EM_INT);
@@ -890,6 +889,29 @@ OZ_C_proc_begin(sched_cpIterateCap, 4)
 		   OZ_getLowPrio());
 }
 OZ_C_proc_end
+
+/*
+// flag version for interval reasoning only
+OZ_C_proc_begin(sched_cpIterateCap, 5)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT ","  OZ_EM_INT ","  OZ_EM_INT);
+  
+  PropagatorExpect pe;
+  
+  OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
+  OZ_EXPECT(pe, 1, expectVectorInt);
+  OZ_EXPECT(pe, 2, expectVectorInt);
+  OZ_EXPECT(pe, 3, expectInt);
+  OZ_EXPECT(pe, 4, expectInt);
+  SAMELENGTH_VECTORS(0, 1);
+  
+  return pe.impose(new CPIteratePropagatorCap(OZ_args[0], OZ_args[1],
+					     OZ_args[2], OZ_args[3],
+					     OZ_intToC(OZ_args[4])), 
+		  OZ_getLowPrio());
+}
+OZ_C_proc_end
+*/
 
 struct Set2 {
   int dSi, sUp, sLow, extSize;
@@ -937,7 +959,7 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
   int mSi;
 
   constraints = initConstraints;
-  int * constraintsExtension = NULL;
+  int * constraintsExtension;
 
   int constraintLimit = INITIALSIZE;
 
@@ -1531,62 +1553,127 @@ capLoop:
     // exclude from the tasks the intervals, which indicate that 
     // the task connot be scheduled here because of no sufficient place.
     //////////
-    for (i=0; i<ts; i++) {
-      int lst = MinMax[i].max;
-      int ect = MinMax[i].min + dur[i];
-      int use_i = use[i];
-      int dur_i = dur[i];
-      for (j=0; j<exclusion_nb; j++) {
-	Interval Exclusion = ExclusionIntervals[j];
-	if (Exclusion.use + use_i > capacity) {
-	  int left = Exclusion.left;
-	  int right = Exclusion.right;
-	  if (lst < ect) {
-	    if ( (lst <= left) && (right <= ect) ) continue;
-	    else {
-	      if ( (lst < left) && (left < ect) && (ect < right) )
-		cout << "Fatal1: " << lst <<" "<<left<<" "<<ect<<" "<<right<<endl;
-	      else if ( (left < lst) && (lst < right) && (right < ect) )
-		cout << "Fatal2: " << lst <<" "<<left<<" "<<ect<<" "<<right<<endl;
-	      else if ( (left < lst) && (ect < right) )
-		cout << "Fatal3: " << lst <<" "<<left<<" "<<ect<<" "<<right<<endl;
+    // do not use reg_flag anymore, it is not worth it.
+    // the commented region does contain code which avoids the 
+    // production of holes in domains
+    /*
+    if (reg_flag == 0)
+      {
+      */
+	// perhaps some tests before generalizing domains could improve
+        for (i=0; i<ts; i++) {
+	  int lst = MinMax[i].max;
+	  int ect = MinMax[i].min + dur[i];
+	  int use_i = use[i];
+	  int dur_i = dur[i];
+	  for (j=0; j<exclusion_nb; j++) {
+	    Interval Exclusion = ExclusionIntervals[j];
+	    if (Exclusion.use + use_i > capacity) {
+	      int left = Exclusion.left;
+	      int right = Exclusion.right;
+	      if (lst < ect) {
+		if ( (lst <= left) && (right <= ect) ) continue;
+		else {
+		  if (Exclusion.use + use_i > capacity) {
+		    OZ_FiniteDomain la;
+		    la.initRange(left-dur_i+1,right-1);
+		    FailOnEmpty(*x[i] -= la);
+		    
+		    // new
+		    // for capacity > 1 we must count the used resource. 
+		    // But this is too expensive.
+		    if ((left - last < dur_i) && (capacity == 1)) {
+		      OZ_FiniteDomain la;
+		      la.initRange(last,right-1);
+		      FailOnEmpty(*x[i] -= la);
+		    }
+		    last = right;
+		    
+		  }
+		}
+	      }
 	      else {
 		if (Exclusion.use + use_i > capacity) {
 		  OZ_FiniteDomain la;
 		  la.initRange(left-dur_i+1,right-1);
 		  FailOnEmpty(*x[i] -= la);
-
+		  
 		  // new
-  	          if (left - last < dur_i) {
+ 	          // for capacity > 1 we must count the used resource. 
+                  // But this is too expensive.
+  	          if ((left - last < dur_i) && (capacity == 1)) {
 		    OZ_FiniteDomain la;
 		    la.initRange(last,right-1);
 		    FailOnEmpty(*x[i] -= la);
 		  }
 		  last = right;
-
+		  
 		}
 	      }
 	    }
 	  }
-	  else {
-	    if (Exclusion.use + use_i > capacity) {
-	      OZ_FiniteDomain la;
-	      la.initRange(left-dur_i+1,right-1);
-	      FailOnEmpty(*x[i] -= la);
-
+	}
+    /*
+      }
+  
+    else {
+      
+      OZ_FiniteDomain la, lb;
+      for (i=0; i<ts; i++) {
+	int lst = MinMax[i].max;
+	int ect = MinMax[i].min + dur[i];
+	int use_i = use[i];
+	int dur_i = dur[i];
+	lb.initFull();
+	for (j=0; j<exclusion_nb; j++) {
+	  Interval Exclusion = ExclusionIntervals[j];
+	  if (Exclusion.use + use_i > capacity) {
+	    int left = Exclusion.left;
+	    int right = Exclusion.right;
+	    if (lst < ect) {
+	      if ( (lst <= left) && (right <= ect) ) continue;
+	      else {
+		if (Exclusion.use + use_i > capacity) {
+		  la.initRange(left-dur_i+1,right-1);
+		  FailOnEmpty(lb -= la);
+		  
 		  // new
-  	          if (left - last < dur_i) {
-		    OZ_FiniteDomain la;
+ 	          // for capacity > 1 we must count the used resource. 
+                  // But this is too expensive.
+		  if ((left - last < dur_i) && (capacity == 1)) {
 		    la.initRange(last,right-1);
-		    FailOnEmpty(*x[i] -= la);
+		    FailOnEmpty(lb -= la);
 		  }
 		  last = right;
-
+		  
+		}
+	      }
+	    }
+	    else {
+	      if (Exclusion.use + use_i > capacity) {
+		la.initRange(left-dur_i+1,right-1);
+		FailOnEmpty(lb -= la);
+		
+		// new
+ 	        // for capacity > 1 we must count the used resource. 
+                // But this is too expensive.
+  	        if ((left - last < dur_i) && (capacity == 1)) {
+		  la.initRange(last,right-1);
+		  FailOnEmpty(lb -= la);
+		}
+		last = right;
+		
+	      }
 	    }
 	  }
 	}
+	FailOnEmpty(lb >= x[i]->getMinElem());
+	FailOnEmpty(lb <= x[i]->getMaxElem());
+	FailOnEmpty(*x[i] >= lb.getMinElem());
+	FailOnEmpty(*x[i] <= lb.getMaxElem());
       }
     }
+    */
 
     //////////
     // update the min/max values
@@ -1608,8 +1695,8 @@ capLoop:
       cap_flag = 0;
       goto capLoop;
     }
+
       
-    
   }
 
 
@@ -1773,8 +1860,9 @@ capLoop:
 	  int right = Inclusion.right;
 	  if ( (mini <= left) && (right <= maxi) ) {
 	    if (Inclusion.use - use_i < capacity) {
+	      if (dur_i < right - left) goto failure;
 	      OZ_FiniteDomain la;
-	      la.initRange(left-dur_i+1,right-1);
+	      la.initRange(right-dur_i,left);
 	      FailOnEmpty(*x[i] &= la);
 	      int mini_new = x[i]->getMinElem();
 	      int maxi_new = x[i]->getMaxElem();
@@ -1804,6 +1892,8 @@ capLoop:
     }
 
 
+
+
     if (cap_flag == 1) {
       cap_flag = 0;
       goto capLoop;
@@ -1818,7 +1908,6 @@ failure:
   return P.fail();
 }
   
-
 //-----------------------------------------------------------------------------
 // static member
 
