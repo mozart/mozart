@@ -7,6 +7,8 @@ PREFIX		= @prefix@
 OZBIN		= $(PREFIX)/bin
 OZTOOLS		= $(PREFIX)/tools
 IMAGESDIR	= $(OZTOOLS)/images
+CACHEDIR	= $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/tools
+CACHEBINDIR	= $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/bin
 
 SHELL		= @SH@
 RM		= @RM@ -f
@@ -27,8 +29,8 @@ ENV2TYPE	= $(PERL) $(SRCDIR)/../lib/env2type
 OZFLAGS		=
 OZBATCH		= @OZBATCH@
 
-COMPILE		= $(OZBATCH) $(OZFLAGS) -c
-EXEC		= $(OZBATCH) $(OZFLAGS)
+COMPILE		= OZHOME=$(PREFIX) $(OZBATCH) $(OZFLAGS) -c
+EXEC		= OZHOME=$(PREFIX) $(OZBATCH) $(OZFLAGS)
 
 COMPILERPANELSRC1 = \
 	CompilerPanelClass.oz
@@ -114,9 +116,12 @@ COMPONENTS = \
 	Ozcar.ozc Profiler.ozc Gump.ozc GumpScanner.ozc GumpParser.ozc
 
 TOOLSCOMPONENTS = $(COMPONENTS:%=$(OZTOOLS)/%)
+CACHECOMPONENTS = $(COMPONENTS:%=$(CACHEDIR)/%)
+CACHETYCS	= $(TYCS:tyc/%=$(CACHEDIR)/%)
 
 SYSLETS = opi
 BINFILES = $(SYSLETS:%=$(OZBIN)/%)
+CACHELETS = $(SYSLETS:%=$(CACHEBINDIR)/%)
 
 IMAGES1 = \
 	compiler.xbm compilermask.xbm \
@@ -172,16 +177,16 @@ GumpScanner.ozc: $(GUMPSCANNERSRC) GumpScanner.env
 
 GumpParser.ozc: $(GUMPPARSERSRC) GumpParser.env
 
-opi: MakeOPI.oz
+opi: MakeOPI.oz $(TYCS)
 	$(EXEC) -l AP $<
 
 #---------------------------------------------------------------------
 # Installation
 #---------------------------------------------------------------------
 
-.PHONY: install install-main install-images
+.PHONY: install install-main install-images install-cache
 
-install: install-main install-images
+install: install-main install-images install-cache
 
 install-main: all \
 	$(OZTOOLS) $(TOOLSDIRS) $(TOOLSFILES) $(TOOLSCOMPONENTS) \
@@ -215,6 +220,16 @@ $(OZTOOLS)/%.tyc: tyc/%.tyc
 	$(INSTALLFILE) $< $@
 
 $(OZBIN)/%: %
+	$(INSTALLPRG) $< $@
+
+install-cache: $(CACHEDIR) $(CACHECOMPONENTS) $(CACHETYCS) $(CACHELETS)
+$(CACHEDIR) $(CACHEBINDIR):
+	$(MKINSTALLDIRS) $@
+$(CACHECOMPONENTS): $(CACHEDIR)/%.ozc : %.ozc
+	$(INSTALLFILE) $< $@
+$(CACHETYCS): $(CACHEDIR)/%.tyc : tyc/%.tyc
+	$(INSTALLFILE) $< $@
+$(CACHELETS): $(CACHEBINDIR)/% : % $(CACHEBINDIR)
 	$(INSTALLPRG) $< $@
 
 #---------------------------------------------------------------------
