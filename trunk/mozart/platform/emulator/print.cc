@@ -278,14 +278,15 @@ PRINT(DynamicTable)
     stream << '(';
     int nonempty=FALSE;
     // Count Atoms & Names in dynamictable:
-    TaggedRef tmplit;
+    TaggedRef tmplit,tmpval;
     dt_index di;
     long ai;
     long nAtom=0;
     long nName=0;
     for (di=0; di<size; di++) {
 	tmplit=table[di].ident;
-	if (tmplit) { 
+        tmpval=table[di].value;
+	if (tmpval) { 
 	    nonempty=TRUE;
             CHECK_DEREF(tmplit);
 	    if (isAtom(tmplit)) nAtom++; else nName++;
@@ -297,7 +298,8 @@ PRINT(DynamicTable)
     TaggedRef *arr = new TaggedRef[nAtom+1]; // +1 since nAtom may be zero
     for (ai=0,di=0; di<size; di++) {
 	tmplit=table[di].ident;
-	if (tmplit && isAtom(tmplit)) arr[ai++]=tmplit;
+        tmpval=table[di].value;
+	if (tmpval!=makeTaggedNULL() && isAtom(tmplit)) arr[ai++]=tmplit;
     }
     // Sort the Atoms according to printName:
     inplace_quicksort(arr, arr+(nAtom-1));
@@ -312,12 +314,13 @@ PRINT(DynamicTable)
     // Output the Names last, unordered:
     for (di=0; di<size; di++) {
 	tmplit=table[di].ident;
-	if (tmplit && !isAtom(tmplit)) {
+        tmpval=table[di].value;
+	if (tmpval!=makeTaggedNULL() && !isAtom(tmplit)) {
             stream << ' ';
             tagged2Stream(tmplit,stream,depth);
             stream << ':';
             stream << ' ';
-            tagged2Stream(table[di].value,stream,depth);
+            tagged2Stream(tmpval,stream,depth);
         }
     }
     // Deallocate array:
