@@ -364,6 +364,15 @@ OZ_FSetValue * OZ_fsetValueToC(OZ_Term t)
   return  tagged2FSetValue(oz_deref(t));
 }
 
+OZ_Propagator::~OZ_Propagator(void) {}
+
+OZ_Boolean OZ_Propagator::isMonotonic(void) const {
+  return OZ_TRUE;
+}
+
+OZ_NonMonotonic::order_t OZ_Propagator::getOrder(void) const {
+  return 0;
+}
 
 // End of File
 //-----------------------------------------------------------------------------
