@@ -137,6 +137,13 @@ define(CaseTwoRegs,``''
     )
 
 
+  Case(CLEARY)
+    {
+      Yreg(getRegArg(PC+1)) = makeTaggedNULL();
+      DISPATCH(2);
+    }
+
+
 Case(GETSELF)
      {
        XPC(1) = makeTaggedConst(e->getSelf());
