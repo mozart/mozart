@@ -32,6 +32,11 @@ in
 	   'Could not open file'
 	   [hint(l: 'File name' m: oz(FileName))]
 	   Exc}
+       elseof gump(fatalError VS) then
+	  {Error.format T
+	   VS
+	   nil
+	   Exc}
        else
 	  {Error.formatGeneric T Exc}
        end
