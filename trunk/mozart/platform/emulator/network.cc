@@ -150,7 +150,7 @@ enum ByteStreamType{
   BS_Unmarshal};
 
 
-#define MAXTCPCACHE 30
+#define MAXTCPCACHE 15
 
 enum ipReturn{
   IP_OK= 0,
@@ -221,6 +221,7 @@ int tcpPreReadHandler(int,void*);
 static int tcpReadHandler(int,void*);
 inline ipReturn writeI(int,BYTE*);
 inline ipReturn readI(int,BYTE *);
+
 int findProbeCons(Connection*);
 
 /* ************************************************************************ */
@@ -716,7 +717,7 @@ ByteBuffer *NetMsgBuffer::getAnother(){
   return(byteBufferManager->newByteBuffer());}
 
 /* *********************************************************************/
-/*   SECTION ?: RemoteSite                                          */
+/*   SECTION :: RemoteSite                                          */
 /* *********************************************************************/
 
 
@@ -729,16 +730,15 @@ class RemoteSite{
   
   // This is all monitor stuff. 
   // should be encapsulated in an  object with manager
-  int totalNrMsg;        // nr of queued msgs
   int totalMsgSize;      // size of queued msgs
   int MsgMonitorSize;    // limits given by protocol-layer
-  int MsgMonitorNr;      // limits given by protocol-layer
-  void* MsgMonitorPtr;   // given by protocol-layer
+  int treashFullCtr;
   
   WriteConnection *writeConnection; 
   ReadConnection *readConnection;
   Message *sentMsg;      // non-acknowledge msgs
   IOQueue writeQueue; //Unsent Messages,
+  int tSn;
 public:
   Site* site;
 
@@ -776,18 +776,20 @@ public:
   void siteTmpDwn(closeInitiator);
   void sitePrmDwn();
 
-  int getTmpMsgNum(){
-    return tmpMsgNum++;}
+  int getTmpMsgNum(){ return tmpMsgNum++;}
 
   Bool receivedNewMsg(int);
   int getRecMsgCtr();
   void clearRecMsgCtr(){recMsgCtr = 0;}
   
   void storeSentMessage(Message* bs);
+
   time_t getTimeStamp(){return site->timestamp;}
   port_t getPort(){return site->port;}
   ip_address getAddress(){return site->address;}
-  
+  int getTmpSessionNr(){return tSn;}
+  void incTmpSessionNr(){tSn = ++tSn % 199802;}
+
   WriteConnection *getWriteConnection(){return writeConnection;}
   ReadConnection *getReadConnection(){return readConnection;}
   
@@ -796,41 +798,24 @@ public:
   
   int discardUnsentMessage(int msgNum);
 
-  int getQueueSize(int &noMsg) {Assert(0);return 0;} // ATTENTION
-  MonitorReturn deMonitorQueue();
-
   void queueMessage(int size){
-    Assert(totalNrMsg >=0 && totalMsgSize >=0);
-    totalNrMsg++;
+    Assert(totalMsgSize >=0);
     totalMsgSize += size;
-    PD((WRT_QUEUE,"New queue entry nr: %d size: %d",
-	totalNrMsg,totalMsgSize));}
-
+    PD((WRT_QUEUE,"New entry s:%d tS:%d tr:%d",size,totalMsgSize,MsgMonitorSize));}
+  
   void deQueueMessage(int size){
-    totalNrMsg--;
+    PD((WRT_QUEUE,"Rm entry s:%d tS:%d tr:%d",size,totalMsgSize,MsgMonitorSize));
     totalMsgSize -= size;
-    Assert(totalNrMsg >=0 && totalMsgSize >= 0);
-    /* 
-       ATTENTION
-       
-    if (totalNrMsg <= MsgMonitorNr ||
-	totalMsgSize <= MsgMonitorSize)
-      queueSizeMsgs(totalNrMsg, totalMsgSize, MsgMonitorPtr);
-      */
-      PD((WRT_QUEUE,"Remove queue entry nr: %d size: %d",
-	totalNrMsg,totalMsgSize));}
+    Assert( totalMsgSize >= 0);
+    if (totalMsgSize <= MsgMonitorSize){
+      treashFullCtr = (1+treashFullCtr) % 100000;}}
 
-  void partlyDeQueueMessage(int size){
-    Assert(totalNrMsg >0 && totalMsgSize >0 && size > 0);
-    totalMsgSize -= size;
-    Assert(totalMsgSize >= 0);
-    PD((SITE,"Remove part of msg nr: %d totsize: %d size: %d",
-	totalNrMsg,totalMsgSize, size));}
-
-  MonitorReturn monitorQueueMsgs(int NoMess, int SizeMess, void *p);
-  Bool deMonitorQueueMsg();
-  int  getQueuesize(int &);
-
+  void monitorQueueMsgs(int SizeMess){
+    Assert(MsgMonitorSize == -1);
+    MsgMonitorSize=SizeMess;}
+  void deMonitorQueue(){MsgMonitorSize = -1;}
+  int  getQueueSize(){return totalMsgSize;}
+  int  getTreashCtr(){return treashFullCtr;}
   Site* getSite(){return site;}
   
   ProbeReturn installProbe(ProbeType);
@@ -838,13 +823,6 @@ public:
 
   void sendAck();
 };
-
-
-/* ********************************************************************** 
-   Message  
-   ********************************************************************** */
-
-
 
 
 /***********************************************************************/
@@ -1032,6 +1010,7 @@ public:
     PD((REMOTE,"opened site:%s",remoteSite->site->stringrep()));
     clearOpening();
     remoteSite->setSiteStatus(SITE_OK);
+    remoteSite->incTmpSessionNr();
     if(isProbingOK()){
       remoteSite->site->probeFault(PROBE_OK);
       clearProbingOK();}}
@@ -1302,17 +1281,16 @@ public:
 void RemoteSite::zeroReferences(){
   PD((SITE,"Zero references to site %s",site->stringrep()));
   if(writeConnection == NULL)  return;
-  if(writeConnection -> goodCloseCand()){
+  if(writeConnection -> goodCloseCand())
     writeConnection->closeConnection();
-    return;}
-  writeConnection -> setCanClose();}
+  else
+    writeConnection -> setCanClose();}
   
 void RemoteSite::nonZeroReferences(){
   PD((SITE,"Non zero references to site %s",site->stringrep()));
   if(writeConnection == NULL && writeConnection->isCanClose())
     writeConnection->clearCanClose();}
   
-
 void RemoteSite::writeConnectionRemoved(){
     writeConnection = NULL;
     if(readConnection == NULL){
@@ -1320,7 +1298,7 @@ void RemoteSite::writeConnectionRemoved(){
       remoteSiteManager->freeRemoteSite(this);}}
 
 void RemoteSite::readConnectionRemoved(){
-    readConnection = NULL;
+  readConnection = NULL;
     if(writeConnection == NULL){
       site->dumpRemoteSite(recMsgCtr);
       remoteSiteManager->freeRemoteSite(this);}}
@@ -1333,7 +1311,7 @@ void RemoteSite::readConnectionRemoved(){
 
 ipReturn tcpError()
 {
-  switch(ossockerrno()){
+switch(ossockerrno()){
   case EPIPE:{
     OZ_warning("Connection socket lost: EPIPE");
     return IP_PERM_BLOCK;}
@@ -1471,7 +1449,7 @@ public:
 	  ((ReadConnection*)c)->closeConnection();}
       else{
 	PD((TCPCACHE,"Not Closing connection %x",c));
-	c = c->next;}
+c = c->next;}
       c = cc;}
     openCon = FALSE;}
   
@@ -1563,7 +1541,7 @@ public:
 	return;}
       if(((WriteConnection*)w)->isTmpDwn()){
 	unlink(w, tmpHead, tmpTail);
-	return;}}
+return;}}
     unlink(w, currentHead, currentTail);  
     open_size--;
     adjust();}
@@ -1617,7 +1595,7 @@ Bool openClosedConnection(int Type){
   switch(Type){ 
   case WKUPMYC:
     return tcpCache->openMyClosedConnection();
-  case WKUPTMP:
+case WKUPTMP:
     return tcpCache->openTmpBlockedConnection();
   case WKUPPRB:  
     return tcpCache->sendProbeConnections();
@@ -1699,7 +1677,7 @@ public:
   void freeMessageAndMsgBuffer(Message *m){
     netMsgBufferManager->dumpNetMsgBuffer(m->bs);
     PD((MESSAGE,"BM freed nr:%d", --Msgs));
-    deleteMessage(m);}
+deleteMessage(m);}
 };
 
 
@@ -1768,14 +1746,9 @@ Bool WriteConnection::checkAckQueue(){
   return TRUE;
 }
   
-
-/* *****************************************************************
- * *****************************************************************
- * methods from Site obj that handles messages...
- * *****************************************************************
- * *************************************************************** */
-
-
+/************************************************************/
+/*  SECTION :: Stornig messages till ack received           */
+/************************************************************/
 
 void RemoteSite::storeSentMessage(Message* m) {
   PD((ACK_QUEUE,"Adding to ack queue  %d",m));
@@ -1787,8 +1760,7 @@ void WriteConnection::storeSentMessage(Message* m) {
   sentMsg = m;
   PD((ACK_QUEUE,"*** QUEUE CHECKED %d***",checkAckQueue()));}
 
-int WriteConnection::discardUnsentMessage(int msgNum)
-{
+int WriteConnection::discardUnsentMessage(int msgNum){
   Message *m = sentMsg;
     if(m != NULL){
 	if(m->getMsgNum() == msgNum){
@@ -1806,28 +1778,6 @@ int WriteConnection::discardUnsentMessage(int msgNum)
 	  m->next = ptr;
 	  ptr = ptr->next;}}
     return MSG_SENT;}
-
-MonitorReturn RemoteSite::monitorQueueMsgs(int NoMess, int SizeMess, void* ptr)  {
-  if(NoMess >= totalNrMsg)
-    return NO_MSGS_THRESHOLD_REACHED;
-  if(SizeMess >= totalMsgSize)
-    return SIZE_THRESHOLD_REACHED;
-  MsgMonitorNr = NoMess;
-  MsgMonitorSize = SizeMess;
-  MsgMonitorPtr = ptr;
-  return MONITOR_OK;}
-
-MonitorReturn RemoteSite::deMonitorQueue(){
-  if (MsgMonitorNr == -1 && MsgMonitorSize == -1)
-    return NO_MONITOR_EXISTS;
-  MsgMonitorNr = -1;
-  MsgMonitorSize = -1;
-  MsgMonitorPtr = NULL;
-  return MONITOR_OK;}
-
-int RemoteSite::getQueuesize(int& NoMsg){
-  NoMsg = totalNrMsg;
-  return totalMsgSize;}
 
 /* *****************************************************************
             MsgBuffer operations
@@ -2857,7 +2807,6 @@ int tcpWriteHandler(int fd,void *r0){
   
   PD((TCP,"tcpWriteHandler finished r:%x",r));  
   
-
   OZ_unregisterWrite(fd);
   PD((OS,"unregister WRITE fd:%d",fd));
   if(r->isCanClose()){
@@ -2871,7 +2820,6 @@ writeHerrorBlock:
   switch(ret){
   case IP_BLOCK:{
     PD((WEIRD,"incomplete write %x",r));
-    site->queueMessage(m->getMsgBuffer()->getTotLen());
     r->addCurQueue(m);
     tcpCache->touch(r);
     break;}
@@ -2896,8 +2844,7 @@ static int tcpCloseHandler(int fd,void *r0){
   PD((TCP,"tcpCloseHandler read b:%d r:%d e:%d",msg, ret,errno));
 close_handler_read:
   if(ret!=IP_OK){ // crashed Connection site 
-    PD((WEIRD,"crashed Connection site %s",r->remoteSite->site->stringrep()));
-    OZ_warning("Connection Lost %d",tcpError());
+    PD((ERROR_DET,"crashed Connection site %s error:%d",r->remoteSite->site->stringrep(), errno));
     if(tcpError() == IP_TEMP_BLOCK)
       r->connectionBlocked();
     else
@@ -3222,9 +3169,11 @@ void RemoteSite::init(Site* s, int msgCtr){
     readConnection=NULL;
     recMsgCtr = msgCtr;
     tmpMsgNum = 1;
-    totalNrMsg = 0;
     totalMsgSize = 0;
+    MsgMonitorSize = -1;
+    treashFullCtr = -1;
     site = s;
+    tSn = 0;
     status = SITE_OK;
 }
 
@@ -3322,7 +3271,6 @@ ProbeReturn RemoteSite::deInstallProbe(ProbeType pt){
 
 void RemoteSite::addWriteQueue(Message* m){
   writeConnection->setInWriteQueue();
-  queueMessage(m->bs->getTotLen());
   writeQueue.enqueue(m);}
 
 Message* RemoteSite::getWriteQueue(){
@@ -3344,7 +3292,7 @@ sendTo(NetMsgBuffer *bs, MessageType msg,
   int msgNum,ret;
   Message *m=messageManager->allocMessage(bs,NO_MSG_NUM,
 storeS,msg,storeInd);
-  queueMessage(m->getMsgBuffer()->getTotLen());
+  queueMessage(m->getMsgBuffer()->getTotLen());  
   switch (siteStatus()){
   case SITE_TEMP:{
     bs->beginWrite(this);
@@ -3402,6 +3350,7 @@ tmpdwnsend2:
 ipBlockSend:
   PD((TCP_INTERFACE,"sendTo IpBlock add to writeQueue %d",m));
   addWriteQueue(m);
+
   return ACCEPTED;
 }
 
@@ -3411,32 +3360,42 @@ ipBlockSend:
 
 RemoteSite* createRemoteSite(Site* site, int readCtr){
   return remoteSiteManager->allocRemoteSite(site, readCtr);}
-void zeroRefsToRemote(RemoteSite *s){return;}
-//s->zeroReferences();}
-void nonZeroRefsToRemote(RemoteSite *s){return;}
-//  s->nonzeroReferences();} 
+
+void zeroRefsToRemote(RemoteSite *s){s->zeroReferences();}
+void nonZeroRefsToRemote(RemoteSite *s){s->nonZeroReferences();} 
+
 int sendTo_RemoteSite(RemoteSite* rs,MsgBuffer* bs,MessageType m,Site* s, int i){
   return rs->sendTo((NetMsgBuffer*)bs,m,s,i);}
 void sendAck_RemoteSite(RemoteSite* rs){
   rs->sendAck();}
+
 int discardUnsentMessage_RemoteSite(RemoteSite* s,int msg){
   return s->discardUnsentMessage(msg);}
-int getQueueStatus_RemoteSite(RemoteSite* s,int &noMsgs){
-  return s->getQueueSize(noMsgs);}
 SiteStatus siteStatus_RemoteSite(RemoteSite* s){
   return s->siteStatus();}
-MonitorReturn monitorQueue_RemoteSite(RemoteSite* site,int size,int no_msgs,void* storePtr){
-  return site->monitorQueueMsgs(no_msgs, size, storePtr);}
-MonitorReturn demonitorQueue_RemoteSite(RemoteSite* site){
-  return site->deMonitorQueue();}
+
+void monitorQueue_RemoteSite(RemoteSite* site,int size){
+  site->monitorQueueMsgs(size);}
+void demonitorQueue_RemoteSite(RemoteSite* site){
+  site->deMonitorQueue();}
+int getTreashCtr_RemoteSite(RemoteSite* site){
+  return site->getTreashCtr();}
+int getQueueStatus_RemoteSite(RemoteSite* s){
+  return s->getQueueSize();}
+
+
 ProbeReturn installProbe_RemoteSite(RemoteSite* site,ProbeType pt, int frequency){
   return site->installProbe(pt);}
 ProbeReturn deinstallProbe_RemoteSite(RemoteSite* site,ProbeType pt){
   return site->deInstallProbe(pt);}
 ProbeReturn probeStatus_RemoteSite(RemoteSite* site,ProbeType &pt,int &frequncey,void* &storePtr){
   Assert(0);return PROBE_PERM;}
+
+
 GiveUpReturn giveUp_RemoteSite(RemoteSite* site){
   Assert(0);return GIVES_UP;}
+
+
 void discoveryPerm_RemoteSite(RemoteSite* site){
   site->sitePrmDwn();} 
 
@@ -3463,7 +3422,7 @@ void initNetwork(){
   time_t timestamp=time(0);
   mySiteInfo.tcpFD=tcpFD;
   mySiteInfo.maxNrAck = 100;
-  mySiteInfo.maxSizeAck = 10000;
+  mySiteInfo.maxSizeAck = 1000;
   Assert(mySite==NULL);
   mySite=initMySite(ip,p,timestamp);
   Assert(mySite!=NULL);  

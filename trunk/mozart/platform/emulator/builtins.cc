@@ -4490,8 +4490,7 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   CheckLocalBoard(port,"port");
 
   if(tt==Te_Proxy) {
-    portSend(port,val);
-    return PROCEED;
+    return portSend(port,val,am.currentThread());
   } 
   LTuple *lt = new LTuple(val,am.currentUVarPrototype());
     
@@ -4635,6 +4634,16 @@ OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef oldVal, TaggedRef newVal)
 
   Tertiary *tert = tagged2Tert(rec);
   if(tert->getTertType()!=Te_Local){
+    if(tert->getTertType()!=Te_Proxy){
+      CellSec* sec;
+      if(tert->getTertType()==Te_Frame){
+	sec=((CellFrame*)tert)->getSec();}
+      else{
+	sec=((CellManager*)tert)->getSec();}    
+      if(sec->getState()==Cell_Lock_Valid){
+	TaggedRef old=sec->getContents();
+	sec->setContents(newVal);
+	return oz_unify(old,oldVal);}}
     cellDoExchange(tert,oldVal,newVal,am.currentThread());
     return checkSuspend();
   }
@@ -4808,7 +4817,8 @@ OZ_BI_define(BIprobe,1,0)
   OZ_Term e = OZ_in(0);
   NONVAR(e,entity);
   Tertiary *tert = tagged2Tert(entity);
-  tert->entityProblem();
+  if(tert->getType()!=Co_Port)
+    tert->entityProblem();
   return PROCEED;
 } OZ_BI_end
 
@@ -4821,6 +4831,7 @@ OZ_BI_define(BIrestop,1,0)
   case OZCONST:{
     switch(tagged2Const(entity)->getType()){
     case Co_Cell: 
+    case Co_Port:
     case Co_Lock:{
       tagged2Tert(entity)->restop();
       break;}
@@ -4832,32 +4843,60 @@ OZ_BI_define(BIrestop,1,0)
   return BI_PREEMPT;
 } OZ_BI_end
 
-OZ_BI_define(BIhandlerInstall,3,0)
+OZ_BI_define(BIhandlerInstall,4,0)
 {
   OZ_Term entity0   = OZ_in(0);
   OZ_Term cond0     = OZ_in(1);
   OZ_Term proc      = OZ_in(2);  
 
+  
   NONVAR(cond0,cond);
   NONVAR(entity0,entity);
-
+  
   EntityCond ec;
   if(cond==AtomPermBlocked) {ec=PERM_BLOCKED;}
   else{
     if(cond==AtomTempBlocked) {ec=TEMP_BLOCKED|PERM_BLOCKED;}
     else {
       return oz_raise(E_ERROR,E_SYSTEM,"invalid handler condition",0);}}
-
-
+  
+  Bool Continue = FALSE;
+  /*  if(type == AtomContinue)
+    Continue = TRUE;
+  else
+    if(type!=AtomRetry)
+      return oz_raise(E_ERROR,E_SYSTEM,"invalid handler type condition",0);
+      */
   Tertiary *tert = tagged2Tert(entity);
-  if((tert->getType()!=Co_Cell) && (tert->getType()!=Co_Lock)){
+  switch(tert->getType()){
+  case Co_Object:{
+    Object *o = (Object *)tert;
+    Tertiary *lock, *cell;
+    if(tert->getTertType()==Te_Local) 
+      return oz_raise(E_ERROR,E_SYSTEM,"handlers on Local Objects not implemented",0);;
+    cell = getCell(o->getState());
+    lock = o->getLock();
+    cell->setMasterTert(tert);
+    if(cell->installHandler(ec,proc,am.currentThread(),Continue)){
+      if(lock!=NULL){
+	o->getLock()->setMasterTert(tert);
+	if(!lock->installHandler(ec,proc,am.currentThread(),Continue)){
+	  cell->deinstallHandler(am.currentThread());
+	  break;}}
+      return PROCEED;}
+    break;}
+  case Co_Port:
+    if(tert->getTertType()!=Te_Proxy) return PROCEED;
+  case Co_Lock:
+  case Co_Cell:
+    if(tert->installHandler(ec,proc,am.currentThread(),Continue)){
+      return PROCEED;}  
+  default:
     return oz_raise(E_ERROR,E_SYSTEM,"handlers on ? not implemented",0);}
-  if(tert->installHandler(ec,proc,am.currentThread())){
-    return PROCEED;}
   return oz_raise(E_ERROR,E_SYSTEM,"handler already installed",0);
 } OZ_BI_end
 
-Bool translateWatcherCond(TaggedRef tr,EntityCond &ec){
+Bool translateWatcherCond(TaggedRef tr,EntityCond &ec, TypeOfConst toc){
   TaggedRef car;
   TaggedRef cdr=tr;
   ec=ENTITY_NORMAL;
@@ -4873,21 +4912,21 @@ Bool translateWatcherCond(TaggedRef tr,EntityCond &ec){
       return NO;}
     cdr=tagged2LTuple(cdr)->getTail();
     if(car==AtomPermMe){
-      ec|=PERM_BLOCKED;
+      ec|=PERM_ME;
       continue;}
     if(car==AtomTempMe) {
-      ec |= (TEMP_BLOCKED|PERM_BLOCKED);
+      ec |= (TEMP_ME|PERM_ME);
       continue;}
-    if(car==AtomPermAllOthers){
+    if(car==AtomPermAllOthers && toc!=Co_Port){
       ec |= PERM_ALL;
       continue;}
-    if(car==AtomTempAllOthers){
+    if(car==AtomTempAllOthers && toc!=Co_Port){
       ec |= (TEMP_ALL|PERM_ALL);
       continue;}
-    if(car==AtomPermSomeOther){
+    if(car==AtomPermSomeOther && toc!=Co_Port){
       ec |= PERM_SOME;
       continue;}
-    if(car==AtomTempSomeOther){
+    if(car==AtomTempSomeOther  && toc!=Co_Port){
       ec |= (TEMP_SOME|PERM_SOME);
       continue;}
     return NO;}
@@ -4902,18 +4941,55 @@ OZ_BI_define(BIwatcherInstall,3,0)
 
 
   NONVAR(c, cond);
-  EntityCond ec;  
-
-  if(!translateWatcherCond(cond,ec)){
-    return oz_raise(E_ERROR,E_SYSTEM,"invalid watcher condition",0);}
   NONVAR(e, entity);
 
+  EntityCond ec;  
+  
   Tertiary *tert = tagged2Tert(entity);
-  if((tert->getType()!=Co_Cell) && (tert->getType()!=Co_Lock)){
-    return oz_raise(E_ERROR,E_SYSTEM,"watchers on ? not implemented",0);}
-  tert->installWatcher(ec,proc);
+  
+  if(!translateWatcherCond(cond,ec,tert->getType())){
+    return oz_raise(E_ERROR,E_SYSTEM,"invalid watcher condition",0);}
+  
+  switch(tert->getType()){
+  case Co_Object:{
+    Object *o = (Object *)tert;
+    Tertiary *lock, *cell;
+    if(tert->getTertType()==Te_Local) 
+      return oz_raise(E_ERROR,E_SYSTEM,"handlers on Local Objects not implemented",0);;
+    cell = getCell(o->getState());
+    lock = o->getLock();
+    cell->setMasterTert(tert);
+    cell->installWatcher(ec,proc);
+    if(lock!=NULL){
+      lock->setMasterTert(tert);
+      lock->installWatcher(ec,proc);}
+    break;}
+  case Co_Port:
+    if(tert->getTertType()!=Te_Proxy) break;
+  case Co_Cell:
+  case Co_Lock:{
+    tert->installWatcher(ec,proc);
+    break;}
+  default: return oz_raise(E_ERROR,E_SYSTEM,"watchers on ? not implemented",0);}
   return PROCEED;
-} OZ_BI_end
+}OZ_BI_end
+
+/*
+OZ_BI_define(BIgetEntityCond,2)
+{
+  OZ_declareArg(1,out);
+  OZ_Term e = OZ_getCArg(0);
+  
+  NONVAR(e, entity);
+  Tertiary *tert = tagged2Tert(entity);
+  
+  EntityCond ec = tert->getEntityCond();
+  if(ec == ENTITY_NORMAL)
+    return OZ_unify(out,cons(AtomEntityNormal,nil()));
+  return OZ_unify(out,listifyWatcherCond(ec));
+}OZ_BI_end
+*/
+
 
 
 
@@ -5006,6 +5082,7 @@ OZ_BI_define(BIcheckCVH,1,0)
 } OZ_BI_end
 
 
+
 /********************************************************************
  *   Dictionaries
  ******************************************************************** */
@@ -5014,7 +5091,6 @@ OZ_BI_define(BIdictionaryNew,0,1)
 {
   OZ_RETURN(makeTaggedConst(new OzDictionary(am.currentBoard())));
 } OZ_BI_end
-
 
 OZ_BI_define(BIdictionaryKeys,1,1)
 {
@@ -5742,7 +5818,7 @@ OZ_C_proc_proto(BIatWithState);
 OZ_C_proc_proto(BIassignWithState);
 
 inline
-SRecord *getStateInline(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val)
+SRecord *getStateInline(RecOrCell state, Bool isAssign, Bool newVar,OZ_Term fea, OZ_Term &val, int &EmCode)
 {
   if (!stateIsCell(state)) {
     return getRecord(state);}
@@ -5766,30 +5842,28 @@ SRecord *getStateInline(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &va
       if (!isAnyVar(old))
 	return tagged2SRecord(old);}}
   
-  old = oz_newVariable();
+  
+  DEREF(fea, _1, feaTag);
+  if (isAnyVar(fea)) {
+    EmCode = SUSPEND;
+    return NULL;}
   if (am.onToplevel())
-    cellDoExchange(t,old,old,am.currentThread());
+    if(isAssign)
+      cellAssignExchange(t,fea,val,am.currentThread());
+    else{
+      if(newVar) val = oz_newVariable();
+      cellAtExchange(t,fea,val,am.currentThread());}
   else
-    cellDoAccess(t,old);
-  if (!isAnyVar(deref(old)))
-    return tagged2SRecord(deref(old));
-
-  // OZ_suspendOnInternal(old);
-
-  RefsArray x = allocateRefsArray(3,NO);
-  x[0] = old;
-  x[1] = fea;
-  if (!isAssign)
-    val = oz_newVariable();
-  x[2] = val;
-  am.currentThread()->pushCFun(isAssign?BIassignWithState:BIatWithState,x,3,NO);
-
+    if(!isAssign){
+      val = oz_newVariable();
+  cellAtAccess(t,fea,val);}
+  EmCode = checkSuspend();
   return NULL;
 }
 
-SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val)
+SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea,OZ_Term &val, int &EmCode)
 {
-  return getStateInline(state,isAssign,fea,val);
+  return getStateInline(state,isAssign,TRUE,fea,val,EmCode);
 }
 
 
@@ -5816,12 +5890,28 @@ bomb:
   oz_typeError(0,"(valid) Feature");
 }
 
+
+
+
+OZ_Return atInlineRedo(TaggedRef fea, TaggedRef out)
+{
+  RecOrCell state = am.getSelf()->getState();
+  int emC;
+  SRecord *rec = getStateInline(state,NO,FALSE,fea,out,emC);
+  if (rec==NULL) {
+    return emC;
+  }
+  return doAt(rec,fea,out);
+}
+NEW_DECLAREBI_USEINLINEREL2(BIatRedo,atInlineRedo)
+
 OZ_Return atInline(TaggedRef fea, TaggedRef &out)
 {
   RecOrCell state = am.getSelf()->getState();
-  SRecord *rec = getStateInline(state,NO,fea,out);
+  int emC;
+  SRecord *rec = getStateInline(state,NO,TRUE,fea,out,emC);
   if (rec==NULL) {
-    return BI_REPLACEBICALL;
+    return emC;
   }
   return doAt(rec,fea,out);
 }
@@ -5864,9 +5954,10 @@ OZ_Return assignInline(TaggedRef fea, TaggedRef value)
   CheckLocalBoard(self,"object");
 
   RecOrCell state = self->getState();
-  SRecord *rec = getStateInline(state,OK,fea,value);
+  int emC;
+  SRecord *rec = getStateInline(state,OK,TRUE,fea,value,emC);
   if (rec==NULL)
-    return BI_REPLACEBICALL;
+    return emC;
   return doAssign(rec,fea,value);
 }
 
@@ -6744,12 +6835,19 @@ Builtin *BIinit()
   BI_probe=makeTaggedConst(builtinTab.find("probe"));
   BI_Delay=makeTaggedConst(builtinTab.find("Delay"));
   BI_startTmp=makeTaggedConst(builtinTab.find("startTmp"));
+  BI_portWait=makeTaggedConst(builtinTab.find("portWait"));
+  
+  BI_exchangeCell = makeTaggedConst(builtinTab.find("Exchange"));
+  BI_assign   = makeTaggedConst(builtinTab.find("<-"));
+  BI_atRedo = makeTaggedConst(builtinTab.find("atRedo"));
+  BI_lockLock = makeTaggedConst(builtinTab.find("Lock"));
 
   BI_load=makeTaggedConst(builtinTab.find("load"));
   BI_fail=makeTaggedConst(builtinTab.find("fail"));
   BI_url_load=makeTaggedConst(builtinTab.find("URL.load"));
 
   // BIinitLazy();
+
 
   dummyRecord = makeTaggedNULL();
   OZ_protect(&dummyRecord);

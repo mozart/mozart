@@ -74,13 +74,16 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomTempBlocked, AtomPermBlocked,  
   AtomPermMe, AtomTempMe,
   AtomPermAllOthers, AtomTempAllOthers,
-  AtomPermSomeOther, AtomTempSomeOther,
+  AtomPermSomeOther, AtomTempSomeOther,AtomEntityNormal,
+  
+  AtomContinue, AtomRetry,
 
 RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
-  BI_Unify,BI_Show,BI_send,BI_restop,BI_probe,BI_Delay,BI_startTmp,
+  BI_portWait,BI_Unify,BI_Show,BI_send,BI_restop,BI_probe,BI_Delay,BI_startTmp,
   BI_load,BI_fail,BI_url_load,
-  BI_controlVarHandler;
+  BI_exchangeCell,BI_assign,BI_atRedo,BI_lockLock,
+BI_controlVarHandler;
 
 
 extern Board *ozx_rootBoard();
@@ -90,19 +93,22 @@ extern Board *ozx_rootBoard();
  *=================================================================== */
 
 enum WatcherKind{
-  KIND_HANDLER = 0,
-    KIND_WATCHER = 1};
+  KIND_RETRY_HANDLER = 0,
+  KIND_CONTINUE_HANDLER = 1,
+  KIND_WATCHER = 2};
 
 enum EntityCondFlags{
-  ENTITY_NORMAL=0,
-  PERM_BLOCKED = 2,       
-    TEMP_BLOCKED = 1,
-    PERM_ALL = 4,
-    TEMP_ALL = 8,
-    PERM_SOME = 16,
-    TEMP_SOME = 32,
-    PERM_ME =64,
-    TEMP_ME=128};
+  ENTITY_NORMAL = 0,
+  PERM_BLOCKED  = 2,       
+  TEMP_BLOCKED  = 1,
+  PERM_ALL      = 4,
+  TEMP_ALL      = 8,
+  PERM_SOME     = 16,
+  TEMP_SOME     = 32,
+  PERM_ME       = 64,
+  TEMP_ME       = 128,
+  OBJECT_PART   = 256
+};
 
 typedef unsigned int EntityCond;
 
@@ -112,21 +118,29 @@ protected:
   Watcher *watchers;
   short entityCond;
   short managerEntityCond;
-  
+  Tertiary* object;
 public:
   USEHEAPMEMORY;
   NO_DEFAULT_CONSTRUCTORS(EntityInfo);
   EntityInfo(Watcher *w){
     entityCond=ENTITY_NORMAL;
     managerEntityCond=ENTITY_NORMAL;
-    watchers=w;}
+    object   = NULL;
+    watchers = w;}
   EntityInfo(EntityCond c){
     entityCond=c;
     managerEntityCond=ENTITY_NORMAL;    
+    object = NULL;
     watchers=NULL;}
   EntityInfo(EntityCond c,EntityCond d){
     entityCond=c;
     managerEntityCond=d;
+    object = NULL;
+    watchers=NULL;}
+  EntityInfo(Tertiary* o){
+    entityCond=ENTITY_NORMAL;
+    managerEntityCond=ENTITY_NORMAL;
+    object = o;
     watchers=NULL;}
   void gcWatchers();
 };
@@ -149,7 +163,7 @@ public:
     proc=p;
     next=NULL;
     thread=t;
-    kind=KIND_HANDLER;
+    kind=KIND_RETRY_HANDLER;
     Assert((wc==PERM_BLOCKED) || (wc==TEMP_BLOCKED|PERM_BLOCKED));
     watchcond=wc;}
 
@@ -161,7 +175,9 @@ public:
     kind=KIND_WATCHER;
     watchcond=wc;}
 
-  Bool isHandler(){ return kind==KIND_HANDLER;}
+  Bool isHandler(){ return kind!=KIND_WATCHER;}
+  Bool isContinueHandler(){Assert(isHandler());return kind == KIND_CONTINUE_HANDLER;} 
+  void setContinueHandler(){Assert(isHandler()); kind = KIND_CONTINUE_HANDLER;} 
   void setNext(Watcher* w){next=w;}
   Watcher* getNext(){return next;}
   void invokeHandler(EntityCond ec,Tertiary* t);
@@ -896,12 +912,23 @@ public:
     info->managerEntityCond &= ~c;
     if(getEntityCond()==old_ec) return NO;
     return OK;}
-
+  
+  
   void gcEntityInfo();
+  
+  void  setMasterTert(Tertiary *t){
+    if(info==NULL)
+      info= new EntityInfo(t);
+    else{
+      info->object = t;}}
+
+  Tertiary* getInfoTert(){
+    if(info==NULL) return NULL;
+    return info->object;}
   
   Watcher *getWatchers(){
     return info->watchers;}
-
+  
   Watcher *getWatchersIfExist(){
     if(info==NULL){return NULL;}
     return info->watchers;}
@@ -945,12 +972,13 @@ public:
   void gcTertiaryInfo();
   void gcBorrowMark();
 
-  Bool installHandler(EntityCond,TaggedRef,Thread*);
+  Bool installHandler(EntityCond,TaggedRef,Thread*,Bool);
   Bool deinstallHandler(Thread*);
   void installWatcher(EntityCond,TaggedRef);
   Bool deinstallWatcher(EntityCond,TaggedRef);
 
   void entityProblem();
+  Bool startHandlerPort(Thread*,Tertiary* ,TaggedRef,EntityCond);
   void managerProbeFault(Site*,int);
   void proxyProbeFault(int);
   void restop();
@@ -1613,7 +1641,7 @@ public:
   Object *gcObject();
 };
 
-SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val);
+SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val, int &eC);
 
 inline
 Bool isObject(ConstTerm *t)
@@ -2131,6 +2159,14 @@ public:
   void globalize(int);
 };
 
+enum ExKind{
+  EXCHANGE = 0,
+  ASSIGN   = 1,
+  AT       = 2,
+  NOEX     = 3
+};
+
+
 
 #define Cell_Lock_Invalid     0
 #define Cell_Lock_Requested   1
@@ -2145,7 +2181,9 @@ friend class CellManager;
 friend class Chain;
 private:
   unsigned int state;
+  /*
   TaggedRef head;
+  */
   PendThread* pending;
   Site* next;
   TaggedRef contents;
@@ -2170,9 +2208,9 @@ public:
   unsigned int stateWithoutAccessBit(){return state & (~Cell_Lock_Access_Bit);}
 
   void addPendBinding(Thread*,TaggedRef);
-
+  /*
   TaggedRef getHead(){return head;}
-    
+  */
   Site* getNext(){return next;}
 
   unsigned int getState(){return state;}
@@ -2180,12 +2218,17 @@ public:
   TaggedRef getContents(){
     Assert(state & (Cell_Lock_Valid|Cell_Lock_Requested));
     return contents;}
-
+  
+  void setContents(TaggedRef t){
+    Assert(state & (Cell_Lock_Valid|Cell_Lock_Requested));
+    contents = t;}
+  
   PendThread** getPendBase(){return &pending;}
 
   void gcCellSec();
-  void exchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
+  void exchange(Tertiary*,TaggedRef,TaggedRef,Thread*,ExKind);
   void access(Tertiary*,TaggedRef);
+  void exchangeVal(TaggedRef,TaggedRef,Thread*,ExKind);
   Bool cellRecovery(TaggedRef);
   Bool secReceiveRemoteRead(TaggedRef&);
   void secReceiveReadAns(TaggedRef);
@@ -2317,7 +2360,7 @@ public:
 };
 
 class PortManager: public PortWithStream {
-friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gcConstRecurse(void);
 public:
   OZPRINTLONG;
   NO_DEFAULT_CONSTRUCTORS2(PortManager);
@@ -2344,7 +2387,7 @@ friend void ConstTerm::gcConstRecurse(void);
 public:
   OZPRINT;
   NO_DEFAULT_CONSTRUCTORS(PortProxy);
-  PortProxy(int i): Port(0,Te_Proxy) { setIndex(i); }
+  PortProxy(int i): Port(0,Te_Proxy) { setIndex(i);}
 };
 
 inline Bool isPort(TaggedRef term)

@@ -170,9 +170,12 @@ class SendRecvCounter;
 /* ************************************************************************ */
 
 OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg);
-void portSend(Tertiary *p, TaggedRef msg);
+int portSend(Tertiary *p, TaggedRef msg,Thread* t);
 void cellDoExchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
 void cellDoAccess(Tertiary*,TaggedRef);
+void cellAtAccess(Tertiary*,TaggedRef,TaggedRef);
+void cellAtExchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
+void cellAssignExchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
 void lockInstallHandler(Tertiary*,TaggedRef,TaggedRef,Thread*);
 TaggedRef cellGetContentsFast(Tertiary *c);
 int perdioInit();
@@ -368,6 +371,8 @@ extern int tempTimeCtr;
 /* ************************************************************************ */
 
 void startDangelingProbe();
+TaggedRef listifyWatcherCond(EntityCond);
+
 
 /* __PERDIOHH */
 #endif 
