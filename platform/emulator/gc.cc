@@ -2949,6 +2949,8 @@ void CodeGCList::collectGClist()
 
 void CodeArea::gcCodeAreaStart()
 {
+// #define CODEGCOFF
+#ifndef CODEGCOFF
   if (ozconf.codeGCcycles == 0) {
     codeGCgeneration = 1;
   } else if (++codeGCgeneration >= ozconf.codeGCcycles) {
@@ -2956,6 +2958,7 @@ void CodeArea::gcCodeAreaStart()
     codeGCgeneration = 0;
     return;
   }
+#endif
 
   CodeArea *code = allBlocks;
 
