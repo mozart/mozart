@@ -17,7 +17,6 @@ Dbg = dbg( taskstack   : {`Builtin` taskstack 3}
 NL = [10]  %% newline
 
 %% send a warning/error message
-
 proc {OzcarShow X}
    case {Cget verbose} then
       {Show X}
