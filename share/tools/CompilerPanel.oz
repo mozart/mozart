@@ -25,6 +25,7 @@ import
    Error(messageToVirtualString)
    Open(file)
    Pickle(load save)
+   Property(get)
    Tk
    TkTools
    Listener('class')
