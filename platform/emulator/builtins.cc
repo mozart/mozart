@@ -7315,8 +7315,12 @@ BIspec allSpec2[] = {
 
 
 extern void BIinitFD(void);
+#ifdef FSETVAR
 extern void BIinitFSet(void);
+#endif
+#ifdef METAVAR
 extern void BIinitMeta(void);
+#endif
 extern void BIinitAVar(void);
 extern void BIinitPerdioVar(void);
 extern void BIinitUnix();
@@ -7339,8 +7343,12 @@ BuiltinTabEntry *BIinit()
 #endif
 
   BIinitFD();
+#ifdef FSETVAR
   BIinitFSet();
+#endif
+#ifdef METAVAR
   BIinitMeta();
+#endif
 
   BIinitAVar();
   BIinitPerdioVar();

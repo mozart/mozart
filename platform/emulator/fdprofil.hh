@@ -64,7 +64,9 @@ enum ProfileDataIndex2 {
   cp_size_fdvar,
   cp_size_ofsvar,
   cp_size_boolvar,
+#ifdef METAVAR
   cp_size_metavar,
+#endif
   cp_size_board,
   cp_size_askactor,
   cp_size_waitactor,

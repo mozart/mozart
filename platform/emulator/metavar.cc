@@ -9,6 +9,7 @@
   ------------------------------------------------------------------------
 */
 
+#ifdef METAVAR
 #if defined(INTERFACE)
 #pragma implementation "metavar.hh"
 #endif
@@ -518,3 +519,5 @@ void BIinitMeta(void)
 #include "metavar.icc"
 #undef inline
 #endif
+
+#endif /* METAVAR */

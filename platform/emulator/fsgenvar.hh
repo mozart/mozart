@@ -22,6 +22,10 @@
 #include "fdhook.hh"
 #include "oz_cpi.hh"
 
+#ifdef FSETVAR
+
+enum OZ_FSetPropState {fs_glb = 0, fs_lub, fs_val, fs_any};
+
 class GenFSetVariable: public GenCVariable {
 private:
   OZ_FSet _fset;
@@ -75,6 +79,8 @@ inline void addSuspFSetVar(OZ_Term, Thread *);
 #else
 #undef inline
 #endif
+
+#endif /* FSETVAR */
 
 #endif // __FSGENVAR_HH__
 

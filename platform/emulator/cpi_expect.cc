@@ -137,6 +137,8 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
 
 }
 
+#ifdef FSETVAR
+
 //-----------------------------------------------------------------------------
 // An OZ term describing a finite set is either:
 // (1) a positive small integer <= FS.sup
@@ -188,6 +190,7 @@ OZ_expect_t OZ_Expect::expectSetDescr(OZ_Term descr, int level)
   return expectFail();  
 
 }
+#endif /* FSETVAR */
 
 OZ_expect_t OZ_Expect::expectVar(OZ_Term t)
 {

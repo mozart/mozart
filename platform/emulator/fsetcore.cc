@@ -10,11 +10,18 @@
 */
 
 
+
+#ifdef FSETVAR
+
 #include "am.hh"
 #include "cpi.hh"
 
 //-----------------------------------------------------------------------------
 // Introduce FD Built-ins to the Emulator
+
+#define OZ_EM_FSETVAL   "finite set of integers value"
+#define OZ_EM_FSET      "finite set of integers"
+#define OZ_EM_FSETDESCR "description of finite set of integers"
 
 OZ_C_proc_begin(BIfsSetValue, 2) 
 {
@@ -83,3 +90,6 @@ void BIinitFSet(void)
 {
   BIaddSpec(fdSpec);
 }
+
+
+#endif /* FSETVAR */

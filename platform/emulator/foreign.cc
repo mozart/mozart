@@ -905,11 +905,13 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
   return out;
 }
 
+#ifdef FSETVAR
 static
 void fset2buffer(ostream &out, FSetValue * fs) 
 {
   out << *fs;
 }
+#endif /* FSETVAR */
 
 static
 void cvar2buffer(ostream &out, char *s, GenCVariable *cv, int depth)
@@ -922,12 +924,14 @@ void cvar2buffer(ostream &out, char *s, GenCVariable *cv, int depth)
       break;
     }
 
+#ifdef FSETVAR
   case FSetVariable:
     {
       out << s;
       out << ((GenFSetVariable *) cv)->getSet();
       break;
     }
+#endif /* FSETVAR */
 
   case BoolVariable:
     {
@@ -951,12 +955,15 @@ void cvar2buffer(ostream &out, char *s, GenCVariable *cv, int depth)
       break;
    }
 
+#ifdef METAVAR
   case MetaVariable:
     {
       out << s;
       // TmpBuffer.print_string(((GenMetaVariable *)cv)->toString(0));
       break;
     }
+#endif /* METAVAR */
+
   case PerdioVariable:
     {
       out << s;
@@ -1002,9 +1009,13 @@ void value2buffer(ostream &out, OZ_Term term, int depth)
 	if (isCVar(tag)) { cvar2buffer(out, s,tagged2CVar(term),depth); }
       }
       break;
+
+#ifdef FSETVAR
     case FSETVALUE:
       fset2buffer(out, tagged2FSetValue(term));
       break;
+#endif /* FSETVAR */
+
     case SRECORD:
       record2buffer(out,tagged2SRecord(term),depth);
       break;

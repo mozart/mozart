@@ -9,6 +9,7 @@
   ------------------------------------------------------------------------
 */
 
+#ifdef FSETVAR 
 
 #if defined(INTERFACE)
 #pragma implementation "fset.hh"
@@ -243,3 +244,5 @@ OZ_Boolean OZ_FSetImpl::isWeakerThan(OZ_FSetImpl const &fs) const
 {
   return _known_in < fs._known_in || _known_not_in < fs._known_not_in; 
 }
+
+#endif /* FSETVAR */
