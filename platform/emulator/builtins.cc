@@ -636,7 +636,8 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
         return PROCEED;
       }
     case Co_Dictionary:
-      if (tagged2Dictionary(t)->getArg(f,tf) != PROCEED)
+      tf = tagged2Dictionary(t)->getArg(f);
+      if (!tf)
         goto no_feature;
       return PROCEED;
     default:

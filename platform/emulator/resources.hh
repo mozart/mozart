@@ -135,7 +135,8 @@
 /* dp tables default values */
 #define DEFAULT_CLOSE_TIME           1000
 #define DEFAULT_OWNER_TABLE_SIZE     100
-#define DEFAULT_BORROW_TABLE_SIZE    100
+// logarithm of (i.e. 2^7 = 128 entries):
+#define DEFAULT_BORROW_TABLE_SIZE    7
 #define DP_TABLE_LOW_LIMIT           20
 #define DP_TABLE_EXPAND_FACTOR       200
 #define DP_TABLE_BUFFER              50

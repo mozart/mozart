@@ -2299,24 +2299,24 @@ Case(GETVOID)
 
   Case(TESTLT)
     {
-      TaggedRef A = XPC(1); DEREF0(A,_1);
+      TaggedRef A = XPC(1); DEREF_NONVAR(A);
 
       if (oz_isSmallInt(A)) {
-        TaggedRef B = XPC(2); DEREF0(B,_2);
+        TaggedRef B = XPC(2); DEREF_NONVAR(B);
         if (oz_isSmallInt(B)) {
           LT_IF(smallIntLess(A,B));
         }
       }
 
       if (oz_isFloat(A)) {
-        TaggedRef B = XPC(2); DEREF0(B,_2);
+        TaggedRef B = XPC(2); DEREF_NONVAR(B);
         if (oz_isFloat(B)) {
           LT_IF(floatValue(A) < floatValue(B));
         }
       }
 
       {
-        TaggedRef B = XPC(2); DEREF0(B,_2);
+        TaggedRef B = XPC(2); DEREF_NONVAR(B);
         if (oz_isAtom(A) && oz_isAtom(B)) {
           LT_IF(strcmp(tagged2Literal(A)->getPrintName(),
                        tagged2Literal(B)->getPrintName()) < 0);
@@ -2352,8 +2352,8 @@ Case(GETVOID)
 
   Case(TESTLE)
     {
-      TaggedRef A = XPC(1); DEREF0(A,_1);
-      TaggedRef B = XPC(2); DEREF0(B,_2);
+      TaggedRef A = XPC(1); DEREF_NONVAR(A);
+      TaggedRef B = XPC(2); DEREF_NONVAR(B);
 
       if (oz_isSmallInt(A) && oz_isSmallInt(B)) {
         LT_IF(smallIntLE(A,B));

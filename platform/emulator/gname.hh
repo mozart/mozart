@@ -255,7 +255,7 @@ public:
   }
 };
 
-#define GNAME_HASH_TABLE_DEFAULT_SIZE 500
+#define GNAME_HASH_TABLE_DEFAULT_SIZE 10
 
 class GNameTable: public GenDistEntryTable<GName> {
 private:

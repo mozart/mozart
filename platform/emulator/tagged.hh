@@ -453,9 +453,15 @@ TaggedRef makeTaggedSmallInt(int i) {
   register TaggedRef term = *termPtr;                  \
   _DEREF(term,termPtr);
 
+#define DEREF_NONVAR(term)                              \
+  while (oz_isRef(term)) {                              \
+    register TaggedRef *termPtr = tagged2Ref(term);     \
+    term = *termPtr;                                    \
+  }
+
 inline
 TaggedRef oz_deref(TaggedRef t) {
-  DEREF0(t,_1);
+  DEREF_NONVAR(t);
   return t;
 }
 

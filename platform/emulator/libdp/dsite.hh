@@ -395,7 +395,8 @@ void gcDSiteTable();
 //
 class DSiteHashTable : public GenDistEntryTable<DSite> {
 public:
-  DSiteHashTable(int size) : GenDistEntryTable<DSite>(size) {}
+  DSiteHashTable(int sizeAsPowerOf2)
+    : GenDistEntryTable<DSite>(sizeAsPowerOf2) {}
 
   //
   FindType find(DSite *target, DSite* &found) {

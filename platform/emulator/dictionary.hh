@@ -2,13 +2,13 @@
  *  Authors:
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  *    Peter van Roy (pvr@info.ucl.ac.be)
+ *    Konstantin Popov <kost@sics.se>
  *
  *  Contributors:
  *    Christian Schulte <schulte@ps.uni-sb.de>
  *
  *  Copyright:
- *    Ralf Scheidhauer, 1997
- *    Peter Van Roy, 1997
+ *    Konstantin Popov, 2002
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -34,508 +34,686 @@
 #endif
 
 #include "value.hh"
-#include "board.hh"
 
-// TODO
-// 1. Check that all TaggedRef's are dereferenced when they should be.
+//
+// (Oz) Dictionaries
+//
 
-//-------------------------------------------------------------------------
-//                           class PairList
-//-------------------------------------------------------------------------
+//
+// Table sizes. These are primes stepped approximately 2/3 from each
+// other, and choosen for best [division] performance (I have the
+// utility that generated them).
+//
+#define HT_PRIMES_NUM           46
+//
+#define HT_PRIME0               1
+#define HT_PRIME1               3
+#define HT_PRIME2               5
+#define HT_PRIME3               11
+#define HT_PRIME4               23
+#define HT_PRIME5               41
+#define HT_PRIME6               71
+#define HT_PRIME7               127
+#define HT_PRIME8               191
+#define HT_PRIME9               293
+#define HT_PRIME10              461
+#define HT_PRIME11              769
+#define HT_PRIME12              1153
+#define HT_PRIME13              1733
+#define HT_PRIME14              2633
+#define HT_PRIME15              4007
+#define HT_PRIME16              6053
+#define HT_PRIME17              9109
+#define HT_PRIME18              13697
+#define HT_PRIME19              20551
+#define HT_PRIME20              30829
+#define HT_PRIME21              46301
+#define HT_PRIME22              69473
+#define HT_PRIME23              104347
+#define HT_PRIME24              156521
+#define HT_PRIME25              234781
+#define HT_PRIME26              352229
+#define HT_PRIME27              528403
+#define HT_PRIME28              792881
+#define HT_PRIME29              1189637
+#define HT_PRIME30              1784459
+#define HT_PRIME31              2676727
+#define HT_PRIME32              4015199
+#define HT_PRIME33              6022873
+#define HT_PRIME34              9034357
+#define HT_PRIME35              13551589
+#define HT_PRIME36              20327443
+#define HT_PRIME37              30491239
+#define HT_PRIME38              45736963
+#define HT_PRIME39              68605463
+#define HT_PRIME40              102908261
+#define HT_PRIME41              154362469
+#define HT_PRIME42              231543727
+#define HT_PRIME43              347315603
+#define HT_PRIME44              520973503
+#define HT_PRIME45              781460413
 
-// A simple class implementing list of pairs of terms,
-// used as a utility by DynamicTable and OzOFVariable.
-
-
-class Pair {
-friend class PairList;
-
-private:
-  TaggedRef term1;
-  TaggedRef term2;
-  Pair* next;
-
-  USEFREELISTMEMORY;
-
-  NO_DEFAULT_CONSTRUCTORS(Pair)
-  Pair(TaggedRef t1, TaggedRef t2, Pair* list) {
-     term1=t1;
-     term2=t2;
-     next=list;
-  }
-};
-
-
-class PairList {
-friend class Pair;
-
-private:
-  Pair* list;
-
-public:
-  NO_DEFAULT_CONSTRUCTORS2(PairList)
-  PairList() { list=NULL; }
-
-  USEFREELISTMEMORY;
-
-  // Add a pair to the head of a list
-  void addpair(TaggedRef term1, TaggedRef term2) {
-      list=new Pair(term1, term2, list);
-  }
-
-  // Get the first pair of a list
-  // (Return FALSE if the list is empty)
-  Bool getpair(TaggedRef &t1, TaggedRef &t2) {
-      if (list!=NULL) {
-          t1=list->term1;
-          t2=list->term2;
-          return TRUE;
-      } else {
-          return FALSE;
-      }
-  }
-
-  // Advance to next element
-  // (Return FALSE if the advance cannot be done because the list is empty)
-  Bool nextpair() {
-      if (list!=NULL) {
-          list=list->next;
-          return TRUE;
-      } else {
-          return FALSE;
-      }
-  }
-
-  Bool isempty() {
-      return (list==NULL);
-  }
-
-  // Free memory for all elements of the list and the head
-  void free() {
-      while (list) {
-          Pair* next=list->next;
-          oz_freeListDispose(list, sizeof(*list));
-          list=next;
-      }
-      oz_freeListDispose(this, sizeof(*this)); // IS THIS REASONABLE?
-  }
-};
-
-
-//-------------------------------------------------------------------------
-//                               class DynamicTable
-//-------------------------------------------------------------------------
-
-// A class implementing a hash table with insertion/deletion operations that
-// can be expanded when it becomes too full and reduced when it becomes too empty
-// (recovering memory), while keeping amortized constant-time insertion/deletion.
-// Several operations (merge, srecordcheck) are added to facilitate unification of
-// OzOFVariables, which are built on top of a DynamicTable.
-
-// Three possibilities for an entry:
-// ident: fea value: val   filled entry
-// ident: fea value: 0     empty entry (emptied by removeC--a restricted empty slot)
-// ident: 0   value: 0     empty entry (empty from the start--a fully empty slot)
-// With valid flag, full emptiness check is: table[i].value==makeTaggedNULL()
-// Hash termination condition is: table[i].ident==makeTaggedNULL() || table[i].ident==id || s==0
-
-// This implementation needs to be tuned for space & time.  Currently, in the worst-case,
-// a hash table may be doubled in size if it contains only FILLFACTOR/2 entries, if all
-// other entries are restricted empty slots.  The hash table will then be reduced in size
-// at the first remove operation, at the price of a large transient memory use.  However,
-// this method guarantees amortized constant-time access.  If, in a steady-state, there
-// is balance between the add and remove operations, then no extra space is used on average.
-
-typedef long dt_index;
-
-const dt_index invalidIndex = -1L;
-
-// Maximum size of completely full table
-#define FILLLIMIT 4
-// Maximum fill factor of bigger tables
-// (if changing this, must also change ofgenvar.cc)
-#define FILLFACTOR 0.75
-
-// Return true iff argument is a power of two
-extern Bool isPwrTwo(dt_index s);
-// Round up to nearest power of two
-extern dt_index ceilPwrTwo(dt_index s);
-
-class HashElement {
-friend class DynamicTable;
-
-private:
-    TaggedRef ident;
-    TaggedRef value;
-};
-
-
-// Maximum number of elements in hash table:
-/* Full/Max: 0/0, 1/1, 2/2, 4/4, 6/8, 12/16, 24/32 (limit:75%) */
-/* !!! DOING +2 instead of +1 goes into INFINITE LOOP.  CHECK IT OUT! */
-// #define fullFunc(size) (((size)+((size)>>1)+1)>>1)
-#define fullFunc(size) ((size)<=FILLLIMIT?(size):( (size) - ((size)>>2) ))
-
-// Fill factor at which the hash table is considered sparse enough to halve in size:
-/* Empty/Max: 0/0, 0/1, 1/2, 2/4, 3/8, 6/16, ... (limit:37.5%) */
-#define emptyFunc(size) (((size)+((size)>>1)+2)>>2)
-
-// class DynamicTable uses:
-//   TaggedRef SRecord::getFeature(Literal* feature)            (srecord.hh)
-//   int Literal::hash()                                        (term.hh)
-//   Literal* tagged2Literal(TaggedRef ref)                     (tagged.hh)
-//   Bool isLiteral(TaggedRef term)                             (tagged.hh)
-//   void* heapMalloc(size_t chunk_size)                        (mem.hh)
-
-class DynamicTable {
-friend class HashElement;
+//
+// A DictNode holds either a key/value pair, or - in case of a
+// collision - identifies a block of separately allocated DictNode"s;
+class DictNode {
+protected:
+  OZ_Term key, value;
 
 public:
-    dt_index numelem;
-    dt_index size;
-    HashElement table[1]; // 1 == placeholder.  Actual size set when allocated.
+  DictNode() : key(0) {
+    DebugCode(value = (OZ_Term) -1;);
+  }
+  DictNode(OZ_Term keyIn, OZ_Term valueIn)
+    : key(keyIn), value(valueIn) {}
 
+  //
+  void* operator new(size_t size) { Assert(0); return ((void *) 0); }
+  void* operator new(size_t, void *place) { return (place); }
+
+  //
+  int isEmpty() { return (!key); }
+  void setEmpty() {
+    Assert(!isEmpty());
+    key = (OZ_Term) 0;
+    DebugCode(value = (OZ_Term) -1;);
+  }
+  void set(OZ_Term keyIn, OZ_Term valueIn) {
+    Assert(isEmpty());
+    key = keyIn;
+    value = valueIn;
+  }
+  void setValue(OZ_Term valueIn) {
+    Assert(!isEmpty());
+    value = valueIn;
+  }
+
+  // If there is a collision, the DictNode in the hash table is
+  // converted into a pointer to a chunk of separately allocated
+  // DictNode"s. 'eptr' points at a cell after the array;
+  void setSPtr(DictNode *sptr) {
+    Assert(isRTAligned(sptr));
+    key = ToInt32(sptr);
+    DebugCode(value = (OZ_Term) -1;);
+  }
+  void setEPtr(DictNode *eptr) {
+    Assert(isRTAligned(eptr));
+    Assert(isPointer());
+    value = ToInt32(eptr);
+  }
+
+  //
+  int isPointer() { return (oz_isRef(key)); }
+  DictNode *getDictNodeSPtr() {
+    Assert(isPointer());
+    return ((DictNode *) ToPointer(key));
+  }
+  DictNode *getDictNodeEPtr() {
+    Assert(isPointer());
+    return ((DictNode *) ToPointer(value));
+  }
+
+  //
+  OZ_Term getKey() {
+    Assert(!isPointer());
+    return (key);
+  }
+  OZ_Term getValue() {
+    Assert(!isPointer());
+    return (value);
+  }
+};
+
+//
+extern unsigned int dictHTSizes[];
+
+
+//
+// DictHashTable is a custom one (unfortunately, I don't know how to
+// generalize it). OZ_Term key/value pairs are kept directly in the
+// table as long as there are no overflows. If any occurs, a
+// contiguous block of DictNode"s is (re)allocated. The division
+// hashing scheme is used (for the sake of perfection of hashing, in
+// particular with consecutive integers as keys). Unfortunately, this
+// is not as efficient to compute as the multiplication scheme (though
+// on modern computers the difference is not as large as it used to
+// be). Also, there is a method to copy a dictionary.
+class DictHashTable {
+  DictNode *table;
+  // int tableSize;             // number of slots;
+  int sizeIndex;                // in the 'dictHTSizes' array;
+  int entries;                  // number of allocated entries;
+  // int slots;                 // number of allocated slots;
+  int maxEntries;               // boundaries for reallocation;
+  // int maxSlots;
+
+  //
 private:
-  // Hash and rehash until: (1) the element is found, (2) a fully empty slot is
-  // found, or (3) the hash table has only filled slots and restricted empty slots
-  // and does not contain the element.  In first two cases, answer is valid and
-  // routine returns index of slot containing the element or a fully empty slot.
-  // Otherwise returns "invalidIndex".
-  // This hash routine works for completely full hash tables and hash tables with
-  // restricted empty slotes (i.e., in which elements have been removed by making
-  // their value NULL).
-  dt_index DynamicTable::fullhash(TaggedRef id)
-  {
-    Assert(isPwrTwo(size));
-    Assert(oz_isFeature(id));
-    // Function 'hash' may eventually return the literal's seqNumber (see value.hh):
-    if (size==0) { return invalidIndex; }
-    dt_index size1=(size-1);
-    dt_index i=size1 & ((dt_index) featureHash(id));
-    dt_index s=size1;
-    // Rehash if necessary using semi-quadratic probing (quadratic is not covering)
-    // Theorem: semi-quadratic probing is covering in size steps (proof: PVR+JN)
+  void mkEmpty();
+  void init(int size);
+  void resize();
 
-    while(1) {
-      if (table[i].ident==makeTaggedNULL() ||
-          featureEq(table[i].ident,id))
-        return i;
-      if (s==0)
-        return invalidIndex;
-      i+=s;
-      i&=size1;
-      s--;
+  //
+  unsigned int hash(unsigned int m) {
+    switch (sizeIndex) {
+    case 0:     m = m % HT_PRIME0; break;
+    case 1:     m = m % HT_PRIME1; break;
+    case 2:     m = m % HT_PRIME2; break;
+    case 3:     m = m % HT_PRIME3; break;
+    case 4:     m = m % HT_PRIME4; break;
+    case 5:     m = m % HT_PRIME5; break;
+    case 6:     m = m % HT_PRIME6; break;
+    case 7:     m = m % HT_PRIME7; break;
+    case 8:     m = m % HT_PRIME8; break;
+    case 9:     m = m % HT_PRIME9; break;
+    case 10:    m = m % HT_PRIME10; break;
+    case 11:    m = m % HT_PRIME11; break;
+    case 12:    m = m % HT_PRIME12; break;
+    case 13:    m = m % HT_PRIME13; break;
+    case 14:    m = m % HT_PRIME14; break;
+    case 15:    m = m % HT_PRIME15; break;
+    case 16:    m = m % HT_PRIME16; break;
+    case 17:    m = m % HT_PRIME17; break;
+    case 18:    m = m % HT_PRIME18; break;
+    case 19:    m = m % HT_PRIME19; break;
+    case 20:    m = m % HT_PRIME20; break;
+    case 21:    m = m % HT_PRIME21; break;
+    case 22:    m = m % HT_PRIME22; break;
+    case 23:    m = m % HT_PRIME23; break;
+    case 24:    m = m % HT_PRIME24; break;
+    case 25:    m = m % HT_PRIME25; break;
+    case 26:    m = m % HT_PRIME26; break;
+    case 27:    m = m % HT_PRIME27; break;
+    case 28:    m = m % HT_PRIME28; break;
+    case 29:    m = m % HT_PRIME29; break;
+    case 30:    m = m % HT_PRIME30; break;
+    case 31:    m = m % HT_PRIME31; break;
+    case 32:    m = m % HT_PRIME32; break;
+    case 33:    m = m % HT_PRIME33; break;
+    case 34:    m = m % HT_PRIME34; break;
+    case 35:    m = m % HT_PRIME35; break;
+    case 36:    m = m % HT_PRIME36; break;
+    case 37:    m = m % HT_PRIME37; break;
+    case 38:    m = m % HT_PRIME38; break;
+    case 39:    m = m % HT_PRIME39; break;
+    case 40:    m = m % HT_PRIME40; break;
+    case 41:    m = m % HT_PRIME41; break;
+    case 42:    m = m % HT_PRIME42; break;
+    case 43:    m = m % HT_PRIME43; break;
+    case 44:    m = m % HT_PRIME44; break;
+    case 45:    m = m % HT_PRIME45; break;
     }
+    return (m);
   }
 
+  //
+  // Just inserts the entry into the table - keeps 'entries'(/'slots'),
+  // does not bother with resizing, all nodes given are unique etc.,
+  // and "cac"s" that entry;
+  void gCollectDictEntry(DictNode *n);
+  void sCloneDictEntry(DictNode *n);
+
+  // Return sorted list (with given tail) containing all features;
+  OZ_Term getArityList(OZ_Term tail = AtomNil);
+
+  //
 public:
-  USEFREELISTMEMORY;
-  OZPRINT;
-  NO_DEFAULT_CONSTRUCTORS(DynamicTable)
+  USEHEAPMEMORY;
 
-  // iteration
-  int getFirst() { return -1; }
-  int getNext(int i) {
-    i++;
-    while (i<size) {
-      if (table[i].value!=makeTaggedNULL())
-        return i;
-      i++;
+  DictHashTable(int size) { init(size); }
+  ~DictHashTable() {
+    delete table;
+    DebugCode(table = (DictNode *) -1;);
+    DebugCode(sizeIndex = -1;);
+    DebugCode(entries = maxEntries = -1;);
+  }
+
+  //
+  void compactify();
+
+  // returns '0' if nothing is found;
+  OZ_Term htFind(OZ_Term key) {
+    DictNode *np = &table[hash(featureHash(key))];
+
+    //
+    if (!np->isPointer()) {
+      Assert(!np->isEmpty());
+      if (featureEq(np->getKey(), key))
+        return (np->getValue());
+      else
+        return ((OZ_Term) 0);
+    } else if (!np->isEmpty()) {
+      Assert(np->isPointer());
+      // Actually, there are at least two elements;
+      DictNode *sptr = np->getDictNodeSPtr();
+      DictNode *eptr = np->getDictNodeEPtr();
+      do {
+        if (featureEq(sptr->getKey(), key))
+          return (sptr->getValue());
+        sptr++;
+      } while (sptr < eptr);
     }
-    return -1;
+    return ((OZ_Term) 0);
   }
 
-  TaggedRef getKey(int i)   { return table[i].ident; }
-  TaggedRef getValue(int i) { return table[i].value; }
-  void clearValue(int i) { table[i].value=0; }
+  //
+  // OZ_Term htFindOutline(OZ_Term key);
 
-  ostream &newprint(ostream &, int depth);
+  // 'htAdd()' inserts a node, or updates an already existing one;
+  void htAdd(OZ_Term key, OZ_Term value) {
+    Assert(value != (OZ_Term) 0);       // '0' is reserved;
+    //
+    DictNode *np = &table[hash(featureHash(key))];
 
-  // Copy the dynamictable from 'from' to 'to' space:
-  DynamicTable * gCollect(void);
-  DynamicTable * sClone(void);
+    //
+    if (np->isEmpty()) {
+      np->set(key, value);
+      Assert(!np->isEmpty());
+      //
+      entries++;
+      // slots++;
+      if (entries > maxEntries /* || slots > maxSlots */ )
+        resize();
+      //
+      Assert(htFind(key));
+      return;
 
-
-  // Create an initially empty dynamictable of size s
-  static DynamicTable* newDynamicTable(dt_index s=4);
-
-  // Initialize an elsewhere-allocated dynamictable of size s
-  void init(dt_index s);
-
-  // True if the hash table is considered full:
-  // Test whether the current table has too little room for one new element:
-  // ATTENTION: Calls to insert should be preceded by fullTest.
-  Bool fullTest() {
-    Assert(isPwrTwo(size));
-    return (numelem>=fullFunc(size));
-  }
-
-  DynamicTable* copyDynamicTable(dt_index newSize=(dt_index)(-1L));
-
-  // Return a table that is double the size of the current table and
-  // that contains the same elements:
-  // ATTENTION: Should be called before insert if the table is full.
-  DynamicTable* doubleDynamicTable() {
-    return copyDynamicTable(size?(size<<1):1);
-  }
-
-  static
-  size_t DTBlockSize(int s)
-  {
-    return sizeof(DynamicTable) + sizeof(HashElement)*(s-1);
-  }
-
-    void dispose() { oz_freeListDispose(this, DTBlockSize(size)); }
-    // Insert val at index id
-    // If valid==FALSE then nothing has been done.
-    // Otherwise, return NULL if val is successfully inserted (id did not exist)
-    // or return the value of the pre-existing element if id already exists.
-    // ATTENTION: insert must only be done if the table has room for a new element.
-    // User should test for and increase size of hash table if it becomes too full.
-    TaggedRef insert(TaggedRef id, TaggedRef val, Bool *valid);
-
-    // Look up val at index id
-    // Return val if it is found
-    // Return NULL if nothing is found
-  TaggedRef lookup(TaggedRef id) {
-    Assert(isPwrTwo(size));
-    Assert(oz_isFeature(id));
-    dt_index i=fullhash(id);
-    Assert(i==invalidIndex || i<size);
-    if (i!=invalidIndex &&
-        table[i].value!=makeTaggedNULL() &&
-        featureEq(table[i].ident,id)) {
-      // Val is found
-      return table[i].value;
+      //
     } else {
-      // Val is not found
-      return makeTaggedNULL();
+      if (!np->isPointer()) {
+        if (featureEq(np->getKey(), key)) {
+          np->setValue(value);
+          //
+          Assert(htFind(key));
+          return;
+
+          //
+        } else {
+          // a fresh collision - allocate a new block of DictNode"s;
+          DictNode *newA =
+            (DictNode *) oz_heapMalloc(2 * sizeof(DictNode));
+          (void) new (newA) DictNode(*np);
+          np->setSPtr(newA++);
+          (void) new (newA++) DictNode(key, value);
+          np->setEPtr(newA);
+
+          //
+          entries++;
+          if (entries > maxEntries)
+            resize();
+          //
+          Assert(htFind(key));
+          return;
+        }
+      } else {
+        // check the array;
+        // Actually, there are at least two elements;
+        DictNode *sptr = np->getDictNodeSPtr();
+        DictNode *eptr = np->getDictNodeEPtr();
+        do {
+          if (featureEq(sptr->getKey(), key)) {
+            sptr->setValue(value);
+            Assert(htFind(key));
+            return;
+          }
+          sptr++;
+        } while (sptr < eptr);
+
+        // not found - add another one;
+        sptr = np->getDictNodeSPtr();
+        DictNode *newA =
+          (DictNode *) oz_heapMalloc((((char *) eptr) - ((char *) sptr)) +
+                                     sizeof(DictNode));
+        //
+        np->setSPtr(newA);
+        // at least two elements are copied;
+        (void) new (newA++) DictNode(*sptr++);
+        do {
+          (void) new (newA++) DictNode(*sptr++);
+        } while (sptr < eptr);
+        (void) new (newA++) DictNode(key, value);
+        np->setEPtr(newA);
+
+        //
+        entries++;
+        if (entries > maxEntries)
+          resize();
+        //
+        Assert(htFind(key));
+        return;
+      }
     }
+    Assert(0);
+  }
+
+  // 'htReAdd()' inserts a new node without any size updates/checks;
+  void htReAdd(OZ_Term key, OZ_Term value) {
+    Assert(!htFind(key));
+    Assert(value != (OZ_Term) 0);       // '0' is reserved;
+    //
+    DictNode *np = &table[hash(featureHash(key))];
+
+    //
+    if (np->isEmpty()) {
+      np->set(key, value);
+      Assert(!np->isEmpty());
+      //
+      Assert(htFind(key));
+      return;
+
+      //
+    } else {
+      if (!np->isPointer()) {
+        // a fresh collision - allocate a new block of DictNode"s;
+        DictNode *newA =
+          (DictNode *) oz_heapMalloc(2 * sizeof(DictNode));
+        (void) new (newA) DictNode(*np);
+        np->setSPtr(newA++);
+        (void) new (newA++) DictNode(key, value);
+        np->setEPtr(newA);
+        //
+        Assert(htFind(key));
+        return;
+
+        //
+      } else {
+        // check the array;
+        // Actually, there are at least two elements;
+        DictNode *sptr = np->getDictNodeSPtr();
+        DictNode *eptr = np->getDictNodeEPtr();
+        DictNode *newA =
+          (DictNode *) oz_heapMalloc((((char *) eptr) - ((char *) sptr)) +
+                                     sizeof(DictNode));
+        //
+        np->setSPtr(newA);
+        // at least two elements are copied;
+        (void) new (newA++) DictNode(*sptr++);
+        do {
+          (void) new (newA++) DictNode(*sptr++);
+        } while (sptr < eptr);
+        (void) new (newA++) DictNode(key, value);
+        np->setEPtr(newA);
+        //
+        Assert(htFind(key));
+        return;
+      }
+    }
+    Assert(0);
   }
 
 
-    // Destructively update index id with new value val, if index id already has a value
-    // Return TRUE if index id successfully updated, else FALSE if index id does not
-    // exist in table
-    Bool update(TaggedRef id, TaggedRef val);
+  // Returns the old value, or '0' if key was not found;
+  OZ_Term htExchange(OZ_Term key, OZ_Term value) {
+    Assert(value != (OZ_Term) 0);
+    //
+    DictNode *np = &table[hash(featureHash(key))];
+    OZ_Term oldValue;
 
-  // Destructively update index id with new value val even if id does
-  // not have a value yet
-  // Return TRUE if index id successfully updated, else FALSE
-  Bool add(TaggedRef id, TaggedRef val);
-  Bool addCond(TaggedRef id, TaggedRef val);
-  Bool exchange(TaggedRef id, TaggedRef new_val, TaggedRef * old_val);
+    //
+    if (np->isEmpty()) {
+      np->set(key, value);
+      Assert(!np->isEmpty());
 
-    // Remove index id from table.  To reclaim memory, if the table becomes too sparse then
-    // return a smaller table that contains all its entries.  Otherwise, return same table.
-    DynamicTable *remove(TaggedRef id);
+      //
+      entries++;
+      // slots++;
+      if (entries > maxEntries /* || slots > maxSlots */ )
+        resize();
+      //
+      Assert(htFind(key));
+      return ((OZ_Term) 0);
 
-    // Return TRUE iff there are features in an external dynamictable that
-    // are not in the current dynamictable
-    Bool extraFeaturesIn(DynamicTable* dt);
+      //
+    } else {
+      if (!np->isPointer()) {
+        if (featureEq(np->getKey(), key)) {
+          OZ_Term oldValue = np->getValue();
+          np->setValue(value);
+          //
+          Assert(htFind(key));
+          return (oldValue);
 
-    // Merge the current dynamictable into an external dynamictable
-    // Return a pairlist containing all term pairs with the same feature
-    // The external dynamictable is resized if necessary
-    void merge(DynamicTable* &dt, PairList* &pairs);
+          //
+        } else {
+          // a new colision;
+          DictNode *newA =
+            (DictNode *) oz_heapMalloc(2 * sizeof(DictNode));
+          (void) new (newA) DictNode(*np);
+          np->setSPtr(newA++);
+          (void) new (newA++) DictNode(key, value);
+          np->setEPtr(newA);
 
-    // Check an srecord against the current dynamictable
-    // Return TRUE if all elements of dynamictable exist in srecord.
-    // Return FALSE if there exists element of dynamictable that is not in srecord.
-    // If TRUE, collect pairs of corresponding elements of dynamictable and srecord.
-    // If FALSE, pair list contains a well-terminated but meaningless list.
-    // Neither the srecord nor the dynamictable is modified.
-    Bool srecordcheck(SRecord &sr, PairList* &pairs);
+          //
+          entries++;
+          if (entries > maxEntries)
+            resize();
+          //
+          Assert(htFind(key));
+          return ((OZ_Term) 0);
+        }
 
-    // Return a difference list of all the features currently in the dynamic table.
-    // The head is the return value and the tail is returned through an argument.
-    TaggedRef getOpenArityList(TaggedRef*,Board*);
+        //
+      } else {
+        // check the array;
+        // Actually, there are at least two elements;
+        DictNode *sptr = np->getDictNodeSPtr();
+        DictNode *eptr = np->getDictNodeEPtr();
+        do {
+          if (featureEq(sptr->getKey(), key)) {
+            OZ_Term oldValue = sptr->getValue();
+            sptr->setValue(value);
+            Assert(htFind(key));
+            return (oldValue);
+          }
+          sptr++;
+        } while (sptr < eptr);
 
-    // Return list of features in current table that are not in dt
-    TaggedRef extraFeatures(DynamicTable* &dt);
+        // not found - add another one;
+        sptr = np->getDictNodeSPtr();
+        DictNode *newA =
+          (DictNode *) oz_heapMalloc((((char *) eptr) - ((char *) sptr)) +
+                                     sizeof(DictNode));
+        //
+        np->setSPtr(newA);
+        // at least two elements are copied;
+        (void) new (newA++) DictNode(*sptr++);
+        do {
+          (void) new (newA++) DictNode(*sptr++);
+        } while (sptr < eptr);
+        (void) new (newA++) DictNode(key, value);
+        np->setEPtr(newA);
 
-    // Return list of features in srecord that are not in current table
-    TaggedRef extraSRecFeatures(SRecord &sr);
+        //
+        entries++;
+        if (entries > maxEntries)
+          resize();
+        //
+        Assert(htFind(key));
+        return ((OZ_Term) 0);
+      }
+    }
+    Assert(0);
+  }
 
-    // Return TRUE if current table has features that are not in arity argument:
-    Bool hasExtraFeatures(int tupleArity);
-    Bool hasExtraFeatures(Arity *recordArity);
+  // 'htDel()' does nothing if no node matches;
+  void htDel(OZ_Term key) {
+    DictNode *np = &table[hash(featureHash(key))];
 
-    // Return sorted list (with given tail) containing all features
-    TaggedRef getArityList(TaggedRef tail=AtomNil);
+    //
+    if (!np->isPointer()) {
+      Assert(!np->isEmpty());
+      if (featureEq(np->getKey(), key)) {
+        np->setEmpty();
+        entries--;
+        // slots--;
+      }
+    } else if (!np->isEmpty()) {
+      Assert(np->isPointer());
 
-    // Allocate & return _unsorted_ list containing all features:
-    TaggedRef getKeys();
+      // Actually, there are at least two elements;
+      DictNode *sptr = np->getDictNodeSPtr();
+      DictNode *eptr = np->getDictNodeEPtr();
+      do {
+        if (featureEq(sptr->getKey(), key)) {
+          // Now, 'sptr' points at the entry to be removed;
+          DictNode *fptr = np->getDictNodeSPtr();
+          int bytes = ((char *) eptr) - ((char *) fptr);
+          if (bytes > 2 * sizeof(DictNode)) {
+            DictNode *newA =
+              (DictNode *) oz_heapMalloc(bytes - sizeof(DictNode));
+            //
+            np->setSPtr(newA);
+            while (fptr < sptr)
+              (void) new (newA++) DictNode(*fptr++);
+            Assert(fptr == sptr && fptr < eptr);
+            fptr++;
+            while (fptr < eptr)
+              (void) new (newA++) DictNode(*fptr++);
+            np->setEPtr(newA);
 
-    // Allocate & return _unsorted_ pair list
-    TaggedRef getPairs();
+            //
+          } else {
+            // only one entry left;
+            DictNode *fptr = np->getDictNodeSPtr();
+            if (fptr == sptr)
+              fptr++;
+            DebugCode(np->setEmpty());
+            np->set(fptr->getKey(), fptr->getValue());
+          }
+          entries--;
+          break;
+        }
 
-    // Allocate & return _unsorted_ list containing all values mapped to:
-    TaggedRef getItems();
+        //
+        sptr++;
+      } while (sptr < eptr);
+    }
+    Assert(!htFind(key));
+  }
 
-    // Convert table to Literal, SRecord or LTuple
-    TaggedRef toRecord(TaggedRef lbl);
+  //
+  int getSize() { return (dictHTSizes[sizeIndex]); }
+  int getUsed() { return (entries); }
 
+  // Allocate & return _unsorted_ list containing all features:
+  OZ_Term getKeys();
+  // Allocate & return _unsorted_ pair list
+  OZ_Term getPairs();
+  // Allocate & return _unsorted_ list containing all values mapped to:
+  OZ_Term getItems();
+  // Convert table to Literal, SRecord or LTuple
+  OZ_Term toRecord(OZ_Term lbl);
+
+  //
+  // Marshaling support: returns an array of DictNode"s that contain
+  // all the dictionary's elements.
+  DictNode* getPairsInArray();
+
+  //
+  DictHashTable *copy();
+
+  //
+  DictHashTable* gCollect(void);
+  DictHashTable* sClone(void);
 };
 
 
-inline
-void resizeDynamicTable(DynamicTable *&dt)
-{
-  DynamicTable *ret = dt->doubleDynamicTable();
-  dt->dispose();
-  dt = ret;
-}
-
-
-/*===================================================================
- * Dictionaries
- *=================================================================== */
-
-
-#define DictDefaultSize 4
-
+//
+#define DictDefaultSize 5
+//
 #define DictSafeFlag  1
 
 class OzDictionary: public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
-  DynamicTable *table;
+  DictHashTable *table;
   int dictFlags;
   // Perdio: safe dictionaries (i.e. those used
   // within objects) can be marshalled.
 
+private:
+  OzDictionary(Board *b, DictHashTable *t, int flagsIn)
+    : ConstTermWithHome(b, Co_Dictionary), dictFlags(flagsIn) {
+    table = t->copy();
+  }
+
 public:
   NO_DEFAULT_CONSTRUCTORS(OzDictionary)
-  void init(int sz)
-  {
-    if (sz<0)
-      sz = DictDefaultSize;
-    table = DynamicTable::newDynamicTable(sz);
+
+  void init(int sz) {
+    table = new DictHashTable(sz);
     dictFlags = 0;
   }
-  OzDictionary(Board *b, int sz=DictDefaultSize) : ConstTermWithHome(b,Co_Dictionary)
-  {
+  OzDictionary(Board *b, int sz = DictDefaultSize)
+    : ConstTermWithHome(b, Co_Dictionary) {
     init(sz);
   }
-  OzDictionary(Board *b, DynamicTable *t) : ConstTermWithHome(b,Co_Dictionary)
-  {
-    table = t->copyDynamicTable();
-    dictFlags = 0;
+
+  OZ_Term getArg(OZ_Term key) {
+    return (table->htFind(key));
   }
 
-  OZ_Return getArg(TaggedRef key, TaggedRef &out) {
-    TaggedRef ret = table->lookup(key);
-    if (ret == makeTaggedNULL())
-      return FAILED;
-    out = ret;
-    return PROCEED;
+  OZ_Term member(OZ_Term key) {
+    OZ_Term found = table->htFind(key);
+    return oz_bool(found != (OZ_Term) 0);
   }
 
-  TaggedRef member(TaggedRef key) {
-    TaggedRef found = table->lookup(key);
-    return oz_bool(found != makeTaggedNULL());
+  void setArg(OZ_Term key, OZ_Term value) {
+    table->htAdd(key, value);
   }
 
-  void setArg(TaggedRef key, TaggedRef value) {
-    if (table->fullTest()) resizeDynamicTable(table);
-    Bool valid=table->add(key,value);
-    if (!valid) {
-      resizeDynamicTable(table);
-      valid = table->add(key,value);
-    }
-    Assert(valid);
-  }
-
-  void exchange(TaggedRef key, TaggedRef new_val, TaggedRef * old_val) {
-    if (table->fullTest())
-      resizeDynamicTable(table);
-
-    Bool valid=table->exchange(key,new_val,old_val);
-
-    if (!valid) {
-      resizeDynamicTable(table);
-      valid = table->exchange(key,new_val,old_val);
-    }
-
-    Assert(valid);
+  // kost@ : used anywhere ?
+  void exchange(OZ_Term key, OZ_Term new_val, OZ_Term *old_val) {
+    *old_val = table->htExchange(key, new_val);
   }
 
   // For Dictionary.[cond]Exchange we don't want to add a new element
   // if the key isn't preexisting, instead return FAILED.
-  OZ_Return exchangeExisting(TaggedRef key, TaggedRef new_val, TaggedRef& old_val) {
-    TaggedRef ret;
-    /* First get old value */
-    ret = getArg(key, old_val);
-    if (ret == FAILED)
+  OZ_Return exchangeExisting(OZ_Term key,
+                             OZ_Term new_val, OZ_Term& old_val) {
+    if ((old_val = table->htFind(key)) == (OZ_Term) 0) {
       return FAILED;
-    /* Second update with new value */
-    setArg(key, new_val);
-    return PROCEED;
-  }
-
-  void setCondArg(TaggedRef key, TaggedRef value) {
-    if (table->fullTest())
-      resizeDynamicTable(table);
-
-    Bool valid=table->addCond(key,value);
-
-    if (!valid) {
-      resizeDynamicTable(table);
-      valid = table->addCond(key,value);
-    }
-    Assert(valid);
-  }
-
-  void remove(TaggedRef key) {
-    DynamicTable *aux = table->remove(key);
-    if (aux!=table) {
-      table->dispose();
-      table = aux;
+    } else {
+      setArg(key, new_val);
+      return PROCEED;
     }
   }
-  void removeAll()           { table->dispose(); init(-1); }
 
-  TaggedRef keys()  { return table->getKeys(); }
-  TaggedRef pairs() { return table->getPairs(); }
-  TaggedRef items() { return table->getItems(); }
+  void remove(OZ_Term key) { table->htDel(key); }
+  void removeAll()  { init(DictDefaultSize); }
 
+  OZ_Term keys()  { return table->getKeys(); }
+  OZ_Term pairs() { return table->getPairs(); }
+  OZ_Term items() { return table->getItems(); }
+  OZ_Term toRecord(OZ_Term lbl) { return table->toRecord(lbl); }
+
+  int getSize()     { return (table->getUsed()); }
+  Bool isEmpty()    { return (table->getUsed() == 0); }
+
+  OZ_Term clone(Board * b) {
+    OzDictionary *aux = new OzDictionary(b, table, dictFlags);
+    return (makeTaggedConst(aux));
+  }
+
+  //
   Bool isSafeDict() { return (dictFlags & DictSafeFlag); }
-  void markSafe()   { dictFlags=DictSafeFlag; }
-
-  int getSize()     { return table->numelem; }
-
-  Bool isEmpty() {
-    return (table->numelem == 0);
-  }
-
-  TaggedRef clone(Board * b) {
-    OzDictionary *aux = new OzDictionary(b, table);
-    aux->dictFlags = dictFlags;
-    return makeTaggedConst(aux);
-  }
-
-  TaggedRef toRecord(TaggedRef lbl) { return table->toRecord(lbl); }
-
-  // iteration
-  int getFirst()            { return table->getFirst(); }
-  int getNext(int i)        { return table->getNext(i); }
-  TaggedRef getKey(int i)   { return table->getKey(i); }
-  TaggedRef getValue(int i) { return table->getValue(i); }
+  void markSafe()   { dictFlags = DictSafeFlag; }
+  //
+  DictNode* pairsInArray() { return (table->getPairsInArray()); }
 
   OZPRINT;
 };
 
 
 inline
-Bool oz_isDictionary(TaggedRef term)
+Bool oz_isDictionary(OZ_Term term)
 {
   return oz_isConst(term) && tagged2Const(term)->getType() == Co_Dictionary;
 }
 
 inline
-OzDictionary *tagged2Dictionary(TaggedRef term)
+OzDictionary *tagged2Dictionary(OZ_Term term)
 {
   Assert(oz_isDictionary(term));
   return (OzDictionary *) tagged2Const(term);

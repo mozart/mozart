@@ -38,7 +38,7 @@
 
 #define NONVAR(X,term)                          \
 TaggedRef term = X;                             \
-{ DEREF(term,_myTermPtr);                       \
+{ DEREF_NONVAR(term);                           \
   Assert(!oz_isRef(term));                      \
   if (oz_isVarOrRef(term)) return SUSPEND;      \
 }

@@ -163,7 +163,7 @@ public:
 };
 
 //
-#define SITE_TABLE_SIZE    10
+#define SITE_TABLE_SIZE    4
 
 //
 class SiteHashTable : public GenDistEntryTable<Site> {
