@@ -22,7 +22,7 @@
 # WARRANTIES.
 #
 
-all: nc ns
+all: Gif2Functor.oza nc ns
 
 c : client      # Make only client
 s : micq        # Make only server
@@ -32,9 +32,14 @@ ns : s
 nc : c
         ozl client -o client.oza
 
+GifToBase64.ozf : GifToBase64.oz
+        ozc -c GifToBase64.oz
+
+Gif2Functor.oza : GifToBase64.ozf Gif2Functor.oz
+        ozc -x Gif2Functor.oz -o Gif2Functor.oza
+
 micq : server.ozf defaultsettings.ozf startserver.oz
         ozc -x startserver.oz -o micq
-
 
 server.ozf: methods.ozf database.ozf mobility.ozf log.ozf server.oz sysadm.ozf
         ozc -c server.oz -o server.ozf
@@ -57,7 +62,28 @@ log.ozf: log.oz
 sysadm.ozf: sysadm.oz addapplicationgui.ozf editapplicationgui.ozf
         ozc -c sysadm.oz -o sysadm.ozf
 
-MozartPower.ozf : MozartPower.oz
+Logo_gif.ozf : Icons2/logo.gif
+        Gif2Functor.oza Icons2/logo.gif -o Logo_gif.ozf
+
+Letter_gif.ozf : Icons2/letter.gif
+        Gif2Functor.oza Icons2/letter.gif -o Letter_gif.ozf
+
+Away_gif.ozf : Icons2/away_t.gif
+        Gif2Functor.oza Icons2/away_t.gif -o Away_gif.ozf
+
+Online_gif.ozf : Icons2/online_t.gif
+        Gif2Functor.oza Icons2/online_t.gif -o Online_gif.ozf
+
+Offline_gif.ozf : Icons2/offline_t.gif
+        Gif2Functor.oza Icons2/offline_t.gif -o Offline_gif.ozf
+
+Eyes_gif.ozf : Icons2/eyes_t.gif
+        Gif2Functor.oza Icons2/eyes_t.gif -o Eyes_gif.ozf
+
+Powered_by_oz_gif.ozf : Icons2/powered-by-oz-100.gif
+        Gif2Functor.oza Icons2/powered-by-oz-100.gif -o Powered_by_oz_gif.ozf
+
+MozartPower.ozf : MozartPower.oz Powered_by_oz_gif.ozf
         ozc -c MozartPower.oz
 
 client : client.ozf startclient.oz newaccountgui.ozf MozartPower.ozf
@@ -72,7 +98,7 @@ FaqEdit.ozf : FaqEdit.oz
 ScrollFrame.ozf : ScrollFrame.oz
         ozc -c ScrollFrame.oz
 
-clientgui.ozf : messagedisplay.ozf manager.ozf defaultsettings.ozf popup.ozf messagegui.ozf editaccount.ozf draganddrop.ozf addapplicationgui.ozf configureclient.ozf clientgui.oz editapplicationgui.ozf FaqEdit.ozf ScrollFrame.ozf Makefile.GARG
+clientgui.ozf : messagedisplay.ozf manager.ozf defaultsettings.ozf popup.ozf messagegui.ozf editaccount.ozf draganddrop.ozf addapplicationgui.ozf configureclient.ozf clientgui.oz editapplicationgui.ozf FaqEdit.ozf ScrollFrame.ozf Logo_gif.ozf Letter_gif.ozf Away_gif.ozf Online_gif.ozf Offline_gif.ozf Eyes_gif.ozf Makefile.GARG
         ozc -c clientgui.oz --define SCROLLFRAME
 
 addapplicationgui.ozf: addapplicationgui.oz
