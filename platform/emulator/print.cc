@@ -969,6 +969,7 @@ PRINT(Thread)
   if ((getFlags ()) & T_ofs)       stream << " O";
   if ((getFlags ()) & T_tag)       stream << " T";
   if ((getFlags ()) & T_ltq)       stream << " Q";
+  if ((getFlags ()) & T_nmo)       stream << " N";
   stream << " <";
   getBoard()->print(stream, DEC(depth));
   stream << ">";

@@ -121,6 +121,17 @@ ostream &operator << (ostream &ofile, const OZ_FiniteDomain &fd) {
 //-----------------------------------------------------------------------------
 // class OZ_Propagator
 
+
+class OZ_NonMonotonic {
+private:
+  typedef unsigned order_t;
+  order_t _order; 
+  static order_t _next_order;
+public:
+  OZ_NonMonotonic(void);
+  order_t getOrder(void) const { return _order; }
+};
+
 enum OZ_FDPropState {fd_prop_singl = 0, fd_prop_bounds, fd_prop_any};
 
 // virtual base class; never create an object from this class
@@ -150,6 +161,12 @@ public:
   virtual OZ_Return propagate(void) = 0;
   virtual OZ_Term getParameters(void) const = 0;
   virtual OZ_CFun getHeaderFunc(void) const = 0;
+
+  // support for nonmonotonic propagator
+  virtual OZ_Boolean isMonotonic(void) const { return OZ_TRUE; }
+  virtual OZ_NonMonotonic::order_t getOrder(void) const { 
+    return 0; 
+  }
 };
 
 ostream& operator << (ostream& o, const OZ_Propagator &p);

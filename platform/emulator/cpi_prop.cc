@@ -107,6 +107,9 @@ ostream& operator << (ostream& o, const OZ_Propagator &p)
   o << "cb(" << (void *) am.currentBoard << "), p(" << (void *) &p << ") ";
 #endif
 
+  if (!p.isMonotonic())
+    o << p.getOrder() << '#' << flush;
+
   o << '{' << func_name << ' ';
   outputArgsList(o, args, FALSE);
   o << '}' << flush;
@@ -165,7 +168,6 @@ OZ_Boolean OZ_Propagator::addImpose(OZ_FDPropState ps, OZ_Term v)
 void OZ_Propagator::impose(OZ_Propagator * p, int prio) 
 {
   Thread * thr = am.mkPropagator(am.currentBoard, prio, p);
-  thr->headInitPropagator();
 
   ozstat.propagatorsCreated.incf();
 
@@ -223,6 +225,16 @@ void OZ_Propagator::impose(OZ_Propagator * p, int prio)
     thr->markLocalThread();
   
   staticSpawnVarsNumberProp = 0;
+}
+
+//-----------------------------------------------------------------------------
+// class NonMonotonic
+
+OZ_NonMonotonic::order_t OZ_NonMonotonic::_next_order = 1;
+
+OZ_NonMonotonic::OZ_NonMonotonic(void) : _order(_next_order++)
+{
+  Assert(_next_order);
 }
 
 // End of File
