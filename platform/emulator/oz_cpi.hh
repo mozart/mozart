@@ -118,6 +118,10 @@ ostream &operator << (ostream &ofile, const OZ_FiniteDomain &fd) {
 
 // virtual base class; never create an object from this class
 class OZ_Propagator {
+friend class Thread;
+private:
+  OZ_Propagator * gc(void); 
+  
 public:
   OZ_Propagator(void) {}
   virtual ~OZ_Propagator(void) {}
@@ -125,7 +129,6 @@ public:
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
 
-  OZ_Propagator * gc(void); 
   OZ_Boolean mayBeEqualVars(void);
   OZ_Return replaceBy(OZ_Propagator *);
   OZ_Return replaceBy(OZ_Term, OZ_Term);
@@ -169,7 +172,7 @@ public:
   OZ_Expect(void); 
   ~OZ_Expect(void); 
 
-  OZ_expect_t expectDomDescr(OZ_Term, int = 4);
+  OZ_expect_t expectDomDescr(OZ_Term descr, int level = 4);
   OZ_expect_t expectVar(OZ_Term t);
   OZ_expect_t expectRecordVar(OZ_Term);
   OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState);
@@ -178,7 +181,7 @@ public:
   OZ_expect_t expectLiteral(OZ_Term);
   OZ_expect_t expectVector(OZ_Term, OZ_ExpectMeth);
 
-  OZ_Return spawn(OZ_Propagator *, int prio = OZ_getPropagatorPrio(),
+  OZ_Return spawn(OZ_Propagator * p, int prio = OZ_getPropagatorPrio(),
                   OZ_PropagatorFlags flags=NULL_flag);
   OZ_Return spawn(OZ_Propagator * p, OZ_PropagatorFlags flags) {
       return spawn(p, OZ_getPropagatorPrio(), flags);
