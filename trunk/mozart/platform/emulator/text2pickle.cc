@@ -721,7 +721,7 @@ int main(int argc, char **argv)
     argc--;
   }
   if (argc >= 3 && !strcmp(argv[1],"-o")) {
-    fd = open(argv[2],O_WRONLY|O_CREAT|O_TRUNC|O_BINARY);
+    fd = open(argv[2],O_WRONLY|O_CREAT|O_TRUNC|O_BINARY,0777);
     if (fd == -1) {
       fprintf(stderr,"text2pickle: could not open output file %s\n",argv[2]);
       exit(1);
