@@ -278,14 +278,14 @@ in
 	 Gui,Disable(self.GlobalEnvText)
       end
    
-      meth frameClick(frame:F size:S tag:T)
+      meth frameClick(frame:F tag:T)
 	 L
       in
 	 {Delay 70} % > TIME_SLICE
 	 L = {Lck is($)}
 	 case L then skip else
 	    Gui,SelectStackFrame(T)
-	    Gui,printEnv(frame:S-F.nr+1 vars:F.env)
+	    Gui,printEnv(frame:F.nr vars:F.env)
 	    SourceManager,scrollbar(file:F.file line:{Abs F.line}
 				    color:ScrollbarStackColor what:stack)
 	    /*
@@ -314,7 +314,7 @@ in
 
       meth printStackFrame(frame:Frame size:Size)
 	 W          = self.StackText
-	 FrameNr    = Size - Frame.nr + 1      % frame number (swapped)
+	 FrameNr    = Frame.nr                 % frame number
 	 FrameName  = Frame.name               % procedure/builtin name
 	 FrameArgs  = {FormatArgs Frame.args}  % argument list
 	 FrameFile  = {StripPath  Frame.file}
@@ -323,8 +323,7 @@ in
 	 LineAction =
 	 {New Tk.action
 	  tkInit(parent: W
-		 action:
-		    Ozcar # frameClick(frame:Frame size:Size tag:LineTag))}
+		 action: Ozcar # frameClick(frame:Frame tag:LineTag))}
 	 LineEnd    = FrameNr # DotEnd
       in
 	 {W tk(insert LineEnd
@@ -365,7 +364,7 @@ in
 		  tk(tag bind LineTag '<1>' LineAction)] W}
 	 
 	 case Size == 1 andthen FrameNr == 1 orelse FrameNr == 2 then
-	     %LastSelectedFrame <- undef
+	    %LastSelectedFrame <- undef
 	    Gui,SelectStackFrame(LineTag)
 	    Gui,printEnv(frame:FrameNr vars:Frame.env)
 	 else skip end
