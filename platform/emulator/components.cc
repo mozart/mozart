@@ -201,6 +201,19 @@ OZ_Return raiseGeneric(char *msg, OZ_Term arg)
 }
 
 
+OZ_Return onlyFutures(OZ_Term l) {
+  if (oz_isNil(l)) return PROCEED;
+  while (oz_isCons(l)) {
+    OZ_Term f=oz_head(l);
+    if (!oz_isFuture(oz_deref(f))) {
+      am.emptySuspendVarList();
+      return PROCEED;
+    }
+    am.addSuspendVarList(f);
+    l = oz_tail(l);
+  }
+  return SUSPEND;
+}
 
 OZ_Return
 ByteSink::putTerm(OZ_Term in, char *filename, char *header, Bool textmode)
@@ -209,6 +222,9 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header, Bool textmode)
   if (textmode)
     bs->setTextmode();
   marshal_M_FILE(bs,PERDIOVERSION,in);
+
+  OZ_Return ret=onlyFutures(bs->getNoGoods());
+  if (ret != PROCEED) return ret;
 
   CheckNogoods(in,bs,"Resources found during save",bufferManager->dumpByteStream(bs));
 
