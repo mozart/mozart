@@ -2,7 +2,7 @@ VPATH		= @srcdir@
 PREFIX		= @prefix@
 BUILDTOP	= @BUILDTOP@
 
-PLATFORM	= @platform@
+PLATFORM	= @PLATFORM@
 PLATFORMDIR     = $(PREFIX)/platform/$(PLATFORM)
 INSTALL		= @INSTALL@
 INSTALL_BIN	= $(INSTALL) -s -m 555
