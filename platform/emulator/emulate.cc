@@ -1019,6 +1019,7 @@ LBLdispatcher:
 
       case BI_REPLACEBICALL:
         PC += 3;
+        Assert(!e->isEmptyPreparedCalls());
         goto LBLreplaceBICall;
 
       case SLEEP:
@@ -1265,6 +1266,7 @@ LBLdispatcher:
         rec = getState(state,NO,fea,XPC(2));
         if (rec==NULL) {
           PC += 5;
+          Assert(!e->isEmptyPreparedCalls());
           goto LBLreplaceBICall;
         }
       } else {
@@ -1298,6 +1300,7 @@ LBLdispatcher:
         rec = getState(state,OK,fea,XPC(2));
         if (rec==NULL) {
           PC += 5;
+          Assert(!e->isEmptyPreparedCalls());
           goto LBLreplaceBICall;
         }
       } else {
@@ -1575,20 +1578,30 @@ LBLdispatcher:
     RAISE_THREAD;
   }
 
+  LockRet ret;
+
   switch(t->getTertType()){
   case Te_Frame:{
     if(((LockFrameEmul *)t)->hasLock(th)) {goto has_lock;}
-    if(((LockFrameEmul *)t)->lockB(oz_currentThread())){goto got_lock;}
-    goto no_lock;}
+    ret = ((LockFrameEmul *)t)->lockB(th);
+    break;}
   case Te_Proxy:{
     (*lockLockProxy)(t, th);
     goto no_lock;}
   case Te_Manager:{
     if(((LockManagerEmul *)t)->hasLock(th)) {goto has_lock;}
-    if(((LockManagerEmul *)t)->lockB(th)){goto got_lock;}
-    goto no_lock;}
+    ret=((LockManagerEmul *)t)->lockB(th);
+    break;}
   default:
     Assert(0);}
+
+  if(ret==LOCK_GOT) goto got_lock;
+  if(ret==LOCK_WAIT) goto no_lock;
+
+  PushCont(PC+lbl); // failure preepmtion
+  PC += 3;
+  Assert(!e->isEmptyPreparedCalls());
+  goto LBLreplaceBICall;
 
   got_lock:
     PushCont(PC+lbl);
@@ -1603,7 +1616,9 @@ LBLdispatcher:
     PushCont(PC+lbl);
     CTS->pushLock(t);
     PC += 3;
+    Assert(!e->isEmptyPreparedCalls());
     goto LBLreplaceBICall;
+
   }
 
   Case(RETURN)
@@ -1915,6 +1930,7 @@ LBLdispatcher:
         if (isTailCall) {
           PC=NOCODE;
         }
+        Assert(!e->isEmptyPreparedCalls());
         goto LBLreplaceBICall;
 
        default: Assert(0);
@@ -1925,7 +1941,10 @@ LBLdispatcher:
    LBLhandleRet:
      switch (tmpRet) {
      case RAISE: RAISE_THREAD;
-     case BI_REPLACEBICALL: PC=NOCODE; goto LBLreplaceBICall;
+     case BI_REPLACEBICALL:
+       PC=NOCODE;
+       Assert(!e->isEmptyPreparedCalls());
+       goto LBLreplaceBICall;
      default: break;
      }
      Assert(0);
@@ -2329,6 +2348,7 @@ LBLdispatcher:
 
        case BI_REPLACEBICALL:
          PC = NOCODE;
+         Assert(!e->isEmptyPreparedCalls());
          goto LBLreplaceBICall;
 
        case SUSPEND:
@@ -2815,6 +2835,7 @@ LBLdispatcher:
 
     switch (tmpRet) {
     case BI_REPLACEBICALL:
+      Assert(!e->isEmptyPreparedCalls());
       goto LBLreplaceBICall;
     case SUSPEND:
       PushContX(PC);

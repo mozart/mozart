@@ -7,7 +7,7 @@
  *    Konstantin Popov <kost@sics.se>
  *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Per Brand, 1998
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -301,9 +301,9 @@ OZ_Return cellAtExchangeImpl(Tertiary *c,TaggedRef old,TaggedRef nw);
 OZ_Return cellAssignExchangeImpl(Tertiary *c,TaggedRef fea,TaggedRef val);
 //
 void lockLockProxyImpl(Tertiary *t, Thread *thr);
-void lockLockManagerOutlineImpl(LockManagerEmul *lmu, Thread *thr);
+LockRet lockLockManagerOutlineImpl(LockManagerEmul *lmu, Thread *thr);
 void unlockLockManagerOutlineImpl(LockManagerEmul *lmu, Thread *thr);
-void lockLockFrameOutlineImpl(LockFrameEmul *lfu, Thread *thr);
+LockRet lockLockFrameOutlineImpl(LockFrameEmul *lfu, Thread *thr);
 void unlockLockFrameOutlineImpl(LockFrameEmul *lfu, Thread *thr);
 void secLockGet(LockSec*,Tertiary*,Thread*);
 //
@@ -318,5 +318,9 @@ void globalizeLock(LockLocal*, int);
 void cellLock_Perm(int state,Tertiary* t);
 void cellLock_Temp(int state,Tertiary* t);
 void cellLock_OK(int state,Tertiary* t);
+
+void ooExchGetFeaOld(TaggedRef,TaggedRef&,TaggedRef&);
+Bool tertiaryFail(Tertiary*, EntityCond &,TaggedRef &);
+OZ_Return tertiaryFailHandler(Tertiary*, TaggedRef,EntityCond,TaggedRef);
 
 #endif

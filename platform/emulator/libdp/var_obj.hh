@@ -1,6 +1,7 @@
 /*
  *  Authors:
  *    Michael Mehl (mehl@dfki.de)
+ *    Per Brand (perbrand@sics.se)
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)

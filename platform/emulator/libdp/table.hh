@@ -8,7 +8,7 @@
  *    optional, Contributor's name (Contributor's email address)
  *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Per Brand,1998
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -814,7 +814,7 @@ public:
   int newBorrow(Credit,DSite*,int);
   int newSecBorrow(DSite*,Credit,DSite*,int);
 
-  void maybeFreeBorrowEntry(int);
+  Bool maybeFreeBorrowEntry(int);
 
   void freeSecBorrow(int);
 

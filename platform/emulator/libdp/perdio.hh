@@ -8,7 +8,7 @@
  *    Konstantin Popov <kost@sics.se>
  *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Per Brand, 1998
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -91,8 +91,6 @@ inline Bool SEND_SHORT(DSite* s){
 
 DSite* getSiteFromTertiaryProxy(Tertiary*);
 
-void gcProxyRecurseImpl(Tertiary*);
-void gcManagerRecurseImpl(Tertiary*);
 
 // MERGER CON OZ_Return raiseGeneric(char *msg, OZ_Term arg);
 OZ_Return raiseGeneric(char *id,char *msg, OZ_Term arg);

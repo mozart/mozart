@@ -7,7 +7,8 @@
  *    optional, Contributor's name (Contributor's email address)
  *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Per Brand, 1998
+ *    Erik Klintskog, 1998
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -55,7 +56,7 @@ void sendUnAskError(BorrowEntry *be,EntityCond ec){
 void Chain::receiveAskError(OwnerEntry *oe,DSite *toS,EntityCond ec){
   if(hasFlag(TOKEN_LOST)){
     PD((NET_HANDLER,"Token Lost"));
-    sendTellError(oe,toS,oe->getTertiary()->getIndex(),PERM_SOME|PERM_ME,TRUE);
+    sendTellError(oe,toS,oe->getTertiary()->getIndex(),PERM_SOME|PERM_FAIL,TRUE);
     return;} // automatic inform has already been sent
   EntityCond aux=ENTITY_NORMAL;
   if(hasFlag(TOKEN_PERM_SOME)) aux |= (PERM_SOME & ec);

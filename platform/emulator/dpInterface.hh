@@ -51,9 +51,9 @@ extern OZ_Return (*objectExchange) (Tertiary*,TaggedRef,TaggedRef,TaggedRef);
 // further, e.g. inline cases when distributed locks are currently
 // local;
 extern void (*lockLockProxy)(Tertiary *t, Thread *thr);
-extern void (*lockLockManagerOutline)(LockManagerEmul *lfu, Thread *thr);
+extern LockRet (*lockLockManagerOutline)(LockManagerEmul *lfu, Thread *thr);
 extern void (*unlockLockManagerOutline)(LockManagerEmul *lfu, Thread *thr);
-extern void (*lockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr);
+extern LockRet (*lockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr);
 extern void (*unlockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr);
 
 //

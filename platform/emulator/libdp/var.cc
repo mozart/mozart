@@ -1,14 +1,15 @@
 /*
  *  Authors:
  *    Michael Mehl (mehl@dfki.de)
+ *    Per Brand (perbrand@sics.se)
  *
  *  Contributors:
- *    Per Brand (perbrand@sics.se)
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  *    Erik Klintskog (erik@sics.se)
  *
  *  Copyright:
  *    Michael Mehl (1997,1998)
+ *    Per Brand, 1998
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -137,6 +138,9 @@ void sendRequested(BorrowEntry *be){
 OZ_Return ProxyVar::addSuspV(TaggedRef *, Suspension susp, int unstable)
 {
   // mm2: always send requested, maybe this should be done only once!
+  if(!errorIgnore()){
+    if(failurePreemption(AtomWait)) return BI_REPLACEBICALL;}
+
   BorrowEntry *be=BT->getBorrow(getIndex());
   sendRequested(be);
 
@@ -147,6 +151,7 @@ OZ_Return ProxyVar::addSuspV(TaggedRef *, Suspension susp, int unstable)
 void ProxyVar::gcRecurseV(void)
 {
   PD((GC,"ProxyVar b:%d",getIndex()));
+  Assert(getIndex()!=BAD_BORROW_INDEX);
   BT->getBorrow(getIndex())->gcPO();
   OZ_collect(&binding);
   setInfo(gcEntityInfoInternal(getInfo()));
@@ -161,9 +166,7 @@ void sendSurrender(BorrowEntry *be,OZ_Term val){
   SendTo(na->site,bs,M_SURRENDER,na->site,na->index);
 }
 
-Bool dealWithInjectors(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Bool &hit){
-  Assert(isInjectorCondition(ec));
-
+Bool dealWithInjectors(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Bool &hit,TaggedRef term){
   Watcher* w;
   Watcher** base= info->getWatcherBase();
   while(TRUE){
@@ -172,37 +175,43 @@ Bool dealWithInjectors(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Boo
     if(th==(*base)->thread) break;
     base= &((*base)->next);}
   if(!((*base)->watchcond) & ec) return FALSE;
-  (*base)->varInvokeInjector(t,(*base)->watchcond & ec);
+  (*base)->varInvokeInjector(t,(*base)->watchcond & ec,term);
   hit=TRUE;
   if((*base)->isPersistent()) return FALSE;
   *base=(*base)->next;
   return TRUE;
 }
 
-inline EntityCond injectorPart(EntityCond ec){
-  return ec & (PERM_BLOCKED|TEMP_BLOCKED);}
-
-
-Bool varFailurePreemption(TaggedRef t,EntityInfo* info,Bool &hit){
-  EntityCond ec=injectorPart(info->getEntityCond());
+Bool varFailurePreemption(TaggedRef t,EntityInfo* info,Bool &hit,TaggedRef term){
+  EntityCond ec=info->getEntityCond();
   if(ec==ENTITY_NORMAL) return FALSE;
-  Bool ret=dealWithInjectors(t,info,ec,oz_currentThread(),hit);
+  Bool ret=dealWithInjectors(t,info,ec,oz_currentThread(),hit,term);
   if(hit) return ret;
   if(globalWatcher==NULL) return FALSE;
-  if(!(globalWatcher->watchcond & ec)) return FALSE;
-  globalWatcher->varInvokeInjector(t,ec);
+  ec=globalWatcher->watchcond & ec;
+  if(!ec) return FALSE;
+  globalWatcher->varInvokeInjector(t,ec,term);
   hit=TRUE;
-  return FALSE;}
+  return FALSE;
+}
 
-Bool ProxyVar::failurePreemption(){
+Bool ProxyVar::failurePreemption(TaggedRef term){
   Assert(info!=NULL);
-  if(info->meToBlocked()){
-    info->dealWithWatchers(getTaggedRef(),info->getEntityCond());}
+  info->dealWithWatchers(getTaggedRef(),info->getEntityCond());
   Bool hit=FALSE;
   EntityCond oldC=info->getSummaryWatchCond();
-  if(varFailurePreemption(getTaggedRef(),info,hit)){
+  if(varFailurePreemption(getTaggedRef(),info,hit,term)){
     EntityCond newC=info->getSummaryWatchCond();
     varAdjustPOForFailure(getIndex(),oldC,newC);}
+  return hit;
+}
+
+Bool ManagerVar::failurePreemption(TaggedRef term){
+  Assert(info!=NULL);
+  info->dealWithWatchers(getTaggedRef(),info->getEntityCond());
+  Bool hit=FALSE;
+  EntityCond oldC=info->getSummaryWatchCond();
+  if(varFailurePreemption(getTaggedRef(),info,hit,term)){}
   return hit;
 }
 
@@ -217,7 +226,7 @@ OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){
   Bool isLocal = oz_isLocalVar(this);
   if (isLocal) {
     if(!errorIgnore()){
-      if(failurePreemption()) return BI_REPLACEBICALL;}
+      if(failurePreemption(mkOp1("bind",r))) return BI_REPLACEBICALL;}
     if (!binding) {
       BorrowEntry *be=BT->getBorrow(getIndex());
       ExportControl(r);
@@ -229,6 +238,9 @@ OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){
     return SUSPEND;
   } else {
     // in guard: bind and trail
+    if(!errorIgnore()){
+      if(failurePreemption(mkOp1("deepBind",r))) {
+        return BI_REPLACEBICALL;}}
     oz_bindGlobalVar(this,lPtr,r);
     return PROCEED;
   }
@@ -245,8 +257,11 @@ void ProxyVar::redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be)
   EntityInfo* ei=info;
   oz_bindLocalVar(this,vPtr,val);
   be->changeToRef();
-  BT->maybeFreeBorrowEntry(BTI);
   maybeHandOver(ei,val);
+  /*
+  if(BT->maybeFreeBorrowEntry(BTI)){
+  gcSetIndex(BAD_BORROW_INDEX);} */
+  (void) BT->maybeFreeBorrowEntry(BTI);
 }
 
 void ProxyVar::acknowledge(TaggedRef *vPtr, BorrowEntry *be)
@@ -258,8 +273,11 @@ void ProxyVar::acknowledge(TaggedRef *vPtr, BorrowEntry *be)
   oz_bindLocalVar(this,vPtr,binding);
 
   be->changeToRef();
-  BT->maybeFreeBorrowEntry(BTI);
   maybeHandOver(ei,binding);
+  /*
+  if(BT->maybeFreeBorrowEntry(BTI)){
+  gcSetIndex(BAD_BORROW_INDEX);} */
+  (void) BT->maybeFreeBorrowEntry(BTI);
 }
 
 /* --- ManagerVar --- */
@@ -270,6 +288,8 @@ OZ_Return ManagerVar::addSuspV(TaggedRef *vPtr, Suspension susp, int unstable)
     if (((Future *)origVar)->kick(vPtr))
       return PROCEED;
   }
+  if(!errorIgnore()){
+    if(failurePreemption(AtomWait)) return BI_REPLACEBICALL;}
   addSuspSVar(susp, unstable);
   return SUSPEND;
 }
@@ -377,6 +397,8 @@ OZ_Return ManagerVar::bindVInternal(TaggedRef *lPtr, TaggedRef r,DSite *s)
 }
 
 OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r){
+  if(!errorIgnore()){
+    if(failurePreemption(mkOp1("bind",r))) return BI_REPLACEBICALL;}
   return bindVInternal(lPtr,r,myDSite);}
 
 void ManagerVar::getStatus(DSite* site,int OTI, TaggedRef tr){
@@ -493,6 +515,7 @@ Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs,GenTraverser * gt) {
     oz_getObjectVar(var)->marshal(bs,gt);
   } else if (oz_isFree(var) || isFuture(var)) {
     if (!bs->globalize()) return TRUE;
+    Assert(perdioInitialized);
     globalizeFreeVariable(tPtr)->marshal(bs);
   } else {
     return FALSE;
@@ -668,15 +691,12 @@ EntityInfo* varMakeOrGetEntityInfo(TaggedRef* tPtr){
 
 // FAILURE stuff
 
-
-
 void ProxyVar::addEntityCond(EntityCond ec){
   if(info==NULL) info= new EntityInfo();
   if(!info->addEntityCond(ec)) return;
-  if(isInjectorCondition(ec)) {
-    wakeAll();
-    return;}
-  info->dealWithWatchers(getTaggedRef(),ec);}
+  wakeAll();
+  info->dealWithWatchers(getTaggedRef(),ec);
+}
 
 void ProxyVar::newWatcher(Bool b){
   if(b){
@@ -691,23 +711,23 @@ void ProxyVar::subEntityCond(EntityCond ec){
 }
 
 void ManagerVar::newWatcher(Bool b){
-  if(b) return;
+  if(b) {
+    wakeAll();
+    return;}
   info->dealWithWatchers(getTaggedRef(),info->getEntityCond());
 }
 
 void ManagerVar::addEntityCond(EntityCond ec){
-  Assert((ec & (TEMP_SOME|PERM_SOME))==ec);
-  Assert(!isInjectorCondition(ec));
   if(info==NULL) info= new EntityInfo();
   if(!info->addEntityCond(ec)) return;
   int i=getIndex();
   OwnerEntry* oe=OT->getOwner(i);
   triggerInforms(&inform,oe,i,ec);
+  wakeAll();
   info->dealWithWatchers(getTaggedRef(),ec);
 }
 
 void ManagerVar::subEntityCond(EntityCond ec){
-  Assert(ec==TEMP_SOME);
   Assert(info!=NULL);
   info->subEntityCond(ec);
   int i=getIndex();
@@ -737,22 +757,13 @@ void ManagerVar::probeFault(DSite *s,int pr){
 
 void ProxyVar::probeFault(int pr){
   if(pr==PROBE_PERM){
-    if(binding!=0){
-      addEntityCond(PERM_ME|PERM_BLOCKED);
-      return;}
-    addEntityCond(PERM_ME);
+    addEntityCond(PERM_FAIL|PERM_SOME);
     return;}
   if(pr==PROBE_TEMP){
-    if(binding!=0){
-      addEntityCond(TEMP_ME|TEMP_BLOCKED);
-      return;}
-    addEntityCond(TEMP_ME);
+    addEntityCond(TEMP_FAIL|TEMP_SOME);
     return;}
   Assert(pr==PROBE_OK);
-  if(binding!=0){
-      subEntityCond(TEMP_ME|TEMP_BLOCKED);
-      return;}
-  subEntityCond(TEMP_ME);
+  subEntityCond(TEMP_FAIL|TEMP_SOME);
 }
 
 EntityCond varGetEntityCond(TaggedRef* tr){
@@ -817,6 +828,10 @@ void ProxyVar::wakeAll(){
   oz_checkSuspensionList(this,pc_all);
 }
 
+void ManagerVar::wakeAll(){
+  oz_checkSuspensionList(this,pc_all);
+}
+
 void recDeregister(TaggedRef tr,DSite* s){
   OZ_Term vars=digOutVars(tr);
   while(!oz_isNil(vars)){
@@ -833,7 +848,6 @@ static ProxyList** findBefore(DSite* s,ProxyList** base ){
     if((*base)->sd==s) return base;
     base= &((*base)->next);}
   return NULL;}
-
 
 void ManagerVar::deAutoSite(DSite* s){
   ProxyList **aux= findBefore(s, &proxies);

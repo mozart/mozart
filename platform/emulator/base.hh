@@ -362,6 +362,12 @@ enum ThreadReturn {
   T_ERROR               // a fatal error occured
 };
 
+enum LockRet{
+  LOCK_GOT = 0,
+  LOCK_PREEMPT=1,
+  LOCK_WAIT=2
+};
+
 
 // see ozthread.cc
 Bool oz_isThread(TaggedRef term);

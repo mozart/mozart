@@ -1,13 +1,12 @@
 /*
  *  Authors:
  *    Per Brand (perbrand@sics.se)
- *    Erik Klintskog (erik@sics.se)
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
  *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Per Brand, 1998
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -35,33 +34,44 @@
 
 Bool perdioInitialized=FALSE;
 
-EntityCond translateWatcherCond(TaggedRef tr){
-  if(tr==AtomPermBlocked)
-    return PERM_BLOCKED;
- if(tr== AtomBlocked)
-    return PERM_BLOCKED|TEMP_BLOCKED;
-  if(tr== AtomPermWillBlock)
-    return PERM_ME;
-  if(tr== AtomWillBlock)
-    return TEMP_ME|PERM_ME;
-  if(tr== AtomPermSome)
-    return PERM_SOME;
-  if(tr== AtomSome)
-    return TEMP_SOME|PERM_SOME;
-  if(tr== AtomPermAll)
-    return PERM_ALL;
-  if(tr== AtomAll)
-    return TEMP_ALL|PERM_ALL;
-  Assert(0);
-  return 0;
+Bool translateWatcherCond(TaggedRef tr,EntityCond &ec){
+  TaggedRef aux;
+  if(tr==AtomPermFail){
+    ec |= PERM_FAIL;
+    return TRUE;}
+  if(tr== AtomTempFail){
+    ec |= TEMP_FAIL;
+    return TRUE;}
+  SRecord *condStruct;
+  if(oz_isSRecord(tr)){
+    condStruct= tagged2SRecord(tr);}
+  else{
+    return FALSE;}
+  if((condStruct->getLabel())!=AtomRemoteProblem) return FALSE;
+  tr = condStruct->getArg(0);
+  if(tr== AtomPermSome){
+    ec |= PERM_SOME;
+    return TRUE;}
+  if(tr== AtomTempSome){
+    ec |= TEMP_SOME;
+    return TRUE;}
+  if(tr== AtomPermAll){
+    ec |= PERM_ALL;
+    return TRUE;}
+  if(tr== AtomTempAll){
+    ec |= TEMP_ALL;
+    return TEMP_ALL;}
+  return FALSE;
 }
 
 OZ_Return translateWatcherConds(TaggedRef tr,EntityCond &ec){
   TaggedRef car,cdr;
   ec=ENTITY_NORMAL;
-
   cdr=tr;
   DerefVarTest(cdr);
+  if(cdr==AtomAny){
+    ec= ANY_COND;
+    return PROCEED;}
   while(!oz_isNil(cdr)){
     if(!oz_isLTuple(cdr)){
       return IncorrectFaultSpecification;}
@@ -69,12 +79,14 @@ OZ_Return translateWatcherConds(TaggedRef tr,EntityCond &ec){
     cdr=tagged2LTuple(cdr)->getTail();
     DerefVarTest(car);
     DerefVarTest(cdr);
-    ec |= translateWatcherCond(car);}
+    if(!translateWatcherCond(car,ec))
+      return IncorrectFaultSpecification;}
   if(ec == ENTITY_NORMAL) ec=UNREACHABLE;
   return PROCEED;
 }
 
 inline OZ_Return checkWatcherConds(EntityCond ec,EntityCond allowed){
+  if((ec==ANY_COND)) return PROCEED;
   if((ec & ~allowed) != ENTITY_NORMAL) return IncorrectFaultSpecification;
   return PROCEED;}
 
@@ -97,6 +109,18 @@ OZ_Return checkRetry(SRecord *condStruct,short &kind){
   return PROCEED;
 }
 
+Bool isWatcherEligible(TaggedRef t){
+  if(!oz_isConst(t)) return FALSE;
+  switch(tagged2Const(t)->getType()){
+  case Co_Object:
+  case Co_Cell:
+  case Co_Lock:
+  case Co_Port: return TRUE;
+  default: return FALSE;}
+  Assert(0);
+  return FALSE;
+}
+
 // the following should check for the existence of not allowed features
 
 OZ_Return distHandlerInstallHelp(SRecord *condStruct,
@@ -116,8 +140,7 @@ OZ_Return distHandlerInstallHelp(SRecord *condStruct,
 
   if(label==AtomInjector || label==AtomSafeInjector){
     kind |= (WATCHER_PERSISTENT|WATCHER_INJECTOR);
-    ret=checkWatcherConds(ec,PERM_BLOCKED|TEMP_BLOCKED);
-    if(ret!=PROCEED) return ret;
+
     FeatureTest(condStruct,aux,"entityType");
     DerefVarTest(aux);
     if(aux==AtomAll) {
@@ -147,19 +170,27 @@ OZ_Return distHandlerInstallHelp(SRecord *condStruct,
   if(label==AtomSiteWatcher){
     FeatureTest(condStruct,aux,"entity");
     entity=aux;
-    return checkWatcherConds(ec,PERM_BLOCKED|TEMP_BLOCKED|PERM_ME|TEMP_ME);}
+    return checkWatcherConds(ec,PERM_FAIL|TEMP_FAIL);}
 
-  if(label!=AtomNetWatcher) {return IncorrectFaultSpecification;}
+  if(label==AtomNetWatcher) {
+    FeatureTest(condStruct,aux,"entity");
+    entity=aux;
+    return checkWatcherConds(ec,PERM_SOME|TEMP_SOME|PERM_ALL|TEMP_ALL);}
+
+  if(label!=AtomWatcher) {return IncorrectFaultSpecification;}
   FeatureTest(condStruct,aux,"entity");
   entity=aux;
-  return checkWatcherConds(ec,PERM_SOME|TEMP_SOME|PERM_ALL|TEMP_ALL);
+  return checkWatcherConds(ec,
+         PERM_FAIL|TEMP_FAIL|PERM_SOME|TEMP_SOME|PERM_ALL|TEMP_ALL);
 }
+
 
 OZ_BI_define(BIinterDistHandlerInstall,2,1){
   OZ_Term c0        = OZ_in(0);
-  OZ_Term proc      = OZ_in(1);
+  OZ_Term proc0      = OZ_in(1);
 
   NONVAR(c0, c);
+  NONVAR(proc0,proc);
   SRecord  *condStruct;
   if(oz_isSRecord(c)) condStruct = tagged2SRecord(c);
   else return IncorrectFaultSpecification;
@@ -169,23 +200,39 @@ OZ_BI_define(BIinterDistHandlerInstall,2,1){
   TaggedRef entity;
 
   OZ_Return ret=distHandlerInstallHelp(condStruct,ec,th,entity,kind);
+  if(ec==ANY_COND) return IncorrectFaultSpecification;
   if(ret!=PROCEED) return ret;
+  if(ec == ANY_COND) return IncorrectFaultSpecification;
   if(kind & WATCHER_SITE_BASED) return IncorrectFaultSpecification;
+  if(!oz_isAbstraction(proc))
+    return IncorrectFaultSpecification;
+  if(kind & WATCHER_INJECTOR) {
+    if(tagged2Abstraction(proc)->getArity()!=3)
+      return IncorrectFaultSpecification;}
+  else{
+    if(tagged2Abstraction(proc)->getArity()!=2)
+      return IncorrectFaultSpecification;}
   Assert(entity!=0);
+  if(!oz_isVariable(oz_deref(entity))){
+    if(!isWatcherEligible(oz_deref(entity))){
+      OZ_RETURN(oz_bool(FALSE));}}
   if(perdioInitialized){
-    if((*distHandlerInstall)(kind,ec,th,entity,proc))
-      {OZ_RETURN(oz_bool(TRUE));}
+    if((*distHandlerInstall)(kind,ec,th,entity,proc)){
+      OZ_RETURN(oz_bool(TRUE));}
+    else{
+      OZ_RETURN(oz_bool(FALSE));}}
+  else{
+    if(addDeferWatcher(kind,ec,th,entity,proc))
+      OZ_RETURN(oz_bool(TRUE));
     OZ_RETURN(oz_bool(FALSE));}
-  if(addDeferWatcher(kind,ec,th,entity,proc))
-    OZ_RETURN(oz_bool(TRUE));
-  OZ_RETURN(oz_bool(FALSE));
 }OZ_BI_end
 
 OZ_BI_define(BIinterDistHandlerDeInstall,2,0){
   OZ_Term c0        = OZ_in(0);
-  OZ_Term proc      = OZ_in(1);
+  OZ_Term proc0      = OZ_in(1);
 
   NONVAR(c0, c);
+  NONVAR(proc0,proc);
   SRecord  *condStruct;
   if(oz_isSRecord(c)) condStruct = tagged2SRecord(c);
   else return IncorrectFaultSpecification;
@@ -198,25 +245,28 @@ OZ_BI_define(BIinterDistHandlerDeInstall,2,0){
   if(ret!=PROCEED) return ret;
   if(kind & WATCHER_SITE_BASED) return IncorrectFaultSpecification;
   Assert(entity!=0);
+  if(!oz_isVariable(oz_deref(entity))){
+    if(!isWatcherEligible(oz_deref(entity))){
+      OZ_RETURN(oz_bool(FALSE));}}
   if(perdioInitialized){
-    if((*distHandlerDeInstall)(kind,ec,th,entity,proc)) {
+    if((*distHandlerDeInstall)(kind,ec,th,entity,proc)){
       OZ_RETURN(oz_bool(TRUE));}
+    else{
+      OZ_RETURN(oz_bool(FALSE));}}
+  else{
+    if(remDeferWatcher(kind,ec,th,entity,proc))
+      OZ_RETURN(oz_bool(TRUE));
     OZ_RETURN(oz_bool(FALSE));}
-  if(remDeferWatcher(kind,ec,th,entity,proc))
-    OZ_RETURN(oz_bool(TRUE));
-  OZ_RETURN(oz_bool(FALSE));
 }OZ_BI_end
 
 DeferWatcher* deferWatchers;
 
 void gcDeferWatchers(){
   DeferWatcher *newW,**base;
-  DeferWatcher* ow= deferWatchers;
-  if(ow==NULL) return;
-  deferWatchers=NULL;
+  if(deferWatchers==NULL) return;
   base=&(deferWatchers);
-  while(ow!=NULL){
-    newW= (DeferWatcher*) OZ_hrealloc(ow,sizeof(DeferWatcher));
+  while((*base)!=NULL){
+    newW= (DeferWatcher*) OZ_hrealloc((*base),sizeof(DeferWatcher));
     newW->gc();
     *base=newW;
     base= &(newW->next);}
@@ -257,7 +307,7 @@ Bool DeferWatcher::isEqual(short k,EntityCond w,
                               Thread* th,TaggedRef e,TaggedRef p){
   if(k & WATCHER_INJECTOR){
     if((th==thread) && (e==entity) &&
-       (p==proc) && (w==watchcond))
+       ((p==proc) || (p==AtomAny)) && ((w==watchcond) || (w==ANY_COND)))
       return TRUE;
     return FALSE;}
   if((e==entity) &&

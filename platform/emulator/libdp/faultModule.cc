@@ -7,7 +7,7 @@
  *    optional, Contributor's name (Contributor's email address)
  *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Per Brand
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -36,10 +36,11 @@
 
 OZ_BI_define(BIdistHandlerInstall,2,1){
   OZ_Term c0        = OZ_in(0);
-  OZ_Term proc      = OZ_in(1);
+  OZ_Term proc0      = OZ_in(1);
 
   initDP();
   NONVAR(c0, c);
+  NONVAR(proc0,proc);
 
   SRecord  *condStruct;
   if(oz_isSRecord(c)) condStruct = tagged2SRecord(c);
@@ -53,9 +54,11 @@ OZ_BI_define(BIdistHandlerInstall,2,1){
 
 OZ_BI_define(BIdistHandlerDeInstall,2,1){
   OZ_Term c0        = OZ_in(0);
-  OZ_Term proc      = OZ_in(1);
+  OZ_Term proc0      = OZ_in(1);
 
+  initDP();
   NONVAR(c0, c);
+  NONVAR(proc0,proc);
 
   SRecord  *condStruct;
   if(oz_isSRecord(c)) condStruct = tagged2SRecord(c);
@@ -82,9 +85,8 @@ OZ_BI_define(BIgetEntityCond,2,0){
   else{
     NONVAR(e0, e);
     if(oz_isConst(e)){
-      Tertiary *tert = tagged2Tert(e);
-      if(isWatcherEligible(tert)){
-        ec = getEntityCond(tert);}}}
+      if(isWatcherEligible(e)){
+        ec = getEntityCond(tagged2Tert(e));}}}
 
   if(ec!= ENTITY_NORMAL){
     OZ_RETURN(listifyWatcherCond(ec));}

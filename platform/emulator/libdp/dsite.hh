@@ -6,7 +6,7 @@
  *    Konstantin Popov <kost@sics.se>
  *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Per Brand, 1998
  *
  *  Last change:
  *    $Date$ by $Author$

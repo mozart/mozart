@@ -172,9 +172,9 @@ void ObjectVar::sendObject(DSite* sd, int si, ObjectFields& of,
   Assert(be->isVar());
   oz_bindLocalVar(this,be->getPtr(),makeTaggedConst(o));
   be->changeToRef();
-  BT->maybeFreeBorrowEntry(o->getIndex());
-  o->localize();
+  (void) BT->maybeFreeBorrowEntry(o->getIndex());
   maybeHandOver(info,makeTaggedConst(o));
+  o->localize();
 }
 
 void ObjectVar::sendObjectAndClass(ObjectFields& of, BorrowEntry *be)
@@ -190,9 +190,9 @@ void ObjectVar::sendObjectAndClass(ObjectFields& of, BorrowEntry *be)
   Assert(be->isVar());
   oz_bindLocalVar(this,be->getPtr(),makeTaggedConst(o));
   be->changeToRef();
-  BT->maybeFreeBorrowEntry(o->getIndex());
-  o->localize();
+  (void) BT->maybeFreeBorrowEntry(o->getIndex());
   maybeHandOver(savedInfo,makeTaggedConst(o));
+  o->localize();
 }
 
 // failure stuff
@@ -200,10 +200,9 @@ void ObjectVar::sendObjectAndClass(ObjectFields& of, BorrowEntry *be)
 Bool ObjectVar::failurePreemption(){
   Bool hit=FALSE;
   Assert(info!=NULL);
-  if(info->meToBlocked()){
-    info->dealWithWatchers(getTaggedRef(),info->getEntityCond());}
+  info->dealWithWatchers(getTaggedRef(),info->getEntityCond());
   EntityCond oldC=info->getSummaryWatchCond();
-  if(varFailurePreemption(getTaggedRef(),info,hit)){
+  if(varFailurePreemption(getTaggedRef(),info,hit,AtomObjectFetch)){
     EntityCond newC=info->getSummaryWatchCond();
     varAdjustPOForFailure(getObject()->getIndex(),oldC,newC);}
   return hit;
@@ -212,9 +211,7 @@ Bool ObjectVar::failurePreemption(){
 void ObjectVar::addEntityCond(EntityCond ec){
   if(info==NULL) info=new EntityInfo();
   if(!info->addEntityCond(ec)) return;
-  if(isInjectorCondition(ec)){
-    wakeAll();
-    return;}
+  wakeAll();
   info->dealWithWatchers(getTaggedRef(),ec);
 }
 
@@ -225,22 +222,13 @@ void ObjectVar::subEntityCond(EntityCond ec){
 
 void ObjectVar::probeFault(int pr){
   if(pr==PROBE_PERM){
-    if(requested){
-      addEntityCond(PERM_ME|PERM_BLOCKED);
-      return;}
-    addEntityCond(PERM_ME);
+    addEntityCond(PERM_FAIL);
     return;}
   if(pr==PROBE_TEMP){
-    if(requested){
-      addEntityCond(TEMP_ME|TEMP_BLOCKED);
-      return;}
-    addEntityCond(TEMP_ME);
+    addEntityCond(TEMP_FAIL);
     return;}
   Assert(pr==PROBE_OK);
-  if(requested){
-      subEntityCond(TEMP_ME|TEMP_BLOCKED);
-      return;}
-  subEntityCond(TEMP_ME);
+  subEntityCond(TEMP_FAIL);
 }
 
 Bool ObjectVar::errorIgnore(){

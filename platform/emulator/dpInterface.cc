@@ -84,17 +84,19 @@ void lockLockProxyStub(Tertiary *t, Thread *thr)
 {
   OZ_error("'lockLockProxy' called without DP library?");
 }
-void lockLockManagerOutlineStub(LockManagerEmul *lfu, Thread *thr)
+LockRet lockLockManagerOutlineStub(LockManagerEmul *lfu, Thread *thr)
 {
   OZ_error("'lockLockManagerOutline' called without DP library?");
+  return LOCK_WAIT;
 }
 void unlockLockManagerOutlineStub(LockManagerEmul *lfu, Thread *thr)
 {
   OZ_error("'unlockLockManagerOutline' called without DP library?");
 }
-void lockLockFrameOutlineStub(LockFrameEmul *lfu, Thread *thr)
+LockRet lockLockFrameOutlineStub(LockFrameEmul *lfu, Thread *thr)
 {
   OZ_error("'lockLockFrameOutline' called without DP library?");
+  return LOCK_WAIT;
 }
 void unlockLockFrameOutlineStub(LockFrameEmul *lfu, Thread *thr)
 {
@@ -247,11 +249,11 @@ OZ_Return (*cellAssignExchange)(Tertiary*,TaggedRef,TaggedRef)
 // local;
 void (*lockLockProxy)(Tertiary *t, Thread *thr)
   = lockLockProxyStub;
-void (*lockLockManagerOutline)(LockManagerEmul *lfu, Thread *thr)
+LockRet (*lockLockManagerOutline)(LockManagerEmul *lfu, Thread *thr)
   = lockLockManagerOutlineStub;
 void (*unlockLockManagerOutline)(LockManagerEmul *lfu, Thread *thr)
   = unlockLockManagerOutlineStub;
-void (*lockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr)
+LockRet (*lockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr)
   = lockLockFrameOutlineStub;
 void (*unlockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr)
   = unlockLockFrameOutlineStub;
