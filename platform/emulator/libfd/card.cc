@@ -151,6 +151,8 @@ OZ_BI_define(fdp_sumCNR, 5, 0)
   sum_ops op = getSumOps(OZ_in(2));
 
   // wait for linearity
+  // raph: This is a fix for a bug in the propagator, which is
+  // apparently not correct in the non-linear case.
   OZ_EXPECT(pe, 1, expectVectorLinearVector);
 
   if (op == sum_ops_neq) {
