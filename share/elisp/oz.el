@@ -28,6 +28,8 @@
 ;;  reimpl. oz-indent-line
 ;; 4.3.93 cs
 ;;  deleted some keywords for highlighting, fixed error
+;; 15.3.93 rs
+;; added "oz-print-region" and "oz-print-buffer"
 ;; --------------------------------------------------------------------------
 
 
@@ -155,6 +157,8 @@
 	     ["Clone buffer"         oz-clone-buffer t]
 	     ["Clear buffer"         oz-clear-buffer t]
 	     ["Pretty print buffer"  oz-prettyprint t]
+	     ["Region to printer"    oz-print-region t]
+	     ["Buffer to printer"    oz-print-buffer t]
 	     ["Include file into Oz" oz-feed-file t]
 	     ["Show/Hide errors"     oz-toggle-compiler-window t]
              ["Show Documentation ..." oz-doc t]
@@ -967,3 +971,17 @@ Meta-Return sends current input.
 
     
 ;(debug-on-entry 'oz-convert)
+
+
+(defun oz-print-buffer()
+  "Print buffer."
+  (interactive)
+  (oz-print-region (point-min) (point-max)))
+
+(defun oz-print-region(start end)
+  "Print region."
+  (interactive "r")
+  (shell-command-on-region start end "oz2lpr -"))
+    
+
+
