@@ -20,7 +20,24 @@
 %%% WARRANTIES.
 %%%
 
-local
+functor
+
+import
+   Search(base)
+   FD
+   Country(getDist getDetourDist)
+   Configure(capacity: Capacity)
+   
+export
+   make: MakePlan
+
+define
+
+   %%
+   %% Defaults used
+   %%
+
+   
    proc {InsertSrc JA|Js Src Dst Weight What ?C ?NJs}
       case Js of nil then
 	 if Src==JA.city then 
@@ -113,7 +130,6 @@ local
 	 end
       end
    end
-in
 
    proc {MakePlan Tour Task ?Cost ?NewTour}
       Cost # NewTour = case {Search.base.best

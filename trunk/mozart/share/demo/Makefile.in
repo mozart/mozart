@@ -46,7 +46,7 @@ DEMOAPPLETS = \
 DIRS = \
 	JobShop Transport
 
-all:: dirs $(APPLETS)
+all: dirs $(APPLETS)
 
 #
 # Applet installation
@@ -65,10 +65,6 @@ $(OZDEMO)/%.oza: %.oza
 # Applet compilation
 #
 
-all:: $(APPLETS)
-
-$(APPLETS): DemoUrls.ozf
-
 # JobShop application
 JobShop/%.ozf: JobShop/%.oz
 	$(COMPILE) -b $(BUILDDIR)/JobShop/ $< -o $@
@@ -76,7 +72,7 @@ JobShop/%.ozf: JobShop/%.oz
 JOBSHOP1 = \
 	Configure Examples
 JOBSHOP2 = \
-	JobShop Scheduler Compiler TaskBoard Tools
+	Main Scheduler Compiler TaskBoard Tools
 
 JOBSHOPFUN1 = $(JOBSHOP1:%=JobShop/%.ozf)
 JOBSHOPFUN2 = $(JOBSHOP2:%=JobShop/%.ozf)
@@ -84,23 +80,31 @@ JOBSHOPFUN2 = $(JOBSHOP2:%=JobShop/%.ozf)
 $(JOBSHOPFUN2): $(JOBSHOPFUN1) 
 
 JobShop.oza: $(JOBSHOPFUN2)
-	$(LINK) JobShop/JobShop.ozf -o $@
+	$(LINK) JobShop/Main.ozf -o $@
 
+
+# Transport application
+Transport/%.ozf: Transport/%.oz
+	$(COMPILE)  -b $(BUILDDIR)/Transport/ $< -o $@
 
 TRANSPORT = \
-	agent broker company configure contract \
-	country driver environment frontend germany \
-	makeplan randomizer truck widgets
-Transport.oza: $(TRANSPORT:%=Transport/%.oz)
+	AgentAbstractions Agents Configure Country \
+	Dialogs Germany Main Plan \
+	Randomizer Widgets
+TRANSPORTFUN = $(TRANSPORT:%=Transport/%.ozf)
 
+Transport/Country.ozf: Transport/Germany.oz
+
+Transport.oza: $(TRANSPORTFUN)
+	$(LINK) Transport/Main.ozf -o $@
+
+
+%.ozf: DemoUrls.ozf
+
+$(APPLETS): DemoUrls.ozf
 
 %.oza: %.oz
 	$(ZCOMPILE) $< -o $@
-
-%.ozf: %.oz
-	$(COMPILE) $< -o $@
-
-
 
 #
 # Images

@@ -20,7 +20,38 @@
 %%% WARRANTIES.
 %%%
 
-local
+functor
+
+import
+   OS
+   
+   Configure(delta:    Delta
+	     delay:    DelayMove
+	     capacity: Capacity
+	     goods:    Goods)
+   Country(cities)
+
+export
+   'class': Randomizer
+   
+define
+
+   %% Randomizer
+   local
+      Speed = (1000 * Delta) div DelayMove % Relative speed
+   in
+      MedLowTime   = 20 * Speed        % Lower bound for random time interval
+      MedHighTime  = 3 * MedLowTime    % Upper bound for random time interval
+      SlowLowTime  = MedLowTime div 2  % Lower bound for random time interval
+      SlowHighTime = MedHighTime div 2 % Upper bound for random time interval
+      FastLowTime  = 2 * MedLowTime    % Lower bound for random time interval
+      FastHighTime = 2 * MedHighTime   % Upper bound for random time interval
+   end
+   
+   LowGood  = Capacity div 10 % Lower bound for random weight of goods
+   HighGood = Capacity        % Upper bound for random weight of goods
+
+
    Cities = {List.toTuple '#' Country.cities}
    
    fun {RandomDot T}
@@ -38,16 +69,22 @@ local
       else RandCity
       end
    end
-in
    
-   class Randomizer from BaseObject
-      prop final locking
-      attr Stamp:0 On:false Low:MedLowTime High:MedHighTime
-      feat broker
+   class Randomizer
+      prop
+	 final locking
+      attr
+	 Stamp: 0
+	 On:    false
+	 Low:   MedLowTime
+	 High:  MedHighTime
+      feat
+	 broker
       
       meth init(broker:B)
 	 self.broker = B
       end
+      
       meth toggle
 	 case
 	    lock
@@ -58,15 +95,19 @@ in
 	 of ~1 then skip elseof S then {self Go(S)}
 	 end
       end
+      
       meth slow
 	 lock Low <- SlowLowTime   High <- SlowHighTime end
       end
+      
       meth medium
 	 lock Low <- MedLowTime    High <- MedHighTime  end
       end
+      
       meth fast
 	 lock Low <- FastLowTime   High <- FastHighTime end
       end
+      
       meth Go(S)
 	 CurS CurLow CurHigh
       in
@@ -86,10 +127,12 @@ in
 	    {self Go(S)}
 	 end
       end
+      
       meth close
 	 lock
 	    {Wait _}
 	 end
       end
+      
    end
 end
