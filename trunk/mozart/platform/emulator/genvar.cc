@@ -40,7 +40,7 @@ SVariable(n == NULL ? am.currentBoard() : n)
 
 void GenCVariable::propagate(SuspList * &sl, PropCaller unifyVars)
 {
-  sl = am.checkSuspensionList(this, sl, unifyVars);
+  sl=oz_checkAnySuspensionList(sl,GETBOARD(this), unifyVars);
 }
 
 void addSuspCVarOutline(TaggedRef *v, Suspension susp, int unstable)

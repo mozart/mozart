@@ -63,9 +63,9 @@ void SolveActor::inject(int prio, TaggedRef proc) {
   RefsArray args = allocateRefsArray(1, NO);
   args[0] = makeTaggedRef(&solveVar);
 
-  Thread *it = am.mkRunnableThread(prio, solveBoard);
+  Thread *it = oz_mkRunnableThread(prio, solveBoard);
   it->pushCall(proc, args, 1);
-  am.scheduleThread(it);
+  am.threadsPool.scheduleThread(it);
 }
 
 inline
@@ -73,7 +73,7 @@ TaggedRef SolveActor::merge(Board *bb, Bool isSibling) {
   solveBoard->setCommitted(bb);
   bb->incSuspCount(solveBoard->getSuspCount());
 
-  if (!am.installScriptOutline(solveBoard->getScriptRef())) {
+  if (!oz_installScript(solveBoard->getScriptRef())) {
     return makeTaggedNULL();
   }
   

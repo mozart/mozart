@@ -31,7 +31,7 @@
 
 
 #define BYTEBUFFER_CUTOFF 100
-#define BYTEBUFFER_SIZE 2048
+#define BYTEBUFFER_SIZE   2048
 #define BYTESTREAM_CUTOFF 40
 
 class ByteBuffer{
@@ -236,8 +236,8 @@ public:
     if(first==last) {
       Assert(within(curpos,first));
       Assert(curpos>=pos);}
-    else {Assert(within(curpos,last));}
-        posMB=pos;
+    // PB else {Assert(within(curpos,last));}
+    posMB=pos;
     if(within(curpos,first)) {
       endMB=curpos;}
     else{
@@ -471,7 +471,8 @@ void ByteStream::afterInterpret(){
   Assert(first==last);
   Assert(first!=NULL);
   pos=curpos+1;
-  Assert(within(curpos,last));}
+  // PB Assert(within(curpos,last));
+}
 
 void ByteStream::afterRead(int len){
   Assert(type==BS_Read);

@@ -726,7 +726,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     }
   }
 
-  Propagator * prop = am.mkPropagator(am.currentBoard(), prio, p);
+  Propagator * prop = oz_mkPropagator(oz_currentBoard(), prio, p);
   ozstat.propagatorsCreated.incf();
   
   // only monotonic propagator are run on imposition 
@@ -735,19 +735,19 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     
     Propagator::setRunningPropagator(prop);
 
-    switch (am.runPropagator(prop)) {
+    switch (oz_runPropagator(prop)) {
     case FAILED:						
-      am.closeDonePropagator(prop);
+      oz_closeDonePropagator(prop);
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
       return FAILED;					        
     case SLEEP:		
-      am.suspendPropagator(prop);
+      oz_suspendPropagator(prop);
       break;						
     case SCHEDULED:					
-      am.scheduledPropagator(prop);
+      oz_scheduledPropagator(prop);
       break;						
     case PROCEED:						
-      am.closeDonePropagator(prop);
+      oz_closeDonePropagator(prop);
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
       return PROCEED;                                     
     default:						
@@ -819,7 +819,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
 #ifdef DEBUG_NONMONOTONIC
     printf("Setting nonmono prop runnable.\n"); fflush(stdout);
 #endif
-    am.scheduledPropagator(prop);
+    oz_scheduledPropagator(prop);
   }
   return PROCEED;
 }

@@ -1129,7 +1129,7 @@ void ThreadQueue::printThreads()
   for (; i; i--) {
     Thread *th = dequeue();
     th->printStream(cout,-1);
-    if (th == am.currentThread())
+    if (th == oz_currentThread())
       cout << " RUNNING ";
     cout << endl;
     enqueue(th);
@@ -1151,7 +1151,7 @@ void ozd_printBoards()
 
 void ozd_printThreads()
 {
-  am.printThreads();
+  am.threadsPool.printThreads();
 }
 
 void ozd_printAM()

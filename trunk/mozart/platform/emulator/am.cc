@@ -276,7 +276,7 @@ void AM::init(int argc,char **argv)
   debugMode       = NO;
   debugStreamTail = OZ_newVariable();
 
-  initThreads();
+  threadsPool.initThreads();
 
   // builtins
   initLiterals();
@@ -396,7 +396,7 @@ void AM::init(int argc,char **argv)
   emulatorClock = 0;
   taskMinInterval = DEFAULT_MIN_INTERVAL;
 
-  profileMode = NO;
+  unsetProfileMode();
 }
 
 #ifdef VIRTUALSITES
@@ -437,10 +437,10 @@ Bool AM::isLocalSVarOutline(SVariable *var)
 
 inline
 // static
-Bool AM::installScript(Script &script)
+Bool oz_installScriptOPT(Script &script)
 {
   Bool ret = OK;
-  installingScript = TRUE; // mm2: special hack ???
+  am.setInstallingScript(); // mm2: special hack ???
   for (int index = 0; index < script.getSize(); index++) {
     int res = oz_unify(script[index].getLeft(),script[index].getRight());
     if (res == PROCEED) continue;
@@ -458,7 +458,9 @@ Bool AM::installScript(Script &script)
       }
     }
   }
-  installingScript = FALSE;
+  am.unsetInstallingScript();
+
+  // mm2: why this?
 #ifndef DEBUG_CHECK
   script.dealloc();
 #else
@@ -468,9 +470,9 @@ Bool AM::installScript(Script &script)
   return ret;
 }
 
-Bool AM::installScriptOutline(Script &script)
+Bool oz_installScript(Script &script)
 {
-  return installScript(script);
+  return oz_installScriptOPT(script);
 }
 
 Bool oz_isBelow(Board *below, Board *above)
@@ -776,15 +778,15 @@ oz_BFlag oz_isBetween(Board *to, Board *varHome)
 
 inline
 // static
-Bool AM::wakeUpThread(Thread * tt, Board *home)
+Bool oz_wakeUpThread(Thread * tt, Board *home)
 {
   Assert (tt->isSuspended());
   Assert (tt->isRThread());
 
   switch (oz_isBetween(GETBOARD(tt), home)) {
   case B_BETWEEN:
-    suspThreadToRunnableOPT(tt);
-    scheduleThread(tt);
+    oz_suspThreadToRunnableOPT(tt);
+    am.threadsPool.scheduleThread(tt);
     return TRUE;
 
   case B_NOT_BETWEEN:
@@ -795,8 +797,8 @@ Bool AM::wakeUpThread(Thread * tt, Board *home)
     //  The whole thread is eliminated - because of the invariant
     // stated just before 'disposeSuspendedThread ()' in thread.hh;
     tt->markDeadThread();
-    checkExtSuspension(tt);
-    freeThreadBody(tt);
+    oz_checkExtSuspension(tt);
+    am.threadsPool.freeThreadBody(tt);
     return TRUE;
 
   default:
@@ -807,24 +809,24 @@ Bool AM::wakeUpThread(Thread * tt, Board *home)
 
 inline
 // static
-void AM::wakeupToRunnable(Thread *tt)
+void oz_wakeupToRunnable(Thread *tt)
 {
   Assert(tt->isSuspended());
 
   tt->markRunnable();
 
-  if (isBelowSolveBoard() || tt->isExtThread()) {
-    Assert (isInSolveDebug (GETBOARD(tt)));
-    incSolveThreads(GETBOARD(tt));
+  if (am.isBelowSolveBoard() || tt->isExtThread()) {
+    Assert (oz_isInSolveDebug(GETBOARD(tt)));
+    oz_incSolveThreads(GETBOARD(tt));
     tt->setInSolve();
   } else {
-    Assert(!isInSolveDebug(GETBOARD(tt)));
+    Assert(!oz_isInSolveDebug(GETBOARD(tt)));
   }
 }
 
 inline
 // static 
-Bool AM::wakeUpBoard(Thread *tt, Board *home)
+Bool oz_wakeUpBoard(Thread *tt, Board *home)
 {
   Assert(tt->isSuspended());
   Assert(tt->getThrType() == S_WAKEUP);
@@ -858,7 +860,7 @@ Bool AM::wakeUpBoard(Thread *tt, Board *home)
     // because of assertions in decSuspCount and getSuspCount
     if (bb->isFailed()) {
       tt->markDeadThread();
-      checkExtSuspension(tt);
+      oz_checkExtSuspension(tt);
       return OK;
     }
 #endif
@@ -876,8 +878,8 @@ Bool AM::wakeUpBoard(Thread *tt, Board *home)
   // to schedule a wakeup for the new thread's home board, 
   // because it could be the last thread in it - check entailment!
   if (bb == home && bb->getSuspCount() == 1) {
-    wakeupToRunnable(tt);
-    scheduleThread(tt);
+    oz_wakeupToRunnable(tt);
+    am.threadsPool.scheduleThread(tt);
     return OK;
   }
 
@@ -885,9 +887,9 @@ Bool AM::wakeUpBoard(Thread *tt, Board *home)
   //  General case;
   switch (oz_isBetween(bb, home)) {
   case B_BETWEEN:
-    Assert(!am.currentBoard()->isSolve() || am.isBelowSolveBoard());
-    am.wakeupToRunnable(tt);
-    am.scheduleThread(tt);
+    Assert(!oz_currentBoard()->isSolve() || am.isBelowSolveBoard());
+    oz_wakeupToRunnable(tt);
+    am.threadsPool.scheduleThread(tt);
     return OK;
 
   case B_NOT_BETWEEN:
@@ -895,7 +897,7 @@ Bool AM::wakeUpBoard(Thread *tt, Board *home)
 
   case B_DEAD:
     tt->markDeadThread();
-    checkExtSuspension(tt);
+    oz_checkExtSuspension(tt);
     return OK;
 
   default:
@@ -910,16 +912,16 @@ Bool AM::wakeUpBoard(Thread *tt, Board *home)
 //  Since this method is used at the only one place, it's inlined;
 inline
 // static 
-Bool AM::wakeUp(Suspension susp, Board * home, PropCaller calledBy) 
+Bool oz_wakeUp(Suspension susp, Board * home, PropCaller calledBy) 
 {
   if (susp.isThread()) {
     Thread * tt = susp.getThread();
     
     switch (tt->getThrType()) {
     case S_RTHREAD: 
-      return wakeUpThread(tt,home);
+      return oz_wakeUpThread(tt,home);
     case S_WAKEUP:
-      return wakeUpBoard(tt,home);
+      return oz_wakeUpBoard(tt,home);
     default:
       Assert(0);
       return FALSE;
@@ -927,12 +929,12 @@ Bool AM::wakeUp(Suspension susp, Board * home, PropCaller calledBy)
   } else {
     Assert(susp.isPropagator());
     
-    return wakeUpPropagator(susp.getPropagator(), home, calledBy);
+    return oz_wakeUpPropagator(susp.getPropagator(), home, calledBy);
   }
 }
 
 
-void AM::wakeupAny(Suspension susp, Board * bb)
+void oz_wakeupAny(Suspension susp, Board * bb)
 {
   if (susp.isThread()) {
     Thread * tt = susp.getThread();
@@ -941,13 +943,13 @@ void AM::wakeupAny(Suspension susp, Board * bb)
     case S_RTHREAD:
       Assert (tt->isSuspended());
       Assert (tt->isRThread());
-      suspThreadToRunnable(tt);
-      scheduleThread(tt);
+      oz_suspThreadToRunnable(tt);
+      am.threadsPool.scheduleThread(tt);
       break;
     case S_WAKEUP:
       Assert(tt->isSuspended());
-      wakeupToRunnable(tt);
-      scheduleThread(tt);
+      oz_wakeupToRunnable(tt);
+      am.threadsPool.scheduleThread(tt);
       break;
     default:
       Assert(0);
@@ -955,21 +957,15 @@ void AM::wakeupAny(Suspension susp, Board * bb)
   } else {
     Assert(susp.isPropagator());
     
-    int ret = wakeUpPropagator(susp.getPropagator(), bb, pc_std_unif);
+    int ret = oz_wakeUpPropagator(susp.getPropagator(), bb, pc_std_unif);
     Assert(ret);
   }
 }
 
-// val is used because it may be a variable which must suspend.
-//  if det X then ... fi
-//  X = Y 
-// --> if det Y then ... fi
-
-SuspList * AM::checkSuspensionList(SVariable * var,
-				   SuspList * suspList,
-				   PropCaller calledBy)
+SuspList *oz_checkAnySuspensionList(SuspList *suspList,Board *home,
+				    PropCaller calledBy)
 {
-  if (inShallowGuard())
+  if (am.inShallowGuard())
     return suspList;
 
   SuspList * retSuspList = NULL;
@@ -988,7 +984,7 @@ SuspList * AM::checkSuspensionList(SVariable * var,
 	Propagator * prop = susp.getPropagator();
 
 	if (calledBy && !prop->isUnifyPropagator()) {
-	  switch (oz_isBetween(GETBOARD(prop), GETBOARD(var))) {
+	  switch (oz_isBetween(GETBOARD(prop), home)) {
 	  case B_BETWEEN:
 	    prop->markUnifyPropagator();
 	    break;
@@ -1007,7 +1003,7 @@ SuspList * AM::checkSuspensionList(SVariable * var,
 	continue;
       }
     } else {
-      if (wakeUp(susp, GETBOARD(var), calledBy)) {
+      if (oz_wakeUp(susp, home, calledBy)) {
 	Assert (susp.isDead() || susp.isRunnable());
 	suspList = suspList->dispose ();
 	continue;
@@ -1055,7 +1051,7 @@ void oz_bind(TaggedRef *varPtr, TaggedRef var, TaggedRef term)
 {
   /* first step: do suspension */
   if (isSVar(var) || isCVar(var)) {
-    am.checkSuspensionList(var, pc_std_unif);
+    oz_checkSuspensionList(tagged2SVarPlus(var), pc_std_unif);
   }
 
   /* second step: push binding for non-local variable on trail;     */
@@ -1097,7 +1093,7 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
 }
 
 
-
+// mm2: why not inline?
 void AM::doBindAndTrail(TaggedRef * vp, TaggedRef t)
 {
   Assert(shallowHeapTop || checkHome(vp));
@@ -1135,10 +1131,10 @@ void AM::doBindAndTrail(TaggedRef * vp, TaggedRef t)
  *      'am.currentBoard' stays unchanged;
  *
  */
-InstType AM::installPath(Board *to)
+InstType oz_installPath(Board *to)
 {
   if (to->isInstalled()) {
-    deinstallPath(to);
+    oz_deinstallPath(to);
     return INST_OK;
   }
 
@@ -1149,16 +1145,16 @@ InstType AM::installPath(Board *to)
     return INST_REJECTED;
   }
 
-  InstType ret = installPath(par);
+  InstType ret = oz_installPath(par);
   if (ret != INST_OK) {
     return ret;
   }
 
-  setCurrent(to);
+  am.setCurrent(to);
   to->setInstalled();
 
-  trail.pushMark();
-  if (!installScript(to->getScriptRef())) {
+  am.trail.pushMark();
+  if (!oz_installScriptOPT(to->getScriptRef())) {
     return INST_FAILED;
   }
   return INST_OK;
@@ -1173,11 +1169,11 @@ InstType AM::installPath(Board *to)
 //
 inline
 // static
-Thread *AM::mkWakeupThread(Board *bb) 
+Thread *oz_mkWakeupThread(Board *bb) 
 {
-  Thread *th = new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb,newId());
+  Thread *th = new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb,am.newId());
   bb->incSuspCount();
-  checkDebug(th,bb);
+  oz_checkDebug(th,bb);
   return th;
 }
 
@@ -1189,21 +1185,21 @@ Thread *AM::mkWakeupThread(Board *bb)
 // unconstrained global var G1 -> unconstrained global var G2 
 //    ==> add susp to G1 and G2
 
-void AM::reduceTrailOnSuspend()
+void oz_reduceTrailOnSuspend()
 {
-  if (!trail.isEmptyChunk()) {
-    int numbOfCons = trail.chunkSize();
-    Board * bb = currentBoard();
+  if (!am.trail.isEmptyChunk()) {
+    int numbOfCons = am.trail.chunkSize();
+    Board * bb = oz_currentBoard();
     bb->newScript(numbOfCons);
 
     //
     // one single suspended thread for all;
-    Thread *thr = mkWakeupThread(bb);
+    Thread *thr = oz_mkWakeupThread(bb);
   
     for (int index = 0; index < numbOfCons; index++) {
       TaggedRef * refPtr, value;
 
-      trail.popRef(refPtr, value);
+      am.trail.popRef(refPtr, value);
 
       Assert(oz_isRef(*refPtr) || !oz_isVariable(*refPtr));
       Assert(oz_isVariable(value));
@@ -1223,28 +1219,28 @@ void AM::reduceTrailOnSuspend()
 
     } // for 
   } // if
-  trail.popMark();
+  am.trail.popMark();
 }
 
-void AM::reduceTrailOnFail()
+void oz_reduceTrailOnFail()
 {
-  while(!trail.isEmptyChunk()) {
+  while(!am.trail.isEmptyChunk()) {
     TaggedRef *refPtr;
     TaggedRef value;
-    trail.popRef(refPtr,value);
+    am.trail.popRef(refPtr,value);
     unBind(refPtr,value);
   }
-  trail.popMark();
+  am.trail.popMark();
 }
 
-void AM::reduceTrailOnShallow()
+void oz_reduceTrailOnShallow()
 {
-  emptySuspendVarList();
+  am.emptySuspendVarList();
 
-  while(!trail.isEmptyChunk()) {
+  while(!am.trail.isEmptyChunk()) {
     TaggedRef *refPtr;
     TaggedRef value;
-    trail.popRef(refPtr,value);
+    am.trail.popRef(refPtr,value);
 
     Assert(oz_isVariable(value));
 
@@ -1259,23 +1255,23 @@ void AM::reduceTrailOnShallow()
      */
     if (refPtr!=ptrOldVal) {
       if (oz_isVariable(oldVal)) {
-	addSuspAnyVar(ptrOldVal,currentThread());
+	addSuspAnyVar(ptrOldVal,oz_currentThread());
       }
     }
 
-    addSuspAnyVar(refPtr,currentThread());
+    addSuspAnyVar(refPtr,oz_currentThread());
   }
-  trail.popMark();
+  am.trail.popMark();
 }
 
-void AM::reduceTrailOnEqEq()
+void oz_reduceTrailOnEqEq()
 {
-  emptySuspendVarList();
+  am.emptySuspendVarList();
 
-  while(!trail.isEmptyChunk()) {
+  while(!am.trail.isEmptyChunk()) {
     TaggedRef *refPtr;
     TaggedRef value;
-    trail.popRef(refPtr,value);
+    am.trail.popRef(refPtr,value);
 
     Assert(oz_isVariable(value));
 
@@ -1285,12 +1281,12 @@ void AM::reduceTrailOnEqEq()
     unBind(refPtr,value);
 
     if (oz_isVariable(oldVal)) {
-      addSuspendVarList(ptrOldVal);
+      am.addSuspendVarList(ptrOldVal);
     }
 
-    addSuspendVarList(refPtr);
+    am.addSuspendVarList(refPtr);
   }
-  trail.popMark();
+  am.trail.popMark();
 }
 
 /* -------------------------------------------------------------------------
@@ -1332,6 +1328,8 @@ Bool NeverDo_CheckProc(unsigned long, void*)
   return (NO);
 }
 
+// mm2: misssing ifdef VIRTUAL_SITE?
+
 //
 // kost@ : The problem with tasks is that we cannot block on them like
 // we can on i/o. So, if there are tasks to be done, we say we want to
@@ -1364,7 +1362,7 @@ void AM::handleTasks()
 
 void AM::suspendEngine()
 {
-  deinstallPath(_rootBoard);
+  oz_deinstallPath(_rootBoard);
 
 #ifdef DEBUG_THREADCOUNT
   printf("(AM::suspendEngine LTQs=%d) ", existingLTQs); fflush(stdout);
@@ -1395,7 +1393,7 @@ void AM::suspendEngine()
       handleTasks();
     }    
     
-    if (!threadQueuesAreEmpty()) {
+    if (!threadsPool.threadQueuesAreEmpty()) {
       break;
     }
 
@@ -1440,23 +1438,23 @@ void AM::suspendEngine()
 void AM::checkStatus()
 {
   if (isSetSFlag(StartGC)) {
-      deinstallPath(_rootBoard);
-      doGC();
+    oz_deinstallPath(_rootBoard);
+    doGC();
   }
   if (isSetSFlag(UserAlarm)) {
-    deinstallPath(_rootBoard);
+    oz_deinstallPath(_rootBoard);
     osBlockSignals();
     handleUser();
     osUnblockSignals();
   }
   if (isSetSFlag(IOReady)) {
-    deinstallPath(_rootBoard);
+    oz_deinstallPath(_rootBoard);
     osBlockSignals();
     oz_io_handle();
     osUnblockSignals();
   }
   if (isSetSFlag(TasksReady)) {
-    deinstallPath(oz_rootBoard());
+    oz_deinstallPath(oz_rootBoard());
     osBlockSignals();
     handleTasks();
     osUnblockSignals();
@@ -1464,6 +1462,7 @@ void AM::checkStatus()
 }
 
 
+// mm2: VIRTUAL_SITES?
 //
 // Returns 'TRUE' if the task has been successfully registered;
 Bool AM::registerTask(void *arg, TaskCheckProc cIn, TaskProcessProc pIn)
@@ -1547,7 +1546,7 @@ void AM::checkTasks()
  * RETURNS: OK if solveSpace found, else NO
  */
 
-int AM::incSolveThreads(Board *bb)
+int oz_incSolveThreads(Board *bb)
 {
   int ret = NO;
   while (!oz_isRootBoard(bb)) {
@@ -1562,7 +1561,7 @@ int AM::incSolveThreads(Board *bb)
       sa->incThreads ();
 
       //
-      Assert (!(isStableSolve (sa)));
+      Assert (!(oz_isStableSolve (sa)));
     }
     bb = bb->getParent();
   }
@@ -1570,11 +1569,11 @@ int AM::incSolveThreads(Board *bb)
 }
 
 #ifdef DEBUG_THREADCOUNT
-void AM::decSolveThreads(Board *bb, char * s)
+void oz_decSolveThreads(Board *bb, char * s)
 {
   //printf("AM::decSolveThreads: %s.\n", s); fflush(stdout);
 #else
-void AM::decSolveThreads(Board *bb)
+void oz_decSolveThreads(Board *bb)
 {
 #endif
   while (!oz_isRootBoard(bb)) {
@@ -1587,8 +1586,9 @@ void AM::decSolveThreads(Board *bb)
       if (sa->decThreads () == 0) {
 	//
 	// ... first - notification board below the failed solve board; 
-	if (!(sa->isCommitted ()) && isStableSolve (sa)) {
-	  scheduleThread(mkRunnableThread(DEFAULT_PRIORITY,bb));
+	if (!(sa->isCommitted ()) && oz_isStableSolve (sa)) {
+	  am.threadsPool.scheduleThread(oz_mkRunnableThread(DEFAULT_PRIORITY,
+							    bb));
 	}
       } else {
 	Assert (sa->getThreads () > 0);
@@ -1606,7 +1606,7 @@ void AM::decSolveThreads(Board *bb)
  *  Just check whether the 'bb' is located beneath some (possibly dead) 
  * solve board;
  */
-Bool AM::isInSolveDebug (Board *bb)
+Bool oz_isInSolveDebug (Board *bb)
 {
   while (!oz_isRootBoard(bb)) {
     Assert(!bb->isCommitted());
@@ -1623,12 +1623,12 @@ Bool AM::isInSolveDebug (Board *bb)
 }
 #endif
 
-Bool AM::isStableSolve(SolveActor *sa)
+Bool oz_isStableSolve(SolveActor *sa)
 {
   if (sa->getThreads() != 0) 
     return NO;
   if (oz_isCurrentBoard(sa->getSolveBoard()) &&
-      !trail.isEmptyChunk())
+      !am.trail.isEmptyChunk())
     return NO;
   // simply "don't worry" if in all other cases it is too weak;
   return sa->areNoExtSuspensions(); 
@@ -1853,23 +1853,23 @@ void AM::wakeUser()
 
 
 
-void AM::checkDebugOutline(Thread *tt)
+void oz_checkDebugOutline(Thread *tt)
 {
-  Assert(debugmode());
-  if (currentThread() && tt->getThrType() == S_RTHREAD)
-    if (currentThread()->getTrace()) {
+  Assert(am.debugmode());
+  if (oz_currentThread() && tt->getThrType() == S_RTHREAD)
+    if (oz_currentThread()->getTrace()) {
       tt->setTrace(OK);
       tt->setStep(OK);
     }
 }
 
 //  Make a runnable thread with a single task stack entry <local thread queue>
-Thread *AM::mkLPQ(Board *bb, int prio)
+Thread *oz_mkLPQ(Board *bb, int prio)
 {
-  Thread * th = new Thread(S_RTHREAD | T_runnable | T_lpq, prio, bb, newId());
-  th->setBody(allocateBody());
+  Thread * th = new Thread(S_RTHREAD | T_runnable | T_lpq, prio, bb, am.newId());
+  th->setBody(am.threadsPool.allocateBody());
   bb->incSuspCount();
-  checkDebug(th,bb);
+  oz_checkDebug(th,bb);
   //Assert(oz_isCurrentBoard(bb));
 
 #ifdef DEBUG_THREADCOUNT
@@ -1880,15 +1880,15 @@ Thread *AM::mkLPQ(Board *bb, int prio)
   //printf("+");fflush(stdout);
 #endif
 
-  if (isBelowSolveBoard()) {
+  if (am.isBelowSolveBoard()) {
 #ifdef DEBUG_THREADCOUNT
     //printf("!");fflush(stdout);
 #endif
-    Assert(isInSolveDebug(bb));
-    incSolveThreads(bb);
+    Assert(oz_isInSolveDebug(bb));
+    oz_incSolveThreads(bb);
     th->setInSolve();
   } else {
-    Assert(!isInSolveDebug(GETBOARD(th)));
+    Assert(!oz_isInSolveDebug(GETBOARD(th)));
   }
 
   th->pushLPQ(bb);
@@ -1896,9 +1896,9 @@ Thread *AM::mkLPQ(Board *bb, int prio)
   return th;
 }
 
-int AM::commit(Board *bb, Thread *tt)
+int oz_commit(Board *bb, Thread *tt)
 {
-  Assert(!currentBoard()->isCommitted());
+  Assert(!oz_currentBoard()->isCommitted());
   Assert(oz_isCurrentBoard(bb->getParent()));
 
   AWActor *aw = AWActor::Cast(bb->getActor());
@@ -1907,23 +1907,23 @@ int AM::commit(Board *bb, Thread *tt)
 
   Continuation *cont=bb->getBodyPtr();
 
-  bb->setCommitted(currentBoard());
-  currentBoard()->incSuspCount(bb->getSuspCount()-1);
+  bb->setCommitted(oz_currentBoard());
+  oz_currentBoard()->incSuspCount(bb->getSuspCount()-1);
 
   if (bb->isWait()) {
     Assert(bb->isWaiting());
 
     WaitActor *wa = WaitActor::Cast(aw);
 
-    if (currentBoard()->isWait()) {
-      WaitActor::Cast(currentBoard()->getActor())->mergeChoices(wa->getCpb());
-    } else if (currentBoard()->isSolve()) {
-      SolveActor::Cast(currentBoard()->getActor())->mergeChoices(wa->getCpb());
+    if (oz_currentBoard()->isWait()) {
+      WaitActor::Cast(oz_currentBoard()->getActor())->mergeChoices(wa->getCpb());
+    } else if (oz_currentBoard()->isSolve()) {
+      SolveActor::Cast(oz_currentBoard()->getActor())->mergeChoices(wa->getCpb());
     } else {
       // forget the choice stack when committing to a conditional
     }
 
-    if (!installScriptOutline(bb->getScriptRef())) {
+    if (!oz_installScript(bb->getScriptRef())) {
       return 0;
     }
   }
@@ -1931,8 +1931,8 @@ int AM::commit(Board *bb, Thread *tt)
   if (!tt) {
     tt=aw->getThread();
     Assert(tt->isSuspended());
-    suspThreadToRunnableOPT(tt);
-    scheduleThread(tt);
+    oz_suspThreadToRunnableOPT(tt);
+    am.threadsPool.scheduleThread(tt);
     DebugCheckT(aw->setThread(0));
   }
 
@@ -1951,16 +1951,16 @@ int AM::commit(Board *bb, Thread *tt)
 }
 
 // see variable.hh
-void checkExtSuspension(Suspension susp, Board * home)
+void oz_checkExtSuspension(Suspension susp, Board * home)
 {
   if (am.isBelowSolveBoard()) {
-    am.setExtSuspensionOutlined(susp, home->derefBoard());
+    oz_setExtSuspensionOutlined(susp, home->derefBoard());
   }
 }
 
-void AM::setExtSuspensionOutlined(Suspension susp, Board *varHome)
+void oz_setExtSuspensionOutlined(Suspension susp, Board *varHome)
 {
-  Board * bb = currentBoard();
+  Board * bb = oz_currentBoard();
   Bool wasFound = NO;
   Assert (!varHome->isCommitted());
 
@@ -1978,7 +1978,7 @@ void AM::setExtSuspensionOutlined(Suspension susp, Board *varHome)
   if (wasFound) susp.setExtSuspension();
 }
 
-void AM::checkExtSuspensionOutlined(Suspension susp)
+void oz_checkExtSuspensionOutlined(Suspension susp)
 {
   Assert(susp.wasExtSuspension());
 
@@ -1988,14 +1988,15 @@ void AM::checkExtSuspensionOutlined(Suspension susp)
     Assert(sb->isSolve());
     
     SolveActor * sa = SolveActor::Cast(sb->getActor());
-    if (isStableSolve(sa)) {
-      scheduleThread(mkRunnableThreadOPT(DEFAULT_PRIORITY, sb));
+    if (oz_isStableSolve(sa)) {
+      am.threadsPool.scheduleThread(oz_mkRunnableThreadOPT(DEFAULT_PRIORITY,
+							   sb));
     }
     sb = GETBOARD(sa)->getSolveBoard();
   }
 }
 
-void AM::removeExtThreadOutlined(Thread *tt)
+void oz_removeExtThreadOutlined(Thread *tt)
 {
   Assert(tt->wasExtThread());
   
@@ -2076,10 +2077,10 @@ char flagChar(StatusBit flag)
  *  clean the trail
  *  update the current board
  */
-void AM::failBoard()
+void oz_failBoard()
 {
   Assert(!oz_onToplevel());
-  Board *bb=currentBoard();
+  Board *bb=oz_currentBoard();
   Assert(bb->isInstalled());
 
   Actor *aa=bb->getActor();
@@ -2092,9 +2093,9 @@ void AM::failBoard()
   Assert(!bb->isFailed());
   bb->setFailed();
 
-  reduceTrailOnFail();
+  oz_reduceTrailOnFail();
   bb->unsetInstalled();
-  setCurrent(GETBOARD(aa));
+  am.setCurrent(GETBOARD(aa));
 }
 
 
@@ -2153,21 +2154,5 @@ void AM::suspendOnVarList(Thread *thr)
     addSuspAnyVar(tagged2Ref(v),thr);
     _suspendVarList=oz_tail(_suspendVarList);
   }
-}
-
-Bool AM::emulateHookOutline() {
-  // without signal blocking;
-  if (isSetSFlag(ThreadSwitch)) {
-    if (threadQueuesAreEmpty()) {
-      restartThread();
-    } else {
-      return TRUE;
-    }
-  }
-  if (isSetSFlag((StatusBit)(StartGC|UserAlarm|IOReady|TasksReady))) {
-    return TRUE;
-  }
-
-  return FALSE;
 }
 

@@ -309,14 +309,14 @@ void SiteUnify(TaggedRef val1,TaggedRef val2)
     }
   
   Assert(oz_onToplevel());
-  Thread *th=am.mkRunnableThread(DEFAULT_PRIORITY,am.currentBoard());
+  Thread *th=oz_mkRunnableThread(DEFAULT_PRIORITY,oz_currentBoard());
 #ifdef PERDIO_DEBUG
   PD((SITE_OP,"SITE_OP: site unify called %d %d",val1, val2));
 
   Assert(MemChunks::isInHeap(val1) && MemChunks::isInHeap(val1));
 #endif
   pushUnify(th,val1,val2);
-  am.scheduleThread(th);
+  am.threadsPool.scheduleThread(th);
 }
 
 void SiteUnifyCannotFail(TaggedRef val1,TaggedRef val2){
@@ -2936,7 +2936,7 @@ PerdioVar *var2PerdioVar(TaggedRef *tPtr)
 void Object::localize()
 {
   setTertType(Te_Local);
-  setBoard(am.currentBoard());
+  setBoard(oz_currentBoard());
 }
 /**********************************************************************/
 /*   SECTION 21 :: marshaling/unmarshaling by protocol-layer          */
@@ -3815,7 +3815,7 @@ Bool Tertiary::startHandlerPort(Thread* th, Tertiary* t, TaggedRef msg, EntityCo
       if(w->isHandler()){
 	ret = TRUE;
 	if(w->isContinueHandler()) {
-	  Assert(th == am.currentThread());
+	  Assert(th == oz_currentThread());
 	  am.prepareCall(BI_send,makeTaggedTert(t),msg);
 	}
 	w->invokeHandler(ec,this,th,0);}
@@ -3842,7 +3842,7 @@ OZ_Return portSend(Tertiary *p, TaggedRef msg)
   switch(getEntityCondPort(p)){
   case PERM_BLOCKED|PERM_ME:{
     PD((ERROR_DET,"Port is PERM"));
-    if(p->startHandlerPort(am.currentThread(), p, msg, PERM_BLOCKED|PERM_ME))
+    if(p->startHandlerPort(oz_currentThread(), p, msg, PERM_BLOCKED|PERM_ME))
       return BI_REPLACEBICALL;
     /* no handler --> suspend forever: */
     ControlVarNew(var,p->getBoardInternal());
@@ -3852,7 +3852,7 @@ OZ_Return portSend(Tertiary *p, TaggedRef msg)
     PD((ERROR_DET,"Port is Tmp size:%d treash:%d",
 	site->getQueueStatus(dummy),PortSendTreash));
     wait = TRUE;
-    if(p->startHandlerPort(am.currentThread(), p, msg, TEMP_BLOCKED|TEMP_ME))
+    if(p->startHandlerPort(oz_currentThread(), p, msg, TEMP_BLOCKED|TEMP_ME))
       return BI_REPLACEBICALL;
     break;
   }
@@ -4002,7 +4002,7 @@ OZ_Return sendRedirect(PerdioVar *pv,OZ_Term val, Site* ackSite, int OTI)
 
 OZ_Return bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
 {
-  PD((PD_VAR,"bindPerdioVar by thread: %x",am.currentThread()));
+  PD((PD_VAR,"bindPerdioVar by thread: %x",oz_currentThread()));
   if (pv->isManager()) {
     PD((PD_VAR,"bind manager o:%d v:%s",pv->getIndex(),toC(v)));
     OT->getOwner(pv->getIndex())->mkRef();
@@ -4348,7 +4348,7 @@ OZ_Return CellSec::exchangeVal(TaggedRef old, TaggedRef nw, Thread *th,
     return PROCEED;
 
   TaggedRef exception;
-  Bool inplace = (th==am.currentThread());
+  Bool inplace = (th==oz_currentThread());
   switch (exKind){
   case ASSIGN:{
     contents = oz_deref(contents);
@@ -4475,13 +4475,13 @@ OZ_Return cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread *th,ExKin
 }
 
 OZ_Return cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw){
-   return cellDoExchange(c,old,nw,am.currentThread(),EXCHANGE);}
+   return cellDoExchange(c,old,nw,oz_currentThread(),EXCHANGE);}
 
 OZ_Return cellAssignExchange(Tertiary *c,TaggedRef fea,TaggedRef val){
-   return cellDoExchange(c,fea,val,am.currentThread(), ASSIGN);}
+   return cellDoExchange(c,fea,val,oz_currentThread(), ASSIGN);}
 
 OZ_Return cellAtExchange(Tertiary *c,TaggedRef old,TaggedRef nw){
-  return cellDoExchange(c,old,nw,am.currentThread(), AT);}
+  return cellDoExchange(c,old,nw,oz_currentThread(), AT);}
 
 OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
   switch(state){
@@ -4523,7 +4523,7 @@ OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
   cellSendRemoteRead(((CellManager*)c)->getChain()->getCurrent(),
 		     mySite,index,mySite);
 exit:
-  Thread* th=am.currentThread();
+  Thread* th=oz_currentThread();
   ControlVarNew(controlvar,c->getBoardInternal());
   pendBinding=new PendThread(th,pendBinding,val,fea,
 			     controlvar,fea ? DEEPAT : ACCESS);
@@ -4545,7 +4545,7 @@ OZ_Return cellAtAccess(Tertiary *c, TaggedRef fea, TaggedRef val){
   return cellDoAccess(c,val,fea);}
 
 OZ_Return cellDoAccess(Tertiary *c, TaggedRef val){
-  if(oz_onToplevel() && c->handlerExists(am.currentThread()))
+  if(oz_onToplevel() && c->handlerExists(oz_currentThread()))
     return cellDoExchange(c,val,val);
   else
     return cellDoAccess(c,val,0);}
@@ -5339,7 +5339,7 @@ void Watcher::invokeHandler(EntityCond ec,Tertiary* entity,
   if(entity->getType()==Co_Port) {
     am.prepareCall(proc,arg0,arg1);
   } else {
-    Assert(th!=am.currentThread()); 
+    Assert(th!=oz_currentThread()); 
     th->pushCall(proc,arg0,arg1);
     ControlVarResume(controlvar);
   }
@@ -5348,9 +5348,9 @@ void Watcher::invokeHandler(EntityCond ec,Tertiary* entity,
 
 void Watcher::invokeWatcher(EntityCond ec,Tertiary* entity){
   Assert(!isHandler());
-  Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, oz_rootBoard());
+  Thread *tt = oz_mkRunnableThread(DEFAULT_PRIORITY, oz_rootBoard());
   tt->pushCall(proc, makeTaggedTert(entity), listifyWatcherCond(ec));
-  am.scheduleThread(tt);}
+  am.threadsPool.scheduleThread(tt);}
 
 Bool CellSec::threadIsPending(Thread *t){
   return basicThreadIsPending(pending,t);}
@@ -5462,7 +5462,7 @@ void Tertiary::entityProblem(){
       Assert(!isProxy());
       pd->thread = DummyThread;
       if(w->isContinueHandler()){
-	Assert(cThread!=am.currentThread());
+	Assert(cThread!=oz_currentThread());
 	if(getType()==Co_Cell){
 	  switch(pd->exKind){
 	  case EXCHANGE:{cThread->pushCall(BI_exchangeCell,makeTaggedTert(this), pd->old, pd->nw); break;}
@@ -5859,9 +5859,9 @@ void Site::probeFault(ProbeReturn pr){
 
 void insertDangelingEvent(Tertiary *t){
   PD((PROBES,"Starting DangelingThread"));
-  Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, oz_rootBoard());
+  Thread *tt = oz_mkRunnableThread(DEFAULT_PRIORITY, oz_rootBoard());
   tt->pushCall(BI_probe, makeTaggedTert(t));
-  am.scheduleThread(tt);}
+  am.threadsPool.scheduleThread(tt);}
 
 /**********************************************************************/
 /*   SECTION 40:: communication problem                               */
@@ -6136,10 +6136,10 @@ OZ_BI_define(BIportWait,2,0)
 
 void wakeUpTmp(int i, int time){
   PD((TCPCACHE,"Starting DangelingThread"));
-  Thread *tt = am.mkRunnableThread(LOW_PRIORITY, oz_rootBoard());
+  Thread *tt = oz_mkRunnableThread(LOW_PRIORITY, oz_rootBoard());
   tt->pushCall(BI_startTmp, oz_int(i), oz_int(time));
   tt->pushCall(BI_Delay, oz_int(time));
-  am.scheduleThread(tt);}
+  am.threadsPool.scheduleThread(tt);}
 
 GenHashNode *getPrimaryNode(GenHashNode* node, int &i);
 GenHashNode *getSecondaryNode(GenHashNode* node, int &i);
@@ -6451,7 +6451,7 @@ OZ_BI_define(BIprobe,1,0)
 
 OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
   EntityCond ec = PERM_BLOCKED;
-  Thread *th      = am.currentThread();
+  Thread *th      = oz_currentThread();
   Bool Continue   = FALSE;
   Bool Persistent = FALSE;
   
@@ -6470,7 +6470,7 @@ OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
     TaggedRef thtt = condStruct->getFeature(OZ_atom("basis"));
     NONVAR(thtt,tht);
     if(tht == AtomPerThread)
-      th = am.currentThread();
+      th = oz_currentThread();
     else{
       if(tht == AtomPerSite)
 	th = DefaultThread;
@@ -6531,14 +6531,14 @@ OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
 
 
 OZ_Return HandlerDeInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
-  Thread *th      = am.currentThread();
+  Thread *th      = oz_currentThread();
   
 
   if(condStruct->hasFeature(OZ_atom("basis"))){
     TaggedRef thtt = condStruct->getFeature(OZ_atom("basis"));
     NONVAR(thtt,tht);
     if(tht == AtomPerThread)
-      th = am.currentThread();
+      th = oz_currentThread();
     else{
       if(tht == AtomPerSite)
 	th = DefaultThread;

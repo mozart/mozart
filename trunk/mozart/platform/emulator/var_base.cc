@@ -53,7 +53,7 @@ void SVariable::wakeupAll()
     Suspension susp = suspList->getElem();
 
     if (!susp.isDead() && !susp.isRunnable()) {
-      am.wakeupAny(susp, GETBOARD(this));
+      oz_wakeupAny(susp, GETBOARD(this));
     }
     suspList = suspList->dispose();
   }
