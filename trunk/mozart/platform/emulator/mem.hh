@@ -120,7 +120,7 @@ inline unsigned int getAllocatedMemory() {
 
 inline void *mallocBody(size_t chunk_size, int align)
 {
-  COUNT1(totalAllocated,chunk_size);
+  ProfileCode(ozstat.heapAlloced(chunk_size);)
   Assert(ToInt32(heapTop)%sizeof(int32) == 0);
 
 retry:
