@@ -122,6 +122,8 @@ int osopen(const char *path, int flags, int mode);
 int ossocket(int domain, int type, int protocol);
 int osaccept(int s, struct sockaddr *addr, int *addrlen);
 int osconnect(int s, struct sockaddr *addr, int namelen);
+int osdup(int fd);
+
 void registerSocket(int fd);
 
 char *osfgets(char *s, int n, FILE *stream);
