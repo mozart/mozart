@@ -10,6 +10,7 @@ define
 		  'create'(char:&c alias:'action'#create)
 		  'from'(single type:string)
 		  'to'(  single type:string)
+		  'home'(single type:string)
 		  'files'(multiple type:list(string))
 		 )}
    case Args.action
@@ -21,7 +22,11 @@ define
       end
       {A close}
    [] 'create' then
-      {Archive.make Args.zip Args.files}
+      if {HasFeature Args 'home'} then
+	 {Archive.makeFrom Args.zip Args.files Args.home}
+      else
+	 {Archive.make Args.zip Args.files}
+      end
    [] 'extract' then
       A = {New Archive.'class' init(Args.zip)}
    in

@@ -2,12 +2,14 @@ functor
 export
    'class' : Archive
    Make
+   MakeFrom
 import
-   URL(toVirtualStringExtended)
+   URL(toVirtualStringExtended make isAbsolute)
    Resolve(expand)
    ZFile at 'zfile.so{native}'
    OS(stat)
    Open(file)
+   FileUtils(withSlash:WithSlash)
 define
    fun {Encode F}
       case F
@@ -21,13 +23,6 @@ define
       {URL.toVirtualStringExtended
        {Resolve.expand {Encode {VirtualString.toString F}}}
        o(full:true raw:true)}
-   end
-
-   fun {FileInfo File}
-      F = {Expand File}
-      R = {OS.stat F}
-   in
-      {AdjoinAt R path F}
    end
 
    fun {Int2Bytes N}
@@ -100,10 +95,30 @@ define
    in
       {Loop}
    end
+   
+   proc {MakeFrom File Files Home}
+      
+      fun{FullName File}
+	 {VirtualString.toString
+	  if {URL.isAbsolute {URL.make File}} then
+	     File
+	  else
+	     if Home==nil then File
+	     else {WithSlash Home}#File
+	     end
+	  end}
+      end
 
-   proc {Make File Files}
-      Infos = {Map Files FileInfo}
+      fun {FileInfo File}
+	 F = {FullName {Expand File}}
+	 R = {OS.stat F}
+      in
+	 {Adjoin r(path:{Expand File}
+		   fullpath:F) R}
+      end
+      
       F = {Expand File}
+      Infos = {Map Files FileInfo}
       Z = {ZFile.open F "wb9"}
    in
       %% write how many files:
@@ -120,10 +135,15 @@ define
       %% write each file
       {ForAll Infos
        proc {$ Info}
-	  {WriteFile Z Info.path}
+	  {WriteFile Z Info.fullpath}
        end}
       {ZFile.finish Z}
       {ZFile.close Z}
+   end
+
+
+   proc {Make File Files}
+      {MakeFrom File Files ""}
    end
 
    proc {ReadFile Z Size File}
