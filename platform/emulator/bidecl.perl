@@ -148,8 +148,8 @@ $builtins = {
     'builtin'   => { in  => ['+virtualString','+int'],
                      out => ['+procedure'],
                      BI  => BIbuiltin,
-                     native => true},
-
+                     native => false},
+    #* NATIVE IS HERE ONLY TEMPORARYLY FALSE IN ORDER TO DEBUG THE SYSTEM!
 
     #* Core
 
@@ -816,7 +816,7 @@ $builtins = {
     'monitorArity'      => { in  => ['*recordC','value','[feature]'],
                              out => [],
                              BI  => BImonitorArity,
-                             native => true},
+                             native => false},
 
     'tellRecordSize'    => { in  => ['+literal','+int','record'],
                              out => [],
@@ -1364,14 +1364,14 @@ $builtins = {
     'GetProperty'       => { in  => ['+literal'],
                              out => ['value'],
                              BI  => BIgetProperty,
-                             module=>'vprop',
-                             native => true},
+                             module=> 'vprop',
+                             native => false},
 
     'CondGetProperty'   => { in  => ['+literal','value'],
                              out => ['value'],
                              BI  => BIcondGetProperty,
-                             module=>'vprop',
-                             native => true},
+                             module=> 'vprop',
+                             native => false},
 
     'PutProperty'       => { in  => ['+literal','value'],
                              out => [],
@@ -1462,6 +1462,11 @@ $builtins = {
                              BI  => BIgetPrintName,
                              native => true},
 
+    'UnSitedPrintName'  => { in  => ['value'],
+                             out => ['+atom'],
+                             BI  => BIgetPrintName,
+                             native => false},
+
     'System.printInfo'  => { in  => ['virtualString'],
                              out => [],
                              BI  => BIprintInfo,
@@ -1525,6 +1530,11 @@ $builtins = {
     'Delay'             => { in  => ['!+int'],
                              out => [],
                              BI  => BIdelay,
+                             native => false},
+
+    'Time.time'         => { in  => [],
+                             out => ['+int'],
+                             BI  => BItimeTime,
                              native => false},
 
     'System.gcDo'       => { in  => [],
@@ -1851,9 +1861,9 @@ $builtins = {
 
     'PerdioVar.is'      => { in  => ['value'],
                              out => ['+bool'],
-                             BI  => PerdioVar_is,
-                             module=>'perdiovar',
-                             native => true},
+                             BI  =>   PerdioVar_is,
+                             module=> 'perdiovar',
+                             native => false},
 
     'probe'             => { in  => ['value'],
                              out => [],
@@ -2273,27 +2283,27 @@ $builtins = {
     'concatenateAtomAndInt' => { in  => ['+atom','+int'],
                                  out => ['+atom'],
                                  BI  => BIconcatenateAtomAndInt,
-                                 native => true},
+                                 native => false},
 
     'getProcInfo' => { in  => ['+procedure'],
                        out => ['value'],
                        BI  => BIgetProcInfo,
-                       native => true},
+                       native => false},
 
     'setProcInfo' => { in  => ['+procedure','value'],
                        out => [],
                        BI  => BIsetProcInfo,
-                       native => true},
+                       native => false},
 
     'isBuiltin' => { in  => ['+value'],
                      out => ['+bool'],
                      BI  => BIisBuiltin,
-                     native => true},
+                     native => false},
 
     'getBuiltinName' => { in  => ['+value'],
                           out => ['+atom'],
                           BI  => BIgetBuiltinName,
-                          native => true},
+                          native => false},
 
     'nameVariable' => { in  => ['value','+atom'],
                         out => [],
