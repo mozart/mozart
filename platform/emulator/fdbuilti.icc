@@ -1,0 +1,119 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __fdbuiltin_icc__
+#define __fdbuiltin_icc__
+
+#if defined(__GNUC__) && !defined(OUTLINE) && !defined(FDOUTLINE)
+#pragma interface
+#endif
+
+
+//-----------------------------------------------------------------------------// Inlined member functions of class BIfdHeadManager
+
+inline
+Bool BIfdHeadManager::addForXorYdet(OZ_CFun func, RefsArray xregs, int arity)
+{
+  if (bifdhm_vartag[0] == SMALLINT || bifdhm_vartag[1] == SMALLINT)
+    return TRUE;
+
+  Suspension * s = createNonResSusp(func, xregs, arity);
+
+  addSuspFDVar(bifdhm_var[0], new SuspList(s, NULL), fd_det);
+  addSuspFDVar(bifdhm_var[1], new SuspList(s, NULL), fd_det);
+
+  return FALSE;
+}
+
+inline
+Bool BIfdHeadManager::expectFDish(int i, TaggedRef v, int &s)
+{
+  DebugCheck(i < 0 || i >= curr_num_of_items, error("index violation"));
+
+  bifdhm_var[i] = deref(v, bifdhm_varptr[i], bifdhm_vartag[i]);
+  TypeOfTerm vtag = bifdhm_vartag[i];
+  
+  if (isGenFDVar(v,vtag)) {
+    return TRUE;
+  } else if (vtag == SMALLINT) {
+    return smallIntValue(v) >= 0;
+  } else if (isNotCVar(vtag)) {
+    s += 1;
+    return TRUE;
+  } 
+  
+  return FALSE;
+}
+  
+inline
+Bool BIfdHeadManager::expectInt(int i, TaggedRef v, int &s)
+{
+  DebugCheck(i < 0 || i >= curr_num_of_items, error("index violation"));
+
+  bifdhm_var[i] = deref(v, bifdhm_varptr[i], bifdhm_vartag[i]);
+  TypeOfTerm vtag = bifdhm_vartag[i];
+  
+  if (vtag == SMALLINT) {
+    bifdhm_coeff[i] = smallIntValue(bifdhm_var[i]);
+    return TRUE;
+  } else if (isGenFDVar(v,vtag)) {
+    s += 1;
+    return TRUE;
+  } else if (isNotCVar(vtag)) {
+    s += 1;
+    return TRUE;
+  }
+  return FALSE;
+}
+
+
+//-----------------------------------------------------------------------------
+// Inlined functions
+
+inline
+OZ_Bool addNonResSuspForDet(TaggedRef v, TaggedRefPtr vp, TypeOfTerm vt,
+			    Suspension * s)
+{
+  if (isGenFDVar(v,vt)) {
+    addSuspFDVar(v, new SuspList(s, NULL), fd_det);
+  } else if (isSVar(vt)) {
+    addSuspSVar(v, new CondSuspList(s, NULL, isDet));
+  } else if (isUVar(vt)) {
+    addSuspOnlyToUVar(vp, new CondSuspList(s, NULL, isDet));
+  } else {
+    error("unexpected term found");
+    return FAILED;
+  }
+  return PROCEED;
+}
+  
+inline
+OZ_Bool addNonResSuspForCon(TaggedRef v, TaggedRefPtr vp, TypeOfTerm vt,
+				Suspension * s)
+{
+  if (isSVar(vt)) {
+    addSuspSVar(v, new CondSuspList(s, NULL, isConstrained));
+  } else if (isUVar(vt)) {
+    addSuspOnlyToUVar(vp, new CondSuspList(s, NULL, isConstrained));
+  } else if (isGenFDVar(v,vt)) {
+    addSuspFDVar(v, new SuspList(s, NULL), fd_size);
+  } else {
+    error("unexpected term found");
+    return FAILED;
+  }
+  return PROCEED;
+}
+
+#endif
+
+
+
+

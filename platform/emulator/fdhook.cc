@@ -18,7 +18,7 @@
 
 #include "am.hh"
 #include "board.hh"
-#include "suspension.hh"
+#include "suspensi.hh"
 #include "trail.hh"
 #include "thread.hh"
 #include "fdhook.hh"

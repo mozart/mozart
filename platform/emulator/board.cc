@@ -19,7 +19,7 @@
 #include "am.hh"
 #include "board.hh"
 #include "actor.hh"
-#include "codeArea.hh"
+#include "codearea.hh"
 
 /* some random comments:
    flags:

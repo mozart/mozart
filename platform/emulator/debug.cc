@@ -25,9 +25,9 @@
 #include "actor.hh"
 #include "am.hh"
 #include "builtins.hh"
-#include "codeArea.hh"
+#include "codearea.hh"
 #include "io.hh"
-#include "taskstack.hh"
+#include "taskstk.hh"
 #include "thread.hh"
 
 
