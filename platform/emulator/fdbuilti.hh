@@ -163,11 +163,6 @@ public:
 
   static void initStaticData(void);
 
-  OZ_Boolean expectFDish(int i, OZ_Term v, int &s);
-  OZ_Boolean expectInt(int i, OZ_Term v, int &s);
-  OZ_Boolean expectNonLin(int i, SRecord &at, SRecord &xt, OZ_Term tagged_xtc,
-                    int &s, OZ_CFun func, OZ_Term * xregs, int arity);
-
   OZ_Return addSuspFDish(OZ_CFun, OZ_Term *, int);
   OZ_Return addSuspSingl(OZ_CFun, OZ_Term *, int);
   OZ_Boolean addSuspXorYdet(OZ_CFun, OZ_Term *, int);
@@ -259,9 +254,6 @@ private:
   void _introduce(int i, OZ_Term v);
   void introduceLocal(int i, OZ_Term v);
   void saveDomainOnTopLevel(int i);
-  int simplifyBody(int ts, SRecord &a, SRecord &x,
-                   OZ_Boolean sign_bits[], double coeffs[],
-                   OZ_Term ct, int &c);
   void _propagate_unify_cd(int clauses, int variables, SRecord &st);
 
   enum {cache_slot_size = 4};
@@ -322,14 +314,6 @@ public:
   // used by putList, putNot, putLe, putGe
   OZ_Return releaseNonRes(void);
 
-  int simplifyOnUnify(SRecord &a, OZ_Boolean sign_bits[],
-                      double coeffs[], SRecord &x,
-                      OZ_Term * ct, int &c);
-
-  int simplifyOnUnify(int ts, SRecord &a, OZ_Boolean sign_bits[],
-                      double coeffs[], SRecord &x,
-                      OZ_Term * ct, int &c);
-
   OZ_Boolean _unifiedVars(void);
   OZ_Boolean unifiedVars(void);
 
@@ -350,9 +334,6 @@ public:
 
   static void restoreDomainOnToplevel(void);
 
-  static OZ_Return replacePropagator(OZ_CFun, int, OZ_Term *);
-  static OZ_Return replacePropagator(OZ_CFun, int, OZ_Term, ...);
-  static OZ_Return replacePropagator(OZ_Term, OZ_Term);
 }; // BIfdBodyManager
 
 

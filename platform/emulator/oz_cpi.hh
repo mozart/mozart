@@ -237,6 +237,7 @@ public:
   OZ_Boolean isSort(Sort_e s) {return s == sort;}
   void setSort(Sort_e s) {sort = s;}
 
+  void ask(OZ_Term);
   void enter(OZ_Term);
   void enterSpec(OZ_Term);
   OZ_Boolean leave(void) { return isSort(sgl_e) ? OZ_FALSE : tell(); }
