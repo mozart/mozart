@@ -327,16 +327,17 @@ loop:
       goto next;
     goto fail;
 
-  case TAG_EXT:
-    {
-      int res = tagged2Extension(term1)->eqV(term2);
-      if (res == PROCEED)
-	goto next;
-      result = res;
-      goto fail;
-    }
   case TAG_CONST:
     switch (tagged2Const(term1)->getType()) {
+    case Co_Extension:
+      {
+	int res = tagged2Extension(term1)->eqV(term2);
+	if (res == PROCEED)
+	  goto next;
+	result = res;
+	goto fail;
+      }
+
     case Co_Float:
       if (floatEq(term1,term2))
 	goto next;
