@@ -32,7 +32,12 @@
 //-----------------------------------------------------------------------------
 
 //#define ADDITIONALPRUNING
+/*
+  the following specifies whether constructive disjunction shall be
+  used for cumulative in the reification loop
+*/
 
+#define CONSTRUCTIVEDISJ
 
 
 static inline int intMin(int a, int b) { return a < b ? a : b; }
@@ -128,6 +133,9 @@ OZ_Return TaskIntervalsPropagator::propagate(void)
 {
   int &ts  = reg_sz;
   int * dur = reg_offset;
+
+  // if we have no tasks the prop returns trivially true
+  if (ts == 0) return PROCEED;
 
   struct Set {
     int low, up, dur, extSize, lst, ect;
@@ -660,6 +668,9 @@ OZ_Return CPIteratePropagatorCumTI::propagate(void)
   int * use    = reg_use;
   int capacity = reg_capacity;
 
+  // if we have no tasks the prop returns trivially true
+  if (ts == 0) return PROCEED;
+
   DECL_DYN_ARRAY(OZ_FDIntVar, x, ts);
 
   PropagatorController_VV P(ts, x);
@@ -1066,6 +1077,21 @@ reifiedloop:
          if (xui + di <= xlj) continue;
          int xuj = MinMax[j].max, dj = dur[j], xli = MinMax[i].min;
          if (xuj + dj <= xli) continue;
+#ifdef CONSTRUCTIVEDISJ
+         // constructive disjunction
+         int lowx = xuj-di+1, lowy = xui-dj+1;
+         int upx = xlj+dj-1, upy = xli+di-1;
+         if (lowx <= upx) {
+           OZ_FiniteDomain la;
+           la.initRange(lowx,upx);
+           FailOnEmpty(*x[i] -= la);
+         }
+         if (lowy <= upy) {
+           OZ_FiniteDomain la;
+           la.initRange(lowy,upy);
+           FailOnEmpty(*x[j] -= la);
+         }
+#endif
          if (xli + di > xuj) {
            if (xuj > xui - dj) {
              disjFlag = 1;
@@ -1295,7 +1321,7 @@ capLoop:
                 FailOnEmpty(*x[i] -= la);
               }
               last = right;
-              }
+            }
           }
         }
       }

@@ -109,6 +109,12 @@ struct StartDurTerms {
 };
 
 
+/*
+This quicksort procedure is necessary
+because the provided quicksort is different
+on different operating systems. Thus, the order
+of equal elements is not the same on different systems
+*/
 template <class T>
 void myqsort(T * my, int left, int right,
              int (*compar)(const T &a, const T &b))
@@ -243,6 +249,9 @@ OZ_Return CPIteratePropagator::propagate(void)
 {
   int &ts  = reg_sz;
   int * dur = reg_offset;
+
+  // if we have no tasks the prop returns trivially true
+  if (ts == 0) return PROCEED;
 
   DECL_DYN_ARRAY(OZ_FDIntVar, x, ts);
   PropagatorController_VV P(ts, x);
@@ -909,6 +918,9 @@ OZ_Return DisjunctivePropagator::propagate(void)
   int &ts  = reg_sz;
   int * dur = reg_offset;
 
+  // if we have no tasks the prop returns trivially true
+  if (ts == 0) return PROCEED;
+
   DECL_DYN_ARRAY(OZ_FDIntVar, x, ts);
   PropagatorController_VV P(ts, x);
 
@@ -1005,12 +1017,15 @@ int ozcdecl CompareBounds(const int &Int1, const int &Int2) {
   else return 0;
 }
 
-
+//////////
+// CONSTRUCTOR
+//////////
 CPIteratePropagatorCap::CPIteratePropagatorCap(OZ_Term tasks,
                                                OZ_Term starts,
                                                OZ_Term durs,
                                                OZ_Term use,
-                                               OZ_Term cap)
+                                               OZ_Term cap,
+                                               int flag)
   : Propagator_VD_VI_VI_I(OZ_vectorSize(tasks))
 {
 
@@ -1039,13 +1054,17 @@ CPIteratePropagatorCap::CPIteratePropagatorCap(OZ_Term tasks,
     reg_offset[i] = sdu[i].dur;
     reg_use[i]    = sdu[i].use;
   }
+  reg_flag = flag;
 }
 
-OZ_C_proc_begin(sched_cpIterateCap, 5)
+//////////
+// BUILTIN
+//////////
+OZ_C_proc_begin(sched_cpIterateCap, 6)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_VECT OZ_EM_FD
                    "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT
-                   "," OZ_EM_VECT OZ_EM_INT);
+                   "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_INT);
 
   {
     PropagatorExpect pe;
@@ -1055,6 +1074,7 @@ OZ_C_proc_begin(sched_cpIterateCap, 5)
     OZ_EXPECT(pe, 2, expectProperRecordInt);
     OZ_EXPECT(pe, 3, expectProperRecordInt);
     OZ_EXPECT(pe, 4, expectVectorInt);
+    OZ_EXPECT(pe, 5, expectInt);
     SAMELENGTH_VECTORS(1, 2);
     SAMELENGTH_VECTORS(1, 3);
   }
@@ -1084,7 +1104,8 @@ OZ_C_proc_begin(sched_cpIterateCap, 5)
     }
 
     OZ_Return r = pe.impose(new CPIteratePropagatorCap(tasks, starts, durs,
-                                                       use, capacity),
+                                                       use, capacity,
+                                                       OZ_intToC(OZ_args[5])),
                             OZ_getLowPrio());
 
     if (r == FAILED) return FAILED;
@@ -1100,7 +1121,9 @@ struct Set2 {
   int * ext;
 };
 
-
+//////////
+// RUN METHOD
+//////////
 OZ_Return CPIteratePropagatorCap::propagate(void)
 {
 
@@ -1113,6 +1136,9 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
   int * use    = reg_use;
   int capacity = reg_capacity;
 
+  // if we have no tasks the prop returns trivially true
+  if (ts == 0) return PROCEED;
+
   DECL_DYN_ARRAY(OZ_FDIntVar, x, ts);
 
   PropagatorController_VV P(ts, x);
@@ -1122,11 +1148,6 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
     x[i].read(reg_l[i]);
 
   xx = x;
-  /*
-  for (i = ts; i--; ){
-    dd[i] = dur[i];
-  }
-  */
   dd = reg_offset;
 
 
@@ -1167,42 +1188,44 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
 
   // memory is automatically disposed when propagator is left
 
-  //////////
-  // do the reified stuff for task pairs.
-  //////////
-  for (i=0; i<ts; i++)
-    for (j=i+1; j<ts; j++) {
-      if (use[i] + use[j] > capacity) {
-        int xui = MinMax[i].max, di = dur[i], xlj = MinMax[j].min;
-        if (xui + di <= xlj) continue;
-        int xuj = MinMax[j].max, dj = dur[j], xli = MinMax[i].min;
-        if (xuj + dj <= xli) continue;
-        if (xli + di > xuj) {
-          int val1 = xui - dj;
-          if (xuj > val1) {
-            FailOnEmpty(*x[j] <= val1);
-            MinMax[j].max = x[j]->getMaxElem();
+  if (reg_flag == 1) {
+    //////////
+    // do the reified stuff for task pairs.
+    //////////
+    for (i=0; i<ts; i++)
+      for (j=i+1; j<ts; j++) {
+        if (use[i] + use[j] > capacity) {
+          int xui = MinMax[i].max, di = dur[i], xlj = MinMax[j].min;
+          if (xui + di <= xlj) continue;
+          int xuj = MinMax[j].max, dj = dur[j], xli = MinMax[i].min;
+          if (xuj + dj <= xli) continue;
+          if (xli + di > xuj) {
+            int val1 = xui - dj;
+            if (xuj > val1) {
+              FailOnEmpty(*x[j] <= val1);
+              MinMax[j].max = x[j]->getMaxElem();
+            }
+            int val2 = xlj + dj;
+            if (xli < val2) {
+              FailOnEmpty(*x[i] >= val2);
+              MinMax[i].min = x[i]->getMinElem();
+            }
           }
-          int val2 = xlj + dj;
-          if (xli < val2) {
-            FailOnEmpty(*x[i] >= val2);
-            MinMax[i].min = x[i]->getMinElem();
-          }
-        }
-        if (xlj + dj > xui) {
-          int val1 = xuj - di;
-          if (xui > val1) {
-            FailOnEmpty(*x[i] <= val1);
-            MinMax[i].max = x[i]->getMaxElem();
-          }
-          int val2 = xli + di;
-          if (xlj < val2) {
-            FailOnEmpty(*x[j] >= val2);
-            MinMax[j].min = x[j]->getMinElem();
+          if (xlj + dj > xui) {
+            int val1 = xuj - di;
+            if (xui > val1) {
+              FailOnEmpty(*x[i] <= val1);
+              MinMax[i].max = x[i]->getMaxElem();
+            }
+            int val2 = xli + di;
+            if (xlj < val2) {
+              FailOnEmpty(*x[j] >= val2);
+              MinMax[j].min = x[j]->getMinElem();
+            }
           }
         }
       }
-    }
+  }
 
 /* it is not worth the effort
 // energy from Baptistes thesis
@@ -1275,9 +1298,10 @@ cploop:
   //////////
   // sort by descending release date; ie. min(s1) > min(s2) > min(s3) etc.
   //////////
-  myqsort((int *)GET_ARRAY(forCompSet0Up), 0, ts-1,compareDescRel );
+  if (reg_flag == 1) {
+    myqsort((int *)GET_ARRAY(forCompSet0Up), 0, ts-1,compareDescRel );
+  }
 
-  {
   for (int upTask=0; upTask < ts; upTask++) {
 
     kUp = MinMax[upTask].max + dur[upTask];
@@ -1303,16 +1327,21 @@ cploop:
                                 intMin(intMax(0,kUp-xlMaxDL+dl),
                                        intMin(dl,kUp-kDown)));
         overlap += overlapTmp*use[l];
-        if (xlMaxDL > kUp) {
-          outSide[outSideSize++] = l;
+        if (reg_flag == 1) {
+          if (xlMaxDL > kUp) {
+            outSide[outSideSize++] = l;
+          }
         }
       }
     }
-    for (l=0; l<ts; l++) {
-      int realL = forCompSet0Up[l];
-      if ( (MinMax[realL].min < kDown) &&
-           (MinMax[realL].max + dur[realL] <= kUp) )
-        compSet0[compSet0Size++] = realL;
+
+    if (reg_flag == 1) {
+      for (l=0; l<ts; l++) {
+        int realL = forCompSet0Up[l];
+        if ( (MinMax[realL].min < kDown) &&
+             (MinMax[realL].max + dur[realL] <= kUp) )
+          compSet0[compSet0Size++] = realL;
+      }
     }
 
     if ((kUp-kDown)*capacity < use0+overlap) {
@@ -1320,6 +1349,9 @@ cploop:
     }
 
 
+    if (reg_flag == 0) goto endUp;
+
+    {
     struct Set2 *oset = &Sets[0];
     oset->dSi = use0;
     oset->sUp = kUp;
@@ -1410,12 +1442,16 @@ cploop:
       }
       else lCount++;
     }
-  }
+    }
+  endUp:
+    ;
   }
 
-  for (i=0; i<ts; i++) {
-    MinMax[i].min = x[i]->getMinElem();
-    MinMax[i].max = x[i]->getMaxElem();
+  if (reg_flag == 1) {
+    for (i=0; i<ts; i++) {
+      MinMax[i].min = x[i]->getMinElem();
+      MinMax[i].max = x[i]->getMaxElem();
+    }
   }
 
   //////////
@@ -1427,10 +1463,10 @@ cploop:
   //////////
   // sort by ascending due date; ie. max(s1)+dur(s1) < max(s2)+dur(s2)
   //////////
-  myqsort((int *) GET_ARRAY(forCompSet0Down), 0, ts-1, compareAscDue);
+  if (reg_flag == 1) {
+    myqsort((int *) GET_ARRAY(forCompSet0Down), 0, ts-1, compareAscDue);
+  }
 
-
-  {
   for (int downTask=0; downTask < ts; downTask++) {
 
     kUp = MinMax[downTask].max + dur[downTask];
@@ -1458,23 +1494,30 @@ cploop:
                                 intMin(intMax(0,kUp-xlMaxDL+dl),
                                        intMin(dl,kUp-kDown)));
         overlap += overlapTmp*use[l];
-        if (xlMin < kDown) {
-          outSide[outSideSize++] = l;
+        if (reg_flag == 1) {
+          if (xlMin < kDown) {
+            outSide[outSideSize++] = l;
+          }
         }
       }
     }
 
-    for (l=0; l<ts; l++) {
-      int realL = forCompSet0Down[l];
-      if ( (MinMax[realL].min >= kDown) &&
-           (MinMax[realL].max + dur[realL] > kUp) )
-        compSet0[compSet0Size++] = realL;
-    }
+     if (reg_flag == 1) {
+       for (l=0; l<ts; l++) {
+         int realL = forCompSet0Down[l];
+         if ( (MinMax[realL].min >= kDown) &&
+              (MinMax[realL].max + dur[realL] > kUp) )
+           compSet0[compSet0Size++] = realL;
+       }
+     }
 
     if ( (kUp-kDown)*capacity < use0+overlap) {
       goto failure;
     }
 
+    if (reg_flag == 0) goto endDown;
+
+    {
     struct Set2 *oset = &Sets[0];
     oset->dSi = use0;
     oset->sUp = kUp;
@@ -1573,19 +1616,24 @@ cploop:
       }
       else lCount++;
     }
-  }
-  }
-  for (i=0; i<ts; i++) {
-    MinMax[i].min = x[i]->getMinElem();
-    MinMax[i].max = x[i]->getMaxElem();
+    }
+  endDown:
+    ;
   }
 
+   if (reg_flag == 1) {
+     for (i=0; i<ts; i++) {
+       MinMax[i].min = x[i]->getMinElem();
+       MinMax[i].max = x[i]->getMaxElem();
+     }
 
-  if ((upFlag == 1)||(downFlag==1)) {
-    upFlag = 0;
-    downFlag = 0;
-    goto cploop;
-  }
+     if ((upFlag == 1)||(downFlag==1)) {
+       upFlag = 0;
+       downFlag = 0;
+       goto cploop;
+     }
+   }
+   else goto capLoop;
 
 reifiedloop:
 
@@ -1996,6 +2044,9 @@ OZ_Return CPIteratePropagatorCapUp::propagate(void)
   int * dur    = reg_offset;
   int * use    = reg_use;
   int capacity = reg_capacity;
+
+  // if we have no tasks the prop returns trivially true
+  if (ts == 0) return PROCEED;
 
   DECL_DYN_ARRAY(OZ_FDIntVar, x, ts);
 
