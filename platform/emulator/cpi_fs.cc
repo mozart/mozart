@@ -65,7 +65,7 @@ void OZ_FSetVar::ask(OZ_Term v)
     setPtr = &set;
     setSort(val_e);
   } else {
-    Assert(isGenFSetVar(v, vtag));
+    Assert(isGenFSetVar(v));
 
     OzFSVariable * fsvar = tagged2GenFSetVar(v);
 
@@ -95,7 +95,7 @@ void OZ_FSetVar::read(OZ_Term v)
     known_not_in = (fs_sup+1) - known_in;
     card_size = 1;
   } else {
-    Assert(isCVar(vtag));
+    Assert(oz_isCVar(v));
 
     if (Propagator::getRunningPropagator()->isLocal()) {
     // local variable per definition
@@ -161,8 +161,6 @@ void OZ_FSetVar::readEncap(OZ_Term v)
     setState(loc_e); // TMUELLER: why, ought to be redundant
     setSort(val_e);
   } else {
-    Assert(isCVar(vtag));
-
     setState(encap_e);
     setSort(var_e);
 

@@ -1,7 +1,6 @@
 
-/*  A Bison parser, made from /home/duchier/mozart/platform/emulator/parser.yy
- by  GNU Bison version 1.27
-  */
+/*  A Bison parser, made from /home/chris/devel/mozart/platform/emulator/parser.yy
+    by GNU Bison version 1.28  */
 
 #define YYBISON 1  /* Identify Bison output.  */
 
@@ -508,9 +507,9 @@ static
 OZ_Term makeLongPos(OZ_Term pos1, OZ_Term pos2) {
   return 
     newCTerm(PA_pos,
-	     OZ_subtree(pos1,newSmallInt(1)),OZ_subtree(pos1,newSmallInt(2)),
-	     OZ_subtree(pos1,newSmallInt(3)),OZ_subtree(pos2,newSmallInt(1)),
-	     OZ_subtree(pos2,newSmallInt(2)),OZ_subtree(pos2,newSmallInt(3)));
+	     OZ_subtree(pos1,makeTaggedSmallInt(1)),OZ_subtree(pos1,makeTaggedSmallInt(2)),
+	     OZ_subtree(pos1,makeTaggedSmallInt(3)),OZ_subtree(pos2,makeTaggedSmallInt(1)),
+	     OZ_subtree(pos2,makeTaggedSmallInt(2)),OZ_subtree(pos2,makeTaggedSmallInt(3)));
 }
 
 static
@@ -560,7 +559,7 @@ OZ_Term makeInt(char * chars, OZ_Term pos) {
 inline
 OZ_Term makeInt(const char c, OZ_Term pos) {
   SRecord * t = SRecord::newSRecord(PA_fInt, 2);
-  t->setArg(0, newSmallInt((unsigned char) c));
+  t->setArg(0, makeTaggedSmallInt((unsigned char) c));
   t->setArg(1, pos);
   return makeTaggedSRecord(t);
 }
@@ -1538,7 +1537,7 @@ static const short yycheck[] = {    15,
 };
 /* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
 
-/* This file comes from bison-1.27.  */
+/* This file comes from bison-1.28.  */
 
 /* Skeleton output parser for bison,
    Copyright (C) 1984, 1989, 1990 Free Software Foundation, Inc.
@@ -2371,7 +2370,7 @@ case 85:
 					  newCTerm(PA_fAtom,oz_atom("by"),NameUnit),
 					  (yyvsp[-1].t == 0)?makeInt("1",NameUnit):yyvsp[-1].t,
 					  0),
-				  makeLongPos(OZ_subtree(yyvsp[-7].t,newSmallInt(2)),yyvsp[0].t));
+				  makeLongPos(OZ_subtree(yyvsp[-7].t,makeTaggedSmallInt(2)),yyvsp[0].t));
 		  ;
     break;}
 case 86:
@@ -2385,7 +2384,7 @@ case 86:
 					    newCTerm(PA_fAtom,oz_atom("in"),NameUnit),
 					    yyvsp[-2].t,
 					    0),
-				    makeLongPos(OZ_subtree(yyvsp[-5].t,newSmallInt(2)),yyvsp[0].t));
+				    makeLongPos(OZ_subtree(yyvsp[-5].t,makeTaggedSmallInt(2)),yyvsp[0].t));
 		    } else {
 		      yyval.t = newCTerm(PA_fMacro,
 				    oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
@@ -2393,7 +2392,7 @@ case 86:
 					    newCTerm(PA_fAtom,oz_atom("next"),NameUnit),
 					    yyvsp[-1].t,
 					    0),
-				    makeLongPos(OZ_subtree(yyvsp[-5].t,newSmallInt(2)),yyvsp[0].t));
+				    makeLongPos(OZ_subtree(yyvsp[-5].t,makeTaggedSmallInt(2)),yyvsp[0].t));
 		    }
 		  ;
     break;}
@@ -2945,7 +2944,7 @@ case 261:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 262:
-{ OZ_Term expect = parserExpect? parserExpect: newSmallInt(0);
+{ OZ_Term expect = parserExpect? parserExpect: makeTaggedSmallInt(0);
 		    yyval.t = newCTerm(PA_fParser,yyvsp[-6].t,yyvsp[-5].t,yyvsp[-4].t,yyvsp[-3].t,yyvsp[-2].t,expect,
 				  makeLongPos(yyvsp[-7].t,yyvsp[0].t)); ;
     break;}

@@ -57,19 +57,19 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
     DEREF(h, hptr, htag);
     switch (htag) {
 
-    case OZFLOAT:
+    case TAG_FLOAT:
       o << floatValue(h);
       break;
 
-    case LITERAL:
+    case TAG_LITERAL:
       o << tagged2Literal(h)->getPrintName();
       break;
 
-    case LTUPLE:
+    case TAG_LTUPLE:
       outputArgsList(o, h, TRUE);
       break;
 
-    case SRECORD:
+    case TAG_SRECORD:
       {
 	SRecord * st = tagged2SRecord(h);
 	if (st->isTuple()) {
@@ -78,19 +78,19 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
 	}
       }
       break;
-    case UVAR: // FUT
+    case TAG_UVAR:
       o << '_';
       break; 
 
-    case SMALLINT:
-      o << smallIntValue(h);
+    case TAG_SMALLINT:
+      o << tagged2SmallInt(h);
       break;
 
-    case FSETVALUE:
+    case TAG_FSETVALUE:
       o << tagged2FSetValue(h)->toString();
       break;
 
-    case CVAR:
+    case TAG_CVAR:
       {
 	o << oz_varGetName(makeTaggedRef(hptr));
 
@@ -183,7 +183,7 @@ OZ_Return OZ_Propagator::replaceBy(OZ_Term a, OZ_Term b)
 
 OZ_Return OZ_Propagator::replaceByInt(OZ_Term v, int i)
 {  
-  return OZ_unify(v, newSmallInt(i)); // mm_u
+  return OZ_unify(v, makeTaggedSmallInt(i)); // mm_u
 }
 
 OZ_Return OZ_Propagator::postpone(void)
@@ -226,15 +226,15 @@ void OZ_Propagator::impose(OZ_Propagator * p)
 
   for (int i = staticSpawnVarsNumberProp; i--; ) {
     OZ_Term v = makeTaggedRef(staticSpawnVarsProp[i].var);
-    DEREF(v, vptr, vtag);
+    DEREF(v, vptr, _vtag);
 
-    Assert(isVariableTag(vtag));
+    Assert(oz_isVariable(v));
 
     Bool isStorePatched = 0, isReifiedPatched = 0, isBoolPatched = 0;
     OZ_FiniteDomain * tmp_fd = NULL;
 
     // TMUELLER: needs to extended to FSet and GenConstraint
-    if (isCVar(vtag)) {
+    if (oz_isCVar(v)) {
       isStorePatched = testResetStoreFlag(v);
       isReifiedPatched = testResetReifiedFlag(v);
       if (isReifiedPatched) {
@@ -243,13 +243,13 @@ void OZ_Propagator::impose(OZ_Propagator * p)
       }
     }
 
-    if (isGenFDVar(v, vtag)) {
+    if (isGenFDVar(v)) {
       addSuspFDVar(v, prop, staticSpawnVarsProp[i].state.fd);
       all_local &= oz_isLocalVar(tagged2CVar(v));
-    } else if (isGenOFSVar(v, vtag)) {
+    } else if (isGenOFSVar(v)) {
       addSuspOFSVar(v, prop);
       all_local &= oz_isLocalVar(tagged2CVar(v));
-    } else if (isGenBoolVar(v, vtag)) {
+    } else if (isGenBoolVar(v)) {
       addSuspBoolVar(v, prop);  
       all_local &= oz_isLocalVar(tagged2CVar(v));
       // mm2:
@@ -257,12 +257,12 @@ void OZ_Propagator::impose(OZ_Propagator * p)
       //      addSuspSVar(v, prop);
       //      all_local &= isLocalVar(v);
     } else {
-      Assert(isUVar(vtag));
+      Assert(oz_isUVar(v));
       oz_var_addSusp(vptr, prop);
       all_local &= oz_isLocalVar(tagged2CVar(*vptr));
     }
 
-    if (isCVar(vtag)) {
+    if (oz_isCVar(v)) {
       if (isStorePatched) 
 	setStoreFlag(v);
       if (isReifiedPatched)

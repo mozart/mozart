@@ -157,7 +157,7 @@ void SiteUnify(TaggedRef val1,TaggedRef val2)
   TaggedRef aux1 = val1; DEREF(aux1,_1,_2);
   TaggedRef aux2 = val2; DEREF(aux2,_3,_4);
   
-    if (isUVar(aux1) || isUVar(aux2)) {
+    if (oz_isUVar(aux1) || oz_isUVar(aux2)) {
       // cannot fail --> do it in current thread
     OZ_unify(val1,val2); // mm2: should be bind?
     return;
@@ -338,7 +338,7 @@ void cellifyObject(Object* o){
   if(stateIsCell(state)) return;
   SRecord *r = getRecord(state);
   Assert(r!=NULL);
-  Tertiary *cell = tagged2Tert(OZ_newCell(makeTaggedSRecord(r)));
+  Tertiary *cell = (Tertiary *) tagged2Const(OZ_newCell(makeTaggedSRecord(r)));
   o->setState(cell);
   transferWatchers(o);
 }

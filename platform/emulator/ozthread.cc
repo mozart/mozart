@@ -84,18 +84,18 @@ public:
 Bool oz_isThread(TaggedRef term)
 {
   return oz_isExtension(term) &&
-    oz_tagged2Extension(term)->getIdV() == OZ_E_THREAD;
+    tagged2Extension(term)->getIdV() == OZ_E_THREAD;
 }
 
 Thread *oz_ThreadToC(TaggedRef term)
 {
   Assert(oz_isThread(term));
-  return ((OzThread *) oz_tagged2Extension(term))->getThread();
+  return ((OzThread *) tagged2Extension(term))->getThread();
 }
 
 TaggedRef oz_thread(Thread *tt)
 {
-  return oz_makeTaggedExtension(new OzThread(tt));
+  return makeTaggedExtension(new OzThread(tt));
 }
 
 OZ_Return OzThread::eqV(OZ_Term term)

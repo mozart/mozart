@@ -306,7 +306,7 @@ ProgramCounter copyCode(ProgramCounter start, TaggedRef list)
     }
     if (op == DEBUGENTRY) {
       TaggedRef file = getTaggedArg(lastPC+1);
-      int line = smallIntValue(getNumberArg(lastPC+2));
+      int line = tagged2SmallInt(getNumberArg(lastPC+2));
       CodeArea::writeDebugInfo(lastPC,file,line);
     }
   }

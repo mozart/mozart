@@ -82,7 +82,7 @@ OZ_BI_define(win32_getRegistryKey,3,1)
 	ByteString *s = new ByteString(buf_size);
 	for (int i = 0; i < buf_size; i++)
 	  s->getByte(i) = buf[i];
-	res = oz_makeTaggedExtension(s);
+	res = makeTaggedExtension(s);
       }
       break;
     case REG_DWORD:

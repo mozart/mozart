@@ -57,8 +57,8 @@ OZ_BI_define(BIfdIs, 1, 1)
     oz_suspendOnPtr(fdptr);
   
   OZ_RETURN(oz_bool(isPosSmallFDInt(fd) || 
-		    isGenFDVar(fd, fdtag) || 
-		    isGenBoolVar(fd, fdtag)));
+		    isGenFDVar(fd) || 
+		    isGenBoolVar(fd)));
 } OZ_BI_end
 
 
@@ -73,10 +73,10 @@ OZ_BI_define(BIfdMin, 1, 1)
 
   if(isSmallIntTag(vartag)) {
     OZ_RETURN(var);
-  } else if (isGenFDVar(var,vartag)) {
-    OZ_RETURN(newSmallInt(tagged2GenFDVar(var)->getDom().getMinElem()));
-  } else if (isGenBoolVar(var,vartag)) {
-    OZ_RETURN(newSmallInt(0));
+  } else if (isGenFDVar(var)) {
+    OZ_RETURN(makeTaggedSmallInt(tagged2GenFDVar(var)->getDom().getMinElem()));
+  } else if (isGenBoolVar(var)) {
+    OZ_RETURN(makeTaggedSmallInt(0));
   } else if (oz_isNonKinded(var)) {
     oz_suspendOnPtr(varptr);
   } else {
@@ -92,10 +92,10 @@ OZ_BI_define(BIfdMax, 1, 1)
 
   if(isSmallIntTag(vartag)) {
     OZ_RETURN(var);   
-  } else if (isGenFDVar(var,vartag)) {
-    OZ_RETURN(newSmallInt(tagged2GenFDVar(var)->getDom().getMaxElem()));
-  } else if (isGenBoolVar(var,vartag)) {
-    OZ_RETURN(newSmallInt(1));
+  } else if (isGenFDVar(var)) {
+    OZ_RETURN(makeTaggedSmallInt(tagged2GenFDVar(var)->getDom().getMaxElem()));
+  } else if (isGenBoolVar(var)) {
+    OZ_RETURN(makeTaggedSmallInt(1));
   } else if (oz_isNonKinded(var)) {
     oz_suspendOnPtr(varptr);
   } else {
@@ -112,10 +112,10 @@ OZ_BI_define(BIfdMid, 1, 1)
 
   if(isSmallIntTag(vartag)) {
     OZ_RETURN(var);
-  } else if (isGenFDVar(var,vartag)) {
-    OZ_RETURN(newSmallInt(tagged2GenFDVar(var)->getDom().getMidElem()));
-  } else if (isGenBoolVar(var,vartag)) {
-    OZ_RETURN(newSmallInt(0));
+  } else if (isGenFDVar(var)) {
+    OZ_RETURN(makeTaggedSmallInt(tagged2GenFDVar(var)->getDom().getMidElem()));
+  } else if (isGenBoolVar(var)) {
+    OZ_RETURN(makeTaggedSmallInt(0));
   } else if (oz_isNonKinded(var)) {
     oz_suspendOnPtr(varptr);
   } else {
@@ -134,7 +134,7 @@ OZ_BI_define(BIfdNextSmaller, 2, 1)
   if (isVariableTag(valtag)) {
     oz_suspendOnPtr(valptr);
   } else if (isSmallIntTag(valtag)) {
-    value = smallIntValue(val);
+    value = tagged2SmallInt(val);
   } else {
     TypeError(1, "");
   }
@@ -142,17 +142,17 @@ OZ_BI_define(BIfdNextSmaller, 2, 1)
   OZ_getINDeref(0, var, varptr, vartag);
 
   if(isSmallIntTag(vartag)) {
-    if (value > smallIntValue(var))
+    if (value > tagged2SmallInt(var))
       OZ_RETURN(var);
-  } else if (isGenFDVar(var,vartag)) {
+  } else if (isGenFDVar(var)) {
     int nextSmaller = tagged2GenFDVar(var)->getDom().getNextSmallerElem(value);
     if (nextSmaller != -1) 
-      OZ_RETURN(newSmallInt(nextSmaller));
-  } else if (isGenBoolVar(var,vartag)) {
+      OZ_RETURN(makeTaggedSmallInt(nextSmaller));
+  } else if (isGenBoolVar(var)) {
     if (value > 1)
-      OZ_RETURN(newSmallInt(1));
+      OZ_RETURN(makeTaggedSmallInt(1));
     else if (value > 0)
-      OZ_RETURN(newSmallInt(0));
+      OZ_RETURN(makeTaggedSmallInt(0));
   } else if (oz_isNonKinded(var)) {
     oz_suspendOnPtr(varptr);
   } else {
@@ -172,7 +172,7 @@ OZ_BI_define(BIfdNextLarger, 2, 1)
   if (oz_isVariable(valtag)) {
     oz_suspendOnPtr(valptr);
   } else if (isSmallIntTag(valtag)) {
-    value = smallIntValue(val);
+    value = tagged2SmallInt(val);
   } else {
     TypeError(1, "");
   }
@@ -180,17 +180,17 @@ OZ_BI_define(BIfdNextLarger, 2, 1)
   OZ_getINDeref(0, var, varptr, vartag);
 
   if(isSmallIntTag(vartag)) {
-    if (value < smallIntValue(var))
+    if (value < tagged2SmallInt(var))
       OZ_RETURN(var);
-  } else if (isGenFDVar(var,vartag)) {
+  } else if (isGenFDVar(var)) {
     int nextLarger = tagged2GenFDVar(var)->getDom().getNextLargerElem(value);
     if (nextLarger != -1) 
-      OZ_RETURN(newSmallInt(nextLarger));
-  } else if (isGenBoolVar(var,vartag)) {
+      OZ_RETURN(makeTaggedSmallInt(nextLarger));
+  } else if (isGenBoolVar(var)) {
     if (value < 0)
-      OZ_RETURN(newSmallInt(0));
+      OZ_RETURN(makeTaggedSmallInt(0));
     else if (value < 1)
-      OZ_RETURN(newSmallInt(1));
+      OZ_RETURN(makeTaggedSmallInt(1));
   } else if (oz_isNonKinded(var)) {
     oz_suspendOnPtr(varptr);
   } else {
@@ -208,12 +208,12 @@ OZ_BI_define(BIfdGetAsList, 1, 1)
   
   if(isSmallIntTag(vartag)) {
     OZ_RETURN(makeTaggedLTuple(new LTuple(var, AtomNil)));
-  } else if (isGenFDVar(var,vartag)) {
+  } else if (isGenFDVar(var)) {
     OZ_FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
     OZ_RETURN(fdomain.getDescr());
-  } else if (isGenBoolVar(var,vartag)) {
-    OZ_RETURN(makeTaggedLTuple(new LTuple(oz_pair2(newSmallInt(0), 
-						   newSmallInt(1)), 
+  } else if (isGenBoolVar(var)) {
+    OZ_RETURN(makeTaggedLTuple(new LTuple(oz_pair2(makeTaggedSmallInt(0), 
+						   makeTaggedSmallInt(1)), 
 					  AtomNil))); 
   } else if (oz_isNonKinded(var)) {
     oz_suspendOnPtr(varptr);
@@ -230,12 +230,12 @@ OZ_BI_define(BIfdGetCardinality, 1, 1)
   OZ_getINDeref(0, var, varptr, vartag);
 
   if(isSmallIntTag(vartag)) {
-    OZ_RETURN(newSmallInt(1));
-  } else if (isGenFDVar(var,vartag)) {
+    OZ_RETURN(makeTaggedSmallInt(1));
+  } else if (isGenFDVar(var)) {
     OZ_FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
-    OZ_RETURN(newSmallInt(fdomain.getSize()));
-  } else if (isGenBoolVar(var,vartag)) {
-    OZ_RETURN(newSmallInt(2));
+    OZ_RETURN(makeTaggedSmallInt(fdomain.getSize()));
+  } else if (isGenBoolVar(var)) {
+    OZ_RETURN(makeTaggedSmallInt(2));
   } else if (oz_isNonKinded(var)) {
     oz_suspendOnPtr(varptr);
   } else { 
@@ -298,9 +298,9 @@ OZ_BI_define(BIfdWatchSize, 3, 0)
 // get the current size of the domain
   if(isSmallIntTag(vtag)) {
     vsize = 1;
-  } else if (isGenFDVar(v,vtag)) {
+  } else if (isGenFDVar(v)) {
     vsize = tagged2GenFDVar(v)->getDom().getSize();
-  } else if (isGenBoolVar(v, vtag)) {
+  } else if (isGenBoolVar(v)) {
     vsize = 2;
   } else if (oz_isNonKinded(v)) {
     oz_suspendOnPtr(vptr);
@@ -315,7 +315,7 @@ OZ_BI_define(BIfdWatchSize, 3, 0)
   if (isVariableTag(vstag)) {
     oz_suspendOnPtr(vsptr);
   } else if (isSmallIntTag(vstag)) {
-    size = smallIntValue(vs);
+    size = tagged2SmallInt(vs);
   } else {
     TypeError(1, "");
   }
@@ -351,11 +351,11 @@ OZ_BI_define(BIfdWatchMin, 3, 0)
 
 // get the current lower bound of the domain
   if(isSmallIntTag(vtag)) {
-    vmin = vmax = smallIntValue(v);
-  } else if (isGenFDVar(v,vtag)) {
+    vmin = vmax = tagged2SmallInt(v);
+  } else if (isGenFDVar(v)) {
     vmin = tagged2GenFDVar(v)->getDom().getMinElem();
     vmax = tagged2GenFDVar(v)->getDom().getMaxElem();
-  } else if (isGenBoolVar(v, vtag)) {
+  } else if (isGenBoolVar(v)) {
     vmin = 0;
     vmax = 1;
   } else if (oz_isNonKinded(v)) {
@@ -371,7 +371,7 @@ OZ_BI_define(BIfdWatchMin, 3, 0)
   if (isVariableTag(vmtag)) {
     oz_suspendOnPtr(vmptr);
   } else if (isSmallIntTag(vmtag)) {
-    min = smallIntValue(vm);
+    min = tagged2SmallInt(vm);
   } else {
     TypeError(1, "");
   }
@@ -405,11 +405,11 @@ OZ_BI_define(BIfdWatchMax, 3, 0)
   
 // get the current lower bound of the domain
   if(isSmallIntTag(vtag)) {
-    vmin = vmax = smallIntValue(v);
-  } else if (isGenFDVar(v,vtag)) {
+    vmin = vmax = tagged2SmallInt(v);
+  } else if (isGenFDVar(v)) {
     vmin = tagged2GenFDVar(v)->getDom().getMinElem();
     vmax = tagged2GenFDVar(v)->getDom().getMaxElem();
-  } else if (isGenBoolVar(v, vtag)) {
+  } else if (isGenBoolVar(v)) {
     vmin = 0;
     vmax = 1;
   } else if (oz_isNonKinded(v)) {
@@ -425,7 +425,7 @@ OZ_BI_define(BIfdWatchMax, 3, 0)
   if (isVariableTag(vmtag)) {
     oz_suspendOnPtr(vmptr);
   } else if (isSmallIntTag(vmtag)) {
-    max = smallIntValue(vm);
+    max = tagged2SmallInt(vm);
   } else {
     TypeError(1, "");
   }

@@ -102,7 +102,7 @@ inline
 Bool oz_isLocalVariable(TaggedRef *varPtr)
 {
   CHECK_ISVAR(*varPtr);
-  return isUVar(*varPtr)
+  return oz_isUVar(*varPtr)
     ? oz_isLocalUVar(varPtr)
     : oz_isLocalVar(tagged2CVar(*varPtr));
 }
@@ -133,7 +133,13 @@ inline
 void doBind(TaggedRef *p, TaggedRef t)
 {
   CHECK_NONVAR(t);
-  Assert(p!=_derefPtr(t));
+#ifdef DEBUG_CHECK
+  {
+    TaggedRef tt = t;
+    DEREF(tt,ttPtr,_1);
+    Assert(p != ttPtr);
+  }
+#endif
   *p = t;
 }
 

@@ -46,7 +46,7 @@ void OzBoolVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr, int e)
 {
   if (oz_isSmallInt(*trPtr)) return;
   propagate();
-  DoBind(trPtr, newSmallInt(e));
+  DoBind(trPtr, makeTaggedSmallInt(e));
   dispose();
 }
 
@@ -79,15 +79,7 @@ inline
 Bool isGenBoolVar(TaggedRef term)
 {
   GCDEBUG(term);
-  return isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_BOOL);
-}
-
-inline
-Bool isGenBoolVar(TaggedRef term, TypeOfTerm tag)
-{
-  GCDEBUG(term);
-  Assert(tag == tagTypeOf(term));
-  return isCVar(tag) && (tagged2CVar(term)->getType() == OZ_VAR_BOOL);
+  return oz_isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_BOOL);
 }
 
 inline

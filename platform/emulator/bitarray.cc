@@ -110,17 +110,15 @@ public:
 };
 
 inline
-Bool oz_isBitArray(TaggedRef term)
-{
+Bool oz_isBitArray(TaggedRef term) {
   return oz_isExtension(term) &&
-    oz_tagged2Extension(term)->getIdV() == OZ_E_BITARRAY;
+    tagged2Extension(term)->getIdV() == OZ_E_BITARRAY;
 }
 
 inline
-BitArray *tagged2BitArray(TaggedRef term)
-{
+BitArray *tagged2BitArray(TaggedRef term) {
   Assert(oz_isBitArray(term));
-  return (BitArray *) oz_tagged2Extension(term);
+  return (BitArray *) tagged2Extension(term);
 }
 
 /*===================================================================
@@ -251,7 +249,7 @@ OZ_BI_define(BIbitArray_new,2,1)
   oz_declareIntIN(0,l);
   oz_declareIntIN(1,h);
   if (l <= h)
-    OZ_RETURN(oz_makeTaggedExtension(new BitArray(l, h)));
+    OZ_RETURN(makeTaggedExtension(new BitArray(l, h)));
   else
     return oz_raise(E_ERROR,E_KERNEL,"BitArray.new",2,OZ_in(0),OZ_in(1));
 } OZ_BI_end
@@ -303,7 +301,7 @@ OZ_Return BitArray::getFeatureV(OZ_Term f,OZ_Term& v)
     return PROCEED;
   } else {
     return oz_raise(E_ERROR,E_KERNEL,"BitArray.index",2,
-		    oz_makeTaggedExtension(this),f);
+		    makeTaggedExtension(this),f);
   }
 }
 
@@ -313,7 +311,7 @@ OZ_Return BitArray::putFeatureV(OZ_Term f,OZ_Term v)
   int i = OZ_intToC(f);
   if (!checkBounds(i)) {
     return oz_raise(E_ERROR,E_KERNEL,"BitArray.index",2,
-		    oz_makeTaggedExtension(this),f);
+		    makeTaggedExtension(this),f);
   }
   if (OZ_isVariable(v)) { OZ_suspendOn(v); }
   v = oz_deref(v);
@@ -338,7 +336,7 @@ OZ_BI_define(BIbitArray_high,1,1)
 OZ_BI_define(BIbitArray_clone,1,1)
 {
   oz_declareBitArrayIN(0,b);
-  OZ_RETURN(oz_makeTaggedExtension(new BitArray(b)));
+  OZ_RETURN(makeTaggedExtension(new BitArray(b)));
 } OZ_BI_end
 
 OZ_BI_define(BIbitArray_or,2,0)
