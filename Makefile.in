@@ -176,7 +176,7 @@ oz-win::
 		   LICENSE \
 		   include share \
 		   contrib doc\
-		   platform/winbin platform/win32-i486 \
+		   winbin platform/win32-i486 \
          ) | (cd oz3; $(TAR) xf -)
 	$(INSTALL_DIR) $(WINCACHEDIR)/share
 	$(INSTALL_DIR) $(WINCACHEDIR)/doc/demo
@@ -185,15 +185,15 @@ oz-win::
 	mv oz3/share/*.so-win32-i486 $(WINCACHEDIR)/share || true
 	cp -r oz3/doc/demo/applets $(WINCACHEDIR)/doc/demo
 	(cd oz3/contrib;\
-	 rm -rf os text;\
-	 rm -rf gdbm.ozf LP.ozf Psql.ozf RI.ozf Reflect.ozf DaVinci.ozf)
+	 rm -rf text os/io.ozf os/process.ozf os/open.ozf;\
+	 rm -rf LP.ozf Psql.ozf RI.ozf Reflect.ozf DaVinci.ozf)
 	mv oz3/contrib $(WINCACHEDIR)
 	rm -rf oz3/share/doc oz3/platform/win32-i486/oztool.sh
 	mv $(WINCACHEDIR)/share/Init.ozf oz3/share
 	for i in ozc ozd ozl; do \
-	  cat oz3/platform/winbin/ozwrapper.exe \
-	      $(PREFIX)/bin/$$i > oz3/platform/winbin/$$i.exe;\
+	  cat oz3/winbin/ozwrapper.exe \
+	      $(PREFIX)/bin/$$i > oz3/winbin/$$i.exe;\
         done
 	i386-mingw32-strip oz3/platform/win32-i486/*.exe
-	mv oz3/platform/winbin oz3/bin
-	cp /project/ps/soft/win32-i486/dlls/*.dll oz3/platform/win32-i486
+	mv oz3/winbin oz3/bin
+
