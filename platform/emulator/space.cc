@@ -269,18 +269,3 @@ void oz_checkExtSuspension(Suspension susp, Board * varHome) {
   }
 }
 
-void _checkExtSuspension(Suspension susp) {
-  Assert(susp.wasExtSuspension());
-
-  Board *sb = GETBOARDOBJ(susp);
-
-  while (!sb->isRoot()) {
-    
-    if (sb->isStable()) {
-      oz_newThreadInject(sb);
-    }
-
-    sb = sb->getParent();
-  }
-}
-
