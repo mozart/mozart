@@ -484,6 +484,8 @@ FDMUL        "*"|"/"
 OTHERMUL     "div"|"mod"
 COMPARE      "<"|">"|"=<"|">="|"\\="
 FDIN         "::"|":::"
+LMACRO	     "<<"|"«"
+RMACRO	     ">>"|"»"
 
 LOWER        [a-z\337-\366\370-\377]
 UPPER        [A-Z\300-\326\330-\336]
@@ -888,6 +890,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "=="|{COMPARE}                 { return T_COMPARE; }
 {FDIN}                         { return T_FDIN; }
 ("="|{COMPARE})":"             { return T_FDCOMPARE; }
+{LMACRO}		       { return T_LMACRO; }
+{RMACRO}		       { return T_RMACRO; }
 
 "."({SPACE}|\n)*[0-9]+         { // Hack to avoid strange parsing of X.1.1:
 				 // If "." is followed by integer, then
@@ -1017,6 +1021,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "try"                          { return T_try; }
 "try"/\(                       { return T_try; }
 "unit"                         { return T_unit; }
+"loop"			       { return T_loop; }
 
 {OZATOM}                       { stripTrans('\''); return T_OZATOM; }
 "'"[^']*"'"                    { if (get_cond()) xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return T_OZATOM;}
