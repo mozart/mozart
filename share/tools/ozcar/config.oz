@@ -352,8 +352,8 @@ Config =
        envSystemVariables :    ConfigEnvSystemVariables
        envPrintTypes :         ConfigEnvPrintTypes
 
-       emacsThreads :          {New Tk.variable tkInit(ConfigEmacsThreads)}
-       subThreads :            {New Tk.variable tkInit(ConfigSubThreads)}
+       emacsThreads :          ConfigEmacsThreads
+       subThreads :            ConfigSubThreads
 
        updateEnv :             ConfigUpdateEnv
        useEmacsBar :           ConfigUseEmacsBar
@@ -401,10 +401,6 @@ end
 
 fun {Cget What}
    {Config get(What $)}
-end
-
-fun {CgetTk What}
-   {Config getTk(What $)}
 end
 
 %%
