@@ -1553,13 +1553,6 @@ OZ_BI_define(BInameVariable,2,0)
   return PROCEED;
 } OZ_BI_end
 
-OZ_BI_define(BInewNamedName,1,1)
-{
-  oz_declareAtomIN(0,printName);
-  Literal *lit = NamedName::newNamedName(printName);
-  OZ_RETURN(makeTaggedLiteral(lit));
-} OZ_BI_end
-
 OZ_BI_define(BInewCopyableName,1,1)
 {
   oz_declareAtomIN(0,printName);
