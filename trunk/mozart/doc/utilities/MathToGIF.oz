@@ -22,14 +22,13 @@
 functor prop once
 import
    Property(get)
-   OS(tmpnam system unlink getEnv)
+   OS(tmpnam system unlink)
    Open(file)
 export
    'class': MathToGIFClass
 define
-   LATEX2GIF = case {OS.getEnv 'OZ_DOC_PATH'} of false
-	       then {Property.get 'oz.home'}#'/share/doc/latex2gif'
-	       elseof X then X#'/utilities/latex2gif' end
+   %% -- PATH has already been augmented
+   LATEX2GIF = 'latex2gif'
 
    class MathToGIFClass
       attr DirName: unit N: unit
