@@ -352,6 +352,7 @@ _FUNDECL(void ,OZ_registerAcceptHandler,(int,OZ_IOHandler,void *));
 _FUNDECL(int ,OZ_protect,(OZ_Term *));
 _FUNDECL(int ,OZ_unprotect,(OZ_Term *));
 _FUNDECL(void ,OZ_collect,(OZ_Term *));
+_FUNDECL(void ,OZ_collectHeapBlock,(OZ_Term *, OZ_Term *, int));
 
 /* raise exception */
 _FUNDECL(OZ_Return ,OZ_typeError,(int pos,char *type));
