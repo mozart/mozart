@@ -225,13 +225,13 @@ public:
   }
   void setInSolve() {
     Assert(isRunnable());
-    state.flags |= T_solve;
+    state.flags =  state.flags | T_solve;
   }
 
   //  non-runnable threads;
   void markRunnable() {
     Assert(isSuspended() && !isDeadThread());
-    state.flags |= T_runnable;
+    state.flags = state.flags | T_runnable;
   }
   void unmarkRunnable() {
     Assert((isRunnable () && !isDeadThread ()) || stopped());
@@ -240,7 +240,7 @@ public:
 
   void setExtThread() {
     Assert (!isDeadThread());
-    state.flags |= T_ext;
+    state.flags = state.flags | T_ext;
   }
   Bool isExtThread() {
     Assert(isRunnable());
@@ -256,7 +256,7 @@ public:
 
   void markPropagatorThread () {
     Assert(!isDeadThread());
-    state.flags |= T_p_thr;
+    state.flags = state.flags | T_p_thr;
   }
   void unmarkPropagatorThread() {
     Assert (!isDeadThread());
@@ -269,7 +269,7 @@ public:
 
   void markNonMonotonicPropagatorThread(void) {
     Assert(!isDeadThread() && isPropagator());
-    state.flags |= T_nmo;
+    state.flags = state.flags | T_nmo;
   }
   void unmarkNonMonotonicPropagatorThread(void) {
     Assert(!isDeadThread() && isPropagator());
