@@ -20,8 +20,6 @@
 %%%
 
 local
-   IsBuiltin = CompilerSupport.isBuiltin
-
    local
       proc {EscapeVariableChar Hd C|Cr Tl}
 	 case Cr of nil then Hd = C|Tl   % terminating quote
@@ -123,7 +121,7 @@ local
    Colors = ['Undetermined'#Gray
 	     'Int'#Red 'Float'#Red 'Atom'#Red 'Name'#Red
 	     'Record'#Magenta 'Tuple'#Magenta
-	     'Procedure'#Black 'Builtin'#Black
+	     'Procedure'#Black
 	     'Cell'#Orange
 	     'Chunk'#Green
 	     'Class'#Blue
@@ -141,7 +139,6 @@ local
 	     elsecase {IsName Value} then 'Name'
 	     elsecase {IsTuple Value} then 'Tuple'
 	     elsecase {IsRecord Value} then 'Record'
-	     elsecase {IsBuiltin Value} then 'Builtin'
 	     elsecase {IsProcedure Value} then 'Procedure'
 	     elsecase {IsCell Value} then 'Cell'
 	     elsecase {IsArray Value} then 'Array'
