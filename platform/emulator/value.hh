@@ -1228,26 +1228,27 @@ public:
 
 typedef enum {
   OFlagDeep   = 1,
-  OFlagClass  = 1<<2
+  OFlagClass  = 2
 } OFlag;
 
+
+#define ObjFlagMask ~3
 
 class Object: public ConstTerm {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
+  // features are in getPtr()
   int32 state;  // was: SRecord *state, but saves memory on the Alpha
   int32 aclass; // was: ObjectClass *aclass
-  TaggedRef threads;  /* list of variables with threads attached to them */
-  int32 flags;
-  OzLock *lock;
+  int32 flagsAndLock;
 public:
   Object();
   ~Object();
   Object(Object&);
 
-  void setFlag(OFlag f)   { flags |= (int) f; }
-  void unsetFlag(OFlag f) { flags &= ~((int) f); }
-  int  getFlag(OFlag f)   { return (flags & ((int) f)); }
+  void setFlag(OFlag f)   { flagsAndLock |= (int) f; }
+  void unsetFlag(OFlag f) { flagsAndLock &= ~((int) f); }
+  int  getFlag(OFlag f)   { return (flagsAndLock & ((int) f)); }
 
   Bool isClass()        { return getFlag(OFlagClass); }
   Bool isDeep()         { return getFlag(OFlagDeep); }
@@ -1258,19 +1259,15 @@ public:
     ConstTerm(Co_Object)
   {
     setFreeRecord(feat);
-    flags = 0;
-    threads = AtomNil;
     setClass(ac);
     setState(s);
     if (iscl) setClass();
-    lock = lck;
+    flagsAndLock = ToInt32(lck);
   }
 
   void setClass(ObjectClass *c) { aclass = ToInt32(c); }
 
-  TaggedRef attachThread();
-
-  OzLock *getLock() { return lock; }
+  OzLock *getLock() { return (OzLock*)ToPointer(flagsAndLock&ObjFlagMask); }
 
   ObjectClass *getClass() { return (ObjectClass*) ToPointer(aclass); }
 
@@ -1381,16 +1378,22 @@ Object *tagged2Object(TaggedRef term)
  * SChunk
  *=================================================================== */
 
-class SChunk: public ConstTerm {
+class SChunk: public Tertiary {
 friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef value;
 public:
-  SChunk(Board *b,TaggedRef v) : ConstTerm(Co_Chunk), value(v) {
+  SChunk(Board *b,TaggedRef v) : Tertiary(b,Co_Chunk,Te_Local), value(v) {
     Assert(isRecord(v));
     Assert(b);
     setPtr(b);
   };
+
+  SChunk(int i, TertType tertType) : Tertiary(0,Co_Chunk,tertType)
+  {
+    setIndex(i);
+    value = makeTaggedNULL();
+  }
 
   OZPRINT;
   OZPRINTLONG;
@@ -1400,13 +1403,27 @@ public:
   TaggedRef getArityList() { return ::getArityList(value); }
   int getWidth () { return ::getWidth(value); }
   Board *getBoard();
+
+  TaggedRef fetchValue();
+  void localize(TaggedRef val);
+
+  TaggedRef checkProxy()
+  {
+    return (isProxy()) ? fetchValue() : makeTaggedNULL();
+  }
 };
 
 
 inline
+Bool isSChunk(ConstTerm *t)
+{
+  return t->getType() == Co_Chunk;
+}
+
+inline
 Bool isSChunk(TaggedRef term)
 {
-  return isConst(term) && tagged2Const(term)->getType() == Co_Chunk;
+  return isConst(term) && isSChunk(tagged2Const(term));
 }
 
 inline

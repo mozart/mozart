@@ -49,7 +49,6 @@ void gcBorrowTable();
 void gcBorrowTableRoots();
 void gcPortProxy(PortProxy* );
 void gcPortManager(PortManager* );
-void getClosure(ProcProxy *, Bool getCode);
 
 #define BYTEBUFFER_CUTOFF 100
 #define BYTEBUFFER_SIZE 2048

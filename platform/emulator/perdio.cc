@@ -173,9 +173,13 @@ typedef enum {
   M_PROC,               // NA CREDIT NAME ARITY
   M_VAR,
   M_BUILTIN,
+  DIF_CHUNK,
   DIF_THREAD,           // NA CREDIT
   DIF_SPACE,            // NA CREDIT
 } MarshallTag;
+
+
+void sendMessage(Tertiary *, MessageType);
 
 
 /**********************************************************************/
@@ -1837,6 +1841,27 @@ void PerdioVar::gcPerdioVar(void)
 }
 
 
+TaggedRef ProcProxy::getSuspvar()
+{
+  if (suspVar==makeTaggedNULL()) {
+    suspVar = makeTaggedRef(newTaggedUVar(am.rootBoard));
+    MessageType msg = ((getPC()==NOCODE) ? M_GET_CLOSUREANDCODE : M_GET_CLOSURE);
+    sendMessage(this,msg);
+  }
+  return suspVar;
+}
+
+
+TaggedRef SChunk::fetchValue()
+{
+  if (value==makeTaggedNULL()) {
+    value = makeTaggedRef(newTaggedUVar(am.rootBoard));
+    //    sendMessage(this,M_GET_CHUNK);
+  }
+  return value;
+}
+
+
 /**********************************************************************/
 /**********************************************************************/
 /*                      GLOBALIZING                                   */
@@ -1930,6 +1955,17 @@ void ProcProxy::localize(RefsArray g, ProgramCounter pc)
   if (OZ_unify(suspVar,NameUnit) != PROCEED) { /* TODO - */
     warning("ProcProxy::localize: unify failed");
   }
+}
+
+void SChunk::localize(TaggedRef val)
+{
+  Tertiary::localize();
+
+  if (OZ_unify(value,NameUnit) != PROCEED) {
+    warning("ProcProxy::localize: unify failed");
+  }
+
+  value = val;
 }
 
 void CellProxy::convertToFrame(int myIndex){
@@ -2340,10 +2376,11 @@ Bool marshallTertiary(Site* sd,Tertiary *t, ByteStream *bs, DebtRec *dr)
   int tag;
   switch (t->getType()) {
   case Co_Port:        tag = M_PORT;     break;
+  case Co_Abstraction: tag = M_PROC;     break;
+  case Co_Cell:        tag = M_CELL;    break;
   case Co_Thread:      tag = DIF_THREAD; break;
   case Co_Space:       tag = DIF_SPACE;  break;
-  case Co_Cell:        tag = M_CELL;    break;
-  case Co_Abstraction: tag = M_PROC;     break;
+  case Co_Chunk:       tag = DIF_CHUNK;  break;
   default: return NO;}
 
   switch(t->getTertType()){
@@ -2381,6 +2418,43 @@ Bool marshallTertiary(Site* sd,Tertiary *t, ByteStream *bs, DebtRec *dr)
 
   trailCycle(t->getRef(),bs->refCounter++);
   return OK;
+}
+
+
+void unmarshallTertiary(ByteStream *bs, TaggedRef *ret, MarshallTag tag, char *comment)
+{
+  OB_Entry *ob;
+  int bi;
+  OZ_Term val = unmarshallBorrow(bs,ob,bi);
+  if (val) {
+    PD(UNMARSHALL,"%s hit b:%d",bi,comment);
+    refTable->set(bs->refCounter++,val);
+    *ret=val;
+    return;
+  }
+  PD(UNMARSHALL,"%s miss b:%d",bi,comment);
+
+  Tertiary *tert;
+  switch (tag) {
+  case M_PORT:
+    tert = new PortProxy(bi);
+    break;
+  case DIF_THREAD:
+    tert = new Thread(bi,Te_Proxy);
+    break;
+  case DIF_SPACE:
+    tert = new Space(bi,Te_Proxy);
+    break;
+  case DIF_CHUNK:
+    tert = new SChunk(bi,Te_Proxy);
+    break;
+  default:
+    Assert(0);
+  }
+
+  *ret= makeTaggedConst(tert);
+  refTable->set(bs->refCounter++,*ret);
+  ob->mkTertiary(tert);
 }
 
 void marshallVariable(Site * sd, PerdioVar *pvar, ByteStream *bs,DebtRec *dr)
@@ -2704,24 +2778,11 @@ loop:
       return;
     }
 
-  case M_PORT:
-    {
-      OB_Entry *ob;
-      int bi;
-      OZ_Term val = unmarshallBorrow(bs,ob,bi);
-      if (val) {
-        PD(UNMARSHALL,"port hit b:%d",bi);
-        refTable->set(bs->refCounter++,val);
-        *ret=val;
-        return;
-      }
-      PD(UNMARSHALL,"port miss b:%d",bi);
-      Tertiary *tert = new PortProxy(bi);
-      *ret= makeTaggedConst(tert);
-      refTable->set(bs->refCounter++,*ret);
-      ob->mkTertiary(tert);
-      return;
-    }
+  case M_PORT:     unmarshallTertiary(bs,ret,tag,"port");   return;
+  case DIF_THREAD: unmarshallTertiary(bs,ret,tag,"thread"); return;
+  case DIF_SPACE:  unmarshallTertiary(bs,ret,tag,"space");  return;
+  case DIF_CHUNK:  unmarshallTertiary(bs,ret,tag,"chunk");  return;
+
   case M_CELL:
     {
       OB_Entry *ob;
@@ -2745,42 +2806,7 @@ loop:
       ob->mkTertiary(tert);
       return;
     }
-  case DIF_THREAD:
-    {
-      OB_Entry *ob;
-      int bi;
-      OZ_Term val = unmarshallBorrow(bs,ob,bi);
-      if (val) {
-        PD(UNMARSHALL,"thread hit b:%d",bi);
-        refTable->set(bs->refCounter++,val);
-        *ret=val;
-        return;
-      }
-      PD(UNMARSHALL,"thread miss b:%d",bi);
-      Tertiary *tert = new Thread(bi,Te_Proxy);
-      *ret= makeTaggedConst(tert);
-      refTable->set(bs->refCounter++,*ret);
-      ob->mkTertiary(tert);
-      return;
-    }
-  case DIF_SPACE:
-    {
-      OB_Entry *ob;
-      int bi;
-      OZ_Term val = unmarshallBorrow(bs,ob,bi);
-      if (val) {
-        PD(UNMARSHALL,"space hit b:%d",bi);
-        refTable->set(bs->refCounter++,val);
-        *ret=val;
-        return;
-      }
-      PD(UNMARSHALL,"space miss b:%d",bi);
-      Tertiary *tert = new Space(bi,Te_Proxy);
-      *ret= makeTaggedConst(tert);
-      refTable->set(bs->refCounter++,*ret);
-      ob->mkTertiary(tert);
-      return;
-    }
+
   case M_VAR:
     {
       OB_Entry *ob;
@@ -3375,12 +3401,12 @@ OZ_Return remoteApplication(char *biName, Tertiary *tert)
                              cons(makeTaggedConst(tert),nil()));
 }
 
-void getClosure(ProcProxy *pp, Bool getCode)
+void sendMessage(Tertiary *tert, MessageType msg)
 {
   ByteStream *bs= bufferManager->getByteStream();
   bs->marshalBegin();
-  bs->put(getCode ? M_GET_CLOSUREANDCODE : M_GET_CLOSURE);
-  int bi = pp->getIndex();
+  bs->put(msg);
+  int bi = tert->getIndex();
   Site* site  =  borrowTable->getOriginSite(bi);
   int index =  borrowTable->getOriginIndex(bi);
   marshallNumber(index,bs);
