@@ -33,11 +33,14 @@ LN_S=		@LN_S@
 INSTALL=	@INSTALL@
 INSTALL_DIR=	@INSTALL_DIR@
 INSTALL_BIN=	$(INSTALL) -m 555
+INSTALL_FILE=	$(INSTALL) -m 444
 
 SCRIPTS=	oz ozplatform
 LINKS=		ozengine text2pickle pickle2text oldpickle2text oztool
 LIB_SCRIPTS=	$(addprefix $(BINDIR)/,$(SCRIPTS))
 LIB_LINKS=	$(addprefix $(BINDIR)/,$(LINKS))
+WRAPPERS0=	ozwrapper.bin ozwrapperw.bin
+WRAPPERS=	$(addprefix $(BINDIR)/,$(WRAPPERS0))
 
 
 .PHONY: bootstrap all install clean veryclean distclean depend check
@@ -49,7 +52,7 @@ oz:
 
 bootstrap:
 
-install: $(BINDIR) $(LIB_SCRIPTS) $(LIB_LINKS)
+install: $(BINDIR) $(LIB_SCRIPTS) $(LIB_LINKS) $(WRAPPERS)
 
 
 $(LIB_SCRIPTS): $(BINDIR)/% : %
@@ -57,6 +60,9 @@ $(LIB_SCRIPTS): $(BINDIR)/% : %
 
 $(LIB_LINKS): $(BINDIR)/oz
 	cd $(BINDIR); rm -f $@; $(LN_S) oz $@
+
+$(WRAPPERS): $(BINDIR)/%: $(SRCTOP)/platform/mswindows/%
+	$(INSTALL_FILE) $< $@
 
 $(BINDIR):
 	$(INSTALL_DIR) $@

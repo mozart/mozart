@@ -22,7 +22,7 @@ OBJS =	LR0.o allocate.o closure.o conflicts.o derives.o gram.o \
 
 all: Bison.so-$(PLATFORM)
 
-include $(SRCTOP)/share/Makefile.boot
+include $(BUILDTOP)/share/Makefile.boot
 bootstrap: cboot-all
 
 %.o: %.c

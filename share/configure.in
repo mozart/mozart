@@ -53,15 +53,23 @@ dnl *****************************************************************
 : ${platform=$PLATFORM}
 
 case $platform in
-    win32*)
-	OZLOADSEP=';'
-	;;
-    *)
-	OZLOADSEP=':'
-	;;
+win32*)
+    oztmp=`${SRCTOP}/share/lib/cygpath.sh "${SRCTOP}/platform/mswindows/ozwrapper.bin"`
+    OZEXECFILE="--execfile=\"$oztmp\""
+    EMULATOR_EXE=emulator.dll
+    BOOTOZTOOL='$(shell $(CYG_PATH) "$(BUILDTOP)/platform/mswindows/oztool.exe")'
+    EXE_EXT='.exe'
+    ;;
+*)
+    EMULATOR_EXE=emulator.exe
+    BOOTOZTOOL='"/bin/sh $(BUILDTOP)/platform/emulator/oztool.sh"'
+    EXE_EXT=''
+    ;;
 esac
-
-AC_SUBST(OZLOADSEP)
+AC_SUBST(OZEXECFILE)
+AC_SUBST(EMULATOR_EXE)
+AC_SUBST(BOOTOZTOOL)
+AC_SUBST(EXE_EXT)
 
 dnl *****************************************************************
 dnl Checks for programs.
@@ -82,6 +90,9 @@ OZ_PATH_PROG(OZTOOL, oztool, OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh")
 OZ_PATH_PROG(OZPLATFORM,ozplatform,OZPLATFORM=$SRCTOP/share/bin/ozplatform)
 PLATFORM=`$OZPLATFORM`
 AC_SUBST(PLATFORM)
+
+OZLOADCACHE=`expr "$OZC" : "\(.*\)/bin/ozc"`
+AC_SUBST(OZLOADCACHE)
 
 AC_SUBST(OZL)
 
@@ -106,6 +117,22 @@ AC_MSG_RESULT($oz_picklecompression)
 AC_SUBST(oz_picklecompression)
 
 dnl ******************************************************************
+dnl set list of directories to build
+dnl ******************************************************************
+
+SHAREDIRS="lib tools elisp test demo examples"
+case $platform in
+    win32*)
+	OZWSOCKLIB=-lwsock32
+	;;
+    *)
+	SHAREDIRS="bin $SHAREDIRS"
+	;;
+esac
+AC_SUBST(SHAREDIRS)
+AC_SUBST(OZWSOCKLIB)
+
+dnl ******************************************************************
 dnl need GMP for test
 dnl ******************************************************************
 
@@ -125,11 +152,12 @@ dnl FINALIZE
 dnl *****************************************************************
 
 AC_OUTPUT(lib/Makefile lib/support/DefaultURL.oz \
-    tools/Makefile tools/ProductionTemplates.oz \
+    tools/Makefile \
     demo/Makefile test/Makefile test/dp-bench/Makefile \
     examples/Makefile elisp/Makefile elisp/mozart.el \
     bin/Makefile \
-    Makefile)
+    Makefile Makefile.boot ozengine.sh,[
+  chmod +x ozengine.sh])
 
 
 errprint(ifdef([OZ_INIT],

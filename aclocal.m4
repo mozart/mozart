@@ -193,6 +193,8 @@ AC_DEFUN(OZ_INIT, [
   AC_SUBST(LDFLAGS)
   OZ_BUILD_DATE
   AC_SUBST(PLATFORM)
+  OZ_OZLOADSEP
+  OZ_OZLOADWIN
 ])
 
 dnl ==================================================================
@@ -324,6 +326,20 @@ You may find a mirror archive closer to you by consulting:
         AC_MSG_WARN([Could not check $CXX version, assuming ok])
       fi
     fi
+    case "$PLATFORM" in
+    *win32*)
+      case "$CXX" in
+      *mno-cygwin*)
+      ;;
+      *)
+        OZ_CXX_OPTIONS(-mno-cygwin,oz_tmp)
+	CXX="$CXX${oz_tmp:+ }$oz_tmp"
+      ;;
+      esac
+    ;;
+    *)
+    ;;
+    esac
     AC_PROG_CXXCPP
     oz_cv_CXX=$CXX
     oz_cv_CXXCPP=$CXXCPP
@@ -441,6 +457,20 @@ You may find a mirror archive closer to you by consulting:
         AC_MSG_WARN([Could not check $CC version, assuming ok])
       fi
     fi
+    case "$PLATFORM" in
+    *win32*)
+      case "$CC" in
+      *mno-cygwin*)
+      ;;
+      *)
+        OZ_CC_OPTIONS(-mno-cygwin,oz_tmp)
+	CC="$CC${oztmp:+ }$oz_tmp"
+      ;;
+      esac
+    ;;
+    *)
+    ;;
+    esac
     AC_PROG_CPP
     oz_cv_CC=$CC
     oz_cv_CPP=$CPP
@@ -1206,6 +1236,7 @@ AC_DEFUN(OZ_CONTRIB_INIT,[
     OZ_INIT
     OZ_PATH_PROG(OZC,ozc)
     OZ_PATH_PROG(OZL,ozl)
+    OZ_PATH_PROG(OZE,ozengine)
 ])
 
 AC_DEFUN(OZ_CONTRIB_INIT_CXX,[
@@ -1349,4 +1380,68 @@ AC_DEFUN(OZ_ARG_WITH_INC_DIR,[
       oz_inc_path="$oz_tmp1${oz_inc_path:+ }$oz_inc_path"
     fi
   done
+])
+
+dnl ------------------------------------------------------------------
+dnl defines some vars that need special care under Windows
+dnl
+dnl OZ_OZLOADSEP
+dnl   define OZLOADSEP to be ":" on Unix and ";" on Windows
+dnl
+dnl OZ_LOADWIN
+dnl
+dnl on Unix we typically added to OZ_LOAD specs like prefix=/=/ and
+dnl prefix=./=./ to say that absolute paths should be tried as such
+dnl but on Windows these specs don't match path that begin with a
+dnl drive.  Instead we need to add rules like prefix=y:/=y:/ and for
+dnl robustness, we need to add both the lowercase and the uppercase
+dnl versions.  We define variable OZLOADWIN to contain such specs
+dnl both for the srcdir and for the build dir; each spec is prefixed
+dnl by the character `%' which serves as the portable path separator
+dnl to be subsequently substituted by the platform specific one.
+dnl OZLOADWIN can be cached because the drives for source dir and
+dnl build dir are the same for the entire build.
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_OZLOADSEP,[
+  AC_CACHE_CHECK([for OZLOADSEP],oz_cv_OZLOADSEP,[
+    case $PLATFORM in
+    win32*) oz_cv_OZLOADSEP=';'
+    ;;
+    *) oz_cv_OZLOADSEP=':'
+    ;;
+    esac
+  ])
+  OZLOADSEP="$oz_cv_OZLOADSEP";
+  AC_SUBST(OZLOADSEP)
+])
+
+AC_DEFUN(OZ_OZLOADWIN,[
+  AC_CACHE_CHECK([for OZLOADWIN],oz_cv_OZLOADWIN,[
+changequote(<,>)
+  case $PLATFORM in
+    win32*)
+	oztmp=`pwd`
+	oztmp=`cygpath -a -w "$tmp"`
+	oztmp=`expr "$oztmp" : "\(.\):"`
+	if test -n "$oztmp"; then
+	  oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
+	  oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
+	  oz_cv_OZLOADWIN="%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
+	fi
+	oztmp=`cygpath -a -w "$srcdir"`
+	oztmp=`expr "$oztmp" : "\(.\):"`
+	if test -n "$oztmp"; then
+	  oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
+	  oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
+	  oz_cv_OZLOADWIN="${OZLOADWIN}%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
+	fi
+	;;
+    *) oz_cv_OZLOADWIN=
+	;;
+  esac
+changequote([,])
+  ])
+  OZLOADWIN="$oz_cv_OZLOADWIN"
+  AC_SUBST(OZLOADWIN)
 ])

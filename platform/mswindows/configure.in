@@ -41,8 +41,6 @@ OZ_CXX_CHOOSE
 
 case "$platform" in
     win32-i486)
-	OZ_CXX_OPTIONS(-mno-cygwin,oz_a)
-	CXX="$CXX $oz_a"
 	if test "$target" = NONE
 	then # compiling for mingw32 under cygwin
 	    BINDIRNAME=bin

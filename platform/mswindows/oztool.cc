@@ -182,22 +182,25 @@ int execute(char **argv, bool dontQuote)
   STARTUPINFO si;
   ZeroMemory(&si,sizeof(si));
   si.cb = sizeof(si);
+  si.dwFlags = STARTF_FORCEOFFFEEDBACK|STARTF_USESTDHANDLES;
+  si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+  si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+  si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+
   PROCESS_INFORMATION pi;
-  DWORD ret = CreateProcess(NULL,buffer,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi);
+  DWORD ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,0,NULL,NULL,&si,&pi);
   if (ret == FALSE) {
     panic(true,"Cannot run '%s'.\n",buffer);
   }
+
+  ret = WaitForSingleObject(pi.hProcess,INFINITE);
+  if (ret == WAIT_FAILED || GetExitCodeProcess(pi.hProcess,&ret) == FALSE)
+    ret = 1;
+
   CloseHandle(pi.hThread);
-  WaitForSingleObject(pi.hProcess,INFINITE);
-
-  DWORD code;
-  ret = GetExitCodeProcess(pi.hProcess,&code);
   CloseHandle(pi.hProcess);
-  if (ret != FALSE)
-    return code;
-  else
-    return 0;
 
+  return ret;
 }
 
 enum system_type {
@@ -350,8 +353,8 @@ int main(int argc, char **argv)
     switch (sys) {
     case SYS_GNU: {
       char *target = NULL;
-      char *tmpfile_a = concat(ostmpnam(),".a");
-      char *tmpfile_def = concat(ostmpnam(),".def");
+      char *tmpfile_a = concat(toUnix(ostmpnam()),".a");
+      char *tmpfile_def = concat(toUnix(ostmpnam()),".def");
       char **dlltoolCmd = new char*[7+argc+1];
       int index = 0;
       int k = 2;
@@ -370,9 +373,8 @@ int main(int argc, char **argv)
 	  // do not pass to dlltool
 	  k++;
 	} else if (!strcmp(argv[k],"-o")) {
-	  if (argc == k + 1) {
-	    usage("Missing object argument.\n");
-	  }
+	  if (argc == k + 1)
+	    usage("Missing argument to `-o'.\n");
 	  target = argv[k + 1];
 	  k += 2;
 	} else {
@@ -380,22 +382,25 @@ int main(int argc, char **argv)
 	}
       }
       dlltoolCmd[index] = NULL;
+      if (target == NULL)
+	usage("Missing option `-o'.\n");
       int r = execute(dlltoolCmd,false);
       if (!r) {
-	char **dllwrapCmd = new char*[argc+9];
-	dllwrapCmd[r++] = "dllwrap";
-	dllwrapCmd[r++] = "--target";
-	dllwrapCmd[r++] = "i386-mingw32";
-	dllwrapCmd[r++] = "-mno-cygwin";
-	dllwrapCmd[r++] = "--def";
-	dllwrapCmd[r++] = tmpfile_def;
-	dllwrapCmd[r++] = "--dllname";
-	dllwrapCmd[r++] = target;
+	char **dllwrapCmd = new char*[8+argc+3];
+	index = 0;
+	dllwrapCmd[index++] = "dllwrap";
+	dllwrapCmd[index++] = "--target";
+	dllwrapCmd[index++] = "i386-mingw32";
+	dllwrapCmd[index++] = "-mno-cygwin";
+	dllwrapCmd[index++] = "--def";
+	dllwrapCmd[index++] = tmpfile_def;
+	dllwrapCmd[index++] = "--dllname";
+	dllwrapCmd[index++] = target;
 	for (int i = 2; i < argc; i++)
-	  dllwrapCmd[r++] = argv[i];
-	dllwrapCmd[r++] = tmpfile_a;
-	dllwrapCmd[r++] = "-lmsvcrt";
-	dllwrapCmd[r] = NULL;
+	  dllwrapCmd[index++] = argv[i];
+	dllwrapCmd[index++] = tmpfile_a;
+	dllwrapCmd[index++] = "-lmsvcrt";
+	dllwrapCmd[index] = NULL;
 	r = execute(dllwrapCmd,false);
       }
       unlink(tmpfile_a);
@@ -403,7 +408,7 @@ int main(int argc, char **argv)
       doexit(r);
     }
     case SYS_MSVC: {
-      char *tmpfile = toUnix(ostmpnam());
+      char *tmpfile = toWindows(ostmpnam());
       char *tmpfile_lib = concat(tmpfile,"lib");
       char *tmpfile_exp = concat(tmpfile,"exp");
       char **libCmd = new char *[6];
@@ -425,7 +430,7 @@ int main(int argc, char **argv)
 	while (i < argc) {
 	  if (!strcmp(argv[i],"-o")) {
 	    if (argc == i + 1) {
-	      usage("Missing target argument.\n");
+	      usage("Missing argument to `-o'.\n");
 	    }
 	    linkCmd[r++] = concat("/out:", argv[i + 1]);
 	    i += 2;

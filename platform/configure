@@ -1158,6 +1158,63 @@ echo "$ac_t""$oz_cv_build_date" 1>&6
   OZBUILDDATE=$oz_cv_build_date;
   
   
+  
+  echo $ac_n "checking for OZLOADSEP""... $ac_c" 1>&6
+echo "configure:1164: checking for OZLOADSEP" >&5
+if eval "test \"`echo '$''{'oz_cv_OZLOADSEP'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  
+    case $PLATFORM in
+    win32*) oz_cv_OZLOADSEP=';'
+    ;;
+    *) oz_cv_OZLOADSEP=':'
+    ;;
+    esac
+  
+fi
+
+echo "$ac_t""$oz_cv_OZLOADSEP" 1>&6
+  OZLOADSEP="$oz_cv_OZLOADSEP";
+  
+
+  
+  echo $ac_n "checking for OZLOADWIN""... $ac_c" 1>&6
+echo "configure:1184: checking for OZLOADWIN" >&5
+if eval "test \"`echo '$''{'oz_cv_OZLOADWIN'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  
+
+  case $PLATFORM in
+    win32*)
+	oztmp=`pwd`
+	oztmp=`cygpath -a -w "$tmp"`
+	oztmp=`expr "$oztmp" : "\(.\):"`
+	if test -n "$oztmp"; then
+	  oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
+	  oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
+	  oz_cv_OZLOADWIN="%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
+	fi
+	oztmp=`cygpath -a -w "$srcdir"`
+	oztmp=`expr "$oztmp" : "\(.\):"`
+	if test -n "$oztmp"; then
+	  oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
+	  oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
+	  oz_cv_OZLOADWIN="${OZLOADWIN}%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
+	fi
+	;;
+    *) oz_cv_OZLOADWIN=
+	;;
+  esac
+
+  
+fi
+
+echo "$ac_t""$oz_cv_OZLOADWIN" 1>&6
+  OZLOADWIN="$oz_cv_OZLOADWIN"
+  
+
 
 
 # PLATFORM is defined by OZ_INIT
@@ -1165,7 +1222,7 @@ echo "$ac_t""$oz_cv_build_date" 1>&6
 
 : ${oz_enable_wish=yes}
 echo $ac_n "checking for --enable-wish""... $ac_c" 1>&6
-echo "configure:1169: checking for --enable-wish" >&5
+echo "configure:1226: checking for --enable-wish" >&5
 # Check whether --enable-wish or --disable-wish was given.
 if test "${enable_wish+set}" = set; then
   enableval="$enable_wish"
@@ -1196,7 +1253,7 @@ fi
 
 
     echo $ac_n "checking for --enable-gtk""... $ac_c" 1>&6
-echo "configure:1200: checking for --enable-gtk" >&5
+echo "configure:1257: checking for --enable-gtk" >&5
     # Check whether --enable-gtk or --disable-gtk was given.
 if test "${enable_gtk+set}" = set; then
   enableval="$enable_gtk"
@@ -1391,6 +1448,8 @@ s%@OZPLATFORM@%$OZPLATFORM%g
 s%@OZTOOL@%$OZTOOL%g
 s%@OZBUILDDATE@%$OZBUILDDATE%g
 s%@PLATFORM@%$PLATFORM%g
+s%@OZLOADSEP@%$OZLOADSEP%g
+s%@OZLOADWIN@%$OZLOADWIN%g
 s%@GTK_ENABLED@%$GTK_ENABLED%g
 s%@PLATFORMDIRS@%$PLATFORMDIRS%g
 s%@subdirs@%$subdirs%g
