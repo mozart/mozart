@@ -12,7 +12,7 @@ COMPILE		= $(OZC) -c
 OZDYNLD		= @OZDYNLD@
 
 CXX		= @CXX@
-CXXFLAGS	= @CXXFLAGS@
+CXXFLAGS	= @CXXAVOID@ @CXXFLAGS@
 CPPFLAGS	= -I$(SRCTOP)/platform/emulator \
 		  -I$(BUILDTOP)/platform/emulator \
 		  -I$(prefix)/include @CPPFLAGS@
