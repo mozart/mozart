@@ -49,10 +49,10 @@ $(WHAT)-tex/$(WHAT).ps: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
 verify: $(MAIN)
         nsgmls -c$(PREFIX)/share/doc/catalog $< -s $<
 
-validate: $(WHAT)-html
+validate: $(WHAT)-html/index.html
         nsgmls -cHTML4.soc -sB $(WHAT)-html/*.html
 
-install: $(WHAT)-html $(DOCDIR)
+install: $(WHAT)-html/index.html $(DOCDIR)
         for i in $(WHAT)-html/*; do $(INSTALL_FILE) $$i $(DOCDIR); done
 
 $(DOCDIR):
