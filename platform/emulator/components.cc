@@ -628,7 +628,7 @@ int pipeHandler(int, void *arg)
 
 class URLInfo {
 public:
-  const char *tmpfile;
+  char *tmpfile;
   const char *url;
   int fd;
   URLInfo(const char *file, const char *u, int f):
