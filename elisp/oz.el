@@ -672,68 +672,105 @@ With ARG, start it instead."
 
 (make-face 'bar-running)
 (set-face-foreground 'bar-running "white")
-(set-face-background 'bar-running (if oz-is-color "#b0b0b0" "black"))
+(set-face-background 'bar-running (if oz-is-color "#d0d0d0" "black"))
+
+(make-face 'bar-running-here)
+(set-face-foreground 'bar-running-here "white")
+(set-face-background 'bar-running-here (if oz-is-color "#909090" "black"))
 
 (make-face 'bar-runnable)
 (set-face-foreground 'bar-runnable "white")
-(set-face-background 'bar-runnable (if oz-is-color "#7070c0" "black"))
+(set-face-background 'bar-runnable (if oz-is-color "#9090e0" "black"))
+
+(make-face 'bar-runnable-here)
+(set-face-foreground 'bar-runnable-here "white")
+(set-face-background 'bar-runnable-here (if oz-is-color "#5050a0" "black"))
 
 (make-face 'bar-blocked)
 (set-face-foreground 'bar-blocked "white")
-(set-face-background 'bar-blocked (if oz-is-color "#d05050" "black"))
+(set-face-background 'bar-blocked (if oz-is-color "#d85858" "black"))
+
+(make-face 'bar-blocked-here)
+(set-face-foreground 'bar-blocked-here "white")
+(set-face-background 'bar-blocked-here (if oz-is-color "#b03030" "black"))
 
 (defvar oz-bar-overlay nil)
+(defvar oz-bar-overlay-here nil)
 
-(defun oz-bar (file line state)
+(defun oz-bar (file line column state)
   "Display bar at given line, load file if necessary."
-  (if (string-equal file "unchanged")
-      (if oz-bar-overlay
-	  (oz-bar-configure state))
-    (let* ((last-nonmenu-event t)
-	   (buffer (oz-find-buffer-or-file file))
-	   (window (display-buffer buffer))
-	   start end oldpos)
-      (save-excursion
-	(set-buffer buffer)
-	(save-restriction
-	  (widen)
-	  (setq oldpos (point))
-	  (goto-line line)
-	  (setq start (point))
-	  (forward-line 1)
-	  (setq end (point))
-	  (or oz-bar-overlay
-	      (setq oz-bar-overlay
-		    (cond (oz-gnu-emacs
-			   (make-overlay start end))
-			  (oz-lucid-emacs
-			   (make-extent start end)))))
-	  (cond (oz-gnu-emacs
-		 (move-overlay
-		  oz-bar-overlay start end (current-buffer)))
-		(oz-lucid-emacs
-		 (set-extent-endpoints
-		  oz-bar-overlay start end (current-buffer))))
-	  (or (string-equal state "unchanged")
-	      (oz-bar-configure state)))
-	(if (and (>= start (window-start)) (< start (window-end)))
-	    (goto-char oldpos)
-	  (widen)
-	  (goto-char start)))
-      (set-window-point window start))))
+  (if (string-equal file "nofile")
+      (oz-bar-remove)
+    (if (string-equal file "unchanged")
+	(if oz-bar-overlay
+	    (oz-bar-configure state))
+      (let* ((last-nonmenu-event t)
+	     (buffer (oz-find-buffer-or-file file))
+	     (window (display-buffer buffer))
+	     start middle end oldpos)
+	(save-excursion
+	  (set-buffer buffer)
+	  (save-restriction
+	    (widen)
+	    (setq oldpos (point))
+	    (goto-line line)
+	    (setq start (point))
+	    (save-excursion
+	      (forward-char column)
+	      (setq middle (point)))
+	    (forward-line 1)
+	    (setq end (point))
+	    (if (> middle end)
+		(setq middle start))
+	    (or oz-bar-overlay
+		(cond (oz-gnu-emacs
+		       (setq oz-bar-overlay (make-overlay start middle)
+			     oz-bar-overlay-here (make-overlay middle end)))
+		      (oz-lucid-emacs
+		       (setq oz-bar-overlay (make-extent start middle)
+			     oz-bar-overlay-here (make-extent middle end)))))
+	    (cond (oz-gnu-emacs
+		   (move-overlay
+		    oz-bar-overlay start middle (current-buffer))
+		   (move-overlay
+		    oz-bar-overlay-here middle end (current-buffer)))
+		  (oz-lucid-emacs
+		   (set-extent-endpoints
+		    oz-bar-overlay start middle (current-buffer))
+		   (set-extent-endpoints
+		    oz-bar-overlay-here middle end (current-buffer))))
+	    (or (string-equal state "unchanged")
+		(oz-bar-configure state)))
+	  (if (and (>= start (window-start)) (< start (window-end)))
+	      (goto-char oldpos)
+	    (widen)
+	    (goto-char start)))
+	(set-window-point window start)))))
 
 (defun oz-bar-configure (state)
   "Change color of bar while not moving it."
-  (let ((face (cond ((string-equal state "running")
-		     'bar-running)
-		    ((string-equal state "runnable")
-		     'bar-runnable)
-		    ((string-equal state "blocked")
-		     'bar-blocked))))
+  (let ((face
+	 (car (read-from-string (concat "bar-" state))))
+	(face-here
+	 (car (read-from-string (concat "bar-" state "-here")))))
     (cond (oz-gnu-emacs
-	   (overlay-put oz-bar-overlay 'face face))
+	   (overlay-put oz-bar-overlay 'face face)
+	   (overlay-put oz-bar-overlay-here 'face face-here))
 	  (oz-lucid-emacs
-	   (set-extent-face oz-bar-overlay face)))))
+	   (set-extent-face oz-bar-overlay face)
+	   (set-extent-face oz-bar-overlay-here face-here)))))
+
+(defun oz-bar-remove ()
+  (interactive)
+  (cond (oz-bar-overlay
+	 (cond (oz-gnu-emacs
+		(delete-overlay oz-bar-overlay)
+		(delete-overlay oz-bar-overlay-here))
+	       (oz-lucid-emacs
+		(delete-extent oz-bar-overlay)
+		(delete-extent oz-bar-overlay-here)))
+	 (setq oz-bar-overlay nil)
+	 (setq oz-bar-overlay-here nil))))
 
 
 ;;------------------------------------------------------------
@@ -774,12 +811,7 @@ If FORCE is non-nil, kill it immediately."
   (cond ((get-buffer oz-temp-buffer)
 	 (delete-windows-on oz-temp-buffer)
 	 (kill-buffer oz-temp-buffer)))
-  (cond (oz-bar-overlay
-	 (cond (oz-gnu-emacs
-		(delete-overlay oz-bar-overlay))
-	       (oz-lucid-emacs
-		(delete-extent oz-bar-overlay)))
-	 (setq oz-bar-overlay nil)))
+  (oz-bar-remove)
   (message "Oz halted.")
   (oz-set-title oz-old-frame-title))
 
@@ -2332,18 +2364,12 @@ After splitting, the outputs are passed to the common oz-filter."
 	    (goto-char start-of-output)
 	    (while (re-search-forward oz-bar-pattern nil t)
 	      (save-excursion
-		(let ((file  (oz-match-string 1))
-		      (line  (string-to-number (oz-match-string 2)))
-		      (state (oz-match-string 4)))
+		(let ((file   (oz-match-string 1))
+		      (line   (string-to-number (oz-match-string 2)))
+		      (column (string-to-number (oz-match-string 3)))
+		      (state  (oz-match-string 4)))
 		  (replace-match "" nil t)
-		  (if (string-equal file "nofile")
-		      (cond (oz-bar-overlay
-			     (cond (oz-gnu-emacs
-				    (delete-overlay oz-bar-overlay))
-				   (oz-lucid-emacs
-				    (delete-extent oz-bar-overlay)))
-			     (setq oz-bar-overlay nil)))
-		    (oz-bar file line state)))))
+		  (oz-bar file line column state))))
 
 	    (setq end-of-output (point-max)))
 
