@@ -21,11 +21,16 @@
 
 functor
 import
+   Pickle(load)
    System(show)
+   Module(link)
    GdkNative       at 'GdkNative.so{native}'
    GtkNative       at 'GtkNative.so{native}'
    GtkCanvasNative at 'GtkCanvasNative.so{native}'
    GOZSignal       at 'GOZSignal.so{native}'
+   GDK
+   GTK
+   GTKCANVAS
 export
    'GOZCore' : GOZCore
 define
@@ -59,14 +64,108 @@ define
          else Object
          end
       end
+
+      %% Some Helper Functions
+      fun {FU A}
+         S = {VirtualString.toString A}
+      in
+         case S
+         of S|Sr then {Char.toUpper S}|Sr
+         [] nil then nil
+         end
+      end
+
+      fun {GetOzClass OzClass}
+         case OzClass
+         of 'Gdk'(Key) then
+            NewKey = if Key == '' then misc else Key end
+         in
+            GDK.NewKey
+         [] 'Gtk'(Key) then GTK.Key
+         [] 'GtkCanvas'(Key) then
+            NewKey = case Key
+                     of ''      then canvas
+                     [] 'group' then canvasGroup
+                     [] 'item'  then canvasItem
+                     end
+         in
+            GTKCANVAS.NewKey
+         end
+      end
+
       %% Convert Pointer to Oz Object
-      fun {PointerToObject Class Pointer}
+      %% Thread is necessary to prevent suspension
+      PointerToObject =
+      thread
+         %% Import OzClasses
+         ClassList    = {Filter
+                         {Pickle.load "x-oz://system/gtk/ClassNames.ozp"}
+                         fun {$ OzClass}
+                            case OzClass
+                            of 'Gdk'(...)    then false
+                               %% Not implemented unter Windows
+                            [] 'Gtk'(socket) then false
+                            [] _             then true
+                            end
+                         end}
+         Classes      = {Map ClassList GetOzClass}
+         ClassKeys    = {Map ClassList
+                         fun {$ OzClass}
+                            RealClass RealObj RealType
+                         in
+                            RealClass = {GetOzClass OzClass}
+                            RealObj   = {New RealClass noop}
+                            RealType  = {RealObj getType($)}
+                            case RealType
+                            of unit then
+                               ClassVS = case OzClass
+                                         of 'Gtk'(Key) then "Gtk"#{FU Key}
+                                         [] 'GtkCanvas'(Key) then
+                                         "GtkCanvas"#{FU Key}
+                                         end
+                               ClassS = {VirtualString.toString ClassVS}
+                            in
+                               {GtkNative.gtkTypeFromName ClassS}
+                            [] Type then Type
+                            end
+                         end}
+         %% GktTypeKey -> OzClass
+         ClassDict = {FoldL {List.zip ClassKeys Classes fun {$ X Y} X#Y end}
+                      fun {$ D X#Y}
+                         {Dictionary.put D X Y} D
+                      end {Dictionary.new}}
+         fun {SearchClass Pointer}
+            {Dictionary.get ClassDict {GOZSignal.getObjectType Pointer}}
+         end
+         fun {CreateClass Class Pointer}
+            Object = {New Class WrapPointer(Pointer)}
+         in
+            {Dictionary.put ObjectTable {ForeignPointer.toInt Pointer} Object}
+            Object
+         end
+      in
+         fun {$ Hint Pointer}
+            case Hint
+            of none  then Pointer
+            [] auto  then {CreateClass {SearchClass Pointer} Pointer}
+            [] Class then {CreateClass Class Pointer}
+            end
+         end
+      end
+      %% Convert Pointer to Oz Object
+      fun {OldPointerToObject Class Pointer}
          Object = {New Class WrapPointer(Pointer)}
       in
          {Dictionary.put ObjectTable {ForeignPointer.toInt Pointer} Object}
          Object
       end
-      %% Pointer Tranlation (necessary for GDK Events and GLists)
+      %% Cast ObjOrPtr to Obj of Class Class
+      fun {CastPointer ObjOrPointer Class}
+         Pointer = {ObjectToPointer ObjOrPointer}
+      in
+         {New Class WrapPointer(Pointer)}
+      end
+      %% Pointer Translation (necessary for GDK Events and GLists)
       fun {TranslatePointer Pointer}
          {Dictionary.condGet ObjectTable
           {ForeignPointer.toInt Pointer} Pointer}
@@ -228,7 +327,7 @@ define
          meth new
             @object = unit
          end
-         meth signalConnect(Signal ProcOrMeth ArgDesc $)
+         meth signalConnect(Signal ProcOrMeth $)
             SigHandler = if {IsProcedure ProcOrMeth}
                          then
                             fun {$ Event}
@@ -241,7 +340,7 @@ define
                                unit
                             end
                          end
-            SignalId   = {Dispatcher registerHandler(SigHandler ArgDesc $)}
+            SignalId   = {Dispatcher registerHandler(SigHandler $)}
          in
             signals <- SignalId|@signals
             {GOZSignal.signalConnect @object Signal SignalId}
@@ -294,6 +393,9 @@ define
                object <- unit
             end
          end
+         meth getType($)
+            unit
+         end
       end
    end
 
@@ -301,26 +403,28 @@ define
    %% Argument Conversion
    %%
 
-   fun {ConvertArguments DataS DescS MapS}
-      case DescS
-      of Desc|DescR then
-         case DataS
-         of Data|DataR then
-            NewData = case Desc
-                      of int          then Data
-                      [] float        then Data
-                      [] bool         then Data
-                      [] pointer      then Data
-                      [] gdk_event    then {GetGdkEvent Data}
-                      [] 'obj'(Class) then {PointerToObject Class Data}
-                      else raise 'dispatcher: illegal argument desc' end
-                      end
-         in
-            {ConvertArguments DataR DescR NewData|MapS}
-         [] _ then raise 'dispatcher: argument mismatch' end
-         end
-      [] nil then {Reverse MapS}
+   fun {ConvertArgument Arg}
+      case Arg
+      of int(Val)      then Val
+      [] double(Val)   then Val
+      [] string(Val)   then Val
+      [] pointer(Val)  then Val
+      [] object(Val)   then {PointerToObject auto Val}
+         %% GDK Events need special care
+      [] event(Val)    then {GetGdkEvent Val}
+      [] color(Val)    then {PointerToObject GDK.color Val}
+      [] context(Val)  then {PointerToObject GDK.colorContext Val}
+      [] map(Val)      then {PointerToObject GDK.colormap Val}
+      [] drawable(Val) then {PointerToObject GDK.drawable Val}
+      [] font(Val)     then {PointerToObject GDK.font Val}
+      [] gc(Val)       then {PointerToObject GDK.gc Val}
+      [] image(Val)    then {PointerToObject GDK.image Val}
+      [] window(Val)   then {PointerToObject GDK.window Val}
       end
+   end
+
+   fun {GetArg Arg}
+      {ConvertArgument {GOZSignal.getArg Arg}}
    end
 
    %%
@@ -380,10 +484,10 @@ define
             meth !NewSignalId($)
                signalId <- (@signalId + 1)
             end
-            meth registerHandler(Handler ArgDesc $)
+            meth registerHandler(Handler $)
                SignalId = DispatcherObject, NewSignalId($)
             in
-               {Dictionary.put @handlerDict SignalId Handler#ArgDesc}
+               {Dictionary.put @handlerDict SignalId Handler}
                SignalId
             end
             meth unregisterHandler(SignalId)
@@ -395,9 +499,8 @@ define
                   Id   = Event.1
                   Data = {Record.toList Event}.2
                in
-                  case {Dictionary.condGet @handlerDict Id EmptyHandler#nil}
-                  of Handler#Desc then
-                     _ = {Handler {ConvertArguments Data Desc nil}}
+                  case {Dictionary.condGet @handlerDict Id EmptyHandler}
+                  of Handler then {Handler {Map Data ConvertArgument} _}
                   end
                   DispatcherObject, Dispatch(Tail)
                [] _ then skip
@@ -420,6 +523,7 @@ define
       GOZCore = 'GOZCore'(%% Native Pointer Import/Export
                           pointerToObject      : PointerToObject
                           objectToPointer      : ObjectToPointer
+                          castPointer          : CastPointer
                           %% GList Import/Export
                           importList           : ImportList
                           exportList           : ExportList
@@ -439,7 +543,7 @@ define
                           freeData             : FreeData
                           %% Gtk Arg Handling
                           makeArg              : GOZSignal.makeArg
-                          getArg               : GOZSignal.getArg
+                          getArg               : GetArg
                           %% String Handling
                           allocStr             : GOZSignal.allocStr
                           getStr               : GOZSignal.getStr

@@ -324,7 +324,7 @@ static void signal_marshal(GtkObject *object, gpointer oz_id,
   /* Assign Result Type; this is fake because it ALWAYS indicates non-handling.
    * This should be changed later on but will work fine (but slowly) for now.
    * CAUTION: Returning FALSE yields the destruction of GTK object hierarchy
-   * CAUTION: before the handler was actually executed in case of delete_event.
+   * CAUTION: before the handler was actually executed in case of delete-event.
    */
   GtkArg result      = args[n_args + 1];
   result.type        = GTK_TYPE_BOOL;
@@ -442,7 +442,6 @@ OZ_BI_define (native_alloc_color, 3, 1) {
 
 OZ_BI_define (native_get_int, 1, 1) {
   OZ_declareForeignType(0, val, int *);
-
   OZ_out(0) = OZ_int(*val);
   return OZ_ENTAILED;
 } OZ_BI_end
@@ -539,6 +538,16 @@ OZ_BI_define (native_get_arg, 1, 1) {
 } OZ_BI_end
 
 /*
+ * Get GtkObject Type
+ */
+
+OZ_BI_define(native_get_object_type, 1, 1) {
+  GOZ_declareObject(0, obj);
+  OZ_out(0) = OZ_int((int) obj->klass->type);
+  return OZ_ENTAILED;
+} OZ_BI_end
+
+/*
  * Lowlevel String Array Handling
  */
 
@@ -604,6 +613,7 @@ static OZ_C_proc_interface oz_interface[] = {
   {"pointsPut", 3, 0, native_points_put},
   {"makeArg", 2, 1, native_make_arg},
   {"getArg", 1, 1, native_get_arg},
+  {"getObjectType", 1, 1, native_get_object_type},
   {"allocStrArr", 1, 1, native_alloc_str_arr},
   {"getStrArr", 1, 1, native_get_str_arr},
   {"makeStrArr", 2, 1, native_make_str_arr},

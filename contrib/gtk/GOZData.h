@@ -111,7 +111,9 @@
 #define GOZ_declareObject(i, val) \
   OZ_declareForeignType(i, val, GtkObject *)
 
-/* String Handling */
+/*
+ * Platform specific String Handling
+ */
 #if defined(__CYGWIN32__) || defined(__MINGW32__)
 static inline gchar *goz_import_string(gchar *source) {
   GError *res;
@@ -135,7 +137,9 @@ static inline gchar *GOZ_stringToC(OZ_Term val) {
   return GOZ_importString((gchar *) OZ_virtualStringToC(val, NULL));
 }
 
-/* GList Handling */
+/*
+ * GList Handling
+ */
 static inline OZ_Term goz_import_glist(GList *ptr) {
   GList *anchor = ptr;
   OZ_Term cons  = OZ_atom("nil");
@@ -182,5 +186,64 @@ static inline GList *goz_export_glist(OZ_Term cons) {
   if (OZ_isVariable(t_val)) {\
     OZ_suspendOn(t_val); \
   }
+
+/*
+ * Generic Handler Argument Handling
+*/
+#define GOZ_ARG_int(val) \
+  OZ_mkTuple(OZ_atom("int"), 1, OZ_int(val));
+
+#define GOZ_ARG_double(val) \
+  OZ_mkTuple(OZ_atom("double"), 1, OZ_float(val));
+
+#define GOZ_ARG_string(val) \
+  OZ_mkTuple(OZ_atom("string"), 1, OZ_string(val));
+
+#define GOZ_ARG_pointer(val) \
+  OZ_mkTuple(OZ_atom("pointer"), 1, OZ_makeForeignPointer(val));
+
+/* This is only suitable for GTk Objects */
+#define GOZ_ARG_object(val) \
+  OZ_mkTuple(OZ_atom("object"), 1, OZ_makeForeignPointer(val));
+
+/*
+ * This is a simple collection of known GDK objects
+ */
+
+/* GDK Event */
+#define GOZ_ARG_event(val) \
+  OZ_mkTuple(OZ_atom("event"), 1, val);
+
+/* GDK Color */
+#define GOZ_ARG_color(val) \
+  OZ_mkTuple(OZ_atom("color"), 1, OZ_makeForeignPointer(val));
+
+/* GDK ColorContext */
+#define GOZ_ARG_context(val) \
+  OZ_mkTuple(OZ_atom("context"), 1, OZ_makeForeignPointer(val));
+
+/* GDK Colormap */
+#define GOZ_ARG_map(val) \
+  OZ_mkTuple(OZ_atom("map"), 1, OZ_makeForeignPointer(val));
+
+/* GDK Drawable */
+#define GOZ_ARG_drawable(val) \
+  OZ_mkTuple(OZ_atom("drawable"), 1, OZ_makeForeignPointer(val));
+
+/* GDK Font */
+#define GOZ_ARG_font(val) \
+  OZ_mkTuple(OZ_atom("font"), 1, OZ_makeForeignPointer(val));
+
+/* GDK GC */
+#define GOZ_ARG_gc(val) \
+  OZ_mkTuple(OZ_atom("gc"), 1, OZ_makeForeignPointer(val));
+
+/* GDK Image */
+#define GOZ_ARG_image(val) \
+  OZ_mkTuple(OZ_atom("image"), 1, OZ_makeForeignPointer(val));
+
+/* GDK Window */
+#define GOZ_ARG_window(val) \
+  OZ_mkTuple(OZ_atom("window"), 1, OZ_makeForeignPointer(val));
 
 #endif

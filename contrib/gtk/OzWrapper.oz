@@ -26,6 +26,8 @@ import
    NativeEmitter(coreResultType)
    Open
    Util
+   System(show)
+   Inspector(inspect)
 export
    'createFuncs'  : CreateFuncs
    'createFields' : CreateFields
@@ -47,6 +49,7 @@ define
     "   GOZCoreComponent('GOZCore' : GOZCore) at 'GOZCore.ozf'"
     "   GDK                                   at 'GDK.ozf'"
     "export"
+    "   CastPointer"
     "   MakeArg"
     "   GetArg"
     "   FreeArg"
@@ -102,16 +105,17 @@ define
 
    GtkInitStub =
    ["define"
-    "   OzBase     = GOZCore.ozBase"
-    "   P2O        = GOZCore.pointerToObject"
-    "   O2P        = GOZCore.objectToPointer"
-    "   ExportList = GOZCore.exportList"
-    "   ImportList = GOZCore.importList"
-    "   GdkWindow  = GDK.window"
-    "   GdkGC      = GDK.gC"
-    "   GdkColor   = GDK.color"
-    "   GdkFont    = GDK.font"
-    "   GdkImage   = GDK.image"
+    "   OzBase      = GOZCore.ozBase"
+    "   P2O         = GOZCore.pointerToObject"
+    "   O2P         = GOZCore.objectToPointer"
+    "   CastPointer = GOZCore.castPointer"
+    "   ExportList  = GOZCore.exportList"
+    "   ImportList  = GOZCore.importList"
+    "   GdkWindow   = GDK.window"
+    "   GdkGC       = GDK.gC"
+    "   GdkColor    = GDK.color"
+    "   GdkFont     = GDK.font"
+    "   GdkImage    = GDK.image"
     "   fun {MakeArg S Val}"
     "      {GOZCore.makeArg S {O2P Val}}"
     "   end"
@@ -163,11 +167,20 @@ define
 
    GtkEnd   = ["end"]
 
+   fun {MakeClassName Prefix Name}
+      {Util.toAtom {Util.firstLower {Util.cutPrefix Prefix Name}}}
+   end
+
    class ClassRegistry
       attr
-         classes
+         classes   %% Classes Dictionary
+         classList %% Class Names List
       meth new
-         @classes = {Dictionary.new}
+         @classes   = {Dictionary.new}
+         @classList = nil
+      end
+      meth addEntry(Class)
+         classList <- Class|@classList
       end
       meth add(ClassKey ClassName)
          {Dictionary.put @classes {Util.toAtom ClassKey} ClassName}
@@ -206,6 +219,23 @@ define
          then {Util.cutPrefix Prefix NameS}
          else NameS
          end
+      end
+      meth saveClassNames
+         ClassList = {Map @classList
+                      fun {$ Name}
+                         NameS  = {Util.toString Name}
+                         Label  = if {Util.checkPrefix "GtkCanvas" NameS}
+                                  then "GtkCanvas"
+                                  elseif {Util.checkPrefix "Gtk" NameS}
+                                  then "Gtk"
+                                  else "Gdk"
+                                  end
+                      in
+                         {List.toTuple {Util.toAtom Label}
+                          [{MakeClassName Label NameS}]}
+                      end}
+      in
+         {Pickle.save ClassList {ToS {OS.getCWD}#"/ClassNames.ozp"}}
       end
    end
 
@@ -406,6 +436,13 @@ define
       end
    end
 
+   fun {CheckHint Flag NameS}
+      if Flag
+      then if {Util.checkPrefix "Gdk" NameS} then NameS else "auto" end
+      else NameS
+      end
+   end
+
    class GtkClasses from TextFile
       attr
          types      %% Type Dictionary
@@ -419,6 +456,7 @@ define
          filePrep   %% FilePrepend
          initStub   %% File Init Stub
          fileEnd    %% File End
+         autoDetect %% Automatic Class Type detection
       meth init(Types AllTypes Name)
          @types      = Types
          @allTypes   = AllTypes
@@ -431,6 +469,7 @@ define
          @filePrep   = GtkFilePrepend
          @initStub   = GtkInitStub
          @fileEnd    = GtkEnd
+         @autoDetect = true
          TextFile, init(name: Name
                         flags:[write create truncate])
          GtkClasses, collect({Filter @entries IsStruct})
@@ -463,12 +502,13 @@ define
          Methods        = {Filter @entries
                            {FuncPrefix ClassPrefix ClassForbidden}}
          ClassS         = {Util.toString Class}
+         ClassValue     = 'class'(anchestor: Parent
+                                  methods: Methods)
       in
          {ClassReg add({Util.toString ClassS#"*"}
                        {Util.cutPrefix @stdPrefix ClassS})}
-         {Dictionary.put @classes Class
-          'class'(anchestor: Parent
-                  methods: Methods)}
+         {Dictionary.put @classes Class ClassValue}
+         {ClassReg addEntry(Class)}
       end
       meth searchAnchor(Keys $)
          case Keys
@@ -694,7 +734,12 @@ define
             elseif {IsBasicType @allTypes TypeS}
             then nil
             elseif {ClassReg member(TypeA $)}
-            then "{P2O "#{ClassReg className(TypeA @impPrefix $)}#" "
+            then
+               ClassHintRaw = {ToS {ClassReg className(TypeA @impPrefix $)}}
+               {System.show 'ClassHintRaw'#{Util.toAtom ClassHintRaw}}
+               ClassHint    = {CheckHint @autoDetect ClassHintRaw}
+            in
+               "{P2O "#ClassHint#" "
             else nil %% Former Pointer Registration is no longer necessary
             end
          [] _ then nil
@@ -793,6 +838,7 @@ define
          @filePrep   = GdkFilePrepend
          @initStub   = GdkInitStub
          @fileEnd    = GtkEnd
+         @autoDetect = false
          TextFile, init(name: Name
                         flags:[write create truncate])
          GdkClasses, collect(GdkClassList)
@@ -837,6 +883,7 @@ define
          @filePrep   = CanvasFilePrepend
          @initStub   = CanvasInitStub
          @fileEnd    = GtkEnd
+         @autoDetect = true
          TextFile, init(name: Name
                         flags:[write create truncate])
          CanvasClasses, collect(CanvasClassList)
@@ -881,6 +928,7 @@ define
          @impPrefix  = "Gtk"
          @filePrep   = FieldFilePrepend
          @first      = true
+         @autoDetect = true
          GtkFieldClasses, emit(Types Name Class)
       end
       meth emit(Types Name Class)
@@ -972,12 +1020,17 @@ define
                         end
             TypeA     = {Util.toAtom TypeS}
             S         = @impPrefix
-            Convert = if TypeS == "GList*"
+            Convert   = if TypeS == "GList*"
                         then "ImportList "
                         elseif {IsBasicType @types TypeS}
                         then nil
                         elseif {ClassReg member(TypeA $)}
-                        then "P2O "#{ClassReg className(TypeA S $)}#" "
+                        then
+                           ClassHintRaw = {ToS {ClassReg className(TypeA S $)}}
+                           {System.show 'ClassHintRaw'#{Util.toAtom ClassHintRaw}}
+                           ClassHint    = {CheckHint @autoDetect ClassHintRaw}
+                        in
+                           "P2O "#ClassHint#" "
                         else nil
                         end
             OStr      = if Convert == nil then nil else "{" end
@@ -996,6 +1049,7 @@ define
          @impPrefix  = "Gdk"
          @filePrep   = FieldFilePrepend
          @first      = false
+         @autoDetect = false
          GtkFieldClasses, emit(Types Name Class)
       end
    end
@@ -1007,6 +1061,7 @@ define
          @impPrefix  = "GtkCanvas"
          @filePrep   = FieldFilePrepend
          @first      = true
+         @autoDetect = true
          GtkFieldClasses, emit(Types Name Class)
       end
    end
@@ -1034,6 +1089,7 @@ define
           in
              {Obj close}
           end}
+         {ClassReg saveClassNames}
       end
       proc {CreateFields Types}
          {ForAll [Types#GdkFieldClasses#"GdkClasses.ozp"#"GDKFIELDS.oz"

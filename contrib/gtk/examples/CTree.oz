@@ -30,16 +30,6 @@ define
    Row2  = ["Car" "Truck"]
    Row3  = ["Airplane" "Bird"]
 
-   %% Every Event needs an Argument Description.
-   %% Legal Values are
-   %% int -> Argument is a Integer
-   %% float -> Argument is a Double (Float)
-   %% pointer -> Argument is a arbitrary pointer
-   %% obj(Class) -> Argument is a object of Class
-   %% This is only appropriate if an Oz Wrapper class is present
-   %% Otherwise use plain pointer instead.
-   RowEventDesc = [pointer int]
-
    class MyTree from GTK.cTree
       meth new
          N1
@@ -51,7 +41,7 @@ define
                                0 unit unit unit unit 0 0 _)
          GTK.cTree, insertNode(unit unit {GTK.makeStrArr Row3}
                                0 unit unit unit unit 0 0 _)
-         GTK.cTree, signalConnect('tree_select_row' myEvent RowEventDesc _)
+         GTK.cTree, signalConnect('tree-select-row' myEvent _)
       end
       meth myEvent(Args)
          %% Arguments are given as a list
@@ -64,10 +54,9 @@ define
          LObj = {New MyTree new}
       in
          GTK.window, new(GTK.'WINDOW_TOPLEVEL')
-         GTK.window, signalConnect('delete_event' deleteEvent nil _)
+         GTK.window, signalConnect('delete-event' deleteEvent _)
          GTK.window, setBorderWidth(10)
          GTK.window, setTitle("CList Test")
-
          GTK.window, add(LObj)
          GTK.window, showAll
       end

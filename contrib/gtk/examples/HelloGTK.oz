@@ -29,7 +29,7 @@ define
    class MyToplevel from GTK.window
       meth new
          GTK.window, new(GTK.'WINDOW_TOPLEVEL')
-         GTK.window, signalConnect('delete_event' deleteEvent nil _)
+         GTK.window, signalConnect('delete-event' deleteEvent _)
          GTK.window, setBorderWidth(10)
          GTK.window, setTitle("Hello GTK")
       end
@@ -49,7 +49,7 @@ define
    class MyButton from GTK.button
       meth new
          GTK.button, newWithLabel("Hello, GTK!")
-         GTK.button, signalConnect('clicked' clickedEvent nil _)
+         GTK.button, signalConnect('clicked' clickedEvent _)
       end
       meth clickedEvent(Args)
          {System.show 'ClickedEvent occured'}

@@ -50,7 +50,7 @@ define
          LObj = {New MyList new}
       in
          GTK.window, new(GTK.'WINDOW_TOPLEVEL')
-         GTK.window, signalConnect('delete_event' deleteEvent nil _)
+         GTK.window, signalConnect('delete-event' deleteEvent _)
          GTK.window, setBorderWidth(10)
          GTK.window, setTitle("CList Test")
 

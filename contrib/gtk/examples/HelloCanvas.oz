@@ -32,7 +32,7 @@ define
          GTK.window, new(GTK.'WINDOW_TOPLEVEL')
          GTK.window, setBorderWidth(10)
          GTK.window, setTitle("Hello Canvas")
-         {self signalConnect('delete_event' deleteEvent nil _)}
+         {self signalConnect('delete-event' deleteEvent _)}
       end
       meth deleteEvent(Args)
          %% Caution: At this time, the underlying GTK object

@@ -185,6 +185,8 @@ $(NATCMPS):%.so-$(PLATFORM): %.o
 
 all:            $(TARGETS) binding
 install:        $(LIB_DIR) $(LIB_TARGETS)
+install_level:
+        cp ClassLevels.ozp $(LIB_DIR)/ClassLevels.ozp
 
 #---------------------------------------------------------------------
 # Create Parser Files

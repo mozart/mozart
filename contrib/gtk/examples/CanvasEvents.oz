@@ -33,7 +33,7 @@ define
          GTK.window, new(GTK.'WINDOW_TOPLEVEL')
          GTK.window, setBorderWidth(10)
          GTK.window, setTitle("Canvas Events")
-         {self signalConnect('delete_event' deleteEvent nil _)}
+         {self signalConnect('delete-event' deleteEvent _)}
       end
       meth deleteEvent(Args)
          %% Caution: At this time, the underlying GTK object
@@ -75,8 +75,8 @@ define
                                 RectItemPars $)}
 
    %% Assign Events to Rectangle Item
-   proc {ItemEvent Args}
-      case {Label Args.1}
+   proc {ItemEvent [Event]}
+      case {Label Event}
       of 'GDK_EXPOSE'            then {System.show 'Got Expose Event'}
       [] 'GDK_MOTION_NOTIFY'     then {System.show 'Got Motion Event'}
       [] 'GDK_BUTTON_PRESS'      then {System.show 'Got ButtonPress Event'}
@@ -113,7 +113,7 @@ define
       [] _                       then {System.show 'Got Strange Event'}
       end
    end
-   {RectItem signalConnect('event' ItemEvent [gdk_event] _)}
+   {RectItem signalConnect('event' ItemEvent _)}
 
    %% Create a Polygon item(member of root group); ignore Item Object
    PolyItemPars =["points"#[20#20 380#200 20#380]
