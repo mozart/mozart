@@ -233,6 +233,9 @@ public:
   int checkEntailment(Continuation *&contAfter,Actor *&aa);
   int handleFailure(Continuation *&cont, AWActor *&aa);
 
+  void defaultExceptionHandler(OZ_Term val, ProgramCounter PC,
+                               TaskStackEntry *oldTos);
+
   // Unification
   Bool unify(TaggedRef ref1, TaggedRef ref2, Bool prop = OK);
   Bool fastUnify(TaggedRef ref1, TaggedRef ref2, Bool prop);
