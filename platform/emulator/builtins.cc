@@ -7115,6 +7115,7 @@ BIspec allSpec[] = {
   {"traceThread",2,BItraceThread},
   {"Debug.breakpointAt",4,BIbreakpointAt},
   {"Debug.breakpoint",0,BIbreakpoint},
+  {"Debug.displayCode", 2, BIdisplayCode},
 
   {"topVarInfo",2,BItopVarInfo},
   {"topVars",2,BItopVars},
@@ -7139,9 +7140,10 @@ BIspec allSpec[] = {
 
   {"traceBack",0,BItraceBack},
 
-  {"taskstack",   3, BItaskStack},
-  {"location",    2, BIlocation},
-  {"Debug.displayCode", 2, BIdisplayCode},
+  {"taskstack",      3, BItaskStack},
+  {"frameVariables", 3, BIframeVariables},
+  {"location",       2, BIlocation},
+
   {"halt",0,BIhalt},
   {"System.printName",2,BIgetPrintName},
 

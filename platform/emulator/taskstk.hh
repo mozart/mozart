@@ -91,9 +91,9 @@ public:
 
   void printTaskStack(ProgramCounter pc = NOCODE,
 		      Bool verbose = NO, int depth = 10000);
-  TaggedRef dbgGetTaskStack(ProgramCounter pc = NOCODE,
-		       int depth = 10000);
-  
+  TaggedRef dbgGetTaskStack(ProgramCounter pc = NOCODE, int depth = 10000);
+  TaggedRef dbgFrameVariables(int frameId);
+
   Bool isEmpty() { return *(tos-1)==C_EMPTY_STACK; }
 
   void checkMax();

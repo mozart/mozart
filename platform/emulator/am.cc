@@ -236,6 +236,7 @@ void AM::init(int argc,char **argv)
   wasSolveSet = NO; 
 
   lastThreadID     = 0;
+  lastFrameID      = 0;
   threadStream     = OZ_newVariable();
   threadStreamTail = threadStream;
 
