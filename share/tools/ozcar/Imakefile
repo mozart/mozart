@@ -8,7 +8,7 @@ OZCAR     = $(OZLIB)/ozcar
 
 
 LOCALFILES = \
-	prelude.oz string.oz tk.oz config.oz \
+	prelude.oz string.oz tk.oz config.oz help.oz \
 	tree.oz thread.oz stack.oz source.oz menu.oz dialog.oz gui.oz \
 	ozcar.oz
 

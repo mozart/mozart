@@ -141,9 +141,9 @@ in
 		  CC(label:  'Breakpoints'
 		     menu:
 			[C(label:  'static'
-			   state:   disabled)
+			   action: self # helpBreakpointStatic)
 			 C(label:  'dynamic'
-			   state:   disabled)]
+			   action: self # helpBreakpointDynamic)]
 		     feature: breakpoints)]
 	      feature: help)
 	  ]}
