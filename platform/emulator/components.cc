@@ -510,7 +510,7 @@ OZ_Return loadFile(char *filename,OZ_Term out)
 char *newTempFile()
 {
   char tn[L_tmpnam] = ""; // I like POSIX!
-  tmpnam(tn);
+  ostmpnam(tn);
   return ozstrdup(tn);
 }
 
@@ -661,9 +661,8 @@ unsigned __stdcall fetchThread(void *p)
 static
 OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
 {
-  //  warning("getURL: %s\n",url);
-
   char *tmpfile = newTempFile();
+  //  warning("getURL: %s,%s\n",url,tmpfile);
 
 #ifdef WINDOWS
 

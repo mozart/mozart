@@ -709,7 +709,30 @@ int osOpenMax()
 }
 
 
+
 #ifdef WINDOWS
+
+char *ostmpnam(char *s)
+{
+  /* make sure that temporary files are allways located under C: */
+  if (s) {
+    s[0] = 'C';
+    s[1] = ':';
+    char *aux = tmpnam(s+2);
+    return aux==0 ? 0 : s;
+  }
+
+  static char tn[L_tmpnam+2];
+  tn[0] = 'C';
+  tn[1] = ':';
+  tn[2] = 0;
+  char *aux = tmpnam(NULL);
+  if (aux==0)
+    return 0;
+  Assert(aux[1] != ':');
+  strcat(tn,aux);
+  return tn;
+}
 
 static int wrappedStdin = -1;
 
@@ -721,10 +744,10 @@ int osdup(int fd)
 
 #else
 
-int osdup(int fd)
-{
-  return dup(fd);
-}
+char *ostmpnam(char *s) { return tmpnam(s); }
+
+int osdup(int fd) { return dup(fd); }
+
 #endif
 
 
@@ -915,6 +938,7 @@ Bool osNextSelect(int fd, int mode)
 /* -------------------------------------------------------------------------
  * subroutine for AM::checkIO
  * ------------------------------------------------------------------------- */
+
 
 // called from AM::checkIO
 int osCheckIO()
