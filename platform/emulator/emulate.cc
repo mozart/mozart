@@ -467,6 +467,25 @@ Suspension *mkSuspension(Board *b, int prio, ProgramCounter PC,
   }
 }
 
+inline
+Suspension *mkSuspension(Board *b, int prio, OZ_CFun bi,
+                         RefsArray X, int argsToSave)
+{
+  switch (am.currentThread->getCompMode()) {
+  case ALLSEQMODE:
+    am.pushCFun(b,bi,X,argsToSave);
+    return new Suspension(am.currentThread);
+  case SEQMODE:
+    am.pushCFun(b,bi,X,argsToSave);
+    return new Suspension(am.currentThread->newSeqThread());
+  case PARMODE:
+    return new Suspension(b,prio,bi,X,argsToSave);
+  default:
+    Assert(0);
+    return 0;
+  }
+}
+
 static
 void suspendOnVar(TaggedRef A, int argsToSave, Board *b, ProgramCounter PC,
                   RefsArray X, RefsArray Y, RefsArray G, int prio)
@@ -928,6 +947,21 @@ void engine() {
           killPropagatedCurrentTaskSusp();
           LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
                             goto localhack0;);
+          goto LBLcheckEntailment;
+        case SUSPEND:
+          extern TaggedRef *globalSeqSuspendHack;
+          if (globalSeqSuspendHack) {
+            Suspension *susp =
+              mkSuspension(CBB,GET_CURRENT_PRIORITY(),
+                           biFun,X,XSize);
+            taggedBecomesSuspVar(globalSeqSuspendHack)
+              ->addSuspension(susp);
+            globalSeqSuspendHack=0;
+          }
+          if (e->currentThread->getCompMode() == ALLSEQMODE) {
+            e->currentThread=0;
+            goto LBLstart;
+          }
           goto LBLcheckEntailment;
         default:
           error("Unexpected return value by c-function.");
@@ -1636,8 +1670,20 @@ void engine() {
               predicate = bi->getSuspHandler();
               if (!predicate) {
                 e->pushTask(CBB,PC,Y,G,X,predArity);
-                e->currentThread=0;
-                goto LBLstart;
+                extern TaggedRef *globalSeqSuspendHack;
+                if (globalSeqSuspendHack) {
+                  Suspension *susp =
+                    mkSuspension(CBB,GET_CURRENT_PRIORITY(),
+                                 bi->getFun(),X,predArity);
+                  taggedBecomesSuspVar(globalSeqSuspendHack)
+                    ->addSuspension(susp);
+                  globalSeqSuspendHack=0;
+                }
+                if (e->currentThread->getCompMode() == ALLSEQMODE) {
+                  e->currentThread=0;
+                  goto LBLstart;
+                }
+                goto LBLcheckEntailment;
               }
               goto LBLcall;
             case FAILED:
