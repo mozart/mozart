@@ -1,6 +1,16 @@
 %%% $Id$
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
+Lck =
+{New class
+	attr
+	   L : false
+	meth init skip end
+	meth set   L <- true  end
+	meth unset L <- false end
+	meth is($) @L end
+     end init}
+
 class Gui from Menu Dialog
 
    feat
@@ -26,7 +36,6 @@ class Gui from Menu Dialog
 
    attr
       LastSelectedFrame : undef
-      LockFrameClick    : false
 
    meth init
       %% create the main window, but delay showing it
@@ -215,8 +224,11 @@ class Gui from Menu Dialog
    end
    
    meth frameClick(nr:I frame:F tag:T)
+      L
+   in
       {Delay 70} % > TIME_SLICE
-      case @LockFrameClick then skip else
+      L = {Lck is($)}
+      case L then skip else
 	 Gui,SelectStackFrame(T)
 	 Gui,printEnv(frame:I vars:F.vars)
 	 SourceManager,scrollbar(file:F.file line:{Abs F.line}
@@ -294,10 +306,10 @@ class Gui from Menu Dialog
 			      action:proc{$}
 					S = A.3
 				     in
-					LockFrameClick <- true
+					{Lck set}
 					{Browse S}
-					{Delay 90}
-					LockFrameClick <- false
+					{Delay 150}
+					{Lck unset}
 				     end)}
 	      in
 		 {ForAll [tk(insert 'end' ' ' T)
