@@ -1,0 +1,234 @@
+<chapter id=chapter.scripts><title/Parameterized Scripts/<p>
+
+Combinatorial problems typically occur in a
+general form that can be instantiated with
+different data sets.  This leads to parameterized
+scripts separating the general script from
+particular data sets.
+
+
+<section id="SecFDQueens"><title/Example: Queens/
+<para><title/Problem Specification./
+Place ?{N} queens on an <math/N\times N/ chess board
+such that no two queens attack each other.  The
+parameter of the problem is ?{N}.  A solution for
+the 8-queens problem looks as follows:
+<figure class="Figure">
+<picture latex>
+{
+\begin{center}
+\psset{xunit=1.5em,yunit=1.5em}
+\begin{pspicture}(0,0)(9,9)
+\showqueen{1}{1}\showqueen{2}{7}\showqueen{3}{4}\showqueen{4}{6}%
+\showqueen{5}{8}\showqueen{6}{2}\showqueen{7}{5}\showqueen{8}{3}%
+\multirput(1,1)(1,0){9}{\psline(0,0)(0,8)}%
+\multirput(1,1)(0,1){9}{\psline(0,0)(8,0)}%
+\rput(0,.5){%
+\rput(0,1){$1$}\rput(0,2){$2$}\rput(0,3){$3$}\rput(0,4){$4$}%
+\rput(0,5){$5$}\rput(0,6){$6$}\rput(0,7){$7$}\rput(0,8){$8$}}%
+\rput(.5,0){%
+\rput(1,0){$1$}\rput(2,0){$2$}\rput(3,0){$3$}\rput(4,0){$4$}%
+\rput(5,0){$5$}\rput(6,0){$6$}\rput(7,0){$7$}\rput(8,0){$8$}}%
+\end{pspicture}
+\end{center}
+}
+</picture>
+</figure>
+
+<para><title/Model./
+We will use a clever model avoiding possible
+symmetries and minimizing the number of
+propagators.
+<p>
+We assume that the queens are numbered from ?{1}
+to ?{N}, and that the ?{k}th queen is always placed
+in the ?{k}th column.  For every queen ?{i} we have
+one variable <math/R_i/ saying in which row the queen
+is placed.  The model guarantees by construction
+that two queens are never placed in the same
+column.  To ensure that two queens are never in
+the same row, we impose the constraint that the
+variables <math/R_1,\ldots,R_N/ are pairwise distinct.
+<p>
+To enforce that two queens are never in the same
+diagonal, we need to impose the constraints
+<p><math/
+R_i+(j-i)\neq R_j
+\qquad
+\hbox{and}
+\qquad
+R_i-(j-i)\neq R_j
+/<p>
+for all ?{i}, ?{j} such that&fsp;<math/1\le i<j\le N/.
+Equivalently, we can impose the constraints
+<p><math/
+R_i-i\neq R_j-j
+\qquad
+\hbox{and}
+\qquad
+R_i+i\neq R_j+j
+/<p>
+for all ?{i}, ?{j} such that&fsp;<math/1\le i<j\le N/.  This is
+equivalent to saying that the sequences
+<p><math/
+R_1-1\;,\ldots,\;R_N-N
+\qquad
+\hbox{and}
+\qquad
+R_1+1\;,\ldots,\;R_N+N
+/<p>
+are both nonrepetitive.  Since Oz has a special
+propagator for the constraint stating the
+nonrepetitiveness of such sequences, this
+formulation requires only two propagators, one for
+each sequence.
+
+<para><title/Distribution Strategy./
+We distribute on the variables <math/R_1,\ldots,R_N/ using a
+first-fail strategy that tries the value in the
+middle of the domain of the selected variable
+first.  This strategy works well even for
+large&nbsp;?{N}.
+<p>
+<figure class="Figure" id="ProgQueens">
+<caption>A script for the ?{N/-queens Problem.}</caption>
+<<<
+fun {Queens N}
+   proc {$ Row}
+      L1N  = {List.number 1 N 1}      % [1 2 3 ... N]
+      LM1N = {List.number ~1 ~N ~1}   % [~1 ~2 ~3 ... ~N]
+   in
+      {FD.tuple queens N 1#N Row}
+      {FD.distinct Row}
+      {FD.distinctOffset Row LM1N}
+      {FD.distinctOffset Row L1N}
+      {FD.distribute generic(value:mid) Row}
+   end
+end
+>>>
+</figure>
+
+<para><title/Script./
+<Ptr to="ProgQueens"> shows a parameterized
+script for the ?{N}-Queens Problem.  The actual
+script is created by the procedure ?{Queens},
+which takes ?{N} as parameter.  The script
+constrains its root variable ?{Row} to a tuple
+having a component for every queen.  This
+implicitly creates the variables <math/R_1,\ldots,R_N/ of the
+model.
+<p>
+The statements
+<<<
+{FD.distinct Row}
+{FD.distinctOffset Row LM1N}
+{FD.distinctOffset Row L1N}
+>>>
+create propagators for the constraints stating
+that the sequences
+<p><math/
+~$\begin{eqnarray*}
+&&
+{\it Row}_1\;,\ldots,\;{\it Row}_N
+\\
+&&
+{\it Row}_1-1\;,\ldots,\;{\it Row}_N-N
+\\
+&&
+{\it Row}_1+1\;,\ldots,\;{\it Row}_N+N
+\end{eqnarray*}$~
+/<p>
+be nonrepetitive.
+</section>
+
+<section><title/Example: Changing Money/
+
+<para><title/Problem Specification./
+Given bills and coins of different denominations
+and an amount ?{A}, select a minimal number of
+bill and coins to pay ?{A}.  One instance of the
+problem assumes that we want to pay the amount of
+<math/1.42/, and that we have 6 one dollar bills, 8
+quarters (25 cents) , 10 dimes (10 cents), 1
+nickel (5 cents), and 5 pennies (1 cent).
+
+<para><title/Model./
+To avoid conversions, we assume that the amount
+to be paid and all denominations are specified in
+the same currency unit (e.g., cents).  The data
+is specified by variables <math/a_1,\ldots,a_k/
+specifying the available denominations <math/d_i/ and
+the number <math/a_i/ of available respective coins or
+bills.
+<p>
+The model has a variable <math/C_i/ for ever available
+denomination saying how many of the corresponding
+bills or coins we will use to pay the amount.
+For all ?{i}, we must have
+<math/
+0\le C_i\le a_i
+/
+Moreover, we must satisfy the constraint
+<p><math/
+d_1\cdot C_1 + d_2\cdot C_2 + \cdots + d_k\cdot
+C_k
+\;=\;
+{\it amount\;to\;be\;paid}
+/<p>
+
+<para><title/Distribution Strategy./
+
+We distribute on the variables <math/C_1,C_2,\ldots/,
+where we give precedence to larger denominations
+and, with second priority, to larger values.
+
+<figure class="Figure" id="ProgChange">
+<caption/A script for changing money together with a data specification./
+
+<<<
+fun {ChangeMoney BillsAndCoins Amount}
+   Available    = {Record.map BillsAndCoins fun {$ A#D} A end}
+   Denomination = {Record.map BillsAndCoins fun {$ A#D} D end}
+   NbDenoms     = {Width Denomination}
+in
+   proc {$ Change}
+      {FD.tuple change NbDenoms 0#Amount Change}
+      {For 1 NbDenoms 1 proc {$ I} Change.I =<: Available.I end}
+      {FD.sumC Denomination Change '=:' Amount}
+      {FD.distribute generic(order:naive value:max) Change}
+   end
+end
+
+BillsAndCoins = bac(6#100  8#25  10#10  1#5  5#1)
+>>>
+</figure>
+
+<para><title/Script./
+The procedure ?{ChangeMoney} in
+<Ptr to="ProgChange"> takes two parameters
+specifying the available bills and coins and the
+amount to be paid.  It returns a script that
+enumerates the possible ways to pay the specified
+amount with the specified bills and coins.  It is
+assumed that the bills and coins are specified in
+denomination decreasing order.
+<p>
+The statement
+<<<
+{Browse {SearchOne {ChangeMoney BillsAndCoins 142}}}
+>>>
+computes the list
+<<<
+[change(1 1 1 1 2)]
+>>>
+saying that we can pay $1.42 with 1 one dollar
+bill, 1 quarter, 1 dime, 1 nickel, and 2 pennies.
+This payment uses the minimal number of bills and
+coins.  The number of different possibilities to
+pay $1.42 with the specified stock of bills and
+coins is 6 and can be computed with the statement
+<<<
+{Browse {Length {SearchAll {ChangeMoney BillsAndCoins 142}}}}
+>>>
+</section>
+</chapter>

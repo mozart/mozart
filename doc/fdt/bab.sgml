@@ -1,0 +1,27 @@
+<chapter id=chapter.branchandbound>
+<title/Branch and Bound/<p>
+
+In this chapter we focus on computing an optimal solution according
+to a given cost function.  While we have searched for optimal solutions
+already in <Ptr to="sec.reified.photo"> and <Ptr to="sec.reified.bin">, we
+have used a rather ad-hoc strategy there. This strategy lacks generality and
+does not provide either for a proof of optimality.
+<p>
+In this section we introduce a general schema to compute an optimal
+solution according to an arbitrary cost function and show how it is
+available in Oz. This schema is called
+<para><title/branch and bound/<def/branch and bound/ and is available
+by  procedures like <<ExploreBest>> (see <Ptr to="ozdoc.modules"> for more
+search engines). A typical application of <<ExploreBest>> for a script <<Script>>
+looks like
+<<<
+{ExploreBest Script Order}
+>>>
+The branch and bound schema works as follows. When a solution of
+<<Script>> is found, all the remaining alternatives in the search tree
+are constrained to be <def/better/ with respect to an order available
+through the procedure <<Order>>.  Usually <<Order>> applies a cost
+function to its arguments and creates a propagator imposing
+the ordering. The first argument of <<Order>> is the previous solution,
+and the second argument is an alternative solution we are searching for.
+</chapter>
