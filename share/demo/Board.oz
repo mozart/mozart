@@ -84,9 +84,9 @@ local
    
    fun {NewBoardFunctor Ticket User}
       
-      ArgSpec = single(master(type:bool default:true)
-		       ticket(type:atom default:Ticket)
-		       user(type:atom   default:User))
+      ArgSpec = record(master(single type:bool default:true)
+		       ticket(single type:atom default:Ticket)
+		       user(single type:atom   default:User))
 
    in
       

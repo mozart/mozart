@@ -38,7 +38,7 @@ require
    Configure(helv: Helv)
    
 prepare
-   ArgSpec = single(example(type:atom default:no))
+   ArgSpec = record(example(single type:atom default:no))
    
 define
 
