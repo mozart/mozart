@@ -180,7 +180,7 @@ case "$cmd" in
         if [ $? -ne 0 ]; then exit 1; fi
         (echo "#!/bin/sh"; 
          echo ": \${OZHOME=$OZHOME}";
-         echo "exec \$OZHOME/bin/ozsa -f \$0";
+         echo "exec \$OZHOME/bin/ozsa -f \$0 -a \$@";
          echo "###";
          cat $tempfile) > $outfile
         chmod +x $outfile
