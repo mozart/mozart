@@ -98,6 +98,15 @@ error include resources.hh before mozart.h
 #define DEFAULT_MID_LOW_RATIO   10
 #define DEFAULT_CLOSE_TIME      1000
 
+/* dp tables default values */
+#define DEFAULT_OWNER_TABLE_SIZE    100
+#define DEFAULT_BORROW_TABLE_SIZE   100
+#define DP_TABLE_LOW_LIMIT          20
+#define DP_TABLE_EXPAND_FACTOR      200
+#define DP_TABLE_BUFFER             50
+#define DP_TABLE_WORTHWHILE_REALLOC 200
+
+
 #define DEFAULT_TRAIL_SIZE      200
 
 #define SHOW_IDLE_MESSAGE	0
