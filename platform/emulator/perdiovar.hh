@@ -52,7 +52,8 @@ public:
   size_t getSize(void) { return sizeof(PerdioVar); }
 
 
-  Bool bindPerdioVar(TaggedRef *vptr,TaggedRef v,PerdioVar *rVar=0);
+  Bool bindProxy(TaggedRef *vptr,TaggedRef v,PerdioVar *rVar=0);
+  Bool bindManager(TaggedRef *vptr,TaggedRef v,PerdioVar *rVar=0);
   Bool surrender(TaggedRef *vptr,TaggedRef v,PerdioVar *rVar);
   Bool unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, Bool prop);
 
