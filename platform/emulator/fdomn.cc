@@ -1184,10 +1184,7 @@ int OZ_FiniteDomain::singl(void) const
 
 int OZ_FiniteDomain::constrainBool(void)
 {
-  setType(fd_descr);
-  min_elem = contains(0) ? 0 : 1;
-  max_elem = contains(1) ? 1 : 0;
-  return size = findSize();
+  return *this <= 1;
 }
 
 int OZ_FiniteDomain::intersectWithBool(void)

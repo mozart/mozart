@@ -193,7 +193,7 @@ OZ_C_proc_begin(BIfdPutLe, 2)
   OZ_getCArgDeref(0, var, varptr, vartag);
 
   if (! (isGenFDVar(var,vartag) || isGenBoolVar(var,vartag) || 
-	 isSmallInt(vartag))) {
+	 OZ_isPosSmallInt(var))) {
     if (isNotCVar(vartag)) {
       return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
     } else {
@@ -232,7 +232,7 @@ OZ_C_proc_begin(BIfdPutGe, 2)
   OZ_getCArgDeref(0, var, varptr, vartag);
 
   if (! (isGenFDVar(var,vartag) || isGenBoolVar(var,vartag) || 
-	 isSmallInt(vartag))) {
+	 OZ_isPosSmallInt(var))) {
     if (isNotCVar(vartag)) {
       return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
     } else {
@@ -350,7 +350,7 @@ OZ_C_proc_begin(BIfdPutNot, 2)
   OZ_getCArgDeref(0, var, varptr, vartag);
 
   if (! (isGenFDVar(var, vartag) || isGenBoolVar(var, vartag) || 
-	 isSmallInt(vartag))) {
+	 OZ_isPosSmallInt(var))) {
     if (isNotCVar(vartag)) {
       return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
     } else {
