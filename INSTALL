@@ -61,7 +61,7 @@ before running configure the following variables can be set
 
   $oz_inc_path
   $oz_lib_path
-    Additional dirs to look for X11,Tcl,Tk, and gmp header/libraries.
+    Additional dirs to look for headers and libraries.
 
   $oz_x11_lib_dir
   $oz_x11_inc_dir
@@ -101,7 +101,7 @@ before running configure the following variables can be set
  make clean
   clean up
 
- make realclean
+ make veryclean
   clean + remove generated files
 
  make distclean
