@@ -65,10 +65,30 @@ void checkStability(Thread * ct, Board * cb) {
 }
 
 
+inline
+int run_thread(Thread * ct) {
+  am.restartThread(); // start a new time slice
+
+  am.setCurrentThread(ct);
+  ozstat.leaveCall(ct->getAbstr());
+  ct->setAbstr(NULL);
+  am.cachedStack = ct->getTaskStackRef();
+  am.cachedSelf  = (Object *) 0;
+  
+  int ret = engine(NO);
+    
+  ct->setAbstr(ozstat.currAbstr);
+  ozstat.leaveCall(NULL);
+  
+  if (am.getSelf()) {
+    ct->pushSelf(am.getSelf());
+    am.cachedSelf = (Object *) NULL;
+  }
+
+  return ret;
+}
 
 void scheduler(void) {
-  register AM * const e	= &am;
-
   register Thread * ct;
   register Board  * cb;
 
@@ -79,7 +99,7 @@ void scheduler(void) {
      *
      */
 
-    e->checkStatus(OK);
+    am.checkStatus(OK);
 
 
     /*
@@ -89,10 +109,10 @@ void scheduler(void) {
 
     do {
 
-      ct = e->threadsPool.getNext();
+      ct = am.threadsPool.getNext();
 
       if (ct == (Thread *) NULL) {
-	e->suspendEngine();
+	am.suspendEngine();
 	continue;
       }
 
@@ -129,114 +149,45 @@ void scheduler(void) {
     }
 
     if (!oz_installPath(cb)) {
-      cb = oz_currentBoard();
-      goto LBLfailure;
+      oz_currentBoard()->fail(ct);
+      continue;
     }
 
     Assert(oz_currentBoard() == cb);
 
-    e->restartThread(); // start a new time slice
-    // fall through
-
-
-    /*
-     * Run thread
-     *
-     */
-
-  LBLrunThread:
-    {
-
-      e->setCurrentThread(ct);
-      ozstat.leaveCall(ct->abstr);
-      ct->abstr = 0;
-      e->cachedStack = ct->getTaskStackRef();
-      e->cachedSelf  = (Object *) 0;
+    switch (run_thread(ct)) {
       
-      int ret = engine(NO);
+    case T_PREEMPT:
+      am.threadsPool.scheduleThread(ct);
+      break;
       
-      ct->setAbstr(ozstat.currAbstr);
-      ozstat.leaveCall(NULL);
-
-      if (e->getSelf()) {
-	ct->pushSelf(e->getSelf());
-	e->cachedSelf = (Object *) NULL;
-      }
+    case T_SUSPEND:
+      Assert(!cb->isFailed());
+      ct->unsetRunnable();
       
-      switch (ret) {
-
-      case T_PREEMPT:
-	am.threadsPool.scheduleThread(ct);
-	break;
-
-      case T_SUSPEND:
-	Assert(!cb->isFailed());
-	ct->unsetRunnable();
-	  
-	if (cb->isRoot()) {
-	  if (e->debugmode() && ct->isTrace())
-	    debugStreamBlocked(ct);
-	} else {
-	  checkStability(ct,cb);
-	}
-	
-	break;
-
-      case T_TERMINATE:
-	Assert(!ct->isDead() && ct->isRunnable() && ct->isEmpty());
-	cb->decSuspCount();
-	oz_disposeThread(ct);
+      if (cb->isRoot()) {
+	if (am.debugmode() && ct->isTrace())
+	  debugStreamBlocked(ct);
+      } else {
 	checkStability(ct,cb);
-	break;
-	
-      case T_FAILURE:
-	goto LBLfailure;
-
-      case T_ERROR:
-      default:
-	Assert(0);
       }
-
-      continue;
-    }
-    
-    
-    /*
-     * Fail Thread
-     *
-     *  - can be entered only in subordinated space
-     *  - current thread must be runnable
-     */
-
-  LBLfailure:
-    {
-      // Note that cb might be different from the thread's home:
-      // this can happen while trying to install the space!
-      Assert(ct->isRunnable());
       
-      Board * pb = cb->getParent();
-
-      Assert(!cb->isRoot());
+      break;
       
-      cb->setFailed();
+    case T_TERMINATE:
+      Assert(!ct->isDead() && ct->isRunnable() && ct->isEmpty());
+      cb->decSuspCount();
+      oz_disposeThread(ct);
+      checkStability(ct,cb);
+      break;
       
-      e->trail.unwindFailed();
+    case T_FAILURE:
+      cb->fail(ct);
+      break;
       
-      am.setCurrent(pb);
-      
-      if (!oz_unify(cb->getStatus(),cb->genFailed())) {
-	Assert(0);
-      }
-     
-      pb->decSolveThreads();
-
-      // tmueller: this experimental
-#ifdef NAME_PROPAGATORS
-      if (!e->isPropagatorLocation())
-	oz_disposeThread(ct);
-#endif
-
-      continue;
+    case T_ERROR:
+    default:
+      Assert(0);
     }
    
   } while(1);
