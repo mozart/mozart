@@ -298,42 +298,45 @@ define
    end
    
    Args={Application.getArgs
-	 record('install'(single type:string char:&i)
-		'create'(single char:&c)
-		'in'(single type:string)
-		'out'(single type:string)
-		'view'(single type:string char:&v)
-		'list'(single char:&l)
-		'info'(single type:string)
-		'check'(single type:string)
-		'interactive'(single)
-		'package'(single type:string)
-		'force'(single)
-		'remove'(single type:string)
-		'help'(single char:&h)
+	 record('action'(single type:atom(install create view check interactive remove help) default:interactive)
+		%%
+		%% aliases for actions
+		%%
+		'install'(alias:['action'#install '<install>'#true])
+		'create'( alias:['action'#create  '<create>' #true])
+		'info'(   alias:['action'#view    '<info>'   #true])
+		'list'(   alias:['action'#list    '<list>'   #true])
+		'check'(  alias:['action'#check   '<check>'  #true])
+		'interactive'(alias:['action'#interactive '<interactive>'#true])
+		'remove'( alias:['action'#remove  '<remove>' #true])
+		'help'(   alias:['action'#help    '<help>'   #true])
+		%%
+		%% corresponding flags
+		%%
+		'<install>'(single type:bool default:false)
+		'<create>'( single type:bool default:false)
+		'<info>'(   single type:bool default:false)
+		'<list>'(   single type:bool default:false)
+		'<check>'(  single type:bool default:false)
+		'<interactive>'(single type:bool default:false)
+		'<remove>'( single type:bool default:false)
+		'<help>'(   single type:bool default:false)
+		%%
+		%% arguments
+		%%
+		'in'(    single type:string
+			 validate:alt(when('<create>' optional)
+				      when(disj('<install>' '<info>' '<remove>') true)
+				      when(true false)))
+		'prefix'(single type:string optional:true)
+		'out'(   single type:string
+			 validate:alt(when('<create>' true)
+				      when(true false)))
+		'force'( single type:bool default:false)
+		'update'(single type:bool default:false)
 	       )}
 
-   Action
-   
-   local
-      Actions=[list create install check interactive view remove help]
-      fun{HasFeats L}
-	 {List.some L fun{$ F} {HasFeature Args F} end}
-      end
-   in
-      if {HasFeats Actions} then % at leat one action
-	 Action={List.nth
-		 {List.dropWhile Actions fun{$ F} {HasFeature Args F}==false end}
-		 1}
-	 if {HasFeats {List.subtract Actions Action}} then % more than one action
-	    {ShowInfo "Error : more than one action specified"}
-	    {Application.exit 1}
-	 end
-      else
-	 Action=interactive
-      end
-   end
-   
+   Action = Args.action
    InteractiveMode=Action==interactive
    
    OzpmInfo={ByNeed fun{$}
