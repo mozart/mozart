@@ -39,6 +39,7 @@ export OZARCH
 : ${OZMACHINE=$OZHOME/bin/$OZARCH/oz.machine.bin}
 #echo "OZMACHINE = $OZMACHINE"
 
+: ${OZWINDOWMANAGER=$OZHOME/bin/$OZARCH/ozwindowmanager}
 
 # set OZPATH & PATH
 if [ ${OZ_PI-xx} = xx ]; then
@@ -101,7 +102,7 @@ case "$cmd" in
 	fi
         echo "Using emacs '${OZEMACS}'"
 
-	exec $OZEMACS -l $OZHOME/lib/elisp/ozstartup.el $*
+	exec $OZEMACS -l $OZHOME/lib/elisp/ozstartup.el "$@"
    ;;
 
    oz.compiler)
@@ -120,15 +121,15 @@ case "$cmd" in
 
 
       if [ $TERM = "emacs" ]; then
-        exec $OZMACHINE -E $*
+        exec $OZMACHINE -E "$@"
       else
-        xterm -title 'Oz Machine' -e $OZMACHINE $* > /dev/null 2>&1 &
+        xterm -title 'Oz Machine' -e $OZMACHINE "$@" > /dev/null 2>&1 &
       fi
       exit 0
    ;;
 
    oz-)
-	exec $ILE $OZCOMPILER $*
+	exec $ILE $OZCOMPILER "$@"
    ;;
 
    ozc)
@@ -138,6 +139,10 @@ case "$cmd" in
 	    $OZCOMPILER +p /dev/null +c $file
         done
         exit $?
+   ;;
+
+   ozwindowmanager)
+	exec $OZWINDOWMANAGER "$@"
    ;;
 
    *)
