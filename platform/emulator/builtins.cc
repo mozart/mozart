@@ -2924,8 +2924,11 @@ OZ_Return BIstatusInline(TaggedRef term, TaggedRef &out) {
     out = makeTaggedSRecord(t);
     break;
   }
-  default:
-    out = OZ_termType(term);
+  default: {
+    SRecord *t = SRecord::newSRecord(AtomDet, 1);
+    t->setArg(0, OZ_termType(term));
+    out = makeTaggedSRecord(t);
+  }
   }
   return PROCEED;
 }
