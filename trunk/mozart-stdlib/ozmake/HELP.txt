@@ -508,6 +508,7 @@ MAKEFILE
           requires  : [ MOGUL... ]
           categories: [ CATEGORY... ]
           version   : VERSION
+          provides  : [ FILES... ]
         )
 
    Features  bin,  lib  and doc list targets to be installed in <BINDIR>,
@@ -726,6 +727,23 @@ MAKEFILE
    that  consist  of  integers  separated  by  single  dots,  e.g. "2" or
    "3.1.7".
 
+    provides
+
+   feature  provides  is  used  to override the default information about
+   what  the  package  provides, normally automatically computed from the
+   bin  and  lib  targets: it should be a list which contains a subset of
+   these targets. The provides feature of a makefile does not override or
+   otherwise  affect  its  submakefiles:  each makefile should separately
+   override  if  it  so  desires.  To  state  that  a  makefile  does not
+   officially  provide  any functors or executable application, you would
+   add:
+        provides : nil
+
+   You  should  use  the provides feature when your package contains both
+   official  public  functors as well as purely implementational functors
+   that  are  not part of the official public interface and should not be
+   mentioned as provided by the package.
+
 CONTACTS
 
    Authors  should  really  be  referred  to  by mogul ids denoting mogul
@@ -734,9 +752,9 @@ CONTACTS
    record describing a person, or a list of such records.
 
    You  should  not have a contact feature in every makefile. Rather, the
-   contact  feature  is  intended  for makefiles that only have a contact
-   feature,  i.e.  whose  only purpose is to create mogul entries for the
-   corresponding persons. Here is an example of such a makefile:
+   contact  feature  is  usually  intended for makefiles that only have a
+   contact  feature,  i.e.  whose only purpose is to create mogul entries
+   for the corresponding persons. Here is an example of such a makefile:
         makefile(
            contact :
               o(
@@ -746,4 +764,4 @@ CONTACTS
                  www   : 'http://www.ps.uni-sb.de/~duchier/'))
 
    You  can  invoke ozmake --publish on such a makefile to contribute the
-   cotrresponding mogule database entries
+   corresponding mogul database entries

@@ -892,6 +892,7 @@ recommended except for features <oz>blurb</oz>, <oz>info_text</oz> and
           requires  : [ MOGUL... ]
           categories: [ CATEGORY... ]
           version   : VERSION
+          provides  : [ FILES... ]
         )
 </oz.display>
 <p>Features bin, lib and doc list targets to be installed in
@@ -1219,6 +1220,24 @@ categorize this package in the MOGUL archive.</p>
 <p>feature <oz>version</oz> is used to provide a version string.  This
 is a string that consist of integers separated by single dots, e.g.
 <oz>"2"</oz> or <oz>"3.1.7"</oz>.</p>
+</subsubsection>
+
+<subsubsection><title>provides</title>
+<p>feature <oz>provides</oz> is used to override the default
+information about what the package provides, normally automatically
+computed from the <oz>bin</oz> and <oz>lib</oz> targets: it should be
+a list which contains a subset of these targets.  The
+<oz>provides</oz> feature of a makefile does not override or otherwise
+affect its submakefiles: each makefile should separately override if
+it so desires.  To state that a makefile does not officially provide
+any functors or executable application, you would add:
+<oz.display>
+        provides : nil
+</oz.display>
+You should use the <oz>provides</oz> feature when your package contains
+both official public functors as well as purely implementational functors
+that are not part of the official public interface and should not be
+mentioned as <em>provided</em> by the package.</p>
 </subsubsection>
 
 </subsection>
