@@ -955,12 +955,43 @@ The system cannot be built.
   fi])
 
 dnl ------------------------------------------------------------------
+dnl OZ_ARG_WITH_GLOBAL_OZ
+dnl
+dnl typically, we do NOT want to bootstrap the system using an existing
+dnl mozart installation.  This can be overriden with an explicit
+dnl --with-global-oz
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_ARG_WITH_GLOBAL_OZ,[
+  AC_MSG_CHECKING([for --with-global-oz])
+  AC_ARG_WITH(global-oz,
+    [--with-global-oz allows to use an existing oz installation to build the system (default: no)],
+    [oz_cv_global_oz="$with_global_oz"],
+    [oz_cv_global_oz=no])
+  WITH_GLOBAL_OZ="$oz_cv_global_oz"
+  AC_MSG_RESULT($WITH_GLOBAL_OZ)
+])
+
+dnl ------------------------------------------------------------------
 dnl OZ_PATH_PROG(VAR,PROGRAM,ACTION-IF-NOT-FOUND)
 dnl ------------------------------------------------------------------
 
 AC_DEFUN(OZ_PATH_PROG, [
+    if test -z "$WITH_GLOBAL_OZ"; then
+      OZ_ARG_WITH_GLOBAL_OZ
+    fi
+    dummy_PATH="$PATH"
+    if test "$WITH_GLOBAL_OZ" = no; then
+      for oz_prog_tmp in $2; do
+        case $oz_prog_tmp in
+          oz|ozc|ozl|oztool|ozengine|ozplatform|ozdoc)
+            dummy_PATH="$SRCTOP/share/bin:$SRCTOP"
+          ;;
+        esac
+      done
+    fi
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
-    dummy_PATH=`echo $PATH | sed -e 's/:://g' | sed -e 's/:$//g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e 's/:://g' | sed -e 's/:$//g'`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
