@@ -554,8 +554,8 @@ One way to access <<Y>> is by perform the operation
 {Wait Y}
 >>>
 
-<P>
-<P><FIGURE ID="volvos2" CLASS="Figure">
+
+<FIGURE ID="volvos2" CLASS="Figure">
 <CAPTION>Producing Volvo's lazily</CAPTION>
 <<<
 local
