@@ -29,6 +29,7 @@
 
 class MsgBuffer{
 public: 
+  Bool unmarshallingOld;
   BYTE* posMB;
   BYTE* endMB;
   virtual void marshalBegin() = 0;	
@@ -38,6 +39,7 @@ public:
   virtual BYTE getNext()=0;
   virtual void putNext(BYTE)=0;
 
+  void init() { unmarshallingOld=NO; }
   BYTE get(){
     if(posMB==endMB){
       return getNext();}

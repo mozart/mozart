@@ -39,7 +39,9 @@
 #include "runtime.hh"
 #include "../include/config.h"
 
-#define PERDIOVERSION    OZVERSION "#6"
+#define PERDIOMINOR      "7"
+#define PERDIOMAJOR      OZVERSION
+#define PERDIOVERSION    PERDIOMAJOR "#" PERDIOMINOR
 
 /* ************************************************************************ */
 /*                         ORGANIZATION                                 
