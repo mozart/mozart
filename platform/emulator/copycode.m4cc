@@ -58,17 +58,17 @@ define(instruction,
 	  break;')
 
 define(opAction,
-`ifelse($1,Literal, handleLiteral(PC++,ht,makecopy);,
-        $1,Feature, handleLiteral(PC++,ht,makecopy);,
-        $1,Constant,handleLiteral(PC,ht,makecopy);PC++;,
-        $1,Number,handleLiteral(PC,ht,makecopy);PC++;,
-        $1,RecordArity, handleRecordArity(PC++,ht,makecopy);,
-        $1,PredicateRef,handlePredicateRef(PC++,ht);,
-        $1,PredId,  handlePredId(PC++,ht,makecopy);,
-        $1,HashTableRef, handleHashTable(PC++,ht,makecopy);,
-        $1,GenCallInfo,handleGenCallInfo(PC++,ht,makecopy);,
-        $1,ApplMethInfo,handleApplMethInfo(PC++,ht,makecopy);,
-        $1,Cache,handleCache(PC,ht,makecopy); PC += CacheSize;,
+`ifelse($1,Literal, handleLiteral(PC++,ht,code);,
+        $1,Feature, handleLiteral(PC++,ht,code);,
+        $1,Constant,handleLiteral(PC,ht,code);PC++;,
+        $1,Number,handleLiteral(PC,ht,code);PC++;,
+        $1,RecordArity, handleRecordArity(PC++,ht);,
+        $1,PredicateRef,handlePredicateRef(PC++,ht,code);,
+        $1,PredId,  handlePredId(PC++,ht);,
+        $1,HashTableRef, handleHashTable(PC++,ht);,
+        $1,GenCallInfo,handleGenCallInfo(PC++,ht);,
+        $1,ApplMethInfo,handleApplMethInfo(PC++,ht,code);,
+        $1,Cache,handleCache(PC,code); PC += CacheSize;,
         $1,,,
         PC++;)')
 
@@ -95,19 +95,15 @@ Literal *checkLiteral(Literal *l, HashTable *ht)
 
 
 static
-void handleLiteral(ProgramCounter PC, HashTable *ht, Bool makecopy)
+void handleLiteral(ProgramCounter PC, HashTable *ht, CodeArea *code)
 {
   TaggedRef newlit = checkTagged(getTaggedArg(PC),ht);
-  if (makecopy) {
-    CodeArea::writeTagged(newlit,PC);
-  } else if (newlit != getTaggedArg(PC)) {
-    CodeArea::writeTaggedNoProtect(newlit,PC);
-  }
+  code->writeTagged(newlit,PC);
 }
 
 
 
-GenCallInfoClass *checkGCI(GenCallInfoClass *gci, HashTable *ht, Bool makecopy)
+GenCallInfoClass *checkGCI(GenCallInfoClass *gci, HashTable *ht)
 {
   TaggedRef newname = checkTagged(gci->mn,ht);
 
@@ -117,23 +113,18 @@ GenCallInfoClass *checkGCI(GenCallInfoClass *gci, HashTable *ht, Bool makecopy)
 
   CheckHT(GenCallInfoClass *,gci);
   
-  if (makecopy) {
-    aux = new GenCallInfoClass(gci->regIndex,gci->isMethAppl,newname, 
-			       gci->isTailCall,gci->arity);
-  } else {
-    gci->mn = newname;
-    aux = gci;
-  }
+  aux = new GenCallInfoClass(gci->regIndex,gci->isMethAppl,newname, 
+			     gci->isTailCall,gci->arity);
   ht->htAdd(ToInt32(gci),aux);
   return aux;
 }
 
 
 static
-void handleGenCallInfo(ProgramCounter PC, HashTable *ht, Bool makecopy)
+void handleGenCallInfo(ProgramCounter PC, HashTable *ht)
 {
   GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC);
-  CodeArea::writeAddress(checkGCI(gci,ht,makecopy),PC);
+  CodeArea::writeAddress(checkGCI(gci,ht),PC);
 }
 
 
@@ -171,60 +162,48 @@ SRecordArity checkSRA(SRecordArity sra, HashTable *ht)
 }
 
 
-PrTabEntry *checkPTE(PrTabEntry *pte, HashTable *ht, Bool makecopy)
+PrTabEntry *checkPTE(PrTabEntry *pte, HashTable *ht)
 {
   CheckHT(PrTabEntry *,pte);
   
-  if (makecopy) {
-    aux = new PrTabEntry(pte->getName(),checkSRA(pte->getMethodArity(),ht),
-			 pte->getFile(), pte->getLine(), pte->getColumn(), 
-			 pte->getFlagsList(),
-			 pte->getMaxX());
-  } else {
-    pte->setMethodArity(checkSRA(pte->getMethodArity(),ht));
-    aux = pte;
-  }
+  aux = new PrTabEntry(pte->getName(),checkSRA(pte->getMethodArity(),ht),
+		       pte->getFile(), pte->getLine(), pte->getColumn(), 
+		       pte->getFlagsList(),
+		       pte->getMaxX());
   ht->htAdd(ToInt32(pte),aux);
   return aux;
 }
 
 
 static
-void handlePredId(ProgramCounter PC, HashTable *ht, Bool makecopy)
+void handlePredId(ProgramCounter PC, HashTable *ht)
 {
-  CodeArea::writeAddress(checkPTE(getPredArg(PC),ht,makecopy),PC);
+  CodeArea::writeAddress(checkPTE(getPredArg(PC),ht),PC);
 }
 
 
-ApplMethInfoClass *checkAMI(ApplMethInfoClass *ami, HashTable *ht, Bool makecopy)
+ApplMethInfoClass *checkAMI(ApplMethInfoClass *ami, HashTable *ht,CodeArea *code)
 {
   CheckHT(ApplMethInfoClass *,ami);
   
-  if (makecopy) {
-    aux = new ApplMethInfoClass(checkTagged(ami->methName,ht),checkSRA(ami->arity,ht));
-  } else {
-    ami->methName = checkTagged(ami->methName,ht);
-    ami->arity    = checkSRA(ami->arity,ht);
-    aux           = ami;
-  }
-
+  aux = new ApplMethInfoClass(checkTagged(ami->methName,ht),
+			      checkSRA(ami->arity,ht),code);
   ht->htAdd(ToInt32(ami),aux);
   return aux;
 }
 
 
 static
-void handleApplMethInfo(ProgramCounter PC, HashTable *ht, Bool makecopy)
+void handleApplMethInfo(ProgramCounter PC, HashTable *ht,CodeArea *code)
 {
-  CodeArea::writeAddress(checkAMI((ApplMethInfoClass*) getAdressArg(PC),ht,makecopy),PC);
+  CodeArea::writeAddress(checkAMI((ApplMethInfoClass*) getAdressArg(PC),ht,code),PC);
 }
 
 
 static
-void handleCache(ProgramCounter PC, HashTable *ht, Bool makecopy)
+void handleCache(ProgramCounter PC, CodeArea *code)
 {
-  if (makecopy)
-    CodeArea::writeCache(PC);
+  code->writeCache(PC);
 }
 
 
@@ -239,10 +218,10 @@ AbstractionEntry *checkAE(AbstractionEntry *ae, HashTable *ht)
 
 
 static
-void handlePredicateRef(ProgramCounter PC, HashTable *ht)
+void handlePredicateRef(ProgramCounter PC, HashTable *ht, CodeArea *code)
 {
   AbstractionEntry *ae = checkAE((AbstractionEntry*) getAdressArg(PC),ht);
-  CodeArea::writeAddress(ae,PC);
+  code->writeAbstractionEntry(ae,PC);
 }
 
 
@@ -250,22 +229,21 @@ void handlePredicateRef(ProgramCounter PC, HashTable *ht)
 
 
 static
-void handleRecordArity(ProgramCounter PC, HashTable *ht, Bool makecopy)
+void handleRecordArity(ProgramCounter PC, HashTable *ht)
 {
   SRecordArity ff = checkSRA((SRecordArity) getAdressArg(PC), ht);
   CodeArea::writeSRecordArity(ff, PC);
 }
 
 
-HTEntry *getNext(HTEntry *e, Bool makecopy)
+HTEntry *getNext(HTEntry *e)
 {
   HTEntry *ret = e->getNext();
-  if (!makecopy) delete e;
   return ret;
 }
 
 static
-void handleHashTable(ProgramCounter PC, HashTable *ht, Bool makecopy)
+void handleHashTable(ProgramCounter PC, HashTable *ht)
 {
   IHashTable *table    = (IHashTable *) getAdressArg(PC);
   int sz               = table->size;
@@ -282,10 +260,9 @@ void handleHashTable(ProgramCounter PC, HashTable *ht, Bool makecopy)
       while(aux) {
 	entries--;
 	newtable->add(checkLiteral(aux->getLiteral(),ht),aux->getLabel());
-	aux = getNext(aux,makecopy);
+	aux = getNext(aux);
       }
     }
-    if(!makecopy) delete [] table->literalTable;
   }
 
   if (table->numberTable) {
@@ -294,10 +271,9 @@ void handleHashTable(ProgramCounter PC, HashTable *ht, Bool makecopy)
       while(aux) {
 	entries--;
 	newtable->add(aux->getNumber(),aux->getLabel());
-	aux = getNext(aux,makecopy);
+	aux = getNext(aux);
        }
     }
-    if(!makecopy) delete [] table->numberTable;
   }
 
   if (table->functorTable) {
@@ -308,24 +284,20 @@ void handleHashTable(ProgramCounter PC, HashTable *ht, Bool makecopy)
         SRecordArity sra;
         Literal *label = aux->getFunctor(sra);
 	newtable->add(checkLiteral(label,ht),checkSRA(sra,ht),aux->getLabel());
-	aux = getNext(aux,makecopy);
+	aux = getNext(aux);
       }
     }
-    if(!makecopy) delete [] table->functorTable;
   }
 
   Assert(entries==0);
   CodeArea::writeIHashTable(newtable, PC);
-  if (!makecopy) {
-    delete table;
-  }
 }
 
 
 
 
 
-ProgramCounter copyCode(ProgramCounter start, TaggedRef list, Bool makecopy)
+ProgramCounter copyCode(ProgramCounter start, TaggedRef list)
 {
   HashTable *ht = new HashTable(HT_INTKEY,100);
   while(OZ_isCons(list)) {
@@ -357,12 +329,9 @@ ProgramCounter copyCode(ProgramCounter start, TaggedRef list, Bool makecopy)
   int size = nxt;
   ProgramCounter ret;
 
-  if (makecopy) {
-    ret = new ByteCode[size];  
-    memcpy(ret,start,size*sizeof(ByteCode));
-  } else {
-    ret = start;
-  }
+  CodeArea *code = new CodeArea(size);  
+  ret = code->getStart();
+  memcpy(ret,start,size*sizeof(ByteCode));
   
   ProgramCounter PC = ret;
 

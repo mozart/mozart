@@ -29,8 +29,6 @@
 #include "codearea.hh"
 #include "indexing.hh"
 
-AbstractionEntry* AbstractionEntry::allEntries = NULL;
-
 #ifdef RECINSTRFETCH
 
 int CodeArea::fetchedInstr = 0;
@@ -123,6 +121,8 @@ AdressOpcode CodeArea::opcodeToAdress(Opcode oc)  { return  oc; }
 Opcode CodeArea::adressToOpcode(AdressOpcode adr) { return adr; }
 #endif /* THREADED */
 
+
+AbstractionEntry *AbstractionEntry::allEntries = NULL;
 
 void AbstractionEntry::setPred(Abstraction *ab)
 {
@@ -823,7 +823,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 	fprintf(ofile," pos(%s %d %d)",
 		OZ_atomToC(file),line,colum);
 	fprintf(ofile," [");
-	fprintf(ofile,"%s",predd->isCopyOnce()?" once":"");
 	fprintf(ofile,"%s",predd->isNative()?" native":"");
 	fprintf(ofile," ]");
 	fprintf(ofile," %d",predd->getMaxX());
@@ -965,9 +964,22 @@ ProgramCounter
 
 
 
+CodeArea::~CodeArea()
+{
+#ifdef DEBUG_CHECK
+  memset(getStart(),-1,size*sizeof(ByteCode));
+#else
+  delete [] getStart();
+#endif
+  gclist->dispose();
+}
+
+
 CodeArea::CodeArea(int sz)
 {
   allocateBlock(sz);
+  referenced = NO;
+  gclist     = NULL;
 }
 
 void CodeArea::init(void **instrTable)
@@ -1046,6 +1058,46 @@ void printWhere(ostream &stream,ProgramCounter PC)
 }
 #endif
 
+
+CodeArea *CodeArea::findBlock(ProgramCounter PC)
+{
+  CodeArea *aux = allBlocks;
+  while (aux) {
+    ByteCode *start = aux->getStart();
+    if (start <= PC && PC < start + aux->size) {
+      return aux;
+    }
+    aux = aux->nextBlock;
+  }
+  Assert(0);
+  return NULL;
+}
+
+
+void CodeArea::unprotect(TaggedRef* t)
+{
+  CodeArea *code = findBlock((ProgramCounter)t);
+  code->gclist->remove(t);
+}
+
+
+void CodeGCList::remove(TaggedRef *t)
+{
+  for (CodeGCList *aux = this; aux!=NULL; aux = aux->next) {
+    for (int i=0; i<codeGCListBlockSize; i++) {
+      if (aux->block[i].u.tagged == t) {
+	aux->block[i].u.tagged = NULL;
+	aux->block[i].tag      = C_FREE;
+	return;
+      }
+    }
+  }
+
+  Assert(0);
+}
+
+
+
 ProgramCounter CodeArea::writeCache(ProgramCounter PC)
 {
   InlineCache *cache = (InlineCache *) PC;
@@ -1067,4 +1119,26 @@ void CodeArea::allocateBlock(int sz)
   nextBlock  = allBlocks;
   allBlocks  = this;
   timeStamp  = time(0);
+}
+
+
+ProgramCounter CodeArea::writeTagged(TaggedRef t, ProgramCounter ptr)
+{
+  Assert(getStart()<=ptr && ptr < getStart()+size);
+  ProgramCounter ret = writeWord(t,ptr);
+  TaggedRef *tptr = (TaggedRef *)ptr;
+  if (!needsNoCollection(*tptr)) {
+    checkPtr(tptr);
+    gclist = gclist->add(tptr);
+  }
+  return ret;
+}
+
+
+ProgramCounter CodeArea::writeAbstractionEntry(AbstractionEntry *p, ProgramCounter ptr)
+{
+  ProgramCounter ret = writeAddress(p,ptr);
+  checkPtr(ptr);
+  gclist = gclist->add((AbstractionEntry**)ptr);
+  return ret;
 }
