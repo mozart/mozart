@@ -1449,74 +1449,57 @@ void osStackDump() {}
    dynamic link objects files
    ----------------------------------------------------------------- */
 
-TaggedRef osDlopen(char *filename, OZ_Term& ret)
+TaggedRef osDlopen(char *filename, void **hdl)
 {
-  OZ_Term err=NameUnit;
-
 #ifdef HPUX_700
 
-  {
-    shl_t handle;
-    handle = shl_load(filename,
-		      BIND_IMMEDIATE | BIND_NONFATAL |
-		      BIND_NOSTART | BIND_VERBOSE, 0L);
-
-    if (handle == NULL) {
-      goto raise;
-    }
-    ret = OZ_makeForeignPointer((void*)handle);
+  shl_t shlhandle;
+  shlhandle = shl_load(filename,
+		       BIND_IMMEDIATE | BIND_NONFATAL |
+		       BIND_NOSTART | BIND_VERBOSE, 0L);
+  
+  if (shlhandle == NULL) {
+    return oz_atom("osDlopen failed");
   }
-
+  void *handle = (void*)shlhandle;
+  
 #elif defined(HAVE_DLOPEN)
-
-  {
-    // RTLD_GLOBAL is important: it serves the same purpose
-    // as -rdynamic for executables: newly loaded objects
-    // are linked against symbols coming from already
-    // liked objects (example: libfd and libschedule)
-
-    void *handle=dlopen(filename, RTLD_NOW | RTLD_GLOBAL);
-
-    if (!handle) {
-      err=oz_atom(dlerror());
-      goto raise;
-    }
-    ret = OZ_makeForeignPointer(handle);
+  
+  // RTLD_GLOBAL is important: it serves the same purpose
+  // as -rdynamic for executables: newly loaded objects
+  // are linked against symbols coming from already
+  // liked objects (example: libfd and libschedule)
+  
+  void *handle=dlopen(filename, RTLD_NOW | RTLD_GLOBAL);
+  
+  if (!handle) {
+    return oz_atom(dlerror());
   }
 
 #elif defined(WINDOWS)
 
-  {
-    void *handle = (void *)LoadLibrary(filename);
-    if (!handle) {
-      err=oz_int(GetLastError());
-      goto raise;
-    }
-
-    FARPROC linkff = (FARPROC) osDlsym(handle, "OZ_linkFF");
-    if (linkff==0) {
-      OZ_warning("OZ_linkFF not found, maybe not exported from DLL?");
-      goto raise;
-    }
-    extern void **ffuns;
-    if (linkff(OZVERSION,ffuns)==0) {
-      OZ_warning("call of 'OZ_linkFF' failed, maybe recompilation needed?");
-      goto raise;
-    }
-
-    ret = OZ_makeForeignPointer(handle);
+  void *handle = (void *)LoadLibrary(filename);
+  if (!handle) {
+    return oz_int(GetLastError());
   }
 
+  FARPROC linkff = (FARPROC) osDlsym(handle, "OZ_linkFF");
+  if (linkff==0) {
+    return oz_atom("OZ_linkFF not found, maybe not exported from DLL?");
+  }
+  extern void **ffuns;
+  if (linkff(OZVERSION,ffuns)==0) {
+    return oz_atom("call of 'OZ_linkFF' failed, maybe recompilation needed?");
+  }
+  
 #else
 
-  goto raise;
+  return oz_atom("osDlopen not supported");
 
 #endif
 
+  *hdl = handle;
   return 0;
-
-raise:
-  return err;
 }
 
 int osDlclose(void* handle)
