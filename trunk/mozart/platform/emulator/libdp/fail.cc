@@ -549,33 +549,40 @@ void DSite::probeFault(ProbeReturn pr) {
   PD((PROBES,"PROBEfAULT  site:%s",stringrep()));
   int limit=OT->getSize();
   for(int ctr = 0; ctr<limit;ctr++){
-    OwnerEntry *oe = OT->getOtiEntry(ctr);
-    if(oe->isTertiary()){
-      Tertiary *tr=oe->getTertiary();
-      PD((PROBES,"Informing Manager"));
-      Assert(tr->isManager());
-      managerProbeFault(tr,this,pr);}
-    else{
-      if(oe->isVar()){
-	GET_VAR(oe,Manager)->probeFault(this,pr);
+    BucketHashNode* o = OT->getBucket(ctr); 
+    while(o){
+      OwnerEntry *oe = (OwnerEntry *)(o);
+      o = o -> getNext();
+      if(oe->isTertiary()){
+	Tertiary *tr=oe->getTertiary();
+	PD((PROBES,"Informing Manager"));
+	Assert(tr->isManager());
+	managerProbeFault(tr,this,pr);}
+      else{
+	if(oe->isVar()){
+	  GET_VAR(oe,Manager)->probeFault(this,pr);
+	}
       }
     }
   }
-
   limit=BT->getSize();
-  for(int ctr1 = 0; ctr1<limit;ctr1++){
-    BorrowEntry *be = BT->getBorrow(ctr1);
-    if(be->isTertiary()){
-      if(be->getSite()==this){
-	proxyProbeFault(be->getTertiary(),pr);}}
-    else{
-      if(be->isVar()){
-	if(be->getSite()==this){	
-	  if(typeOfBorrowVar(be)==VAR_PROXY){
-	    GET_VAR(be,Proxy)->probeFault(pr);}
-	  else{
-	    Assert(typeOfBorrowVar(be)==VAR_LAZY);
-	    GET_VAR(be, Lazy)->probeFault(pr);}}}}}
+  for(int ctr = 0; ctr<limit;ctr++){
+    BucketHashNode* o = BT->getBucket(ctr); 
+    while(o){
+      BorrowEntry *be = (BorrowEntry *)(o);
+      o = o -> getNext();
+      if(be->isTertiary()){
+	if(be->getSite()==this){
+	  proxyProbeFault(be->getTertiary(),pr);}}
+      else{
+	if(be->isVar()){
+	  if(be->getSite()==this){	
+	    if(typeOfBorrowVar(be)==VAR_PROXY){
+	      GET_VAR(be,Proxy)->probeFault(pr);}
+	    else{
+	      Assert(typeOfBorrowVar(be)==VAR_LAZY);
+	      GET_VAR(be, Lazy)->probeFault(pr);}}}}}
+  }
 }
 
 /**********************************************************************/
@@ -586,14 +593,14 @@ void Chain::establish_PERM_SOME(Tertiary* t){
   if(hasFlag(TOKEN_PERM_SOME)) return;
   setFlag(TOKEN_PERM_SOME);
   int OTI=t->getIndex();
-  triggerInforms(&inform,OT->getEntry(OTI),OTI,PERM_SOME);
+  triggerInforms(&inform,OT->index2entry(OTI),PERM_SOME);
   addEntityCond(t,PERM_SOME);
   entityProblem(t);}
 
 void Chain::establish_TOKEN_LOST(Tertiary* t){
   setFlagAndCheck(TOKEN_LOST);
   int OTI=t->getIndex();
-  triggerInforms(&inform,OT->getEntry(OTI),OTI,PERM_SOME|PERM_ALL|PERM_FAIL);
+  triggerInforms(&inform,OT->index2entry(OTI),PERM_SOME|PERM_ALL|PERM_FAIL);
   addEntityCond(t,PERM_SOME|PERM_FAIL|PERM_ALL);}
 
 void Chain::shortcutCrashLock(LockManager* lm){
@@ -612,7 +619,7 @@ void Chain::shortcutCrashLock(LockManager* lm){
   ce=getFirstNonGhost();
   int OTI=lm->getIndex();
   if(ce->site==myDSite){
-    lockReceiveTokenManager(OT->getEntry(OTI),OTI);
+    lockReceiveTokenManager(OT->index2entry(OTI),OT->entry2odi(OTI));
     return;}
   lockSendToken(myDSite,OTI,ce->site);}
 
@@ -633,7 +640,7 @@ void Chain::shortcutCrashCell(CellManager* cm,TaggedRef val){
   ce=getFirstNonGhost();
   int index=cm->getIndex();
   if(ce->site==myDSite){
-    cellReceiveContentsManager(OT->getEntry(index),val,index);
+    cellReceiveContentsManager(OT->index2entry(index),val,OT->entry2odi(index));
     return;}
   cellSendContents(val,ce->site,myDSite,index);}
 
@@ -646,7 +653,7 @@ void Chain::handleTokenLost(Tertiary* t,OwnerEntry *oe,int OTI){
   while(ce){
     if(!ce->flagIsSet(CHAIN_GHOST)){
       if(ce->site!=myDSite){
-	sendTellError(oe,ce->site,OTI,PERM_FAIL,TRUE);}}
+	sendTellError(oe,ce->site,PERM_FAIL,TRUE);}}
     back=ce;
     ce=ce->next;
     releaseChainElem(back);}
@@ -714,40 +721,40 @@ void Chain::managerSeesSitePerm(Tertiary *t,DSite* s){
     return;}
   PD((ERROR_DET,"Token lost"));
   int OTI=t->getIndex();
-  handleTokenLost(t,OT->getEntry(OTI),OTI);
+  handleTokenLost(t,OT->index2entry(OTI),OT->entry2odi(OTI));
   Assert(inform==NULL);
   return;
 }
 
-Bool InformElem::maybeTrigger(OwnerEntry* oe, int index, EntityCond ec){
+Bool InformElem::maybeTrigger(OwnerEntry* oe, EntityCond ec){
   EntityCond xec= ec & watchcond;
   xec &= ~foundcond;
   if(xec == ENTITY_NORMAL) return FALSE;
   foundcond |= xec;
-  sendTellError(oe,site,index,xec,TRUE);
+  sendTellError(oe,site,xec,TRUE);
   if(somePermCondition(xec)) return TRUE;
   return FALSE;
 }
 
-void InformElem::maybeTriggerOK(OwnerEntry* oe, int index, EntityCond ec){
+void InformElem::maybeTriggerOK(OwnerEntry* oe, EntityCond ec){
   EntityCond xec= ec & foundcond;
   if(xec == ENTITY_NORMAL) return;
   foundcond &= ~xec;
-  sendTellError(oe,site,index,xec,FALSE);
+  sendTellError(oe,site,xec,FALSE);
 }
 
-void triggerInforms(InformElem **base,OwnerEntry* oe,int index,EntityCond ec){
+void triggerInforms(InformElem **base,OwnerEntry* oe, EntityCond ec){
   while((*base)!=NULL){
-    if((*base)->maybeTrigger(oe,index,ec))
+    if((*base)->maybeTrigger(oe,ec))
       (*base) = ((*base)->next);
     else
       base= &((*base)->next);}
 }       
 
-void triggerInformsOK(InformElem **base,OwnerEntry* oe,int index,EntityCond ec){
+void triggerInformsOK(InformElem **base,OwnerEntry* oe,EntityCond ec){
   InformElem *ie=(*base);
   while(ie!=NULL){
-    ie->maybeTriggerOK(oe,index,ec);
+    ie->maybeTriggerOK(oe,ec);
     ie=ie->next;}
 }       
   
@@ -755,17 +762,17 @@ void triggerInformsOK(InformElem **base,OwnerEntry* oe,int index,EntityCond ec){
 void Chain::managerSeesSiteTemp(Tertiary *t,DSite* s){
   EntityCond ec;
   int index=t->getIndex();
-  OwnerEntry *oe=OT->getEntry(index);
+  OwnerEntry *oe=OT->index2entry(index);
   PD((ERROR_DET,"managerSeesSiteTemp site:%s nr:%d",
       s->stringrep(),index));
 
 // deal with TEMP_SOME|TEMP_FAIL watchers
-  triggerInforms(&inform,oe,index,(TEMP_SOME|TEMP_FAIL));
+  triggerInforms(&inform,oe,(TEMP_SOME|TEMP_FAIL));
 
   ChainElem *ce=findAfter(s); // deal with TEMP_FAIL injectors
   while(ce!=NULL){
     if(ce->getSite()->siteStatus()!=SITE_OK) break;
-    sendTellError(oe,ce->getSite(),index,ec,TRUE);
+    sendTellError(oe,ce->getSite(),ec,TRUE);
     ce=ce->next;}
 
   setFlag(INTERESTED_IN_OK);
@@ -776,18 +783,18 @@ void Chain::managerSeesSiteOK(Tertiary *t,DSite* s){
   Assert(hasFlag(INTERESTED_IN_OK));
 
   int index=t->getIndex();  
-  OwnerEntry *oe=OT->getEntry(index);
+  OwnerEntry *oe=OT->index2entry(index);
   PD((ERROR_DET,"managerSeesSiteOK site:%s nr:%d",
       s->stringrep(),index));
 
 // deal with TEMP_SOME|TEMP_FAIL watchers
   if(!(tempConnectionInChain())){
-    triggerInformsOK(&inform,oe,index,(TEMP_SOME|TEMP_FAIL));}
+    triggerInformsOK(&inform,oe,(TEMP_SOME|TEMP_FAIL));}
 
   ChainElem *ce=findAfter(s); // deal with TEMP_FAIL injectors
   while(ce!=NULL){
     if(ce->getSite()->siteStatus()==SITE_TEMP) break;
-    sendTellError(oe,ce->getSite(),index,TEMP_FAIL,FALSE);
+    sendTellError(oe,ce->getSite(),TEMP_FAIL,FALSE);
     ce=ce->next;}
 
   if(!tempConnectionInChain()){
@@ -798,11 +805,11 @@ void Chain::managerSeesSiteOK(Tertiary *t,DSite* s){
 /**********************************************************************/
 
 inline void proxyInform(Tertiary* t,EntityCond ec){
-  sendAskError(BT->getBorrow(t->getIndex()),ec);
+  sendAskError(BT->bi2borrow(t->getIndex()),ec);
 }
 
 inline void proxyDeInform(Tertiary* t,EntityCond ec){
-    sendUnAskError(BT->getBorrow(t->getIndex()),ec);
+  sendUnAskError(BT->bi2borrow(t->getIndex()),ec);
 }
 
 EntityCond askPart(Tertiary* t, EntityCond ec){
@@ -833,9 +840,9 @@ void adjustProxyForFailure(Tertiary*t, EntityCond oldEC, EntityCond newEC){
 void varAdjustPOForFailure(int index,EntityCond oldC, EntityCond newC){
   if(varAskPart(oldC)==varAskPart(newC)) return;
   if(varAskPart(oldC)!=ENTITY_NORMAL){
-    sendUnAskError(BT->getBorrow(index),oldC);}
+    sendUnAskError(BT->bi2borrow(index),oldC);}
   if(varAskPart(newC)!=ENTITY_NORMAL){
-    sendAskError(BT->getBorrow(index),newC);}
+    sendAskError(BT->bi2borrow(index),newC);}
 }
 
 /**********************************************************************/
@@ -994,7 +1001,7 @@ Bool installWatcher(Tertiary* t,EntityCond wc,TaggedRef proc,
   else{
     // Establish a connection if a watcher is installed. 
     if (!w->isInjector()) {
-      BorrowEntry* b = BT->getBorrow(t->getIndex());
+      BorrowEntry* b = BT->bi2borrow(t->getIndex());
       NetAddress *na = b->getNetAddress();
       DSite* site    = na->site;
       MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
@@ -1099,7 +1106,7 @@ TaggedRef listifyWatcherCond(EntityCond ec,Tertiary *t){
   case Co_Cell:{
     if(t->getTertType()==Te_Manager){
       return listifyWatcherCond(ec,FALSE,TRUE);}
-    DSite*s =BT->getBorrow(t->getIndex())->getNetAddress()->site;
+    DSite*s =BT->bi2borrow(t->getIndex())->getNetAddress()->site;
     if(s->siteStatus()==SITE_PERM)
       return listifyWatcherCond(ec,TRUE,FALSE);
     else
@@ -1267,9 +1274,6 @@ void EntityInfo::dealWithWatchers(TaggedRef tr,EntityCond ec){
 /**********************************************************************/
 /*   SeifHandler                                                      */
 /**********************************************************************/
-
-DSite* gBTI(int i){
-  return BT->getBorrow(i)->getNetAddress()->site;}
 
 OZ_BI_define(BIfailureDefault,3,0){
   oz_declareIN(0,entity);
@@ -1455,7 +1459,7 @@ OZ_Term createFailedEntity(int OTI, Bool defer)
       // Did not exists 
       int bi=borrowTable->newBorrow(NULL,myDSite,OTI);
       Tertiary *tert = new DistResource(bi);
-      borrowTable->getBorrow(bi)->changeToTertiary(tert);
+      borrowTable->bi2borrow(bi)->changeToTertiary(tert);
       
       // The entity is now marked as perm_failed. 
       // This could be done directly, but if the message is

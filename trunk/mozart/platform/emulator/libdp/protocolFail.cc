@@ -59,13 +59,13 @@ void sendUnAskError(BorrowEntry *be,EntityCond ec){
 void Chain::receiveAskError(OwnerEntry *oe,DSite *toS,EntityCond ec){  
   if(hasFlag(TOKEN_LOST)){
     PD((NET_HANDLER,"Token Lost"));
-    sendTellError(oe,toS,oe->getTertiary()->getIndex(),PERM_SOME|PERM_FAIL,TRUE);
+    sendTellError(oe,toS,PERM_SOME|PERM_FAIL,TRUE);
     return;} // automatic inform has already been sent
   EntityCond aux=ENTITY_NORMAL;
   if(hasFlag(TOKEN_PERM_SOME)) aux |= (PERM_SOME & ec);
   if(hasFlag(TOKEN_TEMP_SOME)) aux |= (TEMP_SOME & ec);    
   if(aux != ENTITY_NORMAL){
-    sendTellError(oe,toS,oe->getTertiary()->getIndex(),aux,TRUE);
+    sendTellError(oe,toS,aux,TRUE);
     return;}
   newInform(toS,ec); 
   PD((NET_HANDLER,"Adding Inform Element"));}
@@ -85,7 +85,7 @@ void receiveAskError(OwnerEntry *oe,DSite *toS,EntityCond ec){
   Assert(oe->isVar());
   ManagerVar* mv=GET_VAR(oe,Manager);
   if(mv->getEntityCond() & ec){
-    sendTellError(oe,toS,mv->getIndex(),mv->getEntityCond() & ec,TRUE);}
+    sendTellError(oe,toS,mv->getEntityCond() & ec,TRUE);}
   mv->newInform(toS,ec); 
 }
  
@@ -132,7 +132,7 @@ void receiveTellError(BorrowEntry* b,EntityCond ec,Bool set){
   Assert(b->isVar());
   receiveTellErrorVar(b,ec,set);}
 
-void sendTellError(OwnerEntry *oe,DSite* toS,int mI,EntityCond ec,Bool set){
+void sendTellError(OwnerEntry *oe,DSite* toS,EntityCond ec,Bool set){
   if(toS==myDSite){
     // kost@ : Erik told me the assertion is wrong.
     // Assert(0); // PER-LOOK is this possible
@@ -141,7 +141,7 @@ void sendTellError(OwnerEntry *oe,DSite* toS,int mI,EntityCond ec,Bool set){
   if(SEND_SHORT(toS)) {return;}
 
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
-  msgC->put_M_TELL_ERROR(myDSite,mI,ec,set);
+  msgC->put_M_TELL_ERROR(myDSite,oe->getOdi(),ec,set);
 
   send(msgC);
 }

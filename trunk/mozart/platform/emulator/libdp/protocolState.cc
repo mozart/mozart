@@ -54,12 +54,12 @@ inline Bool tokenLostCheckManager(Tertiary *t){
   return NO;}
 
 inline void receiveGet_InterestOK(OwnerEntry* oe,DSite* toS,Tertiary* t){ 
-  triggerInforms(getChainFromTertiary(t)->getInformBase(),oe,t->getIndex(),
+  triggerInforms(getChainFromTertiary(t)->getInformBase(),oe,
 		 getEntityCond(t));}
 
 inline void receiveGet_TokenLost(OwnerEntry* oe,DSite* toS,Tertiary* t){  
   PD((ERROR_DET,"TOKEN_LOST message bouncing"));
-  sendTellError(oe,toS,t->getIndex(),(PERM_FAIL|PERM_ALL|PERM_SOME),true);
+  sendTellError(oe,toS,(PERM_FAIL|PERM_ALL|PERM_SOME),true);
   return;}
 
 /**********************************************************************/
@@ -96,6 +96,7 @@ void cellLockSendGet(BorrowEntry *be){
 
 void cellLockSendForward(DSite *toS,DSite *fS,int mI){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+  Assert(mI < OT->getNxtId());
   msgC->put_M_CELL_LOCK_FORWARD(myDSite,mI,fS);
   send(msgC);}
 
@@ -210,9 +211,9 @@ void cellReceiveGet(OwnerEntry* oe,CellManager* cm,DSite* toS){
     PD((CELL,"CELL - shortcut in cellReceiveGet"));    
     TaggedRef val;
     if(cm->getCellSec()->secForward(toS,val)){
-      cellSendContents(val,toS,myDSite,cm->getIndex());}
+      cellSendContents(val,toS,myDSite,oe->getOdi());}
     return;}
-  cellLockSendForward(current,toS,cm->getIndex());
+  cellLockSendForward(current,toS,oe->getOdi());
 }
 
 void cellReceiveDump(CellManager *cm,DSite *fromS){
@@ -306,6 +307,7 @@ void cellReceiveReadAns(Tertiary* t,TaggedRef val){
 /**********************************************************************/
 
 void cellSendReadAns(DSite* toS,DSite* mS,int mI,TaggedRef val){ 
+Assert(mI < OT->getNxtId());
   if(toS == myDSite) {
     OwnerEntry *oe=maybeReceiveAtOwner(mS,mI);
     if(mS!=myDSite)
@@ -426,9 +428,9 @@ void lockReceiveGet(OwnerEntry* oe,LockManager* lm,DSite* toS){
   if(current==myDSite){                             // shortcut
     PD((LOCK," shortcut in lockReceiveGet"));
     if(lm->getLockSec()->secForward(toS)){
-      lockSendToken(myDSite,lm->getIndex(),toS);}
+      lockSendToken(myDSite,oe->getOdi(),toS);}
     return;}
-  cellLockSendForward(current,toS,lm->getIndex());
+  cellLockSendForward(current,toS,oe->getOdi());
 }
 
 void lockReceiveDump(LockManager* lm,DSite *fromS){
@@ -462,7 +464,7 @@ void lockReceiveTokenManager(OwnerEntry* oe,int mI){
   DSite* toS;
   if(sec->secReceiveToken(t,toS)) return;
   PD((CHAIN,"%d",printChain(lm->getChain())));
-  lockSendToken(myDSite,mI,toS);
+  lockSendToken(myDSite,oe->getOdi(),toS);
 }
   
 void lockReceiveTokenFrame(BorrowEntry* be, DSite *mS,int mI){
@@ -600,7 +602,7 @@ void cellSendContentsFailure(TaggedRef tr,DSite* toS,DSite *mS, int mI){
     cellManagerIsDown(tr,toS,mI);
     return;}
   if(mS==myDSite){// At managerSite 
-    cellReceiveCantPut(OT->getEntry(mI),tr,mI,mS,toS);
+    cellReceiveCantPut(OT->index2entry(mI),tr,mI,mS,toS);
     return;}  
   cellSendCantPut(tr,toS,mS,mI);
   return;
@@ -620,7 +622,7 @@ void lockSendTokenFailure(DSite* toS,DSite *mS, int mI){
     lockManagerIsDown(mS,mI);
     return;}
   if(mS==myDSite){// At managerSite 
-    lockReceiveCantPut(OT->getEntry(mI),mI,mS,toS);
+    lockReceiveCantPut(OT->index2entry(mI),mI,mS,toS);
     return;}  
   lockSendCantPut(toS,mS,mI);
   return;
