@@ -35,207 +35,35 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-
-#define YYDEBUG 1
-
 #include <sys/time.h>
 #include <sys/wait.h>
 
 #include "base.hh"
 #include "oz.h"
 
-typedef OZ_Term CTerm;
-
-static void parserInit();
-static unsigned int parseFile(char *file, OZ_Term defines);
-static unsigned int parseVirtualString(char *str, OZ_Term defines);
-
-static CTerm nilAtom;
-
-extern int xy_showInsert, xy_gumpSyntax, xy_systemVariables;
-extern CTerm xy_errorMessages;
-
-static void init(OZ_Term optRec) {
-  nilAtom = OZ_nil();
-  parserInit();
-
-  OZ_Term x;
-
-  x = OZ_subtree(optRec, OZ_atom("showInsert"));
-  xy_showInsert = x == 0? 0: OZ_eq(x, OZ_true());
-
-  x = OZ_subtree(optRec, OZ_atom("gumpSyntax"));
-  xy_gumpSyntax = x == 0? 0: OZ_eq(x, OZ_true());
-
-  x = OZ_subtree(optRec, OZ_atom("systemVariables"));
-  xy_systemVariables = x == 0? 1: OZ_eq(x, OZ_true());
-}
-
-OZ_C_proc_begin(ozparser_parseFile, 3)
-{
-  // {ParseFile FileName OptRec ?AST}
-  OZ_declareVirtualStringArg(0, str);
-  OZ_declareNonvarArg(1, optRec);
-  if (!OZ_isRecord(optRec))
-    return OZ_typeError(1, "Record");
-  init(optRec);
-  xy_errorMessages = OZ_nil();
-  OZ_Term defines = OZ_subtree(optRec, OZ_atom("defines"));
-  if (defines == 0)
-    defines = OZ_nil();
-  OZ_Return res = OZ_unify(OZ_getCArg(2), parseFile(str, defines));
-  if (res == PROCEED) {
-    OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
-    if (x == 0) {
-      if (!OZ_isNil(xy_errorMessages)) {
-        prefixError();
-        printf("%s", OZ_virtualStringToC(xy_errorMessages));
-      }
-      return PROCEED;
-    } else
-      return OZ_unify(x, xy_errorMessages);
-  } else
-    return res;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(ozparser_parseVirtualString, 3)
-{
-  // {ParseVirtualString VS OptRec ?AST}
-  OZ_declareVirtualStringArg(0, str);
-  OZ_declareNonvarArg(1, optRec);
-  if (!OZ_isRecord(optRec))
-    return OZ_typeError(1, "Record");
-  init(optRec);
-  xy_errorMessages = OZ_nil();
-  OZ_Term defines = OZ_subtree(optRec, OZ_atom("defines"));
-  if (defines == 0)
-    defines = OZ_nil();
-  OZ_Return res = OZ_unify(OZ_getCArg(2), parseVirtualString(str, defines));
-  if (res == PROCEED) {
-    OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
-    if (x == 0) {
-      if (!OZ_isNil(xy_errorMessages)) {
-        prefixError();
-        printf("%s", OZ_virtualStringToC(xy_errorMessages));
-      }
-      return PROCEED;
-    } else
-      return OZ_unify(x, xy_errorMessages);
-  } else
-    return res;
-}
-OZ_C_proc_end
-
-char *xy_expand_file_name(char *file);
-
-OZ_C_proc_begin(ozparser_fileExists, 2)
-{
-  OZ_declareVirtualStringArg(0, str);
-  OZ_declareArg(1, res);
-  char *fullname = xy_expand_file_name(str);
-  if (fullname != NULL) {
-    delete[] fullname;
-    return OZ_unify(res, OZ_true());
-  } else
-    return OZ_unify(res, OZ_false());
-}
-OZ_C_proc_end
-
-
-static CTerm newCTerm(char *l) {
-  return OZ_atom(l);
-}
-
-static CTerm newCTerm(char *l, CTerm t1) {
-  OZ_Term t = OZ_tuple(OZ_atom(l), 1);
-  OZ_putArg(t, 0, t1);
-  return t;
-}
-
-static CTerm newCTerm(char *l, CTerm t1, CTerm t2) {
-  OZ_Term t = OZ_tuple(OZ_atom(l), 2);
-  OZ_putArg(t, 0, t1);
-  OZ_putArg(t, 1, t2);
-  return t;
-}
-
-static CTerm newCTerm(char *l, CTerm t1, CTerm t2, CTerm t3) {
-  OZ_Term t = OZ_tuple(OZ_atom(l), 3);
-  OZ_putArg(t, 0, t1);
-  OZ_putArg(t, 1, t2);
-  OZ_putArg(t, 2, t3);
-  return t;
-}
-
-static CTerm newCTerm(char *l, CTerm t1, CTerm t2, CTerm t3, CTerm t4) {
-  OZ_Term t = OZ_tuple(OZ_atom(l), 4);
-  OZ_putArg(t, 0, t1);
-  OZ_putArg(t, 1, t2);
-  OZ_putArg(t, 2, t3);
-  OZ_putArg(t, 3, t4);
-  return t;
-}
-
-static CTerm newCTerm(char *l, CTerm t1, CTerm t2, CTerm t3, CTerm t4, CTerm t5) {
-  OZ_Term t = OZ_tuple(OZ_atom(l), 5);
-  OZ_putArg(t, 0, t1);
-  OZ_putArg(t, 1, t2);
-  OZ_putArg(t, 2, t3);
-  OZ_putArg(t, 3, t4);
-  OZ_putArg(t, 4, t5);
-  return t;
-}
-
-static CTerm newCTerm(char *l, CTerm t1, CTerm t2, CTerm t3, CTerm t4, CTerm t5, CTerm t6) {
-  OZ_Term t = OZ_tuple(OZ_atom(l), 6);
-  OZ_putArg(t, 0, t1);
-  OZ_putArg(t, 1, t2);
-  OZ_putArg(t, 2, t3);
-  OZ_putArg(t, 3, t4);
-  OZ_putArg(t, 4, t5);
-  OZ_putArg(t, 5, t6);
-  return t;
-}
-
-static CTerm makeLongPos(CTerm pos1, CTerm pos2) {
-  return newCTerm("pos",OZ_subtree(pos1,OZ_int(1)),OZ_subtree(pos1,OZ_int(2)),
-                  OZ_subtree(pos1,OZ_int(3)),OZ_subtree(pos2,OZ_int(1)),
-                  OZ_subtree(pos2,OZ_int(2)),OZ_subtree(pos2,OZ_int(3)));
-}
-
-#define pair(left, right)       OZ_pair2(left, right)
-#define consList(head, tail)    OZ_cons(head, tail)
-
-#define YYMAXDEPTH 1000000
-#define YYERROR_VERBOSE
-
 
 //----------------------
 // Interface to Scanner
 //----------------------
 
-void xyscannerInit();
+extern char xyFileName[];   // name of the current file, "nofile" means stdin
+extern char xyhelpFileName[];
+extern OZ_Term xyFileNameAtom;
+
+extern int xy_showInsert, xy_gumpSyntax, xy_systemVariables;
+extern OZ_Term xy_errorMessages;
+
+extern int xylino;
+extern char *xytext;
+extern char *xylastline;
+
+char *xy_expand_file_name(char *file);
+
 int xy_init_from_file(char *file, OZ_Term defines);
 void xy_init_from_string(char *str, OZ_Term defines);
 void xy_exit();
 
 int xylex();
-
-extern int xylino;
-
-/* Defined by (f)lex: */
-extern char *xytext;
-extern char *xylastline;
-
-extern FILE *xyin;
-
-extern char xyFileName[];       // name of the current file, "" means stdin
-extern CTerm xyFileNameAtom;
-extern char xyhelpFileName[];
-
-static void xyerror(char *);
-extern "C" void xyreportError(char *, char *, const char *, int ,int);
 
 static inline int xycharno() {
   int n = xytext - xylastline;
@@ -246,46 +74,21 @@ static inline int xycharno() {
 }
 
 
-//----------------------
-// Operations on CTerms
-//----------------------
+//-----------------
+// Local Variables
+//-----------------
 
+#define YYMAXDEPTH 1000000
+#define YYERROR_VERBOSE
+
+static OZ_Term nilAtom;
 static int nerrors;
-static CTerm yyoutput;
+static OZ_Term yyoutput;
 
-inline CTerm pos() {
-  return newCTerm("pos",xyFileNameAtom,OZ_int(xylino),OZ_int(xycharno()));
-}
-
-inline CTerm makeVar(char *printName) {
-  return newCTerm("fVar",newCTerm(printName),pos());
-}
-
-inline CTerm makeCons(CTerm first, CTerm second, CTerm pos) {
-   return newCTerm("fRecord",
-                   newCTerm("fAtom",newCTerm("|"),pos),
-                   consList(first,consList(second,nilAtom)));
-}
-
-static CTerm makeInt(char *chars, CTerm pos) {
-  return newCTerm("fInt",OZ_CStringToInt(chars),pos);
-}
-
-static CTerm makeInt(char c, CTerm pos) {
-  return newCTerm("fInt",OZ_int((unsigned char) c),pos);
-}
-
-static CTerm makeString(char *chars, CTerm pos) {
-  if (chars[0] == '\0')
-    return newCTerm("fAtom",newCTerm("nil"),pos);
-  else
-    return makeCons(makeInt(chars[0],pos),makeString(&chars[1],pos),pos);
-}
+static void xyerror(char *);
 
 
-//-----------------
 // Gump Extensions
-//-----------------
 
 #define DEPTH 20
 
@@ -293,20 +96,91 @@ static int depth;
 
 static char prodKeyBuffer[DEPTH][80];
 static char *prodKey[DEPTH];
-static CTerm prodName[DEPTH];
+static OZ_Term prodName[DEPTH];
 
 struct TermNode {
-  CTerm term;
+  OZ_Term term;
   TermNode *next;
-  TermNode(CTerm t, TermNode *n) { term = t; next = n; }
+  TermNode(OZ_Term t, TermNode *n) { term = t; next = n; }
 };
 static TermNode *terms[DEPTH];
-static CTerm decls[DEPTH];
+static OZ_Term decls[DEPTH];
+
+
+//---------------------
+// Operations on Terms
+//---------------------
+
+#define pair(left,right) OZ_pair2(left,right)
+#define consList(head,tail) OZ_cons(head,tail)
+
+inline OZ_Term newCTerm(char *l) {
+  return OZ_atom(l);
+}
+
+inline OZ_Term newCTerm(char *l, OZ_Term t1) {
+  return OZ_mkTupleC(l,1,t1);
+}
+
+inline OZ_Term newCTerm(char *l, OZ_Term t1, OZ_Term t2) {
+  return OZ_mkTupleC(l,2,t1,t2);
+}
+
+inline OZ_Term newCTerm(char *l, OZ_Term t1, OZ_Term t2, OZ_Term t3) {
+  return OZ_mkTupleC(l,3,t1,t2,t3);
+}
+
+inline OZ_Term newCTerm(char *l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4) {
+  return OZ_mkTupleC(l,4,t1,t2,t3,t4);
+}
+
+inline OZ_Term newCTerm(char *l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4, OZ_Term t5) {
+  return OZ_mkTupleC(l,5,t1,t2,t3,t4,t5);
+}
+
+inline OZ_Term newCTerm(char *l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4, OZ_Term t5, OZ_Term t6) {
+  return OZ_mkTupleC(l,6,t1,t2,t3,t4,t5,t6);
+}
+
+static OZ_Term makeLongPos(OZ_Term pos1, OZ_Term pos2) {
+  return newCTerm("pos",OZ_subtree(pos1,OZ_int(1)),OZ_subtree(pos1,OZ_int(2)),
+                  OZ_subtree(pos1,OZ_int(3)),OZ_subtree(pos2,OZ_int(1)),
+                  OZ_subtree(pos2,OZ_int(2)),OZ_subtree(pos2,OZ_int(3)));
+}
+
+inline OZ_Term pos() {
+  return newCTerm("pos",xyFileNameAtom,OZ_int(xylino),OZ_int(xycharno()));
+}
+
+inline OZ_Term makeVar(char *printName) {
+  return newCTerm("fVar",OZ_atom(printName),pos());
+}
+
+inline OZ_Term makeCons(OZ_Term first, OZ_Term second, OZ_Term pos) {
+   return newCTerm("fRecord",
+                   newCTerm("fAtom",OZ_atom("|"),pos),
+                   consList(first,consList(second,nilAtom)));
+}
+
+static OZ_Term makeInt(char *chars, OZ_Term pos) {
+  return newCTerm("fInt",OZ_CStringToInt(chars),pos);
+}
+
+static OZ_Term makeInt(char c, OZ_Term pos) {
+  return newCTerm("fInt",OZ_int((unsigned char) c),pos);
+}
+
+static OZ_Term makeString(char *chars, OZ_Term pos) {
+  if (chars[0] == '\0')
+    return newCTerm("fAtom",nilAtom,pos);
+  else
+    return makeCons(makeInt(chars[0],pos),makeString(&chars[1],pos),pos);
+}
 
 %}
 
 %union {
-  CTerm t;
+  OZ_Term t;
   int i;
 }
 
@@ -688,15 +562,15 @@ fdIn            : FDIN
                 ;
 
 add             : ADD
-                  { $$=newCTerm(xytext); }
+                  { $$ = newCTerm(xytext); }
                 ;
 
 fdMul           : FDMUL
-                  { $$=newCTerm(xytext); }
+                  { $$ = newCTerm(xytext); }
                 ;
 
 otherMul        : OTHERMUL
-                  { $$=newCTerm(xytext); }
+                  { $$ = newCTerm(xytext); }
                 ;
 
 inSequence      : sequence _in_ coord sequence
@@ -714,8 +588,7 @@ phraseList      : /* empty */
 fixedListArgs   : thisCoord phrase
                   { $$ = newCTerm("fRecord",
                                   newCTerm("fAtom",newCTerm("|"),$1),
-                                  consList($2,consList(newCTerm("fAtom",
-                                                                newCTerm("nil"),
+                                  consList($2,consList(newCTerm("fAtom",nilAtom,
                                                                 $1),
                                                        nilAtom))); }
                 | thisCoord phrase fixedListArgs
@@ -1276,7 +1149,7 @@ synSeqs         : synSeq
                 ;
 
 synSeq          : nonEmptySeq
-                  { CTerm t = $1;
+                  { OZ_Term t = $1;
                     while (terms[depth]) {
                       t = consList(newCTerm("fSynApplication", terms[depth]->term, nilAtom), t);
                       TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
@@ -1514,45 +1387,111 @@ static void xyerror(char *s) {
     xyreportError("parse error", s, xyFileName, xylino, xycharno());
 }
 
+static OZ_Term init_options(OZ_Term optRec) {
+  OZ_Term x;
 
-static void parserInit() {
-  xyscannerInit();
-  for (int i = 0; i < DEPTH; i++)
-    terms[i] = 0;
-  nerrors = 0;
+  x = OZ_subtree(optRec, OZ_atom("showInsert"));
+  xy_showInsert = x == 0? 0: OZ_eq(x, OZ_true());
+
+  x = OZ_subtree(optRec, OZ_atom("gumpSyntax"));
+  xy_gumpSyntax = x == 0? 0: OZ_eq(x, OZ_true());
+
+  x = OZ_subtree(optRec, OZ_atom("systemVariables"));
+  xy_systemVariables = x == 0? 1: OZ_eq(x, OZ_true());
+
+  OZ_Term defines = OZ_subtree(optRec, OZ_atom("defines"));
+  return defines? defines: OZ_nil();
 }
 
-static CTerm parse() {
-  // in case there was a syntax error during the last parse, delete garbage:
+static OZ_Term parse() {
+  nilAtom = OZ_nil();
+
+  yyoutput = 0;
   for (int i = 0; i < DEPTH; i++) {
     prodKey[i] = prodKeyBuffer[i];
-    prodName[i] = newCTerm("none");
-    while (terms[i]) {
-      TermNode *tmp = terms[i]; terms[i] = terms[i]->next; delete tmp;
-    }
+    prodName[i] = OZ_atom("none");
+    terms[i] = 0;
     decls[i] = nilAtom;
   }
   depth = 0;
+  for (int i = 0; i < DEPTH; i++)
+    terms[i] = 0;
+  nerrors = 0;
 
-  yyoutput = 0;
+  xy_errorMessages = OZ_nil();
+
   xyparse();
+
+  // in case there was a syntax error during the parse, delete garbage:
   xy_exit();
+  for (int i = 0; i < DEPTH; i++)
+    while (terms[i]) {
+      TermNode *tmp = terms[i]; terms[i] = terms[i]->next; delete tmp;
+    }
 
-  if (yyoutput == 0)
-    yyoutput = newCTerm("parseError");
-
-  return yyoutput;
+  return yyoutput? yyoutput: OZ_atom("parseError");
 }
 
-static CTerm parseFile(char *file, CTerm defines) {
+OZ_C_proc_begin(ozparser_parseFile, 3)
+{
+  // {ParseFile FileName OptRec ?AST}
+  OZ_declareVirtualStringArg(0, file);
+  OZ_declareNonvarArg(1, optRec);
+  if (!OZ_isRecord(optRec))
+    return OZ_typeError(1, "Record");
+  OZ_Term defines = init_options(optRec);
   if (!xy_init_from_file(file, defines))
-    return newCTerm("fileNotFound");
-  CTerm res = parse();
-  fclose(xyin);
-  return res;
+    return OZ_atom("fileNotFound");
+  OZ_Return res = OZ_unify(OZ_getCArg(2), parse());
+  if (res == PROCEED) {
+    OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
+    if (x == 0) {
+      if (!OZ_isNil(xy_errorMessages)) {
+        prefixError();
+        printf("%s", OZ_virtualStringToC(xy_errorMessages));
+      }
+      return PROCEED;
+    } else
+      return OZ_unify(x, xy_errorMessages);
+  } else
+    return res;
 }
+OZ_C_proc_end
 
-static CTerm parseVirtualString(char *str, CTerm defines) {
+OZ_C_proc_begin(ozparser_parseVirtualString, 3)
+{
+  // {ParseVirtualString VS OptRec ?AST}
+  OZ_declareVirtualStringArg(0, str);
+  OZ_declareNonvarArg(1, optRec);
+  if (!OZ_isRecord(optRec))
+    return OZ_typeError(1, "Record");
+  OZ_Term defines = init_options(optRec);
   xy_init_from_string(str, defines);
-  return parse();
+  OZ_Return res = OZ_unify(OZ_getCArg(2), parse());
+  if (res == PROCEED) {
+    OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
+    if (x == 0) {
+      if (!OZ_isNil(xy_errorMessages)) {
+        prefixError();
+        printf("%s", OZ_virtualStringToC(xy_errorMessages));
+      }
+      return PROCEED;
+    } else
+      return OZ_unify(x, xy_errorMessages);
+  } else
+    return res;
 }
+OZ_C_proc_end
+
+OZ_C_proc_begin(ozparser_fileExists, 2)
+{
+  OZ_declareVirtualStringArg(0, str);
+  OZ_declareArg(1, res);
+  char *fullname = xy_expand_file_name(str);
+  if (fullname != NULL) {
+    delete[] fullname;
+    return OZ_unify(res, OZ_true());
+  } else
+    return OZ_unify(res, OZ_false());
+}
+OZ_C_proc_end

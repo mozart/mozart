@@ -34,19 +34,17 @@
 #include "oz.h"
 #include "os.hh"
 
-typedef OZ_Term CTerm;
-
 #include "parser.hh"
 
-extern "C" int xyreportError(char *kind, char *message,
-                             const char *file, int line, int offset);
+void xyreportError(char *kind, char *message,
+                   const char *file, int line, int offset);
 
-
-CTerm xyFileNameAtom;
 char xyFileName[100];
 char xyhelpFileName[100];
+OZ_Term xyFileNameAtom;
+
 int xy_showInsert, xy_gumpSyntax, xy_systemVariables;
-CTerm xy_errorMessages;
+OZ_Term xy_errorMessages;
 
 static int errorFlag;
 
@@ -56,7 +54,6 @@ static int errorFlag;
 //*******************
 
 int xylino;                             // current line number
-
 char *xylastline;                       // remember where we have put the input
 
 static inline int xycharno() {
@@ -192,10 +189,6 @@ public:
 
 static XyScannerHashTable *hashTable;
 
-char SCANNERVersion[100];
-char SCANNERMinorVersion[100];
-char SCANNERMajorVersion[100];
-
 
 //*************************
 // CONDITIONAL COMPILATION
@@ -246,12 +239,12 @@ static int cond() {
 class XyFileEntry {
 public:
   YY_BUFFER_STATE buffer;
-  CTerm fileNameAtom;
+  OZ_Term fileNameAtom;
   int lino;
   int conditional_basep;
   XyFileEntry *previous;
 
-  XyFileEntry(YY_BUFFER_STATE b, CTerm f, int l, int c, XyFileEntry *p):
+  XyFileEntry(YY_BUFFER_STATE b, OZ_Term f, int l, int c, XyFileEntry *p):
       buffer(b), fileNameAtom(f), lino(l), conditional_basep(c), previous(p) {}
 };
 
@@ -261,6 +254,7 @@ static void push_insert(FILE *filep, char *fileName) {
   bufferStack = new XyFileEntry(YY_CURRENT_BUFFER, xyFileNameAtom, xylino,
                                 conditional_basep, bufferStack);
   strncpy(xyFileName, fileName, 99);
+  xyFileName[99] = '\0';
   xyFileNameAtom = OZ_atom(fileName);
   xyin = filep;
   BEGIN(INITIAL);
@@ -281,6 +275,7 @@ static int pop_insert() {
     xyFileNameAtom = bufferStack->fileNameAtom;
     const char *fileName = OZ_atomToC(xyFileNameAtom);
     strncpy(xyFileName, fileName, 99);
+    xyFileName[99] = '\0';
     xylino = bufferStack->lino;
     conditional_basep = bufferStack->conditional_basep;
     XyFileEntry *old = bufferStack;
@@ -297,7 +292,7 @@ static int pop_insert() {
 //**********
 
 static int commentdepth;
-static CTerm commentfile;
+static OZ_Term commentfile;
 static int commentlino;
 static int commentoffset;
 static int commentlastmode;
@@ -704,6 +699,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
                                    delete[] fullname;
                                  } else
                                    strncpy(xyFileName, xytext, 99);
+                                 xyFileName[99] = '\0';
                                  xyFileNameAtom = OZ_atom(xyFileName);
                                  BEGIN(DIRECTIVE);
                                }
@@ -757,6 +753,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
                                      delete[] help;
                                    } else
                                      strncpy(xyhelpFileName, xytext, 99);
+                                   xyhelpFileName[99] = '\0';
                                    BEGIN(DIRECTIVE);
                                    return FILENAME;
                                  } else
@@ -1119,55 +1116,28 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 %%
 
-// this one is called only ONCE at startup
-void xyscannerInit()
-{
-  xyFileName[0] = '\0';
-  xyFileName[99] = '\0';
-  xyhelpFileName[99] = '\0';
-
-  hashTable = NULL;
-  strcpy(SCANNERVersion,"Oz_");
-  strcat(SCANNERVersion+3,OZVERSION);
-  for (char *s = SCANNERVersion; *s; s++)
-    if (*s == '.')
-      *s = '_';
-  strcpy(SCANNERMinorVersion,SCANNERVersion);
-  int numberOfUnderscore = 0;
-  int i = 0;
-  while (numberOfUnderscore <= 2)
-    if (SCANNERMinorVersion[i++] == '_')
-      numberOfUnderscore++;
-  SCANNERMinorVersion[i - 1] = '\0';
-  strcpy(SCANNERMajorVersion,SCANNERMinorVersion);
-  numberOfUnderscore = 0;
-  i = 0;
-  while (numberOfUnderscore <= 1)
-    if (SCANNERMinorVersion[i++] == '_')
-      numberOfUnderscore++;
-  SCANNERMajorVersion[i - 1] = '\0';
-
-  bufferStack = NULL;
-}
-
-// this one is called before every new parser run
 static void xy_init(OZ_Term defines) {
-  yy_init = 1;
-
+  xylino = 1;
   errorFlag = 0;
 
-  while (bufferStack != NULL) {
-    XyFileEntry *old = bufferStack;
-    bufferStack = bufferStack->previous;
-    delete old;
-  }
+  bufferStack = NULL;
 
-  if (hashTable != NULL)
-    delete hashTable;
   hashTable = new XyScannerHashTable;
-  hashTable->insert(SCANNERVersion);   // exact version number
-  hashTable->insert(SCANNERMinorVersion);   // minor version number
-  hashTable->insert(SCANNERMajorVersion);   // general Oz release
+  char version[strlen(OZVERSION)+3];
+  strcpy(version,"Oz_");
+  strcat(version+3,OZVERSION);
+  int count = 0;
+  for (char *s = version; *s; s++)
+    if (*s == '.') {
+      count++;
+      *s = '_';
+    }
+  hashTable->insert(version);
+  while (count > 1) {
+    *strrchr(version,'_') = '\0';
+    hashTable->insert(version);
+    count--;
+  }
   hashTable->insert("NEWCOMPILER");
   while (OZ_isCons(defines)) {
     char *x = OZ_virtualStringToC(OZ_head(defines));
@@ -1189,22 +1159,22 @@ int xy_init_from_file(char *file, OZ_Term defines) {
   xyin = fopen(fullname, "r");
   if (xyin == NULL)
     return 0;
-  xy_create_buffer(xyin, YY_BUF_SIZE);
-  xy_init(defines);
-  xylino = 1;
+  xy_switch_to_buffer(xy_create_buffer(xyin, YY_BUF_SIZE));
   strncpy(xyFileName,fullname,99);
+  xyFileName[99] = '\0';
   xyFileNameAtom = OZ_atom(xyFileName);
   delete[] fullname;
+  xy_init(defines);
   return 1;
 }
 
 void xy_init_from_string(char *str, OZ_Term defines) {
+  strcpy(xyFileName,"nofile");
+  xyFileNameAtom = OZ_atom(xyFileName);
+  xyin = NULL;
   xy_scan_string(str);
   xylastline = YY_CURRENT_BUFFER->yy_ch_buf;
   xy_init(defines);
-  xylino = 1;
-  strcpy(xyFileName,"nofile");
-  xyFileNameAtom = OZ_atom(xyFileName);
 }
 
 char *xy_expand_file_name(char *file) {
@@ -1213,6 +1183,14 @@ char *xy_expand_file_name(char *file) {
 
 void xy_exit() {
   xy_delete_buffer(YY_CURRENT_BUFFER);
+  delete hashTable;
+  while (bufferStack != NULL) {
+    XyFileEntry *old = bufferStack;
+    bufferStack = bufferStack->previous;
+    delete old;
+  }
+  if (xyin)
+    fclose(xyin);
 }
 
 int xylex() {
