@@ -317,7 +317,7 @@ sub action_tar {
 	    my $rnum = $1;
 	    die "wrong release number on archive $name" unless $rnum eq $RELEASE_NUMBER;
 	    &do_system("cp -f $file $tardir/$name");
-	} elsif ($name =~ /^README[.-]/) {
+	} elsif ($name =~ /^README\./) {
 	    &do_system("cp -f $file $tardir/$name");
 	} else {
 	    die "unrecognized archive $name";
@@ -331,8 +331,7 @@ sub action_macosx {
     my $macdir = "$RELDIR/macosx";
     foreach $file (@ARGV) {
 	my $name = &nondirname($file);
-	if ($name =~ /^mozart-(\d+\.\d+\.\d+)\.\d{8}-(.*)\.pkg\.t?gz$/ ||
-	    $name =~ /^mozart-(\d+\.\d+\.\d+)\.\d{8}-(.*)\.t?gz$/) {
+	if ($name =~ /^mozart-(\d+\.\d+\.\d+)\.\d{8}-(.*)\.pkg\.t?gz$/) {
 	    die "wrong release number on $name" unless $1 eq $RELEASE_NUMBER;
 	    &do_system("cp -f $file $macdir/$name");
 	} elsif ($name =~ /^README-(\d+\.\d+\.\d+)\.\d{8}-(.*)$/) {
@@ -358,9 +357,7 @@ sub action_debian {
 	    $name =~ /^mozart_(\d+\.\d+\.\d+)\.\d{8}-\d+\.dsc$/ ||
 	    $name =~ /^mozart_(\d+\.\d+\.\d+)\.\d{8}-\d+_(.*)\.changes$/ ||
 	    $name eq "Release" ||
-	    $name eq "Packages.gz" ||
-	    $name eq "Sources.gz" ||
-	    $name eq "override")
+	    $name eq "Packages.gz")
 	{
 	    die "wrong release number on $name" unless !$1 || $1 eq $RELEASE_NUMBER;
 	    &do_system("cp -f $file $debdir/$name");
