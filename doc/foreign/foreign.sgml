@@ -287,30 +287,28 @@ above.
 
 <section><title/Watcom/
 <p>
-TODO: check whether this works
-<p>
 First create a file named <code /getenv.lnk/ with the following contents:
 <code display >
 system nt_dll initinstance terminstance
+name getenv.so-win32-i486
 export _BIgetenv
 export _OZ_linkFF
-file getenv,oz
+export _oz_init_module
+file getenv,mozart
 </code>
 Note that you have to prepend a <code /_/ to each of the functions,
 that you want to export.
 <p>
 Then compile the source files and create the DLL using the following
-commands:
+commands (replace OZHOME by the directory where Oz has been installed):
 <code display >
-wcc386 -zq -bd mozart.c
-wcc386 -zq -bd getenv.cc
+wcc386 -zq -bd -IOZHOME\include mozart.c
+wpp386 -zq -bd -IOZHOME\include getenv.cc
 wlink @getenv
 </code>
 </section>
 
 <section><title/Microsoft Visual C++/
-<p>
-TODO: check whether this works
 <p>
 First create a file named <code /getenv.def/ with the following contents:
 <code display >
@@ -322,8 +320,9 @@ EXPORTS
 <p>
 Compilation and creation of the DLL is done using the following commands:
 <code display >
-cl /c mozart.c getenv.cc
-link /def:getenv.def /dll oz.obj getenv.obj
+cl -IOZHOME\include -c mozart.c
+cl -IOZHOME\include -c -Tp getenv.cc
+link /def:getenv.def /dll mozart.obj getenv.obj
 </code>
 </section>
 </chapter>
@@ -1108,6 +1107,8 @@ OZ_pair2(OZ_atom(left),OZ_string(right))
   <code >void OZ_makeRunnableThread(OZ_CFun fun, OZ_Term *args, int n) </code>
 <item>Creates a thread with one task to execute the function <code /fun/
     with arguments <code /args[0],&ellipsis;,args[n-1]/.
+
+TODO: check this
 
 <entry><<OZ_getLowPrio>>
 <entry><<OZ_getMediumPrio>>
