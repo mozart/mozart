@@ -143,6 +143,12 @@ Used as fallback if the environment variable OZHOME is not set."
 	  (replace-match repl t t))))
     (buffer-substring-no-properties (point-min) (point-max))))
 
+(defvar *OZVERSION*
+  (or (getenv "OZVERSION") "@OZVERSION@"))
+
+(defvar *OZDOTOZ*
+  (or (getenv "OZ_DOTOZ") (concat "~/.oz/" *OZVERSION*)))
+
 (defvar *OZLOAD*
   (or (getenv "OZ_SEARCH_LOAD")
       (getenv "OZ_LOAD")
@@ -150,7 +156,7 @@ Used as fallback if the environment variable OZHOME is not set."
       (concat
        "cache="
        (oz-escape-path-separator
-	(expand-file-name "~/.oz/cache"))
+	(expand-file-name (concat *OZDOTOZ* "/cache")))
        path-separator
        "cache="
        (oz-escape-path-separator
@@ -177,7 +183,7 @@ Used as fallback if the environment variable OZHOME is not set."
       (and oz-platform
 	   (concat
 	    (expand-file-name
-	     (concat "~/.oz/platform/" (oz-platform) "/lib"))
+	     (concat *OZDOTOZ* "/platform/" (oz-platform) "/lib"))
 	    (let ((d *OZHOME*))
 	      (if (equal d "") (setq d nil))
 	      (if d
@@ -670,7 +676,7 @@ Used as fallback if the environment variable OZHOME is not set."
 	  (while specs
 	    (setq spec (car specs) specs (cdr specs))
 	    (cond ((eq spec 'user-cache)
-		   (oz-push-method "cache=~/.oz/cache"))
+		   (oz-push-method (concat "cache=" *OZDOTOZ* "/cache")))
 		  ((eq spec 'global-cache)
 		   (if *OZHOME*
 		       (oz-push-method
@@ -726,7 +732,7 @@ Used as fallback if the environment variable OZHOME is not set."
 	      (oz-dirs-to-search-path
 	       LD_LIBRARY_PATH
 	       (expand-file-name
-		(concat "~/.oz/platform/" (oz-platform) "/lib"))
+		(concat *OZDOTOZ* "/platform/" (oz-platform) "/lib"))
 	       (and *OZHOME*
 		    (expand-file-name
 		     (concat *OZHOME* "/platform/" (oz-platform) "/lib"))))))
@@ -735,7 +741,7 @@ Used as fallback if the environment variable OZHOME is not set."
 	      (oz-dirs-to-search-path
 	       DYLD_LIBRARY_PATH
 	       (expand-file-name
-		(concat "~/.oz/platform/" (oz-platform) "/lib"))
+		(concat *OZDOTOZ* "/platform/" (oz-platform) "/lib"))
 	       (and *OZHOME*
 		    (expand-file-name
 		     (concat *OZHOME* "/platform/" (oz-platform) "/lib"))))))
@@ -744,7 +750,7 @@ Used as fallback if the environment variable OZHOME is not set."
 	(setq *OZ_PATH*
 	      (oz-dirs-to-search-path
 	       PATH
-	       (expand-file-name "~/.oz/bin")
+	       (expand-file-name (concat *OZDOTOZ* "/bin"))
 	       (and *OZHOME*
 		    (expand-file-name
 		     (concat *OZHOME* "/bin"))))))

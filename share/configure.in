@@ -152,7 +152,7 @@ AC_OUTPUT(lib/Makefile lib/support/DefaultURL.oz \
     tools/Makefile \
     demo/Makefile test/Makefile test/dp-bench/Makefile \
     examples/Makefile elisp/Makefile elisp/mozart.el \
-    bin/Makefile \
+    bin/Makefile bin/oz \
     Makefile Makefile.boot ozengine.sh,[
   chmod +x ozengine.sh])
 
