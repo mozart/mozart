@@ -26,31 +26,32 @@ BUILDTOP=       @BUILDTOP@
 PREFIX=         @prefix@
 SRCDIR=         @srcdir@
 VPATH=          @srcdir@
-BINDIR          = $(PREFIX)/bin
+BINDIR=         $(PREFIX)/bin
 
 @SET_MAKE@
-LN_S            = @LN_S@
-INSTALL         = @INSTALL@
-INSTALL_DIR     = @INSTALL_DIR@
-INSTALL_BIN     = $(INSTALL) -m 555
+LN_S=           @LN_S@
+INSTALL=        @INSTALL@
+INSTALL_DIR=    @INSTALL_DIR@
+INSTALL_BIN=    $(INSTALL) -m 555
 
-SCRIPTS = oz ozplatform ozdynld
-LINKS   = ozengine
+SCRIPTS=        oz ozplatform ozdynld
+LINKS=          ozengine
+LIB_SCRIPTS=    $(addprefix $(BINDIR)/,$(SCRIPTS))
+LIB_LINKS=      $(addprefix $(BINDIR)/,$(LINKS))
 
 .PHONY: bootstrap all install clean veryclean distclean
 
 all:
 
-bootstrap: all
+bootstrap:
 
-install: $(BINDIR)
-        $(INSTALL_BIN) $(SCRIPTS:%=$(SRCDIR)/%) $(BINDIR)
-        set -x; cd $(BINDIR);\
-        for file in $(LINKS); \
-        do\
-           rm -f $$file; \
-           $(LN_S) oz $$file; \
-        done
+install: $(BINDIR) $(LIB_SCRIPTS) $(LIB_LINKS)
+
+$(LIB_SCRIPTS): $(BINDIR)/% : %
+        $(INSTALL_BIN) $< $(BINDIR)
+
+$(LIB_LINKS): $(BINDIR)/oz
+        rm -f $@; $(LN_S) $< $@
 
 $(BINDIR):
         $(INSTALL_DIR) $@
