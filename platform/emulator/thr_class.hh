@@ -21,7 +21,7 @@
 #include "oz_cpi.hh"
 #include "cpi_heap.hh"
 
-#undef DEBUG_PROPAGATORS
+//#define DEBUG_PROPAGATORS
 #ifdef DEBUG_PROPAGATORS
 #include "builtins.hh"
 #endif
@@ -459,7 +459,13 @@ public:
       ozstat.enterProp(prop);
       int heapNow = getUsedMemoryBytes();
 #ifdef DEBUG_PROPAGATORS
-      printf("<%s", builtinTab.getName((void *)(item.propagator->getHeader()->getHeaderFunc())));
+      OZ_CFunHeader * header = item.propagator->getHeader();
+      if (header) {
+        OZ_CFun headerfunc = header->getHeaderFunc();
+        printf("<%s", builtinTab.getName((void *) headerfunc)); fflush(stdout);
+      } else {
+        printf("<CDSuppl"); fflush(stdout);
+      }
 #endif
       OZ_Return ret = item.propagator->propagate();
 #ifdef DEBUG_PROPAGATORS
@@ -473,7 +479,13 @@ public:
       return ret;
     } else {
 #ifdef DEBUG_PROPAGATORS
-      printf("<%s", builtinTab.getName((void *)(item.propagator->getHeader()->getHeaderFunc())));
+      OZ_CFunHeader * header = item.propagator->getHeader();
+      if (header) {
+        OZ_CFun headerfunc = header->getHeaderFunc();
+        printf("<%s", builtinTab.getName((void *) headerfunc)); fflush(stdout);
+      } else {
+        printf("<CDSuppl"); fflush(stdout);
+      }
       OZ_Return ret = item.propagator->propagate();
       printf(">\n"); fflush(stdout);
       return ret;

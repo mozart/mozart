@@ -22,7 +22,7 @@
 #include "fddebug.hh"
 
 //*****************************************************************************
-//#undef DEBUG_FSET
+//#define DEBUG_FSET
 #ifdef DEBUG_FSET
 
 

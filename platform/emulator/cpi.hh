@@ -23,6 +23,8 @@
 #define inline
 #endif
 
+#define CPIINITSIZE 1000
+
 struct _spawnVars_t {
   OZ_Term * var;
   TypeOfGenCVariable expected_type;

@@ -420,8 +420,8 @@ public:
   OZ_Boolean isTouched(void) const {return initial_size > domPtr->getSize();}
 
   void ask(OZ_Term);
-  void read(OZ_Term);
-  void readEncap(OZ_Term);
+  int read(OZ_Term);
+  int readEncap(OZ_Term);
   OZ_Boolean leave(void) { return isSort(sgl_e) ? OZ_FALSE : tell(); }
   void fail(void);
 };

@@ -349,6 +349,68 @@ failure:
   return P.fail();
 }
 
+/*
+
+class DistinctStack {
+private:
+  int * _stack, _size, _top;
+public:
+  DistinctStack(int s, int * st) : _stack(st), _size(s), _top(0) {}
+  void push(int i) { _stack[_top++] = i; }
+  int pop(void) {return _stack[--_top]; }
+  int nonEmpty(void) { return _top; }
+};
+
+OZ_Return DistinctPropagator::propagate(void)
+{
+  if (reg_l_sz == 0) return PROCEED;
+
+  int &sz  = reg_l_sz;
+
+  DECL_DYN_ARRAY(OZ_FDIntVar, l, sz);
+  PropagatorController_VV P(sz, l);
+  OZ_FiniteDomain u(fd_empty);
+  DECL_DYN_ARRAY(int, _stack, sz);
+  DECL_DYN_ARRAY(int, init_size, sz);
+  DistinctStack stack(sz, _stack);
+  int i;
+
+  for (i = sz; i--; ) {
+    if ((init_size[i] = l[i].read(reg_l[i])) == 1)
+      stack.push(i);
+  }
+
+  while (stack.nonEmpty()) {
+    int skip = stack.pop();
+    int remove = l[skip]->getSingleElem();
+
+    for  (i = sz; i--; ) {
+      if (i == skip)
+        continue;
+
+      FailOnEmpty(*l[i] -= remove);
+
+      if (*l[i] == fd_singl && init_size[i] > 1) {
+        init_size[i] = 1;
+        stack.push(i);
+      }
+    }
+  }
+
+  // remove singletons from list
+  int from, to;
+  for (from = 0, to = 0; from < sz; from += 1)
+    if (*l[from] != fd_singl)
+      reg_l[to++] = reg_l[from];
+  sz = to;
+
+  return P.leave();
+
+failure:
+  return P.fail();
+}
+ */
+
 //-----------------------------------------------------------------------------
 
 OZ_C_proc_begin(fdp_distinctOffset, 2)

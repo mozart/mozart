@@ -11,21 +11,22 @@
 
 #include <stdio.h>
 
-#define CPIINITSIZE 1000
+#define CPIHEAPINITSIZE 100000
 
 class CpiHeapClass {
 private:
-  const int _init_heap_size = CPIINITSIZE;
+  int _init_heap_size;
 
   char * _heap, * _heap_top;
   int _heap_size, _heap_left;
   struct _heap_t {
     char * heap; _heap_t * next;
-    //    _heap_t(char * h,  _heap_t * p) : heap(h), next(p) {}
+        _heap_t(char * h,  _heap_t * p) : heap(h), next(p) {}
   } * _aux_heaps;
 public:
-  CpiHeapClass(int size = _init_heap_size)
-    : _heap_size(size), _heap_left(size), _aux_heaps(NULL)
+  CpiHeapClass(int size = CPIHEAPINITSIZE)
+    : _heap_size(size), _heap_left(size), _aux_heaps(NULL),
+      _init_heap_size(size)
   {
     _heap = _heap_top = new char[_heap_size];
   }
@@ -45,17 +46,14 @@ public:
 
       return tmp;
     } else {
-      if (tmp_size > _heap_size) {
-        error("cpi heap memory exhausted");
-      }
+      if (tmp_size > _heap_size)
+        _init_heap_size = tmp_size;
 
-
-      _heap_t * aux = new _heap_t;
-      aux->heap = _heap_top;
-      aux->next = _aux_heaps;
-      _aux_heaps = aux;
+      _aux_heaps = new _heap_t(_heap_top, _aux_heaps);
 
       _heap = (_heap_top = new char[_heap_size]) + tmp_size;
+      if (!_heap)
+        error("CPI heap memory exhausted.");
       _heap_left = _heap_size - tmp_size;
       return _heap_top;
     }
