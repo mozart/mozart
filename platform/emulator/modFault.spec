@@ -24,13 +24,6 @@
 
 %builtins_all =
 (
-    'installHW'	        => { in  => ['value','value','value'],
-			     out => [],
-			     BI  => BIhwInstall},
-
-    'deInstallHW'	=>  { in  => ['value','value','value'],
-			     out => [],
-			     BI  => BIhwDeInstall},
 
     'getEntityCond'	=>  { in  => ['value'],
 			     out => ['value'],
