@@ -42,6 +42,9 @@
 
 #ifndef WINDOWS
 #include <netdb.h>
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 #include <netinet/tcp.h>
 #endif
 
