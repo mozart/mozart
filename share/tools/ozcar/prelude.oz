@@ -6,6 +6,7 @@
 
 %% some builtins...
 Dbg = dbg( taskstack   : {`Builtin` taskstack 3}
+	   frameVars   : {`Builtin` frameVariables 3}
 	   stream      : {`Builtin` globalThreadStream 1}
 	   contflag    : {`Builtin` setContFlag 2}
 	   stepmode    : {`Builtin` setStepMode 2}
@@ -39,6 +40,7 @@ Dkeys    = Dictionary.keys
 Dget     = Dictionary.get
 Ditems   = Dictionary.items
 Dremove  = Dictionary.remove
+Dmember  = Dictionary.member
 
 local
    fun {MakeSpace N}
