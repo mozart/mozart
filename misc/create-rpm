@@ -34,17 +34,19 @@ TMPDIR=/tmp
 #
 # Read dir
 #
-if test $# -lt 2
+if test $# -lt 3
 then
-   echo "usage: create-rpm <build-dir> <dst-dir>" 1>&2;
+   echo "usage: create-rpm <build-dir> <build-stdlib-dir> <dst-dir>" 1>&2;
    echo <build-dir> is the place where Mozart has been built;
+   echo <build-stdlib-dir> is the place where Mozart Standard Library has been built;
    exit 1;
 fi
 BUILDDIR=$1
+BUILDSTDDIR=$2
 BUSRCTAR=`ls ${BUILDDIR}/mozart-*.*-src.tar.gz`
 BUDOCTAR=`ls ${BUILDDIR}/mozart-*.*-doc.tar.gz`
-BUSTDTAR=`ls ${BUILDDIR}/mozart-*.*-std.tar.gz`
-DSTDIR=$2
+BUSTDTAR=`ls ${BUILDSTDDIR}/mozart-*.*-std.tar.gz`
+DSTDIR=$3
 OZHOME=/usr/lib/mozart
 
 #
