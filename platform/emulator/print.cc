@@ -1019,11 +1019,19 @@ PRINT(Thread)
 
   stream << indent(offset)
     << "Thread @" << this
-    << " [ prio: " << priority
-    << ", ";
-  stream << " Normal (#"
-         << taskStack.getUsed()-1
-         << ")";
+    << " [ prio: " << priority;
+  stream << ", #" << taskStack.getUsed()-1;
+  switch (getCompMode()) {
+  case PARMODE:
+    stream << ", PARMODE";
+    break;
+  case SEQMODE:
+    stream << ", SEQMODE";
+    break;
+  case ALLSEQMODE:
+    stream << ", ALLSEQMODE";
+    break;
+  }
   stream << " ]";
 }
 
@@ -1032,6 +1040,7 @@ PRINTLONG(Thread)
   CHECKDEPTHLONG;
   this->print(stream,depth,offset);
   stream << endl;
+  taskStack.printDebug(NOCODE,NO,depth);
 }
 
 PRINTLONG(Literal)
@@ -1319,6 +1328,20 @@ void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
   while (isEmpty() == NO && depth-- > 0) {
     TaggedBoard tb = (TaggedBoard) ToInt32(pop());
     ContFlag flag = getContFlag(tb);
+    if (flag == C_COMP_MODE) {
+      switch (((int) tb)>>4) {
+      case PARMODE:
+        message("\tPARMODE\n");
+        break;
+      case SEQMODE:
+        message("\tSEQMODE\n");
+        break;
+      case ALLSEQMODE:
+        message("\tSEQMODE (all)\n");
+        break;
+      }
+      continue;
+    }
     Board* n = getBoard(tb,flag)->getBoardFast();
     switch (flag){
     case C_CONT:
@@ -1352,13 +1375,19 @@ void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
       message("\tC_NERVOUS: board=0x%x\n", n);
       break;
     case C_COMP_MODE:
-      message("\t%sMODE\n",((int) tb)>>4==SEQMODE?"SEQ":"PAR");
+      Assert(0);
       break;
     case C_CFUNC_CONT:
       {
         OZ_CFun biFun    = (OZ_CFun) pop();
         Suspension* susp = (Suspension*) pop();
         RefsArray X      = (RefsArray) pop();
+#ifdef NEWCOUNTER
+        if (biFun == AM::SolveActorWaker) {
+          message("\tSolve Actor\n");
+          break;
+        }
+#endif
         message("\tBuiltin: {%s", builtinTab.getName((void *) biFun));
         for(int i=0; i<getRefsArraySize(X); i++) {
           printf(" ");
