@@ -150,8 +150,9 @@ particular, it lists the changes from
       <title/The Oz Base Environment/
       <p>
       <list>
-         <item> Added <<Array.exchange>>, <<Dictionary.exchange>>, 
-                and <<Dictionary.condExchange>>.
+         <item>Added <<Array.exchange>>, <<Dictionary.exchange>>,
+	       <<WeakDictionary.exchange>>, <<Dictionary.condExchange>>,
+	       and <<WeakDictionary.condExchange>>.
       </list>
 
     <section id="sec.m130.uniform">
