@@ -37,7 +37,6 @@ in
 	 socketpair	: SOCKETPAIR
 	 dup		: DUP
 	 fork		: FORK
-	 execvp		: EXECVP
 	 pipe		: PIPE
 	 getfd		: GETFD
 	 ) @ 'io.so{native}'
@@ -46,8 +45,10 @@ in
       Finalize
    export
       Make Write Read ReadAsString Open Close SocketPair Dup
-      Fork Run Pipe DevNull
+      Fork Run Pipe DevNull Getfd
    define
+
+      fun {Getfd X} {GETFD X} end
 
       fun {Make I}
 	 {MAKE I {NewLock} {NewLock}}
