@@ -38,6 +38,9 @@
 #pragma interface
 #endif
 
+#include "am.hh"
+#include "variable.hh"
+
 //#define DEBUG_TELLCONSTRAINTS
 
 //-----------------------------------------------------------------------------

@@ -33,59 +33,17 @@
 #pragma interface
 #endif
 
-// specification for builtins
-struct BIspec {
-  char *name;
-  int arity;
-  OZ_CFun fun;
-  IFOR ifun;
-};
-
-
-// add specification to builtin table
-void BIaddSpec(BIspec *spec);
-OZ_Term OZ_findBuiltin(char *name, OZ_Term handler);
+#include "base.hh"
+#include "oz.h"
+#include "oz_cpi.hh"
 
 BuiltinTabEntry *BIinit();
-BuiltinTabEntry *BIadd(const char *name,int arity,OZ_CFun fun,IFOR infun=(IFOR) NULL);
 
 void threadRaise(Thread *th,OZ_Term E);
 
 // -----------------------------------------------------------------------
 // tables
 
-class BuiltinTab : public HashTable {
-public:
-  BuiltinTab(int sz) : HashTable(HT_CHARKEY,sz) {};
-  ~BuiltinTab() {};
-  unsigned memRequired(void) {
-    return HashTable::memRequired(sizeof(BuiltinTabEntry));
-  }
-  const char * getName(void * fp) {
-    HashNode * hn = getFirst();
-    for (; hn != NULL; hn = getNext(hn)) {
-      BuiltinTabEntry * abit = (BuiltinTabEntry *) hn->value;
-      if (abit->getInlineFun() == (IFOR) fp ||
-          abit->getFun() == (OZ_CFun) fp)
-        return hn->key.fstr;
-    }
-    return "???";
-  }
-  BuiltinTabEntry * getEntry(void * fp) {
-    HashNode * hn = getFirst();
-    for (; hn != NULL; hn = getNext(hn)) {
-      BuiltinTabEntry * abit = (BuiltinTabEntry *) hn->value;
-      if (abit->getInlineFun() == (IFOR) fp ||
-          abit->getFun() == (OZ_CFun) fp)
-        return abit;
-    }
-    return (BuiltinTabEntry *) NULL;
-  }
-
-  BuiltinTabEntry *find(const char *name) { return (BuiltinTabEntry*) htFind(name); }
-};
-
-extern BuiltinTab builtinTab;
 extern OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
 extern OZ_Return uparrowInlineBlocking(TaggedRef term, TaggedRef fea,
                                        TaggedRef &out);

@@ -25,6 +25,7 @@
  */
 
 #include "fdbuilti.hh"
+#include "lps.hh"
 
 //#define DEBUG_FDCD
 

@@ -26,11 +26,10 @@
 
 // internal interface to AMOZ
 
-#ifndef FOREIGN_HH
-#define FOREIGN_HH
+#ifndef RUNTIME_HH
+#define RUNTIME_HH
 
 #include "am.hh"
-
 
 /* -----------------------------------------------------------------------
  * equality, unification
@@ -340,11 +339,70 @@ int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...);
   return BI_TYPE_ERROR;                         \
 }
 
+OZ_Return typeError(int pos, char *comment, char *typeString);
+
+#define ExpectedTypes(S) char * __typeString = S;
+#define TypeError(Pos, Comment) return typeError(Pos,Comment,__typeString);
+
 /* -----------------------------------------------------------------------
  * MISC
  * -----------------------------------------------------------------------*/
 
 OZ_Term oz_getLocation(Board *bb);
+
+/* -----------------------------------------------------------------------
+ * BuiltinTab
+ * -----------------------------------------------------------------------*/
+
+// specification for builtins
+struct BIspec {
+  char *name;
+  int arity;
+  OZ_CFun fun;
+  IFOR ifun;
+};
+
+
+class BuiltinTab : public HashTable {
+public:
+  BuiltinTab(int sz) : HashTable(HT_CHARKEY,sz) {};
+  ~BuiltinTab() {};
+  unsigned memRequired(void) {
+    return HashTable::memRequired(sizeof(BuiltinTabEntry));
+  }
+  const char * getName(void * fp) {
+    HashNode * hn = getFirst();
+    for (; hn != NULL; hn = getNext(hn)) {
+      BuiltinTabEntry * abit = (BuiltinTabEntry *) hn->value;
+      if (abit->getInlineFun() == (IFOR) fp ||
+          abit->getFun() == (OZ_CFun) fp)
+        return hn->key.fstr;
+    }
+    return "???";
+  }
+  BuiltinTabEntry * getEntry(void * fp) {
+    HashNode * hn = getFirst();
+    for (; hn != NULL; hn = getNext(hn)) {
+      BuiltinTabEntry * abit = (BuiltinTabEntry *) hn->value;
+      if (abit->getInlineFun() == (IFOR) fp ||
+          abit->getFun() == (OZ_CFun) fp)
+        return abit;
+    }
+    return (BuiltinTabEntry *) NULL;
+  }
+
+  BuiltinTabEntry *find(const char *name) {
+    return (BuiltinTabEntry*) htFind(name);
+  }
+};
+
+extern BuiltinTab builtinTab;
+
+// (see builtins.hh)
+BuiltinTabEntry *BIadd(const char *name,int arity,OZ_CFun fun,
+                       IFOR infun=(IFOR) NULL);
+void BIaddSpec(BIspec *spec); // add specification to builtin table
+
 
 /* -----------------------------------------------------------------------
  * TODO

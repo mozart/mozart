@@ -27,6 +27,7 @@
    declarations for the URL client
  */
 
+#ifndef URL_CLIENT
 #define URL_CLIENT
 
 
@@ -89,3 +90,5 @@ char *urlcStrerror(int err)
     return "unknown urlc error";
   }
 }
+
+#endif

@@ -30,7 +30,7 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 
-#include "config.h"
+#include "base.hh"
 #include "oz.h"
 #include "os.hh"
 

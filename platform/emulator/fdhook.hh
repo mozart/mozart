@@ -31,7 +31,9 @@
 #pragma interface
 #endif
 
-#include "types.hh"
+#include "base.hh"
+
+#include "thread.hh"
 
 #include "runtime.hh"
 

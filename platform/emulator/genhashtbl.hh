@@ -31,6 +31,8 @@
 #pragma interface
 #endif
 
+#include "base.hh"
+
 #define GenCast(X,XType,Y,NewType)\
 { XType tmp=X; Y= (NewType) tmp;}
 

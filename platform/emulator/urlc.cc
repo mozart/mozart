@@ -37,18 +37,8 @@
 
 /* defines */
 
-#ifdef HAVE_CONFIG_H
-#include "conf.h"
-#endif
-
-#ifdef WINDOWS
-#define EINPROGRESS WSAEINPROGRESS
-#endif
-
-
-#ifndef URL_CLIENT
-  #include  "urlc.hh"
-#endif
+#include "os.hh"
+#include "urlc.hh"
 
 /* ## define to 2 if debugging messages and perror wanted;
              to 1 if perror wanted;
@@ -123,8 +113,6 @@
 #endif
 #include <netdb.h>
 #include <sys/utsname.h>
-
-#include "os.hh"
 
 #if 1 <= URLC_RESOLVER
 #include <arpa/nameser.h>

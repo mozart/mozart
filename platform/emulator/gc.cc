@@ -37,9 +37,11 @@
 #include <sys/time.h>
 #endif
 
-#include "am.hh"
-
 #include "gc.hh"
+
+#include "runtime.hh"
+#include "perdio.hh"
+
 #include "tcl_tk.hh"
 
 #include "genvar.hh"
@@ -1251,12 +1253,12 @@ inline
 BigInt * BigInt::gc() {
   Assert(opMode == IN_GC);
 
-  CHECKCOLLECTED(*(int *)&value.d, BigInt *);
+  CHECKCOLLECTED(*(int *)&value, BigInt *);
   COUNT(bigInt);
 
   BigInt *ret = new BigInt();
   mpz_set(&ret->value,&value);
-  storeForward(&value.d, ret);
+  storeForward((int *)&value, ret);
   return ret;
 }
 
@@ -2933,8 +2935,6 @@ void Board::gcRecurse()
 
   script.Script::gc();
 }
-
-
 
 Actor *Actor::gcActor()
 {

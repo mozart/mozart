@@ -29,9 +29,6 @@
 #pragma implementation "genvar.hh"
 #endif
 
-
-#include "am.hh"
-
 #include "genvar.hh"
 
 GenCVariable::GenCVariable(TypeOfGenCVariable t, Board * n) :

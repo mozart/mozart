@@ -41,10 +41,8 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 
-#include "config.h"
+#include "base.hh"
 #include "oz.h"
-#include "types.hh"
-#include "error.hh"
 
 typedef OZ_Term CTerm;
 

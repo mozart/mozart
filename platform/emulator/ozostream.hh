@@ -30,8 +30,6 @@
 #include <stdio.h>
 #include <malloc.h>
 
-#include "types.hh"
-
 #define ostream ozostream
 #define cout ozcout
 #define cerr ozcerr

@@ -36,10 +36,13 @@
 #pragma implementation "builtins.hh"
 #endif
 
+#include "builtins.hh"
+#include "perdio.hh"
+#include "os.hh"
+#include "codearea.hh"
+#include "debug.hh"
+
 #include "wsock.hh"
-
-#include "types.hh"
-
 
 #include "iso-ctype.hh"
 #include <string.h>
@@ -76,7 +79,6 @@ extern "C" int dlclose(void *);
 #endif
 
 #include "runtime.hh"
-#include "builtins.hh"
 
 #include "genvar.hh"
 #include "ofgenvar.hh"
@@ -238,30 +240,6 @@ DECLAREBI_USEINLINEFUN2(BIfun,BIifun)
   if (!am.onToplevel() && !am.isCurrentBoard(GETBOARD(Object))) {       \
     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom(Where));   \
   }
-
-/********************************************************************
- * BuiltinTab
- ******************************************************************** */
-
-BuiltinTab builtinTab(750);
-
-
-BuiltinTabEntry *BIadd(const char *name,int arity, OZ_CFun funn, IFOR infun)
-{
-  BuiltinTabEntry *builtin = new BuiltinTabEntry(name,arity,funn,infun);
-
-  builtinTab.htAdd(name,builtin);
-
-  return builtin;
-}
-
-// add specification to builtin table
-void BIaddSpec(BIspec *spec)
-{
-  for (int i=0; spec[i].name; i++) {
-    BIadd(spec[i].name,spec[i].arity,spec[i].fun,spec[i].ifun);
-  }
-}
 
 /********************************************************************
  * `builtin`

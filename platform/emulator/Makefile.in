@@ -50,7 +50,7 @@ CREATEDFILES = $(CREATEDOTHERS) $(CREATEDSRCS)
 PEANUTSFILE = peanuts.cc
 PEANUTS = \
         am.cc genvar.cc indexing.cc fdhook.cc\
-        taskstk.cc mem.cc assemble.cc error.cc\
+        taskstk.cc mem.cc assemble.cc\
         fdprofil.cc statisti.cc fdgenvar.cc\
         codearea.cc debug.cc lps.cc solve.cc\
         variable.cc thrqueue.cc thrspool.cc\
@@ -58,11 +58,11 @@ PEANUTS = \
         print.cc
 
 CXXSRCS = \
-        actor.cc board.cc thread.cc\
+        actor.cc base.cc board.cc thread.cc\
         dictionary.cc stack.cc susplist.cc\
         cpbag.cc tagged.cc value.cc\
-        cont.cc config.cc trail.cc\
-        types.cc foreign.cc gc.cc\
+        cont.cc ozconfig.cc trail.cc\
+        foreign.cc gc.cc\
         compiler.cc ofgenvar.cc genhashtbl.cc\
         ozostream.cc runtime.cc unix.cc\
         tcl_tk.cc metavar.cc perdio.cc\
@@ -206,10 +206,9 @@ realclean::
                 ozma.hh \
                 $(CREATEDFILES) TAGS
 
-distclean:
-        $(MAKE) realclean
+distclean::
         $(RM) conf.h config.cache config.log config.status \
-                Makefile.rules Makefile.vars
+                Makefile.rules Makefile.vars Makefile
 
 # dependencies
 marshaler.hh marshalMsg.cc: $(SRCDIR)/msgFormat.m4

@@ -39,9 +39,7 @@
 
 #include <stdio.h>
 
-#include "machine.hh"
-#include "types.hh"
-#include "error.hh"
+#include "base.hh"
 #include "mem.hh"
 #include "gc.hh"
 

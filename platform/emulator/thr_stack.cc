@@ -31,10 +31,7 @@
 #endif
 
 #include "taskstk.hh"
-#include "os.hh"
-#include "value.hh"
-#include "actor.hh"
-#include "am.hh"
+#include "runtime.hh"
 
 int TaskStack::tasks()
 {

@@ -38,10 +38,6 @@
  * appropriate handbook chapter: system/system.raw.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "conf.h"
-#endif
-
 #define COMPILER_TIMEOUT        180 /* seconds */
 
 #define IO_BUF_SIZE             10000

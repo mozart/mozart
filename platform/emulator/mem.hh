@@ -38,10 +38,8 @@
 #endif
 #include <stdio.h>
 
-#include "types.hh"
-#include "error.hh"
+#include "base.hh"
 #include "statisti.hh"
-
 
 #ifdef DEBUG_MEM
 #define DebugMem(Code) Code

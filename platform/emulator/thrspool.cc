@@ -28,7 +28,6 @@
 #pragma implementation "thrspool.hh"
 #endif
 
-#include "config.h"
 #include "am.hh"
 
 int ThreadsPool::getRunnableNumber()

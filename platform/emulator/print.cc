@@ -24,11 +24,9 @@
  *
  */
 
-#include "types.hh"
+#include "base.hh"
 
 #ifdef PRINT_LONG
-#include "ozostream.hh"
-
 #include "am.hh"
 
 #include "genvar.hh"

@@ -32,6 +32,7 @@
 #pragma interface
 #endif
 
+#include "base.hh"
 #include "oz_cpi.hh"
 
 #ifdef OUTLINE

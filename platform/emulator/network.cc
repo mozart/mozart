@@ -42,6 +42,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
+
 #include "os.hh"
 #include "perdio.hh"
 #include "marshaler.hh"

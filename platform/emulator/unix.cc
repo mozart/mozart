@@ -25,7 +25,7 @@
 
 #include "wsock.hh"
 
-#include "oz.h"
+#include "runtime.hh"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -39,8 +39,6 @@
 #include <dirent.h>
 #include <netdb.h>
 #endif
-
-#include "os.hh"
 
 #if defined(LINUX) || defined(HPUX_700)
 extern int h_errno;
@@ -86,8 +84,6 @@ extern "C" char *inet_ntoa(struct in_addr in);
 
 #define max_vs_length 4096*4
 #define vs_buff(VAR) char VAR[max_vs_length + 256];
-
-#include "am.hh"
 
 //
 // Argument handling

@@ -34,7 +34,6 @@
 #include <unistd.h>
 #include <stdio.h>
 
-#include "types.hh"
 #include "hashtbl.hh"
 
 const int STEP=5;

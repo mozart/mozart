@@ -33,6 +33,10 @@
 #pragma interface
 #endif
 
+#include "tagged.hh"
+#include "susplist.hh"
+#include "board.hh"
+
 #define AddSuspToList0(List,Thread,Home)                \
 {                                                       \
   if ((List) && ((List)->getElem() == Thread)) {        \

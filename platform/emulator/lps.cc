@@ -30,6 +30,7 @@
 #pragma implementation "lps.hh"
 #endif
 
+#include "lps.hh"
 #include "am.hh"
 
 #include "genvar.hh"

@@ -33,11 +33,9 @@
 #pragma interface
 #endif
 
-#include "tagged.hh"
+#include "value.hh"
 #include "genhashtbl.hh"
 #include "perdio_debug.hh"
-#include "runtime.hh"
-#include "config.h"
 
 #define PERDIOMINOR      "7"
 #define PERDIOMAJOR      OZVERSION

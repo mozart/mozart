@@ -24,7 +24,7 @@
  *
  */
 #include "ozostream.hh"
-
+#include "base.hh"
 
 ozostream& ends(ozostream& outs)  { return outs.ends();}
 ozostream& endl(ozostream& outs)  { return outs.endl(); }
