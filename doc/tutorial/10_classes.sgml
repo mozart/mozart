@@ -306,7 +306,7 @@ class B from A ... end
 
 <P><FIGURE ID="cycle" CLASS="Figure">
 <CAPTION>Illegal class hierarchy</CAPTION>
-<PICTURE.EXTERN TO="image161.gif" TYPE="gif" info="-width 200">
+<PICTURE.EXTERN TO="image161.gif" TYPE="gif" info="-width 100">
 </FIGURE>
 
 <P>Second, after striking out all overridden methods each remaining
