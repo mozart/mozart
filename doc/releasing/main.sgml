@@ -288,15 +288,15 @@ make bin</code>
 	<item>Now you need to create and populate the ftp directory
 	for the release.  For this, you need to be logged into the
 	consortium's ftp machine.  Currently this is <code/grizzly/ in
-	Saarbrücken.
+	Saarbrücken.  Become <code/root/:
 	  <list>
-	    <entry><code>$SOURCE/misc/mkftp --release=$VERSION --create</code></entry>
+	    <entry><code>perl $SOURCE/misc/mkftp --release=$VERSION --create</code></entry>
 	    <item>this creates the directory structure for the
 	    release.  Use option <code/-n/ to see what <code/mkftp/
 	    would do without actually doing it.</item>
-	    <entry><code>$SOURCE/misc/mkftp --release=$VERSION --tar *.tar.gz README.*</code></entry>
+	    <entry><code>perl $SOURCE/misc/mkftp --release=$VERSION --tar *.tar.gz README.*</code></entry>
 	    <item>this will install the tar and README files appropriately.</item>
-	    <entry><code>$SOURCE/misc/mkftp --release=$VERSION --rpm=redhat *.rpm</code></entry>
+	    <entry><code>perl $SOURCE/misc/mkftp --release=$VERSION --rpm=redhat *.rpm</code></entry>
 	    <item>install the source and binary RPMs.</item>
 	  </list>
 	</item>
