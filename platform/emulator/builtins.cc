@@ -4895,6 +4895,16 @@ OZ_C_proc_begin(BIcrash,0)   /* only for debugging */
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIprobe,1)
+{ 
+  OZ_Term e = OZ_getCArg(0);
+  NONVAR(e,entity);
+  Tertiary *tert = tagged2Tert(entity);
+  tert->entityProblem();
+  return PROCEED;
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BIrestop,1)
 {
   OZ_Term entity = OZ_getCArg(0);
@@ -4987,21 +4997,12 @@ OZ_C_proc_begin(BIwatcherInstall,3)
 
 
   NONVAR(c, cond);
-  /*
-  if(isAnyVar(cond)) {return SUSPEND;}
-  */
   EntityCond ec;  
 
   if(!translateWatcherCond(cond,ec)){
     return oz_raise(E_ERROR,E_SYSTEM,"invalid watcher condition",0);}
   NONVAR(e, entity);
 
-  /*
-  if(isAnyVar(entity)){
-  return oz_raise(E_ERROR,E_SYSTEM,"handlers on variables not implemented",0);      }
-  */
-
-  
   Tertiary *tert = tagged2Tert(entity);
   if((tert->getType()!=Co_Cell) && (tert->getType()!=Co_Lock)){
     return oz_raise(E_ERROR,E_SYSTEM,"watchers on ? not implemented",0);}
@@ -7111,11 +7112,13 @@ BIspec allSpec[] = {
   {"Exchange",        3,BIexchangeCell, (IFOR) BIexchangeCellInline},
   {"Access",          2,BIaccessCell,   (IFOR) BIaccessCellInline},
   {"Assign",          2,BIassignCell,   (IFOR) BIassignCellInline},
-
- {"perdioRestop",   1, BIrestop,          0},
- {"crash",          0, BIcrash,           0},
- {"InstallHandler", 3, BIhandlerInstall,  0},
+  
+  {"probe",         1, BIprobe,           0},
+  {"perdioRestop",   1, BIrestop,          0},
+  {"crash",          0, BIcrash,           0},
+  {"InstallHandler", 3, BIhandlerInstall,  0},
  {"InstallWatcher", 3, BIwatcherInstall,  0},
+  
 
   {"IsChar",        2, BIcharIs,	0},
   {"Char.isAlNum",  2, BIcharIsAlNum,	0},
@@ -7464,7 +7467,11 @@ BuiltinTabEntry *BIinit()
 
   BIinitPerdio();
   BI_restop=makeTaggedConst(builtinTab.find("perdioRestop"));
-
+  
+  BI_probe=makeTaggedConst(builtinTab.find("probe"));
+  BI_Delay=makeTaggedConst(builtinTab.find("Delay"));
+  BI_startTmp=makeTaggedConst(builtinTab.find("startTmp"));
+  
   BIinitLazy();
 
   dummyRecord = makeTaggedNULL();
