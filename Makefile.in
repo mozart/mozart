@@ -56,39 +56,16 @@ INSTALL_BIN=	$(INSTALL) -m 555
 INSTALL_FILE=	$(INSTALL) -m 444
 INSTALL_DIR=	@INSTALL_DIR@
 
-TAR=		tar
-CVS=		cvs
-
 ######################################################################
 # other variables
 ######################################################################
 
 OZVERSION=	$(SRCTOP)/OZVERSION
-
-PLATFORMS=	solaris-sparc aix3-rs600 freebsd-i486 hpux-700\
-		irix5-mips linux-i486 netbsd-i486 netbsd-m68k netbsd-sparc\
-		osf1-alpha solaris-i486 sunos-sparc win32-i486
-
-DISTDIR=	dist
-
 FILES=		LICENSE LICENSE.html
 ALLFILES=	$(FILES:%=$(PREFIX)/%)
 
-COMMONFILES=	LICENSE LICENSE.html \
-		bin include share cache
-
-DEMOFILES=	demo examples
-
-COMPRESS=	gzip -9
-
-WINCACHEDIR=	oz/cache/$(HOMECACHE)
-
 # sub directories for recursive makes
 SUBDIRS=	@oz_subdirs@
-
-# list of directories to create during install
-DIRS=		
-INSTALLDIRS=	$(PREFIX) $(DIRS:%=$(PREFIX)/%)
 
 ######################################################################
 # common targets
@@ -117,9 +94,9 @@ distclean::
 	$(MAKE) veryclean SUBDIRS=
 	-rm -f Makefile config.cache config.log config.status
 
-install:: $(INSTALLDIRS)
+install:: $(PREFIX)
 
-$(INSTALLDIRS):
+$(PREFIX):
 	$(INSTALL_DIR) $@
 
 all:: Makefile
@@ -130,41 +107,51 @@ Makefile: Makefile.in ./config.status
 ./config.status: ./configure
 	./config.status --recheck
 
-######################################################################
-# other targets
-######################################################################
-
 install:: $(ALLFILES)
 
 $(ALLFILES): $(PREFIX)/% : % $(PREFIX)
 	$(INSTALL_FILE) $< $@
 
-$(DISTDIR):
+######################################################################
+# other targets
+######################################################################
+
+PLATFORMS=	solaris-sparc aix3-rs600 freebsd-i486 hpux-700\
+		irix5-mips linux-i486 netbsd-i486 netbsd-m68k netbsd-sparc\
+		osf1-alpha solaris-i486 sunos-sparc win32-i486
+BASES=          $(PLATFORMS:%=%-base)
+CONTRIBS=       $(PLATFORMS:%=%-contrib)
+
+COMPRESS=	gzip -9
+TAR=		tar
+WINCACHEDIR=	oz/cache/$(HOMECACHE)
+PACKDIR=	pack
+
+
+.PHONY: source doc $(PLATFORMS)
+
+source: $(PACKDIR)
+	(cd $(PACKDIR); \
+	 (cd $(SRCTOP)/..; \
+	  $(TAR) -cf - mozart) | $(TAR) -xf - ; \
+	 find mozart -name CVS -type d -exec rm -rf ';' ; \
+	 find mozart -name '.cvsignore' -type f -exec rm -f ';' ; \
+	 $(TAR) -cf - mozart | \
+	 $(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-src.tar.gz; \
+	 rm -rf mozart)
+
+doc:	$(PACKDIR)
+	(cd $(PACKDIR); \
+	(cd $(PREFIX); \
+	 $(TAR) -cf - doc) | $(TAR) -xf -; \
+	 rm -rf doc/demo/applets; \
+	 $(TAR) -cf - doc | \
+	 $(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-doc.tar.gz; \
+	 rm -rf doc)
+
+
+$(PACKDIR):
 	$(INSTALL_DIR) $@
-
-pack-all: common $(PLATFORMS)
-
-home: mini-common wish-linux src linuxz
-
-mini-common: $(DISTDIR)
-	(cd $(PREFIX)/..; \
-	$(TAR) -zvcf - oz/bin oz/include oz/share) > \
-	   $(DISTDIR)/mini-`$(OZVERSION)`.tgz
-
-common: $(DISTDIR)
-	(cd $(PREFIX)/..; \
-	$(TAR) -cf - $(COMMONFILES:%=oz/%)) | \
-        $(COMPRESS) > $(DISTDIR)/oz-`$(OZVERSION)`-$@.tar.gz
-
-demo: $(DISTDIR)
-	(cd $(PREFIX)/..; \
-	$(TAR) -cf - $(DEMOFILES:%=oz/%)) | \
-        $(COMPRESS) > $(DISTDIR)/oz-`$(OZVERSION)`-$@.tar.gz
-
-$(PLATFORMS): $(DISTDIR)
-	(cd $(PREFIX)/..; \
-        $(TAR) -cf - oz/platform/$@) | \
-        $(COMPRESS) > $(DISTDIR)/oz-`$(OZVERSION)`-$@.tar.gz
 
 oz-win::
 	rm -rf oz oz3 oz-`$(OZVERSION)`
