@@ -207,7 +207,7 @@ OZ_BI_define(weakdict_put,3,0)
      oz_unify(makeTaggedRef(newTaggedVar(oz_newSimpleVar(wh))), v);
    if (r != PROCEED) return r;
  }
- d->put(k,v);
+ d->put(oz_deref(k),v);
  return PROCEED;
 }
 OZ_BI_end
