@@ -2663,9 +2663,12 @@ void unmarshallObject(Object *o, ByteStream *bs)
   o->import();
   if (o->isClass()) {
     TaggedRef ff = feat->getFeature(NameOoUnFreeFeat);
+    Bool locking = literalEq(NameTrue,deref(feat->getFeature(NameOoLocking)));
+
     o->getClass()->import(tagged2Dictionary(feat->getFeature(NameOoFastMeth)),
                           isSRecord(ff) ? tagged2SRecord(ff) : (SRecord*)NULL,
-                          tagged2Dictionary(feat->getFeature(NameOoDefaults)));
+                          tagged2Dictionary(feat->getFeature(NameOoDefaults)),
+                          locking);
   } else {
     o->setState(tagged2Tert(unmarshallTerm(bs)));
   }
@@ -2676,6 +2679,9 @@ void marshallObject(Site *sd, Object *o, ByteStream *bs, DebtRec *dr)
   marshallSRecord(sd,o->getFreeRecord(),bs,dr);
   if (!o->isClass()) {
     marshallTerm(sd,makeTaggedConst(getCell(o->getState())),bs,dr);
+    if (o->getLock()) {
+      warning("marshallObject: cannot handle locks (yet)");
+    }
   }
 }
 
