@@ -4,16 +4,15 @@
 
 /* -------------------------------------------------------------------- */
 
-#define INFINITE_CREDIT            (0-1)
 #define PERSISTENT_CRED            (0-1)
 
 //  #define DEBUG_CREDIT
 #ifdef DEBUG_CREDIT
 
 #define START_CREDIT_SIZE        (256)
-#define OWNER_GIVE_CREDIT_SIZE   (16)
-#define BORROW_MIN               (2)
-#define BORROW_GIVE_CREDIT_SIZE  (4)
+#define OWNER_GIVE_CREDIT_SIZE   (32)
+#define BORROW_MIN               (1)
+#define BORROW_GIVE_SWITCH       (1)
 #define BORROW_LOW_THRESHOLD     (8)
 #define BORROW_HIGH_THRESHOLD    (64)
 
@@ -21,11 +20,11 @@
 #else
 
 #define START_CREDIT_SIZE        ((1<<30)-1)
-#define OWNER_GIVE_CREDIT_SIZE   ((1<<14))
-#define BORROW_MIN               (2)
-#define BORROW_GIVE_CREDIT_SIZE  ((1<<7))
+#define OWNER_GIVE_CREDIT_SIZE   ((1<<19))
+#define BORROW_MIN               (1)
+#define BORROW_GIVE_SWITCH       (2)       // Equals to divide by 2^2=4
 #define BORROW_LOW_THRESHOLD     ((1<<4))
-#define BORROW_HIGH_THRESHOLD    ((1<<19))
+#define BORROW_HIGH_THRESHOLD    ((1<<20)) // Twice of OWNER_GIVE_SIZE
 #endif
 
 /* -------------------------------------------------------------------- */
@@ -58,7 +57,7 @@ typedef int int_Credit;
 
 // Marshaling ---------------------------------------------------------
 void marshalCredit(MarshalerBuffer *buf,Credit c) {
-//    PD((CREDIT_NEW,"marshalCredit %d %x",c.credit,c.owner));
+  PD((CREDIT_NEW,"marshalCredit %d %x",c.credit,c.owner));
   Assert(c.credit>0);
   if(c.owner==NULL) {
     buf->put(DIF_PRIMARY);
@@ -199,6 +198,19 @@ Credit unmarshalCreditToOwner(MarshalerBuffer *buf,MarshalTag mt,
 }
 #endif
 
+// Calculations ------------------------------------------------------
+inline int getBorrowGiveSize(int avail) {
+  int_Credit give=avail>>BORROW_GIVE_SWITCH;
+  Assert(give>=0);
+  if(give>BORROW_LOW_THRESHOLD)
+    return give;
+  else if(give-2>=BORROW_MIN)
+    return 2;
+  else
+    return 0;
+}
+
+
 // Extensions ---------------------------------------------------------
 
 class OwnerCreditExtension{
@@ -284,6 +296,7 @@ ReduceCode OwnerCreditExtension::addCreditE(int_Credit ret){
   return CANNOT_REDUCE;}
 
 void OwnerCreditExtension::expand(){
+//    printf("OwnerCreditExtension::expand\n");
   OwnerCreditExtension *oce=newOwnerCreditExtension();
   oce->init(0);
   next=oce;}
@@ -390,9 +403,10 @@ Bool BorrowCreditExtension::getSecCredit_Master(int_Credit cred){
 
 Bool BorrowCreditExtension::getSmall_Slave(int_Credit &cred){
   int_Credit c=slaveGetSecCredit();
-  if(c>BORROW_GIVE_CREDIT_SIZE){
-    cred=BORROW_GIVE_CREDIT_SIZE;
-    slaveSetSecCredit(c-BORROW_GIVE_CREDIT_SIZE);
+  int_Credit give=getBorrowGiveSize(c);
+  if(give>0){
+    cred=give;
+    slaveSetSecCredit(c-give);
     PD((CREDIT,"Got %d SecSlaveCred %d left",cred, c-cred));
     return NO;}
   PD((CREDIT,"Wanted %d SecSlaveCred %d in store",cred, c));
@@ -422,7 +436,6 @@ int_Credit BorrowCreditExtension::reduceSlave(int_Credit more,DSite* &s,int_Cred
 /* add PrimaryCredit */
 
 int_Credit BorrowCreditExtension::addPrimaryCredit_Master(int_Credit more){
-  Assert(more!=INFINITE_CREDIT);
   int_Credit c=msGetPrimCredit()+more;
   if(c>BORROW_HIGH_THRESHOLD) {
     msSetPrimCredit(BORROW_HIGH_THRESHOLD);
@@ -530,6 +543,7 @@ void OwnerCreditHandler::setOwnerCreditExtension(OwnerCreditExtension* oce){
   cu.oExt=oce;}
 
 void OwnerCreditHandler::extend(){
+//    printf("OwnerCreditHandler::extend\n");
   OwnerCreditExtension* oce=newOwnerCreditExtension();
   oce->init(getCreditOB());
   addFlags(CH_EXTENDED|CH_BIGCREDIT);
@@ -743,6 +757,7 @@ Credit BorrowCreditHandler::getCreditBig() {
   if(c.credit) {
     c.owner=NULL;
   } else {
+    printf("new:getSecondary %d\n",osgetpid());
     c.owner = getSmallSecondaryCredit(c.credit);
   }
   PD((CREDIT_NEW,"borrow::getCreditBig %x %x %d %x",
@@ -756,6 +771,7 @@ Credit BorrowCreditHandler::getCreditSmall() {
   if (getOnePrimaryCredit()) {
     c.owner=NULL;
   } else {
+    printf("new:getOneSecondary\n");
     c.owner = getOneSecondaryCredit();
   }
   PD((CREDIT_NEW,"borrow::getCreditSmall %x %x %d %x",
@@ -801,6 +817,8 @@ NetAddress* BorrowCreditHandler::getNetAddress() {
 Bool BorrowCreditHandler::maybeFreeCreditHandler() {
   if(isExtended()){
     if(getExtendFlags() & CH_MASTER) {
+      printf("maybeFreeCreditHandler & master %d\n",osgetpid());
+      Assert(0);
       return FALSE;
     }
     Assert(getExtendFlags() & CH_SLAVE);
@@ -832,23 +850,24 @@ void BorrowCreditHandler::setMaster(BorrowCreditExtension* bce){
 
 Bool BorrowCreditHandler::getOnePrimaryCredit_E(){
   int_Credit c=extendGetPrimCredit();
-  if(c>BORROW_MIN+BORROW_GIVE_CREDIT_SIZE){
-    extendSetPrimCredit(c-BORROW_GIVE_CREDIT_SIZE);
-    return BORROW_GIVE_CREDIT_SIZE;}
-  if(c>BORROW_MIN+2){
-    extendSetPrimCredit(c-2);
-    return 2;}
-  return 0;}
+  if(c>BORROW_MIN+1) {
+    extendSetPrimCredit(c-1);
+    return OK;
+  }
+  else
+    return NO;
+}
 
 int_Credit BorrowCreditHandler::getSmallPrimaryCredit_E(){
   int_Credit c=extendGetPrimCredit();
-  if(c>BORROW_MIN+BORROW_GIVE_CREDIT_SIZE){
-    extendSetPrimCredit(c-BORROW_GIVE_CREDIT_SIZE);
-    return BORROW_GIVE_CREDIT_SIZE;}
-  if(c>BORROW_MIN+2){
-    extendSetPrimCredit(c-2);
-    return 2;}
-  return 0;}
+  int_Credit give=getBorrowGiveSize(c);
+  if(give>0) {
+    extendSetPrimCredit(c-give);
+    return give;
+  }
+  else
+    return 0;
+}
 
 void BorrowCreditHandler::thresholdCheck(int_Credit c){
   if((getCreditOB()+c>BORROW_LOW_THRESHOLD) &&
@@ -1108,6 +1127,7 @@ Bool BorrowCreditHandler::getOnePrimaryCredit(){
   if(tmp-1<BORROW_MIN) {
     PD((CREDIT,"gopc low credit %d",tmp));
     PD((CREDIT,"got no credit"));
+//    printf("BorrowCreditHandler::getOnePrimaryCredit got none, not yet extended\n");
     return NO;}
   //      printf("be i:%d %d c:-%d\n",getOTI(),netaddr.site->getTimeStamp()->pid,1);
   subCreditOB(1);
@@ -1116,8 +1136,7 @@ Bool BorrowCreditHandler::getOnePrimaryCredit(){
   return OK;}
 
 int_Credit BorrowCreditHandler::getSmallPrimaryCredit(){
-  PD((CREDIT,"Trying to get %d primary credit",
-      BORROW_GIVE_CREDIT_SIZE));
+  PD((CREDIT,"Trying to get primary credit"));
   if(isPersistent())
     return PERSISTENT_CRED;
   if(isExtended()){
@@ -1125,24 +1144,19 @@ int_Credit BorrowCreditHandler::getSmallPrimaryCredit(){
     return NO;}
   int_Credit tmp=getCreditOB();
   Assert(tmp>0);
-  if(tmp-BORROW_GIVE_CREDIT_SIZE >= BORROW_MIN){
-    subCreditOB(BORROW_GIVE_CREDIT_SIZE);
+  int_Credit give=getBorrowGiveSize(tmp);
+  if(give>0) {
+    subCreditOB(give);
     PD((CREDIT,"Got %d credit, %d credit left",
-        BORROW_GIVE_CREDIT_SIZE,
-        tmp-BORROW_GIVE_CREDIT_SIZE));
-    thresholdCheck(BORROW_GIVE_CREDIT_SIZE);
-    //        printf("be i:%d %d c:-%d\n",getOTI(),netaddr.site->getTimeStamp()->pid
-    //               ,BORROW_GIVE_CREDIT_SIZE);
-    return BORROW_GIVE_CREDIT_SIZE;}
-  PD((CREDIT,"gspc low credit %d",tmp));
-  if(tmp-2>=BORROW_MIN){
-    //        printf("be i:%d %d c:-%d\n",getOTI(),netaddr.site->getTimeStamp()->pid,2);
-    subCreditOB(2);
-    PD((CREDIT,"Got 2 credit, %d credit left", tmp-2));
-    thresholdCheck(2);
-    return 2;}
-  PD((CREDIT,"got no credit"));
-  return 0;}
+        give,tmp-give));
+    thresholdCheck(give);
+    return give;
+  }
+  else {
+    PD((CREDIT,"got no credit"));
+    return 0;
+  }
+}
 
 DSite *BorrowCreditHandler::getOneSecondaryCredit() {
   while(TRUE){
@@ -1206,7 +1220,7 @@ DSite *BorrowCreditHandler::getSmallSecondaryCredit(int_Credit &cred){
     case CH_EXTENDED|CH_SLAVE:{
       if(getSlave()->getSmall_Slave(cred)){
         addFlags(CH_MASTER);
-        break;}
+        break;} // Now also master, try again.
       return getSlave()->getSite();}
     case CH_NONE:{
       createSecMaster();
