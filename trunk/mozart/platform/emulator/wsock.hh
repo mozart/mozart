@@ -23,11 +23,19 @@
 #define Bool WinBool
 
 #include <windows.h>
-#undef FAILED /* used in oz.h as well */
 
+#undef FAILED /* used in oz.h as well */
 #undef Bool
 
 #ifdef GNUWIN32
+
+/* The headers of gnu win32 are incomplete: */
+
+/* do not redefine FD_* macros, have to use win32 versions */
+#define _POSIX_SOURCE  
+#include <sys/types.h>
+#undef _POSIX_SOURCE
+
 
 #include <sys/times.h>
 #include <fcntl.h>
@@ -35,15 +43,13 @@
 typedef HINSTANCE HMODULE;
 #define CreateEvent  CreateEventA
 extern "C" {
-  int WINAPI closesocket(int s);
-  int WINAPI send(int s, const char *buf, int len, int flags);
-  int WINAPI recv(int s, char * buf, int len, int flags);
-  
-  int WINAPI WSAGetLastError(void);
-  int WINAPI socket(int af, int type, int protocol);
+
+typedef void *PVOID;
+#include "winsock.h"
+
+#define MAKEWORD(a, b) ((WORD)(((BYTE)(a)) | ((WORD)((BYTE)(b))) << 8))
 
   BOOL WINAPI SetStdHandle(DWORD nStdHandle, HANDLE hHandle);
-#define timeGetTime() 0
 #define GetModuleHandle  GetModuleHandleA
   HMODULE WINAPI GetModuleHandleA(LPCSTR lpModuleName);
   BOOL WINAPI FreeLibrary(HINSTANCE hLibModule);
