@@ -2253,11 +2253,7 @@ ConstTerm *ConstTerm::gcConstTerm() {
         ret = (ConstTerm *) gcReallocStatic(this,sizeof(CellManagerEmul));
         break;
       case Te_Frame:{
-        ConstTerm *aux = (*auxGcDistCell)((Tertiary *) this);
-        if (aux)
-          return (aux);
-        else
-          ret = (ConstTerm *) gcReallocStatic(this,sizeof(CellFrameEmul));
+        ret = (ConstTerm *) gcReallocStatic(this,sizeof(CellFrameEmul));
         break;
       }
       default:{
@@ -2323,11 +2319,7 @@ ConstTerm *ConstTerm::gcConstTerm() {
         ret = (ConstTerm *) gcReallocStatic(this,sizeof(LockLocal));
         break;
       case Te_Frame:{
-        ConstTerm *aux = (*auxGcDistLock)((Tertiary *) this);
-        if (aux)
-          return (aux);
-        else
-          ret = (ConstTerm *) gcReallocStatic(this,sizeof(LockLocal));
+        ret = (ConstTerm *) gcReallocStatic(this,sizeof(LockLocal));
         break;
       }
       default:{
@@ -2368,19 +2360,6 @@ ConstTerm *ConstTerm::gcConstTerm() {
    Note- all other Tertiarys are marked in gcConstRecurse
 */
 
-
-ConstTerm* ConstTerm::gcConstTermSpec() {
-  if (gcIsMarked())
-    return gcGetFwd();
-
-  Tertiary *t=(Tertiary*)this;
-  Assert((t->getType()==Co_Cell) || (t->getType()==Co_Lock));
-  Assert(t->isFrame());
-  ConstTerm *ret = (*gcStatefulSpec)(t);
-
-  gcStack.push(ret,PTR_CONSTTERM);
-  return ret;
-}
 
 inline
 Bool Actor::gcIsMarked(void) {

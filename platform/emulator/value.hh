@@ -549,7 +549,6 @@ public:
     return (ConstTerm *) (tag&~1);
   }
   ConstTerm *gcConstTerm(void);
-  ConstTerm *gcConstTermSpec(void);
   void gcConstRecurse(void);
 
   TypeOfConst getType() { return (TypeOfConst) ((tag & Co_Mask)>>1); }

@@ -232,7 +232,6 @@ void cellReceiveForward(BorrowEntry *be,DSite *toS,DSite* mS,int mI){
   Assert(cf->getType()==Co_Cell);
   CellSec *sec=cf->getCellSec();
   TaggedRef val;
-  cf->resetDumpBit();
   if(!sec->secForward(toS,val)) return;
   be->getOneMsgCredit();
   cellSendContents(val,toS,mS,mI);
@@ -467,7 +466,6 @@ void lockReceiveTokenFrame(BorrowEntry* be, DSite *mS,int mI){
 
 void lockReceiveForward(BorrowEntry *be,DSite *toS,DSite* mS,int mI){
   LockFrame *lf= (LockFrame*) be->getTertiary();
-  lf->resetDumpBit();
   Assert(lf->isFrame());
   Assert(lf->getType()==Co_Lock);
   LockSec* sec=lf->getLockSec();

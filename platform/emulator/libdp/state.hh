@@ -62,8 +62,6 @@ public:
     pendBinding=NULL;
     next=NULL;}
 
-  unsigned int stateWithoutAccessBit(){return state & (~Cell_Lock_Access_Bit);}
-
   PendThread* getPending(){return pending;}
   DSite* getNext(){return next;}
   PendThread** getPendBase(){return &pending;}
@@ -137,22 +135,9 @@ public:
   CellFrame(){
     Assert(0);}
 
-  void setDumpBit(){getCellSec()->state |= Cell_Lock_Dump_Asked;}
-
-  void resetDumpBit(){getCellSec()->state &= ~Cell_Lock_Dump_Asked;}
-
   Bool dumpCandidate(){
-    if((getCellSec()->state & Cell_Lock_Valid)
-       && (!(getCellSec()->state & Cell_Lock_Dump_Asked))){
-      setDumpBit();
-      return OK;}
+    if((getCellSec()->state & Cell_Lock_Valid)) return OK;
     return NO;}
-
-  Bool isAccessBit(){return getCellSec()->state & Cell_Lock_Access_Bit;}
-
-  void setAccessBit(){getCellSec()->state |= Cell_Lock_Access_Bit;}
-
-  void resetAccessBit(){getCellSec()->state &= (~Cell_Lock_Access_Bit);}
 
   void myStoreForward(void* f) { forward = f; }
   void* getForward()           { return forward; }
@@ -189,10 +174,6 @@ public:
     pending=NULL;
     next=NULL;}
 
-  void setAccessBit(){state |= Cell_Lock_Access_Bit;}
-
-  void resetAccessBit(){state &= ~Cell_Lock_Access_Bit;}
-
   Bool isPending(Thread *th);
   PendThread* getPending(){return pending;}
 
@@ -222,21 +203,8 @@ public:
   NO_DEFAULT_CONSTRUCTORS2(LockFrame);
   LockFrame(){Assert(0);}
 
-  Bool isAccessBit(){
-    if(getLockSec()->state & Cell_Lock_Access_Bit) return TRUE;
-    return FALSE;}
-
-  void setAccessBit(){getLockSec()->setAccessBit();}
-  void resetAccessBit(){getLockSec()->resetAccessBit();}
-
-  void setDumpBit(){getLockSec()->state |= Cell_Lock_Dump_Asked;}
-  void resetDumpBit(){getLockSec()->state &= ~Cell_Lock_Dump_Asked;}
-
   Bool dumpCandidate(){
-    if((getLockSec()->state & Cell_Lock_Valid)
-       && (!(getLockSec()->state & Cell_Lock_Dump_Asked))){
-      setDumpBit();
-      return OK;}
+    if(getLockSec()->state & Cell_Lock_Valid) return OK;
     return NO;}
 
   void myStoreForward(void* f) { forward=f; }

@@ -121,7 +121,6 @@ void cellifyObject(Object*);
 Bool isPerdioInitializedImpl();
 void gcProxyRecurseImpl(Tertiary *t);
 void gcManagerRecurseImpl(Tertiary *t);
-ConstTerm *gcStatefulSpecImpl(Tertiary *t);
 void gcBorrowTableUnusedFramesImpl();
 void gcFrameToProxyImpl();
 void gcPerdioFinalImpl();

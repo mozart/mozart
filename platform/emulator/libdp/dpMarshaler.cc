@@ -351,13 +351,9 @@ OZ_Term unmarshalTertiaryImpl(MsgBuffer *bs, MarshalTag tag)
       break;
     case DIF_CELL:{
       Tertiary *t=ob->getTertiary(); // mm2: bug: ob is 0 if I am the owner
-      if((t->getType()==Co_Cell) && (t->isFrame())){
-        ((CellFrame *)t)->resetDumpBit();}
       break;}
     case DIF_LOCK:{
       Tertiary *t=ob->getTertiary();
-      if((t->getType()==Co_Lock) && (t->isFrame())){
-        ((LockFrame *)t)->resetDumpBit();}
       break;}
     case DIF_OBJECT:
       TaggedRef obj;

@@ -1016,6 +1016,19 @@ inline OZ_Return checkWatcherConds(EntityCond ec,EntityCond allowed){
   if((ec & ~allowed) != ENTITY_NORMAL) return IncorrectFaultSpecification;
   return PROCEED;}
 
+
+OZ_Return checkRetry(SRecord *condStruct,Bool canHave, short &kind){
+  TaggedRef aux;
+  aux = condStruct->getFeature(OZ_atom("prop"));
+  if(aux==0) return PROCEED;
+  if(!canHave) {return IncorrectFaultSpecification;}
+  NONVAR(aux,aux2);
+  if(aux2!=AtomRetry) {return IncorrectFaultSpecification;}
+  kind |= WATCHER_RETRY;
+  return PROCEED;}
+
+// the following should check for the existence of not allowed features
+
 OZ_Return distHandlerInstallHelp(SRecord *condStruct,
                      EntityCond& ec,Thread* &th,TaggedRef &entity,short &kind){
   kind=0;
@@ -1033,33 +1046,35 @@ OZ_Return distHandlerInstallHelp(SRecord *condStruct,
   TaggedRef label=condStruct->getLabel();
 
   if(label==AtomInjector){
-    kind |= WATCHER_PERSISTENT;
+    kind |= (WATCHER_PERSISTENT|WATCHER_INJECTOR);
     aux = condStruct->getFeature(OZ_atom("entityType"));
     if(aux==0){return IncorrectFaultSpecification;}
     NONVAR(aux,aux2);
     if(aux2==AtomAll) {
       entity=0;
-      kind |= WATCHER_SITE_BASED;}
-    else{
-      if(aux2!=AtomSingle) {
-        return IncorrectFaultSpecification;}
-      aux=condStruct->getFeature(OZ_atom("entity"));
-      if(aux==0) {return IncorrectFaultSpecification;}
-      entity=aux;}
+      kind |= WATCHER_SITE_BASED;
+      aux=condStruct->getFeature(OZ_atom("thread"));
+      // all entities only with all threads
+      if(aux!=AtomAll){return IncorrectFaultSpecification;}
+      return checkRetry(condStruct,NO,kind);}
+
+    if(aux2!=AtomSingle) {return IncorrectFaultSpecification;}
+    aux=condStruct->getFeature(OZ_atom("entity"));
+    if(aux==0) {return IncorrectFaultSpecification;}
+    entity=aux;
     aux=condStruct->getFeature(OZ_atom("thread"));
     if(aux==0){return IncorrectFaultSpecification;}
     NONVAR(aux,aux3);
     if(aux3==AtomAll) {
-      if(entity!=0) {return IncorrectFaultSpecification;}
-      th=NULL;}
-    Assert(0); // PER-LOOK
-    //    th=tagged2Thread(aux3);
-    aux = condStruct->getFeature(OZ_atom("prop"));
-    if(aux!=0){
-      NONVAR(aux,aux4);
-      if(aux4==AtomRetry) kind |= WATCHER_RETRY;
-      else {return IncorrectFaultSpecification;}}
-    return checkWatcherConds(ec,PERM_BLOCKED|TEMP_BLOCKED);}
+      th=NULL;
+      kind |= WATCHER_SITE_BASED;
+      return checkRetry(condStruct,OK,kind);}
+    if(aux3==AtomThis){
+      th=oz_currentThread();
+      return checkRetry(condStruct,OK,kind);}
+    if(!oz_isThread(aux3)) {return IncorrectFaultSpecification;}
+    th=oz_ThreadToC(aux3);
+    return checkRetry(condStruct,OK,kind);}
 
   if(label==AtomSiteWatcher){
     aux = condStruct->getFeature(OZ_atom("entity"));
