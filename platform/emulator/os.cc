@@ -1609,7 +1609,6 @@ int osgetEpid()
   } while (ticks==emulatorStartTime);
   ticks = ticks % sysconf(_SC_CLK_TCK);
 #endif
-  Assert(ticks>=0);
   Assert(ticks<100);
   unsigned int pid = (unsigned int) osgetpid();
   // check that the 6 highest bits only sign-extend the 7th highest bit
