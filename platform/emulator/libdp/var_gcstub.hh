@@ -58,9 +58,9 @@ public:
 
   //
   virtual ExtVarType    getIdV() { return (OZ_EVAR_GCSTUB); }
-  virtual OzVariable*   gCollectV() { return new GCStubVar(*this); }
+  virtual ExtVar*       gCollectV() { return new GCStubVar(*this); }
   virtual void          gCollectRecurseV() { oz_gCollectTerm(val, val); }
-  virtual OzVariable*   sCloneV() {
+  virtual ExtVar*       sCloneV() {
     Assert(0);
     return ((GCStubVar *) 0);
   }
@@ -90,8 +90,8 @@ public:
     return (EVAR_STATUS_UNKNOWN);
   }
   virtual void          disposeV() {
-    Assert(isEmptySuspList());
-    oz_freeListDispose(this, sizeof(GCStubVar));
+    Assert(extVar2Var(this)->isEmptySuspList());
+    freeListDispose(sizeof(GCStubVar));
   }
 
   //

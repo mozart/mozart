@@ -64,10 +64,10 @@ void ExportedManagerVar::marshal(ByteBuffer *bs)
 //
 void ExportedManagerVar::disposeV()
 {
-  Assert(isEmptySuspList());
+  Assert(extVar2Var(this)->isEmptySuspList());
   //
   if (!isMarshaled) {
     discardOwnHeadSaved(oti, credit);
   }
-  oz_freeListDispose(this, sizeof(ExportedManagerVar));
+  freeListDispose(sizeof(ExportedManagerVar));
 }

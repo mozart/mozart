@@ -72,6 +72,7 @@ define
 	 [] K|Kr then
 	    case K
 	    of "__extension__"              then ""
+	    [] "((noreturn));"              then ""
 	    [] "__ssize_t"                  then "unsigned int"
 	    [] "(__const"                   then "(const"
 	    [] "__const"                    then "const"
@@ -83,8 +84,10 @@ define
 	    [] "__attribute__((format"      then {IncCounter} ";"
 	    [] "__attribute__(("            then {IncCounter} ""
 	    [] "__attribute__((__cdecl__))" then ""
+	    [] "__attribute__((dllimport))" then ""
 	    [] "dllimport"                  then ""
-	    [] "))"                         then if {DecCounter} then "" else "))" end
+	    [] "))"                         then
+	       if {DecCounter} then "" else "))" end
 	    [] K                            then K
 	    end|{KeyFilter Kr}
 	 [] nil then nil
@@ -103,7 +106,8 @@ define
 	 case Line
 	 of ""   then ""
 	 [] &#|_ then ""
-	 [] Line then {VirtualString.toString {RebuildLine {KeyFilter {Tokens Line [& &\t]}}}}
+	 [] Line then {VirtualString.toString
+		       {RebuildLine {KeyFilter {Tokens Line [& &\t]}}}}
 	 end
       end
       

@@ -3459,8 +3459,11 @@ fi
     fi
     if test "${oz_enable_qtk}" != no; then
 	QTK_ENABLED=yes
+    echo "$ac_t""yes" 1>&6
     else
 	QTK_ENABLED=no
+    echo "$ac_t""no" 1>&6
+
     fi
     
 

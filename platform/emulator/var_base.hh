@@ -180,6 +180,12 @@ public:
     setType(t);
   }
 
+  void initAsExtension(Board*bb) {
+    homeAndFlags=(unsigned int)bb;
+    suspList = 0;
+    setType(OZ_VAR_EXT);
+  }
+
   USEFREELISTMEMORY;
 
   Board *getBoardInternal() {

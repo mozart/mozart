@@ -33,9 +33,6 @@
 
 #include "base.hh"
 
-#define GenCast(X,XType,Y,NewType)\
-{ XType tmp=X; Y= (NewType) tmp;}
-
 #define GENHASHNODE_CUTOFF 100
 
 class FreeListEntry{
@@ -159,12 +156,12 @@ public:
     FreeListEntry *f=getOne();
     if(f==NULL){return new GenHashNode();}
     GenHashNode *ghn;
-    GenCast(f,FreeListEntry*,ghn,GenHashNode*);
+    ghn = (GenHashNode*) (f);
     return ghn;}
 
   void deleteGenHashNode(GenHashNode* ghn){
     FreeListEntry *f;
-    GenCast(ghn,GenHashNode*,f,FreeListEntry*);
+    f = (FreeListEntry*)(void*)ghn;
     if(putOne(f)) {return;}
     delete ghn;
     return;}

@@ -881,9 +881,7 @@ public:
 void AM::insertUser(int ms, TaggedRef node)
 {
   osBlockSignals();
-
   unsigned int wakeupAt = osTotalTime() + ms;
-
   OzSleep **prev = &sleepQueue;
   for (OzSleep *aux = *prev; aux; prev = &aux->next, aux=aux->next) {
     if (wakeupAt <= aux->time) {
@@ -1114,3 +1112,24 @@ OZ_Return oz_addSuspendInArgs3(OZ_Term * _OZ_LOC[]) {
   return SUSPEND;
 }
 
+#if OUTLINE_SETEXCEPTIONINFO
+void AM::setExceptionInfo(TaggedRef inf) {
+    if (exception.info == NameUnit) {
+      exception.info=oz_nil();
+    }
+    exception.info = oz_cons(inf,exception.info);
+  }
+#endif
+
+#if OUTLINE_HF_RAISE_FAILURE
+Bool AM::hf_raise_failure()
+{
+  if (!oz_onToplevel() && !oz_currentThread()->isCatch())
+    return OK;
+
+  exception.info  = NameUnit;
+  exception.value = RecordFailure;
+  exception.debug = ozconf.errorDebug;
+  return NO;
+}
+#endif

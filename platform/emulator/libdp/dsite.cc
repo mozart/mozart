@@ -64,7 +64,7 @@ public:
   FindType findPrimary(DSite *s,int hvalue,DSite* &found){
     GenHashNode *ghn=htFindFirst(hvalue);
     while(ghn!=NULL){
-      GenCast(ghn->getBaseKey(),GenHashBaseKey*,found,DSite*);    
+      found = (DSite*) (ghn->getBaseKey());
       if(s->compareSitesNoTimestamp(found)==0) {
 	int ft=s->compareSites(found);
 	if(ft==0) {return SAME;}
@@ -78,7 +78,7 @@ public:
     GenHashNode *ghn=htFindFirst(hvalue);
     DSite* found;
     while(ghn!=NULL){
-      GenCast(ghn->getBaseKey(),GenHashBaseKey*,found,DSite*);    
+      found = (DSite*) (ghn->getBaseKey());
       if(s->compareSites(found)==0) return found;
       ghn=htFindNext(ghn,hvalue);}
     return NULL;}
@@ -86,7 +86,7 @@ public:
   void insertPrimary(DSite *s,int hvalue){
     GenHashBaseKey *ghn_bk;
     GenHashEntry *ghn_e=NULL;  
-    GenCast(s,DSite*,ghn_bk,GenHashBaseKey*);
+    ghn_bk = (GenHashBaseKey*)(void*) s;
     PD((SITE,"add hvalue:%d site:%s",hvalue,s->stringrep()));
     htAdd(hvalue,ghn_bk,ghn_e);}
 
@@ -97,7 +97,7 @@ public:
     GenHashNode *ghn=htFindFirst(hvalue);
     DSite* found;
     while(ghn!=NULL){
-      GenCast(ghn->getBaseKey(),GenHashBaseKey*,found,DSite*);
+      found = (DSite*) (ghn->getBaseKey());
       if(s->compareSites(found)==0){
 	htSub(hvalue,ghn);
 	return;}
@@ -119,7 +119,7 @@ void DSiteHashTable::cleanup(){
   int i=0;
   ghn=getFirst(i);
   while(ghn!=NULL){
-    GenCast(ghn->getBaseKey(),GenHashBaseKey*,s,DSite*);
+    s = (DSite*) (ghn->getBaseKey());
 
     if(!(s->isGCMarkedSite())){
       PD((SITE,"Head: Not Marked Site %x %s",s, s->stringrep()));
@@ -133,7 +133,7 @@ void DSiteHashTable::cleanup(){
       s->removeGCMarkSite();}
     ghn1=ghn->getNext();
     while(ghn1!=NULL){
-      GenCast(ghn1->getBaseKey(),GenHashBaseKey*,s,DSite*);
+      s = (DSite*) (ghn1->getBaseKey());
       if(s->isGCMarkedSite()){
 	PD((SITE,"      : Marked Site %x %s",s, s->stringrep()));
 	s->removeGCMarkSite();}

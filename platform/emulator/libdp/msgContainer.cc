@@ -95,7 +95,7 @@ MsgContainerManager::~MsgContainerManager() {
   for(int i=0;i<l;i++) {
     f=getOne();
     Assert(f!=NULL);
-    GenCast(f,FreeListEntry*,msgC,MsgContainer*);
+    msgC = new (f) MsgContainer;
     delete msgC;
   }
   Assert(length()==0);
@@ -107,7 +107,7 @@ MsgContainer *MsgContainerManager::newMsgContainer(DSite* site) {
   if(f==NULL) 
     msgC=new MsgContainer();
   else
-    GenCast(f,FreeListEntry*,msgC,MsgContainer*);
+    msgC = new (f) MsgContainer;
   msgC->init(site);
   ++wc;
   return msgC;
@@ -122,7 +122,7 @@ void MsgContainerManager::deleteMsgContainer(MsgContainer* msgC) {
 
   FreeListEntry *f;
   --wc;
-  GenCast(msgC,MsgContainer*,f,FreeListEntry*);
+  f = (FreeListEntry*)(void*) msgC;
   if(putOne(f)) return;
   delete msgC;
   return;

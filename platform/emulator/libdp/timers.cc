@@ -43,7 +43,7 @@ public:
     for(int i=0;i<l;i++) {
       f=getOne();
       Assert(f!=NULL);
-      GenCast(f,FreeListEntry*,te,TimerElement*);
+      te = (TimerElement*) (void*) f;
       delete te;
     }
     Assert(length()==0);
@@ -58,7 +58,7 @@ public:
       bb=new TimerElement();
     }
     else {
-      GenCast(f,FreeListEntry*,bb,TimerElement*);
+      bb = (TimerElement*) (void*) f;
     }
     bb->init();
     ++wc;
@@ -68,7 +68,7 @@ public:
   void deleteTimerElement(TimerElement* bb){
     FreeListEntry *f;
     --wc;
-    GenCast(bb,TimerElement*,f,FreeListEntry*);
+    f = (FreeListEntry*)(void*) bb;
     if(putOne(f)) 
       return;
     else

@@ -288,7 +288,7 @@ EOF
 #
 
 rpmpgm=`rpmbuild --usage >/dev/null 2>&1 && echo rpmbuild || echo rpm`
-$rpmpgm --clean -ba ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
+$rpmpgm --clean -bs ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
 rm -f ${RPMSPEC}/${SPEC}
 rm -f ${RPMSRC}/${SRCTAR}
 rm -f ${RPMSRC}/${DOCTAR}

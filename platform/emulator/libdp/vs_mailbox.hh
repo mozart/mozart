@@ -434,7 +434,7 @@ public:
     Assert(find(shmkey) == mbm);
 
     //
-    GenCast(mbm, VSMailboxManagerImported*, ghn, GenHashNode*);
+    ghn = (GenHashNode*) mbm;
     htSub(hvalue, ghn);
   }
 

@@ -62,6 +62,11 @@ struct msgField {
 //
 class MsgContainer {
   friend class MsgContainerManager;
+public:
+  // for placement argument
+  void* operator new(size_t,void*p) { return p; }
+  void* operator new(size_t n) { return ::new char[n]; }
+
 private:
   MessageType mt;
   int flags;

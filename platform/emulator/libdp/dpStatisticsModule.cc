@@ -72,7 +72,7 @@ OZ_BI_define(BIsiteStatistics,0,1)
   int sent, received, lastrtt;
   Bool primary = TRUE;
   while(node!=NULL){
-    GenCast(node->getBaseKey(),GenHashBaseKey*,found,DSite*);  
+    found = (DSite*) (node->getBaseKey());
     if(found->remoteComm() && found->isConnected()){
       ComObj *c=found->getComObj();
       received = getNORM_ComObj(c);

@@ -408,7 +408,7 @@ define
    %%
    %% Distribution
    %%
-      
+
    local
 	 
       proc {MakeDistrTuple V ?T}
@@ -420,7 +420,7 @@ define
 	 end
       end
 	 
-      local
+%      local
 	 %% Optimized and generic
 	 SelVal = map(min:      FdReflect.min
 		      max:      FdReflect.max
@@ -471,7 +471,7 @@ define
 	    if {IsAtom AOP} then Map.AOP else AOP end
 	 end
 	    
-      in
+%      in
 	    
 	 fun {PreProcessSpec Spec}
 	    FullSpec = {Adjoin
@@ -498,13 +498,13 @@ define
 		   value: FullSpec.value)
 	    else
 	       gen(order:     {MapSelect GenSelVar FullSpec.order}
-		   value:     {MapSelect SelVal FullSpec.value}
+		   value:     {MapSelect SelVal    FullSpec.value}
 		   select:    {MapSelect GenSelSel FullSpec.select}
 		   filter:    {MapSelect GenSelFil FullSpec.filter}
 		   procedure: {MapSelect GenSelPro FullSpec.procedure})
 	    end
 	 end
-      end
+%      end
 	 
       fun {Choose Xs Y Order}
 	 case Xs of nil then Y
@@ -549,11 +549,15 @@ define
 	 
       proc {FdChoose RawSpec Vec ?V ?D}
 	 {Space.waitStable}
-	 try
+%	 try
 	    case {PreProcessSpec RawSpec}
-	    of opt(value:SelVal order:SelVar) then
-	       V={SelVar {MakeDistrTuple Vec}}
-	       D={SelVal V}
+	    of opt(value:SelValSpec order:SelVarSpec) then
+	       case {Filter {VectorToList Vec} GenSelFil.undet}
+	       of nil then D=unit
+	       [] X|Xs then
+		  {Choose Xs X {MapSelect GenSelVar SelVarSpec} V}
+		  {{MapSelect SelVal SelValSpec} V D}
+	       end
 	    [] gen(value:     SelVal
 		   order:     Order
 		   select:    Select
@@ -561,17 +565,17 @@ define
 		   procedure: _)
 	    then
 	       case {Filter {VectorToList Vec} Fil} of nil then
-		  raise ~1 end
+		  D=unit
 	       [] X|Xr then
 		  V={Select {Choose Xr X Order}}
 		  D={SelVal V}
 	       end
 	    end
-	 catch ~1 then
-	    {Exception.raiseError
-	     fd(noChoice 'FD.choose' [RawSpec Vec V D] 2
-		'Vector must contain non-determined elements.')}
-	 end
+%	 catch ~1 then
+%	    {Exception.raiseError
+%	     fd(noChoice 'FD.choose' [RawSpec Vec V D] 2
+%		'Vector must contain non-determined elements.')}
+%	 end
       end
    end
 

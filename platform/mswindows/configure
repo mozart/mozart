@@ -1375,7 +1375,7 @@ else
 fi
 
     if test "${GXX}" = yes; then
-      if oz_tmp=`$CXX --version 2>/dev/null`; then
+      if oz_tmp=`$CXX -dumpversion 2>/dev/null` || oz_tmp=`$CXX --version 2>/dev/null`; then
         if expr "$oz_tmp" : egcs >/dev/null; then
           echo "configure: warning: dont know how to check egcs version, assuming ok" 1>&2
 	else
@@ -1383,7 +1383,7 @@ fi
   echo $ac_n "checking $CXX version is at least 2.7""... $ac_c" 1>&6
 echo "configure:1385: checking $CXX version is at least 2.7" >&5
   oz_tmp_ok=no
-  if oz_tmp_version1=`$CXX --version 2>/dev/null`; then
+  if oz_tmp_version1=`$CXX -dumpversion || $CXX --version 2>/dev/null`; then
     # first we try to locate the string "version"
     oz_tmp_version2=`echo "${oz_tmp_version1}" | tr '\012' ' '`
 

@@ -26,4 +26,3 @@
 #endif
 
 #include "var_ext.hh"
-

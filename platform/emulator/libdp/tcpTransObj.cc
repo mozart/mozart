@@ -268,7 +268,7 @@ unmarshalReturn TCPTransObj::unmarshal() {
   // ----------------------------------------- // Must read read
   if(readBuffer->canGet(framesize-MUSTREAD)) { // Can all be read?
     b=readBuffer->get();           // MessageType
-    GenCast(b,BYTE,type,MessageType);
+    type = (MessageType) b;
     cf=readBuffer->get();          // CF
 
     if(cf==CF_FIRST)
@@ -393,7 +393,7 @@ public:
     for(int i=0;i<l;i++) {
       f=getOne();
       Assert(f!=NULL);
-      GenCast(f,FreeListEntry*,bb,BYTE*);
+      bb = (BYTE*) f;
       delete [] bb;
     }
     Assert(length()==0);
@@ -405,7 +405,7 @@ public:
       bb=new BYTE[BYTE_DEF_SIZE];
     }
     else {
-      GenCast(f,FreeListEntry*,bb,BYTE*);
+      bb = (BYTE*) f;
     }
     ++wc;
     return bb;
@@ -413,7 +413,7 @@ public:
   void deleteByteBlock(BYTE* bb) {
     FreeListEntry *f;
     --wc;
-    GenCast(bb,BYTE*,f,FreeListEntry*);
+    f = (FreeListEntry*) bb;
     if(!putOne(f))
       delete [] bb;
     return;
@@ -431,7 +431,7 @@ TransObj *TCPTransController::newTransObj() {
     tcpTransObj=new TCPTransObj();
   }
   else {
-    GenCast(f,FreeListEntry*,tcpTransObj,TCPTransObj*);
+    tcpTransObj = new (f) TCPTransObj;
   }
   tcpTransObj->readBuffer = byteBufferManager->getByteBuffer(
 			       BYTE_DEF_SIZE,byteBlockManager.getByteBlock());
@@ -450,10 +450,9 @@ void TCPTransController::deleteTransObj(TransObj* transObj) {
   byteBlockManager.deleteByteBlock(
   byteBufferManager->deleteByteBuffer(((TCPTransObj *) transObj)
 				      ->writeBuffer));
-
   FreeListEntry *f;
   --wc;
-  GenCast((TCPTransObj *)transObj,TCPTransObj*,f,FreeListEntry*);
+  f = (FreeListEntry*) transObj;
   if(putOne(f)) 
     return;
 
@@ -473,7 +472,7 @@ TCPTransController::~TCPTransController() {
   for(int i=0;i<l;i++) {
     f=getOne();
     Assert(f!=NULL);
-    GenCast(f,FreeListEntry*,tcpTransObj,TCPTransObj*);
+    tcpTransObj = new (f) TCPTransObj;
     delete tcpTransObj;
   }
   Assert(length()==0);

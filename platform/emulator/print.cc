@@ -335,7 +335,7 @@ void OzVariable::printStream(ostream &stream, int depth)
     }
 
   case OZ_VAR_EXT:
-    ((ExtVar*)this)->printStreamV(stream,depth);
+    var2ExtVar(this)->printStreamV(stream,depth);
     break;
 
   default:
@@ -415,7 +415,7 @@ void OzVariable::printLongStream(ostream &stream, int depth, int offset)
     }
 
   case OZ_VAR_EXT:
-    ((ExtVar*)this)->printLongStreamV(stream,depth,offset);
+    var2ExtVar(this)->printLongStreamV(stream,depth,offset);
     break;
 
   default:
@@ -675,7 +675,7 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
   case Co_Extension:
     {
       int n;
-      char * s = OZ_virtualStringToC(((OZ_Extension *) (OZ_Container *) this)->printV(depth),&n);
+      char * s = OZ_virtualStringToC(const2Extension(this)->printV(depth),&n);
       stream << s;
       break;
     }
@@ -775,7 +775,7 @@ void ConstTerm::printStream(ostream &stream, int depth)
   case Co_Extension:
     {
       int n;
-      char * s = OZ_virtualStringToC(((OZ_Extension *) (OZ_Container*) this)->printV(depth),&n);
+      char * s = OZ_virtualStringToC(const2Extension(this)->printV(depth),&n);
       stream << s;
       break;
     }
