@@ -6,9 +6,10 @@ WHAT = apptut
 MAIN = main.sgml
 SGMLSRCS = \
 	deploy.sgml devel.sgml hello.sgml link.sgml \
-	module.sgml native.sgml cs-intro.sgml cs-db.sgml \
+	module.sgml cs-intro.sgml cs-db.sgml \
 	cs-ozc.sgml native-celloid.sgml native-counter.sgml \
-	native-counter-obj.sgml chat.sgml
+	native-counter-obj.sgml chat.sgml \
+	conc-cheap.sgml conc-patterns.sgml
 HTMLEXTRAFILES =
 
 include ../Makefile.common
