@@ -1076,6 +1076,14 @@ int ComController::closeDownCount() {
   return count;
 }
 
+void ComController::closeAll() {
+  ComObj *tmp=list;
+  while(tmp!=NULL) {
+    tmp->shutDown();
+    tmp=tmp->next;
+  }
+}
+
 Bool ComController::valid(ComObj *testObj) {
   ComObj *tmp=list;
   while(tmp!=NULL) {
