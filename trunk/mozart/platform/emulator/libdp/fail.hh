@@ -360,6 +360,8 @@ TaggedRef mkOp3(char*,TaggedRef,TaggedRef,TaggedRef);
 OZ_Return tertiaryFailHandle(Tertiary*, TaggedRef,EntityCond,TaggedRef);
 Bool tertiaryFail(Tertiary*, EntityCond &, TaggedRef&);
 
+OZ_Term createFailedEntity(int OTI, Bool defer);
+
 /* __FAILHH */
 #endif 
 
