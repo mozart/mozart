@@ -35,7 +35,7 @@ include Makefile.vars
 MODULE_NAMES =							\
 	PID Fault DPMisc DPB VirtualSite DPPane Tk Schedule FDP FSP Parser \
 	CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
-	System Profile
+	Win32 System Profile
 
 STATIC_MODULES=		@STATIC_MODULES@
 DYNAMIC_MODULES=	@DYNAMIC_MODULES@
@@ -64,7 +64,7 @@ BIMODSPECS = \
 MODSPECS= \
 	FDP FSP Schedule Tk Parser OS Property Pickle \
 	PID URL FDB FSB CTB RecordC Space System Finalize CTB \
-	CompilerSupport Compat Profile \
+	CompilerSupport Compat Win32 Profile \
 	Debug Fault Browser Misc DPMisc Distribution \
 	VirtualSite Application DPPane \
 	$(BIMODSPECS) \
@@ -141,7 +141,7 @@ TEXT2PICKLESRCS= text2pickle.cc
 TEXT2PICKLEOBJS= $(TEXT2PICKLESRCS:.cc=.o)
 
 SRCS= \
-	$(SUPPORTSRCS) $(STORESRCS) $(OSSRCS) \
+	$(SUPPORTSRCS) $(STORESRCS) $(OSSRCS) $(WINDOWSSRCS) \
 	$(RUNSRCS) $(MEMSRCS) $(SPACESRCS) \
 	$(CPISRCS) $(FDSRCS) $(FSETSRCS) $(OFSRCS) \
 	$(PICKLESRCS)
@@ -169,6 +169,8 @@ RECORDCSRCS = \
 	ofs-bi.cc
 COMPATSRCS = \
 	compat.cc
+WIN32SRCS=\
+	win32.cc
 SYSTEMSRCS = \
 	system.cc
 PROFILESRCS = \
@@ -184,6 +186,7 @@ FSBOBJS=	$(FSBSRCS:%.cc=%.lo)
 CTBOBJS=	$(CTBSRCS:%.cc=%.lo)
 RECORDCOBJS=	$(RECORDCSRCS:%.cc=%.lo)
 COMPATOBJS=	$(COMPATSRCS:%.cc=%.lo)
+WIN32OBJS=	$(WIN32SRCS:%.cc=%.lo)
 SYSTEMOBJS=	$(SYSTEMSRCS:%.cc=%.lo)
 PROFILEOBJS=	$(PROFILESRCS:%.cc=%.lo)
 
@@ -191,7 +194,7 @@ PROFILEOBJS=	$(PROFILESRCS:%.cc=%.lo)
 ALLSRCS= $(SRCS) \
 	$(TKSRCS) $(COMPILERSUPPORTSRCS) $(BROWSERSRCS) \
 	$(SPACEOPSRCS) $(FDBSRCS) $(FSBSRCS) $(CTBSRCS) \
-	$(RECORDCSRCS) $(COMPATSRCS) $(SYSTEMSRCS) \
+	$(RECORDCSRCS) $(COMPATSRCS) $(WIN32SRCS) $(SYSTEMSRCS) \
 	$(PROFILESRCS) \
 	$(DEBUGSRCS) $(TEXT2PICKLESRCS)
 
@@ -286,6 +289,12 @@ Compat.so: $(COMPATOBJS)
 
 libCompat.a: $(COMPATOBJS)
 	$(AR) -rc $@ $(COMPATOBJS) && $(RANLIB) $@
+
+Win32.so: $(WIN32OBJS)
+	$(DYNLD) -o $@ $(WIN32OBJS)
+
+libWin32.a: $(WIN32OBJS)
+	$(AR) -rc $@ $(WIN32OBJS) && $(RANLIB) $@
 
 Profile.so: $(PROFILEOBJS)
 	$(DYNLD) -o $@ $(PROFILEOBJS)
