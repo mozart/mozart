@@ -32,8 +32,14 @@ include Makefile.vars
 
 INCS		= -I. -I$(SRCDIR)
 M4_D		= -DEMUDIR=$(SRCDIR)
+WIFTARGETS	= @WIFTARGETS@
+WIFINSTALL      = @WIFINSTALL@
 FDTARGETS	= @FDTARGETS@
+FDINSTALL	= @FDINSTALL@
 FSETTARGETS	= @FSETTARGETS@
+FSETINSTALL	= @FSETINSTALL@
+PARSERTARGETS	= @PARSERTARGETS@
+PARSERINSTALL	= @PARSERINSTALL@
 TARGETS		= @TARGETS@
 OZMALIB		= @OZMALIB@
 SUBDIRS		= libfd libfset
@@ -45,11 +51,17 @@ CREATEDOTHERS = \
 	marshalcode.cc marshalMsg.cc register.hh oz.c \
 	config.h builtins.tbl builtins.dcl \
 	fdbuilti.tbl fdbuilti.dcl \
-	fsbuilti.tbl fsbuilti.dcl
+	libfd.tbl libfd.dcl \
+	libschedule.tbl libschedule.dcl \
+	fsetbuilti.tbl fsetbuilti.dcl \
+	libfset.tbl libfset.dcl \
+	libwif.tbl libwif.dcl \
+	libparser.tbl libparser.dcl \
+	scanner.cc parser.cc 
 
 CREATEDSRCS = \
 	copycode.cc opcodes.cc \
-	scanner.cc parser.cc version.cc initffuns.cc
+	version.cc initffuns.cc
 
 CREATEDFILES = $(CREATEDOTHERS) $(CREATEDSRCS)
 
@@ -76,7 +88,7 @@ CXXSRCS = \
 	os.cc emulate.cc scheduler.cc builtins.cc \
 	components.cc network.cc virtual.cc \
 	comm.cc marshaler.cc liveness.cc gc.cc \
-	vprops.cc promise.cc wif.cc
+	vprops.cc promise.cc
 
 FDSRCS =\
 	fdbuilti.cc fdomn.cc fdcore.cc \
@@ -99,21 +111,30 @@ OBJS = $(SRCS:.cc=.o)
 .NOEXPORT: emulate.o @PROGRAMNAME@ peanuts.o
 .PHONY:	all subdirs win win-install first install install-bin install-inc \
 	install-dir version depend tags clean distclean realclean veryclean \
-	$(FDTARGETS) $(FSETTARGETS)
+	$(FDTARGETS) $(FSETTARGETS) $(WIFINSTALL) \
+	$(FDINSTALL) $(FSETINSTALL) $(PARSERINSTALL)
 
-all: $(TARGETS)
+all: $(TARGETS) $(PARSERTARGETS) $(WIFTARGETS)
 
-$(FDTARGETS):
+$(FDTARGETS) $(FDINSTALL): libfd.dcl libfd.tbl libschedule.tbl libschedule.dcl
 	cd libfd; $(MAKE) $@
 
-$(FSETTARGETS):
+$(FSETTARGETS) $(FSETINSTALL): libfset.dcl libfset.tbl
 	cd libfset; $(MAKE) $@
+
+
+libwif.so: wif.o
+	$(DYNLD) -o $@ wif.o
+
+libwif.a: wif.o
+	$(AR) -rc $@ wif.o && $(RANLIB) $@
 
 win: ozlib.lnk $(CREATEDFILES)
 
 first: $(CREATEDFILES) $(SRCS)
 
-@PROGRAMNAME@: first $(OBJS) $(OZMALIB) $(FDTARGETS) $(FSETTARGETS)
+@PROGRAMNAME@: first $(OBJS) \
+	$(OZMALIB) $(FDTARGETS) $(FSETTARGETS) $(WIFTARGETS) $(PARSERTARGETS)
 	$(LD) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
 
 @oz_tmphack_programname@: first $(OBJS) $(OZMALIB) $(FDTARGETS) $(FSETTARGETS)
@@ -124,7 +145,8 @@ first: $(CREATEDFILES) $(SRCS)
 	 rcp $$tmp @oz_tmphack_host@:`pwd`/$@ && \
 	 $(RM) $$tmp
 
-install:: install-bin install-inc
+install:: install-bin install-inc \
+	$(WIFINSTALL) $(FDINSTALL) $(FSETINSTALL) $(PARSERINSTALL)
 
 install-bin: version $(TARGETS) $(BINDIR)
 	$(INSTALL_BIN) $(TARGETS) $(BINDIR)
@@ -132,6 +154,12 @@ install-bin: version $(TARGETS) $(BINDIR)
 install-inc: $(INCDIR)
 	$(INSTALL_OTHER) $(SRCDIR)/oz.h $(INCDIR)
 	$(INSTALL_OTHER) $(SRCDIR)/oz_cpi.hh $(INCDIR)
+
+install-wif: libwif.so $(BINDIR)
+	$(INSTALL_BIN) libwif.so $(BINDIR)
+
+install-parser: libparser.so $(BINDIR)
+	$(INSTALL_BIN) libparser.so $(BINDIR)
 
 $(BINDIR) $(INCDIR):
 	$(INSTALL_DIR) $@
@@ -148,7 +176,7 @@ version:
 	     $(SRCDIR)/version.sed > version.cc
 
 depend:: Makefile $(CREATEDFILES) $(SRCS)
-	$(DEPEND) $(SRCS1:%=$(SRCDIR)/%) $(CREATEDSRCS) > Makefile.deps
+	$(DEPEND) $(SRCDIR)/wif.cc $(SRCS1:%=$(SRCDIR)/%) $(CREATEDSRCS) > Makefile.deps
 
 # prefered gmake depend!
 # include $(SRCS:.cc=.d)
@@ -173,21 +201,73 @@ parser.hh: parser.yy
 	@$(MV) y.tab.c parser.cc
 	@$(MV) y.tab.h parser.hh
 
+libparser.so: parser.o scanner.o parsertable.o
+	$(DYNLD) -o $@ parser.o scanner.o parsertable.o
+
+libparser.a: parser.o scanner.o parsertable.o
+	$(AR) -rc $@ parser.o scanner.o parsertable.o && $(RANLIB) $@
+
+
 builtins.o: builtins.tbl builtins.dcl
+
 fdbuilti.o: fdbuilti.tbl fdbuilti.dcl
-fsetcore.o: fsbuilti.tbl fsbuilti.dcl
+
+fsetcore.o: fsetbuilti.tbl fsetbuilti.dcl
+
+wif.o: libwif.tbl libwif.dcl
+
+parsertable.o: libparser.dcl libparser.tbl
+
+builtins.o: \
+	libwif.tbl libwif.dcl \
+	libfd.tbl libfd.dcl libschedule.tbl libschedule.dcl \
+	libfset.tbl libfset.dcl \
+	libparser.tbl libparser.dcl
+
+
 builtins.tbl: bidecl.perl
-	perl $(SRCDIR)/bidecl.perl -ctable -exclude fd > $@
+	perl $(SRCDIR)/bidecl.perl -ctable \
+	-exclude wif,fd,libfd,libschedule,fset,libfset,libparser > $@
 builtins.dcl: bidecl.perl
-	perl $(SRCDIR)/bidecl.perl -cdecl -exclude fd > $@
+	perl $(SRCDIR)/bidecl.perl -cdecl \
+	-exclude wif,fd,libfd,libschedule,fset,libfset,libparser > $@
+
 fdbuilti.tbl: bidecl.perl
 	perl $(SRCDIR)/bidecl.perl -ctable -include fd > $@
 fdbuilti.dcl: bidecl.perl
 	perl $(SRCDIR)/bidecl.perl -cdecl -include fd > $@
-fsbuilti.tbl: bidecl.perl
+
+fsetbuilti.tbl: bidecl.perl
 	perl $(SRCDIR)/bidecl.perl -ctable -include fset > $@
-fsbuilti.dcl: bidecl.perl
+fsetbuilti.dcl: bidecl.perl
 	perl $(SRCDIR)/bidecl.perl -cdecl -include fset > $@
+
+libwif.tbl: bidecl.perl
+	perl $(SRCDIR)/bidecl.perl -cdyntable -include wif > $@
+libwif.dcl: bidecl.perl
+	perl $(SRCDIR)/bidecl.perl -cdecl -include wif > $@
+
+libfd.tbl: bidecl.perl
+	perl $(SRCDIR)/bidecl.perl -cdyntable -include libfd > $@
+libfd.dcl: bidecl.perl
+	perl $(SRCDIR)/bidecl.perl -cdecl -include libfd > $@
+
+libschedule.tbl: bidecl.perl
+	perl $(SRCDIR)/bidecl.perl -cdyntable -include libschedule > $@
+libschedule.dcl: bidecl.perl
+	perl $(SRCDIR)/bidecl.perl -cdecl -include libschedule > $@
+
+libfset.tbl: bidecl.perl
+	perl $(SRCDIR)/bidecl.perl -cdyntable -include libfset > $@
+libfset.dcl: bidecl.perl
+	perl $(SRCDIR)/bidecl.perl -cdecl -include libfset > $@
+
+libparser.tbl: bidecl.perl
+	perl $(SRCDIR)/bidecl.perl -cdyntable -include libparser > $@
+libparser.dcl: bidecl.perl
+	perl $(SRCDIR)/bidecl.perl -cdecl -include libparser > $@
+
+
 
 # this special rule ensures that warnings issued in bison.simple
 # are not treated as errors:

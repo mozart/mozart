@@ -61,8 +61,17 @@
 
 
 
-/* define if propagator are linked statically */
-#undef FOREIGNFDPROPS
+/* define if libwif is linked statically */
+#undef STATIC_LIBWIF
+
+/* define if libfd and libschedule are linked statically */
+#undef STATIC_LIBFD
+
+/* define if libfset is linked statically */
+#undef STATIC_LIBFSET
+
+/* define if libparser is linked statically */
+#undef STATIC_LIBPARSER
 
 /* define for including the Oz assembler */
 #undef OZMA

@@ -1,12 +1,9 @@
 /*
  *  Authors:
- *    Tobias Mueller (tmueller@ps.uni-sb.de)
- * 
- *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Christian Schulte, 1997, 1998
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -28,9 +25,21 @@
 #include "conf.h"
 #endif
 
-//*****************************************************************************
-// Finite Domains
+#include "../builtins.hh"
 
-#include "fdbuilti.dcl"
-#include "fsetbuilti.dcl"
+/*
+ * The builtin table
+ */
+
+#ifndef STATIC_LIBFD
+
+#include "../libschedule.dcl"
+
+OZ_C_proc_interface oz_interface[] = {
+#include "../libschedule.tbl"
+ {0,0,0,0}
+};
+
+#endif
+
 
