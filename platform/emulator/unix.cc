@@ -1505,6 +1505,52 @@ OZ_BI_iodefine(unix_receiveFromInet,5,3)
 } OZ_BI_ioend
 
 
+OZ_BI_iodefine(unix_receiveFromInetAnon,5,1)
+{
+  OZ_declareInt(0,sock);
+  OZ_declareInt(1,maxx);
+  DeclareAtomListIN(2, OzFlags);
+  OZ_declareTerm(3, hd);
+  OZ_declareTerm(4, tl);
+  // OZ_out(0) == n
+
+  if (!(!OZ_isVariable(hd) || oz_isFree(oz_deref(hd))))
+    return (OZ_typeError(3, "value or a free variable"));
+
+  int flags;
+  OZ_Return flagBool;
+
+  if (!((flagBool = get_send_recv_flags(OzFlags,&flags)) == PROCEED))
+      return flagBool;
+
+  CHECK_READ(sock);
+
+  char *buf = (char *) malloc(maxx+1);
+
+  struct sockaddr_in from;
+
+#if __GLIBC__ == 2
+  unsigned int fromlen = sizeof from;
+#else
+  socklen_t fromlen = sizeof from;
+#endif
+
+  WRAPCALL("recvfrom",recvfrom(sock, buf, maxx, flags,
+                    (struct sockaddr*)&from, &fromlen),ret);
+
+  OZ_Term localhead = oz_string(buf, ret, tl);
+
+  free(buf);
+
+  OZ_Return ures = oz_unify(localhead, hd);
+  Assert(ures == PROCEED || ures == FAILED);
+  if (ures == FAILED) return (FAILED);
+
+  OZ_out(0) = OZ_int(ret);
+  return (PROCEED);
+} OZ_BI_ioend
+
+
 const int maxArgv = 100;
 static char* argv[maxArgv];
 
