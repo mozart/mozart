@@ -894,7 +894,6 @@ void Board::printStream(ostream &stream, int depth)
   stream << "Board @" << this << " [";
 
   if (isInstalled())    stream << " Installed";
-  if (isMarkedGlobal()) stream << " MarkedGlobal";
   if (isFailed())       stream << " Failed";
   if (isCommitted())    stream << " Committed";
   
@@ -914,7 +913,6 @@ void Board::printLongStream(ostream &stream, int depth, int offset)
   printStream(stream,depth);
   stream << endl;
 
-  stream << indent(offset) << "Flags: " << (void *) flags << endl;
   stream << indent(offset) << "Script: " << endl;
   script.printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
   
