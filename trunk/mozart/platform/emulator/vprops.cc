@@ -866,7 +866,7 @@ void initVirtualProperties()
   VirtualProperty::add("internal.stop",PROP_INTERNAL_STOP);
   VirtualProperty::add("internal.ip.debug",PROP_INTERNAL_DEBUG_IP);
   VirtualProperty::add("internal.perdio.debug",PROP_INTERNAL_PERDIO_DEBUG);
-  VirtualProperty::add("internal.perdio.d0Compatiblity",PROP_INTERNAL_PERDIO_DOCOMPATIBLE);
+  VirtualProperty::add("perdio.minimal",PROP_INTERNAL_PERDIO_DOCOMPATIBLE);
   VirtualProperty::add("internal.browser",PROP_INTERNAL_BROWSER);
   VirtualProperty::add("internal.applet",PROP_INTERNAL_APPLET);
   VirtualProperty::add("internal",PROP_INTERNAL);
