@@ -8,7 +8,10 @@
 local
    DarkColor      = '#828282'
    BrightColor    = '#ffffff'
-   BackColor      = '#d9d9d9'
+   fun {TclGetConf T Opt}
+      l(lindex(l(T conf '-'#Opt) 4))
+   end
+
    MarkFrameColor = black
 
    Home               = ~10000
@@ -192,7 +195,7 @@ in
 			MarkFrameWidth - MarkOuterOffset 
 			X6 - MarkOuterOffset
 			Y1 + MarkOuterOffset 
-			fill:    BackColor
+			fill:    {TclGetConf self bg}
 			outline: black
 			width:   MarkFrameWidth
 			tags:    q(ThisOutlineTag ThisEventTag))>>
@@ -206,7 +209,7 @@ in
       in
 	 case {IsObject Top} then
 	    {Top.MoveTag     tk(move Home Home)}
-	    {Top.OutlineTag tk(itemconf outline:BackColor)}
+	    {Top.OutlineTag tk(itemconf outline:{TclGetConf self bg})}
 	 else true
 	 end
 	 TopNote <- Note
