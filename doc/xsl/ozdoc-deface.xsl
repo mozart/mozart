@@ -1,6 +1,8 @@
 <!-- -*-xml-*- -->
 
-<stylesheet xmlns="http://www.w3.org/XSL/Transform/1.0">
+<stylesheet
+  xmlns		="http://www.w3.org/XSL/Transform/1.0"
+  xmlns:id	="http://www.jclark.com/xt/java/ID">
 
 <strip-space elements="
 	BOOK FRONT BACK BODY
@@ -13,6 +15,11 @@
 	HILITE.BOOK HILITE.PREFACE HILITE.MODE HILITE"/>
 
 <template match="/">
+  <!-- build table mapping ID to HILITE element from
+       the preface HILITE.PREFACE -->
+  <for-each select="/HILITE.BOOK/HILITE.PREFACE/HILITE">
+    <if test="id:put(string(@ID),.)"/>
+  </for-each>
   <apply-templates select="HILITE.BOOK/BOOK"/>
 </template>
 
@@ -27,8 +34,7 @@
 </template>
 
 <template match="HILITE.ITEM|HILITE.FILE">
-  <variable name="id" select="@ID"/>
-  <apply-templates select="/HILITE.BOOK/HILITE.PREFACE/HILITE[@ID=$id]"/>
+  <apply-templates select="id:get(string(@ID))"/>
 </template>
 
 </stylesheet>

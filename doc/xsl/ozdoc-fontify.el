@@ -80,16 +80,23 @@
 	  (goto-char e)))
       (ozdoc-output "</HILITE>\n"))))
 
+(defvar oz-mode-alist
+  '((gump . oz-gump-mode)
+    (cc   . c++-mode)
+    (elisp . emacs-lisp-mode)
+    (sh    . sh-mode)))
+
+(defun ozdoc-declare-mode (name mode)
+  (setq name (intern (downcase name)))
+  (setq oz-mode-alist (cons (cons name mode) oz-mode-alist)))
+
 (defun ozdoc-to-mode (mode)
   (setq mode (intern (downcase mode)))
-  (cond ((fboundp mode) mode)
+  (cond ((cdr (assq mode oz-mode-alist)))
+	((fboundp mode) mode)
 	((let ((m (intern-soft
 		   (format "%s-mode" mode))))
 	   (and m (fboundp m) m)))
-	((eq mode 'gump ) 'oz-gump-mode)
-	((eq mode 'cc   ) 'c++-mode)
-	((eq mode 'elisp) 'emacs-lisp-mode)
-	((eq mode 'sh   ) 'sh-mode)
 	(t 'fundamental-mode)))
 
 (defun ozdoc-get-buffer (mode)

@@ -20,8 +20,9 @@ COMPILE		= $(JAVAC) -classpath $(SRCDIR)/xsl.jar -d .
 
 LATEXHANDLER	= com/jclark/xsl/sax/LaTeXOutputHandler.class
 NXMLHANDLER	= com/jclark/xsl/sax/NXMLOutputHandler.class
+TEXTHANDLER	= com/jclark/xsl/sax/TextOutputHandler.class
 EXTEND_CLASSES	= TeX.class ID.class Msg.class Meta.class
-HANDLER_CLASSES	= $(LATEXHANDLER) $(NXMLHANDLER)
+HANDLER_CLASSES	= $(LATEXHANDLER) $(NXMLHANDLER) $(TEXTHANDLER)
 CLASSES		= $(EXTEND_CLASSES) $(HANDLER_CLASSES)
 
 .PHONY: all quick bootstrap check install clean veryclean distclean depend bootquick
@@ -34,6 +35,9 @@ $(LATEXHANDLER): LaTeXOutputHandler.java
 	$(COMPILE) $<
 
 $(NXMLHANDLER): NXMLOutputHandler.java
+	$(COMPILE) $<
+
+$(TEXTHANDLER): TextOutputHandler.java
 	$(COMPILE) $<
 
 %.class: %.java
