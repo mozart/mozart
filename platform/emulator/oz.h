@@ -290,7 +290,144 @@ OZ_C_proc_begin(Name,Arity) 				          	      \
 }
 #endif
 
-#include "oz_meta.h"
-#include "oz_fd.h"
+/* ------------------------------------------------------------------------ *
+ * oz_meta.h
+ * ------------------------------------------------------------------------ */
+
+#ifdef __cplusplus
+extern "C" { 
+#endif
+
+  
+typedef enum {
+  meta_unconstrained     = 0,
+  meta_determined        = 1,
+  meta_left_constrained  = 2,
+  meta_right_constrained = 4,
+  meta_failed            = 8
+} mur_t;
+
+typedef enum {
+  OZ_Type_Cell,
+  OZ_Type_Cons,
+  OZ_Type_HeapChunk,
+  OZ_Type_CVar,
+  OZ_Type_Float,
+  OZ_Type_Int,
+  OZ_Type_Literal,
+  OZ_Type_Procedure,
+  OZ_Type_Record,
+  OZ_Type_Tuple,
+  OZ_Type_Var,
+  OZ_Type_Unknown
+} OZ_TermType;
+
+
+typedef void * OZ_MetaType;
+
+typedef mur_t (* OZ_UnifyMetaDet) (OZ_Term, OZ_Term, OZ_TermType, OZ_Term *);
+typedef mur_t (* OZ_UnifyMetaMeta) (OZ_Term, OZ_Term, OZ_MetaType, OZ_Term *);
+
+typedef char * (* OZ_PrintMeta) (OZ_Term);
+
+
+extern OZ_TermType OZ_typeOf        _PROTOTYPE((OZ_Term t));
+
+extern OZ_MetaType OZ_introMetaVar  _PROTOTYPE((OZ_UnifyMetaDet unify_md,
+						OZ_UnifyMetaMeta unify_mm,
+						OZ_PrintMeta print,
+						char * name));
+
+extern OZ_Term OZ_makeMetaVar       _PROTOTYPE((OZ_MetaType t,
+						OZ_Term d));
+
+extern OZ_MetaType OZ_getMetaVarType _PROTOTYPE((OZ_Term v));
+extern OZ_Term OZ_getMetaVarData     _PROTOTYPE((OZ_Term v));
+
+extern OZ_Term OZ_makeHeapChunk      _PROTOTYPE((int s));
+extern char * OZ_getHeapChunk        _PROTOTYPE((OZ_Term t,
+						 char * buf));
+extern void OZ_putHeapChunk          _PROTOTYPE((OZ_Term t,
+						 char * buf));
+extern int OZ_getHeapChunkSize       _PROTOTYPE((OZ_Term t));
+extern int OZ_isHeapChunk            _PROTOTYPE((OZ_Term t));
+extern int OZ_isMetaVar              _PROTOTYPE((OZ_Term t));
+extern void OZ_constrainMetaVar      _PROTOTYPE((int d,
+						 OZ_Term v,
+						 OZ_Term c));
+
+extern int OZ_areIdentVars           _PROTOTYPE((OZ_Term v1,
+						 OZ_Term v2));
+
+extern char * OZ_printTerm           _PROTOTYPE((OZ_Term t));
+
+#ifdef __cplusplus
+}
+#endif
+
+/* ------------------------------------------------------------------------ *
+ * oz_fd.h
+ * ------------------------------------------------------------------------ */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern OZ_Bool FD_introduce    _PROTOTYPE((OZ_CFun, OZ_Term *, int));
+extern int     FD_getWidth     _PROTOTYPE((int i));
+extern int     FD_getSize      _PROTOTYPE((int i));
+extern int     FD_getMaxElem   _PROTOTYPE((int i));
+extern int     FD_getMinElem   _PROTOTYPE((int i));
+
+extern int     FD_less         _PROTOTYPE((int i, int less));
+extern int     FD_lessEq       _PROTOTYPE((int i, int less_eq));
+extern int     FD_greater      _PROTOTYPE((int i, int greater));
+extern int     FD_greaterEq    _PROTOTYPE((int i, int greater_eq));
+extern int     FD_union        _PROTOTYPE((int i, int j, int k));
+extern int     FD_intersect    _PROTOTYPE((int i, int j, int k));
+extern int     FD_singleton    _PROTOTYPE((int i, int singl));
+extern int     FD_remove       _PROTOTYPE((int i, int rem));
+extern int     FD_insert       _PROTOTYPE((int i, int ins));
+
+extern int     FD_isContained  _PROTOTYPE((int i, int contained));
+extern int     FD_areIdentVars _PROTOTYPE((int i, int j));
+
+extern OZ_Bool FD_entailment   _PROTOTYPE((void));
+extern OZ_Bool FD_release      _PROTOTYPE((void));
+extern OZ_Bool FD_failure      _PROTOTYPE((void));
+
+extern int     FD_isTouched    _PROTOTYPE((void));
+
+extern void    FD_print        _PROTOTYPE((int));
+
+#define OZ_C_FD_proc_begin(Name, Arity)					      \
+OZ_C_proc_proto(Name)							      \
+  OZ_C_proc_header(Name)						      \
+  OZ_CFun OZ_self = Name;						      \
+if (OZ_arity != Arity && Arity != VarArity) {				      \
+  OZ_warning("Wrong arity in C procedure '%s'. Expected: %d, got %d",	      \
+	     OZStringify(Name),Arity, OZ_arity);			      \
+  return FAILED;							      \
+}									      \
+{									      \
+  OZ_Bool ret_val = FD_introduce(OZ_self, OZ_args, OZ_arity);		      \
+  switch (ret_val) {							      \
+  case SUSPEND:								      \
+    return PROCEED;							      \
+  case FAILED:								      \
+    return FAILED;							      \
+  default:								      \
+    break;								      \
+  }									      \
+}
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif // __FOREIGN_H
+
+
+
+
