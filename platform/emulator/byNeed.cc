@@ -6,7 +6,6 @@
  *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
- *    Denys Duchier (1998)
  *    Michael Mehl (1998)
  * 
  *  Last change:
@@ -31,11 +30,7 @@
 
 #include "byNeed.hh"
 
-/* if `function' is a procedure or an object, we simply call it with a
- * new variable as argument: local Tmp in {F Tmp} This := Tmp end
- */
-
-
+// this builtin is only internally available
 OZ_BI_define(BIbyNeedAssign,2,0)
 {
   OZ_Term var = OZ_in(0);
@@ -47,15 +42,21 @@ OZ_BI_define(BIbyNeedAssign,2,0)
   return PROCEED;
 } OZ_BI_end
 
-void
-ByNeedVariable::kickLazy(TaggedRef *ptr)
+/* call `function' as
+ *    local Tmp in {function Tmp} This := Tmp end
+ */
+
+void ByNeedVariable::kick(TaggedRef *ptr)
 {
   if (function!=0) {
-    Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,GETBOARD(this));
-    OZ_Term newvar=oz_newVar(GETBOARD(this));
+    Board* bb      = GETBOARD(this);
+    Thread* thr    = am.mkRunnableThread(DEFAULT_PRIORITY,bb);
+    OZ_Term newvar = oz_newVar(bb);
+
     static RefsArray args = allocateStaticRefsArray(2);
     args[0]=makeTaggedRef(ptr);
     args[1]=newvar;
+
     thr->pushCFun(BIbyNeedAssign, args, 2, OK);
     thr->pushCall(function,newvar);
     am.scheduleThread(thr);
@@ -63,31 +64,47 @@ ByNeedVariable::kickLazy(TaggedRef *ptr)
   }
 }
 
-OZ_Return
-ByNeedVariable::unifyV(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
+OZ_Return ByNeedVariable::unifyV(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
 {
-  // if x:lazy=y:var y<-x if x is global, then trail
-  // ^^^DONE AUTOMATICALLY
-  // else x.kick() x=y
-
-  kickLazy(vPtr);
+  kick(vPtr);
 
   oz_suspendOnPtr(vPtr);
   return SUSPEND;
 }
 
-void
-ByNeedVariable::addSuspV(Suspension susp, TaggedRef *tPtr, int unstable)
+void ByNeedVariable::addSuspV(Suspension susp, TaggedRef *tPtr, int unstable)
 {
-  kickLazy(tPtr);
+  kick(tPtr);
   addSuspSVar(susp, unstable);
+}
+
+void ByNeedVariable::printStreamV(ostream &out,int depth = 10) {
+    OZ_Term f = getFunction();
+    if (f==0) {
+      out << "<future byNeed: requested>";
+    } else {
+      out << "<future byNeed: ";
+      oz_printStream(f,out,depth-1);
+      out << ">";
+    }
+  }
+
+OZ_Term ByNeedVariable::inspectV()
+{
+  // future(byNeed(requested|F))
+  OZ_Term f = getFunction();
+  if (f==0) {
+    f=oz_atom("requested");
+  }
+  return OZ_mkTupleC("future",1, OZ_mkTupleC("byNeed",1,f));
 }
 
 OZ_BI_define(BIbyNeed,1,1)
 {
   OZ_Term oz_fun = OZ_in(0);
-  if (!OZ_isProcedure(oz_fun) && !OZ_isObject(oz_fun))
-    return OZ_typeError(0,"Unary Procedure|Object");
+  if (!OZ_isProcedure(oz_fun) && !OZ_isObject(oz_fun)) {
+    oz_typeError(0,"Unary Procedure|Object");
+  }
   ByNeedVariable *lazy = new ByNeedVariable(oz_fun);
   OZ_RETURN(makeTaggedRef(newTaggedCVar(lazy)));
 } OZ_BI_end
