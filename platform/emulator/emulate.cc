@@ -2087,8 +2087,8 @@ LBLdispatcher:
     {
       Reg reg                     = getRegArg(PC+1);
       ProgramCounter nxt          = getLabelArg(PC+2);
-      AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+3);
-      PrTabEntry *predd           = getPredArg(PC+4);
+      PrTabEntry *predd           = getPredArg(PC+3);
+      AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
       AssRegArray *list           = (AssRegArray*) getAdressArg(PC+5);
       
       if (predd->getPC()==NOCODE) {
