@@ -49,7 +49,6 @@ extern ProgramCounter
   C_SET_SELF_Ptr       , // set am.ooRegisters
   C_SET_ABSTR_Ptr      ,
   C_CATCH_Ptr          , // exception handler
-  C_DEL_SUSPS_Ptr      , // a task to remove suspensions
   C_EMPTY_STACK        ;
 
 
@@ -204,14 +203,6 @@ public:
 	      a,
 	      makeTaggedSmallInt(invoc_counter++)); 
   }
-  void pushDelSusps(TaggedRef list) {
-    // `list' is the list of vars on which the thread
-    // is about to suspend.  A task is pushed to remove
-    // these suspensions when the thread is woken.
-    // see AM::suspendOnVarList for further details
-    pushFrame(C_DEL_SUSPS_Ptr,(void*)list,makeTaggedNULL());
-  }
-
   int tasks();
 
   TaskStack(int s): Stack(s,Stack_WithFreelist) { pushEmpty(); }

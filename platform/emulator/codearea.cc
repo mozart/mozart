@@ -295,7 +295,6 @@ ProgramCounter CodeArea::definitionEnd(ProgramCounter PC)
     case TASKLOCK:
     case TASKSETSELF:
     case TASKCATCH:
-    case TASKDELSUSPS:
     case TASKEMPTYSTACK:
     case TASKPROFILECALL:
     case ENDOFFILE:
@@ -448,7 +447,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case TASKLOCK:
     case TASKSETSELF:
     case TASKCATCH:
-    case TASKDELSUSPS:
     case TASKEMPTYSTACK:
     case TASKPROFILECALL:
       fprintf(ofile, "\n");
@@ -1144,7 +1142,6 @@ ProgramCounter
   C_SET_SELF_Ptr,
   C_SET_ABSTR_Ptr,
   C_CATCH_Ptr,
-  C_DEL_SUSPS_Ptr,
   C_EMPTY_STACK;
 
 
@@ -1202,7 +1199,7 @@ void CodeArea::init(void **instrTable)
   // apparently, the magic number given to the CodeArea constructor
   // is 2*(1+number of task types).  The 1 is for GLOBALVARNAME
   // which is not really a task type.
-  CodeArea *code = new CodeArea(22);
+  CodeArea *code = new CodeArea(20);
   C_XCONT_Ptr        = code->getStart();
   C_DEBUG_CONT_Ptr   = writeOpcode(TASKXCONT,       C_XCONT_Ptr);
   C_CALL_CONT_Ptr    = writeOpcode(TASKDEBUGCONT,   C_DEBUG_CONT_Ptr);
@@ -1211,8 +1208,7 @@ void CodeArea::init(void **instrTable)
   C_SET_ABSTR_Ptr    = writeOpcode(TASKSETSELF,     C_SET_SELF_Ptr);
   C_CATCH_Ptr        = writeOpcode(TASKPROFILECALL, C_SET_ABSTR_Ptr);
   C_EMPTY_STACK      = writeOpcode(TASKCATCH,       C_CATCH_Ptr);
-  C_DEL_SUSPS_Ptr    = writeOpcode(TASKEMPTYSTACK,  C_EMPTY_STACK);
-  ProgramCounter aux = writeOpcode(TASKDELSUSPS,    C_DEL_SUSPS_Ptr);
+  ProgramCounter aux = writeOpcode(TASKEMPTYSTACK,  C_EMPTY_STACK);
   /* mark end with GLOBALVARNAME, so definitionEnd works properly */
   (void) writeOpcode(GLOBALVARNAME,aux);
   CodeArea::skipInGC = code;

@@ -272,7 +272,6 @@ instruction(taskSetSelf)
 instruction(taskCatch)
 instruction(taskEmptyStack)
 instruction(taskProfileCall)
-instruction(taskDelSusps)
 
 dnl '!' to move! (will require complete bootstrapping)
 dnl   Pseudo-instruction to mark the end of a code chunk
