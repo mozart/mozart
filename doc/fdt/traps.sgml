@@ -204,7 +204,7 @@ creation of a propagator
 X*Y <: 900*1000*1000
 >>>
 will result in a run-time error since the constant
-$900\,\,000\,\,000$ computed by the compiler is
+<math/900\,\,000\,\,000/ computed by the compiler is
 larger than <<FD.sup>>.  There is a trick that
 solves the problem for some cases.  The trick
 consists in giving a large number as a product
