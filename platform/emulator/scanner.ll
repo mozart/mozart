@@ -414,6 +414,7 @@ static void transBody(char c, char *text, int &i, int &j) {
         text[i] = '\v';
         break;
       case 'x':
+      case 'X':
         { char hexstring[3];
           hexstring[0] = text[++j];
           hexstring[1] = text[++j];
@@ -497,7 +498,7 @@ ESCAPE       [abfnrtv\\'\"`&]
 BIN          [0-1]
 OCT          [0-7]
 HEX          [0-9a-fA-F]
-PSEUDOCHAR   \\({OCT}{OCT}{OCT}|x{HEX}{HEX}|{ESCAPE})
+PSEUDOCHAR   \\({OCT}{OCT}{OCT}|[xX]{HEX}{HEX}|{ESCAPE})
 
 ANYCHAR      {CHAR}|{PSEUDOCHAR}
 OZATOM       ({LOWER}{ALPHANUM}*)|("'"({ATOMCHAR}|{PSEUDOCHAR})*"'")
@@ -506,7 +507,7 @@ STRING                            "\""({STRINGCHAR}|{PSEUDOCHAR})*"\""
 
 INT          {DIGIT}+
 
-OZINT        ~?(0{OCT}*|0(x|X){HEX}+|0(b|B){BIN}+|{NONZERODIGIT}{DIGIT}*)
+OZINT        ~?(0{OCT}*|0[xX]{HEX}+|0[bB]{BIN}+|{NONZERODIGIT}{DIGIT}*)
 
 FILENAME     ([-0-9a-zA-Z/_~]|\..)+|'["-\377]+'
 
