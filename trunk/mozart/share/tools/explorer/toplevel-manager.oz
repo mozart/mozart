@@ -392,7 +392,7 @@ in
 			     {IntToFloat (Y + ShadeWidth)} * Scale
 			     Scale}
 			    fi:CursorColor
-			    ou:''
+			    outline:''
 			    ta:Cursor))}
 	 {Cursor tk(lower)}
 	 if CurNode==@curNode orelse IsVisible then skip else
