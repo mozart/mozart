@@ -747,16 +747,12 @@ private:
   static fdbm_var_state * bifdbm_var_state;
 
 // backup data slots
+  int backup_count;
   int backup_curr_num_of_vars1;
   Bool backup_vars_left1;
   Bool backup_glob_vars_touched1;
   Bool backup_only_local_vars1;
   Suspension * backup_FDcurrentTaskSusp1;
-  int backup_curr_num_of_vars2;
-  Bool backup_vars_left2;
-  Bool backup_glob_vars_touched2;
-  Bool backup_only_local_vars2;
-  Suspension * backup_FDcurrentTaskSusp2;
 
 // private methods
   Bool isTouched(int i) {
@@ -790,6 +786,7 @@ private:
   void setSpeculative(int i);
 public:
   BIfdBodyManager(int s) {
+    DebugCode(backup_count = 0;)
     if (s == -1) {
       curr_num_of_vars = 0;
       only_local_vars = FALSE;
@@ -800,6 +797,8 @@ public:
       only_local_vars = FDcurrentTaskSusp->isLocalSusp();
     }
   }
+
+  DebugCode(~BIfdBodyManager() {if (backup_count) error("backup_count!=0");})
 
   Bool setCurr_num_of_vars(int i) {
     if (i < 0 || i > MAXFDBIARGS)
@@ -848,13 +847,17 @@ public:
   }
 
   void printDebug(int i) {
-    cerr << '[' << i << "]: var=" << (void *) bifdbm_var[i]
-         << ", varptr=" << (void *) bifdbm_varptr[i]
-         << ", dom=" << *bifdbm_dom[i]
-         << ", @dom=" << bifdbm_dom[i]
-         << ", init_dom_size=" << bifdbm_init_dom_size[i]
-         << ", var_state=" << fdbm_var_stat2char(bifdbm_var_state[i]) << endl;
-    cerr.flush();
+    if (bifdbm_dom[i]) {
+      cerr << '[' << i << "]: var=" << (void *) bifdbm_var[i]
+           << ", varptr=" << (void *) bifdbm_varptr[i]
+           << ", dom=" << *bifdbm_dom[i]
+           << ", @dom=" << bifdbm_dom[i]
+           << ", init_dom_size=" << bifdbm_init_dom_size[i]
+           << ", var_state=" << fdbm_var_stat2char(bifdbm_var_state[i])
+           << endl << flush;
+    } else {
+      cerr << "unvalid field" << endl << flush;
+    }
   }
 
   void printTerm(void) {
@@ -879,6 +882,8 @@ public:
     }
   }
 
+  void introduceDummy(int i) { bifdbm_dom[i] = NULL; }
+
   void introduce(int i, TaggedRef v) {
     if (only_local_vars) {
       introduceLocal(i, v);
@@ -900,6 +905,12 @@ public:
     bifdbm_init_dom_size[i] = aux;
   }
 
+  void reintroduce1(int i, TaggedRef v) {
+    int aux = bifdbm_init_dom_size[i];
+    introduce(i, v);
+    bifdbm_init_dom_size[i] = aux;
+  }
+
   void introduce(int i, int j, TaggedRef v) {
     int index = idx(i, j);
     Assert(index_offset[i] <= index && index < index_offset[i + 1]);
@@ -910,6 +921,8 @@ public:
     }
     saveDomainOnTopLevel(index);
   }
+
+  void process(int i) {processFromTo(i, i+1);}
 
   OZ_Bool entailment(void) {
     if (only_local_vars) {
@@ -1025,7 +1038,7 @@ public:
   FiniteDomainPtr * getDoms(void) {return bifdbm_dom;}
 
 // exactly one variable is regarded
-  BIfdBodyManager(void) {curr_num_of_vars = 1;}
+  BIfdBodyManager(void) {backup_count = 0; curr_num_of_vars = 1;}
 
   Bool introduce(TaggedRef v);
 

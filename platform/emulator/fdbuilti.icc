@@ -86,21 +86,18 @@ OZ_Bool BIfdBodyManager::entailmentClause(int from_b, int to_b,
 {
   Assert((from <= to) && (from_p <= to_p) && ((to - from) == (to_p - from_p)));
 
-  processLocalFromTo(from_b, to_b+1);
-
   for (int i = from, j = from_p; i < to+1; i += 1, j += 1) {
-    if (bifdbm_vartag[j] == CVAR) {
-      if (isTouched(j) && *bifdbm_dom[j] == fd_singleton &&
-          tagTypeOf(deref(*bifdbm_varptr[j])) != SMALLINT) {
-        tagged2GenFDVar(bifdbm_var[j])->
-          becomesSmallIntAndPropagate(bifdbm_varptr[j]);
-      } else if(*bifdbm_dom[i] != fd_singleton &&
-                bifdbm_dom[j] != &__CDVoidFiniteDomain) {
+
+    *bifdbm_dom[i] &= *bifdbm_dom[j];
+    if(bifdbm_vartag[j] == CVAR) {
+      if (bifdbm_vartag[i] == CVAR) {
         tagged2GenFDVar(bifdbm_var[j])->
           relinkSuspListTo(tagged2GenFDVar(bifdbm_var[i]));
+        doBind(bifdbm_varptr[j], TaggedRef(bifdbm_varptr[i]));
+      } else {
+        propagateIfTouched(j);
       }
     }
-    doBind(bifdbm_varptr[j], makeTaggedRef(bifdbm_varptr[i]));
   }
 
   if (only_local_vars) {
@@ -109,6 +106,9 @@ OZ_Bool BIfdBodyManager::entailmentClause(int from_b, int to_b,
     processFromTo(from, to+1);
     if (glob_vars_touched) dismissCurrentTaskSusp();
   }
+
+  processLocalFromTo(from_b, to_b+1);
+
   return EntailFD;
 }
 
@@ -237,11 +237,7 @@ OZ_Bool BIfdBodyManager::entailmentAndSuspOnAny(void) {
 inline
 void BIfdBodyManager::backup(void)
 {
-  backup_curr_num_of_vars2 = backup_curr_num_of_vars1;
-  backup_vars_left2 = backup_vars_left1;
-  backup_glob_vars_touched2 = backup_glob_vars_touched1;
-  backup_only_local_vars2 = backup_only_local_vars1;
-  backup_FDcurrentTaskSusp2 = backup_FDcurrentTaskSusp1;
+  backup_count += 1;
 
   backup_curr_num_of_vars1 = curr_num_of_vars;
   backup_vars_left1 = vars_left;
@@ -266,6 +262,8 @@ void BIfdBodyManager::backup(void)
 inline
 void BIfdBodyManager::restore(void)
 {
+  backup_count -= 1;
+
   bifdbm_var -= backup_curr_num_of_vars1;
   bifdbm_varptr -= backup_curr_num_of_vars1;
   bifdbm_vartag -= backup_curr_num_of_vars1;
@@ -283,12 +281,6 @@ void BIfdBodyManager::restore(void)
   glob_vars_touched = backup_glob_vars_touched1;
   only_local_vars = backup_only_local_vars1;
   FDcurrentTaskSusp = backup_FDcurrentTaskSusp1;
-
-  backup_curr_num_of_vars1 = backup_curr_num_of_vars2;
-  backup_vars_left1 = backup_vars_left2;
-  backup_glob_vars_touched1 = backup_glob_vars_touched2;
-  backup_only_local_vars1 = backup_only_local_vars2;
-  backup_FDcurrentTaskSusp1 = backup_FDcurrentTaskSusp2;
 }
 
 //-----------------------------------------------------------------------------
