@@ -185,12 +185,15 @@ inline Board *Board::getBoard()
 /* return NULL if board is dead */
 inline Board *Board::getBoardDeref()
 {
-  if (isDiscarded() || isFailed()) {
-    return NULL;
-  } else if (isCommitted()) {
-    return board->getBoardDeref();
-  } else {
-    return this;
+  Board *bb = this;
+  while (OK) {
+    if (bb->isDiscarded() || bb->isFailed()) {
+      return NULL;
+    } else if (bb->isCommitted()) {
+      bb = bb->board;
+    } else {
+      return bb;
+    }
   }
 }
 
