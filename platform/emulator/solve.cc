@@ -208,7 +208,7 @@ void SolveActor::clearSuspList(Suspension killSusp) {
       Thread * thr = susp.getThread();
 
       if (bb == 0) {
-        am.disposeSuspendedThread(thr);
+        oz_disposeSuspendedThread(thr);
         tmpSuspList = tmpSuspList->dispose ();
       } else {
         SuspList *helpList = tmpSuspList;
