@@ -29,7 +29,6 @@ functor $
 import
    System
    Property
-   Foreign
    Debug
    FD
    FS
