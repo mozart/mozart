@@ -143,7 +143,10 @@ protected:
   int minSize;
   int tableSize;
   GenHashNodeManager *manager;
-  void init(int,int);
+  void init(int low,int high) {
+    int i;
+    for(i=low; i<high; i++) {
+      table[i].makeEmpty();}}
   void basic_htAdd(int,GenHashBaseKey *,GenHashEntry *);
   void rehash(GenHashNode *,int);
   void resize();
@@ -153,7 +156,10 @@ protected:
 public:
   void compactify();
   GenHashNode * table; /* TODO -move to private */
-  void clear();
+  void clear(){
+    counter=0;
+    init(0,tableSize);
+  }
   int getSize(){return tableSize;}
   int getUsed(){return counter;}
   GenHashTable(int);
