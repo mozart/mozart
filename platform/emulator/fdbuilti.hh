@@ -696,6 +696,7 @@ public:
 //-----------------------------------------------------------------------------
 
 enum fdbm_var_state {fdbm_local, fdbm_global, fdbm_speculative};
+inline
 char * fdbm_var_stat2char(fdbm_var_state s) {
   static char * fdbm_var_state_names[3] = {"local", "global", "speculative"};
   return fdbm_var_state_names[s];
