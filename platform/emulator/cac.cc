@@ -404,9 +404,9 @@ Board * Board::_cacBoard(void) {
 }
 
 Board * Board::_cacBoardDo(void) {
-  Assert(bb->cacIsAlive());
-
   Board * bb = derefBoard();
+ 
+  Assert(bb->cacIsAlive());
 
   if (bb->cacIsMarked())  
     return bb->cacGetFwd();
