@@ -45,21 +45,21 @@ its virtual computer.
 -r--r--r--    1 kost     sics      2336472 Feb 14 19:06 tk8.2.3.tar.gz
 -r--r--r--    1 kost     sics       168463 Feb 14 19:06 zlib-1.1.3.tar.gz
 
-. Run
-
-    cd $BUILD; ${HOME}/mozart/misc/make-packages.sh |& tee make-packages.log
-
-  The outcome of that is the '$BUILD/packages' directory;
-
 . Copy mozart source tree into the $BUILD, e.g.:
 
     cd ${HOME}; tar cf - ./mozart | (cd $BUILD; tar xf -)
+
+. Run
+
+    cd $BUILD; mozart/misc/make-packages.sh |& tee make-packages.log
+
+  The outcome of that is the '$BUILD/packages' directory;
 
 . Make sure there is no 'oz' etc. in your $PATH !!!
 
 . Run
 
-    cd $BUILD; ${HOME}/mozart/misc/make-mozart.sh |& tee make-mozart.log
+    cd $BUILD; mozart/misc/make-mozart.sh |& tee make-mozart.log
 
   The outcome of that are the 'install' mozart directory, and the
   '.tar' files in the '$BUILD/build-$PLAT' directory.
@@ -71,7 +71,7 @@ its virtual computer.
 
 . On Linux (or when just using rpm), 'su' to root, run
 
-    cd $BUILD; ${HOME}/mozart/misc/make-mozart-rpm.sh |& tee make-mozart-rpm.log
+    cd $BUILD; mozart/misc/make-mozart-rpm.sh |& tee make-mozart-rpm.log
 
   The outcome of that are the rpm"s.
 
