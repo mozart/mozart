@@ -14,7 +14,7 @@ class TitleFrame from Tk.frame
 	 self.Label = {New Tk.label tkInit(parent: self
 					   text:   T
 					   font:   TitleFont
-					   bd:     NoBorderSize
+					   bd:     0
 					   relief: raised)}
 	 {Tk.send grid(self.Label row:0 column:0 sticky:we)}
       end
@@ -58,11 +58,7 @@ local
 	 self.W  = {New self.widget
 		    {Record.subtract {Record.adjoinAt M parent self} title}}
 	 local
-	    SY     = {New Tk.scrollbar
-		      tkInit(parent: self
-			     width:  ScrollbarWidth
-			     borderwidth: SmallBorderSize
-			     elementborderwidth: SmallBorderSize)}
+	    SY = {New Tk.scrollbar tkInit(parent:self width:ScrollbarWidth)}
 	 in
 	    {Tk.addYScrollbar self.W SY}
 	    {Tk.batch [grid(self.W row:1 column:0 sticky:nswe)
