@@ -20,7 +20,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* comments for these variables are in gram.h  */
 
-#include <oz.h>
+#include <mozart.h>
 
 int nitems;
 int nrules;

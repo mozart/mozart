@@ -65,7 +65,7 @@ assigned.
 
 Associativities are recorded similarly in rassoc and sassoc.  */
 
-#include <oz.h>
+#include <mozart.h>
 
 
 #define	ISTOKEN(s)	((s) < ntokens)
