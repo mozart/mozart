@@ -83,20 +83,19 @@ enum TypeOfTerm {
 #define TaggedToPointer(t)       ((void*) (mallocBase|t))
 
 #ifdef LARGEADRESSES
-#define _tagValueOf2(tag,ref)    TaggedToPointer((ref-tag) >> (tagSize-2))
+#define _tagValueOf2(tag,ref)  TaggedToPointer((ref>>(tagSize-2)) - ((tag)>>2))
 #define _tagValueOf(ref)         TaggedToPointer(((ref) >> (tagSize-2))&~3)
 #define _tagValueOfVerbatim(ref) ((void*)(((ref) >> (tagSize-2))&~3))
 #define _makeTaggedRef2(tag,i)   ((i << (tagSize-2)) | tag)
 #else
-#define _tagValueOf2(tag,ref)    TaggedToPointer((ref) >> tagSize)
 #define _tagValueOf(ref)         TaggedToPointer((ref) >> tagSize)
+#define _tagValueOf2(tag,ref)    tagValueOf(ref)
 #define _tagValueOfVerbatim(ref) ((ref) >> tagSize)
 #define _makeTaggedRef2(tag,i)   ((i << tagSize) | (tag))
 #endif
 
 #define _makeTaggedRef2i(tag,ptr) _makeTaggedRef2(tag,(int32)ToInt32(ptr))
 
-#define NEW_TAGGING
 #ifdef NEW_TAGGING
 #define _makeTaggedRef(s) _makeTaggedRef2i(REF,s)
 #define _isRef(term)      (tagTypeOf(term)==REF)
@@ -125,6 +124,12 @@ void *tagValueOf(TaggedRef ref)
 {
   GCDEBUG(ref);
   return _tagValueOf(ref);
+}
+inline
+void *tagValueOf2(TypeOfTerm tag, TaggedRef ref)
+{
+  GCDEBUG(ref);
+  return _tagValueOf2(tag,ref);
 }
 
 inline
@@ -159,6 +164,7 @@ TaggedRef makeTaggedRef2p(TypeOfTerm tag, void *ptr)
 #else
 
 #define tagValueOf(ref)         _tagValueOf((TaggedRef)ref)
+#define tagValueOf2(tag,ref)    _tagValueOf2(tag,ref)
 #define tagValueOfVerbatim(ref) _tagValueOfVerbatim((TaggedRef)ref)
 #define tagTypeOf(ref)          _tagTypeOf((TaggedRef)ref)
 #define makeTaggedRef2i(tag,i)  _makeTaggedRef2(tag,i)
@@ -552,21 +558,6 @@ TaggedRef *newTaggedCVar(GenCVariable *c) {
 // --- TaggedRef: conversion: tagged2<Type>
 
 
-inline
-void *tagValueOf2(TypeOfTerm tag, TaggedRef ref)
-{
-  GCDEBUG(ref);
-#ifdef LARGEADRESSES
-  return TaggedToPointer((ref>>(tagSize-2)) - (tag>>2));
-#else
-  return tagValueOf(ref);
-#endif
-}
-
-#ifdef DEBUG_CHECK
-#else
-#endif
-
 /* does not deref home pointer! */
 inline
 Board *tagged2VarHome(TaggedRef ref)
@@ -751,14 +742,6 @@ void doBindCVar(TaggedRef *p, GenCVariable *cvar)
 {
   *p = makeTaggedCVar(cvar);
 }
-
-inline
-void unBind(TaggedRef *p, TaggedRef t)
-{
-  Assert(oz_isVariable(t));
-  *p = t;
-}
-
 
 inline int32  GCMARK(void *S)    { return makeTaggedRef2p(GCTAG,S); }
 inline int32  GCMARK(int32 S)    { return makeTaggedRef2i(GCTAG,S); }
