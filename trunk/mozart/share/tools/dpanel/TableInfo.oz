@@ -292,7 +292,7 @@ define
 	 Table, initialize
 	 self.makeKey = fun {$ E} E.index end
 	 self.makeSite = fun {$ E} E.na.site end
-	 self.getCredit = fun {$ E} credit(E.secCred E.primCred) end
+	 self.getCredit = fun {$ E} credit(E.dist_gc) end
 	 self.colorAlloc = {New ColorAlloc init(getCol:GetCol
 						guiActive:self.guiActive
 						guiNumber:self.guiNumber)}
