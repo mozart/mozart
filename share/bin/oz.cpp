@@ -36,9 +36,9 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   /*
    * TCL/TK
    */
-  sprintf(buffer,"%s/ozwish-win/lib/tcl7.5",ozhome);
+  sprintf(buffer,"%s/lib/wish/tcl",ozhome);
   ozSetenv("TCL_LIBRARY",buffer);
-  sprintf(buffer,"%s/ozwish-win/lib/tk4.1",ozhome);
+  sprintf(buffer,"%s/lib/wish/tk",ozhome);
   ozSetenv("TK_LIBRARY",buffer);
 
 
