@@ -258,7 +258,7 @@ make install
 find \$PREFIX -type f -name '*.so*' -exec strip '{}' ';'
 find \$PREFIX -type f -name '*.exe' -exec strip '{}' ';'
 # standard library
-(cd \$RPM_BUILD_DIR/\$RPM_PACKAGE_NAME-\$RPM_PACKAGE_VERSION-std; \$PREFIX/bin/ozengine ./ozmake --prefix=\$PREFIX --install --package=mozart-stdlib.pkg --nosavedb)
+(cd \$RPM_BUILD_DIR/\$RPM_PACKAGE_NAME-\$RPM_PACKAGE_VERSION-std; \$PREFIX/bin/ozengine ./ozmake.ozf --prefix=\$PREFIX --install --package=mozart-stdlib.pkg --nosavedb)
 
 # Create file lists
 PLTFRM=\`\$PREFIX/bin/ozplatform\`
