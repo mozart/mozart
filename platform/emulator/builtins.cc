@@ -106,11 +106,10 @@ OZ_C_proc_begin(Name,2)                                                       \
   switch (state) {                                                            \
   case SUSPEND:                                                               \
     return OZ_suspendOnVar(arg1);                                             \
-  case FAILED:                                                                \
-    return FAILED;                                                            \
   case PROCEED:                                                               \
-  default:                                                                    \
     return(OZ_unify(help,OZ_getCArg(1)));                                     \
+  default:                                                                    \
+    return state;                                                             \
   }                                                                           \
                                                                               \
 }                                                                             \
@@ -118,25 +117,24 @@ OZ_C_proc_end
 
 
 
-#define DECLAREBI_USEINLINEFUN2(Name,InlineName)                              \
-OZ_C_proc_begin(Name,3)                                                       \
-{                                                                             \
-  OZ_Term help;                                                               \
-                                                                              \
-  OZ_Term arg0 = OZ_getCArg(0);                                               \
-  OZ_Term arg1 = OZ_getCArg(1);                                               \
-  State state=InlineName(arg0,arg1,help);                                     \
-  switch (state) {                                                            \
-  case SUSPEND:                                                               \
-    return OZ_suspendOnVar2(arg0,arg1);                                       \
-  case FAILED:                                                                \
-    return state;                                                             \
-  case PROCEED:                                                               \
-  default:                                                                    \
-    return(OZ_unify(help,OZ_getCArg(2)));                                     \
-  }                                                                           \
-                                                                              \
-}                                                                             \
+#define DECLAREBI_USEINLINEFUN2(Name,InlineName)        \
+OZ_C_proc_begin(Name,3)                                 \
+{                                                       \
+  OZ_Term help;                                         \
+                                                        \
+  OZ_Term arg0 = OZ_getCArg(0);                         \
+  OZ_Term arg1 = OZ_getCArg(1);                         \
+  State state=InlineName(arg0,arg1,help);               \
+  switch (state) {                                      \
+  case SUSPEND:                                         \
+    return OZ_suspendOnVar2(arg0,arg1);                 \
+  case PROCEED:                                         \
+    return(OZ_unify(help,OZ_getCArg(2)));               \
+  default:                                              \
+    return state;                                       \
+  }                                                     \
+                                                        \
+}                                                       \
 OZ_C_proc_end
 
 
@@ -152,11 +150,10 @@ OZ_C_proc_begin(Name,4)                                                       \
   switch (state) {                                                            \
   case SUSPEND:                                                               \
     return OZ_suspendOnVar3(arg0,arg1,arg2);                                  \
-  case FAILED:                                                                \
-    return state;                                                             \
   case PROCEED:                                                               \
-  default:                                                                    \
     return(OZ_unify(help,OZ_getCArg(3)));                                     \
+  default:                                                                    \
+    return state;                                                             \
   }                                                                           \
                                                                               \
 }                                                                             \
@@ -2031,15 +2028,6 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BInewName,1)
 {
-//   OZ_Term tmp = OZ_getCArg(0);
-//   char *printName;
-//   DEREF(tmp,_1,tag);
-//   if (isSVar(tag)) {
-//     printName = tagged2SVar(tmp)->getPrintName();
-//   } else {
-//     printName = "_";
-//   }
-
   OZ_Term out = OZ_getCArg(0);
   return OZ_unify(out,OZ_newName());
 }
@@ -3058,7 +3046,7 @@ State bigtest(TaggedRef A, TaggedRef B, State (*test)(BigInt*, BigInt*))
       return res;
     }
   }
-  return SUSPEND;
+  return (isAnyVar(A) || isAnyVar(B)) ? SUSPEND : FAILED;
 }
 
 
