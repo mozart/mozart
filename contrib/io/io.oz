@@ -40,8 +40,8 @@ in
          execvp         : EXECVP
          pipe           : PIPE
          getfd          : GETFD
-         ) @ 'io.so{native}'
-      MODE @ 'io/mode'
+         ) at 'io.so{native}'
+      MODE at 'io/mode'
       Finalize
    export
       Make Write Read ReadAsString Open Close SocketPair Dup

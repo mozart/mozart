@@ -30,7 +30,7 @@ in
             free        : FREE
             flags       : FLAGS
             is          : Is
-           ) @ 'regex.so{native}'
+           ) at 'regex.so{native}'
       Finalize(register:Register)
    export
       CFlags EFlags

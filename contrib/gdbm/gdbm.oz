@@ -42,11 +42,11 @@ in
          remove         : REMOVE
          reorganize     : REORGANIZE
          member         : MEMBER
-         ) @ 'gdbm.so{native}'
+         ) at 'gdbm.so{native}'
       Finalize(register :Register)
       Resolve( expand   :Expand) URL
       Error ErrorRegistry
-      MODE @ 'x-oz://contrib/io/mode'
+      MODE at 'x-oz://contrib/io/mode'
    export
       is        : IS
       open      : Open

@@ -6,7 +6,7 @@ import
       dropDead  : DROPDEAD
       status    : STATUS
       kill      : KILL
-      ) @ 'process.so{native}'
+      ) at 'process.so{native}'
    Finalize
 export
    is           : IS
