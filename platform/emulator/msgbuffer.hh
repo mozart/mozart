@@ -93,7 +93,7 @@ public:
   virtual Bool globalize() { return OK; }
   virtual void unmarshalReset()                 {} // only for network receovery
 
-  virtual void visit(OZ_Term t)     { }
+  virtual Bool visit(OZ_Term t) { return OK; }
   void addNogood(OZ_Term t) { nogoods = oz_cons(t,nogoods); }
   OZ_Term getNoGoods()      { return nogoods; }
 };
