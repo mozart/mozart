@@ -1912,14 +1912,54 @@ fi
 	
     fi
     
-
 : ${platform=`$PLATFORMSCRIPT`}
+
+
+
+# Extract the first word of "perl", so it can be a program name with args.
+set dummy perl; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:1923: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_perlpath'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$perlpath" in
+  /*)
+  ac_cv_path_perlpath="$perlpath" # Let the user override the test with a path.
+  ;;
+  ?:/*)			 
+  ac_cv_path_perlpath="$perlpath" # Let the user override the test with a dos path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
+  ac_dummy="$PATH"
+  for ac_dir in $ac_dummy; do 
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_perlpath="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+perlpath="$ac_cv_path_perlpath"
+if test -n "$perlpath"; then
+  echo "$ac_t""$perlpath" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+PERL=$perlpath
+
+echo "$ac_t""ok" 1>&6
 
 
 # Extract the first word of "glib-config", so it can be a program name with args.
 set dummy glib-config; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1923: checking for $ac_word" >&5
+echo "configure:1963: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_glibpath'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1952,7 +1992,7 @@ else
 fi
 
 echo $ac_n "checking for Glib compile flags""... $ac_c" 1>&6
-echo "configure:1956: checking for Glib compile flags" >&5
+echo "configure:1996: checking for Glib compile flags" >&5
 GLIB_CFLAGS=`$glibpath --cflags`
 GLIB_LIBS=`$glibpath --libs`
 CFLAGS="$CFLAGS $GLIB_CFLAGS"
@@ -1963,7 +2003,7 @@ echo "$ac_t""ok" 1>&6
 # Extract the first word of "gtk-config", so it can be a program name with args.
 set dummy gtk-config; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1967: checking for $ac_word" >&5
+echo "configure:2007: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_gtkpath'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1996,7 +2036,7 @@ else
 fi
 
 echo $ac_n "checking for Gtk compile flags""... $ac_c" 1>&6
-echo "configure:2000: checking for Gtk compile flags" >&5
+echo "configure:2040: checking for Gtk compile flags" >&5
 GTK_CFLAGS=`$gtkpath --cflags`
 GTK_LIBS=`$gtkpath --libs`
 GTK_HDRS=`$gtkpath --prefix`/include/gtk
@@ -2181,6 +2221,8 @@ s%@CXX@%$CXX%g
 s%@CXXCPP@%$CXXCPP%g
 s%@LN_S@%$LN_S%g
 s%@PLATFORMSCRIPT@%$PLATFORMSCRIPT%g
+s%@perlpath@%$perlpath%g
+s%@PERL@%$PERL%g
 s%@glibpath@%$glibpath%g
 s%@gtkpath@%$gtkpath%g
 s%@GTK_HDRS@%$GTK_HDRS%g
