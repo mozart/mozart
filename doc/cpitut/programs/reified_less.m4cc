@@ -241,20 +241,16 @@ OZ_BI_proto(fd_lessEq);
 OZ_BI_proto(fd_greater);
 OZ_BI_proto(fd_reifiedLesseq);
 
-extern "C"
+OZ_C_proc_interface *oz_init_module(void)
 {
-  
-  OZ_C_proc_interface *oz_init_module(void)
-  {
-    static OZ_C_proc_interface i_table[] = {
-      {"init", 0, 0, fd_init},
-      {"lessEq", 2, 0, fd_lessEq},
-      {"greater", 2, 0, fd_greater},
-      {"reifiedLessEq", 3, 0, fd_reifiedLessEq},
-      {0,0,0,0}
-    };
-    
-    printf("reified propagators loaded\n");
-    return i_table;
-  }
+  static OZ_C_proc_interface i_table[] = {
+    {"init", 0, 0, fd_init},
+    {"lessEq", 2, 0, fd_lessEq},
+    {"greater", 2, 0, fd_greater},
+    {"reifiedLessEq", 3, 0, fd_reifiedLessEq},
+    {0,0,0,0}
+  };
+
+  printf("reified propagators loaded\n");
+  return i_table;
 }
