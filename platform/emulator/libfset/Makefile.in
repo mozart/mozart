@@ -45,8 +45,10 @@ all: $(FSETTARGETS)
 ../libFSP.a: $(FSETLIBOBJS)
 	$(AR) -rc $@ $(FSETLIBOBJS) && $(RANLIB) $@
 
-depend:: $(FSETLIBSRCS) 
-	$(DEPEND) $(FSETLIBSRCS:%=$(SRCDIR)/%) > Makefile.deps
+depend:: Makefile.deps
+
+Makefile.deps: $(FSETLIBSRCS) 
+	$(DEPEND) $(FSETLIBSRCS:%=$(SRCDIR)/%) > $@
 
 Makefile: Makefile.in
 	(cd ..;./config.status)
