@@ -76,9 +76,9 @@
     our previous example). Other properties are mutable:
     changing their values customizes the engine's behaviour. For
     example, the property 
-    <<'threads.medium'>> gives the relation between time slices
+    <<'threads.medium'>> gives the ratio between the number of time slices
     available for threads of priorities <<medium>> and <<low>>. This
-    can be changed to 1:2 by:
+    can be changed to 2:1 by:
 <<<{Property.put 'threads.medium' 2}>>>
   </P>
 
@@ -87,7 +87,7 @@
     time slices for threads of all priorities, we can use:
 <<<{Property.put 'threads' foo('medium': 2
                             'high':   2)}>>>
-    Not that the record's label does not carry any significance.
+    The record's label is not significant.
   </P>
  
   <P> 
