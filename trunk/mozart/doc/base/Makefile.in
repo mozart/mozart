@@ -1,0 +1,65 @@
+PREFIX		= @prefix@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
+OZENGINE	= @OZENGINE@
+OZDOC		= @OZDOC@
+OZDOCFLAGS	=
+DOCIFY		= $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
+
+DOCDIR		= /www/mozart/documentation/base
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_DIR	= @INSTALL_DIR@
+
+SGMLSRCS = \
+	base.sgml introduction.sgml typestruct.sgml values.sgml \
+	numbers.sgml literals.sgml records.sgml text.sgml proccells.sgml \
+	chunks.sgml control.sgml infix.sgml
+MISCSRCS = \
+	base.bib
+GIFSRCS = \
+	base.gif
+
+.PHONY: all validate install clean veryclean distclean
+
+all: base-html
+
+include $(SRCDIR)/../../share/Makefile.boot
+
+bootstrap: boot-all
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+base-html: $(SGMLSRCS) $(MISCSRCS) $(GIFSRCS)
+	$(DOCIFY) --in=$(SRCDIR)/base.sgml --out=$@ --type=html-stylesheets \
+	--autoindex \
+	--bib-path=$(SRCDIR):$(SRCTOP)/doc \
+	--bst-path=$(SRCTOP)/doc/utilities && \
+	cp -p $(addprefix $(SRCDIR)/,$(GIFSRCS)) $@
+
+base-tex: $(SGMLSRCS) $(MISCSRCS)
+	$(DOCIFY) --in=$(SRCDIR)/base.sgml --out=$@ --type=latex --autoindex
+
+validate: base-html
+	nsgmls -cHTML4.soc -sB base-html/*.html
+
+install: base-html $(DOCDIR)
+	for i in base-html/*; do $(INSTALL_FILE) $$i $(DOCDIR); done
+
+$(DOCDIR):
+	$(INSTALL_DIR) $@
+
+clean:
+	-rm -rf base-html
+	-rm -rf base-tex
+	-rm -f *~
+
+veryclean: clean
+
+distclean: veryclean
+	-rm -f Makefile
