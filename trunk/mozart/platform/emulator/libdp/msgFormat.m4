@@ -29,7 +29,7 @@ message(M_PORT_SEND,Index,Term)
 
 message(M_ASK_FOR_CREDIT,Index,Site)
 message(M_OWNER_CREDIT,Index,Credit)
-message(M_OWNER_SEC_CREDIT,Site,Index,Credit)
+message(M_OWNER_SEC_CREDIT,Site,Index,Credit) 
 message(M_BORROW_CREDIT,Site,Index,Credit)
 
 message(M_REGISTER,Index,Site)

@@ -82,7 +82,6 @@ void doConnect(ComObj *comObj) {
 
 inline OZ_Return parseRequestor(OZ_Term requestor, 
 				ComObj *&comObj, const char *&siteid) {
-  // AN! is any dereffing needed for comObj and siteid?
   if(OZ_isRecord(requestor)) {
     SRecord *srequestor = tagged2SRecord(requestor);
     int index = srequestor->getIndex(oz_atom("id"));
@@ -295,7 +294,7 @@ OZ_BI_define(BIconnFailed,2,0) {
     // has its own timer to discover this.
     ;
   }
-  else { // AN! do sensible stuff! Will work as for temp.
+  else { // AN! For now do as for temp. Could go ahead and inform comObj.
 //      printf("connFailed due to");
 //      printf(" %s\n",OZ_atomToC(reason));
     ;

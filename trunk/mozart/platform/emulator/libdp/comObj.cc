@@ -700,10 +700,6 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
       ++lastReceived;
       remoteRef=TRUE; // Implicitly known since he is sending a message!
 
-      if(site->siteStatus()!=SITE_OK) {
-	Assert(0); //Not an error just want to see AN! Can this ever happen???
-        break;
-      }
       perdio_msgReceived(msgC);
 
       if(!msgAckLength || // avoid division with zero
@@ -1085,7 +1081,7 @@ int ComController::closeDownCount() {
     if(tmp->canBeFreed()) {
       DSite *site=tmp->site;
       deleteComObj(tmp);  // Inefficient extra listsearch
-      site->dumpRemoteSite(); // Is this correct? AN!
+      site->dumpRemoteSite(); 
     }
     else 
       count++;
