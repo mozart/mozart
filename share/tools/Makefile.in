@@ -126,7 +126,7 @@ TOOLSFILES = \
 FUNCTORS = \
 	CompilerPanel.ozf Panel.ozf Browser.ozf Explorer.ozf Emacs.ozf \
 	Ozcar.ozf Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf \
-	ProductionTemplates.ozf OPI.ozf Inspector.ozf
+	ProductionTemplates.ozf OPI.ozf OPIEnv.ozf Inspector.ozf
 
 TOOLSFUNCTORS = $(FUNCTORS:%=$(OZTOOLS)/%)
 
@@ -156,6 +156,8 @@ bootstrap: boot-all
 	$(COMPILE) $< -o $@
 
 OPI.ozf: OPI.oz
+
+OPIEnv.ozf: OPIEnv.oz
 
 CompilerPanel.ozf: $(COMPILERPANELSRC)
 
@@ -275,6 +277,9 @@ distclean: veryclean
 #---------------------------------------------------------------------
 
 Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+ProductionTemplates.oz.in: ProductionTemplates.oz ../config.status
 	cd .. && ./config.status
 
 ../config.status: ../configure
