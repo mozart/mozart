@@ -86,9 +86,11 @@ For example
  (setq oz-title-format "Oz Console          C: %s  M: %s")
  )
 (if lucid
- (setq oz-title-format 	
-       '(("Oz Console           C:  "   (-30 . oz-compiler-state))
-	 ("   M:  " (-30 . oz-machine-state)))))
+ (setq oz-title-format
+       '(("Oz Console: %b   C: "    oz-compiler-state)
+	 ("   M: " oz-machine-state))))
+;       '(("Oz Console: %b   C:  "   (-30 . oz-compiler-state))
+;	 ("   M:  " (-30 . oz-machine-state)))))
 
 
 (defvar oz-old-screen-title nil
@@ -142,7 +144,7 @@ For example
       t
     (setq string (oz-canon-status-string string))
     (set state 
-	 (format "%-30s" 
+	 (format "%s" 
 		 (substring string 0 
 			    (min 30 (length string)))))
     (if gnu19
@@ -211,6 +213,7 @@ For example
 	  (set-face-font 'oz-italic (concat (car font) "medium-o" (cdr font)) scr)
 	  ))))
 
+(oz-default-font)
 
 ;;------------------------------------------------------------
 ;; Menus
@@ -300,7 +303,7 @@ For example
      ("machine"      . oz-toggle-machine-window)
      )
     ("-----")
-    ("Start Oz" . oz-run)
+    ("Start Oz" . oz-start)
     ("Halt Oz"  . oz-halt)
     )
    ("Font"
@@ -374,7 +377,7 @@ For example
   (define-key map "\C-c\C-f"    'oz-feed-file)
   (define-key map "\C-c\C-n"    'oz-new-buffer)
   (define-key map "\C-c\C-l"    'oz-prettyprint)
-  (define-key map "\C-c\C-r"    'oz-run)
+  (define-key map "\C-c\C-r"    'oz-start)
   (define-key map "\C-cc"    'oz-precompile-file)
   )
 
@@ -394,7 +397,6 @@ if that value is non-nil."
   (oz-mode-variables)
   (if lucid
    (set-buffer-menubar (append current-menubar oz-menubar)))
-  (oz-default-font)
   (run-hooks 'oz-mode-hook))
 
 ;;------------------------------------------------------------
@@ -407,28 +409,34 @@ if that value is non-nil."
   "??? show *Oz Errors* if necessary")
 
 
-(defun oz-run ()
-  "Run an inferior Oz process, input and output via buffer *Oz Compiler*."
+(defun oz-start ()
+  "Run the Oz Compiler and Oz Machine.
+Input and output via buffers *Oz Compiler* and *Oz Machine*."
   (interactive)
   (oz-check-running)
-  (if (get-process "Oz Compiler")
-      (error "Oz already running"))
+  (if (or (get-process "Oz Compiler") (get-process "Oz Machine"))
+      (error "Oz already running, try halting Oz"))
   (start-oz-process)
-  (if (not (eq major-mode 'oz-mode)) (oz-new-buffer)))
+  (if (not (eq major-mode 'oz-mode))
+      (oz-new-buffer)))
 
+(defvar oz-halt-timeout 5
+  "How long to wait in oz-halt after sending the directive halt")
 
 (defun oz-halt()
   (interactive)
-  (if (and (get-process "Oz Compiler")
-	   (get-process "Oz Machine"))
-      (oz-send-string "!halt \n"))
 
   (if (and (not (get-process "Oz Compiler"))
 	   (not (get-process "Oz Machine")))
       (error "Oz not running"))
-
   (message "halting Oz...")
-  (sleep-for 5)
+
+  (if (and (get-process "Oz Compiler")
+	   (get-process "Oz Machine"))
+      (progn
+	(oz-send-string "!halt \n")
+	(sleep-for oz-halt-timeout)))
+
   (if (get-process "Oz Compiler")
       (delete-process "*Oz Compiler*"))
   (if (get-process "Oz Machine")
