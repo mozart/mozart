@@ -2,7 +2,7 @@ VPATH           = @srcdir@
 SRCDIR          = @srcdir@
 TOPDIR          = @TOPDIR@
 
-PREFIX=         @prefix@
+PREFIX          = @prefix@
 
 OZBIN           = $(PREFIX)/bin
 OZLIB           = $(PREFIX)/lib
@@ -26,11 +26,23 @@ ENV2TYPE        = @PERL@ @ENV2TYPE@
 
 OZFLAGS         =
 OZBATCH         = @OZBATCH@
+RALFBATCH       = . ./env && @OZBATCH@
 
-COMPILE         = . ./env && $(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz -c
-EXEC            = . ./env && $(OZBATCH) $(OZFLAGS)
-EXECWITHSTD     = . ./env && $(OZBATCH) $(OZFLAGS) -l AP --include=DumpIntro.oz
-OZMA            = . ./env && $(OZBATCH) $(OZFLAGS) --ozma
+
+COMPILE         = $(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz -c
+EXEC            = $(OZBATCH) $(OZFLAGS)
+EXECWITHSTD     = $(OZBATCH) $(OZFLAGS) -l AP --include=DumpIntro.oz
+OZMA            = $(OZBATCH) $(OZFLAGS) --ozma
+
+# exports
+export SRCDIR
+export OZLIB
+export OZMAFILE = Init.ozc
+export OZMAFILE = ozbatch.ozm
+export OZ_EMULATOR_DIR = @OZ_EMULATOR_DIR@
+export OZPATH = .:compiler:ozcar:$SRCDIR
+export OZ_PI = 1
+export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$OZLIB/
 
 OZVERSION       = $(TOPDIR)/OZVERSION
 
