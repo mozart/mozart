@@ -58,6 +58,8 @@
 <!ENTITY chapter.flights        SYSTEM "flights.sgml">
 <!ENTITY chapter.corpus         SYSTEM "corpus.sgml">
 
+<!ENTITY chapter.dict-client    SYSTEM "dict-client.sgml">
+
 <!ENTITY appendix.enable        SYSTEM "enable.sgml">
 ]>
 
@@ -83,20 +85,22 @@
     <Meta name="html.split"       value="chapter.flights">
     <Meta name="html.split"       value="chapter.corpus">
 
+    <Meta name="html.split"       value="chapter.dict-client">
+
     <Meta name="html.split"       value="appendix.enable">
 
     <Meta name="html.split.toc"   value="">
 
     <Author.Extern to="author.db" key="Denys.Duchier">
-    <Author.Extern to="author.db" key="Martin.Mueller">
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
     <Author.Extern to="author.db" key="Michael.Mehl">
+    <Author.Extern to="author.db" key="Martin.Mueller">
     <Author.Extern to="author.db" key="Christian.Schulte">
     <Author.Extern to="author.db" key="Gert.Smolka">
     <Author.Extern to="author.db" key="Joerg.Wuertz">
     <Author.Extern to="author.db" key="Tobias.Mueller">
 
     <Abstract>
-      <P.silent><!--**-->
       This document offers a number of demo applets that can be run
       directly from within their documentation. In order to execute
       Mozart Applets, your Web Browser must be Mozart Applet
@@ -125,6 +129,11 @@
       &chapter.board;
       &chapter.flights;
       &chapter.corpus;
+    </Part>
+
+    <Part id="part.miscellaneous">
+      <Title/Miscellaneous Applications/
+      &chapter.dict-client;
     </Part>
 
     <Part id="part.appendix">
