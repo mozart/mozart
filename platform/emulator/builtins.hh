@@ -31,6 +31,7 @@ BuiltinTabEntry *BIinit();
 BuiltinTabEntry *BIadd(char *name,int arity,OZ_CFun fun,IFOR infun=(IFOR) NULL);
 
 OZ_Return sendPort(OZ_Term port, OZ_Term val);
+OZ_Return closePort(OZ_Term port);
 
 // -----------------------------------------------------------------------
 // tables
