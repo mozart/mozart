@@ -34,7 +34,7 @@ proc {ProfilerMessage M}
    skip
 end
 proc {ProfilerError M}
-   {System.showInfo ProfilerErrorPrefix # M}
+   {System.showError ProfilerErrorPrefix # M}
 end
 
 StatusHelp = {NewName}
