@@ -10,6 +10,7 @@ BUILDTOOLS=$(BUILDSHARE)/tools
 BUILDCONTRIB=$(BUILDTOP)/contrib
 BUILDGDBM=$(BUILDCONTRIB)/gdbm
 BUILDOS=$(BUILDCONTRIB)/os
+BUILDBISON=$(BUILDTOP)/platform/tools/gump/ozbison
 
 SOURCELIB=$(SRCTOP)/share/lib
 SOURCETOOLS=$(SRCTOP)/share/tools
@@ -18,6 +19,9 @@ BOOTEMU=$(BUILDTOP)/platform/emulator/emulator.exe
 BOOTCOM=$(BOOTEMU) -u $(BUILDLIB)/ozc --
 BOOTENG=$(SRCTOP)/share/ozengine.sh
 BOOTOZL=$(BOOTENG) $(BUILDTOP)/share/lib/ozl
+BOOTOZTOOL="/bin/sh $(BUILDTOP)/platform/emulator/oztool.sh"
+BOOTOZTOOLINC="-I$(SRCTOP)/platform/emulator -I$(SRCTOP)/platform/tools/gump"
+BOOTOZFLEX=$(BUILDTOP)/platform/tools/gump/ozflex/flex
 
 ifdef OZC
 export OZC
@@ -67,6 +71,18 @@ ifdef OZDOC_SBIN_PATH
 export OZDOC_SBIN_PATH
 endif
 
+ifdef OZTOOL
+export OZTOOL
+endif
+
+ifdef OZTOOL_INCLUDES
+export OZTOOL_INCLUDES
+endif
+
+ifdef OZFLEX
+export OZFLEX
+endif
+
 boot-%:
         $(MAKE) $* \
         OZEMULATOR=$(BOOTEMU) \
@@ -74,7 +90,7 @@ boot-%:
         OZC="$(BOOTCOM)" \
         OZINIT=$(BUILDLIB)/Init.ozf \
         OZPATH=.:$(BUILDLIB):$(BUILDTOOLS):$(SOURCELIB):$(SOURCETOOLS) \
-        OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=$(BUILDLIB)/:prefix=$(HOMEURL)/share/=$(BUILDTOOLS)/:prefix=$(HOMEURL)/contrib/=$(BUILDCONTRIB)/:prefix=$(HOMEURL)/contrib/=$(BUILDGDBM)/:prefix=$(HOMEURL)/contrib/os/=$(BUILDOS)/:= \
+        OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=$(BUILDLIB)/:prefix=$(HOMEURL)/share/=$(BUILDTOOLS)/:prefix=$(HOMEURL)/contrib/=$(BUILDCONTRIB)/:prefix=$(HOMEURL)/contrib/=$(BUILDGDBM)/:prefix=$(HOMEURL)/contrib/os/=$(BUILDOS)/:prefix=$(HOMEURL)/share/Bison.so-$(PLATFORM)=$(BUILDBISON)/Bison.so:= \
         OZL="$(BOOTOZL)" \
         OZDOC_HOME="$(SRCTOP)/doc/utilities" \
         OZDOC_AUTHOR_PATH="$(SRCDIR):$(SRCTOP)/doc" \
@@ -82,4 +98,7 @@ boot-%:
         OZDOC_BST_PATH="$(SRCDIR):$(SRCTOP)/doc/utilities" \
         OZDOC_ELISP_PATH=".:$(SRCDIR):$(BUILDTOP)/doc:$(BUILDTOP)/doc/utilities:$(BUILDTOP)/share/elisp:$(BUILDTOP)/contrib/doc/code" \
         OZDOC_SBIN_PATH="$(SRCTOP)/doc/utilities" \
-        OZDOC_CATALOG="$(BUILDTOP)/doc/bootcatalog"
+        OZDOC_CATALOG="$(BUILDTOP)/doc/bootcatalog" \
+        OZTOOL=$(BOOTOZTOOL) \
+        OZTOOL_INCLUDES=$(BOOTOZTOOLINC) \
+        OZFLEX=$(BOOTOZFLEX)
