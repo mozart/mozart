@@ -112,7 +112,6 @@ public:
   void setTop(TaskStackEntry *newTos) { tos = newTos; }
 
   void gc(TaskStack *newstack);
-  void gcRecurse();
 
   void pushCall(TaggedRef pred, RefsArray  x, int i)
   {
@@ -198,22 +197,6 @@ public:
   DebugCode (int hasJobDebug ();)
   void copySeq(TaskStack *newStack,int size);
   static int frameSize(ContFlag);
-
-private:
-
-  void gcInit()                     { tos = stackEnd-1; }
-
-  void gcQueue(TaskStackEntry elem) { *(tos--) = elem; }
-
-  void gcEnd()
-  {
-    TaskStackEntry *saveTop = tos+1;
-    makeEmpty();
-    while(saveTop < stackEnd) {
-      push(*saveTop,NO);
-      saveTop++;
-    }
-  }
 };
 
 
