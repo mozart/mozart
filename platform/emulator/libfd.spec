@@ -345,13 +345,6 @@ $cmode='dyn';
 			     module => libfd,
 			     native => true},
 
-    'testsum'		=> { in  => ['value','int'],
-			     out => [],
-			     bi  => fdtest_sum,
-			     ifdef =>ALLDIFF,
-			     module => libfd,
-			     native => true},
-
     'inqueens'		=> { in  => ['value'],
 			     out => [],
 			     bi  => fdtest_inqueens,

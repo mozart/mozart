@@ -171,17 +171,5 @@ $cmode='dyn';
 			     module => libfset,
 			     native => true},
 
-    'fsp_partitionProbing'=> { in  => ['+value','fset','+value'],
-			       out => [],
-			       bi  => fsp_partitionProbing,
-			       module => libfset,
-			       native => true},
-
-    'fsp_partitionReified1'=> { in  => ['+value','fset','+value','int'],
-				out => [],
-				bi  => fsp_partitionReified1,
-				module => libfset,
-				native => true},
-
 
  );
