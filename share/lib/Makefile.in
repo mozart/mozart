@@ -107,7 +107,7 @@ BASESRC1 = \
 	Time.oz Thread.oz Space.oz Array.oz Dictionary.oz \
 	Exception.oz Functor.oz BitArray.oz BitString.oz \
 	ByteString.oz
-BASESRC = $(BASESRC1:%=standard/%) Base.oz
+BASESRC = $(BASESRC1:%=base/%) Base.oz
 
 Base.ozf: $(BASESRC) BaseBuiltins.ozf
 	$(OZC) $(OZFLAGS) -l BaseBuiltins -c Base.oz -o $@
@@ -281,12 +281,6 @@ $(OZLIB) $(IMAGESDIR) $(OZBIN):
 	$(INSTALL_DIR) $@
 
 $(OZLIB)/%.ozf: %.ozf
-	$(INSTALL_FILE) $< $@
-
-$(OZLIB)/%.ozm: %.ozm
-	$(INSTALL_FILE) $< $@
-
-$(OZLIB)/%.ozp: %.ozp
 	$(INSTALL_FILE) $< $@
 
 $(IMAGESDIR)/%: images/%
