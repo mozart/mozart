@@ -156,8 +156,8 @@ int VirtualSite::sendTo(VSMsgBufferOwned *mb, MessageType mt,
 
 //
 // ... retry to send it with (it takes un unsent message, compared to
-// 'sendTo()');
-int VirtualSite::tryToSendToAgain(VSMessage *vsm, 
+// 'sendTo()'). It says 'TRUE' if we got it;
+Bool VirtualSite::tryToSendToAgain(VSMessage *vsm, 
 				  FreeListDataManager<VSMsgBufferOwned> *freeMBs)
 {
   //
@@ -165,35 +165,44 @@ int VirtualSite::tryToSendToAgain(VSMessage *vsm,
   switch (getSiteStatus()) {
   case SITE_TEMP:
     error("A virtual site temporarily down???");
+    return (TRUE);
 
   case SITE_PERM:
-    fmp->dispose(vsm);
+    error("Attempt to re-send to a 'perm' virtual site!");
     return (PERM_NOT_SENT);
 
   case SITE_OK:
-    //
-    // First, let's try to deliver it *now*.
-    // If it fails, a message (job) for delayed delivery is created; 
-    VSMsgBufferOwned *mb = vsm->getMsgBuffer();
-    VSMailboxImported *mbox = mboxMgr->getMailbox();
-    VirtualInfo *myVI = mySite->getVirtualInfo();
+    {
+      //
+      // First, let's try to deliver it *now*.
+      // If it fails, a message (job) for delayed delivery is created; 
+      VSMsgBufferOwned *mb = vsm->getMsgBuffer();
+      VSMailboxImported *mbox = mboxMgr->getMailbox();
+      VirtualInfo *myVI = mySite->getVirtualInfo();
 
-    //
-    if (mbox->enqueue(mb->getSHMKey(), mb->getFirstChunk())) {
-      fmp->dispose(vsm);
-      mb->passChunks();
-      mb->cleanup();
-      freeMBs->dispose(mb);
-    } else {
-      // Failed to enqueue it inline - then queue up the message again;
-      enqueue(vsm);
-      sq->enqueue(this);
+      //
+      if (mbox->enqueue(mb->getSHMKey(), mb->getFirstChunk())) {
+	fmp->dispose(vsm);
+	mb->passChunks();
+	mb->cleanup();
+	freeMBs->dispose(mb);
+
+	//
+	return (TRUE);
+      } else {
+	// Failed to enqueue it inline - then queue up the message again;
+	enqueue(vsm);
+	sq->enqueue(this);
+
+	//
+	return (FALSE);
+      }
     }
 
-    //
-    return (ACCEPTED);
+  default: 
+    error("wrong virtual site status!");
+    return (TRUE);
   }
-  return(ACCEPTED);	// to make gcc happy;
 }
 
 //

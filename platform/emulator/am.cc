@@ -1608,18 +1608,33 @@ Bool NeverDo_CheckProc(void *va)
 }
 
 //
+// kost@ : The problem with tasks is that we cannot block on them like
+// we can on i/o. So, if there are tasks to be done, we say we want to
+// wait for availability of 'stderr' (thus, always (i hope!!?));
 void AM::handleTasks()
 {
+  Bool ready = TRUE;
+
+  //
+  osClrWatchedFD(fileno(stderr), SEL_WRITE);
+  unsetSFlag(TasksReady);
+
+  //
   for (int i = 0; i < MAXTASKS; i++) {
     TaskNode *tn = &taskNodes[i];
     //
     // Apply 'checkProc' from a task with the corresponding argument;
     if (tn->isReady()) {
       tn->dropReady();
-      (tn->getProcessProc())(tn->getArg());
+      ready = ready && (tn->getProcessProc())(tn->getArg());
     }
   }
-  unsetSFlag(TasksReady);
+
+  //
+  if (!ready) {
+    setSFlag(TasksReady);
+    osWatchFD(fileno(stderr), SEL_WRITE);
+  }
 }
 
 //
@@ -1676,7 +1691,7 @@ void AM::suspendEngine()
 
     unsigned long idle_start = osTotalTime();
 
-#if defined(VIRTUALSITES) || defined(SLOWNET)
+#if defined(SLOWNET)
     osBlockSelect(CLOCK_TICK/1000);
 #else
     osBlockSelect(nextUser());
@@ -1773,6 +1788,9 @@ Bool AM::removeTask(void *arg, TaskCheckProc cIn)
 // and another one;
 void AM::checkTasks()
 {
+  Bool tasks = FALSE;
+
+  //
   for (int i = 0; i < MAXTASKS; i++) {
     TaskNode *tn = &taskNodes[i];
 
@@ -1780,8 +1798,13 @@ void AM::checkTasks()
     // Apply 'checkProc' from a task with the corresponding argument;
     if ((*(tn->getCheckProc()))(tn->getArg())) {
       tn->setReady();
-      setSFlag(TasksReady);
+      tasks = TRUE;
     }
+  }
+
+  if (tasks) {
+    setSFlag(TasksReady);
+    osWatchFD(fileno(stderr), SEL_WRITE);
   }
 }
 
@@ -1963,13 +1986,12 @@ void handlerALRM()
   am.handleAlarm();
 }
 
-#ifdef VIRTUALSITES
 //
+// 'USR2' serves right now only virtual sites;
 void handlerUSR2()
 {
   am.handleUSR2();
 }
-#endif
 
 /* -------------------------------------------------------------------------
  * Alarm handling
@@ -2005,13 +2027,11 @@ void AM::handleAlarm()
   checkTasks();
 }
 
-#ifdef VIRTUALSITES
 //
 void AM::handleUSR2()
 {
   checkTasks();
 }
-#endif
 
 /* handleUserAlarm:
     if UserAlarm-SFLAG is set this method is called
