@@ -5306,29 +5306,6 @@ OZ_BI_define(BIraiseDebugCheck, 1, 1) {
  * (OPI and environment handling)
  ******************************************************************** */
 
-OZ_BI_define(BIsetOPICompiler,1,0)
-{
-  oz_declareNonvarIN(0,obj);
-  if (!oz_isObject(obj)) {
-    oz_typeError(0,"Object");
-  } else if (am.getOpiCompiler()!=makeTaggedNULL()) {
-    return oz_raise(E_ERROR,E_SYSTEM,"opiCompilerAlreadySet",0);
-  } else {
-    am.setOpiCompiler(obj);
-    return PROCEED;
-  }
-} OZ_BI_end
-
-OZ_BI_define(BIgetOPICompiler,0,1)
-{
-  OZ_Term obj = am.getOpiCompiler();
-
-  if (obj==makeTaggedNULL())
-    OZ_RETURN(NameFalse);
-  else
-    OZ_RETURN(obj);
-} OZ_BI_end
-
 OZ_BI_define(BIconcatenateAtomAndInt,2,1)
 {
   // {ConcatenateAtomAndInts S I ?Res} computes:
