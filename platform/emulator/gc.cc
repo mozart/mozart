@@ -2312,11 +2312,12 @@ void CpStack::gc(CpStack *cps) {
     Assert(wa && !wa->isCommitted());
   
     Board *b = wa->getBoardFast();
-    if (!b->gcIsAlive())
+    if (!b->gcIsAlive()) {
       u.choice = (WaitActor *) 0;
-
-    Assert(!(opMode == IN_TC && !isInTree(b)));
-    u.choice = (WaitActor *) wa->gcActor();
+    } else {
+      Assert(!(opMode == IN_TC && !isInTree(b)));
+      u.choice = (WaitActor *) wa->gcActor();
+    }
   } else {
     Assert(cps->top);
     top = 0;

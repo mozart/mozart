@@ -196,9 +196,9 @@ in
 		  entailed:  class $ from EntailedNode  Features end
 		  suspended: class $ from SuspendedNode Features end
 		  choose:    class $ from ChooseNode    Features end)
-      S = {Space.newDebug Query}
+      S = {Space.new Query}
    in   
-      case job {Space.ask S} end
+      case job {Space.askVerbose S} end
       of failed then
 	 {New Classes.failed init(Sentinel 1)}
       [] succeeded(SA) then
