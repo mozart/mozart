@@ -130,7 +130,7 @@ CursorColor          = case Tk.isColor then
 			  'LightSlateBlue' # % ChooseColor
 			  'DarkSlateBlue'  # % ChooseTermColor
 			  'MediumSeaGreen' # % EntailedColor
-			  'DarkSeaGreen'   # % SuspendedColor
+			  'olivedrab1'     # % SuspendedColor
 			  'firebrick2'     # % FailedColor
 			  'orange'         # % BlockedColor
 			  'purple1'        # % PartialFailedColor
