@@ -347,7 +347,7 @@ in
 		       ' Heap: ' # {FormatSize S.heap})
 	    Gui,Disable(self.ProcText)
 	    case {Cget emacs} then
-	       {Emacs bar(file:S.file line:S.line state:runnable)}
+	       {Emacs bar(file:S.file line:S.line column:unit state:runnable)}
 	    else skip end
 	 end
       end
@@ -473,7 +473,7 @@ in
       end
 
       meth DeleteLine(Widget Nr)
-	 {Widget tk(delete Nr#'.0' Nr#DotEnd)}
+	 {Widget tk(delete Nr#'.0' Nr#'.end')}
       end
 
       meth DeleteToEnd(Widget Nr)

@@ -48,18 +48,6 @@ end
 %% a null object which ignores all messages
 NullObject = {New class meth otherwise(M) skip end end ''}
 
-%% Dictionary.xxx is too long, really...
-Dnew       = Dictionary.new
-Dput       = Dictionary.put
-Dentries   = Dictionary.entries
-Dkeys      = Dictionary.keys
-Dget       = Dictionary.get
-Ditems     = Dictionary.items
-Dremove    = Dictionary.remove
-Dmember    = Dictionary.member
-DcondGet   = Dictionary.condGet
-DremoveAll = Dictionary.removeAll
-
 fun {V2VS X}
    P = {System.get errors}
 in
@@ -83,63 +71,15 @@ local
       case N < 1 then nil else 32 | {MakeSpace N-1} end
    end
 in
-   fun {PrintF S N}  %% Format S to have length N, fill up with spaces
-		     %% break up line if S is too long
+   fun {PrintF S N}
+      %% Format S to have length N, fill up with spaces -- break up
+      %% line if S is too long
       SpaceCount = N - {VirtualString.length S}
    in
       case SpaceCount < 1 then
 	 S # '\n' # {MakeSpace N}
       else
 	 S # {MakeSpace SpaceCount}
-      end
-   end
-end
-
-
-%% file lookup
-
-local
-   LS = 'file lookup: '
-   fun {DoLookupFile SearchList F OrigF}
-      case SearchList of nil then
-	 %% must have been the name of an unsaved file or buffer in Emacs:
-	 OrigF
-      elseof Path|SearchListRest then Try = Path # F in
-	 try
-	    case {OS.stat Try}.type == reg then
-	       {OzcarMessage LS # F # ' is ' # Try}
-	       {VS2A Try}
-	    else
-	       {OzcarMessage LS # F # ' is not ' #
-		Try # ': ' # {V2VS {OS.stat Try}}}
-	       {DoLookupFile SearchListRest F OrigF}
-	    end
-	 catch system(...) then
-	    {OzcarMessage LS # F # ' is not ' # Try # ': file not found'}
-	    {DoLookupFile SearchListRest F OrigF}
-	 end
-      end
-   end
-in
-   fun {LookupFile F}
-      S   = {Atom.toString F}
-      Abs = case S                   % absolute path?
-	    of     &/|_   then true
-	    elseof _|&:|_ then Platform == WindowsPlatform
-	    else false end
-   in
-      case Abs then
-	 %% the file doesn't need to exist, since it may be the name of
-	 %% an unsaved buffer or file in Emacs:
-	 F
-      else                           % ...no!
-	 %% strip "./" or "././"
-	 Suffix = case S of &.|&/|T then
-		     case T of &.|&/|R then R
-		     else T end
-		  else S end
-      in
-	 {DoLookupFile OzPath Suffix F}
       end
    end
 end

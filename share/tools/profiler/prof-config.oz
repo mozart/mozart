@@ -41,11 +41,9 @@ ResetButtonText        = ' reset'
 SortButtonText         = 'Sort By:'
 
 ProfilerMessagePrefix  = fun {$}
-                            'Profiler[' # {Thread.id {Thread.this}} # ']: '
-                         end
+			    'Profiler[' # {Thread.id {Thread.this}} # ']: '
+			 end
 ProfilerErrorPrefix    = 'Profiler ERROR: '
-
-DotEnd                 = '.end'
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -100,25 +98,6 @@ HelpFont               = '-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Files
 %%
-
-HomeDir                = {VS2A {OS.getEnv 'HOME'} # '/'}
-
-OzRawPath              = {OS.getEnv 'OZPATH'}
-FieldSeparator         = case Platform == WindowsPlatform then &; else &: end
-OzPath
-
-local
-   fun {PathList RawPath} % RawPath must be of type string
-      H T P in
-      {List.takeDropWhile RawPath fun {$ C} C \= FieldSeparator end H T}
-      P = {VS2A H#'/'}
-      case T == nil then P|nil
-      else P|{PathList T.2}
-      end
-   end
-in
-   OzPath = {PathList OzRawPath}
-end
 
 BitMapDir              = {System.get home} # '/lib/bitmaps/'
 BitMap                 = '@' # BitMapDir # 'debugger.xbm'
