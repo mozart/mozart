@@ -36,7 +36,7 @@
 
 #ifdef TMUELLER
 //-----------------------------------------------------------------------------
-OZ_Return OzFDVariable::bind(TaggedRef * vPtr, TaggedRef term)
+OZ_Return OzFDVariable::bind(OZ_Term * vPtr, OZ_Term term)
 {
   Assert(!oz_isRef(term));
 
@@ -49,11 +49,7 @@ OZ_Return OzFDVariable::bind(TaggedRef * vPtr, TaggedRef term)
 
   Bool isLocalVar = oz_isLocalVar(this);
 
-#ifdef SCRIPTDEBUG
-  printf("fd-int %s\n", isLocalVar ? "local" : "global"); fflush(stdout);
-#endif
-
-  if (!am.inEqEq() && (isLocalVar))
+  if (!am.inEqEq() && isLocalVar)
     propagate(fd_prop_singl);
 
   if (isLocalVar) {
