@@ -262,11 +262,21 @@ dnl ------------------------------------------------------------------
 AC_DEFUN(OZ_PROG_VERSION_CHECK,[
   AC_MSG_CHECKING([$2 version is at least $3])
   [$1]=no
-  if oz_tmp_version=`ifelse([$4],[],[$2 --version],[$4]) 2>/dev/null | tr '\012' ' '`; then
+  if oz_tmp_version1=`ifelse([$4],[],[$2 --version],[$4]) 2>/dev/null`; then
+    # first we try to locate the string "version"
+    oz_tmp_version2=`echo "${oz_tmp_version1}" | tr '\012' ' '`
 changequote(<,>)
-    oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]*\)'`
+    oz_tmp_version=`expr "${oz_tmp_version2}" : '.*version \([0-9._]*\)'`
+    # if that failed: we look at the end of the first line
     if test -z "$oz_tmp_version"; then
-      oz_tmp_version=`expr "$oz_tmp_version" : '.* \([0-9._]*\)$'`
+      oz_tmp_IFS="$IFS"
+      IFS='
+'
+      for oz_tmp_version3 in ${oz_tmp_version1}; do
+        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._]*\)\n'`
+	break
+      done
+      IFS="$oz_tmp_IFS"
     fi
 changequote([,])
     if test -n "$oz_tmp_version"; then
@@ -1280,6 +1290,18 @@ AC_DEFUN(OZ_ENABLE, [
 	ifelse($5,[],AC_MSG_RESULT(no),$5)
     fi
     ])
+
+dnl ------------------------------------------------------------------
+dnl OZ_COMPILE_ELISP
+dnl	check for --enable-compile-elisp
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_COMPILE_ELISP,
+  [OZ_ENABLE(compile-elisp,[whether to compile elisp files],yes,
+	COMPILE_ELISP=yes,
+	COMPILE_ELISP=no)
+   AC_MSG_RESULT($COMPILE_ELISP)
+   AC_SUBST(COMPILE_ELISP)])
 
 dnl ------------------------------------------------------------------
 dnl OZ_DENYS_EVENTS
