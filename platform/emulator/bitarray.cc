@@ -43,7 +43,7 @@ private:
   }
   int *allocate(int size) {
     size_t n = size * sizeof(int);
-    return (int *) alignedMalloc(n, sizeof(double));
+    return (int *) doubleMalloc(n);
   }
 public:
   virtual

@@ -38,24 +38,12 @@
 Bool across_chunks;
 #endif
 
-#ifdef __FCC_VERSION
-#define caddr_t void *
-extern "C" {
-  int brk(void *);
-  void * sbrk(ptrdiff_t);
-}
-#endif
-
-// ----------------------------------------------------------------
-// heap memory
-
-// allocate 1000 kilo byte chunks of memory
-
 
 MemChunks *MemChunks::list = NULL;
 
 unsigned int heapTotalSize;
 unsigned int heapTotalSizeBytes;
+
 
 #ifndef HEAPTOPINTOREGISTER
 char *heapTop;
@@ -63,16 +51,12 @@ char *heapTop;
 
 char *heapEnd;
 
-void initMemoryManagement(void) {
 
-#ifdef LINKED_QUEUES
-  extern void initLinkedQueueFreeList();
-  initLinkedQueueFreeList();
-#endif
+void initMemoryManagement(void) {
 
   // init heap memory
   heapTotalSizeBytes = heapTotalSize = 0;
-  heapTop       = NULL;
+  heapTop            = NULL;
 
   // allocate first chunk of memory;
   MemChunks::list = NULL;
@@ -547,17 +531,14 @@ void ozFree(char *p, size_t ignored)
 #include "wsock.hh"
 
 
-void ozFree(char *ptr, int sz)
-{
-  //message("free(0x%p)\n",ptr);
+void ozFree(char *ptr, int sz) {
   if (ptr && VirtualFree(ptr,0,MEM_RELEASE) != TRUE) {
     OZ_warning("free(0x%p) failed: %d\n",ptr,GetLastError());
   }
 }
 
 
-char *ozMalloc0(int sz)
-{
+char *ozMalloc0(int sz) {
   char *ret = (char *)VirtualAlloc(0,sz,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE);
 
   if (ret==0)
@@ -572,18 +553,15 @@ char *ozMalloc0(int sz)
   SYSTEM_INFO si;
   GetSystemInfo(&si);
   char *base = (char*)si.lpMinimumApplicationAddress;
-  // message("base = 0x%p\n",base);
 
   while(1) {
     ret = (char*)VirtualAlloc(base,sz,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE);
     if (!checkAddress(ret+sz)) {
-      //message("ozMalloc finally failed: ptr = 0x%p\n",ret);
       ozFree(ret,sz);
       return NULL;
     }
 
     if (ret!=NULL) {
-      //message("malloc(%d)=0x%p\n",sz,ret);
       return ret;
     }
 
@@ -598,7 +576,6 @@ char *ozMalloc0(int sz)
 char *ozMalloc(int sz)
 {
   char *aux = ozMalloc0(sz);
-  //message("malloc(%d)=0x%p\n",sz,aux);
   return aux;
 }
 
@@ -616,14 +593,14 @@ void *ozMalloc(size_t size) {
 
 
 
-void MemChunks::deleteChunkChain()
-{
+void MemChunks::deleteChunkChain() {
   MemChunks *aux = this;
   while (aux) {
+
 #ifdef DEBUG_GC
-//    memset(aux->block,0x14,aux->xsize);
     memset(aux->block,-1,aux->xsize);
 #endif
+
     ozFree(aux->block,aux->xsize);
 
     MemChunks *aux1 = aux;
@@ -631,6 +608,9 @@ void MemChunks::deleteChunkChain()
     delete aux1;
   }
 }
+
+
+#ifdef DEBUG_MEM
 
 // 'inChunkChain' returns 1 if value points into chunk chain otherwise 0.
 Bool MemChunks::inChunkChain(void *value)
@@ -672,8 +652,7 @@ Bool MemChunks::isInHeap(TaggedRef term)
   return OK;
 }
 
-Bool MemChunks::areRegsInHeap(TaggedRef *regs, int sz)
-{
+Bool MemChunks::areRegsInHeap(TaggedRef *regs, int sz) {
   for (int i=0; i<sz; i++) {
     if (!isInHeap(regs[i])) {
       return NO;
@@ -683,8 +662,7 @@ Bool MemChunks::areRegsInHeap(TaggedRef *regs, int sz)
 }
 
 
-void MemChunks::print()
-{
+void MemChunks::print() {
   MemChunks *aux = this;
   while (aux) {
     printf(" chunk( from: 0x%p, to: 0x%p )\n",
@@ -696,16 +674,7 @@ void MemChunks::print()
   }
 }
 
-
-
-
-void *heapMallocOutline(size_t chunk_size)
-{
-  Assert((int) chunk_size <= HEAPBLOCKSIZE);
-
-  return heapMalloc(chunk_size);
-}
-
+#endif
 
 
 char *getMemFromOS(size_t sz) {

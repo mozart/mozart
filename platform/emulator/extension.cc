@@ -78,7 +78,7 @@ unsigned int OZ_getUniqueId(void)
 
 
 void* _OZ_new_OZ_Extension(size_t n) {
- return alignedMalloc(n,sizeof(double));
+ return doubleMalloc(n);
 }
 
 
