@@ -543,7 +543,7 @@ the GDB commands `cd DIR' and `directory'."
        "end" "fi" "ro" "RO"
        "class" "create" "meth" "extern" "from" "with" "attr" "feat" "self"
        "true" "false"
-       "div" "mod" "andthen" "elseor"
+       "div" "mod" "andthen" "orelse"
        "not" "thread" "in"
        ))
     "\\|\\.\\|\\[\\]\\|#\\|!\\|:\\|\\@"
