@@ -26,7 +26,7 @@ Ozcar =
 	   {Compile "\\sw -optimize +debuginfo"}
 	   {Debug.on}
 	   case @currentThread == undef then
-	      Gui,rawStatus(InitStatus)
+	      Gui,status(InitStatus)
 	   else skip end
 	end
 	

@@ -74,11 +74,11 @@ local
 					 self.filename L true}
 				in
 				   case Ok then
-				      {Ozcar rawStatus('B'#Br#FL)}
+				      {Ozcar status('B'#Br#FL)}
 				      {self tk(tag conf q(L)
 					       font:SmallBoldFont)}
 				   else
-				      {Ozcar rawStatus(Err#Set#Br#FL)}
+				      {Ozcar status(Err#Set#Br#FL)}
 				   end
 				end)}
 	    AcDelete = {New Tk.action
@@ -88,11 +88,11 @@ local
 						self.filename L false}
 				       in
 					  case Ok then
-					     {Ozcar rawStatus(D1#Br#FL)}
+					     {Ozcar status(D1#Br#FL)}
 					     {self tk(tag conf q(L)
 						   font:SmallFont)}
 					  else
-					     {Ozcar rawStatus(Err#D2#Br#FL)}
+					     {Ozcar status(Err#D2#Br#FL)}
 					  end
 				       end)}
 	 in
@@ -199,15 +199,15 @@ in
       in
 	 case YesNo then
 	    case Ok then
-	       {Ozcar rawStatus('B'#Br#FL)}
+	       {Ozcar status('B'#Br#FL)}
 	    else
-	       {Ozcar rawStatus(Err#Set#Br#FL)}
+	       {Ozcar status(Err#Set#Br#FL)}
 	    end
 	 else
 	    case Ok then
-	       {Ozcar rawStatus(D1#Br#FL)}
+	       {Ozcar status(D1#Br#FL)}
 	    else
-	       {Ozcar rawStatus(Err#D2#Br#FL)}
+	       {Ozcar status(Err#D2#Br#FL)}
 	    end
 	 end
       end
