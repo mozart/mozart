@@ -33,15 +33,15 @@ Furthermore, we write <math/\emptyset/ and <math/\uniset/ for the empty set and 
 universal set.
 <p>
 
-For every set specification ?{SpecM} we write the set ?{M}
-specified by ?{SpecM} as ?{M} = <math/
+For every set specification ?{Spec} we write the set ?{M}
+specified by ?{Spec} as ?{M} = <math/
 ~$
 \newcommand{\sic}[2]{\mbox{$[#1,#2]$}}
 \newcommand{\conv}{{\it set}}
 \newcommand{\convinv}{{\it set}^{-1}}
 
 ~$~
-\conv({SpecM})/.  For example,
+\conv({Spec})/.  For example,
 <math/\conv(\mbox{\codeinline{oz}{[1\#3 5 7]}})/ denotes <math/\{1,2,3,5,7\}/. Further, for
 every set <<S>> we denote with <math/{D} = \convinv({S})/ a set
 description ?{D} such that <math/\conv({\tt D}) = {\tt S}/.
@@ -112,15 +112,15 @@ set.  Its value is implementation-dependent.  In Mozart <<FD.sup>> is
 <item>
 <math/(\codeinline{oz}{E} \in \codeinline{oz}{M}) \rightarrow \codeinline{oz}{B}/
 <entry>
-<index class=module/FS<and>newWeights<and>id/
-<<newWeights>>
+<index class=module/FS<and>makeWeights<and>id/
+<<makeWeights>>
 <synopsis>
-<<<{FS.newWeights +SpecW ?P}
+<<<{FS.makeWeights +SpecW ?P}
 >>>
 <item>
 Returns a procedure with signature <<{P +I1 ?I2>>}. This procedure
 maps an element to a weight according to the weight description passed
-to <<FS.newWeights>>.
+to <<FS.makeWeights>>.
 </list>
 </section>
 <section><title/Sets over Integers/
@@ -316,7 +316,7 @@ Tests whether <<M>> is a finite set variable.
 <index class=module/FS<and>var<and>upperBound/
 <<var.upperBound>>
 <synopsis>
-<<<{FS.var.upperBound +SpecM ?M}
+<<<{FS.var.upperBound +Spec ?M}
 >>>
 <item>
 <math/\emptyset \subseteq \codeinline{oz}{M} \subseteq \conv(\codeinline{oz}{Spec})/
@@ -324,18 +324,18 @@ Tests whether <<M>> is a finite set variable.
 <index class=module/FS<and>var<and>lowerBound/
 <<var.lowerBound>>
 <synopsis>
-<<<{FS.var.lowerBound +SpecM ?M}
+<<<{FS.var.lowerBound +Spec ?M}
 >>>
 <item>
-<math/\conv({\tt SpecM}) \subseteq \codeinline{oz}{M} \subseteq \uniset/
+<math/\conv({\tt Spec}) \subseteq \codeinline{oz}{M} \subseteq \uniset/
 <entry>
-<index class=module/FS<and>var<and>new/
-<<var.new>>
+<index class=module/FS<and>var<and>bounds/
+<<var.bounds>>
 <synopsis>
-<<<{FS.var.new +SpecM1 +SpecM2 ?M}
+<<<{FS.var.bounds +Spec1 +Spec2 ?M}
 >>>
 <item>
-<math/\conv({\tt SpecM1}) \subseteq {\tt M} \subseteq \conv({\tt SpecM2})/
+<math/\conv({\tt Spec1}) \subseteq {\tt M} \subseteq \conv({\tt Spec2})/
 </list>
 </subsection>
 <subsection><title/Declaring a List of Variables/
@@ -357,31 +357,31 @@ For all elements <<M>> of <<Ms>>:
 <index class=module/FS<and>var<and>list<and>upperBound/
 <<var.list.upperBound>>
 <synopsis>
-<<<{FS.var.list.upperBound +I +SpecM ?Ms}
+<<<{FS.var.list.upperBound +I +Spec ?Ms}
 >>>
 <item>
 For all elements <<M>> of <<Ms>>:
 <math/\emptyset \subseteq \codeinline{oz}{M} \subseteq
-\conv({\tt SpecM})/
+\conv({\tt Spec})/
 <entry>
 <index class=module/FS<and>var<and>list<and>lowerBound/
 <<var.list.lowerBound>>
 <synopsis>
-<<<{FS.var.list.lowerBound +I +SpecM ?Ms}
+<<<{FS.var.list.lowerBound +I +Spec ?Ms}
 >>>
 <item>
 For all elements <<M>> of <<Ms>>:
-<math/\conv(\codeinline{oz}{SpecM}) \subseteq \codeinline{oz}{M}\subseteq \uniset/
+<math/\conv(\codeinline{oz}{Spec}) \subseteq \codeinline{oz}{M}\subseteq \uniset/
 <entry>
-<index class=module/FS<and>var<and>list<and>new/
-<<var.list.new>>
+<index class=module/FS<and>var<and>list<and>bounds/
+<<var.list.bounds>>
 <synopsis>
-<<<{FS.var.list.new +I +SpecM1 +SpecM2 ?Ms}
+<<<{FS.var.list.bounds +I +Spec1 +Spec2 ?Ms}
 >>>
 <item>
 For all elements <<M>> of <<Ms>>:
-<math/\conv({\tt SpecM1})\subseteq
-{\tt M}\subseteq \conv({\tt SpecM2})/
+<math/\conv({\tt Spec1})\subseteq
+{\tt M}\subseteq \conv({\tt Spec2})/
 </list>
 </subsection>
 <subsection><title/Declaring a Tuple of Variables/
@@ -404,31 +404,31 @@ For all elements <<M>> of <<Mt>>:
 <index class=module/FS<and>var<and>tuple<and>upperBound/
 <<var.tuple.upperBound>>
 <synopsis>
-<<<{FS.var.tuple.upperBound +L +I +SpecM ?Mt}
+<<<{FS.var.tuple.upperBound +L +I +Spec ?Mt}
 >>>
 <item>
 For all elements <<M>> of <<Mt>>:
 <math/\emptyset \subseteq \codeinline{oz}{M} \subseteq
-\conv({\tt SpecM})/
+\conv({\tt Spec})/
 <entry>
 <index class=module/FS<and>var<and>tuple<and>lowerBound/
 <<var.tuple.lowerBound>>
 <synopsis>
-<<<{FS.var.tuple.lowerBound +L +I +SpecM ?Mt}
+<<<{FS.var.tuple.lowerBound +L +I +Spec ?Mt}
 >>>
 <item>
 For all elements <<M>> of <<Mt>>:
-<math/\conv(\codeinline{oz}{SpecM}) \subseteq
+<math/\conv(\codeinline{oz}{Spec}) \subseteq
 \codeinline{oz}{M}\subseteq \uniset/
 <entry>
-<index class=module/FS<and>var<and>tuple<and>new/
-<<var.tuple.new>>
+<index class=module/FS<and>var<and>tuple<and>bounds/
+<<var.tuple.bounds>>
 <synopsis>
-<<<{FS.var.tuple.new +L +M +SpecM1 +SpecM2 ?Mt}
+<<<{FS.var.tuple.bounds +L +M +Spec1 +Spec2 ?Mt}
 >>>
 <item>
-For all elements <<M>> of <<Mt>>: <math/\conv({\tt SpecM1})\subseteq
-{\tt M}\subseteq \conv({\tt SpecM2})/
+For all elements <<M>> of <<Mt>>: <math/\conv({\tt Spec1})\subseteq
+{\tt M}\subseteq \conv({\tt Spec2})/
 </list>
 </subsection>
 <subsection><title/Declaring a Record of Variables/
@@ -451,31 +451,31 @@ For all elements <<M>> of <<Mr>>:
 <index class=module/FS<and>var<and>record<and>upperBound/
 <<var.record.upperBound>>
 <synopsis>
-<<<{FS.var.record.upperBound +L +Ls +SpecM ?Mr}
+<<<{FS.var.record.upperBound +L +Ls +Spec ?Mr}
 >>>
 <item>
 For all elements <<M>> of <<Mr>>:
 <math/\emptyset \subseteq \codeinline{oz}{M} \subseteq
-\conv({\tt SpecM})/
+\conv({\tt Spec})/
 <entry>
 <index class=module/FS<and>var<and>record<and>lowerBound/
 <<var.record.lowerBound>>
 <synopsis>
-<<<{FS.var.record.lowerBound +L +Ls +SpecM ?Mr}
+<<<{FS.var.record.lowerBound +L +Ls +Spec ?Mr}
 >>>
 <item>
 For all elements <<M>> of <<Mr>>:
-<math/\conv(\codeinline{oz}{SpecM}) \subseteq
+<math/\conv(\codeinline{oz}{Spec}) \subseteq
 \codeinline{oz}{M}\subseteq \uniset/
 <entry>
-<index class=module/FS<and>var<and>record<and>new/
-<<var.record.new>>
+<index class=module/FS<and>var<and>record<and>bounds/
+<<var.record.bounds>>
 <synopsis>
-<<<{FS.var.record.new +L +Ls +SpecM1 +SpecM2 ?Mr}
+<<<{FS.var.record.bounds +L +Ls +Spec1 +Spec2 ?Mr}
 >>>
 <item>
 For all elements <<M>> of <<Mr>>: <math/{\tt M} \in
-\sic{\conv({\tt SpecM1})}{\conv({\tt SpecM2})}/
+\sic{\conv({\tt Spec1})}{\conv({\tt Spec2})}/
 </list>
 </subsection>
 </section>
@@ -507,13 +507,13 @@ Denotes <math/\uniset/.
 <item>
 <math/{\tt M} = \{{\tt I}\}/
 <entry>
-<index class=module/FS<and>value<and>new/
-<<value.new>>
+<index class=module/FS<and>value<and>make/
+<<value.make>>
 <synopsis>
-<<<{FS.value.new +SpecM ?M}
+<<<{FS.value.make +Spec ?M}
 >>>
 <item>
-<math/{\tt M} = \conv({\tt SpecM})/
+<math/{\tt M} = \conv({\tt Spec})/
 <entry>
 <index class=module/FS<and>value<and>is/
 <<value.is>>
@@ -601,11 +601,12 @@ constraint store and is non-deterministic.
 <item>
 returns a description ?{Spec} of the current information on the
 cardinality of&nbsp;?{M}.
+
 <entry>
 <index class=module/FS<and>reflect<and>lowerBound/
 <<reflect.lowerBound>>
 <synopsis>
-<<<{FS.reflect.lowerBound *M ?SpecM}
+<<<{FS.reflect.lowerBound *M ?Spec}
 >>>
 <item>
 Returns a specification of the greatest lower bound that is
@@ -614,7 +615,7 @@ currently known about the set ?{M}.
 <index class=module/FS<and>reflect<and>upperBound/
 <<reflect.upperBound>>
 <synopsis>
-<<<{FS.reflect.upperBound *M ?SpecM}
+<<<{FS.reflect.upperBound *M ?Spec}
 >>>
 <item>
 Returns a specification of the least upper bound that is currently
@@ -623,11 +624,43 @@ known about the set ?{M}.
 <index class=module/FS<and>reflect<and>unknown/
 <<reflect.unknown>>
 <synopsis>
-<<<{FS.reflect.unknown *M ?SpecM}
+<<<{FS.reflect.unknown *M ?Spec}
 >>>
 <item>
 Returns a specification of the set of elements that are neither known
 to included in ?{M} no excluded from ?{M}.
+
+<entry>
+<index class=module/FS<and>reflect<and>lowerBoundList/
+<<reflect.lowerBoundList>>
+<synopsis>
+<<<{FS.reflect.lowerBoundList *M ?Spec}
+>>>
+<item>
+Returns an expanded specification (&ie;, every individual element is
+represented) of the greatest lower bound that is currently known about
+the set ?{M}.
+<entry>
+<index class=module/FS<and>reflect<and>upperBoundList/
+<<reflect.upperBoundList>>
+<synopsis>
+<<<{FS.reflect.upperBoundList *M ?Spec}
+>>>
+<item>
+Returns an expanded specification (&ie;, every individual element is
+represented) of the least upper bound that is currently
+known about the set ?{M}.
+<entry>
+<index class=module/FS<and>reflect<and>unknownList/
+<<reflect.unknownList>>
+<synopsis>
+<<<{FS.reflect.unknownList *M ?Spec}
+>>>
+<item>
+Returns an expanded specification (&ie;, every individual element is
+represented) of the set of elements that are neither known to included
+in ?{M} no excluded from ?{M}.
+
 <entry>
 <index class=module/FS<and>reflect<and>cardOf<and>lowerBound/
 <<reflect.cardOf.lowerBound>>
@@ -656,7 +689,7 @@ Returns the cardinality of the current greatest lower bound for ?{M}.
         be included or excluded from ?{M}.
 </list>
 </section>
-<section><title/Distribution/
+<section id="sect.fs.distribution"><title/Distribution/
 <p>
 Given a set ?{M}, let <math/{\it lowerBound}({\tt M})/ and <math/{\it
 upperBound}({\tt M})/ denote the greatest lower bound and the least upper
@@ -682,7 +715,7 @@ generic(order:    +Order   &lt;= order
         select:   +Select  &lt;= id
         element:  +Element &lt;= element
         rrobin:   +RRobin  &lt;= false
-        weights:  +Weights &lt;= {FS.newWeights nil}
+        weights:  +Weights &lt;= {FS.makeWeights nil}
         procedure:+Proc    &lt;= proc {$} skip end)
 >>>
 <list>

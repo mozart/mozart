@@ -3,11 +3,13 @@
   -   Denys Duchier     <duchier@ps.uni-sb.de>
   -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
   -   Christian Schulte <schulte@dfki.de>
+  -   Tobias Mueller <tmueller@ps.uni-sb.de>
   -
   - Copyright:
   -   Denys Duchier, 1998
   -   Leif Kornstaedt, 1998
   -   Christian Schulte, 1998
+  -   Tobias Mueller, 1998
   -
   - Last change:
   -   $Date$ by $Author$
@@ -44,6 +46,7 @@
 <!ENTITY cdots PI "cdots">
 <!ENTITY slash PI "slash">
 <!ENTITY ie PI "ie">
+<!ENTITY resp PI "resp">
 <!ENTITY eg PI "eg">
 <!ENTITY etc PI "etc">
 
@@ -59,6 +62,7 @@
 
 <!ENTITY chapter.fd       SYSTEM "fd.sgml">
 <!ENTITY chapter.fs       SYSTEM "fs.sgml">
+<!ENTITY chapter.types_modes_constr SYSTEM "types_modes_constr.sgml">
 <!ENTITY chapter.schedule SYSTEM "schedule.sgml">
 <!ENTITY chapter.search   SYSTEM "search.sgml">
 
@@ -115,6 +119,7 @@
     <!-- Constraint programming -->
 
     <Meta name="html.split"       value="chapter.search">
+    <Meta name="html.split" value="chapter.types_modes_constr">
     <Meta name="html.split"       value="chapter.fd">
     <Meta name="html.split"       value="chapter.schedule">
     <Meta name="html.split"       value="chapter.fs">
@@ -138,8 +143,8 @@
 
 
     <Meta name="html.split"       value="chapter.property">
-<Meta name="html.split" value="section.property.threads">
-<Meta name="html.split" value="section.property.priority">
+    <Meta name="html.split" value="section.property.threads">
+    <Meta name="html.split" value="section.property.priority">
 <Meta name="html.split" value="section.property.time">
 <Meta name="html.split" value="section.property.gc">
 <Meta name="html.split" value="section.property.print">
@@ -188,10 +193,11 @@
 
   <Part id="Part.Constraints">
     <Title/Constraint Programming/
-    &chapter.search;
+    &chapter.types_modes_constr;
     &chapter.fd;
     &chapter.schedule;
     &chapter.fs;
+    &chapter.search;
   </Part>
 
   <Part id="Part.Distributed">
