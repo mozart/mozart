@@ -572,6 +572,7 @@ $builtins = {
                      out => ['+bool'],
                      bi  => BIlessFun,
                      ibi => BIlessInlineFun,
+                     negated => '>=',
                      shallow => '<Rel' ,
                      native => false},
 
@@ -579,6 +580,7 @@ $builtins = {
                      out => ['+bool'],
                      bi  => BIleFun,
                      ibi => BIleInlineFun,
+                     negated => '>',
                      shallow => '=<Rel' ,
                      native => false},
 
@@ -586,6 +588,7 @@ $builtins = {
                      out => ['+bool'],
                      bi  => BIgreatFun,
                      ibi => BIgreatInlineFun,
+                     negated => '=<',
                      shallow => '>Rel' ,
                      native => false},
 
@@ -593,6 +596,7 @@ $builtins = {
                      out => ['+bool'],
                      bi  => BIgeFun,
                      ibi => BIgeInlineFun,
+                     negated => '<',
                      shallow => '>=Rel' ,
                      native => false},
 
@@ -1329,6 +1333,7 @@ $builtins = {
                              bi  => BIeqB,
                              ibi => eqeqInline,
                              eqeq => 1,
+                             negated => '\\\\=',
                              native => false},
 
     '\\\\='             => { in  => ['*value','*value'],
@@ -1336,6 +1341,7 @@ $builtins = {
                              bi  => BIneqB,
                              ibi => neqInline,
                              eqeq => 1,
+                             negated => '==',
                              native => false},
 
     '==Rel'             => { in  => ['*value','*value'],
@@ -3826,6 +3832,8 @@ sub OZTABLE {
         }
 
         print "\t\tdoesNotReturn: true\n" if $info->{doesNotReturn};
+        my $negated = $info->{negated};
+        print "\t\tnegated: '$negated'\n" if $negated;
         print "\t)\n";
     }
 }
