@@ -30,7 +30,6 @@ local
    LeftWidth       = 50
    HalfWidth       = LoadWidth div 2
    Border          = 5
-   BlackTickSize   = 4 
    Height          = 60
 
    FontFamily      = '-*-helvetica-medium-r-normal--*-'
@@ -72,7 +71,7 @@ in
    class Load
       from Tk.canvas
       prop final
-	 
+
       feat
 	 MinY
 	 BothTag
@@ -91,7 +90,7 @@ in
 	 CurScale:     1.0
 	 CurLimit:     0.0
 	 Slice:        (LoadWidth * DefaultUpdateTime) div DefaultHistoryRange
-      
+
       meth init(parent:P maxy:Y miny:MY dim:Dim colors:Cs stipple:Ss)
 	 Limit = {GetLimit {Max MY Y}}
       in
@@ -105,8 +104,8 @@ in
 	 Tk.canvas,tk(xview scroll ~LeftWidth     units)
 	 LeftTag      <- {New Tk.canvasTag tkInit(parent: self)}
 	 RightTag     <- {New Tk.canvasTag tkInit(parent: self)}
-	 self.BothTag   =  {New Tk.canvasTag tkInit(parent: self)} 
-	 self.CoverTag  =  {New Tk.canvasTag tkInit(parent: self)} 
+	 self.BothTag   =  {New Tk.canvasTag tkInit(parent: self)}
+	 self.CoverTag  =  {New Tk.canvasTag tkInit(parent: self)}
 	 self.TextTag   =  {New Tk.canvasTag tkInit(parent: self)}
 	 self.Dimension = Dim # ' '
 	 self.Colors    = Cs
@@ -131,7 +130,7 @@ in
 	 Load,tk(crea line 0 D*N LoadWidth D*N fill:LineColor)
 	 case N>0 then Load,DrawTicks(N-1 D) else skip end
       end
-      
+
       meth DrawLabel(N D Y IsFrac)
 	 Load,tk(crea text 0 D*N
 		 font: TickFont
@@ -147,12 +146,12 @@ in
 	 Load,tk('raise' self.TextTag)
 	 case N>0 then Load,DrawLabel(N-1 D Y IsFrac) else skip end
       end
-      
+
       meth DisplayLoads(Y1s Y2s X1 X2 Cs Ss T)
 	 case Y1s of nil then skip
 	 [] Y1|Y1r then
 	    Y2|Y2r = Y2s
-	    C|Cr   = Cs 
+	    C|Cr   = Cs
 	    S|Sr   = Ss
 	    CS     = ~@CurScale
 	    Y3     = case Y1r of nil then 0.0 [] Y|_ then Y end
@@ -195,7 +194,7 @@ in
 	 Slice <- S
 	 Load,clear
       end
-      
+
       meth display(Ys)
 	 S          = @Slice
 	 Y          = {FoldL Ys Max 0.0}
@@ -231,7 +230,7 @@ in
 	 end
 	 case @CurX+S < HalfWidth then LeftMaxY <- {Max @LeftMaxY Y}
 	 else RightMaxY <- {Max @RightMaxY Y}
-	 end 
+	 end
 	 Load,DisplayLoads(@PrevYs Ys @CurX @CurX+S self.Colors self.Stipple
 			   case @CurX+S < HalfWidth then @LeftTag
 			   else @RightTag

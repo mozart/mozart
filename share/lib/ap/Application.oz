@@ -52,10 +52,10 @@
 %%%
 %%% * SRC describes where the functor may be obtained, valid values
 %%%   are:
-%%%		url(URL)
-%%%		value(FUN)
-%%%		path(PATH)
-%%%		system(BASENAME)
+%%%             url(URL)
+%%%             value(FUN)
+%%%             path(PATH)
+%%%             system(BASENAME)
 %%%
 %%%   value(FUN) is for the case when the functor is not in a component
 %%%   but is given explicitly as a procedure value. path(PATH) is for
@@ -85,10 +85,10 @@
 %%%   lazy exports are then instantiated with their actual values.
 %%%   valid values are:
 %%%
-%%%		LABEL#ARITY
-%%%		file(FILE)
-%%%		load(URL)	system(NAME)
-%%%		unit
+%%%             LABEL#ARITY
+%%%             file(FILE)
+%%%             load(URL)       system(NAME)
+%%%             unit
 %%%
 %%%   LABEL#ARITY describes an export record.  file(FILE) indicates
 %%%   that FILE is a `*.env' kind of file from which LABEL#ARITY can
@@ -147,10 +147,6 @@ local
    end
    proc {BadRegistration Name Desc Which}
       raise error(registry(badRegistration Name Desc Which) debug:debug)
-      with debug end
-   end
-   proc {BadDescriptor Name Desc}
-      raise error(registry(badDescriptor Name Desc) debug:debug)
       with debug end
    end
    proc {CircularDependency Name}
@@ -322,8 +318,8 @@ local
    end
    %%
    %% {RegistryGetAllDeps R Name ArgsMap}
-   %%	records in ArgsMap all the modules that Name depends on
-   %%	(including Name itself).
+   %%   records in ArgsMap all the modules that Name depends on
+   %%   (including Name itself).
    %%
    proc {RegistryGetAllDeps R Name ArgsMap}
       %% either Name itself is already recorded in ArgsMap, which
@@ -339,7 +335,7 @@ local
    end
    %%
    %% {RegistryGet R Name $}
-   %%	returns the descriptor for Name or raises an error
+   %%   returns the descriptor for Name or raises an error
    %%
    fun {RegistryGet R Name}
       E={Dictionary.condGet {RegistryGetMap R} Name unit}
@@ -349,17 +345,17 @@ local
    fun {RegistryGetMap R} R.1 end
    %%
    %% {RegistryGetArgs R Name $}
-   %%	returns a record of FEATURE:MODULE mappings
+   %%   returns a record of FEATURE:MODULE mappings
    %%
    fun {RegistryGetArgs R Name}
       {RegistryGet R Name}.args
    end
    %%
    %% {RegistryGetModes R Name $}
-   %%	returns a record of FEATURE:MODE mappings indicating the
-   %%	desired loading mode of the corresponding argument.  A mode
-   %%	of unit indicates that the mode should be inherited from the
-   %%	parent.
+   %%   returns a record of FEATURE:MODE mappings indicating the
+   %%   desired loading mode of the corresponding argument.  A mode
+   %%   of unit indicates that the mode should be inherited from the
+   %%   parent.
    %%
    fun {RegistryGetModes R Name}
       {RegistryGet R Name}.modes
@@ -452,8 +448,8 @@ local
    %% interface to the module without causing the module to load.
    %% The programmer will use code like:
    %%
-   %%	\insert Foo.env
-   %%	= IMPORT.'Foo'
+   %%   \insert Foo.env
+   %%   = IMPORT.'Foo'
    %%
    %% and this will cause all the variables in the interface to be
    %% lazy: as soon as one is touched, module Foo actually gets loaded.
@@ -502,7 +498,7 @@ local
    end
    %%
    %% MakeLazyTopLoader(Name $)
-   %%	creates a loader that, when applied to its imports
+   %%   creates a loader that, when applied to its imports
    %% creates a lazy variable that waits until it is requested
    %% before it actually applies the real functor.
    %%
@@ -634,7 +630,6 @@ local
 		   {Adjoin CompSpec c('WP': eager)}}
       ArgProc   = {Parser.applet ArgSpec}
       SystemGet = System.get
-      SystemSet = System.set
    in
       proc {$}
 	 try
@@ -682,7 +677,7 @@ local
    end
    %%
    %% Combine two loading modes: simply return the strongest one
-   %%	include > eager > lazy > lazyTop
+   %%   include > eager > lazy > lazyTop
    %%
    ModePriority = x('lazyTop':0 'lazy':1 'eager':2 'include':3)
    fun {ModeCombine Mode1 Mode2}
@@ -718,46 +713,46 @@ local
    %% as a dependency, it is also expected on import feature M.
    %%
    StandardModules =
-   oz('SP':		nil
-      'OP':		['SP']
-      'AP':		['SP' 'OP']
-      'CP':		['SP']
-      'WP':		['SP' 'OP']
-      'DP':		['SP' 'OP' 'AP' 'WP']
-      'Panel':		['SP' 'OP' 'WP']
-      'Browser':	['SP' 'WP' 'CP']
-      'Explorer':	['SP' 'WP' 'Browser'#lazy]
-      'Compiler':	['SP' 'CP' 'Gump'#lazy]
-      'CompilerPanel':	['SP' 'OP' 'WP' 'Compiler' 'Browser'#lazy]
-      'Emacs':		['OP' 'SP']
-      'Ozcar':		['SP' 'WP' 'Browser'#lazy 'Compiler' 'Emacs'#lazy]
-      'Profiler':	['SP' 'OP' 'WP' 'Browser'#lazy 'Compiler' 'Emacs'#lazy]
-      'Gump':		['SP' 'OP']
-      'GumpScanner':	['SP']
-      'GumpParser':	['SP'])
+   oz('SP':             nil
+      'OP':             ['SP']
+      'AP':             ['SP' 'OP']
+      'CP':             ['SP']
+      'WP':             ['SP' 'OP']
+      'DP':             ['SP' 'OP' 'AP' 'WP']
+      'Panel':          ['SP' 'OP' 'WP']
+      'Browser':        ['SP' 'WP' 'CP']
+      'Explorer':       ['SP' 'WP' 'Browser'#lazy]
+      'Compiler':       ['SP' 'CP' 'Gump'#lazy]
+      'CompilerPanel':  ['SP' 'OP' 'WP' 'Compiler' 'Browser'#lazy]
+      'Emacs':          ['OP' 'SP']
+      'Ozcar':          ['SP' 'WP' 'Browser'#lazy 'Compiler' 'Emacs'#lazy]
+      'Profiler':       ['SP' 'OP' 'WP' 'Browser'#lazy 'Compiler' 'Emacs'#lazy]
+      'Gump':           ['SP' 'OP']
+      'GumpScanner':    ['SP']
+      'GumpParser':     ['SP'])
    %%
    %% we also want to export a useful collection of submodules
    %%
    StandardSubModules =
-   oz('SP':		['System' 'Exit' 'Print' 'Show' 'Foreign'
+   oz('SP':             ['System' 'Exit' 'Print' 'Show' 'Foreign'
 			 'Debug' 'Error' 'Finalize']
-      'OP':		['OS' 'Open' 'Component' 'Load' 'Save']
-      'AP':		['Application']
-      'CP':		['Search' 'SearchOne' 'SearchAll' 'SearchBest'
+      'OP':             ['OS' 'Open' 'Component' 'Load' 'Save']
+      'AP':             ['Application']
+      'CP':             ['Search' 'SearchOne' 'SearchAll' 'SearchBest'
 			 'FD' 'FS']
-      'WP':		['Tk' 'NewTk' 'TkTools' 'NewTkTools']
-      'DP':		['Site' 'Server' 'NewServer' 'NewAgenda' 'Gate']
-      'Panel':		nil
-      'Browser':	['Browse']
-      'Explorer':	['ExploreOne' 'ExploreAll' 'ExploreBest']
-      'Compiler':	nil
-      'CompilerPanel':	nil
-      'Emacs':		nil
-      'Ozcar':		nil
-      'Profiler':	nil
-      'Gump':		nil
-      'GumpScanner':	nil
-      'GumpParser':	nil)
+      'WP':             ['Tk' 'NewTk' 'TkTools' 'NewTkTools']
+      'DP':             ['Site' 'Server' 'NewServer' 'NewAgenda' 'Gate']
+      'Panel':          nil
+      'Browser':        ['Browse']
+      'Explorer':       ['ExploreOne' 'ExploreAll' 'ExploreBest']
+      'Compiler':       nil
+      'CompilerPanel':  nil
+      'Emacs':          nil
+      'Ozcar':          nil
+      'Profiler':       nil
+      'Gump':           nil
+      'GumpScanner':    nil
+      'GumpParser':     nil)
    %%
    %% Create a new registry and record in it all the standard modules
    %% and submodules
@@ -818,7 +813,7 @@ local
    %%
    proc {FixErrorHandler EXPORT}
       %% This very smart idea has been taken over from Denys Duchier
-      %%	[I am stealing it back! -- Denys]
+      %%        [I am stealing it back! -- Denys]
       {{`Builtin` setDefaultExceptionHandler 1}
        proc {$ E}
 	  %% cause Error to be instantiated, which installs
@@ -860,18 +855,18 @@ in
    try {Error.formatter.put registry RegistryFormatter}
    catch _ then skip end
    Application = application(
-			     register	:DefaultRegister
-			     loader	:DefaultGetLoader
-			     plan	:DefaultGetPlan
-			     exec	:DefaultMakeExec
-			     servlet:   DefaultMakeServlet
-			     applet:    DefaultMakeApplet
-			     registry   :registry(new     :MakeDefaultRegistry
-						  register:RegistryRegister
-						  loader  :RegistryGetLoader
-						  plan    :RegistryGetPlan
-						  exec    :RegistryMakeExec
-						  servlet: RegistryMakeServlet
-						  applet:  RegistryMakeApplet)
+			     register: DefaultRegister
+			     loader:   DefaultGetLoader
+			     plan:     DefaultGetPlan
+			     exec:     DefaultMakeExec
+			     servlet:  DefaultMakeServlet
+			     applet:   DefaultMakeApplet
+			     registry: registry(new:      MakeDefaultRegistry
+						register: RegistryRegister
+						loader:   RegistryGetLoader
+						plan:     RegistryGetPlan
+						exec:     RegistryMakeExec
+						servlet:  RegistryMakeServlet
+						applet:   RegistryMakeApplet)
 			    )
 end

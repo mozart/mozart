@@ -57,11 +57,6 @@ UpdateButtonText       = ' update'
 ResetButtonText        = ' reset'
 SortButtonText         = 'Sort By:'
 
-ProfilerMessagePrefix  = fun {$}
-			    'Profiler[' # {Thread.id {Thread.this}} # ']: '
-			 end
-ProfilerErrorPrefix    = 'Profiler ERROR: '
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Geometry
@@ -123,9 +118,6 @@ BitMap                 = '@' # BitMapDir # 'debugger.xbm'
 TextCursor             = left_ptr
 
 HelpEvent              = '<3>'
-
-PrintDepth             = 2  % for System.valueToVirtualString
-PrintWidth             = 3
 
 TimeoutToStatus        = 210
 
