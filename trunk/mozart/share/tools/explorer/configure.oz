@@ -7,7 +7,7 @@
 
 %% Global default settings
 
-DefLayoutOptions = o(hide:   !False
+DefLayoutOptions = o(hide:   !True
 		     update: 10)
 
 DefSearchOptions = o(dist:        1
