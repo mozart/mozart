@@ -2237,11 +2237,9 @@ OZ_Return notInline(TaggedRef A, TaggedRef &out)
   if (literalEq(term,NameTrue)) {
     out = NameFalse;
     return PROCEED;
-  } else {
-    if (literalEq(term,NameFalse)) {
-      out = NameTrue;
-      return PROCEED;
-    }
+  } else if (literalEq(term,NameFalse)) {
+    out = NameTrue;
+    return PROCEED;
   }
 
   TypeErrorT(0,"Bool");
@@ -2249,62 +2247,65 @@ OZ_Return notInline(TaggedRef A, TaggedRef &out)
 
 DECLAREBI_USEINLINEFUN1(BInot,notInline)
 
-// and: not specified (mm)
-OZ_Return andInline(TaggedRef A, TaggedRef B, TaggedRef &out)
-{
+OZ_Return andInline(TaggedRef A, TaggedRef B, TaggedRef &out) {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
 
-  TaggedRef nt = NameTrue;
-
-  if (literalEq(A,nt)) {
+  if (literalEq(A,NameTrue)) {
     if (isAnyVar(B)) {
       return SUSPEND;
+    } else if (literalEq(B,NameTrue) || literalEq(B,NameFalse)) {
+      out = B;
+      return PROCEED;
+    } else {
+      TypeErrorT(1,"Bool");
     }
-
-    out = literalEq(B,nt) ? nt : NameFalse;
-    return PROCEED;
-  }
-
-  if (isAnyVar(A)) {
-    if (isAnyVar(B) || literalEq(B,nt)) {
+  } else if (literalEq(A,NameFalse)) {
+    if (isAnyVar(B)) {
       return SUSPEND;
+    } else if (literalEq(B,NameTrue) || literalEq(B,NameFalse)) {
+      out = NameFalse;
+      return PROCEED;
+    } else { 
+      TypeErrorT(1,"Bool");
     }
-    out = NameFalse;
-    return PROCEED;
+  } else if (isAnyVar(A)) {
+    return SUSPEND;
+  } else {
+    TypeErrorT(0,"Bool");
   }
-
-  out = NameFalse;
-  return PROCEED;  
 }
 
 DECLAREBI_USEINLINEFUN2(BIand,andInline)
 
 
-// or: not specified (mm)
-OZ_Return orInline(TaggedRef A, TaggedRef B, TaggedRef &out)
-{
+OZ_Return orInline(TaggedRef A, TaggedRef B, TaggedRef &out) {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
 
-  TaggedRef nt = NameTrue;
-  
-  if (literalEq(A,nt)) {
-    out = nt;
-    return PROCEED;
-  }
-
-  if (literalEq(B,nt)) {
-    out = nt;
-    return PROCEED;
-  }
-
-  if (isAnyVar(tagA) || isAnyVar(tagB)) {
+  if (literalEq(A,NameTrue)) {
+    if (isAnyVar(B)) {
+      return SUSPEND;
+    } else if (literalEq(B,NameTrue) || literalEq(B,NameFalse)) {
+      out = NameTrue;
+      return PROCEED;
+    } else {
+      TypeErrorT(1,"Bool");
+    }
+  } else if (literalEq(A,NameFalse)) {
+    if (isAnyVar(B)) {
+      return SUSPEND;
+    } else if (literalEq(B,NameTrue) || literalEq(B,NameFalse)) {
+      out = B;
+      return PROCEED;
+    } else { 
+      TypeErrorT(1,"Bool");
+    }
+  } else if (isAnyVar(A)) {
     return SUSPEND;
+  } else {
+    TypeErrorT(0,"Bool");
   }
-  
-  out = NameFalse;
-  return PROCEED;
 }
 
 DECLAREBI_USEINLINEFUN2(BIor,orInline)
