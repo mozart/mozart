@@ -265,8 +265,11 @@ if that value is non-nil."
 	(proc-buff (get-buffer-process "*Oz Compiler*")))
     (if proc-buff
 	(error "Oz already running")
+
+      ;; make sure buffer exists
+      (get-buffer-create "*Oz Compiler*")
+
       (set-buffer (process-buffer (start-oz-process)))
-      (oz-clear-buffer)
       (oz-input-mode)
       (if (not oz-input-to-oz) 
 	  (oz-toggle-read-only t))
@@ -274,6 +277,8 @@ if that value is non-nil."
       (set-process-filter (get-process "Oz Machine")  'oz-machine-filter)
       (oz-new-buffer)
       (oz-show-machine-window)
+      (bury-buffer "*Oz Machine*")
+      (bury-buffer "*Oz Compiler*")
       (oz-hide-errors))))
 
 
@@ -399,7 +404,7 @@ if that value is non-nil."
 (defun oz-clear-buffer0(&optional beg end)
   (interactive)
   (if (buffer-file-name)
-      (error "Buffer is associated with a file. Use kill-buffer.")
+      (error "Buffer is associated with a file (%s). Use kill-buffer."  (buffer-file-name))
     (if (not oz-input-to-oz) 
 	(let ((oldro  buffer-read-only))
 	  (oz-toggle-read-only nil)
@@ -432,8 +437,8 @@ if that value is non-nil."
       (setq win (get-buffer-window buffer))
       (select-window win)
       (goto-char (point-max))
-      (select-window old-win)
-      (bury-buffer buffer))))
+      (select-window old-win)))
+  (bury-buffer buffer))
 
 
 
