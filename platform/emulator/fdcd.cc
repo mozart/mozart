@@ -430,8 +430,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdConstrDisj, 3)
 {
-  EXPECTED_TYPE("tuple of finite domain,tuple of finite domain,"
-                "tuple of of tuple of finite domain");
+  OZ_EXPECTED_TYPE("tuple of finite domain,tuple of finite domain,"
+                   "tuple of of tuple of finite domain");
 
   OZ_getCArgDeref(0, b_tuple, b_tupleptr, b_tupletag);
   OZ_getCArgDeref(1, v_tuple, v_tupleptr, v_tupletag);
@@ -470,7 +470,7 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
   }
 
   PropagatorExpect pe;
-  EXPECT(pe, 1, expectVectorIntVarAny);
+  OZ_EXPECT(pe, 1, expectVectorIntVarAny);
 
   return pe.spawn(new CDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]),
                   OZMAX_PRIORITY - 1);

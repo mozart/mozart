@@ -894,7 +894,7 @@ OZ_C_proc_end
  */
 OZ_C_proc_begin(BIwidthC, 2)
 {
-    EXPECTED_TYPE("record,finite domain");
+    OZ_EXPECTED_TYPE("record,finite domain");
 
     TaggedRef rawrec=OZ_getCArg(0);
     TaggedRef rawwid=OZ_getCArg(1);
@@ -961,8 +961,8 @@ OZ_C_proc_begin(BIwidthC, 2)
     //   }
 
     OZ_Expect pe;
-    EXPECT(pe, 0, expectRecordVar);
-    EXPECT(pe, 1, expectIntVarAny);
+    OZ_EXPECT(pe, 0, expectRecordVar);
+    OZ_EXPECT(pe, 1, expectIntVarAny);
 
     return pe.spawn(new WidthPropagator(rawrec, rawwid)); // OZ_args[0], OZ_args[1]));
 }
@@ -1177,7 +1177,7 @@ OZ_C_proc_end
 // RecordC) and hence fails if X is not a record.
 OZ_C_proc_begin(BImonitorArity, 3)
 {
-    EXPECTED_TYPE("any(record),any,any(list)");
+    OZ_EXPECTED_TYPE("any(record),any,any(list)");
 
     OZ_Term rec = OZ_getCArg(0);
     OZ_Term kill = OZ_getCArg(1);
@@ -1236,8 +1236,8 @@ OZ_C_proc_begin(BImonitorArity, 3)
         if (!am.unify(featlist,arity)) return FAILED;
 
         OZ_Expect pe;
-        EXPECT(pe, 0, expectRecordVar);
-        EXPECT(pe, 1, expectVar);
+        OZ_EXPECT(pe, 0, expectRecordVar);
+        OZ_EXPECT(pe, 1, expectVar);
 
         TaggedRef uvar=makeTaggedRef(newTaggedUVar(home));
         return pe.spawn(

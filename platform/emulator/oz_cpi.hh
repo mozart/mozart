@@ -20,9 +20,9 @@
 //-----------------------------------------------------------------------------
 // misc macros
 
-#define EXPECTED_TYPE(S) char * expectedType = S
+#define OZ_EXPECTED_TYPE(S) char * expectedType = S
 
-#define EXPECT(O, P, F)                                                     \
+#define OZ_EXPECT(O, P, F)                                                  \
   {                                                                         \
     OZ_expect_t r = O.F(OZ_args[P]);                                        \
     if (O.isFailing(r)) {                                                   \
@@ -32,7 +32,7 @@
       return O.suspend(OZ_makeSuspendedThread(OZ_self,OZ_args,OZ_arity));   \
   }
 
-#define EXPECT_SUSPEND(O, P, F, SC)                                         \
+#define OZ_EXPECT_SUSPEND(O, P, F, SC)                                      \
   {                                                                         \
     OZ_expect_t r = O.F(OZ_args[P]);                                        \
     if (O.isFailing(r)) {                                                   \
@@ -42,12 +42,12 @@
       SC += 1;                                                              \
   }
 
-#define EM_LIT     "literal"
-#define EM_INT     "integer"
-#define EM_FD      "finite domain integer"
-#define EM_FDDESCR "finite domain integer description"
-#define EM_VECT    "vector of "
-#define EM_TNAME   "truth name"
+#define OZ_EM_LIT     "literal"
+#define OZ_EM_INT     "integer"
+#define OZ_EM_FD      "finite domain integer"
+#define OZ_EM_FDDESCR "finite domain integer description"
+#define OZ_EM_VECT    "vector of "
+#define OZ_EM_TNAME   "truth name"
 
 //-----------------------------------------------------------------------------
 // OZ_FiniteDomain
