@@ -1,9 +1,18 @@
 AC_INIT(mozart-stdlib.hhc)
 AC_PREFIX_DEFAULT(/usr/local/oz)
+AC_PROG_MAKE_SET
+srcdir=`cd $srcdir 2> /dev/null && pwd`
+if test "$prefix" = NONE; then
+  prefix="$ac_default_prefix"
+fi
+prefix=`cd $prefix 2> /dev/null && pwd`
 BUILDDIR=`pwd`
 AC_SUBST(BUILDDIR)
 AC_CONFIG_AUX_DIR(ozmake)
-AC_PATH_PROG(OZENGINE,ozengine,$prefix/bin:$PATH)
-AC_SUBST(OZENGINE)
+AC_PATH_PROGS(VAR_OZE,ozengine ozengine.exe,UNDEFINED,$prefix/bin:$PATH)
+if test "$VAR_OZE" = "UNDEFINED"; then
+    AC_MSG_ERROR([ozengine not found])
+fi
+AC_SUBST(VAR_OZE)
 AC_CONFIG_SUBDIRS([ozmake])
 AC_OUTPUT(Makefile)
