@@ -104,16 +104,9 @@ define
 	    if Args.opi then
 	       OZVERSION = {Property.get 'oz.version'}
 	       DATE      = {Property.get 'oz.date'}
-	       MOZART    = ('Mozart Engine '#OZVERSION#' of '#DATE#
-			    ' playing Oz 3\n')
 	    in
-	       case Args.mode of debugger then
-		  OZCAR = \insert ozcar-version.oz
-	       in
-		  {System.printError MOZART#'Ozcar Version of '#OZCAR#'\n\n'}
-	       [] profiler then
-		  {System.printError MOZART#'\n'}
-	       end
+	       {System.printError ('Mozart Engine '#OZVERSION#' ('#DATE#
+				   ') playing Oz 3\n\n')}
 	       File = {New Open.file init(name: stdout flags: [write])}
 	    else Port in
 	       thread

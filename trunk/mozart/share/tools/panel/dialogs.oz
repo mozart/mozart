@@ -40,7 +40,7 @@ local
 
 	 Author = {New Tk.label tkInit(parent: self
 				       text: ('Christian Schulte\n' #
-					      '(schulte@dfki.uni-sb.de)\n'))}
+					      '<schulte@ps.uni-sb.de>\n'))}
       in
 	 {Tk.send pack(Title Author
 		       side:top expand:1 padx:Pad pady:Pad)}
