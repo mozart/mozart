@@ -1,7 +1,12 @@
 <!DOCTYPE Book SYSTEM "ozdoc.dtd" [
 
 <!-- Extension to the DTD -->
+<!ENTITY % p.mix.local "|Em">
+<!ELEMENT Em - - (#PCDATA)>
 <!ENTITY % proglang.values.local "|sh">
+
+<!-- Abbreviations -->
+<!ENTITY amp "&">
 
 <!-- Processing Instructions -->
 <!ENTITY emdash PI "emdash">
@@ -19,6 +24,7 @@
     <!-- Splitting the document into different HTML nodes -->
     <Meta name="html.split" value="chapter.parsingconventions">
     <Meta name="html.split" value="chapter.specifications">
+    <Meta name="html.split" value="section.list.examples">
     <Meta name="html.split" value="chapter.accessing">
 
     <Meta name=ozversion value="3.0">
@@ -191,7 +197,85 @@
             <Grammar.Alt/?={option name}<<#>>?={value}/
             <Grammar.Alt/?={string}/
           </Grammar.Rule>
-        <!--** Examples -->
+        <SubSection class=unnumbered id="section.list.examples">
+          <Title/Examples/
+          <P>
+            The following will give some examples taken from the <File/ozc/
+            program, which is the Oz command-line compiler.
+          <Para class=apropos><Title/Basics/
+            The <File/ozc/ program has a command line option to tell it to
+            output usage information.  The easiest way to specify such an
+            option is:
+            <<<help>>>
+            Furthermore, we want to support a popular single-character
+            abbreviation for it:
+            <<<help(char: &amp;h)>>>
+            We might even support several single-character abbreviations for
+            convenience.
+            <<<help(char: [&amp;h &amp;?])>>>
+            We can now write any of <Samp/--help/, <Samp/-h/, or <Samp/-?/
+            for this option.  (We might also abbreviate the long form to
+            one of <Samp/--h/, <Samp/--he/, or <Samp/--hel/, provided that
+            this would still be unambiguous.)  The returned option list
+            would be <<[help#true]>>.
+          <Para class=apropos><Title/Boolean Options/
+            There is another option to tell <File/ozc/ to be verbose about
+            what it is doing.  Say we specified it as follows:
+            <<<verbose(char: &amp;v)>>>
+            This means that we can write <Samp/--verbose/ or <Samp/-v/.
+            In contrast, the following specification additionally allows for
+            <Samp/--noverbose/:
+            <<<verbose(char: &amp;v type: bool)>>>
+          <Para class=apropos><Title/Aliases/
+            Some people prefer to write <Samp/--noverbose/ as <Samp/--quiet/,
+            so we introduce an alias for it:
+            <<<quiet(char: &amp;q alias: verbose#false)>>>
+            This is an alias with associated value.  In contrast, the following
+            option (not supported by <File/ozc/, by the way) would be an alias
+            without value:
+            <<<gossipy(alias: verbose)>>>
+            This would allow us to write <Samp/--gossipy/ for <Samp/--verbose/
+            and <Samp/--nogossipy/ for <Samp/--noverbose/.
+          <Para class=apropos><Title/String Arguments/
+            The following example illustrates another type of argument than
+            boolean:
+            <<<include(type: string)>>>
+            Saying <Samp/--include=x.oz/ for instance would tell <File/ozc/
+            to load and compile this file before tackling its <Q class=quasi
+            /real/ job.  Together with the following option, we get an example
+            for when the order beween different arguments may matter:
+            <<<'define'(char: &amp;D type: atom)>>>
+            Saying
+            <Code display proglang=sh
+            /--define=MYMACRO1 --include=x.oz --include=y.oz/
+            for instance would mean that <<MYMACRO1>> would be defined for both
+            <File/x.oz/ and <File/y.oz/, whereas in
+            <Code display proglang=sh
+            /--include=x.oz --define=MYMACRO1 --include=y.oz/
+            it is only defined for <File/y.oz/.
+          <P>
+            By the way, this option has a single-character abbreviation
+            <Em/and/ an explicit argument (in contrast to the implicit boolean
+            arguments above):  We can thus write either <Samp/-D MYMACRO1/ or
+            <Samp/-DMYMACRO1/ instead of <Samp/--define=MYMACRO1/.
+          <Para class=apropos><Title/List Arguments/
+            In <File/ozc/, actually, a list of macro names is allowed for this
+            option:
+            <<<'define'(char: &amp;D type: list(atom))>>>
+            This also supports, &eg;, <Samp/-DMYMACRO1,YOURMACRO17 x.oz/.
+            This would return the option list
+            <<['define'#['MYMACRO1' 'YOURMACRO17'] "x.oz"]>>.
+          <Para class=apropos><Title/Range Limitations/
+            Sometimes one wants to limit the range of allowed values:
+            <<<compress(char: &amp;z type: int(min: 0 max: 9))>>>
+            This would allow us to write <Samp/-z9/, but not <Samp/-z17/.
+            For atom arguments, sometimes only a limited set of values is
+            sensible:
+<<<mode(type: atom(help core outputcode
+                   feedtoemulator dump executable)>>>
+            For these, <File/ozc/ also provides the better known aliases
+            such as:
+            <<<dump(char: &amp;c alias: mode#dump)>>>
       <Section>
         <Title/Record/
         <Para class=apropos><Title/Syntax Specification/
