@@ -292,7 +292,7 @@
 \newcommand{\mozartstyle@A}{%
   \renewcommand{\mozart@topcomic}{%
     \begin{flushleft}%
-      \ifx\@comix\long@empty\vspace*{\mozart@comic@height}\else\@comic\fi
+      \ifx\@comic\long@empty\vspace*{\mozart@comic@height}\else\@comic\fi
     \end{flushleft}}}
 
 \newcommand{\mozartstyle@B}{%
@@ -1234,3 +1234,24 @@
 \DeclareFontShape{T1}{code}{bx}{sl}{<->ssub * code/b/sl}{}
 \DeclareFontShape{T1}{code}{b}{it}{<->ssub * code/b/sl}{}
 \DeclareFontShape{T1}{code}{bx}{it}{<->ssub * code/b/it}{}
+
+%% \mozartBibAdd{FILENAME}
+%%	accumulates bibliography files
+%% \mozartBibDo
+%%	issues the corresponding
+%%		\bibliographystyle{...}
+%%		\bibliography{FILE1,...,FILEn}
+
+\def\mozart@bibfiles{}
+\newcommand{\mozartBibAdd}[1]{%
+  \@ifundefined{mozbib@#1}%
+    {\@namedef{mozbib@#1}{}%
+     \ifx\mozart@bibfiles\@empty
+       \gdef\mozart@bibfiles{#1}%
+     \else
+       \xdef\mozart@bibfiles{\mozart@bibfiles,#1}\fi}%
+    {}}
+\newcommand{\mozart@bibstyle}{plain}
+\newcommand{\mozartBibDo}{%
+  \bibliographystyle{\mozart@bibstyle}%
+  \bibliography{\mozart@bibfiles}}
