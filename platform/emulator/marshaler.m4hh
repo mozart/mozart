@@ -1,0 +1,91 @@
+/*
+  Perdio Project, DFKI & SICS,
+  Universit"at des Saarlandes
+  Postfach 15 11 59, D-66041 Saarbruecken, Phone (+49) 681 302-5312
+  SICS
+  Box 1263, S-16428 Sweden, Phone (+46) 8 7521500
+  Author: brand
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  provided by marshaler to protocol-layer.
+  ------------------------------------------------------------------------
+*/
+
+void marshalTerm(OZ_Term,MsgBuffer*);
+void marshalNumber(unsigned int,MsgBuffer*);
+void marshalShort(unsigned short,MsgBuffer*);
+void marshalString(const char *s, MsgBuffer *bs);
+
+OZ_Term unmarshalTerm(MsgBuffer*);
+int unmarshalNumber(MsgBuffer*);
+char *unmarshalString(MsgBuffer *);
+unsigned short unmarshalShort(MsgBuffer*);
+GName* unmarshalGName(TaggedRef*,MsgBuffer*);
+
+MessageType unmarshalHeader(MsgBuffer*);
+
+Bool changeMarshaledFastCall(ProgramCounter,TaggedRef,int);
+
+void initMarshaler();
+
+class ObjectFields{
+public:
+  SRecord *feat;
+  OZ_Term state;
+  OZ_Term lock;
+  OZ_Term clas;
+
+  ObjectFields(){}
+};
+
+void fillInObjectAndClass(ObjectFields *,Object *);
+void fillInObject(ObjectFields *,Object *);
+
+// message routines provided by marshaler
+
+Bool unmarshal_SPEC(MsgBuffer*, char* &,OZ_Term&);
+
+define(message,`void marshal_$1(MsgBuffer *,mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
+
+define(mxzArg,`ifelse($1,Index,int,
+	           $1,Index2,int,
+	           $1,Index3,int,
+                   $1,Term,TaggedRef,
+		   $1,String,char*,
+                   $1,Credit,Credit,
+                   $1,Object,Object*,
+                   $1,ObjectAndClass,Object*,
+                   $1,Site,Site*,
+	           $1,Site2,Site*)'
+            `ifelse($2,`',`',`,')')
+
+
+include(msgFormat.m4)
+
+undefine(`mxzArg')
+define(mxzArg,`ifelse($1,Index,int &,
+	           $1,Index2,int &,
+	           $1,Index3,int &,
+                   $1,Term,TaggedRef &,
+		   $1,String,char* &,
+                   $1,Credit,Credit &,
+                   $1,Object,ObjectFields* ,
+                   $1,ObjectAndClass,ObjectFields* ,
+                   $1,Site,Site* &,
+	           $1,Site2,Site* &)'
+            `ifelse($2,`',`',`,')')
+
+
+undefine(`message')
+define(message,`void unmarshal_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
+include(msgFormat.m4)
+
+undefine(`message')
+define(message,`void unmarshalUnsent_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
+include(msgFormat.m4)
+
+
+
+
