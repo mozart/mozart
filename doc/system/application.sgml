@@ -334,8 +334,15 @@
 	  the order) is returned.
 	  <Grammar.Rule>?={occ}
 	    <Grammar.Alt/<<single>> | <<multiple>>
-	      | <<leftmost>> | <<rightmost>>/
+	      | <<leftmost>> | <<rightmost>> | <<accumulate(P)>>/
 	  </Grammar.Rule>
+          When <<accumulate(P)>> is specified, procedure <<P>> is called
+          for each occurrence of the option.  It takes two arguments: the
+          option (as an atom) and the parsed value.  This can be used to
+          accumulate multiple occurrences of related options into one list.
+          See, for example, options <<--include>> and <<--exclude>> of
+          <ref.extern to="ozdoc:tools" key="chapter.linker"
+		      /the Oz linker <<ozl>>/.
 	<Para class=apropos><Title/Returned Result/
 	  The result consists of an option record.  The options which had
 	  an explicit ?={occ} given in their specification are moved from
