@@ -25,13 +25,15 @@
 functor $
 
 import
-   SP.{Show   = 'Show'
-       System = 'System'}
+   System.{show
+           get
+           printName}
 
-   WP.{Tk      = 'Tk'
-       TkTools = 'TkTools'}
+   Tk
 
-   Browser.{Browse = 'Browse'}
+   TkTools
+
+   Browser.{browse}
 
 export
    'ExplorerClass': ExplorerClass
@@ -39,6 +41,12 @@ export
    'ExploreOne':    ExploreOne
    'ExploreAll':    ExploreAll
    'ExploreBest':   ExploreBest
+
+   'class':  ExplorerClass
+   'object': Explorer
+   'one':    ExploreOne
+   'all':    ExploreAll
+   'best':   ExploreBest
 
 body
 

@@ -29,21 +29,22 @@
 functor $
 
 import
-   SP.{System  = 'System'}
+   System.{get}
 
-   OP.{OS = 'OS'}
+   OS.{time}
 
-   WP.{Tk      = 'Tk'
-       TkTools = 'TkTools' }
+   Tk
 
-   Emacs.{RealEmacs = emacs}
+   TkTools
+
+   Emacs.{getOPI
+          condSend}
 
 export
    'Profiler': Profiler
+   'object':   Profiler
 
 body
-   Emacs = RealEmacs
-
    \insert 'profiler/prof-config'
    \insert 'profiler/prof-prelude'
 
@@ -51,7 +52,6 @@ body
    \insert 'profiler/prof-dialog'
    \insert 'profiler/prof-help'
    \insert 'profiler/prof-gui'
-in
    \insert 'profiler/profiler'
 end
 
