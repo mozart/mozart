@@ -59,13 +59,12 @@
         <Picture.Extern to="gump.gif" type=gif>
       </Picture.Choice>
     <Abstract>
-      <P.silent><!--**-->
-        This manual describes &Gump;, the front-end generator for &Oz;.
-        It reads &Oz; files with embedded scanner and&slash;or parser
-        definitions and produces &Oz; code as output in which these have
-        been replaced by classes implementing scanners and&slash;or
-        parsers.  The semantic actions in the specifications allow the
-        full flexibility and expressivity of &Oz; to be used.
+      This manual describes &Gump;, the front-end generator for &Oz;.
+      It reads &Oz; files with embedded scanner and&slash;or parser
+      definitions and produces &Oz; code as output in which these have
+      been replaced by classes implementing scanners and&slash;or
+      parsers.  The semantic actions in the specifications allow the
+      full flexibility and expressivity of &Oz; to be used.
     </Abstract>
   <Body>
     &intro;
