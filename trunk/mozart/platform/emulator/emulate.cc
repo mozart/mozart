@@ -68,149 +68,95 @@ Abstraction *getApplyMethodForGenCall(Object *obj, TaggedRef label,
 // -----------------------------------------------------------------------
 // EXCEPTION
 
-enum ExceptionTypes {
-  E_ERROR,                     // System error
-  E_FAILURE,                   // Toplevel failure
-  E_DEEP_FAILURE,              // Failure in local space
-  E_USER,                      // User exception
-};
-
-OZ_Term formatError(OZ_Term info)
-{
-  OZ_Term ret = OZ_record(OZ_atom("error"),
-			  cons(OZ_int(1),
-			       cons(OZ_atom("debug"),OZ_nil())));
-  OZ_putSubtree(ret,OZ_int(1),info);
-  OZ_putSubtree(ret,OZ_atom("debug"),NameUnit);
-  return ret;
-}
-
-OZ_Term formatError(OZ_Term info,OZ_Term traceBack,OZ_Term loc)
-{
-  OZ_Term d = OZ_record(OZ_atom("d"),
-			cons(OZ_atom("stack"),
-			     cons(OZ_atom("loc"),
-				  OZ_nil())));
-  OZ_putSubtree(d,OZ_atom("stack"),traceBack);
-  OZ_putSubtree(d,OZ_atom("loc"),loc);
-  OZ_Term ret = OZ_record(OZ_atom("error"),
-			  cons(OZ_int(1),
-			       cons(OZ_atom("debug"),OZ_nil())));
-  OZ_putSubtree(ret,OZ_int(1),info);
-  OZ_putSubtree(ret,OZ_atom("debug"),d);
-  return ret;
-}
-
-OZ_Term formatFailure() 
-{
-  OZ_Term ret = OZ_record(OZ_atom("failure"),OZ_cons(OZ_atom("debug"),
-						     OZ_nil()));
-  OZ_putSubtree(ret,OZ_atom("debug"),NameUnit);
-  return ret;
-}
-
-OZ_Term formatFailure(OZ_Term info,OZ_Term traceBack,OZ_Term loc)
+void AM::formatError(OZ_Term traceBack,OZ_Term loc)
 {
   OZ_Term d = OZ_record(OZ_atom("d"),
 			OZ_cons(OZ_atom("info"),
 				cons(OZ_atom("stack"),
 				     cons(OZ_atom("loc"),
 					  OZ_nil()))));
-  OZ_putSubtree(d,OZ_atom("info"),info);
   OZ_putSubtree(d,OZ_atom("stack"),traceBack);
   OZ_putSubtree(d,OZ_atom("loc"),loc);
-  OZ_Term ret = OZ_record(OZ_atom("failure"),OZ_cons(OZ_atom("debug"),
-						     OZ_nil()));
-  OZ_putSubtree(ret,OZ_atom("debug"),d);
-  return ret;
+  OZ_putSubtree(d,OZ_atom("info"),exception.info);
+
+  OZ_putSubtree(exception.value,OZ_atom("debug"),d);
 }
 
-// used in builtins.cc
-int raiseKernel(char *label,int arity,...) 
+int AM::raise(int cat, int key, char *label,int arity,...) 
 {
-  OZ_Term tt=OZ_tuple(OZ_atom("kernel"),arity+1);
-  OZ_putArg(tt,0,OZ_atom(label));
+  char *lab;
+  switch (key) {
+  case E_KERNEL:
+    lab="kernel";
+    break;
+  case E_OBJECT:
+    lab="object";
+    break;
+  case E_OPEN:
+    lab="open";
+    break;
+  case E_TK:
+    lab="tk";
+    break;
+  case E_UNIX:
+    lab="unix";
+    break;
+  case E_SYSTEM:
+    lab="system";
+    break;
+  default:
+    error("never here");
+    break;
+  }
+
+  OZ_Term exc=OZ_tuple(OZ_atom(lab),arity+1);
+  OZ_putArg(exc,0,OZ_atom(label));
 
   va_list ap;
   va_start(ap,arity);
 
   for (int i = 0; i < arity; i++) {
-    OZ_putArg(tt,i+1,va_arg(ap,OZ_Term));
+    OZ_putArg(exc,i+1,va_arg(ap,OZ_Term));
   }
 
   va_end(ap);
 
-  return OZ_raise(tt);
-}
-
-OZ_Return kernelError(char *label,int arity,...)
-{
-  OZ_Term tt=OZ_tuple(OZ_atom("kernel"),arity+1);
-  OZ_putArg(tt,0,OZ_atom(label));
-
-  va_list ap;
-  va_start(ap,arity);
-
-  for (int i = 0; i < arity; i++) {
-    OZ_putArg(tt,i+1,va_arg(ap,OZ_Term));
+  switch (cat) {
+  case 0:
+    lab="error";
+    break;
+  case 1:
+    lab="system";
+    break;
+  default:
+    error("never here");
   }
 
-  va_end(ap);
-  return tt;
+  OZ_Term ret = OZ_record(OZ_atom(lab),
+			  cons(OZ_int(1),
+			       cons(OZ_atom("debug"),OZ_nil())));
+  OZ_putSubtree(ret,OZ_int(1),exc);
+  OZ_putSubtree(ret,OZ_atom("debug"),NameUnit);
+
+  exception.info = NameUnit;
+  exception.value = ret;
+  exception.debug = TRUE;
+  return RAISE;
 }
-
-
-// used in builtins.cc
-int raiseObject(char *label,int arity,...) 
-{
-  OZ_Term tt=OZ_tuple(OZ_atom("object"),arity+1);
-  OZ_putArg(tt,0,OZ_atom(label));
-
-  va_list ap;
-  va_start(ap,arity);
-
-  for (int i = 0; i < arity; i++) {
-    OZ_putArg(tt,i+1,va_arg(ap,OZ_Term));
-  }
-
-  va_end(ap);
-
-  return OZ_raise(tt);
-}
-
-OZ_Return objectError(char *label,int arity,...)
-{
-  OZ_Term tt=OZ_tuple(OZ_atom("object"),arity+1);
-  OZ_putArg(tt,0,OZ_atom(label));
-
-  va_list ap;
-  va_start(ap,arity);
-
-  for (int i = 0; i < arity; i++) {
-    OZ_putArg(tt,i+1,va_arg(ap,OZ_Term));
-  }
-
-  va_end(ap);
-  return tt;
-}
-
-// former DORAISE
-#define RAISE_ERROR(T) {exceptionValue=(T); exceptionType=E_ERROR; goto LBLraise;}
 
 #define RAISE_APPLY(fun,args) \
-  RAISE_ERROR(kernelError("apply",2,fun,args))
+  (void) e->raise(E_ERROR,E_KERNEL,"apply",2,fun,args); goto LBLraise;
 
 
-OZ_Term AM::typeException(char *fun, OZ_Term args)
+void AM::enrichTypeException(char *fun, OZ_Term args)
 {
-  return kernelError("type",5,OZ_atom(fun),args,
-		      OZ_atom(typeError.type),
-		      OZ_int(typeError.pos),
-		      OZ_string(typeError.comment));
+  OZ_Term e = OZ_subtree(exception.value,OZ_int(1));
+  OZ_putArg(e,1,OZ_atom(fun));
+  OZ_putArg(e,2,args);
 }
 
 #define RAISE_TYPE1(fun,args)			\
-  RAISE_ERROR(e->typeException(fun,args));
+  e->enrichTypeException(fun,args); goto LBLraise;
 
 #define RAISE_TYPE1_FUN(fun,args)				\
   RAISE_TYPE1(fun,						\
@@ -220,24 +166,20 @@ OZ_Term AM::typeException(char *fun, OZ_Term args)
    RAISE_TYPE1(builtinTab.getName((void *) biFun),	\
 	       OZ_toList(predArity,X));
 
-#define RAISE_BI goto LBLraiseE;
-
-
 /*
  * Handle Failure macros (HF)
  */
+
 #define HF_RAISE_FAILURE(T)					\
    {								\
      if (!e->isToplevel()) {					\
        if (!CTT->hasCatchFlag() || CBB!=CTT->getBoard()) {	\
 	 goto LBLfailure;					\
-       } else {							\
-	 exceptionType=E_DEEP_FAILURE;				\
        }							\
-     } else {							\
-       exceptionType=E_FAILURE;					\
      }								\
-     exceptionValue=(T);					\
+     e->exception.info  = ozconf.errorDebug?T:NameUnit;		\
+     e->exception.value = RecordFailure;			\
+     e->exception.debug = ozconf.errorDebug;			\
      goto LBLraise;						\
    }
 
@@ -250,9 +192,10 @@ OZ_Term AM::typeException(char *fun, OZ_Term args)
 #define HF_BI	      HF_APPLY(OZ_atom(builtinTab.getName((void *) biFun)), \
 			       OZ_toList(predArity,X));
 
-#define CheckArity(arityExp,proc)					\
-if (predArity != arityExp && VarArity != arityExp) {			\
-  RAISE_ERROR(kernelError("arity",2,proc,OZ_toList(predArity,X)));	\
+#define CheckArity(arityExp,proc)					 \
+if (predArity != arityExp && VarArity != arityExp) {			 \
+  (void) e->raise(E_ERROR,E_KERNEL,"arity",2,proc,OZ_toList(predArity,X)); \
+  goto LBLraise;							 \
 }
 
 // -----------------------------------------------------------------------
@@ -872,10 +815,6 @@ void engine(Bool init)
   OZ_CFun biFun = NULL;     NoReg(biFun);
   ConstTerm *predicate;	    NoReg(predicate);
   int predArity;    	    NoReg(predArity);
-
-  /* exception */
-  int exceptionType;
-  OZ_Term exceptionValue;
 
   // short names
 # define CBB (e->currentBoard)
@@ -1523,15 +1462,9 @@ LBLdispatcher:
 
       case PROCEED:	  DISPATCH(3);
       case FAILED:	  HF_BI;
-      case RAISE:	  RAISE_BI;
+      case RAISE:	  goto LBLraise;
       case BI_TYPE_ERROR: RAISE_TYPE;
       case BI_TERMINATE:  goto LBLpopTask;
-      case RAISE_BIERROR: RAISE_ERROR(X[0]);
-
-       case RAISE_USER:
-	 exceptionType=E_USER;
-	 exceptionValue=X[0];
-	 goto LBLraise;
 	 
       case SUSPEND:
 	e->pushTask(PC,Y,G,X,predArity);
@@ -1573,7 +1506,7 @@ LBLdispatcher:
 		 cons(XPC(2),nil()));
 
       case RAISE:
-	RAISE_BI;
+	goto LBLraise;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1(entry->getPrintName(),
@@ -1612,7 +1545,7 @@ LBLdispatcher:
 		 cons(XPC(2),cons(XPC(3),nil())));
 
       case RAISE:
-	RAISE_BI;
+	goto LBLraise;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1(entry->getPrintName(),
@@ -1652,7 +1585,7 @@ LBLdispatcher:
 		 cons(XPC(2),cons(XPC(3),cons(XPC(4),nil()))));
 
       case RAISE:
-	RAISE_BI;
+	goto LBLraise;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1(entry->getPrintName(),
@@ -1692,7 +1625,7 @@ LBLdispatcher:
 	Assert(0);
 
       case RAISE:
-	RAISE_BI;
+	goto LBLraise;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1_FUN(entry->getPrintName(),
@@ -1736,7 +1669,7 @@ LBLdispatcher:
 	//	error("inlinefun2 fail");
 
       case RAISE:
-	RAISE_BI;
+	goto LBLraise;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1_FUN(entry->getPrintName(),
@@ -1757,7 +1690,8 @@ LBLdispatcher:
 	SRecord *srec = tagged2SRecord(rec);
 	int index = ((InlineCache*)(PC+5))->lookup(srec,feature);
 	if (index<0) {
-	  RAISE_ERROR(kernelError(".", 2, XPC(1), feature));
+	  (void) e->raise(E_ERROR,E_KERNEL,".", 2, XPC(1), feature);
+	  goto LBLraise;
 	}
 	XPC(3) = srec->getArg(index);
 	DISPATCH(7);	
@@ -1781,7 +1715,7 @@ LBLdispatcher:
 	  }
 
 	case RAISE:
-	  RAISE_BI;
+	  goto LBLraise;
 
 	case BI_TYPE_ERROR:
 	  RAISE_TYPE1_FUN(".", cons(XPC(1), cons(feature, nil())));
@@ -1806,10 +1740,9 @@ LBLdispatcher:
 	  DISPATCH(6);
 	}
       }
-      RAISE_ERROR(objectError("@",2,
-			      rec?makeTaggedSRecord(rec)
-			         :OZ_atom("noattributes"),
-			      fea));
+      (void) e->raise(E_ERROR,E_OBJECT,"@",2,
+		      rec?makeTaggedSRecord(rec):OZ_atom("noattributes"),fea);
+      goto LBLraise;
     }
 
   Case(INLINEASSIGN)
@@ -1826,10 +1759,10 @@ LBLdispatcher:
 	}
       }
       
-      RAISE_ERROR(objectError("<-",3,
-			      rec?makeTaggedSRecord(rec)
-			         :OZ_atom("noattributes"),
-			      fea, XPC(2)));
+      (void) e->raise(E_ERROR,E_OBJECT,"<-",3,
+		      rec?makeTaggedSRecord(rec) :OZ_atom("noattributes"),
+		      fea, XPC(2));
+      goto LBLraise;
     }
 
   Case(INLINEUPARROW)
@@ -1850,7 +1783,7 @@ LBLdispatcher:
 		 cons(XPC(1),cons(XPC(2),nil())));
 
       case RAISE:
-	RAISE_BI;
+	goto LBLraise;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1_FUN("^",cons(XPC(1),cons(XPC(2),nil())));
@@ -1893,7 +1826,7 @@ LBLdispatcher:
 	Assert(0);
 
       case RAISE:
-	RAISE_BI;
+	goto LBLraise;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1_FUN(entry->getPrintName(),
@@ -1957,7 +1890,7 @@ LBLdispatcher:
 	goto LBLsuspendThread;
 
       case RAISE:
-	RAISE_BI;
+	goto LBLraise;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1(entry->getPrintName(),
@@ -1992,7 +1925,7 @@ LBLdispatcher:
 	}
 
       case RAISE:
-	RAISE_BI;
+	goto LBLraise;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1(entry->getPrintName(),
@@ -2100,13 +2033,15 @@ LBLdispatcher:
       }
       
       if (!isLock(aux)) {
-	RAISE_ERROR(objectError("attempt to lock closed object",0));
+	(void) e->raise(E_ERROR,E_OBJECT,"attempt to lock closed object",0);
+	goto LBLraise;
       }
 
       OzLock *lck = tagged2Lock(aux);
       if (!e->isToplevel()) {
 	if (e->currentBoard != lck->getBoard()) {
-	  RAISE_ERROR(objectError("attempt to lock object in guard",0));
+	  (void) e->raise(E_ERROR,E_OBJECT,"attempt to lock object in guard",0);
+	  goto LBLraise;
 	}
       }
       
@@ -2470,16 +2405,10 @@ LBLdispatcher:
 	 JUMP(PC);
 	 
        case SLEEP:         Assert(0);
-       case RAISE:         RAISE_BI;
-       case RAISE_BIERROR: RAISE_ERROR(X[0]);
+       case RAISE:         goto LBLraise;
        case BI_TYPE_ERROR: RAISE_TYPE;
        case BI_TERMINATE:  goto LBLpopTask;
        case FAILED:        HF_BI;
-
-       case RAISE_USER:
-	 exceptionType=E_USER;
-	 exceptionValue=X[0];
-	 goto LBLraise;
 
        case BI_PREEMPT:
 	 if (!isTailCall) {
@@ -2494,11 +2423,6 @@ LBLdispatcher:
 // --- Call: Builtin: raise
 // ------------------------------------------------------------------------
 
-   LBLraiseE:
-     exceptionValue=e->exception;
-     exceptionType=E_ERROR;
-     // fall through
-     
    LBLraise:
      {
        DebugCheck(ozconf.stopOnToplevelFailure,
@@ -2509,48 +2433,27 @@ LBLdispatcher:
        shallowCP = 0; // failure in shallow guard can never be handled
 
        TaskStackEntry *lastTop=CTT->getTop();
-       Bool foundHdl = CTT->findCatch(); /* topmost entry points to handler now */
+       Bool foundHdl = CTT->findCatch();
+       /* topmost entry points to handler now */
 
-       if (exceptionType!=E_USER) {
-	 switch (exceptionType) {
-	 case E_ERROR:
-	   if (ozconf.errorDebug) {
-	     OZ_Term traceBack = CTT->reflect(lastTop,CTT->getTop(),PC);
-	     OZ_Term loc = e->dbgGetLoc(CBB);
-	     exceptionValue = formatError(exceptionValue,traceBack,loc);
-	   } else {
-	     exceptionValue = formatError(exceptionValue);
-	   }	     
-	   break;
-	 case E_DEEP_FAILURE:
-	 case E_FAILURE:
-	   if (ozconf.errorDebug) {
-	     OZ_Term traceBack = CTT->reflect(lastTop,CTT->getTop(),PC);
-	     OZ_Term loc = e->dbgGetLoc(CBB);
-	     exceptionValue = formatFailure(exceptionValue,traceBack,loc);
-	   } else {
-	     exceptionValue = formatFailure();
-	   }
-	   break;
-	 default:
-	   Assert(0);
-	   break;
-	 }
+       if (e->exception.debug) {
+	 OZ_Term traceBack = CTT->reflect(lastTop,CTT->getTop(),PC);
+	 OZ_Term loc = e->dbgGetLoc(CBB);
+	 e->formatError(traceBack,loc);
        }
 
        if (foundHdl) {
-	 X[0] = exceptionValue;
+	 X[0] = e->exception.value;
 	 goto LBLpopTask;
        }
 
-       if (exceptionType==E_DEEP_FAILURE ||
-	   (exceptionType==E_USER &&
-	    !e->isToplevel() &&
-	    OZ_eq(OZ_label(exceptionValue),OZ_atom("failure")))) {
+       if (!e->isToplevel() &&
+	   OZ_eq(OZ_label(e->exception.value),OZ_atom("failure"))) {
 	 goto LBLfailure;
        }
+
        RefsArray argsArray = allocateRefsArray(1,NO);
-       argsArray[0] = exceptionValue;
+       argsArray[0] = e->exception.value;
        CTT->pushCall(e->defaultExceptionHandler,argsArray,1);
        goto LBLpopTask;
      }
@@ -2861,7 +2764,7 @@ LBLdispatcher:
        switch (biFun(predArity, X)) {
        case FAILED:        HF_BI;
        case PROCEED:       goto LBLpopTask;
-       case RAISE:         RAISE_BI;
+       case RAISE:         goto LBLraise;
        case BI_TYPE_ERROR: RAISE_TYPE;
 
        case SUSPEND:

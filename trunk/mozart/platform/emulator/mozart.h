@@ -59,8 +59,6 @@ typedef unsigned int OZ_Return;
 #define SLEEP       3
 #define SCHEDULED   4
 #define RAISE       5
-#define RAISE_USER  6
-#define RAISE_BIERROR 7
 
 
 typedef void *OZ_Thread;

@@ -36,25 +36,9 @@ TaggedRef NameTclName,
 
 TaggedRef tcl_dict;
 
-int raiseTk(char *label_a, char *label_b,int arity,...)  {
-  OZ_Term tt=OZ_tuple(OZ_atom(label_a),arity+1);
-  OZ_putArg(tt,0,OZ_atom(label_b));
-
-  va_list ap;
-  va_start(ap,arity);
-
-  for (int i = 0; i < arity; i++) {
-    OZ_putArg(tt,i+1,va_arg(ap,OZ_Term));
-  }
-
-  va_end(ap);
-
-  return OZ_raise(tt);
-}
-
 OZ_Return raise_os_error()
 {
-  return raiseTk("unix","unix",2,OZ_int(errno),OZ_atom(OZ_unixError(errno)));
+  return am.raise(E_ERROR,E_TK,"unix",2,OZ_int(errno),OZ_atom(OZ_unixError(errno)));
 }
 
 OZ_Return raise_type_error(TaggedRef tcl)
@@ -63,14 +47,11 @@ OZ_Return raise_type_error(TaggedRef tcl)
 }
 
 OZ_Return raise_closed(TaggedRef tcl) {
-  return raiseTk("tk","alreadyClosed",1,tcl);
+  return am.raise(E_CONDITION,E_TK,"alreadyClosed",1,tcl);
 }
 
-extern
-int raiseKernel(char *label,int arity,...);
-
 OZ_Return raise_toplevel(void) {
-  return raiseKernel("globalState",1,OZ_atom("io"));
+  return am.raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("io"));
 }
 
 #define CHECK_TOPLEVEL     \
