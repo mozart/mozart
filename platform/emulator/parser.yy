@@ -142,6 +142,10 @@ inline OZ_Term newCTerm(char *l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4,
   return OZ_mkTupleC(l,6,t1,t2,t3,t4,t5,t6);
 }
 
+inline OZ_Term newCTerm(char *l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4, OZ_Term t5, OZ_Term t6, OZ_Term t7) {
+  return OZ_mkTupleC(l,7,t1,t2,t3,t4,t5,t6,t7);
+}
+
 static OZ_Term makeLongPos(OZ_Term pos1, OZ_Term pos2) {
   return newCTerm("pos",OZ_subtree(pos1,OZ_int(1)),OZ_subtree(pos1,OZ_int(2)),
 		  OZ_subtree(pos1,OZ_int(3)),OZ_subtree(pos2,OZ_int(1)),
@@ -175,6 +179,22 @@ static OZ_Term makeString(char *chars, OZ_Term pos) {
     return newCTerm("fAtom",nilAtom,pos);
   else
     return makeCons(makeInt(chars[0],pos),makeString(&chars[1],pos),pos);
+}
+
+
+//------
+// Gump
+//------
+
+static OZ_Term scannerPrefix = 0;
+static OZ_Term parserExpect = 0;
+
+void xy_setScannerPrefix() {
+  scannerPrefix = OZ_atom(xytext);
+}
+
+void xy_setParserExpect() {
+  parserExpect = makeInt(xytext,pos());
 }
 
 %}
@@ -937,7 +957,9 @@ coord		: /* empty */
 scannerSpecification
 		: _scanner_ coord nakedVariable
 		  classDescriptorList methList scannerRules end
-		  { $$ = newCTerm("fScanner",$3,$4,$5,$6,$2); }
+		  { OZ_Term prefix =
+		      scannerPrefix? scannerPrefix: OZ_atom("zy");
+		    $$ = newCTerm("fScanner",$3,$4,$5,$6,prefix,$2); }
 		;
 
 scannerRules	: lexAbbrev
@@ -993,7 +1015,8 @@ parserSpecification
 		: _parser_ coord nakedVariable
 		  classDescriptorList methList
 		  tokenClause parserRules end
-		  { $$ = newCTerm("fParser",$3,$4,$5,$6,$7,$2); }
+		  { OZ_Term expect = parserExpect? parserExpect: OZ_int(0);
+		    $$ = newCTerm("fParser",$3,$4,$5,$6,$7,expect,$2); }
 		;
 
 parserRules	: synClause
