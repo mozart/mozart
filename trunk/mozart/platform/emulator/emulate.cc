@@ -566,18 +566,20 @@ void Thread::makeRunning ()
 
 #define SUSP_PC(TermPtr,RegsToSave,PC)		\
    e->pushTask(PC,Y,G,X,RegsToSave);		\
-   addSusp(TermPtr,CTT);			\
+   addSusp(TermPtr,CTT);	\
    goto LBLsuspendThread;
 
 
 void addSusp(TaggedRef *varPtr, Thread *thr)
 {
-  taggedBecomesSuspVar(varPtr)->addSuspension (thr);
+  addSuspAnyVar(varPtr,thr);
 }
+
+
 
 void addSusp(TaggedRef var, Thread *thr)
 {
-  DEREF(var,varPtr,_1);
+  DEREF(var,varPtr,tag);
   Assert(isAnyVar(var));
 
   addSusp(varPtr,thr);
@@ -2180,7 +2182,7 @@ LBLdispatcher:
     int argsToSave = getPosIntArg(PC+2);
     e->pushTask(PC,Y,G,X,argsToSave);
     if (isCVar (tag)) {
-      tagged2CVar(term)->addDetSusp(CTT);
+      tagged2CVar(term)->addDetSusp(CTT,termPtr);
     } else {
       addSusp (termPtr, CTT);
     }

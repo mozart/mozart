@@ -119,25 +119,20 @@ void addSuspFSetVar(OZ_Term v, Thread * el, OZ_FSetPropState list_index)
 
   switch (list_index) {
   case fs_prop_val:
-    fsv->fsSuspList[fs_prop_val] = addSuspToList(fsv->fsSuspList[fs_prop_val], el,
-					    fsv->home);
+    AddSuspToList(fsv->fsSuspList[fs_prop_val], el, fsv->home);
     break;
   case fs_prop_bounds:
-    fsv->fsSuspList[fs_prop_glb] = addSuspToList(fsv->fsSuspList[fs_prop_glb], el,
-					    fsv->home);
-    fsv->fsSuspList[fs_prop_lub] = addSuspToList(fsv->fsSuspList[fs_prop_lub], el,
-					    fsv->home);
+    AddSuspToList(fsv->fsSuspList[fs_prop_glb], el, fsv->home);
+    AddSuspToList(fsv->fsSuspList[fs_prop_lub], el, fsv->home);
     break;
   case fs_prop_glb:
-    fsv->fsSuspList[fs_prop_glb] = addSuspToList(fsv->fsSuspList[fs_prop_glb], el,
-					    fsv->home);
+    AddSuspToList(fsv->fsSuspList[fs_prop_glb], el, fsv->home);
     break;
   case fs_prop_lub:
-    fsv->fsSuspList[fs_prop_lub] = addSuspToList(fsv->fsSuspList[fs_prop_lub], el,
-					    fsv->home);
+    AddSuspToList(fsv->fsSuspList[fs_prop_lub], el, fsv->home);
     break;
   case fs_prop_any:
-    fsv->suspList = addSuspToList(fsv->suspList, el, fsv->home);
+    AddSuspToList(fsv->suspList, el, fsv->home);
     break;
   default:
     error("list index out of range.");

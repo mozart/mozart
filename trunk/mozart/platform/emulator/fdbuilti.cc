@@ -243,20 +243,20 @@ void BIfdHeadManager::addPropagator (int i, Thread *thr, OZ_FDPropState target)
   if (tag == pm_singl) {
     return;
   } else if (tag == pm_fd) {
-    addSuspFDVar(bifdhm_var[i], new SuspList (thr), target);
+    addSuspFDVar(bifdhm_var[i], thr, target);
     if (! am.isLocalCVar(bifdhm_var[i])) global_vars += 1;
   } else if (tag == pm_bool) {
-    addSuspBoolVar(bifdhm_var[i], new SuspList (thr));
+    addSuspBoolVar(bifdhm_var[i], thr);
     if (! am.isLocalCVar(bifdhm_var[i])) global_vars += 1;
   } else if (tag == pm_uvar) {
     if (bifdhm_var[i] != *bifdhm_varptr[i]) return;
     if (am.isLocalUVar(bifdhm_var[i])) {
       OZ_Term * taggedfdvar = newTaggedCVar(new GenFDVariable());
-      addSuspFDVar(*taggedfdvar, new SuspList (thr), target);
+      addSuspFDVar(*taggedfdvar, thr, target);
       doBind(bifdhm_varptr[i], makeTaggedRef(taggedfdvar));
     } else {
       global_vars += 1;
-      addSuspUVar(bifdhm_varptr[i], new SuspList (thr));
+      addSuspUVar(bifdhm_varptr[i], thr);
     } 
   } else {
     Assert(tag == pm_svar);
@@ -267,11 +267,11 @@ void BIfdHeadManager::addPropagator (int i, Thread *thr, OZ_FDPropState target)
       OZ_Term * taggedfdvar = newTaggedCVar(fdvar);
       am.checkSuspensionList(bifdhm_var[i]);
       fdvar->setSuspList(tagged2SVar(bifdhm_var[i])->getSuspList());
-      addSuspFDVar(*taggedfdvar, new SuspList (thr), target);
+      addSuspFDVar(*taggedfdvar, thr, target);
       doBind(bifdhm_varptr[i], makeTaggedRef(taggedfdvar));
     } else {
       global_vars += 1;
-      addSuspSVar(bifdhm_var[i], new SuspList (thr));
+      addSuspSVar(bifdhm_var[i],thr);
     } 
   } 
 }
