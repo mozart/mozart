@@ -10,6 +10,18 @@ fi
 system="`$UNAME -m` `$UNAME -s` `$UNAME -r`"
 
 case $system in
+    #-----------------------------------------------------------------
+    # tentative new platforms pending confirmation
+    #-----------------------------------------------------------------
+    mips\ Linux\ *)	OZARCH=linux-mips
+    ;;
+    s390\ Linux\ *)	OZARCH=linux-s390
+    ;;
+    armv4l\ Linux\ *)	OZARCH=linux-arm
+    ;;
+    parisc32\ Linux\ *)	OZARCH=linux-hppa32
+    ;;
+    #-----------------------------------------------------------------
    ppc\ Linux\ 2.*)	OZARCH=linux-ppc
    ;;
    sun4*\ SunOS\ 4.1*)	OZARCH=sunos-sparc
