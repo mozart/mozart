@@ -156,7 +156,7 @@ define
 
       {Tk.send pack(WeekDays Canvas side:left)}
 
-      {Loop.for 3 QuartersPerDay 4
+      {For 3 QuartersPerDay 4
        proc{$ I} 
 	  Text={Int.toString 8 + (I+1)div 4}
        in 
