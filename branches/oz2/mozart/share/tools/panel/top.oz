@@ -288,7 +288,7 @@ in
 		       [time(text:    'Run:'
 			     color:   TimeColors.run
 			     stipple: TimeStipple.run)
-			time(text:    'Garbage collection:'
+			time(text:    'Garbage Collection:'
 			     color:   TimeColors.gc
 			     feature: gc
 			     stipple: TimeStipple.gc)
@@ -351,7 +351,7 @@ in
 			size(text:    'Size:'
 			     color:   SizeColor
 			     stipple: SizeStipple)
-			size(text:    'Active size:'
+			size(text:    'Active Size:'
 			     color:   ActiveColor
 			     feature: active
 			     stipple: ActiveStipple)]
@@ -366,7 +366,7 @@ in
 		    feature: parameter
 		    pack:    false
 		    left:
-		       [scale(text:    'Maximal size limit:'
+		       [scale(text:    'Maximal Size Limit:'
 			      range:   1#1024
 			      dim:     'MB'
 			      feature: maxSize
@@ -382,7 +382,7 @@ in
 					  else skip end
 					  {System.set gc(max: N * MegaByteI)}
 				       end)
-			scale(text:    'Minimal size limit:'
+			scale(text:    'Minimal Size Limit:'
 			      range:   1#1024
 			      dim:     'MB'
 			      feature: minSize
@@ -437,10 +437,10 @@ in
 	      frame(text:    'Heap Parameters'
 		    feature: showParameter
 		    left:
-		       [size(text:    'Maximal size limit:'
+		       [size(text:    'Maximal Size Limit:'
 			     feature: maxSize
 			     dim:     'MB')
-			size(text:    'Minimal size limit:'
+			size(text:    'Minimal Size Limit:'
 			     feature: minSize
 			     dim:     'MB')]
 		    right:
@@ -462,11 +462,11 @@ in
 	     {MakePage PsPage 'Problem Solving' Book self true
 	      [frame(text:    'Finite Domain Constraints'
 		     feature: fd
-		     left:    [number(text: 'Variables created:'
+		     left:    [number(text: 'Variables Created:'
 				      feature: var)
-			       number(text:    'Propagators created:'
+			       number(text:    'Propagators Created:'
 				      feature: propc)
-			       number(text:    'Propagators invoked:'
+			       number(text:    'Propagators Invoked:'
 				      feature: propi)]
 		     right:   nil)
 	       frame(text:    'Spaces'
@@ -487,7 +487,7 @@ in
 				     action: proc {$ B}
 						{System.set messages(idle:B)}
 					     end)
-			 checkbutton(text:    'Garbage collection'
+			 checkbutton(text:    'Garbage Collection'
 				     feature: gc
 				     state:  {System.get messages}.gc
 				     action: proc {$ B}
@@ -502,13 +502,13 @@ in
 					end)])
 	       frame(text:    'Output'
 		     left:
-			[entry(text:    'Maximal print width:'
+			[entry(text:    'Maximal Print Width:'
 			       feature: width
 			       action:  proc {$ N}
 					   {System.set print(width: N)}
 					end
 			       top:     self)
-			 entry(text:    'Maximal print depth:'
+			 entry(text:    'Maximal Print Depth:'
 			       feature: depth
 			       action:  proc {$ N}
 					   {System.set print(depth: N)}
@@ -523,32 +523,32 @@ in
 					end)])
 	       frame(text:    'Errors'
 		     left:
-			[checkbutton(text:    'Show location'
+			[checkbutton(text:    'Show Location'
 				     feature: location
 				     state:  {System.get errors}.location
 				     action:  proc {$ B}
 						 {System.set
 						  errors(location:B)}
 					      end)
-			 checkbutton(text: 'Show hints'
+			 checkbutton(text: 'Show Hints'
 				     state:  {System.get errors}.hints
 				     action:  proc {$ B}
 						 {System.set errors(hints:B)}
 					      end
 				     feature: hints)
-			 entry(text:    'Maximal tasks:'
+			 entry(text:    'Maximal Tasks:'
 			       feature: 'thread'
 			       action:  proc {$ N}
 					   {System.set errors('thread': N)}
 					end
 			       top:     self)
-			 entry(text:    'Maximal print depth:'
+			 entry(text:    'Maximal Print Depth:'
 			       feature: depth
 			       action:  proc {$ N}
 					   {System.set errors(depth: N)}
 					end
 			       top:     self)
-			 entry(text:    'Maximal print width:'
+			 entry(text:    'Maximal Print Width:'
 			       feature: width
 			       action:  proc {$ N}
 					   {System.set errors(width: N)}
