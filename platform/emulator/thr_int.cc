@@ -41,7 +41,6 @@ Thread * _newThread(int prio, Board *bb) {
   Thread *th = new Thread(0,prio,bb,oz_newId());
   th->setBody(am.threadsPool.allocateBody());
   bb->incSuspCount();
-  oz_checkDebug(th,bb);
   return th;
 }
 

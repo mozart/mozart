@@ -93,7 +93,6 @@ Thread * oz_mkLPQ(Board *bb, int prio)
   Thread * th = new Thread(T_runnable|T_lpq, prio, bb, oz_newId());
   th->setBody(am.threadsPool.allocateBody());
   bb->incSuspCount();
-  oz_checkDebug(th,bb);
 
   if (!bb->isRoot())
     bb->incSolveThreads();

@@ -1071,6 +1071,11 @@ OZ_BI_define(BIthreadCreate,1,0)
   tt->getTaskStackRef()->pushCont(a->getPC(),NULL,a);
   tt->setAbstr(a->getPred());
 
+  if (am.debugmode() && oz_onToplevel() && oz_currentThread()->getTrace()) {
+    tt->setTrace(OK);
+    tt->setStep(OK);
+  }
+
   return PROCEED;
 } OZ_BI_end
 
