@@ -647,6 +647,10 @@
   -->
 
 <!ELEMENT note - - (%p.chars.model;)>
+<!ATTLIST note
+	%common.attr;
+	foot (foot) #IMPLIED
+>
 
 <!--==================== INDEX ====================================-->
 <!--
