@@ -1,0 +1,200 @@
+<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % p.mix.local "|Em">
+<!ELEMENT Em - - (#PCDATA)>
+<!ENTITY % proglang.values.local "|lambda">
+
+<!-- Include Files -->
+<!ENTITY u_basic_concepts SYSTEM "u_basic_concepts.sgml">
+<!ENTITY u_getting_started SYSTEM "u_getting_started.sgml">
+<!ENTITY u_replacing SYSTEM "u_replacing.sgml">
+<!ENTITY u_nesting SYSTEM "u_nesting.sgml">
+<!ENTITY u_vectors SYSTEM "u_vectors.sgml">
+<!ENTITY u_advanced SYSTEM "u_advanced.sgml">
+
+<!ENTITY r_overview SYSTEM "r_overview.sgml">
+<!ENTITY r_expect SYSTEM "r_expect.sgml">
+<!ENTITY r_prop SYSTEM "r_prop.sgml">
+<!ENTITY r_fdint SYSTEM "r_fdint.sgml">
+<!ENTITY r_fd SYSTEM "r_fd.sgml">
+<!ENTITY r_fs SYSTEM "r_fs.sgml">
+<!ENTITY r_fsc SYSTEM "r_fsc.sgml">
+<!ENTITY r_aux SYSTEM "r_aux.sgml">
+
+<!ENTITY r_anhang SYSTEM "r_anhang.sgml">
+
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY amp "&">
+<!ENTITY dot "." -- to distinguish it from periods -->
+<!ENTITY oz "Oz">
+<!ENTITY moz3 "Mozart Oz 3">
+<!ENTITY Gump "Gump">
+<!ENTITY lex "<Name type=tool>lex</Name>">
+<!ENTITY yacc "<Name type=tool>yacc</Name>">
+<!ENTITY flex "<Name type=tool>flex</Name>">
+<!ENTITY bison "<Name type=tool>bison</Name>">
+<!ENTITY cpi "C<Span class=allcaps>PI</Span>">
+<!ENTITY sci "S<Span class=allcaps>CI</Span>">
+
+
+<!ENTITY fd_inf "0">
+<!ENTITY fs_sup "134217726">
+<!ENTITY fs_inf "0">
+<!ENTITY fs_sup "63">
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY endash PI "endash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY wrt PI "wrt">
+<!ENTITY eg PI "eg">
+<!ENTITY resp PI "resp">
+
+]>
+
+
+<Book proglang="oz">
+  <Front>
+    <Meta name="latex.package" value="wasysym">
+
+    <!-- Splitting the document into different HTML nodes -->
+
+    <Meta name="html.split" value="cpi.introduction">
+    <Meta name="html.split" value="u_basic_concepts">
+    <Meta name="html.split" value="u_getting_started">
+    <Meta name="html.split" value="u_replacing">
+    <Meta name="html.split" value="u_nesting">
+    <Meta name="html.split" value="u_vectors">
+    <Meta name="html.split" value="u_advanced">
+
+    <Meta name="html.split" value="r_overview">
+    <Meta name="html.split" value="r_expect">
+    <Meta name="html.split" value="r_prop">
+    <Meta name="html.split" value="r_fdint">
+    <Meta name="html.split" value="r_fd">
+    <Meta name="html.split" value="r_fs">
+    <Meta name="html.split" value="r_fsc">
+    <Meta name="html.split" value="r_aux">
+        
+    <Meta name="html.split" value="r_anhang">
+    <Meta name="html.split" value="anhang.ccode">
+    <Meta name="html.split" value="anhang.ozcode">
+    <Meta name="html.split" value="anhang.lesseq">
+    
+
+    <Meta name="html.split.bib" value="">
+    <Meta name="html.split.index" value="">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value="revised">
+    <Title/The Constraint Propagator Extensions Manual/
+    <Author.Extern to="author.db" key="Tobias.Mueller">
+
+    <Abstract>
+      <P.silent>
+      This manual gives the information needed to implement finite domain
+      propagators by the &cpi; (constraint propagator interface) of DFKI Oz.
+
+      <Para class=apropos><Title/Motivation/
+      A major design goal of Oz is to provide for a
+      wide range of applications the right level of programming
+      abstractions. Though Oz features a full-fledged finite domain solver
+      providing for the functionality required to solve combinatorial 
+      problems
+      efficiently, it is often desirable to implement constraints in
+      <<C++>>. There may be several reasons to do so, as for example, that a
+      given algorithm requires destructively updateable data structures or an
+      already existing <<C++>> library shall be used.  Consequently,
+      we opened
+      the constraint solver of Oz by adding a <<C/C++>> interface for
+      implementing so-called <Em/constraint propagators/. Hereby, a
+      constraint propagator is the implementation of a constraint.
+
+      <Para class=apropos><Title/Structure of the Manual/
+      The user manual explains how to
+      implement various propagators. It starts with a propagator for the
+      constraint <Math>x+y=z</Math> and introduces the tools and techniques
+      needed. This
+      propagator will be refined such that it is able to detect equal
+      variables and reduces to a more specialised propagator. Then a
+      functionally nestable version of the addition propagator will be
+      derived. We go on with a propagator that can deal with vectors of
+      variables. As example serves the so-called <Em/element/
+      constraint. 
+      Finally
+      more advanced topics, like the implementation of reified constraints,
+      are discussed. <Em/Note that it is not the intention of this manual to
+      provide sophisticated algorithms/.
+      <p>
+      The second part of this document is the reference manual for the
+      &cpi . It explains the functionality of all interface
+      abstractions and is
+      intended to be next to the keyboard when actually implementing
+      propagators.
+      <p>
+      <Para class=apropos><Title/Prerequisites/
+      The reader is supposed to have a working
+      knowledge in the <<C/C++>> programming language and to be familiar with
+      constraint-based problem solving techniques in Oz. An excellent
+      supplementary text book on <<C++>> is <ptr to="murray">.
+      Problem solving 
+      techniques with finite domain constraints in Oz are explained in
+      Section 10
+      of <Em/An Oz Primer/ [cite fixme]. The &cpi is built on top of
+      the &sci (standard <<C/C++>> interface) of DFKI Oz. A
+      description of the 
+      interface can be found in
+      Section 10 of the DFKI Oz User's Manual <ptr to="system">
+    </Abstract>
+
+  <Body>
+
+  <Chapter id="user_manual">
+  <Title/User Manual/
+    &u_basic_concepts
+    &u_getting_started
+    &u_replacing
+    &u_nesting
+    &u_vectors
+    &u_advanced
+  </Chapter>
+
+  <Chapter id="reference_manual">
+  <Title/Reference Manual/
+
+    &r_overview
+    &r_expect
+    &r_prop
+    &r_fdint
+    &r_fd
+    &r_fs
+    &r_fsc
+    &r_aux
+
+  </Chapter>
+  
+  <chapter id="anhang">
+  <title/Appendix/
+    &r_anhang
+  </chapter>
+
+  <Back>
+  
+  <bib.extern id="system" to="cpi.bib" key="system">
+  <bib.extern id="murray" to="cpi.bib" key="murray">
+  <bib.extern id="primer" to="cpi.bib" key="primer">
+  <bib.extern id="absmachine" to="cpi.bib" key="absmachine">
+  <bib.extern id="modules" to="cpi.bib" key="modules">
+  <bib.extern id="gdb" to="cpi.bib" key="gdb">
+
+</Book>
+
+
+

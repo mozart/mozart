@@ -1,0 +1,199 @@
+<section id="r_fdint">
+<title/The class <<OZ_FDIntVar>>/
+<p>
+
+An instance of this class is a mapping of a finite domain integer
+variable on the heap of the emulator to a <<C/C++>> data structure. The
+provided functionality allows to directly manipulate the domain
+(constraint) of the heap variable.
+<p>
+
+<subsection id="r_fdint.constr">
+<title/Constructor Member Functions/
+<p>
+
+<para class=apropos><title/<<OZ_FDIntVar>>/
+<em/constructor/<p>
+<<
+OZ_FDIntVar(void);
+>>
+<p>
+This constructor creates an uninitialised instance of the class
+<<OZ_FDIntVar>>, which can be initialised later by the member
+functions <<ask()>>, <<read()>>, or <<readEncap()>>.
+<p>
+
+<para class=apropos><title/<<OZ_FDIntVar>>/
+<em/constructor/<p>
+<<
+OZ_FDIntVar(OZ_Term v);
+>>
+<p>
+This constructor creates an instance of the class <<OZ_FDIntVar>> and
+initialises it using <<read()>>.
+<p>
+
+<subsection id="r_fdint.op">
+<title/Operator Member Functions/
+<p>
+
+<para class=apropos><title/<<new>>/
+<em/static operator member function/<p>
+<<
+static void * operator new(size_t); 
+>>
+<p>
+This operator allocates memory for a single instance of class
+<<OZ_FDIntVar>>. This operator must only be used inside the member
+function <<propagate()>> of the class <<OZ_Propagator>>. The
+allocated memory is automatically reclaimed when <<propagate()>> is
+left.
+<p>
+
+<para class=apropos><title/<<new[]>>/
+<em/static operator member function/<p>
+<<
+static void * operator new[](size_t);
+>>
+<p>
+This operator allocates memory for an array of instances of
+<<OZ_FDIntVar>>. This operator must only be used inside the member
+function <<propagate()>> of the class <<OZ_Propagator>>. The
+allocated memory is automatically reclaimed when <<propagate()>> is
+left.
+<p>
+
+<para class=apropos><title/<<delete>>/
+<em/static operator member function/<p>
+<<
+static void operator delete(void *, size_t);
+>>
+<p>
+This operator is a dummy since reclaiming memory happens automatically.
+<p>
+
+<para class=apropos><title/<<delete[]>>/
+<em/static operator member function/<p>
+<<
+static void operator delete[](void *, size_t);
+>>
+<p>
+This operator is a dummy since reclaiming memory happens automatically.
+<p>
+
+<para class=apropos><title/<<operator *>>/
+<em/operator member function/<p>
+<<
+OZ_FiniteDomain &amp;operator * (void);
+>>
+<p>
+This operator returns a finite domain representing the constraint of
+this variable.
+<p>
+
+<para class=apropos><title/<<operator -&gt;>>>/
+<em/operator member function/<p>
+<<
+OZ_FiniteDomain * operator -&gt; (void);
+>>
+<p>
+This operator returns a pointer to a finite domain representing the
+constraint of this variable.
+<p>
+
+<subsection id="r_fdint.member">
+<title/Member Functions/
+<p>
+
+<para class=apropos><title/<<isTouched>>/
+<em/constant member function/<p>
+<<
+OZ_Boolean isTouched(void) const;
+>>
+<p>
+This function returns <<OZ_TRUE>> if at least one element has been
+removed from the domain and otherwise <<OZ_FALSE>>.
+<p>
+
+<para class=apropos><title/<<ask>>/
+<em/member function/
+<p>
+<<
+void ask(OZ_Term);
+>>
+<p>
+This member function initialises an instance of <<OZ_FDIntVar>> for
+only reading constraints from the store and it does not require a call
+of <<leave()>> or <<fail()>>.
+<p>
+
+<para class=apropos><title/<<read>>/
+<em/member function/<p>
+<<
+int read(OZ_Term);
+>>
+<p>
+This member function initialises an instance of <<OZ_FDIntVar>> for
+constraints to be read from and to be written to the constraint
+store. It returns the size of the domain. Using this function requires
+to call either <<leave()>> or <<fail()>> when leaving the member
+function <<propagate()>> of class <<OZ_Propagator>>.
+<p>
+
+<para class=apropos><title/<<readEncap>>/
+<em/member function/<p>
+<<
+int readEncap(OZ_Term);
+>>
+<p>
+This member function initialises an instance of <<OZ_FDIntVar>> for
+constraints to be read from the constraint store and to perform
+encapsulated constraint propagation as required by reified constraint
+propagators. It returns the size of the domain. Using this function
+requires to call either <<leave()>> or <<fail()>> when leaving the
+member function <<propagate()>> of class <<OZ_Propagator>>. For
+further details see <ptr to="u_advanced.reified">.
+<p>
+
+<para class=apropos><title/<<leave>>/
+<em/member function/<p>
+<<
+OZ_Boolean leave(void);
+>>
+<p>
+This member function has to be applied to each object of type
+<<OZ_FDIntVar>> when leaving the function <<propagate()>> of class
+<<OZ_Propagator>> and <em/no/ inconsistency was detected (except it
+was initialised with <<ask()>>). This member function returns
+<<OZ_FALSE>> if the domain denotes a singleton. Otherwise it returns
+<<OZ_TRUE>>.
+<p>
+
+
+<para class=apropos><title/<<fail>>/
+<em/member function/<p>
+<<
+void fail(void);
+>>
+<p>
+This member function has to be applied to each object of type
+<<OZ_FDIntVar>> when leaving the function <<propagate()>> of class
+<<OZ_Propagator>> and inconsistency <em/was/ detected (except it
+was initialised with <<ask()>>).
+<p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
