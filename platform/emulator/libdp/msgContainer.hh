@@ -86,24 +86,49 @@ public:
 
   void init(DSite *site);
 
-//    void setCntrl(Var cntrlVar);
-//    Var getCntrlVar();
+inline void setMsgNum(int msgNum) {
+  this->msgNum = msgNum;
+}
 
-  void setMsgNum(int msgNum);
-  int getMsgNum();
+inline int getMsgNum() {
+  return msgNum;
+}
 
-  int getSendTime();
-  void setSendTime(int sendTime);
+inline void setSendTime(int sendTime) {
+  this->sendTime = sendTime;
+}
 
-  MessageType getMessageType();
-  void setMessageType(MessageType mt);
+inline int getSendTime() {
+  return sendTime;
+}
 
-  void setFlag(int f); 
-  int getFlags();
-  Bool checkFlag(int f);
-  void clearFlag(int f);
+inline MessageType getMessageType() {
+  return mt;
+}
 
-  DSite* getDestination(); 
+inline void setMessageType(MessageType mt) {
+  this->mt=mt;
+}
+
+inline void setFlag(int flag) {
+  flags |= flag;
+}
+
+inline int getFlags() {
+  return flags;
+}
+
+inline Bool checkFlag(int flag) {
+  return flags & flag;
+}
+
+inline void clearFlag(int flag) {
+  flags &= ~flag;
+}
+
+inline DSite* getDestination() { 
+  return destination; 
+}
 
   void takeSnapshot();
   void deleteSnapshot();
