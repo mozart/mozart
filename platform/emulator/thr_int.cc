@@ -248,7 +248,7 @@ void oz_checkExtSuspensionOutlined(Suspension susp)
     
     SolveActor * sa = SolveActor::Cast(sb->getActor());
     if (oz_isStableSolve(sa)) {
-      oz_newThreadInject(DEFAULT_PRIORITY, sb); // mm2: maybe OPT
+      oz_newThreadInject(sb); // mm2: maybe OPT
     }
     sb = GETBOARD(sa)->getSolveBoard();
   }

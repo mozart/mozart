@@ -709,29 +709,12 @@ extern void checkLiveness(ProgramCounter PC,TaggedRef *X, int maxX);
 // ???
 // ------------------------------------------------------------------------
 
-#define SUSP_PC(TermPtr,PC)		\
-   CheckLiveness(PC);			\
-   PushContX(PC);			\
-   addSuspPtr(TermPtr,CTT);		\
+#define SUSP_PC(TermPtr,PC)			\
+   CheckLiveness(PC);				\
+   PushContX(PC);				\
+   if (oz_var_addSusp(TermPtr,CTT))		\
+      goto LBLpopTask;				\
    return T_SUSPEND;
-
-
-void addSuspPtr(TaggedRef *varPtr, Thread *thr)
-{
-  //  if(thr->getPStop()==0) ???????????????
-  addSuspAnyVar(varPtr,thr);
-}
-
-
-
-void addSusp(TaggedRef var, Thread *thr)
-{
-  DEREF(var,varPtr,tag);
-  Assert(oz_isVariable(var));
-
-  addSuspPtr(varPtr,thr);
-}
-
 
 /*
  * create the suspension for builtins returning SUSPEND
@@ -742,16 +725,30 @@ void addSusp(TaggedRef var, Thread *thr)
 
 #define SUSPENDONVARLIST			\
 {						\
-  e->suspendOnVarList(CTT);			\
+  if (e->suspendOnVarList(CTT))			\
+    goto LBLpopTask;				\
   return T_SUSPEND;				\
 }
 
 static
-void suspendInline(Thread *th, OZ_Term A,OZ_Term B=0,OZ_Term C=0)
+Bool suspendInline(Thread *th, OZ_Term A,OZ_Term B=0,OZ_Term C=0)
 {
-  if (C) { DEREF (C, ptr, _1); if (oz_isVariable(C)) addSuspPtr(ptr, th); }
-  if (B) { DEREF (B, ptr, _1); if (oz_isVariable(B)) addSuspPtr(ptr, th); }
-  { DEREF (A, ptr, _1); if (oz_isVariable(A)) addSuspPtr(ptr, th); }
+  if (C) {
+    DEREF (C, ptr, _1);
+    if (oz_isVariable(C))
+      if (oz_var_addSusp(ptr, th)) return TRUE;
+  }
+  if (B) {
+    DEREF (B, ptr, _1);
+    if (oz_isVariable(B))
+      if (oz_var_addSusp(ptr, th)) return TRUE;
+  }
+  {
+    DEREF (A, ptr, _1);
+    if (oz_isVariable(A))
+      if (oz_var_addSusp(ptr, th)) return TRUE;
+  }
+  return FALSE;
 }
 
 // -----------------------------------------------------------------------
@@ -1262,7 +1259,8 @@ LBLdispatcher:
 	  }
 	  CheckLiveness(PC);
 	  PushContX(PC);
-	  suspendInline(CTT,auxTaggedA,auxTaggedB);
+	  if (suspendInline(CTT,auxTaggedA,auxTaggedB))
+	    goto LBLpopTask;
 	  return T_SUSPEND;
 	}
       default:    Assert(0);
@@ -1300,7 +1298,8 @@ LBLdispatcher:
 	    }
 	    CheckLiveness(PC);
 	    PushContX(PC);
-	    suspendInline(CTT,A);
+	    if (suspendInline(CTT,A))
+	      goto LBLpopTask;
 	    return T_SUSPEND;
 	  }
 
@@ -1469,7 +1468,8 @@ LBLdispatcher:
 	{
 	  CheckLiveness(PC);
 	  PushContX(PC);
-	  suspendInline(CTT,XPC(1),XPC(2));
+	  if (suspendInline(CTT,XPC(1),XPC(2)))
+	    goto LBLpopTask;
 	  return T_SUSPEND;
 	}
       
@@ -2282,7 +2282,8 @@ LBLdispatcher:
       if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
 	if (isVariableTag(predTag)) {
 	  CTS->pushCallNoCopy(makeTaggedRef(predPtr),args);
-	  addSuspPtr(predPtr,CTT);
+	  if (oz_var_addSusp(predPtr,CTT))
+	    goto LBLpopTask;
 	  return T_SUSPEND;
 	}
 	RAISE_APPLY(taggedPredicate,OZ_toList(predArity,args));
@@ -2293,7 +2294,6 @@ LBLdispatcher:
 	X[i] = args[i];
       }
       disposeRefsArray(args);
-      DebugTrace(ozd_trace("call cont task"));
       isTailCall = OK;
 
       predicate=tagged2Const(taggedPredicate);
@@ -2368,8 +2368,6 @@ LBLdispatcher:
 	 predArity = 0;
        }
        disposeRefsArray(tmpX);
-
-       DebugTrace(ozd_trace("cfunc cont task"));
 
        switch (biFun(X,OZ_ID_MAP)) {
        case PROCEED:       goto LBLpopTask;

@@ -30,7 +30,7 @@
     (
      'is'	=> { in  => ['+value'],
 		     out => ['+bool'],
-		     bi  => BIisChunkB},
+		     bi  => BIisChunk},
 
      'new'	=> { in  => ['+record'],
 		     out => ['+chunk'],

@@ -951,14 +951,18 @@ void AM::emptyPreparedCalls()
 }
 
 
-void AM::suspendOnVarList(Thread *thr)
+Bool AM::suspendOnVarList(Thread *thr)
 {
   while (oz_isCons(_suspendVarList)) {
     OZ_Term v=oz_head(_suspendVarList);
     Assert(oz_isVariable(*tagged2Ref(v)));
     
-    addSuspAnyVar(tagged2Ref(v),thr);
+    if (oz_var_addSusp(tagged2Ref(v),thr)) {
+      am.emptySuspendVarList();
+      return TRUE;
+    }
     _suspendVarList=oz_tail(_suspendVarList);
   }
+  return FALSE;
 }
 

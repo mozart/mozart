@@ -37,10 +37,9 @@
 class Future: public OzVariable {
 private:
   OZ_Term function;
-
 public:
   Future(Board *bb) : OzVariable(OZ_VAR_FUTURE,bb), function(0) {}
-  Future(OZ_Term function,Board *bb)
+  Future(Board *bb,OZ_Term function)
     : OzVariable(OZ_VAR_FUTURE,bb), function(function) {}
   OZ_Return bind(TaggedRef* vPtr,TaggedRef t,ByteCode* scp);
   OZ_Return unify(TaggedRef* vPtr,TaggedRef* tPtr,ByteCode* scp);
@@ -54,7 +53,7 @@ public:
       OZ_collectHeapTerm(function,function);
     }
   }
-  void addSusp(TaggedRef*, Suspension, int);
+  Bool addSusp(TaggedRef*, Suspension, int);
   void dispose(void) {
     disposeS();
     DebugCode(function=0);
@@ -66,7 +65,7 @@ public:
     printStream(out,depth); out << endl;
   }
   OZ_Term inspect();
-  void kick(TaggedRef *);
+  Bool kick(TaggedRef *);
 };
 
 inline

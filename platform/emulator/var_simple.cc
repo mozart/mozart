@@ -67,14 +67,13 @@ OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef *tPtr, ByteCode* scp)
   return PROCEED;
 }
 
-OzVariable *uvar2SimpleVar(TaggedRef *v)
+OzVariable *oz_getVar(TaggedRef *v)
 {
-  OzVariable *sv = new SimpleVar(tagged2VarHome(*v));
-  *v = makeTaggedCVar(sv);
-  return sv;
-}
-
-void addSuspUVar(TaggedRef *v, Suspension susp, int unstable)
-{
-  uvar2SimpleVar(v)->addSuspSVar(susp, unstable);
+  if (isUVar(*v)) {
+    OzVariable *sv = new SimpleVar(tagged2VarHome(*v));
+    *v = makeTaggedCVar(sv);
+    return sv;
+  } else {
+    return tagged2CVar(*v);
+  }
 }
