@@ -122,6 +122,7 @@
   "Toggle between global and local Oz Emulator resp. Oz functors." t)
 (autoload 'oz-gdb "mozart"
   "Toggle debugging of the Oz Emulator with gdb." t)
+(autoload 'oz-is-running "mozart" "" nil)
 
 ;;}}}
 ;;{{{ GNU and Lucid Emacsen Support
