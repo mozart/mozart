@@ -25,7 +25,7 @@ functor
 import
    Property(get)
    Fontifier at 'x-oz://contrib/doc/code/Fontifier'
-   HTML(seq: SEQ pcdata: PCDATA)
+   HTML(seq: SEQ pcdata: PCDATA verbatim: VERBATIM)
 export
    'class': FontifierClass
    NoProgLang
@@ -99,16 +99,29 @@ define
       end
    end
 
-   fun {HtmlEscape L} L end
-%      case L of nil then nil
-%      [] H|T then
-%        case H
-%        of &< then &&|&l|&t|&;|{HtmlEscape T}
-%        [] &> then &&|&g|&t|&;|{HtmlEscape T}
-%        [] && then &&|&a|&m|&p|&;|{HtmlEscape T}
-%        else H|{HtmlEscape T} end
-%      end
-%   end
+   local
+      SPACE = VERBATIM('&nbsp;')
+      TAB = VERBATIM('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')
+
+      fun {HtmlEscapeSub S} S1 Rest in
+         {List.takeDropWhile S fun {$ C}
+                                  C \= &\n andthen C \= &  andthen C \= &\t
+                               end ?S1 ?Rest}
+         case Rest of C|Rest1 then
+            case C of &\n then
+               PCDATA(S1)|br()|{HtmlEscapeSub Rest1}
+            [] &  then PCDATA(S1)|SPACE|{HtmlEscapeSub Rest1}
+            [] &\t then PCDATA(S1)|TAB|{HtmlEscapeSub Rest1}
+            end
+         else
+            [PCDATA(S1)]
+         end
+      end
+   in
+      fun {HtmlEscape S}
+         SEQ({HtmlEscapeSub S})
+      end
+   end
 
    fun {Face2Color Face}
       case Face
@@ -146,8 +159,8 @@ define
    fun {ToHtmlCSS1 Face#Text}
       C = {Face2Class Face}
    in
-      if C==unit then PCDATA({HtmlEscape Text})
-      else span('class':[C] 1:PCDATA({HtmlEscape Text})) end
+      if C==unit then {HtmlEscape Text}
+      else span('class':[C] 1:{HtmlEscape Text}) end
    end
 
    fun {ToHtmlCSS L}
@@ -158,7 +171,7 @@ define
    end
 
    fun {ToHtmlColor1 Face#Text L}
-      font(color:{Face2Color Face} 1:PCDATA({HtmlEscape Text}))
+      font(color:{Face2Color Face} 1:{HtmlEscape Text})
    end
 
    fun {ToHtmlColor L}
@@ -170,8 +183,8 @@ define
 
    fun {ToHtmlMono1 Face#Text L}
       F = {Face2Font Face}
-   in if F==unit then PCDATA({HtmlEscape Text})
-      else F(PCDATA({HtmlEscape Text})) end
+   in if F==unit then {HtmlEscape Text}
+      else F({HtmlEscape Text}) end
       #L
    end
 
