@@ -21,6 +21,7 @@ cvs get Oz/demo
 cvs get Oz/Tools
 cvs get Oz/ozwish
 
+cvs rtag -b 2.0.0 Oz
 - install bin/ozplatform in your PATH
 
 - edit Imake.tmpl:
@@ -45,7 +46,6 @@ cvs get Oz/ozwish
         Compiler/backend
         Compiler/frontend
         lib
-                make unixo
 
    make install
         bin
@@ -55,7 +55,6 @@ cvs get Oz/ozwish
         Compiler/backend
         Compiler/frontend
         lib
-        lib/unix.o
         demo
         demo/documentation (copy !)
 
@@ -65,7 +64,7 @@ cvs get Oz/ozwish
 
    $(OZHOME)/bin/oz
 
-- create a new entry in /usr/share/gs/bin/scripts/oz-wrapper
+- create a new entry in /project/ps/bin/scripts/oz-wrapper
 
 - mkdir dist
 - make dist
