@@ -216,7 +216,7 @@ _DECL_DYN_ARRAY(Type,Var,Size==0?1:Size)
 //-----------------------------------------------------------------------------
 // OZ_FiniteDomain
 
-class OZ_FSetValue;
+class ozdeclspec OZ_FSetValue;
 
 enum OZ_FDState {fd_empty, fd_full, fd_bool, fd_singl};
 
@@ -313,7 +313,7 @@ const int fsethigh32 = 32*fset_high;
 
 const int fs_max_card = fs_sup + 1;
 
-class OZ_FSetConstraint;
+class ozdeclspec OZ_FSetConstraint;
 class OZ_FiniteDomainImpl;
 class FSetValue;
 
@@ -655,7 +655,7 @@ typedef OZ_CtWakeUp OZ_CtEvents;
 
 //----------------------------------------------------------------------
 
-class OZ_CtDefinition;
+class ozdeclspec OZ_CtDefinition;
 
 enum OZ_FDPropState {fd_prop_singl = 0, fd_prop_bounds, fd_prop_any};
 
@@ -1022,7 +1022,7 @@ _FUNDECL(OZ_FSetValue *,OZ_fsetValueToC,(OZ_Term));
 //-----------------------------------------------------------------------------
 // Interface to Generic Constraint Systems
 
-class OZ_Ct;
+class ozdeclspec OZ_Ct;
 
 //-----------------------------------------------------------------------------
 // OZ_CtDefinition
@@ -1181,7 +1181,7 @@ public:
   OZ_expect_t(int s, int a) : size(s), accepted(a) {}
 };
 
-class OZ_Expect;
+class ozdeclspec OZ_Expect;
 
 typedef OZ_expect_t (OZ_Expect::*OZ_ExpectMeth) (OZ_Term);
 
