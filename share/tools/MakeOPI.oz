@@ -118,8 +118,12 @@ in
 	  {OPICompiler enqueue(mergeEnv(Env))}
        end}
 
-      {OPICompiler enqueue(mergeEnv(env('Module': {Module.load 'Module' unit}
-					'URL': {Module.load 'URL' unit})))}
+      {OPICompiler
+       enqueue(mergeEnv({List.toRecord env
+			 {Map FuncDefaults.volatile
+			  fun {$ A}
+			     A#{ByNeed fun {$} {Module.load A unit} end}
+			  end}}))}
 
       CompilerUI = {New Emacs.interface init(OPICompiler)}
       Sock = {CompilerUI getSocket($)}
