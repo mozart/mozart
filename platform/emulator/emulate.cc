@@ -409,24 +409,11 @@ void pushContX(TaskStack *stk,
 
 #ifdef AS_CAN_INLINE_OPCODE_MAP
 
-#if    defined(AS_HAS_BYTE_AND_P2ALIGN)
-#define ALIGNED_LABEL(INSTR) asm(".p2align 4," OPM_##INSTR)
-#elif  defined(AS_HAS_BYTE_AND_ALIGN)
-#if    defined(AS_HAS_MULTIPLE_ALIGN)
-#define ALIGNED_LABEL(INSTR) asm(".align 4," OPM_##INSTR)
-#elif  defined(AS_HAS_POWER_ALIGN)
-#define ALIGNED_LABEL(INSTR) asm(".align 2," OPM_##INSTR)
-#else
-#error unknown alignment for .align
-#endif
-#else
-#error neither .p2align nor .align available
-#endif
+#define REPEAT_FOR_ALIGNMENT(S) S;S;S;S
 
 #define Case(INSTR) \
 FAKE_##INSTR: \
-asm(".byte " OPM_##INSTR); \
-ALIGNED_LABEL(INSTR); \
+REPEAT_FOR_ALIGNMENT(asm(".byte " OPM_##INSTR)); \
 asm("TRUE_"#INSTR":");
 
 #else /* AS_CAN_INLINE_OPCODE_MAP */
