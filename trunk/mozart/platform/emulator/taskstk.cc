@@ -34,7 +34,7 @@
 
 void TaskStack::resize(int newsize)
 { 
-  if (newsize < 100) {
+ if (newsize < 100) {
     newsize = 200;
   }
   
