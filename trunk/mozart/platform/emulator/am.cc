@@ -108,6 +108,10 @@ void printBanner()
 #else
   printf("Not using threaded code.\n");
 #endif
+
+#ifdef PROFILE_FD
+  printf("Compiled to support fd-profiling.\n");
+#endif
 }
 
 void AM::init(int argc,char **argv)
@@ -565,11 +569,8 @@ BFlag AM::isBetween(Board *to, Board *varHome)
 
 SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
 				   SuspList * suspList,
-				   TaggedRef term,
 				   PropCaller calledBy)
 {
-  Assert(isRef(term) || !isAnyVar(term));
-
   SuspList * retSuspList = NULL;
 
   // see the reduction of solve actor by the enumeration; 
@@ -642,8 +643,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
   /* first step: do suspensions */
   if (prop && isSVar(var)) {
 
-    checkSuspensionList(var, isAnyVar(term) ? makeTaggedRef(termPtr) : term,
-			pc_std_unif);
+    checkSuspensionList(var, pc_std_unif);
 
     LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
 			     localPropStore.isInLocalPropagation()));
