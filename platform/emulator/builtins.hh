@@ -182,11 +182,10 @@ State BIifun(TaggedRef val, TaggedRef &out)                                   \
 {                                                                             \
   State state = BIirel(val);                                                  \
   switch(state) {                                                             \
-  case PROCEED: out = NameTrue; break;                                        \
-  case FAILED:  out = NameFalse; break;                                       \
-  default: break;                                                             \
+  case PROCEED: out = NameTrue;  return PROCEED;                              \
+  case FAILED:  out = NameFalse; return PROCEED;                              \
+  default: return state;                                                      \
   }                                                                           \
-  return state;                                                               \
 }                                                                             \
 DECLAREBI_USEINLINEFUN1(BIfun,BIifun);
 
