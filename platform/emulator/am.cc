@@ -429,14 +429,10 @@ Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2)
   }
 }
 
+// mm2: has to be optimzed: ask rs
 Bool AM::isBetween(Board *to, Board *varHome)
 {
-  Board *tmp = to->getBoardDeref();
-
-  if (varHome == tmp)
-    return OK;
-
-  for (;
+  for (Board *tmp = to->getBoardDeref();
        tmp != currentBoard;
        tmp = tmp->getParentBoard()->getBoardDeref()) {
     if (tmp == varHome) {
