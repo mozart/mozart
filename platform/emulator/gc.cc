@@ -23,8 +23,8 @@
 #include "cell.hh"
 #include "dllist.hh"
 #include "fdgenvar.hh"
-#include "gc.hh"
 #include "io.hh"
+#include "gc.hh"
 #include "misc.hh"
 #include "objects.hh"
 #include "stack.hh"
@@ -58,7 +58,7 @@ void performCopying(void);
 //// switches for debug macros
 #define CHECKSPACE  // check if object is really copied from heap (1 chunk) 
 // #define INITFROM    // initialise copied object
-// #define VERBOSE     // inform user about current state of gc
+#define VERBOSE     // inform user about current state of gc
 
 // the debug macros themselves
 #ifndef DEBUG_GC
@@ -79,14 +79,14 @@ void performCopying(void);
       if (opMode == IN_GC && P != NULL && inChunkChain(heapGetStart(), (void*)P)) \
                              error("Taken from TO-SPACE 0x%x %d", P, __LINE__);
 #   define TOSPACE(P)                                                         \
-      if (opMode == IN_GC && P != NULL && !inChunkChain(heapGetStart(), (void*)P))\
+      if (opMode == IN_GC && P != NULL && !inChunkChain(heapGetStart(), (void*)P)) \
                         error("Not taken from TO-SPACE 0x%x %d", P, __LINE__);
 
-#   define TAGINTOSPACE(T) if(!(isRef(T) || isAnyVar(T) ||                  \
+#   define TAGINTOSPACE(T) if(!(isRef(T) || isAnyVar(T) ||                   \
                                 tagTypeOf(T) == ATOM || tagTypeOf(T) == SMALLINT || \
 			        tagTypeOf(T) == FLOAT || tagTypeOf(T) == BIGINT))   \
                           if (opMode == IN_GC &&                              \
-			      inChunkChain(heapGetStart(), tagValueOf(T)))       \
+			      inChunkChain(heapGetStart(), tagValueOf(T)))    \
                               error("Taken from TO-SPACE 0x%x %d",            \
 			           tagValueOf(T), __LINE__);
 #   define PRINTTOSPACE   printf("TO:\n");                                    \
@@ -107,20 +107,33 @@ void performCopying(void);
 #endif
 
 #ifdef VERBOSE
-#  define PUTCHAR(C) putchar(C)
+   static FILE *debugFile = fopen ("./gc-debug.txt", "w");
+#  define PUTCHAR(C) putc(C, debugFile)
 #  define GCMETHMSG(S)                                                        \
-    fprintf(stdout,"%s this: 0x%p %s:%d\n",S,this,__FILE__,__LINE__);         \
-    fflush(stdout);
-# define GCPROCMSG(S)                                                         \
-    fprintf(stdout,"%s %s:%d\n",S,__FILE__,__LINE__);                         \
-    fflush(stdout);
+    fprintf(debugFile,"[%d] %s this: 0x%p %s:%d\n",                           \
+	    (ptrStack.getUsed ()),                        \
+	    S,this,__FILE__,__LINE__);                                        \
+    fflush(debugFile);
+#  define GCNEWADDRMSG(A)                                                     \
+    fprintf(debugFile,"--> 0x%p %s:%d\n",(void *)A,__FILE__,__LINE__);        \
+    fflush(debugFile);
+#  define GCOLDADDRMSG(A)                                                     \
+    fprintf(debugFile,"--> 0x%p %s:%d\n",(void *)A,__FILE__,__LINE__);        \
+    fflush(debugFile);
+#  define GCPROCMSG(S)                                                        \
+    fprintf(debugFile,"[%d] %s %s:%d\n",                                      \
+	    (ptrStack.getUsed ()),                        \
+	    S,__FILE__,__LINE__);                                             \
+    fflush(debugFile);
 # define MOVEMSG(F,T,S)                                                       \
-     fprintf(stdout,"\t%d bytes moved from 0x%p to 0x%p\n",S,F,T);            \
-     fflush(stdout) 
+     fprintf(debugFile,"\t%d bytes moved from 0x%p to 0x%p\n",S,F,T);         \
+     fflush(debugFile) 
 #else
 #  define PUTCHAR(C)
 #  define GCMETHMSG(S)
 #  define GCPROCMSG(S)
+#  define GCNEWADDRMSG(A)
+#  define GCOLDADDRMSG(A)
 #  define MOVEMSG(F,T,S)
 #endif
 
@@ -236,7 +249,6 @@ inline void *getPtr(TaggedPtr tp)
 //*****************************************************************************
 //               Recursion stack for GC
 //*****************************************************************************
-
 
 class TypedPtrStack: public Stack {
 public:
@@ -427,6 +439,7 @@ inline void ConsList::gc()
   if(first){
     int size = numbOfCons*sizeof(Equation);
     Equation *aux = (Equation*)gcRealloc(first,size);
+    GCNEWADDRMSG(aux);
     for(int i = 0; i < numbOfCons; i++){
       gcTagged(*first[i].getLeftRef(),  *aux[i].getLeftRef()); 
       gcTagged(*first[i].getRightRef(), *aux[i].getRightRef());
@@ -440,6 +453,7 @@ inline void ConsList::gc()
 /* mm2: have to check for discarded node */
 inline SuspContinuation *SuspContinuation::gcCont()
 {
+  GCMETHMSG("SuspContinuation::gcCont");
   if (this == NULL) return NULL;
 
   if (pc != NOCODE) {
@@ -447,6 +461,7 @@ inline SuspContinuation *SuspContinuation::gcCont()
   }
   
   SuspContinuation *ret = (SuspContinuation*) gcRealloc(this, sizeof(*this));
+  GCNEWADDRMSG(ret);
   ptrStack.push(ret, PTR_SUSPCONT);
   
   DebugGC(opMode == IN_TC && !isLocalBoard(node),
@@ -462,6 +477,8 @@ inline SuspContinuation *SuspContinuation::gcCont()
 
 RefsArray gcRefsArray(RefsArray r)
 {
+  GCPROCMSG("gcRefsArray");
+  GCOLDADDRMSG(r);
   if (r == NULL)
     return r;
 
@@ -472,6 +489,7 @@ RefsArray gcRefsArray(RefsArray r)
   int size = getRefsArraySize(r);
 
   RefsArray aux = allocateRefsArray(size,NO);
+  GCNEWADDRMSG(aux);
 
   if (isDirtyRefsArray(r)) {
     markDirtyRefsArray(aux);
@@ -490,6 +508,9 @@ RefsArray gcRefsArray(RefsArray r)
 
 void CFuncContinuation::gcRecurse(void)
 {
+  GCMETHMSG("CFuncContinuation::gcRecurse");
+  DebugCheck (isFreedRefsArray (xRegs),
+	      error ("freed refs array in CFunContinuation::gcRecurse ()"));
   xRegs = gcRefsArray(xRegs);
   node = node->gcBoard();
 }
@@ -497,9 +518,11 @@ void CFuncContinuation::gcRecurse(void)
 /* mm2: have to check for discarded node */
 CFuncContinuation *CFuncContinuation::gcCont(void)
 {
+  GCMETHMSG("CFuncContinuation::gcCont");
   CHECKCOLLECTED(cFunc, CFuncContinuation *);
   
   CFuncContinuation *ret = (CFuncContinuation*) gcRealloc(this,sizeof(*this));
+  GCNEWADDRMSG(ret);
   ptrStack.push(ret, PTR_CFUNCONT);
   setHeapCell((int *)&cFunc, GCMARK(ret));
   return ret;
@@ -508,21 +531,31 @@ CFuncContinuation *CFuncContinuation::gcCont(void)
 
 Continuation *Continuation::gc()
 {
+  GCMETHMSG("Continuation::gc");
   CHECKCOLLECTED(pc, Continuation *);
   
   Continuation *ret = (Continuation *) gcRealloc(this,sizeof(Continuation));
+  GCNEWADDRMSG(ret);
   ptrStack.push(ret, PTR_CONT);
   setHeapCell((int *)&pc, GCMARK(ret));
   return ret;
 }
 
 inline void Continuation::gcRecurse(){
+  GCMETHMSG("Continuation::gcRecurse");
+  DebugCheck (isFreedRefsArray (yRegs),
+	      error ("freed 'y' refs array in Continuation::gcRecurse ()"));
   yRegs = gcRefsArray(yRegs);
+  DebugCheck (isFreedRefsArray (gRegs),
+	      error ("freed 'g' refs array in Continuation::gcRecurse ()"));
   gRegs = gcRefsArray(gRegs);
+  DebugCheck (isFreedRefsArray (xRegs),
+	      error ("freed 'x' refs array in Continuation::gcRecurse ()"));
   xRegs = gcRefsArray(xRegs);
 }
 
 inline void SuspContinuation::gcRecurse(){
+  GCMETHMSG("SuspContinuation::gcRecurse");
   node=node->gcBoard();
   Continuation::gcRecurse();
 }
@@ -530,11 +563,13 @@ inline void SuspContinuation::gcRecurse(){
 
 inline STuple *STuple::gc()
 {
+  GCMETHMSG("STuple::gc");
   CHECKCOLLECTED(label, STuple *);
 
   int len = (size-1)*sizeof(TaggedRef)+sizeof(STuple);
 
   STuple *ret = (STuple*) gcRealloc(this,len);
+  GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_STUPLE);
   setHeapCell((int *)&label, GCMARK(ret));
   gcTaggedBlock(getRef(),ret->getRef(),getSize());
@@ -544,9 +579,11 @@ inline STuple *STuple::gc()
 
 inline LTuple *LTuple::gc()
 {
+  GCMETHMSG("LTuple::gc");
   CHECKCOLLECTED(args[0], LTuple *);
       
   LTuple *ret = (LTuple*) gcRealloc(this,sizeof(*this));
+  GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_LTUPLE);
 
   gcTaggedBlock(args,ret->args,2);
@@ -558,6 +595,7 @@ inline LTuple *LTuple::gc()
 
 inline SRecord *SRecord::gcSRecord()
 {
+  GCMETHMSG("SRecord::gcSRecord");
   if (this == NULL) return NULL; /* objects may contain an empty record */
 
   CHECKCOLLECTED(u.type, SRecord *);
@@ -602,12 +640,16 @@ inline SRecord *SRecord::gcSRecord()
   }
 
   SRecord *ret = (SRecord*) gcRealloc(this,size);
+  GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_SRECORD);
   setHeapCell((int *)&u.type, GCMARK(ret));
   return ret;
 }
 
 // mm2: what shall we check here ???
+// kost@: we have to split suspension lists of variables which are quantified
+//        in "solve" board itself in two parts - "relevant" wrt copy and
+//        'irrelevant'; 
 inline Bool isInTree (Board *b)
 {
   while (b != (Board *)NULL) {
@@ -620,7 +662,9 @@ inline Bool isInTree (Board *b)
 
 
 /* return NULL if contains pointer to discarded node */
-inline Suspension *Suspension::gcSuspension(Bool tcFlag){
+inline Suspension *Suspension::gcSuspension(Bool tcFlag)
+{
+  GCMETHMSG("Suspension::gcSuspension");
   if (!this || isDead()) return NULL;
   
   CHECKCOLLECTED(flag, Suspension*);
@@ -637,6 +681,7 @@ inline Suspension *Suspension::gcSuspension(Bool tcFlag){
   }
   
   Suspension *newSusp = (Suspension *) gcRealloc(this, sizeof(*this));
+  GCNEWADDRMSG(newSusp);
 
   switch (flag & (S_cont|S_cfun)){
   case S_null:
@@ -665,7 +710,7 @@ inline Suspension *Suspension::gcSuspension(Bool tcFlag){
  */
 SuspList *SuspList::gc(Bool tcFlag)
 {
-  GCPROCMSG("SuspList::gc");
+  GCMETHMSG("SuspList::gc");
 
   SuspList *ret = NULL;
 
@@ -695,6 +740,7 @@ SuspList *SuspList::gc(Bool tcFlag)
 // without copying the tagged reference of the variable itself.
 TaggedRef gcVariable(TaggedRef var)
 {
+  GCPROCMSG("gcVariable");
   TypeOfTerm varTag = tagTypeOf(var);
 
   switch(varTag){
@@ -790,6 +836,7 @@ void GenCVariable::gc(void){
 
 void GenFDVariable::gc(void)
 {
+  GCMETHMSG("GenFDVariable::gc");
   finiteDomain.gc();
   
   int i;
@@ -804,6 +851,7 @@ void GenFDVariable::gc(void)
 
 inline Bool updateVar(TaggedRef var)
 {
+  GCPROCMSG("updateVar");
   Bool toUpdate = OK;
   if (opMode == IN_TC) {
     if (isUVar(var)) {
@@ -833,6 +881,7 @@ inline Bool updateVar(TaggedRef var)
 
 void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
 {
+  GCPROCMSG("gcTagged");
   TaggedRef auxTerm = fromTerm;
 
   TaggedRef *auxTermPtr;
@@ -940,6 +989,7 @@ int gcing = 1;
 // abstract machine, ie that all entry points into heap are properly 
 // treated and references to variables are properly updated
 void AM::gc(int msgLevel) {
+  GCMETHMSG(" ********** AM::gc **********");
   opMode = IN_GC;
   gcing = 0;
   DebugGCT(updateStackCount = 0);
@@ -975,6 +1025,11 @@ void AM::gc(int msgLevel) {
 
 // colouring root pointers grey
 //-----------------------------------------------------------------------------
+
+#ifdef VERBOSE
+  (void) fclose (debugFile);
+  debugFile = fopen ("./gc-debug.txt", "w");  // reopen;
+#endif
 
   trail.gc();
   rebindTrail.gc();
@@ -1023,7 +1078,6 @@ void AM::gc(int msgLevel) {
   PRINTTOSPACE;
 
   deleteChunkChain(oldChain);
-
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //                garbage collection is finished here
@@ -1109,18 +1163,34 @@ void processUpdateStack(void)
 // all nodes but node self
 inline void setPathMarks (Board *bb)
 {
-  while (bb->isCommitted()) {
-    bb = bb->getBoard();
+  bb = bb->getParentBoard ();
+  while (OK) {
     bb->setPathMark();
+    if (bb->isRoot () == OK) {
+      return;
+    } else if (bb->isCommitted () == OK) {
+      bb = bb->getBoard ();
+    } else {
+      bb = bb->getParentBoard ();
+    }
   }
+  error ("(gc) getPathMarks");
 }
 
 inline void unsetPathMarks (Board *bb)
 {
-  while (bb->isCommitted()) {
-    bb = bb->getBoard();
+  bb = bb->getParentBoard ();
+  while (OK) {
     bb->unsetPathMark();
+    if (bb->isRoot () == OK) {
+      return;
+    } else if (bb->isCommitted () == OK) {
+      bb = bb->getBoard ();
+    } else {
+      bb = bb->getParentBoard ();
+    }
   }
+  error ("(gc) getPathMarks");
 }
 
 
@@ -1130,13 +1200,14 @@ inline void unsetPathMarks (Board *bb)
  */
 Board* AM::copyTree (Board* bb, Bool *isGround)
 {
+  GCMETHMSG(" ********** AM::copyTree **********");
   opMode = IN_TC;
   gcing = 0;
   varCount=0;
   stat.timeForCopy -= usertime();
 
   DebugGCT(updateStackCount = 0);
-
+  DebugGC ((bb->isCommitted () == OK), error ("committed board to be copied"));
   fromCopyBoard = bb;
   setPathMarks(fromCopyBoard);
   toCopyBoard = fromCopyBoard->gcBoard();
@@ -1178,6 +1249,7 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
 
 void AbstractionTable::gc()
 {
+  GCMETHMSG("AbstractionTable::gc");
   AbstractionTable *aux = this;
   
   while(aux != NULL)
@@ -1197,6 +1269,7 @@ void CodeArea::gc()
 
 TaskStack *TaskStack::gc()
 {
+  GCMETHMSG("TaskStack::gc");
   TaskStack *newStack = new TaskStack(size);
 
   newStack->gcInit();
@@ -1272,6 +1345,7 @@ TaskStack *TaskStack::gc()
 
 ConstTerm *ConstTerm::gcConstTerm()
 {
+  GCMETHMSG("ConstTerm::gcConstTerm");
   CHECKCOLLECTED(type, ConstTerm *);
 
   switch (typeOf()) {
@@ -1296,10 +1370,12 @@ void Thread::GC()
 
 Thread *Thread::gc()
 {
+  GCMETHMSG("Thread::gc");
   CHECKCOLLECTED(flags, Thread *);
   size_t size;
   size = sizeof(Thread);
   Thread *ret = (Thread *) gcRealloc(this,size);
+  GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_THREAD);
   setHeapCell((int *)&flags, GCMARK(ret));
   return ret;
@@ -1307,7 +1383,7 @@ Thread *Thread::gc()
 
 void Thread::gcRecurse()
 {
-  GCMETHMSG("Thread::gc");
+  GCMETHMSG("Thread::gcRecurse");
 
   GCREF(next);
   GCREF(prev);
@@ -1338,6 +1414,7 @@ void Thread::gcRecurse()
 
 Board *Board::gcGetBoardDeref()
 {
+  GCMETHMSG("Board::gcGetBoardDeref");
   Board *bb = this;
   while (OK) {
     if (!bb || GCISMARKED(bb->suspCount)) {
@@ -1358,7 +1435,8 @@ Board *Board::gcGetBoardDeref()
 // the end of such a chain.
 Board *Board::gcBoard()
 {
-  GCPROCMSG("Board::gcBoard");
+  GCMETHMSG("Board::gcBoard");
+
   Board *bb;
   bb=this->gcGetBoardDeref();
   
@@ -1367,11 +1445,12 @@ Board *Board::gcBoard()
 
 Board *Board::gcBoard1()
 {
-  GCPROCMSG("Board::gcBoard1");
   CHECKCOLLECTED(suspCount, Board *);
+  DebugGC ((isLocalBoard (this) == NO), error ("non-local board is copied!")); 
   size_t size;
   size = sizeof(Board);
   Board *ret = (Board *) gcRealloc(this,size);
+  GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_BOARD);
   setHeapCell((int *)&suspCount, GCMARK(ret));
   return ret;
@@ -1379,12 +1458,14 @@ Board *Board::gcBoard1()
 
 void Board::gcRecurse()
 {
-  GCMETHMSG("Board::gc");
+  GCMETHMSG("Board::gcRecurse");
   if (isCommitted()) {
     error("Board::gcRecurse:: never collect committed nodes");
 //    body.defeat();
 //    GCREF(u.board);
   } else {
+    DebugCheck (isFreedRefsArray(body.getY ()),
+		error ("freed 'y' regs in Board::gcRecurse ()"));
     body.gcRecurse();
     GCREF(u.actor);
   }
@@ -1393,7 +1474,7 @@ void Board::gcRecurse()
 
 Actor *Actor::gc()
 {
-  // CHECKCOLLECTED(flags, Actor *);
+  GCMETHMSG("Actor::gc");
   CHECKCOLLECTED(priority, Actor *);
   // by kost@; flags are needed for getBoardDeref
   size_t size;
@@ -1405,6 +1486,7 @@ Actor *Actor::gc()
     size = sizeof (SolveActor);
   }
   Actor *ret = (Actor *) gcRealloc(this,size);
+  GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_ACTOR);
   setHeapCell((int *)&priority, GCMARK(ret));
   return ret;
@@ -1412,8 +1494,7 @@ Actor *Actor::gc()
 
 void Actor::gcRecurse()
 {
-  GCMETHMSG("Actor::gc");
-  board=board->gcBoard();
+  GCMETHMSG("Actor::gcRecurse");
   if (isWait()) {
     ((WaitActor *)this)->gcRecurse();
   } else if (isAsk () == OK) {
@@ -1425,6 +1506,10 @@ void Actor::gcRecurse()
 
 void WaitActor::gcRecurse()
 {
+  GCMETHMSG("WaitActor::gcRecurse");
+  DebugCheck (isFreedRefsArray(next.getY ()),
+	      error ("freed 'y' regs in WaitActor::gcRecurse ()"));
+  board = board->gcBoard ();
   next.gcRecurse ();
 
   int no = (int) childs[-1];
@@ -1442,11 +1527,19 @@ void WaitActor::gcRecurse()
 
 void AskActor::gcRecurse ()
 {
+  GCMETHMSG("AskActor::gcRecurse");
+  DebugCheck (isFreedRefsArray(next.getY ()),
+	      error ("freed 'y' regs in AskActor::gcRecurse ()"));
   next.gcRecurse ();
+  board = board->gcBoard ();
 }
 
 void SolveActor::gcRecurse ()
 {
+  GCMETHMSG("SolveActor::gcRecurse");
+  if (opMode == IN_GC || solveBoard != fromCopyBoard) {
+    board = board->gcBoard();
+  }
   solveBoard = solveBoard->gcBoard ();
   boardToInstall = boardToInstall->gcBoard ();
   gcTagged (solveVar, solveVar);
@@ -1457,7 +1550,11 @@ void SolveActor::gcRecurse ()
 
 inline DLLStackEntry actorStackEntryGC (DLLStackEntry entry)
 {
-  return ((DLLStackEntry) ((Actor *) entry)->gc ());
+  if (((Actor *) entry)->isCommitted () == OK) {
+    return ((DLLStackEntry) NULL);
+  } else {
+    return ((DLLStackEntry) ((Actor *) entry)->gc ());
+  }
 }
 
 void DLLStack::gc (DLLStackEntry (*f)(DLLStackEntry))
@@ -1465,9 +1562,15 @@ void DLLStack::gc (DLLStackEntry (*f)(DLLStackEntry))
   DLLStackBodyEntry *read = l, *current = c;
   clear ();
   while (read != (DLLStackBodyEntry *) NULL) {
-    push ((*f)(read->elem));
-    if (current == read)
-      c = s;
+    DLLStackEntry el = (*f)(read->elem);
+    if (el == (DLLStackEntry) NULL) {
+      if (current == read)
+	current = current->next;
+    } else {
+      push (el);
+      if (current == read)
+	c = s;
+    }
     read = read->next;
   }
 }
@@ -1481,11 +1584,14 @@ void DLLStack::gc (DLLStackEntry (*f)(DLLStackEntry))
 
 void SRecord::gcRecurse()
 {
+  GCMETHMSG("SRecord::gcRecurse");
   switch (getType()) {
 
   case R_ABSTRACTION:
     {
       Abstraction *a = (Abstraction *) this;
+      DebugCheck (isFreedRefsArray (a->gRegs),
+		  error ("freed 'g' refs (abs) array in SRecord::gcRecurse ()"));
       a->gRegs = gcRefsArray(a->gRegs);
       break;
     }
@@ -1493,6 +1599,8 @@ void SRecord::gcRecurse()
   case R_OBJECT:
     {
       Object *o      = (Object *) this;
+      DebugCheck (isFreedRefsArray (o->gRegs),
+		  error ("freed 'g' refs (obj) array in SRecord::gcRecurse ()"));
       o->gRegs       = gcRefsArray(o->gRegs);
       o->cell        = (Cell*)o->cell->gcSRecord();
       o->fastMethods = o->fastMethods->gcSRecord();
@@ -1512,6 +1620,8 @@ void SRecord::gcRecurse()
     {
       Builtin *bi = (Builtin *) this;
       gcTagged(bi->suspHandler,bi->suspHandler);
+      DebugCheck (isFreedRefsArray (bi->gRegs),
+		  error ("freed 'g' refs (bi) array in SRecord::gcRecurse ()"));
       bi->gRegs = gcRefsArray(bi->gRegs);
       break;
     }
@@ -1526,11 +1636,14 @@ void SRecord::gcRecurse()
     error("SRecord::gcRecurse:: unknown type");
   }
   
+  DebugCheck (isFreedRefsArray (args),
+	      error ("freed 'g' refs (args) array in SRecord::gcRecurse ()"));
   args = gcRefsArray(args);
 }
 
 inline void STuple::gcRecurse()
 {
+  GCMETHMSG("STuple::gcRecurse");
   gcTagged(label,label);
   gcTaggedBlockRecurse(getRef(),getSize());
 }
@@ -1538,6 +1651,7 @@ inline void STuple::gcRecurse()
 
 inline void LTuple::gcRecurse()
 {
+  GCMETHMSG("LTuple::gcRecurse");
   gcTaggedBlockRecurse(args,2);
 }
 
