@@ -5945,22 +5945,6 @@ OZ_C_proc_begin(BIgetPrintName,2)
 }
 OZ_C_proc_end
 
-TaggedRef SVariable::DBGmakeSuspList()
-{
-  return suspList->DBGmakeList();
-}
-
-TaggedRef SuspList::DBGmakeList() {
-  if (this == NULL) {
-    return nil();
-  }
-
-  Thread *t = getElem();
-  Board *b = GETBOARD(t);
-  return cons(makeTaggedConst(b),getNext()->DBGmakeList());
-}
-
-
 //----------------------------------------------------------------------
 //  System set and get
 //----------------------------------------------------------------------
@@ -6388,25 +6372,6 @@ OZ_C_proc_begin(BIaddr,2)
   return oz_unifyInt(out,ToInt32(tagValueOf2(valTag,val)));
 }
 OZ_C_proc_end
-
-OZ_C_proc_begin(BIsuspensions,2)
-{
-  oz_declareArg(0,val);
-  oz_declareArg(1,out);
-
-  DEREF(val,valPtr,valTag);
-  switch (valTag) {
-  case UVAR:
-    return oz_unify(out,nil());
-  case SVAR:
-  case CVAR:
-    return oz_unify(out,tagged2SuspVar(val)->DBGmakeSuspList());
-  default:
-    return oz_unify(out,nil());
-  }
-}
-OZ_C_proc_end
-
 
 // ---------------------------------------------------------------------------
 // Debugging: special builtins for Benni
@@ -7630,7 +7595,6 @@ BIspec allSpec[] = {
 
   {"onToplevel",1,BIonToplevel},
   {"addr",2,BIaddr},
-  {"suspensions",2,BIsuspensions},
 
   // Debugging
   {"debugmode",1,BIdebugmode},
