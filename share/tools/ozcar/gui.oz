@@ -563,32 +563,37 @@ in
       end
 
       meth action(A)
-	 T = @currentThread
-	 L = {Label A}
-	 I
-      in
-	 case L == ' reset' then
-	    N in
-	    Gui,status(ResetStatus)
-	    ThreadManager,killAll(N)
-	    {self.StackText title(StackTitle)}
-	    {Delay 200} %% just to look nice... ;)
-	    Gui,status(case N == 1 then
-			  ' (1 thread has been killed)'
-		       else
-			  ' (' # N # ' threads have been killed)'
-		       end append)
-	 else
-	    case T == undef then
-	       Gui,status(FirstSelectThread)
-	    else
-	       I = {Thread.id T}
+	 lock
+	    case A
+
+	    of ' reset' then
+	       N in
+	       Gui,status(ResetStatus)
+	       ThreadManager,killAll(N)
+	       {self.StackText title(StackTitle)}
+	       {Delay 200} %% just to look nice... ;)
+	       Gui,status(case N == 1 then
+			     ' (1 thread has been killed)'
+			  else
+			     ' (' # N # ' threads have been killed)'
+			  end append)
+
+	    [] ' step' then
+	       T = @currentThread
+	    in
+	       case T == undef then
+		  Gui,status(FirstSelectThread)
+	       else
+		  {Thread.resume @currentThread}
+	       end
 	       
-	       case L
-	       of ' step' then
-		  {Thread.resume T}
-		  
-	       elseof ' next' then
+	    [] ' next' then
+	       T = @currentThread
+	    in
+	       case T == undef then
+		  Gui,status(FirstSelectThread)
+	       else
+		  I         = {Thread.id T}
 		  ThreadDic = ThreadManager,getThreadDic($)
 		  Stack     = try
 				 {Dget ThreadDic I}
@@ -608,29 +613,53 @@ in
 		     end
 		     {Thread.resume T}
 		  end
+	       end
+	       
+	    [] ' finish' then
+	       {Browse 'not yet implemented'}
+	       skip
 		  
-	       elseof ' finish' then
-		  {Browse 'not yet implemented'}
-		  skip
-		  
-	       elseof ' cont' then
+	    [] ' cont' then
+	       T = @currentThread
+	    in
+	       case T == undef then
+		  Gui,status(FirstSelectThread)
+	       else
 		  {Dbg.stepmode T false}
 		  {Dbg.contflag T true}
 		  {Thread.resume T}
-		  
-	       elseof ' forget' then
+	       end
+	       
+	    [] ' forget' then
+	       T = @currentThread
+	    in
+	       case T == undef then skip else
+		  I = {Thread.id T}
+	       in
 		  ThreadManager,forget(T I)
-	  
-	       elseof ' term' then
+	       end
+	       
+	    [] ' term' then
+	       T = @currentThread
+	    in
+	       case T == undef then skip else
+		  I = {Thread.id T}
+	       in
 		  ThreadManager,kill(T I)
-		  
-	       elseof ' stack' then
+	       end
+	       
+	    [] ' stack' then
+	       T = @currentThread
+	    in
+	       case T == undef then
+		  Gui,status(FirstSelectThread)
+	       else
 		  {Browse {Dbg.taskstack T MaxStackBrowseSize}}
 	       end
 	    end
 	 end
       end
-
+      
       meth Clear(Widget)
 	 {ForAll [tk(conf state:normal)
 		  tk(delete '0.0' 'end')] Widget}
