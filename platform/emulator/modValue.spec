@@ -61,6 +61,11 @@
 			     bi  => BIisFuture,
 			     test => 0},
 
+     'isFailed'		=> { in  => ['value'],
+			     out => ['+bool'],
+			     bi  => BIisFailed,
+			     test => 0},
+
      'isDet'		=> { in  => ['value'],
 			     out => ['+bool'],
 			     bi  => BIisDet,

@@ -235,6 +235,17 @@ OZ_BI_define(BIwaitQuiet,1,0)
   return PROCEED;
 } OZ_BI_end
 
+OZ_BI_define(BIisFailed,1,1)
+{
+  oz_declareDerefIN(0,fut);
+  Assert(!oz_isRef(fut));
+  OZ_RETURN(
+	    (oz_isVarOrRef(fut) &&
+	     oz_isFuture(fut) &&
+	     ((Future*)tagged2Var(fut))->isFailed())
+	    ? oz_true() : oz_false() );
+} OZ_BI_end
+
 OZ_BI_define(BIbyNeed,1,1)
 {
   oz_declareNonvarIN(0,p);
