@@ -595,8 +595,8 @@ variables oz-compiler-buffer and oz-emulator-buffer."
       (oz-new-buffer))
   (oz-show-buffer (get-buffer oz-compiler-buffer)))
 
-(defvar oz-halt-timeout 15
-  "How long to wait in oz-halt after sending the directive `\\halt'.")
+(defvar oz-halt-timeout 30
+  "Number of seconds to wait in oz-halt after sending the directive `\\halt'.")
 
 (defun oz-halt (force)
   "Halt Oz Compiler and Emulator.
@@ -606,24 +606,15 @@ after this delay, the processes are simply killed if still living.
 If FORCE is non-nil, kill the processes immediately."
   (interactive "P")
   (message "Halting Oz ...")
-  (cond ((get-buffer oz-temp-buffer)
-	 (delete-windows-on oz-temp-buffer)
-	 (kill-buffer oz-temp-buffer)))
-  (cond (oz-bar-overlay
-	 (cond (oz-gnu-emacs
-		(delete-overlay oz-bar-overlay))
-	       (oz-lucid-emacs
-		(delete-extent oz-bar-overlay)))
-	 (setq oz-bar-overlay nil)))
-  (if (and (not force)
-	   (get-buffer-process oz-compiler-buffer)
-	   (or oz-win32 (get-buffer-process oz-emulator-buffer)))
-      (let* ((i (* 2 oz-halt-timeout))
-	     (cproc (get-buffer-process oz-compiler-buffer))
+  (if (and (not force) (oz-is-running))
+      (let* ((i oz-halt-timeout)
+	     (cproc (if oz-using-new-compiler
+			(get-buffer-process oz-emulator-buffer)
+		      (get-buffer-process oz-compiler-buffer)))
 	     (eproc (if oz-win32
 			cproc
 		      (get-buffer-process oz-emulator-buffer))))
-	(oz-send-string "\\halt ")
+	(oz-send-string "\\halt")
 	(while (and (or (eq (process-status eproc) 'run)
 			(eq (process-status cproc) 'run))
 		    (> i 0))
@@ -634,86 +625,96 @@ If FORCE is non-nil, kill the processes immediately."
       (delete-process oz-compiler-buffer))
   (if (get-buffer-process oz-emulator-buffer)
       (delete-process oz-emulator-buffer))
+  (cond ((get-buffer oz-temp-buffer)
+	 (delete-windows-on oz-temp-buffer)
+	 (kill-buffer oz-temp-buffer)))
+  (cond (oz-bar-overlay
+	 (cond (oz-gnu-emacs
+		(delete-overlay oz-bar-overlay))
+	       (oz-lucid-emacs
+		(delete-extent oz-bar-overlay)))
+	 (setq oz-bar-overlay nil)))
   (message "Oz halted.")
   (oz-set-title oz-old-frame-title))
 
+(defun oz-is-running ()
+  (cond (oz-using-new-compiler
+	 (get-buffer-process oz-emulator-buffer))
+	(oz-win32
+	 (get-buffer-process oz-compiler-buffer))
+	((and (get-buffer-process oz-compiler-buffer)
+	      (not (get-buffer-process oz-emulator-buffer)))
+	 (message "Emulator died.")
+	 (delete-process oz-compiler-buffer)
+	 nil)
+	((and (not (get-buffer-process oz-compiler-buffer))
+	      (get-buffer-process oz-emulator-buffer))
+	 (message "Compiler died.")
+	 (delete-process oz-emulator-buffer)
+	 nil)
+	(t
+	 (and (get-buffer-process oz-compiler-buffer)
+	      (get-buffer-process oz-emulator-buffer)))))
+
 (defun oz-check-running (start-flag use-new-compiler)
-  (let ((running t))
-    (cond (oz-using-new-compiler
-	   (setq running (get-buffer-process oz-emulator-buffer)))
-	  (oz-win32
-	   (setq running (get-buffer-process oz-compiler-buffer)))
-	  ((and (get-buffer-process oz-compiler-buffer)
-		(not (get-buffer-process oz-emulator-buffer)))
-	   (setq running nil)
-	   (message "Emulator died.")
-	   (delete-process oz-compiler-buffer))
-	  ((and (not (get-buffer-process oz-compiler-buffer))
-		(get-buffer-process oz-emulator-buffer))
-	   (setq running nil)
-	   (message "Compiler died.")
-	   (delete-process oz-emulator-buffer))
-	  ((or (not (get-buffer-process oz-compiler-buffer))
-	       (not (get-buffer-process oz-emulator-buffer)))
-	   (setq running nil)))
-    (if (not running)
-	(let ((file (concat (oz-make-temp-name "/tmp/ozpipeout") ":"
-			    (oz-make-temp-name "/tmp/ozpipein"))))
-	  (if (not start-flag) (message "Oz died.  Restarting ..."))
-	  (setq oz-using-new-compiler use-new-compiler)
-	  (define-key oz-mode-map "\C-cc"
-	    (if oz-using-new-compiler 'oz-compiler-panel 'oz-precompile-file))
-	  (cond (oz-using-new-compiler
-		 t)
-		(oz-win32
-		 (setq oz-read-emulator-output nil)
-		 (make-comint "Oz Compiler"
-			      "ozcompiler" nil "+E"))
+  (if (not (oz-is-running))
+      (let ((file (concat (oz-make-temp-name "/tmp/ozpipeout") ":"
+			  (oz-make-temp-name "/tmp/ozpipein"))))
+	(if (not start-flag) (message "Oz died.  Restarting ..."))
+	(setq oz-using-new-compiler use-new-compiler)
+	(define-key oz-mode-map "\C-cc"
+	  (if oz-using-new-compiler 'oz-compiler-panel 'oz-precompile-file))
+	(cond (oz-using-new-compiler
+	       t)
+	      (oz-win32
+	       (setq oz-read-emulator-output nil)
+	       (make-comint "Oz Compiler"
+			    "ozcompiler" nil "+E"))
+	      (t
+	       (make-comint "Oz Compiler"
+			    "oz.compiler" nil "-emacs" "-S" file)))
+	(oz-create-buffer oz-compiler-buffer 'compiler)
+	(save-excursion
+	  (set-buffer oz-compiler-buffer)
+	  (set (make-local-variable 'compilation-error-regexp-alist)
+	       '((oz-error-pattern 2 3 5)))
+	  (set (make-local-variable 'compilation-parsing-end)
+	       (point))
+	  (set (make-local-variable 'compilation-error-list)
+	       nil)
+	  (set (make-local-variable 'compilation-last-buffer)
+	       (current-buffer)))
+	(if (not oz-using-new-compiler)
+	    (set-process-filter (get-buffer-process oz-compiler-buffer)
+				'oz-compiler-filter))
+	(bury-buffer oz-compiler-buffer)
+
+	(if oz-emulator-hook
+	    (funcall oz-emulator-hook file)
+	  (setq oz-emulator-buffer "*Oz Emulator*")
+	  (cond ((and oz-using-new-compiler oz-win32)
+		 (setq oz-read-emulator-output t)
+		 (let ((compilercomp
+			(or (getenv "OZCOMPILERCOMP")
+			    (concat "file:" (oz-home) "/lib/Compiler.ozc"))))
+		   (make-comint "Oz Emulator" "ozemulator" nil "-E"
+				"-u" compilercomp)))
+		(oz-using-new-compiler
+		 (setq oz-read-emulator-output t)
+		 (make-comint "Oz Emulator" "oznc" nil "-E"))
+		(oz-win32 t)
 		(t
-		 (make-comint "Oz Compiler"
-			      "oz.compiler" nil "-emacs" "-S" file)))
-	  (oz-create-buffer oz-compiler-buffer 'compiler)
-	  (save-excursion
-	    (set-buffer oz-compiler-buffer)
-	    (set (make-local-variable 'compilation-error-regexp-alist)
-		 '((oz-error-pattern 2 3 5)))
-	    (set (make-local-variable 'compilation-parsing-end)
-		 (point))
-	    (set (make-local-variable 'compilation-error-list)
-		 nil)
-	    (set (make-local-variable 'compilation-last-buffer)
-		 (current-buffer)))
-	  (if (not oz-using-new-compiler)
-	      (set-process-filter (get-buffer-process oz-compiler-buffer)
-				  'oz-compiler-filter))
-	  (bury-buffer oz-compiler-buffer)
+		 (make-comint "Oz Emulator"
+			      "oz.emulator" nil "-emacs" "-S" file)))
+	  (oz-create-buffer oz-emulator-buffer 'emulator)
+	  (if (or oz-using-new-compiler (not oz-win32))
+	      (set-process-filter (get-buffer-process oz-emulator-buffer)
+				  'oz-emulator-filter)))
 
-	  (if oz-emulator-hook
-	      (funcall oz-emulator-hook file)
-	    (setq oz-emulator-buffer "*Oz Emulator*")
-	    (cond ((and oz-using-new-compiler oz-win32)
-		   (setq oz-read-emulator-output t)
-		   (let ((compilercomp
-			  (or (getenv "OZCOMPILERCOMP")
-			      (concat "file:" (oz-home) "/lib/Compiler.ozc"))))
-		     (make-comint "Oz Emulator" "ozemulator" nil "-E"
-				  "-u" compilercomp)))
-		  (oz-using-new-compiler
-		   (setq oz-read-emulator-output t)
-		   (make-comint "Oz Emulator" "oznc" nil "-E"))
-		  (oz-win32 t)
-		  (t
-		   (make-comint "Oz Emulator"
-				"oz.emulator" nil "-emacs" "-S" file)))
-	    (oz-create-buffer oz-emulator-buffer 'emulator)
-	    (if (not oz-win32)
-		(set-process-filter (get-buffer-process oz-emulator-buffer)
-				    'oz-emulator-filter)))
+	(bury-buffer oz-emulator-buffer)
 
-	  (bury-buffer oz-emulator-buffer)
-
-	  (oz-set-title oz-frame-title)
-	  (message "Oz started.")))))
+	(oz-set-title oz-frame-title)
+	(message "Oz started."))))
 
 
 ;;------------------------------------------------------------
