@@ -211,74 +211,9 @@ OZ_C_proc_begin(fdp_minus, 3)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.impose(new MinusPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new PlusPropagator(OZ_args[2], OZ_args[1], OZ_args[0]));
 }
 OZ_C_proc_end
-
-OZ_Return MinusPropagator::propagate(void)
-{
-  SimplifyOnUnify(replaceByInt(reg_z, 0),
-                  replaceByInt(reg_y, 0),
-                  replaceBy(new TwicePropagator(reg_z, reg_x)));
-
-  OZ_FDIntVar x(reg_x), y(reg_y), z(reg_z);
-  PropagatorController_V_V_V P(x, y, z);
-
-  int txl = z->getMinElem() + y->getMinElem();
-  int txu = z->getMaxElem() + y->getMaxElem();
-  int tyl = x->getMinElem() - z->getMaxElem();
-  int tyu = x->getMaxElem() - z->getMinElem();
-  int tzl = x->getMinElem() - y->getMaxElem();
-  int tzu = x->getMaxElem() - y->getMinElem();
-
- loop:
-  if (x->getMinElem() < txl) {
-    FailOnEmpty(*x >= txl);
-    tyl = x->getMinElem() - z->getMaxElem();
-    tzl = x->getMinElem() - y->getMaxElem();
-    goto loop;
-  }
-
-  if (x->getMaxElem() > txu) {
-    FailOnEmpty(*x <= txu);
-    tyu = x->getMaxElem() - z->getMinElem();
-    tzu = x->getMaxElem() - y->getMinElem();
-    goto loop;
-  }
-
-  if (y->getMinElem() < tyl) {
-    FailOnEmpty(*y >= tyl);
-    txl = z->getMinElem() + y->getMinElem();
-    tzu = x->getMaxElem() - y->getMinElem();
-    goto loop;
-  }
-
-  if (y->getMaxElem() > tyu) {
-    FailOnEmpty(*y <= tyu);
-    txu = z->getMaxElem() + y->getMaxElem();
-    tzl = x->getMinElem() - y->getMaxElem();
-    goto loop;
-  }
-
-  if (z->getMinElem() < tzl) {
-    FailOnEmpty(*z >= tzl);
-    txl = z->getMinElem() + y->getMinElem();
-    tyu = x->getMaxElem() - z->getMinElem();
-    goto loop;
-  }
-
-  if (z->getMaxElem() > tzu) {
-    FailOnEmpty(*z <= tzu);
-    txu = z->getMaxElem() + y->getMaxElem();
-    tyl = x->getMinElem() - z->getMaxElem();
-    goto loop;
-  }
-
-  return P.leave();
-
-failure:
-  return P.fail();
-}
 
 //-----------------------------------------------------------------------------
 
@@ -734,6 +669,206 @@ failure:
   return P.fail();
 }
 
+//=============================================================================
+// domain consistent propagators
+
+//-----------------------------------------------------------------------------
+// Twice
+
+OZ_C_proc_begin(fdp_twiceD, 2)
+{
+  OZ_warning("This foreign function must never be called.");
+  return FAILED;
+}
+OZ_C_proc_end
+
+OZ_Return TwiceDPropagator::propagate(void)
+{
+  OZ_FDIntVar x(reg_x), y(reg_y);
+  PropagatorController_V_V P(x, y);
+
+  OZ_FiniteDomain new_x(fd_empty), new_y(fd_empty);
+  FiniteDomainIterator x_it(&*x);
+  for (int x_v = x_it.resetToMin(); x_v != -1; x_v = x_it.nextLarger()) {
+    int y_v = 2 * x_v;
+      if (y->isIn(y_v)) {
+        new_x += x_v;
+        new_y += y_v;
+      }
+  }
+  FailOnEmpty(*x &= new_x);
+  FailOnEmpty(*y &= new_y);
+
+  return P.leave();
+
+failure:
+  return P.fail();
+}
+
+//-----------------------------------------------------------------------------
+// Square
+
+OZ_C_proc_begin(fdp_squareD, 2)
+{
+  OZ_warning("This foreign function must never be called.");
+  return FAILED;
+}
+OZ_C_proc_end
+
+OZ_Return SquareDPropagator::propagate(void)
+{
+  OZ_FDIntVar x(reg_x), y(reg_y);
+  PropagatorController_V_V P(x, y);
+
+  OZ_FiniteDomain new_x(fd_empty), new_y(fd_empty);
+  FiniteDomainIterator x_it(&*x);
+  for (int x_v = x_it.resetToMin(); x_v != -1; x_v = x_it.nextLarger()) {
+    int y_v = x_v * x_v;
+      if (y->isIn(y_v)) {
+        new_x += x_v;
+        new_y += y_v;
+      }
+  }
+  FailOnEmpty(*x &= new_x);
+  FailOnEmpty(*y &= new_y);
+
+  return P.leave();
+
+failure:
+  return P.fail();
+}
+
+//-----------------------------------------------------------------------------
+
+OZ_C_proc_begin(fdp_plusD, 3)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
+
+  PropagatorExpect pe;
+  int susp_count = 0;
+
+  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
+
+  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+
+  return pe.impose(new PlusDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+}
+OZ_C_proc_end
+
+OZ_Return PlusDPropagator::propagate(void)
+{
+  SimplifyOnUnify(replaceBy(new TwiceDPropagator(reg_x, reg_z)),
+                  replaceByInt(reg_y, 0),
+                  replaceByInt(reg_x, 0));
+
+  OZ_FDIntVar x(reg_x), y(reg_y), z(reg_z);
+  PropagatorController_V_V_V P(x, y, z);
+
+  if (*x == fd_singl)
+    if (*x == 0) {
+      P.vanish();
+      return replaceBy(reg_y, reg_z);
+    }
+
+  if (*y == fd_singl)
+    if (*y == 0) {
+      P.vanish();
+      return replaceBy(reg_x, reg_z);
+    }
+
+  OZ_FiniteDomain new_x(fd_empty), new_y(fd_empty), new_z(fd_empty);
+  FiniteDomainIterator x_it(&*x), y_it(&*y);
+  for (int x_v = x_it.resetToMin(); x_v != -1; x_v = x_it.nextLarger()) {
+    for (int y_v = y_it.resetToMin(); y_v != -1; y_v = y_it.nextLarger()) {
+      int z_v = x_v + y_v;
+      if (z->isIn(z_v)) {
+        new_x += x_v;
+        new_y += y_v;
+        new_z += z_v;
+      }
+    }
+  }
+  FailOnEmpty(*x &= new_x);
+  FailOnEmpty(*y &= new_y);
+  FailOnEmpty(*z &= new_z);
+
+  return P.leave();
+
+failure:
+  return P.fail();
+}
+
+//-----------------------------------------------------------------------------
+
+OZ_C_proc_begin(fdp_minusD, 3)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
+
+  PropagatorExpect pe;
+  int susp_count = 0;
+
+  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
+
+  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+
+  return pe.impose(new PlusDPropagator(OZ_args[2], OZ_args[1], OZ_args[0]));
+}
+OZ_C_proc_end
+
+//-----------------------------------------------------------------------------
+
+OZ_C_proc_begin(fdp_timesD, 3)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
+
+  PropagatorExpect pe;
+  int susp_count = 0;
+
+  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
+
+  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+
+  return pe.impose(new TimesDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+}
+OZ_C_proc_end
+
+OZ_Return TimesDPropagator::propagate(void)
+{
+  SimplifyOnUnify(replaceBy(new SquareDPropagator(reg_x,reg_z)),
+                  replaceByInt(reg_y, 1),
+                  replaceByInt(reg_x, 1));
+
+  OZ_FDIntVar x(reg_x), y(reg_y), z(reg_z);
+  PropagatorController_V_V_V P(x, y, z);
+
+  OZ_FiniteDomain new_x(fd_empty), new_y(fd_empty), new_z(fd_empty);
+  FiniteDomainIterator x_it(&*x), y_it(&*y);
+  for (int x_v = x_it.resetToMin(); x_v != -1; x_v = x_it.nextLarger()) {
+    for (int y_v = y_it.resetToMin(); y_v != -1; y_v = y_it.nextLarger()) {
+      int z_v = x_v * y_v;
+      if (z->isIn(z_v)) {
+        new_x += x_v;
+        new_y += y_v;
+        new_z += z_v;
+      }
+    }
+  }
+  FailOnEmpty(*x &= new_x);
+  FailOnEmpty(*y &= new_y);
+  FailOnEmpty(*z &= new_z);
+
+  return P.leave();
+
+failure:
+  return P.fail();
+}
+
 
 //-----------------------------------------------------------------------------
 // static members
@@ -741,13 +876,16 @@ failure:
 OZ_PropagatorProfile TwicePropagator::profile;
 OZ_PropagatorProfile SquarePropagator::profile;
 OZ_PropagatorProfile PlusPropagator::profile;
-OZ_PropagatorProfile MinusPropagator::profile;
 OZ_PropagatorProfile TimesPropagator::profile;
 OZ_PropagatorProfile DivPropagator::profile;
 OZ_PropagatorProfile DivIPropagator::profile;
 OZ_PropagatorProfile ModPropagator::profile;
 OZ_PropagatorProfile ModIPropagator::profile;
 OZ_PropagatorProfile PowerPropagator::profile;
+OZ_PropagatorProfile TwiceDPropagator::profile;
+OZ_PropagatorProfile SquareDPropagator::profile;
+OZ_PropagatorProfile PlusDPropagator::profile;
+OZ_PropagatorProfile TimesDPropagator::profile;
 
 //-----------------------------------------------------------------------------
 // eof
