@@ -234,13 +234,16 @@ inline Bool isTaggedIndex(TaggedRef t) {return (t & taggedIndex);}
 
 int BIfdHeadManager::simplifyHead(int ts, STuple &a, STuple &x)
 {
+  int first_int_index = -1;
+  int int_sum = 0;
+
   // 1st pass: mark first occ of a var and sum up coeffs of further occs
   for (int i = 0; i < ts; i++) {
     Assert(bifdhm_vartag[i] == pm_fd ||
            bifdhm_vartag[i] == pm_bool ||
            bifdhm_vartag[i] == pm_singl);
 
-    if (isAnyVar(bifdhm_var[i]))
+    if (isAnyVar(bifdhm_var[i])) {
       if (! isTaggedIndex(*bifdhm_varptr[i])) {
         *bifdhm_varptr[i] = makeTaggedIndex(i);
       } else {
@@ -248,9 +251,31 @@ int BIfdHeadManager::simplifyHead(int ts, STuple &a, STuple &x)
         a[ind] = newSmallInt(bifdhm_coeff[ind] += bifdhm_coeff[i]);
         bifdhm_var[i] = 0;
       }
+    } else {
+      Assert(bifdhm_vartag[i] == pm_singl);
+
+      if (first_int_index == -1)
+        first_int_index = i;
+      int_sum += (smallIntValue(bifdhm_var[i]) * bifdhm_coeff[i]);
+      bifdhm_var[i] = 0;
+    }
   }
 
-  // 2nd pass: undo marks and compress vector
+  // 2nd pass: collect integer values into one field, whereby
+  // a[first_int_index] is preferably 1 or -1
+  if (first_int_index != -1) {
+    if (int_sum < 0) {
+      x[first_int_index] = bifdhm_var[first_int_index] = newSmallInt(-int_sum);
+      a[first_int_index] = newSmallInt(bifdhm_coeff[first_int_index] = -1);
+    } else {
+      x[first_int_index] = bifdhm_var[first_int_index] = newSmallInt(int_sum);
+      a[first_int_index] = newSmallInt(bifdhm_coeff[first_int_index] = 1);
+    }
+    bifdhm_varptr[first_int_index] = NULL;
+    bifdhm_vartag[first_int_index] = pm_singl;
+  }
+
+  // 3rd pass: undo marks and compress vector
   int from, to;
   for (from = 0, to = 0; from < ts; from += 1) {
     TaggedRef var_from = bifdhm_var[from];
