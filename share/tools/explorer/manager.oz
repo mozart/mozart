@@ -438,6 +438,11 @@ in
 	 <<Manager setCursor(<<ToplevelManager findByXY(X Y $)>> True)>>
       end
       
+      meth nodesByXY(What X Y)
+	 <<Manager setCursor(<<ToplevelManager findByXY(X Y $)>> False)>>
+	 <<Manager nodes(What)>>
+      end
+      
       meth selInfo(X Y)
 	 Node = <<ToplevelManager findByXY(X Y $)>>
       in
@@ -573,4 +578,5 @@ in
 
 
 end
+
 
