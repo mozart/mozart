@@ -34,7 +34,7 @@ local
    LibNames = ['Application'
 	       'Search' 'FD' 'Schedule' 'FS'
 	       'System' 'Error' 'Debug' 'Finalize' 'Foreign'
-	       'Connection' 'Remote'
+	       'Connection' 'Remote' 'VirtualSite'
 	       'OS' 'Open' 'Pickle'
 	       'Tk' 'TkTools'
 	       'Compiler'
