@@ -276,17 +276,17 @@ public:
   void clearSuspList(Suspendable *);
 
   //
-  // local thread queue
+  // Propagation queue
   //
 
 private:
-  LocalPropagatorQueue * localPropagatorQueue;
+  SuspQueue * localPropagatorQueue;
 
 public:
-  LocalPropagatorQueue * getLocalPropagatorQueue(void) {
+  SuspQueue * getLocalPropagatorQueue(void) {
     return localPropagatorQueue;
   }
-  void setLocalPropagatorQueue(LocalPropagatorQueue * lpq) {
+  void setLocalPropagatorQueue(SuspQueue * lpq) {
     localPropagatorQueue = lpq;
   }
   void resetLocalPropagatorQueue(void);
