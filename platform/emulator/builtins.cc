@@ -7,17 +7,19 @@
   State: $State$
   */
 
+#ifndef WINDOWS
+#define BUILTINS1
+#define BUILTINS2
+#endif
 
 #if defined(INTERFACE) && !defined(PEANUTS)
 #pragma implementation "builtins.hh"
 #endif
 
+#include "wsock.hh"
+
 #include <ctype.h>
 #include <string.h>
-#ifdef WINDOWS
-#include "wsock.hh"
-#endif
-
 #include <errno.h>
 
 #include "dldwrap.h"
@@ -235,6 +237,8 @@ DECLAREBI_USEINLINEFUN2(BIfun,BIifun)
 /*===================================================================
  * BuiltinTab
  *=================================================================== */
+
+#ifdef BUILTINS2
 
 BuiltinTab builtinTab(750);
 
@@ -2384,70 +2388,6 @@ OZ_C_proc_begin(BIchunkArity,2)
 }
 OZ_C_proc_end
 
-// ---------------------------------------------------------------------
-// Cell
-// ---------------------------------------------------------------------
-
-OZ_C_proc_begin(BInewCell,2)
-{
-  OZ_Term val = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-
-  return OZ_unify(out,OZ_newCell(val));
-}
-OZ_C_proc_end
-
-#define CheckFuckingBoard(Object);								\
-  if (am.currentBoard != Object->getBoardFast()) {						\
-    if (am.currentBoard->isWait()) {								\
-      warning("nonlocal access in computation space of disjunction not impl.");			\
-    } else {											\
-      warning("nonlocal access in computation space of %s",					\
-	      am.currentBoard->isSolve() ? "solve" : "conditional");				\
-    }												\
-    message("Built-in exchangeCell: message sending to a non locally declared object?\n");	\
-    am.currentBoard->incSuspCount();								\
-    return PROCEED;										\
-  }
-
-
-OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef inState, TaggedRef &outState)
-{
-  NONVAR(c,rec,_1);
-  outState = OZ_newVariable();
-
-  if (!isCell(rec)) {
-    TypeError2("exchangeCell",0,"Cell",c,inState);
-  }
-  Cell *cell = tagged2Cell(rec);
-
-  CheckFuckingBoard(cell);
-
-  TaggedRef old = cell->exchangeValue(outState);
-  return OZ_unify(old,inState);
-}
-
-/* we do not use here DECLAREBI_USEINLINEFUN2,
- * since we only want to suspend on the first argument
- */
-OZ_C_proc_begin(BIexchangeCell,3)
-{			
-  OZ_Term help;
-  OZ_Term cell = OZ_getCArg(0);
-  OZ_Term inState = OZ_getCArg(1);
-  OZ_Term outState = OZ_getCArg(2);
-  OZ_Return state=BIexchangeCellInline(cell,inState,help);
-  switch (state) {
-  case SUSPEND:
-    OZ_suspendOn(cell);
-  case FAILED:
-    return FAILED;
-  case PROCEED:
-  default:
-    return OZ_unify(help,outState);
-  }
-}
-OZ_C_proc_end
 
 // ---------------------------------------------------------------------
 
@@ -3146,205 +3086,14 @@ OZ_Return assignInline(TaggedRef fea, TaggedRef value)
 
 DECLAREBI_USEINLINEREL2(BIassign,assignInline)
 
-
-/*===================================================================
- * Arrays
- *=================================================================== */
-
-OZ_C_proc_begin(BIarrayNew,4)
-{
-  OZ_declareIntArg(0,low);
-  OZ_declareIntArg(1,high);
-  OZ_Term initvalue = OZ_getCArg(2);
-  OZ_Term out       = OZ_getCArg(3);
-
-  low = deref(OZ_getCArg(0));
-  high = deref(OZ_getCArg(1));
-
-  if (!isSmallInt(low)) {
-    TypeErrorT(0,"smallInteger");
-  }
-  if (!isSmallInt(high)) {
-    TypeErrorT(1,"smallInteger");
-  }
-
-  int ilow  = smallIntValue(low);
-  int ihigh = smallIntValue(high);
-
-  return OZ_unify(makeTaggedConst(new OzArray(am.currentBoard,ilow,ihigh,initvalue)),out);
-}
-OZ_C_proc_end
-
-
-OZ_Return isArrayInline(TaggedRef t, TaggedRef &out)
-{
-  NONVAR( t, term, tag );
-  out = isArray(term) ? NameTrue : NameFalse;
-  return PROCEED;
-}
-
-DECLAREBI_USEINLINEFUN1(BIisArray,isArrayInline)
-
-OZ_Return arrayLowInline(TaggedRef t, TaggedRef &out)
-{
-  NONVAR( t, term, tag );
-  if (!isArray(term)) {
-    TypeErrorT(0,"Array");
-  }
-  out = makeInt(tagged2Array(term)->getLow());
-  return PROCEED;
-}
-DECLAREBI_USEINLINEFUN1(BIarrayLow,arrayLowInline)
-
-OZ_Return arrayHighInline(TaggedRef t, TaggedRef &out)
-{
-  NONVAR( t, term, tag );
-  if (!isArray(term)) {
-    TypeErrorT(0,"Array");
-  }
-  out = makeInt(tagged2Array(term)->getHigh());
-  return PROCEED;
-}
-
-DECLAREBI_USEINLINEFUN1(BIarrayHigh,arrayHighInline)
-
-OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
-{
-  NONVAR( t, array, _1 );
-  NONVAR( i, index, _2 );
-
-  if (!isArray(array)) {
-    TypeErrorT(0,"Array");
-  }
-
-  if (!isSmallInt(index)) {
-    TypeErrorT(1,"smallInteger");
-  }
-
-  OzArray *ar = tagged2Array(array);
-  CheckFuckingBoard(ar);
-  return ar->getArg(smallIntValue(index),out);
-}
-DECLAREBI_USEINLINEFUN2(BIarrayGet,arrayGetInline)
-
-OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
-{
-  NONVAR( t, array, _1 );
-  NONVAR( i, index, _2 );
-
-  if (!isArray(array)) {
-    TypeErrorT(0,"Array");
-  }
-
-  if (!isSmallInt(index)) {
-    TypeErrorT(1,"smallInteger");
-  }
-
-  OzArray *ar = tagged2Array(array);
-  CheckFuckingBoard(ar);
-  return ar->setArg(smallIntValue(index),value);
-}
-
-DECLAREBI_USEINLINEREL3(BIarrayPut,arrayPutInline)
-
-
-/*===================================================================
- *   Dictionaries
- *=================================================================== */
-
-OZ_C_proc_begin(BIdictionaryNew,1)
-{
-  OZ_Term out       = OZ_getCArg(0);
-
-  return OZ_unify(makeTaggedConst(new OzDictionary(am.currentBoard)),out);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIdictionaryKeys,2)
-{
-  OZ_Term d   = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-
-  NONVAR( d, dict, _1 );
-  if (!isDictionary(dict)) {
-    TypeErrorT(0,"Dictionary");
-  }
-
-  CheckFuckingBoard(tagged2Dictionary(dict));
-  return OZ_unify(tagged2Dictionary(dict)->keys(),out);
-}
-OZ_C_proc_end
-
-
-OZ_Return isDictionaryInline(TaggedRef t, TaggedRef &out)
-{
-  NONVAR( t, term, tag );
-  out = isDictionary(term) ? NameTrue : NameFalse;
-  return PROCEED;
-}
-DECLAREBI_USEINLINEFUN1(BIisDictionary,isDictionaryInline)
-
-
-#define GetDictAndKey(d,k,dict,key)				\
-  NONVAR(d,dictaux,_1);						\
-  NONVAR(k,key, _2);						\
-  if (!isDictionary(dictaux)) { TypeErrorT(0,"Dictionary"); }	\
-  if (!isFeature(key))        { TypeErrorT(1,"feature"); }	\
-  OzDictionary *dict = tagged2Dictionary(dictaux);		\
-  CheckFuckingBoard(dict);
-
-
-OZ_Return dictionaryMemberInline(TaggedRef d, TaggedRef k, TaggedRef &out)
-{
-  GetDictAndKey(d,k,dict,key);
-  out = dict->member(key);
-  return PROCEED;
-}
-DECLAREBI_USEINLINEFUN2(BIdictionaryMember,dictionaryMemberInline)
-
-
-OZ_Return dictionaryGetInline(TaggedRef d, TaggedRef k, TaggedRef &out)
-{
-  GetDictAndKey(d,k,dict,key);
-  return dict->getArg(key,out);
-}
-DECLAREBI_USEINLINEFUN2(BIdictionaryGet,dictionaryGetInline)
-
-
-OZ_Return dictionaryGetIfInline(TaggedRef d, TaggedRef k, TaggedRef deflt, TaggedRef &out)
-{
-  GetDictAndKey(d,k,dict,key);
-  if (dict->getArg(key,out)!=PROCEED) {
-    out = deflt;
-  }
-  return PROCEED;
-}
-DECLAREBI_USEINLINEFUN3(BIdictionaryGetIf,dictionaryGetIfInline)
-
-
-OZ_Return dictionaryPutInline(TaggedRef d, TaggedRef k, TaggedRef value)
-{
-  GetDictAndKey(d,k,dict,key);
-  dict->setArg(key,value);
-  return PROCEED;
-}
-
-DECLAREBI_USEINLINEREL3(BIdictionaryPut,dictionaryPutInline)
-
-
-OZ_Return dictionaryRemoveInline(TaggedRef d, TaggedRef k)
-{
-  GetDictAndKey(d,k,dict,key);
-  dict->remove(key);
-  return PROCEED;
-}
-DECLAREBI_USEINLINEREL2(BIdictionaryRemove,dictionaryRemoveInline)
+#endif /* BUILTINS2 */
 
 
 /* -----------------------------------------------------------------------
    suspending
    ----------------------------------------------------------------------- */
+
+#ifdef BUILTINS1
 
 static OZ_Return bombBuiltin(char *type)
 {
@@ -4334,11 +4083,273 @@ DECLAREBI_USEINLINEFUN1(BIabs,BIabsInline)
 DECLAREBI_USEINLINEFUN1(BIadd1,BIadd1Inline)
 DECLAREBI_USEINLINEFUN1(BIsub1,BIsub1Inline)
 
+#define CheckFuckingBoard(Object);								\
+  if (am.currentBoard != Object->getBoardFast()) {						\
+    if (am.currentBoard->isWait()) {								\
+      warning("nonlocal access in computation space of disjunction not impl.");			\
+    } else {											\
+      warning("nonlocal access in computation space of %s",					\
+	      am.currentBoard->isSolve() ? "solve" : "conditional");				\
+    }												\
+    message("Built-in exchangeCell: message sending to a non locally declared object?\n");	\
+    am.currentBoard->incSuspCount();								\
+    return PROCEED;										\
+  }
+
+// ---------------------------------------------------------------------
+// Cell
+// ---------------------------------------------------------------------
+
+OZ_C_proc_begin(BInewCell,2)
+{
+  OZ_Term val = OZ_getCArg(0);
+  OZ_Term out = OZ_getCArg(1);
+
+  return OZ_unify(out,OZ_newCell(val));
+}
+OZ_C_proc_end
+
+OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef inState, TaggedRef &outState)
+{
+  NONVAR(c,rec,_1);
+  outState = OZ_newVariable();
+
+  if (!isCell(rec)) {
+    TypeError2("exchangeCell",0,"Cell",c,inState);
+  }
+  Cell *cell = tagged2Cell(rec);
+
+  CheckFuckingBoard(cell);
+
+  TaggedRef old = cell->exchangeValue(outState);
+  return OZ_unify(old,inState);
+}
+
+/* we do not use here DECLAREBI_USEINLINEFUN2,
+ * since we only want to suspend on the first argument
+ */
+OZ_C_proc_begin(BIexchangeCell,3)
+{			
+  OZ_Term help;
+  OZ_Term cell = OZ_getCArg(0);
+  OZ_Term inState = OZ_getCArg(1);
+  OZ_Term outState = OZ_getCArg(2);
+  OZ_Return state=BIexchangeCellInline(cell,inState,help);
+  switch (state) {
+  case SUSPEND:
+    OZ_suspendOn(cell);
+  case FAILED:
+    return FAILED;
+  case PROCEED:
+  default:
+    return OZ_unify(help,outState);
+  }
+}
+OZ_C_proc_end
+
+
+/*===================================================================
+ * Arrays
+ *=================================================================== */
+
+OZ_C_proc_begin(BIarrayNew,4)
+{
+  OZ_declareIntArg(0,low);
+  OZ_declareIntArg(1,high);
+  OZ_Term initvalue = OZ_getCArg(2);
+  OZ_Term out       = OZ_getCArg(3);
+
+  low = deref(OZ_getCArg(0));
+  high = deref(OZ_getCArg(1));
+
+  if (!isSmallInt(low)) {
+    TypeErrorT(0,"smallInteger");
+  }
+  if (!isSmallInt(high)) {
+    TypeErrorT(1,"smallInteger");
+  }
+
+  int ilow  = smallIntValue(low);
+  int ihigh = smallIntValue(high);
+
+  return OZ_unify(makeTaggedConst(new OzArray(am.currentBoard,ilow,ihigh,initvalue)),out);
+}
+OZ_C_proc_end
+
+
+OZ_Return isArrayInline(TaggedRef t, TaggedRef &out)
+{
+  NONVAR( t, term, tag );
+  out = isArray(term) ? NameTrue : NameFalse;
+  return PROCEED;
+}
+
+DECLAREBI_USEINLINEFUN1(BIisArray,isArrayInline)
+
+OZ_Return arrayLowInline(TaggedRef t, TaggedRef &out)
+{
+  NONVAR( t, term, tag );
+  if (!isArray(term)) {
+    TypeErrorT(0,"Array");
+  }
+  out = makeInt(tagged2Array(term)->getLow());
+  return PROCEED;
+}
+DECLAREBI_USEINLINEFUN1(BIarrayLow,arrayLowInline)
+
+OZ_Return arrayHighInline(TaggedRef t, TaggedRef &out)
+{
+  NONVAR( t, term, tag );
+  if (!isArray(term)) {
+    TypeErrorT(0,"Array");
+  }
+  out = makeInt(tagged2Array(term)->getHigh());
+  return PROCEED;
+}
+
+DECLAREBI_USEINLINEFUN1(BIarrayHigh,arrayHighInline)
+
+OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
+{
+  NONVAR( t, array, _1 );
+  NONVAR( i, index, _2 );
+
+  if (!isArray(array)) {
+    TypeErrorT(0,"Array");
+  }
+
+  if (!isSmallInt(index)) {
+    TypeErrorT(1,"smallInteger");
+  }
+
+  OzArray *ar = tagged2Array(array);
+  CheckFuckingBoard(ar);
+  return ar->getArg(smallIntValue(index),out);
+}
+DECLAREBI_USEINLINEFUN2(BIarrayGet,arrayGetInline)
+
+OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
+{
+  NONVAR( t, array, _1 );
+  NONVAR( i, index, _2 );
+
+  if (!isArray(array)) {
+    TypeErrorT(0,"Array");
+  }
+
+  if (!isSmallInt(index)) {
+    TypeErrorT(1,"smallInteger");
+  }
+
+  OzArray *ar = tagged2Array(array);
+  CheckFuckingBoard(ar);
+  return ar->setArg(smallIntValue(index),value);
+}
+
+DECLAREBI_USEINLINEREL3(BIarrayPut,arrayPutInline)
+
+
+/*===================================================================
+ *   Dictionaries
+ *=================================================================== */
+
+OZ_C_proc_begin(BIdictionaryNew,1)
+{
+  OZ_Term out       = OZ_getCArg(0);
+
+  return OZ_unify(makeTaggedConst(new OzDictionary(am.currentBoard)),out);
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIdictionaryKeys,2)
+{
+  OZ_Term d   = OZ_getCArg(0);
+  OZ_Term out = OZ_getCArg(1);
+
+  NONVAR( d, dict, _1 );
+  if (!isDictionary(dict)) {
+    TypeErrorT(0,"Dictionary");
+  }
+
+  CheckFuckingBoard(tagged2Dictionary(dict));
+  return OZ_unify(tagged2Dictionary(dict)->keys(),out);
+}
+OZ_C_proc_end
+
+
+OZ_Return isDictionaryInline(TaggedRef t, TaggedRef &out)
+{
+  NONVAR( t, term, tag );
+  out = isDictionary(term) ? NameTrue : NameFalse;
+  return PROCEED;
+}
+DECLAREBI_USEINLINEFUN1(BIisDictionary,isDictionaryInline)
+
+
+#define GetDictAndKey(d,k,dict,key)				\
+  NONVAR(d,dictaux,_1);						\
+  NONVAR(k,key, _2);						\
+  if (!isDictionary(dictaux)) { TypeErrorT(0,"Dictionary"); }	\
+  if (!isFeature(key))        { TypeErrorT(1,"feature"); }	\
+  OzDictionary *dict = tagged2Dictionary(dictaux);		\
+  CheckFuckingBoard(dict);
+
+
+OZ_Return dictionaryMemberInline(TaggedRef d, TaggedRef k, TaggedRef &out)
+{
+  GetDictAndKey(d,k,dict,key);
+  out = dict->member(key);
+  return PROCEED;
+}
+DECLAREBI_USEINLINEFUN2(BIdictionaryMember,dictionaryMemberInline)
+
+
+OZ_Return dictionaryGetInline(TaggedRef d, TaggedRef k, TaggedRef &out)
+{
+  GetDictAndKey(d,k,dict,key);
+  return dict->getArg(key,out);
+}
+DECLAREBI_USEINLINEFUN2(BIdictionaryGet,dictionaryGetInline)
+
+
+OZ_Return dictionaryGetIfInline(TaggedRef d, TaggedRef k, TaggedRef deflt, TaggedRef &out)
+{
+  GetDictAndKey(d,k,dict,key);
+  if (dict->getArg(key,out)!=PROCEED) {
+    out = deflt;
+  }
+  return PROCEED;
+}
+DECLAREBI_USEINLINEFUN3(BIdictionaryGetIf,dictionaryGetIfInline)
+
+
+OZ_Return dictionaryPutInline(TaggedRef d, TaggedRef k, TaggedRef value)
+{
+  GetDictAndKey(d,k,dict,key);
+  dict->setArg(key,value);
+  return PROCEED;
+}
+
+DECLAREBI_USEINLINEREL3(BIdictionaryPut,dictionaryPutInline)
+
+
+OZ_Return dictionaryRemoveInline(TaggedRef d, TaggedRef k)
+{
+  GetDictAndKey(d,k,dict,key);
+  dict->remove(key);
+  return PROCEED;
+}
+DECLAREBI_USEINLINEREL2(BIdictionaryRemove,dictionaryRemoveInline)
+
+
+#endif /* BUILTINS1 */
 
 /* -----------------------------------------------------------------
    dynamic link objects files
    ----------------------------------------------------------------- */
 
+#ifdef BUILTINS2
 
 char *expandFileName(char *fileName,char *path) {
 
@@ -6176,13 +6187,115 @@ OZ_C_proc_begin(BIcloneObjectRecord,4)
 }
 OZ_C_proc_end
 
+
+#endif /* BUILTINS2 */
+
+
 /*===================================================================
  * Table of builtins
  *=================================================================== */
 
 
-static
-BIspec allSpec[] = {
+#ifdef BUILTINS2
+extern BIspec allSpec1[];
+#endif
+
+#ifdef BUILTINS1
+
+BIspec allSpec1[] = {
+  {"/",  3,BIfdiv,    (IFOR) BIfdivInline},
+  {"*",  3,BImult,    (IFOR) BImultInline},
+  {"div",3,BIdiv,     (IFOR) BIdivInline},
+  {"mod",3,BImod,     (IFOR) BImodInline},
+  {"-",  3,BIminus,   (IFOR) BIminusInline},
+  {"+",  3,BIplus,    (IFOR) BIplusInline},
+  
+  {"max", 3,BImax,      (IFOR) BImaxInline},
+  {"min", 3,BImin,      (IFOR) BIminInline},
+  
+  {"<B", 3,BIlessFun,      (IFOR) BIlessInlineFun},
+  {"=<B",3,BIleFun,        (IFOR) BIleInlineFun},
+  {">B", 3,BIgreatFun,     (IFOR) BIgreatInlineFun},
+  {">=B",3,BIgeFun,        (IFOR) BIgeInlineFun},
+  {"=:=B",2,BInumeqFun,    (IFOR) BInumeqInlineFun},
+  {"=\\=B",2,BInumneqFun,  (IFOR) BInumneqInlineFun},
+  
+  {"=<",2,BIle,       (IFOR) BIleInline},
+  {"<",2,BIless,      (IFOR) BIlessInline},
+  {">=",2,BIge,       (IFOR) BIgeInline},
+  {">",2,BIgreat,     (IFOR) BIgreatInline},
+  {"=:=",2,BInumeq,   (IFOR) BInumeqInline},
+  {"=\\=",2,BInumneq,  (IFOR) BInumneqInline},
+  
+  {"~",2,BIuminus,    (IFOR) BIuminusInline},
+  {"+1",2,BIadd1,     (IFOR) BIadd1Inline},
+  {"-1",2,BIsub1,     (IFOR) BIsub1Inline},
+  
+  {"isNumber",1,BIisNumber,    (IFOR) BIisNumberInline},
+  {"isInt"   ,1,BIisInt,       (IFOR) BIisIntInline},
+  {"isFloat" ,1,BIisFloat,     (IFOR) BIisFloatInline},
+  {"isNumberB",2,BIisNumberB,  (IFOR) BIisNumberBInline},
+  {"isIntB"   ,2,BIisIntB,     (IFOR) BIisIntBInline},
+  {"isFloatB" ,2,BIisFloatB,   (IFOR) BIisFloatBInline},
+  
+  {"exp",  2, BIexp,   (IFOR) BIinlineExp},
+  {"log",  2, BIlog,   (IFOR) BIinlineLog},
+  {"sqrt", 2, BIsqrt,  (IFOR) BIinlineSqrt},
+  {"sin",  2, BIsin,   (IFOR) BIinlineSin},
+  {"asin", 2, BIasin,  (IFOR) BIinlineAsin},
+  {"cos",  2, BIcos,   (IFOR) BIinlineCos},
+  {"acos", 2, BIacos,  (IFOR) BIinlineAcos},
+  {"tan",  2, BItan,   (IFOR) BIinlineTan},
+  {"atan", 2, BIatan,  (IFOR) BIinlineAtan},
+  {"ceil", 2, BIceil,  (IFOR) BIinlineCeil},
+  {"floor",2, BIfloor, (IFOR) BIinlineFloor},
+  {"fabs", 2, BIfabs,  (IFOR) BIinlineFabs},
+  {"round",2, BIround, (IFOR) BIinlineRound},
+  {"abs",  2, BIabs,   (IFOR) BIabsInline},
+
+  {"fPow",3,BIfPow, (IFOR) BIfPowInline},
+  {"atan2",3,BIatan2, (IFOR) BIatan2Inline},
+
+  /* what is a small int ? */
+  {"smallIntLimits", 2, BIsmallIntLimits, 0},
+
+  /* conversion: float <-> int <-> virtualStrings */
+  {"intToFloat",2,BIintToFloat,  (IFOR) BIintToFloatInline},
+  {"floatToInt",2,BIfloatToInt,  (IFOR) BIfloatToIntInline},
+
+  {"intToString",    2, BIintToString,		0},
+  {"floatToString",  2, BIfloatToString,	0},
+  {"stringToInt",    2, BIstringToInt,		0},
+  {"stringToFloat",  2, BIstringToFloat,	0},
+  {"stringIsInt",    2, BIstringIsInt,		0},
+  {"stringIsFloat",  2, BIstringIsFloat,	0},
+
+  {"Array.new",  4, BIarrayNew,	0},
+  {"Array.is",   2, BIisArray,   (IFOR) isArrayInline},
+  {"Array.high", 2, BIarrayHigh, (IFOR) arrayHighInline},
+  {"Array.low",  2, BIarrayLow,  (IFOR) arrayLowInline},
+  {"Array.get",  3, BIarrayGet,  (IFOR) arrayGetInline},
+  {"Array.put",  3, BIarrayPut,  (IFOR) arrayPutInline},
+
+  {"Dictionary.new",    1, BIdictionaryNew,	0},
+  {"Dictionary.is",     2, BIisDictionary,     (IFOR) isDictionaryInline},
+  {"Dictionary.get",    3, BIdictionaryGet,    (IFOR) dictionaryGetInline},
+  {"Dictionary.getIf",  4, BIdictionaryGetIf,  (IFOR) dictionaryGetIfInline},
+  {"Dictionary.put",    3, BIdictionaryPut,    (IFOR) dictionaryPutInline},
+  {"Dictionary.remove", 2, BIdictionaryRemove, (IFOR) dictionaryRemoveInline},
+  {"Dictionary.member", 3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
+  {"Dictionary.keys",   2, BIdictionaryKeys,    0},
+
+  {"newCell",	      2,BInewCell,	0},
+  {"exchangeCell",    3,BIexchangeCell, (IFOR) BIexchangeCellInline},
+
+  {0,0,0,0}
+};
+#endif
+
+#ifdef BUILTINS2
+
+BIspec allSpec2[] = {
   {"isValue",1,BIisValue,          (IFOR) isValueInline},
   {"isValueB",2,BIisValueB,        (IFOR) isValueBInline},
   {"isLiteral",1,BIisLiteral,      (IFOR) isLiteralInline},
@@ -6254,9 +6367,6 @@ BIspec allSpec[] = {
   {"Chunk.new",	      2,BInewChunk,	0},
   {"`ChunkArity`",    2,BIchunkArity,	0},
 
-  {"newCell",	      2,BInewCell,	0},
-  {"exchangeCell",    3,BIexchangeCell, (IFOR) BIexchangeCellInline},
-
   {"newName",         1,BInewName,	0},
 
   {"setThreadPriority", 1, BIsetThreadPriority,	0},
@@ -6293,74 +6403,8 @@ BIspec allSpec[] = {
   {"@",               2,BIat,               (IFOR) atInline},
   {"<-",              2,BIassign,           (IFOR) assignInline},
   {"copyRecord",      2,BIcopyRecord,       0},
-  {"/",  3,BIfdiv,    (IFOR) BIfdivInline},
-  {"*",  3,BImult,    (IFOR) BImultInline},
-  {"div",3,BIdiv,     (IFOR) BIdivInline},
-  {"mod",3,BImod,     (IFOR) BImodInline},
-  {"-",  3,BIminus,   (IFOR) BIminusInline},
-  {"+",  3,BIplus,    (IFOR) BIplusInline},
-  
-  {"max", 3,BImax,      (IFOR) BImaxInline},
-  {"min", 3,BImin,      (IFOR) BIminInline},
-  
-  {"<B", 3,BIlessFun,      (IFOR) BIlessInlineFun},
-  {"=<B",3,BIleFun,        (IFOR) BIleInlineFun},
-  {">B", 3,BIgreatFun,     (IFOR) BIgreatInlineFun},
-  {">=B",3,BIgeFun,        (IFOR) BIgeInlineFun},
-  {"=:=B",2,BInumeqFun,    (IFOR) BInumeqInlineFun},
-  {"=\\=B",2,BInumneqFun,  (IFOR) BInumneqInlineFun},
-  
-  {"=<",2,BIle,       (IFOR) BIleInline},
-  {"<",2,BIless,      (IFOR) BIlessInline},
-  {">=",2,BIge,       (IFOR) BIgeInline},
-  {">",2,BIgreat,     (IFOR) BIgreatInline},
-  {"=:=",2,BInumeq,   (IFOR) BInumeqInline},
-  {"=\\=",2,BInumneq,  (IFOR) BInumneqInline},
-  
-  {"~",2,BIuminus,    (IFOR) BIuminusInline},
-  {"+1",2,BIadd1,     (IFOR) BIadd1Inline},
-  {"-1",2,BIsub1,     (IFOR) BIsub1Inline},
-  
-  {"isNumber",1,BIisNumber,    (IFOR) BIisNumberInline},
-  {"isInt"   ,1,BIisInt,       (IFOR) BIisIntInline},
-  {"isFloat" ,1,BIisFloat,     (IFOR) BIisFloatInline},
-  {"isNumberB",2,BIisNumberB,  (IFOR) BIisNumberBInline},
-  {"isIntB"   ,2,BIisIntB,     (IFOR) BIisIntBInline},
-  {"isFloatB" ,2,BIisFloatB,   (IFOR) BIisFloatBInline},
-  
-  {"exp",  2, BIexp,   (IFOR) BIinlineExp},
-  {"log",  2, BIlog,   (IFOR) BIinlineLog},
-  {"sqrt", 2, BIsqrt,  (IFOR) BIinlineSqrt},
-  {"sin",  2, BIsin,   (IFOR) BIinlineSin},
-  {"asin", 2, BIasin,  (IFOR) BIinlineAsin},
-  {"cos",  2, BIcos,   (IFOR) BIinlineCos},
-  {"acos", 2, BIacos,  (IFOR) BIinlineAcos},
-  {"tan",  2, BItan,   (IFOR) BIinlineTan},
-  {"atan", 2, BIatan,  (IFOR) BIinlineAtan},
-  {"ceil", 2, BIceil,  (IFOR) BIinlineCeil},
-  {"floor",2, BIfloor, (IFOR) BIinlineFloor},
-  {"fabs", 2, BIfabs,  (IFOR) BIinlineFabs},
-  {"round",2, BIround, (IFOR) BIinlineRound},
-  {"abs",  2, BIabs,   (IFOR) BIabsInline},
 
-  {"fPow",3,BIfPow, (IFOR) BIfPowInline},
-  {"atan2",3,BIatan2, (IFOR) BIatan2Inline},
-
-  /* what is a small int ? */
-  {"smallIntLimits", 2, BIsmallIntLimits, 0},
-
-  /* conversion: float <-> int <-> virtualStrings */
-  {"intToFloat",2,BIintToFloat,  (IFOR) BIintToFloatInline},
-  {"floatToInt",2,BIfloatToInt,  (IFOR) BIfloatToIntInline},
-
-  {"intToString",    2, BIintToString,		0},
-  {"floatToString",  2, BIfloatToString,	0},
-  {"stringToInt",    2, BIstringToInt,		0},
-  {"stringToFloat",  2, BIstringToFloat,	0},
-  {"stringIsInt",    2, BIstringIsInt,		0},
-  {"stringIsFloat",  2, BIstringIsFloat,	0},
   {"loadFile",       1, BIloadFile,		0},
-
   {"linkObjectFiles",2, BIlinkObjectFiles,	0},
   {"unlinkObjectFile",1,BIunlinkObjectFile,	0},
   {"findFunction",   3, BIfindFunction,		0},
@@ -6400,22 +6444,6 @@ BIspec allSpec[] = {
   {"constraints",    2, BIconstraints,		0},
 
   {"pushExHdl",      1, BIpushExHdl,		0},
-
-  {"Array.new",  4, BIarrayNew,	0},
-  {"Array.is",   2, BIisArray,   (IFOR) isArrayInline},
-  {"Array.high", 2, BIarrayHigh, (IFOR) arrayHighInline},
-  {"Array.low",  2, BIarrayLow,  (IFOR) arrayLowInline},
-  {"Array.get",  3, BIarrayGet,  (IFOR) arrayGetInline},
-  {"Array.put",  3, BIarrayPut,  (IFOR) arrayPutInline},
-
-  {"Dictionary.new",    1, BIdictionaryNew,	0},
-  {"Dictionary.is",     2, BIisDictionary,     (IFOR) isDictionaryInline},
-  {"Dictionary.get",    3, BIdictionaryGet,    (IFOR) dictionaryGetInline},
-  {"Dictionary.getIf",  4, BIdictionaryGetIf,  (IFOR) dictionaryGetIfInline},
-  {"Dictionary.put",    3, BIdictionaryPut,    (IFOR) dictionaryPutInline},
-  {"Dictionary.remove", 2, BIdictionaryRemove, (IFOR) dictionaryRemoveInline},
-  {"Dictionary.member", 3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
-  {"Dictionary.keys",   2, BIdictionaryKeys,    0},
 
   {"setAbstractionTabDefaultEntry", 1, BIsetAbstractionTabDefaultEntry, 0},
 
@@ -6502,7 +6530,6 @@ BIspec allSpec[] = {
 };
 
 
-
 extern void BIinitFD(void);
 extern void BIinitMeta(void);
 extern void BIinitAVar(void);
@@ -6517,7 +6544,8 @@ BuiltinTabEntry *BIinit()
   if (!bi)
     return bi;
 
-  BIaddSpec(allSpec);
+  BIaddSpec(allSpec1);
+  BIaddSpec(allSpec2);
 
   /* see emulate.cc */
   BIaddSpecial("raise",             1, BIraise);
@@ -6535,3 +6563,5 @@ BuiltinTabEntry *BIinit()
 
   return bi;
 }
+
+#endif /* BUILTINS2 */
