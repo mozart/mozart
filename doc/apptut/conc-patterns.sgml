@@ -299,6 +299,15 @@ This suspends until it can be decided whether or not <code/X/ is equal
 to <code/a/.  I said <q/almost/ because in between being free and
 determined, a variable may be kinded (&ie; its type is known), and the
 code above does not account for this possibility.</p>
+    <p>The <code/ForAll/ procedure is actually implemented as follows:
+<code display>
+proc {ForAll L P}
+   case L of H|T then {P X} {ForAll T P}
+   elseof nil then skip end
+end
+</code>
+The case statement (a conditional) suspends until it can be determined
+whether <code/L/ matches <code/H|T/, &ie; is a list pair.</p>
     <subsection>
       <title/The Short-Circuit Technique/
       <p>The short-circuit technique is the standard means of
