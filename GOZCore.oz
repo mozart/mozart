@@ -380,21 +380,31 @@ define
 			    {self ProcOrMeth(Event)}
 			 end
 		      end
-	 SignalId   = {Dispatcher
+	 SignalIds  = {Dispatcher
 		       signalConnect(SigHandler self.GtkObject Signal $)}
 	 CurSignals = @GtkSignals
       in
-	 GtkSignals <- SignalId|CurSignals
+	 case SignalIds of SignalId#_ then GtkSignals <- SignalId|CurSignals end
+	 SignalIds
       end
-      meth signalDisconnect(SignalId)
-	 {Dispatcher signalDisconnect(self.GtkObject SignalId)}
-	 GtkSignals <- {Filter @GtkSignals fun {$ Id} SignalId \= Id end}
+      meth signalDisconnect(SignalIds)
+	 {Dispatcher signalDisconnect(self.GtkObject SignalIds)}
+	 case SignalIds
+	 of SignalId#_ then
+	    GtkSignals <- {Filter @GtkSignals fun {$ Id} SignalId \= Id end}
+	 end
       end
-      meth signalBlock(SignalId)
-	 {GOZSignal.signalBlock self.GtkObject SignalId}
+      meth signalBlock(SignalIds)
+	 case SignalIds
+	 of _#GtkSignalId then
+	    {GOZSignal.signalBlock self.GtkObject GtkSignalId}
+	 end
       end
-      meth signalUnblock(SignalId)
-	 {GOZSignal.signalUnblock self.GtkObject SignalId}
+      meth signalUnblock(SignalIds)
+	 case SignalIds
+	 of _#GtkSignalId then
+	    {GOZSignal.signalUnblock self.GtkObject GtkSignalId}
+	 end
       end
       meth signalEmit(Signal)
 	 {GOZSignal.signalEmit self.GtkObject Signal}
@@ -658,12 +668,15 @@ define
 	       IsNormal = if Signal == 'delete-event' then 0 else 1 end
 	    in
 	       {Dictionary.put @handlerDict SignalId Handler}
+	       SignalId#
 	       {GOZSignal.signalConnect Object Signal SignalId IsNormal}
-	       SignalId
 	    end
-	    meth signalDisconnect(Object SignalId)
-	       {GOZSignal.signalDisconnect Object SignalId}
-	       {Dictionary.remove @handlerDict SignalId}
+	    meth signalDisconnect(Object SignalIds)
+	       case SignalIds
+	       of SignalId#GtkSignalId then
+		  {GOZSignal.signalDisconnect Object GtkSignalId}
+		  {Dictionary.remove @handlerDict SignalId}
+	       end
 	    end
 	    meth killSignals(Signals)
 	       case Signals

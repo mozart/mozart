@@ -390,29 +390,31 @@ static gboolean oz_delete_event(GtkWidget *widget, GdkEventAny *event) {
  */
 
 
-OZ_BI_define (native_signal_connect, 4, 0) {
+OZ_BI_define (native_signal_connect, 4, 1) {
   GOZ_declareObject(0, object);
   OZ_declareTerm(1, name);
   OZ_declareInt(2, oz_id);
   OZ_declareInt(3, normal_event);
 
   /* Delete Events need special care */
+  guint id;
   if (normal_event) {
-    gtk_signal_connect_full(GTK_OBJECT (object),
-			    (gchar *) OZ_virtualStringToC(name, NULL),
-			    NULL, signal_standard_marshal, (gpointer) oz_id,
-			    NULL, FALSE, FALSE);
+    id = gtk_signal_connect_full(GTK_OBJECT (object),
+				 (gchar *) OZ_virtualStringToC(name, NULL),
+				 NULL, signal_standard_marshal,
+				 (gpointer) oz_id,
+				 NULL, FALSE, FALSE);
   }
   else {
     GtkWidgetClass *cl = (GtkWidgetClass *) (GTK_OBJECT (object)->klass);
     cl->delete_event = oz_delete_event;
-
-    gtk_signal_connect_full(GTK_OBJECT (object),
-			    (gchar *) OZ_virtualStringToC(name, NULL),
-			    NULL, signal_delete_marshal, (gpointer) oz_id,
-			    NULL, FALSE, FALSE);
+    
+    id = gtk_signal_connect_full(GTK_OBJECT (object),
+				 (gchar *) OZ_virtualStringToC(name, NULL),
+				 NULL, signal_delete_marshal, (gpointer) oz_id,
+				 NULL, FALSE, FALSE);
   }
-
+  OZ_out(0) = OZ_int(id);
   return OZ_ENTAILED;
 } OZ_BI_end
 
@@ -739,7 +741,7 @@ OZ_BI_define(native_reset_stdin, 0, 0) {
 static OZ_C_proc_interface oz_interface[] = {
   {"initializeSignalPort", 1, 0, native_initialize_signal_port},
   {"handlePendingEvents", 0, 1, native_handle_pending_events},
-  {"signalConnect", 4, 0, native_signal_connect},
+  {"signalConnect", 4, 1, native_signal_connect},
   {"signalDisconnect", 2, 0, native_signal_disconnect},
   {"signalBlock", 2, 0, native_signal_block},
   {"signalUnblock", 2, 0, native_signal_unblock},
