@@ -1797,14 +1797,14 @@ void handlerSEGV()
 {
   CodeArea::writeInstr();
   error("**** segmentation violation ****\n");
-  am.exitOz(0);
+  am.exitOz(1);
 }
 
 void handlerBUS()
 {
   CodeArea::writeInstr();
   error("**** bus error ****\n");
-  am.exitOz(0);
+  am.exitOz(1);
 }
 
 void handlerPIPE()
