@@ -1,0 +1,25 @@
+VPATH           = @srcdir@
+SRCDIR          = @srcdir@
+
+WHAT = wp
+MAIN = wp.sgml
+SGMLSRCS = \
+        intro.sgml started.sgml widgets-1.sgml geometry.sgml widgets-2.sgml \
+        tools.sgml tkreference.sgml
+HTMLEXTRAFILES0 = \
+        button.gif check-and-radio-action.gif check-and-radio.gif dialog.gif \
+        entry.gif error.gif file.gif fonts.gif grid-span.gif grid-sticky.gif \
+        grid-weight.gif grid.gif help.gif images-1.gif labels.gif listbox.gif \
+        menu.gif messages.gif packer-anchor.gif packer-bottom.gif \
+        packer-fill.gif packer-ipad.gif packer-left.gif packer-pad.gif \
+        packer-plain.gif packer-resize-both.gif packer-resize-expand.gif \
+        packer-resize-fill.gif predefined-error.gif predefined-gray25.gif \
+        predefined-gray50.gif predefined-hourglass.gif predefined-info.gif \
+        predefined-questhead.gif predefined-question.gif \
+        predefined-warning.gif relief-frames.gif scales.gif started-1.gif \
+        started-2.gif tools-menubar.gif toplevel-1.gif widget-anchor.gif
+HTMLEXTRAFILES = \
+        wp.gif \
+        $(addprefix pictures/,$(HTMLEXTRAFILES0))
+
+include $(SRCDIR)/../Makefile.common

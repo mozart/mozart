@@ -1,0 +1,226 @@
+<!--
+  Translated to SGML by:
+     Daniel Simon, dansim@ps.uni-sb.de
+     Andy Walter, anwalt@ps.uni-sb.de
+-->
+
+<Chapter id="chapter.tools">
+  <Title/Tools for Tk/
+  <P>
+    This chapter presents some common graphical abstractions you might
+    find useful when building graphical user interfaces in &Oz;.  The
+    graphical abstractions are provided by the module <<TkTools>> and are
+    built on top of the functionality provided by the <<Tk>> module.
+  <Section id="section.tools.dialogs">
+    <Title/Dialogs/
+    <P>
+      A dialog displays some graphical information and several buttons.
+      The class <<TkTools.dialog>> provides a simple abstraction to build
+      dialogs.
+    <P>
+      <Ptr to="figure.tools.dialog"> shows an example dialog for deleting
+      a file.  The class <<TkTools.dialog>> is a subclass of <<Tk.frame>>.
+      Creating and initializing an instance of this class creates a toplevel
+      widget together with buttons displayed at the bottom of the toplevel
+      widget.  The instance itself serves as container for user-defined
+      widgets that are displayed at the top of the dialog (as the label and
+      the entry widget in our example).
+      <Figure id="figure.tools.dialog">
+        <Caption/A dialog to remove files./
+        <P>
+          <Picture.Extern to="dialog.gif" type=gif>
+<<<D={New TkTools.dialog
+   tkInit(title:   'Remove File'
+          buttons: ['Okay' #
+                    proc {$}
+                       try
+                          {OS.unlink {E tkReturn(get $)}}
+                          {D tkClose}
+                       catch system(os(_ _ S) ...) then skip
+                       end
+                    end
+                    'Cancel' # tkClose]
+          default:  1)}
+L={New Tk.label tkInit(parent:D text:'File name:')}
+E={New Tk.entry tkInit(parent:D bg:wheat width:20)}
+{Tk.batch [pack(L E side:left pady:2#m) focus(E)]}>>>
+      </Figure>
+    <P>
+      The initialization message for a dialog must contain the <<title>>
+      option, which gives the title of the dialog.  The buttons to be
+      displayed are specified by a list of pairs, where the first pair in
+      the list describes the leftmost button.  The pair consists of the label
+      of the button and the action for the button.  The action can be also
+      the atom <<close>>, which means that the action of the button sends a
+      <<close>> message to the dialog.  In a similar manner, the action can
+      be a unary tuple with label <<close>>, which means that first the action
+      specified by the tuple's argument is executed and then the dialog is
+      closed.  The <<default>> option specifies which button should be the
+      default one.  The default button  is marked by a sunken frame drawn
+      around the button.
+    <P>
+      In the above example, pressing the <<'Okay'>> button executes an
+      <Code proglang=sh/rm/ command to remove the file with the name as given
+      by the entry widget&nbsp;<<E>>.  Only if execution of this command
+      returns&nbsp;<<0>>, the dialog is closed.
+    <P>
+      The class <<TkTools.dialog>> is a subclass of <<Tk.frame>> and
+      <<Object.closed>>.  This allows to wait until the dialog object gets
+      closed.  For example, the execution of
+      <<<{Wait D.tkClosed}>>>
+      blocks until the dialog in the above example is closed.
+  <Section id="section.tools.error">
+    <Title/Error Dialogs/
+    <P>
+      A dialog to display error messages is provided by the class
+      <<TkTools.error>>, which is a sub class of <<TkTools.dialog>>.
+      <Ptr to="figure.tools.error"> shows an example of how to use
+      <<TkTools.error>>.
+      <Figure id="figure.tools.error">
+        <Caption/A transient error dialog./
+        <P>
+          <Picture.Extern to="error.gif" type=gif>
+<<<T={New Tk.toplevel tkInit}
+E={New TkTools.error
+   tkInit(master:T
+          text: 'Error in system configuration: '#
+                'too much memory.')}>>>
+      </Figure>
+    <P>
+      All dialogs provide for the option <<master>>.  By giving as value for
+      this option a toplevel widget, the dialog appears as a <Def/transient/
+      widget: depending on the window manager the widget appears with less
+      decoration, &eg;, no title, on the screen.  Moreover, when the master
+      widget is closed, the dialog is closed as well.
+  <Section>
+    <Title/Menubars/
+    <P>
+      A menubar is a frame widget containing several menubutton widgets.  To
+      each of the menubutton widgets a menu is attached.  The menu contains
+      menuitems being either radiobutton entries, checkbutton entries, command
+      entries (similar to button widgets), separator entries or cascade entries
+      to which sub menus are attached.  The menu entries can be equipped with
+      <Def/keyboard accelerators/ describing key event bindings that can be
+      used to invoke the action of the menu entry.  A keyboard accelerator
+      must be added to the menu entry and the right event binding needs to be
+      created.
+    <P>
+      Creating a menubar by hand has to follow this structure and is
+      inconvenient due to the large numbers of different kinds of widgets and
+      menu entries that are to be created.  To ease the creation of a menubar,
+      the <<TkTools>> module provides the procedure <<TkTools.menubar>> that
+      creates to a given specification a menubar and creates keyboard
+      accelerators with the right event bindings.  The specification of a
+      menubar consists of messages used to initialize the necessary widgets
+      and entries, where the label determines the kind of entry to be created.
+    <P>
+      <Ptr to="figure.tools.menubar"> shows an example for the creation of
+      a menubar.  The procedure <<TkTools.menubar>> takes two widgets and
+      two menubar sepcifications as input and returns a frame containg the
+      widgets for the menubar.  The widget gievn as first argument serves
+      as parent for the menubar's frame, whereas the widget given as
+      second argument receives the key bindings for the accelerators.
+      The specification given as third (fourth) argument describe the
+      left (right) part of the menubar.
+      <Figure id="figure.tools.menubar">
+        <Caption/A listbox together with a vertical scrollbar./
+        <P>
+          <Picture.Extern to="tools-menubar.gif" type=gif>
+<<<SizeVar = {New Tk.variable tkInit(0)}
+Bar =
+{TkTools.menubar T T
+ [menubutton(text:'Test' underline:0
+             menu:
+                [command(label:   'About test'
+                         action:  Browse # about
+                         key:     alt(a)
+                         feature: about)
+                 separator
+                 command(label:   'Quit'
+                         action:  T # close
+                         key:     ctrl(c)
+                         feature: quit)]
+             feature: test)
+  menubutton(text:'Options' underline:0
+             menu:
+                [checkbutton(label: 'Incremental'
+                             var:   {New Tk.variable tkInit(false)})
+                 separator
+                 cascade(label: 'Size'
+                         menu:
+                            [radiobutton(label: 'Small'
+                                         var:   SizeVar
+                                         value: 0)
+                             radiobutton(label: 'Middle'
+                                         var:   SizeVar
+                                         value: 1)
+                             radiobutton(label: 'Large'
+                                         var:   SizeVar
+                                         value: 2)])])]
+ nil}
+Dummy = {New Tk.frame tkInit(parent:T width:10#c height:4#c)}
+{Tk.send pack(Bar Dummy fill:x)}>>>
+      </Figure>
+    <P>
+      A menubar specification consists of a list of <<menubutton>> messages.
+      The valid options are those for the <<TkInit>> method of a menubutton
+      widget object, where the parent field is not necessary, and the
+      additional options <<menu>> and <<feature>>.  The value for the <<menu>>
+      option must be a list of specifications for the menu entries.  The menu
+      entries are specified similar to the menubuttons, the allow for the
+      additional options <<feature>>, <<key>>, and <<event>>.
+    <P>
+      The value for the <<key>> describes the keyboard accelerator and event
+      binding to be created.  They can be used as follows:
+      <Table>
+        <TR>
+          <TH/<<key>> option value/
+          <TH/accelerator/
+          <TH/event binding/
+        <TR>
+          <TD/<<a>>/
+          <TD/<Key/a//
+          <TD/<Samp/a//
+        <TR>
+          <TD/<<ctrl(a)>>/
+          <TD/<Key/C-a//
+          <TD/<Samp/&lt;Control-a&gt;//
+        <TR>
+          <TD/<<alt(a)>>/
+          <TD/<Key/A-a//
+          <TD/<Samp/&lt;Alt-a&gt;//
+        <TR>
+          <TD/<<alt(ctrl(a))>>/
+          <TD/<Key/A-C-a//
+          <TD/<Samp/&lt;Alt-Control-a&gt;//
+        <TR>
+          <TD/<<ctrl(alt(a))>>/
+          <TD/<Key/C-A-a//
+          <TD/<Samp/&lt;Control-Alt-a&gt;//
+      </Table>
+    <p>
+      In case one wants to use different event bindings than those generated
+      from the <<key>> option value, one can specify the event pattern as
+      value for the option <<event>>.
+    <P>
+      The <<feature>> options for menubuttons and menu entries attach features
+      to the created objects such that the object get accesible by these
+      features.  For instance, to disable the <Q class=menu/About test/ entry
+      is possible with
+      <<<{Bar.test.about tk(entryconfigure state:disabled)}>>>
+    <P>
+      The menus attached to menubuttons or to cascade entries can be acessed
+      under the feature <<menu>>.  For instance the first tear off entry from
+      the <Q class=menu/Test/ menu can be removed with
+      <<<{Bar.test.menu tk(configure tearoff:false)}>>>
+    <P>
+      It is possible to extend a menubar created with <<TkTools.menubar>> with
+      further entries.  The following statement adds a menu entry just before
+      the <<Quit>> entry:
+<<<Added={New Tk.menuentry.command
+       tkInit(parent:Bar.test.menu
+              before:Bar.test.quit
+              label: 'Exit')}>>>
+      which can be deleted and removed from the menu again by:
+      <<<{Added tkClose}>>>
+</Chapter>
