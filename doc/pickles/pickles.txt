@@ -1,20 +1,21 @@
 
-<pickle> ::=  S:<string>         % header (any sequence of characters)
+<pickle> ::=  S:<nonquoted-string>     % header (any sequence of characters)
               S:<string>               % version number
-              <pair>*
+              <pair>*                  % separated by blanks
 
 
 <pair> ::=  S:<string>
             I:<digit>+                  % integer
             D:<termtag>
             O:<opcode>
-            L:<string>                  % refence to label
+            L:<string>                  % refence to a label
+                                        % scope: surrounding code block
             l:<string>                  % definition of instruction label
             B:<digit>+                  % decimal code of a single byte
             C:                          % start of code block
             c:                          % end of code block
-            T:<string>                  % reference to term
-            t:<string>                  % definition of term label
+            T:<string>                  % reference to term (global scope)
+            t:<string>                  % definition of term label (follows <termtag>)
             #:<char>* <newline>         % comment
 
 
@@ -24,3 +25,5 @@
 <termtag> ::=   ATOM | SMALLINT | ...   % see pickle.hh
 
 <string> ::=    to be defined by Leif
+
+<digit>  ::=  0|1|2|3|4|5|6|7|8|9
