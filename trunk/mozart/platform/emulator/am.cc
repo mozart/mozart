@@ -207,6 +207,23 @@ void AM::init(int argc,char **argv)
   ozconf.argV = NULL;
   ozconf.argC = 0;
 
+  /* enter emulator path */
+  ozconf.emuhome = strdup(argv[0]);
+
+  {
+    char * last_slash = 0;
+    char * c = ozconf.emuhome;
+
+    while (*c) {
+      if (*c == '/')
+	last_slash = c;
+      c++;
+    }
+    
+    if (last_slash) 
+      *last_slash = 0;
+  }
+
   for (int i=url?2:1; i<argc; i++) {
     if (strcmp(argv[i],"-d")==0) {
 #ifdef DEBUG_TRACE
@@ -336,28 +353,13 @@ void AM::init(int argc,char **argv)
 
 #ifndef STATIC_LIBOZMA
 
-    char * libname = "libozma.so";
-    char * libfile = new char[strlen(argv[0]) + strlen(libname)];
+    char * libname = "/libozma.so";
+    int n = strlen(ozconf.emuhome);
+    char * libfile = new char[n + strlen(libname)];
 
-    strcpy(libfile, argv[0]);
+    strcpy(libfile, ozconf.emuhome);
 
-    char * last_slash = 0;
-
-    char * c = libfile;
-
-    while (*c) {
-      if (*c == '/')
-	last_slash = c+1;
-      c++;
-    }
-    
-    if (!last_slash) {
-      fprintf(stderr, "Illegal emulator name.\n");
-      osExit(1);
-    }
-
-    // Assumption that emulator name is longer than libozma.so
-    strcpy(last_slash, "libozma.so");
+    strcpy(libfile + n, libname);
 
     printf("Loading ozma library: %s\n",libfile);
 
