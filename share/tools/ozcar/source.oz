@@ -40,14 +40,19 @@ local
       end
       
       meth highlight(line:L color:C)
+	 {Show highlight#L#@CurrentLine}
 	 case @CurrentLine \= undef then
 	    {self tk(tag conf q(@CurrentLine)
 		     foreground:black
 		     background:white)}
 	 else skip end
-	 {ForAll [tk(tag conf q(L) foreground:white background:C)
-		  tk(see L#'.0')] self}
-	 CurrentLine <- L
+	 case L \= undef then
+	    {ForAll [tk(tag conf q(L) foreground:white background:C)
+		     tk(see L#'.0')] self}
+	    CurrentLine <- L
+	 else
+	    CurrentLine <- undef
+	 end
       end
    end
    
@@ -58,7 +63,7 @@ in
 	 NoteBook
       attr
 	 WindowList : nil
-	 Current    : nil
+	 Current    : undef
 	 WithDrawn  : true
       
       meth init
@@ -82,8 +87,11 @@ in
       end
       
       meth scrollbar(file:F line:L color:C)
-	 case F == undef orelse L == undef then
-	    skip
+	 {Show scrollbar#F}
+	 case F == undef orelse F == '' orelse L == undef then
+	    case @Current \= undef then
+	       {@Current highlight(line:undef color:undef)}
+	    else skip end
 	 else
 	    E = {self lookup(file:F entry:$)}
 	 in
