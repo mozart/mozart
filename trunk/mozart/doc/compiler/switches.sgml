@@ -171,11 +171,11 @@
 	<Item>
 	  Place a static breakpoint on the first statement of each
 	  compiled query.
-	<Entry><Code><Span class=ignore/\switch +/debuginfocontrol</Code>
+	<Entry><Code><Span class=ignore/\switch +/controlflowinfo</Code>
 	  (default: <<false>>)
 	<Item>
 	  Include program flow information in the generated code.
-	<Entry><Code><Span class=ignore/\switch +/debuginfovarnames</Code>
+	<Entry><Code><Span class=ignore/\switch +/staticvarnames</Code>
 	  (default: <<false>>)
 	<Item>
 	  Include environment information in the generated code.

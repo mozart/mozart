@@ -41,8 +41,8 @@ local
 	 if {self.emacsThreadsMenu getCurrent($)} == AttachText then
 	    {EnqueueCompilerQuery setSwitch(debuginfo true)}
 	 else
-	    {EnqueueCompilerQuery setSwitch(debuginfovarnames true)}
-	    {EnqueueCompilerQuery setSwitch(debuginfocontrol true)}
+	    {EnqueueCompilerQuery setSwitch(controlflowinfo true)}
+	    {EnqueueCompilerQuery setSwitch(staticvarnames true)}
 	 end
 	 {Dbg.on}
 	 if @currentThread == unit then
