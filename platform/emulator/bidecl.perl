@@ -1163,8 +1163,8 @@ $builtins = {
 			     ibi => newObjectInline,
 			     native => false},
 
-    'New'		=> { in  => ['+class','+record'],
-			     out => ['+object'],
+    'New'		=> { in  => ['+class','+record','+object'],
+			     out => [],
 			     bi  => BINew,
 			     native => false},
 
