@@ -15,15 +15,6 @@ local
    Y0           = Gap + 1
    Y1           = Height
    Home         = ~10
-
-   ZeroTime     = time(copy:      0 
-		       gc:        0 
-		       load:      0
-		       propagate: 0 
-		       run:       0
-		       system:    0
-		       user:      0)
-
 in
 
    class RuntimeBar
