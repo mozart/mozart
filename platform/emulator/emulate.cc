@@ -113,8 +113,8 @@ void failureNomsg(AM *e) { HF_BODY(,); }
 
 
 #define CheckArity(arity,arityExp,pred,cont)				      \
-if (arity != arityExp && VarArity != arity) {			      	      \
-  HF_WARN(applFailure(pred);					      \
+if (arity != arityExp && VarArity != arityExp) {		      	      \
+  HF_WARN(applFailure(pred);						      \
 	  message("Wrong number of arguments: expected %d got %d\n",arityExp,arity),); \
 }
 
@@ -1024,10 +1024,10 @@ void engine() {
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       OZ_CFun fun = entry->getFun();
-      int arityExp = getPosIntArg(PC+2);
+      int arityGot = getPosIntArg(PC+2);
       int arity = entry->getArity();
 
-      CheckArity(arity,arityExp,entry,PC+3);
+      CheckArity(arityGot,arity,entry,PC+3);
 
       LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
 
@@ -1626,7 +1626,7 @@ void engine() {
       {
 	Abstraction *def = (Abstraction *) predicate;
 
-        CheckArity(def->getArity(), predArity, def, PC);
+        CheckArity(predArity, def->getArity(), def, PC);
 	CallDoChecks(def,def->getGRegs(),isExecute,PC,def->getArity());
 	Y = NULL; // allocateL(0);
 
@@ -1641,7 +1641,7 @@ void engine() {
       {
 	bi = (Builtin *) predicate;
 
-	CheckArity(bi->getArity(),predArity,bi,PC);
+	CheckArity(predArity, bi->getArity(),bi,PC);
 
 	switch (bi->getType()) {
 
