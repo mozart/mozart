@@ -52,7 +52,7 @@ class Truck from Tk.canvasTag
       Y = @y
    in
       Truck, tk(delete)
-      case Tk.isColor then
+      if Tk.isColor then
          %% Create the truck's window
          {P tk(create image X Y
                image: Images.truck.win.D
@@ -60,7 +60,6 @@ class Truck from Tk.canvasTag
          {P tk(create image X Y
                image: Images.truck.fill.(self.fill).D
                tags:  self)}
-      else skip
       end
       %% Create the frame for truck (better visibility)
       {P tk(create image X Y
@@ -88,9 +87,9 @@ class Truck from Tk.canvasTag
    end
 
    meth turn(X0 X1)
-      NewTurn = case X0<X1 then right else left end
+      NewTurn = if X0<X1 then right else left end
    in
-      case @turn==NewTurn then skip else
+      if @turn\=NewTurn then
          turn <- NewTurn Truck, draw
       end
    end
@@ -106,7 +105,7 @@ class Truck from Tk.canvasTag
    end
 
    meth Move(N XS YS)
-      case N==0 then skip else
+      if N\=0 then
          Truck,tk(move XS YS)
          x <- @x + XS y <- @y + YS
          {Delay DelayMove}

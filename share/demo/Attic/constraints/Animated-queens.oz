@@ -22,45 +22,43 @@
 
 local
 
-   functor MakeQueens prop once
+   URL = 'http://www.ps.uni-sb.de/ozhome/demo/images/animated-queens/'
+
+   MaxWidth      = 600 % How large can the drawing area be
+
+   FailWidth     = 10
+
+   DefaultSize   = 6   % With which N-Queens problem should we start
+
+   ParamWinTitle = 'Animated Queens: Size'
+
+   LargeFont     = '-Adobe-times-bold-r-normal--*-240*'
+
+   %% Derived Parameters
+   WidthByMag    = s(micro:2 tiny:5 small:10 middle:25 large:50)
+
+   MaxBoardSize  = 255
+
+in
+
+   functor
 
    import
       FD
-
       Tk
-
       TkTools
+      Application
 
-      Applet
-
-   body
-      Applet.spec = single(title(type:string default:"Animated Queens"))
-
-      URL = 'http://www.ps.uni-sb.de/ozhome/demo/images/animated-queens/'
-
-      MaxWidth      = 600 % How large can the drawing area be
-
-      FailWidth     = 10
-
-      DefaultSize   = 6   % With which N-Queens problem should we start
-
-      ParamWinTitle = 'Animated Queens: Size'
-
-      LargeFont     = '-Adobe-times-bold-r-normal--*-240*'
+   define
 
       BlackColor    #
       WhiteColor    #
       QueenColor    #
       CrossColor    #
-      FailColor     = case Tk.isColor then
+      FailColor     = if Tk.isColor then
                          gray85 # gray95 # darkorange1 # gray75 # firebrick
                       else black # white # black # black # black
                       end
-
-      %% Derived Parameters
-      WidthByMag    = s(micro:2 tiny:5 small:10 middle:25 large:50)
-
-      MaxBoardSize  = 255
 
       QueenByMag = q(micro:  {New Tk.image
                               tkInit(type:bitmap foreground:QueenColor
@@ -116,7 +114,7 @@ local
                    [] !FirstFailStrat then ff
                    [] !UpFirstStrat   then generic(order:OrderUp)
                    [] !MiddleOutStrat then generic(value:mid)
-                end
+                   end
          in
             proc {$ Xs}
                Xs = {FD.list Size 1#Size}
@@ -153,7 +151,7 @@ local
                   Stopped <- true
                   {self.canvas stop}
                [] S|Sr then
-                  case S==backtrack then
+                  if S==backtrack then
                      Stack <- Sr
                      {self backtrack}
                      Engine,next
@@ -179,7 +177,7 @@ local
 
             meth sol
                Engine, next
-               case @Stopped then skip else
+               if @Stopped then skip else
                   Engine,sol
                end
             end
@@ -206,7 +204,7 @@ local
          fun {Reflect Xs}
             case Xs of nil then nil
             [] X|Xr then
-               case {FD.reflect.size X}==1 then X else void end|{Reflect Xr}
+               if {FD.reflect.size X}==1 then X else void end|{Reflect Xr}
             end
          end
 
@@ -228,7 +226,7 @@ local
             end
 
             proc {DrawQueen X Y T}
-               case X==void orelse Y==void then skip else
+               if X\=void andthen Y\=void then
                   {Canvas tk(crea image (X-1)*Width (Y-1)*Width
                              image:  Queen
                              tags:   T
@@ -239,7 +237,7 @@ local
             UpdateBoard
             ReflectBoard
 
-            case Cross\=false then
+            if Cross\=false then
                proc {DrawCross X Y T}
                   {Canvas tk(crea image (X-1)*Width (Y-1)*Width
                              image:  Cross
@@ -251,7 +249,7 @@ local
                   [] O|Or then
                      case Ns of nil then {DrawCross O I T} {DrawCrosses Or Ns I T}
                      [] N|Nr then
-                        {DrawCrosses Or case O<N then {DrawCross O I T} Ns
+                        {DrawCrosses Or if O<N then {DrawCross O I T} Ns
                                         else Nr end I T}
                      end
                   end
@@ -260,7 +258,7 @@ local
                proc {UpdateBoard Os Ns I T}
                   case Os of nil then skip
                   [] O|Or then N|Nr=Ns in
-                     case O.2==nil then skip else
+                     if O.2\=nil then
                         case N of [M] then {DrawQueen M I T} else skip end
                         {DrawCrosses O N I T}
                      end
@@ -272,7 +270,7 @@ local
                proc {UpdateBoard Os Ns I T}
                   case Os of nil then skip
                   [] O|Or then N|Nr=Ns in
-                     case O==N then skip else {DrawQueen N I T} end
+                     if O\=N then {DrawQueen N I T} end
                      {UpdateBoard Or Nr I+1 T}
                   end
                end
@@ -486,10 +484,10 @@ local
             lock
                Size     = @size
                Strat    = @strategy
-               Mag      = case     Size*WidthByMag.large =<MaxWidth then large
-                          elsecase Size*WidthByMag.middle=<MaxWidth then middle
-                          elsecase Size*WidthByMag.small =<MaxWidth then small
-                          elsecase Size*WidthByMag.tiny  =<MaxWidth then tiny
+               Mag      = if     Size*WidthByMag.large =<MaxWidth then large
+                          elseif Size*WidthByMag.middle=<MaxWidth then middle
+                          elseif Size*WidthByMag.small =<MaxWidth then small
+                          elseif Size*WidthByMag.tiny  =<MaxWidth then tiny
                           else micro
                           end
                MagWidth = WidthByMag.Mag
@@ -553,20 +551,17 @@ local
 
          meth close
             lock
-               Board,       stop
-               {self.toplevel tkClose}
-               {Wait _}
+               {Application.exit 0}
             end
          end
 
       end
 
-      {New Board init(Applet.toplevel) _}
+      Top = {New Tk.toplevel tkInit(title:  'Animated Queens'
+                                    delete: Application.exit # 0)}
+
+      {New Board init(Top) _}
 
    end
-
-in
-
-    MakeQueens
 
 end

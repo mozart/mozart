@@ -22,34 +22,31 @@
 
 local
 
-   functor MakeJobShop prop once
+   \insert 'job-shop/configure.oz'
+
+   \insert 'job-shop/examples.oz'
+
+   ArgSpec = single(example(type:atom default:no))
+
+in
+
+   functor
 
    import
       FD
-
       Schedule
-
       Explorer
-
       Tk
-
       TkTools
-
-      Applet.{Argv   = args
-              toplevel spec}
-
       Search
+      Application
 
-   body
-      Applet.spec = single(example(type:atom default:no)
-                           title(type:string default:"Job Shop Scheduler"))
+   define
+
+      Argv = {Application.getCmdArgs ArgSpec}
 
       \insert 'job-shop/main.oz'
 
    end
-
-in
-
-    MakeJobShop
 
 end

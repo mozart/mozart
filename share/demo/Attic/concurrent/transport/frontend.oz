@@ -67,7 +67,7 @@ local
          proc {Okay}
             AddC={Entry tkReturnAtom(get $)}
          in
-            case {Dictionary.member AS AddC} then
+            if {Dictionary.member AS AddC} then
                {Error self 'Company '#AddC#' already exists.'}
             else C=AddC {self tkClose}
             end
@@ -93,7 +93,7 @@ local
          proc {Okay}
             RemC={Entry.entry tkReturnAtom(get $)}
          in
-            case {Dictionary.member AS RemC} then C=RemC {self tkClose}
+            if {Dictionary.member AS RemC} then C=RemC {self tkClose}
             else {Error self 'There is no company with name: '#RemC#'.'}
             end
          end
@@ -122,11 +122,11 @@ local
             AddD={EntryD       tkReturnAtom(get $)}
             AddY={EntryY.entry tkReturnAtom(get $)}
          in
-            case {Dictionary.member AS AddC} then
-               case {Member AddD {Dictionary.get AS AddC}} then
+            if {Dictionary.member AS AddC} then
+               if {Member AddD {Dictionary.get AS AddC}} then
                   {Error self 'Driver '#AddD#' already exists for company '#
                               AddC#'.'}
-               elsecase {Country.isCity AddY} then
+               elseif {Country.isCity AddY} then
                   C=AddC D=AddD Y=AddY  {self tkClose}
                else
                   {Error self 'There is no city '#AddY#'.'}
@@ -173,8 +173,8 @@ local
             RemC={EntryC.entry tkReturnAtom(get $)}
             RemD={EntryD.entry tkReturnAtom(get $)}
          in
-            case {Dictionary.member AS RemC} then
-               case {Member RemD {Dictionary.get AS RemC}} then
+            if {Dictionary.member AS RemC} then
+               if {Member RemD {Dictionary.get AS RemC}} then
                   C=RemC D=RemD {self tkClose}
                else
                   {Error self 'No driver '#RemD#' for company '#RemC#'.'}
@@ -283,7 +283,7 @@ in
                                          action:  self # about)
                                  separator
                                  command(label:   'Quit'
-                                         action:  T # tkClose)])
+                                         action:  Application.exit # 0)])
                   menubutton(text:    'Configure'
                              feature: configure
                              menu:
@@ -403,7 +403,7 @@ in
       meth CheckSend
          S=@src D=@dst
       in
-         {self.send tk(conf state:case S\=D andthen
+         {self.send tk(conf state:if S\=D andthen
                                      {IsAtom S} andthen {IsAtom D}
                                   then normal
                                   else disabled
@@ -428,10 +428,9 @@ in
          lock
             W = {self.weight tkReturnInt(get $)}
          in
-            case {IsInt W} then
+            if {IsInt W} then
                {self.broker announce(src:@src dst:@dst weight:W
                                      what:{self.what tkReturnAtom(get $)})}
-            else skip
             end
          end
       end
@@ -450,21 +449,20 @@ in
             {Wait {New AddCompanyDialog init(master: self.toplevel
                                              agents: Agents
                                              company:C)}.tkClosed}
-            case {IsDet C} then
+            if {IsDet C} then
                Menu = self.menu.configure
             in
                {Dictionary.put Agents C nil}
                {self.broker add(company:C)}
                {Menu.remCompany tk(entryconfigure state:normal)}
                {Menu.addDriver  tk(entryconfigure state:normal)}
-               case {Some {Arity DefaultScenario}
+               if {Some {Arity DefaultScenario}
                      fun {$ C}
                         {Dictionary.member Agents C}
                      end} then
                   {Menu.addDefaults tk(entryconfigure state:disabled)}
-               else skip
                end
-            else skip end
+            end
             Frontend, EnableMenus
          end
       end
@@ -475,24 +473,22 @@ in
             {Wait {New RemCompanyDialog init(master: self.toplevel
                                              agents: Agents
                                              company:C)}.tkClosed}
-            case {IsDet C} then
+            if {IsDet C} then
                Menu = self.menu.configure
             in
                {Dictionary.remove Agents C}
                {self.broker remove(company:C)}
-               case {Dictionary.entries Agents}==nil then
+               if {Dictionary.entries Agents}==nil then
                   {Menu.remCompany  tk(entryconf      state:disabled)}
                   {Menu.addDriver   tk(entryconf      state:disabled)}
                   {Menu.remDriver   tk(entryconf      state:disabled)}
                   {Menu.addDefaults tk(entryconfigure state:normal)}
-               elsecase {Not {Some {Arity DefaultScenario}
+               elseif {Not {Some {Arity DefaultScenario}
                               fun {$ C}
                                  {Dictionary.member Agents C}
                               end}} then
                   {Menu.addDefaults  tk(entryconfigure state:enabled)}
-               else skip
                end
-            else skip
             end
             Frontend, EnableMenus
          end
@@ -506,11 +502,11 @@ in
                                             company:C
                                             driver: D
                                             city:   Y)}.tkClosed}
-            case {IsDet C} then
+            if {IsDet C} then
                {Dictionary.put Agents C D|{Dictionary.get Agents C}}
                {self.menu.configure.remDriver tk(entryconf state:normal)}
                {self.broker add(company:C driver:D city:Y)}
-            else skip end
+            end
             Frontend, EnableMenus
          end
       end
@@ -522,19 +518,18 @@ in
                                             agents:  Agents
                                             company: C
                                             driver:  D)}.tkClosed}
-            case {IsDet C} then
+            if {IsDet C} then
                {Dictionary.put Agents C
                 {List.subtract {Dictionary.get Agents C} D}}
                {self.broker remove(company:C driver:D)}
-               case {All {Dictionary.keys Agents}
-                     fun {$ C}
-                        {Dictionary.get Agents C}==nil
-                     end}
+               if {All {Dictionary.keys Agents}
+                   fun {$ C}
+                      {Dictionary.get Agents C}==nil
+                   end}
                then
                   {self.menu.configure.remDriver tk(entryconf state:disabled)}
-               else skip
                end
-            else skip end
+            end
             Frontend, EnableMenus
          end
       end

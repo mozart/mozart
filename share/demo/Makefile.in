@@ -16,7 +16,7 @@ INSTALL_DIR     = @INSTALL_DIR@
 COMPRESSLEVEL   = @oz_picklecompression@
 COMPRESSFLAGS   = --compress=$(COMPRESSLEVEL)
 
-OZCFLAGS        = $(COMPRESSFLAGS)
+OZCFLAGS        = $(COMPRESSFLAGS) --noallowdeprecated
 OZC             = @OZC@
 
 COMPILE         = $(OZC) $(OZCFLAGS)
@@ -71,7 +71,7 @@ WEBC = \
 
 all:: $(WEBPAGES) $(WEBC)
 
-ozp2html: make-ozp2html.oz
+ozp2html: ozp2html.oz
         $(COMPILE) -x $< -o $@
 
 $(WEBPAGES): ozp2html

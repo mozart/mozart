@@ -20,8 +20,6 @@
 %%% WARRANTIES.
 %%%
 
-\insert 'configure.oz'
-
 \insert 'tools.oz'
 
 \insert 'scheduler.oz'
@@ -62,20 +60,20 @@ class Frontend
    end
 
    meth displaySol(Sol)
-      case {Record.all Sol IsDet} then
+      if {Record.all Sol IsDet} then
          {self.Board displaySol(Sol)}
          {self.Sched setSpan(Sol)}
-      else skip
       end
    end
 
 end
 
-\insert 'examples.oz'
+Top = {New Tk.toplevel tkInit(title:  'Job Shop Scheduler'
+                              delete: Application.exit # 0)}
 
 JSS = {New Frontend
-       tkInit(parent: Applet.toplevel
-              spec:   case {HasFeature Examples Argv.example} then
+       tkInit(parent: Top
+              spec:   if {HasFeature Examples Argv.example} then
                          Examples.(Argv.example)
                       else nil
                       end)}

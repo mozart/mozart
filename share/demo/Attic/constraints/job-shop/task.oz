@@ -71,7 +71,7 @@ class Task
    meth setSol(S)
       X = S * DurUnit
    in
-      case @EditMode then Task,tk(move X-@X0 0)
+      if @EditMode then Task,tk(move X-@X0 0)
       else Task,tk(move X-@X1 0)
       end
       EditMode <- false
@@ -79,7 +79,7 @@ class Task
    end
 
    meth setEdit
-      case @EditMode then skip else
+      if @EditMode then skip else
          EditMode <- true
          Task,tk(move @X0-@X1 0)
       end

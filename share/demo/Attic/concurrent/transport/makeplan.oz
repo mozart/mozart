@@ -23,7 +23,7 @@
 local
    proc {InsertSrc JA|Js Src Dst Weight What ?C ?NJs}
       case Js of nil then
-         case Src==JA.city then
+         if Src==JA.city then
             NJs = [act(city:Src
                        load:Weight
                        lift:What|JA.lift
@@ -49,13 +49,13 @@ local
       [] JB|_ then
          NewLoad = JA.load + Weight
       in
-         case NewLoad>Capacity then
+         if NewLoad>Capacity then
             %% Job cannot placed here, because load would exceed the
             %% capacity of the truck
             NJs=JA|{InsertSrc Js Src Dst Weight What ?C}
          else
             dis NewJob in
-               case Src==JA.city then
+               if Src==JA.city then
                   %% Okay, the truck drives to this city anyway, so
                   %% simply add this good
                   NJs = (act(city: Src
@@ -94,7 +94,7 @@ local
                     drop: [What])]
       [] JB|Jr then
          dis
-            case JB.city==Dst then
+            if JB.city==Dst then
                C   = 0
                NJs = {AdjoinAt JB drop What|JB.drop} | Jr
             else
@@ -116,7 +116,7 @@ local
 in
 
    proc {MakePlan Tour Task ?Cost ?NewTour}
-      Cost # NewTour = case {SearchBest
+      Cost # NewTour = case {Search.base.best
                              proc {$ S}
                                 C # NewTour = S
                              in

@@ -67,7 +67,7 @@ in
                  T1  = {New Tk.canvasTag tkInit(parent:CA)}
                  T2  = {New Tk.canvasTag tkInit(parent:CA)}
               in
-                 case Dur>MaxDur then skip else
+                 if Dur=<MaxDur then
                     {CA tk(create rectangle
                            X + CellDelta
                            Y + CellDelta
@@ -95,8 +95,7 @@ in
                     {T2 tkBind(event:  '<1>'
                                action: self # Choose(Dur T1))}
                  end
-                 case Dur==1 then Selected <- T1
-                 else skip
+                 if Dur==1 then Selected <- T1
                  end
               end}
           end}
@@ -119,15 +118,14 @@ in
       end
 
       meth disable
-         case @Enabled then
+         if @Enabled then
             {self.DisableTag tk(move 0 HideY)}
             Enabled <- false
-         else skip
          end
       end
 
       meth enable
-         case @Enabled then skip else
+         if @Enabled then skip else
             {self.DisableTag tk(move 0 ~HideY)}
             Enabled <- true
             {self.Action}

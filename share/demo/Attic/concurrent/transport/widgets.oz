@@ -59,19 +59,18 @@ in
       end
 
       meth toggle
-         {Tk.send wm(case @mapped then iconify else deiconify end self)}
+         {Tk.send wm(if @mapped then iconify else deiconify end self)}
          History, setMapped({Not @mapped})
       end
 
       meth map
-         case @mapped then skip else {Tk.send wm(deiconify self)}
+         if @mapped then skip else {Tk.send wm(deiconify self)}
          end
          History, setMapped(true)
       end
 
       meth unmap
-         case @mapped then {Tk.send wm(iconify self)}
-         else skip
+         if @mapped then {Tk.send wm(iconify self)}
          end
          History, setMapped(false)
       end
@@ -119,7 +118,7 @@ in
          Button = {New Tk.button tkInit(parent: self
                                         image: Images.down
                                         highlightthickness:0
-                                        state:  case Es==nil then disabled
+                                        state:  if Es==nil then disabled
                                                 else normal
                                                 end
                                         action: self # OpenChooser)}
@@ -134,7 +133,7 @@ in
 
       meth entries(Es)
          entries <- Es
-         case Es==nil then skip else
+         if Es\=nil then
             {self.entry tk(delete 0 'end')}
             {self.entry tk(insert 0 Es.1)}
          end
