@@ -122,6 +122,8 @@ public:
   OZ_Boolean operator >= (const OZ_FSetImpl &);
   OZ_Boolean operator != (const OZ_FSetImpl &);
   OZ_Boolean operator == (const OZ_FSetImpl &);
+  OZ_Boolean operator <= (const int);
+  OZ_Boolean operator >= (const int);
 };
 
 inline
