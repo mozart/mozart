@@ -53,9 +53,7 @@ extern "C" void setmode(int,mode_t);
 #include "os.hh"
 
 
-#ifdef SUNOS_SPARC
 static long emulatorStartTime = 0;
-#endif
 
 fd_set socketFDs;
 static int maxSocket = 0;
@@ -175,8 +173,8 @@ unsigned int osTotalTime()
 #else
 
   struct tms buffer;
-  
-  return (unsigned int) (times(&buffer)*1000.0/(double)sysconf(_SC_CLK_TCK));
+  int t = times(&buffer) - emulatorStartTime;
+  return (unsigned int) (t*1000.0/(double)sysconf(_SC_CLK_TCK));
 
 #endif
 
@@ -717,9 +715,9 @@ void osInit()
 
   emulatorStartTime = tp.tv_sec;
 
-#endif
-
+#else
 #ifdef WINDOWS
+
   /* make sure everything is opened in binary mode */
   setmode(fileno(stdin),O_BINARY);  // otherwise input blocks!!
   _fmode = O_BINARY;
@@ -729,6 +727,13 @@ void osInit()
   SYSTEMTIME st;
   GetSystemTime(&st);
   SystemTimeToFileTime(&st,&emuStartTime);
+
+#else
+  
+  struct tms buffer;
+  emulatorStartTime = times(&buffer);;
+
+#endif
 #endif
 }
 
