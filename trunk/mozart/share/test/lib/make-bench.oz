@@ -123,16 +123,16 @@ local
       import
 	 Property
 	 System
-	 Debug    from 'x-oz://boot/Debug'
-		     Module
+	 Debug at 'x-oz://boot/Debug'
+	 Module
 
       export
 	 Run
-	 
-      body
+
+      define
 	 \insert 'engine.oz'
 	 \insert 'compute-tests.oz'
-	 
+
 	 fun {ComputeMinTime T0 TMin Test}
 	    {Test _}
 	    local

@@ -19,23 +19,23 @@
 %%% WARRANTIES.
 %%%
 
-functor prop once
+functor
 import
-   Application.save
-   System.{valueToVirtualString show}
-   Error.{formatLine msg}
-   FS.value
-   Open.file
-   Pickle.{load save}
+   Application(save)
+   System(valueToVirtualString show)
+   Error(formatLine msg)
+   FS(value)
+   Open(file)
+   Pickle(load save)
    Tk
    TkTools
-   Compiler.genericInterface
-   Browser.browse
-   Emacs.condSend
+   Compiler(genericInterface)
+   Browser(browse)
+   Emacs(condSend)
 export
    'class':           CompilerPanel
 
-body
+define
    local
       UrlDefaults = \insert '../url-defaults.oz'
    in

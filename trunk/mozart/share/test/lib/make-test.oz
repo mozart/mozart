@@ -47,18 +47,18 @@ local
       import
 	 Property
 	 System
-	 Debug    from 'x-oz://boot/Debug'
-		     Module
+	 Debug at 'x-oz://boot/Debug'
+	 Module
 
       export
 	 Run
-	 
-      body
+
+      define
 	 fun {X2V X}
 	    {System.valueToVirtualString X 100 100}
 	 end
 
-	 
+
 	 \insert 'engine.oz'
 	 \insert 'compute-tests.oz'
 

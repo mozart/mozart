@@ -1,13 +1,13 @@
-functor $ prop once
+functor
 
 import
    Property
    Open
-   
+
 export
    Return
 
-body
+define
    % tests may be performed (1) either at top-level or in a space
    % and (2) either width debugging on or off.
    local

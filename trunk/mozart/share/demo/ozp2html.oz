@@ -61,15 +61,15 @@ local
    ArgSpec = single(ozp(type:string optional:false))
    
 in
-   
+
    functor
 
    import
       Open
       Application
       Pickle
-      
-   body
+
+   define
 
       Args = {Application.getCmdArgs ArgSpec}
       

@@ -1,4 +1,4 @@
-functor $ prop once
+functor
 
 import
 
@@ -8,9 +8,9 @@ import
 
 export
    Return
-body
+define
 
-   
+
    MiscTest =
    fun {$ N T}
       L = {StringToAtom {VirtualString.toString N}}

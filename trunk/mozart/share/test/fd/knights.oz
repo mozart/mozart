@@ -1,4 +1,4 @@
-functor $ prop once
+functor
 
 import
 
@@ -8,9 +8,9 @@ import
 
 export
    Return
-body
+define
 
-Knights = 
+Knights =
 fun {$ N}
    NN = N*N
    % The fields of the board are numbered from 1..NN

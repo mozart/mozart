@@ -1,17 +1,17 @@
-functor $ prop once
+functor
 
 import
 
    FS
-   
+
    FD
 
    Search
 
 export
    Return
-body
-   
+define
+
    Bits = 7     % maximal domain (7 bit, ie, 128 codes)
    Dist = 2     % minimal hamming distance
    Num  = 16    % number of variables

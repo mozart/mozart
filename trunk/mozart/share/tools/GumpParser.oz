@@ -23,7 +23,7 @@
 %%% WARRANTIES.
 %%%
 
-functor prop once
+functor
 import
    System(showError)
 export
