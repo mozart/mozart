@@ -131,6 +131,18 @@ AC_DEFUN(OZ_BUILD_DATE,[
 
 AC_DEFUN(OZ_INIT, [
   AC_PREFIX_DEFAULT(/usr/local/oz)
+  OZ_PATH_SRCDIR
+  OZ_PATH_SRCTOP
+  OZ_PATH_BUILDTOP
+  AC_CONFIG_AUX_DIR($SRCTOP)
+  AC_CANONICAL_HOST
+  OZ_PROG_MAKE
+  AC_PROG_MAKE_SET
+  OZ_PROG_INSTALL
+  HOMEURL="http://www.mozart-oz.org/home"
+  HOMECACHE="http/www.mozart-oz.org/home"
+  AC_SUBST(HOMEURL)
+  AC_SUBST(HOMECACHE)
   case "$target" in
     i386-mingw32)
         PLATFORM=win32-i486
@@ -144,7 +156,7 @@ AC_DEFUN(OZ_INIT, [
         RANLIB=${target}-ranlib
         AR=${target}-ar
         STRIP=${target}-strip
-        OZTOOL=${target}-oztool
+        OZTOOL="sh $BUILDTOP/platform/emulator/${target}-oztool"
         enable_contrib_psql=no
         enable_contrib_gdbm=yes
         enable_contrib_regex=yes
@@ -157,18 +169,6 @@ AC_DEFUN(OZ_INIT, [
         OZ_PATH_PROG(OZTOOL,oztool,[OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh"])
     ;;
   esac
-  OZ_PATH_SRCDIR
-  OZ_PATH_SRCTOP
-  OZ_PATH_BUILDTOP
-  AC_CONFIG_AUX_DIR($SRCTOP)
-  AC_CANONICAL_HOST
-  OZ_PROG_MAKE
-  AC_PROG_MAKE_SET
-  OZ_PROG_INSTALL
-  HOMEURL="http://www.mozart-oz.org/home"
-  HOMECACHE="http/www.mozart-oz.org/home"
-  AC_SUBST(HOMEURL)
-  AC_SUBST(HOMECACHE)
   OZ_ARG_WITH_INC_DIR
   OZ_ARG_WITH_LIB_DIR
   AC_SUBST(CPPFLAGS)
