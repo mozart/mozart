@@ -48,7 +48,7 @@ if test "${enable_wincross}" = yes; then
 	CC=$oz_wincross_dir/$oz_wincross_prefix-gcc
 	EXTRALDFLAGS="-mwindows -s"
 	platform="win32-i486"
-	OZWISH="ozwish.exe"
+	OZWISH="wif.exe"
 	SRCS="winMain.c"
 	oz_tcl_inc_dir=$oz_wincross_tcl_inc_dir
 	oz_tcl_lib_dir=$oz_wincross_tcl_lib_dir
@@ -58,7 +58,7 @@ if test "${enable_wincross}" = yes; then
     fi
 else
     AC_MSG_RESULT(no)
-    OZWISH="oz.wish.bin"
+    OZWISH="wif.exe"
     SRCS="ozMain.c ozAppInit.c"
 fi
 
@@ -85,11 +85,6 @@ dnl *****************************************************************
 
 : ${platform=`$PLATFORMSCRIPT`}
 AC_SUBST(platform)
-
-: ${PROGRAMNAME=oz.emulator.bin}
-TARGETS="$PROGRAMNAME"
-AC_SUBST(PROGRAMNAME)
-AC_SUBST(TARGETS)
 
 PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
 AC_DEFINE_UNQUOTED($PLATFORM)

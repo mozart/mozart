@@ -825,7 +825,7 @@ if test "${enable_wincross}" = yes; then
 	AR=$oz_wincross_dir/$oz_wincross_prefix-ar
 	#LDFLAGS="$LDFLAGS $oz_wincross_LDFLAGS"
 	platform="win32-i486"
-	PROGRAMNAME="ozemulator.exe"
+	PROGRAMNAME="emulator.exe"
 	with_sunpro=no
 	oz_gmp_lib_dir=$oz_wincross_gmp_lib_dir
 	oz_gmp_inc_dir=$oz_wincross_gmp_inc_dir
@@ -868,7 +868,7 @@ if test "${enable_os2}" = yes; then
     CXX=gcc
     LD=$CXX
     platform="os2-i486"
-    PROGRAMNAME="ozemulator.exe"
+    PROGRAMNAME="emulator.exe"
     with_sunpro=no
     with_gmp=no
     oz_malloc_obj=
@@ -1534,7 +1534,7 @@ fi
 : ${platform=`$PLATFORMSCRIPT`}
 
 
-: ${PROGRAMNAME=oz.emulator.bin}
+: ${PROGRAMNAME=emulator.exe}
 TARGETS="$PROGRAMNAME"
 
 

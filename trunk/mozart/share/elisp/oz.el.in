@@ -208,7 +208,7 @@ and that no command will be bound to C-c followed by a letter."
   (eval '(defcustom oz-emulator
 	   (or (getenv "OZEMULATOR")
 	       (concat (getenv "HOME")
-		       "/mozart/platform/emulator/oz.emulator.bin"))
+		       "/mozart/platform/emulator/emulator.exe"))
 	   "*Path to the Oz Emulator for gdb mode and for \\[oz-other]."
 	   :type 'string
 	   :group 'oz)))
