@@ -897,7 +897,6 @@ case $enable_opt in
 	oz_enable_threaded=no
 	oz_enable_fastreg=no
 	oz_enable_fasterreg=no
-	oz_enable_regopt=no
 	;;
     p*)
 	AC_MSG_RESULT(profile (-DPROFILE_EMULATOR))
@@ -943,11 +942,6 @@ OZ_ENABLE(fasterreg,[  even faster temporary register access],yes,
 OZ_ENABLE(fastarith,[  use fast arithemtic (assembly), if available],yes,
 	AC_MSG_RESULT(yes (-DFASTARITH))
 	AC_DEFINE(FASTARITH)
-	)
-
-OZ_ENABLE(regopt,[   register optimization],yes,
-	AC_MSG_RESULT(yes (-DREGOPT))
-	AC_DEFINE(REGOPT)
 	)
 
 OZ_ENABLE(modules-static,[ link modules statically],$oz_enable_modules_static,

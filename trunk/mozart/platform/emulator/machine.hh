@@ -89,11 +89,6 @@ inline uint32 ToInt32(uint32 t) { return t; }
 inline void *orPointer(void *p, int i)  { return (void*) ((intlong)p|(intlong)i); }
 inline void *andPointer(void *p, int i) { return (void*) ((intlong)p&(intlong)i); }
 
-// Memory management gets a register
-#if __GNUC__ >= 2 && defined(sparc) && defined(REGOPT)
-#define HEAPCURINTOREGISTER 1
-#endif
-
 #ifdef THREADED
 
 #if defined(AS_HAS_MULTIPLE_ALIGN) || defined(AS_HAS_POWER_ALIGN)

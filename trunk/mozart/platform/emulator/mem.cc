@@ -45,10 +45,9 @@ unsigned int heapTotalSize;
 unsigned int heapTotalSizeBytes;
 
 
-#ifndef HEAPCURINTOREGISTER
 char * _oz_heap_cur;
-#endif
 char * _oz_heap_end;
+
 #ifdef TRACE_ALOVER
 size_t _oz_alover;
 #endif
