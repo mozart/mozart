@@ -28,70 +28,56 @@
 // -----------------------------------------------------------------------
 // TOPLEVEL FAILURE (HF = Handle Failure)
 
-#include <stdarg.h>
-
-OZ_Term mkTuple(char *label,int arity,...)
-{
-  va_list ap;
-  va_start(ap,arity);
-
-  OZ_Term tmp=OZ_tupleC(label,arity);
-  for (int i = 0; i < arity; i++) {
-    OZ_putArg(tmp,i+1,va_arg(ap,OZ_Term));
-  }
-
-  va_end(ap);
-  return tmp;
-}
-
-OZ_Term mkTuple(OZ_Term label,int arity,...)
-{
-  va_list ap;
-  va_start(ap,arity);
-
-  OZ_Term tmp=OZ_tuple(label,arity);
-  for (int i = 0; i < arity; i++) {
-    OZ_putArg(tmp,i+1,va_arg(ap,OZ_Term));
-  }
-
-  va_end(ap);
-  return tmp;
-}
-
 /*
  * make an STuple
  * INPUT: X register, number of arguments
  */
-OZ_Term mkTupleX(char *label,RefsArray A,int n)
+OZ_Term mkTupleX(char *label,OZ_Term fun, RefsArray A,int n)
 {
-  OZ_Term tmp=OZ_tupleC(label,n);
-  for (int i=0; i < n; i++) OZ_putArg(tmp,i+1,A[i]);
+  OZ_Term tmp=OZ_tupleC(label,n+1);
+  OZ_putArg(tmp,1,fun);
+  for (int i=0; i < n; i++) OZ_putArg(tmp,i+2,A[i]);
   return tmp;
 }
 
-#define HF_FAIL1(R)                                     \
+OZ_Term mkTupleX(char *label,char *fun, RefsArray A,int n)
+{
+  return mkTupleX(label,OZ_CToAtom(fun),A,n);
+}
+
+OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
+{
+  if (!isSTuple(tuple)) {
+    Assert(OZ_isAtom(tuple));
+    OZ_Term tmp=OZ_tuple(tuple,1);
+    OZ_putArg(tmp,1,arg);
+    return tmp;
+  } else {
+    STuple *st=tagged2STuple(tuple);
+    int len=st->getSize();
+    OZ_Term tmp=OZ_tuple(st->getLabel(),len+1);
+    OZ_putArg(tmp,1,arg);
+    for (int i=0; i < len; i++) OZ_putArg(tmp,i+2,st->getArg(i));
+    return tmp;
+  }
+}
+
+#define HF_FAIL(R)                                      \
    if (!e->isToplevelFailure()) { goto LBLfailure; }    \
    X[0]=mkTuple("toplevelFailure",1,(R));               \
    goto LBLraise;
 
-#define HF_FAIL2(L,A1,A2)        \
-   HF_FAIL1(mkTuple(L,2,A1,A2));
+#define HF_PROC                                 \
+ HF_FAIL1(mkTupleX("proc",                      \
+                   predicate->getPrintName(),   \
+                   X,predArity));
 
-#define HF_FAIL                                         \
-   if (!e->isToplevelFailure()) { goto LBLfailure; }    \
-   X[0]=OZ_CToAtom("toplevelFailure");                  \
-   goto LBLraise;
+#define INFO_BI                                 \
+ mkTupleX("proc",                               \
+          builtinTab.getName((void *) biFun),   \
+          X,predArity)
 
-
-#define HF_PROC                                         \
- HF_FAIL2("proc",                                       \
-          OZ_CToAtom(predicate->getPrintName()),        \
-          mkTupleX("args",X,predArity));
-
-#define HF_BI                                                   \
- HF_FAIL2("bi",                                                 \
-          OZ_CToAtom(builtinTab.getName((void *) biFun)),       \
-          mkTupleX("args",X,predArity));
+#define RAISE_BI(val) { X[0]=adjoinT(am.exception,val); goto LBLraise; }
 
 #define NOFLATGUARD   (shallowCP==NULL)
 
@@ -99,7 +85,7 @@ OZ_Term mkTupleX(char *label,RefsArray A,int n)
 
 #define CheckArity(arityExp,proc)                                       \
 if (predArity != arityExp && VarArity != arityExp) {                    \
-  X[0]=mkTuple("arityCheck",2,proc,mkTupleX("args",X,predArity));       \
+  X[0]=mkTuple("arityCheck",1,mkTupleX("proc",proc,X,predArity));       \
   goto LBLraise;                                                        \
 }
 
@@ -240,11 +226,9 @@ void genCallInfo(GenCallInfoClass *gci, int arity, TaggedRef pred,
       return;
     }
   } else {
-    if(!isConstChunk(pred) ||
-       chunkCast(pred)->getType()!=Co_Abstraction) {
-      goto bombGenCall;
-    }
-    abstr = (Abstraction*)chunkCast(pred);
+    if(!isAbstraction(pred)) goto bombGenCall;
+
+    abstr = tagged2Abstraction(pred);
     if (abstr->getArity() != arity)
       goto bombGenCall;
   }
@@ -291,7 +275,7 @@ Bool AM::emulateHookOutline(Abstraction *def,
   }
 
   if (def && isSetSFlag(DebugMode)) {
-    enterCall(currentBoard,def,arity,arguments);
+    enterCall(currentBoard,makeTaggedConst(def),arity,arguments);
   }
 
   return FALSE;
@@ -598,24 +582,68 @@ TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
 }
 
 
+static
+void printArg(OZ_Term arg)
+{
+  arg=deref(arg);
+  if (isSTuple(arg)) {
+    STuple *st=tagged2STuple(arg);
+    int len=st->getSize();
+    TaggedRef lab=st->getLabel();
+    if (lab==OZ_CToAtom("proc")) {
+      message("In application { %s ",OZ_toC(st->getArg(0)));
+      for (int i=1; i<len; i++) {
+        printf("%s ",OZ_toC(st->getArg(i)));
+      }
+      printf("}.\n");
+    } else if (lab==OZ_CToAtom("instr")) {
+      message("In instruction %s(",OZ_toC(st->getArg(0)));
+      for (int i=1; i<len; i++) {
+        printf("%s ",OZ_toC(st->getArg(i)));
+      }
+      printf(").\n");
+    } else if (lab==OZ_CToAtom("vs")) {
+      for (int i=0; i<len; i++) {
+        message("");
+        OZ_printVS(st->getArg(i));
+        printf("\n");
+      }
+    } else if (lab==OZ_CToAtom("pos")) {
+      printf("For Argument #%s.\n",OZ_toC(st->getArg(0)));
+    } else if (lab==OZ_CToAtom("type")) {
+      message("Expected type '%s'.\n",OZ_toC(st->getArg(0)));
+    } else {
+      message("%s.\n",OZ_toC(arg));
+    }
+  } else {
+    if (arg != OZ_CToAtom("noInfo")) {
+      message("%s.\n",OZ_toC(arg));
+    }
+  }
+}
+
+
 void AM::defaultExceptionHandler(OZ_Term val, ProgramCounter PC,
                                  TaskStackEntry *oldTos)
 {
   if (ozconf.errorVerbosity > 0) {
-    printf("\n");
-    prefixError();
-    message("****************************************\n");
+    errorHeader();
     if (OZ_isVariable(val) || !OZ_isNoNumber(val)) {
       message("Exception %s raised.\n",OZ_toC(val));
     } else {
       OZ_Term lab=OZ_label(val);
-      message("Exception %s raised\n",OZ_toC(lab));
+      message("Exception '%s' raised.\n",OZ_toC(lab));
       if (lab == OZ_CToAtom("no_else")) {
         message("Conditional without else failed.\n");
-      }
-      if (ozconf.errorVerbosity > 1) {
-        if (!OZ_isLiteral(val)) {
-          message("Arguments: %s.\n",OZ_toC(val));
+      } else if (ozconf.errorVerbosity > 1) {
+        val=deref(val);
+        if (isSTuple(val)) {
+          STuple *st=tagged2STuple(val);
+          int len=st->getSize();
+          DebugCheckT(message("Arguments: %s.\n",OZ_toC(val)));
+          for (int i=0; i<len; i++) {
+            printArg(st->getArg(i));
+          }
         }
       }
     }
@@ -954,7 +982,7 @@ void engine()
   Bool isSolveDebug  = NO;
 
   OZ_CFun biFun = NULL;     NoReg(biFun);
-  Chunk *predicate;         NoReg(predicate);
+  ConstTerm *predicate;     NoReg(predicate);
   int predArity;            NoReg(predArity);
 
 #ifdef CATCH_SEGV
@@ -1133,7 +1161,7 @@ void engine()
       LOCAL_PROPAGATION (localPropStore.reset ());
 
     localhack0:
-      HF_BI;
+      HF_FAIL(INFO_BI);
 
     default:
       error ("Unexpected value returned from a propagator.");
@@ -1276,7 +1304,7 @@ LBLpopTask:
 
     case C_CALL_CONT:
       {
-        predicate = (Chunk *) TaskStackPop(--topCache);
+        predicate = tagged2Const((TaggedRef)ToInt32(TaskStackPop(--topCache)));
         RefsArray tmpX = (RefsArray) TaskStackPop(--topCache);
         predArity = tmpX ? getRefsArraySize(tmpX) : 0;
         int i = predArity;
@@ -1325,10 +1353,11 @@ LBLpopTask:
         LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
 
         switch (biFun(predArity, X)) {
+        default:
         case FAILED:
           LOCAL_PROPAGATION(localPropStore.reset());
         localhack1:
-          HF_BI;
+          HF_FAIL(INFO_BI);
 
         case SLEEP:
           error ("popTask: CFunCont returns 'SLEEP'!");
@@ -1347,11 +1376,9 @@ LBLpopTask:
             e->suspendOnVarList (thr);
             CHECK_CURRENT_THREAD;
           }
-        default:
-          X[0]=mkTuple("biInvalidReturn",2,
-                       OZ_CToAtom(builtinTab.getName((void *) biFun)),
-                       mkTupleX("args",X,predArity));
-          goto LBLraise;
+
+        case RAISE:
+          RAISE_BI(INFO_BI);
         } // switch
       }
 
@@ -1568,7 +1595,7 @@ LBLkillThread:
       if (nb) e->decSolveThreads (nb->getBoardFast ());
       //
       //  Note: there is no thread!
-      HF_FAIL;
+      HF_FAIL(OZ_CToAtom("noInfo"));
     }
 
     error("never here");
@@ -1744,7 +1771,7 @@ LBLsuspendThread:
       // marked already as non-propagated;
       //
       //  Note: there is no thread!
-      HF_FAIL;
+      HF_FAIL(OZ_CToAtom("noInfo"));
 
     case CE_CONT:
       error ("Entailment of some guard during suspending a thread???");
@@ -1843,7 +1870,7 @@ LBLsuspendThread:
       Assert(biFun); // NOTE: special builtin need suspension handler
       predArity = getPosIntArg(PC+2);
 
-      CheckArity(entry->getArity(),OZ_CToAtom(entry->getPrintName()));
+      CheckArity(entry->getArity(),entry->getPrintName());
 
       LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
 
@@ -1853,10 +1880,11 @@ LBLsuspendThread:
         e->suspendOnVarList(e->mkSuspThread ());
         CHECK_CURRENT_THREAD;
 
+      default:
       case FAILED:
         LOCAL_PROPAGATION(localPropStore.reset());
       localhack2:
-        HF_BI;
+        HF_FAIL(INFO_BI);
 
       case SLEEP: // no break
         error ("'CALLBUILTIN' has got 'SLEEP' back!\n");
@@ -1864,11 +1892,9 @@ LBLsuspendThread:
         LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
                           goto localhack2;);
         DISPATCH(3);
-      default:
-        X[0]=mkTuple("biInvalidReturn",2,
-                     OZ_CToAtom(entry->getPrintName()),
-                     mkTupleX("args",X,predArity));
-        goto LBLraise;
+
+      case RAISE:
+        RAISE_BI(INFO_BI);
       }
     }
 
@@ -1894,9 +1920,15 @@ LBLsuspendThread:
         CHECK_CURRENT_THREAD;
       case FAILED:
         SHALLOWFAIL;
-        HF_FAIL2("bi",
-                 OZ_CToAtom(entry->getPrintName()),
-                 mkTuple("args",1,XPC(2)));
+        HF_FAIL(mkTuple("proc",2,
+                        OZ_CToAtom(entry->getPrintName()),
+                        XPC(2)));
+
+      case RAISE:
+        RAISE_BI(mkTuple("proc",2,
+                         OZ_CToAtom(entry->getPrintName()),
+                         XPC(2)));
+
       case SLEEP:
       default:
         Assert(0);
@@ -1927,9 +1959,15 @@ LBLsuspendThread:
         }
       case FAILED:
         SHALLOWFAIL;
-        HF_FAIL2("bi",
-                 OZ_CToAtom(entry->getPrintName()),
-                 mkTuple("args",2,XPC(2),XPC(3)));
+        HF_FAIL(mkTuple("proc",3,
+                        OZ_CToAtom(entry->getPrintName()),
+                        XPC(2),XPC(3)));
+
+      case RAISE:
+        RAISE_BI(mkTuple("proc",3,
+                         OZ_CToAtom(entry->getPrintName()),
+                         XPC(2),XPC(3)));
+
       case SLEEP:
       default:
         Assert(0);
@@ -1962,9 +2000,15 @@ LBLsuspendThread:
 
       case FAILED:
         SHALLOWFAIL;
-        HF_FAIL2("bi",
-                 OZ_CToAtom(entry->getPrintName()),
-                 mkTuple("args",1,XPC(2)));
+        HF_FAIL(mkTuple("proc",3,
+                        OZ_CToAtom(entry->getPrintName()),
+                        XPC(2),AtomVoid));
+
+      case RAISE:
+        RAISE_BI(mkTuple("proc",3,
+                         OZ_CToAtom(entry->getPrintName()),
+                         XPC(2),AtomVoid));
+
       case SLEEP:
       default:
         Assert(0);
@@ -2002,8 +2046,15 @@ LBLsuspendThread:
 
       case FAILED:
         SHALLOWFAIL;
-        HF_FAIL2("bi",OZ_CToAtom(entry->getPrintName()),
-                 mkTuple("args",2,XPC(2),XPC(3)));
+        HF_FAIL(mkTuple("proc",4,
+                        OZ_CToAtom(entry->getPrintName()),
+                        XPC(2),XPC(3),AtomVoid));
+
+      case RAISE:
+        RAISE_BI(mkTuple("proc",4,
+                         OZ_CToAtom(entry->getPrintName()),
+                         XPC(2),XPC(3),AtomVoid));
+
       case SLEEP:
       default:
         Assert(0);
@@ -2052,6 +2103,9 @@ LBLsuspendThread:
             CHECK_CURRENT_THREAD;
           }
 
+        case RAISE:
+          RAISE_BI(mkTuple("proc",4,OZ_CToAtom("`.`"),feature,XPC(3),AtomVoid));
+
         case SLEEP:
         default:
           Assert(0);
@@ -2059,7 +2113,7 @@ LBLsuspendThread:
       }
     dotFailed:
       SHALLOWFAIL;
-      HF_FAIL2("bi",OZ_CToAtom("."), mkTuple("args",2,feature,XPC(3)));
+      HF_FAIL(mkTuple("proc",4,OZ_CToAtom("`.`"),feature,XPC(3),AtomVoid));
     }
 
 
@@ -2085,7 +2139,11 @@ LBLsuspendThread:
       case FAILED:
         LOCAL_PROPAGATION(localPropStore.reset());
       localhack4:
-        HF_FAIL2("bi",OZ_CToAtom("^"), mkTuple("args",2,XPC(1),XPC(2)));
+        HF_FAIL(mkTuple("proc",4,OZ_CToAtom("`^`"),XPC(1),XPC(2),AtomVoid));
+
+      case RAISE:
+        RAISE_BI(mkTuple("proc",4,OZ_CToAtom("`^`"),XPC(1),XPC(2),AtomVoid));
+
       case SLEEP:
       default:
         Assert(0);
@@ -2123,8 +2181,15 @@ LBLsuspendThread:
 
       case FAILED:
         SHALLOWFAIL;
-        HF_FAIL2("bi",OZ_CToAtom(entry->getPrintName()),
-                 mkTuple("args",3,XPC(2),XPC(3),XPC(4)));
+        HF_FAIL(mkTuple("proc",5,
+                        OZ_CToAtom(entry->getPrintName()),
+                        XPC(2),XPC(3),XPC(4),AtomVoid));
+
+      case RAISE:
+        RAISE_BI(mkTuple("proc",5,
+                         OZ_CToAtom(entry->getPrintName()),
+                         XPC(2),XPC(3),XPC(4),AtomVoid));
+
       case SLEEP:
       default:
         Assert(0);
@@ -2148,6 +2213,8 @@ LBLsuspendThread:
           e->suspendInline(2,A,B);
           CHECK_CURRENT_THREAD;
         }
+
+      case RAISE:
       case FAILED:
       case SLEEP:
       default:
@@ -2182,6 +2249,11 @@ LBLsuspendThread:
         addSusp (XPC(2), e->mkSuspThread ());
         CHECK_CURRENT_THREAD;
 
+      case RAISE:
+        RAISE_BI(mkTuple("proc",2,
+                         OZ_CToAtom(entry->getPrintName()),
+                         XPC(1)));
+
       case SLEEP:
       default:
         Assert(0);
@@ -2210,6 +2282,10 @@ LBLsuspendThread:
           if (isAnyVar (B)) addSusp (BPtr, thr);
           CHECK_CURRENT_THREAD;
         }
+
+      case RAISE:
+        RAISE_BI(mkTuple("proc",3,OZ_CToAtom(entry->getPrintName()),
+                         XPC(1),XPC(2)));
 
       case SLEEP:
       default:
@@ -2273,7 +2349,7 @@ LBLsuspendThread:
 
   Case(FAILURE)
     {
-      HF_FAIL;
+      HF_FAIL(mkTuple("instr",1,OZ_CToAtom("failure")));
     }
 
 
@@ -2406,8 +2482,9 @@ LBLsuspendThread:
         goto bombSend;
 
 
-      X[0]=mkTuple("apply",2,object,
-                   mkTuple("args",1,makeMethod(arity,label,X)));
+      X[0]=mkTuple("applyFailure",1,
+                   mkTuple("proc",2,object,
+                           makeMethod(arity,label,X)));
       goto LBLraise;
     }
 
@@ -2433,7 +2510,7 @@ LBLsuspendThread:
     PC = isTailCall ? PC : PC+4;
     X[0] = makeMethod(arity,label,X);
     predArity = 1;
-    predicate = chunkCast(object);
+    predicate = tagged2Const(object);
     goto LBLcall;
   }
 
@@ -2474,7 +2551,7 @@ LBLsuspendThread:
 
   bombApply:
     if (methApplHdl == makeTaggedNULL()) {
-      message("Application handler not set (apply method)\n");
+      error("no apply handler");
     }
 
     TaggedRef method = makeMethod(arity-3,label,X);
@@ -2485,7 +2562,7 @@ LBLsuspendThread:
     X[0] = origObject;
 
     predArity = 5;
-    predicate = chunkCast(methApplHdl);
+    predicate = tagged2Const(methApplHdl);
     goto LBLcall;
   }
 
@@ -2505,19 +2582,20 @@ LBLsuspendThread:
        predArity = getPosIntArg(PC+2);
 
        DEREF(taggedPredicate,predPtr,predTag);
-       if (!isConstChunk(taggedPredicate)) {
+       if (!isProcedure(taggedPredicate) && !isObject(taggedPredicate)) {
          if (isAnyVar(predTag)) {
            /* compiler ensures: if pred is in X[n], then n == arity+1,
             * so we save one additional argument */
            Assert(HelpReg!=X || predArity==regToInt(getRegArg(PC+1)));
            SUSP_PC(predPtr,predArity+1,PC);
          }
-         X[0]=mkTuple("apply",2,taggedPredicate, mkTupleX("args",X,predArity));
+         X[0]=mkTuple("applyFailure", 1,
+                      mkTupleX("proc",taggedPredicate, X,predArity));
          goto LBLraise;
        }
 
        PC = isTailCall ? PC : PC+3;
-       predicate = chunkCast(taggedPredicate);
+       predicate = tagged2Const(taggedPredicate);
      }
 
 // -----------------------------------------------------------------------
@@ -2542,18 +2620,19 @@ LBLsuspendThread:
            if (typ==Co_Object) {
              /* {Obj Msg} --> {Obj Msg Methods Self} */
              Object *o = (Object*) predicate;
-             if (o->getIsClass()) {
-               X[0]=mkTuple("apply",2,makeTaggedConst(predicate),
-                            mkTupleX("args",X,predArity));
+             if (o->isClass()) {
+               X[0]=mkTuple("applyFailure",1,
+                            mkTupleX("proc",makeTaggedConst(predicate),
+                                     X,predArity));
                goto LBLraise;
              }
-             CheckArity(1,makeTaggedConst(predicate));
+             CheckArity(1,o->getPrintName());
              def = o->getAbstraction();
              X[predArity++] = o->getSlowMethods();
              X[predArity++] = makeTaggedConst(predicate);
            } else {
              def = (Abstraction *) predicate;
-             CheckArity(def->getArity(), makeTaggedConst(predicate));
+             CheckArity(def->getArity(), def->getPrintName());
            }
            if (!isTailCall) { CallPushCont(PC); }
            CallDoChecks(def,def->getGRegs(),def->getArity());
@@ -2570,7 +2649,7 @@ LBLsuspendThread:
          {
            bi = (Builtin *) predicate;
 
-           CheckArity(bi->getArity(),makeTaggedConst(predicate));
+           CheckArity(bi->getArity(),bi->getPrintName());
 
            switch (bi->getType()) {
 
@@ -2592,13 +2671,13 @@ LBLsuspendThread:
                LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
 
                if (e->isSetSFlag(DebugMode)) {
-                 enterCall(CBB,bi,predArity,X);
+                 enterCall(CBB,makeTaggedConst(bi),predArity,X);
                }
 
                biFun=bi->getFun();
                OZ_Bool res = biFun(predArity, X);
                if (e->isSetSFlag(DebugMode)) {
-                 exitBuiltin(res,bi,predArity,X);
+                 exitBuiltin(res,makeTaggedConst(bi),predArity,X);
                }
 
                switch (res) {
@@ -2606,20 +2685,23 @@ LBLsuspendThread:
                case SUSPEND:
                  LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
 
-                 predicate = bi->getSuspHandler();
-                 if (!predicate) {
-                   if (!isTailCall) e->pushTaskOutline(PC,Y,G);
-                   e->pushCFun(biFun,X,predArity);
-                   Thread *thr = e->mkSuspThread ();
-                   e->suspendOnVarList (thr);
-                   CHECK_CURRENT_THREAD;
+                 {
+                   TaggedRef sh = bi->getSuspHandler();
+                   if (sh==makeTaggedNULL()) {
+                     if (!isTailCall) e->pushTaskOutline(PC,Y,G);
+                     e->pushCFun(biFun,X,predArity);
+                     Thread *thr=e->mkSuspThread();
+                     e->suspendOnVarList(thr);
+                     CHECK_CURRENT_THREAD;
+                   }
+                   predicate = tagged2Const(sh);
                  }
                  goto LBLcall;
                case FAILED:
                  LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
                  LOCAL_PROPAGATION(localPropStore.reset());
                localHack3:
-                 HF_BI;
+                 HF_FAIL(INFO_BI);
 
                case SLEEP: // no break
                  error ("'xxxCALLxxx' has got 'SLEEP' back!\n");
@@ -2630,6 +2712,10 @@ LBLsuspendThread:
                    goto LBLpopTask;
                  }
                  JUMP(PC);
+
+               case RAISE:
+                 RAISE_BI(INFO_BI);
+
                default:
                  error("builtin: bad return value");
                  goto LBLerror;
@@ -2658,18 +2744,24 @@ LBLsuspendThread:
 
        TaskStackEntry *oldTos;
        int spaceCount;
+       TaggedRef pred;
        if (!e->currentThread) {
          e->defaultExceptionHandler(X[0],NOCODE,0);
          goto LBLpopTask;
        }
 
-       spaceCount = e->currentThread->findExceptionHandler(predicate,oldTos);
+       spaceCount = e->currentThread->findExceptionHandler(pred,oldTos);
        while (spaceCount-- > 0) e->deinstallCurrent();
        Assert(currentDebugBoard=CBB);
 
 
        /* exception is already in X[0], but should somehow be reflected !!! */
-       if (predicate) { isTailCall = OK; predArity=1; goto LBLcall; }
+       if (pred!=makeTaggedNULL()) {
+         isTailCall = OK;
+         predicate=tagged2Const(pred);
+         predArity=1;
+         goto LBLcall;
+       }
 
        e->defaultExceptionHandler(X[0],PC,oldTos);
        goto LBLpopTask;
@@ -2686,18 +2778,15 @@ LBLsuspendThread:
        DEREF (x0, _0, x0Tag);
 
        if (isAnyVar (x0Tag) == OK) {
-         predicate = bi->getSuspHandler();
-         if (!predicate) {
-           X[0]=mkTuple("solve",2,OZ_CToAtom("noSuspensionHandler"),X[0]);
-           goto LBLraise;
-         }
+         predicate = tagged2Const(bi->getSuspHandler());
+         Assert(predicate);
          goto LBLcall;
        }
 
        if (!isConst(x0) ||
            !(tagged2Const(x0)->getType () == Co_Abstraction ||
              tagged2Const(x0)->getType () == Co_Builtin)) {
-         X[0]=mkTuple("solve",2,OZ_CToAtom("noProcedure"),X[0]);
+         X[0]=mkTuple("solve",1,mkTuple("noProcedure",1,X[0]));
          goto LBLraise;
        }
 
@@ -2728,11 +2817,8 @@ LBLsuspendThread:
        }
 
        if (!isNil(guide)) {
-         predicate = bi->getSuspHandler();
-         if (!predicate) {
-           X[0]=mkTuple("solve",2,OZ_CToAtom("noSuspensionHandler"),X[0]);
-           goto LBLraise;
-         }
+         predicate = tagged2Const(bi->getSuspHandler());
+         Assert(predicate);
          goto LBLcall;
        }
 
@@ -2759,7 +2845,7 @@ LBLsuspendThread:
                                 // kost@  TODO!!! piece of junk
        sb->decSuspCount ();     // since 'Board::Board' sets it to one;
        sa->decThreads ();       // since 'SolveActor::SolveActor' sets it ...
-       tt->pushCall(predicate,X,1);
+       tt->pushCall(makeTaggedConst(predicate),X,1);
        e->scheduleThread(tt);
        goto LBLpopTask;
      }
@@ -2803,7 +2889,7 @@ LBLsuspendThread:
        }
 
        if ( !e->fastUnifyOutline(solveAA->getSolveVar(), X[0], OK) ) {
-         HF_FAIL;
+         HF_FAIL(OZ_CToAtom("solve"));
        }
 
        if (isTailCall) {
@@ -2865,11 +2951,11 @@ LBLsuspendThread:
          }
 
          if ( !e->fastUnifyOutline(solveAA->getSolveVar(), X[0], OK) ) {
-           HF_FAIL;
+           HF_FAIL(OZ_CToAtom("solve"));
          }
        } else {
          if ( !e->fastUnifyOutline(valueIn, X[0], OK) ) {
-           HF_FAIL;
+           HF_FAIL(OZ_CToAtom("solve"));
          }
        }
 
@@ -2909,7 +2995,7 @@ LBLsuspendThread:
 
         Bool ret = e->installScript(waitBoard->getScriptRef());
         if (!ret) {
-          HF_FAIL;
+          HF_FAIL(OZ_CToAtom("commitClause"));
         }
         Assert(ret!=NO);
         DISPATCH(1);
@@ -2959,7 +3045,7 @@ LBLsuspendThread:
 
         Bool ret = e->installScript(bb->getScriptRef());
         if (!ret) {
-          HF_FAIL;
+          HF_FAIL(OZ_CToAtom("commitClause"));
         }
 
         Assert(ret != NO);
@@ -3251,7 +3337,7 @@ LBLsuspendThread:
       }
 
     case CE_FAIL:
-      HF_FAIL;
+      HF_FAIL(OZ_CToAtom("noInfo"));
 
     case CE_SUSPEND:
       if (e->currentThread) {
