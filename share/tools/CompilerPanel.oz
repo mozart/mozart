@@ -22,8 +22,7 @@
 functor $
 
 import
-   System.{get
-	   valueToVirtualString
+   System.{valueToVirtualString
 	   show}
 
    Error.{formatLine

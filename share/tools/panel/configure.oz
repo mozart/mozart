@@ -26,8 +26,6 @@ MegaByteF      = 1024.0 * 1024.0
 KiloByteI      = 1024
 MegaByteI      = KiloByteI * KiloByteI
 
-BitMapDir      = '@' # {System.get home} # '/tools/images/'
-
 LineColor        #
 RunnableColor    # RunnableStipple  #
 ThresholdColor   # ThresholdStipple #
@@ -52,19 +50,25 @@ case Tk.isColor then
    blue #
    lightslateblue
 else
+   UrlDefaults = \insert '../../url-defaults.oz'
+   BitmapUrl   = UrlDefaults.home # 'tools/images/'
+   fun {Bitmap V}
+      '@'#{Tk.localize BitmapUrl#V#'.xbm'}
+   end
+in
    black #
-   black # (BitMapDir # 'grid-50.xbm')  #
-   black # (BitMapDir # 'grid-25.xbm')  #
-   black # (BitMapDir # 'grid-50.xbm') #
+   black # {Bitmap 'grid-50'} #
+   black # {Bitmap 'grid-25'} #
+   black # {Bitmap 'grid-50'} #
    black # '' #
    color(run:    black
 	 'prop': black
 	 copy:   black
 	 gc:     black) #
-   stipple(run:    BitMapDir # 'grid-25.xbm'
-	   'prop': BitMapDir # 'grid-50.xbm'
-	   copy:   BitMapDir # 'lines-lr.xbm'
-	   gc:     BitMapDir # 'lines-rl.xbm') #
+   stipple(run:    {Bitmap 'grid-25'}
+	   'prop': {Bitmap 'grid-50'}
+	   copy:   {Bitmap 'lines-lr'}
+	   gc:     {Bitmap 'lines-rl'}) #
    black #
    black
 end

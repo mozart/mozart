@@ -105,7 +105,11 @@ local
       Options = {New OptionsClass init()}
    end
 
-   BitmapPath = '@'#{System.get home}#'/tools/images/'
+   local
+      UrlDefaults = \insert '../../url-defaults.oz'
+   in
+      BitmapUrl = UrlDefaults.home#'tools/images/'
+   end
 
    Black = c(0 0 0)
    Gray = c(127 127 127)
@@ -830,8 +834,10 @@ in
 	 NCols           = {Options get(compilerEnvCols $)}
 
 	 {Tk.batch [wm(iconname self.TopLevel 'Oz Compiler')
-		    wm(iconbitmap self.TopLevel BitmapPath#'compiler.xbm')
-		    wm(iconmask self.TopLevel BitmapPath#'compilermask.xbm')
+		    wm(iconbitmap self.TopLevel
+		       '@'#{Tk.localize BitmapUrl#'compiler.xbm'})
+		    wm(iconmask self.TopLevel
+		       '@'#{Tk.localize BitmapUrl#'compilermask.xbm'})
 		    wm(resizable self.TopLevel 0 0)]}
 	 self.SystemVariables = {New Tk.variable tkInit(false)}
 	 self.NColsInEnv = {New Tk.variable tkInit(NCols)}
