@@ -6,5 +6,8 @@
 #
 
 : ${OZEMULATOR=$HOME/Oz/Emulator/oz.emulator.bin}
+: ${OZQUIET=-quiet}
+OZINIT=${OZMAINIT}
+export OZINIT
 
-exec $OZEMULATOR -quiet -b ./ozbatch.ozm -a "$@"
+exec $OZEMULATOR $OZQUIET -b ./ozbatch.ozm -a "$@"
