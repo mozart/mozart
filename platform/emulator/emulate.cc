@@ -30,6 +30,7 @@
  */
 
 #define NAMEVOLATILE volatile
+//#define NAMEVOLATILE
 //#define HEAPCURVOLATILE volatile
 //#define HEAPENDVOLATILE volatile
 
@@ -123,8 +124,7 @@ TaggedRef formatError(TaggedRef info, TaggedRef val, TaggedRef traceBack) {
  * Handle Failure macros (HF)
  */
 
-#ifdef __GNUC__
-#if __GNUC__<3
+#if OUTLINE_HF_RAISE_FAILURE
 Bool AM::hf_raise_failure()
 {
   if (!oz_onToplevel() && !oz_currentThread()->isCatch())
@@ -135,7 +135,6 @@ Bool AM::hf_raise_failure()
   exception.debug = ozconf.errorDebug;
   return NO;
 }
-#endif
 #endif
 
 // This macro is optimized such that the term T is only created

@@ -34,6 +34,25 @@
 #include "thr_pool.hh"
 #include "value.hh"
 
+//make it easy to experiment with inlining these again
+//#define OUTLINE_SETEXCEPTIONINFO 0
+//#define OUTLINE_HF_RAISE_FAILURE 0
+
+#ifndef OUTLINE_SETEXCEPTIONINFO
+#if defined(__GNUC__) && __GNUC__>2
+#define OUTLINE_SETEXCEPTIONINFO 1
+#else
+#define OUTLINE_SETEXCEPTIONINFO 0
+#endif
+#endif
+
+#ifndef OUTLINE_HF_RAISE_FAILURE
+#if defined(__GNUC__) && __GNUC__>2
+#define OUTLINE_HF_RAISE_FAILURE 1
+#else
+#define OUTLINE_HF_RAISE_FAILURE 0
+#endif
+#endif
 
 /* -----------------------------------------------------------------------
  * StatusReg
@@ -398,8 +417,7 @@ public:
     exception.debug = d;
   }
   void setExceptionInfo(TaggedRef inf)
-#ifdef __GNUC__
-#if defined(XDENYS) || __GNUC__>2
+#if OUTLINE_SETEXCEPTIONINFO
     ;
 #else
   {
@@ -408,7 +426,6 @@ public:
     }
     exception.info = oz_cons(inf,exception.info);
   }
-#endif
 #endif
   TaggedRef getExceptionValue() { return exception.value; }
   Bool hf_raise_failure();
