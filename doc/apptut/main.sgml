@@ -51,7 +51,7 @@
 <!entity chapter.concurrency.cheap system "conc-cheap.sgml">
 <!entity chapter.concurrency.patterns system "conc-patterns.sgml">
 
-<!ENTITY % proglang.values.local "|sh|makefile|java">
+<!ENTITY % proglang.values.local "|sh|makefile|java|fundamental">
 <!ENTITY % p.mix.local "|em">
 <!ELEMENT em - - (#PCDATA)>
 <!ENTITY % author.class "author|author.extern|comic">
@@ -89,7 +89,6 @@
     <meta name="html.split" value="chapter.counter.object">
     <meta name="html.split" value="chapter.celloid">
     <meta name="html.split" value="part.managing.modules">
-    <meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
     <meta name="html.split" value="part.client.server">
     <meta name="html.split" value="chapter.client.server.intro">
     <meta name="html.split" value="chapter.client.server.db">
@@ -106,7 +105,9 @@
     <meta name="html.split.bib"   value="">
     <meta name="html.split.index" value="">
 
-    <meta name=proglang arg1="java" arg2="java-mode">
+    <meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
+    <meta name=proglang        arg1="java" arg2="java-mode">
+    <meta name=proglang        arg1="fundamental" arg2="fundamental-mode">
 
     <title/Application Programming/
     <author.Extern to="author.db" key="Denys.Duchier">
