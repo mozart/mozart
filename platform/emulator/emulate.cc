@@ -7,13 +7,6 @@
   ------------------------------------------------------------------------
 */
 
-// Ozcar special...
-//#define DEBUGMAGIC
-
-#ifdef DEBUGMAGIC
- #include <sys/stat.h>
-#endif
-
 #include "am.hh"
 
 #include "indexing.hh"
@@ -263,19 +256,25 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *argu
     debugStreamThread(currentThread);
   }
 
-  if (def && debugmode() && currentThread->stepMode()) {
+  if (def && debugmode() &&
+      (currentThread->stepMode() || def->getPred()->getSpyFlag())) {
 
     // this finds the debuginfo _after_ the call
     ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
 
-    if (debugPC != NOCODE) {
-      debugStreamCall(debugPC, def->getPrintName(), def->getArity(), arguments);
-/*
-      xx= new OzDebug(...,pairlist);
-      am.currentTaskStack->pushDebug(xx);
-*/
-      return TRUE;
+    debugStreamCall(debugPC, def->getPrintName(), def->getArity(),
+                    arguments, 0);
+
+    OZ_Term dinfo = nil();
+    for (int i=def->getArity()-1; i>=0; i--) {
+      dinfo = cons(arguments[i],dinfo);
     }
+    dinfo = cons(makeTaggedConst(def),dinfo);
+
+    OzDebug *dbg = new OzDebug(DBG_NEXT,dinfo);
+    currentThread->pushDebug(dbg);
+    currentThread->stopStepMode();
+    return TRUE;
   }
 
   return FALSE;
@@ -1328,6 +1327,10 @@ LBLsuspendThread:
     }
 #endif
 
+    if (e->debugmode() && CTT->isTraced()) {
+      debugStreamSuspend(CTT);
+    }
+
     CTT = (Thread *) NULL;
 
     //  No counter decrement 'cause the thread is still alive!
@@ -2350,7 +2353,7 @@ LBLdispatcher:
 
          if (debugPC != NOCODE) {
            char *name = builtinTab.getName((void *) bi->getFun());
-           debugStreamCall(debugPC, name, predArity, X);
+           debugStreamCall(debugPC, name, predArity, X, 1);
 
            if (!isTailCall) e->pushTask(PC,Y,G);
            e->pushCFun(bi->getFun(),X,predArity);
@@ -2597,12 +2600,7 @@ LBLdispatcher:
         prio = DEFAULT_PRIORITY;
       }
 
-#ifdef LINKEDTHREADS
-      Bool link = am.currentThread->getID() < 0x80000000;
-      Thread *tt = e->mkRunnableThread(prio, CBB, NO, link);
-#else
       Thread *tt = e->mkRunnableThread(prio, CBB);
-#endif
 
       ozstat.createdThreads.incf();
       RefsArray newY = Y==NULL ? (RefsArray) NULL : copyRefsArray(Y);
@@ -2610,43 +2608,6 @@ LBLdispatcher:
       tt->setSelf(e->getSelf());
 
       e->scheduleThread (tt);
-
-#ifdef LINKEDTHREADS
-      if (link) {
-        if (e->debugmode())
-          printf("born %ld parent %ld\n",tt->getID(),
-                 e->currentThread->getID());
-        tt->setParent(makeTaggedConst(e->currentThread));
-        e->currentThread->addChildThread(makeTaggedConst(tt));
-      }
-#endif
-
-#ifdef THREADARRAY
-      e->threadArray[tt->getID()] = makeTaggedConst(tt);
-#endif
-
-      if (e->debugmode()) {
-/*
- * Debugger: We write the "thread creation" event onto the
- *           global debug stream and stop it ONLY when
- *             - the parent thread has id 1, i.e. it's a
- *               toplevel query
- *             - the magic file "/tmp/ozdebugmagic" exists
- */
-#ifdef DEBUGMAGIC
-        struct stat dummy;
-
-        if (e->currentThread->getID() == 1UL &&
-            !stat("/tmp/ozdebugmagic", &dummy)) {
-
-          debugStreamThread(tt);
-          unlink("/tmp/ozdebugmagic");
-          tt->startStepMode();
-          tt->traced();
-          tt->stop();
-        }
-#endif
-      }
 
       JUMP(contPC);
     }
@@ -2715,13 +2676,23 @@ LBLdispatcher:
     {
       OzDebug *ozdeb = (OzDebug *) Y;
       Y = NULL;
-      exitCall(PROCEED,ozdeb);
-      /*
-      CHECK HERE!!!!!!!!
-      */
+
+      message("exit call: %s\n",toC(ozdeb->info));
+
+      switch (ozdeb->dothis) {
+      case DBG_NOOP : {
+        break;
+      }
+      case DBG_NEXT : {
+        if (CTT->isTraced())
+          CTT->startStepMode();
+        break;
+      }
+      default:
+        ;
+      }
       goto LBLpopTaskNoPreempt;
     }
-
 
    Case(TASKCFUNCONT)
      {
@@ -2885,47 +2856,14 @@ LBLdispatcher:
 
   Case(DEBUGINFO)
     {
+      DISPATCH(6);
+
       TaggedRef filename = getLiteralArg(PC+1);
       int line           = smallIntValue(getNumberArg(PC+2));
       int absPos         = smallIntValue(getNumberArg(PC+3));
       TaggedRef comment  = getLiteralArg(PC+4);
       int noArgs         = smallIntValue(getNumberArg(PC+5));
       TaggedRef globals  = OZ_nil(); // CodeArea::globalVarNames(PC);
-
-      if (!e->debugmode() || !CTT->stepMode() || strstr(toC(comment), "exit"))
-        {
-          DISPATCH(6);
-        }
-
-      // else
-#ifdef STEPWITHDEBUGINFO
-      Board *b = e->currentBoard;       // how can we avoid this ugly hack?
-      e->currentBoard = e->rootBoard;
-
-      TaggedRef tail    = e->threadStreamTail;
-      TaggedRef newTail = OZ_newVariable();
-
-      CTT->stop();
-
-      TaggedRef pairlist =
-        OZ_cons(OZ_pairA("thr",
-                         OZ_mkTupleC("#",2,makeTaggedConst(CTT),
-                                     OZ_int(CTT->getID()))),
-                OZ_cons(OZ_pairA("file", filename),
-                        OZ_cons(OZ_pairAI("line", line),
-                                OZ_nil())));
-
-      TaggedRef entry = OZ_recordInit(OZ_atom("step"), pairlist);
-      OZ_unify(tail, OZ_cons(entry, newTail));
-      e->threadStreamTail = newTail;
-
-      e->currentBoard = b;
-
-      e->pushTask(PC+6,Y,G,X, noArgs==-1 ? 1 : noArgs+1);
-      goto LBLpreemption;
-#else
-      DISPATCH(6);
-#endif
     }
 
   Case(MARSHALLEDFASTCALL)

@@ -81,10 +81,6 @@ friend class Thread;
 private:
   TaskStack taskStack;
   RunnableThreadBody *next;  /* for linking in the freelist */
-#ifdef LINKEDTHREADS
-  TaggedRef parentThread;
-  TaggedRef childThreads;
-#endif
 
 public:
   USEHEAPMEMORY;
@@ -158,7 +154,6 @@ private:
 
   //
   void disposeThread ();
-
   Bool wakeUpPropagator (Board *home,
                          PropCaller calledBy = pc_propagator);
   Bool wakeUpBoard (Board *home);
@@ -185,7 +180,7 @@ public:
   Thread(const Thread &tt);
   Thread &operator = (const Thread& tt);
 
-  Thread(int flags, int prio, Board *bb, Bool link=NO);
+  Thread(int flags, int prio, Board *bb);
 
   USEHEAPMEMORY;
   OZPRINT;
@@ -200,51 +195,6 @@ public:
   void setInitialPropagator(OZ_Propagator *pro) { item.propagator=pro; }
 
   unsigned long getID() { return id; }
-
-#ifdef LINKEDTHREADS
-  void addChildThread(TaggedRef th) {
-    Assert(hasStack());
-    item.threadBody->childThreads = cons(th, item.threadBody->childThreads);
-  }
-
-  void addChildThreads(TaggedRef th) {
-    Assert(hasStack());
-    while (OZ_isCons(th)) {
-      TaggedRef t = OZ_head(th);
-      Thread *cs = (Thread*) tagged2Const(OZ_deref(t));
-      cs->setParent(makeTaggedConst(this));
-      item.threadBody->childThreads = cons(t, item.threadBody->childThreads);
-      th = OZ_tail(th);
-    }
-  }
-
-  void deleteChildThread(TaggedRef th) {
-    Assert(hasStack());
-    TaggedRef newChilds = nil(), c = item.threadBody->childThreads;
-    while (OZ_isCons(c)) {
-      TaggedRef t = OZ_head(c);
-      if (t != th)
-        newChilds = cons(t, newChilds);
-      c = OZ_tail(c);
-    }
-    item.threadBody->childThreads = newChilds;
-  }
-
-  TaggedRef getParent() {
-    Assert(hasStack());
-    return item.threadBody->parentThread;
-  }
-
-  void setParent(TaggedRef p) {
-    Assert(hasStack());
-    item.threadBody->parentThread = p;
-  }
-
-  TaggedRef getChildren() {
-    Assert(hasStack());
-    return item.threadBody->childThreads;
-  }
-#endif
 
   void setSelf(Object *o) { self = o; }
 
@@ -263,7 +213,7 @@ public:
 
   //
 
-  /* check is thread has a stack */
+  /* check if thread has a stack */
   Bool isRThread() { return (state.flags & S_TYPE_MASK) == S_RTHREAD; }
 
   //
@@ -354,6 +304,10 @@ public:
 
   void traced() {
     state.flags = state.flags | T_G_trace;
+  }
+
+  void notTraced() {
+    state.flags = state.flags & ~T_G_trace;
   }
 
   void startStepMode() {

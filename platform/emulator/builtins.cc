@@ -2696,24 +2696,6 @@ OZ_C_proc_begin(BIthreadSetName,2)
 }
 OZ_C_proc_end
 
-#ifdef LINKEDTHREADS
- OZ_C_proc_begin(BIthreadParent,2)
- {
-   oz_declareThreadArg(0,th);
-   oz_declareArg(1,out);
-   return oz_unify(out, th->getParent());
- }
- OZ_C_proc_end
-
- OZ_C_proc_begin(BIthreadChildren,2)
- {
-   oz_declareThreadArg(0,th);
-   oz_declareArg(1,out);
-   return oz_unify(out, th->getChildren());
- }
- OZ_C_proc_end
-#endif
-
 OZ_C_proc_begin(BIthreadPreempt,1)
 {
   oz_declareThreadArg(0,th);
@@ -6019,8 +6001,10 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
 
   if (debugmode == 0) {
     am.unsetSFlag(DebugMode);
+    printf("DebugMode turned OFF\n");
   } else if (debugmode == 1) {
     am.setSFlag(DebugMode);
+    printf("DebugMode turned ON\n");
   }
 
   SetIfPos(ozconf.showSuspension,        suspension, 1);
@@ -6109,17 +6093,6 @@ OZ_C_proc_end
 
 
 // ---------------------------------------------------------------------------
-// Debugging: set a break
-// ---------------------------------------------------------------------------
-
-OZ_C_proc_begin(BIhalt,0)
-{
-  tracerOn();
-  return PROCEED;
-}
-OZ_C_proc_end
-
-// ---------------------------------------------------------------------------
 // Debugging: special builtins for Benni
 // ---------------------------------------------------------------------------
 
@@ -6133,23 +6106,6 @@ OZ_C_proc_begin(BIcurrentThread,1)
 {
   return oz_unify(OZ_getCArg(0),
                   makeTaggedConst(am.currentThread));
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIsetStepMode,2)
-{
-  OZ_Term chunk = deref(OZ_getCArg(0));
-  char   *onoff = toC(OZ_getCArg(1));
-
-  ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = (Thread*) rec;
-
-  if (!strcmp(onoff, "on"))
-    thread->startStepMode();
-  else if (!strcmp(onoff, "off"))
-    thread->stopStepMode();
-  else warning("setStepMode: invalid second argument: must be 'on' or 'off'");
-  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -6175,28 +6131,6 @@ OZ_C_proc_begin(BIcontThread,1)
   return PROCEED;
 }
 OZ_C_proc_end
-
-OZ_C_proc_begin(BIqueryDebugState,2)
-{
-  OZ_Term chunk = deref(OZ_getCArg(0));
-  OZ_Term out   = OZ_getCArg(1);
-
-  ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = (Thread*) rec;
-
-  return oz_unify(out, OZ_mkTupleC("debugState",
-                                   3,
-                                   thread->isTraced()  ? oz_atom("Traced")
-                                                       : oz_atom("notTraced"),
-                                   thread->stepMode()  ? oz_atom("stepON")
-                                                       : oz_atom("stepOFF"),
-                                   thread->stopped()   ? oz_atom("stopped")
-                                                       : oz_atom("running")
-                                   ));
-
-}
-OZ_C_proc_end
-
 
 /* ------- Builtins to handle toplevel variables in the debugger ---------- */
 
@@ -7005,6 +6939,7 @@ BIspec allSpec[] = {
   {"setStepMode",2,BIsetStepMode},
   {"stopThread",1,BIstopThread},
   {"contThread",1,BIcontThread},
+  {"traceThread",2,BItraceThread},
   {"queryDebugState",2,BIqueryDebugState},
   {"Debug.breakpoint",0,BIbreakpoint},
 
@@ -7030,23 +6965,12 @@ BIspec allSpec[] = {
   {"Thread.getName",2,BIthreadGetName},
   {"Thread.setName",2,BIthreadSetName},
 
-#ifdef LINKEDTHREADS
-  {"Thread.parent",2,BIthreadParent},
-  {"Thread.children",2,BIthreadChildren},
-#endif
-
   {"printLong",1,BIprintLong},
 
-  {"halt",0,BIhalt},
   {"traceBack",0,BItraceBack},
 
   {"taskstack",   3, BItaskStack},
   {"location",    2, BIlocation},
-  {"getThreadByID",2,BIgetThreadByID},
-  {"spy",         1, BIspy},
-  {"nospy",       1, BInospy},
-  {"traceOn",     0, BItraceOn},
-  {"traceOff",    0, BItraceOff},
   {"Debug.displayCode", 2, BIdisplayCode},
 
   {"System.printName",2,BIgetPrintName},

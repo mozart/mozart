@@ -12,57 +12,33 @@
 #ifndef __DEBUGH
 #define __DEBUGH
 
-#if fertig
-enum OzDebugDoit {DBG_NEXT};
+enum OzDebugDoit {DBG_NOOP, DBG_NEXT};
 
 class OzDebug {
 public:
   OzDebugDoit dothis;
-  OzDebug(OzDebugDoit x)
-  {
-    ;
+  TaggedRef info;
+  OzDebug(OzDebugDoit x, TaggedRef i) {
+    dothis = x;
+    info = i;
   }
-
-  OzDebug *gcOzDebug();
-  void printCall();
-};
-#endif
-
-class OzDebug {
-public:
-  static unsigned long goalCounter;
-  TaggedRef pred;   // really a Abstraction* or a Builtin*
-  TaggedRef *args;
-  unsigned long goalNum;
-  OzDebug(TaggedRef p, int arity, TaggedRef *a)
-  {
-    pred = p;
-    args = arity==0 ? (RefsArray) NULL : copyRefsArray(a,arity);
-    goalNum = goalCounter++;
-  }
-
   OzDebug *gcOzDebug();
   void printCall();
 };
 
-
-void enterCall(Board *b, TaggedRef def,int arity, TaggedRef *args);
-void exitCall(OZ_Return,OzDebug *);
-void exitBuiltin(OZ_Return, TaggedRef bi, int arity, TaggedRef *args);
-
-void debugStreamThread(Thread*);
-void debugStreamTerm(Thread*, TaggedRef);
-void debugStreamCall(ProgramCounter, char*, int, TaggedRef*);
+void debugStreamSuspend(Thread*);
+void debugStreamCont(Thread*);
+void debugStreamThread(Thread*,Thread* parent=NULL);
+void debugStreamTerm(Thread*);
+void debugStreamCall(ProgramCounter, char*, int, TaggedRef*, bool);
 
 OZ_C_proc_proto(BItaskStack)
-OZ_C_proc_proto(BIlocation)
-OZ_C_proc_proto(BIgetThreadByID)
-OZ_C_proc_proto(BIspy)
-OZ_C_proc_proto(BInospy)
-OZ_C_proc_proto(BItraceOn)
-OZ_C_proc_proto(BItraceOff)
-OZ_C_proc_proto(BIdisplayCode)
 OZ_C_proc_proto(BIbreakpoint)
+OZ_C_proc_proto(BIsetStepMode)
+OZ_C_proc_proto(BItraceThread)
+OZ_C_proc_proto(BIqueryDebugState)
+OZ_C_proc_proto(BIdisplayCode)
+OZ_C_proc_proto(BIlocation)
 
 Bool trace(char *s,Board *board=NULL,Actor *actor=NULL,
            ProgramCounter PC=NOCODE,RefsArray Y=NULL,RefsArray G=NULL);

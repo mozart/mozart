@@ -1890,7 +1890,7 @@ OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
   printf("\n");
 #endif
 
-  thr = am.mkSuspendedThread(am.currentBoard, DEFAULT_PRIORITY,0);
+  thr = am.mkSuspendedThread(am.currentBoard, DEFAULT_PRIORITY);
   thr->pushCFunCont (fun, args, arity, OK);
 
   return ((OZ_Thread) thr);

@@ -231,9 +231,6 @@ void AM::init(int argc,char **argv)
   threadStreamTail = threadStream;
 
   breakflag = NO;
-#ifdef THREADARRAY
-  threadArray = new TaggedRef[200000];
-#endif
 
   initThreads();
   toplevelQueue = (Toplevel *) NULL;
@@ -1277,10 +1274,6 @@ Bool AM::isStableSolve(SolveActor *sa)
  * toplevel: rootThread and toplevelQueue
  * ------------------------------------------------------------------------ */
 
-void AM::pushDebug(TaggedRef def, int arity, RefsArray args)
-{
-  currentThread->pushDebug(new OzDebug(def,arity,args));
-}
 
 /*
  * Toplevel is a queue of toplevel queries, which must be executed
@@ -1547,7 +1540,7 @@ OZ_Term AM::dbgGetLoc(Board *bb) {
 //  Make a runnable thread with a single task stack entry <local trhread queue>
 Thread *AM::mkLTQ(Board *bb, int prio, SolveActor * sa)
 {
-  Thread *th = new Thread(S_RTHREAD | T_prop | T_ltq,prio,bb,0);
+  Thread *th = new Thread(S_RTHREAD | T_prop | T_ltq,prio,bb);
   th->setBody(allocateBody());
 
   Assert(bb == currentBoard);
