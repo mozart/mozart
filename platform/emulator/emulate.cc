@@ -2120,8 +2120,18 @@ void engine() {
       TaggedRef filename = getLiteralArg(PC+1);
       int line           = smallIntValue(getNumberArg(PC+2));
       int absPos         = smallIntValue(getNumberArg(PC+3));
-      printf("Executing line %d in file: %s\n",line,OZ_toC(filename));
-      DISPATCH(4);
+      int comment        = getLiteralArg(PC+4);
+      int noArgs         = smallIntValue(getNumberArg(PC+5));
+      printf("%s in line %d in file: %s\n",
+	     OZ_toC(comment),line,OZ_toC(filename));
+      if (noArgs != -1) {
+	printf("\t");
+	for (int i=0; i<noArgs; i++) {
+	  printf("%s ",OZ_toC(X[i]));
+        }
+      }
+      printf("\n");
+      DISPATCH(6);
     }
 
   INSTRUCTION(TESTLABEL1)
