@@ -50,16 +50,23 @@
 
 //-----------------------------------------------------------------------------
 
+// a CPIVector can be compressed, i.e., it can drop `dropped'
+// parameters by the methods `compress(void)' and `compress(int *)'
 template <class T>
 class CPIVector {
 private:
   T * _vector;
+  T ** _vector_elems;
   int _size;
   OZ_Term ** _ot_vector;
 public:
   CPIVector(int size, T * vector, OZ_Term ** ot_vector)
-    : _size(size), _vector(vector), _ot_vector(ot_vector) { }
-  T & operator [] (int i) { return _vector[i]; }
+    : _size(size), _vector(vector), _ot_vector(ot_vector) {
+    _vector_elems = (T **) OZ_CPIVar::operator new(sizeof(T*) * _size);
+    for (int i = _size; i--; )
+      _vector_elems[i] = &_vector[i];
+  }
+  T & operator [] (int i) { return *_vector_elems[i]; }
   int getHigh(void) { return _size; }
   OZ_Term getOzTermVector(void) {
     OZ_Term r = OZ_nil();
@@ -72,6 +79,20 @@ public:
   }
   int * find_equals(void) {
     return OZ_findEqualVars(_size, *_ot_vector);
+  }
+  void compress(int * a) {
+    for (int f = 0, t = 0; f < _size; f += 1) {
+      if (!_vector_elems[f]->is_dropped()) {
+        _vector_elems[t] = _vector_elems[f];
+        if (a) {
+          a[t] = a[f];
+        }
+        t += 1;
+      }
+    }
+  }
+   void compress(void) {
+     compress((int *) NULL);
   }
 };
 
@@ -142,7 +163,7 @@ public:  //
       _actions[_nb_actions]._what = _actions_t::_serv_leave;
       _actions[_nb_actions]._action_params._vars_left = vars_left;
       _nb_actions += 1;
-      OZ_ASSERT(_nb_actions =< _max_actions);
+      OZ_ASSERT(_nb_actions <= _max_actions);
     }
     _closed = 1;
     return *this;
@@ -152,7 +173,7 @@ public:  //
     if (!_closed) {
       _actions[_nb_actions]._what = _actions_t::_serv_entailed;
       _nb_actions += 1;
-      OZ_ASSERT(_nb_actions =< _max_actions);
+      OZ_ASSERT(_nb_actions <= _max_actions);
     }
     _closed = 1;
     return *this;
@@ -162,7 +183,7 @@ public:  //
     if (!_closed) {
       _actions[_nb_actions]._what = _actions_t::_serv_failed;
       _nb_actions += 1;
-      OZ_ASSERT(_nb_actions =< _max_actions);
+      OZ_ASSERT(_nb_actions <= _max_actions);
     }
     _closed = 1;
     return *this;
@@ -174,7 +195,7 @@ public:  //
       _actions[_nb_actions]._action_params._equat._x = x;
       _actions[_nb_actions]._action_params._equat._y = y;
       _nb_actions += 1;
-      OZ_ASSERT(_nb_actions =< _max_actions);
+      OZ_ASSERT(_nb_actions <= _max_actions);
     }
     _closed = 1;
     return *this;
