@@ -1,4 +1,3 @@
-
 /*
  *  Authors:
  *    Per Brand (perbrand@sics.se)

@@ -1,14 +1,26 @@
 /*
- *  Perdio Project, DFKI & SICS,
- *  Universit"at des Saarlandes
- *  Postfach 15 11 59, D-66041 Saarbruecken, Phone (+49) 681 302-5312
- *  SICS
- *  Box 1263, S-16428 Sweden, Phone (+46) 8 7521500
- *  Author: kost
- *  Last modified: $Date$ from $Author$
- *  Version: $Revision$
- *  State: $State$
+ *  Authors:
+ *    Konstantin Popov
  * 
+ *  Contributors:
+ *
+ *  Copyright:
+ *    Konstantin Popov 1997-1998
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://mozart.ps.uni-sb.de
+ * 
+ *  See the file "LICENSE" or
+ *     http://mozart.ps.uni-sb.de/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
  */
 
 #if defined(INTERFACE)
