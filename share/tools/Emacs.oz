@@ -49,8 +49,9 @@ import
    Compiler.{genericInterface}
 
 export
-   getOPI:   GetOPI
-   condSend: CondSend
+   getOPI:    GetOPI
+   condSend:  CondSend
+   interface: CompilerInterfaceEmacs
 
 body
 
