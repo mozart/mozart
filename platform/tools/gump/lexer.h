@@ -56,7 +56,7 @@ OZ_BI_end
 
 OZ_BI_define(yy_lexer_delete, 1, 0)
 {
-  OZ_declareForeignPointerIN(0, p);
+  OZ_declareForeignPointer(0, p);
   delete (yyFlexLexer *) p;
   return PROCEED;
 }
@@ -64,7 +64,7 @@ OZ_BI_end
 
 OZ_BI_define(yy_lexer_getNextMatch, 1, 1)
 {
-  OZ_declareForeignPointerIN(0, p);
+  OZ_declareForeignPointer(0, p);
   yyFlexLexer *lexer = (yyFlexLexer *) p;
   int res = lexer->yylex();
   if (res == -1) {
@@ -78,7 +78,7 @@ OZ_BI_end
 
 OZ_BI_define(yy_lexer_getAtom, 1, 1)
 {
-  OZ_declareForeignPointerIN(0, p);
+  OZ_declareForeignPointer(0, p);
   OZ_RETURN_ATOM((char *) ((yyFlexLexer *) p)->YYText());
 }
 OZ_BI_end
@@ -87,7 +87,7 @@ OZ_BI_define(yy_lexer_getString, 1, 1)
 {
   // this does not use OZ_string because we don't necessarily want
   // to stop at the first NUL
-  OZ_declareForeignPointerIN(0, p);
+  OZ_declareForeignPointer(0, p);
   yyFlexLexer *obj = (yyFlexLexer *) p;
   int i = obj->YYLeng();
   const unsigned char *yytext = (unsigned char*) obj->YYText();
@@ -100,15 +100,15 @@ OZ_BI_end
 
 OZ_BI_define(yy_lexer_getLength, 1, 1)
 {
-  OZ_declareForeignPointerIN(0, p);
+  OZ_declareForeignPointer(0, p);
   OZ_RETURN_INT(((yyFlexLexer *) p)->YYLeng());
 }
 OZ_BI_end
 
 OZ_BI_define(yy_lexer_switchToBuffer, 2, 0)
 {
-  OZ_declareForeignPointerIN(0, p);
-  OZ_declareForeignPointerIN(1, q);
+  OZ_declareForeignPointer(0, p);
+  OZ_declareForeignPointer(1, q);
   ((yyFlexLexer *) p)->yy_switch_to_buffer((yy_buffer_state *) q);
   return PROCEED;
 }
@@ -116,8 +116,8 @@ OZ_BI_end
 
 OZ_BI_define(yy_lexer_setMode, 2, 0)
 {
-  OZ_declareForeignPointerIN(0, p);
-  OZ_declareIntIN(1, i);
+  OZ_declareForeignPointer(0, p);
+  OZ_declareInt(1, i);
   ((yyFlexLexer *) p)->yy_start = i * 2 + 1;
   return PROCEED;
 }
@@ -125,14 +125,14 @@ OZ_BI_end
 
 OZ_BI_define(yy_lexer_currentMode, 1, 1)
 {
-  OZ_declareForeignPointerIN(0, p);
+  OZ_declareForeignPointer(0, p);
   OZ_RETURN_INT((((yyFlexLexer *) p)->yy_start - 1) / 2);
 }
 OZ_BI_end
 
 OZ_BI_define(yy_lexer_input, 1, 1)
 {
-  OZ_declareForeignPointerIN(0, p);
+  OZ_declareForeignPointer(0, p);
   OZ_RETURN_INT(((yyFlexLexer *) p)->yyinput());
 }
 OZ_BI_end
