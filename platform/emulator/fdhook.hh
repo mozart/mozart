@@ -27,13 +27,10 @@ void reviveCurrentTaskSusp(void);
 void killPropagatedCurrentTaskSusp(void);
 void dismissCurrentTaskSusp(void);
 
-void undoTrailing(int n);
+SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home);
 
-SuspList * addVirtualConstr(SuspList * list, SuspList * elem, Board * home);
-
-Suspension * makeHeadSuspension(OZ_Bool (*fun)(int, OZ_Term[]),
+Suspension * makeHeadSuspension(OZ_Bool (* fun)(int, OZ_Term[]),
 				OZ_Term * args, int arity);
 
-void addVirtualConstr(SVariable * var, SuspList * elem);
 
 #endif
