@@ -23,7 +23,7 @@
 functor
 
 prepare
-   Image = 'http://mozart.ps.uni-sb.de/home/doc/demo/images/'
+   Image = 'http://mozart.ps.uni-sb.de/home/doc/demo/applets/images/'
 
 export
    Image
