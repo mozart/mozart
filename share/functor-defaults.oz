@@ -32,6 +32,7 @@ defaults(lib:
 	     'Open'
 	     'Tk' 'TkTools'
 	     'Compiler'
+	     'Type'
 	     'Misc']
 
 	 volatile:
