@@ -34,6 +34,15 @@ BuiltinTabEntry *BIadd(char *name,int arity, OZ_CFun funn, Bool replace,
   return(builtin);
 }
 
+// add specification to builtin table
+void BIaddSpec(BIspec *spec)
+{
+  for (int i=0; spec[i].name; i++) {
+    BIadd(spec[i].name,spec[i].arity,spec[i].fun,
+	  spec[i].yps,spec[i].ifun);
+  }
+}
+
 BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t, Bool replace)
 {
   BuiltinTabEntry *builtin = new BuiltinTabEntry(name,arity,t);
