@@ -1395,7 +1395,7 @@ fi
   echo $ac_n "checking $LEX version is at least 2.5.3""... $ac_c" 1>&6
 echo "configure:1397: checking $LEX version is at least 2.5.3" >&5
   oz_tmp_ok=no
-  if oz_tmp_version=`$LEX --version 2>/dev/null`; then
+  if oz_tmp_version=`$LEX --version 2>/dev/null | tr '\n' ' '`; then
 
     oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]*\)'`
 
@@ -1508,7 +1508,7 @@ test -n "$YACC" || YACC="yacc"
   echo $ac_n "checking $YACC version is at least 1.25""... $ac_c" 1>&6
 echo "configure:1510: checking $YACC version is at least 1.25" >&5
   oz_tmp_ok=no
-  if oz_tmp_version=`$YACC --version 2>/dev/null`; then
+  if oz_tmp_version=`$YACC --version 2>/dev/null | tr '\n' ' '`; then
 
     oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]*\)'`
 
@@ -1854,7 +1854,7 @@ test -n "$PERL" || PERL="NONE"
   echo $ac_n "checking $PERL version is at least 5""... $ac_c" 1>&6
 echo "configure:1856: checking $PERL version is at least 5" >&5
   oz_tmp_ok=no
-  if oz_tmp_version=`$PERL -v 2>/dev/null`; then
+  if oz_tmp_version=`$PERL -v 2>/dev/null | tr '\n' ' '`; then
 
     oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]*\)'`
 
