@@ -294,9 +294,6 @@ public:
     return i;}
 
   void dumpByteBuffers();
-
-  static ByteStream *makeByteStream(OZ_Datum *d);
-  void getDatum(OZ_Datum *d) ;
 };
 
 class ByteStreamManager: public FreeListManager {
@@ -357,6 +354,90 @@ PrTabEntry *findCodeGName(GName *);
 int loadURL(TaggedRef url, OZ_Term out);
 int loadURL(char *url, OZ_Term out);
 int perdioInit();
+
+// class ByteSource [Denys Duchier]
+// something to marshall from
+
+class ByteSource {
+public:
+  virtual OZ_Return maybeSkipHeader();
+  virtual OZ_Return getBytes(BYTE*,int&,int&);
+  virtual OZ_Return getTerm(OZ_Term);
+  virtual OZ_Return makeByteStream(ByteStream*&);
+  virtual char*     emptyMsg();
+};
+
+class ByteSourceFD : public ByteSource {
+private:
+  int fd;
+  Bool del;
+public:
+  ByteSourceFD(int i,Bool d=FALSE):fd(i),del(d){}
+  ~ByteSourceFD(){ if (del) close(fd); }
+  char* emptyMsg();
+  OZ_Return maybeSkipHeader();
+  OZ_Return getBytes(BYTE*,int&,int&);
+};
+
+class ByteSourceDatum : public ByteSource {
+private:
+  OZ_Datum dat;
+  Bool     del;
+  int      idx;
+public:
+  ByteSourceDatum():del(FALSE),idx(0){}
+  ByteSourceDatum(OZ_Datum d,Bool b):dat(d),del(b),idx(0){}
+  ~ByteSourceDatum() {
+    if (del) free(dat.data);
+  }
+  char* emptyMsg();
+  OZ_Return maybeSkipHeader();
+  OZ_Return getBytes(BYTE*,int&,int&);
+};
+
+// class ByteSink [Denys Duchier]
+// something to marshall into
+
+class ByteSink {
+public:
+  virtual OZ_Return putTerm(OZ_Term,OZ_Term,OZ_Term,OZ_Term,OZ_Term);
+  virtual OZ_Return putBytes(BYTE*,int);
+  virtual OZ_Return allocateBytes(int);
+};
+
+class ByteSinkFD : public ByteSink {
+private:
+  int fd;
+  Bool del;
+public:
+  ByteSinkFD(int f,Bool b=FALSE):fd(f),del(b){}
+  ByteSinkFD():fd(0),del(FALSE){}
+  ~ByteSinkFD() { if (del) close(fd); }
+  OZ_Return allocateBytes(int);
+  OZ_Return putBytes(BYTE*,int);
+};
+
+class ByteSinkFile : public ByteSink {
+private:
+  char* filename;
+  int fd;
+public:
+  ByteSinkFile(char*s):filename(s),fd(-1){};
+  ByteSinkFile():filename(0),fd(-1){};
+  ~ByteSinkFile() { if (fd>=0) close(fd); }
+  OZ_Return allocateBytes(int);
+  OZ_Return putBytes(BYTE*,int);
+};
+
+class ByteSinkDatum : public ByteSink {
+private:
+  int      idx;
+public:
+  OZ_Datum dat;
+  ByteSinkDatum():idx(0){ dat.size=0; dat.data=0; }
+  OZ_Return allocateBytes(int);
+  OZ_Return putBytes(BYTE*,int);
+};
 
 /* __PERDIOHH */
 #endif

@@ -61,6 +61,10 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
                                               scp))
       return FALSE;
     break;
+  case LazyVariable:
+    if (! ((GenLazyVariable*)this)->unifyLazy(tptr1,tptr2==0?&term2:tptr2,scp))
+      return FALSE;
+    break;
   default:
     Assert(0);
     return FALSE;
@@ -100,6 +104,7 @@ size_t GenCVariable::getSize(void)
   case FSetVariable: return ((GenFSetVariable*)this)->getSize();
   case AVAR:         return ((AVar *)this)->getSize();
   case PerdioVariable: return ((PerdioVar *)this)->getSize();
+  case LazyVariable: return ((GenLazyVariable*)this)->getSize();
   default:           Assert(0);
   }
   return 0;
@@ -116,6 +121,7 @@ Bool GenCVariable::valid(TaggedRef *ptr,TaggedRef val)
   case FSetVariable: return ((GenFSetVariable*)this)->valid(val);
   case AVAR:         return ((AVar *)this)->valid(val);
   case PerdioVariable: return ((PerdioVar *)this)->valid(ptr,val);
+  case LazyVariable: return ((GenLazyVariable*)this)->valid(val);
   default: Assert(0); break;
   }
   return FALSE;
@@ -215,6 +221,9 @@ void addSuspCVar(TaggedRef v, Thread *el)
   switch(cv->getType()) {
   case PerdioVariable:
     ((PerdioVar*)cv)->addSuspPerdioVar(el);
+    break;
+  case LazyVariable:
+    ((GenLazyVariable*)cv)->addSuspLazy(el);
     break;
   default:
     cv->addSuspSVar(el);
