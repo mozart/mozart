@@ -1,6 +1,7 @@
 #!/bin/sh
-OZWISHHOME=/project/ps/soft/tcl-beta
-OZWISH=$OZWISHHOME/platform/$OZPLATFORM/bin/ozwish
+
+OZWISHHOME=$OZHOME/ozwish4
+OZWISH=$OZWISHHOME/platform/$OZPLATFORM/ozwish4
 OZTK4=1
 export OZWISHHOME OZWISH OZTK4
 exec $OZHOME/bin/ozwish $@
