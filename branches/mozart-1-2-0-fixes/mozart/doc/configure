@@ -1324,7 +1324,7 @@ if test "${with_emacs_options+set}" = set; then
   withval="$with_emacs_options"
   oz_cv_emacs_options="$with_emacs_options"
 else
-  oz_cv_emacs_options="-q --no-site-file
+  oz_cv_emacs_options="-q --no-site-file"
 fi
 
   EMACS_OPTIONS="$oz_cv_emacs_options"
