@@ -42,7 +42,7 @@ interpreted as Windows-style device notation rather than as a uri
 scheme -- in practice, this is a compatible extension since there are
 no legal single character schemes, (2) path segments may indifferently
 be separated by <samp>/</samp> or <samp/\/; this too is compatible
-since non-separator forward and backward slashes oughtto be otherwise
+since non-separator forward and backward slashes ought to be otherwise
 <em/escape encoded/.</P>
     <p>There is additionally a further experimental extension: all
 urls may be suffixed by a string of the form "{foo=a,bar=b}".  This
