@@ -33,7 +33,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
     {
       if (finiteDomain.contains(smallIntValue(term)) == NO)
 	return NO;
-      propagate(var, det, term);
+      propagate(var, fd_det, term, TRUE);
       Bool varIsLocal = isLocalVariable();
       if (varIsLocal == NO) {
 	Suspension * susp = new Suspension(am.currentBoard);
@@ -54,10 +54,10 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
       // don't change the order of the args
       intersection = finiteDomain & termDom; 
 // ... and check if resulting domain is empty -> failure
-      if (intersection == empty)
+      if (intersection == fd_empty)
 	return NO;
-      FDState left_dom = intersection.checkAgainst(finiteDomain);
-      FDState right_dom = intersection.checkAgainst(termDom);
+      FDPropState left_dom = intersection.checkAgainst(finiteDomain);
+      FDPropState right_dom = intersection.checkAgainst(termDom);
       
 // bind - trail - propagate
       Bool varIsLocal = isLocalVariable();
@@ -69,7 +69,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	  if (tPtr < vPtr){
 	    // bind  var to term
 	    TaggedRef auxterm = term;
-	    if (intersection == singleton)
+	    if (intersection == fd_singleton)
 	      term = *tPtr = newSmallInt(intersection.singl());
 	    else
 	      termVar->setDom(intersection);
@@ -81,7 +81,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	  } else {
 	    // bind term to  var
 	    TaggedRef auxvar = var;
-	    if (intersection == singleton)
+	    if (intersection == fd_singleton)
 	      var = *vPtr = newSmallInt(intersection.singl());
 	    else
 	      setDom(intersection);
@@ -96,9 +96,9 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
       case OK + 2 * NO:
 	{
 	  // var is local and term is global
-	  if (intersection != termDom){
+	  if (intersection.getSize() != termDom.getSize()){
 	    TaggedRef auxvar = var;
-	    if (intersection == singleton)
+	    if (intersection == fd_singleton)
 	      var = *vPtr = newSmallInt(intersection.singl());
 	    else
 	      setDom(intersection);
@@ -118,9 +118,9 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
       case NO + 2 * OK:
 	{
 	  // var is global and term is local
-	  if (intersection != finiteDomain){
+	  if (intersection.getSize() != finiteDomain.getSize()){
 	    TaggedRef auxterm = term;
-	    if(intersection == singleton)
+	    if(intersection == fd_singleton)
 	      term = *tPtr = newSmallInt(intersection.singl());
 	    else
 	      termVar->setDom(intersection);
@@ -141,7 +141,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	{
 	  // var and term is global
 	  TaggedRef *aPtr, aux;
-	  if (intersection == singleton){
+	  if (intersection == fd_singleton){
 	    aPtr = NULL;
 	    aux = newSmallInt(intersection.singl());
 	    propagate(var, left_dom, aux, TRUE);
