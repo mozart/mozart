@@ -220,7 +220,7 @@ OZ_Term FDIntervals::getAsList(void) const
 
   for (int i = 0; i < high; i += 1)
       l_ptr = (i_arr[i].left == i_arr[i].right)
-        ? mkListEl(hd, l_ptr, OZ_CToInt(i_arr[i].left))
+        ? mkListEl(hd, l_ptr, OZ_int(i_arr[i].left))
         : mkListEl(hd, l_ptr, mkTuple(i_arr[i].left, i_arr[i].right));
 
   return makeTaggedLTuple(hd);
@@ -776,7 +776,7 @@ OZ_Term FDBitVector::getAsList(void) const
 
   for (int i = 0; i < len; i += 1)
     if (fd_bv_left_conv[i] == fd_bv_right_conv[i])
-      l_ptr = mkListEl(hd, l_ptr, OZ_CToInt(fd_bv_left_conv[i]));
+      l_ptr = mkListEl(hd, l_ptr, OZ_int(fd_bv_left_conv[i]));
     else
       l_ptr = mkListEl(hd, l_ptr, mkTuple(fd_bv_left_conv[i],
                                           fd_bv_right_conv[i]));

@@ -550,7 +550,7 @@ public:
     item.propagator = p;
   }
 
-  OZ_Bool runNewPropagator(void) {
+  OZ_Return runNewPropagator(void) {
     Assert(isNewPropagator());
     return item.propagator->run();
   }

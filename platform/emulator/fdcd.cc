@@ -46,7 +46,7 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
   if (isLiteral(v_tupletag)) {
     // reduce to sum(b) >= 1
     int p_size = p.getWidth();
-    TaggedRef tone = OZ_CToInt(1), tmone = OZ_CToInt(-1);
+    TaggedRef tone = OZ_int(1), tmone = OZ_int(-1);
     SRecord * st = SRecord::newSRecord(p.getLabel(), p_size);
 
     for (int i = 0; i < p_size; i++) (*st)[i] = tmone;
@@ -125,7 +125,7 @@ public:
     OZ_gcTerm(vp_tuple);
   }
   virtual size_t sizeOf(void) { return sizeof(CDPropagator); }
-  virtual OZ_Bool run(void);
+  virtual OZ_Return run(void);
   virtual ostream &print(ostream& o) const {
     return o << "cd manager";
   }
@@ -231,7 +231,7 @@ OZ_C_proc_end
 //-----------------------------------------------------------------------------
 
 #ifdef PROPAGATOR_CD
-OZ_Bool CDPropagator::run(void)
+OZ_Return CDPropagator::run(void)
 {
   DEREF(b_tuple, b_tupleptr, b_tupletag);
   DEREF(v_tuple, v_tupleptr, v_tupletag);
@@ -428,7 +428,7 @@ OZ_C_proc_end
 //-----------------------------------------------------------------------------
 // Propagators
 
-OZ_Bool cd_wrapper_a(int OZ_arity, OZ_Term OZ_args[], OZ_CFun, OZ_CFun BI_body)
+OZ_Return cd_wrapper_a(int OZ_arity, OZ_Term OZ_args[], OZ_CFun, OZ_CFun BI_body)
 {
   int last_index = OZ_arity - 1;
 
@@ -446,7 +446,7 @@ OZ_Bool cd_wrapper_a(int OZ_arity, OZ_Term OZ_args[], OZ_CFun, OZ_CFun BI_body)
   }
 
   x.backup();
-  OZ_Bool ret_val = BI_body(last_index, OZ_args);
+  OZ_Return ret_val = BI_body(last_index, OZ_args);
   x.restore();
 
   Assert(x[0].maxElem() >= 2);
@@ -601,7 +601,7 @@ OZ_C_proc_end
 //-----------------------------------------------------------------------------
 // Built-ins
 
-OZ_Bool cd_wrapper_b(int OZ_arity, OZ_Term OZ_args[], OZ_CFun, OZ_CFun BI_body)
+OZ_Return cd_wrapper_b(int OZ_arity, OZ_Term OZ_args[], OZ_CFun, OZ_CFun BI_body)
 {
   int last_index = OZ_arity - 1;
 
@@ -616,7 +616,7 @@ OZ_Bool cd_wrapper_b(int OZ_arity, OZ_Term OZ_args[], OZ_CFun, OZ_CFun BI_body)
   }
 
   x.backup();
-  OZ_Bool ret_val = BI_body(last_index, OZ_args);
+  OZ_Return ret_val = BI_body(last_index, OZ_args);
   x.restore();
 
   Assert(x[0].maxElem() >= 2);
@@ -697,14 +697,14 @@ OZ_C_proc_begin(BIfdCDSched_body, 4)
     return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
                                               OZ_getCArg(y),
                                               OZ_getCArg(x),
-                                              OZ_CToInt(-yd));
+                                              OZ_int(-yd));
   }
 
   if (yl + yd > xu) {
     return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
                                               OZ_getCArg(x),
                                               OZ_getCArg(y),
-                                              OZ_CToInt(-xd));
+                                              OZ_int(-xd));
   }
 
   OZ_FiniteDomain la, lb, lc, ld, l1, l2;
@@ -765,7 +765,7 @@ OZ_C_proc_begin(BIfdCDSchedControl_body, 5)
     return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
                                               OZ_getCArg(y),
                                               OZ_getCArg(x),
-                                              OZ_CToInt(-yd));
+                                              OZ_int(-yd));
   }
 
   if (yl + yd > xu){
@@ -774,7 +774,7 @@ OZ_C_proc_begin(BIfdCDSchedControl_body, 5)
     return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
                                               OZ_getCArg(x),
                                               OZ_getCArg(y),
-                                              OZ_CToInt(-xd));
+                                              OZ_int(-xd));
   }
 
   if (a[control] == fd_singleton) {
@@ -782,14 +782,14 @@ OZ_C_proc_begin(BIfdCDSchedControl_body, 5)
       return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
                                                 OZ_getCArg(x),
                                                 OZ_getCArg(y),
-                                                OZ_CToInt(-xd));
+                                                OZ_int(-xd));
     }
 
     else {
       return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
                                                 OZ_getCArg(y),
                                                 OZ_getCArg(x),
-                                                OZ_CToInt(-yd));
+                                                OZ_int(-yd));
     }
   }
 

@@ -91,7 +91,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIfdGetNext, 1)
 {
   cout << "Move on to next profile." << endl;
-  return OZ_unify(OZ_getCArg(0), OZ_CToInt(FDProfiles.next() ? 1 : 0));
+  return OZ_unify(OZ_getCArg(0), OZ_int(FDProfiles.next() ? 1 : 0));
 }
 OZ_C_proc_end
 

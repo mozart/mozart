@@ -70,10 +70,10 @@ extern "C" char *inet_ntoa(struct in_addr in);
 
 #define OZ_declareVsArg(ARG,VAR) \
  vs_buff(VAR); OZ_nonvarArg(ARG);                                     \
- { int len; OZ_Bool status; OZ_Term rest, susp;                       \
+ { int len; OZ_Return status; OZ_Term rest, susp;                 \
    status = buffer_vs(OZ_getCArg(ARG), VAR, &len, &rest, &susp);      \
    if (status == SUSPEND) {                                           \
-     if (OZ_isVariable(susp)) {                                            \
+     if (OZ_isVariable(susp)) {                                       \
        return SUSPEND;                                                \
      } else {                                                         \
        return OZ_raise(OZ_mkTupleC("unix",1,OZ_mkTupleC("vs",2,"virtual string too long in arg",ARG+1))); \
@@ -119,15 +119,12 @@ while ((RET = CALL) < 0) {                          \
 
 
 // return upon runtime-failure
-#define RETURN_ANY_ERROR(OUT,NUMBER,STRING,GROUP)                    \
-{  OZ_Term err_tuple = OZ_tupleC("error",3);                      \
-   if (OZ_putArg(err_tuple, 1, OZ_CToInt(NUMBER)) &&              \
-       OZ_putArg(err_tuple, 2, OZ_CToString(STRING)) &&               \
-       OZ_putArg(err_tuple, 3, OZ_CToString(GROUP))) {                \
-     return OZ_unify(OUT, err_tuple);                                \
-   } else {                                                          \
-     return FAILED;                                                  \
-   }                                                                 \
+#define RETURN_ANY_ERROR(OUT,NUMBER,STRING,GROUP)             \
+{  OZ_Term err_tuple = OZ_tupleC("error",3);                  \
+   OZ_putArg(err_tuple, 0, OZ_int(NUMBER));              \
+   OZ_putArg(err_tuple, 1, OZ_string(STRING));           \
+   OZ_putArg(err_tuple, 2, OZ_string(GROUP));            \
+   return OZ_unify(OUT, err_tuple);                           \
  }
 
 // return upon unix-error
@@ -169,28 +166,22 @@ static char* h_strerror(const int err) {
 
 // return unable to perform service
 #define RETURN_UNABLE(OUT) \
-{ return OZ_unifyString(OUT,"unable"); }
+{ return OZ_unifyAtom(OUT,"unable"); }
 
 // return suspension upon
-#define RETURN_SUSPEND(OUT,LEN,VAR,REST) \
-{ OZ_Term susp_tuple = OZ_tupleC("suspend",3); \
-  if (OZ_putArg(susp_tuple,1,LEN) &&              \
-      OZ_putArg(susp_tuple,2,VAR) &&              \
-      OZ_putArg(susp_tuple,3,REST)) {             \
-    return OZ_unify(OUT,susp_tuple);              \
-  } else {                                        \
-    return FAILED;                                \
-  }                                               \
+#define RETURN_SUSPEND(OUT,LEN,VAR,REST)          \
+{ OZ_Term susp_tuple = OZ_tupleC("suspend",3);    \
+  OZ_putArg(susp_tuple,0,LEN);               \
+  OZ_putArg(susp_tuple,1,VAR);               \
+  OZ_putArg(susp_tuple,2,REST);              \
+  return OZ_unify(OUT,susp_tuple);                 \
 }
 
 // return suspension upon
-#define RETURN_UNABLE_REST(OUT,REST) \
-{ OZ_Term un_tuple = OZ_tupleC("unable", 1);   \
-  if (OZ_putArg(un_tuple,1,REST)) {               \
-    return OZ_unify(OUT,un_tuple);                \
-  } else {                                        \
-    return FAILED;                                \
-  }                                               \
+#define RETURN_UNABLE_REST(OUT,REST)              \
+{ OZ_Term un_tuple = OZ_tupleC("unable", 1);      \
+  OZ_putArg(un_tuple,0,REST);                \
+  return OZ_unify(OUT,un_tuple);                  \
 }
 
 
@@ -223,18 +214,18 @@ static OZ_Term openbuff2list(int len, const char *s, const OZ_Term tl)
     return tl;
 
   hd = OZ_tupleC("|", 2);
-  OZ_putArg(hd, 1, OZ_CToInt((unsigned char) *s++));
+  OZ_putArg(hd, 0, OZ_int((unsigned char) *s++));
   prev = hd;
 
   while (--len) {
     OZ_Term next = OZ_tupleC("|", 2);
 
-    OZ_putArg(next, 1, OZ_CToInt((unsigned char) *s++));
-    OZ_putArg(prev, 2, next);
+    OZ_putArg(next, 0, OZ_int((unsigned char) *s++));
+    OZ_putArg(prev, 1, next);
     prev = next;
   }
 
-  OZ_putArg(prev, 2, tl);
+  OZ_putArg(prev, 1, tl);
   return hd;
 }
 
@@ -250,7 +241,7 @@ inline OZ_Term buff2list(int len, const char *s)
 
 
 
-OZ_Bool atom2buff(OZ_Term atom, char **write_buff, int *len,
+OZ_Return atom2buff(OZ_Term atom, char **write_buff, int *len,
                   OZ_Term *rest, OZ_Term *susp)
 {
   char c;
@@ -274,7 +265,7 @@ OZ_Bool atom2buff(OZ_Term atom, char **write_buff, int *len,
   }
 
   if (*len == max_vs_length && c) {
-    *susp = OZ_CToString(string);
+    *susp = OZ_string(string);
     *rest = *susp;
     return SUSPEND;
   }
@@ -283,7 +274,7 @@ OZ_Bool atom2buff(OZ_Term atom, char **write_buff, int *len,
 }
 
 
-OZ_Bool int2buff(OZ_Term ozint, char **write_buff, int *len,
+OZ_Return int2buff(OZ_Term ozint, char **write_buff, int *len,
                  OZ_Term *rest, OZ_Term *susp)
 {
   char *string = OZ_intToCString(ozint);
@@ -299,17 +290,15 @@ OZ_Bool int2buff(OZ_Term ozint, char **write_buff, int *len,
   }
 
   if (*len == max_vs_length && c) {
-    *susp = OZ_CToString(help);
+    *susp = OZ_string(help);
     *rest = *susp;
-    OZ_free(string);
     return SUSPEND;
   }
 
-  OZ_free(string);
   return PROCEED;
 }
 
-OZ_Bool float2buff(OZ_Term ozfloat, char **write_buff, int *len,
+OZ_Return float2buff(OZ_Term ozfloat, char **write_buff, int *len,
                    OZ_Term *rest, OZ_Term *susp)
 {
   char *string = OZ_floatToCString(ozfloat);
@@ -325,18 +314,16 @@ OZ_Bool float2buff(OZ_Term ozfloat, char **write_buff, int *len,
   }
 
   if (*len == max_vs_length && c) {
-    *susp = OZ_CToString(help);
+    *susp = OZ_string(help);
     *rest = *susp;
-    OZ_free(string);
     return SUSPEND;
   }
 
-  OZ_free(string);
   return PROCEED;
 }
 
 
-OZ_Bool list2buff(OZ_Term list, char **write_buff, int *len,
+OZ_Return list2buff(OZ_Term list, char **write_buff, int *len,
                   OZ_Term *rest, OZ_Term *susp)
 {
   OZ_Term hd, tl;
@@ -379,7 +366,7 @@ OZ_Bool list2buff(OZ_Term list, char **write_buff, int *len,
 }
 
 
-static OZ_Bool vs2buff(OZ_Term vs, char **write_buff, int *len,
+static OZ_Return vs2buff(OZ_Term vs, char **write_buff, int *len,
                        OZ_Term *rest, OZ_Term *susp)
 {
   if (OZ_isAtom(vs)) {
@@ -392,21 +379,21 @@ static OZ_Bool vs2buff(OZ_Term vs, char **write_buff, int *len,
     if (IsPair(label) && width > 0) {
       OZ_Term arg_susp, arg_rest;
 
-      for (int i=1; i<=width; i++) {
+      for (int i=0; i<width; i++) {
 
-        OZ_Bool status = vs2buff(OZ_getArg(vs,i), write_buff, len,
+        OZ_Return status = vs2buff(OZ_getArg(vs,i), write_buff, len,
                                  &arg_rest, &arg_susp);
         if (status == SUSPEND) {
           *susp = arg_susp;
 
-          if (i==width) {
+          if (i==width-1) {
             *rest = arg_rest;
           } else {
-            *rest = OZ_tupleC("#", (width - i) + 1);
+            *rest = OZ_tupleC("#", (width - i));
 
-            OZ_putArg(*rest, 1, arg_rest);
+            OZ_putArg(*rest, 0, arg_rest);
             i++;
-            for (int j=2 ; i <= width ; (j++, i++)) {
+            for (int j=1 ; i < width ; (j++, i++)) {
               OZ_putArg(*rest, j, OZ_getArg(vs, i));
             }
           }
@@ -445,7 +432,7 @@ static OZ_Bool vs2buff(OZ_Term vs, char **write_buff, int *len,
 }
 
 
-inline OZ_Bool buffer_vs(OZ_Term vs, char *write_buff, int *len,
+inline OZ_Return buffer_vs(OZ_Term vs, char *write_buff, int *len,
                          OZ_Term *rest, OZ_Term *susp)
 {
   *len        = 0;
@@ -484,7 +471,7 @@ static OZ_Term readEntries(DIR *dp) {
   static struct dirent *dirp;
   OZ_Term dirEntry;
   if ((dirp = readdir(dp)) != NULL) {
-    dirEntry = OZ_CToString(dirp->d_name);
+    dirEntry = OZ_string(dirp->d_name);
     return OZ_cons(dirEntry, readEntries(dp));
   }
   else
@@ -535,7 +522,7 @@ OZ_C_proc_begin(unix_stat,2)
     OZ_cons(OZ_pairAA("type",fileType),
             OZ_cons(OZ_pairAI("size",fileSize),
                     OZ_nil()));
-  return OZ_unify(out,OZ_recordInit(OZ_CToAtom("stat"),pairlist));
+  return OZ_unify(out,OZ_recordInit(OZ_atom("stat"),pairlist));
 }
 OZ_C_proc_end
 
@@ -556,7 +543,7 @@ OZ_C_proc_begin(unix_uName,1)
 
   OZ_Term pairlist=
     OZ_cons(t1,OZ_cons(t2,OZ_cons(t3,OZ_cons(t4,OZ_cons(t5,OZ_nil())))));
-  return OZ_unify(out,OZ_recordInit(OZ_CToAtom("utsname"),pairlist));
+  return OZ_unify(out,OZ_recordInit(OZ_atom("utsname"),pairlist));
 }
 OZ_C_proc_end
 #endif
@@ -568,7 +555,7 @@ OZ_C_proc_begin(unix_getCWD,1)
 
   const int SIZE=256;
   char buf[SIZE];
-  if (getcwd(buf,SIZE)) return OZ_unifyString(out,buf);
+  if (getcwd(buf,SIZE)) return OZ_unifyAtom(out,buf);
   if (errno != ERANGE) RETURN_UNIX_ERROR(out);
 
   int size=SIZE+SIZE;
@@ -576,7 +563,7 @@ OZ_C_proc_begin(unix_getCWD,1)
   while (OK) {
     bigBuf=(char *) malloc(size);
     if (getcwd(bigBuf,size)) {
-      OZ_Bool ret=OZ_unifyString(out,buf);
+      OZ_Return ret=OZ_unifyAtom(out,buf);
       free(bigBuf);
       return ret;
     }
@@ -609,25 +596,25 @@ OZ_C_ioproc_begin(unix_open,4)
 
     if (OZ_isVariable(hd)) return SUSPEND;
 
-    if (OZ_unifyString(hd,"O_RDONLY") == PROCEED) {
+    if (OZ_unifyAtom(hd,"O_RDONLY") == PROCEED) {
       flags |= O_RDONLY;
-    } else if (OZ_unifyString(hd,"O_WRONLY"  ) == PROCEED) {
+    } else if (OZ_unifyAtom(hd,"O_WRONLY"  ) == PROCEED) {
       flags |= O_WRONLY;
-    } else if (OZ_unifyString(hd,"O_RDWR"    ) == PROCEED) {
+    } else if (OZ_unifyAtom(hd,"O_RDWR"    ) == PROCEED) {
       flags |= O_RDWR;
-    } else if (OZ_unifyString(hd,"O_APPEND"  ) == PROCEED) {
+    } else if (OZ_unifyAtom(hd,"O_APPEND"  ) == PROCEED) {
       flags |= O_APPEND;
-    } else if (OZ_unifyString(hd,"O_CREAT"   ) == PROCEED) {
+    } else if (OZ_unifyAtom(hd,"O_CREAT"   ) == PROCEED) {
       flags |= O_CREAT;
-    } else if (OZ_unifyString(hd,"O_EXCL"    ) == PROCEED) {
+    } else if (OZ_unifyAtom(hd,"O_EXCL"    ) == PROCEED) {
       flags |= O_EXCL;
-    } else if (OZ_unifyString(hd,"O_TRUNC"   ) == PROCEED) {
+    } else if (OZ_unifyAtom(hd,"O_TRUNC"   ) == PROCEED) {
       flags |= O_TRUNC;
-    } else if (OZ_unifyString(hd,"O_NOCTTY"  ) == PROCEED) {
+    } else if (OZ_unifyAtom(hd,"O_NOCTTY"  ) == PROCEED) {
       flags |= O_NOCTTY;
-    } else if (OZ_unifyString(hd,"O_NONBLOCK") == PROCEED) {
+    } else if (OZ_unifyAtom(hd,"O_NONBLOCK") == PROCEED) {
       flags |= O_NONBLOCK;
-    } else if (OZ_unifyString(hd,"O_SYNC"    ) == PROCEED) {
+    } else if (OZ_unifyAtom(hd,"O_SYNC"    ) == PROCEED) {
       flags |= O_SYNC;
     } else {
       OZ_warning("open: illegal flag");
@@ -654,15 +641,15 @@ OZ_C_ioproc_begin(unix_open,4)
     OZ_warning("open: illegal mode");
     return FAILED;
 #else
-    if (OZ_unifyString(hd,"S_IRUSR") == PROCEED) { mode |= S_IRUSR; }
-    else if (OZ_unifyString(hd,"S_IWUSR") == PROCEED) { mode |= S_IWUSR; }
-    else if (OZ_unifyString(hd,"S_IXUSR") == PROCEED) { mode |= S_IXUSR; }
-    else if (OZ_unifyString(hd,"S_IRGRP") == PROCEED) { mode |= S_IRGRP; }
-    else if (OZ_unifyString(hd,"S_IWGRP") == PROCEED) { mode |= S_IWGRP; }
-    else if (OZ_unifyString(hd,"S_IXGRP") == PROCEED) { mode |= S_IXGRP; }
-    else if (OZ_unifyString(hd,"S_IROTH") == PROCEED) { mode |= S_IROTH; }
-    else if (OZ_unifyString(hd,"S_IWOTH") == PROCEED) { mode |= S_IWOTH; }
-    else if (OZ_unifyString(hd,"S_IXOTH") == PROCEED) { mode |= S_IXOTH; }
+    if (OZ_unifyAtom(hd,"S_IRUSR") == PROCEED) { mode |= S_IRUSR; }
+    else if (OZ_unifyAtom(hd,"S_IWUSR") == PROCEED) { mode |= S_IWUSR; }
+    else if (OZ_unifyAtom(hd,"S_IXUSR") == PROCEED) { mode |= S_IXUSR; }
+    else if (OZ_unifyAtom(hd,"S_IRGRP") == PROCEED) { mode |= S_IRGRP; }
+    else if (OZ_unifyAtom(hd,"S_IWGRP") == PROCEED) { mode |= S_IWGRP; }
+    else if (OZ_unifyAtom(hd,"S_IXGRP") == PROCEED) { mode |= S_IXGRP; }
+    else if (OZ_unifyAtom(hd,"S_IROTH") == PROCEED) { mode |= S_IROTH; }
+    else if (OZ_unifyAtom(hd,"S_IWOTH") == PROCEED) { mode |= S_IWOTH; }
+    else if (OZ_unifyAtom(hd,"S_IXOTH") == PROCEED) { mode |= S_IXOTH; }
     else {
       OZ_warning("open: illegal mode");
       return FAILED;
@@ -731,7 +718,7 @@ OZ_C_ioproc_begin(unix_write, 3)
   CHECK_WRITE(fd,out,vs);
 
   int len;
-  OZ_Bool status;
+  OZ_Return status;
   OZ_Term rest, susp;
   vs_buff(write_buff);
 
@@ -752,14 +739,11 @@ OZ_C_ioproc_begin(unix_write, 3)
   }
 
   if (len > ret) {
-    OZ_Term rest_all = OZ_tupleC("#",2);
+    OZ_Term rest_all = OZ_pair2(buff2list(len - ret, write_buff + ret),rest);
 
-    OZ_putArg(rest_all, 1, buff2list(len - ret, write_buff + ret));
-    OZ_putArg(rest_all, 2, rest);
-
-    RETURN_SUSPEND(out,OZ_CToInt(ret),susp,rest_all);
+    RETURN_SUSPEND(out,OZ_int(ret),susp,rest_all);
   } else {
-    RETURN_SUSPEND(out,OZ_CToInt(ret),susp,rest);
+    RETURN_SUSPEND(out,OZ_int(ret),susp,rest);
   }
 }
 OZ_C_proc_end
@@ -800,7 +784,7 @@ OZ_C_proc_begin(unix_readSelect,2)
   WRAPCALL(osTestSelect(fd,SEL_READ),sel,out);
 
   if (sel == 0) {
-    return OZ_readSelect(fd,OZ_CToInt(0),out);
+    return OZ_readSelect(fd,OZ_int(0),out);
   }
   return OZ_unifyInt(out,0);
 }
@@ -815,7 +799,7 @@ OZ_C_proc_begin(unix_writeSelect,2)
   WRAPCALL(osTestSelect(fd,SEL_WRITE),sel,out);
 
   if (sel == 0) {
-    return OZ_writeSelect(fd,OZ_CToInt(0),out);
+    return OZ_writeSelect(fd,OZ_int(0),out);
   }
   return OZ_unifyInt(out,0);
 }
@@ -976,7 +960,7 @@ OZ_C_ioproc_begin(unix_acceptUnix,3)
 
   WRAPCALL(accept(sock,(struct sockaddr *)&from, &fromlen), fd, out);
 
-  return (OZ_unify(path, OZ_CToString(from.sun_path)) == PROCEED
+  return (OZ_unify(path, OZ_string(from.sun_path)) == PROCEED
     && OZ_unifyInt(out, fd) == PROCEED) ? PROCEED: FAILED;
 }
 OZ_C_proc_end
@@ -1066,18 +1050,18 @@ OZ_C_ioproc_begin(unix_acceptInet,4)
                                           fromlen, AF_INET);
   if (gethost) {
     return (OZ_unifyInt(port, ntohs(from.sin_port)) == PROCEED
-            && OZ_unify(host, OZ_CToString((char*)gethost->h_name)) == PROCEED
+            && OZ_unify(host, OZ_string((char*)gethost->h_name)) == PROCEED
             && OZ_unifyInt(out, fd) == PROCEED) ? PROCEED : FAILED;
   } else {
     return (OZ_unifyInt(port, ntohs(from.sin_port)) == PROCEED
-            && OZ_unify(host, OZ_CToString(inet_ntoa(from.sin_addr))) == PROCEED
+            && OZ_unify(host, OZ_string(inet_ntoa(from.sin_addr))) == PROCEED
             && OZ_unifyInt(out, fd) == PROCEED) ? PROCEED : FAILED;
   }
 }
 OZ_C_proc_end
 
 
-static OZ_Bool get_send_recv_flags(OZ_Term OzFlags, int * flags)
+static OZ_Return get_send_recv_flags(OZ_Term OzFlags, int * flags)
 {
   OZ_Term hd, tl;
 
@@ -1088,9 +1072,9 @@ static OZ_Bool get_send_recv_flags(OZ_Term OzFlags, int * flags)
     if (OZ_isVariable(hd))
       return SUSPEND;
 
-    if (OZ_unifyString(hd,"MSG_OOB") == PROCEED) {
+    if (OZ_unifyAtom(hd,"MSG_OOB") == PROCEED) {
       *flags |= MSG_OOB;
-    } else if (OZ_unifyString(hd,"MSG_PEEK") == PROCEED) {
+    } else if (OZ_unifyAtom(hd,"MSG_PEEK") == PROCEED) {
       *flags |= MSG_PEEK;
     } else {
       OZ_warning("send or receive: illegal flag");
@@ -1119,7 +1103,7 @@ OZ_C_ioproc_begin(unix_send, 4)
 
 
   int flags;
-  OZ_Bool flagBool;
+  OZ_Return flagBool;
 
   if (!((flagBool = get_send_recv_flags(OzFlags,&flags)) == PROCEED))
       return flagBool;
@@ -1127,7 +1111,7 @@ OZ_C_ioproc_begin(unix_send, 4)
   CHECK_WRITE(sock,out,vs);
 
   int len;
-  OZ_Bool status;
+  OZ_Return status;
   OZ_Term rest, susp, from_buff, rest_all;
   vs_buff(write_buff);
 
@@ -1150,13 +1134,11 @@ OZ_C_ioproc_begin(unix_send, 4)
   if (len > ret) {
     from_buff = buff2list(len - ret, write_buff + ret);
 
-    rest_all = OZ_tupleC("#", 2);
-    OZ_putArg(rest_all, 1, from_buff);
-    OZ_putArg(rest_all, 2, rest);
+    rest_all = OZ_pair2(from_buff,rest);
 
-    RETURN_SUSPEND(out,OZ_CToInt(ret),susp,rest_all);
+    RETURN_SUSPEND(out,OZ_int(ret),susp,rest_all);
   } else {
-    RETURN_SUSPEND(out,OZ_CToInt(ret),susp,rest);
+    RETURN_SUSPEND(out,OZ_int(ret),susp,rest);
   }
 
 }
@@ -1172,7 +1154,7 @@ OZ_C_ioproc_begin(unix_sendToInet, 6)
   OZ_declareArg(5, out);
 
   int flags;
-  OZ_Bool flagBool;
+  OZ_Return flagBool;
 
   if (!((flagBool = get_send_recv_flags(OzFlags,&flags)) == PROCEED))
       return flagBool;
@@ -1194,7 +1176,7 @@ OZ_C_ioproc_begin(unix_sendToInet, 6)
 
 
   int len;
-  OZ_Bool status;
+  OZ_Return status;
   OZ_Term rest, susp;
   vs_buff(write_buff);
 
@@ -1216,14 +1198,11 @@ OZ_C_ioproc_begin(unix_sendToInet, 6)
   }
 
   if (len > ret) {
-    OZ_Term rest_all = OZ_tupleC("#",2);
+    OZ_Term rest_all = OZ_pair2(buff2list(len - ret, write_buff + ret),rest);
 
-    OZ_putArg(rest_all, 1, buff2list(len - ret, write_buff + ret));
-    OZ_putArg(rest_all, 2, rest);
-
-    RETURN_SUSPEND(out,OZ_CToInt(ret),susp,rest_all);
+    RETURN_SUSPEND(out,OZ_int(ret),susp,rest_all);
   } else {
-    RETURN_SUSPEND(out,OZ_CToInt(ret),susp,rest);
+    RETURN_SUSPEND(out,OZ_int(ret),susp,rest);
   }
 
 }
@@ -1239,7 +1218,7 @@ OZ_C_ioproc_begin(unix_sendToUnix, 5)
   OZ_declareArg(4, out);
 
   int flags;
-  OZ_Bool flagBool;
+  OZ_Return flagBool;
 
   if (!((flagBool = get_send_recv_flags(OzFlags,&flags)) == PROCEED))
       return flagBool;
@@ -1251,7 +1230,7 @@ OZ_C_ioproc_begin(unix_sendToUnix, 5)
   strcpy(addr.sun_path, path);
 
   int len;
-  OZ_Bool status;
+  OZ_Return status;
   OZ_Term rest, susp;
   vs_buff(write_buff);
 
@@ -1273,14 +1252,11 @@ OZ_C_ioproc_begin(unix_sendToUnix, 5)
   }
 
   if (len > ret) {
-    OZ_Term rest_all = OZ_tupleC("#",2);
+    OZ_Term rest_all = OZ_pair2(buff2list(len - ret, write_buff + ret), rest);
 
-    OZ_putArg(rest_all, 1, buff2list(len - ret, write_buff + ret));
-    OZ_putArg(rest_all, 2, rest);
-
-    RETURN_SUSPEND(out,OZ_CToInt(ret),susp,rest_all);
+    RETURN_SUSPEND(out,OZ_int(ret),susp,rest_all);
   } else {
-    RETURN_SUSPEND(out,OZ_CToInt(ret),susp,rest);
+    RETURN_SUSPEND(out,OZ_int(ret),susp,rest);
   }
 
 }
@@ -1314,7 +1290,7 @@ OZ_C_ioproc_begin(unix_receiveFromInet,8)
   OZ_declareArg(7, outN);
 
   int flags;
-  OZ_Bool flagBool;
+  OZ_Return flagBool;
 
   if (!((flagBool = get_send_recv_flags(OzFlags,&flags)) == PROCEED))
       return flagBool;
@@ -1338,7 +1314,7 @@ OZ_C_ioproc_begin(unix_receiveFromInet,8)
 
   return (OZ_unify(localhead, hd) == PROCEED
           && OZ_unifyInt(port, ntohs(from.sin_port)) == PROCEED
-          && OZ_unify(host, OZ_CToString(gethost ?
+          && OZ_unify(host, OZ_string(gethost ?
                                         gethost->h_name :
                                         inet_ntoa(from.sin_addr))) == PROCEED
           && OZ_unifyInt(outN, ret) == PROCEED) ? PROCEED : FAILED;
@@ -1358,7 +1334,7 @@ OZ_C_ioproc_begin(unix_receiveFromUnix,7)
   OZ_declareArg(6, outN);
 
   int flags;
-  OZ_Bool flagBool;
+  OZ_Return flagBool;
 
   if (!((flagBool = get_send_recv_flags(OzFlags,&flags)) == PROCEED))
       return flagBool;
@@ -1378,7 +1354,7 @@ OZ_C_ioproc_begin(unix_receiveFromUnix,7)
   free(buf);
 
   return (OZ_unify(localhead, hd) == PROCEED
-          && OZ_unify(path, OZ_CToString(from.sun_path)) == PROCEED
+          && OZ_unify(path, OZ_string(from.sun_path)) == PROCEED
           && OZ_unifyInt(outN, ret) == PROCEED) ? PROCEED : FAILED;
 
 }
@@ -1428,7 +1404,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
 
   while (unixIsCons(argl, &hd, &tl)) {
     int len;
-    OZ_Bool status;
+    OZ_Return status;
     OZ_Term rest, susp;
 
     char *vsarg = (char *) malloc(max_vs_length + 256);
@@ -1539,7 +1515,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
 
   addChildProc(pid);
 
-  TaggedRef rw = OZ_pair(OZ_CToInt(rsock),OZ_CToInt(wsock));
+  TaggedRef rw = OZ_pair2(OZ_int(rsock),OZ_int(wsock));
   return OZ_unifyInt(rpid,pid) == PROCEED
     && OZ_unify(rwsock,rw) == PROCEED ? PROCEED : FAILED;
 }
@@ -1549,7 +1525,7 @@ static OZ_Term mkAliasList(char **alias)
 {
   OZ_Term ret = OZ_nil();
   while (*alias != 0) {
-    ret = OZ_cons(OZ_CToString(*alias), ret);
+    ret = OZ_cons(OZ_string(*alias), ret);
     alias++;
   }
   return ret;
@@ -1559,7 +1535,7 @@ static OZ_Term mkAddressList(char **lstptr)
 {
   OZ_Term ret = OZ_nil();
   while (*lstptr != NULL) {
-    ret = OZ_cons(OZ_CToString(inet_ntoa(**((struct in_addr **) lstptr))),
+    ret = OZ_cons(OZ_string(inet_ntoa(**((struct in_addr **) lstptr))),
                   ret);
     lstptr++;
   }
@@ -1582,7 +1558,7 @@ OZ_C_ioproc_begin(unix_getHostByName, 2)
   OZ_Term t3=OZ_pairA("addrList",mkAddressList(hostaddr->h_addr_list));
   OZ_Term pairlist= OZ_cons(t1,OZ_cons(t2,OZ_cons(t3,OZ_nil())));
 
-  return OZ_unify(out,OZ_recordInit(OZ_CToAtom("hostent"),pairlist));
+  return OZ_unify(out,OZ_recordInit(OZ_atom("hostent"),pairlist));
 }
 OZ_C_proc_end
 
@@ -1637,7 +1613,7 @@ OZ_C_ioproc_begin(unix_getServByName, 3)
   serv = getservbyname(name, proto);
 
   if (!serv)
-    return OZ_unify(out, OZ_getNameFalse());
+    return OZ_unify(out, OZ_false());
 
   return OZ_unifyInt(out, ntohs(serv->s_port));
 }
@@ -1666,7 +1642,7 @@ OZ_C_ioproc_begin(unix_tempName, 3)
   }
   filename = ozstrdup(filename);
 
-  return OZ_unify(name, OZ_CToString(filename));
+  return OZ_unify(name, OZ_string(filename));
 }
 OZ_C_proc_end
 
@@ -1679,9 +1655,9 @@ OZ_C_ioproc_begin(unix_getEnv,2)
 
   envValue = getenv(envVar);
   if (envValue == 0)
-    return OZ_unify(OZ_getCArg(1),OZ_getNameFalse());
+    return OZ_unify(OZ_getCArg(1),OZ_false());
 
-  return OZ_unify(OZ_getCArg(1),OZ_CToString(envValue));
+  return OZ_unify(OZ_getCArg(1),OZ_string(envValue));
 }
 OZ_C_proc_end
 
@@ -1719,7 +1695,7 @@ static OZ_Term make_time(const struct tm* tim)
 
   OZ_Term l1=OZ_cons(t6,OZ_cons(t7,OZ_cons(t8,OZ_cons(t9,OZ_nil()))));
   OZ_Term l2=OZ_cons(t1,OZ_cons(t2,OZ_cons(t3,OZ_cons(t4,OZ_cons(t5,l1)))));
-  return OZ_recordInit(OZ_CToAtom("time"),l2);
+  return OZ_recordInit(OZ_atom("time"),l2);
 }
 
 OZ_C_ioproc_begin(unix_gmTime, 1)
@@ -1813,14 +1789,6 @@ NotAvail("getServByName",3,unix_getServByName);
 NotAvail("uName",1,unix_uName);
 #endif
 
-// specification for builtins
-struct OZ_BIspec {
-  char *name;
-  int arity;
-  OZ_CFun fun;
-};
-
-
 OZ_BIspec spec[] = {
   {"unix_getDir",2,unix_getDir},
   {"unix_stat",2,unix_stat},
@@ -1869,7 +1837,5 @@ OZ_BIspec spec[] = {
 
 void BIinitUnix()
 {
-  for (int i=0; spec[i].name; i++) {
-    OZ_addBuiltin(spec[i].name,spec[i].arity,spec[i].fun);
-  }
+  OZ_addBISpec(spec);
 }

@@ -108,7 +108,7 @@ void BIfdBodyManager::introduce(int i, int j, OZ_Term v) {
 }
 
 inline
-OZ_Bool BIfdBodyManager::entailment(void) {
+OZ_Return BIfdBodyManager::entailment(void) {
   if (only_local_vars) {
     processLocal();
   } else {
@@ -118,14 +118,14 @@ OZ_Bool BIfdBodyManager::entailment(void) {
 }
 
 inline
-OZ_Bool BIfdBodyManager::entailmentClause(int from_b, int to_b) {
+OZ_Return BIfdBodyManager::entailmentClause(int from_b, int to_b) {
   processLocalFromTo(from_b, to_b+1);
 
   return EntailFD;
 }
 
 inline
-OZ_Bool BIfdBodyManager::releaseReify(int from_b, int to_b, int from, int to) {
+OZ_Return BIfdBodyManager::releaseReify(int from_b, int to_b, int from, int to) {
 
   processLocalFromTo(from_b, to_b+1);
 
@@ -133,13 +133,13 @@ OZ_Bool BIfdBodyManager::releaseReify(int from_b, int to_b, int from, int to) {
 }
 
 inline
-OZ_Bool BIfdBodyManager::release1(void) {
+OZ_Return BIfdBodyManager::release1(void) {
   process();
   return EntailFD;
 }
 
 inline
-OZ_Bool BIfdBodyManager::releaseNonRes(void) {
+OZ_Return BIfdBodyManager::releaseNonRes(void) {
   processNonRes();
   return EntailFD;
 }

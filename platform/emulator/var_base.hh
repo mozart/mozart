@@ -159,4 +159,6 @@ public:
   static void addName(TaggedRef var, TaggedRef name);
 };
 
+char *getVarName(TaggedRef v);
+
 #endif

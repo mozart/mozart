@@ -179,8 +179,8 @@ public:
   OZ_Boolean expectNonLin(int i, SRecord &at, SRecord &xt, OZ_Term tagged_xtc,
                     int &s, OZ_CFun func, OZ_Term * xregs, int arity);
 
-  OZ_Bool addSuspFDish(OZ_CFun, OZ_Term *, int);
-  OZ_Bool addSuspSingl(OZ_CFun, OZ_Term *, int);
+  OZ_Return addSuspFDish(OZ_CFun, OZ_Term *, int);
+  OZ_Return addSuspSingl(OZ_CFun, OZ_Term *, int);
   OZ_Boolean addSuspXorYdet(OZ_CFun, OZ_Term *, int);
 
   int getCoeff(int i);
@@ -189,13 +189,13 @@ public:
 
   int getCurrNumOfItems(void) {return curr_num_of_items;}
 
-  OZ_Bool spawnPropagator(OZ_FDPropState, OZ_CFun, int, OZ_Term *);
-  OZ_Bool spawnPropagator(OZ_FDPropState, OZ_FDPropState, OZ_CFun, int, OZ_Term *);
-  OZ_Bool spawnPropagator(OZ_FDPropState, OZ_CFun, int, OZ_Term, ...);
-  OZ_Bool spawnPropagatorStabil(OZ_FDPropState, OZ_CFun, int, OZ_Term, ...);
-  static OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *);
-  static OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *, OZ_Term *);
-  static OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *, OZ_Term *, OZ_Term *);
+  OZ_Return spawnPropagator(OZ_FDPropState, OZ_CFun, int, OZ_Term *);
+  OZ_Return spawnPropagator(OZ_FDPropState, OZ_FDPropState, OZ_CFun, int, OZ_Term *);
+  OZ_Return spawnPropagator(OZ_FDPropState, OZ_CFun, int, OZ_Term, ...);
+  OZ_Return spawnPropagatorStabil(OZ_FDPropState, OZ_CFun, int, OZ_Term, ...);
+  static OZ_Return suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *);
+  static OZ_Return suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *, OZ_Term *);
+  static OZ_Return suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *, OZ_Term *, OZ_Term *);
 
   OZ_Boolean areIdentVar(int a, int b);
 
@@ -315,24 +315,24 @@ public:
 
   void process(int i) {processFromTo(i, i+1);}
 
-  OZ_Bool entailment(void);
+  OZ_Return entailment(void);
 
-  OZ_Bool entailmentClause(int from_b, int to_b,
+  OZ_Return entailmentClause(int from_b, int to_b,
                            int from, int to,
                            int from_p, int to_p);
 
-  OZ_Bool entailmentClause(int from_b, int to_b);
+  OZ_Return entailmentClause(int from_b, int to_b);
 
-  OZ_Bool release(int from, int to);
+  OZ_Return release(int from, int to);
 
-  OZ_Bool releaseReify(int from_b, int to_b, int from, int to);
+  OZ_Return releaseReify(int from_b, int to_b, int from, int to);
 
-  OZ_Bool release(void) {return release(0, curr_num_of_vars - 1);}
+  OZ_Return release(void) {return release(0, curr_num_of_vars - 1);}
 
   // used by square and twice
-  OZ_Bool release1(void);
+  OZ_Return release1(void);
   // used by putList, putNot, putLe, putGe
-  OZ_Bool releaseNonRes(void);
+  OZ_Return releaseNonRes(void);
 
   int simplifyOnUnify(SRecord &a, OZ_Boolean sign_bits[],
                       double coeffs[], SRecord &x,
@@ -362,15 +362,15 @@ public:
 
   static void restoreDomainOnToplevel(void);
 
-  static OZ_Bool replacePropagator(OZ_CFun, int, OZ_Term *);
-  static OZ_Bool replacePropagator(OZ_CFun, int, OZ_Term, ...);
-  static OZ_Bool replacePropagator(OZ_Term, OZ_Term);
+  static OZ_Return replacePropagator(OZ_CFun, int, OZ_Term *);
+  static OZ_Return replacePropagator(OZ_CFun, int, OZ_Term, ...);
+  static OZ_Return replacePropagator(OZ_Term, OZ_Term);
 }; // BIfdBodyManager
 
 
 //-----------------------------------------------------------------------------
 
-OZ_Bool checkDomDescr(OZ_Term, OZ_CFun, OZ_Term *, int, int = 3);
+OZ_Return checkDomDescr(OZ_Term, OZ_CFun, OZ_Term *, int, int = 3);
 
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdbuilti.icc"

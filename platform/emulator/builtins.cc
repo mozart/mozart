@@ -72,9 +72,9 @@ TypeOfTerm tag;                                                               \
 OZ_C_proc_begin(Name,1)                                                       \
 {                                                                             \
   OZ_Term arg1 = OZ_getCArg(0);                                               \
-  State state = InlineName(arg1);                                             \
+  OZ_Return state = InlineName(arg1);                                 \
   if (state == SUSPEND) {                                                     \
-    return OZ_suspendOnVar(arg1);                                             \
+    OZ_suspendOn(arg1);                                       \
   } else {                                                                    \
     return state;                                                             \
   }                                                                           \
@@ -87,9 +87,9 @@ OZ_C_proc_begin(Name,2)                                                       \
 {                                                                             \
   OZ_Term arg0 = OZ_getCArg(0);                                               \
   OZ_Term arg1 = OZ_getCArg(1);                                               \
-  State state = InlineName(arg0,arg1);                                        \
+  OZ_Return state = InlineName(arg0,arg1);                                    \
   if (state == SUSPEND) {                                                     \
-    return OZ_suspendOnVar2(arg0,arg1);                                       \
+    OZ_suspendOn2(arg0,arg1);                                         \
   } else {                                                                    \
     return state;                                                             \
   }                                                                           \
@@ -103,10 +103,10 @@ OZ_C_proc_begin(Name,2)                                                       \
   OZ_Term help;                                                               \
                                                                               \
   OZ_Term arg1 = OZ_getCArg(0);                                               \
-  State state = InlineName(arg1,help);                                        \
+  OZ_Return state = InlineName(arg1,help);                                    \
   switch (state) {                                                            \
   case SUSPEND:                                                               \
-    return OZ_suspendOnVar(arg1);                                             \
+    OZ_suspendOn(arg1);                                       \
   case PROCEED:                                                               \
     return(OZ_unify(help,OZ_getCArg(1)));                                     \
   default:                                                                    \
@@ -125,10 +125,10 @@ OZ_C_proc_begin(Name,3)                                 \
                                                         \
   OZ_Term arg0 = OZ_getCArg(0);                         \
   OZ_Term arg1 = OZ_getCArg(1);                         \
-  State state=InlineName(arg0,arg1,help);               \
+  OZ_Return state=InlineName(arg0,arg1,help);   \
   switch (state) {                                      \
   case SUSPEND:                                         \
-    return OZ_suspendOnVar2(arg0,arg1);                 \
+    OZ_suspendOn2(arg0,arg1);                   \
   case PROCEED:                                         \
     return(OZ_unify(help,OZ_getCArg(2)));               \
   default:                                              \
@@ -178,10 +178,10 @@ OZ_C_proc_begin(Name,4)                                                       \
   OZ_Term arg0 = OZ_getCArg(0);                                               \
   OZ_Term arg1 = OZ_getCArg(1);                                               \
   OZ_Term arg2 = OZ_getCArg(2);                                               \
-  State state=InlineName(arg0,arg1,arg2,help);                                \
+  OZ_Return state=InlineName(arg0,arg1,arg2,help);                            \
   switch (state) {                                                            \
   case SUSPEND:                                                               \
-    return OZ_suspendOnVar3(arg0,arg1,arg2);                                  \
+    OZ_suspendOn3(arg0,arg1,arg2);                                    \
   case PROCEED:                                                               \
     return(OZ_unify(help,OZ_getCArg(3)));                                     \
   default:                                                                    \
@@ -192,9 +192,9 @@ OZ_C_proc_begin(Name,4)                                                       \
 OZ_C_proc_end
 
 #define DECLAREBOOLFUN1(BIfun,BIifun,BIirel)                                  \
-State BIifun(TaggedRef val, TaggedRef &out)                                   \
+OZ_Return BIifun(TaggedRef val, TaggedRef &out)                       \
 {                                                                             \
-  State state = BIirel(val);                                                  \
+  OZ_Return state = BIirel(val);                                              \
   switch(state) {                                                             \
   case PROCEED: out = NameTrue;  return PROCEED;                              \
   case FAILED:  out = NameFalse; return PROCEED;                              \
@@ -204,9 +204,9 @@ State BIifun(TaggedRef val, TaggedRef &out)                                   \
 DECLAREBI_USEINLINEFUN1(BIfun,BIifun)
 
 #define DECLAREBOOLFUN2(BIfun,BIifun,BIirel)                                  \
-State BIifun(TaggedRef val1, TaggedRef val2, TaggedRef &out)                  \
+OZ_Return BIifun(TaggedRef val1, TaggedRef val2, TaggedRef &out)              \
 {                                                                             \
-  State state = BIirel(val1,val2);                                            \
+  OZ_Return state = BIirel(val1,val2);                                \
   switch(state) {                                                             \
   case PROCEED: out = NameTrue;  return PROCEED;                              \
   case FAILED:  out = NameFalse; return PROCEED;                              \
@@ -258,40 +258,48 @@ BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t)
  * `builtin`
  *=================================================================== */
 
+OZ_Term OZ_findBuiltin(char *name, OZ_Term handler)
+{
+  if (!OZ_isProcedure(handler)) {
+    if (!OZ_isAtom(handler) || !OZ_eq(handler,OZ_atom("noHandler"))) {
+      TypeError2("builtin",1,"Procedure or Atom \"noHandler\"",
+                 OZ_getCArg(0),handler);
+    }
+    handler = 0;
+  }
+
+  BuiltinTabEntry *found = (BuiltinTabEntry *) builtinTab.htFind(name);
+
+  if (found == htEmpty) {
+    // type error
+    warning("builtin: '%s' not in table", name);
+    return FAILED;
+  }
+
+  if (!handler && !found->getFun()) {
+    // type error
+    warning("builtin '%s' is special: needs suspension handler",name);
+    return FAILED;
+  }
+  if (handler && found->getInlineFun()) {
+    // type error
+    warning("builtin '%s' is compiled inline: suspension handler ignored",name);
+    handler = 0;
+  }
+
+  Builtin *bi = new Builtin(found,handler);
+  return makeTaggedConst(bi);
+}
+
 OZ_C_proc_begin(BIbuiltin,3)
 {
   OZ_declareAtomArg(0,str);
-  OZ_Term hdl = OZ_getCArg(1);
+  OZ_nonvarArg(1);
+  OZ_Term hdl = OZ_deref(OZ_getCArg(1));
   OZ_Term ret = OZ_getCArg(2);
 
-  DEREF(hdl,_3,tag);
-  if (!isProcedure(hdl)) {
-    if (!isAtom(hdl) || !OZ_unifyString(hdl,"noHandler")) {
-      TypeError2("builtin",1,"Procedure or Atom \"noHandler\"",
-                 OZ_getCArg(0),hdl);
-    }
-    hdl = makeTaggedNULL();
-  }
-
-  BuiltinTabEntry *found = (BuiltinTabEntry *) builtinTab.htFind(str);
-
-  if (found == htEmpty) {
-    warning("builtin: '%s' not in table", str);
-    return FAILED;
-  }
-
-  if (hdl == makeTaggedNULL() && !found->getFun()) {
-    warning("builtin '%s' is special and needs suspension handler",str);
-    return FAILED;
-  }
-  if (hdl != makeTaggedNULL() && found->getInlineFun()) {
-    hdl = makeTaggedNULL();
-    warning("builtin '%s' is compiled inline, suspension handler ignored",str);
-  }
-
-  Builtin *bi = new Builtin(found,hdl);
-
-  return (OZ_unify(ret,makeTaggedConst(bi)));
+  OZ_Term bi = OZ_findBuiltin(str, hdl);
+  return OZ_unify(ret,bi);
 }
 OZ_C_proc_end
 
@@ -300,7 +308,7 @@ OZ_C_proc_end
  * All builtins
  *=================================================================== */
 
-State isValueInline(TaggedRef vall)
+OZ_Return isValueInline(TaggedRef vall)
 {
   NONVAR( vall, _1, tag );
   return PROCEED;
@@ -309,7 +317,7 @@ State isValueInline(TaggedRef vall)
 DECLAREBI_USEINLINEREL1(BIisValue,isValueInline)
 DECLAREBOOLFUN1(BIisValueB,isValueBInline,isValueInline)
 
-State isLiteralInline(TaggedRef t)
+OZ_Return isLiteralInline(TaggedRef t)
 {
   NONSUVAR( t, term, tag );
   if (isCVar(tag)) {
@@ -331,7 +339,7 @@ DECLAREBI_USEINLINEREL1(BIisLiteral,isLiteralInline)
 DECLAREBOOLFUN1(BIisLiteralB,isLiteralBInline,isLiteralInline)
 
 
-State isAtomInline(TaggedRef t)
+OZ_Return isAtomInline(TaggedRef t)
 {
   NONSUVAR( t, term, tag );
   if (isCVar(tag)) {
@@ -356,7 +364,7 @@ DECLAREBI_USEINLINEREL1(BIisAtom,isAtomInline)
 DECLAREBOOLFUN1(BIisAtomB,isAtomBInline,isAtomInline)
 
 
-State isVarInline(TaggedRef term)
+OZ_Return isVarInline(TaggedRef term)
 {
   DEREF(term, _1, _2);
   return isAnyVar(term) ? PROCEED : FAILED;
@@ -365,7 +373,7 @@ State isVarInline(TaggedRef term)
 DECLAREBI_USEINLINEREL1(BIisVar,isVarInline)
 DECLAREBOOLFUN1(BIisVarB,isVarBInline,isVarInline)
 
-State isNonvarInline(TaggedRef term)
+OZ_Return isNonvarInline(TaggedRef term)
 {
   DEREF(term, _1, _2);
   return isAnyVar(term) ? FAILED : PROCEED;
@@ -375,7 +383,7 @@ DECLAREBI_USEINLINEREL1(BIisNonvar,isNonvarInline)
 DECLAREBOOLFUN1(BIisNonvarB,isNonvarBInline,isNonvarInline)
 
 
-State isNameInline(TaggedRef t)
+OZ_Return isNameInline(TaggedRef t)
 {
   NONSUVAR( t, term, tag );
   if (isCVar(tag)) {
@@ -402,7 +410,7 @@ DECLAREBI_USEINLINEREL1(BIisName,isNameInline)
 DECLAREBOOLFUN1(BIisNameB,isNameBInline,isNameInline)
 
 
-State isTupleInline(TaggedRef t)
+OZ_Return isTupleInline(TaggedRef t)
 {
   NONSUVAR( t, term, tag );
   if (isCVar(tag)) {
@@ -424,7 +432,7 @@ DECLAREBI_USEINLINEREL1(BIisTuple,isTupleInline)
 DECLAREBOOLFUN1(BIisTupleB,isTupleBInline,isTupleInline)
 
 
-State isRecordInline(TaggedRef t)
+OZ_Return isRecordInline(TaggedRef t)
 {
   NONSUVAR( t, term, tag );
   if (isCVar(tag)) {
@@ -516,7 +524,7 @@ OZ_C_proc_end
 
 // Suspend until can determine whether term is a record or not.
 // This routine extends isRecordInline to accept undetermined records.
-State isRecordCInline(TaggedRef t)
+OZ_Return isRecordCInline(TaggedRef t)
 {
   DEREF(t, tPtr, tag);
   switch (tag) {
@@ -590,7 +598,7 @@ OZ_C_proc_end
 
 
 
-State isProcedureInline(TaggedRef t)
+OZ_Return isProcedureInline(TaggedRef t)
 {
   NONVAR( t, term, tag );
   return isProcedure(term) ? PROCEED : FAILED;
@@ -599,7 +607,7 @@ State isProcedureInline(TaggedRef t)
 DECLAREBI_USEINLINEREL1(BIisProcedure,isProcedureInline)
 DECLAREBOOLFUN1(BIisProcedureB,isProcedureBInline,isProcedureInline)
 
-State isChunkInline(TaggedRef t)
+OZ_Return isChunkInline(TaggedRef t)
 {
   NONSUVAR( t, term, tag );
   if (isCVar(tag)) {
@@ -614,7 +622,7 @@ State isChunkInline(TaggedRef t)
 }
 DECLAREBOOLFUN1(BIisChunk,isChunkBInline,isChunkInline)
 
-State isNaryInline(TaggedRef procedure, TaggedRef arity)
+OZ_Return isNaryInline(TaggedRef procedure, TaggedRef arity)
 {
   DEREF( procedure, pterm, ptag );
   DEREF( arity, aterm, atag );
@@ -653,7 +661,7 @@ typeError1:
 DECLAREBI_USEINLINEREL2(BIisNary,isNaryInline)
 DECLAREBOOLFUN2(BIisNaryB,isNaryBInline,isNaryInline)
 
-State procedureArityInline(TaggedRef procedure, TaggedRef &out)
+OZ_Return procedureArityInline(TaggedRef procedure, TaggedRef &out)
 {
   NONVAR( procedure, pterm, ptag );
 
@@ -737,7 +745,7 @@ typeError:
 OZ_C_proc_end
 
 
-State isCellInline(TaggedRef cell)
+OZ_Return isCellInline(TaggedRef cell)
 {
   NONVAR( cell, term, _ );
   return isCell(term) ? PROCEED : FAILED;
@@ -750,7 +758,7 @@ DECLAREBOOLFUN1(BIisCellB,isCellBInline,isCellInline)
 // Tuple
 // ---------------------------------------------------------------------
 
-State tupleInline(TaggedRef label, TaggedRef argno, TaggedRef &out)
+OZ_Return tupleInline(TaggedRef label, TaggedRef argno, TaggedRef &out)
 {
   DEREF(argno,_1,argnoTag);
   DEREF(label,_2,labelTag);
@@ -808,7 +816,7 @@ DECLAREBI_USEINLINEFUN2(BItuple,tupleInline)
 // ---------------------------------------------------------------------
 
 
-State labelInline(TaggedRef term, TaggedRef &out)
+OZ_Return labelInline(TaggedRef term, TaggedRef &out)
 {
   DEREF(term,_,tag);
 
@@ -851,7 +859,7 @@ public:
     OZ_gcTerm(rawwid);
   }
   virtual size_t sizeOf(void) { return sizeof(WidthPropagator); }
-  virtual OZ_Bool run(void);
+  virtual OZ_Return run(void);
   virtual ostream &print(ostream& o) const {
     return o << "widthC propagator";
   }
@@ -944,11 +952,11 @@ OZ_C_proc_end
 // Assume: wid is FD or SMALLINT or BIGINT.
 // This is the simplest most straightforward possible
 // implementation and it can be optimized in many ways.
-OZ_Bool WidthPropagator::run(void)
+OZ_Return WidthPropagator::run(void)
 {
     int res;
     int recwidth;
-    OZ_Bool result = SLEEP;
+    OZ_Return result = SLEEP;
 
     TaggedRef rec=rawrec;
     TaggedRef wid=rawwid;
@@ -1142,7 +1150,7 @@ public:
     OZ_gcTerm(FT);
   }
   virtual size_t sizeOf(void) { return sizeof(MonitorArityPropagator); }
-  virtual OZ_Bool run(void);
+  virtual OZ_Return run(void);
   virtual ostream &print(ostream& o) const {
     return o << "monitorArity propagator";
   }
@@ -1237,7 +1245,7 @@ OZ_C_proc_end // BImonitorArity
 // check in addFeatOFSSuspList that the suspension is waiting for the right
 // variable.  FH and FT are a difference list that holds the features that
 // have been added.
-OZ_Bool MonitorArityPropagator::run(void)
+OZ_Return MonitorArityPropagator::run(void)
 {
     // Check if killed:
     TaggedRef kill=K;
@@ -1284,7 +1292,7 @@ OZ_Bool MonitorArityPropagator::run(void)
 /*
  * NOTE: similar functions are dot, genericSet, uparrow
  */
-State genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot)
+OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot)
 {
   DEREF(fea, _1,feaTag);
 LBLagain:
@@ -1403,7 +1411,7 @@ typeError1r:
 }
 
 
-State dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
+OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
 {
   return genericDot(term,fea,&out,TRUE);
 }
@@ -1418,7 +1426,7 @@ DECLAREBI_USEINLINEFUN2(BIdot,dotInline)
      }
 
 
-State atInline(TaggedRef fea, TaggedRef &out)
+OZ_Return atInline(TaggedRef fea, TaggedRef &out)
 {
   DEREF(fea, _1, feaTag);
 
@@ -1440,13 +1448,13 @@ State atInline(TaggedRef fea, TaggedRef &out)
 
 bomb:
   TypeError2("@",1,"Feature (and the name of a field)",
-             rec?makeTaggedSRecord(rec):OZ_CToAtom("noattributes"),
+             rec?makeTaggedSRecord(rec):OZ_atom("noattributes"),
              fea);
 }
 DECLAREBI_USEINLINEFUN1(BIat,atInline)
 
 
-State subtreeInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
+OZ_Return subtreeInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
 {
   return genericDot(term,fea,&out,FALSE);
 }
@@ -1574,7 +1582,7 @@ OZ_C_proc_end
  * NOTE: similar functions are dot, genericSet, uparrow
  */
 // X^Y=Z: add feature Y to open feature structure X (Tell operation).
-State uparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
+OZ_Return uparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
 {
     DEREF(fea,  feaPtr,  feaTag);
     DEREF(term, termPtr, termTag);
@@ -1729,7 +1737,7 @@ typeError2:
 DECLAREBI_USEINLINEFUN2(BIuparrow,uparrowInline)
 
 
-State hasSubtreeAtInline(TaggedRef term, TaggedRef fea)
+OZ_Return hasSubtreeAtInline(TaggedRef term, TaggedRef fea)
 {
   return genericDot(term,fea,0,FALSE);
 }
@@ -1737,20 +1745,20 @@ DECLAREBI_USEINLINEREL2(BIhasSubtreeAt,hasSubtreeAtInline)
 DECLAREBOOLFUN2(BIhasSubtreeAtB,hasSubtreeAtBInline,hasSubtreeAtInline)
 
 
-State widthInline(TaggedRef term, TaggedRef &out)
+OZ_Return widthInline(TaggedRef term, TaggedRef &out)
 {
   DEREF(term,_,tag);
 
   switch (tag) {
   case LTUPLE:
-    out = OZ_CToInt(2);
+    out = OZ_int(2);
     return PROCEED;
   case SRECORD:
   record:
-    out = OZ_CToInt(tagged2SRecord(term)->getWidth());
+    out = OZ_int(tagged2SRecord(term)->getWidth());
     return PROCEED;
   case LITERAL:
-    out = OZ_CToInt(0);
+    out = OZ_int(0);
     return PROCEED;
   case UVAR:
   case SVAR:
@@ -1787,7 +1795,7 @@ OZ_C_proc_begin(BIgetFalse,1)
 OZ_C_proc_end
 
 
-State isBoolInline(TaggedRef t)
+OZ_Return isBoolInline(TaggedRef t)
 {
   NONSUVAR( t, term, tag);
   if (isCVar(tag)) {
@@ -1800,8 +1808,8 @@ State isBoolInline(TaggedRef t)
           DEREF(lbl,_1,lblTag);
           if (isLiteral(lblTag)) {
               if (isAtom(lbl)) {
-                  if (sameLiteral(term,NameTrue) ||
-                      sameLiteral(term,NameFalse))
+                  if (literalEq(term,NameTrue) ||
+                      literalEq(term,NameFalse))
                       return SUSPEND;
                   else
                       return FAILED;
@@ -1815,7 +1823,7 @@ State isBoolInline(TaggedRef t)
         return FAILED;
       }
   }
-  if (sameLiteral(term,NameTrue) || sameLiteral(term,NameFalse))
+  if (literalEq(term,NameTrue) || literalEq(term,NameFalse))
     return PROCEED;
   else
     return FAILED;
@@ -1825,15 +1833,15 @@ DECLAREBI_USEINLINEREL1(BIisBool,isBoolInline)
 DECLAREBOOLFUN1(BIisBoolB,isBoolBInline,isBoolInline)
 
 
-State notInline(TaggedRef A, TaggedRef &out)
+OZ_Return notInline(TaggedRef A, TaggedRef &out)
 {
   NONVAR(A,term,tag);
 
-  if (sameLiteral(term,NameTrue)) {
+  if (literalEq(term,NameTrue)) {
     out = NameFalse;
     return PROCEED;
   } else {
-    if (sameLiteral(term,NameFalse)) {
+    if (literalEq(term,NameFalse)) {
       out = NameTrue;
       return PROCEED;
     }
@@ -1844,24 +1852,24 @@ State notInline(TaggedRef A, TaggedRef &out)
 
 DECLAREBI_USEINLINEFUN1(BInot,notInline)
 
-State andInline(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return andInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
 
   TaggedRef nt = NameTrue;
 
-  if (sameLiteral(A,nt)) {
+  if (literalEq(A,nt)) {
     if (isAnyVar(B)) {
       return SUSPEND;
     }
 
-    out = sameLiteral(B,nt) ? nt : NameFalse;
+    out = literalEq(B,nt) ? nt : NameFalse;
     return PROCEED;
   }
 
   if (isAnyVar(A)) {
-    if (isAnyVar(B) || sameLiteral(B,nt)) {
+    if (isAnyVar(B) || literalEq(B,nt)) {
       return SUSPEND;
     }
     out = NameFalse;
@@ -1875,19 +1883,19 @@ State andInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 DECLAREBI_USEINLINEFUN2(BIand,andInline)
 
 
-State orInline(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return orInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
 
   TaggedRef nt = NameTrue;
 
-  if (sameLiteral(A,nt)) {
+  if (literalEq(A,nt)) {
     out = nt;
     return PROCEED;
   }
 
-  if (sameLiteral(B,nt)) {
+  if (literalEq(B,nt)) {
     out = nt;
     return PROCEED;
   }
@@ -1913,28 +1921,18 @@ OZ_C_proc_begin(BIatomToString,2)
   OZ_declareAtomArg(0,str);
   OZ_Term out = OZ_getCArg(1);
 
-  return OZ_unify(out,OZ_CToString(str));
+  return OZ_unify(out,OZ_string(str));
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BIstringToAtom,2)
 {
-  OZ_Term in = OZ_getCArg(0);
+  OZ_declareStringArg(0,str);
   OZ_Term out = OZ_getCArg(1);
 
-  int len=isString(in);
-  if (len == -2) {
-    TypeError1("stringToAtom",0,"String",in);
-    return FAILED;
-  }
-  if (len == -1) {
-    return SUSPEND;
-  }
-  char *str=stringToC(in,len);
 
-  OZ_Bool ret = OZ_unifyString(out,str);
+  OZ_Return ret = OZ_unifyAtom(out,str);
 
-  delete [] str;
   return ret;
 }
 OZ_C_proc_end
@@ -1948,7 +1946,7 @@ OZ_C_proc_begin(BInewChunk,2)
   OZ_Term vall = OZ_getCArg(0);
   OZ_Term out = OZ_getCArg(1);
 
-  if (OZ_isVariable(vall)) return OZ_suspendOnVar(vall);
+  if (OZ_isVariable(vall)) OZ_suspendOn(vall);
   vall=deref(vall);
   if (!isSRecord(vall)) TypeError1("Chunk.new",0,"Record and not Literal",vall);
 
@@ -1961,7 +1959,7 @@ OZ_C_proc_begin(BIchunkArity,2)
   OZ_Term ch =  OZ_getCArg(0);
   OZ_Term out = OZ_getCArg(1);
 
-  if (OZ_isVariable(ch)) return OZ_suspendOnVar(ch);
+  if (OZ_isVariable(ch)) OZ_suspendOn(ch);
   ch=deref(ch);
   if (!OZ_isChunk(ch)) TypeError1("Chunk.arity",0,"Chunk",ch);
 
@@ -1986,7 +1984,7 @@ OZ_C_proc_begin(BInewCell,2)
 }
 OZ_C_proc_end
 
-State BIexchangeCellInline(TaggedRef c, TaggedRef inState, TaggedRef &outState)
+OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef inState, TaggedRef &outState)
 {
   NONVAR(c,rec,_1);
   outState = OZ_newVariable();
@@ -2021,10 +2019,10 @@ OZ_C_proc_begin(BIexchangeCell,3)
   OZ_Term cell = OZ_getCArg(0);
   OZ_Term inState = OZ_getCArg(1);
   OZ_Term outState = OZ_getCArg(2);
-  State state=BIexchangeCellInline(cell,inState,help);
+  OZ_Return state=BIexchangeCellInline(cell,inState,help);
   switch (state) {
   case SUSPEND:
-    return OZ_suspendOnVar(cell);
+    OZ_suspendOn(cell);
   case FAILED:
     return FAILED;
   case PROCEED:
@@ -2078,7 +2076,7 @@ OZ_C_proc_end
 // term type
 // ---------------------------------------------------------------------
 
-State BItermTypeInline(TaggedRef term, TaggedRef &out)
+OZ_Return BItermTypeInline(TaggedRef term, TaggedRef &out)
 {
   out = OZ_termType(term);
   if (out == AtomVariable) {
@@ -2094,7 +2092,7 @@ DECLAREBI_USEINLINEFUN1(BItermType,BItermTypeInline)
 // Builtins ==, \=, ==B and \=B
 // ---------------------------------------------------------------------
 
-inline OZ_Bool eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
+inline OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
 {
   TaggedRef A = Ain, B = Bin;
   DEREF(A,aPtr,tagA); DEREF(B,bPtr,tagB);
@@ -2105,11 +2103,11 @@ inline OZ_Bool eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
     return FAILED;
   }
 
-  if (isSmallInt(tagA)) return sameSmallInt(A,B) ? PROCEED : FAILED;
-  if (isBigInt(tagA))   return sameBigInt(A,B)   ? PROCEED : FAILED;
-  if (isFloat(tagA))    return sameFloat(A,B)    ? PROCEED : FAILED;
+  if (isSmallInt(tagA)) return smallIntEq(A,B) ? PROCEED : FAILED;
+  if (isBigInt(tagA))   return bigIntEq(A,B)   ? PROCEED : FAILED;
+  if (isFloat(tagA))    return floatEq(A,B)    ? PROCEED : FAILED;
 
-  if (isLiteral(tagA))  return sameLiteral(A,B)  ? PROCEED : FAILED;
+  if (isLiteral(tagA))  return literalEq(A,B)  ? PROCEED : FAILED;
 
   if (A == B && !isAnyVar(A)) return PROCEED;
 
@@ -2151,14 +2149,14 @@ OZ_C_proc_end
 
 
 
-State neqInline(TaggedRef A, TaggedRef B, TaggedRef &out);
-State eqeqInline(TaggedRef A, TaggedRef B, TaggedRef &out);
+OZ_Return neqInline(TaggedRef A, TaggedRef B, TaggedRef &out);
+OZ_Return eqeqInline(TaggedRef A, TaggedRef B, TaggedRef &out);
 
 
 OZ_C_proc_begin(BIneqB,3)
 {
   OZ_Term help;
-  State ret=neqInline(OZ_getCArg(0),OZ_getCArg(1),help);
+  OZ_Return ret=neqInline(OZ_getCArg(0),OZ_getCArg(1),help);
   return ret==PROCEED ? OZ_unify(help,OZ_getCArg(2)) : ret;
 }
 OZ_C_proc_end
@@ -2166,13 +2164,13 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIeqB,3)
 {
   OZ_Term help;
-  State ret=eqeqInline(OZ_getCArg(0),OZ_getCArg(1),help);
+  OZ_Return ret=eqeqInline(OZ_getCArg(0),OZ_getCArg(1),help);
   return ret==PROCEED ? OZ_unify(help,OZ_getCArg(2)): ret;
 }
 OZ_C_proc_end
 
 
-State eqeqInline(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return eqeqInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   switch(eqeqWrapper(A,B)) {
   case PROCEED:
@@ -2188,7 +2186,7 @@ State eqeqInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 }
 
 
-State neqInline(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return neqInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   switch(eqeqWrapper(A,B)) {
   case PROCEED:
@@ -2208,11 +2206,11 @@ OZ_C_proc_begin(BIisString,2)
   OZ_Term in=OZ_getCArg(0);
   OZ_Term out=OZ_getCArg(1);
 
-  int len=isString(in);
-  if (len==-1) {
-    return SUSPEND;
-  }
-  return (len==-2) ? OZ_unify(out,NameFalse) : OZ_unify(out,NameTrue);
+  OZ_Return ret = OZ_isString(in);
+
+  if (ret == FAILED) { return OZ_unify(out,NameFalse); }
+  if (ret == PROCEED) { return OZ_unify(out,NameTrue); }
+  return ret;
 }
 OZ_C_proc_end
 
@@ -2335,7 +2333,7 @@ OZ_C_proc_end
  * Records
  *=================================================================== */
 
-State BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
+OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
 {
   DEREF(t0,_0,tag0);
   DEREF(t1,_1,tag1);
@@ -2429,13 +2427,13 @@ OZ_C_proc_begin(BIadjoinAt,4)
       return OZ_unify(out, makeTaggedSRecord(newrec));
     }
     if (isNotCVar(fea)) {
-      return OZ_suspendOnVar(makeTaggedRef(feaPtr));
+      OZ_suspendOn(makeTaggedRef(feaPtr));
     }
     if (isCVar(fea)) {
       if (tagged2CVar(fea)->getType()!=OFSVariable ||
           tagged2GenOFSVar(fea)->getWidth()>0)
         TypeError3("adjoinAt",1,"Feature",rec,fea,value);
-      return OZ_suspendOnVar(makeTaggedRef(feaPtr));;
+      OZ_suspendOn(makeTaggedRef(feaPtr));;
     }
     TypeError3("adjoinAt",1,"Feature",rec,fea,value);
 
@@ -2443,7 +2441,7 @@ OZ_C_proc_begin(BIadjoinAt,4)
     {
       SRecord *rec1 = tagged2SRecord(rec);
       if (isAnyVar(tag1)) {
-        return OZ_suspendOnVar(makeTaggedRef(feaPtr));
+        OZ_suspendOn(makeTaggedRef(feaPtr));
       }
       if (!isFeature(tag1)) {
         TypeError3("adjoinAt",1,"Feature",rec,fea,value);
@@ -2457,13 +2455,13 @@ OZ_C_proc_begin(BIadjoinAt,4)
     if (tag0==CVAR && tagged2CVar(rec)->getType()!=OFSVariable)
         TypeError3("adjoinAt",0,"Record",rec,fea,value);
     if (isFeature(fea) || isNotCVar(fea)) {
-      return OZ_suspendOnVar(makeTaggedRef(recPtr));
+      OZ_suspendOn(makeTaggedRef(recPtr));
     }
     if (isCVar(fea)) {
       if (tagged2CVar(fea)->getType()!=OFSVariable ||
           tagged2GenOFSVar(fea)->getWidth()>0)
         TypeError3("adjoinAt",1,"Feature",rec,fea,value);
-      return OZ_suspendOnVar(makeTaggedRef(recPtr));
+      OZ_suspendOn(makeTaggedRef(recPtr));
     }
     TypeError3("adjoinAt",1,"Feature",rec,fea,value);
 
@@ -2483,7 +2481,7 @@ loop:
     TaggedRef pair = head(list);
     DEREF(pair,pairPtr,_e1);
     if (isAnyVar(pair)) return makeTaggedRef(pairPtr);
-    if (!isPair(pair)) goto bomb;
+    if (!OZ_isPair2(pair)) goto bomb;
 
     TaggedRef fea = tagged2SRecord(pair)->getArg(0);
     DEREF(fea,feaPtr,_f1);
@@ -2514,7 +2512,7 @@ bomb:
    recordFlag=OK: 'adjoinList' allows records as first arg
               N0: 'makeRecord' only allows literals */
 
-State adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
+OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
                            Bool recordFlag)
 {
   TaggedRef arity=getArity(list);
@@ -2576,9 +2574,9 @@ State adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
   switch (tag0) {
   case LITERAL:
     {
-      int len=lengthOfList(arity);
+      int len=length(arity);
       arity = sortlist(arity,len);
-      len=lengthOfList(arity); // NOTE: duplicates may be removed
+      len=length(arity); // NOTE: duplicates may be removed
       SRecord *newrec = SRecord::newSRecord(t0,aritytable.find(arity));
       newrec->setFeatures(list);
       out = makeTaggedSRecord(newrec);
@@ -2613,7 +2611,7 @@ State adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
   }
 }
 
-State adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
+OZ_Return adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
                      Bool recordFlag)
 {
   return adjoinPropListInline(t0,list,out,recordFlag);
@@ -2624,10 +2622,10 @@ OZ_C_proc_begin(BIadjoinList,3)
 {
   OZ_Term help;
 
-  State state = adjoinPropListInline(OZ_getCArg(0),OZ_getCArg(1),help,OK);
+  OZ_Return state = adjoinPropListInline(OZ_getCArg(0),OZ_getCArg(1),help,OK);
   switch (state) {
   case SUSPEND:
-    return OZ_suspendOnVar(help);
+    OZ_suspendOn(help);
   case PROCEED:
     return(OZ_unify(help,OZ_getCArg(2)));
   default:
@@ -2641,10 +2639,10 @@ OZ_C_proc_begin(BImakeRecord,3)
 {
   OZ_Term help;
 
-  State state = adjoinPropListInline(OZ_getCArg(0),OZ_getCArg(1),help,NO);
+  OZ_Return state = adjoinPropListInline(OZ_getCArg(0),OZ_getCArg(1),help,NO);
   switch (state) {
   case SUSPEND:
-    return OZ_suspendOnVar(help);
+    OZ_suspendOn(help);
     return PROCEED;
   case PROCEED:
     return(OZ_unify(help,OZ_getCArg(2)));
@@ -2655,7 +2653,7 @@ OZ_C_proc_begin(BImakeRecord,3)
 OZ_C_proc_end
 
 
-State BIarityInline(TaggedRef term, TaggedRef &out)
+OZ_Return BIarityInline(TaggedRef term, TaggedRef &out)
 {
   DEREF(term,termPtr,tag);
 
@@ -2688,12 +2686,12 @@ void assignError(TaggedRef rec, TaggedRef fea, char *name)
   prefixError();
   message("Object Error\n");
   message("Assignment (%s) failed: bad attribute or state\n",name);
-  message("attribute found  : %s\n", OZ_toC(fea));
-  message("state found      : %s\n", OZ_toC(rec));
+  message("attribute found  : %s\n", toC(fea));
+  message("state found      : %s\n", toC(rec));
 }
 
 
-State assignInline(TaggedRef fea, TaggedRef value)
+OZ_Return assignInline(TaggedRef fea, TaggedRef value)
 {
   DEREF(fea, _2, feaTag);
 
@@ -2713,7 +2711,7 @@ State assignInline(TaggedRef fea, TaggedRef value)
   }
 
  bomb:
-  assignError(r?makeTaggedSRecord(r):OZ_CToAtom("noattributes"),
+  assignError(r?makeTaggedSRecord(r):OZ_atom("noattributes"),
               fea,"<-");
   return PROCEED;
 }
@@ -2725,10 +2723,10 @@ DECLAREBI_USEINLINEREL2(BIassign,assignInline)
    suspending
    ----------------------------------------------------------------------- */
 
-static State bombBuiltin(char *type)
+static OZ_Return bombBuiltin(char *type)
 {
   return OZ_raise(OZ_mkTupleC("typeError",1,
-                              OZ_mkTupleC("type",1,OZ_CToAtom(type))));
+                              OZ_mkTupleC("type",1,OZ_atom(type))));
 }
 
 #define suspendTest(A,B,test,type)                      \
@@ -2742,7 +2740,7 @@ static State bombBuiltin(char *type)
   return bombBuiltin(type);
 
 
-static State suspendOnNumbers(TaggedRef A, TaggedRef B)
+static OZ_Return suspendOnNumbers(TaggedRef A, TaggedRef B)
 {
   suspendTest(A,B,isNumber,"Number");
 }
@@ -2752,18 +2750,18 @@ inline Bool isNumOrAtom(TaggedRef t)
   return isNumber(t) || isAtom(t);
 }
 
-static State suspendOnNumbersAndAtoms(TaggedRef A, TaggedRef B)
+static OZ_Return suspendOnNumbersAndAtoms(TaggedRef A, TaggedRef B)
 {
   suspendTest(A,B,isNumOrAtom,"Number or Atom");
 }
 
-static State suspendOnFloats(TaggedRef A, TaggedRef B)
+static OZ_Return suspendOnFloats(TaggedRef A, TaggedRef B)
 {
   suspendTest(A,B,isFloat,"Float");
 }
 
 
-static State suspendOnInts(TaggedRef A, TaggedRef B)
+static OZ_Return suspendOnInts(TaggedRef A, TaggedRef B)
 {
   suspendTest(A,B,isInt,"integer");
 }
@@ -2779,7 +2777,7 @@ static State suspendOnInts(TaggedRef A, TaggedRef B)
    ----------------------------------- */
 
 // Float x Float -> Float
-State BIfdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return BIfdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
@@ -2815,14 +2813,14 @@ State BIfdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   }
 
 // Integer x Integer -> Integer
-State BIdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return BIdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
 
   if ((tagB == SMALLINT && smallIntValue(B) == 0)) {
     OZ_warning("div(%s,%s): division by zero",
-               OZ_toC(A),OZ_toC(B));
+               toC(A),toC(B));
     return FAILED;
 
   }
@@ -2836,13 +2834,13 @@ State BIdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 }
 
 // Integer x Integer -> Integer
-State BImodInline(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return BImodInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
 
   if ((tagB == SMALLINT && smallIntValue(B) == 0)) {
-    OZ_warning("mod(%s,0): division by zero",OZ_toC(A));
+    OZ_warning("mod(%s,0): division by zero",toC(A));
     return FAILED;
   }
 
@@ -2873,7 +2871,7 @@ int multOverflow(int a, int b)
 }
 
 
-State BImultInline(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return BImultInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
@@ -2904,7 +2902,7 @@ State BImultInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 }
 
 
-State BIminusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return BIminusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
@@ -2923,7 +2921,7 @@ State BIminusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   return suspendOnNumbers(A,B);
 }
 
-State BIplusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return BIplusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
@@ -2948,7 +2946,7 @@ State BIplusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
    ----------------------------------- */
 
 // unary minus: Number -> Number
-State BIuminusInline(TaggedRef A, TaggedRef &out)
+OZ_Return BIuminusInline(TaggedRef A, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
 
@@ -2975,7 +2973,7 @@ State BIuminusInline(TaggedRef A, TaggedRef &out)
   }
 }
 
-State BIabsInline(TaggedRef A, TaggedRef &out)
+OZ_Return BIabsInline(TaggedRef A, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
 
@@ -2986,7 +2984,7 @@ State BIabsInline(TaggedRef A, TaggedRef &out)
   }
 
   if (isFloat(tagA)) {
-    OZ_Float f = floatValue(A);
+    double f = floatValue(A);
     out = (f >= 0.0) ? A : makeTaggedFloat(fabs(f));
     return PROCEED;
   }
@@ -3005,7 +3003,7 @@ State BIabsInline(TaggedRef A, TaggedRef &out)
 }
 
 // add1(X) --> X+1
-State BIadd1Inline(TaggedRef A, TaggedRef &out)
+OZ_Return BIadd1Inline(TaggedRef A, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
 
@@ -3028,7 +3026,7 @@ State BIadd1Inline(TaggedRef A, TaggedRef &out)
 }
 
 // sub1(X) --> X-1
-State BIsub1Inline(TaggedRef A, TaggedRef &out)
+OZ_Return BIsub1Inline(TaggedRef A, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
 
@@ -3055,19 +3053,19 @@ State BIsub1Inline(TaggedRef A, TaggedRef &out)
    X test Y
    ----------------------------------- */
 
-State bigintLess(BigInt *A, BigInt *B)
+OZ_Return bigintLess(BigInt *A, BigInt *B)
 {
   return (A->cmp(B) < 0 ? PROCEED : FAILED);
 }
 
 
-State bigintLe(BigInt *A, BigInt *B)
+OZ_Return bigintLe(BigInt *A, BigInt *B)
 {
   return (A->cmp(B) <= 0 ? PROCEED : FAILED);
 }
 
 
-State bigtest(TaggedRef A, TaggedRef B, State (*test)(BigInt*, BigInt*))
+OZ_Return bigtest(TaggedRef A, TaggedRef B, OZ_Return (*test)(BigInt*, BigInt*))
 {
   if (isBigInt(A)) {
     if (isBigInt(B)) {
@@ -3075,7 +3073,7 @@ State bigtest(TaggedRef A, TaggedRef B, State (*test)(BigInt*, BigInt*))
     }
     if (isSmallInt(B)) {
       BigInt *b = new BigInt(smallIntValue(B));
-      State res = test(tagged2BigInt(A),b);
+      OZ_Return res = test(tagged2BigInt(A),b);
       b->dispose();
       return res;
     }
@@ -3083,7 +3081,7 @@ State bigtest(TaggedRef A, TaggedRef B, State (*test)(BigInt*, BigInt*))
   if (isBigInt(B)) {
     if (isSmallInt(A)) {
       BigInt *a = new BigInt(smallIntValue(A));
-      State res = test(a,tagged2BigInt(B));
+      OZ_Return res = test(a,tagged2BigInt(B));
       a->dispose();
       return res;
     }
@@ -3094,7 +3092,7 @@ State bigtest(TaggedRef A, TaggedRef B, State (*test)(BigInt*, BigInt*))
 
 
 
-State BIminInline(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return BIminInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
@@ -3117,7 +3115,7 @@ State BIminInline(TaggedRef A, TaggedRef B, TaggedRef &out)
     }
   }
 
-  State ret = bigtest(A,B,bigintLess);
+  OZ_Return ret = bigtest(A,B,bigintLess);
   if (ret != SUSPEND) {
     out = (ret == PROCEED ? A : B);
     return PROCEED;
@@ -3128,7 +3126,7 @@ State BIminInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 
 
 /* code adapted from min */
-State BImaxInline(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return BImaxInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
@@ -3151,7 +3149,7 @@ State BImaxInline(TaggedRef A, TaggedRef B, TaggedRef &out)
     }
   }
 
-  State ret = bigtest(A,B,bigintLess);
+  OZ_Return ret = bigtest(A,B,bigintLess);
   if (ret != SUSPEND) {
     out = (ret == PROCEED ? B : A);
     return PROCEED;
@@ -3161,7 +3159,7 @@ State BImaxInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 }
 
 
-State BIlessInline(TaggedRef A, TaggedRef B)
+OZ_Return BIlessInline(TaggedRef A, TaggedRef B)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
@@ -3186,7 +3184,7 @@ State BIlessInline(TaggedRef A, TaggedRef B)
     }
   }
 
-  State ret = bigtest(A,B,bigintLess);
+  OZ_Return ret = bigtest(A,B,bigintLess);
   if (ret!=SUSPEND)
     return ret;
 
@@ -3195,15 +3193,15 @@ State BIlessInline(TaggedRef A, TaggedRef B)
 
 
 
-State BInumeqInline(TaggedRef A, TaggedRef B)
+OZ_Return BInumeqInline(TaggedRef A, TaggedRef B)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
 
   if (tagA == tagB) {
-    if (isSmallInt(tagA)) if (sameSmallInt(A,B)) goto proceed; goto failed;
-    if (isFloat(tagA))    if (sameFloat(A,B))    goto proceed; goto failed;
-    if (isBigInt(tagA))   if (sameBigInt(A,B))   goto proceed; goto failed;
+    if (isSmallInt(tagA)) if (smallIntEq(A,B)) goto proceed; goto failed;
+    if (isFloat(tagA))    if (floatEq(A,B))    goto proceed; goto failed;
+    if (isBigInt(tagA))   if (bigIntEq(A,B))   goto proceed; goto failed;
   }
 
   return suspendOnNumbers(A,B);
@@ -3216,7 +3214,7 @@ State BInumeqInline(TaggedRef A, TaggedRef B)
 }
 
 
-State BInumeqInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return BInumeqInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   switch (BInumeqInline(A,B)) {
   case PROCEED:
@@ -3231,15 +3229,15 @@ State BInumeqInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
   }
 }
 
-State BInumneqInline(TaggedRef A, TaggedRef B)
+OZ_Return BInumneqInline(TaggedRef A, TaggedRef B)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
 
   if (tagA == tagB) {
-    if (isSmallInt(tagA)) if(sameSmallInt(A,B)) goto failed; goto proceed;
-    if (isFloat(tagA))    if(sameFloat(A,B))    goto failed; goto proceed;
-    if (isBigInt(tagA))   if(sameBigInt(A,B))   goto failed; goto proceed;
+    if (isSmallInt(tagA)) if(smallIntEq(A,B)) goto failed; goto proceed;
+    if (isFloat(tagA))    if(floatEq(A,B))    goto failed; goto proceed;
+    if (isBigInt(tagA))   if(bigIntEq(A,B))   goto failed; goto proceed;
   }
 
   return suspendOnNumbers(A,B);
@@ -3252,7 +3250,7 @@ State BInumneqInline(TaggedRef A, TaggedRef B)
 }
 
 
-State BInumneqInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return BInumneqInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   switch (BInumneqInline(A,B)) {
   case PROCEED:
@@ -3267,7 +3265,7 @@ State BInumneqInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
   }
 }
 
-State BIlessInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return BIlessInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   switch (BIlessInline(A,B)) {
   case PROCEED:
@@ -3282,18 +3280,18 @@ State BIlessInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
   }
 }
 
-State BIgreatInline(TaggedRef A, TaggedRef B)
+OZ_Return BIgreatInline(TaggedRef A, TaggedRef B)
 {
   return BIlessInline(B,A);
 }
 
-State BIgreatInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return BIgreatInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   return BIlessInlineFun(B,A,out);
 }
 
 
-State BIleInline(TaggedRef A, TaggedRef B)
+OZ_Return BIleInline(TaggedRef A, TaggedRef B)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
@@ -3320,7 +3318,7 @@ State BIleInline(TaggedRef A, TaggedRef B)
 
   }
 
-  State ret = bigtest(A,B,bigintLe);
+  OZ_Return ret = bigtest(A,B,bigintLe);
   if (ret!=SUSPEND)
     return ret;
 
@@ -3328,7 +3326,7 @@ State BIleInline(TaggedRef A, TaggedRef B)
 }
 
 
-State BIleInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return BIleInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   switch (BIleInline(A,B)) {
   case PROCEED:
@@ -3343,13 +3341,13 @@ State BIleInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
   }
 }
 
-State BIgeInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return BIgeInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   return BIleInlineFun(B,A,out);
 }
 
 
-State BIgeInline(TaggedRef A, TaggedRef B)
+OZ_Return BIgeInline(TaggedRef A, TaggedRef B)
 {
   return BIleInline(B,A);
 }
@@ -3359,17 +3357,16 @@ State BIgeInline(TaggedRef A, TaggedRef B)
    ----------------------------------- */
 
 
-State BIintToFloatInline(TaggedRef A, TaggedRef &out)
+OZ_Return BIintToFloatInline(TaggedRef A, TaggedRef &out)
 {
   DEREF(A,_1,_2);
   if (isSmallInt(A)) {
-    out = makeTaggedFloat((OZ_Float)smallIntValue(A));
+    out = makeTaggedFloat((double)smallIntValue(A));
     return PROCEED;
   }
   if (isBigInt(A)) {
     char *s = OZ_intToCString(A);
     out = OZ_CStringToFloat(s);
-    OZ_free(s);
     return PROCEED;
   }
 
@@ -3400,17 +3397,15 @@ double ozround(double in) {
   return ff;
 }
 
-State BIfloatToIntInline(TaggedRef A, TaggedRef &out)
+OZ_Return BIfloatToIntInline(TaggedRef A, TaggedRef &out)
 {
+  A=OZ_deref(A);
   if (OZ_isFloat(A)) {
     double ff = ozround(OZ_floatToC(A));
-    if (ff <= OzMaxInt && ff >= OzMinInt) {
-      out = makeInt((int) ff);
-    } else {
-      char *s = OZ_floatToCStringInt(A);
-      out = makeTaggedBigInt(new BigInt(s));
-      OZ_free(s);
+    if (ff > INT_MAX || ff < INT_MIN) {
+      OZ_warning("float to int: truncated to signed 32 Bit\n");
     }
+    out = makeInt((int) ff);
     return PROCEED;
   }
 
@@ -3430,9 +3425,7 @@ OZ_C_proc_begin(BIfloatToString, 2)
 
   if (OZ_isFloat(in)) {
     char *s = OZ_floatToCString(in);
-    (void) OZ_normFloat(s);
-    OZ_Bool ret = OZ_unify(out,OZ_CToString(s));
-    OZ_free(s);
+    OZ_Return ret = OZ_unify(out,OZ_string(s));
     return ret;
   }
   TypeError1("Float.toString",0,"Float",in);
@@ -3442,110 +3435,57 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIstringToFloat, 2)
 {
-  OZ_Term in = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-
-  int len=isString(in);
-  if (len == -2) {
-    TypeError1("String.toFloat",0,"String",in);
-    return FAILED;
-  }
-  if (len == -1) {
-    return SUSPEND;
-  }
-
-  char *str=stringToC(in,len);
+  OZ_declareStringArg(0,str);
+  OZ_declareArg(1,out);
 
   char *end = OZ_parseFloat(str);
   if (!end || *end != 0) {
-    OZ_free(str);
     return FAILED;
   }
-  OZ_Bool ret = OZ_unify(out,OZ_CStringToFloat(str));
-  OZ_free(str);
+  OZ_Return ret = OZ_unify(out,OZ_CStringToFloat(str));
   return ret;
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BIstringIsFloat, 2)
 {
-  OZ_Term in = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-
-  int len=isString(in);
-  if (len == -2) {
-    TypeError1("String.isFloat",0,"String",in);
-    return FAILED;
-  }
-  if (len == -1) {
-    return SUSPEND;
-  }
-
-  char *str=stringToC(in,len);
+  OZ_declareStringArg(0,str);
+  OZ_declareArg(1,out);
 
   char *end = OZ_parseFloat(str);
 
   if (!end || *end != 0) {
-    OZ_free(str);
     return OZ_unify(out,NameFalse);
   }
 
-  OZ_free(str);
   return OZ_unify(out,NameTrue);
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BIstringToInt, 2)
 {
-  OZ_Term in = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-
-  int len=isString(in);
-  if (len == -2) {
-    TypeError1("String.toInt",0,"String",in);
-    return FAILED;
-  }
-  if (len == -1) {
-    return SUSPEND;
-  }
-
-  char *str=stringToC(in,len);
-
+  OZ_declareStringArg(0,str);
+  OZ_declareArg(1,out);
   char *end = OZ_parseInt(str);
   if (!end || *end != 0) {
-    OZ_free(str);
     return FAILED;
   }
-  OZ_Bool ret = OZ_unify(out,OZ_CStringToInt(str));
-  OZ_free(str);
+  OZ_Return ret = OZ_unify(out,OZ_CStringToInt(str));
   return ret;
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BIstringIsInt, 2)
 {
-  OZ_Term in = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-
-  int len=isString(in);
-  if (len == -2) {
-    TypeError1("String.isInt",0,"String",in);
-    return OZ_unify(out,NameFalse);
-  }
-  if (len == -1) {
-    return SUSPEND;
-  }
-
-  char *str=stringToC(in,len);
+  OZ_declareStringArg(0,str);
+  OZ_declareArg(1,out);
 
   char *end = OZ_parseInt(str);
 
   if (!end || *end != 0) {
-    OZ_free(str);
     return OZ_unify(out,NameFalse);
   }
 
-  OZ_free(str);
   return OZ_unify(out,NameTrue);
 }
 OZ_C_proc_end
@@ -3559,9 +3499,7 @@ OZ_C_proc_begin(BIintToString, 2)
 
   if (OZ_isInt(in)) {
     char *str = OZ_intToCString(in);
-    (void) OZ_normInt(str);
-    OZ_Bool ret = OZ_unify(out,OZ_CToString(str));
-    OZ_free(str);
+    OZ_Return ret = OZ_unify(out,OZ_string(str));
     return ret;
   }
   TypeError1("Int.toString",0,"Int",in);
@@ -3581,12 +3519,9 @@ OZ_C_proc_begin(BInumStrLen, 2)
   if (OZ_isInt(in)) {
     char *str = OZ_intToCString(in);
     lenn = strlen(str);
-    OZ_free(str);
   } else if (OZ_isFloat(in)) {
     char *s = OZ_floatToCString(in);
-    delChar(s,'+');
     lenn = strlen(s);
-    OZ_free(s);
   } else {
     TypeError1("numStrLen",0,"Number",in);
     return FAILED;
@@ -3600,7 +3535,7 @@ OZ_C_proc_end
    type X
    ----------------------------------- */
 
-State BIisNumberInline(TaggedRef num)
+OZ_Return BIisNumberInline(TaggedRef num)
 {
   DEREF(num,_,tag);
 
@@ -3612,7 +3547,7 @@ State BIisNumberInline(TaggedRef num)
 }
 
 
-State BIisFloatInline(TaggedRef num)
+OZ_Return BIisFloatInline(TaggedRef num)
 {
   DEREF(num,_,tag);
 
@@ -3624,7 +3559,7 @@ State BIisFloatInline(TaggedRef num)
 }
 
 
-State BIisIntInline(TaggedRef num)
+OZ_Return BIisIntInline(TaggedRef num)
 {
   DEREF(num,_,tag);
 
@@ -3643,7 +3578,7 @@ State BIisIntInline(TaggedRef num)
 
 
 #define FLOATFUN(Fun,BIName,InlineName)                                       \
-State InlineName(TaggedRef AA, TaggedRef &out)                                \
+OZ_Return InlineName(TaggedRef AA, TaggedRef &out)                                    \
 {                                                                             \
   DEREF(AA,_,tag);                                                            \
                                                                               \
@@ -3676,7 +3611,7 @@ FLOATFUN(ozround, BIround, BIinlineRound)
 #undef FLOATFUN
 
 
-State BIfPowInline(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return BIfPowInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
@@ -3688,7 +3623,7 @@ State BIfPowInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   return suspendOnFloats(A,B);
 }
 
-State BIatan2Inline(TaggedRef A, TaggedRef B, TaggedRef &out)
+OZ_Return BIatan2Inline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
@@ -3743,7 +3678,7 @@ OZ_C_proc_begin(BIsmallIntLimits,2)
   OZ_Term minV = OZ_getCArg(0);
   OZ_Term maxV = OZ_getCArg(1);
 
-  OZ_Bool ret;
+  OZ_Return ret;
   if ((ret=OZ_unifyInt(minV,OzMinInt)) != PROCEED) {
     return ret;
   }
@@ -4070,7 +4005,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
   if (arrayFromList(list,ofiles,numOfiles) == NULL ||
       ofiles[0]==NULL ||
       ofiles[1]!=NULL) {
-    OZ_warning("linkObjectFiles(%s): can only accept one DLL\n",OZ_toC(list));
+    OZ_warning("linkObjectFiles(%s): can only accept one DLL\n",toC(list));
     return FAILED;
   }
 
@@ -4159,9 +4094,9 @@ OZ_C_proc_begin(BIfindFunction,3)
   OZ_CFun func;
   if ((func = (OZ_CFun) Link((void *) handle,functionName)) == 0) {
     OZ_warning("findFunction(%s,%s,%s): not found",
-               OZ_toC(OZ_getCArg(0)),
-               OZ_toC(OZ_getCArg(1)),
-               OZ_toC(OZ_getCArg(2))
+               toC(OZ_getCArg(0)),
+               toC(OZ_getCArg(1)),
+               toC(OZ_getCArg(2))
                );
 #ifdef DLD
     dld_perror("findFunction");
@@ -4176,8 +4111,8 @@ OZ_C_proc_begin(BIfindFunction,3)
   // check whether it contains unresolved references:
   if (dld_function_executable_p(functionName) == 0) {
     OZ_warning("findFunction(%s,%s): unresolved references:",
-               OZ_toC(OZ_getCArg(0)),
-               OZ_toC(OZ_getCArg(1))
+               toC(OZ_getCArg(0)),
+               toC(OZ_getCArg(1))
                );
     char ** unresolved = dld_list_undefined_sym();
     for (int i=0; i< dld_undefined_sym_count; i++)
@@ -4241,15 +4176,15 @@ OZ_C_proc_end
 
 // ---------------------------------------------------------------------------
 
-OZ_C_proc_begin(BIsame,2)
+OZ_C_proc_begin(BIsystemEq,2)
 {
-  return sameTerm(OZ_getCArg(0),OZ_getCArg(1)) ? PROCEED : FAILED;
+  return termEq(OZ_getCArg(0),OZ_getCArg(1)) ? PROCEED : FAILED;
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIsameB,3)
+OZ_C_proc_begin(BIsystemEqB,3)
 {
-  OZ_Term ret = sameTerm(OZ_getCArg(0),OZ_getCArg(1)) ? NameTrue : NameFalse;
+  OZ_Term ret = termEq(OZ_getCArg(0),OZ_getCArg(1)) ? NameTrue : NameFalse;
   return OZ_unify(OZ_getCArg(2),ret);
 }
 OZ_C_proc_end
@@ -4320,20 +4255,21 @@ OZ_C_proc_begin(BIapply,2)
   OZ_Term proc = OZ_getCArg(0);
   OZ_Term args = OZ_getCArg(1);
 
-  int len=isList(args,OK);
-  if (len == -1) return SUSPEND;
-  if (len == -2) {
+  OZ_Return ret = OZ_isList(args);
+  if (ret == SUSPEND) return SUSPEND;
+  if (ret == FAILED) {
     TypeError2("apply",1,"List",proc,args);
   }
+  int len = OZ_length(args);
   RefsArray argsArray = allocateY(len);
   for (int i=0; i < len; i++) {
-    argsArray[i] = head(args);
-    args=tail(args);
+    argsArray[i] = OZ_head(args);
+    args=OZ_tail(args);
   }
   Assert(OZ_isNil(args));
 
   DEREF(proc,procPtr,_2);
-  if (isAnyVar(proc)) return OZ_suspendOnVar(makeTaggedRef(procPtr));
+  if (isAnyVar(proc)) OZ_suspendOn(makeTaggedRef(procPtr));
   if (!isProcedure(proc) && !isObject(proc)) {
     TypeError2("apply",0,"Procedure",proc,args);
   }
@@ -4373,7 +4309,7 @@ OZ_C_proc_begin(BIdeepFeed,2)
 
   TaggedRef newVar = OZ_newVariable();
   TaggedRef old = cell1->exchangeValue(newVar);
-  State ret = OZ_unify(old,cons(val,newVar));
+  OZ_Return ret = OZ_unify(old,cons(val,newVar));
 
   switch (am.installPath(savedNode)) {
   case INST_FAILED:
@@ -4492,9 +4428,9 @@ OZ_C_proc_end
  * end
  */
 
-extern State subtreeInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
+extern OZ_Return subtreeInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
 
-State matchDefaultInline(TaggedRef term, TaggedRef attr, TaggedRef defau,
+OZ_Return matchDefaultInline(TaggedRef term, TaggedRef attr, TaggedRef defau,
                          TaggedRef &out)
 {
   switch(subtreeInline(term,attr,out)) {
@@ -4517,12 +4453,12 @@ OZ_C_proc_begin(BIatomHash, 3)
 {
   OZ_Term atom = OZ_getCArg(0);
   if (OZ_isVariable(atom)) {
-      return OZ_suspendOnVar(atom);
+      OZ_suspendOn(atom);
   }
 
   OZ_Term modulo = OZ_getCArg(1);
   if (OZ_isVariable(modulo)) {
-    return OZ_suspendOnVar(modulo);
+    OZ_suspendOn(modulo);
   }
 
   OZ_Term ret = OZ_getCArg(2);
@@ -4561,7 +4497,7 @@ OZ_C_proc_begin(BIatomConcat,3)
   char *str = new char[strlen(s0)+strlen(s1)+1];
   sprintf(str,"%s%s",s0,s1);
 
-  State ret = OZ_unifyString(out,str);
+  OZ_Return ret = OZ_unifyAtom(out,str);
 
   delete [] str;
 
@@ -4589,7 +4525,7 @@ OZ_C_proc_begin(BIgensym,2)
   char *s = new char[strlen(str) + 20];
   sprintf(s,"%s%04d",str,genCount++);
 
-  State ret = OZ_unifyString(out,s);
+  OZ_Return ret = OZ_unifyAtom(out,s);
   delete [] s;
   return ret;
 }
@@ -4660,9 +4596,7 @@ OZ_C_proc_begin(BIintToAtom, 2)
 
   if (OZ_isInt(in)) {
     char *str = OZ_intToCString(in);
-    (void) OZ_normInt(str);
-    OZ_Bool ret = OZ_unifyString(out,str);
-    OZ_free(str);
+    OZ_Return ret = OZ_unifyAtom(out,str);
     return ret;
   }
   TypeError1("intToAtom",0,"Int",inP);
@@ -4731,7 +4665,7 @@ OZ_C_proc_begin(BIsetAbstractionTabDefaultEntry,1)
 {
   TaggedRef in = OZ_getCArg(0); DEREF(in,_1,_2);
   if (!isAbstraction(in)) {
-    warning("setAbstractionTabDefaultEntry: abstraction expected: %s",OZ_toC(in));
+    warning("setAbstractionTabDefaultEntry: abstraction expected: %s",toC(in));
     return FAILED;
   }
 
@@ -4755,7 +4689,7 @@ OZ_C_proc_end
 /* print and show are inline,
    because it prevents the compiler from generating different code
    */
-State printInline(TaggedRef term)
+OZ_Return printInline(TaggedRef term)
 {
   taggedPrint(term,ozconf.printDepth);
   fflush(stdout);
@@ -4780,7 +4714,7 @@ OZ_C_proc_begin(BItermToVS,2)
 }
 OZ_C_proc_end
 
-State showInline(TaggedRef term)
+OZ_Return showInline(TaggedRef term)
 {
   printInline(term);
   printf("\n");
@@ -4800,9 +4734,9 @@ DECLAREBI_USEINLINEREL1(BIshow,showInline)
 
 TaggedRef Abstraction::DBGgetGlobals() {
   int n = getGSize();
-  OZ_Term t = OZ_tuple(OZ_CToAtom("globals"),n);
+  OZ_Term t = OZ_tuple(OZ_atom("globals"),n);
   for (int i = 0; i < n; i++) {
-    OZ_putArg(t,i+1,gRegs[i]);
+    OZ_putArg(t,i,gRegs[i]);
   }
   return t;
 }
@@ -4813,12 +4747,12 @@ OZ_Term NULL2NIL(OZ_Term t)
   return t==makeTaggedNULL() ? OZ_nil() : t;
 }
 
-State taggedGetValue(TaggedRef term,TaggedRef feat,TaggedRef out)
+int taggedGetValue(TaggedRef term,TaggedRef feat,TaggedRef out)
 {
   DEREF(term,termPtr,tag);
   DEREF(feat,_1,fTag);
   if (!OZ_isAtom(feat)) {
-    TypeError2("getValue",1,"Literal",term,feat);
+    return NO;
   }
 
   char *feature = tagged2Literal(feat)->getPrintName();
@@ -4828,7 +4762,7 @@ State taggedGetValue(TaggedRef term,TaggedRef feat,TaggedRef out)
           OZ_unifyInt);
   STRCASE("isvar",
           isAnyVar(tag) ? "ok" : "no",
-          OZ_unifyString);
+          OZ_unifyAtom);
   STRCASE("lengthSuspList",
           isCVar(tag) ? tagged2CVar(term)->getSuspListLength() :
           (isSVar(tag) ? tagged2SVar(term)->getSuspList()->length()
@@ -4837,7 +4771,7 @@ State taggedGetValue(TaggedRef term,TaggedRef feat,TaggedRef out)
 
   STRCASE("name",
           tagged2String(term,ozconf.printDepth),
-          OZ_unifyString);
+          OZ_unifyAtom);
 
   switch (tag) {
   case SRECORD:
@@ -4885,15 +4819,15 @@ State taggedGetValue(TaggedRef term,TaggedRef feat,TaggedRef out)
   }
 
   warning("getValue(%s,%s): bad feature",
-          OZ_toC(term),OZ_toC(feat));
-  return FAILED;
+          toC(term),toC(feat));
+  return NO;
 }
 
 OZ_C_proc_begin(BIgetArgv,1)
 {
   TaggedRef out = nil();
   for(int i=ozconf.argC-1; i>=0; i--) {
-    out = cons(OZ_CToAtom(ozconf.argV[i]),out);
+    out = cons(OZ_atom(ozconf.argV[i]),out);
   }
 
   return OZ_unify(OZ_getCArg(0),out);
@@ -4915,22 +4849,22 @@ OZ_C_proc_begin(BIgetPrintName,2)
       switch (rec->getType()) {
       case Co_Builtin:      return OZ_unify(out, ((Builtin *) rec)->getName());
       case Co_Abstraction:  return OZ_unify(out, ((Abstraction *) rec)->getName());
-      case Co_Object:      return OZ_unifyString(out, ((Object*) rec)->getPrintName());
-      case Co_Cell:        return OZ_unifyString(out,"_");
+      case Co_Object:      return OZ_unifyAtom(out, ((Object*) rec)->getPrintName());
+      case Co_Cell:        return OZ_unifyAtom(out,"_");
       default:             break;
       }
     }
     break;
 
-  case UVAR:    return OZ_unifyString(out, "_");
+  case UVAR:    return OZ_unifyAtom(out, "_");
   case SVAR:
   case CVAR:    return OZ_unify(out, VariableNamer::getName(OZ_getCArg(0)));
-  case LITERAL: return OZ_unifyString(out, tagged2Literal(term)->getPrintName());
+  case LITERAL: return OZ_unifyAtom(out, tagged2Literal(term)->getPrintName());
 
   default:      break;
   }
 
-  return OZ_unifyString(out, tagged2String(term,ozconf.printDepth));
+  return OZ_unifyAtom(out, tagged2String(term,ozconf.printDepth));
 }
 OZ_C_proc_end
 
@@ -4949,11 +4883,11 @@ TaggedRef SuspList::DBGmakeList() {
   return cons(makeTaggedConst(b),getNext()->DBGmakeList());
 }
 
-State AM::getValue(TaggedRef feat, TaggedRef out)
+int AM::getValue(TaggedRef feat, TaggedRef out)
 {
   DEREF(feat,_1,fTag);
   if (!OZ_isAtom(feat)) {
-    TypeError1("getValue",0,"Literal",feat);
+    return NO;
   }
 
   char *feature = tagged2Literal(feat)->getPrintName();
@@ -4967,7 +4901,7 @@ State AM::getValue(TaggedRef feat, TaggedRef out)
   STRCASE("idleMessage",    ozconf.showIdleMessage,             OZ_unifyInt);
   STRCASE("showSuspension", ozconf.showSuspension,              OZ_unifyInt);
   STRCASE("stopOnToplevelFailure",ozconf.stopOnToplevelFailure, OZ_unifyInt);
-  STRCASE("isvar",          "no",OZ_unifyString);
+  STRCASE("isvar",          "no",OZ_unifyAtom);
 
   STRCASE("cellHack",          ozconf.cellHack,                 OZ_unifyInt);
   STRCASE("gcFlag",            ozconf.gcFlag,                   OZ_unifyInt);
@@ -4986,8 +4920,8 @@ State AM::getValue(TaggedRef feat, TaggedRef out)
   STRCASE("queryFILE",         compStream->csfileno(),     OZ_unifyInt);
   STRCASE("errorVerbosity",    ozconf.errorVerbosity,           OZ_unifyInt);
 
-  warning("getValue(0,%s): bad feature", OZ_toC(feat));
-  return FAILED;
+  warning("getValue(0,%s): bad feature", toC(feat));
+  return NO;
 }
 
 
@@ -5010,13 +4944,13 @@ OZ_C_proc_begin(BIgetValue,3)
     DEREF(term,_1,_2);
     STRCASE("addr",ToInt32(tagValueOf(term)),OZ_unifyInt);
     STRCASE("name", tagged2String(term,ozconf.printDepth),
-            OZ_unifyString);
+            OZ_unifyAtom);
     STRCASE("printname", tagged2String(term,ozconf.printDepth),
-            OZ_unifyString);
-    return am.getValue(feat,out);
+            OZ_unifyAtom);
+    return am.getValue(feat,out) ? PROCEED : FAILED;
   }
 
-  return taggedGetValue(term,feat,out);
+  return taggedGetValue(term,feat,out) ? PROCEED: FAILED;
 }
 OZ_C_proc_end
 
@@ -5027,15 +4961,15 @@ OZ_C_proc_end
 // --------------------------------------------------------------------------
 
 #define DOIF(str,body) \
-     if (feature == OZ_CToAtom(str)) { \
+     if (feature == OZ_atom(str)) { \
        body \
-       return PROCEED; \
+       return OK; \
      }
 
-State AM::setValue(TaggedRef feature, TaggedRef value)
+int AM::setValue(TaggedRef feature, TaggedRef value)
 {
   if (!OZ_isInt(value)) {
-    TypeError1("setValue",0,"Int",feature);
+    return NO;
   }
   int val = OZ_intToC(value);
 
@@ -5086,8 +5020,8 @@ State AM::setValue(TaggedRef feature, TaggedRef value)
   DOIF("errorVerbosity",
        ozconf.errorVerbosity = val;
        );
-  warning("setValue(0,%s): bad feature",OZ_toC(feature));
-  return FAILED;
+  warning("setValue(0,%s): bad feature",toC(feature));
+  return NO;
 }
 
 OZ_C_proc_begin(BIsetValue,3)
@@ -5107,7 +5041,7 @@ OZ_C_proc_begin(BIsetValue,3)
   }
 
   if (OZ_isInt(term)) {  // AM
-    return am.setValue(feature,value);
+    return am.setValue(feature,value) ? PROCEED : FAILED;
   }
 
   TypeError2("setValue",0,"Const",term,feature);
@@ -5243,7 +5177,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIplatform, 1)
 {
-  OZ_Term ret = OZ_pair(OZ_CToAtom(ozconf.osname),OZ_CToAtom(ozconf.cpu));
+  OZ_Term ret = OZ_pair2(OZ_atom(ozconf.osname),OZ_atom(ozconf.cpu));
   return OZ_unify(ret,OZ_getCArg(0));
 }
 OZ_C_proc_end
@@ -5251,7 +5185,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIozhome, 1)
 {
-  return OZ_unifyString(OZ_getCArg(0),ozconf.ozHome);
+  return OZ_unifyAtom(OZ_getCArg(0),ozconf.ozHome);
 }
 OZ_C_proc_end
 
@@ -5271,10 +5205,21 @@ OZ_C_proc_end
 
 // ---------------------------------------------------------------------------
 
+#ifdef PARSER
 OZ_C_proc_proto(ozparser_parse)
 OZ_C_proc_proto(ozparser_init)
 OZ_C_proc_proto(ozparser_exit)
-
+#else
+OZ_C_proc_begin(ozparser_parse,2)
+return PROCEED;
+OZ_C_proc_end
+OZ_C_proc_begin(ozparser_init,0)
+return PROCEED;
+OZ_C_proc_end
+OZ_C_proc_begin(ozparser_exit,0)
+return PROCEED;
+OZ_C_proc_end
+#endif
 
 Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla,
                   Bool iscl, Board *b)
@@ -5300,7 +5245,7 @@ OZ_C_proc_begin(BImakeClass,8)
 
   /* only isRecord, not isSRecord: fast methods may be empty */
   if (!isRecord(fastmeth)) {
-    warning("makeClass: record expected: %s", OZ_toC(fastmeth));
+    warning("makeClass: record expected: %s", toC(fastmeth));
     return FAILED;
   }
 
@@ -5315,7 +5260,7 @@ OZ_C_proc_begin(BImakeClass,8)
       DEREF(abstr,_11,_12);
       if (!isAbstraction(abstr)) {
         warning("makeClass: %s should be an abstraction",
-                OZ_toC(abstr));
+                toC(abstr));
         return FAILED;
       }
       methods->setArg(i,abstr);
@@ -5323,22 +5268,22 @@ OZ_C_proc_begin(BImakeClass,8)
   }
 
   if (!isLiteral(printname)) {
-    warning("makeClass: literal expected: %s", OZ_toC(printname));
+    warning("makeClass: literal expected: %s", toC(printname));
     return FAILED;
   }
 
   if (!isAbstraction(send)) {
-    warning("makeClass: abstraction expected: %s", OZ_toC(send));
+    warning("makeClass: abstraction expected: %s", toC(send));
     return FAILED;
   }
 
   if (!isRecord(features)) {
-    warning("makeClass: record expected: %s", OZ_toC(features));
+    warning("makeClass: record expected: %s", toC(features));
     return FAILED;
   }
 
   if (!isRecord(ufeatures)) {
-    warning("makeClass: record expected: %s", OZ_toC(ufeatures));
+    warning("makeClass: record expected: %s", toC(ufeatures));
     return FAILED;
   }
 
@@ -5348,7 +5293,7 @@ OZ_C_proc_begin(BImakeClass,8)
                                     tagged2Literal(printname),
                                     slowmeth,
                                     tagged2Abstraction(send),
-                                    sameLiteral(hfb,NameTrue),
+                                    literalEq(hfb,NameTrue),
                                     uf);
 
   Object *reto = newObject(tagged2SRecord(features),
@@ -5371,17 +5316,17 @@ OZ_C_proc_begin(BImakeObject,4)
   OZ_Term obj       = OZ_getCArg(3);
 
   if (!isRecord(initState)) {
-    warning("makeObject: record expected: %s", OZ_toC(initState));
+    warning("makeObject: record expected: %s", toC(initState));
     return FAILED;
   }
 
   if (!isRecord(ffeatures)) {
-    warning("makeObject: record expected: %s", OZ_toC(ffeatures));
+    warning("makeObject: record expected: %s", toC(ffeatures));
     return FAILED;
   }
 
   if (!isObject(clas)) {
-    warning("makeObject: class expected: %s", OZ_toC(clas));
+    warning("makeObject: class expected: %s", toC(clas));
     return FAILED;
   }
 
@@ -5419,7 +5364,7 @@ OZ_C_proc_begin(BIsetMethApplHdl,1)
 OZ_C_proc_end
 
 
-State hasFastBatchInline(TaggedRef t)
+OZ_Return hasFastBatchInline(TaggedRef t)
 {
   DEREF(t,_,tag);
   if (isNotCVar(tag)) return SUSPEND;
@@ -5438,7 +5383,7 @@ State hasFastBatchInline(TaggedRef t)
 DECLAREBI_USEINLINEREL1(BIhasFastBatch,hasFastBatchInline)
 
 
-State BIisObjectInline(TaggedRef t)
+OZ_Return BIisObjectInline(TaggedRef t)
 {
   DEREF(t,_1,_2);
   if (isAnyVar(t)) return SUSPEND;
@@ -5452,7 +5397,7 @@ State BIisObjectInline(TaggedRef t)
 DECLAREBI_USEINLINEREL1(BIisObject,BIisObjectInline)
 DECLAREBOOLFUN1(BIisObjectB,BIisObjectBInline,BIisObjectInline)
 
-State BIisClassInline(TaggedRef t)
+OZ_Return BIisClassInline(TaggedRef t)
 {
   DEREF(t,_1,_2);
   if (isAnyVar(t)) return SUSPEND;
@@ -5470,7 +5415,7 @@ DECLAREBOOLFUN1(BIisClassB,BIisClassBInline,BIisClassInline)
 /* getClass(t) returns class of t, if t is an object
  * otherwise return t!
  */
-State getClassInline(TaggedRef t, TaggedRef &out)
+OZ_Return getClassInline(TaggedRef t, TaggedRef &out)
 {
   DEREF(t,_,tag);
   if (isAnyVar(tag)) return SUSPEND;
@@ -5491,7 +5436,7 @@ OZ_C_proc_begin(BIsetClosed,1)
   OZ_Term out=OZ_getCArg(1);
 
   DEREF(obj,objPtr,_2);
-  if (isAnyVar(obj)) return OZ_suspendOnVar(makeTaggedRef(objPtr));
+  if (isAnyVar(obj)) OZ_suspendOn(makeTaggedRef(objPtr));
   if (!isObject(obj)) return FAILED;
   Object *oo = (Object *)tagged2Const(obj);
   oo->close();
@@ -5500,7 +5445,7 @@ OZ_C_proc_begin(BIsetClosed,1)
 OZ_C_proc_end
 
 
-State objectIsFreeInline(TaggedRef tobj, TaggedRef &out)
+OZ_Return objectIsFreeInline(TaggedRef tobj, TaggedRef &out)
 {
   DEREF(tobj,_1,_2);
   Assert(isObject(tobj));
@@ -5509,7 +5454,7 @@ State objectIsFreeInline(TaggedRef tobj, TaggedRef &out)
 
   if (am.currentBoard != obj->getBoardFast()) {
     warning("object application(%s): in local computation space not allowed",
-            OZ_toC(tobj));
+            toC(tobj));
     am.currentBoard->incSuspCount();
     am.currentThread->printTaskStack(NOCODE);
     return FAILED;
@@ -5552,7 +5497,7 @@ OZ_C_proc_begin(BIsetSelf,1)
   TaggedRef o = OZ_getCArg(0);
   DEREF(o,_1,_2);
   if (!isObject(o)) {
-    OZ_warning("setSelf(%s): object expected",OZ_toC(OZ_getCArg(0)));
+    OZ_warning("setSelf(%s): object expected",toC(OZ_getCArg(0)));
     return FAILED;
   }
 
@@ -5593,11 +5538,11 @@ OZ_C_proc_begin(BIcloneObjectRecord,4)
   }
 
   if (!isSRecord(record)) {
-    warning("BIcloneObjectRecord: record expected: %s", OZ_toC(record));
+    warning("BIcloneObjectRecord: record expected: %s", toC(record));
     return FAILED;
   }
   if (!isLiteral(nocopy)) {
-    warning("BIcloneObjectRecord: literal expected: %s", OZ_toC(nocopy));
+    warning("BIcloneObjectRecord: literal expected: %s", toC(nocopy));
     return FAILED;
   }
 
@@ -5609,8 +5554,8 @@ OZ_C_proc_begin(BIcloneObjectRecord,4)
   TaggedRef newvar = proto;
   for(int i=0; i < in->getWidth(); i++) {
     OZ_Term arg = in->getArg(i);
-    if (sameLiteral(nocopy,deref(arg))) {
-      if (sameLiteral(NameTrue,varOnHeap)) {
+    if (literalEq(nocopy,deref(arg))) {
+      if (literalEq(NameTrue,varOnHeap)) {
         newvar = makeTaggedRef(newTaggedUVar(proto));
       }
       rec->setArg(i,newvar);
@@ -5816,8 +5761,8 @@ BIspec allSpec[] = {
 
   {"apply",          2, BIapply,                0},
 
-  {"eq",             2, BIsame,                 0},
-  {"eqB",            3, BIsameB,                0},
+  {"eq",             2, BIsystemEq,             0},
+  {"eqB",            3, BIsystemEqB,            0},
 
   {"=",              2, BIunify,                0},
   {"fail",           VarArity,BIfail,           0},

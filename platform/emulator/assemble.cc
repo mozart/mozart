@@ -118,7 +118,7 @@ OZ_C_proc_begin(BIwriteBuiltin,3)
 
   DEREF(bi,_1,_2);
   if (!isConst(bi) || tagged2Const(bi)->getType() != Co_Builtin) {
-    warning("writeBuiltin: builtin expected", OZ_toC(bi));
+    warning("writeBuiltin: builtin expected", toC(bi));
     return FAILED;
   }
 
