@@ -237,7 +237,7 @@ void yy_flush_buffer YY_PROTO(( YY_BUFFER_STATE b ));
 #define YY_FLUSH_BUFFER yy_flush_buffer( yy_current_buffer )
 
 YY_BUFFER_STATE yy_scan_buffer YY_PROTO(( char *base, yy_size_t size ));
-YY_BUFFER_STATE yy_scan_string YY_PROTO(( yyconst char *str ));
+YY_BUFFER_STATE yy_scan_string YY_PROTO(( yyconst char *yy_str ));
 YY_BUFFER_STATE yy_scan_bytes YY_PROTO(( yyconst char *bytes, int len ));
 
 static void *yy_flex_alloc YY_PROTO(( yy_size_t ));
@@ -1245,10 +1245,10 @@ static char *yy_last_accepting_cpos;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "scan.l"
+#line 1 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 #define INITIAL 0
 /* scan.l - scanner for flex input */
-#line 4 "scan.l"
+#line 4 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -1488,7 +1488,7 @@ YY_DECL
         register char *yy_cp, *yy_bp;
         register int yy_act;
 
-#line 94 "scan.l"
+#line 94 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 
         static int bracelevel, didadef, indented_code;
         static int doing_rule_action = false;
@@ -1586,32 +1586,32 @@ do_action:      /* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 105 "scan.l"
+#line 105 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 indented_code = true; BEGIN(CODEBLOCK);
         YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 106 "scan.l"
+#line 106 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO; yy_push_state( COMMENT );
         YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 107 "scan.l"
+#line 107 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 yy_push_state( LINEDIR );
         YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 108 "scan.l"
+#line 108 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 return SCDECL;
         YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 109 "scan.l"
+#line 109 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 return XSCDECL;
         YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 110 "scan.l"
+#line 110 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         ++linenum;
                         line_directive_out( (FILE *) 0, 1 );
@@ -1621,12 +1621,12 @@ YY_RULE_SETUP
         YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 117 "scan.l"
+#line 117 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 /* discard */
         YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 119 "scan.l"
+#line 119 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         sectnum = 2;
                         bracelevel = 0;
@@ -1638,37 +1638,37 @@ YY_RULE_SETUP
         YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 128 "scan.l"
+#line 128 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 yytext_is_array = false; ++linenum;
         YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 129 "scan.l"
+#line 129 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 yytext_is_array = true; ++linenum;
         YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 131 "scan.l"
+#line 131 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(OPTION); return OPTION_OP;
         YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 133 "scan.l"
+#line 133 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ++linenum; /* ignore */
         YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 134 "scan.l"
+#line 134 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ++linenum;      /* ignore */
         YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 136 "scan.l"
+#line 136 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 synerr( _( "unrecognized '%' directive" ) );
         YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 138 "scan.l"
+#line 138 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         strcpy( nmstr, yytext );
                         didadef = false;
@@ -1677,56 +1677,56 @@ YY_RULE_SETUP
         YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 144 "scan.l"
+#line 144 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 RETURNNAME;
         YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 145 "scan.l"
+#line 145 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ++linenum; /* allows blank lines in section 1 */
         YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 146 "scan.l"
+#line 146 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO; ++linenum; /* maybe end of comment line */
         YY_BREAK
 
 
 case 19:
 YY_RULE_SETUP
-#line 151 "scan.l"
+#line 151 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO; yy_pop_state();
         YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 152 "scan.l"
+#line 152 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO;
         YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 153 "scan.l"
+#line 153 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO;
         YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 154 "scan.l"
+#line 154 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ++linenum; ACTION_ECHO;
         YY_BREAK
 
 
 case 23:
 YY_RULE_SETUP
-#line 158 "scan.l"
+#line 158 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 yy_pop_state();
         YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 159 "scan.l"
+#line 159 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 linenum = myctoi( yytext );
         YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 161 "scan.l"
+#line 161 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         flex_free( (void *) infilename );
                         infilename = copy_string( yytext + 1 );
@@ -1735,24 +1735,24 @@ YY_RULE_SETUP
         YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 166 "scan.l"
+#line 166 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 /* ignore spurious characters */
         YY_BREAK
 
 
 case 27:
 YY_RULE_SETUP
-#line 170 "scan.l"
+#line 170 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ++linenum; BEGIN(INITIAL);
         YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 172 "scan.l"
+#line 172 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO;
         YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 174 "scan.l"
+#line 174 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         ++linenum;
                         ACTION_ECHO;
@@ -1764,12 +1764,12 @@ YY_RULE_SETUP
 
 case 30:
 YY_RULE_SETUP
-#line 184 "scan.l"
+#line 184 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 /* separates name and definition */
         YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 186 "scan.l"
+#line 186 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         strcpy( (char *) nmdef, yytext );
 
@@ -1787,7 +1787,7 @@ YY_RULE_SETUP
         YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 201 "scan.l"
+#line 201 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         if ( ! didadef )
                                 synerr( _( "incomplete name definition" ) );
@@ -1799,94 +1799,94 @@ YY_RULE_SETUP
 
 case 33:
 YY_RULE_SETUP
-#line 211 "scan.l"
+#line 211 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ++linenum; BEGIN(INITIAL);
         YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 212 "scan.l"
+#line 212 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 option_sense = true;
         YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 214 "scan.l"
+#line 214 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 return '=';
         YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 216 "scan.l"
+#line 216 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 option_sense = ! option_sense;
         YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 218 "scan.l"
+#line 218 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 csize = option_sense ? 128 : 256;
         YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 219 "scan.l"
+#line 219 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 csize = option_sense ? 256 : 128;
         YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 221 "scan.l"
+#line 221 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 long_align = option_sense;
         YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 222 "scan.l"
+#line 222 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         action_define( "YY_ALWAYS_INTERACTIVE", option_sense );
                         }
         YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 225 "scan.l"
+#line 225 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 yytext_is_array = option_sense;
         YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 226 "scan.l"
+#line 226 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 backing_up_report = option_sense;
         YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 227 "scan.l"
+#line 227 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 interactive = ! option_sense;
         YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 228 "scan.l"
+#line 228 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 C_plus_plus = option_sense;
         YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 229 "scan.l"
+#line 229 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 caseins = ! option_sense;
         YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 230 "scan.l"
+#line 230 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 caseins = option_sense;
         YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 231 "scan.l"
+#line 231 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ddebug = option_sense;
         YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 232 "scan.l"
+#line 232 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 spprdflt = ! option_sense;
         YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 233 "scan.l"
+#line 233 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 useecs = option_sense;
         YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 234 "scan.l"
+#line 234 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         useecs = usemecs = false;
                         use_read = fullspd = true;
@@ -1894,7 +1894,7 @@ YY_RULE_SETUP
         YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 238 "scan.l"
+#line 238 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         useecs = usemecs = false;
                         use_read = fulltbl = true;
@@ -1902,22 +1902,22 @@ YY_RULE_SETUP
         YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 242 "scan.l"
+#line 242 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_IFDEF("YY_NO_INPUT", ! option_sense);
         YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 243 "scan.l"
+#line 243 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 interactive = option_sense;
         YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 244 "scan.l"
+#line 244 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 lex_compat = option_sense;
         YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 245 "scan.l"
+#line 245 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         action_define( "YY_MAIN", option_sense );
                         do_yywrap = ! option_sense;
@@ -1925,134 +1925,134 @@ YY_RULE_SETUP
         YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 249 "scan.l"
+#line 249 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 usemecs = option_sense;
         YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 250 "scan.l"
+#line 250 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         action_define( "YY_NEVER_INTERACTIVE", option_sense );
                         }
         YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 253 "scan.l"
+#line 253 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 performance_report += option_sense ? 1 : -1;
         YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 254 "scan.l"
+#line 254 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 yytext_is_array = ! option_sense;
         YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 255 "scan.l"
+#line 255 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 use_read = option_sense;
         YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 256 "scan.l"
+#line 256 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 reject_really_used = option_sense;
         YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 257 "scan.l"
+#line 257 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 action_define( "YY_STACK_USED", option_sense );
         YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 258 "scan.l"
+#line 258 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 do_stdinit = option_sense;
         YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 259 "scan.l"
+#line 259 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 use_stdout = option_sense;
         YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 260 "scan.l"
+#line 260 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 subset_sort = option_sense;
         YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 261 "scan.l"
+#line 261 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_IFDEF("YY_NO_UNPUT", ! option_sense);
         YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 262 "scan.l"
+#line 262 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 printstats = option_sense;
         YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 263 "scan.l"
+#line 263 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 nowarn = ! option_sense;
         YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 264 "scan.l"
+#line 264 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 do_yylineno = option_sense;
         YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 265 "scan.l"
+#line 265 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 yymore_really_used = option_sense;
         YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 266 "scan.l"
+#line 266 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 do_yywrap = option_sense;
         YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 268 "scan.l"
+#line 268 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_IFDEF("YY_NO_PUSH_STATE", ! option_sense);
         YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 269 "scan.l"
+#line 269 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_IFDEF("YY_NO_POP_STATE", ! option_sense);
         YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 270 "scan.l"
+#line 270 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_IFDEF("YY_NO_TOP_STATE", ! option_sense);
         YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 272 "scan.l"
+#line 272 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_IFDEF("YY_NO_SCAN_BUFFER", ! option_sense);
         YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 273 "scan.l"
+#line 273 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_IFDEF("YY_NO_SCAN_BYTES", ! option_sense);
         YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 274 "scan.l"
+#line 274 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_IFDEF("YY_NO_SCAN_STRING", ! option_sense);
         YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 276 "scan.l"
+#line 276 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 return OPT_OUTFILE;
         YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 277 "scan.l"
+#line 277 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 return OPT_PREFIX;
         YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 278 "scan.l"
+#line 278 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 return OPT_YYCLASS;
         YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 280 "scan.l"
+#line 280 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         strcpy( nmstr, yytext + 1 );
                         nmstr[strlen( nmstr ) - 1] = '\0';
@@ -2061,7 +2061,7 @@ YY_RULE_SETUP
         YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 286 "scan.l"
+#line 286 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         format_synerr( _( "unrecognized %%option: %s" ),
                                 yytext );
@@ -2071,28 +2071,28 @@ YY_RULE_SETUP
 
 case 83:
 YY_RULE_SETUP
-#line 293 "scan.l"
+#line 293 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ++linenum; BEGIN(INITIAL);
         YY_BREAK
 
 case 84:
 YY_RULE_SETUP
-#line 297 "scan.l"
+#line 297 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ++bracelevel; yyless( 2 );      /* eat only %{ */
         YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 298 "scan.l"
+#line 298 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 --bracelevel; yyless( 2 );      /* eat only %} */
         YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 300 "scan.l"
+#line 300 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO;    /* indented code in prolog */
         YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 302 "scan.l"
+#line 302 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {       /* non-indented code */
                         if ( bracelevel <= 0 )
                                 { /* not in %{ ... %} */
@@ -2107,16 +2107,16 @@ YY_RULE_SETUP
         YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 314 "scan.l"
+#line 314 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO;
         YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 315 "scan.l"
+#line 315 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ++linenum; ACTION_ECHO;
         YY_BREAK
 case YY_STATE_EOF(SECT2PROLOG):
-#line 317 "scan.l"
+#line 317 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         mark_prolog();
                         sectnum = 0;
@@ -2127,12 +2127,12 @@ case YY_STATE_EOF(SECT2PROLOG):
 
 case 90:
 YY_RULE_SETUP
-#line 325 "scan.l"
+#line 325 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ++linenum; /* allow blank lines in section 2 */
         YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 327 "scan.l"
+#line 327 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         indented_code = false;
                         doing_codeblock = true;
@@ -2142,17 +2142,17 @@ YY_RULE_SETUP
         YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 334 "scan.l"
+#line 334 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(SC); return '<';
         YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 335 "scan.l"
+#line 335 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 return '^';
         YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 336 "scan.l"
+#line 336 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(QUOTE); return '"';
         YY_BREAK
 case 95:
@@ -2160,7 +2160,7 @@ case 95:
 yy_c_buf_p = yy_cp = yy_bp + 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 337 "scan.l"
+#line 337 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(NUM); return '{';
         YY_BREAK
 case 96:
@@ -2168,12 +2168,12 @@ case 96:
 yy_c_buf_p = yy_cp = yy_bp + 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 338 "scan.l"
+#line 338 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 return '$';
         YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 340 "scan.l"
+#line 340 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         bracelevel = 1;
                         BEGIN(PERCENT_BRACE_ACTION);
@@ -2188,12 +2188,12 @@ YY_RULE_SETUP
         YY_BREAK
 case 98:
 YY_RULE_SETUP
-#line 351 "scan.l"
+#line 351 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 continued_action = true; ++linenum; return '\n';
         YY_BREAK
 case 99:
 YY_RULE_SETUP
-#line 353 "scan.l"
+#line 353 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         yyless( yyleng - 2 );   /* put back '/', '*' */
                         bracelevel = 0;
@@ -2203,12 +2203,12 @@ YY_RULE_SETUP
         YY_BREAK
 case 100:
 YY_RULE_SETUP
-#line 360 "scan.l"
+#line 360 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 /* allow indented rules */
         YY_BREAK
 case 101:
 YY_RULE_SETUP
-#line 362 "scan.l"
+#line 362 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         /* This rule is separate from the one below because
                          * otherwise we get variable trailing context, so
@@ -2228,7 +2228,7 @@ YY_RULE_SETUP
         YY_BREAK
 case 102:
 YY_RULE_SETUP
-#line 379 "scan.l"
+#line 379 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         bracelevel = 0;
                         continued_action = false;
@@ -2244,15 +2244,15 @@ YY_RULE_SETUP
                         }
         YY_BREAK
 case 103:
-#line 394 "scan.l"
+#line 394 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 case 104:
 YY_RULE_SETUP
-#line 394 "scan.l"
+#line 394 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 return EOF_OP;
         YY_BREAK
 case 105:
 YY_RULE_SETUP
-#line 396 "scan.l"
+#line 396 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         sectnum = 3;
                         BEGIN(SECT3);
@@ -2261,7 +2261,7 @@ YY_RULE_SETUP
         YY_BREAK
 case 106:
 YY_RULE_SETUP
-#line 402 "scan.l"
+#line 402 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         int cclval;
 
@@ -2298,7 +2298,7 @@ YY_RULE_SETUP
         YY_BREAK
 case 107:
 YY_RULE_SETUP
-#line 436 "scan.l"
+#line 436 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         register Char *nmdefptr;
                         Char *ndlookup();
@@ -2335,24 +2335,24 @@ YY_RULE_SETUP
         YY_BREAK
 case 108:
 YY_RULE_SETUP
-#line 470 "scan.l"
+#line 470 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 return (unsigned char) yytext[0];
         YY_BREAK
 case 109:
 YY_RULE_SETUP
-#line 471 "scan.l"
+#line 471 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 RETURNCHAR;
         YY_BREAK
 
 
 case 110:
 YY_RULE_SETUP
-#line 476 "scan.l"
+#line 476 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 return (unsigned char) yytext[0];
         YY_BREAK
 case 111:
 YY_RULE_SETUP
-#line 477 "scan.l"
+#line 477 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(SECT2); return '>';
         YY_BREAK
 case 112:
@@ -2360,17 +2360,17 @@ case 112:
 yy_c_buf_p = yy_cp = yy_bp + 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 478 "scan.l"
+#line 478 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(CARETISBOL); return '>';
         YY_BREAK
 case 113:
 YY_RULE_SETUP
-#line 479 "scan.l"
+#line 479 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 RETURNNAME;
         YY_BREAK
 case 114:
 YY_RULE_SETUP
-#line 480 "scan.l"
+#line 480 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         format_synerr( _( "bad <start condition>: %s" ),
                                 yytext );
@@ -2379,23 +2379,23 @@ YY_RULE_SETUP
 
 case 115:
 YY_RULE_SETUP
-#line 486 "scan.l"
+#line 486 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(SECT2); return '^';
         YY_BREAK
 
 case 116:
 YY_RULE_SETUP
-#line 490 "scan.l"
+#line 490 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 RETURNCHAR;
         YY_BREAK
 case 117:
 YY_RULE_SETUP
-#line 491 "scan.l"
+#line 491 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(SECT2); return '"';
         YY_BREAK
 case 118:
 YY_RULE_SETUP
-#line 493 "scan.l"
+#line 493 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         synerr( _( "missing quote" ) );
                         BEGIN(SECT2);
@@ -2410,7 +2410,7 @@ case 119:
 yy_c_buf_p = yy_cp = yy_bp + 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 503 "scan.l"
+#line 503 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(CCL); return '^';
         YY_BREAK
 case 120:
@@ -2418,12 +2418,12 @@ case 120:
 yy_c_buf_p = yy_cp = yy_bp + 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 504 "scan.l"
+#line 504 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 return '^';
         YY_BREAK
 case 121:
 YY_RULE_SETUP
-#line 505 "scan.l"
+#line 505 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(CCL); RETURNCHAR;
         YY_BREAK
 
@@ -2433,22 +2433,22 @@ case 122:
 yy_c_buf_p = yy_cp = yy_bp + 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 509 "scan.l"
+#line 509 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 return '-';
         YY_BREAK
 case 123:
 YY_RULE_SETUP
-#line 510 "scan.l"
+#line 510 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 RETURNCHAR;
         YY_BREAK
 case 124:
 YY_RULE_SETUP
-#line 511 "scan.l"
+#line 511 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(SECT2); return ']';
         YY_BREAK
 case 125:
 YY_RULE_SETUP
-#line 512 "scan.l"
+#line 512 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         synerr( _( "bad character class" ) );
                         BEGIN(SECT2);
@@ -2459,67 +2459,67 @@ YY_RULE_SETUP
 
 case 126:
 YY_RULE_SETUP
-#line 520 "scan.l"
+#line 520 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(CCL); return CCE_ALNUM;
         YY_BREAK
 case 127:
 YY_RULE_SETUP
-#line 521 "scan.l"
+#line 521 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(CCL); return CCE_ALPHA;
         YY_BREAK
 case 128:
 YY_RULE_SETUP
-#line 522 "scan.l"
+#line 522 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(CCL); return CCE_BLANK;
         YY_BREAK
 case 129:
 YY_RULE_SETUP
-#line 523 "scan.l"
+#line 523 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(CCL); return CCE_CNTRL;
         YY_BREAK
 case 130:
 YY_RULE_SETUP
-#line 524 "scan.l"
+#line 524 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(CCL); return CCE_DIGIT;
         YY_BREAK
 case 131:
 YY_RULE_SETUP
-#line 525 "scan.l"
+#line 525 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(CCL); return CCE_GRAPH;
         YY_BREAK
 case 132:
 YY_RULE_SETUP
-#line 526 "scan.l"
+#line 526 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(CCL); return CCE_LOWER;
         YY_BREAK
 case 133:
 YY_RULE_SETUP
-#line 527 "scan.l"
+#line 527 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(CCL); return CCE_PRINT;
         YY_BREAK
 case 134:
 YY_RULE_SETUP
-#line 528 "scan.l"
+#line 528 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(CCL); return CCE_PUNCT;
         YY_BREAK
 case 135:
 YY_RULE_SETUP
-#line 529 "scan.l"
+#line 529 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(CCL); return CCE_SPACE;
         YY_BREAK
 case 136:
 YY_RULE_SETUP
-#line 530 "scan.l"
+#line 530 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(CCL); return CCE_UPPER;
         YY_BREAK
 case 137:
 YY_RULE_SETUP
-#line 531 "scan.l"
+#line 531 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(CCL); return CCE_XDIGIT;
         YY_BREAK
 case 138:
 YY_RULE_SETUP
-#line 532 "scan.l"
+#line 532 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         format_synerr(
                                 _( "bad character class expression: %s" ),
@@ -2531,7 +2531,7 @@ YY_RULE_SETUP
 
 case 139:
 YY_RULE_SETUP
-#line 541 "scan.l"
+#line 541 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         yylval = myctoi( yytext );
                         return NUMBER;
@@ -2539,17 +2539,17 @@ YY_RULE_SETUP
         YY_BREAK
 case 140:
 YY_RULE_SETUP
-#line 546 "scan.l"
+#line 546 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 return ',';
         YY_BREAK
 case 141:
 YY_RULE_SETUP
-#line 547 "scan.l"
+#line 547 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 BEGIN(SECT2); return '}';
         YY_BREAK
 case 142:
 YY_RULE_SETUP
-#line 549 "scan.l"
+#line 549 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         synerr( _( "bad character inside {}'s" ) );
                         BEGIN(SECT2);
@@ -2558,7 +2558,7 @@ YY_RULE_SETUP
         YY_BREAK
 case 143:
 YY_RULE_SETUP
-#line 555 "scan.l"
+#line 555 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         synerr( _( "missing }" ) );
                         BEGIN(SECT2);
@@ -2570,18 +2570,18 @@ YY_RULE_SETUP
 
 case 144:
 YY_RULE_SETUP
-#line 565 "scan.l"
+#line 565 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 bracelevel = 0;
         YY_BREAK
 case 145:
 YY_RULE_SETUP
-#line 567 "scan.l"
+#line 567 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO; yy_push_state( COMMENT );
         YY_BREAK
 
 case 146:
 YY_RULE_SETUP
-#line 570 "scan.l"
+#line 570 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         ACTION_ECHO;
                         CHECK_REJECT(yytext);
@@ -2589,7 +2589,7 @@ YY_RULE_SETUP
         YY_BREAK
 case 147:
 YY_RULE_SETUP
-#line 574 "scan.l"
+#line 574 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         ACTION_ECHO;
                         CHECK_YYMORE(yytext);
@@ -2598,12 +2598,12 @@ YY_RULE_SETUP
 
 case 148:
 YY_RULE_SETUP
-#line 580 "scan.l"
+#line 580 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO;
         YY_BREAK
 case 149:
 YY_RULE_SETUP
-#line 581 "scan.l"
+#line 581 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         ++linenum;
                         ACTION_ECHO;
@@ -2623,37 +2623,37 @@ YY_RULE_SETUP
 
 case 150:
 YY_RULE_SETUP
-#line 599 "scan.l"
+#line 599 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO; ++bracelevel;
         YY_BREAK
 case 151:
 YY_RULE_SETUP
-#line 600 "scan.l"
+#line 600 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO; --bracelevel;
         YY_BREAK
 case 152:
 YY_RULE_SETUP
-#line 601 "scan.l"
+#line 601 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO;
         YY_BREAK
 case 153:
 YY_RULE_SETUP
-#line 602 "scan.l"
+#line 602 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO;
         YY_BREAK
 case 154:
 YY_RULE_SETUP
-#line 603 "scan.l"
+#line 603 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO; /* character constant */
         YY_BREAK
 case 155:
 YY_RULE_SETUP
-#line 604 "scan.l"
+#line 604 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO; BEGIN(ACTION_STRING);
         YY_BREAK
 case 156:
 YY_RULE_SETUP
-#line 605 "scan.l"
+#line 605 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         ++linenum;
                         ACTION_ECHO;
@@ -2669,41 +2669,41 @@ YY_RULE_SETUP
         YY_BREAK
 case 157:
 YY_RULE_SETUP
-#line 617 "scan.l"
+#line 617 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO;
         YY_BREAK
 
 
 case 158:
 YY_RULE_SETUP
-#line 621 "scan.l"
+#line 621 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO;
         YY_BREAK
 case 159:
 YY_RULE_SETUP
-#line 622 "scan.l"
+#line 622 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO;
         YY_BREAK
 case 160:
 YY_RULE_SETUP
-#line 623 "scan.l"
+#line 623 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ++linenum; ACTION_ECHO;
         YY_BREAK
 case 161:
 YY_RULE_SETUP
-#line 624 "scan.l"
+#line 624 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO; BEGIN(ACTION);
         YY_BREAK
 case 162:
 YY_RULE_SETUP
-#line 625 "scan.l"
+#line 625 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ACTION_ECHO;
         YY_BREAK
 
 case YY_STATE_EOF(COMMENT):
 case YY_STATE_EOF(ACTION):
 case YY_STATE_EOF(ACTION_STRING):
-#line 628 "scan.l"
+#line 628 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         synerr( _( "EOF encountered inside an action" ) );
                         yyterminate();
@@ -2711,7 +2711,7 @@ case YY_STATE_EOF(ACTION_STRING):
         YY_BREAK
 case 163:
 YY_RULE_SETUP
-#line 634 "scan.l"
+#line 634 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 {
                         yylval = myesc( (Char *) yytext );
 
@@ -2724,22 +2724,22 @@ YY_RULE_SETUP
 
 case 164:
 YY_RULE_SETUP
-#line 645 "scan.l"
+#line 645 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 ECHO;
         YY_BREAK
 case YY_STATE_EOF(SECT3):
-#line 646 "scan.l"
+#line 646 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 sectnum = 0; yyterminate();
         YY_BREAK
 
 case 165:
 YY_RULE_SETUP
-#line 649 "scan.l"
+#line 649 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 format_synerr( _( "bad character: %s" ), yytext );
         YY_BREAK
 case 166:
 YY_RULE_SETUP
-#line 651 "scan.l"
+#line 651 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 YY_FATAL_ERROR( "flex scanner jammed" );
         YY_BREAK
 #line 2746 "scan.c"
@@ -2939,7 +2939,7 @@ static int yy_get_next_buffer()
                 /* don't do the read, it's not guaranteed to return an EOF,
                  * just force an EOF
                  */
-                yy_n_chars = 0;
+                yy_current_buffer->yy_n_chars = yy_n_chars = 0;
 
         else
                 {
@@ -2994,6 +2994,8 @@ static int yy_get_next_buffer()
                 /* Read in more data. */
                 YY_INPUT( (&yy_current_buffer->yy_ch_buf[number_to_move]),
                         yy_n_chars, num_to_read );
+
+                yy_current_buffer->yy_n_chars = yy_n_chars;
                 }
 
         if ( yy_n_chars == 0 )
@@ -3119,7 +3121,8 @@ register char *yy_bp;
 
                 yy_cp += (int) (dest - source);
                 yy_bp += (int) (dest - source);
-                yy_n_chars = yy_current_buffer->yy_buf_size;
+                yy_current_buffer->yy_n_chars =
+                        yy_n_chars = yy_current_buffer->yy_buf_size;
 
                 if ( yy_cp < yy_current_buffer->yy_ch_buf + 2 )
                         YY_FATAL_ERROR( "flex scanner push-back overflow" );
@@ -3162,13 +3165,26 @@ static int input()
 
                         switch ( yy_get_next_buffer() )
                                 {
+                                case EOB_ACT_LAST_MATCH:
+                                        /* This happens because yy_g_n_b()
+                                         * sees that we've accumulated a
+                                         * token and flags that we need to
+                                         * try matching the token before
+                                         * proceeding.  But for input(),
+                                         * there's no matching to consider.
+                                         * So convert the EOB_ACT_LAST_MATCH
+                                         * to EOB_ACT_END_OF_FILE.
+                                         */
+
+                                        /* Reset buffer status. */
+                                        yyrestart( yyin );
+
+                                        /* fall through */
+
                                 case EOB_ACT_END_OF_FILE:
                                         {
                                         if ( yywrap() )
-                                                {
-                                                yy_c_buf_p = yytext_ptr + offset;
                                                 return EOF;
-                                                }
 
                                         if ( ! yy_did_buffer_switch_on_eof )
                                                 YY_NEW_FILE;
@@ -3182,15 +3198,6 @@ static int input()
                                 case EOB_ACT_CONTINUE_SCAN:
                                         yy_c_buf_p = yytext_ptr + offset;
                                         break;
-
-                                case EOB_ACT_LAST_MATCH:
-#ifdef __cplusplus
-                                        YY_FATAL_ERROR(
-                                        "unexpected last match in yyinput()" );
-#else
-                                        YY_FATAL_ERROR(
-                                        "unexpected last match in input()" );
-#endif
                                 }
                         }
                 }
@@ -3355,6 +3362,9 @@ YY_BUFFER_STATE b;
 #endif
 
         {
+        if ( ! b )
+                return;
+
         b->yy_n_chars = 0;
 
         /* We always need two end-of-buffer characters.  The first causes
@@ -3414,17 +3424,17 @@ yy_size_t size;
 
 #ifndef YY_NO_SCAN_STRING
 #ifdef YY_USE_PROTOS
-YY_BUFFER_STATE yy_scan_string( yyconst char *str )
+YY_BUFFER_STATE yy_scan_string( yyconst char *yy_str )
 #else
-YY_BUFFER_STATE yy_scan_string( str )
-yyconst char *str;
+YY_BUFFER_STATE yy_scan_string( yy_str )
+yyconst char *yy_str;
 #endif
         {
         int len;
-        for ( len = 0; str[len]; ++len )
+        for ( len = 0; yy_str[len]; ++len )
                 ;
 
-        return yy_scan_bytes( str, len );
+        return yy_scan_bytes( yy_str, len );
         }
 #endif
 
@@ -3633,7 +3643,7 @@ int main()
         return 0;
         }
 #endif
-#line 651 "scan.l"
+#line 651 "/home/scheidhr/mozart/platform/tools/gump/ozflex/scan.l"
 
 
 
