@@ -266,19 +266,6 @@ PRINT(LTuple)
   }
 }
 
-static Bool isWellFormed(char *s) {
-  if (!islower(*s)) {
-    return NO;
-  }
-  s++;
-  while (*s) {
-    if (!isalnum(*s) && *s != '_') {
-      return NO;
-    }
-    s++;
-  }
-  return OK;
-}
 
 static void ppAtom(ostream &stream, char *s) {
   stream << "'";
@@ -309,25 +296,38 @@ static void ppAtom(ostream &stream, char *s) {
   stream << "'";
 }
 
+
+#define WELLFORMED
+
+static Bool isWellFormed(char *s)
+{
+#ifdef WELLFORMED
+  if (!islower(*s)) {
+    return NO;
+  }
+  s++;
+  while (*s) {
+    if (!isalnum(*s) && *s != '_') {
+      return NO;
+    }
+    s++;
+  }
+#endif
+  return OK;
+}
+
 PRINT(Atom)
 {
-  char *s = getPrintName();
   if (isXName()) {
-    stream << "N:"
-           << s
-//         << "-"
-           << seqNumber;
+    stream << OZ_literalToC(makeTaggedAtom(this));
+    return;
+  }
+
+  char *s = getPrintName();
+  if (isWellFormed(s)) {
+    stream << OZ_atomToC(makeTaggedAtom(this));
   } else {
-#define WELLFORMED
-#ifdef WELLFORMED
-    if (isWellFormed(s)) {
-      stream << s;
-    } else {
-      ppAtom(stream,s);
-    }
-#else
-    stream << s;
-#endif
+    ppAtom(stream,s);
   }
 }
 

@@ -356,12 +356,39 @@ OZ_Term OZ_CStringToNumber(char *s)
  * Atoms
  */
 
+char *OZ_literalToC(OZ_Term term)
+{
+  DEREF(term,_1,tag);
+  if (!isLiteral(term)) {
+    OZ_warning("literalToC(%s): literal arg expected",OZ_toC(term));
+    return NULL;
+  }
+
+  Atom *a = tagged2Atom(term);
+  char *s = a->getPrintName();
+  if (a->isXName()) {
+    const int buflen=1000;
+    static char buf[buflen];
+    int len = strlen(s)+20;
+    char *tmp;
+    if (len < buflen) {
+      tmp = buf;
+    } else {
+      tmp = new char[len];
+    }
+    sprintf(tmp,"N:%s-%d",s,a->getSeqNumber());
+    return tmp;
+  } else {
+    return s;
+  }
+}
+
+
 char *OZ_atomToC(OZ_Term term)
 {
   DEREF(term,_1,tag);
   if (isXAtom(term)) {
-//    return ozstrdup(tagged2Atom(term)->getPrintName());
-    return tagged2Atom(term)->getPrintName();
+    return OZ_literalToC(term);
   }
   OZ_warning("atomToC(%s): atom arg expected",OZ_toC(term));
   return NULL;
@@ -386,41 +413,18 @@ char *OZ_toC(OZ_Term term)
   switch(tag) {
   case UVAR:
     return tagged2String(term,am.conf.printDepth);
-//    stream << "UV@" << termPtr;
-    break;
   case SVAR:
     return tagged2String(term,am.conf.printDepth);
-//    tagged2SVar(term)->print(stream,depth,offset);
-    break;
   case CVAR:
     return tagged2String(term,am.conf.printDepth);
-//    tagged2CVar(term)->print(stream, depth, offset);
-    break;
   case STUPLE:
     return tagged2String(term,am.conf.printDepth);
-//    tagged2STuple(term)->print(stream,depth,offset);
-    break;
   case SRECORD:
     return tagged2String(term,am.conf.printDepth);
-//    tagged2SRecord(term)->print(stream,depth,offset);
-    break;
   case LTUPLE:
     return tagged2String(term,am.conf.printDepth);
-//    tagged2LTuple(term)->print(stream,depth,offset);
-    break;
   case ATOM:
-    {
-      Atom *a = tagged2Atom(term);
-      char *s = a->getPrintName();
-      if (a->isXName()) {
-        char *tmp = new char[strlen(s)+20];
-        sprintf(tmp,"*%s-0x%x*",s,a);
-        return tmp;
-      } else {
-//      return ozstrdup(s);
-        return s;
-      }
-    }
+    return OZ_literalToC(term);
   case FLOAT:
     return OZ_floatToCString(term);
   case BIGINT:
@@ -428,11 +432,8 @@ char *OZ_toC(OZ_Term term)
     return OZ_intToCString(term);
   case CONST:
     return tagged2String(term,am.conf.printDepth);
-//    tagged2Const(term)->print(stream,depth,offset);
-    break;
 
   default:
-    Assert(0);
     break;
   }
 
