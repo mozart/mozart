@@ -64,7 +64,7 @@ cp $infile $tmpdir/x.tex
             done
             i=`expr $i + 1`
             pnmcrop < latex$i.ppm 2> /dev/null |
-            ppmtogif -interlace -transparent rgbi:1/1/1 2> /dev/null > latex$1.gif  || exit 1
+            ppmtogif -transparent rgbi:1/1/1 2> /dev/null > latex$1.gif  || exit 1
             rm latex$i.ppm
             echo Wrote latex$1.gif 1>&2
             echo
