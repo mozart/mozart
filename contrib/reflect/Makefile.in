@@ -29,9 +29,10 @@ RM              = rm -f
 
 LIBS            =
 
-CXXFLAGS        += -UDEBUG
+#CXXFLAGS       += -DDEBUG -DPROGRESS
+#CXXFLAGS       += -DDEBUG
 
-CXX             = $(OZTOOL) c++
+CXX             = $(OZTOOL) c++ $(CXXFLAGS)
 LD              = $(OZTOOL) ld
 DEPEND          = $(CXX) $(CPPFLAGS) $(CFLAGS) -MM
 

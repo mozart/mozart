@@ -439,6 +439,8 @@ OZ_Term reflect_space(OZ_Term v)
     }
   } // while
 
+  _DEBUGPRINT(("Reflecting Space done.\n"));
+
   OZ_Term arity_def[] = {
     {OZ_pair2(atom_vars, OZ_recordInit(atom_reflect_vartable, var_list))},
     {OZ_pair2(atom_props, OZ_recordInit(atom_reflect_proptable, prop_list))},
