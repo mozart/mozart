@@ -3402,7 +3402,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
       arity = sortlist(arity,len1);
       int len=length(arity); // NOTE: duplicates may be removed
       if (!recordFlag && len!=len1) { // handles case f(a:_ a:_)
-	return oz_raise(E_ERROR,E_KERNEL,"recordConstruction",2,
+	return am.raise(E_ERROR,E_KERNEL,"recordConstruction",2,
 			t0,list
 			);
       }
