@@ -106,6 +106,22 @@ define
    end
 
    local
+      fun {Class MakeHHC}
+	 case MakeHHC of unit then [toc]
+	 else nil
+	 end
+      end
+
+      fun {Object Link Text MakeHHC}
+	 case MakeHHC of unit then a(href: Link Text)
+	 else
+	    object(type: 'text/sitemap'
+		   param(name: 'Name'
+			 value: {HTML.toVirtualString {HTML.clean Text}})
+		   param(name: 'Local' value: MakeHHC#'/'#Link))
+	 end
+      end
+
       fun {MakeLIs LIs}
 	 case LIs of li(T)|(Y=ul(...))|Xr then {MakeLIs li(SEQ([T Y]))|Xr}
 	 elseof X|Xr then X|{MakeLIs Xr}
@@ -113,38 +129,41 @@ define
 	 end
       end
 
-      fun {FormatTOCLevel TOC Level LIs1 LIss}
+      fun {FormatTOCLevel TOC Level LIs1 LIss MakeHHC}
 	 case TOC of Entry|TOCr then N#Label#Node#Text = Entry in
 	    if N < Level then
 	       case LIss of LIs2|LIsr then
 		  {FormatTOCLevel TOC Level - 1
-		   ul('class': [toc] SEQ({MakeLIs {Reverse LIs1}}))|LIs2 LIsr}
+		   ul('class': {Class MakeHHC}
+		      SEQ({MakeLIs {Reverse LIs1}}))|LIs2 LIsr MakeHHC}
 	       [] nil then
 		  {FormatTOCLevel TOC Level - 1
-		   [ul('class': [toc] SEQ({MakeLIs {Reverse LIs1}}))] nil}
+		   [ul('class': {Class MakeHHC}
+		       SEQ({MakeLIs {Reverse LIs1}}))] nil MakeHHC}
 	       end
 	    elseif N > Level then
-	       {FormatTOCLevel TOC Level + 1 nil LIs1|LIss}
+	       {FormatTOCLevel TOC Level + 1 nil LIs1|LIss MakeHHC}
 	    else
 	       {FormatTOCLevel TOCr Level
-		li(a(href: Node#"#"#Label Text))|LIs1 LIss}
+		li({Object Node#"#"#Label Text MakeHHC})|LIs1 LIss MakeHHC}
 	    end
 	 [] nil then
 	    {FoldL LIs1|LIss
 	     fun {$ In LIs} LIs1 in
 		LIs1 = case In of unit then LIs else In|LIs end
-		ul('class': [toc] SEQ({MakeLIs {Reverse LIs1}}))
+		ul('class': {Class MakeHHC}
+		   SEQ({MakeLIs {Reverse LIs1}}))
 	     end unit}
 	 end
       end
    in
-      fun {FormatTOC TOC Depth}
+      fun {FormatTOC TOC Depth MakeHHC}
 	 case TOC of Entry|_ then N#_#_#_ = Entry NewTOC in
 	    NewTOC = case Depth of ~1 then TOC
 		     else {Filter TOC fun {$ M#_#_#_} M < N + Depth end}
 		     end
-	    {FormatTOCLevel NewTOC N nil nil}
-	 [] nil then SEQ(nil)
+	    {FormatTOCLevel NewTOC N nil nil MakeHHC}
+	 [] nil then EMPTY
 	 end
       end
    end
@@ -276,6 +295,7 @@ define
 	 MyCrossReferencer: unit
 	 XRefDir: unit
 	 IndexDBName: unit
+	 MakeHHC: unit
 	 % for Table:
 	 TableCols: unit
 	 TableRow: unit
@@ -324,6 +344,7 @@ define
 					  Args.'xrefdb' @Reporter)}
 	       XRefDir <- Args.'xrefdir'
 	       IndexDBName <- Args.'indexdb'
+	       MakeHHC <- Args.'make-hhc'
 	       CurrentNode <- 'index.html'
 	       NavigationPanel <- N
 	       NodeCounter <- 0
@@ -359,6 +380,12 @@ define
 		proc {$ DocType#Node#File}
 		   {WriteFile DocType#{HTML.toVirtualString Node}#'\n' File}
 		end}
+	       case @MakeHHC of unit then skip
+	       elseof S then
+		  {@Reporter startSubPhase('writing HHC file')}
+		  {WriteFile {HTML.toVirtualString
+			      {FormatTOC @TOC ~1 @XRefDir}}#'\n' S}
+	       end
 	    end
 	 catch tooManyErrors then
 	    {@Reporter
@@ -500,7 +527,7 @@ define
 	    %-----------------------------------------------------------
 	    % Document Structure
 	    %-----------------------------------------------------------
-	    case Tag of book then HTML TopTOC IndexHTML in
+	    case Tag of book then HTM0 TopTOC IndexHTML in
 	       Floats <- nil
 	       FootNotes <- nil
 	       FigureCounters <- {NewDictionary}
@@ -516,7 +543,7 @@ define
 	       TOCMode <- false
 	       ChunkDefinitions <- {NewDictionary}
 	       ChunkLinks <- nil
-	       HTML = [OzDocToHTML, Process(M.1=front(...) $)
+	       HTM0 = [OzDocToHTML, Process(M.1=front(...) $)
 		       if {HasFeature M 3} then
 			  OzDocToHTML, Process(M.3=back(...) $)
 		       else EMPTY
@@ -575,7 +602,7 @@ define
 			  OzDocToHTML, FinishNode(Title X HTML $)
 		       end
 		       IndexHTML]
-	       OzDocToHTML, MakeNode(@TopTitle SEQ(HTML))
+	       OzDocToHTML, MakeNode(@TopTitle SEQ(HTM0))
 	       {@Reporter startSubPhase('fontifying code')}
 	       {@MyFontifier process(case @FontifyMode
 				     of color then 'html-color'
@@ -602,10 +629,10 @@ define
 			      OzDocToHTML, FinishNode(Title X HTML $)
 			   end
 	       TopTOC = if @SomeSplit then EMPTY
-			else SEQ([hr() {FormatTOC @TOC ~1} hr()])
+			else SEQ([hr() {FormatTOC @TOC ~1 unit} hr()])
 			end
 	       if {IsFree @WholeTOC} then
-		  @WholeTOC = SEQ([hr() {FormatTOC @TOC ~1} hr()])
+		  @WholeTOC = SEQ([hr() {FormatTOC @TOC ~1 unit} hr()])
 	       end
 	       case @MyLaTeXToGIF of unit then skip
 	       elseof O then
@@ -1743,8 +1770,8 @@ define
 	    Depth = if C == 'index.html' andthen {IsFree @WholeTOC} then 1
 		    else ~1
 		    end
-	    Res = if M then {FormatTOC @TOC Depth}
-		  else SEQ([hr() {FormatTOC @TOC Depth}])
+	    Res = if M then {FormatTOC @TOC Depth unit}
+		  else SEQ([hr() {FormatTOC @TOC Depth unit}])
 		  end
 	    TOC <- {Append T @TOC}
 	    TOCMode <- true

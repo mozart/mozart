@@ -54,11 +54,12 @@ prepare
 		 'latexdb'(single type: string default: unit)
 		 'split'(rightmost type: bool default: true)
 		 'abstract'(rightmost type: bool default: false)
+		 'keeppictures'(rightmost type: bool default: false)
 		 'xrefdb'(single type: string default: unit)
 		 'xrefdir'(single type: string default: unit)
 		 'xreftree'(single type: string default: '../')
 		 'indexdb'(single type: string default: unit)
-		 'keeppictures'(rightmost type: bool default: false)
+		 'make-hhc'(single type: string default: unit)
 		 %% Path names
 		 'ozdoc-home'(single type: string default: unit)
 		 'author-path'(single type: string default: unit)
@@ -266,6 +267,7 @@ define
 	  '--xreftree=<RelURL> How to get to whole doc installation from\n'#
 	  '                    the directory where this document goes.\n'#
 	  '--indexdb=<File>    Where to look up resp. store index entries.\n'#
+	  '--make-hhc=<File>   Where to write a HTML Help contents file.\n'#
 	  '\n'#
 	  'Parametrization\n'#
 	  '--ozdoc-home=<DIR>  ozdoc installation directory.\n'#
