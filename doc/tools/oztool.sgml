@@ -1,5 +1,5 @@
 <chapter id=chapter.oztool proglang=sh>
-  <title/The Oz C++ Driver: <code/oztool//
+  <title/The Oz DLL Builder: <code/oztool//
   <p><code/oztool/ facilitates the creation of native functors (see
 <ptr.extern to="ozdoc:apptut" key="part.foreign.extensions"> and
 <ptr.extern to="ozdoc:foreign">).  A
