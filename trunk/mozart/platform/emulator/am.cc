@@ -515,8 +515,12 @@ Bool AM::isBetween(Board *to, Board *varHome)
     if (tmp == varHome) {
       return NO;
     }
+    if (!tmp) {
+      // mm2: dead detected
+      return OK;
+    }
   }
-  return (OK);
+  return OK;
 }
 
 // ------------------------------------------------------------------------
