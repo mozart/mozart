@@ -124,11 +124,13 @@ instruction(deAllocateL8)
 instruction(deAllocateL9)
 instruction(deAllocateL10)
 
-dnl   NOTE: The instructions callMethod, call, tailCall, callConstant,
-dnl   callProcedureRef, fastCall and fastTailCall must all have the 
-dnl   same size due to self-modifying code.
+dnl   NOTE: The instructions callMethod, callGlobal, call{X,Y,Z},
+dnl   tailCall{X,G}, callConstant, callProcedureRef, fastCall and
+dnl   fastTailCall must all have the same size due to self-modifying code.
 
 instruction(callMethod,CallMethodInfo,Arity)
+
+dnl   second argument is 2 * arity + (is_tailcall? 1: 0)
 instruction(callGlobal,readArg(GRegisterIndex),ArityAndIsTail)
 instruction(callX,readArg(XRegisterIndex),Arity)
 instruction(callY,readArg(YRegisterIndex),Arity)
@@ -136,11 +138,11 @@ instruction(callG,readArg(GRegisterIndex),Arity)
 instruction(tailCallX,readArg(XRegisterIndex),Arity)
 instruction(tailCallG,readArg(GRegisterIndex),Arity)
 
-dnl   first argument is a TaggedRef pointing to a procedure proxy;
+dnl   first argument is a TaggedRef eventually pointing to a procedure;
 dnl   second argument is 2 * arity + (is_tailcall? 1: 0)
 instruction(callConstant,Constant,ArityAndIsTail)
 
-dnl   second argument is a flag: non-zero iff tailcall
+dnl   second argument is 2 * arity + (is_tailcall? 1: 0)
 instruction(callProcedureRef,ProcedureRef,ArityAndIsTail)
 
 dnl   second argument is dummy argument
