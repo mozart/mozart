@@ -30,5 +30,6 @@ tarplat hpux-700      hppa1.1-hp-hpux9
 tarplat irix5-mips    mips-sgi-irix5.2
 tarplat ultrix-mips   mips-dec-ultrix4.2
 tarplat solaris-sparc sparc-sun-solaris2.3
+tarplat linux-i486    i486-unknown-linux
 
 
