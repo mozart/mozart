@@ -2255,8 +2255,8 @@ $cmode='stat';
 
     ###* ByNeed
 
-    'ByNeed'		=> { in  => ['value','value'],
-			     out => [],
+    'ByNeed'		=> { in  => ['value'],
+			     out => ['value'],
 			     BI  => BIbyNeed,
 			     module=>'future',
 			     native => false},
