@@ -20,7 +20,7 @@ local
 
    FontFamily      = '-*-helvetica-medium-r-normal--*-'
    FontMatch       = '-*-*-*-*-*-*'
-   TickFont        = FontFamily#100#FontMatch
+   TickFont        = !FontFamily # 100 # !FontMatch
 
    local
       Log10 = {Log 10.0}
