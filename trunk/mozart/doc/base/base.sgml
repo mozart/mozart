@@ -103,6 +103,7 @@
     <Meta name="html.split" value="section.control.general">
     <Meta name="html.split" value="section.control.loops">
     <Meta name="html.split" value="section.control.time">
+    <Meta name="html.split" value="section.control.exceptions">
     <Meta name="html.split" value="section.control.threads">
 
     <Meta name="html.split" value="chapter.infix">
@@ -150,9 +151,9 @@
     &text;
     &proccells;
     &chunks;
-    &misc;
     &control;
     &infix;
+    &misc;
   <Back>
     <Bib.Extern id="mozart-opi" to="mozart.bib" key="Mozart-OPI">
     <Bib.Extern id="kernighan88" to="base.bib" key="kernighan88">
