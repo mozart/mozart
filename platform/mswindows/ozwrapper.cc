@@ -30,6 +30,7 @@
  *     "exec ozengine $0 $@"
  */
 
+#include <string.h>
 #include <windows.h>
 #include <process.h>
 
