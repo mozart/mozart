@@ -118,6 +118,7 @@ with floating-point numbers or big integers.
 
 <section class=unnumbered><title/Graphics Interface/
 
+<p>
 The graphics interface
 (see <ptr.extern to="ozdoc:system" key="chapter.tk">)
 is much slower under Windows than under Unix.
