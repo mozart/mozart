@@ -5,14 +5,16 @@
 #include "dictionary.hh"
 #include "extension.hh"
 
-extern void gCollectWeakDictionaries(void);
+extern void gCollectWeakDictionariesInit(void);
+extern void gCollectWeakDictionariesPreserve(void);
+extern void gCollectWeakDictionariesContent(void);
 
 class WeakDictionary : public OZ_Extension {
 private:
   DynamicTable *table;
   OZ_Term stream;
-  WeakDictionary* next;
-  friend void gCollectWeakDictionaries(void);
+  friend void gCollectWeakDictionariesPreserve(void);
+  friend void gCollectWeakDictionariesContent(void);
 public:
   WeakDictionary();
   WeakDictionary(DynamicTable*t,OZ_Term s)
