@@ -1358,6 +1358,18 @@ end>>/
 else skip
 end>>/
 	    </Rewrite>
+	    <Rewrite>?={expression}
+	      <Rewrite.From
+/<<if ?{E1} then ?{E1}
+end>>/
+	      <Rewrite.To
+/<<if ?{E1} then ?{E2}
+else
+   raise error(kernel(noElse &ellipsis;) &ellipsis;) end
+end>>/
+	      <Rewrite.Condition/where the omitted parts of the exception
+		are implementation-dependent./
+	    </Rewrite>
 	    <Rewrite>?={statement} ?={expression}
 	      <Rewrite.From
 /<<if ?{E} then ?{SE1}
