@@ -195,15 +195,6 @@ int ConstTerm::getArity()
   }
 }
 
-void Tertiary::setBoard(Board *b)
-{
-  if (getTertType() == Te_Local) {
-    setPointer(b);
-  } else {
-    Assert(b==NULL || oz_isRootBoard(b));
-  }
-}
-
 
 
 /*===================================================================

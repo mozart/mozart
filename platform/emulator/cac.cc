@@ -32,6 +32,7 @@
 /****************************************************************************
  ****************************************************************************/
 
+#include "tagged.hh"
 #include "board.hh"
 #include "var_base.hh"
 #include "fdomn.hh"
@@ -958,6 +959,7 @@ ForeignPointer * ForeignPointer::cac(void) {
 // ===================================================================
 // Extension
 
+inline
 TaggedRef _cacExtension(TaggedRef term) {
   OZ_Extension *ex = oz_tagged2Extension(term);
 
@@ -994,6 +996,7 @@ TaggedRef _cacExtension(TaggedRef term) {
   return oz_makeTaggedExtension(ret);
 }
 
+inline
 void _cacExtensionRecurse(OZ_Extension *ex)
 {
   Board *bb=(Board*) (ex->__getSpaceInternal());

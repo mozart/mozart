@@ -133,16 +133,16 @@ public:
   NO_DEFAULT_CONSTRUCTORS(Name)
   static Name *newName(Board *b);
 
-  Board *getBoardInternal() {
-    return (hasGName() || isNamedName())
-      ? oz_rootBoardOutline() : (Board*)ToPointer(homeOrGName);
-  }
-
   int getSeqNumber() { return getOthers(); }
   unsigned int hash() { return getSeqNumber(); }
 
   Bool isOnHeap() { return (getFlags()&Lit_isNamedName)==0; }
   Bool hasGName() { return (getFlags()&Lit_hasGName); }
+
+  Board *getBoardInternal() {
+    return (hasGName() || isNamedName())
+      ? oz_rootBoardOutline() : (Board*)ToPointer(homeOrGName);
+  }
 
   Bool Name::cacIsMarked() {
     return GCISMARKED(homeOrGName);
@@ -891,15 +891,20 @@ public:
   Bool checkTertiary(TypeOfConst s,TertType t){
     return (s==getType() && t==getTertType());}
 
-  Board *getBoardInternal() {
-    return isLocal() ? (Board*)getPointer() : oz_rootBoardOutline();}
-
   Bool isLocal()   { return (getTertType() == Te_Local); }
   Bool isManager() { return (getTertType() == Te_Manager); }
   Bool isProxy()   { return (getTertType() == Te_Proxy); }
   Bool isFrame()   { return (getTertType() == Te_Frame); }
 
-  void setBoard(Board *b);
+  Board *getBoardInternal() {
+    return isLocal() ? (Board*)getPointer() : oz_rootBoardOutline();}
+
+  void setBoard(Board *b) {
+    if (getTertType() == Te_Local) {
+      setPointer(b);
+    }
+  }
+
 };
 
 /*===================================================================
