@@ -62,6 +62,8 @@ void killPropagatedCurrentTaskSusp() {
   FDcurrentTaskSusp = NULL;
 }
 
+#ifndef NEW_SUSP_SCHEME
+
 /*
  * make propagator into surviving board suspension
  */
@@ -84,7 +86,7 @@ void activateCurrentTaskSusp(void) {
   FDcurrentTaskSusp->unmarkResistantSusp();
   FDcurrentTaskSusp = NULL;
 }
-
+#endif
 
 SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * hoome)
 {
