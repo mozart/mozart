@@ -27,6 +27,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef INTERFACE
+#pragma interface "complalldist.hh"
+#endif
+
 #include "std.hh"
 
 
