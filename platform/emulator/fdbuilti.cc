@@ -231,8 +231,6 @@ inline Bool isTaggedIndex(TaggedRef t) {return (t & taggedIndex);}
 
 int BIfdHeadManager::simplifyHead(int ts, STuple &a, STuple &x)
 {
-  FDcurrentTaskSusp->unmarkUnifySusp();
-
   // 1st pass: mark first occ of a var and sum up coeffs of further occs
   for (int i = 0; i < ts; i++)
     if (isAnyVar(bifdhm_var[i]))
