@@ -36,7 +36,8 @@ Makefile: Makefile.in ../config.status
         cd .. && ./config.status
 
 gump-html: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
-        $(DOCIFY) --in=$(SRCDIR)/gump.sgml --out=$@ --type=html-stylesheets
+        $(DOCIFY) --in=$(SRCDIR)/gump.sgml --out=$@ \
+        --type=html-stylesheets && \
         cp -p $(addprefix $(SRCDIR)/,$(GIFSRCS)) $@
 
 gump-tex: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
