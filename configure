@@ -1133,10 +1133,15 @@ else
     echo "$ac_t""no" 1>&6
 fi
 
-: ${oz_subdirs="platform share $oz_enable_contrib $oz_enable_doc"}
+if test "$target" = "i386-mingw32"
+then
+    : ${oz_subdirs="platform $oz_enable_contrib"}
+else
+    : ${oz_subdirs="platform share $oz_enable_contrib $oz_enable_doc"}
+fi
 
 echo $ac_n "checking for --enable-subdirs""... $ac_c" 1>&6
-echo "configure:1140: checking for --enable-subdirs" >&5
+echo "configure:1145: checking for --enable-subdirs" >&5
 # Check whether --enable-subdirs or --disable-subdirs was given.
 if test "${enable_subdirs+set}" = set; then
   enableval="$enable_subdirs"
