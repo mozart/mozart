@@ -387,45 +387,14 @@ extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
  * III. macros
  * ------------------------------------------------------------------------ */
 
-#if defined(__STDC__) || defined(__cplusplus) || __BORLANDC__ || _MSC_VER
+#define OZ_C_proc_proto(Name)   OZ_BI_proto(Name)
 
-#ifdef __cplusplus
-#if defined(OZ_DEBUG_INTERFACE)
-#define OZ_C_proc_proto(Name)                                                 \
-   OZ_Return ozcdecl Name(OZ_Term OZ_args[],int OZ_loc[]);
-#else
-#define OZ_C_proc_proto(Name)                                                 \
-    extern "C" OZ_Return ozcdecl Name(OZ_Term OZ_args[],int OZ_loc[]);
-#endif
-#else
-#define OZ_C_proc_proto(Name)                                                 \
-    extern OZ_Return ozcdecl Name(OZ_Term OZ_args[],int OZ_loc[]);
-#endif
+#define OZ_C_proc_begin(Name,arity)     OZ_BI_define(Name,arity,0)
 
-#define OZ_C_proc_header(Name)                                                \
-    OZ_Return ozcdecl Name(OZ_Term OZ_args[],int OZ_loc[]) {
-
-#else
-
-#define OZ_C_proc_proto(Name)                   \
-  OZ_Return ozcdecl Name();
-
-#define OZ_C_proc_header(Name)                  \
-  OZ_Return ozcdecl Name(OZ_args,OZ_loc)        \
-  OZ_Term OZ_args[]; int OZ_loc[]; {
-
-#endif
-
-#define OZ_C_proc_begin(Name,arity)             \
-    OZ_C_proc_proto(Name)                       \
-    OZ_C_proc_header(Name)                      \
-       OZ_CFun OZ_self = Name;                  \
-       int OZ_arity = arity;
-
-#define OZ_C_proc_end }
+#define OZ_C_proc_end                   OZ_BI_end
 
 /* access arguments */
-#define OZ_getCArg(N) OZ_args[N]
+#define OZ_getCArg(N) OZ_in(N)
 
 /* useful macros and functions (mm 9.2.93) */
 
@@ -645,34 +614,17 @@ extern OZ_Return _FUNDECL(OZ_datumToValue,(OZ_Datum d, OZ_Term   t));
 #define BI_TYPE_ERROR    1026
 
 #define OZ_STATUS_OK(s) ((s)==PROCEED || (s)==BI_PREEMPT)
-#define OZ_BI_proto(Name) \
-  OZ_Return Name(OZ_Term OZ__ARGS[],int OZ__LOC[])
+#define OZ_BI_proto(Name) OZ_Return Name(OZ_Term OZ_args[],int OZ__LOC[]);
 
 #define OZ_ID_MAP 0
-#define OZ_in(N) OZ__ARGS[OZ__LOC==OZ_ID_MAP?N:OZ__LOC[N]]
-#define OZ_out(N) OZ__ARGS[OZ__LOC==OZ_ID_MAP?OZ_arity+N:OZ__LOC[OZ_arity+N]]
+#define OZ_in(N) OZ_args[OZ__LOC==OZ_ID_MAP?N:OZ__LOC[N]]
+#define OZ_out(N) OZ_args[OZ__LOC==OZ_ID_MAP?OZ_arity+N:OZ__LOC[OZ_arity+N]]
 #define OZ_result(V) OZ_out(0)=V
 
-#define OZ_BI_define(Name,Arity_IN,Arity_OUT)                   \
-OZ_BI_proto(BI__##Name);                                        \
-OZ_C_proc_begin(Name,Arity_IN+Arity_OUT)                        \
-{                                                               \
-  OZ_Term OZ__OUT[Arity_OUT];                                   \
-  for (int i=0;i<Arity_OUT;i++) {                               \
-    OZ__OUT[i]=OZ_args[Arity_IN+i];                             \
-  }                                                             \
-  OZ_Return OZ__STATUS = BI__##Name(OZ_args,OZ_ID_MAP);         \
-  if (OZ_STATUS_OK(OZ__STATUS))                                 \
-    for (int i=0;i<Arity_OUT;i++) {                             \
-      OZ_Return OZ__TMP =                                       \
-        OZ_unify(OZ_args[Arity_IN+i],OZ__OUT[i]);               \
-      if (OZ__TMP!=PROCEED) return OZ__TMP;                     \
-    }                                                           \
-  return OZ__STATUS;                                            \
-}                                                               \
-OZ_C_proc_end                                                   \
-OZ_Return BI__##Name(OZ_Term OZ__ARGS[],int OZ__LOC[]) {        \
-    const OZ_CFun OZ_self = Name;                               \
+#define OZ_BI_define(Name,Arity_IN,Arity_OUT)           \
+OZ_BI_proto(Name);                                      \
+OZ_Return Name(OZ_Term OZ_args[],int OZ__LOC[]) {       \
+    const OZ_CFun OZ_self = Name;                       \
     const int OZ_arity = Arity_IN;
 
 #define OZ_BI_end }

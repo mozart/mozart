@@ -47,6 +47,28 @@
 #define inline
 #endif
 
+/*
+ * new builtins support
+ */
+
+OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
+{
+  const int inAr = bi->getInArity();
+  const int outAr = bi->getOutArity();
+
+  OZ_Term savedX[outAr];
+  for (int i=outAr; i--; ) savedX[i]=X[inAr+i];
+
+  OZ_Return ret1 = bi->getFun()(X,OZ_ID_MAP);
+  if (OZ_STATUS_OK(ret1)) {
+    for (int i=outAr;i--;) {
+      OZ_Return ret2 = oz_unify(X[inAr+i],savedX[i]);
+      if (ret2!=PROCEED) return ret2;
+    }
+  }
+  return ret1;
+}
+
 // -----------------------------------------------------------------------
 // Object stuff
 // -----------------------------------------------------------------------
@@ -92,9 +114,7 @@ void enrichTypeException(TaggedRef value,const char *fun, OZ_Term args)
   RAISE_TYPE1(fun,                                              \
               appendI(args,cons(OZ_newVariable(),nil())));
 
-#define RAISE_TYPE                                      \
-   RAISE_TYPE1(builtinTab.getName((void *) biFun),      \
-               OZ_toList(predArity,X));
+#define RAISE_TYPE(bi) RAISE_TYPE1(bi->getPrintName(), OZ_toList(predArity,X));
 
 /*
  * Handle Failure macros (HF)
@@ -128,8 +148,7 @@ Bool AM::hf_raise_failure()
 #define HF_EQ(X,Y)    HF_RAISE_FAILURE(OZ_mkTupleC("eq",2,X,Y))
 #define HF_TELL(X,Y)  HF_RAISE_FAILURE(OZ_mkTupleC("tell",2,X,Y))
 #define HF_APPLY(N,A) HF_RAISE_FAILURE(OZ_mkTupleC("apply",2,N,A))
-#define HF_BI         HF_APPLY(OZ_atom(builtinTab.getName((void *) biFun)), \
-                               OZ_toList(predArity,X));
+#define HF_BI(bi)     HF_APPLY(bi->getName(),OZ_toList(predArity,X));
 
 #define CheckArity(arityExp,proc)                                          \
 if (predArity != arityExp) {                                               \
@@ -909,22 +928,17 @@ LBLdispatcher:
   Case(CALLBUILTIN)
     {
       COUNT(bicalls);
-      Builtin* entry = GetBI(PC+1);
-      OZ_CFun biFun = entry->getFun();
-
-      // CheckArity(entry->getArity(),makeTaggedConst(entry));
+      Builtin* bi = GetBI(PC+1);
 
 #ifdef PROFILE_BI
-      entry->incCounter();
+      bi->incCounter();
 #endif
-      switch (biFun(X,OZ_ID_MAP)) { // -2 == don't check arity
+      switch (oz_bi_wrapper(bi,X)) {
 
       case PROCEED:       DISPATCH(3);
-      case FAILED:        HF_BI;
-      case RAISE:
-        RAISE_THREAD;
-
-      case BI_TYPE_ERROR: RAISE_TYPE;
+      case FAILED:        HF_BI(bi);
+      case RAISE:         RAISE_THREAD;
+      case BI_TYPE_ERROR: RAISE_TYPE(bi);
 
       case SUSPEND:
         predArity = getPosIntArg(PC+2);
@@ -2177,11 +2191,10 @@ LBLdispatcher:
 
        CheckArity(bi->getArity(),makeTaggedConst(bi));
 
-       OZ_CFun biFun = bi->getFun();
 #ifdef PROFILE_BI
        bi->incCounter();
 #endif
-       OZ_Return res = biFun(X,OZ_ID_MAP);
+       OZ_Return res = oz_bi_wrapper(bi,X);
 
        switch (res) {
 
@@ -2189,7 +2202,7 @@ LBLdispatcher:
          {
            if (!isTailCall) PushCont(PC,Y,G);
 
-           CTT->pushCFun(biFun,X,predArity,OK);
+           CTT->pushCall(makeTaggedConst(bi),X,predArity);
            SUSPENDONVARLIST;
          }
 
@@ -2200,10 +2213,9 @@ LBLdispatcher:
          JUMPABSOLUTE(PC);
 
        case SLEEP:         Assert(0);
-       case RAISE:
-         RAISE_THREAD;
-       case BI_TYPE_ERROR: RAISE_TYPE;
-       case FAILED:        HF_BI;
+       case RAISE:         RAISE_THREAD;
+       case BI_TYPE_ERROR: RAISE_TYPE(bi);
+       case FAILED:        HF_BI(bi);
 
        case BI_PREEMPT:
          if (!isTailCall) {
@@ -2643,11 +2655,10 @@ LBLdispatcher:
        DebugTrace(ozd_trace("cfunc cont task"));
 
        switch (biFun(X,OZ_ID_MAP)) {
-       case FAILED:        HF_BI;
+       case FAILED:        HF_BI(builtinTab.getEntry((void *) biFun));
        case PROCEED:       goto LBLpopTask;
-       case RAISE:
-         RAISE_THREAD_NO_PC;
-       case BI_TYPE_ERROR: RAISE_TYPE;
+       case RAISE:         RAISE_THREAD_NO_PC;
+       case BI_TYPE_ERROR: RAISE_TYPE(builtinTab.getEntry((void *) biFun));
 
        case BI_REPLACEBICALL:
          PC = NOCODE;

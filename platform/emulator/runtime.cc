@@ -162,3 +162,10 @@ OZ_Return typeError(int Pos, char *Comment, char *TypeString)
                   OZ_string(Comment));
   return BI_TYPE_ERROR;
 }
+
+#ifdef DEBUG_CHECK
+int checkBIArity(OZ_CFun fn) {
+  Builtin *bi=builtinTab.getEntry((void *) fn);
+  return !bi || bi->getOutArity()==0;
+}
+#endif
