@@ -12,6 +12,8 @@ define
       {Filter SiteStats
        proc{$ SS Res}
           Res = {Not {SiteDict member(SS.siteid $)}}
+          % Hack to make make sure to update the rtt of recently
+          % become nonactive sites.
           if {Not Res} then
              if SS.lastRTT==~1 then
                 CurS={SiteDict getSite(SS.siteid $)}
@@ -122,7 +124,7 @@ define
       meth getLastRTT($) @lastRTT end
       meth setGraphKey(K) graphKey<-K end
       meth getGraphKey($) @graphKey end
-      meth getText($) self.info.ip#":"#self.info.port#"\t"#@state#if @state==connected orelse true then "("#{self getLastRTT($)}#")" else "" end
+      meth getText($) self.info.ip#":"#self.info.port#"\t"#@state#if @state==connected then "("#{self getLastRTT($)}#")" else "" end
       end
       meth updateState(NewS ?Updated)
          Updated = NewS \= (state<-NewS)
@@ -265,10 +267,12 @@ define
              end}
             % Make a list of rtt display information
             RTTDL=
-            {Map {Dictionary.items self.ActiveSites}
-             fun{$ SS}
-                {SS getLastRTT($)}#{SS getGraphKey($)}
-             end}
+            {Filter
+             {Map {Dictionary.items self.ActiveSites}
+              fun{$ SS}
+                 {SS getLastRTT($)}#{SS getGraphKey($)}
+              end}
+              fun{$ RTT#_} RTT\=~1.0 end}
          in
             {self.GUI.sactivity display(ActivityDL)}
             {self.GUI.srtt display(RTTDL)}
