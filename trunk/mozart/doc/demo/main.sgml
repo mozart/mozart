@@ -165,7 +165,7 @@
       <Title/Distributed Applications/
       &chapter.board;
       &chapter.chat;
-      <!--      &chapter.mim; -->
+      &chapter.mim;
     </Part>
 
     <Part id="part.miscellaneous">
