@@ -1767,7 +1767,7 @@ LBLdispatcher:
 
   Case(INLINEUPARROW)
     {
-      switch(uparrowInline(XPC(1),XPC(2),XPC(3))) {
+      switch(uparrowInlineBlocking(XPC(1),XPC(2),XPC(3))) {
       case PROCEED:
         DISPATCH(5);
 
