@@ -228,9 +228,9 @@ define
 			 if @oldmessages==nil andthen @sentmessages==nil then ignore
 			 else "View Dialog"#proc{$} {self viewDialog} end end
 			 separator
-			 ("Remove "#E.name)#proc {$}{RemoveFriend E}end
+			 ("View User Information")#proc {$}{ViewInfo ID} end
 			 separator
-			 ("View User Info")#proc {$}{ViewInfo ID} end
+			 ("Remove "#E.name)#proc {$}{RemoveFriend E}end
 			] self}
 	      end
 	 in
@@ -743,6 +743,11 @@ define
    end
    
    proc{ChangeStatus M}
+      if {Dictionary.member DB M.id}==false then
+	 {Delay 2000}
+	 {ChangeStatus M}
+      end
+      
       try
 	 lock CLock then E={Dictionary.get DB M.id} in
 	    if M.online==online then
