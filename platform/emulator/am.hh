@@ -228,6 +228,13 @@ private:
   int statusReg;
   TaskStack *cachedStack;
   Object *cachedSelf;
+
+public:
+  TaskStack * getCachedStack(void) {
+    return cachedStack;
+  }
+
+private:
   Bool _inEqEq;
   TaggedRef _currentUVarPrototype; // opt: cache
 
@@ -287,7 +294,7 @@ public:
   void setProfileMode()   { _profileMode=TRUE; }
   void unsetProfileMode() { _profileMode=FALSE; }
   Bool profileMode()      { return _profileMode; }
-
+  
 public:
   ThreadsPool threadsPool;
 
