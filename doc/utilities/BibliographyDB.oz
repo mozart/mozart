@@ -35,6 +35,14 @@ define
       prop final
    end
 
+   fun {DotExpand S}
+      case S of &.|&/|L then
+         {VirtualString.toString {Property.get 'ozdoc.src.dir'}#'/'#L}
+      elseof &.|&.|&/|L then
+         {VirtualString.toString {Property.get 'ozdoc.src.dir'}#'/'#S}
+      else S end
+   end
+
    fun {RemoveExtension S}
       case S of ".bib" then ""
       elsecase S of C|Cr then C|{RemoveExtension Cr}
@@ -179,7 +187,7 @@ define
          else
             {Dictionary.put @Keys AKey Text}
          end
-         NTo = {RemoveExtension To}
+         NTo = {DotExpand {RemoveExtension To}}
          if {Member NTo @Tos} then skip
          else
             Tos <- NTo|@Tos
