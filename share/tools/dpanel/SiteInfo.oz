@@ -25,13 +25,10 @@
 functor
 import
    DPStatistics(siteStatistics)
-   DPB at 'x-oz://boot/DPB'
 export
    sitesDict:SitesDict
    sites:SiteInfo
 define
-   {Wait DPB}
-   
    fun{FilterNew SiteStats SiteDict}
       {Filter SiteStats
        proc{$ SS Res}
