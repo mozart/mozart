@@ -894,15 +894,14 @@ FSetValue FSetValue::operator | (const FSetValue &y) const
 
     z._card = findBitsSet(fset_high, z._in);
     z._other = _other | y._other;
-    if (z._other) z._card += size_of_other;
-  }
-  else if (!_normal && !y._normal) {
+    if (z._other)
+      z._card += size_of_other;
+  } else if (!_normal && !y._normal) {
     z._normal = false;
     z._IN = _IN | y._IN;
     z._card = z._IN.getSize();
     z.maybeToNormal();
-  }
-  else if (_normal) { // !y._normal
+  } else if (_normal) { // !y._normal
     z._normal = true;
     z._other = _other;
     for (int i=fset_high; i--; )
@@ -911,8 +910,7 @@ FSetValue FSetValue::operator | (const FSetValue &y) const
     z._IN = z._IN | y._IN;
     z._card = z._IN.getSize();
     z.maybeToNormal();
-  }
-  else { // !_normal && y._normal
+  } else { // !_normal && y._normal
     z._normal = true;
     z._other = y._other;
     for (int i=fset_high; i--; )
@@ -1047,28 +1045,27 @@ FSetValue FSetValue::operator |= (const FSetValue &y)
 
     _card = findBitsSet(fset_high, _in);
     _other |= y._other;
-    if (_other) _card += fs_sup - 32*fset_high + 1;
-  }
-  else if (!_normal && !y._normal) {
+    if (_other)
+      _card += fs_sup - 32*fset_high + 1;
+  } else if (!_normal && !y._normal) {
     _IN = _IN | y._IN;
     _card = _IN.getSize();
     maybeToNormal();
-  }
-  else if (_normal) { // !y._normal
+  } else if (_normal) { // !y._normal
     toExtended();
     _IN = _IN | y._IN;
     _card = _IN.getSize();
     maybeToNormal();
-  }
-  else { // !_normal && y._normal
+  } else { // !_normal && y._normal
     // have to copy y for conversion since it is const
     OZ_FiniteDomain aux = _IN;
     _normal = true;
     _other = y._other;
     for (int i = fset_high; i--; )
-      _in[i] = y._in[i];
+       _in[i] = y._in[i];
     toExtended();
     _IN = _IN | aux;
+    _card = _IN.getSize();
     maybeToNormal();
   }
 
