@@ -28,6 +28,16 @@
 
 //-----------------------------------------------------------------------------
 
+void * OZ_GenConstraint::operator new(size_t s) 
+{
+  return freeListMalloc(s);
+}
+
+void OZ_GenConstraint::operator delete(void * p, size_t s) 
+{
+  freeListDispose(p, s);
+}
+
 void * OZ_GenCtVar::operator new(size_t s) 
 {
   return CpiHeap.alloc(s);
@@ -261,6 +271,13 @@ void OZ_GenCtVar::fail(void)
   }
 }
 
+
+OZ_Return OZ_mkCtVariable(OZ_Term v, 
+			  OZ_GenConstraint * c, 
+			  OZ_GenDefinition * d)
+{
+  return tellBasicConstraint(v, c, d);
+}
 
 // eof
 //-----------------------------------------------------------------------------

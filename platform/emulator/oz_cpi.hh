@@ -534,6 +534,7 @@ class OZ_GenDefinition {
 public:
   virtual int getKind(void) = 0;
   virtual int getNoOfWakeUpLists(void) = 0;
+  virtual char * getName(void) = 0;
   virtual OZ_GenConstraint * toConstraint(OZ_Term) = 0;
   virtual OZ_GenConstraint * leastConstraint(void) = 0;
   virtual OZ_Boolean isValidValue(OZ_Term) = 0;
@@ -549,8 +550,9 @@ private:
   unsigned _wakeUpDescriptor;
 public:
   // don't define any constructor
-  void init(unsigned d) { _wakeUpDescriptor = d; }
+  void init(void) { _wakeUpDescriptor = 0; }
   OZ_Boolean isEmpty(void) { return (_wakeUpDescriptor == 0); }
+  OZ_Boolean setWakeUp(int i) { return (_wakeUpDescriptor |= (1 << i)); }
   OZ_Boolean isWakeUp(int i) { return (_wakeUpDescriptor & (1 << i)); }
   static OZ_GenWakeUpDescriptor getWakeUpAll(void) { 
     OZ_GenWakeUpDescriptor aux;
@@ -567,7 +569,7 @@ public:
 class OZ_GenConstraintProfile {
 public: 
   OZ_GenConstraintProfile(void) {}
-  OZ_GenConstraintProfile(OZ_GenConstraint *);
+  virtual void init(OZ_GenConstraint *) = 0;
   
 };
 
@@ -586,7 +588,11 @@ public:
   virtual size_t sizeOf(void) = 0;
   virtual OZ_GenConstraintProfile * getProfile(void) = 0;
   virtual OZ_GenWakeUpDescriptor getWakeUpDescriptor(OZ_GenConstraintProfile *) = 0;
-  virtual char * toString(void) = 0;
+  virtual char * toString(int) = 0;
+  virtual OZ_GenConstraint * copy(void) = 0;
+
+  static void * operator new(size_t);  
+  static void operator delete(void *, size_t);  
 };
 
 //-----------------------------------------------------------------------------
@@ -616,9 +622,9 @@ private:
   }
   void ctSetGlobalConstraint(OZ_GenConstraint * c) {
     // copy constraint ...
-    ctSaveConstraint(c);
+    this->ctSaveConstraint(c);
     // ... but compute on constraint in store
-    ctRefConstraint(c);
+    this->ctRefConstraint(c);
   }
   OZ_GenConstraint * ctSetEncapConstraint(OZ_GenConstraint * c) {
     // copy constraint and compute on the copy
@@ -635,7 +641,7 @@ protected:
 
   virtual OZ_GenConstraint * ctRefConstraint(OZ_GenConstraint *) = 0;
   virtual OZ_GenConstraint * ctSaveConstraint(OZ_GenConstraint *) = 0;
-  virtual void ctRestoreConstraint(void) = 0;
+  virtual void ctRestoreConstraint() = 0;
 
   virtual void ctSetConstraintProfile(void) = 0;
   virtual OZ_GenConstraintProfile * ctGetConstraintProfile(void) = 0;
@@ -644,8 +650,7 @@ protected:
 
 public:
 
-  OZ_GenCtVar(void);
-  OZ_GenCtVar(OZ_Term);
+  OZ_GenCtVar(void) {}
 		      
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
@@ -667,7 +672,7 @@ public:
 //-----------------------------------------------------------------------------
 // Misc
 
-OZ_Term mkCtVariable(OZ_GenConstraint *, OZ_GenDefinition *);
+OZ_Return OZ_mkCtVariable(OZ_Term, OZ_GenConstraint *, OZ_GenDefinition *);
 
 //-----------------------------------------------------------------------------
 // class OZ_Expect, etc.
@@ -729,7 +734,7 @@ public:
   OZ_Return impose(OZ_Propagator * p, 
 		   int prio = OZ_getMediumPrio(),
 		   OZ_PropagatorFlags flags = NULL_flag);
-  OZ_Return suspend(OZ_Thread);
+  OZ_Return suspend(OZ_Thread); // blocks if argument is `NULL'
   OZ_Return fail(void);
   OZ_Boolean isSuspending(OZ_expect_t r) {
     return (r.accepted == 0 || (0 < r.accepted && r.accepted < r.size));
