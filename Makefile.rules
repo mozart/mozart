@@ -32,13 +32,15 @@ distclean::
 MOGUL_DATABASE	= MOGUL.DB
 MOGUL_DIRECTORY	= $$HOME/public_html/mogul
 MOGUL_ROOT_URL	= http://www.ps.uni-sb.de/~duchier/mogul/db
+MOGUL_IGNORE	=
 MOGUL_LIBRARIAN	= $(OZE) $(PKG_URI)/Librarian.exe	\
 	--verbose 					\
 	--mogul-url=$(MOGUL_ROOT_URL)			\
 	--root-url=mogul-root.mogul			\
 	--open-db=$(MOGUL_DATABASE)			\
 	--mogul-dir=$(MOGUL_DIRECTORY)			\
-	--mogul-top=$(MOGUL_TOP)
+	--mogul-top=$(MOGUL_TOP)			\
+	$(MOGUL_IGNORE)
 
 MOGUL_DATABASE_OPTIONS	=	\
 	--update-info		\

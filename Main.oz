@@ -49,6 +49,9 @@ define
 		   'update-ozpm-info'(type:bool)
 		   %%
 		   'mogul-top'(type:string)
+		   %%
+		   'ignore-id'(type:list(string) default:nil)
+		   'ignore-url'(type:list(string) default:nil)
 		  )}
    catch error(ap(usage Msg) ...) then
       {System.showError Msg}
