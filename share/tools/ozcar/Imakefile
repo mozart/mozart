@@ -48,5 +48,5 @@ $(OZCAR):
 	$(INSTALL) -m 775 -d $@
 
 $(OZCAR)/%.oz: %.oz
-	$(INSTALL) -m 444 '$<' '$@'
+	$(INSTALLSRC)  '$<' '$@'
 
