@@ -2,6 +2,7 @@
 <!entity regex system "regex.sgml">
 <!entity gdbm system "gdbm.sgml">
 <!entity compat system "compat.sgml">
+<!entity directory system "directory.sgml">
 <!entity EG PI "PI:EG">
 <!ENTITY nbsp PI "nbsp">
 <!ENTITY % proglang.values.local "|sh|makefile">
@@ -13,12 +14,16 @@
     <meta name="html.split" value="chapter.gdbm.install">
     <meta name="html.split" value="chapter.gdbm.interface">
     <meta name="html.split" value="chapter.compat">
+    <meta name="html.split" value="chapter.directory">
+    <meta name="html.split" value="chapter.directory.module">
+    <meta name="html.split" value="chapter.directory.example">
     <title/Contributed Libraries/
     <author.extern to="author.db" key="Denys.Duchier">
     <author.extern to="author.db" key="Leif.Kornstaedt">
     &regex;
     &gdbm;
     &compat;
+    &directory;
 </book>
 <!--
 Local Variables:
