@@ -32,7 +32,7 @@ end
 %% Text
 %%
 
-Version                = \insert version.oz
+Version                = \insert ozcar-version.oz
 TitleName              = 'Oz Debugger'
 IconName               = 'Ozcar'
 
