@@ -107,6 +107,10 @@ Bool TaskStack::discardLocalTasks()
     ContFlag cFlag = getContFlag(ToInt32(entry));
 
     switch (cFlag){
+    case C_COMP_MODE:
+      warning("not impl: discard compMode task!");
+      // xxcurrentThread->compMode=getCompMode(entry);
+      break;
     case C_LOCAL:
     case C_SOLVE:
       return OK;
