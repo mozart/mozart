@@ -83,11 +83,6 @@ public:
 
   void dispose(void) {
     delete _p;
-
-    DebugCode(
-              _p = (OZ_Propagator *) NULL;
-              _b = (Board * ) NULL;
-              );
   }
 
   Propagator * gcPropagator(void);
