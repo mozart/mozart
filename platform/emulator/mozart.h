@@ -68,8 +68,9 @@ extern OZ_Term OZ_termType _PROTOTYPE((OZ_Term));
 
 /* convert: C from/to Oz datastructure */
 
-extern char *   OZ_atomToC   _PROTOTYPE((OZ_Term));
-extern OZ_Term  OZ_CToAtom   _PROTOTYPE((char *));
+extern char *   OZ_atomToC    _PROTOTYPE((OZ_Term));
+extern char *   OZ_literalToC _PROTOTYPE((OZ_Term));
+extern OZ_Term  OZ_CToAtom    _PROTOTYPE((char *));
 
 extern OZ_Term  OZ_CToInt        _PROTOTYPE((int));
 extern int      OZ_intToC        _PROTOTYPE((OZ_Term));
