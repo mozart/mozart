@@ -83,6 +83,7 @@ constraining its arity's width to the number of features.
 
 <P>
 Invoking the solver by
+
 <<<
 declare Disks = 
 {SearchOne {SpreadFiles [file(name:a size:360) file(name:b size:850)
@@ -90,11 +91,15 @@ declare Disks =
 			 file(name:e size:700) file(name:f size:210)]
 	    1440}}
 >>>
+
 produces the following result:
+
 <<<
 [[diskette(a:360 b:850 f:210) diskette(c:630 d:70 e:700)]]
 >>>
+
 The input data for this solver can be easily obtained from the
-respective operating system by using the module <<OS>> [see ... for details].
+respective operating system by using the module <<OS>> (see
+<Ptr.Extern to="ozdoc:system" key="chapter.os"> for details].
 
 </Chapter>
