@@ -467,6 +467,22 @@ outerLoop2:
         PUSH(getLabelArg(PC+3));
         PUSH(getLabelArg(PC+4));
         break;
+      case TESTRECORDX:
+        ISREAD(GETREGARG(PC+1));
+        // fall through
+      case TESTRECORDY:
+      case TESTRECORDG:
+        PUSH(getLabelArg(PC+4));
+        PUSH(getLabelArg(PC+5));
+        break;
+      case TESTLISTX:
+        ISREAD(GETREGARG(PC+1));
+        // fall through
+      case TESTLISTY:
+      case TESTLISTG:
+        PUSH(getLabelArg(PC+2));
+        PUSH(getLabelArg(PC+3));
+        break;
       case GETLITERALX:
       case GETNUMBERX:
         ISREAD(GETREGARG(PC+2));
@@ -538,7 +554,7 @@ outerLoop2:
 
           IHashTable *table = (IHashTable *) getAdressArg(PC+2);
           PUSH(table->elseLabel);
-          if (table->elseLabel != table->listLabel) PUSH(table->listLabel);
+          if (table->listLabel) PUSH(table->listLabel);
           if (table->literalTable) DOTABLE(table->literalTable);
           if (table->functorTable) DOTABLE(table->functorTable);
           if (table->numberTable) DOTABLE(table->numberTable);
