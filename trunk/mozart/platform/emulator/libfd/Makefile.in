@@ -28,14 +28,15 @@ VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 INCS		= -I. -I$(SRCDIR)/.. -I..
 
-FDLIBSRCS = arith.cc fdaux.cc bool.cc \
+FDLIBSRCS = fdaux.cc prop_fncts.cc prop_engine.cc \
+	    fdinit.cc fdtable.cc \
+	    arith.cc bool.cc \
 	    card.cc count.cc \
 	    rel.cc disjoint.cc std.cc \
 	    sum.cc sumequal.cc \
 	    distance.cc streamProps.cc \
 	    sumd.cc sumabs.cc complalldist.cc diffn.cc \
-            distribute.cc fdtable.cc fdinit.cc \
-	    prop_fncts.cc prop_engine.cc
+            distribute.cc
 
 FDLIBOBJS = $(FDLIBSRCS:.cc=.lo)
 
