@@ -236,16 +236,16 @@ GTK.ozf: gtkclasses.oz gtkexports.oz
 
 GDK.ozf: gdkclasses.oz gdkexports.oz
 
-gtkclasses.oz: $(GTKSPECS)
+gtkclasses.oz: $(GTKSPECS) $(BUILDER)
 	$(BUILDER) --oz-classes $(GTKSPECS) > $@
 
-gdkclasses.oz: $(GDKSPECS)
+gdkclasses.oz: $(GDKSPECS) $(BUILDER)
 	$(BUILDER) --oz-classes $(GDKSPECS) > $@
 
-gtkexports.oz: $(GTKSPECS)
+gtkexports.oz: $(GTKSPECS) $(BUILDER)
 	$(BUILDER) --oz-exportlist $(GTKSPECS) > $@
 
-gdkexports.oz: $(GDKSPECS)
+gdkexports.oz: $(GDKSPECS) $(BUILDER)
 	$(BUILDER) --oz-exportlist $(GDKSPECS) > $@
 
 # compiler dependencies
