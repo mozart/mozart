@@ -91,7 +91,7 @@ extern char *heapTop;         // pointer to next free memory block
 extern char *heapEnd;
 extern unsigned int heapTotalSize;   // # kilo bytes allocated
 
-void getMemFromOS(size_t size);
+Bool getMemFromOS(size_t size);
 
 // return free used kilo bytes on the heap
 unsigned int getUsedMemory(void);
@@ -127,7 +127,9 @@ inline void *mallocBody(size_t chunk_size, int align)
     return heapTop;
   }
 
-  getMemFromOS(chunk_size);
+  if (!getMemFromOS(chunk_size)) {
+    return 0;
+  }
   goto retry;
 }
 
