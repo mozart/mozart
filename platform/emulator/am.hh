@@ -40,14 +40,12 @@
  * -----------------------------------------------------------------------*/
 
 typedef enum {
-  ThreadSwitch   = 1 << 2, // choose a new process
-  IOReady        = 1 << 3, // IO handler has signaled IO ready
-  UserAlarm      = 1 << 4, // Alarm handler has signaled User Alarm
-  StartGC        = 1 << 5, // need a GC
-  TasksReady     = 1 << 6,
-  ChildReady     = 1 << 7, // SIGCHLD raised
-  SigPending     = 1 << 8,  // some signal caught
-  TimerInterrupt = 1 << 9,
+  TimerInterrupt = 1 << 1, // reflects the arrival of an alarm from OS;
+  IOReady        = 1 << 2, // IO handler has signaled IO ready
+  UserAlarm      = 1 << 3, // some Oz delays are to be processed;
+  StartGC        = 1 << 4, // need a GC
+  TasksReady     = 1 << 5, //
+  SigPending     = 1 << 6  //
 } StatusBit;
 
 /* -----------------------------------------------------------------------
@@ -279,7 +277,16 @@ private:
   // location of propagators on/off
   Bool propLocation;
 
+  // kost@ : The flags that affect the decision to run
+  // 'checkStatus()'.  In particular, 'childReady' does not, which
+  // means that 'childReady' is checked first when some other flag(s)
+  // is set, e.g. UserAlarm.
   int statusReg;
+  // "second-class" flags. NOTE: these flag(s) do not require
+  // protection by the 'criticalFlag';
+  int childReady;
+
+  //
   TaskStack *cachedStack;
   Object *cachedSelf;
 
@@ -300,7 +307,6 @@ private:
   TaggedRef _suspendVarList;
   CallList *preparedCalls;      // for BI_REPLACEBICALL
 
-  int threadSwitchCounter;
   int userCounter;
 
 #ifndef DENYS_EVENTS
@@ -316,8 +322,9 @@ private:
     Abstraction *cap;
   } exception;
 
-  Bool criticalFlag;  // if this is true we will NOT set Sflags
-                      // from within signal handlers
+  // if this is true we will NOT set Sflags from within signal
+  // handlers;
+  Bool criticalFlag;
 
   TaggedRef defaultExceptionHdl;
 
@@ -509,6 +516,9 @@ public:
     criticalFlag = NO;
   }
 
+  //
+  void setChildReady() { childReady = OK; }
+
   int isSetSFlag(StatusBit flag) { return statusReg & flag; }
   int isSetSFlag()               { return statusReg; }
 
@@ -545,12 +555,6 @@ public:
   void nextCopyStep() { copyStep++; }
   int getCopyStep() { return (copyStep); }
 
-  // unset the ThreadSwitch flag and reset the counter
-  // only needed in emulate.cc
-  void restartThread() {
-    unsetSFlag(ThreadSwitch);
-    threadSwitchCounter=oz_msToClockTick(TIME_SLICE);
-  }
 #ifndef DENYS_EVENTS
   void handleTasks();
 
