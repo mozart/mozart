@@ -124,7 +124,6 @@ if test "${enable_wincross}" = yes; then
 	#LDFLAGS="$LDFLAGS $oz_wincross_LDFLAGS"
 	platform="win32-i486"
 	PROGRAMNAME="ozemulator.exe"
-	with_pgcc=no
 	with_sunpro=no
 	oz_gmp_lib_dir=$oz_wincross_gmp_lib_dir
 	oz_gmp_inc_dir=$oz_wincross_gmp_inc_dir
@@ -153,7 +152,6 @@ if test "${enable_os2}" = yes; then
     LD=$CXX
     platform="os2-i486"
     PROGRAMNAME="ozemulator.exe"
-    with_pgcc=no
     with_sunpro=no
     oz_check_gmp=no
     oz_malloc_obj=
@@ -166,42 +164,6 @@ fi
 dnl *****************************************************************
 dnl Checks for programs.
 dnl *****************************************************************
-
-AC_MSG_CHECKING(for --with-pgcc)
-AC_ARG_WITH(pgcc,
-    [--with-pgcc        use pgcc compiler (default: yes, if --enable-opt)])
-
-	if test "${with_pgcc+set}" != set
-	then
-	    case $enable_opt in
-		n*|d*)
-		    AC_MSG_RESULT(no)
-		    ;;
-		*)
-		    AC_MSG_RESULT(trying)
-		    AC_CHECK_PROGS(PGXX, pg++)
-		    if test -n "${PGXX}"
-		    then
-			CXX=$PGXX
-			LD=pgcc
-		    fi
-		    ;;
-	    esac
-	else
-	if test "${with_pgcc}" = yes; then
-            AC_MSG_RESULT(yes)
-	    AC_CHECK_PROGS(PGXX, pg++)
-	    if test -n "${PGXX}"
-	    then
-		CXX=$PGXX
-		LD=pgcc
-	    else
-		AC_MSG_WARN(Ignoring --with-pgcc)
-	    fi
-	else
-	    AC_MSG_RESULT(no)
-	fi
-	fi
 
 AC_MSG_CHECKING(for --with-sunpro)
 AC_ARG_WITH(sunpro,
@@ -273,7 +235,7 @@ if test "${GXX}" = yes; then
 
     # Note: use $(CC) for linking, not $(CXX): 
     # g++ creates references to libg++ 
-    if test -z "${PGXX}" -a -z "${LD}"
+    if test -z "${LD}"
     then
 	LD=gcc
     fi
@@ -524,7 +486,6 @@ case $enable_opt in
 	oz_enable_threaded=no
 	oz_enable_fastreg=no
 	oz_enable_regopt=no
-	oz_enable_lstatic=no
 	;;
     p*)
 	AC_MSG_RESULT(profile (-DPROFILE_EMULATOR))
@@ -641,23 +602,6 @@ fi
 AC_SUBST(oz_tmphack_target)
 AC_SUBST(oz_tmphack_host)
 AC_SUBST(oz_tmphack_programname)
-
-dnl *****************************************************************
-dnl special hack for static linking under linux (libc5 only)
-dnl *****************************************************************
-
-case $platform in
-    linux*)
-	if ! test -f /usr/include/xopen_lim.h
-	then
-	    OZ_ENABLE_YES(lstatic,[  statically link on linux-libc5],
-		    AC_MSG_RESULT(yes)
-		    LIBS=`echo $LIBS | sed -e 's/[ ]-ldl//g'`
-		    LIBS="-ldl -Xlinker -Bstatic $LIBS"
-		    )
-	fi
-	;;
-esac
 
 dnl *****************************************************************
 dnl virtual site SUPPORT
