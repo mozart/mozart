@@ -53,6 +53,7 @@ void initPickleMarshaler()
 #include "picklecode.cc"
 
 //
+inline 
 void Pickler::processSmallInt(OZ_Term siTerm)
 {
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
@@ -60,6 +61,7 @@ void Pickler::processSmallInt(OZ_Term siTerm)
 }
 
 //
+inline 
 void Pickler::processFloat(OZ_Term floatTerm)
 {
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
@@ -67,6 +69,7 @@ void Pickler::processFloat(OZ_Term floatTerm)
 }
 
 //
+inline 
 void Pickler::processLiteral(OZ_Term litTerm)
 {
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
@@ -77,6 +80,7 @@ void Pickler::processLiteral(OZ_Term litTerm)
 }
 
 //
+inline 
 void Pickler::processBigInt(OZ_Term biTerm, ConstTerm *biConst)
 {
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
@@ -159,6 +163,7 @@ void Pickler::processVar(OZ_Term cv, OZ_Term *varTerm)
 }
 
 //
+inline 
 void Pickler::processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber)
 {
   Assert(repNumber >= 0);
@@ -170,6 +175,7 @@ void Pickler::processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber)
 }
 
 //
+inline 
 Bool Pickler::processLTuple(OZ_Term ltupleTerm)
 {
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
@@ -181,6 +187,7 @@ Bool Pickler::processLTuple(OZ_Term ltupleTerm)
 }
 
 //
+inline 
 Bool Pickler::processSRecord(OZ_Term srecordTerm)
 {
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
@@ -202,6 +209,7 @@ Bool Pickler::processSRecord(OZ_Term srecordTerm)
 }
 
 //
+inline 
 Bool Pickler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 { 
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
@@ -320,6 +328,7 @@ Bool Pickler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 }
 
 //
+inline 
 void Pickler::processSync()
 {
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
@@ -327,24 +336,36 @@ void Pickler::processSync()
 }
 
 //
+#define	TRAVERSERCLASS	Pickler
+#include "gentraverserLoop.cc"
+#undef	TRAVERSERCLASS
+
+//
 // 
+inline 
 void ResourceExcavator::processSmallInt(OZ_Term siTerm) {}
+inline 
 void ResourceExcavator::processFloat(OZ_Term floatTerm) {}
+inline 
 void ResourceExcavator::processLiteral(OZ_Term litTerm) {}
+inline 
 void ResourceExcavator::processBigInt(OZ_Term biTerm, ConstTerm *biConst) {}
 
 //
+inline 
 Bool ResourceExcavator::processNoGood(OZ_Term resTerm, Bool trail)
 {
   addNogood(resTerm);
   return (OK);
 }
+inline 
 void ResourceExcavator::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
 {
   rememberTerm(biTerm);
   if (((Builtin *) biConst)->isSited())
     (void) processNoGood(biTerm, OK);
 }
+inline 
 void ResourceExcavator::processExtension(OZ_Term t)
 {
   if (!tagged2Extension(t)->toBePickledV())
@@ -376,6 +397,7 @@ void ResourceExcavator::processPort(OZ_Term portTerm, Tertiary *tert)
   rememberTerm(portTerm);
   addResource(portTerm);
 }
+inline 
 void ResourceExcavator::processResource(OZ_Term rTerm, Tertiary *tert)
 {
   rememberTerm(rTerm);
@@ -383,6 +405,7 @@ void ResourceExcavator::processResource(OZ_Term rTerm, Tertiary *tert)
 }
 
 //
+inline 
 void ResourceExcavator::processVar(OZ_Term cv, OZ_Term *varTerm)
 {
   rememberVarLocation(varTerm);
@@ -390,18 +413,22 @@ void ResourceExcavator::processVar(OZ_Term cv, OZ_Term *varTerm)
 }
 
 //
+inline 
 void ResourceExcavator::processRepetition(OZ_Term t, OZ_Term *tPtr,
 					  int repNumber) {}
+inline 
 Bool ResourceExcavator::processLTuple(OZ_Term ltupleTerm)
 {
   rememberTerm(ltupleTerm);
   return (NO);
 }
+inline 
 Bool ResourceExcavator::processSRecord(OZ_Term srecordTerm)
 {
   rememberTerm(srecordTerm);
   return (NO);
 }
+inline 
 Bool ResourceExcavator::processChunk(OZ_Term chunkTerm,
 				     ConstTerm *chunkConst)
 {
@@ -486,7 +513,13 @@ Bool ResourceExcavator::processAbstraction(OZ_Term absTerm,
 }
 
 //
+inline 
 void ResourceExcavator::processSync() {}
+
+//
+#define	TRAVERSERCLASS	ResourceExcavator
+#include "gentraverserLoop.cc"
+#undef	TRAVERSERCLASS
 
 //
 Pickler pickler;
