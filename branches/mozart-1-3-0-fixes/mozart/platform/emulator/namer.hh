@@ -123,7 +123,6 @@ private:
 public:
   Namer(void) { 
     GCMeManager::registerObject(this);
-    _head = NULL; 
   }
   static Namer<T_INDEX, T_NAME> * getHead(void) { return _head; }
   static T_NAME getName(T_INDEX index) {
