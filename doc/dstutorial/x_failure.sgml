@@ -20,7 +20,7 @@ the fault-tolerant abstractions.
 
 <P> The failure model is designed to cover the
 vast majority of failures occurring in distributed systems,
-namely instantaneous, permanent site failures (fail-stop)
+namely permanent site failures that are instantaneous (fail-stop)
 and both temporary and permanent communication failures.
 This failure model is reflected in each language entity.
 The system provides mechanisms to be informed of failures
@@ -38,49 +38,50 @@ relative to a language entity on a given site:
 <ITEM> The entity works normally (fault state <<ok>>).
 <ITEM> The entity is temporarily not working
 (fault state <<tempFail>>).
-This is because a site crucial to the entity's operation
+This is because a site crucial to the entity
 is unreachable due to a network problem.
 This fault state can go away.
 The network layer actively tries
 to reestablish another connection.
 <ITEM> The entity is permanently not working
 (fault state <<permFail>>).
-This is because a site crucial to the entity's operation
+This is because a site crucial to the entity
 has crashed.
 This fault state is permanent.
 <ITEM> The entity works normally on the given site
 (fault state <<remoteProblem>>),
 but there are some remote problems that might
 have a bearing on the application's use of the entity.
-For example, one is waiting for a variable
-binding on a given site,
-but the site that will bind the value has crashed.
+For example, a given site waits for a variable binding,
+but the site that will do the binding has crashed.
 This fault state can go away if the
 remote problems are temporary.
 </LIST>
 <P> An entity on a site therefore has four
-possible basic fault states.
+basic fault states.
 We now explain how these fault states occur
 in terms of the possible system failures
 for each language entity.
 Each language entity has a different
 distributed protocol, and therefore the
 fault states occur in different ways.
-In the case of <<remoteProblem>>, it is usually
+In the case of <<tempFail>> and <<permFail>>,
+operations on the entity will not complete.
+In the case of <<remoteProblem>>, operations
+will complete and it is usually
 possible to find out something about what the
 problem is, depending on the type of the entity.
 
 <SUBSECTION><TITLE>Eager stateless data</TITLE>
 
-<P> Eager stateless data are
+<P> Eager stateless data, namely records, procedures,
+functions, and functors, are
 copied immediately in messages.
-There are therefore no remote references to eager
-stateless data, which are
-always local to a site.
-Therefore no special failure handling is needed for them.
-Their only possible fault state is <<ok>>.
+There are no remote references to eager
+stateless data, which are always local to a site.
+So their only possible fault state is <<ok>>.
 
-<P> In future releases, procedures, functions, classes, and functors
+<P> In future releases, procedures, functions, and functors
 will not send their code immediately in the message,
 but will send only their global name.
 Upon arrival, if the code is not present,
@@ -97,10 +98,9 @@ becomes unreachable or crashes.
 <P> Sited entities can be referenced remotely
 but can only be used on their home site.
 Attempting to use one outside of its home
-site immediately raises an exception,
-without any network operations.
-Therefore no special failure handling is needed for them.
-Their only possible fault state is <<ok>>.
+site immediately raises an exception.
+Detecting this does not need any network operations.
+So their only possible fault state is <<ok>>.
 
 <SUBSECTION><TITLE>Ports</TITLE>
 
@@ -109,11 +109,22 @@ and a set of proxy sites.
 The following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
-<ITEM> Owner site down (<<permFail>>).
-<ITEM> Owner site unreachable (<<tempFail>>).
+<ITEM> Owner site down (<<permFail(type:port)>>).
+<ITEM> Owner site unreachable (<<tempFail(type:port)>>).
 </LIST>
-A port has a single operation, <<Send>>,
+<P> A port has a single operation, <<Send>>,
 which can complete if the fault state is <<ok>>.
+The <<Send>> operation is asynchronous,
+that is, it completes immediately on the
+sender site and at some later point in time
+it will complete on the port's owner site.
+The fact that it completes on the sender site
+does not imply that it will complete on the owner site.
+This is because the owner site may fail.
+
+<P> We will see later how to build a <<SafeSend>> abstraction
+that only completes on the sender site if it completes
+on the owner site.
 
 <SUBSECTION><TITLE>Logic variables</TITLE>
 
@@ -122,20 +133,27 @@ and a set of proxy sites.
 The following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
-<ITEM> Owner site down (<<permFail>>).
-<ITEM> Owner site unreachable (<<tempFail>>).
-<ITEM> Some proxy sites down (<<remoteProblem>>).
-<ITEM> Some proxy sites unreachable (<<remoteProblem>>).
+<ITEM> Owner site down (<<permFail(type:variable)>>).
+<ITEM> Owner site unreachable (<<tempFail(type:variable)>>).
+<ITEM> Some proxy sites down
+(<<remoteProblem(type:variable permFail:SiteList)>>).
+<ITEM> Some proxy sites unreachable
+(<<remoteProblem(type:variable tempFail:SiteList)>>).
 </LIST>
-<P> A logic variable has two operations,
+<P> (The <<SiteList>> lists the site identifiers
+of the problem sites.)
+A logic variable has two operations,
 binding and waiting until bound.
-The bind operation can complete if the
+Bind operations are explicit in the program text.
+Most wait operations are implicit:
+threads block until their data is available.
+The bind operation will only complete if the
 fault state is <<ok>> or <<remoteProblem>>.
 
-<P> The wait operation completes when another
-proxy binds the variable.
-The wait operation can complete if the
+<P> The wait operation will only complete if the
 fault state is <<ok>>.
+When it completes, this means
+that another proxy has bound the variable.
 If the fault state is <<remoteProblem>>,
 then the wait operation may not be able
 to complete if the problem exists 
@@ -160,14 +178,19 @@ or in the network.
 The following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
-<ITEM> Owner site down and state pointer not present (<<permFail>>).
-<ITEM> Owner site unreachable and state pointer not present (<<tempFail>>).
-<ITEM> State pointer lost (owner site up) (<<permFail>>).
-<ITEM> State pointer unreachable (owner site up) (<<tempFail>>).
+<ITEM> Owner site down and state pointer not present
+(<<permFail(type:CO info:owner)>>).
+<ITEM> Owner site unreachable and state pointer not present
+(<<tempFail(type:CO info:owner)>>).
+<ITEM> State pointer lost (owner site up)
+(<<permFail(type:CO info:state)>>).
+<ITEM> State pointer unreachable (owner site up)
+(<<tempFail(type:CO info:state)>>).
 </LIST>
-<P> Objects and cells have one primitive operation,
+<P> (The <<CO>> is <<cell>> or <<object>>.)
+Objects and cells have one primitive operation,
 namely a state update.
-For a cell this operation is called exchange.
+For a cell this operation is called <<Exchange>>.
 The exchange operation can complete if the
 fault state is <<ok>>.
 
