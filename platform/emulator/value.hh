@@ -594,6 +594,22 @@ TaggedRef cons(char *head, TaggedRef tail)
 }
 
 inline
+TaggedRef mklist(TaggedRef l1,TaggedRef l2) {
+  return cons(l1,cons(l2,nil()));
+}
+
+inline
+TaggedRef mklist(TaggedRef l1,TaggedRef l2,TaggedRef l3) {
+  return cons(l1,mklist(l2,l3));
+}
+
+inline
+TaggedRef mklist(TaggedRef l1,TaggedRef l2,TaggedRef l3,TaggedRef l4) {
+  return cons(l1,mklist(l2,l3,l4));
+}
+
+
+inline
 TaggedRef head(TaggedRef list)
 {
   Assert(oz_isLTuple(list));
