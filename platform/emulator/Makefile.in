@@ -270,14 +270,6 @@ first: $(CREATEDFILES)
 @PROGRAMNAME@: $(PRGDEP)
 	$(LD) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
 
-@oz_tmphack_programname@: $(PRGDEP)
-	tmp=/tmp/ozemu$$$$; \
-	trap "rm -f $$tmp; exit 1" 1 2 15; \
-	 $(LD) $(LDFLAGS) $(LDOPT) -o $$tmp $(OBJS) $(LIBS) && \
-	 echo 'moving ...' && \
-	 rcp $$tmp @oz_tmphack_host@:`pwd`/$@ && \
-	 rm -f $$tmp
-
 text2pickle: $(TEXT2PICKLEOBJS)
 	$(LD) $(LDFLAGS) $(LDOPT) -o $@ $(TEXT2PICKLEOBJS)
 
