@@ -524,6 +524,52 @@ fi
 
 
 
+ac_aux_dir=
+for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
+  if test -f $ac_dir/install-sh; then
+    ac_aux_dir=$ac_dir
+    ac_install_sh="$ac_aux_dir/install-sh -c"
+    break
+  elif test -f $ac_dir/install.sh; then
+    ac_aux_dir=$ac_dir
+    ac_install_sh="$ac_aux_dir/install.sh -c"
+    break
+  fi
+done
+if test -z "$ac_aux_dir"; then
+  { echo "configure: error: can not find install-sh or install.sh in $srcdir $srcdir/.. $srcdir/../.." 1>&2; exit 1; }
+fi
+ac_config_guess=$ac_aux_dir/config.guess
+ac_config_sub=$ac_aux_dir/config.sub
+ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
+
+
+  
+# Make sure we can run config.sub.
+if $ac_config_sub sun4 >/dev/null 2>&1; then :
+else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
+fi
+
+echo $ac_n "checking host system type""... $ac_c" 1>&6
+echo "configure:555: checking host system type" >&5
+
+host_alias=$host
+case "$host_alias" in
+NONE)
+  case $nonopt in
+  NONE)
+    if host_alias=`$ac_config_guess`; then :
+    else { echo "configure: error: can not guess host type; you must specify one" 1>&2; exit 1; }
+    fi ;;
+  *) host_alias=$nonopt ;;
+  esac ;;
+esac
+
+host=`$ac_config_sub $host_alias`
+host_cpu=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\1/'`
+host_vendor=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\2/'`
+host_os=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
+echo "$ac_t""$host" 1>&6
 
   
   
@@ -533,7 +579,7 @@ fi
 
   
   echo $ac_n "checking for SRCTOP""... $ac_c" 1>&6
-echo "configure:537: checking for SRCTOP" >&5
+echo "configure:583: checking for SRCTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_SRCTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -566,7 +612,7 @@ echo "$ac_t""$oz_cv_path_SRCTOP" 1>&6
   
   
   echo $ac_n "checking for BUILDTOP""... $ac_c" 1>&6
-echo "configure:570: checking for BUILDTOP" >&5
+echo "configure:616: checking for BUILDTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_BUILDTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -623,7 +669,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:627: checking for $ac_word" >&5
+echo "configure:673: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_MAKE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -691,13 +737,13 @@ You may find a mirror archive closer to you by consulting:
   else
     
   echo $ac_n "checking for GNU make""... $ac_c" 1>&6
-echo "configure:695: checking for GNU make" >&5
+echo "configure:741: checking for GNU make" >&5
   MAKE=$oz_cv_MAKE
   echo "$ac_t""(cached) $MAKE" 1>&6
   fi
   
   echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:701: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:747: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -726,7 +772,7 @@ fi
   
   if test "${INSTALL+set}" = set; then
     echo $ac_n "checking whether to unset broken INSTALL""... $ac_c" 1>&6
-echo "configure:730: checking whether to unset broken INSTALL" >&5
+echo "configure:776: checking whether to unset broken INSTALL" >&5
 if eval "test \"`echo '$''{'oz_cv_unset_INSTALL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -755,7 +801,7 @@ echo "$ac_t""$oz_cv_unset_INSTALL" 1>&6
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:759: checking for a BSD compatible install" >&5
+echo "configure:805: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -815,7 +861,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:819: checking for $ac_word" >&5
+echo "configure:865: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -843,7 +889,10 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
-    INSTALL_DIR=`echo $INSTALL_DIR | sed -e "s|//|/|g"`
+    case "$host_os" in
+      cygwin32) ;;
+      *) INSTALL_DIR=`echo $INSTALL_DIR | sed -e "s|//|/|g"`;;
+    esac
     if test ! -n "$INSTALL_DIR"
     then
 	INSTALL_DIR=undefined
@@ -856,7 +905,7 @@ fi
   
   
   echo $ac_n "checking for --with-inc-dir""... $ac_c" 1>&6
-echo "configure:860: checking for --with-inc-dir" >&5
+echo "configure:909: checking for --with-inc-dir" >&5
   # Check whether --with-inc-dir or --without-inc-dir was given.
 if test "${with_inc_dir+set}" = set; then
   withval="$with_inc_dir"
@@ -898,7 +947,7 @@ fi
 
   
   echo $ac_n "checking for --with-lib-dir""... $ac_c" 1>&6
-echo "configure:902: checking for --with-lib-dir" >&5
+echo "configure:951: checking for --with-lib-dir" >&5
   # Check whether --with-lib-dir or --without-lib-dir was given.
 if test "${with_lib_dir+set}" = set; then
   withval="$with_lib_dir"
@@ -951,7 +1000,7 @@ fi
     # Extract the first word of "oztool", so it can be a program name with args.
 set dummy oztool; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:955: checking for $ac_word" >&5
+echo "configure:1004: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -979,7 +1028,10 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
-    OZTOOL=`echo $OZTOOL | sed -e "s|//|/|g"`
+    case "$host_os" in
+      cygwin32) ;;
+      *) OZTOOL=`echo $OZTOOL | sed -e "s|//|/|g"`;;
+    esac
     if test ! -n "$OZTOOL"
     then
 	OZTOOL=undefined
@@ -990,16 +1042,113 @@ fi
 
 
 case "$target" in
+   NONE)
+   ;;
    i386-mingw32) 
         echo "$ac_t""cross compiling for windows" 1>&6
 	CXX=${target}-g++
-	
+	platform=win32-i486
    ;;
-
    *)
 	{ echo "configure: error: "can only cross-compile for target i386-mingw32 not for $target"" 1>&2; exit 1; }
     ;;
 esac
+
+
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    # Extract the first word of "ozplatform", so it can be a program name with args.
+set dummy ozplatform; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:1069: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_PLATFORMSCRIPT'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$PLATFORMSCRIPT" in
+  /*)
+  ac_cv_path_PLATFORMSCRIPT="$PLATFORMSCRIPT" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_PLATFORMSCRIPT="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+PLATFORMSCRIPT="$ac_cv_path_PLATFORMSCRIPT"
+if test -n "$PLATFORMSCRIPT"; then
+  echo "$ac_t""$PLATFORMSCRIPT" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+    case "$host_os" in
+      cygwin32) ;;
+      *) PLATFORMSCRIPT=`echo $PLATFORMSCRIPT | sed -e "s|//|/|g"`;;
+    esac
+    if test ! -n "$PLATFORMSCRIPT"
+    then
+	PLATFORMSCRIPT=undefined
+	
+    fi
+    
+: ${platform=`$PLATFORMSCRIPT`}
+
+
+case "$platform" in
+   win32-i486)
+	
+	ozm_out=
+	if test -n "-mno-cygwin"
+	then
+	    echo 'void f(){}' > oz_conftest.c
+	    for ozm_opt in -mno-cygwin
+	    do
+		echo $ac_n "checking c++ compiler option $ozm_opt""... $ac_c" 1>&6
+echo "configure:1120: checking c++ compiler option $ozm_opt" >&5
+		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
+		if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test -z "`${CXX} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
+			eval "oz_cv_gxxopt_$ozm_ropt=yes"
+		    else
+			eval "oz_cv_gxxopt_$ozm_ropt=no"
+		    fi
+fi
+
+		if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'}'`\" = yes"; then
+		    ozm_out="$ozm_out $ozm_opt"
+		    echo "$ac_t""yes" 1>&6
+		else
+		    echo "$ac_t""no" 1>&6
+		fi
+	    done
+	    rm -f oz_conftest*
+	fi
+	oz_a="$ozm_out"
+	
+	: ${CXX=c++}
+	CXX="$CXX $oz_a"
+   ;;
+
+   *)
+    ;;
+esac
+
+
+
 
 
 trap '' 1 2 15
@@ -1145,6 +1294,11 @@ s%@includedir@%$includedir%g
 s%@oldincludedir@%$oldincludedir%g
 s%@infodir@%$infodir%g
 s%@mandir@%$mandir%g
+s%@host@%$host%g
+s%@host_alias@%$host_alias%g
+s%@host_cpu@%$host_cpu%g
+s%@host_vendor@%$host_vendor%g
+s%@host_os@%$host_os%g
 s%@SRCDIR@%$SRCDIR%g
 s%@SRCTOP@%$SRCTOP%g
 s%@BUILDTOP@%$BUILDTOP%g
@@ -1156,6 +1310,8 @@ s%@INSTALL_DIR@%$INSTALL_DIR%g
 s%@HOMEURL@%$HOMEURL%g
 s%@HOMECACHE@%$HOMECACHE%g
 s%@OZTOOL@%$OZTOOL%g
+s%@PLATFORMSCRIPT@%$PLATFORMSCRIPT%g
+s%@platform@%$platform%g
 s%@CXX@%$CXX%g
 
 CEOF
