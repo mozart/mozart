@@ -355,7 +355,9 @@ void ManagerVar::sendRedirectToProxies(OZ_Term val, DSite* ackSite)
       if(!canSend(sd)){
         flowControler->addElement(val,sd,getIndex());}
       else{
-        if(pl->kind==EXP_REG || queueTrigger(sd)){
+        if(!(USE_ALT_VAR_PROTOCOL) && (pl->kind==EXP_REG || queueTrigger(sd))){
+          //NOTE globalRedirect is only important if we use the alt var
+          //NOTE protocol.
           globalRedirectFlag=EXP_REG;
           sendRedirect(sd,getIndex(),val);
           globalRedirectFlag=AUT_REG;}
@@ -564,6 +566,20 @@ OZ_Term unmarshalVarImpl(MsgBuffer* bs, Bool isFuture, Bool isAuto){
     sendRegister((BorrowEntry *)ob);}
   else{
     pvar->makeAuto();}
+  /*
+    switch(((BorrowEntry*)ob)->getSite()->siteStatus()){
+    case SITE_OK:{
+    break;}
+    case SITE_PERM:{
+    deferProxyProbeFault(tert,PROBE_PERM);
+    break;}
+    case SITE_TEMP:{
+    deferProxyProbeFault(tert,PROBE_TEMP);
+    break;}
+    default:
+    Assert(0);
+    }
+  */
   return val;
 }
 
@@ -848,9 +864,9 @@ static ProxyList** findBefore(DSite* s,ProxyList** base ){
 
 void ManagerVar::deAutoSite(DSite* s){
   ProxyList **aux= findBefore(s, &proxies);
-  Assert(aux!=NULL);
-  ProxyList *pl=*aux;
-  pl->kind=EXP_REG;
+  if (aux!=NULL && *aux!=NULL){
+    ProxyList *pl=*aux;
+    pl->kind=EXP_REG;}
 }
 
 void ManagerVar::deregisterSite(DSite* s){
