@@ -598,6 +598,8 @@ importDecls	: /* empty */
 
 optFeatures	: /* empty */
 		  { $$ = nilAtom; }
+		| '.' featureNoVar
+		  { $$ = consList($2,nilAtom); }
 		| '.' '{' featureList '}'
 		  { $$ = $3; }
 		;
