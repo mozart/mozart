@@ -1360,8 +1360,7 @@ to handle lines like 'attr a:'."
   "Display bar at given line, load file if necessary."
   (if (string-equal file "")
       (oz-bar-remove)
-    (let* ((last-nonmenu-event t)
-	   (buffer (oz-find-buffer-or-file file))
+    (let* ((buffer (oz-find-buffer-or-file file))
 	   (window (display-buffer buffer))
 	   start1 end1 start2 end2)
       (save-excursion
@@ -1401,14 +1400,20 @@ to handle lines like 'attr a:'."
 		  oz-bar-overlay-here start2 end2 (current-buffer))))
 	  (or (string-equal state "unchanged")
 	      (oz-bar-configure state))))
-      (let ((old-window (selected-window)))
-	(select-window window)
-	(if (not (pos-visible-in-window-p start2))
-	    (save-restriction
-	      (widen)
-	      (goto-char start2)
-	      (recenter (/ (1+ (window-height)) 2))))
-	(select-window old-window)))))
+      (save-selected-window
+	(let ((old-buffer (current-buffer)) old-pos)
+	  (select-window window)
+	  (set-buffer buffer)
+	  (setq old-pos (point))
+	  (if (or (< start1 (point-min)) (> start1 (point-max)))
+	      (widen))
+	  (if (not (pos-visible-in-window-p start1))
+	      (progn
+		(goto-char start1)
+		(recenter (/ (1- (window-height)) 2))))
+	  (if (pos-visible-in-window-p old-pos)
+	      (goto-char old-pos))
+	  (set-buffer old-buffer))))))
 
 (defun oz-bar-configure (state)
   "Change color of bar while not moving it."
