@@ -123,7 +123,7 @@ in
 
       CompilerUI = {New Emacs.interface init(OPICompiler)}
       Sock = {CompilerUI getSocket($)}
-      {{`Builtin` setOPICompiler 1} CompilerUI}
+      {Property.put 'opi.compiler' CompilerUI}
 
       % Try to load some ozrc file:
       local
