@@ -1,8 +1,8 @@
 functor
 import
    Colour(list)
-   DPPane(getNetInfo) at 'x-oz://boot/DPPane.ozf'
-   DPB at 'x-oz://boot/DPB.ozf'
+   DPPane(getNetInfo) at 'x-oz://boot/DPPane'
+   DPB at 'x-oz://boot/DPB'
 export
    netInfo:NetInfo
 define

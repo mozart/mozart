@@ -1,8 +1,8 @@
 functor
 import
    Browser(browse)
-   DPPane(getTablesInfo) at 'x-oz://boot/DPPane.ozf'
-   DPB at 'x-oz://boot/DPB.ozf'
+   DPPane(getTablesInfo) at 'x-oz://boot/DPPane'
+   DPB at 'x-oz://boot/DPB'
 export
    ownerTable:OwnerTable
    borrowTable:BorrowTable
