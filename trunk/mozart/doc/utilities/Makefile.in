@@ -55,12 +55,13 @@ DOCBINFILES = $(SHELLSCRIPTS:%=$(DOCDIR)/%)
 DOCFILES = $(DOCDIR)/html.bst
 ELISPFILES = $(ELS:%=$(ELISPDIR)/%) $(ELCS:%=$(ELISPDIR)/%)
 
-.PHONY: bootstrap all clean veryclean distclean quick
+.PHONY: bootstrap all clean veryclean distclean quick boot-quick
 
 all: $(FUNCTORS) $(SYSLETS) $(ELCS)
 
 quick:
 depend:
+boot-quick: boot-all
 
 include $(SRCTOP)/share/Makefile.boot
 

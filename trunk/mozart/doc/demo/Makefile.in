@@ -6,7 +6,7 @@ WHAT = demo
 MAIN = main.sgml
 PERL = perl
 
-SGMLSRCS = \
+SGMLSRCS0 = \
 	board.sgml bounce.sgml \
 	jobshop.sgml lift.sgml main.sgml queens.sgml \
 	transportation.sgml trucks.sgml cutting.sgml \
@@ -51,6 +51,8 @@ SRCFILES = \
 	$(addprefix Cutting/,$(SRC_CUTTING)) \
 	$(addprefix Transport/,$(SRC_TRANSPORT)) \
 	$(addprefix JobShop/,$(SRC_JOBSHOP))
+
+SGMLSRCS = $(SGMLSRCS0) $(SRCFILES)
 
 HTMLEXTRAFILES = \
 	note-gui-l1.gif note-gui-lm1.gif demo.gif
