@@ -41,6 +41,9 @@
 
 #include "os.hh"
 
+
+
+
 int NetHashTable::hashFunc(NetAddress *na){
   unsigned char *p = (unsigned char*) na;
   int i;
@@ -124,9 +127,11 @@ void OwnerTable::init(int beg,int end){
 void OwnerTable::compactify()
 {
   Assert(size>=no_used);
+
+  // If the size is the minimal size don't touch it...
   if(size==ozconf.dpTableDefaultOwnerTableSize) return;
-  PD((TABLE,"owner compactify enter: size:%d no_used:%d",
-      size,no_used));
+
+  // Sorts the free list of the owner table.
   int i=0;
   int used_slot= -1;
   int* base = &nextfree;
@@ -138,6 +143,8 @@ void OwnerTable::compactify()
     else used_slot=i;
     i++;}
   *base=END_FREE;
+
+
   int after_last=used_slot+1;
 
   if(size<ozconf.dpTableDefaultOwnerTableSize){
@@ -178,7 +185,7 @@ void OwnerTable::resize(){
 #ifdef BTRESIZE_CRITICAL
   OZ_warning("OwnerTable::resize: maybe incorrect");
 #endif
-  int newsize = ozconf.dpTableExpandFactor*size/100;
+  int newsize = (ozconf.dpTableExpandFactor*size)/100;
   PD((TABLE,"resize owner old:%d no_used:%d new:%d",
                 size,no_used,newsize));
   array = (OwnerEntry*) realloc(array,newsize*sizeof(OwnerEntry));
@@ -362,6 +369,9 @@ void BorrowTable::init(int beg,int end)
   array[i].u.nextfree=nextfree;
   nextfree=beg;
 }
+/*
+
+  We dont dare to remove this code yet.
 
 void BorrowTable::compactify(){
   Assert(notGCMarked());
@@ -398,6 +408,38 @@ void BorrowTable::compactify(){
   PD((TABLE,"compactify borrow complete"));
   Assert(notGCMarked());
   return;}
+*/
+
+
+void BorrowTable::compactify(){
+  Assert(notGCMarked());
+
+  // If more than ozconf.dpTableLowLimit is used, dont compactify.
+  if(no_used*100/size >= ozconf.dpTableLowLimit) return;
+
+  // If size of the borrow table is equal to the default size dont
+  // shrink it.
+  if(size==ozconf.dpTableDefaultBorrowTableSize) return;
+
+  int newsize = no_used + no_used * ozconf.dpTableBuffer / 100 ;
+
+  if(newsize<ozconf.dpTableDefaultBorrowTableSize)
+    newsize=ozconf.dpTableDefaultBorrowTableSize;
+
+  BorrowEntry *oldarray=array;
+  array = (BorrowEntry*) malloc(newsize*sizeof(BorrowEntry));
+  if(array==NULL){
+    OZ_warning("compactify borrow table NOT POSSIBLE");
+    array=oldarray;
+    return;}
+
+  int oldsize=size;
+  size=newsize;
+  copyBorrowTable(oldarray,oldsize);
+
+  Assert(notGCMarked());
+  return;}
+
 
 void BorrowTable::resize()
 {
