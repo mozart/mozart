@@ -332,21 +332,23 @@ in
 	  in
 	     node(x:X y:Y r:R s:S dy:DY i:I ...) = {N get($)}
 
+	     %% the horizontal line
 	     {self tk(crea line X*SFX-OS Y*SFY (X-1)*SFX-OS Y*SFY
-		      width:1 fill:TrunkColor)}
+		      width:2 capstyle:projecting fill:TrunkColor)}
 	     case R then
 		case Y > 2 andthen DY == 1 then
+		   %% the stippled line to separate thread trees
 		   {self tk(crea line SFX (Y-DY+1)*SFY-7 10*SFX (Y-DY+1)*SFY-7
-			    stipple: LocalBitMapDir # 'line.xbm')}
-		else skip
-		end
+			    stipple:LocalBitMapDir#'line.xbm')}
+		else skip end
 		{self tk(crea line (X-1)*SFX-OS Y*SFY
 			 (X-1)*SFX-OS (Y-DY+1)*SFY-5
-			 width:1 fill:TrunkColor)}
+			 width:2 capstyle:projecting fill:TrunkColor)}
+
 	     else
 		{self tk(crea line (X-1)*SFX-OS Y*SFY
-			 (X-1)*SFX-OS (Y-1)*SFY
-			 width:1 fill:TrunkColor)}
+			 (X-1)*SFX-OS (Y-DY+1)*SFY-SFY
+			 width:2 capstyle:projecting fill:TrunkColor)}
 	     end
 
 	     local
