@@ -27,7 +27,7 @@
 #include "testing.hh"
 
 
-OZ_C_proc_begin(fsp_isIn, 3)
+OZ_BI_define(fsp_isIn, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_INT "," OZ_EM_FSET "," OZ_EM_TNAME);
 
@@ -36,17 +36,17 @@ OZ_C_proc_begin(fsp_isIn, 3)
   OZ_EXPECT(pe, 0, expectInt);
   OZ_EXPECT(pe, 1, expectFSetVarAny);
   
-  if (!OZ_isVariable(OZ_args[2]) && 
-      !(OZ_isTrue(OZ_args[2]) || OZ_isFalse(OZ_args[2]))) {
+  if (!OZ_isVariable(OZ_in(2)) && 
+      !(OZ_isTrue(OZ_in(2)) || OZ_isFalse(OZ_in(2)))) {
     pe.fail();                                             
     return OZ_typeErrorCPI(expectedType, 2, "");           
   }
   
-  return pe.impose(new IsInPropagator(OZ_args[1],
-				      OZ_args[0],
-				      OZ_args[2]));
+  return pe.impose(new IsInPropagator(OZ_in(1),
+				      OZ_in(0),
+				      OZ_in(2)));
 } 
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return IsInPropagator::propagate(void)
 {

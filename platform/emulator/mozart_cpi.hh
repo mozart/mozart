@@ -32,37 +32,6 @@
 #include <string.h>
 #include "mozart.h"
 
-//-----------------------------------------------------------------------------
-// the old built-in interface
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
-#define OZ_C_proc_begin(Name,arity)                                       \
-OZ_BI_proto(Name);                                                        \
-FUNDECL(OZ_Return,Name,(OZ_Term _OZ_NEW_ARGS[],int _OZ_NEW_LOC[])) {      \
-    const OZ_CFun OZ_self = Name;                                         \
-    OZ_Term OZ_args[arity];                                               \
-    const int OZ_arity = arity;                                           \
-    { int i;                                                              \
-      for (i = arity; i--; ) {                                            \
-	OZ_args[i]=_OZ_NEW_ARGS[_OZ_NEW_LOC==OZ_ID_MAP?i:_OZ_NEW_LOC[i]]; \
-    }                                                                     \
-}
-
-#define OZ_C_proc_end                   OZ_BI_end
-
-/* access arguments */
-#define OZ_getCArg(N) OZ_args[N]
-
-#if defined(__cplusplus)
-}
-#endif
-
-//-----------------------------------------------------------------------------
-// real cpi starts here
-
 #define BIGFSET
 
 // loeckelt:
@@ -76,35 +45,36 @@ FUNDECL(OZ_Return,Name,(OZ_Term _OZ_NEW_ARGS[],int _OZ_NEW_LOC[])) {      \
 //-----------------------------------------------------------------------------
 // misc macros
 
+
 #define OZ_EXPECTED_TYPE(S) char * expectedType = S
 
-#define _OZ_EXPECT(O, A, P, F)                                                  \
-  {                                                                             \
-    OZ_expect_t r = O.F(P);                                                     \
-    if (O.isFailing(r)) {                                                       \
-      O.fail();                                                                 \
-      return OZ_typeErrorCPI(expectedType, A, "");                              \
-    } else if (O.isSuspending(r) || O.isExceptional(r))                         \
-      return O.suspend(); \
+
+#define OZ_EXPECT(O, A, F)                              \
+  {                                                     \
+    OZ_Term     P = OZ_in(A);                           \
+    OZ_expect_t r = O.F(P);                             \
+    if (O.isFailing(r)) {                               \
+      O.fail();                                         \
+      return OZ_typeErrorCPI(expectedType, A, "");      \
+    } else if (O.isSuspending(r) || O.isExceptional(r)) \
+      return O.suspend();                               \
   }
 
-#define OZ_EXPECT(O, P, F)  _OZ_EXPECT(O, P, OZ_args[P], F)
 
-#define _OZ_EXPECT_SUSPEND(O, A, P, F, SC)                                      \
-  {                                                                             \
-    OZ_expect_t r = O.F(P);                                                     \
-    if (O.isFailing(r)) {                                                       \
-      O.fail();                                                                 \
-      return OZ_typeErrorCPI(expectedType, A, "");                              \
-    } else if (O.isSuspending(r)) {                                             \
-      SC += 1;                                                                  \
-    } else if (O.isExceptional(r)) {                                            \
-      return O.suspend(); \
-    }                                                                           \
+#define OZ_EXPECT_SUSPEND(O, A, F, SC)                  \
+  {                                                     \
+    OZ_Term     P = OZ_in(A);                           \
+    OZ_expect_t r = O.F(P);                             \
+    if (O.isFailing(r)) {                               \
+      O.fail();                                         \
+      return OZ_typeErrorCPI(expectedType, A, "");      \
+    } else if (O.isSuspending(r)) {                     \
+      SC += 1;                                          \
+    } else if (O.isExceptional(r)) {                    \
+      return O.suspend();                               \
+    }                                                   \
   }
 
-#define OZ_EXPECT_SUSPEND(O, P, F, SC)          \
-_OZ_EXPECT_SUSPEND(O, P, OZ_args[P], F, SC)
 
 #define _OZ_EM_FDINF    "0"
 #define _OZ_EM_FDSUP    "134 217 726"
