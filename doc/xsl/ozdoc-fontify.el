@@ -119,9 +119,9 @@
       (set-buffer (ozdoc-get-buffer mode))
       (erase-buffer)
       (while alist
-        (setq b (dot-marker))
+        (setq b (point-marker))
         (insert (cdr (car alist)))
-        (setq e (dot-marker))
+        (setq e (point-marker))
         (setq spans (cons (list (car (car alist)) b e) spans)
               alist (cdr alist)))
       (untabify (point-min) (point-max))
