@@ -17,8 +17,20 @@
   <nxml:nxml>
     <nxml:escape char='"'>\"</nxml:escape>
     <nxml:escape char="\">\\</nxml:escape>
+    <call-template name="emacs.packages"/>
     <apply-templates/>
   </nxml:nxml>
+</template>
+
+<template name="emacs.packages">
+  <for-each select="/BOOK/FRONT/META[@NAME='EMACS.PACKAGE' and @VALUE]">
+    <nxml:control>
+      <text>(load "</text>
+      <nxml:data><value-of select="@VALUE"/></nxml:data>
+      <text>")
+</text>
+    </nxml:control>
+  </for-each>
 </template>
 
 <template match="META[@NAME='PROGLANG.MODE' and @ARG1 and @ARG2]">
