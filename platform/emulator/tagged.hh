@@ -60,8 +60,9 @@ enum TypeOfTerm {
 // 12 = 1100 unusable \
 //  8 = 1000 unusable  >  recognized as reference
 //  4 = 0100 unusable /
-//  3 = 0011 free
 };
+
+char * TypeOfTermString[16];
 
 // ---------------------------------------------------------------------------
 // --- TaggedRef: CLASS / BASIC ACCESS FUNCTIONS
