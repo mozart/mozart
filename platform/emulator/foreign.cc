@@ -8,7 +8,7 @@
   */
 
 
-#include "foreign.h"
+#include "oz.h"
 
 
 #include "am.hh"
@@ -223,14 +223,6 @@ OZ_Term OZ_CToString(char *s)
     ret = OZ_cons(OZ_CToInt((unsigned char)*(--p)), ret);
   }
   return ret;
-}
-
-/* -----------------------------------------------------------------
- * no number
- * -----------------------------------------------------------------*/
-
-OZ_Term OZ_dot       _PROTOTYPE((OZ_Term, OZ_Term)) {
-  error("OZ_dot: ni");
 }
 
 /* -----------------------------------------------------------------
@@ -499,7 +491,7 @@ void OZ_addSuspension(OZ_Term var, OZ_Suspension susp)
 
 int OZ_onToplevel()
 {
-  return am.isToplevel();
+  return am.isToplevel() ? 1 : 0;
 }
 
 /* -----------------------------------------------------------------

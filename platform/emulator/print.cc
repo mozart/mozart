@@ -554,10 +554,13 @@ PRINT(ConstTerm)
   switch (typeOf()) {
   case Co_Board:
     ((Board *) this)->print(stream, depth, offset);
+    break;
   case Co_Thread:
     ((Thread *) this)->print(stream, depth, offset);
+    break;
   case Co_Actor:
     ((Actor *) this)->print(stream, depth, offset);
+    break;
   default:
     error("ConstTerm::print");
   }
