@@ -502,7 +502,8 @@ TaggedRef SRecord::normalize(void) {
 }
 
 TaggedRef SRecord::getFeature(TaggedRef f) {
-  return getFeatureInline(f);
+  int i = getIndex(f);
+  return i < 0 ? makeTaggedNULL() : getArg(i);
 }
 
 /************************************************************************/
@@ -768,23 +769,31 @@ Arity *Arity::newArity(TaggedRef entrylist , Bool itf)
   return ar;
 }
 
-
-int Arity::lookupInternal(TaggedRef entry)
-{
-  Assert(!isTuple());
-  const int hsh  = featureHash(entry);
-
-  int i          = hashfold(hsh);
+int Arity::lookupBigIntInternal(TaggedRef entry) {
+  Assert(!isTuple() && oz_isBigInt(entry));
+  const int hsh  = tagged2BigInt(entry)->hash();
   const int step = scndhash(hsh);
+  int i = hashfold(hsh);
   while (1) {
     const TaggedRef key = table[i].key;
-    if (!key) return -1;
-    if (featureEq(key,entry)) {
+    if (!key)
+      return -1;
+    if (featureEq(key,entry))
       return table[i].index;
-    }
     i = hashfold(i+step);
   }
 }
+
+int Arity::lookupInternal(TaggedRef entry) {
+  if (oz_isSmallInt(entry)) {
+    return lookupSmallIntInternal(entry);
+  } else if (oz_isLiteral(entry)) {
+    return lookupLiteralInternal(entry);
+  }
+  Assert(oz_isBigInt(entry));
+  return lookupBigIntInternal(entry);
+}
+
 
 /************************************************************************/
 /*                          Class ArityTable                            */

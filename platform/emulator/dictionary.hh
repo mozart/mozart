@@ -195,6 +195,39 @@ public:
     dt_index size;
     HashElement table[1]; // 1 == placeholder.  Actual size set when allocated.
 
+private:
+  // Hash and rehash until: (1) the element is found, (2) a fully empty slot is
+  // found, or (3) the hash table has only filled slots and restricted empty slots
+  // and does not contain the element.  In first two cases, answer is valid and
+  // routine returns index of slot containing the element or a fully empty slot.
+  // Otherwise returns "invalidIndex".
+  // This hash routine works for completely full hash tables and hash tables with
+  // restricted empty slotes (i.e., in which elements have been removed by making
+  // their value NULL).
+  dt_index DynamicTable::fullhash(TaggedRef id)
+  {
+    Assert(isPwrTwo(size));
+    Assert(oz_isFeature(id));
+    // Function 'hash' may eventually return the literal's seqNumber (see value.hh):
+    if (size==0) { return invalidIndex; }
+    dt_index size1=(size-1);
+    dt_index i=size1 & ((dt_index) featureHash(id));
+    dt_index s=size1;
+    // Rehash if necessary using semi-quadratic probing (quadratic is not covering)
+    // Theorem: semi-quadratic probing is covering in size steps (proof: PVR+JN)
+
+    while(1) {
+      if (table[i].ident==makeTaggedNULL() ||
+          featureEq(table[i].ident,id))
+        return i;
+      if (s==0)
+        return invalidIndex;
+      i+=s;
+      i&=size1;
+      s--;
+    }
+  }
+
 public:
   USEFREELISTMEMORY;
   OZPRINT;
@@ -264,7 +297,22 @@ public:
     // Look up val at index id
     // Return val if it is found
     // Return NULL if nothing is found
-    TaggedRef lookup(TaggedRef id);
+  TaggedRef lookup(TaggedRef id) {
+    Assert(isPwrTwo(size));
+    Assert(oz_isFeature(id));
+    dt_index i=fullhash(id);
+    Assert(i==invalidIndex || i<size);
+    if (i!=invalidIndex &&
+        table[i].value!=makeTaggedNULL() &&
+        featureEq(table[i].ident,id)) {
+      // Val is found
+      return table[i].value;
+    } else {
+      // Val is not found
+      return makeTaggedNULL();
+    }
+  }
+
 
     // Destructively update index id with new value val, if index id already has a value
     // Return TRUE if index id successfully updated, else FALSE if index id does not
@@ -328,10 +376,7 @@ public:
     // Convert table to Literal, SRecord or LTuple
     TaggedRef toRecord(TaggedRef lbl);
 
-private:
-    dt_index fullhash(TaggedRef id);
 };
-
 
 
 inline

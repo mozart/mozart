@@ -302,177 +302,272 @@ OZ_BI_define(BIlabel, 1, 1)
 /*
  * NOTE: similar functions are dot, genericSet, uparrow
  */
+
+#define GDOT_CASE_TYPEFEAT(a) \
+  case LTAG_PAIR(a,LTAG_MARK0):    case LTAG_PAIR(a,LTAG_MARK1):   \
+  case LTAG_PAIR(a,LTAG_LTUPLE0):  case LTAG_PAIR(a,LTAG_LTUPLE1): \
+  case LTAG_PAIR(a,LTAG_SRECORD0): case LTAG_PAIR(a,LTAG_SRECORD1):
+
 inline
-OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
-  DEREF(fea, _1);
+OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
+  ltag_t t_t = tagged2ltag(t);
+  ltag_t f_t = tagged2ltag(f);
+ redo:
+  switch (LTAG_PAIR(t_t,f_t)) {
+    // Dereferencing
+  LTAG_CASE_REF_REF
+    t = * tagged2Ref(t);
+    t_t = tagged2ltag(t);
+    f   = * tagged2Ref(f);
+    f_t = tagged2ltag(f);
+    goto redo;
+  LTAG_CASE_REF_VAL
+    t   = * tagged2Ref(t);
+    t_t = tagged2ltag(t);
+    goto redo;
+  LTAG_CASE_VAL_REF
+    f   = * tagged2Ref(f);
+    f_t = tagged2ltag(f);
+    goto redo;
 
-  DEREF(term, _2);
+    // Type errors for feature
+  GDOT_CASE_TYPEFEAT(LTAG_LTUPLE0)
+  GDOT_CASE_TYPEFEAT(LTAG_LTUPLE1)
+  GDOT_CASE_TYPEFEAT(LTAG_SRECORD0)
+  GDOT_CASE_TYPEFEAT(LTAG_SRECORD1)
+  GDOT_CASE_TYPEFEAT(LTAG_CONST0)
+  GDOT_CASE_TYPEFEAT(LTAG_CONST1)
+    goto type_error_f;
 
-  if (oz_isVar(fea)) {
-    switch (tagged2ltag(term)) {
-    case LTAG_LTUPLE0:
-    case LTAG_LTUPLE1:
-    case LTAG_SRECORD0:
-    case LTAG_SRECORD1:
-      return SUSPEND;
-    case LTAG_VAR0:
-    case LTAG_VAR1:
-      switch (tagged2Var(term)->getType()) {
-      case OZ_VAR_FD:
-      case OZ_VAR_BOOL:
-      case OZ_VAR_FS:
-          goto typeError0;
-      default:
-          return SUSPEND;
-      }
-    case LTAG_LITERAL:
-      goto typeError0;
+    // Variable as feature
+  case LTAG_PAIR(LTAG_CONST0,LTAG_VAR0):
+  case LTAG_PAIR(LTAG_CONST1,LTAG_VAR0):
+  case LTAG_PAIR(LTAG_CONST0,LTAG_VAR1):
+  case LTAG_PAIR(LTAG_CONST1,LTAG_VAR1):
+    if (!oz_isChunk(t))
+      goto type_error_t;
+    else
+      goto feature_var;
+  case LTAG_PAIR(LTAG_VAR0,LTAG_VAR0):
+  case LTAG_PAIR(LTAG_VAR0,LTAG_VAR1):
+  case LTAG_PAIR(LTAG_VAR1,LTAG_VAR0):
+  case LTAG_PAIR(LTAG_VAR1,LTAG_VAR1):
+    switch (tagged2Var(t)->getType()) {
+    case OZ_VAR_FD:
+    case OZ_VAR_BOOL:
+    case OZ_VAR_FS:
+      goto type_error_t;
     default:
-      if (oz_isChunk(term)) return SUSPEND;
-      goto typeError0;
+      goto feature_var;
     }
-  }
-
-  if (!oz_isFeature(fea)) goto typeError1;
-
-  switch (tagged2ltag(term)) {
-  case LTAG_LTUPLE0:
-  case LTAG_LTUPLE1:
-    {
-      if (!oz_isSmallInt(fea)) {
-        if (dot) goto raise; else return FAILED;
-      }
-      int i2 = tagged2SmallInt(fea);
-
-      if (i2 == 1) {
-        if (out) *out = tagged2LTuple(term)->getHead();
-        return PROCEED;
-      }
-      if (i2 == 2) {
-        if (out) *out = tagged2LTuple(term)->getTail();
-        return PROCEED;
-      }
-
-      if (dot) goto raise; else return FAILED;
+  case LTAG_PAIR(LTAG_SRECORD0,LTAG_VAR0):
+  case LTAG_PAIR(LTAG_SRECORD0,LTAG_VAR1):
+  case LTAG_PAIR(LTAG_SRECORD1,LTAG_VAR0):
+  case LTAG_PAIR(LTAG_SRECORD1,LTAG_VAR1):
+  case LTAG_PAIR(LTAG_LITERAL,LTAG_VAR0):
+  case LTAG_PAIR(LTAG_LITERAL,LTAG_VAR1):
+  case LTAG_PAIR(LTAG_LTUPLE0,LTAG_VAR0):
+  case LTAG_PAIR(LTAG_LTUPLE0,LTAG_VAR1):
+  case LTAG_PAIR(LTAG_LTUPLE1,LTAG_VAR0):
+  case LTAG_PAIR(LTAG_LTUPLE1,LTAG_VAR1):
+  feature_var:
+    switch (tagged2Var(f)->getType()) {
+    case OZ_VAR_FS:
+    case OZ_VAR_OF:
+      goto type_error_f;
+    default:
+      return SUSPEND;
     }
 
-  case LTAG_SRECORD0:
-  case LTAG_SRECORD1:
-    {
-      TaggedRef t = tagged2SRecord(term)->getFeatureInline(fea);
-      if (t == makeTaggedNULL()) {
-        if (dot) goto raise; else return FAILED;
-      }
-      if (out) *out = t;
+    // List
+  case LTAG_PAIR(LTAG_LTUPLE0,LTAG_SMALLINT):
+  case LTAG_PAIR(LTAG_LTUPLE1,LTAG_SMALLINT):
+    if (f == makeTaggedSmallInt(1)) {
+      tf = tagged2LTuple(t)->getHead();
       return PROCEED;
     }
+    if (f == makeTaggedSmallInt(2)) {
+      tf = tagged2LTuple(t)->getTail();
+      return PROCEED;
+    }
+    goto no_feature;
+  case LTAG_PAIR(LTAG_LTUPLE0,LTAG_LITERAL):
+  case LTAG_PAIR(LTAG_LTUPLE1,LTAG_LITERAL):
+    goto no_feature;
+  case LTAG_PAIR(LTAG_LTUPLE0,LTAG_CONST0):
+  case LTAG_PAIR(LTAG_LTUPLE1,LTAG_CONST0):
+  case LTAG_PAIR(LTAG_LTUPLE0,LTAG_CONST1):
+  case LTAG_PAIR(LTAG_LTUPLE1,LTAG_CONST1):
+    if (tagged2Const(f)->getType() != Co_BigInt)
+      goto type_error_f;
+    else
+      goto no_feature;
 
-  case LTAG_VAR0:
-  case LTAG_VAR1:
-    switch (tagged2Var(term)->getType()) {
+    // SRecord
+  case LTAG_PAIR(LTAG_SRECORD0,LTAG_CONST0):
+  case LTAG_PAIR(LTAG_SRECORD1,LTAG_CONST0):
+  case LTAG_PAIR(LTAG_SRECORD0,LTAG_CONST1):
+  case LTAG_PAIR(LTAG_SRECORD1,LTAG_CONST1):
+    if (tagged2Const(f)->getType() != Co_BigInt)
+      goto type_error_f;
+    tf = tagged2SRecord(t)->getBigIntFeatureInline(f);
+    if (tf == makeTaggedNULL())
+      goto no_feature;
+    return PROCEED;
+  case LTAG_PAIR(LTAG_SRECORD0,LTAG_SMALLINT):
+  case LTAG_PAIR(LTAG_SRECORD1,LTAG_SMALLINT):
+    tf = tagged2SRecord(t)->getSmallIntFeatureInline(f);
+    if (tf == makeTaggedNULL())
+      goto no_feature;
+    return PROCEED;
+  case LTAG_PAIR(LTAG_SRECORD0,LTAG_LITERAL):
+  case LTAG_PAIR(LTAG_SRECORD1,LTAG_LITERAL):
+    tf = tagged2SRecord(t)->getLiteralFeatureInline(f);
+    if (tf == makeTaggedNULL())
+      goto no_feature;
+    return PROCEED;
+
+    // Literal
+  case LTAG_PAIR(LTAG_LITERAL,LTAG_CONST0):
+  case LTAG_PAIR(LTAG_LITERAL,LTAG_CONST1):
+    if (tagged2Const(f)->getType() != Co_BigInt)
+      goto type_error_f;
+    else
+      goto no_feature;
+  case LTAG_PAIR(LTAG_LITERAL,LTAG_SMALLINT):
+  case LTAG_PAIR(LTAG_LITERAL,LTAG_LITERAL):
+    goto no_feature;
+
+    // Variable
+  case LTAG_PAIR(LTAG_VAR0,LTAG_CONST0):
+  case LTAG_PAIR(LTAG_VAR1,LTAG_CONST0):
+  case LTAG_PAIR(LTAG_VAR0,LTAG_CONST1):
+  case LTAG_PAIR(LTAG_VAR1,LTAG_CONST1):
+    if (tagged2Const(f)->getType() != Co_BigInt)
+      goto type_error_f;
+    /* fall through */
+  case LTAG_PAIR(LTAG_VAR0,LTAG_SMALLINT):
+  case LTAG_PAIR(LTAG_VAR1,LTAG_SMALLINT):
+  case LTAG_PAIR(LTAG_VAR0,LTAG_LITERAL):
+  case LTAG_PAIR(LTAG_VAR1,LTAG_LITERAL):
+    switch (tagged2Var(t)->getType()) {
     case OZ_VAR_OF:
       {
-        int ret = tagged2GenOFSVar(term)->hasFeature(fea,out);
-        if (ret == FAILED) goto typeError0;
+        int ret = tagged2GenOFSVar(t)->hasFeature(f,&tf);
+        if (ret == FAILED)
+          goto no_feature;
         return ret;
       }
     case OZ_VAR_FD:
     case OZ_VAR_BOOL:
     case OZ_VAR_FS:
-      goto typeError0;
+      goto type_error_t;
     default:
-      if (!oz_isFeature(fea))
-        oz_typeError(1,"Feature");
       return SUSPEND;
     }
 
-  case LTAG_LITERAL:
-    if (dot) goto raise; else return FAILED;
-
-  default:
-    if (oz_isChunk(term)) {
-      TaggedRef t;
-      switch (tagged2Const(term)->getType()) {
-      case Co_Extension:
-        {
-          TaggedRef t = tagged2Extension(term)->getFeatureV(fea);
-          if (t == makeTaggedNULL()) {
-            if (dot) goto raise; else return FAILED;
-          }
-          if (out) *out = t;
-          return PROCEED;
-        }
-      case Co_Chunk:
-        t = tagged2SChunk(term)->getFeature(fea);
-        break;
-      case Co_Object:
-        t = tagged2Object(term)->getFeature(fea);
-        break;
-      case Co_Class:
-        t = tagged2ObjectClass(term)->classGetFeature(fea);
-        if (!t) {
-          TaggedRef cfs;
-          cfs = oz_deref(tagged2ObjectClass(term)->classGetFeature(NameOoFeat));
-          if (oz_isSRecord(cfs)) {
-            t = tagged2SRecord(cfs)->getFeatureInline(fea);
-            if (t) {
-              TaggedRef dt = oz_deref(t);
-
-              if (oz_isName(dt) && oz_eq(dt,NameOoFreeFlag))
-                t = makeTaggedNULL();
-            }
-          }
-        }
-        break;
-      case Co_Array:
-        {
-          TaggedRef t;
-          OZ_Return arrayGetInline(TaggedRef,TaggedRef,TaggedRef&);
-          OZ_Return r = arrayGetInline(term,fea,t);
-          if (r!=PROCEED) return (dot)?r:FAILED;
-          if (out) *out = t;
-          return PROCEED;
-        }
-      case Co_Dictionary:
-        {
-          TaggedRef t;
-          extern OZ_Return dictionaryGetInline(TaggedRef,TaggedRef,TaggedRef&);
-          OZ_Return r = dictionaryGetInline(term,fea,t);
-          if (r!=PROCEED) return (dot)?r:FAILED;
-          if (out) *out = t;
-          return PROCEED;
-        }
-      default:
-        // no public known features
-        t = makeTaggedNULL();
-        break;
-      }
-      if (t == makeTaggedNULL()) {
-        if (dot) goto raise; else return FAILED;
-      }
-      if (out) *out = t;
+    // Const
+  case LTAG_PAIR(LTAG_CONST0,LTAG_CONST0):
+  case LTAG_PAIR(LTAG_CONST0,LTAG_CONST1):
+  case LTAG_PAIR(LTAG_CONST1,LTAG_CONST0):
+  case LTAG_PAIR(LTAG_CONST1,LTAG_CONST1):
+    if (tagged2Const(f)->getType() != Co_BigInt)
+      goto type_error_f;
+  case LTAG_PAIR(LTAG_CONST0,LTAG_LITERAL):
+  case LTAG_PAIR(LTAG_CONST1,LTAG_LITERAL):
+  case LTAG_PAIR(LTAG_CONST0,LTAG_SMALLINT):
+  case LTAG_PAIR(LTAG_CONST1,LTAG_SMALLINT):
+    switch (tagged2Const(t)->getType()) {
+    case Co_Extension:
+      if (!oz_isChunkExtension(t))
+        goto type_error_t;
+      tf = tagged2Extension(t)->getFeatureV(f);
+      if (tf == makeTaggedNULL())
+        goto no_feature;
       return PROCEED;
+    case Co_Object:
+      tf = tagged2Object(t)->getFeature(f);
+      if (tf == makeTaggedNULL())
+        goto no_feature;
+      return PROCEED;
+    case Co_Port:
+    case Co_Lock:
+      goto no_feature;
+    case Co_Chunk:
+      tf = tagged2SChunk(t)->getFeature(f);
+      if (tf == makeTaggedNULL())
+        goto no_feature;
+      return PROCEED;
+    case Co_Class:
+      tf = tagged2ObjectClass(t)->classGetFeature(f);
+      if (tf == makeTaggedNULL()) {
+        TaggedRef cfs = oz_deref(tagged2ObjectClass(t)->classGetFeature(NameOoFeat));
+        if (oz_isSRecord(cfs)) {
+          tf = tagged2SRecord(cfs)->getFeature(f);
+          if (tf) {
+            TaggedRef dt = oz_deref(tf);
+            if (oz_isName(dt) && oz_eq(dt,NameOoFreeFlag))
+              goto no_feature;
+          } else {
+            goto no_feature;
+          }
+        }
+        goto no_feature;
+      }
+      return PROCEED;
+    case Co_Array:
+      {
+        if (!oz_isSmallInt(f))
+          goto no_feature;
+        tf = tagged2Array(t)->getArg(tagged2SmallInt(f));
+        if (tf == makeTaggedNULL())
+          goto no_feature;
+        return PROCEED;
+      }
+    case Co_Dictionary:
+      if (tagged2Dictionary(t)->getArg(f,tf) != PROCEED)
+        goto no_feature;
+      return PROCEED;
+    default:
+      goto type_error_t;
     }
 
-    goto typeError0;
+  default:
+   goto type_error_t;
   }
-typeError0:
+
+ type_error_t:
   oz_typeError(0,"Record or Chunk");
-typeError1:
+
+ type_error_f:
   oz_typeError(1,"Feature");
-raise:
-  return oz_raise(E_ERROR,E_KERNEL,".",2,term,fea);
+
+ no_feature:
+  if (isdot)
+    return oz_raise(E_ERROR,E_KERNEL,".",2,t,f);
+  else
+    return FAILED;
 }
 
 // extern
 OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out) {
-  return genericDot(term,fea,&out,TRUE);
+  return genericDot(term,fea,out,TRUE);
 }
-OZ_DECLAREBI_USEINLINEFUN2(BIdot,dotInline)
+
+OZ_BI_define(BIdot,2,1) {
+  OZ_Return r = genericDot(OZ_in(0), OZ_in(1), OZ_out(0), TRUE);
+  if (r == SUSPEND) {
+    oz_suspendOn2(OZ_in(0), OZ_in(1));
+  } else {
+    return r;
+  }
+} OZ_BI_end
+
 
 OZ_BI_define(BIhasFeature,2,1)
 {
-  OZ_Return r = genericDot(OZ_in(0),OZ_in(1),0,FALSE);
+  TaggedRef dummy;
+  OZ_Return r = genericDot(OZ_in(0),OZ_in(1),dummy,FALSE);
   switch (r) {
   case PROCEED: OZ_RETURN(oz_true());
   case FAILED : OZ_RETURN(oz_false());
@@ -491,7 +586,7 @@ OZ_BI_define(BImatchDefault,3,1) {
   OZ_Term aux=0;
   oz_declareIN(0,rec);
   oz_declareIN(1,fea);
-  OZ_Return ret = genericDot(rec,fea,&aux,FALSE);
+  OZ_Return ret = genericDot(rec,fea,aux,FALSE);
   if (ret==SUSPEND) {
     oz_suspendOn2(rec,fea);
   } else if (ret==PROCEED) {
@@ -1840,7 +1935,7 @@ OZ_BI_define(BItestRecordFeature,2,2)
   oz_declareIN(0,val);
   oz_declareIN(1,patFeature);
   TaggedRef out;
-  OZ_Return ret = genericDot(val,patFeature,&out,FALSE);
+  OZ_Return ret = genericDot(val,patFeature,out,FALSE);
   switch (ret) {
   case SUSPEND:
     oz_suspendOn2(val,patFeature);

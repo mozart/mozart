@@ -1134,8 +1134,12 @@ private:
 
   KeyAndIndex table[1];
 
-  int scndhash(int i) { return ((i&7)<<1)|1; }
-  int hashfold(int i) { return i&hashmask; }
+  int scndhash(int i) {
+    return ((i&7)<<1)|1;
+  }
+  int hashfold(int i) {
+    return i&hashmask;
+  }
 
 public:
   OZPRINT
@@ -1148,8 +1152,38 @@ public:
     return -1;
   }
 
-  // use SRecord::getIndex instead of this!
-  int lookupInternal(TaggedRef entry);   // return -1, if argument not found.
+  int lookupLiteralInternal(TaggedRef entry) {
+    Assert(!isTuple());
+    const int hsh  = tagged2Literal(entry)->hash();
+    const int step = scndhash(hsh);
+    int i = hashfold(hsh);
+    while (1) {
+      const TaggedRef key = table[i].key;
+      if (oz_eqNoCheck(key,entry))
+        return table[i].index;
+      if (!key)
+        return -1;
+      i = hashfold(i+step);
+    }
+  }
+
+  int lookupSmallIntInternal(TaggedRef entry) {
+    Assert(!isTuple());
+    const int hsh  = smallIntHash(entry);
+    const int step = scndhash(hsh);
+    int i = hashfold(hsh);
+    while (1) {
+      const TaggedRef key = table[i].key;
+      if (oz_eqNoCheck(key,entry))
+        return table[i].index;
+      if (!key)
+        return -1;
+      i = hashfold(i+step);
+    }
+  }
+
+  int lookupBigIntInternal(TaggedRef entry);
+  int lookupInternal(TaggedRef entry);
 
   TaggedRef getList() { return list; }
   int getWidth()      { return width; }
@@ -1360,22 +1394,55 @@ public:
     return isTuple() ? aritytable.find(getArityList()) : getRecordArity();
   }
 
-  int getIndex(TaggedRef feature)
-  {
-    Assert(oz_isFeature(feature));
+  int getLiteralIndex(TaggedRef f) {
+    Assert(oz_isLiteral(f));
     if (isTuple()) {
-      if (!oz_isSmallInt(feature)) return -1;
-      int f=tagged2SmallInt(feature);
-      return (1 <= f && f <= getWidth()) ? f-1 : -1;
+      return -1;
+    } else {
+      return getRecordArity()->lookupLiteralInternal(f);
     }
-    return getRecordArity()->lookupInternal(feature);
+  }
+  int getSmallIntIndex(TaggedRef f) {
+    Assert(oz_isSmallInt(f));
+    if (isTuple()) {
+      int i = tagged2SmallInt(f)-1;
+      if ((0<=i) && (i<getWidth()))
+        return i;
+      else
+        return -1;
+    } else {
+      return getRecordArity()->lookupSmallIntInternal(f);
+    }
+  }
+  int getBigIntIndex(TaggedRef f) {
+    Assert(oz_isBigInt(f));
+    if (isTuple()) {
+      return -1; // FIXME
+    } else {
+      return getRecordArity()->lookupBigIntInternal(f);
+    }
+  }
+  int getIndex(TaggedRef f) {
+    if (oz_isSmallInt(f)) {
+      return getSmallIntIndex(f);
+    } else if (oz_isLiteral(f)) {
+      return getLiteralIndex(f);
+    }
+    Assert(oz_isBigInt(f));
+    return getBigIntIndex(f);
   }
 
-  Bool hasFeature(TaggedRef feature) { return getIndex(feature) >= 0; }
 
-  TaggedRef getFeatureInline(TaggedRef feature)
-  {
-    int i = getIndex(feature);
+  TaggedRef getSmallIntFeatureInline(TaggedRef f) {
+    int i = getSmallIntIndex(f);
+    return i < 0 ? makeTaggedNULL() : getArg(i);
+  }
+  TaggedRef getLiteralFeatureInline(TaggedRef f) {
+    int i = getLiteralIndex(f);
+    return i < 0 ? makeTaggedNULL() : getArg(i);
+  }
+  TaggedRef getBigIntFeatureInline(TaggedRef f) {
+    int i = getBigIntIndex(f);
     return i < 0 ? makeTaggedNULL() : getArg(i);
   }
   TaggedRef getFeature(TaggedRef);
