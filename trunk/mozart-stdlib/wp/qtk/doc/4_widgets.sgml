@@ -1,5 +1,5 @@
 <CHAPTER ID="chapter.widgets">
-  <TITLE>Widgets Reference</TITLE>
+  <TITLE>Widget Reference</TITLE>
 
 <P>
 
@@ -8,13 +8,9 @@
 &widgetcheckbutton;
 &widgetdropdownlistbox;
 &widgetentry;
+&widgetgrid;
 &widgetlabel;
 &widgetlistbox;
-&widgetline;
-&widgetrubberframe;
-&widgetscale;
-&widgetscrollbar;
-&widgetspace;
 &widgetmenubutton;
 &widgetmessage;
 &widgetnumberentry;
@@ -25,9 +21,13 @@
 &widgettbbutton;
 &widgettbcheckbutton;
 &widgettbradiobutton;
-&widgettext;
 &widgettdlr;
-&widgetgrid;
+&widgetline;
+&widgetrubberframe;
+&widgetscale;
+&widgetscrollbar;
+&widgetspace;
+&widgettext;
 &widgettoplevel;
 
 

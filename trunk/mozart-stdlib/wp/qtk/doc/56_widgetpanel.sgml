@@ -62,7 +62,7 @@ descendant of a sibling of this widget. In this case the <<'raise'>> command wil
 just above <<W>>; this could end up either raising
 or lowering the widget.
 
-<para><title>addPanel</title><p><<addPanel(D before:B after:A)>>: Adds a frame to the panel. <<D>> must be a record describing a widget. This widget has a supplementary parameter: <<title:VS>>. <<VS>> must be a virtual string describing the text to display in the tab corresponding to the widget. If the <<before:B>> parameter is pecified, <<B>> must be an handle to a widget displayed in the panel to insert <<D>> just before <<B>>, or <<B>> must be the atom <<all>> to insert <<D>> before all other widgets in the panel. If the <<after:A>> parameter is pecified, <<A>> must be an handle to a widget displayed in the panel to insert <<D>> just after <<A>>, or <<A>> must be the atom <<all>> to insert <<D>> after all other widgets in the panel. If both <<before>> and <<after>> are specified, only <<after>> is taken into account. If none are specified, <<after:all>> is assumed by default.
+<para><title>addPanel</title><p><<addPanel(D before:B after:A)>>: Adds a frame to the panel. <<D>> must be a record describing a widget. This widget has a supplementary parameter: <<title:VS>>. <<VS>> must be a virtual string describing the text to display in the tab corresponding to the widget. If the <<before:B>> parameter is pecified, <<B>> must be a handle to a widget displayed in the panel to insert <<D>> just before <<B>>, or <<B>> must be the atom <<all>> to insert <<D>> before all other widgets in the panel. If the <<after:A>> parameter is pecified, <<A>> must be a handle to a widget displayed in the panel to insert <<D>> just after <<A>>, or <<A>> must be the atom <<all>> to insert <<D>> after all other widgets in the panel. If both <<before>> and <<after>> are specified, only <<after>> is taken into account. If none are specified, <<after:all>> is assumed by default.
 
 <para><title>bind</title><p><<bind(event:E action:A args:LA append:AP)>>: Specifies an action <<LA>> to execute when the event <<E>> is triggered.
 <list>
@@ -72,7 +72,7 @@ or lowering the widget.
 <item> The boolean <<append>> parameter specifies if the binding overrides the previous binding for this event, or adds a supplementary action. If not specified, <<false>> is assumed.
 </LIST>
 
-<para><title>deletePanel</title><p><<deletePanel(O)>>: Removes a widget from the panel. <<O>> must be an handle to a widget that is in the panel.
+<para><title>deletePanel</title><p><<deletePanel(O)>>: Removes a widget from the panel. <<O>> must be a handle to a widget that is in the panel.
 
 <para><title>get</title><p><<get(parameter1:Variable1 ... parameterX:VariableX)>>: Obtains the value of one or more parameters. <<parameterX>> must be a valid parameter for the widget. <<VariableX>> must be free variables that will receive the current value of the parameters.
 
@@ -89,7 +89,7 @@ or lowering the widget.
 
 <para><title>releaseGrab</title><p><<releaseGrab>>: Releases the grab on the widget if there is one, otherwise does nothing.
 
-<para><title>selectPanel</title><p><<selectPanel(O)>>: Selects a widget to display in the panel. <<O>> must be an handle to a widget that is in the panel.
+<para><title>selectPanel</title><p><<selectPanel(O)>>: Selects a widget to display in the panel. <<O>> must be a handle to a widget that is in the panel.
 
 <para><title>set</title><p><<set(parameter1:value1 ... parameterX:valueX)>>: Changes the value of one or more parameters. <<parameterX>> must be a valid parameter for the widget. <<valueX>> must be a valid value for the parameter.
 

@@ -21,7 +21,7 @@ end
 <subsection> <TITLE>Description</TITLE>
 
 <P>
-A dropdownlistbox is a widget that displays a button with a down arrow. Clicking this button pops down a listbox allowing the user to select one of the displayed items. The listbox can ben pulled down either at the left or at the right of the button. Usually a label or an entry are placed at the left of the dropdownlistbox. The user can change the contents of that widget by selecting an item in the listbox.
+A dropdownlistbox is a widget that displays a button with a down arrow. Clicking this button pops down a listbox allowing the user to select one of the displayed items. The listbox can ben pulled down either at the left or at the right of the button. Usually a label or an entry is placed at the left of the dropdownlistbox. The user can change the contents of that widget by selecting an item in the listbox.
 </P>
 <P>
 A dropdownlistbox is a just a button and a listbox linked together. All parameters that begin by <<button>> configure the button part of the widget while the remaining parameters configure the listbox part of the widget. See these specific widgets for more details.
@@ -291,3 +291,4 @@ window exits). During global grabs the window manager will not receive pointer e
 
 
 </section>
+

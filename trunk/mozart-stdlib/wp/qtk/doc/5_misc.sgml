@@ -6,7 +6,7 @@
 <section ID="misc.color"><TITLE>Colors</TITLE>
 
 <P>
-Valid colors are atoms that describe the color like
+Valid colors are atoms that describe a color like
 <<red>>, <<blue>>, <<green>>, <<yellow>>, <<white>>, <<black>>
 
 or records of the form
@@ -18,10 +18,10 @@ where <<RR>>, <<GG>> and <<BB>> are integers ranging from 0 to 255 and correspon
 
 <subsection> <TITLE>Description</TITLE>
 <P>
-A bitmap is an image whose pixels can display either of two colors or be transparent. A bitmap image is defined by four things: a background color, a foreground color, and two bitmaps, called the source and the mask. Each of the bitmaps specifies 0/1 values for a rectangular array of pixels, and the two bitmaps must have the same dimensions. For pixels where the mask is zero, the image displays nothing, producing a transparent effect. For other pixels, the image displays the foreground color if the source data is one and the background color if the source data is zero. 
+A bitmap is an image whose pixels can display either of two colors or be transparent. Four things define a bitmap: a background color, a foreground color, and two bitmaps, called the source and the mask. Each of the bitmaps specifies 0/1 values for a rectangular array of pixels, and the two bitmaps must have the same dimensions. For pixels where the mask is zero, the image displays nothing, producing a transparent effect. For other pixels, the image displays the foreground color if the source data is one and the background color if the source data is zero. 
 </P>
 <P>
-In QTk, bitmaps are built by the <<QTk.newImage>> function. This function takes one parameter: a record of the form: <<bitmap(param1:value1 ... paramX:valueX)>> and returns an object allowing to reference that bitmap and change it as needed. The valid parameters and methods are described below.
+In QTk, bitmaps are built by the <<QTk.newImage>> function. This function takes one parameter: a record of the form <<bitmap(param1:value1 ... paramX:valueX)>> and returns an object allowing to reference that bitmap and change it as needed. The valid parameters and methods are described below.
 </P>
 
 <subsection> <TITLE>Parameters</TITLE>
@@ -65,7 +65,7 @@ In QTk, bitmaps are built by the <<QTk.newImage>> function. This function takes 
 A photo is an image whose pixels can display any color or be transparent. A photo image is stored internally in full color (24 bits per pixel), and is displayed using dithering if necessary. Image data for a photo image can be obtained from a file, a string or a url. At present, only GIF and PPM/PGM formats are supported. A photo image is transparent in regions where no image data has been supplied.
 </P>
 <P>
-In QTk, photos are built by the <<QTk.newImage>> function. This function takes one parameter: a record of the form: <<photot(param1:value1 ... paramX:valueX)>> and returns an object allowing to reference that photo and change it as needed. The valid parameters and methods are described below.
+In QTk, photos are built by the <<QTk.newImage>> function. This function takes one parameter: a record of the form <<photo(param1:value1 ... paramX:valueX)>> and returns an object allowing to reference that photo and change it as needed. The valid parameters and methods are described below.
 </P>
 
 <subsection> <TITLE>Parameters</TITLE>
@@ -159,7 +159,7 @@ Where all <<Pij>> are valid colors (see <ptr to="misc.color">). The <<to>> optio
 
 <section ID="misc.imagelibrary"><TITLE>Image libraries</TITLE>
 <P>
-When an application uses several bitmaps or photos, it is usefull to group all these images into a single file called an image library. Image librairies can be saved to files and loaded later, restoring all images that were stored inside the library. Moreover image libraires files are functors that can be linked to your application so that graphical ressources like images can be packaged inside your application binaries.
+When an application uses several bitmaps or photos, it is useful to group all these images into a single file called an image library. Image libraries can be saved to files and loaded later, restoring all images that were stored inside the library. Moreover image libraries files are functors that can be linked to your application so that graphical resources like images can be packaged inside your application binaries.
 </P>
 <P>
 The function <<QTk.newImageLibrary>> returns an empty image library. An image library is an object that implements the following interface:
@@ -170,7 +170,7 @@ The function <<QTk.newImageLibrary>> returns an empty image library. An image li
 
 <ITEM> <<newBitmap(...)>>: Adds a bitmap to the image library. All the parameters are the same as the ones for <<QTk.newImage bitmap(...)>>, except a supplementary one: <<name:A>> that defines the image's name inside the image library. If not specified, a name is determined by the file name or url, or an error is raised if no name could be determined. <<A>> must be an atom.
 
-<ITEM> <<get(name:A image:V)>>: Binds <<V>> to the image in the image library that has the name <<A>>. The returned image is similar the images built using then <<QTk.newImage>> function. However, if you modify these images after they were created inside the image library, the image libray won't be updated. You need to explicitly save and reload the modified image into the library.
+<ITEM> <<get(name:A image:V)>>: Binds <<V>> to the image in the image library that has the name <<A>>. The returned image is similar the images built using then <<QTk.newImage>> function. However, if you modify these images after they were created inside the image library, the image library won't be updated. You need to explicitly save and reload the modified image into the library.
 
 <ITEM> <<getNames(V)>>: Binds <<V>> to a list of atoms that are all the names of all avalaible images in the library.
 
@@ -201,7 +201,7 @@ Lib={QTk.buildImageLibrary BL}
 >>>
 </LIST>
 
-Compiling your functor now staticaly includes all the required data for rebuilding the image library, and all the necessary commands for creating a new one from this data. The original image library file is no more needed for the correct execution of your application.
+Compiling your functor now statically includes all the required data for rebuilding the image library, and all the necessary commands for creating a new one from this data. The original image library file is no more needed for the correct execution of your application.
 
 <section ID="misc.distance"><TITLE>Screen distances</TITLE>
 
@@ -311,7 +311,7 @@ Fonts are obtained by the <<QTk.newFont>> function. The only parameter of that f
 
 <P>
 <LIST>
-<ITEM> <<family:VS>>: The case-insensitive font family name. The following families are garanteed to exist on all platforms: <<Courier>> (a monospaced ``typewriter'' font), <<Times>> (a serifed ``newspaper'' font), and <<Helvetica>> (a sans-serif ``European'' font). The most closely matching native font family will automatically be substituted when one of the above font families is used. The name may also be the name of a native, platform-specific font family; in that case it will work as desired on one platform but may not display correctly on other platforms. If the family is unspecified or unrecognized, a platform-specific default font will be chosen. 
+<ITEM> <<family:VS>>: The case-insensitive font family name. The following families are guaranteed to exist on all platforms: <<Courier>> (a monospaced ``typewriter'' font), <<Times>> (a serifed ``newspaper'' font), and <<Helvetica>> (a sans-serif ``European'' font). The most closely matching native font family will automatically be substituted when one of the above font families is used. The name may also be the name of a native, platform-specific font family; in that case it will work as desired on one platform but may not display correctly on other platforms. If the family is unspecified or unrecognized, a platform-specific default font will be chosen. 
 
 <ITEM> <<size:I>>: The desired size of the font. If <<I>> is a positive number, it is interpreted as a size in points. If <<I>> is a negative number, its absolute value is interpreted as a size in pixels. If a font cannot be displayed at the specified size, a nearby size will be chosen. If size is unspecified or zero, a platform-dependent default size will be chosen.  Sizes should normally be specified in points so the application will remain the same ruler size on the screen, even when changing screen resolutions or moving scripts across platforms. However, specifying pixels is useful in certain circumstances such as when a piece of text must line up with respect to a fixed-size bitmap.
 
@@ -339,7 +339,7 @@ Fonts obtained by <<Qtk.newFont>> are objects that support the following methods
 
 <ITEM> <<families(V)>>: Binds <<V>> to a list a string containing all available font families on the platform.
 
-<ITEM> <<measure(VS V ?displayof:D)>>: Binds <<V>> to the amount of space the string <<VS>> would use in the given font when displayed in the window <<D>>. If the window <<D>> argument is omitted, it defaults to the main window. The return value is the total width in pixels of text, not including the extra pixels used by highly exagerrated characters such as cursive ``f''. If the string contains newlines or tabs, those characters are not expanded or treated specially when measuring the string. 
+<ITEM> <<measure(VS V ?displayof:D)>>: Binds <<V>> to the amount of space the string <<VS>> would use in the given font when displayed in the window <<D>>. If the window <<D>> argument is omitted, it defaults to the main window. The return value is the total width in pixels of text, not including the extra pixels used by highly exaggerated characters such as cursive ``f''. If the string contains newlines or tabs, those characters are not expanded or treated specially when measuring the string. 
 
 <ITEM> <<metrics(A V ?displayof:D>>: Binds <<V>> to metrics information of the font (font-specific data) when displayed in the window <<D>> or in the main window is the <<displayof>> parameter is not specified. The returned information depends on the value of <<A>>:
 
@@ -350,7 +350,7 @@ Fonts obtained by <<Qtk.newFont>> are objects that support the following methods
 
 <ITEM> <<linespace>>:  Returns how far apart vertically in pixels two lines of text using the same font should be placed so that none of the characters in one line overlap any of the characters in the other line. This is generally the sum of the ascent above the baseline line plus the descent below the baseline. 
 
-<ITEM> <<fixed>>: Returns a boolean flag that is ``1'' if this is a fixed-width font, where each normal character is the the same width as all the other characters, or is ``0'' if this is a proportionally-spaced font, where individual characters have different widths. The widths of control characters, tab characters, and other non-printing characters are not included when calculating this value. 
+<ITEM> <<fixed>>: Returns a boolean flag that is ``1'' if this is a fixed-width font, where each normal character is the same width as all the other characters, or is ``0'' if this is a proportionally-spaced font, where individual characters have different widths. The widths of control characters, tab characters, and other non-printing characters are not included when calculating this value. 
 </LIST>
 
 </LIST>
@@ -358,19 +358,17 @@ Fonts obtained by <<Qtk.newFont>> are objects that support the following methods
 <section ID="misc.winfo"><TITLE>Window-related information</TITLE>
 
 <P>
-All widgets have a <<winfo(parameter1:value1 ... parameterX:valueX)>> method that obtains window-related information. <<parameterX>> must be a valid parameter for the <<winfo>>. <<valueX>> must be a free variable which will receive the current value of the parameter. The parameters for this method are:
+All widgets have a <<winfo(parameter1:variable1 ... parameterX:variableX)>> method that obtains window-related information. <<parameterX>> must be a valid parameter for the <<winfo>>. <<variableX>> must be a free variable which will receive the current value of the parameter. The parameters for this method are:
 
 <LIST>
 
 <ITEM> <<cells>>: Returns an integer giving the number of cells in the color map for window. 
 
-<ITEM> <<colormapfull>>: Returns <<true>> if the colormap for window is known to be full, <<false>> otherwise. The colormap for a window is
-    ``known'' to be full if the last attempt to allocate a new color on that window failed and this application
-    hasn't freed any colors in the colormap since the failed allocation. 
+<ITEM> <<colormapfull>>: Returns <<true>> if the colormap for window is known to be full, <<false>> otherwise. The colormap for a window is known to be full if the last attempt to allocate a new color on that window failed and this application hasn't freed any colors in the colormap since the failed allocation. 
 
 <ITEM> <<depth>>: Returns an integer giving the depth of window (number of bits per pixel).
 
-<ITEM> <<fpixels>>: Returns a one parameter function. Giving a valid screen distance to this function (see <ptr to="misc.distance">) returns a floating-point value giving the number of pixels in the widget corresponding to that distance. The return value may be fractional; for an integer value, use <<winfo(pixels:V)>>. 
+<ITEM> <<fpixels>>: Returns a one-parameter function. Giving a valid screen distance to this function (see <ptr to="misc.distance">) returns a floating-point value giving the number of pixels in the widget corresponding to that distance. The return value may be fractional; for an integer value, use <<winfo(pixels:V)>>. 
 
 <ITEM> <<geometry>>: Returns a record of the form <<geometry(width:W height:H x:X y:Y)>> describing the size and position of the widget inside its parent.
 
@@ -389,7 +387,7 @@ All widgets have a <<winfo(parameter1:value1 ... parameterX:valueX)>> method tha
 <ITEM> <<parent>>: Returns the Tk path name of widget's parent, or an empty string if window is the main window of the
     application.
 
-<ITEM> <<pixels>>: Returns a one parameter function. Giving a valid screen distance to this function (see <ptr to="misc.distance">) returns an integer value giving the number of pixels in the widget corresponding to that distance. The value is rounded to the nearest fractional value; for a fractional value, use <<winfo(fpixels:V)>>. 
+<ITEM> <<pixels>>: Returns a one-parameter function. Giving a valid screen distance to this function (see <ptr to="misc.distance">) returns an integer value giving the number of pixels in the widget corresponding to that distance. The value is rounded to the nearest fractional value; for a fractional value, use <<winfo(fpixels:V)>>. 
 
 <ITEM> <<pointerx>>: If the mouse pointer is on the same screen as the widget, returns an integer that is the pointer's x coordinate, measured in pixels in the screen's root window. If a virtual root window is in use on the screen, the position is measured in the virtual root. If the mouse pointer isn't on the same screen as the widget then -1 is returned.  
 
@@ -403,7 +401,7 @@ All widgets have a <<winfo(parameter1:value1 ... parameterX:valueX)>> method tha
 <ITEM> <<reqwidth>>: Returns an integer giving widget's requested width, in pixels. This is the value used by window's
     geometry manager to compute its geometry. 
 
-<ITEM> <<rgb>>: Returns a one parameter function. Giving a valid color (see <ptr to="misc.color">) to this function, it returns a record of the form <<rgb(red:R green:G blue:B)>> which are the red, green, and blue intensities that correspond to the color in the widget. 
+<ITEM> <<rgb>>: Returns a one-parameter function. Giving a valid color (see <ptr to="misc.color">) to this function, it returns a record of the form <<rgb(red:R green:G blue:B)>> which are the red, green, and blue intensities that correspond to the color in the widget. 
 
 <ITEM> <<rootx>>: Returns an integer giving the x-coordinate, in the root window of the screen, of the upper-left
     corner of the widget's border 
@@ -435,14 +433,14 @@ All widgets have a <<winfo(parameter1:value1 ... parameterX:valueX)>> method tha
     X11R5), vendor is the name of the vendor for the server, and vendorRelease is an integer release number
     provided by the server. 
 
-<ITEM> <<toplevel>>: Returns an handle to the toplevel window of the widget.
+<ITEM> <<toplevel>>: Returns a handle to the toplevel window of the widget.
 
 <ITEM> <<viewable>>: Returns <<true>> if the widget and all of its ancestors up through the nearest toplevel window are mapped. Returns <<false>> if any of these windows are not mapped. 
 
 <ITEM> <<visual>>: Returns one of the following atoms to indicate the visual class for the widget: <<directcolor>>, <<grayscale>>,
     <<pseudocolor>>, <<staticcolor>>, <<staticgray>>, or <<truecolor>>. 
 
-<ITEM> <<visualid>>: Returns a string which is the X identifier for the visual for the widget. 
+<ITEM> <<visualid>>: Returns a string that is the X identifier for the visual for the widget. 
 
 <ITEM> <<visualsavailable>>: Returns a list of records of the form <<visual(visual:A depth:I id:VS)>> with <<A>> and atom describing a visual class, <<I>> an integer and <<VS>> a string which is an X identifier. The list is composed of all the different visuals available on the screen that display's the widget.
 
@@ -669,7 +667,7 @@ The object controlling the menu entry implements the following methods:
 
 <ITEM> <<delete>>: Deletes the menu entry from the menu. Further access to this menu entry will raise errors.
 
-<ITEM> <<position(Y)>>: Binds <<Y>> to a postive integer giving the y-coordinate within the menu window of the topmost pixel of the entry. 
+<ITEM> <<position(Y)>>: Binds <<Y>> to a positive integer giving the y-coordinate within the menu window of the topmost pixel of the entry. 
 
 <ITEM> <<type(V)>>: Binds <<V>> to the type of the entry (in this case, to <<command>>).
 
@@ -753,7 +751,7 @@ A checkbutton menu entry is described by a record of the form:
           <TD/none/
       </Table>
 
-<ITEM> <<return:V>>: When the toplevel window is closed, <<V>> is binded to <<true>> is the menu entry is selected, otherwise it is binded to <<false>>.
+<ITEM> <<return:V>>: When the toplevel window is closed, <<V>> is bound to <<true>> is the menu entry is selected, otherwise it is bound to <<false>>.
 
 <item><<handle:V>>: Specifies a variable to reference the object controlling this widget. This variable is bound when the window is built. For more details, see <ptr to="basics.interaction">. <<V>> must be a free variable.
 <item><<feature:A>>: Specifies a feature name for the container object to reference the object controlling this widget. For more details, see <ptr to="basics.interaction">. <<A>> must be an atom.
@@ -770,7 +768,7 @@ The object controlling the menu entry implements the following methods:
 
 <ITEM> <<delete>>: Deletes the menu entry from the menu. Further access to this menu entry will raise errors.
 
-<ITEM> <<position(Y)>>: Binds <<Y>> to a postive integer giving the y-coordinate within the menu window of the topmost pixel of the entry. 
+<ITEM> <<position(Y)>>: Binds <<Y>> to a positive integer giving the y-coordinate within the menu window of the topmost pixel of the entry. 
 
 <ITEM> <<type(V)>>: Binds <<V>> to the type of the entry (in this case, to <<checkbutton>>).
 
@@ -791,15 +789,15 @@ A radiobutton menu entry is described by a record of the form:
 
 <LIST>
 
-<ITEM> <<1:B>>: Specifies if the button is on or off. If <<B>> is <<true>> then the button is selelected. All other radiobuttons in the same group are deselected. If <<B>> is false then the button is deselected. This can end in no radiobutton in the same group selected at all. This parameter can be used with the <<set()>> and <<get()>> methods only. <<B>> must be a boolean.
+<ITEM> <<1:B>>: Specifies if the button is on or off. If <<B>> is <<true>> then the button is selected. All other radiobuttons in the same group are deselected. If <<B>> is false then the button is deselected. This can end in no radiobutton in the same group selected at all. This parameter can be used with the <<set()>> and <<get()>> methods only. <<B>> must be a boolean.
 
-<ITEM> <<init:B>>: Specifies if the button is on or off. If <<B>> is <<true>> then the button is selelected. All other radiobuttons in the same group are deselected. If <<B>> is false then the button is deselected. This can end in no radiobutton in the same group selected at all. This parameter is valid at creation time only. <<B>> must be a boolean.
+<ITEM> <<init:B>>: Specifies if the button is on or off. If <<B>> is <<true>> then the button is selected. All other radiobuttons in the same group are deselected. If <<B>> is false then the button is deselected. This can end in no radiobutton in the same group selected at all. This parameter is valid at creation time only. <<B>> must be a boolean.
 
 <ITEM> <<return:V>>: When the window is closed, <<V>> is bound to <<true>> if the radiobutton, false otherwise. This parameter is valid at creation time only. <<V>> must be a free variable.
 
 <ITEM> <<action:C>>: Specifies an action to execute right after the user clicked the button. <<C>> can take several different forms (see <ptr to="basics.events">).
 
-<ITEM> <<group:A>>: Specifies what group the radiobutton belongs to. All radiobuttons that use the same <<A>> belong to the same group (only one can be selected at a time in a group). Valid at necessary at creation time only. <<A>> must be an atom.
+<ITEM> <<group:A>>: Specifies what group the radiobutton belongs to. All radiobuttons that use the same <<A>> belong to the same group (only one can be selected at a time in a group). Must be specified at creation time. <<A>> must be an atom.
 
 <item><<activebackground:C>>: Specifies the background color to use when drawing active elements. An element (a widget or portion of a widget) is active if the mouse cursor is positioned over the element and pressing a mouse button will cause some action to occur. For some elements on Windows and Macintosh systems, the active color will only be used while mouse button 1 is pressed over the element. <<C>> must be a valid color (see <ptr to="misc.color">)
 <item><<activeforeground:C>>: Specifies the foreground color to use when drawing active elements. An element (a widget or portion of a widget) is active if the mouse cursor is positioned over the element and pressing a mouse button will cause some action to occur. For some elements on Windows and Macintosh systems, the active color will only be used while mouse button 1 is pressed over the element. C must be a valid color (see <ptr to="misc.color">)
@@ -874,7 +872,7 @@ The object controlling the menu entry implements the following methods:
 
 <ITEM> <<delete>>: Deletes the menu entry from the menu. Further access to this menu entry will raise errors.
 
-<ITEM> <<position(Y)>>: Binds <<Y>> to a postive integer giving the y-coordinate within the menu window of the topmost pixel of the entry. 
+<ITEM> <<position(Y)>>: Binds <<Y>> to a positive integer giving the y-coordinate within the menu window of the topmost pixel of the entry. 
 
 <ITEM> <<type(V)>>: Binds <<V>> to the type of the entry (in this case, to <<radiobutton>>).
 
@@ -964,7 +962,7 @@ The object controlling the menu entry implements the following methods:
 
 <ITEM> <<delete>>: Deletes the menu entry from the menu. Further access to this menu entry will raise errors.
 
-<ITEM> <<position(Y)>>: Binds <<Y>> to a postive integer giving the y-coordinate within the menu window of the topmost pixel of the entry. 
+<ITEM> <<position(Y)>>: Binds <<Y>> to a positive integer giving the y-coordinate within the menu window of the topmost pixel of the entry. 
 
 <ITEM> <<type(V)>>: Binds <<V>> to the type of the entry (in this case, to <<cascade>>).
 
@@ -1012,8 +1010,8 @@ The object controlling the menu entry implements the following methods:
       <Title/Event Patterns/
 
       <P>
-An event pattern may take one of two forms. In the simplest case it is a single printing ASCII character, such as a or [. The character may not be a space character or the character <<&lt;>>. This form of pattern matches a <<KeyPress>> event for the particular character. The second form of pattern is longer but more general. It has the following syntax: 
-<<<&lt;modifier-modifier-type-detail&gt;>>>
+An event pattern may take one of two forms. In the simplest case it is a single printing ASCII character, such as a or [. The character may not be a space character or the character <<&lt;>>. This form of pattern matches a <<KeyPress>> event for the particular character. The second form of pattern is longer but more general. It is a virtual string of the form: 
+<<<"&lt;modifier-modifier-type-detail&gt;">>>
 The entire event pattern is surrounded by angle brackets. Inside the angle brackets are zero or more modifiers, an event type, and an extra piece of information (detail) identifying a particular button or keysym. Any of the fields may be omitted, as long as at least one of type and detail is present. The fields must be separated by white space or dashes. 
 </p>
 <p>
@@ -1104,7 +1102,7 @@ Most of the above events have the same fields and behaviors as events in the X W
 <list>
 <item> <<Activate>>
 <item> <<Deactivate>>: These two events are sent to every sub-window of a toplevel when they change state. In addition to the focus Window, the Macintosh platform and Windows platforms have a notion of an active window (which often has but is not required to have the focus). On the Macintosh, widgets in the active window have a different appearance than widgets in deactive windows. The Activate event is sent to all the sub-windows in a toplevel when it changes from being deactive to active. Likewise, the Deactive event is sent when the window's state changes from active to deactive. There are no useful percent substitutions you would make when binding to these events. 
-<item> <<MouseWheel>>: Some mice on the Windows platform support a mouse wheel which is used for scrolling documents without using the scrollbars. By rolling the wheel, the system will generate MouseWheel events that the application can use to scroll. Like Key events the event is always routed to the window that currently has focus. When the event is received you can use the <<D>> substitution to get the delta field for the event which is a integer value of motion that the mouse wheel has moved. The smallest value for which the system will report is defined by the OS. On Windows 95 & 98 machines this value is at least 120 before it is reported. However, higher resolution devices may be available in the future. The sign of the value determines which direction your widget should scroll. Positive values should scroll up and negative values should scroll down. 
+<item> <<MouseWheel>>: Some mice on the Windows platform support a mouse wheel which is used for scrolling documents without using the scrollbars. By rolling the wheel, the system will generate MouseWheel events that the application can use to scroll. Like Key events the event is always routed to the window that currently has focus. When the event is received you can use the <<D>> substitution to get the delta field for the event that is an integer value of motion that the mouse wheel has moved. The smallest value for which the system will report is defined by the OS. On Windows 95 & 98 machines this value is at least 120 before it is reported. However, higher resolution devices may be available in the future. The sign of the value determines which direction your widget should scroll. Positive values should scroll up and negative values should scroll down. 
 </list>
 The last part of a long event specification is detail. In the case of a <<ButtonPress>> or <<ButtonRelease>> event, it is the number of a button (1-5). If a button number is given, then only an event on that particular button will match; if no button number is given, then an event on any button will match. Note: giving a specific button number is different than specifying a button modifier; in the first case, it refers to a button being pressed or released, while in the second it refers to some other button that is already depressed when the matching event occurs. If a button number is given then type may be omitted: if will default to <<ButtonPress>>. For example, the specifier <<&lt;1&gt;>> is equivalent to <<&lt;ButtonPress-1&gt;>>. 
 </p>
@@ -1134,9 +1132,9 @@ If the event type is <<KeyPress>> or <<KeyRelease>>, then detail may be specifie
                 <td/<<float(?_{A})>>/
               <TR>
                 <TD/<<list(string(?_{A}))>>, <<list(?_{A})>>/
-                <TD/<<list(atom(?_{A})>>/
-                <TD/<<list(int(?_{A})>>/
-                <TD/<<list(float(?_{A})>>/
+                <TD/<<list(atom(?_{A}))>>/
+                <TD/<<list(int(?_{A}))>>/
+                <TD/<<list(float(?_{A}))>>/
             </Table>
         </Figure>
 <em>Argument codes</em>
@@ -1145,11 +1143,10 @@ If the event type is <<KeyPress>> or <<KeyRelease>>, then detail may be specifie
 <item> <<c>>: The count field from the event. Valid only for <<Expose>> events. 
 <item> <<d>>: The detail field from the event. For <<Enter>>, <<Leave>>, <<FocusIn>>, and <<FocusOut>> events, the returned string will be one of the following: 
 <table>
-<tr>
-<td/<<NotifyAncestor>>/	<td/<<NotifyNonlinearVirtual>>/
-<td/<<NotifyDetailNone>>/	<td/<<NotifyPointer>>/
-<td/<<NotifyInferior>>/	<td/<<NotifyPointerRoot>>/
-<td/<<NotifyNonlinear>>/	<td/<<NotifyVirtual>>/
+<tr><td/<<NotifyAncestor>>/	<td/<<NotifyNonlinearVirtual>>/
+<tr><td/<<NotifyDetailNone>>/	<td/<<NotifyPointer>>/
+<tr><td/<<NotifyInferior>>/	<td/<<NotifyPointerRoot>>/
+<tr><td/<<NotifyNonlinear>>/	<td/<<NotifyVirtual>>/
 </table>
 For events other than these, the substituted string is undefined. 
 <item> <<f>>: The focus field from the event (0 or 1). Valid only for <<Enter>> and <<Leave>> events. 
@@ -1188,3 +1185,4 @@ For events other than these, the substituted string is undefined.
 <item> Short paper at <ref.extern to="http://link.springer.de/link/service/series/0558/bibs/2254/22540109.htm"/<kbd/EHCI2001//.
 </list>
 </CHAPTER>
+

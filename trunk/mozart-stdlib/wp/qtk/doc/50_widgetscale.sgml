@@ -22,7 +22,7 @@ end
 <subsection> <TITLE>Description</TITLE>
 
 <P>
-A scale is a widget that displays a rectangular trough and a small slider. <<tdscale>> displays a vertical slider while <<lrscale>> displays an horizontal one. The trough corresponds to a range of real values (determined by the <<from>>, <<to>>, and <<resolution>> options), and the position of the slider selects a particular real value. The slider's position (and hence the scale's value) may be adjusted with the mouse or keyboard. Whenever the scale's value is changed, an Oz command is invoked (using the <<action>> option) to notify other interested widgets of
+A scale is a widget that displays a rectangular trough and a small slider. <<tdscale>> displays a vertical slider while <<lrscale>> displays an horizontal one. The trough corresponds to a range of real values determined by the <<from>>, <<to>>, and <<resolution>> options. These values can also be specified as integers. The position of the slider selects a particular real value. The slider's position (and hence the scale's value) may be adjusted with the mouse or keyboard. Whenever the scale's value is changed, an Oz command is invoked (using the <<action>> option) to notify other interested widgets of
 the change. 
 </P>
 <P>
@@ -119,7 +119,7 @@ window exits). During global grabs the window manager will not receive pointer e
 
 <para id="chapter.widgets.scale.from"><title>'from'</title><p><<'from':F>>: A real value corresponding to the left or top end of the scale. 
 
-<para id="chapter.widgets.scale.1"><title>1</title><p><<1:R>>: Specifies the value of the scale. Valid with the <<set()>> and <<get()>> methods only. <<R>> must be a real.
+<para id="chapter.widgets.scale.1"><title>1</title><p><<1:R>>: Specifies the value of the scale. Valid with the <<set()>> and <<get()>> methods only. When setting this parameter, <<R>> must be a real or an integer. When getting this parameter, the returned value is always a real.
 
 <para id="chapter.widgets.scale.action"><title>action</title><p><<action:C>>: Specifies an action to execute right after the user modified the position of the slider of the scale. <<C>> can take several different forms (see <ptr to="basics.events">).
 

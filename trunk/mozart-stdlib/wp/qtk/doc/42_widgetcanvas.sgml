@@ -377,7 +377,7 @@ Methods supported by canvas tags and canvas items handles:
 
 <ITEM> <<insert(I VS)>>: For all items in tag that supports text insertion, <<VS>> is inserted just before the character at position <<I>>.
 
-<ITEM> <<lower>>: Move all of the items ine the tag to a new position in the display list, depending on the form of the call :
+<ITEM> <<lower>>: Move all of the items in the tag to a new position in the display list, depending on the form of the call :
 <LIST> 
 <ITEM> <<lower()>>: All items are moved below all other items.
 <ITEM> <<lower(Tag)>>: All items are moved just below the lowest item in <<Tag>>.
@@ -386,7 +386,7 @@ Note: this command has no effect on window items. Window items always obscure ot
 
 <ITEM> <<move(X Y)>>: Move all items in tag in the canvas coordinate space by adding <<X>> to the x-coordinate of each point associated with the item and <<Y>> to the y-coordinate of each point associated with the item.
 
-<ITEM> <<'raise'>>: Move all of the items ine the tag to a new position in the display list, depending on the form of the call :
+<ITEM> <<'raise'>>: Move all of the items in the tag to a new position in the display list, depending on the form of the call :
 <LIST> 
 <ITEM> <<'raise'()>>: All items are moved above all other items.
 <ITEM> <<'raise'(Tag)>>: All items are moved just above the highest item in <<Tag>>.
@@ -641,3 +641,4 @@ graphical items (such as lines and images) on top of window items. A window item
 obscures any graphics that overlap it, regardless of their order in the display list. 
 
 </section>
+
