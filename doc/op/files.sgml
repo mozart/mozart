@@ -176,7 +176,7 @@ F={New Open.file
 	writes a nested virtual string containing integers, atoms, strings and
 	floats to the file.  Even the filename argument of the <<init>> method
 	of class <<Open.file>> is allowed to be a virtual string.  For more
-	information on virtual strings see <Ptr to="section.virtualstrings">.
+	information on virtual strings see <Ptr to="section.data.virtualstrings">.
       <P>
 	If you type the Unix command
 	<Code display proglang=sh/<Span class=index/cat/ ours.txt/
@@ -232,7 +232,7 @@ end>>>
 	    Here <<O>> is the object that has been closed already and <<M>>
 	    the message <<O>> has been applied to.
 	</List>
-  <Section id="section.expand-a">
+  <Section id="section.files.expand-a">
     <Title/Example: Expanding TAB Characters/
     <P>
       Suppose we want to read a file, expand all <Name type=char/TAB/
