@@ -198,12 +198,12 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
     return makeTaggedNULL();
   } else if (auxPC == C_DEBUG_CONT_Ptr) {
     // the OzDebug in the next stack frame has more to tell than
-    // this builtin frame:
+    // this vanilla frame:
     frame = lastframe;
     return makeTaggedNULL();
   } else {
     frame = lastframe;
-    return CodeArea::dbgGetDef(PC,definitionPC,verbose);
+    return CodeArea::dbgGetDef(PC,definitionPC,frameId);
   }
 }
 
