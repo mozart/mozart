@@ -95,12 +95,15 @@ void oz_dpvar_localize(TaggedRef *);
 
 void OwnerEntry::localize(int index)
 {
-  if (isRef()) {
-    OT->freeOwnerEntry(index);
-  } else if (isVar()) {
-    oz_dpvar_localize(getPtr());
-    OT->freeOwnerEntry(index);
+  if (isVar()) { 
+    if(GET_VAR(this,Manager)->getInfo()==NULL)
+      oz_dpvar_localize(getPtr());
+    else return;}
+  else {
+    if(isTertiary()){
+      localizeTertiary(getTertiary());}
   }
+  OT->freeOwnerEntry(index);
 }
 
 void OwnerEntry::addCreditExtended(Credit back){
@@ -910,13 +913,16 @@ void BorrowEntry::freeBorrowEntry(){
 void BorrowEntry::gcBorrowRoot(int i) {
   if (isVar()) {
     PD((GC,"BT1 b:%d variable found",i));
-    // mm2
     if (tagged2CVar(*getPtr())->getSuspList()!=0) {
-      PD((WEIRD,"BT1 b:%d pending unmarked var found",i));
       gcPO();
     }
     return;
   }
+  if(isRef()) {
+    gcPO(); // PER-LOOK - this is probably incorrect 
+    return;}
+  Assert(isTertiary());
+  if(isTertiaryPending(getTertiary())) gcPO();
 }
 
 void BorrowTable::init(int beg,int end)
@@ -1046,12 +1052,9 @@ fin:
 }
 
 
-
 void OB_Entry::gcPO() {
-  if (isGCMarked())
-    return;
+  if (isGCMarked()) return;
   makeGCMark();
-  
   if (isTertiary()) {
     PD((GC,"OT tertiary found"));
 #ifdef DEBUG_GC
@@ -1073,7 +1076,7 @@ void OwnerTable::gcOwnerTableRoots()
   PD((GC,"owner gc"));
   for(int i=0;i<size;i++) {
     OwnerEntry* o = getOwner(i); // PER-LOOK
-    if(!o->isFree() && !o->hasFullCredit()) {
+    if(!o->isFree()) {
       PD((GC,"OT o:%d",i));
       o->gcPO();
     }
@@ -1083,6 +1086,7 @@ void OwnerTable::gcOwnerTableRoots()
 
 void OwnerTable::gcOwnerTableFinal()
 {
+  /*  PER-LOOK localize replace this
   PD((GC,"owner gc"));
   for(int i=0;i<size;i++) {
     OwnerEntry* o = getOwner(i);
@@ -1096,6 +1100,7 @@ void OwnerTable::gcOwnerTableFinal()
       }
     }
   }
+  */
   compactify();
   return;
 }
@@ -1106,24 +1111,32 @@ void BorrowTable::gcBorrowTableRoots()
   for(int i=0;i<size;i++) {
     BorrowEntry *b=getBorrow(i);
     if (!b->isFree() && !b->isGCMarked())
-      b->gcBorrowRoot(i);
-  }
+      b->gcBorrowRoot(i);}
 }
 
-void BorrowEntry::gcBorrowUnusedFrame(int i) {
-  if(isTertiary() && getTertiary()->isFrame())
-    {u.tert= (Tertiary*) u.tert->gcConstTermSpec();}}
+void BorrowEntry::gcBorrowUnusedFrame(Tertiary* t) {
+  Assert(!(isTertiaryPending(getTertiary())));
+  if(t->getType()==Co_Cell){
+    CellFrame *cf = (CellFrame*) t;
+    if(cf->dumpCandidate()){
+      cellLockSendDump(this);}}
+  else{
+    Assert(t->getType()==Co_Lock);
+    LockFrame *lf = (LockFrame*) t;
+    if(lf->dumpCandidate()){
+      cellLockSendDump(this);}
+  }
+  gcPO();
+}
 
 void BorrowTable::gcBorrowTableUnusedFrames()
 {
-  PD((GC,"borrow gc roots"));
+  PD((GC,"borrow unused frames"));
   int i;
   for(i=0;i<size;i++) {
     BorrowEntry *b=getBorrow(i);
-    if(!b->isFree()){
-      Assert((b->isGCMarked()) || (b->isVar()) || (b->getTertiary()->isFrame()) 
-	     || (b->getTertiary()->isProxy()));
-      if(!(b->isGCMarked())) {b->gcBorrowUnusedFrame(i);}}}
+    if((!b->isGCMarked()) && b->isTertiary() && b->getTertiary()->isFrame()){
+      b->gcBorrowUnusedFrame(b->getTertiary());}}
 }
 
 void BorrowTable::gcFrameToProxy(){
@@ -1144,20 +1157,6 @@ void BorrowTable::gcFrameToProxy(){
 }
 
 
-void maybeUnask(BorrowEntry *be){
-  Tertiary *t=be->getTertiary();
-  /* PER-HANDLE
-  Watcher* w=t->getWatchersIfExist();
-  EntityCond ec;
-  while(w!=NULL){
-    ec=managerPart(w->getWatchCond());
-    if(ec!=ENTITY_NORMAL){
-      sendUnAskError(t,ec);}
-    w=w->getNext();}
-  */
-}
-
-
 /* OBSERVE - this must done at the end of other gc */
 void BorrowTable::gcBorrowTableFinal()
 {
@@ -1173,50 +1172,20 @@ void BorrowTable::gcBorrowTableFinal()
       if(b->isGCMarked()) {
 	b->removeGCMark();
 	b->getSite()->makeGCMarkSite();
-	PD((GC,"BT b:%d mark variable found",i));
-      } else{
+	PD((GC,"BT b:%d mark variable found",i));} 
+      else{
 	PD((GC,"BT b:%d unmarked variable found",i));
+	if(!errorIgnoreVar(b)) maybeUnaskVar(b);
 	borrowTable->maybeFreeBorrowEntry(i);
-      }
-    } else {
+      }} 
+    else {
       Tertiary *t = b->getTertiary();
       if(b->isGCMarked()) {
 	b->removeGCMark();
 	b->getSite()->makeGCMarkSite();
-	PD((GC,"BT b:%d mark tertiary found",i));
-	
-	if(t->isFrame()) {
-	  switch(t->getType()){
-	  case Co_Cell:{
-	    CellFrame *cf=(CellFrame *)t;
-	    if(cf->isAccessBit()){
-	      cf->resetAccessBit();
-	      if(cf->dumpCandidate()) {
-		cellLockSendDump(b);
-	      }
-	    }
-	    break;
-	  }
-	  case Co_Lock:{
-	    LockFrame *lf=(LockFrame *)t;
-	    if(lf->isAccessBit()){
-	      lf->resetAccessBit();
-	      if(lf->dumpCandidate()) {
-		cellLockSendDump(b);
-	      }
-	    }
-	    break;
-	  }
-	  default:
-	    Assert(0);
-	    break;
-	  }
-	}
-      } else{
-	/* PER-HANDLE
-	if(t->maybeHasInform() && t->getType()!=Co_Port)
-	  maybeUnask(b);
-	*/
+	PD((GC,"BT b:%d mark tertiary found",i));}
+      else{
+	if(!errorIgnore(t)) maybeUnask(t);
 	Assert(t->isProxy());
 	borrowTable->maybeFreeBorrowEntry(i);
       }

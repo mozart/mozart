@@ -79,7 +79,7 @@ public:
 
 class InformElem{
 friend class Chain;
-protected:
+public:
   InformElem *next;
   DSite *site;
   short unsigned int watchcond;
@@ -98,7 +98,7 @@ public:
   void free(){
     genFreeListManager->putOne_3((FreeListEntry*) this);}
 
-  void maybeTrigger(OwnerEntry*, int, EntityCond);
+  Bool maybeTrigger(OwnerEntry*, int, EntityCond);
   void maybeTriggerOK(OwnerEntry*, int, EntityCond);
 };
 
@@ -156,6 +156,7 @@ public:
     return inform!=NULL;}
 
   InformElem *getInform(){return inform;}
+  InformElem **getInformBase(){return &inform;}
   
   ChainElem* getFirst(){return first;}
   ChainElem* getLast(){return last;}
@@ -192,8 +193,6 @@ public:
   void shortcutCrashLock(LockManager*);       // shortcutting chain methods
   void shortcutCrashCell(CellManager*,TaggedRef);
   void handleTokenLost(Tertiary*,OwnerEntry*,int);
-  void informHandle(OwnerEntry*,int,EntityCond);
-  void informHandleOK(OwnerEntry*,int,EntityCond);
   void receiveUnAsk(DSite*,EntityCond);
   void establish_PERM_SOME(Tertiary*);
   void establish_TOKEN_LOST(Tertiary*);

@@ -316,6 +316,7 @@ inline void maybeConvertCellProxyToFrame(Tertiary *t){
 
 Chain* getChainFromTertiary(Tertiary*);
 CellSec *getCellSecFromTert(Tertiary *c);
+LockSec *getLockSecFromTert(Tertiary *c);
 int getStateFromLockOrCell(Tertiary*);
 PendThread* getPendThreadStartFromCellLock(Tertiary *);
 
