@@ -28,6 +28,7 @@ export
    int               : Int
    float             : Float
    atom              : Atom
+   atomSML           : AtomSML
    name              : Name
    nameSML           : NameSML
    procedure         : Procedure
@@ -64,6 +65,7 @@ export
    vectorSML         : VectorSML
    listSML           : ListSML
    recordSML         : RecordSML
+   recordSMLInd      : RecordSMLInd
    cellSML           : CellSML
    wordSML           : WordSML
    generic           : Generic
@@ -96,6 +98,15 @@ define
 	 final
    end
 
+   class AtomSML
+      from
+	 CreateObjects.atomCreateObject
+	 LayoutObjects.atomSMLLayoutObject
+	 DrawObjects.drawObject
+      prop
+	 final
+   end
+   
    class Name
       from
 	 CreateObjects.nameCreateObject
@@ -420,6 +431,15 @@ define
 	 final
    end
 
+   class RecordSMLInd
+      from
+	 CreateObjects.recordSMLIndCreateObject
+	 LayoutObjects.tupleSMLLayoutObject
+	 DrawObjects.labelTupleDrawObject
+      prop
+	 final
+   end
+   
    class CellSML
       from
 	 CreateObjects.cellSMLCreateObject
