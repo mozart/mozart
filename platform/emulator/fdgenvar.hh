@@ -1,7 +1,18 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
 #ifndef __GENFDVAR__H__
 #define __GENFDVAR__H__
 
-#ifdef __GNUC__
+#if defined(__GNUC__)
 #pragma interface
 #endif
 
@@ -13,13 +24,15 @@
 //                           class GenFDVariable
 //-----------------------------------------------------------------------------
 
-class GenFDVariable: public GenCVariable{
-friend OZ_Bool fdDomainConstrain(TaggedRef &var, TaggedRef* &varPtr,
+class GenFDVariable: public GenCVariable {
+friend OZ_Bool fdDomainConstrain(TaggedRef &var, TaggedRef * &varPtr,
                                  FiniteDomain &domain);
 friend class GenCVariable;
+
 private:
   FiniteDomain finiteDomain;
-  SuspList* fdSuspList[any];
+  SuspList * fdSuspList[any];
+
 public:
   GenFDVariable(FiniteDomain &fd, TaggedRef pn = AtomVoid)
   : GenCVariable(FDVariable, pn) {
@@ -35,12 +48,12 @@ public:
   void gc(void);
   size_t getSize(void){return sizeof(GenFDVariable);}
 
-  Bool unifyFD(TaggedRef*, TaggedRef, TypeOfTerm,
-               TaggedRef*, TaggedRef, TypeOfTerm);
+  Bool unifyFD(TaggedRef *, TaggedRef, TypeOfTerm,
+               TaggedRef *, TaggedRef, TypeOfTerm);
 
-  inline void becomesSmallIntAndPropagate(TaggedRef* trPtr);
+  void becomesSmallIntAndPropagate(TaggedRef * trPtr);
 
-  ProgramCounter index(ProgramCounter elseLabel, IHashTable* table);
+  ProgramCounter index(ProgramCounter elseLabel, IHashTable * table);
 
   OZPRINT;
   OZPRINTLONG;
@@ -48,31 +61,29 @@ public:
   void setDom(FiniteDomain &fd){finiteDomain = fd;}
   FiniteDomain &getDom(void){return finiteDomain;}
 
-  inline void relinkSuspList(GenFDVariable* leftVar);
+  void relinkSuspList(GenFDVariable * leftVar);
 
-  void addVirtualConstr(SuspList *elem, FDState state) {
+  void addVirtualConstr(SuspList * elem) {
+    ::addVirtualConstr(this, elem);
+  }
+
+  void addVirtualConstr(SuspList * elem, FDState state) {
     if (state == any)
       addVirtualConstr(elem);
     else
-      fdSuspList[state] =
-        ::addVirtualConstr(fdSuspList[state], elem, home);
+      fdSuspList[state] = ::addVirtualConstr(fdSuspList[state], elem, home);
   }
 
-  void addVirtualConstrLocal(SuspList *elem, FDState state) {
+  void addVirtualConstrLocal(SuspList * elem, FDState state) {
     if (isLocalVariable() == OK || state == any || state == eqvar)
       addVirtualConstr(elem, state);
     else
-      fdSuspList[size] =
-        ::addVirtualConstr(fdSuspList[size], elem, home);
+      fdSuspList[size] = ::addVirtualConstr(fdSuspList[size], elem, home);
 
   }
 
-  void addVirtualConstr(SuspList *elem) {
-    ::addVirtualConstr(this,elem);
-  }
-
-  inline void propagate(TaggedRef var, FDState state, TaggedRef term);
-  inline void propagate(TaggedRef var, FDState state, TaggedRef* tPtr);
+  void propagate(TaggedRef var, FDState state, TaggedRef term);
+  void propagate(TaggedRef var, FDState state, TaggedRef * tPtr);
 };
 
 
@@ -81,14 +92,14 @@ public:
 //-----------------------------------------------------------------------------
 
 Bool isGenFDVar(TaggedRef term);
-GenFDVariable* tagged2GenFDVar(TaggedRef term);
+GenFDVariable * tagged2GenFDVar(TaggedRef term);
 
 //-----------------------------------------------------------------------------
 //                   Functions to constrain variables
 //-----------------------------------------------------------------------------
 
-OZ_Bool fdDomainConstrain(TaggedRef &var, TaggedRef* &varPtr,
-                       FiniteDomain &domain);
+OZ_Bool fdDomainConstrain(TaggedRef &var, TaggedRef * &varPtr,
+                          FiniteDomain &domain);
 
 
 

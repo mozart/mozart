@@ -19,7 +19,7 @@
 #ifndef __GENVAR__H__
 #define __GENVAR__H__
 
-#ifdef __GNUC__
+#if defined(__GNUC__)
 #pragma interface
 #endif
 
@@ -30,7 +30,7 @@
 //-----------------------------------------------------------------------------
 
 
-#define ONLY_ONLY_FDVAR
+#define CVAR_ONLY_FDVAR
 enum TypeOfGenCVariable {
   FDVariable
 };
@@ -41,19 +41,19 @@ protected:
 
   // takes the suspensionlist of var and  appends it to the
   // suspensionlist of leftVar
-  inline void relinkSuspList(GenCVariable* leftVar);
+  inline void relinkSuspList(GenCVariable * leftVar);
 
   // moves appropriate suspension-list entries onto wake-up stack
   void propagate(TaggedRef, TaggedRef);
-  void propagate(TaggedRef, TaggedRef*);
-  SuspList* propagate(TaggedRef, SuspList* &, TaggedRef);
+  void propagate(TaggedRef, TaggedRef *);
+  SuspList * propagate(TaggedRef, SuspList * &, TaggedRef);
 public:
   USEHEAPMEMORY;
 
   // the constructor creates per default a local variable (wrt curr. node)
   GenCVariable(TypeOfGenCVariable t,
                TaggedRef pn = AtomVoid,
-               Board *n = NULL);
+               Board * n = NULL);
 
   TypeOfGenCVariable getType(void){return type;}
 
@@ -63,21 +63,23 @@ public:
   // binds var to term and trails var, if it is global
   // var can be global/local GenCVariable
   // term can be local GenCVariable or an appropriate non-variable
-  void bind(TaggedRef *vPtr, TaggedRef var,
-            TaggedRef *tPtr, TaggedRef term);
+  void bind(TaggedRef * vPtr, TaggedRef var,
+            TaggedRef * tPtr, TaggedRef term);
+  void bind(TaggedRef * vPtr, TaggedRef var, Bool varIsLocal,
+            TaggedRef * tPtr, TaggedRef term);
 
   // methods relevant for term copying (gc and solve)
   void gc(void);
   size_t getSize(void);
 
-  // unifies a generic variable with another generic variable or
+  // unifies a generic variable with another generic variable
   // or a non-variable
   // invariant: left term == *this
-  Bool unify(TaggedRef*, TaggedRef, TypeOfTerm,
-             TaggedRef*, TaggedRef, TypeOfTerm);
+  Bool unify(TaggedRef *, TaggedRef, TypeOfTerm,
+             TaggedRef *, TaggedRef, TypeOfTerm);
 
   // does indexing over constrained variables
-  ProgramCounter index(ProgramCounter elseLabel, IHashTable* table);
+  ProgramCounter index(ProgramCounter elseLabel, IHashTable * table);
 
   OZPRINT;
   OZPRINTLONG;

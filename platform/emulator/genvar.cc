@@ -10,7 +10,7 @@
 */
 
 
-#ifdef __GNUC__
+#if defined(__GNUC__)
 #pragma implementation "genvar.hh"
 #endif
 
@@ -21,12 +21,12 @@ Bool GenCVariable::unifyGenCVariables = OK;
 
 
 GenCVariable::GenCVariable(TypeOfGenCVariable t, TaggedRef pn,
-                           Board *n)
+                           Board * n)
 :type(t), SVariable(n==NULL ? am.currentBoard : n, pn){}
 
 
 Bool GenCVariable::isLocalVariable(void){
-  Board *home = getHome1();
+  Board * home = getHome1();
 
   return (home == am.currentBoard ||
           home->getBoardDeref() == am.currentBoard)
@@ -34,8 +34,8 @@ Bool GenCVariable::isLocalVariable(void){
 }
 
 
-void GenCVariable::bind(TaggedRef *vPtr, TaggedRef var,
-                        TaggedRef *tPtr, TaggedRef term){
+void GenCVariable::bind(TaggedRef * vPtr, TaggedRef var,
+                        TaggedRef * tPtr, TaggedRef term){
   if (tagged2CVar(var)->isLocalVariable() == NO)
     am.trail.pushRef(vPtr, var);
 
@@ -44,6 +44,19 @@ void GenCVariable::bind(TaggedRef *vPtr, TaggedRef var,
 
   *vPtr = term;
 } // GenCVariable::bind
+
+
+void GenCVariable::bind(TaggedRef * vPtr, TaggedRef var, Bool varIsLocal,
+                        TaggedRef * tPtr, TaggedRef term)
+{
+  if (varIsLocal == NO)
+    am.trail.pushRef(vPtr, var);
+
+  if (isCVar(term) == OK)
+    term = makeTaggedRef(tPtr);
+
+  *vPtr = term;
+}
 
 
 void GenCVariable::propagate(TaggedRef var, TaggedRef term){
@@ -56,27 +69,29 @@ void GenCVariable::propagate(TaggedRef var, TaggedRef *tPtr){
 }
 
 
-SuspList* GenCVariable::propagate(TaggedRef var, SuspList* &sl,
-                                         TaggedRef term)
+SuspList * GenCVariable::propagate(TaggedRef var, SuspList * &sl,
+                                   TaggedRef term)
 {
   sl = am.checkSuspensionList(tagged2SuspVar(var), var, sl, term);
 }
 
-Bool GenCVariable::unify(TaggedRef* tptr1, TaggedRef term1,
-                                TypeOfTerm ttag1,
-                                TaggedRef* tptr2, TaggedRef term2,
-                                TypeOfTerm ttag2) {
+
+Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
+                         TypeOfTerm ttag1,
+                         TaggedRef* tptr2, TaggedRef term2,
+                         TypeOfTerm ttag2)
+{
   switch (type){
   case FDVariable:
-    return ((GenFDVariable*)this)->unifyFD(tptr1, term1, ttag1,
-                                           tptr2, term2, ttag2);
+    return ((GenFDVariable *)this)->unifyFD(tptr1, term1, ttag1,
+                                            tptr2, term2, ttag2);
   default:
     error("Unexpected type generic variable at %s:%d.",
           __FILE__, __LINE__);
     break;
   }
-    return NO;
-} // GenCVariable::unify
+  return NO;
+}
 
 
 size_t GenCVariable::getSize(void){
@@ -89,12 +104,11 @@ size_t GenCVariable::getSize(void){
     break;
   }
   return 0;
-} // GenCVariable::getSize
-
+}
 
 
 ProgramCounter GenCVariable::index(ProgramCounter elseLabel,
-                                          IHashTable* table)
+                                   IHashTable * table)
 {
   switch (type){
   case FDVariable:
@@ -104,7 +118,7 @@ ProgramCounter GenCVariable::index(ProgramCounter elseLabel,
           __FILE__, __LINE__);
     return NOCODE;
   }
-} // GenCVariable::index
+}
 
 
 #ifdef OUTLINE

@@ -10,7 +10,7 @@
 */
 
 
-#ifdef __GNUC__
+#if defined(__GNUC__)
 #pragma implementation "fdgenvar.hh"
 #endif
 
@@ -25,18 +25,24 @@
 // Only if a local variable is bound relink its suspension list, since
 // global variables are trailed.(ie. their suspension lists are
 // implicitely relinked.)
-Bool GenFDVariable::unifyFD(TaggedRef* vPtr, TaggedRef var,  TypeOfTerm vTag,
-                            TaggedRef* tPtr, TaggedRef term, TypeOfTerm tTag){
+Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
+                            TaggedRef * tPtr, TaggedRef term, TypeOfTerm tTag)
+{
 #ifdef PROFILE_FD
   FiniteDomain::unifyCalled++;
 #endif
 
   switch (tTag){
   case SMALLINT:
-    if (finiteDomain.isInDomain(smallIntValue(term)) == NO)
+    if (finiteDomain.contains(smallIntValue(term)) == NO)
       return NO;
     propagate(var, det, term);
-    bind(vPtr, var, tPtr, term);
+    Bool varIsLocal = isLocalVariable();
+    if (varIsLocal == NO) {
+      Suspension * susp = new Suspension(am.currentBoard);
+      addSuspension(susp);
+    }
+    bind(vPtr, var, varIsLocal, tPtr, term);
     return OK;
 
   case CVAR:
@@ -54,7 +60,9 @@ Bool GenFDVariable::unifyFD(TaggedRef* vPtr, TaggedRef var,  TypeOfTerm vTag,
       return NO;
 
 // bind - trail - propagate
-    switch (isLocalVariable() + 2 * termVar->isLocalVariable()) {
+    varIsLocal = isLocalVariable();
+    Bool termIsLocal = termVar->isLocalVariable();
+    switch (varIsLocal + 2 * termIsLocal) {
     case OK + 2 * OK:
       {
         // var and term are local
@@ -62,26 +70,26 @@ Bool GenFDVariable::unifyFD(TaggedRef* vPtr, TaggedRef var,  TypeOfTerm vTag,
           // bind  var to term
           TaggedRef auxterm = term;
           if (intersection == singleton)
-            term = *tPtr = newSmallInt(intersection.getSingleton());
+            term = *tPtr = newSmallInt(intersection.singl());
           else
             termVar->setDom(intersection);
           propagate(var, FiniteDomain::leftDom, tPtr);
           termVar->propagate(auxterm, FiniteDomain::rightDom, tPtr);
           if (isCVar(term) == OK)
             relinkSuspList(termVar);
-          bind(vPtr, var, tPtr, term);
+          bind(vPtr, var, varIsLocal, tPtr, term);
         } else {
           // bind term to  var
           TaggedRef auxvar = var;
           if (intersection == singleton)
-            var = *vPtr = newSmallInt(intersection.getSingleton());
+            var = *vPtr = newSmallInt(intersection.singl());
           else
             setDom(intersection);
           termVar->propagate(term, FiniteDomain::rightDom, vPtr);
           propagate(auxvar, FiniteDomain::leftDom, vPtr);
           if (isCVar(var) == OK)
             termVar->relinkSuspList(this);
-          bind(tPtr, term, vPtr, var);
+          bind(tPtr, term, termIsLocal, vPtr, var);
         }
         break;
       }
@@ -91,18 +99,19 @@ Bool GenFDVariable::unifyFD(TaggedRef* vPtr, TaggedRef var,  TypeOfTerm vTag,
         if (intersection != termDom){
           TaggedRef auxvar = var;
           if (intersection == singleton)
-            var = *vPtr = newSmallInt(intersection.getSingleton());
+            var = *vPtr = newSmallInt(intersection.singl());
           else
             setDom(intersection);
           termVar->propagate(term, FiniteDomain::rightDom, vPtr);
           propagate(auxvar, FiniteDomain::leftDom, vPtr);
-          bind(tPtr, term, vPtr, var);
+          termVar->addSuspension(new Suspension(am.currentBoard));
+          bind(tPtr, term, termIsLocal, vPtr, var);
         } else {
           termVar->propagate(term, FiniteDomain::rightDom, tPtr);
           propagate(var, FiniteDomain::leftDom, tPtr);
           if (isCVar(term) == OK)
             relinkSuspList(termVar);
-          bind(vPtr, var, tPtr, term);
+          bind(vPtr, var, varIsLocal, tPtr, term);
         }
         break;
       }
@@ -112,18 +121,19 @@ Bool GenFDVariable::unifyFD(TaggedRef* vPtr, TaggedRef var,  TypeOfTerm vTag,
         if (intersection != finiteDomain){
           TaggedRef auxterm = term;
           if(intersection == singleton)
-            term = *tPtr = newSmallInt(intersection.getSingleton());
+            term = *tPtr = newSmallInt(intersection.singl());
           else
             termVar->setDom(intersection);
           propagate(var, FiniteDomain::leftDom, tPtr);
           termVar->propagate(auxterm, FiniteDomain::rightDom, tPtr);
-          bind(vPtr, var, tPtr, term);
+          addSuspension(new Suspension(am.currentBoard));
+          bind(vPtr, var, varIsLocal, tPtr, term);
         } else {
           termVar->propagate(term, FiniteDomain::rightDom, vPtr);
           propagate(var, FiniteDomain::leftDom, vPtr);
           if (isCVar(var) == OK)
             termVar->relinkSuspList(this);
-          bind(tPtr, term, vPtr, var);
+          bind(tPtr, term, termIsLocal, vPtr, var);
         }
         break;
       }
@@ -133,7 +143,7 @@ Bool GenFDVariable::unifyFD(TaggedRef* vPtr, TaggedRef var,  TypeOfTerm vTag,
         TaggedRef *aPtr, aux;
         if (intersection == singleton){
           aPtr = NULL;
-          aux = newSmallInt(intersection.getSingleton());
+          aux = newSmallInt(intersection.singl());
           propagate(var, FiniteDomain::leftDom, aux);
           termVar->propagate(term, FiniteDomain::rightDom, aux);
         } else {
@@ -143,8 +153,11 @@ Bool GenFDVariable::unifyFD(TaggedRef* vPtr, TaggedRef var,  TypeOfTerm vTag,
           propagate(var, FiniteDomain::leftDom, aPtr);
           termVar->propagate(term, FiniteDomain::rightDom, aPtr);
         }
-        bind(vPtr, var,  aPtr, aux);
-        bind(tPtr, term, aPtr, aux);
+        Suspension* susp = new Suspension(am.currentBoard);
+        termVar->addSuspension(susp);
+        addSuspension(susp);
+        bind(vPtr, var,  varIsLocal, aPtr, aux);
+        bind(tPtr, term, termIsLocal, aPtr, aux);
         break;
       }
     default:
@@ -185,7 +198,7 @@ ProgramCounter GenFDVariable::index(ProgramCounter elseLabel,
       HTEntry* aux_entry = aux_table[i];
       while (aux_entry) {
         if (isSmallInt(aux_entry->number))
-          if (finiteDomain.isInDomain(smallIntValue(aux_entry->number)))
+          if (finiteDomain.contains(smallIntValue(aux_entry->number)))
             return table->varLabel;
         aux_entry = aux_entry->getNext();
       } // while
@@ -194,91 +207,6 @@ ProgramCounter GenFDVariable::index(ProgramCounter elseLabel,
 
   return elseLabel;
 } // GenFDVariable::index
-
-
-//-----------------------------------------------------------------------------
-//                   Predicates for suspension lists
-
-
-//typedef Bool (*CondFunc)(TaggedRef, TaggedRef, TaggedRef);
-
-// Returns OK, if an unconstrained variable gets constrained in some way,
-// otherwise NO
-Bool isGettingConstrained(TaggedRef oldVal,TaggedRef newVal, TaggedRef){
-  DEREF(newVal, newValPtr, newValTag);
-
-  return (isNotCVar(newVal) == OK) ? NO : OK;
-}
-
-
-// Returns OK, if unconstrained variable gets bound to another
-// variable or a term, otherwise NO.
-Bool isGettingBound(TaggedRef oldVal, TaggedRef newVal, TaggedRef arg){
-  DEREF(newVal, newValPtr, newValTag);
-
-  return ((TaggedRef) newValPtr == arg) ? NO : OK;
-}
-
-
-// Returns OK, if a variable gets determined
-Bool isDet(TaggedRef oldVal, TaggedRef newVal, TaggedRef){
-  DEREF(newVal, newValPtr, newValTag);
-
-  return (isAnyVar(newValTag) == OK) ? NO : OK;
-}
-
-// Returns OK, if the lower bound of newVal is bigger than arg.i,
-// otherwise NO
-Bool lowerBound(TaggedRef oldVal, TaggedRef newVal, TaggedRef arg){
-  DEREF(newVal, newValPtr, newValTag);
-
-  if (isNotCVar(newVal) == OK)
-    return NO;
-  if (isGenFDVar(newVal) == OK){
-    return (tagged2GenFDVar(newVal)->getDom().minElem() > smallIntValue(arg))
-      ? OK : NO;
-  } else
-    return OK;
-}
-
-// Returns  OK, if the uppper bound of newVal is smaller than arg.i,
-// otherwise NO
-Bool upperBound(TaggedRef oldVal, TaggedRef newVal, TaggedRef arg){
-  DEREF(newVal, newValPtr, newValTag);
-
-  if (isNotCVar(newVal) == OK)
-    return NO;
-  if (isGenFDVar(newVal) == OK){
-    return (tagged2GenFDVar(newVal)->getDom().maxElem() < smallIntValue(arg))
-      ? OK : NO;
-  } else
-    return OK;
-}
-
-// Return OK, if newValPtr == arg.trPtr (modulo dereferencing),
-// otherwise NO
-Bool eqVar(TaggedRef oldVal, TaggedRef newVal, TaggedRef arg){
-  DEREF(newVal, newValPtr, newValTag);
-
-  if (arg == 0)
-    return NO;
-  DEREF(arg, argPtr, argTag);
-  return ((newValPtr == argPtr) && isAnyVar(newValTag)) ? OK : NO;
-}
-
-// Returns OK, if cardinality was changed or term has no cardinality,
-// otherwise NO
-Bool hasSmallerCard(TaggedRef oldVal, TaggedRef newVal, TaggedRef arg){
-  DEREF(newVal, newValPtr, newValTag);
-
-  if (isNotCVar(newVal) == OK)
-    return NO;
-  if (isGenFDVar(newVal) == OK){
-    return (tagged2GenFDVar(newVal)->getDom().getSize() < smallIntValue(arg))
-      ? OK : NO;
-  } else
-    return OK;
-}
 
 
 OZ_Bool fdDomainConstrain(TaggedRef &var, TaggedRef* &varPtr,
@@ -290,7 +218,7 @@ OZ_Bool fdDomainConstrain(TaggedRef &var, TaggedRef* &varPtr,
 
   switch (tagTypeOf(var)) {
   case SMALLINT:
-    return domain.isInDomain(smallIntValue(var)) == OK ? PROCEED : FAILED;
+    return domain.contains(smallIntValue(var)) == OK ? PROCEED : FAILED;
 
   case CVAR:
     if (isGenFDVar(var) == NO) goto do_unification;
@@ -309,7 +237,7 @@ OZ_Bool fdDomainConstrain(TaggedRef &var, TaggedRef* &varPtr,
       if (fdvar->isLocalVariable() == OK){
 
         if (domain == singleton)
-          *varPtr = newSmallInt(domain.getSingleton());
+          *varPtr = newSmallInt(domain.singl());
         else
           vardom = domain;
 
@@ -336,7 +264,7 @@ OZ_Bool fdDomainConstrain(TaggedRef &var, TaggedRef* &varPtr,
       TaggedRef auxvar;
 
       if (domain == singleton) {
-        auxvar = newSmallInt(domain.getSingleton());
+        auxvar = newSmallInt(domain.singl());
       } else {
         auxvar = makeTaggedRef(newTaggedCVar(new GenFDVariable(domain,vName)));
 #ifdef DEBUG_CHECK
