@@ -1228,9 +1228,15 @@ BIspec fdSpec[] = {
   {"dplus", 3, fdtest_plus},
   {"sumac", 3, fdtest_sumac},
   {"testgensum", 2, fdtest_gensum},
+  {"testsum", 2, fdtest_sum},
 #ifdef ALLDIFF
   {"alldiff_complete", 1, fdtest_alldiff},
 #endif
+
+#ifndef INPROP
+  //#define INPROP
+#endif
+
 #ifdef INPROP
   {"inqueens", 1, fdtest_inqueens},
 #endif
