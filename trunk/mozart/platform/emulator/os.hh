@@ -34,14 +34,18 @@
 #pragma interface
 #endif
 
+
 #include "base.hh"
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 #include <sys/types.h>
 #include <signal.h>
+
+#ifndef _MSC_VER
+#include <unistd.h>
+#endif
 
 #ifdef AIX3_RS6000
 #include <sys/select.h>
@@ -53,6 +57,93 @@
 
 // getpid
 #include <process.h>
+
+#ifdef _MSC_VER
+#include <io.h>
+#include <sys/stat.h>
+
+#define STDIN_FILENO    0
+#define STDOUT_FILENO   1
+#define STDERR_FILENO   2
+
+/* Some defines for _access nAccessMode (MS doesn't define them, but
+ * it doesn't seem to hurt to add them). */
+#define F_OK    0       /* Check for file existence */
+#define W_OK    2       /* Check for write permission */
+#define R_OK    4       /* Check for read permission */
+
+#define _S_IRWXU        (_S_IREAD | _S_IWRITE | _S_IEXEC)
+#define _S_IXUSR        _S_IEXEC
+#define _S_IWUSR        _S_IWRITE
+#define _S_IRUSR        _S_IREAD
+
+#define S_IFIFO         _S_IFIFO
+#define S_IFCHR         _S_IFCHR
+#define S_IFBLK         _S_IFBLK
+#define S_IFDIR         _S_IFDIR
+#define S_IFREG         _S_IFREG
+#define S_IFMT          _S_IFMT
+#define S_IEXEC         _S_IEXEC
+#define S_IWRITE        _S_IWRITE
+#define S_IREAD         _S_IREAD
+#define S_IRWXU         _S_IRWXU
+#define S_IXUSR         _S_IXUSR
+#define S_IWUSR         _S_IWUSR
+#define S_IRUSR         _S_IRUSR
+
+#define S_ISDIR(m)      ((m) & S_IFDIR)
+#define S_ISFIFO(m)     ((m) & S_IFIFO)
+#define S_ISCHR(m)      ((m) & S_IFCHR)
+#define S_ISBLK(m)      ((m) & S_IFBLK)
+#define S_ISREG(m)      ((m) & S_IFREG)
+
+
+#define lseek(x,y,z) _lseek(x,y,z)
+
+/* the following is stolen from mingw32 */
+struct dirent
+{
+        long            d_ino;          /* Always zero. */
+        unsigned short  d_reclen;       /* Always zero. */
+        unsigned short  d_namlen;       /* Length of name in d_name. */
+        char*           d_name;         /* File name. */
+        /* NOTE: The name in the dirent structure points to the name in the
+         *       finddata_t structure in the DIR. */
+};
+
+
+typedef struct
+{
+        /* disk transfer area for this dir */
+        struct _finddata_t      dd_dta;
+
+        /* dirent struct to return from dir (NOTE: this makes this thread
+         * safe as long as only one thread uses a particular DIR struct at
+         * a time) */
+        struct dirent           dd_dir;
+
+        /* _findnext handle */
+        long                    dd_handle;
+
+        /*
+         * Status of search:
+         *   0 = not started yet (next entry to read is first entry)
+         *  -1 = off the end
+         *   positive = 0 based index of next entry
+         */
+        short                   dd_stat;
+
+        /* given path for dir with search pattern (struct is extended) */
+        char                    dd_name[1];
+} DIR;
+
+
+DIR*            opendir (const char* szPath);
+struct dirent*  readdir (DIR* dir);
+int             closedir (DIR* dir);
+
+#endif
+
 
 #endif
 

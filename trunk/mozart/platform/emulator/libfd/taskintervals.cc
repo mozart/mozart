@@ -558,16 +558,16 @@ struct Interval {
 
 template <class T>
 static void myqsort(T * my, int left, int right,   
-	     int (*compar)(const T &a, const T &b))
+	     int (*compar)(const T *a, const T *b))
 {
   register int i = left, j = right;
   int middle = (left + right) / 2;
   T x = my[middle];
 
   do {
-    while((*compar)(my[i], x) && (i < right)) i++;
+    while((*compar)(my+i, &x) && (i < right)) i++;
     
-    while((*compar)(x, my[j]) && j > left) j--;
+    while((*compar)(&x, my+j) && j > left) j--;
     
     if (i <= j) {
       T aux = my[i];
@@ -582,28 +582,28 @@ static void myqsort(T * my, int left, int right,
   if (i < right) myqsort(my, i, right, compar);
 }
 
-static int compareDursUse(const StartDurUseTerms &a, const StartDurUseTerms &b) {
-  if (a.dur * a.use > b.dur * b.use) 
+static int compareDursUse(const StartDurUseTerms *a, const StartDurUseTerms *b) {
+  if (a->dur * a->use > b->dur * b->use) 
     return 1;
   else return 0;
 }
 
-static int ozcdecl CompareIntervals(const Interval &Int1, const Interval &Int2) 
+static int ozcdecl CompareIntervals(const Interval *Int1, const Interval *Int2) 
 {
-  int left1 = Int1.left;
-  int left2 = Int2.left;
+  int left1 = Int1->left;
+  int left2 = Int2->left;
   if (left1 >= left2) return 0;
   else {
     if (left1 == left2) {
-      if (Int1.right < Int2.right) return 1;
+      if (Int1->right < Int2->right) return 1;
       else return 0;
     }
     else return 1;
   }
 }
 
-static int ozcdecl CompareBounds(const int &Int1, const int &Int2) {
-  if (Int1 < Int2) return 1;
+static int ozcdecl CompareBounds(const int *Int1, const int *Int2) {
+  if (*Int1 < *Int2) return 1;
   else return 0;
 }
 
@@ -634,6 +634,7 @@ CPIteratePropagatorCumTI::CPIteratePropagatorCumTI(OZ_Term tasks,
 
   OZ_ASSERT(i == reg_sz);
 
+  
   myqsort((StartDurUseTerms*) GET_ARRAY(sdu), 0, reg_sz-1, compareDursUse);
 
   for (i = reg_sz; i--; ) {
