@@ -42,15 +42,6 @@
       SC += 1;                                                              \
   }
 
-#define SAMELENGTH_VECTORS(I, J)					\
-  { 									\
-    int i_size = OZ_vectorSize(OZ_args[I]);				\
-    int j_size = OZ_vectorSize(OZ_args[J]);				\
-    if ((i_size >= 0) && (j_size >= 0) && (i_size != j_size))		\
-      return OZ_typeError(OZ_self, OZ_args, OZ_arity, expectedType, J,	\
-	  		  "Vectors must have same size.");		\
-  }
-
 #define EM_LIT     "literal"
 #define EM_INT     "integer"
 #define EM_FD      "finite domain integer"
@@ -159,7 +150,7 @@ struct OZ_expect_t {
   OZ_expect_t(int s, int a) : size(s), accepted(a) {}
 };
 
-enum OZ_PropagatorFlags { NULL_flag, OFS_flag, CD_flag };
+enum OZ_PropagatorFlags {NULL_flag, OFS_flag};
 
 class OZ_Expect;
 
