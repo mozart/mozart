@@ -844,3 +844,8 @@ Bool Space::isMerged() {
   if (solve == (Board *) 1) return OK;
   return NO;
 }
+
+char *toC(OZ_Term term)
+{
+  return OZ_toC(term,ozconf.errorPrintDepth,ozconf.errorPrintWidth);
+}

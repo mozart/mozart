@@ -291,7 +291,7 @@ Board *Object::getBoardFast()
 inline
 Board *SChunk::getBoardFast()
 {
-  return home->getBoardFast();
+  return ((Board *) getPtr())->getBoardFast();
 }
 
 inline

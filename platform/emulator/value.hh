@@ -957,6 +957,22 @@ TaggedRef right(TaggedRef pair)
   return tagged2SRecord(pair)->getArg(1);
 }
 
+inline
+OZ_Term getArityList(OZ_Term term)
+{
+  if (isSRecord(term)) {
+    return tagged2SRecord(term)->getArityList();
+  }
+  if (isLTuple(term)) {
+    return makeTupleArityList(2);
+  }
+  if (isLiteral(term)) {
+    return nil();
+  }
+  return 0;
+}
+
+
 /*===================================================================
  * ObjectOrClass incl. ObjectClass, DeepObjectOrClass
  *=================================================================== */
@@ -1161,17 +1177,20 @@ Object *tagged2Object(TaggedRef term)
 class SChunk: public ConstTerm {
 friend void ConstTerm::gcConstRecurse(void);
 private:
-  Board *home;
+  TaggedRef value;
 public:
-  SChunk(Board *b,SRecord *v) : ConstTerm(Co_Chunk), home(b) {
-    setPtr(v);
+  SChunk(Board *b,TaggedRef v) : ConstTerm(Co_Chunk), value(v) {
+    Assert(isRecord(v));
+    Assert(b);
+    setPtr(b);
   };
 
   OZPRINT;
   OZPRINTLONG;
 
-  SRecord *getRecord() { return (SRecord *) getPtr(); }
-  TaggedRef getFeature(TaggedRef fea) { return getRecord()->getFeature(fea); }
+  TaggedRef getValue() { return value; }
+  TaggedRef getFeature(TaggedRef fea) { return OZ_subtree(value,fea); }
+  TaggedRef getArityList() { return ::getArityList(value); }
   Board *getBoardFast();
 };
 
@@ -1598,5 +1617,7 @@ Space *tagged2Space(TaggedRef term)
 /*===================================================================
  *
  *=================================================================== */
+
+char *toC(OZ_Term);
 
 #endif

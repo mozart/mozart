@@ -326,9 +326,9 @@ OZ_C_proc_end
  * All builtins
  *=================================================================== */
 
-OZ_Return isValueInline(TaggedRef vall)
+OZ_Return isValueInline(TaggedRef val)
 {
-  NONVAR( vall, _1, tag );
+  NONVAR( val, _1, tag );
   return PROCEED;
 }
 
@@ -1603,10 +1603,10 @@ typeError0:
   if (dot)   TypeError2(".",0,"Record and no Literal",term,fea);
   TypeError2("subtree",0,"Record",term,fea);
 typeError1t:
-  if (dot) TypeError2(".",1,"Int (and in range [1 .. width])",term,fea);
+  if (dot) TypeError2(".",1,"(valid) Int)",term,fea);
   TypeError2("subtree",1,"Int",term,fea);
 typeError1r:
-  if (dot) TypeError2(".",1,"Feature (and the name of a field)",term,fea);
+  if (dot) TypeError2(".",1,"(valid) Feature",term,fea);
   TypeError2("subtree",1,"Feature",term,fea);
 }
 
@@ -1647,7 +1647,7 @@ OZ_Return atInline(TaggedRef fea, TaggedRef &out)
   }
 
 bomb:
-  TypeError2("@",1,"Feature (and the name of a field)",
+  TypeError2("@",1,"(valid) Feature",
              rec?makeTaggedSRecord(rec):OZ_atom("noattributes"),
              fea);
 }
@@ -2143,14 +2143,14 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BInewChunk,2)
 {
-  OZ_Term vall = OZ_getCArg(0);
+  OZ_Term val = OZ_getCArg(0);
   OZ_Term out = OZ_getCArg(1);
 
-  if (OZ_isVariable(vall)) OZ_suspendOn(vall);
-  vall=deref(vall);
-  if (!isSRecord(vall)) TypeError1("Chunk.new",0,"Record and not Literal",vall);
+  if (OZ_isVariable(val)) OZ_suspendOn(val);
+  val=deref(val);
+  if (!isRecord(val)) TypeError1("Chunk.new",0,"Record",val);
 
-  return OZ_unify(out,OZ_newChunk(vall));
+  return OZ_unify(out,OZ_newChunk(val));
 }
 OZ_C_proc_end
 
@@ -2161,13 +2161,13 @@ OZ_C_proc_begin(BIchunkArity,2)
 
   if (OZ_isVariable(ch)) OZ_suspendOn(ch);
   ch=deref(ch);
-  if (!OZ_isChunk(ch)) TypeError1("Chunk.arity",0,"Chunk",ch);
+  if (!isChunk(ch)) TypeError1("Chunk.arity",0,"Chunk",ch);
 
   if (isObject(ch)) {
     return OZ_unify(out,tagged2Object(ch)->getArityList());
   }
   Assert(isSChunk(ch));
-  return OZ_unify(out,tagged2SChunk(ch)->getRecord()->getArityList());
+  return OZ_unify(out,tagged2SChunk(ch)->getArityList());
 }
 OZ_C_proc_end
 
@@ -2177,10 +2177,10 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BInewCell,2)
 {
-  OZ_Term vall = OZ_getCArg(0);
+  OZ_Term val = OZ_getCArg(0);
   OZ_Term out = OZ_getCArg(1);
 
-  return OZ_unify(out,OZ_newCell(vall));
+  return OZ_unify(out,OZ_newCell(val));
 }
 OZ_C_proc_end
 
@@ -2406,11 +2406,12 @@ OZ_C_proc_begin(BIisString,2)
   OZ_Term in=OZ_getCArg(0);
   OZ_Term out=OZ_getCArg(1);
 
-  OZ_Return ret = OZ_isString(in);
-
-  if (ret == FAILED) { return OZ_unify(out,NameFalse); }
-  if (ret == PROCEED) { return OZ_unify(out,NameTrue); }
-  return ret;
+  OZ_Term var;
+  if (!OZ_isString(in,&var)) {
+    if (var == 0) return OZ_unify(out,NameFalse);
+    OZ_suspendOn(var);
+  }
+  return OZ_unify(out,NameTrue);
 }
 OZ_C_proc_end
 
@@ -2857,26 +2858,15 @@ OZ_Return BIarityInline(TaggedRef term, TaggedRef &out)
 {
   DEREF(term,termPtr,tag);
 
-  switch (tag) {
-  case SRECORD:
-    out = tagged2SRecord(term)->getArityList();
-    return PROCEED;
-  case LTUPLE:
-    out = makeTupleArityList(2);
-    return PROCEED;
-  case LITERAL:
-    out = AtomNil;
-    return PROCEED;
-  case UVAR:
-  case SVAR:
-    return SUSPEND;
-  case CVAR:
+  out = getArityList(term);
+  if (out) return PROCEED;
+  if (isNotCVar(tag)) return SUSPEND;
+  if (isCVar(tag)) {
     if (tagged2CVar(term)->getType()!=OFSVariable)
-        TypeError1("arity",0,"Record",term);
+      TypeError1("arity",0,"Record",term);
     return SUSPEND;
-  default:
-    TypeError1("arity",0,"Record",term);
   }
+  TypeError1("arity",0,"Record",term);
 }
 
 DECLAREBI_USEINLINEFUN1(BIarity,BIarityInline)
@@ -2943,7 +2933,7 @@ OZ_C_proc_begin(BIarrayNew,4)
   int ilow  = smallIntValue(low);
   int ihigh = smallIntValue(high);
 
-  if (ilow>=ihigh) {
+  if (ilow>ihigh) {
     TypeErrorM("Low bound must be less than high bound");
   }
 
@@ -3666,7 +3656,7 @@ OZ_Return BIintToFloatInline(TaggedRef A, TaggedRef &out)
     return PROCEED;
   }
   if (isBigInt(A)) {
-    char *s = OZ_intToCString(A);
+    char *s = toC(A);
     out = OZ_CStringToFloat(s);
     return PROCEED;
   }
@@ -3725,7 +3715,7 @@ OZ_C_proc_begin(BIfloatToString, 2)
   OZ_Term out = OZ_getCArg(1);
 
   if (OZ_isFloat(in)) {
-    char *s = OZ_floatToCString(in);
+    char *s = toC(in);
     OZ_Return ret = OZ_unify(out,OZ_string(s));
     return ret;
   }
@@ -3799,7 +3789,7 @@ OZ_C_proc_begin(BIintToString, 2)
   OZ_Term out = OZ_getCArg(1);
 
   if (OZ_isInt(in)) {
-    char *str = OZ_intToCString(in);
+    char *str = toC(in);
     OZ_Return ret = OZ_unify(out,OZ_string(str));
     return ret;
   }
@@ -3818,10 +3808,10 @@ OZ_C_proc_begin(BInumStrLen, 2)
   int lenn;
 
   if (OZ_isInt(in)) {
-    char *str = OZ_intToCString(in);
+    char *str = toC(in);
     lenn = strlen(str);
   } else if (OZ_isFloat(in)) {
-    char *s = OZ_floatToCString(in);
+    char *s = toC(in);
     lenn = strlen(s);
   } else {
     TypeError1("numStrLen",0,"Number",in);
@@ -4556,11 +4546,12 @@ OZ_C_proc_begin(BIapply,2)
   OZ_Term proc = OZ_getCArg(0);
   OZ_Term args = OZ_getCArg(1);
 
-  OZ_Return ret = OZ_isList(args);
-  if (ret == SUSPEND) return SUSPEND;
-  if (ret == FAILED) {
-    TypeError2("apply",1,"List",proc,args);
+  OZ_Term var;
+  if (!OZ_isList(args,&var)) {
+    if (var == 0) TypeError2("apply",1,"List",proc,args);
+    OZ_suspendOn(var);
   }
+
   int len = OZ_length(args);
   RefsArray argsArray = allocateY(len);
   for (int i=0; i < len; i++) {
@@ -4896,7 +4887,7 @@ OZ_C_proc_begin(BIintToAtom, 2)
   NONVAR(inP,in,_1);
 
   if (OZ_isInt(in)) {
-    char *str = OZ_intToCString(in);
+    char *str = toC(in);
     OZ_Return ret = OZ_unifyAtom(out,str);
     return ret;
   }
@@ -4992,7 +4983,8 @@ OZ_C_proc_end
    */
 OZ_Return printInline(TaggedRef term)
 {
-  taggedPrint(term,ozconf.printDepth);
+  char *s=OZ_toC(term,ozconf.printDepth,ozconf.printWidth);
+  fprintf(stdout,"%s",s);
   fflush(stdout);
   return (PROCEED);
 }
