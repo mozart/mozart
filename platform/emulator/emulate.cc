@@ -1407,36 +1407,24 @@ void engine() {
         case CE_FAIL:
           if (nb) e->decSolveThreads(nb);
           HF_NOMSG;
-        case CE_SOLVE_CONT:
-          e->currentThread = e->newThread(prio,CBB);
-          Assert(CBB->isSolve());
-          // Make the actor unstable by incrementing the thread counter
-          SolveActor::Cast(CBB->getActor())->incThreads();
-#ifdef NEWCOUNTER
-          CBB->incSuspCount();
-#endif
-          e->pushCFun(CBB, &AM::SolveActorWaker);    // no args;
-          goto LBLcontWithNewThread;
+        case CE_SOLVE_CONT: /* no special case */
         case CE_CONT:
           e->currentThread = e->newThread(prio,CBB);
-          {
-          LBLcontWithNewThread:
-            LOADCONT(cont);
-            CBB->incSuspCount();
-            /* optimization for:
-             *  if (nb) e->decSolveThreads(nb);
-             *  e->incSolveThreads(CBB);
-             */
-            if (orgNB==CBB) {
-              SolveActor *sa = SolveActor::Cast(CBB->getActor());
-              sa->incThreads();
-            }
-            if (e->currentSolveBoard) {
-              e->currentThread->setNotificationBoard(CBB);
-            }
-            e->restartThread();
-            goto LBLemulateHook;
+          LOADCONT(cont);
+          CBB->incSuspCount();
+          /* optimization for:
+           *  if (nb) e->decSolveThreads(nb);
+           *  e->incSolveThreads(CBB);
+           */
+          if (orgNB==CBB) {
+            SolveActor *sa = SolveActor::Cast(CBB->getActor());
+            sa->incThreads();
           }
+          if (e->currentSolveBoard) {
+            e->currentThread->setNotificationBoard(CBB);
+          }
+          e->restartThread();
+          goto LBLemulateHook;
         case CE_NOTHING:
           // deref nb, because maybe committed ??
           if (nb) e->decSolveThreads(nb->getBoardFast());
