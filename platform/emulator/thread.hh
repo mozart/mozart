@@ -454,9 +454,12 @@ public:
     return hasStack() ? item.threadBody->taskStack.isEmpty() : NO;
   }
 
-  void printTaskStack(Bool verbose = NO, int depth = 10000) {
+  void printTaskStack(int depth) {
     if (!isDeadThread() && hasStack()) {
-      item.threadBody->taskStack.printTaskStack(verbose, depth);
+      item.threadBody->taskStack.printTaskStack(depth);
+    } else {
+      message("\tEMPTY\n");
+      message("\n");
     }
   }
 

@@ -278,7 +278,7 @@ public:
         s = "blocked";
       message("Thread: id = %d, state: %s\n",aux->elem->getID(),s);
       message("----------------------------------------\n");
-      aux->elem->printTaskStack();
+      aux->elem->printTaskStack(ozconf.errorThreadDepth);
     }
   }
 
