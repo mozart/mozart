@@ -428,6 +428,19 @@ in
 	 DeleteCount
       end
 
+      meth removeAllDead
+	 {ForAll {Dictionary.items self.ThreadDic}
+	  proc {$ S}
+	     I = {S getId($)}
+	     T = {S getThread($)}
+	  in
+	     case {Thread.state T} == terminated then
+		ThreadManager,remove(T I kill false)
+		Gui,doStatus('.' append)
+	     else skip end
+	  end}
+      end
+
       meth forget(T I)
 	 lock
 	    {Dbg.trace T false}      %% thread is not traced anymore

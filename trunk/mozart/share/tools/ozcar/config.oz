@@ -64,7 +64,8 @@ WaitForThread          = ('waiting for thread to be added ' #
 FirstSelectThread      = 'You must select a thread first!'
 
 StackAction            = {NewName}
-ResetAction            = {NewName}
+RemoveAllAction        = {NewName}
+RemoveAllDeadAction    = {NewName}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
