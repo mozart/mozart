@@ -269,6 +269,14 @@ define
       end	      
    end
 
+   class XDBclass from StorageClass
+      feat
+	 type: xdb
+      meth store(id:ID data: D)
+	 StorageClass, store(id:ID data:D )
+      end	      
+   end
+
    class Friends from StorageClass
       feat
 	 type: friends
@@ -318,7 +326,8 @@ define
    NotifyDB={New Notify init()}
    MessageDB={New MailBox init()}
    ApplicationDB={New Applications init()}
-  
+   XDB={New XDBclass init()}
+   
    class DBase prop locking
       feat
 	 membersDB 
@@ -327,7 +336,7 @@ define
 	 notifyDB
 	 messageDB
 	 applicationDB
-
+	 xDB
       attr
 	 path
 
@@ -338,6 +347,7 @@ define
 	 self.notifyDB = proc{$ X} {NotifyDB X} end
 	 self.messageDB = proc{$ X} {MessageDB X} end
 	 self.applicationDB= proc{$ X} {ApplicationDB X} end
+	 self.xDB= proc{$ X} {XDB X} end
       end
 
       meth setDBdir( dir: D )
@@ -768,6 +778,7 @@ define
 	    {self.friendsDB saveToDisk( file: @path#friends) }
 	    {self.messageDB saveToDisk( file: @path#message) }
 	    {self.applicationDB saveToDisk( file: @path#application)}
+	    {self.xDB saveToDisk( file: @path#xdb)}
 	    {SaveMessID @path#id }
 	    {SaveAppID @path#appid }
 	    
@@ -801,6 +812,7 @@ define
 	    {self.friendsDB loadFromDisk( file: @path#friends ) }
 	    {self.messageDB loadFromDisk( file: @path#message ) }
 	    {self.applicationDB loadFromDisk( file: @path#application)}
+	    {self.xDB loadFromDisk( file: @path#xdb)}
 	    {LoadMessID @path#id}
 	    {LoadAppID @path#appid}
 	    {self buildNotifyTable}
