@@ -387,7 +387,7 @@ OPTIONS
    --mogul=<ACTION>  simplifies  your  task.  It makes it easy for you to
    maintain  a  database of your contributions and to export them so that
    the MOGUL librarian may automatically find them. In fact, the simplest
-   way  is to use ozmake --mogul=publish which will take take care of all
+   way  is  to  use  ozmake  --publish  which  will take take care of all
    defails for you.
 
    ozmake --mogul=put
@@ -404,15 +404,15 @@ OPTIONS
    ozmake --mogul=delete
           remove entry for current contribution
 
-   ozmake --list
+   ozmake --mogul=list
           show  the  recorded data for all entries in the user's database
           of own mogul contributions
 
-   ozmake --list <MOG1> ... <MOGn>
+   ozmake --mogul=list <MOG1> ... <MOGn>
           show the recorded data for entries <MOG1> through <MOGn> in the
           user's database of own mogul contributions
 
-   ozmake --export
+   ozmake --mogul=export
           write  all  necessary  mogul  entries  for the user's own mogul
           contributions.  These are the entries which will be read by the
           MOGUL  librarian  to  automatically  assemble  the  full  MOGUL

@@ -1,8 +1,5 @@
 makefile(
-   lib        : ['Parser.ozf'
-		 'ParserAgain.ozf'
-		 %%'FastParser.ozf' 'XSLTParser.ozf'
-		]
+   lib        : ['Parser.ozf']
    doc        : ['index.html' 'fig1.gif' 'fig2.gif' 'fig3.gif' 'example.xml']
    version    : '0.2'
    uri        : 'x-ozlib://duchier/xml'
