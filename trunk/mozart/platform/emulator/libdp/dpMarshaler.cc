@@ -179,7 +179,7 @@ void DPMarshaler::processBigInt(OZ_Term biTerm, ConstTerm *biConst)
   const char *crep = toC(biTerm);
 
   //
-  if (bs->availableSpace() >= 2*DIFMaxSize + strlen(crep)) {
+  if (bs->availableSpace() >= 2*DIFMaxSize + MNumberMaxSize + strlen(crep)) {
     marshalBigInt(bs, biTerm, biConst);
   } else {
     marshalDIF(bs, DIF_SUSPEND);
@@ -323,6 +323,7 @@ Bool DPMarshaler::marshalFullObject(OZ_Term term, ConstTerm *objConst)
     marshalGName(bs, o->getGName1());
     doToplevel = FALSE;
   } else {
+//      printf("suspend %d\n",osgetpid());
     marshalDIF(bs, DIF_SUSPEND);
     suspend(term);
     // 'doToplevel' is NOT reset here, since 'processObject' will be
@@ -842,6 +843,7 @@ void marshalOwnHead(MarshalerBuffer *bs, int tag, int i){
   marshalNumber(bs, i);
   bs->put(DIF_PRIMARY);
   Credit c=ownerTable->getOwner(i)->getSendCredit();
+//    DebugCode(if (tag==DIF_STUB_OBJECT) printf("m-ms i:%d c:-%d %d\n",i,c,osgetpid());)
   marshalNumber(bs, c);
   PD((MARSHAL,"ownHead o:%d rest-c: ",i));
   return;}
@@ -851,6 +853,7 @@ void marshalToOwner(MarshalerBuffer *bs, int bi){
   BorrowEntry *b=BT->getBorrow(bi); 
   int OTI=b->getOTI();
   if(b->getOnePrimaryCredit()){
+//      printf("p-mto i:%d c:-%d %d\n",b->getOTI(),1,b->getNetAddress()->site->getTimeStamp()->pid);
     bs->put((BYTE) DIF_OWNER);
     marshalNumber(bs, OTI);
     PD((MARSHAL,"toOwner Borrow b:%d Owner o:%d",bi,OTI));
@@ -965,10 +968,12 @@ OZ_Term unmarshalBorrow(MarshalerBuffer *bs,OB_Entry *&ob,int &bi)
 #else
   DSite* site = unmarshalDSite(bs);    		  
 #endif
+
   bi=borrowTable->newSecBorrow(site,cred,sd,si);
   b=borrowTable->getBorrow(bi);
   PD((UNMARSHAL,"borrowed miss"));
   b->moreCredit(); // The Borrow needs some of the real McCoys
+
   ob=b;
   return 0;
 }
@@ -1108,6 +1113,8 @@ OZ_Term unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
       break;
     case DIF_CELL:{
       Tertiary *t=ob->getTertiary(); // mm2: bug: ob is 0 if I am the owner
+      // '!'
+      DebugCode((void) ((ConstTerm *) t)->getType());
       break;}
     case DIF_LOCK:{
       Tertiary *t=ob->getTertiary();
@@ -1170,11 +1177,15 @@ OZ_Term unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
       GName *gnobj = unmarshalGName(&obj, bs);
       GName *gnclass = unmarshalGName(&clas, bs);
 #endif
-      if(!gnobj) {
+      if(!gnobj) {	
+//  	printf("Had Object %d:%d flags:%d\n",
+//  	       ((BorrowEntry *)ob)->getNetAddress()->index,
+//  	       ((BorrowEntry *)ob)->getNetAddress()->site->getTimeStamp()->pid,
+//  	       ((BorrowEntry *)ob)->getFlags());
 	if(!(BT->maybeFreeBorrowEntry(bi))){
 	  ob->mkRef(obj,ob->getFlags());
-	  //printf("indx:%d %xd\n",((BorrowEntry *)ob)->getNetAddress()->index,
-	  //	 ((BorrowEntry *)ob)->getNetAddress()->site);
+//    	  printf("indx:%d %xd\n",((BorrowEntry *)ob)->getNetAddress()->index,
+//    	  	 ((BorrowEntry *)ob)->getNetAddress()->site);
 	}
 	return (obj);
       }
@@ -1249,6 +1260,7 @@ OZ_Term unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
   } 
   return val;
 }
+
 
 #ifndef USE_FAST_UNMARSHALER
 OZ_Term unmarshalOwnerRobust(MarshalerBuffer *bs,MarshalTag mt,int *error)
