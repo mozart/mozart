@@ -105,7 +105,7 @@ public:
 class CellManager : public  CellManagerEmul {
   friend void ConstTerm::gcConstRecurse(void);
 public:
-  CellSec* getCellSec(){(CellSec*) getSec();}
+  CellSec* getCellSec(){return (CellSec*) getSec();}
   NO_DEFAULT_CONSTRUCTORS2(CellManager);
   CellManager() {
     Assert(sizeof(CellManagerEmul) == sizeof(CellManager));
@@ -133,7 +133,7 @@ public:
 class CellFrame : public CellFrameEmul {
 friend void ConstTerm::gcConstRecurse(void);
 public:
-  CellSec* getCellSec(){(CellSec*) getSec();}
+  CellSec* getCellSec(){return (CellSec*) getSec();}
   void setCellSec(CellSec* cs){sec=(CellSecEmul*) cs;}
   NO_DEFAULT_CONSTRUCTORS2(CellFrame);
   CellFrame(){
@@ -257,7 +257,7 @@ public:
 class LockManager : public LockManagerEmul {
 friend void ConstTerm::gcConstRecurse(void);
 public:
-  LockSec* getLockSec(){(LockSec*) getSec();}
+  LockSec* getLockSec(){return (LockSec*) getSec();}
   NO_DEFAULT_CONSTRUCTORS2(LockManager);
   LockManager() {Assert(0);}
 
