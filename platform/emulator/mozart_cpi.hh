@@ -606,7 +606,7 @@ public:
     r = 0;
     return 0;
   }
-  int expectIntVarMinMax(OZ_Term v, int &r) {
+  int expectIntVarBounds(OZ_Term v, int &r) {
     r = addImpose(fd_prop_bounds, v);
     return 0;
   }
@@ -1085,17 +1085,39 @@ public:
     return (r.accepted == -2);
   }
 
+  OZ_expect_t expectVector(OZ_Term, OZ_ExpectMeth);
   OZ_expect_t expectDomDescr(OZ_Term descr, int level = 4);
   OZ_expect_t expectFSetDescr(OZ_Term descr, int level = 4);
   OZ_expect_t expectVar(OZ_Term t);
   OZ_expect_t expectRecordVar(OZ_Term);
   OZ_expect_t expectBoolVar(OZ_Term);
   OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState = fd_prop_any);
-  int expectIntVarMinMax(OZ_Term v, OZ_Return &r) {
-    OZ_expect_t e = expectIntVar(v);
+  OZ_expect_t expectIntVarMinMax(OZ_Term t) {
+    return expectIntVar(t, fd_prop_bounds);
+  }
+  OZ_expect_t expectVectorIntVarMinMax(OZ_Term t) {
+    return expectVector(t, &expectIntVarMinMax);
+  }
+  OZ_expect_t expectVectorInt(OZ_Term t) {
+    return expectVector(t, &expectInt);
+  }
+  int expectIntVarBounds(OZ_Term v, OZ_Return &r) {
+    OZ_expect_t e = expectIntVarMinMax(v);
     if (isFailing(e)) {
       fail();
       r = OZ_typeErrorCPI(OZ_EM_FD, 0, "");
+      return 1;
+    } else if (isSuspending(e) || isExceptional(e)) {
+      r = suspend();
+      return 1;
+    }
+    return 0;
+  }
+  int expectVectorIntVarBounds(OZ_Term v, OZ_Return &r) {
+    OZ_expect_t e = expectVectorIntVarMinMax(v);
+    if (isFailing(e)) {
+      fail();
+      r = OZ_typeErrorCPI(OZ_EM_VECT OZ_EM_FD, 0, "");
       return 1;
     } else if (isSuspending(e) || isExceptional(e)) {
       r = suspend();
@@ -1115,13 +1137,24 @@ public:
     }
     return 0;
   }
+  int expectVectorInt(OZ_Term v, OZ_Return &r) {
+    OZ_expect_t e = expectVectorInt(v);
+    if (isFailing(e)) {
+      fail();
+      r = OZ_typeErrorCPI(OZ_EM_VECT OZ_EM_FD, 0, "");
+      return 1;
+    } else if (isSuspending(e) || isExceptional(e)) {
+      r = suspend();
+      return 1;
+    }
+    return 0;
+  }
   OZ_expect_t expectFSetVar(OZ_Term, OZ_FSetPropState = fs_prop_any);
   OZ_expect_t expectInt(OZ_Term);
   OZ_expect_t expectFloat(OZ_Term);
   OZ_expect_t expectFSetValue(OZ_Term);
   OZ_expect_t expectLiteral(OZ_Term);
   OZ_expect_t expectLiteralOutOf(OZ_Term, OZ_Term *);
-  OZ_expect_t expectVector(OZ_Term, OZ_ExpectMeth);
   OZ_expect_t expectProperRecord(OZ_Term, OZ_ExpectMeth);
   OZ_expect_t expectProperRecord(OZ_Term, OZ_Term *);
   OZ_expect_t expectProperTuple(OZ_Term, OZ_ExpectMeth);
@@ -1408,6 +1441,7 @@ public:  //
     }
     return r;
   }
+  OZ_Propagator &operator *(void) { return *_prop; }
 };
 
 #endif // __MOZART_CPI_HH__

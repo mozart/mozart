@@ -57,6 +57,12 @@ public:
   virtual OZ_Return propagate(void);
 };
 
+class LessEqOffset : public LessEqOffPropagator {
+public:
+  LessEqOffset(OZ_Term x, OZ_Term y,  int c)
+    : LessEqOffPropagator(x, y, c) {}
+};
+
 //-----------------------------------------------------------------------------
 
 class MinimumPropagator : public Propagator_D_D_D {

@@ -31,6 +31,8 @@
 #include "auxcomp.hh"
 #include "arith.hh"
 
+#define TMUELLER
+#define NEW
 //-----------------------------------------------------------------------------
 
 OZ_BI_define(fdp_sum, 3, 0)
@@ -71,18 +73,27 @@ OZ_BI_end
 
 //-----------------------------------------------------------------------------
 
+#include "sum_filter.hh"
+
 OZ_BI_define(fdp_sumC, 4, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_INT","OZ_EM_VECT OZ_EM_FD","OZ_EM_LIT
                    ","OZ_EM_FD);
 
+  const char * op = OZ_atomToC(OZ_in(2));
+
   PropagatorExpect pe;
+
+#ifdef NEW
+  if (!strcmp(SUM_OP_LEQ, op)) {
+    OZ_Return r;
+    return make_lessEqOffsetN(r, pe, OZ_in(0), OZ_in(1), OZ_in(3));
+  }
+#endif
 
   OZ_EXPECT(pe, 2, expectLiteral);
   OZ_EXPECT(pe, 0, expectVectorInt);
   SAMELENGTH_VECTORS(0, 1);
-
-  const char * op = OZ_atomToC(OZ_in(2));
 
   if (!strcmp(SUM_OP_NEQ, op)) {
     OZ_EXPECT(pe, 1, expectVectorIntVarSingl);
@@ -228,8 +239,6 @@ OZ_Return LinNotEqPropagator::propagate(void)
 }
 
 //-----------------------------------------------------------------------------
-#define TMUELLER
-#define NEW
 #ifdef TMUELLER
 #ifdef NEW
 #include "sum_filter.hh"

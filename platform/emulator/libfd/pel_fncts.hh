@@ -59,8 +59,8 @@ void make_PEL_LessEqOffset(PEL_PersistentEngine &engine,
                            PEL_PersistentFDIntVar &x, int c,
                            PEL_PersistentFDIntVar &y)
 {
-  engine.expectFDIntVarMinMax(x);
-  engine.expectFDIntVarMinMax(y);
+  engine.expectIntVarBounds(x);
+  engine.expectIntVarBounds(y);
   engine.impose(new PEL_LessEqOffset(x, c, y));
 }
 
@@ -83,8 +83,8 @@ void make_PEL_GreaterOffset(PEL_PersistentEngine &engine,
                            PEL_PersistentFDIntVar &x, int c,
                            PEL_PersistentFDIntVar &y)
 {
-  engine.expectFDIntVarMinMax(x);
-  engine.expectFDIntVarMinMax(y);
+  engine.expectIntVarBounds(x);
+  engine.expectIntVarBounds(y);
   engine.impose(new PEL_GreaterOffset(x, c, y));
 }
 

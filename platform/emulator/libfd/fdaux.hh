@@ -137,9 +137,6 @@ public:
   OZ_expect_t expectIntVarMax(OZ_Term t) {
     return expectIntVar(t, fd_prop_bounds);
   }
-  OZ_expect_t expectIntVarMinMax(OZ_Term t) {
-    return expectIntVar(t, fd_prop_bounds);
-  }
   OZ_expect_t expectIntVarSingl(OZ_Term t) {
     return expectIntVar(t, fd_prop_singl);
   }
@@ -149,15 +146,8 @@ public:
   OZ_expect_t expectProperRecord(OZ_Term t, PropagatorExpectMeth expectf) {
     return OZ_Expect::expectProperRecord(t, (OZ_ExpectMeth) expectf);
   }
-
-  OZ_expect_t expectVectorInt(OZ_Term t) {
-    return expectVector(t, (PropagatorExpectMeth) &OZ_Expect::expectInt);
-  }
   OZ_expect_t expectVectorLiteral(OZ_Term t) {
     return expectVector(t, (PropagatorExpectMeth) &OZ_Expect::expectLiteral);
-  }
-  OZ_expect_t expectVectorIntVarMinMax(OZ_Term t) {
-    return expectVector(t, &PropagatorExpect::expectIntVarMinMax);
   }
   OZ_expect_t expectVectorIntVarSingl(OZ_Term t) {
     return expectVector(t, &PropagatorExpect::expectIntVarSingl);

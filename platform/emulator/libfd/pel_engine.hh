@@ -132,14 +132,14 @@ public:
     _current_params = 0;
     return 0;
   }
-  int expectFDIntVarMinMax(PEL_PersistentFDIntVar &fdv) {
+  int expectIntVarBounds(PEL_PersistentFDIntVar &fdv) {
     _PEL_EventList * el = &(fdv.getEventLists().getBounds());
     _ela[_current_params] = el;
     _current_params += 1;
     CASSERT(_current_params < MAX_PARAMS);
     return 0;
   }
-  int expectFDIntVarMinMax(PEL_PersistentFDIntVar &fdv, int &r) {
+  int expectIntVarBounds(PEL_PersistentFDIntVar &fdv, int &r) {
     _PEL_EventList * el = &(fdv.getEventLists().getBounds());
     _ela[_current_params] = el;
     _current_params += 1;

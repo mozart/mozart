@@ -55,12 +55,11 @@ TasksOverlapPropagator::TasksOverlapPropagator(OZ_Term x, OZ_Term xd,
     (*_cl2_t2).initFull();
     (*_cl2_o).initSingleton(0);
   }
-
   // clause 3
   {
     _engine_cl3.init();
     make_PEL_LessEqOffset(_engine_cl3, _cl3_t2, reg_yd, _cl3_t1);
-
+    //
     (*_cl3_t1).initFull();
     (*_cl3_t2).initFull();
     (*_cl3_o).initSingleton(0);
@@ -169,7 +168,7 @@ OZ_Return TasksOverlapPropagator::propagate(void)
       }
     }
     _first = 0;
-    // 3. step
+    // 3. step // was soll das?, wir sind och eager, oder?
     if (engine_cl1.hasReachedFixPoint() &&
         engine_cl2.hasReachedFixPoint() &&
         engine_cl3.hasReachedFixPoint()) {
