@@ -157,7 +157,7 @@ TkTools.ozf: ../url-defaults.oz wp/EvalDialog.oz
 
 # compiler dependencies
 COMPILERSRC1 = \
-	CompilerClass.oz PrintName.oz Reporter.oz ParseOz.oz FormatStrings.oz \
+	CompilerClass.oz PrintName.oz ParseOz.oz FormatStrings.oz \
 	CheckTupleSyntax.oz Builtins.oz Core.oz Annotate.oz \
 	StaticAnalysis.oz POTypes.oz CodeGen.oz CodeStore.oz \
 	CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
@@ -214,7 +214,7 @@ CodeGen.ozf: compiler/CodeGen.oz compiler/CodeStore.oz compiler/CodeEmitter.oz
 Assembler.ozf: compiler/Assembler.oz compiler-Opcodes.oz
 
 Main.ozf: compiler/Main.oz compiler/FormatStrings.oz \
-	compiler/CheckTupleSyntax.oz compiler/Reporter.oz compiler/ParseOz.oz \
+	compiler/CheckTupleSyntax.oz compiler/ParseOz.oz \
 	compiler/CompilerClass.oz compiler/GenericInterface.oz \
 	compiler/QuietInterface.oz compiler/Abstractions.oz \
 	compiler/Errors.oz compiler-Version.oz \
