@@ -12,7 +12,7 @@ import
    HTML_ByAuthor(updatePage)
    Pickle(saveCompressed)
    Regex(make compile search) at 'x-oz://contrib/regex'
-   Directory(mkDir)
+   Directory(mkDir listRegularFiles)
 export
    Manager Trace Indent Dedent RelativeTo Admin
 define
@@ -199,11 +199,22 @@ define
       in
 	 @mogulTOP#'/doc/'#S#'/'
       end
+      
       meth id_to_pkgdir_href(ID $)
 	 S = Admin,id_to_relurl(ID $)
       in
-	 @mogulTOP#'/pkg/'#S#'/'
+	 {RelativeTo @mogulTOP 'populate/'#S}
       end
+
+      meth id_to_pkg_files(ID $)
+	 S = Admin,id_to_relurl(ID $)
+	 D = {RelativeTo @mogulDIR 'populate/'#S}
+      in
+	 {Sort {Map {Directory.listRegularFiles D}
+		VirtualString.toAtom}
+	  Value.'<'}
+      end
+
       meth condGetId(ID D $)
 	 if @db==unit then D else {@db condGet(ID D $)} end
       end

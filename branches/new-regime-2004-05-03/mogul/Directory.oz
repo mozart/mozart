@@ -1,11 +1,11 @@
 functor
 import
-   OS(system stat)
+   OS(system stat getDir)
    Admin(manager:Manager)
    Resolve(expand)
    URL(make resolve)
 export
-   MkDir MkDirForFile
+   MkDir MkDirForFile ListRegularFiles
 define
    proc {CreateDir Path}
       {Manager trace('Creating dir '#Path)}
@@ -36,5 +36,12 @@ define
       case {Reverse U.path}
       of _|T then {MkDir {AdjoinAt U path {Reverse T}}}
       else skip end
+   end
+   %%
+   fun {ListRegularFiles Path}
+      for F in {OS.getDir Path} collect:COL do
+	 if F\="." andthen F\=".." andthen {OS.stat Path#'/'#F}.type=='reg'
+	 then {COL F} end
+      end
    end
 end
