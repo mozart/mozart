@@ -79,10 +79,10 @@ define
          case TextSocket, getS($) of false then
             {Exception.raiseError netdict(serverClosed unit)}
             {self.crash}
-         elseof S=(A|B|C|_) then
+         elseof S=(A|_) andthen {Char.isDigit A} then
             N = {String.toInt {List.takeDropWhile S Char.isDigit $ ?Rest}}
             if N == 420 orelse N == 421 then
-               {Exception.raiseError netdict(serverClosed N)}
+               {Exception.raiseError netdict(serverClosed 'Error '#N)}
                {self.crash}
             elseif {Member N Ns} then skip
             else
@@ -98,7 +98,7 @@ define
             TextSocket, write(vs: S#'\r\n')
          catch system(os(os 4: Text ...) ...) then
             {self.crash}
-            {Exception.raiseError netdict(serverClosed unit)}
+            {Exception.raiseError netdict(serverClosed Text)}
          end
       end
    end
