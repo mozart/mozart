@@ -289,7 +289,7 @@ end
         <item> The module manager <def/links/ the functor by applying the functor body to
         the imported system modules <code proglang=oz/Application/ and
         <code proglang=oz/Open/.
-        <item> It <def/instantiates/ the functor executing its body.
+        <item> It <def/instantiates/ the functor by executing its body.
 <!--
 <def/executes/ the functor by
 -->
