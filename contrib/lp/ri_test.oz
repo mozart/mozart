@@ -36,7 +36,7 @@
 % You are welcome to find new test cases and to add them to this file.
 % -- Tobias (tmueller@ps.uni-sb.de)
 
-declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP.ozf']}
+declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP']}
 
 {Browse
  [

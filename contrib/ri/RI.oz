@@ -32,7 +32,7 @@ functor
 import
    
    Export_RI at 'ri.so{native}'
-
+   
 export
    
    sup:           Sup
@@ -52,7 +52,7 @@ export
 	 
    
 define
-   
+
    Sup           = {Export_RI.getSup}
    Inf           = {Export_RI.getInf}
    SetPrec       = Export_RI.setPrecision
