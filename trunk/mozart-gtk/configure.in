@@ -100,6 +100,19 @@ fi
 AC_SUBST(IMLIB_CFLAGS)
 AC_SUBST(IMLIB_LIBS)
 
+dnl check for libart-config
+AC_PATH_PROG(LIBART_CONFIG,libart-config)
+if test -n "$LIBART_CONFIG"; then
+   AC_MSG_CHECKING(libart c flags)
+   LIBART_CFLAGS=`${LIBART_CONFIG} --cflags`
+   AC_MSG_RESULT($LIBART_CFLAGS)
+   AC_MSG_CHECKING(libart lib flags)
+   LIBART_LIBS=`${LIBART_CONFIG} --libs`
+   AC_MSG_RESULT($LIBART_LIBS)
+fi
+AC_SUBST(LIBART_CFLAGS)
+AC_SUBST(LIBART_LIBS)
+
 dnl Check for the right GTK+ version
 AC_MSG_CHECKING(for GTK+ version)
 GTKVERSION=`$GTKCONFIG --version`
@@ -116,8 +129,8 @@ esac
 GTKFLAGS=`$GTKCONFIG --cflags`
 GTKLIBS=`$GTKCONFIG --libs`
 
-CPPFLAGS="$GTKFLAGS $CPPFLAGS"
-LIBS="-lart_lgpl -lgdk_imlib $GTKLIBS $LIBS"
+CPPFLAGS="$LIBART_CFLAGS $GTKFLAGS $CPPFLAGS"
+LIBS="$LIBART_LIBS -lart_lgpl -lgdk_imlib $GTKLIBS $LIBS"
 
 dnl Checking for canvas
 EXPLICIT_CANVAS=no
