@@ -521,6 +521,15 @@ prepare
 	 error(kind : TITLE_MOGUL
 	       msg  : 'tarball not found'
 	       items: [hint(l:'Filename' m:F)])
+      [] ozmake(makefile:unknownprovides(A)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'unknown target on \'provides\' feature'
+	       items: [hint(l:'Target' m:A)])
+      [] ozmake(makefile:badprovides(S A)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'only bin and lib targets allowed on feature \`provides\''
+	       items: [hint(l:'Target' m:A)
+		       hint(l:'Section' m:S)])
       end
    end
 define

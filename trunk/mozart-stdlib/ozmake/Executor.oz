@@ -476,12 +476,11 @@ define
 
       meth exec_save_to_file(Data File)
 	 Executor,exec_mkdir({Path.dirname File})
-	 {self trace('saving '#File)}
+	 {self xtrace('saving '#File)}
 	 if {self get_justprint($)} then
 	    Executor,SimulatedTouch(File)
 	 else
-	    if {Path.exists File} then {Path.remove File} end
-	    {Pickle.save Data File}
+	    {Pickle.saveCompressed Data File 9}
 	 end 
       end
 

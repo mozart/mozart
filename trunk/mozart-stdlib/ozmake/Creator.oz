@@ -2,7 +2,6 @@ functor
 export
    'class' : Creator
 import
-   Pickle
    Utils at 'Utils.ozf'
    Path  at 'Path.ozf'
 define
@@ -32,12 +31,8 @@ define
 			     end}
 			 end)
       in
-	 {self exec_mkdir({Path.dirname PKG})}
-	 {self xtrace('writing '#PKG)}
-	 if {self get_justprint($)} then skip else
-	    try {Pickle.save REC PKG}
-	    catch _ then raise ozmake(create:write(PKG)) end end
-	 end
+	 try {self exec_save_to_file(REC PKG)}
+	 catch _ then raise ozmake(create:write(PKG)) end end
       end
 
       meth GetNeeded($)

@@ -13,6 +13,7 @@ export
 prepare
    IsPrefix = List.isPrefix
    VS2S = VirtualString.toString
+   VS2A = VirtualString.toAtom
    fun {List2VSX Accu X} Accu#X end
    fun {List2VS L} {FoldL L List2VSX nil} end
    fun {NewQueue}
@@ -81,6 +82,24 @@ define
 	 @RootID
       end
 
+      meth ToProvides(R Uri Table)
+	 if {HasFeature R provides} then
+	    for E in R.provides do
+	       Table.{Path.resolveAtom Uri E} := unit
+	    end
+	 else
+	    for E in {CondSelect R bin nil} do
+	       Table.{VS2A E} := unit
+	    end
+	    for E in {CondSelect R lib nil} do
+	       Table.{Path.resolveAtom Uri E} := unit
+	    end
+	 end
+	 for D#M in {Record.toListInd {CondSelect R submakefiles o}} do
+	    {self ToProvides(M {Path.resolve Uri D} Table)}
+	 end
+      end
+
       meth ToMogulPackageEntry(R VS)
 	 Q={NewQueue}
       in
@@ -124,12 +143,14 @@ define
 	     {Path.resolve {self get_moguldocurl($)}
 	      {Utils.mogulToFilename R.mogul}#'/'#F}#'\n'}
 	 else skip end
-	 for T in {CondSelect R bin nil} do
-	    {Q.put 'provides:       '#T#'\n'}
+	 local Table={NewDictionary} in
+	    {self ToProvides(R {CondSelect R uri nil} Table)}
+	    for T in {Dictionary.keys Table} do
+	       {Q.put 'provides:       '#T#'\n'}
+	    end
 	 end
-	 for T in {CondSelect R lib nil} do
-	    {Q.put 'provides:       '#
-	     {Path.resolve R.uri T}#'\n'}
+	 for T in {CondSelect R requires nil} do
+	    {Q.put 'requires:       '#T#'\n'}
 	 end
 	 if {HasFeature R info_html} then
 	    {Q.put 'content-type:   text/html\n\n'}
@@ -231,6 +252,10 @@ define
 	 of nil  then skip
 	 [] unit then skip
 	 [] L    then D.categories := L end
+	 case {CondSelect R requires unit}
+	 of nil  then skip
+	 [] unit then skip
+	 [] L    then D.requires := L end
 	 local P = {Dictionary.toRecord package D} in
 	    @DB.(R.mogul) := P
 	    {self trace('updated entry for '#R.mogul)}
