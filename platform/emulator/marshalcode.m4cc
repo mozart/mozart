@@ -589,7 +589,8 @@ ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
     }
   }
   
-  Assert(discard==OK || CodeArea::getOpcode(start)==DEFINITION);
+  Assert(discard==OK || CodeArea::getOpcode(start)==DEFINITION || 
+	 CodeArea::getOpcode(start)==DEFINITIONCOPY);
   if (discard)
     return 0;
   else
