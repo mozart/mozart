@@ -6,6 +6,10 @@
 <!ENTITY amp "&">
 <!ENTITY alfa "ALFA">
 <!ENTITY lambda "LAMBDA">
+<!ENTITY % proglang.values.local "|lambda">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
 
 
 <!-- Include Files -->
@@ -88,7 +92,10 @@
     <TITLE>Tutorial of Oz</TITLE>
     <Author.Extern to="author.db" key="Seif.Haridi">
     <Author.Extern to="author.db" key="Nils.Franzen">
-
+    <Comic>
+      <Picture.Choice>
+	<Picture.Extern to="tutorial.gif" type=gif>
+      </Picture.Choice>
     <ABSTRACT>
      &abstract;
     </ABSTRACT>
