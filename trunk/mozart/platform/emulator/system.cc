@@ -130,36 +130,8 @@ OZ_Return showInline(TaggedRef term)
 
 OZ_DECLAREBI_USEINLINEREL1(BIshow,showInline)
 
-OZ_BI_define(BIgetPrintName,1,1)
-{
-  oz_declareDerefIN(0,t);
-  switch (tTag) {
-  case TAG_CONST:
-    {
-      ConstTerm *rec = tagged2Const(t);
-      switch (rec->getType()) {
-      case Co_Builtin:
-	OZ_RETURN(((Builtin *) rec)->getName());
-      case Co_Abstraction:
-	OZ_RETURN(((Abstraction *) rec)->getName());
-      case Co_Class:
-	OZ_RETURN_ATOM((OZ_CONST char*)((ObjectClass *) rec)->getPrintName());
-      default:
-	break;
-      }
-      break;
-    }
-  case TAG_UVAR: case TAG_CVAR: // FUT
-    OZ_RETURN_ATOM((OZ_CONST char*)oz_varGetName(OZ_in(0)));
-  case TAG_LITERAL:
-    {
-      const char *s = tagged2Literal(t)->getPrintName();
-      OZ_RETURN(s? oz_atom(s): AtomEmpty);
-    }
-  default:
-    break;
-  }
-  OZ_RETURN(AtomEmpty);
+OZ_BI_define(BIgetPrintName,1,1) {
+  OZ_RETURN(oz_getPrintName(OZ_in(0)));
 } OZ_BI_end
 
 // ---------------------------------------------------------------------------
