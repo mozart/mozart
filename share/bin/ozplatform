@@ -9,7 +9,7 @@ case $system in
    ;;
    RISC\ ULTRIX\ 4.*)   OZARCH=ultrix-mips
    ;;
-   i486\ Linux\ *)      OZARCH=linux-i486
+   i[34]86\ Linux\ *)   OZARCH=linux-i486
    ;;
    IP19\ IRIX\ *)       OZARCH=irix-ip19
    ;;
