@@ -8,6 +8,13 @@
 <Section id="lp.tutorial.fd"> <Title/The Finite Domain Model/
 
 <P>
+The finite domain model is a one-to-one translation of the LP
+model. Every problem variable of <Math>\mbox{\bf x}</Math> is
+represented by a finite domain variable. The inequalities are
+expressed by appropriate finite domain constraints.
+
+<Code.Extern display to="mks_fd.oz" class=linenumbers>
+
 The function <<KnapsackFD>> returns a procedure abstracting the
 script. The solution variable <<Sol>> of the script is constrained
 to a record. The record provides access to the individual quantities
@@ -29,8 +36,7 @@ to the problem variables. The distribution strategy is
 straightforwardly chosen to <<naive>>. Experimenting with first fail
 (<<ff>>) produced even worse results.
 
-<Code.Extern display to="mks_fd.oz" class=linenumbers>
-
+<P>
 Solving the problem by calling <<<{ExploreBest {KnapsackFD Problem}
 proc {$ O N} O.maxprofit <: N.maxprofit end}>>> produces the following
 search tree.
