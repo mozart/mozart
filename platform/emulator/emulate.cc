@@ -1626,13 +1626,9 @@ void engine() {
    LBLBIsolve:
      {
        TaggedRef x0 = X[0];
-       TaggedRef x1 = X[1];
-       DEREF (x0, solvePredPtr, x0Tag);
-       DEREF (x1, resVarPtr, x1Tag);
+       DEREF (x0, _0, x0Tag);
 
        if (isAnyVar (x0Tag) == OK) {
-	 X[0] = makeTaggedRef (solvePredPtr);
-	 X[1] = makeTaggedRef (resVarPtr);
 	 predicate = bi->getSuspHandler();
 	 if (!predicate) {
 	   warning("call: builtin %s/%d: no suspension handler",
@@ -1654,9 +1650,9 @@ void engine() {
        if (isExecute == NO)
 	 e->pushTaskOutline(CBB, contAdr, Y, G);
 
-       // create solve actor(resVarPtr);
-       SolveActor *sa = new SolveActor (CBB, GET_CURRENT_PRIORITY(), 
-					makeTaggedRef (resVarPtr));
+       // create solve actor(x1);
+       // Note: don't perform any derefencing on X[1];
+       SolveActor *sa = new SolveActor (CBB, GET_CURRENT_PRIORITY(), X[1]);
 
        e->setCurrent(new Board(sa, Bo_Solve), OK);
        CBB->setInstalled();
