@@ -188,7 +188,7 @@ if test "${GXX}" = yes; then
     if test "${platform}" = linux-i486
     then
         oz_opt="$oz_opt -mpentium"
-#       oz_om="-fomit-frame-pointer"
+        oz_om="-fomit-frame-pointer"
     fi
     : ${oz_copt_optimize="$oz_opt $oz_om"}
     : ${oz_copt_profile="$oz_opt -pg"}
