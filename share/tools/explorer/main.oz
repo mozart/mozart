@@ -108,7 +108,7 @@ in
 		      ActionArities.ActionKind}
 		  then
 		     MenuLabel = case Label==NoLabel then
-				    {Procedure.printName Action}
+				    {System.printName Action}
 				 else Label
 				 end
 		  in
