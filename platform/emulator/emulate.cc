@@ -1801,12 +1801,21 @@ void engine() {
          boardToInstall->setCommitted (CBB);
 #ifdef DEBUG_CHECK
          if ( !e->installScript (boardToInstall->getScriptRef ()) ) {
+           LOCAL_PROPAGATION(HANDLE_FAILURE(NULL, ;));
            // error ("installScript has failed in solveCont");
            message ("installScript has failed in solveCont (0x%x to 0x%x)\n",
                     (void *) boardToInstall, (void *) solveBB);
          }
 #else
-         (void) e->installScript (boardToInstall->getScriptRef ());
+
+         LOCAL_PROPAGATION(
+           if (!e->installScript (boardToInstall->getScriptRef ()))
+             HANDLE_FAILURE(NULL, ;)
+         )
+
+         NO_LOCAL_PROPAGATION(
+           (void) e->installScript (boardToInstall->getScriptRef ());
+         )
 #endif
          // add the suspensions of the committed board and remove
          // its suspension itself;
