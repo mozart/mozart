@@ -1538,12 +1538,13 @@ Negative arg -N means kill N Oz expressions after the cursor."
     (define-key map "\C-c\C-f\C-h" 'oz-profiler-stop))
 
   (define-key map "\M-\C-x"	'oz-feed-paragraph)
-  (define-key map "\C-c\C-c"    'oz-toggle-compiler)
 
   (define-key map [(control c) (control h)] 'oz-halt)
   (define-key map "\C-c\C-h"    'oz-halt)
 
+  (define-key map "\C-c\C-c"    'oz-toggle-compiler)
   (define-key map "\C-c\C-e"    'oz-toggle-emulator)
+  (define-key map "\C-c\C-t"    'oz-toggle-temp)
   (define-key map "\C-c\C-n"    'oz-new-buffer)
   (define-key map "\C-c\C-l"    'oz-fontify)
   (define-key map "\C-c\C-r"    'run-oz)
@@ -2137,6 +2138,7 @@ The rest of the output is then passed through the oz-filter."
     (save-excursion
       (let ((win (or (get-buffer-window oz-emulator-buffer)
 		     (get-buffer-window oz-compiler-buffer)
+		     (get-buffer-window oz-temp-buffer)
 		     (split-window (get-largest-window)
 				   (/ (* (window-height (get-largest-window))
 					 (- 100 oz-other-buffer-percent))
@@ -2181,6 +2183,13 @@ If the emulator window is not visible, then show it.
 If it is, then remove it."
   (interactive)
   (oz-toggle-window oz-emulator-buffer))
+
+(defun oz-toggle-temp ()
+  "Toggle Oz Temp window.
+If the temp window is not visible, then show it.
+If it is, then remove it."
+  (interactive)
+  (oz-toggle-window oz-temp-buffer))
 
 (defun oz-toggle-window (buffername)
   (let ((buffer (get-buffer buffername)))
