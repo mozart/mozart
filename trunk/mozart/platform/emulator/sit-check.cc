@@ -112,7 +112,7 @@ TaggedRef bads;
 void checkSituatedBlock(OZ_Term *, int);
 
 
-int Board::checkSituatedness(TaggedRef * x, TaggedRef *f,TaggedRef *b) {
+void Board::checkSituatedness(TaggedRef * x, TaggedRef *f,TaggedRef *b) {
 
   futs = AtomNil;
   bads = AtomNil;
