@@ -841,17 +841,6 @@ loop:
         return CE_NOTHING;
       } else {
 
-        // wake up propagators to be woken up on stablity
-        if (solveAA->stable_wake()) {
-          LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
-                            return CE_FAIL;);
-          if (!isStableSolve(solveAA)) {
-            deinstallCurrent();
-            return CE_NOTHING;
-          }
-          goto loop;
-        }
-
         WaitActor *wa = solveAA->topChoice();
 
         if (wa == NULL) {
