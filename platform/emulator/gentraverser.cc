@@ -583,10 +583,10 @@ repeat:
       SRecord *feat = tagged2SRecord(value);
       TaggedRef ff = feat->getFeature(NameOoFeat);
       //
-      cl->import(feat,
-		 tagged2Dictionary(feat->getFeature(NameOoFastMeth)),
-		 oz_isSRecord(ff) ? tagged2SRecord(ff) : (SRecord*)NULL,
-		 tagged2Dictionary(feat->getFeature(NameOoDefaults)),
+      cl->import(value,
+		 feat->getFeature(NameOoFastMeth),
+		 oz_isSRecord(ff) ? ff : makeTaggedNULL(),
+		 feat->getFeature(NameOoDefaults),
 		 flags);
 
       //

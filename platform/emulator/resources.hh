@@ -202,7 +202,7 @@ error include resources.hh before mozart.h
 /* always define debug print for debugging */
 #define DEBUG_PRINT
 
-#define DEBUG_TRACE	// MM: enable low level debugging: step instructions
+// #define DEBUG_TRACE
 
 //#define SLOW_DEBUG_CHECK
 //#define DEBUG_GC

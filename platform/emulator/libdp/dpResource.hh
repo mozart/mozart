@@ -58,8 +58,6 @@ extern char *dpresource_names[];
 /************************************************************/
 
 class DistResource: public Tertiary{
-  friend void ConstTerm::gCollectConstRecurse(void);
-  friend void ConstTerm::sCloneConstRecurse(void);
 public:
   NO_DEFAULT_CONSTRUCTORS(DistResource)
   DistResource(int i):Tertiary(i,Co_Resource,Te_Proxy){}
