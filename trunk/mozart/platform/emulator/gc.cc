@@ -710,6 +710,7 @@ RefsArray gcRefsArray(RefsArray r)
     return refsArrayUnmark(r);
   }
 
+  Assert(!isFreedRefsArray(r));
   int sz = getRefsArraySize(r);
 
   RefsArray aux = allocateRefsArray(sz,NO);
@@ -932,21 +933,25 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
 		  FDProfiles.inc_item(cp_size_susp, sizeof(*this));
 		})
 
-  switch (flag & (S_cont|S_cfun)){
-  case S_null:
-    newSusp->item.board = item.board->gcBoard();
-    Assert(newSusp->item.board);
-    break;
-  case S_cont:
-    newSusp->item.cont = item.cont->gcCont();
-    Assert(newSusp->item.cont);
-    break;
-  case S_cont|S_cfun:
-    newSusp->item.ccont = item.ccont->gcCont();
-    Assert(newSusp->item.ccont);
-    break;
-  default:
-    error("Unexpected case in Suspension::gc().");
+  if (flag & S_thread) {
+    newSusp->item.thread = item.thread->gcThread();
+  } else {
+    switch (flag & (S_cont|S_cfun)){
+    case S_null:
+      newSusp->item.board = item.board->gcBoard();
+      Assert(newSusp->item.board);
+      break;
+    case S_cont:
+      newSusp->item.cont = item.cont->gcCont();
+      Assert(newSusp->item.cont);
+      break;
+    case S_cont|S_cfun:
+      newSusp->item.ccont = item.ccont->gcCont();
+      Assert(newSusp->item.ccont);
+      break;
+    default:
+      Assert(0);
+    }
   }
   
   storeForward(&item.cont, newSusp);
@@ -1026,7 +1031,7 @@ TaggedRef gcVariable(TaggedRef var)
   GCOLDADDRMSG(var);
   if (var==nil()) { return nil(); }
   if (isUVar(var)) {
-    Board *bb = tagged2VarHome(var)
+    Board *bb = tagged2VarHome(var);
     INFROMSPACE(bb);
     bb = bb->gcBoard();
     if (!bb) return nil();
@@ -2224,8 +2229,7 @@ void AM::doGC()
 {
   osBlockSignals();
 
-  /*  --> empty trail */
-  deinstallPath(rootBoard);
+  Assert(isToplevel());
 
   /* do gc */
   gc(ozconf.gcVerbosity);
@@ -2241,9 +2245,10 @@ void AM::doGC()
 }
 
 
-// pre-condition: root node is installed
 Bool AM::idleGC()
 {
+  Assert(isToplevel());
+
   if ((int)getUsedMemory() > (ozconf.heapIdleMargin*ozconf.heapThreshold)/100 && ozconf.gcFlag) {
     if (ozconf.showIdleMessage) {
       printf("gc ... ");
