@@ -39,7 +39,6 @@ import
 
    Scheduler(timeTable:      TimeTable)
    
-   FD
    Tk
    
 define
