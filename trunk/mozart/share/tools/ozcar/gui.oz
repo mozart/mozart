@@ -83,6 +83,9 @@ local
 in
 
    class Gui from Menu Dialog
+
+      prop
+	 locking
       
       feat
 	 toplevel
@@ -393,28 +396,30 @@ in
       end
 	 
       meth printStack(id:I size:Size stack:Stack ack:Ack<=unit)
-	 W = self.StackText
-      in
-	 {OzcarMessage 'printing complete stack of size ' # Size}
-	 {W title(AltStackTitle # I)}
-	 /*
-	 local
-	    AllTags = {{W w($)} tkReturn(tag names $)}
+	 lock
+	    W = self.StackText
 	 in
-	    {Show AllTags}
-	    {W tk(tag delete AllTags)}
+	    {OzcarMessage 'printing complete stack of size ' # Size}
+	    {W title(AltStackTitle # I)}
+	    /*
+	    local
+	       AllTags = {{W w($)} tkReturn(tag names $)}
+	    in
+	       {Show AllTags}
+	       {W tk(tag delete AllTags)}
+	    end
+	    */ 
+	    Gui, Clear(W)
+	    Gui,Append(W {MakeLines Size})  % Tk is _really_ stupid...
+	    
+	    {ForAll {Ditems Stack}
+	     proc{$ Frame}
+		Gui,printStackFrame(frame:Frame size:Size)
+	     end}
+	    
+	    Gui,Disable(W)
+	    case {IsDet Ack} then skip else Ack = unit end
 	 end
-	 */ 
-	 Gui, Clear(W)
-	 Gui,Append(W {MakeLines Size})  % Tk is _really_ stupid...
-	 
-	 {ForAll {Ditems Stack}
-	  proc{$ Frame}
-	     Gui,printStackFrame(frame:Frame size:Size)
-	  end}
-	 
-	 Gui,Disable(W)
-	 case {IsDet Ack} then skip else Ack = unit end
       end
       
       meth printAppl(id:I name:N args:A builtin:B<=false time:Time<=0
