@@ -33,46 +33,48 @@
 #include "dpBase.hh"
 //#include "dpMarshaler.hh"
 
-void cellLockSendForward(DSite *toS,DSite *rS,int mI);
+void cellLockSendForward(DSite *toS, DSite *rS, Ext_OB_TIndex);
 void cellLockSendGet(BorrowEntry*);
 void cellLockSendDump(BorrowEntry*);
-void cellLockReceiveForward(BorrowEntry*,DSite*,DSite*,int);
+void cellLockReceiveForward(BorrowEntry*, DSite*, DSite*, Ext_OB_TIndex);
 void cellLockReceiveDump(OwnerEntry*,DSite *);
 void cellLockReceiveGet(OwnerEntry*,DSite *);
 
 void cellReceiveGet(OwnerEntry* oe,CellManager*,DSite*);
 void cellReceiveDump(CellManager*,DSite*);
-void cellReceiveForward(BorrowEntry*,DSite*,DSite*,int);
-void cellReceiveContentsManager(OwnerEntry*,TaggedRef,int);
-void cellReceiveContentsFrame(BorrowEntry*,TaggedRef,DSite*,int);
-void cellReceiveRemoteRead(BorrowEntry*,DSite*,int,DSite*);
+void cellReceiveForward(BorrowEntry*, DSite*, DSite*, Ext_OB_TIndex);
+void cellReceiveContentsManager(OwnerEntry*, OZ_Term, Ext_OB_TIndex);
+void cellReceiveContentsFrame(BorrowEntry*, OZ_Term, DSite*, Ext_OB_TIndex);
+void cellReceiveRemoteRead(BorrowEntry*, DSite*, Ext_OB_TIndex, DSite*);
 void cellReceiveRead(OwnerEntry*,DSite*,DSite*);
-void cellReceiveReadAns(Tertiary*,TaggedRef);
-void cellReceiveCantPut(OwnerEntry*,TaggedRef,int,DSite*,DSite*);
-void cellSendReadAns(DSite*,DSite*,int,TaggedRef);
-void cellSendRemoteRead(DSite* toS,DSite* mS,int mI,DSite* fS,DSite*);
-void cellSendContents(TaggedRef tr,DSite* toS,DSite *mS,int mI);
+void cellReceiveReadAns(Tertiary*,OZ_Term);
+void cellReceiveCantPut(OwnerEntry*, OZ_Term, Ext_OB_TIndex, DSite*, DSite*);
+void cellSendReadAns(DSite*,DSite*,Ext_OB_TIndex,OZ_Term);
+void cellSendRemoteRead(DSite *toS, DSite *mS, Ext_OB_TIndex mI,
+			DSite *fS, DSite*);
+void cellSendContents(OZ_Term tr, DSite* toS, DSite *mS, Ext_OB_TIndex);
 void cellSendRead(BorrowEntry *be,DSite *dS);
-void cellSendContentsFailure(TaggedRef,DSite*,DSite*,int);
+void cellSendContentsFailure(OZ_Term, DSite*, DSite*, Ext_OB_TIndex);
 
 void lockReceiveGet(OwnerEntry* oe,LockManager*,DSite*);
 void lockReceiveDump(LockManager*,DSite*);
-void lockReceiveTokenManager(OwnerEntry*,int);
-void lockReceiveTokenFrame(BorrowEntry*,DSite*,int);
-void lockReceiveForward(BorrowEntry*,DSite*,DSite*,int);
-void lockReceiveCantPut(OwnerEntry*,int,DSite*,DSite*);
-void lockSendToken(DSite*,int,DSite*);
-void lockReceiveCantPut(LockManager *cm,int mI,DSite* rsite, DSite* dS);
-void lockSendForward(DSite *toS,DSite *fS,int mI);
-void lockSendTokenFailure(DSite*,DSite*,int);
+void lockReceiveTokenManager(OwnerEntry*,Ext_OB_TIndex);
+void lockReceiveTokenFrame(BorrowEntry*, DSite*, Ext_OB_TIndex);
+void lockReceiveForward(BorrowEntry*,DSite*,DSite*, Ext_OB_TIndex);
+void lockReceiveCantPut(OwnerEntry*, Ext_OB_TIndex, DSite*, DSite*);
+void lockSendToken(DSite*, Ext_OB_TIndex, DSite*);
+void lockReceiveCantPut(LockManager *cm, Ext_OB_TIndex, 
+			DSite* rsite, DSite* dS);
+void lockSendForward(DSite *toS,DSite *fS,OB_TIndex);
+void lockSendTokenFailure(DSite*, DSite*, Ext_OB_TIndex);
 void lockSendDump(BorrowEntry*,LockFrame*);
 
 void chainReceiveAck(OwnerEntry*, DSite*);
-void chainReceiveAnswer(OwnerEntry*,DSite*,int,DSite*);
-void chainReceiveQuestion(BorrowEntry*,DSite*,int,DSite*);
-void chainSendAnswer(BorrowEntry*,DSite*,int,int,DSite*);
-void chainSendQuestion(DSite*,int,DSite*);
-void chainSendAck(DSite*,int);
+void chainReceiveAnswer(OwnerEntry*, DSite*, Ext_OB_TIndex, DSite*);
+void chainReceiveQuestion(BorrowEntry*, DSite*, Ext_OB_TIndex, DSite*);
+void chainSendAnswer(BorrowEntry*, DSite*, Ext_OB_TIndex, int, DSite*);
+void chainSendQuestion(DSite*, Ext_OB_TIndex, DSite*);
+void chainSendAck(DSite*,Ext_OB_TIndex);
 
 void maybeChainSendQuestion(ChainElem*, Tertiary*, DSite*);
 

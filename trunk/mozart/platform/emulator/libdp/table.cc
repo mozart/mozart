@@ -51,7 +51,7 @@ BorrowTable *borrowTable;
 // from var.cc
 void oz_dpvar_localize(TaggedRef *);
 
-void OwnerEntry::localize(int index)
+void OwnerEntry::localize()
 {
   if (isVar()) { 
     if(GET_VAR(this,Manager)->getInfo()==NULL)
@@ -63,7 +63,7 @@ void OwnerEntry::localize(int index)
       return;
   } 
   homeRef.removeReference();
-  OT->freeOwnerEntry(getOdi());
+  OT->freeOwnerEntry(getExtOTI());
 }
 
 void OwnerEntry::updateReference(DSite* site){
@@ -237,7 +237,7 @@ void BorrowTable::gcBorrowTableFinal()
 		 {
 		   if(!errorIgnoreVar(b)) maybeUnaskVar(b);
 		   
-		   borrowTable->maybeFreeBorrowEntry((int)b);
+		   borrowTable->maybeFreeBorrowEntry(MakeOB_TIndex(b));
 		 }
 	     }
 	   else 
@@ -253,7 +253,7 @@ void BorrowTable::gcBorrowTableFinal()
 		   {
 		     if(!errorIgnore(t)) maybeUnask(t);
 		     Assert(t->isProxy());
-		     borrowTable->maybeFreeBorrowEntry((int)b);
+		     borrowTable->maybeFreeBorrowEntry(MakeOB_TIndex(b));
 		   }
 	       }
 	     else 
@@ -361,7 +361,7 @@ void BorrowTable::dumpProxies()
 	  Tertiary *t = be->getTertiary();
 	  
 	  if (t->isProxy()) {
-	    maybeFreeBorrowEntry((int) be);
+	    maybeFreeBorrowEntry(MakeOB_TIndex(be));
 	    DebugCode(proxies++;);
 	    continue;
 	  }
@@ -378,7 +378,7 @@ void BorrowTable::dumpProxies()
 	  {
 	    if (be->isVar() && oz_isProxyVar(oz_deref(be->getRef()))) 
 	      {
-		maybeFreeBorrowEntry((int)be);
+		maybeFreeBorrowEntry(MakeOB_TIndex(be));
 		DebugCode(proxies++;);
 		continue;
 	      }
@@ -400,7 +400,7 @@ int BorrowTable::notGCMarked() {
 	if(be->isTertiary()) {
 	  if(be->getTertiary()->cacIsMarked())
 	    return FALSE;
-	  Assert(BT->bi2borrow(be->getTertiary()->getIndex()) == be);
+	  Assert(BT->bi2borrow(MakeOB_TIndex(be->getTertiary()->getTertPointer())) == be);
 	  
 	}
       }
@@ -423,16 +423,18 @@ void NewOwnerTable::resize()
   printf("We dont have to resize the NewOwnerTable\n");
 }
 
-int NewOwnerTable::newOwner(OwnerEntry *&oe, int algs){
-  int odi = nxtId++; 
-  oe = new OwnerEntry(odi,algs);
-  htAdd(hash(odi),oe);
-  return (int) oe;}
-
-void NewOwnerTable::freeOwnerEntry(int odi)
+OB_TIndex NewOwnerTable::newOwner(OwnerEntry *&oe, int algs)
 {
-  (void) htSubPkSk(hash(odi),odi);
-  localized ++; 
+  Ext_OB_TIndex extOTI = MakeExt_OB_TIndex(nxtId++); 
+  oe = new OwnerEntry(extOTI, algs);
+  htAdd(hash(extOTI), oe);
+  return (MakeOB_TIndex(oe));
+}
+
+void NewOwnerTable::freeOwnerEntry(Ext_OB_TIndex extOTI)
+{
+  (void) htSubPkSk(hash(extOTI), (unsigned int) Ext_OB_TIndex2Int(extOTI));
+  localized++; 
   return;
 }
 
@@ -448,7 +450,7 @@ OZ_Term NewOwnerTable::extract_info(){
       o = o->getNext();
       list=
 	oz_cons(OZ_recordInit(oz_atom("oe"),
-	        oz_cons(oz_pairAI("odi",oe->homeRef.oti),
+	        oz_cons(oz_pairAI("extOTI",oe->homeRef.extOTI),
 		oz_cons(oz_pairAA("type", toC(PO_getValue(oe))),
 	        oz_cons(oz_pairA("dist_gc", credit), 
 		oz_nil())))), list);
@@ -511,13 +513,13 @@ int NewOwnerTable::notGCMarked() {
   return TRUE;
 }
 
-OwnerEntry* NewOwnerTable::odi2entry(int odi)
+OwnerEntry* NewOwnerTable::extOTI2entry(Ext_OB_TIndex extOTI)
 {
-  Assert(odi <= nxtId);
-  unsigned int hvalue = hash(odi);
+  Assert(Ext_OB_TIndex2Int(extOTI) <= nxtId);
+  unsigned int hvalue = hash(extOTI);
   BucketHashNode *aux = htFindPk(hvalue);
-  while(aux && aux->getPrimKey() != odi) aux = aux ->getNext(); 
-  return (OwnerEntry *) aux;
+  while(aux && aux->getPrimKey() != extOTI) aux = aux ->getNext(); 
+  return ((OwnerEntry *) aux);
 }
 
 
@@ -527,18 +529,21 @@ BorrowEntry *BorrowTable::find(NetAddress *na)
 }
 
 
-BorrowEntry *BorrowTable::find(int index, DSite  *site)
+BorrowEntry *BorrowTable::find(Ext_OB_TIndex index, DSite  *site)
 {
-  return (BorrowEntry *) htFindPkSk((unsigned int) index,(unsigned int)site); 
+  return ((BorrowEntry *) htFindPkSk((unsigned int) OB_TIndex2Int(index),
+				     (unsigned int) site)); 
 }
  
-int BorrowTable::newBorrow(RRinstance *c,DSite * sd,int odi){
-  BorrowEntry* be = new BorrowEntry(sd,odi,c);
-  htAdd((unsigned int)odi,be);
-  return (int) be;
+OB_TIndex BorrowTable::newBorrow(RRinstance *c, DSite * sd, Ext_OB_TIndex extOTI)
+{
+  BorrowEntry* be = new BorrowEntry(sd, extOTI, c);
+  htAdd((unsigned int) Ext_OB_TIndex2Int(extOTI), be);
+  return (MakeOB_TIndex(be));
 }  
 
-Bool BorrowTable::maybeFreeBorrowEntry(int index){
+Bool BorrowTable::maybeFreeBorrowEntry(OB_TIndex index)
+{
   BorrowEntry *b = bi2borrow(index);
   if(!b->remoteRef.canBeReclaimed()) {
     if(b->isVar()){

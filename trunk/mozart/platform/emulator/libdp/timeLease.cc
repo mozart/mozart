@@ -136,8 +136,8 @@ void TL::leaseTimerExpired()
     timers->setTimer(timer,lt,tl_lease_timer_expired,this);
   }
   else{
-    printf("Forced localizing %d!\n",(parent.hr)->oti);
-    OT->odi2entry((parent.hr)->oti)->localize((parent.hr)->oti);
+    printf("Forced localizing %d!\n",(parent.hr)->extOTI);
+    OT->extOTI2entry((parent.hr)->extOTI)->localize();
   }
 }
 

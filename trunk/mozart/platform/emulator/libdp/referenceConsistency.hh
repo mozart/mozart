@@ -87,7 +87,7 @@ class HomeReference{
   friend class OB_Entry;
   
 public:
-  int oti;
+  Ext_OB_TIndex extOTI;
   GCalgorithm *algs;
   // 
   Bool isPersistent();
@@ -95,7 +95,7 @@ public:
   // old hasFullCredit
   Bool canBeReclaimed();
   
-  void setUp(int indx,int algs);
+  void setUp(Ext_OB_TIndex indx, int algs);
   
   Bool mergeReference(RRinstance *r);
   RRinstance *getBigReference();
@@ -135,16 +135,16 @@ public:
 
 
 
-void marshalCredit(MarshalerBuffer*,RRinstance*);
-void marshalCreditToOwner(MarshalerBuffer *buf,RRinstance *,int oti);
+void marshalCredit(MarshalerBuffer*, RRinstance*);
+void marshalCreditToOwner(MarshalerBuffer*, RRinstance*, Ext_OB_TIndex);
 
-RRinstance *unmarshalCredit(MarshalerBuffer *buf);
-RRinstance *unmarshalCreditToOwner(MarshalerBuffer *buf,
-				   MarshalTag mt, int &oti);
+RRinstance *unmarshalCredit(MarshalerBuffer*);
+RRinstance *unmarshalCreditToOwner(MarshalerBuffer*, MarshalTag,
+				   Ext_OB_TIndex&);
 
 RRinstance *CreateRRinstance(int type, int val1, int val2);
-void sendReferenceBack(DSite *entitysite,int entityOTI,int type, int val1, int val2);
-void askForCredit(DSite *entitysite, int entityOTI);
-void sendRRinstanceBack(DSite *entitysite,int entityOTI, RRinstance *r);
+void sendReferenceBack(DSite *entitysite, Ext_OB_TIndex, int type,
+		       int val1, int val2);
+void sendRRinstanceBack(DSite *entitysite, Ext_OB_TIndex, RRinstance*);
 
 #endif // __REFERENCE_CONCISTENCY_HH

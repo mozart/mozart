@@ -118,7 +118,7 @@ MsgContainer::marshal(ByteBuffer *bb, TransController *transController)
 
     case FT_SITE:
       if (bb->availableSpace() >= MDSiteMaxSize) {
-	marshalDSite(bb, (DSite*) msgFields[i].arg);
+	((DSite*) msgFields[i].arg)->marshalDSite(bb);
 	msgFields[i].ft = FT_NONE;
 	continue;
       } else {
@@ -153,26 +153,26 @@ define(message,`
 	 argEnc($6,4)
        }')
 
-define(mcarg,`ifelse($1,Index,int i1,
-	             $1,Index2,int i2,
-	             $1,Index3,int i3,
+define(mcarg,`ifelse($1,Index,Ext_OB_TIndex ind,
                      $1,Term,TaggedRef t,
                      $1,FullTopTerm,TaggedRef t,
 		     $1,String,char *str,
                      $1,Credit,int c,
                      $1,Site,DSite *s1,
-	             $1,Site2,DSite *s2,)'
+	             $1,Site2,DSite *s2,
+	             $1,Int,int int1,
+	             $1,Int2,int int2)'
               `ifelse($2,`',`',`,')')
 
-define(argEnc,`ifelse($1,Index,msgFields[$2].arg=(void *) i1; msgFields[$2].ft=FT_NUMBER;,
-	             $1,Index2,msgFields[$2].arg=(void *) i2; msgFields[$2].ft=FT_NUMBER;,
-	             $1,Index3,msgFields[$2].arg=(void *) i3; msgFields[$2].ft=FT_NUMBER;,
+define(argEnc,`ifelse($1,Index,msgFields[$2].arg=(void *) ind; msgFields[$2].ft=FT_NUMBER;,
                      $1,Term,msgFields[$2].arg=(void *) t; msgFields[$2].ft=FT_TERM;,
                      $1,FullTopTerm,msgFields[$2].arg=(void *) t; msgFields[$2].ft=FT_FULLTOPTERM;,
 		     $1,String,Assert(MAX_DP_STRING>=strlen(str)); msgFields[$2].arg=(void *) str;msgFields[$2].ft=FT_STRING;,
                      $1,Credit,msgFields[$2].arg=(void *) c; msgFields[$2].ft=FT_CREDIT;,
                      $1,Site,msgFields[$2].arg=(void *) s1; msgFields[$2].ft=FT_SITE;,
 	             $1,Site2,msgFields[$2].arg=(void *) s2; msgFields[$2].ft=FT_SITE;,
+	             $1,Int,msgFields[$2].arg=(void *) int1; msgFields[$2].ft=FT_NUMBER;,
+	             $1,Int2,msgFields[$2].arg=(void *) int2; msgFields[$2].ft=FT_NUMBER;,
 		     msgFields[$2].ft=FT_NONE;)')
 
 include(EMUDIR/msgFormat.m4)
@@ -199,14 +199,14 @@ define(message,`
 
 
 define(argEnc,`ifelse($1,Index,FT_NUMBER,
-		      $1,Index2,FT_NUMBER,
-		      $1,Index3,FT_NUMBER,
 	              $1,Term,FT_TERM,
 	              $1,FullTopTerm,FT_FULLTOPTERM,
 	              $1,Credit,FT_CREDIT,
 	              $1,String,FT_STRING,
                       $1,Site,FT_SITE,
                       $1,Site2,FT_SITE,
+		      $1,Int,FT_NUMBER,
+		      $1,Int2,FT_NUMBER,
 		      FT_NONE)')
 
 void MsgContainer::setMessageType(MessageType mtIn)
@@ -343,26 +343,26 @@ MsgContainer::unmarshal(ByteBuffer *bb, TransController *transController)
 undefine(`argEnc')
 undefine(`message')
 
-define(mcarg,`ifelse($1,Index,int &i1,
-	           $1,Index2,int &i2,
-	           $1,Index3,int &i3,
+define(mcarg,`ifelse($1,Index,Ext_OB_TIndex &ind,
                    $1,Term,TaggedRef &t,
                    $1,FullTopTerm,TaggedRef &t,
 		   $1,String,char *&str,
                    $1,Credit,int &c,
                    $1,Site,DSite *&s1,
-	           $1,Site2,DSite *&s2,)'
+	           $1,Site2,DSite *&s2,
+	           $1,Int,int &int1,
+	           $1,Int2,int &int2)'
             `ifelse($2,`',`',`,')')
 
-define(argEnc,`ifelse($1,Index,i1=(int),
-		      $1,Index2,i2=(int),
-		      $1,Index3,i3=(int),
+define(argEnc,`ifelse($1,Index,ind=(Ext_OB_TIndex),
 	              $1,Term,t=(TaggedRef),
 	              $1,FullTopTerm,t=(TaggedRef),
 	              $1,Credit,c=(int),
 	              $1,String,str=(char*),
                       $1,Site,s1=(DSite*),
                       $1,Site2,s2=(DSite*),
+		      $1,Int,int1=(int),
+		      $1,Int2,int2=(int),
                       //)')
 
 define(message,`
@@ -390,8 +390,6 @@ define(message,`
        }')
 
 define(argEnc,`ifelse($1,Index,,
-		      $1,Index2,,
-		      $1,Index3,,
 	              $1,Term,if(!checkFlag(MSG_HAS_UNMARSHALCONT) || $3==FT_NONE)
 			         oz_gCollectTerm((TaggedRef &) $2, 
 			                         (TaggedRef &) $2);,
@@ -402,7 +400,9 @@ define(argEnc,`ifelse($1,Index,,
                       $1,Site,if(!checkFlag(MSG_HAS_UNMARSHALCONT) || $3==FT_NONE)
 ((DSite*) $2)->makeGCMarkSite();,
                       $1,Site2,if(!checkFlag(MSG_HAS_UNMARSHALCONT) || $3==FT_NONE)
-((DSite*) $2)->makeGCMarkSite();,)')
+((DSite*) $2)->makeGCMarkSite();,
+		      $1,Int,,
+		      $1,Int2,,)')
 
 void MsgContainer::gcMsgC()
 {
@@ -454,14 +454,14 @@ define(message,`
 
 
 define(argEnc,`ifelse($1,Index,FT_NUMBER,
-		      $1,Index2,FT_NUMBER,
-		      $1,Index3,FT_NUMBER,
 	              $1,Term,FT_TERM,
 	              $1,FullTopTerm,FT_FULLTOPTERM,
 	              $1,Credit,FT_CREDIT,
 	              $1,String,FT_STRING,
                       $1,Site,FT_SITE,
                       $1,Site2,FT_SITE,
+		      $1,Int,FT_NUMBER,
+		      $1,Int2,FT_NUMBER,
 		      FT_NONE)')
 
 void MsgContainer::resetMarshaling() {

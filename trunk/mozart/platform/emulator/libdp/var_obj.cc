@@ -44,7 +44,7 @@
 // Marshaling code is in dpMarshaler.cc;
 
 //
-TaggedRef newObjectProxy(int bi, GName *gnobj, TaggedRef cl)
+TaggedRef newObjectProxy(OB_TIndex bi, GName *gnobj, TaggedRef cl)
 {
   ObjectVar *pvar = new ObjectVar(oz_currentBoard(), bi, gnobj, cl);
   TaggedRef val = makeTaggedRef(newTaggedVar(pvar));

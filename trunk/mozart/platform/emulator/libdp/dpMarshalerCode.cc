@@ -407,7 +407,7 @@ Bool DPMARSHALERCLASS::marshalObjectStub(OZ_Term term, ConstTerm *objConst)
 
       //
       marshalDIFcounted(bs, index ? DIF_STUB_OBJECT_DEF : DIF_STUB_OBJECT);
-      marshalOwnHead(bs, o->getIndex());
+      marshalOwnHead(bs, MakeOB_TIndex(o->getTertPointer()));
       marshalGName(bs, gnobj);
       marshalGName(bs, gnclass);
       //

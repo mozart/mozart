@@ -79,11 +79,14 @@ void cellLockReceiveGet(OwnerEntry* oe,DSite* toS){
   if(ch->hasFlag(INTERESTED_IN_OK)){ 
     receiveGet_InterestOK(oe,toS,t);}}
 
-void cellLockReceiveForward(BorrowEntry *be,DSite* toS,DSite* mS,int mI){
+void
+cellLockReceiveForward(BorrowEntry *be, DSite* toS, DSite* mS,
+		       Ext_OB_TIndex mI)
+{
   if(be->getTertiary()->getType()==Co_Cell){
-    cellReceiveForward(be,toS,mS,mI);
+    cellReceiveForward(be, toS, mS, mI);
     return;}
-  lockReceiveForward(be,toS,mS,mI);}
+  lockReceiveForward(be, toS, mS, mI);}
 
 void cellLockSendGet(BorrowEntry *be){  
   NetAddress *na=be->getNetAddress();
@@ -94,9 +97,9 @@ void cellLockSendGet(BorrowEntry *be){
   msgC->put_M_CELL_LOCK_GET(na->index,myDSite);
   send(msgC);}
 
-void cellLockSendForward(DSite *toS,DSite *fS,int mI){
+void cellLockSendForward(DSite *toS, DSite *fS, Ext_OB_TIndex mI) {
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
-  Assert(mI < OT->getNxtId());
+  Assert(OB_TIndex2Int(mI) < OB_TIndex2Int(OT->getNxtId()));
   msgC->put_M_CELL_LOCK_FORWARD(myDSite,mI,fS);
   send(msgC);}
 
@@ -185,7 +188,8 @@ void CellSec::secReceiveReadAns(TaggedRef val){
   Assert(secReceiveReadAnsCheck(pending));
 }
 
-Bool CellSec::secReceiveRemoteRead(DSite* toS,DSite* mS, int mI){
+Bool CellSec::secReceiveRemoteRead(DSite* toS, DSite* mS, Ext_OB_TIndex mI)
+{
   switch(state){
   case Cell_Lock_Invalid:
     return NO;
@@ -211,9 +215,9 @@ void cellReceiveGet(OwnerEntry* oe,CellManager* cm,DSite* toS){
     PD((CELL,"CELL - shortcut in cellReceiveGet"));    
     TaggedRef val;
     if(cm->getCellSec()->secForward(toS,val)){
-      cellSendContents(val,toS,myDSite,oe->getOdi());}
+      cellSendContents(val, toS, myDSite, oe->getExtOTI());}
     return;}
-  cellLockSendForward(current,toS,oe->getOdi());
+  cellLockSendForward(current, toS, oe->getExtOTI());
 }
 
 void cellReceiveDump(CellManager *cm,DSite *fromS){
@@ -234,18 +238,22 @@ void cellReceiveDump(CellManager *cm,DSite *fromS){
 }
 // MERGECON  (void) cellDoExchangeInternal((Tertiary *)cm,tr,tr,DummyThread,EXCHANGE);
 
-void cellReceiveForward(BorrowEntry *be,DSite *toS,DSite* mS,int mI){
+void
+cellReceiveForward(BorrowEntry *be, DSite *toS, DSite* mS, Ext_OB_TIndex mI)
+{
   CellFrame *cf=(CellFrame*) be->getTertiary();
   Assert(cf->isFrame());
   Assert(cf->getType()==Co_Cell);
   CellSec *sec=cf->getCellSec();
   TaggedRef val;
   if(!sec->secForward(toS,val)) return;
-  cellSendContents(val,toS,mS,mI);
+  cellSendContents(val, toS, mS, mI);
   return;
 }
 
-void cellReceiveContentsManager(OwnerEntry *oe,TaggedRef val,int mI){ 
+void
+cellReceiveContentsManager(OwnerEntry *oe, TaggedRef val, Ext_OB_TIndex mI)
+{
   CellManager *cm=(CellManager*)oe->getTertiary();
   Assert(cm->getType()==Co_Cell);
   Assert(cm->isManager());
@@ -255,11 +263,14 @@ void cellReceiveContentsManager(OwnerEntry *oe,TaggedRef val,int mI){
   DSite *toS;
   TaggedRef outval;
   if(!sec->secReceiveContents(val,toS,outval)) return;
-  cellSendContents(outval,toS,myDSite,mI);
+  cellSendContents(outval, toS, myDSite, mI);
   return;
 }
 
-void cellReceiveContentsFrame(BorrowEntry *be,TaggedRef val,DSite *mS,int mI){ 
+void
+cellReceiveContentsFrame(BorrowEntry *be, TaggedRef val, DSite *mS,
+			 Ext_OB_TIndex mI)
+{
   CellFrame *cf=(CellFrame*) be->getTertiary();
   Assert(cf->getType()==Co_Cell);
   Assert(cf->isFrame());
@@ -269,10 +280,12 @@ void cellReceiveContentsFrame(BorrowEntry *be,TaggedRef val,DSite *mS,int mI){
   TaggedRef outval;
   DSite *toS;
   if(!sec->secReceiveContents(val,toS,outval)) return;
-  cellSendContents(outval,toS,mS,mI);
+  cellSendContents(outval, toS, mS, mI);
 }
 
-void cellReceiveRemoteRead(BorrowEntry *be,DSite* mS,int mI,DSite* fS){ 
+void cellReceiveRemoteRead(BorrowEntry *be,
+			   DSite* mS, Ext_OB_TIndex mI, DSite* fS)
+{ 
   PD((CELL,"Receive REMOTEREAD toS:%s",fS->stringrep()));
   Tertiary* t=be->getTertiary();
   Assert(t->isFrame());
@@ -283,7 +296,8 @@ void cellReceiveRemoteRead(BorrowEntry *be,DSite* mS,int mI,DSite* fS){
   cellSendRead(be,fS);
 }
 
-void cellReceiveRead(OwnerEntry *oe,DSite* fS,DSite *cS){ 
+void cellReceiveRead(OwnerEntry *oe, DSite* fS, DSite *cS)
+{
   PD((CELL,"Recevie READ toS:%s",fS->stringrep()));
   CellManager* cm=(CellManager*) oe->getTertiary();
   Assert(cm->isManager());
@@ -292,9 +306,17 @@ void cellReceiveRead(OwnerEntry *oe,DSite* fS,DSite *cS){
   Chain* ch=cm->getChain();
   if(ch->getCurrent()==myDSite){
     PD((CELL,"Token at mgr site short circuit"));
-    sec->secReceiveRemoteRead(fS,myDSite,cm->getIndex());
-    return;}
-  cellSendRemoteRead(ch->getCurrent(),myDSite,cm->getIndex(),fS,cS);
+    //  kost@ 'CellSec::secReceiveRemoteRead()' signature ??!
+    //  was like that:
+    // sec->secReceiveRemoteRead(fS,myDSite,MakeOB_TIndex(cm->getTertPointer()));
+    sec->secReceiveRemoteRead(fS, myDSite, oe->getExtOTI());
+  } else {
+    //  kost@ 'CellSec::cellSendRemoteRead()' signature ??!
+    //  was like that:
+    // cellSendRemoteRead(ch->getCurrent(),myDSite,
+    //		          MakeOB_TIndex(cm->getTertPointer()),fS,cS);
+    cellSendRemoteRead(ch->getCurrent(), myDSite, oe->getExtOTI(), fS, cS);
+  }
 }
 
 void cellReceiveReadAns(Tertiary* t,TaggedRef val){ 
@@ -306,8 +328,9 @@ void cellReceiveReadAns(Tertiary* t,TaggedRef val){
 /*   cell send                        */
 /**********************************************************************/
 
-void cellSendReadAns(DSite* toS,DSite* mS,int mI,TaggedRef val){ 
-Assert(mI < OT->getNxtId());
+void cellSendReadAns(DSite* toS, DSite* mS, Ext_OB_TIndex mI, TaggedRef val)
+{ 
+  Assert(Ext_OB_TIndex2Int(mI) < OT->getNxtId());
   if(toS == myDSite) {
     OwnerEntry *oe=maybeReceiveAtOwner(mS,mI);
     if(mS!=myDSite)
@@ -320,13 +343,16 @@ Assert(mI < OT->getNxtId());
   send(msgC);
 }
 
-void cellSendRemoteRead(DSite* toS,DSite* mS,int mI,DSite* fS,DSite *cS){ 
+void cellSendRemoteRead(DSite* toS, DSite* mS, Ext_OB_TIndex mI,
+			DSite* fS, DSite *cS)
+{
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CELL_REMOTEREAD(mS,mI,fS);
   send(msgC);
 }
 
-void cellSendContents(TaggedRef tr,DSite* toS,DSite *mS,int mI){
+void cellSendContents(TaggedRef tr, DSite* toS, DSite *mS, Ext_OB_TIndex mI)
+{
   PD((CELL,"Cell Send Contents to:%s",toS->stringrep()));
   PD((SPECIAL,"CellContents %s",toC(tr)));
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
@@ -343,7 +369,8 @@ void cellSendRead(BorrowEntry *be,DSite *dS){
   send(msgC);
 }
 
-void chainSendAck(DSite* toS, int mI){
+void chainSendAck(DSite* toS, Ext_OB_TIndex mI)
+{
   if(SEND_SHORT(toS)) {return;}
   PD((CHAIN,"M_CHAIN_ACK indx:%d site:%s",mI,toS->stringrep()));
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
@@ -428,9 +455,9 @@ void lockReceiveGet(OwnerEntry* oe,LockManager* lm,DSite* toS){
   if(current==myDSite){                             // shortcut
     PD((LOCK," shortcut in lockReceiveGet"));
     if(lm->getLockSec()->secForward(toS)){
-      lockSendToken(myDSite,oe->getOdi(),toS);}
+      lockSendToken(myDSite, oe->getExtOTI(), toS);}
     return;}
-  cellLockSendForward(current,toS,oe->getOdi());
+  cellLockSendForward(current, toS, oe->getExtOTI());
 }
 
 void lockReceiveDump(LockManager* lm,DSite *fromS){
@@ -453,7 +480,8 @@ void lockReceiveDump(LockManager* lm,DSite *fromS){
   }
 }
 
-void lockReceiveTokenManager(OwnerEntry* oe,int mI){
+void lockReceiveTokenManager(OwnerEntry* oe, Ext_OB_TIndex mI)
+{
   Tertiary *t=oe->getTertiary();
   Assert(t->getType()==Co_Lock);
   Assert(t->isManager());
@@ -464,10 +492,11 @@ void lockReceiveTokenManager(OwnerEntry* oe,int mI){
   DSite* toS;
   if(sec->secReceiveToken(t,toS)) return;
   PD((CHAIN,"%d",printChain(lm->getChain())));
-  lockSendToken(myDSite,oe->getOdi(),toS);
+  lockSendToken(myDSite, oe->getExtOTI(), toS);
 }
   
-void lockReceiveTokenFrame(BorrowEntry* be, DSite *mS,int mI){
+void lockReceiveTokenFrame(BorrowEntry* be, DSite *mS, Ext_OB_TIndex mI)
+{
   LockFrame *lf=(LockFrame*) be->getTertiary();
   Assert(lf->getType()==Co_Lock);
   Assert(lf->isFrame());
@@ -476,23 +505,25 @@ void lockReceiveTokenFrame(BorrowEntry* be, DSite *mS,int mI){
   LockSec *sec=lf->getLockSec();
   DSite* toS;
   if(sec->secReceiveToken(lf,toS)) return;
-  lockSendToken(mS,mI,toS);
+  lockSendToken(mS, mI, toS);
 }
   
-void lockReceiveForward(BorrowEntry *be,DSite *toS,DSite* mS,int mI){
+void lockReceiveForward(BorrowEntry *be, DSite *toS, DSite* mS,
+			Ext_OB_TIndex mI)
+{
   LockFrame *lf= (LockFrame*) be->getTertiary();
   Assert(lf->isFrame());
   Assert(lf->getType()==Co_Lock);
   LockSec* sec=lf->getLockSec();
   if(!sec->secForward(toS)) return;
-  lockSendToken(mS,mI,toS);
+  lockSendToken(mS, mI, toS);
 }
 
 /**********************************************************************/
 /*  Lock protocol - send                                */
 /**********************************************************************/
 
-void lockSendToken(DSite *mS,int mI,DSite* toS){
+void lockSendToken(DSite *mS, Ext_OB_TIndex mI, DSite* toS) {
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_LOCK_TOKEN(mS,mI);
   send(msgC);
@@ -522,27 +553,38 @@ ChainAnswer answerChainQuestion(Tertiary *t){
   return BEFORE_ME;
 }
 
-void chainReceiveQuestion(BorrowEntry *be,DSite* site,int OTI,DSite* deadS){
+void chainReceiveQuestion(BorrowEntry *be, DSite* site,
+			  Ext_OB_TIndex extOTI, DSite* deadS)
+{
   if(be==NULL){
-    chainSendAnswer(be,site,OTI,PAST_ME,deadS);}
-  chainSendAnswer(be,site,OTI,answerChainQuestion(be->getTertiary()),deadS);
+    chainSendAnswer(be,site,extOTI,PAST_ME,deadS);}
+  chainSendAnswer(be,site,extOTI,answerChainQuestion(be->getTertiary()),deadS);
 }
 
-void chainReceiveAnswer(OwnerEntry* oe,DSite* fS,int ans,DSite* deadS){
+void chainReceiveAnswer(OwnerEntry* oe, DSite* fS, int ans, DSite* deadS)
+{
   Tertiary* t=oe->getTertiary();
   getChainFromTertiary(t)->receiveAnswer(t,fS,ans,deadS);
   PD((CHAIN,"%d",printChain(getChainFromTertiary(t))));
 }
 
-void maybeChainSendQuestion(ChainElem *ce,Tertiary *t,DSite* deadS){
+void maybeChainSendQuestion(ChainElem *ce,Tertiary *t,DSite* deadS)
+{
   if(ce->getSite()!=myDSite){
     if(!(ce->flagIsSet(CHAIN_QUESTION_ASKED))){
       ce->setFlagAndCheck(CHAIN_QUESTION_ASKED);
-      chainSendQuestion(ce->getSite(),t->getIndex(),deadS);}
-    return;}
-  Chain *ch=getChainFromTertiary(t);
-  ce->setFlagAndCheck(CHAIN_QUESTION_ASKED);
-  ch->receiveAnswer(t,myDSite,answerChainQuestion(t),deadS);}
+      //  kost@ 'chainSendQuestion()' signature ??!
+      //  was like that:
+      // chainSendQuestion(ce->getSite(),MakeOB_TIndex(t->getTertPointer()),deadS);
+      OB_TIndex ti = MakeOB_TIndex(t->getTertPointer());
+      chainSendQuestion(ce->getSite(),OT->entry2extOTI(ti),deadS);
+    }
+  } else {
+    Chain *ch=getChainFromTertiary(t);
+    ce->setFlagAndCheck(CHAIN_QUESTION_ASKED);
+    ch->receiveAnswer(t,myDSite,answerChainQuestion(t),deadS);
+  }
+}
 
 /**********************************************************************/
 /*   failure-related                                         */
@@ -569,27 +611,31 @@ Bool LockSec::lockRecovery(){
   return OK;
 }
 
-static void cellManagerIsDown(TaggedRef tr,DSite* mS,int mI){
+static void cellManagerIsDown(TaggedRef tr, DSite* mS, Ext_OB_TIndex mI)
+{
   NetAddress na=NetAddress(mS,mI);
   BorrowEntry *be=BT->find(&na);
   if(be==NULL) return; // has been gced 
   Tertiary* t=be->getTertiary();
   maybeConvertCellProxyToFrame(t);
   if(((CellFrame*)t)->getCellSec()->cellRecovery(tr)){
-    cellReceiveContentsFrame(be,tr,mS,mI);}
+    cellReceiveContentsFrame(be, tr, mS, mI);}
 }
 
-void lockManagerIsDown(DSite* mS,int mI){
+static void lockManagerIsDown(DSite* mS, Ext_OB_TIndex mI)
+{
   NetAddress na=NetAddress(mS,mI);
   BorrowEntry *be=BT->find(&na);
   if(be==NULL) return; // has been gced 
   Tertiary* t=be->getTertiary();
   maybeConvertLockProxyToFrame(t);
   if(((LockFrame*)t)->getLockSec()->lockRecovery()){  
-    lockReceiveTokenFrame(be,mS,mI);}
+    lockReceiveTokenFrame(be, mS, mI);}
 }
 
-void cellSendCantPut(TaggedRef tr,DSite* toS, DSite *mS, int mI){
+static
+void cellSendCantPut(TaggedRef tr, DSite* toS, DSite *mS, Ext_OB_TIndex mI)
+{
   PD((ERROR_DET,"Proxy cant put to %s site: %s:%d",
       toS->stringrep(), mS->stringrep(),mI));
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
@@ -597,18 +643,21 @@ void cellSendCantPut(TaggedRef tr,DSite* toS, DSite *mS, int mI){
   send(msgC);
 }
 
-void cellSendContentsFailure(TaggedRef tr,DSite* toS,DSite *mS, int mI){ 
+void cellSendContentsFailure(TaggedRef tr, DSite* toS, DSite *mS,
+			     Ext_OB_TIndex mI)
+{
   if(toS==mS) {// ManagerSite is down
     cellManagerIsDown(tr,toS,mI);
     return;}
   if(mS==myDSite){// At managerSite 
-    cellReceiveCantPut(OT->odi2entry(mI),tr,mI,mS,toS);
+    cellReceiveCantPut(OT->extOTI2entry(mI),tr,mI,mS,toS);
     return;}  
   cellSendCantPut(tr,toS,mS,mI);
   return;
 }
 
-void lockSendCantPut(DSite* toS, DSite *mS, int mI){
+void lockSendCantPut(DSite* toS, DSite *mS, Ext_OB_TIndex mI)
+{
   PD((ERROR_DET,"Proxy cant put - to %s site: %s:%d Nr %d",
       toS->stringrep(),mS->stringrep(),mI));
   MsgContainer *msgC = msgContainerManager->newMsgContainer(mS);
@@ -616,23 +665,28 @@ void lockSendCantPut(DSite* toS, DSite *mS, int mI){
   send(msgC);
 }
 
-void lockSendTokenFailure(DSite* toS,DSite *mS, int mI){ 
+void lockSendTokenFailure(DSite* toS, DSite *mS, Ext_OB_TIndex mI)
+{
   PD((ERROR_DET,"LockTokenFailure"));
-  if(toS==mS) {// ManagerSite is down
-    lockManagerIsDown(mS,mI);
+  if (toS==mS) {// ManagerSite is down
+    lockManagerIsDown(mS, mI);
     return;}
-  if(mS==myDSite){// At managerSite 
-    lockReceiveCantPut(OT->index2entry(mI),mI,mS,toS);
-    return;}  
-  lockSendCantPut(toS,mS,mI);
-  return;
+  if (mS==myDSite) {// At managerSite 
+    //  kost@ 'lockReceiveCantPut()' signature ??!
+    //  was like that:
+    // lockReceiveCantPut(OT->index2entry(mI),mI,mS,toS);
+    lockReceiveCantPut(OT->extOTI2entry(mI), mI, mS, toS);
+  } else {
+    lockSendCantPut(toS,mS,mI);
+  }
 }
 
 /**********************************************************************/
 /*   STATE & FAILURE                        */
 /**********************************************************************/
 
-void lockReceiveCantPut(OwnerEntry *oe,int mI,DSite* rsite, DSite* bad){ 
+void lockReceiveCantPut(OwnerEntry *oe, Ext_OB_TIndex mI,
+			DSite* rsite, DSite* bad){ 
   LockManager* lm=(LockManager*)oe->getTertiary();
   Assert(lm->getType()==Co_Lock);
   Assert(lm->isManager());
@@ -643,8 +697,8 @@ void lockReceiveCantPut(OwnerEntry *oe,int mI,DSite* rsite, DSite* bad){
   PD((CHAIN,"%d",printChain(ch)));
 }
 
-void cellReceiveCantPut(OwnerEntry* oe,TaggedRef val,int mI,DSite* rsite,
-			DSite* badS){ 
+void cellReceiveCantPut(OwnerEntry* oe, TaggedRef val, Ext_OB_TIndex mI,
+			DSite* rsite, DSite* badS){ 
   CellManager* cm=(CellManager*)oe->getTertiary();
   Assert(cm->getType()==Co_Cell);
   Assert(cm->isManager());
@@ -655,14 +709,16 @@ void cellReceiveCantPut(OwnerEntry* oe,TaggedRef val,int mI,DSite* rsite,
   PD((CHAIN,"%d",printChain(ch)));
 }
 
-void chainSendQuestion(DSite* toS,int mI,DSite *deadS){
+void chainSendQuestion(DSite* toS, Ext_OB_TIndex mI, DSite *deadS) {
   PD((ERROR_DET,"chainSendQuestion  %s",toS->stringrep()));
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CHAIN_QUESTION(mI,myDSite,deadS);
   send(msgC);
 }
 
-void chainSendAnswer(BorrowEntry* be,DSite* toS, int mI, int ans, DSite *deadS){
+void chainSendAnswer(BorrowEntry* be, DSite* toS, Ext_OB_TIndex mI,
+		     int ans, DSite *deadS)
+{
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CHAIN_ANSWER(mI,myDSite,ans,deadS);
   send(msgC);
