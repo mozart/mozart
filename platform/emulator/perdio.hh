@@ -403,6 +403,7 @@ public:
   virtual OZ_Return putTerm(OZ_Term,OZ_Term,OZ_Term,OZ_Term,OZ_Term);
   virtual OZ_Return putBytes(BYTE*,int);
   virtual OZ_Return allocateBytes(int);
+  virtual OZ_Return maybeSaveHeader(ByteStream*);
 };
 
 class ByteSinkFD : public ByteSink {
@@ -437,6 +438,7 @@ public:
   ByteSinkDatum():idx(0){ dat.size=0; dat.data=0; }
   OZ_Return allocateBytes(int);
   OZ_Return putBytes(BYTE*,int);
+  OZ_Return maybeSaveHeader(ByteStream*);
 };
 
 /* __PERDIOHH */
