@@ -16,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = 'May 22 1997'
+Version                = 'Jun 22 1997'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -94,6 +94,9 @@ ContButtonText         = ' cont'
 ForgetButtonText       = ' forget'
 TermButtonText         = ' term'
 
+StackAction            = {NewName}
+ResetAction            = {NewName}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Types, Names and Atoms
 %%
@@ -129,7 +132,8 @@ NoAction               = {NewName}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Geometry
 %%
-ToplevelGeometry       = '510x360+46+3'
+%ToplevelGeometry       = '510x360+46+3'
+ToplevelGeometry       = '510x360'
 
 ThreadTreeWidth        = 120
 ThreadTreeStretchX     = 11

@@ -25,8 +25,8 @@ in
    class Menu
       meth init
 	 self.menuBar = 
-	 {OzcarMenuBar self.toplevel self.toplevel
-	  [MB(text: 'Ozcar'
+	 {MyMenuBar self.toplevel self.toplevel
+	  [MB(text: IconName
 	      menu:
 		 [C(label:   'About...'
 		    action:  self # about
@@ -36,13 +36,12 @@ in
 		    action:  self # checkMe
 		    key:     ctrl(s))
 		  C(label:   'Reset'
-		    action:  self # action(' reset')
+		    action:  self # action(ResetAction)
 		    key:     ctrl(r))
 		  separator
 		  C(label:   'Close'
 		    action:  self # off
-		    key:     ctrl(x))]
-	      feature: ozcar)
+		    key:     ctrl(x))])
 	   MB(text: 'Thread'
 	      menu:
 		 [C(label:  'Previous'
@@ -55,21 +54,20 @@ in
 		    event:  '<Right>')
 		  separator
 		  C(label:  'Step'
-		    action: self # action(' step')
+		    action: self # action(StepButtonText)
 		    key:    s)
 		  C(label:  'Next'
-		    action: self # action(' next')
+		    action: self # action(NextButtonText)
 		    key:    n)
 		  C(label:  'Continue'
-		    action: self # action(' cont')
+		    action: self # action(ContButtonText)
 		    key:    c)
 		  C(label:  'Forget'
-		    action: self # action(' forget')
+		    action: self # action(ForgetButtonText)
 		    key:    f)
 		  C(label:  'Terminate'
-		    action: self # action(' term')
-		    key:    t)]
-	      feature: thr)
+		    action: self # action(TermButtonText)
+		    key:    t)])
 	   MB(text: 'Stack'
 	      menu:
 		 [C(label:  'Previous Frame'
@@ -85,9 +83,8 @@ in
 		    action: self # rebuildCurrentStack
 		    key:    ctrl(l))
 		  C(label:  'Browse'
-		    action: self # action(' stack')
-		    key:    ctrl(b))]
-	      feature: stack)
+		    action: self # action(StackAction)
+		    key:    ctrl(b))])
 	   MB(text: 'Options'
 	      menu:
 		 [CB(label:    'Step on All System Procedures'
@@ -130,8 +127,7 @@ in
 		  CB(label:   'Messages in Emulator Buffer'
 		     variable: TkVerbose
 		     action:   Config # toggle(verbose)
-		     feature:  verbose)]
-	      feature: options)]
+		     feature:  verbose)])]
 	  [MB(text: 'Help'
 	      menu:
 		 [C(label:   'Help on Help'
@@ -143,10 +139,7 @@ in
 			   action: self # help(BreakpointStaticHelp))
 			 C(label:  'dynamic'
 			   action: self # help(BreakpointDynamicHelp))]
-		     feature: breakpoints)]
-	      feature: help)
-	  ]}
-
+		     feature: breakpoints)])]}
       end
    end
 end
