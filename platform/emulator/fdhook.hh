@@ -30,7 +30,7 @@ extern Suspension * FDcurrentTaskSusp;
 #ifdef DEBUG_STABLE
 extern SuspList * board_constraints;
 void printBC(ostream &, Board *);
-void printBCDebug(Board * b = NULL) { printBC(cerr, b); }
+void printBCDebug(Board * b = NULL); 
 #endif
 
 void reviveCurrentTaskSusp(void);
