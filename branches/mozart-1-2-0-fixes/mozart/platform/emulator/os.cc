@@ -1821,7 +1821,7 @@ void *osDlsym(void *h, const char *name)
     sprintf(buf,"_%s",name);
     ret = GetProcAddress(handle,buf);
   }
-  return ret;
+  return (void *) ret;
 }
 #else
 void *osDlsym(void *h, const char *name) {}
