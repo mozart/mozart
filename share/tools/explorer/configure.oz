@@ -127,18 +127,18 @@ BackColor            #
 EntryColor           #
 DepthColor           #
 CursorColor          = case Tk.isColor then
-			  'LightSlateBlue' # % ChooseColor
-			  'DarkSlateBlue'  # % ChooseTermColor
-			  'MediumSeaGreen' # % EntailedColor
-			  'olivedrab1'     # % SuspendedColor
-			  'firebrick2'     # % FailedColor
-			  'orange'         # % BlockedColor
-			  'purple1'        # % PartialFailedColor
-			  black            # % LineColor
-			  white            # % BackColor
-			  wheat            # % EntryColor
-			  wheat            # % DepthColor
-			  gray60             % CursorColor
+			  'lightskyblue3'   # % ChooseColor
+			  'LightSlateBlue'  # % ChooseTermColor
+			  'MediumSeaGreen'  # % EntailedColor
+			  'olivedrab1'      # % SuspendedColor
+			  'firebrick2'      # % FailedColor
+			  'orange'          # % BlockedColor
+			  'purple1'         # % PartialFailedColor
+			  black             # % LineColor
+			  white             # % BackColor
+			  wheat             # % EntryColor
+			  wheat             # % DepthColor
+			  gray60              % CursorColor
 		       else
 			  white # % ChooseColor
 			  white # % ChooseTermColor
