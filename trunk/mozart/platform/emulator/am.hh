@@ -18,6 +18,7 @@
 
 #include "types.hh"
 
+#include "alarm.hh"
 #include "codeArea.hh"
 #include "gc.hh"
 #include "genvar.hh"
@@ -69,10 +70,10 @@ public:
 
   int gcFlag;                 // request GC to run
   int gcVerbosity;            // GC verbosity level
-  heapMaxSize;
-  heapMargin;
-  heapIncrement;
-  heapIdleMargin;
+  int heapMaxSize;
+  int heapMargin;
+  int heapIncrement;
+  int heapIdleMargin;
   
   char *ozPath;
   char *linkPath;
@@ -80,8 +81,6 @@ public:
   int systemPriority;
   int defaultPriority;
   int timeSlice;
-
-  int clockTick;
 
   int taskStackSize;
 
@@ -94,6 +93,8 @@ public:
 class AM {
 friend void engine();
 public:
+  static int ProcessCounter;
+
   int statusReg;
   Trail trail;
   RebindTrail rebindTrail;
@@ -213,6 +214,8 @@ public:
 // debugging --> see file ../builtins/debug.C
   State getValue(TaggedRef feature, TaggedRef out);
   State setValue(TaggedRef feature, TaggedRef value);
+
+  void RestartProcess();
 };
 
 extern AM am;

@@ -51,6 +51,8 @@
 
 AM am;
 
+int AM::ProcessCounter;
+
 ConfigData::ConfigData() {
   ozPath		= OZ_PATH;
   linkPath		= OZ_PATH;
@@ -72,7 +74,6 @@ ConfigData::ConfigData() {
   timeSlice		= TIME_SLICE;
   defaultPriority	= DEFAULT_PRIORITY;
   systemPriority	= SYSTEM_PRIORITY;
-  clockTick		= CLOCK_TICK;
   taskStackSize		= TASK_STACK_SIZE;
   typeErrorVerbosity    = TYPE_ERROR_VERBOSITY;
 }

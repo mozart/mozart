@@ -174,7 +174,7 @@ Bool emulateHookOutline(AM *e, Abstraction *def=NULL,
   if (e->isSetSFlag(ThreadSwitch)) {
     if (Thread::QueueIsEmpty()
 	|| Thread::GetHead()->getPriority() < e->currentThread->getPriority()){
-      Alarm::RestartProcess();
+      e->RestartProcess();
     } else {
       return TRUE;
     }
@@ -556,7 +556,7 @@ void engine() {
 
   DebugTrace(trace("thread switched"));
 
-  Alarm::RestartProcess();
+  e->RestartProcess();
 
 
 // ------------------------------------------------------------------------
