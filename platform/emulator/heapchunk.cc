@@ -92,13 +92,13 @@ inline
 Bool oz_isHeapChunk(TaggedRef term)
 {
   return oz_isExtension(term)
-    && tagged2Extension(term)->getIdV() == OZ_E_HEAPCHUNK;
+    && oz_tagged2Extension(term)->getIdV() == OZ_E_HEAPCHUNK;
 }
 
 HeapChunk *tagged2HeapChunk(TaggedRef term)
 {
   Assert(oz_isHeapChunk(term));
-  return (HeapChunk *)tagged2Extension(term);
+  return (HeapChunk *)oz_tagged2Extension(term);
 }
 
 int OZ_isHeapChunk(OZ_Term t)
@@ -109,7 +109,7 @@ int OZ_isHeapChunk(OZ_Term t)
 OZ_Term OZ_makeHeapChunk(int s)
 {
   HeapChunk * hc = new HeapChunk(s);
-  return makeTaggedConst(hc);
+  return oz_makeTaggedExtension(hc);
 }
 
 #define NotHeapChunkWarning(T, F, R)                                        \
@@ -147,7 +147,7 @@ HeapChunk *VAR;                                 \
 OZ_BI_define(BIHeapChunk_new,1,1)
 {
   oz_declareIntIN(0,size);
-  OZ_RETURN(makeTaggedConst(new HeapChunk(size)));
+  OZ_RETURN(oz_makeTaggedExtension(new HeapChunk(size)));
 } OZ_BI_end
 
 OZ_BI_define(BIHeapChunk_is,1,1)

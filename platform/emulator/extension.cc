@@ -35,6 +35,21 @@ unsigned int oz_newUniqueId() {
   return counter++;
 }
 
+int OZ_isExtension(OZ_Term t)
+{
+  return oz_isExtension(oz_deref(t));
+}
+
+Extension *OZ_getExtension(OZ_Term t)
+{
+  return oz_tagged2Extension(oz_deref(t));
+}
+
+OZ_Term OZ_extension(Extension *e)
+{
+  return oz_makeTaggedExtension(e);
+}
+
 unsigned int OZ_getUniqueId(void)
 {
   return oz_newUniqueId();
@@ -71,6 +86,11 @@ void SituatedExtension::printStreamV(ostream &out,int depth)
 OZ_Term SituatedExtension::typeV()
 {
   return oz_atom("situatedExtension");
+}
+
+Bool oz_isChunkExtension(TaggedRef term)
+{
+  return oz_tagged2Extension(term)->isChunkV();
 }
 
 static oz_unmarshalProcType *unmarshalRoutine = 0;

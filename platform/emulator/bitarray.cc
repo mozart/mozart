@@ -35,8 +35,6 @@
 #define BITS_PER_INT (sizeof(int) * 8)
 
 class BitArray: public Extension {
-public:
-
 private:
   int lowerBound, upperBound;
   int *array;
@@ -113,14 +111,14 @@ inline
 Bool oz_isBitArray(TaggedRef term)
 {
   return oz_isExtension(term) &&
-    tagged2Extension(term)->getIdV() == OZ_E_BITARRAY;
+    oz_tagged2Extension(term)->getIdV() == OZ_E_BITARRAY;
 }
 
 inline
 BitArray *tagged2BitArray(TaggedRef term)
 {
   Assert(oz_isBitArray(term));
-  return (BitArray *) tagged2Extension(term);
+  return (BitArray *) oz_tagged2Extension(term);
 }
 
 /*===================================================================
@@ -246,7 +244,7 @@ OZ_BI_define(BIbitArray_new,2,1)
   oz_declareIntIN(0,l);
   oz_declareIntIN(1,h);
   if (l <= h)
-    OZ_RETURN(makeTaggedConst(new BitArray(l, h)));
+    OZ_RETURN(oz_makeTaggedExtension(new BitArray(l, h)));
   else
     return oz_raise(E_ERROR,E_KERNEL,"BitArray.new",2,OZ_in(0),OZ_in(1));
 } OZ_BI_end
@@ -304,7 +302,7 @@ OZ_BI_define(BIbitArray_high,1,1)
 OZ_BI_define(BIbitArray_clone,1,1)
 {
   oz_declareBitArrayIN(0,b);
-  OZ_RETURN(makeTaggedConst(new BitArray(*b)));
+  OZ_RETURN(oz_makeTaggedExtension(new BitArray(*b)));
 } OZ_BI_end
 
 OZ_BI_define(BIbitArray_or,2,0)

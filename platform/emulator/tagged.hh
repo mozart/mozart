@@ -65,7 +65,7 @@ enum TypeOfTerm {
   OZCONST          = 10,   // 1010
 
   SMALLINT         =  6,   // 0110
-  UNUSED7          =  7,   // 0111
+  EXT              =  7,   // 0111
   OZFLOAT          = 11    // 1011
 };
 
@@ -1052,5 +1052,23 @@ int nextPowerOf2(int n)
 
 #define DerefIfVarReturnIt(v)   DerefIfVarDo(v, return v);
 #define DerefIfVarSuspend(v)    DerefIfVarDo(v, return SUSPEND);
+
+
+/* Extension */
+
+inline
+int oz_isExtension(OZ_Term t) {
+  return tagTypeOf(t)==EXT;
+}
+
+inline
+Extension *oz_tagged2Extension(OZ_Term t) {
+  return (Extension *) tagValueOf2(EXT,t);
+}
+
+inline
+OZ_Term oz_makeTaggedExtension(Extension *e) {
+  return makeTaggedRef2p(EXT,e);
+}
 
 #endif

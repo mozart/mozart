@@ -65,7 +65,7 @@ void initTagged()
   tts[SMALLINT] = "SMALLINT";  //  3
   tts[CVAR]     = "CVAR";      //  5
   tts[FSETVALUE]= "FSETVALUE"; //  6
-  tts[UNUSED7]  = "UNUSED7";   //  7
+  tts[EXT]      = "EXTENSION"; //  7
   tts[UNUSED_VAR] = "";        //  9 // FUT
   tts[OZCONST]  = "OZCONST";   // 10
   tts[OZFLOAT]  = "OZFLOAT";   // 11

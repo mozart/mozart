@@ -293,35 +293,16 @@ OZ_Return isChunkInline(TaggedRef t)
 }
 OZ_DECLAREBOOLFUN1(BIisChunkB,isChunkInline)
 
-OZ_Return procedureArityInline(TaggedRef procedure, TaggedRef &out)
+OZ_BI_define(BIprocedureArity, 1,1)
 {
-  NONVAR( procedure, pterm );
+  oz_declareNonvarIN(0, pterm);
 
   if (oz_isProcedure(pterm)) {
-    int arity;
-    ConstTerm *rec = tagged2Const(pterm);
-
-    switch (rec->getType()) {
-    case Co_Abstraction:
-      arity = ((Abstraction *) rec)->getArity();
-      break;
-    case Co_Builtin:
-      arity = ((Builtin *) rec)->getArity();
-      break;
-    default:
-      goto typeError;
-    }
-    out = newSmallInt(arity);
-    return PROCEED;
+    OZ_RETURN(oz_int(oz_procedureArity(pterm)));
+  } else {
+    oz_typeError(0,"Procedure");
   }
-  goto typeError;
-
-typeError:
-  out = oz_nil();
-  oz_typeError(0,"Procedure");
-}
-
-OZ_DECLAREBI_USEINLINEFUN1(BIprocedureArity,procedureArityInline)
+} OZ_BI_end
 
 OZ_Return isCellInline(TaggedRef cell)
 {
@@ -999,6 +980,15 @@ LBLagain:
   case LITERAL:
     if (dot) goto raise; else return FAILED;
 
+  case EXT:
+    {
+      TaggedRef t = oz_tagged2Extension(term)->getFeatureV(fea);
+      if (t == makeTaggedNULL()) {
+        if (dot) goto raise; else return FAILED;
+      }
+      if (out) *out = t;
+      return PROCEED;
+    }
   default:
     if (oz_isChunk(term)) {
       TaggedRef t;
@@ -1011,9 +1001,6 @@ LBLagain:
         break;
       case Co_Class:
         t = tagged2ObjectClass(term)->classGetFeature(fea);
-        break;
-      case Co_Extension:
-        t = tagged2Extension(term)->getFeatureV(fea);
         break;
       case Co_Array:
       case Co_Dictionary:
@@ -1564,7 +1551,7 @@ OZ_BI_define(BIvsToBs,3,1)
     virtualString2buffer(*out,OZ_in(2));
     bs->copy(out->str(),len);
     delete out;
-    OZ_RETURN(makeTaggedConst(bs));
+    OZ_RETURN(oz_makeTaggedExtension(bs));
   }
 } OZ_BI_end
 
@@ -1915,12 +1902,13 @@ OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
 
   if (A == B && !oz_isVariable(A)) return PROCEED;
 
+  if (oz_isExtension(A))
+    return oz_tagged2Extension(A)->eqV(B);
+
   if (isConstTag(tagA)) {
     switch (tagged2Const(A)->getType()) {
     case Co_BigInt:
       return bigIntEq(A,B) ? PROCEED : FAILED;
-    case Co_Extension:
-      return tagged2Extension(A)->eqV(B);
     default:
       return FAILED;
     }
@@ -4833,6 +4821,11 @@ static int finalizable(OZ_Term& x)
     //  case LITERAL:
     //  case OZFLOAT:
     //    return 1;
+  case EXT:
+    {
+      Board *b = oz_tagged2Extension(x)->getBoardInternal();
+      return (!b || oz_isRootBoard(b))?1:2;
+    }
   case OZCONST:
     {
       ConstTerm* xp = tagged2Const(x);
@@ -4865,10 +4858,6 @@ static int finalizable(OZ_Term& x)
         b = ((Tertiary*)xp)->getBoardInternal(); break;
       case Co_Class:
         b = ((ObjectClass*)xp)->getBoardInternal(); break;
-      case Co_Extension:
-        b = ((Extension*)xp)->getBoardInternal();
-        if (!b) return 1;
-        break;
       }
       return oz_isRootBoard(b)?1:2;
     }

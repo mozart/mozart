@@ -648,15 +648,6 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
 
 #undef HandleTert
 
-  case Co_Extension:
-    {
-      PD((MARSHAL,"extension"));
-      marshalDIF(bs,DIF_EXTENSION);
-      marshalNumber(((Extension*)t)->getIdV(),bs);
-      if (!((Extension*)t)->marshalV(bs)) goto bomb;
-      return;
-    }
-
   default:
     goto bomb;
   }
@@ -766,6 +757,19 @@ loop:
       goto loop;
     }
 
+  case EXT:
+    {
+      PD((MARSHAL,"extension"));
+      // hack alert using vtable to trail cycle
+      if (!checkCycle(*((TaggedRef*)oz_tagged2Extension(t)),bs,tTag)) {
+        marshalDIF(bs,DIF_EXTENSION);
+        marshalNumber(oz_tagged2Extension(t)->getIdV(),bs);
+        if (!oz_tagged2Extension(t)->marshalV(bs)) {
+          marshalNoGood(t,bs);
+        }
+      }
+      break;
+    }
   case OZCONST:
     {
       PD((MARSHAL,"constterm"));

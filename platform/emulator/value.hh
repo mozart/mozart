@@ -648,8 +648,7 @@ enum TypeOfConst {
   Co_Array,
   Co_Dictionary,
   Co_Lock,
-  Co_Class,
-  Co_Extension
+  Co_Class
 };
 
 #define Co_ChunkStart Co_Object
@@ -670,7 +669,6 @@ public:
   USEHEAPMEMORY;
   OZPRINTLONG;
   ConstTerm() { Assert(0); }
-  ~ConstTerm() { Assert(0); } // needed for Extension class
   ConstTerm(TypeOfConst t) { init(t); }
   void init(TypeOfConst t) { tag = t<<1; }
   Bool gcIsMarked(void)        { return tag&1; }
@@ -1931,11 +1929,14 @@ SChunk *tagged2SChunk(TaggedRef term)
 }
 
 
+Bool oz_isChunkExtension(TaggedRef term);
 /* optimized isChunk test */
 inline
 Bool oz_isChunk(TaggedRef t)
 {
-  return oz_isConst(t) && tagged2Const(t)->getType()>=Co_ChunkStart;
+  return
+    (oz_isConst(t) && tagged2Const(t)->getType()>=Co_ChunkStart)
+    || (oz_isExtension(t) && oz_isChunkExtension(t));
 }
 
 /*===================================================================
@@ -2238,22 +2239,6 @@ public:
 };
 
 inline
-Bool oz_isProcedure(TaggedRef term)
-{
-  if (!oz_isConst(term)) {
-    return NO;
-  }
-  switch (tagged2Const(term)->getType()) {
-  case Co_Abstraction:
-  case Co_Builtin:
-    return OK;
-  default:
-    return NO;
-  }
-}
-
-
-inline
 Bool isAbstraction(ConstTerm *s)
 {
   return s->getType() == Co_Abstraction;
@@ -2342,7 +2327,6 @@ Builtin *tagged2Builtin(TaggedRef term)
   return (Builtin *)tagged2Const(term);
 }
 
-
 /* -----------------------------------------------------------------------
  * BuiltinTab
  * -----------------------------------------------------------------------*/
@@ -2359,11 +2343,44 @@ Builtin * string2Builtin(const char * s) {
 
 Builtin * cfunc2Builtin(void * f);
 
+/*===================================================================
+ * Procedure = Abstraction or Builtin
+ *=================================================================== */
+
+inline
+Bool oz_isProcedure(TaggedRef term)
+{
+  if (!oz_isConst(term)) {
+    return NO;
+  }
+  switch (tagged2Const(term)->getType()) {
+  case Co_Abstraction:
+  case Co_Builtin:
+    return OK;
+  default:
+    return NO;
+  }
+}
+
+inline
+int oz_procedureArity(OZ_Term pterm)
+{
+  ConstTerm *rec = tagged2Const(pterm);
+
+  switch (rec->getType()) {
+  case Co_Abstraction:
+    return ((Abstraction *) rec)->getArity();
+  case Co_Builtin:
+    return ((Builtin *) rec)->getArity();
+  default:
+    Assert(0);
+    return -1;
+  }
+}
 
 /*===================================================================
  * Cell
  * Unused third field from tertiary.
- *
  *=================================================================== */
 
 
