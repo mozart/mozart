@@ -239,7 +239,6 @@ public:
 
 
   Thread *mkSuspThread ();
-  void suspendCond(AskActor *aa);
 
   TaggedRef createNamedVariable(int regIndex, TaggedRef name);
   void handleToplevelBlocking();

@@ -313,7 +313,9 @@ Thread *AM::mkRunnableThread(int prio, Board *bb, TaggedRef val, Bool inSolve)
   Thread *th = new Thread(S_RTHREAD | T_prop,prio,bb,val);
   th->setBody(allocateBody());
 
-  Assert(bb==currentBoard || inSolve);
+  Assert(bb==currentBoard ||
+	 bb->getParentFast() == currentBoard ||
+	 inSolve);
   if (currentSolveBoard != (Board *) NULL || inSolve) {
     Assert (isInSolveDebug (bb));
     incSolveThreads (bb);
@@ -381,8 +383,6 @@ int AM::commit(Board *bb, Thread *tt=0)
     if (tt->isSuspended()) {
       tt->suspThreadToRunnable();
       scheduleThread(tt);
-    } else {
-      tt->cleanUp(currentBoard);
     }
 
     { // remove the actor task

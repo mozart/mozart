@@ -735,13 +735,8 @@ void AM::print()
   cout << endl
        << "  rootBoard:    ";
   rootBoard->print(cout,~1,0);
-  cout << endl
-       << "  currentThread: ";
-  currentThread->print(cout,~1,0);
-  cout << endl
-       << "  rootThread:    ";
-  rootThread->print(cout,~1,0);
   cout << endl;
+  ThreadsPool::printThreads();
 }
 
 PRINT(Board)
@@ -910,15 +905,15 @@ void ThreadsPool::printThreads()
        << "  runnable:" << endl;
 
   if (!hiQueue.isEmpty()) {
-    cout << "  prio = HI" << endl;
+    cout << "   prio = HI";
     hiQueue.printThreads();
   }
   if (!midQueue.isEmpty()) {
-    cout << "  prio = MID" << endl;
+    cout << "   prio = MID";
     midQueue.printThreads();
   }
   if (!lowQueue.isEmpty()) {
-    cout << "  prio = LOW" << endl;
+    cout << "   prio = LOW";
     lowQueue.printThreads();
   }
 }
@@ -926,7 +921,7 @@ void ThreadsPool::printThreads()
 void ThreadQueue::printThreads()
 {
   int i = getSize();
-  cout << "    there are " << i << " threads" << endl;
+  cout << " #" << i << " threads" << endl;
 
   for (; i; i--) {
     Thread *th = dequeue();
@@ -953,41 +948,50 @@ PRINT(Thread)
     return;
   }
 
-  stream << indent(offset) << 
-    (isSuspended() ? "Suspended " : "Runnable ") <<
-    "Thread @" << this << " [prio: " << getPriority();
+  stream << indent(offset) << "Thread @" << this;
+  switch (getPriority()) {
+  case LOW_PRIORITY:
+    stream << " low";
+    break;
+  case MID_PRIORITY:
+    stream << " mid";
+    break;
+  case HI_PRIORITY:
+    stream << " hi";
+    break;
+  default:
+    stream << " (unknown Priority " << getPriority() << ")";
+    break;
+  }
+  stream << (isSuspended() ? " S" : " R");
 
   switch (getThrType ()) {
   case S_RTHREAD:
-    stream << " 'seq thread'";
-    stream << ", stack depth #" << item.threadBody->taskStack.getUsed()-1;
+    stream << " #" << item.threadBody->taskStack.tasks();
+    break;
 
   case S_WAKEUP: 
-    stream << " 'board'";
+    stream << " W";
     break;
 
   case S_PR_THR:
-    stream << ' ' << *getPropagator();
+    stream << " P: " << *getPropagator();
     break;
 
   default:
     stream << "(unknown)";
   }
 
-  stream << ", flags: <";
-  if ((getFlags ()) & T_solve)     stream << 'S';
-  if ((getFlags ()) & T_ext)       stream << 'E';
-  if ((getFlags ()) & T_loca)      stream << 'L';
-  if ((getFlags ()) & T_unif)      stream << 'U';
-  if ((getFlags ()) & T_ofs)       stream << 'O';
-  if ((getFlags ()) & T_tag)       stream << 'T';
-  if ((getFlags ()) & T_ltq)       stream << 'Q';
-  stream << ">]" << endl;
-
-  if (getBoard()) {
-    stream << indent(offset+2) << "in board: ";
-    getBoardFast()->print(stream, DEC(depth));
-  }
+  if ((getFlags ()) & T_solve)     stream << " S";
+  if ((getFlags ()) & T_ext)       stream << " E";
+  if ((getFlags ()) & T_loca)      stream << " L";
+  if ((getFlags ()) & T_unif)      stream << " U";
+  if ((getFlags ()) & T_ofs)       stream << " O";
+  if ((getFlags ()) & T_tag)       stream << " T";
+  if ((getFlags ()) & T_ltq)       stream << " Q";
+  stream << " <";
+  getBoardFast()->print(stream, DEC(depth));
+  stream << ">";
 }
 
 PRINTLONG(Thread)
@@ -1329,10 +1333,6 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
     TaggedPC topElem = ToInt32(pop());
     ContFlag flag = getContFlag(topElem);
     switch (flag){
-    case C_JOB:
-      message("\tIn job\n");
-      break;
-
     case C_CONT:
       {
         ProgramCounter PC = getPC(C_CONT,topElem);
@@ -1450,10 +1450,6 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
     TaggedPC topElem = ToInt32(pop());
     ContFlag flag = getContFlag(topElem);
     switch (flag){
-    case C_JOB:
-      out = cons(OZ_atom("job"),out);
-      break;
-
     case C_CONT:
       {
         ProgramCounter PC = getPC(C_CONT,topElem);

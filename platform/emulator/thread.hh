@@ -37,7 +37,7 @@ enum ThreadFlag {
   T_stack  = 0x000008,   // it has an (allocated) stack;
 
   //
-  T_hasjob = 0x000010,   // has more than one job on the stack;
+  T_xxx    = 0x000010,   //
   T_solve  = 0x000020,   // it was created in a search CS 
                            // (former notificationBoard);
 
@@ -220,14 +220,6 @@ public:
   }
 
   //
-  void setHasJobs() { 
-    Assert (isRunnable ());
-    state.flags = state.flags | T_hasjob; 
-  }
-  void unsetHasJobs() {
-    state.flags = state.flags & ~T_hasjob;
-  }
-  Bool hasJobs () { return (state.flags & T_hasjob); }
 
   /* check is thread has a stack */
   Bool isRThread() { return (state.flags & S_TYPE_MASK) == S_RTHREAD; }
@@ -417,8 +409,8 @@ public:
 
   //  Second - get/set the home board;
   Board *getBoardFast ();
-  Board *getBoard () { return (Board *) getPtr(); }
-  void setBoard (Board *bp) { setPtr(bp); }
+  Board *getBoardInternal() { return (Board *) getPtr(); }
+  void setBoardInternal(Board *bp) { setPtr(bp); }
   void setSelf(Object *o);
 
   TaggedRef getStreamTail();
@@ -499,15 +491,6 @@ public:
   void removeExtThread ();
 
   //
-  //  Runnable (running) threads;
-  void discardUpTo(Board *bb);
-  // 
-  //  The iterative procedure which cleans up all the tasks 
-  // up to the 'current' board, and sets the 'current' to the 
-  // thread's board;
-  void cleanUp (Board *current);
-
-  //
   Bool isBelowFailed (Board *top);
 
   //
@@ -520,7 +503,6 @@ public:
   TaggedRef findCatch(TaggedRef &traceback) {
     return item.threadBody->taskStack.findCatch(traceback);
   }
-  void pushJob();
   void pushSelf(Object *obj);
   void pushSetModeTop();
   void pushActor(Actor *aa) {
@@ -539,18 +521,6 @@ public:
 		       Bool verbose = NO, int depth = 10000);
 
   TaggedRef dbgGetTaskStack(ProgramCounter pc, int depth = 10000);
-
-  // 
-  //  Gets the size of the stack segment with the top-level job, 
-  // and *virtually* removes it -- i.e. moves the 'tos' downwards, 
-  // while preserving the data. It means in particular, 
-  // that it must be followed by the 'getJob ()'!
-  int getSeqSize ();
-  //  
-  //  'getJob' yields a *suspended* thread!
-  Thread *getJob ();
-  //
-  DebugCode (Bool hasJobDebug ();)
 
   //
   TaskStack *getTaskStackRef ();

@@ -30,10 +30,10 @@ enum ContFlag {
   C_CFUNC_CONT     = 2, // a continuation  to call a c-function
   C_DEBUG_CONT     = 3, // a continuation for debugging
   C_CALL_CONT      = 4, // an application
-  C_JOB            = 5, // job marker
+  C_XXXX1          = 5, // 
   C_ACTOR          = 6, // an actor task
-  C_XXXX           = 7, //
-  C_XXXX2          = 9, // 
+  C_XXXX2          = 7, //
+  C_XXXX3          = 9, // 
   C_SET_SELF       = 9, // set am.cachedSelf
   C_LTQ            = 10,// local thread queue
   C_CATCH          = 11 // exception handler
@@ -203,24 +203,8 @@ public:
   void pushSelf(Object *obj)     { pushPair(obj,C_SET_SELF); }
   void pushActor(Actor *aa)      { pushPair(aa,C_ACTOR); }
 
-  static TaskStackEntry makeJobEntry(Bool hasJob)
-  {
-    return (TaskStackEntry) ToPointer(makeTaggedRef((TypeOfTerm)C_JOB,hasJob));
-  }
-
-  static Bool getJobFlagFromEntry(TaskStackEntry e)
-  {
-    return (Bool) tagValueOf((TypeOfTerm)C_JOB,(TaggedRef) ToInt32(e));
-  }
-  void pushJob(Bool hasJobs)
-  {
-    push(makeJobEntry(hasJobs));
-  }
-
-  int getSeqSize();
-  DebugCode (int hasJobDebug ();)
-  void copySeq(TaskStack *newStack,int size);
   static int frameSize(ContFlag);
+  int tasks();
 };
 
 
