@@ -3513,7 +3513,7 @@ loop:
       if (val) {
         PD((UNMARSHALL,"cell hit b:%d",bi));
         gotRef(bs,val);
-        Tertiary *t=ob->getTertiary();
+        Tertiary *t=ob->getTertiary(); // mm2: bug: ob is 0 if I am the owner
         if((t->getType()==Co_Cell) && (t->getTertType()==Te_Frame)){
           CellFrame *cf=(CellFrame *)t;
           if(cf->getState() & Cell_Dump_Asked){
@@ -5368,10 +5368,11 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIsave,3)
 {
   OZ_declareArg(0,in);
+  OZ_declareVirtualStringArg(2,urlS);
+  OZ_Term url=OZ_atom(urlS);
   OZ_declareVirtualStringArg(1,filename);
-  OZ_declareVirtualStringArg(1,url);
 
-  return saveFile(in,filename,OZ_atom(url));
+  return saveFile(in,filename,url);
 }
 OZ_C_proc_end
 
