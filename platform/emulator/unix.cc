@@ -1554,18 +1554,17 @@ OZ_C_ioproc_begin(unix_wait,2)
 }
 OZ_C_proc_end
 
-OZ_C_ioproc_begin(unix_getEnv,3)
+OZ_C_ioproc_begin(unix_getEnv,2)
 {
   OZ_declareVsArg("getEnv", 0, envVar);
-  OZ_nonvarArg(1);
 
   char *envValue;
 
   envValue = getenv(envVar);
   if (envValue == 0) 
-    return OZ_unify(OZ_getCArg(1),OZ_getCArg(2));
+    return OZ_unify(OZ_getCArg(1),OZ_getNameFalse());
 
-  return OZ_unify(OZ_getCArg(2),OZ_CToString(envValue));
+  return OZ_unify(OZ_getCArg(1),OZ_CToString(envValue));
 }
 OZ_C_proc_end
 
@@ -1611,18 +1610,17 @@ OZ_C_ioproc_begin(unix_tempName, 3)
 OZ_C_proc_end
   
 
-OZ_C_ioproc_begin(unix_getServByName, 4)
+OZ_C_ioproc_begin(unix_getServByName, 3)
 {
   OZ_declareVsArg("getServByName", 0, name);
   OZ_declareVsArg("getServByName", 1, proto);
-  OZ_nonvarArg(2);
-  OZ_Term out = OZ_getCArg(3);
+  OZ_Term out = OZ_getCArg(2);
 
   struct servent *serv;
   serv = getservbyname(name, proto);
 
   if (!serv)
-    return OZ_unify(OZ_getCArg(2), out);
+    return OZ_unify(out, OZ_getNameFalse());
 
   return OZ_unifyInt(out, ntohs(serv->s_port));
 }
@@ -1727,16 +1725,13 @@ void BIinitUnix()
   OZ_addBuiltin("unix_read",5,unix_read);
   OZ_addBuiltin("unix_lSeek",4,unix_lSeek);
   OZ_addBuiltin("unix_unlink",2,unix_unlink);
-  OZ_addBuiltin("unix_getServByName",4,unix_getServByName);
-
-
+  OZ_addBuiltin("unix_getServByName",3,unix_getServByName);
   OZ_addBuiltin("unix_readSelect",2,unix_readSelect);
   OZ_addBuiltin("unix_writeSelect",2,unix_writeSelect);
   OZ_addBuiltin("unix_deSelect",1,unix_deSelect);
-
   OZ_addBuiltin("unix_system",2,unix_system);
   OZ_addBuiltin("unix_wait",2,unix_wait);
-  OZ_addBuiltin("unix_getEnv",3,unix_getEnv);
+  OZ_addBuiltin("unix_getEnv",2,unix_getEnv);
   OZ_addBuiltin("unix_putEnv",2,unix_putEnv);
   OZ_addBuiltin("unix_tempName",3,unix_tempName);
   OZ_addBuiltin("unix_gmTime",1,unix_gmTime);
