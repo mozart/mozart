@@ -64,7 +64,7 @@ INSTALL_DIR=    @INSTALL_DIR@
 
 OZVERSION=      $(SRCTOP)/OZVERSION
 OZBUILD=        @OZBUILDDATE@
-FILES=          README LICENSE LICENSE.html
+FILES=          README LICENSE LICENSE.html LICENSE.rtf
 ALLFILES=       $(FILES:%=$(PREFIX)/%)
 
 # sub directories for recursive makes
@@ -122,11 +122,9 @@ $(ALLFILES): $(PREFIX)/% : % $(PREFIX)
 PLATFORMS=      solaris-sparc aix3-rs600 freebsd-i486 hpux-700 \
                 irix6-mips linux-i486 netbsd-i486 netbsd-m68k netbsd-sparc \
                 osf1-alpha solaris-i486 sunos-sparc freebsdelf-i486
-PLATFORMFILES=  README LICENSE LICENSE.html \
-        bin cache contrib examples include share
 COMPRESS=       gzip -9
+ZIP=            zip -r
 TAR=            tar
-WINCACHEDIR=    oz3/cache/$(HOMECACHE)
 PACKDIR=        /tmp/pack
 MPD=            $(PACKDIR)/mozart
 WIN32CACHEDIR=  $(MPD)/cache/$(HOMECACHE)
@@ -225,7 +223,7 @@ win32-i486: $(PACKDIR) $(PACKDIR)/mozart
                      include share/Init.ozf share/elisp platform) | \
          (cd mozart-win32/base; $(TAR) xf -)
         rm -rf /tmp/pack/mozart
-        zip -r mozart-win32.zip mozart-win32
+        $(ZIP) -r mozart-win32.zip mozart-win32
         rm -rf mozart-win32
 
 files.base:
