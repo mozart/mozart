@@ -23,11 +23,16 @@
 
 <Chapter id="chapter.board">
     <Title/Drawing Board/
+    <Author.Extern to="author.db" key="Michael.Mehl">
+    <Author.Extern to="author.db" key="Ralf.Scheidhauer">
+    <Author.Extern to="author.db" key="Christian.Schulte">
+    <Author.Extern to="author.db" key="Gert.Smolka">
 
   <P>
     <List class=linkmenu>
       <Item><Ref.Extern to="applets/Board.oza"/Start Applet/
-      <Item><Ref to="appendix.enable"/How to enable Applets/
+      <Item>
+	<Ref.extern to="ozdoc:apptut" key="applets"/How to enable Applets/
     </List>
   </P>
 
@@ -84,6 +89,17 @@
        </P>
 
     </Section>
+
+  <section class=unnumbered id="section.board.implementation">
+    <title/Implementation/
+
+    <subsection class=unnumbered id=code.board>
+      <title>Root functor: <file/Board.oz/</title>
+      <para><title><ref.extern to="Board.oz">Source
+File</ref.extern></title>
+<code.extern display to="Board.oz" proglang=oz></para>
+    </subsection>
+
 
 
 </Chapter>

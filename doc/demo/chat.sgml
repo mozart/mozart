@@ -23,10 +23,13 @@
 
 <Chapter id="chapter.chat">
   <Title/Chat Server and Client/
+    <Author.Extern to="author.db" key="Denys.Duchier">
+
   <p><list class=linkmenu>
       <item/<ref.extern to="applets/ChatServer.oza"/Start Server//
       <item/<ref.extern to="applets/ChatClient.oza"/Start Client//
-      <item/<ref to=appendix.enable/How to enable Applets//
+      <Item>
+	<Ref.extern to="ozdoc:apptut" key="applets"/How to enable Applets/
     </list></p>
   <section class=unnumbered>
     <title/Starting a Chat Server/

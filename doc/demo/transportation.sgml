@@ -23,11 +23,13 @@
 
 <Chapter id="chapter.transportation">
   <Title/Transportation/
+  <Author.Extern to="author.db" key="Christian.Schulte">
 
   <P>
     <List class=linkmenu>
       <Item><Ref.Extern to="applets/Transport.oza"/Start Applet/
-      <Item><Ref to="appendix.enable"/How to enable Applets/
+      <Item>
+	<Ref.extern to="ozdoc:apptut" key="applets"/How to enable Applets/
     </List>
   </P>
 
@@ -175,5 +177,78 @@
    </Subsection>
 
   </Section>
+
+  <section class=unnumbered id="section.transportation.implementation">
+    <title/Implementation/
+
+    <subsection class=unnumbered id=code.transportation.main>
+      <title>Root functor: <file/Main.oz/</title>
+      <para><title><ref.extern to="Transport/Main.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Main.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.AgentAbstractions>
+      <title>Programming abstractions for agents: <file/AgentAbstractions.oz/</title>
+      <para><title><ref.extern to="Transport/AgentAbstractions.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/AgentAbstractions.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.Agents>
+      <title>Agent definitions: <file/Agents.oz/</title>
+      <para><title><ref.extern to="Transport/Agents.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Agents.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.country>
+      <title>Distance and route computation: <file/Country.oz/</title>
+      <para><title><ref.extern to="Transport/Country.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Country.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.Configure>
+      <title>Predefined default values: <file/Configure.oz/</title>
+      <para><title><ref.extern to="Transport/Configure.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Configure.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.Dialogs>
+      <title>User dialog widgets: <file/Dialogs.oz/</title>
+      <para><title><ref.extern to="Transport/Dialogs.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Dialogs.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.Germany>
+      <title>Small map of Germany: <file/Germany.oz/</title>
+      <para><title><ref.extern to="Transport/Germany.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Germany.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.Plan>
+      <title>Problem solver for computing plans: <file/Plan.oz/</title>
+      <para><title><ref.extern to="Transport/Plan.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Plan.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.Randomizer>
+      <title>Random generation of transportation tasks: <file/Randomizer.oz/</title>
+      <para><title><ref.extern to="Transport/Randomizer.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Randomizer.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.Widgets>
+      <title>Support widgets: <file/Widgets.oz/</title>
+      <para><title><ref.extern to="Transport/Widgets.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Widgets.oz" proglang=oz></para>
+    </subsection>
 
 </Chapter>

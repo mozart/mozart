@@ -5,7 +5,4 @@ if ($code =~ /^((\%.*\n)*)\n*/) {
     $head = $1;
     $code = $';
 }
-if ($head =~ /\%\%\% Authors:.*\n((\%\%\%[ \t]*\S.*\n)+)\%\%\%\n/) {
-    print $1,"\n";
-}
 print $code;
