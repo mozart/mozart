@@ -855,8 +855,11 @@ If FORCE is non-nil, kill it immediately."
 	    (funcall oz-emulator-hook)
 	  (setq oz-emulator-buffer "*Oz Emulator*")
 	  (setq oz-read-emulator-output t)
-	  (make-comint "Oz Emulator" "ozengine" nil
-		       "http://www.ps.uni-sb.de/ozhome/lib/OPI.ozc")
+	  (let ((url "http://www.ps.uni-sb.de/ozhome/lib/OPI.ozc"))
+	    (if oz-win32
+		(make-comint "Oz Emulator" "ozemulator" nil "-u" url)
+	      (make-comint "Oz Emulator" "ozengine" nil url)))
+		       
 	  (oz-create-buffer oz-emulator-buffer 'emulator)
 	  (set-process-filter (get-buffer-process oz-emulator-buffer)
 			      'oz-emulator-filter)
