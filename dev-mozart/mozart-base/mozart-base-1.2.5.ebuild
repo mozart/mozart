@@ -45,11 +45,7 @@ src_install() {
     make install PREFIX=${D}/opt/mozart
 
     # update env
-    dodir /etc/env.d
-    doins files/99mozart
+    insinto /etc/env.d
+    doins ${FILESDIR}/99mozart
 
-}
-
-pkg_postinst() {
-    env-update
 }
