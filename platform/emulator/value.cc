@@ -1002,29 +1002,43 @@ TaggedRef SRecord::adjoin(SRecord* hrecord)
   TaggedRef list1 = this->getArityList();
   TaggedRef list2 = hrecord->getArityList();
 
+  // optimize case that left record is literal
   if (isNil(list1)) {
+  overwrite:
     return makeTaggedSRecord(newSRecord(hrecord));
   }
+
+  // optimize case that right record is literal
   if (isNil(list2)) {
     return makeTaggedSRecord(this->replaceLabel(hrecord->getLabel()));
   }
 
+  // adjoin arities
   TaggedRef newArityList = merge(list1,list2);
   Arity *newArity = aritytable.find(newArityList);
 
   SRecord *newrec = newSRecord(hrecord->getLabel(),newArity);
 
-  if (newArity != hrecord->getRecordArity()) {
-    TaggedRef ar = list1;
-    CHECK_DEREF(ar);
-    while (isCons(ar)) {
-      TaggedRef a = head(ar);
-      CHECK_DEREF(a);
-      newrec->setFeature(a,getFeature(a));
-      ar = tail(ar);
-      CHECK_DEREF(ar);
+  // optimize case that right record completely overwrites left side.
+  if (hrecord->isTuple()) {
+    if (newArity->isTuple() && hrecord->getWidth() == newArity->getWidth()) {
+      goto overwrite;
     }
+  } else if (newArity == hrecord->getRecordArity()) {
+    goto overwrite;
   }
+
+  // copy left record to new record
+  TaggedRef ar = list1;
+  CHECK_DEREF(ar);
+  while (isCons(ar)) {
+    TaggedRef a = head(ar);
+    CHECK_DEREF(a);
+    newrec->setFeature(a,getFeature(a));
+    ar = tail(ar);
+    CHECK_DEREF(ar);
+  }
+
   TaggedRef har = list2;
   CHECK_DEREF(har);
   while (isCons(har)) {
