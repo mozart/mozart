@@ -709,3 +709,11 @@ Bool trace(char *s,Board *board,Actor *actor,
     }
   }
 }
+
+// mm2: I need this builtin for debugging!
+OZ_C_proc_begin(BIhalt, 0)
+{
+  mode=OK;
+  return PROCEED;
+}
+OZ_C_proc_end

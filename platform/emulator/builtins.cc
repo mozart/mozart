@@ -2691,16 +2691,6 @@ OZ_C_proc_end
 /*
  * terminate a thread
  */
-void threadTerminate(Thread *th) {
-  if (th->isDeadThread()) return;
-
-  th->terminate();
-
-  if (!th->isRunnable()) {
-    am.scheduleThread(th);
-  }
-}
-
 OZ_C_proc_begin(BIthreadTerminate,1)
 {
   oz_declareThreadArg(0,th);
@@ -2709,8 +2699,14 @@ OZ_C_proc_begin(BIthreadTerminate,1)
     return remoteApplication("Thread.terminate",th);
   }
 
+  if (th->isDeadThread()) return PROCEED;
 
-  threadTerminate(th);
+  th->terminate();
+
+  if (!th->isRunnable()) {
+    th->markRunnable();
+    am.scheduleThread(th);
+  }
 
   if (am.currentThread == th) {
     return BI_TERMINATE;
@@ -7154,7 +7150,7 @@ BIspec allSpec[] = {
   {"taskstack",   3, BItaskStack},
   {"location",    2, BIlocation},
   {"Debug.displayCode", 2, BIdisplayCode},
-
+  {"halt",0,BIhalt},
   {"System.printName",2,BIgetPrintName},
 
   {"ozparser_parse",2,ozparser_parse},
