@@ -64,6 +64,12 @@ protected:
   
   void propagate(TaggedRef, SuspList * &, PropCaller);
 
+  // takes the suspensionlist of var and  appends it to the
+  // suspensionlist of leftVar
+  void relinkSuspListTo(GenCVariable * lv, Bool reset_local = FALSE) {
+    suspList = suspList->appendToAndUnlink(lv->suspList, reset_local);
+  }
+
 public:
   USEFREELISTMEMORY;
 
@@ -96,12 +102,6 @@ public:
   void printLong(ostream &stream, int depth, int offset, TaggedRef v);
 
   void installPropagators(GenCVariable *, Bool prop);
-
-  // takes the suspensionlist of var and  appends it to the
-  // suspensionlist of leftVar
-  void relinkSuspListTo(GenCVariable * lv, Bool reset_local = FALSE) {
-    suspList = suspList->appendToAndUnlink(lv->suspList, reset_local);
-  }
 
   void addDetSusp (Thread *thr, TaggedRef *tptr);
 
