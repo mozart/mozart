@@ -156,9 +156,6 @@ extern void     OZ_printVirtualString   _PROTOTYPE((OZ_Term t));
 #define OZ_printVS(t) OZ_printVirtualString(t)
 
 
-/* mm2: impl? */
-extern OZ_Term  OZ_termToVS  _PROTOTYPE((OZ_Term t));
-
 /* tuples */
 extern OZ_Term OZ_label     _PROTOTYPE((OZ_Term));
 extern int     OZ_width     _PROTOTYPE((OZ_Term));
@@ -192,9 +189,6 @@ extern OZ_Term OZ_recordInit     _PROTOTYPE((OZ_Term, OZ_Term));
 extern void OZ_putSubtree        _PROTOTYPE((OZ_Term, OZ_Term, OZ_Term));
 extern OZ_Term OZ_subtree        _PROTOTYPE((OZ_Term, OZ_Term));
 extern OZ_Term OZ_arityList      _PROTOTYPE((OZ_Term));
-
-#define OZ_getRecordArgA(t,s)    OZ_getRecordArg(t,OZ_atom(s))
-#define OZ_putRecordArgA(t,s,v)  OZ_putRecordArg(t,OZ_atom(s),v)
 
 /* unification */
 extern OZ_Return OZ_unify    _PROTOTYPE((OZ_Term, OZ_Term));
@@ -253,17 +247,15 @@ extern OZ_Return OZ_raise	    _PROTOTYPE((OZ_Term));
 
 /* Suspending builtins */
 
-OZ_Thread  OZ_makeThread      _PROTOTYPE((OZ_CFun, OZ_Term *, int));
-void       OZ_addThread       _PROTOTYPE((OZ_Term, OZ_Thread));
+void       OZ_makeRunableThread    _PROTOTYPE((OZ_CFun, OZ_Term *, int));
+OZ_Thread  OZ_makeSuspendedThread  _PROTOTYPE((OZ_CFun, OZ_Term *, int));
+void       OZ_addThread            _PROTOTYPE((OZ_Term, OZ_Thread));
 
 /* for example
-   OZ_Thread s = OZ_makeThread(BIplus,OZ_args,OZ_arity);
+   OZ_Thread s = OZ_makeSuspendedThread(BIplus,OZ_args,OZ_arity);
    OZ_addThread(t1,s);
    OZ_addThread(t2,s);
    */
-
-/* suspend self */
-#define OZ_makeSelfThread()   OZ_makeThread(OZ_self,OZ_args,OZ_arity)
 
 void OZ_suspendOnInternal  _PROTOTYPE((OZ_Term));
 void OZ_suspendOnInternal2 _PROTOTYPE((OZ_Term,OZ_Term));

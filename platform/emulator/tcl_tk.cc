@@ -19,7 +19,121 @@
 #include "ofgenvar.hh"
 #include "fdbuilti.hh"
 #include "solve.hh"
-#include "StringBuffer.hh"
+
+/*
+ * Dynamically expanded string buffer
+ */
+
+
+#define SAFETY_MARGIN   256
+#define STRING_BUFFER_SIZE 1024
+
+class StringBuffer {
+  char static_buffer[STRING_BUFFER_SIZE+SAFETY_MARGIN];
+  char * buffer;
+  char * start;
+  char * end;
+
+  void ensure(int n)
+  {
+    while (buffer+n>end) resize();
+  }
+
+public:
+  StringBuffer() {
+    start  = static_buffer;
+    end    = start + STRING_BUFFER_SIZE;
+    buffer = start;
+  }
+  ~StringBuffer() {
+    dispose();
+  }
+  void reset(void) {
+    dispose();
+    start  = static_buffer;
+    end    = start + STRING_BUFFER_SIZE;
+    buffer = start;
+  }
+
+  int size() { return buffer-start; }
+
+  char *string() { *buffer=0; return start; }
+  char *getPtr() { return buffer; }
+  void setPtr(char *ptr) { buffer = ptr; }
+
+  char *allocate(int n) {
+    ensure(n);
+    char *ret = buffer;
+    buffer += n;
+    return ret;
+  }
+
+  void resize(void);
+
+  void dispose(void)
+  {
+    if (start!=static_buffer) delete start;
+  }
+
+  void put(char c)
+  {
+    ensure(1);
+    *buffer++ = c;
+  }
+  void put2(char c1,char c2)
+  {
+    ensure(2);
+    *buffer++ = c1;
+    *buffer++ = c2;
+  }
+  void back()
+  {
+    // assert(buffer>start);
+    buffer--;
+  }
+  void put_octal(char c) {
+    unsigned char c1 = (((unsigned char) c & '\300') >> 6) + '0';
+    unsigned char c2 = (((unsigned char) c & '\070') >> 3) + '0';
+    unsigned char c3 = ((unsigned char) c & '\007') + '0';
+    ensure(4);
+    *buffer++ = '\\';
+    *buffer++ = c1;
+    *buffer++ = c2;
+    *buffer++ = c3;
+  }
+  void put_string(char *s) {
+    ensure(strlen(s));
+    char c;
+    while ((c = *s++)) *buffer++=c;
+  }
+  void put_int(int i) {
+    int len;
+    sprintf(buffer,"%d%n",i,&len);
+    buffer += len;
+    ensure(0);
+  }
+  void put_float(double f) {
+    int len;
+    sprintf(buffer,"%g%n",f,&len);
+    buffer += len;
+    ensure(0);
+  }
+};
+
+void StringBuffer::resize(void)
+{
+  int new_size = (3 * (end - start)) / 2; 
+  char *new_start = new char[new_size + SAFETY_MARGIN];
+  
+  end   = new_start + new_size;
+  
+  memcpy(new_start, start, buffer-start);
+    
+  dispose();
+
+  buffer = (buffer - start) + new_start;
+  start  = new_start;
+}
 
 StringBuffer tcl_buffer;
 

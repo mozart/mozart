@@ -247,7 +247,7 @@ OZ_Return OZ_constrainMetaTerm(OZ_Term v, OZ_MetaType t, OZ_Term d)
 
 OZ_Return OZ_suspendMetaProp(OZ_CFun OZ_self, OZ_Term * OZ_args, int OZ_arity)
 {
-  OZ_Thread thr = OZ_makeThread(OZ_self, OZ_args, OZ_arity);
+  OZ_Thread thr = OZ_makeSuspendedThread(OZ_self, OZ_args, OZ_arity);
   Bool suspNotAdded = TRUE;
   
   for (int i = OZ_arity; i--; )
@@ -396,7 +396,7 @@ OZ_C_proc_begin(BImetaGetDataAsAtom, 2)
 		    OZ_getCArg(1));   
   } else if (isNotCVar(vartag)) {
     OZ_addThread(makeTaggedRef(varptr),
-		 OZ_makeThread(OZ_self, OZ_args, OZ_arity));
+		 OZ_makeSuspendedThread(OZ_self, OZ_args, OZ_arity));
     return PROCEED;
   } else {
     TypeError(0, "");
@@ -418,7 +418,7 @@ OZ_C_proc_begin(BImetaGetStrength, 2)
 		    OZ_getCArg(1));   
   } else if (isNotCVar(vartag)) {
     OZ_addThread(makeTaggedRef(varptr),
-		 OZ_makeThread(OZ_self, OZ_args, OZ_arity));
+		 OZ_makeSuspendedThread(OZ_self, OZ_args, OZ_arity));
     return PROCEED;
   } else {
     TypeError(0, "");
@@ -441,7 +441,7 @@ OZ_C_proc_begin(BImetaGetNameAsAtom, 2)
 	       OZ_getCArg(1));   
   } else if (isNotCVar(vartag)) {
     OZ_addThread(makeTaggedRef(varptr),
-		 OZ_makeThread(OZ_self, OZ_args, OZ_arity));
+		 OZ_makeSuspendedThread(OZ_self, OZ_args, OZ_arity));
     return PROCEED;
   } else {
     TypeError(0, "");
@@ -464,7 +464,7 @@ OZ_C_proc_begin(BImetaWatchVar, 2)
       return PROCEED;
     
     OZ_addThread(makeTaggedRef(vptr),
-		 OZ_makeThread(OZ_self, OZ_args, OZ_arity));
+		 OZ_makeSuspendedThread(OZ_self, OZ_args, OZ_arity));
     return PROCEED;
   } else {
     TypeError(0, "");
@@ -486,7 +486,7 @@ OZ_C_proc_begin(BImetaWatchVarB, 3)
       return (OZ_unify (OZ_getCArg (2), NameTrue));
     
     OZ_addThread(makeTaggedRef(vptr),
-		 OZ_makeThread(OZ_self, OZ_args, OZ_arity));
+		 OZ_makeSuspendedThread(OZ_self, OZ_args, OZ_arity));
     return (OZ_unify (OZ_getCArg (2), NameTrue));
   } else {
     TypeError(0, "");
