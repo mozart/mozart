@@ -541,6 +541,10 @@ in
       
       meth close
 	 {self.explorer ManagerClosed}
+	 Manager, closeByMain
+      end
+
+      meth closeByMain
 	 lock
 	    Manager,         ClearDialogs
 	    ToplevelManager, close
