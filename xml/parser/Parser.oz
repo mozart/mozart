@@ -39,7 +39,7 @@ prepare
    %%     Medium (URI *) ('*' Tag)
    %%     High   (URI Tag)
    %%
-   %% there can be an ambiguity on Medium, in which case en error is
+   %% there can be an ambiguity on Medium, in which case an error is
    %% raised when the question is asked.
    %%
    %% askStripSpace(+URI +Tag ?Bool)
@@ -274,14 +274,14 @@ prepare
 	 PREFIXTABLE : unit
 	 ALIST       : nil
 	 TAGS        : nil
-	 KeepComments : false
-	 KeepNamespaceDeclarations : false
+	 keepComments : false
+	 keepNamespaceDeclarations : false
 
       meth init() skip end
       
       meth setSpaceManager(M) STRIP<-M end
-      meth setKeepComments(B<=true) KeepComments<-B end
-      meth setKeepNamespaceDeclarations(B<=true) KeepNamespaceDeclarations<-B end
+      meth setKeepComments(B<=true) keepComments<-B end
+      meth setKeepNamespaceDeclarations(B<=true) keepNamespaceDeclarations<-B end
 
       meth parseVS(VS $)
 	 Parser,Reset()
@@ -826,7 +826,7 @@ prepare
 		  %% default namespace declaration
 		  TRAIL<-(unit|{CondSelect @PREFIXTABLE unit unit})|@TRAIL
 		  @PREFIXTABLE.unit := ValueA
-		  {self onNamespaceDeclaration('' ValueA)}
+		  {self onNamespaceDeclaration('' ValueA Coord)}
 	       else
 		  %% attribute in no-namespace
 		  {self onAttribute(
@@ -843,7 +843,7 @@ prepare
 	       %% namespace declaration
 	       TRAIL<-(SuffixA|{CondSelect @PREFIXTABLE SuffixA unit})|@TRAIL
 	       @PREFIXTABLE.SuffixA := ValueA
-	       {self onNamespaceDeclaration(SuffixA ValueA)}
+	       {self onNamespaceDeclaration(SuffixA ValueA Coord)}
 	    else Tag = tag(
 			  qname  : {StringToAtom Attr}
 			  prefix : PrefixA
@@ -900,34 +900,57 @@ prepare
 	 end
       end
 
-      meth append(X) L in
-	 @CONTENTS=X|L
-	 CONTENTS<-L
-      end
+      %%--------------------------------------------------------------
+      %% methods onXXX(...) are meant to be overriden to build more
+      %% specialized document representations
+      %%
+      %% onStartDocument()
+      %% onEndDocument()
+      %% onStartElement(Tag Alist Children)
+      %% onEndElement(Tag)
+      %% onAttribute(Tag Value)
+      %% onNamespaceDeclaration(Prefix URI Coord)
+      %% onProcessingInstruction(Name Data Coord)
+      %% onCharacters(Chars Coord)
+      %% onComment(Data Coord)
+      %%
+      %% append(_)
+      %% attributeAppend(_)
+      %%--------------------------------------------------------------
 
-      meth attributeAppend(X) L in
-	 @ALIST=X|L
-	 ALIST<-L
-      end
-
-      meth onAttribute(Tag Value)
-	 {self attributeAppend(
-		  attribute(
-		     uri   : Tag.uri
-		     name  : Tag.name
-		     value : Value))}
-      end
-      meth onNamespaceDeclaration(Prefix URI)
-	 if @KeepNamespaceDeclarations then
-	    {self attributeAppend(
-		     namespaceDeclaration(
-			prefix : Prefix
-			uri    : URI))}
-	 end
-      end
-	 
+      %% invoked respectively at the start and end of the document
+      
       meth onStartDocument() skip end
       meth onEndDocument() skip end
+
+      %% onStartElement(Tag Alist Children)
+      %%
+      %% invoked on the start tag of an element.  It is its
+      %% responsibility to construct a representation of the element
+      %% and to contribute it to the list of items currently being
+      %% accummulated (by invoking the append(_) method)
+      %%
+      %% Tag is a record that describes the start tag and has the
+      %% following feature:
+      %%
+      %% - qname    : the tag's name as it appears in the document
+      %% - prefix   : just the prefix of the name (unit if none)
+      %% - uri      : the uri bound to the prefix (unit if none)
+      %% - name     : the localname of the tag (i.e. minus prefix)
+      %% - coord    : the debug coordinates where the tag occurred
+      %% - endCoord : the, as yet uninstantiated, debug coordinates
+      %%              where the corresponding tag occurs
+      %%
+      %% qname, prefix, uri and name are all atoms
+      %% debug coordinates are records of the form:
+      %%     coord(Filename LineNumber)
+      %%
+      %% Alist is the list of accummulated attributes and possibly
+      %% namespaceDeclarations.
+      %%
+      %% Children is the, as yet uninstantiated, list of accummulated
+      %% children of this elements
+      
       meth onStartElement(Tag Alist Children)
 	 {self append(
 		  element(
@@ -936,20 +959,116 @@ prepare
 		     attributes : Alist
 		     children   : Children))}
       end
+
+      %% contributes a new item to the contents of the current element
+
+      meth append(X) L in
+	 @CONTENTS=X|L
+	 CONTENTS<-L
+      end
+
+      %% invoked on an end tag
+      
       meth onEndElement(Tag) skip end
+
+      %% onAttribute(Tag Value)
+      %%
+      %% invoked for each attribute of an element.  It is its
+      %% responsibility to construct a representation of the attribute
+      %% and to contribute it to the list of attributes currently being
+      %% accumulated (by invoking the attributeAppend(_) method).  Of
+      %% course, attributes can be ignored by not contributing them.
+      %%
+      %% Tag is a record describing the attribute's name and has the
+      %% following features:
+      %%
+      %% - qname
+      %% - prefix
+      %% - name
+      %% - uri
+      %% - coord
+      %%
+      %% with the same interpretation as for elements.  Note that
+      %% attributes without an explicit prefix are always considered to
+      %% be in NO namespace, and not in the default namespace if any.
+      %%
+      %% It should be noted that the attributes of an element are
+      %% processed before its onStartElement method is called.  The
+      %% reason is that it is necessary to process all namespace
+      %% declarations before attempting to interpret the tag.
+
+      meth onAttribute(Tag Value)
+	 {self attributeAppend(
+		  attribute(
+		     uri   : Tag.uri
+		     name  : Tag.name
+		     value : Value))}
+      end
+
+      %% contributes a new item to the list of attributes and
+      %% namespaceDeclarations currently being accummulated
+      
+      meth attributeAppend(X) L in
+	 @ALIST=X|L
+	 ALIST<-L
+      end
+
+      %% onNamespaceDeclaration(Prefix URI Coord)
+      %%
+      %% some attributes are actually namespace declarations.
+      %% This is identified by their "xmlns" prefix (using any
+      %% possibly mixed capitalization as desired).
+      %%
+      %% Prefix and URI are both atoms
+      %% Coord is a debug coordinates record
+      %%
+      %% By default, namespace declarations are contributed to
+      %% the list of attributes only if @keepNamespaceDeclarations
+      %% is true
+
+      meth onNamespaceDeclaration(Prefix URI Coord)
+	 if @keepNamespaceDeclarations then
+	    {self attributeAppend(
+		     namespaceDeclaration(
+			prefix : Prefix
+			uri    : URI))}
+	 end
+      end
+
+      %% onProcessingInstructions(Name Data Coord)
+      %%
+      %% Name is an atom, Data is a string, Coord is a debug
+      %% coordinates record
+	 
       meth onProcessingInstruction(Name Data Coord)
 	 {self append(
 		  pi(name : Name
 		     data : {StringToAtom Data}))}
       end
+
+      %% onCharacters(Chars Coord)
+      %%
+      %% invoked for text nodes. Chars is a string, Coord is a
+      %% debug coordinates record
+      
       meth onCharacters(Chars Coord)
 	 {self append(
 		  text(data : {MakeBS Chars}))}
       end
+
+      %% onComment(Data Coord)
+      %%
+      %% invoked for comment nodes. Data is a string, Coord is a
+      %% debug coordinates record.  Note that comment nodes are
+      %% automatically discarded if @keepComments is false
+      
       meth onComment(Data Coord)
 	 {self append(
 		  comment(data:{MakeBS Data}))}
       end
+
+
+      %% the main recursive loop for parsing the document
 
       meth PARSE()
 	 case Parser,GetToken($)
@@ -1022,7 +1141,7 @@ prepare
 	    end
 	    Parser,PARSE()
 	 [] comment(Data Coord) then
-	    if @KeepComments then
+	    if @keepComments then
 	       {self onComment(Data Coord)}
 	    end
 	    Parser,PARSE()
