@@ -302,22 +302,36 @@ define
 	 else nil
 	 end
       end
-      meth BatchCode(M I $)
-	 SEQ(OzDocToHTML, BatchCodeSub(M I $))
+      meth BatchCode(M I ?HTML) Request in
+	 OzDocToHTML, BatchCodeSub(M I ?Request ?HTML)
+	 {@MyFontifier enqueueRequest(@ProgLang complex(Request))}
       end
-      meth BatchCodeSub(M I $)
-	 %--** interpret <Span class=ignore>...</Span>
+      meth BatchCodeSub(M I ?Request ?HTML)
 	 if {HasFeature M I} then
-	    case M.I of S=_|_ then VS in
-	       {@MyFontifier enqueueVirtualString(@ProgLang S ?VS)}
-	       code(VS)|   %--** VERBATIM?
-	       OzDocToHTML, BatchCodeSub(M I + 1 $)
+	    case M.I of S=_|_ then HTML1 Rr HTML2 in
+	       Request = simple(S HTML1)|Rr
+	       HTML = SEQ([code(HTML1) HTML2])   %--** VERBATIM?
+	       OzDocToHTML, BatchCodeSub(M I + 1 ?Rr ?HTML2)
 	    [] nil then
-	       OzDocToHTML, BatchCodeSub(M I + 1 $)
+	       OzDocToHTML, BatchCodeSub(M I + 1 ?Request ?HTML)
 	    elseof N then
-	       OzDocToHTML, Process(N $)|OzDocToHTML, BatchCodeSub(M I + 1 $)
+	       case {Label N} of span then X R1 HTML1 Rr HTML2 in
+		  OzDocToHTML, PushCommon(N ?X)
+		  OzDocToHTML, BatchCodeSub(N 1 ?R1 ?HTML1)
+		  HTML = SEQ([span(COMMON: @Common HTML1) HTML2])
+		  OzDocToHTML, PopCommon(X)
+		  Request = complex(R1)|Rr
+		  OzDocToHTML, BatchCodeSub(M I + 1 ?Rr ?HTML2)
+	       else Rr HTML1 HTML2 in
+		  Request = simple(' ' _)|Rr   %--** insert a variable?
+		  OzDocToHTML, Process(N ?HTML1)
+		  HTML = SEQ([HTML1 HTML2])
+		  OzDocToHTML, BatchCodeSub(M I + 1 ?Rr ?HTML2)
+	       end
 	    end
-	 else nil
+	 else
+	    Request = nil
+	    HTML = EMPTY
 	 end
       end
       meth Process(M $)
@@ -753,9 +767,7 @@ define
 	       [] inline then span(COMMON: @Common HTML)
 	       end
 	    [] 'code.extern' then HTML in
-	       %--** class=linenumbers
-	       HTML = VERBATIM({@MyFontifier   %--** VERBATIM?
-				enqueueFile(@ProgLang M.to $)})
+	       {@MyFontifier enqueueFile(@ProgLang M.to HTML)}
 	       case M.display of display then
 		  BLOCK(blockquote(COMMON: @Common pre(HTML)))
 	       [] inline then code(COMMON: @Common HTML)
@@ -964,7 +976,8 @@ define
 				   end
 			   case Title of unit then EMPTY
 			   else
-			      p(align: center b(OzDocToHTML, Batch(Title 1 $)))
+			      tr(td(p(align: center
+				      b(OzDocToHTML, Batch(Title 1 $)))))
 			   end
 			   OzDocToHTML, Batch(Mr 1 $)))
 	    [] tr then
