@@ -291,7 +291,8 @@ OZ_BI_define(BImergeSpace, 1,1) {
 
   OZ_result(SBB->getRootVar());
 
-  OZ_Return ret = SBB->merge(CBB, isSibling);
+  OZ_Return ret = SBB->merge(CBB);
+
   space->markMerged();
 
   return ret;
