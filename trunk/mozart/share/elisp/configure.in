@@ -20,7 +20,7 @@ dnl  of this file, and for a DISCLAIMER OF ALL
 dnl  WARRANTIES.
 dnl
 
-AC_INIT(oz.el)
+AC_INIT(oz.in)
 
 OZ_INIT
 
