@@ -49,10 +49,6 @@ in
    {System.showInfo Prefix # M}
 end
 
-proc {DebugMessage M}
-   {Show M}
-end
-
 fun {VS2A X}
    {String.toAtom {VirtualString.toString X}}
 end

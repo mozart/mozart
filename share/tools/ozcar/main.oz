@@ -12,9 +12,9 @@ local
    \insert config
    %\insert emacs
    \insert source
-   \insert thr
+   \insert 'thread'
    \insert stack
-   \insert manager
+   \insert menu
    \insert dialog
    \insert tkext
    \insert tree

@@ -105,7 +105,7 @@ class Tree from BaseTree Tk.canvas
    attr
       Selected : undef
 
-   meth init(parent:P width:W height:H)
+   meth init(parent:P width:W<=100 height:H<=100)
       BaseTree,init
       Tk.canvas,tkInit(parent:P width:W height:H)
       {Tk.send pack(self)}
