@@ -36,8 +36,6 @@
 void debugStreamTerm(Thread*);
 void debugStreamReady(Thread*);
 
-void oz_removeExtThread(Thread *tt);
-
 inline
 Thread * _newThread(int prio, Board *bb) {
   Thread *th = new Thread(S_RTHREAD,prio,bb,oz_newId());
@@ -130,7 +128,10 @@ void oz_wakeupThread(Thread *tt) {
     bb->incSolveThreads();
 
     if (tt->wasExtThread()) {
-      oz_removeExtThread(tt);
+      do {
+        bb->clearSuspList(tt);
+        bb = bb->getParent();
+      } while (!bb->isRoot());
     }
 
     tt->clearExtThread();

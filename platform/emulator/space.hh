@@ -41,8 +41,6 @@ void oz_reduceTrailOnSuspend();
 void oz_reduceTrailOnFail();
 void oz_reduceTrailOnEqEq();
 
-void oz_removeExtThread(Thread *tt);
-
 void oz_checkExtSuspension(Suspension susp, Board * home);
 void _checkExtSuspension(Suspension susp);
 

@@ -33,45 +33,6 @@
 #include "var_base.hh"
 #include "var_all.hh"
 
-
-#ifdef DEBUG_STABLE
-Thread *board_constraints_thr = NULL;
-SuspList * board_constraints = NULL;
-
-void printBCDebug(Board * b) { printBC(cerr, b); }
-
-void printBC(ostream &ofile, Board * b)
-{
-  SuspList *sl;
-  Board *hb;
-
-  sl = board_constraints;
-  board_constraints = (SuspList *) NULL;
-
-  while (sl != NULL) {
-    Thread *thr = sl->getElem ();
-    if (thr->isDeadThread () ||
-        (hb = thr->getBoard()) == NULL ||
-        hb->isFailed ()) {
-      sl = sl->dispose ();
-      continue;
-    }
-
-    thr->print (ofile);
-    ofile << endl;
-    if (b) {
-      ofile << "    ---> " << (void *) b << endl;
-    }
-
-    sl = sl->getNext();
-    board_constraints = new SuspList (thr, board_constraints);
-  }
-
-  ofile.flush();
-}
-
-#endif
-
 Bool oz_var_valid(OzVariable *cv,TaggedRef *ptr,TaggedRef val) {
   return oz_var_validINLINE(cv,ptr,val);
 }

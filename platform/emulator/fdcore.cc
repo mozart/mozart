@@ -504,24 +504,3 @@ OZ_C_proc_begin(BIfdWatchMax, 3)
 
   return (OZ_unify (OZ_getCArg(2), oz_false()));
 } OZ_C_proc_end
-
-//-----------------------------------------------------------------------------
-// debug stuff
-
-#ifdef DEBUG_STABLE
-
-OZ_C_proc_begin(debugStable,0)
-{
-  printBCDebug();
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(resetStable,0)
-{
-  board_constraints = NULL;
-  return PROCEED;
-}
-OZ_C_proc_end
-
-#endif

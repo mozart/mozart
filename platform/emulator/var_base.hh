@@ -68,7 +68,7 @@ enum TypeOfVariable {
 #define OZ_VAR_INVALID ((TypeOfVariable) -1)
 #endif
 
-#define AddSuspToList0(List, Susp, Home)                \
+#define AddSuspToList(List, Susp, Home)         \
 {                                                       \
   if ((List) && ((List)->getElem() == Susp)) {          \
   } else {                                              \
@@ -76,26 +76,6 @@ enum TypeOfVariable {
     if (Home) oz_checkExtSuspension(Susp, Home);        \
   }                                                     \
 }
-
-#ifdef DEBUG_STABLE
-
-#define AddSuspToList(List, Susp, Home)                         \
-{                                                               \
-  AddSuspToList0(List, Susp, Home);                             \
-                                                                \
-  if (board_constraints_thr != Susp) {                          \
-    board_constraints_thr = Susp;                               \
-    board_constraints = new SuspList(board_constraints_thr,     \
-                                     board_constraints);        \
-  }                                                             \
-}
-
-#else
-
-#define AddSuspToList(List, Susp, Home) AddSuspToList0(List, Susp, Home)
-
-#endif
-
 
 #define STORE_FLAG 1
 #define REIFIED_FLAG 2

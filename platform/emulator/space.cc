@@ -242,18 +242,6 @@ void oz_reduceTrailOnEqEq()
  * Search
  * -------------------------------------------------------------------------*/
 
-void oz_removeExtThread(Thread *tt) {
-  Assert(tt->wasExtThread());
-
-  Board *sb = GETBOARD(tt);
-
-  while (!sb->isRoot()) {
-    sb->clearSuspList(tt);
-    sb = sb->getParent();
-  }
-
-}
-
 void oz_checkExtSuspension(Suspension susp, Board * varHome) {
 
   if (!oz_onToplevel()) {

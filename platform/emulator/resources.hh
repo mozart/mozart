@@ -245,7 +245,6 @@ error include resources.hh before mozart.h
 
 //#define DEBUG_META
 //#define DEBUG_STACK
-//#define DEBUG_STABLE
 //#define DEBUG_THREADS
 //#define DEBUG_NONMONOTONIC
 //#define DEBUG_LTQ

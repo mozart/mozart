@@ -1623,10 +1623,6 @@ void AM::gc(int msgLevel) {
   aritytable.gc ();
   threadsPool.doGC();
 
-#ifdef DEBUG_STABLE
-  board_constraints = board_constraints->gc ();
-#endif
-
   // mm2: Assert(isEmptySuspendVarList());
   emptySuspendVarList();
 
