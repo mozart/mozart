@@ -44,7 +44,6 @@ extern int h_errno;
 
 
 extern "C" char *inet_ntoa(struct in_addr in);
-extern "C" char *ozStrerror(int errno);
 
 
 #define max_vs_length 4096*4
@@ -116,8 +115,8 @@ while ((RET = CALL) < 0) {                          \
 #define RETURN_ANY_ERROR(OUT,NUMBER,STRING,GROUP)                    \
 {  OZ_Term err_tuple = OZ_tupleC("error",3);                      \
    if (OZ_putArg(err_tuple, 1, OZ_CToInt(NUMBER)) &&              \
-       OZ_putArg(err_tuple, 2, OZ_CToList(STRING)) &&               \
-       OZ_putArg(err_tuple, 3, OZ_CToList(GROUP))) {                \
+       OZ_putArg(err_tuple, 2, OZ_CToString(STRING)) &&               \
+       OZ_putArg(err_tuple, 3, OZ_CToString(GROUP))) {                \
      return OZ_unify(OUT, err_tuple);                                \
    } else {                                                          \
      return FAILED;                                                  \
@@ -126,7 +125,7 @@ while ((RET = CALL) < 0) {                          \
 
 // return upon unix-error
 #define RETURN_UNIX_ERROR(OUT) \
-{ RETURN_ANY_ERROR(OUT,errno,ozStrerror(errno),"unix"); }
+{ RETURN_ANY_ERROR(OUT,errno,OZ_unixError(errno),"unix"); }
 
 
 #if defined(SUNOS_SPARC) || defined(SOLARIS_SPARC) || defined(LINUX_I486) || defined(HPUX_700) || defined(IRIX5_MIPS) || defined(AIX3_RS6000)
@@ -216,36 +215,6 @@ static char* h_strerror(const int err) {
 
 
 
-
-// -------------------------------------------------
-// buffers to list of (unsigned char)
-// -------------------------------------------------
-
-static OZ_Term OZ_CToList(const char *s)
-{
-  // gives back a string as a list (an Oz string), i.e. scans the string
-  // until the usual C-terminator '\0' is encountered
-  OZ_Term head, prev, tail;
-
-  if (*s == '\0')
-    return OZ_nil();
-
-  head = OZ_tupleC("|", 2);
-  OZ_putArg(head, 1, OZ_CToInt((unsigned char) *s++));
-  prev = head;
-  tail = head;
-
-  while (*s) {
-    tail = OZ_tupleC("|", 2);
-    OZ_putArg(tail, 1, OZ_CToInt((unsigned char) *s++));
-    OZ_putArg(prev, 2, tail);
-    prev = tail;
-  }
-
-  OZ_putArg(tail, 2, OZ_nil());
-  return head;
-}
-
 static OZ_Term openbuff2list(int len, const char *s, const OZ_Term tail)
 {
   // gives back a list of length len which elments are taken from a C-string
@@ -307,7 +276,7 @@ OZ_Bool atom2buff(OZ_Term atom, char **write_buff, int *len,
   }
 
   if (*len == max_vs_length && c) {
-    *susp = OZ_CToList(string);
+    *susp = OZ_CToString(string);
     *rest = *susp;
     return SUSPEND;
   }
@@ -332,7 +301,7 @@ OZ_Bool int2buff(OZ_Term ozint, char **write_buff, int *len,
   }
 
   if (*len == max_vs_length && c) {
-    *susp = OZ_CToList(help);
+    *susp = OZ_CToString(help);
     *rest = *susp;
     OZ_free(string);
     return SUSPEND;
@@ -358,7 +327,7 @@ OZ_Bool float2buff(OZ_Term ozfloat, char **write_buff, int *len,
   }
 
   if (*len == max_vs_length && c) {
-    *susp = OZ_CToList(help);
+    *susp = OZ_CToString(help);
     *rest = *susp;
     OZ_free(string);
     return SUSPEND;
@@ -998,11 +967,11 @@ OZ_C_ioproc_begin(unix_acceptInet,4)
                                           fromlen, AF_INET);
   if (gethost) {
     return (OZ_unifyInt(port, ntohs(from.sin_port)) == PROCEED
-            && OZ_unify(host, OZ_CToList(gethost->h_name)) == PROCEED
+            && OZ_unify(host, OZ_CToString(gethost->h_name)) == PROCEED
             && OZ_unifyInt(out, fd) == PROCEED) ? PROCEED : FAILED;
   } else {
     return (OZ_unifyInt(port, ntohs(from.sin_port)) == PROCEED
-            && OZ_unify(host, OZ_CToList(inet_ntoa(from.sin_addr))) == PROCEED
+            && OZ_unify(host, OZ_CToString(inet_ntoa(from.sin_addr))) == PROCEED
             && OZ_unifyInt(out, fd) == PROCEED) ? PROCEED : FAILED;
   }
 }
@@ -1020,7 +989,7 @@ OZ_C_ioproc_begin(unix_acceptUnix,3)
 
   WRAPCALL(accept(sock,(struct sockaddr *)&from, &fromlen), fd, out);
 
-  return (OZ_unify(path, OZ_CToList(from.sun_path)) == PROCEED
+  return (OZ_unify(path, OZ_CToString(from.sun_path)) == PROCEED
     && OZ_unifyInt(out, fd) == PROCEED) ? PROCEED: FAILED;
 }
 OZ_C_proc_end
@@ -1285,7 +1254,7 @@ OZ_C_ioproc_begin(unix_receiveFromInet,8)
 
   return (OZ_unify(localhead, head) == PROCEED
           && OZ_unifyInt(port, ntohs(from.sin_port)) == PROCEED
-          && OZ_unify(host, OZ_CToList(gethost ?
+          && OZ_unify(host, OZ_CToString(gethost ?
                                         gethost->h_name :
                                         inet_ntoa(from.sin_addr))) == PROCEED
           && OZ_unifyInt(outN, ret) == PROCEED) ? PROCEED : FAILED;
@@ -1324,7 +1293,7 @@ OZ_C_ioproc_begin(unix_receiveFromUnix,7)
   free(buf);
 
   return (OZ_unify(localhead, head) == PROCEED
-          && OZ_unify(path, OZ_CToList(from.sun_path)) == PROCEED
+          && OZ_unify(path, OZ_CToString(from.sun_path)) == PROCEED
           && OZ_unifyInt(outN, ret) == PROCEED) ? PROCEED : FAILED;
 
 }
@@ -1446,7 +1415,7 @@ static OZ_Term mkAliasList(char **alias)
   if (*alias == 0) {
     return OZ_nil();
   } else {
-    return OZ_cons(OZ_CToList(*alias), mkAliasList(++alias));
+    return OZ_cons(OZ_CToString(*alias), mkAliasList(++alias));
   }
 }
 
@@ -1457,10 +1426,10 @@ static OZ_Term mkAddressList(char **lstptr)
   } else {
 
 #ifdef SUNOS_SPARC
-    return OZ_cons(OZ_CToList(inet_ntoa(*(struct in_addr *)lstptr)),
+    return OZ_cons(OZ_CToString(inet_ntoa(*(struct in_addr *)lstptr)),
                    mkAddressList(++lstptr));
 #else
-    return OZ_cons(OZ_CToList(inet_ntoa(*((struct in_addr *) *lstptr))),
+    return OZ_cons(OZ_CToString(inet_ntoa(*((struct in_addr *) *lstptr))),
                    mkAddressList(++lstptr));
 #endif
   }
@@ -1479,7 +1448,7 @@ OZ_C_ioproc_begin(unix_getHostByName, 4)
     RETURN_NET_ERROR(offName);
   }
 
-  return (OZ_unify(offName,OZ_CToList(hostaddr->h_name)) == PROCEED &&
+  return (OZ_unify(offName,OZ_CToString(hostaddr->h_name)) == PROCEED &&
           OZ_unify(aliases,mkAliasList(hostaddr->h_aliases)) == PROCEED &&
           OZ_unify(addresses,mkAddressList(hostaddr->h_addr_list)) ==
           PROCEED)
@@ -1538,7 +1507,7 @@ OZ_C_ioproc_begin(unix_getEnv,3)
   if (envValue == 0)
     return OZ_unify(OZ_getCArg(1),OZ_getCArg(2));
 
-  return OZ_unify(OZ_getCArg(2),OZ_CToList(envValue));
+  return OZ_unify(OZ_getCArg(2),OZ_CToString(envValue));
 }
 OZ_C_proc_end
 
@@ -1577,7 +1546,7 @@ OZ_C_ioproc_begin(unix_tempName, 3)
   }
   filename = ozstrdup(filename);
 
-  return OZ_unify(name, OZ_CToList(filename));
+  return OZ_unify(name, OZ_CToString(filename));
 }
 OZ_C_proc_end
 
