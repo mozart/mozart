@@ -1114,7 +1114,8 @@ public:
 
   //
   OZ_Term get(int i) {
-    return (i>=size) ? makeTaggedNULL() : array[i];
+    Assert(i < size);
+    return (array[i]);
   }
   void set(OZ_Term val, int pos) {
     Assert(pos >= 0);
@@ -1122,6 +1123,12 @@ public:
       resize(pos);
     array[pos] = val;
   }
+#ifdef DEBUG_CHECK
+  void resetTT() {
+    for (int i = 0; i < size; i++) 
+      array[i] = (OZ_Term) 0;
+  }
+#endif  
 
 };
 
@@ -1193,6 +1200,7 @@ public:
   //
   // begin building:
   void build() {
+    DebugCode(resetTT(););
     CrazyDebug(debugNODES = 0;);
     DebugCode(ringbuf.init(););
     putTask(BT_spointer, &result);
@@ -1301,6 +1309,10 @@ public:
     EnsureBTSpace(frame, 2);
     PutBTFrameArg(frame, n);
     PutBTTask(frame, BT_takeRecordLabelMemo);
+    // Setting the slot to a 'GC' TaggedRef is exploited later by
+    // '_intermediate' tasks to reassign a proper value passed over
+    // that '_intermediate' task;
+    set(makeGCTaggedInt(n), n);
     SetBTFrame(frame);
   }
 
