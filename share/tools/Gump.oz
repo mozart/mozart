@@ -28,21 +28,22 @@
 functor $
 
 import
-   SP.{System  = 'System'
-       Foreign = 'Foreign'}
+   Open.{file}
 
-   OP.{Open = 'Open'
-       OS   = 'OS'}
+   OS.{system}
+
+   System.{get
+	   valueToVirtualString}
+
+   Foreign.{load}
 
 export
-   'Gump': Gump
+   makeProductionTemplates: MakeProductionTemplates
+   transformScanner:        TransformScanner
+   transformParser:         TransformParser
    
 body
    \insert gump/Main.oz
-in
-   Gump = gump(makeProductionTemplates: MakeProductionTemplates
-	       transformScanner: TransformScanner
-	       transformParser: TransformParser)
 end
 
 \else

@@ -20,24 +20,24 @@
 %%% WARRANTIES.
 %%%
 
-ExplorerClass,add(information proc {$ N X} {Show N#X} end
+ExplorerClass,add(information proc {$ N X} {System.show N#X} end
 		  label: 'Show')
 
-ExplorerClass,add(information proc {$ N X} {Browse N#X} end
+ExplorerClass,add(information proc {$ N X} {Browser.browse N#X} end
 		  label: 'Browse')
 
-ExplorerClass,add(compare proc {$ N1 X1 N2 X2} {Show N1#N2#X1#X2} end
+ExplorerClass,add(compare proc {$ N1 X1 N2 X2} {System.show N1#N2#X1#X2} end
 		  label: 'Show')
 
-ExplorerClass,add(compare proc {$ N1 X1 N2 X2} {Browse N1#N2#X1#X2} end
+ExplorerClass,add(compare proc {$ N1 X1 N2 X2} {Browser.browse N1#N2#X1#X2} end
 		  label: 'Browse')
 
 ExplorerClass,add(statistics proc {$ N S}
-				{Show N#{Record.subtract S shape}}
+				{System.show N#{Record.subtract S shape}}
 			     end
 		  label: 'Show')
 
 ExplorerClass,add(statistics proc {$ N S}
-				{Browse N#{Record.subtract S shape}}
+				{Browser.browse N#{Record.subtract S shape}}
 			     end
 		  label: 'Browse')

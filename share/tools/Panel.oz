@@ -25,16 +25,24 @@
 functor $ prop once
 
 import
-   System.{gaga}
+   System.{get
+	   set
+	   gcDo
+	   valueToVirtualString
+	   exit}
 
    Open.{file}
 
    Tk
    
-   TkTools.{note
+   TkTools.{error
+	    dialog
+	    note
 	    notebook
+	    scale
 	    textframe
-	    numberentry}
+	    numberentry
+	    menubar}
    
 export
    'class': PanelClass
