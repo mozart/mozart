@@ -297,7 +297,7 @@ end
 a problem with the server:
 <chunk><title/Client side/
 proc {StatP M}
-   R W T
+   R
 in
    {Fault.enable R 'thread'(this) nil _}
    {Guard P [permFail]
