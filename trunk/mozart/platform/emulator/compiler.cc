@@ -361,7 +361,7 @@ OZ_BI_define(BInewHashTable,4,0) {
     tes = oz_deref(es->getTail());
   }
 
-  Assert(oz_isNil(es));
+  Assert(oz_isNil(tes));
   
   code->writeAddress(ht);
   return PROCEED;

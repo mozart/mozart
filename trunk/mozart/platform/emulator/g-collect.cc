@@ -27,7 +27,8 @@
 #undef  S_CLONE
 
 #include "codearea.hh"
-// #include <malloc.h>
+#include "indexing.hh"
+
 
 /*
  * Entry points for code garbage collection
@@ -252,7 +253,7 @@ void PrTabEntry::gCollectDispose(void) {
 }
 
 inline
-void AbstractionEntry::freeUnusedEntries() {
+void AbstractionEntry::freeUnusedEntries(void) {
   AbstractionEntry *aux = allEntries;
   allEntries = NULL;
   while (aux) {
@@ -279,35 +280,282 @@ void AbstractionEntry::gCollectAbstractionEntry(void) {
 }
 
 inline
-void CodeGCList::collectGClist(void) { 
-  CodeGCList *aux = this;
-  while(aux) {
-    for (int i=aux->nextFree; i--; ) {
-      switch (aux->block[i].getTag()) {
-      case C_TAGGED:
-	oz_gCollectTerm(*(TaggedRef*)aux->block[i].getPtr(),
-			*(TaggedRef*)aux->block[i].getPtr());
-	break;
-      case C_ABSTRENTRY:
-	(*((AbstractionEntry**) (aux->block[i].getPtr())))->gCollectAbstractionEntry();
-	break;
-      case C_INLINECACHE:
-	((InlineCache*)aux->block[i].getPtr())->invalidate();
-	break;
-      case C_FREE:
-	break;
-      default:
-	Assert(0);
-      }
+void IHashTable::gCollect(void) {
+  for (int i=getSize(); i--; )
+    if (entries[i].val)
+      oz_gCollectTerm(entries[i].val,entries[i].val);
+}
+
+
+#define CODEGC_ABSTRACTION(PCR) \
+{ AbstractionEntry * ae = (AbstractionEntry *) getAdressArg(PC+PCR); \
+  if (ae) ae->gCollectAbstractionEntry();                            \
+}
+
+#define CODEGC_TAGGED(PCR) \
+  oz_gCollectTerm(getTaggedArg(PC+PCR),getTaggedArg(PC+PCR));
+
+#define CODEGC_RECORDARITY(PCR) {};
+
+#define CODEGC_CACHE(PCR) \
+  ((InlineCache *) (PC+PCR))->invalidate();
+
+#define CODEGC_CALLMETHODINFO(PCR) \
+{ CallMethodInfo * cmi = (CallMethodInfo *) getAdressArg(PC+PCR); \
+  if (cmi) oz_gCollectTerm(cmi->mn, cmi->mn);                     \
+}
+
+#define CODEGC_IHASHTABLE(PCR) \
+{ IHashTable * iht = (IHashTable *) getAdressArg(PC+PCR); \
+  if (iht) iht->gCollect();                               \
+}
+
+inline
+void CodeArea::gCollectInstructions(void) {
+  ProgramCounter PC = getStart();
+  while (OK) {
+#ifdef THREADED
+    if (!*PC) {
+      // Can happen while codearea is under construction from compiler:
+      // Initially, the codearea is filled with zeros.
+      // The check is only necessary for threaded code, since otherwise
+      // null represents ENDOFFILE;
+      return;
     }
-    aux = aux->next;
+#endif
+    Opcode op = getOpcode(PC);
+    switch (op) {
+    case ENDOFFILE:
+      return;
+    case PROFILEPROC:
+    case RETURN:
+    case POPEX:
+    case DEALLOCATEL10:
+    case DEALLOCATEL9:
+    case DEALLOCATEL8:
+    case DEALLOCATEL7:
+    case DEALLOCATEL6:
+    case DEALLOCATEL5:
+    case DEALLOCATEL4:
+    case DEALLOCATEL3:
+    case DEALLOCATEL2:
+    case DEALLOCATEL1:
+    case DEALLOCATEL:
+    case ALLOCATEL10:
+    case ALLOCATEL9:
+    case ALLOCATEL8:
+    case ALLOCATEL7:
+    case ALLOCATEL6:
+    case ALLOCATEL5:
+    case ALLOCATEL4:
+    case ALLOCATEL3:
+    case ALLOCATEL2:
+    case ALLOCATEL1:
+    case SKIP:
+      PC += 1;
+      break;
+    case DEFINITIONCOPY:
+    case DEFINITION:
+      CODEGC_ABSTRACTION(4);
+      PC += 6;      
+      break;
+    case CLEARY:
+    case GETVOID:
+    case GETVARIABLEY:
+    case GETVARIABLEX:
+    case FUNRETURNG:
+    case FUNRETURNY:
+    case FUNRETURNX:
+    case GETRETURNG:
+    case GETRETURNY:
+    case GETRETURNX:
+    case EXHANDLER:
+    case BRANCH:
+    case SETSELFG:
+    case GETSELF:
+    case ALLOCATEL:
+    case UNIFYVOID:
+    case UNIFYVALUEG:
+    case UNIFYVALUEY:
+    case UNIFYVALUEX:
+    case UNIFYVARIABLEY:
+    case UNIFYVARIABLEX:
+    case GETLISTG:
+    case GETLISTY:
+    case GETLISTX:
+    case SETVOID:
+    case SETVALUEG:
+    case SETVALUEY:
+    case SETVALUEX:
+    case SETVARIABLEY:
+    case SETVARIABLEX:
+    case PUTLISTY:
+    case PUTLISTX:
+    case CREATEVARIABLEY:
+    case CREATEVARIABLEX:
+    case ENDDEFINITION:
+      PC += 2;
+      break;
+    case INLINEMINUS1:
+    case INLINEPLUS1:
+    case CALLBI:
+    case GETVARVARYY:
+    case GETVARVARYX:
+    case GETVARVARXY:
+    case GETVARVARXX:
+    case TESTLISTG:
+    case TESTLISTY:
+    case TESTLISTX:
+    case LOCKTHREAD:
+    case TAILCALLG:
+    case TAILCALLX:
+    case CALLG:
+    case CALLY:
+    case CALLX:
+    case CALLGLOBAL:
+    case UNIFYVALVARGY:
+    case UNIFYVALVARGX:
+    case UNIFYVALVARYY:
+    case UNIFYVALVARYX:
+    case UNIFYVALVARXY:
+    case UNIFYVALVARXX:
+    case UNIFYXG:
+    case UNIFYXY:
+    case UNIFYXX:
+    case CREATEVARIABLEMOVEY:
+    case CREATEVARIABLEMOVEX:
+    case MOVEGY:
+    case MOVEGX:
+    case MOVEYY:
+    case MOVEYX:
+    case MOVEXY:
+    case MOVEXX:
+      PC += 3;
+      break;
+    case TESTLE:
+    case TESTLT:
+    case MOVEMOVEYXXY:
+    case MOVEMOVEXYYX:
+    case MOVEMOVEYXYX:
+    case MOVEMOVEXYXY:
+      PC += 5;
+      break;
+    case GETRECORDG:
+    case GETRECORDY:
+    case GETRECORDX:
+    case PUTRECORDY:
+    case PUTRECORDX:
+      CODEGC_TAGGED(1);
+      CODEGC_RECORDARITY(2);
+      PC += 4;
+      break;
+    case CALLCONSTANT:
+    case GETNUMBERG:
+    case GETNUMBERY:
+    case GETNUMBERX:
+    case GETLITERALG:
+    case GETLITERALY:
+    case GETLITERALX:
+    case PUTCONSTANTY:
+    case PUTCONSTANTX:
+      CODEGC_TAGGED(1);
+      PC += 3;
+      break;
+    case LOCALVARNAME:
+    case GLOBALVARNAME:
+    case UNIFYLITERAL:
+    case UNIFYNUMBER:
+    case SETCONSTANT:
+      CODEGC_TAGGED(1);
+      PC += 2;
+      break;
+    case SETPROCEDUREREF:
+      CODEGC_ABSTRACTION(1);
+      PC += 2;
+      break;
+    case TESTBI:
+    case INLINEMINUS:
+    case INLINEPLUS:
+    case TESTBOOLG:
+    case TESTBOOLY:
+    case TESTBOOLX:
+    case GETLISTVALVARX:
+      PC += 4;
+      break;
+    case CALLMETHOD:
+      CODEGC_CALLMETHODINFO(1);
+      PC += 3;
+      break;
+    case FASTTAILCALL:
+    case FASTCALL:
+    case CALLPROCEDUREREF:
+      CODEGC_ABSTRACTION(1);
+      PC += 3;
+      break;
+    case TAILSENDMSGG:
+    case TAILSENDMSGY:
+    case TAILSENDMSGX:
+    case SENDMSGG:
+    case SENDMSGY:
+    case SENDMSGX:
+      CODEGC_TAGGED(1);
+      CODEGC_RECORDARITY(3);
+      CODEGC_CACHE(4);
+      PC += 6;
+      break;
+    case INLINEASSIGN:
+    case INLINEAT:
+      CODEGC_TAGGED(1);
+      CODEGC_CACHE(3);
+      PC += 5;
+      break;
+    case TESTNUMBERG:
+    case TESTNUMBERY:
+    case TESTNUMBERX:
+    case TESTLITERALG:
+    case TESTLITERALY:
+    case TESTLITERALX:
+      CODEGC_TAGGED(2);
+      PC += 4;
+      break;
+    case TESTRECORDG:
+    case TESTRECORDY:
+    case TESTRECORDX:
+      CODEGC_TAGGED(2);
+      CODEGC_RECORDARITY(3);
+      PC += 5;
+      break;
+    case MATCHG:
+    case MATCHY:
+    case MATCHX:
+      CODEGC_IHASHTABLE(2);
+      PC += 3;
+      break;
+    case DEBUGEXIT:
+    case DEBUGENTRY:
+      CODEGC_TAGGED(1);
+      CODEGC_TAGGED(2);
+      CODEGC_TAGGED(3);
+      CODEGC_TAGGED(4);
+      PC += 5;
+      break;
+    case INLINEDOT:
+      CODEGC_TAGGED(2);
+      CODEGC_CACHE(4);
+      PC += 6;
+      break;
+    default: 
+      Assert(0);
+      break;
+    }
   }
 }
 
 void CodeArea::gCollectCodeBlock(void) {
   if (referenced == NO) {
     referenced = OK;
-    gclist->collectGClist();
+    if (this != CodeArea::skipInGC)
+      gCollectInstructions();
   }
 }
 
