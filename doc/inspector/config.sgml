@@ -306,8 +306,10 @@ end>>>
     without beeing rebuilt provided that they can be distinguished using <<Value.status>>
     and transformed to a built-in type. In this case,
     it is sufficient to add a new mapping function attached to that type.
-    If this is not possible, the inspector will show <<'&lt;type&gt;'>>&nbsp;instead,
-    where type results from <<Value.status>>.
+    In the default case, the inspector will use
+    <<Value.toVirtualString>> to obtain a useful representation of
+    the unknown value. Depending on its type, the value
+    will be monitored und updated, too.
   <P>
     For example, to
     introduce weak dictionaries to the inspector use the code shown below.
