@@ -177,7 +177,7 @@ extern void *    _FUNDECL(OZ_getHeapChunkData,(OZ_Term t));
 extern int       _FUNDECL(OZ_getHeapChunkSize,(OZ_Term t));
 extern int       _FUNDECL(OZ_isHeapChunk,(OZ_Term t));
 
-extern int       _FUNDECL(OZ_getUniqueId,(void));
+extern unsigned int _FUNDECL(OZ_getUniqueId,(void));
 
 
 #define OZ_assertList(t)                        \
