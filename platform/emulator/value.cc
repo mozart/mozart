@@ -270,7 +270,8 @@ Abstraction::Abstraction(TaggedRef name, int arity, GName *gn)
   PrTabEntry *aux = findCodeGName(gn);
   if (aux==NULL) {
     aux = new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0);
-    GName *gnret = addGName(copyGName(gn),aux);
+    GName *gnret = copyGName(gn);
+    addGName(gnret,aux);
     aux->setGName(gnret);
   }
   pred = aux;
