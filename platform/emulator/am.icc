@@ -277,7 +277,7 @@ Board *Abstraction::getBoardFast()
 inline
 Board *Object::getBoardFast()
 {
-  return isDeep() ? ((DeepObject*)this)->getBoardFast() : am.rootBoard;
+  return isDeep() ? ((DeepObject*)this)->home->getBoardFast() : am.rootBoard;
 }
 
 /*
