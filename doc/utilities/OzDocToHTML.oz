@@ -451,9 +451,22 @@ define
                            [{@MyAuthorDB get(M.to M.key $)}]}
                EMPTY
             [] meta then
-               {Dictionary.put @Meta M.name
-                {Append {Dictionary.condGet @Meta M.name nil}
-                 [{String.toAtom M.value}]}}
+               if {HasFeature M value} then
+                  if {HasFeature M arg1} orelse {HasFeature M arg2} then
+                     {Exception.raiseError ozDoc(sgmlToHTML illegalMeta M)}
+                  end
+                  {Dictionary.put @Meta M.name
+                   {Append {Dictionary.condGet @Meta M.name nil}
+                    [{String.toAtom M.value}]}}
+               else
+                  if {HasFeature M arg1} andthen {HasFeature M arg2} then
+                     {Dictionary.put @Meta M.name
+                      {Append {Dictionary.condGet @Meta M.name nil}
+                       [{String.toAtom M.arg1}#{String.toAtom M.arg2}]}}
+                  else
+                     {Exception.raiseError ozDoc(sgmlToHTML illegalMeta M)}
+                  end
+               end
                EMPTY
             [] abstract then
                Abstract <- blockquote(COMMON: @Common
@@ -1050,23 +1063,41 @@ define
          end
       end
       meth PrepareNode(M ?X ?HTML)
-         if @Split
-            andthen {Member {CondSelect M id unit}
-                     {Dictionary.condGet @Meta 'html.split' nil}}
-         then
-            SomeSplit <- true
-            X = @CurrentNode#@TOC#@TOCMode
-            NodeCounter <- @NodeCounter + 1
-            CurrentNode <- 'node'#@NodeCounter#'.html'
-            TOC <- nil
-            HTML = EMPTY
-         else
+         case OzDocToHTML, GetSplitNode(M $) of unit then
             X = unit
             HTML = if @TOCMode then hr()
                    else EMPTY
                    end
+         elseof Node then
+            SomeSplit <- true
+            X = @CurrentNode#@TOC#@TOCMode
+            CurrentNode <- Node
+            TOC <- nil
+            HTML = EMPTY
          end
          TOCMode <- false
+      end
+      meth GetSplitNode(M $)
+         if @Split then
+            case {CondSelect M id unit} of unit then unit
+            elseof ID then Splits in
+               Splits = {Dictionary.condGet @Meta 'html.split' nil}
+               OzDocToHTML, GetSplitNodeSub(Splits ID $)
+            end
+         else unit
+         end
+      end
+      meth GetSplitNodeSub(Ms ID $)
+         case Ms of M|Mr then
+            case M of !ID then
+               NodeCounter <- @NodeCounter + 1
+               'node'#@NodeCounter#'.html'
+            elseof !ID#Node then Node
+            else
+               OzDocToHTML, GetSplitNodeSub(Mr ID $)
+            end
+         [] nil then unit
+         end
       end
       meth PrepareBibNode(?X ?HTML)
          if @Split andthen {Dictionary.member @Meta 'html.split.bib'} then
