@@ -6,13 +6,14 @@ INSTALLATION INSTRUCTIONS FOR THE MOZART SYSTEM
 * Requirements
 
   GNU GCC 2.7
-  GNU make 
+  GNU make
   GNU m4
   GNU bison 1.25
   GNU flex 2.5.3
   GNU mp library 2.0
+  zlib 1.1
   Tcl/Tk 8.0
-  Perl
+  Perl 5
 
   SP 1.3
   PSGML 1.0.1
