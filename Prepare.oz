@@ -72,6 +72,7 @@ define
 	 [] K|Kr then
 	    case K
 	    of "__extension__"              then ""
+	    [] "__signed"                   then ""
 	    [] "((noreturn));"              then ""
 	    [] "__ssize_t"                  then "unsigned int"
 	    [] "(__const"                   then "(const"
