@@ -1082,6 +1082,14 @@ void AM::gCollect(int msgLevel)
   _rootBoard = _rootBoard->gCollectBoard();   // must go first!
   setCurrent(_rootBoard, _rootBoard->getOptVar());
   aritytable.gCollect();
+
+  // gCollectCodeAreaStart() decides whether or not this gc will discard
+  // CodeAreas. Since threads contain indirect pointers to CodeAreas, it
+  // must be run before threadsPool.gCollect().  Fixes a bug where a thread
+  // had the only live reference to a CodeArea.
+  // PR#953.
+  CodeArea::gCollectCodeAreaStart();
+
   threadsPool.gCollect();
 
   // mm2: Assert(isEmptySuspendVarList());
@@ -1091,7 +1099,6 @@ void AM::gCollect(int msgLevel)
     oz_gCollectTerm(defaultExceptionHdl,defaultExceptionHdl);
   oz_gCollectTerm(debugStreamTail,debugStreamTail);
 
-  CodeArea::gCollectCodeAreaStart();
   PrTabEntry::gCollectPrTabEntries();
   extRefs = extRefs->gCollect();
 
