@@ -16,7 +16,7 @@ AC_DEFUN(OZSKEL_PATH_PROG, [
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
     OZSKEL_for="$dummy_PATH"
-    AC_PATH_PROG($1,$2,,$OZSKEL_for)
+    AC_PATH_PROGS($1,$2.exe $2,,$OZSKEL_for)
     case "$host_os" in
       cygwin32) ;;
       *) $1=`echo $$1 | sed -e "s|//|/|g"`;;
@@ -71,7 +71,15 @@ dnl *****************************************************************
 dnl windows cross compilation
 dnl *****************************************************************
 
+AC_DEFUN(OZSKEL_WINDLLDIR,[
+  AC_ARG_WITH(windlldir,
+    [--with-windlldir=DIR],
+    OZSKEL_cv_WINDLLDIR=$with_windlldir)
+  : ${VAR_WINDLLDIR:=$OZSKEL_cv_WINDLLDIR}
+])
+
 AC_DEFUN(OZSKEL_OZTOOL,[
+  AC_SUBST(VAR_WINDLLDIR)
   OZSKEL_PATH_PROG(VAR_OZTOOL_HOST,oztool)
   case "$target" in
     NONE)
@@ -80,6 +88,7 @@ AC_DEFUN(OZSKEL_OZTOOL,[
     i386-mingw32)
 	AC_MSG_RESULT(cross compiling for windows)
 	VAR_OZTOOL="sh ${target}-oztool"
+	OZSKEL_WINDLLDIR
 	;;
     *)
 	AC_MSG_ERROR("only known cross-compile target is i386-mingw32")

@@ -291,6 +291,7 @@ TAR_DIR  = $(TMP_DIR)/$(PKG_NAME)
 TGZ_FILE = $(BUILDTOP)/$(PKG_NAME).tgz
 ZIP_FILE = $(BUILDTOP)/$(PKG_NAME).zip
 TAR_FILE = $(BUILDTOP)/$(PKG_NAME).tar
+PKG_FILE = $(BUILDTOP)/$(PKG_NAME).pkg
 
 ifndef PKG_METHOD
 ifdef PKG_SOURCES
@@ -374,8 +375,9 @@ clean::
 TGZ_FILE_DST	= $(subst $(BUILDTOP)/,$(PKGDIR)/,$(TGZ_FILE))
 TAR_FILE_DST	= $(subst $(BUILDTOP)/,$(PKGDIR)/,$(TAR_FILE).Z)
 ZIP_FILE_DST	= $(subst $(BUILDTOP)/,$(PKGDIR)/,$(ZIP_FILE))
+PKG_FILE_DST	= $(subst $(BUILDTOP)/,$(PKGDIR)/,$(PKG_FILE))
 
-INSTALL_FILES_DST = $(TGZ_FILE_DST) $(TAR_FILE_DST) $(ZIP_FILE_DST)
+INSTALL_FILES_DST = $(TGZ_FILE_DST) $(TAR_FILE_DST) $(ZIP_FILE_DST) $(PKG_FILE_DST)
 
 $(INSTALL_FILES_DST): $(PKGDIR)/% : $(BUILDTOP)/%
 	$(INSTALL_FILE) $< $@
@@ -397,6 +399,38 @@ clean::
 	-rm -f $(ZIP_FILE)
 
 #=====================================================================
+# OZPM SUPPORT
+#=====================================================================
+
+OZPMINFO	= $(TMP_DIR)/OZPMINFO
+
+ifndef PKG_INFO
+define PKG_INFO
+echo "id:      $(PKG_MOGUL_URI)" >> $(OZPMINFO)
+echo "version: $(PKG_VERSION)"   >> $(OZPMINFO)
+echo "uri:     $(PKG_URI)"       >> $(OZPMINFO)
+echo "title:   $(PKG_TITLE)"     >> $(OZPMINFO)
+echo "blurb:   $(PKG_BLURB)"     >> $(OZPMINFO)
+endef
+endif
+
+OZPM	= $(OZE) x-ozlib://duchier/tools/ozpm/ozpm.exe
+
+$(PKG_FILE): pkg
+pkg::
+	@rm -rf $(TMP_DIR)
+	@mkdir $(TMP_DIR)
+	$(PKG_INFO)
+	make install PREFIX=$(TMP_DIR)/INSTALL
+	$(OZPM) --create --in=$(OZPMINFO) \
+	--prefix=$(TMP_DIR)/INSTALL --out=$(PKG_FILE)
+
+update-pkg:: $(PKG_FILE_DST)
+
+clean::
+	-rm -f $(PKG_FILE)
+
+#=====================================================================
 # DEBUGGING
 #	in order to build the package with debugging flags on
 # execute `make debug-all'.  In fact `make debug-FOO' invokes
@@ -405,6 +439,23 @@ clean::
 
 debug-%:
 	$(MAKE) $* CFLAGS="-g $(CFLAGS)" OZCFLAGS="-g $(OZCFLAGS)"
+
+#=====================================================================
+# CREATING TAGS FILES
+#=====================================================================
+
+ETAGS_PATTERNS	= *.c *.h *.cc *.hh *.el
+ETAGS_OPTIONS	= -false $(patsubst %, -o -name '%',$(ETAGS_PATTERNS))
+
+tags:
+	cd $(BUILDTOP) && \
+	etags -l none \
+	--regex='/[ 	]*\(proc\|fun\)[ 	]*{[ 	]*\([a-zA-Z0-9_]+\)/\2/' \
+	--regex='/.*[ 	]class[ 	]\([a-zA-Z0-9_]+\)/\1/' \
+	`find . -name '*.oz' -print` && \
+	etags -a -l auto \
+	--regex='/OZ_BI_define([ 	]*\([^ 	,)]+\)/\1/' \
+	`find . \( $(ETAGS_OPTIONS) \) -print`
 
 -include Makefile.rules
 
