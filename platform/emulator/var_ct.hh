@@ -38,7 +38,7 @@ class OzCtVariable : public OzVariable {
   friend class OzVariable;
   friend void constrainGlobalVar(OZ_Term *, OZ_Ct *);
   friend OZ_Return tellBasicConstraint(OZ_Term, OZ_Ct *, OZ_CtDefinition *);
-  friend OZ_Boolean OZ_CtVar::tell(void);
+  friend class OZ_CtVar;
   friend void addSuspCtVar(OZ_Term , Suspendable * , OZ_CtWakeUp);
 
 private:
