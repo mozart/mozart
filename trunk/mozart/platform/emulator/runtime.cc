@@ -78,25 +78,16 @@ OZ_Term oz_getLocation(Board *bb)
  * BuiltinTab
  *=================================================================== */
 
-BuiltinTab builtinTab(750);
+Builtin * cfunc2Builtin(void * f) {
+  SRecord * sr = tagged2SRecord(builtinRecord);
+  
+  for (int i = sr->getWidth(); i--; ) {
+    Builtin * bi = tagged2Builtin(sr->getArg(i));
 
-Builtin *BIadd(const char *name,int inArity, int outArity, OZ_CFun funn, 
-	       Bool native)
-{
-  Builtin *builtin = new Builtin(name,inArity,outArity,funn,native);
-
-  builtinTab.htAdd(name,builtin);
-
-  return builtin;
-}
-
-// add specification to builtin table
-void BIaddSpec(BIspec *spec)
-{
-  for (int i=0; spec[i].name; i++) {
-    BIadd(spec[i].name,spec[i].inArity,spec[i].outArity,spec[i].fun,
-	  spec[i].native);
+    if (bi->getFun() == (OZ_CFun) f)
+      return bi;
   }
+  return tagged2Builtin(BI_unknown);
 }
 
 /*===================================================================
@@ -134,12 +125,6 @@ OZ_Return typeError(int Pos, char *Comment, char *TypeString)
   return BI_TYPE_ERROR;
 }
 
-#ifdef DEBUG_CHECK
-int checkBIArity(OZ_CFun fn) {
-  Builtin *bi=builtinTab.getEntry((void *) fn);
-  return !bi || bi->getOutArity()==0;
-}
-#endif
 
 /*
  * Control Vars

@@ -1,5 +1,6 @@
 /*
  *  Authors:
+ *    Denys Duchier (duchier@ps.uni-sb.de)
  *    Christian Schulte (schulte@dfki.de)
  * 
  *  Copyright:
@@ -35,6 +36,13 @@
 #else
 #define DYNAMIC_MODULE(m) 0
 #endif
+
+
+
+TaggedRef builtinRecord;
+
+
+
 
 #ifdef MODULES_LINK_STATIC
 // Declarations for all modules than can be loaded dynamically
@@ -223,13 +231,14 @@ static ModuleEntry module_table[] = {
 };
 
 
-static TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I) {
+static TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I, 
+				     Bool isSited) {
   OZ_Term l = oz_nil();
 
   Builtin *bi;
 
   while (I && I->name) {
-    bi = new Builtin(I->name,I->inArity,I->outArity,I->func,OK);
+    bi = new Builtin(I->name,I->inArity,I->outArity,I->func,isSited);
  
     l = oz_cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
     I++;
@@ -242,8 +251,14 @@ static TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I) {
 OZ_BI_define(BIBootManager, 1, 1) {
   oz_declareVirtualStringIN(0, mod_name);
 
-  // First: find module entry in table
 
+  // Check for builtins
+
+  if (!strcmp("Builtins", mod_name)) 
+    OZ_RETURN(builtinRecord);
+
+  // First: find module entry in table
+  
   ModuleEntry * me = module_table;
 
   while (me && me->name && strcmp(me->name, mod_name)) {
@@ -304,6 +319,108 @@ OZ_BI_define(BIBootManager, 1, 1) {
   }
   
   
-  OZ_RETURN(ozInterfaceToRecord(I));
+  OZ_RETURN(ozInterfaceToRecord(I,OK));
 
 } OZ_BI_end
+
+
+OZ_BI_define(BIdlLoad,1,1)
+{
+  oz_declareVirtualStringIN(0,filename);
+
+  TaggedRef hdl;
+  OZ_Return res = osDlopen(filename,hdl);
+  if (res!=PROCEED) return res;
+  void* handle = OZ_getForeignPointer(hdl);
+  OZ_C_proc_interface * I;
+  I = (OZ_C_proc_interface *) osDlsym(handle,"oz_interface");
+  if (I==0)
+    return oz_raise(E_ERROR,AtomForeign, "cannotFindInterface", 1,
+		    OZ_in(0));
+
+  OZ_RETURN(oz_pair2(hdl,ozInterfaceToRecord(I,OK)));
+} OZ_BI_end
+
+extern void BIinitPerdio();
+
+OZ_C_proc_proto(BIcontrolVarHandler);
+OZ_C_proc_proto(BIatRedo);
+OZ_C_proc_proto(BIfail);
+OZ_C_proc_proto(BIurl_load);
+OZ_C_proc_proto(BIload);
+OZ_C_proc_proto(BIprobe);
+OZ_C_proc_proto(BIstartTmp);
+OZ_C_proc_proto(BIportWait);
+
+
+#include "modBuiltins.dcl"
+
+static OZ_C_proc_interface mod_int_Builtins[] = {
+#include "modBuiltins.tbl"
+ {0,0,0,0}
+};
+
+
+void initBuiltins() {
+  builtinRecord = ozInterfaceToRecord(mod_int_Builtins, NO);
+
+  OZ_protect(&builtinRecord);
+
+  // General stuff
+  BI_send         = makeTaggedConst(string2Builtin("Send"));
+  BI_exchangeCell = makeTaggedConst(string2Builtin("Exchange"));
+  BI_assign       = makeTaggedConst(string2Builtin("<-"));
+  BI_lockLock     = makeTaggedConst(string2Builtin("Lock"));
+  BI_Delay        = makeTaggedConst(string2Builtin("Delay"));
+  BI_Unify        = makeTaggedConst(string2Builtin("="));
+
+  // Exclusively used (not in builtin table)
+  BI_controlVarHandler = 
+    makeTaggedConst(new Builtin("controlVarHandler", 
+				1, 0, BIcontrolVarHandler, OK));
+
+
+  BIinitPerdio();
+  
+  
+  // Exclusively used (not in builtin table)
+  BI_probe     = 
+    makeTaggedConst(new Builtin("probe", 
+				1, 0, BIprobe, OK));
+  BI_startTmp  = 
+    makeTaggedConst(new Builtin("startTmp",
+				2, 0, BIstartTmp, OK));
+  BI_portWait  = 
+    makeTaggedConst(new Builtin("portWait", 
+				2, 0, BIportWait, OK));
+  BI_atRedo    =
+    makeTaggedConst(new Builtin("atRedo", 
+				2, 0, BIatRedo, OK));
+  BI_fail      =
+    makeTaggedConst(new Builtin("fail", 
+				0, 0, BIfail, OK));
+
+  // if mapping from cfun to builtin fails
+  BI_unknown =
+    makeTaggedConst(new Builtin("UNKNOWN", 0, 0, BIfail,     OK));
+    
+  // to execute boot functor in am.cc
+  BI_dot      =
+    makeTaggedConst(string2Builtin("."));
+  // not in builtin table...
+  BI_load     = 
+    makeTaggedConst(new Builtin("load",     2, 0, BIload,     OK));
+  BI_url_load = 
+    makeTaggedConst(new Builtin("URL.load", 1, 1, BIurl_load, OK));
+  BI_boot_manager =
+    makeTaggedConst(new Builtin("BootManager", 1, 1, BIBootManager, OK));
+
+
+  bi_raise      = string2Builtin("raise");
+  bi_raiseError = string2Builtin("raiseError");
+  bi_raiseDebug = string2Builtin("raiseDebug");
+
+  initObjectBuiltins();
+
+}
+
