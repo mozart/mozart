@@ -155,6 +155,8 @@ enum EmulatorPropertyIndex {
   PROP_PERDIO_DEBUG,
   PROP_PERDIO_MINIMAL,
   PROP_PERDIO,
+
+  PROP_OZ_SUSPEND_ONLY_FUTURES,
   // this must remain last
   PROP__LAST
 };
@@ -429,6 +431,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	   (2,oz_atom("minimal"),oz_atom("debug")),
 	   SET_BOOL(oz_atom("minimal"), ozconf.perdioMinimal);
 	   SET_INT(oz_atom("debug"), ozconf.debugPerdio););
+  CASE_BOOL(PROP_OZ_SUSPEND_ONLY_FUTURES,ozconf.onlyFutures);
   default:
     return 0; // not readable. 0 ok because no OZ_Term==0
   }
@@ -701,6 +704,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
 						    "modelChoose",0));
 		 ozconf.perdioMinimal=INT__));
     CASE_BOOL_DO(PROP_STANDALONE,ozconf.runningUnderEmacs=!INT__);
+    CASE_BOOL(PROP_OZ_SUSPEND_ONLY_FUTURES,ozconf.onlyFutures);
   default:
     return PROP__NOT__WRITABLE;
   }
@@ -927,6 +931,8 @@ void initVirtualProperties()
   VirtualProperty::add("oz.emulator.home",PROP_OZ_EMULATOR_HOME);
   VirtualProperty::add("oz.version",PROP_OZ_VERSION);
   VirtualProperty::add("oz.date",PROP_OZ_DATE);
+  // Suspending on SimpleVars raises an exception
+  VirtualProperty::add("oz.suspendOnlyFutures",PROP_OZ_SUSPEND_ONLY_FUTURES);
   // Distribution
   VirtualProperty::add("distribution.virtualsites",
 		       PROP_DISTRIBUTION_VIRTUALSITES);
