@@ -2528,6 +2528,9 @@ LBLdispatcher:
 	  case PUTCONSTANTX:
 	  case PUTCONSTANTY:
 	  case PUTCONSTANTG:
+	  case GETLITERALX:
+	  case GETLITERALY:
+	  case GETLITERALG:
 	    dbg->setSingleArgument(getTaggedArg(PC+6));
 	    break;
 	  default:
