@@ -56,12 +56,17 @@ SPAN.BUILTIN      { color: #DA70D6; }
 </P>
 <DL>
   <DT><B>provides</B>
-  <DD><SPAN CLASS="MODULE">x-ozlib://duchier/xml/parser.ozf</SPAN>
+  <DD><SPAN CLASS="MODULE">x-ozlib://duchier/xml/Parser.ozf</SPAN>
+  <DD><SPAN CLASS="MODULE">x-ozlib://duchier/xml/Parser-0.2.1.ozf</SPAN>
 </DL>
 <HR>
+<blockquote>
+<i>The earlier implementation of this module is still available as <code>Parser-0.2.1.ozf</code>
+and is documented by <a href="index-0.2.1.html"><file>index-0.2.1.html</file></a>.</i>
+</blockquote>
 
 <H2>Introduction</H2>
-<P>This module implements a namespace-aware object-oriented XML parser.
+<P>The <code>Parser</code> module implements a namespace-aware object-oriented XML parser.
 It understands just enough of the optional
 <code>DOCTYPE</code> declaration to respect <code>ENTITY</code>
 declarations.  For example, if you place the following entity
@@ -75,15 +80,15 @@ declarations in your document's <CODE>DOCTYPE</CODE>:</P>
     occurrence of entity reference <CODE>&amp;w3;</CODE> is
     expanded into <CODE>http://www.w3.org</CODE>.  The parser is also
     able to strip whitespace text nodes on the fly according to a
-    user specification in the style of XSLT.</p>
+    user specification in the style of XSLT encapsulated in a <code>SpaceManager</code>.</p>
 
 <H2>Exports</H2>
 <P>The <code>parser</code> module exports the following features:</P>
 <DL>
-  <DT><code>parser</code>
-  <DD>a class implementing the XML parser
   <DT><code>spaceManager</code>
   <DD>a class implementing the decision rules for stripping whitespace
+  <DT><code>parser</code>
+  <DD>a class implementing the XML parser
 </DL>
 
 <H3>Space Manager</H3>
@@ -136,7 +141,7 @@ wildcard can be used, of course.</p>
 A <code>Parser</code> object can be used to parse XML documents and
 obtain their Oz representation.  The <code>Parser</code> class can be subclassed
 to provide problem-specific methods for constructing the document representation.
-Of course, reasonable default implementations are provided.
+Of course, reasonable default implementations are provided.<p>
 
 <dl>
 <dt><code>init</code>
@@ -188,7 +193,7 @@ following features:
 <ul>
 <li><b>qname</b>: the tag's fullname as it appears in the document
 <li><b>prefix</b>: just it's prefix (<code>unit</code> if none)
-<li><b>uri</b>: the namespace uri bound the prefix (<code>unit</code>
+<li><b>uri</b>: the namespace uri bound to the prefix (<code>unit</code>
 if none)
 <li><b>name</b>: the localname of the tag (i.e. minus prefix)
 <li><b>coord</b>: the debug coordinates where the start tag occurred
