@@ -144,6 +144,9 @@ extern void OZ_free _PROTOTYPE((char *));
 /* print warning */
 extern void OZ_warning _PROTOTYPE((char * ...));
 
+/* generate the unix error string from an errno (see perror(3)) */
+char *OZ_unixError(int errno);
+
 /* check for toplevel */
 extern int OZ_onToplevel();
 
