@@ -74,7 +74,8 @@ void error(const char *format, ...)
 
   DebugCheckT(osUnblockSignals());
 
-  oskill(getpid(),ozconf.dumpCore?SIGQUIT:SIGUSR1);
+  // send a signal to all forked processes, including the emulator itself
+  oskill(0,ozconf.dumpCore?SIGQUIT:SIGUSR1);
 }
 
 void warning(const char *format, ...)
