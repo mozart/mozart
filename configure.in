@@ -126,11 +126,11 @@ case $GTKVERSION in
   *)  AC_MSG_ERROR(Your GTK+ library is too old. Please update to version 1.2 or later. GTK+ can be found at http://www.gtk.org)
 esac
 
-GTKFLAGS="$LIBART_CFLAGS `$GTKCONFIG --cflags`"
-GTKLIBS="$LIBART_LIBS `$GTKCONFIG --libs`"
+GTKFLAGS=`$GTKCONFIG --cflags`
+GTKLIBS=`$GTKCONFIG --libs`
 
-CPPFLAGS="$GTKFLAGS $CPPFLAGS"
-LIBS="-lart_lgpl -lgdk_imlib $GTKLIBS $LIBS"
+CPPFLAGS="$LIBART_CFLAGS $GTKFLAGS $CPPFLAGS"
+LIBS="$LIBART_LIBS -lart_lgpl -lgdk_imlib $GTKLIBS $LIBS"
 
 dnl Checking for canvas
 EXPLICIT_CANVAS=no
