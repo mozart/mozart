@@ -26,6 +26,9 @@ export
    text: TextFile
    read: ReadFile
    write: WriteFile
+
+   BaseName
+   ChangeExtension
 define
    class TextFile from Open.file Open.text
       prop final
@@ -46,5 +49,28 @@ define
       F = {New Open.file init(name: File flags: [write create truncate])}
       {F write(vs: VS)}
       {F close()}
+   end
+
+   fun {BaseName V}
+      {Reverse
+       {List.takeWhile {Reverse {VirtualString.toString V}}
+        fun {$ C} C \= &/ end}}
+   end
+
+   fun {ChangeExtension VS OldExt NewExt}
+      OrigS = {VirtualString.toString VS}
+      fun {ChangeExtensionSub S OldExt NewExt}
+         if S == OldExt then NewExt
+         else
+            case S of C|Cr then
+               C|{ChangeExtensionSub Cr OldExt NewExt}
+            [] nil then OrigS
+            end
+         end
+      end
+   in
+      {ChangeExtensionSub OrigS
+       {VirtualString.toString OldExt}
+       {VirtualString.toString NewExt}}
    end
 end
