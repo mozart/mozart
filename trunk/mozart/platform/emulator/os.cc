@@ -1066,7 +1066,11 @@ int ossocket(int domain, int type, int protocol)
 
 int osaccept(int s, struct sockaddr *addr, int *addrlen)
 {
+#if __GLIBC__ == 2
+  int ret = accept(s,addr,(unsigned int*)addrlen);
+#else
   int ret = accept(s,addr,addrlen);
+#endif
   if (ret >= 0) 
     registerSocket(ret);
   return ret;

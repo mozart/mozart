@@ -632,19 +632,11 @@ OZ_BI_iodefine(unix_uName,0,1)
   OZ_Term pairlist = cons(t2,cons(t3,cons(t4,cons(t5,cons(t6,nil())))));
 
 #if defined(SUNOS_SPARC) || defined(LINUX)
-
-#ifdef SUNOS_SPARC
   char dname[65];
   if (getdomainname(dname, 65)) {
     RETURN_UNIX_ERROR;
   }
-#else
-  char * dname;
-  dname = buf.domainname;
-#endif
-
   pairlist = cons(OZ_pairAS("domainname",dname),pairlist);
-
 #endif
 
   OZ_RETURN(OZ_recordInit(OZ_atom("utsname"),pairlist));
@@ -1022,7 +1014,12 @@ OZ_BI_define(unix_getSockName,1,1)
   OZ_declareIntIN(0,s);
 
   struct sockaddr_in addr;
+
+#if __GLIBC__ == 2
+  unsigned int length = sizeof(addr);
+#else
   int length = sizeof(addr);
+#endif
 
   WRAPCALL(getsockname(s, (struct sockaddr *) &addr, &length), ret);
 
@@ -1278,8 +1275,13 @@ OZ_BI_iodefine(unix_receiveFromInet,5,3)
   char *buf = (char *) malloc(maxx+1);
 
   struct sockaddr_in from;
+
+#if __GLIBC__ == 2
+  unsigned int fromlen = sizeof from;
+#else
   int fromlen = sizeof from;
-  
+#endif
+
   WRAPCALL(recvfrom(sock, buf, maxx, flags,
                     (struct sockaddr*)&from, &fromlen),ret);
 
