@@ -204,6 +204,7 @@ _OZ_EXPECT_SUSPEND(O, P, OZ_args[P], F, SC)
 #define OZ_EM_LIT       "literal"
 #define OZ_EM_INT       "integer in [~"_OZ_EM_INTMAX"\\,...\\,"_OZ_EM_INTMAX"]"
 #define OZ_EM_FD        "finite domain integer in {"_OZ_EM_FDINF"\\,...\\,"_OZ_EM_FDSUP"}"
+#define OZ_EM_FDBOOL    "boolean finite domain integer in {0,1}"
 #define OZ_EM_FDDESCR   "description of a finite domain integer"
 #define OZ_EM_FSETVAL   "finite set of integers"
 #define OZ_EM_FSET      "finite set of integers constraint"

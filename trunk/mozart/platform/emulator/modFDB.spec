@@ -2,9 +2,11 @@
 ### Authors:
 ###   Denys Duchier <duchier@ps.uni-sb.de>
 ###   Christian Schulte <schulte@dfki.de>
+###   Tobias Mueller <tmueller@ps.uni-sb.de>
 ###
 ### Copyright:
 ###   Denys Duchier, 1998
+###   Tobias Mueller, 1998
 ###   Christian Schulte, 1998
 ###
 ### Last change:
@@ -70,13 +72,17 @@
 			     out => [],
 			     bi  => BIfdNextLarger},
 
-    'tellConstraint'	=> { in  => ['int','+value'],
+    'tellConstraint'	=> { in  => ['+value', 'int'],
 			     out => [],
 			     bi  => BIfdTellConstraint},
 
     'tellBoolConstraint'=> { in  => ['int'],
 			     out => [],
-			     bi  => BIfdboolTellConstraint},
+			     bi  => BIfdBoolTellConstraint},
+
+    'tellDeclConstraint'=> { in  => ['int'],
+			     out => [],
+			     bi  => BIfdDeclTellConstraint},
 
     'watchSize'	=> { in  => ['*int','+int','bool'],
 			     out => [],

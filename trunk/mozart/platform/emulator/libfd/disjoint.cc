@@ -99,18 +99,22 @@ failure:
 
 OZ_C_proc_begin(fdp_disjointC, 5)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_FD "," OZ_EM_INT "," OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_FD "," OZ_EM_INT "," OZ_EM_FDBOOL);
 
   PropagatorExpect pe;
+  int dummy;
 
   OZ_EXPECT(pe, 0, expectIntVarMinMax);
   OZ_EXPECT(pe, 1, expectInt);
   OZ_EXPECT(pe, 2, expectIntVarMinMax);
   OZ_EXPECT(pe, 3, expectInt);
-  OZ_EXPECT(pe, 4, expectIntVarMinMax);
+  OZ_EXPECT_SUSPEND(pe, 4, expectBoolVar, dummy);
 
-  return pe.impose(new SchedCDBPropagator(OZ_args[0], OZ_args[1], 
-					 OZ_args[2], OZ_args[3], OZ_args[4]));
+  return pe.impose(new SchedCDBPropagator(OZ_args[0], 
+					  OZ_args[1], 
+					  OZ_args[2], 
+					  OZ_args[3], 
+					  OZ_args[4]));
 }
 OZ_C_proc_end
 
