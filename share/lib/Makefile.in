@@ -22,7 +22,8 @@ INSTALLPRG	= $(INSTALL) -m 555
 INSTALLSRC	= @INSTALLSRC@
 INSTALLDIR	= $(INSTALL) -m 775 -d
 
-ENV2TYPE	= @PERL@ @ENV2TYPE@
+PERL		= @PERL@
+ENV2TYPE	= $(PERL) @ENV2TYPE@
 
 OZFLAGS		=
 OZBATCH		= @OZBATCH@
@@ -95,8 +96,8 @@ COMPILERSRC1 = \
 	CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
 	UnnestFD.oz Assembler.oz Interface.oz \
 	GenericInterface.oz QuietInterface.oz
-COMPILERSRCNOVER = $(COMPILERSRC1:%=compiler/%) compiler-Opcodes.oz \
-	Compiler.oz
+COMPILERSRCNOVER = $(COMPILERSRC1:%=compiler/%) compiler-Builtins.oz \
+	compiler-Opcodes.oz Compiler.oz
 COMPILERSRC = $(COMPILERSRCNOVER) compiler-Version.oz
 
 COMPILERPANELSRC1 = CompilerPanelClass.oz
@@ -257,7 +258,8 @@ install-src: $(ALLSRCS:%=$(OZLIB)/%)
 
 clean:
 	$(RM) *~ *.bak
-	$(RM) compiler-Version.oz compiler-Opcodes.oz ozcar-version.oz
+	$(RM) compiler-Version.oz compiler-Builtins.oz compiler-Opcodes.oz
+	$(RM) ozcar-version.oz
 	$(RM) $(TYPS) $(TYCS) $(HELPCOMPONENTS) $(COMPONENTS)
 	$(RM) ozbatch ozserver
 	$(RM) TAGS
@@ -366,15 +368,21 @@ COMPILER_FUN = @COMPILER_FUN@
 $(COMPILER_BIG): $(DUMPINTRO) $(COMPILERSRC) SP.env \
 	CP.env Gump.env Compiler.env Init.ozc
 
-$(COMPILER_FUN): NewCompiler.oz compiler/FunComp.oz compiler/FunMake.oz \
+$(COMPILER_FUN): NewCompiler.oz SP.env compiler/Common.env \
+	compiler/FunComp.oz compiler/Misc.oz compiler/Builtins.oz \
+	compiler-Builtins.oz compiler/Annotate.oz compiler/FunMake.oz \
 	compiler/FunCode.ozc compiler/FunCore.ozc compiler/FunEnd.ozc \
-	compiler/FunMisc.ozc compiler/FunStat.ozc Init.ozc $(STANDARD)
+	compiler/FunMisc.ozc compiler/FunStat.ozc Compiler.env Init.ozc \
+	$(STANDARD)
 	$(OZBATCH) $(OZFLAGS) --include=compiler/FunMake.oz \
 	-c NewCompiler.oz -o Compiler.ozc
 
 compiler-Version.oz: $(COMPILERSRCNOVER) $(OZVERSION) compiler/Opcodes.m4oz
 	($(ECHO) 'OZVERSION = '\'`$(OZVERSION)`\'; \
 	$(ECHO) 'DATE = '\'`date '+%h %d 19%y (%T)'`\') > $@
+
+compiler-Builtins.oz: $(TOPDIR)/Emulator/bidecl.perl
+	$(PERL) $< -oztable > $@
 
 compiler-Opcodes.oz: compiler/Opcodes.m4oz $(TOPDIR)/Emulator/instrDefs.m4
 	$(M4) -DEMUDIR=$(TOPDIR)/Emulator < $< > $@
