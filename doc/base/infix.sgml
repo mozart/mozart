@@ -21,44 +21,49 @@
     <Table>
       <TR/<TH/Infix/<TH/Normal//
       <TR/<TD colspan=2/right-associative//
-      <TR/<TD/<<?_{X} = ?_{Y}>>/<TD/<<{Value.'=' X Y}>>//
+      <TR/<TD/<<?_{X} = ?_{Y}>>/<TD/<<{Value.'=' ?_{X} ?_{Y}}>>//
       <TR/<TD colspan=2/right-associative//
-      <TR/<TD/<<?+{LI} <- ?_{X}>>/<TD/<<{Object.'<-' LI X}>>//
-      <TR/<TD/<<?_{Y} = ?+{LI} <- ?_{X}>>/<TD/<<{Object.exchange LI X Y}>>//
+      <TR/<TD/<<?+{LI} <- ?_{X}>>/<TD/<<{Object.'<-' ?_{LI} ?_{X}}>>//
+      <TR/<TD/<<?_{Y} = ?+{LI} <- ?_{X}>>/
+	<TD/<<{Object.exchange ?_{LI} ?_{X} ?_{Y}}>>//
       <TR/<TD colspan=2/non-associative//
-      <TR/<TD/<<??{B} = ?_{X} == ?_{Y}>>/<TD/<<{Value.'==' X Y B}>>//
-      <TR/<TD/<<??{B} = ?_{X} \= ?_{Y}>>/<TD/<<{Value.'\\=' X Y B}>>//
+      <TR/<TD/<<??{B} = ?_{X} == ?_{Y}>>/
+	<TD/<<{Value.'==' ?_{X} ?_{Y} ?_{B}}>>//
+      <TR/<TD/<<??{B} = ?_{X} \= ?_{Y}>>/
+	<TD/<<{Value.'\\=' ?_{X} ?_{Y} ?_{B}}>>//
       <TR/<TD/<<??{B} = ?+{AFI1} &lt; ?+{AFI2}>>/
-	<TD/<<{Value.'&lt' AFI1 AFI2 B}>>//
+	<TD/<<{Value.'&lt' ?_{AFI1} ?_{AFI2} ?_{B}}>>//
       <TR/<TD/<<??{B} = ?+{AFI1} =&lt; ?+{AFI2}>>/
-	<TD/<<{Value.'=&lt;' AFI1 AFI2 B}>>//
+	<TD/<<{Value.'=&lt;' ?_{AFI1} ?_{AFI2} ?_{B}}>>//
       <TR/<TD/<<??{B} = ?+{AFI1} > ?+{AFI2}>>/
-	<TD/<<{Value.'>' AFI1 AFI2 B}>>//
+	<TD/<<{Value.'>' ?_{AFI1} ?_{AFI2} ?_{B}}>>//
       <TR/<TD/<<??{B} = ?+{AFI1} >= ?+{AFI2}>>/
-	<TD/<<{Value.'>=' AFI1 AFI2 B}>>//
+	<TD/<<{Value.'>=' ?_{AFI1} ?_{AFI2} ?_{B}}>>//
       <TR/<TD colspan=2/left-associative//
       <TR/<TD/<<??{FI3} = ?+{FI1} + ?+{FI2}>>/
-	<TD/<<{Number.'+' FI1 FI2 FI3}>>//
+	<TD/<<{Number.'+' ?_{FI1} ?_{FI2} ?_{FI3}}>>//
       <TR/<TD/<<??{FI3} = ?+{FI1} - ?+{FI2}>>/
-	<TD/<<{Number.'-' FI1 FI2 FI3}>>//
+	<TD/<<{Number.'-' ?_{FI1} ?_{FI2} ?_{FI3}}>>//
       <TR/<TD colspan=2/left-associative//
       <TR/<TD/<<??{FI3} = ?+{FI1} * ?+{FI2}>>/
-	<TD/<<{Number.'*' FI1 FI2 FI3}>>//
+	<TD/<<{Number.'*' ?_{FI1} ?_{FI2} ?_{FI3}}>>//
       <TR><TD><<??{F3} = ?+{F1} / ?+{F2}>></TD>
-	<TD><<{Float.'/' F1 F2 F3}>></TD></TR>
+	<TD><<{Float.'/' ?_{F1} ?_{F2} ?_{F3}}>></TD></TR>
       <TR/<TD/<<??{I3} = ?+{I1} div ?+{I2}>>/
-	<TD/<<{Int.'div' I1 I2 I3}>>//
+	<TD/<<{Int.'div' ?_{I1} ?_{I2} ?_{I3}}>>//
       <TR/<TD/<<??{I3} = ?+{I1} mod ?+{I2}>>/
-	<TD/<<{Int.'mod' I1 I2 I3}>>//
+	<TD/<<{Int.'mod' ?_{I1} ?_{I2} ?_{I3}}>>//
       <TR/<TD colspan=2/left-associative//
-      <TR/<TD/<<?+{K}, ?+{R}>>/<TD/<<{Object.',' K R}>>//
+      <TR/<TD/<<?+{K}, ?+{R}>>/<TD/<<{Object.',' ?_{K} ?_{R}}>>//
       <TR/<TD colspan=2/prefix//
-      <TR/<TD/<<??{FI1} = ~?+{FI2}>>/<TD/<<{Number.'~' FI2 FI1}>>//
+      <TR/<TD/<<??{FI1} = ~?+{FI2}>>/<TD/<<{Number.'~' ?_{FI2} ?_{FI1}}>>//
       <TR/<TD colspan=2/left-associative//
-      <TR/<TD/<<?_{X} = ?+{RC}.?+{LI}>>/<TD/<<{Value.'.' RC LI X}>>//
-      <TR/<TD/<<?_{X} = ?*{R}^?+{LI}>>/<TD/<<{Record.'^' R LI X}>>//
+      <TR/<TD/<<?_{X} = ?+{RC}.?+{LI}>>/
+	<TD/<<{Value.'.' ?_{RC} ?_{LI} ?_{X}}>>//
+      <TR/<TD/<<?_{X} = ?*{R}^?+{LI}>>/
+	<TD/<<{Record.'^' ?_{R} ?_{LI} ?_{X}}>>//
       <TR/<TD colspan=2/infix//
-      <TR/<TD/<<?_{X} = @?+{LI}>>/<TD/<<{Object.'@' LI X}>>//
-      <TR/<TD/<<?_{X} = !!?_{Y}>>/<TD/<<{Value.'!!' X Y}>>//
+      <TR/<TD/<<?_{X} = @?+{LI}>>/<TD/<<{Object.'@' ?_{LI} ?_{X}}>>//
+      <TR/<TD/<<?_{X} = !!?_{Y}>>/<TD/<<{Value.'!!' ?_{X} ?_{Y}}>>//
     </Table>
 </Chapter>

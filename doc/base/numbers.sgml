@@ -20,49 +20,49 @@
 	<Synopsis>
 	  <<{Number.is ?+{X} ??{B}}>>
 	<Item>
-	  tests whether <<X>> is a number.
+	  tests whether ?_{X} is a number.
 
 	<Entry><Span class=index/<<+>>/
 	  <Index/<<Number>><And><<'+'>>/
 	<Synopsis>
 	  <<{Number.'+' ?+{FI1} ?+{FI2} ??{FI3}}>>
 	<Item>
-	  binds <<FI3>> to the sum of <<FI1>> and&nbsp;<<FI2>>.
+	  returns the sum of ?_{FI1} and&nbsp;?_{FI2}.
 
 	<Entry><Span class=index/<<->>/
 	  <Index/<<Number>><And><<'-'>>/
 	<Synopsis>
 	  <<{Number.'-' ?+{FI1} ?+{FI2} ??{FI3}}>>
 	<Item>
-	  binds <<FI3>> to the difference of <<FI1>> and&nbsp;<<FI2>>.
+	  returns the difference of ?_{FI1} and&nbsp;?_{FI2}.
 
 	<ENTRY><Span class=index/<<*>>/
 	  <Index/<<Number>><And><<'*'>>/
 	<Synopsis>
 	  <<{Number.'*' ?+{FI1} ?+{FI2} ??{FI3}}>>
 	<Item>
-	  binds <<FI3>> to the product of <<FI1>> and&nbsp;<<FI2>>.
+	  returns the product of ?_{FI1} and&nbsp;?_{FI2}.
 
 	<Entry><Span class=index/<<~>>/
 	  <Index/<<Number>><And><<'~'>>/
 	<Synopsis>
 	  <<{Number.'~' ?+{FI1} ??{FI2}}>>
 	<Item>
-	  binds <<FI2>> to the negation of&nbsp;<<FI1>>.
+	  returns the negation of&nbsp;?_{FI1}.
 
 	<Entry><Span class=index/<<Pow>>/
 	  <Index/<<Number>><And><<pow>>/
 	<Synopsis>
 	  <<{Number.pow ?+{FI1} ?+{FI2} ??{FI3}}>>
 	<Item>
-	  binds <<FI3>> to <<FI1>> to the power of&nbsp;<<FI2>>.
+	  returns ?_{FI1} to the power of&nbsp;?_{FI2}.
 
 	<Entry><Span class=index/<<Abs>>/
 	  <Index/<<Number>><And><<abs>>/
 	<Synopsis>
 	  <<{Number.abs ?+{FI1} ??{FI2}}>>
 	<Item>
-	  binds <<FI2>> to the absolute value of&nbsp;<<FI1>>.
+	  returns the absolute value of&nbsp;?_{FI1}.
       </List>
 
   <Section>
@@ -77,14 +77,14 @@
 	<Synopsis>
 	  <<{Int.is ?+{X} ??{B}}>>
 	<Item>
-	  tests whether <<X>> is an integer.
+	  tests whether ?_{X} is an integer.
 
 	<Entry><Span class=index/<<IsNat>>/
 	  <Index/<<Int>><And><<isNat>>/
 	<Synopsis>
 	  <<{Int.isNat ?+{I} ??{B}}>>
 	<Item>
-	  tests whether <<I>> is a natural number, &ie;, an integer greater
+	  tests whether ?_{I} is a natural number, &ie;, an integer greater
 	  than or equal to&nbsp;<<0>>.
 
 	<Entry><Span class=index/<<IsOdd>>/
@@ -92,21 +92,21 @@
 	<Synopsis>
 	  <<{Int.isOdd ?+{I} ??{B}}>>
 	<Item>
-	  tests whether <<I>> is an odd integer.
+	  tests whether ?_{I} is an odd integer.
 
 	<Entry><Span class=index/<<IsEven>>/
 	  <Index/<<Int>><And><<isEven>>/
 	<Synopsis>
 	  <<{Int.isEven ?+{I} ??{B}}>>
 	<Item>
-	  tests whether <<I>> is an even integer.
+	  tests whether ?_{I} is an even integer.
 
 	<Entry><Span class=index/<<div>>/
 	  <Index/<<Int>><And><<'div'>>/
 	<Synopsis>
 	  <<{Int.'div' ?+{I1} ?+{I2} ??{I3}}>>
 	<Item>
-	  binds <<I3>> to <<I1>> integer-divided by&nbsp;<<I2>>, rounding
+	  returns ?_{I1} integer-divided by&nbsp;?_{I2}, rounding
 	  towards&nbsp;<<0>>.  <<Int.'div'>> can be defined as follows:
 <<<local
    fun {Div I1 I2}
@@ -124,8 +124,8 @@ end>>>
 	<Synopsis>
 	  <<{Int.'mod' ?+{I1} ?+{I2} ??{I3}}>>
 	<Item>
-	  binds <<I3>> to <<I1>> modulo&nbsp;<<I2>>.  <<Int.'mod'>> can
-	  be defined as follows:
+	  returns ?_{I1} modulo&nbsp;?_{I2}.  <<Int.'mod'>> can be
+	  defined as follows:
 <<<fun {Int.'mod' I1 I2}
    I1 - I2 * (I1 div I2)
 end>>>
@@ -135,14 +135,14 @@ end>>>
 	<Synopsis>
 	  <<{Int.toFloat ?+{I} ??{F}}>>
 	<Item>
-	  binds <<F>> to the float closest to the integer&nbsp;<<I>>.
+	  returns the float closest to the integer&nbsp;?_{I}.
 
 	<Entry><Span class=index/<<IntToString>>/
 	  <Index class=tails/<<Int>><And><<toString>>/
 	<Synopsis>
 	  <<{Int.toString ?+{I} ??{S}}>>
 	<Item>
-	  binds <<S>> to the string describing the integer&nbsp;<<I>>
+	  returns the string describing the integer&nbsp;?_{I}
 	  in &Oz; concrete syntax.
       </List>
 
@@ -158,131 +158,131 @@ end>>>
 	<Synopsis>
 	  <<{Float.is ?+{X} ??{B}}>>
 	<Item>
-	  tests whether <<X>> is a float.
+	  tests whether ?_{X} is a float.
 
 	<Entry><Span class=index><</>></Span>
 	  <Index><<Float>><And><<'/'>></Index>
 	<Synopsis>
 	  <<{Float.'/' ?+{F1} ?+{F2} ??{F3}}>>
 	<Item>
-	  binds <<F3>> to <<F1>> divided by&nbsp;<<F2>>.
+	  returns ?_{F1} divided by&nbsp;?_{F2}.
 
 	<Entry><Span class=index/<<Exp>>/
 	  <Index/<<Float>><And><<exp>>/
 	<Synopsis>
 	  <<{Float.exp ?+{F1} ??{F2}}>>
 	<Item>
-	  binds <<F2>> to <<F1>> to the power of <Var type=meta/e/.
+	  returns ?_{F1} to the power of <Var type=meta/e/.
 
 	<Entry><Span class=index/<<Log>>/
 	  <Index/<<Float>><And><<log>>/
 	<Synopsis>
 	  <<{Float.log ?+{F1} ??{F2}}>>
 	<Item>
-	  binds <<F2>> to the logarithm to the base <Var type=meta/e/
-	  of&nbsp;<<F1>>.
+	  returns the logarithm to the base <Var type=meta/e/ of&nbsp;?_{F1}.
 
 	<Entry><Span class=index/<<Sqrt>>/
 	  <Index/<<Float>><And><<sqrt>>/
 	<Synopsis>
 	  <<{Float.sqrt ?+{F1} ??{F2}}>>
 	<Item>
-	  binds <<F2>> to the square root of&nbsp;<<F1>>.
+	  returns the square root of&nbsp;?_{F1}.
 
 	<Entry><Span class=index/<<Ceil>>/
 	  <Index/<<Float>><And><<ceil>>/
 	<Synopsis>
 	  <<{Float.ceil ?+{F1} ??{F2}}>>
 	<Item>
-	  binds <<F2>> to the ceiling of&nbsp;<<F1>> (rounding towards
-	  positive infinity).
+	  returns the ceiling of&nbsp;?_{F1} (rounding towards positive
+	  infinity).
 
 	<Entry><Span class=index/<<Floor>>/
 	  <Index/<<Float>><And><<floor>>/
 	<Synopsis>
 	  <<{Float.floor ?+{F1} ??{F2}}>>
 	<Item>
-	  binds <<F2>> to the floor of&nbsp;<<F1>> (rounding towards
-	  negative infinity).
+	  returns the floor of&nbsp;?_{F1} (rounding towards negative
+	  infinity).
 
 	<Entry><Span class=index/<<Round>>/
 	  <Index/<<Float>><And><<round>>/
 	<Synopsis>
 	  <<{Float.round ?+{F1} ??{F2}}>>
 	<Item>
-	  binds <<F2>> to the integral value closest to&nbsp;<<F1>>.
-	  If there are two candidates, <<F1>> is rounded to the closest
-	  even integral value, &eg;, <<{Float.round 1.5}>> and
-	  <<{Float.round 2.5}>> both return <<2.0>>.
+	  returns the integral value closest to&nbsp;?_{F1}.  If there are
+	  two candidates, ?_{F1} is rounded to the closest even integral
+	  value, &eg;, <<{Float.round 1.5}>> and <<{Float.round 2.5}>> both
+	  return <<2.0>>.
 
 	<Entry><Span class=index/<<Sin>>/
 	  <Index/<<Float>><And><<sin>>/
 	<Synopsis>
 	  <<{Float.sin ?+{F1} ??{F2}}>>
 	<Item>
-	  binds <<F2>> to the sine of&nbsp;<<F1>>.
+	  returns the sine of&nbsp;?_{F1}.
 
 	<Entry><Span class=index/<<Cos>>/
 	  <Index/<<Float>><And><<cos>>/
 	<Synopsis>
 	  <<{Float.cos ?+{F1} ??{F2}}>>
 	<Item>
-	  binds <<F2>> to the cosine of&nbsp;<<F1>>.
+	  returns the cosine of&nbsp;?_{F1}.
 
 	<Entry><Span class=index/<<Tan>>/
 	  <Index/<<Float>><And><<tan>>/
 	<Synopsis>
 	  <<{Float.tan ?+{F1} ??{F2}}>>
 	<Item>
-	  binds <<F2>> to the tangent of&nbsp;<<F1>>.
+	  returns the tangent of&nbsp;?_{F1}.
 
 	<Entry><Span class=index/<<Asin>>/
 	  <Index/<<Float>><And><<asin>>/
 	<Synopsis>
 	  <<{Float.asin ?+{F1} ??{F2}}>>
 	<Item>
-	  binds <<F2>> to the arc sine of&nbsp;<<F1>>.
+	  returns the arc sine of&nbsp;?_{F1}.
 
 	<Entry><Span class=index/<<Acos>>/
 	  <Index/<<Float>><And><<acos>>/
 	<Synopsis>
 	  <<{Float.acos ?+{F1} ??{F2}}>>
 	<Item>
-	  binds <<F2>> to the arc cosine of&nbsp;<<F1>>.
+	  returns the arc cosine of&nbsp;?_{F1}.
 
 	<Entry><Span class=index/<<Atan>>/
 	  <Index/<<Float>><And><<atan>>/
 	<Synopsis>
 	  <<{Float.atan ?+{F1} ??{F2}}>>
 	<Item>
-	  binds <<F2>> to the arc tangent of&nbsp;<<F1>>.
+	  returns the arc tangent of&nbsp;?_{F1}.
 
 	<Entry><Span class=index/<<Atan2>>/
 	  <Index/<<Float>><And><<atan2>>/
 	<Synopsis>
 	  <<{Float.atan2 ?+{F1} ?+{F2} ??{F3}}>>
 	<Item>
-	  binds <<F3>> to the principal value of the arc tangent
-	  of <<F1 / F2>>, using the signs of both arguments to determine
-	  the quadrant of the return value.  An error exception may (but
-	  needs not) be raised if both arguments are zero.
+	  returns the principal value of the arc tangent of
+	  <<?_{F1} / ?_{F2}>>, using the signs of both arguments
+	  to determine the quadrant of the return value.  An error
+	  exception may (but needs not) be raised if both arguments
+	  are zero.
 
 	<Entry><Span class=index/<<FloatToInt>>/
 	  <Index class=tails/<<Float>><And><<toInt>>/
 	<Synopsis>
 	  <<{Float.toInt ?+{F} ??{I}}>>
 	<Item>
-	  binds <<I>> to the integer closest to float&nbsp;<<F>>.
-	  If there are two candidates, <<F>> is rounded to the closest
-	  even integer, &eg;, <<{FloatToInt 1.5}>> and <<{FloatToInt 2.5}>>
-	  both return&nbsp;<<2>>.
+	  returns the integer closest to float&nbsp;?_{F}.  If there are
+	  two candidates, ?_{F} is rounded to the closest even integer,
+	  &eg;, <<{FloatToInt 1.5}>> and <<{FloatToInt 2.5}>> both
+	  return&nbsp;<<2>>.
 
 	<Entry><Span class=index/<<FloatToString>>/
 	  <Index class=tails/<<Float>><And><<toString>>/
 	<Synopsis>
 	  <<{Float.toString ?+{F} ??{S}}>>
 	<Item>
-	  binds <<S>> to the string describing the float&nbsp;<<F>>
-	  in &Oz; concrete syntax.
+	  returns the string describing the float&nbsp;?_{F} in &Oz;
+	  concrete syntax.
       </List>
 </Chapter>

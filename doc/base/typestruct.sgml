@@ -98,36 +98,36 @@
 	abbreviations summarized in the following table:
 	<Table>
 	  <TR/<TH/Abbreviation/<TH/Type//
-	  <TR/<TD/<<A>>/<TD/atom//
-	  <TR/<TD/<<B>>/<TD/bool//
-	  <TR/<TD/<<C>>/<TD/chunk//
-	  <TR/<TD/<<F>>/<TD/float//
-	  <TR/<TD/<<I>>/<TD/integer//
-	  <TR/<TD/<<K>>/<TD/class//
-	  <TR/<TD/<<L>>/<TD/literal//
-	  <TR/<TD/<<N>>/<TD/name//
-	  <TR/<TD/<<O>>/<TD/object//
-	  <TR/<TD/<<P>>/<TD/procedure//
-	  <TR/<TD/<<R>>/<TD/record//
-	  <TR/<TD/<<S>>/<TD/string//
-	  <TR/<TD/<<T>>/<TD/tuple//
-	  <TR/<TD/<<U>>/<TD/unit//
-	  <TR/<TD/<<V>>/<TD/virtual string//
-	  <TR/<TD/<<X Y Z>>/<TD/value//
-	  <TR/<TD/<<FI>>/<TD/number//
-	  <TR/<TD/<<LI>>/<TD/feature//
-	  <TR/<TD/<<AFI>>/<TD/atom, float, or int//
-	  <TR/<TD/<<PO>>/<TD/unary procedure or object//
-	  <TR/<TD/<<Xs>>/<TD/lists of elements of type&nbsp;<<X>>//
+	  <TR/<TD/?_{A}/<TD/atom//
+	  <TR/<TD/?_{B}/<TD/bool//
+	  <TR/<TD/?_{C}/<TD/chunk//
+	  <TR/<TD/?_{F}/<TD/float//
+	  <TR/<TD/?_{I}/<TD/integer//
+	  <TR/<TD/?_{K}/<TD/class//
+	  <TR/<TD/?_{L}/<TD/literal//
+	  <TR/<TD/?_{N}/<TD/name//
+	  <TR/<TD/?_{O}/<TD/object//
+	  <TR/<TD/?_{P}/<TD/procedure//
+	  <TR/<TD/?_{R}/<TD/record//
+	  <TR/<TD/?_{S}/<TD/string//
+	  <TR/<TD/?_{T}/<TD/tuple//
+	  <TR/<TD/?_{U}/<TD/unit//
+	  <TR/<TD/?_{V}/<TD/virtual string//
+	  <TR/<TD/?_{X} ?_{Y} ?_{Z}/<TD/value//
+	  <TR/<TD/?_{FI}/<TD/number//
+	  <TR/<TD/?_{LI}/<TD/feature//
+	  <TR/<TD/?_{AFI}/<TD/atom, float, or int//
+	  <TR/<TD/?_{PO}/<TD/unary procedure or object//
+	  <TR/<TD/?_{Xs}/<TD/lists of elements of type&nbsp;?_{X}//
 	</Table>
-	We use indices such as <<R1>> or&nbsp;<<R2>> to disambiguate several
+	We use indices such as ?_{R1} or&nbsp;?_{R2} to disambiguate several
 	occurrences of arguments of the same type.  We combine these
-	abbreviations as in&nbsp;<<FI>> meaning <Q/float or integer/
-	(&ie;, number) or <<LI>> meaning <Q/literal or integer/ (&ie;,
+	abbreviations as in&nbsp;?_{FI} meaning <Q/float or integer/
+	(&ie;, number) or ?_{LI} meaning <Q/literal or integer/ (&ie;,
 	feature).  We use the plural-<Q/s/ suffix to indicate lists of
-	values of a certain type.  For instance, <<Is>> stands for a list
+	values of a certain type.  For instance, ?_{Is} stands for a list
 	of integers.  This suffix can be repeated to indicate lists of lists
-	&etc;  Additionally, these arguments can be prefixed as in <<LowI>>,
+	&etc;  Additionally, these arguments can be prefixed as in ?_{LowI},
 	which indicates that the integer represents a lower bound.
     <SubSection class=unnumbered>
       <Title/Modes/
