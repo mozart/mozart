@@ -59,7 +59,8 @@ STANDARDSRC1 = \
 	Literal.oz Value.oz Cell.oz Lock.oz Char.oz String.oz \
 	VirtualString.oz Object.oz Class.oz Loop.oz Port.oz \
 	Time.oz Thread.oz Match.oz Type.oz Space.oz \
-	Array.oz Dictionary.oz Exception.oz Lazy.oz
+	Array.oz Dictionary.oz Exception.oz Lazy.oz Promise.oz
+
 STANDARDSRC = $(STANDARDSRC1:%=Standard/%) Standard.oz
 
 INITSRC1 = URL.oz Prop.oz
