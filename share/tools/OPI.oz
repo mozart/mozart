@@ -26,6 +26,8 @@
 %%%
 
 local
+   Spec = record(host(single type: string default: unit))
+
    %% List of all functors
    local
       ModuleDefs = \insert ../functor-defaults
@@ -63,6 +65,7 @@ local
 in
    functor
    import
+      Application(getCmdArgs)
       Module(manager)
       System(printError)
       Property(get put)
@@ -71,6 +74,8 @@ in
       Compiler(engine)
       Emacs(interface)
    define
+      Args = {Application.getCmdArgs Spec}
+
       local
 	 OZVERSION = {Property.get 'oz.version'}
 	 DATE      = {Property.get 'oz.date'}
@@ -111,7 +116,7 @@ in
 	  end}
       end
 
-      CompilerUI = {New Emacs.interface init(OPICompiler)}
+      CompilerUI = {New Emacs.interface init(OPICompiler Args.host)}
       Sock = {CompilerUI getSocket($)}
       {Property.put 'opi.compiler' CompilerUI}
 
