@@ -447,6 +447,30 @@ proceed:
   return PROCEED;
 }
 
+// inline DISABLED CS
+void GenFDVariable::propagate(OZ_FDPropState state,
+			      PropCaller prop_eq)
+{
+  if (prop_eq == pc_propagator) {
+    switch (state) {
+    case fd_prop_singl: // no break
+      if (fdSuspList[fd_prop_singl])
+	GenCVariable::propagate(fdSuspList[fd_prop_singl], prop_eq);
+    case fd_prop_bounds: // no break
+      if (fdSuspList[fd_prop_bounds])
+	GenCVariable::propagate(fdSuspList[fd_prop_bounds], prop_eq);
+    default:
+      break;
+    }
+  } else {
+    GenCVariable::propagate(fdSuspList[fd_prop_singl], prop_eq);
+    GenCVariable::propagate(fdSuspList[fd_prop_bounds], prop_eq);
+  }
+  if (suspList) 
+    GenCVariable::propagate(suspList, prop_eq);
+}
+
+
 #ifdef OUTLINE 
 #define inline
 #include "fdgenvar.icc"
