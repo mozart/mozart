@@ -1,0 +1,67 @@
+# -*- Makefile -*-
+#  Authors:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Contributors:
+#    optional, Contributor's name (Contributor's email address)
+# 
+#  Copyright:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://mozart.ps.uni-sb.de
+# 
+#  See the file "LICENSE" or
+#     http://mozart.ps.uni-sb.de/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
+BUILDTOP=	@BUILDTOP@
+SRCTOP=		@SRCTOP@
+TESTDIR=	$(BUILDTOP)/share/test
+LIBDIR=		$(BUILDTOP)/share/lib
+PREFIX=		@prefix@
+
+BINDIR=		$(PREFIX)/platform/$(PLATFORM)
+INCDIR=		$(PREFIX)/include
+
+SHELL=		/bin/sh
+LEX=		@LEX@
+LFLAGS=		-8
+YACC=		@YACC@
+YFLAGS=		-d
+M4=		@M4@
+M4_S=		@M4_S@
+CXX=		@CXX@
+CXXCPP=		@CXXCPP@
+
+LD=		@LD@
+DYNLD=		@DYNLD@
+RANLIB=		@RANLIB@
+AR=		@AR@
+
+INSTALL=	@INSTALL@
+INSTALL_DIR= 	@INSTALL_DIR@
+INSTALL_BIN=	$(INSTALL) -m 555
+INSTALL_FILE=	$(INSTALL) -m 444
+
+LDFLAGS=	   @LDFLAGS@ $(CUSR)
+
+DEFS=		@DEFS@
+OZ_WARN=	@oz_warn@
+OZ_WARN_ERROR=	@oz_warn_error@
+CPPFLAGS=	@CPPFLAGS@ $(INCS) $(DEFS)
+COPT=		@COPT@
+CXXFLAGS=	@CXXFLAGS@ $(COPT) $(OZ_WARN) $(OZ_WARN_ERROR) $(CUSR)
+CXXFLAGS_NO_ERROR= @CXXFLAGS@ $(COPT) $(OZ_WARN) $(CUSR)
+DEPEND=		@DEPEND@ $(CPPFLAGS)
+
+PLATFORM=	@platform@
+
+OZVERSION=	$(SRCTOP)/OZVERSION

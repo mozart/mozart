@@ -1,0 +1,42 @@
+dnl -*- sh -*-
+dnl
+dnl  Authors:
+dnl    Denys Duchier (duchier@ps.uni-sb.de)
+dnl 
+dnl  Copyright:
+dnl    Denys Duchier (1998)
+dnl 
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl 
+dnl  This file is part of Mozart, an implementation 
+dnl  of Oz 3:
+dnl     http://mozart.ps.uni-sb.de
+dnl 
+dnl  See the file "LICENSE" or
+dnl     http://mozart.ps.uni-sb.de/LICENSE.html
+dnl  for information on usage and redistribution 
+dnl  of this file, and for a DISCLAIMER OF ALL 
+dnl  WARRANTIES.
+dnl
+
+dnl Process this file with autoconf to produce a configure script.
+
+AC_INIT(ozdoc.dtd)
+OZ_INIT
+AC_PROG_INSTALL
+AC_MSG_CHECKING(for --with-psgml-dir)
+AC_ARG_WITH(psgml-dir,
+    [--with-psgml-dir=DIR
+    	directory where psgml mode support is located],
+    oz_psgml_dir=${with_psgml_dir})
+: ${oz_psgml_dir=}
+AC_MSG_RESULT($oz_psgml_dir)
+PSGML="${oz_psgml_dir}"
+AC_SUBST(PSGML)
+AC_OUTPUT(Makefile catalog ced.el)
+errprint(ifdef([OZ_INIT],
+ [],
+ [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
+]))

@@ -1,0 +1,53 @@
+
+1)  CommHandlers/Watchers/			Per/Erik
+2)  Arrays/Dictionaries - distribution		Ralf
+3)  Builtins - distribution			??
+4)  Threads - distribution			??
+5)  Simplification component code		Per/Erik
+6)  WaitOnRequest
+ a) centralized					Ralf
+ b) distributed					Per/Erik
+7)  GlobalNames of Code				Michael
+8)  Unification-stopping immediately/
+    simplify perdio as a result			Michael
+9)  SecondaryCredit test/debug			Per/Erik
+10) Spaces - distribution 			??
+ *   spaces
+ *     Space.ask[Verbose] may suspend?
+ *     Space.merge may fail.
+ *     Space.clone may suspend
+ *     Space.clone should return a local clone
+ *     Space.choose may fail, suspend
+ *     Space.inject may fail, suspend
+11) GC of sites rather than ref counting	Per/Erik
+12) Test Bench
+ a) protocol suite				Per/Erik
+ b) starting remote sites			Michael
+ c) programs					??
+13) Cell-Access protocol			Per/Erik
+14) IsFree (distributed)			Ralf
+15) support for multiple marshalers		Ralf
+16) GC- code					??
+
+
+ *   owner table
+ *     compactify
+
+
+ *   save
+ *     saving proxies for resources raises exception
+ *     url=unit: save without support
+ *     isGround: save and check that no variables saved
+ *     getUrls:  save and look at the urls
+ *     isFixed: save and check that resources empty
+ *     IDEA: implement {Flatten X ?Xs} Xs is a list of a reachable nodes
+
+
+
+from Ralfs TODO.perdio
+- use hashing for BorrowerTable
+- eliminate NetAddress if object is local
+
+from Denys:
+- extend ByteSource with an `error origin' method to allow
+  for more informative error exceptions

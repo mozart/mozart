@@ -1,0 +1,95 @@
+### NOTES:
+###	configure should really look for oz.h and substitute the
+###	appropriate dependency
+
+@SET_MAKE@
+
+VPATH		= @srcdir@
+BUILDTOP	= @BUILDTOP@
+PREFIX		= @prefix@
+SRCDIR		= @srcdir@
+SRCTOP		= @SRCTOP@
+SUBDIRS		= ozflex ozbison
+
+RM		= @RM@ -f
+DYNLD		= @DYNLD@
+CXX		= @CXX@
+CPPFLAGS	= -I$(SRCDIR) -I. -I$(SRCTOP)/platform/emulator @CPPFLAGS@
+CXXFLAGS	= @CXXFLAGS@ $(CFLAGS)
+LDFLAGS		= @LDFLAGS@
+LIBS		= @LIBS@ -lc
+CFLAGS		= -O6
+
+DYNLDIR		= $(PREFIX)/platform/@platform@/share/gump
+INCDIR		= $(PREFIX)/include
+
+INSTALL		= @INSTALL@
+INSTALLPRG	= $(INSTALL) -m 555
+INSTALLFILE	= $(INSTALL) -m 444
+MKINSTALLDIRS	= @MKINSTALLDIRS@
+
+PACKAGE		= www.ps.uni-sb.de/ozhome/share/gump
+CACHE_DIR	= $(PREFIX)/platform/@platform@/cache/$(PACKAGE)
+GUMP_FILES	= GumpScanner.dl flex ozbison.dl
+DYNLDIR_FILES	= $(addprefix $(DYNLDIR)/,$(GUMP_FILES))
+CACHE_FILES	= $(addprefix $(CACHE_DIR)/,$(GUMP_FILES))
+
+HEADERS1 = FlexLexer.h lexer.h
+HEADERS = $(HEADERS1:%=$(INCDIR)/%)
+
+all: Makefile subdirs GumpScanner.dl
+
+bootstrap: all
+
+subdirs:
+	dirs="$(SUBDIRS)"; \
+	for i in $$dirs; do \
+	  if (cd $$i && $(MAKE) all); \
+          then true; \
+          else exit 1; \
+          fi; \
+        done
+
+GumpScanner.dl: GumpScanner.C $(SRCTOP)/platform/emulator/oz.h
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o GumpScanner.o && \
+	$(DYNLD) -o $@ GumpScanner.o $(LDFLAGS) $(LIBS)
+
+## here we install shared object libs twice: once in the old
+## location and once in the cache.  eventually we should only
+## install into the cache, I think.
+
+install: all \
+	$(DYNLDIR) $(DYNLDIR_FILES) \
+	$(CACHE_DIR) $(CACHE_FILES) \
+	$(INCDIR) $(HEADERS)
+
+$(DYNLDIR) $(INCDIR) $(CACHE_DIR):
+	$(MKINSTALLDIRS) $@
+
+$(DYNLDIR)/GumpScanner.dl $(CACHE_DIR)/GumpScanner.dl: GumpScanner.dl
+	$(INSTALLFILE) $< $@
+
+$(DYNLDIR)/flex $(CACHE_DIR)/flex: ozflex/flex
+	$(INSTALLPRG) $< $@
+
+$(DYNLDIR)/ozbison.dl $(CACHE_DIR)/ozbison.dl: ozbison/ozbison.dl
+	$(INSTALLFILE) $< $@
+
+$(INCDIR)/%: %
+	$(INSTALLFILE) $< $@
+
+clean veryclean:
+	$(RM) *~ *.o *.dl
+	for i in $(SUBDIRS); do (cd $$i && $(MAKE) clean); done
+
+distclean: clean
+	$(RM) Makefile config.*
+	for i in $(SUBDIRS); do (cd $$i && $(MAKE) distclean); done
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
+
+check:

@@ -1,0 +1,478 @@
+#  Authors:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Contributors:
+#    optional, Contributor's name (Contributor's email address)
+# 
+#  Copyright:
+#    Michael Mehl, 1998
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://mozart.ps.uni-sb.de
+# 
+#  See the file "LICENSE" or
+#     http://mozart.ps.uni-sb.de/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
+# !!! THIS MAKEFILE REQUIRES GNU MAKE !!!!
+
+############################################################################
+# VARIABLES
+############################################################################
+
+VPATH=	@srcdir@
+SRCDIR=	@srcdir@
+
+include Makefile.vars
+
+MODULE_NAMES =\
+	Wif FDP Schedule FSP Parser \
+	ozma CompilerSupport Browser Debug
+
+STATIC_MODULELIBS=	-L. ${MODULE_NAMES:%=-l%}
+STATIC_MODULETARGETS=	$(MODULE_NAMES:%=lib%.a)
+DYNAMIC_MODULETARGETS=	$(MODULE_NAMES:%=%.so)
+
+CORE_MODULES=	Perdio Run OF FS FD CPI OS Space Store Mem Support
+#CORE_LIBS=	-L. ${CORE_MODULES:%=-l%}
+CORE_TARGETS=	${CORE_MODULES:%=lib%.a}
+
+LIBS=		$(CORE_LIBS) @LIBS@
+
+INCS=		-I. -I$(SRCDIR)
+M4_D=		-DEMUDIR=$(SRCDIR)
+TARGETS=	@TARGETS@ text2pickle Builtins.oz
+MODULETARGETS=	@MODULETARGETS@
+MODULEINSTALL=	@MODULEINSTALL@  
+SUBDIRS=	libfd libfset
+OZVERSION=	$(SRCTOP)/OZVERSION
+
+# these are the builtin modules: non-sited primitives
+BIMODSPECS = \
+	Boot Array Atom BitArray Bool Cell Char Chunk Class \
+	Dictionary Exception Float ForeignPointer Int Literal \
+	Lock Name Number Object Port Procedure Record Space \
+	String Thread Time Tuple Unit Value VirtualString
+
+MODSPECS= \
+	FDP FSP Schedule Wif Parser OS Property Pickle \
+	PID URL FDB FSB System Finalize CTB \
+	CompilerSupport Profile \
+	Debug Fault Foreign Browser Misc Distribution \
+	Builtins VirtualSite \
+	BitString ByteString \
+	$(BIMODSPECS)
+
+MODINTERS = $(MODSPECS:%=mod%-if.cc)
+
+CREATEDSRCS=scanner.cc parser.cc
+
+CREATEDFILES= \
+	instrtab.hh opcodes.hh marshaler.hh\
+	marshalcode.cc marshalMsg.cc register.hh oz.c \
+	atoms.hh atoms.cc\
+	config.h scanner.cc parser.cc \
+	version.cc initffuns.cc copycode.cc opcodes.cc\
+	$(MODINTERS) Builtins.oz
+
+OTHERSRCS= \
+	main.cc \
+	version.cc initffuns.cc \
+	fdhook.cc statisti.cc trace.cc \
+	print.cc base.cc ozconfig.cc \
+	foreign.cc boot-manager.cc \
+	builtins.cc vprops.cc debug.cc
+
+SUPPORTSRCS=\
+	stack.cc genhashtbl.cc ozostream.cc hashtbl.cc \
+	iso-ctype.cc
+
+OSSRCS=\
+	os.cc unix.cc urlc.cc ioHandler.cc
+
+STORESRCS=\
+	tagged.cc value.cc atoms.cc \
+	dictionary.cc extension.cc bitarray.cc \
+	ozthread.cc heapchunk.cc \
+	variable.cc susplist.cc genvar.cc \
+	simplevar.cc future.cc \
+	fdgenvar.cc \
+	bytedata.cc
+
+RUNSRCS=\
+	am.cc indexing.cc taskstk.cc codearea.cc lps.cc thread.cc\
+	thrqueue.cc thrspool.cc trail.cc emulate.cc scheduler.cc \
+	threadInterface.cc copycode.cc opcodes.cc controlvar.cc \
+	cont.cc
+
+SPACESRCS=\
+	actor.cc board.cc solve.cc cpbag.cc space.cc
+
+MEMSRCS=\
+	gc.cc mem.cc liveness.cc
+
+PERDIOSRCS=\
+	perdio.cc components.cc network.cc comm.cc perdio_debug.cc \
+	virtual.cc vs_comm.cc vs_mailbox.cc vs_msgbuffer.cc \
+	marshaler.cc perdiovar.cc
+
+OFSRCS=	ofgenvar.cc ofbi.cc
+
+FDSRCS=\
+	fdbuilti.cc fdomn.cc fdcore.cc \
+	fdcd.cc fdbvar.cc
+
+CPISRCS=\
+	cpi.cc cpi_fd.cc cpi_prop.cc \
+	cpi_fs.cc cpi_expect.cc cpi_misc.cc \
+	cpi_stream.cc cpi_profile.cc cpi_ct.cc \
+	ctgenvar.cc
+
+FSETSRCS=\
+	fset.cc fsetcore.cc fsgenvar.cc
+
+TEXT2PICKLESRCS= text2pickle.cc opcodes.cc
+TEXT2PICKLEOBJS= $(TEXT2PICKLESRCS:.cc=.o)
+
+SRCS= \
+	$(SUPPORTSRCS) $(MEMSRCS) $(STORESRCS) \
+	$(SPACESRCS) $(RUNSRCS) $(OSSRCS) \
+	$(CPISRCS) $(FDSRCS) $(FSETSRCS) $(OFSRCS) \
+	$(PERDIOSRCS)
+
+OBJS=   $(SRCS:%.cc=%.o) $(OTHERSRCS:%.cc=%.o)
+
+WIFSRCS=	wif.cc
+COMPILERSUPPORTSRCS=	compiler.cc
+BROWSERSRCS=	browser.cc
+DEBUGSRCS=	debugBI.cc
+
+WIFOBJS=	$(WIFSRCS:%.cc=%.o)
+COMPILERSUPPORTOBJS=	$(COMPILERSUPPORTSRCS:%.cc=%.o)
+BROWSEROBJS=	$(BROWSERSRCS:%.cc=%.o)
+DEBUGOBJS=	$(DEBUGSRCS:%.cc=%.o)
+
+ALLSRCS= $(SRCS) \
+	$(WIFSRCS) $(COMPILERSUPPORTSRCS) $(BROWSERSRCS) \
+	$(DEBUGSRCS) $(TEXT2PICKLESRCS)
+
+############################################################################
+### TARGETS
+############################################################################
+
+.NOEXPORT: emulate.o @PROGRAMNAME@ peanuts.o
+.PHONY:	all win win-install first install install-bin install-inc \
+	install-dir depend tags clean distclean veryclean \
+	install-module
+
+all: $(TARGETS) 
+
+bootstrap:: all
+
+BIMODFILES = $(BIMODSPECS:%=mod%.spec)
+
+$(MODINTERS): bidecl.perl
+
+Builtins.oz: $(BIMODFILES) bidecl.perl
+	perl $(SRCDIR)/bidecl.perl -srcdir $(SRCDIR) -builtins $(BIMODSPECS) > $@
+
+.PHONY: libFDP.a FDP.so libSchedule.a Schedule.so
+libFDP.a FDP.so libSchedule.a Schedule.so:
+	cd libfd; $(MAKE) ../$@
+
+.PHONY: libFSP.a FSP.so
+libFSP.a FSP.so:
+	cd libfset; $(MAKE) ../$@
+
+Wif.so: $(WIFOBJS)
+	$(DYNLD) -o $@ $(WIFOBJS)
+
+libWif.a: $(WIFOBJS)
+	$(AR) -rc $@ $(WIFOBJS) && $(RANLIB) $@
+
+CompilerSupport.so: $(COMPILERSUPPORTOBJS)
+	$(DYNLD) -o $@ $(COMPILERSUPPORTOBJS)
+
+libCompilerSupport.a: $(COMPILERSUPPORTOBJS)
+	$(AR) -rc $@ $(COMPILERSUPPORTOBJS) && $(RANLIB) $@
+
+browser.o: modBrowser-if.cc
+
+Browser.so: $(BROWSEROBJS)
+	$(DYNLD) -o $@ $(BROWSEROBJS)
+
+libBrowser.a: $(BROWSEROBJS)
+	$(AR) -rc $@ $(BROWSEROBJS) && $(RANLIB) $@
+
+Debug.so: $(DEBUGOBJS)
+	$(DYNLD) -o $@ $(DEBUGOBJS)
+
+libDebug.a: $(DEBUGOBJS)
+	$(AR) -rc $@ $(DEBUGOBJS) && $(RANLIB) $@
+
+libPerdio.a: $(PERDIOSRCS:%.cc=%.o)
+	$(AR) -rc $@ $(PERDIOSRCS:%.cc=%.o) && $(RANLIB) $@
+
+libOF.a: $(OFSRCS:%.cc=%.o)
+	$(AR) -rc $@ $(OFSRCS:%.cc=%.o) && $(RANLIB) $@
+
+libFD.a: $(FDSRCS:%.cc=%.o)
+	$(AR) -rc $@ $(FDSRCS:%.cc=%.o) && $(RANLIB) $@
+
+libFS.a: $(FSETSRCS:%.cc=%.o)
+	$(AR) -rc $@ $(FSETSRCS:%.cc=%.o) && $(RANLIB) $@
+
+libCPI.a: $(CPISRCS:%.cc=%.o)
+	$(AR) -rc $@ $(CPISRCS:%.cc=%.o) && $(RANLIB) $@
+
+libStore.a: $(STORESRCS:%.cc=%.o)
+	$(AR) -rc $@ $(STORESRCS:%.cc=%.o) && $(RANLIB) $@
+
+libSupport.a: $(SUPPORTSRCS:%.cc=%.o)
+	$(AR) -rc $@ $(SUPPORTSRCS:%.cc=%.o) && $(RANLIB) $@
+
+libSpace.a: $(SPACESRCS:%.cc=%.o)
+	$(AR) -rc $@ $(SPACESRCS:%.cc=%.o) && $(RANLIB) $@
+
+libRun.a: $(RUNSRCS:%.cc=%.o)
+	$(AR) -rc $@ $(RUNSRCS:%.cc=%.o) && $(RANLIB) $@
+
+libOS.a: $(OSSRCS:%.cc=%.o)
+	$(AR) -rc $@ $(OSSRCS:%.cc=%.o) && $(RANLIB) $@
+
+libMem.a: $(MEMSRCS:%.cc=%.o)
+	$(AR) -rc $@ $(MEMSRCS:%.cc=%.o) && $(RANLIB) $@
+
+win: ozlib.lnk $(CREATEDFILES)
+
+PRGDEP=$(CREATEDFILES) $(OBJS) $(OZMALIB) $(MODULETARGETS)
+
+# PRGDEP+=$(CORE_TARGETS)
+
+core: $(CORE_TARGETS)
+
+first: $(CREATEDFILES)
+
+@PROGRAMNAME@: $(PRGDEP)
+	$(LD) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
+
+@oz_tmphack_programname@: $(PRGDEP)
+	tmp=/tmp/ozemu$$$$; \
+	trap "rm -f $$tmp; exit 1" 1 2 15; \
+	 $(LD) $(LDFLAGS) $(LDOPT) -o $$tmp $(OBJS) $(LIBS) && \
+	 echo 'moving ...' && \
+	 rcp $$tmp @oz_tmphack_host@:`pwd`/$@ && \
+	 rm -f $$tmp
+
+text2pickle: $(TEXT2PICKLEOBJS)
+	$(LD) $(LDFLAGS) $(LDOPT) -o $@ $(TEXT2PICKLEOBJS)
+
+install:: install-bin install-inc $(MODULEINSTALL)
+
+install-bin: $(TARGETS) $(BINDIR)
+	$(INSTALL_BIN) $(TARGETS) $(BINDIR)
+
+install-inc: $(INCDIR)
+	$(INSTALL_FILE) $(SRCDIR)/oz.h $(INCDIR)
+	$(INSTALL_FILE) $(SRCDIR)/oz_cpi.hh $(INCDIR)
+
+install-module: $(DYNAMIC_MODULETARGETS) $(BINDIR)
+	$(INSTALL_BIN) $(DYNAMIC_MODULETARGETS) $(BINDIR)
+
+$(BINDIR) $(INCDIR):
+	$(INSTALL_DIR) $@
+
+initffuns.cc oz.c: oz.h $(OZVERSION)
+	$(SHELL) $(SRCDIR)/makeffuns $(SRCDIR) `$(OZVERSION)`
+
+version.cc: version.sed $(filter-out version.cc,$(ALLSRCS))
+	sed -e "s/HEREGOESDATE/`date '+%h %d %Y \(%T\)'`/" \
+	     -e "s/OZPLATFORM/$(PLATFORM)/" \
+	     $(SRCDIR)/version.sed > version.cc
+
+depend:: version.cc initffuns.cc $(CREATEDSRCS) $(ALLSRCS)
+	$(MAKE) first
+	$(DEPEND) $^ > Makefile.deps
+
+tags:	$(CREATEDFILES) version.cc
+	etags \
+	--regex='/OZ_BI_\(io\)?define([ 	]*\([^ 	,)]+\)/\2/' \
+	--regex='/OZ_C_\(io\)?proc_begin([ 	]*\([^ 	,)]+\)/\2/' -l c++ \
+	-o $(SRCDIR)/TAGS \
+	$(CREATEDFILES) \
+	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/*/*c $(SRCDIR)/*/*h
+
+clean::
+	-rm -f gmon.out  fetchedInstr.dump verb_out.txt
+
+ozlib.lnk: oz.h
+	grep FUNDECL oz.h | grep -v typedef | grep -v define | \
+	sed -e 's/.*_FUNDECL(\([A-Za-z0-9_]*\).*/export _\1/' > $@
+
+scanner.cc: scanner.ll
+	$(LEX) $(LFLAGS) -Pxy -o$@ $<
+
+parser.cc: parser.hh
+	@echo > /dev/null
+
+parser.hh: parser.yy
+	$(YACC) $(YFLAGS) -p xy $<
+	@mv y.tab.c parser.cc
+	@mv y.tab.h parser.hh
+
+Parser.so: parser.o scanner.o parsertable.o
+	$(DYNLD) -o $@ parser.o scanner.o parsertable.o
+
+libParser.a: parser.o scanner.o parsertable.o
+	$(AR) -rc $@ parser.o scanner.o parsertable.o && $(RANLIB) $@
+
+wif.o: modWif-if.cc
+
+parsertable.o: modParser-if.cc
+
+compiler.o: modCompilerSupport-if.cc
+
+boot-manager.o: $(MODINTERS)
+
+%-if.cc: %.spec
+	perl $(SRCDIR)/bidecl.perl -file $< -interface > $@
+
+# this special rule ensures that warnings issued in bison.simple
+# are not treated as errors:
+parser.o: parser.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) -c $< -o $@
+
+config.h: config.m4h $(OZVERSION)
+	$(M4) $(M4_D) -DOZVERSION=\"`$(OZVERSION)`\" $(SRCDIR)/config.m4h > $@
+
+#/usr/include/signal.h is broken on Linux:
+#os.cc: In function `void osBlockSignals(int = 0)':
+#os.cc:208: warning: assignment of negative value `-1' to `long unsigned int'
+os.o: os.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) -c $< -o $@
+
+# dependencies
+-include Makefile.deps
+
+value.o: atoms.hh
+
+marshaler.hh marshalMsg.cc: msgFormat.m4
+copycode.cc marshalcode.cc opcodes.hh opcodes.cc instrtab.hh config.h: instrDefs.m4
+
+marshaler.o: marshalcode.cc pickle.cc
+text2Pickle.o: pickle.cc
+components.o: componentBuffer.cc
+
+# automatic configure
+#${srcdir}/configure: configure.in
+#	cd ${srcdir} && autoconf -l ..
+
+conf.h: conf.h.in
+	./config.status
+
+Makefile: Makefile.in
+	./config.status
+
+Makefile.vars: Makefile.vars.in
+	./config.status
+
+Makefile.rules: Makefile.rules.in
+	./config.status
+
+config.status: configure
+	./config.status --recheck
+
+
+# ozma
+ozma-s.cc: ozma-s.ll
+	$(LEX) $(LFLAGS) -Pozma $<
+	@mv lex.ozma.c ozma-s.cc
+
+ozma-p.cc ozma.hh: ozma-p.yy
+	$(YACC) $(YFLAGS) -p ozma $<
+	@mv y.tab.c ozma-p.cc
+	@mv y.tab.h ozma.hh
+
+ozma-s.ll ozma-p.yy: instrDefs.m4
+ozma-p.o ozma-s.o: config.h opcodes.hh
+
+# this special rule ensures that warnings issued in bison.simple
+# are not treated as errors:
+ozma-p.o: ozma-p.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) -c $< -o $@
+
+ozma-s.ll: ozma-s.m4ll
+	$(M4) $(M4_D) $< > $@
+
+ozma-p.yy: ozma-p.m4yy
+	$(M4) $(M4_D) $< > $@
+
+ozma.so: ozma-p.o ozma-s.o
+	$(DYNLD) -o $@ ozma-p.o ozma-s.o -lc
+
+libozma.a: ozma-p.o ozma-s.o
+	$(AR) -rc $@ ozma-p.o ozma-s.o && $(RANLIB) $@
+
+veryclean::
+	-rm -f ozma-p.cc ozma-p.yy ozma-s.cc ozma-s.ll ozma.hh
+
+############################################################################
+# testing the local emulator:
+#   make test-check       # runs the test suite with local emulator
+#   make test-stage1-check # ... with the stage1 components
+#   make lib-check        # runs the check in the lib with local emulator
+############################################################################
+
+.PHONY: test-all test lib-all check
+
+test-all:
+	OZEMULATOR=`pwd`/oz.emulator.bin; export OZEMULATOR; \
+	cd $(TESTDIR) && ./configure && make clean all
+	$(MAKE) test1;
+
+test:
+	OZEMULATOR=`pwd`/oz.emulator.bin; export OZEMULATOR; \
+	cd $(TESTDIR) && \
+	$(MAKE) check
+
+lib-all:
+	$(MAKE) lib-check
+
+lib-%:
+	OZEMULATOR=`pwd`/oz.emulator.bin && export OZEMULATOR; \
+	cd $(LIBDIR) && \
+	$(MAKE) $*
+
+test-%:
+	OZEMULATOR=`pwd`/oz.emulator.bin && export OZEMULATOR; \
+	cd $(TESTDIR) && \
+	$(MAKE) $*
+
+check-all: oz.emulator.bin
+	$(MAKE) test
+	$(MAKE) lib-check
+
+
+############################################################################
+# RULES
+############################################################################
+
+include Makefile.rules
+
+# should be after make in subdirs (see Makefiles.rules)
+
+veryclean::
+	-rm -f version.cc scanner.cc parser.cc parser.hh $(TARGETS) \
+		ozlib.lnk *.exe *.map *.imp *.sym \
+		$(CREATEDFILES) TAGS Makefile.deps
+
+distclean::
+	-rm -f CONF.h conf.h config.cache config.log config.status \
+		Makefile.rules Makefile.vars Makefile

@@ -1,0 +1,254 @@
+BUILDTOP	= @BUILDTOP@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+SRCTOP		= @SRCTOP@
+
+PREFIX		= @prefix@
+OZDEMO		= $(PREFIX)/demo
+
+SHELL		= /bin/sh
+LN_S            = @LN_S@
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_DIR	= @INSTALL_DIR@
+
+OZC		= @OZC@
+OZCA		= $(OZC) #-l Application,Open
+
+
+#
+# The list of demos
+#
+
+DIRS = \
+	concurrent constraints distributed
+
+CONSTRAINTS = \
+	job-shop animated-queens
+
+CONCURRENT = \
+	bounce trucks transport lift
+
+DISTRIBUTED = \
+	board
+
+all::
+
+OZDIRS = $(DIRS:%=$(OZDEMO)/%)
+
+install:: $(OZDEMO) $(OZDIRS)
+
+$(OZDEMO):
+	$(INSTALL_DIR) $@
+
+$(OZDIRS):
+	$(INSTALL_DIR) $@
+	$(LN_S) $@/../demo.css $@
+	$(LN_S) $@/../demo.gif $@
+
+#
+# Web pages
+# 
+
+CONSTRAINTWEB  = $(CONSTRAINTS:%=constraints/%.html)
+CONCURRENTWEB  = $(CONCURRENT:%=concurrent/%.html)
+DISTRIBUTEDWEB = $(DISTRIBUTED:%=distributed/%.html)
+
+WEBPAGES = \
+	$(CONSTRAINTWEB) $(CONCURRENTWEB) $(DISTRIBUTEDWEB)
+
+CONSTRAINTWEBP  = $(CONSTRAINTS:%=constraints/%-html.ozp)
+CONCURRENTWEBP  = $(CONCURRENT:%=concurrent/%-html.ozp)
+DISTRIBUTEDWEBP = $(DISTRIBUTED:%=distributed/%-html.ozp)
+
+WEBC = \
+	$(CONSTRAINTWEBC) $(CONCURRENTWEBC) $(DISTRIBUTEDWEBC)
+
+all:: $(WEBPAGES) $(WEBC)
+
+ozp2html: make-ozp2html.oz
+	$(OZCA) -x $< -o $@
+
+$(WEBPAGES): ozp2html
+
+OZENGINE=ozengine
+OZP2HTML=$(OZENGINE) ./ozp2html
+
+constraints/%.html: constraints/%-html.ozp
+	$(OZP2HTML) --ozp=$< > $@
+concurrent/%.html: concurrent/%-html.ozp
+	$(OZP2HTML) --ozp=$< > $@
+distributed/%.html: distributed/%-html.ozp
+	$(OZP2HTML) --ozp=$< > $@
+
+constraints/%-html.ozp: constraints/%-html.oz
+	$(OZCA) -c $< -o $@
+concurrent/%-html.ozp: concurrent/%-html.oz
+	$(OZCA) -c $< -o $@
+distributed/%-html.ozp: distributed/%-html.oz
+	$(OZCA) -c $< -o $@
+
+clean:: 
+	-rm -f $(WEBC) ozp2html
+
+veryclean::
+	-rm -f $(WEBPAGES)
+
+
+ALLWEB = \
+	$(WEBPAGES) \
+	demo.css demo.gif \
+	index.html \
+	install.html netscape.gif
+
+OZALLWEB = $(ALLWEB:%=$(OZDEMO)/%)
+
+install:: $(OZALLWEB)
+
+$(OZDEMO)/%.html: %.html
+	$(INSTALL_FILE) $< $@
+$(OZDEMO)/%.css: %.css
+	$(INSTALL_FILE) $< $@
+$(OZDEMO)/%.gif: %.gif
+	$(INSTALL_FILE) $< $@
+
+$(OZDEMO)/constraints/%.html: constraints/%.html
+	$(INSTALL_FILE) $< $@
+$(OZDEMO)/concurrent/%.html: concurrent/%.html
+	$(INSTALL_FILE) $< $@
+$(OZDEMO)/distributed/%.html: distributed/%.html
+	$(INSTALL_FILE) $< $@
+
+#
+# Compiling the applets
+#
+
+CONSTRAINTAPPLETS  = $(CONSTRAINTS:%=constraints/%.oza)
+CONCURRENTAPPLETS  = $(CONCURRENT:%=concurrent/%.oza)
+DISTRIBUTEDAPPLETS = $(DISTRIBUTED:%=distributed/%.oza)
+
+APPLETS = \
+	$(CONSTRAINTAPPLETS) \
+	$(CONCURRENTAPPLETS) \
+	$(DISTRIBUTEDAPPLETS)
+
+all:: $(APPLETS)
+
+constraints/%.oza: constraints/%.oz
+	$(OZCA) -c $< -o $@
+concurrent/%.oza: concurrent/%.oz
+	$(OZCA) -c $< -o $@
+distributed/%.oza: distributed/%.oz
+	$(OZCA) -c $< -o $@
+
+JOBSHOP = \
+	compiler configure duration-tool examples job \
+	main resource-tool scheduler task-board task tools
+constraints/job-shop.oza: $(JOBSHOP:%=constraints/job-shop/%.oz)
+
+TRANSPORT = \
+	agent broker company configure contract \
+	country driver environment frontend germany \
+	makeplan randomizer truck widgets
+concurrent/transport.oza: $(TRANSPORT:%=concurrent/transport/%.oz)
+
+
+veryclean::
+	-rm -f $(APPLETS)
+
+OZAPPLETS = $(APPLETS:%=$(OZDEMO)/%)
+
+install:: $(OZAPPLETS)
+
+$(OZDEMO)/constraints/%.oza: constraints/%.oza
+	$(INSTALL_FILE) $< $@
+$(OZDEMO)/concurrent/%.oza: concurrent/%.oza
+	$(INSTALL_FILE) $< $@
+$(OZDEMO)/distributed/%.oza: distributed/%.oza
+	$(INSTALL_FILE) $< $@
+
+
+#
+# Images
+#
+
+OZIMG = $(OZDEMO)/images
+
+IMGDIRS = \
+	animated-queens diagnosis lift transport trucks
+
+OZIMGDIRS = $(IMGDIRS:%=$(OZIMG)/%)
+
+QUEENSIMGS0 = \
+	large-cross large-gray large-queen large-solid \
+	micro-gray micro-queen micro-solid \
+	middle-cross middle-gray middle-queen middle-solid \
+	small-gray small-queen small-solid \
+	tiny-gray tiny-queen tiny-solid
+
+DIAGIMGS0 = \
+	and or xor
+
+LIFTIMGS0 = \
+	downE downF lift liftDown liftUp upE upF
+
+TRANSPORTIMGS0 = \
+	down \
+	truck_fill_left truck_fill_right \
+	truck_frame_left truck_frame_right \
+	truck_win_left truck_win_right
+
+TRUCKSIMGS0 = \
+	truck-left truck-right
+
+OZIMAGES = \
+	$(QUEENSIMGS0:%=$(OZIMG)/animated-queens/%.xbm) \
+	$(DIAGIMGS0:%=$(OZIMG)/diagnosis/%.xbm) \
+	$(LIFTIMGS0:%=$(OZIMG)/lift/%.xbm) \
+	$(TRANSPORTIMGS0:%=$(OZIMG)/transport/%.xbm) \
+	$(TRUCKSIMGS0:%=$(OZIMG)/trucks/%.gif)
+
+install:: $(OZIMGDIRS) $(OZIMAGES)
+
+$(OZIMGDIRS):
+	$(INSTALL_DIR) $@
+$(OZIMG)/animated-queens/%.xbm: images/animated-queens/%.xbm
+	$(INSTALL_FILE) $< $@
+$(OZIMG)/diagnosis/%.xbm: images/diagnosis/%.xbm
+	$(INSTALL_FILE) $< $@
+$(OZIMG)/lift/%.xbm: images/lift/%.xbm
+	$(INSTALL_FILE) $< $@
+$(OZIMG)/transport/%.xbm: images/transport/%.xbm
+	$(INSTALL_FILE) $< $@
+$(OZIMG)/trucks/%.gif: images/trucks/%.gif
+	$(INSTALL_FILE) $< $@
+
+
+#
+# Generic
+#
+
+clean::
+	-rm -f *~ ./*/*~ ./*/*/*~
+
+veryclean:: clean
+
+distclean: veryclean
+	-rm -f Makefile config.cache config.status config.log
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck
+
+include $(SRCDIR)/../Makefile.boot
+
+bootstrap:
+	@mkdir constraints 2> /dev/null || true
+	@mkdir concurrent 2> /dev/null || true
+	@mkdir distributed 2> /dev/null || true
+	$(MAKE) boot-all
+
+check:

@@ -1,0 +1,110 @@
+/*
+ *  Authors:
+ *    Kostja Popow (popow@ps.uni-sb.de)
+ *    Michael Mehl (mehl@dfki.de)
+ * 
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
+ * 
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://mozart.ps.uni-sb.de
+ * 
+ *  See the file "LICENSE" or
+ *     http://mozart.ps.uni-sb.de/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+#ifndef __AM_ICC
+#define __AM_ICC
+
+#if !defined(OUTLINE) && defined(INTERFACE)
+#pragma interface
+#endif
+
+#include "variable.hh"
+
+// optimize: inline ....
+
+#define ShallowCheckLocal(ptr)						\
+   if (inShallowGuard()) return reallyHeapNever(ptr,_shallowHeapTop);
+
+INLINE
+Bool AM::isLocalUVar(TaggedRef var,TaggedRef *varPtr)
+{
+  // variables are usually bound 
+  // in the node where they are created
+  ShallowCheckLocal(varPtr);
+  if (currentUVarPrototypeEq(var)) return OK;
+  return isLocalUVarOutline(var,varPtr);
+}
+
+
+INLINE
+Bool AM::isLocalSVar(SVariable *var) {
+  ShallowCheckLocal(var);
+  return (oz_isCurrentBoard(var->getHome1())) || isLocalSVarOutline(var);
+}
+
+#undef ShallowCheckLocal
+
+INLINE
+Bool AM::isLocalSVar(TaggedRef var) {
+  return isLocalSVar(tagged2SVarPlus(var));
+}
+
+INLINE
+Bool AM::isLocalVariable(TaggedRef var,TaggedRef *varPtr)
+{
+  CHECK_ISVAR(var);
+
+  if (isUVar(var)) return isLocalUVar(var,varPtr);
+  return isLocalSVar(var);
+}
+
+/* ------------------------------------------------------------------------
+ * Threads
+ * ------------------------------------------------------------------------ */
+
+INLINE
+int AM::newId() {
+  unsigned int currentThreadID = oz_currentThread() ?
+    oz_currentThread()->getID() & THREAD_ID_MASK : 1;
+  lastThreadID = (lastThreadID + 1) & THREAD_ID_MAX;
+  return lastThreadID | (currentThreadID << THREAD_ID_SIZE);
+}
+
+/* ------------------------------------------------------------------------
+ * OO stuff
+ * ------------------------------------------------------------------------ */
+
+INLINE
+void AM::changeSelf(Object *o)
+{
+  Object *oldSelf = cachedSelf;
+  if(o != oldSelf) {
+    cachedStack->pushSelf(oldSelf);
+    cachedSelf = o;
+  }
+}
+
+INLINE
+void AM::saveSelf()
+{
+  if (cachedSelf != 0) {
+    oz_currentThread()->setSelf(cachedSelf);
+    cachedSelf = 0;
+  }
+}
+
+#endif  // __AM_ICC

@@ -1,0 +1,72 @@
+VPATH=		@srcdir@
+BUILDTOP=	@BUILDTOP@
+PREFIX=		@prefix@
+
+PLATFORM	= @platform@
+PLATFORMDIR     = $(PREFIX)/platform/$(PLATFORM)
+INSTALL		= @INSTALL@
+INSTALL_BIN	= $(INSTALL) -s -m 555
+INSTALL_DIR	= @INSTALL_DIR@
+CC		= @CC@
+
+LIBS    	= @LIBS@
+CPPFLAGS	= @CPPFLAGS@
+CFLAGS		= @CFLAGS@
+LDFLAGS		= @LDFLAGS@
+LN_S		= @LN_S@
+
+PROVIDETCLLIBS  = @PROVIDETCLLIBS@
+TCLLIBTCLDIR    = @oz_tcl_lib_tcl_dir@
+TKLIBTCLDIR     = @oz_tk_lib_tcl_dir@
+
+
+OZWISH		= oz.wish.bin
+SRCS		= ozMain.c ozAppInit.c
+OBJS		= ${SRCS:.c=.o}
+
+.PHONY: $(PROVIDETCLLIBS)
+
+all: $(OZWISH)
+
+bootstrap: all
+
+$(OZWISH): $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+
+clean:
+	-rm -f $(OBJS) *~
+
+veryclean: clean
+	-rm -f $(OZWISH)
+
+distclean: veryclean
+	-rm -f config.* Makefile
+	-rm -f ozwish80.mk ozwish.mk1 ozwish.lk1 ozwish.imp ozwish.map ozwish.sym
+
+install: $(PLATFORMDIR) $(OZWISH) $(PROVIDETCLLIBS)
+	$(INSTALL_BIN) $(OZWISH) $(PLATFORMDIR)
+
+$(PLATFORMDIR):
+	$(INSTALL_DIR) $@
+
+provide-link: $(PLATFORMDIR)
+	rm -rf $(PLATFORMDIR)/wish
+	$(INSTALL_DIR) $(PLATFORMDIR)/wish
+	(cd $(PLATFORMDIR)/wish; \
+		rm -rf tcl; \
+		rm -rf tk; \
+		$(LN_S) $(TCLLIBTCLDIR) tcl; \
+		$(LN_S) $(TKLIBTCLDIR) tk)
+
+provide-copy: $(PLATFORMDIR)
+	rm -rf $(PLATFORMDIR)/wish
+	$(INSTALL_DIR) $(PLATFORMDIR)/wish
+	(cd $(PLATFORMDIR)/wish; \
+		rm -rf tcl; \
+		rm -rf tk; \
+		cp -r $(TCLLIBTCLDIR) .; \
+		cp -r $(TKLIBTCLDIR) .; \
+		$(LN_S) tcl8.0 tcl; \
+		$(LN_S) tk8.0 tk)
+
+check:

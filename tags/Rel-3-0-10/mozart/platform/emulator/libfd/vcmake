@@ -1,0 +1,22 @@
+FDLIBSRCS = arith.cc fdaux.cc bool.cc card.cc cd.cc count.cc \
+	    rel.cc disjoint.cc std.cc sum.cc distance.cc \
+	    scheduling.cc
+
+FDLIBOBJS = $(FDLIBSRCS:.cc=.obj)
+
+.SUFFIXES: .cc .obj
+
+# use -Zi for debugging
+CFLAGS = -MT -nologo -O2 -G5
+
+all: fdlib.lib
+
+fdlib.lib: $(FDLIBOBJS)
+	lib -nologo -out:$@ $(FDLIBOBJS)
+
+.cc.obj:
+	cl $(CFLAGS) -c -Tp $<
+
+clean:
+	del *.exe *.obj *.pdb *.ilk fdlib.lib
+

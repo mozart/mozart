@@ -1,0 +1,49 @@
+dnl -*- sh -*-
+dnl
+dnl  Authors:
+dnl    Michael Mehl (mehl@dfki.de)
+dnl 
+dnl  Contributors:
+dnl    Denys Duchier, (duchier@ps.uni-sb.de)
+dnl 
+dnl  Copyright:
+dnl    Michael Mehl (1997)
+dnl 
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl 
+dnl  This file is part of Mozart, an implementation 
+dnl  of Oz 3:
+dnl     http://mozart.ps.uni-sb.de
+dnl 
+dnl  See the file "LICENSE" or
+dnl     http://mozart.ps.uni-sb.de/LICENSE.html
+dnl  for information on usage and redistribution 
+dnl  of this file, and for a DISCLAIMER OF ALL 
+dnl  WARRANTIES.
+dnl
+
+dnl Process this file with autoconf to produce a configure script.
+
+dnl *****************************************************************
+dnl INITIALIZE
+dnl *****************************************************************
+
+dnl This will check that we are in the Oz directory and initiate
+AC_INIT(OZVERSION)
+
+OZ_INIT
+
+BUILDTOP=`pwd`
+AC_SUBST(BUILDTOP)
+
+AC_CONFIG_SUBDIRS(platform share contrib doc)
+
+AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded.
+],
+ [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
+]))

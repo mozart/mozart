@@ -1,0 +1,27 @@
+solaris-sparc netbsd-sparc linux-i486 netbsd-i486
+config.h version.cc oz.emulator.bin text2pickle
+Makefile Makefile.rules Makefile.vars Makefile.deps
+conf.h CONF.h
+scancode.cc instrtab.hh  opcodes.hh optostr.hh register.hh
+opcodes.cc
+copycode.cc
+scanner.cc parser.cc parser.hh
+ozlib.lnk
+oz.c
+initffuns.cc
+components.cc
+marshalcode.cc
+marshaler.hh
+marshalMsg.cc
+atoms.hh atoms.cc
+config.status
+config.cache
+config.log
+ozma.hh
+ozma-s.ll
+ozma-s.cc
+ozma-p.yy
+ozma-p.cc
+perdio.cc
+*-if.cc
+

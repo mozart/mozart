@@ -1,0 +1,8 @@
+(setq load-path (cons "@PSGML@" load-path))
+(load-library "psgml")
+(find-file "ced.sgml")
+(sgml-mode)
+(setq sgml-local-catalogs '("ced.cat"))
+(setq sgml-default-doctype-name "ozdoc")
+(sgml-parse-prolog)
+(sgml-save-dtd "ozdoc.ced")

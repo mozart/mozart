@@ -1,0 +1,91 @@
+#  Authors:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Contributors:
+#    optional, Contributor's name (Contributor's email address)
+# 
+#  Copyright:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://mozart.ps.uni-sb.de
+# 
+#  See the file "LICENSE" or
+#     http://mozart.ps.uni-sb.de/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
+SRCTOP=		@SRCTOP@
+BUILDTOP=	@BUILDTOP@
+PREFIX=		@prefix@
+SRCDIR= 	@srcdir@
+VPATH=	 	@srcdir@
+BINDIR=		$(PREFIX)/bin
+
+@SET_MAKE@
+LN_S=		@LN_S@
+INSTALL=	@INSTALL@
+INSTALL_DIR=	@INSTALL_DIR@
+INSTALL_BIN=	$(INSTALL) -m 555
+
+SCRIPTS=	oz ozplatform ozdynld
+LINKS=		ozengine text2pickle pickle2text oldpickle2text
+LIB_SCRIPTS=	$(addprefix $(BINDIR)/,$(SCRIPTS))
+LIB_LINKS=	$(addprefix $(BINDIR)/,$(LINKS))
+
+.PHONY: bootstrap all install clean veryclean distclean
+
+all:
+
+bootstrap:
+
+install: $(BINDIR) $(LIB_SCRIPTS) $(LIB_LINKS)
+
+$(LIB_SCRIPTS): $(BINDIR)/% : %
+	$(INSTALL_BIN) $< $(BINDIR)
+
+$(LIB_LINKS): $(BINDIR)/oz
+	cd $(BINDIR); rm -f $@; $(LN_S) oz $@
+
+$(BINDIR):
+	$(INSTALL_DIR) $@
+
+clean:
+
+veryclean: clean
+
+distclean: clean
+	rm -f Makefile
+
+
+# Windows
+.PHONY: win-install
+
+all:  version.h
+
+clean:
+	rm -f *.exe *.obj *.sym *.map *.mk* *.lk* *.err oz.res setup.res version.h
+
+win-install: setup.exe oz.exe ozengine.exe
+	$(INSTALL_BIN) setup.exe oz.exe ozengine.exe $(PREFIX)
+
+
+ozengine.exe: oz.exe
+	cp oz.exe $@
+
+version.h: $(SRCTOP)/OZVERSION
+	echo "#define OZVERSION \"`$<`\"" > $@
+
+check:
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck

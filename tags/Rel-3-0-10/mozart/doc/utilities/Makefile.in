@@ -1,0 +1,81 @@
+#
+#  Author:
+#    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+#
+#  Copyright:
+#    Leif Kornstaedt, 1998
+#
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+#
+#  This file is part of Mozart, an implementation of Oz 3:
+#     http://mozart.ps.uni-sb.de
+#
+#  See the file "LICENSE" or
+#     http://mozart.ps.uni-sb.de/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+#
+
+PREFIX		= @prefix@
+VPATH		= @srcdir@
+BINDIR		= $(PREFIX)/bin
+ELISPDIR	= $(PREFIX)/share/elisp
+
+INSTALL		= @INSTALL@
+INSTALL_DIR	= @INSTALL_DIR@
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_FILE	= $(INSTALL) -m 444
+
+OZFLAGS		= 
+OZC		= ozc $(OZFLAGS)
+OZAR		= ozar
+EMACS		= emacs
+
+FUNCTORS = \
+	SGML.ozf AuthorDB.ozf BibliographyDB.ozf Fontifier.ozf \
+	OzDocToHTML.ozf Main.ozf
+SYSLETS = ozdoc
+ELCS = ozdoc.elc
+
+BINFILES = $(SYSLETS:%=$(BINDIR)/%) $(BINDIR)/ozdoc-fontify.sh
+ELISPFILES = $(ELCS:%=$(ELISPDIR)/%)
+
+.PHONY: bootstrap all clean veryclean distclean
+
+all: $(FUNCTORS) $(SYSLETS) $(ELCS)
+
+bootstrap: all
+
+Makefile: Makefile.in config.status
+	./config.status
+
+ozdoc: $(FUNCTORS)
+	$(OZAR) --syslet --in=Main.ozf --out=$@
+
+%.ozf: %.oz
+	$(OZC) -c $< -o $@
+
+%.elc: %.el
+	$(EMACS) -q -batch -f batch-byte-compile $<
+
+install: $(BINDIR) $(BINFILES) $(ELISPDIR) $(ELISPFILES)
+
+$(BINDIR) $(ELISPDIR):
+	$(INSTALL_DIR) $@
+
+$(BINFILES): $(BINDIR)/% : %
+	$(INSTALL_BIN) $< $@
+
+$(ELISPFILES): $(ELISPDIR)/% : %
+	$(INSTALL_FILE) $< $@
+
+clean:
+	rm -rf $(FUNCTORS) $(SYSLET) $(ELCS)
+
+veryclean: clean
+
+distclean: veryclean
+	rm -f Makefile config.log config.status config.cache

@@ -1,0 +1,72 @@
+<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % p.mix.local "|Em">
+<!ELEMENT Em - - (#PCDATA)>
+<!ENTITY % proglang.values.local "|lambda">
+
+<!-- Include Files -->
+<!ENTITY intro SYSTEM "intro.sgml">
+<!ENTITY scanner SYSTEM "scanner.sgml">
+<!ENTITY parser SYSTEM "parser.sgml">
+<!ENTITY syntax SYSTEM "syntax.sgml">
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY dot "." -- to distinguish it from periods -->
+<!ENTITY Oz "Oz">
+<!ENTITY Gump "Gump">
+<!ENTITY lex "<Name type=tool>lex</Name>">
+<!ENTITY yacc "<Name type=tool>yacc</Name>">
+<!ENTITY flex "<Name type=tool>flex</Name>">
+<!ENTITY bison "<Name type=tool>bison</Name>">
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY endash PI "endash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY wrt PI "wrt">
+<!ENTITY eg PI "eg">
+
+]>
+
+<Book proglang="gump">
+  <Front>
+    <!-- Splitting the document into different HTML nodes -->
+    <Meta name=htmlfile value="chapter.intro">
+    <Meta name=htmlfile value="chapter.scanner">
+    <Meta name=htmlfile value="section.scanner.example">
+    <Meta name=htmlfile value="section.scanner.reference">
+    <Meta name=htmlfile value="chapter.parser">
+    <Meta name=htmlfile value="section.parser.example">
+    <Meta name=htmlfile value="section.parser.reference">
+    <Meta name=htmlfile value="appendix.notation">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value="revised">
+    <Title/Gump&emdash;A Front-End Generator for Oz/
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
+    <Abstract>
+      <P.silent><!--**-->
+	This manual describes &Gump;, the front-end generator for &Oz;.
+	It reads &Oz; files with embedded scanner and&slash;or parser
+	definitions and produces &Oz; code as output in which these have
+	been replaced by classes implementing scanners and&slash;or
+	parsers.  The semantic actions in the specifications allow the
+	full flexibility and expressivity of &Oz; to be used.
+    </Abstract>
+  <Body>
+    &intro;
+    &scanner;
+    &parser;
+    &syntax;
+  <Back>
+    <Bib.Extern id="OzWizard" to="gump.bib" key="OzWizard">
+    <Bib.Extern id="paxson95" to="gump.bib" key="paxson95">
+    <Bib.Extern id="donellystallman95" to="gump.bib" key="donellystallman95">
+    <Bib.Extern id="kornstaedt96" to="gump.bib" key="kornstaedt96">
+</Book>

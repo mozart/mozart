@@ -1,0 +1,493 @@
+****************
+*** BUILTINS ***
+****************
+
+----------------------------------------------------------------------------
+Implementation Datatypes (classes)
+----------------------------------------------------------------------------
+
+Term
+ Variable
+ Record
+   SRecord (standard record)
+     Cell
+     Predicate
+       Builtin
+       Abstraction
+ Literal
+   Atom
+   Name
+ Tuple
+   STuple (standard tuple)
+ Number
+   Float
+   Int
+     SmallInt
+     BigInt
+
+ xxx
+  Node
+
+abbrev:
+  FieldName
+    Literal
+    SmallInt
+
+
+We say a term is 'determined' if it is not a variable.
+
+ We use in the specification the following abbreviation:
+  det X
+  <...>
+
+  <=>
+
+  if isVariable(X) then suspend
+  else <...>
+  fi
+
+
+
+The following general rules are valid for all the builtins. Exceptions
+are explicitly mentioned.
+
+  There are two sorts of arguments for builtins:
+    input and output arguments
+  Output arguments are prefixed with '?'
+  Arguments without a '?' prefix are input arguments
+
+  Builtins suspend if the input arguments are not determined
+
+  Builtins fail if the input arguments are not correctly typed
+
+  Builtins fail if the unification of the output arguments with
+  the computed values fail
+
+  Builtins are non interuptable
+  (this condition is necessary e.g. for '@')
+
+----------------------------------------------------------------------------
+Type tests (core.C & bignum.m4C)
+----------------------------------------------------------------------------
+
+The test predicates fail or succeed depending on the type of the argument
+ with respect to the type hierarchie.
+
+  BIisAtom = pred{T} det T isAtom(T) end
+  BIisName = pred{T} det T isName(T) end
+  BIisLiteral = pred{T} det T isLiteral(T) end
+  BIisTuple = pred{T} det T isTuple(T) end
+  BIisRecord = pred{T} det T isRecord(T) end
+  BIisProcedure = pred{T} det T isProcedure(T) end
+  BIisCell = pred{T} det T isCell(T) end
+  BIisNumber = pred{T} det T isNumber(T) end
+  BIisInteger = pred{T} det T isInteger(T) end
+  BIisFloat = pred{T} det T isFloat(T) end
+
+
+----------------------------------------------------------------------------
+Records (records.C)
+----------------------------------------------------------------------------
+
+fun {copyRecord R}
+   if {IsRecord R} not {IsChunk R} end then
+      {`record` {Label R} {Record.toList R}}
+   else false _
+   fi
+end
+
+----------------------------------------------------------------------------
+Tuple & Records (core.C)
+----------------------------------------------------------------------------
+
+  BItuple = pred{L N ?T}
+     % Make a tuple with label L and width N and new distict
+     % variables as args
+     det N
+     isSmallInt(N)
+     det L
+     isLiteral(L)
+     N >= 0
+     if N = 0 then T = L
+     else T = L(_ ... _)
+     fi
+  end
+
+  BIadjoin = pred{I0 I1 ?O}
+     case tag(I0)
+     of atom then
+	case tag(I1)
+	of record then O = I1
+	[] stuple then suspend
+	[] variable then suspend
+	else false
+	end
+     [] srecord then
+	case tag(I1)
+	of atom then O = adjoinLabel(I0,I1)
+	[] srecord then O = adjoin(IO,I1)
+	[] stuple then suspend
+	[] variable then suspend
+	else false
+	end
+     [] stuple then suspend
+     [] variable then suspend
+     else false
+     end
+  end
+
+  BIadjoinAt = pred{I F X ?O}
+     case tag(I)
+     of atom then
+	case tag(F)
+	of number then suspend
+	[] atom then O = I(F:X)
+	[] variable then suspend
+	else false
+	end
+     [] srecord then
+	isLiteral(F)
+	O=adjoinAt(I,F,X)
+     [] stuple then suspend
+     [] variable then suspend
+     end
+  end
+
+  BIadjoinList = pred{I L ?O}
+     case isPropList(L)
+     of suspended then suspend
+     [] failed then false
+     [] nil then
+	case tag(I)
+	of record then O = I
+	[] stuple then suspend
+	[] variable then suspend
+	else false
+	end
+     else
+	case tag(I)
+	of atom then O = mkRecord(I,L)
+	[] srecord then O = adjoinList(I,L)
+	[] stuple then suspend
+	[] variable then suspend
+	else false
+	end
+     end
+  end
+
+  BIarity = pred{T ?L}
+     % computes the sorted list of fieldnames
+     case tag(T)
+     of srecord then L = arity(T)
+     [] atom then L = nil
+     [] stuple then suspend
+     [] variable then suspend
+     else false
+     end
+  end
+
+  BIat= pred{I F ?X ?O}
+     % @: object attribute access
+     det I
+     det F
+     O = I           % warning("@: unify states failed")
+     isSRecord(I)
+     isLiteral(F)
+     X = subtree(I,F)
+  end
+
+  BIassign = pred{I F X ?O}
+     % <-: object attribute assignment
+     det I
+     det F
+     isLiteral(F)
+     if isLiteral(I) then O = I(F:X)
+     else isProperRecord(I)
+	  if subtreeReplace(I,F,X) then O = X
+	  else O = adjoinAt(I,F,X)
+	  fi
+     fi
+  end
+
+  BIlabel = pred{T ?L}
+     det T
+     or isLiteral(T) [] isSRecord(T) [] isSTuple(T) ro
+     label(T)
+  end
+
+  BIdot = pred{T F ?X}
+     % .: subtree access of compound
+     det F
+     case tag(T)
+     of stuple then
+	isSmallInt(F)
+	F > 0
+	F <= width(T)
+	X = subtree(T,F)
+     [] srecord then
+	isLiteral(F)
+	X = subtree(T,F)
+     [] variable then suspend
+     else false
+     end
+  end
+
+
+  BIwidth = pred{T ?N}
+     % number of subtrees
+     case tag(T)
+     of or stuple [] srecord ro then N = width(T)
+     [] atom then N = 0
+     [] variable then suspend
+     else false
+     end
+  end
+
+----------------------------------------------------------------------------
+Atom (core.C)
+----------------------------------------------------------------------------
+
+  BIatomList = pred{A L}
+     % Convert an atom to a list of numbers or vice versa
+     %  See also: syntactic sugar "..."
+     if isAtom(A) then L = atom2List(A)
+     elseif isVariable(A) then
+	case isAsciiList(L)
+	of suspended then suspend
+	[] failed then false
+	else A = list2Atom(L)
+	end
+     else false
+     fi
+  end
+
+  BIatomConcat = pred{A1 A2 ?O}
+     det A1
+     isAtom(A1)
+     det A2
+     isAtom(A2)
+     O = concat(A1,A2)
+  end
+
+  BIatomLength = pred{A ?N}
+     % Compute the length of atom as string
+     det A
+     isAtom(A)
+     N = length(A)
+  end
+
+----------------------------------------------------------------------------
+Numbers (bignum.m4C)
+----------------------------------------------------------------------------
+
+'/'(Num Num ?Num)
+'*'(Num Num ?Num)
+'+'(Num Num ?Num)
+div(Num Num ?Num)
+mod(Num Num ?Num)
+'-'(Num Num ?Num)
+'~'(Num ?Num)
+
+intToFloat(Int ?Float)
+floatToInt(Float ?Int)
+
+atomToFloat(Atom Float)
+atomToInt(Atom Int)
+floatToAtom(Float Atom)
+intToAtom(Int Atom)
+
+
+float functions(Num ?Num):
+ exp log sqrt sin asin cos acos tan atan ceil floor fabs pow
+
+----------------------------------------------------------------------------
+Number and Atom (core.C)
+----------------------------------------------------------------------------
+
+  BIless = pred{T T}
+     % '<'
+     ...
+  end
+
+  BIle = pred{T T}
+     % '=<'
+     ...
+  end
+
+----------------------------------------------------------------------------
+Channel (core.C)
+----------------------------------------------------------------------------
+
+newChannel(?Channel): make a new channel.
+put(Term Channel): positive communication token.
+get(Term Channel): negative communication token.
+
+----------------------------------------------------------------------------
+Names (core.C)
+----------------------------------------------------------------------------
+
+newName(?Name)
+
+----------------------------------------------------------------------------
+Misc (special.C)
+----------------------------------------------------------------------------
+
+apply(Pred Tuple): call the abstraction Pred with the arguments extracted
+		 from the arguments of Tuple. The label of Tuple is not
+		 relevant
+loadFile(Atom): load a precompiled assembler (ham) file
+
+
+linkObjectFile(Atom)
+unlinkObjectFile(Atom)
+findFunction(Atom Int): adds the function from the foreign file to the
+			builtin table
+
+usertime(?Int): read current usertime. see: getrusage(2)
+memory(?Int): read current memory consumption
+system(Atom ?SmallInt): see: system(1)
+shutdown(): leave Oz immediately
+statistics(): print out the system statistic
+parseFile(Atom ?Tuple): reads an oz file and generates a term representation
+			of the oo-syntax
+random(?SmallInt): random number generator, see: random(3)
+gensym(Atom ?Atom): generate a unique new atom, which is not accessible via
+		 symbol table
+alarm(SmallInt ?SmallInt): suspend until n clock ticks arrived
+garbageCollection(): start the garbarge collection
+
+openIO(SmallInt)
+closeIO(SmallInt)
+select(SmallInt): wait for an input on an unix file descriptor
+
+systemProcess()
+processFreeze(?SmallInt): freeze the current process, returns the process id
+processUnfreeze(SmallInt): unfreeze a process with id Int
+processSwitch(): force a process switch
+
+  Freeze Example:
+
+  exists X in
+    process
+     {Show freeze} {Freeze X} {Show running}
+    end
+
+  if det X then {Unfreeze X} fi
+
+eq(Term Term): test the pointer equality.
+ Das Builtin eq vergleicht die Pointer von dereferenzierten Termen.
+ Es ist sinnvoll f\"ur in Oz geschrieben Ausgaberoutinen zur effizienten
+ Erkennung von Zykeln.
+testEq(Term Term): efficient eq test, returns SUSPEND if not decidable
+
+(in builtins.C)
+
+
+builtin(Atom Pred ?Pred): load a builtin from builtin table
+printBuiltins(): print the builtin table
+
+
+  BIdotReplace = pred{T F X}
+     % destructive version of .
+     det F
+     case tag(T)
+     of stuple then
+	isSmallInt(F)
+	F > 0
+	F <= width(T)
+	subtreeReplace(T,F,X)
+     [] srecord then
+	isLiteral(F)
+	subtreeReplace(T,F,X)
+     [] variable then suspend
+     else false
+     end
+  end
+
+----------------------------------------------------------------------------
+Debugging (debug.C)
+----------------------------------------------------------------------------
+
+print(Term):   		print Term
+show(Term):		print Term with carriage return
+
+halt()
+
+shadowPredicate(Pred Pred)
+unshadowPredicate(Pred ?Pred)
+getShadowPredicate(Pred ?Pred)
+
+printLong(Term):	print Term with debugging information
+printTree(Node,Int)
+printNode(Node) 
+termToId(Term Int)
+idToTerm(Int Term)
+
+deepPut(Term Channel): put without enable check
+
+debugDot(Term Atom ?Term): read a "hidden" field (see table)
+
+  Type		fieldname	description
+  ============================================================================
+  Any		addr		current address in memory (danger GC!)
+  Pred		arity
+  		printName
+  		shadow		nil or the shadow predicate
+  Channel	printName
+  		max
+		size
+		home
+  Literal	printName
+  Node		flags
+		type
+		parent
+		info
+  ProcessNode	stackSize
+		stack
+  Variable	printName
+		home
+		isvar		ok
+  ============================================================================
+
+getValue(0 Atom ?Term):	read system parameter (see table)
+setValue(0 Atom Term):	set system parameter (see table)
+
+  Id	fieldname		description
+  ============================================================================
+   +++++ read and write ++++++++++++++++++++++++++++++++++++++++++++++++++++
+  0	gcFlag			0 = gcOff, else gc On
+  	gcVerbosity		0 = silence, 1 = medium, 2 = loud
+  	processQuota    	Timeslice for processes in 1/100 sec
+  	printDepth		print depth for builtins print/show
+
+   +++++ read only +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  	processQueueSize	Length of process queue
+  	root
+	rootProcess
+	currentProcess
+
+   +++++ special "hacks" !!! ++++++++++++++++++++++++++++++++++++++++++++++++
+	processQueue
+	statusReg
+	processTaskStackSize
+	queryFILE
+  ============================================================================
+
+
+
+----------------------------------------------------------------------------
+not longer supported:
+----------------------------------------------------------------------------
+
+isToplevel()
+getRootNode(?Int)
+getChild(Int ?Int)
+getLeftSibling(Int ?Int)
+getRightSibling(Int ?Int)
+getParent(Int ?Int)
+getNodeType(Int ?Atom)
+getNodeName(Int ?Atom)
+
+
+

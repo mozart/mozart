@@ -1,0 +1,15 @@
+/*
+ * Programming Systems Lab, DFKI Saarbruecken,
+ * Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+ * Author: Christian Schulte
+ * Email: schulte@dfki.uni-sb.de
+ * Last modified: $Date$ by $Author$
+ * Version: $Revision$
+ */
+
+#define micro-solid_width 4
+#define micro-solid_height 4
+#define micro-solid_x_hot 0
+#define micro-solid_y_hot 0
+static unsigned char micro-solid_bits[] = {
+   0x03, 0x03, 0x0c, 0x0c};

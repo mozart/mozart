@@ -1,0 +1,7 @@
+config.log
+config.cache
+config.status
+Makefile
+catalog
+ced.el
+ozdoc.ced

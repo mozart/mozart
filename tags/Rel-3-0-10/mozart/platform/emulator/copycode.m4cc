@@ -1,0 +1,391 @@
+/* -*- C++ -*-
+ *  Authors:
+ *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ * 
+ *  Contributors:
+ * 
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $_Date$ by $_Author$
+ *    $_Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://mozart.ps.uni-sb.de
+ * 
+ *  See the file "LICENSE" or
+ *     http://mozart.ps.uni-sb.de/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+
+#include "copycode.hh"
+#include "indexing.hh"
+#include "value.hh"
+#include "codearea.hh"
+
+define(readArg,$1)
+define(writeArg,$1)
+define(instruction,
+	`ifelse(numOfRegs($2,$3,$4),1,
+                    case TOUPPER($1)X: 
+		    case TOUPPER($1)Y: 
+		    case TOUPPER($1)G:,
+	 numOfRegs($2,$3,$4),2,
+            case TOUPPER($1)XX:
+            case TOUPPER($1)XY:
+            case TOUPPER($1)XG:
+            case TOUPPER($1)YX:
+            case TOUPPER($1)YY:
+            case TOUPPER($1)YG:
+            case TOUPPER($1)GX:
+            case TOUPPER($1)GY:
+            case TOUPPER($1)GG:,
+         case TOUPPER($1):)
+	   opAction($2)
+	   opAction($3)
+	   opAction($4)
+	   opAction($5)
+	   opAction($6)
+	   opAction($7)
+	   opAction($8)
+	   opAction($9)
+	  break;')
+
+define(opAction,
+`ifelse($1,Literal, handleLiteral(PC++,ht,makecopy);,
+        $1,Feature, handleLiteral(PC++,ht,makecopy);,
+        $1,Constant,handleLiteral(PC,ht,makecopy);PC++;,
+        $1,Number,handleLiteral(PC,ht,makecopy);PC++;,
+        $1,RecordArity, handleRecordArity(PC++,ht,makecopy);,
+        $1,PredicateRef,handlePredicateRef(PC++,ht);,
+        $1,PredId,  handlePredId(PC++,ht,makecopy);,
+        $1,HashTableRef, handleHashTable(PC++,ht,makecopy);,
+        $1,GenCallInfo,handleGenCallInfo(PC++,ht,makecopy);,
+        $1,ApplMethInfo,handleApplMethInfo(PC++,ht,makecopy);,
+        $1,Cache,handleCache(PC,ht,makecopy); PC += CacheSize;,
+        $1,,,
+        PC++;)')
+
+
+
+
+#define CheckHT(Type,Val)			\
+  Type aux = (Type)ht->htFind(ToInt32(Val));	\
+  if ((uint32)ToInt32(aux) != ToInt32(htEmpty))	\
+    return aux;
+
+static
+TaggedRef checkTagged(TaggedRef t, HashTable *ht)
+{
+  CheckHT(TaggedRef,t);
+  return t;
+}
+
+static
+Literal *checkLiteral(Literal *l, HashTable *ht)
+{
+  return tagged2Literal(oz_deref(checkTagged(makeTaggedLiteral(l),ht)));
+}
+
+
+static
+void handleLiteral(ProgramCounter PC, HashTable *ht, Bool makecopy)
+{
+  TaggedRef newlit = checkTagged(getTaggedArg(PC),ht);
+  if (makecopy) {
+    CodeArea::writeTagged(newlit,PC);
+  } else if (newlit != getTaggedArg(PC)) {
+    CodeArea::writeTaggedNoProtect(newlit,PC);
+  }
+}
+
+
+
+GenCallInfoClass *checkGCI(GenCallInfoClass *gci, HashTable *ht, Bool makecopy)
+{
+  TaggedRef newname = checkTagged(gci->mn,ht);
+
+  // GCIs are deleted after use, so always make a copy
+  // if (newname == gci->mn)
+  //   return gci;
+
+  CheckHT(GenCallInfoClass *,gci);
+  
+  if (makecopy) {
+    aux = new GenCallInfoClass(gci->regIndex,gci->isMethAppl,newname, 
+			       gci->isTailCall,gci->arity);
+  } else {
+    gci->mn = newname;
+    aux = gci;
+  }
+  ht->htAdd(ToInt32(gci),aux);
+  return aux;
+}
+
+
+static
+void handleGenCallInfo(ProgramCounter PC, HashTable *ht, Bool makecopy)
+{
+  GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC);
+  CodeArea::writeAddress(checkGCI(gci,ht,makecopy),PC);
+}
+
+
+
+static
+SRecordArity checkSRA(SRecordArity sra, HashTable *ht)
+{
+  if (sraIsTuple(sra))
+    return sra;
+
+  CheckHT(SRecordArity,sra);
+
+  TaggedRef list = getRecordArity(sra)->getList();
+  TaggedRef newlist = oz_nil();
+
+  int len = 0, copies = 0;
+  
+  while(oz_isCons(list)) {
+    TaggedRef newt = checkTagged(oz_head(list),ht);
+    DebugCode(if (OZ_isName(newt)) {
+                len++; 
+                copies += literalEq(newt,oz_deref(oz_head(list)));});
+    newlist = oz_cons(newt,newlist);
+    list = oz_tail(list);
+  }
+
+  /* do not mix names to be copied and those not to be copied */
+  Assert(copies==0 || copies==len);
+
+  newlist = reverseC(newlist);
+  // mm2:  Assert(isSorted(newlist));
+  aux = mkRecordArity(aritytable.find(newlist));
+  ht->htAdd(sra,ToPointer(aux));
+  return aux;
+}
+
+
+PrTabEntry *checkPTE(PrTabEntry *pte, HashTable *ht, Bool makecopy)
+{
+  CheckHT(PrTabEntry *,pte);
+  
+  if (makecopy) {
+    aux = new PrTabEntry(pte->getName(),checkSRA(pte->getMethodArity(),ht),
+			 pte->getFile(), pte->getLine(), pte->getColumn(), 
+			 pte->getFlagsList(),
+			 pte->getMaxX());
+  } else {
+    pte->setMethodArity(checkSRA(pte->getMethodArity(),ht));
+    aux = pte;
+  }
+  ht->htAdd(ToInt32(pte),aux);
+  return aux;
+}
+
+
+static
+void handlePredId(ProgramCounter PC, HashTable *ht, Bool makecopy)
+{
+  CodeArea::writeAddress(checkPTE(getPredArg(PC),ht,makecopy),PC);
+}
+
+
+ApplMethInfoClass *checkAMI(ApplMethInfoClass *ami, HashTable *ht, Bool makecopy)
+{
+  CheckHT(ApplMethInfoClass *,ami);
+  
+  if (makecopy) {
+    aux = new ApplMethInfoClass(checkTagged(ami->methName,ht),checkSRA(ami->arity,ht));
+  } else {
+    ami->methName = checkTagged(ami->methName,ht);
+    ami->arity    = checkSRA(ami->arity,ht);
+    aux           = ami;
+  }
+
+  ht->htAdd(ToInt32(ami),aux);
+  return aux;
+}
+
+
+static
+void handleApplMethInfo(ProgramCounter PC, HashTable *ht, Bool makecopy)
+{
+  CodeArea::writeAddress(checkAMI((ApplMethInfoClass*) getAdressArg(PC),ht,makecopy),PC);
+}
+
+
+static
+void handleCache(ProgramCounter PC, HashTable *ht, Bool makecopy)
+{
+  if (makecopy)
+    CodeArea::writeCache(PC);
+}
+
+
+/* the compiler stores AbstractionEntries as ints */
+
+static
+AbstractionEntry *checkAE(AbstractionEntry *ae, HashTable *ht)
+{
+  CheckHT(AbstractionEntry *,ae);
+  return ae;
+}
+
+
+static
+void handlePredicateRef(ProgramCounter PC, HashTable *ht)
+{
+  AbstractionEntry *ae = checkAE((AbstractionEntry*) getAdressArg(PC),ht);
+  CodeArea::writeAddress(ae,PC);
+}
+
+
+
+
+
+static
+void handleRecordArity(ProgramCounter PC, HashTable *ht, Bool makecopy)
+{
+  SRecordArity ff = checkSRA((SRecordArity) getAdressArg(PC), ht);
+  CodeArea::writeSRecordArity(ff, PC);
+}
+
+
+HTEntry *getNext(HTEntry *e, Bool makecopy)
+{
+  HTEntry *ret = e->getNext();
+  if (!makecopy) delete e;
+  return ret;
+}
+
+static
+void handleHashTable(ProgramCounter PC, HashTable *ht, Bool makecopy)
+{
+  IHashTable *table    = (IHashTable *) getAdressArg(PC);
+  int sz               = table->size;
+  IHashTable *newtable = new IHashTable(sz,table->elseLabel);
+
+	
+  newtable->addList(table->listLabel);
+
+  int entries = table->numentries;
+
+  if (table->literalTable) {
+    for(int i=0; i<sz; i++) {
+      HTEntry *aux = table->literalTable[i];
+      while(aux) {
+	entries--;
+	newtable->add(checkLiteral(aux->getLiteral(),ht),aux->getLabel());
+	aux = getNext(aux,makecopy);
+      }
+    }
+    if(!makecopy) delete [] table->literalTable;
+  }
+
+  if (table->numberTable) {
+    for(int i=0; i<sz; i++) {
+      HTEntry *aux = table->numberTable[i];
+      while(aux) {
+	entries--;
+	newtable->add(aux->getNumber(),aux->getLabel());
+	aux = getNext(aux,makecopy);
+       }
+    }
+    if(!makecopy) delete [] table->numberTable;
+  }
+
+  if (table->functorTable) {
+    for(int i=0; i<sz; i++) {
+      HTEntry *aux = table->functorTable[i];
+      while(aux) {
+	entries--;
+        SRecordArity sra;
+        Literal *label = aux->getFunctor(sra);
+	newtable->add(checkLiteral(label,ht),checkSRA(sra,ht),aux->getLabel());
+	aux = getNext(aux,makecopy);
+      }
+    }
+    if(!makecopy) delete [] table->functorTable;
+  }
+
+  Assert(entries==0);
+  CodeArea::writeIHashTable(newtable, PC);
+  if (!makecopy) {
+    delete table;
+  }
+}
+
+
+
+
+
+ProgramCounter copyCode(ProgramCounter start, TaggedRef list, Bool makecopy)
+{
+  HashTable *ht = new HashTable(HT_INTKEY,100);
+  while(OZ_isCons(list)) {
+    TaggedRef key = OZ_head(list);
+    if (OZ_isForeignPointer(key)) {
+      AbstractionEntry *oldentry =
+	(AbstractionEntry *) OZ_getForeignPointer(key);
+      Assert(oldentry->copyable);
+      AbstractionEntry *newentry = new AbstractionEntry(NO);
+      ht->htAdd(ToInt32(oldentry),newentry);
+    } else {
+      NamedName *theCopy =
+	((NamedName *) tagged2Literal(oz_deref(key)))->generateCopy();
+      ht->htAdd(ToInt32(key),ToPointer(makeTaggedLiteral(theCopy)));
+    }
+    list = OZ_tail(list);
+  }
+  Assert(OZ_isNil(list));
+
+  int sizeOfDef = sizeOf(DEFINITION);
+  start -= sizeOfDef; // copy DEFINITION instructions as well (for debugging)
+
+  Reg reg;
+  int nxt,line,colum;
+  PrTabEntry *pred;
+  TaggedRef file,predName;
+  CodeArea::getDefinitionArgs(start,reg,nxt,file,line,colum,predName);
+
+  int size = nxt;
+  ProgramCounter ret;
+
+  if (makecopy) {
+    ret = new ByteCode[size];  
+    memcpy(ret,start,size*sizeof(ByteCode));
+  } else {
+    ret = start;
+  }
+  
+  ProgramCounter PC = ret;
+
+  ProgramCounter ende = ret+size;
+
+  while (PC<ende) {
+    ProgramCounter lastPC = PC;
+    Opcode op = CodeArea::getOpcode(PC++);
+
+    switch(op) {
+
+    include(EMUDIR/instrDefs.m4)
+
+    default: Assert(0); break;
+    }
+    if (op == DEBUGENTRY) {
+      TaggedRef file = getTaggedArg(lastPC+1);
+      int line = smallIntValue(getNumberArg(lastPC+2));
+      CodeArea::writeDebugInfo(lastPC,file,line);
+    }
+  }
+
+  delete ht;
+  return ret+sizeOfDef;
+}
+

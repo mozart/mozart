@@ -1,0 +1,457 @@
+BUILDTOP	= @BUILDTOP@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+PREFIX		= @prefix@
+OZPREFIX	= $(PREFIX)
+
+OZBIN		= $(PREFIX)/bin
+OZLIB		= $(PREFIX)/share
+IMAGESDIR	= $(OZLIB)/images
+SHELL		= /bin/sh
+LN_S		= @LN_S@
+M4		= @M4@
+PERL            = @PERL@
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_DIR	= @INSTALL_DIR@
+
+OZENGINE        = @OZENGINE@
+
+OZFLAGS		= 
+OZC		= @OZC@
+
+COMPILE		= $(OZC) $(OZFLAGS) -l Standard -c
+EXEC		= $(OZC) $(OZFLAGS)
+COMPILESYSLET	= $(OZC) $(OZFLAGS) -l Standard -x
+OZMA		= $(OZC) $(OZFLAGS) -DOZM --ozma
+
+# exports
+export BUILDTOP
+export SRCDIR
+export OZPREFIX
+export OZLIB
+export OZMAINIT = Init.ozf
+export OZMAFILE = -init ozc.ozp
+export OZPATH = .:$(SRCDIR)
+export OZ_PI = 1
+export OZ_LIB = $(OZLIB)
+export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/share/RunTimeLibrary.ozf=RunTimeLibrary.ozf:prefix=http\://www.ps.uni-sb.de/ozhome/share/=$(OZ_LIB)/
+
+SPSRC   = Foreign Error ErrorRegistry Finalize
+OPSRC   = Open
+APSRC   = GetArgs Syslet Servlet Applet Application
+CPSRC   = Search FD Schedule FS
+DPSRC   = Connection Remote RemoteServer Fault URL
+WPSRC   = Tk TkTools
+MISCSRC = Misc
+SUPPSRC = Type
+
+RUNFUNCTORS = \
+	$(SPSRC:%=%.ozf) \
+	$(OPSRC:%=%.ozf) \
+	$(APSRC:%=%.ozf) \
+	$(CPSRC:%=%.ozf) \
+	Init.ozf
+
+FUNCTORS = \
+	$(RUNFUNCTORS) \
+	$(DPSRC:%=%.ozf) \
+	$(WPSRC:%=%.ozf) \
+	$(SUPPSRC:%=%.ozf) \
+	$(MISCSRC:%=%.ozf) \
+	RunTimeLibrary.ozf Compiler.ozf
+
+SYSLETS = ozc ozar
+
+.PHONY: all
+
+all: $(FUNCTORS) $(SYSLETS)
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck
+
+#---------------------------------------------------------------------
+# Init
+#---------------------------------------------------------------------
+
+INITSRC1 = Resolve.oz Prop.oz Module.oz
+INITSRC = $(INITSRC1:%=init/%) Init.oz \
+	../url-defaults.oz ../functor-defaults.oz
+
+Init.ozf: URL.ozf $(INITSRC)
+	$(COMPILE) -l URL=URL.ozf Init.oz -o Init.ozf
+
+#---------------------------------------------------------------------
+# Standard
+#---------------------------------------------------------------------
+
+STANDARDSRC1 = \
+	Forward.oz \
+	Record.oz Unit.oz Tuple.oz Atom.oz Name.oz Procedure.oz \
+	Int.oz Float.oz Number.oz Bool.oz List.oz Chunk.oz \
+	Literal.oz Value.oz Cell.oz Lock.oz Char.oz String.oz \
+	VirtualString.oz Object.oz Class.oz Loop.oz Port.oz \
+	Time.oz Thread.oz Space.oz Array.oz Dictionary.oz \
+	Exception.oz Functor.oz BitArray.oz
+STANDARDSRC = $(STANDARDSRC1:%=standard/%) Standard.oz
+
+RunTimeLibrary.ozf: Standard.ozf
+	@true
+
+Standard.ozf: $(STANDARDSRC)
+	$(EXEC) -l Pickle Standard.oz
+
+#---------------------------------------------------------------------
+# Remaining functors
+#---------------------------------------------------------------------
+
+$(FUNCTORS): Standard.ozf
+
+%.ozf: sp/%.oz Standard.ozf
+	$(COMPILE) $< -o $@
+%.ozf: op/%.oz Standard.ozf
+	$(COMPILE) $< -o $@
+%.ozf: ap/%.oz Standard.ozf
+	$(COMPILE) $< -o $@
+%.ozf: cp/%.oz Standard.ozf
+	$(COMPILE) $< -o $@
+%.ozf: dp/%.oz Standard.ozf
+	$(COMPILE) $< -o $@
+%.ozf: wp/%.oz Standard.ozf
+	$(COMPILE) $< -o $@
+%.ozf: misc/%.oz Standard.ozf
+	$(COMPILE) $< -o $@
+%.ozf: %.oz Standard.ozf
+	$(COMPILE) $< -o $@
+%.ozf: compiler/%.oz Standard.ozf
+	$(COMPILE) $< -o $@
+%.ozf: support/%.oz Standard.ozf
+	$(COMPILE) $< -o $@
+
+# op dependencies
+Open.ozf: op/HtmlTable.oz
+
+# wp dependencies
+Tk.ozf: wp/TkInit.oz wp/TkOptions.oz
+TkTools.ozf: ../url-defaults.oz
+
+# compiler dependencies
+COMPILERSRC1 = \
+	CompilerClass.oz PrintName.oz Reporter.oz ParseOz.oz FormatStrings.oz \
+	CheckTupleSyntax.oz Builtins.oz Core.oz Annotate.oz \
+	StaticAnalysis.oz POTypes.oz CodeGen.oz CodeStore.oz \
+	CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
+	UnnestFD.oz Assembler.oz GenericInterface.oz QuietInterface.oz \
+	Abstractions.oz Errors.oz RunTime.oz
+
+COMPILERSRCEXTRA = compiler-Builtins.oz compiler-Opcodes.oz compiler-Env.oz
+
+COMPILERSRCNOVER = \
+	$(COMPILERSRC1:%=compiler/%) $(COMPILERSRCEXTRA)
+
+compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
+	echo 'DATE = '\'`date '+%h %d %Y (%T)'`\' > $@ \
+	|| (rm -f $@; exit 1)
+
+EMUSRCDIR=$(SRCDIR)/../../platform/emulator
+BIDECL=$(EMUSRCDIR)/bidecl.perl
+compiler-Builtins.oz: $(EMUSRCDIR)/Builtins.oz
+	cp $< $@
+
+compiler-Opcodes.oz: compiler/Opcodes.m4oz $(EMUSRCDIR)/instrDefs.m4
+	$(M4) -DEMUDIR=$(EMUSRCDIR) < $< > $@ \
+	|| (rm -f $@; exit 1)
+
+functor2env: $(RUNFUNCTORS) Standard.ozf MakeFunctorToEnv.oz
+	$(COMPILESYSLET) MakeFunctorToEnv.oz -o $@
+
+compiler-Env.oz: $(RUNFUNCTORS) Standard.ozf functor2env
+	$(OZENGINE) functor2env -in=Standard.ozf -out=compiler-Env.oz
+
+FUNFUNCTORS = PrintName.ozf Builtins.ozf Unnester.ozf Core.ozf \
+	StaticAnalysis.ozf CodeGen.ozf Assembler.ozf Main.ozf RunTime.ozf
+
+PrintName.ozf: compiler/PrintName.oz
+
+Builtins.ozf: compiler/Builtins.oz compiler-Builtins.oz
+
+Unnester.ozf: compiler/Unnester.oz compiler/TupleSyntax.oz \
+	compiler/BindingAnalysis.oz compiler/UnnestFD.oz
+
+Core.ozf: compiler/Core.oz compiler/Annotate.oz
+
+StaticAnalysis.ozf: compiler/StaticAnalysis.oz compiler/POTypes.oz Search.ozf
+	$(COMPILE) -l Search=Search.ozf compiler/StaticAnalysis.oz -o $@
+
+CodeGen.ozf: compiler/CodeGen.oz compiler/CodeStore.oz compiler/CodeEmitter.oz
+
+Assembler.ozf: compiler/Assembler.oz compiler-Opcodes.oz
+
+Main.ozf: compiler/Main.oz compiler-Env.oz compiler/FormatStrings.oz \
+	compiler/CheckTupleSyntax.oz compiler/Reporter.oz compiler/ParseOz.oz \
+	compiler/CompilerClass.oz compiler/GenericInterface.oz \
+	compiler/QuietInterface.oz compiler/Abstractions.oz \
+	compiler/Errors.oz compiler-Version.oz
+
+RunTime.ozf: compiler/RunTime.oz
+
+Compiler.ozf: $(FUNFUNCTORS) ozar
+	$(OZENGINE) ozar --in=Main.ozf --out=Compiler.ozf \
+	--exclude=ProductionTemplates
+
+#---------------------------------------------------------------------
+# Syslets
+#---------------------------------------------------------------------
+
+$(SYSLETS): $(RUNFUNCTORS)
+
+ozc: Standard.ozf MakeBatch.oz BatchCompile.oz
+	$(COMPILESYSLET) MakeBatch.oz -o $@
+
+ozar: URL.ozf ar/Print.oz ar/Main.oz ar/Archiver.oz ../functor-defaults.oz \
+	../url-defaults.oz
+	$(COMPILESYSLET) -l URL=URL.ozf ar/Main.oz -o $@
+
+
+#---------------------------------------------------------------------
+# Installation
+#---------------------------------------------------------------------
+
+.PHONY: install install-stage install-main install-images install-cache
+
+LIBFUNCTORS = \
+	$(FUNCTORS:%=$(OZLIB)/%)
+BINFILES = \
+	$(SYSLETS:%=$(OZBIN)/%)
+STAGEEXTRAFILES = \
+	$(OZLIB)/Standard.ozf $(OZLIB)/ozc.ozm $(OZLIB)/ozc.ozp
+
+install: install-main install-images install-cache
+
+install-stage: install-main $(STAGEEXTRAFILES)
+
+install-main: all \
+	$(OZLIB) $(LIBFUNCTORS) \
+	$(OZBIN) $(BINFILES)
+
+IMAGES1 = mini-dec.xbm mini-inc.xbm
+IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
+
+install-images: \
+	$(IMAGESDIR) $(IMAGES)
+
+CACHEDIR  = $(PREFIX)/cache/http/www.ps.uni-sb.de
+CACHELINK = $(CACHEDIR)/ozhome
+
+install-cache: \
+	$(CACHEDIR) $(CACHELINK)
+
+$(CACHEDIR):
+	$(INSTALL_DIR) $(CACHEDIR)
+
+$(CACHELINK): $(CACHEDIR)
+	rm -f $(CACHELINK)
+	$(LN_S)  $(PREFIX) $(CACHELINK)
+
+$(OZLIB) $(IMAGESDIR) $(OZBIN):
+	$(INSTALL_DIR) $@
+
+$(OZLIB)/%.ozf: %.ozf
+	$(INSTALL_FILE) $< $@
+
+$(OZLIB)/%.ozm: %.ozm
+	$(INSTALL_FILE) $< $@
+
+$(OZLIB)/%.ozp: %.ozp
+	$(INSTALL_FILE) $< $@
+
+$(IMAGESDIR)/%: images/%
+	$(INSTALL_FILE) $< $@
+
+$(OZBIN)/%: %
+	$(INSTALL_BIN) $< $@
+
+#---------------------------------------------------------------------
+# Cleaning up
+#---------------------------------------------------------------------
+
+.PHONY: clean veryclean distclean
+
+CLEANFILES = \
+	compiler-Version.oz compiler-Builtins.oz \
+	compiler-Opcodes.oz \
+	functor2env compiler-Env.oz \
+	ozc.ozp Standard.ozf $(FUNCTORS) $(FUNFUNCTORS) \
+	$(SYSLETS)
+
+clean:
+	-rm -f $(CLEANFILES)
+
+veryclean: clean
+	-rm -f -r $(STAGE1) $(STAGE2) $(STAGE2A) $(STAGE2B)
+	-rm -f -r $(STAGE3) $(STAGE3A) $(STAGE3B) $(SAVE)
+
+distclean: veryclean
+	@echo To really make distclean, please use \"cd ..\; make distclean\".
+
+#---------------------------------------------------------------------
+# Bootstrapping and Testing Functors Locally
+#---------------------------------------------------------------------
+#    make check
+# Test a new emulator with
+#    make check OZEMULATOR=$(HOME)/Oz/Emulator/oz.emulator.bin
+# Test changes to the compiler's code generation with
+#    make check-compiler
+
+.PHONY: bootstrap stage1 stage2 stage2a stage2b stage3 stage3a stage3b
+.PHONY: save restore
+.PHONY: check check-compiler
+
+URL=http\\://www.ps.uni-sb.de/ozhome
+
+# use Ozma to create the functors
+bootstrap:
+	$(MAKE) ozc.ozp all \
+	OZC=$(SRCDIR)/ozc.sh \
+	OZENGINE=$(SRCDIR)/oze.sh \
+	OZINIT=Init.ozf \
+	OZ_LIB=. \
+	OZ_LOAD=root=.:prefix=$(URL)/share/=./:=
+
+STAGE1=./stage1
+STAGE2=./stage2
+STAGE2A=./stage2a
+STAGE2B=./stage2b
+STAGE3=./stage3
+STAGE3A=./stage3a
+STAGE3B=./stage3b
+
+# stage1: create the initial functors using the installed ones
+stage1:
+	$(MAKE) install-main PREFIX=$(STAGE1)
+
+# stage2: recreate the functors and Ozma file using the stage1 functors
+stage2:
+	mv $(SRCDIR)/ozc.ozm ozc.ozm.save; \
+	trap "s=$$?;mv ozc.ozm.save $(SRCDIR)/ozc.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
+	$(MAKE) install-stage PREFIX=$(STAGE2) \
+	OZ_LOAD=prefix=$(URL)/share/=$(STAGE1)/share/:.:= \
+	OZC="$(SRCDIR)/oze.sh $(STAGE1)/bin/ozc" \
+	OZINIT=$(STAGE1)/share/Init.ozf
+
+# stage2a: recreate only the functors using the stage1 functors
+stage2a:
+	$(MAKE) install-main PREFIX=$(STAGE2A) \
+	OZ_LOAD=prefix=$(URL)/share/=$(STAGE1)/share/:.:= \
+	OZC="$(SRCDIR)/oze.sh $(STAGE1)/bin/ozc" \
+	OZINIT=$(STAGE1)/share/Init.ozf
+
+# stage2b: recreate the functors and Ozma file using the stage2a functors
+stage2b:
+	mv $(SRCDIR)/ozc.ozm ozc.ozm.save; \
+	trap "s=$$?;mv ozc.ozm.save $(SRCDIR)/ozc.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
+	$(MAKE) install-stage PREFIX=$(STAGE2B) \
+	OZ_LOAD=prefix=$(URL)/share/=$(STAGE2A)/share/:.:= \
+	OZC="$(SRCDIR)/oze.sh $(STAGE2A)/bin/ozc" \
+	OZINIT=$(STAGE2A)/share/Init.ozf
+
+# stage3: recreate the functors and Ozma file using the stage2 Ozma file
+stage3:
+	mv $(SRCDIR)/ozc.ozm ozc.ozm.save; \
+	trap "s=$$?;mv ozc.ozm.save $(SRCDIR)/ozc.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
+	$(MAKE) install-stage PREFIX=$(STAGE3) \
+	OZ_LOAD=prefix=$(URL)/share/=./:.:= \
+	OZC=$(SRCDIR)/ozc.sh \
+	OZINIT=$(STAGE2)/share/Init.ozf \
+	OZMAINIT=$(STAGE2)/share/Init.ozf \
+	OZMAFILE="-init $(STAGE2)/share/ozc.ozp"; \
+	cmp $(STAGE2)/share/ozc.ozm ozc.ozm || \
+	( mv ozc.ozm ozc.ozm.new; \
+	  echo New ozc.ozm differs from old one - saved in ozc.ozm.new )
+
+# stage3a: recreate only the functors using the stage2b Ozma file
+stage3a:
+	$(MAKE) install-main PREFIX=$(STAGE3A) \
+	OZ_LOAD=prefix=$(URL)/share/=./:.:= \
+	OZC=$(SRCDIR)/ozc.sh \
+	OZINIT=$(STAGE2B)/share/Init.ozf \
+	OZMAINIT=$(STAGE2B)/share/Init.ozf \
+	OZMAFILE="-init $(STAGE2B)/share/ozc.ozp"
+
+# stage3b: recreate the functors and Ozma file using the stage3a functors
+stage3b:
+	mv $(SRCDIR)/ozc.ozm ozc.ozm.save; \
+	trap "s=$$?;mv ozc.ozm.save $(SRCDIR)/ozc.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
+	$(MAKE) install-stage PREFIX=$(STAGE3B) \
+	OZ_LOAD=prefix=$(URL)/share/=$(STAGE3A)/share/:.:= \
+	OZC="$(SRCDIR)/oze.sh $(STAGE3A)/bin/ozc" \
+	OZINIT=$(STAGE3A)/share/Init.ozf
+
+SAVE=./save
+
+save:
+	-mkdir $(SAVE)
+	-mv -f $(CLEANFILES) save
+
+restore: clean
+	-mv -f $(SAVE)/* .
+	-rmdir $(SAVE)
+
+check:
+	$(MAKE) clean bootstrap stage1 || exit 1
+	$(MAKE) clean stage2 || exit 1
+	$(MAKE) clean stage3
+
+check-compiler:
+	$(MAKE) clean stage1 || exit 1
+	$(MAKE) clean stage2a || exit 1
+	$(MAKE) clean stage2b || exit 1
+	$(MAKE) clean stage3a || exit 1
+	$(MAKE) clean stage3b
+
+#---------------------------------------------------------------------
+# Boot compiler
+#---------------------------------------------------------------------
+
+.PHONY: new-ozma incompatible-ozma
+
+# Make sure you first make $(COMPILERSRCEXTRA)
+ozc.ozm:
+	$(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
+	mv -f /tmp/$$$$.ozm $@
+
+ozc.ozp: ozc.ozm
+	OZMAINIT="" OZMAFILE="-b $<" $(SRCDIR)/ozc.sh
+
+new-ozma:
+	rm -f ozc.ozm
+	$(MAKE) $(COMPILERSRCEXTRA) ozc.ozm
+
+# for making incompatible changes to instructions
+#  1. make incompatible-ozma       # create new ozc.ozm with old emulator
+#  2. make bootstrap OZEMULATOR=.. # bootstrap again with new emulator
+incompatible-ozma:
+	$(MAKE) clean stage1 OZFLAGS="-DNO_ASSEMBLER" || exit 1
+	$(MAKE) new-ozma \
+	OZ_LOAD=prefix=$(URL)/share/=$(STAGE1)/share/:.:=\
+	OZC=$(STAGE1)/bin/ozc \
+	OZINIT=$(STAGE1)/share/Init.ozf
+
+my-ozma:
+	$(MAKE) new-ozma \
+	OZ_LOAD=prefix=$(URL)/share/=$(STAGE1)/share/:.:=\
+	OZC="$(SRCDIR)/oze.sh $(STAGE1)/bin/ozc" \
+	OZINIT=$(STAGE1)/share/Init.ozf
+
+# no suffixes needed
+.SUFFIXES:

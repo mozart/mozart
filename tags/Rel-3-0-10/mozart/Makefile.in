@@ -1,0 +1,193 @@
+#
+#  Authors:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Contributors:
+#    Denys Duchier (duchier@ps.uni-sb.de)
+# 
+#  Copyright:
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://mozart.ps.uni-sb.de
+# 
+#  See the file "LICENSE" or
+#     http://mozart.ps.uni-sb.de/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
+# !!! THIS MAKEFILE REQUIRES GNU MAKE !!!!
+
+######################################################################
+# path
+######################################################################
+
+BUILDTOP=	@BUILDTOP@
+SRCTOP=		@SRCTOP@
+SRCDIR=		@srcdir@
+VPATH=		@srcdir@
+PREFIX=		@prefix@
+
+BINDIR=		$(PREFIX)/bin
+SHAREDIR=	$(PREFIX)/share
+TOOLSDIR=	$(SHAREDIR)/tools
+ELISPDIR=	$(SHAREDIR)/elisp
+IMAGESDIR=	$(SHAREDIR)/images
+CACHEDIR= 	$(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome
+CACHETOOLS= 	$(CACHEDIR)/tools
+CACHEBIN=	$(CACHEDIR)/bin
+SHARECACHE=	$(CACHEDIR)/share
+URL=		http\\://www.ps.uni-sb.de/ozhome
+
+######################################################################
+# programs
+######################################################################
+
+@SET_MAKE@
+INSTALL=	@INSTALL@
+INSTALL_BIN=	$(INSTALL) -m 555
+INSTALL_FILE=	$(INSTALL) -m 444
+INSTALL_DIR=	@INSTALL_DIR@
+
+TAR=		tar
+CVS=		cvs
+
+######################################################################
+# other variables
+######################################################################
+
+OZVERSION=	$(SRCTOP)/OZVERSION
+
+PLATFORMS=	solaris-sparc aix3-rs600 freebsd-i486 hpux-700\
+		irix5-mips linux-i486 netbsd-i486 netbsd-m68k netbsd-sparc\
+		osf1-alpha solaris-i486 sunos-sparc win32-i486
+
+DISTDIR=	dist
+
+FILES=		LICENSE
+ALLFILES=	$(FILES:%=$(PREFIX)/%)
+
+COMMONFILES=	LICENSE \
+		bin include share cache
+
+DEMOFILES=	demo examples
+
+COMPRESS=	gzip -9
+
+WINCACHEDIR=	oz/cache/http/www.ps.uni-sb.de/ozhome
+
+# sub directories for recursive makes
+SUBDIRS=	platform share contrib
+
+# list of directories to create during install
+DIRS=		
+INSTALLDIRS=	$(PREFIX) $(DIRS:%=$(PREFIX)/%)
+
+######################################################################
+# common targets
+######################################################################
+
+.PHONY: all bootstrap install clean veryclean distclean check
+.PHONY: platform platform-install
+
+all:: bootstrap
+
+platform:
+	(cd platform; make bootstrap)
+
+platform-install:
+	(cd platform; make install)
+
+bootstrap clean veryclean depend distclean check install::
+	dirs="$(SUBDIRS)"; \
+	for i in $$dirs; do \
+	  if (cd $$i && $(MAKE) $@); \
+          then true; \
+          else exit 1; \
+          fi; \
+        done
+
+clean::
+	-rm -f *~
+
+veryclean::
+	$(MAKE) clean SUBDIRS=
+
+distclean::
+	$(MAKE) veryclean SUBDIRS=
+	-rm -f Makefile config.cache config.log config.status
+
+install:: $(INSTALLDIRS)
+
+$(INSTALLDIRS):
+	$(INSTALL_DIR) $@
+
+all:: Makefile
+
+Makefile: Makefile.in ./config.status
+	./config.status
+
+./config.status: ./configure
+	./config.status --recheck
+
+######################################################################
+# other targets
+######################################################################
+
+install:: $(ALLFILES)
+
+$(ALLFILES): $(PREFIX)/% : % $(PREFIX)
+	$(INSTALL_FILE) $< $@
+
+$(DISTDIR):
+	$(INSTALL_DIR) $@
+
+pack-all: common $(PLATFORMS)
+
+home: mini-common wish-linux src linuxz
+
+mini-common: $(DISTDIR)
+	(cd $(PREFIX)/..; \
+	$(TAR) -zvcf - oz/bin oz/include oz/share) > \
+	   $(DISTDIR)/mini-`$(OZVERSION)`.tgz
+
+common: $(DISTDIR)
+	(cd $(PREFIX)/..; \
+	$(TAR) -cf - $(COMMONFILES:%=oz/%)) | \
+        $(COMPRESS) > $(DISTDIR)/oz-`$(OZVERSION)`-$@.tar.gz
+
+demo: $(DISTDIR)
+	(cd $(PREFIX)/..; \
+	$(TAR) -cf - $(DEMOFILES:%=oz/%)) | \
+        $(COMPRESS) > $(DISTDIR)/oz-`$(OZVERSION)`-$@.tar.gz
+
+$(PLATFORMS): $(DISTDIR)
+	(cd $(PREFIX)/..; \
+        $(TAR) -cf - oz/platform/$@) | \
+        $(COMPRESS) > $(DISTDIR)/oz-`$(OZVERSION)`-$@.tar.gz
+
+oz-win::
+	rm -rf oz oz3 oz-`$(OZVERSION)`
+	( cd $(PREFIX)/..; \
+	  $(TAR) cf - oz/?*.exe oz/demo oz/include oz/share \
+		   oz/tools \
+		   oz/LICENSE \
+		   oz/bin/opi \
+                   oz/platform/win32-i486/?*.exe \
+                   oz/platform/win32-i486/?*.dll \
+                   oz/platform/win32-i486/tcldoc \
+         ) | $(TAR) xf -
+	rm -f oz/demo/rundemo oz/share/ozbatch.ozm
+	$(INSTALL_DIR) $(WINCACHEDIR)/share
+	$(INSTALL_DIR) $(WINCACHEDIR)/tools
+	$(INSTALL_DIR) $(WINCACHEDIR)/bin
+	mv oz/share/images oz/share/?*.ozf $(WINCACHEDIR)/share
+	mv oz/tools/images oz/tools/?*.ozf $(WINCACHEDIR)/tools
+	mv oz/bin/opi $(WINCACHEDIR)/bin
+	(cd oz/share/wish; rm -rf tk tcl; mv tcl8.0 tcl; mv tk8.0 tk)
+	mv oz oz3

@@ -1,0 +1,1 @@
+test "x$prefix" = xNONE && prefix=@prefix@
