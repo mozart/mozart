@@ -35,11 +35,12 @@ REALCORESRCS = dpMarshaler.cc port.cc dpDebug.cc network.cc		\
                protocolState.cc dsite.cc perdio.cc state.cc		\
                vs_interface.cc fail.cc table.cc	                        \
                protocolFail.cc var.cc var_obj.cc var_lazy.cc msgType.cc	\
-               chain.cc dpResource.cc flowControl.cc msgContainer.cc	\
+               chain.cc dpResource.cc msgContainer.cc	\
 	       comObj.cc connection.cc tcpConnection.cc			\
                prioQueues.cc transObj.cc tcpTransObj.cc timers.cc	\
                var_class.cc var_eproxy.cc var_emanager.cc var_gcstub.cc \
-               referenceConsistency.cc fracWRC.cc timeLease.cc
+               referenceConsistency.cc fracWRC.cc timeLease.cc          \
+               bucketHashTable.cc
 
 CREATEDCOREFILES = msgContainer_marshal.hh msgContainer_marshal.cc \
                    dpMarshalcode.cc 
