@@ -26,13 +26,13 @@ ten years of research into concurrent constraint programming.
 The driving goal is to separate the fundamental aspects
 of programming a distributed system:
 application functionality, distribution structure,
-fault-tolerance, security, and openness.
+fault tolerance, security, and open computing.
 The current release completely separates
 application functionality and distribution structure,
 and provides primitives for fault-tolerance,
-openness, and partial support for security.
-Current research is focussed on completing
-the separation for fault-tolerance and openness,
+open computing, and partial support for security.
+Current research is focused on completing
+the separation for fault tolerance and open computing,
 which will be offered in future releases.
 
 <P>This tutorial presents many examples
@@ -46,6 +46,45 @@ mobile agents, and
 fault-tolerant mobile agents,
 and shows how easy it is to develop new abstractions
 in the Mozart platform.
+
+<P>Essentially all the distribution abilities of Mozart are
+given by four modules:
+<LIST>
+<ITEM> The module <<Connection>>
+provides the basic mechanism (known as <EM>tickets</EM>)
+for running applications to connect with each other.
+<ITEM> The module <<Remote>>
+allows a running application to create
+a new site on another host machine and connect with it.
+<ITEM> The module <<Pickle>> gives the basic primitives
+for storing and retrieving
+arbitrary stateless data from files and URLs.
+<ITEM> The module <<Fault>> gives the basic primitives
+for fault detection and handling.
+</LIST>
+The first three modules, <<Connection>>, <<Remote>>,
+and <<Pickle>>, are extremely simple to use.
+In each case, there are just one or two basic operations.
+For example, <<Connection>> has just two basic operations:
+offering a ticket and taking a ticket.
+The fourth module, <<Fault>>, is the base on which
+fault-tolerant abstractions are built.
+This release provides a few of the most useful abstractions
+to get you started.
+The development of more powerful ones is still ongoing
+research and will be provided in future releases.
+
+<P>We say two or more applications are <EM>connected</EM>
+if they share a reference to a language entity that allows
+them to exchange information.
+For example, let's say that Application 1 and Application 2
+reference the same object.
+Then either application can call the object.
+All low-level data transfer between the two applications
+is automatic; from the viewpoint of the system, it's just one
+big concurrent program where one object is being called from
+more than one thread.
+There is never any explicit message passing or encoding of data.
 
 <P>The Mozart platform provides much functionality
 in addition to distribution.
