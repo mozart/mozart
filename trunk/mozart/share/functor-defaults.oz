@@ -31,7 +31,7 @@ defaults(lib:
 	     'Fault' 'Connection' 'Remote' 'VirtualSite' 'URL'
 	     'Open'
 	     'Tk' 'TkTools'
-	     'Compiler' 'RunTimeLibrary'
+	     'Compiler'
 	     'Type'
 	     'Misc']
 
