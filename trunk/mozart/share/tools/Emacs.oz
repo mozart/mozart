@@ -25,7 +25,8 @@
 
 functor
 import
-   System.{get showInfo valueToVirtualString print}
+   Property.get
+   System.{showInfo valueToVirtualString print}
    Error.{formatLine msg}
    OS.{getEnv stat uName getHostByName tmpnam}
    Open.{socket text file}
@@ -45,7 +46,7 @@ body
 
    local
       fun {V2VS X}
-	 P = {System.get errors}
+	 P = {Property.get errors}
       in
 	 {System.valueToVirtualString X P.depth P.width}
       end
@@ -60,7 +61,7 @@ body
 	 end
       end
 
-      Platform = {System.get platform}.1
+      Platform = {Property.get platform}.1
       WindowsPlatform = 'win32'
 
       local
@@ -210,7 +211,7 @@ body
 		  {@Socket write(vs: {VirtualString.toAtom
 				      '\'oz-show-temp '#Name#'\''})}
 	       [] toTop() then
-		  case {System.get standalone} then skip
+		  case {Property.get 'oz.standalone'} then skip
 		  else
 		     {@Socket write(vs: MSG_ERROR)}
 		  end

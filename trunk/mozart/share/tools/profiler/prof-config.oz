@@ -37,7 +37,7 @@ TitleName              = 'Oz Profiler'
 IconName               = 'Profiler'
 
 Platform               = local
-			    X#Y = {System.get platform}
+			    X#Y = {Property.get platform}
 			 in
 			    {VS2A X#'-'#Y}
 			 end

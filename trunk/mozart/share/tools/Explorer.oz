@@ -34,8 +34,9 @@ in
    functor $ prop once
       
    import
+      Property.{get}
+      
       System.{show
-	      get
 	      printName}
 
       Error.{formatGeneric

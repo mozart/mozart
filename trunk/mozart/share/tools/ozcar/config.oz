@@ -29,7 +29,7 @@ TitleName              = 'Oz Debugger'
 IconName               = 'Ozcar'
 
 Platform               = local
-			    X#Y = {System.get platform}
+			    X#Y = {Property.get platform}
 			 in
 			    {VirtualString.toAtom X#'-'#Y}
 			 end
@@ -329,7 +329,7 @@ ConfigUseEmacsBar          = RunningWithOPI  % use Emacs?
 PrintWidth
 PrintDepth
 local
-   P = {System.get print}
+   P = {Property.get print}
 in
    PrintWidth = P.width
    PrintDepth = P.depth

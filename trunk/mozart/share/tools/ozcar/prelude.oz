@@ -24,10 +24,10 @@
 
 %% some builtins...
 Dbg = dbg(on:           proc {$}
-			   {System.set internal(debug:true)}
+			   {Property.put 'internal.debug' true}
 			end
 	  off:          proc {$}
-			   {System.set internal(debug:false)}
+			   {Property.put 'internal.debug' false}
 			end
 	  stream:       {`Builtin` 'Debug.getStream' 1}
 	  step:         {`Builtin` 'Debug.setStepFlag' 2}
