@@ -27,6 +27,7 @@ SRCTOP=         @SRCTOP@
 TESTDIR=        $(BUILDTOP)/share/test
 LIBDIR=         $(BUILDTOP)/share/lib
 PREFIX=         @prefix@
+PLATFORM=       @platform@
 
 BINDIR=         $(PREFIX)/platform/$(PLATFORM)
 INCDIR=         $(PREFIX)/include
@@ -92,7 +93,5 @@ CDYNOPT=        @CDYNOPT@
 CXXFLAGS_NO_ERROR= @CXXFLAGS@ $(COPT) $(OZ_WARN) $(CUSR)
 CXXFLAGS=       $(CXXFLAGS_NO_ERROR) $(OZ_WARN_ERROR)
 DEPEND=         @DEPEND@ $(CPPFLAGS)
-
-PLATFORM=       @platform@
 
 OZVERSION=      $(SRCTOP)/OZVERSION
