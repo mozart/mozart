@@ -63,4 +63,53 @@ OZ_Return BIarityInline(TaggedRef, TaggedRef &);
 OZ_Return adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
                              Bool recordFlag);
 
+// -----------------------------------------------------------------------
+// propagators
+
+class WidthPropagator : public OZ_Propagator {
+protected:
+  OZ_Term rawrec, rawwid;
+public:
+  WidthPropagator(OZ_Term r, OZ_Term w)
+    : rawrec(r), rawwid(w) {}
+
+  virtual void gcRecurse(void) {
+    OZ_gcTerm(rawrec);
+    OZ_gcTerm(rawwid);
+  }
+  virtual size_t sizeOf(void) { return sizeof(WidthPropagator); }
+  virtual OZ_Return run(void);
+  virtual ostream &print(ostream& o) const {
+    return o << "widthC propagator";
+  }
+};
+
+class MonitorArityPropagator : public OZ_Propagator {
+protected:
+  OZ_Term X, K, L, FH, FT;
+public:
+  MonitorArityPropagator(OZ_Term X1, OZ_Term K1, OZ_Term L1,
+                         OZ_Term FH1, OZ_Term FT1)
+    : X(X1), K(K1), L(L1), FH(FH1), FT(FT1) {}
+
+  virtual void gcRecurse(void) {
+    OZ_gcTerm(X);
+    OZ_gcTerm(K);
+    OZ_gcTerm(L);
+    OZ_gcTerm(FH);
+    OZ_gcTerm(FT);
+  }
+  virtual size_t sizeOf(void) { return sizeof(MonitorArityPropagator); }
+  virtual OZ_Return run(void);
+  virtual ostream &print(ostream& o) const {
+    return o << "monitorArity propagator";
+  }
+
+  TaggedRef getX(void) { return X; }
+  TaggedRef getK(void) { return K; }
+  TaggedRef getFH(void) { return FH; }
+  TaggedRef getFT(void) { return FT; }
+  void setFH(TaggedRef FH1) { FH=FH1; }
+};
+
 #endif

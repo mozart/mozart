@@ -184,7 +184,7 @@ public:
     // Return value is valid iff 'valid'==TRUE.  Otherwise, nothing is done.
     // Return NULL if val is successfully inserted (id did not exist)
     // Return the value of the pre-existing element if id already exists
-    // Test for and increase size of hash table if it becomes too full
+    // User should test for and increase size of hash table if it becomes too full
     // ATTENTION: insert must only be done if the table has room for a new element.
     TaggedRef insert(TaggedRef id, TaggedRef val, Bool *valid);
 
@@ -194,7 +194,8 @@ public:
     TaggedRef lookup(TaggedRef id);
 
     // Destructively update index id with new value val, if index id already has a value
-    // Return TRUE if index id successfully updated, else FALSE
+    // Return TRUE if index id successfully updated, else FALSE if index id does not
+    // exist in table
     Bool update(TaggedRef id, TaggedRef val);
 
     // Remove index id from table.  To reclaim memory, if the table becomes too sparse then
@@ -228,6 +229,10 @@ public:
 
     // Return list of features in srecord that are not in current table
     TaggedRef extraSRecFeatures(SRecord &sr);
+
+    // Return TRUE if current table has features that are not in arity argument:
+    Bool hasExtraFeatures(int tupleArity);
+    Bool hasExtraFeatures(Arity *recordArity);
 
     // Return sorted list (with given tail) containing all features
     TaggedRef getArityList(TaggedRef tail=AtomNil);
@@ -379,8 +384,8 @@ public:
     // arity being "tupleArity"/"recordArity"
     // note: "tupleArity" may be zero
     // for now they always return NO, leading to suspension
-    Bool disentailed(Literal *l, int tupleArity)     { return NO; }
-    Bool disentailed(Literal *l, Arity *recordArity) { return NO; }
+    Bool disentailed(Literal *l, int tupleArity);
+    Bool disentailed(Literal *l, Arity *recordArity);
 
     // These procedures exist as well in the class GenFDVariable,
     // but they are not needed in GenOFSVariable:
