@@ -22,7 +22,7 @@ char *TypeOfTermString[1<<tagSize];
 void initTagged()
 {
   void *p = (void *) malloc(100);
-  void *p1 = tagValueOf(makeTaggedMisc(p));
+  void *p1 = tagValueOf(makeTaggedMiscp(p));
   if (p != p1) {
     fprintf(stderr,"\n*******\nError, wrong configuration\n");
     fprintf(stderr,"Try defining\n\n");
