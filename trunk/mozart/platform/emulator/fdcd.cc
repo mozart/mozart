@@ -458,7 +458,7 @@ void BIfdBodyManager::introduceDummy(int i) {
 
 void BIfdBodyManager::introduceLocal(int i, OZ_Term v)
 {
-  DebugCheck(i < 0 || i >= curr_num_of_vars, error("index overflow"));
+  DebugCheck(i < 0 || i >= curr_num_of_vars, OZ_error("index overflow"));
 
   pm_term_type &vartag = bifdbm_vartag[i];
   OZ_Term  &var = bifdbm_var[i] = v;
@@ -529,7 +529,7 @@ void BIfdBodyManager::processLocalFromTo(int from, int to)
 
 void BIfdBodyManager::_introduce(int i, OZ_Term v)
 {
-  DebugCheck(i < 0 || i >= curr_num_of_vars, error("index overflow"));
+  DebugCheck(i < 0 || i >= curr_num_of_vars, OZ_error("index overflow"));
 
   pm_term_type vtag;
   OZ_Term *vptr;
@@ -1054,10 +1054,10 @@ Bool do_cd_propagation (LocalPropagationStore &lps) {
       return lps.reset();
       
     case RAISE:
-      error("propagators can't raise exceptions");
+      OZ_error("propagators can't raise exceptions");
       
     case SUSPEND:
-      error ("propagate_locally: 'SUSPEND' is returned?\n");
+      OZ_error ("propagate_locally: 'SUSPEND' is returned?\n");
       
     case SLEEP:
       oz_sleepPropagator(prop);
@@ -1313,7 +1313,7 @@ OZ_Return CDPropagator::propagate(void)
 
       x.backup();
       if (!do_cd_propagation(localPropStore)) 
-	error("local propagation must be empty");
+	OZ_error("local propagation must be empty");
       x.restore();
       continue;
     }
@@ -1327,7 +1327,7 @@ OZ_Return CDPropagator::propagate(void)
 
     x.backup();
     if (!do_cd_propagation(localPropStore)) 
-      error("local propagation must be empty");
+      OZ_error("local propagation must be empty");
     x.restore();
 
     Assert(localPropStore.isEmpty());
@@ -1394,7 +1394,7 @@ OZ_Return CDPropagator::propagate(void)
       for (int i = 0; i < variables; i += 1)
 	if (is[i] >= 0 && is[i] != i) 
 	  if (FAILED == OZ_unify(_v[i], _v[is[i]])) // mm_u
-	    error("Failure occured while commiting clause in constr disj."); 
+	    OZ_error("Failure occured while commiting clause in constr disj."); 
     }
 
 #ifdef DEBUG_FDCD

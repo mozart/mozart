@@ -64,7 +64,7 @@ public:
 
   Propagator * dequeue () {
     if (size == 0) 
-      error ( "Cannot dequeue from empty queue.");
+      OZ_error ( "Cannot dequeue from empty queue.");
     Propagator * prop = queue[head].prop;
     head = (head + 1) & (maxsize - 1);
     size -= 1;

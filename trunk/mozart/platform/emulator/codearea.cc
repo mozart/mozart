@@ -1036,7 +1036,7 @@ void CodeArea::writeInstr(void){
 	    RECINSTRFETCH, InstrDumpFile);
     fflush(stderr);
   } else
-    error("Cannot open file '%s'.", InstrDumpFile);
+    OZ_error("Cannot open file '%s'.", InstrDumpFile);
 } // CodeArea::writeInstr
 #endif
 

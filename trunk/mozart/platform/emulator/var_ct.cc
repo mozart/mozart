@@ -231,7 +231,7 @@ OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr, ByteCode * scp)
     break;
 
   default:
-    error("unexpected case in unifyCt");
+    OZ_error("unexpected case in unifyCt");
     break;
   } // switch (varIsLocal + 2 * termIsLocal) 
   return PROCEED;

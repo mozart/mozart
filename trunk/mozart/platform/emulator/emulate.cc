@@ -199,7 +199,7 @@ void deallocateY(RefsArray a)
 
 #define NOFLATGUARD   (shallowCP)
 
-#define IMPOSSIBLE(INSTR) error("%s: impossible instruction",INSTR)
+#define IMPOSSIBLE(INSTR) OZ_error("%s: impossible instruction",INSTR)
 
 #define DoSwitchOnTerm(indexTerm,table)					\
       TaggedRef term = indexTerm;					\
@@ -309,7 +309,7 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
     case BI_REPLACEBICALL:
       break;
     default:
-      error("oz_bi_wrapper: return not handled: %d",ret1);
+      OZ_error("oz_bi_wrapper: return not handled: %d",ret1);
       return FAILED;
     }
   }
@@ -2405,7 +2405,7 @@ LBLdispatcher:
     
   Case(OZERROR)
     {
-      error("Emulate: OZERROR instruction executed");
+      OZ_error("Emulate: OZERROR instruction executed");
       return T_ERROR;
     }
 
@@ -2671,14 +2671,14 @@ LBLdispatcher:
 
   Case(GLOBALVARNAME)
     {
-      error("under threaded code this must be different from LOCALVARNAME,");
-      error("otherwise CodeArea::adressToOpcode will not work.");
+      OZ_error("under threaded code this must be different from LOCALVARNAME,");
+      OZ_error("otherwise CodeArea::adressToOpcode will not work.");
     }
 
   Case(LOCALVARNAME)
     {
-      error("under threaded code this must be different from GLOBALVARNAME,");
-      error("otherwise CodeArea::adressToOpcode will not work.");
+      OZ_error("under threaded code this must be different from GLOBALVARNAME,");
+      OZ_error("otherwise CodeArea::adressToOpcode will not work.");
     }
 
   Case(PROFILEPROC)
@@ -2700,18 +2700,18 @@ LBLdispatcher:
 
   Case(TASKCATCH)
     {
-      error("impossible");
+      OZ_error("impossible");
     }
 
   Case(ENDOFFILE)
     {
-      error("Emulate: ENDOFFILE instruction executed");
+      OZ_error("Emulate: ENDOFFILE instruction executed");
       return T_ERROR;
     }
 
   Case(ENDDEFINITION)
     {
-      error("Emulate: ENDDEFINITION instruction executed");
+      OZ_error("Emulate: ENDDEFINITION instruction executed");
       return T_ERROR;
     }
 
@@ -2730,7 +2730,7 @@ LBLdispatcher:
 
 #ifndef THREADED
   default:
-     error("emulate instruction: default should never happen");
+    OZ_error("emulate instruction: default should never happen");
      break;
    } /* switch*/
 #endif
