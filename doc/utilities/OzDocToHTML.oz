@@ -1726,6 +1726,7 @@ define
 			       type: 'text/css'
 			       href: @StyleSheet))
 		     'body'(COMMON: @BodyCommon
+			    @NavigationPanel
 			    BodyContents
 			    OzDocToHTML, FlushFloats($)
 			    @NavigationPanel
