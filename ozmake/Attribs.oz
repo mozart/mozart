@@ -66,6 +66,10 @@ define
 	 Submakefiles:unit
 	 IncludeDirs: nil
 	 LibraryDirs: nil
+	 SysIncludeDirsOK:true
+	 SysLibraryDirsOK:true
+	 SysIncludeDirs:unit
+	 SysLibraryDirs:unit
 	 %% tools
 	 OzEngine   : unit
 	 OzC        : unit
@@ -526,6 +530,68 @@ define
       meth get_includedirs($) @IncludeDirs end
       meth set_librarydirs(L) LibraryDirs<-L end
       meth get_librarydirs($) @LibraryDirs end
+
+      %% `system' directories to pass to oztool
+      meth set_sysincludedirsok(B) SysIncludeDirsOK<-(B==true) end
+      meth set_syslibrarydirsok(B) SysLibraryDirsOK<-(B==true) end
+      meth get_sysincludedirsok($)
+	 if @Superman\=unit
+	 then {@Superman get_sysincludedirsok($)}
+	 else @SysIncludeDirsOK end
+      end
+      meth get_syslibrarydirsok($)
+	 if @Superman\=unit
+	 then {@Superman get_syslibrarydirsok($)}
+	 else @SysLibraryDirsOK end
+      end
+      meth get_sysincludedirs($)
+	 if @SysIncludeDirs==unit then
+	    if {self get_sysincludedirsok($)} then
+	       if @Superman\=unit then
+		  SysIncludeDirs<-{@Superman get_sysincludedirs($)}
+	       else
+		  SysIncludeDirs<-
+		  [{Path.expand
+		    {Path.resolve
+		     {self get_prefix($)}
+		     'platform/'#{Property.get 'platform.name'}#'/include'}}
+		   {Path.expand
+		    {Path.resolve {self get_prefix($)} 'include'}}
+		   {Path.expand
+		    {Path.resolve
+		     {Property.get 'oz.home'}
+		     'platform/'#{Property.get 'platform.name'}#'/include'}}
+		   {Path.expand
+		    {Path.resolve {Property.get 'oz.home'} 'include'}}]
+	       end
+	    else
+	       SysIncludeDirs<-nil
+	    end
+	 end
+	 @SysIncludeDirs
+      end
+      meth get_syslibrarydirs($)
+	 if @SysLibraryDirs==unit then
+	    if {self get_syslibrarydirsok($)} then
+	       if @Superman\=unit then
+		  SysLibraryDirs<-{@Superman get_syslibrarydirs($)}
+	       else
+		  SysLibraryDirs<-
+		  [{Path.expand
+		    {Path.resolve
+		     {self get_prefix($)}
+		     'platform/'#{Property.get 'platform.name'}#'/lib'}}
+		   {Path.expand
+		    {Path.resolve
+		     {Property.get 'oz.home'}
+		     'platform/'#{Property.get 'platform.name'}#'/lib'}}]
+	       end
+	    else
+	       SysLibraryDirs<-nil
+	    end
+	 end
+	 @SysLibraryDirs
+      end
 
       meth extend_resolver
 	 if @ResolverExtended then skip else

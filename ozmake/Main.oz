@@ -73,6 +73,8 @@ prepare
 
       includedir(multiple char:&I type:string)
       librarydir(multiple char:&L type:string)
+      sysincludedirs(single type:bool)
+      syslibrarydirs(single type:bool)
       )
 
    OPTLIST =
@@ -110,6 +112,8 @@ prepare
     'local'        # set_local
     includedir     # set_includedirs
     librarydir     # set_librarydirs
+    sysincludedirs # set_sysincludedirsok
+    syslibrarydirs # set_syslibrarydirsok
    ]
       
 define
