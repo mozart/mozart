@@ -1700,10 +1700,14 @@ OZ_BI_define(unix_pipe,2,2) {
   int sv[2];
   int aux = ossocketpair(PF_UNIX,SOCK_STREAM,0,sv);
 
-  SECURITY_ATTRIBUTES sa;
-  sa.nLength = sizeof(sa);
-  sa.lpSecurityDescriptor = NULL;
-  sa.bInheritHandle = TRUE;
+  SECURITY_ATTRIBUTES sa1;
+  sa1.nLength = sizeof(sa1);
+  sa1.lpSecurityDescriptor = NULL;
+  sa1.bInheritHandle = TRUE;
+  SECURITY_ATTRIBUTES sa2;
+  sa2.nLength = sizeof(sa2);
+  sa2.lpSecurityDescriptor = NULL;
+  sa2.bInheritHandle = TRUE;
 
   STARTUPINFO si;
   memset(&si,0,sizeof(si));
@@ -1716,13 +1720,12 @@ OZ_BI_define(unix_pipe,2,2) {
   HANDLE saveerr = GetStdHandle(STD_ERROR_HANDLE);
   HANDLE savein  = GetStdHandle(STD_INPUT_HANDLE);
   HANDLE rh1,wh1,rh2,wh2;
-
-  if (!CreatePipe(&rh1,&wh1,&sa,64*1024)  ||
-      !CreatePipe(&rh2,&wh2,&sa,64*1024)  ||
+  if (!CreatePipe(&rh1,&wh1,&sa1,64*1024)  ||
+      !CreatePipe(&rh2,&wh2,&sa2,64*1024)  ||
       !SetStdHandle((DWORD)STD_OUTPUT_HANDLE,wh1) ||
       !SetStdHandle((DWORD)STD_ERROR_HANDLE,wh1) ||
       !SetStdHandle((DWORD)STD_INPUT_HANDLE,rh2) ||
-      !CreateProcess(NULL,buf,&sa,NULL,TRUE,0,
+      !CreateProcess(NULL,buf,NULL,NULL,TRUE,0,
 		     NULL,NULL,&si,&pinf)) {
     fprintf(stderr,"dup error %ld\n",GetLastError());
     return raiseUnixError("CreatePipe",0, "Cannot create pipe process.",
@@ -1730,7 +1733,7 @@ OZ_BI_define(unix_pipe,2,2) {
   }
 
   int pid = pinf.dwProcessId;
-  CloseHandle(pinf.hProcess);
+  CloseHandle(pinf.hProcess); //--** this is unsafe! keep open while pid used
   CloseHandle(pinf.hThread);
   CloseHandle(wh1);
   CloseHandle(rh2);
@@ -1840,6 +1843,12 @@ OZ_BI_define(unix_exec,3,1){
   memset(&si,0,sizeof(si));
   si.cb = sizeof(si);
   si.dwFlags = STARTF_FORCEOFFFEEDBACK|STARTF_USESTDHANDLES;
+  SetHandleInformation(GetStdHandle(STD_INPUT_HANDLE),
+		       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
+  SetHandleInformation(GetStdHandle(STD_OUTPUT_HANDLE),
+		       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
+  SetHandleInformation(GetStdHandle(STD_ERROR_HANDLE),
+		       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
   si.hStdInput  = GetStdHandle(STD_INPUT_HANDLE);
   si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
   si.hStdError  = GetStdHandle(STD_ERROR_HANDLE);
@@ -1861,7 +1870,7 @@ OZ_BI_define(unix_exec,3,1){
 
   PROCESS_INFORMATION pinf;
   
-  if (!CreateProcess(NULL,buf,NULL,NULL,FALSE,
+  if (!CreateProcess(NULL,buf,NULL,NULL,TRUE,
 		     (do_kill ? 0 : DETACHED_PROCESS),
 		     NULL,NULL,&si,&pinf)) {
     if (ozppidbuf[0] != 0)
@@ -1870,7 +1879,7 @@ OZ_BI_define(unix_exec,3,1){
 			  "os");
   }
   CloseHandle(pinf.hThread);
-  CloseHandle(pinf.hProcess);
+  CloseHandle(pinf.hProcess); //--** unsafe! keep open while pid used
 
   if (ozppidbuf[0] != 0)
     SetEnvironmentVariable("OZPPID", ozppidbuf);
