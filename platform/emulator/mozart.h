@@ -551,12 +551,24 @@ OZ_RETURN((X)?OZ_true():OZ_false())
     { OZ_suspendOn(OZ_in(ARG)); }               \
 }
 
+#define OZ__doTerm(TYPE,ARG,VAR)                \
+TYPE VAR = OZ_in(ARG);
+
 #define OZ_declareTerm(ARG,VAR)                 \
-OZ_Term VAR = OZ_in(ARG);
+OZ__doTerm(OZ_Term,ARG,VAR);
+
+#define OZ_setTerm(ARG,VAR)                     \
+OZ__doTerm(,ARG,VAR);
+
+#define OZ__doDetTerm(TYPE,ARG,VAR)             \
+OZ_expectDet(ARG);                              \
+OZ__doTerm(TYPE,ARG,VAR);
 
 #define OZ_declareDetTerm(ARG,VAR)              \
-OZ_expectDet(ARG);                              \
-OZ_declareTerm(ARG,VAR);
+OZ__doDetTerm(OZ_Term,ARG,VAR);
+
+#define OZ_setDetTerm(ARG,VAR)                  \
+OZ__doDetTerm(,ARG,VAR);
 
 /*
  * OZ_expectType(ARG,MSG,CHECK)
@@ -603,32 +615,62 @@ OZ_expectType(ARG,"ForeignPointer",OZ_isForeignPointer)
  * applying the conversion function COERCE.
  */
 
-#define OZ_declareType(ARG,VAR,TYPE,MSG,CHECK,COERCE) \
+#define OZ__doType(ARG,VAR,TYPE,MSG,CHECK,COERCE) \
 OZ_expectType(ARG,MSG,CHECK);                   \
 TYPE VAR = COERCE(OZ_in(ARG));
+
+#define OZ_declareType(ARG,VAR,TYPE,MSG,CHECK,COERCE) \
+OZ__doType(ARG,VAR,TYPE,MSG,CHECK,COERCE)
+
+#define OZ_setType(ARG,VAR,TYPE,MSG,CHECK,COERCE) \
+OZ__doType(ARG,VAR,,MSG,CHECK,COERCE)
 
 #define OZ_declareBool(ARG,VAR)                 \
 OZ_declareType(ARG,VAR,int,"Bool",OZ_isBool,OZ_boolToC)
 
+#define OZ_setBool(ARG,VAR)                     \
+OZ_setType(ARG,VAR,int,"Bool",OZ_isBool,OZ_boolToC)
+
 #define OZ_declareInt(ARG,VAR)                  \
 OZ_declareType(ARG,VAR,int,"Int",OZ_isInt,OZ_intToC)
+
+#define OZ_setInt(ARG,VAR)                      \
+OZ_setType(ARG,VAR,int,"Int",OZ_isInt,OZ_intToC)
 
 #define OZ_declareFloat(ARG,VAR)                \
 OZ_declareType(ARG,VAR,double,"Float",OZ_isFloat,OZ_floatToC)
 
+#define OZ_setFloat(ARG,VAR)                    \
+OZ_setType(ARG,VAR,double,"Float",OZ_isFloat,OZ_floatToC)
+
 #define OZ_declareAtom(ARG,VAR)                 \
 OZ_declareType(ARG,VAR,CONST char*,"Atom",OZ_isAtom,OZ_atomToC)
 
+#define OZ_setAtom(ARG,VAR)                     \
+OZ_setType(ARG,VAR,CONST char*,"Atom",OZ_isAtom,OZ_atomToC)
+
 #define OZ_declareBitString(ARG,VAR)            \
 OZ_declareType(ARG,VAR,BitString*,"BitString",  \
+               OZ_isBitString,tagged2BitString)
+
+#define OZ_setBitString(ARG,VAR)                \
+OZ_setType(ARG,VAR,BitString*,"BitString",      \
                OZ_isBitString,tagged2BitString)
 
 #define OZ_declareByteString(ARG,VAR)           \
 OZ_declareType(ARG,VAR,ByteString*,"ByteString",\
                OZ_isByteString,tagged2ByteString)
 
+#define OZ_setByteString(ARG,VAR)               \
+OZ_setType(ARG,VAR,ByteString*,"ByteString",    \
+               OZ_isByteString,tagged2ByteString)
+
 #define OZ_declareForeignPointer(ARG,VAR)       \
 OZ_declareType(ARG,VAR,void*,"ForeignPointer",  \
+        OZ_isForeignPointer,OZ_getForeignPointer)
+
+#define OZ_setForeignPointer(ARG,VAR)           \
+OZ_setType(ARG,VAR,void*,"ForeignPointer",      \
         OZ_isForeignPointer,OZ_getForeignPointer)
 
 /*
@@ -642,6 +684,10 @@ OZ_declareType(ARG,VAR,void*,"ForeignPointer",  \
 #define OZ_declareForeignType(ARG,VAR,TYPE)     \
 OZ_expectForeignPointer(ARG);                   \
 TYPE VAR = (TYPE) OZ_getForeignPointer(OZ_in(ARG));
+
+#define OZ_setForeignType(ARG,VAR,TYPE) \
+OZ_expectForeignPointer(ARG);                   \
+VAR = (TYPE) OZ_getForeignPointer(OZ_in(ARG));
 
 /*
  * OZ_expectRecType(ARG,MSG,CHECK)
@@ -686,6 +732,10 @@ OZ_expectRecType(ARG,"VirtualString",OZ_isVirtualString);
 OZ_expectRecType(ARG,MSG,COERCE);               \
 TYPE VAR = COERCE(OZ_in(ARG));
 
+#define OZ_setRecType(ARG,VAR,TYPE,MSG,CHECK,COERCE) \
+OZ_expectRecType(ARG,MSG,COERCE);               \
+VAR = COERCE(OZ_in(ARG));
+
 #define oz_str2c(t) OZ_stringToC(t,0)
 #define oz_vs2c(t) OZ_vsToC(t,0)
 
@@ -693,8 +743,16 @@ TYPE VAR = COERCE(OZ_in(ARG));
 OZ_declareRecType(ARG,VAR,char*,"String",       \
         OZ_isProperString,oz_str2c);
 
+#define OZ_setString(ARG,VAR)           \
+OZ_setRecType(ARG,VAR,char*,"String",   \
+        OZ_isProperString,oz_str2c);
+
 #define OZ_declareVirtualString(ARG,VAR)        \
 OZ_declareRecType(ARG,VAR,char*,"VirtualString",\
+        OZ_isVirtualString,oz_vs2c);
+
+#define OZ_setVirtualString(ARG,VAR)    \
+OZ_setRecType(ARG,VAR,char*,"VirtualString",\
         OZ_isVirtualString,oz_vs2c);
 
 /*
@@ -708,6 +766,10 @@ OZ_declareRecType(ARG,VAR,char*,"VirtualString",\
 OZ_expectVirtualString(ARG);                    \
 int LEN;                                        \
 char* VAR = OZ_vsToC(OZ_in(ARG),&LEN);
+
+#define OZ_setVS(ARG,VAR,LEN)                   \
+OZ_expectVirtualString(ARG);                    \
+VAR = OZ_vsToC(OZ_in(ARG),&LEN);
 
 /* ------------------------------------------------------------------------ *
  * Debugging Support
