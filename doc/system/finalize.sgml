@@ -97,7 +97,12 @@ assuming ?_{Value} is no longer referenced at all, not even by the
 guardian, will it really be garbage collected.
 <p class=danger>
 The ?_{Register} procedure cannot be used in a (subordinated) space
-other than where ?_{Finalize.guardian} has been called.
+other than where ?_{Finalize.guardian} has been called.  Keep in mind
+that it probably doesn't make sense to create a guardian in a
+non-toplevel space because a space can become failed.  When this
+happens, everything in the space is discarded, including the
+guardians, which means the values registered in them will never be
+finalized.
       <entry/<code/Finalize.register/
 <index/<code/Finalize/<and><code/register///
       <synopsis/<code/{Finalize.register ?+{Value} ?+{Handler}}//
