@@ -2,9 +2,6 @@
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
   Author: popow, mehl
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
 
       (main) AM::procedure;
       another things.
@@ -298,55 +295,6 @@ void AM::exitOz(int status)
   osExit(status);
 }
 
-
-void AM::suspendEngine()
-{
-  deinstallPath(rootBoard);
-
-  ozstat.printIdle(stdout);
-
-  osBlockSignals(OK);
-
-  while (1) {
-
-    if (isSetSFlag(UserAlarm)) {
-      handleUser();
-    }
-
-    if (isSetSFlag(IOReady) || !compStream->bufEmpty()) {
-      handleIO();
-    }
-    
-    if (!threadQueuesAreEmpty()) {
-      break;
-    }
-
-    if (isStandalone() && !compStream->cseof()) {
-      loadQuery(compStream);
-      continue;
-    }
-    Assert(compStream->bufEmpty());
-
-    int ticksleft = osBlockSelect(userCounter);
-    setSFlag(IOReady);
-
-    if (userCounter>0 && ticksleft==0) {
-      handleUser();
-      continue;
-    }
-
-    setUserAlarmTimer(ticksleft);
-  }
-
-  ozstat.printRunning(stdout);
-  
-  // restart alarm
-  osSetAlarmTimer(CLOCK_TICK/1000);
-
-  osUnblockSignals();
-}
-
-
 /* -------------------------------------------------------------------------
  * Unification
  * -------------------------------------------------------------------------*/
@@ -390,6 +338,30 @@ Bool AM::isLocalSVarOutline(SVariable *var)
 {
   Board *home = var->getHomeUpdate();
   return home == currentBoard;
+}
+
+
+inline
+Bool AM::installScript(Script &script)
+{
+  Bool ret = OK;
+  installingScript = TRUE;
+  for (int index = 0; index < script.getSize(); index++) {
+    if (!unify(script[index].getLeft(),script[index].getRight())) {
+      ret = NO;
+      if (!isToplevel()) {
+	break;
+      }
+    }
+  }
+  installingScript = FALSE;
+#ifndef DEBUG_CHECK
+  script.dealloc();
+#else
+  if (ret == OK) 
+    script.dealloc ();
+#endif
+  return ret;
 }
 
 Bool AM::installScriptOutline(Script &script)

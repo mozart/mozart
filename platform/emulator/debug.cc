@@ -2,9 +2,6 @@
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, W-66123 Saarbruecken, Phone (+49) 681 302-5312
   Author: scheidhr & mehl
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
   */
 
 /*
@@ -20,7 +17,7 @@
 #include <signal.h>
 #include <setjmp.h>
 
-#include "am.hh"
+#include "runtime.hh"
 #include "debug.hh"
 
 unsigned long OzDebug::goalCounter = 1;
@@ -124,7 +121,7 @@ OZ_C_proc_begin(BItaskStack,2)
   OZ_declareArg(1,out);
 
   in = OZ_deref(in);
-  if (!isThread(in)) { TypeErrorT(0,"Thread"); }
+  if (!isThread(in)) { oz_typeError(0,"Thread"); }
 
   ConstTerm *rec = tagged2Const(in);
   Thread *thread = (Thread*) rec;
@@ -148,7 +145,7 @@ OZ_C_proc_begin(BIlocation,2)
   OZ_declareArg(1,out);
 
   in = OZ_deref(in);
-  if (!isThread(in)) { TypeErrorT(0,"Thread"); }
+  if (!isThread(in)) { oz_typeError(0,"Thread"); }
 
   ConstTerm *rec = tagged2Const(in);
   Thread *thread = (Thread*) rec;
