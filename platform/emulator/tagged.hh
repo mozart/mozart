@@ -136,7 +136,7 @@ TypeOfTerm tagTypeOf(TaggedRef ref)
 char *tagged2String(TaggedRef ref, int depth, int offset = 0);
 void taggedPrint(TaggedRef ref,int depth = 10, int offset = 0);
 void taggedPrintLong(TaggedRef ref, int depth = 10, int offset = 0);
-
+void tagged2Stream(TaggedRef, ostream & = cout, int = 10,int = 0);
 
 // ---------------------------------------------------------------------------
 // --- TaggedRef: CHECK_xx

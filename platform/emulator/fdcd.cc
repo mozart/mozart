@@ -115,6 +115,8 @@ OZ_C_proc_end
 //-----------------------------------------------------------------------------
 
 class CDPropagator : public OZ_Propagator {
+private:
+  static OZ_CFun spawner;
 protected:
   OZ_Term b_tuple, v_tuple, vp_tuple;
 public:
@@ -128,9 +130,8 @@ public:
   }
   virtual size_t sizeOf(void) { return sizeof(CDPropagator); }
   virtual OZ_Return run(void);
-  virtual ostream &print(ostream& o) const {
-    return o << "cd manager";
-  }
+  virtual OZ_Term getArguments(void) const { return OZ_nil(); }
+  virtual OZ_CFun getSpawner(void) const { return spawner; }
 };
 
 //-----------------------------------------------------------------------------
@@ -455,6 +456,7 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
 }
 OZ_C_proc_end
 
+OZ_CFun CDPropagator::spawner = BIfdConstrDisj;
 
 CDSuppl::CDSuppl(OZ_Propagator * p, OZ_Term b) : reg_b(b) 
 {
@@ -464,12 +466,6 @@ CDSuppl::CDSuppl(OZ_Propagator * p, OZ_Term b) : reg_b(b)
 void CDSuppl::gcRecurse(void) {
   thr = (OZ_Thread) ((Thread *)thr)->gcThread();
   OZ_gcTerm(reg_b);
-}
-
-ostream& CDSuppl::print(ostream& o) const 
-{
-  return o << '(' << *((Thread *)thr)->getPropagator() 
-    << ") ><" <<OZ_toStream(reg_b);
 }
 
 OZ_Return CDSuppl::run(void)

@@ -1110,7 +1110,6 @@ OZ_Return labelInline(TaggedRef term, TaggedRef &out)
 DECLAREBI_USEINLINEFUN1(BIlabel,labelInline)
 
 
-
 /*
  * {RecordC.widthC X W} -- builtin that constrains number of features
  * of X to be equal to finite domain variable W.  Will constrain X to
@@ -1192,7 +1191,7 @@ OZ_C_proc_begin(BIwidthC, 2)
 }
 OZ_C_proc_end
 
-
+OZ_CFun WidthPropagator::spawner = BIwidthC;
 
 // Used by BIwidthC built-in
 // {PropWidth X W} where X is OFS and W is FD width.
@@ -1477,6 +1476,7 @@ OZ_C_proc_begin(BImonitorArity, 3)
 }
 OZ_C_proc_end // BImonitorArity
 
+OZ_CFun MonitorArityPropagator::spawner = BImonitorArity;
 
 // The propagator for the built-in RecordC.monitorArity 
 // {PropFeat X K L FH FT} -- propagate features from X to the list L, and go
