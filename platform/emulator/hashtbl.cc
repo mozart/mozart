@@ -422,7 +422,12 @@ void AddressHashTable::htAdd(void *k, void *val)
       break;
     } else if (table[key].getKey() == k) {
       // already there;
+      //DENYS: this assertion is ifdef'ed out because it turns out
+      //that when building the opcodeTable, there are instructions that
+      //share the same jump label.
+#if !defined(THREADED)
       Assert(table[key].getValue() == val);
+#endif
       break;
     } else {
       // next hop:
