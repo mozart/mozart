@@ -927,16 +927,6 @@ void deallocateY(RefsArray a)
 }
 
 inline
-RefsArray allocateStaticRefsArray(int n) 
-{
-  RefsArray a = new TaggedRef[n + 1];
-  a += 1;
-  initRefsArray(a,n,OK);
-  return a;
-}
-
-
-inline
 RefsArray copyRefsArray(RefsArray a) 
 {
   int n = getRefsArraySize(a);
