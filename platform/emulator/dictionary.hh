@@ -629,6 +629,10 @@ public:
   //
   DictHashTable* gCollect(void);
   DictHashTable* sClone(void);
+
+#if defined(DEBUG_CHECK)
+  void verify();
+#endif
 };
   
 
