@@ -201,6 +201,15 @@ current buffer's file name, minus the `.oz' or `.ozg' extension."
 (put 'oz-application-command 'variable-interactive
      "sShell command to invoke an Oz application: ")
 
+(eval-and-compile
+  (eval '(defcustom oz-engine-program
+	   (concat (oz-home) "/bin/ozengine")
+	   "Default Oz engine to run the OPI"
+	   :type 'string
+	   :group 'mozart)))
+(put 'oz-engine-program 'variable-interactive
+     "sShell command to invoke an Oz application: ")
+
 ;;}}}
 ;;{{{ Variables/Initialization
 
@@ -513,7 +522,7 @@ With C-u C-u as prefix argument, send it a SIGKILL instead."
 		(process-filter (get-buffer-process oz-emulator-buffer)) t))
 	      (t
 	       (setq oz-emulator-buffer "*Oz Emulator*")
-	       (oz-make-comint "ozengine" oz-root-functor)
+	       (oz-make-comint oz-engine-program oz-root-functor)
 	       (oz-prepare-emulator-buffer 'oz-filter t)))
 	(oz-set-title oz-frame-title)
 	(message "Oz started."))))
