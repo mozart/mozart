@@ -1134,22 +1134,30 @@ define
             %-----------------------------------------------------------
             % Literate Programming
             %-----------------------------------------------------------
-            [] chunk then Title Label Name ChunkNav Left Right Body in
-               OzDocToHTML, Batch(M.1=title(...) 1 ?Title)
-               ToGenerate <- Label|@ToGenerate
-               Name = {VirtualString.toAtom
-                       {HTML.toVirtualString {HTML.clean Title}}}
-               {Dictionary.put @ChunkDefinitions Name
-                (@CurrentNode#"#"#Label)#ChunkNav|
-                {Dictionary.condGet @ChunkDefinitions Name nil}}
+            [] chunk then Title Label Name ChunkNav Left Right Body Anon in
+               Anon = {SGML.isOfClass M anonymous}
+               if Anon then skip else
+                  OzDocToHTML, Batch(M.1=title(...) 1 ?Title)
+                  ToGenerate <- Label|@ToGenerate
+                  Name = {VirtualString.toAtom
+                          {HTML.toVirtualString {HTML.clean Title}}}
+                  {Dictionary.put @ChunkDefinitions Name
+                   (@CurrentNode#"#"#Label)#ChunkNav|
+                   {Dictionary.condGet @ChunkDefinitions Name nil}}
+               end
                Left = span('class': [chunkborder] PCDATA('<'))
                Right = span('class': [chunkborder] PCDATA('>='))
                Body = OzDocToHTML, BatchCode(M.2 1 $)
-               BLOCK(dl(COMMON: @Common
-                        dt(span('class': [chunktitle]
-                                SEQ([Left a(name: Label Title) Right]))
-                           ChunkNav)
+               if Anon then
+                  BLOCK(dl(COMMON: @Common
                         dd('class': [code] Body)))
+               else
+                  BLOCK(dl(COMMON: @Common
+                           dt(span('class': [chunktitle]
+                                   SEQ([Left a(name: Label Title) Right]))
+                              ChunkNav)
+                           dd('class': [code] Body)))
+               end
             [] 'chunk.ref' then Title LinkedTitle Left Right in
                OzDocToHTML, Batch(M 1 ?Title)
                ChunkLinks <- ({VirtualString.toAtom
