@@ -43,7 +43,7 @@ COMPILERSRC1 = \
 COMPILERSRCNOVER = $(COMPILERSRC1:%=$(SRCDIR)/compiler/%) $(SRCDIR)/Compiler.oz
 COMPILERSRC = $(COMPILERSRCNOVER) compiler/Opcodes.oz compiler/Version.oz
 
-COMPILERPANELSRC1 = CompilerPanel.oz
+COMPILERPANELSRC1 = CompilerPanelClass.oz
 COMPILERPANELSRC = $(COMPILERPANELSRC1:%=$(SRCDIR)/compiler/%) \
 	$(SRCDIR)/CompilerPanel.oz
 
@@ -89,9 +89,6 @@ ALLSRCS = \
 	$(COMPILERSRC) $(COMPILERPANELSRC) $(PANELSRC) $(BROWSERSRC) \
 	$(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC)
 
-OTHERS1 = StartOPI.oz
-OTHERS = $(OTHERS1:%=$(SRCDIR)/%)
-
 DUMPINTRO1 = DumpIntro.oz Base.env Standard.env
 DUMPINTRO = $(DUMPINTRO1:%=$(SRCDIR)/%) Base.ozc Standard.ozc
 
@@ -104,12 +101,13 @@ TYPS = $(ENVS1:%.env=%.typ)
 
 LIBFILES = \
 	$(ALLSRCS:$(SRCDIR)/%=$(OZLIB)/%) \
-	$(OTHERS:$(SRCDIR)/%=$(OZLIB)/%) \
 	$(ENVS:$(SRCDIR)/%=$(OZLIB)/%) \
 	$(TYPS:%=$(OZLIB)/%)
 
+HELPCOMPONENTS = Base.ozc Standard.ozc
+
 COMPONENTS = \
-	Base.ozc Standard.ozc OPI.ozc SP.ozc OP.ozc CP.ozc WP.ozc DP.ozc \
+	OPI.ozc SP.ozc OP.ozc CP.ozc WP.ozc DP.ozc \
 	Compiler.ozc CompilerPanel.ozc Panel.ozc Browser.ozc Explorer.ozc \
 	Emacs.ozc Ozcar.ozc Profiler.ozc
 
@@ -134,16 +132,19 @@ OZCARBITMAPS = $(OZCARBITMAPS1:%=$(OZCARBITMAPDIR)/%)
 
 all:: Makefile $(COMPONENTS) ozbatch
 
-Assembly.ozm: $(SRCDIR)/MakeAssembly.oz \
+ozbatch.ozm.gz: ozbatch.ozm
+	$(GZIP) --best < $< > $@
+
+ozbatch.ozm: $(SRCDIR)/MakeAssembly.oz \
 	$(STANDARDSRC) $(SRCDIR)/Base.env $(SRCDIR)/Standard.env \
 	$(SPSRC) $(SRCDIR)/SP.env $(CPSRC) $(SRCDIR)/CP.env \
 	$(OPSRC) $(TYPS) $(SRCDIR)/OP.env \
-	$(COMPILERSRC) $(SRCDIR)/Compiler.env $(SRCDIR)/StartOPI.oz
+	$(COMPILERSRC) $(SRCDIR)/Compiler.env $(SRCDIR)/BatchCompile.oz
 	$(OZMA) -o /tmp/$$$$.ozm $(SRCDIR)/MakeAssembly.oz && \
 	/bin/mv -f /tmp/$$$$.ozm $@
 
-ozbatch: $(SRCDIR)/MakeBatch.oz $(DUMPINTRO) OP.ozc $(SRCDIR)/OP.env \
-	SP.ozc $(SRCDIR)/SP.env
+ozbatch: $(SRCDIR)/MakeBatch.oz $(SRCDIR)/BatchCompile.oz $(DUMPINTRO) \
+	OP.ozc $(SRCDIR)/OP.env SP.ozc $(SRCDIR)/SP.env
 	$(EXECWITHSTD) $(SRCDIR)/MakeBatch.oz
 
 Base.ozc: Standard.ozc
@@ -159,8 +160,8 @@ install:: \
 
 clean::
 	$(RM) compiler/Version.oz compiler/Opcodes.oz ozcar/version.oz
-	$(RM) $(TYPS) $(COMPONENTS) ozbatch $(SRCDIR)/Makefile.bak
-	$(RM) Assembly.ozm TAGS
+	$(RM) $(TYPS) $(HELPCOMPONENTS) $(COMPONENTS) ozbatch
+	$(RM) ozbatch.ozm TAGS $(SRCDIR)/Makefile.bak
 
 distclean::
 	$(RM) confdefs.h config.cache config.status config.log
@@ -196,7 +197,7 @@ $(OZBIN)/ozbatch: ozbatch
 %.ozc:
 	$(COMPILE) $*
 
-OPI.ozc: $(DUMPINTRO) $(SRCDIR)/OPI.oz $(SRCDIR)/StartOPI.oz SP.ozc OP.ozc \
+OPI.ozc: $(DUMPINTRO) $(SRCDIR)/OPI.oz SP.ozc OP.ozc \
 	$(SRCDIR)/Compiler.env
 
 SP.ozc: $(DUMPINTRO) $(SPSRC) $(SRCDIR)/SP.env

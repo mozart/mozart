@@ -36,7 +36,7 @@ fun
    = IMPORT.'Browser'
 in
    local
-      \insert compiler/CompilerPanel
+      \insert compiler/CompilerPanelClass
    in
       \insert 'CompilerPanel.env'
    end
