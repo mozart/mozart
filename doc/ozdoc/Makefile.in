@@ -1,8 +1,8 @@
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 
-WHATCLASS=misc
-PRINTNAME=OzDocumentation
+#WHATCLASS=misc
+#PRINTNAME=OzDocumentation
 WHAT = ozdoc
 MAIN = ozdoc.sgml
 SGMLSRCS =

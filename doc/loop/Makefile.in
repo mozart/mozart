@@ -2,8 +2,8 @@ SRCTOP		= @SRCTOP@
 SRCDIR		= @srcdir@
 VPATH		= @srcdir@
 
-WHATCLASS=misc
-PRINTNAME=Loop
+#WHATCLASS=misc
+#PRINTNAME=Loop
 WHAT = loop
 MAIN = main.sgml
 SGMLSRCS = loop.sgml
