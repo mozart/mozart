@@ -58,14 +58,14 @@
 //
 #define MAX_DP_STRING		4
 // MARSHALERMAJOR "#" MARSHALERMINOR:
-#define MARSHALERVERSION	"3#1"
+#define MARSHALERVERSION	"3#2"
 #define MARSHALERMAJOR		3
-#define MARSHALERMINOR		1
+#define MARSHALERMINOR		2
 
 //
-#define PERDIOVERSION     "3#1" /* PERDIOMAJOR "#" PERDIOMINOR */
+#define PERDIOVERSION     "3#2" /* PERDIOMAJOR "#" PERDIOMINOR */
 #define PERDIOMAJOR          3
-#define PERDIOMINOR          1
+#define PERDIOMINOR          2
 
 
 const unsigned int KB = 1024;

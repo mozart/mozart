@@ -48,6 +48,7 @@ DISTRIBUTIONPANELSRC1 = \
 	Widgets.oz Colour.oz FieldDisplay.oz Graph.oz NetInfo.oz TableInfo.oz \
 	AdvancedListBox.oz TitleGraph.oz DistributionPanel.oz
 DISTRIBUTIONPANELSRC = $(DISTRIBUTIONPANELSRC1:%=dpanel/%)
+DISTRIBUTIONPANELOBJS = $(DISTRIBUTIONPANELSRC1:%=%f)
 
 BROWSERSRC1 = \
 	XResources.oz browserObject.oz browserTerm.oz \
@@ -307,7 +308,8 @@ $(CACHEDIR):
 
 clean:
 	rm -f *~ *.bak ./*/*~ ./*/*/*~ ./*/*.bak ./*/*/*.bak
-	rm -f $(FUNCTORS) $(INSPECTOROBJS)
+	rm -f $(FUNCTORS) $(INSPECTOROBJS) \
+	$(DISTRIBUTIONPANELOBJS) $(SYSLETS)
 
 veryclean: clean
 	rm -f -r TAGS
