@@ -563,7 +563,7 @@ public:
   //  Runnable (running) threads;
   Bool discardLocalTasks();
   //
-  int findExceptionHandler(Chunk *&pred, TaskStackEntry *&oldTos);
+  int findExceptionHandler(TaggedRef &pred, TaskStackEntry *&oldTos);
   //
   //  The iterative procedure which cleans up all the tasks
   // up to the 'current' board, and sets the 'current' to the
@@ -575,7 +575,7 @@ public:
 
   //
   void pushDebug (OzDebug *d);
-  void pushCall (Chunk *pred, RefsArray  x, int n);
+  void pushCall (TaggedRef pred, RefsArray  x, int n);
   void pushJob ();
   void pushSolve ();
   void pushLocal ();
@@ -611,10 +611,7 @@ public:
   }
 #endif
 
-  //
-  //  Exception handling;
-  Chunk *findExceptionHandler ();
-  void pushExceptionHandler (Chunk *pred);
+  void pushExceptionHandler (TaggedRef pred);
 
   //
   CFuncContinuation *getCCont () {
