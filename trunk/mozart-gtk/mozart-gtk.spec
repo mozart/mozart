@@ -11,7 +11,7 @@ URL: http://www.mozart-oz.org/
 Group: Development/Languages
 Packager: Denys Duchier
 Source: ftp://ftp.mozart-oz.org/pub/extras/mozart-gtk-1.0.tar.gz
-Prefix: /usr/local/oz
+Prefix: /usr/lib/mozart
 BuildRoot: /var/tmp/mozart-gtk
 
 %description
@@ -33,38 +33,38 @@ mkdir -p $RPM_BUILD_ROOT/usr/local/oz
 make install
 
 %files
-/usr/local/cache/x-oz/system/gtk/GOZSignal.so-linux-i486
-/usr/local/cache/x-oz/system/gtk/GOZCore.ozf
-/usr/local/cache/x-oz/system/gtk/GDK.ozf
-/usr/local/cache/x-oz/system/gtk/GTK.ozf
-/usr/local/cache/x-oz/system/gtk/GTKCANVAS.ozf
-/usr/local/cache/x-oz/system/gtk/GdkNative.so-linux-i486
-/usr/local/cache/x-oz/system/gtk/GtkNative.so-linux-i486
-/usr/local/cache/x-oz/system/gtk/GdkFieldNative.so-linux-i486
-/usr/local/cache/x-oz/system/gtk/GtkFieldNative.so-linux-i486
-/usr/local/cache/x-oz/system/gtk/GtkCanvasNative.so-linux-i486
-/usr/local/cache/x-oz/system/gtk/GtkCanvasFieldNative.so-linux-i486
-/usr/local/cache/x-oz/system/gtk/Generator.ozf
-/usr/local/cache/x-oz/system/gtk/GBuilderTypes.ozf
-/usr/local/cache/x-oz/system/gtk/GBuilderWidgets.ozf
-/usr/local/cache/x-oz/system/gtk/GBuilder.ozf
-/usr/local/cache/x-oz/system/gtk/ClassNames.ozp
-/usr/local/examples/gtk/CList.oz
-/usr/local/examples/gtk/CTree.oz
-/usr/local/examples/gtk/CanvasEvents.oz
-/usr/local/examples/gtk/CanvasMove.oz
-/usr/local/examples/gtk/CanvasScramble.oz
-/usr/local/examples/gtk/FileSelection.oz
-/usr/local/examples/gtk/HelloArgs.oz
-/usr/local/examples/gtk/HelloCanvas.oz
-/usr/local/examples/gtk/HelloGTK.oz
-/usr/local/examples/gtk/HelloImage.oz
-/usr/local/examples/gtk/HelloText.oz
-/usr/local/examples/gtk/List.oz
-/usr/local/examples/gtk/GBuilderExamples.oz
-/usr/local/doc/add-ons/gtk/index.html
-/usr/local/doc/add-ons/gtk/node1.html
-/usr/local/doc/add-ons/gtk/node2.html
-/usr/local/doc/add-ons/gtk/node3.html
-/usr/local/doc/add-ons/gtk/node4.html
-/usr/local/doc/add-ons/gtk/node5.html
+/usr/lib/mozart/cache/x-oz/system/gtk/GOZSignal.so-linux-i486
+/usr/lib/mozart/cache/x-oz/system/gtk/GOZCore.ozf
+/usr/lib/mozart/cache/x-oz/system/gtk/GDK.ozf
+/usr/lib/mozart/cache/x-oz/system/gtk/GTK.ozf
+/usr/lib/mozart/cache/x-oz/system/gtk/GTKCANVAS.ozf
+/usr/lib/mozart/cache/x-oz/system/gtk/GdkNative.so-linux-i486
+/usr/lib/mozart/cache/x-oz/system/gtk/GtkNative.so-linux-i486
+/usr/lib/mozart/cache/x-oz/system/gtk/GdkFieldNative.so-linux-i486
+/usr/lib/mozart/cache/x-oz/system/gtk/GtkFieldNative.so-linux-i486
+/usr/lib/mozart/cache/x-oz/system/gtk/GtkCanvasNative.so-linux-i486
+/usr/lib/mozart/cache/x-oz/system/gtk/GtkCanvasFieldNative.so-linux-i486
+/usr/lib/mozart/cache/x-oz/system/gtk/Generator.ozf
+/usr/lib/mozart/cache/x-oz/system/gtk/GBuilderTypes.ozf
+/usr/lib/mozart/cache/x-oz/system/gtk/GBuilderWidgets.ozf
+/usr/lib/mozart/cache/x-oz/system/gtk/GBuilder.ozf
+/usr/lib/mozart/cache/x-oz/system/gtk/ClassNames.ozp
+/usr/lib/mozart/examples/gtk/CList.oz
+/usr/lib/mozart/examples/gtk/CTree.oz
+/usr/lib/mozart/examples/gtk/CanvasEvents.oz
+/usr/lib/mozart/examples/gtk/CanvasMove.oz
+/usr/lib/mozart/examples/gtk/CanvasScramble.oz
+/usr/lib/mozart/examples/gtk/FileSelection.oz
+/usr/lib/mozart/examples/gtk/HelloArgs.oz
+/usr/lib/mozart/examples/gtk/HelloCanvas.oz
+/usr/lib/mozart/examples/gtk/HelloGTK.oz
+/usr/lib/mozart/examples/gtk/HelloImage.oz
+/usr/lib/mozart/examples/gtk/HelloText.oz
+/usr/lib/mozart/examples/gtk/List.oz
+/usr/lib/mozart/examples/gtk/GBuilderExamples.oz
+/usr/lib/mozart/doc/add-ons/gtk/index.html
+/usr/lib/mozart/doc/add-ons/gtk/node1.html
+/usr/lib/mozart/doc/add-ons/gtk/node2.html
+/usr/lib/mozart/doc/add-ons/gtk/node3.html
+/usr/lib/mozart/doc/add-ons/gtk/node4.html
+/usr/lib/mozart/doc/add-ons/gtk/node5.html
