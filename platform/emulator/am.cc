@@ -49,7 +49,6 @@
 #include "ozdebug.hh"
 
 AM am;
-ConfigData conf;
 
 ConfigData::ConfigData() {
   ozPath		= OZ_PATH;
@@ -144,12 +143,12 @@ void AM::init(int argc,char **argv)
 
   char *tmp;
   if ((tmp = getenv("OZPATH"))) {
-    conf.ozPath = tmp;
-    conf.linkPath = tmp;
+    am.conf.ozPath = tmp;
+    am.conf.linkPath = tmp;
   }
 
   if ((tmp = getenv("OZLINKPATH"))) {
-    conf.linkPath = tmp;
+    am.conf.linkPath = tmp;
   }
 
   char *comPath = NULL;  // path name where to create AF_UNIX socket
