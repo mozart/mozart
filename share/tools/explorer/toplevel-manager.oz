@@ -68,9 +68,8 @@ local
 
 	 proc {PackMe}
 	    {Tk.batch [focus(self)
-		       wm(iconname   self TitleName)
-		       wm(iconbitmap self BitMap)
-		       wm(minsize self MinSizeX MinSizeY)
+		       wm(iconname self TitleName)
+		       wm(minsize  self MinSizeX MinSizeY)
 		       grid(Menu   row:0 column:0 columnspan:3 sticky:we)
 		       grid(Canvas row:1 column:0              sticky:nswe)
 		       grid(ScrY   row:1 column:1              sticky:ns)
