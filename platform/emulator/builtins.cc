@@ -5500,7 +5500,7 @@ OZ_BI_define(BIdlLoad,1,1)
       return oz_raise(E_ERROR,AtomForeign,
 		      "cannotFindInterfaceFunction", 2,
 		      OZ_in(0), oz_atom(I->name));
-    bi = new Builtin(I->name,I->arity,0,*func,OK,(IFOR)NULL); // mm2
+    bi = new Builtin(I->name,I->inArity,I->outArity,*func,OK,(IFOR)NULL);
     l = cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
     I++;
   }
