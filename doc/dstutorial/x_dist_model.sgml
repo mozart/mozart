@@ -154,6 +154,8 @@ on the port's site.
 Messages from the same thread appear
 in the stream in the same order 
 in which they were sent in the thread.
+A port's stream is terminated by a
+<em>future</em> (see <ptr to="single.assignment">).
 
 <P>Oz ports, which are a language concept,
 should not be confused with Unix ports, which
@@ -184,12 +186,15 @@ This implements a standard distributed mutual
 exclusion algorithm.
 </LIST>
 
-<SUBSECTION><TITLE>Single-assignment entities</TITLE>
+<SUBSECTION id="single.assignment"><TITLE>Single-assignment entities</TITLE>
 
 <P>An important category of language entities
 are those that can be assigned only to one value:
 <LIST>
 <ITEM> <EM>Logic variable</EM>:
+Logic variables have two operations:
+they can be bound (i.e., assigned)
+or read (i.e., wait until bound).
 A logic variable resembles a single-assignment variable,
 e.g., a <<final>> variable in Java.
 It is more than that because two logic variables can
@@ -227,7 +232,9 @@ it is sent to all sites that need it.
 <ITEM> They are the basic mechanism
 for synchronization and communication
 in concurrent execution.
-Mozart does not need an explicit
+Data-flow execution in Oz is implemented
+with logic variables.
+Oz does not need an explicit
 monitor or signal concept--rather,
 logic variables let threads
 wait for data availability,
@@ -241,10 +248,19 @@ The reader is advised not to take
 the above numbers too seriously.
 </LIST>
 
+<ITEM> <EM>Future</EM>:
+A future is a logic variable that can only be <em>read</em>, not bound.
+A future can be created explicitly from a logic variable.
+Futures are useful to protect logic variables from being
+bound by unauthorized sites.
+Futures are also used to distribute constrained variables
+(see <ptr to="sited.entities").
+
 <ITEM> <EM>Stream</EM>:
 A stream is an asynchronous one-to-many communication channel.
 In fact,
-a stream is just a list whose last element is a logic variable.
+a stream is just a list whose last element is a logic variable
+or a future.
 If the stream is bound on the owner site,
 then the binding is sent asynchronously to all sites that
 have the variable.
@@ -332,7 +348,7 @@ Functors are chunks that contain a function
 taking modules as arguments and returning a module,
 where a module is a record.
 
-<SUBSECTION><TITLE>Sited entities</TITLE>
+<SUBSECTION id="sited.entities"><TITLE>Sited entities</TITLE>
 
 <P>Entities that can be used only on one site
 are called <EM>sited</EM>.
@@ -366,17 +382,25 @@ For example, a procedure that does additions
 can be used on another site,
 since the addition operation is 
 part of the base module <<Number>>.
-Due to limitations of the current release,
-threads, dictionaries, arrays, and spaces are sited,
-even though they are in base modules.
-These entities will become
-unsited in future releases.
 Some commonly-used base modules are
 <<Number>>, <<Int>>, and <<Float>> (operations on numbers),
 <<Record>> and <<List>> (operations on records and lists),
 and
 <<Procedure>>, <<Port>>, <<Cell>>, and <<Lock>>
 (operations on common entities).
+
+<P>Due to limitations of the current release,
+threads, dictionaries, arrays, and spaces are sited
+even though they are in base modules.
+These entities will become
+unsited in future releases.
+
+<P>When a reference to a constrained variable
+(finite domain, finite set, or free record)
+is passed to another site, then this reference
+is converted to a <em>future</em>.
+The future will be bound when the constrained
+variable becomes determined.
 
 <P>We call <EM>resource</EM> any module
 that is either a system module
