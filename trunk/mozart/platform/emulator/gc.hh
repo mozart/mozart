@@ -19,14 +19,5 @@
 Bool gcProtect(TaggedRef *);
 Bool gcUnprotect(TaggedRef *);
 
-
-#ifdef DEBUG_CHECK
-void checkInToSpace(TaggedRef term);
-void regsInToSpace(TaggedRef *regs, int size);
-#else
-#define checkInToSpace(term) 
-#define regsInToSpace(regs,size) 
-#endif
-
 #endif //__GC_H__
 

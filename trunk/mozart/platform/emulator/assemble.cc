@@ -91,7 +91,7 @@ OZ_C_proc_begin(BIscheduleCode,3)
 
   PrTabEntry *predd = new PrTabEntry(OZ_nil(),0,size);
   predd->PC = pc;
-  Abstraction *p = new Abstraction(predd, gregs, tagged2Atom(OZ_nil()));
+  Abstraction *p = new Abstraction(predd, gregs, tagged2Literal(OZ_nil()));
 
   return OZ_unify(OZ_getCArg(2),makeTaggedSRecord(p));
 }
@@ -129,10 +129,10 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIwriteConst,3)
 {
   PCIN("writeOpcode");
-  OZ_Term atom = OZ_getCArg(1);
-  DEREF(atom,_1,_2);
+  OZ_Term literal = OZ_getCArg(1);
+  DEREF(literal,_1,_2);
 
-  RET(CodeArea::writeAtom(atom,pc),2);
+  RET(CodeArea::writeLiteral(literal,pc),2);
 }
 OZ_C_proc_end
 

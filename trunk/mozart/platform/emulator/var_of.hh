@@ -118,9 +118,9 @@ private:
 
 
 // class DynamicTable uses:
-//   TaggedRef SRecord::getFeature(Atom* feature)		(srecord.hh)
-//   int Atom::hash()						(term.hh)
-//   Atom* tagged2Atom(TaggedRef ref)				(tagged.hh)
+//   TaggedRef SRecord::getFeature(Literal* feature)		(srecord.hh)
+//   int Literal::hash()					(term.hh)
+//   Literal* tagged2Literal(TaggedRef ref)			(tagged.hh)
 //   Bool isLiteral(TaggedRef term)				(tagged.hh)
 //   void* freeListMalloc(size_t chunk_size)			(mem.hh)
 //   void freeListDispose(void* addr, size_t chunk_size)	(mem.hh)
@@ -306,8 +306,8 @@ private:
     dt_index fullhash(TaggedRef id) {
         Assert(isPwrTwo(size));
         Assert(isLiteral(id));
-        // Function 'hash' may eventually return the atom's seqNumber (see term.hh):
-        dt_index i=(size-1) & ((dt_index) (tagged2Atom(id)->hash()));
+        // Function 'hash' may eventually return the literal's seqNumber (see term.hh):
+        dt_index i=(size-1) & ((dt_index) (tagged2Literal(id)->hash()));
         dt_index s=1;
         // Rehash if necessary using semi-quadratic probing (quadratic is not covering)
         while(table[i].ident!=makeTaggedNULL() && table[i].ident!=id) {
@@ -354,8 +354,8 @@ public:
     void gc(void);
     size_t getSize(void) { return sizeof(GenOFSVariable); }
 
-    Atom* getLabel(void) {
-	return tagged2Atom(AtomOpen);
+    Literal* getLabel(void) {
+	return tagged2Literal(AtomOpen);
     }
 
     DynamicTable* getTable(void) {

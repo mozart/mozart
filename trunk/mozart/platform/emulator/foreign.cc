@@ -35,7 +35,7 @@ char TmpBuffer[512];
 int OZ_isAtom(OZ_Term term)
 {
   DEREF(term,_1,_2);
-  return (isXAtom(term) == OK) ? 1 : 0;
+  return (isAtom(term) == OK) ? 1 : 0;
 }
 
 int OZ_isCell(OZ_Term term)
@@ -70,7 +70,7 @@ int OZ_isLiteral(OZ_Term term)
 int OZ_isName(OZ_Term term)
 {
   DEREF(term,_1,_2);
-  return (isXName(term) == OK) ? 1 : 0;
+  return (isAtom(term) == NO) ? 1 : 0;
 }
 
 int OZ_isNil(OZ_Term term)
@@ -125,7 +125,7 @@ OZ_Term OZ_termType(OZ_Term term)
   }
     
   if (isLiteral(tag)) {
-    return (tagged2Atom(term)->isXName() ? AtomName : AtomAtom);
+    return (tagged2Literal(term)->isAtom() ? AtomAtom : AtomName);
   }
 
   if (isSTuple(tag) || isLTuple(tag)) {
@@ -353,7 +353,7 @@ OZ_Term OZ_CStringToNumber(char *s)
 
 
 /*
- * Atoms
+ * Literals
  */
 
 char *OZ_literalToC(OZ_Term term)
@@ -364,9 +364,9 @@ char *OZ_literalToC(OZ_Term term)
     return NULL;
   }
 
-  Atom *a = tagged2Atom(term);
+  Literal *a = tagged2Literal(term);
   char *s = a->getPrintName();
-  if (a->isXName()) {
+  if (!a->isAtom()) {
     const int buflen=1000;
     static char buf[buflen];
     int len = strlen(s)+20;
@@ -387,7 +387,7 @@ char *OZ_literalToC(OZ_Term term)
 char *OZ_atomToC(OZ_Term term)
 {
   DEREF(term,_1,tag);
-  if (isXAtom(term)) {
+  if (isAtom(term)) {
     return OZ_literalToC(term);
   }
   OZ_warning("atomToC(%s): atom arg expected",OZ_toC(term));
@@ -423,7 +423,7 @@ char *OZ_toC(OZ_Term term)
     return tagged2String(term,am.conf.printDepth);
   case LTUPLE:
     return tagged2String(term,am.conf.printDepth);
-  case ATOM:
+  case LITERAL:
     return OZ_literalToC(term);
   case FLOAT:
     return OZ_floatToCString(term);
@@ -504,7 +504,7 @@ OZ_Term OZ_label(OZ_Term term)
     return tagged2LTuple(term)->getLabel();
   case STUPLE:
     return tagged2STuple(term)->getLabel();
-  case ATOM:
+  case LITERAL:
     return term;
   case SRECORD:
     return tagged2SRecord(term)->getLabel();
@@ -526,7 +526,7 @@ int OZ_width(OZ_Term term)
     return tagged2STuple(term)->getSize ();
   case SRECORD:
     return tagged2SRecord(term)->getWidth();
-  case ATOM:
+  case LITERAL:
     return 0;
   default:
     break;
@@ -545,7 +545,7 @@ OZ_Term OZ_tuple(OZ_Term label, int width)
     return nil();
   }
 
-  if (width == 2 && sameAtom(label,AtomCons)) {
+  if (width == 2 && sameLiteral(label,AtomCons)) {
     // have to make a list
     return makeTaggedLTuple(new LTuple());
   }

@@ -54,7 +54,7 @@ OZ_C_proc_begin(BIbuiltin,3)
 
   DEREF(hdl,_3,tag);
   if (!isProcedure(hdl)) {
-    if (!isXAtom(hdl) || !OZ_unifyString(hdl,"noHandler")) {
+    if (!isAtom(hdl) || !OZ_unifyString(hdl,"noHandler")) {
       TypeError2("builtin",1,"Procedure or Atom \"noHandler\"",
 		 OZ_getCArg(0),hdl);
     }
