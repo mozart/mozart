@@ -91,13 +91,9 @@ public:
   {
     return taskStack.isEmpty();
   }
-  void printDebug(ProgramCounter pc, Bool verbose, int depth = 10000) {
+  void printDebug(ProgramCounter pc, Bool verbose=NO, int depth = 10000) {
     taskStack.printDebug(pc,verbose,depth);
   }
-  void printSuspension(ostream &out) {
-    taskStack.print(out);
-  }
-
   void setPriority(int prio);
   Board *getBoardFast() { return home->getBoardFast(); }
   int getCompMode() { return compMode; }
