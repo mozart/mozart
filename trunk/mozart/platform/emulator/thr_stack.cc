@@ -19,21 +19,23 @@ int TaskStack::frameSize(ContFlag cFlag)
 {
   switch (cFlag){
   case C_SETFINAL:
+  case C_CATCH:
     return 1;
-  case C_CONT: 
-    return 3;      
-  case C_XCONT:
-    return 4;
+
   case C_DEBUG_CONT:
   case C_SET_OOREGS:
   case C_LTQ:
-  case C_CATCH:
   case C_ACTOR:  
     return 2;
+
   case C_CALL_CONT:  
   case C_CFUNC_CONT:
-    return 3;
+  case C_CONT: 
+    return 3;      
     
+  case C_XCONT:
+    return 4;
+
   default:
     Assert(0);
     return -1;
@@ -86,7 +88,7 @@ loop:
 }
 
 
-TaggedRef TaskStack::findCatch() 
+Bool TaskStack::findCatch() 
 {
   Assert(this);
 
@@ -103,9 +105,7 @@ TaggedRef TaskStack::findCatch()
       break;
 
     case C_CATCH:
-      {
-        return (TaggedRef) ToInt32(pop());
-      }
+      return TRUE;
 
     case C_SET_OOREGS:
       { 
@@ -118,7 +118,7 @@ TaggedRef TaskStack::findCatch()
     } // switch
   } // while
 
-  return 0;
+  return FALSE;
 }
 
 
@@ -198,11 +198,8 @@ TaggedRef TaskStack::reflect(TaskStackEntry *from=0,TaskStackEntry *to=0,
       break;
 
     case C_CATCH:
-      {
-        TaggedRef pred = (TaggedRef) ToInt32(pop());
-	out = cons(OZ_mkTupleC("catch",1,pred),out);
-	break;
-      }
+      out = cons(OZ_atom("catch"),out);
+      break;
 
     case C_SET_OOREGS:
       { 

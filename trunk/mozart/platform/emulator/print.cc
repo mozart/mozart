@@ -1401,11 +1401,8 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
       }
 
     case C_CATCH:
-      {
-	TaggedRef pred = (TaggedRef) ToInt32(pop());
-	message("\tCatch %s\n",toC(pred));
-	break;
-      }
+      message("\tCatch\n");
+      break;
 
     case C_SET_OOREGS:
       { 
@@ -1513,11 +1510,8 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
       }
 
     case C_CATCH:
-      {
-        TaggedRef pred = (TaggedRef) ToInt32(pop());
-        out = cons(OZ_mkTupleC("catch",1,pred),out);
-        break;
-      }
+      out = cons(OZ_atom("catch"),out);
+      break;
 
     case C_SET_OOREGS:
       { 
