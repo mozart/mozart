@@ -1,5 +1,3 @@
-$cmode='dyn';
-
 %builtins_all =
 (
     ##* WIF (Wish InterFace)

@@ -386,30 +386,6 @@ OZ_BI_define(BIisRecordCB,1,1)
   }
 } OZ_BI_end
 
-//
-OZ_BI_define(BIisRecordCVarB,1,1)
-{
-  TaggedRef t = OZ_in(0); 
-  DEREF(t, tPtr, tag);
-  switch (tag) {
-  case LTUPLE:
-  case LITERAL:
-  case SRECORD:
-    break;
-  case CVAR:
-    if (tagged2CVar(t)->getType()!=OFSVariable)
-      OZ_RETURN(NameFalse);
-    break;
-  case UVAR:
-  case SVAR:
-    OZ_RETURN(NameFalse);
-  default:
-    OZ_RETURN(NameFalse);
-  }
-  OZ_RETURN(NameTrue);
-} OZ_BI_end
-
-
 /*
  * {RecordC.widthC X W} -- builtin that constrains number of features
  * of X to be equal to finite domain variable W.  Will constrain X to

@@ -1,42 +1,32 @@
-$cmode='dyn';
-
 %builtins_all =
 (
 
     'getsBoundB'	=> { in  => ['value','value'],
 			     out => [],
-			     BI  => BIgetsBoundB,
-			     native => true},
+			     BI  => BIgetsBoundB},
 
     'addr'		=> { in  => ['value'],
 			     out => ['+int'],
-			     BI  => BIaddr,
-			     native => true},
+			     BI  => BIaddr},
 
     'recordCIsVarB'	=> { in  => ['value'],
 			     out => ['+bool'],
-			     BI  => BIisRecordCVarB,
-			     native => true},
+			     BI  => BIisRecordCVarB},
 
     'deepFeed'		=> { in  => ['+cell','value'],
 			     out => [],
-			     BI  => BIdeepFeed,
-			     native => true},
+			     BI  => BIdeepFeed},
 
     'chunkWidth'	=> { in  => ['+chunk'],
 			     out => ['+int'],
-			     BI  => BIchunkWidth,
-			     native => true},
+			     BI  => BIchunkWidth},
 
     'chunkArity'	=> { in  => ['+chunk'],
 			     out => ['+[feature]'],
-			     BI  => BIchunkArity,
-			     native => true},
+			     BI  => BIchunkArity},
 
     'getTermSize'	=> { in  => ['value','+int','+int'],
 			     out => ['+int'],
-			     BI  => BIgetTermSize,
-			     native => true},
-
+			     BI  => BIgetTermSize},
 
  );
