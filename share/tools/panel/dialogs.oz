@@ -8,7 +8,7 @@
 
 local
 
-   class AboutDialog 
+   class AboutDialog
       from TkTools.dialog
       prop final
 
@@ -33,7 +33,7 @@ local
 
    end
 
-   class ShutdownDialog 
+   class ShutdownDialog
       from TkTools.dialog
       prop final
 
@@ -52,7 +52,7 @@ local
 					  bitmap: question)}
 	 Message = {New Tk.message tkInit(parent: self
 					  aspect: 250
-					  text:   'Do you really want to shutdown?')}   
+					  text:   'Do you really want to shutdown?')}
       in
 	 {Tk.send pack(Bitmap Message
 		       side:left expand:1 padx:Pad pady:Pad)}
@@ -61,7 +61,7 @@ local
    end
 
 
-   
+
    local
 
       fun {FindPos TLs FT N}
@@ -69,15 +69,15 @@ local
       in
 	 case T==FT then N else {FindPos TLr FT N+1} end
       end
-      
+
       ScaleWidth  = 100
 
    in
-      
+
       class UpdateDialog
 	 from TkTools.dialog
 	 prop final
-	    
+
 	 meth init(master:Master  options:O)
 	    TkTools.dialog,tkInit(master:  Master
 				  title:   TitleName#': Update'
@@ -96,7 +96,7 @@ local
 						      text:   'Update Time')}
 	    TimeLabel = {New Tk.label tkInit(parent: TimeOuter.inner
 					     text:   'Update Every: ')}
-	    TimeScale = {New DiscreteScale init(parent: TimeOuter.inner
+	    TimeScale = {New TkTools.scale init(parent: TimeOuter.inner
 						width:  ScaleWidth
 						values: UpdateTimes
 						initpos: {FindPos UpdateTimes
@@ -114,10 +114,10 @@ local
 		       pack(MouseButton side:left fill:x)
 		       pack(TimeOuter MouseOuter fill:x)]}
 	 end
-	 
+
       end
 
-      
+
       class HistoryDialog
 	 from TkTools.dialog
 	 prop final
@@ -137,7 +137,7 @@ local
 						       text:   'History Range')}
 	    RangeLabel = {New Tk.label tkInit(parent: RangeOuter.inner
 					     text:   'Range Covers: ')}
-	    RangeScale = {New DiscreteScale init(parent:  RangeOuter.inner
+	    RangeScale = {New TkTools.scale init(parent:  RangeOuter.inner
 						 width:   ScaleWidth
 						 values:  HistoryRanges
 						 initpos: {FindPos
@@ -159,7 +159,7 @@ in
    class DialogClass
 
       meth about
-         {Wait {New AboutDialog init(master:self)}.tkClosed}
+	 {Wait {New AboutDialog init(master:self)}.tkClosed}
       end
 
       meth shutdown(?Shut)
