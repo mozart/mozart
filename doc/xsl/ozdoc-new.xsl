@@ -801,6 +801,9 @@
                            node()[last()=1 and
                                   local-part()='PICTURE.EXTERN']]
                     and not(@ID and meta:latexTableSpecExists(string(@ID)))]">
+  <if test="not(position()=1)">
+    <txt:usemap>&amp;</txt:usemap>
+  </if>
   <txt:usemap>\multicolumn{1}{l}{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
