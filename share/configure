@@ -740,12 +740,12 @@ test -n "$MAKE" || MAKE="NONE"
 GNU make is needed to build the system.
 It can be retrieved from:
 
-	ftp://ftp.gnu.org/pub/gnu/
+	ftp://ftp.gnu.org/pub/gnu/make/
 
-The latest version at this time is 3.77 and is available
+The latest version at this time is 3.80 and is available
 packaged as the following archive:
 
-	make-3.77.tar.gz
+	make-3.80.tar.gz
 
 You may find a mirror archive closer to you by consulting:
 
@@ -3697,12 +3697,12 @@ The GNU Multiple Precision Arithmetic Library (gmp)
 version 2 or higher is required
 to build the system.  It can be retrieved from:
 
-	ftp://ftp.gnu.org/pub/gnu/
+	ftp://ftp.gnu.org/pub/gnu/gmp/
 
-The latest version at this time is 3.0.1 and is available
+The latest version at this time is 4.1.2 and is available
 packaged as the following archive:
 
-	ftp://ftp.gnu.org/pub/gnu/gmp/gmp-3.0.1.tar.gz
+	ftp://ftp.gnu.org/pub/gnu/gmp/gmp-4.1.2.tar.gz
 
 You may find a mirror archive closer to you by consulting:
 
@@ -3830,7 +3830,7 @@ trap 'rm -fr `echo "lib/Makefile lib/support/DefaultURL.oz \
     tools/Makefile \
     demo/Makefile test/Makefile test/dp-bench/Makefile \
     examples/Makefile elisp/Makefile elisp/mozart.el \
-    bin/Makefile \
+    bin/Makefile bin/oz \
     Makefile Makefile.boot ozengine.sh" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -3954,7 +3954,7 @@ CONFIG_FILES=\${CONFIG_FILES-"lib/Makefile lib/support/DefaultURL.oz \
     tools/Makefile \
     demo/Makefile test/Makefile test/dp-bench/Makefile \
     examples/Makefile elisp/Makefile elisp/mozart.el \
-    bin/Makefile \
+    bin/Makefile bin/oz \
     Makefile Makefile.boot ozengine.sh"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
