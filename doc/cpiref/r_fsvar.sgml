@@ -79,7 +79,7 @@ automatically.
 
 <Entry class="operator member function"><<operator *>>
 <Index class=proglang><<OZ_FSetVar>><And><<operator *>></Index>
-<Synopsis> <<OZ_FiniteDomain &amp;operator * (void);>>
+<Synopsis> <<OZ_FSetConstraint &amp;operator * (void);>>
 
 <Item> This operator returns a finite set constraint representing the
 constraint of this variable.
@@ -87,7 +87,7 @@ constraint of this variable.
 
 <Entry class="operator member function"><<operator -&gt;>>
 <Index class=proglang><<OZ_FSetVar>><And><<operator -&gt;>></Index>
-<Synopsis> <<OZ_FiniteDomain * operator -&gt; (void);>>
+<Synopsis> <<OZ_FSetConstraint * operator -&gt; (void);>>
 
 <Item> This operator returns a pointer to a finite set constraint
 representing the constraint of this variable.
