@@ -1613,7 +1613,8 @@ void marshalOwnHead(MarshalerBuffer *bs, int tag, int i)
   PD((MARSHAL_CT,"OwnHead"));
   bs->put(tag);
   dif_counter[tag].send();
-  myDSite->marshalDSite(bs);
+  bs->put(DIF_SITE_SENDER);
+  //  myDSite->marshalDSite(bs);
   OwnerEntry *oe = OT->index2entry(i);
   marshalNumber(bs, oe->getOdi());
   bs->put((BYTE)ENTITY_NORMAL);
@@ -1632,7 +1633,8 @@ void marshalOwnHeadSaved(MarshalerBuffer *bs, int tag, int oti, RRinstance *c)
   PD((MARSHAL_CT,"OwnHead"));
   bs->put(tag);
   dif_counter[tag].send();
-  myDSite->marshalDSite(bs);
+  bs->put(DIF_SITE_SENDER);
+  //  myDSite->marshalDSite(bs);
   OwnerEntry *oe = OT->index2entry(oti);
   marshalNumber(bs, oe->getOdi());
   bs->put((BYTE)ENTITY_NORMAL);
