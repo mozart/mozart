@@ -24,7 +24,7 @@ BuiltinTabEntry *BIadd(char *name,int arity, OZ_CFun funn, Bool replace,
 {
   BuiltinTabEntry *builtin = new BuiltinTabEntry(name,arity,funn,infun);
 
-  if (! builtinTab.add(builtin,name,replace)) {
+  if (builtinTab.aadd(builtin,name,replace) == (unsigned) htEmpty) {
     warning("BIadd: failed to add %s/%d\n",name,arity);
     delete builtin;
     return((BuiltinTabEntry *) NULL);
@@ -36,7 +36,7 @@ BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t, Bool replace)
 {
   BuiltinTabEntry *builtin = new BuiltinTabEntry(name,arity,t);
 
-  if (! builtinTab.add(builtin,name,replace)) {
+  if (builtinTab.aadd(builtin,name,replace) == (unsigned) htEmpty) {
     warning("BIadd: failed to add %s/%d\n",name,arity);
     delete builtin;
     return((BuiltinTabEntry *) NULL);
@@ -60,9 +60,9 @@ OZ_C_proc_begin(BIbuiltin,3)
     hdl = makeTaggedNULL();
   }
 
-  BuiltinTabEntry *found = (BuiltinTabEntry *) builtinTab.find(str);
+  BuiltinTabEntry *found = (BuiltinTabEntry *) builtinTab.ffind(str);
 
-  if (!found) {
+  if (found == htEmpty) {
     warning("builtin: '%s' not in table", str);
     return(FAILED);
   }
