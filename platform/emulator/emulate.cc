@@ -7,6 +7,11 @@
   Version: $Revision$
   State: $State$
 
+  Changes: $Log$
+  Changes: Revision 1.338  1996/07/04 12:04:01  mehl
+  Changes: testing $Log$
+  Changes:
+
   The main engine
   ------------------------------------------------------------------------
 */
