@@ -1,7 +1,7 @@
 config.log
 config.cache
 config.status
-Makefile
+Makefile Makefile.common
 catalog bootcatalog
 ced.sgml
 ced.el
