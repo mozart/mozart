@@ -63,7 +63,7 @@ public:
   }
 
   virtual void gcRecurseV(void) {
-    _p = _p->gcPropagatorOutlined();
+    _p = (Propagator *) ((Suspendable *) _p)->gcSuspendable();
   }
 
   virtual OZ_Term printV(int) {
@@ -76,8 +76,8 @@ public:
 //-----------------------------------------------------------------------------
 // prototypes of reflection functions
 
-OZ_Term reflect_propagator(Suspension);
-OZ_Term reflect_thread(Suspension);
+OZ_Term reflect_propagator(Suspendable *);
+OZ_Term reflect_thread(Suspendable *);
 OZ_Term reflect_susplist(SuspList *);
 OZ_Term reflect_variable(OZ_Term);
 OZ_Term reflect_space(OZ_Term);
