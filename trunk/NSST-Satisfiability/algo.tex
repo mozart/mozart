@@ -1,4 +1,27 @@
-\section{The Semi-Lattice Case}
+\section{The Reduction}
+
+We define the set of inequations which are syntactically supported by
+a constraint $\phi$, written $\phi \vdash x \leq y$, by the following
+rules:
+\[\frac{}{\phi \vdash x \leq x}\]
+\[\frac{\phi \vdash x \leq y \qquad \phi \vdash y \leq z}{\phi \vdash
+  x \leq z}
+\]
+\[\frac{f(x_1,\ldots,x_n)\leq x \in \phi
+  \qquad \phi \vdash x \leq y
+  \qquad y \leq g(y_1,\ldots,y_m) \in \phi}{\phi \vdash x_i \leq
+  y_i}
+\]
+
+\begin{lemma}
+  If $\phi\vdash x\leq y$, then $x\leq y$ holds in any solution of
+  $\phi$.
+\end{lemma}
+\begin{proof}
+Obvious.
+\end{proof}
+
+\subsection{OLDSTUFF}
 
 We want to prove the following theorem:
 
@@ -10,33 +33,8 @@ structure of possibly infinte trees can be checked in cubic time.
 \end{satz}
 
 Let $\bot$ denote the smallest element of $\Sigma$. $\bot$ may be a
-constant, or a function symbol with a non-zero arity. We can assume
-without loss of generality that the constraint is of the following
-form:
-\[
-\phi ::= x \leq f(x_1,\ldots,x_n) \mid x \geq f(x_1,\ldots,x_n) \mid \phi \und \phi
-\]
-Here we allow that the arity $n$ of a functiomn symbol is $0$. In this
-case we write $x \leq f$ instead of $x \leq f()$, etc.
+constant, or a function symbol with a non-zero arity.
 
-We define the set of inequations which are syntactically supported by
-a constraint $\phi$, written $\phi \vdash x \leq y$, by the following
-rules:
-\[ \frac{}{\phi \vdash x \leq x}\]
-\[ \frac{\phi \vdash x \leq y \qquad \phi \vdash y \leq z}{\phi \vdash
-  x \leq z} \]
-\[ \frac{f(x_1,\ldots,x_n)\leq x \in \phi
-  \qquad \phi \vdash x \leq y
-  \qquad y \leq g(y_1,\ldots,y_m) \in \phi}{\phi \vdash x_i \leq
-  y_i}\]
-
-\begin{lemma}
-  If $\phi\vdash x\leq y$, then $x\leq y$ holds in any solution of
-  $\phi$.
-\end{lemma}
-\begin{proof}
-Obvious.
-\end{proof}
 
 We say that a constraint $\phi$ \emph{clashes} if it contains
 constraints $f(x_1,\ldots,x_n) \leq x$ and $y \leq g(y_1,\ldots,y_m)$
