@@ -4891,7 +4891,7 @@ OZ_C_proc_begin(BIdictionaryClone,2)
   oz_declareDictionaryArg(0,dict);
   oz_declareArg(1,out);
 
-  return oz_unify(dict->clone(),out);
+  return oz_unify(dict->clone(am.currentBoard()),out);
 }
 OZ_C_proc_end
 
@@ -4965,14 +4965,14 @@ DECLAREBI_USEINLINEREL2(BIdictionaryRemove,dictionaryRemoveInline)
 
 OZ_C_proc_begin(BIdictionaryToRecord,3)
 {
-  oz_declareNonvarArg(0,dict);
+  oz_declareNonvarArg(1,dict);
   if (!isDictionary(dict)) {
-    oz_typeError(0,"Dictionary");
+    oz_typeError(1,"Dictionary");
   }
 
-  oz_declareNonvarArg(1,lbl);
+  oz_declareNonvarArg(0,lbl);
   if (!isLiteral(lbl)) {
-    oz_typeError(1,"Literal");
+    oz_typeError(0,"Literal");
   }
 
   oz_declareArg(2,r);
@@ -7567,19 +7567,26 @@ BIspec allSpec[] = {
   {"Get",        3, BIarrayGet,  (IFOR) arrayGetInline},
   {"Put",        3, BIarrayPut,  (IFOR) arrayPutInline},
 
-  {"NewDictionary",      1, BIdictionaryNew,	0},
-  {"IsDictionary",       2, BIisDictionary,     (IFOR) isDictionaryInline},
-  {"Dictionary.get",     3, BIdictionaryGet,    (IFOR) dictionaryGetInline},
-  {"Dictionary.condGet", 4, BIdictionaryGetIf,  (IFOR) dictionaryGetIfInline},
-  {"Dictionary.put",     3, BIdictionaryPut,    (IFOR) dictionaryPutInline},
-  {"Dictionary.remove",  2, BIdictionaryRemove, (IFOR) dictionaryRemoveInline},
-  {"Dictionary.removeAll",1, BIdictionaryRemoveAll, 0},
-  {"Dictionary.member",  3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
-  {"Dictionary.keys",    2, BIdictionaryKeys,    0},
-  {"Dictionary.entries", 2, BIdictionaryEntries, 0},
-  {"Dictionary.items",   2, BIdictionaryItems,   0},
-  {"Dictionary.clone",   2, BIdictionaryClone,   0},
-  {"Dictionary.markSafe",1, BIdictionaryMarkSafe,   0},
+  {"NewDictionary",        1, BIdictionaryNew,	0},
+  {"IsDictionary",         2, BIisDictionary,     
+   (IFOR) isDictionaryInline},
+  {"Dictionary.get",       3, BIdictionaryGet,    
+   (IFOR) dictionaryGetInline},
+  {"Dictionary.condGet",   4, BIdictionaryGetIf,  
+   (IFOR) dictionaryGetIfInline},
+  {"Dictionary.put",       3, BIdictionaryPut,   
+   (IFOR) dictionaryPutInline},
+  {"Dictionary.remove",    2, BIdictionaryRemove, 
+   (IFOR) dictionaryRemoveInline},
+  {"Dictionary.removeAll", 1, BIdictionaryRemoveAll, 0},
+  {"Dictionary.member",    3, BIdictionaryMember, 
+   (IFOR) dictionaryMemberInline},
+  {"Dictionary.keys",      2, BIdictionaryKeys,     0},
+  {"Dictionary.entries",   2, BIdictionaryEntries,  0},
+  {"Dictionary.items",     2, BIdictionaryItems,    0},
+  {"Dictionary.clone",     2, BIdictionaryClone,    0},
+  {"Dictionary.toRecord",  3, BIdictionaryToRecord, 0},
+  {"Dictionary.markSafe",  1, BIdictionaryMarkSafe, 0},
 
   {"NewLock",	      1,BInewLock,	 0},
   {"Lock",	      1,BIlockLock,	 0},
