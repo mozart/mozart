@@ -1846,6 +1846,7 @@ class CellSec{
 friend class CellFrame;
 friend class CellManager;
 private:
+  USEHEAPMEMORY;
   short state;
   short int readCtr;
   TaggedRef head;
