@@ -179,11 +179,17 @@ Bool ComObj::handover(TransObj *transObj) {
   PD((TCP_INTERFACE,"Connection handover (from %d to %d (%x))",
       myDSite->getTimeStamp()->pid,site->getTimeStamp()->pid,this));
   if(DO_CONNECT_LOG) {
+    /*
     fprintf(logfile,"handover(\"%s\" ",
 	    myDSite->stringrep_notype());
     fprintf(logfile,"\"%s\" %d)\n",
 	   site!=NULL?site->stringrep_notype():"-",
 	   (int) am.getEmulatorClock());
+    */
+    fprintf(logfile,"handover(%d %d %d)\n",
+	    myDSite->getTimeStamp()->pid,
+	    site!=NULL?site->getTimeStamp()->pid:0,
+	    (int) am.getEmulatorClock());
   }
   if(state!=CLOSED_WF_HANDOVER) {
     return FALSE;
@@ -275,12 +281,19 @@ void ComObj::close(CState statetobe,Bool merging) {
 
   if(transObj!=NULL) {
     if(DO_CONNECT_LOG) {
+      /*
       fprintf(logfile,"close(\"%s\" ",
 	      myDSite->stringrep_notype());
       fprintf(logfile,"\"%s\" %d %d %d)\n",
 	      site!=NULL?site->stringrep_notype():"-",
 	      (int) am.getEmulatorClock(),
 	      state,statetobe);
+      */
+      fprintf(logfile,"close(%d %d %d %d %d)\n",
+	      myDSite->getTimeStamp()->pid,
+	      site!=NULL?site->getTimeStamp()->pid:0,
+	      (int) am.getEmulatorClock(),
+	      state,statetobe);      
     }
     handback(this,transObj);
     transObj=NULL;
@@ -486,11 +499,18 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
       transObj->setSite(site);
 
       if(DO_CONNECT_LOG) {
+	/*
 	fprintf(logfile,"accept(\"%s\" ",
 		myDSite->stringrep_notype());
 	fprintf(logfile,"\"%s\" %d)\n",
 		site!=NULL?site->stringrep_notype():"-",
 		(int) am.getEmulatorClock());
+	*/
+	fprintf(logfile,"accept(%d %d %d)\n",
+		myDSite->getTimeStamp()->pid,
+		site!=NULL?site->getTimeStamp()->pid:0,
+		(int) am.getEmulatorClock());
+
       }
 
       if(strcmp(version,PERDIOVERSION)!=0) {
@@ -746,13 +766,11 @@ Bool ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
       goto adopt_anon;
     }
     else {
-      anon->close(CLOSED,TRUE);
-      return FALSE;
+      goto drop_anon;
     }
   case WORKING:
   case CLOSING_HARD: // Resources are poor, wait in line...?
-    anon->close(CLOSED,TRUE);
-    return FALSE;
+    goto drop_anon;
   case CLOSING_WF_DISCONNECT:
   case CLOSING_WEAK:
     old->close(CLOSED,TRUE);
@@ -763,7 +781,23 @@ Bool ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
     return FALSE;
   }
 
+ drop_anon:
+  anon->close(CLOSED,TRUE);
+  if(DO_CONNECT_LOG) {
+    fprintf(logfile,"merge(%d %d %d anon_dropped)\n",
+	    myDSite->getTimeStamp()->pid,
+	    site!=NULL?site->getTimeStamp()->pid:0,
+	    (int) am.getEmulatorClock());
+  }
+  return FALSE;
+
  adopt_anon:
+  if(DO_CONNECT_LOG) {
+    fprintf(logfile,"merge(%d %d %d anon_adopted)\n",
+	    myDSite->getTimeStamp()->pid,
+	    site!=NULL?site->getTimeStamp()->pid:0,
+	    (int) am.getEmulatorClock());
+  }
   anon->transObj->setOwner(old);
   Assert(old->transObj==NULL);
   old->transObj=anon->transObj;
