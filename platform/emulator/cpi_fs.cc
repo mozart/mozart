@@ -85,7 +85,12 @@ void OZ_FSetVar::read(OZ_Term v)
     setPtr = &set;
     setSort(val_e);
     known_in = set.getCardMin();
-    known_not_in = 0; // TMUELLER: that is not correct!
+    // used to be known_not_in=0 which was known to be wrong.
+    // however, for values, everything is known, therefore
+    // everything that is not known to be in is known to be
+    // not in.  The cardinality of the largest set is fs_sup+1
+    // because its domain is {0,1,...,fs_sup}. --Denys
+    known_not_in = (fs_sup+1) - known_in;
     card_size = 1;
   } else {
     Assert(isCVar(vtag));
