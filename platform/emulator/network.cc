@@ -728,6 +728,7 @@ public:
   IOQueue():first(NULL),last(NULL){}
   Message* getFirst();
   Message* removeFirst();
+  Bool     queueEmpty();
   Message* find(int msg){
     // EK
     // Rewrite, looks like shit...
@@ -958,8 +959,15 @@ public:
     writeCtr++;
     PD((CONNECTION,"setInWriteQueue s:%s ct:%d",remoteSite->site->stringrep(),writeCtr));
     setFlag(WRITE_QUEUE);}
+  void clearInWriteQueue(){
+    writeCtr--;
+    PD((CONNECTION,"Removed from writequeue  s:%s ct:%d",remoteSite->site->stringrep(),writeCtr));
+    clearFlag(WRITE_QUEUE);}
   Message* getWriteQueue(){
-    return writeQueue.removeFirst();}
+    Message* m = writeQueue.removeFirst();
+    if(writeQueue.queueEmpty())
+      clearInWriteQueue();
+    return m;}
   Bool isWantsToClose(){
     return testFlag(WANTS_TO_CLOSE);}
   Bool isOpening(){
@@ -2979,6 +2987,9 @@ Message* IOQueue::removeFirst(){
     last = NULL;
   return t;
 }
+Bool IOQueue::queueEmpty(){
+  Assert((first==NULL && last == NULL) || first != NULL);
+  return first == NULL;}
     
 void IOQueue::enqueue(Message *m){ 
   // EKT
