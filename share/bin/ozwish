@@ -1,7 +1,7 @@
 #!/bin/sh
 OZWISHHOME=$OZHOME/ozwish
 OZWISH=$OZWISHHOME/platform/$OZPLATFORM/ozwish
-if [ -x  $OZWISH ]
+if [ -f  $OZWISH ]
 then
   TCL_LIBRARY=$OZWISHHOME/tcl/lib/tcl
   TK_LIBRARY=$OZWISHHOME/tcl/lib/tk
