@@ -14,7 +14,7 @@ distributed database system. The basic mechanism in Oz to get
 exclusive access is through locks.
 
 
-<SECTION><TITLE/Locks/
+<SECTION id=section.objectscc.lock><TITLE/Locks/
 <P>The purpose of a lock is to mediate exclusive access to a shared
 resource between threads. Such a mechanism is typically made safer and
 more robust by restricting this exclusive access to a critical
@@ -68,14 +68,14 @@ class SimpleLock
      Old New in
      try
         Old = lck &lt;- New
-           {Wait Old} {Code}
+        {Wait Old} {Code}
      finally New= unit end
    end
 end
 >>>
 
 
-<SECTION><TITLE/Thread-Reentrant Locks/
+<SECTION id=section.objectscc.reentrant><TITLE/Thread-Reentrant Locks/
 <P>In Oz, the computational unit is the thread. Therefore an
 appropriate locking mechanism should grant exclusive access rights to
 threads. As a consequence the non-reentrant simple lock mechanism
@@ -87,21 +87,25 @@ get the same lock are queued. When the lock is released, it is granted
 to the thread standing first in line etc. Thread-reentrant locks can
 be modeled in Oz as follows:
 
+<!-- DENYS: fixed a race condition bug in previous definition -->
 <<<
 class ReentrantLock from SimpleLock
    attr Current:unit
    meth lck(Code)
-    ThisThread = {Thread.this} in
-     case ThisThread == @Current then
+      ThisThread = {Thread.this} in
+      if ThisThread == @Current then
          {Code}
       else
-         try
-          Code1 = proc {$}
-                      Current &lt;- ThisThread
-                      {Code}
-                    end
-       in SimpleLock, lck{Code1}
-         finally Current &lt;- unit end
+         proc {Code1}
+            try
+               Current &lt;- ThisThread
+               {Code}
+            finally
+               Current &lt;- unit
+            end
+         end
+      in
+         SimpleLock, lck(Code1)
       end
    end
 end
@@ -214,7 +218,7 @@ will get the value <<zero>> or <<0>>. We have no mixed values.
 multiple objects using multiple locks.
 
 
-<SECTION><TITLE/Locking Objects/
+<SECTION id=section.objectscc.lockobject><TITLE/Locking Objects/
 <P>To guarantee mutual exclusion on objects one may use the locks
 described in the previous subsection. Alternatively, we may declare in
 the class that its instance objects can be locked with a default lock
@@ -274,7 +278,7 @@ only perform atomic transactions on objects, but also synchronize
 through objects.
 
 
-<SECTION><TITLE/Concurrent FIFO Channel/
+<SECTION id=section.objectscc.fifo><TITLE/Concurrent FIFO Channel/
 <P>The first example shows a concurrent channel, which is shared among
 an arbitrary number of threads. Any producing thread may put
 information in the channel asynchronously. A consuming thread has to
@@ -315,7 +319,7 @@ end
 >>>
 
 
-<SECTION><TITLE/Monitors/
+<SECTION id=section.objectscc.monitor><TITLE/Monitors/
 <P>The next example shows a traditional way to write
 <EM>monitors</EM>. We start by defining a class that defines the
 notion of events and the monitor operations <<notify(Event)>> and
@@ -361,31 +365,31 @@ class UnitBufferM
    meth put(I)
       X in
       lock
-      case @empty then
-        item &lt;- I
-        empty &lt;- false
-        X = yes
-        {@csignal notify}
-      else X = no end
+         if @empty then
+            item &lt;- I
+            empty &lt;- false
+            X = yes
+            {@csignal notify}
+         else X = no end
       end
-      case X == no then
-       {@psignal wait}
-       {self put(I)}
+      if X == no then
+         {@psignal wait}
+         {self put(I)}
       else skip end
    end
    meth get(I)
       X in
       lock
-      case {Not @empty} then
-        I = @item
-        empty &lt;- true
-        {@psignal notify}
-        X = yes
-      else X = no end
+         if {Not @empty} then
+            I = @item
+            empty &lt;- true
+            {@psignal notify}
+            X = yes
+         else X = no end
       end
-      case X == no then
-       {@csignal wait}
-       {self get(I)}
+      if X == no then
+         {@csignal wait}
+         {self get(I)}
       else skip end
    end
 end
@@ -443,7 +447,7 @@ changed.
 class BoundedBuffer from UnitBuffer
    attr prodq buffer
    meth init(N)
-        buffer &lt;- {New Channel init}
+      buffer &lt;- {New Channel init}
       prodq &lt;- {New Event init}
       {For 1 N 1 proc {$ _} {@prodq notify} end}
    end
@@ -451,7 +455,7 @@ end
 >>>
 
 
-<SECTION><TITLE/Active Objects/
+<SECTION id=section.objectscc.active><TITLE/Active Objects/
 <P>An active object is a thread whose behavior is described by a class
 definition. Communication with active objects is though asynchronous
 message passing. An active object reacts to received messages by

@@ -15,7 +15,7 @@ always exists. In addition, a member ceases to exist when it is no
 longer accessible.
 
 
-<SECTION><TITLE/Ports/
+<SECTION id=section.stateful.port><TITLE/Ports/
 <P>Port is such an abstract data-type. A Port <<P>> is an asynchronous
 communication channel that can be shared among several senders. A port
 has a stream associated with it. The operation: <<{NewPort S ?P}>>
@@ -44,17 +44,21 @@ S
 >>>
 
 <P>Ports are more expressive abstractions than pure stream
-communication that was discussed in SECTION0!!, since they can be shared
+communication that was discussed in
+<ptr to=section.concurrency.stream>, since they can be shared
 among multiple thread, and can be embedded in other data
 structures. Ports are the main message passing mechanism between
 threads in Oz.
 
 
-<SECTION><TITLE/Server-Clients Communication/
+<SECTION id=section.stateful.clientserver><TITLE/Server-Clients Communication/
+<!-- DENYS: I am replacing this example by a much simpler one
+     I am leaving the old stuff here, but commented out
+
 <P>The program shown in <PTR TO="concurrentQueue"> defines a thread
 that acts as FIFO queue server. Using single-assignment (logic)
 variables makes the server insensitive to the arrival order of <<get>>
-messages relative <<put>> messages. <<get>> messages can arrive even
+messages relative to <<put>> messages. <<get>> messages can arrive even
 when the queue is empty. A server is created by <<{NewQueueServer ?Q}>>.
 This procedure returns back a port <<Q>> to the server. A client
 thread having access to <<Q>> can request services by sending a
@@ -118,6 +122,52 @@ Q = {NewQueueServer}
 {Send Q put(3)}
 {Browse {Send Q empty($)}}
 >>>
+-->
+<!-- DENYS: here is a much simpler definition of a concurrent queue
+I am not implementing the `empty' method.  it would not be hard, but
+it is not very meaningful in a concurrent setting (you need other
+invariants).
+ -->
+<P>The program shown in <PTR TO="concurrentQueue"> defines a thread
+that acts as FIFO queue server. Using single-assignment (logic)
+variables makes the server insensitive to the relative arrival
+order of <<get>> and <<put>> requests. <<get>> requests can arrive even
+when the queue is empty. A server is created by <<{NewQueueServer ?Q}>>.
+This procedure returns back a record <<Q>> with features <<put>> and
+<<get>> each holding a unary procedure. A client
+thread having access to <<Q>> can request services by invoking
+these procedure. Notice how results are returned back through
+logic variables. A client requesting an Item in the queue will
+call <<{Q.get I}>>. The server will eventually answer
+back by binding <<I>> to an item.
+
+<P><FIGURE ID="concurrentQueue" CLASS="Figure">
+<CAPTION>Concurrent Queue server</CAPTION>
+<code display>
+declare
+fun {NewQueueServer}
+   Given GivePort={Port.new Given}
+   Taken TakePort={Port.new Taken}
+in
+   thread Given=Taken end
+   queue(put:proc {$ X} {Port.send GivePort X} end
+         get:proc {$ X} {Port.send TakePort X} end)
+end
+</code>
+</FIGURE>
+
+<P>The following sequence of statement illustrates the working of the program.
+
+<<<
+declare
+Q = {NewQueueServer}
+{Q.put 1}
+{Browse {Q.get}}
+{Browse {Q.get}}
+{Browse {Q.get}}
+{Q.put 2}
+{Q.put 3}
+>>>
 
 <P CLASS=WARNING>*** Explain the use of logic variables as a mechanism
 to returns value.
@@ -126,7 +176,7 @@ to returns value.
 markers in message passing.
 
 
-<SECTION><TITLE/Chunks/
+<SECTION id=section.stateful.chunk><TITLE/Chunks/
 <P>Ports are actually stateful data structures. A port keeps a local
 state internally tracking the end of its associated stream. Oz
 provides two primitive devices to construct abstract stateful
@@ -137,7 +187,7 @@ chunks can be defined in terms of chunks and cells.
 an oz-name, and there is no arity operation available on chunks. This
 means one can hide certain components of a chunk if the feature of the
 component is an oz-name that is visible only (by lexical scoping) to
-user-define operations on the chunk.
+user-defined operations on the chunk.
 
 <P>A chunk is created by the procedure <<{NewChunk Record}>>. This
 creates a chunk with the same arguments as the record, but having a
@@ -161,7 +211,7 @@ end
 information hiding ability of chunks to implement Ports.
 
 
-<SECTION><TITLE/Cells/
+<SECTION id=section.stateful.cell><TITLE/Cells/
 <P>A cell could be seen as a chunk with a mutable single component. A
 cell is created as follows.
 
@@ -211,8 +261,10 @@ end
 
 <P>Cells and higher-order iterators allow conventional assignment-based
 programming in Oz. The following program accumulates in the cell <<J>>
-<P CLASS=WARNING>&<;MATH.EXTERN TO="file:Image53.gif" TYPE=gif&>;
-
+<P CLASS=WARNING>
+<!-- DENYS: this file does not exist
+<MATH.EXTERN TO="file:Image53.gif" TYPE=gif>
+-->
 <<<
 declare J in
 J = {NewCell 0}
@@ -225,7 +277,8 @@ J = {NewCell 0}
 {Browse {Access J}}
 >>>
 
-<P>Ports described in SUBSECTION0!! can be implemented by chunks and
+<P>Ports described in <ptr to=section.stateful.port> can be
+implemented by chunks and
 cells in a secure way, i.e. as an abstract data type that cannot be
 forged. The following program shows an implementation of Ports.
 

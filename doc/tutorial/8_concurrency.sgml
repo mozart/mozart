@@ -131,12 +131,17 @@ end
 
 <P>The whole idea of explicit thread creation in Oz is to enable the
 programmer to structure his/her application in a modular
-way. Therefore, create threads only when the application need it, and
+way.
+<!-- DENYS: on the contrary, we should encourage users to take -->
+<!-- DENYS: full advantage of concurrency.  In Oz, threads are -->
+<!-- DENYS: very very cheap and efficient.  new designs are possible -->
+Therefore, create threads only when the application need it, and
 not because concurrency is fun.
 
-<SECTION><TITLE/Time/
-<P>In module <<Time>>, we can find a number of useful soft real-time
-procedures. Among them are:
+<SECTION id=section.concurrency.time><TITLE/Time/
+<P>In module
+<ref.extern to="ozdoc:base" key="section.control.time"/<<Time>>/, we
+can find a number of useful soft real-time procedures. Among them are:
 
 <LIST>
 
@@ -175,7 +180,7 @@ displays <<ping>> periodically after 500 milliseconds, and the other
 immediately after each other because of the periodicity difference.
 
 
-<SECTION><TITLE/Stream Communication/
+<SECTION id=section.concurrency.stream><TITLE/Stream Communication/
 <P>The data-flow property of Oz easily enables writing threads that
 communicate through streams in a producer-consumer pattern. A stream
 is a list that is created incrementally by one thread (the producer)
@@ -287,7 +292,8 @@ argument ?{N} that accumulates a result which, is passed to the next
 recursive call. The argument corresponds to some kind of
 <EM>state</EM>. In general, there are two solutions. We either
 introduce a stateful (mutable) data structure, which we will do in
-SECTION 0!!, or define another iterator that passes the state around. In
+<ptr to=section.stateful.cell>, or define another iterator that passes
+the state around. In
 our case, some iterators that fit our needs exist in the module
 <<List>>. First, we need an iterator that filters away all items
 except volvo's. We can use <<{Filter Xs P ?Ys}>> which outputs in
@@ -314,7 +320,7 @@ end
 >>>
 
 
-<SECTION><TITLE/Thread Priority and Real Time/
+<SECTION id=section.concurrency.priority><TITLE/Thread Priority and Real Time/
 <P>Try to run the program using the following statement:
 
 <<<{Consumer thread {Producer 5000000} end}>>>
@@ -379,7 +385,7 @@ operations pertinent to threads. Some of these are summarized in
 </TABLE>
 </FIGURE>
 
-<P>DFKI Oz has three priority levels. The system procedure
+<P>Oz has three priority levels. The system procedure
 
 <<<{System.set priorities(high:X medium:Y)}>>>
 
@@ -412,7 +418,8 @@ local L in
 end
 >>>
 
-<SECTION><TITLE/Demand-driven Execution/
+<SECTION id=section.concurrency.demanddriven><TITLE/Demand-driven Execution/
+<!-- DENYS: mozart supports lazy functions -->
 <P>An extreme alternative solution is to make the producer lazy, only
 producing an item when the consumer requests one. A consumer, in the
 case, constructs the stream with unbound variables (empty boxes). The
@@ -475,7 +482,7 @@ end
 </FIGURE>
 
 
-<SECTION><TITLE/Thread Termination-Detection/
+<SECTION id=section.concurrency.termination><TITLE/Thread Termination-Detection/
 <P>We have seen how threads are forked using the statement
 <<thread ?{S} end>>.  A natural question that arises is how to join
 back a forked thread into the original thread of control. In fact,
@@ -509,10 +516,9 @@ only when all procedures in the list terminate.
 <<<
 local
     proc {Conc1 Ps I O}
-      case Ps of P|Pr then
-       M in
-       thread {P} M = I end
-       {Conc1 Pr M O}
+      case Ps of P|Pr then M in
+         thread {P} M = I end
+         {Conc1 Pr M O}
       [] nil then O = I
       end
     end

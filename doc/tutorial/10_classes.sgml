@@ -24,7 +24,7 @@ how the objects of the class should behave.
 </LIST>
 
 
-<SECTION><TITLE/Classes from First Principles/
+<SECTION id=section.classes.classprinciples><TITLE/Classes from First Principles/
 <P><PTR TO="classConstr"> shows how a class is constructed from first
 principles as outlined above. Here we construct a <<Counter>>
 class. It has a single attribute accessed by the atom val. It has a
@@ -42,13 +42,13 @@ local
    Attrs = [val]
    MethodTable = m(browse:MyBrowse init:Init inc:Inc)
    proc {Init M S Self}
-    init(Value) = M in
+      init(Value) = M in
       {Assign S.val Value}
    end
    proc {Inc M S Self}
-      X inc(Value)=M in
-         {Access S.val X} {Assign S.val X+Value}
-      end
+      X inc(Value)=M
+   in
+      {Access S.val X} {Assign S.val X+Value}
    end
    proc {MyBrowse M=browse S Self}
       {Browse {Access S.val}}
@@ -61,7 +61,7 @@ end
 
 <P CLASS=WARNING>*** Talk about the example.
 
-<SECTION><TITLE/Objects from First Principles/
+<SECTION id=section.classes.objectprinciples><TITLE/Objects from First Principles/
 <P><PTR TO="objectConstr"> shows a generic procedure that creates an
 object from a given class. This procedure creates an object state from
 the attributes of the class. It initializes the attributes of the
@@ -117,7 +117,7 @@ the following statement, things will work as expected.
 
 <<<local X in thread {C inc(X)} end X=5 end  {C browse}>>>
 
-<SECTION><TITLE/Objects and Classes for Real/
+<SECTION id=section.classes.forreal><TITLE/Objects and Classes for Real/
 <P>Oz supports object-oriented programming following the methodology
 outlined above. There is also syntactic support and optimized
 implementation so that object application (calling a method in
@@ -258,7 +258,7 @@ some method calls:
 <<<{Browse {ListM nrev([1 2 3]  $)}}>>>
 
 
-<SECTION><TITLE/Inheritance/
+<SECTION id=section.classes.inheritance><TITLE/Inheritance/
 <P>Classes may inherit from one or several classes appearing after the
 keyword: <<from>>. A class ?{B} is a <EM>superclass</EM> of a class
 ?{A} if:
@@ -312,7 +312,7 @@ class B from A ... end
 method should have a unique label and is defined only in one class in
 the hierarchy. Hence, class <<C>> in the following example is not
 valid because the two methods labeled <<m>> remains.
-
+<!-- DENYS: this example makes no sense to me -->
 <<<
 class A meth m(...) ... end end
 class B meth m(...) ... end end
@@ -377,7 +377,7 @@ problem.
 </LIST>
 
 
-<SECTION><TITLE/Features/
+<SECTION id=section.classes.features><TITLE/Features/
 <P>Objects may have features similar to records. Features are
 components that are specified in the class declaration:
 
@@ -472,7 +472,7 @@ Apt1.streetName = f(york)
 that of <<Apt1>>.
 
 
-<SECTION><TITLE/Parameterized Classes/
+<SECTION id=section.classes.parametrized><TITLE/Parameterized Classes/
 <P>There are many ways to get your classes more generic, which later
 may be specialized for specific purposes. The common way to do this in
 object-oriented programming is to define first <EM>an abstract
@@ -548,7 +548,7 @@ end
 >>>
 
 
-<SECTION><TITLE/Self Application/
+<SECTION id=section.classes.self><TITLE/Self Application/
 <P>The program in <PTR TO="paramClass"> shows in the method <<qsort>>
 an object application using the keyword <<self>> (see below).
 
@@ -574,7 +574,7 @@ object (as a procedure) on the message. This is a form of dynamic
 binding common in all object-oriented languages.
 
 
-<SECTION><TITLE/Attributes/
+<SECTION id=section.classes.attributes><TITLE/Attributes/
 <P>We have touched before on the notion of attributes. Attributes are
 the carriers of state in objects. Attributes are declared similar to
 features, but using the keyword <<attr>> instead. When an object is
@@ -629,7 +629,7 @@ P = {New Point init(2 0)}
 >>>
 
 
-<SECTION><TITLE/Private and Protected Methods/
+<SECTION id=section.classes.private><TITLE/Private and Protected Methods/
 <P>Methods may be labeled by variables instead of literals. These
 methods are <EM>private</EM> to the class in which they are defined,
 as in:
@@ -739,7 +739,7 @@ P = {New HistoryPoint init(2 0)}
 >>>
 
 
-<SECTION><TITLE/Default Argument Values/
+<SECTION id=section.classes.defaultargs><TITLE/Default Argument Values/
 <P>A method head may have default argument values. Consider the following
 example.
 

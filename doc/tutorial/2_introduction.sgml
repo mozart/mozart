@@ -4,7 +4,9 @@
   compatible to the previous version Oz 2. Oz 2 is the successor Oz 1.
   Oz 3 and its programming system Mozart is developed mainly by the
   research groups of Gert Smolka at DFKI (the German Research Center
-  for Artificial Intelligent) and Seif Haridi at SICS (the Swedish Institute
+  for Artificial Intelligent)
+<!-- DENYS: university of saarbruecken -->
+ and Seif Haridi at SICS (the Swedish Institute
   of Computer Science).
 
   <P>Oz is in essence a concurrent constraint programming language, see
@@ -104,7 +106,7 @@
 
   <SECTION><TITLE>The Kernel Language</TITLE>
   <P>In this section we are going to give a short and terse
-  introduction to kernel language of Oz. Oz is constructed in two
+  introduction to the kernel language of Oz. Oz is constructed in two
   steps. The first is the kernel language and thereafter the full
   language. The kernel language represents the essential part of the
   language, whereas the rest may be regarded as syntactic sugar to
@@ -112,7 +114,29 @@
 
 <P><FIGURE ID="CoreLang" CLASS="Figure">
 <CAPTION>The Oz kernel language</CAPTION>
-<<<
+        <grammar>
+          <grammar.rule>
+            <grammar.head/<code/?={Statement}//
+            <grammar.alt/<code/?={Statement1} ?={Statement2}//
+            <grammar.alt or/<code/?{X} = ?{f}(?{l1}:?{Y1} ... ?{ln}:?{Yn})//
+            <grammar.alt or/<code/?{X} = ?={number}//
+            <grammar.alt or/<code/?{X} = ?={atom}//
+            <grammar.alt or/<code/?{X} = ?={boolean}//
+            <grammar.alt or/<code/{NewName ?{X}}//
+            <grammar.alt or/<code/?{X} = ?{Y}//
+            <grammar.alt or/<code/local ?{X1} ... ?{Xn} then ?{S1} end//
+            <grammar.alt or/<code/proc {?{X} ?{Y1} ... ?{Yn}} ?{S1} end//
+            <grammar.alt or/<code/{X ?{Y1} ... ?{Yn}}//
+            <grammar.alt or/<code/{NewCell Y X}//
+            <grammar.alt or/<code/{Exchange X Y Z}//
+            <grammar.alt or/<code/{Access X Y}//
+            <grammar.alt or/<code/if ?{B} then ?{S1} else ?{S2} end//
+            <grammar.alt or/<code/thread ?{S1} end//
+            <grammar.alt or/<code/try ?{S1} catch ?{X} then ?{S2} end//
+            <grammar.alt or/<code/raise ?{X} end//
+          </grammar.rule>
+        </grammar>
+<!--
 S ::= ?{S1} ?{S2}
     | ?{X}=?{f}(?{l1}:?{Y1} ... ?{ln}:?{Yn})
     | ?{X}=&lt;number&gt; | ?{X}=&lt;atom&gt; | ?{X==&lt;Boolean&gt; | ...
@@ -125,7 +149,7 @@ S ::= ?{S1} ?{S2}
     | if ?{B} then ?{S1} else ?{S2} end
     | thread ?{S1} end
     | try ?{S1} catch ?{X} then ?{S2} end | raise ?{X} end
->>>
+-->
 </FIGURE>
 
 <P>The Oz execution model consists of dataflow threads observing a
@@ -151,7 +175,7 @@ procedure stores are monotonic, i.e., information can only be added to
 them, not changed or removed.
 
 <P>All Oz execution can be defined in terms of a kernel language
-called Oz Programming Model (OPM) <PTR TO="smolka95">. <PTR TO="CoreLang">
+called the Oz Programming Model (OPM) <PTR TO="smolka95">. <PTR TO="CoreLang">
 defines the abstract syntax of an OPM statement S. We briefly define
 each possible statement. Statement sequences are reduced sequentially
 inside a thread. Values (records, numbers, etc.) are introduced
@@ -190,7 +214,9 @@ procedure that references a cell, which is hidden by lexical
 scoping. Another component is the object's class. The cell holds the
 object's state. Applying an object <<Obj>> to message <<M>> applies
 the object's procedure to <<M>>. The argument indexes into the method
-table. A method is a procedure that is given the message and the
+table.
+<!-- DENYS: this is no longer the correct model -->
+A method is a procedure that is given the message and the
 object state, and calculates the new state.
 
 

@@ -17,7 +17,7 @@ executed at all, if an exception is raised in ?{S1}.
 <P>The statement <<skip>> is the empty statement.
 
 
-<SECTION><TITLE>If Statement</TITLE>
+<SECTION id=control.if><TITLE>If Statement</TITLE>
 <P>Oz provides a simple form of conditional statement having the
 following form:
 
@@ -30,17 +30,21 @@ following form:
 
 <P><LIST>
 
-<ITEM>If <<B>> is bound to <<true>> ?{S1} is executed;
+<ITEM>If <<B>> is bound to <<true>> ?{S1} is executed
 
-<ITEM>if <<B>> is bound to <<false>> ?{S2} is executed;
+<ITEM>if <<B>> is bound to <<false>> ?{S2} is executed
 
-<ITEM>otherwise if <<B>> is unbound the thread suspends.
+<item>if <<B>> is bound to an non-boolean value, an exception is raised
+
+<ITEM>otherwise if <<B>> is unbound the thread suspends until one of
+the cases above applies
 
 </LIST>
 
-<P>Comparison Procedures. Oz provides a number of built-in tertiary
+<Para><title/Comparison Procedures/ Oz provides a number of built-in tertiary
 procedures used for comparison. These include <<==>> that we have seen
 earlier as well as <<\=>>, <<=&lt;>>, <<&lt;>>, <<&gt;=>>, <<&gt;>>,
+<!-- DENYS: andthen and orelse are operators not procedures -->
 <<andthen>>, and <<orelse>>. Common to these procedures is that they
 are used as Boolean functions in an infix notation. The following
 example illustrates the use of an If-statement in conjunction with the
@@ -63,7 +67,7 @@ end
 
 <<<if ?{B1} then ?{S1} elseif ?{B2} then ?{S2} else ?{S3} end>>>
 
-<P>is shorthand of nested if-statements:
+<P>is shorthand for nested if-statements:
 <<<
 if ?{B1} then ?{S1}
 else if ?{B2} then ?{S2}
@@ -82,19 +86,20 @@ if ?{B1} then ?{S1} else skip end
 >>>
 
 
-<SECTION><TITLE>Procedural Abstraction</TITLE>
+<SECTION id=control.procedure><TITLE>Procedural Abstraction</TITLE>
 <SUBSECTION><TITLE>Procedure Definition</TITLE>
 <P>Procedure definition is a primary abstraction in Oz. A procedure
 can be defined, passed around as argument to another procedure, or
 stored in a record. A procedure definition is a statement that has the
 following structure.
 <<<
-proc{P ?{X1} ... ?{Xn}} S end
+proc {P X1 ... Xn} S end
 >>>
 
 <SUBSECTION><TITLE>Semantics</TITLE>
 <P>Assume that the variable <<P>> is already introduced; executing the
 above statement will:
+<!-- DENYS: bad explanation -->
 
 <P><LIST>
 
@@ -112,8 +117,10 @@ Oz values that we encounter, whose equality is based on name
 equality. Others include threads, cells, and chunks.
 
 
-<SECTION><TITLE>On Lexical Scoping</TITLE>
+<SECTION id=control.lexical><TITLE>On Lexical Scoping</TITLE>
 <P>In general, the statement ?{S} in a procedure definition will
+<!-- DENYS: aargh! variable identifier is syntax -->
+<!-- DENYS: `logic variable node' is data -->
 have many <EM>syntactic</EM> variable occurrences. A syntactic
 variable is called an identifier to distinguish it from the logic
 variable that is created at runtime. Some identifier occurrences in
@@ -134,33 +141,33 @@ abstract this code into a procedure.
 <<<
 local Max X Y Z in
    proc {Max X Y Z}
-      if X &gt;= Y then
-        Z = X
-      else Z = Y end
+      if X &gt;= Y then Z = X else Z = Y end
    end
-   X = 5 Y = 10
+   X = 5
+   Y = 10
    {Max X Y Z} {Browse Z}
 end
 >>>
 
 
-<SECTION><TITLE>Anonymous Procedures and Variable Initialization</TITLE>
+<SECTION id=control.anonymous><TITLE>Anonymous Procedures and Variable Initialization</TITLE>
 <P>One could ask why is a variable bound to a procedure in a way that
 is different from the variable being bound to record:
 <<X = ?{f(...)}>>? The answer is that what you see is just a syntactic
 variant of the equivalent form
 
-<<<P = proc {$ ?{X1} ... ?{Xn}} S end>>>
+<<<P = proc {$ X1 ... Xn} S end>>>
 
 <P>The R.H.S. defines an <EM>anonymous procedural value</EM>. This is
 equivalent to
 
-<<<proc {P ?{X1} ... ?{Xn}} S end>>>
+<<<proc {P X1 ... Xn} S end>>>
 
 <P>In Oz, we can initialize a variable immediately while it is being
 introduced by using a <EM>variable-initialization equality</EM>
-
-<<<X = &lt;Value&gt;  or   &lt;Record&gt; = &lt;Value&gt;>>>
+<code display/X = ?={Value}/
+or
+<code display/?={Record} = ?={Value}/
 
 <P>between <<local>> and <<in>>, in the statement
 <<local ... in ... end>>. So the previous example could be written
@@ -231,7 +238,7 @@ in
 end
 >>>
 
-<SECTION><TITLE>Pattern Matching</TITLE>
+<SECTION id=control.pattern><TITLE>Pattern Matching</TITLE>
 <P>Let us consider a very simple example: insertion of elements in a
 binary tree. A binary tree is either empty, represented by <<nil>>, or
 is a tuple of the form <<tree(Key Value TreeL TreeR)>>, where <<Key>>
@@ -295,6 +302,7 @@ else ?{S} end
 >>>
 
 <SUBSECTION><TITLE/Parallel Case/
+<!-- DENYS: the parallel case is being phased out -->
 <P><<<
 case E of ?{Pattern_1} then ?{S1}
 [] ?{Pattern_2} then ?{S2}
@@ -306,6 +314,8 @@ else ?{S} end
 declared, and have a scope stretching over the corresponding
 ?{Si}. In the first case-matching statement, the patterns
 are tested in order. In the second, called <EM>parallel</EM>
+<!-- DENYS: don't say that the order is indeterminate -->
+<!-- DENYS: rather say that all clauses are attempted concurrently -->
 case-matching statement, the order is indeterminate. The <<else>> part
 may be omitted, in which case an exception is raised if all matches
 fail.
@@ -326,7 +336,7 @@ We have also reduced the syntactic nesting by abbreviating:
 
 <<<
 local ?_{T}  in
-  TreeOut = tree( ...?_{T}... )
+  TreeOut = tree( ... ?_{T} ... )
   {Insert ... ?_{T}}
 end
 >>>
@@ -346,7 +356,7 @@ end
 proc {Insert Key Value TreeIn ?TreeOut}
    case TreeIn
    of nil then TreeOut = tree(Key Value nil nil)
-   [] tree(K1 V1 T1 T2) then
+   elseof tree(K1 V1 T1 T2) then
       if Key == K1 then TreeOut = tree(Key Value T1 T2)
       elseif Key &lt; K1 then T in
         TreeOut = tree(K1 V1 T T2)
@@ -384,7 +394,8 @@ end
 >>>
 </FIGURE>
 
-<SECTION><TITLE/Nesting/
+<SECTION id=control.nesting><TITLE/Nesting/
+<index/nesting/
 <P>Let us use our <<Insert>> procedure as defined in <PTR TO="TreeInsert2">.
 The following statement inserts a few nodes in an initially empty
 tree. Note that we had to introduce a number of intermediate variables
@@ -414,13 +425,19 @@ end
 
 <<<{Q {P ... $ ...} ... }>>>
 
-<P>Using <<$>> as a <EM>nesting marker</EM>, and thereby the variable <<Y>> is eliminated.  The rule, to revert to the flattened syntax is that, a nested procedure call, inside a procedure call, is moved <EM>before</EM> the current statement; and a new variable is introduced with one occurrence replacing the nested procedure call, and the other occurrence replacing the nesting marker.
+<P>Using <<$>> as a <index/nesting<and>marker/ <EM>nesting
+marker</EM>, and thereby the variable <<Y>> is eliminated.  The rule,
+to revert to the flattened syntax is that, a nested procedure call,
+inside a procedure call, is moved <EM>before</EM> the current
+statement; and a new variable is introduced with one occurrence
+replacing the nested procedure call, and the other occurrence
+replacing the nesting marker.
 
 
 <SUBSECTION><TITLE/Functional Nesting/
 <P>Another form of nesting is called functional nesting: a procedure
 <<{P X ... R}>> could be considered as a function; its result is the
-argument <<R>>. Therefore <<{P X...}>> could considered as a function
+argument <<R>>. Therefore <<{P X ...}>> could considered as a function
 call that can be inserted in any expression instead of the result
 argument <<R>>. So <<{Q {P X ... } ... }>> is equivalent to:
 
@@ -445,7 +462,9 @@ application inside a record or a tuple as in:
 <<<Zs = X|{Merge Xr Ys $}>>>
 
 <P>Here, the nested application goes <EM>after</EM> the record
-construction statement; do you see why? Therefore, we get
+construction statement;
+<!-- DENYS: why? you should answer the question -->
+do you see why? Therefore, we get
 
 <<<
 local Zr in
@@ -471,7 +490,7 @@ end
 >>>
 </FIGURE>
 
-<SECTION><TITLE/Procedures as Values/
+<SECTION id=control.procasvals><TITLE/Procedures as Values/
 <P>Since we have been inserting elements in binary trees, let us
 define a program that checks if is a data structure is actually a
 binary tree. The procedure <<BinaryTree>> shown in <PTR TO="CheckBinTree">
@@ -484,12 +503,13 @@ accordingly returns <<true>> or <<false>> in its result argument <<B>>.
 <CAPTION>Checking a binary tree</CAPTION>
 <<<
 % What is a binary tree?
+declare
 local
    proc {And B1 B2 ?B}
-      case B1 then B = B2
-      else B = false end
+      if B1 then B = B2 else B = false end
    end
-in proc {BinaryTree T ?B}
+in
+   proc {BinaryTree T ?B}
       case T
       of nil then B = true
       [] tree(K V T1 T2) then
@@ -515,23 +535,25 @@ returns a Boolean value. However, in general, we are going to see
 other examples where procedures return procedures as result.  As in
 functional languages, higher order procedures are invaluable
 abstraction devices that help creating generic reusable components.
+<!-- DENYS: you should mention then andthen operator -->
 
 <P><FIGURE ID="CheckBinTreeLazy" CLASS="Figure">
 <CAPTION>Checking a binary tree lazily</CAPTION>
 <<<
+declare
 local
    proc {AndThen BP1 BP2 ?B}
-      case {BP1} then
-      case {BP2} then B = true else B = false end
-      else B = false end
+      if {BP1} then B = {BP2} else B = false end
    end
-in proc {BinaryTree T ?B}
+in
+   proc {BinaryTree T ?B}
       case T
       of nil then B = true
-      [] tree(K V T1 T2) then
-           {AndThen proc {$ B1}{BinaryTree T1 B1} end
-              proc {$ B2}{BinaryTree T2 B2} end
-              B}
+      elseof tree(K V T1 T2) then
+         {AndThen
+          proc {$ B1} {BinaryTree T1 B1} end
+          proc {$ B2} {BinaryTree T2 B2} end
+          B}
       else B = false end
    end
 end
@@ -539,29 +561,31 @@ end
 </FIGURE>
 
 
-<SECTION><TITLE/Control Abstractions/
+<SECTION id=control.controlabs><TITLE/Control Abstractions/
 <P>Higher-order procedures are used in Oz to define various control
-abstractions. In modules <<Control>> and <<List>> as well as many
+abstractions. In modules
+<ref.extern to="ozdoc:base" key="chapter.control"/<<Control>>/ and
+<ref.extern to="ozdoc:base" key="section.records.lists"/<<List>>/
+as well as many
 others, you will find many control abstractions. Here are some
-examples. The procedure <<{For From To Step P}>> is an iterator
+examples. The procedure
+<ref.extern to="ozdoc:base" key="section.control.loops"
+/<<{For From To Step P}>>/ is an iterator
 abstraction that applies the unary procedure <<P>> (normally saying
 the procedure <<P/1>> instead) to integers from <<From>> to <<To>>
-proceeding in steps <<Step>>. Notice that use of the empty statement
-<<skip>>. Executing <<{For 1 10 1 Browse}>> will display the integers
-<<1 2 ... 10>>.
+proceeding in steps <<Step>>. Executing <<{For 1 10 1 Browse}>>
+will display the integers <<1 2 ... 10>>.
 
 <<<
 local
    proc {HelpPlus C To Step P}
-      case C=&lt;To then {P C} {HelpPlus C+Step To Step P}
-      else skip end
+      if C=&lt;To then {P C} {HelpPlus C+Step To Step P} end
    end
    proc {HelpMinus C To Step P}
-      case C&gt;=To then {P C} {HelpMinus C+Step To Step P}
-      else skip end
+      if C&gt;=To then {P C} {HelpMinus C+Step To Step P} end
    end
 in proc {For From To Step P}
-      case Step&gt;0 then {HelpPlus From To Step P}
+      if Step&gt;0 then {HelpPlus From To Step P}
       else {HelpMinus From To Step P} end
    end
 end
@@ -573,12 +597,13 @@ iterator defined in the <<List>> module. <<ForAll/2>> applies a unary
 procedure on all the elements of a list, in the order defined by the
 list. Think what happens if the list is produced incrementally by
 another concurrent thread?
+<!-- DENYS: well... what? answer the question -->
 
 <<<
 proc {ForAll Xs P}
    case Xs
    of nil then skip
-   [] X|Xr then
+   elseof X|Xr then
       {P X}
       {ForAll Xr P}
    end
@@ -586,7 +611,7 @@ end
 >>>
 
 
-<SECTION><TITLE/Exception Handling/
+<SECTION id=control.exception><TITLE/Exception Handling/
 <P>Oz incorporates an exception handling mechanism that allows
 safeguarding programs against exceptional and/or unforeseeable
 situations at run-time. It is also possible to raise and handle
@@ -597,20 +622,20 @@ user-defined exceptions.
 
 <<<raise ?{E} end>>>
 
-<P>He is a simple example:
+<P>Here is a simple example:
 
 <<<
 proc {Eval E ?R}
   case E
-  of plus(X Y) then {Browse X+Y}
-  [] times(X Y) then {Browse X*Y}
+  of      plus(X Y) then {Browse X+Y}
+  elseof times(X Y) then {Browse X*Y}
   else raise illFormedExpression(E) end
   end
 end
 >>>
 
 <P>The basic exception handling statement is called a try-statement, and has the following form:
-
+<!-- DENYS: we really should be using elseof instead -->
 <<<
 try ?{S} catch
    ?{Pattern_1} then ?{S1}
@@ -626,7 +651,7 @@ end
 control is passed to the corresponding statement ?{S_i}. If
 ?{E} does not match any pattern the exception is propagated
 outside the try-statement until eventually caught by the system, which
-catches all escaped exceptions.
+catches all escaping exceptions.
 
 <<<
 try
@@ -653,7 +678,7 @@ end
 <P>Assume that <<F>><NOTE FOOT>We will how see how input/output is
 handled later</NOTE> is an opened file; the procedure <<Process/1>>
 manipulates the file in some way; and the procedure <<CloseFile/1>>
-closes the file. The following program ensures that the F is closed
+closes the file. The following program ensures that the <code/F/ is closed
 upon normal or exceptional exit.
 
 <<<
@@ -664,7 +689,7 @@ catch
 finally {CloseFile F} end
 >>>
 
-<SECTION><TITLE/System Exceptions/
+<SECTION id=control.sysexcept><TITLE/System Exceptions/
 <P>The exceptions raised by the Oz system are records with one of the
 labels: <<failure>>, <<error>>, and <<system>>.
 
