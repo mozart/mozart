@@ -201,7 +201,9 @@ retry:
     heapTop = (char *)((long)heapTop & (-align));
   }
 
-  if (heapEnd > heapTop) {
+  /* heapTop might now be negative!! */
+  if ((int)heapEnd > (int)heapTop) {
+    Assert((int)heapEnd>0); // otherwise the above test is wrong
     (void) getMemFromOS(chunk_size);
     goto retry;
   }
