@@ -76,6 +76,10 @@ fi
 AC_MSG_RESULT($GTK_CFLAGS)
 AC_SUBST(GTK_CFLAGS)
 
+AC_MSG_CHECKING([for options to filter from gtk c flags])
+OZ_FILTER_CFLAGS(GTK_CFLAGS)
+AC_MSG_RESULT(keeping: $GTK_CFLAGS)
+
 AC_MSG_CHECKING(gtk lib flags)
 if test -z "`${GTKCONFIG} --libs 2>&1 1>/dev/null`"; then
    GTK_LIBS=`${GTKCONFIG} --libs`
@@ -91,6 +95,11 @@ if test -n "$IMLIB_CONFIG"; then
      IMLIB_CFLAGS=`${IMLIB_CONFIG} --cflags`
    fi
    AC_MSG_RESULT($IMLIB_CFLAGS)
+
+   AC_MSG_CHECKING([for options to filter from imlib c flags])
+   OZ_FILTER_CFLAGS(IMLIB_CFLAGS)
+   AC_MSG_RESULT(keeping: $IMLIB_CFLAGS)
+
    AC_MSG_CHECKING(imlib lib flags)
    if test -z "`${IMLIB_CONFIG} --libs 2>&1 1>/dev/null`"; then
      IMLIB_LIBS=`${IMLIB_CONFIG} --libs`
@@ -106,6 +115,11 @@ if test -n "$LIBART_CONFIG"; then
    AC_MSG_CHECKING(libart c flags)
    LIBART_CFLAGS=`${LIBART_CONFIG} --cflags`
    AC_MSG_RESULT($LIBART_CFLAGS)
+
+   AC_MSG_CHECKING([for options to filter from libart c flags])
+   OZ_FILTER_CFLAGS(LIBART_CFLAGS)
+   AC_MSG_RESULT(keeping: $LIBART_CFLAGS)
+
    AC_MSG_CHECKING(libart lib flags)
    LIBART_LIBS=`${LIBART_CONFIG} --libs`
    AC_MSG_RESULT($LIBART_LIBS)
