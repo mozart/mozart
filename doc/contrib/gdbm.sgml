@@ -100,7 +100,7 @@ the database.
 database.
       <entry/<code/Gdbm.forAll//
       <synopsis/<code/{Gdbm.forAll ?+{DB} ?+{P}}//
-      <item>Calls <code/{P KEY}/ for every key in the database.
+      <item>Calls <code/{P VALUE}/ for every entry in the database.
       <entry/<code/Gdbm.forAllInd//
       <synopsis/<code/{Gdbm.forAllInd ?+{DB} ?+{P}}//
       <item>Calls <code/{P KEY VALUE}/ for every entry in the
