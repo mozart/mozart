@@ -150,6 +150,7 @@ public:
 
   void dispose(void) {
     suspList->disposeList();
+    // mm2: what does this mean? NOTHING!!!
     freeListDispose(this,sizeof(*this));
   }
 

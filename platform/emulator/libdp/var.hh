@@ -36,8 +36,6 @@
 #include "var_ext.hh"
 #include "table.hh"
 
-class ObjectFields;
-
 class ProxyList {
 public:
   DSite* sd;
@@ -67,9 +65,6 @@ public:
   virtual void printStreamV(ostream &out,int depth = 10) = 0;
   virtual OZ_Return bindV(TaggedRef *vptr, TaggedRef t) = 0;
 
-  virtual Bool gcIsAliveV() = 0;
-  virtual void primBind(TaggedRef *lPtr,TaggedRef v);
-
   OZ_Return unifyV(TaggedRef *vptr, TaggedRef *tPtr);
 };
 
@@ -90,8 +85,6 @@ public:
   virtual void printStreamV(ostream &out,int depth = 10) = 0;
   virtual OZ_Return bindV(TaggedRef *vptr, TaggedRef t) = 0;
 
-  virtual Bool gcIsAliveV() = 0;
-
   int getIndex() { return index; }
   void gcSetIndex(int i) { index =  i; }
 };
@@ -107,8 +100,6 @@ public:
   void gcRecurseV(void);
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:pxy>"; }
   OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
-
-  Bool gcIsAliveV() { return getSuspList()!=0 || binding!=0; }
 
   void proxyBind(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be);
   void proxyAck(TaggedRef *vPtr, BorrowEntry *be);
@@ -145,11 +136,6 @@ public:
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:mgr>"; }
   OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
 
-#ifdef ORIG
-  Bool gcIsAliveV() { return origVar->getSuspList()!=0; }
-#else
-  Bool gcIsAliveV() { return getSuspList()!=0; }
-#endif
   void registerSite(DSite* sd) {
     // test if already registered
     for (ProxyList *pl = proxies; pl != 0; pl=pl->next) {
@@ -219,8 +205,7 @@ public:
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:oprxy>"; }
   OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
 
-  Bool gcIsAliveV() { return getSuspList()!=0; }
-  virtual void primBind(TaggedRef *lPtr,TaggedRef v);
+  void disposeV();
 
 private:
   Bool isObjectClassAvail()    { return getpvType()==PV_OBJECTCLASSAVAIL; }

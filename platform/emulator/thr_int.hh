@@ -40,9 +40,19 @@ DebugCode(Bool oz_isInSolveDebug(Board *bb);)
 void debugStreamTerm(Thread*);
 void debugStreamReady(Thread*);
 
+// TODO
+
 void oz_checkExtSuspension(Suspension susp, Board * home);
 void oz_checkExtSuspensionOutlined(Suspension susp);
 void oz_removeExtThreadOutlined(Thread *tt);
+
+inline
+void oz_removeExtThread(Thread *tt)
+{
+  if (tt->wasExtThread()) {
+    oz_removeExtThreadOutlined(tt);
+  }
+}
 
 // exports
 #define CheckExtSuspension(susp)                \
@@ -171,14 +181,6 @@ void _wakeupThread(Thread *tt)
     debugStreamReady(tt);
   }
   am.threadsPool.scheduleThread(tt);
-}
-
-inline
-void oz_removeExtThread(Thread *tt)
-{
-  if (tt->wasExtThread()) {
-    oz_removeExtThreadOutlined(tt);
-  }
 }
 
 inline

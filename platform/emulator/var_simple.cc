@@ -33,7 +33,7 @@
 
 OZ_Return SimpleVar::bind(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
 {
-  oz_bind(vPtr, t);
+  oz_bindVar(this,vPtr, t);
   return PROCEED;
 }
 
@@ -57,12 +57,12 @@ OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef *tPtr, ByteCode* scp)
 #endif
       ) {
 
-    if (tagged2SimpleVar(*tPtr)->isExported())
-      markExported();  // mm2: already done above?
+    if (tv->isExported())
+      markExported();
 
-    oz_bind(tPtr, makeTaggedRef(vPtr));
+    oz_bindVar(tv,tPtr, makeTaggedRef(vPtr));
   } else {
-    oz_bind(vPtr, makeTaggedRef(tPtr));
+    oz_bindVar(this,vPtr, makeTaggedRef(tPtr));
   }
   return PROCEED;
 }

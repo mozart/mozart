@@ -28,12 +28,16 @@
 #ifndef __UNIFY_HH
 #define __UNIFY_HH
 
+#ifdef INTERFACE
+#pragma interface
+#endif
+
 #include "base.hh"
 #include "am.hh"
 #include "var_base.hh"
 
 /* -----------------------------------------------------------------------
- * Var Locality Tests
+ * Locality test for variables
  * -----------------------------------------------------------------------*/
 
 #define ShallowCheckLocal(ptr)                                  \
@@ -72,28 +76,9 @@ Bool oz_isLocalVariable(TaggedRef *varPtr)
     : oz_isLocalVar(tagged2CVar(*varPtr));
 }
 
-/* -----------------------------------------------------------------------
- * Unification
- * -----------------------------------------------------------------------*/
-
-OZ_Return oz_unify(OZ_Term t1, OZ_Term t2, ByteCode *scp=0);
-
-// mm2: interface (see also oz_bind)
-void doBindAndTrail(TaggedRef * vp, TaggedRef t);
-
-#define DoBindAndTrailAndIP(vp,t,lv,gv) {       \
-  lv->installPropagators(gv);                   \
-  doBindAndTrail(vp,t);                         \
-  }
-
-void oz_bind(OZ_Term *varPtr, OZ_Term term);
-void oz_bind_global(OZ_Term var, OZ_Term term);
-
 /* -------------------------------------------------------------------------
  * Suspension lists
  * ------------------------------------------------------------------------- */
-
-void oz_wakeupAll(OzVariable *sv);
 
 SuspList * oz_checkAnySuspensionList(SuspList *suspList,Board *home,
                           PropCaller calledBy);
@@ -104,5 +89,37 @@ SuspList * oz_checkAnySuspensionList(SuspList *suspList,Board *home,
 
 #define oz_checkSuspensionListProp(var)         \
   oz_checkSuspensionList(var,pc_propagator)
+
+/* -----------------------------------------------------------------------
+ * Binding
+ * -----------------------------------------------------------------------*/
+
+// mm2: interface (see also oz_bind)
+void doBindAndTrail(TaggedRef * vp, TaggedRef t);
+
+#define DoBindAndTrailAndIP(vp,t,lv,gv) {       \
+  lv->installPropagators(gv);                   \
+  doBindAndTrail(vp,t);                         \
+  }
+
+void oz_bindLocalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term);
+void oz_bindGlobalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term);
+
+inline
+void oz_bindVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
+{
+  if (oz_isLocalVar(ov)) {
+    oz_bindLocalVar(ov,varPtr,term);
+  } else {
+    oz_bindGlobalVar(ov,varPtr,term);
+  }
+}
+void oz_bind_global(TaggedRef var, TaggedRef term);
+
+/* -----------------------------------------------------------------------
+ * Unification
+ * -----------------------------------------------------------------------*/
+
+OZ_Return oz_unify(OZ_Term t1, OZ_Term t2, ByteCode *scp=0);
 
 #endif

@@ -30,6 +30,7 @@
 #define RUNTIME_HH
 
 #include "value.hh"
+#include "unify.hh"
 
 /* -----------------------------------------------------------------------
  * control variables

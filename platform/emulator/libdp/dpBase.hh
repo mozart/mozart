@@ -39,11 +39,11 @@ class RemoteSite;
 class DSiteHashTable;
 class Watcher;
 class PerdioVar;
-class OldPerdioVar;
 class BorrowEntry;
 class OwnerEntry;
 class DSite;
 class ChainElem;
+class ObjectFields;
 
 /* __BASEHH */
 #endif

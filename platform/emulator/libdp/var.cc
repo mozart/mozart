@@ -48,20 +48,6 @@
 #define UNIFY_ERRORMSG \
    "Unification of distributed variable with term containing resources"
 
-void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
-{
-  oz_checkSuspensionList(this, pc_std_unif);
-
-  TaggedRef vv=oz_deref(v);
-  if (isCVar(vv)) {
-    OzVariable *sv=tagged2SVarPlus(vv);
-    if (sv==this) return;
-    oz_checkSuspensionList(sv, pc_std_unif);
-    relinkSuspListTo(sv);
-  }
-  doBind(lPtr, v);
-}
-
 
 // compare NAs
 #define GET_ADDR(var,SD,OTI)                                            \
@@ -193,22 +179,19 @@ void ProxyVar::proxyBind(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be)
     DebugCode(binding=0);
     PD((PD_VAR,"REDIRECT while pending"));
   }
-  primBind(vPtr,val);
+  oz_bindLocalVar(this,vPtr,val);
   be->changeToRef();
-  // dispose();
   BT->maybeFreeBorrowEntry(getIndex());
 }
 
 void ProxyVar::proxyAck(TaggedRef *vPtr, BorrowEntry *be)
 {
   PD((PD_VAR,"acknowledge"));
-  Assert(binding!=0);
-  primBind(vPtr,binding);
+
+  oz_bindLocalVar(this,vPtr,binding);
   DebugCode(binding=0);
-  PD((THREAD_D,"start thread ackowledge"));
   be->changeToRef();
   BT->maybeFreeBorrowEntry(getIndex());
-  // dispose();
 }
 
 /* --- ManagerVar --- */
@@ -275,13 +258,11 @@ OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r)
   if (isLocal) {
     OZ_Return aux = sendRedirectToProxies(r, myDSite);
     if (aux != PROCEED) return aux;
+    oz_bindLocalVar(this,lPtr,r);
     OT->getOwner(getIndex())->changeToRef();
-    primBind(lPtr,r);
     return PROCEED;
   } else {
-    // in guard: bind and trail
-    oz_checkSuspensionList(tagged2SVarPlus(*lPtr),pc_std_unif);
-    doBindAndTrail(lPtr,r);
+    oz_bindGlobalVar(this,lPtr,r);
     return PROCEED;
   }
 }
@@ -298,7 +279,7 @@ void ManagerVar::managerBind(TaggedRef *vPtr, TaggedRef val,
     return;
   }
 #endif
-  primBind(vPtr,val);
+  oz_bindLocalVar(this,vPtr,val);
   oe->changeToRef();
   if (oe->hasFullCredit()) {
     PD((WEIRD,"SURRENDER: full credit"));
@@ -485,16 +466,16 @@ void ObjectVar::gcRecurseV(void)
     u.aclass = u.aclass->gcClass();}
 }
 
-void ObjectVar::primBind(TaggedRef *lPtr,TaggedRef v)
+void ObjectVar::disposeV()
 {
-  PerdioVar::primBind(lPtr,v);
   if (isObjectClassNotAvail()) {
     deleteGName(u.gnameClass);
   }
+  freeListDispose(this, sizeof(ObjectVar));
 }
 
 void ObjectVar::sendObject(DSite* sd, int si, ObjectFields& of,
-                                BorrowEntry *be)
+                           BorrowEntry *be)
 {
   Object *o = getObject();
   Assert(o);
@@ -510,7 +491,7 @@ void ObjectVar::sendObject(DSite* sd, int si, ObjectFields& of,
     cl=tagged2ObjectClass(oz_deref(oz_findGName(getGNameClass())));
   }
   o->setClass(cl);
-  primBind(be->getPtr(),makeTaggedConst(o));
+  oz_bindLocalVar(this,be->getPtr(),makeTaggedConst(o));
   be->changeToRef();
   BT->maybeFreeBorrowEntry(o->getIndex());
   o->localize();
@@ -525,7 +506,7 @@ void ObjectVar::sendObjectAndClass(ObjectFields& of, BorrowEntry *be)
   gnobj->setValue(makeTaggedConst(o));
 
   fillInObjectAndClass(&of,o);
-  primBind(be->getPtr(),makeTaggedConst(o));
+  oz_bindLocalVar(this,be->getPtr(),makeTaggedConst(o));
   be->changeToRef();
   BT->maybeFreeBorrowEntry(o->getIndex());
   o->localize();
