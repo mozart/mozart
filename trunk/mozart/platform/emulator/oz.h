@@ -110,6 +110,7 @@ extern int _FUNDECL(OZ_isFalse,(OZ_Term));
 extern int _FUNDECL(OZ_isFeature,(OZ_Term));
 extern int _FUNDECL(OZ_isFloat,(OZ_Term));
 extern int _FUNDECL(OZ_isInt,(OZ_Term));
+extern int _FUNDECL(OZ_isNumber,(OZ_Term));
 extern int _FUNDECL(OZ_isLiteral,(OZ_Term));
 extern int _FUNDECL(OZ_isName,(OZ_Term));
 extern int _FUNDECL(OZ_isNil,(OZ_Term));
