@@ -227,15 +227,15 @@ install_doc:
 # Create Parser Files
 #---------------------------------------------------------------------
 
-c.bison.tab.cc: c.bison
+y.tab.h y.tab.c: c.bison
 	$(BISON) -d $<
-	@mv y.tab.c c.bison.tab.cc
-	@mv y.tab.h c.bison.tab.hh
+c.bison.tab.cc: y.tab.c
+	cp $< $@
+c.bison.tab.hh: y.tab.h
+	cp $< $@
 
 lex.yy.cc: c.flex
 	$(FLEX) -o$@ $<
-
-c.bison.tab.hh: c.bison.tab.cc ;
 
 lex.yy.o: c.bison.tab.hh
 
@@ -253,7 +253,7 @@ gtkraw.c: gtkdefs.c
 Generator.ozf: $(GENOBJS)
 	$(LINK) Main.ozf -o $@
 
-binding:
+binding: ./gtkraw.c
 ifeq ($(GTKGENERATED), GDK.oz)
 	@$(MAKE) wrapper_files
 else
@@ -300,7 +300,7 @@ clean veryclean:
 	-$(RM) -f *~ *.ozf *.o *.so-*
 
 distclean: clean
-	-$(RM) config.* Makefile
+	-$(RM) config.cache config.log config.status Makefile
 
 #---------------------------------------------------------------------
 # Automatic Makefile update
