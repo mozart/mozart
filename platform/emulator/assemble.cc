@@ -60,7 +60,7 @@ OZ_C_proc_begin(BInewCodeArea,2)
     return OZ_unifyInt(out,-1);
   }
 
-  return OZ_unifyInt(out,(int)mypc);
+  return OZ_unifyInt(out,ToInt32(mypc));
 }
 OZ_C_proc_end
 
@@ -69,7 +69,7 @@ OZ_C_proc_end
 #define PCIN(fun)   OZ_declareIntArg(fun,0,help); \
                     ProgramCounter pc = (ProgramCounter) help;
 
-#define RET(Call,N) return OZ_unifyInt(OZ_getCArg(N),(int)Call);
+#define RET(Call,N) return OZ_unifyInt(OZ_getCArg(N),ToInt32(Call));
 
 
 OZ_C_proc_begin(BIscheduleCode,3)

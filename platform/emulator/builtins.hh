@@ -187,7 +187,7 @@ State BIifun(TaggedRef val, TaggedRef &out)                                   \
   default: return state;                                                      \
   }                                                                           \
 }                                                                             \
-DECLAREBI_USEINLINEFUN1(BIfun,BIifun);
+DECLAREBI_USEINLINEFUN1(BIfun,BIifun)
 
 #define DECLAREBOOLFUN2(BIfun,BIifun,BIirel)                                  \
 State BIifun(TaggedRef val1, TaggedRef val2, TaggedRef &out)                  \
@@ -199,7 +199,7 @@ State BIifun(TaggedRef val1, TaggedRef val2, TaggedRef &out)                  \
   default: return state;                                                      \
   }                                                                           \
 }                                                                             \
-DECLAREBI_USEINLINEFUN2(BIfun,BIifun);
+DECLAREBI_USEINLINEFUN2(BIfun,BIifun)
 
 BuiltinTabEntry *BIinit();
 BuiltinTabEntry *BIadd(char *name,int arity,OZ_CFun fun,
@@ -302,7 +302,7 @@ public:
   }
   // mm: this is a hack: the id is not always unique
   int getId() {
-    return ((int) fun)^((int) suspHandler)^((int) gRegs);
+    return ToInt32(fun)^((int32) suspHandler)^ToInt32(gRegs);
   }
 
   BuiltinTabEntry *getBITabEntry() {return fun;}

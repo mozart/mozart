@@ -79,7 +79,7 @@ inline Literal *addToLiteralTab(char *str, HashTable *table, Bool isName)
   }
 
   found = new Literal(str,isName);
-  if (table->aadd(found,str) != (unsigned) htEmpty) {
+  if (table->aadd(found,str)) {
     return found;
   } else {
     error("addToLiteralTab: failed");
@@ -114,7 +114,7 @@ AbstractionEntry *addAbstractionTab(int id)
   }
 
   found = new AbstractionEntry();
-  if (CodeArea::abstractionTab.aadd(found,id) != (unsigned) htEmpty) {
+  if (CodeArea::abstractionTab.aadd(found,id)) {
     return found;
   }
 

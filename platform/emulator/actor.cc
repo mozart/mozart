@@ -73,7 +73,7 @@ void WaitActor::addChildInternal(Board *bb)
     childs[1] = NULL;
     return;
   }
-  int maxx=(int) childs[-1];
+  int32 maxx= ToInt32(childs[-1]);
   for (int i = 0; i < maxx; i++) {
     if (!childs[i]) {
       childs[i] = bb;
@@ -82,11 +82,11 @@ void WaitActor::addChildInternal(Board *bb)
   }
   int size = 2*maxx;
   Board **cc = (Board **) freeListMalloc((size+1)*sizeof(Board *));
-  *cc++ = (Board *) size;
+  *cc++ = (Board *) ToPointer(size);
   for (i = 0; i < maxx; i++) {
     cc[i] = childs[i];
   }
-  freeListDispose(childs-1,(((int) childs[-1])+1)*sizeof(Board *));
+  freeListDispose(childs-1,(ToInt32(childs[-1])+1)*sizeof(Board *));
   childs = cc;
   childs[maxx] = bb;
   for (i = maxx+1; i < size; i++) {
@@ -96,7 +96,7 @@ void WaitActor::addChildInternal(Board *bb)
 
 void WaitActor::failChildInternal(Board *bb)
 {
-  int maxx=(int) childs[-1];
+  int32 maxx = ToInt32(childs[-1]);
   for (int i = 0; i < maxx; i++) {
     if (childs[i] == bb) {
       for (; i < maxx-1; i++) {    // the order must be preserved (for solve);
@@ -111,7 +111,7 @@ void WaitActor::failChildInternal(Board *bb)
 
 Board *WaitActor::getChild()
 {
-  int maxx=(int) childs[-1];
+  int32 maxx = ToInt32(childs[-1]);
   for (int i = 0; i < maxx; i++) {
     if (childs[i]) {
       Board *wb = childs[i];
@@ -128,7 +128,7 @@ Board *WaitActor::getChild()
 
 Board *WaitActor::getChildRef ()
 {
-  int maxx=(int) childs[-1];
+  int32 maxx = ToInt32(childs[-1]);
   for (int i = 0; i < maxx; i++) {
     if (childs[i]) {
       return (childs[i]);
