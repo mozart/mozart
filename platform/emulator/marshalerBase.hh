@@ -181,6 +181,15 @@ enum {
   MISC_LAST
 };
 
+//
+#define GT_MCodeAreaDesc        (GT_AE_GenericBase + 0)
+#define GT_BCodeAreaDesc        (GT_AE_GenericBase + 1)
+#define GT_CodeAreaLoc          (GT_AE_GenericBase + 2)
+#define GT_CodeAreaOzValueLoc   (GT_AE_GenericBase + 3)
+#define GT_CodeAreaPredIdLoc    (GT_AE_GenericBase + 4)
+#define GT_CodeAreaMethInfoLoc  (GT_AE_GenericBase + 5)
+#define GT_CodeAreaHTEntryDesc  (GT_AE_GenericBase + 6)
+
 #if !defined(TEXT2PICKLE)
 
 //
@@ -503,12 +512,21 @@ public:
 //
 // 'CodeAreaProcessor' argument: keeps the location of a code area
 // being processed;
-class MarshalerCodeAreaDescriptor : public NMMemoryManager {
-private:
+class MarshalerCodeAreaDescriptor : public GTAbstractEntity,
+                                    public NMMemoryManager {
+protected:
   ProgramCounter start, end, current;
 public:
   MarshalerCodeAreaDescriptor(ProgramCounter startIn, ProgramCounter endIn)
     : start(startIn), end(endIn), current(startIn) {}
+  virtual ~MarshalerCodeAreaDescriptor() {
+    DebugCode(start = end = current = (ProgramCounter) -1;);
+  }
+
+  //
+  virtual int getType() { return (GT_MCodeAreaDesc); }
+  virtual void gc() {}
+
   //
   ProgramCounter getStart() { return (start); }
   ProgramCounter getEnd() { return (end); }
@@ -517,14 +535,20 @@ public:
 };
 
 //
-class BuilderCodeAreaDescriptor : public NMMemoryManager {
-private:
+class BuilderCodeAreaDescriptor : public GTAbstractEntity,
+                                  public NMMemoryManager {
+protected:
   ProgramCounter start, end, current;
   CodeArea *code;
 public:
   BuilderCodeAreaDescriptor(ProgramCounter startIn, ProgramCounter endIn,
                             CodeArea *codeIn)
     : start(startIn), end(endIn), current(startIn), code(codeIn) {}
+  virtual ~BuilderCodeAreaDescriptor() {
+    DebugCode(start = end = current = (ProgramCounter) -1;);
+    DebugCode(code = (CodeArea *) -1;);
+  }
+
   //
   ProgramCounter getStart() { return (start); }
   ProgramCounter getEnd() { return (end); }
@@ -532,6 +556,10 @@ public:
   void setCurrent(ProgramCounter pc) { current = pc; }
   //
   CodeArea* getCodeArea() { return (code); }
+
+  //
+  virtual int getType() { return (GT_BCodeAreaDesc); }
+  virtual void gc() {}
 };
 
 //
@@ -543,7 +571,8 @@ ProgramCounter unmarshalCache(ProgramCounter PC, CodeArea *code);
 // and either an Oz value or an Oz value and SRecordArity. Thus, a
 // descriptor of an entry used for the 'Builder::getOzValue()' task
 // keeps table, label and may be a record arity list.
-class HashTableEntryDesc : public NMMemoryManager {
+class HashTableEntryDesc : public GTAbstractEntity,
+                           public NMMemoryManager {
 private:
   IHashTable *table;
   int label;
@@ -555,6 +584,7 @@ public:
   {
     DebugCode(arityList = (OZ_Term) -1;);
   }
+  virtual ~HashTableEntryDesc() {}
 
   //
   IHashTable* getTable() { return (table); }
@@ -563,13 +593,17 @@ public:
   void setSRA(SRecordArity sraIn) { sra = sraIn; }
   void setArityList(OZ_Term ra) { arityList = ra; }
   OZ_Term getArityList() { return (arityList); }
+
+  //
+  virtual int getType() { return (GT_CodeAreaHTEntryDesc); }
+  virtual void gc() {}
 };
 
 //
-void getHashTableRecordEntryLabelCA(void *arg, OZ_Term value);
-void saveRecordArityHashTableEntryCA(void *arg, OZ_Term value);
-void getHashTableAtomEntryLabelCA(void *arg, OZ_Term value);
-void getHashTableNumEntryLabelCA(void *arg, OZ_Term value);
+void getHashTableRecordEntryLabelCA(GTAbstractEntity *arg, OZ_Term value);
+void saveRecordArityHashTableEntryCA(GTAbstractEntity *arg, OZ_Term value);
+void getHashTableAtomEntryLabelCA(GTAbstractEntity *arg, OZ_Term value);
+void getHashTableNumEntryLabelCA(GTAbstractEntity *arg, OZ_Term value);
 
 //
 #ifdef USE_FAST_UNMARSHALER

@@ -48,12 +48,14 @@
 //
 // GT_ExtensionSusp is fixed for extensions (see gentraverser.hh).
 // generic (marshaler):
-#define GT_LiteralSusp          1
+#define GT_DPMCodeAreaDesc      (GT_AE_DPMarshalerBase + 0)
+#define GT_LiteralSusp          (GT_AE_DPMarshalerBase + 1)
 // unmarshaler:
-#define GT_AtomSusp             2
-#define GT_UniqueNameSusp       3
-#define GT_CopyableNameSusp     4
-#define GT_NameSusp             5
+#define GT_DPBCodeAreaDesc      (GT_AE_DPMarshalerBase + 2)
+#define GT_AtomSusp             (GT_AE_DPMarshalerBase + 3)
+#define GT_UniqueNameSusp       (GT_AE_DPMarshalerBase + 4)
+#define GT_CopyableNameSusp     (GT_AE_DPMarshalerBase + 5)
+#define GT_NameSusp             (GT_AE_DPMarshalerBase + 6)
 
 //
 // Abstract continuation for literals' 'suspendAC':
@@ -120,6 +122,18 @@ public:
     : MarshalerCodeAreaDescriptor(startIn, endIn), htNDone(0) {
     DebugCode(htIndex = -1);
   }
+  virtual ~DPMarshalerCodeAreaDescriptor() {
+    DebugCode(start = end = current = (ProgramCounter) -1;);
+    DebugCode(htIndex = htNDone = -1;);
+    DebugCode(htREntries = -1;);
+    DebugCode(htable = (IHashTable *) -1;);
+  }
+
+  //
+  virtual int getType() { return (GT_DPMCodeAreaDesc); }
+  // there are no problems with code areas: the corresponding
+  // abstraction are collected themselves;
+  virtual void gc() { }
 
   //
   int getHTIndex() { return (htIndex); }
@@ -145,10 +159,19 @@ public:
   DPBuilderCodeAreaDescriptor(ProgramCounter startIn, ProgramCounter endIn,
                               CodeArea *codeIn)
     : BuilderCodeAreaDescriptor(startIn, endIn, codeIn), htNDone(0) {}
+  virtual ~DPBuilderCodeAreaDescriptor() {
+    DebugCode(start = end = current = (ProgramCounter) -1;);
+    DebugCode(code = (CodeArea *) -1;);
+    DebugCode(htNDone = -1;);
+  }
 
   //
   int getHTNDone() { return (htNDone); }
   void setHTNDone(int htNDoneIn) { htNDone = htNDoneIn; }
+
+  //
+  virtual int getType() { return (GT_DPBCodeAreaDesc); }
+  virtual void gc();
 };
 
 //
@@ -448,10 +471,10 @@ OZ_Term extractVars(OZ_Term in)
 
 //
 // That's the corresponding 'CodeAreaProcessor':
-Bool dpMarshalCode(GenTraverser *m, void *arg);
+Bool dpMarshalCode(GenTraverser *m, GTAbstractEntity *arg);
 // 'traverseCode' is shared with the centralized system (logically,
 // yeah?)
-Bool traverseCode(GenTraverser *m, void *arg);
+Bool traverseCode(GenTraverser *m, GTAbstractEntity *arg);
 
 
 //

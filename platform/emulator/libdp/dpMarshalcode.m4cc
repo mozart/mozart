@@ -74,7 +74,7 @@ static Bool needNewBuffer(Opcode op, ProgramCounter PC, int availSpace);
 
 //
 //
-Bool dpMarshalCode(GenTraverser *gt, void *arg)
+Bool dpMarshalCode(GenTraverser *gt, GTAbstractEntity *arg)
 {
   DPMarshalerCodeAreaDescriptor *desc =
     (DPMarshalerCodeAreaDescriptor *) arg;

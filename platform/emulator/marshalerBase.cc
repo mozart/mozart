@@ -355,24 +355,60 @@ GName *unmarshalGNameRobust(TaggedRef *ret, MarshalerBuffer *bs, int *error)
 // (which representation will follow in the stream): this is arranged
 // with 'putOzValueCA' processor. Note that writing into a code area
 // is that code area's business;
-class CodeAreaLocation : public NMMemoryManager {
+class CodeAreaLocation : public GTAbstractEntity,
+                         public NMMemoryManager {
 private:
   ProgramCounter ptr;
   CodeArea *code;
   DebugCode(OzTermTypeCheck tp;);
 public:
-  CodeAreaLocation(ProgramCounter ptrIn, CodeArea* codeIn DebugArg(OzTermTypeCheck tpIn))
+  CodeAreaLocation(ProgramCounter ptrIn, CodeArea* codeIn
+                   DebugArg(OzTermTypeCheck tpIn))
     : ptr(ptrIn), code(codeIn) DebugArg(tp(tpIn)){}
   CodeAreaLocation(ProgramCounter ptrIn)
     : ptr(ptrIn) {
     DebugCode(code = (CodeArea *) -1;);
     DebugCode(tp = (OzTermTypeCheck) -1;);
   }
+  virtual ~CodeAreaLocation() {}
+
   //
   ProgramCounter getPtr() { return (ptr); }
   CodeArea *getCodeArea() { return (code); }
   DebugCode(OzTermTypeCheck getTP() { return (tp); })
+
+  //
+  virtual int getType() { return (GT_CodeAreaLoc); }
+  virtual void gc() {}
 };
+
+//
+class CodeAreaOzValueLocation : public CodeAreaLocation {
+public:
+  CodeAreaOzValueLocation(ProgramCounter ptrIn, CodeArea*
+                          codeIn DebugArg(OzTermTypeCheck tpIn))
+    : CodeAreaLocation(ptrIn, codeIn DebugArg(tpIn))
+  {
+    // In the current GC incarnation the location must be eagerly
+    // initialized because 'CodeArea::gCollectCodeAreaStart()' is called
+    // before (almost) anything else during GC;
+    (void) codeIn->writeTagged((OZ_Term) 0, ptrIn);
+  }
+  virtual ~CodeAreaOzValueLocation() {}
+
+  //
+  virtual int getType() { return (GT_CodeAreaOzValueLoc); }
+  virtual void gc();
+};
+
+//
+void CodeAreaOzValueLocation::gc()
+{
+#if defined(DEBUG_CHECK)
+  OZ_Term t = getTaggedArg(getPtr());
+  Assert(t == (OZ_Term) 0);
+#endif
+}
 
 //
 // A "CodeAreaLocation" argument ist not sufficient for more
@@ -396,9 +432,11 @@ public:
   PredIdLocation(ProgramCounter ptrIn, ProgramCounter defPCIn)
     : CodeAreaLocation(ptrIn), sra((SRecordArity) 0), defPC(defPCIn)
   {
+    CodeArea::writeAddressAllocated((PrTabEntry *) 0, ptrIn);
     DebugCode(line = column = maxX = -1;);
     DebugCode(file = flagsList = arityList = (OZ_Term) -1;);
   }
+  virtual ~PredIdLocation() {}
 
   //
   ProgramCounter getDefPC() { return (defPC); }
@@ -422,7 +460,20 @@ public:
   int getMaxX() { return (maxX); }
   void setGSize(int gSizeIn) { gSize = gSizeIn; }
   int getGSize() { return (gSize); }
+
+  //
+  virtual int getType() { return (GT_CodeAreaPredIdLoc); }
+  virtual void gc();
 };
+
+//
+void PredIdLocation::gc()
+{
+#if defined(DEBUG_CHECK)
+  void *t = getAdressArg(getPtr());
+  Assert(t == (void *) 0);
+#endif
+}
 
 //
 //
@@ -437,8 +488,10 @@ public:
   CallMethodInfoLocation(ProgramCounter ptrIn, int compactIn)
     : CodeAreaLocation(ptrIn), compact(compactIn), sra((SRecordArity) 0)
   {
+    CodeArea::writeAddressAllocated((CallMethodInfo *) 0, ptrIn);
     DebugCode(arityList = (OZ_Term) -1;);
   }
+  virtual ~CallMethodInfoLocation() {}
 
   //
   int getCompact() { return (compact); }
@@ -446,12 +499,25 @@ public:
   void setSRA(SRecordArity sraIn) { sra = sraIn; }
   OZ_Term getArityList() { return (arityList); }
   void setArityList(OZ_Term ar) { arityList = ar; }
+
+  //
+  virtual int getType() { return (GT_CodeAreaMethInfoLoc); }
+  virtual void gc();
 };
 
 //
-static void putOzValueCA(void *arg, OZ_Term value)
+void CallMethodInfoLocation::gc()
 {
-  CodeAreaLocation *loc = (CodeAreaLocation *) arg;
+#if defined(DEBUG_CHECK)
+  void *t = getAdressArg(getPtr());
+  Assert(t == (void *) 0);
+#endif
+}
+
+//
+static void putOzValueCA(GTAbstractEntity *arg, OZ_Term value)
+{
+  CodeAreaOzValueLocation *loc = (CodeAreaOzValueLocation *) arg;
   //
   Assert((*loc->getTP())(value));
   (void) (loc->getCodeArea())->writeTagged(value, loc->getPtr());
@@ -461,7 +527,7 @@ static void putOzValueCA(void *arg, OZ_Term value)
 //
 // A builtin in a code area is stored not as an 'OzTerm' but as an
 // Builtin* (while in the stream it appears as an 'OzTerm'):
-static void putBuiltinCA(void *arg, OZ_Term value)
+static void putBuiltinCA(GTAbstractEntity *arg, OZ_Term value)
 {
   CodeAreaLocation *loc = (CodeAreaLocation *) arg;
   //
@@ -482,7 +548,7 @@ SRecordArity makeRealRecordArity(OZ_Term arityList)
 
 //
 // Gets a (complete) arity list and puts 'SRecordArity';
-static void putRealRecordArityCA(void *arg, OZ_Term value) {
+static void putRealRecordArityCA(GTAbstractEntity *arg, OZ_Term value) {
   CodeAreaLocation *loc = (CodeAreaLocation *) arg;
 
   //
@@ -495,7 +561,7 @@ static void putRealRecordArityCA(void *arg, OZ_Term value) {
 //
 // Thus, there are four processors, first three of them save values
 // and the last one does the job:
-static void getPredIdNameCA(void *arg, OZ_Term value)
+static void getPredIdNameCA(GTAbstractEntity *arg, OZ_Term value)
 {
   PredIdLocation *loc = (PredIdLocation *) arg;
   SRecordArity sra = loc->getSRA();
@@ -524,25 +590,25 @@ static void getPredIdNameCA(void *arg, OZ_Term value)
 // Note that these processors do not delete the argument;
 // Note also that 'saveRecordArityPredIdCA' is used only when the
 // arity is of a real record (i.e. not a tuple);
-static void saveRecordArityPredIdCA(void *arg, OZ_Term value)
+static void saveRecordArityPredIdCA(GTAbstractEntity *arg, OZ_Term value)
 {
   PredIdLocation *loc = (PredIdLocation *) arg;
   // 'value' *will be* an arity list - now we have only head cell;
   loc->setArityList(value);
 }
-static void saveFileCA(void *arg, OZ_Term value)
+static void saveFileCA(GTAbstractEntity *arg, OZ_Term value)
 {
   PredIdLocation *loc = (PredIdLocation *) arg;
   loc->setFile(value);
 }
-static void saveFlagsListCA(void *arg, OZ_Term value)
+static void saveFlagsListCA(GTAbstractEntity *arg, OZ_Term value)
 {
   PredIdLocation *loc = (PredIdLocation *) arg;
   loc->setFlagsList(value);
 }
 
 //
-static void getCallMethodInfoNameCA(void *arg, OZ_Term value)
+static void getCallMethodInfoNameCA(GTAbstractEntity *arg, OZ_Term value)
 {
   CallMethodInfoLocation *loc = (CallMethodInfoLocation *) arg;
   int compact = loc->getCompact();
@@ -565,7 +631,8 @@ static void getCallMethodInfoNameCA(void *arg, OZ_Term value)
 }
 
 //
-static void saveCallMethodInfoRecordArityCA(void *arg, OZ_Term value)
+static void
+saveCallMethodInfoRecordArityCA(GTAbstractEntity *arg, OZ_Term value)
 {
   CallMethodInfoLocation *loc = (CallMethodInfoLocation *) arg;
   loc->setArityList(value);
@@ -573,7 +640,7 @@ static void saveCallMethodInfoRecordArityCA(void *arg, OZ_Term value)
 
 //
 // Processors...
-void getHashTableRecordEntryLabelCA(void *arg, OZ_Term value)
+void getHashTableRecordEntryLabelCA(GTAbstractEntity *arg, OZ_Term value)
 {
   HashTableEntryDesc *desc = (HashTableEntryDesc *) arg;
   SRecordArity sra = desc->getSRA();
@@ -592,14 +659,14 @@ void getHashTableRecordEntryLabelCA(void *arg, OZ_Term value)
 }
 
 //
-void saveRecordArityHashTableEntryCA(void *arg, OZ_Term value)
+void saveRecordArityHashTableEntryCA(GTAbstractEntity *arg, OZ_Term value)
 {
   HashTableEntryDesc *desc = (HashTableEntryDesc *) arg;
   desc->setArityList(value);
 }
 
 //
-void getHashTableAtomEntryLabelCA(void *arg, OZ_Term value)
+void getHashTableAtomEntryLabelCA(GTAbstractEntity *arg, OZ_Term value)
 {
   HashTableEntryDesc *desc = (HashTableEntryDesc *) arg;
 
@@ -609,7 +676,7 @@ void getHashTableAtomEntryLabelCA(void *arg, OZ_Term value)
 }
 
 //
-void getHashTableNumEntryLabelCA(void *arg, OZ_Term value)
+void getHashTableNumEntryLabelCA(GTAbstractEntity *arg, OZ_Term value)
 {
   HashTableEntryDesc *desc = (HashTableEntryDesc *) arg;
 
@@ -679,7 +746,8 @@ ProgramCounter unmarshalOzValue(Builder *b, ProgramCounter pc,
 {
   ProgramCounter retPC;
   if (pc) {
-    CodeAreaLocation *loc = new CodeAreaLocation(pc, code DebugArg(tp));
+    CodeAreaOzValueLocation *loc =
+      new CodeAreaOzValueLocation(pc, code DebugArg(tp));
     b->getOzValue(putOzValueCA, loc);
     retPC = CodeArea::allocateWord(pc);
   } else {

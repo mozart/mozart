@@ -301,7 +301,7 @@ void IHashTable::gCollect(void) {
 
 #define CODEGC_CALLMETHODINFO(PCR) \
 { CallMethodInfo * cmi = (CallMethodInfo *) getAdressArg(PC+PCR); \
-  oz_gCollectTerm(cmi->mn, cmi->mn);                              \
+  if (cmi) oz_gCollectTerm(cmi->mn, cmi->mn);                     \
 }
 
 #define CODEGC_IHASHTABLE(PCR) \
@@ -309,10 +309,13 @@ void IHashTable::gCollect(void) {
   iht->gCollect();                                        \
 }
 
+//
 inline
 void CodeArea::gCollectInstructions(void) {
   ProgramCounter PC = getStart();
   while (OK) {
+    // Among others, the distribution's builder assumes a code area is
+    // scanned/GCed until the 'ENDOFFILE' opcode;
 #ifdef THREADED
     Assert(*PC);
 #endif
@@ -913,15 +916,26 @@ void Builder::gCollect()
       //
       // Dealing with binary areas (e.g. code areas);
     case BT_binary:
-      NextBTFrame(frame);
-      break;
+      {
+        GetBTTaskPtr1(frame, GTAbstractEntity*, bae);
+        if (bae)
+          bae->gc();
+        //
+        NextBTFrame(frame);
+        break;
+      }
 
       //
-      // 'binary_getValue' holds only a (stateless) binary area
-      // processor and its (again stateless) argument;
     case BT_binary_getValue:
-      NextBT2Frames(frame);
-      break;                    // case;
+      {
+        NextBTFrame(frame);
+        GetBTFramePtr2(frame, GTAbstractEntity*, bae);
+        if (bae)
+          bae->gc();
+        //
+        NextBTFrame(frame);
+        break;                  // case;
+      }
 
       //
       // ... but 'binary_getValueSync' holds a value, which at that
@@ -931,7 +945,12 @@ void Builder::gCollect()
         OZ_Term &v = GetBTTaskArg1Ref(frame, OZ_Term);
         oz_gCollectTerm(v, v);
         //
-        NextBT2Frames(frame);
+        NextBTFrame(frame);
+        GetBTFramePtr2(frame, GTAbstractEntity*, bae);
+        if (bae)
+          bae->gc();
+        //
+        NextBTFrame(frame);
         break;                  // case;
       }
 

@@ -433,12 +433,20 @@ const OZ_Term taggedContTask = MAKETRAVERSERTASK(2);
 // A user can declare a binary area which will be processed with
 // 'TraverserBinaryAreaProcessor' supplied (see also the comments for
 // GenTraverser::traverseBinary()');
-typedef Bool (*TraverserBinaryAreaProcessor)(GenTraverser *m, void *arg);
+typedef Bool
+(*TraverserBinaryAreaProcessor)(GenTraverser *m, GTAbstractEntity *arg);
 
 //
 // GT_ExtensionSusp is fixed for extensions (see bytedata.cc).
 #define GT_ExtensionSusp        0
-// Other already used types are defined in libdp/dpMarshaer.hh
+//
+#define GT_AE_SectionSizeBits   8
+#define GT_AE_SectionSize       (1<<GT_AE_SectionSizeBits)
+//
+#define GT_AE_GenericBase       (1<<GT_AE_SectionSizeBits)
+#define GT_AE_PicklerBase       (2<<GT_AE_SectionSizeBits)
+#define GT_AE_DPMarshalerBase   (3<<GT_AE_SectionSizeBits)
+#define GT_AE_AuxBase           (4<<GT_AE_SectionSizeBits)
 
 //
 // For both the traverser and the builder, 'GTAbstractEntity'
@@ -689,7 +697,7 @@ public:
   // Marshaling a binary area is finished when 'proc' returns
   // TRUE. 'proc' must take care of descriptor (e.g. deallocate it);
   void traverseBinary(TraverserBinaryAreaProcessor proc,
-                      void *binaryDescriptor) {
+                      GTAbstractEntity *binaryDescriptor) {
     Assert(binaryDescriptor);   // '0' is used by the traverser itself;
     ensureFree(3);
     putPtr((void *) proc);
@@ -1501,7 +1509,7 @@ public:
 
 //
 typedef int BuilderOpaqueBA;
-typedef void (*OzValueProcessor)(void *arg, OZ_Term value);
+typedef void (*OzValueProcessor)(GTAbstractEntity *arg, OZ_Term value);
 typedef void (*BuilderGenAction)(void *arg);
 
 //
@@ -1789,7 +1797,7 @@ public:
   // 'binaryAreaDesc' holds the state of unmarshaler relevant for that
   // binary area. The descriptor cannot contain by now any Oz terms
   // (they are handled when a builder is GCed);
-  void buildBinary(void *binaryAreaDesc) {
+  void buildBinary(GTAbstractEntity *binaryAreaDesc) {
     // Zero arguments are not allowed since they are used internally;
     Assert(binaryAreaDesc);
     // Observe that lifting a task can have a consequence: if there
@@ -1806,10 +1814,10 @@ public:
   // 'DIF' header, aka 'DIF_CODEAREA' for code areas) while the
   // abstract argument for its processing is supplied by the builder
   // using 'fillBinary()':
-  void* fillBinary(BuilderOpaqueBA &opaque) {
+  GTAbstractEntity* fillBinary(BuilderOpaqueBA &opaque) {
     CrazyDebug(incDebugNODES(););
     GetBTFrame(frame);
-    void *bp;
+    GTAbstractEntity *bp;
 
     //
   repeat:
@@ -1827,13 +1835,13 @@ public:
              type == BT_binary_doGenAction_intermediate);
       //
       frame = findBinary(frame);
-      GetBTTaskPtr1NoDecl(frame, void*, bp);
+      GetBTTaskPtr1NoDecl(frame, GTAbstractEntity*, bp);
       Assert(bp);
     } else {
       Assert(type == BT_binary);
 
       //
-      GetBTTaskPtr1NoDecl(frame, void*, bp);
+      GetBTTaskPtr1NoDecl(frame, GTAbstractEntity*, bp);
       if (!bp) {
         // finished binary area - discard it & try again;
         DiscardBTFrame(frame);
@@ -1861,10 +1869,10 @@ public:
   // objects, aka Oz values (the builder does not handle them during
   // GC));
   //
-  void getOzValue(OzValueProcessor proc, void *arg) {
+  void getOzValue(OzValueProcessor proc, GTAbstractEntity *arg) {
     GetBTFrame(frame);
     EnsureBTSpace(frame, 2);
-    PutBTFrame2Ptrs(frame, (void *) proc, (void *) arg);
+    PutBTFrame2Ptrs(frame, (void *) proc, arg);
     PutBTTask(frame, BT_binary_getValue);
     SetBTFrame(frame);
   }
