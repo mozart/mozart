@@ -759,7 +759,9 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-is-field-value ()
   (let ((old (point)))
     (skip-chars-backward " \t\n")
-    (backward-char)
+    (if (= (point) 1)
+	t
+      (backward-char))
     (if (looking-at ":")
 	t
       (goto-char old)
@@ -836,9 +838,11 @@ the GDB commands `cd DIR' and `directory'."
 		 (oz-search-matching-paren))
 		(t (error "mm2: beg"))
 		)
-	(message "no matching begin token")
 	(goto-char 1)
-	(setq ret -1)))
+	(if (= nesting 0)
+	    (setq ret 0)
+	  (message "no matching begin token")
+	  (setq ret -1))))
     ret))
 
 (defun oz-search-matching-paren()
