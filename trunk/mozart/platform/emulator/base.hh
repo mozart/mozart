@@ -338,6 +338,7 @@ void scheduler();
 enum ThreadReturn {
   T_PREEMPT,		// thread is preempted
   T_SUSPEND,		// thread must suspend
+  T_SUSPEND_ACTOR,	// thread must suspend on deep guard
   T_RAISE,		// an exception must be handled
   T_FAILURE,		// an failure exception must be handled
   T_TERMINATE,		// the thread terminated
