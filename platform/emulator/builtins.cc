@@ -3198,32 +3198,6 @@ OZ_BI_define(BIstringToFloat, 1,1)
   OZ_RETURN(OZ_CStringToFloat(str));
 } OZ_BI_end
 
-OZ_BI_define(BIstringIsFloat, 1,1)
-{
-  oz_declareProperStringIN(0,str);
-
-  if (!str) OZ_RETURN(NameFalse);
-
-  char *end = OZ_parseFloat(str);
-
-  if (!end || *end != 0) {
-    OZ_RETURN(NameFalse);
-  }
-
-  OZ_RETURN(NameTrue);
-} OZ_BI_end
-
-OZ_BI_define(BIstringIsAtom, 1,1) {
-  OZ_Term in = OZ_in(0);
-
-  OZ_Term var;
-  if (!OZ_isProperString(in,&var)) {
-    if (var == 0) OZ_RETURN(NameFalse);
-    oz_suspendOn(var);
-  }
-  OZ_RETURN(NameTrue);
-} OZ_BI_end
-
 OZ_BI_define(BIstringToInt, 1,1)
 {
   oz_declareProperStringIN(0,str);
@@ -3236,21 +3210,6 @@ OZ_BI_define(BIstringToInt, 1,1)
     return oz_raise(E_ERROR,E_KERNEL,"stringNoInt",1,OZ_in(0));
   else
     OZ_RETURN(res);
-} OZ_BI_end
-
-OZ_BI_define(BIstringIsInt, 1,1)
-{
-  oz_declareProperStringIN(0,str);
-
-  if (!str) OZ_RETURN(NameFalse);
-
-  char *end = OZ_parseInt(str);
-
-  if (!end || *end != 0) {
-    OZ_RETURN(NameFalse);
-  }
-
-  OZ_RETURN(NameTrue);
 } OZ_BI_end
 
 OZ_BI_define(BIintToString, 1,1)
