@@ -315,6 +315,7 @@ int FDIntervals::midElem(int i) const
   return ((r - i) >= (i - l)) ? l : r;
 }
 
+static
 inline
 LTuple * mkListEl(LTuple * &h, LTuple * a, OZ_Term el)
 {
