@@ -1505,6 +1505,8 @@ inline
 void Thread::_cacRecurse(Thread * fr) {
   taskStack = fr->taskStack->_cac();
   abstr     = fr->abstr;
+  if (abstr)
+    abstr->_cac();
   id        = fr->id;
 }
 
