@@ -95,8 +95,8 @@ public:
     return array[i];
   }
 
-  TaggedRef getAsList(void) const;
-  Bool next(int i, int &n) const;
+  inline TaggedRef getAsList(void) const;
+  inline Bool next(int i, int &n) const;
 
   void print(ostream & = cout, int = 0) const;
   void printLong(ostream & = cout, int = 0) const;
@@ -134,17 +134,17 @@ protected:
       bitArray = new BitArray;
   }
 
-  BitArray rangeToBitArray(void) const;
+  inline BitArray rangeToBitArray(void) const;
 
 public:
   USEHEAPMEMORY;
 
   FiniteDomain(BitArray* ba = NULL) : bitArray(setRange(ba)) {};
-  FiniteDomain(int len, int intList[]);
-  FiniteDomain(int intList[], int len); // constr for fdNotList
-  FiniteDomain(int from, int to);
-  FiniteDomain(LeGeFull_e type, int n = -1);
-  FiniteDomain(const FiniteDomain &fd);
+  inline FiniteDomain(int len, int intList[]);
+  inline FiniteDomain(int intList[], int len); // constr for fdNotList
+  inline FiniteDomain(int from, int to);
+  inline FiniteDomain(LeGeFull_e type, int n = -1);
+  inline FiniteDomain(const FiniteDomain &fd);
 
   const FiniteDomain &operator =(const FiniteDomain &fd) {
     if (this != &fd) {
@@ -168,16 +168,16 @@ public:
     return *this;
   }
 
-  FiniteDomain &operator &(const FiniteDomain &y) const; // intersection
-  FiniteDomain &operator |(const FiniteDomain &y) const; // union
-  FiniteDomain &operator ~(void) const;                  // inversion
+  inline FiniteDomain &operator &(const FiniteDomain &y) const; // intersection
+  inline FiniteDomain &operator |(const FiniteDomain &y) const; // union
+  inline FiniteDomain &operator ~(void) const;                  // inversion
 
-  FiniteDomain &operator <=(const int y_upper) const;
-  FiniteDomain &operator >=(const int y_lower) const;
+  inline FiniteDomain &operator <=(const int y_upper) const;
+  inline FiniteDomain &operator >=(const int y_lower) const;
 
-  FiniteDomain &operator -=(const int not_in);
-  FiniteDomain &operator +=(const int is_in);
-  FiniteDomain &operator &=(const int singl);
+  inline FiniteDomain &operator -=(const int not_in);
+  inline FiniteDomain &operator +=(const int is_in);
+  inline FiniteDomain &operator &=(const int singl);
 
   int minElem(void) const {return lower;}
   int maxElem(void) const {return upper;}
@@ -238,15 +238,15 @@ public:
   }
 
 
-  Bool operator == (const FiniteDomain &) const;
-  Bool operator != (const FiniteDomain &) const;
+  inline Bool operator == (const FiniteDomain &) const;
+  inline Bool operator != (const FiniteDomain &) const;
 
-  TaggedRef getAsList(void) const;
-  Bool next(int i, int &n) const;
+  inline TaggedRef getAsList(void) const;
+  inline Bool next(int i, int &n) const;
 
-  FDState checkDom(FiniteDomain &dom);
+  inline FDState checkDom(FiniteDomain &dom);
 
-  Bool isInDomain(int i) const;
+  inline Bool isInDomain(int i) const;
   int getSingleton(void) const {return lower;}
 
   void constrainBool(void)

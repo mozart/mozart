@@ -66,4 +66,26 @@ inline void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef* trPtr)
 }
 
 
+inline Bool isGenFDVar(TaggedRef term)
+{
+  GCDEBUG(term);
+#ifdef CVAR_ONLY_FDVAR
+  return isCVar(term);
+#else
+  return (tagTypeOf(term) == CVAR)
+    ? ((tagged2CVar(term)->getType() == FDVariable) ? OK : NO)
+    : NO;
+#endif
+}
+
+inline GenFDVariable* tagged2GenFDVar(TaggedRef term)
+{
+  GCDEBUG(term);
+#ifdef DEBUG_FD
+  if(isGenFDVar(term) == NO)
+    error("GenFDVariable expected at %s:%d", __FILE__, __LINE__);
+#endif
+  return (GenFDVariable*) tagged2CVar(term);
+}
+
 #endif

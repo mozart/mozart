@@ -42,7 +42,7 @@ protected:
 
   // takes the suspensionlist of var and  appends it to the
   // suspensionlist of leftVar
-  void relinkSuspList(GenCVariable* leftVar);
+  inline void relinkSuspList(GenCVariable* leftVar);
 
   // moves appropriate suspension-list entries onto wake-up stack
   void propagate(TaggedRef, TaggedRef);

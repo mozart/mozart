@@ -24,14 +24,14 @@
 #define USEFREELISTMEMORY \
   static inline void *operator new(size_t size) \
     { return freeListMalloc(size); } \
-  static void operator delete(void *,size_t ) \
+  static inline void operator delete(void *,size_t ) \
     { error("deleting free list mem"); }
 
 
 #define USEHEAPMEMORY \
-  void *operator new(size_t size) \
+  static inline void *operator new(size_t size) \
     { return heapMalloc(size); }\
-  static void operator delete(void *,size_t) \
+  static inline void operator delete(void *,size_t) \
     { error("deleting heap mem");}
 
 
