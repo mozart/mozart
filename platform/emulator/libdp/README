@@ -8,13 +8,6 @@ Notation:
 
 The following files are part of CORE
 
-
-genhashtbl.hh
-genhashtbl.cc
-        Defines the general hash table class, as well as a general free
-        list management. Used mainly by DP, but
-        to some extent the CORE (site tables).
-
 site.hh:
         Sites are a component of gnames. Procedures, oznames, etc.
         all are identified by gnames. In CORE this is

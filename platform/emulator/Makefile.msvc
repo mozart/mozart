@@ -34,7 +34,7 @@ SRCS= \
         tk.cc compiler.cc compat.cc browser.cc debugBI.cc \
         parser.cc winscanner.cc \
         system.cc profile.cc \
-        stack.cc genhashtbl.cc ozostream.cc hashtbl.cc \
+        stack.cc ozostream.cc hashtbl.cc \
         iso-ctype.cc weakdict.cc word.cc alice.cc \
         os.cc unix.cc urlc.cc ioHandler.cc\
         tagged.cc value.cc atoms.cc \
@@ -102,7 +102,6 @@ SRCS= \
         libdp/state.cc \
         libdp/prioQueues.cc \
         libdp/timeLease.cc \
-        libdp/bucketHashTable.cc \
         libdp/fracWRC.cc \
         libdp/referenceConsistency.cc \
         byteBuffer.cc win32.cc

@@ -33,143 +33,46 @@
 #include "board.hh"
 
 //
-GNameTable gnameTable;
-FatInt *idCounter;
-
-int GNameTable::hash(GName *gname)
-{
- int ret = gname->site->hash();
-  for(int i=0; i<fatIntDigits; i++) {
-    ret += gname->id.number[i];
-  }
-  return ret<0?-ret:ret;
-}
-
-inline void GNameTable::add(GName *name)
-{
-  unsigned int hvalue=hash(name);
-  GenHashTable::htAddU(hvalue,(GenHashBaseKey*)name,0);
-}
-
-TaggedRef GNameTable::find(GName *name)
-{
-  unsigned int hvalue = hash(name);
-  GenHashNode *aux = htFindFirstU(hvalue);
-  while(aux) {
-    GName *gn = (GName*)aux->getBaseKey();
-    if (name->same(gn)) {
-      return gn->getValue();
-    }
-    aux = htFindNextU(aux,hvalue); }
-  return makeTaggedNULL();
-}
-
-void GNameTable::remove(GName *name)
-{
-  unsigned int hvalue = hash(name);
-  GenHashNode *aux = htFindFirstU(hvalue);
-  while(aux) {
-    GName *gn = (GName *) aux->getBaseKey();
-    if (name->same(gn)) {
-      htSubU(hvalue, aux);
-      break;
-    }
-    aux = htFindNextU(aux, hvalue);
-  }
-}
-
-inline TaggedRef findGName(GName *gn) {
-  return GT.find(gn);
-}
-
-TaggedRef oz_findGName(GName *gn)
-{
-  return findGName(gn);
-}
-
-inline void addGName(GName *gn) {
-  Assert(!findGName(gn));
-  GT.add(gn);
-}
-
-void addGName(GName *gn, TaggedRef t)
-{
-  gn->setValue(t);
-  addGName(gn);
-}
+template class GenDistEntryTable<GName>;
+#include "hashtblDefs.cc"
 
 //
-// The distribution's lazy protocols involve (atomic) changing a
-// gname's binding from a proxy to a proper entity. So, we have:
-void overwriteGName(GName *gn, TaggedRef t)
-{
-  gn->setValue(t);
-  if (!findGName(gn))
-    addGName(gn);
-}
+GNameTable gnameTable;
+FatIntBody gnameID;
+DebugCode(FatInt noGNameID;)
 
-GName *newGName(TaggedRef t, GNameType gt)
+static inline
+Bool checkGNameIsAlive(GName *gn)
 {
-  GName* ret = new GName(mySite,gt,t);
-  addGName(ret);
-  return ret;
-}
-
-static
-Bool checkGName(GName *gn)
-{
-  if (gn->getGCMark()) {
+  if (gn->getGCMark() ||
+      (gn->getGNameType() == GNT_NAME &&
+       tagged2Literal(gn->getValue())->isNamedName())) {
     gn->resetGCMark();
     gn->site->setGCFlag();
-    return OK;
+    return (OK);
+  } else {
+    return (NO);
   }
-  if (gn->getGNameType()==GNT_NAME &&
-      tagged2Literal(gn->getValue())->isNamedName()) {
-    return OK;
-  }
-  delete gn;
-  return NO;
 }
 
 /* OBSERVE - this must be done at the end of other gc */
 void GNameTable::gCollectGNameTable()
 {
-  int i=0;
-  GenHashNode *ghn1,*ghn=getFirst(i);
-  while(ghn!=NULL){
-    GName *gn;
-    GenCast(ghn->getBaseKey(),GenHashBaseKey*,gn,GName*);
-    if (checkGName(gn)==NO) {
-      deleteFirst(ghn);
-      ghn=getByIndex(i);
-      continue;
-    }
-    ghn1=ghn->getNext();
-    while(ghn1!=NULL) {
-      GenCast(ghn1->getBaseKey(),GenHashBaseKey*,gn,GName*);
-      if (checkGName(gn)==NO) {
-        deleteNonFirst(ghn,ghn1);
-        ghn1=ghn->getNext();
-        continue;
+  for (int i = getSize(); i--; ) {
+    GName **gnp = getFirstNodeRef(i);
+    GName *gn = *gnp;
+    while (gn) {
+      if (checkGNameIsAlive(gn) == NO) {
+        deleteNode(gn, gnp);
+        delete gn;
+        // 'gnp' stays in place;
+      } else {
+        gnp = (GName **) gn->getNextNodeRef();
       }
-      ghn=ghn1;
-      ghn1=ghn1->getNext();
+      gn = *gnp;
     }
-    i++;
-    ghn=getByIndex(i);
   }
   compactify();
-}
-
-//
-void GName::gcMaybeOff()
-{
-  if (!value) {
-    Assert(!findGName(this));
-    gcMark = 1;
-  } else {
-    Assert(findGName(this));
-  }
 }
 
 /**********************************************************************/
@@ -186,20 +89,37 @@ GName *Name::globalize()
   return getGName1();
 }
 
-GName *Abstraction::globalize(){
+GName *Abstraction::globalize()
+{
   if (!hasGName()) {
     setGName(newGName(makeTaggedConst(this),GNT_PROC));}
   return getGName1();
 }
 
-GName *SChunk::globalize() {
+GName *SChunk::globalize()
+{
   if (!hasGName()) {
     setGName(newGName(makeTaggedConst(this),GNT_CHUNK));}
   return getGName1();
 }
 
-GName *ObjectClass::globalize() {
+GName *ObjectClass::globalize()
+{
   if (!hasGName()) {
     setGName(newGName(makeTaggedConst(this),GNT_CLASS));}
   return getGName1();
 }
+
+// to be on the safe side;
+void initGNameTable()
+{
+  gnameID.init();
+  DebugCode(noGNameID.cInit(););
+}
+
+#if defined(DEBUG_CHECK)
+TaggedRef findGNameDEBUG(GName *gn)
+{
+  return (oz_findGName(gn));
+}
+#endif

@@ -99,7 +99,6 @@ void cellLockSendGet(BorrowEntry *be){
 
 void cellLockSendForward(DSite *toS, DSite *fS, Ext_OB_TIndex mI) {
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
-  Assert(OB_TIndex2Int(mI) < OB_TIndex2Int(OT->getNxtId()));
   msgC->put_M_CELL_LOCK_FORWARD(myDSite,mI,fS);
   send(msgC);}
 
@@ -330,7 +329,6 @@ void cellReceiveReadAns(Tertiary* t,TaggedRef val){
 
 void cellSendReadAns(DSite* toS, DSite* mS, Ext_OB_TIndex mI, TaggedRef val)
 {
-  Assert(Ext_OB_TIndex2Int(mI) < OT->getNxtId());
   if(toS == myDSite) {
     OwnerEntry *oe=maybeReceiveAtOwner(mS,mI);
     if(mS!=myDSite)
@@ -577,7 +575,7 @@ void maybeChainSendQuestion(ChainElem *ce,Tertiary *t,DSite* deadS)
       //  was like that:
       // chainSendQuestion(ce->getSite(),MakeOB_TIndex(t->getTertPointer()),deadS);
       OB_TIndex ti = MakeOB_TIndex(t->getTertPointer());
-      chainSendQuestion(ce->getSite(),OT->entry2extOTI(ti),deadS);
+      chainSendQuestion(ce->getSite(),ownerEntry2extOTI(ti),deadS);
     }
   } else {
     Chain *ch=getChainFromTertiary(t);
@@ -613,8 +611,7 @@ Bool LockSec::lockRecovery(){
 
 static void cellManagerIsDown(TaggedRef tr, DSite* mS, Ext_OB_TIndex mI)
 {
-  NetAddress na=NetAddress(mS,mI);
-  BorrowEntry *be=BT->find(&na);
+  BorrowEntry *be = BT->find(mI, mS);
   if(be==NULL) return; // has been gced
   Tertiary* t=be->getTertiary();
   maybeConvertCellProxyToFrame(t);
@@ -624,8 +621,7 @@ static void cellManagerIsDown(TaggedRef tr, DSite* mS, Ext_OB_TIndex mI)
 
 static void lockManagerIsDown(DSite* mS, Ext_OB_TIndex mI)
 {
-  NetAddress na=NetAddress(mS,mI);
-  BorrowEntry *be=BT->find(&na);
+  BorrowEntry *be = BT->find(mI, mS);
   if(be==NULL) return; // has been gced
   Tertiary* t=be->getTertiary();
   maybeConvertLockProxyToFrame(t);
@@ -650,7 +646,7 @@ void cellSendContentsFailure(TaggedRef tr, DSite* toS, DSite *mS,
     cellManagerIsDown(tr,toS,mI);
     return;}
   if(mS==myDSite){// At managerSite
-    cellReceiveCantPut(OT->extOTI2entry(mI),tr,mI,mS,toS);
+    cellReceiveCantPut(OT->extOTI2ownerEntry(mI),tr,mI,mS,toS);
     return;}
   cellSendCantPut(tr,toS,mS,mI);
   return;
@@ -674,8 +670,8 @@ void lockSendTokenFailure(DSite* toS, DSite *mS, Ext_OB_TIndex mI)
   if (mS==myDSite) {// At managerSite
     //  kost@ 'lockReceiveCantPut()' signature ??!
     //  was like that:
-    // lockReceiveCantPut(OT->index2entry(mI),mI,mS,toS);
-    lockReceiveCantPut(OT->extOTI2entry(mI), mI, mS, toS);
+    // lockReceiveCantPut(ownerIndex2ownerEntry(mI),mI,mS,toS);
+    lockReceiveCantPut(OT->extOTI2ownerEntry(mI), mI, mS, toS);
   } else {
     lockSendCantPut(toS,mS,mI);
   }

@@ -93,7 +93,7 @@ OTHERSRCS= \
         system.cc alice.cc
 
 SUPPORTSRCS=\
-        stack.cc genhashtbl.cc ozostream.cc hashtbl.cc \
+        stack.cc ozostream.cc hashtbl.cc \
         iso-ctype.cc
 
 OSSRCS=\

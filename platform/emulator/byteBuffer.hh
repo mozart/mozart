@@ -26,7 +26,7 @@
 #define __BYTEBUFFERHH
 
 #include "base.hh"
-#include "genhashtbl.hh"
+#include "memaux.hh"
 #include "mbuffer.hh"
 
 /*
@@ -186,7 +186,7 @@ public:
 };
 
 
-class ByteBufferManager: public FreeListManager {
+class ByteBufferManager : public FreeListManager {
 public:
   int wc;
 

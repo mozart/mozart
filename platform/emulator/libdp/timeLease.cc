@@ -121,8 +121,9 @@ void TL::updateTimerExpired()
                      tl_update_timer_expired,this);
   }
   else{
-    MsgContainer *msgC = msgContainerManager->newMsgContainer(parent.rr->netaddr.site);
-    msgC->put_M_UPDATE_REFERENCE(parent.rr->netaddr.index);
+    MsgContainer *msgC =
+      msgContainerManager->newMsgContainer(((parent.rr)->getNetAddress())->site);
+    msgC->put_M_UPDATE_REFERENCE(((parent.rr)->getNetAddress())->index);
     send(msgC);
   }
 }
@@ -136,8 +137,8 @@ void TL::leaseTimerExpired()
     timers->setTimer(timer,lt,tl_lease_timer_expired,this);
   }
   else{
-    printf("Forced localizing %d!\n",(parent.hr)->extOTI);
-    OT->extOTI2entry((parent.hr)->extOTI)->localize();
+    printf("Forced localizing %d!\n",(parent.hr)->getExtOTI());
+    OT->extOTI2ownerEntry((parent.hr)->getExtOTI())->localize();
   }
 }
 

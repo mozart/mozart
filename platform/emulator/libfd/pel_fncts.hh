@@ -46,9 +46,15 @@ public:
   }
   //
   void print(ENGINE &e) {
+    // kost@ : this code does NOT insntatiate!
+    // I've simpliefied it (below);
+    /*
     printf("LessEqOffset x(%s,%d) + c(%d) <= ",
            (*(FDVAR *) e[_x])->toString(), _x, _c);
     printf("y(%s,%d)\n", (*(FDVAR *) e[_y])->toString(), _y);
+    */
+    printf("LessEqOffset x(,%d) + c(%d) <= ", _x, _c);
+    printf("y(,%d)\n", _y);
   }
   //
   virtual pf_return_t propagate(PEL_Engine &e);
@@ -73,9 +79,15 @@ public:
     : PEL_LessEqOffset<ENGINE,FDVAR,PFDVAR>(y, -c+1, x) {}
   //
   void print(ENGINE &e) {
+    // kost@ : this code does NOT insntatiate!
+    // I've simpliefied it (below);
+    /*
     printf("GreaterOffset x(%s,%d) + c(%d) > ",
            (*(FDVAR *) e[_y])->toString(), _y, -_c+1);
     printf("y(%s,%d)\n", (*(FDVAR *) e[_x])->toString(), _x);
+    */
+    printf("GreaterOffset x(,%d) + c(%d) > ", _y, -_c+1);
+    printf("y(,%d)\n", _x);
   }
 };
 
@@ -88,6 +100,10 @@ void make_PEL_GreaterOffset(ENGINE &engine,
   engine.expectIntVarBounds(y);
   engine.impose(new PEL_GreaterOffset<ENGINE,FDVAR,PFDVAR>(x, c, y));
 }
+
+template class _OZ_ParamIterator<int>;
+template class _PropagatorController_V_V<int, PEL_FDIntVar, 1, 0, 2>;
+template class _PropagatorController_V_V_V<unsigned int, OZ_FDIntVar, 1, 0, 3>;
 
 template <class FDVAR>
 class PEL_Filter {
@@ -130,5 +146,7 @@ pf_return_t PEL_LessEqOffset<ENGINE, FDVAR, PFDVAR>::propagate(PEL_Engine &e)
   //
   return filter_lessEqOffset(s, x, y, c)();
 }
+
+template PEL_Filter<PEL_FDIntVar> & filter_lessEqOffset<PEL_Filter<PEL_FDIntVar>, PEL_FDIntVar>(PEL_Filter<PEL_FDIntVar> &, PEL_FDIntVar &, PEL_FDIntVar &, int);
 
 #endif /* __PEL_FNCTS_HH__ */

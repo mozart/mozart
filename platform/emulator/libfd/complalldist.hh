@@ -195,7 +195,8 @@ struct dlink :public generic {
   }
 };
 
-template<class T> class list :public generic {
+template<class T>
+class list :public generic {
   dlink<T> *root;
   dlink<T> *end;
   int sz;
@@ -460,6 +461,11 @@ typedef node_struct* node;
 
 template<class t> class edge_array;
 template<class t> class node_array;
+
+template class list<edge>;
+template class list<node>;
+template class dlink<edge>;
+template class dlink<node>;
 
 #define forall_adj_edges(e, n) \
  n->edgeiterator = NULL; while (n->next_adj_edge(e,n))
@@ -832,6 +838,11 @@ public:
     DEBUG(("node_array, size=%d\r\n", size));
   }
 };
+
+template class node_array<edge>;
+template class node_array<int>;
+template class edge_array<int>;
+template class b_queue<node>;
 
 inline
 bool graph::bfs(node s, node t, edge_array<int>& layered) {

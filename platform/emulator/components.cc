@@ -32,7 +32,6 @@
 #include "var_base.hh"
 #include "controlvar.hh"
 #include "dictionary.hh"
-#include "genhashtbl.hh"
 #include "urlc.hh"
 #include "site.hh"
 #include "mbuffer.hh"

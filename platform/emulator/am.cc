@@ -315,8 +315,7 @@ void AM::init(int argc,char **argv)
   osSetAlarmTimer(CLOCK_TICK/1000);
 
   //
-  genFreeListManager=new GenFreeListManager();
-  idCounter = new FatInt();
+  initGNameTable();
 
   //
   initSite();

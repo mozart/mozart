@@ -2,6 +2,7 @@
  *  Authors:
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ *    Konstantin Popov <kost@sics.se>
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -37,39 +38,37 @@
 
 const double SHT_MAXLOAD = 0.75;
 
-#define MIN_PRIME       7
-
+/*
 inline Bool isPrime(int prime)
 {
-  if (prime%2 == 0) {
+  if (prime%2 == 0)
     return NO;
-  }
-  for(int i=3; i*i<=prime; i+=2) {
-    if (prime%i == 0) {
+  for (int i=3; i*i<=prime; i+=2)
+    if (prime%i == 0)
       return NO;
-    }
-  }
-
   return OK;
 }
 
+//
+#define MIN_PRIME       7
 // kost@ : good enough for our purposes..
 int nextPrime(int prime)
 {
-  if (prime < MIN_PRIME) {
+  if (prime < MIN_PRIME)
     prime = MIN_PRIME;
-  }
-  if (prime%2 == 0) {
+  if (prime%2 == 0)
     prime++;
-  }
 
-  while(!isPrime(prime)) {
+  while(!isPrime(prime))
     prime += 2;
-  }
   return prime;
 }
+*/
 
 //
+// kost@ : use now the CRC32, which appears to be faster (and does not
+// require the table size to be a prime (!));
+/*
 inline
 unsigned int StringHashTable::hashFunc(const char *s)
 {
@@ -86,6 +85,7 @@ unsigned int StringHashTable::hashFunc(const char *s)
   }
   return (h % tableSize);
 }
+*/
 
 //
 SHT_HashNode* StringHashTable::getFirst()
@@ -117,7 +117,10 @@ SHT_HashNode* StringHashTable::getNext(SHT_HashNode *hn)
 //
 StringHashTable::StringHashTable(int s)
 {
-  tableSize = nextPrime(s);
+  tableSize = 128;
+  while (tableSize < s)
+    tableSize = tableSize * 2;
+  mask = tableSize - 1;
   table = new SHT_HashNode[tableSize];
   mkEmpty();
 }
@@ -169,7 +172,8 @@ void StringHashTable::resize()
   int i;
 
   //
-  tableSize = nextPrime(tableSize*2);
+  tableSize = tableSize*2;
+  mask = tableSize - 1;
   table = new SHT_HashNode[tableSize];
   counter = 0;
   percent = (int) (SHT_MAXLOAD * tableSize);
@@ -354,12 +358,12 @@ inline
 unsigned int AddressHashTable::primeHashFunc(void *i)
 {
   Assert(sizeof(unsigned int)*8 == 32);
-  return ((((unsigned int) i) * ((unsigned int) 0x9e3779b9)) >> rsBits);
+  return ((((unsigned int) i) * ((unsigned int) 0x9e419355)) >> rsBits);
 }
 inline
 unsigned int AddressHashTable::incHashFunc(void *i)
 {
-  unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e3779b9);
+  unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e419355);
   return (((m << slsBits) >> rsBits) | 0x1); // has to be odd;
 }
 
@@ -375,21 +379,20 @@ unsigned AddressHashTable::memRequired(int valSize)
 void AddressHashTable::resize()
 {
   int oldSize = tableSize;
+  AHT_HashNode* old = table;
 
   tableSize = tableSize * 2;
   bits++;
-  counter = 0;
-  percent = (int) (AHT_MAXLOAD * tableSize);
-  AHT_HashNode* neu = new AHT_HashNode[tableSize];
-  AHT_HashNode* old = table;
-  table = neu;
-  int i;
-  for (i = tableSize; i--; )
-    neu[i].setEmpty();
-  for (i = oldSize; i--; ) {
+  table = new AHT_HashNode[tableSize];
+  mkEmpty();
+
+  //
+  for (int i = oldSize; i--; ) {
     if (! old[i].isEmpty())
       htAdd((old[i].getKey()), old[i].getValue());
   }
+
+  //
   delete [] old;
 }
 
@@ -401,7 +404,7 @@ void AddressHashTable::htAdd(void *k, void *val)
   //
   Assert(k != htEmpty);
   Assert(val != htEmpty);
-  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e3779b9);
+  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e419355);
   unsigned int pkey = m >> rsBits;
   Assert(pkey == primeHashFunc(k));
   unsigned int ikey = 0;
@@ -439,7 +442,7 @@ void AddressHashTable::htAdd(void *k, void *val)
 
 void *AddressHashTable::htFind(void *k)
 {
-  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e3779b9);
+  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e419355);
   unsigned int pkey = m >> rsBits;
   Assert(pkey == primeHashFunc(k));
   unsigned int ikey = 0;
@@ -611,16 +614,13 @@ unsigned int AddressHashTableO1Reset::incHashFunc(void *i)
 inline
 unsigned int AddressHashTableO1Reset::primeHashFunc(void *i)
 {
-  // golden cut = 0.6180339887 = A/w, 32bit integers w = 4294967296,
-  // thus A = 2654435769.2829335552
-  // .. on a 64bit architecture A = 11400714819323198485
   Assert(sizeof(unsigned int)*8 == 32);
-  return ((((unsigned int) i) * ((unsigned int) 0x9e3779b9)) >> rsBits);
+  return ((((unsigned int) i) * ((unsigned int) 0x9e419355)) >> rsBits);
 }
 inline
 unsigned int AddressHashTableO1Reset::incHashFunc(void *i)
 {
-  unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e3779b9);
+  unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e419355);
   return (((m << slsBits) >> rsBits) | 0x1); // has to be odd;
 }
 
@@ -631,7 +631,7 @@ void AddressHashTableO1Reset::htAdd(void *k, void *val)
 
   //
   Assert(val != htEmpty);
-  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e3779b9);
+  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e419355);
   unsigned int pkey = m >> rsBits;
   Assert(pkey == primeHashFunc(k));
   unsigned int ikey = 0;
@@ -671,7 +671,7 @@ void AddressHashTableO1Reset::htAdd(void *k, void *val)
 //
 void* AddressHashTableO1Reset::htFind(void *k)
 {
-  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e3779b9);
+  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e419355);
   unsigned int pkey = m >> rsBits;
   Assert(pkey == primeHashFunc(k));
   unsigned int ikey = 0;

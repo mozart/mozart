@@ -33,7 +33,6 @@
 
 #include "base.hh"
 #include "value.hh"
-#include "genhashtbl.hh"
 
 enum WatcherKind{
   WATCHER_RETRY      = 1,

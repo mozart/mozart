@@ -143,6 +143,8 @@ typedef PosInt GReg;
 
 typedef unsigned int32 TaggedRef;
 
+typedef unsigned int32 crc_t;
+
 enum PropCaller {
   pc_propagator = 0,
   pc_std_unif = 1,

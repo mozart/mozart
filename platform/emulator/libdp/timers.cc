@@ -25,7 +25,7 @@
 #include "timers.hh"
 #include "am.hh"
 #include "dpDebug.hh"
-#include "genhashtbl.hh"
+#include "memaux.hh"
 
 #define TIMER_RES 1000
 

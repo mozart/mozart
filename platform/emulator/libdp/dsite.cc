@@ -39,7 +39,6 @@
 #include "dsite.hh"
 #include "comm.hh"
 #include "mbuffer.hh"
-#include "genhashtbl.hh"
 #include "byteBuffer.hh"
 #define SITE_CUTOFF           100
 
@@ -51,12 +50,17 @@
 #define PRIMARY_SITE_TABLE_SIZE    10
 #define SECONDARY_SITE_TABLE_SIZE  50
 
+//
+template class GenDistEntryTable<DSite>;
+#include "hashtblDefs.cc"
 
+DSiteHashTable* primarySiteTable
+= new DSiteHashTable(PRIMARY_SITE_TABLE_SIZE);
+DSiteHashTable* secondarySiteTable
+= new DSiteHashTable(SECONDARY_SITE_TABLE_SIZE);
 
-DSiteHT* primarySiteTable=new DSiteHT(PRIMARY_SITE_TABLE_SIZE);
-DSiteHT* secondarySiteTable=new DSiteHT(SECONDARY_SITE_TABLE_SIZE);
-
-void gcDSiteTable(){
+void gcDSiteTable()
+{
   primarySiteTable->cleanup();
   secondarySiteTable->cleanup();
 }
@@ -65,10 +69,13 @@ void gcDSiteTable(){
 /*   SECTION ::  General unmarshaling routines                        */
 /**********************************************************************/
 
-inline void primaryToSecondary(DSite *s) {
+static inline
+void primaryToSecondary(DSite *s)
+{
   primarySiteTable->remove(s);
   s->putInSecondary();
-  secondarySiteTable->insert(s);}
+  secondarySiteTable->insertAny(s);
+}
 
 static
 DSite* unmarshalDSiteInternal(MarshalerBuffer *buf, DSite *tryS, MarshalTag mt)
@@ -98,9 +105,9 @@ DSite* unmarshalDSiteInternal(MarshalerBuffer *buf, DSite *tryS, MarshalTag mt)
   case I_AM_YOUNGER:{
     PD((SITE,"unmarshalsite I_AM_YOUNGER"));
     if (secondarySiteTable->find(tryS,s) == SAME)
-      {
-        return s;
-      }
+      // kost@ : 's' is not necessarily the SAME: it can have a
+      // different timestamp!
+      return s;
     s = new DSite(tryS->getAddress(), tryS->getPort(), tryS->getTimeStamp(),
                   PERM_SITE);
     secondarySiteTable->insert(s);

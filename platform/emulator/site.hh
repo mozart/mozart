@@ -32,7 +32,7 @@
 #endif
 
 #include "base.hh"
-#include "genhashtbl.hh"
+#include "hashtbl.hh"
 #include "mbuffer.hh"
 
 // time_t
@@ -48,26 +48,36 @@ typedef unsigned int ip_address;
 //
 class TimeStamp {
 public:
-  time_t start;
   int pid;
+  time_t start;
 
   //
 public:
   TimeStamp() { DebugCode(start = (time_t) 0; pid = 0;); }
-  TimeStamp(time_t s, int p): start(s), pid(p) {}
+  TimeStamp(time_t s, int p) : pid(p), start(s) {}
+
+  // positive if 'this' is younger (that is, larger stamp) than 't';
+  // NOTE: start with the time stamp itself;
+  int compareTimeStamps(TimeStamp *t) {
+    int cmp;
+    if ((cmp = (int) (start - t->start)) != 0)
+      return (cmp);
+    else
+      return ((int) (pid - t->pid));
+  }
 };
 
 //
 // 'BaseSite' (now) constitutes a base for both 'NSite's ("naming
 // site") and 'DSite's ("distribution site");
-class BaseSite:public CppObjMemory{
+class BaseSite : public CppObjMemory {
 friend class Site;
 friend class DSite;
   //
 protected:
   ip_address address;
-  TimeStamp timestamp;
   port_t port;
+  TimeStamp timestamp;
 
 public:
   BaseSite() {}                 // ... just allocating space for it;
@@ -84,34 +94,11 @@ public:
   TimeStamp *getTimeStamp() { return (&timestamp); }
 
   //
-  unsigned int hash();
-
-  //
   void marshalBaseSite(MarshalerBuffer* buf);
   void marshalBaseSiteForGName(MarshalerBuffer* buf);
   void marshalBaseSiteForGName(PickleMarshalerBuffer *buf);
   void unmarshalBaseSite(MarshalerBuffer* buf);
   void unmarshalBaseSiteGName(MarshalerBuffer* buf);
-
-  int checkTimeStamp(time_t t){
-    if(t==timestamp.start) return 0;
-    if(t<timestamp.start) return 1;
-    return 0-1;}
-
-  int checkTimeStamp(TimeStamp *t){
-    int aux = checkTimeStamp(t->start);
-    if (aux!=0) return aux;
-    if (t->pid==timestamp.pid) return 0;
-    if (t->pid<timestamp.pid) return 1;
-    return 0-1;}
-
-  int compareSites(BaseSite *s){
-    if(address<s->address) return 0-1;
-    if(s->address<address) return 1;
-    if(port< s->port) return 0-1;
-    if(s->port< port) return 1;
-    return checkTimeStamp(&s->timestamp);
-  }
 };
 
 //
@@ -119,16 +106,12 @@ public:
 
 //
 // 'Site' is used for naming sites (GNames --> pickling);
-class Site : public BaseSite {
+class Site : public BaseSite , public GenDistEntryNode<Site> {
 private:
   unsigned short flags;         // essentially a GC bit only;
 
   //
 public:
-  //
-  unsigned short getType() { return (flags); }
-
-  //
   Site() {}
   Site(ip_address a, port_t p, TimeStamp &t)
     : BaseSite (a, p, t) {}
@@ -137,10 +120,40 @@ public:
   ~Site() {}
 
   //
+  unsigned short getType() { return (flags); }
+
+  //
+  unsigned int value4hash() {
+    unsigned int v = (unsigned int) address;
+    v = ((v<<9)^(v>>23)) ^ ((unsigned int) port);
+    v = ((v<<13)^(v>>19)) ^ ((unsigned int) timestamp.start);
+    v = ((v<<5)^(v>>27)) ^ ((unsigned int) timestamp.pid);
+    // originally, that was like that:
+    //      unsigned int v =
+    //        ((unsigned int) address) +
+    //        ((unsigned int) port) +
+    //        ((unsigned int) timestamp.start) +
+    //        ((unsigned int) timestamp.pid);
+    return (v);
+  }
+  //
+  int compare(BaseSite *s) {
+    int cmp;
+    if ((cmp = (int) (address - s->address)) != 0)
+      return (cmp);
+    else if ((cmp = (int) (port - s->port)) != 0)
+      return (cmp);
+    else
+      return (timestamp.compareTimeStamps(&(s->timestamp)));
+  }
+
+  //
   void setGCFlag() { flags |= NSITE_GC_MARK; }
   void resetGCFlag() { flags &= ~NSITE_GC_MARK; }
   Bool hasGCFlag() { return (flags & NSITE_GC_MARK); }
-  void marshalSite(MarshalerBuffer *buf) { marshalBaseSite(buf); }
+  void marshalSite(MarshalerBuffer *buf) {
+    marshalBaseSite(buf);
+  }
   void marshalSiteForGName(MarshalerBuffer *buf) {
     marshalBaseSiteForGName(buf);
   }
@@ -153,36 +166,23 @@ public:
 #define SITE_TABLE_SIZE    10
 
 //
-class SiteHashTable: public GenHashTable {
+class SiteHashTable : public GenDistEntryTable<Site> {
 public:
-  SiteHashTable(int size): GenHashTable(size) {}
+  SiteHashTable(int size) : GenDistEntryTable<Site>(size) {}
 
   //
-  Site *find(Site *s, unsigned int hvalue) {
-    GenHashNode *ghn = htFindFirstU(hvalue);
-    Site* found;
-    while (ghn!=NULL) {
-      GenCast(ghn->getBaseKey(),GenHashBaseKey*,found,Site*);
-      if(s->compareSites(found)==0) return found;
-      ghn=htFindNextU(ghn,hvalue);}
-    return NULL;}
-
-  void insert(Site *s, unsigned int hvalue) {
-    GenHashBaseKey *ghn_bk;
-    GenHashEntry *ghn_e=NULL;
-    GenCast(s,Site*,ghn_bk,GenHashBaseKey*);
-    htAddU(hvalue,ghn_bk,ghn_e);}
-
-  void remove(Site *s, unsigned int hvalue) {
-    GenHashNode *ghn=htFindFirstU(hvalue);
-    Site* found;
-    while(ghn!=NULL){
-      GenCast(ghn->getBaseKey(),GenHashBaseKey*,found,Site*);
-      if(s->compareSites(found)==0){
-        htSubU(hvalue,ghn);
-        return;}
-      ghn=htFindNextU(ghn,hvalue);}
-    Assert(0);}
+  void insert(Site *s) {
+    Assert(!htFind(s));
+    htAdd(s);
+  }
+  Site *find(Site *s) {
+    return ((Site *) htFind(s));
+  }
+  // nothing is actually removed like this:
+  void remove(Site *s) {
+    Assert(htFind(s));
+    htDel(s);
+  }
 
   //
   void cleanup();

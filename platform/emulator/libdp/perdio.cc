@@ -54,6 +54,7 @@
 #include "msgContainer.hh"
 #include "dpMarshaler.hh"
 #include "ozconfig.hh"
+#include "memaux.hh"
 
 #include "os.hh"
 #include "connection.hh"
@@ -143,7 +144,7 @@ static void initGateStream()
     Tertiary *t=(Tertiary*)new PortWithStream(oz_currentBoard(),GateStream);
     globalizeTert(t);
     OB_TIndex ind = MakeOB_TIndex(t->getTertPointer());
-    OwnerEntry* oe = OT->index2entry(ind);
+    OwnerEntry* oe = ownerIndex2ownerEntry(ind);
     oe->makePersistent();
   }
 }
@@ -200,7 +201,7 @@ void send(MsgContainer *msgC)
 }
 
 DSite* getSiteFromTertiaryProxy(Tertiary* t){
-  BorrowEntry *be = BT->bi2borrow(MakeOB_TIndex(t->getTertPointer()));
+  BorrowEntry *be = borrowIndex2borrowEntry(MakeOB_TIndex(t->getTertPointer()));
   Assert(be!=NULL);
   return be->getNetAddress()->site;}
 
@@ -261,7 +262,7 @@ void gcBorrowTableUnusedFramesImpl() {
 
 void gcProxyRecurseImpl(Tertiary *t) {
   OB_TIndex i = MakeOB_TIndex(t->getTertPointer());
-  BorrowEntry *be=BT->bi2borrow(i);
+  BorrowEntry *be=borrowIndex2borrowEntry(i);
   if(be->isGCMarked()){
     PD((GC,"borrow already marked:%d",i));
     return;}
@@ -274,7 +275,7 @@ void gcProxyRecurseImpl(Tertiary *t) {
 void gcManagerRecurseImpl(Tertiary *t) {
   Assert(!t->isFrame());
   OB_TIndex i = MakeOB_TIndex(t->getTertPointer());
-  OwnerEntry *oe=OT->index2entry(i);
+  OwnerEntry *oe=ownerIndex2ownerEntry(i);
   if(oe->isGCMarked()){
     PD((GC,"owner already marked:%d",i));
     return;
@@ -341,7 +342,7 @@ void gcPerdioFinalImpl()
   if (isPerdioInitializedImpl()) {
     BT->gcBorrowTableFinal();
     OT->gcOwnerTableFinal();
-    RHT->gcResourceTable();
+    RHT->gcResourceTable();     // after fixing the owner table;
     gcDSiteTable();
     comController_finishGCComObjs();
   }
@@ -488,12 +489,12 @@ Bool localizeTertiary(Tertiary*t){
 
 OwnerEntry* maybeReceiveAtOwner(DSite* mS, Ext_OB_TIndex extOTI)
 {
-  return ((mS == myDSite) ? OT->extOTI2entry(extOTI) : (OwnerEntry*) 0);
+  return ((mS == myDSite) ? OT->extOTI2ownerEntry(extOTI) : (OwnerEntry*) 0);
 }
 
 static inline OwnerEntry* receiveAtOwner(Ext_OB_TIndex extOTI)
 {
-  return (OT->extOTI2entry(extOTI));
+  return (OT->extOTI2ownerEntry(extOTI));
 }
 
 BorrowEntry* receiveAtBorrow(DSite* mS, Ext_OB_TIndex extOTI)
@@ -501,10 +502,9 @@ BorrowEntry* receiveAtBorrow(DSite* mS, Ext_OB_TIndex extOTI)
   return (BT->find(extOTI, mS));
 }
 
-inline BorrowEntry* maybeReceiveAtBorrow(DSite* mS, Ext_OB_TIndex extOTI){
-  if (mS != myDSite)
-    return BT->find(extOTI,mS);
-  return NULL;
+inline BorrowEntry* maybeReceiveAtBorrow(DSite* mS, Ext_OB_TIndex extOTI)
+{
+  return ((mS != myDSite) ? BT->find(extOTI, mS) : (BorrowEntry *) 0);
 }
 
 void msgReceived(MsgContainer* msgC,DSite *sender)
@@ -786,7 +786,7 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
       msgC->get_M_SENDSTATUS(site,extOTI,status);
       PD((MSG_RECEIVED,"M_SENDSTATUS site:%s index:%d status:%d",
           site->stringrep(),extOTI,status));
-      BorrowEntry *be=BT->find(extOTI,site);
+      BorrowEntry *be = BT->find(extOTI, site);
       if(be==NULL){
         PD((WEIRD,"receive M_SENDSTATUS after gc"));
         break;}
@@ -800,7 +800,7 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
       Ext_OB_TIndex si;
       msgC->get_M_ACKNOWLEDGE(si);
       PD((MSG_RECEIVED,"M_ACKNOWLEDGE site:%s index:%d",sender->stringrep(),si));
-      BorrowEntry *be=BT->find(si,sender);
+      BorrowEntry *be = BT->find(si, sender);
       if (be) {
         Assert(be->isVar());
         GET_VAR(be,Proxy)->acknowledge(be->getPtr(), be);
@@ -1134,6 +1134,7 @@ OZ_BI_proto(BIfailureDefault);
 //  DebugCode(FILE *log;)
 void initDPCore()
 {
+  genFreeListManager = new GenFreeListManager();
   // link interface...
 //    DebugCode(char *s;sprintf(s,"~/tmp/%d",osgetpid()));
 //    DebugCode(log=freopen(s,"w",stdout);)
@@ -1171,7 +1172,7 @@ void initDPCore()
   initNetwork();
 
   borrowTable      = new BorrowTable(ozconf.dpTableDefaultBorrowTableSize);
-  ownerTable       = new NewOwnerTable(ozconf.dpTableDefaultOwnerTableSize);
+  ownerTable       = new OwnerTable(ozconf.dpTableDefaultOwnerTableSize);
   resourceTable    = new ResourceHashTable(RESOURCE_HASH_TABLE_DEFAULT_SIZE);
   //  msgBufferManager = new MarshalerBufferManager();
 
@@ -1258,14 +1259,13 @@ OZ_Term getGatePort(DSite* sd){
   /* Gates are always located at position 0 */
   Ext_OB_TIndex si = (Ext_OB_TIndex) 0;
   if(sd==myDSite){
-    OwnerEntry* oe = OT->extOTI2entry(si);
+    OwnerEntry* oe = OT->extOTI2ownerEntry(si);
     Assert(oe->isPersistent());
     return  oe->getValue();}
-  NetAddress na = NetAddress(sd,si);
-  BorrowEntry *b = borrowTable->find(&na);
+  BorrowEntry *b = borrowTable->find(si, sd);
   if (b==NULL) {
     OB_TIndex bi = borrowTable->newBorrow(NULL, sd, si);
-    b=borrowTable->bi2borrow(bi);
+    b=borrowIndex2borrowEntry(bi);
     PortProxy *pp = new PortProxy(bi);
     b->mkTertiary(pp);
 
@@ -1471,3 +1471,6 @@ void dpExitWithTimer(unsigned int timeUntilClose)
 void dpExitImpl() {
   dpExitWithTimer(ozconf.closetime);
 }
+
+// see memaux.hh;
+GenFreeListManager *genFreeListManager;

@@ -591,6 +591,11 @@ SERVICE &filter_intersectN(SERVICE &s,
   return s.fail();
 }
 
+template
+OZ_Filter<FSetIntersectionNPropagator> &
+filter_intersectN(OZ_Filter<FSetIntersectionNPropagator> &s,
+                  OZ_FSetVarVector &xs, OZ_FSetVar &z);
+
 OZ_Return FSetIntersectionNPropagator::propagate(void)
 {
   DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);

@@ -171,7 +171,7 @@ OZ_BI_end
 
 //-----------------------------------------------------------------------------
 template <class SERVICE>
-SERVICE &filter_intersection(SERVICE & s,
+SERVICE & filter_intersection(SERVICE & s,
                              OZ_FSetVar &x,
                              OZ_FSetVar &y,
                              OZ_FSetVar &z)
@@ -225,6 +225,12 @@ SERVICE &filter_intersection(SERVICE & s,
 #define TMUELLER
 
 #ifdef TMUELLER
+template
+OZ_Filter<OZ_Propagator> &filter_intersection(OZ_Filter<OZ_Propagator> &s,
+                                              OZ_FSetVar &x,
+                                              OZ_FSetVar &y,
+                                              OZ_FSetVar &z);
+
 OZ_Return FSetIntersectionPropagator::propagate(void)
 {
   OZ_DEBUGPRINTTHIS("in ");

@@ -31,6 +31,7 @@
 // naming variables
 
 typedef Namer<OZ_Term, const char *> VarNamer;
+template VarNamer;
 
 VarNamer * VarNamer::_head;
 
@@ -94,6 +95,7 @@ const char * toStringNamer(const char * s)
 // naming propagators
 
 typedef Namer<Propagator *, OZ_Term> PropNamer;
+template PropNamer;
 
 PropNamer * PropNamer::_head;
 

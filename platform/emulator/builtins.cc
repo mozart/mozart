@@ -1385,7 +1385,7 @@ OZ_BI_define(BInameToString,1,1)
       TimeStamp *ts = gname->site->getTimeStamp();
       static char s[256];
       sprintf(s, "%u:%u:%u:%ld", ts->pid,
-              gname->id.number[0], gname->id.number[1],
+              gname->id.getNumber(1), gname->id.getNumber(0),
               (unsigned long) ts->start);
       OZ_RETURN(oz_atom(s));
     }

@@ -291,10 +291,9 @@ char *unmarshalString(MarshalerBuffer *bs)
 static
 void unmarshalGName1(GName *gname, MarshalerBuffer *bs)
 {
-  gname->site=unmarshalSite(bs);
-  for (int i=0; i<fatIntDigits; i++) {
-    gname->id.number[i] = unmarshalNumber(bs);
-  }
+  gname->site = unmarshalSite(bs);
+  for (int i = fatIntDigits; i--; )
+    gname->id.setNumber(i, unmarshalNumber(bs));
   gname->gnameType = (GNameType) unmarshalNumber(bs);
 }
 

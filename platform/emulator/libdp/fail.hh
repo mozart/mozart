@@ -36,7 +36,7 @@
 #include "value.hh"
 #include "dpBase.hh"
 #include "comm.hh"
-#include "genhashtbl.hh"
+#include "memaux.hh"
 #include "interFault.hh"
 
 class EntityInfo{

@@ -397,7 +397,7 @@ unsigned hash(char *s)
 
 
 class LabelTable {
-  static const int tableSize = 1024*3;  /* fixed size, cannot grow :-( */
+  static const int tableSize = 16411;  /* fixed size, cannot grow :-( */
   Label *table[tableSize];
 
 public:
@@ -661,6 +661,7 @@ int main(int argc, char **argv)
 {
   int textmode = 0;
   int fd = STDOUT_FILENO;
+
   if (argc >= 2 && !strcmp(argv[1],"--textmode")) {
     /* out in textmode too: eliminates unused labels */
     textmode = 1;

@@ -29,7 +29,7 @@
 
 #include "dpBase.hh"
 #include "msgType.hh"
-#include "genhashtbl.hh"
+#include "memaux.hh"
 #include "comm.hh" // For FaultCode
 #include "table.hh"
 #include "dpMarshaler.hh"
@@ -63,7 +63,7 @@ struct msgField {
 };
 
 //
-class MsgContainer:public CppObjMemory {
+class MsgContainer : public CppObjMemory {
   friend class MsgContainerManager;
 private:
   MessageType mt;

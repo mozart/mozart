@@ -1,7 +1,7 @@
 /*
  *  Authors:
  *    Erik Klintskog (erik@sics.se)
- *
+ *    Kostja Popov <kost@sics.se>
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -42,17 +42,6 @@
 #define RESOURCE_HASH_TABLE_DEFAULT_SIZE 25
 #define RESOURCE_NOT_IN_TABLE 0-1
 
-enum DPResourceType{
-  UD_unknown = 0,
-
-  UD_thread,
-  UD_array,
-  UD_dictionary,
-  UD_last
-};
-
-extern char *dpresource_names[];
-
 /************************************************************/
 /*  Defines                                                 */
 /************************************************************/
@@ -64,91 +53,87 @@ public:
     : Tertiary(OB_TIndex2Ptr(p),Co_Resource,Te_Proxy) {}
 
 };
+
 /************************************************************/
 /*  ResourceTable                                           */
 /************************************************************/
 
-
-class ResourceHashTable: public GenHashTable {
-  unsigned int hash(TaggedRef entity){
-    return (unsigned int) entity;}
+//
+// Resource hash table maps OZ_Term"s - either values, or references
+// to immediate variables - to OTI"s (internal ones).
+//
+class RHTNode : public GenDistEntryNode<RHTNode>,
+                public CppObjMemory {
+private:
+  OZ_Term entity;
+  OB_TIndex oti;
 
 public:
-  ResourceHashTable(int i):GenHashTable(i){}
+  RHTNode(OZ_Term entityIn, OB_TIndex otiIn)
+    : entity(entityIn), oti(otiIn) {}
+  RHTNode(OZ_Term entityIn)
+    : entity(entityIn) { DebugCode(oti = (OB_TIndex) -1;); }
+  ~RHTNode() {
+    DebugCode(entity = (OZ_Term) -1;);
+    DebugCode(oti = (OB_TIndex) -1;);
+  }
+
+  unsigned int value4hash() { return ((unsigned int) entity); }
+  int compare(RHTNode *n) { return (((int) entity) - ((int) n->entity)); }
+
+  OZ_Term getEntity() { return (entity); }
+  OB_TIndex getOTI() { return (oti); }
+};
+
+//
+//
+class ResourceHashTable: public GenDistEntryTable<RHTNode> {
+public:
+  ResourceHashTable(int i) : GenDistEntryTable<RHTNode>(i) {}
+  ~ResourceHashTable() {}
 
   //
   void add(OZ_Term entity, OB_TIndex oti) {
-    // kost@ : this is what we can deal with:
+    // kost@ : this is what we can deal with: values or refs to vars;
     Assert((!oz_isRef(entity) && !oz_isVar(entity)) ||
            (oz_isRef(entity) && oz_isVar(*tagged2Ref(entity))));
+    // there can be at most one entry for a given 'entity':
     Assert(find(entity) == (OB_TIndex) RESOURCE_NOT_IN_TABLE);
-    unsigned int hvalue;
-    GenHashBaseKey *ghbk;
-    GenHashEntry *ghe;
-
+    // the owner entry must be of the type 'ref':
+    DebugCode(OwnerEntry *oe = ownerIndex2ownerEntry(oti););
+    Assert(oe && oe->isRef());
     //
-    hvalue = hash(entity);
-    GenCast(entity, OZ_Term, ghbk, GenHashBaseKey*);
-    GenCast(oti, OB_TIndex, ghe, GenHashEntry*);
-    GenHashTable::htAddU(hvalue, ghbk, ghe);
+    RHTNode *n = new RHTNode(entity, oti);
+    htAdd(n);
   }
 
   //
   OB_TIndex find(TaggedRef entity) {
-    // kost@ : this is what we can deal with:
     Assert((!oz_isRef(entity) && !oz_isVar(entity)) ||
            (oz_isRef(entity) && oz_isVar(*tagged2Ref(entity))));
-    unsigned int hvalue = hash(entity);
-    GenHashNode *aux;
+    //
+    RHTNode ref(entity);
+    RHTNode *found = htFind(&ref);
 
     //
-  repeat:
-    aux = htFindFirstU(hvalue);
-    while (aux){
-      OZ_Term te;
+    if (found) {
+      Assert(found->getEntity() == entity);
+      OB_TIndex oti = found->getOTI();
+      OwnerEntry *oe = ownerIndex2ownerEntry(oti);
 
       //
-      GenCast(aux->getBaseKey(), GenHashBaseKey*, te, OZ_Term);
-
-      //
-      // Now, there are three cases: found, not found, and found a
-      // dead entry;
-      if (te == entity) {
-        // that's the entry we're talking about: let's check whether
-        // the corresponding oe entry is still alive:
-        OB_TIndex oti;
-        OwnerEntry *oe;
-
-        //
-        GenCast(aux->getEntry(), GenHashEntry*, oti, OB_TIndex);
-        oe = OT->index2entry(oti);
-
-        //
-        if (oe && oe->isRef() && oe->getRef() == entity) {
-          return (oti);         // found!
-        } else {
-          // The wrong one: that is, the current entry is outdated
-          // and should be removed;
-          (void) htSubU(hvalue, aux);
-
-          // must start from scratch since 'htSub()' is NOT compatible
-          // with 'htFindFirst()' & Co.;
-          goto repeat;
-        }
-        Assert(0);
-
-        //
-      } if (oz_isRef(te) && !oz_isVar(*tagged2Ref(te))) {
-        // bound variables can be (and should be) discarded as well;
-        (void) htSubU(hvalue, aux);
-        goto repeat;
+      if (oe && oe->isRef() && oe->getRef() == entity) {
+        return (oti);           // still upright;
       } else {
-        aux = htFindNextU(aux, hvalue);
+        htDel(found);           // something's changed;
+        delete found;
+        return ((OB_TIndex) RESOURCE_NOT_IN_TABLE);
       }
+      Assert(0);
+    } else {
+      return ((OB_TIndex) RESOURCE_NOT_IN_TABLE);
     }
-
-    //
-    return ((OB_TIndex) RESOURCE_NOT_IN_TABLE);
+    Assert(0);
   }
 
   //

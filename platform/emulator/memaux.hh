@@ -27,6 +27,10 @@
 #ifndef __GENHASHTABLEH
 #define __GENHASHTABLEH
 
+//
+// kost@ : leftovers from 'genhashtbl.hh'.
+//         For my taste, this should go too. Some other time?
+
 #ifdef INTERFACE
 #pragma interface
 #endif
@@ -35,8 +39,6 @@
 
 #define GenCast(X,XType,Y,NewType)\
 { XType tmp=X; Y= (NewType) tmp;}
-
-#define GENHASHNODE_CUTOFF 100
 
 class FreeListEntry{
 friend class FreeListManager;
@@ -98,132 +100,6 @@ public:
     return no_free;
   }
 };
-
-class GenHashBaseKey{
-unsigned int dummy;
-};
-
-class GenHashEntry{
-unsigned int dummy;
-};
-
-#define FREE_ENTRY  ((GenHashEntry *)~1)
-
-class GenHashNode {
-friend class GenHashTable;
-protected:
-  unsigned int key;
-  GenHashBaseKey * basekey;
-  GenHashEntry *entry;
-  GenHashNode *next;
-  int getLength();
-  Bool isEmpty()  {return entry==FREE_ENTRY;}
-
-  void makeEmpty() {
-    entry=FREE_ENTRY;}
-
-
-  void b_set(unsigned int k,GenHashBaseKey *kb,GenHashEntry *e) {
-    Assert(e!=FREE_ENTRY);
-    key=k;
-    basekey=kb;
-    entry=e;}
-
-  void set(unsigned int k,GenHashBaseKey *kb,GenHashEntry *e) {
-    b_set(k,kb,e);
-    next=NULL;}
-
-  void setWithNext(unsigned int k,GenHashBaseKey *kb,GenHashEntry *e,GenHashNode *ne) {
-    set(k,kb,e);
-    next=ne;}
-
-  void copyFrom(GenHashNode *from){
-    key=from->key;
-    next=from->next;
-    basekey=from->basekey;
-    entry=from->entry;}
-
-public:
-  void setNext(GenHashNode *n){next=n;}
-  GenHashNode *getNext(){return next;}
-  GenHashBaseKey *getBaseKey(){return basekey;}
-  GenHashEntry *getEntry(){return entry;}
-  void setEntry(GenHashEntry *e){ entry=e;}
-  int getKey(){return key;}
-};
-
-class GenHashNodeManager: public FreeListManager{
-public:
-  GenHashNodeManager():FreeListManager(GENHASHNODE_CUTOFF){
-    Assert(sizeof(GenHashNode)>=sizeof(void*));}
-
-  GenHashNode *newGenHashNode(){
-    FreeListEntry *f=getOne();
-    if(f==NULL){return new GenHashNode();}
-    GenHashNode *ghn;
-    GenCast(f,FreeListEntry*,ghn,GenHashNode*);
-    return ghn;}
-
-  void deleteGenHashNode(GenHashNode* ghn){
-    FreeListEntry *f;
-    GenCast(ghn,GenHashNode*,f,FreeListEntry*);
-    if(putOne(f)) {return;}
-    delete ghn;
-    return;}
-};
-
-class GenHashTable {
-protected:
-  int counter;      // number of entries
-  double top_percent;      // if more than percent is used, we reallocate
-  double bottom_percent;
-  int minSize;
-  int tableSize;
-  GenHashNodeManager *manager;
-  void init(int low,int high) {
-    int i;
-    for(i=low; i<high; i++) {
-      table[i].makeEmpty();}}
-  void basic_htAddU(unsigned int,GenHashBaseKey *,GenHashEntry *);
-  void rehash(GenHashNode *,int);
-  void resize();
-  void calc_percents();
-  GenHashNode* getByIndex(int&);
-
-public:
-  void compactify();
-  GenHashNode * table; /* TODO -move to private */
-  void clear(){
-    counter=0;
-    for(int i=0; i<tableSize; i++) {
-      if(!table[i].isEmpty()){
-        GenHashNode *tmp, *next = table[i].next;
-        while(next){
-          tmp = next;
-          next = next->next;
-          manager->deleteGenHashNode(tmp);}
-        table[i].makeEmpty();}}
-  }
-  int getSize(){return tableSize;}
-  int getUsed(){return counter;}
-  GenHashTable(int);
-  void htAddU(unsigned int,GenHashBaseKey*,GenHashEntry*);
-  Bool htSubU(unsigned int,GenHashNode*);
-  GenHashNode* htFindFirstU(unsigned int);
-  GenHashNode* getFirst(int&);
-  GenHashNode* getNext(GenHashNode*,int&);
-  GenHashNode* htFindNextU(GenHashNode*,unsigned int);
-  GenHashBaseKey *htGetBaseKey(int i) {return table[i].getBaseKey();}
-  GenHashEntry *htGetEntry(int i) {return table[i].getEntry();}
-  int htGetKey(int i) {return table[i].getKey();}
-  void deleteFirst(GenHashNode*);
-  void deleteNonFirst(GenHashNode*,GenHashNode*);
-  GenHashNode *getElem(int);
-};
-
-
-
-
 
 class Construct_7{
   void* one;
@@ -379,7 +255,5 @@ public:
 };
 
 extern GenFreeListManager *genFreeListManager;
-
-
 
 #endif

@@ -402,7 +402,7 @@ OZ_BI_define(BIsetDGC,2,1)
     else
       OZ_RETURN(oz_atom("not_manager"));
   }
-  if (ownerTable->index2entry(OTI)->homeRef.removeAlgorithm(algorithm))
+  if (ownerIndex2ownerEntry(OTI)->homeRef.removeAlgorithm(algorithm))
     OZ_RETURN(oz_true());
   else
     OZ_RETURN(oz_false());
@@ -417,15 +417,15 @@ OZ_BI_define(BIgetDGC,1,1)
       if (tert->isLocal())
         OZ_RETURN(oz_atom("local_entity"));
       if (tert->isManager()){
-        OZ_RETURN(ownerTable->index2entry(MakeOB_TIndex(tert->getTertPointer()))->homeRef.extract_info());}
-      OZ_RETURN(borrowTable->bi2borrow(MakeOB_TIndex(tert->getTertPointer()))->remoteRef.extract_info());
+        OZ_RETURN(ownerIndex2ownerEntry(MakeOB_TIndex(tert->getTertPointer()))->homeRef.extract_info());}
+      OZ_RETURN(borrowIndex2borrowEntry(MakeOB_TIndex(tert->getTertPointer()))->remoteRef.extract_info());
     }
   DEREF(entity,e0);
   if(oz_isVarOrRef(entity)){
     if (oz_isManagerVar(*e0))
-      OZ_RETURN(ownerTable->index2entry(oz_getManagerVar(*e0)->getIndex())->homeRef.extract_info());
+      OZ_RETURN(ownerIndex2ownerEntry(oz_getManagerVar(*e0)->getIndex())->homeRef.extract_info());
     if (oz_isProxyVar(*e0))
-      OZ_RETURN(borrowTable->bi2borrow(oz_getProxyVar(*e0)->getIndex())->remoteRef.extract_info());
+      OZ_RETURN(borrowIndex2borrowEntry(oz_getProxyVar(*e0)->getIndex())->remoteRef.extract_info());
   }
   OZ_RETURN(oz_atom("local_entity"));
 }OZ_BI_end

@@ -140,8 +140,6 @@ RRinstance *CreateRRinstance(int type, int val1, int val2)
 
 // Home Reference
 
-Bool HomeReference::isPersistent(){return algs == NULL;}
-
 void HomeReference::makePersistent()
 {
   while(algs!=NULL){
@@ -159,14 +157,14 @@ Bool HomeReference::canBeReclaimed(){
   return FALSE;
 }
 
-void HomeReference::setUp(Ext_OB_TIndex indx, int algss)
+void HomeReference::setUp(Ext_OB_TIndex indx)
 {
   extOTI = indx;
   algs = NULL;
-  if(algss & GC_ALG_WRC)
-    algs = new WRC(this,algs);
-  if(algss & GC_ALG_TL)
-    algs = new TL(this,algs);
+  if (ozconf.dpUseFracWRC)      // GC_ALG_WRC
+    algs = new WRC(this, algs);
+  if (ozconf.dpUseTimeLease)    //  GC_ALG_TL
+    algs = new TL(this, algs);
 }
 
 Bool HomeReference::mergeReference(RRinstance *r){
@@ -235,7 +233,8 @@ Bool RemoteReference::canBeReclaimed(){
 
 }
 
-void RemoteReference::setUp(RRinstance *r,DSite* s,int i){
+void RemoteReference::setUp(RRinstance *r, DSite* s, int i)
+{
   netaddr.set(s,i);
   algs = NULL;
   while(r!=NULL){
@@ -255,15 +254,6 @@ void RemoteReference::setUp(RRinstance *r,DSite* s,int i){
   }
 }
 
-void HomeReference::removeReference(){
-  while(algs!=NULL){
-    GCalgorithm *tmp2=algs;
-    algs->remove();
-    algs=algs->next;
-    delete tmp2;
-  }
-}
-
 Bool HomeReference::removeAlgorithm(OZ_Term id){
   GCalgorithm **tmp = &algs;
   while(*tmp!=NULL){
@@ -279,21 +269,6 @@ Bool HomeReference::removeAlgorithm(OZ_Term id){
   return FALSE;
 }
 
-
-
-void RemoteReference::dropReference(){
-  NetAddress *na = getNetAddress();
-  DSite* site = na->site;
-  int index = na->index;
-  GCalgorithm *tmp=algs;
-  while(tmp!=NULL){
-    GCalgorithm *tmp2=tmp;
-    tmp->dropReference(site,index);
-    tmp=tmp->next;
-    delete tmp2;
-  }
-
-}
 
 void RemoteReference::copyReference(RemoteReference *from){
   netaddr.set(from->netaddr.site,from->netaddr.index);
@@ -351,8 +326,6 @@ RRinstance *RemoteReference::getSmallReference(){
   return ans;
 }
 
-NetAddress* RemoteReference::getNetAddress() {return &netaddr;}
-
 OZ_Term RemoteReference::extract_info(){
   OZ_Term ans = oz_nil();
   for(GCalgorithm *tmp = algs;tmp != NULL ; tmp = tmp->next)
@@ -361,9 +334,6 @@ OZ_Term RemoteReference::extract_info(){
     }
   return ans;
 }
-
-Bool RemoteReference::isPersistent(){
-  return algs == NULL;}
 
 void sendReferenceBack(DSite *entitysite, Ext_OB_TIndex entityOTI,
                        int type, int val1, int val2)

@@ -90,7 +90,7 @@ void marshalOwnHead(MarshalerBuffer *bs, OB_TIndex i)
 {
   PD((MARSHAL_CT,"OwnHead"));
   bs->put(DIF_SITE_SENDER);
-  OwnerEntry *oe = OT->index2entry(i);
+  OwnerEntry *oe = ownerIndex2ownerEntry(i);
   marshalNumber(bs, oe->getExtOTI());
   bs->put((BYTE) ENTITY_NORMAL);
   marshalCredit(bs, oe->getCreditBig());
@@ -100,7 +100,7 @@ void marshalOwnHead(MarshalerBuffer *bs, OB_TIndex i)
 static inline
 void saveMarshalOwnHead(OB_TIndex oti, RRinstance *&c)
 {
-  c = ownerTable->index2entry(oti)->getCreditBig();
+  c = ownerIndex2ownerEntry(oti)->getCreditBig();
 }
 
 //
@@ -109,7 +109,7 @@ void marshalOwnHeadSaved(MarshalerBuffer *bs, OB_TIndex oti, RRinstance *c)
 {
   PD((MARSHAL_CT,"OwnHead"));
   bs->put(DIF_SITE_SENDER);
-  OwnerEntry *oe = OT->index2entry(oti);
+  OwnerEntry *oe = ownerIndex2ownerEntry(oti);
   marshalNumber(bs, oe->getExtOTI());
   bs->put((BYTE) ENTITY_NORMAL);
   marshalCredit(bs, c);
@@ -119,7 +119,7 @@ void marshalOwnHeadSaved(MarshalerBuffer *bs, OB_TIndex oti, RRinstance *c)
 static inline
 void discardOwnHeadSaved(OB_TIndex oti, RRinstance *c)
 {
-  ownerTable->index2entry(oti)->mergeReference(c);
+  ownerIndex2ownerEntry(oti)->mergeReference(c);
 }
 
 //
@@ -127,7 +127,7 @@ static inline
 void marshalToOwner(MarshalerBuffer *bs, OB_TIndex bi)
 {
   PD((MARSHAL,"toOwner"));
-  BorrowEntry *b = borrowTable->bi2borrow(bi);
+  BorrowEntry *b = borrowIndex2borrowEntry(bi);
   Ext_OB_TIndex OTI = b->getExtOTI();
   marshalCreditToOwner(bs, b->getSmallReference(), OTI);
 }
@@ -140,7 +140,7 @@ static inline
 void saveMarshalToOwner(OB_TIndex bi, Ext_OB_TIndex &oti, RRinstance *&c)
 {
   PD((MARSHAL,"toOwner"));
-  BorrowEntry *b = borrowTable->bi2borrow(bi);
+  BorrowEntry *b = borrowIndex2borrowEntry(bi);
 
   //
   oti = b->getExtOTI();
@@ -159,7 +159,7 @@ static inline
 void marshalBorrowHead(MarshalerBuffer *bs, OB_TIndex bi, BYTE ec)
 {
   PD((MARSHAL,"BorrowHead"));
-  BorrowEntry *b = borrowTable->bi2borrow(bi);
+  BorrowEntry *b = borrowIndex2borrowEntry(bi);
   NetAddress *na = b->getNetAddress();
   na->site->marshalDSite(bs);
   marshalNumber(bs, Ext_OB_TIndex2Int(na->index));
@@ -174,7 +174,7 @@ void saveMarshalBorrowHead(OB_TIndex bi, DSite* &ms, Ext_OB_TIndex &oti,
 {
   PD((MARSHAL,"BorrowHead"));
 
-  BorrowEntry *b = borrowTable->bi2borrow(bi);
+  BorrowEntry *b = borrowIndex2borrowEntry(bi);
   NetAddress *na = b->getNetAddress();
 
   //
@@ -201,9 +201,7 @@ void marshalBorrowHeadSaved(MarshalerBuffer *bs, DSite *ms,
 static inline
 void discardBorrowHeadSaved(DSite *ms, Ext_OB_TIndex oti, RRinstance *credit)
 {
-  //
-  NetAddress na = NetAddress(ms, oti);
-  BorrowEntry *b = borrowTable->find(&na);
+  BorrowEntry *b = borrowTable->find(oti, ms);
 
   //
   if (b) {
@@ -212,12 +210,6 @@ void discardBorrowHeadSaved(DSite *ms, Ext_OB_TIndex oti, RRinstance *credit)
   } else {
     sendRRinstanceBack(ms,oti,credit);
   }
-}
-
-static inline
-void discardToOwnerSaved(DSite *ms, Ext_OB_TIndex oti, RRinstance *c)
-{
-  discardBorrowHeadSaved(ms, oti, c);
 }
 
 
@@ -298,13 +290,8 @@ PxyVarPatch::PxyVarPatch(OZ_Term locIn, OzValuePatch *nIn,
 //
 void PxyVarPatch::disposeV()
 {
-  if (!isMarshaled) {
-    if (isToOwner) {
-      discardToOwnerSaved(ms, oti, remoteRef);
-    } else {
-      discardBorrowHeadSaved(ms, oti, remoteRef);
-    }
-  }
+  if (!isMarshaled)
+    discardBorrowHeadSaved(ms, oti, remoteRef);
   disposeOVP();
   DebugCode(isMarshaled = OK;);
   DebugCode(oti = (Ext_OB_TIndex) -1;);
@@ -617,8 +604,7 @@ unmarshalBorrow(MarshalerBuffer *bs,
 
   if(sd==myDSite){ Assert(0);}
 
-  NetAddress na = NetAddress(sd,si);
-  BorrowEntry *b = borrowTable->find(&na);
+  BorrowEntry *b = borrowTable->find(si, sd);
 
   ec = bs->get();
   RRinstance* cred = unmarshalCredit(bs);
@@ -628,10 +614,9 @@ unmarshalBorrow(MarshalerBuffer *bs,
     ob = b;
     // Assert(b->getValue() != (OZ_Term) 0);
     return b->getValue();
-  }
-  else {
+  } else {
     bi = borrowTable->newBorrow(cred,sd,si);
-    b=borrowTable->bi2borrow(bi);
+    b=borrowIndex2borrowEntry(bi);
     ob=b;
     return 0;
   }
@@ -1307,7 +1292,7 @@ unmarshalOwner(MarshalerBuffer *bs, MarshalTag mt)
   OZ_Term oz;
   RRinstance  *c = unmarshalCreditToOwner(bs, mt, OTI);
   PD((UNMARSHAL,"OWNER o:%d",OTI));
-  OwnerEntry* oe = ownerTable->extOTI2entry(OTI);
+  OwnerEntry* oe = ownerTable->extOTI2ownerEntry(OTI);
   if (oe){
     oe->mergeReference(c);
     oz=oe->getValue();}

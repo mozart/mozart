@@ -142,18 +142,32 @@ static void myqsort(T * my, int left, int right,
   if (i < right) myqsort(my, i, right, compar);
 }
 
-int compareDurs(const StartDurTerms *a, const StartDurTerms *b) {
-  if ( a->dur > b->dur) return 1;
-  else return 0;
-}
-
-
+//
+struct Interval {
+  int left, right, use;
+};
 // for cpIterateCap
 struct StartDurUseTerms {
   OZ_Term start;
   int dur;
   int use;
 };
+
+//
+template void myqsort(int *, int, int, int (*)(int const *, int const *));
+template void myqsort(StartDurTerms *, int, int,
+                      int (*)(StartDurTerms const *, StartDurTerms const *));
+template void myqsort(Interval *, int, int,
+                      int (*)(Interval const *, Interval const *));
+template void myqsort(StartDurUseTerms *, int, int,
+                      int (*)(StartDurUseTerms const *,
+                              StartDurUseTerms const *));
+
+int compareDurs(const StartDurTerms *a, const StartDurTerms *b) {
+  if ( a->dur > b->dur) return 1;
+  else return 0;
+}
+
 
 int compareDursUse(const StartDurUseTerms *a, const StartDurUseTerms *b) {
   if (a->dur * a->use > b->dur * b->use)
@@ -863,10 +877,6 @@ failure:
 }
 
 //-----------------------------------------------------------------------------
-
-struct Interval {
-  int left, right, use;
-};
 
 int ozcdecl CompareIntervals(const Interval *Int1, const Interval *Int2)
 {

@@ -120,7 +120,7 @@ char *unmarshalVersionString(PickleMarshalerBuffer *bs);
 const char SYSLETHEADER = 2;
 
 //
-typedef unsigned int32 crc_t;
+extern crc_t crc_table[256];
 //
 crc_t update_crc(crc_t crc, unsigned char *buf, int len);
 inline crc_t init_crc() { return 0; }

@@ -42,10 +42,6 @@
 #include <netdb.h>
 #endif
 
-unsigned int BaseSite::hash() {
-  return ((unsigned int)address)+((unsigned int)port)+
-    ((unsigned int)timestamp.start)+((unsigned int)timestamp.pid);}
-
 //
 void BaseSite::marshalBaseSite(MarshalerBuffer* buf)
 {
@@ -116,6 +112,10 @@ static ip_address getMySiteIP()
 }
 
 //
+template class GenDistEntryTable<Site>;
+#include "hashtblDefs.cc"
+
+//
 SiteHashTable* siteTable = 0;
 
 //
@@ -127,42 +127,34 @@ void initSite()
   mySite = new Site(myIP, (port_t) 0, timestamp);
   //
   siteTable = new SiteHashTable(SITE_TABLE_SIZE);
-  siteTable->insert(mySite, mySite->hash());
+  siteTable->insert(mySite);
 }
 
-void SiteHashTable::cleanup(){
-  GenHashNode *ghn,*ghn1;
-  Site* s;
-  int i=0;
-  ghn=getFirst(i);
-  while(ghn!=NULL){
-    GenCast(ghn->getBaseKey(),GenHashBaseKey*,s,Site*);
-    if((!(s->hasGCFlag())) && s!=mySite){
-      delete s;
-      deleteFirst(ghn);
-      ghn=getByIndex(i);
-      continue;}
-    else{
-      s->resetGCFlag();}
-    ghn1=ghn->getNext();
-    while(ghn1!=NULL){
-      GenCast(ghn1->getBaseKey(),GenHashBaseKey*,s,Site*);
-      if((s->hasGCFlag()) || (s==mySite)){
-        s->resetGCFlag();}
-      else{
-        delete s;
-        deleteNonFirst(ghn,ghn1);
-        ghn1=ghn->getNext();
-        continue;}
-      ghn=ghn1;
-      ghn1=ghn1->getNext();}
-    i++;
-    ghn=getByIndex(i);}
-  return;
+void SiteHashTable::cleanup()
+{
+  for (int i = getSize(); i--; ) {
+    Site **ps = getFirstNodeRef(i);
+    Site *site = *ps;
+    while (site) {
+      if (!(site->hasGCFlag()) && site != mySite) {
+        deleteNode(site, ps);
+        delete site;
+        // 'ps' stays in place;
+      } else {
+        site->resetGCFlag();
+        ps = (Site **) site->getNextNodeRef();
+      }
+
+      //
+      site = *ps;
+    }
+  }
+  compactify();
 }
 
 //
-void gCollectSiteTable() {
+void gCollectSiteTable()
+{
   siteTable->cleanup();
 }
 
@@ -176,11 +168,10 @@ Site* unmarshalSite(MarshalerBuffer *buf)
   tryS.unmarshalBaseSiteGName(buf);
 
   //
-  int hvalue = tryS.hash();
-  Site *s = siteTable->find(&tryS, hvalue);
+  Site *s = siteTable->find(&tryS);
   if (!s) {
     s = new Site(&tryS);
-    siteTable->insert(s, hvalue);
+    siteTable->insert(s);
   }
   return (s);
 }

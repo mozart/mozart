@@ -43,17 +43,16 @@ static GName *makeGName(OZ_Term tup, OZ_Term *ret) {
 
   TimeStamp timeStamp(stamp, pid);
   Site tryS(ip, 0, timeStamp);
-  int hvalue = tryS.hash();
-  Site *site = siteTable->find(&tryS, hvalue);
+  Site *site = siteTable->find(&tryS);
   if (site == NULL) {
     site = new Site(&tryS);
-    siteTable->insert(site, hvalue);
+    siteTable->insert(site);
   }
 
   GName gname;
   gname.site = site;
-  gname.id.number[0] = i1;
-  gname.id.number[1] = i2;
+  gname.id.setNumber(1, i1);
+  gname.id.setNumber(0, i2);
   gname.gnameType = (GNameType) type;
 
   OZ_Term aux = oz_findGName(&gname);
