@@ -1,0 +1,44 @@
+OZDOC = ozdoc
+
+DOCDIR          = /www/mozart/gump/manual
+
+INSTALL         = @INSTALL@
+INSTALL_FILE    = $(INSTALL) -m 444
+INSTALL_BIN     = $(INSTALL) -m 555
+INSTALL_DIR     = @INSTALL_DIR@
+
+SGMLSRCS = \
+        gump.sgml intro.sgml parser.sgml scanner.sgml syntax.sgml
+OZGSRCS = \
+        LambdaParser.ozg LambdaScanner.ozg TestParser.ozg TestScanner.ozg
+MISCSRCS = \
+        Lambda.in
+
+.PHONY: all install clean veryclean distclean
+
+all: gump-html
+
+Makefile: Makefile.in config.status
+        ./config.status
+
+gump-html: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
+        $(OZDOC) --in=gump.sgml --out=gump-html --type=html-color
+
+gump-tex: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
+        $(OZDOC) --in=gump.sgml --out=gump-tex --type=latex
+
+install: gump-html $(DOCDIR)
+        cp -p gump-html/* $(DOCDIR)
+
+$(DOCDIR):
+        $(INSTALL_DIR) $@
+
+clean:
+        -rm -rf gump-html
+        -rm -rf gump-tex
+        -rm -f *~
+
+veryclean: clean
+
+distclean: veryclean
+        -rm -f Makefile config.status config.cache config.log
