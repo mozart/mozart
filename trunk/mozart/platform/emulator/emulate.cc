@@ -1181,7 +1181,6 @@ void engine()
 	  // do disposal of aa (which must be a wait actor!)
 	  Assert(aa->isWait());
 	  ((WaitActor*) aa)->dispose();
-
 	  e->pushSolve();
 	  sa->incThreads();
 	  CBB->incSuspCount();
@@ -1458,6 +1457,7 @@ LBLkillThread:
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       OZ_CFun fun = entry->getFun();
+      Assert(fun); // NOTE: special builtin need suspension handler
       int arityGot = getPosIntArg(PC+2);
       int arity = entry->getArity();
 
