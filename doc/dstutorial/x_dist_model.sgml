@@ -74,6 +74,8 @@ Here are some of the more useful ones:
 <ITEM> <EM>Cached object</EM>:
 <index id=idx.cachedobject/cached object/
 <index id=idx.objectcached/object<and>cached/
+<index/object<and>mobile/
+<index/mobile object/
 Objects and cells are cached by default--we also call
 this "mobile objects".
 Objects are always executed locally,
@@ -117,7 +119,7 @@ copied when the object is called for the first time.
 Once the class is on the site, no further copies are done.
 
 <ITEM> <EM>Stationary object (server)</EM>:
-<index id=stationaryobject/stationary object/
+<index id=stationaryobject/stationary object<and>definition/
 <index/object<and>stationary/
 A stationary object remains on the site at which it was created.
 Each method invocation uses one message to start the method
@@ -474,12 +476,12 @@ groups related operations and
 that possibly has some internal state.
 The modules that are available in a Mozart
 <index/base module/
-<index/module<and>base/
+<index/module<and>base<and>definition/
 process when it starts up are called <EM>base modules</EM>.
 The base modules contain all operations on
 all basic Oz types.
 <index/system module/
-<index/module<and>system/
+<index/module<and>system<and>definition/
 There are additional modules, called <EM>system modules</EM>,
 that are part of the system but loaded only when needed.
 Furthermore, an application can define more
