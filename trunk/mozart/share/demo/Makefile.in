@@ -246,10 +246,13 @@ Makefile: Makefile.in ../config.status
 
 include $(SRCDIR)/../Makefile.boot
 
-bootstrap:
-	@mkdir constraints 2> /dev/null || true
-	@mkdir concurrent 2> /dev/null || true
-	@mkdir distributed 2> /dev/null || true
+dirs:
+	dirs="$(DIRS)"; \
+	for d in $$dirs; \
+	do if test ! -d $$d; then mkdir $$d; fi; \
+	done
+
+bootstrap: dirs
 	$(MAKE) boot-all
 
 check:
