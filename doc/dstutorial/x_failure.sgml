@@ -1,0 +1,55 @@
+<CHAPTER ID="chapter.failure">
+  <TITLE>Handling failure</TITLE>
+
+This chapter first introduces the Mozart failure model:
+what we assume can go wrong with the system
+and how this is reflected in the language entities.
+We then show how to program with this model.
+We first present
+basic fault-tolerant versions of
+the common language operations.
+Then we present
+fault-tolerant versions of the server examples.
+Finally
+we summarize the basic fault-detection
+and handling primitives of the language.
+These primitives are used to build
+the fault-tolerant abstractions.
+
+<SECTION><TITLE>Failure model</TITLE>
+
+The failure model is designed to cover the
+vast majority of failures occurring in distributed systems,
+namely instantaneous and permanent site failures (fail-stop)
+and both temporary and permanent communication failures.
+This failure model is reflected in each language entity.
+The system provides mechanisms to be informed of failures
+and to program with language entities in case of failures.
+
+<SUBSECTION><TITLE>Stateless data</TITLE>
+
+In the current release, no special failure handling
+is needed for eager stateless data, since they
+are copied immediately in messages.
+That is, there are no remote references to eager
+stateless data.
+They are always local to a site.
+
+<SUBSECTION><TITLE>Sited entities</TITLE>
+
+Sited entities can be referenced remotely
+but can only be used on their home site.
+Attempting to use one outside of its home
+site immediately raises an exception,
+without any network operations.
+Therefore no special failure handling is needed for them.
+
+<SUBSECTION><TITLE>Ports</TITLE>
+
+<SUBSECTION><TITLE>Logic variables</TITLE>
+
+<SUBSECTION><TITLE>Objects and cells</TITLE>
+
+
+
+</CHAPTER>
