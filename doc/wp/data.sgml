@@ -27,11 +27,11 @@
 <p> The following appendix features some data specifications omitted
 in the chapters' text.
 
-<section id="section.data.scheduling">
+<section id="section.data.widgets-2">
   <title/More on Widgets/
 
 <p>
-<chunk id=data.bridge><title/Color names/
+<chunk><title/Color names/
 [aliceblue            antiquewhite         aquamarine
  azure                beige                bisque
  black                blanchedalmond       blue
@@ -83,5 +83,30 @@ in the chapters' text.
 </chunk>
 
 </section>
+
+<section id="section.data.text">
+  <title/Text Widgets/
+
+<p>
+<chunk><title/Sample text/
+'Existing constraint programming systems offer a '#
+'fixed set of inference engines implementing search '#
+'strategies such as single, all, and best solution '#
+'search. This is unfortunate, since new engines '#
+'cannot be integrated by the user.  The paper '#
+'presents first-class computation spaces as '#
+'abstractions with which the user can program '#
+'inference engines at a high level.  Using '#
+'computation spaces, the paper covers several '#
+'inference engines ranging from standard search '#
+'strategies to techniques new to constraint '#
+'programming, including limited discrepancy search, '#
+'visual search, and saturation. Saturation is an '#
+'inference method for tautology-checking used in '#
+'industrial practice.  Computation spaces have '#
+'shown their practicability in the constraint '#
+'programming system Oz.'
+</chunk>
+
 
 </appendix>
