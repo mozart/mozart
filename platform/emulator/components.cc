@@ -871,6 +871,7 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
     return raiseGeneric("getURL:thread",
                         "getURL: start thread failed",
                         oz_cons(OZ_pairA("URL",oz_atom(url)),oz_nil()));
+  CloseHandle(thrd);
   int pid = 0;
 
 #else
