@@ -786,6 +786,7 @@ TaggedRef deref(TaggedRef &tr, TaggedRef * &ptr, TypeOfTerm &tag)
 // ---------------------------------------------------------------------------
 
 #ifdef DEBUG_CHECK
+inline
 TaggedRef *derefPtr(TaggedRef t) {
   DEREF(t,tPtr,_1);
   return tPtr;
