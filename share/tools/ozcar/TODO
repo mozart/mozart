@@ -42,3 +42,19 @@ rebuildCurrentStack sollte aktuell selektierten stackframe nicht veraendern
 
 Mon Nov 24 20:24:37 CET 1997
 Left und Right selektieren "neuen" Thread, wenn nur einer da ist...
+
+Tue Dec  9 16:19:49 CET 1997
+bruni special: jaaaa...
+- step to next line
+- interpreter in status line
+- anforderungen fuer inspector, um embedded benutzen zu koennen
+- gewichte festlegen (leif meint, interaktiv) fuer die subwindows
+  (merkt sich das in rc file)
+- icon + menuleiste ausblendbar machen
+
+Tue Dec  9 16:20:41 CET 1997
+Leif special: nicht gerade special
+- alternative ausdruecke in den auswertungsbaum einhaengen
+- das wars fuer Leif.
+- fuer printnamen und werte getrennte fenster, um resizing gracefully handlen
+  zu koennen (frei aus dem englischen transkribiert von bruni)
