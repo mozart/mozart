@@ -294,7 +294,7 @@ At its creation, an entity is not enabled at any level.
 All four functions raise a type error exception if their arguments
 do not have the correct type.
 
-<SUBSECTION><TITLE>Binding logic variables</TITLE>
+<SUBSECTION id="binding.logic.variables"><TITLE>Binding logic variables</TITLE>
 
 <P>A logic variable can be declared before it is bound.
 What happens to its enabled exceptions when it is bound?
@@ -524,7 +524,16 @@ on a given entity at a given level
 for a given set of fault states.
 The possible entities, levels, and fault states
 are exactly the same.
-Handlers are installed and deinstalled with the
+What happens to handlers on logic variables
+when the variables are bound is exactly
+the same as what happens to
+enabled exceptions in <ptr to="binding.logic.variables">.
+For example, when a variable with handler
+is bound to a port with handler <<H_p>>,
+then the result has handler <<H_p>>.
+The variable's handler is discarded.
+
+<P>Handlers are installed and deinstalled with the
 following two built-in operations:
 <LIST>
 <ENTRY> <<fun {Fault.install Entity Level FStates HandlerProc}>>
