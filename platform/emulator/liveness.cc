@@ -148,6 +148,11 @@ outerLoop2:
         }
       }
 
+      while (seen) {
+        Segment *n = seen->next;
+        delete seen;
+        seen = n;
+      }
       delete [] xUsage;
       return nextI;
     }
