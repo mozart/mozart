@@ -121,7 +121,7 @@ char *ostmpnam()
 {
   static char path[2048];
   int n = GetTempPath(sizeof(path),path);
-  if (n == 0 || n >= sizeof(path))
+  if (n == 0 || n == sizeof(path))
     doexit(18);
   static char file[MAX_PATH];
   n = GetTempFileName(path,"oztool",0,file);
@@ -152,7 +152,7 @@ char *toDos(char *path)
 {
   static char buffer[2048];
   int n = GetShortPathName(path,buffer,sizeof(buffer));
-  if (n == 0 || n >= sizeof(buffer))
+  if (n == 0 || n == sizeof(buffer))
     doexit(17);
   return buffer;
 }
@@ -227,7 +227,6 @@ int main(int argc, char **argv)
     }
   }
 
-  verbose = 1;
   if (!strcmp(argv[1],"-verbose")) {
     verbose = 1;
     argv++;
@@ -262,26 +261,23 @@ int main(int argc, char **argv)
     int r = 0;
     int k = 2;
     bool dontQuote = false;
-
-    switch(sys) {
+    switch (sys) {
     case SYS_GNU:
       ccCmd = new char*[argc + 3];
       if (cxx)
         ccCmd[r++] = "g++";
       else
         ccCmd[r++] = "gcc";
-
       ccCmd[r++] = "-mno-cygwin";
-      ccCmd[r++] = concat("-I", toUnix(incdir));
+      ccCmd[r++] = concat("-I",toUnix(incdir));
       while (k < argc) {
-        if (!strcmp(argv[k], "-c") || !strcmp(argv[k], "-o")) {
-          if ((k + 1) == argc) {
-            usage("Missing file argument");
+        if (!strcmp(argv[k],"-c") || !strcmp(argv[k],"-o")) {
+          if (argc == k + 1) {
+            usage("Missing file argument.\n");
           }
           ccCmd[r++] = argv[k++];
           ccCmd[r++] = argv[k++];
-        }
-        else {
+        } else {
           ccCmd[r++] = argv[k++];
         }
       }
@@ -294,22 +290,22 @@ int main(int argc, char **argv)
         ccCmd[r++] = "-TP";
       else
         ccCmd[r++] = "-TC";
-      ccCmd[r++] = concat("-I", toWindows(incdir));
+      ccCmd[r++] = concat("-I",toWindows(incdir));
       while (k < argc) {
-        if (!strcmp(argv[k], "-c")) {
-          if ((k + 1) == argc) {
-            usage("Missing file argument");
+        if (!strcmp(argv[k],"-c")) {
+          if (argc == k + 1) {
+            usage("Missing file argument.\n");
           }
           ccCmd[r++] = argv[k++];
           ccCmd[r++] = argv[k++];
-        } else if (!strcmp(argv[k], "-o")) {
-          if ((k + 1) == argc) {
-            usage("Missing file argument");
+        } else if (!strcmp(argv[k],"-o")) {
+          if (argc == k + 1) {
+            usage("Missing file argument.\n");
           }
-          ccCmd[r++] = concat("-Fo", argv[k + 1]);
-          k +=2;
-        } else if (!strncmp(argv[k], "-I", 2)) {
-          ccCmd[r++] = concat("-I", toWindows(argv[k++] + 2));
+          ccCmd[r++] = concat("-Fo",argv[k + 1]);
+          k += 2;
+        } else if (!strncmp(argv[k],"-I",2)) {
+          ccCmd[r++] = concat("-I",toWindows(argv[k++] + 2));
         } else {
           ccCmd[r++] = argv[k++];
         }
@@ -326,20 +322,20 @@ int main(int argc, char **argv)
       ccCmd[r++] = "-5s";
       ccCmd[r++] = concat("-i=",toDos(incdir));
       while (k < argc) {
-        if (!strcmp(argv[k], "-c")) {
-          if ((k + 1) == argc) {
-            usage("Missing file argument");
+        if (!strcmp(argv[k],"-c")) {
+          if (argc == k + 1) {
+            usage("Missing file argument.\n");
           }
-          ccCmd[r++] = argv[k+ 1];
+          ccCmd[r++] = argv[k + 1];
           k += 2;
         } else if (!strcmp(argv[k], "-o")) {
-          if ((k + 1) == argc) {
-            usage("Missing file argument");
+          if (argc == k + 1) {
+            usage("Missing file argument.\n");
           }
-          ccCmd[r++] = concat("-fo=", argv[k + 1]);
+          ccCmd[r++] = concat("-fo=",argv[k + 1]);
           k += 2;
-        } else if (!strncmp(argv[k], "-I", 2)) {
-          ccCmd[r++] = concat("-i=", toDos(argv[k++] + 2));
+        } else if (!strncmp(argv[k],"-I",2)) {
+          ccCmd[r++] = concat("-i=",toDos(argv[k++] + 2));
         } else {
           ccCmd[r++] = argv[k++];
         }
@@ -357,11 +353,8 @@ int main(int argc, char **argv)
       char *tmpfile_a = concat(ostmpnam(),".a");
       char *tmpfile_def = concat(ostmpnam(),".def");
       char **dlltoolCmd = new char*[7+argc+1];
-      char **libCmd = new char*[argc];
       int index = 0;
       int k = 2;
-      int lib_index = 0;
-      int do_strip = 0;
       dlltoolCmd[index++] = "dlltool";
       dlltoolCmd[index++] = "--def";
       dlltoolCmd[index++] = toUnix(concat(incdir,"/emulator.def"));
@@ -369,25 +362,23 @@ int main(int argc, char **argv)
       dlltoolCmd[index++] = tmpfile_def;
       dlltoolCmd[index++] = "--output-lib";
       dlltoolCmd[index++] = tmpfile_a;
-
       while (k < argc) {
-        if ((!strncmp(argv[k], "-l", 2)) || (!strncmp(argv[k], "-L", 2))) {
-          libCmd[lib_index++] = argv[k++];
-        } else if (!strcmp(argv[k], "-s")) {
-          do_strip = 1;
+        if (!strncmp(argv[k],"-l",2) || !strncmp(argv[k],"-L",2)) {
+          // do not pass to dlltool
           k++;
-        } else if (!strcmp(argv[k], "-o")) {
-          if ((k + 1) == argc) {
-            usage("missing object argument");
+        } else if (!strcmp(argv[k],"-s")) {
+          // do not pass to dlltool
+          k++;
+        } else if (!strcmp(argv[k],"-o")) {
+          if (argc == k + 1) {
+            usage("Missing object argument.\n");
           }
           target = argv[k + 1];
-          k +=2;
-        }
-        else {
+          k += 2;
+        } else {
           dlltoolCmd[index++] = argv[k++];
         }
       }
-      libCmd[lib_index] = NULL;
       dlltoolCmd[index] = NULL;
       int r = execute(dlltoolCmd,false);
       if (!r) {
@@ -400,21 +391,9 @@ int main(int argc, char **argv)
         dllwrapCmd[r++] = tmpfile_def;
         dllwrapCmd[r++] = "--dllname";
         dllwrapCmd[r++] = target;
-        for (int i = 2; i < argc; i++) {
-          if ((strncmp(argv[i], "-l", 2) != 0) &&
-              (strncmp(argv[i], "-L", 2) != 0) &&
-              (strcmp(argv[i], "-s") != 0)) {
-            dllwrapCmd[r++] = argv[i];
-          }
-        }
+        for (int i = 2; i < argc; i++)
+          dllwrapCmd[r++] = argv[i];
         dllwrapCmd[r++] = tmpfile_a;
-        if (do_strip) {
-          dllwrapCmd[r++] = "-s";
-        }
-        int i = 0;
-        while (libCmd[i] != NULL) {
-          dllwrapCmd[r++] = libCmd[i++];
-        }
         dllwrapCmd[r++] = "-lmsvcrt";
         dllwrapCmd[r] = NULL;
         r = execute(dllwrapCmd,false);
@@ -444,17 +423,17 @@ int main(int argc, char **argv)
         linkCmd[r++] = "/dll";
         int i = 2;
         while (i < argc) {
-          if (!strcmp(argv[i], "-o")) {
-            if ((i + 1) == argc) {
-              usage("missing target argument");
+          if (!strcmp(argv[i],"-o")) {
+            if (argc == i + 1) {
+              usage("Missing target argument.\n");
             }
             linkCmd[r++] = concat("/out:", argv[i + 1]);
             i += 2;
-          } else if (!strncmp(argv[i], "-l", 2)) {
-            linkCmd[r++] = concat((argv[i++] + 2), ".lib");
-          } else if (!strncmp(argv[i], "-L", 2)) {
-            linkCmd[r++] = concat("/libpath:", toWindows(argv[i] + 2));
-          } else if (!strcmp(argv[i], "-s")) {
+          } else if (!strncmp(argv[i],"-l",2)) {
+            linkCmd[r++] = concat(argv[i++] + 2, ".lib");
+          } else if (!strncmp(argv[i],"-L",2)) {
+            linkCmd[r++] = concat("/libpath:",toWindows(argv[i] + 2));
+          } else if (!strcmp(argv[i],"-s")) {
             i++;
           } else {
             linkCmd[r++] = argv[i++];
@@ -470,20 +449,20 @@ int main(int argc, char **argv)
       unlink(tmpfile_exp);
       doexit(r);
     }
-    case SYS_WATCOM: {
-      /* New Options not supported with WATCOM */
-      if (argc >= 4 && !strcmp(argv[2], "-o")) {
+    case SYS_WATCOM:
+      // options -l, -L, -s not implemented yet for WATCOM
+      if (argc >= 4 && !strcmp(argv[2],"-o")) {
         if (argc == 4) {
           usage("Missing object files.\n");
         }
         char *target = argv[3];
-        char *tmpfile_lib = concat(ostmpnam(),".lib");
+        char *tmpfile_lib = toDos(concat(ostmpnam(),".lib"));
         char **wlibCmd = new char*[6];
         wlibCmd[0] = "wlib";
         wlibCmd[1] = "/q";
         wlibCmd[2] = "/n";
         wlibCmd[3] = tmpfile_lib;
-        wlibCmd[4] = concat("@",toDos(concat(incdir, "\\emulator.cmd")));
+        wlibCmd[4] = concat("@",toDos(concat(incdir,"\\emulator.cmd")));
         wlibCmd[5] = NULL;
         int r = execute(wlibCmd,true);
         if (!r) {
@@ -503,7 +482,6 @@ int main(int argc, char **argv)
         unlink(tmpfile_lib);
         doexit(r);
       }
-    }
     }
   }
   usage();
