@@ -134,21 +134,40 @@ Board *WaitActor::getChild()
 // ------------------------------------------------------------------------
 //
 
-BuiltinTabEntry *solveContBITabEntry = new BuiltinTabEntry
-("*solveCont*", 1, BIsolveCont); // local Entry;
-BuiltinTabEntry *solvedBITabEntry = new BuiltinTabEntry
-("*solved*", 1, BIsolved);       // local Entry;
-TaggedRef SolveContFList = makeTaggedLTuple
-(new LTuple(makeTaggedAtom(StatusAtom),makeTaggedAtom(NameOfNil)));
-Arity *SolveContArity = SRecord::aritytable.find(SolveContFList);
-  
-TaggedRef solvedAtom = makeTaggedAtom (SolvedAtom);
-TaggedRef enumedAtom = makeTaggedAtom (EnumedAtom);
-TaggedRef lastAtom = makeTaggedAtom (LastAtom);
-TaggedRef moreAtom = makeTaggedAtom (MoreAtom);
-TaggedRef entailedAtom = makeTaggedAtom (EntailedAtom);
-TaggedRef stableAtom = makeTaggedAtom (StableAtom);
-TaggedRef failedAtom = makeTaggedAtom (FailedAtom);
+
+
+BuiltinTabEntry *solveContBITabEntry = NULL;
+BuiltinTabEntry *solvedBITabEntry    = NULL;
+TaggedRef SolveContFList             = makeTaggedNULL();
+Arity *SolveContArity                = NULL;
+
+TaggedRef solvedAtom;
+TaggedRef enumedAtom;
+TaggedRef lastAtom;
+TaggedRef moreAtom;
+TaggedRef entailedAtom;
+TaggedRef stableAtom;
+TaggedRef failedAtom;
+
+void Actor::InitSolve()
+{
+  solveContBITabEntry =
+    new BuiltinTabEntry("*solveCont*", 1, BIsolveCont); // local Entry;
+  solvedBITabEntry =
+    new BuiltinTabEntry("*solved*", 1, BIsolved);       // local Entry;
+  SolveContFList =
+    makeTaggedLTuple(new LTuple(makeTaggedAtom(StatusAtom),
+				makeTaggedAtom(NameOfNil)));
+  SolveContArity = SRecord::aritytable.find(SolveContFList);
+  solvedAtom = makeTaggedAtom (SolvedAtom);
+  enumedAtom = makeTaggedAtom (EnumedAtom);
+  lastAtom = makeTaggedAtom (LastAtom);
+  moreAtom = makeTaggedAtom (MoreAtom);
+  entailedAtom = makeTaggedAtom (EntailedAtom);
+  stableAtom = makeTaggedAtom (StableAtom);
+  failedAtom = makeTaggedAtom (FailedAtom);
+
+}
 
 void SolveActor::pushWaitActor (WaitActor *a)
 {
