@@ -37,14 +37,14 @@
 <Book proglang="gump">
   <Front>
     <!-- Splitting the document into different HTML nodes -->
-    <Meta name=htmlfile value="chapter.intro">
-    <Meta name=htmlfile value="chapter.scanner">
-    <Meta name=htmlfile value="section.scanner.example">
-    <Meta name=htmlfile value="section.scanner.reference">
-    <Meta name=htmlfile value="chapter.parser">
-    <Meta name=htmlfile value="section.parser.example">
-    <Meta name=htmlfile value="section.parser.reference">
-    <Meta name=htmlfile value="appendix.notation">
+    <Meta name="html.split" value="chapter.intro">
+    <Meta name="html.split" value="chapter.scanner">
+    <Meta name="html.split" value="section.scanner.example">
+    <Meta name="html.split" value="section.scanner.reference">
+    <Meta name="html.split" value="chapter.parser">
+    <Meta name="html.split" value="section.parser.example">
+    <Meta name="html.split" value="section.parser.reference">
+    <Meta name="html.split" value="appendix.notation">
 
     <Meta name=ozversion value="3.0">
     <Meta name=status value="revised">
