@@ -1,6 +1,6 @@
 functor
 export
-   SpaceManager parser:XMLParser ParseVS ParseFile ParseURL
+   SpaceManager parser:XMLParser
 require
    URL(make     : URLMake
        toString : URLToString
@@ -1076,18 +1076,6 @@ define
       meth openWithTail(Url Tail Restore $)
 	 {FileOpenWithTail Url Tail Restore}
       end
-   end
-
-   fun {ParseVS VS}
-      {{New XMLParser init} parseVS(VS $)}
-   end
-
-   fun {ParseFile F}
-      {{New XMLParser init} parseFile(F $)}
-   end
-   
-   fun {ParseURL F}
-      {{New XMLParser init} parseURL(F $)}
    end
 
 end
