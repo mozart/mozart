@@ -2932,6 +2932,113 @@ OZ_Return assignInline(TaggedRef fea, TaggedRef value)
 DECLAREBI_USEINLINEREL2(BIassign,assignInline)
 
 
+/*===================================================================
+ * Arrays
+ *=================================================================== */
+
+OZ_C_proc_begin(BIarrayNew,4)
+{
+  OZ_declareIntArg(0,low);
+  OZ_declareIntArg(1,high);
+  OZ_Term initvalue = OZ_getCArg(2);
+  OZ_Term out       = OZ_getCArg(3);
+
+  low = deref(OZ_getCArg(0));
+  high = deref(OZ_getCArg(1));
+
+  if (!isSmallInt(low)) {
+    TypeErrorT(0,"smallInteger");
+  }
+  if (!isSmallInt(high)) {
+    TypeErrorT(1,"smallInteger");
+  }
+
+  int ilow  = smallIntValue(low);
+  int ihigh = smallIntValue(high);
+
+  if (ilow>=ihigh) {
+    TypeErrorM("Low bound must be less than high bound");
+  }
+  
+  return OZ_unify(makeTaggedConst(new OzArray(ilow,ihigh,initvalue)),out);
+}
+OZ_C_proc_end
+
+
+OZ_Return isArrayInline(TaggedRef t, TaggedRef &out)
+{
+  NONVAR( t, term, tag );
+  out = isArray(term) ? NameTrue : NameFalse;
+  return PROCEED;
+}
+
+DECLAREBI_USEINLINEFUN1(BIisArray,isArrayInline)
+
+OZ_Return arrayLowInline(TaggedRef t, TaggedRef &out)
+{
+  NONVAR( t, term, tag );
+  if (!isArray(term)) {
+    TypeErrorT(0,"Array");
+  }
+  out = makeInt(tagged2Array(term)->getLow());
+  return PROCEED;
+}
+DECLAREBI_USEINLINEFUN1(BIarrayLow,arrayLowInline)
+
+OZ_Return arrayHighInline(TaggedRef t, TaggedRef &out)
+{
+  NONVAR( t, term, tag );
+  if (!isArray(term)) {
+    TypeErrorT(0,"Array");
+  }
+  out = makeInt(tagged2Array(term)->getHigh());
+  return PROCEED;
+}
+
+DECLAREBI_USEINLINEFUN1(BIarrayHigh,arrayHighInline)
+
+OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
+{
+  NONVAR( t, array, _1 );
+  NONVAR( i, index, _2 );
+
+  if (!isArray(array)) {
+    TypeErrorT(0,"Array");
+  }
+
+  if (!isSmallInt(index)) {
+    TypeErrorT(1,"smallInteger");
+  }
+
+  return tagged2Array(array)->getArg(smallIntValue(index),out);
+}
+DECLAREBI_USEINLINEFUN2(BIarrayGet,arrayGetInline)
+
+OZ_C_proc_begin(BIarrayPut,3)
+{
+  OZ_Term array = OZ_getCArg(0);
+  OZ_Term index = OZ_getCArg(1);
+  OZ_Term value = OZ_getCArg(2);
+
+  DEREF(array,_1,_2);
+  DEREF(index,_3,_4);
+  if (isAnyVar(array) || isAnyVar(index)) {
+    OZ_suspendOn2(OZ_getCArg(0),OZ_getCArg(1));
+  }
+
+  if (!isArray(array)) {
+    TypeErrorT(0,"Array");
+  }
+
+  if (!isSmallInt(index)) {
+    TypeErrorT(1,"smallInteger");
+  }
+
+  return tagged2Array(array)->setArg(smallIntValue(index),value);
+}
+OZ_C_proc_end
+
+
 /* -----------------------------------------------------------------------
    suspending
    ----------------------------------------------------------------------- */
@@ -6004,6 +6111,13 @@ BIspec allSpec[] = {
   {"constraints",    2, BIconstraints,		0},
 
   {"pushExHdl",      1, BIpushExHdl,		0},
+
+  {"Array.new",  4, BIarrayNew,	0},
+  {"Array.is",   2,BIisArray, (IFOR) isArrayInline},
+  {"Array.high", 2,BIarrayHigh, (IFOR) arrayHighInline},
+  {"Array.low",  2,BIarrayLow,  (IFOR) arrayLowInline},
+  {"Array.get",  3,BIarrayGet,  (IFOR) arrayGetInline},
+  {"Array.put",  3,BIarrayPut,  0},
 
   {"setAbstractionTabDefaultEntry", 1, BIsetAbstractionTabDefaultEntry, 0},
 
