@@ -75,12 +75,14 @@ initialize_conflicts()
   for (i = 0; i < nstates; i++)
     set_conflicts(i);
 
-  for (i = 0; i < ntokens; i++)
-    if (sprec[i] && !sprec_used[i])
-      fprintf(foutput, "Precedence for token `%s' ignored.\n", tags[i]);
-  for (i = 1; i <= nrules; i++)
-    if (rprec[i] && !rprec_used[i])
-      fprintf(foutput, "Precedence token for rule %d ignored.\n", i);
+  if (verboseflag) {
+    for (i = 0; i < ntokens; i++)
+      if (sprec[i] && !sprec_used[i])
+        fprintf(foutput, "Precedence for token `%s' ignored.\n", tags[i]);
+    for (i = 1; i <= nrules; i++)
+      if (rprec[i] && !rprec_used[i])
+        fprintf(foutput, "Precedence token for rule %d ignored.\n", i);
+  }
 }
 
 
