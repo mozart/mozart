@@ -593,9 +593,9 @@ inline
 void Literal::gcRecurse ()
 {
   GCMETHMSG("Literal::gcRecurse");
-  DebugGC((isDynName () == NO),
+  DebugGC((isDynName() == NO),
 	  error ("non-dynamic name is found in gcRecurse"));
-  home = home->gcBoard ();
+  home = home->gcBoard();
   if (home == (Board *) NULL) {
     /*
      * mm2
@@ -1823,34 +1823,36 @@ void Chunk::gcRecurse()
   record = getRecord()->gcSRecord();
   switch(getCType()) {
 	      
-  case C_ABSTRACTION:
-    {
-      Abstraction *a = (Abstraction *) this;
-      Assert(!isFreedRefsArray (a->gRegs));
-      a->gRegs = gcRefsArray(a->gRegs);
-      a->name = a->name->gc ();
-      DebugGC((a->name->getHome () == (Board *) ToPointer(ALLBITS) ||
-		   a->name->getHome () == (Board *) NULL),
-	      error ("non-dynamic name is met in Abstraction::gcRecurse"));
-      INTOSPACE(a->name);
-      break;
-    }
-    
   case C_OBJECT:
     {
       Object *o      = (Object *) this;
-      Assert(!isFreedRefsArray (o->gRegs));
-      o->gRegs       = gcRefsArray(o->gRegs);
       o->cell        = (Cell*)o->cell->gcConstTerm();
       o->fastMethods = o->fastMethods->gcSRecord();
-      // "Literal *printName" needs no collection
+    }   // no break here!
+    
+  case C_ABSTRACTION:
+    {
+      Abstraction *a = (Abstraction *) this;
+      Assert(!isFreedRefsArray(a->gRegs));
+      a->gRegs = gcRefsArray(a->gRegs);
+
+      a->home = a->home->gcBoard();
+      varCount++;
+
+      DebugGC((a->home == (Board *) ToPointer(ALLBITS) ||
+	       a->home == NULL),
+	      error ("non-dynamic name is met in Abstraction::gcRecurse"));
+      INTOSPACE(a->home);
       break;
     }
     
   case C_CELL:
     {
       Cell *c = (Cell *) this;
-      c->name = c->name->gc ();
+
+      c->home = c->home->gcBoard();
+      varCount++;
+
       gcTagged(c->val,c->val);
       break;
     }
@@ -1900,24 +1902,22 @@ ConstTerm *ConstTerm::gcConstTerm()
 	return (newBoard);
       }
     }
-  case Co_Actor:
-    return ((Actor *) this)->gc();
-  case Co_Thread:
-    return ((Thread *) this)->gc();
-
-  case Co_HeapChunk:
-    return ((HeapChunk *) this)->gc();
+  case Co_Actor:     return ((Actor *) this)->gc();
+  case Co_Thread:    return ((Thread *) this)->gc();
+  case Co_HeapChunk: return ((HeapChunk *) this)->gc();
     
   case Co_Chunk:
     {
       size_t sz;
       switch(((Chunk*) this)->getCType()) {
-      case C_ABSTRACTION:
-	if (opMode == IN_TC && isLocalBoard (((Abstraction *) this)->getBoard ()) == NO)
+      case C_ABSTRACTION: {
+	Abstraction *a = (Abstraction *) this;
+	if (opMode == IN_TC && !isLocalBoard(a->getBoard()))
 	  return this;
 	sz = sizeof(Abstraction);
-//	DebugGCT(if (opMode == IN_GC) NOTINTOSPACE(((Abstraction *) this)->name););
+//	DebugGCT(if (opMode == IN_GC) NOTINTOSPACE(a->getBoard(););
 	break;
+      }
       case C_OBJECT:
 	sz = sizeof(Object);
 	break;
