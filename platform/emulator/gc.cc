@@ -1919,36 +1919,33 @@ void Thread::gcRecurse()
 
 Board* Board::gcGetNotificationBoard ()
 {
-  /* Kostja please check: Board::flags may contain forward reference */
-  return this;
-
   GCMETHMSG("Board::gcGetNotificationBoard");
   Board *bb = this;
-  if (bb == (Board *) NULL)
+  if (bb == NULL)
     return (bb);
   Board *nb = this;
   Actor *auxActor;
   while (OK) {
-    if (bb->isRoot () == OK)
+    if (GCISMARKED(*getGCField()) || bb->isRoot())
       return (nb);
-    if (bb->isDiscarded () == OK || bb->isFailed () == OK) {
+    if (bb->isDiscarded() || bb->isFailed()) {
       auxActor = bb->u.actor;
-      DebugGC((auxActor == (Actor *) NULL ||
-               ((ConstTerm *) auxActor)->getType () != Co_Actor),
+      DebugGC(auxActor == NULL ||
+              (auxActor->getType() != Co_Actor) && !GCISMARKED(*auxActor->getGCField()),
               error ("non-actor is got in Board::gcGetNotificationBoard"));
-      bb = auxActor->getBoard ();
+      bb = auxActor->getBoard();
       nb = bb;   // probably not dead;
       continue;
     }
-    if (bb->isCommitted () == OK) {
+    if (bb->isCommitted()) {
       bb = bb->u.board;
-    } else {
-      auxActor = bb->u.actor;
-      DebugGC((auxActor == (Actor *) NULL ||
-               ((ConstTerm *) auxActor)->getType () != Co_Actor),
-              error ("non-actor is got in Board::gcGetNotificationBoard"));
-      bb = auxActor->getBoard ();
+      continue;
     }
+    auxActor = bb->u.actor;
+    DebugGC(auxActor == NULL ||
+            (auxActor->getType() != Co_Actor) && !GCISMARKED(*auxActor->getGCField()),
+            error ("non-actor is got in Board::gcGetNotificationBoard"));
+    bb = auxActor->getBoard ();
   }
 }
 
@@ -1970,23 +1967,23 @@ Board *Board::gcGetBoardDeref()
     }
     if (bb->isCommitted()) {
       bb = bb->u.board;
-    } else {
-      Board *retB = bb;
-      while (OK) {
-        if (!bb || GCISMARKED(*bb->getGCField())) {
+      continue;
+    }
+    Board *retB = bb;
+    while (OK) {
+      if (!bb || GCISMARKED(*bb->getGCField())) {
+        return retB;
+      }
+      if (bb->isDiscarded() || bb->isFailed()) {
+        return NULL;
+      }
+      if (bb->isCommitted()) {
+        bb = bb->u.board;
+      } else {
+        if (bb->isRoot () == OK) {
           return retB;
         }
-        if (bb->isDiscarded() || bb->isFailed()) {
-          return NULL;
-        } else if (bb->isCommitted()) {
-          bb = bb->u.board;
-        } else {
-          if (bb->isRoot () == OK) {
-            return retB;
-          } else {
-            bb = bb->getParentBoard ();
-          }
-        }
+        bb = bb->getParentBoard ();
       }
     }
   }
