@@ -363,7 +363,7 @@ in
 		  tk(tag add  LineTag LineEnd) % extend tag to whole line
 		  tk(tag bind LineTag '<1>' LineAction)] W}
 	 
-	 case Size == 1 andthen FrameNr == 1 orelse FrameNr == 2 then
+	 case Size == 1 andthen FrameNr == 1 orelse FrameNr == Size - 1 then
 	    %LastSelectedFrame <- undef
 	    Gui,SelectStackFrame(LineTag)
 	    Gui,printEnv(frame:FrameNr vars:Frame.env)
