@@ -37,6 +37,10 @@
 #define OZ_DEBUGPRINTTHIS
 #endif
 
+#ifndef OZ_DEBUGPRINT
+#define OZ_DEBUGPRINT
+#endif
+
 template  <class SERVICE, class FDVAR, class FD, class P_PFDVAR, class PFDVAR, class ENGINE>
 SERVICE &FilterTasksOverlap<SERVICE, FDVAR, FD, P_PFDVAR, PFDVAR, ENGINE>::filter(SERVICE & s,
 							FDVAR &x,
