@@ -282,6 +282,14 @@ in
 	    end
 	 end
       end
+
+      meth close
+	 lock
+	    case @MyManager of unit then skip
+	    elseof M then {M close}
+	    end
+	 end
+      end
       
    end
    
