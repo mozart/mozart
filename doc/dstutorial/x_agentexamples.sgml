@@ -2,11 +2,16 @@
 <CHAPTER ID="chapter.agentexamples">
   <TITLE>Mobile Agents</TITLE>
  
+<index see=idx.agent/mobile agent/
 <P>This chapter shows how to program mobile agents in Mozart.
+<index id=idx.agent/agent<and>/
 We call <EM>agent</EM> any distributed
 computation that is organized as a set of tasks.
+<index/task/
+<index/agent<and>task/
 A <EM>task</EM> is a computation that uses the
 resources of a single site.
+<index/agent<and>resource/
 By <EM>resource</EM> we mean the technical definition
 given in <ptr to="sited.entities">, for example,
 file system, peripherals, networking abilities, operating system access, etc.
@@ -24,12 +29,14 @@ unnecessarily general,
 but it is natural in Mozart, where
 it is as easy for an application to
 run on one site or a set of sites.
+<index/agent<and>barrier synchronization example/
 For example, here's an agent <<A>> that
 concurrently delegates 10 tasks to remote sites
 and waits until all are done before continuing.
 The agent servers are represented by <<AS0>> and <<AS9>> and the
 work is represented by functors containing
 the one-argument procedures <<P0>> to <<P9>>.
+When a procedure is finished it binds its argument to <<unit>>.
 <<<
 declare
 A=functor
@@ -68,6 +75,8 @@ Then, we will program the agents.
 <SUBSECTION><TITLE>Installing the agent servers</TITLE>
 
 <P>To go to a site, there has to be something at the site
+<index/agent server<and>/
+<index/agent<and>agent server/
 that accepts the agent.  We call it an <EM>agent server</EM>.
 An agent server accepts functors (which represent agents or parts
 of agents) and applies them on its site.
@@ -81,8 +90,10 @@ along with the following operations:
 A calculation is started asynchronously on the agent server by invoking <<{AS.server F}>>,
 where <<F>> is a functor that
 specifies the calculation and the resources it needs.
+<index/agent<and>publishing an agent server/
 <ITEM>The operation <<{AS.publishserver FN}>>, which when executed
 creates a file <<FN>> that contains a ticket to the site's agent server.
+<index/agent<and>getting an agent server/
 <ITEM>The operation <<{AS.getserver UFN ?AS}>>, which when inputted
 an URL or file name <<UFN>> to any agent server
 (even on other sites), gives as output a reference to that agent server <<AS>>.
@@ -149,6 +160,7 @@ let the agents work.
 <P>A first example creates an agent on the remote site.
 The agent queries the operating system and returns
 the value of the <<OS.time>> operation.
+<index/agent<and>simple example/
 Let's first execute the agent interactively:
 <<<
 declare D1 in
@@ -234,6 +246,7 @@ on the termination.
 
 <SUBSECTION id="agent.server"><TITLE>Definition of <<AgentServer>></TITLE>
 
+<index/agent server<and>definition/
 <P>The basic tool giving agent functionality is the functor <<AgentServer>>,
 which is defined as follows.
 When installed, this functor creates an agent server,
