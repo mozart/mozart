@@ -2076,22 +2076,22 @@ void initFDs()
   unsigned int i;
 
   /* initialize numOfBitsInByte */
-  numOfBitsInByte = new unsigned char[maxByte];
+  numOfBitsInByte = new unsigned char[maxByte+1];
   Assert(numOfBitsInByte!=NULL);
-  for(i=0; i<maxByte; i++) {
+  for(i=0; i<=maxByte; i++) {
     numOfBitsInByte[i] = 0;
     int j = i;
     while (j>0) {
       if (j&1)
         numOfBitsInByte[i]++;
-      j = j>>1;
+      j>>=1;
     }
   }
 
   /* initialize numOfBitsInHalfWord */
-  numOfBitsInHalfWord = new unsigned char[maxHalfWord];
+  numOfBitsInHalfWord = new unsigned char[maxHalfWord+1];
   Assert(numOfBitsInHalfWord!=NULL);
-  for(i=0; i<maxHalfWord; i++) {
+  for(i=0; i<=maxHalfWord; i++) {
     numOfBitsInHalfWord[i] = numOfBitsInByte[i&0xff] + numOfBitsInByte[i>>8];
   }
 
