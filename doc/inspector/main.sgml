@@ -45,12 +45,11 @@
     <META name="html.split" value="chapter.gui">
     <META name="html.split" value="chapter.configure">
 
-    <TITLE>Oz Inspector</TITLE>
+    <TITLE/The Oz Inspector/
     <AUTHOR.EXTERN to="author.db" key="Thorsten.Brunklaus">
     <ABSTRACT>
-      The Inspector is a graphical and interactive tool for
-      displaying and examining Oz values.
-      The idea is to combine fast basic display services with powerful
+      The Inspector is a graphical and interactive tool for displaying and
+      examining Oz values.  It combines fast display services with powerful
       interactive in-place manipulation of the datastructures.
     </ABSTRACT>
   </FRONT>
