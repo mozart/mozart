@@ -1,0 +1,882 @@
+<Chapter ID="chapter.parser">
+  <Title>The Gump Parser Generator
+  <P>
+    This chapter describes the Gump Parser Generator.  As for the Gump
+    Scanner Generator described in the last chapter, its input consists of
+    an Oz source with embedded parser specifications and the output are Oz
+    class definitions.
+<PARA CLASS=apropos><TITLE/Definitions/
+    A <Def>parser</Def> is a program that performs syntax analysis.  This
+    means that a stream of tokens is analyzed and a (unique) tree structure
+    on the tokens in this stream is computed.  The token classes are
+    called <Def>terminal symbols</Def>; additionally, new <Def>nonterminal
+    symbols</Def> are introduced in the specification.  For each nonterminal,
+    a set of rules is given which indicates sequences of symbols that may be
+    replaced by this nonterminal.  The token sequence is read from left to
+    right and subsequences of symbols are replaced by nonterminal symbols
+    according to the rules (which is called a <Def>reduction</Def>).  Either
+    the result is a special nonterminal, the <Def>start symbol</Def>, or the
+    input is erroneous and rejected.  A result is constructed during the parse
+    by executing user-specified <Def>semantic actions</Def> each reduction.
+  <P>
+    This chapter first describes the basic concepts of the Gump Parser
+    Generator by example in <PTR TO="section.parser.example"
+    CLASS="Section">.  <PTR TO="section.parser.reference"
+    CLASS="Section"> presents the more advanced concepts and a
+    detailed definition of the specification language.
+  <Section ID="section.parser.example">
+    <Title>Example
+    <P>
+      This section presents the parser for the functional language
+      <Code>Lambda</Code> for which a scanner was specified in the last
+      chapter.
+    <SubSection><Title>Writing a Parser Specification
+      <P>
+	<PTR TO="program.parser.example" CLASS="Program">
+	shows the parser specification which will serve as an example to
+	demonstrate the basic concepts of the Gump Parser Generator.  This
+	example will be examined in detail in the following.
+<FLOAT ID="program.parser.example" CLASS="Program">
+<TITLE>The <Code proglang="oz">LambdaParser</Code> parser
+specification.</TITLE>
+<P><CODE.EXTERN PROGLANG="gump" TO="LambdaParser.ozg">
+</FLOAT>
+<PARA CLASS=apropos><TITLE/Class Descriptors/
+	Again, a Gump specification resembles a class definition introduced
+	by a special keyword, <Code proglang="gump">parser</Code>, and
+	augmented
+	by additional declarations.  The usual class descriptors <Code
+	proglang="gump">from</Code> and <Code proglang="gump">meth</Code>
+	are also
+	used in this specification in lines 2 to&nbsp;8.  The switches
+	<Code proglang="gump">gumpparseroutputsimplified</Code> and
+	<Code proglang="gump">gumpparserverbose</Code> simply cause additional
+	information to be output at parser generation time; we will see this
+	in the next section.
+      <P>
+	The <Code proglang="gump">error</Code> method will be called upon
+	detection of parse errors.  Its parameter is a virtual string
+	describing the error.  We redefine this method (which has a default
+	implementation in the super class <Code
+	proglang="gump">GumpParser</Code>)
+	since we want to provide the user with the line number information we
+	maintain in the scanner.
+<PARA CLASS=apropos><TITLE/Token Declarations/
+	In line&nbsp;10 begin the token declarations.  All token classes
+	(which must be atoms) that the scanner can produce are listed after
+	the <Code proglang="gump">token</Code> keyword.  Additionally, some
+	tokens
+	are assigned an <Def>associativity</Def> (here: <Code
+	proglang="gump"
+	>leftAssoc</Code>) and a <Def>precedence</Def> value (a nonzero
+	positive integer) after a colon.  These are used to resolve
+	ambiguities in the syntax rules.  The reason for the assignments in
+	our example are explained below.  (You may notice that one of the
+	listed tokens cannot be produced by the scanner, the <Code
+	proglang="gump"
+	>'APPLY'</Code> token.  This is called a <Def>pseudo-token</Def> and is
+	solely defined for its associativity and precedence information.)
+<PARA CLASS=apropos><TITLE/Syntax Rules/
+	Line&nbsp;19 marks the start of the syntax rules themselves.  For each
+	nonterminal, a syntax rule (introduced by the keyword <Code
+	proglang="gump"
+	>syn</Code>) must be given.  Nonterminals may be named by atoms or
+	variables.
+<PARA CLASS=apropos><TITLE/Start Symbols/
+	An atom means that this nonterminal is a start symbol.  Several start
+	symbols may be defined &endash; the one to reduce to is selected when
+	a concrete parse is initiated.
+<PARA CLASS=apropos><TITLE/Formal Parameter Lists/
+	Following the nonterminal is its parameter list, consisting of zero or
+	more variables in parentheses.  The start symbol <Code
+	proglang="gump"
+	>program</Code> has two parameters: a list of definitions and a list
+	of terms.  These are both output parameters, as is indicated by the
+	commentary <Code proglang="gump">?</Code>.
+<PARA CLASS=apropos><TITLE/EBNF Phrases/
+	The body of each syntax rule is an EBNF phrase (EBNF is an
+	abbreviation of <Def>Extended Backus-Naur-Formalism</Def>).  As in Oz,
+	we distinguish between statements and expressions:  Some EBNF phrases
+	carry values and may thus only stand at expression position, others
+	don't and must be used at statement position.
+      <P>
+	The basic building blocks of EBNF expressions are <Def>grammar symbol
+	applications</Def>, denoted by the name of a terminal or nonterminal
+	followed by the actual parameter list in parentheses, as in
+	line&nbsp;20:
+	<Code Display proglang="gump">Definition($)</Code>
+	which is an application of the nonterminal <Code proglang="gump"
+	>Definition</Code> with a single actual parameter.  Since this is
+	the nesting marker, the application is an expression (as opposed to
+	a statement) with the value of the corresponding actual parameter
+	as its value.  This application is written inside the repetition
+	symbols <Code proglang="gump">{</Code> &Ellipsis; <Code
+	proglang="gump"
+	> }*</Code>, which means that the application is to be repeated
+	0 to&nbsp;<Math>n</Math> times.  The repetition construct builds a
+	list of its argument's values at each iteration, since it is used
+	in expression position.  This list is assigned to the formal
+	parameter <Code proglang="gump">Definitions</Code>.
+      <P>
+	The next line, line&nbsp;21, is similar:  Here, a nonempty list (note
+	the <Code proglang="gump">+</Code>) of <Code
+	proglang="gump">Term</Code>s is
+	expected, seperated by semicolons.  The values computed by each
+	<Code proglang="gump">Term</Code> are collected in a list, which is
+	assigned to the formal parameter <Code proglang="gump">Terms</Code>.
+<PARA CLASS=apropos><TITLE/Local Variables/
+	The next syntax rule introduces a new feature: local variables.
+	All variables in <Def>pattern position</Def> in syntax rules are
+	implicitly declared local.  EBNF pattern positions are the left
+	side of an assignment (such as in line&nbsp;20) and the actual
+	parameters of grammar symbol applications.  If in any of these
+	places a single non-escaped variable is used, it is implicitly
+	declared local to the EBNF construct it is used in.  Such is the
+	case for the variables <Code proglang="gump">I</Code> and&nbsp;<Code
+	proglang="gump">T</Code> in line&nbsp;24.  The formal parameter
+	variables
+	assigned to in lines 20 and&nbsp;21 had to be escaped to avoid their
+	implicit (re-)declaration.
+      <P>
+	The syntax rule for <Code proglang="gump">Definition</Code> in
+	line&nbsp;23
+	has a single parameter.  Since this is the nesting marker, an EBNF
+	expression is expected as body of this rule.  The value of a sequence
+	of EBNF expressions is the value of the last expression (as in Oz,
+	where the value of a sequential composition is the value of the
+	composition's second argument).
+<PARA CLASS=apropos><TITLE/Semantic Actions/
+	The last EBNF expression in line&nbsp;23 is the <Def>semantic
+	action</Def>, introduced by the arrow <Code
+	proglang="gump">=&gt;</Code>.
+	This action constructs a an abstract syntax tree node as a tuple.
+<PARA CLASS=apropos><TITLE/Alternatives/
+	Lines 26 to&nbsp;32 show the rule for <Code
+	proglang="gump">Term</Code>.
+	This rule has several alternatives, separated by the choice operator
+	<Code proglang="gump">[]</Code>.  These alternatives also imply the
+	need
+	for the given token precedences and associativities mentioned above:
+	Not all inputs have a unique parse tree.  If, for example, we wrote
+	<Code Display>lambda x.y z</Code>
+	this could be parsed as either
+	<Code Display>(lambda x.y) z</Code>
+	or
+	<Code Display>lambda x.(y z)</Code>
+	We want to enforce the second meaning (that is, the application has a
+	higher precedence than the abstraction); furthermore, the application
+	should be left-associative (&IE;, <Code>x y z</Code> means
+	<Code>(x y) z</Code>).
+<PARA CLASS=apropos><TITLE/Resolving Conflicts/
+	This is why the pseudo-token <Code proglang="gump">'APPLY'</Code> was
+	introduced.  Each alternative may also have, like the tokens, a
+	precedence and an associativity.  If the alternative contains a
+	terminal, than the values of the last terminal are used.
+	Alternatively, a special <Def>precedence token</Def> may be specified
+	via <Code proglang="gump">prec(</Code><Var>terminal</Var><Code
+	proglang="gump"
+	>)</Code>; then the values of this are used instead.  Thus, the
+	application <Code>Term Term</Code> is left-associative.  Higher
+	precedence values mean tighter binding of operators.  Thus, the
+	application (token <Code proglang="gump">'APPLY'</Code> of
+	precedence&nbsp;2) has precedence over the abstraction
+	(token&nbsp;<Code proglang="gump">'.'</Code> of precedence&nbsp;1).
+      <P>
+	However, one anomaly remains because the application has no
+	(visible) operator &endash; to resolve conflicts, the
+	precedence/associativity values of the lookahead token are compared
+	to the
+	values of the (potentially) applicable rules.  So if the lookahead
+	is one of the tokens with which a <Code proglang="gump">Term</Code> can
+	begin, it is in fact an application we have to parse.  This is why
+	all these tokens are assigned the same precedence as the application.
+	(For a more detailed description of how operator precedence
+	information is used to resolve conflicts, consult the <Ref
+	TO="donellystallman95" CLASS=bib><Cite>Bison</Cite> manual</Ref>.
+<PARA CLASS=apropos><TITLE/Epsilon Productions/
+	The last nonterminal, <Code proglang="gump">Line</Code> in
+	line&nbsp;33,
+	is actually only introduced for the semantic value it computes.  The
+	empty sequence of grammar symbols is denoted by <Code
+	proglang="gump"
+	>skip</Code>.
+    <SubSection><Title>Invoking Gump
+      <P>
+	Parser specifications are processed in the same way scanner
+	specifications are.  First we prepare the Gump Parser Generator
+	by feeding:
+	<Code Display proglang="gump">\switch +gump</Code>
+      <P>
+	Then the file to translate is simply fed into the compiler.
+	Suppose you saved the example specification in the file
+	<Code>LambdaParser.ozg</Code>; feed:
+	<Code Display>\insert LambdaParser.ozg</Code>
+	The extension <Code>.ozg</Code> indicating, as before, an Oz file with
+	embedded Gump specifications.
+<PARA CLASS=apropos><TITLE/Output Files/
+	Two files are generated from the <Code proglang="gump">parser</Code>
+	definition: <Code>LambdaParser.simplified</Code> contains a simplified
+	version of the syntax rules where the EBNF constructs have been
+	expanded to equivalent BNF forms (because the <Code
+	proglang="gump"
+	>gumpparseroutputsimplified</Code> switch was set), whereas the
+	file <Code>LambdaParser.output</Code> contains the output from the
+	<Cite>Bison</Cite> parse table generator (because the <Code
+	proglang="gump"
+	>gumpparserverbose</Code> switch was set).  These names are generated
+	from the parser specification's name.
+    <SubSection><Title>Using the Generated Parser
+      <P>
+	<PTR TO="program.parser.test" CLASS="Program"> shows an
+	example Oz program that uses both the generated scanner from the last
+	chapter and the generated parser from above.
+<FLOAT ID="program.parser.test" CLASS="program here">
+<TITLE>A program making use of the generated parser.</TITLE>
+<P><CODE.EXTERN PROGLANG="gump" TO="TestParser.ozg">
+</FLOAT>
+<PARA CLASS=apropos><TITLE/Initialization/
+	First, the scanner and parser classes are loaded.  After instantiating
+	and initializing the scanner, a parser object is created.  This needs
+	as initializer a single parameter, a scanner.  This is, technically
+	speaking, a unary procedure that understands the messages <Code
+	proglang="gump">putToken</Code> and <Code
+	proglang="gump">getToken</Code>
+	described in <PTR TO="section.parser.class" CLASS="Section">.
+<PARA CLASS=apropos><TITLE/Initiating a Parse/
+      <P>
+	The most interesting message sent to the parser is the <Code
+	proglang="gump">parse</Code> message.  The first argument has to
+	be a tuple.  The label specifies the start symbol to use, the
+	features corresponding to the actual parameters of the start symbol.
+	In this case, the actual parameter variables <Code proglang="gump"
+	>Definitions</Code> and <Code proglang="gump">Terms</Code> are bound to
+	lists of definitions and terms, respectively.  The second argument
+	to the <Code proglang="gump">parse</Code> message is the result status.
+	This is either unified with <Code proglang="gump">true</Code> if
+	parsing
+	was successful or with <Code proglang="gump">false</Code> if an error
+	occurred.
+  <Section ID="section.parser.reference">
+    <Title>Reference</Title>
+    <P>
+      This section is the reference manual for the Gump Parser Generator.
+      It is divided into three parts:  First, the syntax of the Gump parser
+      specification language is given in <PTR TO="section.parser.syntax"
+      CLASS="Section">.  Then, the options to parser
+      generation supported by the Gump Parser Generator are detailed
+      in <PTR TO="section.parser.params" CLASS="Section">.
+      Finally, the runtime support for generated parsers, the mixin class
+      <Code proglang="gump">GumpParser</Code>, is presented in <PTR
+      TO="section.parser.class" CLASS="Section">.
+    <SubSection ID="section.parser.syntax">
+      <Title>Syntax of the Parser Specification Language
+      <P>
+	The meta-notation used for describing the syntax of the specification
+	language is explained in <PTR TO="appendix.notation"
+	CLASS="Appendix">.  (Note:  This is <Em>not</Em> the
+	language used in Gump to specify parsers.  This is intentional.)
+      <P>
+	Gump specifications are allowed anywhere as a statement.
+      <Grammar.Rule>?={phrase}
+	<Grammar.Alt type="add">?={parser specification}</Grammar.Alt>
+      <P>
+	A parser specification is introduced by the keyword <Code
+	proglang="gump"
+	>parser</Code>, followed by the usual components of an Oz class.
+	Following these are additional parser-specific descriptors.  Parser
+	specifications must be named by variables, since the names of these
+	variables will be used to generate auxiliary file names during parser
+	generation.
+      <Grammar.Rule>?={parser specification}
+	<Grammar.Alt type="def"
+	  ><Code proglang="gump">parser</Code> ?={variable}</Grammar.Alt>
+	<Grammar.Alt>{ ?={class descriptor} }</Grammar.Alt>
+	<Grammar.Alt>{ ?={method} }</Grammar.Alt>
+	<Grammar.Alt>[ ?={token clause} ]</Grammar.Alt>
+	<Grammar.Alt>{ ?={parser descriptor} }+</Grammar.Alt>
+	<Grammar.Alt><Code proglang="gump">end</Code></Grammar.Alt>
+      <SubSubSection>
+	<Title>Token Declarations
+	<P>
+	  The first extra parser descriptor is the <Code proglang="gump"
+	  >token</Code> clause.  This defines the names of the terminals used
+	  in the specification as well as (optionally) their associativity
+	  and precedence.  Several tokens are predefined:  The atoms of
+	  length&nbsp;1 are always considered tokens.  Furthermore, token
+	  <Code proglang="gump">'error'</Code> stands for an erroneous token
+	  (sequence) and is used for error recovery, and token <Code
+	  proglang="gump">'EOF'</Code> signalizes the end of input and is
+	  always
+	  expected before reduction to the start symbol can take place.
+	<Grammar.Rule>?={token clause}
+	  <Grammar.Alt type="def"
+	    ><Code proglang="gump">token</Code> { ?={token declaration}
+	     }+</Grammar.Alt>
+	<Grammar.Rule>?={token declaration}
+	  <Grammar.Alt type="def"
+	    >?={atom} [ <Code proglang="gump">:</Code> ?={phrase}
+	    ]</Grammar.Alt>
+	<P>
+	  The optional phrase following the colon in a token declaration must
+	  be a tuple with arity&nbsp;1 and one of the labels <Code
+	  proglang="gump"
+	  >leftAssoc</Code>, <Code proglang="gump">rightAssoc</Code> or <Code
+	  proglang="gump">nonAssoc</Code>, depending on the desired
+	  associativity.
+	  The feature must always be a nonzero positive integer.  Only the
+	  relative values matter; they are used to derive an ordering on the
+	  tokens.  Larger values imply a greater binding strength of the
+	  operator.  For the algorithm used to resolve conflicts using
+	  operator precedence information, refer to the <Ref
+	  TO="donellystallman95" CLASS=bib INFO="Node `Precedence'"><Cite
+	  >Bison</Cite> manual</Ref>.
+	<SubSubSection><Title>Syntax Rules
+	  <P>
+	    Syntax rules are parser descriptors.  They are composed of a
+	    head and a body.  The head specifies the name of the defined
+	    nonterminal, where atoms are considered start symbols, as well
+	    as the formal parameters of the nonterminal.  Only one syntax
+	    rule per nonterminal name is allowed.
+	  <Grammar.Rule>?={parser descriptor}
+	    <Grammar.Alt type="def">?={syn clause}</Grammar.Alt>
+	  <Grammar.Rule>?={parser descriptor}
+	    <Grammar.Alt type="def">?={syn clause}</Grammar.Alt>
+	  <Grammar.Rule>?={syn clause}
+	    <Grammar.Alt type="def"><Code proglang="gump">syn</Code>
+	      ?={syn head} ?={syn alt} <Code proglang="gump">end</Code
+	      ></Grammar.Alt>
+	  <Grammar.Rule>?={syn head}
+	    <Grammar.Alt type="def">?={atom}</Grammar.Alt>
+	    <Grammar.Alt type="or">?={atom label}
+	      ?={syn formals}</Grammar.Alt>
+	    <Grammar.Alt type="or">?={variable}</Grammar.Alt>
+	    <Grammar.Alt type="or">?={variable label}
+	      ?={syn formals}</Grammar.Alt>
+	  <Grammar.Rule>?={syn formals}
+	    <Grammar.Alt type="def"><Code proglang="gump">(</Code> {
+	      ?={syn formal} } <Code proglang="gump">)</Code></Grammar.Alt>
+	  <P>
+	    The body of a syntax rule is an EBNF phrase.  It is distinguished
+	    between EBNF statements and EBNF expressions:  EBNF expressions
+	    carry an additional value.  In the following, it is always
+	    specified where EBNF statements or expressions are expected and
+	    which constructs yield a value.
+	  <P>
+	    Formal parameters are denoted by variables.  At most one parameter
+	    may be the nesting marker; in this case the body of the syntax
+	    rule must be an EBNF expression.  Its value is unified with the
+	    corresponding actual parameter upon application of the nonterminal.
+	  <Grammar.Rule>?={syn formal}
+	    <Grammar.Alt type="def">?={variable}</Grammar.Alt>
+	    <Grammar.Alt type="or"><Code proglang="gump">_</Code></Grammar.Alt>
+	    <Grammar.Alt type="or"><Code proglang="Gump">$</Code></Grammar.Alt>
+	  <P>
+	    An alternation specifies several sequences (called <Def
+	    >alternatives</Def>), separated by the choice operator&nbsp;<Code
+	    proglang="gump">[]</Code>.  Either all sequences must be EBNF
+	    expressions or all sequences must be EBNF statements.  If all
+	    alternatives are expressions, the alternation is an expression
+	    and yields at runtime the value of the selected sequence at
+	    runtime.
+	  <Grammar.Rule>?={syn alt}
+	    <Grammar.Alt type="def">?={syn seq} { <Code proglang="gump"
+	      >[]</Code> ?={syn seq} }</Grammar.Alt>
+	  <P>
+	    At the beginning of an sequence, local variables may be declared.
+	    These are visible only inside the sequence.  The sequence itself
+	    is composed of <Math>n \ge 0</Math> EBNF factors, optionally
+	    followed by a semantic action.  If an EBNF expression is expected
+	    at the place the sequence stands, then a semantic action must
+	    either be an expression or omitted.  In the latter case, the
+	    last EBNF phrase must be an EBNF expression, the value of the
+	    sequence then is the value of this EBNF expression.  All other
+	    EBNF factors must be statements.  If <Math>n = 0</Math>, then the
+	    sequence may be written as <Code proglang="gump">skip</Code>.
+	  <Grammar.Rule>?={syn seq}
+	    <Grammar.Alt type="def">[ { ?={variable} }+ <Code proglang="gump"
+	      >in</Code> ]</Grammar.Alt>
+	    <Grammar.Alt>{ ?={syn factor} } [ ?={syn action}
+	       ]</Grammar.Alt>
+	    <Grammar.Alt type="or"><Code proglang="gump">skip</Code> [ 
+	      ?={syn action} ]</Grammar.Alt>
+	  <Grammar.Rule>?={syn action}
+	    <Grammar.Alt type="def"><Code proglang="gump">=&gt;</Code> [ 
+	      ?={phrase} <Code proglang="Gump">in</Code> ] ?={phrase}
+	      </Grammar.Alt>
+	  <P>
+	    An EBNF factor is either an application or an assignment.  An
+	    application is denoted by the name of either a terminal or a
+	    nonterminal, optionally followed by the actual parameters in
+	    parentheses.  Terminals may either have a single (variable)
+	    parameter or no parameter at all; if a parameter is specified
+	    then it is unified with the actual token value at runtime.  In
+	    the application of a nonterminal, the number of actual parameters
+	    must correspond to the number of formal parameters in the
+	    nonterminal's definition.  Non-escaped variables as actual
+	    parameters are implicitly declared local to the innermost sequence
+	    that contains the application.  At most one actual parameter may
+	    be the nesting marker.  In this case, the application is an
+	    expression yielding the value of the corresponding actual
+	    parameter; else it is a statement.
+	  <Grammar.Rule>?={syn factor}
+	    <Grammar.Alt type="def">?={syn application}</Grammar.Alt>
+	    <Grammar.Alt type="or">?={syn assignment}</Grammar.Alt>
+	  <Grammar.Rule>?={syn application}
+	    <Grammar.Alt type="def">?={atom}</Grammar.Alt>
+	    <Grammar.Alt type="or">?={atom label}
+	      ?={syn actuals}</Grammar.Alt>
+	    <Grammar.Alt type="or">?={variable}</Grammar.Alt>
+	    <Grammar.Alt type="or">?={variable label}
+	      ?={syn actuals}</Grammar.Alt>
+	  <Grammar.Rule>?={syn actuals}
+	    <Grammar.Alt type="def"><Code proglang="gump">(</Code> { 
+	      ?={phrase} } <Code proglang="gump">)</Code></Grammar.Alt>
+	  <P>
+	    Two grammar symbols are predefined which receive a special
+	    treatment:
+	    <LIST>
+	      <ENTRY><Code proglang="gump">'prec'(A)</Code>
+	      <Item>
+		<P>
+		  By inserting an application of <Code
+		  proglang="gump">prec</Code>
+		  into a sequence, the latter is assigned an associativity and
+		  a precedence.  These are taken from the token&nbsp;<Code
+		  proglang="gump">A</Code>.  Sequences that contain no
+		  application
+		  of <Code proglang="gump">prec</Code> inherit the values of
+		  the
+		  last token used in the sequence, if any, else none.
+	      <ENTRY><Code proglang="gump">'error'</Code>
+	      <Item>
+		<P>
+		  The application of the predefined terminal <Code
+		  proglang="gump"
+		  >'error'</Code> defines a restart point for error recovery.
+		  Consult the <Ref TO="donellystallman95" CLASS=bib
+		  INFO="Node `Error Recovery'"><Cite>Bison</Cite
+		  > manual</Ref> for
+		  additional information.
+	    </LIST>
+	  <P>
+	    An assignment equates a variable with the value of an EBNF
+	    expression.  Unless the variable is escaped, it is implicitly
+	    declared local to the sequence the assignment appears in, else it
+	    must have been declared local within the current syntax rule (or
+	    be a formal parameter).  An assignment is always a statement.
+	  <Grammar.Rule>?={syn assignment}
+	    <Grammar.Alt type="def">?={escaped variable} <Code
+	      proglang="gump">=</Code> ?={syn factor}</Grammar.Alt>
+	<SubSubSection><Title>Definition of Production Templates
+	  <P>
+	    This section and the next augment the syntax rules defined above
+	    by the concept of <Def>production templates</Def>.  These provide
+	    for, &EG;, the repetition constructs used in the
+	    example in <PTR TO="section.parser.example" CLASS="Section">.
+	  <P>
+	    The definition of a production template is another parser
+	    descriptor.  Production templates are local to the parser
+	    specification they are defined in, and may be used only textually
+	    after their definition.  (This is to avoid cyclic production
+	    template expansions.)  Production templates may be redefined.
+	  <Grammar.Rule>?={parser descriptor}
+	    <Grammar.Alt type="add"><?={prod clause}</Grammar.Alt>
+	  <P>
+	    A production template definition consists of a head and a body.
+	    The body specifies the EBNF phrase the production template is
+	    to be replaced with when instantiated.  The body may introduce
+	    optional local syntax rules which are always newly created when
+	    instantiated.  These must be denoted by variables.
+	  <Grammar.Rule>?={prod clause}
+	    <Grammar.Alt type="def"><Code proglang="gump">prod</Code>
+	      ?={prod head}</Grammar.Alt>
+	    <Grammar.Alt>[ ?={local rules} <Code proglang="gump">in</Code
+	      > ] ?={syn alt}</Grammar.Alt>
+	    <Grammar.Alt><Code proglang="gump">end</Code></Grammar.Alt>
+	  <Grammar.Rule>?={local rules}
+	     <Grammar.Alt type="def">?={syn clause} {
+	       ?={syn clause} }</Grammar.Alt>
+	  <P>
+	    The head of a production template provides &endash; aside from the
+	    list of its formal parameters &endash; the unique identification
+	    of the production template.  This is composed of the following
+	    parts:
+	    <LIST ENUM>
+	      <Item>
+		<P>
+		  whether the production template is an expression or a
+		  statement when it is instantiated (expressions being denoted
+		  by <Code proglang="gump">V=</Code>&Ellipsis; or <Code
+		  proglang="gump"
+		  >$=</Code>&Ellipsis; in the head);
+	      <Item>
+		<P>
+		  the optional identification name of the template, written
+		  before a colon;
+	      <Item>
+		<P>
+		  the used parentheses, brackets or braces, if any;
+	      <Item>
+		<P>
+		  the number of arguments, all being separated by <Code
+		  proglang="gump">//</Code>; and
+	      <Item>
+		<P>
+		  the used postfix operator, if any.
+	    </LIST>
+	  <P>
+	    For example, you could define the commonly used notation <Code
+	    proglang="gump">[ X ]</Code> as an EBNF option, or use <Code
+	    proglang="gump">{ X // Y }+</Code> for a separated list with at
+	    least
+	    one element.  This construct could yield a value, such as a list
+	    of the Oz values produced by the expression&nbsp;<Code
+	    proglang="gump"
+	    >X</Code>, which would be denoted by the production template
+	    <Code proglang="gump">Z={ X // Y }+</Code>.  (Compare this to the
+	    template's instantiation in <PTR TO="program.parser.example"
+	    CLASS="Program"> in line&nbsp;21.)
+	  <Grammar.Rule>?={prod head}
+	    <Grammar.Alt type="def">?={template definition}</Grammar.Alt>
+	    <Grammar.Alt type="or">?={variable} <Code
+	      proglang="gump">=</Code> ?={template definition}</Grammar.Alt>
+	    <Grammar.Alt type="or"><Code proglang="gump">$</Code> <Code
+	      proglang="gump">=</Code> ?={template definition}</Grammar.Alt>
+	  <Grammar.Rule>?={template definition}
+	    <Grammar.Alt type="def">?={prod formal list}</Grammar.Alt>
+	    <Grammar.Alt type="or">?={atom} <Code proglang="gump">:</Code
+	      > ?={prod formal list}</Grammar.Alt>
+	  <Grammar.Rule>?={prod formal list}
+	    <Grammar.Alt type="def"><Code proglang="gump">(</Code>
+	      ?={prod formals} <Code proglang="gump">)</Code> [
+	      ?={prod postfix} ]</Grammar.Alt>
+	    <Grammar.Alt type="or"><Code proglang="gump">[</Code>
+	      ?={prod formals} <Code proglang="gump">]</Code> [
+	      ?={prod postfix} ]</Grammar.Alt>
+	    <Grammar.Alt type="or"><Code proglang="gump">}</Code>
+	      ?={prod formals} <Code proglang="gump">}</Code> [
+	      ?={prod postfix} ]</Grammar.Alt>
+	    <Grammar.Alt type="or">?={variable} ?={prod postfix}</Grammar.Alt>
+	  <Grammar.Rule>?={prod formals}
+	    <Grammar.Alt type="def">?={variable} { <Code proglang="gump"
+	      >//</Code> ?={variable} }</Grammar.Alt>
+	  <Grammar.Rule>?={prod postfix}
+	    <Grammar.Alt type="def"><Code proglang="gump">+</Code> | <Code
+	      proglang="gump">-</Code> | <Code proglang="gump">*</Code> |
+	      <Code proglang="gump">/</Code></Grammar.Alt>
+	<SubSubSection><Title>Expansion of Production Templates
+	  <P>
+	    Production templates may be instantiated as EBNF factors.
+	  <Grammar.Rule>?={syn factor}
+	    <Grammar.Alt type="add">?={template instantiation}</Grammar.Alt>
+	  <P>
+	    The instantiation of a production template is very similar to its
+	    definition, since it must specify the same unique identification.
+	    The difference is that instead of the formal parameter variables
+	    actual EBNF phrases are allowed.
+	  <Grammar.Rule>?={template instantiation}
+	    <Grammar.Alt type="def">?={prod actual list}</Grammar.Alt>
+	    <Grammar.Alt type="or">?={atom} <Code proglang="gump">:</Code
+	      > ?={prod actual list}</Grammar.Alt>
+	  <Grammar.Rule>?={prod actual list}
+	    <Grammar.Alt type="def"><Code proglang="gump">(</Code>
+	      ?={prod actuals} <Code proglang="gump">)</Code> [
+	      ?={prod postfix} ]</Grammar.Alt>
+	    <Grammar.Alt type="or"><Code proglang="gump">[</Code>
+	      ?={prod actuals} <Code proglang="gump">]</Code> [
+	      ?={prod postfix} ]</Grammar.Alt>
+	    <Grammar.Alt type="or"><Code proglang="gump">{</Code>
+	      ?={prod actuals} <Code proglang="gump">}</Code> [
+	      ?={prod postfix} ]</Grammar.Alt>
+	    <Grammar.Alt type="or">?={syn application}
+	      ?={prod postfix}</Grammar.Alt>
+	  <Grammar.Rule>?={prod actuals}
+	    <Grammar.Alt type="def">?={syn alt} { <Code proglang="gump"
+	      >//</Code> ?={syn alt} }</Grammar.Alt>
+	  <P>
+	    When a production template is expanded, name clashes must be
+	    avoided.  This is why the expansion proceeds in several steps:
+	    <LIST>
+	      <Item>
+		<P>
+		  The local variables of the template are uniquely renamed,
+		  both in the body's EBNF phrase as well as in the local rules.
+	      <Item>
+		<P>
+		  The local rules are uniquely renamed to avoid confusion with
+		  other rules in the parser specification.
+	      <Item>
+		<P>
+		  The actual EBNF phrases are substituted for the parameter
+		  variables of the production template.  The formal parameter
+		  variables may only occur as applications of grammar symbols
+		  and may either be applied with a single actual parameter or
+		  none at all.  If the parameter is given, then the actual
+		  EBNF phrase must be an expression whose value is unified
+		  with the application's actual parameter.
+	      <Item>
+		<P>
+		  The local rules are quantified over the local variables used
+		  in actual EBNF phrases of the instantiation by adding these
+		  as parameters.
+	      <Item>
+		<P>
+		  The local rules are aded to the table of grammar symbols.
+	      <Item>
+		<P>
+		  The template instantiation is replaced by the body's EBNF
+		  phrase from the production template's definition.
+	    </LIST>
+	<SubSubSection><Title>Predefined Production Templates
+	  <P>
+	    <PTR TO="table.parser.predef" CLASS="Table"> shows
+	    the predefined production templates.  For many operators several
+	    equivalent notations exist.  All operators also have a form that
+	    yields a value:  The grouping construct yields the value of its
+	    argument, as do options (or \?nil? if they are not chosen at
+	    runtime); the repetition constructs yield Oz lists of their first
+	    argument.
+	  <Table ID="table.parser.predef">
+	    <TITLE>Predefined production templates.</TITLE>
+	    <TR>
+	      <TD>Grouping
+	      <TD><Code proglang="gump">( A )</Code>
+	    <TR>
+	      <TD>Option
+	      <TD><Code proglang="gump">[ A ]</Code>
+	    <TR>
+	      <TD>Mandatory Repetition
+	      <TD>
+		<P><Code proglang="gump">A+</Code>
+		<P><Code proglang="gump">( A )+</Code>
+		<P><Code proglang="gump">{ A }+</Code>
+	    <TR>
+	      <TD>Optional Repetition
+	      <TD>
+		<P><Code proglang="gump">A*</Code>
+		<P><Code proglang="gump">( A )*</Code>
+		<P><Code proglang="gump">{ A }*</Code>
+	    <TR>
+	      <TD>Mandatory Separated Repetition
+	      <TD>
+		<P><Code proglang="gump">( A // B )+</Code>
+		<P><Code proglang="gump">( A // B )</Code>
+		<P><Code proglang="gump">{ A // B }+</Code>
+		<P><Code proglang="gump">{ A // B }</Code>
+	    <TR>
+	      <TD>Optional Repetition
+	      <TD>
+		<P><Code proglang="gump">( A // B )*</Code>
+		<P><Code proglang="gump">{ A // B }*</Code>
+	  </TABLE>
+	<SubSubSection><Title>Assignment of Attribute Types
+	  <P>
+	    Due to the underlying LR(1) algorithm used, two different
+	    attribute types must be distinguished concerning parameters
+	    to nonterminals, namely <Def>synthesized</Def> and <Def
+	    >inherited</Def> attributes.  This is in contrary to Oz, where
+	    input and output arguments need not be distinguished due to the
+	    concept of logical variables and unification.  However, things
+	    are simplified by an algorithm determining the attribute types
+	    automatically.
+	  <P>
+	    Before this algorithm is explained in the following, we need to
+	    introduce a definition.
+<PARA CLASS=apropos><TITLE/Definition/
+	    Let <Math>S</Math> be an expanded sequence (&IE;,
+	    template instantiations and assignments have been expanded) with
+	    EBNF factors <Math>0, \ldots, n</Math>.  Let <Math>i</Math> be the
+	    index of the first EBNF factor (application or semantic action) in
+	    which a local Variable&nbsp;<Math>V</Math> (which is not a formal
+	    parameter) of the sequence occurs.  Then we say that <Math>V</Math>
+	    is <EM/initialized/ in all EBNF factors with
+	    indices&nbsp;<Math>j</Math>, <Math>j \ge i</Math>, and
+	    <EM/uninitialized/ in all others.
+	  <P>
+	    The following rules describe how attribute types are derived from
+	    their uses in applications of grammar symbols:
+	    <LIST>
+	      <Item>
+		<P>
+		  The (optional) parameter of a terminal always is a
+		  synthesized attribute (since the scanner always produces
+	          the token value).
+	      <Item>
+		<P>
+		  Let the <Math>i</Math>th actual parameter of an application
+		  of a grammar symbol&nbsp;<Math>B</Math> be either an
+		  uninitialized local variable&nbsp;<Math>V</Math> or a
+		  nesting marker.  Then the <Math>i</Math>th formal parameter
+		  of&nbsp;<Math>B</Math> is a synthesized attribute.
+		  Furthermore, <Math>V</Math>&nbsp;may not occur in any
+		  other actual parameter of the application.
+	      <Item>
+		<P>
+		  Let the <Math>i</Math>th actual parameter of an application
+		  of a grammar symbol&nbsp;<Math>B</Math> be either an
+		  initialized local variable&nbsp;<Math>V</Math> or a complex
+		  Oz expression (&IE;, neither a variable nor a
+		  nesting marker).  Then the <Math>i</Math>th formal parameter
+		  of&nbsp;<Math>B</Math> is an inherited attribute.
+		  Furthermore, no uninitialized variable may occur in said
+		  actual parameter.
+	      <Item>
+		<P>
+		  If a formal parameter of the syntax rule for a
+		  nonterminal&nbsp;<Math>A</Math> is used as actual parameter
+		  of an application of a nonterminal&nbsp;<Math>B</Math>, then
+		  the corresponding formal parameters of <Math>A</Math>
+		  and&nbsp;<Math>B</Math> are attributes of the same type,
+		  &IE;, either both synthesized or both inherited.
+	    </LIST>
+	    Note that nothing can be concluded from the use of a formal
+	    parameter variable in a semantic action, since Oz does not
+	    distinguish between access of and assignment to a variable: both
+	    are realized by unification.
+	  <P>
+	    If contradicting attribute types are derived for any formal
+	    parameter variable of a nonterminal, then this is an error.
+	    If no attribute type can be derived for a formal parameter
+	    variable, then it is realized as a synthesized attribute.
+    <SubSection ID="section.parser.params">
+      <Title>Parameters to Parser Generation
+      <P>
+	<PTR TO="table.parser.params" CLASS="Table"> summarizes
+	the options that the Gump Parser Generator understands.  They may be
+	given as compiler switches before a parser specification.
+      <Table ID="table.parser.params">
+	<TITLE>Compiler switches for the Gump Parser Generator.</TITLE>
+	<TR>
+	  <TH>Switch
+	  <TH>Effect
+	<TR>
+	  <TD><Code proglang="gump">gumpparseroutputsimplified</Code>
+	  <TD>create the <Code>.simplified</Code> file with the
+	    BNF version of the grammar
+	<TR>
+	  <TD><Code proglang="gump">verbose</Code>
+	  <TD>create then <Code>.output</Code> file with the
+	    Bison verbose output
+      </Table>
+    <SubSection ID="section.parser.class">
+      <Title>The Mixin Class `GumpParser'
+      <P>
+	The component <Code>GumpParser</Code> defines the mixin class <Code
+	proglang="gump">GumpParser</Code> which is required to make Gump parser
+	specifications executable.  It requires some features to be present
+	in derived classes; these are automatically inserted by the
+	Gump Parser Generator and contain the generated parse tables.
+	They all begin with <Code proglang="gump">syn</Code>&Ellipsis; thus it
+	is a good idea not to define any such named class components in order
+	to avoid conflicts with Gump internals.  Likewise, you should not
+	define any variables beginning with <Code proglang="gump">Syn</Code
+	>&Ellipsis;, since such variable names are generated by the tool.
+      <P>
+	Furthermore, the following method must be defined:
+	<LIST>
+	  <ENTRY><Code proglang="gump">meth synExecuteAction(+I)</Code>
+	  <Item>
+	    <P>
+	      This method is invoked each time a reduction takes place.  The
+	       parameter&nbsp;<Code proglang="gump">I</Code> is the number of
+	       the
+	       rule reduced.
+	</LIST>
+      <P>
+	The <Code proglang="gump">GumpParser</Code> class defines several
+	attributes and methods that may be called by users of the generated
+	parser or from inside semantic actions:
+	<LIST>
+	  <ENTRY><Code proglang="gump">attr lookaheadSymbol</Code>
+	  <Item>
+	    <P>
+	      This contains the token class of the current lookahead symbol.
+	  <ENTRY><Code proglang="gump">attr lookaheadValue</Code>
+	  <Item>
+	    <P>
+	      This contains the token value of the current lookahead symbol.
+	  <ENTRY><Code proglang="gump">feat noLookahead</Code>
+	  <Item>
+	    <P>
+	      This is the value <Code proglang="gump">lookaheadSymbol</Code>
+	      should be set to if you want to skip a token from inside a
+	      semantic action.
+	  <ENTRY><Code proglang="gump">meth init(+P)</Code>
+	  <Item>
+	    <P>
+	      This initializes the <Code proglang="gump">GumpParser</Code>
+	      internal structures and connects to a scanner&nbsp;<Code
+	      proglang="gump">P</Code>.  <Code
+	      proglang="gump">P</Code>&nbsp;must
+	      (at least) understand the messages <Code proglang="gump"
+	      >putToken</Code> and <Code proglang="gump">getToken</Code> as
+	      described in <PTR TO="section.scanner.class"
+	      CLASS="Section">.
+	  <ENTRY><Code proglang="gump">meth parse(+T ?B)</Code>
+	  <Item>
+	    <P>
+	      This methods initates a parse.  The label of tuple&nbsp;<Code
+	      proglang="gump">T</Code> denotes the start symbol to use (which
+	      must be a declared nonterminal named by an atom); its features
+	      correspond to the parameters of the corresponding syntax rule.
+	      Values of inherited attributes are extracted from this tuple,
+	      values of synthesized attributes are unified with the
+	      corresponding features after the parse is finished
+	      (successfully).  The parameter&nbsp;<Code
+	      proglang="gump">B</Code>
+	      is unified with <Code proglang="gump">true</Code> if the parse
+	      was
+	      successful, else with <Code proglang="gump">false</Code>.
+	  <ENTRY><Code proglang="gump">meth accept()</Code>
+	  <Item>
+	    <P>
+	      By calling this method the parse is interrupted and success
+	      reported.  (Note that the values of synthesized attributes of
+	      the start symbol given to <Code proglang="gump">parse</Code> are
+	      not influenced by this.)
+	  <ENTRY><Code proglang="gump">meth abort()</Code>
+	  <Item>
+	    <P>
+	      By calling this method the parse is interrupted and failure
+	      reported.  (Note that the <Code proglang="gump">error</Code>
+	      method
+	      is not called.)
+	  <ENTRY><Code proglang="gump">meth raiseError()</Code>
+	  <Item>
+	    <P>
+	      This method places the parser in the same state as if a syntax
+	      error had been found in the input.  Normal error recovery is
+	      attempted.  The method <Code proglang="gump">error</Code> is not
+	      called.
+	  <ENTRY><Code proglang="gump">meth errorOK()</Code>
+	  <Item>
+	    <P>
+	      When a production with a restart point (token <Code
+	      proglang="gump"
+	      >error</Code>) is reduced, this method may be called to tell the
+	      parser that the error recovery process is finished and normal
+	      parsing may be resumed.
+	  <ENTRY><Code proglang="gump">meth clearLookahead()</Code>
+	  <Item>
+	    <P>
+	      When a production with a restart point (token <Code
+	      proglang="gump"
+	      >error</Code>) is reduced, this method may be called to clear
+	      the lookahead token (if, for example, it was used to synchronize
+	      to the restart point and is not legal thereafter).
+	  <ENTRY><Code proglang="gump">meth error(+V)</Code>
+	  <Item>
+	    <P>
+	      This method is always invoked when (during normal parsing) an
+	      error in the input is recognized.  It is handed a diagnostic
+	      message in&nbsp;<Code proglang="gump">V</Code>.  This method
+	      may be
+	      overridden in derived classes.
+	  <ENTRY><Code proglang="gump">meth getScanner(?P)</Code>
+	  <Item>
+	    <P>
+	      Returns the scanner object or procedure&nbsp;<Code
+	      proglang="Gump"
+	      >P</Code> currently used as the token source.
+	</LIST>
+</Chapter>
