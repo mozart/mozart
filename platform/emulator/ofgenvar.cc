@@ -614,7 +614,7 @@ Bool isGenOFSVar(TaggedRef term, TypeOfTerm tag)
     GCDEBUG(term);
     return isCVar(tag) && cvarIsOFSvar(term);
 }
-  
+
 GenOFSVariable* tagged2GenOFSVar(TaggedRef term)
 {
     GCDEBUG(term);
