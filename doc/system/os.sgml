@@ -97,7 +97,7 @@ See <file /rand(3)/.
 <<< {OS.srand ?+{I}} >>>
 <Item>
 Sets the seed for the random number generator used by <<OS.rand>>. If
-?+{I} is <<0>>, the seed will be generated from the current time.
+?_{I} is <<0>>, the seed will be generated from the current time.
 <p>
 See <file /srand(3)/.
 
@@ -108,7 +108,7 @@ See <file /srand(3)/.
 >>>
 <item>
 <Index class=module/OS<and>randLimits/
-Binds ??{MinI} and ??{MaxI} to the smallest and greatest possible
+Binds ?_{MinI} and ?_{MaxI} to the smallest and greatest possible
 random number obtainable by <<OS.rand>>.
 <p>
 See <file /rand(3)/.
@@ -136,7 +136,7 @@ See <file /tmpnam(2)/.
 >>>
 <Index class=module/OS<and>unlink/
 <item>
-Removes the file with name ?+{PathV}.
+Removes the file with name ?_{PathV}.
 <p>
 See <file /link(2)/.
 </list>
@@ -154,7 +154,7 @@ See <file /link(2)/.
 <Index class=module/OS<and>getDir/
 <item>
 Returns a list of strings giving the files in
-the directory ?+{PathV}.
+the directory ?_{PathV}.
 <p>
 See <file /opendir(3)/ and <file /readdir(3)/.
 
@@ -165,7 +165,7 @@ See <file /opendir(3)/ and <file /readdir(3)/.
 >>>
 <Index class=module/OS<and>getCWD/
 <item>
-Returns in ??{FileNameS} the path of the current working directory.
+Returns in ?_{FileNameS} the path of the current working directory.
 <p>
 See <file /getcwd(3)/.
 
@@ -176,11 +176,11 @@ See <file /getcwd(3)/.
 >>>
 <Index class=module/OS<and>stat/
 <item>
-Returns a record describing the status of the file ?+{PathV}.
+Returns a record describing the status of the file ?_{PathV}.
 <p>
-??{StatR} has features <<size>> and <<type>>. The
+?_{StatR} has features <<size>> and <<type>>. The
 subtree at the feature <<size>> is an integer that gives the size of
-the file ?+{PathV}. The subtree at the feature <<type>> is one of the
+the file ?_{PathV}. The subtree at the feature <<type>> is one of the
 following atoms: <<reg>> (regular file), <<dir>> (directory), <<chr>>
 (character special file), <<blk>> (block special file), <<fifo>> (pipe
 or FIFO special file), <<unknown>> (something else).
@@ -199,8 +199,8 @@ See <file /stat(2)/.
 >>>
 <Index class=module/OS<and>getServByName/
 <item>
-Returns the port number ?_{PortI} of a service ?+{NameV} reachable in
-the Internet domain with the specified protocol ?+{ProtoV}.
+Returns the port number ?_{PortI} of a service ?_{NameV} reachable in
+the Internet domain with the specified protocol ?_{ProtoV}.
 <p>
 If the service is unknown, <<false>> is returned.
 <p>
@@ -220,7 +220,7 @@ See <file /getservbyname(3)/.
 >>>
 <Index class=module/OS<and>getHostByName/
 <item>
-Returns name information for the host ?+{NameV}.
+Returns name information for the host ?_{NameV}.
 <p>
 The record ?{HostentR} has the following features:
 <table class=dyptic>
@@ -260,7 +260,7 @@ Returns a description of the Coordinated Universal
 Time (UTC), respectively a description of the local
 time.
 <p>
-The records ??{GmTimeR} and ??{LocalTimeR} have the following
+The records ?_{GmTimeR} and ?_{LocalTimeR} have the following
 features, where the fields are all integers:
 <table class=dyptic>
 <tr/<td/
@@ -291,7 +291,7 @@ See <file /gmtime(3)/, <file /localtime(3)/, and <file /time(3)/.
 <Index class=module/OS<and>getEnv/
 <item>
 Returns the value of the environment variable
-?+{NameV}.
+?_{NameV}.
 <p>
 If a variable with the given name does not exist, the
 procedure returns <<false>>.
@@ -314,7 +314,7 @@ See <file /getenv(3)/.
 >>>
 <Index class=module/OS<and>putEnv/
 <item>
-Sets the value of the environment variable ?+{NameV} to ?+{ValueV}.
+Sets the value of the environment variable ?_{NameV} to ?_{ValueV}.
 <p>
 See <file /putenv(3)/.
 </list>
@@ -332,7 +332,7 @@ See <file /putenv(3)/.
 <item>
 Returns system information.
 <p>
-The record ??{UtsnameR} has at least the following features, where all
+The record ?_{UtsnameR} has at least the following features, where all
 fields are strings:
 <table class=dyptic>
 <tr/<td/
@@ -351,8 +351,8 @@ See <file /uname(2)/.
 >>>
 <Index class=module/OS<and>system/
 <item>
-Starts a new operating system shell in which the OS command ?+{CmdV}
-is executed. The status of the command is reported by ??{StatusI}.
+Starts a new operating system shell in which the OS command ?_{CmdV}
+is executed. The status of the command is reported by ?_{StatusI}.
 <p>
 See <file /system(3)/.
 </list>
@@ -374,7 +374,7 @@ See <file /system(3)/.
 <item>
 Opens a file for reading and/or writing.
 <p>
-?+{FlagsAs} must be a list with some of the following atoms as
+?_{FlagsAs} must be a list with some of the following atoms as
 elements:
 <table class=dyptic> <tr/<td/
 <<'O_RDONLY'>> /<td/ <<'O_WRONLY'>> /<td/ <<'O_RDWR'>>      //<tr/ <td/
@@ -384,7 +384,7 @@ elements:
 </table>
 Their meanings coincide with their usual POSIX meanings.
 <p>
-In the same manner ?+{ModeAs} must be a list with elements drawn from:
+In the same manner ?_{ModeAs} must be a list with elements drawn from:
 <table class=dyptic> <tr/<td/
 <<'S_IRUSR'>> /<td/ <<'S_IWUSR'>> /<td/ <<'S_IXUSR'>> //<tr/ <td/
 <<'S_IRGRP'>> /<td/ <<'S_IWGRP'>> /<td/ <<'S_IXGRP'>> //<tr/ <td/
@@ -417,7 +417,7 @@ See <file /open(2)/ and <file /dup(2)/.
 <Index class=module/OS<and>read/
 <item>
 Reads data from a file or socket.  Yields a list of characters in
-??{ListS}, where the tail of the list is constrained to
+?_{ListS}, where the tail of the list is constrained to
 ?_{TailX}.
 <p>
 
@@ -430,19 +430,19 @@ Implements the <file /read(2)/ system call.
 >>>
 <Index class=module/OS<and>write/
 <item>
-Writes the virtual string ?+{V} to a file or a socket by using the
+Writes the virtual string ?_{V} to a file or a socket by using the
 function <file /write(2)/.
 <p>
-Illegal parts of the virtual string ?+{V} are simply ignored,
+Illegal parts of the virtual string ?_{V} are simply ignored,
 and the legal parts are written.
 <p>
-If ?+{V} contains
-an undetermined variable, ??{StatusTI} is bound to a ternary
+If ?_{V} contains
+an undetermined variable, ?_{StatusTI} is bound to a ternary
 tuple with label <<suspend>>. The first argument is an
 integer describing the portion already written, the second the
-undetermined variable, and the last to the not yet written part of ?+{V}.
+undetermined variable, and the last to the not yet written part of ?_{V}.
 <p>
-Otherwise ??{StatusTI} is bound to the number of characters written.
+Otherwise ?_{StatusTI} is bound to the number of characters written.
 
 <Entry> <<lSeek>> <Synopsis>
 <<<
@@ -452,7 +452,7 @@ Otherwise ??{StatusTI} is bound to the number of characters written.
 <item>
 Positions the seek pointer of a file.
 This procedure is implemented by
-the <file /lseek(2)/ function. ?+{WhenceA} must be one of the atoms
+the <file /lseek(2)/ function. ?_{WhenceA} must be one of the atoms
 <<'SEEK_SET'>>, <<'SEEK_CUR'>>, and <<'SEEK_END'>>.
 
 <Entry> <<close>> <Synopsis>
@@ -489,7 +489,7 @@ These procedures will suspend rather than block.
 <item>
 Blocks until a socket connection can be accepted (data is present to
 be read, and writing of data is possible, respectively) at the file or
-socket with descriptor ?+{DescI}
+socket with descriptor ?_{DescI}
 <p>
 For example the following case statement (we assume that
 <<Desc>> is bound to a descriptor of a socket):
@@ -514,7 +514,7 @@ needs to be called.
 >>>
 <Index class=module/OS<and>deSelect/
 <item>
-Discards all threads depending on the file descriptor ?+{DescI}.
+Discards all threads depending on the file descriptor ?_{DescI}.
 </list>
 </subsection>
 
@@ -530,10 +530,10 @@ Discards all threads depending on the file descriptor ?+{DescI}.
 Creates a socket. Is implemented by the function
 <file /socket(2)/.
 <p>
-?+{DomainA} must be either the atom <<'PF_INET'>> or <<'PF_UNIX'>>, whereas
-?+{TypeA} must be either <<'SOCK_STREAM'>>, or <<'SOCK_DGRAM'>>.
+?_{DomainA} must be either the atom <<'PF_INET'>> or <<'PF_UNIX'>>, whereas
+?_{TypeA} must be either <<'SOCK_STREAM'>>, or <<'SOCK_DGRAM'>>.
 <p>
-?+{ProtoV} must be a virtual string. If it denotes the empty string, an
+?_{ProtoV} must be a virtual string. If it denotes the empty string, an
 appropriate protocol is chosen automatically, otherwise it must denote
 a valid protocol name like <<"tcp">> or <<"udp">>.
 
@@ -565,7 +565,7 @@ See <file /listen(2)/.
 <item>
 Accepts a connect request on a socket.
 <p>
-??{HostS} is bound to a string describing the host name.
+?_{HostS} is bound to a string describing the host name.
 <index class=module/OS<and>acceptSelect/
 It is possible to use <<OS.acceptSelect>> to block a
 thread until a connect attempt on this socket is made.
@@ -610,7 +610,7 @@ See <file /getsockname(3)/.
 <item>
 Sends data from a socket.
 <p>
-?+{FlagsAs} must be a list of atoms; its elements must be either
+?_{FlagsAs} must be a list of atoms; its elements must be either
 <<'MSG_OOB'>> or <<'MSG_DONTROUTE'>>.
 <p>
 See <file /send(2)/ and <file /gethostbyname(3)/.
@@ -624,7 +624,7 @@ See <file /send(2)/ and <file /gethostbyname(3)/.
 <item>
 Receives data at a socket.
 <p>
-?+{FlagsAs} must be a list of atoms; its elements must be either
+?_{FlagsAs} must be a list of atoms; its elements must be either
 <<'MSG_OOB'>> or <<'MSG_PEEK'>>.
 <p>
 See <file /recvfrom(2)/ and <file /gethostbyaddr(3)/.
@@ -641,8 +641,8 @@ See <file /recvfrom(2)/ and <file /gethostbyaddr(3)/.
 >>>
 <Index class=module/OS<and>kill/
 <item>
-Implements the <file /kill(2)/ function. ?+{PidI} is the process
-identifier, ?+{SigA} is an atom describing the signal to be sent:
+Implements the <file /kill(2)/ function. ?_{PidI} is the process
+identifier, ?_{SigA} is an atom describing the signal to be sent:
 depending on the platform different signals are supported; at least
 the following signals are supported on all platforms: <<'SIGTERM'>>,
 <<'SIGINT'>>.
@@ -653,11 +653,11 @@ the following signals are supported on all platforms: <<'SIGTERM'>>,
 >>>
 <Index class=module/OS<and>pipe/
 <item>
-Forks a OS process which executes the command ?+{CmdV} with arguments
-?+{ArgsVs}.
+Forks a OS process which executes the command ?_{CmdV} with arguments
+?_{ArgsVs}.
 <p>
-??{PidI} is bound to the process identifier.
-??{StatusT} is bound to a pair of socket or file descriptors where the
+?_{PidI} is bound to the process identifier.
+?_{StatusT} is bound to a pair of socket or file descriptors where the
 standard input, the standard output and the standard error is
 redirected to. The first field of the pair is the descriptor for
 reading whereas the second field is the descriptor for writing.
