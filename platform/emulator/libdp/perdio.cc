@@ -488,6 +488,7 @@ inline BorrowEntry* maybeReceiveAtBorrow(DSite* mS,int OTI){
 
 void msgReceived(MsgBuffer* bs)
 {
+
   Assert(oz_onToplevel());
   Assert(creditSiteIn==NULL);
   Assert(creditSiteOut==NULL);
@@ -704,7 +705,14 @@ void msgReceived(MsgBuffer* bs)
       PD((MSG_RECEIVED,"M_GETSTATUS index:%d",OTI));
       OwnerEntry *oe = receiveAtOwner(OTI);
 
-      (GET_TERM(oe,Manager))->getStatus(site,OTI,oz_status(oe->getValue()));
+      if(oe->isVar()){
+	DebugCode(printf("status receive and is variable OTI:%d \n",OTI));
+	(GET_VAR(oe,Manager))->getStatus(site,OTI,oz_status(oe->getValue()));
+	break;
+      }
+      Assert(oe->isRef());
+      DebugCode(printf("status receive and is NONvariable OTI:%d \n",OTI));
+      (GET_TERM(oe,Manager))->getStatus(site,OTI,oz_status(oe->getRef()));
       break;
     }
 
@@ -977,201 +985,35 @@ void DSite::communicationProblem(MessageType mt, DSite* storeSite,
   TaggedRef tr;
   CommCase flag;
 
-  return; // shortcut out of not working code
-
-  if (storeSite) {
-  PD((SITE,"CommProb type:%d site:%s\n storeSite: %s \n indx:%d faultCode:%d",
-      mt,this->stringrep(),storeSite->stringrep(), storeIndex, fc));
-  }
   switch(mt){
-    
-  case M_PORT_SEND:{
-    
-    flag=USUAL_BORROW_CASE;
-    break;}
-  
-  case M_ASK_FOR_CREDIT:{
-    flag=USUAL_BORROW_CASE;
-    break;}
-
-  case M_OWNER_CREDIT:{
-      flag=USUAL_BORROW_CASE;
-      break;}
-
-  case M_OWNER_SEC_CREDIT:{
+  case M_CELL_CONTENTS:{
+    if(fc == COMM_FAULT_PERM_NOT_SENT){
+      ResetCP(((MsgBuffer*)fi),M_CELL_CONTENTS);
+      unmarshal_M_CELL_CONTENTS((MsgBuffer*)fi,s1,OTI,tr);
+      Assert(s1==storeSite);
+      Assert(OTI=storeIndex);
+      returnSendCredit(s1,OTI);	  
+      cellSendContentsFailure(tr,this,storeSite,OTI);
+      return;}
     flag=USUAL_BORROW_CASE;
     break;}
 
-  case M_BORROW_CREDIT:{
-    flag=USUAL_OWNER_CASE;
-    break;}
-
-  case M_REGISTER:{
-    flag=USUAL_BORROW_CASE;
-    break;}
-
-  case M_REDIRECT:{
-    if(fc==COMM_FAULT_PERM_NOT_SENT){
-      ResetCP(((MsgBuffer*)fi),M_REDIRECT);
-      unmarshal_M_REDIRECT((MsgBuffer*)fi,s1,OTI,tr);
+  case M_LOCK_TOKEN:{
+    if(fc == COMM_FAULT_PERM_NOT_SENT){
+      ResetCP(((MsgBuffer*)fi),M_LOCK_TOKEN);
+      unmarshal_M_LOCK_TOKEN((MsgBuffer*)fi,s1,OTI);
+      Assert(s1==storeSite);
+      Assert(OTI=storeIndex);
       returnSendCredit(s1,OTI);
+      lockSendTokenFailure(this,storeSite,OTI);
       return;}
-    flag=USUAL_OWNER_CASE;
-    break;}
-
-    case M_ACKNOWLEDGE:{
-      flag=USUAL_OWNER_CASE;
-      break;}
-
-    case M_SURRENDER:{
-      if(fc==COMM_FAULT_PERM_NOT_SENT){
-	ResetCP(((MsgBuffer*)fi),M_SURRENDER);
-	unmarshal_M_SURRENDER((MsgBuffer*)fi,OTI,s1,tr);
-	returnSendCredit(myDSite,OTI);
-	return;}
-      flag=USUAL_OWNER_CASE;
-      break;}
-
-    // mm2: I don't understand this: its a copy of M_SURRENDER!
-    case M_REQUESTED:{
-      if(fc==COMM_FAULT_PERM_NOT_SENT){
-	ResetCP(((MsgBuffer*)fi),M_REQUESTED);
-	unmarshal_M_REQUESTED((MsgBuffer*)fi,OTI);
-	returnSendCredit(myDSite,OTI);
-	return;}
-      flag=USUAL_OWNER_CASE;
-      break;}
-
-    case M_CELL_LOCK_GET:{
-      flag=USUAL_BORROW_CASE;
-      break;}
-
-    case  M_CELL_LOCK_FORWARD:{
-      flag=USUAL_OWNER_CASE;
-      break;}
-
-    case M_CELL_LOCK_DUMP:{
-      flag=USUAL_BORROW_CASE;
-      break;}
-
-    case M_CELL_CONTENTS:{
-      if(fc == COMM_FAULT_PERM_NOT_SENT){
-	ResetCP(((MsgBuffer*)fi),M_CELL_CONTENTS);
-	unmarshal_M_CELL_CONTENTS((MsgBuffer*)fi,s1,OTI,tr);
-	Assert(s1==storeSite);
-	Assert(OTI=storeIndex);
-	returnSendCredit(s1,OTI);	  
-	cellSendContentsFailure(tr,this,storeSite,OTI);
-	return;}
-      /*
-	if(fc==COMM_FAULT_PERM_MAYBE_SENT){
-	NOT_IMPLEMENTED;}
-	*/
-      return;}
-
-    case M_CELL_READ:{
-      flag=USUAL_BORROW_CASE;
-      break;}
-
-    case M_CELL_REMOTEREAD:{
-      NOT_IMPLEMENTED;}
-
-    case M_CELL_READANS:{
-      NOT_IMPLEMENTED;}
-
-    case M_CELL_CANTPUT:{
-      NOT_IMPLEMENTED;}
-
-    case M_LOCK_TOKEN:{
-      if(fc == COMM_FAULT_PERM_NOT_SENT){
-	ResetCP(((MsgBuffer*)fi),M_LOCK_TOKEN);
-	unmarshal_M_LOCK_TOKEN((MsgBuffer*)fi,s1,OTI);
-	Assert(s1==storeSite);
-	Assert(OTI=storeIndex);
-	returnSendCredit(s1,OTI);
-	lockSendTokenFailure(this,storeSite,OTI);
-	return;}
-      return;}
-
-    case M_LOCK_CANTPUT:{
-      return;}
-
-    case M_CHAIN_ACK:{
-      flag=USUAL_BORROW_CASE;
-      break;}
-
-
-    case M_CHAIN_QUESTION:{
-      flag=USUAL_OWNER_CASE;
-      break;}
-
-    case M_CHAIN_ANSWER:{
-      flag=USUAL_BORROW_CASE;
-      break;}
-
-    case M_ASK_ERROR:{
-      flag=USUAL_OWNER_CASE;
-      break;}
-
-    case M_UNASK_ERROR:{
-      flag=USUAL_OWNER_CASE;
-      break;}
-
-    case M_TELL_ERROR:{
-      flag=USUAL_BORROW_CASE;
-      break;}
-
-    case M_GET_OBJECT:{
-      NOT_IMPLEMENTED;}
-
-    case M_GET_OBJECTANDCLASS:{
-      NOT_IMPLEMENTED;}
-
-    case M_SEND_OBJECT:{
-      NOT_IMPLEMENTED;}
-
-    case M_SEND_OBJECTANDCLASS:{
-      NOT_IMPLEMENTED;}
-
-    case M_SEND_GATE:{
-      return;}
-
-  default:
-    OZ_warning("communication problem - impossible");
-    Assert(0);
-  }
+    return;}
   
-  switch(flag){
-  case USUAL_OWNER_CASE:{
-    switch(fc){
-    case COMM_FAULT_TEMP_NOT_SENT:
-    case COMM_FAULT_TEMP_MAYBE_SENT: {
-      PD((SITE,"Owner:CommProb temp ignored"));
-      return;}
-    case COMM_FAULT_PERM_NOT_SENT:{
-      PD((SITE,"Owner:CommProb perm not sent extract send credit and ignore"));
-      returnSendCredit(storeSite,storeIndex);
-      return;}
-    case COMM_FAULT_PERM_MAYBE_SENT:{
-      PD((SITE,"Owner:CommProb perm maybe sent lose send credit and ignore"));
-      return;}}}
-  case USUAL_BORROW_CASE:{
-    switch(fc){
-    case COMM_FAULT_TEMP_NOT_SENT:
-    case COMM_FAULT_TEMP_MAYBE_SENT: {
-      PD((SITE,"Borrow:CommProb temp ignored"));
-      return;}
-    case COMM_FAULT_PERM_NOT_SENT:
-    case COMM_FAULT_PERM_MAYBE_SENT:{
-      PD((SITE,"Borrow:CommProb perm maybe sent lose send credit and ignore"));
-      NetAddress na=NetAddress(storeSite,storeIndex);
-      BorrowEntry *be=BT->find(&na);
-      if(be==NULL) return;
-      return;}}}}}
+  default:
+    return;
+  }
+}  
     
-
-
-
 /**********************************************************************/
 /*   Initialization                                      */
 /**********************************************************************/
