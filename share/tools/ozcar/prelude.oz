@@ -68,6 +68,10 @@ in
    end
 end
 
+fun {UnknownFile F}
+   F == undef orelse F == '' orelse F == noDebugInfo orelse F == nofile
+end
+
 fun {StripPath File}
    case File == '' then
       '???'
