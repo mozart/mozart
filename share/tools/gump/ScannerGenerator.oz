@@ -385,7 +385,7 @@ local
    end
 in
    fun {TransformScanner T From Prop Attr Feat Ms Rules P Flags ImportFV Rep}
-      Globals FS
+      Globals FS Imports
    in
       {Rep logPhase('processing scanner "'#{SymbolToVirtualString T}#'" ...')}
       Globals = {New ScannerSpecification init()}
@@ -397,29 +397,47 @@ in
       {Globals enterMeth(Ms)}
       {ForAll Rules
        proc {$ Rule} {TransformScannerDescriptor Rule Globals Rep} end}
-      if {Rep hasSeenError($)} then fSkip(unit)
+      if {Rep hasSeenError($)} then
+	 Imports = nil
+	 fSkip(unit)
       else
 	 {Rep logSubPhase('analysing scanner ...')}
 	 {Globals analyse(Rep)}
-	 if {Rep hasSeenError($)} then fSkip(unit)
+	 if {Rep hasSeenError($)} then
+	    Imports = nil
+	    fSkip(unit)
 	 else Flex Local Locals LexMeth MakeLexer in
 	    {Rep logSubPhase('extracting lexical rules ...')}
 	    {Globals generate(Globals {MakeFileName T ".C"}
 			      ?Flex ?Local|?Locals ?LexMeth)}
 	    MakeLexer = {CompileScanner Flex T Rep}
-	    case MakeLexer of stop then fSkip(unit)
+	    case MakeLexer of stop then
+	       Imports = nil
+	       fSkip(unit)
 	    else LexerLoad Locals2 Descrs Meths in
 	       {Rep logSubPhase('building class definition ...')}
-	       case MakeLexer of continue then
-		  LexerLoad = fEq(fVar('`lexer`' unit)
-				  fApply(fOpApply('.' [fVar('Foreign' unit)
-						       fAtom('load' unit)]
-						  unit)
-					 [fAtom({MakeFileName T ".so"} unit)]
-					 unit) unit)
+	       case MakeLexer of continue then LexerFileName in
+		  LexerFileName = {MakeFileName T ".so"}
+		  case ImportFV of unit then
+		     Imports = nil
+		     LexerLoad = fEq(fVar('`lexer`' unit)
+				     fApply(fOpApply('.' [fVar('Foreign' unit)
+							  fAtom('load' unit)]
+						     unit)
+					    [fAtom(LexerFileName unit)]
+					    unit) unit)
+		  else Feature From in
+		     From = {VirtualString.toAtom LexerFileName#'{native}'}
+		     Imports = [Feature#From]
+		     LexerLoad = fEq(fVar('`lexer`' unit)
+				     fOpApply('.' [ImportFV
+						   fAtom(Feature unit)] unit)
+				     unit)
+		  end
 		  {Globals enterFeat([fAtom(lexer unit)#fVar('`lexer`' unit)])}
 		  Locals2 = fVar('`lexer`' unit)|Locals
 	       [] noLexer then
+		  Imports = nil
 		  LexerLoad = fSkip(unit)
 		  Locals2 = Locals
 	       end
@@ -431,6 +449,6 @@ in
 	    end
 	 end
       end = FS
-      FS#nil
+      FS#Imports
    end
 end
