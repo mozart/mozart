@@ -49,28 +49,46 @@ define
       functor
 	 SecureOS
       import
-	 OS(getEnv:GetEnv time:Time rand:Rand file:File)
-	 TkTools Tk
+	 OS(getEnv:GetEnv time:Time rand:Rand)
       export
 	 getEnv:GetEnv
 	 time:Time
 	 rand:Rand
+      define
+	 skip
+      end
+      
+      functor
+	 SecureProperty
+      import
+	 Property(get:Get)
+      export
+	 get:Get
+      define skip end
+
+      functor SecureOpen
+      import
+	 Open(file:File)
+	 TkTools Tk
+      export
 	 file:SecureFile
       define
 	 class SecureFile from File
-	    meth init(name:File flags:Flags ...)=M
+	    meth init(name:F flags:Flags ...)=M
 	       IsOk
-	       T={New TkTools.dialog
-		  tkInit(title:"Start Application"
-			 buttons: ['Okay'#proc {$} IsOk=true end 
-				   'Cancel' # proc{$} IsOk=false end]
-			 default: 1)}
-	       L=if {Member Flags create} then
-		    {New Tk.label tkInit(parent:T text:"Application requires to save file: "#File)}
+	       T={New TkTools.dialog tkInit(title:"Application Security Manager"
+					    buttons:['Okay'#proc {$} IsOk=true end 
+						      'Cancel' # proc{$} IsOk=false end]
+					    default:1)}
+	       L=if {Member write Flags} then
+		    {New Tk.label tkInit(parent:T text:"Application requires to save file: "#F)}
 		 else
-		    {New Tk.label tkInit(parent:T text:"Application requires to load file: "#File)}
+		    {New Tk.label tkInit(parent:T text:"Application requires to load file: "#F)}
 		 end
 	    in
+	       {Tk.send pack(L)}
+	       {Wait IsOk}
+	       {T tkClose}
 	       if IsOk==true then
 		  File, M
 	       else
@@ -81,20 +99,12 @@ define
       end
       
       functor
-	 SecureProperty
-      import
-	 Property(get:Get)
-      export
-	 get:Get
-      define skip end
-      
-      functor
 	 NotAccessible
       define skip end
    in
       %% Insert all "secure" modules into the untrusted manager
       {ForAll ['System'#SecureSystem 'OS'#SecureOS 'Property'#SecureProperty
-	       'Open'#NotAccessible 'Module'#NotAccessible]
+	       'Open'#SecureOpen 'Module'#NotAccessible]
        proc{$ F} Module={TM apply(url:'' F.2 $)} in
 	  {SM enter(name:F.1 Module)}  
        end}
