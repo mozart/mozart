@@ -705,8 +705,8 @@ Handle input and output via the Oz Emulator buffer."
 
 (defun oz-halt (force)
   "Halt the Mozart sub-process.
-If FORCE is nil, send the `{Application.exit 0}' statement and wait for the process
-to terminate.  Waiting time is limited by variable `oz-halt-timeout';
+If FORCE is nil, send the `{Application.exit 0}' statement and wait for the
+process to terminate.  Waiting time is limited by variable `oz-halt-timeout';
 after this delay, the process is simply killed if still living.
 If FORCE is non-nil, kill it immediately."
   (interactive "P")
@@ -1868,23 +1868,20 @@ buffer."
   (set (make-local-variable 'compilation-last-buffer)
        nil))
 
-(defmacro oz-kbd (keys)
-  (read-kbd-macro keys))
-
 (defun oz-mode-commands (map)
-  (define-key map (oz-kbd "TAB")         'oz-indent-line)
-  (define-key map (oz-kbd "DEL")         'backward-delete-char-untabify)
+  (define-key map [tab]                         'oz-indent-line)
+  (define-key map [del]                         'backward-delete-char-untabify)
 
-  (define-key map (oz-kbd "M-RET")       'oz-feed-buffer)
-  (define-key map (oz-kbd "C-c C-p")     'oz-feed-paragraph)
-  (define-key map (oz-kbd "M-C-x")       'oz-feed-paragraph)
-  (define-key map (oz-kbd "C-c C-b")     'oz-browse-region)
-  (define-key map (oz-kbd "C-c C-i")     'oz-inspect-region)
+  (define-key map [(meta return)]               'oz-feed-buffer)
+  (define-key map [(control ?c) (control ?p)]   'oz-feed-paragraph)
+  (define-key map [(meta control ?x)]           'oz-feed-paragraph)
+  (define-key map [(control ?c) (control ?b)]   'oz-browse-region)
+  (define-key map [(control ?c) (control ?i)]   'oz-inspect-region)
 
-  (define-key map (oz-kbd "M-n")         'oz-next-buffer)
-  (define-key map (oz-kbd "M-p")         'oz-previous-buffer)
+  (define-key map [(meta ?n)]                   'oz-next-buffer)
+  (define-key map [(meta ?p)]                   'oz-previous-buffer)
 
-  (define-key map (oz-kbd "C-x SPC")     'oz-breakpoint-at-point)
+  (define-key map [(control ?x) space]          'oz-breakpoint-at-point)
   (cond (oz-gnu-emacs
 	 (define-key map [(meta shift mouse-1)] 'oz-breakpoint-mouse-set)
 	 (define-key map [(meta shift mouse-3)] 'oz-breakpoint-mouse-delete))
@@ -1892,46 +1889,46 @@ buffer."
 	 (define-key map [(meta shift button1)] 'oz-breakpoint-mouse-set)
 	 (define-key map [(meta shift button3)] 'oz-breakpoint-mouse-delete)))
 
-  (define-key map (oz-kbd "C-c C-c")     'oz-toggle-compiler)
-  (define-key map (oz-kbd "C-c C-e")     'oz-toggle-emulator)
-  (define-key map (oz-kbd "C-c C-t")     'oz-toggle-temp)
-  (define-key map (oz-kbd "C-c C-n")     'oz-new-buffer)
-  (define-key map (oz-kbd "C-c C-l")     'oz-fontify-buffer)
-  (define-key map (oz-kbd "C-c C-r")     'run-oz)
-  (define-key map (oz-kbd "C-c C-h")     'oz-halt)
-  (define-key map (oz-kbd "RET")         'oz-electric-terminate-line)
+  (define-key map [(control ?c) (control ?c)]   'oz-toggle-compiler)
+  (define-key map [(control ?c) (control ?e)]   'oz-toggle-emulator)
+  (define-key map [(control ?c) (control ?t)]   'oz-toggle-temp)
+  (define-key map [(control ?c) (control ?n)]   'oz-new-buffer)
+  (define-key map [(control ?c) (control ?l)]   'oz-fontify-buffer)
+  (define-key map [(control ?c) (control ?r)]   'run-oz)
+  (define-key map [(control ?c) (control ?h)]   'oz-halt)
+  (define-key map [return]                      'oz-electric-terminate-line)
 
-  (define-key map (oz-kbd "M-C-f")       'forward-oz-expr)
-  (define-key map (oz-kbd "M-C-b")       'backward-oz-expr)
-  (define-key map (oz-kbd "M-C-k")       'kill-oz-expr)
-  (define-key map (oz-kbd "M-C-@")       'mark-oz-expr)
-  (define-key map (oz-kbd "M-C-SPC")     'mark-oz-expr)
-  (define-key map (oz-kbd "M-C-DEL")     'backward-kill-oz-expr)
-  (define-key map (oz-kbd "M-C-q")       'indent-oz-expr)
-  (define-key map (oz-kbd "M-C-a")       'oz-beginning-of-defun)
-  (define-key map (oz-kbd "M-C-e")       'oz-end-of-defun)
-  (define-key map (oz-kbd "M-C-t")       'transpose-oz-exprs)
+  (define-key map [(meta control ?f)]           'forward-oz-expr)
+  (define-key map [(meta control ?b)]           'backward-oz-expr)
+  (define-key map [(meta control ?k)]           'kill-oz-expr)
+  (define-key map [(meta control ?\@)]          'mark-oz-expr)
+  (define-key map [(meta control space)]        'mark-oz-expr)
+  (define-key map [(meta control del)]          'backward-kill-oz-expr)
+  (define-key map [(meta control ?q)]           'indent-oz-expr)
+  (define-key map [(meta control ?a)]           'oz-beginning-of-defun)
+  (define-key map [(meta control ?e)]           'oz-end-of-defun)
+  (define-key map [(meta control ?t)]           'transpose-oz-exprs)
 
-  (define-key map (oz-kbd "C-x `")       'oz-goto-next-error)
+  (define-key map [(control ?x) ?\`]            'oz-goto-next-error)
 
-  (define-key map (oz-kbd "C-c C-d")     'oz-debugger)
-  (define-key map (oz-kbd "C-c C-f")     'oz-profiler)
+  (define-key map [(control ?c) (control ?d)]   'oz-debugger)
+  (define-key map [(control ?c) (control ?f)]   'oz-profiler)
 
-  (define-key map (oz-kbd "C-c C-m")     'oz-set-other)
-  (define-key map (oz-kbd "C-c C-o")     'oz-other)
+  (define-key map [(control ?c) (control ?m)]   'oz-set-other)
+  (define-key map [(control ?c) (control ?o)]   'oz-other)
 
   (if (not oz-pc-keys)
       (progn
-	(define-key map (oz-kbd "M-r")   'oz-feed-region)
-	(define-key map (oz-kbd "M-l")   'oz-feed-line)
+	(define-key map [(meta ?r)]             'oz-feed-region)
+	(define-key map [(meta ?l)]             'oz-feed-line)
 
-	(define-key map (oz-kbd "C-c p") 'oz-open-panel)
-	(define-key map (oz-kbd "C-c b") 'oz-browse-line)
-	(define-key map (oz-kbd "C-c c") 'oz-open-compiler-panel)
+	(define-key map [(control ?c) ?p]       'oz-open-panel)
+	(define-key map [(control ?c) ?b]       'oz-browse-line)
+	(define-key map [(control ?c) ?c]       'oz-open-compiler-panel)
 
-	(define-key map (oz-kbd "C-c m") 'oz-set-other)
-	(define-key map (oz-kbd "C-c o") 'oz-other)
-	(define-key map (oz-kbd "C-c d") 'oz-gdb))))
+	(define-key map [(control ?c) ?m]       'oz-set-other)
+	(define-key map [(control ?c) ?o]       'oz-other)
+	(define-key map [(control ?c) ?d]       'oz-gdb))))
 
 (oz-mode-commands oz-mode-map)
 
