@@ -1,0 +1,28 @@
+CHECKLIST
+
+- make a buckup of the old version
+
+- write a news announcing the changes from the old to the current version
+
+- cd $(OZSRC)
+
+- install bin/ozplatform in your PATH
+
+- edit Imake.tmpl:
+    OZHOME : target directory for installation
+
+- edit Compiler/Imake.tmpl
+    SPLIB : sicstus prolog
+
+- ./ozmkmf
+
+- make Makefiles
+
+- make all
+
+- make install
+
+- test your installation:
+
+   $(OZHOME)/bin/oz
+    
