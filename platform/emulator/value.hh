@@ -19,13 +19,9 @@
  * global names and atoms
  *=================================================================== */
 extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
-       AtomLess, AtomGreater, AtomSame, AtomUncomparable,
-       AtomInt, AtomFloat, AtomTuple, AtomProcedure, AtomCell,
-       AtomChunk, AtomSpace,
        AtomSucceeded, AtomAlt, AtomMerged, AtomFailed,
        AtomEntailed, AtomSuspended, AtomBlocked,
-       AtomRecord, AtomAtom, AtomName, AtomUnknown,
-       AtomClosed, AtomVariable,
+       AtomClosed,
        NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl;
 
 /*===================================================================
