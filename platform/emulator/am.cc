@@ -88,6 +88,9 @@ void printBanner()
 #ifdef DEBUG_FD
          " DEBUG_FD"
 #endif
+#ifdef DEBUG_FSET
+         " DEBUG_FSET"
+#endif
 #ifdef PROFILE_FD
          " PROFILE_FD"
 #endif
