@@ -3,7 +3,8 @@ fun {SpreadFiles Files DiskCap}
    proc {$ Disks}
       FileSizes = {Map Files fun {$ F} F.size end}
       Size = {FoldL FileSizes Number.'+' 0}
-      LB = Size div DiskCap + if Size mod DiskCap==0 then 0 else 1 end
+      LB = Size div DiskCap +
+           if Size mod DiskCap==0 then 0 else 1 end
       NbDisks    = {FD.int LB#FD.sup}
       AllFiles  = {List.number 1 {Length Files} 1}
       Ds
@@ -26,7 +27,11 @@ fun {SpreadFiles Files DiskCap}
                   Disk = {TellRecord diskette}
                in
                   {ForAll {FS.monitorIn D}
-                   proc {$ E} F = {Nth Files E} in Disk^(F.name) = F.size end}
+                   proc {$ E}
+                      F = {Nth Files E}
+                   in
+                      Disk^(F.name) = F.size
+                   end}
                   {WidthC Disk} = {FS.card D}
                   Disk
                end}

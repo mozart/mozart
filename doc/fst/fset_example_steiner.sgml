@@ -2,7 +2,7 @@
 
 <Chapter id="fset.examples.steiner"> <Title/The Steiner Problem/
 
-<Para><Title/Problem Specification./ The ternary Steiner problem of
+<Para><Title/Problem Specification/ The ternary Steiner problem of
 order <Math>n</Math> asks for <Math>n(n-1)/6</Math> sets <Math>s_i
 \subset \{1,\ldots,n\}</Math> with cardinality <Math>3</Math> such
 that every two of them share at most one element. The mathematical
@@ -10,7 +10,7 @@ properties of the problem require that <Math>n \bmod 6</Math> has to be
 either <Math>1</Math> or <Math>3</Math> <Ptr to="LindnerRosa:80">.
 
 
-<Para><Title/Model./ We create a list <<Ss>> of <Math>n(n-1)/6</Math>
+<Para><Title/Model/ We create a list <<Ss>> of <Math>n(n-1)/6</Math>
 set variables and constrain every set to have a cardinality of
 <Math>3</Math> and to have an upper bound of
 <Math>\{1,\ldots,n\}</Math>. Further we require that the cardinality
@@ -18,11 +18,11 @@ of the intersection of every two distinct sets in <<Ss>> must not
 exceed <Math>1</Math>.
 
 
-<Para><Title/Distribution Strategy./ Distribution simply takes the
+<Para><Title/Distribution Strategy/ Distribution simply takes the
 sets as they occur in <<Ss>> and adds &resp; removes elements from them
 starting from the smallest element.
 
-<Para><Title/Solver./ The solver is created by a function <<Steiner>>
+<Para><Title/Solver/ The solver is created by a function <<Steiner>>
 that takes the order of the Steiner problem as argument and checks if
 it is a valid order. In case it is valid it returns the actual solver
 with the list of solution sets as formal argument.
@@ -39,7 +39,7 @@ abstraction <<FS.distribute>> for naive distribution..
 
 <P>
 Solving the Steiner problem of order <Math>9</Math> by invoking the Oz
-Explorer <<{ExploreOne {Steiner 9}}>> yields as solution
+Explorer <<<{ExploreOne {Steiner 9}}>>> yields as solution
 
 <<<[{1#3}#3 {1 4#5}#3 {1 6#7}#3 {1 8#9}#3 {2 4 6}#3 {2 5 8}#3
   {2 7 9}#3 {3#4 9}#3 {3 5 7}#3 {3 6 8}#3 {4 7#8}#3 {5#6 9}#3].>>>
@@ -49,7 +49,7 @@ The search tree has depth <Math/50/, <Math/4545/ choice nodes, and
 
 <PICTURE.extern id="pic.fset_steiner_naive" display to="fset_steiner_naive.gif" type=GIF>
 
-<Para><Title/Improving the Model./ A promising way to improve the
+<Para><Title/Improving the Model/ A promising way to improve the
 efficiency of a constraint model (where the corresponding problem does
 not have a unique solution) is to break symmetries and thus to improve
 constraint propagation. Breaking symmetries can be achieved by
@@ -59,7 +59,7 @@ digits to the base <Math>(n+1)</Math>. A set with three elements
 <Math>\{x_1,x_2,x_3\}</Math> can be mapped to an integer by
 <Math>(n+1)^2x_1+(n+1)x_2+x_3</Math>.
 
-<Para><Title/Extending the Solver./ The finite set library provides
+<Para><Title/Extending the Solver/ The finite set library provides
 <<FS.int.match>> to match the elements of a set <Math>s</Math> with a
 fixed number of elements to a vector of size <Math>\#s</Math> of finite
 domain variables. This library constraint in conjunction with <<Map>>

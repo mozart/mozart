@@ -3,7 +3,10 @@ fun {Golf NbOfWeeks NbOfFourSomes}
    NbOfPlayers = 4*NbOfFourSomes
 
    fun {Flatten Ls}
-      {FoldL Ls fun {$ L R} if R==nil then L else {Append L R} end end nil}
+      {FoldL Ls fun {$ L R}
+                   if R==nil then L
+                   else {Append L R} end
+                end nil}
    end
 
    proc {DistrPlayers AllWeeks Player Weeks}
@@ -30,9 +33,14 @@ in
 
       {ForAll Weeks
        proc {$ Week}
-          Week = {FS.var.list.upperBound NbOfFourSomes [1#NbOfPlayers]}
-          {ForAll Week proc {$ FourSome} {FS.card FourSome 4} end}
-          {FS.partition Week {FS.value.make [1#NbOfPlayers]}}
+          Week =
+          {FS.var.list.upperBound
+           NbOfFourSomes [1#NbOfPlayers]}
+          {ForAll Week proc {$ FourSome}
+                          {FS.card FourSome 4}
+                       end}
+          {FS.partition Week
+           {FS.value.make [1#NbOfPlayers]}}
        end}
 
       {ForAllTail Weeks
@@ -44,7 +52,8 @@ in
                  {ForAll {Flatten RestWeeks}
                   proc {$ RestFourSome}
                      {FS.cardRange 0 1
-                      {FS.intersect FourSome RestFourSome}}
+                      {FS.intersect
+                       FourSome RestFourSome}}
                   end}
               end}
           else skip end

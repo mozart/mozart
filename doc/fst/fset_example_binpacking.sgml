@@ -3,21 +3,21 @@
 <Chapter id="fset.examples.binpacking"> <Title/Packing Files onto
 Disks/
 
-<Para><Title/Problem Specification./ Suppose, you want to copy a set
+<Para><Title/Problem Specification/ Suppose, you want to copy a set
 of files from your hard-disk onto as few as possible diskettes of a
 given size, &eg; onto common 1.44 MB diskettes. In case your files do
 not fit on a single diskette, it might become quite tricky to figure
 out the minimal number of needed diskettes and how to partition the
 files.
 
-<Para><Title/Model./ A diskette is modeled by a set <Math>s_i</Math>.
+<Para><Title/Model/ A diskette is modeled by a set <Math>s_i</Math>.
 All sets <Math>s_i</Math> form a partition of the set of all files
 <Math>s_{all files}</Math>, &ie;, all <Math>s_i</Math> are pairwise
 disjoint and their union is <Math>s_{all files}</Math>. The sizes of
 all files contained in a set is summed up and compared with the fixed
 capacity of the diskette.
 
-<Para><Title/Distribution Strategy./ The distribution is two-dimensional.
+<Para><Title/Distribution Strategy/ The distribution is two-dimensional.
 
 <List>
 
@@ -36,7 +36,7 @@ The distribution over the files could be refined by taking the size of
 the actual file into account. This is subject to experimentation by
 the reader.
 
-<Para><Title/Solver./ The function <<SpreadFiles>> returns a solver
+<Para><Title/Solver/ The function <<SpreadFiles>> returns a solver
 configured according to the actual values of the formal arguments
 <<Files>> and <<DiskCap>>. The returned solver's root variable
 <<Disks>> contains the set of diskettes of size <<DiskCap>> needed to
@@ -66,7 +66,7 @@ elements of sets to 0/1 variables. These 0/1 variable are passed to
 <<FD.sumC>> to ensure that a diskettes capacity is not exceeded.
 Distribution over <<Ds>> tries to locate file onto diskettes.
 
-<Para><Title/Particularities./ The solver represents internally
+<Para><Title/Particularities/ The solver represents internally
 individual file as integers since finite set constraints in &oz; can
 only deal with non-negative integers. To make the produced solution
 readable to humans, a diskette is represented as record where the
@@ -86,9 +86,12 @@ Invoking the solver by
 
 <<<
 declare Disks =
-{SearchOne {SpreadFiles [file(name:a size:360) file(name:b size:850)
-                         file(name:c size:630) file(name:d size:70)
-                         file(name:e size:700) file(name:f size:210)]
+{SearchOne {SpreadFiles [file(name:a size:360)
+                         file(name:b size:850)
+                         file(name:c size:630)
+                         file(name:d size:70)
+                         file(name:e size:700)
+                         file(name:f size:210)]
             1440}}
 >>>
 
