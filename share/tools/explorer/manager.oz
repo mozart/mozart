@@ -33,7 +33,7 @@ in
 	 final
       
       feat
-	 explorer
+	 explorer options
 
       attr
 	 IsBAB:   false
@@ -44,7 +44,7 @@ in
 	 ToClose: nil
 
       
-      meth init(EXPLORER)
+      meth init(EXPLORER Options)
 	 lock
 	    PackAll = ToplevelManager,init($)
 	 in
@@ -52,6 +52,7 @@ in
 	    MenuManager,init
 	    StatusManager,init
 	    self.explorer = EXPLORER
+	    self.options  = Options
 	    {PackAll}
 	    ToplevelManager,configurePointer(idle)
 	 end
