@@ -706,75 +706,6 @@ OZ_Return BIfdHeadManager::suspendOnVar(OZ_CFun f, int a, OZ_Term * x,
 #endif
 
 //-----------------------------------------------------------------------------
-// An OZ term describing a finite domain is either:
-// (1) a positive small integer <= fd_sup
-// (2) a 2 tuple of (1)
-// (3) a list of (1) and/or (2)
-
-OZ_Return checkDomDescr(OZ_Term descr,
-                      OZ_CFun cfun, OZ_Term * args, int arity,
-                      int expect)
-{
-  OZ_Term * descr_ptr;
-  TypeOfTerm descr_tag;
-
-  deref(descr, descr_ptr, descr_tag);
-
-  if (isNotCVar(descr_tag)) {
-#ifdef FDBISTUCK
-    am.addSuspendVarList(descr_ptr);
-#else
-    OZ_addThread(makeTaggedRef(descr_ptr),
-                     OZ_makeSuspendedThread(cfun, args, arity));
-#endif
-    return SUSPEND; // checkDomDescr
-  } else if (isSmallInt(descr_tag) && (expect >= 1)) { // (1)
-    return PROCEED;
-  } else if (AtomSup == descr && (expect >= 1)) { // (1)
-    return PROCEED;
-  } else if (isGenFDVar(descr, descr_tag) && (expect >= 1)) {
-#ifdef FDBISTUCK
-    am.addSuspendVarList(descr_ptr);
-#else
-    OZ_addThread(makeTaggedRef(descr_ptr),
-                     OZ_makeSuspendedThread(cfun, args, arity));
-#endif
-    return SUSPEND; // checkDomDescr
-  } else if (AtomBool == descr && (expect >= 2)) { // (1)
-    return PROCEED;
-  } else if (isSRecord(descr_tag) && (expect >= 2)) {
-    SRecord &tuple = *tagged2SRecord(descr);
-    if (tuple.getWidth() != 2) {
-      return FAILED;
-    }
-    for (int i = 0; i < 2; i++) {
-      OZ_Return r = checkDomDescr(makeTaggedRef(&tuple[i]), cfun, args, arity, 1);
-      if (r != PROCEED)
-        return r;
-    }
-    return PROCEED;
-  } else if (isNil(descr) && (expect == 3)) {
-    return PROCEED;
-  } else if (isLTuple(descr_tag) && (expect == 3)) {
-
-    do {
-      LTuple &list = *tagged2LTuple(descr);
-      OZ_Return r = checkDomDescr(makeTaggedRef(list.getRefHead()),
-                                cfun, args, arity, 2);
-      if (r != PROCEED)
-        return r;
-      descr = makeTaggedRef(list.getRefTail());
-
-      deref(descr, descr_ptr, descr_tag);
-    } while (isLTuple(descr_tag));
-
-    if (isNil(descr)) return PROCEED;
-    return checkDomDescr(makeTaggedRef(descr_ptr), cfun, args, arity, 0);
-  }
-  return FAILED;
-}
-
-//-----------------------------------------------------------------------------
 //                              class BIfdBodyManager
 //-----------------------------------------------------------------------------
 // Global data
@@ -1712,141 +1643,11 @@ BIspec fdSpec[] = {
   {"fdPutInterval", 3, BIfdPutInterval},
   {"fdPutNot", 2, BIfdPutNot},
 
-// fdrel.cc
-  {"fdMinimum", 3, BIfdMinimum},
-  {"fdMinimum_body", 3, BIfdMinimum_body},
-  {"fdMaximum", 3, BIfdMaximum},
-  {"fdMaximum_body", 3, BIfdMaximum_body},
-  {"fdUnion", 3, BIfdUnion},
-  {"fdUnion_body", 3, BIfdUnion_body},
-  {"fdIntersection", 3, BIfdIntersection},
-  {"fdIntersection_body", 3, BIfdIntersection_body},
-  {"fdSubsume_body", 3, BIfdSubsume_body},
-  {"fdLessEqOff", 3, BIfdLessEqOff},
-  {"fdLessEqOff_body", 3, BIfdLessEqOff_body},
-  {"fdNotEqEnt", 2, BIfdNotEqEnt},
-  {"fdNotEqEnt_body", 2, BIfdNotEqEnt_body},
-  {"fdNotEq", 2, BIfdNotEq},
-  {"fdNotEq_body", 2, BIfdNotEq_body},
-  {"fdNotEqOffEnt", 3, BIfdNotEqOffEnt},
-  {"fdNotEqOffEnt_body", 3, BIfdNotEqOffEnt_body},
-  {"fdNotEqOff", 3, BIfdNotEqOff},
-  {"fdNotEqOff_body", 3, BIfdNotEqOff_body},
-  {"fdAllDifferent", 1, BIfdAllDifferent},
-  {"fdAllDifferent_body", 1, BIfdAllDifferent_body},
-  {"fdDistinctOffset", 2, BIfdDistinctOffset},
-  {"fdDistinctOffset_body", 2, BIfdDistinctOffset_body},
-  {"fdCPIterate", 2, BIfdCPIterate},
-  {"fdCPIterate_body", 2, BIfdCPIterate_body},
-
-// fdbool.cc
-  {"fdAnd", 3, BIfdAnd},
-  {"fdAnd_body", 3, BIfdAnd_body},
-  {"fdOr", 3, BIfdOr},
-  {"fdOr_body", 3, BIfdOr_body},
-  {"fdNot", 2, BIfdNot},
-  {"fdNot_body", 2, BIfdNot_body},
-  {"fdXor", 3, BIfdXor},
-  {"fdXor_body", 3, BIfdXor_body},
-  {"fdEquiv", 3, BIfdEquiv},
-  {"fdEquiv_body", 3, BIfdEquiv_body},
-  {"fdImpl", 3, BIfdImpl},
-  {"fdImpl_body", 3, BIfdImpl_body},
-
-// fdarith.cc
-  {"fdPlus", 3, BIfdPlus},
-  {"fdPlus_body", 3, BIfdPlus_body},
-  {"fdTwice_body", 2, BIfdTwice_body},
-  {"fdMinus", 3, BIfdMinus},
-  {"fdMinus_body", 3, BIfdMinus_body},
-  {"fdMult", 3, BIfdMult},
-  {"fdMult_body", 3, BIfdMult_body},
-  {"fdSquare_body", 2, BIfdSquare_body},
-  {"fdDiv", 3, BIfdDiv},
-  {"fdDiv_body", 3, BIfdDiv_body},
-  {"fdDivInterval", 3, BIfdDivInterval},
-  {"fdDivInterval_body", 3, BIfdDivInterval_body},
-  {"fdMod", 3, BIfdMod},
-  {"fdMod_body", 3, BIfdMod_body},
-  {"fdModInterval", 3, BIfdModInterval},
-  {"fdModInterval_body", 3, BIfdModInterval_body},
-  {"fdPlus_rel", 3, BIfdPlus_rel},
-  {"fdMult_rel", 3, BIfdMult_rel},
-
-// fdgeneric.cc
-  {"fdGenLinEq", 3, BIfdGenLinEq},
-  {"fdGenLinEq_body", 3, BIfdGenLinEq_body},
-  {"fdGenNonLinEq", 3, BIfdGenNonLinEq},
-  {"fdGenNonLinEq1", 3, BIfdGenNonLinEq1},
-  {"fdGenNonLinEq_body", 3, BIfdGenNonLinEq_body},
-  {"fdGenLinNotEq", 3, BIfdGenLinNotEq},
-  {"fdGenLinNotEq_body", 3, BIfdGenLinNotEq_body},
-  {"fdGenNonLinNotEq", 3, BIfdGenNonLinNotEq},
-  {"fdGenNonLinNotEq_body", 3, BIfdGenNonLinNotEq_body},
-  {"fdGenLinLessEq", 3, BIfdGenLinLessEq},
-  {"fdGenLinLessEq_body", 3, BIfdGenLinLessEq_body},
-  {"fdGenNonLinLessEq", 3, BIfdGenNonLinLessEq},
-  {"fdGenNonLinLessEq1", 3, BIfdGenNonLinLessEq1},
-  {"fdGenNonLinLessEq_body", 3, BIfdGenNonLinLessEq_body},
-
-// fdcount.cc
-  {"fdElement", 3, BIfdElement},
-  {"fdElement_body", 3, BIfdElement_body},
-  {"fdAtMost", 3, BIfdAtMost},
-  {"fdAtMost_body", 3, BIfdAtMost_body},
-  {"fdAtLeast", 3, BIfdAtLeast},
-  {"fdAtLeast_body", 3, BIfdAtLeast_body},
-  {"fdCount", 3, BIfdCount},
-  {"fdCount_body", 3, BIfdCount_body},
-
-// fdcard.cc
-  {"fdCardBIBin", 2, BIfdCardBIBin},
-  {"fdCardBIBin_body", 2, BIfdCardBIBin_body},
-  {"fdCardNestableBI", 4, BIfdCardNestableBI},
-  {"fdCardNestableBI_body", 4, BIfdCardNestableBI_body},
-  {"fdCardNestableBIBin", 3, BIfdCardNestableBIBin},
-  {"fdCardNestableBIBin_body", 3, BIfdCardNestableBIBin_body},
-  {"fdInB", 3, BIfdInB},
-  {"fdInB_body", 3, BIfdInB_body},
-  {"fdNotInB", 3, BIfdNotInB},
-  {"fdNotInB_body", 3, BIfdNotInB_body},
-  {"fdGenLinEqB", 4, BIfdGenLinEqB},
-  {"fdGenNonLinEqB", 4, BIfdGenNonLinEqB},
-  {"fdGenLinEqB_body", 4, BIfdGenLinEqB_body},
-  {"fdGenLinNotEqB", 4, BIfdGenLinNotEqB},
-  {"fdGenNonLinNotEqB", 4, BIfdGenNonLinNotEqB},
-  {"fdGenLinNotEqB_body", 4, BIfdGenLinNotEqB_body},
-  {"fdGenLinLessEqB", 4, BIfdGenLinLessEqB},
-  {"fdGenLinLessEqB_body", 4, BIfdGenLinLessEqB_body},
-  {"fdGenNonLinLessEqB", 4, BIfdGenNonLinLessEqB},
+  {"fdWatchDomB", 3, BIfdWatchDomB},
 
 // fdcd.cc
   {"fdConstrDisjSetUp", 4, BIfdConstrDisjSetUp},
   {"fdConstrDisj", 3, BIfdConstrDisj},
-#ifndef PROPAGATOR_CD
-  {"fdConstrDisj_body", 3, BIfdConstrDisj_body},
-#endif
-
-  {"fdGenLinEqCD", 4, BIfdGenLinEqCD},
-  {"fdGenLinEqCD_body", 4, BIfdGenLinEqCD_body},
-  {"fdGenNonLinEqCD", 4, BIfdGenNonLinEqCD},
-  {"fdGenLinNotEqCD", 4, BIfdGenLinNotEqCD},
-  {"fdGenLinNotEqCD_body", 4, BIfdGenLinNotEqCD_body},
-  {"fdGenNonLinNotEqCD", 4, BIfdGenNonLinNotEqCD},
-  {"fdGenLinLessEqCD", 4, BIfdGenLinLessEqCD},
-  {"fdGenLinLessEqCD_body", 4, BIfdGenLinLessEqCD_body},
-  {"fdGenNonLinLessEqCD", 4, BIfdGenNonLinLessEqCD},
-  {"fdPlusCD", 4, BIfdPlusCD_rel},
-  {"fdPlusCD_body", 4, BIfdPlusCD_rel_body},
-  {"fdMultCD", 4, BIfdMultCD_rel},
-  {"fdMultCD_body", 4, BIfdMultCD_rel_body},
-
-  {"fdLessEqOffCD", 4, BIfdLessEqOffCD},
-  {"fdLessEqOffCD_body", 4, BIfdLessEqOffCD_body},
-  {"fdNotEqCD", 3, BIfdNotEqCD},
-  {"fdNotEqCD_body", 3, BIfdNotEqCD_body},
-  {"fdNotEqOffCD", 4, BIfdNotEqOffCD},
-  {"fdNotEqOffCD_body", 4, BIfdNotEqOffCD_body},
 
   {"fdPutLeCD", 3, BIfdPutLeCD},
   {"fdPutGeCD", 3, BIfdPutGeCD},
@@ -1855,39 +1656,6 @@ BIspec fdSpec[] = {
   {"fdPutNotCD", 3, BIfdPutNotCD},
 
 // fdwatch.cc
-  {"fdWatchDomB", 3, BIfdWatchDomB},
-  {"fdWatchDom1", 2, BIfdWatchDom1},
-  {"fdWatchDom2", 4, BIfdWatchDom2},
-  {"fdWatchDom3", 6, BIfdWatchDom3},
-
-  {"fdWatchBounds1", 3, BIfdWatchBounds1},
-  {"fdWatchBounds2", 6, BIfdWatchBounds2},
-  {"fdWatchBounds3", 9, BIfdWatchBounds3},
-
-// fdmisc.cc
-  {"fdCardSched", 4, BIfdCardSched},
-  {"fdCardSched_body", 4, BIfdCardSched_body},
-  {"fdCardSchedControl", 5, BIfdCardSchedControl},
-  {"fdCardSchedControl_body", 5, BIfdCardSchedControl_body},
-  {"fdCDSched", 4, BIfdCDSched},
-  {"fdCDSched_body", 4, BIfdCDSched_body},
-  {"fdCDSchedControl", 5, BIfdCDSchedControl},
-  {"fdCDSchedControl_body", 5, BIfdCDSchedControl_body},
-  {"fdNoOverlap", 6, BIfdNoOverlap},
-  {"fdNoOverlap_body", 6, BIfdNoOverlap_body},
-  {"fdGenLinEqKillB", 4, BIfdGenLinEqKillB},
-  {"fdGenLinEqKillB_body", 4, BIfdGenLinEqKillB_body},
-  {"fdGenLinLessEqKillB", 4, BIfdGenLinLessEqKillB},
-  {"fdGenLinLessEqKillB_body", 4, BIfdGenLinLessEqKillB_body},
-  {"fdCardBIKill", 4, BIfdCardBIKill},
-  {"fdCardBIKill_body", 4, BIfdCardBIKill_body},
-  {"fdInKillB", 3, BIfdInKillB},
-  {"fdInKillB_body", 3, BIfdInKillB_body},
-  {"fdNotInKillB", 3, BIfdNotInKillB},
-  {"fdNotInKillB_body", 3, BIfdNotInKillB_body},
-  {"fdCopyDomain", 2, BIfdCopyDomain},
-  {"fdDivDomCons", 3, BIfdDivIntervalCons},
-  {"getCopyStat", 1, BIgetCopyStat},
 #ifndef FOREIGNFDPROPS
   {"fdp_init", 0, fdp_init},
   {"fdp_plus_rel", 3, fdp_plus_rel},

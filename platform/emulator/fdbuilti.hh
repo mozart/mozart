@@ -16,20 +16,10 @@
 #pragma interface
 #endif
 
-#define PROPAGATOR_CD
-
-// include oz.h
 #include "fdomn.hh"
 #include "fdprofil.hh"
 
-// have to vanish
-//#include "fdhook.hh"
-//#include "genvar.hh"
-
-
-// do not include any file
 #include "fdproto.hh"
-#include "fdheads.hh"
 #include "fddebug.hh"
 
 enum Recalc_e {lower, upper};
@@ -365,10 +355,6 @@ public:
   static OZ_Return replacePropagator(OZ_Term, OZ_Term);
 }; // BIfdBodyManager
 
-
-//-----------------------------------------------------------------------------
-
-OZ_Return checkDomDescr(OZ_Term, OZ_CFun, OZ_Term *, int, int = 3);
 
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdbuilti.icc"

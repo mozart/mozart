@@ -433,10 +433,12 @@ int FDIntervals::union_iv(const FDIntervals &x, const FDIntervals &y)
       i_arr[z_c].left = x.i_arr[x_c].left;
       r = x.i_arr[x_c].right;
       x_c += 1;
+      for (; y_c < y.high && y.i_arr[y_c].right <= r; y_c += 1);
     } else {
       i_arr[z_c].left = y.i_arr[y_c].left;
       r = y.i_arr[y_c].right;
       y_c += 1;
+      for (; x_c < x.high && x.i_arr[x_c].right <= r; x_c += 1);
     }
 
     for (OZ_Boolean cont = OZ_TRUE; cont; )
@@ -444,10 +446,12 @@ int FDIntervals::union_iv(const FDIntervals &x, const FDIntervals &y)
           x.i_arr[x_c].left <= r + 1 && r <= x.i_arr[x_c].right) {
         r = x.i_arr[x_c].right;
         x_c += 1;
+        for (; y_c < y.high && y.i_arr[y_c].right <= r; y_c += 1);
       } else if (y_c < y.high &&
                  y.i_arr[y_c].left <= r + 1 && r <= y.i_arr[y_c].right) {
         r = y.i_arr[y_c].right;
         y_c += 1;
+        for (; x_c < x.high && x.i_arr[x_c].right <= r; x_c += 1);
       } else {
         cont = OZ_FALSE;
       }

@@ -363,3 +363,29 @@ OZ_C_proc_begin(BIfdPutNot, 2)
   return x.releaseNonRes();
 }
 OZ_C_proc_end // BIfdPutNot
+
+OZ_C_proc_begin(BIfdWatchDomB, 3){
+  OZ_getCArgDeref(0, x, xPtr, xTag);
+  OZ_getCArgDeref(1, xSize, xSizePtr, xSizeTag);
+
+  if (isSmallInt(xSizeTag) == NO){
+    warning("Small integer expected as size here.");
+    return (OZ_unify (OZ_getCArg(2), NameFalse));
+  }
+
+  int currXSize = isSmallInt(xTag)
+    ? 1 : (isGenFDVar(x) ? tagged2GenFDVar(x)->getDom().getSize() : 0);
+
+  if (!currXSize)
+    return (OZ_unify (OZ_getCArg(2), NameFalse));
+
+  if (currXSize < OZ_intToC(xSize))
+    return (OZ_unify (OZ_getCArg(2), NameTrue));
+
+  if (isGenFDVar(x)){
+    //  must return SUSPEND;
+    return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, xPtr);
+  }
+
+  return (OZ_unify (OZ_getCArg(2), NameFalse));
+} OZ_C_proc_end

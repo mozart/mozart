@@ -43,24 +43,6 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
   SRecord &p = *tagged2SRecord(p_tuple);
   SRecord &b = *tagged2SRecord(b_tuple);
 
-  if (isLiteral(v_tupletag)) {
-    // reduce to sum(b) >= 1
-    int p_size = p.getWidth();
-    TaggedRef tone = OZ_int(1), tmone = OZ_int(-1);
-    SRecord * st = SRecord::newSRecord(p.getLabel(), p_size);
-
-    for (int i = 0; i < p_size; i++) (*st)[i] = tmone;
-
-    TaggedRefPtr new_args = allocateRegs(makeTaggedSRecord(st), b_tuple, tone);
-    return BIfdGenLinLessEq(3, new_args);
-  }
-
-  if (! isSTuple(v_tuple)) TypeError(2, "");
-  if (! isSTuple(vp_tuple)) TypeError(3, "");
-
-  SRecord &v = *tagged2SRecord(v_tuple);
-  SRecord &vp = *tagged2SRecord(vp_tuple);
-
   const int clauses = p.getWidth();
   if (clauses != b.getWidth()) {
     warning("Tuples clauses and b differ in size.");
@@ -80,6 +62,15 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
       error("Unexpected CVar found.");
     }
   }
+
+  // Has already been reduced to sum(b) >= 1
+  if (isLiteral(v_tupletag)) return PROCEED;
+
+  if (! isSTuple(v_tuple)) TypeError(2, "");
+  if (! isSTuple(vp_tuple)) TypeError(3, "");
+
+  SRecord &v = *tagged2SRecord(v_tuple);
+  SRecord &vp = *tagged2SRecord(vp_tuple);
 
   const int variables = v.getWidth();
 
@@ -108,10 +99,8 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
 }
 OZ_C_proc_end
 
-#ifdef PROPAGATOR_CD
-
 //  by kost@ 9.04.96: usage of fdaux.hh in fdcd.cc is eliminated;
-// #include "../FDLib/fdaux.hh"
+//#include "../FDLib/fdaux.hh"
 
 class CDPropagator : public OZ_Propagator {
 protected:
@@ -141,8 +130,18 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
   OZ_getCArgDeref(1, v_tuple, v_tupleptr, v_tupletag);
   OZ_getCArgDeref(2, vp_tuple, vp_tupleptr, vp_tupletag);
 
-  // Has already been reduced to sum(b) >= 1
-  if (isLiteral(v_tupletag)) return PROCEED;
+  if (isLiteral(v_tupletag)) {
+    SRecord &b = *tagged2SRecord(b_tuple);
+    int b_size = b.getWidth();
+    int ones = 0;
+
+    for (int i = 0; i < b_size; i++) {
+      OZ_Term b_val = deref(b[i]);
+      Assert(isSmallInt(b_val));
+      if (smallIntValue(b_val) == 1) ones += 1;
+    }
+    return ones > 0 ? PROCEED : FAILED;
+  }
 
 
   if (! isSTuple(b_tuple) || ! isSTuple(v_tuple) ||
@@ -152,54 +151,13 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
   }
 
   OZ_PropagatorExpect pe;
-  EXPECT(pe, 1, expectTupleIntVarAny);
+  EXPECT(pe, 1, expectVectorIntVarAny);
 
   return pe.spawn(new CDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]),
                   OZMAX_PRIORITY - 1);
 }
 OZ_C_proc_end
 
-#else // PROPAGATOR_CD
-
-OZ_C_proc_begin(BIfdConstrDisj, 3)
-{
-  ExpectedTypes("tuple of finite domain,tuple of finite domain,"
-                "tuple of of tuple of finite domain");
-
-  OZ_getCArgDeref(0, b_tuple, b_tupleptr, b_tupletag);
-  OZ_getCArgDeref(1, v_tuple, v_tupleptr, v_tupletag);
-  OZ_getCArgDeref(2, vp_tuple, vp_tupleptr, vp_tupletag);
-
-  // Has already been reduced to sum(b) >= 1
-  if (isLiteral(v_tupletag)) return PROCEED;
-
-
-  if (! isSTuple(b_tuple)) TypeError(0, "");
-  if (! isSTuple(v_tuple)) TypeError(1, "");
-  if (! isSTuple(vp_tuple)) TypeError(2, "");
-
-  SRecord &v = *tagged2SRecord(v_tuple);
-
-  const int variables = v.getWidth();
-
-  // suspend until global variables are constrained to finite domains
-  BIfdHeadManager x_items(variables);
-
-  int suspend, i;
-  for (suspend = 0, i = variables; i--; )
-    if (! x_items.expectFDish(i, makeTaggedRef(&v[i]), suspend))
-      TypeError(1, "");
-
-  if (suspend > 0) {
-    return x_items.addSuspFDish(OZ_self, OZ_args, OZ_arity);
-  }
-
-  return x_items.spawnPropagator(fd_any, BIfdConstrDisj_body, 3,
-                                 b_tuple, v_tuple, vp_tuple);
-}
-OZ_C_proc_end
-
-#endif // PROPAGATOR_CD
 
 //-----------------------------------------------------------------------------
 // BIfdConstrDisj
@@ -231,19 +189,11 @@ OZ_C_proc_end
 //   o constrain global variables with union of corresponding local vars
 //-----------------------------------------------------------------------------
 
-#ifdef PROPAGATOR_CD
 OZ_Return CDPropagator::run(void)
 {
   DEREF(b_tuple, b_tupleptr, b_tupletag);
   DEREF(v_tuple, v_tupleptr, v_tupletag);
   DEREF(vp_tuple, vp_tupleptr, vp_tupletag);
-#else
-OZ_C_proc_begin(BIfdConstrDisj_body, 3)
-{
-  OZ_getCArgDeref(0, b_tuple, b_tupleptr, b_tupletag);
-  OZ_getCArgDeref(1, v_tuple, v_tupleptr, v_tupletag);
-  OZ_getCArgDeref(2, vp_tuple, vp_tupleptr, vp_tupletag);
-#endif
 
   SRecord &_b = *tagged2SRecord(b_tuple);
   SRecord &_v = *tagged2SRecord(v_tuple);
@@ -422,187 +372,12 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
   return x.releaseReify(idx_b(0), idx_b(clauses - 1),
                         idx_v(0), idx_v(variables - 1));
 }
-#ifndef PROPAGATOR_CD
-OZ_C_proc_end
-#endif
-
-//-----------------------------------------------------------------------------
-// Propagators
-
-OZ_Return cd_wrapper_a(int OZ_arity, OZ_Term OZ_args[], OZ_CFun, OZ_CFun BI_body)
-{
-  int last_index = OZ_arity - 1;
-
-  BIfdBodyManager x(1);
-
-  x.introduce(0, OZ_getCArg(last_index));
-
-  Assert(x.allVarsAreLocal());
-
-  if (x[0] == 0) {
-    return EntailFD;
-  }
-  if (x[0] == 1) {
-    return BIfdBodyManager::replacePropagator(BI_body,last_index, OZ_args);
-  }
-
-  x.backup();
-  OZ_Return ret_val = BI_body(last_index, OZ_args);
-  x.restore();
-
-  Assert(x[0].maxElem() >= 2);
-
-  if (ret_val == PROCEED) {
-    x[0] <= (x[0].maxElem() - 1);
-    Assert(x[0].maxElem() >= 2);
-  } else if (ret_val == FAILED) {
-    x[0] &= 0;
-  }
-  x.process(0);
-
-  return ret_val == SLEEP ? SLEEP : PROCEED;
-}
-
-OZ_C_proc_begin(BIfdGenLinEqCD, 4)
-{
-  return genericHead_a_x_c_b(OZ_arity, OZ_args, OZ_self,
-                             BIfdGenLinEqCD_body, fd_bounds);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIfdGenNonLinEqCD, 4)
-{
-  return genericHead_a_x_c_b_nl(OZ_arity, OZ_args, OZ_self,
-                                BIfdGenLinEqCD_body, fd_bounds);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIfdGenLinEqCD_body, 4)
-{
-  return cd_wrapper_a(OZ_arity, OZ_args, OZ_self, BIfdGenLinEq_body);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIfdGenLinLessEqCD, 4)
-{
-  return genericHead_a_x_c_b(OZ_arity, OZ_args, OZ_self,
-                             BIfdGenLinLessEqCD_body, fd_bounds);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIfdGenNonLinLessEqCD, 4)
-{
-  return genericHead_a_x_c_b_nl(OZ_arity, OZ_args, OZ_self,
-                                BIfdGenLinLessEqCD_body, fd_bounds);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIfdGenLinLessEqCD_body, 4)
-{
-  return cd_wrapper_a(OZ_arity, OZ_args, OZ_self, BIfdGenLinLessEq_body);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIfdGenLinNotEqCD, 4)
-{
-  return genericHead_a_x_c_b(OZ_arity, OZ_args, OZ_self,
-                             BIfdGenLinNotEqCD_body, fd_bounds);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIfdGenNonLinNotEqCD, 4)
-{
-  return genericHead_a_x_c_b_nl(OZ_arity, OZ_args, OZ_self,
-                                BIfdGenLinNotEqCD_body, fd_bounds);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIfdGenLinNotEqCD_body, 4)
-{
-  return cd_wrapper_a(OZ_arity, OZ_args, OZ_self, BIfdGenLinNotEq_body);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIfdPlusCD_rel, 4)
-{
-  return genericHead_x_y_z_b(OZ_arity, OZ_args, OZ_self, BIfdPlusCD_rel_body);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIfdPlusCD_rel_body, 4)
-{
-  return cd_wrapper_a(OZ_arity, OZ_args, OZ_self, BIfdPlus_body);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIfdMultCD_rel, 4)
-{
-  return genericHead_x_y_z_b(OZ_arity, OZ_args, OZ_self, BIfdMultCD_rel_body);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIfdMultCD_rel_body, 4)
-{
-  return cd_wrapper_a(OZ_arity, OZ_args, OZ_self, BIfdMult_body);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIfdLessEqOffCD, 4)
-{
-  return genericHead_x_y_c_b(OZ_arity, OZ_args, OZ_self, BIfdLessEqOffCD_body,
-                             fd_bounds);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIfdLessEqOffCD_body, 4)
-{
-  return cd_wrapper_a(OZ_arity, OZ_args, OZ_self, BIfdLessEqOff_body);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIfdNotEqOffCD, 4)
-{
-  return genericHead_x_y_c_b(OZ_arity, OZ_args, OZ_self, BIfdNotEqOffCD_body,
-                             fd_det);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIfdNotEqOffCD_body, 4)
-{
-  return cd_wrapper_a(OZ_arity, OZ_args, OZ_self, BIfdNotEqOff_body);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIfdNotEqCD, 3)
-{
-  return genericHead_x_y_c_b(OZ_arity, OZ_args, OZ_self, BIfdNotEqCD_body,
-                             fd_det);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIfdNotEqCD_body, 3)
-{
-  return cd_wrapper_a(OZ_arity, OZ_args, OZ_self, BIfdNotEq_body);
-}
-OZ_C_proc_end
-
 
 //-----------------------------------------------------------------------------
 // Built-ins
 
-OZ_Return cd_wrapper_b(int OZ_arity, OZ_Term OZ_args[], OZ_CFun, OZ_CFun BI_body)
+OZ_Return cd_wrapper_b(int OZ_arity, OZ_Term OZ_args[],
+                       OZ_CFun, OZ_CFun BI_body)
 {
   int last_index = OZ_arity - 1;
 
@@ -665,162 +440,7 @@ OZ_C_proc_end
 
 
 //-----------------------------------------------------------------------------
-// Special scheduling constructive disjunctions
-//-----------------------------------------------------------------------------
-// Constructive Disjunction for scheduling only
-
-OZ_C_proc_begin(BIfdCDSched, 4)
-{
-  return genericHead_x_y_c_d(OZ_arity, OZ_args, OZ_self, BIfdCDSched_body,
-                             fd_bounds, fd_bounds);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIfdCDSched_body, 4)
-{
-  BIfdBodyManager a(2); //number of FDs
-
-  for (int i = 2; i--; )
-    a.introduce(i, OZ_getCArg(i));
-
-  const int x = 0, y = 1;
-
-  int xd = OZ_intToC(OZ_getCArg(2));
-  int yd = OZ_intToC(OZ_getCArg(3));
-
-  int xl = a[x].minElem(), xu = a[x].maxElem();
-  int yl = a[y].minElem(), yu = a[y].maxElem();
-
-  if (xu + xd <= yl) return a.entailment();
-  if (yu + yd <= xl) return a.entailment();
-
-  if (xl + xd > yu) {
-    return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
-                                              OZ_getCArg(y),
-                                              OZ_getCArg(x),
-                                              OZ_int(-yd));
-  }
-
-  if (yl + yd > xu) {
-    return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
-                                              OZ_getCArg(x),
-                                              OZ_getCArg(y),
-                                              OZ_int(-xd));
-  }
-
-  int lowx = yu-xd+1, lowy = xu-yd+1;
-  int upx = yl+yd-1, upy = xl+xd-1;
-  if (lowx <= upx) {
-    OZ_FiniteDomain la;
-    la.init(lowx,upx);
-    FailOnEmpty(a[x] -= la);
-
-  }
-  if (lowy <= upy) {
-    OZ_FiniteDomain la;
-    la.init(lowy,upy);
-    FailOnEmpty(a[y] -= la);
-
-  }
-
-  return a.release();
-}
-OZ_C_proc_end
-
-//-----------------------------------------------------------------------------
-// Constructive Disjunction for scheduling only
-
-OZ_C_proc_begin(BIfdCDSchedControl, 5)
-{
-  return genericHead_x_y_c_d_b(OZ_arity, OZ_args, OZ_self,
-                               BIfdCDSchedControl_body,
-                               fd_bounds);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIfdCDSchedControl_body, 5)
-{
-  BIfdBodyManager a(3); //number of FDs
-
-  for (int i = 2; i--; )
-    a.introduce(i, OZ_getCArg(i));
-  a.introduce(2, OZ_getCArg(4));
-
-  const int x = 0, y = 1, control = 2;
-
-  int xd = OZ_intToC(OZ_getCArg(2));
-  int yd = OZ_intToC(OZ_getCArg(3));
-
-  int xl = a[x].minElem(), xu = a[x].maxElem();
-  int yl = a[y].minElem(), yu = a[y].maxElem();
-
-  if (xu + xd <= yl) {
-    FailOnEmpty(a[control] &= 0);
-    return a.entailment();
-  }
-  if (yu + yd <= xl) {
-    FailOnEmpty(a[control] &= 1);
-    return a.entailment();
-  }
-
-  if (xl + xd > yu){
-    FailOnEmpty(a[control] &= 1);
-    a.process(control);
-    return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
-                                              OZ_getCArg(y),
-                                              OZ_getCArg(x),
-                                              OZ_int(-yd));
-  }
-
-  if (yl + yd > xu){
-    FailOnEmpty(a[control] &= 0);
-    a.process(control);
-    return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
-                                              OZ_getCArg(x),
-                                              OZ_getCArg(y),
-                                              OZ_int(-xd));
-  }
-
-  if (a[control] == fd_singleton) {
-    if (a[control].singl() == 0) {
-      return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
-                                                OZ_getCArg(x),
-                                                OZ_getCArg(y),
-                                                OZ_int(-xd));
-    }
-
-    else {
-      return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
-                                                OZ_getCArg(y),
-                                                OZ_getCArg(x),
-                                                OZ_int(-yd));
-    }
-  }
-
-  int lowx = yu-xd+1, lowy = xu-yd+1;
-  int upx = yl+yd-1, upy = xl+xd-1;
-  if (lowx <= upx) {
-    OZ_FiniteDomain la;
-    la.init(lowx,upx);
-    FailOnEmpty(a[x] -= la);
-
-  }
-  if (lowy <= upy) {
-    OZ_FiniteDomain la;
-    la.init(lowy,upy);
-    FailOnEmpty(a[y] -= la);
-
-  }
-
-
-  return a.release();
-}
-OZ_C_proc_end
-
-
-//-----------------------------------------------------------------------------
-//
-//
+// Propagators
 
 #undef FailOnEmpty
 #undef SimplifyOnUnify

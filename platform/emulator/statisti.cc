@@ -229,7 +229,7 @@ void Statistics::printIdle(FILE *fd)
               timeUtime.sinceidle()-
               (timeForGC.sinceidle()+timeForLoading.sinceidle()
                +timeForCopy.sinceidle()+timeForPropagation.sinceidle()));
-    //printTime(fd,", p: ",timeForPropagation.sinceidle());
+    printTime(fd,", p: ",timeForPropagation.sinceidle());
     printTime(fd,", c: ",timeForCopy.sinceidle());
     printTime(fd,", g: ",timeForGC.sinceidle());
     printTime(fd,", l: ",timeForLoading.sinceidle());
