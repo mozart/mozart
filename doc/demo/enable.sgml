@@ -21,7 +21,7 @@
   -
   -->
 
-<Chapter id="appendix.enable">
+<Appendix id="appendix.enable">
   <Title/How to Enable Mozart Applications/
 
   <Section class=unnumbered>
@@ -88,4 +88,4 @@
      </P>
    </Section>
 
-</Chapter>
+</Appendix>

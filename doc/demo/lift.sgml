@@ -25,9 +25,9 @@
   <Title/Lift/
 
   <P>
-    <List>
-      <Item><Ref.Extern to="applets/Lift.oza"/[Start Applet]/
-      <Item><Ref to="appendix.enable"/[How to enable Applets]/
+    <List class=linkmenu>
+      <Item><Ref.Extern to="applets/Lift.oza"/Start Applet/
+      <Item><Ref to="appendix.enable"/How to enable Applets/
     </List>
   </P>
 
