@@ -741,11 +741,12 @@ protected:
     void *padForAlpha;   // otherwise we get lots of warnings
   } ctu;
 public:
-  /* where do we store forward reference */
-  int32 *getGCField() { return (int32*) &ctu.tagged; }
-public:
   USEHEAPMEMORY;
 
+  Bool gcIsMarked(void);
+  void gcMark(ConstTerm *);
+  void ** gcGetMarkField(void);
+  ConstTerm * gcGetFwd(void);
   ConstTerm *gcConstTerm(void);
   ConstTerm *gcConstTermSpec(void);
   void gcConstRecurse(void);

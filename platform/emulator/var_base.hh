@@ -6,6 +6,7 @@
  *
  *  Contributors:
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ *    Christian Schulte (schulte@dfki.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -36,6 +37,7 @@
 #include "tagged.hh"
 #include "susplist.hh"
 #include "board.hh"
+#include "pointer-marks.hh"
 
 #define AddSuspToList0(List,Thread,Home)                \
 {                                                       \
@@ -95,6 +97,10 @@ public:
   void setSuspList(SuspList *inSuspList) { suspList = inSuspList; }
   void unlinkSuspList() { suspList = NULL; }
 
+  Bool gcIsMarked(void);
+  void gcMark(SVariable *);
+  void ** gcGetMarkField(void);
+  SVariable * gcGetFwd(void);
   SVariable * gc();
   Bool gcNeeded(void);
 

@@ -55,7 +55,7 @@ public:
 protected:
   int flags;
   Board *board;
-  int gcField;    // mm2: hack: flags and board seem to be needed for copying?
+  Actor * gcField;// mm2: hack: flags and board seem to be needed for copying?
 public:
   Actor(); // fake for compiler
   Actor(Actor &); // fake for compiler
@@ -71,9 +71,13 @@ protected:
 
 public:
   USEHEAPMEMORY;
-  Actor *gcActor();
+
+  Bool gcIsMarked(void);
+  void gcMark(Actor *);
+  void ** gcGetMarkField(void);
+  Actor * gcGetFwd(void);
+  Actor * gcActor();
   void gcRecurse(void);
-  int32 *getGCField() { return (int32*) &gcField; }
   OZPRINT;
   OZPRINTLONG;
 

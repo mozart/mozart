@@ -41,7 +41,10 @@ public:
   USEFREELISTMEMORY
   void gcRecurse(void);
   Continuation * gc();
-  int32 *getGCField() { return (int32*) &pc; }
+  Bool gcIsMarked(void);
+  void gcMark(Continuation *);
+  void ** gcGetMarkField(void);
+  Continuation * gcGetFwd(void);
 
   Continuation(void)
   : pc(NOCODE), yRegs(NULL), gRegs(NULL) , xRegs(NULL) {}

@@ -3,7 +3,7 @@
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -40,6 +40,7 @@
 
 #include "am.hh"
 #include "variable.hh"
+#include "pointer-marks.hh"
 
 //#define DEBUG_TELLCONSTRAINTS
 
@@ -103,6 +104,10 @@ public:
   }
 
   // methods relevant for term copying (gc and solve)
+  Bool gcIsMarked(void);
+  void ** gcGetMarkField(void);
+  void gcMark(GenCVariable *);
+  GenCVariable * gcGetFwd(void);
   GenCVariable * gc(void);
   Bool gcNeeded(void);
 
