@@ -88,7 +88,7 @@ CXXSRCS= \
         vprops.cc promise.cc \
         vs_comm.cc vs_mailbox.cc vs_msgbuffer.cc \
         ctgenvar.cc simplevar.cc byNeed.cc \
-        ofbi.cc ioHandler.cc
+        ofbi.cc ioHandler.cc future.cc
 
 FDSRCS=\
         fdbuilti.cc fdomn.cc fdcore.cc \

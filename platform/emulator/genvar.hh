@@ -61,6 +61,7 @@ enum TypeOfGenCVariable {
   SimpleVarType,
   ComplexVarType,
   OZ_VAR_BYNEED,
+  OZ_VAR_FUTURE,
   LazyVariable,
   PerdioVariable,
   BoolVariable,
