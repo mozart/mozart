@@ -34,7 +34,8 @@ define
                                     withdraw: true)}
    B = {New TkTools.notebook tkInit(parent: T)}
 
-   E = {New Edit.page        init(parent: B)}
+   E = {New Edit.page        init(parent:  B
+                                  compute: C)}
    C = {New Compute.page     init(parent: B
                                   edit:   E)}
 

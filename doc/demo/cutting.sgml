@@ -42,11 +42,9 @@
     <Title/The Problem/
 
     <P>
-      Given a number of small glass plates that must be cut from a
+      A number of small glass plates must be cut from a
       large target glass plate. Additionally, cuts can only be
-      straight and must cut the entire remaining plate.
-      Cuts must alternate between x and y direction. The first
-      cut must be in y direction.
+      straight and must cut the entire remaining plate (remember the material to be cut is glass).
     </P>
 
   </Section>

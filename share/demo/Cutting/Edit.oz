@@ -43,7 +43,6 @@ prepare
    EntryColor   = Colors.entry
 
    BadColor     = Colors.bad
-   OkayColor    = Colors.okay
    GoodColor    = Colors.good
    NeutralColor = Colors.neutral
 
@@ -100,10 +99,11 @@ define
          squares
          plateBars
          status
+         compute
       attr
          x:10 y:10
 
-      meth init(parent:P)
+      meth init(parent:P compute:C)
          TkTools.note,tkInit(parent:P text:'Edit')
          PlateFrame  = {New TkTools.textframe
                         tkInit(parent: self
@@ -173,7 +173,8 @@ define
                                    relief: sunken
                                    bd:     1)}
       in
-         self.status = CL
+         self.status  = CL
+         self.compute = C
          {Tk.batch {Append TicklePackPlates
                     [grid(row:1 column:1 XL padx:Pad pady:Pad sticky:n)
                      grid(row:1 column:2 XE padx:Pad pady:Pad sticky:n)
@@ -194,16 +195,13 @@ define
       end
 
       meth UpdateStatus
-         Cap     = {IntToFloat @x * @y}
-         Use     = {IntToFloat {FoldL {Dictionary.entries self.squares}
-                                fun {$ Use D#N}
-                                   D*D*N + Use
-                                end 0}}
-         Rest    = (Cap - Use) / Cap
-         Col#Txt = if Rest < 0.0 then
+         Cap     = @x * @y
+         Use     = {FoldL {Dictionary.entries self.squares}
+                    fun {$ Use D#N}
+                       D*D*N + Use
+                    end 0}
+         Col#Txt = if Cap < Use then
                       BadColor  # 'Plate too small.'
-                   elseif Rest < 0.3 then
-                      OkayColor # 'Plate possibly to small.'
                    else
                       GoodColor # 'Plate possibly large enough.'
                    end

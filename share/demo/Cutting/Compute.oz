@@ -23,7 +23,7 @@
 functor
 
 import
-   Tk TkTools Search Explorer
+   Tk TkTools Search
 
    Script(compile: Compile)
 
@@ -196,11 +196,6 @@ define
                                        action: self # stop
                                        state:  disabled
                                        font:   Fonts.normal)}
-         Tree  = {New Tk.button tkInit(parent: ButtonFrame
-                                       text:   'Search Tree'
-                                       width:  ButtonWidth
-                                       action: self # tree
-                                       font:   Fonts.normal)}
          Anim  = {New Tk.button tkInit(parent: ButtonFrame
                                        text:   'Animate'
                                        width:  ButtonWidth
@@ -234,9 +229,8 @@ define
                     grid(columnconfigure self    2 weight:1)
                     grid(rowconfigure    self    1 weight:1)
 
-                    grid(row:0 column:1 padx:Pad pady:Pad Start)
-                    grid(row:1 column:1 padx:Pad pady:Pad Stop)
-                    grid(row:2 column:1 padx:Pad pady:Pad Tree)
+                    grid(row:1 column:1 padx:Pad pady:Pad Start)
+                    grid(row:2 column:1 padx:Pad pady:Pad Stop)
                     grid(row:3 column:1 padx:Pad pady:Pad
                          {New Tk.canvas tkInit(parent:ButtonFrame
                                                width:0 height:20)})
@@ -285,12 +279,6 @@ define
          end
       end
 
-      meth tree
-         thread
-            {Explorer.object one(@script)}
-         end
-      end
-
       meth stop
          lock
             S=@stopper
@@ -310,8 +298,12 @@ define
          end
       end
 
-      meth toTop
+      meth toBottom
          {self.plate stopAnim}
+         ComputePage,stop
+      end
+
+      meth toTop
          lock
             Spec = {self.edit getSpec($)}
          in
