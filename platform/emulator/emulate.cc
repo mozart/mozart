@@ -1848,9 +1848,9 @@ void engine() {
         waitBoard->unsetInstalled();
 	e->setCurrent(aa->getBoard()->getBoardDeref());
 
+	waitBoard->setCommitted(CBB);   // by kost@ 4.10.94
 	Bool ret = e->installScript(waitBoard->getScriptRef());
 	Assert(ret!=NO);
-	waitBoard->setCommitted(CBB);
 	CBB->incSuspCount(waitBoard->getSuspCount()-1);
 	DISPATCH(1);
       }
@@ -1888,9 +1888,9 @@ void engine() {
         bb->unsetInstalled();
 	e->setCurrent(aa->getBoard()->getBoardDeref());
 
+	bb->setCommitted(CBB);    // by kost@ 4.10.94
 	Bool ret = e->installScript(bb->getScriptRef());
 	Assert(ret != NO);
-	bb->setCommitted(CBB);
 	CBB->incSuspCount(bb->getSuspCount());
 	CBB->removeSuspension();
 	goto LBLreduce;
