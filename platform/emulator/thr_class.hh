@@ -172,6 +172,7 @@ private:
   void setExtThreadOutlined (Board *varHome);
   //  it asserts that the suspended thread is 'external' (see beneath);
   void checkExtThreadOutlined ();
+  void removeExtThreadOutlined ();
 
 protected:
 
@@ -281,6 +282,10 @@ public:
     Assert (isRunnable ());
     return (state.flags & T_ext);
   }
+  void clearExtThread() {
+    state.flags = state.flags & ~T_ext;
+  }
+
   Bool wasExtThread () {
     Assert (isDeadThread ());   // already killed!
     return (state.flags & T_ext);
@@ -492,6 +497,7 @@ public:
   //  Check all the solve actors above for stabily
   // (and, of course, wake them up if needed);
   void checkExtThread ();
+  void removeExtThread ();
 
   //
   //  Runnable (running) threads;
