@@ -413,7 +413,7 @@ extern "C" void __builtin_vec_delete (void *ptr)
 #endif
 
 
-#ifdef GNUWIN32
+#ifdef WINDOWS
 
 const int wrappedHDStart = 1000; /* hope that's enough (RS) */
 

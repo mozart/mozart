@@ -163,7 +163,7 @@ char *osfgets(char *s, int n, FILE *stream);
 #define SIGUSR1 SIGINT
 #endif
 
-#ifdef GNUWIN32
+#if defined(__CYGWIN32__) || defined(__MINGW32__)
 extern int _hdopen(int, int flags);
 #endif
 

@@ -35,7 +35,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
-#if defined(WINDOWS) && (!defined(GNUWIN32) || defined(__MINGW32__))
+#if defined(__MINGW32__)
 #include <direct.h>
 #else
 #include <dirent.h>
@@ -65,7 +65,7 @@ extern int h_errno;
 
 #include <signal.h>
 
-#if !defined(WINDOWS) || (defined(GNUWIN32) && !defined(__MINGW32__))
+#if !defined(WINDOWS) || defined(__CYGWIN32__)
 #include <sys/wait.h>
 #include <sys/utsname.h>
 #endif
@@ -75,7 +75,7 @@ extern int h_errno;
 #include <bstring.h>
 #endif
 
-#if !defined(_MSC_VER) && !defined(GNUWIN32)
+#ifndef WINDOWS
 extern "C" char *inet_ntoa(struct in_addr in);
 #endif
 
@@ -671,7 +671,7 @@ OZ_BI_iodefine(unix_getCWD,0,1)
   }
 } OZ_BI_ioend
 
-#if defined(WINDOWS) && !defined(GNUWIN32)
+#ifdef __MINGW32__
 #define O_NOCTTY   0
 #define O_NONBLOCK 0
 #define O_SYNC     0
@@ -1563,7 +1563,7 @@ OZ_BI_iodefine(unix_system,1,1)
   OZ_RETURN_INT(ret);
 } OZ_BI_ioend
 
-#if !defined(WINDOWS) || (defined(GNUWIN32) && !defined(__MINGW32__))
+#if !defined(WINDOWS) || defined(__CYGWIN32__)
 OZ_BI_iodefine(unix_wait,0,2)
 {
   // OZ_out(0) == rpid

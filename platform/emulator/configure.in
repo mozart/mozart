@@ -107,7 +107,7 @@ AC_ARG_ENABLE(wincross,
 if test "${enable_wincross}" = yes; then
     if test -n "$oz_wincross_dir" && test -n "$oz_wincross_prefix"
     then
-        AC_MSG_RESULT(yes (-DGNUWIN32 -DWINDOWS))
+        AC_MSG_RESULT(yes (-DWINDOWS))
         CXX=$oz_wincross_dir/$oz_wincross_prefix-gcc
         LD=$CXX
         RANLIB=$oz_wincross_dir/$oz_wincross_prefix-ranlib
@@ -122,8 +122,13 @@ if test "${enable_wincross}" = yes; then
         oz_zlib_inc_dir=$oz_wincross_zlib_inc_dir
         oz_enable_modules_static=yes
         oz_malloc_obj=
-        oz_warn_error=
-        AC_DEFINE(GNUWIN32)
+
+        # va-start makes problems under mingw32
+        enable_warnings=no
+
+        # -DINTERFACE does not work
+        oz_copt_debug="-g"
+
         AC_DEFINE(WINDOWS)
         AC_DEFINE(ARCH_I486)
     else

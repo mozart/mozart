@@ -382,11 +382,6 @@ extern "C" {
 */
 
 
-#ifdef XGNUWIN32
-#define INT_MAX    2147483647
-#define INT_MIN    (-2147483647-1)
-#endif
-
 const int OzMaxInt = INT_MAX>>tagSize;
 const int OzMinInt = -OzMaxInt;
 const unsigned long OzMaxUnsignedLong = ~0;

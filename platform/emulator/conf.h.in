@@ -28,7 +28,6 @@
 #undef LINUX_I486
 #undef SUNOS_SPARC
 #undef SOLARIS_SPARC
-#undef GNUWIN32
 #undef OSF1_ALPHA
 #undef HPUX_700
 
