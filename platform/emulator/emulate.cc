@@ -751,7 +751,7 @@ void engine(Bool init)
    */
   register ProgramCounter PC   Reg1 = 0;
 #ifdef MANY_REGISTERS
-  register TaggedRef *X Reg2 = am.xRegs;
+  register TaggedRef *X        Reg2 = am.xRegs;
 #else
   register TaggedRef * const X Reg2 = am.xRegs;
 #endif
