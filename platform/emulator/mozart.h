@@ -38,30 +38,32 @@
 #define FINALIZATION
 #endif
 
+
+#define ozdeclspec
+
 /* calling convention "cdecl" under win32 */
-#if defined(__WATCOMC__) || defined(__MINGW32__) || defined(__CYGWIN32__)
-#define ozcdecl __cdecl
-#define OZWIN
-#else
-#ifdef __BORLANDC__
+#if defined(__WATCOMC__) || defined(__BORLANDC__)
 #define ozcdecl __export __cdecl
 #define OZWIN
-#else
-#ifdef _MSC_VER
-#define ozcdecl cdecl
+#elif defined(__CYGWIN32__) || defined(__MINGW32__) 
+#define ozcdecl __cdecl
+#define OZWIN
+#elif defined(_MSC_VER)
+#define ozcdecl __cdecl
+#undef ozdeclspec
+#define ozdeclspec __declspec( dllexport ) 
 #define OZWIN
 #else
 #define ozcdecl
 #endif
-#endif
-#endif
+
 
 #if defined(__STDC__)
 #define OZStringify(Name) #Name
-#define CONST const
+#define OZ_CONST const
 #else
 #define OZStringify(Name) "Name"
-#define CONST
+#define OZ_CONST
 #endif
 
 /* we use function pointers only when creating DLLs 
@@ -73,23 +75,19 @@
 #endif
 
 #if defined(__STDC__) || defined(__cplusplus) || __BORLANDC__ || _MSC_VER
-#define _FUNDECL(fun,arglist) OzFun(fun) arglist
-#define _FUNTYPEDECL(fun,arglist) (ozcdecl *fun) arglist
+#define _FUNDECL(rettype,fun,arglist) extern ozdeclspec rettype OzFun(fun) arglist
+#define _FUNTYPEDECL(rettype,fun,arglist) ozdeclspec rettype (ozcdecl *fun) arglist
+#else
+#define _FUNDECL(rettype,fun,ignore) extern ozdeclspec rettype OzFun(fun) ()
+#define _FUNTYPEDECL(rettype,fun,ignore) ozdeclspec rettype (ozcdecl *fun) ()
+#endif
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
-#else
-#define _FUNDECL(fun,ignore) OzFun(fun) ()
-#define _FUNTYPEDECL(fun,ignore) (ozcdecl *fun) ()
-#endif
 
-#define FUNDECL(fun,args) _FUNDECL(fun,args)
+#define FUNDECL(rettype,fun,args) _FUNDECL(rettype,fun,args)
 
-/* Tell me whether this version of Oz supports dynamic linking */
-
-#if defined(sun) || defined(linux) || defined(sgi)
-#define OZDYNLINKING
-#endif
 
 /* ------------------------------------------------------------------------ *
  * I. type declarations
@@ -100,7 +98,9 @@ typedef unsigned int OZ_Term;
 typedef unsigned int OZ_Return;
 
 #define OZ_FAILED      0
+#ifndef FAILED
 #define FAILED         OZ_FAILED
+#endif
 #define PROCEED        1
 #define OZ_ENTAILED    PROCEED
 #define SUSPEND     2
@@ -113,7 +113,7 @@ typedef unsigned int OZ_Return;
 typedef void *OZ_Thread;
 typedef void *OZ_Arity;
 
-typedef OZ_Return _FUNTYPEDECL(OZ_CFun,(OZ_Term *,int *));
+typedef _FUNTYPEDECL(OZ_Return,OZ_CFun,(OZ_Term *,int *));
 
 typedef int OZ_Boolean;
 #define OZ_FALSE 0
@@ -123,119 +123,119 @@ typedef int OZ_Boolean;
  * II. function prototypes
  * ------------------------------------------------------------------------ */
 
-extern void	_FUNDECL(OZ_main, (int argc,char **argv));
+_FUNDECL(void, OZ_main, (int argc,char **argv));
 
 
-extern OZ_Term 	_FUNDECL(OZ_deref,(OZ_Term term));
+_FUNDECL(OZ_Term,OZ_deref,(OZ_Term term));
 
 /* tests */
-extern int _FUNDECL(OZ_isBool,(OZ_Term));
-extern int _FUNDECL(OZ_isAtom,(OZ_Term));
-extern int _FUNDECL(OZ_isBigInt,(OZ_Term));
-extern int _FUNDECL(OZ_isCell,(OZ_Term));
-extern int _FUNDECL(OZ_isThread,(OZ_Term));
-extern int _FUNDECL(OZ_isPort,(OZ_Term));
-extern int _FUNDECL(OZ_isChunk,(OZ_Term));
-extern int _FUNDECL(OZ_isDictionary,(OZ_Term));
-extern int _FUNDECL(OZ_isCons,(OZ_Term));
-extern int _FUNDECL(OZ_isFalse,(OZ_Term));
-extern int _FUNDECL(OZ_isFeature,(OZ_Term));
-extern int _FUNDECL(OZ_isFloat,(OZ_Term));
-extern int _FUNDECL(OZ_isInt,(OZ_Term));
-extern int _FUNDECL(OZ_isNumber,(OZ_Term));
-extern int _FUNDECL(OZ_isLiteral,(OZ_Term));
-extern int _FUNDECL(OZ_isName,(OZ_Term));
-extern int _FUNDECL(OZ_isNil,(OZ_Term));
-extern int _FUNDECL(OZ_isObject,(OZ_Term));
-extern int _FUNDECL(OZ_isPair,(OZ_Term));
-extern int _FUNDECL(OZ_isPair2,(OZ_Term));
-extern int _FUNDECL(OZ_isProcedure,(OZ_Term));
-extern int _FUNDECL(OZ_isRecord,(OZ_Term));
-extern int _FUNDECL(OZ_isSmallInt,(OZ_Term));
-extern int _FUNDECL(OZ_isTrue,(OZ_Term));
-extern int _FUNDECL(OZ_isTuple,(OZ_Term));
-extern int _FUNDECL(OZ_isUnit,(OZ_Term));
-extern int _FUNDECL(OZ_isValue,(OZ_Term));
-extern int _FUNDECL(OZ_isVariable,(OZ_Term));
-extern int _FUNDECL(OZ_isBitString,(OZ_Term));
-extern int _FUNDECL(OZ_isByteString,(OZ_Term));
+_FUNDECL(int,OZ_isBool,(OZ_Term));
+_FUNDECL(int,OZ_isAtom,(OZ_Term));
+_FUNDECL(int,OZ_isBigInt,(OZ_Term));
+_FUNDECL(int,OZ_isCell,(OZ_Term));
+_FUNDECL(int,OZ_isThread,(OZ_Term));
+_FUNDECL(int,OZ_isPort,(OZ_Term));
+_FUNDECL(int,OZ_isChunk,(OZ_Term));
+_FUNDECL(int,OZ_isDictionary,(OZ_Term));
+_FUNDECL(int,OZ_isCons,(OZ_Term));
+_FUNDECL(int,OZ_isFalse,(OZ_Term));
+_FUNDECL(int,OZ_isFeature,(OZ_Term));
+_FUNDECL(int,OZ_isFloat,(OZ_Term));
+_FUNDECL(int,OZ_isInt,(OZ_Term));
+_FUNDECL(int,OZ_isNumber,(OZ_Term));
+_FUNDECL(int,OZ_isLiteral,(OZ_Term));
+_FUNDECL(int,OZ_isName,(OZ_Term));
+_FUNDECL(int,OZ_isNil,(OZ_Term));
+_FUNDECL(int,OZ_isObject,(OZ_Term));
+_FUNDECL(int,OZ_isPair,(OZ_Term));
+_FUNDECL(int,OZ_isPair2,(OZ_Term));
+_FUNDECL(int,OZ_isProcedure,(OZ_Term));
+_FUNDECL(int,OZ_isRecord,(OZ_Term));
+_FUNDECL(int,OZ_isSmallInt,(OZ_Term));
+_FUNDECL(int,OZ_isTrue,(OZ_Term));
+_FUNDECL(int,OZ_isTuple,(OZ_Term));
+_FUNDECL(int,OZ_isUnit,(OZ_Term));
+_FUNDECL(int,OZ_isValue,(OZ_Term));
+_FUNDECL(int,OZ_isVariable,(OZ_Term));
+_FUNDECL(int,OZ_isBitString,(OZ_Term));
+_FUNDECL(int,OZ_isByteString,(OZ_Term));
 
-extern int _FUNDECL(OZ_isList,(OZ_Term, OZ_Term *));
-extern int _FUNDECL(OZ_isString,(OZ_Term, OZ_Term *));
-extern int _FUNDECL(OZ_isProperString,(OZ_Term, OZ_Term *));
-extern int _FUNDECL(OZ_isVirtualString,(OZ_Term, OZ_Term *));
+_FUNDECL(int,OZ_isList,(OZ_Term, OZ_Term *));
+_FUNDECL(int,OZ_isString,(OZ_Term, OZ_Term *));
+_FUNDECL(int,OZ_isProperString,(OZ_Term, OZ_Term *));
+_FUNDECL(int,OZ_isVirtualString,(OZ_Term, OZ_Term *));
 
 /* heap chunks */
 
-extern OZ_Term   _FUNDECL(OZ_makeHeapChunk,(int s));
-extern void *    _FUNDECL(OZ_getHeapChunkData,(OZ_Term t));
-extern int       _FUNDECL(OZ_getHeapChunkSize,(OZ_Term t));
-extern int       _FUNDECL(OZ_isHeapChunk,(OZ_Term t));
+_FUNDECL(OZ_Term,OZ_makeHeapChunk,(int s));
+_FUNDECL(void*,OZ_getHeapChunkData,(OZ_Term t));
+_FUNDECL(int,OZ_getHeapChunkSize,(OZ_Term t));
+_FUNDECL(int,OZ_isHeapChunk,(OZ_Term t));
 
-extern unsigned int _FUNDECL(OZ_getUniqueId,(void));
+_FUNDECL(unsigned int,OZ_getUniqueId,(void));
 
 
-extern OZ_Term _FUNDECL(OZ_termType,(OZ_Term));
+_FUNDECL(OZ_Term ,OZ_termType,(OZ_Term));
 
 /* convert: C from/to Oz datastructure */
 
-extern CONST char* _FUNDECL(OZ_atomToC,(OZ_Term));
-extern OZ_Term _FUNDECL(OZ_atom,(CONST char *));
-extern int     _FUNDECL(OZ_featureCmp,(OZ_Term,OZ_Term));
+_FUNDECL(OZ_CONST char* ,OZ_atomToC,(OZ_Term));
+_FUNDECL(OZ_Term ,OZ_atom,(OZ_CONST char *));
+_FUNDECL(int     ,OZ_featureCmp,(OZ_Term,OZ_Term));
 
-extern int     _FUNDECL(OZ_smallIntMin,(void));
-extern int     _FUNDECL(OZ_smallIntMax,(void));
-extern OZ_Term _FUNDECL(OZ_false,(void));
-extern OZ_Term _FUNDECL(OZ_true,(void));
-extern OZ_Term _FUNDECL(OZ_unit,(void));
-extern OZ_Term _FUNDECL(OZ_int,(int));
-extern int     _FUNDECL(OZ_getLowPrio,(void));
-extern int     _FUNDECL(OZ_getMediumPrio,(void));
-extern int     _FUNDECL(OZ_getHighPrio,(void));
-extern int     _FUNDECL(OZ_intToC,(OZ_Term));
-extern int     _FUNDECL(OZ_boolToC,(OZ_Term));
-extern OZ_Term _FUNDECL(OZ_CStringToInt,(char *str));
-extern char *  _FUNDECL(OZ_parseInt,(char *s));
+_FUNDECL(int     ,OZ_smallIntMin,(void));
+_FUNDECL(int     ,OZ_smallIntMax,(void));
+_FUNDECL(OZ_Term ,OZ_false,(void));
+_FUNDECL(OZ_Term ,OZ_true,(void));
+_FUNDECL(OZ_Term ,OZ_unit,(void));
+_FUNDECL(OZ_Term ,OZ_int,(int));
+_FUNDECL(int     ,OZ_getLowPrio,(void));
+_FUNDECL(int     ,OZ_getMediumPrio,(void));
+_FUNDECL(int     ,OZ_getHighPrio,(void));
+_FUNDECL(int     ,OZ_intToC,(OZ_Term));
+_FUNDECL(int     ,OZ_boolToC,(OZ_Term));
+_FUNDECL(OZ_Term ,OZ_CStringToInt,(char *str));
+_FUNDECL(char *  ,OZ_parseInt,(char *s));
 
-extern OZ_Term _FUNDECL(OZ_float,(double));
-extern double  _FUNDECL(OZ_floatToC,(OZ_Term));
+_FUNDECL(OZ_Term ,OZ_float,(double));
+_FUNDECL(double  ,OZ_floatToC,(OZ_Term));
 
-extern OZ_Term _FUNDECL(OZ_CStringToFloat,(char *s));
-extern char *  _FUNDECL(OZ_parseFloat,(char *s));
+_FUNDECL(OZ_Term ,OZ_CStringToFloat,(char *s));
+_FUNDECL(char *  ,OZ_parseFloat,(char *s));
 
-extern OZ_Term _FUNDECL(OZ_CStringToNumber,(char *));
+_FUNDECL(OZ_Term ,OZ_CStringToNumber,(char *));
 
-extern char *  _FUNDECL(OZ_toC,(OZ_Term, int, int));
-extern int     _FUNDECL(OZ_termGetSize,(OZ_Term, int, int));
+_FUNDECL(char *  ,OZ_toC,(OZ_Term, int, int));
+_FUNDECL(int     ,OZ_termGetSize,(OZ_Term, int, int));
 
-extern OZ_Term _FUNDECL(OZ_string,(CONST char *));
-extern char *  _FUNDECL(OZ_stringToC,(OZ_Term t,int*n));
+_FUNDECL(OZ_Term ,OZ_string,(OZ_CONST char *));
+_FUNDECL(char *  ,OZ_stringToC,(OZ_Term t,int*n));
 
-extern char*   _FUNDECL(OZ_vsToC,(OZ_Term t,int*n));
-extern char *  _FUNDECL(OZ_virtualStringToC,(OZ_Term t,int*n));
-extern OZ_Term _FUNDECL(OZ_mkByteString,(char*,int));
+_FUNDECL(char*   ,OZ_vsToC,(OZ_Term t,int*n));
+_FUNDECL(char *  ,OZ_virtualStringToC,(OZ_Term t,int*n));
+_FUNDECL(OZ_Term ,OZ_mkByteString,(char*,int));
 
 
 /* tuples */
-extern OZ_Term  _FUNDECL(OZ_label,(OZ_Term));
-extern int      _FUNDECL(OZ_width,(OZ_Term));
-extern OZ_Term _FUNDECL(OZ_tuple,(OZ_Term, int));
+_FUNDECL(OZ_Term  ,OZ_label,(OZ_Term));
+_FUNDECL(int      ,OZ_width,(OZ_Term));
+_FUNDECL(OZ_Term ,OZ_tuple,(OZ_Term, int));
 #define OZ_tupleC(s,n) OZ_tuple(OZ_atom(s),n)
-extern OZ_Term  _FUNDECL(OZ_mkTuple,(OZ_Term label,int arity,...));
-extern OZ_Term  _FUNDECL(OZ_mkTupleC,(char *label,int arity,...));
+_FUNDECL(OZ_Term  ,OZ_mkTuple,(OZ_Term label,int arity,...));
+_FUNDECL(OZ_Term  ,OZ_mkTupleC,(char *label,int arity,...));
 
-extern void     _FUNDECL(OZ_putArg,(OZ_Term, int, OZ_Term));
-extern OZ_Term  _FUNDECL(OZ_getArg,(OZ_Term, int));
-extern OZ_Term  _FUNDECL(OZ_nil,());
-extern OZ_Term  _FUNDECL(OZ_cons,(OZ_Term ,OZ_Term));
-extern OZ_Term  _FUNDECL(OZ_head,(OZ_Term));
-extern OZ_Term  _FUNDECL(OZ_tail,(OZ_Term));
-extern int      _FUNDECL(OZ_length,(OZ_Term list));
-extern OZ_Term  _FUNDECL(OZ_toList,(int, OZ_Term *));
+_FUNDECL(void     ,OZ_putArg,(OZ_Term, int, OZ_Term));
+_FUNDECL(OZ_Term  ,OZ_getArg,(OZ_Term, int));
+_FUNDECL(OZ_Term  ,OZ_nil,());
+_FUNDECL(OZ_Term  ,OZ_cons,(OZ_Term ,OZ_Term));
+_FUNDECL(OZ_Term  ,OZ_head,(OZ_Term));
+_FUNDECL(OZ_Term  ,OZ_tail,(OZ_Term));
+_FUNDECL(int      ,OZ_length,(OZ_Term list));
+_FUNDECL(OZ_Term  ,OZ_toList,(int, OZ_Term *));
 
 
-extern OZ_Term  _FUNDECL(OZ_pair,(int));
-extern OZ_Term  _FUNDECL(OZ_pair2,(OZ_Term t1,OZ_Term t2));
+_FUNDECL(OZ_Term  ,OZ_pair,(int));
+_FUNDECL(OZ_Term  ,OZ_pair2,(OZ_Term t1,OZ_Term t2));
 
 #define OZ_pairA(s1,t)      OZ_pair2(OZ_atom(s1),t)
 #define OZ_pairAI(s1,i)     OZ_pair2(OZ_atom(s1),OZ_int(i))
@@ -244,19 +244,19 @@ extern OZ_Term  _FUNDECL(OZ_pair2,(OZ_Term t1,OZ_Term t2));
 
 
 /* records */
-extern OZ_Arity _FUNDECL(OZ_makeArity,(OZ_Term list));
-extern OZ_Term  _FUNDECL(OZ_record,(OZ_Term, OZ_Term));
-extern OZ_Term  _FUNDECL(OZ_recordInit,(OZ_Term, OZ_Term));
+_FUNDECL(OZ_Arity ,OZ_makeArity,(OZ_Term list));
+_FUNDECL(OZ_Term  ,OZ_record,(OZ_Term, OZ_Term));
+_FUNDECL(OZ_Term  ,OZ_recordInit,(OZ_Term, OZ_Term));
 #define OZ_recordInitC(s,t) OZ_recordInit(OZ_atom(s),t)
-extern void     _FUNDECL(OZ_putSubtree,(OZ_Term, OZ_Term, OZ_Term));
-extern OZ_Term  _FUNDECL(OZ_subtree,(OZ_Term, OZ_Term));
-extern OZ_Term  _FUNDECL(OZ_arityList,(OZ_Term));
-extern OZ_Term  _FUNDECL(OZ_adjoinAt,(OZ_Term, OZ_Term, OZ_Term));
+_FUNDECL(void     ,OZ_putSubtree,(OZ_Term, OZ_Term, OZ_Term));
+_FUNDECL(OZ_Term  ,OZ_subtree,(OZ_Term, OZ_Term));
+_FUNDECL(OZ_Term  ,OZ_arityList,(OZ_Term));
+_FUNDECL(OZ_Term  ,OZ_adjoinAt,(OZ_Term, OZ_Term, OZ_Term));
 
 /* unification */
-extern OZ_Return _FUNDECL(OZ_unify,(OZ_Term, OZ_Term));
-extern void      _FUNDECL(OZ_unifyInThread,(OZ_Term,OZ_Term));
-extern int       _FUNDECL(OZ_eq,(OZ_Term, OZ_Term));
+_FUNDECL(OZ_Return ,OZ_unify,(OZ_Term, OZ_Term));
+_FUNDECL(void      ,OZ_unifyInThread,(OZ_Term,OZ_Term));
+_FUNDECL(int       ,OZ_eq,(OZ_Term, OZ_Term));
 
 #define OZ_unifyFloat(t1,f)      OZ_unify(t1, OZ_float(f))
 #define OZ_unifyInt(t1,i)        OZ_unify(t1, OZ_int(i))
@@ -267,25 +267,25 @@ extern int       _FUNDECL(OZ_eq,(OZ_Term, OZ_Term));
 #define OZ_eqFloat(t1,s)      OZ_eq(t1, OZ_float(s))
 
 /* create a new oz variable */
-extern OZ_Term _FUNDECL(OZ_newVariable,());
+_FUNDECL(OZ_Term ,OZ_newVariable,());
 
-extern OZ_Term _FUNDECL(OZ_newChunk,(OZ_Term));
+_FUNDECL(OZ_Term ,OZ_newChunk,(OZ_Term));
 
 /* cell */
-extern OZ_Term _FUNDECL(OZ_newCell,(OZ_Term));
+_FUNDECL(OZ_Term ,OZ_newCell,(OZ_Term));
 /* exchangeCell, deepFeed */
 
 /* port */
-extern OZ_Term _FUNDECL(OZ_newPort,(OZ_Term));
-extern void _FUNDECL(OZ_send,(OZ_Term,OZ_Term));
+_FUNDECL(OZ_Term ,OZ_newPort,(OZ_Term));
+_FUNDECL(void ,OZ_send,(OZ_Term,OZ_Term));
 
 /* name */
-extern OZ_Term _FUNDECL(OZ_newName,());
+_FUNDECL(OZ_Term ,OZ_newName,());
 
 /* foreign pointer */
-extern OZ_Term	_FUNDECL(OZ_makeForeignPointer,(void*));
-extern void*	_FUNDECL(OZ_getForeignPointer,(OZ_Term));
-extern int	_FUNDECL(OZ_isForeignPointer,(OZ_Term));
+_FUNDECL(OZ_Term	,OZ_makeForeignPointer,(void*));
+_FUNDECL(void*	,OZ_getForeignPointer,(OZ_Term));
+_FUNDECL(int	,OZ_isForeignPointer,(OZ_Term));
 
 /* interface */
 
@@ -304,28 +304,31 @@ typedef struct {
 } OZ_Datum;
 
 
+/* declare here, so C linkage is used */
+OZ_C_proc_interface * ozcdecl oz_init_module();
+
 #define OZ_DATUM_UNKNOWNERROR -1
 #define OZ_DATUM_OUTOFMEMORY  -2
 
-extern OZ_Return _FUNDECL(OZ_valueToDatum,(OZ_Term  t, OZ_Datum* d));
-extern OZ_Return _FUNDECL(OZ_datumToValue,(OZ_Datum d, OZ_Term   t));
+_FUNDECL(OZ_Return ,OZ_valueToDatum,(OZ_Term  t, OZ_Datum* d));
+_FUNDECL(OZ_Return ,OZ_datumToValue,(OZ_Datum d, OZ_Term   t));
 
 /* print warnings/errors */
-extern void _FUNDECL(OZ_warning,(CONST char *, ...));
-extern void _FUNDECL(OZ_error,(CONST char *, ...));
+_FUNDECL(void ,OZ_warning,(OZ_CONST char *, ...));
+_FUNDECL(void ,OZ_error,(OZ_CONST char *, ...));
 
 /* generate the unix error string from an errno (see perror(3)) */
-extern char * _FUNDECL(OZ_unixError,(int err));
+_FUNDECL(char * ,OZ_unixError,(int err));
 
 /* check for toplevel */
-extern int _FUNDECL(OZ_onToplevel,());
+_FUNDECL(int ,OZ_onToplevel,());
 
 /* IO */
 
-extern OZ_Return _FUNDECL(OZ_readSelect,(int, OZ_Term, OZ_Term));
-extern OZ_Return _FUNDECL(OZ_writeSelect,(int, OZ_Term, OZ_Term));
-extern OZ_Return _FUNDECL(OZ_acceptSelect,(int, OZ_Term, OZ_Term));
-extern void      _FUNDECL(OZ_deSelect,(int));
+_FUNDECL(OZ_Return ,OZ_readSelect,(int, OZ_Term, OZ_Term));
+_FUNDECL(OZ_Return ,OZ_writeSelect,(int, OZ_Term, OZ_Term));
+_FUNDECL(OZ_Return ,OZ_acceptSelect,(int, OZ_Term, OZ_Term));
+_FUNDECL(void      ,OZ_deSelect,(int));
 
 /*
  * OZ_IOHandler is called with fd + static pointer given when registered
@@ -333,39 +336,39 @@ extern void      _FUNDECL(OZ_deSelect,(int));
  *   else (return FALSE) its called again, when something is available
  */
 
-typedef int _FUNTYPEDECL(OZ_IOHandler,(int,void *));
+typedef _FUNTYPEDECL(int,OZ_IOHandler,(int,void *));
 
-extern void _FUNDECL(OZ_registerReadHandler,(int,OZ_IOHandler,void *));
-extern void _FUNDECL(OZ_unregisterRead,(int));
+_FUNDECL(void ,OZ_registerReadHandler,(int,OZ_IOHandler,void *));
+_FUNDECL(void ,OZ_unregisterRead,(int));
 
-extern void _FUNDECL(OZ_registerWriteHandler,(int,OZ_IOHandler,void *));
-extern void _FUNDECL(OZ_unregisterWrite,(int));
+_FUNDECL(void ,OZ_registerWriteHandler,(int,OZ_IOHandler,void *));
+_FUNDECL(void ,OZ_unregisterWrite,(int));
 
-extern void _FUNDECL(OZ_registerAcceptHandler,(int,OZ_IOHandler,void *));
+_FUNDECL(void ,OZ_registerAcceptHandler,(int,OZ_IOHandler,void *));
 
 /* garbage collection */
-extern int _FUNDECL(OZ_protect,(OZ_Term *));
-extern int _FUNDECL(OZ_unprotect,(OZ_Term *));
-extern void _FUNDECL(OZ_collect,(OZ_Term *));
+_FUNDECL(int ,OZ_protect,(OZ_Term *));
+_FUNDECL(int ,OZ_unprotect,(OZ_Term *));
+_FUNDECL(void ,OZ_collect,(OZ_Term *));
 
 /* raise exception */
-extern OZ_Return _FUNDECL(OZ_typeError,(int pos,char *type));
-extern OZ_Return _FUNDECL(OZ_raise,(OZ_Term));
-extern OZ_Return _FUNDECL(OZ_raiseDebug,(OZ_Term));
-extern OZ_Return _FUNDECL(OZ_raiseC,(char *label,int arity,...));
-extern OZ_Return _FUNDECL(OZ_raiseError,(OZ_Term));
-extern OZ_Return _FUNDECL(OZ_raiseErrorC,(char *label,int arity,...));
-extern OZ_Term   _FUNDECL(OZ_makeException,(OZ_Term kind,OZ_Term key,char*label,int arity,...));
+_FUNDECL(OZ_Return ,OZ_typeError,(int pos,char *type));
+_FUNDECL(OZ_Return ,OZ_raise,(OZ_Term));
+_FUNDECL(OZ_Return ,OZ_raiseDebug,(OZ_Term));
+_FUNDECL(OZ_Return ,OZ_raiseC,(char *label,int arity,...));
+_FUNDECL(OZ_Return ,OZ_raiseError,(OZ_Term));
+_FUNDECL(OZ_Return ,OZ_raiseErrorC,(char *label,int arity,...));
+_FUNDECL(OZ_Term   ,OZ_makeException,(OZ_Term kind,OZ_Term key,char*label,int arity,...));
 
 /* Suspending builtins */
 
-extern OZ_Thread _FUNDECL(OZ_newRunnableThread,());
-extern void      _FUNDECL(OZ_makeRunnableThread,(OZ_CFun, OZ_Term *, int));
-extern OZ_Thread _FUNDECL(OZ_newSuspendedThread,());
-extern OZ_Thread _FUNDECL(OZ_makeSuspendedThread,(OZ_CFun, OZ_Term *, int));
-extern void      _FUNDECL(OZ_addThread,(OZ_Term, OZ_Thread));
-extern void      _FUNDECL(OZ_pushCFun,(OZ_Thread,OZ_CFun,OZ_Term *,int));
-extern void      _FUNDECL(OZ_pushCall,(OZ_Thread,OZ_Term,OZ_Term *,int));
+_FUNDECL(OZ_Thread ,OZ_newRunnableThread,());
+_FUNDECL(void      ,OZ_makeRunnableThread,(OZ_CFun, OZ_Term *, int));
+_FUNDECL(OZ_Thread ,OZ_newSuspendedThread,());
+_FUNDECL(OZ_Thread ,OZ_makeSuspendedThread,(OZ_CFun, OZ_Term *, int));
+_FUNDECL(void      ,OZ_addThread,(OZ_Term, OZ_Thread));
+_FUNDECL(void      ,OZ_pushCFun,(OZ_Thread,OZ_CFun,OZ_Term *,int));
+_FUNDECL(void      ,OZ_pushCall,(OZ_Thread,OZ_Term,OZ_Term *,int));
 
 #define OZ_makeSelfSuspendedThread() \
   OZ_makeSuspendedThread(OZ_self, OZ_args,OZ_arity)
@@ -376,9 +379,9 @@ extern void      _FUNDECL(OZ_pushCall,(OZ_Thread,OZ_Term,OZ_Term *,int));
    OZ_addThread(t2,s);
    */
 
-extern OZ_Return _FUNDECL(OZ_suspendOnInternal,(OZ_Term));
-extern OZ_Return _FUNDECL(OZ_suspendOnInternal2,(OZ_Term,OZ_Term));
-extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
+_FUNDECL(OZ_Return ,OZ_suspendOnInternal,(OZ_Term));
+_FUNDECL(OZ_Return ,OZ_suspendOnInternal2,(OZ_Term,OZ_Term));
+_FUNDECL(OZ_Return ,OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
 
 #define OZ_suspendOn(t1) \
    { return OZ_suspendOnInternal(t1); }
@@ -514,7 +517,7 @@ TYPE VAR = COERCE(OZ_in(ARG));
 OZ__doType(ARG,VAR,TYPE,MSG,CHECK,COERCE)
 
 #define OZ_setType(ARG,VAR,TYPE,MSG,CHECK,COERCE) \
-OZ__doType(ARG,VAR,,MSG,CHECK,COERCE)
+OZ__doType(ARG,VAR,;,MSG,CHECK,COERCE)
 
 #define OZ_declareBool(ARG,VAR)			\
 OZ_declareType(ARG,VAR,int,"Bool",OZ_isBool,OZ_boolToC)
@@ -535,10 +538,10 @@ OZ_declareType(ARG,VAR,double,"Float",OZ_isFloat,OZ_floatToC)
 OZ_setType(ARG,VAR,double,"Float",OZ_isFloat,OZ_floatToC)
 
 #define OZ_declareAtom(ARG,VAR)			\
-OZ_declareType(ARG,VAR,CONST char*,"Atom",OZ_isAtom,OZ_atomToC)
+OZ_declareType(ARG,VAR,OZ_CONST char*,"Atom",OZ_isAtom,OZ_atomToC)
 
 #define OZ_setAtom(ARG,VAR)			\
-OZ_setType(ARG,VAR,CONST char*,"Atom",OZ_isAtom,OZ_atomToC)
+OZ_setType(ARG,VAR,OZ_CONST char*,"Atom",OZ_isAtom,OZ_atomToC)
 
 #define OZ_declareBitString(ARG,VAR)		\
 OZ_declareType(ARG,VAR,BitString*,"BitString",	\
