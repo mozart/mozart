@@ -41,17 +41,23 @@ This is a one-time only operation: <code/cvs/ correspondingly updates your
 you access our server.  After typing the command below, your are
 prompted for the <code/CVS password/ which happens to be <code/anoncvs/.
 <code display proglang=none>
-% cvs -d :pserver:anoncvs@ps.uni-sb.de:/CVS login
+% cvs -d :pserver:anoncvs@cvs.mozart-oz.org:/home/mozart/CVS login
 (Logging in to anoncvs@ps.uni-sb.de)
 CVS password: anoncvs
 </code>
 From now on, you can always obtain a complete snapshot of the Mozart
 system using the command below:
 <code display>
-% cvs -d :pserver:anoncvs@ps.uni-sb.de:/CVS get mozart
+% cvs -d :pserver:anoncvs@cvs.mozart-oz.org:/home/mozart/CVS get mozart
 </code>
 This creates a directory <file/mozart/ in which the full source tree
 is placed.</p>
+<p>
+If you want to retrieve the a released version (say, Mozart 1.0.0), you can do this as follows:
+<code display>
+% cvs -d :pserver:anoncvs@cvs.mozart-oz.org:/home/mozart/CVS get -r mozart-1-0-0 mozart
+</code>
+</p>
   </section>
 
 </chapter>
