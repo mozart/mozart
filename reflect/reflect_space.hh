@@ -106,6 +106,11 @@ OZ_Term reflect_space_variable(ReflectStack &,
 			       VarTable &, 
 			       PropTable &, 
 			       OZ_Term);
+OZ_Term reflect_space_prop(ReflectStack &, 
+			   OZ_Term &, 
+			   VarTable &, 
+			   PropTable &, 
+			   Propagator *);
 OZ_Term reflect_space_susplist(ReflectStack &, 
 			       VarTable &vt, 
 			       PropTable &pt, 
