@@ -648,6 +648,7 @@ enum TypeOfConst {
   Co_Port,
   Co_Chunk,
   Co_HeapChunk,
+  Co_BitArray,
   Co_Array,
   Co_Dictionary,
   Co_Lock,
@@ -1100,6 +1101,89 @@ public:
 
   HeapChunk * gc(void);
 };
+
+/*===================================================================
+ * BitArray
+ *=================================================================== */
+
+#define BITS_PER_INT (sizeof(int) * 8)
+
+class BitArray: public ConstTerm {
+private:
+  int lowerBound, upperBound;
+  int *array;
+  int getSize() {
+    return (upperBound - lowerBound) / BITS_PER_INT + 1;
+  }
+  int *copyArray(void) {
+    int size = getSize();
+    int *newArray = allocate(size);
+    for (int i = 0; i < size; i++)
+      newArray[i] = array[i];
+    return newArray;
+  }
+  int *allocate(int size) {
+    COUNT1(sizeBitArrays,size);
+    return (int *) alignedMalloc(size, sizeof(double));
+  }
+public:
+  OZPRINT;
+  /* Avoid that the compiler generates constructors, destructors and
+   * assignment operators which are not wanted in Oz */
+  BitArray();
+  ~BitArray();
+  BitArray operator=(const BitArray &);
+  BitArray(int lower, int upper): ConstTerm(Co_BitArray) {
+    Assert(lower <= upper);
+    lowerBound = lower;
+    upperBound = upper;
+    int size = getSize();
+    array = allocate(size);
+    for (int i = 0; i < size; i++)
+      array[i] = 0;
+    COUNT1(sizeBitArrays, sizeof(BitArray));
+  }
+  BitArray(const BitArray &b): ConstTerm(Co_BitArray) {
+    lowerBound = b.lowerBound;
+    upperBound = b.upperBound;
+    int size = getSize();
+    array = allocate(size);
+    for (int i = 0; i < size; i++)
+      array[i] = b.array[i];
+    COUNT1(sizeBitArrays, sizeof(BitArray));
+  }
+  Bool checkBounds(int i) {
+    return lowerBound <= i && i <= upperBound;
+  }
+  Bool checkBounds(const BitArray *b) {
+    return lowerBound == b->lowerBound && upperBound == b->upperBound;
+  }
+  void set(int);
+  void clear(int);
+  Bool test(int);
+  int getLower(void) { return lowerBound; }
+  int getUpper(void) { return upperBound; }
+  void or(const BitArray *);
+  void and(const BitArray *);
+  void nimpl(const BitArray *);
+  TaggedRef toList(void);
+  TaggedRef complementToList(void);
+
+  BitArray *gc(void);
+};
+
+inline
+Bool oz_isBitArray(TaggedRef term)
+{
+  return oz_isConst(term) && tagged2Const(term)->getType() == Co_BitArray;
+}
+
+inline
+BitArray *tagged2BitArray(TaggedRef term)
+{
+  Assert(oz_isBitArray(term));
+  return (BitArray *) tagged2Const(term);
+}
 
 /*===================================================================
  * ForeignPointer
