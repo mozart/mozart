@@ -1308,8 +1308,11 @@ public:
       if (c==INFINITE_CREDIT) {
         makePersistent();
       } else {
-        if (getCredit()==1) addToCredit(1); // at least one credit to request more
-        addCredit1(c-1); // rest may be use for pending messages
+        if (getCredit()==1) {   // at least one credit to request more
+          addToCredit(1);
+          c--;
+        }
+        addCredit1(c); // rest may be used for pending messages
       }
     }
   }
