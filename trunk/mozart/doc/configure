@@ -784,6 +784,7 @@ else
         if $INSTALL -c -m 644 conftest.$$ /tmp >/dev/null 2>&1; then
           rm -f /tmp/conftest.$$ 2>/dev/null
           oz_cv_unset_INSTALL=no
+          oz_cv_given_INSTALL="$INSTALL"
         else
           oz_cv_unset_INSTALL=yes
         fi
@@ -805,7 +806,7 @@ echo "$ac_t""$oz_cv_unset_INSTALL" 1>&6
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:809: checking for a BSD compatible install" >&5
+echo "configure:810: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -857,6 +858,9 @@ test -z "$INSTALL_SCRIPT" && INSTALL_SCRIPT='${INSTALL_PROGRAM}'
 
 test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 
+  if test "$INSTALL" = "$oz_cv_given_INSTALL"; then
+    ac_given_INSTALL="$oz_cv_given_INSTALL"
+  fi
   
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
     dummy_PATH=`echo $PATH | sed -e 's/:://g'`
@@ -869,7 +873,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:873: checking for $ac_word" >&5
+echo "configure:877: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -913,7 +917,7 @@ fi
     
   
   echo $ac_n "checking for oz version""... $ac_c" 1>&6
-echo "configure:917: checking for oz version" >&5
+echo "configure:921: checking for oz version" >&5
 if eval "test \"`echo '$''{'oz_cv_ozversion'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -965,7 +969,7 @@ echo "$ac_t""$oz_cv_ozversion" 1>&6
     # Extract the first word of "ozplatform", so it can be a program name with args.
 set dummy ozplatform; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:969: checking for $ac_word" >&5
+echo "configure:973: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1020,7 +1024,7 @@ fi
     # Extract the first word of "oztool", so it can be a program name with args.
 set dummy oztool; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1024: checking for $ac_word" >&5
+echo "configure:1028: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1066,7 +1070,7 @@ fi
   esac
   
   echo $ac_n "checking for --with-inc-dir""... $ac_c" 1>&6
-echo "configure:1070: checking for --with-inc-dir" >&5
+echo "configure:1074: checking for --with-inc-dir" >&5
   # Check whether --with-inc-dir or --without-inc-dir was given.
 if test "${with_inc_dir+set}" = set; then
   withval="$with_inc_dir"
@@ -1108,7 +1112,7 @@ fi
 
   
   echo $ac_n "checking for --with-lib-dir""... $ac_c" 1>&6
-echo "configure:1112: checking for --with-lib-dir" >&5
+echo "configure:1116: checking for --with-lib-dir" >&5
   # Check whether --with-lib-dir or --without-lib-dir was given.
 if test "${with_lib_dir+set}" = set; then
   withval="$with_lib_dir"
@@ -1152,7 +1156,7 @@ fi
   
   
   echo $ac_n "checking for build date""... $ac_c" 1>&6
-echo "configure:1156: checking for build date" >&5
+echo "configure:1160: checking for build date" >&5
 if eval "test \"`echo '$''{'oz_cv_build_date'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1177,7 +1181,7 @@ echo "$ac_t""$oz_cv_build_date" 1>&6
     # Extract the first word of "ozengine", so it can be a program name with args.
 set dummy ozengine; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1181: checking for $ac_word" >&5
+echo "configure:1185: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZENGINE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1231,7 +1235,7 @@ fi
     # Extract the first word of "ozdoc", so it can be a program name with args.
 set dummy ozdoc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1235: checking for $ac_word" >&5
+echo "configure:1239: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZDOC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1277,7 +1281,7 @@ fi
 
 
 echo $ac_n "checking for --with-java-bin""... $ac_c" 1>&6
-echo "configure:1281: checking for --with-java-bin" >&5
+echo "configure:1285: checking for --with-java-bin" >&5
 # Check whether --with-java or --without-java was given.
 if test "${with_java+set}" = set; then
   withval="$with_java"
@@ -1295,7 +1299,7 @@ JAVA_BIN=${oz_java_bin}
 
 
 echo $ac_n "checking for --with-java-threads""... $ac_c" 1>&6
-echo "configure:1299: checking for --with-java-threads" >&5
+echo "configure:1303: checking for --with-java-threads" >&5
 # Check whether --with-java-threads or --without-java-threads was given.
 if test "${with_java_threads+set}" = set; then
   withval="$with_java_threads"
@@ -1308,7 +1312,7 @@ JAVA_THREADS=${oz_java_threads}
 
 
 echo $ac_n "checking for --with-documents""... $ac_c" 1>&6
-echo "configure:1312: checking for --with-documents" >&5
+echo "configure:1316: checking for --with-documents" >&5
 # Check whether --with-documents or --without-documents was given.
 if test "${with_documents+set}" = set; then
   withval="$with_documents"
@@ -1324,7 +1328,7 @@ DOC_DIRS=$oz_doc_dirs
 
 
 echo $ac_n "checking for --enable-index""... $ac_c" 1>&6
-echo "configure:1328: checking for --enable-index" >&5
+echo "configure:1332: checking for --enable-index" >&5
 # Check whether --enable-index or --disable-index was given.
 if test "${enable_index+set}" = set; then
   enableval="$enable_index"
@@ -1344,7 +1348,7 @@ fi
 
 
 echo $ac_n "checking for --enable-chm""... $ac_c" 1>&6
-echo "configure:1348: checking for --enable-chm" >&5
+echo "configure:1352: checking for --enable-chm" >&5
 # Check whether --enable-chm or --disable-chm was given.
 if test "${enable_chm+set}" = set; then
   enableval="$enable_chm"
