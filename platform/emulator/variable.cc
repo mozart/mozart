@@ -52,35 +52,14 @@
 
 VariableNamer *VariableNamer::allnames = NULL;
 
-#ifdef PRETTYVARNAMES
-/* Different variables may have been unified, so we
- * return "X=Y" as printname if X and Y have been unified
- */
-#endif
 const char *VariableNamer::getName(TaggedRef v)
 {
-  char *ret = "_";
-  int found = 0;
-  char buf[1000];
-  buf[0] = '\0';
   for (VariableNamer *i = allnames; i!=NULL; i = i->next) {
-#ifdef PRETTYVARNAMES
-/* Browser cannot handle: declare A B in {Browse A#B}  A=B  */
-    if (termEq(i->var,v)) {
-      ret = i->name;
-      found++;
-      if (found > 1) {
-        strcat(buf,"=");
-      }
-      strcat(buf,ret);
-    }
-#else
     if (OZ_isVariable(i->var) && termEq(i->var,v)) {
       return i->name;
     }
-#endif
   }
-  return (found<=1) ? ret : ozstrdup(buf);
+  return "_";
 }
 
 void VariableNamer::addName(TaggedRef v, const char *nm)
