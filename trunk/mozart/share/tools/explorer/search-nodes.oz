@@ -117,7 +117,7 @@ local
 	       CurCopy  = {Space.clone TaggedCopy.1}
 	       CurDist  = 0
 	       RevNs    = nil
-	       CurDepth = {self.mom findDepth(0 $)}
+	       CurDepth = {self.mom findDepth(1 $)}
 	    end
 	 end
 
