@@ -208,7 +208,7 @@ public:
   OZ_FSetValue(const OZ_FSetState);
   OZ_FSetValue(int, int);
   OZ_FSetValue(const OZ_FiniteDomain &);
-  /*
+
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
 
@@ -216,7 +216,7 @@ public:
   static void * operator new[](size_t);
   static void operator delete[](void *, size_t);
 #endif
-  */
+
   void copyExtension(void);
   void disposeExtension(void);
 
