@@ -1,4 +1,5 @@
 *~
 Makefile
-oz.el oz.elc
+mozart.el
+*.elc
 TAGS

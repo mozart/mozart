@@ -1,25 +1,25 @@
+#
 #  Authors:
-#    Michael Mehl (mehl@dfki.de)
-# 
-#  Contributors:
-#    optional, Contributor's name (Contributor's email address)
-# 
+#    Michael Mehl <mehl@dfki.de>
+#    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+#
 #  Copyright:
 #    Michael Mehl, 1998
-# 
+#    Leif Kornstaedt, 1998
+#
 #  Last change:
 #    $Date$ by $Author$
 #    $Revision$
-# 
-#  This file is part of Mozart, an implementation 
-#  of Oz 3:
-#     http://mozart.ps.uni-sb.de
-# 
+#
+#  This file is part of Mozart, an implementation of Oz 3:
+#    http://mozart.ps.uni-sb.de
+#
 #  See the file "LICENSE" or
-#     http://mozart.ps.uni-sb.de/LICENSE.html
-#  for information on usage and redistribution 
-#  of this file, and for a DISCLAIMER OF ALL 
+#    http://mozart.ps.uni-sb.de/LICENSE.html
+#  for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL
 #  WARRANTIES.
+#
 
 BUILDTOP=	@BUILDTOP@
 PREFIX=		@prefix@
@@ -34,25 +34,27 @@ INSTALL		= @INSTALL@
 INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_DIR	= @INSTALL_DIR@
 
-LIBFILES = $(ELISPDIR)/oz.el $(ELISPDIR)/oz.elc \
-	   $(ELISPDIR)/oz-extra.el $(ELISPDIR)/oz-extra.elc
+LIBFILES = \
+	$(ELISPDIR)/oz.el $(ELISPDIR)/oz.elc \
+	$(ELISPDIR)/mozart.el $(ELISPDIR)/mozart.elc \
+	$(ELISPDIR)/oz-extra.el $(ELISPDIR)/oz-extra.elc
 
 .PHONY: bootstrap all install clean veryclean distclean tags check depend
 
-all: oz.elc oz-extra.elc
+all: oz.elc mozart.elc oz-extra.elc
 
 bootstrap: all
 
-oz.el: oz.el.in ../config.status
+Makefile: Makefile.in ../config.status
 	cd .. && ./config.status
 
-Makefile: Makefile.in ../config.status
+mozart.el: mozart.el.in ../config.status
 	cd .. && ./config.status
 
 ../config.status: ../configure
 	cd .. && ./config.status --recheck
 
-oz.elc oz-extra.elc: %.elc : %.el
+oz.elc mozart.elc oz-extra.elc: %.elc : %.el
 	$(EMACS) -q -batch -f batch-byte-compile $<
 
 install: all $(ELISPDIR) $(LIBFILES)
@@ -72,10 +74,10 @@ clean:
 veryclean: clean
 
 distclean: clean
-	-rm -f Makefile oz.el
+	-rm -f Makefile mozart.el
 
 tags:
-	etags oz.el oz-extra.el
+	etags oz.el mozart.el oz-extra.el
 
 check:
 
