@@ -1159,10 +1159,12 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
 }
 
 
+
 void AM::doBindAndTrail(TaggedRef * vp, TaggedRef t)
 {
   Assert(shallowHeapTop || checkHome(vp));
   trail.pushRef(vp, *vp);
+
   
   CHECK_NONVAR(t);
   *vp = t;
@@ -1574,14 +1576,10 @@ void AM::deSelect(int fd,int mode)
   ion->handler[mode]  = 0;
 }
 
-extern void incTimeSlice();
 
 // called if IOReady (signals are blocked)
 void AM::handleIO()
 {
-#ifdef SLOWNET 
-  incTimeSlice();
-#endif
   unsetSFlag(IOReady);
   int numbOfFDs = osFirstSelect();
 
@@ -2007,6 +2005,7 @@ void handlerALRM()
 void handlerUSR2()
 {
   am.handleUSR2();
+
 }
 
 /* -------------------------------------------------------------------------
