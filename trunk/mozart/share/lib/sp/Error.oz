@@ -108,39 +108,39 @@ local
 
 in
 
-   functor $ prop once
+   functor
 
    import
-      Property.{get put}
-      
-      System.{printName
-	      printError
-	      valueToVirtualString
-	      onToplevel}
+      Property(get put)
 
-      ErrorRegistry.{get
-		     exists}
-      
+      System(printName
+	     printError
+	     valueToVirtualString
+	     onToplevel)
+
+      ErrorRegistry(get
+		    exists)
+
    export
       formatGeneric: GenericFormatter
-      
-      formatExc:     FormatOzError 
+
+      formatExc:     FormatOzError
       formatLine:    AlmostVSToVS
       formatPos:     PosToVS
       formatAppl:    FormatAppl
       formatTypes:   FormatTypes
       formatHint:    FormatHint
       format:        Format
-      
+
       dispatch:      DispatchField
       info:          InfoField
-      
-      printExc:      OzError      
+
+      printExc:      OzError
 
       msg:           ErrorMsg
       msgDebug:      ErrorMsgDebug
 
-   body
+   define
 
       %% current output: strings into emulator window
       

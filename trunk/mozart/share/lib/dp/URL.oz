@@ -658,9 +658,9 @@ local
 	 else raise urlbug end end
       end
    end
-      
+
 in
-   functor prop once
+   functor
    export
       is		: URL_is
       make		: URL_make

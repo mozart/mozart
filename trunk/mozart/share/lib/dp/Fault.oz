@@ -21,18 +21,18 @@
 %%%
 
 
-functor $ prop once
+functor
 
 import
-   Fault.{installHW
-	  deInstallHW
-	  getEntityCond
-	  setNetBufferSize
-	  getNetBufferSize
-	  tempSimulate}
-	  
-      from 'x-oz://boot/Fault'
-	    
+   Fault(installHW
+	 deInstallHW
+	 getEntityCond
+	 setNetBufferSize
+	 getNetBufferSize
+	 tempSimulate)
+
+      at 'x-oz://boot/Fault'
+
 export
    install:           Install
    deinstall:         Deinstall
@@ -45,7 +45,7 @@ export
    startNetPartition: BNP
    stopNetPartition:  ENP
 
-body
+define
 
    Install   = Fault.installHW
    Deinstall = Fault.deInstallHW
