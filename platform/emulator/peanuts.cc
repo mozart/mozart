@@ -29,7 +29,6 @@
 #define PEANUTS
 #ifdef INTERFACE
 
-#pragma implementation "assemble.hh"
 #pragma implementation "debug.hh"
 #pragma implementation "perdiovar.hh"
 #pragma implementation "fdgenvar.hh"
@@ -50,7 +49,6 @@
 #include "wsock.hh"
 
 #include "am.cc"
-#include "assemble.cc"
 #include "codearea.cc"
 #include "debug.cc"
 #include "perdiovar.cc"

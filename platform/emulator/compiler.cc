@@ -25,11 +25,6 @@
  */
 
 
-#if defined(INTERFACE) && !defined(PEANUTS)
-#pragma implementation "assemble.hh"
-#endif
-
-#include "assemble.hh"
 #include "am.hh"
 #include "runtime.hh"
 #include "indexing.hh"
@@ -261,19 +256,6 @@ OZ_BI_define(BIstoreRegisterIndex,2,0)
   OZ_declareCodeBlockIN(0,code);
   oz_declareIntIN(1,i);
   if (i < 0) {
-    return oz_raise(E_ERROR,OZ_atom("assembler"),
-                    "registerIndexOutOfRange",1,OZ_in(1));
-  }
-  code->writeReg(i);
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreRegisterIndexX,2,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareIntIN(1,i);
-  if (i < 0 || i >= NumberOfXRegisters) {
     return oz_raise(E_ERROR,OZ_atom("assembler"),
                     "registerIndexOutOfRange",1,OZ_in(1));
   }
@@ -558,3 +540,98 @@ OZ_BI_define(BIstoreCache,2,0)
   code->writeCache();
   return PROCEED;
 } OZ_BI_end
+
+
+/********************************************************************
+ * builtins for the compiler
+ ******************************************************************** */
+
+OZ_BI_define(BIconcatenateAtomAndInt,2,1)
+{
+  // {ConcatenateAtomAndInts S I ?Res} computes:
+  //    Res = {String.toAtom {Append {Atom.toString S} {Int.toString I}}}
+  oz_declareAtomIN(0,s);
+  oz_declareIntIN(1,i);
+  char *news = new char[strlen(s) + 12];
+  sprintf(news,"%s%d",s,i);
+  OZ_Term newa = oz_atom(news);
+  delete[] news;
+  OZ_RETURN(newa);
+} OZ_BI_end
+
+OZ_BI_define(BIisBuiltin,1,1)
+{
+  oz_declareNonvarIN(0,val);
+
+  OZ_RETURN(oz_isBuiltin(val)?NameTrue:NameFalse);
+} OZ_BI_end
+
+OZ_BI_define(BInameVariable,2,0)
+{
+  oz_declareIN(0,var);
+  oz_declareAtomIN(1,name);
+  VariableNamer::addName(var,name);
+  return PROCEED;
+} OZ_BI_end
+
+OZ_BI_define(BInewNamedName,1,1)
+{
+  oz_declareAtomIN(0,printName);
+  Literal *lit = NamedName::newNamedName(printName);
+  OZ_RETURN(makeTaggedLiteral(lit));
+} OZ_BI_end
+
+OZ_BI_define(BInewCopyableName,1,1)
+{
+  oz_declareAtomIN(0,printName);
+  Literal *lit = NamedName::newNamedName(printName);
+  lit->setFlag(Lit_isCopyableName);
+  OZ_RETURN(makeTaggedLiteral(lit));
+} OZ_BI_end
+
+OZ_BI_define(BIisCopyableName,1,1)
+{
+  oz_declareNonvarIN(0,val);
+  OZ_RETURN((oz_isLiteral(val) && tagged2Literal(val)->isCopyableName())?
+            NameTrue: NameFalse);
+} OZ_BI_end
+
+OZ_BI_define(BIisUniqueName,1,1)
+{
+  oz_declareNonvarIN(0,val);
+  OZ_RETURN((oz_isLiteral(val) && tagged2Literal(val)->isUniqueName())?
+            NameTrue: NameFalse);
+} OZ_BI_end
+
+OZ_BI_define(BInewPredicateRef,0,1)
+{
+  AbstractionEntry *entry = new AbstractionEntry(NO);
+  OZ_RETURN(OZ_makeForeignPointer(entry));
+} OZ_BI_end
+
+OZ_BI_define(BInewCopyablePredicateRef,0,1)
+{
+  AbstractionEntry *entry = new AbstractionEntry(OK);
+  OZ_RETURN(OZ_makeForeignPointer(entry));
+} OZ_BI_end
+
+OZ_BI_define(BIisCopyablePredicateRef,1,1)
+{
+  OZ_declareForeignPointerIN(0,p);
+  AbstractionEntry *entry = (AbstractionEntry *) p;
+  OZ_RETURN(entry->copyable? NameTrue: NameFalse);
+} OZ_BI_end
+
+
+/*
+ * The builtin table
+ */
+
+#ifndef MODULES_LINK_STATIC
+
+OZ_C_proc_interface mod_int_CompilerSupport[] = {
+#include "modCompilerSupport.tbl"
+ {0,0,0,0}
+};
+
+#endif
