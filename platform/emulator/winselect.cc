@@ -318,7 +318,7 @@ int win32Select(fd_set *rfds, fd_set *wfds, int *timeout)
   if (numsockets > 0) {
     ResetEvent(si->event);
     wait_hnd[nh++] = si->event;
-    si->timeout = timeout;
+    si->timeout = wait;
     unsigned tid;
     HANDLE ret = _beginthreadex(NULL,0,&selectThread,si,0,&tid);
     Assert(ret!=0);
