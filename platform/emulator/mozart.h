@@ -279,6 +279,9 @@ OZ_C_proc_begin(Name,Arity)                                                   \
    VAR = OZ_atomToC(OZ_getCArg(ARG));                                         \
  }
 
+/* the following one is obsolete */
+#define OZ_declareStringArg(FUN,ARG,VAR) OZ_declareAtomArg(FUN,ARG,VAR)
+
 /* ------------------------------------------------------------------------ *
  * end
  * ------------------------------------------------------------------------ */
