@@ -747,6 +747,7 @@ Bool ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
     anon->close(CLOSED,TRUE);
     return FALSE;
   case CLOSING_WF_DISCONNECT:
+  case CLOSING_WEAK:
     goto adopt_anon;
   default:
     DebugCode(printf("PROBLEM (state %d %d)\n",old->state,state);)
