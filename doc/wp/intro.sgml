@@ -1,0 +1,33 @@
+<!--
+  Translated to SGML by:
+     Daniel Simon, dansim@ps.uni-sb.de
+     Andy Walter, anwalt@ps.uni-sb.de
+-->
+
+<Chapter id="chapter.introduction">
+  <Title/Introduction/
+  <Section>
+    <Title/Graphical User Interfaces/
+    <P>
+      Mozart comes with an object-oriented interface to Tcl/Tk,
+      a powerful tool for programming graphical user interfaces.  The
+      functionality of all graphical objects comes in form of classes,
+      which are subject to possibly multiple inheritance.  Windows are
+      described compositionally by means of object hierarchies and are
+      subject to dynamic and interactive modification.  
+    <P>
+      The interface substitutes &Oz; for the low-level Tcl (an event-driven
+      script language).  By this, the interface inherits from &Oz; concurrency,
+      objects and first-class procedures.  From Tcl/Tk the interface inherits
+      a set of powerful graphical abstractions.  The large number of available
+      graphical abstractions built on top of Tcl/Tk can be integrated
+      smoothly.
+  <Section>
+    <Title/The Model/
+  <Section>
+    <Title/The Implementation/
+  <Section>
+    <Title/The Examples/
+  <Section>
+    <Title/Further Information/
+</Chapter>
