@@ -1,12 +1,9 @@
 %%%
-%%% Authors:
-%%%   Author's name (Author's email address)
-%%%
-%%% Contributors:
-%%%   optional, Contributor's name (Contributor's email address)
+%%% Author:
+%%%   Benjamin Lorenz <lorenz@ps.uni-sb.de>
 %%%
 %%% Copyright:
-%%%   Organization or Person (Year(s))
+%%%   Benjamin Lorenz, 1997
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -21,12 +18,8 @@
 %%% for information on usage and redistribution
 %%% of this file, and for a DISCLAIMER OF ALL
 %%% WARRANTIES.
-%%%
-%%% $Id$
-%%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
 %% some helpers
 
 S2A = String.toAtom  %% string to atom
@@ -178,44 +171,44 @@ local
    Config =
    {New
     class
-       
+
        attr
 	  emacs     : ConfigEmacs
 	  update    : ConfigUpdate
 	  threshold : ConfigThreshold
-	  
+
        meth init
 	  skip
        end
-       
+
        meth toggle(What)
 	  What <- {Not @What}
        end
-       
+
        meth set(What Value)
 	  What <- Value
        end
-       
+
        meth get(What $)
 	  @What
        end
-       
+
     end init}
-   
+
 in
-   
+
    proc {Ctoggle What}
       {Config toggle(What)}
    end
-   
+
    proc {Cset What Value}
       {Config set(What Value)}
    end
-   
+
    fun {Cget What}
       {Config get(What $)}
    end
-   
+
 end
 
 %%
