@@ -1,5 +1,5 @@
 declare
-scanner LambdaScanner from GumpScanner.'class' BaseObject
+scanner LambdaScanner from GumpScanner.'class'
    attr LineNumber
    meth init()
       GumpScanner.'class', init()
