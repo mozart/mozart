@@ -1,6 +1,8 @@
 <!DOCTYPE Book SYSTEM "ozdoc.dtd" [
 
 <!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh">
+
 <!ENTITY % input.local.2 SYSTEM "tools.extra">
 <!ENTITY % p.mix.local "|Em|note.gui|menu">
 <!ELEMENT Em - - (#PCDATA)>
